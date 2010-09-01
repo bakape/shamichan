@@ -1,0 +1,42 @@
+a:hover {
+	color: #d00;
+	cursor: pointer;
+}
+body {
+	background-color: #eef2ff;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+}
+li {
+	background-color: #d6daf0;
+	display: table;
+	margin: 2px;
+	padding: 4px 10px;
+}
+li b {
+	color: #117743;
+	font-weight: bold;
+}
+li code {
+	color: #228854;
+	font-family: inherit;
+}
+li p {
+	display: inline;
+}
+.editing {
+	background-color: #fa6;
+}
+.trans {
+	background-color: transparent;
+	border: 0;
+	color: #444;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+	margin: 0 0 0 -1px;
+	outline: none;
+	padding: 0;
+}
+.replylink a {
+	text-decoration: underline;
+}
