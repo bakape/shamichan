@@ -6,23 +6,10 @@ var client = new Faye.Client('http://localhost:8000/msg', {
 	timeout: 60
 });
 
-function time_to_str(time) {
-	function pad_zero(n) { return (n < 10 ? '0' : '') + n; }
-	return pad_zero(time[0]) + ':' + pad_zero(time[1]);
-}
-
 function insert_post(msg) {
 	if (msg.num == curPostNum)
 		return;
-	var meta = $('<span/>').append(
-		$('<b/>').text(msg.name)).append(' ').append(
-		$('<code/>').text(msg.trip)).append(' ').append(
-		$('<time/>').text(time_to_str(msg.time))).append(
-		' No.' + msg.num);
-	var body = $('<blockquote/>').text(msg.body);
-	body.html(body.html().replace(/\n/g, '<br>'));
-	var post = $('<li class="editing"/>').append(meta).append(body);
-	post.attr('name', 'post' + msg.num);
+	var post = $(gen_post_html(msg));
 	post.insertAfter('ul li[class!=replylink]:last');
 }
 
@@ -30,7 +17,7 @@ function insert_reply_box() {
 	var link = $('<a>[Reply]</a>')
 	link.click(reply_form);
 	var box = $('<li class="replylink"/>').append(link);
-	box.insertAfter('ul li:last');
+	$('ul').append(box);
 }
 
 function update_post(msg) {
@@ -75,7 +62,7 @@ function reply_form() {
 		meta.children('code').text(msg.trip);
 		meta.children('time').text(time_to_str(msg.time));
 		curPostNum = msg.num;
-		meta.append(' No. ' + curPostNum);
+		meta.append(' No.' + curPostNum);
 		post.addClass('editing');
 
 		var submit = $('<input type="button" value="Done"/>')
@@ -118,19 +105,13 @@ function reply_form() {
 		var newWord = endsWithSpace && !spaceEntered;
 		if (newWord && words.length > 1) {
 			input.val(words.pop() + ' ');
-			var text = '';
-			for (var i = 0; i < words.length; i++)
-				text += words[i] + ' ';
-			commit(text);
+			commit(words.join(' ') + ' ');
 		}
 		else if (words.length > 2) {
 			var last = words.pop();
 			input.val(words.pop() + ' ' + last
 					+ (endsWithSpace ? ' ' : ''));
-			var text = '';
-			for (var i = 0; i < words.length; i++)
-				text += words[i] + ' ';
-			commit(text);
+			commit(words.join(' ') + ' ');
 		}
 	}
 	input.attr('size', INPUT_MIN_SIZE);
