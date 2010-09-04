@@ -1,8 +1,6 @@
-var INPUT_MIN_SIZE = 2;
-
 var curPostNum = 0;
 
-var client = new Faye.Client('http://localhost:8000/msg', {
+var client = new Faye.Client(FAYE_URL, {
 	timeout: 60
 });
 
