@@ -1,7 +1,9 @@
-all: www/js/client.js
+all: builder
+
+builder: builder.c
+	gcc -o $@ $^
 
 www/js/client.js: client.js common.js config.js
-	@echo Building $@.
 	@cp config.js $@
 	@echo >> $@
 	@sed "s/^exports\.//g" common.js >> $@
