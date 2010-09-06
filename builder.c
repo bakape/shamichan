@@ -62,7 +62,7 @@ static int num_watches, inotify_fd;
 static void monitor_files(void) {
 	struct inotify_event event;
 	int i;
-	if (read(inotify_fd, &event, sizeof(event)) != sizeof(event)) {
+	if (read(inotify_fd, &event, sizeof event) != sizeof event) {
 		fprintf(stderr, "Monitor failure\n");
 		exit(-1);
 	}
