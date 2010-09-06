@@ -16,3 +16,13 @@ exports.gen_post_html = function (data) {
 		time_to_str(data.time) + '</time> No.' + data.num +
 		'</span> <blockquote>' + body + '</blockquote></li>\n';
 }
+
+exports.parse_name = function (name) {
+	var hash = name.indexOf('#');
+	var tripcode = null;
+	if (hash >= 0) {
+		tripcode = name.substr(hash+1);
+		name = name.substr(0, hash);
+	}
+	return [name.trim() || 'Anonymous', tripcode];
+}

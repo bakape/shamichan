@@ -1,7 +1,8 @@
 var common = require('./common'),
 	faye = require('./faye/faye-node'),
 	fs = require('fs'),
-	http = require('http');
+	http = require('http'),
+	tripcode = require('./tripcode');
 
 var bayeux = new faye.NodeAdapter({ mount: '/msg', timeout: 45 });
 var localClient = bayeux.getClient();
@@ -27,13 +28,18 @@ var server = http.createServer(function(request, response) {
 localClient.subscribe('/post/new', function (msg) {
 	var num = post_counter++;
 	now = new Date();
+	var parsed = common.parse_name(msg.name);
 	var post = {
-		name: msg.name.trim() || 'Anonymous',
-		trip: '!!test',
+		name: parsed[0],
 		time: [now.getHours(), now.getMinutes(), now.getSeconds()],
 		num: num,
 		body: msg.frag
 	};
+	if (parsed[1]) {
+		var trip = tripcode.hash(parsed[1]);
+		if (trip)
+			post.trip = trip;
+	}
 	localClient.publish('/post/ok/' + msg.id, post);
 	localClient.publish('/thread/new', post);
 	post.id = msg.id;

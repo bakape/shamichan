@@ -11,7 +11,7 @@ static void kill_existing(const char *);
 
 static void build_client(void) {
 	if (!fork())
-		execlp("make", "make", "www/js/client.js", NULL);
+		execlp("make", "make", "-s", "www/js/client.js", NULL);
 }
 
 static void restart_server(void) {
@@ -120,7 +120,7 @@ int main(void) {
 		return -1;
 	}
 	setup_watches();
-	restart_server();
+	client_and_server();
 
 	daemonize();
 

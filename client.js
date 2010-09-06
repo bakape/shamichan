@@ -49,7 +49,9 @@ function reply_form() {
 	var sentAllocRequest = false, allocSubscription = null;
 	var myId = my_id();
 
-	meta.children('b').text(posterName || 'Anonymous');
+	var parsed = parse_name(posterName);
+	meta.children('b').text(parsed[0]);
+	meta.children('code').text(parsed[1] && '!?');
 	if (posterEmail) {
 		/* TODO: add link */
 	}

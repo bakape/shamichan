@@ -1,3 +1,4 @@
+*.node
 .*
 builder
 www/js/client.js
