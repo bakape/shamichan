@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/inotify.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -16,22 +17,7 @@ static void build_client(void) {
 }
 
 static void restart_server(void) {
-	int pid;
-	FILE *f;
 	kill_existing(server_pid);
-	if ((pid = fork()) < 0) {
-		perror("fork");
-	}
-	else if (pid) {
-		f = fopen(server_pid, "w");
-		if (f) {
-			fprintf(f, "%d\n", pid);
-			fclose(f);
-		}
-	}
-	else {
-		execlp("node", "node", "server.js", NULL);
-	}
 }
 
 static void client_and_server(void) {
@@ -77,7 +63,6 @@ static void monitor_files(void) {
 		for (i = 0; i < MAX_WATCHES; i++) {
 			if (!strcmp(event->name, watches[i].name)
 					&& now - 1 > watches[i].stamp) {
-				printf("%s\n", event->name);
 				(*watches[i].func)();
 				watches[i].stamp = now;
 				break;
@@ -100,27 +85,10 @@ static void add_watch(const char *filename, void (*f)(void)) {
 	num_watches++;
 }
 
-static void daemonize(void) {
-	FILE *f;
-	int pid = fork();
-	if (pid < 0) {
-		perror("fork");
-		exit(-1);
-	}
-	else if (pid) {
-		f = fopen(builder_pid, "w");
-		if (f) {
-			fprintf(f, "%d\n", pid);
-			fclose(f);
-		}
-		printf("Forked monitor.\n");
-		exit(0);
-	}
-}
-
 int main(void) {
 	FILE *f;
-	struct sigaction act;
+	int pid;
+	time_t start;
 
 	kill_existing(builder_pid);
 
@@ -136,8 +104,43 @@ int main(void) {
 	setup_watches();
 	client_and_server();
 
-	daemonize();
+	pid = fork();
+	if (pid < 0) {
+		perror("fork");
+		exit(-1);
+	}
+	else if (!pid) {
+		while (1)
+			monitor_files();
+	}
 
-	while (1)
-		monitor_files();
+	printf("Forked monitor.\n");
+	f = fopen(builder_pid, "w");
+	if (f) {
+		fprintf(f, "%d\n", pid);
+		fclose(f);
+	}
+
+	do {
+		start = time(NULL);
+		/* turn main process into the server */
+		pid = fork();
+		if (pid < 0)
+			break;
+		else if (!pid) {
+			printf("Running server.\n");
+			execlp("node", "node", "server.js", NULL);
+			perror("node server.js");
+			break;
+		}
+
+		f = fopen(server_pid, "w");
+		if (f) {
+			fprintf(f, "%d\n", pid);
+			fclose(f);
+		}
+		waitpid(pid, NULL, 0);
+	} while (time(NULL) > start + 2);
+
+	return -1;
 }
