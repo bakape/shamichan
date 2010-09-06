@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/inotify.h>
+#include <time.h>
 #include <unistd.h>
 
 static const char *builder_pid = ".builder.pid", *server_pid = ".server.pid";
@@ -57,22 +58,28 @@ static void kill_existing(const char *pid_file) {
 }
 
 #define MAX_WATCHES 5
-static struct { const char *name; void (*func)(void); } watches[MAX_WATCHES];
+static struct { const char *name; void (*func)(void); time_t stamp; }
+		watches[MAX_WATCHES];
 static int num_watches, inotify_fd;
 
 static void monitor_files(void) {
 	struct inotify_event *event;
 	char buf[128];
 	int i, len, total;
+	time_t now;
 	if ((total = read(inotify_fd, buf, sizeof buf)) <= 0) {
 		fprintf(stderr, "Monitor failure\n");
 		exit(-1);
 	}
 	event = (struct inotify_event *) buf;
 	while (total > 0) {
+		now = time(NULL);
 		for (i = 0; i < MAX_WATCHES; i++) {
-			if (!strcmp(event->name, watches[i].name)) {
+			if (!strcmp(event->name, watches[i].name)
+					&& now - 1 > watches[i].stamp) {
+				printf("%s\n", event->name);
 				(*watches[i].func)();
+				watches[i].stamp = now;
 				break;
 			}
 		}
@@ -89,6 +96,7 @@ static void add_watch(const char *filename, void (*f)(void)) {
 	}
 	watches[num_watches].name = filename;
 	watches[num_watches].func = f;
+	watches[num_watches].stamp = time(NULL);
 	num_watches++;
 }
 
