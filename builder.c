@@ -85,10 +85,42 @@ static void add_watch(const char *filename, void (*f)(void)) {
 	num_watches++;
 }
 
-int main(void) {
+static void server_process() {
 	FILE *f;
 	int pid;
 	time_t start;
+
+	do {
+		start = time(NULL);
+		/* turn main process into the server */
+		pid = fork();
+		if (pid < 0)
+			break;
+		else if (!pid) {
+			printf("Running server.\n");
+			execlp("node", "node", "server.js", NULL);
+			perror("node server.js");
+			break;
+		}
+
+		f = fopen(server_pid, "w");
+		if (f) {
+			fprintf(f, "%d\n", pid);
+			fclose(f);
+		}
+		waitpid(pid, NULL, 0);
+	} while (time(NULL) > start + 2);
+}
+
+int main(int argc, char *argv[]) {
+	FILE *f;
+	int pid;
+
+	if (argc > 1 && !strcmp(argv[1], "--server")) {
+		server_process();
+		fprintf(stderr, "Server stopped.\n");
+		return -1;
+	}
 
 	kill_existing(builder_pid);
 
@@ -121,26 +153,5 @@ int main(void) {
 		fclose(f);
 	}
 
-	do {
-		start = time(NULL);
-		/* turn main process into the server */
-		pid = fork();
-		if (pid < 0)
-			break;
-		else if (!pid) {
-			printf("Running server.\n");
-			execlp("node", "node", "server.js", NULL);
-			perror("node server.js");
-			break;
-		}
-
-		f = fopen(server_pid, "w");
-		if (f) {
-			fprintf(f, "%d\n", pid);
-			fclose(f);
-		}
-		waitpid(pid, NULL, 0);
-	} while (time(NULL) > start + 2);
-
-	return -1;
+	execlp(argv[0], argv[0], "--server", NULL);
 }
