@@ -12,7 +12,7 @@ exports.gen_post_html = function (data) {
 	var body = escape_html(data.body).replace(/\n/g, '<br>');
 	return '\t<li name="post' + data.num + '"><span><b>' +
 		escape_html(data.name) + '</b> <code>' +
-		escape_html(data.trip) + '</code> <time>' +
+		escape_html(data.trip || '') + '</code> <time>' +
 		time_to_str(data.time) + '</time> No.' + data.num +
 		'</span> <blockquote>' + body + '</blockquote></li>\n';
 }
