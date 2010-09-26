@@ -1,4 +1,5 @@
 *.node
 .*
 builder
+config.js
 www/js/client.js
