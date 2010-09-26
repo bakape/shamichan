@@ -10,7 +10,7 @@ function time_to_str(time) {
 
 exports.gen_post_html = function (data) {
 	var body = escape_html(data.body).replace(/\n/g, '<br>');
-	return '\t<li name="post' + data.num + '"><span><b>' +
+	return '\t\t<li name="q' + data.num + '"><span><b>' +
 		escape_html(data.name) + '</b> <code>' +
 		escape_html(data.trip || '') + '</code> <time>' +
 		time_to_str(data.time) + '</time> No.' + data.num +
@@ -26,3 +26,13 @@ exports.parse_name = function (name) {
 	}
 	return [name.trim() || 'Anonymous', tripcode];
 }
+
+function clone (obj) {
+	if (obj == null || typeof(obj) != 'object')
+		return obj;
+	var temp = new obj.constructor();
+	for (var key in obj)
+		temp[key] = clone(obj[key]);
+	return temp;
+}
+exports.clone = clone;

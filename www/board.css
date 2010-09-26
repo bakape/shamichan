@@ -37,6 +37,6 @@ li p {
 	outline: none;
 	padding: 0;
 }
-.replylink a {
+.replylink a, .newlink a {
 	text-decoration: underline;
 }

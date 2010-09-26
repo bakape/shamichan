@@ -7,22 +7,27 @@ var common = require('./common'),
 var bayeux = new faye.NodeAdapter({ mount: '/msg', timeout: 45 });
 var localClient = bayeux.getClient();
 
-var index_tmpl = fs.readFileSync('index.html', 'UTF-8');
-
+var threads = [];
 var posts = {};
-var post_counter = 2;
+var post_counter = 1;
 
-function gen_posts_html() {
-	var html = [];
-	for (num in posts) {
-		html.push(common.gen_post_html(posts[num]));
+function write_threads_html(response) {
+	for (var i = 0; i < threads.length; i++) {
+		var thread = threads[i];
+		response.write('\t<ul name="thread' + thread[0].num + '">\n');
+		for (var j = 0; j < thread.length; j++)
+			response.write(common.gen_post_html(thread[j]));
+		response.write('\t</ul>\n');
 	}
-	return html.join('');
 }
+
+var index_tmpl = fs.readFileSync('index.html', 'UTF-8').split("$THREADS");
 
 var server = http.createServer(function(request, response) {
 	response.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-	response.end(index_tmpl.replace('$POSTS', gen_posts_html()));
+	response.write(index_tmpl[0]);
+	write_threads_html(response);
+	response.end(index_tmpl[1]);
 });
 
 localClient.subscribe('/post/new', function (msg) {
@@ -40,10 +45,32 @@ localClient.subscribe('/post/new', function (msg) {
 		if (trip)
 			post.trip = trip;
 	}
-	localClient.publish('/post/ok/' + msg.id, post);
-	localClient.publish('/thread/new', post);
+	if (msg.op && posts[msg.op] && !posts[msg.op].op)
+		post.op = msg.op;
+
+	var announce = common.clone(post);
+	localClient.publish('/post/ok/' + msg.id, announce);
+	localClient.publish('/thread/new', announce);
+	/* And save this for later */
 	post.id = msg.id;
 	posts[num] = post;
+	if (!post.op) {
+		/* New thread */
+		post.thread = [post];
+		threads.unshift(post.thread);
+	}
+	else {
+		var thread = posts[post.op].thread;
+		thread.push(post);
+		/* Bump thread */
+		for (var i = 0; i < threads.length; i++) {
+			if (threads[i] == thread) {
+				threads.splice(i, 1);
+				threads.unshift(thread);
+				break;
+			}
+		}
+	}
 });
 
 localClient.subscribe('/post/frag', function (msg) {
@@ -58,7 +85,7 @@ localClient.subscribe('/post/done', function (msg) {
 	var post = posts[msg.num];
 	if (post && post.id == msg.id) {
 		localClient.publish('/thread/done', {num: msg.num});
-		post.id = null;
+		delete post.id;
 	}
 });
 
