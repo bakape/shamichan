@@ -11,7 +11,7 @@ tripcode.node: .build tripcode.cc
 	node-waf configure
 
 www/js/client.js: client.js common.js config.js
-	@cp config.js $@
+	@cat config.js > $@
 	@echo >> $@
 	@sed "s/^exports\.//g" common.js >> $@
 	@echo >> $@
