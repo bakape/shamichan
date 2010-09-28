@@ -18,16 +18,20 @@ function insert_new_post_boxes() {
 	$('.replylink a, .newlink a').click(new_post_form);
 }
 
-function insert_formatted(text, dest, state) {
-	for (var i = 0; i < state.spoilers; i++)
-		dest = dest.children('del:last');
-	var newline = text.indexOf('\n');
-	if (newline >= 0) /* max one newline allowed */
-		text = text.substr(0, newline);
-	var frags = format_line(text, state);
-	if (newline >= 0)
-		frags.push(safe('<br>'));
-	dest.append(flatten(frags).join(''));
+function insert_formatted(text, buffer, state) {
+	format_fragment(text, state, function (frag) {
+		var dest = buffer;
+		for (var i = 0; i < state[1]; i++)
+			dest = dest.children('del:last');
+		if (state[0] == 1)
+			dest = dest.children('em:last');
+		if (frag.safe == '<del>')
+			dest.append(document.createElement('del'));
+		else if (frag.safe == '<em>')
+			dest.append(document.createElement('em'));
+		else if (frag.safe != '</del>' && frag.safe != '</em>')
+			dest.append(escape_fragment(frag));
+	});
 }
 
 function is_mine(msg) {
@@ -37,32 +41,33 @@ function is_mine(msg) {
 function insert_post(msg) {
 	if (is_mine(msg))
 		return;
-	var state = {spoilers: 0};
-	var post = $(gen_post_html(msg, state));
-	state.li = post;
-	activePosts[msg.num] = state;
+	var post = $(gen_post_html(msg));
+	activePosts[msg.num] = post;
 	if (msg.op) {
 		post.insertAfter('ul[name=thread' + msg.op
 				+ '] li:not(.replylink):last');
-		return;
 	}
-	var new_ul = $('<ul name="thread' + msg.num + '" />')
-	new_ul.append(post).insertBefore('ul:not(.newlink):first');
-	if (!curPostNum)
-		new_ul.append(make_reply_box());
+	else {
+		var new_ul = $('<ul name="thread' + msg.num + '" />')
+		new_ul.append(post);
+		if (!curPostNum)
+			new_ul.append(make_reply_box());
+		var newlink = $('.newlink');
+		new_ul.insertAfter(newlink.length ? newlink : 'hr');
+	}
 }
 
 function update_post(msg) {
 	if (is_mine(msg))
 		return;
 	var post = activePosts[msg.num];
-	insert_formatted(msg.frag, post.li.find('blockquote'), post);
+	insert_formatted(msg.frag, post.find('blockquote'), msg.state);
 }
 
 function finish_post(msg) {
 	if (is_mine(msg))
 		return;
-	activePosts[msg.num].li.removeClass('editing');
+	activePosts[msg.num].removeClass('editing');
 	delete activePosts[msg.num];
 }
 
@@ -88,7 +93,7 @@ function new_post_form() {
 	var sentAllocRequest = false, allocSubscription = null;
 	var myId = my_id();
 	var ul = $(this).parents('ul');
-	var state = {spoilers: 0};
+	var state = initial_post_state();
 
 	blockquote.append.apply(blockquote, [buffer, line_buffer, input]);
 	post.append.apply(post, [meta, blockquote]);
@@ -212,10 +217,8 @@ function new_post_form() {
 $(document).ready(function () {
 	insert_new_post_boxes();
 	$('.editing').each(function(index) {
-		var li = $(this);
-		var num = parseInt(li.attr('name').replace('q', ''));
-		var state = {spoilers: 0, li: li};
-		parse_spoilers(li.find('blockquote').html(), state);
-		activePosts[num] = state;
+		var post = $(this);
+		var num = parseInt(post.attr('name').replace('q', ''));
+		activePosts[num] = post;
 	});
 });

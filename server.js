@@ -17,7 +17,7 @@ function write_threads_html(response) {
 		response.write('\t<ul name="thread' + thread[0].num + '">\n');
 		for (var j = 0; j < thread.length; j++) {
 			var post = thread[j];
-			response.write(common.gen_post_html(post, post));
+			response.write(common.gen_post_html(post));
 		}
 		response.write('\t</ul>\n');
 	}
@@ -82,6 +82,8 @@ localClient.subscribe('/post/new', function (msg) {
 	localClient.publish('/thread/new', announce);
 	/* And save this for later */
 	post.id = msg.id;
+	post.state = common.initial_post_state();
+	common.format_fragment(post.body, post.state, null);
 	posts[num] = post;
 	if (!post.op) {
 		/* New thread */
@@ -109,8 +111,12 @@ localClient.subscribe('/post/frag', function (msg) {
 		return;
 	var post = posts[msg.num];
 	if (post && post.editing && post.id == msg.id) {
-		localClient.publish('/frag', {num: msg.num, frag: msg.frag});
+		var announce = [post.state[0], post.state[1]]; /* TEMP */
+		localClient.publish('/frag',
+			{num: msg.num, frag: msg.frag, state: announce});
 		post.body += msg.frag;
+		/* update state */
+		common.format_fragment(msg.frag, post.state, null);
 	}
 });
 
@@ -122,6 +128,7 @@ localClient.subscribe('/post/done', function (msg) {
 		localClient.publish('/thread/done', {num: msg.num});
 		post.editing = false;
 		delete post.id;
+		delete post.state;
 	}
 });
 

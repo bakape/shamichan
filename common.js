@@ -3,25 +3,31 @@ function escape_html(html) {
 		/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function escape_fragment(frag) {
+	var t = typeof(frag);
+	if (t == 'object' && typeof(frag.safe) == 'string')
+		return frag.safe;
+	else if (t == 'string')
+		return escape_html(frag);
+	else if (t == 'number')
+		return frag.toString();
+	else
+		return '???';
+
+}
+exports.escape_fragment = escape_fragment;
+
 function flatten(frags) {
 	var out = [];
 	for (var i = 0; i < frags.length; i++) {
 		var frag = frags[i];
-		var t = typeof(frag);
-		if (t == 'object' && typeof(frag.safe) == 'string')
-			out.push(frag.safe);
-		else if (frag.constructor == Array)
+		if (frag.constructor == Array)
 			out = out.concat(flatten(frag));
-		else if (t == 'string')
-			out.push(escape_html(frag));
-		else if (t == 'number')
-			out.push(frag.toString())
 		else
-			out.push('???');
+			out.push(escape_fragment(frag));
 	}
 	return out;
 }
-exports.flatten = flatten;
 
 safe = function (frag) {
 	return {safe: frag};
@@ -38,48 +44,74 @@ function map_unsafe(frags, func) {
 	return frags;
 }
 
-parse_spoilers = function (body, context) {
-	frags = body.split(/(\[\/?spoiler\])/i);
-	for (var i = 0; i < frags.length; i++) {
-		if (i % 2 == 0)
+function initial_post_state() {
+	return [0, 0];
+}
+exports.initial_post_state = initial_post_state;
+
+function format_fragment(frag, state, func) {
+	if (!func)
+		func = function (tok) {};
+	function do_transition(token, new_state) {
+		if (state[0] == 1 && new_state != 1)
+			func(safe('</em>'));
+		switch (new_state) {
+		case 1:
+			if (state[0] != 1) {
+				func(safe('<em>'));
+				state[0] = 1;
+			}
+			func(token);
+			break;
+		case 3:
+			if (token[1] == '/') {
+				state[1]--;
+				func(safe('</del>'));
+			}
+			else {
+				func(safe('<del>'));
+				state[1]++;
+			}
+			break;
+		default:
+			func(token);
+			break;
+		}
+		state[0] = new_state;
+	}
+	var chunks = frag.split(/(\[\/?spoiler\])/i);
+	for (var i = 0; i < chunks.length; i++) {
+		var chunk = chunks[i];
+		if (i % 2) {
+			var new_state = 3;
+			if (chunk[1] == '/' && state[1] < 1)
+				new_state = (state[0] == 1) ? 1 : 2;
+			do_transition(chunk, new_state);
 			continue;
-		if (frags[i][1] != '/') {
-			context.spoilers++;
-			frags[i] = safe('<del>');
 		}
-		else if (context.spoilers > 0) {
-			context.spoilers--;
-			frags[i] = safe('</del>');
+		lines = chunk.split(/(\n)/);
+		for (var l = 0; l < lines.length; l++) {
+			var line = lines[l];
+			if (l % 2)
+				do_transition(safe('<br>'), 0);
+			else if (state[0] == 0 && line[0] == '>')
+				do_transition(line, 1);
+			else if (line)
+				do_transition(line, (state[0] == 1) ? 1 : 2);
 		}
 	}
-	return frags;
 }
-exports.parse_spoilers = parse_spoilers;
+exports.format_fragment = format_fragment;
 
-function format_line(line, context) {
-	line = parse_spoilers(line, context);
-	map_unsafe(line, function (frag) {
-		var gt = frag.indexOf('>');
-		if (gt >= 0)
-			return [frag.substr(0, gt), safe('<em>'),
-				frag.substr(gt), safe('</em>')];
-		return frag;
-	});
-	return line;
-}
-exports.format_line = format_line;
-
-function format_body(body, context) {
-	var lines = body.split('\n');
+function format_body(body) {
+	var state = initial_post_state();
 	var output = [];
-	for (var i = 0; i < lines.length; i++) {
-		var line = format_line(lines[i], context);
-		if (line.length > 1 || line[0] != '')
-			output.push(line);
-		if (i < lines.length - 1)
-			output.push(safe('<br>'));
-	}
-	for (var i = 0; i < context.spoilers; i++)
+	format_fragment(body, state, function (frag) {
+		output.push(frag);
+	});
+	if (state[0] == 1)
+		output.push(safe('</em>'));
+	for (var i = 0; i < state[1]; i++)
 		output.push(safe('</del>'));
 	return output;
 }
@@ -89,13 +121,13 @@ function time_to_str(time) {
 	return pad_zero(time[0]) + ':' + pad_zero(time[1]);
 }
 
-exports.gen_post_html = function (data, context) {
+exports.gen_post_html = function (data) {
 	var edit = data.editing ? '" class="editing"' : '"';
 	var post = [safe('\t\t<li name="q' + data.num + edit + '><span><b>'),
 		data.name, safe('</b> <code>'), (data.trip || ''),
 		safe('</code> <time>'), time_to_str(data.time),
 		safe('</time> No.' + data.num + '</span> <blockquote>'),
-		format_body(data.body, context), safe('</blockquote></li>\n')];
+		format_body(data.body), safe('</blockquote></li>\n')];
 	return flatten(post).join('');
 }
 
