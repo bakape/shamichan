@@ -186,8 +186,10 @@ function new_post_form() {
 	input.keydown(function (event) {
 		var key = event.keyCode;
 		if (key == 13) {
-			commit(input.val() + '\n');
-			input.val('');
+			if (sentAllocRequest || input.val().replace(' ', '')) {
+				commit(input.val() + '\n');
+				input.val('');
+			}
 			event.preventDefault();
 		}
 		else {

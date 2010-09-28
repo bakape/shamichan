@@ -32,7 +32,33 @@ var server = http.createServer(function(request, response) {
 	response.end(index_tmpl[1]);
 });
 
+function is_integer(n) {
+	return (typeof(n) == 'number' && parseFloat(n) == parseInt(n)
+			&& !isNaN(n));
+}
+
+function validate(msg, schema) {
+	if (msg == null || typeof(msg) != 'object')
+		return false;
+	for (var k in schema) {
+		var m = msg[k];
+		if (m == null || m.constructor != schema[k])
+			return false;
+		if (schema[k] == Number && !is_integer(m))
+			return false;
+	}
+	return true;
+}
+
+function multiple_newlines(frag) {
+	return frag.split('\n', 3).length > 2;
+}
+
 localClient.subscribe('/post/new', function (msg) {
+	if (!validate(msg, {name: String, frag: String, id: Number}))
+		return;
+	if (!msg.frag.replace(/[ \n]/g, '') || multiple_newlines(msg.frag))
+		return;
 	var num = post_counter++;
 	now = new Date();
 	var parsed = common.parse_name(msg.name);
@@ -48,7 +74,7 @@ localClient.subscribe('/post/new', function (msg) {
 		if (trip)
 			post.trip = trip;
 	}
-	if (msg.op && posts[msg.op] && !posts[msg.op].op)
+	if (is_integer(msg.op) && posts[msg.op] && !posts[msg.op].op)
 		post.op = msg.op;
 
 	var announce = common.clone(post);
@@ -77,9 +103,9 @@ localClient.subscribe('/post/new', function (msg) {
 });
 
 localClient.subscribe('/post/frag', function (msg) {
-	/* XXX: stupid validation */
-	if (!msg || !msg.frag || typeof(msg.frag) != 'string'
-			|| msg.frag.split('\n').length > 2)
+	if (!validate(msg, {frag: String, num: Number, id: Number}))
+		return;
+	if (multiple_newlines(msg.frag))
 		return;
 	var post = posts[msg.num];
 	if (post && post.editing && post.id == msg.id) {
@@ -89,6 +115,8 @@ localClient.subscribe('/post/frag', function (msg) {
 });
 
 localClient.subscribe('/post/done', function (msg) {
+	if (!validate(msg, {num: Number, id: Number}))
+		return;
 	var post = posts[msg.num];
 	if (post && post.editing && post.id == msg.id) {
 		localClient.publish('/thread/done', {num: msg.num});
