@@ -7,6 +7,14 @@ body {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
 }
+del, del em {
+	background-color: black;
+	color: black;
+	text-decoration: none;
+}
+del:hover, del:hover em {
+	color: white;
+}
 li {
 	background-color: #d6daf0;
 	display: table;
@@ -23,6 +31,10 @@ li code {
 }
 li p {
 	display: inline;
+}
+em {
+	font-style: normal;
+	color: #789922;
 }
 .editing {
 	background-color: #fa6;

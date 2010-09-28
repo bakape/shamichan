@@ -21,6 +21,15 @@ function insert_new_post_boxes() {
 	$('.replylink a, .newlink a').click(new_post_form);
 }
 
+function insert_formatted(text, dest, context, suffix) {
+	for (var i = 0; i < context.spoilers; i++)
+		dest = dest.children('del:last');
+	var frags = format_line(text, context);
+	if (suffix)
+		frags.push(suffix);
+	dest.append(flatten(frags).join(''));
+}
+
 function is_mine(msg) {
 	return (msg.num == curPostNum || msg.num in myPosts);
 }
@@ -64,18 +73,22 @@ function my_id() {
 }
 
 function new_post_form() {
-	var buffer = $('<p/>');
+	var buffer = $('<p/>'), line_buffer = $('<p/>');
 	var meta = $('<span><b/> <code/> <time/></span>');
 	var posterName = $('input[name=name]').val().trim();
 	var posterEmail = $('input[name=email]').val().trim();
 	var input = $('<input name="body" class="trans"/>');
-	var blockquote = $('<blockquote/>').append(buffer).append(input);
-	var post = $('<li/>').append(meta).append(blockquote);
+	var blockquote = $('<blockquote/>');
+	var post = $('<li/>');
 	var postOp = null;
 	var dummy = $(document.createTextNode(' '));
 	var sentAllocRequest = false, allocSubscription = null;
 	var myId = my_id();
 	var ul = $(this).parents('ul');
+	var context = {spoilers: 0};
+
+	blockquote.append.apply(blockquote, [buffer, line_buffer, input]);
+	post.append.apply(post, [meta, blockquote]);
 
 	var parsed = parse_name(posterName);
 	meta.children('b').text(parsed[0]);
@@ -110,7 +123,10 @@ function new_post_form() {
 			commit(input.val());
 			input.remove();
 			submit.remove();
+			insert_formatted(line_buffer.text(), buffer, context,
+				null);
 			buffer.replaceWith(buffer.contents());
+			line_buffer.remove();
 			post.removeClass('editing');
 
 			curPostNum = 0;
@@ -137,7 +153,17 @@ function new_post_form() {
 			client.publish('/post/frag',
 				{id: myId, num: curPostNum, frag: text});
 		}
-		buffer.append(document.createTextNode(text));
+		if (text.indexOf('\n') >= 0) {
+			var lines = text.split('\n');
+			lines[0] = line_buffer.text() + lines[0];
+			line_buffer.text(lines.pop());
+			for (var i = 0; i < lines.length; i++)
+				insert_formatted(lines[i], buffer, context,
+						safe('<br>'));
+		}
+		else {
+			line_buffer.append(document.createTextNode(text));
+		}
 	}
 	function commit_words(text, spaceEntered) {
 		var words = text.trim().split(/ +/);
@@ -160,7 +186,6 @@ function new_post_form() {
 		var key = event.keyCode;
 		if (key == 13) {
 			commit(input.val() + '\n');
-			buffer.append('<br>');
 			input.val('');
 			event.preventDefault();
 		}
