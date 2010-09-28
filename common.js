@@ -38,20 +38,26 @@ function map_unsafe(frags, func) {
 	return frags;
 }
 
-function format_line(line, context) {
-	line = line.split(/(\[\/?spoiler\])/i);
-	for (var i = 0; i < line.length; i++) {
+parse_spoilers = function (body, context) {
+	frags = body.split(/(\[\/?spoiler\])/i);
+	for (var i = 0; i < frags.length; i++) {
 		if (i % 2 == 0)
 			continue;
-		if (line[i][1] != '/') {
+		if (frags[i][1] != '/') {
 			context.spoilers++;
-			line[i] = safe('<del>');
+			frags[i] = safe('<del>');
 		}
 		else if (context.spoilers > 0) {
 			context.spoilers--;
-			line[i] = safe('</del>');
+			frags[i] = safe('</del>');
 		}
 	}
+	return frags;
+}
+exports.parse_spoilers = parse_spoilers;
+
+function format_line(line, context) {
+	line = parse_spoilers(line, context);
 	map_unsafe(line, function (frag) {
 		var gt = frag.indexOf('>');
 		if (gt >= 0)
@@ -63,18 +69,16 @@ function format_line(line, context) {
 }
 exports.format_line = format_line;
 
-function format_body(body) {
+function format_body(body, context) {
 	var lines = body.split('\n');
 	var output = [];
-	var context = {spoilers: 0};
 	for (var i = 0; i < lines.length; i++) {
 		var line = format_line(lines[i], context);
 		if (line.length > 1 || line[0] != '')
 			output.push(line);
-		output.push(safe('<br>'));
+		if (i < lines.length - 1)
+			output.push(safe('<br>'));
 	}
-	while (output.length && output[output.length-1].safe == '<br>')
-		output.pop();
 	for (var i = 0; i < context.spoilers; i++)
 		output.push(safe('</del>'));
 	return output;
@@ -85,12 +89,13 @@ function time_to_str(time) {
 	return pad_zero(time[0]) + ':' + pad_zero(time[1]);
 }
 
-exports.gen_post_html = function (data) {
-	var post = [safe('\t\t<li name="q'), data.num, safe('"><span><b>'),
+exports.gen_post_html = function (data, context) {
+	var edit = data.editing ? '" class="editing"' : '"';
+	var post = [safe('\t\t<li name="q' + data.num + edit + '><span><b>'),
 		data.name, safe('</b> <code>'), (data.trip || ''),
 		safe('</code> <time>'), time_to_str(data.time),
-		safe('</time> No.'), data.num, safe('</span> <blockquote>'),
-		format_body(data.body), safe('</blockquote></li>\n')];
+		safe('</time> No.' + data.num + '</span> <blockquote>'),
+		format_body(data.body, context), safe('</blockquote></li>\n')];
 	return flatten(post).join('');
 }
 

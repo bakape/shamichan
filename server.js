@@ -15,8 +15,10 @@ function write_threads_html(response) {
 	for (var i = 0; i < threads.length; i++) {
 		var thread = threads[i];
 		response.write('\t<ul name="thread' + thread[0].num + '">\n');
-		for (var j = 0; j < thread.length; j++)
-			response.write(common.gen_post_html(thread[j]));
+		for (var j = 0; j < thread.length; j++) {
+			var post = thread[j];
+			response.write(common.gen_post_html(post, post));
+		}
 		response.write('\t</ul>\n');
 	}
 }
@@ -38,6 +40,7 @@ localClient.subscribe('/post/new', function (msg) {
 		name: parsed[0],
 		time: [now.getHours(), now.getMinutes(), now.getSeconds()],
 		num: num,
+		editing: true,
 		body: msg.frag
 	};
 	if (parsed[1]) {
@@ -74,8 +77,12 @@ localClient.subscribe('/post/new', function (msg) {
 });
 
 localClient.subscribe('/post/frag', function (msg) {
+	/* XXX: stupid validation */
+	if (!msg || !msg.frag || typeof(msg.frag) != 'string'
+			|| msg.frag.split('\n').length > 2)
+		return;
 	var post = posts[msg.num];
-	if (post && post.id == msg.id) {
+	if (post && post.editing && post.id == msg.id) {
 		localClient.publish('/frag', {num: msg.num, frag: msg.frag});
 		post.body += msg.frag;
 	}
@@ -83,8 +90,9 @@ localClient.subscribe('/post/frag', function (msg) {
 
 localClient.subscribe('/post/done', function (msg) {
 	var post = posts[msg.num];
-	if (post && post.id == msg.id) {
+	if (post && post.editing && post.id == msg.id) {
 		localClient.publish('/thread/done', {num: msg.num});
+		post.editing = false;
 		delete post.id;
 	}
 });
