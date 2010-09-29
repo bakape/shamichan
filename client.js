@@ -49,7 +49,7 @@ function insert_post(msg) {
 		threads[msg.op].find('li:not(.replylink):last').after(post);
 	}
 	else {
-		var new_ul = $('<ul/>').append(post);
+		var new_ul = $('<ul id="thread'+msg.num+'"/>').append(post);
 		threads[msg.num] = new_ul;
 		if (!curPostNum)
 			new_ul.append(make_reply_box());
@@ -82,7 +82,7 @@ function my_id() {
 }
 
 function extract_num(q, prefix) {
-	return parseInt(q.attr('name').replace(prefix, ''));
+	return parseInt(q.attr('id').replace(prefix, ''));
 }
 
 function new_post_form() {
@@ -113,7 +113,7 @@ function new_post_form() {
 	if (ul.hasClass('newlink'))
 		ul.removeClass('newlink');
 	else
-		postOp = extract_num(ul.find('a[name^=thread]'), 'thread');
+		postOp = extract_num(ul, 'thread');
 
 	function got_allocation(msg) {
 		var num = msg.num;
@@ -123,10 +123,10 @@ function new_post_form() {
 		meta.children('time').text(time_to_str(msg.time));
 		curPostNum = num;
 		myPosts[num] = 1;
-		meta.append(' No.<a name="q' + num + '">' + num + '</a>');
-		post.addClass('editing');
+		meta.append(' No.<a href="#q' + num + '">' + num + '</a>');
+		post.attr('id', 'q' + num).addClass('editing');
 		if (!postOp) {
-			$('<a name="thread' + num + '"/>').insertBefore(meta);
+			ul.attr('id', 'thread' + num);
 			threads[num] = ul;
 		}
 
@@ -223,13 +223,11 @@ function new_post_form() {
 $(document).ready(function () {
 	$('.editing').each(function(index) {
 		var post = $(this);
-		var num = extract_num(post.find('span a[name^=q]'), 'q');
-		activePosts[num] = post;
+		activePosts[extract_num(post, 'q')] = post;
 	});
-	$('a[name^=thread]').each(function (index) {
-		var a = $(this);
-		var num = extract_num(a, 'thread');
-		threads[num] = a.parents('ul');
+	$('ul').each(function (index) {
+		var ul = $(this);
+		threads[extract_num(ul, 'thread')] = ul;
 	});
 	insert_new_post_boxes();
 });

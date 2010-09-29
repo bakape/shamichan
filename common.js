@@ -122,12 +122,11 @@ function time_to_str(time) {
 }
 
 exports.gen_post_html = function (data) {
-	var edit = data.editing ? ' class="editing">' : '>';
-	var thread = data.op ? '' : ('<a name="thread' + data.num + '">');
-	var post = [safe('\t\t<li' + edit + thread + '<span><b>'),
+	var edit = data.editing ? '" class="editing' : '';
+	var post = [safe('\t\t<li id="q' + data.num + edit + '"><span><b>'),
 		data.name, safe('</b> <code>'), (data.trip || ''),
 		safe('</code> <time>'), time_to_str(data.time),
-		safe('</time> No.<a name="q' + data.num + '">' + data.num
+		safe('</time> No.<a href="#q' + data.num + '">' + data.num
 			+ '</a></span> <blockquote>'),
 		format_body(data.body), safe('</blockquote></li>\n')];
 	return flatten(post).join('');

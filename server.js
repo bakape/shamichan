@@ -14,7 +14,7 @@ var post_counter = 1;
 function write_threads_html(response) {
 	for (var i = 0; i < threads.length; i++) {
 		var thread = threads[i];
-		response.write('\t<ul name="thread' + thread[0].num + '">\n');
+		response.write('\t<ul id="thread' + thread[0].num + '">\n');
 		for (var j = 0; j < thread.length; j++) {
 			var post = thread[j];
 			response.write(common.gen_post_html(post));

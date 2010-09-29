@@ -32,6 +32,10 @@ li code {
 li p {
 	display: inline;
 }
+li span a {
+	color: inherit;
+	text-decoration: none;
+}
 em {
 	font-style: normal;
 	color: #789922;
