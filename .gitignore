@@ -1,5 +1,7 @@
 *.node
-.*
+*.pid
+.build
+.lock*
 builder
 config.js
-www/js/client.js
+www/js/client-v*.js

@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/inotify.h>
 #include <sys/wait.h>
 #include <time.h>
@@ -10,10 +11,14 @@ static const char *builder_pid = ".builder.pid", *server_pid = ".server.pid";
 
 static void add_watch(const char *, void (*)(void));
 static void kill_existing(const char *);
+static void read_version(char *);
 
 static void build_client(void) {
+	char buf[32] = "www/js/client-v";
+	read_version(buf + strlen(buf));
+	strcat(buf, ".js");
 	if (!fork())
-		execlp("make", "make", "-s", "www/js/client.js", NULL);
+		execlp("make", "make", "-s", buf, NULL);
 }
 
 static void restart_server(void) {
@@ -30,7 +35,9 @@ static void setup_watches(void) {
 	add_watch("config.js", &build_client);
 	add_watch("server.js", &restart_server);
 	add_watch("tripcode.node", &restart_server);
+	add_watch("index.html", &restart_server);
 	add_watch("common.js", &client_and_server);
+	add_watch("version", &client_and_server);
 }
 
 static void kill_existing(const char *pid_file) {
@@ -43,7 +50,7 @@ static void kill_existing(const char *pid_file) {
 	}
 }
 
-#define MAX_WATCHES 5
+#define MAX_WATCHES 7
 static struct { const char *name; void (*func)(void); time_t stamp; }
 		watches[MAX_WATCHES];
 static int num_watches, inotify_fd;
@@ -83,6 +90,15 @@ static void add_watch(const char *filename, void (*f)(void)) {
 	watches[num_watches].func = f;
 	watches[num_watches].stamp = time(NULL);
 	num_watches++;
+}
+
+static void read_version(char *dest) {
+	FILE *f = fopen("version", "r");
+	if (!f || fscanf(f, "%10s", dest) != 1) {
+		fprintf(stderr, "Couldn't read version.\n");
+		exit(-1);
+	}
+	fclose(f);
 }
 
 static void server_process() {

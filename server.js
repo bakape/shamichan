@@ -23,7 +23,9 @@ function write_threads_html(response) {
 	}
 }
 
-var index_tmpl = fs.readFileSync('index.html', 'UTF-8').split("$THREADS");
+var client_version = fs.readFileSync('version', 'UTF-8').replace(/\n$/,'');
+var index_tmpl = fs.readFileSync('index.html', 'UTF-8'
+		).replace('$VERSION', client_version).split("$THREADS");
 
 var server = http.createServer(function(request, response) {
 	response.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
