@@ -118,9 +118,8 @@ function new_post_form() {
 		meta.children('time').text(time_to_str(msg.time));
 		curPostNum = num;
 		myPosts[num] = 1;
-		meta.append(' No.' + curPostNum);
+		meta.append(' No.<a name="q' + num + '">' + num + '</a>');
 		post.addClass('editing');
-		post.attr('name', 'q' + num);
 		if (!postOp)
 			ul.attr('name', 'thread' + num);
 
@@ -218,7 +217,7 @@ $(document).ready(function () {
 	insert_new_post_boxes();
 	$('.editing').each(function(index) {
 		var post = $(this);
-		var num = parseInt(post.attr('name').replace('q', ''));
-		activePosts[num] = post;
+		var num = post.find('span a').attr('name').replace('q', '');
+		activePosts[parseInt(num)] = post;
 	});
 });
