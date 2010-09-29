@@ -229,5 +229,13 @@ $(document).ready(function () {
 		var ul = $(this);
 		threads[extract_num(ul, 'thread')] = ul;
 	});
+	if (window.location.hash) {
+		var id = window.location.hash.match(/^(#q\d+)$/);
+		if (id) {
+			var li = $(id[1]);
+			if (li)
+				li.addClass('highlight');
+		}
+	}
 	insert_new_post_boxes();
 });

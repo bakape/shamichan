@@ -43,6 +43,9 @@ em {
 .editing {
 	background-color: #fa6;
 }
+.highlight {
+	background-color: #d6bad0;
+}
 .trans {
 	background-color: transparent;
 	border: 0;
