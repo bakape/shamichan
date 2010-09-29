@@ -1,6 +1,7 @@
 var curPostNum = 0;
 var myPosts = {};
 var activePosts = {};
+var threads = {};
 
 var client = new Faye.Client(FAYE_URL, {
 	timeout: 60
@@ -13,9 +14,10 @@ function make_reply_box() {
 }
 
 function insert_new_post_boxes() {
-	$('ul:not(.newlink)').append(make_reply_box());
-	$('hr').after('<ul class="newlink"><li><a>[New thread]</a></li></ul>');
-	$('.replylink a, .newlink a').click(new_post_form);
+	make_reply_box().appendTo('ul:not(.newlink)');
+	var box = $('<ul class="newlink"><li><a>[New thread]</a></li></ul>');
+	box.find('a').click(new_post_form);
+	$('hr').after(box);
 }
 
 function insert_formatted(text, buffer, state) {
@@ -44,12 +46,11 @@ function insert_post(msg) {
 	var post = $(gen_post_html(msg));
 	activePosts[msg.num] = post;
 	if (msg.op) {
-		post.insertAfter('ul[name=thread' + msg.op
-				+ '] li:not(.replylink):last');
+		threads[msg.op].find('li:not(.replylink):last').after(post);
 	}
 	else {
-		var new_ul = $('<ul name="thread' + msg.num + '" />')
-		new_ul.append(post);
+		var new_ul = $('<ul/>').append(post);
+		threads[msg.num] = new_ul;
 		if (!curPostNum)
 			new_ul.append(make_reply_box());
 		var newlink = $('.newlink');
@@ -80,6 +81,10 @@ function my_id() {
 	return Math.floor(Math.random() * 4e15 + 1);
 }
 
+function extract_num(q, prefix) {
+	return parseInt(q.attr('name').replace(prefix, ''));
+}
+
 function new_post_form() {
 	var buffer = $('<p/>'), line_buffer = $('<p/>');
 	var meta = $('<span><b/> <code/> <time/></span>');
@@ -108,7 +113,7 @@ function new_post_form() {
 	if (ul.hasClass('newlink'))
 		ul.removeClass('newlink');
 	else
-		postOp = parseInt(ul.attr('name').replace('thread', ''));
+		postOp = extract_num(ul.find('a[name^=thread]'), 'thread');
 
 	function got_allocation(msg) {
 		var num = msg.num;
@@ -120,8 +125,10 @@ function new_post_form() {
 		myPosts[num] = 1;
 		meta.append(' No.<a name="q' + num + '">' + num + '</a>');
 		post.addClass('editing');
-		if (!postOp)
-			ul.attr('name', 'thread' + num);
+		if (!postOp) {
+			$('<a name="thread' + num + '"/>').insertBefore(meta);
+			threads[num] = ul;
+		}
 
 		var submit = $('<input type="button" value="Done"/>')
 		post.append(submit)
@@ -214,10 +221,15 @@ function new_post_form() {
 }
 
 $(document).ready(function () {
-	insert_new_post_boxes();
 	$('.editing').each(function(index) {
 		var post = $(this);
-		var num = post.find('span a').attr('name').replace('q', '');
-		activePosts[parseInt(num)] = post;
+		var num = extract_num(post.find('span a[name^=q]'), 'q');
+		activePosts[num] = post;
 	});
+	$('a[name^=thread]').each(function (index) {
+		var a = $(this);
+		var num = extract_num(a, 'thread');
+		threads[num] = a.parents('ul');
+	});
+	insert_new_post_boxes();
 });
