@@ -1,3 +1,6 @@
+var INVALID = 0, ALLOCATE_POST = 1, INSERT_POST = 2, UPDATE_POST = 3,
+	FINISH_POST = 4;
+
 function escape_html(html) {
 	return html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 		/>/g, '&gt;').replace(/"/g, '&quot;');

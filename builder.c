@@ -32,12 +32,11 @@ static void client_and_server(void) {
 
 static void setup_watches(void) {
 	add_watch("client.js", &build_client);
-	add_watch("config.js", &build_client);
+	add_watch("config.js", &restart_server);
 	add_watch("server.js", &restart_server);
 	add_watch("tripcode.node", &restart_server);
 	add_watch("index.html", &restart_server);
 	add_watch("common.js", &client_and_server);
-	add_watch("version", &client_and_server);
 }
 
 static void kill_existing(const char *pid_file) {
@@ -50,7 +49,7 @@ static void kill_existing(const char *pid_file) {
 	}
 }
 
-#define MAX_WATCHES 7
+#define MAX_WATCHES 6
 static struct { const char *name; void (*func)(void); time_t stamp; }
 		watches[MAX_WATCHES];
 static int num_watches, inotify_fd;
@@ -93,12 +92,12 @@ static void add_watch(const char *filename, void (*f)(void)) {
 }
 
 static void read_version(char *dest) {
-	FILE *f = fopen("version", "r");
+	FILE *f = popen("node config.js --show-config VERSION", "r");
 	if (!f || fscanf(f, "%10s", dest) != 1) {
 		fprintf(stderr, "Couldn't read version.\n");
 		exit(-1);
 	}
-	fclose(f);
+	pclose(f);
 }
 
 static void server_process() {

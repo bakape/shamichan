@@ -1,15 +1,15 @@
 var common = require('./common'),
-	faye = require('./faye/faye-node'),
+	config = require('./config'),
 	fs = require('fs'),
+	io = require('../socket.io'),
 	http = require('http'),
 	tripcode = require('./tripcode');
-
-var bayeux = new faye.NodeAdapter({ mount: '/msg', timeout: 45 });
-var localClient = bayeux.getClient();
 
 var threads = [];
 var posts = {};
 var post_counter = 1;
+var clients = {};
+var dispatcher = {};
 
 function write_threads_html(response) {
 	for (var i = 0; i < threads.length; i++) {
@@ -23,9 +23,10 @@ function write_threads_html(response) {
 	}
 }
 
-var client_version = fs.readFileSync('version', 'UTF-8').replace(/\n$/,'');
-var index_tmpl = fs.readFileSync('index.html', 'UTF-8'
-		).replace('$VERSION', client_version).split("$THREADS");
+var index_tmpl = fs.readFileSync('index.html', 'UTF-8');
+for (var k in config.config)
+	index_tmpl = index_tmpl.replace('$'+k, config.config[k]);
+index_tmpl = index_tmpl.split('$THREADS');
 
 var server = http.createServer(function(request, response) {
 	response.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
@@ -33,6 +34,35 @@ var server = http.createServer(function(request, response) {
 	write_threads_html(response);
 	response.end(index_tmpl[1]);
 });
+
+function on_client (socket) {
+	var id = Math.floor(Math.random() * 4e15 + 1);
+	var state = {id: id, stage: common.ALLOCATE_POST, socket: socket};
+	clients[id] = state;
+	socket.on('message', function (msg) {
+		var type = state.stage;
+		if (state.stage == common.UPDATE_POST
+				&& msg.constructor == Array
+				&& msg[0] != common.ALLOCATE_POST
+				&& msg[0] in dispatcher) {
+			type = msg.shift();
+		}
+		if (!dispatcher[type](msg, state))
+			socket.send([common.INVALID]);
+	});
+	socket.on('disconnect', function () {
+		delete clients[id];
+		if (state.post)
+			finish_post(state.post, id);
+	});
+}
+
+function broadcast(msg, skip) {
+	for (var id in clients) {
+		if (id != skip)
+			clients[id].socket.send(msg);
+	}
+}
 
 function is_integer(n) {
 	return (typeof(n) == 'number' && parseFloat(n) == parseInt(n)
@@ -52,15 +82,11 @@ function validate(msg, schema) {
 	return true;
 }
 
-function multiple_newlines(frag) {
-	return frag.split('\n', 3).length > 2;
-}
-
-localClient.subscribe('/post/new', function (msg) {
-	if (!validate(msg, {name: String, frag: String, id: Number}))
-		return;
-	if (!msg.frag.replace(/[ \n]/g, '') || multiple_newlines(msg.frag))
-		return;
+dispatcher[common.ALLOCATE_POST] = function (msg, client) {
+	if (!validate(msg, {name: String, frag: String}))
+		return false;
+	if (!msg.frag.replace(/[ \n]/g, ''))
+		return false;
 	var num = post_counter++;
 	now = new Date();
 	var parsed = common.parse_name(msg.name);
@@ -79,13 +105,13 @@ localClient.subscribe('/post/new', function (msg) {
 	if (is_integer(msg.op) && posts[msg.op] && !posts[msg.op].op)
 		post.op = msg.op;
 
-	var announce = common.clone(post);
-	localClient.publish('/post/ok/' + msg.id, announce);
-	localClient.publish('/thread/new', announce);
+	client.socket.send([common.ALLOCATE_POST, post]);
+	broadcast([common.INSERT_POST, post], client.id);
 	/* And save this for later */
-	post.id = msg.id;
 	post.state = common.initial_post_state();
 	common.format_fragment(post.body, post.state, null);
+	client.stage = common.UPDATE_POST;
+	client.post = post;
 	posts[num] = post;
 	if (!post.op) {
 		/* New thread */
@@ -104,35 +130,43 @@ localClient.subscribe('/post/new', function (msg) {
 			}
 		}
 	}
-});
+	return true;
+}
 
-localClient.subscribe('/post/frag', function (msg) {
-	if (!validate(msg, {frag: String, num: Number, id: Number}))
-		return;
-	if (multiple_newlines(msg.frag))
-		return;
-	var post = posts[msg.num];
-	if (post && post.editing && post.id == msg.id) {
-		var announce = [post.state[0], post.state[1]]; /* TEMP */
-		localClient.publish('/frag',
-			{num: msg.num, frag: msg.frag, state: announce});
-		post.body += msg.frag;
-		/* update state */
-		common.format_fragment(msg.frag, post.state, null);
-	}
-});
+dispatcher[common.UPDATE_POST] = function (frag, client) {
+	if (!frag || typeof(frag) != 'string')
+		return false;
+	var post = client.post;
+	if (!post || !post.editing)
+		return false;
+	broadcast([common.UPDATE_POST, post.num, frag].concat(post.state),
+			client.id);
+	post.body += frag;
+	common.format_fragment(frag, post.state, null); /* update state */
+	return true;
+}
 
-localClient.subscribe('/post/done', function (msg) {
-	if (!validate(msg, {num: Number, id: Number}))
-		return;
-	var post = posts[msg.num];
-	if (post && post.editing && post.id == msg.id) {
-		localClient.publish('/thread/done', {num: msg.num});
-		post.editing = false;
-		delete post.id;
-		delete post.state;
-	}
-});
+function finish_post(post, owner_id) {
+	broadcast([common.FINISH_POST, post.num], owner_id);
+	post.editing = false;
+	delete post.state;
+}
 
-bayeux.attach(server);
+dispatcher[common.FINISH_POST] = function (msg, client) {
+	if (msg !== [])
+		return false;
+	var post = client.post;
+	if (!post.editing)
+		return false;
+	finish_post(post, client.id);
+	client.stage = common.ALLOCATE_POST;
+	client.post = null;
+	return true;
+}
+
+var socket = io.listen(server, {
+	transports: ['websocket', 'server-events', 'htmlfile', 'xhr-multipart',
+		'xhr-polling']
+});
+socket.on('connection', on_client);
 server.listen(8000);

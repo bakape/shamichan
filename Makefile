@@ -1,4 +1,4 @@
-CLIENT_JS = www/js/client-v$(shell cat version).js
+CLIENT_JS = www/js/client-v$(shell node config.js --show-config VERSION).js
 
 all: builder tripcode.node
 
@@ -12,10 +12,8 @@ tripcode.node: .build tripcode.cc
 .build: wscript
 	node-waf configure
 
-$(CLIENT_JS): client.js common.js config.js
-	@cat config.js > $@
-	@echo >> $@
-	@sed "s/^exports\.//g" common.js >> $@
+$(CLIENT_JS): client.js common.js
+	@sed "s/^exports\.//g" common.js > $@
 	@echo >> $@
 	@cat client.js >> $@
 

@@ -1,2 +1,6 @@
-var FAYE_URL = "http://localhost:8000/msg";
-var INPUT_MIN_SIZE = 2;
+exports.config = {
+	SOCKET_IO_URL: "http://localhost:8000/socket.io/",
+	VERSION: "2",
+};
+if (process.argv[2] == '--show-config')
+	console.log(exports.config[process.argv[3]]);

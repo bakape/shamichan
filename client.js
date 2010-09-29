@@ -1,11 +1,6 @@
 var curPostNum = 0;
-var myPosts = {};
 var activePosts = {};
 var threads = {};
-
-var client = new Faye.Client(FAYE_URL, {
-	timeout: 60
-});
 
 function make_reply_box() {
 	var box = $('<li class="replylink"><a>[Reply]</a></li>');
@@ -36,13 +31,7 @@ function insert_formatted(text, buffer, state) {
 	});
 }
 
-function is_mine(msg) {
-	return (msg.num == curPostNum || msg.num in myPosts);
-}
-
 function insert_post(msg) {
-	if (is_mine(msg))
-		return;
 	var post = $(gen_post_html(msg));
 	activePosts[msg.num] = post;
 	if (msg.op) {
@@ -59,26 +48,14 @@ function insert_post(msg) {
 }
 
 function update_post(msg) {
-	if (is_mine(msg))
-		return;
-	var post = activePosts[msg.num];
-	insert_formatted(msg.frag, post.find('blockquote'), msg.state);
+	var num = msg[0], frag = msg[1], state = [msg[2], msg[3]];
+	var post = activePosts[num];
+	insert_formatted(frag, post.find('blockquote'), state);
 }
 
-function finish_post(msg) {
-	if (is_mine(msg))
-		return;
-	activePosts[msg.num].removeClass('editing');
-	delete activePosts[msg.num];
-}
-
-client.subscribe('/thread/new', insert_post);
-client.subscribe('/frag', update_post);
-client.subscribe('/thread/done', finish_post);
-
-function my_id() {
-	/* XXX: temp */
-	return Math.floor(Math.random() * 4e15 + 1);
+function finish_post(num) {
+	activePosts[num].removeClass('editing');
+	delete activePosts[num];
 }
 
 function extract_num(q, prefix) {
@@ -96,9 +73,9 @@ function new_post_form() {
 	var postOp = null;
 	var dummy = $(document.createTextNode(' '));
 	var sentAllocRequest = false, allocSubscription = null;
-	var myId = my_id();
 	var ul = $(this).parents('ul');
 	var state = initial_post_state();
+	var INPUT_MIN_SIZE = 2;
 
 	blockquote.append.apply(blockquote, [buffer, line_buffer, input]);
 	post.append.apply(post, [meta, blockquote]);
@@ -115,14 +92,13 @@ function new_post_form() {
 	else
 		postOp = extract_num(ul, 'thread');
 
-	function got_allocation(msg) {
+	allocate_post = function (msg) {
 		var num = msg.num;
 		allocSubscription.cancel();
 		meta.children('b').text(msg.name);
 		meta.children('code').text(msg.trip);
 		meta.children('time').text(time_to_str(msg.time));
 		curPostNum = num;
-		myPosts[num] = 1;
 		meta.append(' No.<a href="#q' + num + '">' + num + '</a>');
 		post.attr('id', 'q' + num).addClass('editing');
 		if (!postOp) {
@@ -143,28 +119,27 @@ function new_post_form() {
 			post.removeClass('editing');
 
 			curPostNum = 0;
-			client.publish('/post/done', {id: myId, num: num});
+			socket.send([FINISH_POST]);
 			insert_new_post_boxes();
 		});
 	}
 	function commit(text) {
+		if (!text)
+			return;
 		if (!curPostNum && !sentAllocRequest) {
 			var msg = {
-				id: myId,
 				name: posterName,
 				email: posterEmail,
 				frag: text
 			};
-			if (postOp) msg.op = postOp;
-			client.publish('/post/new', msg);
-			allocSubscription = client.subscribe('/post/ok/'
-					+ myId, got_allocation);
+			if (postOp)
+				msg.op = postOp;
+			socket.send(msg);
 			sentAllocRequest = true;
 		}
 		else if (curPostNum) {
 			/* TODO: Maybe buffer until allocation okayed? */
-			client.publish('/post/frag',
-				{id: myId, num: curPostNum, frag: text});
+			socket.send(text);
 		}
 		if (text.indexOf('\n') >= 0) {
 			var lines = text.split('\n');
@@ -220,6 +195,9 @@ function new_post_form() {
 	input.focus();
 }
 
+var socket = new io.Socket();
+var allocate_post = function (msg) {};
+
 $(document).ready(function () {
 	$('.editing').each(function(index) {
 		var post = $(this);
@@ -238,4 +216,22 @@ $(document).ready(function () {
 		}
 	}
 	insert_new_post_boxes();
+
+	socket.on('connect', function () {
+		alert('connected');
+		window.title = 'Connected.';
+	});
+	socket.on('disconnect', function () {
+		window.title = 'Disconnected.';
+	});
+	socket.on('message', function (msg) {
+		var type = msg.shift();
+		switch (type) {
+		case INVALID: window.title = "Something's gone wrong."; break;
+		case ALLOCATE_POST: allocate_post(msg[0]); break;
+		case INSERT_POST: insert_post(msg[0]); break;
+		case UPDATE_POST: update_post(msg); break;
+		case FINISH_POST: finish_post(msg[0]); break;
+		}
+	});
 });
