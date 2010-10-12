@@ -201,6 +201,21 @@ var socket = new io.Socket(HOST, {
 });
 var allocate_post = function (msg) {};
 
+var reconnect_timer = null, reset_timer = null, reconnect_delay = 3000;
+function on_connect() {
+	clearTimeout(reconnect_timer);
+	console.log("Connected!");
+	reset_timer = setTimeout(function (){ reconnect_delay = 3000; }, 9999);
+}
+
+function attempt_reconnect() {
+	clearTimeout(reset_timer);
+	console.log("Trying to reconnect...");
+	socket.connect();
+	reconnect_timer = setTimeout(attempt_reconnect, reconnect_delay);
+	reconnect_delay = Math.min(reconnect_delay * 2, 60000);
+}
+
 $(document).ready(function () {
 	$('.editing').each(function(index) {
 		var post = $(this);
@@ -220,14 +235,9 @@ $(document).ready(function () {
 	}
 	insert_new_post_boxes();
 
-	socket.on('connect', function () {
-		console.log('Connected.');
-	});
-	socket.on('disconnect', function () {
-		console.log('Disconnected.');
-	});
+	socket.on('connect', on_connect);
+	socket.on('disconnect', attempt_reconnect);
 	socket.on('message', function (msg) {
-		console.log(msg);
 		msg = JSON.parse(msg);
 		var type = msg.shift();
 		switch (type) {

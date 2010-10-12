@@ -1,5 +1,6 @@
 *.node
 *.pid
+*.swp
 .build
 .lock*
 builder
