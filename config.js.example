@@ -4,6 +4,7 @@ exports.config = {
 	SOCKET_IO_URL: "http://localhost:8000/socket.io/",
 	VERSION: "2",
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
+	BACKLOG_PERIOD: 20000,
 };
 if (process.argv[2] == '--show-config')
 	console.log(exports.config[process.argv[3]]);

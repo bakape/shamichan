@@ -12,6 +12,61 @@ var post_counter = 1;
 var clients = {};
 var dispatcher = {};
 
+var sync_number = 0;
+var backlog = [];
+var backlog_last_dropped = 0;
+
+function multisend(client, msgs) {
+	client.socket.send(JSON.stringify(msgs));
+}
+
+function broadcast(msg, except) {
+	msg = JSON.stringify(msg);
+	var payload = '[' + msg + ']';
+	for (id in clients) {
+		var client = clients[id];
+		if (id != except && client.synced)
+			client.socket.send(payload);
+	}
+	var now = new Date().getTime();
+	++sync_number;
+	backlog.push([now, msg]);
+	cleanup_backlog(now);
+}
+
+function cleanup_backlog(now) {
+	var limit = now - config.BACKLOG_PERIOD;
+	/* binary search would be nice */
+	while (backlog.length && backlog[0][0] < limit) {
+		backlog.shift();
+		backlog_last_dropped++;
+	}
+}
+
+dispatcher[common.SYNCHRONIZE] = function (msg, client) {
+	if (msg.length != 1)
+		return false;
+	var sync = msg[0];
+	if (sync.constructor != Number)
+		return false;
+	if (sync == sync_number) {
+		multisend(client, [[common.SYNCHRONIZE]]);
+		client.synced = true;
+		return true; /* already synchronized */
+	}
+	if (sync > sync_number)
+		return false; /* client in the future? */
+	if (sync < backlog_last_dropped)
+		return false; /* client took too long */
+	var logs = [];
+	for (var i = sync - backlog_last_dropped; i < backlog.length; i++)
+		logs.push(backlog[i][1]);
+	logs.push('[' + common.SYNCHRONIZE + ']');
+	client.socket.send('[' + logs.join() + ']');
+	client.synced = true;
+	return true;
+}
+
 function write_threads_html(response) {
 	for (var i = 0; i < threads.length; i++) {
 		var thread = threads[i];
@@ -25,18 +80,20 @@ function write_threads_html(response) {
 }
 
 var index_tmpl = jsontemplate.Template(fs.readFileSync('index.html', 'UTF-8')
-		).expand(config).split('$THREADS');
+		).expand(config).split(/\$[A-Z]+/);
 
 var server = http.createServer(function(request, response) {
 	response.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
 	response.write(index_tmpl[0]);
+	response.write(sync_number.toString());
+	response.write(index_tmpl[1]);
 	write_threads_html(response);
-	response.end(index_tmpl[1]);
+	response.end(index_tmpl[2]);
 });
 
 function on_client (socket) {
 	var id = socket.sessionId;
-	var client = {id: id, socket: socket, post: null};
+	var client = {id: id, socket: socket, post: null, synced: false};
 	clients[id] = client;
 	socket.on('message', function (data) {
 		msg = JSON.parse(data);
@@ -48,8 +105,7 @@ function on_client (socket) {
 		var func = dispatcher[type];
 		if (!func || !func(msg, client)) {
 			console.log("Got invalid message " + data);
-			common.send(socket, [common.INVALID]);
-			socket.close();
+			multisend(client, [[common.INVALID]]);
 		}
 	});
 	socket.on('disconnect', function () {
@@ -57,10 +113,6 @@ function on_client (socket) {
 		if (client.post)
 			finish_post(client.post, id);
 	});
-}
-
-function broadcast(msg, except) {
-	socket.broadcast(JSON.stringify(msg), except);
 }
 
 function is_integer(n) {
@@ -107,7 +159,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (is_integer(msg.op) && posts[msg.op] && !posts[msg.op].op)
 		post.op = msg.op;
 
-	common.send(client.socket, [common.ALLOCATE_POST, post]);
+	multisend(client, [[common.ALLOCATE_POST, post]]);
 	broadcast([common.INSERT_POST, post], client.id);
 	/* And save this for later */
 	post.state = common.initial_post_state();
@@ -165,8 +217,8 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 }
 
 server.listen(config.PORT);
-var socket = io.listen(server, {
+var listener = io.listen(server, {
 	transports: ['websocket', 'server-events', 'htmlfile', 'xhr-multipart',
 		'xhr-polling']
 });
-socket.on('connection', on_client);
+listener.on('connection', on_client);

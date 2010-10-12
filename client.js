@@ -3,6 +3,10 @@ var activePosts = {};
 var threads = {};
 var dispatcher = {};
 
+function send(msg) {
+	socket.send(JSON.stringify(msg));
+}
+
 function make_reply_box() {
 	var box = $('<li class="replylink"><a>[Reply]</a></li>');
 	box.find('a').click(new_post_form);
@@ -126,7 +130,7 @@ function new_post_form() {
 
 			dispatcher[ALLOCATE_POST] = null;
 			curPostNum = 0;
-			send(socket, [FINISH_POST]);
+			send([FINISH_POST]);
 			insert_new_post_boxes();
 		});
 	};
@@ -141,16 +145,16 @@ function new_post_form() {
 			};
 			if (postOp)
 				msg.op = postOp;
-			send(socket, [ALLOCATE_POST, msg]);
+			send([ALLOCATE_POST, msg]);
 			sentAllocRequest = true;
 		}
 		else if (curPostNum) {
 			if (unallocatedBuffer) {
-				send(socket, unallocatedBuffer + text);
+				send(unallocatedBuffer + text);
 				unallocatedBuffer = '';
 			}
 			else
-				send(socket, text);
+				send(text);
 		}
 		else
 			unallocatedBuffer += text;
@@ -217,20 +221,25 @@ var socket = new io.Socket(HOST, {
 var reconnect_timer = null, reset_timer = null, reconnect_delay = 3000;
 function on_connect() {
 	clearTimeout(reconnect_timer);
-	console.log("Connected!");
 	reset_timer = setTimeout(function (){ reconnect_delay = 3000; }, 9999);
+	$('#sync').text('Synching...');
+	send([SYNCHRONIZE, SYNC]);
 }
 
 function attempt_reconnect() {
 	clearTimeout(reset_timer);
-	console.log("Trying to reconnect...");
+	$('#sync').text('Not synched.');
 	socket.connect();
 	reconnect_timer = setTimeout(attempt_reconnect, reconnect_delay);
 	reconnect_delay = Math.min(reconnect_delay * 2, 60000);
 }
 
+dispatcher[SYNCHRONIZE] = function (msg) {
+	$('#sync').text('Synched.');
+}
+
 dispatcher[INVALID] = function (msg) {
-	console.log("EJECT!");
+	$('#sync').text('Sync error.');
 }
 
 $(document).ready(function () {
@@ -254,12 +263,14 @@ $(document).ready(function () {
 
 	socket.on('connect', on_connect);
 	socket.on('disconnect', attempt_reconnect);
-	socket.on('message', function (msg) {
-		msg = JSON.parse(msg);
-		var type = msg.shift();
-		if (msg.length == 1)
-			msg = msg[0];
-		dispatcher[type](msg);
+	socket.on('message', function (data) {
+		msgs = JSON.parse(data);
+		for (var i = 0; i < msgs.length; i++) {
+			var msg = msgs[i];
+			var type = msg.shift();
+			dispatcher[type](msg.length == 1 ? msg[0] : msg);
+			SYNC++;
+		}
 	});
 	socket.connect();
 });
