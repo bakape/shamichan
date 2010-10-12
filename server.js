@@ -99,8 +99,8 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 		editing: true,
 		body: msg.frag
 	};
-	if (parsed[1]) {
-		var trip = tripcode.hash(parsed[1]);
+	if (parsed[1] || parsed[2]) {
+		var trip = tripcode.hash(parsed[1], parsed[2]);
 		if (trip)
 			post.trip = trip;
 	}

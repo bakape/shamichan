@@ -139,13 +139,18 @@ exports.gen_post_html = function (data) {
 }
 
 exports.parse_name = function (name) {
+	var tripcode = '', secure = '';
 	var hash = name.indexOf('#');
-	var tripcode = null;
-	if (hash >= 0) {
+	if (hash >= 0 && hash < 128) {
 		tripcode = name.substr(hash+1);
 		name = name.substr(0, hash);
+		hash = tripcode.indexOf('#');
+		if (hash >= 0 && hash < 128) {
+			secure = tripcode.substr(hash+1);
+			tripcode = tripcode.substr(0, hash);
+		}
 	}
-	return [name.trim() || 'Anonymous', tripcode];
+	return [name.trim() || 'Anonymous', tripcode, secure];
 }
 
 exports.send = function (socket, msg) {

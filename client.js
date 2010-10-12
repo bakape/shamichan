@@ -82,7 +82,7 @@ function new_post_form() {
 
 	var parsed = parse_name(posterName);
 	meta.children('b').text(parsed[0]);
-	meta.children('code').text(parsed[1] && '!?');
+	meta.children('code').text((parsed[1] || parsed[2]) && '!?');
 	if (posterEmail) {
 		/* TODO: add link */
 	}
