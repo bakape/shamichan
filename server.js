@@ -36,32 +36,32 @@ var server = http.createServer(function(request, response) {
 });
 
 function on_client (socket) {
-	var id = Math.floor(Math.random() * 4e15 + 1);
-	var state = {id: id, stage: common.ALLOCATE_POST, socket: socket};
-	clients[id] = state;
-	socket.on('message', function (msg) {
-		var type = state.stage;
-		if (state.stage == common.UPDATE_POST
-				&& msg.constructor == Array
-				&& msg[0] != common.ALLOCATE_POST
-				&& msg[0] in dispatcher) {
+	var id = socket.sessionId;
+	var client = {id: id, socket: socket, post: null};
+	clients[id] = client;
+	socket.on('message', function (data) {
+		msg = JSON.parse(data);
+		var type = common.INVALID;
+		if (client.post && msg.constructor == String)
+			type = common.UPDATE_POST;
+		else if (msg.constructor == Array)
 			type = msg.shift();
+		var func = dispatcher[type];
+		if (!func || !func(msg, client)) {
+			console.log("Got invalid message " + data);
+			common.send(socket, [common.INVALID]);
+			socket.close();
 		}
-		if (!dispatcher[type](msg, state))
-			socket.send([common.INVALID]);
 	});
 	socket.on('disconnect', function () {
 		delete clients[id];
-		if (state.post)
-			finish_post(state.post, id);
+		if (client.post)
+			finish_post(client.post, id);
 	});
 }
 
-function broadcast(msg, skip) {
-	for (var id in clients) {
-		if (id != skip)
-			clients[id].socket.send(msg);
-	}
+function broadcast(msg, except) {
+	socket.broadcast(JSON.stringify(msg), except);
 }
 
 function is_integer(n) {
@@ -83,6 +83,9 @@ function validate(msg, schema) {
 }
 
 dispatcher[common.ALLOCATE_POST] = function (msg, client) {
+	if (msg.length != 1)
+		return false;
+	msg = msg.shift();
 	if (!validate(msg, {name: String, frag: String}))
 		return false;
 	if (!msg.frag.replace(/[ \n]/g, ''))
@@ -105,12 +108,11 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (is_integer(msg.op) && posts[msg.op] && !posts[msg.op].op)
 		post.op = msg.op;
 
-	client.socket.send([common.ALLOCATE_POST, post]);
+	common.send(client.socket, [common.ALLOCATE_POST, post]);
 	broadcast([common.INSERT_POST, post], client.id);
 	/* And save this for later */
 	post.state = common.initial_post_state();
 	common.format_fragment(post.body, post.state, null);
-	client.stage = common.UPDATE_POST;
 	client.post = post;
 	posts[num] = post;
 	if (!post.op) {
@@ -134,13 +136,13 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 }
 
 dispatcher[common.UPDATE_POST] = function (frag, client) {
-	if (!frag || typeof(frag) != 'string')
+	if (!frag || frag.constructor != String)
 		return false;
 	var post = client.post;
 	if (!post || !post.editing)
 		return false;
-	broadcast([common.UPDATE_POST, post.num, frag].concat(post.state),
-			client.id);
+	var msg = [common.UPDATE_POST, post.num, frag].concat(post.state);
+	broadcast(msg, client.id);
 	post.body += frag;
 	common.format_fragment(frag, post.state, null); /* update state */
 	return true;
@@ -153,20 +155,20 @@ function finish_post(post, owner_id) {
 }
 
 dispatcher[common.FINISH_POST] = function (msg, client) {
-	if (msg !== [])
+	if (msg.length)
 		return false;
 	var post = client.post;
 	if (!post.editing)
 		return false;
 	finish_post(post, client.id);
-	client.stage = common.ALLOCATE_POST;
 	client.post = null;
 	return true;
 }
 
+server.listen(8000);
 var socket = io.listen(server, {
+	port: 8000,
 	transports: ['websocket', 'server-events', 'htmlfile', 'xhr-multipart',
 		'xhr-polling']
 });
 socket.on('connection', on_client);
-server.listen(8000);

@@ -72,7 +72,7 @@ function new_post_form() {
 	var post = $('<li/>');
 	var postOp = null;
 	var dummy = $(document.createTextNode(' '));
-	var sentAllocRequest = false, allocSubscription = null;
+	var sentAllocRequest = false;
 	var ul = $(this).parents('ul');
 	var state = initial_post_state();
 	var INPUT_MIN_SIZE = 2;
@@ -94,7 +94,6 @@ function new_post_form() {
 
 	allocate_post = function (msg) {
 		var num = msg.num;
-		allocSubscription.cancel();
 		meta.children('b').text(msg.name);
 		meta.children('code').text(msg.trip);
 		meta.children('time').text(time_to_str(msg.time));
@@ -119,7 +118,7 @@ function new_post_form() {
 			post.removeClass('editing');
 
 			curPostNum = 0;
-			socket.send([FINISH_POST]);
+			send(socket, [FINISH_POST]);
 			insert_new_post_boxes();
 		});
 	}
@@ -134,12 +133,12 @@ function new_post_form() {
 			};
 			if (postOp)
 				msg.op = postOp;
-			socket.send(msg);
+			send(socket, [ALLOCATE_POST, msg]);
 			sentAllocRequest = true;
 		}
 		else if (curPostNum) {
 			/* TODO: Maybe buffer until allocation okayed? */
-			socket.send(text);
+			send(socket, text);
 		}
 		if (text.indexOf('\n') >= 0) {
 			var lines = text.split('\n');
@@ -195,7 +194,11 @@ function new_post_form() {
 	input.focus();
 }
 
-var socket = new io.Socket();
+var socket = new io.Socket('localhost', {
+	port: 8000,
+	transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling',
+		'jsonp-polling']
+});
 var allocate_post = function (msg) {};
 
 $(document).ready(function () {
@@ -218,20 +221,22 @@ $(document).ready(function () {
 	insert_new_post_boxes();
 
 	socket.on('connect', function () {
-		alert('connected');
-		window.title = 'Connected.';
+		console.log('Connected.');
 	});
 	socket.on('disconnect', function () {
-		window.title = 'Disconnected.';
+		console.log('Disconnected.');
 	});
 	socket.on('message', function (msg) {
+		console.log(msg);
+		msg = JSON.parse(msg);
 		var type = msg.shift();
 		switch (type) {
-		case INVALID: window.title = "Something's gone wrong."; break;
+		case INVALID: console.log("Something's gone wrong."); break;
 		case ALLOCATE_POST: allocate_post(msg[0]); break;
 		case INSERT_POST: insert_post(msg[0]); break;
 		case UPDATE_POST: update_post(msg); break;
 		case FINISH_POST: finish_post(msg[0]); break;
 		}
 	});
+	socket.connect();
 });

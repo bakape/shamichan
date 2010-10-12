@@ -1,5 +1,8 @@
-var INVALID = 0, ALLOCATE_POST = 1, INSERT_POST = 2, UPDATE_POST = 3,
-	FINISH_POST = 4;
+exports.INVALID = 0;
+exports.ALLOCATE_POST = 1;
+exports.INSERT_POST = 2;
+exports.UPDATE_POST = 3;
+exports.FINISH_POST = 4;
 
 function escape_html(html) {
 	return html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
@@ -143,6 +146,10 @@ exports.parse_name = function (name) {
 		name = name.substr(0, hash);
 	}
 	return [name.trim() || 'Anonymous', tripcode];
+}
+
+exports.send = function (socket, msg) {
+	socket.send(JSON.stringify(msg));
 }
 
 function clone (obj) {
