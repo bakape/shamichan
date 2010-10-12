@@ -22,12 +22,18 @@ function insert_formatted(text, buffer, state) {
 			dest = dest.children('del:last');
 		if (state[0] == 1)
 			dest = dest.children('em:last');
-		if (frag.safe == '<del>')
-			dest.append(document.createElement('del'));
-		else if (frag.safe == '<em>')
-			dest.append(document.createElement('em'));
-		else if (frag.safe != '</del>' && frag.safe != '</em>')
-			dest.append(escape_fragment(frag));
+		var out = null;
+		if (frag.safe) {
+			var m = frag.safe.match(/^<(\w+)>$/);
+			if (m)
+				out = document.createElement(m[1]);
+			else if (frag.safe.match(/^<\/\w+>$/))
+				out = '';
+		}
+		if (out === null)
+			out = escape_fragment(frag);
+		if (out)
+			dest.append(out);
 	});
 }
 
