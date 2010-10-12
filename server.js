@@ -1,7 +1,8 @@
 var common = require('./common'),
-	config = require('./config'),
+	config = require('./config').config,
 	fs = require('fs'),
 	io = require('../socket.io'),
+	jsontemplate = require('./json-template'),
 	http = require('http'),
 	tripcode = require('./tripcode');
 
@@ -23,10 +24,8 @@ function write_threads_html(response) {
 	}
 }
 
-var index_tmpl = fs.readFileSync('index.html', 'UTF-8');
-for (var k in config.config)
-	index_tmpl = index_tmpl.replace('$'+k, config.config[k]);
-index_tmpl = index_tmpl.split('$THREADS');
+var index_tmpl = jsontemplate.Template(fs.readFileSync('index.html', 'UTF-8')
+		).expand(config).split('$THREADS');
 
 var server = http.createServer(function(request, response) {
 	response.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
@@ -165,9 +164,8 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	return true;
 }
 
-server.listen(8000);
+server.listen(config.PORT);
 var socket = io.listen(server, {
-	port: 8000,
 	transports: ['websocket', 'server-events', 'htmlfile', 'xhr-multipart',
 		'xhr-polling']
 });

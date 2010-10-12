@@ -194,8 +194,8 @@ function new_post_form() {
 	input.focus();
 }
 
-var socket = new io.Socket('localhost', {
-	port: 8000,
+var socket = new io.Socket(HOST, {
+	port: PORT,
 	transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling',
 		'jsonp-polling']
 });
