@@ -78,7 +78,7 @@ function new_post_form() {
 	var post = $('<li/>');
 	var postOp = null;
 	var dummy = $(document.createTextNode(' '));
-	var sentAllocRequest = false;
+	var sentAllocRequest = false, unallocatedBuffer = '';
 	var ul = $(this).parents('ul');
 	var state = initial_post_state();
 	var INPUT_MIN_SIZE = 2;
@@ -143,9 +143,15 @@ function new_post_form() {
 			sentAllocRequest = true;
 		}
 		else if (curPostNum) {
-			/* TODO: Maybe buffer until allocation okayed? */
-			send(socket, text);
+			if (unallocatedBuffer) {
+				send(socket, unallocatedBuffer + text);
+				unallocatedBuffer = '';
+			}
+			else
+				send(socket, text);
 		}
+		else
+			unallocatedBuffer += text;
 		if (text.indexOf('\n') >= 0) {
 			var lines = text.split('\n');
 			lines[0] = line_buffer.text() + lines[0];
