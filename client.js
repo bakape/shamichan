@@ -1,6 +1,7 @@
 var curPostNum = 0;
 var activePosts = {};
 var threads = {};
+var dispatcher = {};
 
 function make_reply_box() {
 	var box = $('<li class="replylink"><a>[Reply]</a></li>');
@@ -37,7 +38,7 @@ function insert_formatted(text, buffer, state) {
 	});
 }
 
-function insert_post(msg) {
+dispatcher[INSERT_POST] = function (msg) {
 	var post = $(gen_post_html(msg));
 	activePosts[msg.num] = post;
 	if (msg.op) {
@@ -51,18 +52,18 @@ function insert_post(msg) {
 		var newlink = $('.newlink');
 		new_ul.insertAfter(newlink.length ? newlink : 'hr');
 	}
-}
+};
 
-function update_post(msg) {
+dispatcher[UPDATE_POST] = function (msg) {
 	var num = msg[0], frag = msg[1], state = [msg[2], msg[3]];
 	var post = activePosts[num];
 	insert_formatted(frag, post.find('blockquote'), state);
-}
+};
 
-function finish_post(num) {
+dispatcher[FINISH_POST] = function (num) {
 	activePosts[num].removeClass('editing');
 	delete activePosts[num];
-}
+};
 
 function extract_num(q, prefix) {
 	return parseInt(q.attr('id').replace(prefix, ''));
@@ -98,7 +99,7 @@ function new_post_form() {
 	else
 		postOp = extract_num(ul, 'thread');
 
-	allocate_post = function (msg) {
+	dispatcher[ALLOCATE_POST] = function (msg) {
 		var num = msg.num;
 		meta.children('b').text(msg.name);
 		meta.children('code').text(msg.trip);
@@ -123,11 +124,12 @@ function new_post_form() {
 			line_buffer.remove();
 			post.removeClass('editing');
 
+			dispatcher[ALLOCATE_POST] = null;
 			curPostNum = 0;
 			send(socket, [FINISH_POST]);
 			insert_new_post_boxes();
 		});
-	}
+	};
 	function commit(text) {
 		if (!text)
 			return;
@@ -211,7 +213,6 @@ var socket = new io.Socket(HOST, {
 	transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling',
 		'jsonp-polling']
 });
-var allocate_post = function (msg) {};
 
 var reconnect_timer = null, reset_timer = null, reconnect_delay = 3000;
 function on_connect() {
@@ -226,6 +227,10 @@ function attempt_reconnect() {
 	socket.connect();
 	reconnect_timer = setTimeout(attempt_reconnect, reconnect_delay);
 	reconnect_delay = Math.min(reconnect_delay * 2, 60000);
+}
+
+dispatcher[INVALID] = function (msg) {
+	console.log("EJECT!");
 }
 
 $(document).ready(function () {
@@ -252,13 +257,9 @@ $(document).ready(function () {
 	socket.on('message', function (msg) {
 		msg = JSON.parse(msg);
 		var type = msg.shift();
-		switch (type) {
-		case INVALID: console.log("Something's gone wrong."); break;
-		case ALLOCATE_POST: allocate_post(msg[0]); break;
-		case INSERT_POST: insert_post(msg[0]); break;
-		case UPDATE_POST: update_post(msg); break;
-		case FINISH_POST: finish_post(msg[0]); break;
-		}
+		if (msg.length == 1)
+			msg = msg[0];
+		dispatcher[type](msg);
 	});
 	socket.connect();
 });
