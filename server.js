@@ -159,7 +159,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (is_integer(msg.op) && posts[msg.op] && !posts[msg.op].op)
 		post.op = msg.op;
 	if (msg.email && msg.email.constructor == String)
-		post.email = msg.email.substr(0, 320);
+		post.email = msg.email.trim().substr(0, 320);
 
 	multisend(client, [[common.ALLOCATE_POST, post]]);
 	broadcast([common.INSERT_POST, post], client.id);
@@ -176,12 +176,14 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	else {
 		var thread = posts[post.op].thread;
 		thread.push(post);
-		/* Bump thread */
-		for (var i = 0; i < threads.length; i++) {
-			if (threads[i] == thread) {
-				threads.splice(i, 1);
-				threads.unshift(thread);
-				break;
+ 		if (post.email != 'sage') {
+			/* Bump thread */
+			for (var i = 0; i < threads.length; i++) {
+				if (threads[i] == thread) {
+					threads.splice(i, 1);
+					threads.unshift(thread);
+					break;
+				}
 			}
 		}
 	}
