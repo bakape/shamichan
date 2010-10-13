@@ -17,6 +17,8 @@ del:hover, del:hover em {
 }
 li {
 	background-color: #d6daf0;
+	border-right: 1px solid #b7c5d9;
+	border-bottom: 1px solid #b7c5d9;
 	display: table;
 	margin: 2px;
 	padding: 4px 10px;
@@ -42,6 +44,12 @@ em {
 }
 .editing {
 	background-color: #fa6;
+	border-right: 1px solid #e95;
+	border-bottom: 1px solid #e95;
+}
+.email, .email b, .email code {
+	color: #0f0c5d;
+	text-decoration: underline;
 }
 .highlight {
 	background-color: #d6bad0;

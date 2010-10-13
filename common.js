@@ -130,9 +130,16 @@ function time_to_str(time) {
 
 exports.gen_post_html = function (data) {
 	var edit = data.editing ? '" class="editing' : '';
-	var post = [safe('\t\t<li id="q' + data.num + edit + '"><span><b>'),
-		data.name, safe('</b> <code>'), (data.trip || ''),
-		safe('</code> <time>'), time_to_str(data.time),
+	var email = safe('<b>'), email_end = safe(' <time>');
+	if (data.email) {
+		email = safe('<a class="email" href="mailto:'
+				+ escape(data.email) + '"><b>');
+		email_end = safe('</a> <time>');
+	}
+	var trip = data.trip ? safe('</b> <code>' + data.trip + '</code>')
+			: safe('</b>');
+	var post = [safe('\t<li id="q' + data.num + edit + '"><span>'),
+		email, data.name, trip, email_end, time_to_str(data.time),
 		safe('</time> No.<a href="#q' + data.num + '">' + data.num
 			+ '</a></span> <blockquote>'),
 		format_body(data.body), safe('</blockquote></li>\n')];
