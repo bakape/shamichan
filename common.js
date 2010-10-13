@@ -123,23 +123,36 @@ function format_body(body) {
 	return output;
 }
 
-function time_to_str(time) {
-	function pad_zero(n) { return (n < 10 ? '0' : '') + n; }
-	return pad_zero(time[0]) + ':' + pad_zero(time[1]);
+function readable_time(time) {
+	var d = new Date(time - new Date().getTimezoneOffset() * 60000);
+	function pad(n) { return (n < 10 ? '0' : '') + n; }
+	return (d.getUTCFullYear() + '/' + pad(d.getUTCMonth()+1) + '/' +
+		pad(d.getUTCDate()) + ' ' + pad(d.getUTCHours()) + ':' +
+		pad(d.getUTCMinutes()));
+}
+
+function datetime(time) {
+	var d = new Date(time);
+	function pad(n) { return (n < 10 ? '0' : '') + n; }
+	function pad3(n) { return (n < 10 ? '00' : (n < 100 ? '0' : '')) + n; }
+	return (d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' +
+		pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' +
+		pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
 }
 
 exports.gen_post_html = function (data) {
 	var edit = data.editing ? '" class="editing' : '';
-	var email = safe('<b>'), email_end = safe(' <time>');
+	var time_tag = ' <time datetime="' + datetime(data.time) + '">';
+	var email = safe('<b>'), email_end = safe(time_tag);
 	if (data.email) {
 		email = safe('<a class="email" href="mailto:'
 				+ escape(data.email) + '"><b>');
-		email_end = safe('</a> <time>');
+		email_end = safe('</a>' + time_tag);
 	}
 	var trip = data.trip ? safe('</b> <code>' + data.trip + '</code>')
 			: safe('</b>');
 	var post = [safe('\t<li id="q' + data.num + edit + '"><span>'),
-		email, data.name, trip, email_end, time_to_str(data.time),
+		email, data.name, trip, email_end, readable_time(data.time),
 		safe('</time> No.<a href="#q' + data.num + '">' + data.num
 			+ '</a></span> <blockquote>'),
 		format_body(data.body), safe('</blockquote></li>\n')];

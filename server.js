@@ -142,11 +142,10 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (!msg.frag.replace(/[ \n]/g, ''))
 		return false;
 	var num = post_counter++;
-	now = new Date();
 	var parsed = common.parse_name(msg.name);
 	var post = {
 		name: parsed[0],
-		time: [now.getHours(), now.getMinutes(), now.getSeconds()],
+		time: new Date().getTime(),
 		num: num,
 		editing: true,
 		body: msg.frag

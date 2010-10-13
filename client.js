@@ -116,7 +116,8 @@ function new_post_form() {
 		emailField.unbind();
 		meta.children('b').text(msg.name);
 		meta.children('code').text(msg.trip);
-		meta.children('time').text(time_to_str(msg.time));
+		meta.children('time').text(readable_time(msg.time)
+				).attr('datetime', datetime(msg.time));
 		curPostNum = num;
 		meta.append(' No.<a href="#q' + num + '">' + num + '</a>');
 		post.attr('id', 'q' + num).addClass('editing');
@@ -282,4 +283,9 @@ $(document).ready(function () {
 		}
 	});
 	socket.connect();
+
+	$('time').each(function (index) {
+		var time = $(this);
+		time.text(readable_time(new Date(time.attr('datetime'))));
+	});
 });
