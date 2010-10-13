@@ -76,8 +76,8 @@ function extract_num(q, prefix) {
 function new_post_form() {
 	var buffer = $('<p/>'), line_buffer = $('<p/>');
 	var meta = $('<span><b/> <code/> <time/></span>');
-	var posterName = $('input[name=name]').val().trim();
-	var posterEmail = $('input[name=email]').val().trim();
+	var nameField = $('input[name=name]');
+	var emailField = $('input[name=email]');
 	var input = $('<input name="body" class="trans"/>');
 	var blockquote = $('<blockquote/>');
 	var post = $('<li/>');
@@ -91,20 +91,29 @@ function new_post_form() {
 	blockquote.append.apply(blockquote, [buffer, line_buffer, input]);
 	post.append.apply(post, [meta, blockquote]);
 
-	var parsed = parse_name(posterName);
-	meta.children('b').text(parsed[0]);
-	meta.children('code').text((parsed[1] || parsed[2]) && '!?');
-	if (posterEmail) {
-		/* TODO: add link */
-	}
-
 	if (ul.hasClass('newlink'))
 		ul.removeClass('newlink');
 	else
 		postOp = extract_num(ul, 'thread');
 
+	function propagate_fields() {
+		var name = nameField.val().trim();
+		var parsed = parse_name(name);
+		meta.children('b').text(parsed[0]);
+		meta.children('code').text((parsed[1] || parsed[2]) && '!?');
+		var email = emailField.val().trim();
+		if (email) {
+			/* TODO: add link */
+		}
+	}
+	propagate_fields();
+	nameField.change(propagate_fields).keypress(propagate_fields);
+	emailField.change(propagate_fields).keypress(propagate_fields);
+
 	dispatcher[ALLOCATE_POST] = function (msg) {
 		var num = msg.num;
+		nameField.unbind();
+		emailField.unbind();
 		meta.children('b').text(msg.name);
 		meta.children('code').text(msg.trip);
 		meta.children('time').text(time_to_str(msg.time));
@@ -139,8 +148,8 @@ function new_post_form() {
 			return;
 		if (!curPostNum && !sentAllocRequest) {
 			var msg = {
-				name: posterName,
-				email: posterEmail,
+				name: nameField.val().trim(),
+				email: emailField.val().trim(),
 				frag: text
 			};
 			if (postOp)
