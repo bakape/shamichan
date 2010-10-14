@@ -70,12 +70,12 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 function write_threads_html(response) {
 	for (var i = 0; i < threads.length; i++) {
 		var thread = threads[i];
-		response.write('<ul id="thread' + thread[0].num + '">\n');
+		response.write('<section id="thread' + thread[0].num + '">\n');
 		for (var j = 0; j < thread.length; j++) {
 			var post = thread[j];
 			response.write(common.gen_post_html(post));
 		}
-		response.write('</ul>\n');
+		response.write('</section>\n');
 	}
 }
 

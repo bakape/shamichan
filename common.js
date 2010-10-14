@@ -140,22 +140,29 @@ function datetime(time) {
 		pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
 }
 
+function time_tag_html(time) {
+	return ('<time pubdate datetime="' + datetime(time) + '">'
+		+ readable_time(time) + '</time>');
+}
+
 exports.gen_post_html = function (data) {
 	var edit = data.editing ? '" class="editing' : '';
-	var time_tag = ' <time datetime="' + datetime(data.time) + '">';
-	var email = safe('<b>'), email_end = safe(time_tag);
-	if (data.email) {
-		email = safe('<a class="email" href="mailto:'
-				+ escape(data.email) + '"><b>');
-		email_end = safe('</a>' + time_tag);
+	var ident = [safe('<b>'), data.name, safe('</b>')];
+	if (data.trip) {
+		ident[2].safe += ' <code>';
+		ident.push(data.trip);
+		ident.push(safe('</code>'));
 	}
-	var trip = data.trip ? safe('</b> <code>' + data.trip + '</code>')
-			: safe('</b>');
-	var post = [safe('\t<li id="q' + data.num + edit + '"><span>'),
-		email, data.name, trip, email_end, readable_time(data.time),
-		safe('</time> No.<a href="#q' + data.num + '">' + data.num
-			+ '</a></span> <blockquote>'),
-		format_body(data.body), safe('</blockquote></li>\n')];
+	if (data.email) {
+		ident.unshift(safe('<a class="email" href="mailto:'
+				+ escape(data.email) + '">'));
+		ident.push(safe('</a>'));
+	}
+	var post = [safe('\t<article id="q' + data.num + edit + '"><header>'),
+		ident, safe(' ' + time_tag_html(data.time) + ' '),
+		safe('No.<a href="#q' + data.num + '">' + data.num
+			+ '</a></header> <blockquote>'),
+		format_body(data.body), safe('</blockquote></article>\n')];
 	return flatten(post).join('');
 }
 

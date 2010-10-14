@@ -2,6 +2,24 @@ a:hover {
 	color: #d00;
 	cursor: pointer;
 }
+article, aside {
+	background-color: #d6daf0;
+	border-right: 1px solid #b7c5d9;
+	border-bottom: 1px solid #b7c5d9;
+	display: table;
+	margin: 2px;
+	padding: 4px 10px;
+}
+article em {
+	font-style: normal;
+	color: #789922;
+}
+article p {
+	display: inline;
+}
+aside a {
+	text-decoration: underline;
+}
 body {
 	background-color: #eef2ff;
 	font-family: Arial, Helvetica, sans-serif;
@@ -15,32 +33,20 @@ del, del em {
 del:hover, del:hover em {
 	color: white;
 }
-li {
-	background-color: #d6daf0;
-	border-right: 1px solid #b7c5d9;
-	border-bottom: 1px solid #b7c5d9;
-	display: table;
-	margin: 2px;
-	padding: 4px 10px;
-}
-li b {
+header b {
 	color: #117743;
 	font-weight: bold;
 }
-li code {
+header code {
 	color: #228854;
 	font-family: inherit;
 }
-li p {
-	display: inline;
-}
-li span a {
+header a {
 	color: inherit;
 	text-decoration: none;
 }
-em {
-	font-style: normal;
-	color: #789922;
+section, body > aside {
+	margin: 1em;
 }
 .editing {
 	background-color: #fa6;
@@ -63,9 +69,6 @@ em {
 	margin: 0 0 0 -1px;
 	outline: none;
 	padding: 0;
-}
-.replylink a, .newlink a {
-	text-decoration: underline;
 }
 #sync {
 	float: right;

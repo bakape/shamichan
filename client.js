@@ -8,14 +8,14 @@ function send(msg) {
 }
 
 function make_reply_box() {
-	var box = $('<li class="replylink"><a>[Reply]</a></li>');
+	var box = $('<aside><a>[Reply]</a></aside>');
 	box.find('a').click(new_post_form);
 	return box;
 }
 
 function insert_new_post_boxes() {
-	make_reply_box().appendTo('ul:not(.newlink)');
-	var box = $('<ul class="newlink"><li><a>[New thread]</a></li></ul>');
+	make_reply_box().appendTo('section');
+	var box = $('<aside><a>[New thread]</a></aside>');
 	box.find('a').click(new_post_form);
 	$('hr').after(box);
 }
@@ -46,14 +46,15 @@ dispatcher[INSERT_POST] = function (msg) {
 	var post = $(gen_post_html(msg));
 	activePosts[msg.num] = post;
 	if (msg.op) {
-		threads[msg.op].find('li:not(.replylink):last').after(post);
+		threads[msg.op].find('article:last').after(post);
 	}
 	else {
-		var new_ul = $('<ul id="thread'+msg.num+'"/>').append(post);
+		var new_ul = $('<section id="thread' + msg.num + '"/>'
+				).append(post);
 		threads[msg.num] = new_ul;
 		if (!curPostNum)
 			new_ul.append(make_reply_box());
-		var newlink = $('.newlink');
+		var newlink = $('body > aside');
 		new_ul.insertAfter(newlink.length ? newlink : 'hr');
 	}
 };
@@ -75,26 +76,21 @@ function extract_num(q, prefix) {
 
 function new_post_form() {
 	var buffer = $('<p/>'), line_buffer = $('<p/>');
-	var meta = $('<span><b/> <code/> <time/></span>');
+	var meta = $('<header><b/> <code/> <time/></header>');
 	var nameField = $('input[name=name]');
 	var emailField = $('input[name=email]');
 	var input = $('<input name="body" class="trans"/>');
 	var blockquote = $('<blockquote/>');
-	var post = $('<li/>');
+	var post = $('<article/>');
 	var postOp = null;
 	var dummy = $(document.createTextNode(' '));
 	var sentAllocRequest = false, unallocatedBuffer = '';
-	var ul = $(this).parents('ul');
+	var thread = $(this).parents('section');
 	var state = initial_post_state();
 	var INPUT_MIN_SIZE = 2;
 
 	blockquote.append.apply(blockquote, [buffer, line_buffer, input]);
 	post.append.apply(post, [meta, blockquote]);
-
-	if (ul.hasClass('newlink'))
-		ul.removeClass('newlink');
-	else
-		postOp = extract_num(ul, 'thread');
 
 	function propagate_fields() {
 		var name = nameField.val().trim();
@@ -122,8 +118,8 @@ function new_post_form() {
 		meta.append(' No.<a href="#q' + num + '">' + num + '</a>');
 		post.attr('id', 'q' + num).addClass('editing');
 		if (!postOp) {
-			ul.attr('id', 'thread' + num);
-			threads[num] = ul;
+			thread.attr('id', 'thread' + num);
+			threads[num] = thread;
 		}
 
 		var submit = $('<input type="button" value="Done"/>')
@@ -215,10 +211,14 @@ function new_post_form() {
 			input.attr('size', (cur_size + right_size) / 2);
 		}
 	});
-	/* do the switch */
-	$(this).parent().replaceWith(dummy);
-	$('.newlink, .replylink').remove();
-	dummy.replaceWith(post);
+	var parent = $(this).parent()
+	if (thread.length) {
+		postOp = extract_num(thread, 'thread');
+		parent.replaceWith(post);
+	}
+	else
+		thread = $('<section>').replaceAll(parent).append(post);
+	$('aside').remove();
 	input.focus();
 }
 
@@ -257,9 +257,9 @@ $(document).ready(function () {
 		var post = $(this);
 		activePosts[extract_num(post, 'q')] = post;
 	});
-	$('ul').each(function (index) {
-		var ul = $(this);
-		threads[extract_num(ul, 'thread')] = ul;
+	$('section').each(function (index) {
+		var section = $(this);
+		threads[extract_num(section, 'thread')] = section;
 	});
 	if (window.location.hash) {
 		var id = window.location.hash.match(/^(#q\d+)$/);
@@ -289,3 +289,7 @@ $(document).ready(function () {
 		time.text(readable_time(new Date(time.attr('datetime'))));
 	});
 });
+
+var h5s = ['aside', 'article', 'code', 'section', 'time'];
+for (var i = 0; i < h5s.length; i++)
+	document.createElement(h5s[i]);
