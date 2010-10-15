@@ -70,7 +70,8 @@ section, body > aside {
 	outline: none;
 	padding: 0;
 }
-#sync {
+#live, #sync {
 	float: right;
+	clear: right;
 	color: gray;
 }

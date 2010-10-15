@@ -1,5 +1,6 @@
 var curPostNum = 0;
 var activePosts = {};
+var liveFeed = true;
 var threads = {};
 var dispatcher = {};
 var THREAD = null;
@@ -45,21 +46,35 @@ function insert_formatted(text, buffer, state) {
 	});
 }
 
+function toggle_live() {
+	liveFeed = $(this).attr('checked');
+	if (liveFeed)
+		$('section').show();
+}
+
 dispatcher[INSERT_POST] = function (msg) {
 	var post = $(gen_post_html(msg));
 	activePosts[msg.num] = post;
+	var section = null;
 	if (msg.op) {
-		threads[msg.op].find('article:last').after(post);
+		section = threads[msg.op];
+		section.find('article:last').after(post);
+		if (THREAD || !liveFeed)
+			return;
+		section.detach();
 	}
 	else {
-		var new_ul = $('<section id="thread' + msg.num + '"/>'
+		var section = $('<section id="thread' + msg.num + '"/>'
 				).append(post);
-		threads[msg.num] = new_ul;
+		threads[msg.num] = section;
 		if (!curPostNum)
-			new_ul.append(make_reply_box());
-		var newlink = $('body > aside');
-		new_ul.insertAfter(newlink.length ? newlink : 'hr');
+			section.append(make_reply_box());
+		if (!liveFeed)
+			section.hide();
 	}
+	/* Insert it at the top; need a more robust way */
+	var fencepost = $('body > aside');
+	section.insertAfter(fencepost.length ? fencepost : 'hr');
 };
 
 dispatcher[UPDATE_POST] = function (msg) {
@@ -290,6 +305,13 @@ $(document).ready(function () {
 		var time = $(this);
 		time.text(readable_time(new Date(time.attr('datetime'))));
 	});
+
+	if (!THREAD) {
+		$('#sync').after($('<span id="live"><label for="live_check">'
+			+ 'Real-time bump</label><input type="checkbox" '
+			+ 'id="live_check" checked /></span>'));
+		$('#live_check').change(toggle_live);
+	}
 });
 
 var h5s = ['aside', 'article', 'code', 'section', 'time'];
