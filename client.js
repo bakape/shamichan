@@ -221,7 +221,7 @@ function new_post_form() {
 		parent.replaceWith(post);
 	}
 	else
-		thread = $('<section>').replaceAll(parent).append(post);
+		thread = $('<section/>').replaceAll(parent).append(post);
 	$('aside').remove();
 	input.focus();
 }
