@@ -56,6 +56,19 @@ function initial_post_state() {
 }
 exports.initial_post_state = initial_post_state;
 
+function break_long_words(str, callback) {
+	if (str.safe) {
+		callback(str);
+		return;
+	}
+	var bits = str.split(/(\S{60})/);
+	for (var i = 0; i < bits.length; i++) {
+		callback(bits[i]);
+		if (i % 2)
+			callback(safe('&shy;'));
+	}
+}
+
 function format_fragment(frag, state, func) {
 	if (!func)
 		func = function (tok) {};
@@ -68,7 +81,7 @@ function format_fragment(frag, state, func) {
 				func(safe('<em>'));
 				state[0] = 1;
 			}
-			func(token);
+			break_long_words(token, func);
 			break;
 		case 3:
 			if (token[1] == '/') {
@@ -81,7 +94,7 @@ function format_fragment(frag, state, func) {
 			}
 			break;
 		default:
-			func(token);
+			break_long_words(token, func);
 			break;
 		}
 		state[0] = new_state;

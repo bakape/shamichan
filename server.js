@@ -94,16 +94,11 @@ var notfound_html = fs.readFileSync('www/404.html');
 
 var http_headers = {'Content-Type': 'text/html; charset=UTF-8'};
 var server = http.createServer(function(req, resp) {
-	if (req.url == '/') {
-		console.log(req.url);
-		if (render_index(req, resp))
-			return;
-	}
+	if (req.url == '/' && render_index(req, resp))
+		return;
 	m = req.url.match(/^\/(\d+)$/);
-	if (m) {
-		if (render_thread(req, resp, m[1]))
-			return;
-	}
+	if (m && render_thread(req, resp, m[1]))
+		return;
 	resp.writeHeader(404, http_headers);
 	resp.end(notfound_html);
 });
