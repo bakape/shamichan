@@ -145,6 +145,10 @@ function time_tag_html(time) {
 		+ readable_time(time) + '</time>');
 }
 
+function post_url(post) {
+	return (post.op || post.num) + '#q' + post.num;
+}
+
 exports.gen_post_html = function (data) {
 	var edit = data.editing ? '" class="editing' : '';
 	var ident = [safe('<b>'), data.name, safe('</b>')];
@@ -160,7 +164,8 @@ exports.gen_post_html = function (data) {
 	}
 	var post = [safe('\t<article id="q' + data.num + edit + '"><header>'),
 		ident, safe(' ' + time_tag_html(data.time) + ' '),
-		safe('No.<a href="#q' + data.num + '">' + data.num
+		safe('<a href="#q' + data.num + '">No.</a><a href="'
+			+ post_url(data) + '">' + data.num
 			+ '</a></header> <blockquote>'),
 		format_body(data.body), safe('</blockquote></article>\n')];
 	return flatten(post).join('');

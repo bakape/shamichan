@@ -2,6 +2,7 @@ var curPostNum = 0;
 var activePosts = {};
 var threads = {};
 var dispatcher = {};
+var THREAD = null;
 
 function send(msg) {
 	socket.send(JSON.stringify(msg));
@@ -15,9 +16,11 @@ function make_reply_box() {
 
 function insert_new_post_boxes() {
 	make_reply_box().appendTo('section');
-	var box = $('<aside><a>[New thread]</a></aside>');
-	box.find('a').click(new_post_form);
-	$('hr').after(box);
+	if (!THREAD) {
+		var box = $('<aside><a>[New thread]</a></aside>');
+		box.find('a').click(new_post_form);
+		$('hr').after(box);
+	}
 }
 
 function insert_formatted(text, buffer, state) {
@@ -115,7 +118,8 @@ function new_post_form() {
 		meta.children('time').text(readable_time(msg.time)
 				).attr('datetime', datetime(msg.time));
 		curPostNum = num;
-		meta.append(' No.<a href="#q' + num + '">' + num + '</a>');
+		meta.append(' <a href="#q' + num + '">No.</a><a href="'
+				+ post_url(msg) + '">' + num + '</a>');
 		post.attr('id', 'q' + num).addClass('editing');
 		if (!postOp) {
 			thread.attr('id', 'thread' + num);
@@ -233,7 +237,7 @@ function on_connect() {
 	clearTimeout(reconnect_timer);
 	reset_timer = setTimeout(function (){ reconnect_delay = 3000; }, 9999);
 	$('#sync').text('Synching...');
-	send([SYNCHRONIZE, SYNC]);
+	send([SYNCHRONIZE, SYNC, THREAD]);
 }
 
 function attempt_reconnect() {
@@ -261,14 +265,12 @@ $(document).ready(function () {
 		var section = $(this);
 		threads[extract_num(section, 'thread')] = section;
 	});
-	if (window.location.hash) {
-		var id = window.location.hash.match(/^(#q\d+)$/);
-		if (id) {
-			var li = $(id[1]);
-			if (li)
-				li.addClass('highlight');
-		}
-	}
+	var m = window.location.pathname.match(/\/(\d+)$/);
+	if (m)
+		THREAD = parseInt(m[1]);
+	m = window.location.hash.match(/^(#q\d+)$/);
+	if (m)
+		$(m[1]).addClass('highlight');
 	insert_new_post_boxes();
 
 	socket.on('connect', on_connect);

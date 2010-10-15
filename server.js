@@ -15,40 +15,51 @@ var dispatcher = {};
 var sync_number = 0;
 var backlog = [];
 var backlog_last_dropped = 0;
+var BL_WHEN = 0, BL_MSG = 1, BL_THREAD = 2;
 
 function multisend(client, msgs) {
 	client.socket.send(JSON.stringify(msgs));
 }
 
-function broadcast(msg, except) {
+function broadcast(msg, post, except) {
+	var thread_num = post.op || post.num;
 	msg = JSON.stringify(msg);
 	var payload = '[' + msg + ']';
 	for (id in clients) {
 		var client = clients[id];
+		if (client.watching && client.watching != thread_num)
+			continue;
 		if (id != except && client.synced)
 			client.socket.send(payload);
 	}
 	var now = new Date().getTime();
 	++sync_number;
-	backlog.push([now, msg]);
+	backlog.push([now, msg, thread_num]);
 	cleanup_backlog(now);
 }
 
 function cleanup_backlog(now) {
 	var limit = now - config.BACKLOG_PERIOD;
 	/* binary search would be nice */
-	while (backlog.length && backlog[0][0] < limit) {
+	while (backlog.length && backlog[0][BL_WHEN] < limit) {
 		backlog.shift();
 		backlog_last_dropped++;
 	}
 }
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
-	if (msg.length != 1)
+	if (msg.length != 2)
 		return false;
-	var sync = msg[0];
+	var sync = msg[0], watching = msg[1];
 	if (sync.constructor != Number)
 		return false;
+	if (watching) {
+		var post = posts[watching];
+		if (post && !post.op)
+			client.watching = watching;
+		else
+			return false;
+	}
 	if (sync == sync_number) {
 		multisend(client, [[common.SYNCHRONIZE]]);
 		client.synced = true;
@@ -59,41 +70,77 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (sync < backlog_last_dropped)
 		return false; /* client took too long */
 	var logs = [];
-	for (var i = sync - backlog_last_dropped; i < backlog.length; i++)
-		logs.push(backlog[i][1]);
+	for (var i = sync - backlog_last_dropped; i < backlog.length; i++) {
+		var log = backlog[i];
+		if (!watching || log[BL_THREAD] == watching)
+			logs.push(log[BL_MSG]);
+	}
 	logs.push('[' + common.SYNCHRONIZE + ']');
 	client.socket.send('[' + logs.join() + ']');
 	client.synced = true;
 	return true;
 }
 
-function write_threads_html(response) {
-	for (var i = 0; i < threads.length; i++) {
-		var thread = threads[i];
-		response.write('<section id="thread' + thread[0].num + '">\n');
-		for (var j = 0; j < thread.length; j++) {
-			var post = thread[j];
-			response.write(common.gen_post_html(post));
-		}
-		response.write('</section>\n');
-	}
+function write_thread_html(thread, response) {
+	response.write('<section id="thread' + thread[0].num + '">\n');
+	for (var i = 0; i < thread.length; i++)
+		response.write(common.gen_post_html(thread[i]));
+	response.write('</section>\n');
 }
 
 var index_tmpl = jsontemplate.Template(fs.readFileSync('index.html', 'UTF-8')
 		).expand(config).split(/\$[A-Z]+/);
+var notfound_html = fs.readFileSync('www/404.html');
 
-var server = http.createServer(function(request, response) {
-	response.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-	response.write(index_tmpl[0]);
-	response.write(sync_number.toString());
-	response.write(index_tmpl[1]);
-	write_threads_html(response);
-	response.end(index_tmpl[2]);
+var http_headers = {'Content-Type': 'text/html; charset=UTF-8'};
+var server = http.createServer(function(req, resp) {
+	if (req.url == '/') {
+		console.log(req.url);
+		if (render_index(req, resp))
+			return;
+	}
+	m = req.url.match(/^\/(\d+)$/);
+	if (m) {
+		if (render_thread(req, resp, m[1]))
+			return;
+	}
+	resp.writeHeader(404, http_headers);
+	resp.end(notfound_html);
 });
+
+function render_index(req, resp) {
+	resp.writeHead(200, http_headers);
+	resp.write(index_tmpl[0]);
+	resp.write(sync_number.toString());
+	resp.write(index_tmpl[1]);
+	for (var i = 0; i < threads.length; i++)
+		write_thread_html(threads[i], resp);
+	resp.end(index_tmpl[2]);
+	return true;
+}
+
+function render_thread(req, resp, num) {
+	var post = posts[parseInt(num)];
+	if (!post)
+		return false;
+	if (post.op) {
+		resp.writeHead(301, {Location: '/'+post.op+'#q'+post.num});
+		resp.end();
+		return true;
+	}
+	resp.writeHead(200, http_headers);
+	resp.write(index_tmpl[0]);
+	resp.write(sync_number.toString());
+	resp.write(index_tmpl[1]);
+	write_thread_html(post.thread, resp);
+	resp.end(index_tmpl[2]);
+	return true;
+}
 
 function on_client (socket) {
 	var id = socket.sessionId;
-	var client = {id: id, socket: socket, post: null, synced: false};
+	var client = {id: id, socket: socket, post: null, synced: false,
+			watching: null};
 	clients[id] = client;
 	socket.on('message', function (data) {
 		msg = JSON.parse(data);
@@ -141,32 +188,34 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 		return false;
 	if (!msg.frag.replace(/[ \n]/g, ''))
 		return false;
-	var num = post_counter++;
-	var parsed = common.parse_name(msg.name);
 	var post = {
-		name: parsed[0],
 		time: new Date().getTime(),
-		num: num,
 		editing: true,
 		body: msg.frag
 	};
+	if (is_integer(msg.op) && posts[msg.op] && !posts[msg.op].op)
+		post.op = msg.op;
+	if (client.watching && client.watching != post.op)
+		return false;
+	var parsed = common.parse_name(msg.name);
+	post.name = parsed[0];
 	if (parsed[1] || parsed[2]) {
 		var trip = tripcode.hash(parsed[1], parsed[2]);
 		if (trip)
 			post.trip = trip;
 	}
-	if (is_integer(msg.op) && posts[msg.op] && !posts[msg.op].op)
-		post.op = msg.op;
 	if (msg.email && msg.email.constructor == String)
 		post.email = msg.email.trim().substr(0, 320);
 
+	/* No going back now */
+	post.num = post_counter++;
 	multisend(client, [[common.ALLOCATE_POST, post]]);
-	broadcast([common.INSERT_POST, post], client.id);
+	broadcast([common.INSERT_POST, post], post, client.id);
 	/* And save this for later */
 	post.state = common.initial_post_state();
 	common.format_fragment(post.body, post.state, null);
 	client.post = post;
-	posts[num] = post;
+	posts[post.num] = post;
 	if (!post.op) {
 		/* New thread */
 		post.thread = [post];
@@ -196,14 +245,14 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 	if (!post || !post.editing)
 		return false;
 	var msg = [common.UPDATE_POST, post.num, frag].concat(post.state);
-	broadcast(msg, client.id);
+	broadcast(msg, post, client.id);
 	post.body += frag;
 	common.format_fragment(frag, post.state, null); /* update state */
 	return true;
 }
 
 function finish_post(post, owner_id) {
-	broadcast([common.FINISH_POST, post.num], owner_id);
+	broadcast([common.FINISH_POST, post.num], post, owner_id);
 	post.editing = false;
 	delete post.state;
 }
