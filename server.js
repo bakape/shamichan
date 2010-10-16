@@ -21,19 +21,24 @@ function multisend(client, msgs) {
 	client.socket.send(JSON.stringify(msgs));
 }
 
-function broadcast(msg, post, except) {
+function broadcast(msg, post, origin) {
 	var thread_num = post.op || post.num;
+	++sync_number;
 	msg = JSON.stringify(msg);
 	var payload = '[' + msg + ']';
 	for (id in clients) {
 		var client = clients[id];
 		if (client.watching && client.watching != thread_num)
-			continue;
-		if (id != except && client.synced)
+			multisend(client, [[common.INVALID]]);
+		else if (id == origin) {
+			/* Client won't increment SYNC since they won't
+			 * receive the broadcasted message, so do manually */
+			multisend(client, [[common.SYNCHRONIZE, sync_number]]);
+		}
+		else if (client.synced)
 			client.socket.send(payload);
 	}
 	var now = new Date().getTime();
-	++sync_number;
 	backlog.push([now, msg, thread_num]);
 	cleanup_backlog(now);
 }
@@ -61,7 +66,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			return false;
 	}
 	if (sync == sync_number) {
-		multisend(client, [[common.SYNCHRONIZE]]);
+		multisend(client, [[common.SYNCHRONIZE, sync_number]]);
 		client.synced = true;
 		return true; /* already synchronized */
 	}
@@ -75,7 +80,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		if (!watching || log[BL_THREAD] == watching)
 			logs.push(log[BL_MSG]);
 	}
-	logs.push('[' + common.SYNCHRONIZE + ']');
+	logs.push('[' + common.SYNCHRONIZE + ',' + sync_number + ']');
 	client.socket.send('[' + logs.join() + ']');
 	client.synced = true;
 	return true;
@@ -204,8 +209,8 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 
 	/* No going back now */
 	post.num = post_counter++;
-	multisend(client, [[common.ALLOCATE_POST, post]]);
 	broadcast([common.INSERT_POST, post], post, client.id);
+	multisend(client, [[common.ALLOCATE_POST, post]]);
 	/* And save this for later */
 	post.state = common.initial_post_state();
 	common.format_fragment(post.body, post.state, null);
@@ -256,7 +261,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	if (msg.length)
 		return false;
 	var post = client.post;
-	if (!post.editing)
+	if (!post || !post.editing)
 		return false;
 	finish_post(post, client.id);
 	client.post = null;

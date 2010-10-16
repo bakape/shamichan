@@ -53,6 +53,9 @@ function toggle_live() {
 }
 
 dispatcher[INSERT_POST] = function (msg) {
+	msg = msg[0];
+	if (msg.num == curPostNum)
+		return true;
 	var post = $(gen_post_html(msg));
 	activePosts[msg.num] = post;
 	var section = null;
@@ -60,7 +63,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		section = threads[msg.op];
 		section.find('article:last').after(post);
 		if (THREAD || !liveFeed)
-			return;
+			return true;
 		section.detach();
 	}
 	else {
@@ -75,17 +78,25 @@ dispatcher[INSERT_POST] = function (msg) {
 	/* Insert it at the top; need a more robust way */
 	var fencepost = $('body > aside');
 	section.insertAfter(fencepost.length ? fencepost : 'hr');
+	return true;
 };
 
 dispatcher[UPDATE_POST] = function (msg) {
 	var num = msg[0], frag = msg[1], state = [msg[2], msg[3]];
 	var post = activePosts[num];
-	insert_formatted(frag, post.find('blockquote'), state);
+	if (post)
+		insert_formatted(frag, post.find('blockquote'), state);
+	else
+		console.log("Tried to update inactive post #" + num
+				+ " with " + JSON.stringify(msg));
+	return true;
 };
 
-dispatcher[FINISH_POST] = function (num) {
+dispatcher[FINISH_POST] = function (msg) {
+	num = msg[0];
 	activePosts[num].removeClass('editing');
 	delete activePosts[num];
+	return true;
 };
 
 function extract_num(q, prefix) {
@@ -125,6 +136,7 @@ function new_post_form() {
 	emailField.change(propagate_fields).keypress(propagate_fields);
 
 	dispatcher[ALLOCATE_POST] = function (msg) {
+		msg = msg[0];
 		var num = msg.num;
 		nameField.unbind();
 		emailField.unbind();
@@ -158,6 +170,8 @@ function new_post_form() {
 			send([FINISH_POST]);
 			insert_new_post_boxes();
 		});
+		/* We've already received a SYNC for this insert */
+		return false;
 	};
 	function commit(text) {
 		if (!text)
@@ -264,11 +278,14 @@ function attempt_reconnect() {
 }
 
 dispatcher[SYNCHRONIZE] = function (msg) {
+	SYNC = msg[0];
 	$('#sync').text('Synched.');
+	return false;
 }
 
 dispatcher[INVALID] = function (msg) {
 	$('#sync').text('Sync error.');
+	return false;
 }
 
 $(document).ready(function () {
@@ -291,12 +308,13 @@ $(document).ready(function () {
 	socket.on('connect', on_connect);
 	socket.on('disconnect', attempt_reconnect);
 	socket.on('message', function (data) {
+		console.log(data);
 		msgs = JSON.parse(data);
 		for (var i = 0; i < msgs.length; i++) {
 			var msg = msgs[i];
 			var type = msg.shift();
-			dispatcher[type](msg.length == 1 ? msg[0] : msg);
-			SYNC++;
+			if (dispatcher[type](msg))
+				SYNC++;
 		}
 	});
 	socket.connect();
