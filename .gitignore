@@ -6,3 +6,5 @@
 builder
 config.js
 www/js/client-v*.js
+www/src/*
+www/thumb/*

@@ -1,9 +1,12 @@
 var common = require('./common'),
 	config = require('./config').config,
+	exec = require('child_process').exec,
+	formidable = require('../formidable'),
 	fs = require('fs'),
 	io = require('../socket.io'),
 	jsontemplate = require('./json-template'),
 	http = require('http'),
+	path = require('path'),
 	tripcode = require('./tripcode');
 
 var threads = [];
@@ -108,12 +111,16 @@ var notfound_html = fs.readFileSync('www/404.html');
 
 var http_headers = {'Content-Type': 'text/html; charset=UTF-8'};
 var server = http.createServer(function(req, resp) {
+	if (req.method.toLowerCase() == 'post') {
+		handle_upload(req, resp);
+		return;
+	}
 	if (req.url == '/' && render_index(req, resp))
 		return;
 	m = req.url.match(/^\/(\d+)$/);
 	if (m && render_thread(req, resp, m[1]))
 		return;
-	resp.writeHeader(404, http_headers);
+	resp.writeHead(404, http_headers);
 	resp.end(notfound_html);
 });
 
@@ -144,6 +151,93 @@ function render_thread(req, resp, num) {
 	write_thread_html(post.thread, resp);
 	resp.end(index_tmpl[2]);
 	return true;
+}
+
+function plain(resp, code, text) {
+	resp.writeHead(code, {'Content-Type': 'text/plain'});
+	resp.end(text);
+}
+
+function handle_upload(req, resp) {
+	var form = new formidable.IncomingForm();
+	form.maxFieldsSize = 512;
+	form.onPart = function (part) {
+		if (part.filename && part.name == 'image')
+			form.handlePart(part);
+		else if (!part.filename && part.name == 'client_id')
+			form.handlePart(part);
+		else {
+			this._error('Superfluous field.');
+			if (part.path)
+				console.log(part.path);
+		}
+	};
+	form.parse(req, function (err, fields, files) {
+		if (err) {
+			console.log("Upload error: " + err);
+			var code = 500;
+			err = '' + (err.message || err);
+			if (err.match(/exceed|parse/))
+				code = 412;
+			else if (err.match(/Superfluous/))
+				code = 400;
+			return plain(resp, code, err);
+		}
+		var image = files.image;
+		if (!image)
+			return plain(resp, 400, 'No image supplied.');
+		var fail = function(code, text) {
+			fs.unlink(image.path);
+			plain(resp, code, text);
+		}
+		image.ext = path.extname(image.filename);
+		if (config.IMAGE_EXTS.indexOf(image.ext.toLowerCase()) < 0)
+			return fail(400, 'Invalid image format.');
+		image.client_id = parseInt(fields.client_id);
+		if (!(image.client_id in clients))
+			return fail(401, 'Invalid client id.');
+		plain(resp, 202, 'Processing ' + image.filename);
+		resize_image(image, upload_image);
+	});
+}
+
+function resize_image(image, callback) {
+	image.thumb = image.path + '_thumb';
+	/* TODO: check that it's actually one of the supported image types */
+	exec('convert ' + image.path + ' -gamma 0.454545 -filter lanczos'
+		+ ' -resize 50% -gamma 2.2 -quality ' + config.THUMB_QUALITY
+		+ ' -sampling-factor 1x1 ' + image.thumb,
+		image_handler(image, upload_image));
+}
+
+function image_handler(image, callback) {
+	return function (error, stdout, stderr) {
+		if (error != null)
+			console.log(error);
+		if (stdout)
+			console.log(stdout);
+		if (stderr)
+			console.log(stderr);
+		if (error == null && !stderr)
+			callback(image);
+		else {
+			fs.unlink(image.path);
+			fs.unlink(image.thumb);
+		}
+	};
+}
+
+function upload_image(image) {
+	var base = new Date().getTime();
+	var dest = path.join(config.IMAGE_DIR, base + image.ext);
+	var thumb_dest = path.join(config.THUMB_DIR, base + '.jpg');
+	exec('mv -- ' + image.path + ' ' + dest, image_handler(image,
+	function (image) {
+	exec('mv -- ' + image.thumb + ' ' + thumb_dest, image_handler(image,
+	function (image) {
+		console.log(image.client_id + ' successfully uploaded ' + dest);
+	}));
+	}));
 }
 
 function on_client (socket) {
