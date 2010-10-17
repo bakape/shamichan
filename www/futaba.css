@@ -1,4 +1,7 @@
-a:hover {
+a {
+	text-decoration: underline;
+}
+a:hover, blockquote a {
 	color: #d00;
 	cursor: pointer;
 }
@@ -16,9 +19,6 @@ article em {
 }
 article p {
 	display: inline;
-}
-aside a {
-	text-decoration: underline;
 }
 body {
 	background-color: #eef2ff;

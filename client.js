@@ -24,8 +24,22 @@ function insert_new_post_boxes() {
 	}
 }
 
-function insert_formatted(text, buffer, state) {
-	format_fragment(text, state, function (frag) {
+function make_link(num, op) {
+	var p = {num: num, op: op};
+	return safe('<a href="' + post_url(p) + '">&gt;&gt;' + num + '</a>');
+}
+
+function format_link(num, env) {
+	if (env.links && num in env.links)
+		env.callback(make_link(num, env.links[num]));
+	else
+		env.callback('>>' + num);
+}
+
+function insert_formatted(text, buffer, state, env) {
+	if (!env.format_link)
+		env.format_link = format_link;
+	env.callback = function (frag) {
 		var dest = buffer;
 		for (var i = 0; i < state[1]; i++)
 			dest = dest.children('del:last');
@@ -43,7 +57,8 @@ function insert_formatted(text, buffer, state) {
 			out = escape_fragment(frag);
 		if (out)
 			dest.append(out);
-	});
+	};
+	format_fragment(text, state, env);
 }
 
 function toggle_live() {
@@ -56,7 +71,8 @@ dispatcher[INSERT_POST] = function (msg) {
 	msg = msg[0];
 	if (msg.num == curPostNum)
 		return true;
-	var post = $(gen_post_html(msg));
+	msg.format_link = format_link;
+	var post = $(gen_post_html(msg, msg));
 	activePosts[msg.num] = post;
 	var section = null;
 	if (msg.op) {
@@ -83,9 +99,10 @@ dispatcher[INSERT_POST] = function (msg) {
 
 dispatcher[UPDATE_POST] = function (msg) {
 	var num = msg[0], frag = msg[1], state = [msg[2], msg[3]];
+	var env = msg[4] || {};
 	var post = activePosts[num];
 	if (post)
-		insert_formatted(frag, post.find('blockquote'), state);
+		insert_formatted(frag, post.find('blockquote'), state, env);
 	else
 		console.log("Tried to update inactive post #" + num
 				+ " with " + JSON.stringify(msg));
@@ -135,6 +152,16 @@ function new_post_form() {
 	nameField.change(propagate_fields).keypress(propagate_fields);
 	emailField.change(propagate_fields).keypress(propagate_fields);
 
+	var format_env = {format_link: function (num, env) {
+		var post = $('#q' + num);
+		if (post.length) {
+			var thread = extract_num(post.parent(), 'thread');
+			env.callback(make_link(num, thread));
+		}
+		else
+			env.callback('>>' + num);
+	}};
+
 	dispatcher[ALLOCATE_POST] = function (msg) {
 		msg = msg[0];
 		var num = msg.num;
@@ -160,7 +187,8 @@ function new_post_form() {
 			commit(input.val());
 			input.remove();
 			submit.remove();
-			insert_formatted(line_buffer.text(), buffer, state);
+			insert_formatted(line_buffer.text(), buffer, state,
+					format_env);
 			buffer.replaceWith(buffer.contents());
 			line_buffer.remove();
 			post.removeClass('editing');
@@ -202,7 +230,8 @@ function new_post_form() {
 			lines[0] = line_buffer.text() + lines[0];
 			line_buffer.text(lines.pop());
 			for (var i = 0; i < lines.length; i++)
-				insert_formatted(lines[i]+'\n', buffer, state);
+				insert_formatted(lines[i] + '\n', buffer,
+						state, format_env);
 		}
 		else {
 			line_buffer.append(document.createTextNode(text));

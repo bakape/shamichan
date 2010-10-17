@@ -56,45 +56,52 @@ function initial_post_state() {
 }
 exports.initial_post_state = initial_post_state;
 
-function break_long_words(str, callback) {
-	if (str.safe) {
-		callback(str);
+function break_long_words(frag, env) {
+	if (frag.safe) {
+		env.callback(frag);
 		return;
 	}
-	var bits = str.split(/(\S{60})/);
+	var bits = frag.split(/(\S{60})/);
 	for (var i = 0; i < bits.length; i++) {
-		callback(bits[i]);
-		if (i % 2)
-			callback(safe('&shy;'));
+		if (i % 2) {
+			env.callback(safe('&shy;'));
+			continue;
+		}
+		/* anchor refs */
+		var morcels = bits[i].split(/>>(\d+)/);
+		for (var j = 0; j < morcels.length; j++) {
+			if (j % 2)
+				env.format_link(parseInt(morcels[j]), env);
+			else
+				env.callback(morcels[j]);
+		}
 	}
 }
 
-function format_fragment(frag, state, func) {
-	if (!func)
-		func = function (tok) {};
+function format_fragment(frag, state, env) {
 	function do_transition(token, new_state) {
 		if (state[0] == 1 && new_state != 1)
-			func(safe('</em>'));
+			env.callback(safe('</em>'));
 		switch (new_state) {
 		case 1:
 			if (state[0] != 1) {
-				func(safe('<em>'));
+				env.callback(safe('<em>'));
 				state[0] = 1;
 			}
-			break_long_words(token, func);
+			break_long_words(token, env);
 			break;
 		case 3:
 			if (token[1] == '/') {
 				state[1]--;
-				func(safe('</del>'));
+				env.callback(safe('</del>'));
 			}
 			else {
-				func(safe('<del>'));
+				env.callback(safe('<del>'));
 				state[1]++;
 			}
 			break;
 		default:
-			break_long_words(token, func);
+			break_long_words(token, env);
 			break;
 		}
 		state[0] = new_state;
@@ -123,12 +130,12 @@ function format_fragment(frag, state, func) {
 }
 exports.format_fragment = format_fragment;
 
-function format_body(body) {
+function format_body(body, env) {
 	var state = initial_post_state();
 	var output = [];
-	format_fragment(body, state, function (frag) {
-		output.push(frag);
-	});
+	env.callback = function (frag) { output.push(frag); }
+	format_fragment(body, state, env);
+	env.callback = null;
 	if (state[0] == 1)
 		output.push(safe('</em>'));
 	for (var i = 0; i < state[1]; i++)
@@ -161,8 +168,9 @@ function time_tag_html(time) {
 function post_url(post) {
 	return (post.op || post.num) + '#q' + post.num;
 }
+exports.post_url = post_url;
 
-exports.gen_post_html = function (data) {
+exports.gen_post_html = function (data, env) {
 	var edit = data.editing ? '" class="editing' : '';
 	var ident = [safe('<b>'), data.name, safe('</b>')];
 	if (data.trip) {
@@ -180,7 +188,8 @@ exports.gen_post_html = function (data) {
 		safe('<a href="#q' + data.num + '">No.</a><a href="'
 			+ post_url(data) + '">' + data.num
 			+ '</a></header> <blockquote>'),
-		format_body(data.body), safe('</blockquote></article>\n')];
+		format_body(data.body, env),
+		safe('</blockquote></article>\n')];
 	return flatten(post).join('');
 }
 

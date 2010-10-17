@@ -86,10 +86,19 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	return true;
 }
 
+post_env = {format_link: function (num, env) {
+	var post = posts[num];
+	if (post)
+		env.callback(common.safe('<a href="' + common.post_url(post)
+				+ '">&gt;&gt;' + num + '</a>'));
+	else
+		env.callback('>>' + num);
+}};
+
 function write_thread_html(thread, response) {
 	response.write('<section id="thread' + thread[0].num + '">\n');
 	for (var i = 0; i < thread.length; i++)
-		response.write(common.gen_post_html(thread[i]));
+		response.write(common.gen_post_html(thread[i], post_env));
 	response.write('</section>\n');
 }
 
@@ -180,6 +189,24 @@ function validate(msg, schema) {
 	return true;
 }
 
+function valid_links(frag, state) {
+	var links = {};
+	env = {callback: function (frag) {}, format_link: function (num, e) {
+		var post = posts[num];
+		if (post)
+			links[num] = post.op || post.num;
+	}};
+	common.format_fragment(frag, state, env);
+	return links;
+}
+
+/* TEMP: Must be a better way */
+function empty(obj) {
+	for (k in obj)
+		return false;
+	return true;
+}
+
 dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (msg.length != 1)
 		return false;
@@ -209,13 +236,17 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 
 	/* No going back now */
 	post.num = post_counter++;
+	posts[post.num] = post;
+	var state = common.initial_post_state();
+	var links = valid_links(post.body, state);
+	if (!empty(links))
+		post.links = links;
 	broadcast([common.INSERT_POST, post], post, client.id);
 	multisend(client, [[common.ALLOCATE_POST, post]]);
-	/* And save this for later */
-	post.state = common.initial_post_state();
-	common.format_fragment(post.body, post.state, null);
+	/* Store some extra state for later */
+	post.links = links;
+	post.state = state;
 	client.post = post;
-	posts[post.num] = post;
 	if (!post.op) {
 		/* New thread */
 		post.thread = [post];
@@ -244,10 +275,15 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 	var post = client.post;
 	if (!post || !post.editing)
 		return false;
+	/* imporant: broadcast prior state */
 	var msg = [common.UPDATE_POST, post.num, frag].concat(post.state);
+	var links = valid_links(frag, post.state);
+	if (!empty(links))
+		msg.push({links: links});
 	broadcast(msg, post, client.id);
 	post.body += frag;
-	common.format_fragment(frag, post.state, null); /* update state */
+	for (var k in links)
+		post.links[k] = links[k];
 	return true;
 }
 
