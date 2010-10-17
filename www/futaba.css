@@ -49,9 +49,9 @@ section, body > aside {
 	margin: 1em;
 }
 .editing {
-	background-color: #fa6;
-	border-right: 1px solid #e95;
-	border-bottom: 1px solid #e95;
+	background-color: #fa6 !important;
+	border-right: 1px solid #e95 !important;
+	border-bottom: 1px solid #e95 !important;
 }
 .email, .email b, .email code {
 	color: #0f0c5d;
@@ -59,6 +59,8 @@ section, body > aside {
 }
 .highlight {
 	background-color: #d6bad0;
+	border-right: 1px solid #ba9dbf;
+	border-bottom: 1px solid #ba9dbf;
 }
 .trans {
 	background-color: transparent;
