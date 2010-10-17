@@ -294,10 +294,10 @@ function valid_links(frag, state) {
 	return links;
 }
 
-/* TEMP: Must be a better way */
-function empty(obj) {
+function isEmpty(obj) {
 	for (k in obj)
-		return false;
+		if (obj.hasOwnProperty(k))
+			return false;
 	return true;
 }
 
@@ -333,7 +333,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	posts[post.num] = post;
 	var state = common.initial_post_state();
 	var links = valid_links(post.body, state);
-	if (!empty(links))
+	if (!isEmpty(links))
 		post.links = links;
 	broadcast([common.INSERT_POST, post], post, client.id);
 	multisend(client, [[common.ALLOCATE_POST, post]]);
@@ -372,7 +372,7 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 	/* imporant: broadcast prior state */
 	var msg = [common.UPDATE_POST, post.num, frag].concat(post.state);
 	var links = valid_links(frag, post.state);
-	if (!empty(links))
+	if (!isEmpty(links))
 		msg.push({links: links});
 	broadcast(msg, post, client.id);
 	post.body += frag;
