@@ -120,12 +120,28 @@ function extract_num(q, prefix) {
 	return parseInt(q.attr('id').replace(prefix, ''));
 }
 
+function make_upload_form(callback) {
+	var form = $('<form method="post" enctype="multipart/form-data" '
+		+ 'action="." target="upload">'
+		+ '<input type="file" name="image"/>'
+		+ '<input type="hidden" name="client_id" value="'
+		+ socket.transport.sessionid + '"/>'
+		+ '<iframe src="" name="upload"/></form>');
+	form.find('input[name=image]').change(function () {
+		callback();
+		if ($(this).val())
+			form.submit();
+	});
+	return form;
+}
+
 function new_post_form() {
 	var buffer = $('<p/>'), line_buffer = $('<p/>');
 	var meta = $('<header><b/> <code/> <time/></header>');
 	var nameField = $('input[name=name]');
 	var emailField = $('input[name=email]');
 	var input = $('<input name="body" class="trans"/>');
+	var upload_form = make_upload_form(function () { input.focus(); });
 	var blockquote = $('<blockquote/>');
 	var post = $('<article/>');
 	var postOp = null;
@@ -136,7 +152,7 @@ function new_post_form() {
 	var INPUT_MIN_SIZE = 2;
 
 	blockquote.append.apply(blockquote, [buffer, line_buffer, input]);
-	post.append.apply(post, [meta, blockquote]);
+	post.append.apply(post, [meta, blockquote, upload_form]);
 
 	function propagate_fields() {
 		var name = nameField.val().trim();
@@ -180,13 +196,13 @@ function new_post_form() {
 			threads[num] = thread;
 		}
 
-		var submit = $('<input type="button" value="Done"/>')
-		post.append(submit)
+		var submit = $('<input type="button" value="Done"/>');
+		upload_form.append(submit);
 		submit.click(function () {
 			/* transform into normal post */
 			commit(input.val());
 			input.remove();
-			submit.remove();
+			upload_form.remove();
 			insert_formatted(line_buffer.text(), buffer, state,
 					format_env);
 			buffer.replaceWith(buffer.contents());

@@ -45,6 +45,9 @@ header a {
 	color: inherit;
 	text-decoration: none;
 }
+iframe {
+	display: none;
+}
 section, body > aside {
 	margin: 1em;
 }
