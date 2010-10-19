@@ -120,6 +120,25 @@ function extract_num(q, prefix) {
 	return parseInt(q.attr('id').replace(prefix, ''));
 }
 
+function upload_error(msg) {
+	var msg = $('<strong/>').text(msg);
+	$('input[name=image]').after(msg);
+}
+
+function shorten_filename(text) {
+	m = text.match(/^(.{20}).{8,}(\.\w{3,4})$/);
+	return m ? m[1] + '[\u2026]' + m[2] : m;
+}
+
+function upload_complete(info) {
+	var form = $('form');
+	var metadata = $('<span/>').text(shorten_filename(info.filename)
+			).attr('title', info.filename);
+	form.siblings('header').append(metadata).after('<a href="' + info.src
+			+ '"><img src="' + info.thumb + '"/></a>');
+	form.find('input[name=image]').remove();
+}
+
 function make_upload_form(callback) {
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="." target="upload">'
@@ -129,6 +148,7 @@ function make_upload_form(callback) {
 		+ '<iframe src="" name="upload"/></form>');
 	form.find('input[name=image]').change(function () {
 		callback();
+		$(this).find('strong').remove();
 		if ($(this).val())
 			form.submit();
 	});

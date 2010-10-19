@@ -153,9 +153,11 @@ function render_thread(req, resp, num) {
 	return true;
 }
 
-function plain(resp, code, text) {
-	resp.writeHead(code, {'Content-Type': 'text/plain'});
-	resp.end(text);
+function client_call(resp, func, param) {
+	param = param ? JSON.stringify(param) : '';
+	resp.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+	resp.end('<!doctype html>\n<title></title>\n<script>'
+		+ 'parent.' + func + '(' + param + ');</script>');
 }
 
 function handle_upload(req, resp) {
@@ -177,40 +179,37 @@ function handle_upload(req, resp) {
 			console.log("Upload error: " + err);
 			var code = 500;
 			err = '' + (err.message || err);
-			if (err.match(/exceed|parse/))
-				code = 412;
-			else if (err.match(/Superfluous/))
-				code = 400;
-			return plain(resp, code, err);
+			return client_call(resp, 'upload_error', err);
 		}
 		var image = files.image;
 		if (!image)
-			return plain(resp, 400, 'No image supplied.');
-		var fail = function(code, text) {
+			return client_call(resp, 'upload_error',
+					'No image supplied.');
+		var fail = function(text) {
 			fs.unlink(image.path);
-			plain(resp, code, text);
+			client_call(resp, 'upload_error', text);
 		}
 		image.ext = path.extname(image.filename);
 		if (config.IMAGE_EXTS.indexOf(image.ext.toLowerCase()) < 0)
-			return fail(400, 'Invalid image format.');
+			return fail('Invalid image format.');
 		image.client_id = parseInt(fields.client_id);
 		if (!(image.client_id in clients))
-			return fail(401, 'Invalid client id.');
-		plain(resp, 202, 'Processing ' + image.filename);
+			return fail('Invalid client id.');
+		image.resp = resp;
 		resize_image(image, upload_image);
 	});
 }
 
 function resize_image(image, callback) {
 	image.thumb = image.path + '_thumb';
-	/* TODO: check that it's actually one of the supported image types */
-	exec('convert ' + image.path + ' -gamma 0.454545 -filter lanczos'
-		+ ' -resize 50% -gamma 2.2 -quality ' + config.THUMB_QUALITY
-		+ ' -sampling-factor 1x1 ' + image.thumb,
-		image_handler(image, upload_image));
+	var path = image.ext.replace('.', '') + ':' + image.path;
+	exec('convert ' + path + ' -gamma 0.454545 -filter lanczos -resize '
+		+ config.THUMB_DIMENSIONS + ' -gamma 2.2 -quality '
+		+ config.THUMB_QUALITY + ' ' + image.thumb,
+		image_handler(image, 'Conversion error.', upload_image));
 }
 
-function image_handler(image, callback) {
+function image_handler(image, err_desc, callback) {
 	return function (error, stdout, stderr) {
 		if (error != null)
 			console.log(error);
@@ -221,6 +220,7 @@ function image_handler(image, callback) {
 		if (error == null && !stderr)
 			callback(image);
 		else {
+			client_call(image.resp, 'upload_error', err_desc);
 			fs.unlink(image.path);
 			fs.unlink(image.thumb);
 		}
@@ -232,10 +232,16 @@ function upload_image(image) {
 	var dest = path.join(config.IMAGE_DIR, base + image.ext);
 	var thumb_dest = path.join(config.THUMB_DIR, base + '.jpg');
 	exec('mv -- ' + image.path + ' ' + dest, image_handler(image,
-	function (image) {
+	"Couldn't publish image.", function (image) {
 	exec('mv -- ' + image.thumb + ' ' + thumb_dest, image_handler(image,
-	function (image) {
+	"Couldn't publish thumbnail.", function (image) {
 		console.log(image.client_id + ' successfully uploaded ' + dest);
+		var dest_url = config.IMAGE_URL + base + image.ext;
+		var thumb_url = config.THUMB_URL + base + '.jpg';
+		client_call(image.resp, 'upload_complete', {
+			src: dest_url, thumb: thumb_url,
+			filename: image.filename,
+		});
 	}));
 	}));
 }

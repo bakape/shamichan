@@ -1,5 +1,6 @@
 a {
 	text-decoration: underline;
+	border: none;
 }
 a:hover, blockquote a {
 	color: #d00;
@@ -44,6 +45,9 @@ header code {
 header a {
 	color: inherit;
 	text-decoration: none;
+}
+header span {
+	display: block;
 }
 iframe {
 	display: none;

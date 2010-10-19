@@ -8,7 +8,10 @@ exports.config = {
 	IMAGE_EXTS: ['.gif', '.jpg', '.jpeg', '.png'],
 	IMAGE_DIR: 'www/src',
 	THUMB_DIR: 'www/thumb',
+	IMAGE_URL: 'http://localhost/src/',
+	THUMB_URL: 'http://localhost/thumb/',
 	THUMB_QUALITY: 50,
+	THUMB_DIMENSIONS: '150x150',
 };
 if (process.argv[2] == '--show-config')
 	console.log(exports.config[process.argv[3]]);
