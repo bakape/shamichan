@@ -125,17 +125,10 @@ function upload_error(msg) {
 	$('input[name=image]').after(msg);
 }
 
-function shorten_filename(text) {
-	m = text.match(/^(.{20}).{8,}(\.\w{3,4})$/);
-	return m ? m[1] + '[\u2026]' + m[2] : m;
-}
-
 function upload_complete(info) {
 	var form = $('form');
-	var metadata = $('<span/>').text(shorten_filename(info.filename)
-			).attr('title', info.filename);
-	form.siblings('header').append(metadata).after('<a href="' + info.src
-			+ '"><img src="' + info.thumb + '"/></a>');
+	var metadata = $(flatten(image_metadata(info)).join(''));
+	form.siblings('header').append(metadata).after(thumbnail_html(info));
 	form.find('input[name=image]').remove();
 }
 
@@ -148,7 +141,7 @@ function make_upload_form(callback) {
 		+ '<iframe src="" name="upload"/></form>');
 	form.find('input[name=image]').change(function () {
 		callback();
-		$(this).find('strong').remove();
+		$(this).siblings('strong').remove();
 		if ($(this).val())
 			form.submit();
 	});
@@ -206,15 +199,15 @@ function new_post_form() {
 		meta.children('b').text(msg.name);
 		meta.children('code').text(msg.trip);
 		meta.children('time').text(readable_time(msg.time)
-				).attr('datetime', datetime(msg.time));
-		curPostNum = num;
-		meta.append(' <a href="#q' + num + '">No.</a><a href="'
+				).attr('datetime', datetime(msg.time)).after(
+				' <a href="#q' + num + '">No.</a><a href="'
 				+ post_url(msg) + '">' + num + '</a>');
 		post.attr('id', 'q' + num).addClass('editing');
 		if (!postOp) {
 			thread.attr('id', 'thread' + num);
 			threads[num] = thread;
 		}
+		curPostNum = num;
 
 		var submit = $('<input type="button" value="Done"/>');
 		upload_form.append(submit);
@@ -397,6 +390,6 @@ $(document).ready(function () {
 	}
 });
 
-var h5s = ['aside', 'article', 'code', 'section', 'time'];
+var h5s = ['abbr', 'aside', 'article', 'code', 'section', 'time'];
 for (var i = 0; i < h5s.length; i++)
 	document.createElement(h5s[i]);

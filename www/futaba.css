@@ -1,6 +1,7 @@
-a {
-	text-decoration: underline;
+a, a:visited {
 	border: none;
+	color: #34345c;
+	text-decoration: underline;
 }
 a:hover, blockquote a {
 	color: #d00;
@@ -18,6 +19,11 @@ article em {
 	font-style: normal;
 	color: #789922;
 }
+article img {
+	float: left;
+	vertical-align: top;
+	margin: 3px 20px 0 0;
+}
 article p {
 	display: inline;
 }
@@ -34,6 +40,10 @@ del, del em {
 del:hover, del:hover em {
 	color: white;
 }
+header > a {
+	color: inherit;
+	text-decoration: none;
+}
 header b {
 	color: #117743;
 	font-weight: bold;
@@ -41,10 +51,6 @@ header b {
 header code {
 	color: #228854;
 	font-family: inherit;
-}
-header a {
-	color: inherit;
-	text-decoration: none;
 }
 header span {
 	display: block;

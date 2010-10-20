@@ -240,7 +240,8 @@ function upload_image(image) {
 		var thumb_url = config.THUMB_URL + base + '.jpg';
 		client_call(image.resp, 'upload_complete', {
 			src: dest_url, thumb: thumb_url,
-			filename: image.filename,
+			name: image.filename, dims: [300, 300, 150, 150],
+			size: '300 MB',
 		});
 	}));
 	}));

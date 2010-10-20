@@ -143,6 +143,25 @@ function format_body(body, env) {
 	return output;
 }
 
+function shorten_filename(text) {
+	m = text.match(/^(.{20}).{8,}(\.\w{3,4})$/);
+	return m ? [m[1], safe('[&hellip;]'), m[2]] : text;
+}
+
+function image_metadata(info) {
+	var srcNm = info.src.substr(info.src.lastIndexOf('/') + 1);
+	return [safe('<span>Image <a href="'+info.src+'" target="_blank">'),
+		srcNm, safe('</a> (' + info.size + ', ' + info.dims[0] + 'x'
+		+ info.dims[1] + ', <abbr title="'), info.name, safe('">'),
+		shorten_filename(info.name), safe('</abbr>)</span>')];
+}
+
+function thumbnail_html(info) {
+	return '<a href="' + info.src + '" target="_blank"><img src="'
+		+ info.thumb + '" width="' + info.dims[2] + '" height="'
+		+ info.dims[3] + '" alt="' + info.size + '"></a>';
+}
+
 function readable_time(time) {
 	var d = new Date(time - new Date().getTimezoneOffset() * 60000);
 	function pad(n) { return (n < 10 ? '0' : '') + n; }
