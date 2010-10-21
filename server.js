@@ -182,34 +182,73 @@ function handle_upload(req, resp) {
 			return client_call(resp, 'upload_error', err);
 		}
 		var image = files.image;
+		image.resp = resp;
 		if (!image)
 			return client_call(resp, 'upload_error',
 					'No image supplied.');
-		var fail = function(text) {
-			fs.unlink(image.path);
-			client_call(resp, 'upload_error', text);
-		}
 		image.ext = path.extname(image.filename);
 		if (config.IMAGE_EXTS.indexOf(image.ext.toLowerCase()) < 0)
-			return fail('Invalid image format.');
+			return upload_failure(image, 'Invalid image format.');
+		image.tagged_path = image.ext.replace('.', '') +
+				':' + image.path;
 		image.client_id = parseInt(fields.client_id);
 		if (!(image.client_id in clients))
-			return fail('Invalid client id.');
-		image.resp = resp;
-		resize_image(image, upload_image);
+			return upload_failure(image, 'Invalid client id.');
+		read_image_filesize(image, function (image) {
+		read_image_dimensions(image.tagged_path, function (err, dims) {
+		if (err)
+			return upload_failure(image, 'Corrupt image.');
+		image.dims = dims;
+		resize_image(image, function (image) {
+		read_image_dimensions(image.thumb, function (err, dims) {
+		if (err)
+			return upload_failure(image, 'Internal error.');
+		image.dims = image.dims.concat(dims);
+		upload_image(image);
+		});
+		});
+		});
+		});
+	});
+}
+
+function read_image_filesize(image, callback) {
+	fs.stat(image.path, function (err, stat) {
+		if (err) {
+			upload_failure(image, 'Internal upload error.');
+			return;
+		}
+		image.size = stat.size
+		if (image.size > config.IMAGE_FILESIZE_MAX)
+			upload_failure(image, 'File is too large.');
+		else
+			callback(image);
+	});
+}
+
+function read_image_dimensions(path, callback) {
+	exec('identify ' + path, function (error, stdout, stderr) {
+		if (error) {
+			callback('Error ' + error + ': ' + stderr, null);
+			return;
+		}
+		var m = stdout.match(/.* (\d+)x(\d+) /);
+		if (!m)
+			callback("Couldn't parse image dimensions.", null);			else
+			callback(null, [parseInt(m[1]), parseInt(m[2])]);
 	});
 }
 
 function resize_image(image, callback) {
 	image.thumb = image.path + '_thumb';
-	var path = image.ext.replace('.', '') + ':' + image.path;
+	var path = image.tagged_path;
 	exec('convert ' + path + ' -gamma 0.454545 -filter lanczos -resize '
 		+ config.THUMB_DIMENSIONS + ' -gamma 2.2 -quality '
 		+ config.THUMB_QUALITY + ' ' + image.thumb,
-		image_handler(image, 'Conversion error.', upload_image));
+		exec_handler(image, 'Conversion error.', callback));
 }
 
-function image_handler(image, err_desc, callback) {
+function exec_handler(image, err_desc, callback) {
 	return function (error, stdout, stderr) {
 		if (error != null)
 			console.log(error);
@@ -219,32 +258,47 @@ function image_handler(image, err_desc, callback) {
 			console.log(stderr);
 		if (error == null && !stderr)
 			callback(image);
-		else {
-			client_call(image.resp, 'upload_error', err_desc);
-			fs.unlink(image.path);
-			fs.unlink(image.thumb);
-		}
+		else
+			upload_failure(image, err_desc);
 	};
+}
+
+function upload_failure(image, err_desc) {
+	client_call(image.resp, 'upload_error', err_desc);
+	if (image.path)
+		fs.unlink(image.path);
+	if (image.thumb)
+		fs.unlink(image.thumb);
 }
 
 function upload_image(image) {
 	var base = new Date().getTime();
 	var dest = path.join(config.IMAGE_DIR, base + image.ext);
 	var thumb_dest = path.join(config.THUMB_DIR, base + '.jpg');
-	exec('mv -- ' + image.path + ' ' + dest, image_handler(image,
+	exec('mv -- ' + image.path + ' ' + dest, exec_handler(image,
 	"Couldn't publish image.", function (image) {
-	exec('mv -- ' + image.thumb + ' ' + thumb_dest, image_handler(image,
+	exec('mv -- ' + image.thumb + ' ' + thumb_dest, exec_handler(image,
 	"Couldn't publish thumbnail.", function (image) {
 		console.log(image.client_id + ' successfully uploaded ' + dest);
 		var dest_url = config.IMAGE_URL + base + image.ext;
 		var thumb_url = config.THUMB_URL + base + '.jpg';
 		client_call(image.resp, 'upload_complete', {
 			src: dest_url, thumb: thumb_url,
-			name: image.filename, dims: [300, 300, 150, 150],
-			size: '300 MB',
+			name: image.filename, dims: image.dims,
+			size: readable_filesize(image.size),
 		});
 	}));
 	}));
+}
+
+function readable_filesize(size) {
+	/* Metric. Deal with it. */
+	if (size < 1000)
+		return size + ' B';
+	if (size < 1000000)
+		return Math.round(size / 1000) + ' KB';
+	size = Math.round(size / 100000).toString();
+	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
 }
 
 function on_client (socket) {
