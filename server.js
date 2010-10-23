@@ -186,14 +186,23 @@ function handle_upload(req, resp) {
 		if (!image)
 			return client_call(resp, 'upload_error',
 					'No image supplied.');
+		image.client_id = parseInt(fields.client_id);
+		var client = clients[image.client_id];
+		if (!client)
+			return upload_failure(image, 'Invalid client id.');
+		if (client.uploading) {
+			upload_failure(image, 'Already uploading.');
+			client.uploading = true;
+			return;
+		}
+		client.uploading = true;
+		if (client.post && client.post.image)
+			return upload_failure(image, 'Image already exists.');
 		image.ext = path.extname(image.filename);
 		if (config.IMAGE_EXTS.indexOf(image.ext.toLowerCase()) < 0)
 			return upload_failure(image, 'Invalid image format.');
 		image.tagged_path = image.ext.replace('.', '') +
 				':' + image.path;
-		image.client_id = parseInt(fields.client_id);
-		if (!(image.client_id in clients))
-			return upload_failure(image, 'Invalid client id.');
 
 		/* Flattened... need a better way of chaining this */
 		read_image_filesize(image, function (image) {
@@ -271,6 +280,9 @@ function upload_failure(image, err_desc) {
 		fs.unlink(image.path);
 	if (image.thumb)
 		fs.unlink(image.thumb);
+	var client = clients[image.client_id];
+	if (client)
+		client.uploading = false;
 }
 
 function upload_image(image) {
@@ -284,11 +296,16 @@ function upload_image(image) {
 		console.log(image.client_id + ' successfully uploaded ' + dest);
 		var dest_url = config.IMAGE_URL + base + image.ext;
 		var thumb_url = config.THUMB_URL + base + '.jpg';
-		client_call(image.resp, 'upload_complete', {
+		var info = {
 			src: dest_url, thumb: thumb_url,
 			name: image.filename, dims: image.dims,
 			size: readable_filesize(image.size),
-		});
+		};
+		client_call(image.resp, 'upload_complete', info);
+		var client = clients[image.client_id];
+		if (client.post) /* TEMP */
+			client.post.image = info;
+		client.uploading = false;
 	}));
 	}));
 }
@@ -445,6 +462,7 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 }
 
 function finish_post(post, owner_id) {
+	/* TODO: Should we check client.uploading? */
 	broadcast([common.FINISH_POST, post.num], post, owner_id);
 	post.editing = false;
 	delete post.state;

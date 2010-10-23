@@ -202,12 +202,13 @@ exports.gen_post_html = function (data, env) {
 				+ escape(data.email) + '">'));
 		ident.push(safe('</a>'));
 	}
+	var image = data.image ? [image_metadata(data.image), safe('</header>'),
+			safe(thumbnail_html(data.image))] : safe('</header>');
 	var post = [safe('\t<article id="q' + data.num + edit + '"><header>'),
 		ident, safe(' ' + time_tag_html(data.time) + ' '),
 		safe('<a href="#q' + data.num + '">No.</a><a href="'
-			+ post_url(data) + '">' + data.num
-			+ '</a></header> <blockquote>'),
-		format_body(data.body, env),
+			+ post_url(data) + '">' + data.num + '</a>'),
+		image, safe('\n\t\t<blockquote>'), format_body(data.body, env),
 		safe('</blockquote></article>\n')];
 	return flatten(post).join('');
 }
