@@ -148,7 +148,7 @@ function make_upload_form(callback) {
 	return form;
 }
 
-function new_post_form() {
+function new_post_form(allocation_msg) {
 	var buffer = $('<p/>'), line_buffer = $('<p/>');
 	var meta = $('<header><b/> <code/> <time/></header>');
 	var nameField = $('input[name=name]');
@@ -191,8 +191,7 @@ function new_post_form() {
 			env.callback('>>' + num);
 	}};
 
-	dispatcher[ALLOCATE_POST] = function (msg) {
-		msg = msg[0];
+	function on_allocation(msg) {
 		var num = msg.num;
 		nameField.unbind();
 		emailField.unbind();
@@ -229,7 +228,7 @@ function new_post_form() {
 		});
 		/* We've already received a SYNC for this insert */
 		return false;
-	};
+	}
 	function commit(text) {
 		if (!text)
 			return;
@@ -310,6 +309,15 @@ function new_post_form() {
 	else
 		thread = $('<section/>').replaceAll(parent).append(post);
 	$('aside').remove();
+	if (allocation_msg && allocation_msg.time) {
+		sentAllocRequest = true;
+		on_allocation(allocation_msg);
+	}
+	else {
+		dispatcher[ALLOCATE_POST] = function (msg) {
+			on_allocation(msg[0]);
+		};
+	}
 	input.focus();
 }
 
