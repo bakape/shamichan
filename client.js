@@ -164,8 +164,8 @@ function new_post_form(allocation_msg) {
 	var state = initial_post_state();
 	var INPUT_MIN_SIZE = 2;
 
-	blockquote.append.apply(blockquote, [buffer, line_buffer, input]);
-	post.append.apply(post, [meta, blockquote, upload_form]);
+	blockquote.append.call(blockquote, buffer, line_buffer, input);
+	post.append.call(post, meta, blockquote, upload_form);
 
 	function propagate_fields() {
 		var name = nameField.val().trim();

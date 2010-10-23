@@ -194,6 +194,8 @@ function handle_upload(req, resp) {
 		image.client_id = parseInt(fields.client_id);
 		if (!(image.client_id in clients))
 			return upload_failure(image, 'Invalid client id.');
+
+		/* Flattened... need a better way of chaining this */
 		read_image_filesize(image, function (image) {
 		read_image_dimensions(image.tagged_path, function (err, dims) {
 		if (err)
