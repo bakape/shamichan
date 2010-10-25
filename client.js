@@ -1,9 +1,11 @@
-var curPostNum = 0;
+var postForm = null;
 var activePosts = {};
 var liveFeed = true;
 var threads = {};
 var dispatcher = {};
 var THREAD = null;
+var nameField, emailField;
+var INPUT_MIN_SIZE = 2;
 
 function send(msg) {
 	socket.send(JSON.stringify(msg));
@@ -11,7 +13,7 @@ function send(msg) {
 
 function make_reply_box() {
 	var box = $('<aside><a>[Reply]</a></aside>');
-	box.find('a').click(new_post_form);
+	box.find('a').click(PostForm);
 	return box;
 }
 
@@ -19,7 +21,7 @@ function insert_new_post_boxes() {
 	make_reply_box().appendTo('section');
 	if (!THREAD) {
 		var box = $('<aside><a>[New thread]</a></aside>');
-		box.find('a').click(new_post_form);
+		box.find('a').click(PostForm);
 		$('hr').after(box);
 	}
 }
@@ -69,7 +71,7 @@ function toggle_live() {
 
 dispatcher[INSERT_POST] = function (msg) {
 	msg = msg[0];
-	if (msg.num == curPostNum)
+	if (postForm && msg.num == postForm.num)
 		return true;
 	msg.format_link = format_link;
 	var post = $(gen_post_html(msg, msg));
@@ -86,7 +88,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		var section = $('<section id="thread' + msg.num + '"/>'
 				).append(post);
 		threads[msg.num] = section;
-		if (!curPostNum)
+		if (!postForm)
 			section.append(make_reply_box());
 		if (!liveFeed)
 			section.hide();
@@ -132,194 +134,204 @@ function upload_complete(info) {
 	form.find('input[name=image]').remove();
 }
 
-function make_upload_form(callback) {
+function propagate_fields() {
+	var parsed = parse_name(nameField.val().trim());
+	postForm.meta.children('b').text(parsed[0]);
+	postForm.meta.children('code').text((parsed[1] || parsed[2]) && '!?');
+	var email = emailField.val().trim();
+	if (email) {
+		/* TODO: add link */
+	}
+}
+
+var format_env = {format_link: function (num, env) {
+	var post = $('#q' + num);
+	if (post.length) {
+		var thread = extract_num(post.parent(), 'thread');
+		env.callback(make_link(num, thread));
+	}
+	else
+		env.callback('>>' + num);
+}};
+
+function PostForm(link_clicked) {
+	if (!(this instanceof PostForm)) {
+		return new PostForm(this);
+	}
+	postForm = this;
+	this.buffer = $('<p/>');
+	this.line_buffer = $('<p/>');
+	this.meta = $('<header><b/> <code/> <time/></header>');
+	this.input = $('<input name="body" class="trans"/>');
+	this.upload_form = this.make_upload_form();
+	this.blockquote = $('<blockquote/>');
+	var post = $('<article/>');
+	this.post = post;
+	this.sentAllocRequest = false;
+	this.unallocatedBuffer = '';
+	this.state = initial_post_state();
+
+	var input_field = [this.buffer, this.line_buffer, this.input];
+	this.blockquote.append.apply(this.blockquote, input_field);
+	var post_parts = [this.meta, this.blockquote, this.upload_form];
+	post.append.apply(post, post_parts);
+
+	propagate_fields();
+	nameField.change(propagate_fields).keypress(propagate_fields);
+	emailField.change(propagate_fields).keypress(propagate_fields);
+
+	this.input.attr('size', INPUT_MIN_SIZE);
+	this.input.keydown(function (event) { postForm.on_key(event); });
+	var link = $(link_clicked);
+	var parent = link.parent(), section = link.parents('section');
+	if (section.length) {
+		this.thread = section;
+		this.op = extract_num(section, 'thread');
+		parent.replaceWith(post);
+	}
+	else {
+		this.thread = $('<section/>').replaceAll(parent).append(post);
+	}
+	dispatcher[ALLOCATE_POST] = function (msg) {
+		postForm.on_allocation(msg[0]);
+		/* We've already received a SYNC for this insert */
+		return false;
+	};
+	$('aside').remove();
+	this.input.focus();
+}
+
+PostForm.prototype.on_allocation = function (msg) {
+	var num = msg.num;
+	this.num = num;
+	nameField.unbind();
+	emailField.unbind();
+	var meta = this.meta;
+	meta.children('b').text(msg.name);
+	meta.children('code').text(msg.trip);
+	meta.children('time').text(readable_time(msg.time)
+			).attr('datetime', datetime(msg.time)).after(
+			' <a href="#q' + num + '">No.</a><a href="'
+			+ post_url(msg) + '">' + num + '</a>');
+	this.post.attr('id', 'q' + num).addClass('editing');
+	if (!this.op) {
+		this.thread.attr('id', 'thread' + num);
+		threads[num] = this.thread;
+	}
+
+	var submit = $('<input type="button" value="Done"/>');
+	this.upload_form.append(submit);
+	submit.click(function () { postForm.finish(); });
+};
+
+PostForm.prototype.on_key = function (event) {
+	var input = this.input;
+	if (event.keyCode == 13) {
+		if (this.sentAllocRequest || input.val().replace(' ', '')) {
+			this.commit(input.val() + '\n');
+			input.val('');
+		}
+		event.preventDefault();
+	}
+	else {
+		this.commit_words(input.val(), event.keyCode == 27);
+	}
+	var cur_size = input.attr('size');
+	var right_size = Math.max(Math.round(input.val().length * 1.5),
+			INPUT_MIN_SIZE);
+	if (cur_size != right_size) {
+		input.attr('size', (cur_size + right_size) / 2);
+	}
+};
+
+PostForm.prototype.commit = function (text) {
+	if (!text)
+		return;
+	if (!this.num && !this.sentAllocRequest) {
+		var msg = {
+			name: nameField.val().trim(),
+			email: emailField.val().trim(),
+			frag: text
+		};
+		if (this.op)
+			msg.op = this.op;
+		send([ALLOCATE_POST, msg]);
+		this.sentAllocRequest = true;
+	}
+	else if (this.num) {
+		if (this.unallocatedBuffer) {
+			send(this.unallocatedBuffer + text);
+			this.unallocatedBuffer = '';
+		}
+		else
+			send(text);
+	}
+	else
+		this.unallocatedBuffer += text;
+
+	var line_buffer = this.line_buffer;
+	if (text.indexOf('\n') >= 0) {
+		var lines = text.split('\n');
+		lines[0] = line_buffer.text() + lines[0];
+		line_buffer.text(lines.pop());
+		for (var i = 0; i < lines.length; i++)
+			insert_formatted(lines[i] + '\n', this.buffer,
+					this.state, format_env);
+	}
+	else {
+		line_buffer.append(document.createTextNode(text));
+	}
+};
+
+PostForm.prototype.commit_words = function (text, spaceEntered) {
+	var words = text.trim().split(/ +/);
+	var endsWithSpace = text.length > 0
+			&& text.charAt(text.length-1) == ' ';
+	var newWord = endsWithSpace && !spaceEntered;
+	if (newWord && words.length > 1) {
+		this.input.val(words.pop() + ' ');
+		this.commit(words.join(' ') + ' ');
+	}
+	else if (words.length > 2) {
+		var last = words.pop();
+		this.input.val(words.pop() + ' ' + last
+				+ (endsWithSpace ? ' ' : ''));
+		this.commit(words.join(' ') + ' ');
+	}
+};
+
+PostForm.prototype.finish = function () {
+	this.commit(this.input.val());
+	this.input.remove();
+	this.upload_form.remove();
+	var buffer = this.buffer, line_buffer = this.line_buffer;
+	insert_formatted(line_buffer.text(), buffer, this.state, format_env);
+	buffer.replaceWith(buffer.contents());
+	line_buffer.remove();
+	this.post.removeClass('editing');
+
+	dispatcher[ALLOCATE_POST] = null;
+	postForm = null;
+	send([FINISH_POST]);
+	insert_new_post_boxes();
+};
+
+PostForm.prototype.make_upload_form = function () {
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="." target="upload">'
 		+ '<input type="file" name="image"/>'
 		+ '<input type="hidden" name="client_id" value="'
 		+ socket.transport.sessionid + '"/>'
 		+ '<iframe src="" name="upload"/></form>');
+	var user_input = this.input;
 	form.find('input[name=image]').change(function () {
-		callback();
+		user_input.focus();
 		$(this).siblings('strong').remove();
 		if ($(this).val())
 			form.submit();
 	});
 	return form;
-}
-
-function new_post_form(allocation_msg) {
-	var buffer = $('<p/>'), line_buffer = $('<p/>');
-	var meta = $('<header><b/> <code/> <time/></header>');
-	var nameField = $('input[name=name]');
-	var emailField = $('input[name=email]');
-	var input = $('<input name="body" class="trans"/>');
-	var upload_form = make_upload_form(function () { input.focus(); });
-	var blockquote = $('<blockquote/>');
-	var post = $('<article/>');
-	var postOp = null;
-	var dummy = $(document.createTextNode(' '));
-	var sentAllocRequest = false, unallocatedBuffer = '';
-	var thread = $(this).parents('section');
-	var state = initial_post_state();
-	var INPUT_MIN_SIZE = 2;
-
-	blockquote.append.call(blockquote, buffer, line_buffer, input);
-	post.append.call(post, meta, blockquote, upload_form);
-
-	function propagate_fields() {
-		var name = nameField.val().trim();
-		var parsed = parse_name(name);
-		meta.children('b').text(parsed[0]);
-		meta.children('code').text((parsed[1] || parsed[2]) && '!?');
-		var email = emailField.val().trim();
-		if (email) {
-			/* TODO: add link */
-		}
-	}
-	propagate_fields();
-	nameField.change(propagate_fields).keypress(propagate_fields);
-	emailField.change(propagate_fields).keypress(propagate_fields);
-
-	var format_env = {format_link: function (num, env) {
-		var post = $('#q' + num);
-		if (post.length) {
-			var thread = extract_num(post.parent(), 'thread');
-			env.callback(make_link(num, thread));
-		}
-		else
-			env.callback('>>' + num);
-	}};
-
-	function on_allocation(msg) {
-		var num = msg.num;
-		nameField.unbind();
-		emailField.unbind();
-		meta.children('b').text(msg.name);
-		meta.children('code').text(msg.trip);
-		meta.children('time').text(readable_time(msg.time)
-				).attr('datetime', datetime(msg.time)).after(
-				' <a href="#q' + num + '">No.</a><a href="'
-				+ post_url(msg) + '">' + num + '</a>');
-		post.attr('id', 'q' + num).addClass('editing');
-		if (!postOp) {
-			thread.attr('id', 'thread' + num);
-			threads[num] = thread;
-		}
-		curPostNum = num;
-
-		var submit = $('<input type="button" value="Done"/>');
-		upload_form.append(submit);
-		submit.click(function () {
-			/* transform into normal post */
-			commit(input.val());
-			input.remove();
-			upload_form.remove();
-			insert_formatted(line_buffer.text(), buffer, state,
-					format_env);
-			buffer.replaceWith(buffer.contents());
-			line_buffer.remove();
-			post.removeClass('editing');
-
-			dispatcher[ALLOCATE_POST] = null;
-			curPostNum = 0;
-			send([FINISH_POST]);
-			insert_new_post_boxes();
-		});
-		/* We've already received a SYNC for this insert */
-		return false;
-	}
-	function commit(text) {
-		if (!text)
-			return;
-		if (!curPostNum && !sentAllocRequest) {
-			var msg = {
-				name: nameField.val().trim(),
-				email: emailField.val().trim(),
-				frag: text
-			};
-			if (postOp)
-				msg.op = postOp;
-			send([ALLOCATE_POST, msg]);
-			sentAllocRequest = true;
-		}
-		else if (curPostNum) {
-			if (unallocatedBuffer) {
-				send(unallocatedBuffer + text);
-				unallocatedBuffer = '';
-			}
-			else
-				send(text);
-		}
-		else
-			unallocatedBuffer += text;
-		if (text.indexOf('\n') >= 0) {
-			var lines = text.split('\n');
-			lines[0] = line_buffer.text() + lines[0];
-			line_buffer.text(lines.pop());
-			for (var i = 0; i < lines.length; i++)
-				insert_formatted(lines[i] + '\n', buffer,
-						state, format_env);
-		}
-		else {
-			line_buffer.append(document.createTextNode(text));
-		}
-	}
-	function commit_words(text, spaceEntered) {
-		var words = text.trim().split(/ +/);
-		var endsWithSpace = text.length > 0
-				&& text.charAt(text.length-1) == ' ';
-		var newWord = endsWithSpace && !spaceEntered;
-		if (newWord && words.length > 1) {
-			input.val(words.pop() + ' ');
-			commit(words.join(' ') + ' ');
-		}
-		else if (words.length > 2) {
-			var last = words.pop();
-			input.val(words.pop() + ' ' + last
-					+ (endsWithSpace ? ' ' : ''));
-			commit(words.join(' ') + ' ');
-		}
-	}
-	input.attr('size', INPUT_MIN_SIZE);
-	input.keydown(function (event) {
-		var key = event.keyCode;
-		if (key == 13) {
-			if (sentAllocRequest || input.val().replace(' ', '')) {
-				commit(input.val() + '\n');
-				input.val('');
-			}
-			event.preventDefault();
-		}
-		else {
-			commit_words(input.val(), key == 27);
-		}
-		var cur_size = input.attr('size');
-		var right_size = Math.max(Math.round(input.val().length * 1.5),
-				INPUT_MIN_SIZE);
-		if (cur_size != right_size) {
-			input.attr('size', (cur_size + right_size) / 2);
-		}
-	});
-	var parent = $(this).parent()
-	if (thread.length) {
-		postOp = extract_num(thread, 'thread');
-		parent.replaceWith(post);
-	}
-	else
-		thread = $('<section/>').replaceAll(parent).append(post);
-	$('aside').remove();
-	if (allocation_msg && allocation_msg.time) {
-		sentAllocRequest = true;
-		on_allocation(allocation_msg);
-	}
-	else {
-		dispatcher[ALLOCATE_POST] = function (msg) {
-			on_allocation(msg[0]);
-		};
-	}
-	input.focus();
-}
+};
 
 var socket = new io.Socket(HOST, {
 	port: PORT,
@@ -355,6 +367,9 @@ dispatcher[INVALID] = function (msg) {
 }
 
 $(document).ready(function () {
+	nameField = $('input[name=name]');
+	emailField = $('input[name=email]');
+
 	$('.editing').each(function(index) {
 		var post = $(this);
 		activePosts[extract_num(post, 'q')] = post;
