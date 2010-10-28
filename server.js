@@ -312,14 +312,15 @@ function upload_image(image) {
 			size: readable_filesize(image.size),
 		};
 		var client = clients[image.client_id];
-		var alloc;
-		if (client.post || allocate_post(image.alloc, client,
-				function (a) { info.alloc = a; }))
+		function reply(a) {
+			client_call(image.resp, 'postForm.on_allocation', a);
+		}
+		if (client.post) {
 			client_call(image.resp, 'upload_complete', info);
-		else
+			client.post.image = info;
+		}
+		else if (!allocate_post(image.alloc, info, client, reply))
 			return upload_failure(image, 'No allocation.');
-		delete info.alloc;
-		client.post.image = info;
 		client.uploading = false;
 	}));
 	}));
@@ -391,12 +392,12 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	var frag = msg.frag;
 	if (!frag || typeof frag != 'string' || frag.match(/^\s*$/g))
 		return false;
-	return allocate_post(msg, client, function (alloc) {
+	return allocate_post(msg, null, client, function (alloc) {
 		multisend(client, [[common.ALLOCATE_POST, alloc]]);
 	});
 }
 
-function allocate_post(msg, client, reply_alloc_func) {
+function allocate_post(msg, image, client, reply_alloc_func) {
 	if (!msg)
 		return false;
 	var post = {
@@ -427,6 +428,8 @@ function allocate_post(msg, client, reply_alloc_func) {
 	var links = valid_links(post.body, state);
 	if (!isEmpty(links))
 		post.links = links;
+	if (image)
+		post.image = image;
 	broadcast([common.INSERT_POST, post], post, client.id);
 	reply_alloc_func(post);
 	/* Store some extra state for later */

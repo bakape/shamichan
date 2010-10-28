@@ -128,8 +128,6 @@ function upload_error(msg) {
 }
 
 function upload_complete(info) {
-	if (info.alloc)
-		postForm.on_allocation(info.alloc);
 	var form = postForm.uploadForm;
 	var metadata = $(flatten(image_metadata(info)).join(''));
 	form.siblings('header').append(metadata).after(thumbnail_html(info));
@@ -225,6 +223,8 @@ PostForm.prototype.on_allocation = function (msg) {
 	this.submit.attr('disabled', false);
 	this.uploadForm.append(this.submit);
 	this.submit.click($.proxy(this.finish, this));
+	if (msg.image)
+		upload_complete(msg.image);
 };
 
 PostForm.prototype.on_key = function (event) {
