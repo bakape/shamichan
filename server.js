@@ -160,13 +160,15 @@ function client_call(resp, func, param) {
 		+ 'parent.' + func + '(' + param + ');</script>');
 }
 
+var validFields = ['client_id', 'alloc'];
+
 function handle_upload(req, resp) {
 	var form = new formidable.IncomingForm();
 	form.maxFieldsSize = 512;
 	form.onPart = function (part) {
 		if (part.filename && part.name == 'image')
 			form.handlePart(part);
-		else if (!part.filename && part.name == 'client_id')
+		else if (!part.filename && validFields.indexOf(part.name) >= 0)
 			form.handlePart(part);
 		else {
 			this._error('Superfluous field.');
@@ -186,7 +188,7 @@ function handle_upload(req, resp) {
 		if (!image)
 			return client_call(resp, 'upload_error',
 					'No image supplied.');
-		image.client_id = parseInt(fields.client_id);
+		image.client_id = fields.client_id;
 		var client = clients[image.client_id];
 		if (!client)
 			return upload_failure(image, 'Invalid client id.');
@@ -203,6 +205,14 @@ function handle_upload(req, resp) {
 			return upload_failure(image, 'Invalid image format.');
 		image.tagged_path = image.ext.replace('.', '') +
 				':' + image.path;
+		if (fields.alloc) {
+			try {
+				image.alloc = JSON.parse(fields.alloc);
+			}
+			catch (e) {
+				return upload_failure(image, 'Bad alloc.');
+			}
+		}
 
 		/* Flattened... need a better way of chaining this */
 		read_image_filesize(image, function (image) {
@@ -301,10 +311,15 @@ function upload_image(image) {
 			name: image.filename, dims: image.dims,
 			size: readable_filesize(image.size),
 		};
-		client_call(image.resp, 'upload_complete', info);
 		var client = clients[image.client_id];
-		if (client.post) /* TEMP */
-			client.post.image = info;
+		var alloc;
+		if (client.post || allocate_post(image.alloc, client,
+				function (a) { info.alloc = a; }))
+			client_call(image.resp, 'upload_complete', info);
+		else
+			return upload_failure(image, 'No allocation.');
+		delete info.alloc;
+		client.post.image = info;
 		client.uploading = false;
 	}));
 	}));
@@ -326,9 +341,13 @@ function on_client (socket) {
 			watching: null};
 	clients[id] = client;
 	socket.on('message', function (data) {
-		msg = JSON.parse(data);
+		var msg = null;
+		try { msg = JSON.parse(data); }
+		catch (e) {}
 		var type = common.INVALID;
-		if (client.post && msg.constructor == String)
+		if (msg == null) {
+		}
+		else if (client.post && msg.constructor == String)
 			type = common.UPDATE_POST;
 		else if (msg.constructor == Array)
 			type = msg.shift();
@@ -343,24 +362,6 @@ function on_client (socket) {
 		if (client.post)
 			finish_post(client.post, id);
 	});
-}
-
-function is_integer(n) {
-	return (typeof(n) == 'number' && parseFloat(n) == parseInt(n)
-			&& !isNaN(n));
-}
-
-function validate(msg, schema) {
-	if (msg == null || typeof(msg) != 'object')
-		return false;
-	for (var k in schema) {
-		var m = msg[k];
-		if (m == null || m.constructor != schema[k])
-			return false;
-		if (schema[k] == Number && !is_integer(m))
-			return false;
-	}
-	return true;
 }
 
 function valid_links(frag, state) {
@@ -384,19 +385,30 @@ function isEmpty(obj) {
 dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (msg.length != 1)
 		return false;
-	msg = msg.shift();
-	if (!validate(msg, {name: String, frag: String}))
+	msg = msg[0];
+	if (client.post)
+		return true; /* image upload/fragment typing race */
+	var frag = msg.frag;
+	if (!frag || typeof frag != 'string' || frag.match(/^\s*$/g))
 		return false;
-	if (!msg.frag.replace(/[ \n]/g, ''))
+	return allocate_post(msg, client, function (alloc) {
+		multisend(client, [[common.ALLOCATE_POST, alloc]]);
+	});
+}
+
+function allocate_post(msg, client, reply_alloc_func) {
+	if (!msg)
 		return false;
 	var post = {
 		time: new Date().getTime(),
 		editing: true,
-		body: msg.frag
+		body: msg.frag || '',
 	};
-	if (is_integer(msg.op) && posts[msg.op] && !posts[msg.op].op)
+	if (typeof msg.op == 'number' && posts[msg.op] && !posts[msg.op].op)
 		post.op = msg.op;
 	if (client.watching && client.watching != post.op)
+		return false;
+	if (typeof msg.name != 'string')
 		return false;
 	var parsed = common.parse_name(msg.name);
 	post.name = parsed[0];
@@ -416,7 +428,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (!isEmpty(links))
 		post.links = links;
 	broadcast([common.INSERT_POST, post], post, client.id);
-	multisend(client, [[common.ALLOCATE_POST, post]]);
+	reply_alloc_func(post);
 	/* Store some extra state for later */
 	post.links = links;
 	post.state = state;

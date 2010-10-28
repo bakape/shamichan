@@ -3,7 +3,7 @@ var activePosts = {};
 var liveFeed = true;
 var threads = {};
 var dispatcher = {};
-var THREAD = null;
+var THREAD = 0;
 var nameField, emailField;
 var INPUT_MIN_SIZE = 2;
 
@@ -124,11 +124,13 @@ function extract_num(q, prefix) {
 
 function upload_error(msg) {
 	var msg = $('<strong/>').text(msg);
-	$('input[name=image]').after(msg);
+	$('input[name=image]').attr('disabled', false).after(msg);
 }
 
 function upload_complete(info) {
-	var form = $('form');
+	if (info.alloc)
+		postForm.on_allocation(info.alloc);
+	var form = postForm.uploadForm;
 	var metadata = $(flatten(image_metadata(info)).join(''));
 	form.siblings('header').append(metadata).after(thumbnail_html(info));
 	form.find('input[name=image]').remove();
@@ -163,7 +165,8 @@ function PostForm(link_clicked) {
 	this.line_buffer = $('<p/>');
 	this.meta = $('<header><b/> <code/> <time/></header>');
 	this.input = $('<input name="body" class="trans"/>');
-	this.upload_form = this.make_upload_form();
+	this.uploadForm = this.make_upload_form();
+	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
 	var post = $('<article/>');
 	this.post = post;
@@ -173,7 +176,7 @@ function PostForm(link_clicked) {
 
 	var input_field = [this.buffer, this.line_buffer, this.input];
 	this.blockquote.append.apply(this.blockquote, input_field);
-	var post_parts = [this.meta, this.blockquote, this.upload_form];
+	var post_parts = [this.meta, this.blockquote, this.uploadForm];
 	post.append.apply(post, post_parts);
 
 	propagate_fields();
@@ -181,7 +184,7 @@ function PostForm(link_clicked) {
 	emailField.change(propagate_fields).keypress(propagate_fields);
 
 	this.input.attr('size', INPUT_MIN_SIZE);
-	this.input.keydown(function (event) { postForm.on_key(event); });
+	this.input.keydown($.proxy(this.on_key, this));
 	var link = $(link_clicked);
 	var parent = link.parent(), section = link.parents('section');
 	if (section.length) {
@@ -192,11 +195,11 @@ function PostForm(link_clicked) {
 	else {
 		this.thread = $('<section/>').replaceAll(parent).append(post);
 	}
-	dispatcher[ALLOCATE_POST] = function (msg) {
-		postForm.on_allocation(msg[0]);
+	dispatcher[ALLOCATE_POST] = $.proxy(function (msg) {
+		this.on_allocation(msg[0]);
 		/* We've already received a SYNC for this insert */
 		return false;
-	};
+	}, this);
 	$('aside').remove();
 	this.input.focus();
 }
@@ -219,9 +222,9 @@ PostForm.prototype.on_allocation = function (msg) {
 		threads[num] = this.thread;
 	}
 
-	var submit = $('<input type="button" value="Done"/>');
-	this.upload_form.append(submit);
-	submit.click(function () { postForm.finish(); });
+	this.submit.attr('disabled', false);
+	this.uploadForm.append(this.submit);
+	this.submit.click($.proxy(this.finish, this));
 };
 
 PostForm.prototype.on_key = function (event) {
@@ -244,18 +247,23 @@ PostForm.prototype.on_key = function (event) {
 	}
 };
 
+PostForm.prototype.make_alloc_request = function (text) {
+	var msg = {
+		name: nameField.val().trim(),
+		email: emailField.val().trim(),
+	};
+	if (text)
+		msg.frag = text;
+	if (this.op)
+		msg.op = this.op;
+	return msg;
+};
+
 PostForm.prototype.commit = function (text) {
 	if (!text)
 		return;
 	if (!this.num && !this.sentAllocRequest) {
-		var msg = {
-			name: nameField.val().trim(),
-			email: emailField.val().trim(),
-			frag: text
-		};
-		if (this.op)
-			msg.op = this.op;
-		send([ALLOCATE_POST, msg]);
+		send([ALLOCATE_POST, this.make_alloc_request(text)]);
 		this.sentAllocRequest = true;
 	}
 	else if (this.num) {
@@ -303,7 +311,7 @@ PostForm.prototype.commit_words = function (text, spaceEntered) {
 PostForm.prototype.finish = function () {
 	this.commit(this.input.val());
 	this.input.remove();
-	this.upload_form.remove();
+	this.uploadForm.remove();
 	var buffer = this.buffer, line_buffer = this.line_buffer;
 	insert_formatted(line_buffer.text(), buffer, this.state, format_env);
 	buffer.replaceWith(buffer.contents());
@@ -327,8 +335,16 @@ PostForm.prototype.make_upload_form = function () {
 	form.find('input[name=image]').change(function () {
 		user_input.focus();
 		$(this).siblings('strong').remove();
-		if ($(this).val())
-			form.submit();
+		if (!$(this).val())
+			return;
+		if (!postForm.sentAllocRequest) {
+			postForm.submit.attr('disabled', true);
+			var alloc = $('<input type="hidden" name="alloc"/>');
+			var request = postForm.make_alloc_request(null);
+			form.append(alloc.val(JSON.stringify(request)));
+		}
+		form.submit();
+		$(this).attr('disabled', true);
 	});
 	return form;
 };
