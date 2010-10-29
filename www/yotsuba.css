@@ -3,7 +3,7 @@ a, a:visited {
 	color: #34345c;
 	text-decoration: underline;
 }
-a:hover, blockquote a {
+a:hover, blockquote a, blockquote a:visited {
 	color: #d00;
 	cursor: pointer;
 }
@@ -40,8 +40,8 @@ del, del em {
 del:hover, del:hover em {
 	color: white;
 }
-header > a {
-	color: inherit;
+header > a, header > a:visited {
+	color: black;
 	text-decoration: none;
 }
 header b {
