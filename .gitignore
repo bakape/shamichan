@@ -5,6 +5,7 @@
 .lock*
 server/builder
 server/config.js
+server/jsmin
 www/js/client-v*.js
 www/src/*
 www/thumb/*
