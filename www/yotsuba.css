@@ -40,6 +40,12 @@ del, del em {
 del:hover, del:hover em {
 	color: white;
 }
+h1 {
+	color: #af0a0f;
+	font: bolder 28px Tahoma;
+	letter-spacing: -2px;
+	text-align: center;
+}
 header > a, header > a:visited {
 	color: black;
 	text-decoration: none;

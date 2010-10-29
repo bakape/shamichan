@@ -1,4 +1,5 @@
 exports.config = {
+	TITLE: "/stocking/ - Sweets",
 	HOST: "localhost",
 	PORT: 8000,
 	SOCKET_IO_URL: "http://localhost:8000/socket.io/",
