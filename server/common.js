@@ -36,7 +36,7 @@ function flatten(frags) {
 	return out;
 }
 
-safe = function (frag) {
+function safe(frag) {
 	return {safe: frag};
 }
 exports.safe = safe;
@@ -121,7 +121,7 @@ function format_fragment(frag, state, env) {
 			var line = lines[l];
 			if (l % 2)
 				do_transition(safe('<br>'), 0);
-			else if (state[0] == 0 && line[0] == '>')
+			else if (state[0] === 0 && line[0] == '>')
 				do_transition(line, 1);
 			else if (line)
 				do_transition(line, (state[0] == 1) ? 1 : 2);
@@ -173,7 +173,6 @@ function readable_time(time) {
 function datetime(time) {
 	var d = new Date(time);
 	function pad(n) { return (n < 10 ? '0' : '') + n; }
-	function pad3(n) { return (n < 10 ? '00' : (n < 100 ? '0' : '')) + n; }
 	return (d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' +
 		pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' +
 		pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
@@ -220,7 +219,7 @@ exports.gen_post_html = function (data, env) {
 		format_body(data.body, env),
 		safe('</blockquote></article>\n')];
 	return flatten(post).join('');
-}
+};
 
 exports.parse_name = function (name) {
 	var tripcode = '', secure = '';
@@ -235,4 +234,4 @@ exports.parse_name = function (name) {
 		}
 	}
 	return [name.trim() || 'Anonymous', tripcode, secure];
-}
+};
