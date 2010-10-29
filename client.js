@@ -77,6 +77,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		return true;
 	msg.format_link = format_link;
 	var post = $(gen_post_html(msg, msg));
+	post.find('header > a:last').click(add_ref);
 	activePosts[msg.num] = post;
 	var section = null;
 	if (msg.op) {
@@ -121,7 +122,8 @@ dispatcher[FINISH_POST] = function (msg) {
 };
 
 function extract_num(q, prefix) {
-	return parseInt(q.attr('id').replace(prefix, ''));
+	var a = q.attr('id');
+	return parseInt(prefix ? a.replace(prefix, '') : a);
 }
 
 function upload_error(msg) {
@@ -217,6 +219,7 @@ PostForm.prototype.on_allocation = function (msg) {
 	meta.children('time').text(readable_time(msg.time)
 		).attr('datetime', datetime(msg.time)
 		).after(' ' + num_html(msg));
+	meta.find('a:last').click(add_ref);
 	this.post.attr('id', '' + num).addClass('editing');
 	if (!this.op) {
 		this.thread.attr('id', 'thread' + num);
@@ -252,6 +255,14 @@ PostForm.prototype.on_key = function (event) {
 };
 
 function add_ref(num) {
+	if (!parseInt(num)) {
+		var post = $(this).parents('article');
+		if (!post.length)
+			return;
+		if (num.preventDefault)
+			num.preventDefault();
+		num = extract_num(post, false);
+	}
 	if (!postForm) {
 		var link = $('#' + num).siblings('aside').find('a');
 		console.log(link);
@@ -259,6 +270,7 @@ function add_ref(num) {
 	}
 	postForm.input.val(postForm.input.val() + '>>' + num);
 	postForm.on_key.call(postForm, {keyCode: 13});
+	postForm.input.focus();
 };
 
 PostForm.prototype.make_alloc_request = function (text) {
@@ -403,7 +415,7 @@ $(document).ready(function () {
 
 	$('.editing').each(function(index) {
 		var post = $(this);
-		activePosts[extract_num(post, 'nope')] = post;
+		activePosts[extract_num(post, false)] = post;
 	});
 	$('section').each(function (index) {
 		var section = $(this);
@@ -415,12 +427,16 @@ $(document).ready(function () {
 	insert_new_post_boxes();
 	m = window.location.hash.match(/^#q(\d+)$/);
 	if (m && $('#' + m[1]).length) {
-		window.location.hash = '#' + m[1];
-		add_ref(m[1]);
+		var id = m[1];
+		window.location.hash = '#' + id;
+		$('#' + id).addClass('highlight');
+		setTimeout(function () { add_ref(id); }, 500);
 	}
-	m = window.location.hash.match(/^(#\d+)$/);
-	if (m)
-		$(m[1]).addClass('highlight');
+	else {
+		m = window.location.hash.match(/^(#\d+)$/);
+		if (m)
+			$(m[1]).addClass('highlight');
+	}
 
 	socket.on('connect', on_connect);
 	socket.on('disconnect', attempt_reconnect);
@@ -439,6 +455,9 @@ $(document).ready(function () {
 	$('time').each(function (index) {
 		var time = $(this);
 		time.text(readable_time(new Date(time.attr('datetime'))));
+	});
+	$('article header').each(function (index) {
+	       $(this).children('a').click(add_ref);
 	});
 
 	if (!THREAD) {
