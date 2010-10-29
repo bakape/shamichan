@@ -190,7 +190,12 @@ function post_url(post) {
 exports.post_url = post_url;
 
 exports.gen_post_html = function (data, env) {
-	var edit = data.editing ? '" class="editing' : '';
+	var classes = [];
+	if (!data.op)
+		classes.push('op');
+	if (data.editing)
+		classes.push('editing');
+	var cls = classes.length ? '" class="' + classes.join(' ') : '';
 	var ident = [safe('<b>'), data.name, safe('</b>')];
 	if (data.trip) {
 		ident[2].safe += ' <code>';
@@ -204,7 +209,7 @@ exports.gen_post_html = function (data, env) {
 	}
 	var image = data.image ? [image_metadata(data.image), safe('</header>'),
 			safe(thumbnail_html(data.image))] : safe('</header>');
-	var post = [safe('\t<article id="q' + data.num + edit + '"><header>'),
+	var post = [safe('\t<article id="q' + data.num + cls + '"><header>'),
 		ident, safe(' ' + time_tag_html(data.time) + ' '),
 		safe('<a href="#q' + data.num + '">No.</a><a href="'
 			+ post_url(data) + '">' + data.num + '</a>'),

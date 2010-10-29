@@ -6,6 +6,7 @@ var dispatcher = {};
 var THREAD = 0;
 var nameField, emailField;
 var INPUT_MIN_SIZE = 2;
+var ceiling;
 
 function send(msg) {
 	socket.send(JSON.stringify(msg));
@@ -22,7 +23,7 @@ function insert_new_post_boxes() {
 	if (!THREAD) {
 		var box = $('<aside><a>[New thread]</a></aside>');
 		box.find('a').click(PostForm);
-		$('hr').after(box);
+		ceiling.after(box);
 	}
 }
 
@@ -86,7 +87,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	}
 	else {
 		var section = $('<section id="thread' + msg.num + '"/>'
-				).append(post);
+				).append(post).after('<hr/>');
 		threads[msg.num] = section;
 		if (!postForm)
 			section.append(make_reply_box());
@@ -95,7 +96,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	}
 	/* Insert it at the top; need a more robust way */
 	var fencepost = $('body > aside');
-	section.insertAfter(fencepost.length ? fencepost : 'hr');
+	section.insertAfter(fencepost.length ? fencepost : ceiling);
 	return true;
 };
 
@@ -191,7 +192,9 @@ function PostForm(link_clicked) {
 		parent.replaceWith(post);
 	}
 	else {
-		this.thread = $('<section/>').replaceAll(parent).append(post);
+		this.thread = $('<section/>').replaceAll(parent).append(post
+				).after('<hr/>');
+		post.addClass('op');
 	}
 	dispatcher[ALLOCATE_POST] = $.proxy(function (msg) {
 		this.on_allocation(msg[0]);
@@ -385,6 +388,7 @@ dispatcher[INVALID] = function (msg) {
 $(document).ready(function () {
 	nameField = $('input[name=name]');
 	emailField = $('input[name=email]');
+	ceiling = $('hr:first');
 
 	$('.editing').each(function(index) {
 		var post = $(this);

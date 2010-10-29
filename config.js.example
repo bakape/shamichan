@@ -12,7 +12,9 @@ exports.config = {
 	IMAGE_URL: 'http://localhost/src/',
 	THUMB_URL: 'http://localhost/thumb/',
 	THUMB_QUALITY: 50,
-	THUMB_DIMENSIONS: '150x150',
+	THUMB_DIMENSIONS: '125x125',
+	THUMB_OP_QUALITY: 50,
+	THUMB_OP_DIMENSIONS: '250x250',
 };
 if (process.argv[2] == '--show-config')
 	console.log(exports.config[process.argv[3]]);

@@ -102,7 +102,7 @@ function write_thread_html(thread, response) {
 	response.write('<section id="thread' + thread[0].num + '">\n');
 	for (var i = 0; i < thread.length; i++)
 		response.write(common.gen_post_html(thread[i], post_env));
-	response.write('</section>\n');
+	response.write('</section>\n<hr>\n');
 }
 
 var index_tmpl = jsontemplate.Template(fs.readFileSync('index.html', 'UTF-8')
@@ -282,9 +282,15 @@ function md5_image(image, callback) {
 function resize_image(image, callback) {
 	image.thumb = image.path + '_thumb';
 	var path = image.tagged_path;
+	var dims = config.THUMB_OP_DIMENSIONS;
+	var quality = config.THUMB_OP_QUALITY;
+	var client = clients[image.client_id];
+	if (client.post && client.post.op || image.alloc && image.alloc.op) {
+		dims = config.THUMB_DIMENSIONS;
+		quality = config.THUMB_QUALITY;
+	}
 	exec('convert ' + path + ' -gamma 0.454545 -filter lanczos -resize '
-		+ config.THUMB_DIMENSIONS + ' -gamma 2.2 -quality '
-		+ config.THUMB_QUALITY + ' ' + image.thumb,
+		+ dims + ' -gamma 2.2 -quality ' + quality + ' ' + image.thumb,
 		exec_handler(image, 'Conversion error.', callback));
 }
 
