@@ -270,8 +270,10 @@ function add_ref(num) {
 		console.log(link);
 		new PostForm(link);
 	}
+	if (postForm.input.val().match(/^>>\d+$/))
+		postForm.on_key.call(postForm, {keyCode: 13});
 	postForm.input.val(postForm.input.val() + '>>' + num);
-	postForm.on_key.call(postForm, {keyCode: 13});
+	postForm.on_key.call(postForm, {keyCode: 0});
 	postForm.input.focus();
 };
 
