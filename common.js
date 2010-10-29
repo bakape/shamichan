@@ -159,7 +159,7 @@ function image_metadata(info) {
 function thumbnail_html(info) {
 	return '<a href="' + info.src + '" target="_blank"><img src="'
 		+ info.thumb + '" width="' + info.dims[2] + '" height="'
-		+ info.dims[3] + '" alt="' + info.size + '"></a>';
+		+ info.dims[3] + '" data-MD5="' + info.MD5 + '"></a>';
 }
 
 function readable_time(time) {

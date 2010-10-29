@@ -221,11 +221,16 @@ function handle_upload(req, resp) {
 			return upload_failure(image, 'Corrupt image.');
 		image.dims = dims;
 		resize_image(image, function (image) {
+		md5_image(image, function (err, MD5) {
+		if (err)
+			return upload_failure(image, 'Hashing error.');
+		image.MD5 = MD5;
 		read_image_dimensions(image.thumb, function (err, dims) {
 		if (err)
 			return upload_failure(image, 'Internal error.');
 		image.dims = image.dims.concat(dims);
 		upload_image(image);
+		});
 		});
 		});
 		});
@@ -257,6 +262,20 @@ function read_image_dimensions(path, callback) {
 		if (!m)
 			callback("Couldn't parse image dimensions.", null);			else
 			callback(null, [parseInt(m[1]), parseInt(m[2])]);
+	});
+}
+
+function md5_image(image, callback) {
+	exec('md5sum -b ' + image.path, function (error, stdout, stderr) {
+		if (error) {
+			callback(stderr, null);
+			return;
+		}
+		var m = stdout.match(/^([\da-f]+)/);
+		if (m)
+			callback(null, m[1]);
+		else
+			callback("Couldn't read digest.", null);
 	});
 }
 
@@ -310,6 +329,7 @@ function upload_image(image) {
 			src: dest_url, thumb: thumb_url,
 			name: image.filename, dims: image.dims,
 			size: readable_filesize(image.size),
+			MD5: image.MD5,
 		};
 		var client = clients[image.client_id];
 		function reply(a) {
