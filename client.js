@@ -256,6 +256,8 @@ PostForm.prototype.on_key = function (event) {
 
 function add_ref(num) {
 	if (!parseInt(num)) {
+		if (!THREAD && !postForm)
+			return;
 		var post = $(this).parents('article');
 		if (!post.length)
 			return;
