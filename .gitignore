@@ -3,8 +3,8 @@
 *.swp
 .build
 .lock*
-builder
-config.js
+server/builder
+server/config.js
 www/js/client-v*.js
 www/src/*
 www/thumb/*

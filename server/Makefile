@@ -1,4 +1,4 @@
-CLIENT_JS = www/js/client-v$(shell node config.js --show-config VERSION).js
+CLIENT_JS = ../www/js/client-v$(shell node config.js --show-config VERSION).js
 
 all: builder tripcode.node
 
@@ -18,4 +18,4 @@ $(CLIENT_JS): client.js common.js
 	@cat client.js >> $@
 
 clean:
-	rm -rf -- .build builder tripcode.node www/js/client-v*.js
+	rm -rf -- .build builder tripcode.node ../www/js/client-v*.js

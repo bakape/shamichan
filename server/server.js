@@ -1,9 +1,9 @@
 var common = require('./common'),
 	config = require('./config').config,
 	exec = require('child_process').exec,
-	formidable = require('../formidable'),
+	formidable = require('../../formidable'),
 	fs = require('fs'),
-	io = require('../socket.io'),
+	io = require('../../socket.io'),
 	jsontemplate = require('./json-template'),
 	http = require('http'),
 	path = require('path'),
@@ -108,7 +108,7 @@ function write_thread_html(thread, response) {
 
 var index_tmpl = jsontemplate.Template(fs.readFileSync('index.html', 'UTF-8')
 		).expand(config).split(/\$[A-Z]+/);
-var notfound_html = fs.readFileSync('www/404.html');
+var notfound_html = fs.readFileSync('../www/404.html');
 
 var http_headers = {'Content-Type': 'text/html; charset=UTF-8'};
 var server = http.createServer(function(req, resp) {

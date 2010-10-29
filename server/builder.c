@@ -14,7 +14,7 @@ static void kill_existing(const char *);
 static void read_version(char *);
 
 static void build_client(void) {
-	char buf[32] = "www/js/client-v";
+	char buf[32] = "../www/js/client-v";
 	read_version(buf + strlen(buf));
 	strcat(buf, ".js");
 	if (!fork())
