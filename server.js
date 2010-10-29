@@ -445,8 +445,10 @@ function allocate_post(msg, image, client, reply_alloc_func) {
 		if (trip)
 			post.trip = trip;
 	}
-	if (msg.email && msg.email.constructor == String)
+	if (typeof msg.email == 'string')
 		post.email = msg.email.trim().substr(0, 320);
+	if (post.email == 'noko')
+		delete post.email;
 
 	/* No going back now */
 	post.num = post_counter++;
