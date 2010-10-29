@@ -184,10 +184,15 @@ function time_tag_html(time) {
 		+ readable_time(time) + '</time>');
 }
 
-function post_url(post) {
-	return (post.op || post.num) + '#q' + post.num;
+function post_url(post, quote) {
+	return (post.op || post.num) + (quote ? '#q' : '#') + post.num;
 }
 exports.post_url = post_url;
+
+function num_html(post) {
+	return ('<a href="' + post_url(post, false) + '">No.</a><a href="'
+			+ post_url(post, true) + '">' + post.num + '</a>');
+}
 
 exports.gen_post_html = function (data, env) {
 	var classes = [];
@@ -209,11 +214,10 @@ exports.gen_post_html = function (data, env) {
 	}
 	var image = data.image ? [image_metadata(data.image), safe('</header>'),
 			safe(thumbnail_html(data.image))] : safe('</header>');
-	var post = [safe('\t<article id="q' + data.num + cls + '"><header>'),
+	var post = [safe('\t<article id="' + data.num + cls + '"><header>'),
 		ident, safe(' ' + time_tag_html(data.time) + ' '),
-		safe('<a href="#q' + data.num + '">No.</a><a href="'
-			+ post_url(data) + '">' + data.num + '</a>'),
-		image, safe('\n\t\t<blockquote>'), format_body(data.body, env),
+		safe(num_html(data)), image, safe('\n\t\t<blockquote>'),
+		format_body(data.body, env),
 		safe('</blockquote></article>\n')];
 	return flatten(post).join('');
 }

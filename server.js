@@ -92,7 +92,8 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 post_env = {format_link: function (num, env) {
 	var post = posts[num];
 	if (post)
-		env.callback(common.safe('<a href="' + common.post_url(post)
+		env.callback(common.safe('<a href="'
+				+ common.post_url(post, false)
 				+ '">&gt;&gt;' + num + '</a>'));
 	else
 		env.callback('>>' + num);

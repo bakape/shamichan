@@ -29,7 +29,8 @@ function insert_new_post_boxes() {
 
 function make_link(num, op) {
 	var p = {num: num, op: op};
-	return safe('<a href="' + post_url(p) + '">&gt;&gt;' + num + '</a>');
+	return safe('<a href="' + post_url(p, false) + '">&gt;&gt;'
+			+ num + '</a>');
 }
 
 function format_link(num, env) {
@@ -146,7 +147,7 @@ function propagate_fields() {
 }
 
 var format_env = {format_link: function (num, env) {
-	var post = $('#q' + num);
+	var post = $('#' + num);
 	if (post.length) {
 		var thread = extract_num(post.parent(), 'thread');
 		env.callback(make_link(num, thread));
@@ -214,10 +215,9 @@ PostForm.prototype.on_allocation = function (msg) {
 	meta.children('b').text(msg.name);
 	meta.children('code').text(msg.trip);
 	meta.children('time').text(readable_time(msg.time)
-			).attr('datetime', datetime(msg.time)).after(
-			' <a href="#q' + num + '">No.</a><a href="'
-			+ post_url(msg) + '">' + num + '</a>');
-	this.post.attr('id', 'q' + num).addClass('editing');
+		).attr('datetime', datetime(msg.time)
+		).after(' ' + num_html(msg));
+	this.post.attr('id', '' + num).addClass('editing');
 	if (!this.op) {
 		this.thread.attr('id', 'thread' + num);
 		threads[num] = this.thread;
@@ -392,7 +392,7 @@ $(document).ready(function () {
 
 	$('.editing').each(function(index) {
 		var post = $(this);
-		activePosts[extract_num(post, 'q')] = post;
+		activePosts[extract_num(post, 'nope')] = post;
 	});
 	$('section').each(function (index) {
 		var section = $(this);
@@ -401,7 +401,12 @@ $(document).ready(function () {
 	var m = window.location.pathname.match(/\/(\d+)$/);
 	if (m)
 		THREAD = parseInt(m[1]);
-	m = window.location.hash.match(/^(#q\d+)$/);
+	m = window.location.hash.match(/^#q(\d+)$/);
+	if (m) {
+		/* TODO: Add >>reply */
+		window.location.hash = '#' + m[1];
+	}
+	m = window.location.hash.match(/^(#\d+)$/);
 	if (m)
 		$(m[1]).addClass('highlight');
 	insert_new_post_boxes();
