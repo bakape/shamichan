@@ -237,7 +237,8 @@ PostForm.prototype.on_key = function (event) {
 			this.commit(input.val() + '\n');
 			input.val('');
 		}
-		event.preventDefault();
+		if (event.preventDefault)
+			event.preventDefault();
 	}
 	else {
 		this.commit_words(input.val(), event.keyCode == 27);
@@ -248,6 +249,16 @@ PostForm.prototype.on_key = function (event) {
 	if (cur_size != right_size) {
 		input.attr('size', (cur_size + right_size) / 2);
 	}
+};
+
+function add_ref(num) {
+	if (!postForm) {
+		var link = $('#' + num).siblings('aside').find('a');
+		console.log(link);
+		new PostForm(link);
+	}
+	postForm.input.val(postForm.input.val() + '>>' + num);
+	postForm.on_key.call(postForm, {keyCode: 13});
 };
 
 PostForm.prototype.make_alloc_request = function (text) {
@@ -401,15 +412,15 @@ $(document).ready(function () {
 	var m = window.location.pathname.match(/\/(\d+)$/);
 	if (m)
 		THREAD = parseInt(m[1]);
+	insert_new_post_boxes();
 	m = window.location.hash.match(/^#q(\d+)$/);
-	if (m) {
-		/* TODO: Add >>reply */
+	if (m && $('#' + m[1]).length) {
 		window.location.hash = '#' + m[1];
+		add_ref(m[1]);
 	}
 	m = window.location.hash.match(/^(#\d+)$/);
 	if (m)
 		$(m[1]).addClass('highlight');
-	insert_new_post_boxes();
 
 	socket.on('connect', on_connect);
 	socket.on('disconnect', attempt_reconnect);
