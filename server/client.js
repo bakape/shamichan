@@ -140,7 +140,7 @@ function upload_complete(info) {
 
 function propagate_fields() {
 	var parsed = parse_name(nameField.val().trim());
-	postForm.meta.children('b').text(parsed[0]);
+	postForm.meta.children('b').text(parsed[0] || ANON);
 	postForm.meta.children('code').text((parsed[1] || parsed[2]) && '!?');
 	var email = emailField.val().trim();
 	if (email) {
@@ -214,7 +214,7 @@ PostForm.prototype.on_allocation = function (msg) {
 	nameField.unbind();
 	emailField.unbind();
 	var meta = this.meta;
-	meta.children('b').text(msg.name);
+	meta.children('b').text(msg.name || ANON);
 	meta.children('code').text(msg.trip);
 	meta.children('time').text(readable_time(msg.time)
 		).attr('datetime', datetime(msg.time)

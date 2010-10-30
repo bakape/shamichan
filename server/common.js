@@ -5,6 +5,8 @@ exports.UPDATE_POST = 3;
 exports.FINISH_POST = 4;
 exports.SYNCHRONIZE = 5;
 
+var ANON = 'Anonymous';
+
 function escape_html(html) {
 	return html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 		/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -200,7 +202,7 @@ exports.gen_post_html = function (data, env) {
 	if (data.editing)
 		classes.push('editing');
 	var cls = classes.length ? '" class="' + classes.join(' ') : '';
-	var ident = [safe('<b>'), data.name, safe('</b>')];
+	var ident = [safe('<b>'), data.name || ANON, safe('</b>')];
 	if (data.trip) {
 		ident[2].safe += ' <code>';
 		ident.push(data.trip);
@@ -224,14 +226,15 @@ exports.gen_post_html = function (data, env) {
 exports.parse_name = function (name) {
 	var tripcode = '', secure = '';
 	var hash = name.indexOf('#');
-	if (hash >= 0 && hash < 128) {
+	if (hash >= 0) {
 		tripcode = name.substr(hash+1);
 		name = name.substr(0, hash);
 		hash = tripcode.indexOf('#');
-		if (hash >= 0 && hash < 128) {
+		if (hash >= 0) {
 			secure = tripcode.substr(hash+1);
 			tripcode = tripcode.substr(0, hash);
 		}
 	}
-	return [name.trim() || 'Anonymous', tripcode, secure];
+	return [name.trim().substr(0, 100), tripcode.substr(0, 128),
+			secure.substr(0, 128)];
 };
