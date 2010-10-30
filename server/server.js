@@ -7,6 +7,7 @@ var common = require('./common'),
 	jsontemplate = require('./json-template'),
 	http = require('http'),
 	path = require('path'),
+	db = require('./db'),
 	tripcode = require('./tripcode');
 
 var threads = [];

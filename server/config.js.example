@@ -6,6 +6,7 @@ exports.config = {
 	VERSION: "2",
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
 	BACKLOG_PERIOD: 20000,
+	DB_CONFIG: {user: 'pixplz', database: 'pixplz', password: 'secret'},
 	IMAGE_EXTS: ['.gif', '.jpg', '.jpeg', '.png'],
 	IMAGE_FILESIZE_MAX: 1024 * 1024 * 3,
 	IMAGE_DIR: '../www/src',
