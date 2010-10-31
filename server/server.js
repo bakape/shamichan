@@ -12,7 +12,6 @@ var common = require('./common'),
 
 var threads = [];
 var posts = {};
-var post_counter = 1;
 var clients = {};
 var dispatcher = {};
 
@@ -340,16 +339,17 @@ function upload_image(image) {
 			MD5: image.MD5,
 		};
 		var client = clients[image.client_id];
-		function reply(a) {
-			client_call(image.resp, 'postForm.on_allocation', a);
-		}
+		client.uploading = false;
 		if (client.post) {
 			client_call(image.resp, 'upload_complete', info);
 			client.post.image = info;
+			return;
 		}
-		else if (!allocate_post(image.alloc, info, client, reply))
-			return upload_failure(image, 'No allocation.');
-		client.uploading = false;
+		allocate_post(image.alloc, info, client, function (err, a) {
+			if (err)
+				return upload_failure(image, 'Bad post.');
+			client_call(image.resp, 'postForm.on_allocation', a);
+		});
 	}));
 	}));
 }
@@ -420,12 +420,17 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	var frag = msg.frag;
 	if (!frag || typeof frag != 'string' || frag.match(/^\s*$/g))
 		return false;
-	return allocate_post(msg, null, client, function (alloc) {
+	return allocate_post(msg, null, client, function (err, alloc) {
+		if (err) {
+			/* TODO: Report */
+			console.log(err);
+			return;
+		}
 		multisend(client, [[common.ALLOCATE_POST, alloc]]);
 	});
 }
 
-function allocate_post(msg, image, client, reply_alloc_func) {
+function allocate_post(msg, image, client, callback) {
 	if (!msg)
 		return false;
 	var post = {
@@ -450,18 +455,28 @@ function allocate_post(msg, image, client, reply_alloc_func) {
 		post.email = msg.email.trim().substr(0, 320);
 	if (post.email == 'noko')
 		delete post.email;
+	if (image)
+		post.image = image;
+	var ip = '127.0.0.1'; /* TODO */
+	db.insert_post(post, ip, function (err, num) {
+		if (err) {
+			callback(err, null);
+			return;
+		}
+		post.num = num;
+		allocation_ok(post, client, callback);
+	});
+	return true;
+}
 
-	/* No going back now */
-	post.num = post_counter++;
+function allocation_ok(post, client, callback) {
 	posts[post.num] = post;
 	var state = common.initial_post_state();
 	var links = valid_links(post.body, state);
 	if (!isEmpty(links))
 		post.links = links;
-	if (image)
-		post.image = image;
 	broadcast([common.INSERT_POST, post], post, client.id);
-	reply_alloc_func(post);
+	callback(null, post);
 	/* Store some extra state for later */
 	post.links = links;
 	post.state = state;
@@ -485,7 +500,6 @@ function allocate_post(msg, image, client, reply_alloc_func) {
 			}
 		}
 	}
-	return true;
 }
 
 dispatcher[common.UPDATE_POST] = function (frag, client) {
@@ -524,9 +538,13 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	return true;
 }
 
-server.listen(config.PORT);
-var listener = io.listen(server, {
-	transports: ['websocket', 'server-events', 'htmlfile', 'xhr-multipart',
-		'xhr-polling']
+db.check_tables(function () {
+	console.log("Database OK.");
+
+	server.listen(config.PORT);
+	var listener = io.listen(server, {
+		transports: ['websocket', 'server-events', 'htmlfile',
+			'xhr-multipart', 'xhr-polling']
+	});
+	listener.on('connection', on_client);
 });
-listener.on('connection', on_client);
