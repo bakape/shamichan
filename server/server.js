@@ -525,6 +525,12 @@ function finish_post(post, owner_id) {
 	broadcast([common.FINISH_POST, post.num], post, owner_id);
 	post.editing = false;
 	delete post.state;
+	db.update_post(post.num, post.body, function (ok) {
+		if (!ok) {
+			/* TODO */
+			console.log("Couldn't save final post #" + post.num);
+		}
+	});
 }
 
 dispatcher[common.FINISH_POST] = function (msg, client) {

@@ -28,6 +28,24 @@ exports.insert_post = function(msg, ip, callback) {
 	});
 }
 
+exports.update_post = function(num, body, callback) {
+	var query = db.query({
+		name: 'update post',
+		text: "UPDATE " + config.DB_POST_TABLE +
+		" SET body = $1 WHERE num = $2",
+		values: [body, num]
+	});
+	var done = false;
+	query.on('error', function (err) {
+		done = true;
+		callback(false);
+	});
+	query.on('end', function () {
+		if (!done)
+			callback(true);
+	});
+}
+
 function create_table(table, sql_file, done) {
 	console.log("Creating " + table + "...");
 	var sql = fs.readFileSync(sql_file, 'UTF-8');
