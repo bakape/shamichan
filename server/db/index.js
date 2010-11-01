@@ -10,15 +10,37 @@ db.on('error', function (err) {
 	process.exit(1);
 });
 
+exports.insert_image = function(image, callback) {
+	var dims = image.dims;
+	var query = db.query({
+		name: 'insert image',
+		text: "INSERT INTO " + config.DB_IMAGE_TABLE +
+		" (md5, filesize, width, height, created) VALUES" +
+		" ($1, $2, $3, $4, TIMESTAMP 'epoch' + $5 * INTERVAL '1ms')" +
+		" RETURNING id",
+		values: [image.MD5, image.size, dims[0], dims[1],
+			image.time]
+	});
+	query.on('row', function (row) {
+		callback(null, row.fields[0]);
+	});
+	query.on('error', function (err) {
+		callback(err, null);
+	});
+};
+
 exports.insert_post = function(msg, ip, callback) {
 	var query = db.query({
 		name: 'insert post',
 		text: "INSERT INTO " + config.DB_POST_TABLE +
-		" (name, trip, email, body, parent, created, ip) VALUES" +
+		" (name, trip, email, body, parent, created, ip," +
+		" image, image_filename) VALUES" +
 		" ($1,$2,$3,$4,$5, TIMESTAMP 'epoch' + $6 * INTERVAL '1ms'," +
-		" $7) RETURNING num",
+		" $7, $8, $9) RETURNING num",
 		values: [msg.name, msg.trip || '', msg.email || '',
-			msg.body, msg.op || null, msg.time, ip]
+			msg.body, msg.op || null, msg.time, ip,
+			msg.image ? msg.image.id : null,
+			msg.image ? msg.image.filename : null]
 	});
 	query.on('row', function (row) {
 		callback(null, row.fields[0]);

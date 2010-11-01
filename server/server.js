@@ -322,36 +322,46 @@ function upload_failure(image, err_desc) {
 }
 
 function upload_image(image) {
-	var base = new Date().getTime();
-	var dest = path.join(config.IMAGE_DIR, base + image.ext);
-	var thumb_dest = path.join(config.THUMB_DIR, base + '.jpg');
+	image.time = new Date().getTime();
+	var dest = path.join(config.IMAGE_DIR, image.time + image.ext);
+	var thumb_dest = path.join(config.THUMB_DIR, image.time + '.jpg');
 	exec('mv -- ' + image.path + ' ' + dest, exec_handler(image,
 	"Couldn't publish image.", function (image) {
 	exec('mv -- ' + image.thumb + ' ' + thumb_dest, exec_handler(image,
 	"Couldn't publish thumbnail.", function (image) {
-		console.log(image.client_id + ' successfully uploaded ' + dest);
-		var dest_url = config.IMAGE_URL + base + image.ext;
-		var thumb_url = config.THUMB_URL + base + '.jpg';
-		var info = {
-			src: dest_url, thumb: thumb_url,
-			name: image.filename, dims: image.dims,
-			size: readable_filesize(image.size),
-			MD5: image.MD5,
-		};
-		var client = clients[image.client_id];
-		client.uploading = false;
-		if (client.post) {
-			client_call(image.resp, 'upload_complete', info);
-			client.post.image = info;
-			return;
-		}
-		allocate_post(image.alloc, info, client, function (err, a) {
-			if (err)
-				return upload_failure(image, 'Bad post.');
-			client_call(image.resp, 'postForm.on_allocation', a);
-		});
+	db.insert_image(image, function (err, id) {
+	if (err)
+		return upload_failure("Couldn't add image to database.");
+	else {
+		image.id = id;
+		store_image(image);
+	}
+	});
 	}));
 	}));
+}
+
+function store_image(image) {
+	var dest_url = config.IMAGE_URL + image.time + image.ext;
+	var thumb_url = config.THUMB_URL + image.time + '.jpg';
+	var info = {
+		src: dest_url, thumb: thumb_url,
+		name: image.filename, dims: image.dims,
+		size: readable_filesize(image.size),
+		MD5: image.MD5, id: image.id,
+	};
+	var client = clients[image.client_id];
+	client.uploading = false;
+	if (client.post) {
+		client_call(image.resp, 'upload_complete', info);
+		client.post.image = info;
+		return;
+	}
+	allocate_post(image.alloc, info, client, function (err, a) {
+		if (err)
+			return upload_failure(image, 'Bad post.');
+		client_call(image.resp, 'postForm.on_allocation', a);
+	});
 }
 
 function readable_filesize(size) {
@@ -466,6 +476,8 @@ function allocate_post(msg, image, client, callback) {
 			callback(err, null);
 			return;
 		}
+		if (image)
+			delete image.id;
 		post.num = num;
 		allocation_ok(post, client, callback);
 	});

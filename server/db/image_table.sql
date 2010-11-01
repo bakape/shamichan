@@ -5,5 +5,5 @@ CREATE TABLE {DB_IMAGE_TABLE} (
 	width		smallint NOT NULL,
 	height		smallint NOT NULL,
 	created		timestamp UNIQUE NOT NULL,
-	deleted		boolean NOT NULL
+	deleted		boolean NOT NULL DEFAULT FALSE
 );
