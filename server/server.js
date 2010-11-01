@@ -391,6 +391,9 @@ function on_client (socket) {
 		if (client.post)
 			finish_post(client.post, id);
 	});
+	socket.on('error', function (err) {
+		console.log(err);
+	});
 }
 
 function valid_links(frag, state) {
@@ -553,4 +556,7 @@ db.check_tables(function () {
 			'xhr-multipart', 'xhr-polling']
 	});
 	listener.on('connection', on_client);
+	listener.on('error', function (err) {
+		console.log(err);
+	});
 });
