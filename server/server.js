@@ -547,9 +547,44 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	return true;
 }
 
-db.check_tables(function () {
-	console.log("Database OK.");
+function populate_threads(parents, callback) {
+	db.get_posts(function (err, post) {
+		if (err) throw err;
+		if (post) {
+			posts[post.num] = post;
+			parents[post.op].thread.push(post);
+			if (post.email != 'sage')
+				parents[post.op].last = post.num;
+		}
+		else {
+			var ts = [];
+			for (var num in parents)
+				ts.push(parents[num]);
+			ts.sort(function (a, b) { return a.last < b.last; });
+			for (var i = 0; i < ts.length; i++)
+				ts[i] = ts[i].thread;
+			threads = ts;
+			callback();
+		}
+	});
+}
 
+function load_posts(callback) {
+	var parents = {};
+	db.get_threads(function (err, post) {
+		if (err) throw err;
+		if (post) {
+			var thread = [post];
+			post.thread = thread;
+			posts[post.num] = post;
+			parents[post.num] = {thread: thread, last: post.num};
+		}
+		else
+			populate_threads(parents, callback);
+	});
+}
+
+function start_server() {
 	server.listen(config.PORT);
 	var listener = io.listen(server, {
 		transports: ['websocket', 'server-events', 'htmlfile',
@@ -559,4 +594,9 @@ db.check_tables(function () {
 	listener.on('error', function (err) {
 		console.log(err);
 	});
+}
+
+db.check_tables(function () {
+	console.log("Database OK.");
+	load_posts(start_server);
 });

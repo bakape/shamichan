@@ -46,6 +46,47 @@ exports.update_post = function(num, body, callback) {
 	});
 }
 
+exports.get_threads = function(callback) {
+	var query = db.query({
+		name: 'get threads',
+		text: "SELECT num, name, trip, email, body, " +
+		"EXTRACT(epoch FROM created) * 1000 FROM " +
+		config.DB_POST_TABLE + " WHERE parent IS NULL"
+	});
+	query.on('row', function (row) {
+		var f = row.fields;
+		callback(null, {num: f[0], name: f[1], trip: f[2], email: f[3],
+				body: f[4], time: f[5]});
+	});
+	query.on('error', function (error) {
+		callback(error, null);
+	});
+	query.on('end', function () {
+		callback(null, null);
+	});
+};
+
+exports.get_posts = function(callback) {
+	var query = db.query({
+		name: 'get posts',
+		text: "SELECT num, name, trip, email, body, parent, " +
+		"EXTRACT(epoch FROM created) * 1000 FROM " +
+		config.DB_POST_TABLE + " WHERE parent IS NOT NULL " +
+		"ORDER BY parent, num"
+	});
+	query.on('row', function (row) {
+		var f = row.fields;
+		callback(null, {num: f[0], name: f[1], trip: f[2], email: f[3],
+				body: f[4], op: f[5], time: f[6]});
+	});
+	query.on('error', function (error) {
+		callback(error, null);
+	});
+	query.on('end', function () {
+		callback(null, null);
+	});
+};
+
 function create_table(table, sql_file, done) {
 	console.log("Creating " + table + "...");
 	var sql = fs.readFileSync(sql_file, 'UTF-8');
