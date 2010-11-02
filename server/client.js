@@ -167,7 +167,7 @@ function PostForm(link_clicked) {
 	this.line_buffer = $('<p/>');
 	this.meta = $('<header><b/> <code/> <time/></header>');
 	this.input = $('<input name="body" class="trans"/>');
-	this.uploadForm = this.make_upload_form();
+	this.uploadForm = null;
 	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
 	var post = $('<article/>');
@@ -178,7 +178,11 @@ function PostForm(link_clicked) {
 
 	var input_field = [this.buffer, this.line_buffer, this.input];
 	this.blockquote.append.apply(this.blockquote, input_field);
-	var post_parts = [this.meta, this.blockquote, this.uploadForm];
+	var post_parts = [this.meta, this.blockquote];
+	if (IMAGE_UPLOAD) {
+		this.uploadForm = this.make_upload_form();
+		post_parts.append(this.uploadForm);
+	}
 	post.append.apply(post, post_parts);
 
 	propagate_fields();
@@ -227,7 +231,10 @@ PostForm.prototype.on_allocation = function (msg) {
 	}
 
 	this.submit.attr('disabled', false);
-	this.uploadForm.append(this.submit);
+	if (this.uploadForm)
+		this.uploadForm.append(this.submit);
+	else
+		this.blockquote.after(this.submit);
 	this.submit.click($.proxy(this.finish, this));
 	if (msg.image)
 		upload_complete(msg.image);
@@ -341,7 +348,9 @@ PostForm.prototype.commit_words = function (text, spaceEntered) {
 PostForm.prototype.finish = function () {
 	this.commit(this.input.val());
 	this.input.remove();
-	this.uploadForm.remove();
+	this.submit.remove();
+	if (this.uploadForm)
+		this.uploadForm.remove();
 	var buffer = this.buffer, line_buffer = this.line_buffer;
 	insert_formatted(line_buffer.text(), buffer, this.state, format_env);
 	buffer.replaceWith(buffer.contents());

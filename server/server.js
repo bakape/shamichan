@@ -164,6 +164,11 @@ function client_call(resp, func, param) {
 var validFields = ['client_id', 'alloc'];
 
 function handle_upload(req, resp) {
+	if (!config.IMAGE_UPLOAD) {
+		resp.writeHead(403, {'Content-Type': 'text/plain'});
+		resp.end('No upload.');
+		return;
+	}
 	var form = new formidable.IncomingForm();
 	form.maxFieldsSize = 512;
 	form.onPart = function (part) {
