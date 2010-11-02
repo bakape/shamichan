@@ -274,7 +274,6 @@ function add_ref(num) {
 	}
 	if (!postForm) {
 		var link = $('#' + num).siblings('aside').find('a');
-		console.log(link);
 		new PostForm(link);
 	}
 	if (postForm.input.val().match(/^>>\d+$/))
@@ -454,7 +453,6 @@ $(document).ready(function () {
 	socket.on('connect', on_connect);
 	socket.on('disconnect', attempt_reconnect);
 	socket.on('message', function (data) {
-		console.log(data);
 		msgs = JSON.parse(data);
 		for (var i = 0; i < msgs.length; i++) {
 			var msg = msgs[i];
