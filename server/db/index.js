@@ -6,15 +6,18 @@ var config = require('../config').config,
 var db = new postgres.Client(config.DB_CONFIG);
 db.connect();
 db.on('error', function (err) {
+	if (err.code == 23505)
+		return;
 	console.log(err);
 	process.exit(1);
 });
 
 exports.insert_image = function(image, callback) {
+	var table = config.DB_IMAGE_TABLE;
 	var dims = image.dims;
 	var query = db.query({
 		name: 'insert image',
-		text: "INSERT INTO " + config.DB_IMAGE_TABLE +
+		text: "INSERT INTO " + table +
 		" (md5, filesize, width, height, created) VALUES" +
 		" ($1, $2, $3, $4, TIMESTAMP 'epoch' + $5 * INTERVAL '1ms')" +
 		" RETURNING id",
@@ -25,7 +28,22 @@ exports.insert_image = function(image, callback) {
 		callback(null, row.fields[0]);
 	});
 	query.on('error', function (err) {
-		callback(err, null);
+		if (err.code == 23505) { /* UNIQUE constraint */
+			var query = db.query({
+				name: 'lookup image by md5',
+				text: "SELECT id FROM " + table +
+					" WHERE md5 = $1",
+				values: [image.MD5]
+			});
+			query.on('row', function (row) {
+				callback(null, row.fields[0]);
+			});
+			query.on('error', function (err) {
+				callback(err, null);
+			});
+		}
+		else
+			callback(err, null);
 	});
 };
 
@@ -40,7 +58,7 @@ exports.insert_post = function(msg, ip, callback) {
 		values: [msg.name, msg.trip || '', msg.email || '',
 			msg.body, msg.op || null, msg.time, ip,
 			msg.image ? msg.image.id : null,
-			msg.image ? msg.image.filename : null]
+			msg.image ? msg.image.name.substr(0, 256) : null]
 	});
 	query.on('row', function (row) {
 		callback(null, row.fields[0]);
