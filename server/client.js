@@ -242,7 +242,7 @@ PostForm.prototype.on_allocation = function (msg) {
 
 PostForm.prototype.on_key = function (event) {
 	var input = this.input;
-	if (event.keyCode == 13) {
+	if (event.which == 13) {
 		if (this.sentAllocRequest || input.val().replace(' ', '')) {
 			this.commit(input.val() + '\n');
 			input.val('');
@@ -251,7 +251,7 @@ PostForm.prototype.on_key = function (event) {
 			event.preventDefault();
 	}
 	else {
-		this.commit_words(input.val(), event.keyCode == 27);
+		this.commit_words(input.val(), event.which == 27);
 	}
 	var cur_size = input.attr('size');
 	var right_size = Math.max(Math.round(input.val().length * 1.5),
@@ -277,9 +277,9 @@ function add_ref(num) {
 		new PostForm(link);
 	}
 	if (postForm.input.val().match(/^>>\d+$/))
-		postForm.on_key.call(postForm, {keyCode: 13});
+		postForm.on_key.call(postForm, {which: 13});
 	postForm.input.val(postForm.input.val() + '>>' + num);
-	postForm.on_key.call(postForm, {keyCode: 0});
+	postForm.on_key.call(postForm, {which: 0});
 	postForm.input.focus();
 };
 
