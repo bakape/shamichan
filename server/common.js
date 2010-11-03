@@ -65,10 +65,6 @@ function break_long_words(frag, env) {
 	}
 	var bits = frag.split(/(\S{60})/);
 	for (var i = 0; i < bits.length; i++) {
-		if (i % 2) {
-			env.callback(safe('&shy;'));
-			continue;
-		}
 		/* anchor refs */
 		var morcels = bits[i].split(/>>(\d+)/);
 		for (var j = 0; j < morcels.length; j++) {
@@ -77,6 +73,8 @@ function break_long_words(frag, env) {
 			else
 				env.callback(morcels[j]);
 		}
+		if (i % 2)
+			env.callback(safe('&shy;'));
 	}
 }
 
