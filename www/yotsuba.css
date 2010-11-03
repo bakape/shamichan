@@ -89,11 +89,15 @@ section, body > aside {
 	background-color: transparent;
 	border: 0;
 	color: #444;
+	display: inline;
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
-	margin: 0 0 0 -1px;
+	margin: 0 0 -3px 0;
 	outline: none;
+	overflow-y: hidden;
 	padding: 0;
+	resize: none;
+	text-wrap: none;
 }
 #live, #sync {
 	float: right;

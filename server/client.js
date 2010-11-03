@@ -5,7 +5,7 @@ var threads = {};
 var dispatcher = {};
 var THREAD = 0;
 var nameField, emailField;
-var INPUT_MIN_SIZE = 2;
+var INPUT_MIN_SIZE = 10;
 var ceiling;
 
 function send(msg) {
@@ -166,7 +166,7 @@ function PostForm(link_clicked) {
 	this.buffer = $('<p/>');
 	this.line_buffer = $('<p/>');
 	this.meta = $('<header><b/> <code/> <time/></header>');
-	this.input = $('<input name="body" class="trans"/>');
+	this.input = $('<textarea name="body" class="trans" rows="1"/>');
 	this.uploadForm = null;
 	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
@@ -189,8 +189,12 @@ function PostForm(link_clicked) {
 	nameField.change(propagate_fields).keypress(propagate_fields);
 	emailField.change(propagate_fields).keypress(propagate_fields);
 
-	this.input.attr('size', INPUT_MIN_SIZE);
+	this.input.attr('cols', INPUT_MIN_SIZE);
 	this.input.keydown($.proxy(this.on_key, this));
+	this.input.keyup($.proxy(function (event) {
+		if (this.input.val().indexOf('\n') >= 0)
+			this.on_key(null);
+	}, this));
 	var link = $(link_clicked);
 	var parent = link.parent(), section = link.parents('section');
 	if (section.length) {
@@ -242,7 +246,7 @@ PostForm.prototype.on_allocation = function (msg) {
 
 PostForm.prototype.on_key = function (event) {
 	var input = this.input;
-	if (event.which == 13) {
+	if (event && event.which == 13) {
 		if (this.sentAllocRequest || input.val().replace(' ', '')) {
 			this.commit(input.val() + '\n');
 			input.val('');
@@ -250,14 +254,12 @@ PostForm.prototype.on_key = function (event) {
 		if (event.preventDefault)
 			event.preventDefault();
 	}
-	else {
-		this.commit_words(input.val(), event.which == 27);
-	}
-	var cur_size = input.attr('size');
-	var right_size = Math.max(Math.round(input.val().length * 1.5),
-			INPUT_MIN_SIZE);
+	else
+		this.commit_words(event && event.which == 27);
+	var cur_size = input.attr('cols');
+	var right_size = INPUT_MIN_SIZE + Math.round(input.val().length * 2);
 	if (cur_size != right_size) {
-		input.attr('size', (cur_size + right_size) / 2);
+		input.attr('cols', (cur_size + right_size) / 2);
 	}
 };
 
@@ -279,7 +281,7 @@ function add_ref(num) {
 	if (postForm.input.val().match(/^>>\d+$/))
 		postForm.on_key.call(postForm, {which: 13});
 	postForm.input.val(postForm.input.val() + '>>' + num);
-	postForm.on_key.call(postForm, {which: 0});
+	postForm.on_key.call(postForm, null);
 	postForm.input.focus();
 };
 
@@ -327,7 +329,8 @@ PostForm.prototype.commit = function (text) {
 	}
 };
 
-PostForm.prototype.commit_words = function (text, spaceEntered) {
+PostForm.prototype.commit_words = function (spaceEntered) {
+	var text = this.input.val();
 	var words = text.trim().split(/ +/);
 	var endsWithSpace = text.length > 0
 			&& text.charAt(text.length-1) == ' ';
