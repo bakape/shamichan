@@ -181,7 +181,7 @@ function PostForm(link_clicked) {
 	var post_parts = [this.meta, this.blockquote];
 	if (IMAGE_UPLOAD) {
 		this.uploadForm = this.make_upload_form();
-		post_parts.append(this.uploadForm);
+		post_parts.push(this.uploadForm);
 	}
 	post.append.apply(post, post_parts);
 
