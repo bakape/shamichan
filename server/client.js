@@ -82,7 +82,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	var section = null;
 	if (msg.op) {
 		section = threads[msg.op];
-		section.find('article:last').after(post);
+		section.find('article[id]:last').after(post);
 		if (THREAD || !liveFeed)
 			return true;
 		section.detach();
