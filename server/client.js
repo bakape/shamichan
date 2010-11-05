@@ -468,7 +468,8 @@ $(document).ready(function () {
 
 	$('time').each(function (index) {
 		var time = $(this);
-		time.text(readable_time(new Date(time.attr('datetime'))));
+		time.text(readable_time(new Date(time.attr('datetime'
+				)).getTime()));
 	});
 	$('article header').each(function (index) {
 	       $(this).children('a').click(add_ref);
