@@ -1,0 +1,10 @@
+Dependencies:
+
+ImageMagick
+node.js
+PostgreSQL
+
+flow-js
+formidable
+node-postgres
+socket.io

@@ -3,6 +3,7 @@ var common = require('./common'),
 	config = require('./config'),
 	exec = require('child_process').exec,
 	formidable = require('formidable'),
+	flow = require('flow'),
 	fs = require('fs'),
 	io = require('socket.io'),
 	jsontemplate = require('./json-template'),
@@ -221,26 +222,28 @@ function handle_upload(req, resp) {
 			}
 		}
 
-		/* Flattened... need a better way of chaining this */
-		read_image_filesize(image, function (image) {
-		read_image_dimensions(image.tagged_path, function (err, dims) {
-		if (err)
-			return upload_failure(image, 'Corrupt image.');
-		image.dims = dims;
-		resize_image(image, function (image) {
-		md5_image(image, function (err, MD5) {
-		if (err)
-			return upload_failure(image, 'Hashing error.');
-		image.MD5 = MD5;
-		read_image_dimensions(image.thumb, function (err, dims) {
-		if (err)
-			return upload_failure(image, 'Internal error.');
-		image.dims = image.dims.concat(dims);
-		upload_image(image);
-		});
-		});
-		});
-		});
+		flow.exec(function () {
+			read_image_filesize(image, this);
+		}, function (size) {
+			image.size = size;
+			read_image_dimensions(image.tagged_path, this);
+		}, function (err, dims) {
+			if (err)
+				return upload_failure(image, 'Corrupt image.');
+			image.dims = dims;
+			resize_image(image, this);
+		}, function () {
+			md5_image(image, this);
+		}, function (err, MD5) {
+			if (err)
+				return upload_failure(image, 'Hashing error.');
+			image.MD5 = MD5;
+			read_image_dimensions(image.thumb, this);
+		}, function (err, dims) {
+			if (err)
+				return upload_failure(image, 'Sizing error.');
+			image.dims = image.dims.concat(dims);
+			upload_image(image);
 		});
 	});
 }
@@ -251,11 +254,10 @@ function read_image_filesize(image, callback) {
 			upload_failure(image, 'Internal upload error.');
 			return;
 		}
-		image.size = stat.size
-		if (image.size > config.IMAGE_FILESIZE_MAX)
+		if (stat.size > config.IMAGE_FILESIZE_MAX)
 			upload_failure(image, 'File is too large.');
 		else
-			callback(image);
+			callback(stat.size);
 	});
 }
 
@@ -310,7 +312,7 @@ function exec_handler(image, err_desc, callback) {
 		if (stderr)
 			console.log(stderr);
 		if (error == null && !stderr)
-			callback(image);
+			callback();
 		else
 			upload_failure(image, err_desc);
 	};
@@ -331,20 +333,20 @@ function upload_image(image) {
 	image.time = new Date().getTime();
 	var dest = path.join(config.IMAGE_DIR, image.time + image.ext);
 	var thumb_dest = path.join(config.THUMB_DIR, image.time + '.jpg');
-	exec('mv -- ' + image.path + ' ' + dest, exec_handler(image,
-	"Couldn't publish image.", function (image) {
-	exec('mv -- ' + image.thumb + ' ' + thumb_dest, exec_handler(image,
-	"Couldn't publish thumbnail.", function (image) {
-	db.insert_image(image, function (err, id) {
-	if (err)
-		return upload_failure("Couldn't add image to database.");
-	else {
+	flow.exec(function () {
+		exec('mv -- ' + image.path + ' ' + dest, exec_handler(
+				image, "Couldn't publish image.", this));
+	}, function () {
+		exec('mv -- ' + image.thumb + ' ' + thumb_dest, exec_handler(
+				image, "Couldn't publish thumbnail.", this));
+	}, function () {
+		db.insert_image(image, this);
+	}, function (err, id) {
+		if (err)
+			return upload_failure("Couldn't add image to DB.");
 		image.id = id;
 		store_image(image);
-	}
 	});
-	}));
-	}));
 }
 
 function store_image(image) {
