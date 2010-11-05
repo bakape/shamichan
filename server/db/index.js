@@ -1,7 +1,8 @@
+require.paths.push('../../..');
 var config = require('../config').config,
     fs = require('fs'),
     jsontemplate = require('../json-template'),
-    postgres = require('../../../node-postgres/lib');
+    postgres = require('node-postgres/lib');
 
 var db = new postgres.Client(config.DB_CONFIG);
 db.connect();

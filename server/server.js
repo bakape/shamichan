@@ -1,9 +1,10 @@
+require.paths.push('../..');
 var common = require('./common'),
 	config = require('./config').config,
 	exec = require('child_process').exec,
-	formidable = require('../../formidable'),
+	formidable = require('formidable'),
 	fs = require('fs'),
-	io = require('../../socket.io'),
+	io = require('socket.io'),
 	jsontemplate = require('./json-template'),
 	http = require('http'),
 	path = require('path'),
