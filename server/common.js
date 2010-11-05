@@ -169,6 +169,7 @@ function readable_time(time) {
 		pad(d.getUTCDate()) + ' ' + pad(d.getUTCHours()) + ':' +
 		pad(d.getUTCMinutes()));
 }
+exports.readable_time = readable_time;
 
 function datetime(time) {
 	var d = new Date(time);

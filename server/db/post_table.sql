@@ -5,7 +5,7 @@ CREATE TABLE {DB_POST_TABLE} (
 	email		varchar(320) NOT NULL,
 	body		text NOT NULL,
 	parent		integer REFERENCES {DB_POST_TABLE} ON DELETE CASCADE,
-	created		timestamp NOT NULL,
+	created		timestamp with time zone NOT NULL,
 	ip		inet NOT NULL,
 	image		integer REFERENCES {DB_IMAGE_TABLE} ON DELETE SET NULL,
 	image_filename	varchar(256),

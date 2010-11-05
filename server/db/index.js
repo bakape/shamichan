@@ -20,7 +20,8 @@ exports.insert_image = function(image, callback) {
 		name: 'insert image',
 		text: "INSERT INTO " + table +
 		" (md5, filesize, width, height, created) VALUES" +
-		" ($1, $2, $3, $4, TIMESTAMP 'epoch' + $5 * INTERVAL '1ms')" +
+		" ($1, $2, $3, $4," +
+		" TIMESTAMP 'epoch' AT TIME ZONE 'UTC' + $5 * INTERVAL '1ms')"+
 		" RETURNING id",
 		values: [image.MD5, image.size, dims[0], dims[1],
 			image.time]
@@ -54,7 +55,8 @@ exports.insert_post = function(msg, ip, callback) {
 		text: "INSERT INTO " + config.DB_POST_TABLE +
 		" (name, trip, email, body, parent, created, ip," +
 		" image, image_filename) VALUES" +
-		" ($1,$2,$3,$4,$5, TIMESTAMP 'epoch' + $6 * INTERVAL '1ms'," +
+		" ($1, $2, $3, $4, $5," +
+		" TIMESTAMP 'epoch' AT TIME ZONE 'UTC' + $6 * INTERVAL '1ms',"+
 		" $7, $8, $9) RETURNING num",
 		values: [msg.name, msg.trip || '', msg.email || '',
 			msg.body, msg.op || null, msg.time, ip,

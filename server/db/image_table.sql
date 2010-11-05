@@ -4,6 +4,6 @@ CREATE TABLE {DB_IMAGE_TABLE} (
 	filesize	integer NOT NULL,
 	width		smallint NOT NULL,
 	height		smallint NOT NULL,
-	created		timestamp UNIQUE NOT NULL,
+	created		timestamp with time zone UNIQUE NOT NULL,
 	deleted		boolean NOT NULL DEFAULT FALSE
 );
