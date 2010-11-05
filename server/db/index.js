@@ -1,5 +1,5 @@
 require.paths.push('../../..');
-var config = require('../config').config,
+var config = require('../config'),
     fs = require('fs'),
     jsontemplate = require('../json-template'),
     postgres = require('node-postgres/lib');

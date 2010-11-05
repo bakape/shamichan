@@ -1,6 +1,6 @@
 require.paths.push('../..');
 var common = require('./common'),
-	config = require('./config').config,
+	config = require('./config'),
 	exec = require('child_process').exec,
 	formidable = require('formidable'),
 	fs = require('fs'),
