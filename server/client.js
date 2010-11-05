@@ -77,7 +77,6 @@ dispatcher[INSERT_POST] = function (msg) {
 		return true;
 	msg.format_link = format_link;
 	var post = $(gen_post_html(msg, msg));
-	post.find('header > a:last').click(add_ref);
 	activePosts[msg.num] = post;
 	var section = null;
 	if (msg.op) {
@@ -227,7 +226,6 @@ PostForm.prototype.on_allocation = function (msg) {
 	meta.children('time').text(readable_time(msg.time)
 		).attr('datetime', datetime(msg.time)
 		).after(' ' + num_html(msg));
-	meta.find('a:last').click(add_ref);
 	this.post.attr('id', '' + num).addClass('editing');
 	if (!this.op) {
 		this.thread.attr('id', 'thread' + num);
@@ -263,16 +261,19 @@ PostForm.prototype.on_key = function (event) {
 	}
 };
 
-function add_ref(num) {
-	if (!parseInt(num)) {
+function add_ref(event) {
+	var num = parseInt(event);
+	if (!num) {
 		if (!THREAD && !postForm)
 			return;
-		var post = $(this).parents('article');
-		if (!post.length)
+		var href = $(event.target).attr('href');
+		if (!href)
 			return;
-		if (num.preventDefault)
-			num.preventDefault();
-		num = extract_num(post, false);
+		var q = href.match(/#q(\d+)/);
+		if (!q)
+			return;
+		num = parseInt(q[1]);
+		event.preventDefault();
 	}
 	if (!postForm) {
 		var link = $('#' + num).siblings('aside').find('a');
@@ -466,13 +467,11 @@ $(document).ready(function () {
 	});
 	socket.connect();
 
+	$(document).click(add_ref);
 	$('time').each(function (index) {
 		var time = $(this);
 		time.text(readable_time(new Date(time.attr('datetime'
 				)).getTime()));
-	});
-	$('article header').each(function (index) {
-	       $(this).children('a').click(add_ref);
 	});
 
 	if (!THREAD) {
