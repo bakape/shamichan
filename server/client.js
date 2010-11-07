@@ -77,18 +77,26 @@ dispatcher[INSERT_POST] = function (msg) {
 	msg = msg[0];
 	if (postForm && msg.num == postForm.num)
 		return true;
+	var focus = window.getSelection().focusNode;
+	if (focus && focus.tagName && focus.tagName.match(/blockquote/i))
+		focus = $(focus).find('textarea');
+	else
+		focus = null;
 	msg.format_link = format_link;
 	var post = $(gen_post_html(msg, msg));
 	activePosts[msg.num] = post;
-	var section, hr;
+	var section, hr, bump = true;
 	if (msg.op) {
 		section = threads[msg.op];
 		section.find('article[id]:last').after(post);
-		if (THREAD || !liveFeed || msg.email == 'sage')
-			return true;
-		hr = section.next();
-		section.detach();
-		hr.detach();
+		if (THREAD || !liveFeed || msg.email == 'sage') {
+			bump = false;
+		}
+		else {
+			hr = section.next();
+			section.detach();
+			hr.detach();
+		}
 	}
 	else {
 		section = $('<section id="thread'+msg.num+'"/>').append(post);
@@ -101,9 +109,14 @@ dispatcher[INSERT_POST] = function (msg) {
 			hr.hide();
 		}
 	}
-	/* Insert it at the top; need a more robust way */
-	var fencepost = $('body > aside');
-	section.insertAfter(fencepost.length ? fencepost : ceiling).after(hr);
+	if (bump) {
+		var fencepost = $('body > aside');
+		section.insertAfter(fencepost.length ? fencepost : ceiling
+				).after(hr);
+	}
+	/* Restore focus if it was lost */
+	if (focus)
+		focus.focus();
 	return true;
 };
 
