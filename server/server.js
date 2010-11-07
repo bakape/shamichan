@@ -20,7 +20,6 @@ var dispatcher = {};
 var sync_number = 0;
 var backlog = [];
 var backlog_last_dropped = 0;
-var BL_WHEN = 0, BL_MSG = 1, BL_THREAD = 2;
 
 function multisend(client, msgs) {
 	client.socket.send(JSON.stringify(msgs));
@@ -59,14 +58,14 @@ function broadcast(msg, post, origin) {
 		client.defer_sync = null;
 	}
 	var now = new Date().getTime();
-	backlog.push([now, msg, thread_num]);
+	backlog.push({when: now, msg: msg, thread: thread_num});
 	cleanup_backlog(now);
 }
 
 function cleanup_backlog(now) {
 	var limit = now - config.BACKLOG_PERIOD;
 	/* binary search would be nice */
-	while (backlog.length && backlog[0][BL_WHEN] < limit) {
+	while (backlog.length && backlog[0].when < limit) {
 		backlog.shift();
 		backlog_last_dropped++;
 	}
@@ -97,8 +96,8 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	var logs = [];
 	for (var i = sync - backlog_last_dropped; i < backlog.length; i++) {
 		var log = backlog[i];
-		if (!watching || log[BL_THREAD] == watching)
-			logs.push(log[BL_MSG]);
+		if (!watching || log.thread == watching)
+			logs.push(log.msg);
 	}
 	logs.push('[' + common.SYNCHRONIZE + ',' + sync_number + ']');
 	client.socket.send('[' + logs.join() + ']');
