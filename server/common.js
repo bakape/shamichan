@@ -70,11 +70,11 @@ function break_long_words(frag, env) {
 		for (var j = 0; j < morcels.length; j++) {
 			if (j % 2)
 				env.format_link(parseInt(morcels[j]), env);
+			else if (i % 2)
+				env.callback(morcels[j] + ' ');
 			else
 				env.callback(morcels[j]);
 		}
-		if (i % 2)
-			env.callback(safe('&shy;'));
 	}
 }
 
