@@ -84,7 +84,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	if (msg.op) {
 		section = threads[msg.op];
 		section.find('article[id]:last').after(post);
-		if (THREAD || !liveFeed)
+		if (THREAD || !liveFeed || msg.email == 'sage')
 			return true;
 		hr = section.next();
 		section.detach();
