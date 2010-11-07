@@ -139,12 +139,16 @@ function upload_complete(info) {
 
 function propagate_fields() {
 	var parsed = parse_name(nameField.val().trim());
-	postForm.meta.children('b').text(parsed[0] || ANON);
-	postForm.meta.children('code').text((parsed[1] || parsed[2]) && '!?');
+	postForm.meta.find('b').text(parsed[0] || ANON);
+	postForm.meta.find('code').text((parsed[1] || parsed[2]) && '!?');
 	var email = emailField.val().trim();
-	if (email) {
-		/* TODO: add link */
-	}
+	if (email == 'noko')
+		email = '';
+	var tag = postForm.meta.children('a:first');
+	if (email)
+		tag.attr('href', 'mailto:' + email).attr('class', 'email');
+	else
+		tag.removeAttr('href').attr('class', 'emailcancel');
 }
 
 var format_env = {format_link: function (num, env) {
@@ -164,7 +168,8 @@ function PostForm(link_clicked) {
 	postForm = this;
 	this.buffer = $('<p/>');
 	this.line_buffer = $('<p/>');
-	this.meta = $('<header><b/> <code/> <time/></header>');
+	this.meta = $('<header><a class="emailcancel"><b/> <code/></a>' +
+			' <time/></header>');
 	this.input = $('<textarea name="body" class="trans" rows="1"/>');
 	this.uploadForm = null;
 	this.submit = $('<input type="button" value="Done"/>');
@@ -221,8 +226,13 @@ PostForm.prototype.on_allocation = function (msg) {
 	nameField.unbind();
 	emailField.unbind();
 	var meta = this.meta;
-	meta.children('b').text(msg.name || ANON);
-	meta.children('code').text(msg.trip);
+	meta.find('b').text(msg.name || ANON);
+	meta.find('code').text(msg.trip);
+	var tag = meta.children('a:first');
+	if (msg.email)
+		tag.attr('href', 'mailto:' + msg.email).attr('class', 'email');
+	else
+		tag.removeAttr('href').attr('class', 'emailcancel');
 	meta.children('time').text(readable_time(msg.time)
 		).attr('datetime', datetime(msg.time)
 		).after(' ' + num_html(msg));

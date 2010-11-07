@@ -80,6 +80,11 @@ section, body > aside {
 	color: #0f0c5d;
 	text-decoration: underline;
 }
+.emailcancel {
+	color: inherit !important;
+	cursor: inherit !important;
+	text-decoration: none;
+}
 .highlight {
 	background-color: #d6bad0;
 	border-right: 1px solid #ba9dbf;
