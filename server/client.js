@@ -67,8 +67,10 @@ function insert_formatted(text, buffer, state, env) {
 
 function toggle_live() {
 	liveFeed = $(this).attr('checked');
-	if (liveFeed)
+	if (liveFeed) {
 		$('section').show();
+		$('hr').show();
+	}
 }
 
 dispatcher[INSERT_POST] = function (msg) {
@@ -78,26 +80,30 @@ dispatcher[INSERT_POST] = function (msg) {
 	msg.format_link = format_link;
 	var post = $(gen_post_html(msg, msg));
 	activePosts[msg.num] = post;
-	var section = null;
+	var section, hr;
 	if (msg.op) {
 		section = threads[msg.op];
 		section.find('article[id]:last').after(post);
 		if (THREAD || !liveFeed)
 			return true;
+		hr = section.next();
 		section.detach();
+		hr.detach();
 	}
 	else {
-		var section = $('<section id="thread' + msg.num + '"/>'
-				).append(post).after('<hr/>');
+		section = $('<section id="thread'+msg.num+'"/>').append(post);
+		hr = $('<hr/>');
 		threads[msg.num] = section;
 		if (!postForm)
 			section.append(make_reply_box());
-		if (!liveFeed)
+		if (!liveFeed) {
 			section.hide();
+			hr.hide();
+		}
 	}
 	/* Insert it at the top; need a more robust way */
 	var fencepost = $('body > aside');
-	section.insertAfter(fencepost.length ? fencepost : ceiling);
+	section.insertAfter(fencepost.length ? fencepost : ceiling).after(hr);
 	return true;
 };
 
@@ -207,9 +213,9 @@ function PostForm(link_clicked) {
 		parent.replaceWith(post);
 	}
 	else {
-		this.thread = $('<section/>').replaceAll(parent).append(post
-				).after('<hr/>');
+		this.thread = $('<section/>').replaceAll(parent).append(post);
 		post.addClass('op');
+		this.thread.after('<hr/>');
 	}
 	dispatcher[ALLOCATE_POST] = $.proxy(function (msg) {
 		this.on_allocation(msg[0]);
