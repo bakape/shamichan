@@ -103,6 +103,7 @@ section, body > aside {
 	padding: 0;
 	resize: none;
 	text-wrap: none;
+	vertical-align: top;
 }
 #live, #sync {
 	float: right;
