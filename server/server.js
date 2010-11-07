@@ -33,15 +33,30 @@ function broadcast(msg, post, origin) {
 	var payload = '[' + msg + ']';
 	for (id in clients) {
 		var client = clients[id];
-		if (client.watching && client.watching != thread_num)
-			multisend(client, [[common.INVALID]]);
-		else if (id == origin) {
+		if (!client.synced)
+			continue;
+		if (client.watching && client.watching != thread_num) {
+			/* Client isn't in this thread so let them fall
+			 * out of sync until something relevant comes up */
+			client.defer_sync = sync_number;
+			continue;
+		}
+		if (id == origin) {
 			/* Client won't increment SYNC since they won't
 			 * receive the broadcasted message, so do manually */
 			multisend(client, [[common.SYNCHRONIZE, sync_number]]);
 		}
-		else if (client.synced)
+		else if (client.defer_sync) {
+			/* First catch them up, then send the new message */
+			client.socket.send('[[' + common.SYNCHRONIZE + ',' +
+					client.defer_sync + '],' + msg + ']');
+		}
+		else {
+			/* Client is already in sync */
 			client.socket.send(payload);
+		}
+		/* At this point the client must be caught up */
+		client.defer_sync = null;
 	}
 	var now = new Date().getTime();
 	backlog.push([now, msg, thread_num]);
@@ -402,6 +417,7 @@ function on_client (socket) {
 		if (!func || !func(msg, client)) {
 			console.log("Got invalid message " + data);
 			multisend(client, [[common.INVALID]]);
+			client.synced = false;
 		}
 	});
 	socket.on('disconnect', function () {
