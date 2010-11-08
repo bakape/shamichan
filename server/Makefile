@@ -19,9 +19,7 @@ tripcode.node: .build tripcode.cc
 	node-waf configure
 
 $(CLIENT_JS): client.js common.js jsmin
-	@sed "s/^exports\.//g" common.js > $@
-	@echo >> $@
-	@cat client.js >> $@
+	@node make_client.js common.js client.js > $@
 
 $(RELEASE_JS): $(CLIENT_JS)
 	./jsmin < $< > $@

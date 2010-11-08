@@ -5,7 +5,6 @@ var threads = {};
 var dispatcher = {};
 var THREAD = 0;
 var nameField, emailField;
-var INPUT_MIN_SIZE = 10;
 var ceiling;
 
 function send(msg) {
