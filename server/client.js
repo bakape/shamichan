@@ -198,6 +198,7 @@ function PostForm(link_clicked) {
 	this.unallocatedBuffer = '';
 	this.state = initial_post_state();
 	this.line_count = 1;
+	this.char_count = 0;
 
 	var input_field = [this.buffer, this.line_buffer, this.input];
 	this.blockquote.append.apply(this.blockquote, input_field);
@@ -213,6 +214,7 @@ function PostForm(link_clicked) {
 	emailField.change(propagate_fields).keypress(propagate_fields);
 
 	this.input.attr('cols', INPUT_MIN_SIZE);
+	this.input.attr('maxlength', MAX_POST_CHARS);
 	this.input.keydown($.proxy(this.on_key, this));
 	this.input.keyup($.proxy(function (event) {
 		if (this.input.val().indexOf('\n') >= 0)
@@ -288,6 +290,7 @@ PostForm.prototype.on_key = function (event) {
 	if (cur_size != right_size) {
 		input.attr('cols', (cur_size + right_size) / 2);
 	}
+	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 };
 
 function add_ref(event) {
@@ -340,8 +343,12 @@ PostForm.prototype.commit = function (text) {
 			this.line_count = MAX_POST_LINES;
 		}
 	}
+	var left = MAX_POST_CHARS - this.char_count;
+	if (left < text.length)
+		text = text.substr(0, left);
 	if (!text)
 		return;
+	this.char_count += text.length;
 
 	/* Either get an allocation or send the committed text */
 	if (!this.num && !this.sentAllocRequest) {
