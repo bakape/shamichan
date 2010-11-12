@@ -473,7 +473,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 function allocate_post(msg, image, client, callback) {
 	if (!msg)
 		return false;
-	if (msg.frag.length > common.MAX_POST_CHARS)
+	if (msg.frag && msg.frag.length > common.MAX_POST_CHARS)
 		return false;
 	var post = {
 		time: new Date().getTime(),
