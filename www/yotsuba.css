@@ -7,6 +7,9 @@ a:hover, blockquote a, blockquote a:visited {
 	color: #d00;
 	cursor: pointer;
 }
+abbr {
+	text-decoration: none;
+}
 article, aside {
 	background-color: #d6daf0;
 	border-right: 1px solid #b7c5d9;
