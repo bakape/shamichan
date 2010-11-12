@@ -314,8 +314,9 @@ function resize_image(image, callback) {
 		dims = config.THUMB_DIMENSIONS;
 		quality = config.THUMB_QUALITY;
 	}
-	exec('convert ' + path + ' -gamma 0.454545 -filter lanczos -resize '
-		+ dims + ' -gamma 2.2 -quality ' + quality + ' ' + image.thumb,
+	exec('convert ' + path + '[0] -gamma 0.454545 -filter lanczos -resize '
+		+ dims + ' -gamma 2.2 -quality ' + quality
+		+ ' jpg:' + image.thumb,
 		exec_handler(image, 'Conversion error.', callback));
 }
 
