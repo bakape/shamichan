@@ -1,9 +1,7 @@
-CLIENT_JS = ../www/js/client-v$(shell node config.js --show-config VERSION).js
-RELEASE_JS = $(CLIENT_JS:%.js=%.min.js)
+CLIENT_JS := ../www/js/client-v$(shell node config.js --show-config VERSION).js
+DEBUG := $(shell node config.js --show-config DEBUG)
 
 all: builder tripcode.node
-
-release: $(RELEASE_JS)
 
 builder: builder.c
 	gcc -o $@ $^
@@ -19,10 +17,13 @@ tripcode.node: .build tripcode.cc
 	node-waf configure
 
 $(CLIENT_JS): client.js common.js jsmin
+ifeq ($(DEBUG),true)
 	@node make_client.js common.js client.js > $@
-
-$(RELEASE_JS): $(CLIENT_JS)
-	./jsmin < $< > $@
+else
+	@node make_client.js common.js client.js > $@.orig && \
+		./jsmin < $@.orig > $@
+	@rm -f $@.orig
+endif
 
 clean:
 	rm -rf -- .build builder jsmin tripcode.node ../www/js/client-v*.js

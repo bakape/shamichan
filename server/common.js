@@ -1,13 +1,14 @@
-exports.INVALID = 0;
-exports.ALLOCATE_POST = 1;
-exports.INSERT_POST = 2;
-exports.UPDATE_POST = 3;
-exports.FINISH_POST = 4;
-exports.SYNCHRONIZE = 5;
+var DEFINES = exports;
+DEFINES.INVALID = 0;
+DEFINES.ALLOCATE_POST = 1;
+DEFINES.INSERT_POST = 2;
+DEFINES.UPDATE_POST = 3;
+DEFINES.FINISH_POST = 4;
+DEFINES.SYNCHRONIZE = 5;
 
-var ANON = 'Anonymous';
-exports.INPUT_MIN_SIZE = 10;
-exports.MAX_POST_LINES = 30;
+DEFINES.ANON = 'Anonymous';
+DEFINES.INPUT_MIN_SIZE = 10;
+DEFINES.MAX_POST_LINES = 30;
 
 function escape_html(html) {
 	return html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
@@ -203,7 +204,7 @@ exports.gen_post_html = function (data, env) {
 	if (data.editing)
 		classes.push('editing');
 	var cls = classes.length ? '" class="' + classes.join(' ') : '';
-	var ident = [safe('<b>'), data.name || ANON, safe('</b>')];
+	var ident = [safe('<b>'), data.name || DEFINES.ANON, safe('</b>')];
 	if (data.trip) {
 		ident[2].safe += ' <code>';
 		ident.push(data.trip);
