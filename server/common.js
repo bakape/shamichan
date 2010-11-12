@@ -7,6 +7,7 @@ exports.SYNCHRONIZE = 5;
 
 var ANON = 'Anonymous';
 exports.INPUT_MIN_SIZE = 10;
+exports.MAX_POST_LINES = 30;
 
 function escape_html(html) {
 	return html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(

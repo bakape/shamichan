@@ -197,6 +197,7 @@ function PostForm(link_clicked) {
 	this.sentAllocRequest = false;
 	this.unallocatedBuffer = '';
 	this.state = initial_post_state();
+	this.line_count = 1;
 
 	var input_field = [this.buffer, this.line_buffer, this.input];
 	this.blockquote.append.apply(this.blockquote, input_field);
@@ -327,8 +328,22 @@ PostForm.prototype.make_alloc_request = function (text) {
 };
 
 PostForm.prototype.commit = function (text) {
+	var lines;
+	if (text.indexOf('\n') >= 0) {
+		lines = text.split('\n');
+		this.line_count += lines.length - 1;
+		var breach = this.line_count - MAX_POST_LINES + 1;
+		if (breach > 0) {
+			for (var i = 0; i < breach; i++)
+				lines.pop();
+			text = lines.join('\n');
+			this.line_count = MAX_POST_LINES;
+		}
+	}
 	if (!text)
 		return;
+
+	/* Either get an allocation or send the committed text */
 	if (!this.num && !this.sentAllocRequest) {
 		send([ALLOCATE_POST, this.make_alloc_request(text)]);
 		this.sentAllocRequest = true;
@@ -344,9 +359,9 @@ PostForm.prototype.commit = function (text) {
 	else
 		this.unallocatedBuffer += text;
 
+	/* Add it to the user's display */
 	var line_buffer = this.line_buffer;
-	if (text.indexOf('\n') >= 0) {
-		var lines = text.split('\n');
+	if (lines) {
 		lines[0] = line_buffer.text() + lines[0];
 		line_buffer.text(lines.pop());
 		for (var i = 0; i < lines.length; i++)
