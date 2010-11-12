@@ -375,6 +375,8 @@ function store_image(image) {
 		MD5: image.MD5, id: image.id,
 	};
 	var client = clients[image.client_id];
+	if (!client)
+		return upload_failure("Client disappeared.");
 	client.uploading = false;
 	if (client.post) {
 		client_call(image.resp, 'upload_complete', info);
