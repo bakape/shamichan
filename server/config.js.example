@@ -17,10 +17,10 @@ module.exports = {
 	THUMB_DIR: '../www/thumb',
 	IMAGE_URL: 'http://localhost/src/',
 	THUMB_URL: 'http://localhost/thumb/',
+	PINKY_QUALITY: 50,
+	PINKY_DIMENSIONS: '125x125',
 	THUMB_QUALITY: 50,
-	THUMB_DIMENSIONS: '125x125',
-	THUMB_OP_QUALITY: 50,
-	THUMB_OP_DIMENSIONS: '250x250',
+	THUMB_DIMENSIONS: '250x250',
 };
 if (process.argv[2] == '--show-config')
 	console.log(module.exports[process.argv[3]]);

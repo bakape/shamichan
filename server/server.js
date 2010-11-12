@@ -239,30 +239,42 @@ function handle_upload(req, resp) {
 			catch (e) {
 				return upload_failure(image, 'Bad alloc.');
 			}
+			if (client.post)
+				return upload_failure(image,'Existing alloc.');
+		}
+		else if (!client.post)
+			return upload_failure(image, 'Missing alloc.');
+
+		var pinky = (client.post && client.post.op
+				) || (image.alloc && image.alloc.op);
+		var dims, quality;
+		if (pinky) {
+			dims = config.PINKY_DIMENSIONS;
+			quality = config.PINKY_QUALITY;
+		}
+		else {
+			dims = config.THUMB_DIMENSIONS;
+			quality = config.THUMB_QUALITY;
 		}
 
 		flow.exec(function () {
 			read_image_filesize(image, this);
 		}, function (size) {
 			image.size = size;
-			read_image_dimensions(image.tagged_path, this);
-		}, function (err, dims) {
-			if (err)
-				return upload_failure(image, 'Corrupt image.');
-			image.dims = dims;
-			resize_image(image, this);
-		}, function () {
 			md5_image(image, this);
-		}, function (err, MD5) {
-			if (err)
-				return upload_failure(image, 'Hashing error.');
+		}, function (MD5) {
 			image.MD5 = MD5;
-			read_image_dimensions(image.thumb, this);
-		}, function (err, dims) {
-			if (err)
-				return upload_failure(image, 'Sizing error.');
-			image.dims = image.dims.concat(dims);
-			upload_image(image);
+			read_image_dimensions(image, image.tagged_path, this);
+		}, function (w, h) {
+			image.dims = [w, h];
+			image.thumb_path = image.path + '_thumb';
+			resize_image(image, image.thumb_path, dims, quality,
+					this);
+		}, function () {
+			read_image_dimensions(image, image.thumb_path, this);
+		}, function (w, h) {
+			image.dims.push(w); image.dims.push(h);
+			publish_image(image, pinky);
 		});
 	});
 }
@@ -280,46 +292,33 @@ function read_image_filesize(image, callback) {
 	});
 }
 
-function read_image_dimensions(path, callback) {
+function read_image_dimensions(image, path, callback) {
 	exec('identify ' + path, function (error, stdout, stderr) {
 		if (error) {
-			callback('Error ' + error + ': ' + stderr, null);
-			return;
+			console.log(stderr);
+			return upload_failure(image, 'Corrupt image.');
 		}
 		var m = stdout.match(/.* (\d+)x(\d+) /);
 		if (!m)
-			callback("Couldn't parse image dimensions.", null);			else
-			callback(null, [parseInt(m[1]), parseInt(m[2])]);
+			return upload_failure(image, 'Corrupt image.');
+		callback(parseInt(m[1]), parseInt(m[2]));
 	});
 }
 
 function md5_image(image, callback) {
 	exec('md5sum -b ' + image.path, function (error, stdout, stderr) {
 		if (error) {
-			callback(stderr, null);
-			return;
+			console.log(stderr);
+			return upload_failure(image, 'Hashing error.');
 		}
-		var m = stdout.match(/^([\da-f]+)/);
-		if (m)
-			callback(null, m[1]);
-		else
-			callback("Couldn't read digest.", null);
+		callback(stdout.match(/^([\da-f]+)/)[1]);
 	});
 }
 
-function resize_image(image, callback) {
-	image.thumb = image.path + '_thumb';
+function resize_image(image, dest, dims, quality, callback) {
 	var path = image.tagged_path;
-	var dims = config.THUMB_OP_DIMENSIONS;
-	var quality = config.THUMB_OP_QUALITY;
-	var client = clients[image.client_id];
-	if (client.post && client.post.op || image.alloc && image.alloc.op) {
-		dims = config.THUMB_DIMENSIONS;
-		quality = config.THUMB_QUALITY;
-	}
 	exec('convert ' + path + '[0] -gamma 0.454545 -filter lanczos -resize '
-		+ dims + ' -gamma 2.2 -quality ' + quality
-		+ ' jpg:' + image.thumb,
+		+ dims + ' -gamma 2.2 -quality ' + quality + ' jpg:' + dest,
 		exec_handler(image, 'Conversion error.', callback));
 }
 
@@ -342,52 +341,60 @@ function upload_failure(image, err_desc) {
 	client_call(image.resp, 'upload_error', err_desc);
 	if (image.path)
 		fs.unlink(image.path);
-	if (image.thumb)
-		fs.unlink(image.thumb);
+	if (image.thumb_path)
+		fs.unlink(image.thumb_path);
+	if (image.id) {
+		/* TODO: Remove DB row */
+	}
 	var client = clients[image.client_id];
 	if (client)
 		client.uploading = false;
 }
 
-function upload_image(image) {
+function publish_image(image, pinky) {
 	image.time = new Date().getTime();
-	var dest = path.join(config.IMAGE_DIR, image.time + image.ext);
-	var thumb_dest = path.join(config.THUMB_DIR, image.time + '.jpg');
+	image.src = image.time + image.ext;
+	image.thumb = image.time + (pinky ? '.jpg' : 'l.jpg');
+	var dest = path.join(config.IMAGE_DIR, image.src),
+		nail = path.join(config.THUMB_DIR, image.thumb);
+
 	flow.exec(function () {
 		exec('mv -- ' + image.path + ' ' + dest, exec_handler(
 				image, "Couldn't publish image.", this));
 	}, function () {
-		exec('mv -- ' + image.thumb + ' ' + thumb_dest, exec_handler(
+		image.path = dest;
+		exec('mv -- ' + image.thumb_path + ' ' + nail, exec_handler(
 				image, "Couldn't publish thumbnail.", this));
 	}, function () {
-		db.insert_image(image, this);
+		image.thumb_path = nail;
+		db.insert_image(image, pinky, this);
 	}, function (err, id) {
 		if (err)
 			return upload_failure("Couldn't add image to DB.");
 		image.id = id;
-		store_image(image);
-	});
-}
-
-function store_image(image) {
-	var info = {
-		src: image.time + image.ext, thumb: image.time + '.jpg',
-		name: image.filename, dims: image.dims,
-		size: pix.readable_filesize(image.size),
-		MD5: image.MD5, id: image.id,
-	};
-	var client = clients[image.client_id];
-	if (!client)
-		return upload_failure("Client disappeared.");
-	client.uploading = false;
-	if (client.post) {
-		client_call(image.resp, 'upload_complete', info);
-		client.post.image = info;
-		return;
-	}
-	allocate_post(image.alloc, info, client, function (err, a) {
+		var info = {
+			src: image.src, thumb: image.thumb,
+			name: image.filename, dims: image.dims,
+			size: pix.readable_filesize(image.size),
+			MD5: image.MD5, id: image.id
+		};
+		var client = clients[image.client_id];
+		if (!client)
+			return upload_failure(image, 'Client disappeared.');
+		if (client.post) {
+			client_call(image.resp, 'upload_complete', info);
+			client.post.image = info;
+			client.uploading = false;
+		}
+		else
+			allocate_post(image.alloc, info, client, this);
+	}, function (err, a) {
 		if (err)
 			return upload_failure(image, 'Bad post.');
+		var client = clients[image.client_id];
+		if (!client)
+			return upload_failure(image, 'Client gone.');
+		client.uploading = false;
 		client_call(image.resp, 'postForm.on_allocation', a);
 	});
 }

@@ -14,18 +14,22 @@ db.on('error', function (err) {
 	process.exit(1);
 });
 
-exports.insert_image = function(image, callback) {
+exports.insert_image = function (image, pinky, callback) {
 	var table = config.DB_IMAGE_TABLE;
 	var dims = image.dims;
+	var values = [image.time, image.MD5, image.size, dims[0], dims[1]];
+	if (pinky)
+		values.push(null, null, dims[2], dims[3]);
+	else
+		values.push(dims[2], dims[3], null, null);
 	var query = db.query({
 		name: 'insert image',
 		text: "INSERT INTO " + table +
-		" (md5, filesize, width, height, created) VALUES" +
-		" ($1, $2, $3, $4," +
-		" TIMESTAMP 'epoch' AT TIME ZONE 'UTC' + $5 * INTERVAL '1ms')"+
-		" RETURNING id",
-		values: [image.MD5, image.size, dims[0], dims[1],
-			image.time]
+		" (created, md5, filesize, width, height, thumb_width," +
+		" thumb_height, pinky_width, pinky_height) VALUES (" +
+		"TIMESTAMP 'epoch' AT TIME ZONE 'UTC' + $1 * INTERVAL '1ms'," +
+		" $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
+		values: values
 	});
 	query.on('row', function (row) {
 		callback(null, row.fields[0]);
@@ -39,6 +43,8 @@ exports.insert_image = function(image, callback) {
 				values: [image.MD5]
 			});
 			query.on('row', function (row) {
+				/* TODO: Make a new thumbnail if need be */
+				/* Also return updated info */
 				callback(null, row.fields[0]);
 			});
 			query.on('error', function (err) {
