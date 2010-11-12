@@ -471,6 +471,8 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 function allocate_post(msg, image, client, callback) {
 	if (!msg)
 		return false;
+	if (msg.frag.length > common.MAX_POST_CHARS)
+		return false;
 	var post = {
 		time: new Date().getTime(),
 		editing: true,
@@ -547,6 +549,8 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 		return false;
 	var post = client.post;
 	if (!post || !post.editing)
+		return false;
+	if (post.body.length + frag.length > common.MAX_POST_CHARS)
 		return false;
 	/* imporant: broadcast prior state */
 	var msg = [common.UPDATE_POST, post.num, frag].concat(post.state);
