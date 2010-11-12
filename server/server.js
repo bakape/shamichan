@@ -126,7 +126,9 @@ var index_tmpl = jsontemplate.Template(fs.readFileSync('index.html', 'UTF-8')
 		).expand(config).split(/\$[A-Z]+/);
 var notfound_html = fs.readFileSync('../www/404.html');
 
-var http_headers = {'Content-Type': 'text/html; charset=UTF-8'};
+var http_headers = {'Content-Type': 'text/html; charset=UTF-8',
+		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT, -1',
+		'Cache-Control': 'no-cache'};
 var server = http.createServer(function(req, resp) {
 	if (req.method.toLowerCase() == 'post') {
 		handle_upload(req, resp);
