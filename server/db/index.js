@@ -1,8 +1,9 @@
 require.paths.push('../../..');
 var config = require('../config'),
     fs = require('fs'),
-    jsontemplate = require('../json-template'),
-    postgres = require('node-postgres/lib');
+    pix = require('../pix'),
+    postgres = require('node-postgres/lib'),
+    Template = require('../json-template').Template;
 
 var db = new postgres.Client(config.DB_CONFIG);
 db.connect();
@@ -89,38 +90,55 @@ exports.update_post = function(num, body, callback) {
 	});
 }
 
-exports.get_threads = function(callback) {
-	var query = db.query({
-		name: 'get threads',
-		text: "SELECT num, name, trip, email, body, " +
-		"EXTRACT(epoch FROM created) * 1000 FROM " +
-		config.DB_POST_TABLE + " WHERE parent IS NULL"
+/* TEMP workaround */
+var path = require('path'),
+    exec = require('child_process').exec;
+exports.get_image_ext = function (image) {
+	exec('echo -n ' + path.join(config.IMAGE_DIR, image.src) + '.*',
+			function (error, stdout, stderr) {
+		if (error) {
+			require('util').error(stderr);
+			throw error;
+		}
+		var m = stdout.match(/(\.\w{3})$/);
+		if (!m) {
+			require('util').error(stdout);
+			throw 'get_image_ext parse';
+		}
+		else
+			image.src += m[1];
 	});
-	query.on('row', function (row) {
-		var f = row.fields;
-		callback(null, {num: f[0], name: f[1], trip: f[2], email: f[3],
-				body: f[4], time: f[5]});
-	});
-	query.on('error', function (error) {
-		callback(error, null);
-	});
-	query.on('end', function () {
-		callback(null, null);
-	});
-};
+}
 
-exports.get_posts = function(callback) {
-	var query = db.query({
-		name: 'get posts',
-		text: "SELECT num, name, trip, email, body, parent, " +
-		"EXTRACT(epoch FROM created) * 1000 FROM " +
-		config.DB_POST_TABLE + " WHERE parent IS NOT NULL " +
-		"ORDER BY parent, num"
-	});
+var posts_sql;
+exports.get_posts = function(get_threads, callback) {
+	if (!posts_sql)
+		posts_sql = fs.readFileSync('db/get_posts.sql', 'UTF-8');
+	var vals = {DB_POST_TABLE: config.DB_POST_TABLE,
+		DB_IMAGE_TABLE: config.DB_IMAGE_TABLE};
+	if (!get_threads)
+		vals.posts_only = true;
+
+	var query = db.query(Template(posts_sql).expand(vals));
 	query.on('row', function (row) {
 		var f = row.fields;
-		callback(null, {num: f[0], name: f[1], trip: f[2], email: f[3],
-				body: f[4], op: f[5], time: f[6]});
+		var post = {num: f[0], name: f[1], trip: f[2], email: f[3],
+				body: f[4], time: f[6]};
+		if (f[5])
+			post.op = f[5];
+		if (f[7]) {
+			var time = f[13];
+			post.image = {
+				src: time, thumb: time + '.jpg',
+				id: f[7], MD5: f[8],
+				size: pix.readable_filesize(f[9]),
+				dims: [f[10], f[11]], name: f[12],
+				created: time
+			};
+			/* TEMP */
+			exports.get_image_ext(post.image);
+		}
+		callback(null, post);
 	});
 	query.on('error', function (error) {
 		callback(error, null);
@@ -133,7 +151,7 @@ exports.get_posts = function(callback) {
 function create_table(table, sql_file, done) {
 	console.log("Creating " + table + "...");
 	var sql = fs.readFileSync(sql_file, 'UTF-8');
-	var query = db.query(jsontemplate.Template(sql).expand(config));
+	var query = db.query(Template(sql).expand(config));
 	query.on('end', done);
 }
 

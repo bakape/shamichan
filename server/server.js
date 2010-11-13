@@ -8,6 +8,7 @@ var common = require('./common'),
 	io = require('socket.io'),
 	http = require('http'),
 	path = require('path'),
+	pix = require('./pix'),
 	db = require('./db'),
 	Template = require('./json-template').Template,
 	tripcode = require('./tripcode');
@@ -372,7 +373,7 @@ function store_image(image) {
 	var info = {
 		src: image.time + image.ext, thumb: image.time + '.jpg',
 		name: image.filename, dims: image.dims,
-		size: readable_filesize(image.size),
+		size: pix.readable_filesize(image.size),
 		MD5: image.MD5, id: image.id,
 	};
 	var client = clients[image.client_id];
@@ -389,16 +390,6 @@ function store_image(image) {
 			return upload_failure(image, 'Bad post.');
 		client_call(image.resp, 'postForm.on_allocation', a);
 	});
-}
-
-function readable_filesize(size) {
-	/* Metric. Deal with it. */
-	if (size < 1000)
-		return size + ' B';
-	if (size < 1000000)
-		return Math.round(size / 1000) + ' KB';
-	size = Math.round(size / 100000).toString();
-	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
 }
 
 function on_client (socket) {
@@ -592,7 +583,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 }
 
 function populate_threads(parents, callback) {
-	db.get_posts(function (err, post) {
+	db.get_posts(false, function (err, post) {
 		if (err) throw err;
 		if (post) {
 			posts[post.num] = post;
@@ -613,9 +604,9 @@ function populate_threads(parents, callback) {
 	});
 }
 
-function load_posts(callback) {
+function load_threads(callback) {
 	var parents = {};
-	db.get_threads(function (err, post) {
+	db.get_posts(true, function (err, post) {
 		if (err) throw err;
 		if (post) {
 			var thread = [post];
@@ -642,5 +633,5 @@ function start_server() {
 
 db.check_tables(function () {
 	console.log("Database OK.");
-	load_posts(start_server);
+	load_threads(start_server);
 });
