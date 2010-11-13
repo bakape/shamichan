@@ -148,16 +148,19 @@ function format_body(body, env) {
 }
 
 function shorten_filename(text) {
-	m = text.match(/^(.{20}).{8,}(\.\w{3,4})$/);
-	return m ? [m[1], safe('[&hellip;]'), m[2]] : text;
+	var m = text.match(/^(.{40}).{8,}(\.\w{3,4})$/);
+	if (!m)
+		return text;
+	return [safe('<abbr title="'), text, safe('">'), m[1],
+		safe('(&hellip;)'), m[2], safe('</abbr>')];
 }
 
 function image_metadata(info, dirs) {
 	var src = dirs.src_url + info.src;
 	return [safe('<span>Image <a href="' + src + '" target="_blank">'),
 		info.src, safe('</a> (' + info.size + ', ' + info.dims[0] +
-		'x' + info.dims[1] + ', <abbr title="'), info.name, safe('">'),
-		shorten_filename(info.name), safe('</abbr>)</span>')];
+		'x' + info.dims[1] + ', '), shorten_filename(info.name),
+		safe(')</span>')];
 }
 
 function thumbnail_html(info, dirs) {
