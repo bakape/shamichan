@@ -82,6 +82,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	else
 		focus = null;
 	msg.format_link = format_link;
+	msg.dirs = DIRS;
 	var post = $(gen_post_html(msg, msg));
 	activePosts[msg.num] = post;
 	var section, hr, bump = true;
@@ -150,8 +151,9 @@ function upload_error(msg) {
 
 function upload_complete(info) {
 	var form = postForm.uploadForm;
-	var metadata = $(flatten(image_metadata(info)).join(''));
-	form.siblings('header').append(metadata).after(thumbnail_html(info));
+	var metadata = $(flatten(image_metadata(info, DIRS)).join(''));
+	var thumbnail = $(thumbnail_html(info, DIRS));
+	form.siblings('header').append(metadata).after(thumbnail);
 	form.find('input[name=image]').remove();
 }
 

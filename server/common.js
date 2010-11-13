@@ -152,18 +152,19 @@ function shorten_filename(text) {
 	return m ? [m[1], safe('[&hellip;]'), m[2]] : text;
 }
 
-function image_metadata(info) {
-	var srcNm = info.src.substr(info.src.lastIndexOf('/') + 1);
-	return [safe('<span>Image <a href="'+info.src+'" target="_blank">'),
-		srcNm, safe('</a> (' + info.size + ', ' + info.dims[0] + 'x'
-		+ info.dims[1] + ', <abbr title="'), info.name, safe('">'),
+function image_metadata(info, dirs) {
+	var src = dirs.src_url + info.src;
+	return [safe('<span>Image <a href="' + src + '" target="_blank">'),
+		info.src, safe('</a> (' + info.size + ', ' + info.dims[0] +
+		'x' + info.dims[1] + ', <abbr title="'), info.name, safe('">'),
 		shorten_filename(info.name), safe('</abbr>)</span>')];
 }
 
-function thumbnail_html(info) {
-	return '<a href="' + info.src + '" target="_blank"><img src="'
-		+ info.thumb + '" width="' + info.dims[2] + '" height="'
-		+ info.dims[3] + '" data-MD5="' + info.MD5 + '"></a>';
+function thumbnail_html(info, dirs) {
+	return '<a href="' + dirs.src_url + info.src + '" target="_blank">' +
+		'<img src="' + dirs.thumb_url + info.thumb + '" width="' +
+		info.dims[2] + '" height="' + info.dims[3] +
+		'" data-MD5="' + info.MD5 + '"></a>';
 }
 
 function readable_time(time) {
@@ -216,8 +217,10 @@ exports.gen_post_html = function (data, env) {
 				+ escape(data.email) + '">'));
 		ident.push(safe('</a>'));
 	}
-	var image = data.image ? [image_metadata(data.image), safe('</header>'),
-			safe(thumbnail_html(data.image))] : safe('</header>');
+	var image = safe('</header>');
+	if (data.image)
+		image = [image_metadata(data.image, env.dirs), image,
+			safe(thumbnail_html(data.image, env.dirs))];
 	var post = [safe('\t<article id="' + data.num + cls + '"><header>'),
 		ident, safe(' ' + time_tag_html(data.time) + ' '),
 		safe(num_html(data)), image, safe('\n\t\t<blockquote>'),

@@ -6,10 +6,10 @@ var common = require('./common'),
 	flow = require('flow'),
 	fs = require('fs'),
 	io = require('socket.io'),
-	jsontemplate = require('./json-template'),
 	http = require('http'),
 	path = require('path'),
 	db = require('./db'),
+	Template = require('./json-template').Template,
 	tripcode = require('./tripcode');
 
 var threads = [];
@@ -113,7 +113,9 @@ post_env = {format_link: function (num, env) {
 				+ '">&gt;&gt;' + num + '</a>'));
 	else
 		env.callback('>>' + num);
-}};
+	},
+	dirs: {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL}
+};
 
 function write_thread_html(thread, response) {
 	response.write('<section id="thread' + thread[0].num + '">\n');
@@ -122,8 +124,8 @@ function write_thread_html(thread, response) {
 	response.write('</section>\n<hr>\n');
 }
 
-var index_tmpl = jsontemplate.Template(fs.readFileSync('index.html', 'UTF-8')
-		).expand(config).split(/\$[A-Z]+/);
+var index_tmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
+		{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
 var notfound_html = fs.readFileSync('../www/404.html');
 
 var http_headers = {'Content-Type': 'text/html; charset=UTF-8',
@@ -367,10 +369,8 @@ function upload_image(image) {
 }
 
 function store_image(image) {
-	var dest_url = config.IMAGE_URL + image.time + image.ext;
-	var thumb_url = config.THUMB_URL + image.time + '.jpg';
 	var info = {
-		src: dest_url, thumb: thumb_url,
+		src: image.time + image.ext, thumb: image.time + '.jpg',
 		name: image.filename, dims: image.dims,
 		size: readable_filesize(image.size),
 		MD5: image.MD5, id: image.id,
