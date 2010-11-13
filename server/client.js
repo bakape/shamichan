@@ -532,10 +532,6 @@ $(document).ready(function () {
 			+ 'id="live_check" checked /></span>'));
 		$('#live_check').change(toggle_live);
 	}
-	else {
-		$('#return').text('Return').attr('href', '.').before('['
-				).after(']');
-	}
 });
 
 var h5s = ['abbr', 'aside', 'article', 'code', 'section', 'time'];

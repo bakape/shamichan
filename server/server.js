@@ -152,7 +152,7 @@ function render_index(req, resp) {
 	resp.write(index_tmpl[1]);
 	for (var i = 0; i < threads.length; i++)
 		write_thread_html(threads[i], resp);
-	resp.end(index_tmpl[2]);
+	resp.end(); /* omit return link: index_tmpl[2]); */
 	return true;
 }
 
