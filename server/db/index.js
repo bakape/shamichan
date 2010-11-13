@@ -1,8 +1,7 @@
-require.paths.push('../../..');
 var config = require('../config'),
     fs = require('fs'),
     pix = require('../pix'),
-    postgres = require('node-postgres/lib'),
+    postgres = require('../../../node-postgres/lib'),
     Template = require('../json-template').Template;
 
 var db = new postgres.Client(config.DB_CONFIG);
