@@ -176,7 +176,7 @@ function render_thread(req, resp, num) {
 function on_client (socket) {
 	var id = socket.sessionId;
 	var client = {id: id, socket: socket, post: null, synced: false,
-			watching: null};
+			watching: null, ip: socket.connection.remoteAddress};
 	clients[id] = client;
 	socket.on('message', function (data) {
 		var msg = null;
@@ -273,8 +273,7 @@ function allocate_post(msg, image, client, callback) {
 		delete post.email;
 	if (image)
 		post.image = image;
-	var ip = '127.0.0.1'; /* TODO */
-	db.insert_post(post, ip, function (err, num) {
+	db.insert_post(post, client.ip, function (err, num) {
 		if (err) {
 			callback(err, null);
 			return;
