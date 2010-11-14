@@ -450,17 +450,21 @@ PostForm.prototype.make_upload_form = function () {
 	return form;
 };
 
+function sync_status(msg, hover) {
+	$('#sync').text(msg).attr('class', hover ? 'error' : '');
+}
+
 var reconnect_timer = null, reset_timer = null, reconnect_delay = 3000;
 function on_connect() {
 	clearTimeout(reconnect_timer);
 	reset_timer = setTimeout(function (){ reconnect_delay = 3000; }, 9999);
-	$('#sync').text('Synching...');
+	sync_status('Synching...', false);
 	send([SYNCHRONIZE, SYNC, THREAD]);
 }
 
 function attempt_reconnect() {
 	clearTimeout(reset_timer);
-	$('#sync').text('Not synched.');
+	sync_status('Not synched.', true);
 	socket.connect();
 	reconnect_timer = setTimeout(attempt_reconnect, reconnect_delay);
 	reconnect_delay = Math.min(reconnect_delay * 2, 60000);
@@ -468,12 +472,12 @@ function attempt_reconnect() {
 
 dispatcher[SYNCHRONIZE] = function (msg) {
 	SYNC = msg[0];
-	$('#sync').text('Synched.');
+	sync_status('Synched.', false);
 	return false;
 }
 
 dispatcher[INVALID] = function (msg) {
-	$('#sync').text('Sync error.');
+	sync_status('Sync error.', true);
 	return false;
 }
 

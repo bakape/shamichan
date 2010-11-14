@@ -118,3 +118,8 @@ section, body > aside {
 	clear: right;
 	color: gray;
 }
+.error {
+	position: fixed;
+	top: 12px;
+	right: 8px;
+}
