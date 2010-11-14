@@ -5,7 +5,7 @@ var common = require('./common'),
 	http = require('http'),
 	pix = require('./pix'),
 	db = require('./db'),
-	Template = require('./json-template').Template,
+	Template = require('./lib/json-template').Template,
 	tripcode = require('./tripcode');
 
 var threads = [];

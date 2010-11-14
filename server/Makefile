@@ -1,4 +1,4 @@
-CLIENT_SRC = socket.io.js common.js client.js
+CLIENT_SRC = lib/socket.io.js common.js client.js
 CLIENT_JS := ../www/js/client-v$(shell node config.js --show-config VERSION).js
 DEBUG := $(shell node config.js --show-config DEBUG)
 
