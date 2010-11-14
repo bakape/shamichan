@@ -2,7 +2,6 @@ module.exports = {
 	TITLE: "Test",
 	HOST: "localhost",
 	PORT: 8000,
-	SOCKET_IO_URL: "http://localhost:8000/socket.io/",
 	VERSION: "2",
 	DEBUG: true,
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */

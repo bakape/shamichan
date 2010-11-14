@@ -1,3 +1,4 @@
+CLIENT_SRC = socket.io.js common.js client.js
 CLIENT_JS := ../www/js/client-v$(shell node config.js --show-config VERSION).js
 DEBUG := $(shell node config.js --show-config DEBUG)
 
@@ -16,11 +17,11 @@ tripcode.node: .build tripcode.cc
 .build: wscript
 	node-waf configure
 
-$(CLIENT_JS): client.js common.js jsmin
+$(CLIENT_JS): $(CLIENT_SRC) jsmin
 ifeq ($(DEBUG),true)
-	@node make_client.js common.js client.js > $@
+	@node make_client.js $(CLIENT_SRC) > $@
 else
-	@node make_client.js common.js client.js > $@.orig && \
+	@node make_client.js $(CLIENT_SRC) > $@.orig && \
 		./jsmin < $@.orig > $@
 	@rm -f $@.orig
 endif
