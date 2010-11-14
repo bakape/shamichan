@@ -129,8 +129,8 @@ var http_headers = {'Content-Type': 'text/html; charset=UTF-8',
 		'Cache-Control': 'no-cache'};
 var server = http.createServer(function(req, resp) {
 	if (req.method.toLowerCase() == 'post') {
-		pix.handle_upload(req, resp, clients, {
-			allocate_post: allocate_post});
+		var upload = new pix.ImageUpload(clients, allocate_post);
+		upload.handle_request(req, resp);
 		return;
 	}
 	if (req.url == '/' && render_index(req, resp))

@@ -13,11 +13,11 @@ db.on('error', function (err) {
 	process.exit(1);
 });
 
-exports.insert_image = function (image, pinky, callback) {
+exports.insert_image = function (image, callback) {
 	var table = config.DB_IMAGE_TABLE;
 	var dims = image.dims;
 	var values = [image.time, image.MD5, image.size, dims[0], dims[1]];
-	if (pinky)
+	if (image.pinky)
 		values.push(null, null, dims[2], dims[3]);
 	else
 		values.push(dims[2], dims[3], null, null);
@@ -133,9 +133,9 @@ exports.get_posts = function(get_threads, callback) {
 			post.op = f[5];
 		if (f[7]) {
 			var time = f[13];
+			var thumb = time + (post.op ? '.jpg' : 'l.jpg');
 			post.image = {
-				src: time, thumb: time + '.jpg',
-				id: f[7], MD5: f[8],
+				src: time, thumb: thumb, id: f[7], MD5: f[8],
 				size: pix.readable_filesize(f[9]),
 				dims: [f[10], f[11]], name: f[12],
 				created: time
