@@ -49,6 +49,11 @@ h1 {
 	letter-spacing: -2px;
 	text-align: center;
 }
+h2 {
+	color: #af0a0f;
+	font-family: Tahoma;
+	text-align: center;
+}
 header > a, header > a:visited {
 	color: black;
 	text-decoration: none;

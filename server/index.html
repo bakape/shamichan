@@ -3,10 +3,7 @@
 	<title>{{TITLE}}</title>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 	<link rel="stylesheet" href="yotsuba.css" />
-	<script src="js/jquery-1.4.2.min.js"></script>
-	<script src="{{SOCKET_IO_URL}}socket.io.js"></script>
-	<script>var HOST = "{{HOST}}", PORT = {{PORT}}, SYNC = $SYNC, IMAGE_UPLOAD = {{IMAGE_UPLOAD}}, DIRS = {src_url: "{{IMAGE_URL}}", thumb_url: "{{THUMB_URL}}"};</script>
-	<script src="js/client-v{{VERSION}}.js"></script>
+	<!--[if lt IE 9]><script src="js/ie.js"></script><![endif]-->
 </head>
 
 <h1>{{TITLE}}</h1>
@@ -15,4 +12,7 @@
 <label for="email">Email:</label> <input id="email" name="email"><br>
 <hr>
 $THREADS
-[<a href=".">Return</a>]
+<script src="js/jquery-1.4.2.min.js"></script>
+<script src="{{SOCKET_IO_URL}}socket.io.js"></script>
+<script>var HOST = "{{HOST}}", PORT = {{PORT}}, SYNC = $SYNC, IMAGE_UPLOAD = {{IMAGE_UPLOAD}}, DIRS = {src_url: "{{IMAGE_URL}}", thumb_url: "{{THUMB_URL}}"};</script>
+<script src="js/client-v{{VERSION}}.js"></script>

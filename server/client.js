@@ -3,9 +3,16 @@ var activePosts = {};
 var liveFeed = true;
 var threads = {};
 var dispatcher = {};
-var THREAD = 0;
-var nameField, emailField;
-var ceiling;
+var THREAD = window.location.pathname.match(/\/(\d+)$/);
+THREAD = THREAD ? parseInt(THREAD[1]) : 0;
+var nameField = $('input[name=name]'), emailField = $('input[name=email]');
+var ceiling = $('hr:first');
+
+var socket = new io.Socket(HOST, {
+	port: PORT,
+	transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling',
+		'jsonp-polling']
+});
 
 function send(msg) {
 	socket.send(JSON.stringify(msg));
@@ -443,12 +450,6 @@ PostForm.prototype.make_upload_form = function () {
 	return form;
 };
 
-var socket = new io.Socket(HOST, {
-	port: PORT,
-	transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling',
-		'jsonp-polling']
-});
-
 var reconnect_timer = null, reset_timer = null, reconnect_delay = 3000;
 function on_connect() {
 	clearTimeout(reconnect_timer);
@@ -476,36 +477,7 @@ dispatcher[INVALID] = function (msg) {
 	return false;
 }
 
-$(document).ready(function () {
-	nameField = $('input[name=name]');
-	emailField = $('input[name=email]');
-	ceiling = $('hr:first');
-
-	$('.editing').each(function(index) {
-		var post = $(this);
-		activePosts[extract_num(post, false)] = post;
-	});
-	$('section').each(function (index) {
-		var section = $(this);
-		threads[extract_num(section, 'thread')] = section;
-	});
-	var m = window.location.pathname.match(/\/(\d+)$/);
-	if (m)
-		THREAD = parseInt(m[1]);
-	insert_new_post_boxes();
-	m = window.location.hash.match(/^#q(\d+)$/);
-	if (m && $('#' + m[1]).length) {
-		var id = m[1];
-		window.location.hash = '#' + id;
-		$('#' + id).addClass('highlight');
-		setTimeout(function () { add_ref(id); }, 500);
-	}
-	else {
-		m = window.location.hash.match(/^(#\d+)$/);
-		if (m)
-			$(m[1]).addClass('highlight');
-	}
-
+function are_you_ready_guys() {
 	socket.on('connect', on_connect);
 	socket.on('disconnect', attempt_reconnect);
 	socket.on('message', function (data) {
@@ -518,6 +490,28 @@ $(document).ready(function () {
 		}
 	});
 	socket.connect();
+
+	$('.editing').each(function(index) {
+		var post = $(this);
+		activePosts[extract_num(post, false)] = post;
+	});
+	$('section').each(function (index) {
+		var section = $(this);
+		threads[extract_num(section, 'thread')] = section;
+	});
+	insert_new_post_boxes();
+	var m = window.location.hash.match(/^#q(\d+)$/);
+	if (m && $('#' + m[1]).length) {
+		var id = m[1];
+		window.location.hash = '#' + id;
+		$('#' + id).addClass('highlight');
+		setTimeout(function () { add_ref(id); }, 500);
+	}
+	else {
+		m = window.location.hash.match(/^(#\d+)$/);
+		if (m)
+			$(m[1]).addClass('highlight');
+	}
 
 	$(document).click(add_ref);
 	$('time').each(function (index) {
@@ -532,8 +526,6 @@ $(document).ready(function () {
 			+ 'id="live_check" checked /></span>'));
 		$('#live_check').change(toggle_live);
 	}
-});
+}
 
-var h5s = ['abbr', 'aside', 'article', 'code', 'section', 'time'];
-for (var i = 0; i < h5s.length; i++)
-	document.createElement(h5s[i]);
+are_you_ready_guys();

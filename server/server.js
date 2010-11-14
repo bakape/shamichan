@@ -145,11 +145,11 @@ var server = http.createServer(function(req, resp) {
 function render_index(req, resp) {
 	resp.writeHead(200, http_headers);
 	resp.write(index_tmpl[0]);
-	resp.write(sync_number.toString());
-	resp.write(index_tmpl[1]);
 	for (var i = 0; i < threads.length; i++)
 		write_thread_html(threads[i], resp);
-	resp.end(); /* omit return link: index_tmpl[2]); */
+	resp.write(index_tmpl[1]);
+	resp.write(sync_number.toString());
+	resp.end(index_tmpl[2]);
 	return true;
 }
 
@@ -164,9 +164,10 @@ function render_thread(req, resp, num) {
 	}
 	resp.writeHead(200, http_headers);
 	resp.write(index_tmpl[0]);
-	resp.write(sync_number.toString());
-	resp.write(index_tmpl[1]);
 	write_thread_html(post.thread, resp);
+	resp.write('[<a href=".">Return</a>]');
+	resp.write(index_tmpl[1]);
+	resp.write(sync_number.toString());
 	resp.end(index_tmpl[2]);
 	return true;
 }
