@@ -129,7 +129,8 @@ var http_headers = {'Content-Type': 'text/html; charset=UTF-8',
 		'Cache-Control': 'no-cache'};
 var server = http.createServer(function(req, resp) {
 	if (req.method.toLowerCase() == 'post') {
-		var upload = new pix.ImageUpload(clients, allocate_post);
+		var upload = new pix.ImageUpload(clients, allocate_post,
+			announce_image);
 		upload.handle_request(req, resp);
 		return;
 	}
@@ -317,6 +318,11 @@ function allocation_ok(post, client, callback) {
 			}
 		}
 	}
+}
+
+function announce_image(info, client) {
+	var post = client.post;
+	broadcast([common.INSERT_IMAGE, post.num, info], post, client.id);
 }
 
 dispatcher[common.UPDATE_POST] = function (frag, client) {

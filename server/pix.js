@@ -16,9 +16,10 @@ exports.readable_filesize = function (size) {
        return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
 }
 
-exports.ImageUpload = function (clients, allocate_post) {
+exports.ImageUpload = function (clients, allocate_post, broadcast) {
 	this.clients = clients;
 	this.allocate_post = allocate_post;
+	this.broadcast = broadcast;
 };
 
 var IU = exports.ImageUpload.prototype;
@@ -223,15 +224,17 @@ IU.publish = function () {
 			src: image.src, thumb: image.thumb,
 			name: image.filename, dims: image.dims,
 			size: exports.readable_filesize(image.size),
-			MD5: image.MD5, id: image.id
+			MD5: image.MD5
 		};
 		if (self.client.post) {
 			self.iframe_call('upload_complete', info);
 			self.client.post.image = info;
 			self.client.uploading = false;
+			self.broadcast(info, self.client);
 		}
 		else {
 			var alloc_func = self.allocate_post;
+			info.id = id;
 			alloc_func(self.alloc, info, self.client, this);
 		}
 	}, function (err, a) {

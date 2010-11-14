@@ -79,15 +79,17 @@ function toggle_live() {
 	}
 }
 
+function get_focus() {
+	var focus = window.getSelection().focusNode;
+	if (focus && focus.tagName && focus.tagName.match(/blockquote/i))
+		return $(focus).find('textarea');
+}
+
 dispatcher[INSERT_POST] = function (msg) {
 	msg = msg[0];
 	if (postForm && msg.num == postForm.num)
 		return true;
-	var focus = window.getSelection().focusNode;
-	if (focus && focus.tagName && focus.tagName.match(/blockquote/i))
-		focus = $(focus).find('textarea');
-	else
-		focus = null;
+	var orig_focus = get_focus();
 	msg.format_link = format_link;
 	msg.dirs = DIRS;
 	var post = $(gen_post_html(msg, msg));
@@ -121,7 +123,14 @@ dispatcher[INSERT_POST] = function (msg) {
 		section.insertAfter(fencepost.length ? fencepost : ceiling
 				).after(hr);
 	}
-	/* Restore focus if it was lost */
+	if (orig_focus)
+		orig_focus.focus();
+	return true;
+};
+
+dispatcher[INSERT_IMAGE] = function (msg) {
+	var focus = get_focus();
+	insert_image(msg[1], activePosts[msg[0]].find('header'));
 	if (focus)
 		focus.focus();
 	return true;
@@ -158,10 +167,14 @@ function upload_error(msg) {
 
 function upload_complete(info) {
 	var form = postForm.uploadForm;
+	insert_image(info, form.siblings('header'));
+	form.find('input[name=image]').remove();
+}
+
+function insert_image(info, dest_header) {
 	var metadata = $(flatten(image_metadata(info, DIRS)).join(''));
 	var thumbnail = $(thumbnail_html(info, DIRS));
-	form.siblings('header').append(metadata).after(thumbnail);
-	form.find('input[name=image]').remove();
+	dest_header.append(metadata).after(thumbnail);
 }
 
 function propagate_fields() {
