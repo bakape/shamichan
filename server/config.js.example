@@ -1,6 +1,5 @@
 module.exports = {
 	TITLE: "Test",
-	HOST: "localhost",
 	PORT: 8000,
 	VERSION: "2",
 	DEBUG: true,

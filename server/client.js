@@ -8,7 +8,7 @@ THREAD = THREAD ? parseInt(THREAD[1]) : 0;
 var nameField = $('input[name=name]'), emailField = $('input[name=email]');
 var ceiling = $('hr:first');
 
-var socket = new io.Socket(HOST, {
+var socket = new io.Socket(window.location.domain, {
 	port: PORT,
 	transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling',
 		'jsonp-polling']
