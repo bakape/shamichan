@@ -188,11 +188,6 @@ function datetime(time) {
 		pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
 }
 
-function time_tag_html(time) {
-	return ('<time pubdate datetime="' + datetime(time) + '">'
-		+ readable_time(time) + '</time>');
-}
-
 function post_url(post, quote) {
 	return (post.op || post.num) + (quote ? '#q' : '#') + post.num;
 }
@@ -203,34 +198,40 @@ function num_html(post) {
 			+ post_url(post, true) + '">' + post.num + '</a>');
 }
 
-exports.gen_post_html = function (data, env) {
-	var classes = [];
-	if (!data.op)
-		classes.push('op');
-	if (data.editing)
-		classes.push('editing');
-	var cls = classes.length ? '" class="' + classes.join(' ') : '';
-	var ident = [safe('<b>'), data.name || DEFINES.ANON, safe('</b>')];
-	if (data.trip) {
-		ident[2].safe += ' <code>';
-		ident.push(data.trip);
-		ident.push(safe('</code>'));
-	}
+function gen_post(data, env) {
+	var ident = [safe('<header><b>'), data.name || DEFINES.ANON];
+	if (data.trip)
+		ident.push(safe('</b> <code>' + data.trip + '</code>'));
+	else
+		ident.push(safe('</b>'));
 	if (data.email) {
 		ident.unshift(safe('<a class="email" href="mailto:'
 				+ escape(data.email) + '">'));
 		ident.push(safe('</a>'));
 	}
+	var time = safe(' <time pubdate datetime="' + datetime(data.time) +
+			'">' + readable_time(data.time) + '</time> ');
 	var image = safe('</header>');
 	if (data.image)
 		image = [image_metadata(data.image, env.dirs), image,
 			safe(thumbnail_html(data.image, env.dirs))];
-	var post = [safe('\t<article id="' + data.num + cls + '"><header>'),
-		ident, safe(' ' + time_tag_html(data.time) + ' '),
-		safe(num_html(data)), image, safe('\n\t\t<blockquote>'),
-		format_body(data.body, env),
-		safe('</blockquote></article>\n')];
-	return flatten(post).join('');
+	var body = [safe('\n\t<blockquote>'), format_body(data.body, env),
+			safe('</blockquote>')]
+	return [ident, time, safe(num_html(data)), image, body];
+}
+
+exports.gen_post_html = function (data, env) {
+	var open = safe(data.editing
+			? '\t<article id="' + data.num + '" class="editing">'
+			: '\t<article id="' + data.num + '">');
+	var close = safe('</article>\n');
+	return flatten([open, gen_post(data, env), close]).join('');
+};
+
+exports.gen_thread = function (data, env) {
+	var open = safe('<section id="' + data.num + '">');
+	var close = safe('</section>\n');
+	return flatten([open, gen_post(data, env), '\n', close]);
 };
 
 exports.parse_name = function (name) {

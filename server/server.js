@@ -114,10 +114,12 @@ post_env = {format_link: function (num, env) {
 };
 
 function write_thread_html(thread, response) {
-	response.write('<section id="thread' + thread[0].num + '">\n');
-	for (var i = 0; i < thread.length; i++)
+	var first = common.gen_thread(thread[0], post_env);
+	var ending = first.pop();
+	response.write(first.join(''));
+	for (var i = 1; i < thread.length; i++)
 		response.write(common.gen_post_html(thread[i], post_env));
-	response.write('</section>\n<hr>\n');
+	response.write(ending + '<hr>\n');
 }
 
 var index_tmpl = Template(fs.readFileSync('index.html', 'UTF-8'),

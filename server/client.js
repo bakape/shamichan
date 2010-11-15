@@ -97,10 +97,10 @@ dispatcher[INSERT_POST] = function (msg) {
 	var orig_focus = get_focus();
 	msg.format_link = format_link;
 	msg.dirs = DIRS;
-	var post = $(gen_post_html(msg, msg));
-	activePosts[msg.num] = post;
 	var section, hr, bump = true;
 	if (msg.op) {
+		var post = $(gen_post_html(msg, msg));
+		activePosts[msg.num] = post;
 		section = threads[msg.op];
 		section.find('article[id]:last').after(post);
 		if (THREAD || !liveFeed || msg.email == 'sage') {
@@ -113,9 +113,10 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 	else {
-		section = $('<section id="thread'+msg.num+'"/>').append(post);
-		hr = $('<hr/>');
+		section = $(gen_thread(msg, msg).join(''));
+		activePosts[msg.num] = section;
 		threads[msg.num] = section;
+		hr = $('<hr/>');
 		if (!postForm)
 			section.append(make_reply_box());
 		if (!liveFeed) {
@@ -160,9 +161,8 @@ dispatcher[FINISH_POST] = function (msg) {
 	return true;
 };
 
-function extract_num(q, prefix) {
-	var a = q.attr('id');
-	return parseInt(prefix ? a.replace(prefix, '') : a);
+function extract_num(q) {
+	return parseInt(q.attr('id'));
 }
 
 function upload_error(msg) {
@@ -197,11 +197,9 @@ function propagate_fields() {
 }
 
 var format_env = {format_link: function (num, env) {
-	var post = $('#' + num);
-	if (post.length) {
-		var thread = extract_num(post.parent(), 'thread');
-		env.callback(make_link(num, thread));
-	}
+	var thread = $('#' + num).parents('*').andSelf().filter('section');
+	if (thread.length)
+		env.callback(make_link(num, extract_num(thread)));
 	else
 		env.callback('>>' + num);
 }};
@@ -251,7 +249,7 @@ function PostForm(link_clicked) {
 	var parent = link.parent(), section = link.parents('section');
 	if (section.length) {
 		this.thread = section;
-		this.op = extract_num(section, 'thread');
+		this.op = extract_num(section);
 		parent.replaceWith(post);
 	}
 	else {
@@ -515,11 +513,11 @@ function are_you_ready_guys() {
 
 	$('.editing').each(function(index) {
 		var post = $(this);
-		activePosts[extract_num(post, false)] = post;
+		activePosts[extract_num(post)] = post;
 	});
 	$('section').each(function (index) {
 		var section = $(this);
-		threads[extract_num(section, 'thread')] = section;
+		threads[extract_num(section)] = section;
 	});
 	insert_new_post_boxes();
 	var m = window.location.hash.match(/^#q(\d+)$/);
