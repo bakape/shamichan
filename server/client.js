@@ -14,6 +14,19 @@ var socket = new io.Socket(window.location.domain, {
 		'jsonp-polling']
 });
 
+if (!THREAD) {
+	$('#sync').after($('<span id="live"><label for="live_check">' +
+		'Real-time bump</label><input type="checkbox" ' +
+		'id="live_check" checked /></span>'));
+	$('#live_check').change(function () {
+		liveFeed = $(this).attr('checked');
+		if (liveFeed) {
+			$('section').show();
+			$('hr').show();
+		}
+	});
+}
+
 function send(msg) {
 	socket.send(JSON.stringify(msg));
 }
@@ -69,14 +82,6 @@ function insert_formatted(text, buffer, state, env) {
 			dest.append(out);
 	};
 	format_fragment(text, state, env);
-}
-
-function toggle_live() {
-	liveFeed = $(this).attr('checked');
-	if (liveFeed) {
-		$('section').show();
-		$('hr').show();
-	}
 }
 
 function get_focus() {
@@ -536,13 +541,6 @@ function are_you_ready_guys() {
 		time.text(readable_time(new Date(time.attr('datetime'
 				)).getTime()));
 	});
-
-	if (!THREAD) {
-		$('#sync').after($('<span id="live"><label for="live_check">'
-			+ 'Real-time bump</label><input type="checkbox" '
-			+ 'id="live_check" checked /></span>'));
-		$('#live_check').change(toggle_live);
-	}
 }
 
 are_you_ready_guys();
