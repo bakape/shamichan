@@ -235,7 +235,7 @@ exports.gen_thread = function (data, env) {
 	var o = safe('<section id="' + data.num + '">'),
 	    c = safe('</section>\n'),
 	    gen = gen_post(data, env);
-	return flatten([o, gen.image, gen.header, gen.body, '\n', c]);
+	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
 };
 
 exports.parse_name = function (name) {

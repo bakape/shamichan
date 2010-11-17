@@ -231,6 +231,8 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (msg.length != 1)
 		return false;
 	msg = msg[0];
+	if (config.IMAGE_UPLOAD && !msg.op)
+		return false;
 	if (client.post)
 		return true; /* image upload/fragment typing race */
 	var frag = msg.frag;
