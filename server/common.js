@@ -158,17 +158,16 @@ function shorten_filename(text) {
 
 function image_metadata(info, dirs) {
 	var src = dirs.src_url + info.src;
-	return [safe('<span>Image <a href="' + src + '" target="_blank">'),
+	return [safe('<figcaption>Image <a href="'+src+'" target="_blank">'),
 		info.src, safe('</a> (' + info.size + ', ' + info.dims[0] +
 		'x' + info.dims[1] + ', '), shorten_filename(info.name),
-		safe(')</span>')];
+		safe(')</figcaption>')];
 }
 
 function thumbnail_html(info, dirs) {
 	return '<a href="' + dirs.src_url + info.src + '" target="_blank">' +
 		'<img src="' + dirs.thumb_url + info.thumb + '" width="' +
-		info.dims[2] + '" height="' + info.dims[3] +
-		'" data-MD5="' + info.MD5 + '"></a>';
+		info.dims[2] + '" height="' + info.dims[3] + '"></a>';
 }
 
 function readable_time(time) {
@@ -199,39 +198,44 @@ function num_html(post) {
 }
 
 function gen_post(data, env) {
-	var ident = [safe('<header><b>'), data.name || DEFINES.ANON];
+	var header = [safe('<header><b>'), data.name || DEFINES.ANON];
 	if (data.trip)
-		ident.push(safe('</b> <code>' + data.trip + '</code>'));
+		header.push(safe('</b> <code>' + data.trip + '</code>'));
 	else
-		ident.push(safe('</b>'));
+		header.push(safe('</b>'));
 	if (data.email) {
-		ident.unshift(safe('<a class="email" href="mailto:'
+		header.unshift(safe('<a class="email" href="mailto:'
 				+ escape(data.email) + '">'));
-		ident.push(safe('</a>'));
+		header.push(safe('</a>'));
 	}
-	var time = safe(' <time pubdate datetime="' + datetime(data.time) +
-			'">' + readable_time(data.time) + '</time> ');
-	var image = safe('</header>');
-	if (data.image)
-		image = [image_metadata(data.image, env.dirs), image,
-			safe(thumbnail_html(data.image, env.dirs))];
-	var body = [safe('\n\t<blockquote>'), format_body(data.body, env),
-			safe('</blockquote>')]
-	return [ident, time, safe(num_html(data)), image, body];
+	header.push(safe(' <time pubdate datetime="' + datetime(data.time) +
+			'">' + readable_time(data.time) + '</time> ' +
+			num_html(data) + '</header>\n\t'));
+	var body = [safe('<blockquote>'), format_body(data.body, env),
+			safe('</blockquote>')];
+	if (!data.image)
+		return {header: header, body: body};
+	var image = [safe('<figure data-MD5="' + data.image.MD5 + '">'),
+			image_metadata(data.image, env.dirs),
+			safe(thumbnail_html(data.image, env.dirs)),
+			safe('</figure>\n\t')];
+	return {header: header, image: image, body: body};
 }
 
 exports.gen_post_html = function (data, env) {
-	var open = safe(data.editing
+	var o = safe(data.editing
 			? '\t<article id="' + data.num + '" class="editing">'
-			: '\t<article id="' + data.num + '">');
-	var close = safe('</article>\n');
-	return flatten([open, gen_post(data, env), close]).join('');
+			: '\t<article id="' + data.num + '">'),
+	    c = safe('</article>\n'),
+	    gen = gen_post(data, env);
+	return flatten([o, gen.header, gen.image || '', gen.body, c]).join('');
 };
 
 exports.gen_thread = function (data, env) {
-	var open = safe('<section id="' + data.num + '">');
-	var close = safe('</section>\n');
-	return flatten([open, gen_post(data, env), '\n', close]);
+	var o = safe('<section id="' + data.num + '">'),
+	    c = safe('</section>\n'),
+	    gen = gen_post(data, env);
+	return flatten([o, gen.image, gen.header, gen.body, '\n', c]);
 };
 
 exports.parse_name = function (name) {

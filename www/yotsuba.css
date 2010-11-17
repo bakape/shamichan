@@ -34,6 +34,18 @@ del, del em {
 del:hover, del:hover em {
 	color: white;
 }
+figcaption {
+	display: block;
+}
+figure {
+	display: inline;
+}
+figure img {
+	clear: both;
+	float: left;
+	margin: 3px 20px 20px 0;
+	vertical-align: top;
+}
 h1 {
 	color: #af0a0f;
 	font: bolder 28px Tahoma;
@@ -45,7 +57,7 @@ h2 {
 	font-family: Tahoma;
 	text-align: center;
 }
-header > a, header > a:visited {
+header a, header a:visited {
 	color: black;
 	text-decoration: none;
 }
@@ -56,9 +68,6 @@ header b {
 header code {
 	color: #228854;
 	font-family: inherit;
-}
-header span {
-	display: block;
 }
 hr {
 	border: none;
@@ -74,11 +83,6 @@ section, body > aside {
 section em {
 	font-style: normal;
 	color: #789922;
-}
-section img {
-	float: left;
-	vertical-align: top;
-	margin: 3px 20px 20px 0;
 }
 section p {
 	display: inline;
