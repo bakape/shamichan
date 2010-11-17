@@ -33,7 +33,7 @@ function send(msg) {
 
 function make_reply_box() {
 	var box = $('<aside><a>[Reply]</a></aside>');
-	box.find('a').click(PostForm);
+	box.find('a').click(on_make_post);
 	return box;
 }
 
@@ -41,9 +41,14 @@ function insert_new_post_boxes() {
 	make_reply_box().appendTo('section');
 	if (!THREAD) {
 		var box = $('<aside><a>[New thread]</a></aside>');
-		box.find('a').click(PostForm);
+		box.find('a').click(on_make_post);
 		ceiling.after(box);
 	}
+}
+
+function on_make_post() {
+	var link = $(this);
+	postForm = new PostForm(link.parent(), link.parents('section'));
 }
 
 function make_link(num, op) {
@@ -102,7 +107,8 @@ dispatcher[INSERT_POST] = function (msg) {
 		var post = $(gen_post_html(msg, msg));
 		activePosts[msg.num] = post;
 		section = threads[msg.op];
-		section.find('article[id]:last').after(post);
+		section.children('blockquote,form,article[id]:last'
+				).last().after(post);
 		if (THREAD || !liveFeed || msg.email == 'sage') {
 			bump = false;
 		}
@@ -136,7 +142,7 @@ dispatcher[INSERT_POST] = function (msg) {
 
 dispatcher[INSERT_IMAGE] = function (msg) {
 	var focus = get_focus();
-	insert_image(msg[1], activePosts[msg[0]].find('header'));
+	insert_image(msg[1], activePosts[msg[0]].children('header'));
 	if (focus)
 		focus.focus();
 	return true;
@@ -147,7 +153,7 @@ dispatcher[UPDATE_POST] = function (msg) {
 	var env = msg[4] || {};
 	var post = activePosts[num];
 	if (post)
-		insert_formatted(frag, post.find('blockquote'), state, env);
+		insert_formatted(frag,post.children('blockquote'),state,env);
 	else
 		console.log("Tried to update inactive post #" + num
 				+ " with " + JSON.stringify(msg));
@@ -182,20 +188,6 @@ function insert_image(info, dest_header) {
 	dest_header.append(metadata).after(thumbnail);
 }
 
-function propagate_fields() {
-	var parsed = parse_name(nameField.val().trim());
-	postForm.meta.find('b').text(parsed[0] || ANON);
-	postForm.meta.find('code').text((parsed[1] || parsed[2]) && '!?');
-	var email = emailField.val().trim();
-	if (email == 'noko')
-		email = '';
-	var tag = postForm.meta.children('a:first');
-	if (email)
-		tag.attr('href', 'mailto:' + email).attr('class', 'email');
-	else
-		tag.removeAttr('href').attr('class', 'emailcancel');
-}
-
 var format_env = {format_link: function (num, env) {
 	var thread = $('#' + num).parents('*').andSelf().filter('section');
 	if (thread.length)
@@ -204,29 +196,30 @@ var format_env = {format_link: function (num, env) {
 		env.callback('>>' + num);
 }};
 
-function PostForm(link_clicked) {
-	if (!(this instanceof PostForm)) {
-		return new PostForm(this);
+function PostForm(dest, section) {
+	if (section.length) {
+		this.thread = section;
+		this.op = extract_num(section);
+		this.post = $('<article/>');
 	}
-	postForm = this;
+	else
+		this.post = this.thread = $('<section/>');
+
 	this.buffer = $('<p/>');
 	this.line_buffer = $('<p/>');
 	this.meta = $('<header><a class="emailcancel"><b/> <code/></a>' +
 			' <time/></header>');
 	this.input = $('<textarea name="body" class="trans" rows="1"/>');
-	this.uploadForm = null;
 	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
-	var post = $('<article/>');
-	this.post = post;
 	this.sentAllocRequest = false;
 	this.unallocatedBuffer = '';
 	this.state = initial_post_state();
 	this.line_count = 1;
 	this.char_count = 0;
 
-	var input_field = [this.buffer, this.line_buffer, this.input];
-	this.blockquote.append.apply(this.blockquote, input_field);
+	var post = this.post;
+	this.blockquote.append(this.buffer, this.line_buffer, this.input);
 	var post_parts = [this.meta, this.blockquote];
 	if (IMAGE_UPLOAD) {
 		this.uploadForm = this.make_upload_form();
@@ -234,9 +227,10 @@ function PostForm(link_clicked) {
 	}
 	post.append.apply(post, post_parts);
 
-	propagate_fields();
-	nameField.change(propagate_fields).keypress(propagate_fields);
-	emailField.change(propagate_fields).keypress(propagate_fields);
+	var prop = this.propagate_fields.bind(this);
+	prop();
+	nameField.change(prop).keypress(prop);
+	emailField.change(prop).keypress(prop);
 
 	this.input.attr('cols', INPUT_MIN_SIZE);
 	this.input.attr('maxlength', MAX_POST_CHARS);
@@ -245,18 +239,11 @@ function PostForm(link_clicked) {
 		if (this.input.val().indexOf('\n') >= 0)
 			this.on_key(null);
 	}, this));
-	var link = $(link_clicked);
-	var parent = link.parent(), section = link.parents('section');
-	if (section.length) {
-		this.thread = section;
-		this.op = extract_num(section);
-		parent.replaceWith(post);
-	}
-	else {
-		this.thread = $('<section/>').replaceAll(parent).append(post);
-		post.addClass('op');
-		this.thread.after('<hr/>');
-	}
+
+	dest.replaceWith(post);
+	if (!this.op)
+		post.after('<hr/>');
+
 	dispatcher[ALLOCATE_POST] = $.proxy(function (msg) {
 		this.on_allocation(msg[0]);
 		/* We've already received a SYNC for this insert */
@@ -264,6 +251,21 @@ function PostForm(link_clicked) {
 	}, this);
 	$('aside').remove();
 	this.input.focus();
+}
+
+PostForm.prototype.propagate_fields = function () {
+	var parsed = parse_name(nameField.val().trim());
+	var meta = this.meta;
+	meta.find('b').text(parsed[0] || ANON);
+	meta.find('code').text((parsed[1] || parsed[2]) && '!?');
+	var email = emailField.val().trim();
+	if (email == 'noko')
+		email = '';
+	var tag = meta.children('a:first');
+	if (email)
+		tag.attr('href', 'mailto:' + email).attr('class', 'email');
+	else
+		tag.removeAttr('href').attr('class', 'emailcancel');
 }
 
 PostForm.prototype.on_allocation = function (msg) {
@@ -282,11 +284,11 @@ PostForm.prototype.on_allocation = function (msg) {
 	meta.children('time').text(readable_time(msg.time)
 		).attr('datetime', datetime(msg.time)
 		).after(' ' + num_html(msg));
-	this.post.attr('id', '' + num).addClass('editing');
-	if (!this.op) {
-		this.thread.attr('id', 'thread' + num);
+	this.post.attr('id', num);
+	if (this.op)
+		this.post.addClass('editing');
+	else
 		threads[num] = this.thread;
-	}
 
 	this.submit.attr('disabled', false);
 	if (this.uploadForm)
@@ -319,28 +321,33 @@ PostForm.prototype.on_key = function (event) {
 };
 
 function add_ref(event) {
-	var num = parseInt(event);
-	if (!num) {
+	var num = event;
+	if (typeof num != 'number') {
 		if (!THREAD && !postForm)
 			return;
 		var href = $(event.target).attr('href');
-		if (!href)
-			return;
-		var q = href.match(/#q(\d+)/);
+		var q = href && href.match(/#q(\d+)/);
 		if (!q)
 			return;
 		num = parseInt(q[1]);
 		event.preventDefault();
 	}
+	/* Make the post form if none exists yet */
 	if (!postForm) {
-		var link = $('#' + num).siblings('aside').find('a');
-		new PostForm(link);
+		var link = $('#' + num);
+		if (link[0].tagName.match(/section/i))
+			link = link.children('aside');
+		else
+			link = link.siblings('aside');
+		on_make_post.call(link.find('a'));
 	}
-	if (postForm.input.val().match(/^>>\d+$/))
+	/* If a >>link exists, put this one on the next line */
+	var input = postForm.input;
+	if (input.val().match(/^>>\d+$/))
 		postForm.on_key.call(postForm, {which: 13});
-	postForm.input.val(postForm.input.val() + '>>' + num);
+	input.val(input.val() + '>>' + num);
 	postForm.on_key.call(postForm, null);
-	postForm.input.focus();
+	input.focus();
 };
 
 PostForm.prototype.make_alloc_request = function (text) {
@@ -522,15 +529,15 @@ function are_you_ready_guys() {
 	insert_new_post_boxes();
 	var m = window.location.hash.match(/^#q(\d+)$/);
 	if (m && $('#' + m[1]).length) {
-		var id = m[1];
+		var id = parseInt(m[1]);
 		window.location.hash = '#' + id;
-		$('#' + id).addClass('highlight');
+		$('article#' + id).addClass('highlight');
 		setTimeout(function () { add_ref(id); }, 500);
 	}
 	else {
 		m = window.location.hash.match(/^(#\d+)$/);
 		if (m)
-			$(m[1]).addClass('highlight');
+			$('article' + m[1]).addClass('highlight');
 	}
 
 	$(document).click(add_ref);

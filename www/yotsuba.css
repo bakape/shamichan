@@ -18,6 +18,9 @@ article, aside {
 	margin: 2px;
 	padding: 4px 10px;
 }
+article img {
+	margin-bottom: 0 !important;
+}
 body {
 	background-color: #eef2ff;
 	font-family: Arial, Helvetica, sans-serif;
@@ -60,6 +63,7 @@ header span {
 hr {
 	border: none;
 	border-top: 1px solid #b7c5d9;
+	clear: both;
 }
 iframe {
 	display: none;
@@ -74,7 +78,7 @@ section em {
 section img {
 	float: left;
 	vertical-align: top;
-	margin: 3px 20px 0 0;
+	margin: 3px 20px 20px 0;
 }
 section p {
 	display: inline;
