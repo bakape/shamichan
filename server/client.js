@@ -142,7 +142,7 @@ dispatcher[INSERT_POST] = function (msg) {
 
 dispatcher[INSERT_IMAGE] = function (msg) {
 	var focus = get_focus();
-	insert_image(msg[1], activePosts[msg[0]].children('header'));
+	insert_image(msg[1], activePosts[msg[0]].children('header'), false);
 	if (focus)
 		focus.focus();
 	return true;
@@ -178,14 +178,16 @@ function upload_error(msg) {
 
 function upload_complete(info) {
 	var form = postForm.uploadForm;
-	insert_image(info, form.siblings('header'));
+	insert_image(info, form.siblings('header'), !postForm.op);
 	form.find('input[name=image]').remove();
 }
 
-function insert_image(info, dest_header) {
-	var metadata = $(flatten(image_metadata(info, DIRS)).join(''));
-	var thumbnail = $(thumbnail_html(info, DIRS));
-	dest_header.append(metadata).after(thumbnail);
+function insert_image(info, header, op) {
+	var image = $(flatten(gen_image(info, DIRS)).join(''));
+	if (op)
+		header.before(image);
+	else
+		header.after(image);
 }
 
 var format_env = {format_link: function (num, env) {
@@ -224,6 +226,8 @@ function PostForm(dest, section) {
 	if (IMAGE_UPLOAD) {
 		this.uploadForm = this.make_upload_form();
 		post_parts.push(this.uploadForm);
+		if (!this.op)
+			this.blockquote.hide();
 	}
 	post.append.apply(post, post_parts);
 
@@ -298,6 +302,10 @@ PostForm.prototype.on_allocation = function (msg) {
 	this.submit.click($.proxy(this.finish, this));
 	if (msg.image)
 		upload_complete(msg.image);
+	if (!this.op && IMAGE_UPLOAD) {
+		this.blockquote.show();
+		this.input.focus();
+	}
 };
 
 PostForm.prototype.on_key = function (event) {

@@ -156,18 +156,16 @@ function shorten_filename(text) {
 		safe('(&hellip;)'), m[2], safe('</abbr>')];
 }
 
-function image_metadata(info, dirs) {
+function gen_image(info, dirs) {
 	var src = dirs.src_url + info.src;
-	return [safe('<figcaption>Image <a href="'+src+'" target="_blank">'),
-		info.src, safe('</a> (' + info.size + ', ' + info.dims[0] +
+	return [safe('<figure data-MD5="' + info.MD5 + '">' +
+		'<figcaption>Image <a href="' + src + '" target="_blank">' +
+		info.src + '</a> (' + info.size + ', ' + info.dims[0] +
 		'x' + info.dims[1] + ', '), shorten_filename(info.name),
-		safe(')</figcaption>')];
-}
-
-function thumbnail_html(info, dirs) {
-	return '<a href="' + dirs.src_url + info.src + '" target="_blank">' +
+		safe(')</figcaption><a href="' + src + '" target="_blank">' +
 		'<img src="' + dirs.thumb_url + info.thumb + '" width="' +
-		info.dims[2] + '" height="' + info.dims[3] + '"></a>';
+		info.dims[2] + '" height="' + info.dims[3] + '"></a>' +
+		'</figure>\n\t')];
 }
 
 function readable_time(time) {
@@ -215,10 +213,7 @@ function gen_post(data, env) {
 			safe('</blockquote>')];
 	if (!data.image)
 		return {header: header, body: body};
-	var image = [safe('<figure data-MD5="' + data.image.MD5 + '">'),
-			image_metadata(data.image, env.dirs),
-			safe(thumbnail_html(data.image, env.dirs)),
-			safe('</figure>\n\t')];
+	var image = gen_image(data.image, env.dirs);
 	return {header: header, image: image, body: body};
 }
 
