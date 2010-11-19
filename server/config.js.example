@@ -9,7 +9,6 @@ module.exports = {
 	DB_POST_TABLE: 'posts',
 	DB_IMAGE_TABLE: 'images',
 	IMAGE_UPLOAD: true,
-	IMAGE_EXTS: ['.gif', '.jpg', '.jpeg', '.png'],
 	IMAGE_FILESIZE_MAX: 1024 * 1024 * 3,
 	IMAGE_DIR: '../www/src',
 	THUMB_DIR: '../www/thumb',

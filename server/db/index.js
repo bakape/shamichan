@@ -16,7 +16,8 @@ db.on('error', function (err) {
 exports.insert_image = function (image, callback) {
 	var table = config.DB_IMAGE_TABLE;
 	var dims = image.dims;
-	var values = [image.time, image.MD5, image.size, dims[0], dims[1]];
+	var values = [image.time, image.MD5, image.size,
+			pix.IMAGE_EXTS.indexOf(image.ext), dims[0], dims[1]];
 	if (image.pinky)
 		values.push(null, null, dims[2], dims[3]);
 	else
@@ -24,10 +25,10 @@ exports.insert_image = function (image, callback) {
 	var query = db.query({
 		name: 'insert image',
 		text: "INSERT INTO " + table +
-		" (created, md5, filesize, width, height, thumb_width," +
+		" (created, md5, filesize, ext, width, height, thumb_width," +
 		" thumb_height, pinky_width, pinky_height) VALUES (" +
 		"TIMESTAMP 'epoch' AT TIME ZONE 'UTC' + $1 * INTERVAL '1ms'," +
-		" $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
+		" $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id",
 		values: values
 	});
 	query.on('row', function (row) {
@@ -95,26 +96,6 @@ exports.update_post = function(num, body, callback) {
 	});
 }
 
-/* TEMP workaround */
-var path = require('path'),
-    exec = require('child_process').exec;
-exports.get_image_ext = function (image) {
-	exec('echo -n ' + path.join(config.IMAGE_DIR, image.src) + '.*',
-			function (error, stdout, stderr) {
-		if (error) {
-			require('util').error(stderr);
-			throw error;
-		}
-		var m = stdout.match(/(\.\w{3})$/);
-		if (!m) {
-			require('util').error(stdout);
-			throw 'get_image_ext parse';
-		}
-		else
-			image.src += m[1];
-	});
-}
-
 var posts_sql;
 exports.get_posts = function(get_threads, callback) {
 	if (!posts_sql)
@@ -132,16 +113,16 @@ exports.get_posts = function(get_threads, callback) {
 		if (f[5])
 			post.op = f[5];
 		if (f[7]) {
-			var time = f[13];
+			var time = f[14];
+			var ext = pix.IMAGE_EXTS[f[10]];
+			var src = time + ext;
 			var thumb = time + (post.op ? '.jpg' : 'l.jpg');
 			post.image = {
-				src: time, thumb: thumb, id: f[7], MD5: f[8],
-				size: pix.readable_filesize(f[9]),
-				dims: [f[10], f[11]], name: f[12],
+				src: src, thumb: thumb, id: f[7], MD5: f[8],
+				size: pix.readable_filesize(f[9]), ext: ext,
+				dims: [f[11], f[12]], name: f[13],
 				created: time
 			};
-			/* TEMP */
-			exports.get_image_ext(post.image);
 		}
 		callback(null, post);
 	});

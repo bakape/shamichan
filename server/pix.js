@@ -6,6 +6,8 @@ var config = require('./config'),
 	fs = require('fs'),
 	path = require('path');
 
+exports.IMAGE_EXTS = ['.png', '.jpg', '.gif'];
+
 exports.readable_filesize = function (size) {
        /* Metric. Deal with it. */
        if (size < 1000)
@@ -73,7 +75,9 @@ IU.parse_form = function (err, fields, files) {
 	if (client.post && client.post.image)
 		return this.failure('Image already exists.');
 	image.ext = path.extname(image.filename).toLowerCase();
-	if (config.IMAGE_EXTS.indexOf(image.ext) < 0)
+	if (image.ext == '.jpeg')
+		image.ext = '.jpg';
+	if (exports.IMAGE_EXTS.indexOf(image.ext) < 0)
 		return this.failure('Invalid image format.');
 	image.tagged_path = image.ext.replace('.', '') + ':' + image.path;
 	if (fields.alloc) {
