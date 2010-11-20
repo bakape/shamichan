@@ -176,6 +176,8 @@ function render_thread(req, resp, num) {
 }
 
 function on_client (socket) {
+	if (!socket.connection)
+		return;
 	var id = socket.sessionId;
 	var client = {id: id, socket: socket, post: null, synced: false,
 			watching: null, ip: socket.connection.remoteAddress};
