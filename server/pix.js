@@ -269,9 +269,10 @@ IU.publish = function () {
 		src: image.src, thumb: image.thumb,
 		name: image.filename, dims: image.dims,
 		size: exports.readable_filesize(image.size),
-		MD5: image.MD5
+		MD5: image.MD5, id: image.id
 	};
 	if (this.client.post) {
+		delete info.id;
 		this.iframe_call('upload_complete', info);
 		this.client.post.image = info;
 		this.client.uploading = false;
@@ -279,7 +280,6 @@ IU.publish = function () {
 	}
 	else {
 		var alloc_func = this.allocate_post;
-		info.id = image.id;
 		var self = this;
 		alloc_func(this.alloc, info, this.client, function (err, a) {
 			if (err)
