@@ -231,7 +231,7 @@ function PostForm(dest, section) {
 	}
 	post.append.apply(post, post_parts);
 
-	var prop = this.propagate_fields.bind(this);
+	var prop = $.proxy(this.propagate_fields, this);
 	prop();
 	nameField.change(prop).keypress(prop);
 	emailField.change(prop).keypress(prop);
