@@ -1,8 +1,10 @@
 var config = require('../config'),
+    flow = require('flow'),
     fs = require('fs'),
     pix = require('../pix'),
     postgres = require('../../../node-postgres/lib'),
-    Template = require('../lib/json-template').Template;
+    Template = require('../lib/json-template').Template,
+    util = require('util');
 
 var db = new postgres.Client(config.DB_CONFIG);
 db.connect();
@@ -177,16 +179,20 @@ exports.check_tables = function (done) {
 	query.on('row', function (row) {
 		exist.push(row.fields[0]);
 	});
-	function post_table() {
+	flow.exec(function () {
+		query.on('end', this);
+	}, function () {
+		if (exist.indexOf(image) < 0)
+			create_table(image, 'db/image_table.sql', this);
+		else
+			this();
+	}, function () {
 		if (exist.indexOf(post) < 0)
 			create_table(post, 'db/post_table.sql', done);
 		else
 			done();
-	}
-	query.on('end', function () {
-		if (exist.indexOf(image) < 0)
-			create_table(image, 'db/image_table.sql', post_table);
-		else
-			post_table();
+	});
+	query.on('error', function (err) {
+		util.error(err);
 	});
 };
