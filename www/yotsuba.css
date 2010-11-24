@@ -41,6 +41,7 @@ figure {
 	display: inline;
 }
 figure img {
+	border: 0;
 	clear: both;
 	float: left;
 	margin: 3px 20px 20px 0;
