@@ -6,7 +6,8 @@ var common = require('./common'),
 	pix = require('./pix'),
 	db = require('./db'),
 	Template = require('./lib/json-template').Template,
-	tripcode = require('./tripcode');
+	tripcode = require('./tripcode'),
+	util = require('util');
 
 var threads = [];
 var posts = {};
@@ -176,8 +177,11 @@ function render_thread(req, resp, num) {
 }
 
 function on_client (socket) {
-	if (!socket.connection)
+	if (!socket.connection) {
+		util.log("No socket.connection?!");
+		util.log(util.inspect(socket));
 		return;
+	}
 	var id = socket.sessionId;
 	var client = {id: id, socket: socket, post: null, synced: false,
 			watching: null, ip: socket.connection.remoteAddress};
