@@ -229,14 +229,14 @@ function PostForm(dest, section) {
 	}
 	post.append.apply(post, post_parts);
 
-	var prop = $.proxy(this.propagate_fields, this);
+	var prop = $.proxy(this, 'propagate_fields');
 	prop();
 	nameField.change(prop).keypress(prop);
 	emailField.change(prop).keypress(prop);
 
 	this.input.attr('cols', INPUT_MIN_SIZE);
 	this.input.attr('maxlength', MAX_POST_CHARS);
-	this.input.keydown($.proxy(this.on_key, this));
+	this.input.keydown($.proxy(this, 'on_key'));
 	this.input.keyup($.proxy(function (event) {
 		if (this.input.val().indexOf('\n') >= 0)
 			this.on_key(null);
@@ -297,7 +297,7 @@ PostForm.prototype.on_allocation = function (msg) {
 		this.uploadForm.append(this.submit);
 	else
 		this.blockquote.after(this.submit);
-	this.submit.click($.proxy(this.finish, this));
+	this.submit.click($.proxy(this, 'finish'));
 	if (msg.image)
 		upload_complete(msg.image);
 	if (!this.op && IMAGE_UPLOAD) {
