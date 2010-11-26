@@ -547,11 +547,14 @@ function are_you_ready_guys() {
 	}
 
 	$(document).click(add_ref);
-	$('time').each(function (index) {
-		var time = $(this);
-		time.text(readable_time(new Date(time.attr('datetime'
-				)).getTime()));
-	});
+	setTimeout(function () {
+		$('time').each(function (index) {
+			var time = $(this);
+			var date = time.attr('datetime').replace(/-/g, '/'
+				).replace('T', ' ').replace('Z', ' GMT');
+			time.text(readable_time(new Date(date).getTime()));
+		});
+	}, 0);
 }
 
 are_you_ready_guys();
