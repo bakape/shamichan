@@ -161,7 +161,7 @@ function gen_image(info, dirs) {
 	return [safe('<figure data-MD5="' + info.MD5 + '">' +
 		'<figcaption>Image <a href="' + src + '" target="_blank">' +
 		info.src + '</a> (' + info.size + ', ' + info.dims[0] +
-		'x' + info.dims[1] + ', '), shorten_filename(info.name),
+		'x' + info.dims[1] + ', '), shorten_filename(info.imgnm),
 		safe(')</figcaption><a href="' + src + '" target="_blank">' +
 		'<img src="' + dirs.thumb_url + info.thumb + '" width="' +
 		info.dims[2] + '" height="' + info.dims[3] + '"></a>' +
@@ -213,7 +213,8 @@ function gen_post(data, env) {
 			safe('</blockquote>')];
 	if (!data.image)
 		return {header: header, body: body};
-	var image = gen_image(data.image, env.dirs);
+	var image = gen_image(env.image_view(data.image, data.imgnm, data.op),
+			env.dirs);
 	return {header: header, image: image, body: body};
 }
 

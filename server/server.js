@@ -111,6 +111,7 @@ post_env = {format_link: function (num, env) {
 	else
 		env.callback('>>' + num);
 	},
+	image_view: pix.get_image_view,
 	dirs: {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL}
 };
 
@@ -244,7 +245,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	var frag = msg.frag;
 	if (!frag || typeof frag != 'string' || frag.match(/^\s*$/g))
 		return false;
-	return allocate_post(msg, null, client, function (err, alloc) {
+	return allocate_post(msg, null, null, client, function (err, alloc) {
 		if (err) {
 			/* TODO: Report */
 			console.log(err);
@@ -254,7 +255,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	});
 }
 
-function allocate_post(msg, image, client, callback) {
+function allocate_post(msg, image, imgnm, client, callback) {
 	if (!msg)
 		return false;
 	if (msg.frag && msg.frag.length > common.MAX_POST_CHARS)
@@ -281,31 +282,43 @@ function allocate_post(msg, image, client, callback) {
 		post.email = msg.email.trim().substr(0, 320);
 	if (post.email == 'noko')
 		delete post.email;
-	if (image)
+	if (image) {
 		post.image = image;
+		post.imgnm = imgnm;
+	}
 	db.insert_post(post, client.ip, function (err, num) {
 		if (err) {
 			callback(err, null);
 			return;
 		}
-		if (image)
-			delete image.id;
 		post.num = num;
 		allocation_ok(post, client, callback);
 	});
 	return true;
 }
 
+function get_post_view(post) {
+	var view = {num: post.num, body: post.body, time: post.time};
+	if (post.op) view.op = post.op;
+	if (post.name) view.name = post.name;
+	if (post.trip) view.trip = post.trip;
+	if (post.email) view.email = post.email;
+	if (post.editing) view.editing = post.editing;
+	if (post.links) view.links = post.links;
+	if (post.image)
+		view.image = pix.get_image_view(post.image, post.imgnm,
+				post.op);
+	return view;
+}
+
 function allocation_ok(post, client, callback) {
 	posts[post.num] = post;
 	var state = common.initial_post_state();
-	var links = valid_links(post.body, state);
-	if (!isEmpty(links))
-		post.links = links;
-	broadcast([common.INSERT_POST, post], post, client.id);
-	callback(null, post);
+	post.links = valid_links(post.body, state);
+	var view = get_post_view(post);
+	broadcast([common.INSERT_POST, view], view, client.id);
+	callback(null, view);
 	/* Store some extra state for later */
-	post.links = links;
 	post.state = state;
 	client.post = post;
 	if (!post.op) {

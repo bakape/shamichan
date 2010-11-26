@@ -102,6 +102,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	var orig_focus = get_focus();
 	msg.format_link = format_link;
 	msg.dirs = DIRS;
+	msg.image_view = function (img, imgnm, op) { return img; };
 	var section, hr, bump = true;
 	if (msg.op) {
 		var post = $(gen_post_html(msg, msg));
@@ -183,11 +184,8 @@ function upload_complete(info) {
 }
 
 function insert_image(info, header, op) {
-	var image = $(flatten(gen_image(info, DIRS)).join(''));
-	if (op)
-		header.before(image);
-	else
-		header.after(image);
+	header[op ? 'before' : 'after']($(flatten(
+			gen_image(info, DIRS)).join('')));
 }
 
 var format_env = {format_link: function (num, env) {

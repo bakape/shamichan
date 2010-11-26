@@ -7,9 +7,9 @@ var config = require('./config'),
 	path = require('path'),
 	util = require('util');
 
-exports.IMAGE_EXTS = ['.png', '.jpg', '.gif'];
+var IMAGE_EXTS = ['.png', '.jpg', '.gif'];
 
-exports.readable_filesize = function (size) {
+function readable_filesize(size) {
        /* Metric. Deal with it. */
        if (size < 1000)
                return size + ' B';
@@ -18,6 +18,27 @@ exports.readable_filesize = function (size) {
        size = Math.round(size / 100000).toString();
        return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
 }
+
+function get_thumb_specs(pinky) {
+	if (pinky)
+		return {dims: config.PINKY_DIMENSIONS,
+				quality: config.PINKY_QUALITY, ext: '.jpg'}
+	return {dims: config.THUMB_DIMENSIONS, quality: config.THUMB_QUALITY,
+			ext: 'l.jpg'};
+}
+
+exports.get_image_view = function (image, imgnm, pinky) {
+	if (!image.cache) {
+		var d = image.dims;
+		image.cache = {src: '' + image.time + IMAGE_EXTS[image.ext],
+			size: readable_filesize(image.size),
+			thumb_dims: d.slice(0, 4),
+			pinky_dims: [d[0], d[1], d[4], d[5]]};
+	}
+	return {src: image.cache.src, size: image.cache.size, MD5: image.MD5,
+		thumb: image.time + (pinky ? '.jpg' : 'l.jpg'), imgnm: imgnm,
+		dims: pinky ? image.cache.pinky_dims : image.cache.thumb_dims};
+};
 
 exports.ImageUpload = function (clients, allocate_post, broadcast) {
 	this.clients = clients;
@@ -75,12 +96,13 @@ IU.parse_form = function (err, fields, files) {
 	client.uploading = true;
 	if (client.post && client.post.image)
 		return this.failure('Image already exists.');
-	image.ext = path.extname(image.filename).toLowerCase();
-	if (image.ext == '.jpeg')
-		image.ext = '.jpg';
-	if (exports.IMAGE_EXTS.indexOf(image.ext) < 0)
+	var ext = path.extname(image.filename).toLowerCase();
+	if (ext == '.jpeg')
+		ext = '.jpg';
+	image.tagged_path = ext.replace('.', '') + ':' + image.path;
+	image.ext = IMAGE_EXTS.indexOf(ext);
+	if (image.ext < 0)
 		return this.failure('Invalid image format.');
-	image.tagged_path = image.ext.replace('.', '') + ':' + image.path;
 	if (fields.alloc) {
 		try {
 			this.alloc = JSON.parse(fields.alloc);
@@ -94,14 +116,6 @@ IU.parse_form = function (err, fields, files) {
 	else if (!client.post)
 		return this.failure('Missing alloc.');
 	this.process();
-}
-
-function get_thumb_specs(pinky) {
-	if (pinky)
-		return {dims: config.PINKY_DIMENSIONS,
-				quality: config.PINKY_QUALITY, ext: '.jpg'}
-	return {dims: config.THUMB_DIMENSIONS, quality: config.THUMB_QUALITY,
-			ext: 'l.jpg'};
 }
 
 IU.process = function () {
@@ -136,9 +150,12 @@ IU.process = function () {
 	}, function () {
 		self.read_image_dimensions(image.thumb_path, this);
 	}, function (w, h) {
-		image.dims.push(w, h);
+		if (image.pinky)
+			image.dims.push(null, null, w, h);
+		else
+			image.dims.push(w, h, null, null);
 		image.time = new Date().getTime();
-		image.src = image.time + image.ext;
+		image.src = image.time + IMAGE_EXTS[image.ext];
 		self.dest = path.join(config.IMAGE_DIR, image.src);
 		self.handle_exec('mv -- ' + image.path + ' ' + self.dest,
 				"Couldn't publish image.", this);
@@ -162,22 +179,18 @@ IU.process = function () {
 IU.adapt_existing = function (pinky) {
 	var image = this.image;
 	var index = pinky ? 4 : 2;
-	function remove_unused_dims() {
-		image.dims.splice(6 - index, 7 - index);
-	}
 	var specs = get_thumb_specs(pinky);
-	image.src = image.time + image.ext;
+	image.src = image.time + IMAGE_EXTS[image.ext];
 	image.thumb = image.time + specs.ext;
-	if (image.dims[index] !== null) {
-		remove_unused_dims();
+	if (image.dims[index] !== null)
 		return this.publish();
-	}
 	image.thumb_path = path.join(config.THUMB_DIR, image.thumb);
 	var self = this;
 	flow.exec(function () {
-		var src = path.join(config.IMAGE_DIR, image.src);
-		self.resize_image(src, image.thumb_path, specs.dims,
-				specs.quality, this);
+		/* Don't set image.src since we don't want to delete it
+		 * on failure as it is shared */
+		self.resize_image(path.join(config.IMAGE_DIR, image.src),
+			image.thumb_path, specs.dims, specs.quality, this);
 	}, function () {
 		self.read_image_dimensions(image.thumb_path, this);
 	}, function (w, h) {
@@ -187,7 +200,6 @@ IU.adapt_existing = function (pinky) {
 	}, function (err) {
 		if (err)
 			return self.failure("Secondary thumbnail failure.");
-		remove_unused_dims();
 		self.publish();
 	});
 
@@ -264,24 +276,25 @@ IU.failure = function (err_desc) {
 };
 
 IU.publish = function () {
-	var image = this.image;
-	var info = {
-		src: image.src, thumb: image.thumb,
-		name: image.filename, dims: image.dims,
-		size: exports.readable_filesize(image.size),
-		MD5: image.MD5, id: image.id
+	var imgnm = this.image.filename.substr(0, 256);
+	var image = {
+		time: this.image.time, dims: this.image.dims,
+		size: this.image.size, MD5: this.image.MD5,
+		id: this.image.id, ext: this.image.ext
 	};
 	if (this.client.post) {
-		delete info.id;
-		this.iframe_call('upload_complete', info);
-		this.client.post.image = info;
+		var view = exports.get_image_view(image, imgnm,
+				!this.image.pinky);
+		this.iframe_call('upload_complete', view);
+		this.client.post.image = image;
+		this.client.post.imgnm = imgnm;
 		this.client.uploading = false;
-		this.broadcast(info, this.client);
+		this.broadcast(view, this.client);
 	}
 	else {
-		var alloc_func = this.allocate_post;
 		var self = this;
-		alloc_func(this.alloc, info, this.client, function (err, a) {
+		this.allocate_post(this.alloc, image, imgnm, this.client,
+				function (err, a) {
 			if (err)
 				return self.failure('Bad post.');
 			self.client.uploading = false;

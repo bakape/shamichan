@@ -1,7 +1,6 @@
 var config = require('../config'),
     flow = require('flow'),
     fs = require('fs'),
-    pix = require('../pix'),
     postgres = require('../../../node-postgres/lib'),
     Template = require('../lib/json-template').Template,
     util = require('util');
@@ -18,11 +17,7 @@ db.on('error', function (err) {
 exports.insert_image = function (image, callback) {
 	var dims = image.dims;
 	var values = [image.time, image.MD5, image.size,
-			pix.IMAGE_EXTS.indexOf(image.ext), dims[0], dims[1]];
-	if (image.pinky)
-		values.push(null, null, dims[2], dims[3]);
-	else
-		values.push(dims[2], dims[3], null, null);
+			image.ext].concat(image.dims);
 	var query = db.query({
 		name: 'insert image',
 		text: "INSERT INTO " + config.DB_IMAGE_TABLE +
@@ -55,9 +50,8 @@ exports.check_duplicate_image = function (MD5, callback) {
 	var done = false;
 	query.on('row', function (row) {
 		var f = row.fields;
-		var found = {id: f[0], MD5: MD5, size: f[1],
-				ext: pix.IMAGE_EXTS[f[2]], dims: f.slice(3, 9),
-				time: f[9]};
+		var found = {id: f[0], MD5: MD5, size: f[1], ext: f[2],
+				dims: f.slice(3, 9), time: f[9]};
 		done = true;
 		callback(null, found);
 	});
@@ -95,7 +89,7 @@ exports.insert_post = function(msg, ip, callback) {
 		values: [msg.name, msg.trip || '', msg.email || '',
 			msg.body, msg.op || null, msg.time, ip,
 			msg.image ? msg.image.id : null,
-			msg.image ? msg.image.name.substr(0, 256) : null]
+			msg.image ? msg.imgnm : null]
 	});
 	query.on('row', function (row) {
 		callback(null, row.fields[0]);
@@ -129,28 +123,29 @@ exports.get_posts = function(get_threads, callback) {
 		posts_sql = fs.readFileSync('db/get_posts.sql', 'UTF-8');
 	var vals = {DB_POST_TABLE: config.DB_POST_TABLE,
 		DB_IMAGE_TABLE: config.DB_IMAGE_TABLE};
-	vals.thumb = get_threads ? 'thumb' : 'pinky';
 	if (!get_threads)
 		vals.posts_only = true;
 
 	var query = db.query(Template(posts_sql).expand(vals));
+	var images = {};
 	query.on('row', function (row) {
 		var f = row.fields;
 		var post = {num: f[0], name: f[1], trip: f[2], email: f[3],
 				body: f[4], time: f[6]};
 		if (f[5])
 			post.op = f[5];
-		if (f[7]) {
-			var time = f[16];
-			var ext = pix.IMAGE_EXTS[f[10]];
-			var src = time + ext;
-			var thumb = time + (post.op ? '.jpg' : 'l.jpg');
-			post.image = {
-				src: src, thumb: thumb, id: f[7], MD5: f[8],
-				size: pix.readable_filesize(f[9]), ext: ext,
-				dims: [f[11], f[12], f[13], f[14]],
-				name: f[15], created: time
-			};
+		var image_id = f[7];
+		if (image_id) {
+			var image = images[image_id];
+			if (!image) {
+				image = {id: image_id, MD5: f[8],
+					size: f[9], ext: f[10],
+					dims: f.slice(11, 17), time: f[18]
+				};
+				images[image_id] = image;
+			}
+			post.image = image;
+			post.imgnm = f[17];
 		}
 		callback(null, post);
 	});
