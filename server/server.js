@@ -177,15 +177,26 @@ function render_thread(req, resp, num) {
 	return true;
 }
 
-function on_client (socket) {
-	if (!socket.connection) {
-		util.log("No socket.connection?!");
-		util.log(util.inspect(socket));
-		return;
+function on_client (socket, retry) {
+	if (socket.connection)
+		init_client(socket);
+	else if (!retry || retry < 5000) {
+		/* Wait for socket.connection */
+		retry = retry ? retry*2 : 50;
+		setTimeout(function () {
+			on_client(socket, retry);
+		}, retry);
 	}
+	else
+		util.error("Dropping no-connection client (?!)");
+}
+
+function init_client (socket) {
+	var ip = socket.connection.remoteAddress;
 	var id = socket.sessionId;
+	console.log(id + " has IP " + ip);
 	var client = {id: id, socket: socket, post: null, synced: false,
-			watching: null, ip: socket.connection.remoteAddress};
+			watching: null, ip: ip};
 	clients[id] = client;
 	socket.on('message', function (data) {
 		var msg = null;
