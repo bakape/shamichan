@@ -141,6 +141,11 @@ dispatcher[INSERT_POST] = function (msg) {
 	return true;
 };
 
+dispatcher[IMAGE_STATUS] = function (msg) {
+	$('input[name=image] + strong').text(msg[0]);
+	return false;
+};
+
 dispatcher[INSERT_IMAGE] = function (msg) {
 	var focus = get_focus();
 	insert_image(msg[1], activePosts[msg[0]].children('header'), false);
@@ -173,14 +178,14 @@ function extract_num(q) {
 }
 
 function upload_error(msg) {
-	var msg = $('<strong/>').text(msg);
-	$('input[name=image]').attr('disabled', false).after(msg);
+	$('input[name=image]').attr('disabled', false
+			).siblings('strong').text(msg);
 }
 
 function upload_complete(info) {
 	var form = postForm.uploadForm;
 	insert_image(info, form.siblings('header'), !postForm.op);
-	form.find('input[name=image]').remove();
+	form.find('input[name=image]').siblings('strong').andSelf().remove();
 }
 
 function insert_image(info, header, op) {
@@ -457,14 +462,14 @@ PostForm.prototype.finish = function () {
 PostForm.prototype.make_upload_form = function () {
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="." target="upload">'
-		+ '<input type="file" name="image"/>'
+		+ '<input type="file" name="image"/> <strong/>'
 		+ '<input type="hidden" name="client_id" value="'
 		+ socket.transport.sessionid + '"/>'
 		+ '<iframe src="" name="upload"/></form>');
 	var user_input = this.input;
 	form.find('input[name=image]').change(function () {
 		user_input.focus();
-		$(this).siblings('strong').remove();
+		$(this).siblings('strong').text('');
 		if (!$(this).val())
 			return;
 		if (!postForm.sentAllocRequest) {

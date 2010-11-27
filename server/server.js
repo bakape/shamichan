@@ -128,13 +128,17 @@ var index_tmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
 		{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
 var notfound_html = fs.readFileSync('../www/404.html');
 
+function image_status(status) {
+	multisend(this.client, [[common.IMAGE_STATUS, status]]);
+}
+
 var http_headers = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT, -1',
 		'Cache-Control': 'no-cache'};
 var server = http.createServer(function(req, resp) {
 	if (req.method.toLowerCase() == 'post') {
 		var upload = new pix.ImageUpload(clients, allocate_post,
-			announce_image);
+			announce_image, image_status);
 		upload.handle_request(req, resp);
 		return;
 	}

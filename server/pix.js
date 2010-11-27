@@ -40,10 +40,11 @@ exports.get_image_view = function (image, imgnm, pinky) {
 		dims: pinky ? image.cache.pinky_dims : image.cache.thumb_dims};
 };
 
-exports.ImageUpload = function (clients, allocate_post, broadcast) {
+exports.ImageUpload = function (clients, allocate_post, broadcast, status) {
 	this.clients = clients;
 	this.allocate_post = allocate_post;
 	this.broadcast = broadcast;
+	this.status = status;
 };
 
 var IU = exports.ImageUpload.prototype;
@@ -119,6 +120,7 @@ IU.parse_form = function (err, fields, files) {
 }
 
 IU.process = function () {
+	this.status('Verifying...');
 	var image = this.image;
 	image.pinky = (this.client.post && this.client.post.op) ||
 			(this.alloc && this.alloc.op);
@@ -145,6 +147,7 @@ IU.process = function () {
 	}, function (w, h) {
 		image.dims = [w, h];
 		image.thumb_path = image.path + '_thumb';
+		self.status('Thumbnailing...');
 		self.resize_image(image.tagged_path, image.thumb_path,
 				specs.dims, specs.quality, this);
 	}, function () {
@@ -154,6 +157,7 @@ IU.process = function () {
 			image.dims.push(null, null, w, h);
 		else
 			image.dims.push(w, h, null, null);
+		self.status('Publishing...');
 		image.time = new Date().getTime();
 		image.src = image.time + IMAGE_EXTS[image.ext];
 		self.dest = path.join(config.IMAGE_DIR, image.src);
@@ -182,11 +186,14 @@ IU.adapt_existing = function (pinky) {
 	var specs = get_thumb_specs(pinky);
 	image.src = image.time + IMAGE_EXTS[image.ext];
 	image.thumb = image.time + specs.ext;
-	if (image.dims[index] !== null)
+	if (image.dims[index] !== null) {
+		this.status('Publishing...');
 		return this.publish();
+	}
 	image.thumb_path = path.join(config.THUMB_DIR, image.thumb);
 	var self = this;
 	flow.exec(function () {
+		self.status('Thumbnailing...');
 		/* Don't set image.src since we don't want to delete it
 		 * on failure as it is shared */
 		self.resize_image(path.join(config.IMAGE_DIR, image.src),
@@ -196,6 +203,7 @@ IU.adapt_existing = function (pinky) {
 	}, function (w, h) {
 		image.dims[index] = w;
 		image.dims[index + 1] = h;
+		self.status('Publishing...');
 		db.update_thumbnail_dimensions(image.id, pinky, w, h, this);
 	}, function (err) {
 		if (err)
@@ -206,34 +214,37 @@ IU.adapt_existing = function (pinky) {
 };
 
 IU.read_image_filesize = function (callback) {
+	var self = this;
 	fs.stat(this.image.path, function (err, stat) {
 		if (err)
-			return this.failure('Internal filesize error.');
+			return self.failure('Internal filesize error.');
 		if (stat.size > config.IMAGE_FILESIZE_MAX)
-			this.failure('File is too large.');
+			self.failure('File is too large.');
 		else
 			callback(stat.size);
 	});
 };
 
 IU.read_image_dimensions = function (path, callback) {
+	var self = this;
 	exec('identify ' + path, function (error, stdout, stderr) {
 		if (error) {
 			console.log(stderr);
-			return this.failure('Corrupt image.');
+			return self.failure('Corrupt image.');
 		}
 		var m = stdout.match(/.* (\d+)x(\d+) /);
 		if (!m)
-			return this.failure('Corrupt image.');
+			return self.failure('Corrupt image.');
 		callback(parseInt(m[1]), parseInt(m[2]));
 	});
 };
 
 IU.MD5_image = function (callback) {
+	var self = this;
 	exec('md5sum -b ' + this.image.path, function (error, stdout, stderr) {
 		if (error) {
 			console.log(stderr);
-			return this.failure('Hashing error.');
+			return self.failure('Hashing error.');
 		}
 		callback(stdout.match(/^([\da-f]+)/)[1]);
 	});
