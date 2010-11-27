@@ -196,7 +196,7 @@ function num_html(post) {
 }
 
 function gen_post(data, env) {
-	var header = [safe('<header><b>'), data.name || DEFINES.ANON];
+	var header = [safe('<b>'), data.name || DEFINES.ANON];
 	if (data.trip)
 		header.push(safe('</b> <code>' + data.trip + '</code>'));
 	else
@@ -206,6 +206,7 @@ function gen_post(data, env) {
 				+ escape(data.email) + '">'));
 		header.push(safe('</a>'));
 	}
+	header.unshift(safe('<header>'));
 	header.push(safe(' <time pubdate datetime="' + datetime(data.time) +
 			'">' + readable_time(data.time) + '</time> ' +
 			num_html(data) + '</header>\n\t'));
