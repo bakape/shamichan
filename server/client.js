@@ -99,12 +99,11 @@ dispatcher[INSERT_POST] = function (msg) {
 	if (postForm && msg.num == postForm.num)
 		return true;
 	var orig_focus = get_focus();
-	msg.format_link = format_link;
-	msg.dirs = DIRS;
-	msg.image_view = function (img, imgnm, op) { return img; };
+	var env = {format_link: format_link, dirs: DIRS, links: msg.links,
+			image_view: function (img, imgnm, op) { return img; }};
 	var section, hr, bump = true;
 	if (msg.op) {
-		var post = $(gen_post_html(msg, msg));
+		var post = $(gen_post_html(msg, env));
 		section = threads[msg.op];
 		section.children('blockquote,form,article[id]:last'
 				).last().after(post);
@@ -118,7 +117,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 	else {
-		section = $(gen_thread(msg, msg).join(''));
+		section = $(gen_thread(msg, env).join(''));
 		threads[msg.num] = section;
 		hr = $('<hr/>');
 		if (!postForm)
