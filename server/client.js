@@ -93,6 +93,26 @@ function get_focus() {
 		return $(focus).find('textarea');
 }
 
+function shift_replies(section) {
+	if (THREAD)
+		return;
+	var shown = section.children('article[id]:not(:has(form))');
+	var rem = shown.length;
+	var stat = section.find('.omit');
+	var m = stat.text().match(/(\d+)\D+(\d+)/);
+	var omit = parseInt(m[1]), img = parseInt(m[2]);
+	for (var i = 0; i < shown.length; i++) {
+		var cull = $(shown[i]);
+		if (rem-- < ABBREV)
+			break;
+		if (cull.has('figure').length)
+			img++;
+		omit++;
+		cull.remove();
+	}
+	stat.text(abbrev_msg(omit, img));
+}
+
 dispatcher[INSERT_POST] = function (msg) {
 	msg = msg[0];
 	if (postForm && msg.num == postForm.num)
@@ -106,7 +126,8 @@ dispatcher[INSERT_POST] = function (msg) {
 		if (!section.length)
 			return true;
 		var post = $(gen_post_html(msg, env));
-		section.children('blockquote,form,article[id]:last'
+		shift_replies(section);
+		section.children('blockquote,.omit,form,article[id]:last'
 				).last().after(post);
 		if (THREAD || !liveFeed || msg.email == 'sage') {
 			bump = false;
@@ -215,6 +236,7 @@ function PostForm(dest, section) {
 	this.line_count = 1;
 	this.char_count = 0;
 
+	shift_replies(section);
 	var post = this.post;
 	this.blockquote.append(this.buffer, this.line_buffer, this.input);
 	var post_parts = [this.meta, this.blockquote];

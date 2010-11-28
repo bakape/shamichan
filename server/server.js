@@ -127,7 +127,9 @@ function write_thread_html(thread, response, full_thread) {
 		for (var i = 0; i < replies.length; i++)
 			if (replies[i].image)
 				images_omitted--;
-		response.write(common.abbrev_msg(omitted, images_omitted));
+		response.write('\t<span class="omit">' +
+				common.abbrev_msg(omitted, images_omitted) +
+				'</span>\n');
 	}
 	for (var i = 0; i < replies.length; i++)
 		response.write(common.gen_post_html(replies[i], post_env));
