@@ -143,6 +143,8 @@ IU.process = function () {
 		image.size = size;
 		self.read_image_dimensions(image.tagged_path, this);
 	}, function (w, h) {
+		if (!w || !h)
+			return self.failure('Invalid image dimensions.');
 		image.dims = [w, h];
 		image.thumb_path = image.path + '_thumb';
 		self.status('Thumbnailing...');
@@ -152,9 +154,9 @@ IU.process = function () {
 		self.read_image_dimensions(image.thumb_path, this);
 	}, function (w, h) {
 		if (image.pinky)
-			image.dims.push(null, null, w, h);
+			image.dims.push(0, 0, w, h);
 		else
-			image.dims.push(w, h, null, null);
+			image.dims.push(w, h, 0, 0);
 		self.status('Publishing...');
 		image.time = new Date().getTime();
 		image.src = image.time + IMAGE_EXTS[image.ext];
@@ -184,7 +186,7 @@ IU.adapt_existing = function (pinky) {
 	var specs = get_thumb_specs(pinky);
 	image.src = image.time + IMAGE_EXTS[image.ext];
 	image.thumb = image.time + specs.ext;
-	if (image.dims[index] !== null) {
+	if (image.dims[index]) {
 		this.status('Publishing...');
 		return this.publish();
 	}
