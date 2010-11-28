@@ -294,13 +294,13 @@ IU.publish = function () {
 		size: this.image.size, MD5: this.image.MD5,
 		id: this.image.id, ext: this.image.ext
 	};
+	this.client.uploading = false;
 	if (this.client.post) {
 		var view = exports.get_image_view(image, imgnm,
-				!this.image.pinky);
+				this.image.pinky);
 		this.iframe_call('upload_complete', view);
 		this.client.post.image = image;
 		this.client.post.imgnm = imgnm;
-		this.client.uploading = false;
 		this.broadcast(view, this.client);
 	}
 	else {
@@ -309,7 +309,6 @@ IU.publish = function () {
 				function (err, a) {
 			if (err)
 				return self.failure('Bad post.');
-			self.client.uploading = false;
 			self.iframe_call('postForm.on_allocation', a);
 		});
 	}
