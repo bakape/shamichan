@@ -145,6 +145,10 @@ IU.process = function () {
 	}, function (w, h) {
 		if (!w || !h)
 			return self.failure('Invalid image dimensions.');
+		if (w > config.IMAGE_WIDTH_MAX)
+			return self.failure('Image is too wide.');
+		if (h > config.IMAGE_HEIGHT_MAX)
+			return self.failure('Image is too tall.');
 		image.dims = [w, h];
 		image.thumb_path = image.path + '_thumb';
 		self.status('Thumbnailing...');

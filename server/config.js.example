@@ -14,6 +14,8 @@ module.exports = {
 
 	IMAGE_UPLOAD: true,
 	IMAGE_FILESIZE_MAX: 1024 * 1024 * 3,
+	IMAGE_WIDTH_MAX: 5000,
+	IMAGE_HEIGHT_MAX: 5000,
 	IMAGE_DIR: '../www/src',
 	THUMB_DIR: '../www/thumb',
 	IMAGE_URL: 'http://localhost/src/',
