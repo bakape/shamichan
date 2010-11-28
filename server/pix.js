@@ -283,7 +283,8 @@ IU.failure = function (err_desc) {
 			/* TODO: Remove DB row */
 		}
 	}
-	this.client.uploading = false;
+	if (this.client)
+		this.client.uploading = false;
 };
 
 IU.publish = function () {
