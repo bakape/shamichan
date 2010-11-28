@@ -111,8 +111,6 @@ IU.parse_form = function (err, fields, files) {
 		catch (e) {
 			return this.failure('Bad alloc.');
 		}
-		if (client.post)
-			return this.failure('Existing alloc.');
 	}
 	else if (!client.post)
 		return this.failure('Missing alloc.');
@@ -294,7 +292,6 @@ IU.publish = function () {
 		size: this.image.size, MD5: this.image.MD5,
 		id: this.image.id, ext: this.image.ext
 	};
-	this.client.uploading = false;
 	if (this.client.post) {
 		var view = exports.get_image_view(image, imgnm,
 				this.image.pinky);
@@ -302,16 +299,20 @@ IU.publish = function () {
 		this.client.post.image = image;
 		this.client.post.imgnm = imgnm;
 		this.broadcast(view, this.client);
+		this.client.uploading = false;
+		return;
 	}
-	else {
-		var self = this;
-		this.allocate_post(this.alloc, image, imgnm, this.client,
-				function (err, a) {
-			if (err)
-				return self.failure('Bad post.');
-			self.iframe_call('postForm.on_allocation', a);
-		});
-	}
+	var self = this;
+	flow.exec(function () {
+		if (!self.allocate_post(self.alloc, image, imgnm,
+				self.client, this))
+			self.client.uploading = false;
+	}, function (err, alloc) {
+		if (err)
+			return self.failure('Bad post.');
+		self.client.uploading = false;
+		self.iframe_call('postForm.on_allocation', alloc);
+	});
 };
 
 IU.iframe_call = function (func, param) {
