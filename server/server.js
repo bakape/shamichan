@@ -116,6 +116,7 @@ post_env = {format_link: function (num, env) {
 };
 
 function write_thread_html(thread, response, full_thread) {
+	post_env.full = full_thread;
 	var first = common.gen_thread(thread.op, post_env);
 	var ending = first.pop();
 	response.write(first.join(''));

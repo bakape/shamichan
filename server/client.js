@@ -129,7 +129,8 @@ dispatcher[INSERT_POST] = function (msg) {
 		return true;
 	var orig_focus = get_focus();
 	var env = {format_link: format_link, dirs: DIRS, links: msg.links,
-			image_view: function (img, imgnm, op) { return img; }};
+			image_view: function (img, imgnm, op) { return img; },
+			full: THREAD};
 	var section, hr, bump = true;
 	if (msg.op) {
 		section = $('#' + msg.op);
@@ -213,7 +214,7 @@ function upload_complete(info) {
 
 function insert_image(info, header, op) {
 	header[op ? 'before' : 'after']($(flatten(
-			gen_image(info, DIRS)).join('')));
+			gen_image(info, DIRS, THREAD)).join('')));
 }
 
 var format_env = {format_link: function (num, env) {
