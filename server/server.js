@@ -339,15 +339,13 @@ function get_post_view(post) {
 }
 
 function allocation_ok(post, client, callback) {
+	client.post = post;
 	posts[post.num] = post;
-	var state = common.initial_post_state();
-	post.links = valid_links(post.body, state);
+	post.state = common.initial_post_state();
+	post.links = valid_links(post.body, post.state);
 	var view = get_post_view(post);
 	broadcast([common.INSERT_POST, view], view, client.id);
 	callback(null, view);
-	/* Store some extra state for later */
-	post.state = state;
-	client.post = post;
 	if (!post.op) {
 		/* New thread */
 		post.thread = {image_count: 0, replies: [],
