@@ -102,7 +102,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	return true;
 }
 
-post_env = {format_link: function (num, env) {
+var oneeSama = new common.OneeSama(function (num, env) {
 	var post = posts[num];
 	if (post)
 		env.callback(common.safe('<a href="'
@@ -110,14 +110,13 @@ post_env = {format_link: function (num, env) {
 				+ '">&gt;&gt;' + num + '</a>'));
 	else
 		env.callback('>>' + num);
-	},
-	image_view: pix.get_image_view,
-	dirs: {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL}
-};
+});
+oneeSama.image_view = pix.get_image_view;
+oneeSama.dirs = {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL};
 
 function write_thread_html(thread, response, full_thread) {
-	post_env.full = full_thread;
-	var first = common.gen_thread(thread.op, post_env);
+	oneeSama.full = full_thread;
+	var first = oneeSama.monomono(thread.op, oneeSama);
 	var ending = first.pop();
 	response.write(first.join(''));
 	var replies = thread.replies;
@@ -133,7 +132,7 @@ function write_thread_html(thread, response, full_thread) {
 				'</span>\n');
 	}
 	for (var i = 0; i < replies.length; i++)
-		response.write(common.gen_post_html(replies[i], post_env));
+		response.write(oneeSama.mono(replies[i], oneeSama));
 	response.write(ending + '<hr>\n');
 }
 
@@ -246,12 +245,13 @@ function init_client (socket) {
 
 function valid_links(frag, state) {
 	var links = {};
-	env = {callback: function (frag) {}, format_link: function (num, e) {
+	var onee = new common.OneeSama(function (num, e) {
 		var post = posts[num];
 		if (post)
 			links[num] = post.op || post.num;
-	}};
-	common.format_fragment(frag, state, env);
+	});
+	onee.callback = function (frag) {};
+	onee.fragment(frag, state, onee);
 	return links;
 }
 

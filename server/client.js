@@ -55,16 +55,17 @@ function make_link(num, op) {
 			+ num + '</a>');
 }
 
-function format_link(num, env) {
+var oneeSama = new OneeSama(function (num, env) {
 	if (env.links && num in env.links)
 		env.callback(make_link(num, env.links[num]));
 	else
 		env.callback('>>' + num);
-}
+});
+oneeSama.dirs = DIRS;
+oneeSama.full = THREAD;
+oneeSama.image_view = function (img, imgnm, op) { return img; };
 
 function insert_formatted(text, buffer, state, env) {
-	if (!env.format_link)
-		env.format_link = format_link;
 	env.callback = function (frag) {
 		var dest = buffer;
 		for (var i = 0; i < state[1]; i++)
@@ -84,7 +85,7 @@ function insert_formatted(text, buffer, state, env) {
 		if (out)
 			dest.append(out);
 	};
-	format_fragment(text, state, env);
+	env.fragment(text, state, env);
 }
 
 function get_focus() {
@@ -128,15 +129,13 @@ dispatcher[INSERT_POST] = function (msg) {
 	if (postForm && msg.num == postForm.num)
 		return true;
 	var orig_focus = get_focus();
-	var env = {format_link: format_link, dirs: DIRS, links: msg.links,
-			image_view: function (img, imgnm, op) { return img; },
-			full: THREAD};
+	oneeSama.links = msg.links;
 	var section, hr, bump = true;
 	if (msg.op) {
 		section = $('#' + msg.op);
 		if (!section.length)
 			return true;
-		var post = $(gen_post_html(msg, env));
+		var post = $(oneeSama.mono(msg, oneeSama));
 		shift_replies(section);
 		section.children('blockquote,.omit,form,article[id]:last'
 				).last().after(post);
@@ -150,7 +149,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 	else {
-		section = $(gen_thread(msg, env).join(''));
+		section = $(oneeSama.monomono(msg, oneeSama).join(''));
 		hr = $('<hr/>');
 		if (!postForm)
 			section.append(make_reply_box());
@@ -187,8 +186,10 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 
 dispatcher[UPDATE_POST] = function (msg) {
 	var bq = $('#' + msg[0] + '>blockquote');
-	if (bq.length)
-		insert_formatted(msg[1], bq, msg.slice(2, 4), msg[4] || {});
+	if (bq.length) {
+		oneeSama.links = msg[4] ? msg[4].links : {};
+		insert_formatted(msg[1], bq, msg.slice(2, 4), oneeSama);
+	}
 	return true;
 };
 
@@ -217,13 +218,13 @@ function insert_image(info, header, op) {
 			gen_image(info, DIRS, THREAD)).join('')));
 }
 
-var format_env = {format_link: function (num, env) {
+var imouto = new OneeSama(function (num, env) {
 	var thread = $('#' + num).parents('*').andSelf().filter('section');
 	if (thread.length)
 		env.callback(make_link(num, extract_num(thread)));
 	else
 		env.callback('>>' + num);
-}};
+});
 
 function PostForm(dest, section) {
 	if (section.length) {
@@ -438,7 +439,7 @@ PostForm.prototype.commit = function (text) {
 		line_buffer.text(lines.pop());
 		for (var i = 0; i < lines.length; i++)
 			insert_formatted(lines[i] + '\n', this.buffer,
-					this.state, format_env);
+					this.state, imouto);
 	}
 	else {
 		line_buffer.append(document.createTextNode(text));
@@ -470,7 +471,7 @@ PostForm.prototype.finish = function () {
 	if (this.uploadForm)
 		this.uploadForm.remove();
 	var buffer = this.buffer, line_buffer = this.line_buffer;
-	insert_formatted(line_buffer.text(), buffer, this.state, format_env);
+	insert_formatted(line_buffer.text(), buffer, this.state, imouto);
 	buffer.replaceWith(buffer.contents());
 	line_buffer.remove();
 	this.post.removeClass('editing');
