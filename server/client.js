@@ -240,7 +240,6 @@ function PostForm(dest, section) {
 	this.input = $('<textarea name="body" class="trans" rows="1"/>');
 	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
-	this.sentAllocRequest = false;
 	this.unallocatedBuffer = '';
 	this.state = initial_post_state();
 	this.line_count = 1;
@@ -494,7 +493,7 @@ PostForm.prototype.make_upload_form = function () {
 		$(this).siblings('strong').text('');
 		if (!$(this).val())
 			return;
-		if (!postForm.sentAllocRequest) {
+		if (!postForm.num) {
 			postForm.submit.attr('disabled', true);
 			var alloc = $('<input type="hidden" name="alloc"/>');
 			var request = postForm.make_alloc_request(null);

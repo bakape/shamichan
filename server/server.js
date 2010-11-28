@@ -270,7 +270,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (client.post)
 		return true; /* image upload/fragment typing race */
 	var frag = msg.frag;
-	if (!frag || typeof frag != 'string' || frag.match(/^\s*$/g))
+	if (!frag || frag.match(/^\s*$/g))
 		return false;
 	return allocate_post(msg, null, null, client, function (err, alloc) {
 		if (err) {
@@ -283,15 +283,17 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 }
 
 function allocate_post(msg, image, imgnm, client, callback) {
-	if (!msg)
+	if (!msg || typeof msg != 'object')
 		return false;
-	if (msg.frag && msg.frag.length > common.MAX_POST_CHARS)
-		return false;
-	var post = {
-		time: new Date().getTime(),
-		editing: true,
-		body: msg.frag || '',
-	};
+	var post = {time: new Date().getTime(), editing: true};
+	if (msg.frag !== undefined) {
+		if (typeof msg.frag != 'string' || msg.frag.match(/^\s*$/g)
+				|| msg.frag.length > common.MAX_POST_CHARS)
+			return false;
+		post.body = msg.frag;
+	}
+	else
+		post.body = '';
 	if (typeof msg.op == 'number' && posts[msg.op] && !posts[msg.op].op)
 		post.op = msg.op;
 	if (client.watching && client.watching != post.op)
@@ -339,6 +341,10 @@ function get_post_view(post) {
 }
 
 function allocation_ok(post, client, callback) {
+	if (client.post) {
+		/* Race condition... discard this */
+		return callback('Already have a post.', null);
+	}
 	client.post = post;
 	posts[post.num] = post;
 	post.state = common.initial_post_state();

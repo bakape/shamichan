@@ -293,6 +293,7 @@ IU.publish = function () {
 		id: this.image.id, ext: this.image.ext
 	};
 	if (this.client.post) {
+		/* Text beat us here, discard alloc (if any) */
 		var view = exports.get_image_view(image, imgnm,
 				this.image.pinky);
 		this.iframe_call('upload_complete', view);
