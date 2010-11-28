@@ -116,11 +116,12 @@ post_env = {format_link: function (num, env) {
 };
 
 function write_thread_html(thread, response) {
-	var first = common.gen_thread(thread[0], post_env);
+	var first = common.gen_thread(thread.op, post_env);
 	var ending = first.pop();
 	response.write(first.join(''));
-	for (var i = 1; i < thread.length; i++)
-		response.write(common.gen_post_html(thread[i], post_env));
+	var replies = thread.replies;
+	for (var i = 0; i < replies.length; i++)
+		response.write(common.gen_post_html(replies[i], post_env));
 	response.write(ending + '<hr>\n');
 }
 
@@ -338,13 +339,18 @@ function allocation_ok(post, client, callback) {
 	client.post = post;
 	if (!post.op) {
 		/* New thread */
-		post.thread = [post];
+		post.thread = {reply_count: 0, image_count: 0, replies: [],
+				last_bump: post.num, op: post};
 		threads.unshift(post.thread);
 	}
 	else {
 		var thread = posts[post.op].thread;
-		thread.push(post);
+		thread.replies.push(post);
+		thread.reply_count++;
+		if (post.image)
+			thread.image_count++;
  		if (post.email != 'sage') {
+			thread.last_bump = post.num;
 			/* Bump thread */
 			for (var i = 0; i < threads.length; i++) {
 				if (threads[i] == thread) {
@@ -406,40 +412,40 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	return true;
 }
 
-function populate_threads(parents, callback) {
+function populate_threads(thread_map, callback) {
 	db.get_posts(false, function (err, post) {
 		if (err) throw err;
 		if (post) {
 			posts[post.num] = post;
-			parents[post.op].thread.push(post);
+			thread_map[post.op].replies.push(post);
 			if (post.email != 'sage')
-				parents[post.op].last = post.num;
+				thread_map[post.op].last_bump = post.num;
 		}
 		else {
-			var ts = [];
-			for (var num in parents)
-				ts.push(parents[num]);
-			ts.sort(function (a, b) { return a.last < b.last; });
-			for (var i = 0; i < ts.length; i++)
-				ts[i] = ts[i].thread;
-			threads = ts;
+			for (var num in thread_map)
+				threads.push(thread_map[num]);
+			/* Should really insert into correct spot */
+			threads.sort(function (a, b) {
+				return b.last_bump - a.last_bump;
+			});
 			callback();
 		}
 	});
 }
 
 function load_threads(callback) {
-	var parents = {};
+	var thread_map = {};
 	db.get_posts(true, function (err, post) {
 		if (err) throw err;
 		if (post) {
-			var thread = [post];
+			var thread = {op: post, replies: [], reply_count: 0,
+					image_count: 0, last_bump: post.num};
 			post.thread = thread;
 			posts[post.num] = post;
-			parents[post.num] = {thread: thread, last: post.num};
+			thread_map[post.num] = thread;
 		}
 		else
-			populate_threads(parents, callback);
+			populate_threads(thread_map, callback);
 	});
 }
 
