@@ -236,6 +236,11 @@ exports.gen_thread = function (data, env) {
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
 };
 
+exports.abbrev_msg = function (omit, img_omit) {
+	return omit + (omit==1 ? ' reply and ' : ' replies and ') +
+		img_omit + ' image' + (img_omit==1 ? '' : 's') + ' omitted.';
+};
+
 exports.parse_name = function (name) {
 	var tripcode = '', secure = '';
 	var hash = name.indexOf('#');

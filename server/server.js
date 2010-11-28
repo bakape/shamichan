@@ -115,11 +115,20 @@ post_env = {format_link: function (num, env) {
 	dirs: {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL}
 };
 
-function write_thread_html(thread, response) {
+function write_thread_html(thread, response, full_thread) {
 	var first = common.gen_thread(thread.op, post_env);
 	var ending = first.pop();
 	response.write(first.join(''));
 	var replies = thread.replies;
+	var omitted = replies.length - config.ABBREVIATED_REPLIES;
+	if (!full_thread && omitted > 0) {
+		replies = replies.slice(omitted);
+		var images_omitted = thread.image_count;
+		for (var i = 0; i < replies.length; i++)
+			if (replies[i].image)
+				images_omitted--;
+		response.write(common.abbrev_msg(omitted, images_omitted));
+	}
 	for (var i = 0; i < replies.length; i++)
 		response.write(common.gen_post_html(replies[i], post_env));
 	response.write(ending + '<hr>\n');
@@ -156,7 +165,7 @@ function render_index(req, resp) {
 	resp.writeHead(200, http_headers);
 	resp.write(index_tmpl[0]);
 	for (var i = 0; i < threads.length; i++)
-		write_thread_html(threads[i], resp);
+		write_thread_html(threads[i], resp, false);
 	resp.write(index_tmpl[1]);
 	resp.write(sync_number.toString());
 	resp.end(index_tmpl[2]);
@@ -174,7 +183,7 @@ function render_thread(req, resp, num) {
 	}
 	resp.writeHead(200, http_headers);
 	resp.write(index_tmpl[0]);
-	write_thread_html(post.thread, resp);
+	write_thread_html(post.thread, resp, true);
 	resp.write('[<a href=".">Return</a>]');
 	resp.write(index_tmpl[1]);
 	resp.write(sync_number.toString());
@@ -339,14 +348,13 @@ function allocation_ok(post, client, callback) {
 	client.post = post;
 	if (!post.op) {
 		/* New thread */
-		post.thread = {reply_count: 0, image_count: 0, replies: [],
+		post.thread = {image_count: 0, replies: [],
 				last_bump: post.num, op: post};
 		threads.unshift(post.thread);
 	}
 	else {
 		var thread = posts[post.op].thread;
 		thread.replies.push(post);
-		thread.reply_count++;
 		if (post.image)
 			thread.image_count++;
  		if (post.email != 'sage') {
@@ -417,9 +425,12 @@ function populate_threads(thread_map, callback) {
 		if (err) throw err;
 		if (post) {
 			posts[post.num] = post;
-			thread_map[post.op].replies.push(post);
+			var thread = thread_map[post.op];
+			thread.replies.push(post);
+			if (post.image)
+				thread.image_count++;
 			if (post.email != 'sage')
-				thread_map[post.op].last_bump = post.num;
+				thread.last_bump = post.num;
 		}
 		else {
 			for (var num in thread_map)
@@ -438,7 +449,7 @@ function load_threads(callback) {
 	db.get_posts(true, function (err, post) {
 		if (err) throw err;
 		if (post) {
-			var thread = {op: post, replies: [], reply_count: 0,
+			var thread = {op: post, replies: [],
 					image_count: 0, last_bump: post.num};
 			post.thread = thread;
 			posts[post.num] = post;

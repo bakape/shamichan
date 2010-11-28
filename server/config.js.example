@@ -4,10 +4,14 @@ module.exports = {
 	VERSION: "2",
 	DEBUG: true,
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
-	BACKLOG_PERIOD: 20000,
+
 	DB_CONFIG: {user: 'pixplz', database: 'pixplz', password: 'secret'},
 	DB_POST_TABLE: 'posts',
 	DB_IMAGE_TABLE: 'images',
+
+	BACKLOG_PERIOD: 20000,
+	ABBREVIATED_REPLIES: 5,
+
 	IMAGE_UPLOAD: true,
 	IMAGE_FILESIZE_MAX: 1024 * 1024 * 3,
 	IMAGE_DIR: '../www/src',
