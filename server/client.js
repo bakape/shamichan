@@ -98,9 +98,19 @@ function shift_replies(section) {
 		return;
 	var shown = section.children('article[id]:not(:has(form))');
 	var rem = shown.length;
+	if (rem < ABBREV)
+		return;
 	var stat = section.find('.omit');
-	var m = stat.text().match(/(\d+)\D+(\d+)/);
-	var omit = parseInt(m[1]), img = parseInt(m[2]);
+	var omit = 0, img = 0;
+	if (stat.length) {
+		var m = stat.text().match(/(\d+)\D+(\d+)?/);
+		omit = parseInt(m[1]);
+		img = parseInt(m[2] || 0);
+	}
+	else {
+		stat = $('<span class="omit"></span>');
+		section.children('blockquote,form').last().after(stat);
+	}
 	for (var i = 0; i < shown.length; i++) {
 		var cull = $(shown[i]);
 		if (rem-- < ABBREV)
