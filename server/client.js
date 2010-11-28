@@ -1,5 +1,4 @@
 var postForm = null;
-var activePosts = {};
 var liveFeed = true;
 var threads = {};
 var dispatcher = {};
@@ -106,7 +105,6 @@ dispatcher[INSERT_POST] = function (msg) {
 	var section, hr, bump = true;
 	if (msg.op) {
 		var post = $(gen_post_html(msg, msg));
-		activePosts[msg.num] = post;
 		section = threads[msg.op];
 		section.children('blockquote,form,article[id]:last'
 				).last().after(post);
@@ -121,7 +119,6 @@ dispatcher[INSERT_POST] = function (msg) {
 	}
 	else {
 		section = $(gen_thread(msg, msg).join(''));
-		activePosts[msg.num] = section;
 		threads[msg.num] = section;
 		hr = $('<hr/>');
 		if (!postForm)
@@ -148,28 +145,24 @@ dispatcher[IMAGE_STATUS] = function (msg) {
 
 dispatcher[INSERT_IMAGE] = function (msg) {
 	var focus = get_focus();
-	insert_image(msg[1], activePosts[msg[0]].children('header'), false);
-	if (focus)
-		focus.focus();
+	var hd = $('#' + msg[0] + '>header');
+	if (hd.length) {
+		insert_image(msg[1], hd, false);
+		if (focus)
+			focus.focus();
+	}
 	return true;
 };
 
 dispatcher[UPDATE_POST] = function (msg) {
-	var num = msg[0], frag = msg[1], state = [msg[2], msg[3]];
-	var env = msg[4] || {};
-	var post = activePosts[num];
-	if (post)
-		insert_formatted(frag,post.children('blockquote'),state,env);
-	else
-		console.log("Tried to update inactive post #" + num
-				+ " with " + JSON.stringify(msg));
+	var bq = $('#' + msg[0] + '>blockquote');
+	if (bq.length)
+		insert_formatted(msg[1], bq, msg.slice(2, 4), msg[4] || {});
 	return true;
 };
 
 dispatcher[FINISH_POST] = function (msg) {
-	num = msg[0];
-	activePosts[num].removeClass('editing');
-	delete activePosts[num];
+	$('#' + msg[0]).removeClass('editing');
 	return true;
 };
 
@@ -529,10 +522,6 @@ function are_you_ready_guys() {
 	});
 	socket.connect();
 
-	$('.editing').each(function(index) {
-		var post = $(this);
-		activePosts[extract_num(post)] = post;
-	});
 	$('section').each(function (index) {
 		var section = $(this);
 		threads[extract_num(section)] = section;
