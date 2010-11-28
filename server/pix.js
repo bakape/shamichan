@@ -59,7 +59,7 @@ IU.handle_request = function (req, resp) {
 		return;
 	}
 	var form = new formidable.IncomingForm();
-	form.maxFieldsSize = 512;
+	form.maxFieldsSize = 2048;
 	form.onPart = function (part) {
 		if (part.filename && part.name == 'image')
 			form.handlePart(part);
