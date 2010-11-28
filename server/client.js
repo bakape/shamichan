@@ -1,6 +1,5 @@
 var postForm = null;
 var liveFeed = true;
-var threads = {};
 var dispatcher = {};
 var THREAD = window.location.pathname.match(/\/(\d+)$/);
 THREAD = THREAD ? parseInt(THREAD[1]) : 0;
@@ -103,8 +102,10 @@ dispatcher[INSERT_POST] = function (msg) {
 			image_view: function (img, imgnm, op) { return img; }};
 	var section, hr, bump = true;
 	if (msg.op) {
+		section = $('#' + msg.op);
+		if (!section.length)
+			return true;
 		var post = $(gen_post_html(msg, env));
-		section = threads[msg.op];
 		section.children('blockquote,form,article[id]:last'
 				).last().after(post);
 		if (THREAD || !liveFeed || msg.email == 'sage') {
@@ -118,7 +119,6 @@ dispatcher[INSERT_POST] = function (msg) {
 	}
 	else {
 		section = $(gen_thread(msg, env).join(''));
-		threads[msg.num] = section;
 		hr = $('<hr/>');
 		if (!postForm)
 			section.append(make_reply_box());
@@ -286,8 +286,6 @@ PostForm.prototype.on_allocation = function (msg) {
 	this.post.attr('id', num);
 	if (this.op)
 		this.post.addClass('editing');
-	else
-		threads[num] = this.thread;
 
 	this.submit.attr('disabled', false);
 	if (this.uploadForm)
@@ -521,10 +519,6 @@ function are_you_ready_guys() {
 	});
 	socket.connect();
 
-	$('section').each(function (index) {
-		var section = $(this);
-		threads[extract_num(section)] = section;
-	});
 	insert_new_post_boxes();
 	var m = window.location.hash.match(/^#q(\d+)$/);
 	if (m && $('#' + m[1]).length) {
