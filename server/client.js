@@ -48,10 +48,8 @@ function save_ident() {
 		return;
 	try {
 		function save(key, val) {
-			if (val)
+			if (typeof val == 'string')
 				localStorage.setItem(key, val);
-			else
-				localStorage.removeItem(key);
 		}
 		save('name', nameField.val());
 		if (emailField.val() != 'sage')
@@ -81,7 +79,6 @@ function insert_new_post_boxes() {
 
 function on_make_post() {
 	var link = $(this);
-	load_ident();
 	postForm = new PostForm(link.parent(), link.parents('section'));
 }
 
