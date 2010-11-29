@@ -149,7 +149,7 @@ OS.karada = function (body) {
 	return output;
 }
 
-function shorten_filename(text) {
+function chibi(text) {
 	var m = text.match(/^(.{40}).{8,}(\.\w{3,4})$/);
 	if (!m)
 		return text;
@@ -157,17 +157,17 @@ function shorten_filename(text) {
 		safe('(&hellip;)'), m[2], safe('</abbr>')];
 }
 
-function gen_image(info, dirs, f) {
-	var src = dirs.src_url + info.src;
+OS.gazou = function (info) {
+	var src = this.dirs.src_url + info.src;
 	return [safe('<figure data-MD5="' + info.MD5 + '">' +
 		'<figcaption>Image <a href="' + src + '" target="_blank">' +
 		info.src + '</a> (' + info.size + ', ' + info.dims[0] +
-		'x' + info.dims[1]), f? ', '+shorten_filename(info.imgnm) : '',
+		'x' + info.dims[1]), this.full ? ', '+chibi(info.imgnm) : '',
 		safe(')</figcaption><a href="' + src + '" target="_blank">' +
-		'<img src="' + dirs.thumb_url + info.thumb + '" width="' +
+		'<img src="' + this.dirs.thumb_url + info.thumb + '" width="' +
 		info.dims[2] + '" height="' + info.dims[3] + '"></a>' +
 		'</figure>\n\t')];
-}
+};
 
 function pad(n) {
 	return (n < 10 ? '0' : '') + n;
@@ -217,9 +217,8 @@ OS.monogatari = function (data) {
 			safe('</blockquote>')];
 	if (!data.image)
 		return {header: header, body: body};
-	var image = gen_image(this.image_view(data.image, data.imgnm, data.op),
-			this.dirs, this.full);
-	return {header: header, image: image, body: body};
+	var img = this.gazou(this.image_view(data.image, data.imgnm, data.op));
+	return {header: header, image: img, body: body};
 };
 
 OS.mono = function (data) {

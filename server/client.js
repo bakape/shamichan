@@ -247,8 +247,7 @@ function upload_complete(info) {
 }
 
 function insert_image(info, header, op) {
-	header[op ? 'before' : 'after']($(flatten(
-			gen_image(info, DIRS, THREAD)).join('')));
+	header[op?'before':'after']($(flatten(oneeSama.gazou(info)).join('')));
 }
 
 function PostForm(dest, section) {
