@@ -85,13 +85,6 @@ function inject(frag) {
 		dest.append(out);
 }
 
-function insert_formatted(text, buffer, state, env) {
-	env.callback = inject;
-	env.buffer = buffer;
-	env.state = state;
-	env.fragment(text);
-}
-
 function get_focus() {
 	var focus = window.getSelection().focusNode;
 	if (focus && focus.tagName && focus.tagName.match(/blockquote/i))
@@ -192,7 +185,10 @@ dispatcher[UPDATE_POST] = function (msg) {
 	var bq = $('#' + msg[0] + '>blockquote');
 	if (bq.length) {
 		oneeSama.links = msg[4] ? msg[4].links : {};
-		insert_formatted(msg[1], bq, msg.slice(2, 4), oneeSama);
+		oneeSama.callback = inject;
+		oneeSama.buffer = bq;
+		oneeSama.state = msg.slice(2, 4);
+		oneeSama.fragment(msg[1]);
 	}
 	return true;
 };
@@ -222,14 +218,6 @@ function insert_image(info, header, op) {
 			gen_image(info, DIRS, THREAD)).join('')));
 }
 
-var imouto = new OneeSama(function (num) {
-	var thread = $('#' + num).parents('*').andSelf().filter('section');
-	if (thread.length)
-		this.callback(make_link(num, extract_num(thread)));
-	else
-		this.callback('>>' + num);
-});
-
 function PostForm(dest, section) {
 	if (section.length) {
 		this.thread = section;
@@ -247,9 +235,19 @@ function PostForm(dest, section) {
 	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
 	this.unallocatedBuffer = '';
-	this.state = [0, 0];
 	this.line_count = 1;
 	this.char_count = 0;
+	this.imouto = new OneeSama(function (num) {
+		var thread = $('#' + num).parents('*').andSelf().filter(
+				'section');
+		if (thread.length)
+			this.callback(make_link(num, extract_num(thread)));
+		else
+			this.callback('>>' + num);
+	});
+	this.imouto.callback = inject;
+	this.imouto.state = [0, 0];
+	this.imouto.buffer = this.buffer;
 
 	shift_replies(section);
 	var post = this.post;
@@ -442,8 +440,7 @@ PostForm.prototype.commit = function (text) {
 		lines[0] = line_buffer.text() + lines[0];
 		line_buffer.text(lines.pop());
 		for (var i = 0; i < lines.length; i++)
-			insert_formatted(lines[i] + '\n', this.buffer,
-					this.state, imouto);
+			this.imouto.fragment(lines[i] + '\n');
 	}
 	else {
 		line_buffer.append(document.createTextNode(text));
@@ -474,10 +471,9 @@ PostForm.prototype.finish = function () {
 	this.submit.remove();
 	if (this.uploadForm)
 		this.uploadForm.remove();
-	var buffer = this.buffer, line_buffer = this.line_buffer;
-	insert_formatted(line_buffer.text(), buffer, this.state, imouto);
-	buffer.replaceWith(buffer.contents());
-	line_buffer.remove();
+	this.imouto.fragment(this.line_buffer.text());
+	this.buffer.replaceWith(this.buffer.contents());
+	this.line_buffer.remove();
 	this.post.removeClass('editing');
 
 	dispatcher[ALLOCATE_POST] = null;
