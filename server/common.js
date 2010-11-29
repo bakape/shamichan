@@ -59,11 +59,6 @@ function map_unsafe(frags, func) {
 	return frags;
 }
 
-function initial_post_state() {
-	return [0, 0];
-}
-exports.initial_post_state = initial_post_state;
-
 exports.OneeSama = function (t) {
 	this.tamashii = t;
 };
@@ -87,66 +82,69 @@ OS.break_heart = function (frag) {
 	}
 };
 
-OS.fragment = function (frag, state) {
-	function do_transition(token, new_state) {
-		if (state[0] == 1 && new_state != 1)
-			this.callback(safe('</em>'));
-		switch (new_state) {
-		case 1:
-			if (state[0] != 1) {
-				this.callback(safe('<em>'));
-				state[0] = 1;
-			}
-			this.break_heart(token);
-			break;
-		case 3:
-			if (token[1] == '/') {
-				state[1]--;
-				this.callback(safe('</del>'));
-			}
-			else {
-				this.callback(safe('<del>'));
-				state[1]++;
-			}
-			break;
-		default:
-			this.break_heart(token);
-			break;
+OS.iku = function (token, to) {
+	var state = this.state;
+	if (state[0] == 1 && to != 1)
+		this.callback(safe('</em>'));
+	switch (to) {
+	case 1:
+		if (state[0] != 1) {
+			this.callback(safe('<em>'));
+			state[0] = 1;
 		}
-		state[0] = new_state;
+		this.break_heart(token);
+		break;
+	case 3:
+		if (token[1] == '/') {
+			state[1]--;
+			this.callback(safe('</del>'));
+		}
+		else {
+			this.callback(safe('<del>'));
+			state[1]++;
+		}
+		break;
+	default:
+		this.break_heart(token);
+		break;
 	}
+	state[0] = to;
+}
+
+OS.fragment = function (frag) {
 	var chunks = frag.split(/(\[\/?spoiler\])/i);
+	var state = this.state;
 	for (var i = 0; i < chunks.length; i++) {
 		var chunk = chunks[i];
 		if (i % 2) {
-			var new_state = 3;
+			var to = 3;
 			if (chunk[1] == '/' && state[1] < 1)
-				new_state = (state[0] == 1) ? 1 : 2;
-			do_transition.call(this, chunk, new_state);
+				to = (state[0] == 1) ? 1 : 2;
+			this.iku(chunk, to);
 			continue;
 		}
 		lines = chunk.split(/(\n)/);
 		for (var l = 0; l < lines.length; l++) {
 			var line = lines[l];
 			if (l % 2)
-				do_transition.call(this, safe('<br>'), 0);
+				this.iku(safe('<br>'), 0);
 			else if (state[0] === 0 && line[0] == '>')
-				do_transition.call(this, line, 1);
+				this.iku(line, 1);
 			else if (line)
-				do_transition.call(this, line, (state[0] == 1) ? 1 : 2);
+				this.iku(line, state[0]==1 ? 1 : 2);
 		}
 	}
 };
 
 OS.karada = function (body) {
-	var state = initial_post_state();
 	var output = [];
+	this.state = [0, 0];
 	this.callback = function (frag) { output.push(frag); }
-	this.fragment(body, state);
+	this.fragment(body);
 	this.callback = null;
-	if (state[0] == 1)
+	if (this.state[0] == 1)
 		output.push(safe('</em>'));
-	for (var i = 0; i < state[1]; i++)
+	for (var i = 0; i < this.state[1]; i++)
 		output.push(safe('</del>'));
 	return output;
 }

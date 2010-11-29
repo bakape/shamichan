@@ -251,7 +251,8 @@ function valid_links(frag, state) {
 			links[num] = post.op || post.num;
 	});
 	onee.callback = function (frag) {};
-	onee.fragment(frag, state, onee);
+	onee.state = state;
+	onee.fragment(frag);
 	return links;
 }
 
@@ -348,7 +349,7 @@ function allocation_ok(post, client, callback) {
 	}
 	client.post = post;
 	posts[post.num] = post;
-	post.state = common.initial_post_state();
+	post.state = [0, 0];
 	post.links = valid_links(post.body, post.state);
 	var view = get_post_view(post);
 	broadcast([common.INSERT_POST, view], view, client.id);

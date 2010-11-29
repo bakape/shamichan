@@ -65,27 +65,31 @@ oneeSama.dirs = DIRS;
 oneeSama.full = THREAD;
 oneeSama.image_view = function (img, imgnm, op) { return img; };
 
+function inject(frag) {
+	var dest = this.buffer;
+	for (var i = 0; i < this.state[1]; i++)
+		dest = dest.children('del:last');
+	if (this.state[0] == 1)
+		dest = dest.children('em:last');
+	var out = null;
+	if (frag.safe) {
+		var m = frag.safe.match(/^<(\w+)>$/);
+		if (m)
+			out = document.createElement(m[1]);
+		else if (frag.safe.match(/^<\/\w+>$/))
+			out = '';
+	}
+	if (out === null)
+		out = escape_fragment(frag);
+	if (out)
+		dest.append(out);
+}
+
 function insert_formatted(text, buffer, state, env) {
-	env.callback = function (frag) {
-		var dest = buffer;
-		for (var i = 0; i < state[1]; i++)
-			dest = dest.children('del:last');
-		if (state[0] == 1)
-			dest = dest.children('em:last');
-		var out = null;
-		if (frag.safe) {
-			var m = frag.safe.match(/^<(\w+)>$/);
-			if (m)
-				out = document.createElement(m[1]);
-			else if (frag.safe.match(/^<\/\w+>$/))
-				out = '';
-		}
-		if (out === null)
-			out = escape_fragment(frag);
-		if (out)
-			dest.append(out);
-	};
-	env.fragment(text, state);
+	env.callback = inject;
+	env.buffer = buffer;
+	env.state = state;
+	env.fragment(text);
 }
 
 function get_focus() {
@@ -243,7 +247,7 @@ function PostForm(dest, section) {
 	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
 	this.unallocatedBuffer = '';
-	this.state = initial_post_state();
+	this.state = [0, 0];
 	this.line_count = 1;
 	this.char_count = 0;
 
