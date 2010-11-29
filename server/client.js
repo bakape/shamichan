@@ -25,6 +25,41 @@ if (!THREAD) {
 	});
 }
 
+function load_ident() {
+	if (!window.localStorage)
+		return;
+	try {
+		function load(key, f) {
+			if (!f()) {
+				var val = localStorage.getItem(key);
+				if (val)
+					f(val);
+			}
+		}
+		load('name', $.proxy(nameField, 'val'));
+		load('email', $.proxy(emailField, 'val'));
+	}
+	catch (e) {}
+}
+load_ident();
+
+function save_ident() {
+	if (!window.localStorage)
+		return;
+	try {
+		function save(key, val) {
+			if (val)
+				localStorage.setItem(key, val);
+			else
+				localStorage.removeItem(key);
+		}
+		save('name', nameField.val());
+		if (emailField.val() != 'sage')
+			save('email', emailField.val());
+	}
+	catch (e) {}
+}
+
 function send(msg) {
 	socket.send(JSON.stringify(msg));
 }
@@ -46,6 +81,7 @@ function insert_new_post_boxes() {
 
 function on_make_post() {
 	var link = $(this);
+	load_ident();
 	postForm = new PostForm(link.parent(), link.parents('section'));
 }
 
@@ -307,6 +343,7 @@ PostForm.prototype.on_allocation = function (msg) {
 	this.num = num;
 	nameField.unbind();
 	emailField.unbind();
+	save_ident();
 	var meta = this.meta;
 	meta.find('b').text(msg.name || ANON);
 	meta.find('code').text(msg.trip);
