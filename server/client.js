@@ -55,11 +55,11 @@ function make_link(num, op) {
 			+ num + '</a>');
 }
 
-var oneeSama = new OneeSama(function (num, env) {
-	if (env.links && num in env.links)
-		env.callback(make_link(num, env.links[num]));
+var oneeSama = new OneeSama(function (num) {
+	if (this.links && num in this.links)
+		this.callback(make_link(num, this.links[num]));
 	else
-		env.callback('>>' + num);
+		this.callback('>>' + num);
 });
 oneeSama.dirs = DIRS;
 oneeSama.full = THREAD;
@@ -85,7 +85,7 @@ function insert_formatted(text, buffer, state, env) {
 		if (out)
 			dest.append(out);
 	};
-	env.fragment(text, state, env);
+	env.fragment(text, state);
 }
 
 function get_focus() {
@@ -135,7 +135,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		section = $('#' + msg.op);
 		if (!section.length)
 			return true;
-		var post = $(oneeSama.mono(msg, oneeSama));
+		var post = $(oneeSama.mono(msg));
 		shift_replies(section);
 		section.children('blockquote,.omit,form,article[id]:last'
 				).last().after(post);
@@ -149,7 +149,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 	else {
-		section = $(oneeSama.monomono(msg, oneeSama).join(''));
+		section = $(oneeSama.monomono(msg).join(''));
 		hr = $('<hr/>');
 		if (!postForm)
 			section.append(make_reply_box());
@@ -218,12 +218,12 @@ function insert_image(info, header, op) {
 			gen_image(info, DIRS, THREAD)).join('')));
 }
 
-var imouto = new OneeSama(function (num, env) {
+var imouto = new OneeSama(function (num) {
 	var thread = $('#' + num).parents('*').andSelf().filter('section');
 	if (thread.length)
-		env.callback(make_link(num, extract_num(thread)));
+		this.callback(make_link(num, extract_num(thread)));
 	else
-		env.callback('>>' + num);
+		this.callback('>>' + num);
 });
 
 function PostForm(dest, section) {

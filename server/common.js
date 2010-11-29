@@ -69,48 +69,48 @@ exports.OneeSama = function (t) {
 };
 var OS = exports.OneeSama.prototype;
 
-OS.break_heart = function (frag, env) {
+OS.break_heart = function (frag) {
 	if (frag.safe)
-		return env.callback(frag);
+		return this.callback(frag);
 	var bits = frag.split(/(\S{60})/);
 	for (var i = 0; i < bits.length; i++) {
 		/* anchor refs */
 		var morcels = bits[i].split(/>>(\d+)/);
 		for (var j = 0; j < morcels.length; j++) {
 			if (j % 2)
-				env.tamashii(parseInt(morcels[j]), env);
+				this.tamashii(parseInt(morcels[j]));
 			else if (i % 2)
-				env.callback(morcels[j] + ' ');
+				this.callback(morcels[j] + ' ');
 			else
-				env.callback(morcels[j]);
+				this.callback(morcels[j]);
 		}
 	}
 };
 
-OS.fragment = function (frag, state, env) {
+OS.fragment = function (frag, state) {
 	function do_transition(token, new_state) {
 		if (state[0] == 1 && new_state != 1)
-			env.callback(safe('</em>'));
+			this.callback(safe('</em>'));
 		switch (new_state) {
 		case 1:
 			if (state[0] != 1) {
-				env.callback(safe('<em>'));
+				this.callback(safe('<em>'));
 				state[0] = 1;
 			}
-			this.break_heart(token, env);
+			this.break_heart(token);
 			break;
 		case 3:
 			if (token[1] == '/') {
 				state[1]--;
-				env.callback(safe('</del>'));
+				this.callback(safe('</del>'));
 			}
 			else {
-				env.callback(safe('<del>'));
+				this.callback(safe('<del>'));
 				state[1]++;
 			}
 			break;
 		default:
-			this.break_heart(token, env);
+			this.break_heart(token);
 			break;
 		}
 		state[0] = new_state;
@@ -138,12 +138,12 @@ OS.fragment = function (frag, state, env) {
 	}
 };
 
-OS.karada = function (body, env) {
+OS.karada = function (body) {
 	var state = initial_post_state();
 	var output = [];
-	env.callback = function (frag) { output.push(frag); }
-	this.fragment(body, state, env);
-	env.callback = null;
+	this.callback = function (frag) { output.push(frag); }
+	this.fragment(body, state);
+	this.callback = null;
 	if (state[0] == 1)
 		output.push(safe('</em>'));
 	for (var i = 0; i < state[1]; i++)
@@ -200,7 +200,7 @@ function num_html(post) {
 			+ post_url(post, true) + '">' + post.num + '</a>');
 }
 
-OS.monogatari = function (data, env) {
+OS.monogatari = function (data) {
 	var header = [safe('<b>'), data.name || DEFINES.ANON];
 	if (data.trip)
 		header.push(safe('</b> <code>' + data.trip + '</code>'));
@@ -215,28 +215,28 @@ OS.monogatari = function (data, env) {
 	header.push(safe(' <time pubdate datetime="' + datetime(data.time) +
 			'">' + readable_time(data.time) + '</time> ' +
 			num_html(data) + '</header>\n\t'));
-	var body = [safe('<blockquote>'), this.karada(data.body, env),
+	var body = [safe('<blockquote>'), this.karada(data.body),
 			safe('</blockquote>')];
 	if (!data.image)
 		return {header: header, body: body};
-	var image = gen_image(env.image_view(data.image, data.imgnm, data.op),
-			env.dirs, env.full);
+	var image = gen_image(this.image_view(data.image, data.imgnm, data.op),
+			this.dirs, this.full);
 	return {header: header, image: image, body: body};
 };
 
-OS.mono = function (data, env) {
+OS.mono = function (data) {
 	var o = safe(data.editing
 			? '\t<article id="' + data.num + '" class="editing">'
 			: '\t<article id="' + data.num + '">'),
 	    c = safe('</article>\n'),
-	    gen = this.monogatari(data, env);
+	    gen = this.monogatari(data);
 	return flatten([o, gen.header, gen.image || '', gen.body, c]).join('');
 };
 
-OS.monomono = function (data, env) {
+OS.monomono = function (data) {
 	var o = safe('<section id="' + data.num + '">'),
 	    c = safe('</section>\n'),
-	    gen = this.monogatari(data, env);
+	    gen = this.monogatari(data);
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
 };
 

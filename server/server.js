@@ -102,21 +102,21 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	return true;
 }
 
-var oneeSama = new common.OneeSama(function (num, env) {
+var oneeSama = new common.OneeSama(function (num) {
 	var post = posts[num];
 	if (post)
-		env.callback(common.safe('<a href="'
+		this.callback(common.safe('<a href="'
 				+ common.post_url(post, false)
 				+ '">&gt;&gt;' + num + '</a>'));
 	else
-		env.callback('>>' + num);
+		this.callback('>>' + num);
 });
 oneeSama.image_view = pix.get_image_view;
 oneeSama.dirs = {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL};
 
 function write_thread_html(thread, response, full_thread) {
 	oneeSama.full = full_thread;
-	var first = oneeSama.monomono(thread.op, oneeSama);
+	var first = oneeSama.monomono(thread.op);
 	var ending = first.pop();
 	response.write(first.join(''));
 	var replies = thread.replies;
@@ -132,7 +132,7 @@ function write_thread_html(thread, response, full_thread) {
 				'</span>\n');
 	}
 	for (var i = 0; i < replies.length; i++)
-		response.write(oneeSama.mono(replies[i], oneeSama));
+		response.write(oneeSama.mono(replies[i]));
 	response.write(ending + '<hr>\n');
 }
 
