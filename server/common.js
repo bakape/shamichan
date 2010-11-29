@@ -152,8 +152,8 @@ OS.karada = function (body) {
 function chibi(text) {
 	var m = text.match(/^(.{40}).{8,}(\.\w{3,4})$/);
 	if (!m)
-		return text;
-	return [safe('<abbr title="'), text, safe('">'), m[1],
+		return ', ' + text;
+	return [safe(', <abbr title="'), text, safe('">'), m[1],
 		safe('(&hellip;)'), m[2], safe('</abbr>')];
 }
 
@@ -162,7 +162,7 @@ OS.gazou = function (info) {
 	return [safe('<figure data-MD5="' + info.MD5 + '">' +
 		'<figcaption>Image <a href="' + src + '" target="_blank">' +
 		info.src + '</a> (' + info.size + ', ' + info.dims[0] +
-		'x' + info.dims[1]), this.full ? ', '+chibi(info.imgnm) : '',
+		'x' + info.dims[1]), this.full ? chibi(info.imgnm) : '',
 		safe(')</figcaption><a href="' + src + '" target="_blank">' +
 		'<img src="' + this.dirs.thumb_url + info.thumb + '" width="' +
 		info.dims[2] + '" height="' + info.dims[3] + '"></a>' +
