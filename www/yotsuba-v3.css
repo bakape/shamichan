@@ -41,6 +41,14 @@ em {
 	font-style: normal;
 	color: #789922;
 }
+fieldset {
+	border: 0;
+}
+fieldset label {
+	display: inline-block;
+	text-align: right;
+	width: 4em;
+}
 figcaption {
 	display: block;
 }
