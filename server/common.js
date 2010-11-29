@@ -198,6 +198,10 @@ function num_html(post) {
 			+ post_url(post, true) + '">' + post.num + '</a>');
 }
 
+function expand_html(num) {
+	return ' [<a href="' + num + '" class="expand">Reply</a>]';
+}
+
 OS.monogatari = function (data) {
 	var header = [safe('<b>'), data.name || DEFINES.ANON];
 	if (data.trip)
@@ -214,8 +218,7 @@ OS.monogatari = function (data) {
 			'">' + readable_time(data.time) + '</time> ' +
 			num_html(data)));
 	if (!this.full && !data.op)
-		header.push(safe(' [<a href="' + data.num +
-				'" class="expand">Reply</a>]'));
+		header.push(safe(expand_html(data.num)));
 	header.push(safe('</header>\n\t'));
 	var body = [safe('<blockquote>'), this.karada(data.body),
 			safe('</blockquote>')];

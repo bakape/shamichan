@@ -348,12 +348,14 @@ PostForm.prototype.on_allocation = function (msg) {
 		tag.attr('href', 'mailto:' + msg.email).attr('class', 'email');
 	else
 		tag.removeAttr('href').attr('class', 'emailcancel');
-	meta.children('time').text(readable_time(msg.time)
-		).attr('datetime', datetime(msg.time)
-		).after(' ' + num_html(msg));
 	this.post.attr('id', num);
+	var head_end = ' ' + num_html(msg);
 	if (this.op)
 		this.post.addClass('editing');
+	else
+		head_end += expand_html(num);
+	meta.children('time').text(readable_time(msg.time)
+		).attr('datetime', datetime(msg.time)).after(head_end);
 
 	this.submit.attr('disabled', false);
 	if (this.uploadForm)
