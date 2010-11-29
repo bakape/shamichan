@@ -63,7 +63,7 @@ function send(msg) {
 }
 
 function make_reply_box() {
-	var box = $('<aside><a>[Reply]</a></aside>');
+	var box = $('<aside>[<a>Reply</a>]</aside>');
 	box.find('a').click(on_make_post);
 	return box;
 }
@@ -71,7 +71,7 @@ function make_reply_box() {
 function insert_new_post_boxes() {
 	make_reply_box().appendTo('section');
 	if (!THREAD) {
-		var box = $('<aside><a>[New thread]</a></aside>');
+		var box = $('<aside>[<a>New thread</a>]</aside>');
 		box.find('a').click(on_make_post);
 		ceiling.after(box);
 	}
