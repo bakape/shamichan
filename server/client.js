@@ -69,6 +69,8 @@ function make_reply_box() {
 }
 
 function insert_new_post_boxes() {
+	if (outOfSync)
+		return;
 	make_reply_box().appendTo('section');
 	if (!THREAD) {
 		var box = $('<aside>[<a>New thread</a>]</aside>');
@@ -501,19 +503,23 @@ PostForm.prototype.commit_words = function (spaceEntered) {
 };
 
 PostForm.prototype.finish = function () {
-	this.commit(this.input.val());
-	this.input.remove();
-	this.submit.remove();
-	if (this.uploadForm)
-		this.uploadForm.remove();
-	this.imouto.fragment(this.line_buffer.text());
-	this.buffer.replaceWith(this.buffer.contents());
-	this.line_buffer.remove();
-	this.post.removeClass('editing');
+	if (this.num) {
+		this.commit(this.input.val());
+		this.input.remove();
+		this.submit.remove();
+		if (this.uploadForm)
+			this.uploadForm.remove();
+		this.imouto.fragment(this.line_buffer.text());
+		this.buffer.replaceWith(this.buffer.contents());
+		this.line_buffer.remove();
+		this.post.removeClass('editing');
+		send([FINISH_POST]);
+	}
+	else
+		this.post.remove();
 
 	dispatcher[ALLOCATE_POST] = null;
 	postForm = null;
-	send([FINISH_POST]);
 	insert_new_post_boxes();
 };
 
@@ -525,15 +531,16 @@ PostForm.prototype.make_upload_form = function () {
 		+ socket.transport.sessionid + '"/>'
 		+ '<iframe src="" name="upload"/></form>');
 	var user_input = this.input;
+	var self = this;
 	form.find('input[name=image]').change(function () {
 		user_input.focus();
 		$(this).siblings('strong').text('');
 		if (!$(this).val())
 			return;
-		if (!postForm.num) {
-			postForm.submit.attr('disabled', true);
+		if (!self.num) {
+			self.submit.attr('disabled', true);
 			var alloc = $('<input type="hidden" name="alloc"/>');
-			var request = postForm.make_alloc_request(null);
+			var request = self.make_alloc_request(null);
 			form.append(alloc.val(JSON.stringify(request)));
 		}
 		form.submit();
@@ -547,8 +554,11 @@ function sync_status(msg, hover) {
 }
 
 var reconnect_timer = null, reset_timer = null, reconnect_delay = 3000;
+var outOfSync = false;
 function on_connect() {
 	clearTimeout(reconnect_timer);
+	if (outOfSync)
+		return;
 	reset_timer = setTimeout(function (){ reconnect_delay = 3000; }, 9999);
 	sync_status('Synching...', false);
 	send([SYNCHRONIZE, SYNC, THREAD]);
@@ -556,6 +566,8 @@ function on_connect() {
 
 function attempt_reconnect() {
 	clearTimeout(reset_timer);
+	if (outOfSync)
+		return;
 	sync_status('Dropped.', true);
 	socket.connect();
 	reconnect_timer = setTimeout(attempt_reconnect, reconnect_delay);
@@ -566,12 +578,18 @@ dispatcher[SYNCHRONIZE] = function (msg) {
 	SYNC = msg[0];
 	sync_status('Synched.', false);
 	return false;
-}
+};
 
 dispatcher[INVALID] = function (msg) {
 	sync_status('Out of sync.', true);
+	outOfSync = true;
+	socket.disconnect();
+	if (postForm)
+		postForm.finish();
+	$('aside').remove();
+	$('.editing').removeClass('editing');
 	return false;
-}
+};
 
 function are_you_ready_guys() {
 	socket.on('connect', on_connect);
