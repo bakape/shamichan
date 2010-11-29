@@ -179,7 +179,7 @@ function render_thread(req, resp, num) {
 	if (!post)
 		return false;
 	if (post.op) {
-		resp.writeHead(301, {Location: post.op + '#' + post.num});
+		resp.writeHead(302, {Location: post.op + '#' + post.num});
 		resp.end();
 		return true;
 	}
