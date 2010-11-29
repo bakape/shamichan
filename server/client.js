@@ -556,7 +556,7 @@ function on_connect() {
 
 function attempt_reconnect() {
 	clearTimeout(reset_timer);
-	sync_status('Not synched.', true);
+	sync_status('Dropped.', true);
 	socket.connect();
 	reconnect_timer = setTimeout(attempt_reconnect, reconnect_delay);
 	reconnect_delay = Math.min(reconnect_delay * 2, 60000);
@@ -569,7 +569,7 @@ dispatcher[SYNCHRONIZE] = function (msg) {
 }
 
 dispatcher[INVALID] = function (msg) {
-	sync_status('Sync error.', true);
+	sync_status('Out of sync.', true);
 	return false;
 }
 
