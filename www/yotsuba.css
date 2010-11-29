@@ -1,10 +1,13 @@
-a, a:visited {
+a {
 	border: none;
 	color: #34345c;
 	text-decoration: underline;
 }
-a:hover, blockquote a, blockquote a:visited {
-	color: #d00;
+a:visited {
+	color: inherit;
+}
+a:hover, blockquote a {
+	color: #d00 !important;
 	cursor: pointer;
 }
 abbr {
@@ -34,6 +37,10 @@ del, del em {
 del:hover, del:hover em {
 	color: white;
 }
+em {
+	font-style: normal;
+	color: #789922;
+}
 figcaption {
 	display: block;
 }
@@ -58,9 +65,13 @@ h2 {
 	font-family: Tahoma;
 	text-align: center;
 }
-header a, header a:visited {
+header a {
 	color: black;
 	text-decoration: none;
+}
+header a.expand {
+	color: #34345c;
+	text-decoration: underline;
 }
 header b {
 	color: #117743;
@@ -81,10 +92,6 @@ iframe {
 section, body > aside {
 	margin: 1em;
 }
-section em {
-	font-style: normal;
-	color: #789922;
-}
 section p {
 	display: inline;
 }
@@ -93,9 +100,12 @@ section p {
 	border-right: 1px solid #e95 !important;
 	border-bottom: 1px solid #e95 !important;
 }
-.email, .email b, .email code {
+.email, .email * {
 	color: #0f0c5d;
 	text-decoration: underline;
+}
+.email *:hover {
+	color: #d00 !important;
 }
 .emailcancel {
 	color: inherit !important;

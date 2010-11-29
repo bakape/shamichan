@@ -212,7 +212,11 @@ OS.monogatari = function (data) {
 	header.unshift(safe('<header>'));
 	header.push(safe(' <time pubdate datetime="' + datetime(data.time) +
 			'">' + readable_time(data.time) + '</time> ' +
-			num_html(data) + '</header>\n\t'));
+			num_html(data)));
+	if (!this.full && !data.op)
+		header.push(safe(' [<a href="' + data.num +
+				'" class="expand">Reply</a>]'));
+	header.push(safe('</header>\n\t'));
 	var body = [safe('<blockquote>'), this.karada(data.body),
 			safe('</blockquote>')];
 	if (!data.image)
