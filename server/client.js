@@ -5,6 +5,8 @@ var THREAD = window.location.pathname.match(/\/(\d+)$/);
 THREAD = THREAD ? parseInt(THREAD[1]) : 0;
 var nameField = $('input[name=name]'), emailField = $('input[name=email]');
 var ceiling = $('hr:first');
+var reconnectTimer = null, resetTimer = null, reconnectDelay = 3000;
+var outOfSync = false;
 
 var socket = new io.Socket(window.location.domain, {
 	port: PORT,
@@ -553,25 +555,23 @@ function sync_status(msg, hover) {
 	$('#sync').text(msg).attr('class', hover ? 'error' : '');
 }
 
-var reconnect_timer = null, reset_timer = null, reconnect_delay = 3000;
-var outOfSync = false;
 function on_connect() {
-	clearTimeout(reconnect_timer);
+	clearTimeout(reconnectTimer);
 	if (outOfSync)
 		return;
-	reset_timer = setTimeout(function (){ reconnect_delay = 3000; }, 9999);
+	resetTimer = setTimeout(function (){ reconnectDelay = 3000; }, 9999);
 	sync_status('Synching...', false);
 	send([SYNCHRONIZE, SYNC, THREAD]);
 }
 
 function attempt_reconnect() {
-	clearTimeout(reset_timer);
+	clearTimeout(resetTimer);
 	if (outOfSync)
 		return;
 	sync_status('Dropped.', true);
 	socket.connect();
-	reconnect_timer = setTimeout(attempt_reconnect, reconnect_delay);
-	reconnect_delay = Math.min(reconnect_delay * 2, 60000);
+	reconnectTimer = setTimeout(attempt_reconnect, reconnectDelay);
+	reconnectDelay = Math.min(reconnectDelay * 2, 60000);
 }
 
 dispatcher[SYNCHRONIZE] = function (msg) {

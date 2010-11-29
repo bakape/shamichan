@@ -117,16 +117,16 @@ exports.update_post = function(num, body, callback) {
 	});
 }
 
-var posts_sql;
+var postsSQL;
 exports.get_posts = function(get_threads, callback) {
-	if (!posts_sql)
-		posts_sql = fs.readFileSync('db/get_posts.sql', 'UTF-8');
+	if (!postsSQL)
+		postsSQL = fs.readFileSync('db/get_posts.sql', 'UTF-8');
 	var vals = {DB_POST_TABLE: config.DB_POST_TABLE,
 		DB_IMAGE_TABLE: config.DB_IMAGE_TABLE};
 	if (!get_threads)
 		vals.posts_only = true;
 
-	var query = db.query(Template(posts_sql).expand(vals));
+	var query = db.query(Template(postsSQL).expand(vals));
 	var images = {};
 	query.on('row', function (row) {
 		var f = row.fields;

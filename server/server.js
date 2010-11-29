@@ -14,9 +14,9 @@ var posts = {};
 var clients = {};
 var dispatcher = {};
 
-var sync_number = 0;
+var syncNumber = 0;
 var backlog = [];
-var backlog_last_dropped = 0;
+var backlogLastDropped = 0;
 
 function multisend(client, msgs) {
 	client.socket.send(JSON.stringify(msgs));
@@ -24,7 +24,7 @@ function multisend(client, msgs) {
 
 function broadcast(msg, post, origin) {
 	var thread_num = post.op || post.num;
-	++sync_number;
+	++syncNumber;
 	msg = JSON.stringify(msg);
 	var payload = '[' + msg + ']';
 	for (id in clients) {
@@ -34,13 +34,13 @@ function broadcast(msg, post, origin) {
 		if (client.watching && client.watching != thread_num) {
 			/* Client isn't in this thread so let them fall
 			 * out of sync until something relevant comes up */
-			client.defer_sync = sync_number;
+			client.defer_sync = syncNumber;
 			continue;
 		}
 		if (id == origin) {
 			/* Client won't increment SYNC since they won't
 			 * receive the broadcasted message, so do manually */
-			multisend(client, [[common.SYNCHRONIZE, sync_number]]);
+			multisend(client, [[common.SYNCHRONIZE, syncNumber]]);
 		}
 		else if (client.defer_sync) {
 			/* First catch them up, then send the new message */
@@ -64,7 +64,7 @@ function cleanup_backlog(now) {
 	/* binary search would be nice */
 	while (backlog.length && backlog[0].when < limit) {
 		backlog.shift();
-		backlog_last_dropped++;
+		backlogLastDropped++;
 	}
 }
 
@@ -81,22 +81,22 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		else
 			return false;
 	}
-	if (sync == sync_number) {
-		multisend(client, [[common.SYNCHRONIZE, sync_number]]);
+	if (sync == syncNumber) {
+		multisend(client, [[common.SYNCHRONIZE, syncNumber]]);
 		client.synced = true;
 		return true; /* already synchronized */
 	}
-	if (sync > sync_number)
+	if (sync > syncNumber)
 		return false; /* client in the future? */
-	if (sync < backlog_last_dropped)
+	if (sync < backlogLastDropped)
 		return false; /* client took too long */
 	var logs = [];
-	for (var i = sync - backlog_last_dropped; i < backlog.length; i++) {
+	for (var i = sync - backlogLastDropped; i < backlog.length; i++) {
 		var log = backlog[i];
 		if (!watching || log.thread == watching)
 			logs.push(log.msg);
 	}
-	logs.push('[' + common.SYNCHRONIZE + ',' + sync_number + ']');
+	logs.push('[' + common.SYNCHRONIZE + ',' + syncNumber + ']');
 	client.socket.send('[' + logs.join() + ']');
 	client.synced = true;
 	return true;
@@ -136,15 +136,15 @@ function write_thread_html(thread, response, full_thread) {
 	response.write(ending + '<hr>\n');
 }
 
-var index_tmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
+var indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
 		{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
-var notfound_html = fs.readFileSync('../www/404.html');
+var notFoundHtml = fs.readFileSync('../www/404.html');
 
 function image_status(status) {
 	multisend(this.client, [[common.IMAGE_STATUS, status]]);
 }
 
-var http_headers = {'Content-Type': 'text/html; charset=UTF-8',
+var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT, -1',
 		'Cache-Control': 'no-cache'};
 var server = http.createServer(function(req, resp) {
@@ -159,18 +159,18 @@ var server = http.createServer(function(req, resp) {
 	m = req.url.match(/^\/(\d+)$/);
 	if (m && render_thread(req, resp, m[1]))
 		return;
-	resp.writeHead(404, http_headers);
-	resp.end(notfound_html);
+	resp.writeHead(404, httpHeaders);
+	resp.end(notFoundHtml);
 });
 
 function render_index(req, resp) {
-	resp.writeHead(200, http_headers);
-	resp.write(index_tmpl[0]);
+	resp.writeHead(200, httpHeaders);
+	resp.write(indexTmpl[0]);
 	for (var i = 0; i < threads.length; i++)
 		write_thread_html(threads[i], resp, false);
-	resp.write(index_tmpl[1]);
-	resp.write(sync_number.toString());
-	resp.end(index_tmpl[2]);
+	resp.write(indexTmpl[1]);
+	resp.write(syncNumber.toString());
+	resp.end(indexTmpl[2]);
 	return true;
 }
 
@@ -183,13 +183,13 @@ function render_thread(req, resp, num) {
 		resp.end();
 		return true;
 	}
-	resp.writeHead(200, http_headers);
-	resp.write(index_tmpl[0]);
+	resp.writeHead(200, httpHeaders);
+	resp.write(indexTmpl[0]);
 	write_thread_html(post.thread, resp, true);
 	resp.write('[<a href=".">Return</a>]');
-	resp.write(index_tmpl[1]);
-	resp.write(sync_number.toString());
-	resp.end(index_tmpl[2]);
+	resp.write(indexTmpl[1]);
+	resp.write(syncNumber.toString());
+	resp.end(indexTmpl[2]);
 	return true;
 }
 
