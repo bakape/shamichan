@@ -298,18 +298,23 @@ IU.publish = function () {
 		size: this.image.size, MD5: this.image.MD5,
 		id: this.image.id, ext: this.image.ext
 	};
+	var self = this;
 	if (this.client.post) {
+		var post = this.client.post;
 		/* Text beat us here, discard alloc (if any) */
-		var view = exports.get_image_view(image, imgnm,
-				this.image.pinky);
-		this.iframe_call('upload_complete', view);
-		this.client.post.image = image;
-		this.client.post.imgnm = imgnm;
-		this.broadcast(view, this.client);
-		this.client.uploading = false;
+		db.append_image(post.num, image.id, imgnm, function (err) {
+			if (err)
+				return self.failure("Publishing failure.");
+			var view = exports.get_image_view(image, imgnm,
+					self.image.pinky);
+			self.iframe_call('upload_complete', view);
+			post.image = image;
+			post.imgnm = imgnm;
+			self.broadcast(view, self.client);
+			self.client.uploading = false;
+		});
 		return;
 	}
-	var self = this;
 	flow.exec(function () {
 		if (!self.allocate_post(self.alloc, image, imgnm,
 				self.client, this))

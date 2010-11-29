@@ -38,6 +38,17 @@ exports.insert_image = function (image, callback) {
 	});
 };
 
+exports.append_image = function (post_num, id, imgnm, callback) {
+	var query = db.query({
+		name: 'append image',
+		text: "UPDATE " + config.DB_POST_TABLE +
+		" SET image = $1, image_filename = $2 WHERE num = $3",
+		values: [id, imgnm, post_num]
+	});
+	query.on('error', callback);
+	query.on('end', function () { callback(null); });
+};
+
 exports.check_duplicate_image = function (MD5, callback) {
 	var query = db.query({
 		name: 'lookup image by md5',
