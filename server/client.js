@@ -245,9 +245,10 @@ function upload_error(msg) {
 }
 
 function upload_complete(info) {
-	var form = postForm.uploadForm;
-	insert_image(info, form.siblings('header'), !postForm.op);
+	var form = postForm.uploadForm, op = postForm.op;
+	insert_image(info, form.siblings('header'), !op);
 	form.find('input[name=image]').siblings('strong').andSelf().remove();
+	mpmetrics.track('image', op ? {op: op} : {});
 }
 
 function insert_image(info, header, op) {
@@ -354,10 +355,14 @@ PostForm.prototype.on_allocation = function (msg) {
 		tag.removeAttr('href').attr('class', 'emailcancel');
 	this.post.attr('id', num);
 	var head_end = ' ' + num_html(msg);
-	if (this.op)
+	if (this.op) {
 		this.post.addClass('editing');
-	else
+		mpmetrics.track('reply', {to: this.op});
+	}
+	else {
 		head_end += expand_html(num);
+		mpmetrics.track('create', {num: num});
+	}
 	meta.children('time').text(readable_time(msg.time)
 		).attr('datetime', datetime(msg.time)).after(head_end);
 
@@ -641,5 +646,3 @@ function are_you_ready_guys() {
 		});
 	}, 0);
 }
-
-are_you_ready_guys();

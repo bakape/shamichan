@@ -1,6 +1,6 @@
 CLIENT_SRC = lib/socket.io.js common.js client.js
 RELEASE_SRC = lib/mixpanel.js
-LAST_SRC = lib/mixpanel_invoke.js
+LAST_SRC = lib/mixpanel_invoke.js guns.js
 CLIENT_JS := ../www/js/client-v$(shell node config.js --show-config VERSION).js
 DEBUG := $(shell node config.js --show-config DEBUG)
 
