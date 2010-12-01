@@ -1,4 +1,5 @@
 CLIENT_SRC = lib/socket.io.js common.js client.js
+RELEASE_SRC = lib/mixpanel.js lib/mixpanel_invoke.js
 CLIENT_JS := ../www/js/client-v$(shell node config.js --show-config VERSION).js
 DEBUG := $(shell node config.js --show-config DEBUG)
 
@@ -17,14 +18,19 @@ tripcode.node: .build tripcode.cc
 .build: wscript
 	node-waf configure
 
-$(CLIENT_JS): $(CLIENT_SRC) jsmin
 ifeq ($(DEBUG),true)
+$(CLIENT_JS): $(CLIENT_SRC) jsmin
 	@node make_client.js $(CLIENT_SRC) > $@
 else
-	@node make_client.js $(CLIENT_SRC) > $@.orig && \
+$(CLIENT_JS): $(CLIENT_SRC) $(RELEASE_SRC) jsmin
+	@node make_client.js $(CLIENT_SRC) $(RELEASE_SRC) > $@.orig && \
 		./jsmin < $@.orig > $@
 	@rm -f $@.orig
 endif
+
+client: $(CLIENT_JS)
+
+.PHONY: all client clean
 
 clean:
 	rm -rf -- .build builder jsmin tripcode.node ../www/js/client-v*.js

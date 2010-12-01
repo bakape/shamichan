@@ -24,6 +24,8 @@ module.exports = {
 	PINKY_DIMENSIONS: '125x125',
 	THUMB_QUALITY: 50,
 	THUMB_DIMENSIONS: '250x250',
+
+	MIXPANEL_TOKEN: '',
 };
 if (process.argv[2] == '--show-config')
 	console.log(module.exports[process.argv[3]]);

@@ -1,5 +1,6 @@
-var fs = require('fs'),
-	util = require('util');
+var config = require('./config'),
+    fs = require('fs'),
+    util = require('util');
 
 var defines = {};
 var files = [];
@@ -14,6 +15,8 @@ for (var i = 2; i < process.argv.length; i++) {
 		process.exit(1);
 	}
 }
+
+var config_re = /\$\*\$(\w+)\$\*\$/;
 
 for (var i = 0; i < files.length; i++) {
 	var lines = fs.readFileSync(files[i], 'UTF-8').split('\n');
@@ -42,6 +45,17 @@ for (var i = 0; i < files.length; i++) {
 		}
 		line = line.replace('DEFINES.', '');
 		line = line.replace('exports.', '');
+		while (true) {
+			var m = line.match(config_re);
+			if (!m)
+				break;
+			var cfg = config[m[1]];
+			if (!cfg) {
+				console.error("No such config var " + m[1]);
+				process.exit(1);
+			}
+			line = line.replace(config_re, cfg);
+		}
 		console.log(line);
 	}
 }

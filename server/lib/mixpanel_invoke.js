@@ -1,0 +1,1 @@
+try { var mpmetrics = new MixpanelLib('$*$MIXPANEL_TOKEN$*$'); } catch(err) { null_fn = function () {}; var mpmetrics = {  track: null_fn,  track_funnel: null_fn,  register: null_fn,  register_once: null_fn, register_funnel: null_fn }; }
