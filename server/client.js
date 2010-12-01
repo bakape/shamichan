@@ -406,6 +406,7 @@ function add_ref(event) {
 			return;
 		num = parseInt(q[1]);
 		event.preventDefault();
+		mpmetrics.track('add_ref', {num: num});
 	}
 	/* Make the post form if none exists yet */
 	if (!postForm) {
