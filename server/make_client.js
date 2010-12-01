@@ -50,7 +50,7 @@ for (var i = 0; i < files.length; i++) {
 			if (!m)
 				break;
 			var cfg = config[m[1]];
-			if (!cfg) {
+			if (cfg === undefined) {
 				console.error("No such config var " + m[1]);
 				process.exit(1);
 			}
