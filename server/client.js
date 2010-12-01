@@ -395,15 +395,26 @@ PostForm.prototype.on_key = function (event) {
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 };
 
+var same_page = new RegExp('^' + THREAD + '(#\\d+)$');
 function add_ref(event) {
 	var num = event;
 	if (typeof num != 'number') {
 		if (!THREAD && !postForm)
 			return;
 		var href = $(event.target).attr('href');
-		var q = href && href.match(/#q(\d+)/);
-		if (!q)
+		if (!href)
 			return;
+		var q = href.match(/#q(\d+)/);
+		if (!q) {
+			if (!THREAD)
+				return;
+			q = href.match(same_page);
+			if (!q)
+				return;
+			$('.highlight').removeClass('highlight');
+			$('article'+q[1]).addClass('highlight');
+			return;
+		}
 		num = parseInt(q[1]);
 		event.preventDefault();
 		mpmetrics.track('add_ref', {num: num});
