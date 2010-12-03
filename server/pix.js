@@ -138,7 +138,8 @@ IU.process = function () {
 		if (found) {
 			self.image = found;
 			self.image.filename = image.filename;
-			return self.adapt_existing(image.pinky);
+			self.image.pinky = image.pinky;
+			return self.adapt_existing();
 		}
 		self.read_image_filesize(this);
 	}, function (size) {
@@ -186,10 +187,10 @@ IU.process = function () {
 	});
 };
 
-IU.adapt_existing = function (pinky) {
+IU.adapt_existing = function () {
 	var image = this.image;
-	var index = pinky ? 4 : 2;
-	var specs = get_thumb_specs(pinky);
+	var index = image.pinky ? 4 : 2;
+	var specs = get_thumb_specs(image.pinky);
 	image.src = image.time + IMAGE_EXTS[image.ext];
 	image.thumb = image.time + specs.ext;
 	if (image.dims[index]) {
@@ -210,7 +211,8 @@ IU.adapt_existing = function (pinky) {
 		image.dims[index] = w;
 		image.dims[index + 1] = h;
 		self.status('Publishing...');
-		db.update_thumbnail_dimensions(image.id, pinky, w, h, this);
+		db.update_thumbnail_dimensions(image.id, image.pinky, w, h,
+				this);
 	}, function (err) {
 		if (err)
 			return self.failure("Secondary thumbnail failure.");
@@ -321,8 +323,10 @@ IU.publish = function () {
 				self.client, this))
 			self.client.uploading = false;
 	}, function (err, alloc) {
-		if (err)
+		if (err) {
+			console.error(err);
 			return self.failure('Bad post.');
+		}
 		self.client.uploading = false;
 		self.iframe_call('postForm.on_allocation', alloc);
 	});
