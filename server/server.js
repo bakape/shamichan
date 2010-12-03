@@ -144,13 +144,20 @@ function image_status(status) {
 	multisend(this.client, [[common.IMAGE_STATUS, status]]);
 }
 
+function set_post_image(post, image, imgnm) {
+	post.image = image;
+	post.imgnm = imgnm;
+	if (post.op)
+		posts[post.op].thread.image_count++;
+}
+
 var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT, -1',
 		'Cache-Control': 'no-cache'};
 var server = http.createServer(function(req, resp) {
 	if (req.method.toLowerCase() == 'post') {
 		var upload = new pix.ImageUpload(clients, allocate_post,
-			announce_image, image_status);
+				set_post_image, announce_image, image_status);
 		upload.handle_request(req, resp);
 		return;
 	}

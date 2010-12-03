@@ -40,9 +40,11 @@ exports.get_image_view = function (image, imgnm, pinky) {
 		dims: pinky ? image.cache.pinky_dims : image.cache.thumb_dims};
 };
 
-exports.ImageUpload = function (clients, allocate_post, broadcast, status) {
+exports.ImageUpload = function (clients, allocate_post, set_post_image,
+			broadcast, status) {
 	this.clients = clients;
 	this.allocate_post = allocate_post;
+	this.set_post_image = set_post_image;
 	this.broadcast = broadcast;
 	this.status = status;
 };
@@ -308,8 +310,7 @@ IU.publish = function () {
 			var view = exports.get_image_view(image, imgnm,
 					self.image.pinky);
 			self.iframe_call('upload_complete', view);
-			post.image = image;
-			post.imgnm = imgnm;
+			self.set_post_image(post, image, imgnm);
 			self.broadcast(view, self.client);
 			self.client.uploading = false;
 		});
