@@ -261,6 +261,7 @@ IU.MD5_image = function (callback) {
 IU.resize_image = function (src, dest, dims, quality, callback) {
 	this.handle_exec('convert ' + src + '[0] -gamma 0.454545 ' +
 			'-filter lanczos -resize ' + dims + ' -gamma 2.2 ' +
+			'-background white -mosaic +matte ' +
 			'-quality ' + quality + ' jpg:' + dest,
 		'Conversion error.', callback);
 };
