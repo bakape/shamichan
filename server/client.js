@@ -240,6 +240,7 @@ function extract_num(q) {
 }
 
 function upload_error(msg) {
+	/* TODO: Reset allocation if necessary */
 	$('input[name=image]').attr('disabled', false
 			).siblings('strong').text(msg);
 }
