@@ -14,19 +14,6 @@ var socket = new io.Socket(window.location.domain, {
 		'jsonp-polling']
 });
 
-if (!THREAD) {
-	$('#sync').after($('<span id="live"><label for="live_check">' +
-		'Real-time bump</label><input type="checkbox" ' +
-		'id="live_check" checked /></span>'));
-	$('#live_check').change(function () {
-		liveFeed = $(this).attr('checked');
-		if (liveFeed) {
-			$('section').show();
-			$('hr').show();
-		}
-	});
-}
-
 function load_ident() {
 	if (!window.localStorage)
 		return;
@@ -44,6 +31,30 @@ function load_ident() {
 	catch (e) {}
 }
 load_ident();
+
+var opts;
+function options() {
+	if (opts) {
+		opts.toggle();
+		return;
+	}
+	opts = $('<div class="modal">' +
+		'<input type="checkbox" id="live_check" checked />' +
+		'<label for="live_check">Real-time bump</label>' +
+		'</div>');
+	opts.find('#live_check').change(function () {
+		liveFeed = $(this).attr('checked');
+		if (liveFeed) {
+			$('section').show();
+			$('hr').show();
+		}
+	});
+	$(document.body).append(opts);
+}
+
+if (!THREAD) {
+	$('<a id="options">Options</a>').click(options).insertAfter('#sync');
+}
 
 function save_ident() {
 	if (!window.localStorage)
