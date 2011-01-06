@@ -401,12 +401,11 @@ PostForm.prototype.on_key = function (event) {
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 };
 
-var same_page = new RegExp('^' + THREAD + '(#\\d+)$');
+var samePage = new RegExp('^' + THREAD + '(#\\d+)$');
 function click_shita(event) {
-	var href = $(event.target).attr('href');
-	if (!href)
-		return;
-	if (THREAD || postForm) {
+	var target = $(event.target);
+	var href = target.attr('href');
+	if (href && (THREAD || postForm)) {
 		var q = href.match(/#q(\d+)/);
 		if (q) {
 			event.preventDefault();
@@ -414,13 +413,25 @@ function click_shita(event) {
 			return;
 		}
 		if (THREAD) {
-			q = href.match(same_page);
+			q = href.match(samePage);
 			if (q) {
 				$('.highlight').removeClass('highlight');
 				$('article'+q[1]).addClass('highlight');
 				return;
 			}
 		}
+	}
+	var img = target.filter('img');
+	if (img.length) {
+		var thumb = img.attr('data-thumb-src');
+		if (thumb)
+			img.attr('src', thumb).removeAttr('data-thumb-src');
+		else {
+			img.attr('data-thumb-src', img.attr('src'));
+			img.attr('src', img.parent().attr('href'));
+		}
+		img.removeAttr('width').removeAttr('height');
+		event.preventDefault();
 	}
 }
 
