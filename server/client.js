@@ -402,29 +402,30 @@ PostForm.prototype.on_key = function (event) {
 };
 
 var same_page = new RegExp('^' + THREAD + '(#\\d+)$');
-function add_ref(event) {
-	var num = event;
-	if (typeof num != 'number') {
-		if (!THREAD && !postForm)
-			return;
-		var href = $(event.target).attr('href');
-		if (!href)
-			return;
+function click_shita(event) {
+	var href = $(event.target).attr('href');
+	if (!href)
+		return;
+	if (THREAD || postForm) {
 		var q = href.match(/#q(\d+)/);
-		if (!q) {
-			if (!THREAD)
-				return;
-			q = href.match(same_page);
-			if (!q)
-				return;
-			$('.highlight').removeClass('highlight');
-			$('article'+q[1]).addClass('highlight');
+		if (q) {
+			event.preventDefault();
+			add_ref(parseInt(q[1]));
 			return;
 		}
-		num = parseInt(q[1]);
-		event.preventDefault();
-		mpmetrics.track('add_ref', {num: num});
+		if (THREAD) {
+			q = href.match(same_page);
+			if (q) {
+				$('.highlight').removeClass('highlight');
+				$('article'+q[1]).addClass('highlight');
+				return;
+			}
+		}
 	}
+}
+
+function add_ref(num) {
+	mpmetrics.track('add_ref', {num: num});
 	/* Make the post form if none exists yet */
 	if (!postForm) {
 		var link = $('#' + num);
@@ -637,7 +638,7 @@ function are_you_ready_guys() {
 			$('article' + m[1]).addClass('highlight');
 	}
 
-	$(document).click(add_ref);
+	$(document).click(click_shita);
 	setTimeout(function () {
 		$('time').each(function (index) {
 			var time = $(this);
