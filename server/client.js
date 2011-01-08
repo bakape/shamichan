@@ -1,5 +1,4 @@
 var postForm = null;
-var liveFeed = true;
 var dispatcher = {};
 var THREAD = window.location.pathname.match(/\/(\d+)$/);
 THREAD = THREAD ? parseInt(THREAD[1]) : 0;
@@ -7,6 +6,7 @@ var nameField = $('input[name=name]'), emailField = $('input[name=email]');
 var ceiling = $('hr:first');
 var reconnectTimer = null, resetTimer = null, reconnectDelay = 3000;
 var outOfSync = false;
+var options;
 
 var socket = new io.Socket(window.location.domain, {
 	port: PORT,
@@ -15,8 +15,6 @@ var socket = new io.Socket(window.location.domain, {
 });
 
 function load_ident() {
-	if (!window.localStorage)
-		return;
 	try {
 		function load(key, f) {
 			if (!f()) {
@@ -32,33 +30,9 @@ function load_ident() {
 }
 load_ident();
 
-var opts;
-function options() {
-	if (opts) {
-		opts.toggle();
-		return;
-	}
-	opts = $('<div class="modal">' +
-		'<input type="checkbox" id="live_check" checked />' +
-		'<label for="live_check">Real-time bump</label>' +
-		'</div>');
-	opts.find('#live_check').change(function () {
-		liveFeed = $(this).attr('checked');
-		if (liveFeed) {
-			$('section').show();
-			$('hr').show();
-		}
-	});
-	$(document.body).append(opts);
-}
-
-if (!THREAD) {
-	$('<a id="options">Options</a>').click(options).insertAfter('#sync');
-}
+$('<a id="options">Options</a>').insertAfter('#sync');
 
 function save_ident() {
-	if (!window.localStorage)
-		return;
 	try {
 		function save(key, val) {
 			if (typeof val == 'string')
@@ -184,7 +158,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		shift_replies(section);
 		section.children('blockquote,.omit,form,article[id]:last'
 				).last().after(post);
-		if (THREAD || !liveFeed || msg.email == 'sage') {
+		if (THREAD || !options.live || msg.email == 'sage') {
 			bump = false;
 		}
 		else {
@@ -198,7 +172,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		hr = $('<hr/>');
 		if (!postForm)
 			section.append(make_reply_box());
-		if (!liveFeed) {
+		if (!options.live) {
 			section.hide();
 			hr.hide();
 		}
@@ -433,7 +407,7 @@ function click_shita(event) {
 		}
 	}
 	var img = target.filter('img');
-	if (img.length) {
+	if (img.length && options.inline) {
 		var thumb = img.attr('data-thumb-src');
 		if (thumb)
 			img.attr('src', thumb).removeAttr('data-thumb-src');
@@ -646,6 +620,13 @@ function are_you_ready_guys() {
 	});
 	socket.connect();
 
+	try {
+		options = JSON.parse(localStorage.options);
+	}
+	catch (e) {
+		options = {live: true};
+	}
+
 	insert_new_post_boxes();
 	var m = window.location.hash.match(/^#q(\d+)$/);
 	if (m && $('#' + m[1]).length) {
@@ -669,4 +650,37 @@ function are_you_ready_guys() {
 			time.text(readable_time(new Date(date).getTime()));
 		});
 	}, 0);
+
+	var opts = $('<div class="modal"/>').hide();
+	var bs = {};
+	bs.live = function (b) {
+		if (b) {
+			$('section').show();
+			$('hr').show();
+		}
+	};
+	bs.live.label = 'Real-time bump';
+	bs.inline = function (b) {};
+	bs.inline.label = 'Inline image expansion';
+
+	/* Pre-load options window */
+	function opt_change(id, b) {
+		return function (event) {
+			options[id] = $(this).attr('checked');
+			try {
+				localStorage.options = JSON.stringify(options);
+			}
+			catch (e) {}
+			b(options[id]);
+		};
+	}
+	for (var id in bs) {
+		var b = bs[id];
+		$('<input type="checkbox" id="'+id+'" /> <label for="' +
+				id + '">' + b.label + '</label><br>'
+			).appendTo(opts).change(opt_change(id, b)
+			).attr('checked', options[id] ? 'checked' : null);
+	}
+	$(document.body).append(opts);
+	$('#options').click(function () { opts.toggle(); });
 }
