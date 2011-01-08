@@ -132,6 +132,13 @@ section p {
 	right: 70px;
 	top: 70px;
 }
+.preview {
+	background-color: white;
+	border-right: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+	padding: 4px 10px;
+	position: absolute;
+}
 .trans {
 	background-color: transparent;
 	border: 0;

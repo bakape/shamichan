@@ -1,12 +1,10 @@
-var postForm = null;
 var dispatcher = {};
 var THREAD = window.location.pathname.match(/\/(\d+)$/);
 THREAD = THREAD ? parseInt(THREAD[1]) : 0;
 var nameField = $('input[name=name]'), emailField = $('input[name=email]');
 var ceiling = $('hr:first');
 var reconnectTimer = null, resetTimer = null, reconnectDelay = 3000;
-var outOfSync = false;
-var options;
+var options, outOfSync, postForm, preview, previewNum;
 
 var socket = new io.Socket(window.location.domain, {
 	port: PORT,
@@ -386,6 +384,35 @@ PostForm.prototype.on_key = function (event) {
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 };
 
+function preview_miru(event, num) {
+	if (num != previewNum) {
+		var post = $('article#' + num);
+		if (!post.length)
+			return false;
+		if (preview)
+			preview.remove();
+		preview = $('<div class="preview">' + post.html() + '</div>');
+	}
+	preview.css({left: event.pageX + 'px', top: (event.pageY+30) + 'px'});
+	if (num != previewNum) {
+		$(document.body).append(preview);
+		previewNum = num;
+	}
+	return true;
+}
+
+function hover_shita(event) {
+	if (event.target.tagName.match(/A$/i)) {
+		var m = $(event.target).text().match(/>>(\d+)$/);
+		if (m && preview_miru(event, parseInt(m[1])))
+			return;
+	}
+	if (preview) {
+		preview.remove();
+		preview = previewNum = null;
+	}
+}
+
 var samePage = new RegExp('^' + THREAD + '(#\\d+)$');
 function click_shita(event) {
 	var target = $(event.target);
@@ -662,6 +689,13 @@ function are_you_ready_guys() {
 	bs.live.label = 'Real-time bump';
 	bs.inline = function (b) {};
 	bs.inline.label = 'Inline image expansion';
+	bs.preview = function (b) {
+		if (b)
+			$(document).mousemove(hover_shita);
+		else
+			$(document).unbind('mousemove', hover_shita);
+	}
+	bs.preview.label = 'Hover preview';
 
 	/* Pre-load options window */
 	function opt_change(id, b) {
@@ -680,6 +714,7 @@ function are_you_ready_guys() {
 				id + '">' + b.label + '</label><br>'
 			).appendTo(opts).change(opt_change(id, b)
 			).attr('checked', options[id] ? 'checked' : null);
+		b(options[id]);
 	}
 	$(document.body).append(opts);
 	$('#options').click(function () { opts.toggle(); });
