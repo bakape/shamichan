@@ -463,6 +463,7 @@ function add_ref(num) {
 	if (input.val().match(/^>>\d+$/))
 		postForm.on_key.call(postForm, {which: 13});
 	input.val(input.val() + '>>' + num);
+	input[0].selectionStart = input.val().length;
 	postForm.on_key.call(postForm, null);
 	input.focus();
 };
