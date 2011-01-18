@@ -2,9 +2,9 @@ Dependencies:
 
 ImageMagick
 node.js
-PostgreSQL
+redis
 
 flow-js
 formidable
-node-postgres
+node_redis
 socket.io

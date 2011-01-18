@@ -5,10 +5,6 @@ module.exports = {
 	DEBUG: true,
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
 
-	DB_CONFIG: {user: 'pixplz', database: 'pixplz', password: 'secret'},
-	DB_POST_TABLE: 'posts',
-	DB_IMAGE_TABLE: 'images',
-
 	BACKLOG_PERIOD: 20000,
 	ABBREVIATED_REPLIES: 5,
 

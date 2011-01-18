@@ -1,197 +1,238 @@
 var config = require('../config'),
-    flow = require('flow'),
-    fs = require('fs'),
-    pg = require('pg'),
-    Template = require('../lib/json-template').Template,
+    events = require('events'),
+    redis = require('redis'),
     util = require('util');
 
-exports.connect = pg.connect.bind(pg, config.DB_CONFIG);
+var BOARD_TAG = '3:moe';
 
-exports.insert_image = function (db, image, callback) {
-	var dims = image.dims;
-	var values = [image.time, image.MD5, image.size,
-			image.ext].concat(image.dims);
-	var query = db.query({
-		name: 'insert image',
-		text: "INSERT INTO " + config.DB_IMAGE_TABLE +
-		" (created, md5, filesize, ext, width, height, thumb_width," +
-		" thumb_height, pinky_width, pinky_height) VALUES (" +
-		"TIMESTAMP 'epoch' AT TIME ZONE 'UTC' + $1 * INTERVAL '1ms'," +
-		" $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id",
-		values: values
-	});
-	query.on('row', function (row) {
-		callback(null, row.id);
-	});
-	query.on('error', function (err) {
-		if (err.code == 23505) /* UNIQUE constraint */
-			callback("Duplicate image detected.", null);
-		else
-			callback(err, null);
-	});
-};
-
-exports.append_image = function (db, post_num, id, imgnm, callback) {
-	var query = db.query({
-		name: 'append image',
-		text: "UPDATE " + config.DB_POST_TABLE +
-		" SET image = $1, image_filename = $2 WHERE num = $3",
-		values: [id, imgnm, post_num]
-	});
-	query.on('error', callback);
-	query.on('end', function () { callback(null); });
-};
-
-function dims_array(f) {
-	/* Stupid, stupid, stupid! */
-	return [f.width, f.height, f.thumb_width, f.thumb_height,
-			f.pinky_width, f.pinky_height];
-};
-
-exports.check_duplicate_image = function (db, MD5, callback) {
-	var query = db.query({
-		name: 'lookup image by md5',
-		text: "SELECT id, filesize, ext, width, height, " +
-		"thumb_width, thumb_height, pinky_width, pinky_height, " +
-		"EXTRACT(epoch FROM created) * 1000 AS time FROM " +
-		config.DB_IMAGE_TABLE + " WHERE md5 = $1",
-		values: [MD5]
-	});
-	var done = false;
-	query.on('row', function (r) {
-		var found = {id: r.id, MD5: MD5, size: r.filesize, ext: r.ext,
-				dims: dims_array(r), time: r.time};
-		done = true;
-		callback(null, found);
-	});
-	query.on('end', function () {
-		if (!done)
-			callback(null, null);
-	});
-	query.on('error', function (err) {
-		callback(err, null);
-	});
-};
-
-exports.update_thumbnail_dimensions = function (db, id, pinky, w, h, callback) {
-	var thumb = pinky ? 'pinky' : 'thumb';
-	var query = db.query({
-		name: "update " + thumb + " dimensions",
-		text: "UPDATE " + config.DB_IMAGE_TABLE +
-		" SET "+thumb+"_width = $1, "+thumb+"_height = $2" +
-		" WHERE id = $3",
-		values: [w, h, id]
-	});
-	query.on('error', callback);
-	query.on('end', function () { callback(); });
-};
-
-exports.insert_post = function(db, msg, ip, callback) {
-	var query = db.query({
-		name: 'insert post',
-		text: "INSERT INTO " + config.DB_POST_TABLE +
-		" (name, trip, email, body, parent, created, ip," +
-		" image, image_filename) VALUES" +
-		" ($1, $2, $3, $4, $5," +
-		" TIMESTAMP 'epoch' AT TIME ZONE 'UTC' + $6 * INTERVAL '1ms',"+
-		" $7, $8, $9) RETURNING num",
-		values: [msg.name, msg.trip || '', msg.email || '',
-			msg.body, msg.op || null, msg.time, ip,
-			msg.image ? msg.image.id : null,
-			msg.image ? msg.imgnm : null]
-	});
-	query.on('row', function (row) {
-		callback(null, row.num);
-	});
-	query.on('error', function (err) {
-		callback(err, null);
-	});
-}
-
-exports.update_post = function(db, num, body, callback) {
-	var query = db.query({
-		name: 'update post',
-		text: "UPDATE " + config.DB_POST_TABLE +
-		" SET body = $1 WHERE num = $2",
-		values: [body, num]
-	});
-	var done = false;
-	query.on('error', function (err) {
-		done = true;
-		callback(false);
-	});
-	query.on('end', function () {
-		if (!done)
-			callback(true);
-	});
-}
-
-exports.get_posts = function(db, get_threads, callback) {
-	var postsSQL = fs.readFileSync('db/get_posts.sql', 'UTF-8');
-	var vals = {DB_POST_TABLE: config.DB_POST_TABLE,
-		DB_IMAGE_TABLE: config.DB_IMAGE_TABLE};
-	if (!get_threads)
-		vals.posts_only = true;
-
-	var query = db.query(Template(postsSQL).expand(vals));
-	var images = {};
-	query.on('row', function (r) {
-		var post = {num: r.num, name: r.name, trip: r.trip,
-			email: r.email, body: r.body, time: r.post_time};
-		if (r.parent)
-			post.op = r.parent;
-		var image_id = r.id;
-		if (image_id) {
-			var image = images[image_id];
-			if (!image) {
-				image = {id: image_id, MD5: r.md5,
-					size: r.filesize, ext: r.ext,
-					dims: dims_array(r), time: r.image_time
-				};
-				images[image_id] = image;
-			}
-			post.image = image;
-			post.imgnm = r.image_filename;
+redis.RedisClient.prototype.wrap = function (f) {
+	return (function (e) {
+		if (!e) {
+			var args = [];
+			for (var i = 1; i < arguments.length; i++)
+				args.push(arguments[i]);
+			f.apply(this, args);
 		}
-		callback(null, post);
-	});
-	query.on('error', function (error) {
-		callback(error, null);
-	});
-	query.on('end', function () {
-		callback(null, null);
-	});
+		else
+			this.failure(e);
+	}).bind(this);
 };
 
-function create_table(db, table, sql_file, done) {
-	console.log("Creating " + table + "...");
-	var sql = fs.readFileSync(sql_file, 'UTF-8');
-	var query = db.query(Template(sql).expand(config));
-	query.on('end', done);
+redis.RedisClient.prototype.success = function () {
+	var args = [null];
+	for (var i = 0; i < arguments.length; i++)
+		args.push(arguments[i]);
+	this._callback.apply(this, args);
+	this.quit();
+};
+
+redis.RedisClient.prototype.failure = function (e) {
+	if (!this.failed) {
+		this.failed = true;
+		this._callback(e);
+		this.quit();
+	}
+};
+
+function redis_client(callback) {
+	var r = redis.createClient();
+	r.on('error', callback);
+	r._callback = callback;
+	return r;
 }
 
-exports.check_tables = function (done) {
-	var post = config.DB_POST_TABLE, image = config.DB_IMAGE_TABLE;
-	var db = new pg.Client(config.DB_CONFIG);
-	db.connect();
-	flow.exec(function () {
-		db.query("SELECT relname FROM pg_class " +
-			"WHERE relname IN ($1, $2)", [post, image], this);
-	}, function (err, exist) {
-		if (err)
-			throw(err);
-		exist = exist.rows.map(function (row) { return row.relname; });
-		if (exist.indexOf(image) < 0)
-			create_table(db, image, 'db/image_table.sql', this);
+function is_empty(obj) {
+	if (!obj)
+		return false;
+	for (var key in obj)
+		if (obj.hasOwnProperty(key))
+			return false;
+	return true;
+}
+
+function just_keys(src, keys) {
+	var obj = {};
+	for (var i = 0; i < keys.length; i++)
+		obj[keys[i]] = src[keys[i]];
+	return obj;
+}
+
+function bump_thread(r, num, callback) {
+	var key = 'tag:' + BOARD_TAG;
+	r.incr(key + ':bumpctr', r.wrap(function (score) {
+		r.zadd(key + ':threads', score, num, r.wrap(callback));
+	}));
+}
+
+function push_post(r, post, num) {
+	r.rpush('post:' + post.op + ':replies', num, r.wrap(function () {
+		if (post.email != 'sage')
+			bump_thread(r, post.op, r.success.bind(r, num));
 		else
-			this(exist);
-	}, function (exist) {
-		if (exist.indexOf(post) < 0)
-			create_table(db, post, 'db/post_table.sql', this);
-		else
-			this();
-	}, function () {
-		db.end();
-		done();
-	});
+			r.success(num);
+	}));
+}
+
+exports.insert_post = function(msg, body, ip, callback) {
+	var r = redis_client(callback);
+	/* Multi isn't needed here, yay. */
+	r.incr('post:ctr', r.wrap(function (num) {
+		var view = {time: msg.time, ip: ip};
+		if (msg.name)
+			view.name = msg.name;
+		if (msg.trip)
+			view.trip = msg.trip;
+		if (msg.email)
+			view.email = msg.email;
+		if (msg.op)
+			view.op = msg.op;
+		if (msg.image)
+			add_image_view(msg.image, view);
+		var key = 'post:' + num;
+		r.hmset(key, view, r.wrap(function () {
+			r.set(key + ':body', body, r.wrap(function () {
+				if (msg.op)
+					return push_post(r, msg, num);
+				bump_thread(r, num, r.success.bind(r, num));
+			}));
+		}));
+	}));
+};
+
+function add_image_view(image, dest) {
+	dest.imgMD5 = image.MD5;
+	dest.imgext = image.ext;
+	dest.imgsize = image.size;
+	dest.imgtime = image.time;
+}
+
+exports.add_image = function (post_num, image, callback) {
+	var key = 'post:' + post_num;
+	var r = redis_client(callback);
+	r.exists(key, r.wrap(function (exists) {
+		if (!exists)
+			r.failure("Post does not exist.");
+		else {
+			var view = {};
+			add_image_view(image, view);
+			r.hmset(key, view, r.wrap(r.success.bind(r)));
+		}
+	}));
+};
+
+exports.append_post = function(num, tail, callback) {
+	var key = 'post:' + num;
+	var r = redis_client(callback);
+	r.append(key + ':body', tail, r.wrap(function (new_len) {
+		callback(null);
+		/* If the post doesn't exist, delete this instead */
+		r.exists(key, function (err, exists) {
+			if (!err && !exists)
+				r.del(key + ':body');
+			r.quit();
+		});
+	}));
+};
+
+exports.finish_post = function(num, callback) {
+	var key = 'post:' + num;
+	var r = redis_client(callback);
+	r.get(key + ':body', r.wrap(function (body) {
+		r.hmset(key, 'body', body, r.wrap(function () {
+			r.del(key + ':body', r.wrap(function () {
+				r.success();
+			}));
+		}));
+	}));
+};
+
+var Reader = function () {
+	events.EventEmitter.call(this);
+	this.r = redis_client(this.emit.bind(this, 'error'));
+};
+
+util.inherits(Reader, events.EventEmitter);
+exports.Reader = Reader;
+
+Reader.prototype.get_tag = function (tag_name) {
+	var tag_key = 'tag:' + tag_name.length + ':' + tag_name;
+	this.r.zrevrange(tag_key + ':threads', 0, -1,
+			this.r.wrap(this._get_each_thread.bind(this, 0)));
+};
+
+Reader.prototype._get_each_thread = function (ix, nums) {
+	if (ix >= nums.length) {
+		this.emit('end');
+		this.r.quit();
+		delete this.on_thread_end;
+		return;
+	}
+	this.on_thread_end = this._get_each_thread.bind(this, ix + 1, nums);
+	this.get_thread(nums[ix]);
+};
+
+Reader.prototype.get_thread = function (op) {
+	var key = 'post:' + op;
+	var self = this;
+	this.r.hgetall(key, this.r.wrap(function (pre_post) {
+		if (is_empty(pre_post)) {
+			if (self.on_thread_end)
+				self.on_thread_end();
+			else {
+				self.emit('end');
+				self.r.quit();
+			}
+			return;
+		}
+		pre_post.num = op;
+		self._with_body(key, pre_post, function (post) {
+			self.emit('post', post);
+			self.r.lrange(key + ':replies', 0, -1,
+					self.r.wrap(self._get_each_reply.bind(self, 0)));
+		});
+	}));
+};
+
+Reader.prototype._get_each_reply = function (ix, nums) {
+	if (!nums || ix >= nums.length) {
+		if (this.on_thread_end)
+			this.on_thread_end();
+		else {
+			this.emit('end');
+			this.r.quit();
+		}
+		return;
+	}
+	var num = nums[ix];
+	var key = 'post:' + num;
+	var next_please = this._get_each_reply.bind(this, ix + 1, nums);
+	var self = this;
+	this.r.hgetall(key, this.r.wrap(function (pre_post) {
+		if (is_empty(pre_post))
+			return next_please();
+		pre_post.num = num;
+		self._with_body(key, pre_post, function (post) {
+			self.emit('post', post);
+			next_please();
+		});
+	}));
+};
+
+Reader.prototype._with_body = function (key, post, callback) {
+	if (post.body !== undefined)
+		callback(post);
+	else
+		this.r.get(key + ':body', this.r.wrap(function (body) {
+			if (body !== null) {
+				post.body = body;
+				post.editing = true;
+				callback(post);
+				return;
+			}
+			// Race condition between finishing posts
+			this.r.hget(key, 'body', this.r.wrap(function (body) {
+				post.body = body;
+				callback(post);
+			}));
+		}));
 };
