@@ -202,7 +202,7 @@ function render_thread(req, resp, num) {
 
 function on_client (socket, retry) {
 	if (socket.connection)
-		init_client(socket);
+		db.connect(init_client.bind(this, socket));
 	else if (!retry || retry < 5000) {
 		/* Wait for socket.connection */
 		retry = retry ? retry*2 : 50;
@@ -214,12 +214,17 @@ function on_client (socket, retry) {
 		util.error("Dropping no-connection client (?!)");
 }
 
-function init_client (socket) {
+function init_client (socket, db_err, db_connection) {
+	if (db_err) {
+		console.error(db_err);
+		socket.connection.end();
+		return;
+	}
 	var ip = socket.connection.remoteAddress;
 	var id = socket.sessionId;
 	console.log(id + " has IP " + ip);
 	var client = {id: id, socket: socket, post: null, synced: false,
-			watching: null, ip: ip};
+			watching: null, ip: ip, db: db_connection};
 	clients[id] = client;
 	socket.on('message', function (data) {
 		var msg = null;
@@ -242,7 +247,7 @@ function init_client (socket) {
 	socket.on('disconnect', function () {
 		delete clients[id];
 		if (client.post)
-			finish_post(client.post, id);
+			finish_post(client.post, client);
 		client.synced = false;
 	});
 	socket.on('error', function (err) {
@@ -324,7 +329,7 @@ function allocate_post(msg, image, imgnm, client, callback) {
 		post.image = image;
 		post.imgnm = imgnm;
 	}
-	db.insert_post(post, client.ip, function (err, num) {
+	db.insert_post(client.db, post, client.ip, function (err, num) {
 		if (err) {
 			callback(err, null);
 			return;
@@ -411,12 +416,12 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 	return true;
 }
 
-function finish_post(post, owner_id) {
+function finish_post(post, client) {
 	/* TODO: Should we check client.uploading? */
-	broadcast([common.FINISH_POST, post.num], post, owner_id);
+	broadcast([common.FINISH_POST, post.num], post, client.id);
 	post.editing = false;
 	delete post.state;
-	db.update_post(post.num, post.body, function (ok) {
+	db.update_post(client.db, post.num, post.body, function (ok) {
 		if (!ok) {
 			/* TODO */
 			console.log("Couldn't save final post #" + post.num);
@@ -430,13 +435,13 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	var post = client.post;
 	if (!post || !post.editing)
 		return false;
-	finish_post(post, client.id);
+	finish_post(post, client);
 	client.post = null;
 	return true;
 }
 
-function populate_threads(thread_map, callback) {
-	db.get_posts(false, function (err, post) {
+function populate_threads(conn, thread_map, callback) {
+	db.get_posts(conn, false, function (err, post) {
 		if (err) throw err;
 		if (post) {
 			posts[post.num] = post;
@@ -461,7 +466,9 @@ function populate_threads(thread_map, callback) {
 
 function load_threads(callback) {
 	var thread_map = {};
-	db.get_posts(true, function (err, post) {
+	db.connect(function (err, conn) {
+		if (err) throw err;
+	db.get_posts(conn, true, function (err, post) {
 		if (err) throw err;
 		if (post) {
 			var thread = {op: post, replies: [],
@@ -471,7 +478,8 @@ function load_threads(callback) {
 			thread_map[post.num] = thread;
 		}
 		else
-			populate_threads(thread_map, callback);
+			populate_threads(conn, thread_map, callback);
+	});
 	});
 }
 

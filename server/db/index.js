@@ -1,20 +1,13 @@
 var config = require('../config'),
     flow = require('flow'),
     fs = require('fs'),
-    postgres = require('../../../node-postgres/lib'),
+    pg = require('pg'),
     Template = require('../lib/json-template').Template,
     util = require('util');
 
-var db = new postgres.Client(config.DB_CONFIG);
-db.connect();
-db.on('error', function (err) {
-	if (err.code == 23505)
-		return;
-	console.log(err);
-	process.exit(1);
-});
+exports.connect = pg.connect.bind(pg, config.DB_CONFIG);
 
-exports.insert_image = function (image, callback) {
+exports.insert_image = function (db, image, callback) {
 	var dims = image.dims;
 	var values = [image.time, image.MD5, image.size,
 			image.ext].concat(image.dims);
@@ -28,7 +21,7 @@ exports.insert_image = function (image, callback) {
 		values: values
 	});
 	query.on('row', function (row) {
-		callback(null, row.fields[0]);
+		callback(null, row.id);
 	});
 	query.on('error', function (err) {
 		if (err.code == 23505) /* UNIQUE constraint */
@@ -38,7 +31,7 @@ exports.insert_image = function (image, callback) {
 	});
 };
 
-exports.append_image = function (post_num, id, imgnm, callback) {
+exports.append_image = function (db, post_num, id, imgnm, callback) {
 	var query = db.query({
 		name: 'append image',
 		text: "UPDATE " + config.DB_POST_TABLE +
@@ -49,20 +42,25 @@ exports.append_image = function (post_num, id, imgnm, callback) {
 	query.on('end', function () { callback(null); });
 };
 
-exports.check_duplicate_image = function (MD5, callback) {
+function dims_array(f) {
+	/* Stupid, stupid, stupid! */
+	return [f.width, f.height, f.thumb_width, f.thumb_height,
+			f.pinky_width, f.pinky_height];
+};
+
+exports.check_duplicate_image = function (db, MD5, callback) {
 	var query = db.query({
 		name: 'lookup image by md5',
 		text: "SELECT id, filesize, ext, width, height, " +
 		"thumb_width, thumb_height, pinky_width, pinky_height, " +
-		"EXTRACT(epoch FROM created) * 1000 FROM " +
+		"EXTRACT(epoch FROM created) * 1000 AS time FROM " +
 		config.DB_IMAGE_TABLE + " WHERE md5 = $1",
 		values: [MD5]
 	});
 	var done = false;
-	query.on('row', function (row) {
-		var f = row.fields;
-		var found = {id: f[0], MD5: MD5, size: f[1], ext: f[2],
-				dims: f.slice(3, 9), time: f[9]};
+	query.on('row', function (r) {
+		var found = {id: r.id, MD5: MD5, size: r.filesize, ext: r.ext,
+				dims: dims_array(r), time: r.time};
 		done = true;
 		callback(null, found);
 	});
@@ -75,7 +73,7 @@ exports.check_duplicate_image = function (MD5, callback) {
 	});
 };
 
-exports.update_thumbnail_dimensions = function (id, pinky, w, h, callback) {
+exports.update_thumbnail_dimensions = function (db, id, pinky, w, h, callback) {
 	var thumb = pinky ? 'pinky' : 'thumb';
 	var query = db.query({
 		name: "update " + thumb + " dimensions",
@@ -88,7 +86,7 @@ exports.update_thumbnail_dimensions = function (id, pinky, w, h, callback) {
 	query.on('end', function () { callback(); });
 };
 
-exports.insert_post = function(msg, ip, callback) {
+exports.insert_post = function(db, msg, ip, callback) {
 	var query = db.query({
 		name: 'insert post',
 		text: "INSERT INTO " + config.DB_POST_TABLE +
@@ -103,14 +101,14 @@ exports.insert_post = function(msg, ip, callback) {
 			msg.image ? msg.imgnm : null]
 	});
 	query.on('row', function (row) {
-		callback(null, row.fields[0]);
+		callback(null, row.num);
 	});
 	query.on('error', function (err) {
 		callback(err, null);
 	});
 }
 
-exports.update_post = function(num, body, callback) {
+exports.update_post = function(db, num, body, callback) {
 	var query = db.query({
 		name: 'update post',
 		text: "UPDATE " + config.DB_POST_TABLE +
@@ -128,10 +126,8 @@ exports.update_post = function(num, body, callback) {
 	});
 }
 
-var postsSQL;
-exports.get_posts = function(get_threads, callback) {
-	if (!postsSQL)
-		postsSQL = fs.readFileSync('db/get_posts.sql', 'UTF-8');
+exports.get_posts = function(db, get_threads, callback) {
+	var postsSQL = fs.readFileSync('db/get_posts.sql', 'UTF-8');
 	var vals = {DB_POST_TABLE: config.DB_POST_TABLE,
 		DB_IMAGE_TABLE: config.DB_IMAGE_TABLE};
 	if (!get_threads)
@@ -139,24 +135,23 @@ exports.get_posts = function(get_threads, callback) {
 
 	var query = db.query(Template(postsSQL).expand(vals));
 	var images = {};
-	query.on('row', function (row) {
-		var f = row.fields;
-		var post = {num: f[0], name: f[1], trip: f[2], email: f[3],
-				body: f[4], time: f[6]};
-		if (f[5])
-			post.op = f[5];
-		var image_id = f[7];
+	query.on('row', function (r) {
+		var post = {num: r.num, name: r.name, trip: r.trip,
+			email: r.email, body: r.body, time: r.post_time};
+		if (r.parent)
+			post.op = r.parent;
+		var image_id = r.id;
 		if (image_id) {
 			var image = images[image_id];
 			if (!image) {
-				image = {id: image_id, MD5: f[8],
-					size: f[9], ext: f[10],
-					dims: f.slice(11, 17), time: f[18]
+				image = {id: image_id, MD5: r.md5,
+					size: r.filesize, ext: r.ext,
+					dims: dims_array(r), time: r.image_time
 				};
 				images[image_id] = image;
 			}
 			post.image = image;
-			post.imgnm = f[17];
+			post.imgnm = r.image_filename;
 		}
 		callback(null, post);
 	});
@@ -168,7 +163,7 @@ exports.get_posts = function(get_threads, callback) {
 	});
 };
 
-function create_table(table, sql_file, done) {
+function create_table(db, table, sql_file, done) {
 	console.log("Creating " + table + "...");
 	var sql = fs.readFileSync(sql_file, 'UTF-8');
 	var query = db.query(Template(sql).expand(config));
@@ -177,28 +172,26 @@ function create_table(table, sql_file, done) {
 
 exports.check_tables = function (done) {
 	var post = config.DB_POST_TABLE, image = config.DB_IMAGE_TABLE;
-	var exist = [];
-	var query = db.query({
-		text: "SELECT relname FROM pg_class WHERE relname IN ($1, $2)",
-		values: [post, image]
-	});
-	query.on('row', function (row) {
-		exist.push(row.fields[0]);
-	});
+	var db = new pg.Client(config.DB_CONFIG);
+	db.connect();
 	flow.exec(function () {
-		query.on('end', this);
-	}, function () {
+		db.query("SELECT relname FROM pg_class " +
+			"WHERE relname IN ($1, $2)", [post, image], this);
+	}, function (err, exist) {
+		if (err)
+			throw(err);
+		exist = exist.rows.map(function (row) { return row.relname; });
 		if (exist.indexOf(image) < 0)
-			create_table(image, 'db/image_table.sql', this);
+			create_table(db, image, 'db/image_table.sql', this);
+		else
+			this(exist);
+	}, function (exist) {
+		if (exist.indexOf(post) < 0)
+			create_table(db, post, 'db/post_table.sql', this);
 		else
 			this();
 	}, function () {
-		if (exist.indexOf(post) < 0)
-			create_table(post, 'db/post_table.sql', done);
-		else
-			done();
-	});
-	query.on('error', function (err) {
-		util.error(err);
+		db.end();
+		done();
 	});
 };

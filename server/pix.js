@@ -131,7 +131,7 @@ IU.process = function () {
 		self.MD5_image(this);
 	}, function (MD5) {
 		image.MD5 = MD5;
-		db.check_duplicate_image(MD5, this);
+		db.check_duplicate_image(self.client.db, MD5, this);
 	}, function (err, found) {
 		if (err)
 			return self.failure('Duplicate image check failed.');
@@ -178,7 +178,7 @@ IU.process = function () {
 				"Couldn't publish thumbnail.", this);
 	}, function () {
 		image.thumb_path = self.nail;
-		db.insert_image(image, this);
+		db.insert_image(self.client.db, image, this);
 	}, function (err, id) {
 		if (err)
 			return upload_failure("Couldn't add image to DB.");
@@ -211,8 +211,8 @@ IU.adapt_existing = function () {
 		image.dims[index] = w;
 		image.dims[index + 1] = h;
 		self.status('Publishing...');
-		db.update_thumbnail_dimensions(image.id, image.pinky, w, h,
-				this);
+		db.update_thumbnail_dimensions(self.client.db, image.id,
+				image.pinky, w, h, this);
 	}, function (err) {
 		if (err)
 			return self.failure("Secondary thumbnail failure.");
@@ -307,7 +307,8 @@ IU.publish = function () {
 	if (this.client.post) {
 		var post = this.client.post;
 		/* Text beat us here, discard alloc (if any) */
-		db.append_image(post.num, image.id, imgnm, function (err) {
+		db.append_image(self.client.db, post.num, image.id, imgnm,
+					function (err) {
 			if (err)
 				return self.failure("Publishing failure.");
 			var view = exports.get_image_view(image, imgnm,
