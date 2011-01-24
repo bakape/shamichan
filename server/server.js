@@ -478,7 +478,7 @@ function load_threads(callback) {
 function start_server() {
 	server.listen(config.PORT);
 	var listener = io.listen(server, {
-		transports: ['websocket', 'server-events', 'htmlfile',
+		transports: ['websocket', 'jsonp-polling', 'htmlfile',
 			'xhr-multipart', 'xhr-polling']
 	});
 	listener.on('connection', on_client);
