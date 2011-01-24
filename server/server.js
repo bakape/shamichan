@@ -9,20 +9,14 @@ var common = require('./common'),
 	tripcode = require('./tripcode'),
 	util = require('util');
 
-var threads = [];
-var posts = {};
 var clients = {};
 var dispatcher = {};
-
-var syncNumber = 0;
-var backlog = [];
-var backlogLastDropped = 0;
 
 function multisend(client, msgs) {
 	client.socket.send(JSON.stringify(msgs));
 }
 
-function broadcast(msg, post, origin) {
+function broadcast(msg, origin) {
 	var thread_num = post.op || post.num;
 	++syncNumber;
 	msg = JSON.stringify(msg);
@@ -114,8 +108,26 @@ var oneeSama = new common.OneeSama(function (num) {
 oneeSama.image_view = pix.get_image_view;
 oneeSama.dirs = {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL};
 
-function write_thread_html(thread, response, full_thread) {
-	oneeSama.full = full_thread;
+function write_thread_html(reader, response, full_thread, callback) {
+
+	reader.on('thread', function (op_post) {
+		oneeSama.full = full_thread;
+		var first = oneeSama.monomono(op_post);
+		var ending = first.pop();
+		response.write(first.join(''));
+		function on_end () {
+			reader.unbind('endthread', on_end);
+			response.write(ending + '<hr>\n');
+			callback();
+		}
+		reader.on('endthread', on_end);
+	});
+	reader.on('post', function (post) {
+		oneeSama.full = full_thread;
+		response.write(oneeSama.mono(post));
+	});
+
+	/*
 	var first = oneeSama.monomono(thread.op);
 	var ending = first.pop();
 	response.write(first.join(''));
@@ -134,6 +146,7 @@ function write_thread_html(thread, response, full_thread) {
 	for (var i = 0; i < replies.length; i++)
 		response.write(oneeSama.mono(replies[i]));
 	response.write(ending + '<hr>\n');
+	*/
 }
 
 var indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
@@ -182,21 +195,23 @@ function render_index(req, resp) {
 }
 
 function render_thread(req, resp, num) {
-	var post = posts[parseInt(num)];
-	if (!post)
-		return false;
-	if (post.op) {
-		resp.writeHead(302, {Location: post.op + '#' + post.num});
+	var reader = new db.Reader();
+	reader.get_thread(parseInt(num));
+	reader.on('redirect', function (op) {
+		resp.writeHead(302, {Location: op + '#' + num});
 		resp.end();
-		return true;
-	}
-	resp.writeHead(200, httpHeaders);
-	resp.write(indexTmpl[0]);
-	write_thread_html(post.thread, resp, true);
-	resp.write('[<a href=".">Return</a>]');
-	resp.write(indexTmpl[1]);
-	resp.write(syncNumber.toString());
-	resp.end(indexTmpl[2]);
+	});
+	reader.on('begin', function () {
+		resp.writeHead(200, httpHeaders);
+		resp.write(indexTmpl[0]);
+	});
+	write_thread_html(reader, resp, true);
+	reader.on('end', function () {
+		resp.write('[<a href=".">Return</a>]');
+		resp.write(indexTmpl[1]);
+		resp.write(syncNumber.toString());
+		resp.end(indexTmpl[2]);
+	});
 	return true;
 }
 
@@ -239,20 +254,24 @@ function init_client (socket, db_err, db_connection) {
 			type = msg.shift();
 		var func = dispatcher[type];
 		if (!func || !func(msg, client)) {
-			console.log("Got invalid message " + data);
-			multisend(client, [[common.INVALID]]);
-			client.synced = false;
+			console.error("Got invalid message " + data);
+			bad_client(client, "Bad protocol.");
 		}
 	});
 	socket.on('disconnect', function () {
 		delete clients[id];
-		if (client.post)
-			finish_post(client.post, client);
+		finish_post_by(client);
 		client.synced = false;
 	});
 	socket.on('error', function (err) {
 		console.log(err);
 	});
+}
+
+function bad_client(client, msg) {
+	console.error('Bad ' + client.ip + ': ' + msg);
+	multisend(client, [[common.INVALID, msg]]);
+	client.synced = false;
 }
 
 function valid_links(frag, state) {
@@ -299,15 +318,14 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 function allocate_post(msg, image, imgnm, client, callback) {
 	if (!msg || typeof msg != 'object')
 		return false;
-	var post = {time: new Date().getTime(), editing: true};
+	var post = {time: new Date().getTime()};
+	var body = '';
 	if (msg.frag !== undefined) {
 		if (typeof msg.frag != 'string' || msg.frag.match(/^\s*$/g)
 				|| msg.frag.length > common.MAX_POST_CHARS)
 			return false;
-		post.body = msg.frag;
+		body = msg.frag;
 	}
-	else
-		post.body = '';
 	if (typeof msg.op == 'number' && posts[msg.op] && !posts[msg.op].op)
 		post.op = msg.op;
 	if (client.watching && client.watching != post.op)
@@ -329,7 +347,8 @@ function allocate_post(msg, image, imgnm, client, callback) {
 		post.image = image;
 		post.imgnm = imgnm;
 	}
-	db.insert_post(client.db, post, client.ip, function (err, num) {
+	/* XXX: What about the parse state?! */
+	db.insert_post(post, body, client.ip, function (err, num) {
 		if (err) {
 			callback(err, null);
 			return;
@@ -359,12 +378,13 @@ function allocation_ok(post, client, callback) {
 		/* Race condition... discard this */
 		return callback('Already have a post.', null);
 	}
-	client.post = post;
-	posts[post.num] = post;
+	client.post = post.num;
+	//posts[post.num] = post; // XXX
 	post.state = [0, 0];
 	post.links = valid_links(post.body, post.state);
+
 	var view = get_post_view(post);
-	broadcast([common.INSERT_POST, view], view, client.id);
+	broadcast([common.INSERT_POST, view], client.id);
 	callback(null, view);
 	if (!post.op) {
 		/* New thread */
@@ -393,94 +413,57 @@ function allocation_ok(post, client, callback) {
 
 function announce_image(info, client) {
 	var post = client.post;
-	broadcast([common.INSERT_IMAGE, post.num, info], post, client.id);
+	broadcast([common.INSERT_IMAGE, post.num, info], client.id);
 }
 
 dispatcher[common.UPDATE_POST] = function (frag, client) {
 	if (!frag || frag.constructor != String)
 		return false;
 	var post = client.post;
-	if (!post || !post.editing)
+	if (!post)
 		return false;
-	if (post.body.length + frag.length > common.MAX_POST_CHARS)
+	var limit = common.MAX_POST_CHARS;
+	if (frag.length > limit)
 		return false;
 	/* imporant: broadcast prior state */
+	client.db.append_post(post, client.replying, frag, limit,
+			function (err) {
+		if (err)
+			return bad_client(client, "Couldn't add text.");
+		/* Okay, client should just cache the post */
+	});
+	/*
 	var msg = [common.UPDATE_POST, post.num, frag].concat(post.state);
 	var links = valid_links(frag, post.state);
 	if (!isEmpty(links))
 		msg.push({links: links});
-	broadcast(msg, post, client.id);
+	broadcast(msg, client.id);
 	post.body += frag;
 	for (var k in links)
 		post.links[k] = links[k];
+	*/
 	return true;
 }
 
-function finish_post(post, client) {
+function finish_post_by(client) {
 	/* TODO: Should we check client.uploading? */
-	broadcast([common.FINISH_POST, post.num], post, client.id);
-	post.editing = false;
-	delete post.state;
-	db.update_post(client.db, post.num, post.body, function (ok) {
-		if (!ok) {
-			/* TODO */
-			console.log("Couldn't save final post #" + post.num);
-		}
+	if (!client.post)
+		return false;
+	db.finish_post(client.post, client.replying, function (err) {
+		if (err)
+			return bad_client(client, err);
+		broadcast([common.FINISH_POST, post_id], client.id);
 	});
+	delete client.post;
+	delete client.replying;
+	client.editing = false;
+	return true;
 }
 
 dispatcher[common.FINISH_POST] = function (msg, client) {
 	if (msg.length)
 		return false;
-	var post = client.post;
-	if (!post || !post.editing)
-		return false;
-	finish_post(post, client);
-	client.post = null;
-	return true;
-}
-
-function populate_threads(conn, thread_map, callback) {
-	db.get_posts(conn, false, function (err, post) {
-		if (err) throw err;
-		if (post) {
-			posts[post.num] = post;
-			var thread = thread_map[post.op];
-			thread.replies.push(post);
-			if (post.image)
-				thread.image_count++;
-			if (post.email != 'sage')
-				thread.last_bump = post.num;
-		}
-		else {
-			for (var num in thread_map)
-				threads.push(thread_map[num]);
-			/* Should really insert into correct spot */
-			threads.sort(function (a, b) {
-				return b.last_bump - a.last_bump;
-			});
-			callback();
-		}
-	});
-}
-
-function load_threads(callback) {
-	var thread_map = {};
-	db.connect(function (err, conn) {
-		if (err) throw err;
-	db.get_posts(conn, true, function (err, post) {
-		if (err) throw err;
-		if (post) {
-			var thread = {op: post, replies: [],
-					image_count: 0, last_bump: post.num};
-			post.thread = thread;
-			posts[post.num] = post;
-			thread_map[post.num] = thread;
-		}
-		else
-			populate_threads(conn, thread_map, callback);
-	});
-	});
+	return finish_post_by(client);
 }
 
 function start_server() {
@@ -495,7 +478,4 @@ function start_server() {
 	});
 }
 
-db.check_tables(function () {
-	console.log("Database OK.");
-	load_threads(start_server);
-});
+start_server();

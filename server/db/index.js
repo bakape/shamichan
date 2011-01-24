@@ -3,43 +3,26 @@ var config = require('../config'),
     redis = require('redis'),
     util = require('util');
 
-var BOARD_TAG = '3:moe';
-
-redis.RedisClient.prototype.wrap = function (f) {
-	return (function (e) {
-		if (!e) {
-			var args = [];
-			for (var i = 1; i < arguments.length; i++)
-				args.push(arguments[i]);
-			f.apply(this, args);
-		}
-		else
-			this.failure(e);
-	}).bind(this);
-};
-
-redis.RedisClient.prototype.success = function () {
-	var args = [null];
-	for (var i = 0; i < arguments.length; i++)
-		args.push(arguments[i]);
-	this._callback.apply(this, args);
-	this.quit();
-};
-
-redis.RedisClient.prototype.failure = function (e) {
-	if (!this.failed) {
-		this.failed = true;
-		this._callback(e);
-		this.quit();
-	}
-};
-
-function redis_client(callback) {
-	var r = redis.createClient();
-	r.on('error', callback);
-	r._callback = callback;
-	return r;
+function Yakusoku() {
+	events.EventEmitter.call(this);
 }
+
+util.inherits(Yakusoku, events.EventEmitter);
+exports.Yakusoku = Yakusoku;
+var Y = Yakusoku.prototype;
+
+Y.connect = function () {
+	if (!this.r) {
+		this.r = redis.createClient();
+		this.r.on('error', (function (err) {
+			console.error(err);
+			delete this.r;
+		}).bind(this));
+		/* TEMP */
+		this.tag = '3:moe';
+	}
+	return this.r;
+};
 
 function is_empty(obj) {
 	if (!obj)
@@ -50,33 +33,13 @@ function is_empty(obj) {
 	return true;
 }
 
-function just_keys(src, keys) {
-	var obj = {};
-	for (var i = 0; i < keys.length; i++)
-		obj[keys[i]] = src[keys[i]];
-	return obj;
-}
-
-function bump_thread(r, num, callback) {
-	var key = 'tag:' + BOARD_TAG;
-	r.incr(key + ':bumpctr', r.wrap(function (score) {
-		r.zadd(key + ':threads', score, num, r.wrap(callback));
-	}));
-}
-
-function push_post(r, post, num) {
-	r.rpush('post:' + post.op + ':replies', num, r.wrap(function () {
-		if (post.email != 'sage')
-			bump_thread(r, post.op, r.success.bind(r, num));
-		else
-			r.success(num);
-	}));
-}
-
-exports.insert_post = function(msg, body, ip, callback) {
-	var r = redis_client(callback);
+Y.insert_post = function (msg, body, ip, callback) {
+	var r = this.connect();
+	var self = this;
 	/* Multi isn't needed here, yay. */
-	r.incr('post:ctr', r.wrap(function (num) {
+	r.incr('post:ctr', function (err, num) {
+		if (err)
+			return callback(err);
 		var view = {time: msg.time, ip: ip};
 		if (msg.name)
 			view.name = msg.name;
@@ -84,19 +47,68 @@ exports.insert_post = function(msg, body, ip, callback) {
 			view.trip = msg.trip;
 		if (msg.email)
 			view.email = msg.email;
-		if (msg.op)
-			view.op = msg.op;
 		if (msg.image)
 			add_image_view(msg.image, view);
-		var key = 'post:' + num;
-		r.hmset(key, view, r.wrap(function () {
-			r.set(key + ':body', body, r.wrap(function () {
-				if (msg.op)
-					return push_post(r, msg, num);
-				bump_thread(r, num, r.success.bind(r, num));
-			}));
-		}));
-	}));
+		if (msg.op) {
+			view.op = msg.op;
+			r.exists('thread:' + msg.op, function (err, exists) {
+				if (err)
+					callback(err);
+				else if (!exists)
+					callback('Thread does not exist.');
+				else
+					self._insert(num, view, body, callback);
+			});
+		}
+		else
+			self._insert(num, view, body, callback);
+	});
+};
+
+Y._insert = function (num, view, body, callback) {
+	var r = this.connect();
+	var key = (view.op ? 'post:' : 'thread:') + num;
+	var self = this;
+	r.hmset(key, view, function (err) {
+		if (err)
+			return callback(err);
+		r.set(key + ':body', body, function (err) {
+			if (err)
+				callback(err);
+			else if (view.op)
+				self.push_post(view.op, view.email != 'sage',
+						num, callback);
+			else
+				self.bump_thread(num, callback);
+		});
+	});
+};
+
+Y.push_post = function (op, bump, num, callback) {
+	var r = this.connect();
+	var self = this;
+	r.rpush('thread:' + op + ':posts', num, function (err) {
+		if (err)
+			callback(err);
+		else if (bump)
+			self.bump_thread(op, callback);
+		else
+			callback(null, num);
+	});
+};
+
+Y.bump_thread = function (num, callback) {
+	var r = this.connect();
+	var key = 'tag:' + this.tag;
+	r.incr(key + ':bumpctr', function (err, score) {
+		if (err)
+			return callback(err);
+		r.zadd(key + ':threads', score, num, function (err) {
+			if (err)
+				return callback(err);
+			callback(null, num);
+		});
+	});
 };
 
 function add_image_view(image, dest) {
@@ -106,133 +118,179 @@ function add_image_view(image, dest) {
 	dest.imgtime = image.time;
 }
 
-exports.add_image = function (post_num, image, callback) {
+Y.add_image = function (post_num, image, callback) {
+	var r = this.connect();
 	var key = 'post:' + post_num;
-	var r = redis_client(callback);
-	r.exists(key, r.wrap(function (exists) {
-		if (!exists)
-			r.failure("Post does not exist.");
+	r.exists(key, function (err, exists) {
+		if (err)
+			callback(err);
+		else if (!exists)
+			callback("Post does not exist.");
 		else {
 			var view = {};
 			add_image_view(image, view);
-			r.hmset(key, view, r.wrap(r.success.bind(r)));
+			r.hmset(key, view, callback);
 		}
-	}));
+	});
 };
 
-exports.append_post = function(num, tail, callback) {
-	var key = 'post:' + num;
-	var r = redis_client(callback);
-	r.append(key + ':body', tail, r.wrap(function (new_len) {
-		callback(null);
-		/* If the post doesn't exist, delete this instead */
-		r.exists(key, function (err, exists) {
-			if (!err && !exists)
-				r.del(key + ':body');
-			r.quit();
+Y.append_post = function (num, is_reply, tail, limit, callback) {
+	var r = this.connect();
+	var key = (is_reply ? 'post:' : 'thread:') + num + ':body';
+	/* Don't need to check .exists() thanks to client state */
+	r.append(key, tail, function (err, new_len) {
+		if (err)
+			callback(err);
+		else if (new_len > limit)
+			trim_post(r, key, limit, callback, 0);
+		else
+			callback(null, new_len);
+	});
+};
+
+function trim_post(r, key, limit, callback, tries) {
+	r.watch(key);
+	r.substr(key, 0, limit, function (err, body) {
+		if (err || tries > 5) {
+			console.error("Warning: Overlong post permitted");
+			return callback(err);
+		}
+		r.multi().set(key, body).exec(function (err) {
+			if (err)
+				trim_post(r, key, limit, callback, tries+1);
+			else
+				callback(null, limit);
 		});
-	}));
+	});
+}
+
+Y.finish_post = function (num, is_reply, callback) {
+	var r = this.connect();
+	var key = (is_reply ? 'post:' : 'thread:') + num;
+	/* Don't need to check .exists() thanks to client state */
+	r.get(key + ':body', function (err, body) {
+		if (err)
+			return callback(err);
+		r.hmset(key, 'body', body, function (err) {
+			if (err)
+				callback(err);
+			else
+				r.del(key + ':body', callback);
+		});
+	});
 };
 
-exports.finish_post = function(num, callback) {
-	var key = 'post:' + num;
-	var r = redis_client(callback);
-	r.get(key + ':body', r.wrap(function (body) {
-		r.hmset(key, 'body', body, r.wrap(function () {
-			r.del(key + ':body', r.wrap(function () {
-				r.success();
-			}));
-		}));
-	}));
+Y.get_tag = function () {
+	var r = this.connect();
+	var self = this;
+	r.zrevrange('tag:' + this.tag + ':threads', 0, -1, function (err, ns) {
+		if (err)
+			return self.emit('error', err);
+		self.emit('begin');
+		var reader = new Reader(self);
+		reader.on('error', self.emit.bind(self, 'error'));
+		reader.on('thread', self.emit.bind(self, 'thread'));
+		reader.on('post', self.emit.bind(self, 'post'));
+		self._get_each_thread(reader, 0, ns);
+	});
 };
 
-var Reader = function () {
+Y._get_each_thread = function (reader, ix, nums) {
+	if (!nums || ix >= nums.length) {
+		this.emit('end');
+		return;
+	}
+	var next_please = this._get_each_thread.bind(this, reader, ix+1, nums);
+	reader.once('end', next_please);
+	reader.once('nomatch', next_please);
+	reader.get_thread(nums[ix], false);
+};
+
+function Reader(yakusoku) {
 	events.EventEmitter.call(this);
-	this.r = redis_client(this.emit.bind(this, 'error'));
-};
+	this.y = yakusoku;
+}
 
 util.inherits(Reader, events.EventEmitter);
 exports.Reader = Reader;
 
-Reader.prototype.get_tag = function (tag_name) {
-	var tag_key = 'tag:' + tag_name.length + ':' + tag_name;
-	this.r.zrevrange(tag_key + ':threads', 0, -1,
-			this.r.wrap(this._get_each_thread.bind(this, 0)));
-};
-
-Reader.prototype._get_each_thread = function (ix, nums) {
-	if (ix >= nums.length) {
-		this.emit('end');
-		this.r.quit();
-		delete this.on_thread_end;
-		return;
-	}
-	this.on_thread_end = this._get_each_thread.bind(this, ix + 1, nums);
-	this.get_thread(nums[ix]);
-};
-
-Reader.prototype.get_thread = function (op) {
-	var key = 'post:' + op;
+Reader.prototype.get_thread = function (num, redirect_ok) {
+	var r = this.y.connect();
+	var key = 'thread:' + num;
 	var self = this;
-	this.r.hgetall(key, this.r.wrap(function (pre_post) {
+	r.hgetall(key, function (err, pre_post) {
+		if (err)
+			return self.emit('error', err);
 		if (is_empty(pre_post)) {
-			if (self.on_thread_end)
-				self.on_thread_end();
-			else {
-				self.emit('end');
-				self.r.quit();
-			}
+			if (!redirect_ok)
+				return self.emit('nomatch');
+			r.hget('post:' + num, 'op',
+						function (err, op) {
+				if (err)
+					self.emit('error', err);
+				else if (!op)
+					self.emit('nomatch');
+				else
+					self.emit('redirect', op);
+			});
 			return;
 		}
-		pre_post.num = op;
-		self._with_body(key, pre_post, function (post) {
-			self.emit('post', post);
-			self.r.lrange(key + ':replies', 0, -1,
-					self.r.wrap(self._get_each_reply.bind(self, 0)));
+		self.emit('begin');
+		pre_post.num = num;
+		with_body(r, key, pre_post, function (err, post) {
+			if (err)
+				return self.emit('error', err);
+			self.emit('thread', post);
+			r.lrange(key + ':posts', 0, -1, function (err, nums) {
+				if (err)
+					return self.emit('error', err);
+				self._get_each_reply(0, nums);
+			});
 		});
-	}));
+	});
 };
 
 Reader.prototype._get_each_reply = function (ix, nums) {
-	if (!nums || ix >= nums.length) {
-		if (this.on_thread_end)
-			this.on_thread_end();
-		else {
-			this.emit('end');
-			this.r.quit();
-		}
-		return;
-	}
+	if (!nums || ix >= nums.length)
+		return this.emit('end');
+	var r = this.y.connect();
 	var num = nums[ix];
 	var key = 'post:' + num;
 	var next_please = this._get_each_reply.bind(this, ix + 1, nums);
 	var self = this;
-	this.r.hgetall(key, this.r.wrap(function (pre_post) {
+	r.hgetall(key, function (err, pre_post) {
+		if (err)
+			return self.emit('error', err);
 		if (is_empty(pre_post))
 			return next_please();
 		pre_post.num = num;
-		self._with_body(key, pre_post, function (post) {
+		with_body(r, key, pre_post, function (err, post) {
+			if (err)
+				return self.emit('error', err);
 			self.emit('post', post);
 			next_please();
 		});
-	}));
+	});
 };
 
-Reader.prototype._with_body = function (key, post, callback) {
+function with_body(r, key, post, callback) {
 	if (post.body !== undefined)
-		callback(post);
+		callback(null, post);
 	else
-		this.r.get(key + ':body', this.r.wrap(function (body) {
+		r.get(key + ':body', function (err, body) {
+			if (err)
+				return callback(err);
 			if (body !== null) {
 				post.body = body;
 				post.editing = true;
-				callback(post);
-				return;
+				return callback(null, post);
 			}
 			// Race condition between finishing posts
-			this.r.hget(key, 'body', this.r.wrap(function (body) {
+			r.hget(key, 'body', function (err, body) {
+				if (err)
+					return callback(err);
 				post.body = body;
-				callback(post);
-			}));
-		}));
+				callback(null, post);
+			});
+		});
 };
