@@ -157,6 +157,21 @@ var server = http.createServer(function(req, resp) {
 	m = req.url.match(/^\/(\d+)$/);
 	if (m && render_thread(req, resp, m[1]))
 		return;
+	if (config.DEBUG) {
+		/* Highly insecure! Abunai! */
+		var path = '../www/' + req.url.replace(/\.\./g, '');
+		fs.readFile(path, function (err, buf) {
+			if (err) {
+				resp.writeHead(404, httpHeaders);
+				resp.end(notFoundHtml);
+			}
+			else {
+				resp.writeHead(200, {});
+				resp.end(buf);
+			}
+		});
+		return;
+	}
 	resp.writeHead(404, httpHeaders);
 	resp.end(notFoundHtml);
 });
