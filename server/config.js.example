@@ -1,7 +1,6 @@
 module.exports = {
 	TITLE: "Test",
 	PORT: 8000,
-	VERSION: "2",
 	DEBUG: true,
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
 
@@ -23,5 +22,25 @@ module.exports = {
 
 	MIXPANEL_TOKEN: '',
 };
+module.exports.get_version = function (callback) {
+	require('child_process').exec(
+			'git log -1 --format=%h common.js client.js',
+			function (err, stdout, stderr) {
+		if (err)
+			callback(err);
+		else
+			callback(null, stdout.trim());
+	});
+};
+
 if (process.argv[2] == '--show-config')
 	console.log(module.exports[process.argv[3]]);
+else if (process.argv[2] == '--version')
+	module.exports.get_version(function (err, version) {
+		if (err) {
+			console.error(err);
+			process.exit(1);
+		}
+		else
+			console.log(version);
+	});

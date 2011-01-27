@@ -127,10 +127,6 @@ function write_thread_html(reader, response, full_thread) {
 	});
 }
 
-var indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
-		{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
-var notFoundHtml = fs.readFileSync('../www/404.html');
-
 function image_status(status) {
 	multisend(this.client, [[common.IMAGE_STATUS, status]]);
 }
@@ -488,4 +484,14 @@ function start_server() {
 	});
 }
 
-start_server();
+var indexTmpl, notFoundHtml;
+
+config.get_version(function (err, version) {
+	if (err)
+		throw err;
+	config.VERSION = version;
+	indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
+		{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
+	notFoundHtml = fs.readFileSync('../www/404.html');
+	start_server();
+});

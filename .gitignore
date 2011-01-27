@@ -6,6 +6,6 @@
 server/builder
 server/config.js
 server/jsmin
-www/js/client-v*.js
+www/js/client-*.js
 www/src/*
 www/thumb/*
