@@ -108,45 +108,23 @@ var oneeSama = new common.OneeSama(function (num) {
 oneeSama.image_view = pix.get_image_view;
 oneeSama.dirs = {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL};
 
-function write_thread_html(reader, response, full_thread, callback) {
-
-	reader.on('thread', function (op_post) {
+function write_thread_html(reader, response, full_thread) {
+	reader.on('thread', function (op_post, omit, image_omit) {
 		oneeSama.full = full_thread;
 		var first = oneeSama.monomono(op_post);
-		var ending = first.pop();
+		first.pop();
 		response.write(first.join(''));
-		function on_end () {
-			reader.unbind('endthread', on_end);
-			response.write(ending + '<hr>\n');
-			callback();
-		}
-		reader.on('endthread', on_end);
+		if (omit)
+			response.write('\t<span class="omit">' +
+				common.abbrev_msg(omit, image_omit) +
+				'</span>\n');
 	});
-	reader.on('post', function (post) {
+	reader.on('post', function (post, has_next) {
 		oneeSama.full = full_thread;
 		response.write(oneeSama.mono(post));
+		if (!has_next)
+			response.write('</section><hr>\n');
 	});
-
-	/*
-	var first = oneeSama.monomono(thread.op);
-	var ending = first.pop();
-	response.write(first.join(''));
-	var replies = thread.replies;
-	var omitted = replies.length - config.ABBREVIATED_REPLIES;
-	if (!full_thread && omitted > 0) {
-		replies = replies.slice(omitted);
-		var images_omitted = thread.image_count;
-		for (var i = 0; i < replies.length; i++)
-			if (replies[i].image)
-				images_omitted--;
-		response.write('\t<span class="omit">' +
-				common.abbrev_msg(omitted, images_omitted) +
-				'</span>\n');
-	}
-	for (var i = 0; i < replies.length; i++)
-		response.write(oneeSama.mono(replies[i]));
-	response.write(ending + '<hr>\n');
-	*/
 }
 
 var indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
@@ -184,19 +162,35 @@ var server = http.createServer(function(req, resp) {
 });
 
 function render_index(req, resp) {
-	resp.writeHead(200, httpHeaders);
-	resp.write(indexTmpl[0]);
-	for (var i = 0; i < threads.length; i++)
-		write_thread_html(threads[i], resp, false);
-	resp.write(indexTmpl[1]);
-	resp.write(syncNumber.toString());
-	resp.end(indexTmpl[2]);
+	var yaku = new db.Yakusoku();
+	yaku.get_tag();
+	yaku.on('begin', function () {
+		resp.writeHead(200, httpHeaders);
+		resp.write(indexTmpl[0]);
+	});
+	write_thread_html(yaku, resp, false);
+	yaku.on('end', function () {
+		resp.write(indexTmpl[1]);
+		resp.write('0' /* XXX sync */);
+		resp.end(indexTmpl[2]);
+		yaku.disconnect();
+	});
+	yaku.on('error', function (err) {
+		console.error('index:', err);
+		resp.end();
+		yaku.disconnect();
+	});
 	return true;
 }
 
 function render_thread(req, resp, num) {
-	var reader = new db.Reader();
+	var yaku = new db.Yakusoku();
+	var reader = new db.Reader(yaku);
 	reader.get_thread(parseInt(num));
+	reader.on('nomatch', function () {
+		resp.writeHead(404, httpHeaders);
+		resp.end(notFoundHtml);
+	});
 	reader.on('redirect', function (op) {
 		resp.writeHead(302, {Location: op + '#' + num});
 		resp.end();
@@ -209,15 +203,21 @@ function render_thread(req, resp, num) {
 	reader.on('end', function () {
 		resp.write('[<a href=".">Return</a>]');
 		resp.write(indexTmpl[1]);
-		resp.write(syncNumber.toString());
+		resp.write('0' /* XXX sync */);
 		resp.end(indexTmpl[2]);
+		yaku.disconnect();
+	});
+	reader.on('error', function (err) {
+		console.error('thread '+num+':', err);
+		resp.end();
+		yaku.disconnect();
 	});
 	return true;
 }
 
 function on_client (socket, retry) {
 	if (socket.connection)
-		db.connect(init_client.bind(this, socket));
+		init_client(socket);
 	else if (!retry || retry < 5000) {
 		/* Wait for socket.connection */
 		retry = retry ? retry*2 : 50;
@@ -229,17 +229,12 @@ function on_client (socket, retry) {
 		util.error("Dropping no-connection client (?!)");
 }
 
-function init_client (socket, db_err, db_connection) {
-	if (db_err) {
-		console.error(db_err);
-		socket.connection.end();
-		return;
-	}
+function init_client (socket) {
 	var ip = socket.connection.remoteAddress;
 	var id = socket.sessionId;
 	console.log(id + " has IP " + ip);
 	var client = {id: id, socket: socket, post: null, synced: false,
-			watching: null, ip: ip, db: db_connection};
+			watching: null, ip: ip, db: new db.Yakusoku()};
 	clients[id] = client;
 	socket.on('message', function (data) {
 		var msg = null;
@@ -262,10 +257,10 @@ function init_client (socket, db_err, db_connection) {
 		delete clients[id];
 		finish_post_by(client);
 		client.synced = false;
+		client.db.quit();
 	});
-	socket.on('error', function (err) {
-		console.log(err);
-	});
+	socket.on('error', console.error.bind(console, 'socket:'));
+	client.db.on('error', console.error.bind(console, 'redis:'));
 }
 
 function bad_client(client, msg) {
@@ -348,7 +343,7 @@ function allocate_post(msg, image, imgnm, client, callback) {
 		post.imgnm = imgnm;
 	}
 	/* XXX: What about the parse state?! */
-	db.insert_post(post, body, client.ip, function (err, num) {
+	client.db.insert_post(post, body, client.ip, function (err, num) {
 		if (err) {
 			callback(err, null);
 			return;
@@ -449,7 +444,7 @@ function finish_post_by(client) {
 	/* TODO: Should we check client.uploading? */
 	if (!client.post)
 		return false;
-	db.finish_post(client.post, client.replying, function (err) {
+	client.db.finish_post(client.post, client.replying, function (err) {
 		if (err)
 			return bad_client(client, err);
 		broadcast([common.FINISH_POST, post_id], client.id);

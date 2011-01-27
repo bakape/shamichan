@@ -24,6 +24,11 @@ Y.connect = function () {
 	return this.r;
 };
 
+Y.disconnect = function () {
+	if (this.r)
+		this.r.quit();
+};
+
 function is_empty(obj) {
 	if (!obj)
 		return false;
@@ -267,7 +272,8 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 		with_body(r, key, pre_post, function (err, post) {
 			if (err)
 				return self.emit('error', err);
-			self.emit('post', post);
+			var has_next = ix + 1 < nums.length;
+			self.emit('post', post, has_next);
 			next_please();
 		});
 	});
