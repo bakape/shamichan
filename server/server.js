@@ -268,7 +268,7 @@ function init_client (socket) {
 		delete clients[id];
 		finish_post_by(client);
 		client.synced = false;
-		client.db.quit();
+		client.db.disconnect();
 	});
 	socket.on('error', console.error.bind(console, 'socket:'));
 	client.db.on('error', console.error.bind(console, 'redis:'));

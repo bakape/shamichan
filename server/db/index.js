@@ -42,76 +42,65 @@ Y.insert_post = function (msg, body, ip, callback) {
 	var r = this.connect();
 	var self = this;
 	/* Multi isn't needed here, yay. */
-	r.incr('post:ctr', function (err, num) {
+	if (msg.op) {
+		r.exists('thread:' + msg.op, function (err, exists) {
+			if (err)
+				callback(err);
+			else if (!exists)
+				callback('Thread does not exist.');
+			else
+				self._insert(msg, body, ip, callback);
+		});
+	}
+	else
+		self._insert(msg, body, ip, callback);
+};
+
+Y._insert = function (msg, body, ip, callback) {
+	var r = this.connect();
+	r.incr('tag:' + this.tag + ':ctr', function (err, num) {
 		if (err)
 			return callback(err);
 		var view = {time: msg.time, ip: ip};
+		var op = msg.op;
 		if (msg.name)
 			view.name = msg.name;
 		if (msg.trip)
 			view.trip = msg.trip;
 		if (msg.email)
 			view.email = msg.email;
+		if (op)
+			view.op = msg.op;
 		if (msg.image)
 			add_image_view(msg.image, view);
-		if (msg.op) {
-			view.op = msg.op;
-			r.exists('thread:' + msg.op, function (err, exists) {
-				if (err)
-					callback(err);
-				else if (!exists)
-					callback('Thread does not exist.');
-				else
-					self._insert(num, view, body, callback);
-			});
-		}
-		else
-			self._insert(num, view, body, callback);
-	});
-};
 
-Y._insert = function (num, view, body, callback) {
-	var r = this.connect();
-	var key = (view.op ? 'post:' : 'thread:') + num;
-	var self = this;
-	r.hmset(key, view, function (err) {
-		if (err)
-			return callback(err);
-		r.set(key + ':body', body, function (err) {
-			if (err)
-				callback(err);
-			else if (view.op)
-				self.push_post(view.op, view.email != 'sage',
-						num, callback);
-			else
-				self.bump_thread(num, callback);
-		});
-	});
-};
+		var key = (op ? 'post:' : 'thread:') + num;
+		var tag_key = 'tag:' + this.tag;
+		var bump = !op || view.email != 'sage';
+		var m = r.multi();
+		if (bump)
+			m.incr(tag_key + ':bumpctr');
+		m.hmset(key, view);
+		m.set(key + ':body', body);
+		if (op)
+			m.rpush('thread:' + op + ':posts', num);
 
-Y.push_post = function (op, bump, num, callback) {
-	var r = this.connect();
-	var self = this;
-	r.rpush('thread:' + op + ':posts', num, function (err) {
-		if (err)
-			callback(err);
-		else if (bump)
-			self.bump_thread(op, callback);
-		else
-			callback(null, num);
-	});
-};
+		view.body = body;
+		m.rpush('backlog', '+' + JSON.stringify(view));
+		delete view.body;
 
-Y.bump_thread = function (num, callback) {
-	var r = this.connect();
-	var key = 'tag:' + this.tag;
-	r.incr(key + ':bumpctr', function (err, score) {
-		if (err)
-			return callback(err);
-		r.zadd(key + ':threads', score, num, function (err) {
+		m.exec(function (err, results) {
 			if (err)
 				return callback(err);
-			callback(null, num);
+			else if (!bump)
+				return callback(null, num);
+			r.zadd(tag_key + ':threads', results[0], num,
+						function (err) {
+				if (err)
+					callback(err);
+				else
+					callback(null, num);
+			});
 		});
 	});
 };
