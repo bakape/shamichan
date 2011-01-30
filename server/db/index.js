@@ -225,9 +225,14 @@ Y._get_each_thread = function (reader, ix, nums) {
 		this.emit('end');
 		return;
 	}
-	var next_please = this._get_each_thread.bind(this, reader, ix+1, nums);
-	reader.once('end', next_please);
-	reader.once('nomatch', next_please);
+	var self = this;
+	var next_please = function () {
+		reader.removeListener('end', next_please);
+		reader.removeListener('nomatch', next_please);
+		self._get_each_thread(reader, ix+1, nums);
+	};
+	reader.on('end', next_please);
+	reader.on('nomatch', next_please);
 	reader.get_thread(nums[ix], false);
 };
 
