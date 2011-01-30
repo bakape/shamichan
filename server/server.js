@@ -66,7 +66,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
 	var sync = msg[0], watching = msg[1];
-	if (sync.constructor != Number || sync < 0 || isNaN(sync))
+	if (typeof sync != 'number' || sync < 0 || isNaN(sync))
 		return false;
 	if (watching) {
 		if (watching.constructor != Number)
@@ -348,35 +348,53 @@ function allocate_post(msg, image, imgnm, client, callback) {
 			return false;
 		body = msg.frag;
 	}
-	if (typeof msg.op == 'number' && posts[msg.op] && !posts[msg.op].op)
+	if (msg.op !== undefined) {
+		if (typeof msg.op != 'number')
+			return false;
 		post.op = msg.op;
-	if (client.watching && client.watching != post.op)
-		return false;
-	if (typeof msg.name != 'string')
-		return false;
-	var parsed = common.parse_name(msg.name);
-	post.name = parsed[0];
-	if (parsed[1] || parsed[2]) {
-		var trip = tripcode.hash(parsed[1], parsed[2]);
-		if (trip)
-			post.trip = trip;
 	}
-	if (typeof msg.email == 'string')
+	if (client.watching && post.op !== client.watching)
+		return false;
+	if (msg.name !== undefined) {
+		if (typeof msg.name != 'string')
+			return false;
+		var parsed = common.parse_name(msg.name);
+		post.name = parsed[0];
+		if (parsed[1] || parsed[2]) {
+			var trip = tripcode.hash(parsed[1], parsed[2]);
+			if (trip)
+				post.trip = trip;
+		}
+	}
+	if (msg.email !== undefined) {
+		if (typeof msg.email != 'string')
+			return false;
 		post.email = msg.email.trim().substr(0, 320);
-	if (post.email == 'noko')
-		delete post.email;
+		if (post.email == 'noko')
+			delete post.email;
+	}
 	if (image) {
 		post.image = image;
 		post.imgnm = imgnm;
 	}
 	/* XXX: What about the parse state?! */
 	client.db.insert_post(post, body, client.ip, function (err, num) {
-		if (err) {
-			callback(err, null);
-			return;
-		}
+		if (err)
+			return callback(err);
 		post.num = num;
-		allocation_ok(post, client, callback);
+		post.body = body;
+		if (client.post) {
+			/* Race condition... discard this */
+			return callback('Already have a post.');
+		}
+		client.post = post.num;
+		client.replying = !!post.op;
+		post.state = [0, 0];
+		post.links = valid_links(post.body, post.state);
+
+		var view = get_post_view(post);
+		/*broadcast([common.INSERT_POST, view], client.id);*/
+		callback(null, view);
 	});
 	return true;
 }
@@ -393,44 +411,6 @@ function get_post_view(post) {
 		view.image = pix.get_image_view(post.image, post.imgnm,
 				post.op);
 	return view;
-}
-
-function allocation_ok(post, client, callback) {
-	if (client.post) {
-		/* Race condition... discard this */
-		return callback('Already have a post.', null);
-	}
-	client.post = post.num;
-	//posts[post.num] = post; // XXX
-	post.state = [0, 0];
-	post.links = valid_links(post.body, post.state);
-
-	var view = get_post_view(post);
-	broadcast([common.INSERT_POST, view], client.id);
-	callback(null, view);
-	if (!post.op) {
-		/* New thread */
-		post.thread = {image_count: 0, replies: [],
-				last_bump: post.num, op: post};
-		threads.unshift(post.thread);
-	}
-	else {
-		var thread = posts[post.op].thread;
-		thread.replies.push(post);
-		if (post.image)
-			thread.image_count++;
- 		if (post.email != 'sage') {
-			thread.last_bump = post.num;
-			/* Bump thread */
-			for (var i = 0; i < threads.length; i++) {
-				if (threads[i] == thread) {
-					threads.splice(i, 1);
-					threads.unshift(thread);
-					break;
-				}
-			}
-		}
-	}
 }
 
 function announce_image(info, client) {
@@ -474,11 +454,11 @@ function finish_post_by(client) {
 	client.db.finish_post(client.post, client.replying, function (err) {
 		if (err)
 			return bad_client(client, err);
-		broadcast([common.FINISH_POST, post_id], client.id);
+		/*broadcast([common.FINISH_POST, post_id], client.id);*/
+		delete client.post;
+		delete client.replying;
+		client.editing = false;
 	});
-	delete client.post;
-	delete client.replying;
-	client.editing = false;
 	return true;
 }
 

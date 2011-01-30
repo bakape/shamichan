@@ -59,7 +59,8 @@ Y.insert_post = function (msg, body, ip, callback) {
 
 Y._insert = function (msg, body, ip, callback) {
 	var r = this.connect();
-	r.incr('tag:' + this.tag + ':ctr', function (err, num) {
+	var tag_key = 'tag:' + this.tag;
+	r.incr(tag_key + ':ctr', function (err, num) {
 		if (err)
 			return callback(err);
 		var view = {time: msg.time, ip: ip};
@@ -76,7 +77,6 @@ Y._insert = function (msg, body, ip, callback) {
 			add_image_view(msg.image, view);
 
 		var key = (op ? 'post:' : 'thread:') + num;
-		var tag_key = 'tag:' + this.tag;
 		var bump = !op || view.email != 'sage';
 		var m = r.multi();
 		if (bump)
@@ -296,6 +296,10 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 };
 
 function with_body(r, key, post, callback) {
+	/* Convenience */
+	post.time = parseInt(post.time);
+	post.op = parseInt(post.op);
+
 	if (post.body !== undefined)
 		callback(null, post);
 	else
