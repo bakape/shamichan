@@ -17,7 +17,11 @@ Y.connect = function () {
 		this.r = redis.createClient();
 		this.r.on('error', (function (err) {
 			console.error(err);
-			delete this.r;
+			/*
+			this.r.stream.on('error', function (err) {
+				console.error('stream: ' + err);
+			});
+			*/
 		}).bind(this));
 		/* TEMP */
 		this.tag = '3:moe';

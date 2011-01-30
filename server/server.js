@@ -234,11 +234,13 @@ function render_thread(req, resp, num) {
 			yaku.disconnect();
 		});
 	});
-	reader.on('error', function (err) {
+	function on_err(err) {
 		console.error('thread '+num+':', err);
 		resp.end();
 		yaku.disconnect();
-	});
+	}
+	reader.on('error', on_err);
+	yaku.on('error', on_err);
 	return true;
 }
 
