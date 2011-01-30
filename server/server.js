@@ -66,34 +66,42 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
 	var sync = msg[0], watching = msg[1];
-	if (sync.constructor != Number)
+	if (sync.constructor != Number || sync < 0 || isNaN(sync))
 		return false;
 	if (watching) {
-		var post = posts[watching];
-		if (post && !post.op)
-			client.watching = watching;
-		else
+		if (watching.constructor != Number)
 			return false;
+		client.db.thread_exists(watching, function (err, exists) {
+			if (err)
+				bad_client(err);
+			else if (!exists)
+				bad_client("No such thread.");
+			else {
+				client.watching = watching;
+				sync_client(client, sync);
+			}
+		});
 	}
-	if (sync == syncNumber) {
-		multisend(client, [[common.SYNCHRONIZE, syncNumber]]);
-		client.synced = true;
-		return true; /* already synchronized */
-	}
-	if (sync > syncNumber)
-		return false; /* client in the future? */
-	if (sync < backlogLastDropped)
-		return false; /* client took too long */
-	var logs = [];
-	for (var i = sync - backlogLastDropped; i < backlog.length; i++) {
-		var log = backlog[i];
-		if (!watching || log.thread == watching)
-			logs.push(log.msg);
-	}
-	logs.push('[' + common.SYNCHRONIZE + ',' + syncNumber + ']');
-	client.socket.send('[' + logs.join() + ']');
-	client.synced = true;
+	else
+		sync_client(client, sync);
 	return true;
+};
+
+function sync_client(client, sync) {
+	client.db.fetch_backlog(sync, client.watching, function (err, s, log) {
+		if (err)
+			return bad_client(err);
+		if (log.length == 0) {
+			multisend(client, [[common.SYNCHRONIZE, s]]);
+			client.synced = true;
+			return;
+		}
+		// Probably need to JSON serialize here?
+		// or should we put json in redis... HMMMM
+		logs.push('[' + common.SYNCHRONIZE + ',' + s + ']');
+		client.socket.send('[' + logs.join() + ']');
+		client.synced = true;
+	});
 }
 
 var oneeSama = new common.OneeSama(function (num) {
@@ -181,10 +189,14 @@ function render_index(req, resp) {
 	});
 	write_thread_html(yaku, resp, false);
 	yaku.on('end', function () {
-		resp.write(indexTmpl[1]);
-		resp.write('0' /* XXX sync */);
-		resp.end(indexTmpl[2]);
-		yaku.disconnect();
+		yaku.get_sync_number(function (err, sync_num) {
+			if (err)
+				return yaku.emit('error', err);
+			resp.write(indexTmpl[1]);
+			resp.write(''+sync_num);
+			resp.end(indexTmpl[2]);
+			yaku.disconnect();
+		});
 	});
 	yaku.on('error', function (err) {
 		console.error('index:', err);
@@ -213,10 +225,14 @@ function render_thread(req, resp, num) {
 	write_thread_html(reader, resp, true);
 	reader.on('end', function () {
 		resp.write('[<a href=".">Return</a>]');
-		resp.write(indexTmpl[1]);
-		resp.write('0' /* XXX sync */);
-		resp.end(indexTmpl[2]);
-		yaku.disconnect();
+		yaku.get_sync_number(function (err, sync_num) {
+			if (err)
+				reader.emit('error', err);
+			resp.write(indexTmpl[1]);
+			resp.write(''+sync_num);
+			resp.end(indexTmpl[2]);
+			yaku.disconnect();
+		});
 	});
 	reader.on('error', function (err) {
 		console.error('thread '+num+':', err);

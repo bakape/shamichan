@@ -1,4 +1,5 @@
-var config = require('../config'),
+var common = require('../common'),
+    config = require('../config'),
     events = require('events'),
     redis = require('redis'),
     util = require('util');
@@ -86,7 +87,7 @@ Y._insert = function (msg, body, ip, callback) {
 			m.rpush('thread:' + op + ':posts', num);
 
 		view.body = body;
-		m.rpush('backlog', '+' + JSON.stringify(view));
+		backlog_push(m, common.INSERT_POST, view);
 		delete view.body;
 
 		m.exec(function (err, results) {
@@ -172,6 +173,32 @@ Y.finish_post = function (num, is_reply, callback) {
 				r.del(key + ':body', callback);
 		});
 	});
+};
+
+function backlog_push(m, act) {
+	var rec = [act];
+	for (var i = 2; i < arguments.length; i++)
+		rec.push(arguments[i]);
+	m.rpush('backlog', JSON.stringify(rec));
+}
+
+Y.fetch_backlog = function (sync, watching, callback) {
+	var r = this.connect();
+	r.lrange('backlog', sync, -1, function (err, log) {
+		if (err)
+			return callback(err);
+		// TODO: Do something with watching
+		// Naive impl for now
+		callback(null, sync + log.length, log);
+	});
+};
+
+Y.get_sync_number = function (callback) {
+	this.connect().llen('backlog', callback);
+};
+
+Y.thread_exists = function (num, callback) {
+	this.connect().exists('thread:' + num, callback);
 };
 
 Y.get_tag = function () {
