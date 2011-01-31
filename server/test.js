@@ -1,4 +1,4 @@
-var db = require('./index');
+var db = require('./db');
 
 var y = new db.Yakusoku();
 y.on('error', function (err) {

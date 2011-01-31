@@ -1,5 +1,5 @@
-var common = require('../common'),
-    config = require('../config'),
+var common = require('./common'),
+    config = require('./config'),
     events = require('events'),
     redis = require('redis'),
     util = require('util');
