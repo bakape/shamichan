@@ -6,6 +6,8 @@ var common = require('../common'),
 
 function Yakusoku() {
 	events.EventEmitter.call(this);
+	/* TEMP */
+	this.tag = '3:moe';
 }
 
 util.inherits(Yakusoku, events.EventEmitter);
@@ -15,16 +17,7 @@ var Y = Yakusoku.prototype;
 Y.connect = function () {
 	if (!this.r) {
 		this.r = redis.createClient();
-		this.r.on('error', (function (err) {
-			console.error(err);
-			/*
-			this.r.stream.on('error', function (err) {
-				console.error('stream: ' + err);
-			});
-			*/
-		}).bind(this));
-		/* TEMP */
-		this.tag = '3:moe';
+		this.r.on('error', console.error.bind(console));
 	}
 	return this.r;
 };
@@ -32,6 +25,55 @@ Y.connect = function () {
 Y.disconnect = function () {
 	if (this.r)
 		this.r.quit();
+	if (this.k) {
+		this.k.unsubscribe();
+		this.k.quit();
+	}
+};
+
+Y.kiku = function (thread, callback) {
+	if (!this.k) {
+		this.k = redis.createClient();
+		this.k.on('error', console.error.bind(console));
+	}
+	var ev;
+	function on_subscribe_error(err) {
+		this.k.removeListener(ev, on_subscribe);
+		this.k.removeListener('error', on_subscribe_error);
+		callback(err);
+	}
+	function on_subscribe(chan, count) {
+		this.k.removeListener(ev, on_subscribe);
+		this.k.removeListener('error', on_subscribe_error);
+		callback(null);
+	}
+	this.k.on('error', on_subscribe_error.bind(this));
+	if (thread) {
+		this.k.subscribe('thread:' + thread);
+		ev = 'subscribe';
+		this.k.on(ev, on_subscribe.bind(this));
+		this.k.on('message', this._on_message.bind(this));
+	}
+	else {
+		this.k.psubscribe('thread:*');
+		ev = 'psubscribe';
+		this.k.on(ev, on_subscribe.bind(this));
+		this.k.on('pmessage', this._on_pmessage.bind(this));
+	}
+};
+
+Y.kikanai = function (thread) {
+	this.k.unsubscribe();
+	this.k.removeAllListeners('message');
+	this.k.removeAllListeners('pmessage');
+};
+
+Y._on_message = function (chan, msg) {
+	this.emit('update', chan, msg);
+};
+
+Y._on_pmessage = function (pat, chan, msg) {
+	this.emit('update', chan, msg);
 };
 
 function is_empty(obj) {
@@ -64,6 +106,7 @@ Y.insert_post = function (msg, body, ip, callback) {
 Y._insert = function (msg, body, ip, callback) {
 	var r = this.connect();
 	var tag_key = 'tag:' + this.tag;
+	var self = this;
 	r.incr(tag_key + ':ctr', function (err, num) {
 		if (err)
 			return callback(err);
@@ -90,9 +133,10 @@ Y._insert = function (msg, body, ip, callback) {
 		if (op)
 			m.rpush('thread:' + op + ':posts', num);
 
+		/* Denormalize for backlog */
 		view.body = body;
-		backlog_push(m, common.INSERT_POST, view);
-		delete view.body;
+		view.num = num;
+		self._log(m, op ? op : num, common.INSERT_POST, view);
 
 		m.exec(function (err, results) {
 			if (err)
@@ -179,12 +223,14 @@ Y.finish_post = function (num, is_reply, callback) {
 	});
 };
 
-function backlog_push(m, act) {
+Y._log = function (m, thread, act) {
 	var rec = [act];
-	for (var i = 2; i < arguments.length; i++)
+	for (var i = 3; i < arguments.length; i++)
 		rec.push(arguments[i]);
-	m.rpush('backlog', JSON.stringify(rec));
-}
+	var msg = JSON.stringify(rec);
+	m.rpush('backlog', msg);
+	m.publish('thread:' + thread, msg);
+};
 
 Y.fetch_backlog = function (sync, watching, callback) {
 	var r = this.connect();

@@ -1,5 +1,6 @@
 var common = require('./common'),
 	config = require('./config'),
+	flow = require('flow'),
 	fs = require('fs'),
 	io = require('socket.io'),
 	http = require('http'),
@@ -88,20 +89,34 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 };
 
 function sync_client(client, sync) {
-	client.db.fetch_backlog(sync, client.watching, function (err, s, log) {
+	/* Race between subscribe and backlog fetch... hmmm... */
+	flow.exec(function () {
+		client.db.kiku(client.watching, this);
+	},
+	function (err) {
+		if (err)
+			bad_client(err);
+		else
+			client.db.fetch_backlog(sync, client.watching, this);
+	},
+	function (err, s, log) {
 		if (err)
 			return bad_client(err);
-		if (log.length == 0) {
+
+		client.db.on('update', client_update.bind(client));
+
+		if (log.length == 0)
 			multisend(client, [[common.SYNCHRONIZE, s]]);
-			client.synced = true;
-			return;
+		else {
+			log.push('[' + common.SYNCHRONIZE + ',' + s + ']');
+			client.socket.send('[' + log.join() + ']');
 		}
-		// Probably need to JSON serialize here?
-		// or should we put json in redis... HMMMM
-		logs.push('[' + common.SYNCHRONIZE + ',' + s + ']');
-		client.socket.send('[' + logs.join() + ']');
 		client.synced = true;
 	});
+}
+
+function client_update(thread, msg) {
+	this.socket.send('[' + msg + ']');
 }
 
 var oneeSama = new common.OneeSama(function (num) {
