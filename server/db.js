@@ -23,12 +23,16 @@ Y.connect = function () {
 };
 
 Y.disconnect = function () {
-	if (this.r)
+	if (this.r) {
 		this.r.quit();
+		this.r.removeAllListeners();
+	}
 	if (this.k) {
 		this.k.unsubscribe();
 		this.k.quit();
+		this.k.removeAllListeners();
 	}
+	this.removeAllListeners();
 };
 
 Y.kiku = function (thread, callback) {
@@ -269,6 +273,7 @@ Y.get_tag = function () {
 Y._get_each_thread = function (reader, ix, nums) {
 	if (!nums || ix >= nums.length) {
 		this.emit('end');
+		reader.removeAllListeners();
 		return;
 	}
 	var self = this;
