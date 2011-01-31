@@ -267,17 +267,37 @@ function bad_client(client, msg) {
 	client.synced = false;
 }
 
-function valid_links(frag, state) {
-	var links = {};
+/* Must be prepared to receive callback instantly */
+function valid_links(frag, state, callback) {
+	var possible = {}, links = {};
+	var checked = 0, total = 0;
+	var done = false;
+	function got_post_op(err, num, op) {
+		if (done)
+			return;
+		if (err) {
+			done = true;
+			return callback(err);
+		}
+		if (num)
+			links[num] = op || num;
+		if (++checked >= total) {
+			done = true;
+			callback(null, isEmpty(links) ? null : links);
+		}
+	}
 	var onee = new common.OneeSama(function (num, e) {
-		var post = posts[num];
-		if (post)
-			links[num] = post.op || post.num;
+		if (!(num in possible)) {
+			total++;
+			possible[num] = null;
+			client.db.get_post_op(num, got_post_op);
+		}
 	});
 	onee.callback = function (frag) {};
 	onee.state = state;
 	onee.fragment(frag);
-	return links;
+	if (!total)
+		callback(null, null);
 }
 
 function isEmpty(obj) {
@@ -348,23 +368,27 @@ function allocate_post(msg, image, imgnm, client, callback) {
 		post.image = image;
 		post.imgnm = imgnm;
 	}
-	/* XXX: What about the parse state?! */
-	client.db.insert_post(post, body, client.ip, function (err, num) {
+	post.state = [0, 0];
+	flow.exec(function () {
+		valid_links(body, post.state, this);
+	},
+	function (err, links) {
 		if (err)
 			return callback(err);
-		post.num = num;
-		post.body = body;
+		post.links = links;
+		client.db.insert_post(post, body, client.ip, this);
+	},
+	function (err, num) {
+		if (err)
+			return callback(err);
 		if (client.post) {
 			/* Race condition... discard this */
 			return callback('Already have a post.');
 		}
-		client.post = post.num;
-		client.replying = !!post.op;
-		post.state = [0, 0];
-		post.links = valid_links(post.body, post.state);
-
-		var view = get_post_view(post);
-		callback(null, view);
+		post.num = num;
+		post.body = body;
+		client.post = post;
+		callback(null, get_post_view(post));
 	});
 	return true;
 }
@@ -395,38 +419,41 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 	if (!post)
 		return false;
 	var limit = common.MAX_POST_CHARS;
-	if (frag.length > limit)
+	if (frag.length > limit || post.length >= limit)
 		return false;
+	var combined = post.length + frag.length;
+	if (combined > limit)
+		frag = frag.substr(0, combined - limit);
+	post.body += frag;
 	/* imporant: broadcast prior state */
-	client.db.append_post(post, client.replying, frag, limit,
-			function (err) {
+	var old_state = post.state.slice();
+	flow.exec(function () {
+		valid_links(frag, post.state, this);
+	},
+	function (err, links) {
+		if (err)
+			links = null; /* oh well */
+		if (links)
+			for (var k in links)
+				post.links[k] = links[k];
+		client.db.append_post(post, frag, old_state, links, this);
+	},
+	function (err) {
 		if (err)
 			return bad_client(client, "Couldn't add text.");
-		/* Okay, client should just cache the post */
 	});
-	/*
-	var msg = [common.UPDATE_POST, post.num, frag].concat(post.state);
-	var links = valid_links(frag, post.state);
-	if (!isEmpty(links))
-		msg.push(links);
-	broadcast(msg, client.id);
-	post.body += frag;
-	for (var k in links)
-		post.links[k] = links[k];
-	*/
 	return true;
 }
 
 function finish_post_by(client) {
 	/* TODO: Should we check client.uploading? */
-	if (!client.post)
+	var post = client.post;
+	if (!post)
 		return false;
-	client.db.finish_post(client.post, client.replying, function (err) {
+	client.db.finish_post(post, function (err) {
 		if (err)
 			return bad_client(client, err);
 		delete client.post;
-		delete client.replying;
-		client.editing = false;
 	});
 	return true;
 }

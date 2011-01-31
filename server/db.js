@@ -114,7 +114,7 @@ Y._insert = function (msg, body, ip, callback) {
 	r.incr(tag_key + ':ctr', function (err, num) {
 		if (err)
 			return callback(err);
-		var view = {time: msg.time, ip: ip};
+		var view = {time: msg.time, ip: ip, state: msg.state.join()};
 		var op = msg.op;
 		if (msg.name)
 			view.name = msg.name;
@@ -140,7 +140,7 @@ Y._insert = function (msg, body, ip, callback) {
 		/* Denormalize for backlog */
 		view.body = body;
 		view.num = num;
-		self._log(m, op ? op : num, common.INSERT_POST, view);
+		self._log(m, op || num, [common.INSERT_POST, view]);
 
 		m.exec(function (err, results) {
 			if (err)
@@ -181,57 +181,35 @@ Y.add_image = function (post_num, image, callback) {
 	});
 };
 
-Y.append_post = function (num, is_reply, tail, limit, callback) {
-	var r = this.connect();
-	var key = (is_reply ? 'post:' : 'thread:') + num + ':body';
+Y.append_post = function (post, tail, old_state, links, callback) {
+	/* TODO: Persist links */
+	var m = this.connect().multi();
+	var key = (post.op ? 'post:' : 'thread:') + post.num + ':body';
 	/* Don't need to check .exists() thanks to client state */
-	r.append(key, tail, function (err, new_len) {
-		if (err)
-			callback(err);
-		else if (new_len > limit)
-			trim_post(r, key, limit, callback, 0);
-		else
-			callback(null, new_len);
-	});
+	m.append(key, tail);
+	/* XXX: fragile */
+	if (old_state[0] != post.state[0] || old_state[1] != post.state[1])
+		m.hset(key, 'state', post.state.join());
+	var msg = [common.UPDATE_POST, post.num, tail].concat(old_state);
+	if (links)
+		msg.push(links);
+	this._log(m, post.op || post.num, msg);
+	m.exec(callback);
 };
 
-function trim_post(r, key, limit, callback, tries) {
-	r.watch(key);
-	r.substr(key, 0, limit, function (err, body) {
-		if (err || tries > 5) {
-			console.error("Warning: Overlong post permitted");
-			return callback(err);
-		}
-		r.multi().set(key, body).exec(function (err) {
-			if (err)
-				trim_post(r, key, limit, callback, tries+1);
-			else
-				callback(null, limit);
-		});
-	});
-}
-
-Y.finish_post = function (num, is_reply, callback) {
-	var r = this.connect();
-	var key = (is_reply ? 'post:' : 'thread:') + num;
+Y.finish_post = function (post, callback) {
+	var m = this.connect().multi();
+	var key = (post.op ? 'post:' : 'thread:') + post.num;
 	/* Don't need to check .exists() thanks to client state */
-	r.get(key + ':body', function (err, body) {
-		if (err)
-			return callback(err);
-		r.hmset(key, 'body', body, function (err) {
-			if (err)
-				callback(err);
-			else
-				r.del(key + ':body', callback);
-		});
-	});
+	m.hset(key, 'body', post.body);
+	m.del(key + ':body');
+	m.hdel(key, 'state');
+	this._log(m, post.op || post.num, [common.FINISH_POST, post.num]);
+	m.exec(callback);
 };
 
-Y._log = function (m, thread, act) {
-	var rec = [act];
-	for (var i = 3; i < arguments.length; i++)
-		rec.push(arguments[i]);
-	var msg = JSON.stringify(rec);
+Y._log = function (m, thread, msg) {
+	msg = JSON.stringify(msg);
 	m.rpush('backlog', msg);
 	m.publish('thread:' + thread, msg);
 };
@@ -254,6 +232,24 @@ Y.get_sync_number = function (callback) {
 Y.thread_exists = function (num, callback) {
 	this.connect().exists('thread:' + num, callback);
 };
+
+Y.get_post_op = function (num, callback) {
+	var r = this.connect();
+	r.hget('post:' + num, 'op', function (err, op) {
+		if (err)
+			return callback(err);
+		else if (op)
+			return callback(null, num, op);
+		r.exists('thread:' + num, function (err, exists) {
+			if (err)
+				callback(err);
+			else if (!exists)
+				callback(null, null, null);
+			else
+				callback(null, num, num);
+		});
+	});
+}
 
 Y.get_tag = function () {
 	var r = this.connect();
