@@ -17,52 +17,6 @@ function multisend(client, msgs) {
 	client.socket.send(JSON.stringify(msgs));
 }
 
-function broadcast(msg, origin) {
-	var thread_num = post.op || post.num;
-	++syncNumber;
-	msg = JSON.stringify(msg);
-	var payload = '[' + msg + ']';
-	for (id in clients) {
-		var client = clients[id];
-		if (!client.synced)
-			continue;
-		if (client.watching && client.watching != thread_num) {
-			/* Client isn't in this thread so let them fall
-			 * out of sync until something relevant comes up */
-			client.defer_sync = syncNumber;
-			continue;
-		}
-		if (id == origin) {
-			/* Client won't increment SYNC since they won't
-			 * receive the broadcasted message, so do manually */
-			multisend(client, [[common.SYNCHRONIZE, syncNumber]]);
-		}
-		else if (client.defer_sync) {
-			/* First catch them up, then send the new message */
-			client.socket.send('[[' + common.SYNCHRONIZE + ',' +
-					client.defer_sync + '],' + msg + ']');
-		}
-		else {
-			/* Client is already in sync */
-			client.socket.send(payload);
-		}
-		/* At this point the client must be caught up */
-		client.defer_sync = null;
-	}
-	var now = new Date().getTime();
-	backlog.push({when: now, msg: msg, thread: thread_num});
-	cleanup_backlog(now);
-}
-
-function cleanup_backlog(now) {
-	var limit = now - config.BACKLOG_PERIOD;
-	/* binary search would be nice */
-	while (backlog.length && backlog[0].when < limit) {
-		backlog.shift();
-		backlogLastDropped++;
-	}
-}
-
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
@@ -410,7 +364,6 @@ function allocate_post(msg, image, imgnm, client, callback) {
 		post.links = valid_links(post.body, post.state);
 
 		var view = get_post_view(post);
-		/*broadcast([common.INSERT_POST, view], client.id);*/
 		callback(null, view);
 	});
 	return true;
@@ -432,7 +385,7 @@ function get_post_view(post) {
 
 function announce_image(info, client) {
 	var post = client.post;
-	broadcast([common.INSERT_IMAGE, post.num, info], client.id);
+	/* TODO */
 }
 
 dispatcher[common.UPDATE_POST] = function (frag, client) {
@@ -471,7 +424,6 @@ function finish_post_by(client) {
 	client.db.finish_post(client.post, client.replying, function (err) {
 		if (err)
 			return bad_client(client, err);
-		/*broadcast([common.FINISH_POST, post_id], client.id);*/
 		delete client.post;
 		delete client.replying;
 		client.editing = false;
