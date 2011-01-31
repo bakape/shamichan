@@ -204,7 +204,7 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 dispatcher[UPDATE_POST] = function (msg) {
 	var bq = $('#' + msg[0] + '>blockquote');
 	if (bq.length) {
-		oneeSama.links = msg[4] ? msg[4].links : {};
+		oneeSama.links = msg[4] ? msg[4] : {};
 		oneeSama.callback = inject;
 		oneeSama.buffer = bq;
 		oneeSama.state = msg.slice(2, 4);

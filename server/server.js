@@ -408,7 +408,7 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 	var msg = [common.UPDATE_POST, post.num, frag].concat(post.state);
 	var links = valid_links(frag, post.state);
 	if (!isEmpty(links))
-		msg.push({links: links});
+		msg.push(links);
 	broadcast(msg, client.id);
 	post.body += frag;
 	for (var k in links)
