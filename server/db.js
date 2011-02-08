@@ -56,12 +56,12 @@ Y.kiku = function (thread, callback) {
 	this.k.on('error', on_subscribe_error.bind(this));
 	if (this.kikumono) {
 		this.k.on('subscribe', on_subscribe.bind(this));
-		this.k.on('message', this._on_message.bind(this));
+		this.k.on('message', this._on_message.bind(this, null));
 		this.k.subscribe('thread:' + thread);
 	}
 	else {
 		this.k.on('psubscribe', on_subscribe.bind(this));
-		this.k.on('pmessage', this._on_pmessage.bind(this));
+		this.k.on('pmessage', this._on_message.bind(this));
 		this.k.psubscribe('thread:*');
 	}
 };
@@ -72,12 +72,9 @@ Y.kikanai = function (thread) {
 	this.k.removeAllListeners('pmessage');
 };
 
-Y._on_message = function (chan, msg) {
-	this.emit('update', chan, msg);
-};
-
-Y._on_pmessage = function (pat, chan, msg) {
-	this.emit('update', chan, msg);
+Y._on_message = function (pat, chan, msg) {
+	var num = msg.split(':', 1)[0];
+	this.emit('update', chan, parseInt(num), msg.substr(num.length + 1));
 };
 
 function is_empty(obj) {
@@ -89,7 +86,7 @@ function is_empty(obj) {
 	return true;
 }
 
-Y.insert_post = function (msg, body, ip, callback) {
+Y.insert_post = function (msg, body, ip, update, callback) {
 	var r = this.connect();
 	var self = this;
 	/* Multi isn't needed here, yay. */
@@ -100,14 +97,14 @@ Y.insert_post = function (msg, body, ip, callback) {
 			else if (!exists)
 				callback('Thread does not exist.');
 			else
-				self._insert(msg, body, ip, callback);
+				self._insert(msg, body, ip, update, callback);
 		});
 	}
 	else
-		self._insert(msg, body, ip, callback);
+		self._insert(msg, body, ip, update, callback);
 };
 
-Y._insert = function (msg, body, ip, callback) {
+Y._insert = function (msg, body, ip, update, callback) {
 	var r = this.connect();
 	var tag_key = 'tag:' + this.tag;
 	var self = this;
@@ -137,10 +134,13 @@ Y._insert = function (msg, body, ip, callback) {
 		if (op)
 			m.rpush('thread:' + op + ':posts', num);
 
+		/* Need to set client.post here so pubsub doesn't interfere */
+		update(num);
+
 		/* Denormalize for backlog */
 		view.body = body;
 		view.num = num;
-		self._log(m, op || num, [common.INSERT_POST, view]);
+		self._log(m, op, num, [common.INSERT_POST, view]);
 
 		m.exec(function (err, results) {
 			if (err)
@@ -193,7 +193,7 @@ Y.append_post = function (post, tail, old_state, links, callback) {
 	var msg = [common.UPDATE_POST, post.num, tail].concat(old_state);
 	if (links)
 		msg.push(links);
-	this._log(m, post.op || post.num, msg);
+	this._log(m, post.op, post.num, msg);
 	m.exec(callback);
 };
 
@@ -204,14 +204,14 @@ Y.finish_post = function (post, callback) {
 	m.hset(key, 'body', post.body);
 	m.del(key + ':body');
 	m.hdel(key, 'state');
-	this._log(m, post.op || post.num, [common.FINISH_POST, post.num]);
+	this._log(m, post.op, post.num, [common.FINISH_POST, post.num]);
 	m.exec(callback);
 };
 
-Y._log = function (m, thread, msg) {
+Y._log = function (m, op, num, msg) {
 	msg = JSON.stringify(msg);
 	m.rpush('backlog', msg);
-	m.publish('thread:' + thread, msg);
+	m.publish('thread:' + (op || num), num + ':' + msg);
 };
 
 Y.fetch_backlog = function (sync, watching, callback) {

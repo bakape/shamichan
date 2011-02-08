@@ -143,8 +143,6 @@ function shift_replies(section) {
 
 dispatcher[INSERT_POST] = function (msg) {
 	msg = msg[0];
-	if (postForm && msg.num == postForm.num)
-		return true;
 	var orig_focus = get_focus();
 	oneeSama.links = msg.links;
 	var section, hr, bump = true;
@@ -557,7 +555,6 @@ PostForm.prototype.finish = function () {
 		this.imouto.fragment(this.line_buffer.text());
 		this.buffer.replaceWith(this.buffer.contents());
 		this.line_buffer.remove();
-		this.post.removeClass('editing');
 		send([FINISH_POST]);
 	}
 	else

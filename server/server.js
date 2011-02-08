@@ -69,7 +69,11 @@ function sync_client(client, sync) {
 	});
 }
 
-function client_update(thread, msg) {
+function client_update(thread, num, msg) {
+	if (this.post && this.post.num == num) {
+		/* TODO: Synchronize them instead */
+		return;
+	}
 	this.socket.send('[' + msg + ']');
 }
 
@@ -379,19 +383,20 @@ function allocate_post(msg, image, imgnm, client, callback) {
 	function (err, links) {
 		if (err)
 			return callback(err);
-		post.links = links;
-		client.db.insert_post(post, body, client.ip, this);
-	},
-	function (err, num) {
-		if (err)
-			return callback(err);
 		if (client.post) {
 			/* Race condition... discard this */
-			return callback('Already have a post.');
+			callback('Already have a post.');
 		}
-		post.num = num;
-		post.body = body;
-		client.post = post;
+		post.links = links;
+		client.db.insert_post(post, body, client.ip, function (num) {
+			post.num = num;
+			post.body = body;
+			client.post = post;
+		}, this);
+	},
+	function (err) {
+		if (err)
+			return callback(err);
 		callback(null, get_post_view(post));
 	});
 	return true;
