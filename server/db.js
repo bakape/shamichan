@@ -28,7 +28,6 @@ Y.disconnect = function () {
 		this.r.removeAllListeners();
 	}
 	if (this.k) {
-		this.k.unsubscribe();
 		this.k.quit();
 		this.k.removeAllListeners();
 	}
@@ -40,29 +39,30 @@ Y.kiku = function (thread, callback) {
 		this.k = redis.createClient();
 		this.k.on('error', console.error.bind(console));
 	}
-	var ev;
+	this.kikumono = thread;
 	function on_subscribe_error(err) {
-		this.k.removeListener(ev, on_subscribe);
-		this.k.removeListener('error', on_subscribe_error);
+		deal_with_it.call(this);
 		callback(err);
 	}
 	function on_subscribe(chan, count) {
-		this.k.removeListener(ev, on_subscribe);
-		this.k.removeListener('error', on_subscribe_error);
+		deal_with_it.call(this);
 		callback(null);
 	}
+	function deal_with_it() {
+		var ev = this.kikumono ? 'subscribe' : 'psubscribe';
+		this.k.removeListener(ev, on_subscribe);
+		this.k.removeListener('error', on_subscribe_error);
+	}
 	this.k.on('error', on_subscribe_error.bind(this));
-	if (thread) {
-		this.k.subscribe('thread:' + thread);
-		ev = 'subscribe';
-		this.k.on(ev, on_subscribe.bind(this));
+	if (this.kikumono) {
+		this.k.on('subscribe', on_subscribe.bind(this));
 		this.k.on('message', this._on_message.bind(this));
+		this.k.subscribe('thread:' + thread);
 	}
 	else {
-		this.k.psubscribe('thread:*');
-		ev = 'psubscribe';
-		this.k.on(ev, on_subscribe.bind(this));
+		this.k.on('psubscribe', on_subscribe.bind(this));
 		this.k.on('pmessage', this._on_pmessage.bind(this));
+		this.k.psubscribe('thread:*');
 	}
 };
 

@@ -28,9 +28,9 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			return false;
 		client.db.thread_exists(watching, function (err, exists) {
 			if (err)
-				bad_client(err);
+				report(client, err);
 			else if (!exists)
-				bad_client("No such thread.");
+				report(client, "No such thread.");
 			else {
 				client.watching = watching;
 				sync_client(client, sync);
@@ -49,13 +49,13 @@ function sync_client(client, sync) {
 	},
 	function (err) {
 		if (err)
-			bad_client(err);
+			report(client, err);
 		else
 			client.db.fetch_backlog(sync, client.watching, this);
 	},
 	function (err, s, log) {
 		if (err)
-			return bad_client(err);
+			return report(client, err);
 
 		client.db.on('update', client_update.bind(client));
 
@@ -248,20 +248,24 @@ function init_client (socket) {
 		var func = dispatcher[type];
 		if (!func || !func(msg, client)) {
 			console.error("Got invalid message " + data);
-			bad_client(client, "Bad protocol.");
+			report(client, "Bad protocol.");
 		}
 	});
 	socket.on('disconnect', function () {
 		delete clients[id];
-		finish_post_by(client);
 		client.synced = false;
-		client.db.disconnect();
+		if (client.post)
+			finish_post_by(client, function () {
+				client.db.disconnect();
+			});
+		else
+			client.db.disconnect();
 	});
 	socket.on('error', console.error.bind(console, 'socket:'));
 	client.db.on('error', console.error.bind(console, 'redis:'));
 }
 
-function bad_client(client, msg) {
+function report(client, msg) {
 	console.error('Bad ' + client.ip + ': ' + msg);
 	multisend(client, [[common.INVALID, msg]]);
 	client.synced = false;
@@ -440,28 +444,31 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 	},
 	function (err) {
 		if (err)
-			return bad_client(client, "Couldn't add text.");
+			return report(client, "Couldn't add text.");
 	});
 	return true;
 }
 
-function finish_post_by(client) {
+function finish_post_by(client, callback) {
 	/* TODO: Should we check client.uploading? */
-	var post = client.post;
-	if (!post)
-		return false;
-	client.db.finish_post(post, function (err) {
+	client.db.finish_post(client.post, function (err) {
 		if (err)
-			return bad_client(client, err);
-		delete client.post;
+			callback(err);
+		else {
+			delete client.post;
+			callback(null);
+		}
 	});
-	return true;
 }
 
 dispatcher[common.FINISH_POST] = function (msg, client) {
-	if (msg.length)
+	if (msg.length || !client.post)
 		return false;
-	return finish_post_by(client);
+	finish_post_by(client, function (err) {
+		if (err)
+			report(client, err);
+	});
+	return true;
 }
 
 function start_server() {
