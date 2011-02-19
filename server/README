@@ -4,6 +4,7 @@ ImageMagick
 node.js
 redis
 
+async
 flow-js
 formidable
 node_redis

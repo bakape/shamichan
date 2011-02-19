@@ -497,5 +497,11 @@ config.get_version(function (err, version) {
 	indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
 		{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
 	notFoundHtml = fs.readFileSync('../www/404.html');
-	start_server();
+	var yaku = new db.Yakusoku;
+	yaku.finish_all(function (err) {
+		if (err)
+			throw err;
+		yaku.disconnect();
+		start_server();
+	});
 });
