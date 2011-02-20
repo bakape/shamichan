@@ -1,4 +1,4 @@
-CLIENT_SRC = $(shell node server.js --show-config CLIENT_DEPS)
+CLIENT_SRC := $(shell node server.js --show-config CLIENT_DEPS)
 CLIENT_JS := ../www/js/client-$(shell node server.js --version).js
 DEBUG := $(shell node server.js --show-config DEBUG)
 
@@ -18,6 +18,7 @@ tripcode.node: .build tripcode.cc
 	node-waf configure
 
 ifeq ($(DEBUG),true)
+CLIENT_JS := $(CLIENT_JS:%.js=%.debug.js)
 $(CLIENT_JS): $(CLIENT_SRC) jsmin
 	@node make_client.js $(CLIENT_SRC) > $@
 else

@@ -517,7 +517,8 @@ else {
 		if (err)
 			throw err;
 		tripcode = require('./tripcode');
-		config.VERSION = version;
+		config.CLIENT_JS = 'client-' + version + (
+				config.DEBUG ? '.debug.js' : '.js');
 		indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
 			{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
 		notFoundHtml = fs.readFileSync('../www/404.html');
