@@ -143,6 +143,7 @@ function shift_replies(section) {
 
 dispatcher[INSERT_POST] = function (msg) {
 	msg = msg[0];
+	msg.editing = true;
 	var orig_focus = get_focus();
 	oneeSama.links = msg.links;
 	var section, hr, bump = true;
