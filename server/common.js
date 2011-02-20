@@ -199,7 +199,7 @@ function num_html(post) {
 }
 
 function expand_html(num) {
-	return ' &nbsp; [<a href="' + num + '" class="expand">Reply</a>]';
+	return ' &nbsp; [<a href="' + num + '" class="expand">Expand</a>]';
 }
 
 OS.monogatari = function (data) {
