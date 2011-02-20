@@ -1,17 +1,18 @@
 var common = require('./common'),
-	config = require('./config'),
-	flow = require('flow'),
-	fs = require('fs'),
-	io = require('socket.io'),
-	http = require('http'),
-	pix = require('./pix'),
-	db = require('./db'),
-	Template = require('./lib/json-template').Template,
-	tripcode,
-	util = require('util');
+    config = require('./config'),
+    flow = require('flow'),
+    fs = require('fs'),
+    io = require('socket.io'),
+    http = require('http'),
+    pix = require('./pix'),
+    db = require('./db'),
+    Template = require('./lib/json-template').Template,
+    tripcode,
+    util = require('util');
 
 var clients = {};
 var dispatcher = {};
+var indexTmpl, notFoundHtml;
 
 function multisend(client, msgs) {
 	client.socket.send(JSON.stringify(msgs));
@@ -498,8 +499,6 @@ function get_version(callback) {
 			callback(null, stdout.trim());
 	});
 }
-
-var indexTmpl, notFoundHtml;
 
 if (process.argv[2] == '--show-config')
 	console.log(config[process.argv[3]]);

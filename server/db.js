@@ -211,6 +211,26 @@ Y.finish_post = function (post, callback) {
 	m.exec(callback);
 };
 
+Y.finish_all = function (callback) {
+	var r = this.connect();
+	r.keys('*:body', function (err, keys) {
+		if (err)
+			return callback(err);
+		async.forEach(keys, function (body_key, cb) {
+			var key = body_key.slice(0, -5);
+			r.get(body_key, function (err, body) {
+				if (err)
+					return cb(err);
+				var m = r.multi();
+				m.hset(key, 'body', body);
+				m.del(body_key);
+				m.hdel(key, 'state');
+				m.exec(cb);
+			});
+		}, callback);
+	});
+};
+
 Y._log = function (m, op, num, kind, msg) {
 	msg.unshift(kind);
 	msg = JSON.stringify(msg);
@@ -285,26 +305,6 @@ Y._get_each_thread = function (reader, ix, nums) {
 	reader.on('end', next_please);
 	reader.on('nomatch', next_please);
 	reader.get_thread(nums[ix], false);
-};
-
-Y.finish_all = function (callback) {
-	var r = this.connect();
-	r.keys('*:body', function (err, keys) {
-		if (err)
-			return callback(err);
-		async.forEach(keys, function (body_key, cb) {
-			var key = body_key.slice(0, -5);
-			r.get(body_key, function (err, body) {
-				if (err)
-					return cb(err);
-				var m = r.multi();
-				m.hset(key, 'body', body);
-				m.del(body_key);
-				m.hdel(key, 'state');
-				m.exec(cb);
-			});
-		}, callback);
-	});
 };
 
 function Reader(yakusoku) {
