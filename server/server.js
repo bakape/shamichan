@@ -7,7 +7,7 @@ var common = require('./common'),
 	pix = require('./pix'),
 	db = require('./db'),
 	Template = require('./lib/json-template').Template,
-	tripcode = require('./tripcode'),
+	tripcode,
 	util = require('util');
 
 var clients = {};
@@ -488,20 +488,45 @@ function start_server() {
 	});
 }
 
+function get_version(callback) {
+	require('child_process').exec(
+			'git log -1 --format=%h ' + config.CLIENT_DEPS,
+			function (err, stdout, stderr) {
+		if (err)
+			callback(err);
+		else
+			callback(null, stdout.trim());
+	});
+}
+
 var indexTmpl, notFoundHtml;
 
-config.get_version(function (err, version) {
-	if (err)
-		throw err;
-	config.VERSION = version;
-	indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
-		{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
-	notFoundHtml = fs.readFileSync('../www/404.html');
-	var yaku = new db.Yakusoku;
-	yaku.finish_all(function (err) {
+if (process.argv[2] == '--show-config')
+	console.log(config[process.argv[3]]);
+else if (process.argv[2] == '--version')
+	get_version(function (err, version) {
+		if (err) {
+			console.error(err);
+			process.exit(1);
+		}
+		else
+			console.log(version);
+	});
+else {
+	get_version(function (err, version) {
 		if (err)
 			throw err;
-		yaku.disconnect();
-		start_server();
+		tripcode = require('./tripcode');
+		config.VERSION = version;
+		indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
+			{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
+		notFoundHtml = fs.readFileSync('../www/404.html');
+		var yaku = new db.Yakusoku;
+		yaku.finish_all(function (err) {
+			if (err)
+				throw err;
+			yaku.disconnect();
+			start_server();
+		});
 	});
-});
+}

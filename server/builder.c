@@ -92,7 +92,7 @@ static void add_watch(const char *filename, void (*f)(void)) {
 }
 
 static void read_version(char *dest) {
-	FILE *f = popen("node config.js --version", "r");
+	FILE *f = popen("node server.js --version", "r");
 	if (!f || fscanf(f, "%10s", dest) != 1) {
 		fprintf(stderr, "Couldn't read version.\n");
 		exit(-1);
