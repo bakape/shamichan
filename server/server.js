@@ -183,7 +183,7 @@ function render_index(req, resp) {
 function render_thread(req, resp, num) {
 	var yaku = new db.Yakusoku();
 	var reader = new db.Reader(yaku);
-	reader.get_thread(parseInt(num));
+	reader.get_thread(parseInt(num), true, false);
 	reader.on('nomatch', function () {
 		resp.writeHead(404, httpHeaders);
 		resp.end(notFoundHtml);

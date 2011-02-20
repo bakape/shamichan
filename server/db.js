@@ -304,7 +304,7 @@ Y._get_each_thread = function (reader, ix, nums) {
 	};
 	reader.on('end', next_please);
 	reader.on('nomatch', next_please);
-	reader.get_thread(nums[ix], false);
+	reader.get_thread(nums[ix], false, true);
 };
 
 function Reader(yakusoku) {
@@ -315,7 +315,7 @@ function Reader(yakusoku) {
 util.inherits(Reader, events.EventEmitter);
 exports.Reader = Reader;
 
-Reader.prototype.get_thread = function (num, redirect_ok) {
+Reader.prototype.get_thread = function (num, redirect_ok, abbrev) {
 	var r = this.y.connect();
 	var key = 'thread:' + num;
 	var self = this;
@@ -338,14 +338,20 @@ Reader.prototype.get_thread = function (num, redirect_ok) {
 		}
 		self.emit('begin');
 		pre_post.num = num;
-		with_body(r, key, pre_post, function (err, post) {
+		with_body(r, key, pre_post, function (err, op_post) {
 			if (err)
 				return self.emit('error', err);
-			self.emit('thread', post);
-			r.lrange(key + ':posts', 0, -1, function (err, nums) {
+			var shonen = abbrev ? -config.ABBREVIATED_REPLIES : 0;
+			var m = r.multi();
+			m.lrange(key + ':posts', shonen, -1);
+			if (abbrev)
+				m.llen(key + ':posts');
+			m.exec(function (err, r) {
 				if (err)
 					return self.emit('error', err);
-				self._get_each_reply(0, nums);
+				var omit = Math.max(r[1] + shonen, 0);
+				self.emit('thread', op_post, omit);
+				self._get_each_reply(0, r[0]);
 			});
 		});
 	});
