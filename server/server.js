@@ -69,8 +69,8 @@ function sync_client(client, sync) {
 	});
 }
 
-function client_update(thread, num, msg) {
-	if (this.post && this.post.num == num) {
+function client_update(thread, num, kind, msg) {
+	if (this.post && this.post.num == num && kind != common.FINISH_POST) {
 		/* TODO: Synchronize them instead */
 		return;
 	}

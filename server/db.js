@@ -74,8 +74,10 @@ Y.kikanai = function (thread) {
 };
 
 Y._on_message = function (pat, chan, msg) {
-	var num = msg.split(':', 1)[0];
-	this.emit('update', chan, parseInt(num), msg.substr(num.length + 1));
+	var info = msg.split(':', 2);
+	var num = info[0], kind = info[1];
+	this.emit('update', chan, parseInt(num), parseInt(kind),
+			msg.substr(num.length + kind.length + 2));
 };
 
 function is_empty(obj) {
@@ -141,7 +143,7 @@ Y._insert = function (msg, body, ip, update, callback) {
 		/* Denormalize for backlog */
 		view.body = body;
 		view.num = num;
-		self._log(m, op, num, [common.INSERT_POST, view]);
+		self._log(m, op, num, common.INSERT_POST, [view]);
 
 		m.exec(function (err, results) {
 			if (err)
@@ -191,10 +193,10 @@ Y.append_post = function (post, tail, old_state, links, callback) {
 	/* XXX: fragile */
 	if (old_state[0] != post.state[0] || old_state[1] != post.state[1])
 		m.hset(key, 'state', post.state.join());
-	var msg = [common.UPDATE_POST, post.num, tail].concat(old_state);
+	var msg = [post.num, tail].concat(old_state);
 	if (links)
 		msg.push(links);
-	this._log(m, post.op, post.num, msg);
+	this._log(m, post.op, post.num, common.UPDATE_POST, msg);
 	m.exec(callback);
 };
 
@@ -205,14 +207,15 @@ Y.finish_post = function (post, callback) {
 	m.hset(key, 'body', post.body);
 	m.del(key + ':body');
 	m.hdel(key, 'state');
-	this._log(m, post.op, post.num, [common.FINISH_POST, post.num]);
+	this._log(m, post.op, post.num, common.FINISH_POST, [post.num]);
 	m.exec(callback);
 };
 
-Y._log = function (m, op, num, msg) {
+Y._log = function (m, op, num, kind, msg) {
+	msg.unshift(kind);
 	msg = JSON.stringify(msg);
 	m.rpush('backlog', msg);
-	m.publish('thread:' + (op || num), num + ':' + msg);
+	m.publish('thread:' + (op || num), num + ':' + kind + ':' + msg);
 };
 
 Y.fetch_backlog = function (sync, watching, callback) {
