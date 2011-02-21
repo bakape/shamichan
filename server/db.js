@@ -293,6 +293,7 @@ Y.get_tag = function () {
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));
 		reader.on('post', self.emit.bind(self, 'post'));
+		reader.on('endthread', self.emit.bind(self, 'endthread'));
 		self._get_each_thread(reader, 0, ns);
 	});
 };
@@ -366,8 +367,11 @@ Reader.prototype.get_thread = function (num, redirect_ok, abbrev) {
 };
 
 Reader.prototype._get_each_reply = function (ix, nums) {
-	if (!nums || ix >= nums.length)
-		return this.emit('end');
+	if (!nums || ix >= nums.length) {
+		this.emit('endthread');
+		this.emit('end');
+		return;
+	}
 	var r = this.y.connect();
 	var num = nums[ix];
 	var key = 'post:' + num;
@@ -382,9 +386,8 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 		with_body(r, key, pre_post, function (err, post) {
 			if (err)
 				return self.emit('error', err);
-			var has_next = ix + 1 < nums.length;
 			extract_image(post);
-			self.emit('post', post, has_next);
+			self.emit('post', post);
 			next_please();
 		});
 	});

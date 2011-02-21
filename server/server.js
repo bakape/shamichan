@@ -100,11 +100,12 @@ function write_thread_html(reader, response, full_thread) {
 				common.abbrev_msg(omit, image_omit) +
 				'</span>\n');
 	});
-	reader.on('post', function (post, has_next) {
+	reader.on('post', function (post) {
 		oneeSama.full = full_thread;
 		response.write(oneeSama.mono(post));
-		if (!has_next)
-			response.write('</section><hr>\n');
+	});
+	reader.on('endthread', function () {
+		response.write('</section><hr>\n');
 	});
 }
 
