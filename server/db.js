@@ -146,6 +146,7 @@ Y._insert = function (msg, body, ip, update, callback) {
 		/* Denormalize for backlog */
 		view.body = body;
 		view.num = num;
+		extract_image(view);
 		self._log(m, op, num, common.INSERT_POST, [view]);
 
 		m.exec(function (err, results) {
@@ -166,7 +167,8 @@ Y._insert = function (msg, body, ip, update, callback) {
 
 Y.add_image = function (post, image, callback) {
 	var r = this.connect();
-	var key = 'post:' + post.num;
+	var num = post.num;
+	var key = 'post:' + num;
 	var self = this;
 	r.exists(key, function (err, exists) {
 		if (err)
@@ -174,7 +176,7 @@ Y.add_image = function (post, image, callback) {
 		if (!exists)
 			return callback("Post does not exist.");
 		var m = r.multi();
-		self._log(m, post.op, post.num, common.INSERT_IMAGE, [image]);
+		self._log(m, post.op, num, common.INSERT_IMAGE, [num, image]);
 		m.hmset(key, image);
 		m.incr('thread:' + post.op + ':imgctr');
 		m.exec(callback);
@@ -392,7 +394,8 @@ function extract_image(post) {
 		image[key] = post[key];
 		delete post[key];
 	});
-	image.dims = image.dims.split(',');
+	if (image.dims.split)
+		image.dims = image.dims.split(',');
 	image.size = parseInt(image.dims);
 	post.image = image;
 }
