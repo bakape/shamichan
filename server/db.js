@@ -124,14 +124,17 @@ Y._insert = function (msg, body, ip, update, callback) {
 			view.email = msg.email;
 		if (op)
 			view.op = msg.op;
-		if (msg.image)
-			add_image_view(msg.image, view);
 
 		var key = (op ? 'post:' : 'thread:') + num;
 		var bump = !op || view.email != 'sage';
 		var m = r.multi();
 		if (bump)
 			m.incr(tag_key + ':bumpctr');
+		if (msg.image) {
+			m.incr('thread:' + op + ':imgctr');
+			for (var key in msg.image)
+				view[key] = msg.image[key];
+		}
 		m.hmset(key, view);
 		m.set(key + ':body', body);
 		if (op)
@@ -161,26 +164,20 @@ Y._insert = function (msg, body, ip, update, callback) {
 	});
 };
 
-function add_image_view(image, dest) {
-	dest.imgMD5 = image.MD5;
-	dest.imgext = image.ext;
-	dest.imgsize = image.size;
-	dest.imgtime = image.time;
-}
-
-Y.add_image = function (post_num, image, callback) {
+Y.add_image = function (post, image, callback) {
 	var r = this.connect();
-	var key = 'post:' + post_num;
+	var key = 'post:' + post.num;
+	var self = this;
 	r.exists(key, function (err, exists) {
 		if (err)
-			callback(err);
-		else if (!exists)
-			callback("Post does not exist.");
-		else {
-			var view = {};
-			add_image_view(image, view);
-			r.hmset(key, view, callback);
-		}
+			return callback(err);
+		if (!exists)
+			return callback("Post does not exist.");
+		var m = r.multi();
+		self._log(m, post.op, post.num, common.INSERT_IMAGE, [image]);
+		m.hmset(key, image);
+		m.incr('thread:' + post.op + ':imgctr');
+		m.exec(callback);
 	});
 };
 
@@ -234,6 +231,7 @@ Y.finish_all = function (callback) {
 Y._log = function (m, op, num, kind, msg) {
 	msg.unshift(kind);
 	msg = JSON.stringify(msg);
+	console.log("Log:", msg);
 	m.rpush('backlog', msg);
 	m.publish('thread:' + (op || num), num + ':' + kind + ':' + msg);
 };
@@ -350,6 +348,7 @@ Reader.prototype.get_thread = function (num, redirect_ok, abbrev) {
 				if (err)
 					return self.emit('error', err);
 				var omit = Math.max(r[1] + shonen, 0);
+				extract_image(op_post);
 				self.emit('thread', op_post, omit);
 				self._get_each_reply(0, r[0]);
 			});
@@ -375,11 +374,28 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 			if (err)
 				return self.emit('error', err);
 			var has_next = ix + 1 < nums.length;
+			extract_image(post);
 			self.emit('post', post, has_next);
 			next_please();
 		});
 	});
 };
+
+var image_attrs;
+function extract_image(post) {
+	if (!image_attrs)
+		image_attrs = require('./pix').image_attrs;
+	if (!(image_attrs[0] in post))
+		return;
+	var image = {};
+	image_attrs.forEach(function (key) {
+		image[key] = post[key];
+		delete post[key];
+	});
+	image.dims = image.dims.split(',');
+	image.size = parseInt(image.dims);
+	post.image = image;
+}
 
 function with_body(r, key, post, callback) {
 	/* Convenience */

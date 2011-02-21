@@ -83,7 +83,6 @@ var oneeSama = new OneeSama(function (num) {
 });
 oneeSama.dirs = DIRS;
 oneeSama.full = THREAD;
-oneeSama.image_view = function (img, imgnm, op) { return img; };
 
 function inject(frag) {
 	var dest = this.buffer;

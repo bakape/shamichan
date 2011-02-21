@@ -1,51 +1,24 @@
-var config = require('./config'),
-	db = require('./db'),
-	exec = require('child_process').exec,
-	flow = require('flow'),
-	formidable = require('formidable'),
-	fs = require('fs'),
-	path = require('path'),
-	util = require('util');
+var async = require('async'),
+    config = require('./config'),
+    db = require('./db'),
+    exec = require('child_process').exec,
+    flow = require('flow'),
+    formidable = require('formidable'),
+    fs = require('fs'),
+    im = require('imagemagick'),
+    path = require('path'),
+    util = require('util');
 
-var IMAGE_EXTS = ['.png', '.jpg', '.gif'];
-
-function readable_filesize(size) {
-       /* Metric. Deal with it. */
-       if (size < 1000)
-               return size + ' B';
-       if (size < 1000000)
-               return Math.round(size / 1000) + ' KB';
-       size = Math.round(size / 100000).toString();
-       return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
+function get_thumb_specs(w, h, pinky) {
+	var QUALITY = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
+	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
+	var r = Math.max(w / bound[0], h / bound[1], 1);
+	return {dims: [Math.round(w/r), Math.round(h/r)], quality: QUALITY};
 }
 
-function get_thumb_specs(pinky) {
-	if (pinky)
-		return {dims: config.PINKY_DIMENSIONS,
-				quality: config.PINKY_QUALITY, ext: '.jpg'}
-	return {dims: config.THUMB_DIMENSIONS, quality: config.THUMB_QUALITY,
-			ext: 'l.jpg'};
-}
-
-exports.get_image_view = function (image, imgnm, pinky) {
-	if (!image.cache) {
-		var d = image.dims;
-		image.cache = {src: '' + image.time + IMAGE_EXTS[image.ext],
-			size: readable_filesize(image.size),
-			thumb_dims: d.slice(0, 4),
-			pinky_dims: [d[0], d[1], d[4], d[5]]};
-	}
-	return {src: image.cache.src, size: image.cache.size, MD5: image.MD5,
-		thumb: image.time + (pinky ? '.jpg' : 'l.jpg'), imgnm: imgnm,
-		dims: pinky ? image.cache.pinky_dims : image.cache.thumb_dims};
-};
-
-exports.ImageUpload = function (clients, allocate_post, set_post_image,
-			broadcast, status) {
+exports.ImageUpload = function (clients, allocate_post, status) {
 	this.clients = clients;
 	this.allocate_post = allocate_post;
-	this.set_post_image = set_post_image;
-	this.broadcast = broadcast;
 	this.status = status;
 };
 
@@ -75,12 +48,9 @@ IU.handle_request = function (req, resp) {
 
 IU.parse_form = function (err, fields, files) {
 	if (err) {
-		console.log("Upload error: " + err);
-		var code = 500;
-		err = '' + (err.message || err);
-		return this.failure(err);
+		console.error("Upload error: " + err);
+		return this.failure('Invalid upload.');
 	}
-
 	var image = files.image;
 	if (!image)
 		return this.failure('No image.');
@@ -99,12 +69,10 @@ IU.parse_form = function (err, fields, files) {
 	client.uploading = true;
 	if (client.post && client.post.image)
 		return this.failure('Image already exists.');
-	var ext = path.extname(image.filename).toLowerCase();
-	if (ext == '.jpeg')
-		ext = '.jpg';
-	image.tagged_path = ext.replace('.', '') + ':' + image.path;
-	image.ext = IMAGE_EXTS.indexOf(ext);
-	if (image.ext < 0)
+	image.ext = path.extname(image.filename).toLowerCase();
+	if (image.ext == '.jpeg')
+		image.ext = '.jpg';
+	if (['.png', '.jpg', '.gif'].indexOf(image.ext) < 0)
 		return this.failure('Invalid image format.');
 	if (fields.alloc) {
 		try {
@@ -116,167 +84,102 @@ IU.parse_form = function (err, fields, files) {
 	}
 	else if (!client.post)
 		return this.failure('Missing alloc.');
+	image.imgnm = image.filename.substr(0, 256);
 	this.process();
 }
 
 IU.process = function () {
 	this.status('Verifying...');
 	var image = this.image;
-	image.pinky = (this.client.post && this.client.post.op) ||
-			(this.alloc && this.alloc.op);
-
-	var specs = get_thumb_specs(image.pinky);
+	var tagged_path = image.ext.replace('.', '') + ':' + image.path;
 	var self = this;
-	flow.exec(function () {
-		self.MD5_image(this);
-	}, function (MD5) {
-		image.MD5 = MD5;
-		db.check_duplicate_image(self.client.db, MD5, this);
-	}, function (err, found) {
+	async.parallel({
+		MD5: MD5_file.bind(null, image.path),
+		stat: fs.stat.bind(fs, image.path),
+		dims: im.identify.bind(im, tagged_path)
+	}, function (err, rs) {
 		if (err)
-			return self.failure('Duplicate image check failed.');
-		if (found) {
-			self.image = found;
-			self.image.filename = image.filename;
-			self.image.pinky = image.pinky;
-			return self.adapt_existing();
-		}
-		self.read_image_filesize(this);
-	}, function (size) {
-		image.size = size;
-		self.read_image_dimensions(image.tagged_path, this);
-	}, function (w, h) {
+			return self.failure(err);
+		image.MD5 = rs.MD5;
+		image.size = rs.stat.size;
+		var w = rs.dims.width, h = rs.dims.height;
 		if (!w || !h)
 			return self.failure('Invalid image dimensions.');
 		if (w > config.IMAGE_WIDTH_MAX)
 			return self.failure('Image is too wide.');
 		if (h > config.IMAGE_HEIGHT_MAX)
 			return self.failure('Image is too tall.');
-		image.dims = [w, h];
 		image.thumb_path = image.path + '_thumb';
 		self.status('Thumbnailing...');
-		self.resize_image(image.tagged_path, image.thumb_path,
-				specs.dims, specs.quality, this);
-	}, function () {
-		self.read_image_dimensions(image.thumb_path, this);
-	}, function (w, h) {
-		if (image.pinky)
-			image.dims.push(0, 0, w, h);
-		else
-			image.dims.push(w, h, 0, 0);
+		var pinky = (self.client.post && self.client.post.op) ||
+				(self.alloc && self.alloc.op);
+		var specs = get_thumb_specs(w, h, pinky);
+		image.dims = [w, h].concat(specs.dims);
+		self.resize_image(tagged_path, image.thumb_path,
+				specs.dims, specs.quality,
+	function () {
 		self.status('Publishing...');
-		image.time = new Date().getTime();
-		image.src = image.time + IMAGE_EXTS[image.ext];
-		self.dest = path.join(config.IMAGE_DIR, image.src);
-		self.handle_exec('mv -- ' + image.path + ' ' + self.dest,
-				"Couldn't publish image.", this);
-	}, function () {
-		image.path = self.dest;
-		image.thumb = image.time + specs.ext;
-		self.nail = path.join(config.THUMB_DIR, image.thumb);
-		self.handle_exec('mv -- ' + image.thumb_path + ' ' + self.nail,
-				"Couldn't publish thumbnail.", this);
-	}, function () {
-		image.thumb_path = self.nail;
-		db.insert_image(self.client.db, image, this);
-	}, function (err, id) {
-		if (err)
-			return upload_failure("Couldn't add image to DB.");
-		image.id = id;
-		self.publish();
-	});
-};
+		var time = new Date().getTime();
+		image.src = time + image.ext;
+		image.thumb = time + '.jpg';
+		var dest = path.join(config.IMAGE_DIR, image.src);
+		var nail = path.join(config.THUMB_DIR, image.thumb);
+		async.parallel([fs.rename.bind(fs, image.path, dest),
+				fs.rename.bind(fs, image.thumb_path, nail)],
+				function (err, rs) {
+			if (err) {
+				console.error(err);
+				return self.failure("Distro failure.");
+			}
+			image.path = dest;
+			image.thumb_path = nail;
+			self.publish();
+		});
 
-IU.adapt_existing = function () {
-	var image = this.image;
-	var index = image.pinky ? 4 : 2;
-	var specs = get_thumb_specs(image.pinky);
-	image.src = image.time + IMAGE_EXTS[image.ext];
-	image.thumb = image.time + specs.ext;
-	if (image.dims[index]) {
-		this.status('Publishing...');
-		return this.publish();
-	}
-	image.thumb_path = path.join(config.THUMB_DIR, image.thumb);
-	var self = this;
-	flow.exec(function () {
-		self.status('Thumbnailing...');
-		/* Don't set image.src since we don't want to delete it
-		 * on failure as it is shared */
-		self.resize_image(path.join(config.IMAGE_DIR, image.src),
-			image.thumb_path, specs.dims, specs.quality, this);
-	}, function () {
-		self.read_image_dimensions(image.thumb_path, this);
-	}, function (w, h) {
-		image.dims[index] = w;
-		image.dims[index + 1] = h;
-		self.status('Publishing...');
-		db.update_thumbnail_dimensions(self.client.db, image.id,
-				image.pinky, w, h, this);
-	}, function (err) {
-		if (err)
-			return self.failure("Secondary thumbnail failure.");
-		self.publish();
 	});
-
-};
+	});
+}
 
 IU.read_image_filesize = function (callback) {
 	var self = this;
 	fs.stat(this.image.path, function (err, stat) {
-		if (err)
-			return self.failure('Internal filesize error.');
-		if (stat.size > config.IMAGE_FILESIZE_MAX)
-			self.failure('File is too large.');
+		if (err) {
+			console.error(err);
+			callback('Internal filesize error.');
+		}
+		else if (stat.size > config.IMAGE_FILESIZE_MAX)
+			callback('File is too large.');
 		else
-			callback(stat.size);
+			callback(null, stat.size);
 	});
 };
 
-IU.read_image_dimensions = function (path, callback) {
-	var self = this;
-	exec('identify ' + path, function (error, stdout, stderr) {
-		if (error) {
-			console.log(stderr);
-			return self.failure('Corrupt image.');
+function MD5_file(path, callback) {
+	exec('md5sum -b ' + path, function (err, stdout, stderr) {
+		if (!err) {
+			var m = stdout.match(/^([\da-f]{32})/);
+			if (m)
+				return callback(null, m[1]);
 		}
-		var m = stdout.match(/.* (\d+)x(\d+) /);
-		if (!m)
-			return self.failure('Corrupt image.');
-		callback(parseInt(m[1]), parseInt(m[2]));
-	});
-};
-
-IU.MD5_image = function (callback) {
-	var self = this;
-	exec('md5sum -b ' + this.image.path, function (error, stdout, stderr) {
-		if (error) {
-			console.log(stderr);
-			return self.failure('Hashing error.');
-		}
-		callback(stdout.match(/^([\da-f]+)/)[1]);
+		console.log(stdout);
+		console.error(stderr);
+		return callback('Hashing error.');
 	});
 };
 
 IU.resize_image = function (src, dest, dims, quality, callback) {
-	this.handle_exec('convert ' + src + '[0] -gamma 0.454545 ' +
-			'-filter lanczos -resize ' + dims + ' -gamma 2.2 ' +
-			'-background white -mosaic +matte ' +
-			'-quality ' + quality + ' jpg:' + dest,
-		'Conversion error.', callback);
-};
-
-IU.handle_exec = function (cmd, err_desc, callback) {
 	var self = this;
-	exec(cmd, function (error, stdout, stderr) {
-		if (stdout)
-			console.log(stdout);
-		if (stderr)
-			util.error(stderr);
-		if (error == null && !stderr)
-			callback();
-		else
-			self.failure(err_desc);
+	im.convert([src + '[0]', '-gamma', '0.454545', '-filter', 'lanczos',
+			'-resize', dims[0] + 'x' + dims[1] + '!',
+			'-gamma', '2.2',
+			'-background', 'white', '-mosaic', '+matte',
+			'-quality', ''+quality, 'jpg:' + dest],
+			function (err, stdout, stderr) {
+		if (err) {
+			console.error(stderr);
+			return self.failure('Conversion error.');
+		}
+		callback();
 	});
 };
 
@@ -288,48 +191,37 @@ IU.failure = function (err_desc) {
 			fs.unlink(image.path);
 		if (image.thumb_path)
 			fs.unlink(image.thumb_path);
-		if (image.id) {
-			/* TODO: Remove DB row */
-		}
 	}
 	if (this.client)
 		this.client.uploading = false;
 };
 
+exports.image_attrs = ['src', 'thumb', 'dims', 'size', 'MD5', 'imgnm'];
+
 IU.publish = function () {
-	var imgnm = this.image.filename.substr(0, 256);
-	var image = {
-		time: this.image.time, dims: this.image.dims,
-		size: this.image.size, MD5: this.image.MD5,
-		id: this.image.id, ext: this.image.ext
-	};
+	var client = this.client;
+	var view = {};
 	var self = this;
-	if (this.client.post) {
-		var post = this.client.post;
+	exports.image_attrs.forEach(function (key) {
+		view[key] = self.image[key];
+	});
+	if (client.post) {
 		/* Text beat us here, discard alloc (if any) */
-		db.append_image(self.client.db, post.num, image.id, imgnm,
-					function (err) {
-			if (err)
+		client.db.add_image(client.post, view, function (err) {
+			if (err || !client.post)
 				return self.failure("Publishing failure.");
-			var view = exports.get_image_view(image, imgnm,
-					self.image.pinky);
+			client.post.image = view;
+			client.uploading = false;
 			self.iframe_call('upload_complete', view);
-			self.set_post_image(post, image, imgnm);
-			self.broadcast(view, self.client);
-			self.client.uploading = false;
 		});
 		return;
 	}
-	flow.exec(function () {
-		if (!self.allocate_post(self.alloc, image, imgnm,
-				self.client, this))
-			self.client.uploading = false;
-	}, function (err, alloc) {
+	self.allocate_post(self.alloc, view, client, function (err, alloc) {
 		if (err) {
 			console.error(err);
 			return self.failure('Bad post.');
 		}
-		self.client.uploading = false;
+		client.uploading = false;
 		self.iframe_call('postForm.on_allocation', alloc);
 	});
 };

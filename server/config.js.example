@@ -13,12 +13,12 @@ var config = {
 	IMAGE_HEIGHT_MAX: 5000,
 	IMAGE_DIR: '../www/src',
 	THUMB_DIR: '../www/thumb',
-	IMAGE_URL: 'http://localhost/src/',
-	THUMB_URL: 'http://localhost/thumb/',
+	IMAGE_URL: '/src/',
+	THUMB_URL: '/thumb/',
 	PINKY_QUALITY: 50,
-	PINKY_DIMENSIONS: '125x125',
+	PINKY_DIMENSIONS: [125, 125],
 	THUMB_QUALITY: 50,
-	THUMB_DIMENSIONS: '250x250',
+	THUMB_DIMENSIONS: [250, 250],
 
 	MIXPANEL_TOKEN: '',
 };

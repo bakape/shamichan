@@ -87,7 +87,6 @@ var oneeSama = new common.OneeSama(function (num) {
 	else
 		this.callback('>>' + num);
 });
-oneeSama.image_view = pix.get_image_view;
 oneeSama.dirs = {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL};
 
 function write_thread_html(reader, response, full_thread) {
@@ -113,20 +112,13 @@ function image_status(status) {
 	multisend(this.client, [[common.IMAGE_STATUS, status]]);
 }
 
-function set_post_image(post, image, imgnm) {
-	post.image = image;
-	post.imgnm = imgnm;
-	if (post.op)
-		posts[post.op].thread.image_count++;
-}
-
 var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT, -1',
 		'Cache-Control': 'no-cache'};
 var server = http.createServer(function(req, resp) {
 	if (req.method.toLowerCase() == 'post') {
 		var upload = new pix.ImageUpload(clients, allocate_post,
-				set_post_image, announce_image, image_status);
+				image_status);
 		upload.handle_request(req, resp);
 		return;
 	}
@@ -322,42 +314,43 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	msg = msg[0];
 	if (config.IMAGE_UPLOAD && !msg.op)
 		return false;
-	if (client.post)
-		return true; /* image upload/fragment typing race */
+	if (client.post) {
+		/* TODO: merge with image upload's alloc */
+		return true;
+	}
 	var frag = msg.frag;
 	if (!frag || frag.match(/^\s*$/g))
 		return false;
-	return allocate_post(msg, null, null, client, function (err, alloc) {
-		if (err) {
-			/* TODO: Report */
-			console.log(err);
-			return;
-		}
-		multisend(client, [[common.ALLOCATE_POST, alloc]]);
+	allocate_post(msg, null, client, function (err, alloc) {
+		if (err)
+			return report(err);
+		else
+			multisend(client, [[common.ALLOCATE_POST, alloc]]);
 	});
+	return true;
 }
 
-function allocate_post(msg, image, imgnm, client, callback) {
+function allocate_post(msg, image, client, callback) {
 	if (!msg || typeof msg != 'object')
-		return false;
+		return callback('Bad alloc.');
 	var post = {time: new Date().getTime()};
 	var body = '';
 	if (msg.frag !== undefined) {
 		if (typeof msg.frag != 'string' || msg.frag.match(/^\s*$/g)
 				|| msg.frag.length > common.MAX_POST_CHARS)
-			return false;
+			return callback('Post is too long.');
 		body = msg.frag;
 	}
 	if (msg.op !== undefined) {
 		if (typeof msg.op != 'number')
-			return false;
+			return callback('Invalid thread.');
 		post.op = msg.op;
 	}
 	if (client.watching && post.op !== client.watching)
 		return false;
 	if (msg.name !== undefined) {
 		if (typeof msg.name != 'string')
-			return false;
+			return callback('Invalid name.');
 		var parsed = common.parse_name(msg.name);
 		post.name = parsed[0];
 		if (parsed[1] || parsed[2]) {
@@ -368,26 +361,24 @@ function allocate_post(msg, image, imgnm, client, callback) {
 	}
 	if (msg.email !== undefined) {
 		if (typeof msg.email != 'string')
-			return false;
+			return callback('Invalid email.');
 		post.email = msg.email.trim().substr(0, 320);
 		if (post.email == 'noko')
 			delete post.email;
 	}
-	if (image) {
+	if (image)
 		post.image = image;
-		post.imgnm = imgnm;
-	}
 	post.state = [0, 0];
 	flow.exec(function () {
 		valid_links(body, post.state, this);
 	},
 	function (err, links) {
-		if (err)
-			return callback(err);
-		if (client.post) {
-			/* Race condition... discard this */
-			callback('Already have a post.');
+		if (err) {
+			console.error('valid_links: ' + err);
+			return callback("Post reference error.");
 		}
+		if (client.post)
+			return callback('Already have a post.');
 		post.links = links;
 		client.db.insert_post(post, body, client.ip, function (num) {
 			post.num = num;
@@ -396,8 +387,10 @@ function allocate_post(msg, image, imgnm, client, callback) {
 		}, this);
 	},
 	function (err) {
-		if (err)
-			return callback(err);
+		if (err) {
+			console.error(err);
+			return callback("Couldn't allocate post.");
+		}
 		callback(null, get_post_view(post));
 	});
 	return true;
@@ -411,15 +404,8 @@ function get_post_view(post) {
 	if (post.email) view.email = post.email;
 	if (post.editing) view.editing = post.editing;
 	if (post.links) view.links = post.links;
-	if (post.image)
-		view.image = pix.get_image_view(post.image, post.imgnm,
-				post.op);
+	if (post.image) view.image = post.image;
 	return view;
-}
-
-function announce_image(info, client) {
-	var post = client.post;
-	/* TODO */
 }
 
 dispatcher[common.UPDATE_POST] = function (frag, client) {
