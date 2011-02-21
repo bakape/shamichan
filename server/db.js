@@ -212,18 +212,26 @@ Y.finish_post = function (post, callback) {
 
 Y.finish_all = function (callback) {
 	var r = this.connect();
+	var self = this;
 	r.keys('*:body', function (err, keys) {
 		if (err)
 			return callback(err);
 		async.forEach(keys, function (body_key, cb) {
 			var key = body_key.slice(0, -5);
-			r.get(body_key, function (err, body) {
+			var m = r.multi();
+			m.get(body_key);
+			if (key.slice(0, 5) == 'post:')
+				m.hget(key, 'op');
+			m.exec(function (err, rs) {
 				if (err)
 					return cb(err);
-				var m = r.multi();
-				m.hset(key, 'body', body);
+				m = r.multi();
+				m.hset(key, 'body', rs[0]);
 				m.del(body_key);
 				m.hdel(key, 'state');
+				var n = parseInt(key.match(/:(\d+)$/)[1]);
+				var op = parseInt(rs[1]) || n;
+				self._log(m, op, n, common.FINISH_POST, [n]);
 				m.exec(cb);
 			});
 		}, callback);
