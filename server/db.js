@@ -123,7 +123,7 @@ Y._insert = function (msg, body, ip, update, callback) {
 		if (msg.email)
 			view.email = msg.email;
 		if (op)
-			view.op = msg.op;
+			view.op = op;
 
 		var key = (op ? 'post:' : 'thread:') + num;
 		var bump = !op || view.email != 'sage';
@@ -131,9 +131,8 @@ Y._insert = function (msg, body, ip, update, callback) {
 		if (bump)
 			m.incr(tag_key + ':bumpctr');
 		if (msg.image) {
-			m.incr('thread:' + op + ':imgctr');
-			for (var key in msg.image)
-				view[key] = msg.image[key];
+			m.incr('thread:' + (op || num) + ':imgctr');
+			inline_image(view, msg.image);
 		}
 		m.hmset(key, view);
 		m.set(key + ':body', body);
@@ -406,6 +405,14 @@ function extract_image(post) {
 		image.dims = image.dims.split(',');
 	image.size = parseInt(image.dims);
 	post.image = image;
+}
+
+function inline_image(post, image) {
+	if (!image_attrs)
+		image_attrs = require('./pix').image_attrs;
+	image_attrs.forEach(function (key) {
+		post[key] = image[key];
+	});
 }
 
 function with_body(r, key, post, callback) {
