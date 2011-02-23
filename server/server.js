@@ -131,13 +131,18 @@ var server = http.createServer(function(req, resp) {
 	if (config.DEBUG) {
 		/* Highly insecure! Abunai! */
 		var path = '../www/' + req.url.replace(/\.\./g, '');
+		var h = {};
+		try {
+			h['Content-Type'] = require('connect').utils.mime.type(
+					require('path').extname(path));
+		} catch (e) {}
 		fs.readFile(path, function (err, buf) {
 			if (err) {
 				resp.writeHead(404, httpHeaders);
 				resp.end(notFoundHtml);
 			}
 			else {
-				resp.writeHead(200, {});
+				resp.writeHead(200, h);
 				resp.end(buf);
 			}
 		});
