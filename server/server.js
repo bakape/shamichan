@@ -476,9 +476,8 @@ function start_server() {
 	});
 }
 
-function get_version(callback) {
-	require('child_process').exec(
-			'git log -1 --format=%h ' + config.CLIENT_DEPS,
+function get_version(deps, callback) {
+	require('child_process').exec('git log -1 --format=%h '+deps.join(' '),
 			function (err, stdout, stderr) {
 		if (err)
 			callback(err);
@@ -487,19 +486,21 @@ function get_version(callback) {
 	});
 }
 
-if (process.argv[2] == '--show-config')
-	console.log(config[process.argv[3]]);
-else if (process.argv[2] == '--version')
-	get_version(function (err, version) {
-		if (err) {
-			console.error(err);
-			process.exit(1);
-		}
+if (process.argv[2] == '--show-config') {
+	var val = config[process.argv[3]];
+	if (!val)
+		throw "No such config value " + process.argv[3];
+	console.log(val.join ? val.join(' ') : val);
+}
+else if (process.argv[2] == '--client-version')
+	get_version(config.CLIENT_DEPS, function (err, version) {
+		if (err)
+			throw err;
 		else
 			console.log(version);
 	});
 else {
-	get_version(function (err, version) {
+	get_version(config.CLIENT_DEPS, function (err, version) {
 		if (err)
 			throw err;
 		tripcode = require('./tripcode');

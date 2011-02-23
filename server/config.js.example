@@ -22,8 +22,10 @@ var config = {
 
 	MIXPANEL_TOKEN: '',
 };
-config.CLIENT_DEPS = 'lib/socket.io.js common.js client.js';
+
+config.CLIENT_DEPS = ['lib/socket.io.js', 'common.js', 'client.js'];
 if (!config.DEBUG)
-	config.CLIENT_DEPS += ' lib/mixpanel.js';
-config.CLIENT_DEPS += ' lib/mixpanel_invoke.js guns.js';
+	config.CLIENT_DEPS.push('lib/mixpanel.js');
+config.CLIENT_DEPS.push('lib/mixpanel_invoke.js', 'guns.js');
+
 module.exports = config;

@@ -1,5 +1,5 @@
 CLIENT_SRC := $(shell node server.js --show-config CLIENT_DEPS)
-CLIENT_JS := ../www/js/client-$(shell node server.js --version).js
+CLIENT_JS := ../www/js/client-$(shell node server.js --client-version).js
 DEBUG := $(shell node server.js --show-config DEBUG)
 
 all: builder tripcode.node client
