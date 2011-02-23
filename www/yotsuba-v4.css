@@ -51,9 +51,11 @@ fieldset label {
 }
 figcaption {
 	display: block;
+	margin: 1px 0;
 }
 figure {
 	display: inline;
+	margin: 0;
 }
 figure img {
 	border: 0;
