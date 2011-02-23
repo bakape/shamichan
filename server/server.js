@@ -131,20 +131,26 @@ var server = http.createServer(function(req, resp) {
 	if (config.DEBUG) {
 		/* Highly insecure! Abunai! */
 		var path = '../www/' + req.url.replace(/\.\./g, '');
-		var h = {};
-		try {
-			h['Content-Type'] = require('connect').utils.mime.type(
-					require('path').extname(path));
-		} catch (e) {}
-		fs.readFile(path, function (err, buf) {
-			if (err) {
+		var s = fs.createReadStream(path);
+		s.once('error', function (err) {
+			if (err.code == 'ENOENT') {
 				resp.writeHead(404, httpHeaders);
 				resp.end(notFoundHtml);
 			}
 			else {
-				resp.writeHead(200, h);
-				resp.end(buf);
+				resp.writeHead(500, {});
+				resp.end(err.message);
 			}
+		});
+		s.once('open', function () {
+			var h = {};
+			try {
+				var mime = require('connect').utils.mime;
+				var ext = require('path').extname(path);
+				h['Content-Type'] = mime.type(ext);
+			} catch (e) {}
+			resp.writeHead(200, h);
+			util.pump(s, resp);
 		});
 		return;
 	}
