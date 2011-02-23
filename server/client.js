@@ -621,7 +621,8 @@ dispatcher[SYNCHRONIZE] = function (msg) {
 };
 
 dispatcher[INVALID] = function (msg) {
-	sync_status('Out of sync.', true);
+	msg = msg[0] ? 'Out of sync: ' + msg[0] : 'Out of sync.';
+	sync_status(msg, true);
 	outOfSync = true;
 	socket.disconnect();
 	if (postForm)
