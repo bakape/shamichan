@@ -315,6 +315,12 @@ Y._get_each_thread = function (reader, ix, nums) {
 	reader.get_thread(nums[ix], false, true);
 };
 
+Y.report_error = function (info, ver, callback) {
+	var r = this.connect();
+	info.time = new Date().getTime();
+	r.rpush('error:' + ver, JSON.stringify(info), callback);
+};
+
 function Reader(yakusoku) {
 	events.EventEmitter.call(this);
 	this.y = yakusoku;

@@ -29,9 +29,9 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			return false;
 		client.db.thread_exists(watching, function (err, exists) {
 			if (err)
-				report(client, err);
+				report(err, client);
 			else if (!exists)
-				report(client, "No such thread.");
+				report(null, client, "No such thread.");
 			else {
 				client.watching = watching;
 				sync_client(client, sync);
@@ -50,13 +50,13 @@ function sync_client(client, sync) {
 	},
 	function (err) {
 		if (err)
-			report(client, err);
+			report(err, client);
 		else
 			client.db.fetch_backlog(sync, client.watching, this);
 	},
 	function (err, s, log) {
 		if (err)
-			return report(client, err);
+			return report(err, client);
 
 		client.db.on('update', client_update.bind(client));
 
@@ -257,7 +257,7 @@ function init_client (socket) {
 		var func = dispatcher[type];
 		if (!func || !func(msg, client)) {
 			console.error("Got invalid message " + data);
-			report(client, "Bad protocol.");
+			report(null, client, "Bad protocol.");
 		}
 	});
 	socket.on('disconnect', function () {
@@ -274,10 +274,43 @@ function init_client (socket) {
 	client.db.on('error', console.error.bind(console, 'redis:'));
 }
 
-function report(client, msg) {
-	console.error('Bad ' + client.ip + ': ' + msg);
-	multisend(client, [[common.INVALID, msg]]);
-	client.synced = false;
+function pad3(n) {
+	return (n < 10 ? '00' : (n < 100 ? '0' : '')) + n;
+}
+
+var git_version;
+var error_db;
+function report(error, client, client_msg) {
+	if (typeof git_version == 'undefined') {
+		git_version = null;
+		get_version([], function (err, ver) {
+			if (err) {
+				console.error(err);
+				console.error(error);
+			}
+			else {
+				git_version = ver;
+				report(error, client, client_msg);
+			}
+		});
+		return;
+	}
+	if (!error_db)
+		error_db = new db.Yakusoku;
+	var ver = git_version || 'ffffff';
+	var msg = client_msg || 'Server error.';
+	var ip = client && client.ip;
+	var info = {error: error, msg: msg, ip: ip};
+	error_db.report_error(info, ver, function (err, num) {
+		if (err)
+			console.error(err);
+		ver = ' (#' + ver + '-' + pad3(num) + ')';
+		console.error((error || msg) + ' ' + ip + ver);
+		if (client) {
+			multisend(client, [[common.INVALID, msg + ver]]);
+			client.synced = false;
+		}
+	});
 }
 
 /* Must be prepared to receive callback instantly */
@@ -335,7 +368,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 		return false;
 	allocate_post(msg, null, client, function (err, alloc) {
 		if (err)
-			return report(err);
+			return report(err, client, "Couldn't allocate post.");
 		else
 			multisend(client, [[common.ALLOCATE_POST, alloc]]);
 	});
@@ -448,7 +481,7 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 	},
 	function (err) {
 		if (err)
-			return report(client, "Couldn't add text.");
+			report(err, client, "Couldn't add text.");
 	});
 	return true;
 }
@@ -470,7 +503,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 		return false;
 	finish_post_by(client, function (err) {
 		if (err)
-			report(client, err);
+			report(err, client, "Couldn't finish post.");
 	});
 	return true;
 }
