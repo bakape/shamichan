@@ -632,7 +632,7 @@ dispatcher[INVALID] = function (msg) {
 	return false;
 };
 
-function are_you_ready_guys() {
+$(function () {
 	socket.on('connect', on_connect);
 	socket.on('disconnect', attempt_reconnect);
 	socket.on('message', function (data) {
@@ -717,4 +717,4 @@ function are_you_ready_guys() {
 	}
 	$(document.body).append(opts);
 	$('#options').click(function () { opts.toggle(); });
-}
+});
