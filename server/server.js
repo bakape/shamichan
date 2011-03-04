@@ -357,12 +357,10 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (msg.length != 1)
 		return false;
 	msg = msg[0];
-	if (!msg.op)
+	if (typeof msg != 'object' || !msg.op)
 		return false;
-	if (client.post) {
-		/* TODO: merge with image upload's alloc */
-		return true;
-	}
+	if (client.post)
+		return update_post(msg.frag, client);
 	var frag = msg.frag;
 	if (!frag || frag.match(/^\s*$/g))
 		return false;
@@ -453,8 +451,8 @@ function get_post_view(post) {
 	return view;
 }
 
-dispatcher[common.UPDATE_POST] = function (frag, client) {
-	if (!frag || frag.constructor != String)
+function update_post(frag, client) {
+	if (typeof frag != 'string')
 		return false;
 	var post = client.post;
 	if (!post)
@@ -485,6 +483,7 @@ dispatcher[common.UPDATE_POST] = function (frag, client) {
 	});
 	return true;
 }
+dispatcher[common.UPDATE_POST] = update_post;
 
 function finish_post_by(client, callback) {
 	/* TODO: Should we check client.uploading? */

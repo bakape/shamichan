@@ -233,6 +233,7 @@ function upload_complete(info) {
 	form.find('input[name=image]').siblings('strong').andSelf().add(
 			postForm.cancel).remove();
 	mpmetrics.track('image', op ? {op: op} : {});
+	postForm.flush_pending();
 }
 
 function insert_image(info, header, op) {
@@ -255,7 +256,7 @@ function PostForm(dest, section) {
 	this.input = $('<textarea name="body" class="trans" rows="1"/>');
 	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
-	this.unallocatedBuffer = '';
+	this.pending = '';
 	this.line_count = 1;
 	this.char_count = 0;
 	this.imouto = new OneeSama(function (num) {
@@ -322,6 +323,7 @@ PostForm.prototype.propagate_fields = function () {
 PostForm.prototype.on_allocation = function (msg) {
 	var num = msg.num;
 	this.num = num;
+	this.flush_pending();
 	nameField.unbind();
 	emailField.unbind();
 	save_ident();
@@ -502,17 +504,12 @@ PostForm.prototype.commit = function (text) {
 	if (!this.num && !this.sentAllocRequest) {
 		send([ALLOCATE_POST, this.make_alloc_request(text)]);
 		this.sentAllocRequest = true;
+		this.cancel.attr('disabled', true);
 	}
-	else if (this.num) {
-		if (this.unallocatedBuffer) {
-			send(this.unallocatedBuffer + text);
-			this.unallocatedBuffer = '';
-		}
-		else
-			send(text);
-	}
+	else if (this.num)
+		send(text);
 	else
-		this.unallocatedBuffer += text;
+		this.pending += text;
 
 	/* Add it to the user's display */
 	var line_buffer = this.line_buffer;
@@ -524,6 +521,13 @@ PostForm.prototype.commit = function (text) {
 	}
 	else {
 		line_buffer.append(document.createTextNode(text));
+	}
+};
+
+PostForm.prototype.flush_pending = function () {
+	if (this.pending) {
+		send(this.pending);
+		this.pending = '';
 	}
 };
 
@@ -547,6 +551,7 @@ PostForm.prototype.commit_words = function (spaceEntered) {
 
 PostForm.prototype.finish = function () {
 	if (this.num) {
+		this.flush_pending();
 		this.commit(this.input.val());
 		this.input.remove();
 		this.submit.remove();
