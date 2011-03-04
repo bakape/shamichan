@@ -199,9 +199,8 @@ Y._insert = function (msg, body, ip, update, callback) {
 			r.zadd(tag_key + ':threads', results[0], num,
 						function (err) {
 				if (err)
-					callback(err);
-				else
-					callback(null, num);
+					console.error("Bump error: " + err);
+				callback(null, num);
 			});
 		});
 	});
