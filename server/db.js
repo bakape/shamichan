@@ -233,9 +233,13 @@ Y.append_post = function (post, tail, old_state, links, callback) {
 	/* XXX: fragile */
 	if (old_state[0] != post.state[0] || old_state[1] != post.state[1])
 		m.hset(key, 'state', post.state.join());
-	var msg = [post.num, tail].concat(old_state);
+	var msg = [post.num, tail];
 	if (links)
-		msg.push(links);
+		msg.push(old_state[0], old_state[1], links);
+	else if (old_state[1])
+		msg.push(old_state[0], old_state[1]);
+	else if (old_state[0])
+		msg.push(old_state[0]);
 	this._log(m, post.op, post.num, common.UPDATE_POST, msg);
 	m.exec(callback);
 };
