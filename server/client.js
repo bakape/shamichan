@@ -668,14 +668,18 @@ $(function () {
 	}
 
 	$(document).click(click_shita);
-	setTimeout(function () {
-		$('time').each(function (index) {
-			var time = $(this);
-			var date = time.attr('datetime').replace(/-/g, '/'
-				).replace('T', ' ').replace('Z', ' GMT');
-			time.text(readable_time(new Date(date).getTime()));
-		});
-	}, 0);
+
+	var ts = $('time'), ti = 0;
+	function make_local() {
+		if (ti >= ts.length)
+			return;
+		var t = $(ts[ti++]);
+		var d = t.attr('datetime').replace(/-/g, '/'
+			).replace('T', ' ').replace('Z', ' GMT');
+		t.text(readable_time(new Date(d).getTime()));
+		setTimeout(make_local, 0);
+	}
+	make_local();
 
 	var opts = $('<div class="modal"/>').hide();
 	var bs = {};
