@@ -357,7 +357,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (msg.length != 1)
 		return false;
 	msg = msg[0];
-	if (config.IMAGE_UPLOAD && !msg.op)
+	if (!msg.op)
 		return false;
 	if (client.post) {
 		/* TODO: merge with image upload's alloc */

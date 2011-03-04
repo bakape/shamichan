@@ -271,14 +271,8 @@ function PostForm(dest, section) {
 	shift_replies(section);
 	var post = this.post;
 	this.blockquote.append(this.buffer, this.line_buffer, this.input);
-	var post_parts = [this.meta, this.blockquote];
-	if (IMAGE_UPLOAD) {
-		this.uploadForm = this.make_upload_form();
-		post_parts.push(this.uploadForm);
-		if (!this.op)
-			this.blockquote.hide();
-	}
-	post.append.apply(post, post_parts);
+	this.uploadForm = this.make_upload_form();
+	post.append(this.meta, this.blockquote, this.uploadForm, this.cancel);
 
 	var prop = $.proxy(this, 'propagate_fields');
 	prop();
@@ -293,6 +287,8 @@ function PostForm(dest, section) {
 			this.on_key(null);
 	}, this));
 
+	if (!this.op)
+		this.blockquote.hide();
 	dest.replaceWith(post);
 	if (!this.op)
 		post.after('<hr/>');
@@ -356,7 +352,7 @@ PostForm.prototype.on_allocation = function (msg) {
 	this.submit.click($.proxy(this, 'finish'));
 	if (msg.image)
 		upload_complete(msg.image);
-	if (!this.op && IMAGE_UPLOAD) {
+	if (!this.op) {
 		this.blockquote.show();
 		this.input.focus();
 	}

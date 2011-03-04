@@ -28,11 +28,6 @@ var validFields = ['client_id', 'alloc'];
 
 IU.handle_request = function (req, resp) {
 	this.resp = resp;
-	if (!config.IMAGE_UPLOAD) {
-		resp.writeHead(403, {'Content-Type': 'text/plain'});
-		resp.end('No upload.');
-		return;
-	}
 	var form = new formidable.IncomingForm();
 	form.maxFieldsSize = 2048;
 	form.onPart = function (part) {
