@@ -174,7 +174,10 @@ IU.resize_image = function (src, dest, dims, quality, callback) {
 			console.error(stderr);
 			return self.failure('Conversion error.');
 		}
-		callback();
+		if (config.DEBUG)
+			setTimeout(callback, 1000);
+		else
+			callback();
 	});
 };
 
