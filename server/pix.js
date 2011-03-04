@@ -164,7 +164,7 @@ function MD5_file(path, callback) {
 
 IU.resize_image = function (src, dest, dims, quality, callback) {
 	var self = this;
-	im.convert([src + '[0]', '-gamma', '0.454545', '-filter', 'lanczos',
+	im.convert([src + '[0]', '-gamma', '0.454545',
 			'-resize', dims[0] + 'x' + dims[1] + '!',
 			'-gamma', '2.2',
 			'-background', 'white', '-mosaic', '+matte',
