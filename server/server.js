@@ -530,6 +530,8 @@ function get_version(deps, callback) {
 	});
 }
 
+(function () {
+
 if (process.argv[2] == '--show-config') {
 	var val = config[process.argv[3]];
 	if (!val)
@@ -553,12 +555,18 @@ else {
 		indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
 			{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
 		notFoundHtml = fs.readFileSync('../www/404.html');
-		var yaku = new db.Yakusoku;
-		yaku.finish_all(function (err) {
+		db.track_OPs(function (err) {
 			if (err)
 				throw err;
-			yaku.disconnect();
-			start_server();
+			var yaku = new db.Yakusoku;
+			yaku.finish_all(function (err) {
+				if (err)
+					throw err;
+				yaku.disconnect();
+				setTimeout(start_server, 0);
+			});
 		});
 	});
 }
+
+})();

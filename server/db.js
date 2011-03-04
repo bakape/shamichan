@@ -5,6 +5,9 @@ var async = require('async'),
     redis = require('redis'),
     util = require('util');
 
+var OPs = {};
+exports.OPs = OPs;
+
 function Yakusoku() {
 	events.EventEmitter.call(this);
 	/* TEMP */
@@ -75,10 +78,49 @@ Y.kikanai = function (thread) {
 
 Y._on_message = function (pat, chan, msg) {
 	var info = msg.split(':', 2);
-	var num = info[0], kind = info[1];
-	this.emit('update', chan, parseInt(num), parseInt(kind),
-			msg.substr(num.length + kind.length + 2));
+	var off = info[0].length + info[1].length + 2;
+	var num = parseInt(info[0]), kind = parseInt(info[1]);
+	this.emit('update', chan, num, kind, msg.substr(off));
 };
+
+function on_OP_message(pat, chan, msg) {
+	var op = parseInt(chan.match(/thread:(\d+)/)[1]);
+	var info = msg.split(':', 2);
+	var num = parseInt(info[0]), kind = parseInt(info[1]);
+	if (kind == common.INSERT_POST)
+		OPs[num] = op;
+}
+
+exports.track_OPs = function (callback) {
+	var k = redis.createClient();
+	k.psubscribe('thread:*');
+	k.on('psubscribe', function () {
+		var r = redis.createClient();
+		load_OPs(r, function (err) {
+			r.quit();
+			callback(err);
+		});
+	});
+	k.on('pmessage', on_OP_message);
+};
+
+function load_OPs(r, callback) {
+	r.keys('thread:*:posts', function (err, keys) {
+		if (err)
+			return callback(err);
+		async.forEach(keys, function (key, cb) {
+			var op = parseInt(key.match(/thread:(\d*):posts/)[1]);
+			OPs[op] = op;
+			r.lrange(key, 0, -1, function (err, posts) {
+				if (err)
+					return cb(err);
+				for (var i = 0; i < posts.length; i++)
+					OPs[parseInt(posts[i])] = op;
+				cb();
+			});
+		}, callback);
+	});
+}
 
 function is_empty(obj) {
 	if (!obj)
@@ -151,7 +193,8 @@ Y._insert = function (msg, body, ip, update, callback) {
 		m.exec(function (err, results) {
 			if (err)
 				return callback(err);
-			else if (!bump)
+			OPs[num] = op;
+			if (!bump)
 				return callback(null, num);
 			r.zadd(tag_key + ':threads', results[0], num,
 						function (err) {
