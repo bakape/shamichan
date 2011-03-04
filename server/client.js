@@ -224,12 +224,14 @@ function upload_error(msg) {
 	/* TODO: Reset allocation if necessary */
 	$('input[name=image]').attr('disabled', false
 			).siblings('strong').text(msg);
+	postForm.cancel.show();
 }
 
 function upload_complete(info) {
 	var form = postForm.uploadForm, op = postForm.op;
 	insert_image(info, form.siblings('header'), !op);
-	form.find('input[name=image]').siblings('strong').andSelf().remove();
+	form.find('input[name=image]').siblings('strong').andSelf().add(
+			postForm.cancel).remove();
 	mpmetrics.track('image', op ? {op: op} : {});
 }
 
@@ -272,7 +274,7 @@ function PostForm(dest, section) {
 	var post = this.post;
 	this.blockquote.append(this.buffer, this.line_buffer, this.input);
 	this.uploadForm = this.make_upload_form();
-	post.append(this.meta, this.blockquote, this.uploadForm, this.cancel);
+	post.append(this.meta, this.blockquote, this.uploadForm);
 
 	var prop = $.proxy(this, 'propagate_fields');
 	prop();
@@ -345,8 +347,10 @@ PostForm.prototype.on_allocation = function (msg) {
 		).attr('datetime', datetime(msg.time)).after(head_end);
 
 	this.submit.attr('disabled', false);
-	if (this.uploadForm)
+	if (this.uploadForm) {
+		this.cancel.remove();
 		this.uploadForm.append(this.submit);
+	}
 	else
 		this.blockquote.after(this.submit);
 	this.submit.click($.proxy(this, 'finish'));
@@ -566,8 +570,11 @@ PostForm.prototype.make_upload_form = function () {
 		+ 'action="." target="upload">'
 		+ '<input type="file" name="image"/> <strong/>'
 		+ '<input type="hidden" name="client_id" value="'
-		+ socket.transport.sessionid + '"/>'
+		+ socket.transport.sessionid + '"/> '
+		+ '<input type="button" value="Cancel"/>'
 		+ '<iframe src="" name="upload"/></form>');
+	this.cancel = form.find('input[type=button]').click($.proxy(this,
+			'finish'));
 	var user_input = this.input;
 	var self = this;
 	form.find('input[name=image]').change(function () {
@@ -583,6 +590,7 @@ PostForm.prototype.make_upload_form = function () {
 		}
 		form.submit();
 		$(this).attr('disabled', true);
+		self.cancel.hide();
 	});
 	return form;
 };
