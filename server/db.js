@@ -173,7 +173,10 @@ Y._insert = function (msg, body, ip, update, callback) {
 		if (bump)
 			m.incr(tag_key + ':bumpctr');
 		if (msg.image) {
-			m.incr('thread:' + (op || num) + ':imgctr');
+			if (op)
+				m.hincrby('thread:' + op, 'imgctr', 1);
+			else
+				view.imgctr = 1;
 			inline_image(view, msg.image);
 		}
 		m.hmset(key, view);
@@ -219,7 +222,7 @@ Y.add_image = function (post, image, callback) {
 		var m = r.multi();
 		self._log(m, post.op, num, common.INSERT_IMAGE, [num, image]);
 		m.hmset(key, image);
-		m.incr('thread:' + post.op + ':imgctr');
+		m.hincrby('thread:' + post.op, 'imgctr', 1);
 		m.exec(callback);
 	});
 };

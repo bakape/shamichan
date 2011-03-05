@@ -690,6 +690,25 @@ $(function () {
 	}
 	make_local();
 
+	if (!THREAD) {
+		/* Insert image omission count (kinda dumb) */
+		var ss = $('section'), si = 0;
+		function img_omit() {
+			if (si >= ss.length)
+				return;
+			var s = $(ss[si++]);
+			var img = parseInt(s.attr('data-imgs')) -
+					s.find('img').length;
+			if (img > 0) {
+				var stat = s.find('.omit');
+				var o = stat.text().match(/(\d*)/)[0];
+				stat.text(abbrev_msg(parseInt(o), img));
+			}
+			setTimeout(img_omit, 0);
+		}
+		img_omit();
+	}
+
 	var opts = $('<div class="modal"/>').hide();
 	var bs = {};
 	bs.live = function (b) {

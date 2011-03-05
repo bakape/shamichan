@@ -246,7 +246,8 @@ OS.mono = function (data) {
 };
 
 OS.monomono = function (data) {
-	var o = safe('<section id="' + data.num + '">'),
+	var o = safe('<section id="' + data.num +
+		(data.full ? '' : '" data-imgs="'+data.imgctr) + '">'),
 	    c = safe('</section>\n'),
 	    gen = this.monogatari(data);
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
