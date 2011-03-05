@@ -153,7 +153,7 @@ Y._insert = function (msg, body, ip, update, callback) {
 	var r = this.connect();
 	var tag_key = 'tag:' + this.tag;
 	var self = this;
-	r.incr(tag_key + ':ctr', function (err, num) {
+	r.incr('postctr', function (err, num) {
 		if (err)
 			return callback(err);
 		var view = {time: msg.time, ip: ip, state: msg.state.join()};
@@ -171,7 +171,7 @@ Y._insert = function (msg, body, ip, update, callback) {
 		var bump = !op || view.email != 'sage';
 		var m = r.multi();
 		if (bump)
-			m.incr(tag_key + ':bumpctr');
+			m.hincrby(tag_key, 'bumpctr', 1);
 		if (msg.image) {
 			if (op)
 				m.hincrby('thread:' + op, 'imgctr', 1);
@@ -183,6 +183,8 @@ Y._insert = function (msg, body, ip, update, callback) {
 		m.set(key + ':body', body);
 		if (op)
 			m.rpush('thread:' + op + ':posts', num);
+		else
+			op = num;
 
 		/* Need to set client.post here so pubsub doesn't interfere */
 		update(num);
@@ -199,7 +201,7 @@ Y._insert = function (msg, body, ip, update, callback) {
 			OPs[num] = op;
 			if (!bump)
 				return callback(null, num);
-			r.zadd(tag_key + ':threads', results[0], num,
+			r.zadd(tag_key + ':threads', results[0], op,
 						function (err) {
 				if (err)
 					console.error("Bump error: " + err);
