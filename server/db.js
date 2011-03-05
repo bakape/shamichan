@@ -125,15 +125,6 @@ function load_OPs(r, callback) {
 	});
 }
 
-function is_empty(obj) {
-	if (!obj)
-		return false;
-	for (var key in obj)
-		if (obj.hasOwnProperty(key))
-			return false;
-	return true;
-}
-
 Y.insert_post = function (msg, body, ip, update, callback) {
 	if (msg.op && OPs[msg.op] != msg.op)
 		return callback('Thread does not exist.');
@@ -230,7 +221,7 @@ Y.append_post = function (post, tail, old_state, links, new_links, callback) {
 	/* XXX: fragile */
 	if (old_state[0] != post.state[0] || old_state[1] != post.state[1])
 		m.hset(key, 'state', post.state.join());
-	if (new_links && !is_empty(new_links))
+	if (new_links && !common.is_empty(new_links))
 		m.hmset(key + ':links', new_links);
 	var msg = [post.num, tail];
 	if (links)
@@ -377,7 +368,7 @@ Reader.prototype.get_thread = function (num, redirect_ok, abbrev) {
 	r.hgetall(key, function (err, pre_post) {
 		if (err)
 			return self.emit('error', err);
-		if (is_empty(pre_post)) {
+		if (common.is_empty(pre_post)) {
 			if (!redirect_ok)
 				return self.emit('nomatch');
 			r.hget('post:' + num, 'op',
@@ -427,7 +418,7 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 	r.hgetall(key, function (err, pre_post) {
 		if (err)
 			return self.emit('error', err);
-		if (is_empty(pre_post))
+		if (common.is_empty(pre_post))
 			return next_please();
 		pre_post.num = num;
 		with_body(r, key, pre_post, function (err, post) {

@@ -323,14 +323,7 @@ function valid_links(frag, state, callback) {
 	onee.callback = function (frag) {};
 	onee.state = state;
 	onee.fragment(frag);
-	callback(null, isEmpty(links) ? null : links);
-}
-
-function isEmpty(obj) {
-	for (k in obj)
-		if (obj.hasOwnProperty(k))
-			return false;
-	return true;
+	callback(null, common.is_empty(links) ? null : links);
 }
 
 dispatcher[common.ALLOCATE_POST] = function (msg, client) {

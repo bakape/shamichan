@@ -59,6 +59,16 @@ function map_unsafe(frags, func) {
 	return frags;
 }
 
+function is_empty(o) {
+	if (!o)
+		return false;
+	for (k in o)
+		if (o.hasOwnProperty(k))
+			return false;
+	return true;
+}
+exports.is_empty = is_empty;
+
 exports.OneeSama = function (t) {
 	this.tamashii = t;
 };
