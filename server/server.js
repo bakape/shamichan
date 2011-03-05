@@ -25,25 +25,14 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (typeof sync != 'number' || sync < 0 || isNaN(sync))
 		return false;
 	if (watching) {
-		if (watching.constructor != Number)
+		if (typeof watching != 'number')
 			return false;
-		client.db.thread_exists(watching, function (err, exists) {
-			if (err)
-				report(err, client);
-			else if (!exists)
-				report(null, client, "No such thread.");
-			else {
-				client.watching = watching;
-				sync_client(client, sync);
-			}
-		});
+		if (db.OPs[watching] !== watching) {
+			report(null, client, "No such thread.");
+			return true;
+		}
+		client.watching = watching;
 	}
-	else
-		sync_client(client, sync);
-	return true;
-};
-
-function sync_client(client, sync) {
 	/* Race between subscribe and backlog fetch... hmmm... */
 	flow.exec(function () {
 		client.db.kiku(client.watching, this);
@@ -68,6 +57,7 @@ function sync_client(client, sync) {
 		}
 		client.synced = true;
 	});
+	return true;
 }
 
 function client_update(thread, num, kind, msg) {
@@ -126,17 +116,15 @@ var server = http.createServer(function(req, resp) {
 	if (req.url == '/' && render_index(req, resp))
 		return;
 	m = req.url.match(/^\/(\d+)$/);
-	if (m && render_thread(req, resp, m[1]))
+	if (m && render_thread(req, resp, parseInt(m[1])))
 		return;
 	if (config.DEBUG) {
 		/* Highly insecure! Abunai! */
 		var path = '../www/' + req.url.replace(/\.\./g, '');
 		var s = fs.createReadStream(path);
 		s.once('error', function (err) {
-			if (err.code == 'ENOENT') {
-				resp.writeHead(404, httpHeaders);
-				resp.end(notFoundHtml);
-			}
+			if (err.code == 'ENOENT')
+				render_404(resp);
 			else {
 				resp.writeHead(500, {});
 				resp.end(err.message);
@@ -154,8 +142,7 @@ var server = http.createServer(function(req, resp) {
 		});
 		return;
 	}
-	resp.writeHead(404, httpHeaders);
-	resp.end(notFoundHtml);
+	render_404(resp);
 });
 
 function render_index(req, resp) {
@@ -184,18 +171,27 @@ function render_index(req, resp) {
 	return true;
 }
 
+function render_404(resp) {
+	resp.writeHead(404, httpHeaders);
+	resp.end(notFoundHtml);
+}
+
+function redirect_thread(resp, num, op) {
+	resp.writeHead(302, {Location: op + '#' + num});
+	resp.end();
+}
+
 function render_thread(req, resp, num) {
+	var op = db.OPs[num];
+	if (typeof op == 'undefined')
+		return render_404(resp);
+	if (op != num)
+		return redirect_thread(resp, num, op);
 	var yaku = new db.Yakusoku();
 	var reader = new db.Reader(yaku);
-	reader.get_thread(parseInt(num), true, false);
-	reader.on('nomatch', function () {
-		resp.writeHead(404, httpHeaders);
-		resp.end(notFoundHtml);
-	});
-	reader.on('redirect', function (op) {
-		resp.writeHead(302, {Location: op + '#' + num});
-		resp.end();
-	});
+	reader.get_thread(num, true, false);
+	reader.on('nomatch', render_404.bind(null, resp));
+	reader.on('redirect', redirect_thread.bind(null, resp, num));
 	reader.on('begin', function () {
 		resp.writeHead(200, httpHeaders);
 		resp.write(indexTmpl[0]);

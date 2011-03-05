@@ -105,12 +105,15 @@ exports.track_OPs = function (callback) {
 };
 
 function load_OPs(r, callback) {
-	r.keys('thread:*:posts', function (err, keys) {
+	r.keys('thread:*', function (err, keys) {
 		if (err)
 			return callback(err);
 		async.forEach(keys, function (key, cb) {
-			var op = parseInt(key.match(/thread:(\d*):posts/)[1]);
+			var m = key.match(/^thread:(\d*)(:posts$)?/);
+			var op = parseInt(m[1]);
 			OPs[op] = op;
+			if (!m[2])
+				return cb();
 			r.lrange(key, 0, -1, function (err, posts) {
 				if (err)
 					return cb(err);
@@ -309,10 +312,6 @@ Y.fetch_backlog = function (sync, watching, callback) {
 
 Y.get_sync_number = function (callback) {
 	this.connect().llen('backlog', callback);
-};
-
-Y.thread_exists = function (num, callback) {
-	this.connect().exists('thread:' + num, callback);
 };
 
 Y.get_post_op = function (num, callback) {
