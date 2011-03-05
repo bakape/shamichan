@@ -349,6 +349,8 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 function allocate_post(msg, image, client, callback) {
 	if (!msg || typeof msg != 'object')
 		return callback('Bad alloc.');
+	if (client.post)
+		return callback("Already have a post.");
 	var post = {time: new Date().getTime()};
 	var body = '';
 	if (msg.frag !== undefined) {
@@ -386,27 +388,35 @@ function allocate_post(msg, image, client, callback) {
 		post.image = image;
 	post.state = [0, 0];
 	flow.exec(function () {
+		client.db.reserve_post(post.op, this);
+	},
+	function (err, num) {
+		if (err)
+			return callback("Couldn't reserve a post.");
+		if (client.post)
+			return callback('Already have a post.');
+		client.post = post;
+		post.num = num;
 		valid_links(body, post.state, this);
 	},
 	function (err, links) {
 		if (err) {
 			console.error('valid_links: ' + err);
+			if (client.post === post)
+				delete client.post;
 			return callback("Post reference error.");
 		}
-		if (client.post)
-			return callback('Already have a post.');
 		post.links = links;
-		client.db.insert_post(post, body, client.ip, function (num) {
-			post.num = num;
-			post.body = body;
-			client.post = post;
-		}, this);
+		client.db.insert_post(post, body, client.ip, this);
 	},
 	function (err) {
 		if (err) {
+			if (client.post === post)
+				delete client.post;
 			console.error(err);
 			return callback("Couldn't allocate post.");
 		}
+		post.body = body;
 		callback(null, get_post_view(post));
 	});
 	return true;

@@ -125,17 +125,26 @@ function load_OPs(r, callback) {
 	});
 }
 
-Y.insert_post = function (msg, body, ip, update, callback) {
-	if (msg.op && OPs[msg.op] != msg.op)
-		return callback('Thread does not exist.');
+Y.reserve_post = function (op, callback) {
+	this.connect().incr('postctr', function (err, num) {
+		if (err)
+			return callback(err);
+		OPs[num] = op || num;
+		callback(null, num);
+	});
+};
+
+Y.insert_post = function (msg, body, ip, callback) {
 	var r = this.connect();
 	var tag_key = 'tag:' + this.tag;
 	var self = this;
-	r.incr('postctr', function (err, num) {
-		if (err)
-			return callback(err);
+	if (msg.num) {
+		if (msg.op && OPs[msg.op] != msg.op) {
+			delete OPs[num];
+			return callback('Thread does not exist.');
+		}
 		var view = {time: msg.time, ip: ip, state: msg.state.join()};
-		var op = msg.op;
+		var num = msg.num, op = msg.op;
 		if (msg.name)
 			view.name = msg.name;
 		if (msg.trip)
@@ -165,10 +174,6 @@ Y.insert_post = function (msg, body, ip, update, callback) {
 			m.rpush('thread:' + op + ':posts', num);
 		else
 			op = num;
-		OPs[num] = op;
-
-		/* Need to set client.post here so pubsub doesn't interfere */
-		update(num);
 
 		/* Denormalize for backlog */
 		view.body = body;
@@ -184,15 +189,19 @@ Y.insert_post = function (msg, body, ip, update, callback) {
 				return callback(err);
 			}
 			if (!bump)
-				return callback(null, num);
+				return callback(null);
 			r.zadd(tag_key + ':threads', results[0], op,
 						function (err) {
 				if (err)
 					console.error("Bump error: " + err);
-				callback(null, num);
+				callback(null);
 			});
 		});
-	});
+	}
+	else {
+		/* TODO: Flatten this conditional once history branch merged */
+		callback("No post num.");
+	}
 };
 
 Y.add_image = function (post, image, callback) {
