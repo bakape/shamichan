@@ -110,7 +110,7 @@ IU.process = function () {
 				(self.alloc && self.alloc.op);
 		var specs = get_thumb_specs(w, h, pinky);
 		image.dims = [w, h].concat(specs.dims);
-		self.resize_image(tagged_path, image.thumb_path,
+		self.resize_image(tagged_path, image.ext, image.thumb_path,
 				specs.dims, specs.quality,
 	function () {
 		self.status('Publishing...');
@@ -162,14 +162,18 @@ function MD5_file(path, callback) {
 	});
 };
 
-IU.resize_image = function (src, dest, dims, quality, callback) {
+IU.resize_image = function (src, ext, dest, dims, quality, callback) {
 	var self = this;
-	im.convert([src + '[0]', '-gamma', '0.454545',
-			'-resize', dims[0] + 'x' + dims[1] + '!',
-			'-gamma', '2.2',
+	var args = [];
+	if (ext == '.jpg')
+		args.push('-define', 'jpeg:size=' + (dims[0] * 2) + 'x' +
+				(dims[1] * 2));
+	dims = dims[0] + 'x' + dims[1];
+	args.push(src + '[0]', '-gamma', '0.454545', '-filter', 'box',
+			'-resize', dims + '!', '-gamma', '2.2', '-strip',
 			'-background', 'white', '-mosaic', '+matte',
-			'-quality', ''+quality, 'jpg:' + dest],
-			function (err, stdout, stderr) {
+			'-quality', ''+quality, 'jpg:' + dest);
+	im.convert(args, function (err, stdout, stderr) {
 		if (err) {
 			console.error(stderr);
 			return self.failure('Conversion error.');
