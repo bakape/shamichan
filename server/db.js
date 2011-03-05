@@ -135,24 +135,8 @@ function is_empty(obj) {
 }
 
 Y.insert_post = function (msg, body, ip, update, callback) {
-	var r = this.connect();
-	var self = this;
-	/* Multi isn't needed here, yay. */
-	if (msg.op) {
-		r.exists('thread:' + msg.op, function (err, exists) {
-			if (err)
-				callback(err);
-			else if (!exists)
-				callback('Thread does not exist.');
-			else
-				self._insert(msg, body, ip, update, callback);
-		});
-	}
-	else
-		self._insert(msg, body, ip, update, callback);
-};
-
-Y._insert = function (msg, body, ip, update, callback) {
+	if (msg.op && OPs[msg.op] != msg.op)
+		return callback('Thread does not exist.');
 	var r = this.connect();
 	var tag_key = 'tag:' + this.tag;
 	var self = this;
