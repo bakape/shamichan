@@ -574,10 +574,10 @@ PostForm.prototype.finish = function () {
 PostForm.prototype.make_upload_form = function () {
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="." target="upload">'
+		+ '<input type="button" value="Cancel"/>'
 		+ '<input type="file" name="image"/> <strong/>'
 		+ '<input type="hidden" name="client_id" value="'
 		+ socket.transport.sessionid + '"/> '
-		+ '<input type="button" value="Cancel"/>'
 		+ '<iframe src="" name="upload"/></form>');
 	this.cancel = form.find('input[type=button]').click($.proxy(this,
 			'finish'));

@@ -151,15 +151,17 @@ function render_index(req, resp) {
 	yaku.on('begin', function () {
 		resp.writeHead(200, httpHeaders);
 		resp.write(indexTmpl[0]);
+		resp.write(config.TITLE);
+		resp.write(indexTmpl[1]);
 	});
 	write_thread_html(yaku, resp, false);
 	yaku.on('end', function () {
 		yaku.get_sync_number(function (err, sync_num) {
 			if (err)
 				return yaku.emit('error', err);
-			resp.write(indexTmpl[1]);
+			resp.write(indexTmpl[2]);
 			resp.write(''+sync_num);
-			resp.end(indexTmpl[2]);
+			resp.end(indexTmpl[3]);
 			yaku.disconnect();
 		});
 	});
@@ -195,6 +197,8 @@ function render_thread(req, resp, num) {
 	reader.on('begin', function () {
 		resp.writeHead(200, httpHeaders);
 		resp.write(indexTmpl[0]);
+		resp.write('Thread #' + op);
+		resp.write(indexTmpl[1]);
 	});
 	write_thread_html(reader, resp, true);
 	reader.on('end', function () {
@@ -202,9 +206,9 @@ function render_thread(req, resp, num) {
 		yaku.get_sync_number(function (err, sync_num) {
 			if (err)
 				reader.emit('error', err);
-			resp.write(indexTmpl[1]);
+			resp.write(indexTmpl[2]);
 			resp.write(''+sync_num);
-			resp.end(indexTmpl[2]);
+			resp.end(indexTmpl[3]);
 			yaku.disconnect();
 		});
 	});
