@@ -168,6 +168,8 @@ Y.insert_post = function (msg, body, ip, update, callback) {
 		}
 		m.hmset(key, view);
 		m.set(key + ':body', body);
+		if (msg.links)
+			m.hmset(key + ':links', msg.links);
 		if (op)
 			m.rpush('thread:' + op + ':posts', num);
 		else
@@ -180,6 +182,8 @@ Y.insert_post = function (msg, body, ip, update, callback) {
 		/* Denormalize for backlog */
 		view.body = body;
 		view.num = num;
+		if (msg.links)
+			view.links = msg.links;
 		extract_image(view);
 		self._log(m, op, num, common.INSERT_POST, [view]);
 
@@ -218,15 +222,16 @@ Y.add_image = function (post, image, callback) {
 	});
 };
 
-Y.append_post = function (post, tail, old_state, links, callback) {
-	/* TODO: Persist links */
+Y.append_post = function (post, tail, old_state, links, new_links, callback) {
 	var m = this.connect().multi();
-	var key = (post.op ? 'post:' : 'thread:') + post.num + ':body';
+	var key = (post.op ? 'post:' : 'thread:') + post.num;
 	/* Don't need to check .exists() thanks to client state */
-	m.append(key, tail);
+	m.append(key + ':body', tail);
 	/* XXX: fragile */
 	if (old_state[0] != post.state[0] || old_state[1] != post.state[1])
 		m.hset(key, 'state', post.state.join());
+	if (new_links && !is_empty(new_links))
+		m.hmset(key + ':links', new_links);
 	var msg = [post.num, tail];
 	if (links)
 		msg.push(old_state[0], old_state[1], links);

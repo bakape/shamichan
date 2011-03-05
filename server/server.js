@@ -452,13 +452,20 @@ function update_post(frag, client) {
 	function (err, links) {
 		if (err)
 			links = null; /* oh well */
+		var new_links = {};
 		if (links) {
 			if (!post.links)
 				post.links = {};
-			for (var k in links)
-				post.links[k] = links[k];
+			for (var k in links) {
+				var link = links[k];
+				if (post.links[k] != link) {
+					post.links[k] = link;
+					new_links[k] = link;
+				}
+			}
 		}
-		client.db.append_post(post, frag, old_state, links, this);
+		client.db.append_post(post, frag, old_state, links, new_links,
+				this);
 	},
 	function (err) {
 		if (err)
