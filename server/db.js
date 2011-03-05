@@ -290,8 +290,10 @@ Y._log = function (m, op, num, kind, msg) {
 	msg.unshift(kind);
 	msg = JSON.stringify(msg);
 	console.log("Log:", msg);
-	m.rpush('backlog', msg);
-	m.publish('thread:' + (op || num), num + ':' + kind + ':' + msg);
+	var key = 'thread:' + (op || num);
+	m.rpush(key + ':history', msg);
+	m.hincrby(key, 'historyctr', 1);
+	m.publish(key, num + ':' + kind + ':' + msg);
 };
 
 Y.fetch_backlog = function (sync, watching, callback) {

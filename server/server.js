@@ -22,7 +22,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
 	var sync = msg[0], watching = msg[1];
-	if (typeof sync != 'number' || sync < 0 || isNaN(sync))
+	if (typeof sync != 'object')
 		return false;
 	if (watching) {
 		if (typeof watching != 'number')
@@ -167,9 +167,7 @@ function render_index(req, resp) {
 		yaku.get_sync_number(function (err, sync_num) {
 			if (err)
 				return yaku.emit('error', err);
-			resp.write(indexTmpl[2]);
-			resp.write(''+sync_num);
-			resp.end(indexTmpl[3]);
+			resp.end(indexTmpl[2]);
 			yaku.disconnect();
 		});
 	});
@@ -214,9 +212,7 @@ function render_thread(req, resp, num) {
 		yaku.get_sync_number(function (err, sync_num) {
 			if (err)
 				reader.emit('error', err);
-			resp.write(indexTmpl[2]);
-			resp.write(''+sync_num);
-			resp.end(indexTmpl[3]);
+			resp.end(indexTmpl[2]);
 			yaku.disconnect();
 		});
 	});

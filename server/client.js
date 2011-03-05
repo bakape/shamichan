@@ -1,4 +1,4 @@
-var dispatcher = {};
+var dispatcher = {}, syncs = {};
 var THREAD = window.location.pathname.match(/\/(\d+)$/);
 THREAD = THREAD ? parseInt(THREAD[1]) : 0;
 var nameField = $('input[name=name]'), emailField = $('input[name=email]');
@@ -621,7 +621,7 @@ function on_connect() {
 		return;
 	resetTimer = setTimeout(function (){ reconnectDelay = 3000; }, 9999);
 	sync_status('Syncing...', false);
-	send([SYNCHRONIZE, SYNC, THREAD]);
+	send([SYNCHRONIZE, syncs, THREAD]);
 }
 
 function attempt_reconnect() {
@@ -666,6 +666,11 @@ $(function () {
 		}
 	});
 	socket.connect();
+
+	$('section').each(function () {
+		var s = $(this);
+		syncs[s.attr('id')] = parseInt(s.attr('data-sync'));
+	});
 
 	try {
 		options = JSON.parse(localStorage.options);
