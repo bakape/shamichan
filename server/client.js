@@ -53,8 +53,9 @@ function make_reply_box() {
 	return box;
 }
 
-function insert_new_post_boxes() {
-	if (outOfSync)
+function insert_pbs() {
+	if (outOfSync || postForm || (THREAD ? $('aside').length :
+			ceiling.next().is('aside')))
 		return;
 	make_reply_box().appendTo('section');
 	if (!THREAD) {
@@ -567,7 +568,7 @@ PostForm.prototype.finish = function () {
 
 	dispatcher[ALLOCATE_POST] = null;
 	postForm = null;
-	insert_new_post_boxes();
+	insert_pbs();
 };
 
 PostForm.prototype.make_upload_form = function () {
@@ -626,6 +627,7 @@ function attempt_reconnect() {
 dispatcher[SYNCHRONIZE] = function (msg) {
 	SYNC = msg[0];
 	sync_status('Synched.', false);
+	insert_pbs();
 	return false;
 };
 
@@ -662,7 +664,6 @@ $(function () {
 		options = {live: true};
 	}
 
-	insert_new_post_boxes();
 	var m = window.location.hash.match(/^#q(\d+)$/);
 	if (m && $('#' + m[1]).length) {
 		var id = parseInt(m[1]);
