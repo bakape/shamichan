@@ -188,6 +188,7 @@ Y._insert = function (msg, body, ip, update, callback) {
 			m.rpush('thread:' + op + ':posts', num);
 		else
 			op = num;
+		OPs[num] = op;
 
 		/* Need to set client.post here so pubsub doesn't interfere */
 		update(num);
@@ -199,9 +200,10 @@ Y._insert = function (msg, body, ip, update, callback) {
 		self._log(m, op, num, common.INSERT_POST, [view]);
 
 		m.exec(function (err, results) {
-			if (err)
+			if (err) {
+				delete OPs[num];
 				return callback(err);
-			OPs[num] = op;
+			}
 			if (!bump)
 				return callback(null, num);
 			r.zadd(tag_key + ':threads', results[0], op,

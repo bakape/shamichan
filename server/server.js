@@ -69,10 +69,10 @@ function client_update(thread, num, kind, msg) {
 }
 
 var oneeSama = new common.OneeSama(function (num) {
-	var post = posts[num];
-	if (post)
+	var op = db.OPs[num];
+	if (op)
 		this.callback(common.safe('<a href="'
-				+ common.post_url(post, false)
+				+ common.post_url({op: op, num: num}, false)
 				+ '">&gt;&gt;' + num + '</a>'));
 	else
 		this.callback('>>' + num);
@@ -315,35 +315,15 @@ function report(error, client, client_msg) {
 
 /* Must be prepared to receive callback instantly */
 function valid_links(frag, state, callback) {
-	var possible = {}, links = {};
-	var checked = 0, total = 0;
-	var done = false;
-	function got_post_op(err, num, op) {
-		if (done)
-			return;
-		if (err) {
-			done = true;
-			return callback(err);
-		}
-		if (num)
-			links[num] = op || num;
-		if (++checked >= total) {
-			done = true;
-			callback(null, isEmpty(links) ? null : links);
-		}
-	}
-	var onee = new common.OneeSama(function (num, e) {
-		if (!(num in possible)) {
-			total++;
-			possible[num] = null;
-			client.db.get_post_op(num, got_post_op);
-		}
+	var links = {};
+	var onee = new common.OneeSama(function (num) {
+		if (num in db.OPs)
+			links[num] = db.OPs[num];
 	});
 	onee.callback = function (frag) {};
 	onee.state = state;
 	onee.fragment(frag);
-	if (!total)
-		callback(null, null);
+	callback(null, isEmpty(links) ? null : links);
 }
 
 function isEmpty(obj) {
@@ -472,9 +452,12 @@ function update_post(frag, client) {
 	function (err, links) {
 		if (err)
 			links = null; /* oh well */
-		if (links)
+		if (links) {
+			if (!post.links)
+				post.links = {};
 			for (var k in links)
 				post.links[k] = links[k];
+		}
 		client.db.append_post(post, frag, old_state, links, this);
 	},
 	function (err) {
