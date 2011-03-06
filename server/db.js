@@ -8,6 +8,10 @@ var async = require('async'),
 var OPs = {};
 exports.OPs = OPs;
 
+function redis_client() {
+	return redis.createClient(config.REDIS_PORT || undefined);
+}
+
 function Yakusoku() {
 	events.EventEmitter.call(this);
 	/* TEMP */
@@ -20,7 +24,7 @@ var Y = Yakusoku.prototype;
 
 Y.connect = function () {
 	if (!this.r) {
-		this.r = redis.createClient();
+		this.r = redis_client();
 		this.r.on('error', console.error.bind(console));
 	}
 	return this.r;
@@ -40,7 +44,7 @@ Y.disconnect = function () {
 
 Y.kiku = function (thread, callback) {
 	if (!this.k) {
-		this.k = redis.createClient();
+		this.k = redis_client();
 		this.k.on('error', console.error.bind(console));
 	}
 	this.kikumono = thread;
@@ -92,10 +96,10 @@ function on_OP_message(pat, chan, msg) {
 }
 
 exports.track_OPs = function (callback) {
-	var k = redis.createClient();
+	var k = redis_client();
 	k.psubscribe('thread:*');
 	k.on('psubscribe', function () {
-		var r = redis.createClient();
+		var r = redis_client();
 		load_OPs(r, function (err) {
 			r.quit();
 			callback(err);

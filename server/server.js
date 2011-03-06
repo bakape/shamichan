@@ -533,10 +533,11 @@ function get_version(deps, callback) {
 (function () {
 
 if (process.argv[2] == '--show-config') {
-	var val = config[process.argv[3]];
-	if (!val)
+	var key = process.argv[3];
+	if (!(key in config))
 		throw "No such config value " + process.argv[3];
-	console.log(val.join ? val.join(' ') : val);
+	var val = config[process.argv[3]];
+	console.log((val && val.join) ? val.join(' ') : val);
 }
 else if (process.argv[2] == '--client-version')
 	get_version(config.CLIENT_DEPS, function (err, version) {
