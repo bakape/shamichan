@@ -610,7 +610,7 @@ function on_connect() {
 	if (outOfSync)
 		return;
 	resetTimer = setTimeout(function (){ reconnectDelay = 3000; }, 9999);
-	sync_status('Synching...', false);
+	sync_status('Syncing...', false);
 	send([SYNCHRONIZE, SYNC, THREAD]);
 }
 
@@ -618,7 +618,7 @@ function attempt_reconnect() {
 	clearTimeout(resetTimer);
 	if (outOfSync)
 		return;
-	sync_status('Dropped.', true);
+	sync_status('Dropped. Reconnecting...', true);
 	socket.connect();
 	reconnectTimer = setTimeout(attempt_reconnect, reconnectDelay);
 	reconnectDelay = Math.min(reconnectDelay * 2, 60000);
@@ -626,7 +626,7 @@ function attempt_reconnect() {
 
 dispatcher[SYNCHRONIZE] = function (msg) {
 	SYNC = msg[0];
-	sync_status('Synched.', false);
+	sync_status('Synced.', false);
 	insert_pbs();
 	return false;
 };
