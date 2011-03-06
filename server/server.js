@@ -14,8 +14,8 @@ var clients = {};
 var dispatcher = {};
 var indexTmpl, notFoundHtml;
 
-function multisend(client, msgs) {
-	client.socket.send(JSON.stringify(msgs));
+function private_msg(client, msg) {
+	client.socket.send(JSON.stringify([msg]));
 }
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
@@ -49,12 +49,14 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 
 		client.db.on('update', client_update.bind(client));
 
-		if (log.length == 0)
-			multisend(client, [[common.SYNCHRONIZE, s]]);
-		else {
-			log.push('[' + common.SYNCHRONIZE + ',' + s + ']');
+		if (s != sync + log.length)
+			console.error("Warning: backlog count wrong");
+		if (log.length) {
+			log.push('[' + common.SYNCHRONIZE + ',0]');
 			client.socket.send('[' + log.join() + ']');
 		}
+		else
+			private_msg(client, [common.SYNCHRONIZE, 0]);
 		client.synced = true;
 	});
 	return true;
@@ -62,8 +64,13 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 
 function client_update(thread, num, kind, msg) {
 	if (this.post && this.post.num == num && kind != common.FINISH_POST) {
-		/* TODO: Synchronize them instead */
+		this.skipped++;
 		return;
+	}
+	if (this.skipped) {
+		console.log("Skipping ahead " + this.skipped);
+		msg = '['+common.SYNCHRONIZE+','+this.skipped+'],' + msg;
+		this.skipped = 0;
 	}
 	this.socket.send('[' + msg + ']');
 }
@@ -100,7 +107,7 @@ function write_thread_html(reader, response, full_thread) {
 }
 
 function image_status(status) {
-	multisend(this.client, [[common.IMAGE_STATUS, status]]);
+	private_msg(this.client, [common.IMAGE_STATUS, status]);
 }
 
 var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
@@ -241,7 +248,8 @@ function init_client (socket) {
 	var id = socket.sessionId;
 	console.log(id + " has IP " + ip);
 	var client = {id: id, socket: socket, post: null, synced: false,
-			watching: null, ip: ip, db: new db.Yakusoku()};
+			watching: null, ip: ip, db: new db.Yakusoku(),
+			skipped: 0};
 	clients[id] = client;
 	socket.on('message', function (data) {
 		var msg = null;
@@ -307,7 +315,7 @@ function report(error, client, client_msg) {
 		ver = ' (#' + ver + '-' + pad3(num) + ')';
 		console.error((error || msg) + ' ' + ip + ver);
 		if (client) {
-			multisend(client, [[common.INVALID, msg + ver]]);
+			private_msg(client, [common.INVALID, msg + ver]);
 			client.synced = false;
 		}
 	});
@@ -341,7 +349,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 		if (err)
 			return report(err, client, "Couldn't allocate post.");
 		else
-			multisend(client, [[common.ALLOCATE_POST, alloc]]);
+			private_msg(client, [common.ALLOCATE_POST, alloc]);
 	});
 	return true;
 }

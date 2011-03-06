@@ -299,7 +299,6 @@ function PostForm(dest, section) {
 
 	dispatcher[ALLOCATE_POST] = $.proxy(function (msg) {
 		this.on_allocation(msg[0]);
-		/* We've already received a SYNC for this insert */
 		return false;
 	}, this);
 	$('aside').remove();
@@ -625,7 +624,7 @@ function attempt_reconnect() {
 }
 
 dispatcher[SYNCHRONIZE] = function (msg) {
-	SYNC = msg[0];
+	SYNC += msg[0];
 	sync_status('Synced.', false);
 	insert_pbs();
 	return false;
