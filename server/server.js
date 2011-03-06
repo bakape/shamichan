@@ -1,154 +1,113 @@
 var common = require('./common'),
-	config = require('./config'),
-	fs = require('fs'),
-	io = require('socket.io'),
-	http = require('http'),
-	pix = require('./pix'),
-	db = require('./db'),
-	Template = require('./lib/json-template').Template,
-	tripcode = require('./tripcode'),
-	util = require('util');
+    config = require('./config'),
+    flow = require('flow'),
+    fs = require('fs'),
+    io = require('socket.io'),
+    http = require('http'),
+    pix = require('./pix'),
+    db = require('./db'),
+    Template = require('./lib/json-template').Template,
+    tripcode,
+    util = require('util');
 
-var threads = [];
-var posts = {};
 var clients = {};
 var dispatcher = {};
+var indexTmpl, notFoundHtml;
 
-var syncNumber = 0;
-var backlog = [];
-var backlogLastDropped = 0;
-
-function multisend(client, msgs) {
-	client.socket.send(JSON.stringify(msgs));
-}
-
-function broadcast(msg, post, origin) {
-	var thread_num = post.op || post.num;
-	++syncNumber;
-	msg = JSON.stringify(msg);
-	var payload = '[' + msg + ']';
-	for (id in clients) {
-		var client = clients[id];
-		if (!client.synced)
-			continue;
-		if (client.watching && client.watching != thread_num) {
-			/* Client isn't in this thread so let them fall
-			 * out of sync until something relevant comes up */
-			client.defer_sync = syncNumber;
-			continue;
-		}
-		if (id == origin) {
-			/* Client won't increment SYNC since they won't
-			 * receive the broadcasted message, so do manually */
-			multisend(client, [[common.SYNCHRONIZE, syncNumber]]);
-		}
-		else if (client.defer_sync) {
-			/* First catch them up, then send the new message */
-			client.socket.send('[[' + common.SYNCHRONIZE + ',' +
-					client.defer_sync + '],' + msg + ']');
-		}
-		else {
-			/* Client is already in sync */
-			client.socket.send(payload);
-		}
-		/* At this point the client must be caught up */
-		client.defer_sync = null;
-	}
-	var now = new Date().getTime();
-	backlog.push({when: now, msg: msg, thread: thread_num});
-	cleanup_backlog(now);
-}
-
-function cleanup_backlog(now) {
-	var limit = now - config.BACKLOG_PERIOD;
-	/* binary search would be nice */
-	while (backlog.length && backlog[0].when < limit) {
-		backlog.shift();
-		backlogLastDropped++;
-	}
+function private_msg(client, msg) {
+	client.socket.send(JSON.stringify([msg]));
 }
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
 	var sync = msg[0], watching = msg[1];
-	if (sync.constructor != Number)
+	if (typeof sync != 'number' || sync < 0 || isNaN(sync))
 		return false;
 	if (watching) {
-		var post = posts[watching];
-		if (post && !post.op)
-			client.watching = watching;
-		else
+		if (typeof watching != 'number')
 			return false;
+		if (db.OPs[watching] !== watching) {
+			report(null, client, "No such thread.");
+			return true;
+		}
+		client.watching = watching;
 	}
-	if (sync == syncNumber) {
-		multisend(client, [[common.SYNCHRONIZE, syncNumber]]);
+	/* Race between subscribe and backlog fetch... hmmm... */
+	flow.exec(function () {
+		client.db.kiku(client.watching, this);
+	},
+	function (err) {
+		if (err)
+			report(err, client);
+		else
+			client.db.fetch_backlog(sync, client.watching, this);
+	},
+	function (err, s, log) {
+		if (err)
+			return report(err, client);
+
+		client.db.on('update', client_update.bind(client));
+
+		if (s != sync + log.length)
+			console.error("Warning: backlog count wrong");
+		if (log.length) {
+			log.push('[' + common.SYNCHRONIZE + ',0]');
+			client.socket.send('[' + log.join() + ']');
+		}
+		else
+			private_msg(client, [common.SYNCHRONIZE, 0]);
 		client.synced = true;
-		return true; /* already synchronized */
-	}
-	if (sync > syncNumber)
-		return false; /* client in the future? */
-	if (sync < backlogLastDropped)
-		return false; /* client took too long */
-	var logs = [];
-	for (var i = sync - backlogLastDropped; i < backlog.length; i++) {
-		var log = backlog[i];
-		if (!watching || log.thread == watching)
-			logs.push(log.msg);
-	}
-	logs.push('[' + common.SYNCHRONIZE + ',' + syncNumber + ']');
-	client.socket.send('[' + logs.join() + ']');
-	client.synced = true;
+	});
 	return true;
 }
 
+function client_update(thread, num, kind, msg) {
+	if (this.post && this.post.num == num && kind != common.FINISH_POST) {
+		this.skipped++;
+		return;
+	}
+	if (this.skipped) {
+		console.log("Skipping ahead " + this.skipped);
+		msg = '['+common.SYNCHRONIZE+','+this.skipped+'],' + msg;
+		this.skipped = 0;
+	}
+	this.socket.send('[' + msg + ']');
+}
+
 var oneeSama = new common.OneeSama(function (num) {
-	var post = posts[num];
-	if (post)
+	var op = db.OPs[num];
+	if (op)
 		this.callback(common.safe('<a href="'
-				+ common.post_url(post, false)
+				+ common.post_url({op: op, num: num}, false)
 				+ '">&gt;&gt;' + num + '</a>'));
 	else
 		this.callback('>>' + num);
 });
-oneeSama.image_view = pix.get_image_view;
 oneeSama.dirs = {src_url: config.IMAGE_URL, thumb_url: config.THUMB_URL};
 
-function write_thread_html(thread, response, full_thread) {
-	oneeSama.full = full_thread;
-	var first = oneeSama.monomono(thread.op);
-	var ending = first.pop();
-	response.write(first.join(''));
-	var replies = thread.replies;
-	var omitted = replies.length - config.ABBREVIATED_REPLIES;
-	if (!full_thread && omitted > 0) {
-		replies = replies.slice(omitted);
-		var images_omitted = thread.image_count;
-		for (var i = 0; i < replies.length; i++)
-			if (replies[i].image)
-				images_omitted--;
-		response.write('\t<span class="omit">' +
-				common.abbrev_msg(omitted, images_omitted) +
+function write_thread_html(reader, response, full_thread) {
+	reader.on('thread', function (op_post, omit, image_omit) {
+		oneeSama.full = full_thread;
+		var first = oneeSama.monomono(op_post);
+		first.pop();
+		response.write(first.join(''));
+		if (omit)
+			response.write('\t<span class="omit">' +
+				common.abbrev_msg(omit, image_omit) +
 				'</span>\n');
-	}
-	for (var i = 0; i < replies.length; i++)
-		response.write(oneeSama.mono(replies[i]));
-	response.write(ending + '<hr>\n');
+	});
+	reader.on('post', function (post) {
+		oneeSama.full = full_thread;
+		response.write(oneeSama.mono(post));
+	});
+	reader.on('endthread', function () {
+		response.write('</section><hr>\n');
+	});
 }
-
-var indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
-		{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
-var notFoundHtml = fs.readFileSync('../www/404.html');
 
 function image_status(status) {
-	multisend(this.client, [[common.IMAGE_STATUS, status]]);
-}
-
-function set_post_image(post, image, imgnm) {
-	post.image = image;
-	post.imgnm = imgnm;
-	if (post.op)
-		posts[post.op].thread.image_count++;
+	private_msg(this.client, [common.IMAGE_STATUS, status]);
 }
 
 var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
@@ -157,52 +116,122 @@ var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 var server = http.createServer(function(req, resp) {
 	if (req.method.toLowerCase() == 'post') {
 		var upload = new pix.ImageUpload(clients, allocate_post,
-				set_post_image, announce_image, image_status);
+				image_status);
 		upload.handle_request(req, resp);
 		return;
 	}
 	if (req.url == '/' && render_index(req, resp))
 		return;
 	m = req.url.match(/^\/(\d+)$/);
-	if (m && render_thread(req, resp, m[1]))
+	if (m && render_thread(req, resp, parseInt(m[1])))
 		return;
-	resp.writeHead(404, httpHeaders);
-	resp.end(notFoundHtml);
+	if (config.DEBUG) {
+		/* Highly insecure! Abunai! */
+		var path = '../www/' + req.url.replace(/\.\./g, '');
+		var s = fs.createReadStream(path);
+		s.once('error', function (err) {
+			if (err.code == 'ENOENT')
+				render_404(resp);
+			else {
+				resp.writeHead(500, {});
+				resp.end(err.message);
+			}
+		});
+		s.once('open', function () {
+			var h = {};
+			try {
+				var mime = require('connect').utils.mime;
+				var ext = require('path').extname(path);
+				h['Content-Type'] = mime.type(ext);
+			} catch (e) {}
+			resp.writeHead(200, h);
+			util.pump(s, resp);
+		});
+		return;
+	}
+	render_404(resp);
 });
 
 function render_index(req, resp) {
-	resp.writeHead(200, httpHeaders);
-	resp.write(indexTmpl[0]);
-	for (var i = 0; i < threads.length; i++)
-		write_thread_html(threads[i], resp, false);
-	resp.write(indexTmpl[1]);
-	resp.write(syncNumber.toString());
-	resp.end(indexTmpl[2]);
+	var yaku = new db.Yakusoku();
+	yaku.get_tag();
+	yaku.on('begin', function () {
+		resp.writeHead(200, httpHeaders);
+		resp.write(indexTmpl[0]);
+		resp.write(config.TITLE);
+		resp.write(indexTmpl[1]);
+	});
+	write_thread_html(yaku, resp, false);
+	yaku.on('end', function () {
+		yaku.get_sync_number(function (err, sync_num) {
+			if (err)
+				return yaku.emit('error', err);
+			resp.write(indexTmpl[2]);
+			resp.write(''+sync_num);
+			resp.end(indexTmpl[3]);
+			yaku.disconnect();
+		});
+	});
+	yaku.on('error', function (err) {
+		console.error('index:', err);
+		resp.end();
+		yaku.disconnect();
+	});
 	return true;
 }
 
+function render_404(resp) {
+	resp.writeHead(404, httpHeaders);
+	resp.end(notFoundHtml);
+}
+
+function redirect_thread(resp, num, op) {
+	resp.writeHead(302, {Location: op + '#' + num});
+	resp.end();
+}
+
 function render_thread(req, resp, num) {
-	var post = posts[parseInt(num)];
-	if (!post)
-		return false;
-	if (post.op) {
-		resp.writeHead(302, {Location: post.op + '#' + post.num});
+	var op = db.OPs[num];
+	if (typeof op == 'undefined')
+		return render_404(resp);
+	if (op != num)
+		return redirect_thread(resp, num, op);
+	var yaku = new db.Yakusoku();
+	var reader = new db.Reader(yaku);
+	reader.get_thread(num, true, false);
+	reader.on('nomatch', render_404.bind(null, resp));
+	reader.on('redirect', redirect_thread.bind(null, resp, num));
+	reader.on('begin', function () {
+		resp.writeHead(200, httpHeaders);
+		resp.write(indexTmpl[0]);
+		resp.write('Thread #' + op);
+		resp.write(indexTmpl[1]);
+	});
+	write_thread_html(reader, resp, true);
+	reader.on('end', function () {
+		resp.write('[<a href=".">Return</a>]');
+		yaku.get_sync_number(function (err, sync_num) {
+			if (err)
+				reader.emit('error', err);
+			resp.write(indexTmpl[2]);
+			resp.write(''+sync_num);
+			resp.end(indexTmpl[3]);
+			yaku.disconnect();
+		});
+	});
+	function on_err(err) {
+		console.error('thread '+num+':', err);
 		resp.end();
-		return true;
+		yaku.disconnect();
 	}
-	resp.writeHead(200, httpHeaders);
-	resp.write(indexTmpl[0]);
-	write_thread_html(post.thread, resp, true);
-	resp.write('[<a href=".">Return</a>]');
-	resp.write(indexTmpl[1]);
-	resp.write(syncNumber.toString());
-	resp.end(indexTmpl[2]);
+	reader.on('error', on_err);
+	yaku.on('error', on_err);
 	return true;
 }
 
 function on_client (socket, retry) {
 	if (socket.connection)
-		db.connect(init_client.bind(this, socket));
+		init_client(socket);
 	else if (!retry || retry < 5000) {
 		/* Wait for socket.connection */
 		retry = retry ? retry*2 : 50;
@@ -214,17 +243,13 @@ function on_client (socket, retry) {
 		util.error("Dropping no-connection client (?!)");
 }
 
-function init_client (socket, db_err, db_connection) {
-	if (db_err) {
-		console.error(db_err);
-		socket.connection.end();
-		return;
-	}
+function init_client (socket) {
 	var ip = socket.connection.remoteAddress;
 	var id = socket.sessionId;
 	console.log(id + " has IP " + ip);
 	var client = {id: id, socket: socket, post: null, synced: false,
-			watching: null, ip: ip, db: db_connection};
+			watching: null, ip: ip, db: new db.Yakusoku(),
+			skipped: 0};
 	clients[id] = client;
 	socket.on('message', function (data) {
 		var msg = null;
@@ -239,103 +264,168 @@ function init_client (socket, db_err, db_connection) {
 			type = msg.shift();
 		var func = dispatcher[type];
 		if (!func || !func(msg, client)) {
-			console.log("Got invalid message " + data);
-			multisend(client, [[common.INVALID]]);
-			client.synced = false;
+			console.error("Got invalid message " + data);
+			report(null, client, "Bad protocol.");
 		}
 	});
 	socket.on('disconnect', function () {
 		delete clients[id];
-		if (client.post)
-			finish_post(client.post, client);
 		client.synced = false;
+		if (client.post)
+			finish_post_by(client, function () {
+				client.db.disconnect();
+			});
+		else
+			client.db.disconnect();
 	});
-	socket.on('error', function (err) {
-		console.log(err);
+	socket.on('error', console.error.bind(console, 'socket:'));
+	client.db.on('error', console.error.bind(console, 'redis:'));
+}
+
+function pad3(n) {
+	return (n < 10 ? '00' : (n < 100 ? '0' : '')) + n;
+}
+
+var git_version;
+var error_db;
+function report(error, client, client_msg) {
+	if (typeof git_version == 'undefined') {
+		git_version = null;
+		get_version([], function (err, ver) {
+			if (err) {
+				console.error(err);
+				console.error(error);
+			}
+			else {
+				git_version = ver;
+				report(error, client, client_msg);
+			}
+		});
+		return;
+	}
+	if (!error_db)
+		error_db = new db.Yakusoku;
+	var ver = git_version || 'ffffff';
+	var msg = client_msg || 'Server error.';
+	var ip = client && client.ip;
+	var info = {error: error, msg: msg, ip: ip};
+	error_db.report_error(info, ver, function (err, num) {
+		if (err)
+			console.error(err);
+		ver = ' (#' + ver + '-' + pad3(num) + ')';
+		console.error((error || msg) + ' ' + ip + ver);
+		if (client) {
+			private_msg(client, [common.INVALID, msg + ver]);
+			client.synced = false;
+		}
 	});
 }
 
-function valid_links(frag, state) {
+/* Must be prepared to receive callback instantly */
+function valid_links(frag, state, callback) {
 	var links = {};
-	var onee = new common.OneeSama(function (num, e) {
-		var post = posts[num];
-		if (post)
-			links[num] = post.op || post.num;
+	var onee = new common.OneeSama(function (num) {
+		if (num in db.OPs)
+			links[num] = db.OPs[num];
 	});
 	onee.callback = function (frag) {};
 	onee.state = state;
 	onee.fragment(frag);
-	return links;
-}
-
-function isEmpty(obj) {
-	for (k in obj)
-		if (obj.hasOwnProperty(k))
-			return false;
-	return true;
+	callback(null, common.is_empty(links) ? null : links);
 }
 
 dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (msg.length != 1)
 		return false;
 	msg = msg[0];
-	if (config.IMAGE_UPLOAD && !msg.op)
+	if (typeof msg != 'object' || !msg.op)
 		return false;
 	if (client.post)
-		return true; /* image upload/fragment typing race */
+		return update_post(msg.frag, client);
 	var frag = msg.frag;
 	if (!frag || frag.match(/^\s*$/g))
 		return false;
-	return allocate_post(msg, null, null, client, function (err, alloc) {
-		if (err) {
-			/* TODO: Report */
-			console.log(err);
-			return;
-		}
-		multisend(client, [[common.ALLOCATE_POST, alloc]]);
+	allocate_post(msg, null, client, function (err, alloc) {
+		if (err)
+			return report(err, client, "Couldn't allocate post.");
+		else
+			private_msg(client, [common.ALLOCATE_POST, alloc]);
 	});
+	return true;
 }
 
-function allocate_post(msg, image, imgnm, client, callback) {
+function allocate_post(msg, image, client, callback) {
 	if (!msg || typeof msg != 'object')
-		return false;
-	var post = {time: new Date().getTime(), editing: true};
+		return callback('Bad alloc.');
+	if (client.post)
+		return callback("Already have a post.");
+	var post = {time: new Date().getTime()};
+	var body = '';
 	if (msg.frag !== undefined) {
 		if (typeof msg.frag != 'string' || msg.frag.match(/^\s*$/g)
 				|| msg.frag.length > common.MAX_POST_CHARS)
-			return false;
-		post.body = msg.frag;
+			return callback('Post is too long.');
+		body = msg.frag;
 	}
-	else
-		post.body = '';
-	if (typeof msg.op == 'number' && posts[msg.op] && !posts[msg.op].op)
+	if (msg.op !== undefined) {
+		if (typeof msg.op != 'number')
+			return callback('Invalid thread.');
 		post.op = msg.op;
-	if (client.watching && client.watching != post.op)
-		return false;
-	if (typeof msg.name != 'string')
-		return false;
-	var parsed = common.parse_name(msg.name);
-	post.name = parsed[0];
-	if (parsed[1] || parsed[2]) {
-		var trip = tripcode.hash(parsed[1], parsed[2]);
-		if (trip)
-			post.trip = trip;
 	}
-	if (typeof msg.email == 'string')
-		post.email = msg.email.trim().substr(0, 320);
-	if (post.email == 'noko')
-		delete post.email;
-	if (image) {
-		post.image = image;
-		post.imgnm = imgnm;
-	}
-	db.insert_post(client.db, post, client.ip, function (err, num) {
-		if (err) {
-			callback(err, null);
-			return;
+	if (client.watching && post.op !== client.watching)
+		return false;
+	if (msg.name !== undefined) {
+		if (typeof msg.name != 'string')
+			return callback('Invalid name.');
+		var parsed = common.parse_name(msg.name);
+		post.name = parsed[0];
+		if (parsed[1] || parsed[2]) {
+			var trip = tripcode.hash(parsed[1], parsed[2]);
+			if (trip)
+				post.trip = trip;
 		}
+	}
+	if (msg.email !== undefined) {
+		if (typeof msg.email != 'string')
+			return callback('Invalid email.');
+		post.email = msg.email.trim().substr(0, 320);
+		if (post.email == 'noko')
+			delete post.email;
+	}
+	if (image)
+		post.image = image;
+	post.state = [0, 0];
+	flow.exec(function () {
+		client.db.reserve_post(post.op, this);
+	},
+	function (err, num) {
+		if (err)
+			return callback("Couldn't reserve a post.");
+		if (client.post)
+			return callback('Already have a post.');
+		client.post = post;
 		post.num = num;
-		allocation_ok(post, client, callback);
+		valid_links(body, post.state, this);
+	},
+	function (err, links) {
+		if (err) {
+			console.error('valid_links: ' + err);
+			if (client.post === post)
+				delete client.post;
+			return callback("Post reference error.");
+		}
+		post.links = links;
+		client.db.insert_post(post, body, client.ip, this);
+	},
+	function (err) {
+		if (err) {
+			if (client.post === post)
+				delete client.post;
+			console.error(err);
+			return callback("Couldn't allocate post.");
+		}
+		post.body = body;
+		callback(null, get_post_view(post));
 	});
 	return true;
 }
@@ -348,139 +438,74 @@ function get_post_view(post) {
 	if (post.email) view.email = post.email;
 	if (post.editing) view.editing = post.editing;
 	if (post.links) view.links = post.links;
-	if (post.image)
-		view.image = pix.get_image_view(post.image, post.imgnm,
-				post.op);
+	if (post.image) view.image = post.image;
 	return view;
 }
 
-function allocation_ok(post, client, callback) {
-	if (client.post) {
-		/* Race condition... discard this */
-		return callback('Already have a post.', null);
-	}
-	client.post = post;
-	posts[post.num] = post;
-	post.state = [0, 0];
-	post.links = valid_links(post.body, post.state);
-	var view = get_post_view(post);
-	broadcast([common.INSERT_POST, view], view, client.id);
-	callback(null, view);
-	if (!post.op) {
-		/* New thread */
-		post.thread = {image_count: 0, replies: [],
-				last_bump: post.num, op: post};
-		threads.unshift(post.thread);
-	}
-	else {
-		var thread = posts[post.op].thread;
-		thread.replies.push(post);
-		if (post.image)
-			thread.image_count++;
- 		if (post.email != 'sage') {
-			thread.last_bump = post.num;
-			/* Bump thread */
-			for (var i = 0; i < threads.length; i++) {
-				if (threads[i] == thread) {
-					threads.splice(i, 1);
-					threads.unshift(thread);
-					break;
+function update_post(frag, client) {
+	if (typeof frag != 'string')
+		return false;
+	var post = client.post;
+	if (!post)
+		return false;
+	var limit = common.MAX_POST_CHARS;
+	if (frag.length > limit || post.length >= limit)
+		return false;
+	var combined = post.length + frag.length;
+	if (combined > limit)
+		frag = frag.substr(0, combined - limit);
+	post.body += frag;
+	/* imporant: broadcast prior state */
+	var old_state = post.state.slice();
+	flow.exec(function () {
+		valid_links(frag, post.state, this);
+	},
+	function (err, links) {
+		if (err)
+			links = null; /* oh well */
+		var new_links = {};
+		if (links) {
+			if (!post.links)
+				post.links = {};
+			for (var k in links) {
+				var link = links[k];
+				if (post.links[k] != link) {
+					post.links[k] = link;
+					new_links[k] = link;
 				}
 			}
 		}
-	}
-}
-
-function announce_image(info, client) {
-	var post = client.post;
-	broadcast([common.INSERT_IMAGE, post.num, info], post, client.id);
-}
-
-dispatcher[common.UPDATE_POST] = function (frag, client) {
-	if (!frag || frag.constructor != String)
-		return false;
-	var post = client.post;
-	if (!post || !post.editing)
-		return false;
-	if (post.body.length + frag.length > common.MAX_POST_CHARS)
-		return false;
-	/* imporant: broadcast prior state */
-	var msg = [common.UPDATE_POST, post.num, frag].concat(post.state);
-	var links = valid_links(frag, post.state);
-	if (!isEmpty(links))
-		msg.push({links: links});
-	broadcast(msg, post, client.id);
-	post.body += frag;
-	for (var k in links)
-		post.links[k] = links[k];
+		client.db.append_post(post, frag, old_state, links, new_links,
+				this);
+	},
+	function (err) {
+		if (err)
+			report(err, client, "Couldn't add text.");
+	});
 	return true;
 }
+dispatcher[common.UPDATE_POST] = update_post;
 
-function finish_post(post, client) {
+function finish_post_by(client, callback) {
 	/* TODO: Should we check client.uploading? */
-	broadcast([common.FINISH_POST, post.num], post, client.id);
-	post.editing = false;
-	delete post.state;
-	db.update_post(client.db, post.num, post.body, function (ok) {
-		if (!ok) {
-			/* TODO */
-			console.log("Couldn't save final post #" + post.num);
+	client.db.finish_post(client.post, function (err) {
+		if (err)
+			callback(err);
+		else {
+			delete client.post;
+			callback(null);
 		}
 	});
 }
 
 dispatcher[common.FINISH_POST] = function (msg, client) {
-	if (msg.length)
+	if (msg.length || !client.post)
 		return false;
-	var post = client.post;
-	if (!post || !post.editing)
-		return false;
-	finish_post(post, client);
-	client.post = null;
+	finish_post_by(client, function (err) {
+		if (err)
+			report(err, client, "Couldn't finish post.");
+	});
 	return true;
-}
-
-function populate_threads(conn, thread_map, callback) {
-	db.get_posts(conn, false, function (err, post) {
-		if (err) throw err;
-		if (post) {
-			posts[post.num] = post;
-			var thread = thread_map[post.op];
-			thread.replies.push(post);
-			if (post.image)
-				thread.image_count++;
-			if (post.email != 'sage')
-				thread.last_bump = post.num;
-		}
-		else {
-			for (var num in thread_map)
-				threads.push(thread_map[num]);
-			/* Should really insert into correct spot */
-			threads.sort(function (a, b) {
-				return b.last_bump - a.last_bump;
-			});
-			callback();
-		}
-	});
-}
-
-function load_threads(callback) {
-	var thread_map = {};
-	db.connect(function (err, conn) {
-		if (err) throw err;
-	db.get_posts(conn, true, function (err, post) {
-		if (err) throw err;
-		if (post) {
-			var thread = {op: post, replies: [],
-					image_count: 0, last_bump: post.num};
-			post.thread = thread;
-			posts[post.num] = post;
-			thread_map[post.num] = thread;
-		}
-		else
-			populate_threads(conn, thread_map, callback);
-	});
-	});
 }
 
 function start_server() {
@@ -495,7 +520,54 @@ function start_server() {
 	});
 }
 
-db.check_tables(function () {
-	console.log("Database OK.");
-	load_threads(start_server);
-});
+function get_version(deps, callback) {
+	require('child_process').exec('git log -1 --format=%h '+deps.join(' '),
+			function (err, stdout, stderr) {
+		if (err)
+			callback(err);
+		else
+			callback(null, stdout.trim());
+	});
+}
+
+(function () {
+
+if (process.argv[2] == '--show-config') {
+	var key = process.argv[3];
+	if (!(key in config))
+		throw "No such config value " + process.argv[3];
+	var val = config[process.argv[3]];
+	console.log((val && val.join) ? val.join(' ') : val);
+}
+else if (process.argv[2] == '--client-version')
+	get_version(config.CLIENT_DEPS, function (err, version) {
+		if (err)
+			throw err;
+		else
+			console.log(version);
+	});
+else {
+	get_version(config.CLIENT_DEPS, function (err, version) {
+		if (err)
+			throw err;
+		tripcode = require('./tripcode');
+		config.CLIENT_JS = 'client-' + version + (
+				config.DEBUG ? '.debug.js' : '.js');
+		indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
+			{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
+		notFoundHtml = fs.readFileSync('../www/404.html');
+		db.track_OPs(function (err) {
+			if (err)
+				throw err;
+			var yaku = new db.Yakusoku;
+			yaku.finish_all(function (err) {
+				if (err)
+					throw err;
+				yaku.disconnect();
+				setTimeout(start_server, 0);
+			});
+		});
+	});
+}
+
+})();

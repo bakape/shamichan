@@ -1,31 +1,31 @@
-module.exports = {
+var config = {
 	TITLE: "Test",
 	PORT: 8000,
-	VERSION: "2",
 	DEBUG: true,
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
 
-	DB_CONFIG: {user: 'pixplz', database: 'pixplz', password: 'secret'},
-	DB_POST_TABLE: 'posts',
-	DB_IMAGE_TABLE: 'images',
+	REDIS_PORT: 6379,
 
-	BACKLOG_PERIOD: 20000,
 	ABBREVIATED_REPLIES: 5,
 
-	IMAGE_UPLOAD: true,
 	IMAGE_FILESIZE_MAX: 1024 * 1024 * 3,
 	IMAGE_WIDTH_MAX: 5000,
 	IMAGE_HEIGHT_MAX: 5000,
 	IMAGE_DIR: '../www/src',
 	THUMB_DIR: '../www/thumb',
-	IMAGE_URL: 'http://localhost/src/',
-	THUMB_URL: 'http://localhost/thumb/',
+	IMAGE_URL: '/src/',
+	THUMB_URL: '/thumb/',
 	PINKY_QUALITY: 50,
-	PINKY_DIMENSIONS: '125x125',
+	PINKY_DIMENSIONS: [125, 125],
 	THUMB_QUALITY: 50,
-	THUMB_DIMENSIONS: '250x250',
+	THUMB_DIMENSIONS: [250, 250],
 
 	MIXPANEL_TOKEN: '',
 };
-if (process.argv[2] == '--show-config')
-	console.log(module.exports[process.argv[3]]);
+
+config.CLIENT_DEPS = ['lib/socket.io.js', 'common.js', 'client.js'];
+if (!config.DEBUG)
+	config.CLIENT_DEPS.push('lib/mixpanel.js');
+config.CLIENT_DEPS.push('lib/mixpanel_invoke.js');
+
+module.exports = config;

@@ -59,6 +59,16 @@ function map_unsafe(frags, func) {
 	return frags;
 }
 
+function is_empty(o) {
+	if (!o)
+		return false;
+	for (k in o)
+		if (o.hasOwnProperty(k))
+			return false;
+	return true;
+}
+exports.is_empty = is_empty;
+
 exports.OneeSama = function (t) {
 	this.tamashii = t;
 };
@@ -152,22 +162,31 @@ OS.karada = function (body) {
 function chibi(text) {
 	var m = text.match(/^(.{40}).{8,}(\.\w{3,4})$/);
 	if (!m)
-		return ', ' + text;
-	return [safe(', <abbr title="'), text, safe('">'), m[1],
+		return text;
+	return [safe('<abbr title="'), text, safe('">'), m[1],
 		safe('(&hellip;)'), m[2], safe('</abbr>')];
 }
 
 OS.gazou = function (info) {
-	var src = this.dirs.src_url + info.src;
+	var src = this.dirs.src_url + info.src, d = info.dims;
 	return [safe('<figure data-MD5="' + info.MD5 + '">' +
 		'<figcaption>Image <a href="' + src + '" target="_blank">' +
-		info.src + '</a> (' + info.size + ', ' + info.dims[0] +
-		'x' + info.dims[1]), this.full ? chibi(info.imgnm) : '',
+		info.src + '</a> (' + readable_filesize(info.size) + ', ' +
+		d[0] + 'x' + d[1]), this.full ? ', ' + chibi(info.imgnm) : '',
 		safe(')</figcaption><a href="' + src + '" target="_blank">' +
 		'<img src="' + this.dirs.thumb_url + info.thumb + '" width="' +
-		info.dims[2] + '" height="' + info.dims[3] + '"></a>' +
-		'</figure>\n\t')];
+		d[2] + '" height="' + d[3] + '"></a>' + '</figure>\n\t')];
 };
+
+function readable_filesize(size) {
+       /* Metric. Deal with it. */
+       if (size < 1000)
+               return size + ' B';
+       if (size < 1000000)
+               return Math.round(size / 1000) + ' KB';
+       size = Math.round(size / 100000).toString();
+       return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
+}
 
 function pad(n) {
 	return (n < 10 ? '0' : '') + n;
@@ -199,7 +218,7 @@ function num_html(post) {
 }
 
 function expand_html(num) {
-	return ' &nbsp; [<a href="' + num + '" class="expand">Reply</a>]';
+	return ' &nbsp; [<a href="' + num + '" class="expand">Expand</a>]';
 }
 
 OS.monogatari = function (data) {
@@ -224,8 +243,7 @@ OS.monogatari = function (data) {
 			safe('</blockquote>')];
 	if (!data.image)
 		return {header: header, body: body};
-	var img = this.gazou(this.image_view(data.image, data.imgnm, data.op));
-	return {header: header, image: img, body: body};
+	return {header: header, image: this.gazou(data.image), body: body};
 };
 
 OS.mono = function (data) {
@@ -238,7 +256,8 @@ OS.mono = function (data) {
 };
 
 OS.monomono = function (data) {
-	var o = safe('<section id="' + data.num + '">'),
+	var o = safe('<section id="' + data.num +
+		(data.full ? '' : '" data-imgs="'+data.imgctr) + '">'),
 	    c = safe('</section>\n'),
 	    gen = this.monogatari(data);
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);

@@ -1,10 +1,13 @@
 Dependencies:
 
 ImageMagick
+md5sum
 node.js
-PostgreSQL
+redis
 
+async
 flow-js
 formidable
-node-postgres
+node-imagemagick
+node_redis
 socket.io

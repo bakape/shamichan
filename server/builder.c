@@ -14,7 +14,7 @@ static void kill_existing(const char *);
 static void read_version(char *);
 
 static void build_client(void) {
-	char buf[32] = "../www/js/client-v";
+	char buf[32] = "../www/js/client-";
 	read_version(buf + strlen(buf));
 	strcat(buf, ".js");
 	if (!fork())
@@ -92,7 +92,7 @@ static void add_watch(const char *filename, void (*f)(void)) {
 }
 
 static void read_version(char *dest) {
-	FILE *f = popen("node config.js --show-config VERSION", "r");
+	FILE *f = popen("node server.js --client-version", "r");
 	if (!f || fscanf(f, "%10s", dest) != 1) {
 		fprintf(stderr, "Couldn't read version.\n");
 		exit(-1);
