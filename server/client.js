@@ -562,8 +562,11 @@ PostForm.prototype.finish = function () {
 		this.line_buffer.remove();
 		send([FINISH_POST]);
 	}
-	else
+	else {
+		if (!this.op)
+			this.post.next('hr').remove();
 		this.post.remove();
+	}
 
 	dispatcher[ALLOCATE_POST] = null;
 	postForm = null;
