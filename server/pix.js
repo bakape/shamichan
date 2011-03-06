@@ -1,7 +1,7 @@
 var async = require('async'),
     config = require('./config'),
+    child_process = require('child_process'),
     db = require('./db'),
-    exec = require('child_process').exec,
     flow = require('flow'),
     formidable = require('formidable'),
     fs = require('fs'),
@@ -119,8 +119,8 @@ IU.process = function () {
 		image.thumb = time + '.jpg';
 		var dest = path.join(config.IMAGE_DIR, image.src);
 		var nail = path.join(config.THUMB_DIR, image.thumb);
-		async.parallel([fs.rename.bind(fs, image.path, dest),
-				fs.rename.bind(fs, image.thumb_path, nail)],
+		async.parallel([mv_file.bind(null, image.path, dest),
+				mv_file.bind(null, image.thumb_path, nail)],
 				function (err, rs) {
 			if (err) {
 				console.error(err);
@@ -150,7 +150,7 @@ IU.read_image_filesize = function (callback) {
 };
 
 function MD5_file(path, callback) {
-	exec('md5sum -b ' + path, function (err, stdout, stderr) {
+	child_process.exec('md5sum -b ' + path, function (err, stdout, stderr) {
 		if (!err) {
 			var m = stdout.match(/^([\da-f]{32})/);
 			if (m)
@@ -159,6 +159,15 @@ function MD5_file(path, callback) {
 		console.log(stdout);
 		console.error(stderr);
 		return callback('Hashing error.');
+	});
+};
+
+function mv_file(src, dest, callback) {
+	mv = child_process.spawn('/bin/mv', [src, dest]);
+	mv.on('error', callback);
+	mv.stderr.on('data', console.error.bind(console));
+	mv.on('exit', function (code) {
+		callback(code ? 'mv error' : null);
 	});
 };
 
