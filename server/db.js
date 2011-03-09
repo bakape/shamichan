@@ -457,7 +457,7 @@ function extract_image(post) {
 	});
 	if (image.dims.split)
 		image.dims = image.dims.split(',');
-	image.size = parseInt(image.dims);
+	image.size = parseInt(image.size);
 	post.image = image;
 }
 
