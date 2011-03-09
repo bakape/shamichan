@@ -93,8 +93,10 @@ IU.process = function () {
 		stat: fs.stat.bind(fs, image.path),
 		dims: im.identify.bind(im, tagged_path)
 	}, function (err, rs) {
-		if (err)
-			return self.failure(err);
+		if (err) {
+			console.error(err);
+			return self.failure('Bad image.');
+		}
 		image.MD5 = rs.MD5;
 		image.size = rs.stat.size;
 		var w = rs.dims.width, h = rs.dims.height;
