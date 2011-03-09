@@ -195,7 +195,7 @@ IU.resize_image = function (src, ext, dest, dims, quality, callback) {
 };
 
 IU.failure = function (err_desc) {
-	this.iframe_call('upload_error', err_desc);
+	this.iframe_call('postForm.upload_error', err_desc);
 	var image = this.image;
 	if (image) {
 		if (image.path)
@@ -223,7 +223,7 @@ IU.publish = function () {
 				return self.failure("Publishing failure.");
 			client.post.image = view;
 			client.uploading = false;
-			self.iframe_call('upload_complete', view);
+			self.iframe_call('postForm.upload_complete', view);
 		});
 		return;
 	}

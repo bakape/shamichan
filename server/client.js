@@ -219,25 +219,6 @@ function extract_num(q) {
 	return parseInt(q.attr('id'));
 }
 
-function upload_error(msg) {
-	/* TODO: Reset allocation if necessary */
-	$('input[name=image]').attr('disabled', false
-			).siblings('strong').text(msg);
-	postForm.uploading = false;
-	postForm.update_buttons();
-}
-
-function upload_complete(info) {
-	var form = postForm.uploadForm, op = postForm.op;
-	insert_image(info, form.siblings('header'), !op);
-	form.find('input[name=image]').siblings('strong').andSelf().add(
-			postForm.cancel).remove();
-	mpmetrics.track('image', op ? {op: op} : {});
-	postForm.flush_pending();
-	postForm.uploading = false;
-	postForm.update_buttons();
-}
-
 function insert_image(info, header, op) {
 	header[op?'before':'after']($(flatten(oneeSama.gazou(info)).join('')));
 }
@@ -350,7 +331,7 @@ PostForm.prototype.on_allocation = function (msg) {
 		).attr('datetime', datetime(msg.time)).after(head_end);
 
 	if (msg.image)
-		upload_complete(msg.image);
+		this.upload_complete(msg.image);
 	else
 		this.update_buttons();
 	this.submit.click($.proxy(this, 'finish'));
@@ -384,6 +365,25 @@ PostForm.prototype.on_key = function (event) {
 		input.attr('cols', (cur_size + right_size) / 2);
 	}
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
+};
+
+PostForm.prototype.upload_error = function (msg) {
+	/* TODO: Reset allocation if necessary */
+	$('input[name=image]').attr('disabled', false
+			).siblings('strong').text(msg);
+	this.uploading = false;
+	this.update_buttons();
+};
+
+PostForm.prototype.upload_complete = function (info) {
+	var form = this.uploadForm, op = this.op;
+	insert_image(info, form.siblings('header'), !op);
+	form.find('input[name=image]').siblings('strong').andSelf().add(
+			this.cancel).remove();
+	mpmetrics.track('image', op ? {op: op} : {});
+	this.flush_pending();
+	this.uploading = false;
+	this.update_buttons();
 };
 
 function preview_miru(event, num) {
