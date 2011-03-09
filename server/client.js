@@ -28,8 +28,6 @@ function load_ident() {
 }
 load_ident();
 
-$('<a id="options">Options</a>').insertAfter('#sync');
-
 function save_ident() {
 	try {
 		function save(key, val) {
@@ -662,9 +660,9 @@ $(function () {
 	try {
 		options = JSON.parse(localStorage.options);
 	}
-	catch (e) {
+	catch (e) { }
+	if (!options)
 		options = {live: true};
-	}
 
 	var m = window.location.hash.match(/^#q(\d+)$/);
 	if (m && $('#' + m[1]).length) {
@@ -751,5 +749,7 @@ $(function () {
 		b(options[id]);
 	}
 	$(document.body).append(opts);
-	$('#options').click(function () { opts.toggle(); });
+	$('<a id="options">Options</a>').click(function () {
+		opts.toggle('fast');
+	}).insertAfter('#sync');
 });

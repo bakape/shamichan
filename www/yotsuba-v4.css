@@ -129,10 +129,12 @@ section p {
 }
 .modal {
 	background-color: white;
+	overflow: hidden;
 	padding: 1em;
 	position: absolute;
 	right: 70px;
 	top: 70px;
+	white-space: nowrap;
 }
 .preview {
 	background-color: white;
