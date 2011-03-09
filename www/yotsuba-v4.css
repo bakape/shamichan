@@ -29,6 +29,9 @@ body {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
 }
+body > aside {
+	margin: 1em;
+}
 del, del em {
 	background-color: black;
 	color: black;
@@ -99,8 +102,9 @@ hr {
 iframe {
 	display: none;
 }
-section, body > aside {
-	margin: 1em;
+section {
+	display: block;
+	margin: 0 1em 1em 1em;
 }
 section p {
 	display: inline;
