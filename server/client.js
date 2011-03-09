@@ -223,7 +223,8 @@ function upload_error(msg) {
 	/* TODO: Reset allocation if necessary */
 	$('input[name=image]').attr('disabled', false
 			).siblings('strong').text(msg);
-	postForm.cancel.show();
+	postForm.uploading = false;
+	postForm.update_buttons();
 }
 
 function upload_complete(info) {
@@ -233,6 +234,8 @@ function upload_complete(info) {
 			postForm.cancel).remove();
 	mpmetrics.track('image', op ? {op: op} : {});
 	postForm.flush_pending();
+	postForm.uploading = false;
+	postForm.update_buttons();
 }
 
 function insert_image(info, header, op) {
@@ -346,16 +349,17 @@ PostForm.prototype.on_allocation = function (msg) {
 	meta.children('time').text(readable_time(msg.time)
 		).attr('datetime', datetime(msg.time)).after(head_end);
 
-	this.submit.attr('disabled', false);
+	if (msg.image)
+		upload_complete(msg.image);
+	else
+		this.update_buttons();
+	this.submit.click($.proxy(this, 'finish'));
 	if (this.uploadForm) {
 		this.cancel.remove();
 		this.uploadForm.append(this.submit);
 	}
 	else
 		this.blockquote.after(this.submit);
-	this.submit.click($.proxy(this, 'finish'));
-	if (msg.image)
-		upload_complete(msg.image);
 	if (!this.op) {
 		this.blockquote.show();
 		this.input.focus();
@@ -502,7 +506,7 @@ PostForm.prototype.commit = function (text) {
 	if (!this.num && !this.sentAllocRequest) {
 		send([ALLOCATE_POST, this.make_alloc_request(text)]);
 		this.sentAllocRequest = true;
-		this.cancel.attr('disabled', true);
+		this.update_buttons();
 	}
 	else if (this.num)
 		send(text);
@@ -588,17 +592,23 @@ PostForm.prototype.make_upload_form = function () {
 		$(this).siblings('strong').text('');
 		if (!$(this).val())
 			return;
+		self.uploading = true;
+		self.update_buttons();
 		if (!self.num) {
-			self.submit.attr('disabled', true);
 			var alloc = $('<input type="hidden" name="alloc"/>');
 			var request = self.make_alloc_request(null);
 			form.append(alloc.val(JSON.stringify(request)));
 		}
 		form.submit();
 		$(this).attr('disabled', true);
-		self.cancel.hide();
 	});
 	return form;
+};
+
+PostForm.prototype.update_buttons = function () {
+	var d = this.uploading || (this.sentAllocRequest && !this.num);
+	/* Beware of undefined! */
+	this.submit.add(this.cancel).attr('disabled', !!d);
 };
 
 function sync_status(msg, hover) {
