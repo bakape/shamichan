@@ -63,7 +63,8 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 }
 
 function client_update(thread, num, kind, msg) {
-	if (this.post && this.post.num == num && kind != common.FINISH_POST) {
+	var mine = (this.post && this.post.num == num) || this.last_num == num;
+	if (mine && kind != common.FINISH_POST) {
 		this.skipped++;
 		return;
 	}
@@ -492,6 +493,7 @@ function finish_post_by(client, callback) {
 		if (err)
 			callback(err);
 		else {
+			client.last_num = client.post.num;
 			delete client.post;
 			callback(null);
 		}
