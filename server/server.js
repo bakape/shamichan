@@ -349,8 +349,12 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	allocate_post(msg, null, client, function (err, alloc) {
 		if (err)
 			return report(err, client, "Couldn't allocate post.");
+		var go = private_msg.bind(null, client,
+				[common.ALLOCATE_POST, alloc]);
+		if (!config.DEBUG)
+			go();
 		else
-			private_msg(client, [common.ALLOCATE_POST, alloc]);
+			setTimeout(go, 500);
 	});
 	return true;
 }
