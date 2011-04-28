@@ -8,6 +8,8 @@ var async = require('async'),
 var OPs = {};
 exports.OPs = OPs;
 
+var subs = {};
+
 function redis_client() {
 	return redis.createClient(config.REDIS_PORT || undefined);
 }
@@ -42,36 +44,40 @@ Y.disconnect = function () {
 	this.removeAllListeners();
 };
 
+function sink_sub(thread, err) {
+	console.error(err);
+	this.k.quit();
+	/* TODO: Inform this.watchers */
+	if (subs[thread] == this)
+		delete subs[thread];
+}
+
 Y.kiku = function (thread, callback) {
-	if (!this.k) {
-		this.k = redis_client();
-		this.k.on('error', console.error.bind(console));
+	if (thread in subs) {
+		subs[thread].watchers.push(this);
+		return callback(null);
 	}
+	var k = redis_client();
+	subs[thread] = {k: k, watchers: [this]};
 	this.kikumono = thread;
 	function on_subscribe_error(err) {
-		deal_with_it.call(this);
+		deal_with_it();
+		delete subs[thread];
 		callback(err);
 	}
 	function on_subscribe(chan, count) {
-		deal_with_it.call(this);
+		deal_with_it();
+		k.on('message', on_message.bind(sub));
+		k.on('error', sink_sub.bind(sub, thread));
 		callback(null);
 	}
 	function deal_with_it() {
-		var ev = this.kikumono ? 'subscribe' : 'psubscribe';
-		this.k.removeListener(ev, on_subscribe);
-		this.k.removeListener('error', on_subscribe_error);
+		k.removeListener('subscribe', on_subscribe);
+		k.removeListener('error', on_subscribe_error);
 	}
-	this.k.on('error', on_subscribe_error.bind(this));
-	if (this.kikumono) {
-		this.k.on('subscribe', on_subscribe.bind(this));
-		this.k.on('message', this._on_message.bind(this, null));
-		this.k.subscribe('thread:' + thread);
-	}
-	else {
-		this.k.on('psubscribe', on_subscribe.bind(this));
-		this.k.on('pmessage', this._on_message.bind(this));
-		this.k.psubscribe('thread:*');
-	}
+	k.on('error', on_subscribe_error);
+	k.on('subscribe', on_subscribe);
+	k.subscribe('thread:' + thread);
 };
 
 Y.kikanai = function (thread) {
@@ -80,12 +86,12 @@ Y.kikanai = function (thread) {
 	this.k.removeAllListeners('pmessage');
 };
 
-Y._on_message = function (pat, chan, msg) {
+function on_message(chan, msg) {
 	var info = msg.split(':', 2);
 	var off = info[0].length + info[1].length + 2;
 	var num = parseInt(info[0]), kind = parseInt(info[1]);
 	this.emit('update', chan, num, kind, msg.substr(off));
-};
+}
 
 function on_OP_message(pat, chan, msg) {
 	var op = parseInt(chan.match(/thread:(\d+)/)[1]);
@@ -292,7 +298,7 @@ Y._log = function (m, op, num, kind, msg) {
 	console.log("Log:", msg);
 	var key = 'thread:' + (op || num);
 	m.rpush(key + ':history', msg);
-	m.hincrby(key, 'historyctr', 1);
+	m.hincrby(key, 'hctr', 1);
 	m.publish(key, num + ':' + kind + ':' + msg);
 };
 

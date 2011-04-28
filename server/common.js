@@ -259,7 +259,7 @@ OS.mono = function (data) {
 
 OS.monomono = function (data) {
 	var o = safe('<section id="' + data.num +
-		(data.historyctr ? '" data-sync="'+data.historyctr : '') +
+		(data.hctr ? '" data-sync="'+data.hctr : '') +
 		(data.full ? '' : '" data-imgs="'+data.imgctr) + '">'),
 	    c = safe('</section>\n'),
 	    gen = this.monogatari(data);

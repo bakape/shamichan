@@ -21,18 +21,16 @@ function private_msg(client, msg) {
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
-	var sync = msg[0], watching = msg[1];
+	var sync = msg[0];
 	if (typeof sync != 'object')
 		return false;
-	if (watching) {
-		if (typeof watching != 'number')
-			return false;
-		if (db.OPs[watching] !== watching) {
-			report(null, client, "No such thread.");
-			return true;
-		}
-		client.watching = watching;
+	for (var k in sync)
+		if (db.OPs[k] != k)
+			delete sync[k];
+	if (common.isEmpty(sync)) {
+		/* TODO: Inform client */
 	}
+	client.watching = sync;
 	/* Race between subscribe and backlog fetch... hmmm... */
 	flow.exec(function () {
 		client.db.kiku(client.watching, this);
@@ -41,7 +39,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		if (err)
 			report(err, client);
 		else
-			client.db.fetch_backlog(sync, client.watching, this);
+			client.db.fetch_backlog(client.watching, this);
 	},
 	function (err, s, log) {
 		if (err)
@@ -245,7 +243,7 @@ function init_client (socket) {
 	var id = socket.sessionId;
 	console.log(id + " has IP " + ip);
 	var client = {id: id, socket: socket, post: null, synced: false,
-			watching: null, ip: ip, db: new db.Yakusoku(),
+			watching: {}, ip: ip, db: new db.Yakusoku(),
 			skipped: 0};
 	clients[id] = client;
 	socket.on('message', function (data) {
@@ -373,8 +371,7 @@ function allocate_post(msg, image, client, callback) {
 			return callback('Invalid thread.');
 		post.op = msg.op;
 	}
-	if (client.watching && post.op !== client.watching)
-		return false;
+	/* TODO: Check against client.watching? */
 	if (msg.name !== undefined) {
 		if (typeof msg.name != 'string')
 			return callback('Invalid name.');
