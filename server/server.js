@@ -21,25 +21,35 @@ function private_msg(client, msg) {
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
-	var sync = msg[0];
-	if (typeof sync != 'object')
+	var syncs = msg[0];
+	if (typeof syncs != 'object')
 		return false;
-	for (var k in sync)
-		if (db.OPs[k] != k)
-			delete sync[k];
-	if (common.isEmpty(sync)) {
-		/* TODO: Inform client */
+	/* TODO: Limit thread subscriptions */
+	var dead_threads = [], count = 0;
+	for (var k in syncs) {
+		if (typeof syncs[k] != 'number')
+			return false;
+		if (db.OPs[k] != k) {
+			delete syncs[k];
+			dead_threads.push(k);
+		}
+		if (++count > config.THREADS_PER_PAGE)
+			return false;
 	}
-	client.watching = sync;
+	client.watching = syncs;
 	/* Race between subscribe and backlog fetch... hmmm... */
 	flow.exec(function () {
 		client.db.kiku(client.watching, this);
 	},
-	function (err) {
-		if (err)
-			report(err, client);
-		else
+	function (errs) {
+		if (errs && errs.length >= count)
+			report("Couldn't synchronize to board.", client);
+		else {
+			if (errs) {
+				/* XXX: warn */
+			}
 			client.db.fetch_backlog(client.watching, this);
+		}
 	},
 	function (err, s, log) {
 		if (err)

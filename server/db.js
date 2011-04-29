@@ -8,7 +8,7 @@ var async = require('async'),
 var OPs = {};
 exports.OPs = OPs;
 
-var subs = {};
+var SUBS = {};
 
 function redis_client() {
 	return redis.createClient(config.REDIS_PORT || undefined);
@@ -44,40 +44,34 @@ Y.disconnect = function () {
 	this.removeAllListeners();
 };
 
-function sink_sub(thread, err) {
-	console.error(err);
-	this.k.quit();
-	/* TODO: Inform this.watchers */
-	if (subs[thread] == this)
-		delete subs[thread];
-}
+Y.kiku = function (threads, callback) {
+	var errors = [], count = 0, complete = false;
+	for (var thread in threads) {
+		count++;
+		var sub = SUBS[thread];
+		if (!sub) {
+			sub = new Subscription(thread, collect_results);
+			SUBS[thread] = sub;
+		}
+		sub.on('update', this.on_update);
+		sub.on('sink', this.on_sink_sub);
+	}
 
-Y.kiku = function (thread, callback) {
-	if (thread in subs) {
-		subs[thread].watchers.push(this);
-		return callback(null);
+	function collect_results(err) {
+		count--;
+		if (err)
+			errors.push(err);
+		if (complete && count == 0)
+			proceed();
 	}
-	var k = redis_client();
-	subs[thread] = {k: k, watchers: [this]};
-	this.kikumono = thread;
-	function on_subscribe_error(err) {
-		deal_with_it();
-		delete subs[thread];
-		callback(err);
+
+	complete = true;
+	if (count == 0)
+		proceed();
+
+	function proceed() {
+		callback(errors.length ? errors : null);
 	}
-	function on_subscribe(chan, count) {
-		deal_with_it();
-		k.on('message', on_message.bind(sub));
-		k.on('error', sink_sub.bind(sub, thread));
-		callback(null);
-	}
-	function deal_with_it() {
-		k.removeListener('subscribe', on_subscribe);
-		k.removeListener('error', on_subscribe_error);
-	}
-	k.on('error', on_subscribe_error);
-	k.on('subscribe', on_subscribe);
-	k.subscribe('thread:' + thread);
 };
 
 Y.kikanai = function (thread) {
@@ -86,12 +80,47 @@ Y.kikanai = function (thread) {
 	this.k.removeAllListeners('pmessage');
 };
 
-function on_message(chan, msg) {
+function Subscription(thread, subscription_callback) {
+	this.thread = thread;
+	this.subscription_callback = subscription_callback;
+
+	this.k = redis_client();
+	this.k.on('subscribe', this.on_sub);
+	this.k.on('error', this.on_sub_error);
+	this.k.subscribe('thread:' + thread);
+};
+
+Subscription.prototype.on_sub = function (chan, count) {
+	this.k.removeAllListeners();
+	this.chan = chan;
+	this.k.on('message', this.on_message);
+	this.k.on('error', this.sink_sub);
+	this.subscription_callback(null);
+	delete this.subscription_callback;
+};
+
+Subscription.prototype.on_message = function (msg) {
 	var info = msg.split(':', 2);
 	var off = info[0].length + info[1].length + 2;
 	var num = parseInt(info[0]), kind = parseInt(info[1]);
-	this.emit('update', chan, num, kind, msg.substr(off));
-}
+	this.emit('update', this.chan, num, kind, msg.substr(off));
+};
+
+Subscription.prototype.on_sub_error = function (err) {
+	this.k.removeAllListeners();
+	delete SUBS[this.thread];
+	this.subscription_callback(err);
+	delete this.subscription_callback;
+};
+
+Subscription.prototype.sink_sub = function (err) {
+	console.error('Sub', this.chan, 'sinking:', err);
+	this.k.quit();
+	this.emit('sink');
+	this.removeAllListeners();
+	if (SUBS[this.thread] === this)
+		delete SUBS[this.thread];
+};
 
 function on_OP_message(pat, chan, msg) {
 	var op = parseInt(chan.match(/thread:(\d+)/)[1]);
@@ -302,7 +331,7 @@ Y._log = function (m, op, num, kind, msg) {
 	m.publish(key, num + ':' + kind + ':' + msg);
 };
 
-Y.fetch_backlog = function (sync, watching, callback) {
+Y.fetch_backlog = function (watching, callback) {
 	var r = this.connect();
 	r.lrange('backlog', sync, -1, function (err, log) {
 		if (err)
