@@ -27,7 +27,10 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	/* TODO: Limit thread subscriptions */
 	var dead_threads = [], count = 0;
 	for (var k in syncs) {
-		if (typeof syncs[k] != 'number')
+		if (!k.match(/\d+/))
+			return false;
+		k = parseInt(k);
+		if (!k || typeof syncs[k] != 'number')
 			return false;
 		if (db.OPs[k] != k) {
 			delete syncs[k];
@@ -37,34 +40,32 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			return false;
 	}
 	client.watching = syncs;
-	/* Race between subscribe and backlog fetch... hmmm... */
+	/* Race between subscribe and backlog fetch; client must de-dup */
 	flow.exec(function () {
-		client.db.kiku(client.watching, this);
+		var on_update = client_update.bind(client);
+		client.db.kiku(client.watching, on_update, this);
 	},
 	function (errs) {
 		if (errs && errs.length >= count)
-			report("Couldn't synchronize to board.", client);
-		else {
-			if (errs) {
-				/* XXX: warn */
-			}
-			client.db.fetch_backlog(client.watching, this);
+			return report("Couldn't sync to board.", client);
+		else if (errs) {
+			dead_threads.push.apply(dead_threads, errs);
+			errs.forEach(function (thread) {
+				delete client.watching[thread];
+			});
 		}
+		client.db.fetch_backlogs(client.watching, this);
 	},
-	function (err, s, log) {
-		if (err)
-			return report(err, client);
-
-		client.db.on('update', client_update.bind(client));
-
-		if (s != sync + log.length)
-			console.error("Warning: backlog count wrong");
-		if (log.length) {
-			log.push('[' + common.SYNCHRONIZE + ',0]');
-			client.socket.send('[' + log.join() + ']');
+	function (errs, logs) {
+		if (errs) {
+			dead_threads.push.apply(dead_threads, errs);
+			errs.forEach(function (thread) {
+				delete client.watching[thread];
+			});
 		}
-		else
-			private_msg(client, [common.SYNCHRONIZE, 0]);
+
+		logs.push([common.SYNCHRONIZE, dead_threads]);
+		client.socket.send(JSON.stringify(logs));
 		client.synced = true;
 	});
 	return true;

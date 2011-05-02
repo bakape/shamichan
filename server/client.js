@@ -635,7 +635,7 @@ function attempt_reconnect() {
 }
 
 dispatcher[SYNCHRONIZE] = function (msg) {
-	SYNC += msg[0];
+	var dead_threads = msg[0]; /* TODO */
 	sync_status('Synced.', false);
 	insert_pbs();
 	return false;

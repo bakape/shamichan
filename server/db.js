@@ -44,36 +44,50 @@ Y.disconnect = function () {
 	this.removeAllListeners();
 };
 
-Y.kiku = function (threads, callback) {
-	var errors = [], count = 0, complete = false;
-	for (var thread in threads) {
-		count++;
-		var sub = SUBS[thread];
-		if (!sub) {
-			sub = new Subscription(thread, collect_results);
-			SUBS[thread] = sub;
-		}
-		sub.on('update', this.on_update);
-		sub.on('sink', this.on_sink_sub);
-	}
-
-	function collect_results(err) {
-		count--;
+function forEachInObject(obj, f, callback) {
+	var total = 0, complete = 0, done = false, errors = [];
+	function cb(err) {
+		complete++;
 		if (err)
 			errors.push(err);
-		if (complete && count == 0)
-			proceed();
+		if (done && complete == total)
+			callback(errors.length ? errors : null);
 	}
-
-	complete = true;
-	if (count == 0)
-		proceed();
-
-	function proceed() {
+	for (var k in obj) {
+		if (obj.hasOwnProperty(k)) {
+			total++;
+			f(k, cb);
+		}
+	}
+	done = true;
+	if (complete == total)
 		callback(errors.length ? errors : null);
-	}
+}
+
+Y.kiku = function (threads, on_update, callback) {
+	var self = this;
+	forEachInObject(threads, function (thread, cb) {
+		var sub = SUBS[thread];
+		if (!sub) {
+			sub = new Subscription(thread, cb);
+			SUBS[thread] = sub;
+			sub.on('update', on_update);
+			sub.on('sink', self.on_sink_sub);
+		}
+		else {
+			sub.on('update', on_update);
+			sub.on('sink', self.on_sink_sub);
+			cb(null);
+		}
+	}, callback);
 };
 
+Y.on_sink_sub = function (sub) {
+	/* TODO */
+	console.error("Sub", sub.thread, "sank.");
+};
+
+/* TODO */
 Y.kikanai = function (thread) {
 	this.k.unsubscribe();
 	this.k.removeAllListeners('message');
@@ -81,14 +95,17 @@ Y.kikanai = function (thread) {
 };
 
 function Subscription(thread, subscription_callback) {
+	events.EventEmitter.call(this);
 	this.thread = thread;
 	this.subscription_callback = subscription_callback;
 
 	this.k = redis_client();
-	this.k.on('subscribe', this.on_sub);
-	this.k.on('error', this.on_sub_error);
+	this.k.on('subscribe', this.on_sub.bind(this));
+	this.k.on('error', this.on_sub_error.bind(this));
 	this.k.subscribe('thread:' + thread);
 };
+
+util.inherits(Subscription, events.EventEmitter);
 
 Subscription.prototype.on_sub = function (chan, count) {
 	this.k.removeAllListeners();
@@ -107,6 +124,7 @@ Subscription.prototype.on_message = function (msg) {
 };
 
 Subscription.prototype.on_sub_error = function (err) {
+	console.log("Subscription error:", err.stack || err); /* TEMP? */
 	this.k.removeAllListeners();
 	delete SUBS[this.thread];
 	this.subscription_callback(err);
@@ -116,7 +134,7 @@ Subscription.prototype.on_sub_error = function (err) {
 Subscription.prototype.sink_sub = function (err) {
 	console.error('Sub', this.chan, 'sinking:', err);
 	this.k.quit();
-	this.emit('sink');
+	this.emit('sink', this);
 	this.removeAllListeners();
 	if (SUBS[this.thread] === this)
 		delete SUBS[this.thread];
@@ -331,14 +349,20 @@ Y._log = function (m, op, num, kind, msg) {
 	m.publish(key, num + ':' + kind + ':' + msg);
 };
 
-Y.fetch_backlog = function (watching, callback) {
+Y.fetch_backlogs = function (watching, callback) {
 	var r = this.connect();
-	r.lrange('backlog', sync, -1, function (err, log) {
-		if (err)
-			return callback(err);
-		// TODO: Do something with watching
-		// Naive impl for now
-		callback(null, sync + log.length, log);
+	var combined = [];
+	forEachInObject(watching, function (thread, cb) {
+		var key = 'thread:' + thread + ':history';
+		var sync = watching[thread];
+		r.lrange(key, sync, -1, function (err, log) {
+			if (err)
+				return cb(err);
+			combined.push.apply(combined, log);
+			cb(null);
+		});
+	}, function (errs) {
+		callback(errs, combined);
 	});
 };
 
