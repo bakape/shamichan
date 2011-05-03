@@ -9,6 +9,7 @@ var OPs = {};
 exports.OPs = OPs;
 
 var SUBS = {};
+var YAKUDON = 0;
 
 function redis_client() {
 	return redis.createClient(config.REDIS_PORT || undefined);
@@ -16,6 +17,7 @@ function redis_client() {
 
 function Yakusoku() {
 	events.EventEmitter.call(this);
+	this.id = ++YAKUDON;
 	/* TEMP */
 	this.tag = '3:moe';
 }
@@ -36,10 +38,6 @@ Y.disconnect = function () {
 	if (this.r) {
 		this.r.quit();
 		this.r.removeAllListeners();
-	}
-	if (this.k) {
-		this.k.quit();
-		this.k.removeAllListeners();
 	}
 	this.removeAllListeners();
 };
@@ -64,36 +62,34 @@ function forEachInObject(obj, f, callback) {
 		callback(errors.length ? errors : null);
 }
 
-Y.kiku = function (threads, on_update, callback) {
+Y.kiku = function (threads, on_update, on_sink, callback) {
 	var self = this;
+	this.on_update = on_update;
+	this.on_sink = on_sink;
 	forEachInObject(threads, function (thread, cb) {
 		var sub = SUBS[thread];
 		if (!sub) {
 			sub = new Subscription(thread);
 			SUBS[thread] = sub;
 		}
-		sub.on('update', on_update);
-		sub.on('sink', self.on_sink_sub);
+		sub.promise_to(self);
 		sub.when_ready(cb);
 	}, callback);
 };
 
-Y.on_sink_sub = function (sub) {
-	/* TODO */
-	console.error("Sub", sub.thread, "sank.");
-};
-
-/* TODO */
-Y.kikanai = function (thread) {
-	this.k.unsubscribe();
-	this.k.removeAllListeners('message');
-	this.k.removeAllListeners('pmessage');
+Y.kikanai = function (threads) {
+	for (var thread in threads) {
+		var sub = SUBS[thread];
+		if (sub)
+			sub.break_promise(this);
+	}
 };
 
 function Subscription(thread) {
 	events.EventEmitter.call(this);
 	this.thread = thread;
 	this.subscription_callbacks = [];
+	this.promises = {};
 
 	this.k = redis_client();
 	this.k.on('subscribe', this.on_sub.bind(this));
@@ -110,28 +106,40 @@ Subscription.prototype.when_ready = function (cb) {
 		cb(null);
 };
 
+Subscription.prototype.promise_to = function (yaku) {
+	this.promises[yaku.id] = yaku;
+};
+
+Subscription.prototype.break_promise = function (yaku) {
+	delete this.promises[yaku.id];
+	for (var id in this.promises)
+		return;
+	/* No more promises */
+	this.seppuku();
+};
+
 Subscription.prototype.on_sub = function (chan, count) {
 	this.k.removeAllListeners();
-	this.chan = chan;
-	this.k.on('message', this.on_message);
-	this.k.on('error', this.sink_sub);
+	this.k.on('message', this.on_message.bind(this));
+	this.k.on('error', this.sink_sub.bind(this));
 	this.subscription_callbacks.forEach(function (cb) {
 		cb(null);
 	});
 	delete this.subscription_callbacks;
 };
 
-Subscription.prototype.on_message = function (msg) {
+Subscription.prototype.on_message = function (chan, msg) {
 	var info = msg.split(':', 2);
 	var off = info[0].length + info[1].length + 2;
 	var num = parseInt(info[0]), kind = parseInt(info[1]);
-	this.emit('update', this.chan, num, kind, msg.substr(off));
+	msg = msg.substr(off);
+	for (var id in this.promises)
+		this.promises[id].on_update(chan, num, kind, msg);
 };
 
 Subscription.prototype.on_sub_error = function (err) {
 	console.log("Subscription error:", err.stack || err); /* TEMP? */
-	this.k.removeAllListeners();
-	delete SUBS[this.thread];
+	this.seppuku();
 	this.subscription_callbacks.forEach(function (cb) {
 		cb(err);
 	});
@@ -139,10 +147,14 @@ Subscription.prototype.on_sub_error = function (err) {
 };
 
 Subscription.prototype.sink_sub = function (err) {
-	console.error('Sub', this.chan, 'sinking:', err);
+	this.seppuku();
+	for (var id in this.promises)
+		this.promises[id].on_sink(this.thread, 'Thread unavailable.');
+};
+
+Subscription.prototype.seppuku = function () {
+	this.k.removeAllListeners();
 	this.k.quit();
-	this.emit('sink', this);
-	this.removeAllListeners();
 	if (SUBS[this.thread] === this)
 		delete SUBS[this.thread];
 };

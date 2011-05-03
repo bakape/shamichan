@@ -43,7 +43,8 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	/* Race between subscribe and backlog fetch; client must de-dup */
 	flow.exec(function () {
 		var on_update = client_update.bind(client);
-		client.db.kiku(client.watching, on_update, this);
+		var on_sink = client_thread_sink.bind(client);
+		client.db.kiku(client.watching, on_update, on_sink, this);
 	},
 	function (errs) {
 		if (errs && errs.length >= count)
@@ -71,18 +72,24 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	return true;
 }
 
-function client_update(thread, num, kind, msg) {
+function client_update(chan, num, kind, msg) {
 	var mine = (this.post && this.post.num == num) || this.last_num == num;
 	if (mine && kind != common.FINISH_POST) {
 		this.skipped++;
 		return;
 	}
 	if (this.skipped) {
+		/* TODO */
 		console.log("Skipping ahead " + this.skipped);
 		msg = '['+common.SYNCHRONIZE+','+this.skipped+'],' + msg;
 		this.skipped = 0;
 	}
 	this.socket.send('[' + msg + ']');
+}
+
+function client_thread_sink(thread, err) {
+	/* TODO */
+	console.log(thread, 'sank:', err);
 }
 
 var oneeSama = new common.OneeSama(function (num) {
@@ -273,6 +280,8 @@ function init_client (socket) {
 	socket.on('disconnect', function () {
 		delete clients[id];
 		client.synced = false;
+		if (client.watching)
+			client.db.kikanai(client.watching);
 		if (client.post)
 			finish_post_by(client, function () {
 				client.db.disconnect();
