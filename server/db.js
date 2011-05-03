@@ -366,10 +366,6 @@ Y.fetch_backlogs = function (watching, callback) {
 	});
 };
 
-Y.get_sync_number = function (callback) {
-	this.connect().llen('backlog', callback);
-};
-
 Y.get_post_op = function (num, callback) {
 	var r = this.connect();
 	r.hget('post:' + num, 'op', function (err, op) {

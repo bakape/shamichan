@@ -173,12 +173,8 @@ function render_index(req, resp) {
 	});
 	write_thread_html(yaku, resp, false);
 	yaku.on('end', function () {
-		yaku.get_sync_number(function (err, sync_num) {
-			if (err)
-				return yaku.emit('error', err);
-			resp.end(indexTmpl[2]);
-			yaku.disconnect();
-		});
+		resp.end(indexTmpl[2]);
+		yaku.disconnect();
 	});
 	yaku.on('error', function (err) {
 		console.error('index:', err);
