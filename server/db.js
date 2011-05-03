@@ -69,16 +69,12 @@ Y.kiku = function (threads, on_update, callback) {
 	forEachInObject(threads, function (thread, cb) {
 		var sub = SUBS[thread];
 		if (!sub) {
-			sub = new Subscription(thread, cb);
+			sub = new Subscription(thread);
 			SUBS[thread] = sub;
-			sub.on('update', on_update);
-			sub.on('sink', self.on_sink_sub);
 		}
-		else {
-			sub.on('update', on_update);
-			sub.on('sink', self.on_sink_sub);
-			cb(null);
-		}
+		sub.on('update', on_update);
+		sub.on('sink', self.on_sink_sub);
+		sub.when_ready(cb);
 	}, callback);
 };
 
@@ -94,10 +90,10 @@ Y.kikanai = function (thread) {
 	this.k.removeAllListeners('pmessage');
 };
 
-function Subscription(thread, subscription_callback) {
+function Subscription(thread) {
 	events.EventEmitter.call(this);
 	this.thread = thread;
-	this.subscription_callback = subscription_callback;
+	this.subscription_callbacks = [];
 
 	this.k = redis_client();
 	this.k.on('subscribe', this.on_sub.bind(this));
@@ -107,13 +103,22 @@ function Subscription(thread, subscription_callback) {
 
 util.inherits(Subscription, events.EventEmitter);
 
+Subscription.prototype.when_ready = function (cb) {
+	if (this.subscription_callbacks)
+		this.subscription_callbacks.push(cb);
+	else
+		cb(null);
+};
+
 Subscription.prototype.on_sub = function (chan, count) {
 	this.k.removeAllListeners();
 	this.chan = chan;
 	this.k.on('message', this.on_message);
 	this.k.on('error', this.sink_sub);
-	this.subscription_callback(null);
-	delete this.subscription_callback;
+	this.subscription_callbacks.forEach(function (cb) {
+		cb(null);
+	});
+	delete this.subscription_callbacks;
 };
 
 Subscription.prototype.on_message = function (msg) {
@@ -127,8 +132,10 @@ Subscription.prototype.on_sub_error = function (err) {
 	console.log("Subscription error:", err.stack || err); /* TEMP? */
 	this.k.removeAllListeners();
 	delete SUBS[this.thread];
-	this.subscription_callback(err);
-	delete this.subscription_callback;
+	this.subscription_callbacks.forEach(function (cb) {
+		cb(err);
+	});
+	delete this.subscription_callbacks;
 };
 
 Subscription.prototype.sink_sub = function (err) {
