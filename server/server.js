@@ -24,7 +24,10 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	var syncs = msg[0];
 	if (typeof syncs != 'object')
 		return false;
-	/* TODO: Limit thread subscriptions */
+	if (client.synced) {
+		console.error("warning: Client tried to sync twice");
+		return false;
+	}
 	var dead_threads = [], count = 0;
 	for (var k in syncs) {
 		if (!k.match(/\d+/))
