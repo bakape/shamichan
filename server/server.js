@@ -75,16 +75,18 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	return true;
 }
 
-function client_update(chan, num, kind, msg) {
+function client_update(op, num, kind, msg) {
 	var mine = (this.post && this.post.num == num) || this.last_num == num;
 	if (mine && kind != common.FINISH_POST) {
 		this.skipped++;
 		return;
 	}
+	msg = '[' + msg + ',' + op + ']';
 	if (this.skipped) {
-		/* TODO */
-		console.log("Skipping ahead " + this.skipped);
-		msg = '['+common.SYNCHRONIZE+','+this.skipped+'],' + msg;
+		/* XXX: should be OP nums not post nums */
+		var skipped_post = this.post ? this.post.num : this.last_num;
+		var catch_up = [common.CATCH_UP, skipped_post, this.skipped];
+		msg = JSON.stringify(catch_up) + ',' + msg;
 		this.skipped = 0;
 	}
 	this.socket.send('[' + msg + ']');

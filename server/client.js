@@ -140,7 +140,9 @@ function shift_replies(section) {
 }
 
 dispatcher[INSERT_POST] = function (msg) {
-	msg = msg[0];
+	var num = msg[0];
+	msg = msg[1];
+	msg.num = num;
 	msg.editing = true;
 	var orig_focus = get_focus();
 	oneeSama.links = msg.links;
@@ -148,7 +150,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	if (msg.op) {
 		section = $('#' + msg.op);
 		if (!section.length)
-			return true;
+			return;
 		var post = $(oneeSama.mono(msg));
 		shift_replies(section);
 		section.children('blockquote,.omit,form,article[id]:last'
@@ -179,12 +181,10 @@ dispatcher[INSERT_POST] = function (msg) {
 	}
 	if (orig_focus)
 		orig_focus.focus();
-	return true;
 };
 
 dispatcher[IMAGE_STATUS] = function (msg) {
 	$('input[name=image] + strong').text(msg[0]);
-	return false;
 };
 
 dispatcher[INSERT_IMAGE] = function (msg) {
@@ -195,7 +195,6 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 		if (focus)
 			focus.focus();
 	}
-	return true;
 };
 
 dispatcher[UPDATE_POST] = function (msg) {
@@ -207,12 +206,10 @@ dispatcher[UPDATE_POST] = function (msg) {
 		oneeSama.state = [msg[2] || 0, msg[3] || 0];
 		oneeSama.fragment(msg[1]);
 	}
-	return true;
 };
 
 dispatcher[FINISH_POST] = function (msg) {
 	$('#' + msg[0]).removeClass('editing');
-	return true;
 };
 
 function extract_num(q) {
@@ -281,7 +278,6 @@ function PostForm(dest, section) {
 
 	dispatcher[ALLOCATE_POST] = $.proxy(function (msg) {
 		this.on_allocation(msg[0]);
-		return false;
 	}, this);
 	$('aside').remove();
 	this.input.focus();
@@ -638,7 +634,10 @@ dispatcher[SYNCHRONIZE] = function (msg) {
 	var dead_threads = msg[0]; /* TODO */
 	sync_status('Synced.', false);
 	insert_pbs();
-	return false;
+};
+
+dispatcher[CATCH_UP] = function (msg) {
+	syncs[msg[0]] += msg[1];
 };
 
 dispatcher[INVALID] = function (msg) {
@@ -650,7 +649,6 @@ dispatcher[INVALID] = function (msg) {
 		postForm.finish();
 	$('aside').remove();
 	$('.editing').removeClass('editing');
-	return false;
 };
 
 $(function () {
@@ -661,8 +659,10 @@ $(function () {
 		for (var i = 0; i < msgs.length; i++) {
 			var msg = msgs[i];
 			var type = msg.shift();
-			if (dispatcher[type](msg))
-				SYNC++;
+			/* Pub-sub messages have an extra OP-num entry */
+			if (type >= INSERT_POST && type <= INSERT_IMAGE)
+				syncs[msg.pop()]++;
+			dispatcher[type](msg);
 		}
 	});
 	socket.connect();

@@ -129,12 +129,11 @@ Subscription.prototype.on_sub = function (chan, count) {
 };
 
 Subscription.prototype.on_message = function (chan, msg) {
-	var info = msg.split(':', 2);
-	var off = info[0].length + info[1].length + 2;
-	var num = parseInt(info[0]), kind = parseInt(info[1]);
-	msg = msg.substr(off);
+	var info = msg.match(/^(\d+),(\d+)/);
+	var kind = parseInt(info[1]), num = parseInt(info[2]);
+	var thread = parseInt(chan.match(/^thread:(\d+)$/)[1]);
 	for (var id in this.promises)
-		this.promises[id].on_update(chan, num, kind, msg);
+		this.promises[id].on_update(thread, num, kind, msg);
 };
 
 Subscription.prototype.on_sub_error = function (err) {
@@ -253,7 +252,6 @@ Y.insert_post = function (msg, body, ip, callback) {
 
 		/* Denormalize for backlog */
 		view.body = body;
-		view.num = num;
 		if (msg.links)
 			view.links = msg.links;
 		extract_image(view);
@@ -291,7 +289,7 @@ Y.add_image = function (post, image, callback) {
 		if (!exists)
 			return callback("Post does not exist.");
 		var m = r.multi();
-		self._log(m, post.op, num, common.INSERT_IMAGE, [num, image]);
+		self._log(m, post.op, num, common.INSERT_IMAGE, [image]);
 		m.hmset(key, image);
 		m.hincrby('thread:' + post.op, 'imgctr', 1);
 		m.exec(callback);
@@ -308,7 +306,7 @@ Y.append_post = function (post, tail, old_state, links, new_links, callback) {
 		m.hset(key, 'state', post.state.join());
 	if (new_links && !common.is_empty(new_links))
 		m.hmset(key + ':links', new_links);
-	var msg = [post.num, tail];
+	var msg = [tail];
 	if (links)
 		msg.push(old_state[0], old_state[1], links);
 	else if (old_state[1])
@@ -326,7 +324,7 @@ Y.finish_post = function (post, callback) {
 	m.hset(key, 'body', post.body);
 	m.del(key + ':body');
 	m.hdel(key, 'state');
-	this._log(m, post.op, post.num, common.FINISH_POST, [post.num]);
+	this._log(m, post.op, post.num, common.FINISH_POST, []);
 	m.exec(callback);
 };
 
@@ -351,7 +349,7 @@ Y.finish_all = function (callback) {
 				m.hdel(key, 'state');
 				var n = parseInt(key.match(/:(\d+)$/)[1]);
 				var op = parseInt(rs[1]) || n;
-				self._log(m, op, n, common.FINISH_POST, [n]);
+				self._log(m, op, n, common.FINISH_POST, []);
 				m.exec(cb);
 			});
 		}, callback);
@@ -359,13 +357,13 @@ Y.finish_all = function (callback) {
 };
 
 Y._log = function (m, op, num, kind, msg) {
-	msg.unshift(kind);
-	msg = JSON.stringify(msg);
+	msg.unshift(kind, num);
+	msg = JSON.stringify(msg).slice(1, -1);
 	console.log("Log:", msg);
 	var key = 'thread:' + (op || num);
 	m.rpush(key + ':history', msg);
 	m.hincrby(key, 'hctr', 1);
-	m.publish(key, num + ':' + kind + ':' + msg);
+	m.publish(key, msg);
 };
 
 Y.fetch_backlogs = function (watching, callback) {
