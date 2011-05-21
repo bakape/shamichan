@@ -226,12 +226,8 @@ function render_thread(req, resp, num) {
 	write_thread_html(reader, resp, true);
 	reader.on('end', function () {
 		resp.write('[<a href=".">Return</a>]');
-		yaku.get_sync_number(function (err, sync_num) {
-			if (err)
-				reader.emit('error', err);
-			resp.end(indexTmpl[2]);
-			yaku.disconnect();
-		});
+		resp.end(indexTmpl[2]);
+		yaku.disconnect();
 	});
 	function on_err(err) {
 		console.error('thread '+num+':', err);
