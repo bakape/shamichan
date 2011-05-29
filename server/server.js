@@ -86,9 +86,9 @@ OK.on_update = function(op, num, kind, msg) {
 	}
 	msg = '[' + msg + ',' + op + ']';
 	if (this.skipped) {
-		/* XXX: should be OP nums not post nums */
-		var skipped_post = this.post ? this.post.num : this.last_num;
-		var catch_up = [common.CATCH_UP, skipped_post, this.skipped];
+		var skipped_op = this.post ? (this.post.op || this.post.num)
+				: db.OPs[this.last_num];
+		var catch_up = [common.CATCH_UP, skipped_op, this.skipped];
 		msg = JSON.stringify(catch_up) + ',' + msg;
 		this.skipped = 0;
 	}
