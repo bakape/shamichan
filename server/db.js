@@ -8,12 +8,16 @@ var async = require('async'),
 var OPs = {};
 exports.OPs = OPs;
 
+var SUBS = {};
+var YAKUDON = 0;
+
 function redis_client() {
 	return redis.createClient(config.REDIS_PORT || undefined);
 }
 
 function Yakusoku() {
 	events.EventEmitter.call(this);
+	this.id = ++YAKUDON;
 	/* TEMP */
 	this.tag = '3:moe';
 }
@@ -35,56 +39,123 @@ Y.disconnect = function () {
 		this.r.quit();
 		this.r.removeAllListeners();
 	}
-	if (this.k) {
-		this.k.quit();
-		this.k.removeAllListeners();
-	}
 	this.removeAllListeners();
 };
 
-Y.kiku = function (thread, callback) {
-	if (!this.k) {
-		this.k = redis_client();
-		this.k.on('error', console.error.bind(console));
+function forEachInObject(obj, f, callback) {
+	var total = 0, complete = 0, done = false, errors = [];
+	function cb(err) {
+		complete++;
+		if (err)
+			errors.push(err);
+		if (done && complete == total)
+			callback(errors.length ? errors : null);
 	}
-	this.kikumono = thread;
-	function on_subscribe_error(err) {
-		deal_with_it.call(this);
-		callback(err);
+	for (var k in obj) {
+		if (obj.hasOwnProperty(k)) {
+			total++;
+			f(k, cb);
+		}
 	}
-	function on_subscribe(chan, count) {
-		deal_with_it.call(this);
-		callback(null);
-	}
-	function deal_with_it() {
-		var ev = this.kikumono ? 'subscribe' : 'psubscribe';
-		this.k.removeListener(ev, on_subscribe);
-		this.k.removeListener('error', on_subscribe_error);
-	}
-	this.k.on('error', on_subscribe_error.bind(this));
-	if (this.kikumono) {
-		this.k.on('subscribe', on_subscribe.bind(this));
-		this.k.on('message', this._on_message.bind(this, null));
-		this.k.subscribe('thread:' + thread);
-	}
-	else {
-		this.k.on('psubscribe', on_subscribe.bind(this));
-		this.k.on('pmessage', this._on_message.bind(this));
-		this.k.psubscribe('thread:*');
+	done = true;
+	if (complete == total)
+		callback(errors.length ? errors : null);
+}
+
+Y.kiku = function (threads, on_update, on_sink, callback) {
+	var self = this;
+	this.on_update = on_update;
+	this.on_sink = on_sink;
+	forEachInObject(threads, function (thread, cb) {
+		var sub = SUBS[thread];
+		if (!sub) {
+			sub = new Subscription(thread);
+			SUBS[thread] = sub;
+		}
+		sub.promise_to(self);
+		sub.when_ready(cb);
+	}, callback);
+};
+
+Y.kikanai = function (threads) {
+	for (var thread in threads) {
+		var sub = SUBS[thread];
+		if (sub)
+			sub.break_promise(this);
 	}
 };
 
-Y.kikanai = function (thread) {
-	this.k.unsubscribe();
-	this.k.removeAllListeners('message');
-	this.k.removeAllListeners('pmessage');
+function Subscription(thread) {
+	events.EventEmitter.call(this);
+	this.thread = thread;
+	this.subscription_callbacks = [];
+	this.promises = {};
+
+	this.k = redis_client();
+	this.k.on('subscribe', this.on_sub.bind(this));
+	this.k.on('error', this.on_sub_error.bind(this));
+	this.k.subscribe('thread:' + thread);
 };
 
-Y._on_message = function (pat, chan, msg) {
-	var info = msg.split(':', 2);
-	var off = info[0].length + info[1].length + 2;
-	var num = parseInt(info[0]), kind = parseInt(info[1]);
-	this.emit('update', chan, num, kind, msg.substr(off));
+util.inherits(Subscription, events.EventEmitter);
+
+Subscription.prototype.when_ready = function (cb) {
+	if (this.subscription_callbacks)
+		this.subscription_callbacks.push(cb);
+	else
+		cb(null);
+};
+
+Subscription.prototype.promise_to = function (yaku) {
+	this.promises[yaku.id] = yaku;
+};
+
+Subscription.prototype.break_promise = function (yaku) {
+	delete this.promises[yaku.id];
+	for (var id in this.promises)
+		return;
+	/* No more promises */
+	this.seppuku();
+};
+
+Subscription.prototype.on_sub = function (chan, count) {
+	this.k.removeAllListeners();
+	this.k.on('message', this.on_message.bind(this));
+	this.k.on('error', this.sink_sub.bind(this));
+	this.subscription_callbacks.forEach(function (cb) {
+		cb(null);
+	});
+	delete this.subscription_callbacks;
+};
+
+Subscription.prototype.on_message = function (chan, msg) {
+	var info = msg.match(/^(\d+),(\d+)/);
+	var kind = parseInt(info[1]), num = parseInt(info[2]);
+	var thread = parseInt(chan.match(/^thread:(\d+)$/)[1]);
+	for (var id in this.promises)
+		this.promises[id].on_update(thread, num, kind, msg);
+};
+
+Subscription.prototype.on_sub_error = function (err) {
+	console.log("Subscription error:", err.stack || err); /* TEMP? */
+	this.seppuku();
+	this.subscription_callbacks.forEach(function (cb) {
+		cb(err);
+	});
+	delete this.subscription_callbacks;
+};
+
+Subscription.prototype.sink_sub = function (err) {
+	this.seppuku();
+	for (var id in this.promises)
+		this.promises[id].on_sink(this.thread, 'Thread unavailable.');
+};
+
+Subscription.prototype.seppuku = function () {
+	this.k.removeAllListeners();
+	this.k.quit();
+	if (SUBS[this.thread] === this)
+		delete SUBS[this.thread];
 };
 
 function on_OP_message(pat, chan, msg) {
@@ -181,7 +252,6 @@ Y.insert_post = function (msg, body, ip, callback) {
 
 		/* Denormalize for backlog */
 		view.body = body;
-		view.num = num;
 		if (msg.links)
 			view.links = msg.links;
 		extract_image(view);
@@ -219,7 +289,7 @@ Y.add_image = function (post, image, callback) {
 		if (!exists)
 			return callback("Post does not exist.");
 		var m = r.multi();
-		self._log(m, post.op, num, common.INSERT_IMAGE, [num, image]);
+		self._log(m, post.op, num, common.INSERT_IMAGE, [image]);
 		m.hmset(key, image);
 		m.hincrby('thread:' + post.op, 'imgctr', 1);
 		m.exec(callback);
@@ -236,7 +306,7 @@ Y.append_post = function (post, tail, old_state, links, new_links, callback) {
 		m.hset(key, 'state', post.state.join());
 	if (new_links && !common.is_empty(new_links))
 		m.hmset(key + ':links', new_links);
-	var msg = [post.num, tail];
+	var msg = [tail];
 	if (links)
 		msg.push(old_state[0], old_state[1], links);
 	else if (old_state[1])
@@ -254,7 +324,7 @@ Y.finish_post = function (post, callback) {
 	m.hset(key, 'body', post.body);
 	m.del(key + ':body');
 	m.hdel(key, 'state');
-	this._log(m, post.op, post.num, common.FINISH_POST, [post.num]);
+	this._log(m, post.op, post.num, common.FINISH_POST, []);
 	m.exec(callback);
 };
 
@@ -279,7 +349,7 @@ Y.finish_all = function (callback) {
 				m.hdel(key, 'state');
 				var n = parseInt(key.match(/:(\d+)$/)[1]);
 				var op = parseInt(rs[1]) || n;
-				self._log(m, op, n, common.FINISH_POST, [n]);
+				self._log(m, op, n, common.FINISH_POST, []);
 				m.exec(cb);
 			});
 		}, callback);
@@ -287,26 +357,30 @@ Y.finish_all = function (callback) {
 };
 
 Y._log = function (m, op, num, kind, msg) {
-	msg.unshift(kind);
-	msg = JSON.stringify(msg);
+	msg.unshift(kind, num);
+	msg = JSON.stringify(msg).slice(1, -1);
 	console.log("Log:", msg);
-	m.rpush('backlog', msg);
-	m.publish('thread:' + (op || num), num + ':' + kind + ':' + msg);
+	var key = 'thread:' + (op || num);
+	m.rpush(key + ':history', msg);
+	m.hincrby(key, 'hctr', 1);
+	m.publish(key, msg);
 };
 
-Y.fetch_backlog = function (sync, watching, callback) {
+Y.fetch_backlogs = function (watching, callback) {
 	var r = this.connect();
-	r.lrange('backlog', sync, -1, function (err, log) {
-		if (err)
-			return callback(err);
-		// TODO: Do something with watching
-		// Naive impl for now
-		callback(null, sync + log.length, log);
+	var combined = [];
+	forEachInObject(watching, function (thread, cb) {
+		var key = 'thread:' + thread + ':history';
+		var sync = watching[thread];
+		r.lrange(key, sync, -1, function (err, log) {
+			if (err)
+				return cb(err);
+			combined.push.apply(combined, log);
+			cb(null);
+		});
+	}, function (errs) {
+		callback(errs, combined);
 	});
-};
-
-Y.get_sync_number = function (callback) {
-	this.connect().llen('backlog', callback);
 };
 
 Y.get_post_op = function (num, callback) {

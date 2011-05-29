@@ -14,67 +14,91 @@ var clients = {};
 var dispatcher = {};
 var indexTmpl, notFoundHtml;
 
-function private_msg(client, msg) {
-	client.socket.send(JSON.stringify([msg]));
+function Okyaku() {
 }
+var OK = Okyaku.prototype;
+
+OK.send = function (msg) {
+	this.socket.send(JSON.stringify([msg]));
+};
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
-	var sync = msg[0], watching = msg[1];
-	if (typeof sync != 'number' || sync < 0 || isNaN(sync))
+	var syncs = msg[0];
+	if (typeof syncs != 'object')
 		return false;
-	if (watching) {
-		if (typeof watching != 'number')
-			return false;
-		if (db.OPs[watching] !== watching) {
-			report(null, client, "No such thread.");
-			return true;
-		}
-		client.watching = watching;
+	if (client.synced) {
+		console.error("warning: Client tried to sync twice");
+		return false;
 	}
-	/* Race between subscribe and backlog fetch... hmmm... */
-	flow.exec(function () {
-		client.db.kiku(client.watching, this);
-	},
-	function (err) {
-		if (err)
-			report(err, client);
-		else
-			client.db.fetch_backlog(sync, client.watching, this);
-	},
-	function (err, s, log) {
-		if (err)
-			return report(err, client);
-
-		client.db.on('update', client_update.bind(client));
-
-		if (s != sync + log.length)
-			console.error("Warning: backlog count wrong");
-		if (log.length) {
-			log.push('[' + common.SYNCHRONIZE + ',0]');
-			client.socket.send('[' + log.join() + ']');
+	var dead_threads = [], count = 0;
+	for (var k in syncs) {
+		if (!k.match(/\d+/))
+			return false;
+		k = parseInt(k);
+		if (!k || typeof syncs[k] != 'number')
+			return false;
+		if (db.OPs[k] != k) {
+			delete syncs[k];
+			dead_threads.push(k);
 		}
-		else
-			private_msg(client, [common.SYNCHRONIZE, 0]);
+		if (++count > config.THREADS_PER_PAGE)
+			return false;
+	}
+	client.watching = syncs;
+	/* Race between subscribe and backlog fetch; client must de-dup */
+	flow.exec(function () {
+		client.db.kiku(client.watching, client.on_update.bind(client),
+				client.on_thread_sink.bind(client), this);
+	},
+	function (errs) {
+		if (errs && errs.length >= count)
+			return report("Couldn't sync to board.", client);
+		else if (errs) {
+			dead_threads.push.apply(dead_threads, errs);
+			errs.forEach(function (thread) {
+				delete client.watching[thread];
+			});
+		}
+		client.db.fetch_backlogs(client.watching, this);
+	},
+	function (errs, logs) {
+		if (errs) {
+			dead_threads.push.apply(dead_threads, errs);
+			errs.forEach(function (thread) {
+				delete client.watching[thread];
+			});
+		}
+
+		logs.push([common.SYNCHRONIZE, dead_threads]);
+		client.socket.send(JSON.stringify(logs));
 		client.synced = true;
 	});
 	return true;
 }
 
-function client_update(thread, num, kind, msg) {
+OK.on_update = function(op, num, kind, msg) {
 	var mine = (this.post && this.post.num == num) || this.last_num == num;
 	if (mine && kind != common.FINISH_POST) {
 		this.skipped++;
 		return;
 	}
+	msg = '[' + msg + ',' + op + ']';
 	if (this.skipped) {
-		console.log("Skipping ahead " + this.skipped);
-		msg = '['+common.SYNCHRONIZE+','+this.skipped+'],' + msg;
+		var skipped_op = this.post ? (this.post.op || this.post.num)
+				: db.OPs[this.last_num];
+		var catch_up = [common.CATCH_UP, skipped_op, this.skipped];
+		msg = JSON.stringify(catch_up) + ',' + msg;
 		this.skipped = 0;
 	}
 	this.socket.send('[' + msg + ']');
-}
+};
+
+OK.on_thread_sink = function (thread, err) {
+	/* TODO */
+	console.log(thread, 'sank:', err);
+};
 
 var oneeSama = new common.OneeSama(function (num) {
 	var op = db.OPs[num];
@@ -108,7 +132,7 @@ function write_thread_html(reader, response, full_thread) {
 }
 
 function image_status(status) {
-	private_msg(this.client, [common.IMAGE_STATUS, status]);
+	this.client.send([common.IMAGE_STATUS, status]);
 }
 
 var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
@@ -164,14 +188,8 @@ function render_index(req, resp) {
 	});
 	write_thread_html(yaku, resp, false);
 	yaku.on('end', function () {
-		yaku.get_sync_number(function (err, sync_num) {
-			if (err)
-				return yaku.emit('error', err);
-			resp.write(indexTmpl[2]);
-			resp.write(''+sync_num);
-			resp.end(indexTmpl[3]);
-			yaku.disconnect();
-		});
+		resp.end(indexTmpl[2]);
+		yaku.disconnect();
 	});
 	yaku.on('error', function (err) {
 		console.error('index:', err);
@@ -211,14 +229,8 @@ function render_thread(req, resp, num) {
 	write_thread_html(reader, resp, true);
 	reader.on('end', function () {
 		resp.write('[<a href=".">Return</a>]');
-		yaku.get_sync_number(function (err, sync_num) {
-			if (err)
-				reader.emit('error', err);
-			resp.write(indexTmpl[2]);
-			resp.write(''+sync_num);
-			resp.end(indexTmpl[3]);
-			yaku.disconnect();
-		});
+		resp.end(indexTmpl[2]);
+		yaku.disconnect();
 	});
 	function on_err(err) {
 		console.error('thread '+num+':', err);
@@ -231,8 +243,12 @@ function render_thread(req, resp, num) {
 }
 
 function on_client (socket, retry) {
-	if (socket.connection)
-		init_client(socket);
+	if (socket.connection) {
+		var client = new Okyaku;
+		client.init(socket);
+		clients[client.id] = client;
+		console.log(client.id + " has IP " + client.ip);
+	}
 	else if (!retry || retry < 5000) {
 		/* Wait for socket.connection */
 		retry = retry ? retry*2 : 50;
@@ -244,44 +260,50 @@ function on_client (socket, retry) {
 		util.error("Dropping no-connection client (?!)");
 }
 
-function init_client (socket) {
-	var ip = socket.connection.remoteAddress;
-	var id = socket.sessionId;
-	console.log(id + " has IP " + ip);
-	var client = {id: id, socket: socket, post: null, synced: false,
-			watching: null, ip: ip, db: new db.Yakusoku(),
-			skipped: 0};
-	clients[id] = client;
-	socket.on('message', function (data) {
-		var msg = null;
-		try { msg = JSON.parse(data); }
-		catch (e) {}
-		var type = common.INVALID;
-		if (msg == null) {
-		}
-		else if (client.post && msg.constructor == String)
+OK.init = function (socket) {
+	this.ip = socket.connection.remoteAddress;
+	this.id = socket.sessionId;
+	this.socket = socket;
+	this.watching = {};
+	this.db = new db.Yakusoku;
+	this.skipped = 0;
+	socket.on('message', this.on_message.bind(this));
+	socket.on('disconnect', this.on_disconnect.bind(this));
+	socket.on('error', console.error.bind(console, 'socket:'));
+	this.db.on('error', console.error.bind(console, 'redis:'));
+};
+
+OK.on_message = function (data) {
+	var msg;
+	try { msg = JSON.parse(data); }
+	catch (e) {}
+	var type = common.INVALID;
+	if (msg) {
+		if (this.post && typeof msg == 'string')
 			type = common.UPDATE_POST;
 		else if (msg.constructor == Array)
 			type = msg.shift();
-		var func = dispatcher[type];
-		if (!func || !func(msg, client)) {
-			console.error("Got invalid message " + data);
-			report(null, client, "Bad protocol.");
-		}
-	});
-	socket.on('disconnect', function () {
-		delete clients[id];
-		client.synced = false;
-		if (client.post)
-			finish_post_by(client, function () {
-				client.db.disconnect();
-			});
-		else
-			client.db.disconnect();
-	});
-	socket.on('error', console.error.bind(console, 'socket:'));
-	client.db.on('error', console.error.bind(console, 'redis:'));
-}
+	}
+	var func = dispatcher[type];
+	if (!func || !func(msg, this)) {
+		console.error("Got invalid message " + data);
+		report(null, this, "Bad protocol.");
+	}
+};
+
+OK.on_disconnect = function () {
+	delete clients[this.id];
+	this.synced = false;
+	var db = this.db;
+	if (this.watching)
+		db.kikanai(this.watching);
+	if (this.post)
+		this.finish_post(function () {
+			db.disconnect();
+		});
+	else
+		db.disconnect();
+};
 
 function pad3(n) {
 	return (n < 10 ? '00' : (n < 100 ? '0' : '')) + n;
@@ -316,7 +338,7 @@ function report(error, client, client_msg) {
 		ver = ' (#' + ver + '-' + pad3(num) + ')';
 		console.error((error || msg) + ' ' + ip + ver);
 		if (client) {
-			private_msg(client, [common.INVALID, msg + ver]);
+			client.send([common.INVALID, msg + ver]);
 			client.synced = false;
 		}
 	});
@@ -349,7 +371,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	allocate_post(msg, null, client, function (err, alloc) {
 		if (err)
 			return report(err, client, "Couldn't allocate post.");
-		var go = private_msg.bind(null, client,
+		var go = client.send.bind(client,
 				[common.ALLOCATE_POST, alloc]);
 		if (!config.DEBUG)
 			go();
@@ -377,8 +399,7 @@ function allocate_post(msg, image, client, callback) {
 			return callback('Invalid thread.');
 		post.op = msg.op;
 	}
-	if (client.watching && post.op !== client.watching)
-		return false;
+	/* TODO: Check against client.watching? */
 	if (msg.name !== undefined) {
 		if (typeof msg.name != 'string')
 			return callback('Invalid name.');
@@ -491,14 +512,15 @@ function update_post(frag, client) {
 }
 dispatcher[common.UPDATE_POST] = update_post;
 
-function finish_post_by(client, callback) {
-	/* TODO: Should we check client.uploading? */
-	client.db.finish_post(client.post, function (err) {
+OK.finish_post = function (callback) {
+	/* TODO: Should we check this.uploading? */
+	var self = this;
+	this.db.finish_post(this.post, function (err) {
 		if (err)
 			callback(err);
 		else {
-			client.last_num = client.post.num;
-			delete client.post;
+			self.last_num = self.post.num;
+			delete self.post;
 			callback(null);
 		}
 	});
@@ -507,7 +529,7 @@ function finish_post_by(client, callback) {
 dispatcher[common.FINISH_POST] = function (msg, client) {
 	if (msg.length || !client.post)
 		return false;
-	finish_post_by(client, function (err) {
+	client.finish_post(function (err) {
 		if (err)
 			report(err, client, "Couldn't finish post.");
 	});
