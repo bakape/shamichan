@@ -1,6 +1,7 @@
 var dispatcher = {}, syncs = {};
-var THREAD = window.location.pathname.match(/\/(\d+)$/);
+var THREAD = window.location.pathname.match(/^\/(\d+)$/);
 THREAD = THREAD ? parseInt(THREAD[1]) : 0;
+var BUMP = !!window.location.pathname.match(/^\/live$/);
 var nameField = $('input[name=name]'), emailField = $('input[name=email]');
 var ceiling = $('hr:first');
 var reconnectTimer = null, resetTimer = null, reconnectDelay = 3000;
@@ -155,7 +156,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		shift_replies(section);
 		section.children('blockquote,.omit,form,article[id]:last'
 				).last().after(post);
-		if (THREAD || !options.live || msg.email == 'sage') {
+		if (!BUMP || msg.email == 'sage') {
 			bump = false;
 		}
 		else {
@@ -169,11 +170,12 @@ dispatcher[INSERT_POST] = function (msg) {
 		hr = $('<hr/>');
 		if (!postForm)
 			section.append(make_reply_box());
-		if (!options.live) {
+		if (!BUMP) {
 			section.hide();
 			hr.hide();
 		}
 	}
+
 	if (bump) {
 		var fencepost = $('body > aside');
 		section.insertAfter(fencepost.length ? fencepost : ceiling
@@ -677,7 +679,7 @@ $(function () {
 	}
 	catch (e) { }
 	if (!options)
-		options = {live: true};
+		options = {};
 
 	var m = window.location.hash.match(/^#q(\d+)$/);
 	if (m && $('#' + m[1]).length) {
@@ -727,13 +729,6 @@ $(function () {
 
 	var opts = $('<div class="modal"/>').hide();
 	var bs = {};
-	bs.live = function (b) {
-		if (b) {
-			$('section').show();
-			$('hr').show();
-		}
-	};
-	bs.live.label = 'Real-time bump';
 	bs.inline = function (b) {};
 	bs.inline.label = 'Inline image expansion';
 	bs.preview = function (b) {

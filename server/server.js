@@ -136,6 +136,22 @@ function image_status(status) {
 	this.client.send([common.IMAGE_STATUS, status]);
 }
 
+function make_nav_html(page_count, cur_page) {
+	var bits = ['<nav>Page: '];
+	if (cur_page >= 0)
+		bits.push('<a href="live">live</a>');
+	else
+		bits.push('<b>live</b>');
+	for (var i = 0; i < page_count; i++) {
+		if (i != cur_page)
+			bits.push('<a href="page' + i + '">' + i + '</a>');
+		else
+			bits.push('<b>' + i + '</b>');
+	}
+	bits.push('</nav>');
+	return bits.join('');
+}
+
 var server = express.createServer();
 if (config.DEBUG) {
 	server.use(express.staticProvider(
@@ -152,25 +168,59 @@ server.post('/img', function (req, resp) {
 });
 
 server.get('/', function (req, resp) {
-	resp.redirect('/new', 302);
+	resp.redirect('/live', 302);
 });
 
-server.get('/new', function (req, resp) {
+server.get('/live', function (req, resp) {
 	var yaku = new db.Yakusoku();
-	yaku.get_tag();
-	yaku.on('begin', function () {
+	yaku.get_tag(0);
+	var nav_html;
+	yaku.on('begin', function (pages) {
 		resp.writeHead(200, httpHeaders);
 		resp.write(indexTmpl[0]);
 		resp.write(config.TITLE);
 		resp.write(indexTmpl[1]);
+		nav_html = make_nav_html(pages, -1);
+		resp.write(nav_html);
+		resp.write('<hr>\n');
 	});
 	write_thread_html(yaku, resp, false);
 	yaku.on('end', function () {
+		resp.write(nav_html);
 		resp.end(indexTmpl[2]);
 		yaku.disconnect();
 	});
 	yaku.on('error', function (err) {
 		console.error('index:', err);
+		resp.end();
+		yaku.disconnect();
+	});
+	return true;
+});
+
+server.get('/page:page', function (req, resp) {
+	var yaku = new db.Yakusoku();
+	var page = parseInt(req.param('page'));
+	yaku.get_tag(page);
+	yaku.on('nomatch', render_404.bind(null, resp));
+	var nav_html;
+	yaku.on('begin', function (pages) {
+		resp.writeHead(200, httpHeaders);
+		resp.write(indexTmpl[0]);
+		resp.write(config.TITLE);
+		resp.write(indexTmpl[1]);
+		nav_html = make_nav_html(pages, page);
+		resp.write(nav_html);
+		resp.write('<hr>\n');
+	});
+	write_thread_html(yaku, resp, false);
+	yaku.on('end', function () {
+		resp.write(nav_html);
+		resp.end(indexTmpl[2]);
+		yaku.disconnect();
+	});
+	yaku.on('error', function (err) {
+		console.error('page', page + ':', err);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -205,6 +255,7 @@ server.get('/:op', function (req, resp) {
 		resp.write(indexTmpl[0]);
 		resp.write('Thread #' + op);
 		resp.write(indexTmpl[1]);
+		resp.write('<hr>\n');
 	});
 	write_thread_html(reader, resp, true);
 	reader.on('end', function () {

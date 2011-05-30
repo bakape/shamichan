@@ -400,13 +400,22 @@ Y.get_post_op = function (num, callback) {
 	});
 }
 
-Y.get_tag = function () {
+Y.get_tag = function (page) {
 	var r = this.connect();
 	var self = this;
-	r.zrevrange('tag:' + this.tag + ':threads', 0, -1, function (err, ns) {
+	var key = 'tag:' + this.tag + ':threads';
+	var start = page * config.THREADS_PER_PAGE;
+	var end = start + config.THREADS_PER_PAGE - 1;
+	var m = r.multi();
+	m.zrevrange(key, start, end);
+	m.zcard(key);
+	m.exec(function (err, res) {
 		if (err)
 			return self.emit('error', err);
-		self.emit('begin');
+		var ns = res[0];
+		if (page && !ns.length)
+			return self.emit('nomatch');
+		self.emit('begin', res[1]);
 		var reader = new Reader(self);
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));
