@@ -35,7 +35,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	}
 	var dead_threads = [], count = 0;
 	for (var k in syncs) {
-		if (!k.match(/\d+/))
+		if (!k.match(/^\d+$/))
 			return false;
 		k = parseInt(k);
 		if (!k || typeof syncs[k] != 'number')

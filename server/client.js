@@ -106,7 +106,7 @@ function inject(frag) {
 
 function get_focus() {
 	var focus = window.getSelection().focusNode;
-	if (focus && focus.tagName && focus.tagName.match(/blockquote/i))
+	if (focus && focus.tagName && focus.tagName.match(/^blockquote$/i))
 		return $(focus).find('textarea');
 }
 
@@ -402,8 +402,8 @@ function preview_miru(event, num) {
 }
 
 function hover_shita(event) {
-	if (event.target.tagName.match(/A$/i)) {
-		var m = $(event.target).text().match(/>>(\d+)$/);
+	if (event.target.tagName.match(/^A$/i)) {
+		var m = $(event.target).text().match(/^>>(\d+)$/);
 		if (m && preview_miru(event, parseInt(m[1])))
 			return;
 	}
@@ -452,7 +452,7 @@ function add_ref(num) {
 	/* Make the post form if none exists yet */
 	if (!postForm) {
 		var link = $('#' + num);
-		if (link[0].tagName.match(/section/i))
+		if (link[0].tagName.match(/^section$/i))
 			link = link.children('aside');
 		else
 			link = link.siblings('aside');

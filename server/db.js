@@ -159,7 +159,7 @@ Subscription.prototype.seppuku = function () {
 };
 
 function on_OP_message(pat, chan, msg) {
-	var op = parseInt(chan.match(/thread:(\d+)/)[1]);
+	var op = parseInt(chan.match(/^thread:(\d+)/)[1]);
 	var info = msg.split(':', 2);
 	var num = parseInt(info[0]), kind = parseInt(info[1]);
 	if (kind == common.INSERT_POST)
