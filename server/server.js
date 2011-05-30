@@ -168,7 +168,7 @@ server.post('/img', function (req, resp) {
 });
 
 server.get('/', function (req, resp) {
-	resp.redirect('/live', 302);
+	resp.redirect('live', 302);
 });
 
 server.get('/live', function (req, resp) {
