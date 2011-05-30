@@ -102,13 +102,17 @@ hr {
 iframe {
 	display: none;
 }
-nav a, nav b {
+nav {
 	background-color: #d6daf0;
 	border-right: 1px solid #b7c5d9;
 	border-bottom: 1px solid #b7c5d9;
 	display: inline-block;
+	padding: 2px 10px;
+	margin: 1px 0;
+}
+nav a, nav b {
+	display: inline-block;
 	padding: 4px;
-	margin: 2px;
 }
 section {
 	display: block;

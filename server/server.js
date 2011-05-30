@@ -137,7 +137,7 @@ function image_status(status) {
 }
 
 function make_nav_html(page_count, cur_page) {
-	var bits = ['<nav>Page: '];
+	var bits = ['<nav>'];
 	if (cur_page >= 0)
 		bits.push('<a href="live">live</a>');
 	else
