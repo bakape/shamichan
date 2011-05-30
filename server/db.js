@@ -213,69 +213,68 @@ Y.insert_post = function (msg, body, ip, callback) {
 	var r = this.connect();
 	var tag_key = 'tag:' + this.tag;
 	var self = this;
-	if (msg.num) {
-		if (msg.op && OPs[msg.op] != msg.op) {
-			delete OPs[num];
-			return callback('Thread does not exist.');
-		}
-		var view = {time: msg.time, ip: ip, state: msg.state.join()};
-		var num = msg.num, op = msg.op;
-		if (msg.name)
-			view.name = msg.name;
-		if (msg.trip)
-			view.trip = msg.trip;
-		if (msg.email)
-			view.email = msg.email;
-		if (op)
-			view.op = op;
-
-		var key = (op ? 'post:' : 'thread:') + num;
-		var bump = !op || view.email != 'sage';
-		var m = r.multi();
-		if (bump)
-			m.hincrby(tag_key, 'bumpctr', 1);
-		if (msg.image) {
-			if (op)
-				m.hincrby('thread:' + op, 'imgctr', 1);
-			else
-				view.imgctr = 1;
-			inline_image(view, msg.image);
-		}
-		m.hmset(key, view);
-		m.set(key + ':body', body);
-		if (msg.links)
-			m.hmset(key + ':links', msg.links);
-		if (op)
-			m.rpush('thread:' + op + ':posts', num);
-		else
-			op = num;
-
-		/* Denormalize for backlog */
-		view.body = body;
-		if (msg.links)
-			view.links = msg.links;
-		extract_image(view);
-		self._log(m, op, num, common.INSERT_POST, [view]);
-
-		m.exec(function (err, results) {
-			if (err) {
-				delete OPs[num];
-				return callback(err);
-			}
-			if (!bump)
-				return callback(null);
-			r.zadd(tag_key + ':threads', results[0], op,
-						function (err) {
-				if (err)
-					console.error("Bump error: " + err);
-				callback(null);
-			});
-		});
-	}
-	else {
+	if (!msg.num) {
 		/* TODO: Flatten this conditional once history branch merged */
 		callback("No post num.");
+		return;
 	}
+	else if (msg.op && OPs[msg.op] != msg.op) {
+		delete OPs[num];
+		return callback('Thread does not exist.');
+	}
+	var view = {time: msg.time, ip: ip, state: msg.state.join()};
+	var num = msg.num, op = msg.op;
+	if (msg.name)
+		view.name = msg.name;
+	if (msg.trip)
+		view.trip = msg.trip;
+	if (msg.email)
+		view.email = msg.email;
+	if (op)
+		view.op = op;
+
+	var key = (op ? 'post:' : 'thread:') + num;
+	var bump = !op || view.email != 'sage';
+	var m = r.multi();
+	if (bump)
+		m.hincrby(tag_key, 'bumpctr', 1);
+	if (msg.image) {
+		if (op)
+			m.hincrby('thread:' + op, 'imgctr', 1);
+		else
+			view.imgctr = 1;
+		inline_image(view, msg.image);
+	}
+	m.hmset(key, view);
+	m.set(key + ':body', body);
+	if (msg.links)
+		m.hmset(key + ':links', msg.links);
+	if (op)
+		m.rpush('thread:' + op + ':posts', num);
+	else
+		op = num;
+
+	/* Denormalize for backlog */
+	view.body = body;
+	if (msg.links)
+		view.links = msg.links;
+	extract_image(view);
+	self._log(m, op, num, common.INSERT_POST, [view]);
+
+	m.exec(function (err, results) {
+		if (err) {
+			delete OPs[num];
+			return callback(err);
+		}
+		if (!bump)
+			return callback(null);
+		r.zadd(tag_key + ':threads', results[0], op,
+					function (err) {
+			if (err)
+				console.error("Bump error: " + err);
+			callback(null);
+		});
+	});
 };
 
 Y.add_image = function (post, image, callback) {
