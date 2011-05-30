@@ -1,4 +1,6 @@
 #define _XOPEN_SOURCE
+#include <errno.h>
+#include <iconv.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -7,6 +9,7 @@
 using namespace v8;
 
 static char SECURE_SALT[21] = "$5$";
+#define TRIP_MAX 128
 
 static int load_secure_salt(void) {
 	FILE *fp = popen("node server.js --show-config SECURE_SALT", "r");
@@ -34,7 +37,7 @@ static void fix_char(char &c) {
 		c = to[p - from];
 }
 
-static void hash_trip(const char *key, size_t len, char *dest) {
+static void hash_trip(char *key, size_t len, char *dest) {
 	char *digest, salt[3] = "..";
 	if (len == 1)
 		salt[0] = 'H';
@@ -60,9 +63,9 @@ static void hash_trip(const char *key, size_t len, char *dest) {
 static void hash_secure(char *key, size_t len, char *dest) {
 	size_t i;
 	char buf[21] = "$5$", *digest;
-	if (len > 128) {
-		len = 128;
-		key[128] = 0;
+	if (len > TRIP_MAX) {
+		len = TRIP_MAX;
+		key[TRIP_MAX] = 0;
 	}
 	for (i = 0; i < len; i++)
 		fix_char(key[i]);
@@ -77,22 +80,56 @@ static void hash_secure(char *key, size_t len, char *dest) {
 	strncpy(dest, digest, 13);
 }
 
+static iconv_t conv_desc;
+
+static int setup_conv() {
+	conv_desc = iconv_open("SHIFT_JIS", "UTF-8");
+	if (conv_desc == (iconv_t) -1) {
+		fprintf(stderr, "Can't convert to SHIFT_JIS.\n");
+		return 0;
+	}
+	return 1;
+}
+
+typedef void (*trip_f)(char *, size_t, char *);
+
+static void with_SJIS(String::AsciiValue &trip, trip_f func, char *ret) {
+	char *src = *trip;
+	if (!src)
+		return;
+	size_t src_left = trip.length(), dest_left = TRIP_MAX;
+	if (!src_left)
+		return;
+	if (src_left > TRIP_MAX / 2)
+		src_left = TRIP_MAX / 2;
+	char sjis[TRIP_MAX+1];
+	char *dest = sjis;
+	size_t result = iconv(conv_desc, &src, &src_left, &dest, &dest_left);
+	if (result == (size_t) -1 && errno != EILSEQ && errno != EINVAL) {
+		perror("iconv");
+		return;
+	}
+	ssize_t len = TRIP_MAX - dest_left;
+	if (len > 0) {
+		sjis[len] = 0;
+		func(sjis, len, ret);
+	}
+}
+
 static Handle<Value> hash_callback(Arguments const &args) {
 	if (args.Length() != 2)
 		return Null();
 	String::AsciiValue trip(args[0]->ToString()),
-		secure(args[1]->ToString());
+			secure(args[1]->ToString());
 	char digest[24];
 	digest[0] = 0;
-	if (*trip && trip.length())
-		hash_trip(*trip, trip.length(), digest);
-	if (*secure && secure.length())
-		hash_secure(*secure, secure.length(), digest + strlen(digest));
+	with_SJIS(trip, &hash_trip, digest);
+	with_SJIS(secure, &hash_secure, digest + strlen(digest));
 	return String::New(digest);
 }
 
 extern "C" void init(Handle<Object> target) {
-	if (load_secure_salt())
+	if (load_secure_salt() && setup_conv())
 		target->Set(String::New("hash"),
 			FunctionTemplate::New(&hash_callback)->GetFunction());
 }
