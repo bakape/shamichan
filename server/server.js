@@ -136,12 +136,15 @@ function image_status(status) {
 	this.client.send([common.IMAGE_STATUS, status]);
 }
 
-function make_nav_html(page_count, cur_page) {
+function make_nav_html(thread_count, cur_page) {
 	var bits = ['<nav>'];
 	if (cur_page >= 0)
 		bits.push('<a href="live">live</a>');
 	else
 		bits.push('<b>live</b>');
+	var page_count = Math.ceil(thread_count / config.THREADS_PER_PAGE);
+	if (page_count < 1)
+		page_count = 1;
 	for (var i = 0; i < page_count; i++) {
 		if (i != cur_page)
 			bits.push('<a href="page' + i + '">' + i + '</a>');
@@ -175,12 +178,12 @@ server.get('/live', function (req, resp) {
 	var yaku = new db.Yakusoku();
 	yaku.get_tag(0);
 	var nav_html;
-	yaku.on('begin', function (pages) {
+	yaku.on('begin', function (thread_count) {
 		resp.writeHead(200, httpHeaders);
 		resp.write(indexTmpl[0]);
 		resp.write(config.TITLE);
 		resp.write(indexTmpl[1]);
-		nav_html = make_nav_html(pages, -1);
+		nav_html = make_nav_html(thread_count, -1);
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
@@ -204,12 +207,12 @@ server.get('/page:page', function (req, resp) {
 	yaku.get_tag(page);
 	yaku.on('nomatch', render_404.bind(null, resp));
 	var nav_html;
-	yaku.on('begin', function (pages) {
+	yaku.on('begin', function (thread_count) {
 		resp.writeHead(200, httpHeaders);
 		resp.write(indexTmpl[0]);
 		resp.write(config.TITLE);
 		resp.write(indexTmpl[1]);
-		nav_html = make_nav_html(pages, page);
+		nav_html = make_nav_html(thread_count, page);
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
