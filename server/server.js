@@ -1,5 +1,6 @@
 var common = require('./common'),
     config = require('./config'),
+    express = require('express'),
     flow = require('flow'),
     fs = require('fs'),
     io = require('socket.io'),
@@ -135,49 +136,26 @@ function image_status(status) {
 	this.client.send([common.IMAGE_STATUS, status]);
 }
 
+var server = express.createServer();
+if (config.DEBUG) {
+	server.use(express.staticProvider(
+			require('path').join(__dirname, '..', 'www')));
+}
+
 var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT, -1',
 		'Cache-Control': 'no-cache'};
-var server = http.createServer(function(req, resp) {
-	if (req.method.toLowerCase() == 'post') {
-		var upload = new pix.ImageUpload(clients, allocate_post,
-				image_status);
-		upload.handle_request(req, resp);
-		return;
-	}
-	if (req.url == '/' && render_index(req, resp))
-		return;
-	m = req.url.match(/^\/(\d+)$/);
-	if (m && render_thread(req, resp, parseInt(m[1])))
-		return;
-	if (config.DEBUG) {
-		/* Highly insecure! Abunai! */
-		var path = '../www/' + req.url.replace(/\.\./g, '');
-		var s = fs.createReadStream(path);
-		s.once('error', function (err) {
-			if (err.code == 'ENOENT')
-				render_404(resp);
-			else {
-				resp.writeHead(500, {});
-				resp.end(err.message);
-			}
-		});
-		s.once('open', function () {
-			var h = {};
-			try {
-				var mime = require('connect').utils.mime;
-				var ext = require('path').extname(path);
-				h['Content-Type'] = mime.type(ext);
-			} catch (e) {}
-			resp.writeHead(200, h);
-			util.pump(s, resp);
-		});
-		return;
-	}
-	render_404(resp);
+
+server.post('/img', function (req, resp) {
+	var upload = new pix.ImageUpload(clients, allocate_post, image_status);
+	upload.handle_request(req, resp);
 });
 
-function render_index(req, resp) {
+server.get('/', function (req, resp) {
+	resp.redirect('/new', 302);
+});
+
+server.get('/new', function (req, resp) {
 	var yaku = new db.Yakusoku();
 	yaku.get_tag();
 	yaku.on('begin', function () {
@@ -197,22 +175,24 @@ function render_index(req, resp) {
 		yaku.disconnect();
 	});
 	return true;
-}
+});
 
 function render_404(resp) {
-	resp.writeHead(404, httpHeaders);
+	resp.send(404, httpHeaders);
 	resp.end(notFoundHtml);
 }
 
 function redirect_thread(resp, num, op) {
-	resp.writeHead(302, {Location: op + '#' + num});
-	resp.end();
+	resp.redirect(op + '#' + num, 302);
 }
 
-function render_thread(req, resp, num) {
+server.get('/:op', function (req, resp) {
+	var num = parseInt(req.param('op'));
+	if (!num)
+		return req.next();
 	var op = db.OPs[num];
 	if (typeof op == 'undefined')
-		return render_404(resp);
+		return req.next();
 	if (op != num)
 		return redirect_thread(resp, num, op);
 	var yaku = new db.Yakusoku();
@@ -240,7 +220,7 @@ function render_thread(req, resp, num) {
 	reader.on('error', on_err);
 	yaku.on('error', on_err);
 	return true;
-}
+});
 
 function on_client (socket, retry) {
 	if (socket.connection) {
