@@ -46,8 +46,10 @@ S.promise_to = function (yaku) {
 S.break_promise = function (yaku) {
 	delete this.promises[yaku.id];
 	for (var id in this.promises)
-		return;
-	/* No more promises */
+		if (this.promises.hasOwnProperty(id))
+			return;
+	/* Otherwise, this subscriptions' out of promises */
+	/* Worthless subscriptions like this should just die already */
 	this.seppuku();
 };
 
