@@ -214,7 +214,6 @@ Y.insert_post = function (msg, body, ip, callback) {
 	var tag_key = 'tag:' + this.tag;
 	var self = this;
 	if (!msg.num) {
-		/* TODO: Flatten this conditional once history branch merged */
 		callback("No post num.");
 		return;
 	}
