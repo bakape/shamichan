@@ -37,9 +37,9 @@ Y.connect = function () {
 Y.disconnect = function () {
 	if (this.r) {
 		this.r.quit();
-		this.r.removeAllListeners();
+		this.r.removeAllListeners('error');
 	}
-	this.removeAllListeners();
+	this.removeAllListeners('end');
 };
 
 function forEachInObject(obj, f, callback) {
@@ -119,9 +119,11 @@ Subscription.prototype.break_promise = function (yaku) {
 };
 
 Subscription.prototype.on_sub = function (chan, count) {
-	this.k.removeAllListeners();
-	this.k.on('message', this.on_message.bind(this));
-	this.k.on('error', this.sink_sub.bind(this));
+	var k = this.k;
+	k.removeAllListeners('subscribe');
+	k.removeAllListeners('error');
+	k.on('message', this.on_message.bind(this));
+	k.on('error', this.sink_sub.bind(this));
 	this.subscription_callbacks.forEach(function (cb) {
 		cb(null);
 	});
@@ -152,8 +154,11 @@ Subscription.prototype.sink_sub = function (err) {
 };
 
 Subscription.prototype.seppuku = function () {
-	this.k.removeAllListeners();
-	this.k.quit();
+	var k = this.k;
+	k.removeAllListeners('error');
+	k.removeAllListeners('message');
+	k.removeAllListeners('subscribe');
+	k.quit();
 	if (SUBS[this.thread] === this)
 		delete SUBS[this.thread];
 };
@@ -427,7 +432,8 @@ Y.get_tag = function (page) {
 Y._get_each_thread = function (reader, ix, nums) {
 	if (!nums || ix >= nums.length) {
 		this.emit('end');
-		reader.removeAllListeners();
+		reader.removeAllListeners('endthread');
+		reader.removeAllListeners('end');
 		return;
 	}
 	var self = this;
