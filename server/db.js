@@ -30,19 +30,20 @@ function Subscription(thread) {
 };
 
 util.inherits(Subscription, events.EventEmitter);
+var S = Subscription.prototype;
 
-Subscription.prototype.when_ready = function (cb) {
+S.when_ready = function (cb) {
 	if (this.subscription_callbacks)
 		this.subscription_callbacks.push(cb);
 	else
 		cb(null);
 };
 
-Subscription.prototype.promise_to = function (yaku) {
+S.promise_to = function (yaku) {
 	this.promises[yaku.id] = yaku;
 };
 
-Subscription.prototype.break_promise = function (yaku) {
+S.break_promise = function (yaku) {
 	delete this.promises[yaku.id];
 	for (var id in this.promises)
 		return;
@@ -50,7 +51,7 @@ Subscription.prototype.break_promise = function (yaku) {
 	this.seppuku();
 };
 
-Subscription.prototype.on_sub = function (chan, count) {
+S.on_sub = function (chan, count) {
 	var k = this.k;
 	k.removeAllListeners('subscribe');
 	k.removeAllListeners('error');
@@ -62,7 +63,7 @@ Subscription.prototype.on_sub = function (chan, count) {
 	delete this.subscription_callbacks;
 };
 
-Subscription.prototype.on_message = function (chan, msg) {
+S.on_message = function (chan, msg) {
 	var info = msg.match(/^(\d+),(\d+)/);
 	var kind = parseInt(info[1]), num = parseInt(info[2]);
 	var thread = parseInt(chan.match(/^thread:(\d+)$/)[1]);
@@ -70,7 +71,7 @@ Subscription.prototype.on_message = function (chan, msg) {
 		this.promises[id].on_update(thread, num, kind, msg);
 };
 
-Subscription.prototype.on_sub_error = function (err) {
+S.on_sub_error = function (err) {
 	console.log("Subscription error:", err.stack || err); /* TEMP? */
 	this.seppuku();
 	this.subscription_callbacks.forEach(function (cb) {
@@ -79,13 +80,13 @@ Subscription.prototype.on_sub_error = function (err) {
 	delete this.subscription_callbacks;
 };
 
-Subscription.prototype.sink_sub = function (err) {
+S.sink_sub = function (err) {
 	this.seppuku();
 	for (var id in this.promises)
 		this.promises[id].on_sink(this.thread, 'Thread unavailable.');
 };
 
-Subscription.prototype.seppuku = function () {
+S.seppuku = function () {
 	var k = this.k;
 	k.removeAllListeners('error');
 	k.removeAllListeners('message');
