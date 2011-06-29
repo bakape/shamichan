@@ -26,7 +26,7 @@ OK.send = function (msg) {
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
-	var syncs = msg[0];
+	var syncs = msg[0], live = msg[1];
 	if (typeof syncs != 'object')
 		return false;
 	if (client.synced) {
@@ -48,6 +48,17 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			return false;
 	}
 	client.watching = syncs;
+	if (live) {
+		/* XXX: This will break if a thread disappears during sync
+		 *      (won't be reported)
+		 * Or if any of the threads they see on the first page
+		 * don't show up in the 'live' pub for whatever reason.
+		 * Really we should get them synced first and *then* switch
+		 * to the live pub.
+		 */
+		client.watching = {live: true};
+		count = 1;
+	}
 	/* Race between subscribe and backlog fetch; client must de-dup */
 	flow.exec(function () {
 		client.db.kiku(client.watching, client.on_update.bind(client),

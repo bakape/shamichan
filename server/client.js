@@ -1,7 +1,7 @@
 var dispatcher = {}, syncs = {};
-var THREAD = window.location.pathname.match(/^\/(\d+)$/);
+var THREAD = window.location.pathname.match(/\/(\d+)$/);
 THREAD = THREAD ? parseInt(THREAD[1]) : 0;
-var BUMP = !!window.location.pathname.match(/^\/live$/);
+var BUMP = !!window.location.pathname.match(/\/live$/);
 var nameField = $('input[name=name]'), emailField = $('input[name=email]');
 var ceiling = $('hr:first');
 var reconnectTimer = null, resetTimer = null, reconnectDelay = 3000;
@@ -619,7 +619,7 @@ function on_connect() {
 		return;
 	resetTimer = setTimeout(function (){ reconnectDelay = 3000; }, 9999);
 	sync_status('Syncing...', false);
-	send([SYNCHRONIZE, syncs, THREAD]);
+	send([SYNCHRONIZE, syncs, BUMP]);
 }
 
 function attempt_reconnect() {

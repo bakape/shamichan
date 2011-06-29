@@ -20,13 +20,21 @@ function redis_client() {
 function Subscription(thread) {
 	events.EventEmitter.call(this);
 	this.thread = thread;
+	if (thread == 'live')
+		this.live = true;
 	this.subscription_callbacks = [];
 	this.promises = {};
 
 	this.k = redis_client();
-	this.k.on('subscribe', this.on_sub.bind(this));
 	this.k.on('error', this.on_sub_error.bind(this));
-	this.k.subscribe('thread:' + thread);
+	if (this.live) {
+		this.k.on('psubscribe', this.on_sub.bind(this));
+		this.k.psubscribe('thread:*');
+	}
+	else {
+		this.k.on('subscribe', this.on_sub.bind(this));
+		this.k.subscribe('thread:' + thread);
+	}
 };
 
 util.inherits(Subscription, events.EventEmitter);
@@ -53,11 +61,17 @@ S.break_promise = function (yaku) {
 	this.seppuku();
 };
 
-S.on_sub = function (chan, count) {
+S.on_sub = function () {
 	var k = this.k;
-	k.removeAllListeners('subscribe');
+	if (this.live) {
+		k.removeAllListeners('psubscribe');
+		k.on('pmessage', this.on_message.bind(this));
+	}
+	else {
+		k.removeAllListeners('subscribe');
+		k.on('message', this.on_message.bind(this, null));
+	}
 	k.removeAllListeners('error');
-	k.on('message', this.on_message.bind(this));
 	k.on('error', this.sink_sub.bind(this));
 	this.subscription_callbacks.forEach(function (cb) {
 		cb(null);
@@ -65,9 +79,10 @@ S.on_sub = function (chan, count) {
 	delete this.subscription_callbacks;
 };
 
-S.on_message = function (chan, msg) {
+S.on_message = function (pat, chan, msg) {
 	var info = msg.match(/^(\d+),(\d+)/);
 	var kind = parseInt(info[1]), num = parseInt(info[2]);
+	/* Can't use this.thread since this.live might be true */
 	var thread = parseInt(chan.match(/^thread:(\d+)$/)[1]);
 	for (var id in this.promises)
 		this.promises[id].on_update(thread, num, kind, msg);
@@ -91,8 +106,8 @@ S.sink_sub = function (err) {
 S.seppuku = function () {
 	var k = this.k;
 	k.removeAllListeners('error');
-	k.removeAllListeners('message');
-	k.removeAllListeners('subscribe');
+	k.removeAllListeners(this.live ? 'pmessage' : 'message');
+	k.removeAllListeners(this.live ? 'psubscribe' : 'subscribe');
 	k.quit();
 	if (SUBS[this.thread] === this)
 		delete SUBS[this.thread];
@@ -382,6 +397,8 @@ Y.fetch_backlogs = function (watching, callback) {
 	var r = this.connect();
 	var combined = [];
 	forEachInObject(watching, function (thread, cb) {
+		if (thread == 'live')
+			return cb(null);
 		var key = 'thread:' + thread + ':history';
 		var sync = watching[thread];
 		r.lrange(key, sync, -1, function (err, log) {
