@@ -140,6 +140,16 @@ function shift_replies(section) {
 	stat.text(abbrev_msg(omit, img));
 }
 
+function spill_page() {
+	if (THREAD)
+		return;
+	/* Ugh, this could be smarter. */
+	var ss = $('body > section[id]:visible');
+	for (i = PAGIN; i < ss.length; i++)
+		$(ss[i]).prev('hr').andSelf().hide();
+
+}
+
 dispatcher[INSERT_POST] = function (msg) {
 	var num = msg[0];
 	msg = msg[1];
@@ -180,6 +190,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		var fencepost = $('body > aside');
 		section.insertAfter(fencepost.length ? fencepost : ceiling
 				).after(hr);
+		spill_page();
 	}
 	if (orig_focus)
 		orig_focus.focus();
@@ -323,6 +334,7 @@ PostForm.prototype.on_allocation = function (msg) {
 	}
 	else {
 		head_end += expand_html(num);
+		spill_page();
 		mpmetrics.track('create', {num: num});
 	}
 	meta.children('time').text(readable_time(msg.time)
