@@ -2,6 +2,8 @@ var dispatcher = {}, syncs = {};
 var THREAD = window.location.pathname.match(/\/(\d+)$/);
 THREAD = THREAD ? parseInt(THREAD[1]) : 0;
 var BUMP = !!window.location.pathname.match(/\/live$/);
+var PAGE = window.location.pathname.match(/\/page(\d+)$/);
+PAGE = PAGE ? parseInt(PAGE[1]) : -1;
 var nameField = $('input[name=name]'), emailField = $('input[name=email]');
 var ceiling = $('hr:first');
 var reconnectTimer = null, resetTimer = null, reconnectDelay = 3000;
@@ -57,7 +59,7 @@ function insert_pbs() {
 			ceiling.next().is('aside')))
 		return;
 	make_reply_box().appendTo('section');
-	if (!THREAD) {
+	if (BUMP || PAGE == 0) {
 		var box = $('<aside>[<a>New thread</a>]</aside>');
 		box.find('a').click(on_make_post);
 		ceiling.after(box);
