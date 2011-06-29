@@ -15,75 +15,7 @@ function redis_client() {
 	return redis.createClient(config.REDIS_PORT || undefined);
 }
 
-function Yakusoku() {
-	events.EventEmitter.call(this);
-	this.id = ++YAKUDON;
-	/* TEMP */
-	this.tag = '3:moe';
-}
-
-util.inherits(Yakusoku, events.EventEmitter);
-exports.Yakusoku = Yakusoku;
-var Y = Yakusoku.prototype;
-
-Y.connect = function () {
-	if (!this.r) {
-		this.r = redis_client();
-		this.r.on('error', console.error.bind(console));
-	}
-	return this.r;
-};
-
-Y.disconnect = function () {
-	if (this.r) {
-		this.r.quit();
-		this.r.removeAllListeners('error');
-	}
-	this.removeAllListeners('end');
-};
-
-function forEachInObject(obj, f, callback) {
-	var total = 0, complete = 0, done = false, errors = [];
-	function cb(err) {
-		complete++;
-		if (err)
-			errors.push(err);
-		if (done && complete == total)
-			callback(errors.length ? errors : null);
-	}
-	for (var k in obj) {
-		if (obj.hasOwnProperty(k)) {
-			total++;
-			f(k, cb);
-		}
-	}
-	done = true;
-	if (complete == total)
-		callback(errors.length ? errors : null);
-}
-
-Y.kiku = function (threads, on_update, on_sink, callback) {
-	var self = this;
-	this.on_update = on_update;
-	this.on_sink = on_sink;
-	forEachInObject(threads, function (thread, cb) {
-		var sub = SUBS[thread];
-		if (!sub) {
-			sub = new Subscription(thread);
-			SUBS[thread] = sub;
-		}
-		sub.promise_to(self);
-		sub.when_ready(cb);
-	}, callback);
-};
-
-Y.kikanai = function (threads) {
-	for (var thread in threads) {
-		var sub = SUBS[thread];
-		if (sub)
-			sub.break_promise(this);
-	}
-};
+/* REAL-TIME UPDATES */
 
 function Subscription(thread) {
 	events.EventEmitter.call(this);
@@ -163,6 +95,8 @@ Subscription.prototype.seppuku = function () {
 		delete SUBS[this.thread];
 };
 
+/* OP CACHE */
+
 function on_OP_message(pat, chan, msg) {
 	var op = parseInt(chan.match(/^thread:(\d+)/)[1]);
 	var info = msg.split(':', 2);
@@ -204,6 +138,78 @@ function load_OPs(r, callback) {
 		}, callback);
 	});
 }
+
+/* SOCIETY */
+
+function Yakusoku() {
+	events.EventEmitter.call(this);
+	this.id = ++YAKUDON;
+	/* TEMP */
+	this.tag = '3:moe';
+}
+
+util.inherits(Yakusoku, events.EventEmitter);
+exports.Yakusoku = Yakusoku;
+var Y = Yakusoku.prototype;
+
+Y.connect = function () {
+	if (!this.r) {
+		this.r = redis_client();
+		this.r.on('error', console.error.bind(console));
+	}
+	return this.r;
+};
+
+Y.disconnect = function () {
+	if (this.r) {
+		this.r.quit();
+		this.r.removeAllListeners('error');
+	}
+	this.removeAllListeners('end');
+};
+
+function forEachInObject(obj, f, callback) {
+	var total = 0, complete = 0, done = false, errors = [];
+	function cb(err) {
+		complete++;
+		if (err)
+			errors.push(err);
+		if (done && complete == total)
+			callback(errors.length ? errors : null);
+	}
+	for (var k in obj) {
+		if (obj.hasOwnProperty(k)) {
+			total++;
+			f(k, cb);
+		}
+	}
+	done = true;
+	if (complete == total)
+		callback(errors.length ? errors : null);
+}
+
+Y.kiku = function (threads, on_update, on_sink, callback) {
+	var self = this;
+	this.on_update = on_update;
+	this.on_sink = on_sink;
+	forEachInObject(threads, function (thread, cb) {
+		var sub = SUBS[thread];
+		if (!sub) {
+			sub = new Subscription(thread);
+			SUBS[thread] = sub;
+		}
+		sub.promise_to(self);
+		sub.when_ready(cb);
+	}, callback);
+};
+
+Y.kikanai = function (threads) {
+	for (var thread in threads) {
+		var sub = SUBS[thread];
+		if (sub)
+			sub.break_promise(this);
+	}
+};
 
 Y.reserve_post = function (op, callback) {
 	this.connect().incr('postctr', function (err, num) {
@@ -453,6 +459,8 @@ Y.report_error = function (info, ver, callback) {
 	r.rpush('error:' + ver, JSON.stringify(info), callback);
 };
 
+/* LURKERS */
+
 function Reader(yakusoku) {
 	events.EventEmitter.call(this);
 	this.y = yakusoku;
@@ -530,6 +538,8 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 		});
 	});
 };
+
+/* HELPERS */
 
 var image_attrs;
 function extract_image(post) {
