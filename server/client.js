@@ -756,7 +756,7 @@ $(function () {
 	/* Pre-load options window */
 	function opt_change(id, b) {
 		return function (event) {
-			options[id] = $(this).attr('checked');
+			options[id] = $(this).prop('checked');
 			try {
 				localStorage.options = JSON.stringify(options);
 			}
@@ -769,7 +769,7 @@ $(function () {
 		$('<input type="checkbox" id="'+id+'" /> <label for="' +
 				id + '">' + b.label + '</label><br>'
 			).appendTo(opts).change(opt_change(id, b)
-			).attr('checked', options[id] ? 'checked' : null);
+			).prop('checked', options[id] ? 'checked' : null);
 		b(options[id]);
 	}
 	$(document.body).append(opts);
