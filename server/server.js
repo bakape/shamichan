@@ -176,16 +176,21 @@ var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT, -1',
 		'Cache-Control': 'no-cache'};
 
+function no_slash(req, resp) {
+	resp.redirect(req.url.substr(0, req.url.length-1), 303);
+}
+
 server.post('/img', function (req, resp) {
 	var upload = new pix.ImageUpload(clients, allocate_post, image_status);
 	upload.handle_request(req, resp);
 });
 
 server.get('/', function (req, resp) {
-	resp.redirect('live', 302);
+	resp.redirect('live', 303);
 });
 
-server.get('/live', function (req, resp) {
+server.get(/^\/live\/$/, no_slash);
+server.get(/^\/live$/, function (req, resp) {
 	var yaku = new db.Yakusoku();
 	yaku.get_tag(0);
 	var nav_html;
@@ -212,9 +217,10 @@ server.get('/live', function (req, resp) {
 	return true;
 });
 
-server.get('/page:page', function (req, resp) {
+server.get(/^\/page\d+\/$/, no_slash);
+server.get(/^\/page(\d+)$/, function (req, resp) {
 	var yaku = new db.Yakusoku();
-	var page = parseInt(req.param('page'));
+	var page = parseInt(req.params[0]);
 	yaku.get_tag(page);
 	yaku.on('nomatch', render_404.bind(null, resp));
 	var nav_html;
@@ -247,11 +253,12 @@ function render_404(resp) {
 }
 
 function redirect_thread(resp, num, op) {
-	resp.redirect(op + '#' + num, 302);
+	resp.redirect(op + '#' + num, 303);
 }
 
-server.get('/:op', function (req, resp) {
-	var num = parseInt(req.param('op'));
+server.get(/^\/\d+\/$/, no_slash);
+server.get(/^\/(\d+)$/, function (req, resp) {
+	var num = parseInt(req.params[0]);
 	if (!num)
 		return req.next();
 	var op = db.OPs[num];
