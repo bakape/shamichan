@@ -44,8 +44,10 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			delete syncs[k];
 			dead_threads.push(k);
 		}
-		if (++count > config.THREADS_PER_PAGE)
-			return false;
+		if (++count > config.THREADS_PER_PAGE) {
+			/* Sync logic isn't great yet; allow this for now */
+			// return false;
+		}
 	}
 	client.watching = syncs;
 	if (live) {
