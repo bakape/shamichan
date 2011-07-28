@@ -170,8 +170,7 @@ function make_nav_html(thread_count, cur_page) {
 
 var server = express.createServer();
 if (config.DEBUG) {
-	server.use(express.staticProvider(
-			require('path').join(__dirname, '..', 'www')));
+	server.use(express.static(require('path').join(__dirname,'..','www')));
 }
 
 var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
