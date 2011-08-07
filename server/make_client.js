@@ -44,7 +44,6 @@ for (var i = 0; i < files.length; i++) {
 			line = line.replace(regexp, defines[src]);
 		}
 		line = line.replace('DEFINES.', '');
-		line = line.replace('exports.', '');
 		while (true) {
 			var m = line.match(config_re);
 			if (!m)

@@ -70,10 +70,11 @@ function is_empty(o) {
 }
 exports.is_empty = is_empty;
 
-exports.OneeSama = function (t) {
+var OneeSama = function (t) {
 	this.tamashii = t;
 };
-var OS = exports.OneeSama.prototype;
+exports.OneeSama = OneeSama;
+var OS = OneeSama.prototype;
 
 OS.break_heart = function (frag) {
 	if (frag.safe)

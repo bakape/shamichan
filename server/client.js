@@ -6,10 +6,9 @@ var PAGE = window.location.pathname.match(/\/page(\d+)$/);
 PAGE = PAGE ? parseInt(PAGE[1]) : -1;
 var nameField = $('input[name=name]'), emailField = $('input[name=email]');
 var ceiling = $('hr:first');
-var reconnectTimer = null, resetTimer = null, reconnectDelay = 3000;
 var options, outOfSync, postForm, preview, previewNum;
 
-var socket = new io.Socket(window.location.domain, {
+var socket = io.connect('/', {
 	port: PORT,
 	transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling',
 		'jsonp-polling']
@@ -588,12 +587,13 @@ PostForm.prototype.finish = function () {
 };
 
 PostForm.prototype.make_upload_form = function () {
+	console.log(socket);
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="img" target="upload">'
 		+ '<input type="button" value="Cancel"/>'
 		+ '<input type="file" name="image"/> <strong/>'
 		+ '<input type="hidden" name="client_id" value="'
-		+ socket.transport.sessionid + '"/> '
+		+ socket.socket.sessionid + '"/> '
 		+ '<iframe src="" name="upload"/></form>');
 	this.cancel = form.find('input[type=button]').click($.proxy(this,
 			'finish'));
@@ -627,23 +627,40 @@ function sync_status(msg, hover) {
 	$('#sync').text(msg).attr('class', hover ? 'error' : '');
 }
 
-function on_connect() {
-	clearTimeout(reconnectTimer);
-	if (outOfSync)
-		return;
-	resetTimer = setTimeout(function (){ reconnectDelay = 3000; }, 9999);
+var MIRU = {};
+MIRU.connecting = function () {
+	sync_status('Connecting...', false);
+};
+
+MIRU.connect = function () {
 	sync_status('Syncing...', false);
 	send([SYNCHRONIZE, syncs, BUMP]);
-}
+};
 
-function attempt_reconnect() {
-	clearTimeout(resetTimer);
-	if (outOfSync)
-		return;
+MIRU.disconnect = function () {
 	sync_status('Dropped. Reconnecting...', true);
-	socket.connect();
-	reconnectTimer = setTimeout(attempt_reconnect, reconnectDelay);
-	reconnectDelay = Math.min(reconnectDelay * 2, 60000);
+};
+
+MIRU.reconnect_failed = function () {
+	sync_status('Dropped.', true);
+};
+
+MIRU.message = function (data) {
+	msgs = JSON.parse(data);
+	for (var i = 0; i < msgs.length; i++) {
+		var msg = msgs[i];
+		var type = msg.shift();
+		/* Pub-sub messages have an extra OP-num entry */
+		if (type >= INSERT_POST && type <= INSERT_IMAGE)
+			syncs[msg.pop()]++;
+		dispatcher[type](msg);
+	}
+};
+
+function socket_miru(setup) {
+	var f = (setup ? socket.on : socket.removeAllListeners).bind(socket);
+	for (var ku in MIRU)
+		f(ku, MIRU[ku]);
 }
 
 dispatcher[SYNCHRONIZE] = function (msg) {
@@ -660,6 +677,7 @@ dispatcher[INVALID] = function (msg) {
 	msg = msg[0] ? 'Out of sync: ' + msg[0] : 'Out of sync.';
 	sync_status(msg, true);
 	outOfSync = true;
+	socket_miru(false);
 	socket.disconnect();
 	if (postForm)
 		postForm.finish();
@@ -668,20 +686,7 @@ dispatcher[INVALID] = function (msg) {
 };
 
 $(function () {
-	socket.on('connect', on_connect);
-	socket.on('disconnect', attempt_reconnect);
-	socket.on('message', function (data) {
-		msgs = JSON.parse(data);
-		for (var i = 0; i < msgs.length; i++) {
-			var msg = msgs[i];
-			var type = msg.shift();
-			/* Pub-sub messages have an extra OP-num entry */
-			if (type >= INSERT_POST && type <= INSERT_IMAGE)
-				syncs[msg.pop()]++;
-			dispatcher[type](msg);
-		}
-	});
-	socket.connect();
+	socket_miru(true);
 
 	$('section').each(function () {
 		var s = $(this);

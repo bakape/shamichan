@@ -3,7 +3,6 @@ var common = require('./common'),
     express = require('express'),
     flow = require('flow'),
     fs = require('fs'),
-    io = require('socket.io'),
     http = require('http'),
     pix = require('./pix'),
     db = require('./db'),
@@ -15,7 +14,17 @@ var clients = {};
 var dispatcher = {};
 var indexTmpl, notFoundHtml;
 
-function Okyaku() {
+function Okyaku(socket) {
+	this.ip = socket.handshake.address.address;
+	this.id = socket.id;
+	this.socket = socket;
+	this.watching = {};
+	this.db = new db.Yakusoku;
+	this.skipped = 0;
+	socket.on('message', this.on_message.bind(this));
+	socket.on('disconnect', this.on_disconnect.bind(this));
+	socket.on('error', console.error.bind(console, 'socket:'));
+	this.db.on('error', console.error.bind(console, 'redis:'));
 }
 var OK = Okyaku.prototype;
 
@@ -295,37 +304,6 @@ server.get(/^\/(\d+)$/, function (req, resp) {
 	return true;
 });
 
-function on_client (socket, retry) {
-	if (socket.connection) {
-		var client = new Okyaku;
-		client.init(socket);
-		clients[client.id] = client;
-		console.log(client.id + " has IP " + client.ip);
-	}
-	else if (!retry || retry < 5000) {
-		/* Wait for socket.connection */
-		retry = retry ? retry*2 : 50;
-		setTimeout(function () {
-			on_client(socket, retry);
-		}, retry);
-	}
-	else
-		util.error("Dropping no-connection client (?!)");
-}
-
-OK.init = function (socket) {
-	this.ip = socket.connection.remoteAddress;
-	this.id = socket.sessionId;
-	this.socket = socket;
-	this.watching = {};
-	this.db = new db.Yakusoku;
-	this.skipped = 0;
-	socket.on('message', this.on_message.bind(this));
-	socket.on('disconnect', this.on_disconnect.bind(this));
-	socket.on('error', console.error.bind(console, 'socket:'));
-	this.db.on('error', console.error.bind(console, 'redis:'));
-};
-
 OK.on_message = function (data) {
 	var msg;
 	try { msg = JSON.parse(data); }
@@ -591,12 +569,17 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 
 function start_server() {
 	server.listen(config.PORT);
-	var listener = io.listen(server, {
-		transports: ['websocket', 'jsonp-polling', 'htmlfile',
-			'xhr-multipart', 'xhr-polling']
+	var io = require('socket.io').listen(server, {
+		heartbeats: !config.DEBUG,
+		'log level': config.DEBUG ? 3 : 1,
+		'flash policy server': false,
+		'browser client': false,
 	});
-	listener.on('connection', on_client);
-	listener.on('error', function (err) {
+	io.sockets.on('connection', function on_client (socket) {
+		var client = new Okyaku(socket);
+		clients[client.id] = client;
+	});
+	io.sockets.on('error', function (err) {
 		console.log(err);
 	});
 }
