@@ -448,14 +448,22 @@ function click_shita(event) {
 	}
 	var img = target.filter('img');
 	if (img.length && options.inline) {
-		var thumb = img.attr('data-thumb-src');
-		if (thumb)
-			img.attr('src', thumb).removeAttr('data-thumb-src');
-		else {
-			img.attr('data-thumb-src', img.attr('src'));
-			img.attr('src', img.parent().attr('href'));
+		var thumb = img.data('thumbSrc');
+		if (thumb) {
+			img.width(img.data('thumbWidth')
+				).height(img.data('thumbHeight')
+				).attr('src', thumb
+				).removeData('thumbSrc');
 		}
-		img.removeAttr('width').removeAttr('height');
+		else {
+			var caption = img.parent().prev().text();
+			var dims = caption.match(/(\d+)x(\d+)/);
+			img.data('thumbWidth', img.width()
+				).data('thumbHeight', img.height()
+				).data('thumbSrc', img.attr('src')
+				).attr('src', img.parent().attr('href')
+				).width(dims[1]).height(dims[2]);
+		}
 		event.preventDefault();
 	}
 }
