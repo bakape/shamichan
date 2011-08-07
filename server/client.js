@@ -595,7 +595,6 @@ PostForm.prototype.finish = function () {
 };
 
 PostForm.prototype.make_upload_form = function () {
-	console.log(socket);
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="img" target="upload">'
 		+ '<input type="button" value="Cancel"/>'
