@@ -447,7 +447,7 @@ function click_shita(event) {
 		}
 	}
 	var img = target.filter('img');
-	if (img.length && options.inline) {
+	if (img.length && options.inline && !img.data('skipExpand')) {
 		var thumb = img.data('thumbSrc');
 		if (thumb) {
 			img.width(img.data('thumbWidth')
@@ -465,6 +465,19 @@ function click_shita(event) {
 				).width(dims[1]).height(dims[2]);
 		}
 		event.preventDefault();
+	}
+}
+
+function mouseup_shita(event) {
+	/* Bypass expansion for non-left mouse clicks */
+	if (options.inline && event.which > 1) {
+		var img = $(event.target).filter('img');
+		if (img.length) {
+			img.data('skipExpand', true);
+			setTimeout(function () {
+				img.removeData('skipExpand');
+			}, 100);
+		}
 	}
 }
 
@@ -755,7 +768,12 @@ $(function () {
 
 	var opts = $('<div class="modal"/>').hide();
 	var bs = {};
-	bs.inline = function (b) {};
+	bs.inline = function (b) {
+		if (b)
+			$(document).mouseup(mouseup_shita);
+		else
+			$(document).unbind('mouseup', mouseup_shita);
+	};
 	bs.inline.label = 'Inline image expansion';
 	bs.preview = function (b) {
 		if (b)
