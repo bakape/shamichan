@@ -19,13 +19,9 @@ tripcode.node: .build tripcode.cc
 
 ifeq ($(DEBUG),true)
 CLIENT_JS := $(CLIENT_JS:%.js=%.debug.js)
-$(CLIENT_JS): $(CLIENT_SRC) jsmin
-	@node make_client.js $(CLIENT_SRC) > $@
-else
-$(CLIENT_JS): $(CLIENT_SRC) jsmin
-	@node make_client.js $(CLIENT_SRC) > $@.orig && ./jsmin < $@.orig > $@
-	@rm -f $@.orig
 endif
+$(CLIENT_JS): $(CLIENT_SRC) jsmin
+	node make_client.js $(CLIENT_SRC) > $@
 
 client: $(CLIENT_JS)
 

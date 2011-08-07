@@ -1,4 +1,6 @@
-var config = require('./config'),
+var async = require('async'),
+    child_process = require('child_process'),
+    config = require('./config'),
     fs = require('fs'),
     util = require('util');
 
@@ -18,8 +20,25 @@ for (var i = 2; i < process.argv.length; i++) {
 
 var config_re = /\$\*\$(\w+)\$\*\$/;
 
-for (var i = 0; i < files.length; i++) {
-	var lines = fs.readFileSync(files[i], 'UTF-8').split('\n');
+async.forEachSeries(files, function (file, cb) {
+	if (file.match(/^lib\//)) {
+		process.stdout.write(fs.readFileSync(file));
+		return cb(null);
+	}
+	var lines = fs.readFileSync(file, 'UTF-8').split('\n');
+	var out;
+	if (config.DEBUG) {
+		out = process.stdout;
+	}
+	else {
+		var jsmin = child_process.spawn('./jsmin');
+		jsmin.stdout.pipe(process.stdout, {end: false});
+		jsmin.stderr.pipe(process.stderr, {end: false});
+		jsmin.on('exit', cb);
+		jsmin.stdin.on('error', cb);
+		jsmin.stdout.on('error', cb);
+		out = jsmin.stdin;
+	}
 	for (var j = 0; j < lines.length; j++) {
 		var line = lines[j];
 		if (line.match(/^var\s+DEFINES\s*=\s*exports\s*;\s*$/))
@@ -33,9 +52,8 @@ for (var i = 0; i < files.length; i++) {
 		if (m && m[1] == m[2])
 			continue;
 		m = line.match(/^exports\.(\w+)\s*=\s*(.*)$/);
-		if (m) {
+		if (m)
 			line = 'var ' + m[1] + ' = ' + m[2];
-		}
 
 		for (var src in defines) {
 			if (line.indexOf(src) < 0)
@@ -55,6 +73,14 @@ for (var i = 0; i < files.length; i++) {
 			}
 			line = line.replace(config_re, cfg);
 		}
-		console.log(line);
+		out.write(line+'\n', 'UTF-8');
 	}
-}
+	if (config.DEBUG)
+		cb(null);
+	else
+		out.end();
+}, function (err) {
+	if (err)
+		throw err;
+	process.stdout.end();
+});
