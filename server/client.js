@@ -10,8 +10,7 @@ var options, outOfSync, postForm, preview, previewNum;
 
 var socket = io.connect('/', {
 	port: PORT,
-	transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling',
-		'jsonp-polling']
+	transports: ['htmlfile', 'xhr-polling', 'jsonp-polling']
 });
 
 function load_ident() {
