@@ -6,8 +6,8 @@ node.js
 redis
 
 async
-express
 flow-js
+formidable
 node-imagemagick
 node_redis
 socket.io

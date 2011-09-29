@@ -1,6 +1,5 @@
 var common = require('./common'),
     config = require('./config'),
-    express = require('express'),
     flow = require('flow'),
     fs = require('fs'),
     http = require('http'),
@@ -177,35 +176,99 @@ function make_nav_html(thread_count, cur_page) {
 	return bits.join('');
 }
 
-var server = express.createServer();
-if (config.DEBUG) {
-	server.use(express.static(require('path').join(__dirname,'..','www')));
+var server = http.createServer(function (req, resp) {
+	var method = req.method.toLowerCase(), numRoutes = routes.length;
+	for (var i = 0; i < numRoutes; i++) {
+		var route = routes[i];
+		if (method != route.method)
+			continue;
+		var m = req.url.match(route.pattern);
+		if (m) {
+			route.handler(req, resp, m);
+			return;
+		}
+	}
+	if (debug_static)
+		debug_static(req, resp);
+	else
+		render_404(resp);
+});
+
+var routes = [];
+
+function route_get(pattern, handler) {
+	routes.push({method: 'get', pattern: pattern, handler: handler});
 }
 
-var httpHeaders = {'Content-Type': 'text/html; charset=UTF-8',
+var debug_static = !config.DEBUG ? false : function (req, resp) {
+	/* Highly insecure. */
+	var url = req.url.replace(/\.\.+/g, '');
+	var path = require('path').join(__dirname, '..', 'www', url);
+	var s = fs.createReadStream(path);
+	s.once('error', function (err) {
+		if (err.code == 'ENOENT')
+			render_404(resp);
+		else {
+			resp.writeHead(500, noCacheHeaders);
+			resp.end(err.message);
+		}
+	});
+	s.once('open', function () {
+		var h = {};
+		try {
+			var mime = require('connect').utils.mime;
+			var ext = require('path').extname(path);
+			h['Content-Type'] = mime.type(ext);
+		} catch (e) {}
+		resp.writeHead(200, h);
+		util.pump(s, resp);
+	});
+	return true;
+};
+
+var vanillaHeaders = {'Content-Type': 'text/html; charset=UTF-8'};
+var noCacheHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT, -1',
 		'Cache-Control': 'no-cache'};
 
-function no_slash(req, resp) {
-	resp.redirect(req.url.substr(0, req.url.length-1), 303);
+function render_404(resp) {
+	resp.writeHead(404, noCacheHeaders);
+	resp.end(notFoundHtml);
 }
 
-server.post('/img', function (req, resp) {
+function redirect(resp, uri, code) {
+	var headers = {Location: uri};
+	for (var k in vanillaHeaders)
+		headers[k] = vanillaHeaders[k];
+	resp.writeHead(code || 303, headers);
+	resp.end('<!doctype html><meta charset=utf-8><title>Redirect</title>'
+		+ '<a href="' + encodeURI(uri) + '">Proceed</a>.');
+}
+
+function redirect_thread(resp, num, op) {
+	redirect(resp, op + '#' + num);
+}
+
+function no_slash(req, resp) {
+	redirect(resp, req.url.substr(0, req.url.length-1));
+}
+
+routes.push({method: 'post', pattern: /^\/img$/, handler: function (req,resp) {
 	var upload = new pix.ImageUpload(clients, allocate_post, image_status);
 	upload.handle_request(req, resp);
+}});
+
+route_get(/^\/$/, function (req, resp) {
+	redirect(resp, 'live');
 });
 
-server.get('/', function (req, resp) {
-	resp.redirect('live', 303);
-});
-
-server.get(/^\/live\/$/, no_slash);
-server.get(/^\/live$/, function (req, resp) {
+route_get(/^\/live\/$/, no_slash);
+route_get(/^\/live$/, function (req, resp) {
 	var yaku = new db.Yakusoku();
 	yaku.get_tag(0);
 	var nav_html;
 	yaku.on('begin', function (thread_count) {
-		resp.writeHead(200, httpHeaders);
+		resp.writeHead(200, noCacheHeaders);
 		resp.write(indexTmpl[0]);
 		resp.write(config.TITLE);
 		resp.write(indexTmpl[1]);
@@ -227,15 +290,15 @@ server.get(/^\/live$/, function (req, resp) {
 	return true;
 });
 
-server.get(/^\/page\d+\/$/, no_slash);
-server.get(/^\/page(\d+)$/, function (req, resp) {
+route_get(/^\/page\d+\/$/, no_slash);
+route_get(/^\/page(\d+)$/, function (req, resp, params) {
 	var yaku = new db.Yakusoku();
-	var page = parseInt(req.params[0]);
+	var page = parseInt(params[1]);
 	yaku.get_tag(page);
 	yaku.on('nomatch', render_404.bind(null, resp));
 	var nav_html;
 	yaku.on('begin', function (thread_count) {
-		resp.writeHead(200, httpHeaders);
+		resp.writeHead(200, noCacheHeaders);
 		resp.write(indexTmpl[0]);
 		resp.write(config.TITLE);
 		resp.write(indexTmpl[1]);
@@ -257,18 +320,9 @@ server.get(/^\/page(\d+)$/, function (req, resp) {
 	return true;
 });
 
-function render_404(resp) {
-	resp.send(404, httpHeaders);
-	resp.end(notFoundHtml);
-}
-
-function redirect_thread(resp, num, op) {
-	resp.redirect(op + '#' + num, 303);
-}
-
-server.get(/^\/\d+\/$/, no_slash);
-server.get(/^\/(\d+)$/, function (req, resp) {
-	var num = parseInt(req.params[0]);
+route_get(/^\/\d+\/$/, no_slash);
+route_get(/^\/(\d+)$/, function (req, resp, params) {
+	var num = parseInt(params[1]);
 	if (!num)
 		return req.next();
 	var op = db.OPs[num];
@@ -282,7 +336,7 @@ server.get(/^\/(\d+)$/, function (req, resp) {
 	reader.on('nomatch', render_404.bind(null, resp));
 	reader.on('redirect', redirect_thread.bind(null, resp, num));
 	reader.on('begin', function () {
-		resp.writeHead(200, httpHeaders);
+		resp.writeHead(200, noCacheHeaders);
 		resp.write(indexTmpl[0]);
 		resp.write('Thread #' + op);
 		resp.write(indexTmpl[1]);
