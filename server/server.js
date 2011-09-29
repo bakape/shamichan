@@ -249,21 +249,25 @@ function redirect_thread(resp, num, op) {
 	redirect(resp, op + '#' + num);
 }
 
-function no_slash(req, resp) {
-	redirect(resp, req.url.substr(0, req.url.length-1));
-}
-
 routes.push({method: 'post', pattern: /^\/img$/, handler: function (req,resp) {
 	var upload = new pix.ImageUpload(clients, allocate_post, image_status);
 	upload.handle_request(req, resp);
 }});
 
 route_get(/^\/$/, function (req, resp) {
+	redirect(resp, 'moe/');
+});
+
+route_get(/^\/(\w+)$/, function (req, resp, params) {
+	redirect(resp, params[1] + '/live');
+});
+route_get(/^\/\w+\/$/, function (req, resp) {
 	redirect(resp, 'live');
 });
 
-route_get(/^\/live\/$/, no_slash);
-route_get(/^\/live$/, function (req, resp) {
+route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
+	if (params[1] != 'moe') // TEMP
+		return render_404(resp);
 	var yaku = new db.Yakusoku();
 	yaku.get_tag(0);
 	var nav_html;
@@ -289,11 +293,15 @@ route_get(/^\/live$/, function (req, resp) {
 	});
 	return true;
 });
+route_get(/^\/\w+\/live\/$/, function (req, resp, params) {
+	redirect(resp, '../live');
+});
 
-route_get(/^\/page\d+\/$/, no_slash);
-route_get(/^\/page(\d+)$/, function (req, resp, params) {
+route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
+	if (params[1] != 'moe') // TEMP
+		return render_404(resp);
 	var yaku = new db.Yakusoku();
-	var page = parseInt(params[1]);
+	var page = parseInt(params[2]);
 	yaku.get_tag(page);
 	yaku.on('nomatch', render_404.bind(null, resp));
 	var nav_html;
@@ -319,10 +327,14 @@ route_get(/^\/page(\d+)$/, function (req, resp, params) {
 	});
 	return true;
 });
+route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
+	redirect(resp, '../page' + params[1]);
+});
 
-route_get(/^\/\d+\/$/, no_slash);
-route_get(/^\/(\d+)$/, function (req, resp, params) {
-	var num = parseInt(params[1]);
+route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
+	if (params[1] != 'moe') // TEMP
+		return render_404(resp);
+	var num = parseInt(params[2]);
 	if (!num)
 		return req.next();
 	var op = db.OPs[num];
@@ -356,6 +368,9 @@ route_get(/^\/(\d+)$/, function (req, resp, params) {
 	reader.on('error', on_err);
 	yaku.on('error', on_err);
 	return true;
+});
+route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
+	redirect(resp, '../' + params[1]);
 });
 
 OK.on_message = function (data) {
