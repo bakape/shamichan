@@ -440,7 +440,7 @@ function click_shita(event) {
 			q = href.match(samePage);
 			if (q) {
 				$('.highlight').removeClass('highlight');
-				$('article'+q[1]).addClass('highlight');
+				$(q[1]).addClass('highlight');
 				return;
 			}
 		}
@@ -686,6 +686,15 @@ dispatcher[SYNCHRONIZE] = function (msg) {
 	var dead_threads = msg[0]; /* TODO */
 	sync_status('Synced.', false);
 	insert_pbs();
+
+	var m = window.location.hash.match(/^#q(\d+)$/);
+	if (m) {
+		var id = parseInt(m[1]);
+		if ($('#' + id).hasClass('highlight')) {
+			window.location.hash = '#' + id;
+			add_ref(id);
+		}
+	}
 };
 
 dispatcher[CATCH_UP] = function (msg) {
@@ -719,18 +728,9 @@ $(function () {
 	if (!options)
 		options = {};
 
-	var m = window.location.hash.match(/^#q(\d+)$/);
-	if (m && $('#' + m[1]).length) {
-		var id = parseInt(m[1]);
-		window.location.hash = '#' + id;
-		$('article#' + id).addClass('highlight');
-		setTimeout(function () { add_ref(id); }, 500);
-	}
-	else {
-		m = window.location.hash.match(/^(#\d+)$/);
-		if (m)
-			$('article' + m[1]).addClass('highlight');
-	}
+	var m = window.location.hash.match(/^#q?(\d+)$/);
+	if (m)
+		$('#' + m[1]).addClass('highlight');
 
 	$(document).click(click_shita);
 

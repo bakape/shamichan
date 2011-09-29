@@ -138,7 +138,7 @@ section p {
 	cursor: inherit !important;
 	text-decoration: none;
 }
-.highlight {
+article.highlight {
 	background-color: #d6bad0;
 	border-right: 1px solid #ba9dbf;
 	border-bottom: 1px solid #ba9dbf;
