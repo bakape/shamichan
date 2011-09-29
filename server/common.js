@@ -233,7 +233,7 @@ OS.monogatari = function (data) {
 		header.push(safe('</b>'));
 	if (data.email) {
 		header.unshift(safe('<a class="email" href="mailto:'
-				+ escape(data.email) + '">'));
+				+ encodeURI(data.email) + '">'));
 		header.push(safe('</a>'));
 	}
 	header.unshift(safe('<header>'));
