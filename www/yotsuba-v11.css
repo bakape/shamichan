@@ -162,6 +162,12 @@ section p {
 	top: 12px;
 	right: 8px;
 }
+#lock {
+	background: url(lock.png) no-repeat left;
+	color: gray;
+	float: right;
+	padding-left: 15px;
+}
 .modal {
 	background-color: white;
 	overflow: hidden;

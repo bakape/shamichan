@@ -3,7 +3,7 @@ var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var $sizer = $('<span id="sizer"></span>');
 var commit_deferred = false;
-var options, outOfSync, postForm, preview, previewNum;
+var lockedToBottom, options, outOfSync, postForm, preview, previewNum;
 
 var socket = io.connect('/', {
 	port: PORT,
@@ -717,6 +717,30 @@ function tsugi() {
 	location.href = $('link[rel=next]').prop('href');
 }
 
+if (window.scrollMaxY !== undefined) {
+	function at_bottom() {
+		return window.scrollMaxY == window.scrollY;
+	}
+}
+else {
+	var DOC = $(document);
+	function at_bottom() {
+		return window.scrollY + window.innerHeight >= DOC.height();
+	}
+}
+
+function scroll_shita() {
+	var lock = at_bottom();
+	if (lock != lockedToBottom) {
+		lockedToBottom = lock;
+		var ind = $('#lock');
+		if (lockedToBottom)
+			ind.show();
+		else
+			ind.hide();
+	}
+}
+
 function add_ref(num) {
 	mpmetrics.track('add_ref', {num: num});
 	/* Make the post form if none exists yet */
@@ -1111,6 +1135,11 @@ $(function () {
 			setTimeout(img_omit, 0);
 		}
 		img_omit();
+	}
+	else {
+		$('<span id="lock">Locked to bottom</span>'
+				).hide().appendTo('body');
+		$(document).scroll(scroll_shita);
 	}
 
 	for (var id in toggles) {
