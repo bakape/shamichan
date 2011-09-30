@@ -1,9 +1,4 @@
-var dispatcher = {}, syncs = {};
-var THREAD = window.location.pathname.match(/\/(\d+)$/);
-THREAD = THREAD ? parseInt(THREAD[1]) : 0;
-var BUMP = !!window.location.pathname.match(/\/live$/);
-var PAGE = window.location.pathname.match(/\/page(\d+)$/);
-PAGE = PAGE ? parseInt(PAGE[1]) : -1;
+var THREAD, BUMP, PAGE, syncs = {};
 var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var options, outOfSync, postForm, preview, previewNum;
@@ -13,7 +8,14 @@ var socket = io.connect('/', {
 	transports: ['htmlfile', 'xhr-polling', 'jsonp-polling']
 });
 
-function load_ident() {
+(function () {
+	var p = window.location.pathname;
+	var t = p.match(/\/(\d+)$/);
+	THREAD = t ? parseInt(t[1]) : 0;
+	BUMP = !!p.match(/\/live$/);
+	PAGE = p.match(/\/page(\d+)$/);
+	PAGE = PAGE ? parseInt(PAGE[1]) : -1;
+
 	try {
 		function load(key, f) {
 			if (!f()) {
@@ -26,8 +28,7 @@ function load_ident() {
 		load('email', $.proxy($email, 'val'));
 	}
 	catch (e) {}
-}
-load_ident();
+})();
 
 function save_ident() {
 	try {
@@ -150,6 +151,7 @@ function spill_page() {
 
 }
 
+var dispatcher = {};
 dispatcher[INSERT_POST] = function (msg) {
 	var num = msg[0];
 	msg = msg[1];
