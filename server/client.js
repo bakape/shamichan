@@ -713,6 +713,39 @@ dispatcher[INVALID] = function (msg) {
 	$('.editing').removeClass('editing');
 };
 
+var toggles = {};
+toggles.inline = function (b) {
+	if (b)
+		$(document).mouseup(mouseup_shita);
+	else
+		$(document).unbind('mouseup', mouseup_shita);
+};
+toggles.inline.label = 'Inline image expansion';
+toggles.preview = function (b) {
+	if (b)
+		$(document).mousemove(hover_shita);
+	else
+		$(document).unbind('mousemove', hover_shita);
+}
+toggles.preview.label = 'Hover preview';
+
+/* Pre-load options window */
+function opt_change(id, b) {
+	return function (event) {
+		options[id] = $(this).prop('checked');
+		try {
+			localStorage.options = JSON.stringify(options);
+		}
+		catch (e) {}
+		b(options[id]);
+	};
+}
+
+var $opts = $('<div class="modal"/>');
+function toggle_opts() {
+	$opts.toggle('fast');
+}
+
 $(function () {
 	socket_miru(true);
 
@@ -765,44 +798,16 @@ $(function () {
 		img_omit();
 	}
 
-	var opts = $('<div class="modal"/>').hide();
-	var bs = {};
-	bs.inline = function (b) {
-		if (b)
-			$(document).mouseup(mouseup_shita);
-		else
-			$(document).unbind('mouseup', mouseup_shita);
-	};
-	bs.inline.label = 'Inline image expansion';
-	bs.preview = function (b) {
-		if (b)
-			$(document).mousemove(hover_shita);
-		else
-			$(document).unbind('mousemove', hover_shita);
-	}
-	bs.preview.label = 'Hover preview';
-
-	/* Pre-load options window */
-	function opt_change(id, b) {
-		return function (event) {
-			options[id] = $(this).prop('checked');
-			try {
-				localStorage.options = JSON.stringify(options);
-			}
-			catch (e) {}
-			b(options[id]);
-		};
-	}
-	for (var id in bs) {
-		var b = bs[id];
+	for (var id in toggles) {
+		var b = toggles[id];
 		$('<input type="checkbox" id="'+id+'" /> <label for="' +
 				id + '">' + b.label + '</label><br>'
-			).appendTo(opts).change(opt_change(id, b)
+			).appendTo($opts).change(opt_change(id, b)
 			).prop('checked', options[id] ? 'checked' : null);
 		b(options[id]);
 	}
-	$(document.body).append(opts);
-	$('<a id="options">Options</a>').click(function () {
-		opts.toggle('fast');
-	}).insertAfter('#sync');
+	$opts.hide().appendTo(document.body);
+	$('<a id="options">Options</a>').click(toggle_opts
+			).insertAfter('#sync');
+	delete toggles;
 });
