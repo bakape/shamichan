@@ -277,10 +277,10 @@ function PostForm(dest, section) {
 	$name.change(prop).keypress(prop);
 	$email.change(prop).keypress(prop);
 
-	this.input.attr('cols', INPUT_MIN_SIZE);
-	this.input.attr('maxlength', MAX_POST_CHARS);
-	this.input.keydown($.proxy(this, 'on_key'));
-	this.input.keyup($.proxy(function (event) {
+	this.input.attr('cols', INPUT_MIN_SIZE
+			).attr('maxlength', MAX_POST_CHARS
+			).keydown($.proxy(this, 'on_key')
+			).keyup($.proxy(function (event) {
 		if (this.input.val().indexOf('\n') >= 0)
 			this.on_key(null);
 	}, this));
