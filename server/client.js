@@ -677,7 +677,7 @@ MIRU.message = function (data) {
 };
 
 function socket_miru(setup) {
-	var f = (setup ? socket.on : socket.removeAllListeners).bind(socket);
+	var f = $.proxy(socket, setup ? 'on' : 'removeAllListeners');
 	for (var ku in MIRU)
 		f(ku, MIRU[ku]);
 }
