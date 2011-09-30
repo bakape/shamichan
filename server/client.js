@@ -4,8 +4,8 @@ THREAD = THREAD ? parseInt(THREAD[1]) : 0;
 var BUMP = !!window.location.pathname.match(/\/live$/);
 var PAGE = window.location.pathname.match(/\/page(\d+)$/);
 PAGE = PAGE ? parseInt(PAGE[1]) : -1;
-var nameField = $('input[name=name]'), emailField = $('input[name=email]');
-var ceiling = $('hr:first');
+var $name = $('input[name=name]'), $email = $('input[name=email]');
+var $ceiling = $('hr:first');
 var options, outOfSync, postForm, preview, previewNum;
 
 var socket = io.connect('/', {
@@ -22,8 +22,8 @@ function load_ident() {
 					f(val);
 			}
 		}
-		load('name', $.proxy(nameField, 'val'));
-		load('email', $.proxy(emailField, 'val'));
+		load('name', $.proxy($name, 'val'));
+		load('email', $.proxy($email, 'val'));
 	}
 	catch (e) {}
 }
@@ -35,9 +35,9 @@ function save_ident() {
 			if (typeof val == 'string')
 				localStorage.setItem(key, val);
 		}
-		save('name', nameField.val());
-		if (emailField.val() != 'sage')
-			save('email', emailField.val());
+		save('name', $name.val());
+		if ($email.val() != 'sage')
+			save('email', $email.val());
 	}
 	catch (e) {}
 }
@@ -54,13 +54,13 @@ function make_reply_box() {
 
 function insert_pbs() {
 	if (outOfSync || postForm || (THREAD ? $('aside').length :
-			ceiling.next().is('aside')))
+			$ceiling.next().is('aside')))
 		return;
 	make_reply_box().appendTo('section');
 	if (BUMP || PAGE == 0) {
 		var box = $('<aside>[<a>New thread</a>]</aside>');
 		box.find('a').click(on_make_post);
-		ceiling.after(box);
+		$ceiling.after(box);
 	}
 }
 
@@ -188,7 +188,7 @@ dispatcher[INSERT_POST] = function (msg) {
 
 	if (bump) {
 		var fencepost = $('body > aside');
-		section.insertAfter(fencepost.length ? fencepost : ceiling
+		section.insertAfter(fencepost.length ? fencepost : $ceiling
 				).after(hr);
 		spill_page();
 	}
@@ -272,8 +272,8 @@ function PostForm(dest, section) {
 
 	var prop = $.proxy(this, 'propagate_fields');
 	prop();
-	nameField.change(prop).keypress(prop);
-	emailField.change(prop).keypress(prop);
+	$name.change(prop).keypress(prop);
+	$email.change(prop).keypress(prop);
 
 	this.input.attr('cols', INPUT_MIN_SIZE);
 	this.input.attr('maxlength', MAX_POST_CHARS);
@@ -297,11 +297,11 @@ function PostForm(dest, section) {
 }
 
 PostForm.prototype.propagate_fields = function () {
-	var parsed = parse_name(nameField.val().trim());
+	var parsed = parse_name($name.val().trim());
 	var meta = this.meta;
 	meta.find('b').text(parsed[0] || ANON);
 	meta.find('code').text((parsed[1] || parsed[2]) && '!?');
-	var email = emailField.val().trim();
+	var email = $email.val().trim();
 	if (email == 'noko')
 		email = '';
 	var tag = meta.children('a:first');
@@ -315,8 +315,8 @@ PostForm.prototype.on_allocation = function (msg) {
 	var num = msg.num;
 	this.num = num;
 	this.flush_pending();
-	nameField.unbind();
-	emailField.unbind();
+	$name.unbind();
+	$email.unbind();
 	save_ident();
 	var meta = this.meta;
 	meta.find('b').text(msg.name || ANON);
@@ -503,8 +503,8 @@ function add_ref(num) {
 
 PostForm.prototype.make_alloc_request = function (text) {
 	var msg = {
-		name: nameField.val().trim(),
-		email: emailField.val().trim(),
+		name: $name.val().trim(),
+		email: $email.val().trim(),
 	};
 	if (text)
 		msg.frag = text;
