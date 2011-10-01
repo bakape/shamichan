@@ -18,6 +18,7 @@ function escape_html(html) {
 	return html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 		/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+exports.escape_html = escape_html;
 
 function escape_fragment(frag) {
 	var t = typeof(frag);

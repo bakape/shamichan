@@ -15,6 +15,9 @@ var clients = {};
 var dispatcher = {};
 var indexTmpl, notFoundHtml;
 
+/* I always use encodeURI anyway */
+escape = common.escape_html;
+
 function Okyaku(socket) {
 	this.ip = socket.handshake.address.address;
 	this.id = socket.id;
@@ -205,6 +208,23 @@ function route_get(pattern, handler) {
 	routes.push({method: 'get', pattern: pattern, handler: handler});
 }
 
+function route_get_auth(pattern, handler) {
+	routes.push({method: 'get', pattern: pattern,
+			handler: auth_checker.bind(null, handler)});
+}
+
+function auth_checker(handler, req, resp, params) {
+	twitter.check_cookie(req, function (err, session) {
+		if (err) {
+			resp.writeHead(401, noCacheHeaders);
+			resp.end(preamble + escape(err));
+			return;
+		}
+		req.auth = session;
+		handler(req, resp, params);
+	});
+}
+
 var debug_static = !config.DEBUG ? false : function (req, resp) {
 	/* Highly insecure. */
 	var url = req.url.replace(/\.\.+/g, '');
@@ -215,7 +235,7 @@ var debug_static = !config.DEBUG ? false : function (req, resp) {
 			render_404(resp);
 		else {
 			resp.writeHead(500, noCacheHeaders);
-			resp.end(err.message);
+			resp.end(preamble + escape(err.message));
 		}
 	});
 	s.once('open', function () {
@@ -235,6 +255,7 @@ var vanillaHeaders = {'Content-Type': 'text/html; charset=UTF-8'};
 var noCacheHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT, -1',
 		'Cache-Control': 'no-cache'};
+var preamble = '<!doctype html><meta charset=utf-8>';
 
 function render_404(resp) {
 	resp.writeHead(404, noCacheHeaders);
@@ -246,7 +267,7 @@ function redirect(resp, uri, code) {
 	for (var k in vanillaHeaders)
 		headers[k] = vanillaHeaders[k];
 	resp.writeHead(code || 303, headers);
-	resp.end('<!doctype html><meta charset=utf-8><title>Redirect</title>'
+	resp.end(preamble + '<title>Redirect</title>'
 		+ '<a href="' + encodeURI(uri) + '">Proceed</a>.');
 }
 
@@ -263,8 +284,21 @@ route_get(/^\/$/, function (req, resp) {
 	redirect(resp, 'moe/');
 });
 
-route_get(/^\/login$/, twitter.login);
-route_get(/^\/verify$/, twitter.verify);
+if (config.DEBUG) {
+	route_get(/^\/login$/, function (req, resp) {
+		twitter.set_cookie(resp);
+	});
+}
+else {
+	route_get(/^\/login$/, twitter.login);
+	route_get(/^\/verify$/, twitter.verify);
+}
+
+route_get_auth(/^\/admin$/, function (req, resp) {
+	resp.writeHead(200);
+	var who = req.auth.user || 'unknown';
+	resp.end(preamble + '<title>Admin</title>Hi ' + escape(who));
+});
 
 route_get(/^\/(\w+)$/, function (req, resp, params) {
 	redirect(resp, params[1] + '/live');

@@ -66,26 +66,66 @@ exports.verify = function (req, resp) {
 			r.quit();
 			return;
 		}
-		/* Generate login info */
-		var pass = random_str();
-		var second = random_str();
-		var info = {csrf: second, token: token, secret: secret,
-				user: user, twitter_id: results.user_id};
-		var m = r.multi();
-		m.hmset('session:'+pass, info);
-		m.expire('session:'+pass, config.LOGIN_SESSION_TIME);
-		m.exec(function (err) {
-			r.quit();
-			if (err)
-				return oauth_error(resp, err);
-			var expiry = make_expiry();
-			var cookies = [make_cookie('a', pass, expiry),
-					make_cookie('b', second, expiry)];
-			var headers = {Location: '.', 'Set-Cookie': cookies};
-			resp.writeHead(303, headers);
-			resp.end('Logged in!');
-		});
+		results.token = token;
+		results.secret = secret;
+		results.user = results.screen_name;
+		results.twitter_id = results.user_id;
+		delete results.screen_name;
+		delete results.user_id;
+		exports.set_cookie(resp, results, r);
 	}
+};
+
+exports.set_cookie = function (resp, info, r) {
+	if (!info)
+		info = {};
+	if (!r)
+		r = db.redis_client();
+	var pass = random_str();
+	var second = random_str();
+	info.csrf = second;
+	var m = r.multi();
+	m.hmset('session:'+pass, info);
+	m.expire('session:'+pass, config.LOGIN_SESSION_TIME);
+	m.exec(function (err) {
+		r.quit();
+		if (err)
+			return oauth_error(resp, err);
+		var expiry = make_expiry();
+		var cookies = [make_cookie('a', pass, expiry),
+				make_cookie('b', second, expiry)];
+		var headers = {Location: '.', 'Set-Cookie': cookies};
+		resp.writeHead(303, headers);
+		resp.end('Logged in!');
+	});
+};
+
+function parse_cookie(header) {
+	var chunks = {};
+	(header || '').split(';').forEach(function (part) {
+		var bits = part.match(/^([^=]*)=(.*)$/);
+		if (bits)
+			chunks[bits[1].trim()] = bits[2].trim();
+	});
+	return chunks;
+}
+
+exports.check_cookie = function (req, callback) {
+	var chunks = parse_cookie(req.headers.cookie);
+	var pass = chunks.a;
+	if (!pass)
+		return callback('Not logged in.');
+
+	var r = db.redis_client();
+	r.hgetall('session:' + pass, function (err, session) {
+		r.quit();
+		if (err)
+			callback(err);
+		else if (!session || !Object.keys(session).length)
+			callback('Not logged in.');
+		else
+			callback(null, session);
+	});
 };
 
 function make_expiry() {
@@ -94,8 +134,11 @@ function make_expiry() {
 }
 
 function make_cookie(key, val, expiry) {
+	var header = key + '=' + val + '; Expires=' + expiry;
 	var domain = config.LOGIN_COOKIE_DOMAIN;
-	return key+'='+val+'; Domain='+domain+'; Path=/; Expires='+expiry;
+	if (domain)
+		header += '; Domain=' + domain;
+	return header;
 }
 
 function random_str() {
