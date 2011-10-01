@@ -23,6 +23,15 @@ var config = {
 	THUMB_DIMENSIONS: [250, 250],
 
 	MIXPANEL_TOKEN: '',
+
+	TWITTER_API: {
+		key: '',
+		secret: '',
+		callback: 'http://example.com/verify',
+	},
+	TWITTER_USERNAMES: ['modsan'],
+	LOGIN_COOKIE_DOMAIN: 'example.com',
+	LOGIN_SESSION_TIME: 60*60*24*14,
 };
 
 if (!config.DEBUG)

@@ -1,12 +1,14 @@
 var common = require('./common'),
     config = require('./config'),
+    db = require('./db'),
     flow = require('flow'),
     fs = require('fs'),
     http = require('http'),
     pix = require('./pix'),
-    db = require('./db'),
+    twitter = require('./twitter'),
     Template = require('./lib/json-template').Template,
     tripcode,
+    url_parse = require('url').parse,
     util = require('util');
 
 var clients = {};
@@ -178,6 +180,9 @@ function make_nav_html(thread_count, cur_page) {
 
 var server = http.createServer(function (req, resp) {
 	var method = req.method.toLowerCase(), numRoutes = routes.length;
+	var parsed = url_parse(req.url, true);
+	req.url = parsed.pathname;
+	req.query = parsed.query;
 	for (var i = 0; i < numRoutes; i++) {
 		var route = routes[i];
 		if (method != route.method)
@@ -257,6 +262,9 @@ routes.push({method: 'post', pattern: /^\/img$/, handler: function (req,resp) {
 route_get(/^\/$/, function (req, resp) {
 	redirect(resp, 'moe/');
 });
+
+route_get(/^\/login$/, twitter.login);
+route_get(/^\/verify$/, twitter.verify);
 
 route_get(/^\/(\w+)$/, function (req, resp, params) {
 	redirect(resp, params[1] + '/live');

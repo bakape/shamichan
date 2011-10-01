@@ -10,4 +10,5 @@ flow-js
 formidable
 node-imagemagick
 node_redis
+oauth
 socket.io

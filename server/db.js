@@ -14,6 +14,7 @@ var YAKUDON = 0;
 function redis_client() {
 	return redis.createClient(config.REDIS_PORT || undefined);
 }
+exports.redis_client = redis_client;
 
 /* REAL-TIME UPDATES */
 
