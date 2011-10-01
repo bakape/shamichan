@@ -80,10 +80,12 @@ IU.parse_form = function (err, fields, files) {
 	else if (!client.post)
 		return this.failure('Missing alloc.');
 	image.imgnm = image.filename.substr(0, 256);
-	this.process();
+	client.db.check_throttle(client.ip, this.process.bind(this));
 }
 
-IU.process = function () {
+IU.process = function (err) {
+	if (err)
+		return this.failure(err);
 	this.status('Verifying...');
 	var image = this.image;
 	var tagged_path = image.ext.replace('.', '') + ':' + image.path;

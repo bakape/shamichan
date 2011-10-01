@@ -278,10 +278,17 @@ Y.insert_post = function (msg, body, ip, callback) {
 	m.set(key + ':body', body);
 	if (msg.links)
 		m.hmset(key + ':links', msg.links);
-	if (op)
+	if (op) {
 		m.rpush('thread:' + op + ':posts', num);
-	else
+	}
+	else {
 		op = num;
+		/* Rate-limit new threads */
+		if (ip && ip != '127.0.0.1') {
+			m.set('ip:' + ip, op);
+			m.expire('ip:' + ip, config.THREAD_THROTTLE);
+		}
+	}
 
 	/* Denormalize for backlog */
 	view.body = body;
@@ -303,6 +310,15 @@ Y.insert_post = function (msg, body, ip, callback) {
 				console.error("Bump error: " + err);
 			callback(null);
 		});
+	});
+};
+
+Y.check_throttle = function (ip, callback) {
+	this.connect().exists('ip:' + ip, function (err, exists) {
+		if (err)
+			callback(err);
+		else
+			callback(exists ? 'Too soon.' : null);
 	});
 };
 
