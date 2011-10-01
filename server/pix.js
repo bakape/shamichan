@@ -99,6 +99,11 @@ IU.process = function () {
 		}
 		image.MD5 = rs.MD5;
 		image.size = rs.stat.size;
+		image.dims = [rs.dims.width, rs.dims.height];
+		self.client.db.check_duplicate(image.MD5,
+	function (err) {
+		if (err)
+			return self.failure(err);
 		var w = rs.dims.width, h = rs.dims.height;
 		if (!w || !h)
 			return self.failure('Invalid image dimensions.');
@@ -133,6 +138,7 @@ IU.process = function () {
 			self.publish();
 		});
 
+	});
 	});
 	});
 }

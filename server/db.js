@@ -272,6 +272,7 @@ Y.insert_post = function (msg, body, ip, callback) {
 		else
 			view.imgctr = 1;
 		inline_image(view, msg.image);
+		m.hset('MD5s', msg.image.MD5, msg.num);
 	}
 	m.hmset(key, view);
 	m.set(key + ':body', body);
@@ -305,6 +306,15 @@ Y.insert_post = function (msg, body, ip, callback) {
 	});
 };
 
+Y.check_duplicate = function (MD5, callback) {
+	this.connect().hexists('MD5s', MD5, function (err, exists) {
+		if (err)
+			callback(err);
+		else
+			callback(exists ? 'Duplicate image.' : false);
+	});
+};
+
 Y.add_image = function (post, image, callback) {
 	var r = this.connect();
 	var num = post.num;
@@ -319,6 +329,7 @@ Y.add_image = function (post, image, callback) {
 		self._log(m, post.op, num, common.INSERT_IMAGE, [image]);
 		m.hmset(key, image);
 		m.hincrby('thread:' + post.op, 'imgctr', 1);
+		m.hset('MD5s', image.MD5, post.num);
 		m.exec(callback);
 	});
 };
