@@ -106,11 +106,21 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	return true;
 }
 
+var unskippable = [common.FINISH_POST, common.DELETE_POSTS];
+
 OK.on_update = function(op, num, kind, msg) {
 	var mine = (this.post && this.post.num == num) || this.last_num == num;
-	if (mine && kind != common.FINISH_POST) {
+	if (mine && unskippable.indexOf(kind) < 0) {
 		this.skipped++;
 		return;
+	}
+	else if (this.post && kind == common.DELETE_POSTS) {
+		/* grr special case */
+		var nums = JSON.parse('[' + msg + ']');
+		if (nums.indexOf(this.post.num) >= 0) {
+			this.last_num = this.post.num;
+			delete this.post;
+		}
 	}
 	msg = '[' + msg + ',' + op + ']';
 	if (this.skipped) {
@@ -705,6 +715,19 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	});
 	return true;
 }
+
+dispatcher[common.DELETE_POSTS] = function (msg, client) {
+	if (!msg.length)
+		return false;
+	for (var i = 0; i < msg.length; i++)
+		if (typeof msg[i] != 'number' || msg[i] < 1)
+			return false;
+	client.db.remove_posts(msg, function (err, dels) {
+		if (err)
+			report(err, client, "Couldn't delete.");
+	});
+	return true;
+};
 
 function start_server() {
 	server.listen(config.PORT);

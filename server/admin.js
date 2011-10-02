@@ -12,7 +12,18 @@ function show_panel() {
 }
 
 function korosu() {
-	/* TODO */
+	var ids = [];
+	$('article header input').each(function () {
+		var $check = $(this);
+		if ($check.attr('checked')) {
+			var id = $check.parents('article').attr('id');
+			ids.push(parseInt(id));
+		}
+	});
+	if (ids.length) {
+		ids.unshift(5);
+		send(ids);
+	}
 }
 
 $(document).click(function (event) {

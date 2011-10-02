@@ -296,7 +296,7 @@ Y.insert_post = function (msg, body, ip, callback) {
 	if (msg.links)
 		view.links = msg.links;
 	extract_image(view);
-	self._log(m, op, num, common.INSERT_POST, [view]);
+	self._log(m, op, common.INSERT_POST, [num, view]);
 
 	m.exec(function (err, results) {
 		if (err) {
@@ -311,6 +311,76 @@ Y.insert_post = function (msg, body, ip, callback) {
 				console.error("Bump error: " + err);
 			callback(null);
 		});
+	});
+};
+
+Y.remove_post = function (num, callback) {
+	var r = this.connect();
+	var op = OPs[num];
+	if (!op)
+		return callback('No such post.');
+	if (op == num)
+		return callback('Thread deletion not supported yet.');
+	r.lrem('thread:' + op + ':posts', -1, num, gone_from_thread);
+	var self = this;
+	function gone_from_thread(err, deleted) {
+		if (err)
+			return callback(err);
+		if (deleted != 1)
+			return callback(null, -num); /* already gone */
+		var key = 'post:' + num;
+		r.hset(key, 'hide', '1', function (err) {
+			if (err) {
+				/* Difficult to recover. Whatever. */
+				console.error(err);
+			}
+			delete OPs[num];
+			callback(null, [op, num]);
+
+			/* In the background, try to finish the post */
+			r.get(key + ':body', function (err, body) {
+				if (err)
+					return console.warn(err);
+				var m = r.multi();
+				finish_off(m, key, body);
+				m.exec(function (err) {
+					if (err)
+						console.warn(err);
+					/* Already called callback. */
+				});
+			});
+		});
+	}
+};
+
+Y.remove_posts = function (nums, callback) {
+	var self = this;
+	async.map(nums, this.remove_post.bind(this), function (err, dels) {
+		if (err)
+			callback(err);
+		var threads = {}, already_gone = [];
+		dels.forEach(function (del) {
+			if (Array.isArray(del)) {
+				var op = del[0];
+				if (!(op in threads))
+					threads[op] = [];
+				threads[op].push(del[1]);
+			}
+			else if (del < 0)
+				already_gone.push(-del);
+			else
+				console.error('Unexpected del: ', del);
+		});
+		var m = self.connect().multi();
+		for (var op in threads) {
+			var nums = threads[op];
+			nums.sort();
+			self._log(m, op, common.DELETE_POSTS, nums);
+		}
+		if (already_gone.length)
+			console.warn("Tried to delete missing posts: ",
+					already_gone);
+		m.exec(callback);
 	});
 };
 
@@ -334,7 +404,9 @@ Y.check_duplicate = function (MD5, callback) {
 
 Y.add_image = function (post, image, callback) {
 	var r = this.connect();
-	var num = post.num;
+	var num = post.num, op = post.op;
+	if (!op)
+		return callback("Can't add another image to an OP.");
 	var key = 'post:' + num;
 	var self = this;
 	r.exists(key, function (err, exists) {
@@ -343,9 +415,9 @@ Y.add_image = function (post, image, callback) {
 		if (!exists)
 			return callback("Post does not exist.");
 		var m = r.multi();
-		self._log(m, post.op, num, common.INSERT_IMAGE, [image]);
+		self._log(m, op, common.INSERT_IMAGE, [num, image]);
 		m.hmset(key, image);
-		m.hincrby('thread:' + post.op, 'imgctr', 1);
+		m.hincrby('thread:' + op, 'imgctr', 1);
 		m.hset('MD5s', image.MD5, post.num);
 		m.exec(callback);
 	});
@@ -361,25 +433,29 @@ Y.append_post = function (post, tail, old_state, links, new_links, callback) {
 		m.hset(key, 'state', post.state.join());
 	if (new_links && !common.is_empty(new_links))
 		m.hmset(key + ':links', new_links);
-	var msg = [tail];
+	var msg = [post.num, tail];
 	if (links)
 		msg.push(old_state[0], old_state[1], links);
 	else if (old_state[1])
 		msg.push(old_state[0], old_state[1]);
 	else if (old_state[0])
 		msg.push(old_state[0]);
-	this._log(m, post.op, post.num, common.UPDATE_POST, msg);
+	this._log(m, post.op, common.UPDATE_POST, msg);
 	m.exec(callback);
 };
+
+function finish_off(m, key, body) {
+	m.hset(key, 'body', body);
+	m.del(key + ':body');
+	m.hdel(key, 'state');
+}
 
 Y.finish_post = function (post, callback) {
 	var m = this.connect().multi();
 	var key = (post.op ? 'post:' : 'thread:') + post.num;
 	/* Don't need to check .exists() thanks to client state */
-	m.hset(key, 'body', post.body);
-	m.del(key + ':body');
-	m.hdel(key, 'state');
-	this._log(m, post.op, post.num, common.FINISH_POST, []);
+	finish_off(m, key, post.body);
+	this._log(m, post.op, common.FINISH_POST, [post.num]);
 	m.exec(callback);
 };
 
@@ -399,23 +475,23 @@ Y.finish_all = function (callback) {
 				if (err)
 					return cb(err);
 				m = r.multi();
-				m.hset(key, 'body', rs[0]);
-				m.del(body_key);
-				m.hdel(key, 'state');
+				finish_off(m, key, rs[0]);
 				var n = parseInt(key.match(/:(\d+)$/)[1]);
 				var op = parseInt(rs[1]) || n;
-				self._log(m, op, n, common.FINISH_POST, []);
+				self._log(m, op, common.FINISH_POST, [n]);
 				m.exec(cb);
 			});
 		}, callback);
 	});
 };
 
-Y._log = function (m, op, num, kind, msg) {
-	msg.unshift(kind, num);
+Y._log = function (m, op, kind, msg) {
+	msg.unshift(kind);
 	msg = JSON.stringify(msg).slice(1, -1);
 	console.log("Log:", msg);
-	var key = 'thread:' + (op || num);
+	if (!op)
+		throw new Error('No OP.');
+	var key = 'thread:' + op;
 	m.rpush(key + ':history', msg);
 	m.hincrby(key, 'hctr', 1);
 	m.publish(key, msg);
@@ -574,7 +650,7 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 	r.hgetall(key, function (err, pre_post) {
 		if (err)
 			return self.emit('error', err);
-		if (common.is_empty(pre_post))
+		if (common.is_empty(pre_post) || pre_post.hide)
 			return next_please();
 		pre_post.num = num;
 		with_body(r, key, pre_post, function (err, post) {

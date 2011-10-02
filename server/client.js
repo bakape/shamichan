@@ -111,6 +111,14 @@ function get_focus() {
 		return $(focus).find('textarea');
 }
 
+function section_abbrev(section) {
+	var stat = section.find('.omit');
+	var m = stat.text().match(/(\d+)\D+(\d+)?/);
+	if (!m)
+		return false;
+	return {stat: stat, omit: parseInt(m[1]), img: parseInt(m[2] || 0)};
+}
+
 function shift_replies(section) {
 	if (THREAD)
 		return;
@@ -118,16 +126,16 @@ function shift_replies(section) {
 	var rem = shown.length;
 	if (rem < ABBREV)
 		return;
-	var stat = section.find('.omit');
-	var omit = 0, img = 0;
-	if (stat.length) {
-		var m = stat.text().match(/(\d+)\D+(\d+)?/);
-		omit = parseInt(m[1]);
-		img = parseInt(m[2] || 0);
+	var $stat, omit = 0, img = 0;
+	var info = section_abbrev(section);
+	if (info) {
+		$stat = info.stat;
+		omit = info.omit;
+		img = info.img;
 	}
 	else {
-		stat = $('<span class="omit"></span>');
-		section.children('blockquote,form').last().after(stat);
+		$stat = $('<span class="omit"></span>');
+		section.children('blockquote,form').last().after($stat);
 	}
 	for (var i = 0; i < shown.length; i++) {
 		var cull = $(shown[i]);
@@ -138,7 +146,7 @@ function shift_replies(section) {
 		omit++;
 		cull.remove();
 	}
-	stat.text(abbrev_msg(omit, img));
+	$stat.text(abbrev_msg(omit, img));
 }
 
 function spill_page() {
@@ -225,6 +233,30 @@ dispatcher[UPDATE_POST] = function (msg) {
 
 dispatcher[FINISH_POST] = function (msg) {
 	$('#' + msg[0]).removeClass('editing');
+};
+
+dispatcher[DELETE_POSTS] = function (msg, op) {
+	var ownNum = postForm && postForm.num;
+	_.each(msg, function (num) {
+		if (num === ownNum)
+			return postForm.clean_up(true);
+		var post = $('#' + num);
+		if (post.length)
+			post.remove();
+		else if (!THREAD) {
+			/* post not visible; decrease omit count */
+			var info = section_abbrev($('section#' + op));
+			if (info && info.omit > 0) {
+				/* No way to know if there was an image. Doh */
+				var omit = info.omit - 1;
+				if (omit > 0)
+					info.stat.text(abbrev_msg(omit,
+							info.img));
+				else
+					info.stat.remove();
+			}
+		}
+	});
 };
 
 function extract_num(q) {
@@ -596,8 +628,14 @@ PostForm.prototype.finish = function () {
 		this.buffer.replaceWith(this.buffer.contents());
 		this.line_buffer.remove();
 		send([FINISH_POST]);
+		this.clean_up(false);
 	}
-	else {
+	else
+		this.clean_up(true);
+};
+
+PostForm.prototype.clean_up = function (remove) {
+	if (remove) {
 		if (!this.op)
 			this.post.next('hr').remove();
 		this.post.remove();
@@ -672,9 +710,12 @@ MIRU.message = function (data) {
 		var msg = msgs[i];
 		var type = msg.shift();
 		/* Pub-sub messages have an extra OP-num entry */
-		if (type >= INSERT_POST && type <= INSERT_IMAGE)
-			syncs[msg.pop()]++;
-		dispatcher[type](msg);
+		var op;
+		if (is_pubsub(type)) {
+			op = msg.pop();
+			syncs[op]++;
+		}
+		dispatcher[type](msg, op);
 	}
 };
 
