@@ -266,7 +266,7 @@ Y.insert_post = function (msg, body, ip, callback) {
 	var bump = !op || view.email != 'sage';
 	var m = r.multi();
 	if (bump)
-		m.hincrby(tag_key, 'bumpctr', 1);
+		m.incr(tag_key + ':bumpctr');
 	if (msg.image) {
 		if (op)
 			m.hincrby('thread:' + op, 'imgctr', 1);
