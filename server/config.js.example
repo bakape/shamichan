@@ -60,6 +60,7 @@ config.SERVER_DEPS = [
 	'db.js',
 	'pix.js',
 	'server.js',
+	'twitter.js',
 	'tripcode.cc',
 ];
 
