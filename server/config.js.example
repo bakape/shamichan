@@ -35,13 +35,28 @@ var config = {
 };
 
 if (!config.DEBUG)
-	config.CLIENT_DEPS = ['lib/socket.io.min.js', 'common.js', 'client.js',
-		'lib/mixpanel.js', 'lib/mixpanel_invoke.js'];
+	config.CLIENT_DEPS = [
+		'lib/socket.io.min.js',
+		'common.js',
+		'client.js',
+		'lib/mixpanel.js',
+		'lib/mixpanel_invoke.js',
+	];
 else
-	config.CLIENT_DEPS = ['lib/socket.io.js', 'common.js', 'client.js',
-		'lib/mixpanel_invoke.js'];
+	config.CLIENT_DEPS = [
+		'lib/socket.io.js',
+		'common.js',
+		'client.js',
+		'lib/mixpanel_invoke.js',
+	];
 
-config.SERVER_DEPS = ['lib/json-template.js', 'common.js', 'db.js', 'pix.js',
-		'server.js', 'tripcode.cc'];
+config.SERVER_DEPS = [
+	'lib/json-template.js',
+	'common.js',
+	'db.js',
+	'pix.js',
+	'server.js',
+	'tripcode.cc',
+];
 
 module.exports = config;
