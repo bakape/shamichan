@@ -111,10 +111,12 @@ function parse_cookie(header) {
 }
 
 exports.check_cookie = function (req, callback) {
+	if (!req.headers.cookie)
+		return false;
 	var chunks = parse_cookie(req.headers.cookie);
 	var pass = chunks.a;
 	if (!pass)
-		return callback('Not logged in.');
+		return false;
 
 	var r = db.redis_client();
 	r.hgetall('session:' + pass, function (err, session) {
@@ -126,6 +128,7 @@ exports.check_cookie = function (req, callback) {
 		else
 			callback(null, session);
 	});
+	return true;
 };
 
 function make_expiry() {

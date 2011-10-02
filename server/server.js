@@ -16,7 +16,7 @@ _.templateSettings = {
 
 var clients = {};
 var dispatcher = {};
-var indexTmpl, notFoundHtml;
+var indexTmpl, notFoundHtml, adminJs;
 
 /* I always use encodeURI anyway */
 escape = common.escape_html;
@@ -206,7 +206,18 @@ var server = http.createServer(function (req, resp) {
 var routes = [];
 
 function route_get(pattern, handler) {
-	routes.push({method: 'get', pattern: pattern, handler: handler});
+	routes.push({method: 'get', pattern: pattern,
+			handler: auth_passthrough.bind(null, handler)});
+}
+
+function auth_passthrough(handler, req, resp, params) {
+	if (!twitter.check_cookie(req, function (err, session) {
+		if (!err)
+			req.auth = session;
+		handler(req, resp, params);
+	})) {
+		handler(req, resp, params);
+	}
 }
 
 function route_get_auth(pattern, handler) {
@@ -215,15 +226,20 @@ function route_get_auth(pattern, handler) {
 }
 
 function auth_checker(handler, req, resp, params) {
-	twitter.check_cookie(req, function (err, session) {
-		if (err) {
-			resp.writeHead(401, noCacheHeaders);
-			resp.end(preamble + escape(err));
-			return;
-		}
+	if (!twitter.check_cookie(req, ack))
+		return forbidden('No cookie.');
+
+	function ack(err, session) {
+		if (err)
+			return forbidden(err);
 		req.auth = session;
 		handler(req, resp, params);
-	});
+	}
+
+	function forbidden(err) {
+		resp.writeHead(401, noCacheHeaders);
+		resp.end(preamble + escape(err));
+	}
 }
 
 var debug_static = !config.DEBUG ? false : function (req, resp) {
@@ -300,6 +316,13 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 	var who = req.auth.user || 'unknown';
 	resp.end(preamble + '<title>Admin</title>Hi ' + escape(who));
 });
+route_get_auth(/^\/admin\.js$/, function (req, resp, params) {
+	resp.writeHead(200, {'Content-Type': 'text/javascript'});
+	if (config.DEBUG)
+		resp.end(fs.readFileSync('admin.js'));
+	else
+		resp.end(adminJs);
+});
 
 route_get(/^\/(\w+)$/, function (req, resp, params) {
 	redirect(resp, params[1] + '/live');
@@ -326,7 +349,7 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	write_thread_html(yaku, resp, false);
 	yaku.on('end', function () {
 		resp.write(nav_html);
-		resp.end(indexTmpl[2]);
+		write_page_end(req, resp);
 		yaku.disconnect();
 	});
 	yaku.on('error', function (err) {
@@ -360,7 +383,7 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	write_thread_html(yaku, resp, false);
 	yaku.on('end', function () {
 		resp.write(nav_html);
-		resp.end(indexTmpl[2]);
+		write_page_end(req, resp);
 		yaku.disconnect();
 	});
 	yaku.on('error', function (err) {
@@ -400,7 +423,7 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	write_thread_html(reader, resp, true);
 	reader.on('end', function () {
 		resp.write('[<a href=".">Return</a>]');
-		resp.end(indexTmpl[2]);
+		write_page_end(req, resp);
 		yaku.disconnect();
 	});
 	function on_err(err) {
@@ -415,6 +438,13 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
 	redirect(resp, '../' + params[1]);
 });
+
+function write_page_end(req, resp) {
+	resp.write(indexTmpl[2]);
+	if (req.auth)
+		resp.write('<script src="../admin.js"></script>\n');
+	resp.end();
+}
 
 OK.on_message = function (data) {
 	var msg;
@@ -729,6 +759,7 @@ else {
 		indexTmpl = _.template(fs.readFileSync('index.html', 'UTF-8'),
 				config).split(/\$[A-Z]+/);
 		notFoundHtml = fs.readFileSync('../www/404.html');
+		adminJs = fs.readFileSync('admin.js');
 		db.track_OPs(function (err) {
 			if (err)
 				throw err;
