@@ -1,7 +1,6 @@
 var common = require('./common'),
     config = require('./config'),
     db = require('./db'),
-    flow = require('flow'),
     fs = require('fs'),
     http = require('http'),
     pix = require('./pix'),
@@ -75,11 +74,9 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		count = 1;
 	}
 	/* Race between subscribe and backlog fetch; client must de-dup */
-	flow.exec(function () {
-		client.db.kiku(client.watching, client.on_update.bind(client),
-				client.on_thread_sink.bind(client), this);
-	},
-	function (errs) {
+	client.db.kiku(client.watching, client.on_update.bind(client),
+			client.on_thread_sink.bind(client), listening);
+	function listening(errs) {
 		if (errs && errs.length >= count)
 			return report("Couldn't sync to board.", client);
 		else if (errs) {
@@ -88,9 +85,9 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 				delete client.watching[thread];
 			});
 		}
-		client.db.fetch_backlogs(client.watching, this);
-	},
-	function (errs, logs) {
+		client.db.fetch_backlogs(client.watching, got_backlogs);
+	}
+	function got_backlogs(errs, logs) {
 		if (errs) {
 			dead_threads.push.apply(dead_threads, errs);
 			errs.forEach(function (thread) {
@@ -101,7 +98,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		logs.push([common.SYNCHRONIZE, dead_threads]);
 		client.socket.send(JSON.stringify(logs));
 		client.synced = true;
-	});
+	}
 	return true;
 }
 
@@ -563,19 +560,18 @@ function allocate_post(msg, image, client, callback) {
 	if (image)
 		post.image = image;
 	post.state = [0, 0];
-	flow.exec(function () {
-		client.db.reserve_post(post.op, this);
-	},
-	function (err, num) {
+
+	client.db.reserve_post(post.op, got_reservation);
+	function got_reservation(err, num) {
 		if (err)
 			return callback("Couldn't reserve a post.");
 		if (client.post)
 			return callback('Already have a post.');
 		client.post = post;
 		post.num = num;
-		valid_links(body, post.state, this);
-	},
-	function (err, links) {
+		valid_links(body, post.state, got_links);
+	}
+	function got_links(err, links) {
 		if (err) {
 			console.error('valid_links: ' + err);
 			if (client.post === post)
@@ -583,9 +579,9 @@ function allocate_post(msg, image, client, callback) {
 			return callback("Post reference error.");
 		}
 		post.links = links;
-		client.db.insert_post(post, body, client.ip, this);
-	},
-	function (err) {
+		client.db.insert_post(post, body, client.ip, inserted);
+	}
+	function inserted(err) {
 		if (err) {
 			if (client.post === post)
 				delete client.post;
@@ -594,7 +590,7 @@ function allocate_post(msg, image, client, callback) {
 		}
 		post.body = body;
 		callback(null, get_post_view(post));
-	});
+	}
 	return true;
 }
 
@@ -625,10 +621,8 @@ function update_post(frag, client) {
 	post.body += frag;
 	/* imporant: broadcast prior state */
 	var old_state = post.state.slice();
-	flow.exec(function () {
-		valid_links(frag, post.state, this);
-	},
-	function (err, links) {
+
+	valid_links(frag, post.state, function (err, links) {
 		if (err)
 			links = null; /* oh well */
 		var new_links = {};
@@ -643,12 +637,12 @@ function update_post(frag, client) {
 				}
 			}
 		}
+
 		client.db.append_post(post, frag, old_state, links, new_links,
-				this);
-	},
-	function (err) {
-		if (err)
-			report(err, client, "Couldn't add text.");
+				function (err) {
+			if (err)
+				report(err, client, "Couldn't add text.");
+		});
 	});
 	return true;
 }
