@@ -2,10 +2,7 @@ CLIENT_SRC := $(shell node server.js --show-config CLIENT_DEPS)
 CLIENT_JS := ../www/js/client-$(shell node server.js --client-version).js
 DEBUG := $(shell node server.js --show-config DEBUG)
 
-all: builder tripcode.node client
-
-builder: builder.c
-	gcc -o $@ $^
+all: tripcode.node client
 
 jsmin: jsmin.c
 	gcc -o $@ $^
@@ -28,4 +25,4 @@ client: $(CLIENT_JS)
 .PHONY: all client clean
 
 clean:
-	rm -rf -- .build builder jsmin tripcode.node ../www/js/client-*.js
+	rm -rf -- .build jsmin tripcode.node ../www/js/client-*.js
