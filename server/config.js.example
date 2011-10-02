@@ -36,6 +36,8 @@ var config = {
 
 if (!config.DEBUG)
 	config.CLIENT_DEPS = [
+		'lib/underscore-min.js',
+		'lib/backbone-min.js',
 		'lib/socket.io.min.js',
 		'common.js',
 		'client.js',
@@ -44,6 +46,8 @@ if (!config.DEBUG)
 	];
 else
 	config.CLIENT_DEPS = [
+		'lib/underscore.js',
+		'lib/backbone.js',
 		'lib/socket.io.js',
 		'common.js',
 		'client.js',
