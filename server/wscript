@@ -14,4 +14,3 @@ def build(bld):
     obj.target = 'tripcode'
     obj.source = 'tripcode.cc'
     obj.env.append_value('LINKFLAGS', '-lcrypt') # uselib doesn't seem to work
-    obj.env.append_value('LINKFLAGS', '-liconv')
