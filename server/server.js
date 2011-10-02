@@ -1,14 +1,18 @@
-var common = require('./common'),
+var _ = require('./lib/underscore'),
+    common = require('./common'),
     config = require('./config'),
     db = require('./db'),
     fs = require('fs'),
     http = require('http'),
     pix = require('./pix'),
     twitter = require('./twitter'),
-    Template = require('./lib/json-template').Template,
     tripcode,
     url_parse = require('url').parse,
     util = require('util');
+
+_.templateSettings = {
+	interpolate: /\{\{(.+?)\}\}/g
+};
 
 var clients = {};
 var dispatcher = {};
@@ -722,8 +726,8 @@ else {
 		tripcode = require('./tripcode');
 		config.CLIENT_JS = 'client-' + version + (
 				config.DEBUG ? '.debug.js' : '.js');
-		indexTmpl = Template(fs.readFileSync('index.html', 'UTF-8'),
-			{meta: '{{}}'}).expand(config).split(/\$[A-Z]+/);
+		indexTmpl = _.template(fs.readFileSync('index.html', 'UTF-8'),
+				config).split(/\$[A-Z]+/);
 		notFoundHtml = fs.readFileSync('../www/404.html');
 		db.track_OPs(function (err) {
 			if (err)

@@ -55,7 +55,7 @@ else
 	];
 
 config.SERVER_DEPS = [
-	'lib/json-template.js',
+	'lib/underscore.js',
 	'common.js',
 	'db.js',
 	'pix.js',
