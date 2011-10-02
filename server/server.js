@@ -676,7 +676,7 @@ function start_server() {
 	server.listen(config.PORT);
 	var io = require('socket.io').listen(server, {
 		heartbeats: !config.DEBUG,
-		'log level': config.DEBUG ? 3 : 1,
+		'log level': config.DEBUG ? 2 : 1,
 		'flash policy server': false,
 		'browser client': false,
 	});
