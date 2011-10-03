@@ -343,11 +343,7 @@ Y.remove_post = function (num, callback) {
 					return console.warn(err);
 				var m = r.multi();
 				finish_off(m, key, body);
-				m.exec(function (err) {
-					if (err)
-						console.warn(err);
-					/* Already called callback. */
-				});
+				m.exec(warn);
 			});
 			r.hmget(key, ['src', 'thumb'], dump_pix);
 		});
@@ -356,13 +352,12 @@ Y.remove_post = function (num, callback) {
 	function dump_pix(err, pics) {
 		if (err)
 			return console.warn(err);
-		if (pics && pics[0] && pics[1]) {
-			require('./pix').bury_image(pics[0], pics[1], check);
-			function check(err) {
-				if (err)
-					console.warn(err);
-			}
-		}
+		if (pics && pics[0] && pics[1])
+			require('./pix').bury_image(pics[0], pics[1], warn);
+	}
+	function warn(err) {
+		if (err)
+			console.warn(err);
 	}
 };
 
