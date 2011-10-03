@@ -221,7 +221,7 @@ function route_get(pattern, handler) {
 }
 
 function auth_passthrough(handler, req, resp, params) {
-	if (!twitter.check_cookie(req, function (err, session) {
+	if (!twitter.check_cookie(req.headers.cookie, function (err, session) {
 		if (!err)
 			req.auth = session;
 		handler(req, resp, params);
@@ -236,7 +236,7 @@ function route_get_auth(pattern, handler) {
 }
 
 function auth_checker(handler, req, resp, params) {
-	if (!twitter.check_cookie(req, ack))
+	if (!twitter.check_cookie(req.headers.cookie, ack))
 		return forbidden('No cookie.');
 
 	function ack(err, session) {
@@ -716,7 +716,21 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	return true;
 }
 
-dispatcher[common.DELETE_POSTS] = function (msg, client) {
+function auth_handled(func) {
+	return function (msg, client) {
+		if (!msg.length || !twitter.check_cookie(msg.shift(), go))
+			return false;
+		function go(err, session) {
+			if (err || common.is_empty(session))
+				report(err, client, 'Auth error.');
+			else
+				func(msg, client);
+		}
+		return true;
+	};
+}
+
+dispatcher[common.DELETE_POSTS] = auth_handled(function (msg, client) {
 	if (!msg.length)
 		return false;
 	for (var i = 0; i < msg.length; i++)
@@ -727,7 +741,7 @@ dispatcher[common.DELETE_POSTS] = function (msg, client) {
 			report(err, client, "Couldn't delete.");
 	});
 	return true;
-};
+});
 
 function start_server() {
 	server.listen(config.PORT);

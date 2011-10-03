@@ -110,10 +110,10 @@ function parse_cookie(header) {
 	return chunks;
 }
 
-exports.check_cookie = function (req, callback) {
-	if (!req.headers.cookie)
+exports.check_cookie = function (cookie, callback) {
+	if (typeof cookie != 'string')
 		return false;
-	var chunks = parse_cookie(req.headers.cookie);
+	var chunks = parse_cookie(cookie);
 	var pass = chunks.a;
 	if (!pass)
 		return false;

