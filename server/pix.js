@@ -180,6 +180,19 @@ function mv_file(src, dest, callback) {
 	});
 };
 
+exports.bury_image = function (src, thumb, callback) {
+	/* Just in case */
+	var m = /^\d+\.\w+$/;
+	if (!src.match(m) || !thumb.match(m))
+		return callback('Invalid images.');
+	async.parallel([mv.bind(null, 'src', src),
+			mv.bind(null, 'thumb', thumb)], callback);
+	function mv(p, nm, cb) {
+		mv_file(path.join(config.MEDIA_DIR, p, nm),
+			path.join(config.DEAD_DIR, p, nm), cb);
+	}
+};
+
 IU.resize_image = function (src, ext, dest, dims, quality, callback) {
 	var self = this;
 	var args = [];

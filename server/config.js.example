@@ -15,6 +15,7 @@ var config = {
 	IMAGE_HEIGHT_MAX: 5000,
 	MEDIA_DIR: '../www',
 	MEDIA_URL: '../',
+	DEAD_DIR: '../dead',
 	PINKY_QUALITY: 50,
 	PINKY_DIMENSIONS: [125, 125],
 	THUMB_QUALITY: 50,
