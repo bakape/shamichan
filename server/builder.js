@@ -22,7 +22,7 @@ var build_client = _.debounce(function () {
 		if (!code)
 			return;
 		console.log('make client');
-		var make = child_process.execFile('make', ['-q', 'client']);
+		var make = child_process.execFile('make', ['-s', 'client']);
 		make.stdout.pipe(process.stdout);
 		make.stderr.pipe(process.stderr);
 	});
