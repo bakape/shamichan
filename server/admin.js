@@ -41,6 +41,10 @@ $(document).click(function (event) {
 $(document).ready(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
 	$('<input type=checkbox>').insertBefore('header>:first-child');
+	oneeSama.check = function (target) {
+		$('<input type=checkbox>').insertBefore(target.find(
+				'>header>:first-child'));
+	};
 });
 
 })();
