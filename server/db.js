@@ -99,6 +99,7 @@ S.on_sub_error = function (err) {
 };
 
 S.sink_sub = function (err) {
+	console.error('Sub', this.thread, 'sinking:', err);
 	this.seppuku();
 	for (var id in this.promises)
 		this.promises[id].on_sink(this.thread, 'Thread unavailable.');
