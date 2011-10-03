@@ -3,6 +3,8 @@
 *.swp
 .build
 .lock*
+dead/src/*
+dead/thumb/*
 server/builder
 server/config.js
 server/jsmin
