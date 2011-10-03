@@ -274,7 +274,7 @@ Y.insert_post = function (msg, body, ip, callback) {
 		else
 			view.imgctr = 1;
 		inline_image(view, msg.image);
-		m.hset('MD5s', msg.image.MD5, msg.num);
+		note_MD5(m, msg.image.MD5, msg.num);
 	}
 	m.hmset(key, view);
 	m.set(key + ':body', body);
@@ -456,8 +456,14 @@ Y.check_throttle = function (ip, callback) {
 	});
 };
 
+function note_MD5(m, MD5, num) {
+	var key = 'MD5:' + MD5;
+	m.set(key, num);
+	m.expire(key, config.DEBUG ? 30 : 3600);
+}
+
 Y.check_duplicate = function (MD5, callback) {
-	this.connect().hexists('MD5s', MD5, function (err, exists) {
+	this.connect().exists('MD5:'+MD5, function (err, exists) {
 		if (err)
 			callback(err);
 		else
@@ -481,7 +487,7 @@ Y.add_image = function (post, image, callback) {
 		self._log(m, op, common.INSERT_IMAGE, [num, image]);
 		m.hmset(key, image);
 		m.hincrby('thread:' + op, 'imgctr', 1);
-		m.hset('MD5s', image.MD5, post.num);
+		note_MD5(m, image.MD5, post.num);
 		m.exec(callback);
 	});
 };
