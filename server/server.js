@@ -412,10 +412,10 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		return render_404(resp);
 	var num = parseInt(params[2]);
 	if (!num)
-		return req.next();
+		return render_404(resp);
 	var op = db.OPs[num];
 	if (typeof op == 'undefined')
-		return req.next();
+		return render_404(resp);
 	if (op != num)
 		return redirect_thread(resp, num, op);
 	var yaku = new db.Yakusoku();
