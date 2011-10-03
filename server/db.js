@@ -315,15 +315,24 @@ Y.insert_post = function (msg, body, ip, callback) {
 	});
 };
 
-Y.remove_post = function (num, callback) {
-	var r = this.connect();
+Y.remove_post = function (from_thread, num, callback) {
+	num = parseInt(num);
 	var op = OPs[num];
 	if (!op)
 		return callback('No such post.');
-	if (op == num)
-		return callback('Thread deletion not supported yet.');
-	r.lrem('thread:' + op + ':posts', -1, num, gone_from_thread);
+	if (op == num) {
+		if (!from_thread)
+			return callback('Deletion loop?!');
+		return this.remove_thread(num, callback);
+	}
+
+	var r = this.connect();
 	var self = this;
+	if (from_thread)
+		r.lrem('thread:' + op + ':posts', -1, num, gone_from_thread);
+	else
+		gone_from_thread(null, 1);
+
 	function gone_from_thread(err, deleted) {
 		if (err)
 			return callback(err);
@@ -339,34 +348,19 @@ Y.remove_post = function (num, callback) {
 			callback(null, [op, num]);
 
 			/* In the background, try to finish the post */
-			r.get(key + ':body', function (err, body) {
-				if (err)
-					return console.warn(err);
-				var m = r.multi();
-				finish_off(m, key, body);
-				m.exec(warn);
-			});
+			self.finish_quietly(key, warn);
 			r.hmget(key, ['src', 'thumb'], dump_pix);
 		});
-	}
-
-	function dump_pix(err, pics) {
-		if (err)
-			return console.warn(err);
-		if (pics && pics[0] && pics[1])
-			require('./pix').bury_image(pics[0], pics[1], warn);
-	}
-	function warn(err) {
-		if (err)
-			console.warn(err);
 	}
 };
 
 Y.remove_posts = function (nums, callback) {
 	var self = this;
-	async.map(nums, this.remove_post.bind(this), function (err, dels) {
+	async.map(nums, this.remove_post.bind(this, true), all_gone);
+
+	function all_gone(err, dels) {
 		if (err)
-			callback(err);
+			return callback(err);
 		var threads = {}, already_gone = [];
 		dels.forEach(function (del) {
 			if (Array.isArray(del)) {
@@ -377,21 +371,81 @@ Y.remove_posts = function (nums, callback) {
 			}
 			else if (del < 0)
 				already_gone.push(-del);
-			else
-				console.error('Unexpected del: ', del);
+			else if (del)
+				console.warn('Unknown del:', del);
 		});
+		if (already_gone.length)
+			console.warn("Tried to delete missing posts: ",
+					already_gone);
+		if (common.is_empty(threads))
+			return callback(null);
 		var m = self.connect().multi();
 		for (var op in threads) {
 			var nums = threads[op];
 			nums.sort();
 			self._log(m, op, common.DELETE_POSTS, nums);
 		}
-		if (already_gone.length)
-			console.warn("Tried to delete missing posts: ",
-					already_gone);
 		m.exec(callback);
-	});
+	}
 };
+
+Y.remove_thread = function (op, callback) {
+	if (OPs[op] != op)
+		return callback('Thread does not exist.');
+	var r = this.connect();
+	var key = 'thread:' + op, dead_key = 'dead:' + op;
+	var self = this;
+	async.waterfall([
+	function (next) {
+		r.lrange(key + ':posts', 0, -1, next);
+	},
+	function (nums, next) {
+		if (!nums || !nums.length)
+			return next(null, []);
+		async.map(nums, self.remove_post.bind(self, false), next);
+	},
+	function (dels, next) {
+		r.incr('tag:9:graveyard:bumpctr', next);
+	},
+	function (dead_ctr, next) {
+		/* Rename thread keys, move to graveyard */
+		var m = r.multi();
+		m.zrem('tag:' + self.tag + ':threads', op);
+		m.zadd('tag:9:graveyard:threads', dead_ctr, op);
+		/* XXX: Need to fix the "[op]" dependency in on_update */
+		self._log(m, op, common.DELETE_THREAD, [op]);
+		m.hset(key, 'hide', 1);
+		/* Next two vals are checked */
+		m.renamenx(key, dead_key);
+		m.renamenx(key + ':history', dead_key + ':history');
+		m.exec(next);
+	},
+	function (results, done) {
+		var dels = results.slice(-2);
+		if (dels.some(function (x) { return x === 0; }))
+			return done("Already deleted?!");
+		delete OPs[op];
+		done();
+		/* Background, might not even be there */
+		var nop = function (err) {};
+		r.renamenx(key + ':posts', dead_key + ':posts', nop);
+		r.renamenx(key + ':links', dead_key + ':links', nop);
+		self.finish_quietly(key);
+		r.hmget(key, ['src', 'thumb'], dump_pix);
+	}], callback);
+};
+
+function dump_pix(err, pics) {
+	if (err)
+		return console.warn(err);
+	if (pics && pics[0] && pics[1])
+		require('./pix').bury_image(pics[0], pics[1], warn);
+}
+
+function warn(err) {
+	if (err)
+		console.warn(err);
+}
 
 Y.check_throttle = function (ip, callback) {
 	this.connect().exists('ip:' + ip, function (err, exists) {
@@ -466,6 +520,23 @@ Y.finish_post = function (post, callback) {
 	finish_off(m, key, post.body);
 	this._log(m, post.op || post.num, common.FINISH_POST, [post.num]);
 	m.exec(callback);
+};
+
+Y.finish_quietly = function (key, callback) {
+	var r = this.connect();
+	r.hexists(key, 'body', function (err, exists) {
+		if (err)
+			return callback(err);
+		if (exists)
+			return callback(null);
+		r.get(key + ':body', function (err, body) {
+			if (err)
+				return callback(err);
+			var m = r.multi();
+			finish_off(m, key, body);
+			m.exec(callback);
+		});
+	});
 };
 
 Y.finish_all = function (callback) {
@@ -609,6 +680,8 @@ Reader.prototype.get_thread = function (num, redirect_ok, abbrev) {
 	r.hgetall(key, function (err, pre_post) {
 		if (err)
 			return self.emit('error', err);
+		if (pre_post.hide)
+			return self.emit('nomatch');
 		if (common.is_empty(pre_post)) {
 			if (!redirect_ok)
 				return self.emit('nomatch');

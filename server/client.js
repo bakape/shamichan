@@ -259,6 +259,18 @@ dispatcher[DELETE_POSTS] = function (msg, op) {
 	});
 };
 
+dispatcher[DELETE_THREAD] = function (msg, op) {
+	delete syncs[op];
+	if (postForm) {
+		var num = postForm.num;
+		if ((postForm.op || num) == op)
+			postForm.clean_up(true);
+		if (num == op)
+			return;
+	}
+	$('section#' + op).next('hr').andSelf().remove();
+};
+
 function extract_num(q) {
 	return parseInt(q.attr('id'));
 }

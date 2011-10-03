@@ -106,7 +106,8 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	return true;
 }
 
-var unskippable = [common.FINISH_POST, common.DELETE_POSTS];
+var unskippable = [common.FINISH_POST, common.DELETE_POSTS,
+		common.DELETE_THREAD];
 
 OK.on_update = function(op, num, kind, msg) {
 	var mine = (this.post && this.post.num == num) || this.last_num == num;
@@ -118,6 +119,13 @@ OK.on_update = function(op, num, kind, msg) {
 		/* grr special case */
 		var nums = JSON.parse('[' + msg + ']');
 		if (nums.indexOf(this.post.num) >= 0) {
+			this.last_num = this.post.num;
+			delete this.post;
+		}
+	}
+	else if (this.post && kind == common.DELETE_THREAD) {
+		/* GRR */
+		if (this.post.num == op || this.post.op == op) {
 			this.last_num = this.post.num;
 			delete this.post;
 		}
@@ -730,13 +738,24 @@ function auth_handled(func) {
 	};
 }
 
-dispatcher[common.DELETE_POSTS] = auth_handled(function (msg, client) {
-	if (!msg.length)
+dispatcher[common.DELETE_POSTS] = auth_handled(function (nums, client) {
+	if (!nums.length)
 		return false;
-	for (var i = 0; i < msg.length; i++)
-		if (typeof msg[i] != 'number' || msg[i] < 1)
-			return false;
-	client.db.remove_posts(msg, function (err, dels) {
+	if (nums.some(function (n) { return typeof n != 'number' || n < 1; }))
+		return false;
+
+	/* Omit to-be-deleted posts that are inside to-be-deleted threads */
+	var ops = {}, OPs = db.OPs;
+	nums.forEach(function (num) {
+		if (num == OPs[num])
+			ops[num] = 1;
+	});
+	nums = nums.filter(function (num) {
+		var op = OPs[num];
+		return op == num || !(OPs[num] in ops);
+	});
+
+	client.db.remove_posts(nums, function (err, dels) {
 		if (err)
 			report(err, client, "Couldn't delete.");
 	});
