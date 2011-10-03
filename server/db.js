@@ -349,7 +349,7 @@ Y.remove_post = function (from_thread, num, callback) {
 
 			/* In the background, try to finish the post */
 			self.finish_quietly(key, warn);
-			r.hmget(key, ['src', 'thumb'], dump_pix);
+			self.hide_image(key, warn);
 		});
 	}
 };
@@ -430,17 +430,35 @@ Y.remove_thread = function (op, callback) {
 		var nop = function (err) {};
 		r.renamenx(key + ':posts', dead_key + ':posts', nop);
 		r.renamenx(key + ':links', dead_key + ':links', nop);
-		self.finish_quietly(key);
-		r.hmget(key, ['src', 'thumb'], dump_pix);
+		self.finish_quietly(dead_key, warn);
+		self.hide_image(dead_key, warn);
 	}], callback);
 };
 
-function dump_pix(err, pics) {
-	if (err)
-		return console.warn(err);
-	if (pics && pics[0] && pics[1])
-		require('./pix').bury_image(pics[0], pics[1], warn);
-}
+Y.hide_image = function (key, callback) {
+	var r = this.connect();
+	var MD5;
+	async.waterfall([
+	function (next) {
+		r.hmget(key, ['src', 'thumb', 'MD5'], next);
+	},
+	function (pics, next) {
+		if (!pics)
+			return callback(null);
+		MD5 = pics[2];
+		console.log('got md5', MD5);
+		if (pics[0] && pics[1])
+			require('./pix').bury_image(pics[0], pics[1], next);
+		else
+			next();
+	},
+	function (done) {
+		if (MD5)
+			r.del('MD5:' + MD5, done);
+		else
+			done();
+	}], callback);
+};
 
 function warn(err) {
 	if (err)
@@ -515,7 +533,7 @@ Y.append_post = function (post, tail, old_state, links, new_links, callback) {
 
 function finish_off(m, key, body) {
 	m.hset(key, 'body', body);
-	m.del(key + ':body');
+	m.del(key.replace('dead', 'thread') + ':body');
 	m.hdel(key, 'state');
 }
 
@@ -535,7 +553,8 @@ Y.finish_quietly = function (key, callback) {
 			return callback(err);
 		if (exists)
 			return callback(null);
-		r.get(key + ':body', function (err, body) {
+		var body_key = key.replace('dead', 'thread') + ':body';
+		r.get(body_key, function (err, body) {
 			if (err)
 				return callback(err);
 			var m = r.multi();
