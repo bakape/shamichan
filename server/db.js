@@ -448,7 +448,7 @@ Y.append_post = function (post, tail, old_state, links, new_links, callback) {
 		msg.push(old_state[0], old_state[1]);
 	else if (old_state[0])
 		msg.push(old_state[0]);
-	this._log(m, post.op, common.UPDATE_POST, msg);
+	this._log(m, post.op || post.num, common.UPDATE_POST, msg);
 	m.exec(callback);
 };
 
