@@ -174,7 +174,9 @@ function MD5_file(path, callback) {
 function mv_file(src, dest, callback) {
 	mv = child_process.spawn('/bin/mv', ['-n', src, dest]);
 	mv.on('error', callback);
-	mv.stderr.on('data', console.error.bind(console));
+	mv.stderr.on('data', function (buf) {
+		process.stderr.write(buf);
+	});
 	mv.on('exit', function (code) {
 		callback(code ? 'mv error' : null);
 	});
