@@ -68,7 +68,7 @@ function map_unsafe(frags, func) {
 
 function is_empty(o) {
 	if (!o)
-		return false;
+		return true;
 	for (k in o)
 		if (o.hasOwnProperty(k))
 			return false;
