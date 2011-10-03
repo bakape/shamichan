@@ -349,19 +349,20 @@ Y.remove_post = function (num, callback) {
 					/* Already called callback. */
 				});
 			});
-			/* Also move the images to the dump */
-			r.hmget(key, ['src', 'thumb'], function (err, pics) {
-				if (err)
-					return console.warn(err);
-				if (!pics || pics.length != 2)
-					return console.warn('No files?!');
-				require('./pix').bury_image(pics[0], pics[1],
-						function (err) {
-					if (err)
-						console.warn(err);
-				});
-			});
+			r.hmget(key, ['src', 'thumb'], dump_pix);
 		});
+	}
+
+	function dump_pix(err, pics) {
+		if (err)
+			return console.warn(err);
+		if (pics && pics[0] && pics[1]) {
+			require('./pix').bury_image(pics[0], pics[1], check);
+			function check(err) {
+				if (err)
+					console.warn(err);
+			}
+		}
 	}
 };
 
