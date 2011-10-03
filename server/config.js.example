@@ -58,6 +58,7 @@ config.SERVER_DEPS = [
 	'lib/underscore.js',
 	'admin.js',
 	'common.js',
+	'config.js',
 	'db.js',
 	'pix.js',
 	'server.js',
