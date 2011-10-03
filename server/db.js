@@ -468,7 +468,7 @@ Y.finish_post = function (post, callback) {
 	var key = (post.op ? 'post:' : 'thread:') + post.num;
 	/* Don't need to check .exists() thanks to client state */
 	finish_off(m, key, post.body);
-	this._log(m, post.op, common.FINISH_POST, [post.num]);
+	this._log(m, post.op || post.num, common.FINISH_POST, [post.num]);
 	m.exec(callback);
 };
 
