@@ -82,7 +82,7 @@ var oneeSama = new OneeSama(function (num) {
 	else
 		this.callback('>>' + num);
 });
-oneeSama.dirs = DIRS;
+oneeSama.media = MEDIA;
 oneeSama.full = THREAD;
 
 function inject(frag) {

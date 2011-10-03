@@ -125,8 +125,8 @@ IU.process = function (err) {
 		var time = new Date().getTime();
 		image.src = time + image.ext;
 		image.thumb = time + '.jpg';
-		var dest = path.join(config.IMAGE_DIR, image.src);
-		var nail = path.join(config.THUMB_DIR, image.thumb);
+		var dest = path.join(config.MEDIA_DIR, 'src', image.src);
+		var nail = path.join(config.MEDIA_DIR, 'thumb', image.thumb);
 		async.parallel([mv_file.bind(null, image.path, dest),
 				mv_file.bind(null, image.thumb_path, nail)],
 				function (err, rs) {

@@ -2,8 +2,8 @@
 <head>
 	<meta charset="UTF-8">
 	<title>{{TITLE}}</title>
-	<link rel="stylesheet" href="../yotsuba-v6.css" />
-	<!--[if lt IE 9]><script src="../js/ie.js"></script><![endif]-->
+	<link rel="stylesheet" href="{{MEDIA_URL}}yotsuba-v6.css" />
+	<!--[if lt IE 9]><script src="{{MEDIA_URL}}js/ie.js"></script><![endif]-->
 </head>
 
 <h1>$TITLE</h1>
@@ -13,6 +13,6 @@
 <label for="email">Email:</label> <input id="email" name="email"><br>
 </fieldset>
 $THREADS
-<script src="../js/jquery-1.6.1.min.js"></script>
-<script>var PORT={{PORT}},DIRS={src_url:"{{IMAGE_URL}}",thumb_url:"{{THUMB_URL}}"},ABBREV={{ABBREVIATED_REPLIES}},PAGIN={{THREADS_PER_PAGE}};</script>
-<script src="../js/{{CLIENT_JS}}"></script>
+<script src="{{MEDIA_URL}}js/jquery-1.6.1.min.js"></script>
+<script>var PORT={{PORT}},MEDIA="{{MEDIA_URL}}",ABBREV={{ABBREVIATED_REPLIES}},PAGIN={{THREADS_PER_PAGE}};</script>
+<script src="{{MEDIA_URL}}js/{{CLIENT_JS}}"></script>

@@ -178,13 +178,15 @@ function chibi(text) {
 }
 
 OS.gazou = function (info) {
-	var src = this.dirs.src_url + info.src, d = info.dims;
+	var src = encodeURI(this.media + 'src/' + info.src),
+		thumb = encodeURI(this.media + 'thumb/' + info.thumb),
+		d = info.dims;
 	return [safe('<figure data-MD5="' + info.MD5 + '">' +
 		'<figcaption>Image <a href="' + src + '" target="_blank">' +
 		info.src + '</a> (' + readable_filesize(info.size) + ', ' +
 		d[0] + 'x' + d[1]), this.full ? chibi(info.imgnm) : '',
 		safe(')</figcaption><a href="' + src + '" target="_blank">' +
-		'<img src="' + this.dirs.thumb_url + info.thumb + '" width="' +
+		'<img src="' + thumb + '" width="' +
 		d[2] + '" height="' + d[3] + '"></a>' + '</figure>\n\t')];
 };
 
