@@ -1,1 +1,3 @@
-# Hello, world!
+# Jesus christ how horrifying
+User-agent: *
+Disallow: /src/
