@@ -446,7 +446,6 @@ Y.hide_image = function (key, callback) {
 		if (!pics)
 			return callback(null);
 		MD5 = pics[2];
-		console.log('got md5', MD5);
 		if (pics[0] && pics[1])
 			require('./pix').bury_image(pics[0], pics[1], next);
 		else
