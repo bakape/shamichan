@@ -21,10 +21,7 @@ exports.login = function (req, resp) {
 		var uri = 'https://api.twitter.com/oauth/authorize' +
 				'?oauth_token=' + encodeURI(token);
 		var r = db.redis_client();
-		var m = r.multi();
-		m.set('oauth:' + token, secret);
-		m.expire('oauth:' + token, 5*60);
-		m.exec(function (err) {
+		r.setex('oauth:' + token, 5*60, secret, function (err) {
 			r.quit();
 			if (err)
 				return oauth_error(resp, err);

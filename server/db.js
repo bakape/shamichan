@@ -286,10 +286,8 @@ Y.insert_post = function (msg, body, ip, callback) {
 	else {
 		op = num;
 		/* Rate-limit new threads */
-		if (ip && ip != '127.0.0.1') {
-			m.set('ip:' + ip, op);
-			m.expire('ip:' + ip, config.THREAD_THROTTLE);
-		}
+		if (ip && ip != '127.0.0.1')
+			m.setex('ip:' + ip, config.THREAD_THROTTLE, op);
 	}
 
 	/* Denormalize for backlog */
@@ -475,8 +473,7 @@ Y.check_throttle = function (ip, callback) {
 
 function note_MD5(m, MD5, num) {
 	var key = 'MD5:' + MD5;
-	m.set(key, num);
-	m.expire(key, config.DEBUG ? 30 : 3600);
+	m.setex(key, config.DEBUG ? 30 : 3600, num);
 }
 
 Y.check_duplicate = function (MD5, callback) {
