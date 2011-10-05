@@ -329,6 +329,7 @@ else {
 	route_get(/^\/verify$/, twitter.verify);
 }
 
+var filterTmpl;
 route_get_auth(/^\/admin$/, function (req, resp) {
 	var who = req.auth.user || 'unknown';
 
@@ -340,7 +341,7 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 	var ctr = 0;
 
 	resp.writeHead(200);
-	resp.write(preamble + '<title>' + escape(who) + '</title>\n');
+	resp.write(filterTmpl[0]);
 	resp.write('<h2>Limit ' + limit + '</h2>\n');
 
 	var filter = new db.Filter('moe');
@@ -351,7 +352,8 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 		ctr += 1;
 	});
 	filter.once('end', function () {
-		resp.end('<br>' + ctr + ' thread(s).');
+		resp.write('<br>' + ctr + ' thread(s).');
+		resp.end(filterTmpl[1]);
 	});
 	filter.once('error', function (err) {
 		resp.end('<br><br>Error: ' + escape(err));
@@ -837,6 +839,8 @@ else {
 		config.CLIENT_JS = 'client-' + version + (
 				config.DEBUG ? '.debug.js' : '.js');
 		indexTmpl = _.template(fs.readFileSync('index.html', 'UTF-8'),
+				config).split(/\$[A-Z]+/);
+		filterTmpl = _.template(fs.readFileSync('filter.html', 'UTF-8'),
 				config).split(/\$[A-Z]+/);
 		notFoundHtml = fs.readFileSync('../www/404.html');
 		adminJs = fs.readFileSync('admin.js');

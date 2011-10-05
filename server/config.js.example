@@ -63,6 +63,8 @@ config.SERVER_DEPS = [
 	'server.js',
 	'twitter.js',
 	'tripcode.cc',
+	'filter.html',
+	'index.html',
 ];
 
 module.exports = config;

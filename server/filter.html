@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Admin</title>
+<style>
+img { border: 2px solid white; }
+img.ui-selecting { border: 2px solid #f88; }
+img.ui-selected { border: 2px solid #f22; }
+</style>
+<article>
+$CONTENT
+</article>
+<script src="{{MEDIA_URL}}js/jquery-1.6.2.min.js"></script>
+<script src="{{MEDIA_URL}}js/jquery-ui-1.8.16.min.js"></script>
+<script>
+function delete_selected() {
+	var selected = $('img.ui-selected');
+	alert('deleting ' + selected.length + ' threads');
+}
+
+$(document).ready(function () {
+	$('article').selectable();
+	var $button = $('<input type=button value=Delete>');
+	$('body').append($button.click(delete_selected));
+});
+</script>
