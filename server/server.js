@@ -229,23 +229,68 @@ function route_get(pattern, handler) {
 }
 
 function auth_passthrough(handler, req, resp, params) {
-	if (!twitter.check_cookie(req.headers.cookie, function (err, session) {
+	if (!twitter.check_cookie(req.headers.cookie, false, go))
+		handler(req, resp, params);
+
+	function go(err, session) {
 		if (!err)
 			req.auth = session;
-		handler(req, resp, params);
-	})) {
 		handler(req, resp, params);
 	}
 }
 
 function route_get_auth(pattern, handler) {
 	routes.push({method: 'get', pattern: pattern,
-			handler: auth_checker.bind(null, handler)});
+			handler: auth_checker.bind(null, handler, false)});
 }
 
-function auth_checker(handler, req, resp, params) {
-	if (!twitter.check_cookie(req.headers.cookie, ack))
-		return forbidden('No cookie.');
+function parse_post_body(req, callback) {
+	// jesus christ
+	var buf = [], len = 0;
+	req.on('data', function (data) {
+		buf.push(data);
+		len += data.length;
+	});
+	req.once('end', function () {
+		var i = 0;
+		var dest = new Buffer(len);
+		buf.forEach(function (b) {
+			b.copy(dest, i, 0);
+			i += b.length;
+		});
+		var combined = dest.toString('utf-8');
+		var body = {};
+		combined.split('&').forEach(function (param) {
+			var m = param.match(/^(.*?)=(.*)$/);
+			if (m)
+				body[decodeURIComponent(m[1])] = (
+					decodeURIComponent(m[2]));
+		});
+		buf = dest = combined = null;
+		callback(null, body);
+	});
+	req.once('close', callback);
+}
+
+function auth_checker(handler, is_post, req, resp, params) {
+	if (is_post) {
+		parse_post_body(req, function (err, body) {
+			if (err) {
+				resp.writeHead(500, noCacheHeaders);
+				resp.end(preamble + escape(err));
+				return;
+			}
+			req.body = body;
+			check_it();
+		});
+	}
+	else
+		check_it();
+
+	function check_it() {
+		if (!twitter.check_cookie(req.headers.cookie, is_post, ack))
+			return forbidden('No cookie.');
+	}
 
 	function ack(err, session) {
 		if (err)
@@ -259,6 +304,12 @@ function auth_checker(handler, req, resp, params) {
 		resp.end(preamble + escape(err));
 	}
 }
+
+function route_post_auth(pattern, handler) {
+	routes.push({method: 'post', pattern: pattern,
+			handler: auth_checker.bind(null, handler, true)});
+}
+
 
 var debug_static = !config.DEBUG ? false : function (req, resp) {
 	/* Highly insecure. */
@@ -357,6 +408,34 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 	});
 	filter.once('error', function (err) {
 		resp.end('<br><br>Error: ' + escape(err));
+	});
+});
+
+route_post_auth(/^\/admin$/, function (req, resp) {
+
+	var threads = req.body.threads.split(',').map(function (x) {
+		return parseInt(x);
+	}).filter(function (x) {
+		return !isNaN(x);
+	});
+
+	var yaku = new db.Yakusoku;
+	yaku.remove_posts(threads, function (err, dels) {
+
+		// XXX: Can't disconnect right away.
+		//      Does its business in the background.
+		//      Grrr. Hack for now.
+		setTimeout(function () {
+			yaku.disconnect();
+		}, 30 * 1000);
+
+		if (err) {
+			resp.writeHead(500, noCacheHeaders);
+			resp.end(preamble + escape(err));
+			return;
+		}
+		resp.writeHead(200, noCacheHeaders);
+		resp.end();
 	});
 });
 
@@ -752,7 +831,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 
 function auth_handled(func) {
 	return function (msg, client) {
-		if (!msg.length || !twitter.check_cookie(msg.shift(), go))
+		if (!msg.length || !twitter.check_cookie(msg.shift(),false,go))
 			return false;
 		function go(err, session) {
 			if (err || common.is_empty(session))

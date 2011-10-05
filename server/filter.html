@@ -12,14 +12,32 @@ $CONTENT
 <script src="{{MEDIA_URL}}js/jquery-1.6.2.min.js"></script>
 <script src="{{MEDIA_URL}}js/jquery-ui-1.8.16.min.js"></script>
 <script>
+var $del_button = $('<input type=button value=Delete>');
+
 function delete_selected() {
-	var selected = $('img.ui-selected');
-	alert('deleting ' + selected.length + ' threads');
+	// fgsfds
+	var threads = [];
+	$('img.ui-selected').each(function () {
+		threads.push(parseInt($(this).prop('alt')));
+	});
+	$del_button.val('Deleting ' + threads.length + '...');
+	$.ajax({
+		type: 'POST',
+		url: 'admin',
+		data: {threads: threads.join()},
+		success: function (data) {
+			$del_button.val('Deleted. Refresh.');
+		},
+		error: function (xhr, text, err) {
+			// TODO
+			alert(text);
+			$del_button.val('Failed.');
+		},
+	});
 }
 
 $(document).ready(function () {
 	$('article').selectable();
-	var $button = $('<input type=button value=Delete>');
-	$('body').append($button.click(delete_selected));
+	$('body').append($del_button.click(delete_selected));
 });
 </script>

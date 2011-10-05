@@ -110,7 +110,7 @@ function parse_cookie(header) {
 	return chunks;
 }
 
-exports.check_cookie = function (cookie, callback) {
+exports.check_cookie = function (cookie, check_csrf, callback) {
 	if (typeof cookie != 'string')
 		return false;
 	var chunks = parse_cookie(cookie);
@@ -122,11 +122,16 @@ exports.check_cookie = function (cookie, callback) {
 	r.hgetall('session:' + pass, function (err, session) {
 		r.quit();
 		if (err)
-			callback(err);
+			return callback(err);
 		else if (!session || !Object.keys(session).length)
-			callback('Not logged in.');
-		else
-			callback(null, session);
+			return callback('Not logged in.');
+		if (check_csrf) {
+			if (!session.csrf)
+				return callback('Corrupt session.');
+			if (chunks.b !== session.csrf)
+				return callback('Possible CSRF.');
+		}
+		callback(null, session);
 	});
 	return true;
 };
