@@ -770,6 +770,77 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 	});
 };
 
+/* AUTHORITY */
+
+function Filter(tag) {
+	events.EventEmitter.call(this);
+	this.tag = tag.length + ':' + tag;
+};
+
+util.inherits(Filter, events.EventEmitter);
+exports.Filter = Filter;
+var F = Filter.prototype;
+
+F.connect = function () {
+	if (!this.r) {
+		this.r = redis_client();
+		this.r.on('error', console.error.bind(console));
+	}
+	return this.r;
+};
+
+F.get_all = function (limit) {
+	var self = this;
+	var r = this.connect();
+	r.zrange('tag:' + this.tag + ':threads', 0, -1, go);
+	function go(err, threads) {
+		if (err)
+			return self.failure(err);
+		async.forEach(threads, do_thread, self.check_done.bind(self));
+	}
+	function do_thread(op, cb) {
+		var key = 'thread:' + op;
+		r.llen(key + ':posts', function (err, len) {
+			if (err)
+				cb(err);
+			len = parseInt(len);
+			if (len > limit)
+				return cb(null);
+			r.hget(key, 'thumb', function (err, thumb) {
+				if (err)
+					cb(err);
+				self.emit('thread', {num: op, thumb: thumb});
+				cb(null);
+			});
+		});
+	}
+};
+
+F.check_done = function (err) {
+	if (err)
+		this.failure(err);
+	else
+		this.success();
+};
+
+F.success = function () {
+	this.emit('end');
+	this.cleanup();
+};
+
+F.failure = function (err) {
+	this.emit('error', err);
+	this.cleanup();
+};
+
+F.cleanup = function () {
+	if (this.r)
+		this.r.quit();
+	this.removeAllListeners('error');
+	this.removeAllListeners('thread');
+	this.removeAllListeners('end');
+};
+
 /* HELPERS */
 
 var image_attrs;

@@ -330,10 +330,34 @@ else {
 }
 
 route_get_auth(/^\/admin$/, function (req, resp) {
-	resp.writeHead(200);
 	var who = req.auth.user || 'unknown';
-	resp.end(preamble + '<title>Admin</title>Hi ' + escape(who));
+
+	var img = _.template('<a href="moe/{{num}}">'
+			+ '<img alt="{{num}}" title="Thread {{num}}" src="'
+			+ config.MEDIA_URL + 'thumb/{{thumb}}" width=50 '
+			+ 'height=50></a>\n');
+	var limit = parseInt(req.query.limit) || 0;
+	var ctr = 0;
+
+	resp.writeHead(200);
+	resp.write(preamble + '<title>' + escape(who) + '</title>\n');
+	resp.write('<h2>Limit ' + limit + '</h2>\n');
+
+	var filter = new db.Filter('moe');
+	filter.get_all(limit);
+
+	filter.on('thread', function (thread) {
+		resp.write(img(thread));
+		ctr += 1;
+	});
+	filter.once('end', function () {
+		resp.end('<br>' + ctr + ' thread(s).');
+	});
+	filter.once('error', function (err) {
+		resp.end('<br><br>Error: ' + escape(err));
+	});
 });
+
 route_get_auth(/^\/admin\.js$/, function (req, resp, params) {
 	resp.writeHead(200, {'Content-Type': 'text/javascript'});
 	if (config.DEBUG)
