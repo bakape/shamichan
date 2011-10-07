@@ -20,9 +20,11 @@ function is_pubsub(t) {
 	return t >= INSERT_POST && t <= DELETE_THREAD;
 }
 
+var entities = {'&' : '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'};
 function escape_html(html) {
-	return html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
-		/>/g, '&gt;').replace(/"/g, '&quot;');
+	return html.replace(/[&<>"]/g, function (c) {
+		return entities[c];
+	});
 }
 exports.escape_html = escape_html;
 
