@@ -1,4 +1,4 @@
-var h5s = ['abbr', 'aside', 'article', 'code', 'figcaption', 'figure',
+var h5s = ['abbr', 'aside', 'article', 'cite', 'code', 'figcaption', 'figure',
 		'nav', 'section', 'time'];
 for (var i = 0; i < h5s.length; i++)
 	document.createElement(h5s[i]);

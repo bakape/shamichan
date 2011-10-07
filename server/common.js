@@ -85,20 +85,34 @@ var OneeSama = function (t) {
 exports.OneeSama = OneeSama;
 var OS = OneeSama.prototype;
 
+/* internal refs and youtube videos */
+var ref_re = />>(\d+|>\/?(?:watch\?)?v[=\/][\w-]{11}(?:#t=[\dhms]{1,9})?)/;
+var youtube_re = /^>>>\/?(?:watch\?)?v[=\/]([\w-]{11})(#t=[\dhms]{1,9})?$/;
+
 OS.break_heart = function (frag) {
 	if (frag.safe)
 		return this.callback(frag);
 	var bits = frag.split(/(\S{60})/);
 	for (var i = 0; i < bits.length; i++) {
 		/* anchor refs */
-		var morcels = bits[i].split(/>>(\d+)/);
-		for (var j = 0; j < morcels.length; j++) {
-			if (j % 2)
-				this.tamashii(parseInt(morcels[j]));
+		var morsels = bits[i].split(ref_re);
+		for (var j = 0; j < morsels.length; j++) {
+			var m = morsels[j];
+			if (j % 2) {
+				if (m[0] == '>') {
+					/* This is alright since it's always
+					   a single word */
+					this.callback(safe('<cite>' +
+							escape_html('>>' + m) +
+							'</cite>'));
+				}
+				else
+					this.tamashii(parseInt(m));
+			}
 			else if (i % 2)
-				this.callback(morcels[j] + ' ');
+				this.callback(m + ' ');
 			else
-				this.callback(morcels[j]);
+				this.callback(m);
 		}
 	}
 };
