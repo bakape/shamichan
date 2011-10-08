@@ -514,6 +514,34 @@ function click_shita(event) {
 				).width(dims[1]).height(dims[2]);
 		}
 		event.preventDefault();
+		return;
+	}
+	if (target.filter('cite').length) {
+		var m = target.text().match(youtube_re);
+		var start = 0;
+		if (m[2]) {
+			var t = m[2].match(youtube_time_re);
+			if (t[1])
+				start += parseInt(t[1]) * 3600;
+			if (t[2])
+				start += parseInt(t[2]) * 60;
+			if (t[3])
+				start += parseInt(t[3]);
+		}
+		var url = encodeURI('http://www.youtube.com/v/' + m[1] +
+			'?version=3&autohide=1&showinfo=0&fs=1&' +
+			'modestbranding=1' + (start ? '&start=' + start : ''));
+		var dims = {width: 425, height: 355};
+		var params = {allowScriptAccess: 'always',
+				allowFullScreen: 'true'};
+		var $obj = $('<object></object>').attr(dims);
+		for (var name in params)
+			$obj.append($('<param></param>').attr({name: name,
+					value: params[name]}));
+		var $embed = $('<embed></embed>').attr(params).attr({src: url,
+			type: 'application/x-shockwave-flash'}).attr(dims);
+		$obj.append($embed);
+		target.replaceWith($obj);
 	}
 }
 

@@ -32,6 +32,17 @@ body {
 body > aside {
 	margin: 1em;
 }
+cite {
+	background-color: rgba(255, 255, 255, 0.5);
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	cursor: pointer;
+	display: inline-block;
+	font-style: normal;
+	margin: -2px;
+	padding: 2px;
+}
 del, del em {
 	background-color: black;
 	color: black;
