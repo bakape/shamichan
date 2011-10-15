@@ -136,6 +136,9 @@ exports.check_cookie = function (cookie, check_csrf, callback) {
 function make_expiry() {
 	var expiry = new Date(new Date().getTime()
 			+ config.LOGIN_SESSION_TIME).toUTCString();
+	/* Change it to the expected dash-separated format */
+	var m = expiry.match(/^(\w+,\s+\d+)\s+(\w+)\s+(\d+\s+[\d:]+\s+\w+)$/);
+	return m ? m[1] + '-' + m[2] + '-' + m[3] : expiry;
 }
 
 function make_cookie(key, val, expiry) {
