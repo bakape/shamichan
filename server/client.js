@@ -327,6 +327,7 @@ function PostForm(dest, section) {
 	this.input.css('width', INPUT_MIN_SIZE
 			).attr('maxlength', MAX_POST_CHARS
 			).keydown($.proxy(this, 'on_key')
+			).bind('paste', $.proxy(this, 'on_paste')
 			).keyup($.proxy(function (event) {
 		if (this.input.val().indexOf('\n') >= 0)
 			this.on_key(null);
@@ -428,6 +429,10 @@ PostForm.prototype.on_key = function (event) {
 	input.css('width', size + 'px');
 
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
+};
+
+PostForm.prototype.on_paste = function (event) {
+	setTimeout($.proxy(this, 'on_key'), 0);
 };
 
 PostForm.prototype.upload_error = function (msg) {
