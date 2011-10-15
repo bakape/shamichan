@@ -149,6 +149,11 @@ section p {
 	cursor: inherit !important;
 	text-decoration: none;
 }
+.error {
+	position: fixed;
+	top: 12px;
+	right: 8px;
+}
 article.highlight {
 	background-color: #d6bad0;
 	border-right: 1px solid #ba9dbf;
@@ -169,6 +174,13 @@ article.highlight {
 	border-bottom: 1px solid #eee;
 	padding: 4px 10px;
 	position: absolute;
+}
+#options, #sync {
+	clear: right;
+	color: gray;
+	display: block;
+	float: right;
+	margin-bottom: 2px;
 }
 #sizer {
 	height: auto;
@@ -193,16 +205,4 @@ article.highlight {
 	resize: none;
 	text-wrap: none;
 	vertical-align: top;
-}
-#options, #sync {
-	clear: right;
-	color: gray;
-	display: block;
-	float: right;
-	margin-bottom: 2px;
-}
-.error {
-	position: fixed;
-	top: 12px;
-	right: 8px;
 }
