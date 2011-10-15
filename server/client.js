@@ -411,18 +411,34 @@ PostForm.prototype.on_allocation = function (msg) {
 
 PostForm.prototype.on_key = function (event) {
 	var input = this.input;
+	var val = input.val();
+
+	/* Turn YouTube links into proper refs */
+	var changed = false;
+	while (true) {
+		var m = val.match(youtube_url_re);
+		if (!m)
+			break;
+		val = val.substr(0, m.index) + '>>>/watch?v=' + m[1] + (m[2]
+				|| '') + val.substr(m.index + m[0].length);
+		changed = true;
+	}
+	if (changed)
+		input.val(val);
+
 	if (event && event.which == 13) {
-		if (this.sentAllocRequest || input.val().replace(' ', '')) {
-			this.commit(input.val() + '\n');
+		if (this.sentAllocRequest || val.replace(' ', '')) {
+			this.commit(val + '\n');
 			input.val('');
+			val = '';
 		}
 		if (event.preventDefault)
 			event.preventDefault();
 	}
 	else
-		this.commit_words(event && event.which == 27);
+		this.commit_words(val, event && event.which == 27);
 
-	$sizer.text(input.val());
+	$sizer.text(val);
 	var left = input.offset().left - this.post.offset().left;
 	var size = Math.max($sizer.width() + INPUT_ROOM,
 			INPUT_MIN_SIZE - left);
@@ -529,12 +545,14 @@ function click_shita(event) {
 		var start = 0;
 		if (m[2]) {
 			var t = m[2].match(youtube_time_re);
-			if (t[1])
-				start += parseInt(t[1]) * 3600;
-			if (t[2])
-				start += parseInt(t[2]) * 60;
-			if (t[3])
-				start += parseInt(t[3]);
+			if (t) {
+				if (t[1])
+					start += parseInt(t[1]) * 3600;
+				if (t[2])
+					start += parseInt(t[2]) * 60;
+				if (t[3])
+					start += parseInt(t[3]);
+			}
 		}
 		var url = encodeURI('http://www.youtube.com/v/' + m[1] +
 			'?version=3&autohide=1&showinfo=0&fs=1&' +
@@ -650,8 +668,7 @@ PostForm.prototype.flush_pending = function () {
 	}
 };
 
-PostForm.prototype.commit_words = function (spaceEntered) {
-	var text = this.input.val();
+PostForm.prototype.commit_words = function (text, spaceEntered) {
 	var words = text.trim().split(/ +/);
 	var endsWithSpace = text.length > 0
 			&& text.charAt(text.length-1) == ' ';
