@@ -1,6 +1,7 @@
 var THREAD, BUMP, PAGE, syncs = {};
 var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
+var $sizer = $('<span id="sizer"></span>');
 var options, outOfSync, postForm, preview, previewNum;
 
 var socket = io.connect('/', {
@@ -294,7 +295,7 @@ function PostForm(dest, section) {
 	this.line_buffer = $('<p/>');
 	this.meta = $('<header><a class="emailcancel"><b/> <code/></a>' +
 			' <time/></header>');
-	this.input = $('<textarea name="body" class="trans" rows="1"/>');
+	this.input = $('<textarea name="body" id="trans" rows="1"/>');
 	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
 	this.pending = '';
@@ -323,7 +324,7 @@ function PostForm(dest, section) {
 	$name.change(prop).keypress(prop);
 	$email.change(prop).keypress(prop);
 
-	this.input.attr('cols', INPUT_MIN_SIZE
+	this.input.css('width', INPUT_MIN_SIZE
 			).attr('maxlength', MAX_POST_CHARS
 			).keydown($.proxy(this, 'on_key')
 			).keyup($.proxy(function (event) {
@@ -419,11 +420,13 @@ PostForm.prototype.on_key = function (event) {
 	}
 	else
 		this.commit_words(event && event.which == 27);
-	var cur_size = input.attr('cols');
-	var right_size = INPUT_MIN_SIZE + Math.round(input.val().length * 2);
-	if (cur_size != right_size) {
-		input.attr('cols', (cur_size + right_size) / 2);
-	}
+
+	$sizer.text(input.val());
+	var left = input.offset().left - this.post.offset().left;
+	var size = Math.max($sizer.width() + INPUT_ROOM,
+			INPUT_MIN_SIZE - left);
+	input.css('width', size + 'px');
+
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 };
 
@@ -894,6 +897,7 @@ $(function () {
 		b(options[id]);
 	}
 	$opts.hide().appendTo(document.body);
+	$(document.body).append($sizer);
 	$('<a id="options">Options</a>').click(toggle_opts
 			).insertAfter('#sync');
 	delete toggles;

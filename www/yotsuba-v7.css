@@ -170,17 +170,26 @@ article.highlight {
 	padding: 4px 10px;
 	position: absolute;
 }
-.trans {
-	background-color: transparent;
+#sizer {
+	height: auto;
+	margin: 0;
+	position: absolute;
+	width: auto;
+	visibility: hidden;
+}
+#sizer, #trans {
 	border: 0;
-	color: #444;
-	display: inline;
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
+	padding: 0;
+}
+#trans {
+	background-color: transparent;
+	color: #444;
+	display: inline;
 	margin: 0 0 -3px 0;
 	outline: none;
 	overflow-y: hidden;
-	padding: 0;
 	resize: none;
 	text-wrap: none;
 	vertical-align: top;
