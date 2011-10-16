@@ -83,7 +83,7 @@ var oneeSama = new OneeSama(function (num) {
 	else
 		this.callback('>>' + num);
 });
-oneeSama.media = MEDIA;
+oneeSama.media = MEDIA_URL;
 oneeSama.full = THREAD;
 
 function inject(frag) {
@@ -125,7 +125,7 @@ function shift_replies(section) {
 		return;
 	var shown = section.children('article[id]:not(:has(form))');
 	var rem = shown.length;
-	if (rem < ABBREV)
+	if (rem < ABBREVIATED_REPLIES)
 		return;
 	var $stat, omit = 0, img = 0;
 	var info = section_abbrev(section);
@@ -140,7 +140,7 @@ function shift_replies(section) {
 	}
 	for (var i = 0; i < shown.length; i++) {
 		var cull = $(shown[i]);
-		if (rem-- < ABBREV)
+		if (rem-- < ABBREVIATED_REPLIES)
 			break;
 		if (cull.has('figure').length)
 			img++;
@@ -155,7 +155,7 @@ function spill_page() {
 		return;
 	/* Ugh, this could be smarter. */
 	var ss = $('body > section[id]:visible');
-	for (i = PAGIN; i < ss.length; i++)
+	for (i = THREADS_PER_PAGE; i < ss.length; i++)
 		$(ss[i]).prev('hr').andSelf().hide();
 
 }

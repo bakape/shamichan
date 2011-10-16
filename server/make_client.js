@@ -5,6 +5,8 @@ var async = require('async'),
     util = require('util');
 
 var defines = {};
+for (var k in config)
+	defines[k] = JSON.stringify(config[k]);
 var files = [];
 for (var i = 2; i < process.argv.length; i++) {
 	var arg = process.argv[i];
