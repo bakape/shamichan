@@ -264,7 +264,7 @@ Y.insert_post = function (msg, body, ip, callback) {
 		view.op = op;
 
 	var key = (op ? 'post:' : 'thread:') + num;
-	var bump = !op || common.is_sage(view.email);
+	var bump = !op || !common.is_sage(view.email);
 	var m = r.multi();
 	if (bump)
 		m.incr(tag_key + ':bumpctr');
