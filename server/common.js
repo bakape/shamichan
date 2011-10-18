@@ -119,7 +119,7 @@ OS.break_heart = function (frag) {
 							'</cite>'));
 				}
 				else
-					this.tamashii(parseInt(m));
+					this.tamashii(parseInt(m, 10));
 			}
 			else if (i % 2)
 				this.callback(m + ' ');

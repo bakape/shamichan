@@ -491,7 +491,7 @@ function preview_miru(event, num) {
 function hover_shita(event) {
 	if (event.target.tagName.match(/^A$/i)) {
 		var m = $(event.target).text().match(/^>>(\d+)$/);
-		if (m && preview_miru(event, parseInt(m[1])))
+		if (m && preview_miru(event, parseInt(m[1], 10)))
 			return;
 	}
 	if (preview) {
@@ -508,7 +508,7 @@ function click_shita(event) {
 		var q = href.match(/#q(\d+)/);
 		if (q) {
 			event.preventDefault();
-			add_ref(parseInt(q[1]));
+			add_ref(parseInt(q[1], 10));
 			return;
 		}
 		if (THREAD) {
@@ -548,11 +548,11 @@ function click_shita(event) {
 			var t = m[2].match(youtube_time_re);
 			if (t) {
 				if (t[1])
-					start += parseInt(t[1]) * 3600;
+					start += parseInt(t[1], 10) * 3600;
 				if (t[2])
-					start += parseInt(t[2]) * 60;
+					start += parseInt(t[2], 10) * 60;
 				if (t[3])
-					start += parseInt(t[3]);
+					start += parseInt(t[3], 10);
 			}
 		}
 		var url = encodeURI('http://www.youtube.com/v/' + m[1] +
@@ -802,7 +802,7 @@ dispatcher[SYNCHRONIZE] = function (msg) {
 
 	var m = window.location.hash.match(/^#q(\d+)$/);
 	if (m) {
-		var id = parseInt(m[1]);
+		var id = parseInt(m[1], 10);
 		if ($('#' + id).hasClass('highlight')) {
 			window.location.hash = '#' + id;
 			add_ref(id);

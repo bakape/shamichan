@@ -53,7 +53,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	for (var k in syncs) {
 		if (!k.match(/^\d+$/))
 			return false;
-		k = parseInt(k);
+		k = parseInt(k, 10);
 		if (!k || typeof syncs[k] != 'number')
 			return false;
 		if (db.OPs[k] != k) {
@@ -388,7 +388,7 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 			+ '<img alt="{{num}}" title="Thread {{num}}" src="'
 			+ config.MEDIA_URL + 'thumb/{{thumb}}" width=50 '
 			+ 'height=50></a>\n');
-	var limit = parseInt(req.query.limit) || 0;
+	var limit = parseInt(req.query.limit, 10) || 0;
 	var ctr = 0;
 
 	resp.writeHead(200);
@@ -414,7 +414,7 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 route_post_auth(/^\/admin$/, function (req, resp) {
 
 	var threads = req.body.threads.split(',').map(function (x) {
-		return parseInt(x);
+		return parseInt(x, 10);
 	}).filter(function (x) {
 		return !isNaN(x);
 	});
@@ -490,7 +490,9 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	if (params[1] != 'moe') // TEMP
 		return render_404(resp);
 	var yaku = new db.Yakusoku();
-	var page = parseInt(params[2]);
+	var page = parseInt(params[2], 10);
+	if (page > 0 && params[2][0] == '0') /* leading zeroes? */
+		return redirect(resp, 'page' + page);
 	yaku.get_tag(page);
 	yaku.on('nomatch', render_404.bind(null, resp));
 	var nav_html;
@@ -523,9 +525,11 @@ route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
 route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	if (params[1] != 'moe') // TEMP
 		return render_404(resp);
-	var num = parseInt(params[2]);
+	var num = parseInt(params[2], 10);
 	if (!num)
 		return render_404(resp);
+	else if (params[2][0] == '0')
+		return redirect(resp, '' + num);
 	var op = db.OPs[num];
 	if (typeof op == 'undefined')
 		return render_404(resp);
