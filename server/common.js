@@ -80,6 +80,15 @@ function is_empty(o) {
 }
 exports.is_empty = is_empty;
 
+function is_noko(email) {
+	return email && email.indexOf('@') == -1 && email.match(/noko/i);
+}
+exports.is_noko = is_noko;
+function is_sage(email) {
+	return email && email.indexOf('@') == -1 && email.match(/sage/i);
+}
+exports.is_sage = is_sage;
+
 var OneeSama = function (t) {
 	this.tamashii = t;
 };

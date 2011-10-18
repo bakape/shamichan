@@ -38,8 +38,9 @@ function save_ident() {
 				localStorage.setItem(key, val);
 		}
 		save('name', $name.val());
-		if ($email.val() != 'sage')
-			save('email', $email.val());
+		var email = $email.val();
+		if (is_noko(email) || !is_sage(email))
+			save('email', email);
 	}
 	catch (e) {}
 }
@@ -177,7 +178,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		shift_replies(section);
 		section.children('blockquote,.omit,form,article[id]:last'
 				).last().after(post);
-		if (!BUMP || msg.email == 'sage') {
+		if (!BUMP || is_sage(msg.email)) {
 			bump = false;
 		}
 		else {
@@ -352,7 +353,7 @@ PostForm.prototype.propagate_fields = function () {
 	meta.find('b').text(parsed[0] || ANON);
 	meta.find('code').text((parsed[1] || parsed[2]) && '!?');
 	var email = $email.val().trim();
-	if (email == 'noko')
+	if (is_noko(email))
 		email = '';
 	var tag = meta.children('a:first');
 	if (email)

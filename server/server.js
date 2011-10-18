@@ -711,7 +711,7 @@ function allocate_post(msg, image, client, callback) {
 		if (typeof msg.email != 'string')
 			return callback('Invalid email.');
 		post.email = msg.email.trim().substr(0, 320);
-		if (post.email == 'noko')
+		if (common.is_noko(post.email))
 			delete post.email;
 	}
 	if (image)
