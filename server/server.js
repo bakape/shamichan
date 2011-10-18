@@ -181,21 +181,47 @@ function image_status(status) {
 	this.client.send([common.IMAGE_STATUS, status]);
 }
 
-function make_nav_html(thread_count, cur_page) {
-	var bits = ['<nav>'];
-	if (cur_page >= 0)
+function page_nav(thread_count, cur_page) {
+	var page_count = Math.ceil(thread_count / config.THREADS_PER_PAGE);
+	page_count = Math.max(page_count, 1);
+	var info = {pages: page_count, threads: thread_count,
+		cur_page: cur_page};
+	var next = Math.max(cur_page, 0) + 1;
+	if (next < page_count)
+		info.next_page = 'page' + next;
+	var prev = cur_page - 1;
+	if (prev >= 0)
+		info.prev_page = 'page' + prev;
+	return info;
+}
+
+function make_board_meta(info) {
+	var bits = [];
+	if (info.cur_page >= 0)
+		bits.push(['index', 'live']);
+	if (info.prev_page)
+		bits.push(['prev', info.prev_page]);
+	if (info.next_page)
+		bits.push(['next', info.next_page]);
+	return bits.map(function (p) {
+		return '\t<link rel="'+p[0]+'" href="'+p[1]+'">\n';
+	}).join('');
+}
+
+function make_nav_html(info) {
+	var bits = ['<nav>'], cur = info.cur_page;
+	if (cur >= 0)
 		bits.push('<a href="live">live</a>');
 	else
 		bits.push('<b>live</b>');
-	var page_count = Math.ceil(thread_count / config.THREADS_PER_PAGE);
-	if (page_count < 1)
-		page_count = 1;
-	for (var i = 0; i < page_count; i++) {
-		if (i != cur_page)
+	for (var i = 0; i < info.pages; i++) {
+		if (i != cur)
 			bits.push('<a href="page' + i + '">' + i + '</a>');
 		else
 			bits.push('<b>' + i + '</b>');
 	}
+	if (info.next_page)
+		bits.push(' <input type="button" value="Next">'); // TODO
 	bits.push('</nav>');
 	return bits.join('');
 }
@@ -461,11 +487,14 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	yaku.get_tag(0);
 	var nav_html;
 	yaku.on('begin', function (thread_count) {
+		var nav = page_nav(thread_count, -1);
 		resp.writeHead(200, noCacheHeaders);
 		resp.write(indexTmpl[0]);
-		resp.write(config.TITLE);
+		resp.write(make_board_meta(nav));
 		resp.write(indexTmpl[1]);
-		nav_html = make_nav_html(thread_count, -1);
+		resp.write(config.TITLE);
+		resp.write(indexTmpl[2]);
+		nav_html = make_nav_html(nav);
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
@@ -497,11 +526,14 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	yaku.on('nomatch', render_404.bind(null, resp));
 	var nav_html;
 	yaku.on('begin', function (thread_count) {
+		var nav = page_nav(thread_count, page);
 		resp.writeHead(200, noCacheHeaders);
 		resp.write(indexTmpl[0]);
-		resp.write(config.TITLE);
+		resp.write(make_board_meta(nav));
 		resp.write(indexTmpl[1]);
-		nav_html = make_nav_html(thread_count, page);
+		resp.write(config.TITLE);
+		resp.write(indexTmpl[2]);
+		nav_html = make_nav_html(nav);
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
@@ -543,8 +575,10 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	reader.on('begin', function () {
 		resp.writeHead(200, noCacheHeaders);
 		resp.write(indexTmpl[0]);
-		resp.write('Thread #' + op);
+		resp.write('\t<link rel="index" href="live">\n');
 		resp.write(indexTmpl[1]);
+		resp.write('Thread #' + op);
+		resp.write(indexTmpl[2]);
 		resp.write('<hr>\n');
 	});
 	write_thread_html(reader, resp, true);
@@ -567,7 +601,7 @@ route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
 });
 
 function write_page_end(req, resp) {
-	resp.write(indexTmpl[2]);
+	resp.write(indexTmpl[3]);
 	if (req.auth)
 		resp.write('<script src="../admin.js"></script>\n');
 	resp.end();

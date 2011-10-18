@@ -10,7 +10,7 @@ var socket = io.connect('/', {
 });
 
 (function () {
-	var p = window.location.pathname;
+	var p = location.pathname;
 	var t = p.match(/\/(\d+)$/);
 	THREAD = t ? parseInt(t[1]) : 0;
 	BUMP = !!p.match(/\/live$/);
@@ -585,6 +585,10 @@ function mouseup_shita(event) {
 	}
 }
 
+function tsugi() {
+	location.href = $('link[rel=next]').prop('href');
+}
+
 function add_ref(num) {
 	mpmetrics.track('add_ref', {num: num});
 	/* Make the post form if none exists yet */
@@ -879,6 +883,7 @@ $(function () {
 		$('#' + m[1]).addClass('highlight');
 
 	$(document).click(click_shita);
+	$('nav input').click(tsugi);
 
 	var ts = $('time'), ti = 0;
 	function make_local() {
