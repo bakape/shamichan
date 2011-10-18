@@ -204,5 +204,5 @@ article.highlight {
 	overflow-y: hidden;
 	resize: none;
 	text-wrap: none;
-	vertical-align: top;
+	vertical-align: baseline;
 }
