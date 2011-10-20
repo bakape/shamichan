@@ -1,4 +1,3 @@
-* Use EventEmitter instead of convoluted promise thing
 * Update `syncs` in client when on /live
 * Actually tell user when a particular thread failed to sync
 * Copy thread:* messages to SUBS.live instead of using another redis

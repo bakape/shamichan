@@ -24,7 +24,6 @@ function Subscription(thread) {
 	if (thread == 'live')
 		this.live = true;
 	this.subscription_callbacks = [];
-	this.promises = {};
 
 	this.k = redis_client();
 	this.k.on('error', this.on_sub_error.bind(this));
@@ -46,20 +45,6 @@ S.when_ready = function (cb) {
 		this.subscription_callbacks.push(cb);
 	else
 		cb(null);
-};
-
-S.promise_to = function (yaku) {
-	this.promises[yaku.id] = yaku;
-};
-
-S.break_promise = function (yaku) {
-	delete this.promises[yaku.id];
-	for (var id in this.promises)
-		if (this.promises.hasOwnProperty(id))
-			return;
-	/* Otherwise, this subscriptions' out of promises */
-	/* Worthless subscriptions like this should just die already */
-	this.seppuku();
 };
 
 S.on_sub = function () {
@@ -85,13 +70,12 @@ S.on_message = function (pat, chan, msg) {
 	var kind = parseInt(info[1]), num = parseInt(info[2]);
 	/* Can't use this.thread since this.live might be true */
 	var thread = parseInt(chan.match(/^thread:(\d+)$/)[1]);
-	for (var id in this.promises)
-		this.promises[id].on_update(thread, num, kind, msg);
+	this.emit('update', thread, num, kind, msg);
 };
 
 S.on_sub_error = function (err) {
 	console.log("Subscription error:", err.stack || err); /* TEMP? */
-	this.seppuku();
+	this.commit_sudoku();
 	this.subscription_callbacks.forEach(function (cb) {
 		cb(err);
 	});
@@ -99,13 +83,11 @@ S.on_sub_error = function (err) {
 };
 
 S.sink_sub = function (err) {
-	console.error('Sub', this.thread, 'sinking:', err);
-	this.seppuku();
-	for (var id in this.promises)
-		this.promises[id].on_sink(this.thread, 'Thread unavailable.');
+	this.emit('error', this.thread, err);
+	this.commit_sudoku();
 };
 
-S.seppuku = function () {
+S.commit_sudoku = function () {
 	var k = this.k;
 	k.removeAllListeners('error');
 	k.removeAllListeners(this.live ? 'pmessage' : 'message');
@@ -113,6 +95,17 @@ S.seppuku = function () {
 	k.quit();
 	if (SUBS[this.thread] === this)
 		delete SUBS[this.thread];
+	this.removeAllListeners('update');
+	this.removeAllListeners('error');
+};
+
+S.has_no_listeners = function () {
+	/* Possibly idle out after a while */
+	var self = this;
+	setTimeout(function () {
+		if (self.listeners('update').length == 0)
+			self.commit_sudoku();
+	}, 30 * 1000);
 };
 
 /* OP CACHE */
@@ -218,7 +211,8 @@ Y.kiku = function (threads, on_update, on_sink, callback) {
 			sub = new Subscription(thread);
 			SUBS[thread] = sub;
 		}
-		sub.promise_to(self);
+		sub.on('update', on_update);
+		sub.on('error', on_sink);
 		sub.when_ready(cb);
 	}, callback);
 };
@@ -226,8 +220,12 @@ Y.kiku = function (threads, on_update, on_sink, callback) {
 Y.kikanai = function (threads) {
 	for (var thread in threads) {
 		var sub = SUBS[thread];
-		if (sub)
-			sub.break_promise(this);
+		if (sub) {
+			sub.removeListener('update', this.on_update);
+			sub.removeListener('error', this.on_sink);
+			if (sub.listeners('update').length == 0)
+				sub.has_no_listeners();
+		}
 	}
 };
 
