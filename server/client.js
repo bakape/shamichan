@@ -325,14 +325,9 @@ function PostForm(dest, section) {
 	$name.change(prop).keypress(prop);
 	$email.change(prop).keypress(prop);
 
-	this.input.css('width', INPUT_MIN_SIZE
-			).attr('maxlength', MAX_POST_CHARS
-			).keydown($.proxy(this, 'on_key')
+	this.input.keydown($.proxy(this, 'on_key')
 			).bind('paste', $.proxy(this, 'on_paste')
-			).keyup($.proxy(function (event) {
-		if (this.input.val().indexOf('\n') >= 0)
-			this.on_key(null);
-	}, this));
+			).keyup($.proxy(this, 'on_key_up'));
 
 	if (!this.op)
 		this.blockquote.hide();
@@ -344,6 +339,8 @@ function PostForm(dest, section) {
 		this.on_allocation(msg[0]);
 	}, this);
 	$('aside').remove();
+
+	this.resize_input();
 	this.input.focus();
 }
 
@@ -439,13 +436,25 @@ PostForm.prototype.on_key = function (event) {
 	else
 		this.commit_words(val, event && event.which == 27);
 
+	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
+	this.resize_input(val);
+};
+
+PostForm.prototype.on_key_up = function (event) {
+	if (this.input.val().indexOf('\n') >= 0)
+		this.on_key(null);
+};
+
+PostForm.prototype.resize_input = function (val) {
+	var input = this.input;
+	if (typeof val != 'string')
+		val = input.val();
+
 	$sizer.text(val);
 	var left = input.offset().left - this.post.offset().left;
-	var size = Math.max($sizer.width() + INPUT_ROOM,
-			INPUT_MIN_SIZE - left);
+	var size = $sizer.width() + INPUT_ROOM;
+	size = Math.max(size, INPUT_MIN_SIZE - left);
 	input.css('width', size + 'px');
-
-	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 };
 
 PostForm.prototype.on_paste = function (event) {
@@ -469,6 +478,7 @@ PostForm.prototype.upload_complete = function (info) {
 	this.flush_pending();
 	this.uploading = false;
 	this.update_buttons();
+	this.resize_input();
 };
 
 function preview_miru(event, num) {
