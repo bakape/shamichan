@@ -32,6 +32,15 @@ function korosu() {
 	}
 }
 
+function make_alloc_admin(text) {
+	var msg = this.make_alloc_vanilla(text);
+	if ($('#admin').attr('checked'))
+		msg.auth = 'Admin';
+	if (msg.auth)
+		msg.cookie = document.cookie;
+	return msg;
+}
+
 $(document).click(function (event) {
 	var $box = $(event.target);
 	if ($box.attr('type') == 'checkbox' && $box.parent('header').length)
@@ -41,6 +50,14 @@ $(document).click(function (event) {
 $(document).ready(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
 	$('<input type=checkbox>').insertBefore('header>:first-child');
+	$name.after(' <input type=checkbox id=admin>' +
+			'<label for=admin>Admin</label>');
+
+	/* Dumb hack, injecting auth. Should inherit or something? */
+	var pfp = PostForm.prototype;
+	pfp.make_alloc_vanilla = pfp.make_alloc_request;
+	pfp.make_alloc_request = make_alloc_admin;
+
 	oneeSama.check = function (target) {
 		$('<input type=checkbox>').insertBefore(target.find(
 				'>header>:first-child'));

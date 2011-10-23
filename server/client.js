@@ -294,7 +294,7 @@ function PostForm(dest, section) {
 
 	this.buffer = $('<p/>');
 	this.line_buffer = $('<p/>');
-	this.meta = $('<header><a class="emailcancel"><b/> <code/></a>' +
+	this.meta = $('<header><a class="emailcancel"><b/></a>' +
 			' <time/></header>');
 	this.input = $('<textarea name="body" id="trans" rows="1"/>');
 	this.submit = $('<input type="button" value="Done"/>');
@@ -322,8 +322,8 @@ function PostForm(dest, section) {
 
 	var prop = $.proxy(this, 'propagate_fields');
 	prop();
-	$name.change(prop).keypress(prop);
-	$email.change(prop).keypress(prop);
+	$name.change(prop).keyup(prop);
+	$email.change(prop).keyup(prop);
 
 	this.input.keydown($.proxy(this, 'on_key')
 			).bind('paste', $.proxy(this, 'on_paste')
@@ -347,8 +347,10 @@ function PostForm(dest, section) {
 PostForm.prototype.propagate_fields = function () {
 	var parsed = parse_name($name.val().trim());
 	var meta = this.meta;
-	meta.find('b').text(parsed[0] || ANON);
-	meta.find('code').text((parsed[1] || parsed[2]) && '!?');
+	var $b = meta.find('b');
+	$b.text(parsed[0] || ANON);
+	if (parsed[1] || parsed[2])
+		$b.append(' <code>!?</code>');
 	var email = $email.val().trim();
 	if (is_noko(email))
 		email = '';
@@ -367,8 +369,10 @@ PostForm.prototype.on_allocation = function (msg) {
 	$email.unbind();
 	save_ident();
 	var meta = this.meta;
-	meta.find('b').text(msg.name || ANON);
-	meta.find('code').text(msg.trip);
+	var $b = meta.find('b');
+	$b.text(msg.name || ANON);
+	if (msg.trip)
+		$b.append(' <code>' + escape_html(msg.trip) + '</code>');
 	var tag = meta.children('a:first');
 	if (msg.email)
 		tag.attr('href', 'mailto:' + msg.email).attr('class', 'email');

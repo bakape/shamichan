@@ -258,6 +258,8 @@ Y.insert_post = function (msg, body, ip, callback) {
 		view.trip = msg.trip;
 	if (msg.email)
 		view.email = msg.email;
+	if (msg.auth)
+		view.auth = msg.auth;
 	if (op)
 		view.op = op;
 

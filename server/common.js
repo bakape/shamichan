@@ -263,11 +263,15 @@ function expand_html(num) {
 }
 
 OS.monogatari = function (data) {
-	var header = [safe('<b>'), data.name || DEFINES.ANON];
+	var auth = data.auth;
+	var header = auth ? [safe('<b class="'),auth.toLowerCase(),safe('">')]
+			: [safe('<b>')];
+	header.push(data.name || DEFINES.ANON);
 	if (data.trip)
-		header.push(safe('</b> <code>' + data.trip + '</code>'));
-	else
-		header.push(safe('</b>'));
+		header.push(safe(' <code>' + data.trip + '</code>'));
+	if (auth)
+		header.push(' ## ' + auth);
+	header.push(safe('</b>'));
 	if (data.email) {
 		header.unshift(safe('<a class="email" href="mailto:'
 				+ encodeURI(data.email) + '">'));

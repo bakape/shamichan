@@ -10,6 +10,9 @@ a:hover, blockquote a {
 	color: #d00 !important;
 	cursor: pointer;
 }
+b.admin {
+	color: red;
+}
 abbr {
 	text-decoration: none;
 }
@@ -102,8 +105,8 @@ header b {
 	font-weight: bold;
 }
 header code {
-	color: #228854;
 	font-family: inherit;
+	font-weight: normal;
 }
 hr {
 	border: none;

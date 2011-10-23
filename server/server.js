@@ -756,7 +756,23 @@ function allocate_post(msg, image, client, callback) {
 		post.image = image;
 	post.state = [0, 0];
 
-	client.db.reserve_post(post.op, got_reservation);
+	if (typeof msg.auth != 'undefined') {
+		if (!twitter.check_cookie(msg.cookie, true, got_auth))
+			return callback('Bad cookie.');
+	}
+	else
+		got_auth(null, null);
+
+	function got_auth(err, session) {
+		if (err)
+			return callback('Bad auth.');
+		if (msg.auth) {
+			if (msg.auth != 'Admin')
+				return callback('Bad auth.');
+			post.auth = msg.auth;
+		}
+		client.db.reserve_post(post.op, got_reservation);
+	}
 	function got_reservation(err, num) {
 		if (err)
 			return callback("Couldn't reserve a post.");
