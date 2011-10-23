@@ -43,7 +43,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (msg.length != 2)
 		return false;
 	var syncs = msg[0], live = msg[1];
-	if (typeof syncs != 'object')
+	if (!syncs || typeof syncs != 'object')
 		return false;
 	if (client.synced) {
 		console.error("warning: Client tried to sync twice");
@@ -563,7 +563,7 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	else if (params[2][0] == '0')
 		return redirect(resp, '' + num);
 	var op = db.OPs[num];
-	if (typeof op == 'undefined')
+	if (!op)
 		return render_404(resp);
 	if (op != num)
 		return redirect_thread(resp, num, op);
@@ -695,7 +695,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (msg.length != 1)
 		return false;
 	msg = msg[0];
-	if (typeof msg != 'object' || !msg.op)
+	if (!msg || typeof msg != 'object' || !msg.op)
 		return false;
 	if (client.post)
 		return update_post(msg.frag, client);

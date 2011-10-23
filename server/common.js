@@ -31,7 +31,7 @@ exports.escape_html = escape_html;
 
 function escape_fragment(frag) {
 	var t = typeof(frag);
-	if (t == 'object' && typeof(frag.safe) == 'string')
+	if (t == 'object' && frag && typeof(frag.safe) == 'string')
 		return frag.safe;
 	else if (t == 'string')
 		return escape_html(frag);
