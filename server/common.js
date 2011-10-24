@@ -323,9 +323,10 @@ exports.parse_name = function (name) {
 		name = name.substr(0, hash);
 		hash = tripcode.indexOf('#');
 		if (hash >= 0) {
-			secure = tripcode.substr(hash+1);
+			secure = escape_html(tripcode.substr(hash+1));
 			tripcode = tripcode.substr(0, hash);
 		}
+		tripcode = escape_html(tripcode);
 	}
 	return [name.trim().substr(0, 100), tripcode.substr(0, 128),
 			secure.substr(0, 128)];
