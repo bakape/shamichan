@@ -93,7 +93,7 @@ static int setup_conv() {
 
 typedef void (*trip_f)(char *, size_t, char *);
 
-static void with_SJIS(String::AsciiValue &trip, trip_f func, char *ret) {
+static void with_SJIS(String::Utf8Value &trip, trip_f func, char *ret) {
 	char *src = *trip;
 	if (!src)
 		return;
@@ -119,7 +119,7 @@ static void with_SJIS(String::AsciiValue &trip, trip_f func, char *ret) {
 static Handle<Value> hash_callback(Arguments const &args) {
 	if (args.Length() != 2)
 		return Null();
-	String::AsciiValue trip(args[0]->ToString()),
+	String::Utf8Value trip(args[0]->ToString()),
 			secure(args[1]->ToString());
 	char digest[24];
 	digest[0] = 0;
