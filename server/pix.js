@@ -81,7 +81,12 @@ IU.parse_form = function (err, fields, files) {
 	else if (!client.post)
 		return this.failure('Missing alloc.');
 	image.imgnm = image.filename.substr(0, 256);
-	client.db.check_throttle(client.ip, this.process.bind(this));
+
+	/* Only throttle new threads for now */
+	if (client.post || (this.alloc && this.alloc.op))
+		this.process(null);
+	else
+		client.db.check_throttle(client.ip, this.process.bind(this));
 }
 
 IU.process = function (err) {
