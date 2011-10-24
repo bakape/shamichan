@@ -12,7 +12,9 @@ function get_thumb_specs(w, h, pinky) {
 	var QUALITY = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
-	return {dims: [Math.round(w/r), Math.round(h/r)], quality: QUALITY};
+	var bg = pinky ? '#d6daf0' : '#eef2ff';
+	return {dims: [Math.round(w/r), Math.round(h/r)], quality: QUALITY,
+			bg_color: bg};
 }
 
 exports.ImageUpload = function (clients, allocate_post, status) {
@@ -119,7 +121,7 @@ IU.process = function (err) {
 		var specs = get_thumb_specs(w, h, pinky);
 		image.dims = [w, h].concat(specs.dims);
 		self.resize_image(tagged_path, image.ext, image.thumb_path,
-				specs.dims, specs.quality,
+				specs.dims, specs.quality, specs.bg_color,
 	function () {
 		self.status('Publishing...');
 		var time = new Date().getTime();
@@ -195,7 +197,7 @@ exports.bury_image = function (src, thumb, callback) {
 	}
 };
 
-IU.resize_image = function (src, ext, dest, dims, quality, callback) {
+IU.resize_image = function (src, ext, dest, dims, qual, bg, callback) {
 	var self = this;
 	var args = [];
 	if (ext == '.jpg')
@@ -204,8 +206,8 @@ IU.resize_image = function (src, ext, dest, dims, quality, callback) {
 	dims = dims[0] + 'x' + dims[1];
 	args.push(src + '[0]', '-gamma', '0.454545', '-filter', 'box',
 			'-resize', dims + '!', '-gamma', '2.2', '-strip',
-			'-background', 'white', '-mosaic', '+matte',
-			'-quality', ''+quality, 'jpg:' + dest);
+			'-background', bg, '-mosaic', '+matte',
+			'-quality', ''+qual, 'jpg:' + dest);
 	im.convert(args, function (err, stdout, stderr) {
 		if (err) {
 			console.error(stderr);
