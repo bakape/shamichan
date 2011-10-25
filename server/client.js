@@ -411,6 +411,18 @@ PostForm.prototype.on_allocation = function (msg) {
 	}
 };
 
+function find_time_param(params) {
+	if (!params || params.indexOf('t=') < 0)
+		return false;
+	params = params.split('&');
+	for (var i = 0; i < params.length; i++) {
+		var pair = '#' + params[i];
+		if (pair.match(youtube_time_re))
+			return pair;
+	}
+	return false;
+}
+
 PostForm.prototype.on_key = function (event) {
 	var input = this.input;
 	var val = input.val();
@@ -421,8 +433,10 @@ PostForm.prototype.on_key = function (event) {
 		var m = val.match(youtube_url_re);
 		if (!m)
 			break;
-		val = val.substr(0, m.index) + '>>>/watch?v=' + m[1] + (m[2]
-				|| '') + val.substr(m.index + m[0].length);
+		var t = m[4] || '';
+		t = find_time_param(m[3]) || find_time_param(m[1]) || t;
+		val = val.substr(0, m.index) + '>>>/watch?v=' + m[2] + t
+				+ val.substr(m.index + m[0].length);
 		changed = true;
 	}
 	if (changed)

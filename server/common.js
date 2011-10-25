@@ -98,8 +98,8 @@ var OS = OneeSama.prototype;
 /* internal refs and youtube videos */
 var ref_re = />>(\d+|>\/?(?:watch\?)?v[=\/][\w-]{11}(?:#t=[\dhms]{1,9})?)/;
 var youtube_re = /^>>>\/?(?:watch\?)?v[=\/]([\w-]{11})(#t=[\dhms]{1,9})?$/;
-var youtube_time_re = /^#t=(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/;
-var youtube_url_re = /(?:>>>*?)?(?:http:\/\/)?(?:www\.)?youtube\.com\/watch\?(?:[^\s#&=]+=[^\s#&]*&)*?v=([\w-]{11})(?:&[^\s#&=]+=[^\s#&]*)*(#t=[\dhms]{1,9})?/;
+var youtube_time_re = /^#t=(?:(\d\d?)h)?(?:(\d\d?)m)?(?:(\d\d?)s)?$/;
+var youtube_url_re = /(?:>>>*?)?(?:http:\/\/)?(?:www\.)?youtube\.com\/watch\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/;
 
 OS.break_heart = function (frag) {
 	if (frag.safe)
