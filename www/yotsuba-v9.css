@@ -11,7 +11,7 @@ a:hover, blockquote a {
 	cursor: pointer;
 }
 b.admin {
-	color: red;
+	color: #f00000;
 }
 abbr {
 	text-decoration: none;
