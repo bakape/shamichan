@@ -496,6 +496,12 @@ PostForm.prototype.upload_complete = function (info) {
 	this.flush_pending();
 	this.uploading = false;
 	this.update_buttons();
+	/* Stop obnoxious wrap-around-image behaviour */
+	this.blockquote.css({
+		'margin-left': this.post.find('img').css('margin-right'),
+		'padding-left': info.dims[2] + 'px'
+	});
+
 	this.resize_input();
 };
 
@@ -729,6 +735,7 @@ PostForm.prototype.finish = function () {
 		this.imouto.fragment(this.line_buffer.text());
 		this.buffer.replaceWith(this.buffer.contents());
 		this.line_buffer.remove();
+		this.blockquote.css({'margin-left': '', 'padding-left': ''});
 		send([FINISH_POST]);
 		this.clean_up(false);
 	}
