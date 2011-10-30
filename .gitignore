@@ -8,6 +8,6 @@ dead/thumb/*
 server/builder
 server/config.js
 server/jsmin
-www/js/client-*.js
+www/js/client*.js
 www/src/*
 www/thumb/*

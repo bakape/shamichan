@@ -1,6 +1,10 @@
 CLIENT_SRC := $(shell node server.js --show-config CLIENT_DEPS)
-CLIENT_JS := ../www/js/client-$(shell node server.js --client-version).js
 DEBUG := $(shell node server.js --show-config DEBUG)
+ifeq ($(DEBUG),true)
+CLIENT_JS := ../www/js/client.debug.js
+else
+CLIENT_JS := ../www/js/client-$(shell node server.js --client-version).js
+endif
 
 all: tripcode.node client
 
@@ -14,9 +18,6 @@ tripcode.node: .build tripcode.cc
 .build: wscript
 	node-waf configure
 
-ifeq ($(DEBUG),true)
-CLIENT_JS := $(CLIENT_JS:%.js=%.debug.js)
-endif
 $(CLIENT_JS): $(CLIENT_SRC) jsmin
 	node make_client.js $(CLIENT_SRC) > $@
 
@@ -25,4 +26,4 @@ client: $(CLIENT_JS)
 .PHONY: all client clean
 
 clean:
-	rm -rf -- .build jsmin tripcode.node ../www/js/client-*.js
+	rm -rf -- .build jsmin tripcode.node ../www/js/client{.,-}*.js

@@ -972,8 +972,10 @@ else {
 		if (err)
 			throw err;
 		tripcode = require('./tripcode');
-		config.CLIENT_JS = 'client-' + version + (
-				config.DEBUG ? '.debug.js' : '.js');
+		if (config.DEBUG)
+			version = 'debug';
+		config.CLIENT_JS = 'client' + (config.DEBUG ? '.debug.js'
+				: '-' + version + '.js');
 		indexTmpl = _.template(fs.readFileSync('index.html', 'UTF-8'),
 				config).split(/\$[A-Z]+/);
 		filterTmpl = _.template(fs.readFileSync('filter.html', 'UTF-8'),
