@@ -99,8 +99,11 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			});
 		}
 
-		logs.push([common.SYNCHRONIZE, dead_threads]);
-		client.socket.send(JSON.stringify(logs));
+		var sync = '' + common.SYNCHRONIZE;
+		if (dead_threads.length)
+			sync += ',' + JSON.stringify(dead_threads);
+		logs.push(sync);
+		client.socket.send('[[' + logs.join('],[') + ']]');
 		client.synced = true;
 	}
 	return true;

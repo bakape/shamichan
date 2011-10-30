@@ -835,7 +835,7 @@ function socket_miru(setup) {
 }
 
 dispatcher[SYNCHRONIZE] = function (msg) {
-	var dead_threads = msg[0]; /* TODO */
+	var dead_threads = msg.length ? msg[0] : []; /* TODO */
 	sync_status('Synced.', false);
 	insert_pbs();
 
