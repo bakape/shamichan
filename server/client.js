@@ -2,6 +2,7 @@ var THREAD, BUMP, PAGE, syncs = {};
 var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var $sizer = $('<span id="sizer"></span>');
+var commit_deferred = false;
 var options, outOfSync, postForm, preview, previewNum;
 
 var socket = io.connect('/', {
@@ -423,9 +424,45 @@ function find_time_param(params) {
 	return false;
 }
 
+var yasumono = {
+	SPACE_KEY: '  ', RETURN_KEY: '\n\n',
+	186: ';:', 187: '=+', 188: ',<', 189: '-_', 190: '.>', 191: '/?',
+	192: '`~', 219: '[{', 220: '\\|', 221: ']}', 222: '\'"'
+};
+var ishygddt = ')!@#$%^&*(';
+var metamono = [16, 17, 18, 27, 91];
+
+function predict_result(event, start, end, val) {
+	if (!event || typeof start != 'number' || typeof end != 'number')
+		return val;
+	var which = event.which;
+	if (!which || (which>32 && which<41) || metamono.indexOf(which) >= 0)
+		return val;
+	if (start == end) {
+		if (which == BKSP_KEY)
+			start--;
+		else if (which == DEL_KEY)
+			end++;
+	}
+	var before = val.substr(0, start), after = val.substr(end), mid = '';
+	if (which >= 48 && which < 90) {
+		mid = String.fromCharCode(which);
+		if (!event.shiftKey)
+			mid = mid.toLowerCase();
+		else if (which < 58)
+			mid = ishygddt[which - 48];
+	}
+	else if (which in yasumono)
+		mid = yasumono[which][event.shiftKey ? 1 : 0];
+	else if (which != BKSP_KEY && which != DEL_KEY)
+		mid = 'W'; /* guess */
+	return before + mid + after;
+}
+
 PostForm.prototype.on_key = function (event) {
 	var input = this.input;
 	var val = input.val();
+	var start = input[0].selectionStart, end = input[0].selectionEnd;
 
 	/* Turn YouTube links into proper refs */
 	var changed = false;
@@ -433,34 +470,67 @@ PostForm.prototype.on_key = function (event) {
 		var m = val.match(youtube_url_re);
 		if (!m)
 			break;
+		/* Substitute */
 		var t = m[4] || '';
 		t = find_time_param(m[3]) || find_time_param(m[1]) || t;
-		val = val.substr(0, m.index) + '>>>/watch?v=' + m[2] + t
-				+ val.substr(m.index + m[0].length);
+		var v = '>>>/watch?v=' + m[2] + t;
+		var old = m[0].length;
+		val = val.substr(0, m.index) + v + val.substr(m.index + old);
 		changed = true;
+		/* Compensate caret position */
+		if (m.index < start) {
+			var diff = old - v.length;
+			start -= diff;
+			end -= diff;
+		}
 	}
 	if (changed)
 		input.val(val);
 
-	if (event && event.which == 13) {
-		if (this.sentAllocRequest || val.replace(' ', '')) {
-			this.commit(val + '\n');
-			input.val('');
-			val = '';
-		}
+	var prediction = predict_result(event, start, end, val);
+
+	var nl = prediction.lastIndexOf('\n');
+	if (event && nl >= 0) {
+		var ok = val.substr(0, nl);
+		val = val.substr(nl);
+		prediction = prediction.substr(nl);
+		input.val(val);
+		if (this.sentAllocRequest || ok.match(/[^ ]/))
+			this.commit(ok + '\n');
 		if (event.preventDefault)
 			event.preventDefault();
 	}
-	else
-		this.commit_words(val, event && event.which == 27);
+	else {
+		var len = prediction.length;
+		var revPred = prediction.split('').reverse().join('');
+		var m = revPred.match(/^(\s*\S+\s+\S+)\s+(?=\S)/);
+		if (m) {
+			var lim = len - m[1].length, keep = len - m[1].length;
+			var destiny = val.substr(0, lim);
+			if (destiny == prediction.substr(0, lim)) {
+				/* Prefix of existing and prediction match */
+				this.commit(destiny + ' ');
+				val = val.substr(keep);
+				prediction = prediction.substr(keep);
+				this.input.val(val);
+				this.input[0].selectionStart = start - lim;
+				this.input[0].selectionEnd = end - lim;
+			}
+			else {
+				/* Ambiguous case. Wait until key-up */
+				commit_deferred = true;
+			}
+		}
+	}
 
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
-	this.resize_input(val);
+	this.resize_input(prediction);
 };
 
 PostForm.prototype.on_key_up = function (event) {
-	if (this.input.val().indexOf('\n') >= 0)
+	if (commit_deferred)
 		this.on_key(null);
+	commit_deferred = false;
 };
 
 PostForm.prototype.resize_input = function (val) {
@@ -637,7 +707,7 @@ function add_ref(num) {
 	/* If a >>link exists, put this one on the next line */
 	var input = postForm.input;
 	if (input.val().match(/^>>\d+$/))
-		postForm.on_key.call(postForm, {which: 13});
+		postForm.on_key.call(postForm, {which: RETURN_KEY});
 	input.val(input.val() + '>>' + num);
 	input[0].selectionStart = input.val().length;
 	postForm.on_key.call(postForm, null);
@@ -704,23 +774,6 @@ PostForm.prototype.flush_pending = function () {
 	if (this.pending) {
 		send(this.pending);
 		this.pending = '';
-	}
-};
-
-PostForm.prototype.commit_words = function (text, spaceEntered) {
-	var words = text.trim().split(/ +/);
-	var endsWithSpace = text.length > 0
-			&& text.charAt(text.length-1) == ' ';
-	var newWord = endsWithSpace && !spaceEntered;
-	if (newWord && words.length > 1) {
-		this.input.val(words.pop() + ' ');
-		this.commit(words.join(' ') + ' ');
-	}
-	else if (words.length > 2) {
-		var last = words.pop();
-		this.input.val(words.pop() + ' ' + last
-				+ (endsWithSpace ? ' ' : ''));
-		this.commit(words.join(' ') + ' ');
 	}
 };
 
