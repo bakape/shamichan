@@ -16,6 +16,7 @@ DEFINES.INPUT_MIN_SIZE = 300;
 DEFINES.INPUT_ROOM = 20;
 DEFINES.MAX_POST_LINES = 30;
 DEFINES.MAX_POST_CHARS = 2000;
+DEFINES.WORD_LENGTH_LIMIT = 120;
 
 function is_pubsub(t) {
 	return t >= INSERT_POST && t <= DELETE_THREAD;
@@ -95,6 +96,7 @@ var OneeSama = function (t) {
 exports.OneeSama = OneeSama;
 var OS = OneeSama.prototype;
 
+var break_re = new RegExp("(\\S{" + DEFINES.WORD_LENGTH_LIMIT + "})");
 /* internal refs and youtube videos */
 var ref_re = />>(\d+|>\/?(?:watch\?)?v[=\/][\w-]{11}(?:#t=[\dhms]{1,9})?)/;
 var youtube_re = /^>>>\/?(?:watch\?)?v[=\/]([\w-]{11})(#t=[\dhms]{1,9})?$/;
@@ -104,7 +106,7 @@ var youtube_url_re = /(?:>>>*?)?(?:http:\/\/)?(?:www\.)?youtube\.com\/watch\?((?
 OS.break_heart = function (frag) {
 	if (frag.safe)
 		return this.callback(frag);
-	var bits = frag.split(/(\S{60})/);
+	var bits = frag.split(break_re);
 	for (var i = 0; i < bits.length; i++) {
 		/* anchor refs */
 		var morsels = bits[i].split(ref_re);
