@@ -459,7 +459,19 @@ function predict_result(event, start, end, val) {
 	return before + mid + after;
 }
 
+PostForm.prototype.on_shortcut = function (event) {
+	if (event.which == 83 && event.altKey)
+		this.finish();
+	else
+		return false;
+	return true;
+};
+
 PostForm.prototype.on_key = function (event) {
+	if (event && event.preventDefault && this.on_shortcut(event)) {
+		event.preventDefault();
+		return;
+	}
 	var input = this.input;
 	var val = input.val();
 	var start = input[0].selectionStart, end = input[0].selectionEnd;
