@@ -27,6 +27,16 @@ article, aside {
 article figure img {
 	margin-bottom: 0;
 }
+article.highlight {
+	background-color: #d6bad0;
+	border-right: 1px solid #ba9dbf;
+	border-bottom: 1px solid #ba9dbf;
+}
+article.editing {
+	background-color: #fa6;
+	border-right: 1px solid #e95;
+	border-bottom: 1px solid #e95;
+}
 body {
 	background-color: #eef2ff;
 	font-family: Arial, Helvetica, sans-serif;
@@ -135,11 +145,6 @@ section {
 section p {
 	display: inline;
 }
-article.editing {
-	background-color: #fa6;
-	border-right: 1px solid #e95;
-	border-bottom: 1px solid #e95;
-}
 .email, .email * {
 	color: #0f0c5d;
 	text-decoration: underline;
@@ -156,11 +161,6 @@ article.editing {
 	position: fixed;
 	top: 12px;
 	right: 8px;
-}
-.highlight {
-	background-color: #d6bad0;
-	border-right: 1px solid #ba9dbf;
-	border-bottom: 1px solid #ba9dbf;
 }
 .modal {
 	background-color: white;
