@@ -179,7 +179,7 @@ function MD5_file(path, callback) {
 };
 
 function mv_file(src, dest, callback) {
-	mv = child_process.spawn('/bin/mv', ['-n', src, dest]);
+	var mv = child_process.spawn('/bin/mv', ['-n', src, dest]);
 	mv.on('error', callback);
 	mv.stderr.on('data', function (buf) {
 		process.stderr.write(buf);
