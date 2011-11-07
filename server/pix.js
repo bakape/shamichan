@@ -29,6 +29,14 @@ var validFields = ['client_id', 'alloc'];
 
 IU.handle_request = function (req, resp) {
 	this.resp = resp;
+	var accepts = (req.headers.accept || '').split(',');
+	for (var i = 0; i < accepts.length; i++) {
+		var mime = accepts[i].split(';')[0].trim();
+		if (mime == 'application/json') {
+			this.json_response = true;
+			break;
+		}
+	}
 	var form = new formidable.IncomingForm();
 	form.maxFieldsSize = 2048;
 	form.onPart = function (part) {
@@ -232,7 +240,7 @@ IU.resize_image = function (src, ext, dest, dims, qual, bg, callback) {
 };
 
 IU.failure = function (err_desc) {
-	this.iframe_call('postForm.upload_error', err_desc);
+	this.form_call('upload_error', err_desc);
 	var image = this.image;
 	if (image) {
 		if (image.path)
@@ -260,7 +268,7 @@ IU.publish = function () {
 				return self.failure("Publishing failure.");
 			client.post.image = view;
 			client.uploading = false;
-			self.iframe_call('postForm.upload_complete', view);
+			self.form_call('upload_complete', view);
 		});
 		return;
 	}
@@ -270,14 +278,19 @@ IU.publish = function () {
 			return self.failure('Bad post.');
 		}
 		client.uploading = false;
-		self.iframe_call('postForm.on_allocation', alloc);
+		self.form_call('on_allocation', alloc);
 	});
 };
 
-IU.iframe_call = function (func, param) {
+IU.form_call = function (func, param) {
 	var resp = this.resp;
+	if (this.json_response) {
+		resp.writeHead(200, {'Content-Type': 'application/json'});
+		resp.end(JSON.stringify({func: func, arg: param}));
+		return;
+	}
 	param = param ? JSON.stringify(param) : '';
 	resp.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
 	resp.end('<!doctype html>\n<title></title>\n<script>'
-		+ 'parent.' + func + '(' + param + ');</script>');
+		+ 'parent.postForm.' + func + '(' + param + ');</script>');
 };

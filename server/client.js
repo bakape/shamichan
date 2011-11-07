@@ -73,6 +73,15 @@ function on_make_post() {
 	postForm = new PostForm(link.parent(), link.parents('section'));
 }
 
+function open_post_box(num) {
+	var link = $('#' + num);
+	if (link[0].tagName.match(/^section$/i))
+		link = link.children('aside');
+	else
+		link = link.siblings('aside');
+	on_make_post.call(link.find('a'));
+}
+
 function make_link(num, op) {
 	var p = {num: num, op: op};
 	return safe('<a href="' + post_url(p, false) + '">&gt;&gt;'
@@ -212,7 +221,7 @@ dispatcher[INSERT_POST] = function (msg) {
 };
 
 dispatcher[IMAGE_STATUS] = function (msg) {
-	$('input[name=image] + strong').text(msg[0]);
+	postForm.uploadStatus.text(msg[0]);
 };
 
 dispatcher[INSERT_IMAGE] = function (msg) {
@@ -319,6 +328,7 @@ function PostForm(dest, section) {
 	var post = this.post;
 	this.blockquote.append(this.buffer, this.line_buffer, this.input);
 	this.uploadForm = this.make_upload_form();
+	this.uploadStatus = this.uploadForm.find('strong');
 	post.append(this.meta, this.blockquote, this.uploadForm);
 
 	var prop = $.proxy(this, 'propagate_fields');
@@ -563,8 +573,8 @@ PostForm.prototype.on_paste = function (event) {
 
 PostForm.prototype.upload_error = function (msg) {
 	/* TODO: Reset allocation if necessary */
-	$('input[name=image]').attr('disabled', false
-			).siblings('strong').text(msg);
+	$('input[name=image]').attr('disabled', false);
+	this.uploadStatus.text(msg);
 	this.uploading = false;
 	this.update_buttons();
 };
@@ -577,6 +587,7 @@ PostForm.prototype.upload_complete = function (info) {
 	mpmetrics.track('image', op ? {op: op} : {});
 	this.flush_pending();
 	this.uploading = false;
+	this.uploaded = true;
 	this.update_buttons();
 	/* Stop obnoxious wrap-around-image behaviour */
 	this.blockquote.css({
@@ -708,14 +719,8 @@ function tsugi() {
 function add_ref(num) {
 	mpmetrics.track('add_ref', {num: num});
 	/* Make the post form if none exists yet */
-	if (!postForm) {
-		var link = $('#' + num);
-		if (link[0].tagName.match(/^section$/i))
-			link = link.children('aside');
-		else
-			link = link.siblings('aside');
-		on_make_post.call(link.find('a'));
-	}
+	if (!postForm)
+		open_post_box(num);
 	/* If a >>link exists, put this one on the next line */
 	var input = postForm.input;
 	if (input.val().match(/^>>\d+$/))
@@ -820,6 +825,19 @@ PostForm.prototype.clean_up = function (remove) {
 	insert_pbs();
 };
 
+PostForm.prototype.update_buttons = function () {
+	var d = this.uploading || (this.sentAllocRequest && !this.num);
+	/* Beware of undefined! */
+	this.submit.add(this.cancel).attr('disabled', !!d);
+};
+
+PostForm.prototype.prep_upload = function () {
+	this.uploadStatus.text('Sending...');
+	this.input.focus();
+	this.uploading = true;
+	this.update_buttons();
+};
+
 PostForm.prototype.make_upload_form = function () {
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="/img" target="upload">'
@@ -830,31 +848,94 @@ PostForm.prototype.make_upload_form = function () {
 		+ '<iframe src="" name="upload"/></form>');
 	this.cancel = form.find('input[type=button]').click($.proxy(this,
 			'finish'));
-	var user_input = this.input;
-	var self = this;
-	form.find('input[name=image]').change(function () {
-		user_input.focus();
-		$(this).siblings('strong').text('');
-		if (!$(this).val())
-			return;
-		self.uploading = true;
-		self.update_buttons();
-		if (!self.num) {
-			var alloc = $('<input type="hidden" name="alloc"/>');
-			var request = self.make_alloc_request(null);
-			form.append(alloc.val(JSON.stringify(request)));
-		}
-		form.submit();
-		$(this).attr('disabled', true);
-	});
+	form.find('input[name=image]').change(on_image_chosen);
 	return form;
 };
 
-PostForm.prototype.update_buttons = function () {
-	var d = this.uploading || (this.sentAllocRequest && !this.num);
-	/* Beware of undefined! */
-	this.submit.add(this.cancel).attr('disabled', !!d);
-};
+function on_image_chosen() {
+	if (!$(this).val()) {
+		postForm.uploadStatus.text('');
+		return;
+	}
+	postForm.prep_upload();
+	var form = postForm.uploadForm;
+	if (!postForm.num) {
+		var alloc = $('<input type="hidden" name="alloc"/>');
+		var request = postForm.make_alloc_request(null);
+		form.append(alloc.val(JSON.stringify(request)));
+	}
+	form.submit();
+	$(this).attr('disabled', true);
+}
+
+function drop_shita(e) {
+	e.stopPropagation();
+	e.preventDefault();
+	var files = e.dataTransfer.files;
+	if (files.length != 1) {
+		if (files.length > 1)
+			alert('Too many files.');
+		return;
+	}
+	if (!postForm) {
+		if (THREAD)
+			open_post_box(THREAD);
+		else {
+			var $s = $(e.target).closest('section');
+			if (!$s.length)
+				return;
+			open_post_box($s.attr('id'));
+		}
+	}
+	else if (postForm.uploading || postForm.uploaded)
+		return;
+
+	postForm.prep_upload();
+	postForm.uploadForm.find('input[name=image]').attr('disabled', true);
+
+	var fd = new FormData();
+	fd.append('image', files[0]);
+	fd.append('client_id', socket.socket.sessionid);
+	if (!postForm.num) {
+		var request = postForm.make_alloc_request(null);
+		fd.append('alloc', JSON.stringify(request));
+	}
+	/* Can't seem to jQuery this shit */
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', '/img');
+	xhr.setRequestHeader('Accept', 'application/json');
+	xhr.onreadystatechange = upload_shita;
+	xhr.send(fd);
+}
+
+function upload_shita() {
+	if (this.readyState != 4)
+		return;
+	if (this.status == 200) {
+		try {
+			var info = JSON.parse(this.responseText);
+			postForm[info.func](info.arg);
+		}
+		catch (e) {
+			postForm.upload_error("Bad response.");
+		}
+	}
+	else
+		postForm.upload_error("Couldn't get response.");
+}
+
+function stop_drag(e) {
+	e.stopPropagation();
+	e.preventDefault();
+}
+
+function setup_upload_drop(e) {
+	function go(nm, f) { e.addEventListener(nm, f, false); }
+	go('dragenter', stop_drag);
+	go('dragexit', stop_drag);
+	go('dragover', stop_drag);
+	go('drop', drop_shita);
+}
 
 function sync_status(msg, hover) {
 	$('#sync').text(msg).attr('class', hover ? 'error' : '');
@@ -984,6 +1065,7 @@ $(function () {
 
 	$(document).click(click_shita);
 	$('nav input').click(tsugi);
+	setup_upload_drop(document.body);
 
 	var ts = $('time'), ti = 0;
 	function make_local() {
