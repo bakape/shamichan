@@ -33,7 +33,7 @@ client_deps.forEach(monitor.bind(null, build_client));
 
 function monitor(func, dep) {
 	var mtime = new Date;
-	fs.watchFile(dep, function (event) {
+	fs.watchFile(dep, {interval: 500, persistent: true}, function (event) {
 		if (event.mtime > mtime) {
 			func();
 			mtime = event.mtime;
