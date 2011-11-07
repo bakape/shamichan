@@ -39,7 +39,13 @@ IU.handle_request = function (req, resp) {
 		else
 			this._error('Superfluous field.');
 	};
-	form.parse(req, this.parse_form.bind(this));
+	try {
+		form.parse(req, this.parse_form.bind(this));
+	}
+	catch (err) {
+		console.error(err);
+		this.failure("Invalid request.");
+	}
 };
 
 IU.parse_form = function (err, fields, files) {
