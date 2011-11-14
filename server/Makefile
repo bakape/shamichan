@@ -15,6 +15,9 @@ tripcode.node: .build tripcode.cc
 	node-waf build
 	@cp .build/default/$@ $@
 
+test:
+	node ghost.js
+
 .build: wscript
 	node-waf configure
 

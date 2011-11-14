@@ -411,7 +411,7 @@ PostForm.prototype.on_allocation = function (msg) {
 		this.update_buttons();
 	this.submit.click($.proxy(this, 'finish'));
 	if (this.uploadForm) {
-		this.cancel.remove();
+		this.$cancel.remove();
 		this.uploadForm.append(this.submit);
 	}
 	else
@@ -573,7 +573,7 @@ PostForm.prototype.on_paste = function (event) {
 
 PostForm.prototype.upload_error = function (msg) {
 	/* TODO: Reset allocation if necessary */
-	$('input[name=image]').attr('disabled', false);
+	this.$imageInput.attr('disabled', false);
 	this.uploadStatus.text(msg);
 	this.uploading = false;
 	this.update_buttons();
@@ -582,8 +582,8 @@ PostForm.prototype.upload_error = function (msg) {
 PostForm.prototype.upload_complete = function (info) {
 	var form = this.uploadForm, op = this.op;
 	insert_image(info, form.siblings('header'), !op);
-	form.find('input[name=image]').siblings('strong').andSelf().add(
-			this.cancel).remove();
+	this.$imageInput.siblings('strong').andSelf().add(this.$cancel
+			).remove();
 	mpmetrics.track('image', op ? {op: op} : {});
 	this.flush_pending();
 	this.uploading = false;
@@ -794,6 +794,18 @@ PostForm.prototype.flush_pending = function () {
 	}
 };
 
+PostForm.prototype.cancel_upload = function () {
+	/* XXX: This is a dumb patch-over and it will fail on races */
+	if (this.uploading) {
+		this.$iframe.remove();
+		this.$iframe = $('<iframe src="" name="upload"/></form>');
+		this.form.append(this.$iframe);
+		this.upload_error('');
+	}
+	else
+		this.finish();
+}
+
 PostForm.prototype.finish = function () {
 	if (this.num) {
 		this.flush_pending();
@@ -828,11 +840,11 @@ PostForm.prototype.clean_up = function (remove) {
 PostForm.prototype.update_buttons = function () {
 	var d = this.uploading || (this.sentAllocRequest && !this.num);
 	/* Beware of undefined! */
-	this.submit.add(this.cancel).attr('disabled', !!d);
+	this.submit.attr('disabled', !!d);
 };
 
 PostForm.prototype.prep_upload = function () {
-	this.uploadStatus.text('Sending...');
+	this.uploadStatus.text('Uploading...');
 	this.input.focus();
 	this.uploading = true;
 	this.update_buttons();
@@ -846,9 +858,11 @@ PostForm.prototype.make_upload_form = function () {
 		+ '<input type="hidden" name="client_id" value="'
 		+ socket.socket.sessionid + '"/> '
 		+ '<iframe src="" name="upload"/></form>');
-	this.cancel = form.find('input[type=button]').click($.proxy(this,
-			'finish'));
-	form.find('input[name=image]').change(on_image_chosen);
+	this.$cancel = form.find('input[type=button]').click($.proxy(this,
+			'cancel_upload'));
+	this.$iframe = form.find('iframe');
+	this.$imageInput = form.find('input[name=image]').change(
+			on_image_chosen);
 	return form;
 };
 
@@ -891,7 +905,7 @@ function drop_shita(e) {
 		return;
 
 	postForm.prep_upload();
-	postForm.uploadForm.find('input[name=image]').attr('disabled', true);
+	postForm.$imageInput.attr('disabled', true);
 
 	var fd = new FormData();
 	fd.append('image', files[0]);
