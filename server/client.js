@@ -799,7 +799,7 @@ PostForm.prototype.cancel_upload = function () {
 	if (this.uploading) {
 		this.$iframe.remove();
 		this.$iframe = $('<iframe src="" name="upload"/></form>');
-		this.form.append(this.$iframe);
+		this.uploadForm.append(this.$iframe);
 		this.upload_error('');
 	}
 	else
