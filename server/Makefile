@@ -6,10 +6,13 @@ else
 CLIENT_JS := ../www/js/client-$(shell node server.js --client-version).js
 endif
 
-all: tripcode.node client
+all: perceptual tripcode.node client
 
 jsmin: jsmin.c
 	gcc -o $@ $^
+
+perceptual: perceptual.c
+	gcc -O2 -o $@ $^
 
 tripcode.node: .build tripcode.cc
 	node-waf build

@@ -8,6 +8,7 @@ dead/thumb/*
 server/builder
 server/config.js
 server/jsmin
+server/perceptual
 www/js/client*.js
 www/src/*
 www/thumb/*

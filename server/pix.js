@@ -111,37 +111,57 @@ IU.process = function (err) {
 	var tagged_path = image.ext.replace('.', '') + ':' + image.path;
 	var self = this;
 	async.parallel({
-		MD5: MD5_file.bind(null, image.path),
 		stat: fs.stat.bind(fs, image.path),
 		dims: im.identify.bind(im, tagged_path)
-	}, function (err, rs) {
+	}, verified);
+
+	function verified(err, rs) {
 		if (err) {
 			console.error(err);
 			return self.failure('Bad image.');
 		}
-		image.MD5 = rs.MD5;
-		image.size = rs.stat.size;
-		image.dims = [rs.dims.width, rs.dims.height];
-		self.client.db.check_duplicate(image.MD5,
-	function (err) {
-		if (err)
-			return self.failure(err);
 		var w = rs.dims.width, h = rs.dims.height;
+		image.size = rs.stat.size;
+		image.dims = [w, h];
 		if (!w || !h)
 			return self.failure('Invalid image dimensions.');
 		if (w > config.IMAGE_WIDTH_MAX)
 			return self.failure('Image is too wide.');
 		if (h > config.IMAGE_HEIGHT_MAX)
 			return self.failure('Image is too tall.');
+
+		async.parallel({
+			MD5: MD5_file.bind(null, image.path),
+			hash: perceptual_hash.bind(null, tagged_path)
+		}, hashed);
+	}
+
+	function hashed(err, rs) {
+		if (err)
+			return self.failure(err);
+		image.MD5 = rs.MD5;
+		image.hash = rs.hash;
+		self.client.db.check_duplicate(image.hash, deduped);
+	}
+
+	function deduped(err, rs) {
+		if (err)
+			return self.failure(err);
 		image.thumb_path = image.path + '_thumb';
 		self.status('Thumbnailing...');
 		var pinky = (self.client.post && self.client.post.op) ||
 				(self.alloc && self.alloc.op);
+		var w = image.dims[0], h = image.dims[1];
 		var specs = get_thumb_specs(w, h, pinky);
 		image.dims = [w, h].concat(specs.dims);
-		self.resize_image(tagged_path, image.ext, image.thumb_path,
+		resize_image(tagged_path, image.ext, image.thumb_path,
 				specs.dims, specs.quality, specs.bg_color,
-	function () {
+				thumbnailed);
+	}
+
+	function thumbnailed(err) {
+		if (err)
+			return self.failure(err);
 		self.status('Publishing...');
 		var time = new Date().getTime();
 		image.src = time + image.ext;
@@ -159,10 +179,7 @@ IU.process = function (err) {
 			image.thumb_path = nail;
 			self.publish();
 		});
-
-	});
-	});
-	});
+	}
 }
 
 IU.read_image_filesize = function (callback) {
@@ -190,7 +207,7 @@ function MD5_file(path, callback) {
 		console.error(stderr);
 		return callback('Hashing error.');
 	});
-};
+}
 
 function mv_file(src, dest, callback) {
 	var mv = child_process.spawn('/bin/mv', ['-n', src, dest]);
@@ -201,7 +218,41 @@ function mv_file(src, dest, callback) {
 	mv.on('exit', function (code) {
 		callback(code ? 'mv error' : null);
 	});
-};
+}
+
+function perceptual_hash(src, callback) {
+	var tmp = '/tmp/hash' + (''+Math.random()).substr(2) + '.gray';
+	var args = [src + '[0]', '-scale', '16x16!', '-type', 'grayscale',
+			'-depth', '8', tmp];
+	im.convert(args, function (err, stdout, stderr) {
+		if (err) {
+			console.error(stderr);
+			return callback('Hashing error.');
+		}
+		var bin = path.join(__dirname, 'perceptual');
+		var hasher = child_process.spawn(bin, [tmp]);
+		hasher.on('error', function (err) {
+			fs.unlink(tmp);
+			callback(err);
+		});
+		var hash = [];
+		hasher.stdout.on('data', function (buf) {
+			hash.push(buf.toString('ascii'));
+		});
+		hasher.stderr.on('data', function (buf) {
+			process.stderr.write(buf);
+		});
+		hasher.on('exit', function (code) {
+			fs.unlink(tmp);
+			if (code != 0)
+				return callback('Hashing error.');
+			hash = hash.join('').trim();
+			if (hash.length != 64)
+				return callback('Hashing problem.');
+			callback(null, hash);
+		});
+	});
+}
 
 exports.bury_image = function (src, thumb, callback) {
 	/* Just in case */
@@ -216,8 +267,7 @@ exports.bury_image = function (src, thumb, callback) {
 	}
 };
 
-IU.resize_image = function (src, ext, dest, dims, qual, bg, callback) {
-	var self = this;
+function resize_image(src, ext, dest, dims, qual, bg, callback) {
 	var args = [];
 	if (ext == '.jpg')
 		args.push('-define', 'jpeg:size=' + (dims[0] * 2) + 'x' +
@@ -230,14 +280,14 @@ IU.resize_image = function (src, ext, dest, dims, qual, bg, callback) {
 	im.convert(args, function (err, stdout, stderr) {
 		if (err) {
 			console.error(stderr);
-			return self.failure('Conversion error.');
+			return callback('Conversion error.');
 		}
 		if (config.DEBUG)
 			setTimeout(callback, 1000);
 		else
 			callback();
 	});
-};
+}
 
 IU.failure = function (err_desc) {
 	this.form_call('upload_error', err_desc);
@@ -252,7 +302,7 @@ IU.failure = function (err_desc) {
 		this.client.uploading = false;
 };
 
-exports.image_attrs = ['src', 'thumb', 'dims', 'size', 'MD5', 'imgnm'];
+exports.image_attrs = ['src', 'thumb', 'dims', 'size', 'MD5', 'hash', 'imgnm'];
 
 IU.publish = function () {
 	var client = this.client;
