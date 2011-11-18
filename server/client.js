@@ -531,7 +531,7 @@ PostForm.prototype.on_key = function (event) {
 			var destiny = val.substr(0, lim);
 			if (destiny == prediction.substr(0, lim)) {
 				/* Prefix of existing and prediction match */
-				this.commit(destiny + ' ');
+				this.commit(destiny);
 				val = val.substr(keep);
 				prediction = prediction.substr(keep);
 				this.input.val(val);
