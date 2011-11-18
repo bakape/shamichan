@@ -588,6 +588,7 @@ PostForm.prototype.upload_complete = function (info) {
 	this.flush_pending();
 	this.uploading = false;
 	this.uploaded = true;
+	this.sentAllocRequest = true;
 	this.update_buttons();
 	/* Stop obnoxious wrap-around-image behaviour */
 	this.blockquote.css({
