@@ -634,7 +634,15 @@ function preview_miru(event, num) {
 			preview.remove();
 		preview = $('<div class="preview">' + post.html() + '</div>');
 	}
-	preview.css({left: event.pageX + 'px', top: (event.pageY+30) + 'px'});
+	var height = preview.height();
+	if (height < 5) {
+		preview.hide();
+		$(document.body).append(preview);
+		height = preview.height();
+		preview.detach().show();
+	}
+	preview.css({left: (event.pageX + 20) + 'px',
+		top: (event.pageY - height - 20) + 'px'});
 	if (num != previewNum) {
 		$(document.body).append(preview);
 		previewNum = num;
