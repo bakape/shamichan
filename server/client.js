@@ -3,7 +3,8 @@ var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var $sizer = $('<span id="sizer"></span>');
 var commit_deferred = false;
-var lockedToBottom, options, outOfSync, postForm, preview, previewNum;
+var lockedToBottom, lockHeight, lockKeyHeight;
+var options, outOfSync, postForm, preview, previewNum;
 
 var socket = io.connect('/', {
 	port: PORT,
@@ -69,8 +70,10 @@ function insert_pbs() {
 }
 
 function on_make_post() {
+	begin_dom();
 	var link = $(this);
 	postForm = new PostForm(link.parent(), link.parents('section'));
+	end_dom();
 }
 
 function open_post_box(num) {
@@ -406,10 +409,10 @@ PostForm.prototype.on_allocation = function (msg) {
 		).attr('datetime', datetime(msg.time)).after(head_end);
 
 	if (msg.image)
-		this.upload_complete(msg.image);
+		this.insert_uploaded(msg.image);
 	else
 		this.update_buttons();
-	this.submit.click($.proxy(this, 'finish'));
+	this.submit.click($.proxy(this, 'finish_wrapped'));
 	if (this.uploadForm) {
 		this.$cancel.remove();
 		this.uploadForm.append(this.submit);
@@ -471,7 +474,7 @@ function predict_result(event, start, end, val) {
 
 PostForm.prototype.on_shortcut = function (event) {
 	if (event.which == 83 && event.altKey)
-		this.finish();
+		this.finish_wrapped();
 	else
 		return false;
 	return true;
@@ -485,6 +488,8 @@ PostForm.prototype.on_key = function (event) {
 	var input = this.input;
 	var val = input.val();
 	var start = input[0].selectionStart, end = input[0].selectionEnd;
+	if (lockedToBottom)
+		lockKeyHeight = $DOC.height();
 
 	/* Turn YouTube links into proper refs */
 	var changed = false;
@@ -547,7 +552,22 @@ PostForm.prototype.on_key = function (event) {
 
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 	this.resize_input(prediction);
+	if (lockedToBottom)
+		setTimeout(entryScrollLock, 0);
 };
+
+function entryScrollLock() {
+	/* NOPE */
+	/* Deferred commit may change lockKeyHeight; save first */
+	var keyHeight = lockKeyHeight;
+
+	if (lockedToBottom) {
+		/* Special keyup<->down case */
+		var height = $DOC.height();
+		if (height > keyHeight)
+			window.scrollBy(0, height - keyHeight + 1);
+	}
+}
 
 PostForm.prototype.on_key_up = function (event) {
 	if (commit_deferred)
@@ -580,6 +600,12 @@ PostForm.prototype.upload_error = function (msg) {
 };
 
 PostForm.prototype.upload_complete = function (info) {
+	begin_dom();
+	this.insert_uploaded(info);
+	end_dom();
+};
+
+PostForm.prototype.insert_uploaded = function (info) {
 	var form = this.uploadForm, op = this.op;
 	insert_image(info, form.siblings('header'), !op);
 	this.$imageInput.siblings('strong').andSelf().add(this.$cancel
@@ -636,7 +662,9 @@ function click_shita(event) {
 		var q = href.match(/#q(\d+)/);
 		if (q) {
 			event.preventDefault();
+			begin_dom();
 			add_ref(parseInt(q[1], 10));
+			end_dom();
 			return;
 		}
 		if (THREAD) {
@@ -651,6 +679,7 @@ function click_shita(event) {
 	var img = target.filter('img');
 	if (img.length && options.inline && !img.data('skipExpand')) {
 		var thumb = img.data('thumbSrc');
+		begin_dom();
 		if (thumb) {
 			img.width(img.data('thumbWidth')
 				).height(img.data('thumbHeight')
@@ -666,6 +695,7 @@ function click_shita(event) {
 				).attr('src', img.parent().attr('href')
 				).width(dims[1]).height(dims[2]);
 		}
+		end_dom();
 		event.preventDefault();
 		return;
 	}
@@ -696,7 +726,9 @@ function click_shita(event) {
 		var $embed = $('<embed></embed>').attr(params).attr({src: url,
 			type: 'application/x-shockwave-flash'}).attr(dims);
 		$obj.append($embed);
+		begin_dom();
 		target.replaceWith($obj);
+		end_dom();
 	}
 }
 
@@ -717,27 +749,45 @@ function tsugi() {
 	location.href = $('link[rel=next]').prop('href');
 }
 
+var $DOC = $(document);
 if (window.scrollMaxY !== undefined) {
 	function at_bottom() {
-		return window.scrollMaxY == window.scrollY;
+		return window.scrollMaxY <= window.scrollY;
 	}
 }
 else {
-	var DOC = $(document);
 	function at_bottom() {
-		return window.scrollY + window.innerHeight >= DOC.height();
+		return window.scrollY + window.innerHeight >= $DOC.height();
 	}
 }
 
 function scroll_shita() {
 	var lock = at_bottom();
-	if (lock != lockedToBottom) {
-		lockedToBottom = lock;
-		var ind = $('#lock');
-		if (lockedToBottom)
-			ind.show();
-		else
-			ind.hide();
+	if (lock != lockedToBottom)
+		set_scroll_locked(lock);
+}
+
+function set_scroll_locked(lock) {
+	lockedToBottom = lock;
+	var ind = $('#lock');
+	if (lockedToBottom)
+		ind.show();
+	else
+		ind.hide();
+}
+
+function begin_dom() {
+	if (lockedToBottom) {
+		lockHeight = $DOC.height();
+		inDomUpdate = true;
+	}
+}
+
+function end_dom() {
+	if (lockedToBottom) {
+		var height = $DOC.height();
+		if (height > lockHeight)
+			window.scrollBy(0, height - lockHeight + 1);
 	}
 }
 
@@ -828,8 +878,14 @@ PostForm.prototype.cancel_upload = function () {
 		this.upload_error('');
 	}
 	else
-		this.finish();
+		this.finish_wrapped();
 }
+
+PostForm.prototype.finish_wrapped = function () {
+	begin_dom();
+	this.finish();
+	end_dom();
+};
 
 PostForm.prototype.finish = function () {
 	if (this.num) {
@@ -917,6 +973,7 @@ function drop_shita(e) {
 		return;
 	}
 	if (!postForm) {
+		begin_dom();
 		if (THREAD)
 			open_post_box(THREAD);
 		else {
@@ -925,6 +982,7 @@ function drop_shita(e) {
 				return;
 			open_post_box($s.attr('id'));
 		}
+		end_dom();
 	}
 	else if (postForm.uploading || postForm.uploaded)
 		return;
@@ -1000,6 +1058,7 @@ MIRU.reconnect_failed = function () {
 
 MIRU.message = function (data) {
 	msgs = JSON.parse(data);
+	begin_dom();
 	for (var i = 0; i < msgs.length; i++) {
 		var msg = msgs[i];
 		var type = msg.shift();
@@ -1011,6 +1070,7 @@ MIRU.message = function (data) {
 		}
 		dispatcher[type](msg, op);
 	}
+	end_dom();
 };
 
 function socket_miru(setup) {
@@ -1140,6 +1200,7 @@ $(function () {
 		$('<span id="lock">Locked to bottom</span>'
 				).hide().appendTo('body');
 		$(document).scroll(scroll_shita);
+		scroll_shita();
 	}
 
 	for (var id in toggles) {
