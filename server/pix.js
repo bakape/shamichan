@@ -328,7 +328,7 @@ IU.publish = function () {
 			return self.failure('Bad post.');
 		}
 		client.uploading = false;
-		self.form_call('on_allocation', alloc);
+		self.form_call('on_allocation_wrapped', alloc);
 	});
 };
 

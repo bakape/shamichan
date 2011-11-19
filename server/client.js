@@ -3,7 +3,7 @@ var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var $sizer = $('<span id="sizer"></span>');
 var commit_deferred = false;
-var lockedToBottom, lockHeight, lockKeyHeight;
+var lockedToBottom, lockKeyHeight;
 var options, outOfSync, postForm, preview, previewNum;
 
 var socket = io.connect('/', {
@@ -69,12 +69,10 @@ function insert_pbs() {
 	}
 }
 
-function on_make_post() {
-	begin_dom();
+var on_make_post = _.wrap(function () {
 	var link = $(this);
 	postForm = new PostForm(link.parent(), link.parents('section'));
-	end_dom();
-}
+}, with_dom);
 
 function open_post_box(num) {
 	var link = $('#' + num);
@@ -349,16 +347,14 @@ function PostForm(dest, section) {
 	if (!this.op)
 		post.after('<hr/>');
 
-	dispatcher[ALLOCATE_POST] = $.proxy(function (msg) {
-		this.on_allocation(msg[0]);
-	}, this);
 	$('aside').remove();
 
 	this.resize_input();
 	this.input.focus();
 }
+var PF = PostForm.prototype;
 
-PostForm.prototype.propagate_fields = function () {
+PF.propagate_fields = function () {
 	var parsed = parse_name($name.val().trim());
 	var meta = this.meta;
 	var $b = meta.find('b');
@@ -375,7 +371,14 @@ PostForm.prototype.propagate_fields = function () {
 		tag.removeAttr('href').attr('class', 'emailcancel');
 }
 
-PostForm.prototype.on_allocation = function (msg) {
+dispatcher[ALLOCATE_POST] = function (msg) {
+	if (postForm)
+		postForm.on_allocation(msg[0]);
+	else
+		send([FINISH_POST]); // Huh. Just tidy up.
+};
+
+PF.on_allocation = function (msg) {
 	var num = msg.num;
 	this.num = num;
 	this.flush_pending();
@@ -425,6 +428,10 @@ PostForm.prototype.on_allocation = function (msg) {
 	}
 };
 
+PF.on_allocation_wrapped = function (msg) {
+	with_dom(_.bind(this.on_allocation, this, msg));
+};
+
 function find_time_param(params) {
 	if (!params || params.indexOf('t=') < 0)
 		return false;
@@ -472,7 +479,7 @@ function predict_result(event, start, end, val) {
 	return before + mid + after;
 }
 
-PostForm.prototype.on_shortcut = function (event) {
+PF.on_shortcut = function (event) {
 	if (event.which == 83 && event.altKey)
 		this.finish_wrapped();
 	else
@@ -480,7 +487,7 @@ PostForm.prototype.on_shortcut = function (event) {
 	return true;
 };
 
-PostForm.prototype.on_key = function (event) {
+PF.on_key = function (event) {
 	if (event && event.preventDefault && this.on_shortcut(event)) {
 		event.preventDefault();
 		return;
@@ -569,13 +576,13 @@ function entryScrollLock() {
 	}
 }
 
-PostForm.prototype.on_key_up = function (event) {
+PF.on_key_up = function (event) {
 	if (commit_deferred)
 		this.on_key(null);
 	commit_deferred = false;
 };
 
-PostForm.prototype.resize_input = function (val) {
+PF.resize_input = function (val) {
 	var input = this.input;
 	if (typeof val != 'string')
 		val = input.val();
@@ -587,11 +594,11 @@ PostForm.prototype.resize_input = function (val) {
 	input.css('width', size + 'px');
 };
 
-PostForm.prototype.on_paste = function (event) {
+PF.on_paste = function (event) {
 	setTimeout($.proxy(this, 'on_key'), 0);
 };
 
-PostForm.prototype.upload_error = function (msg) {
+PF.upload_error = function (msg) {
 	/* TODO: Reset allocation if necessary */
 	this.$imageInput.attr('disabled', false);
 	this.uploadStatus.text(msg);
@@ -599,13 +606,11 @@ PostForm.prototype.upload_error = function (msg) {
 	this.update_buttons();
 };
 
-PostForm.prototype.upload_complete = function (info) {
-	begin_dom();
-	this.insert_uploaded(info);
-	end_dom();
+PF.upload_complete = function (info) {
+	with_dom(_.bind(this.insert_uploaded, this, info));
 };
 
-PostForm.prototype.insert_uploaded = function (info) {
+PF.insert_uploaded = function (info) {
 	var form = this.uploadForm, op = this.op;
 	insert_image(info, form.siblings('header'), !op);
 	this.$imageInput.siblings('strong').andSelf().add(this.$cancel
@@ -670,9 +675,9 @@ function click_shita(event) {
 		var q = href.match(/#q(\d+)/);
 		if (q) {
 			event.preventDefault();
-			begin_dom();
-			add_ref(parseInt(q[1], 10));
-			end_dom();
+			with_dom(function () {
+				add_ref(parseInt(q[1], 10));
+			});
 			return;
 		}
 		if (THREAD) {
@@ -687,7 +692,8 @@ function click_shita(event) {
 	var img = target.filter('img');
 	if (img.length && options.inline && !img.data('skipExpand')) {
 		var thumb = img.data('thumbSrc');
-		begin_dom();
+
+		with_dom(function () {
 		if (thumb) {
 			img.width(img.data('thumbWidth')
 				).height(img.data('thumbHeight')
@@ -703,7 +709,8 @@ function click_shita(event) {
 				).attr('src', img.parent().attr('href')
 				).width(dims[1]).height(dims[2]);
 		}
-		end_dom();
+		});
+
 		event.preventDefault();
 		return;
 	}
@@ -734,9 +741,9 @@ function click_shita(event) {
 		var $embed = $('<embed></embed>').attr(params).attr({src: url,
 			type: 'application/x-shockwave-flash'}).attr(dims);
 		$obj.append($embed);
-		begin_dom();
-		target.replaceWith($obj);
-		end_dom();
+		with_dom(function () {
+			target.replaceWith($obj);
+		});
 	}
 }
 
@@ -784,19 +791,17 @@ function set_scroll_locked(lock) {
 		ind.hide();
 }
 
-function begin_dom() {
-	if (lockedToBottom) {
+function with_dom(func) {
+	var lockHeight, locked = lockedToBottom;
+	if (locked)
 		lockHeight = $DOC.height();
-		inDomUpdate = true;
-	}
-}
-
-function end_dom() {
-	if (lockedToBottom) {
+	var ret = func.call(this);
+	if (locked) {
 		var height = $DOC.height();
 		if (height > lockHeight)
 			window.scrollBy(0, height - lockHeight + 1);
 	}
+	return ret;
 }
 
 function add_ref(num) {
@@ -814,7 +819,7 @@ function add_ref(num) {
 	input.focus();
 };
 
-PostForm.prototype.make_alloc_request = function (text) {
+PF.make_alloc_request = function (text) {
 	var msg = {
 		name: $name.val().trim(),
 		email: $email.val().trim(),
@@ -826,7 +831,7 @@ PostForm.prototype.make_alloc_request = function (text) {
 	return msg;
 };
 
-PostForm.prototype.commit = function (text) {
+PF.commit = function (text) {
 	var lines;
 	if (text.indexOf('\n') >= 0) {
 		lines = text.split('\n');
@@ -870,14 +875,14 @@ PostForm.prototype.commit = function (text) {
 	}
 };
 
-PostForm.prototype.flush_pending = function () {
+PF.flush_pending = function () {
 	if (this.pending) {
 		send(this.pending);
 		this.pending = '';
 	}
 };
 
-PostForm.prototype.cancel_upload = function () {
+PF.cancel_upload = function () {
 	/* XXX: This is a dumb patch-over and it will fail on races */
 	if (this.uploading) {
 		this.$iframe.remove();
@@ -889,13 +894,7 @@ PostForm.prototype.cancel_upload = function () {
 		this.finish_wrapped();
 }
 
-PostForm.prototype.finish_wrapped = function () {
-	begin_dom();
-	this.finish();
-	end_dom();
-};
-
-PostForm.prototype.finish = function () {
+PF.finish = function () {
 	if (this.num) {
 		this.flush_pending();
 		this.commit(this.input.val());
@@ -914,32 +913,33 @@ PostForm.prototype.finish = function () {
 		this.clean_up(true);
 };
 
-PostForm.prototype.clean_up = function (remove) {
+PF.finish_wrapped = _.wrap(PF.finish, with_dom);
+
+PF.clean_up = function (remove) {
 	if (remove) {
 		if (!this.op)
 			this.post.next('hr').remove();
 		this.post.remove();
 	}
 
-	dispatcher[ALLOCATE_POST] = null;
 	postForm = null;
 	insert_pbs();
 };
 
-PostForm.prototype.update_buttons = function () {
+PF.update_buttons = function () {
 	var d = this.uploading || (this.sentAllocRequest && !this.num);
 	/* Beware of undefined! */
 	this.submit.attr('disabled', !!d);
 };
 
-PostForm.prototype.prep_upload = function () {
+PF.prep_upload = function () {
 	this.uploadStatus.text('Uploading...');
 	this.input.focus();
 	this.uploading = true;
 	this.update_buttons();
 };
 
-PostForm.prototype.make_upload_form = function () {
+PF.make_upload_form = function () {
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="/img" target="upload">'
 		+ '<input type="button" value="Cancel"/>'
@@ -981,16 +981,16 @@ function drop_shita(e) {
 		return;
 	}
 	if (!postForm) {
-		begin_dom();
-		if (THREAD)
-			open_post_box(THREAD);
-		else {
-			var $s = $(e.target).closest('section');
-			if (!$s.length)
-				return;
-			open_post_box($s.attr('id'));
-		}
-		end_dom();
+		with_dom(function () {
+			if (THREAD)
+				open_post_box(THREAD);
+			else {
+				var $s = $(e.target).closest('section');
+				if (!$s.length)
+					return;
+				open_post_box($s.attr('id'));
+			}
+		});
 	}
 	else if (postForm.uploading || postForm.uploaded)
 		return;
@@ -1065,8 +1065,10 @@ MIRU.reconnect_failed = function () {
 };
 
 MIRU.message = function (data) {
-	msgs = JSON.parse(data);
-	begin_dom();
+	var msgs = JSON.parse(data);
+
+	with_dom(function () {
+
 	for (var i = 0; i < msgs.length; i++) {
 		var msg = msgs[i];
 		var type = msg.shift();
@@ -1078,7 +1080,8 @@ MIRU.message = function (data) {
 		}
 		dispatcher[type](msg, op);
 	}
-	end_dom();
+
+	});
 };
 
 function socket_miru(setup) {
