@@ -13,6 +13,9 @@ a:hover, blockquote a {
 b.admin {
 	color: #f00000;
 }
+b.moderator {
+	color: purple;
+}
 abbr {
 	text-decoration: none;
 }

@@ -28,7 +28,8 @@ var config = {
 		secret: '',
 		callback: 'http://example.com/verify',
 	},
-	TWITTER_USERNAMES: ['modsan'],
+	TWITTER_ADMINS: ['doushio'],
+	TWITTER_MODERATORS: ['doushiomod'],
 	LOGIN_COOKIE_DOMAIN: 'example.com',
 	LOGIN_SESSION_TIME: 60*60*24*14,
 };

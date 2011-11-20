@@ -57,7 +57,9 @@ exports.verify = function (req, resp) {
 			return;
 		}
 		var user = results.screen_name;
-		if (config.TWITTER_USERNAMES.indexOf(user) < 0) {
+		var admin = config.TWITTER_ADMINS.indexOf(user) >= 0;
+		var mod = config.TWITTER_MODERATORS.indexOf(user) >= 0;
+		if (!admin && !mod) {
 			resp.writeHead(401);
 			resp.end('Invalid user.');
 			r.quit();
@@ -67,6 +69,7 @@ exports.verify = function (req, resp) {
 		results.secret = secret;
 		results.user = results.screen_name;
 		results.twitter_id = results.user_id;
+		results.auth = admin ? 'Admin' : 'Moderator';
 		delete results.screen_name;
 		delete results.user_id;
 		exports.set_cookie(resp, results, r);
@@ -75,7 +78,7 @@ exports.verify = function (req, resp) {
 
 exports.set_cookie = function (resp, info, r) {
 	if (!info)
-		info = {};
+		info = {auth: 'Moderator'};
 	if (!r)
 		r = db.redis_client();
 	var pass = random_str();

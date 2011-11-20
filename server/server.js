@@ -16,7 +16,7 @@ _.templateSettings = {
 
 var clients = {};
 var dispatcher = {};
-var indexTmpl, notFoundHtml, adminJs;
+var indexTmpl, notFoundHtml, adminJs, modJs;
 
 /* I always use encodeURI anyway */
 escape = common.escape_html;
@@ -411,6 +411,8 @@ else {
 
 var filterTmpl;
 route_get_auth(/^\/admin$/, function (req, resp) {
+	if (req.auth.auth != 'Admin')
+		return render_404(resp);
 	var who = req.auth.user || 'unknown';
 
 	var img = _.template('<a href="moe/{{num}}">'
@@ -469,11 +471,23 @@ route_post_auth(/^\/admin$/, function (req, resp) {
 });
 
 route_get_auth(/^\/admin\.js$/, function (req, resp, params) {
+	if (req.auth.auth != 'Admin')
+		return render_404(resp);
 	resp.writeHead(200, {'Content-Type': 'text/javascript'});
 	if (config.DEBUG)
 		resp.end(fs.readFileSync('admin.js'));
 	else
 		resp.end(adminJs);
+});
+
+route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
+	if (req.auth.auth != 'Moderator')
+		return render_404(resp);
+	resp.writeHead(200, {'Content-Type': 'text/javascript'});
+	if (config.DEBUG)
+		resp.end(fs.readFileSync('mod.js'));
+	else
+		resp.end(modJs);
 });
 
 route_get(/^\/(\w+)$/, function (req, resp, params) {
@@ -605,8 +619,14 @@ route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
 
 function write_page_end(req, resp) {
 	resp.write(indexTmpl[3]);
-	if (req.auth)
-		resp.write('<script src="../admin.js"></script>\n');
+	if (req.auth) {
+		if (req.auth.auth == 'Admin')
+			resp.write('<script src="../admin.js"></script>\n');
+		else if (req.auth.auth == 'Moderator')
+			resp.write('<script src="../mod.js"></script>\n');
+		else
+			console.error("Unknown auth: " + req.auth.auth);
+	}
 	resp.end();
 }
 
@@ -770,7 +790,7 @@ function allocate_post(msg, image, client, callback) {
 		if (err)
 			return callback('Bad auth.');
 		if (msg.auth) {
-			if (msg.auth != 'Admin')
+			if (msg.auth !== session.auth)
 				return callback('Bad auth.');
 			post.auth = msg.auth;
 		}
@@ -982,6 +1002,7 @@ else {
 				config).split(/\$[A-Z]+/);
 		notFoundHtml = fs.readFileSync('../www/404.html');
 		adminJs = fs.readFileSync('admin.js');
+		modJs = fs.readFileSync('mod.js');
 		db.track_OPs(function (err) {
 			if (err)
 				throw err;
