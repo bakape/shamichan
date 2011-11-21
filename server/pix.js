@@ -313,7 +313,8 @@ IU.publish = function () {
 	});
 	if (client.post) {
 		/* Text beat us here, discard alloc (if any) */
-		client.db.add_image(client.post, view, function (err) {
+		client.db.add_image(client.post, view, client.ip,
+					function (err) {
 			if (err || !client.post)
 				return self.failure("Publishing failure.");
 			client.post.image = view;

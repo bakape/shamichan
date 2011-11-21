@@ -726,8 +726,13 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (!frag || frag.match(/^\s*$/g))
 		return false;
 	allocate_post(msg, null, client, function (err, alloc) {
-		if (err)
-			return report(err, client, "Couldn't allocate post.");
+		if (err) {
+			var niceErr = "Couldn't post: " + err;
+			/* TEMP: Need better nice-error-message policy */
+			if (niceErr.length > 40)
+				niceErr = "Couldn't allocate post.";
+			return report(err, client, niceErr);
+		}
 		var go = client.send.bind(client,
 				[common.ALLOCATE_POST, alloc]);
 		if (!config.DEBUG)
@@ -794,11 +799,11 @@ function allocate_post(msg, image, client, callback) {
 				return callback('Bad auth.');
 			post.auth = msg.auth;
 		}
-		client.db.reserve_post(post.op, got_reservation);
+		client.db.reserve_post(post.op, client.ip, got_reservation);
 	}
 	function got_reservation(err, num) {
 		if (err)
-			return callback("Couldn't reserve a post.");
+			return callback(err);
 		if (client.post)
 			return callback('Already have a post.');
 		client.post = post;
@@ -872,8 +877,8 @@ function update_post(frag, client) {
 			}
 		}
 
-		client.db.append_post(post, frag, old_state, links, new_links,
-				function (err) {
+		client.db.append_post(post, frag, client.ip, old_state, links,
+				new_links, function (err) {
 			if (err)
 				report(err, client, "Couldn't add text.");
 		});

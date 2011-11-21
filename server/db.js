@@ -229,12 +229,48 @@ Y.kikanai = function (threads) {
 	}
 };
 
-Y.reserve_post = function (op, callback) {
-	this.connect().incr('postctr', function (err, num) {
-		if (err)
-			return callback(err);
-		OPs[num] = op || num;
-		callback(null, num);
+function update_throughput(m, ip, when, quant) {
+	var key = 'ip:' + ip + ':';
+	var shortKey = key + short_term_timeslot(when);
+	var longKey = key + long_term_timeslot(when);
+	m.incrby(shortKey, quant);
+	m.incrby(longKey, quant);
+	/* Don't want to use expireat in case of timezone trickery
+	   or something dumb. (Really, UTC should be OK though...) */
+	// Conservative expirations
+	m.expire(shortKey, 10 * 60);
+	m.expire(longKey, 2 * 24 * 3600);
+}
+
+function short_term_timeslot(when) {
+	return Math.floor(when / (1000 * 60 * 5));
+}
+
+function long_term_timeslot(when) {
+	return Math.floor(when / (1000 * 60 * 60 * 24));
+}
+
+Y.reserve_post = function (op, ip, callback) {
+	var r = this.connect();
+	var key = 'ip:' + ip + ':';
+	var now = new Date().getTime();
+	var shortTerm = key + short_term_timeslot(now);
+	var longTerm = key + long_term_timeslot(now);
+	r.mget([shortTerm, longTerm], function (err, quants) {
+		if (err) {
+			console.error(err);
+			return callback("Limiter failure.");
+		}
+		if (quants[0] > config.SHORT_TERM_LIMIT ||
+				quants[1] > config.LONG_TERM_LIMIT)
+			return callback('Reduce your speed.');
+
+		r.incr('postctr', function (err, num) {
+			if (err)
+				return callback(err);
+			OPs[num] = op || num;
+			callback(null, num);
+		});
 	});
 };
 
@@ -296,6 +332,13 @@ Y.insert_post = function (msg, body, ip, callback) {
 		view.links = msg.links;
 	extract_image(view);
 	self._log(m, op, common.INSERT_POST, [num, view]);
+
+	if (ip) {
+		var len = (body ? body.length : 0) + (view.image
+				? config.IMAGE_CHARACTER_WORTH : 0);
+		if (len > 0)
+			update_throughput(m, ip, view.time, len);
+	}
 
 	m.exec(function (err, results) {
 		if (err) {
@@ -487,7 +530,7 @@ Y.check_duplicate = function (hash, callback) {
 	});
 };
 
-Y.add_image = function (post, image, callback) {
+Y.add_image = function (post, image, ip, callback) {
 	var r = this.connect();
 	var num = post.num, op = post.op;
 	if (!op)
@@ -504,11 +547,13 @@ Y.add_image = function (post, image, callback) {
 		m.hmset(key, image);
 		m.hincrby('thread:' + op, 'imgctr', 1);
 		note_hash(m, image.hash, post.num);
+		var now = new Date().getTime();
+		update_throughput(m, ip, now, config.IMAGE_CHARACTER_WORTH);
 		m.exec(callback);
 	});
 };
 
-Y.append_post = function (post, tail, old_state, links, new_links, callback) {
+Y.append_post = function (post, tail, ip, old_state, links, new_links, cb) {
 	var m = this.connect().multi();
 	var key = (post.op ? 'post:' : 'thread:') + post.num;
 	/* Don't need to check .exists() thanks to client state */
@@ -518,6 +563,10 @@ Y.append_post = function (post, tail, old_state, links, new_links, callback) {
 		m.hset(key, 'state', post.state.join());
 	if (!common.is_empty(new_links))
 		m.hmset(key + ':links', new_links);
+	if (ip) {
+		var now = new Date().getTime();
+		update_throughput(m, ip, now, tail.length);
+	}
 	var msg = [post.num, tail];
 	if (links)
 		msg.push(old_state[0], old_state[1], links);
@@ -526,7 +575,7 @@ Y.append_post = function (post, tail, old_state, links, new_links, callback) {
 	else if (old_state[0])
 		msg.push(old_state[0]);
 	this._log(m, post.op || post.num, common.UPDATE_POST, msg);
-	m.exec(callback);
+	m.exec(cb);
 };
 
 function finish_off(m, key, body) {
