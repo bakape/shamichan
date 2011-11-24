@@ -124,7 +124,7 @@ OK.on_update = function(op, num, kind, msg) {
 	}
 	else if (this.post && kind == common.DELETE_POSTS) {
 		/* grr special case */
-		var nums = JSON.parse('[' + msg + ']');
+		var nums = JSON.parse('[' + msg + ']').slice(1);
 		if (nums.indexOf(this.post.num) >= 0) {
 			this.last_num = this.post.num;
 			delete this.post;
