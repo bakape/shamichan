@@ -18,11 +18,10 @@ exports.redis_client = redis_client;
 
 /* REAL-TIME UPDATES */
 
-function Subscription(thread) {
+function Subscription(target) {
 	events.EventEmitter.call(this);
-	this.thread = thread;
-	if (thread == 'live')
-		this.live = true;
+	this.target = target;
+	this.live = !!target.match(/^tag:/);
 	this.subscription_callbacks = [];
 
 	this.k = redis_client();
@@ -33,7 +32,7 @@ function Subscription(thread) {
 	}
 	else {
 		this.k.on('subscribe', this.on_sub.bind(this));
-		this.k.subscribe('thread:' + thread);
+		this.k.subscribe('thread:' + target);
 	}
 };
 
@@ -68,8 +67,10 @@ S.on_sub = function () {
 S.on_message = function (pat, chan, msg) {
 	var info = msg.match(/^(\d+),(\d+)/);
 	var kind = parseInt(info[1]), num = parseInt(info[2]);
-	/* Can't use this.thread since this.live might be true */
 	var thread = parseInt(chan.match(/^thread:(\d+)$/)[1]);
+	if (this.live) {
+		/* TODO: Check what tags this thread is on, possibly filter. */
+	}
 	this.emit('update', thread, num, kind, msg);
 };
 
@@ -83,7 +84,7 @@ S.on_sub_error = function (err) {
 };
 
 S.sink_sub = function (err) {
-	this.emit('error', this.thread, err);
+	this.emit('error', this.target, err);
 	this.commit_sudoku();
 };
 
@@ -93,8 +94,8 @@ S.commit_sudoku = function () {
 	k.removeAllListeners(this.live ? 'pmessage' : 'message');
 	k.removeAllListeners(this.live ? 'psubscribe' : 'subscribe');
 	k.quit();
-	if (SUBS[this.thread] === this)
-		delete SUBS[this.thread];
+	if (SUBS[this.target] === this)
+		delete SUBS[this.target];
 	this.removeAllListeners('update');
 	this.removeAllListeners('error');
 };
@@ -154,16 +155,24 @@ function load_OPs(r, callback) {
 
 /* SOCIETY */
 
-function Yakusoku() {
+exports.is_board = function (board) {
+	return config.BOARDS.indexOf(board) >= 0;
+};
+
+function Yakusoku(board) {
 	events.EventEmitter.call(this);
 	this.id = ++YAKUDON;
-	/* TEMP */
-	this.tag = '3:moe';
+	if (board)
+		this.set_board(board);
 }
 
 util.inherits(Yakusoku, events.EventEmitter);
 exports.Yakusoku = Yakusoku;
 var Y = Yakusoku.prototype;
+
+Y.set_board = function (board) {
+	this.tag = board.length + ':' + board;
+};
 
 Y.connect = function () {
 	if (!this.r) {
@@ -205,11 +214,13 @@ Y.kiku = function (threads, on_update, on_sink, callback) {
 	var self = this;
 	this.on_update = on_update;
 	this.on_sink = on_sink;
-	forEachInObject(threads, function (thread, cb) {
-		var sub = SUBS[thread];
+	forEachInObject(threads, function (key, cb) {
+		if (key == 'live')
+			key = 'tag:' + this.board;
+		var sub = SUBS[key];
 		if (!sub) {
-			sub = new Subscription(thread);
-			SUBS[thread] = sub;
+			sub = new Subscription(key);
+			SUBS[key] = sub;
 		}
 		sub.on('update', on_update);
 		sub.on('error', on_sink);
@@ -274,8 +285,10 @@ Y.reserve_post = function (op, ip, callback) {
 	});
 };
 
-Y.insert_post = function (msg, body, ip, callback) {
+Y.insert_post = function (msg, body, board, ip, callback) {
 	var r = this.connect();
+	if (!this.tag)
+		return callback("Can't retrieve board for posting.");
 	var tag_key = 'tag:' + this.tag;
 	var self = this;
 	if (!msg.num) {
@@ -286,6 +299,7 @@ Y.insert_post = function (msg, body, ip, callback) {
 		delete OPs[num];
 		return callback('Thread does not exist.');
 	}
+
 	var view = {time: msg.time, ip: ip, state: msg.state.join()};
 	var num = msg.num, op = msg.op;
 	if (msg.name)
@@ -298,10 +312,13 @@ Y.insert_post = function (msg, body, ip, callback) {
 		view.auth = msg.auth;
 	if (op)
 		view.op = op;
+	else
+		view.tags = board.length + ':' + board;
 
 	var key = (op ? 'post:' : 'thread:') + num;
 	var bump = !op || !common.is_sage(view.email);
 	var m = r.multi();
+	m.incr(tag_key + ':postctr');
 	if (bump)
 		m.incr(tag_key + ':bumpctr');
 	if (msg.image) {

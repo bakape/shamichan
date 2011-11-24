@@ -6,6 +6,7 @@ var config = {
 
 	REDIS_PORT: 6379,
 
+	BOARDS: ['moe', 'gar'],
 	THREADS_PER_PAGE: 10,
 	ABBREVIATED_REPLIES: 5,
 

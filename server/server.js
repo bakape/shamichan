@@ -26,7 +26,7 @@ function Okyaku(socket) {
 	this.id = socket.id;
 	this.socket = socket;
 	this.watching = {};
-	this.db = new db.Yakusoku;
+	this.db = new db.Yakusoku(null);
 	this.skipped = 0;
 	socket.on('message', this.on_message.bind(this));
 	socket.on('disconnect', this.on_disconnect.bind(this));
@@ -40,15 +40,17 @@ OK.send = function (msg) {
 };
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
-	if (msg.length != 2)
+	if (msg.length != 3)
 		return false;
-	var syncs = msg[0], live = msg[1];
+	var board = msg[0], syncs = msg[1], live = msg[2];
 	if (!syncs || typeof syncs != 'object')
 		return false;
 	if (client.synced) {
 		console.error("warning: Client tried to sync twice");
 		return false;
 	}
+	if (!db.is_board(board))
+		return false;
 	var dead_threads = [], count = 0;
 	for (var k in syncs) {
 		if (!k.match(/^\d+$/))
@@ -77,6 +79,8 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		client.watching = {live: true};
 		count = 1;
 	}
+	client.board = board;
+	client.db.set_board(board);
 	/* Race between subscribe and backlog fetch; client must de-dup */
 	client.db.kiku(client.watching, client.on_update.bind(client),
 			client.on_thread_sink.bind(client), listening);
@@ -415,7 +419,10 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 		return render_404(resp);
 	var who = req.auth.user || 'unknown';
 
-	var img = _.template('<a href="moe/{{num}}">'
+	var board = req.board || 'moe';
+	if (!db.is_board(board))
+		return render_404(resp);
+	var img = _.template('<a href="' + board + '/{{num}}">'
 			+ '<img alt="{{num}}" title="Thread {{num}}" src="'
 			+ config.MEDIA_URL + 'thumb/{{thumb}}" width=50 '
 			+ 'height=50></a>\n');
@@ -426,7 +433,7 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 	resp.write(filterTmpl[0]);
 	resp.write('<h2>Limit ' + limit + '</h2>\n');
 
-	var filter = new db.Filter('moe');
+	var filter = new db.Filter(board);
 	filter.get_all(limit);
 
 	filter.on('thread', function (thread) {
@@ -450,7 +457,7 @@ route_post_auth(/^\/admin$/, function (req, resp) {
 		return !isNaN(x);
 	});
 
-	var yaku = new db.Yakusoku;
+	var yaku = new db.Yakusoku(null);
 	yaku.remove_posts(threads, function (err, dels) {
 
 		// XXX: Can't disconnect right away.
@@ -491,16 +498,23 @@ route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
 });
 
 route_get(/^\/(\w+)$/, function (req, resp, params) {
-	redirect(resp, params[1] + '/live');
+	var board = params[1];
+	if (!db.is_board(board))
+		return render_404(resp);
+	/* If arbitrary boards were allowed, need to escape this: */
+	redirect(resp, board + '/live');
 });
-route_get(/^\/\w+\/$/, function (req, resp) {
+route_get(/^\/(\w+)\/$/, function (req, resp, params) {
+	if (!db.is_board(params[1]))
+		return render_404(resp);
 	redirect(resp, 'live');
 });
 
 route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
-	if (params[1] != 'moe') // TEMP
+	var board = params[1];
+	if (!db.is_board(board))
 		return render_404(resp);
-	var yaku = new db.Yakusoku();
+	var yaku = new db.Yakusoku(board);
 	yaku.get_tag(0);
 	var nav_html;
 	yaku.on('begin', function (thread_count) {
@@ -533,9 +547,10 @@ route_get(/^\/\w+\/live\/$/, function (req, resp, params) {
 });
 
 route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
-	if (params[1] != 'moe') // TEMP
+	var board = params[1];
+	if (!db.is_board(board))
 		return render_404(resp);
-	var yaku = new db.Yakusoku();
+	var yaku = new db.Yakusoku(board);
 	var page = parseInt(params[2], 10);
 	if (page > 0 && params[2][0] == '0') /* leading zeroes? */
 		return redirect(resp, 'page' + page);
@@ -572,7 +587,8 @@ route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
 });
 
 route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
-	if (params[1] != 'moe') // TEMP
+	var board = params[1];
+	if (!db.is_board(board))
 		return render_404(resp);
 	var num = parseInt(params[2], 10);
 	if (!num)
@@ -584,7 +600,7 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		return render_404(resp);
 	if (op != num)
 		return redirect_thread(resp, num, op);
-	var yaku = new db.Yakusoku();
+	var yaku = new db.Yakusoku(board);
 	var reader = new db.Reader(yaku);
 	reader.get_thread(num, true, false);
 	reader.on('nomatch', render_404.bind(null, resp));
@@ -684,7 +700,7 @@ function report(error, client, client_msg) {
 		return;
 	}
 	if (!error_db)
-		error_db = new db.Yakusoku;
+		error_db = new db.Yakusoku(null);
 	var ver = git_version || 'ffffff';
 	var msg = client_msg || 'Server error.';
 	var ip = client && client.ip;
@@ -818,7 +834,8 @@ function allocate_post(msg, image, client, callback) {
 			return callback("Post reference error.");
 		}
 		post.links = links;
-		client.db.insert_post(post, body, client.ip, inserted);
+		client.db.insert_post(post, body, client.board, client.ip,
+				inserted);
 	}
 	function inserted(err) {
 		if (err) {
@@ -1011,7 +1028,7 @@ else {
 		db.track_OPs(function (err) {
 			if (err)
 				throw err;
-			var yaku = new db.Yakusoku;
+			var yaku = new db.Yakusoku(null);
 			yaku.finish_all(function (err) {
 				if (err)
 					throw err;

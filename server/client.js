@@ -1,4 +1,4 @@
-var THREAD, BUMP, PAGE, syncs = {};
+var BOARD, THREAD, BUMP, PAGE, syncs = {};
 var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var $sizer = $('<span id="sizer"></span>');
@@ -13,11 +13,12 @@ var socket = io.connect('/', {
 
 (function () {
 	var p = location.pathname;
+	BOARD = p.match(/^\/(.+?)\//)[1];
 	var t = p.match(/\/(\d+)$/);
-	THREAD = t ? parseInt(t[1]) : 0;
+	THREAD = t ? parseInt(t[1], 10) : 0;
 	BUMP = !!p.match(/\/live$/);
 	PAGE = p.match(/\/page(\d+)$/);
-	PAGE = PAGE ? parseInt(PAGE[1]) : -1;
+	PAGE = PAGE ? parseInt(PAGE[1], 10) : -1;
 
 	try {
 		function load(key, f) {
@@ -1053,7 +1054,7 @@ MIRU.connecting = function () {
 
 MIRU.connect = function () {
 	sync_status('Syncing...', false);
-	send([SYNCHRONIZE, syncs, BUMP]);
+	send([SYNCHRONIZE, BOARD, syncs, BUMP]);
 };
 
 MIRU.disconnect = function () {
