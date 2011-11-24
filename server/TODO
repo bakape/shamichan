@@ -2,7 +2,6 @@
 * Actually tell user when a particular thread failed to sync
 * Extract common fields (num, op, type) from log (since these are duplicated in
   publications for filtering)
-* Back button broken (old cached version shown)
 * Fucking text
 * Not sure if the syncing in pageX threads is broken
 * Look for memory leaks in the front page
