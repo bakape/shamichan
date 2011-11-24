@@ -522,11 +522,14 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
 		resp.writeHead(200, noCacheHeaders);
+		var title = config.TITLES[board];
 		resp.write(indexTmpl[0]);
-		resp.write(make_board_meta(nav));
+		resp.write(title);
 		resp.write(indexTmpl[1]);
-		resp.write(config.TITLE);
+		resp.write(make_board_meta(nav));
 		resp.write(indexTmpl[2]);
+		resp.write(title);
+		resp.write(indexTmpl[3]);
 		nav_html = make_nav_html(nav);
 		resp.write(nav_html);
 		resp.write('<hr>\n');
@@ -562,11 +565,14 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, page);
 		resp.writeHead(200, noCacheHeaders);
+		var title = config.TITLES[board];
 		resp.write(indexTmpl[0]);
-		resp.write(make_board_meta(nav));
+		resp.write(title);
 		resp.write(indexTmpl[1]);
-		resp.write(config.TITLE);
+		resp.write(make_board_meta(nav));
 		resp.write(indexTmpl[2]);
+		resp.write(title);
+		resp.write(indexTmpl[3]);
 		nav_html = make_nav_html(nav);
 		resp.write(nav_html);
 		resp.write('<hr>\n');
@@ -610,10 +616,12 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	reader.on('begin', function () {
 		resp.writeHead(200, noCacheHeaders);
 		resp.write(indexTmpl[0]);
-		resp.write('\t<link rel="index" href="live">\n');
+		resp.write('/'+escape(board)+'/ - #' + op);
 		resp.write(indexTmpl[1]);
-		resp.write('Thread #' + op);
+		resp.write('\t<link rel="index" href="live">\n');
 		resp.write(indexTmpl[2]);
+		resp.write('Thread #' + op);
+		resp.write(indexTmpl[3]);
 		resp.write('<hr>\n');
 	});
 	write_thread_html(reader, resp, true);
@@ -636,7 +644,7 @@ route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
 });
 
 function write_page_end(req, resp) {
-	resp.write(indexTmpl[3]);
+	resp.write(indexTmpl[4]);
 	if (req.auth) {
 		if (req.auth.auth == 'Admin')
 			resp.write('<script src="../admin.js"></script>\n');

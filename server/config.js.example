@@ -1,5 +1,4 @@
 var config = {
-	TITLE: "Test",
 	PORT: 8000,
 	DEBUG: true,
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
@@ -7,6 +6,7 @@ var config = {
 	REDIS_PORT: 6379,
 
 	BOARDS: ['moe', 'gar'],
+	TITLES: {moe: "/moe/ - Sweets", gar: "/gar/ - Hard Work &amp; Guts"},
 	THREADS_PER_PAGE: 10,
 	ABBREVIATED_REPLIES: 5,
 
