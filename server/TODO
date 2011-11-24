@@ -1,7 +1,5 @@
 * Update `syncs` in client when on /live
 * Actually tell user when a particular thread failed to sync
-* Copy thread:* messages to SUBS.live instead of using another redis
-  subscriber (would halve redis pubsub bandwidth)
 * Extract common fields (num, op, type) from log (since these are duplicated in
   publications for filtering)
 * Back button broken (old cached version shown)

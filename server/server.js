@@ -26,12 +26,10 @@ function Okyaku(socket) {
 	this.id = socket.id;
 	this.socket = socket;
 	this.watching = {};
-	this.db = new db.Yakusoku(null);
 	this.skipped = 0;
 	socket.on('message', this.on_message.bind(this));
 	socket.on('disconnect', this.on_disconnect.bind(this));
 	socket.on('error', console.error.bind(console, 'socket:'));
-	this.db.on('error', console.error.bind(console, 'redis:'));
 }
 var OK = Okyaku.prototype;
 
@@ -80,7 +78,11 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		count = 1;
 	}
 	client.board = board;
-	client.db.set_board(board);
+
+	if (client.db)
+		client.db.disconnect();
+	client.db = new db.Yakusoku(board);
+	client.db.on('error', console.error.bind(console, 'redis:'));
 	/* Race between subscribe and backlog fetch; client must de-dup */
 	client.db.kiku(client.watching, client.on_update.bind(client),
 			client.on_thread_sink.bind(client), listening);
@@ -657,6 +659,8 @@ OK.on_message = function (data) {
 		else if (msg.constructor == Array)
 			type = msg.shift();
 	}
+	if (!this.synced && type != common.SYNCHRONIZE)
+		type = common.INVALID;
 	var func = dispatcher[type];
 	if (!func || !func(msg, this)) {
 		console.error("Got invalid message " + data);
@@ -668,14 +672,16 @@ OK.on_disconnect = function () {
 	delete clients[this.id];
 	this.synced = false;
 	var db = this.db;
-	if (this.watching)
-		db.kikanai(this.watching);
-	if (this.post)
-		this.finish_post(function () {
+	if (db) {
+		if (this.watching)
+			db.kikanai(this.watching);
+		if (this.post)
+			this.finish_post(function () {
+				db.disconnect();
+			});
+		else
 			db.disconnect();
-		});
-	else
-		db.disconnect();
+	}
 };
 
 function pad3(n) {

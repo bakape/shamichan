@@ -21,19 +21,12 @@ exports.redis_client = redis_client;
 function Subscription(target) {
 	events.EventEmitter.call(this);
 	this.target = target;
-	this.live = !!target.match(/^tag:/);
 	this.subscription_callbacks = [];
 
 	this.k = redis_client();
 	this.k.on('error', this.on_sub_error.bind(this));
-	if (this.live) {
-		this.k.on('psubscribe', this.on_sub.bind(this));
-		this.k.psubscribe('thread:*');
-	}
-	else {
-		this.k.on('subscribe', this.on_sub.bind(this));
-		this.k.subscribe('thread:' + target);
-	}
+	this.k.on('subscribe', this.on_sub.bind(this));
+	this.k.subscribe(target);
 };
 
 util.inherits(Subscription, events.EventEmitter);
@@ -48,14 +41,8 @@ S.when_ready = function (cb) {
 
 S.on_sub = function () {
 	var k = this.k;
-	if (this.live) {
-		k.removeAllListeners('psubscribe');
-		k.on('pmessage', this.on_message.bind(this));
-	}
-	else {
-		k.removeAllListeners('subscribe');
-		k.on('message', this.on_message.bind(this, null));
-	}
+	k.removeAllListeners('subscribe');
+	k.on('message', this.on_message.bind(this));
 	k.removeAllListeners('error');
 	k.on('error', this.sink_sub.bind(this));
 	this.subscription_callbacks.forEach(function (cb) {
@@ -64,12 +51,23 @@ S.on_sub = function () {
 	delete this.subscription_callbacks;
 };
 
-S.on_message = function (pat, chan, msg) {
-	var info = msg.match(/^(\d+),(\d+)/);
-	var kind = parseInt(info[1]), num = parseInt(info[2]);
-	var thread = parseInt(chan.match(/^thread:(\d+)$/)[1]);
-	if (this.live) {
-		/* TODO: Check what tags this thread is on, possibly filter. */
+S.on_message = function (chan, msg) {
+	var thread, info, kind, num;
+	var m = chan.match(/^thread:(\d+)$/);
+	if (m) {
+		thread = parseInt(m[1], 10);
+		info = msg.match(/^(\d+),(\d+)/);
+		kind = parseInt(info[1], 10);
+		num = parseInt(info[2], 10);
+	}
+	else {
+		/* TEMP: Want to keep these uniform really... */
+		info = msg.match(/^(\d+),(\d+),(\d+)/);
+		thread = parseInt(info[1], 10);
+		kind = parseInt(info[2], 10);
+		num = parseInt(info[3], 10);
+		/* BLEH */
+		msg = msg.slice(info[1].length + 1);
 	}
 	this.emit('update', thread, num, kind, msg);
 };
@@ -91,8 +89,8 @@ S.sink_sub = function (err) {
 S.commit_sudoku = function () {
 	var k = this.k;
 	k.removeAllListeners('error');
-	k.removeAllListeners(this.live ? 'pmessage' : 'message');
-	k.removeAllListeners(this.live ? 'psubscribe' : 'subscribe');
+	k.removeAllListeners('message');
+	k.removeAllListeners('subscribe');
 	k.quit();
 	if (SUBS[this.target] === this)
 		delete SUBS[this.target];
@@ -162,16 +160,15 @@ exports.is_board = function (board) {
 function Yakusoku(board) {
 	events.EventEmitter.call(this);
 	this.id = ++YAKUDON;
-	if (board)
-		this.set_board(board);
+	this.tag = board;
 }
 
 util.inherits(Yakusoku, events.EventEmitter);
 exports.Yakusoku = Yakusoku;
 var Y = Yakusoku.prototype;
 
-Y.set_board = function (board) {
-	this.tag = board.length + ':' + board;
+Y.tag_key = function () {
+	return 'tag:' + this.tag.length + ':' + this.tag;
 };
 
 Y.connect = function () {
@@ -210,13 +207,16 @@ function forEachInObject(obj, f, callback) {
 		callback(errors.length ? errors : null);
 }
 
-Y.kiku = function (threads, on_update, on_sink, callback) {
+Y.target_key = function (key) {
+	return (key == 'live') ? 'tag:' + this.tag : 'thread:' + key;
+};
+
+Y.kiku = function (targets, on_update, on_sink, callback) {
 	var self = this;
 	this.on_update = on_update;
 	this.on_sink = on_sink;
-	forEachInObject(threads, function (key, cb) {
-		if (key == 'live')
-			key = 'tag:' + this.board;
+	forEachInObject(targets, function (target, cb) {
+		var key = self.target_key(target);
 		var sub = SUBS[key];
 		if (!sub) {
 			sub = new Subscription(key);
@@ -228,9 +228,9 @@ Y.kiku = function (threads, on_update, on_sink, callback) {
 	}, callback);
 };
 
-Y.kikanai = function (threads) {
-	for (var thread in threads) {
-		var sub = SUBS[thread];
+Y.kikanai = function (targets) {
+	for (var target in targets) {
+		var sub = SUBS[this.target_key(target)];
 		if (sub) {
 			sub.removeListener('update', this.on_update);
 			sub.removeListener('error', this.on_sink);
@@ -289,7 +289,6 @@ Y.insert_post = function (msg, body, board, ip, callback) {
 	var r = this.connect();
 	if (!this.tag)
 		return callback("Can't retrieve board for posting.");
-	var tag_key = 'tag:' + this.tag;
 	var self = this;
 	if (!msg.num) {
 		callback("No post num.");
@@ -301,6 +300,7 @@ Y.insert_post = function (msg, body, board, ip, callback) {
 	}
 
 	var view = {time: msg.time, ip: ip, state: msg.state.join()};
+	var tag_key = this.tag_key();
 	var num = msg.num, op = msg.op;
 	if (msg.name)
 		view.name = msg.name;
@@ -468,7 +468,7 @@ Y.remove_thread = function (op, callback) {
 	function (dead_ctr, next) {
 		/* Rename thread keys, move to graveyard */
 		var m = r.multi();
-		m.zrem('tag:' + self.tag + ':threads', op);
+		m.zrem(self.tag_key() + ':threads', op);
 		m.zadd('tag:9:graveyard:threads', dead_ctr, op);
 		/* XXX: Need to fix the "[op]" dependency in on_update */
 		self._log(m, op, common.DELETE_THREAD, [op]);
@@ -664,6 +664,8 @@ Y._log = function (m, op, kind, msg) {
 	m.rpush(key + ':history', msg);
 	m.hincrby(key, 'hctr', 1);
 	m.publish(key, msg);
+	/* TEMP */
+	m.publish('tag:' + this.tag, op + ',' + msg);
 };
 
 Y.fetch_backlogs = function (watching, callback) {
@@ -706,7 +708,7 @@ Y.get_post_op = function (num, callback) {
 Y.get_tag = function (page) {
 	var r = this.connect();
 	var self = this;
-	var key = 'tag:' + this.tag + ':threads';
+	var key = this.tag_key() + ':threads';
 	var start = page * config.THREADS_PER_PAGE;
 	var end = start + config.THREADS_PER_PAGE - 1;
 	var m = r.multi();
@@ -838,7 +840,7 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 
 function Filter(tag) {
 	events.EventEmitter.call(this);
-	this.tag = tag.length + ':' + tag;
+	this.tag = tag;
 };
 
 util.inherits(Filter, events.EventEmitter);
@@ -856,7 +858,7 @@ F.connect = function () {
 F.get_all = function (limit) {
 	var self = this;
 	var r = this.connect();
-	r.zrange('tag:' + this.tag + ':threads', 0, -1, go);
+	r.zrange(this.tag_key() + ':threads', 0, -1, go);
 	function go(err, threads) {
 		if (err)
 			return self.failure(err);
@@ -903,6 +905,10 @@ F.cleanup = function () {
 	this.removeAllListeners('error');
 	this.removeAllListeners('thread');
 	this.removeAllListeners('end');
+};
+
+F.tag_key = function () {
+	return 'tag:' + this.tag.length + ':' + this.tag;
 };
 
 /* HELPERS */
