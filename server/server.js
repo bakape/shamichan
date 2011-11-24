@@ -392,8 +392,9 @@ function redirect(resp, uri, code) {
 		+ '<a href="' + encodeURI(uri) + '">Proceed</a>.');
 }
 
-function redirect_thread(resp, num, op) {
-	redirect(resp, op + '#' + num);
+function redirect_thread(resp, num, op, tag) {
+	var board = tag ? '../'+tag+'/' : '';
+	redirect(resp, board + op + '#' + num);
 }
 
 routes.push({method: 'post', pattern: /^\/img$/, handler: function (req,resp) {
@@ -610,7 +611,7 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		return redirect_thread(resp, num, op);
 	var yaku = new db.Yakusoku(board);
 	var reader = new db.Reader(yaku);
-	reader.get_thread(num, true, false);
+	reader.get_thread(board, num, true, false);
 	reader.on('nomatch', render_404.bind(null, resp));
 	reader.on('redirect', redirect_thread.bind(null, resp, num));
 	reader.on('begin', function () {

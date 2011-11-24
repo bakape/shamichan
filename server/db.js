@@ -745,7 +745,7 @@ Y._get_each_thread = function (reader, ix, nums) {
 	};
 	reader.on('end', next_please);
 	reader.on('nomatch', next_please);
-	reader.get_thread(nums[ix], false, true);
+	reader.get_thread(this.tag, nums[ix], false, true);
 };
 
 Y.report_error = function (info, ver, callback) {
@@ -764,7 +764,7 @@ function Reader(yakusoku) {
 util.inherits(Reader, events.EventEmitter);
 exports.Reader = Reader;
 
-Reader.prototype.get_thread = function (num, redirect_ok, abbrev) {
+Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 	var r = this.y.connect();
 	var key = 'thread:' + num;
 	var self = this;
@@ -785,6 +785,15 @@ Reader.prototype.get_thread = function (num, redirect_ok, abbrev) {
 				else
 					self.emit('redirect', op);
 			});
+			return;
+		}
+		var tags = parse_tags(pre_post.tags);
+		if (tags.indexOf(tag) < 0) {
+			/* XXX: Should redirect directly to correct thread */
+			if (!redirect_ok)
+				self.emit('nomatch');
+			else
+				self.emit('redirect', num, tags[0]);
 			return;
 		}
 		self.emit('begin');
@@ -964,3 +973,21 @@ function with_body(r, key, post, callback) {
 			});
 		});
 };
+
+function parse_tags(input) {
+	if (!input)
+		return ['moe'];
+	var tags = [];
+	while (input.length) {
+		var m = input.match(/^(\d+):/);
+		if (!m)
+			break;
+		var len = parseInt(m[1], 10);
+		var pre = m[1].length + 1;
+		if (input.length < pre + len)
+			break;
+		tags.push(input.substr(pre, len));
+		input = input.slice(pre + len);
+	}
+	return tags;
+}
