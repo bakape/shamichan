@@ -5,9 +5,11 @@ md5sum
 node.js
 redis
 
+npm modules:
+
 async
 formidable
-node-imagemagick
-node_redis
+imagemagick
 oauth
+redis
 socket.io
