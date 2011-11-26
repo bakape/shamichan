@@ -16,7 +16,7 @@ perceptual: perceptual.c
 
 tripcode.node: .build tripcode.cc
 	node-waf build
-	@cp .build/default/$@ $@
+	@cp .build/*/$@ $@
 
 test:
 	node ghost.js
