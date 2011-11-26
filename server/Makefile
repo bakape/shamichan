@@ -1,9 +1,9 @@
-CLIENT_SRC := $(shell node server.js --show-config CLIENT_DEPS)
-DEBUG := $(shell node server.js --show-config DEBUG)
+CLIENT_SRC := $(shell node get.js CLIENT_DEPS)
+DEBUG := $(shell node get.js DEBUG)
 ifeq ($(DEBUG),true)
 CLIENT_JS := ../www/js/client.debug.js
 else
-CLIENT_JS := ../www/js/client-$(shell node server.js --client-version).js
+CLIENT_JS := ../www/js/client-$(shell node get.js --client-version).js
 endif
 
 all: perceptual tripcode.node client

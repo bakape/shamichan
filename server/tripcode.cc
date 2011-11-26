@@ -12,7 +12,7 @@ static char SECURE_SALT[21] = "$5$";
 #define TRIP_MAX 128
 
 static int load_secure_salt(void) {
-	FILE *fp = popen("node server.js --show-config SECURE_SALT", "r");
+	FILE *fp = popen("node get.js SECURE_SALT", "r");
 	if (!fp) {
 		perror("popen");
 		return 0;

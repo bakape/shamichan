@@ -998,34 +998,9 @@ function start_server() {
 	});
 }
 
-function get_version(deps, callback) {
-	require('child_process').exec('git log -1 --format=%h '+deps.join(' '),
-			function (err, stdout, stderr) {
-		if (err)
-			callback(err);
-		else
-			callback(null, stdout.trim());
-	});
-}
-
 (function () {
-
-if (process.argv[2] == '--show-config') {
-	var key = process.argv[3];
-	if (!(key in config))
-		throw "No such config value " + process.argv[3];
-	var val = config[process.argv[3]];
-	console.log((val && val.join) ? val.join(' ') : val);
-}
-else if (process.argv[2] == '--client-version')
-	get_version(config.CLIENT_DEPS, function (err, version) {
-		if (err)
-			throw err;
-		else
-			console.log(version);
-	});
-else {
-	get_version(config.CLIENT_DEPS, function (err, version) {
+	var deps = config.CLIENT_DEPS;
+	require('./get').get_version(deps, function (err, version) {
 		if (err)
 			throw err;
 		tripcode = require('./tripcode');
@@ -1052,6 +1027,4 @@ else {
 			});
 		});
 	});
-}
-
 })();
