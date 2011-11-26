@@ -1,0 +1,68 @@
+a, header a.expand {
+	color: #a00;
+}
+a:hover, blockquote a, .email *:hover {
+	color: #513fd3 !important;
+}
+article, aside, nav {
+	background-color: #e9e0c9;
+	border-right: 1px solid #d1c29b;
+	border-bottom: 1px solid #d1c29b;
+}
+article.highlight {
+	background-color: #ff83c5;
+	border-right: 1px solid #df63a5;
+	border-bottom: 1px solid #df63a5;
+}
+article.editing {
+	background-image: url('chevrons.png');
+	border-right: 1px solid gray;
+	border-bottom: 1px solid gray;
+}
+b.admin {
+	color: #ff2385;
+}
+b.moderator {
+	color: #128e3c;
+}
+body {
+	background: #eee url('scales.png');
+}
+body, #sizer, #trans {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+}
+em {
+	color: #992278;
+}
+h1 {
+	color: black;
+	font: bolder 28px Tahoma;
+	letter-spacing: -2px;
+}
+h2 {
+	color: black;
+	font-family: Tahoma;
+}
+header, header a {
+	color: #444;
+}
+header b {
+	color: #555;
+}
+hr {
+	border-top: 1px solid #b7c5d9;
+}
+.email, .email * {
+	color: #0f0c5d;
+}
+.modal {
+	background-color: white;
+	border-right: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+}
+.preview {
+	background-color: #f9f0d9;
+	border-right: 1px solid #e9e0c9;
+	border-bottom: 1px solid #e9e0c9;
+}

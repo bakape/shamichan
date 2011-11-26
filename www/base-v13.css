@@ -1,49 +1,23 @@
 a {
 	border: none;
-	color: #34345c;
 	text-decoration: underline;
 }
 a:visited {
 	color: inherit;
 }
 a:hover, blockquote a {
-	color: #d00 !important;
 	cursor: pointer;
-}
-b.admin {
-	color: #f00000;
-}
-b.moderator {
-	color: purple;
 }
 abbr {
 	text-decoration: none;
 }
 article, aside {
-	background-color: #d6daf0;
-	border-right: 1px solid #b7c5d9;
-	border-bottom: 1px solid #b7c5d9;
 	display: table;
 	margin: 2px;
 	padding: 4px 10px;
 }
 article figure img {
 	margin-bottom: 0;
-}
-article.highlight {
-	background-color: #d6bad0;
-	border-right: 1px solid #ba9dbf;
-	border-bottom: 1px solid #ba9dbf;
-}
-article.editing {
-	background-color: #fa6;
-	border-right: 1px solid #e95;
-	border-bottom: 1px solid #e95;
-}
-body {
-	background-color: #eef2ff;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10pt;
 }
 body > aside {
 	margin: 1em;
@@ -69,7 +43,6 @@ del:hover, del:hover em {
 }
 em {
 	font-style: normal;
-	color: #789922;
 }
 fieldset {
 	border: 0;
@@ -94,27 +67,16 @@ figure img {
 	margin: 3px 20px 20px 0;
 	vertical-align: top;
 }
-h1 {
-	color: #af0a0f;
-	font: bolder 28px Tahoma;
-	letter-spacing: -2px;
-	text-align: center;
-}
-h2 {
-	color: #af0a0f;
-	font-family: Tahoma;
+h1, h2 {
 	text-align: center;
 }
 header a {
-	color: black;
 	text-decoration: none;
 }
 header a.expand {
-	color: #34345c;
 	text-decoration: underline;
 }
 header b {
-	color: #117743;
 	font-weight: bold;
 }
 header code {
@@ -123,16 +85,12 @@ header code {
 }
 hr {
 	border: none;
-	border-top: 1px solid #b7c5d9;
 	clear: both;
 }
 iframe {
 	display: none;
 }
 nav {
-	background-color: #d6daf0;
-	border-right: 1px solid #b7c5d9;
-	border-bottom: 1px solid #b7c5d9;
 	display: inline-block;
 	padding: 2px 10px;
 	margin: 1px 0;
@@ -149,11 +107,7 @@ section p {
 	display: inline;
 }
 .email, .email * {
-	color: #0f0c5d;
 	text-decoration: underline;
-}
-.email *:hover {
-	color: #d00 !important;
 }
 .emailcancel {
 	color: inherit !important;
@@ -172,7 +126,6 @@ section p {
 	padding-left: 15px;
 }
 .modal {
-	background-color: white;
 	overflow: hidden;
 	padding: 1em;
 	position: absolute;
@@ -181,9 +134,6 @@ section p {
 	white-space: nowrap;
 }
 .preview {
-	background-color: white;
-	border-right: 1px solid #eee;
-	border-bottom: 1px solid #eee;
 	padding: 4px 10px;
 	position: absolute;
 }
@@ -203,8 +153,6 @@ section p {
 }
 #sizer, #trans {
 	border: 0;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10pt;
 	padding: 0;
 }
 #trans {

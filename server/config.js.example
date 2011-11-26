@@ -7,6 +7,11 @@ var config = {
 
 	BOARDS: ['moe', 'gar'],
 	TITLES: {moe: "/moe/ - Sweets", gar: "/gar/ - Hard Work &amp; Guts"},
+	BASE_CSS: 'base-v13.css',
+	BOARD_CSS: {
+		moe: 'moe-v1.css',
+		meta: 'gar-wtf.css',
+	},
 	THREADS_PER_PAGE: 10,
 	ABBREVIATED_REPLIES: 5,
 

@@ -1,0 +1,63 @@
+a, header a.expand {
+	color: #34345c;
+}
+a:hover, blockquote a, .email *:hover {
+	color: #d00 !important;
+}
+article, aside, nav {
+	background-color: #d6daf0;
+	border-right: 1px solid #b7c5d9;
+	border-bottom: 1px solid #b7c5d9;
+}
+article.highlight {
+	background-color: #d6bad0;
+	border-right: 1px solid #ba9dbf;
+	border-bottom: 1px solid #ba9dbf;
+}
+article.editing {
+	background-color: #fa6;
+	border-right: 1px solid #e95;
+	border-bottom: 1px solid #e95;
+}
+b.admin {
+	color: #f00000;
+}
+b.moderator {
+	color: purple;
+}
+body {
+	background-color: #eef2ff;
+}
+body, #sizer, #trans {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+}
+em {
+	color: #789922;
+}
+h1 {
+	color: #af0a0f;
+	font: bolder 28px Tahoma;
+	letter-spacing: -2px;
+}
+h2 {
+	color: #af0a0f;
+	font-family: Tahoma;
+}
+header a {
+	color: black;
+}
+header b {
+	color: #117743;
+}
+hr {
+	border-top: 1px solid #b7c5d9;
+}
+.email, .email * {
+	color: #0f0c5d;
+}
+.modal, .preview {
+	background-color: white;
+	border-right: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+}

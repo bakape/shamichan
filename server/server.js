@@ -204,7 +204,15 @@ function page_nav(thread_count, cur_page) {
 	return info;
 }
 
-function make_board_meta(info) {
+function make_link_rels(board, bits) {
+	bits.push(['stylesheet', config.MEDIA_URL + config.BASE_CSS]);
+	bits.push(['stylesheet', config.MEDIA_URL + config.BOARD_CSS[board]]);
+	return bits.map(function (p) {
+		return '\t<link rel="'+p[0]+'" href="'+p[1]+'">\n';
+	}).join('');
+}
+
+function make_board_meta(board, info) {
 	var bits = [];
 	if (info.cur_page >= 0)
 		bits.push(['index', 'live']);
@@ -212,9 +220,11 @@ function make_board_meta(info) {
 		bits.push(['prev', info.prev_page]);
 	if (info.next_page)
 		bits.push(['next', info.next_page]);
-	return bits.map(function (p) {
-		return '\t<link rel="'+p[0]+'" href="'+p[1]+'">\n';
-	}).join('');
+	return make_link_rels(board, bits);
+}
+
+function make_thread_meta(board, num) {
+	return make_link_rels(board, [['index', 'live']]);
 }
 
 function make_nav_html(info) {
@@ -527,7 +537,7 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 		resp.write(indexTmpl[0]);
 		resp.write(title);
 		resp.write(indexTmpl[1]);
-		resp.write(make_board_meta(nav));
+		resp.write(make_board_meta(board, nav));
 		resp.write(indexTmpl[2]);
 		resp.write(title);
 		resp.write(indexTmpl[3]);
@@ -570,7 +580,7 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 		resp.write(indexTmpl[0]);
 		resp.write(title);
 		resp.write(indexTmpl[1]);
-		resp.write(make_board_meta(nav));
+		resp.write(make_board_meta(board, nav));
 		resp.write(indexTmpl[2]);
 		resp.write(title);
 		resp.write(indexTmpl[3]);
@@ -619,7 +629,7 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		resp.write(indexTmpl[0]);
 		resp.write('/'+escape(board)+'/ - #' + op);
 		resp.write(indexTmpl[1]);
-		resp.write('\t<link rel="index" href="live">\n');
+		resp.write(make_thread_meta(board, num));
 		resp.write(indexTmpl[2]);
 		resp.write('Thread #' + op);
 		resp.write(indexTmpl[3]);
