@@ -48,7 +48,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		console.error("warning: Client tried to sync twice");
 		return false;
 	}
-	if (!db.is_board(board))
+	if (!can_access(null, board))
 		return false;
 	var dead_threads = [], count = 0;
 	for (var k in syncs) {
@@ -356,6 +356,12 @@ function route_post_auth(pattern, handler) {
 			handler: auth_checker.bind(null, handler, true)});
 }
 
+function can_access(auth, board) {
+	if (auth && auth.auth == 'Admin' && board == 'graveyard')
+		return true;
+	return db.is_board(board);
+}
+
 
 var debug_static = !config.DEBUG ? false : function (req, resp) {
 	/* Highly insecure. */
@@ -434,7 +440,7 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 	var who = req.auth.user || 'unknown';
 
 	var board = req.board || 'moe';
-	if (!db.is_board(board))
+	if (!can_access(req.auth, board))
 		return render_404(resp);
 	var img = _.template('<a href="' + board + '/{{num}}">'
 			+ '<img alt="{{num}}" title="Thread {{num}}" src="'
@@ -513,20 +519,21 @@ route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
 
 route_get(/^\/(\w+)$/, function (req, resp, params) {
 	var board = params[1];
-	if (!db.is_board(board))
+	if (!can_access(req.auth, board))
 		return render_404(resp);
 	/* If arbitrary boards were allowed, need to escape this: */
 	redirect(resp, board + '/live');
 });
 route_get(/^\/(\w+)\/$/, function (req, resp, params) {
-	if (!db.is_board(params[1]))
+	var board = params[1];
+	if (!can_access(req.auth, board))
 		return render_404(resp);
 	redirect(resp, 'live');
 });
 
 route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	var board = params[1];
-	if (!db.is_board(board))
+	if (!can_access(req.auth, board))
 		return render_404(resp);
 	var yaku = new db.Yakusoku(board);
 	yaku.get_tag(0);
@@ -534,7 +541,7 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
 		resp.writeHead(200, noCacheHeaders);
-		var title = config.TITLES[board];
+		var title = config.TITLES[board] || escape(board);
 		resp.write(indexTmpl[0]);
 		resp.write(title);
 		resp.write(indexTmpl[1]);
@@ -565,7 +572,7 @@ route_get(/^\/\w+\/live\/$/, function (req, resp, params) {
 
 route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	var board = params[1];
-	if (!db.is_board(board))
+	if (!can_access(req.auth, board))
 		return render_404(resp);
 	var yaku = new db.Yakusoku(board);
 	var page = parseInt(params[2], 10);
@@ -577,7 +584,7 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, page);
 		resp.writeHead(200, noCacheHeaders);
-		var title = config.TITLES[board];
+		var title = config.TITLES[board] || escape(board);
 		resp.write(indexTmpl[0]);
 		resp.write(title);
 		resp.write(indexTmpl[1]);
@@ -608,7 +615,7 @@ route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
 
 route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var board = params[1];
-	if (!db.is_board(board))
+	if (!can_access(req.auth, board))
 		return render_404(resp);
 	var num = parseInt(params[2], 10);
 	if (!num)
