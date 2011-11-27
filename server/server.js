@@ -3,6 +3,7 @@ var _ = require('./lib/underscore'),
     config = require('./config'),
     db = require('./db'),
     fs = require('fs'),
+    get_version = require('./get').get_version,
     http = require('http'),
     pix = require('./pix'),
     twitter = require('./twitter'),
@@ -1010,7 +1011,7 @@ function start_server() {
 
 (function () {
 	var deps = config.CLIENT_DEPS;
-	require('./get').get_version(deps, function (err, version) {
+	get_version(deps, function (err, version) {
 		if (err)
 			throw err;
 		tripcode = require('./tripcode');
