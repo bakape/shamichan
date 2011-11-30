@@ -222,8 +222,11 @@ function mv_file(src, dest, callback) {
 
 function perceptual_hash(src, callback) {
 	var tmp = '/tmp/hash' + (''+Math.random()).substr(2) + '.gray';
-	var args = [src + '[0]', '-scale', '16x16!', '-type', 'grayscale',
-			'-depth', '8', tmp];
+	var args = [src + '[0]',
+			'-background', 'white', '-mosaic', '+matte',
+			'-scale', '16x16!',
+			'-type', 'grayscale', '-depth', '8',
+			tmp];
 	im.convert(args, function (err, stdout, stderr) {
 		if (err) {
 			console.error(stderr);
