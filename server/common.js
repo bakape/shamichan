@@ -214,16 +214,22 @@ function chibi(text) {
 }
 
 OS.gazou = function (info) {
-	var src = encodeURI(this.media + 'src/' + info.src),
-		thumb = encodeURI(this.media + 'thumb/' + info.thumb),
-		d = info.dims;
+	var src = encodeURI(this.media + 'src/' + info.src);
+	var thumb = src, d = info.dims;
+	var w = d[0], h = d[1];
+	var tw = w, th = h;
+	if (info.thumb) {
+		thumb = encodeURI(this.media + 'thumb/' + info.thumb);
+		tw = d[2];
+		th = d[3];
+	}
 	return [safe('<figure data-MD5="' + info.MD5 + '">' +
 		'<figcaption>Image <a href="' + src + '" target="_blank">' +
 		info.src + '</a> (' + readable_filesize(info.size) + ', ' +
-		d[0] + 'x' + d[1]), this.full ? chibi(info.imgnm) : '',
+		w + 'x' + h), this.full ? chibi(info.imgnm) : '',
 		safe(')</figcaption><a href="' + src + '" target="_blank">' +
 		'<img src="' + thumb + '" width="' +
-		d[2] + '" height="' + d[3] + '"></a>' + '</figure>\n\t')];
+		tw + '" height="' + th + '"></a>' + '</figure>\n\t')];
 };
 
 function readable_filesize(size) {

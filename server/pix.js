@@ -153,30 +153,41 @@ IU.process = function (err) {
 				(self.alloc && self.alloc.op);
 		var w = image.dims[0], h = image.dims[1];
 		var specs = get_thumb_specs(w, h, pinky);
+		/* Determine if we really need a thumbnail */
+		if (image.size < 30*1024
+				&& ['.jpg', '.png'].indexOf(image.ext) >= 0
+				&& w <= specs.dims[0] && h <= specs.dims[1]) {
+			return got_thumbnail(false, null);
+		}
 		image.dims = [w, h].concat(specs.dims);
 		resize_image(tagged_path, image.ext, image.thumb_path,
 				specs.dims, specs.quality, specs.bg_color,
-				thumbnailed);
+				got_thumbnail.bind(null, true));
 	}
 
-	function thumbnailed(err) {
+	function got_thumbnail(made, err) {
 		if (err)
 			return self.failure(err);
 		self.status('Publishing...');
 		var time = new Date().getTime();
 		image.src = time + image.ext;
-		image.thumb = time + '.jpg';
-		var dest = path.join(config.MEDIA_DIR, 'src', image.src);
-		var nail = path.join(config.MEDIA_DIR, 'thumb', image.thumb);
-		async.parallel([mv_file.bind(null, image.path, dest),
-				mv_file.bind(null, image.thumb_path, nail)],
-				function (err, rs) {
+		if (made)
+			image.thumb = time + '.jpg';
+		var dest, nail, mvs;
+		dest = path.join(config.MEDIA_DIR, 'src', image.src);
+		mvs = [mv_file.bind(null, image.path, dest)];
+		if (made) {
+			nail = path.join(config.MEDIA_DIR,'thumb',image.thumb);
+			mvs.push(mv_file.bind(null, image.thumb_path, nail));
+		}
+		async.parallel(mvs, function (err, rs) {
 			if (err) {
 				console.error(err);
 				return self.failure("Distro failure.");
 			}
 			image.path = dest;
-			image.thumb_path = nail;
+			if (made)
+				image.thumb_path = nail;
 			self.publish();
 		});
 	}
@@ -260,10 +271,15 @@ function perceptual_hash(src, callback) {
 exports.bury_image = function (src, thumb, callback) {
 	/* Just in case */
 	var m = /^\d+\.\w+$/;
-	if (!src.match(m) || !thumb.match(m))
-		return callback('Invalid images.');
-	async.parallel([mv.bind(null, 'src', src),
-			mv.bind(null, 'thumb', thumb)], callback);
+	if (!src.match(m))
+		return callback('Invalid image.');
+	var mvs = [mv.bind(null, 'src', src)];
+	if (thumb) {
+		if (!thumb.match(m))
+			return callback('Invalid thumbnail.');
+		mvs.push(mv.bind(null, 'thumb', thumb));
+	}
+	async.parallel(mv, callback);
 	function mv(p, nm, cb) {
 		mv_file(path.join(config.MEDIA_DIR, p, nm),
 			path.join(config.DEAD_DIR, p, nm), cb);
@@ -312,7 +328,8 @@ IU.publish = function () {
 	var view = {};
 	var self = this;
 	exports.image_attrs.forEach(function (key) {
-		view[key] = self.image[key];
+		if (key in self.image)
+			view[key] = self.image[key];
 	});
 	if (client.post) {
 		/* Text beat us here, discard alloc (if any) */

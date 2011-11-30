@@ -502,7 +502,6 @@ Y.remove_thread = function (op, callback) {
 
 Y.hide_image = function (key, callback) {
 	var r = this.connect();
-	var hash;
 	async.waterfall([
 	function (next) {
 		r.hmget(key, ['src', 'thumb', 'hash'], next);
@@ -510,13 +509,13 @@ Y.hide_image = function (key, callback) {
 	function (pics, next) {
 		if (!pics)
 			return callback(null);
-		hash = pics[2];
-		if (pics[0] && pics[1])
+		next = next.bind(null, pics[2]);
+		if (pics[0])
 			require('./pix').bury_image(pics[0], pics[1], next);
 		else
 			next();
 	},
-	function (done) {
+	function (hash, done) {
 		if (hash)
 			r.del('hash:' + hash, done);
 		else
@@ -888,7 +887,7 @@ F.get_all = function (limit) {
 			len = parseInt(len);
 			if (len > limit)
 				return cb(null);
-			r.hget(key, 'thumb', function (err, thumb) {
+			r.hmget(key, ['thumb', 'src'], function (err, rs) {
 				if (err)
 					cb(err);
 				self.emit('thread', {num: op, thumb: thumb});
@@ -937,8 +936,10 @@ function extract_image(post) {
 		return;
 	var image = {};
 	image_attrs.forEach(function (key) {
-		image[key] = post[key];
-		delete post[key];
+		if (key in post) {
+			image[key] = post[key];
+			delete post[key];
+		}
 	});
 	if (image.dims.split)
 		image.dims = image.dims.split(',');
@@ -951,7 +952,8 @@ function inline_image(post, image) {
 	if (!image_attrs)
 		image_attrs = require('./pix').image_attrs;
 	image_attrs.forEach(function (key) {
-		post[key] = image[key];
+		if (key in image)
+			post[key] = image[key];
 	});
 }
 
