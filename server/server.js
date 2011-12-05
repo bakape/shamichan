@@ -994,12 +994,26 @@ dispatcher[common.DELETE_POSTS] = auth_handled(function (nums, client) {
 
 function start_server() {
 	server.listen(config.PORT);
-	var io = require('socket.io').listen(server, {
+	var socketIo = require('socket.io');
+	var io = socketIo.listen(server, {
 		heartbeats: !config.DEBUG,
 		'log level': config.DEBUG ? 2 : 1,
 		'flash policy server': false,
 		'browser client': false,
 	});
+	if (config.TRUST_X_FORWARDED_FOR) {
+		/* Dumb hotpatch, merge this shit in socket.io! */
+		if (!io.handshakeData)
+			throw new Error("No handshakeData to patch!");
+		io.handshakeData = function (data) {
+			var d = socketIo.Manager.prototype.handshakeData.call(
+					this, data);
+			var realIP = data.request.headers['x-forwarded-for'];
+			if (realIP)
+				d.address.address = realIP;
+			return d;
+		};
+	}
 	io.sockets.on('connection', function on_client (socket) {
 		var client = new Okyaku(socket);
 		clients[client.id] = client;

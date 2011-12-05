@@ -7,7 +7,6 @@ var lockedToBottom, lockKeyHeight;
 var options, outOfSync, postForm, preview, previewNum;
 
 var socket = io.connect('/', {
-	port: PORT,
 	transports: ['htmlfile', 'xhr-polling', 'jsonp-polling']
 });
 
