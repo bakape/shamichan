@@ -526,8 +526,8 @@ PF.on_key = function (event) {
 	var nl = prediction.lastIndexOf('\n');
 	if (event && nl >= 0) {
 		var ok = val.substr(0, nl);
-		val = val.substr(nl);
-		prediction = prediction.substr(nl);
+		val = val.substr(nl+1);
+		prediction = prediction.substr(nl+1);
 		input.val(val);
 		if (this.sentAllocRequest || ok.match(/[^ ]/))
 			this.commit(ok + '\n');
