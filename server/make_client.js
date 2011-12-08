@@ -84,5 +84,4 @@ async.forEachSeries(files, function (file, cb) {
 }, function (err) {
 	if (err)
 		throw err;
-	process.stdout.end();
 });
