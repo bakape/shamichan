@@ -263,6 +263,9 @@ function long_term_timeslot(when) {
 
 Y.reserve_post = function (op, ip, callback) {
 	var r = this.connect();
+	if (ip == '127.0.0.1')
+		return reserve();
+
 	var key = 'ip:' + ip + ':';
 	var now = new Date().getTime();
 	var shortTerm = key + short_term_timeslot(now);
@@ -276,13 +279,17 @@ Y.reserve_post = function (op, ip, callback) {
 				quants[1] > config.LONG_TERM_LIMIT)
 			return callback('Reduce your speed.');
 
+		reserve();
+	});
+
+	function reserve() {
 		r.incr('postctr', function (err, num) {
 			if (err)
 				return callback(err);
 			OPs[num] = op || num;
 			callback(null, num);
 		});
-	});
+	}
 };
 
 Y.insert_post = function (msg, body, board, ip, callback) {
