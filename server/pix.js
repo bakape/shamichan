@@ -25,7 +25,7 @@ exports.ImageUpload = function (clients, allocate_post, status) {
 
 var IU = exports.ImageUpload.prototype;
 
-var validFields = ['client_id', 'alloc'];
+var validFields = ['client_id', 'alloc', 'spoiler'];
 
 IU.handle_request = function (req, resp) {
 	this.resp = resp;
@@ -95,6 +95,8 @@ IU.parse_form = function (err, fields, files) {
 	else if (!client.post)
 		return this.failure('Missing alloc.');
 	image.imgnm = image.filename.substr(0, 256);
+	if (fields.spoiler == 'true')
+		image.spoiler = 1;
 
 	/* Only throttle new threads for now */
 	if (client.post || (this.alloc && this.alloc.op))
@@ -148,13 +150,14 @@ IU.process = function (err) {
 		if (err)
 			return self.failure(err);
 		image.thumb_path = image.path + '_thumb';
-		self.status('Thumbnailing...');
+		if (!image.spoiler)
+			self.status('Thumbnailing...');
 		var pinky = (self.client.post && self.client.post.op) ||
 				(self.alloc && self.alloc.op);
 		var w = image.dims[0], h = image.dims[1];
 		var specs = get_thumb_specs(w, h, pinky);
 		/* Determine if we really need a thumbnail */
-		if (image.size < 30*1024
+		if (!image.spoiler && image.size < 30*1024
 				&& ['.jpg', '.png'].indexOf(image.ext) >= 0
 				&& w <= specs.dims[0] && h <= specs.dims[1]) {
 			return got_thumbnail(false, null);
@@ -321,7 +324,8 @@ IU.failure = function (err_desc) {
 		this.client.uploading = false;
 };
 
-exports.image_attrs = ['src', 'thumb', 'dims', 'size', 'MD5', 'hash', 'imgnm'];
+exports.image_attrs = ['src', 'thumb', 'dims', 'size', 'MD5', 'hash', 'imgnm',
+		'spoiler'];
 
 IU.publish = function () {
 	var client = this.client;

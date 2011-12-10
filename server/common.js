@@ -213,15 +213,22 @@ function chibi(text) {
 		safe('(&hellip;)'), m[2], safe('</abbr>')];
 }
 
-OS.gazou = function (info) {
+OS.gazou = function (info, toppu) {
 	var src = encodeURI(this.media + 'src/' + info.src);
 	var thumb = src, d = info.dims;
-	var w = d[0], h = d[1];
-	var tw = w, th = h;
-	if (info.thumb) {
+	var w = d[0], h = d[1], tw = d[2], th = d[3];
+	if (info.spoiler) {
+		thumb = encodeURI(this.media + 'spoiler' + (toppu ? '' : 's')
+				+ info.spoiler + '.png');
+		var sp = toppu ? [250, 250] : [125, 125]; /* TEMP */
+		tw = sp[0];
+		th = sp[1];
+	}
+	else if (info.thumb)
 		thumb = encodeURI(this.media + 'thumb/' + info.thumb);
-		tw = d[2];
-		th = d[3];
+	else {
+		tw = w;
+		th = h;
 	}
 	return [safe('<figure data-MD5="' + info.MD5 + '">' +
 		'<figcaption>Image <a href="' + src + '" target="_blank">' +
@@ -275,7 +282,7 @@ function expand_html(num) {
 	return ' &nbsp; [<a href="' + num + '" class="expand">Expand</a>]';
 }
 
-OS.monogatari = function (data) {
+OS.monogatari = function (data, t) {
 	var auth = data.auth;
 	var header = auth ? [safe('<b class="'),auth.toLowerCase(),safe('">')]
 			: [safe('<b>')];
@@ -301,7 +308,7 @@ OS.monogatari = function (data) {
 			safe('</blockquote>')];
 	if (!data.image)
 		return {header: header, body: body};
-	return {header: header, image: this.gazou(data.image), body: body};
+	return {header: header, image: this.gazou(data.image, t), body: body};
 };
 
 OS.mono = function (data) {
@@ -309,7 +316,7 @@ OS.mono = function (data) {
 			? '\t<article id="' + data.num + '" class="editing">'
 			: '\t<article id="' + data.num + '">'),
 	    c = safe('</article>\n'),
-	    gen = this.monogatari(data);
+	    gen = this.monogatari(data, false);
 	return flatten([o, gen.header, gen.image || '', gen.body, c]).join('');
 };
 
@@ -318,7 +325,7 @@ OS.monomono = function (data) {
 		(data.hctr ? '" data-sync="'+data.hctr : '') +
 		(data.full ? '' : '" data-imgs="'+data.imgctr) + '">'),
 	    c = safe('</section>\n'),
-	    gen = this.monogatari(data);
+	    gen = this.monogatari(data, true);
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
 };
 

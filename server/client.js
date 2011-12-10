@@ -617,6 +617,7 @@ PF.insert_uploaded = function (info) {
 	insert_image(info, form.siblings('header'), !op);
 	this.$imageInput.siblings('strong').andSelf().add(this.$cancel
 			).remove();
+	form.find('#toggle').remove();
 	mpmetrics.track('image', op ? {op: op} : {});
 	this.flush_pending();
 	this.uploading = false;
@@ -945,7 +946,9 @@ PF.make_upload_form = function () {
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="/img" target="upload">'
 		+ '<input type="button" value="Cancel"/>'
-		+ '<input type="file" name="image"/> <strong/>'
+		+ '<input type="file" name="image"/> '
+		+ '<a id="toggle">Spoiler</a> <strong/>'
+		+ '<input type="hidden" name="spoiler"/>'
 		+ '<input type="hidden" name="client_id" value="'
 		+ socket.socket.sessionid + '"/> '
 		+ '<iframe src="" name="upload"/></form>');
@@ -954,7 +957,13 @@ PF.make_upload_form = function () {
 	this.$iframe = form.find('iframe');
 	this.$imageInput = form.find('input[name=image]').change(
 			on_image_chosen);
+	this.$toggle = form.find('#toggle').click($.proxy(this, 'on_toggle'));
 	return form;
+};
+
+PF.on_toggle = function () {
+	if (!this.uploading && !this.uploaded)
+		this.$toggle.toggleClass('spoil');
 };
 
 function on_image_chosen() {
@@ -969,6 +978,8 @@ function on_image_chosen() {
 		var request = postForm.make_alloc_request(null);
 		form.append(alloc.val(JSON.stringify(request)));
 	}
+	var spoil = form.find('#toggle').hasClass('spoil');
+	form.find('input[name=spoiler]').val(!!spoil);
 	form.submit();
 	$(this).attr('disabled', true);
 }
