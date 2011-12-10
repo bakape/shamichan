@@ -604,6 +604,8 @@ PF.upload_error = function (msg) {
 	this.uploadStatus.text(msg);
 	this.uploading = false;
 	this.update_buttons();
+	if (this.uploadForm)
+		this.uploadForm.find('input[name=alloc]').remove();
 };
 
 PF.upload_complete = function (info) {
