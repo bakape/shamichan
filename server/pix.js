@@ -95,8 +95,12 @@ IU.parse_form = function (err, fields, files) {
 	else if (!client.post)
 		return this.failure('Missing alloc.');
 	image.imgnm = image.filename.substr(0, 256);
-	if (fields.spoiler == 'true')
-		image.spoiler = 1;
+	if (fields.spoiler) {
+		var spoiler = parseInt(fields.spoiler, 10);
+		if (config.SPOILER_IMAGES.indexOf(spoiler) < 0)
+			return this.failure('Bad spoiler.');
+		image.spoiler = spoiler;
+	}
 
 	/* Only throttle new threads for now */
 	if (client.post || (this.alloc && this.alloc.op))

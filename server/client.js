@@ -962,7 +962,9 @@ PF.on_toggle = function () {
 };
 
 PF.spoiling = function () {
-	return this.uploadForm.find('#toggle').hasClass('spoil');
+	var spoil = this.uploadForm.find('#toggle').hasClass('spoil');
+	var imgs = config.SPOILER_IMAGES;
+	return spoil ? imgs[Math.floor(Math.random() * imgs.length)] : 0;
 };
 
 function on_image_chosen() {
