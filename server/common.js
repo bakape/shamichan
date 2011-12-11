@@ -24,7 +24,7 @@ DEFINES.RETURN_KEY = 13;
 DEFINES.SPACE_KEY = 32;
 
 function is_pubsub(t) {
-	return t >= INSERT_POST && t <= DELETE_THREAD;
+	return t >= DEFINES.INSERT_POST && t <= DEFINES.DELETE_THREAD;
 }
 
 var entities = {'&' : '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'};
