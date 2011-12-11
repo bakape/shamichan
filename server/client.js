@@ -961,6 +961,10 @@ PF.on_toggle = function () {
 		this.$toggle.toggleClass('spoil');
 };
 
+PF.spoiling = function () {
+	return this.uploadForm.find('#toggle').hasClass('spoil');
+};
+
 function on_image_chosen() {
 	if (!$(this).val()) {
 		postForm.uploadStatus.text('');
@@ -973,8 +977,7 @@ function on_image_chosen() {
 		var request = postForm.make_alloc_request(null);
 		form.append(alloc.val(JSON.stringify(request)));
 	}
-	var spoil = form.find('#toggle').hasClass('spoil');
-	form.find('input[name=spoiler]').val(!!spoil);
+	form.find('input[name=spoiler]').val(postForm.spoiling());
 	form.submit();
 	$(this).attr('disabled', true);
 }
@@ -1013,6 +1016,7 @@ function drop_shita(e) {
 		var request = postForm.make_alloc_request(null);
 		fd.append('alloc', JSON.stringify(request));
 	}
+	fd.append('spoiler', postForm.spoiling());
 	/* Can't seem to jQuery this shit */
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', '/img');
