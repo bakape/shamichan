@@ -95,7 +95,6 @@ var oneeSama = new OneeSama(function (num) {
 	else
 		this.callback('>>' + num);
 });
-oneeSama.media = MEDIA_URL;
 oneeSama.full = THREAD;
 
 function inject(frag) {

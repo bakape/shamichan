@@ -20,13 +20,15 @@ for (var i = 2; i < process.argv.length; i++) {
 	}
 }
 
-var config_re = /\$\*\$(\w+)\$\*\$/;
+var config_re = /\bconfig\.(\w+)\b/;
 
 async.forEachSeries(files, function (file, cb) {
 	if (file.match(/^lib\//)) {
 		process.stdout.write(fs.readFileSync(file));
 		return cb(null);
 	}
+	if (file.match(/^config\.js/))
+		return cb("config.js shouldn't be in client");
 	var lines = fs.readFileSync(file, 'UTF-8').split('\n');
 	var out;
 	if (config.DEBUG) {
@@ -45,6 +47,8 @@ async.forEachSeries(files, function (file, cb) {
 		var line = lines[j];
 		if (line.match(/^var\s+DEFINES\s*=\s*exports\s*;\s*$/))
 			continue;
+		if (line.match(/^var\s+config\s*=\s*require.*$/))
+			continue;
 		m = line.match(/^DEFINES\.(\w+)\s*=\s*(.+);$/);
 		if (m) {
 			defines[m[1]] = m[2];
@@ -57,13 +61,6 @@ async.forEachSeries(files, function (file, cb) {
 		if (m)
 			line = 'var ' + m[1] + ' = ' + m[2];
 
-		for (var src in defines) {
-			if (line.indexOf(src) < 0)
-				continue;
-			var regexp = new RegExp('\\b' + src + '\\b');
-			line = line.replace(regexp, defines[src]);
-		}
-		line = line.replace('DEFINES.', '');
 		while (true) {
 			var m = line.match(config_re);
 			if (!m)
@@ -73,7 +70,14 @@ async.forEachSeries(files, function (file, cb) {
 				console.error("No such config var " + m[1]);
 				process.exit(1);
 			}
-			line = line.replace(config_re, cfg);
+			line = line.replace(config_re, JSON.stringify(cfg));
+		}
+		for (var src in defines) {
+			if (line.indexOf(src) < 0)
+				continue;
+			var regexp = new RegExp('(?:DEFINES\.)?\\b' + src
+					+ '\\b', 'g');
+			line = line.replace(regexp, defines[src]);
 		}
 		out.write(line+'\n', 'UTF-8');
 	}

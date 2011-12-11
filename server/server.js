@@ -165,7 +165,6 @@ var oneeSama = new common.OneeSama(function (num) {
 	else
 		this.callback('>>' + num);
 });
-oneeSama.media = config.MEDIA_URL;
 
 function write_thread_html(reader, response, full_thread) {
 	reader.on('thread', function (op_post, omit, image_omit) {

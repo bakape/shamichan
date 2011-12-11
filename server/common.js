@@ -1,3 +1,4 @@
+var config = require('./config');
 var DEFINES = exports;
 DEFINES.INVALID = 0;
 DEFINES.ALLOCATE_POST = 1;
@@ -214,18 +215,20 @@ function chibi(text) {
 }
 
 OS.gazou = function (info, toppu) {
-	var src = encodeURI(this.media + 'src/' + info.src);
+	var media = config.MEDIA_URL;
+	var src = encodeURI(media + 'src/' + info.src);
 	var thumb = src, d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
 	if (info.spoiler) {
-		thumb = encodeURI(this.media + 'spoiler' + (toppu ? '' : 's')
+		thumb = encodeURI(media + 'spoiler' + (toppu ? '' : 's')
 				+ info.spoiler + '.png');
-		var sp = toppu ? [250, 250] : [125, 125]; /* TEMP */
+		var sp = toppu ? config.THUMB_DIMENSIONS
+				: config.PINKY_DIMENSIONS;
 		tw = sp[0];
 		th = sp[1];
 	}
 	else if (info.thumb)
-		thumb = encodeURI(this.media + 'thumb/' + info.thumb);
+		thumb = encodeURI(media + 'thumb/' + info.thumb);
 	else {
 		tw = w;
 		th = h;
