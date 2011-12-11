@@ -52,8 +52,6 @@ if (!config.DEBUG)
 		'lib/socket.io.min.js',
 		'common.js',
 		'client.js',
-		'lib/mixpanel.js',
-		'lib/mixpanel_invoke.js',
 	];
 else
 	config.CLIENT_DEPS = [
@@ -62,7 +60,6 @@ else
 		'lib/socket.io.js',
 		'common.js',
 		'client.js',
-		'lib/mixpanel_invoke.js',
 	];
 
 config.SERVER_DEPS = [

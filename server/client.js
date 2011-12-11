@@ -400,12 +400,10 @@ PF.on_allocation = function (msg) {
 	var head_end = ' ' + num_html(msg);
 	if (this.op) {
 		this.post.addClass('editing');
-		mpmetrics.track('reply', {to: this.op});
 	}
 	else {
 		head_end += expand_html(num);
 		spill_page();
-		mpmetrics.track('create', {num: num});
 	}
 	meta.children('time').text(readable_time(msg.time)
 		).attr('datetime', datetime(msg.time)).after(head_end);
@@ -617,7 +615,6 @@ PF.insert_uploaded = function (info) {
 	this.$imageInput.siblings('strong').andSelf().add(this.$cancel
 			).remove();
 	form.find('#toggle').remove();
-	mpmetrics.track('image', op ? {op: op} : {});
 	this.flush_pending();
 	this.uploading = false;
 	this.uploaded = true;
@@ -807,7 +804,6 @@ function with_dom(func) {
 }
 
 function add_ref(num) {
-	mpmetrics.track('add_ref', {num: num});
 	/* Make the post form if none exists yet */
 	if (!postForm)
 		open_post_box(num);
