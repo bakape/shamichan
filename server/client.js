@@ -289,8 +289,12 @@ function extract_num(q) {
 	return parseInt(q.attr('id'));
 }
 
-function insert_image(info, header, op) {
-	header[op?'before':'after']($(flatten(oneeSama.gazou(info)).join('')));
+function insert_image(info, header, toppu) {
+	var fig = $(flatten(oneeSama.gazou(info, toppu)).join(''));
+	if (toppu)
+		header.before(fig);
+	else
+		header.after(fig);
 }
 
 function PostForm(dest, section) {
@@ -1031,13 +1035,14 @@ function upload_shita() {
 	if (this.readyState != 4)
 		return;
 	if (this.status == 200) {
+		var info;
 		try {
-			var info = JSON.parse(this.responseText);
-			postForm[info.func](info.arg);
+			info = JSON.parse(this.responseText);
 		}
 		catch (e) {
 			postForm.upload_error("Bad response.");
 		}
+		postForm[info.func](info.arg);
 	}
 	else
 		postForm.upload_error("Couldn't get response.");
