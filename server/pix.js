@@ -316,18 +316,22 @@ function perceptual_hash(src, callback) {
 	});
 }
 
-exports.bury_image = function (src, thumb, callback) {
+exports.bury_image = function (src, thumb, altThumb, callback) {
 	/* Just in case */
-	var m = /^\d+\.\w+$/;
+	var m = /^\d+\w*\.\w+$/;
 	if (!src.match(m))
 		return callback('Invalid image.');
 	var mvs = [mv.bind(null, 'src', src)];
-	if (thumb) {
-		if (!thumb.match(m))
+	function try_thumb(t) {
+		if (!t)
+			return;
+		if (!t.match(m))
 			return callback('Invalid thumbnail.');
-		mvs.push(mv.bind(null, 'thumb', thumb));
+		mvs.push(mv.bind(null, 'thumb', t));
 	}
-	async.parallel(mv, callback);
+	try_thumb(thumb);
+	try_thumb(altThumb);
+	async.parallel(mvs, callback);
 	function mv(p, nm, cb) {
 		mv_file(path.join(config.MEDIA_DIR, p, nm),
 			path.join(config.DEAD_DIR, p, nm), cb);

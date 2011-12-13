@@ -502,30 +502,35 @@ Y.remove_thread = function (op, callback) {
 
 Y.hide_image = function (key, callback) {
 	var r = this.connect();
-	async.waterfall([
-	function (next) {
-		r.hmget(key, ['src', 'thumb', 'hash'], next);
-	},
-	function (pics, next) {
+	var hash;
+	r.hmget(key, ['hash', 'src', 'thumb', 'realthumb'], move_dead);
+
+	function move_dead(err, pics) {
+		if (err)
+			return callback(err);
 		if (!pics)
 			return callback(null);
-		next = next.bind(null, pics[2]);
-		if (pics[0])
-			require('./pix').bury_image(pics[0], pics[1], next);
+		hash = pics[0];
+		if (pics[1])
+			require('./pix').bury_image(pics[1], pics[2], pics[3],
+					free_hash);
 		else
-			next();
-	},
-	function (hash, done) {
+			free_hash(null);
+	}
+
+	function free_hash(err) {
+		if (err)
+			return callback(err);
 		if (hash)
-			r.del('hash:' + hash, done);
+			r.del('hash:' + hash, callback);
 		else
-			done();
-	}], callback);
+			callback(null);
+	}
 };
 
 function warn(err) {
 	if (err)
-		console.warn(err);
+		console.warn('Warning: ' + err);
 }
 
 Y.check_throttle = function (ip, callback) {
