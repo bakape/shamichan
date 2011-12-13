@@ -14,7 +14,7 @@ function get_thumb_specs(w, h, pinky) {
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var bg = pinky ? '#d6daf0' : '#eef2ff';
 	return {dims: [Math.round(w/r), Math.round(h/r)], quality: QUALITY,
-			bg_color: bg};
+			bg_color: bg, bound: bound};
 }
 
 exports.ImageUpload = function (clients, allocate_post, status) {
@@ -170,7 +170,6 @@ IU.process = function (err) {
 				&& w <= specs.dims[0] && h <= specs.dims[1]) {
 			return got_thumbnail(false, false, null);
 		}
-		image.dims = [w, h].concat(specs.dims);
 		var info = {
 			src: tagged_path,
 			ext: image.ext,
@@ -179,22 +178,24 @@ IU.process = function (err) {
 			quality: specs.quality,
 			bg: specs.bg_color,
 		};
-		var done = got_thumbnail.bind(null, true);
 		if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0) {
 			self.status('Spoilering...');
 			var comp = composite_src(sp, pinky);
 			image.comp_path = image.path + '_comp';
+			image.dims = [w, h].concat(specs.bound);
 			info.composite = comp;
 			info.compDest = image.comp_path;
-			async.parallel([resize_image.bind(null, info),
-				composite_image.bind(null, info)],
+			info.compDims = specs.bound;
+			async.parallel([resize_image.bind(null, info, false),
+				resize_image.bind(null, info, true)],
 				got_thumbnail.bind(null, true, comp));
 		}
 		else {
+			image.dims = [w, h].concat(specs.dims);
 			if (!sp)
 				self.status('Thumbnailing...');
-			resize_image(info, got_thumbnail.bind(null, true,
-					false));
+			resize_image(info, false,
+					got_thumbnail.bind(null, true, false));
 		}
 	}
 
@@ -343,31 +344,27 @@ function setup_im_args(o, args) {
 		o.dest = 'jpg:' + o.dest;
 		if (o.compDest)
 			o.compDest = 'jpg:' + o.compDest;
+		o.flatDims = o.dims[0] + 'x' + o.dims[1];
+		if (o.compDims)
+			o.compDims = o.compDims[0] + 'x' + o.compDims[1];
 		o.quality += '';
-		o.flatDims = o.dims[0] + 'x' + o.dims[1] + '!';
 		o.setup = true;
 	}
+	args.push(o.src, '-gamma', '0.454545', '-filter', 'box');
 	return args;
 }
 
-function resize_image(o, callback) {
+function resize_image(o, comp, callback) {
 	var args = setup_im_args(o);
-	args.push(o.src, '-gamma', '0.454545', '-filter', 'box',
-			'-resize', o.flatDims, '-gamma', '2.2', '-strip',
-			'-background', o.bg, '-mosaic', '+matte',
-			'-quality', o.quality, o.dest);
+	var dims = comp ? o.compDims : o.flatDims;
+	args.push('-resize', dims + (comp ? '^' : '!'));
+	args.push('-gamma', '2.2', '-background', o.bg);
+	if (comp)
+		args.push(o.composite, '-layers', 'flatten', '-extent', dims);
+	else
+		args.push('-layers', 'mosaic', '+matte');
+	args.push('-strip', '-quality', o.quality, comp ? o.compDest : o.dest);
 	im.convert(args, im_callback.bind(null, callback));
-}
-
-function composite_image(o, callback) {
-	var args = setup_im_args(o);
-	args.push(o.composite, '-gravity', 'south', o.src, '-filter', 'box',
-			'-resize', o.flatDims, '-strip', '-background', o.bg,
-			'-quality', o.quality, o.compDest);
-	/* XXX: Jesus christ how horrifying. */
-	im.convert.path = 'composite';
-	im.convert(args, im_callback.bind(null, callback));
-	im.convert.path = 'convert';
 }
 
 function im_callback(cb, err, stdout, stderr) {
