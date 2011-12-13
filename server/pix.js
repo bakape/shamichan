@@ -37,6 +37,9 @@ IU.handle_request = function (req, resp) {
 			break;
 		}
 	}
+	var len = parseInt(req.headers['content-length'], 10);
+	if (len > 0 && len > config.IMAGE_FILESIZE_MAX + (20*1024))
+		return this.failure('File is too large.');
 	var form = new formidable.IncomingForm();
 	form.maxFieldsSize = 2048;
 	form.onPart = function (part) {
