@@ -31,7 +31,7 @@ var config = {
 	PINKY_DIMENSIONS: [125, 125],
 	THUMB_QUALITY: 50,
 	THUMB_DIMENSIONS: [250, 250],
-	SPOILER_IMAGES: {normal: [3], trans: [4, 5]},
+	SPOILER_IMAGES: {normal: [], trans: [4, 5, 6]},
 
 	MIXPANEL_TOKEN: '',
 

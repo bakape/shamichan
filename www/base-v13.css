@@ -160,10 +160,8 @@ section p {
 	display: inline-block;
 	height: 19px;
 	text-indent: -9001em;
+	user-select: none;
 	width: 78px;
-}
-#toggle.spoil {
-	background-image: url('spoil.png');
 }
 #trans {
 	background-color: transparent;

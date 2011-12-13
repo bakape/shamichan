@@ -957,22 +957,27 @@ PF.make_upload_form = function () {
 	this.$imageInput = form.find('input[name=image]').change(
 			on_image_chosen);
 	this.$toggle = form.find('#toggle').click($.proxy(this, 'on_toggle'));
+	this.spoiler = 0;
 	return form;
 };
 
 PF.on_toggle = function () {
-	if (!this.uploading && !this.uploaded)
-		this.$toggle.toggleClass('spoil');
-};
-
-PF.spoiling = function () {
-	var spoil = this.uploadForm.find('#toggle').hasClass('spoil');
-	if (!spoil)
-		return 0;
-	var imgs = config.SPOILER_IMAGES;
-	var n = imgs.normal.length;
-	var i = Math.floor(Math.random() * (n + imgs.trans.length));
-	return i < n ? imgs.normal[i] : imgs.trans[i - n];
+	if (!this.uploading && !this.uploaded) {
+		if (this.spoiler) {
+			this.spoiler = 0;
+			/* XXX: Removing the style attr is buggy... */
+			this.$toggle.css('background-image', 'url("'
+					+ config.MEDIA_URL + 'pane.png")');
+			return;
+		}
+		var imgs = config.SPOILER_IMAGES;
+		var n = imgs.normal.length;
+		var i = Math.floor(Math.random() * (n + imgs.trans.length));
+		i = i < n ? imgs.normal[i] : imgs.trans[i - n];
+		var url = 'url("' + config.MEDIA_URL + 'spoil' + i + '.png")';
+		this.$toggle.css('background-image', url);
+		this.spoiler = i;
+	}
 };
 
 function on_image_chosen() {
@@ -987,7 +992,7 @@ function on_image_chosen() {
 		var request = postForm.make_alloc_request(null);
 		form.append(alloc.val(JSON.stringify(request)));
 	}
-	form.find('input[name=spoiler]').val(postForm.spoiling());
+	form.find('input[name=spoiler]').val(postForm.spoiler);
 	form.submit();
 	$(this).attr('disabled', true);
 }
@@ -1026,7 +1031,7 @@ function drop_shita(e) {
 		var request = postForm.make_alloc_request(null);
 		fd.append('alloc', JSON.stringify(request));
 	}
-	fd.append('spoiler', postForm.spoiling());
+	fd.append('spoiler', postForm.spoiler);
 	/* Can't seem to jQuery this shit */
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', '/img');
