@@ -24,7 +24,7 @@ test:
 .build: wscript
 	node-waf configure
 
-$(CLIENT_JS): $(CLIENT_SRC) jsmin
+$(CLIENT_JS): $(CLIENT_SRC) jsmin config.js
 	node make_client.js $(CLIENT_SRC) > $@
 
 client: $(CLIENT_JS)
