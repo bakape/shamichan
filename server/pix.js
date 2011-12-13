@@ -97,7 +97,9 @@ IU.parse_form = function (err, fields, files) {
 	image.imgnm = image.filename.substr(0, 256);
 	var spoiler = parseInt(fields.spoiler, 10);
 	if (spoiler) {
-		if (config.SPOILER_IMAGES.indexOf(spoiler) < 0)
+		var sps = config.SPOILER_IMAGES;
+		if (sps.normal.indexOf(spoiler) < 0
+				&& sps.trans.indexOf(spoiler) < 0)
 			return this.failure('Bad spoiler.');
 		image.spoiler = spoiler;
 	}
@@ -154,38 +156,66 @@ IU.process = function (err) {
 		if (err)
 			return self.failure(err);
 		image.thumb_path = image.path + '_thumb';
-		if (!image.spoiler)
-			self.status('Thumbnailing...');
 		var pinky = (self.client.post && self.client.post.op) ||
 				(self.alloc && self.alloc.op);
 		var w = image.dims[0], h = image.dims[1];
 		var specs = get_thumb_specs(w, h, pinky);
 		/* Determine if we really need a thumbnail */
-		if (!image.spoiler && image.size < 30*1024
+		var sp = image.spoiler;
+		if (!sp && image.size < 30*1024
 				&& ['.jpg', '.png'].indexOf(image.ext) >= 0
 				&& w <= specs.dims[0] && h <= specs.dims[1]) {
-			return got_thumbnail(false, null);
+			return got_thumbnail(false, false, null);
 		}
 		image.dims = [w, h].concat(specs.dims);
-		resize_image(tagged_path, image.ext, image.thumb_path,
-				specs.dims, specs.quality, specs.bg_color,
-				got_thumbnail.bind(null, true));
+		var info = {
+			src: tagged_path,
+			ext: image.ext,
+			dest: image.thumb_path,
+			dims: specs.dims,
+			quality: specs.quality,
+			bg: specs.bg_color,
+		};
+		var done = got_thumbnail.bind(null, true);
+		if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0) {
+			self.status('Spoilering...');
+			var comp = composite_src(sp, pinky);
+			image.comp_path = image.path + '_comp';
+			info.composite = comp;
+			info.compDest = image.comp_path;
+			async.parallel([resize_image.bind(null, info),
+				composite_image.bind(null, info)],
+				got_thumbnail.bind(null, true, comp));
+		}
+		else {
+			if (!sp)
+				self.status('Thumbnailing...');
+			resize_image(info, got_thumbnail.bind(null, true,
+					false));
+		}
 	}
 
-	function got_thumbnail(made, err) {
+	function got_thumbnail(nail, comp, err) {
 		if (err)
 			return self.failure(err);
 		self.status('Publishing...');
 		var time = new Date().getTime();
 		image.src = time + image.ext;
-		if (made)
-			image.thumb = time + '.jpg';
-		var dest, nail, mvs;
+		var dest, mvs;
 		dest = path.join(config.MEDIA_DIR, 'src', image.src);
 		mvs = [mv_file.bind(null, image.path, dest)];
-		if (made) {
-			nail = path.join(config.MEDIA_DIR,'thumb',image.thumb);
+		if (nail) {
+			nail = time + '.jpg';
+			image.thumb = nail;
+			nail = path.join(config.MEDIA_DIR, 'thumb', nail);
 			mvs.push(mv_file.bind(null, image.thumb_path, nail));
+		}
+		if (comp) {
+			comp = time + 's' + image.spoiler + '.jpg';
+			image.composite = comp;
+			comp = path.join(config.MEDIA_DIR, 'thumb', comp);
+			mvs.push(mv_file.bind(null, image.comp_path, comp));
+			delete image.spoiler;
 		}
 		async.parallel(mvs, function (err, rs) {
 			if (err) {
@@ -193,11 +223,18 @@ IU.process = function (err) {
 				return self.failure("Distro failure.");
 			}
 			image.path = dest;
-			if (made)
+			if (nail)
 				image.thumb_path = nail;
+			if (comp)
+				image.comp_path = comp;
 			self.publish();
 		});
 	}
+}
+
+function composite_src(spoiler, pinky) {
+	var file = 'spoiler' + (pinky ? 's' : '') + spoiler + '.png';
+	return path.join(config.MEDIA_DIR, file);
 }
 
 IU.read_image_filesize = function (callback) {
@@ -293,26 +330,52 @@ exports.bury_image = function (src, thumb, callback) {
 	}
 };
 
-function resize_image(src, ext, dest, dims, qual, bg, callback) {
-	var args = [];
-	if (ext == '.jpg')
+function setup_im_args(o, args) {
+	var args = [], dims = o.dims;
+	if (o.ext == '.jpg')
 		args.push('-define', 'jpeg:size=' + (dims[0] * 2) + 'x' +
 				(dims[1] * 2));
-	dims = dims[0] + 'x' + dims[1];
-	args.push(src + '[0]', '-gamma', '0.454545', '-filter', 'box',
-			'-resize', dims + '!', '-gamma', '2.2', '-strip',
-			'-background', bg, '-mosaic', '+matte',
-			'-quality', ''+qual, 'jpg:' + dest);
-	im.convert(args, function (err, stdout, stderr) {
-		if (err) {
-			console.error(stderr);
-			return callback('Conversion error.');
-		}
-		if (config.DEBUG)
-			setTimeout(callback, 1000);
-		else
-			callback();
-	});
+	if (!o.setup) {
+		o.src += '[0]';
+		o.dest = 'jpg:' + o.dest;
+		if (o.compDest)
+			o.compDest = 'jpg:' + o.compDest;
+		o.quality += '';
+		o.flatDims = o.dims[0] + 'x' + o.dims[1] + '!';
+		o.setup = true;
+	}
+	return args;
+}
+
+function resize_image(o, callback) {
+	var args = setup_im_args(o);
+	args.push(o.src, '-gamma', '0.454545', '-filter', 'box',
+			'-resize', o.flatDims, '-gamma', '2.2', '-strip',
+			'-background', o.bg, '-mosaic', '+matte',
+			'-quality', o.quality, o.dest);
+	im.convert(args, im_callback.bind(null, callback));
+}
+
+function composite_image(o, callback) {
+	var args = setup_im_args(o);
+	args.push(o.composite, '-gravity', 'south', o.src, '-filter', 'box',
+			'-resize', o.flatDims, '-strip', '-background', o.bg,
+			'-quality', o.quality, o.compDest);
+	/* XXX: Jesus christ how horrifying. */
+	im.convert.path = 'composite';
+	im.convert(args, im_callback.bind(null, callback));
+	im.convert.path = 'convert';
+}
+
+function im_callback(cb, err, stdout, stderr) {
+	if (err) {
+		console.error(stderr);
+		return callback('Conversion error.');
+	}
+	if (config.DEBUG)
+		setTimeout(cb, 1000);
+	else
+		cb();
 }
 
 IU.failure = function (err_desc) {
@@ -323,13 +386,15 @@ IU.failure = function (err_desc) {
 			fs.unlink(image.path);
 		if (image.thumb_path)
 			fs.unlink(image.thumb_path);
+		if (image.comp_path)
+			fs.unlink(image.comp_path);
 	}
 	if (this.client)
 		this.client.uploading = false;
 };
 
 exports.image_attrs = ['src', 'thumb', 'dims', 'size', 'MD5', 'hash', 'imgnm',
-		'spoiler'];
+		'spoiler', 'realthumb'];
 
 IU.publish = function () {
 	var client = this.client;
@@ -339,6 +404,10 @@ IU.publish = function () {
 		if (key in self.image)
 			view[key] = self.image[key];
 	});
+	if (this.image.composite) {
+		view.realthumb = view.thumb;
+		view.thumb = this.image.composite;
+	}
 	if (client.post) {
 		/* Text beat us here, discard alloc (if any) */
 		client.db.add_image(client.post, view, client.ip,

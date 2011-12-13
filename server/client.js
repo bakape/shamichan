@@ -967,8 +967,12 @@ PF.on_toggle = function () {
 
 PF.spoiling = function () {
 	var spoil = this.uploadForm.find('#toggle').hasClass('spoil');
+	if (!spoil)
+		return 0;
 	var imgs = config.SPOILER_IMAGES;
-	return spoil ? imgs[Math.floor(Math.random() * imgs.length)] : 0;
+	var n = imgs.normal.length;
+	var i = Math.floor(Math.random() * (n + imgs.trans.length));
+	return i < n ? imgs.normal[i] : imgs.trans[i - n];
 };
 
 function on_image_chosen() {
