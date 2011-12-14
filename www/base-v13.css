@@ -156,7 +156,7 @@ section p {
 	padding: 0;
 }
 #toggle {
-	background-image: url('pane.png');
+	background-image: url('kana/pane.png');
 	display: inline-block;
 	height: 19px;
 	text-indent: -9001em;

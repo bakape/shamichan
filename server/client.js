@@ -962,21 +962,24 @@ PF.make_upload_form = function () {
 };
 
 PF.on_toggle = function () {
+	var self = this;
 	if (!this.uploading && !this.uploaded) {
 		if (this.spoiler) {
 			this.spoiler = 0;
 			/* XXX: Removing the style attr is buggy... */
-			this.$toggle.css('background-image', 'url("'
-					+ config.MEDIA_URL + 'pane.png")');
+			set_image('pane.png');
 			return;
 		}
 		var imgs = config.SPOILER_IMAGES;
 		var n = imgs.normal.length;
 		var i = Math.floor(Math.random() * (n + imgs.trans.length));
 		i = i < n ? imgs.normal[i] : imgs.trans[i - n];
-		var url = 'url("' + config.MEDIA_URL + 'spoil' + i + '.png")';
-		this.$toggle.css('background-image', url);
+		set_image('spoil' + i + '.png');
 		this.spoiler = i;
+	}
+	function set_image(path) {
+		self.$toggle.css('background-image', 'url("'
+				+ config.MEDIA_URL + 'kana/' + path + '")');
 	}
 };
 

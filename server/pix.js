@@ -238,7 +238,7 @@ IU.process = function (err) {
 
 function composite_src(spoiler, pinky) {
 	var file = 'spoiler' + (pinky ? 's' : '') + spoiler + '.png';
-	return path.join(config.MEDIA_DIR, file);
+	return path.join(config.MEDIA_DIR, 'kana', file);
 }
 
 IU.read_image_filesize = function (callback) {

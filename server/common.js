@@ -220,7 +220,7 @@ OS.gazou = function (info, toppu) {
 	var thumb = src, d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
 	if (info.spoiler) {
-		thumb = encodeURI(media + 'spoiler' + (toppu ? '' : 's')
+		thumb = encodeURI(media + 'kana/spoiler' + (toppu ? '' : 's')
 				+ info.spoiler + '.png');
 		var sp = toppu ? config.THUMB_DIMENSIONS
 				: config.PINKY_DIMENSIONS;
