@@ -964,9 +964,10 @@ PF.make_upload_form = function () {
 	return form;
 };
 
-PF.on_toggle = function () {
+PF.on_toggle = function (event) {
 	var self = this;
 	if (!this.uploading && !this.uploaded) {
+		event.preventDefault();
 		if (this.spoiler) {
 			this.spoiler = 0;
 			/* XXX: Removing the style attr is buggy... */
