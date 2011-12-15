@@ -5,6 +5,8 @@ var $sizer = $('<span id="sizer"></span>');
 var commit_deferred = false;
 var lockedToBottom, lockKeyHeight;
 var options, outOfSync, postForm, preview, previewNum;
+var spoilerImages = config.SPOILER_IMAGES;
+var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
 
 var socket = io.connect('/', {
 	transports: ['htmlfile', 'xhr-polling', 'jsonp-polling']
@@ -958,6 +960,7 @@ PF.make_upload_form = function () {
 			on_image_chosen);
 	this.$toggle = form.find('#toggle').click($.proxy(this, 'on_toggle'));
 	this.spoiler = 0;
+	this.nextSpoiler = Math.floor(Math.random() * spoilerCount);
 	return form;
 };
 
@@ -970,12 +973,11 @@ PF.on_toggle = function () {
 			set_image('pane.png');
 			return;
 		}
-		var imgs = config.SPOILER_IMAGES;
-		var n = imgs.normal.length;
-		var i = Math.floor(Math.random() * (n + imgs.trans.length));
-		i = i < n ? imgs.normal[i] : imgs.trans[i - n];
-		set_image('spoil' + i + '.png');
-		this.spoiler = i;
+		var imgs = spoilerImages;
+		var i = this.nextSpoiler, n = imgs.normal.length;
+		this.spoiler = i < n ? imgs.normal[i] : imgs.trans[i - n];
+		this.nextSpoiler = (i+1) % spoilerCount;
+		set_image('spoil' + this.spoiler + '.png');
 	}
 	function set_image(path) {
 		self.$toggle.css('background-image', 'url("'
