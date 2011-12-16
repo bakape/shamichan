@@ -56,6 +56,9 @@ figcaption {
 	display: block;
 	margin: 1px 0;
 }
+figcaption i {
+	font-style: normal;
+}
 figure {
 	display: inline;
 	margin: 0;
@@ -173,4 +176,25 @@ section p {
 	resize: none;
 	text-wrap: none;
 	vertical-align: baseline;
+}
+
+@media screen and (max-device-width: 480px) {
+	article {
+		clear: both;
+	}
+	body {
+		-webkit-text-size-adjust: none;
+	}
+	blockquote {
+		margin: 1em;
+	}
+	section {
+		margin: 0;
+	}
+}
+
+@media screen and (max-device-width: 480px) and (orientation: portrait) {
+	figcaption i {
+		display: block;
+	}
 }

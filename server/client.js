@@ -5,6 +5,7 @@ var $sizer = $('<span id="sizer"></span>');
 var commit_deferred = false;
 var lockedToBottom, lockKeyHeight;
 var options, outOfSync, postForm, preview, previewNum;
+var inputMinSize = 300, nashi = {opts: []};
 var spoilerImages = config.SPOILER_IMAGES;
 var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
 
@@ -33,6 +34,15 @@ var socket = io.connect('/', {
 		load('email', $.proxy($email, 'val'));
 	}
 	catch (e) {}
+
+	nashi.upload = !!$('<input type="file"/>').prop('disabled');
+	/* Ought to rely on dimensions instead */
+	if (navigator.platform.indexOf('iPod') >= 0
+			|| navigator.platform.indexOf('iPhone') >= 0) {
+		inputMinSize = 50;
+	}
+	if ('ontouchstart' in window)
+		nashi.opts.push('preview');
 })();
 
 function save_ident() {
@@ -64,7 +74,7 @@ function insert_pbs() {
 			$ceiling.next().is('aside')))
 		return;
 	make_reply_box().appendTo('section');
-	if (BUMP || PAGE == 0) {
+	if (!nashi.upload && (BUMP || PAGE == 0)) {
 		var box = $('<aside>[<a>New thread</a>]</aside>');
 		box.find('a').click(on_make_post);
 		$ceiling.after(box);
@@ -593,7 +603,7 @@ PF.resize_input = function (val) {
 	$sizer.text(val);
 	var left = input.offset().left - this.post.offset().left;
 	var size = $sizer.width() + INPUT_ROOM;
-	size = Math.max(size, INPUT_MIN_SIZE - left);
+	size = Math.max(size, inputMinSize - left);
 	input.css('width', size + 'px');
 };
 
@@ -959,6 +969,10 @@ PF.make_upload_form = function () {
 	this.$imageInput = form.find('input[name=image]').change(
 			on_image_chosen);
 	this.$toggle = form.find('#toggle').click($.proxy(this, 'on_toggle'));
+	if (nashi.upload) {
+		this.$imageInput.hide();
+		this.$toggle.hide();
+	}
 	this.spoiler = 0;
 	this.nextSpoiler = Math.floor(Math.random() * spoilerCount);
 	return form;
@@ -1249,6 +1263,8 @@ $(function () {
 	}
 
 	for (var id in toggles) {
+		if (nashi.opts.indexOf(id) >= 0)
+			continue;
 		var b = toggles[id];
 		$('<input type="checkbox" id="'+id+'" /> <label for="' +
 				id + '">' + b.label + '</label><br>'

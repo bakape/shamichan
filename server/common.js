@@ -13,7 +13,6 @@ DEFINES.SYNCHRONIZE = 9;
 DEFINES.CATCH_UP = 10;
 
 DEFINES.ANON = 'Anonymous';
-DEFINES.INPUT_MIN_SIZE = 300;
 DEFINES.INPUT_ROOM = 20;
 DEFINES.MAX_POST_LINES = 30;
 DEFINES.MAX_POST_CHARS = 2000;
@@ -235,9 +234,9 @@ OS.gazou = function (info, toppu) {
 	}
 	return [safe('<figure data-MD5="' + info.MD5 + '">' +
 		'<figcaption>Image <a href="' + src + '" target="_blank">' +
-		info.src + '</a> (' + readable_filesize(info.size) + ', ' +
+		info.src + '</a> <i>(' + readable_filesize(info.size) + ', ' +
 		w + 'x' + h), this.full ? chibi(info.imgnm) : '',
-		safe(')</figcaption><a href="' + src + '" target="_blank">' +
+		safe(')</i></figcaption><a href="'+src+'" target="_blank">' +
 		'<img src="' + thumb + '" width="' +
 		tw + '" height="' + th + '"></a>' + '</figure>\n\t')];
 };
