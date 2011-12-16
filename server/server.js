@@ -169,7 +169,7 @@ var oneeSama = new common.OneeSama(function (num) {
 function write_thread_html(reader, response, full_thread) {
 	reader.on('thread', function (op_post, omit, image_omit) {
 		oneeSama.full = full_thread;
-		var first = oneeSama.monomono(op_post);
+		var first = oneeSama.monomono(op_post, full_thread && 'full');
 		first.pop();
 		response.write(first.join(''));
 		if (omit)

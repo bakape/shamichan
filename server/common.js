@@ -322,8 +322,9 @@ OS.mono = function (data) {
 	return flatten([o, gen.header, gen.image || '', gen.body, c]).join('');
 };
 
-OS.monomono = function (data) {
+OS.monomono = function (data, cls) {
 	var o = safe('<section id="' + data.num +
+		(cls ? '" class="' + cls : '') +
 		(data.hctr ? '" data-sync="'+data.hctr : '') +
 		(data.full ? '' : '" data-imgs="'+data.imgctr) + '">'),
 	    c = safe('</section>\n'),

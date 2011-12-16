@@ -194,7 +194,10 @@ section p {
 }
 
 @media screen and (max-device-width: 480px) and (orientation: portrait) {
-	figcaption i {
+	section > header {
+		clear: both;
+	}
+	.full figcaption i {
 		display: block;
 	}
 }
