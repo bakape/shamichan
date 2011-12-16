@@ -8,7 +8,7 @@ var config = {
 
 	BOARDS: ['moe', 'gar'],
 	TITLES: {moe: "/moe/ - Sweets", gar: "/gar/ - Hard Work &amp; Guts"},
-	BASE_CSS: 'base-v13.css',
+	BASE_CSS: 'base-v14.css',
 	BOARD_CSS: {
 		moe: 'moe-v1.css',
 		meta: 'gar-wtf.css',
