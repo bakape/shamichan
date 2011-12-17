@@ -718,11 +718,17 @@ function click_shita(event) {
 		else {
 			var caption = img.parent().prev().text();
 			var dims = caption.match(/(\d+)x(\d+)/);
-			img.data('thumbWidth', img.width()
-				).data('thumbHeight', img.height()
-				).data('thumbSrc', img.attr('src')
+			var w = parseInt(dims[1],10), h = parseInt(dims[2],10);
+			var r = window.devicePixelRatio;
+			if (r && r > 1) {
+				w /= r;
+				h /= r;
+			}
+			img.data({thumbWidth: img.width(),
+				thumbHeight: img.height(),
+				thumbSrc: img.attr('src')}
 				).attr('src', img.parent().attr('href')
-				).width(dims[1]).height(dims[2]);
+				).width(w).height(h);
 		}
 		});
 
