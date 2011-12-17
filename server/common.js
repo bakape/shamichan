@@ -204,7 +204,7 @@ OS.karada = function (body) {
 }
 
 function chibi(text) {
-	var m = text.match(/^(.{40}).{8,}(\.\w{3,4})$/);
+	var m = text.match(/^(.{30}).{8,}(\.\w{3,4})$/);
 	/* Comma inlined for convience in OS.gazou (beware of concatenating
 	 * lists with strings) */
 	if (!m)
