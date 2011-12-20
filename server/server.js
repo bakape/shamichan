@@ -50,7 +50,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	}
 	if (!can_access(null, board))
 		return false;
-	var dead_threads = [], count = 0;
+	var dead_threads = [], count = 0, op;
 	for (var k in syncs) {
 		if (!k.match(/^\d+$/))
 			return false;
@@ -61,6 +61,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			delete syncs[k];
 			dead_threads.push(k);
 		}
+		op = k;
 		if (++count > config.THREADS_PER_PAGE) {
 			/* Sync logic isn't great yet; allow this for now */
 			// return false;
@@ -112,6 +113,15 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		logs.push(sync);
 		client.socket.send('[[' + logs.join('],[') + ']]');
 		client.synced = true;
+
+		if (!live && count == 1) {
+			client.db.get_fun(op, function (err, js) {
+				if (err)
+					console.error(err);
+				else if (js)
+					client.send([common.EXECUTE_JS,op,js]);
+			});
+		}
 	}
 	return true;
 }
@@ -424,7 +434,7 @@ route_get(/^\/$/, function (req, resp) {
 
 if (config.DEBUG) {
 	route_get(/^\/login$/, function (req, resp) {
-		twitter.set_cookie(resp);
+		twitter.set_cookie(resp, {auth: 'Admin'});
 	});
 }
 else {
@@ -972,13 +982,13 @@ function auth_handled(func) {
 			if (err || common.is_empty(session))
 				report(err, client, 'Auth error.');
 			else
-				func(msg, client);
+				func(msg, client, session);
 		}
 		return true;
 	};
 }
 
-dispatcher[common.DELETE_POSTS] = auth_handled(function (nums, client) {
+dispatcher[common.DELETE_POSTS] = auth_handled(function (nums, client, auth) {
 	if (!nums.length)
 		return false;
 	if (nums.some(function (n) { return typeof n != 'number' || n < 1; }))
@@ -998,6 +1008,17 @@ dispatcher[common.DELETE_POSTS] = auth_handled(function (nums, client) {
 	client.db.remove_posts(nums, function (err, dels) {
 		if (err)
 			report(err, client, "Couldn't delete.");
+	});
+	return true;
+});
+
+dispatcher[common.EXECUTE_JS] = auth_handled(function (msg, client, auth) {
+	if (auth.auth !== 'Admin' || typeof msg[0] != 'number')
+		return report(null, client);
+	var op = msg[0];
+	client.db.set_fun_thread(op, function (err) {
+		if (err)
+			report(err, client, "No fun allowed.");
 	});
 	return true;
 });

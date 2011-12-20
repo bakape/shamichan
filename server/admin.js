@@ -32,6 +32,10 @@ function korosu() {
 	}
 }
 
+window.fun = function () {
+	send([11, document.cookie, THREAD]);
+};
+
 function make_alloc_admin(text) {
 	var msg = this.make_alloc_vanilla(text);
 	if ($('#admin').attr('checked'))

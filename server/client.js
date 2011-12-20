@@ -297,6 +297,17 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 	$('section#' + op).next('hr').andSelf().remove();
 };
 
+dispatcher[EXECUTE_JS] = function (msg) {
+	if (THREAD != msg[0])
+		return;
+	try {
+		eval(msg[1]);
+	}
+	catch (e) {
+		/* fgsfds */
+	}
+};
+
 function extract_num(q) {
 	return parseInt(q.attr('id'));
 }
@@ -749,23 +760,43 @@ function click_shita(event) {
 					start += parseInt(t[3], 10);
 			}
 		}
-		var url = encodeURI('http://www.youtube.com/v/' + m[1] +
-			'?version=3&autohide=1&showinfo=0&fs=1&' +
-			'modestbranding=1' + (start ? '&start=' + start : ''));
-		var dims = {width: 425, height: 355};
-		var params = {allowScriptAccess: 'always',
-				allowFullScreen: 'true'};
-		var $obj = $('<object></object>').attr(dims);
-		for (var name in params)
-			$obj.append($('<param></param>').attr({name: name,
-					value: params[name]}));
-		var $embed = $('<embed></embed>').attr(params).attr({src: url,
-			type: 'application/x-shockwave-flash'}).attr(dims);
-		$obj.append($embed);
+		var $obj = make_video(m[1], null, null, start);
 		with_dom(function () {
 			target.replaceWith($obj);
 		});
 	}
+}
+
+function make_video(id, params, dims, start) {
+	if (!dims)
+		dims = {width: 425, height: 355};
+	if (!params)
+		params = {allowFullScreen: 'true'};
+	params.allowScriptAccess = 'always';
+	var query = {version: 3, autohide: 1, showinfo: 0, fs: 1,
+		modestbranding: 1};
+	if (start)
+		query.start = start;
+	if (params.autoplay)
+		query.autoplay = params.autoplay;
+	if (params.loop) {
+		query.loop = '1';
+		query.playlist = id;
+	}
+
+	var bits = [];
+	for (var k in query)
+		bits.push(encodeURIComponent(k) + '=' +
+				encodeURIComponent(query[k]));
+	var uri = encodeURI('http://www.youtube.com/v/' + id) + '?' +
+			bits.join('&');
+	var $obj = $('<object></object>').attr(dims);
+	for (var name in params)
+		$obj.append($('<param></param>').attr({name: name,
+				value: params[name]}));
+	$('<embed></embed>').attr(params).attr(dims).attr({src: uri,
+		type: 'application/x-shockwave-flash'}).appendTo($obj);
+	return $obj;
 }
 
 function mouseup_shita(event) {

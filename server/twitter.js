@@ -77,8 +77,6 @@ exports.verify = function (req, resp) {
 };
 
 exports.set_cookie = function (resp, info, r) {
-	if (!info)
-		info = {auth: 'Moderator'};
 	if (!r)
 		r = db.redis_client();
 	var pass = random_str();

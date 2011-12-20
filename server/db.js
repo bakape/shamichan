@@ -2,6 +2,7 @@ var async = require('async'),
     common = require('./common'),
     config = require('./config'),
     events = require('events'),
+    fs = require('fs'),
     redis = require('redis'),
     util = require('util');
 
@@ -9,7 +10,7 @@ var OPs = {};
 exports.OPs = OPs;
 
 var SUBS = {};
-var YAKUDON = 0;
+var YAKUMAN = 0;
 
 function redis_client() {
 	return redis.createClient(config.REDIS_PORT || undefined);
@@ -82,6 +83,8 @@ S.on_sub_error = function (err) {
 };
 
 S.sink_sub = function (err) {
+	if (config.DEBUG)
+		throw err;
 	this.emit('error', this.target, err);
 	this.commit_sudoku();
 };
@@ -159,7 +162,7 @@ exports.is_board = function (board) {
 
 function Yakusoku(board) {
 	events.EventEmitter.call(this);
-	this.id = ++YAKUDON;
+	this.id = ++YAKUMAN;
 	this.tag = board;
 }
 
@@ -929,6 +932,33 @@ F.cleanup = function () {
 
 F.tag_key = function () {
 	return 'tag:' + this.tag.length + ':' + this.tag;
+};
+
+/* AMUSEMENT */
+
+var funThread;
+
+Y.get_fun = function (op, callback) {
+	if (funThread && op == funThread) {
+		/* Don't cache, for extra fun */
+		fs.readFile('fun.js', 'UTF-8', callback);
+	}
+	else
+		callback(null);
+};
+
+Y.set_fun_thread = function (op, callback) {
+	if (OPs[op] != op)
+		return callback("Thread not found.");
+	var self = this;
+	fs.readFile('fun.js', 'UTF-8', function (err, funJs) {
+		if (err)
+			return callback(err);
+		funThread = op;
+		var m = self.connect().multi();
+		self._log(m, op, common.EXECUTE_JS, [op, funJs]);
+		m.exec(callback);
+	});
 };
 
 /* HELPERS */
