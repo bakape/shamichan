@@ -442,6 +442,10 @@ else {
 	route_get(/^\/verify$/, twitter.verify);
 }
 
+route_get(/^\/login\/$/, function (req, resp) {
+	redirect(resp, '../login');
+});
+
 var filterTmpl;
 route_get_auth(/^\/admin$/, function (req, resp) {
 	if (req.auth.auth != 'Admin')
