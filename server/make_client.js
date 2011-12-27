@@ -70,7 +70,12 @@ async.forEachSeries(files, function (file, cb) {
 				console.error("No such config var " + m[1]);
 				process.exit(1);
 			}
-			line = line.replace(config_re, JSON.stringify(cfg));
+			// Bleh
+			if (cfg instanceof RegExp)
+				cfg = cfg.toString();
+			else
+				cfg = JSON.stringify(cfg);
+			line = line.replace(config_re, cfg);
 		}
 		for (var src in defines) {
 			if (line.indexOf(src) < 0)
