@@ -814,13 +814,14 @@ function allocate_post(msg, image, client, callback) {
 	var post = {time: new Date().getTime()};
 	var body = '';
 	if (msg.frag !== undefined) {
-		if (typeof msg.frag != 'string' || msg.frag.match(/^\s*$/g)
-				|| msg.frag.length > common.MAX_POST_CHARS)
+		if (typeof msg.frag != 'string' || msg.frag.match(/^\s*$/g))
+			return callback('Bad post body.');
+		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback('Post is too long.');
 		body = msg.frag;
 	}
 	if (msg.op !== undefined) {
-		if (typeof msg.op != 'number')
+		if (typeof msg.op != 'number' || msg.op < 1)
 			return callback('Invalid thread.');
 		post.op = msg.op;
 	}
