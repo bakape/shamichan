@@ -134,6 +134,7 @@ exports.track_OPs = function (callback) {
 };
 
 function load_OPs(r, callback) {
+	// TODO: Use the board maps instead
 	r.keys('thread:*', function (err, keys) {
 		if (err)
 			return callback(err);

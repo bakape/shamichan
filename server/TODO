@@ -2,7 +2,8 @@
 * Actually tell user when a particular thread failed to sync
 * Extract common fields (num, op, type) from log (since these are duplicated in
   publications for filtering)
-* Fucking text
+* Tokenize text instead of multiple levels of regexps
+* Use oninput()
 * Look for memory leaks in the front page
   * Also redis connection count
 * When navigating away from a page, commit any outstanding text
@@ -12,3 +13,4 @@
 * Inline expansion should remake the img
 * YouTube expansions should be closeable
 * Post insertion publications have hash field
+* Don't use keys() for loading OPs
