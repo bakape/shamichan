@@ -115,6 +115,8 @@ function inject(frag) {
 		dest = dest.children('del:last');
 	if (this.state[0] == 1)
 		dest = dest.children('em:last');
+	if (this.strong)
+		dest = dest.children('strong:last');
 	var out = null;
 	if (frag.safe) {
 		var m = frag.safe.match(/^<(\w+)>$/);
@@ -249,6 +251,8 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 dispatcher[UPDATE_POST] = function (msg) {
 	var bq = $('#' + msg[0] + '>blockquote');
 	if (bq.length) {
+		var extra = msg[5];
+		oneeSama.dice = extra ? extra.dice : null;
 		oneeSama.links = msg[4] || {};
 		oneeSama.callback = inject;
 		oneeSama.buffer = bq;

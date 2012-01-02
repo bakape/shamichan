@@ -3,6 +3,7 @@ var _ = require('./lib/underscore'),
     config = require('./config'),
     db = require('./db'),
     fs = require('fs'),
+    games = require('./games'),
     get_version = require('./get').get_version,
     http = require('http'),
     pix = require('./pix'),
@@ -813,12 +814,15 @@ function allocate_post(msg, image, client, callback) {
 		return callback("Already have a post.");
 	var post = {time: new Date().getTime()};
 	var body = '';
+	var extra = {ip: client.ip, board: client.board};
 	if (msg.frag !== undefined) {
 		if (typeof msg.frag != 'string' || msg.frag.match(/^\s*$/g))
 			return callback('Bad post body.');
 		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback('Post is too long.');
 		body = msg.frag;
+		if (config.GAME_BOARDS.indexOf(client.board) >= 0)
+			games.roll_dice(body, post, extra);
 	}
 	if (msg.op !== undefined) {
 		if (typeof msg.op != 'number' || msg.op < 1)
@@ -886,8 +890,7 @@ function allocate_post(msg, image, client, callback) {
 			return callback("Post reference error.");
 		}
 		post.links = links;
-		client.db.insert_post(post, body, client.board, client.ip,
-				inserted);
+		client.db.insert_post(post, body, extra, inserted);
 	}
 	function inserted(err) {
 		if (err) {
@@ -926,6 +929,9 @@ function update_post(frag, client) {
 	var combined = post.length + frag.length;
 	if (combined > limit)
 		frag = frag.substr(0, combined - limit);
+	var extra = {ip: client.ip};
+	if (config.GAME_BOARDS.indexOf(client.board) >= 0)
+		games.roll_dice(frag, post, extra);
 	post.body += frag;
 	/* imporant: broadcast prior state */
 	var old_state = post.state.slice();
@@ -933,10 +939,10 @@ function update_post(frag, client) {
 	valid_links(frag, post.state, function (err, links) {
 		if (err)
 			links = null; /* oh well */
-		var new_links = {};
 		if (links) {
 			if (!post.links)
 				post.links = {};
+			var new_links = {};
 			for (var k in links) {
 				var link = links[k];
 				if (post.links[k] != link) {
@@ -944,10 +950,12 @@ function update_post(frag, client) {
 					new_links[k] = link;
 				}
 			}
+			extra.links = links;
+			extra.new_links = new_links;
 		}
 
-		client.db.append_post(post, frag, client.ip, old_state, links,
-				new_links, function (err) {
+		client.db.append_post(post, frag, old_state, extra,
+					function (err) {
 			if (err)
 				report(err, client, "Couldn't add text.");
 		});

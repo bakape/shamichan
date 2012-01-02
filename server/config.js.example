@@ -13,6 +13,7 @@ var config = {
 		moe: 'moe-v1.css',
 		meta: 'gar-wtf.css',
 	},
+	GAME_BOARDS: ['moe'],
 	THREADS_PER_PAGE: 10,
 	ABBREVIATED_REPLIES: 5,
 

@@ -130,9 +130,9 @@ OS.break_heart = function (frag) {
 					this.tamashii(parseInt(m, 10));
 			}
 			else if (i % 2)
-				this.callback(m + ' ');
+				this.geimu(m + ' ');
 			else
-				this.callback(m);
+				this.geimu(m);
 		}
 	}
 };
@@ -203,6 +203,58 @@ OS.karada = function (body) {
 		output.push(safe('</del>'));
 	return output;
 }
+
+var dice_re = /(#\d{1,2}d\d{1,3}(?:[+-]\d{1,3})?)/i;
+exports.dice_re = dice_re;
+
+function parse_dice(frag) {
+	var m = frag.match(/^#(\d+)d(\d+)([+-]\d+)?$/i);
+	if (!m)
+		return false;
+	var n = parseInt(m[1], 10), faces = parseInt(m[2], 10);
+	if (n < 1 || n > 10 || faces < 2 || faces > 100)
+		return false;
+	var info = {n: n, faces: faces};
+	if (m[3])
+		info.bias = parseInt(m[3], 10);
+	return info;
+}
+exports.parse_dice = parse_dice;
+
+OS.geimu = function (text) {
+	if (!this.dice)
+		return this.callback(text);
+	var bits = text.split(dice_re);
+	for (var i = 0, x = 0; i < bits.length; i++) {
+		var bit = bits[i];
+		if (!(i % 2) || !parse_dice(bit) || !this.dice[0]) {
+			this.callback(bit);
+			continue;
+		}
+		var d = this.dice.shift();
+		var f = d[0], n = d.length, b = 0;
+		if (d[n-1] && typeof d[n-1] == 'object') {
+			b = d[n-1].bias;
+			n--;
+		}
+		var r = d.slice(1, n);
+		n = r.length;
+		bit += ' (';
+		var eq = n > 1 || b;
+		if (eq)
+			bit += r.join(', ');
+		if (b)
+			bit += (b < 0 ? ' - ' + (-b) : ' + ' + b);
+		var sum = b;
+		for (var j = 0; j < n; j++)
+			sum += r[j];
+		this.callback(safe('<strong>'));
+		this.strong = true; // for client DOM insertion
+		this.callback(bit + (eq ? ' = ' : '') + sum + ')');
+		this.strong = false;
+		this.callback(safe('</strong>'));
+	}
+};
 
 function chibi(text) {
 	var m = text.match(/^(.{30}).{8,}(\.\w{3,4})$/);
@@ -307,8 +359,10 @@ OS.monogatari = function (data, t) {
 	if (!this.full && !data.op)
 		header.push(safe(expand_html(data.num)));
 	header.push(safe('</header>\n\t'));
-	var body = [safe('<blockquote>'), this.karada(data.body),
-			safe('</blockquote>')];
+
+	this.dice = data.dice;
+	var body = this.karada(data.body);
+	body = [safe('<blockquote>'), body, safe('</blockquote>')];
 	if (!data.image)
 		return {header: header, body: body};
 	return {header: header, image: this.gazou(data.image, t), body: body};

@@ -3,6 +3,7 @@ var async = require('async'),
     config = require('./config'),
     events = require('events'),
     fs = require('fs'),
+    games = require('./games'),
     redis = require('redis'),
     util = require('util');
 
@@ -296,23 +297,23 @@ Y.reserve_post = function (op, ip, callback) {
 	}
 };
 
-Y.insert_post = function (msg, body, board, ip, callback) {
+Y.insert_post = function (msg, body, extra, callback) {
 	var r = this.connect();
 	if (!this.tag)
 		return callback("Can't retrieve board for posting.");
 	var self = this;
-	if (!msg.num) {
-		callback("No post num.");
-		return;
-	}
-	else if (msg.op && OPs[msg.op] != msg.op) {
+	var ip = extra.ip, board = extra.board, num = msg.num, op = msg.op;
+	if (!num)
+		return callback("No post num.");
+	else if (!ip)
+		return callback("No IP.");
+	else if (op && OPs[op] != op) {
 		delete OPs[num];
 		return callback('Thread does not exist.');
 	}
 
 	var view = {time: msg.time, ip: ip, state: msg.state.join()};
 	var tag_key = this.tag_key();
-	var num = msg.num, op = msg.op;
 	if (msg.name)
 		view.name = msg.name;
 	if (msg.trip)
@@ -332,12 +333,12 @@ Y.insert_post = function (msg, body, board, ip, callback) {
 	m.incr(tag_key + ':postctr');
 	if (bump)
 		m.incr(tag_key + ':bumpctr');
+	inline(view, msg);
 	if (msg.image) {
 		if (op)
 			m.hincrby('thread:' + op, 'imgctr', 1);
 		else
 			view.imgctr = 1;
-		inline_image(view, msg.image);
 		note_hash(m, msg.image.hash, msg.num);
 	}
 	m.hmset(key, view);
@@ -350,7 +351,7 @@ Y.insert_post = function (msg, body, board, ip, callback) {
 	else {
 		op = num;
 		/* Rate-limit new threads */
-		if (ip && ip != '127.0.0.1')
+		if (ip != '127.0.0.1')
 			m.setex('ip:' + ip, config.THREAD_THROTTLE, op);
 	}
 
@@ -358,7 +359,7 @@ Y.insert_post = function (msg, body, board, ip, callback) {
 	view.body = body;
 	if (msg.links)
 		view.links = msg.links;
-	extract_image(view);
+	extract(view);
 	self._log(m, op, common.INSERT_POST, [num, view]);
 
 	if (ip) {
@@ -585,7 +586,7 @@ Y.add_image = function (post, image, ip, callback) {
 	});
 };
 
-Y.append_post = function (post, tail, ip, old_state, links, new_links, cb) {
+Y.append_post = function (post, tail, old_state, extra, cb) {
 	var m = this.connect().multi();
 	var key = (post.op ? 'post:' : 'thread:') + post.num;
 	/* Don't need to check .exists() thanks to client state */
@@ -593,14 +594,25 @@ Y.append_post = function (post, tail, ip, old_state, links, new_links, cb) {
 	/* XXX: fragile */
 	if (old_state[0] != post.state[0] || old_state[1] != post.state[1])
 		m.hset(key, 'state', post.state.join());
-	if (!common.is_empty(new_links))
-		m.hmset(key + ':links', new_links);
-	if (ip) {
+	if (extra.ip) {
 		var now = new Date().getTime();
-		update_throughput(m, ip, now, tail.length);
+		update_throughput(m, extra.ip, now, tail.length);
+	}
+	if (!common.is_empty(extra.new_links))
+		m.hmset(key + ':links', extra.new_links);
+	if (extra.new_dice) {
+		// Only need to update when new dice are rolled
+		var flat = {};
+		// This is a little janky... possibly change inline API?
+		games.inline_dice(flat, post.dice);
+		m.hset(key, 'dice', flat.dice);
 	}
 	var msg = [post.num, tail];
-	if (links)
+	var links = extra.links || {};
+	if (extra.new_dice)
+		msg.push(old_state[0], old_state[1], links,
+				{dice: extra.new_dice});
+	else if (extra.links)
 		msg.push(old_state[0], old_state[1], links);
 	else if (old_state[1])
 		msg.push(old_state[0], old_state[1]);
@@ -825,7 +837,7 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 				if (err)
 					return self.emit('error', err);
 				var omit = Math.max(r[1] + shonen, 0);
-				extract_image(op_post);
+				extract(op_post);
 				self.emit('thread', op_post, omit);
 				self._get_each_reply(0, r[0]);
 			});
@@ -853,7 +865,7 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 		with_body(r, key, pre_post, function (err, post) {
 			if (err)
 				return self.emit('error', err);
-			extract_image(post);
+			extract(post);
 			self.emit('post', post);
 			next_please();
 		});
@@ -964,8 +976,26 @@ Y.set_fun_thread = function (op, callback) {
 
 /* HELPERS */
 
+var EXTRACTS = [];
+var INLINES = {};
+
+function extract(post) {
+	EXTRACTS.forEach(function (f) {
+		f(post);
+	});
+}
+
+function inline(dest, src) {
+	// Nondeterministic order... must be independent attrs
+	for (var attr in INLINES) {
+		console.log(attr);
+		var f = INLINES[attr];
+		f(dest, src[attr]);
+	}
+}
+
 var image_attrs;
-function extract_image(post) {
+EXTRACTS.push(function (post) {
 	if (!image_attrs)
 		image_attrs = require('./pix').image_attrs;
 	if (!(image_attrs[0] in post))
@@ -982,16 +1012,21 @@ function extract_image(post) {
 	image.size = parseInt(image.size);
 	delete image.hash;
 	post.image = image;
-}
+});
 
-function inline_image(post, image) {
+INLINES.image = function (post, image) {
 	if (!image_attrs)
 		image_attrs = require('./pix').image_attrs;
+	if (!image)
+		return;
 	image_attrs.forEach(function (key) {
 		if (key in image)
 			post[key] = image[key];
 	});
-}
+};
+
+EXTRACTS.push(games.extract_dice);
+INLINES.dice = games.inline_dice;
 
 function with_body(r, key, post, callback) {
 	/* Convenience */
