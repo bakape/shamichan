@@ -9,3 +9,6 @@
 * Backbone.js
 * Hover previews of threads
 * Inline expansion messes with prediction?
+* Inline expansion should remake the img
+* YouTube expansions should be closeable
+* Post insertion publications have hash field
