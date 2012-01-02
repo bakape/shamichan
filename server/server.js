@@ -45,8 +45,9 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	if (!syncs || typeof syncs != 'object')
 		return false;
 	if (client.synced) {
-		console.error("warning: Client tried to sync twice");
-		return false;
+		console.warn("Client tried to sync twice");
+		/* Sync logic is buggy; allow for now */
+		//return true;
 	}
 	if (!can_access(null, board))
 		return false;
