@@ -481,6 +481,9 @@ PF.on_key_down = function (event) {
 	}
 };
 
+var workaroundA = navigator.userAgent.indexOf('Chrome') > -1;
+var workaroundB = navigator.userAgent.indexOf('Safari') > -1;
+
 PF.on_input = function () {
 	var input = this.input;
 	var val = input.val();
@@ -522,13 +525,25 @@ PF.on_input = function () {
 		var rev = val.split('').reverse().join('');
 		var m = rev.match(/^(\s*\S+\s+\S+)\s+(?=\S)/);
 		if (m) {
-			var lim = len - m[1].length, keep = len - m[1].length;
+			var lim = len - m[1].length;
 			var destiny = val.substr(0, lim);
 			this.commit(destiny);
-			val = val.substr(keep);
+			val = val.substr(lim);
+			start -= lim;
+			end -= lim;
 			input.val(val);
-			input[0].selectionStart = start - lim;
-			input[0].selectionEnd = end - lim;
+			// XXX: FUUUUUUUUCK
+			var p = input[0];
+			if (workaroundA)
+				setTimeout(function () {
+					p.setSelectionRange(start+1, end+1);
+				}, 0);
+			else if (workaroundB)
+				setTimeout(function () {
+					p.setSelectionRange(start+1, end);
+				}, 0);
+			else
+				p.setSelectionRange(start, end);
 		}
 	}
 
