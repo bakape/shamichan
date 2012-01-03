@@ -28,7 +28,7 @@ b.moderator {
 body {
 	background-color: #eef2ff;
 }
-body, #sizer, #trans {
+body, pre, #trans {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
 }

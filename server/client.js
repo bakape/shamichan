@@ -1,7 +1,7 @@
 var BOARD, THREAD, BUMP, PAGE, syncs = {};
 var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
-var $sizer = $('<span id="sizer"></span>');
+var $sizer = $('<pre></pre>');
 var lockedToBottom, lockKeyHeight;
 var options, outOfSync, postForm, preview, previewNum;
 var inputMinSize = 300, nashi = {opts: []};

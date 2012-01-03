@@ -147,14 +147,15 @@ section p {
 	float: right;
 	margin-bottom: 2px;
 }
-#sizer {
+pre {
 	height: auto;
 	margin: 0;
 	position: absolute;
+	top: 0;
 	width: auto;
 	visibility: hidden;
 }
-#sizer, #trans {
+pre, #trans {
 	border: 0;
 	padding: 0;
 }
