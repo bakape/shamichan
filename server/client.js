@@ -402,7 +402,7 @@ function PostForm(dest, section) {
 	this.imouto.callback = inject;
 	this.imouto.state = [0, 0];
 	this.imouto.buffer = this.buffer;
-	this.imouto.dice = true;
+	this.imouto.dice = GAME_BOARDS.indexOf(BOARD) >= 0;
 	this.imouto.queueRoll = queue_roll;
 	this.imouto.allRolls = {sent: 0, seen: 0};
 
