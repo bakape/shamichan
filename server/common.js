@@ -198,14 +198,16 @@ OS.karada = function (body) {
 	return output;
 }
 
-var dice_re = /(#\d{1,2}d\d{1,3}(?:[+-]\d{1,3})?)/i;
+var dice_re = /(#flip|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
 exports.dice_re = dice_re;
 
 function parse_dice(frag) {
-	var m = frag.match(/^#(\d+)d(\d+)([+-]\d+)?$/i);
+	if (frag == '#flip')
+		return {n: 1, faces: 2};
+	var m = frag.match(/^#(\d*)d(\d+)([+-]\d+)?$/i);
 	if (!m)
 		return false;
-	var n = parseInt(m[1], 10), faces = parseInt(m[2], 10);
+	var n = parseInt(m[1], 10) || 1, faces = parseInt(m[2], 10);
 	if (n < 1 || n > 10 || faces < 2 || faces > 100)
 		return false;
 	var info = {n: n, faces: faces};
@@ -216,6 +218,8 @@ function parse_dice(frag) {
 exports.parse_dice = parse_dice;
 
 function readable_dice(bit, d) {
+	if (bit == '#flip')
+		return '#flip (' + (d[1] == 2) + ')';
 	var f = d[0], n = d.length, b = 0;
 	if (d[n-1] && typeof d[n-1] == 'object') {
 		b = d[n-1].bias;
