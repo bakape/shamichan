@@ -215,38 +215,49 @@ function parse_dice(frag) {
 }
 exports.parse_dice = parse_dice;
 
+function readable_dice(bit, d) {
+	var f = d[0], n = d.length, b = 0;
+	if (d[n-1] && typeof d[n-1] == 'object') {
+		b = d[n-1].bias;
+		n--;
+	}
+	var r = d.slice(1, n);
+	n = r.length;
+	bit += ' (';
+	var eq = n > 1 || b;
+	if (eq)
+		bit += r.join(', ');
+	if (b)
+		bit += (b < 0 ? ' - ' + (-b) : ' + ' + b);
+	var sum = b;
+	for (var j = 0; j < n; j++)
+		sum += r[j];
+	return bit + (eq ? ' = ' : '') + sum + ')';
+}
+
 OS.geimu = function (text) {
 	if (!this.dice)
 		return this.callback(text);
 	var bits = text.split(dice_re);
 	for (var i = 0, x = 0; i < bits.length; i++) {
 		var bit = bits[i];
-		if (!(i % 2) || !parse_dice(bit) || !this.dice[0]) {
+		if (!(i % 2) || !parse_dice(bit)) {
 			this.callback(bit);
-			continue;
 		}
-		var d = this.dice.shift();
-		var f = d[0], n = d.length, b = 0;
-		if (d[n-1] && typeof d[n-1] == 'object') {
-			b = d[n-1].bias;
-			n--;
+		else if (this.queueRoll) {
+			this.queueRoll(bit);
 		}
-		var r = d.slice(1, n);
-		n = r.length;
-		bit += ' (';
-		var eq = n > 1 || b;
-		if (eq)
-			bit += r.join(', ');
-		if (b)
-			bit += (b < 0 ? ' - ' + (-b) : ' + ' + b);
-		var sum = b;
-		for (var j = 0; j < n; j++)
-			sum += r[j];
-		this.callback(safe('<strong>'));
-		this.strong = true; // for client DOM insertion
-		this.callback(bit + (eq ? ' = ' : '') + sum + ')');
-		this.strong = false;
-		this.callback(safe('</strong>'));
+		else if (!this.dice[0]) {
+			this.callback(bit);
+		}
+		else {
+			var d = this.dice.shift();
+			this.callback(safe('<strong>'));
+			this.strong = true; // for client DOM insertion
+			this.callback(readable_dice(bit, d));
+			this.strong = false;
+			this.callback(safe('</strong>'));
+		}
 	}
 };
 

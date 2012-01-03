@@ -896,6 +896,7 @@ function get_post_view(post) {
 	if (post.editing) view.editing = post.editing;
 	if (post.links) view.links = post.links;
 	if (post.image) view.image = post.image;
+	if (post.dice) view.dice = post.dice;
 	return view;
 }
 

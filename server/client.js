@@ -129,6 +129,35 @@ function inject(frag) {
 		out = escape_fragment(frag);
 	if (out)
 		dest.append(out);
+	return out;
+}
+
+function queue_roll(bit) {
+	var n = this.allRolls.sent++;
+	var info = this.allRolls[n];
+	if (!info)
+		info = this.allRolls[n] = {};
+	info.bit = bit;
+	info.$tag = $(this.callback(safe('<strong>')));
+	this.strong = true;
+	this.callback(info.dice ? readable_dice(bit, info.dice) : bit);
+	this.strong = false;
+	this.callback(safe('</strong>'));
+}
+
+function resolve_rolls(dice) {
+	if (!postForm || !postForm.imouto)
+		return;
+	var rolls = postForm.imouto.allRolls;
+	for (var i = 0; i < dice.length; i++) {
+		var n = rolls.seen++;
+		var info = rolls[n];
+		if (!info)
+			info = rolls[n] = {};
+		info.dice = dice[i];
+		if (info.$tag)
+			info.$tag.text(readable_dice(info.bit, info.dice));
+	}
 }
 
 function get_focus() {
@@ -192,6 +221,8 @@ dispatcher[INSERT_POST] = function (msg) {
 	if (msg.nonce && msg.nonce in nonces) {
 		delete nonces[msg.nonce];
 		ownPosts[num] = true;
+		if (msg.dice)
+			resolve_rolls(msg.dice);
 		return;
 	}
 	msg.num = num;
@@ -255,12 +286,16 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 
 dispatcher[UPDATE_POST] = function (msg) {
 	var num = msg[0];
-	if (num in ownPosts)
+	var extra = msg[5];
+	var dice = extra ? extra.dice : null;
+	if (num in ownPosts) {
+		if (dice)
+			resolve_rolls(dice);
 		return;
+	}
 	var bq = $('#' + num + '>blockquote');
 	if (bq.length) {
-		var extra = msg[5];
-		oneeSama.dice = extra ? extra.dice : null;
+		oneeSama.dice = dice;
 		oneeSama.links = msg[4] || {};
 		oneeSama.callback = inject;
 		oneeSama.buffer = bq;
@@ -364,6 +399,9 @@ function PostForm(dest, section) {
 	this.imouto.callback = inject;
 	this.imouto.state = [0, 0];
 	this.imouto.buffer = this.buffer;
+	this.imouto.dice = true;
+	this.imouto.queueRoll = queue_roll;
+	this.imouto.allRolls = {sent: 0, seen: 0};
 
 	shift_replies(section);
 	var post = this.post;
