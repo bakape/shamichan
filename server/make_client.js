@@ -25,6 +25,7 @@ var config_re = /\bconfig\.(\w+)\b/;
 async.forEachSeries(files, function (file, cb) {
 	if (file.match(/^lib\//)) {
 		process.stdout.write(fs.readFileSync(file));
+		process.stdout.write('\n');
 		return cb(null);
 	}
 	if (file.match(/^config\.js/))
