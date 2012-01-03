@@ -279,7 +279,10 @@ dispatcher[IMAGE_STATUS] = function (msg) {
 
 dispatcher[INSERT_IMAGE] = function (msg) {
 	var focus = get_focus();
-	var hd = $('#' + msg[0] + '>header');
+	var num = msg[0];
+	if (num in ownPosts)
+		return;
+	var hd = $('#' + num + '>header');
 	if (hd.length) {
 		insert_image(msg[1], hd, false);
 		if (focus)
