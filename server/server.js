@@ -28,7 +28,6 @@ function Okyaku(socket) {
 	this.id = socket.id;
 	this.socket = socket;
 	this.watching = {};
-	this.skipped = 0;
 	socket.on('message', this.on_message.bind(this));
 	socket.on('disconnect', this.on_disconnect.bind(this));
 	socket.on('error', console.error.bind(console, 'socket:'));
@@ -128,39 +127,19 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	return true;
 }
 
-var unskippable = [common.FINISH_POST, common.DELETE_POSTS,
-		common.DELETE_THREAD];
-
 OK.on_update = function(op, num, kind, msg) {
-	var mine = (this.post && this.post.num == num) || this.last_num == num;
-	if (mine && unskippable.indexOf(kind) < 0) {
-		this.skipped++;
-		return;
-	}
-	else if (this.post && kind == common.DELETE_POSTS) {
+	if (this.post && kind == common.DELETE_POSTS) {
 		/* grr special case */
 		var nums = JSON.parse('[' + msg + ']').slice(1);
-		if (nums.indexOf(this.post.num) >= 0) {
-			this.last_num = this.post.num;
+		if (nums.indexOf(this.post.num) >= 0)
 			delete this.post;
-		}
 	}
 	else if (this.post && kind == common.DELETE_THREAD) {
 		/* GRR */
-		if (this.post.num == op || this.post.op == op) {
-			this.last_num = this.post.num;
+		if (this.post.num == op || this.post.op == op)
 			delete this.post;
-		}
 	}
-	msg = '[' + msg + ',' + op + ']';
-	if (this.skipped) {
-		var skipped_op = this.post ? (this.post.op || this.post.num)
-				: db.OPs[this.last_num];
-		var catch_up = [common.CATCH_UP, skipped_op, this.skipped];
-		msg = JSON.stringify(catch_up) + ',' + msg;
-		this.skipped = 0;
-	}
-	this.socket.send('[' + msg + ']');
+	this.socket.send('[[' + msg + ',' + op + ']]');
 };
 
 OK.on_thread_sink = function (thread, err) {
@@ -810,9 +789,11 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 function allocate_post(msg, image, client, callback) {
 	if (!msg || typeof msg != 'object')
 		return callback('Bad alloc.');
+	if (typeof msg.nonce != 'number' || !msg.nonce || msg.nonce < 1)
+		return callback('Bad nonce.');
 	if (client.post)
 		return callback("Already have a post.");
-	var post = {time: new Date().getTime()};
+	var post = {time: new Date().getTime(), nonce: msg.nonce};
 	var body = '';
 	var extra = {ip: client.ip, board: client.board};
 	if (msg.frag !== undefined) {
@@ -907,6 +888,7 @@ function allocate_post(msg, image, client, callback) {
 
 function get_post_view(post) {
 	var view = {num: post.num, body: post.body, time: post.time};
+	if (post.nonce) view.nonce = post.nonce;
 	if (post.op) view.op = post.op;
 	if (post.name) view.name = post.name;
 	if (post.trip) view.trip = post.trip;

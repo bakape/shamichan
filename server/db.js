@@ -356,6 +356,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 	}
 
 	/* Denormalize for backlog */
+	view.nonce = msg.nonce;
 	view.body = body;
 	if (msg.links)
 		view.links = msg.links;

@@ -33,7 +33,7 @@ function korosu() {
 }
 
 window.fun = function () {
-	send([11, document.cookie, THREAD]);
+	send([10, document.cookie, THREAD]);
 };
 
 function make_alloc_admin(text) {

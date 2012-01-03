@@ -1,4 +1,5 @@
-var BOARD, THREAD, BUMP, PAGE, syncs = {};
+var BOARD, THREAD, BUMP, PAGE;
+var syncs = {}, nonces = {}, ownPosts = {};
 var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var $sizer = $('<pre></pre>');
@@ -188,6 +189,11 @@ var dispatcher = {};
 dispatcher[INSERT_POST] = function (msg) {
 	var num = msg[0];
 	msg = msg[1];
+	if (msg.nonce && msg.nonce in nonces) {
+		delete nonces[msg.nonce];
+		ownPosts[num] = true;
+		return;
+	}
 	msg.num = num;
 	msg.editing = true;
 	var orig_focus = get_focus();
@@ -248,7 +254,10 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 };
 
 dispatcher[UPDATE_POST] = function (msg) {
-	var bq = $('#' + msg[0] + '>blockquote');
+	var num = msg[0];
+	if (num in ownPosts)
+		return;
+	var bq = $('#' + num + '>blockquote');
 	if (bq.length) {
 		var extra = msg[5];
 		oneeSama.dice = extra ? extra.dice : null;
@@ -261,7 +270,9 @@ dispatcher[UPDATE_POST] = function (msg) {
 };
 
 dispatcher[FINISH_POST] = function (msg) {
-	$('#' + msg[0]).removeClass('editing');
+	var num = msg[0];
+	$('#' + num).removeClass('editing');
+	delete ownPosts[num];
 };
 
 dispatcher[DELETE_POSTS] = function (msg, op) {
@@ -408,6 +419,7 @@ dispatcher[ALLOCATE_POST] = function (msg) {
 
 PF.on_allocation = function (msg) {
 	var num = msg.num;
+	ownPosts[num] = true;
 	this.num = num;
 	this.flush_pending();
 	$name.unbind();
@@ -827,9 +839,13 @@ function add_ref(num) {
 };
 
 PF.make_alloc_request = function (text) {
+	var nonce = Math.floor(Math.random() * 1e16) + 1;
+	// TODO: Ought to clear out nonces that never arrive eventually
+	nonces[nonce] = true;
 	var msg = {
 		name: $name.val().trim(),
 		email: $email.val().trim(),
+		nonce: nonce,
 	};
 	if (text)
 		msg.frag = text;
@@ -1144,10 +1160,6 @@ dispatcher[SYNCHRONIZE] = function (msg) {
 			add_ref(id);
 		}
 	}
-};
-
-dispatcher[CATCH_UP] = function (msg) {
-	syncs[msg[0]] += msg[1];
 };
 
 dispatcher[INVALID] = function (msg) {
