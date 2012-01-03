@@ -11,6 +11,5 @@
 * Inline expansion messes with prediction?
 * Inline expansion should remake the img
 * YouTube expansions should be closeable
-* Post insertion publications have hash field
 * Don't use keys() for loading OPs
 * Incoming JSON schema checker

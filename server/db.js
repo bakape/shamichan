@@ -577,10 +577,13 @@ Y.add_image = function (post, image, ip, callback) {
 		if (!exists)
 			return callback("Post does not exist.");
 		var m = r.multi();
-		self._log(m, op, common.INSERT_IMAGE, [num, image]);
+		note_hash(m, image.hash, post.num);
 		m.hmset(key, image);
 		m.hincrby('thread:' + op, 'imgctr', 1);
-		note_hash(m, image.hash, post.num);
+
+		delete image.hash;
+		self._log(m, op, common.INSERT_IMAGE, [num, image]);
+
 		var now = new Date().getTime();
 		update_throughput(m, ip, now, config.IMAGE_CHARACTER_WORTH);
 		m.exec(callback);
