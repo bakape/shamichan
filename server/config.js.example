@@ -8,10 +8,10 @@ var config = {
 
 	BOARDS: ['moe', 'gar'],
 	TITLES: {moe: "/moe/ - Sweets", gar: "/gar/ - Hard Work &amp; Guts"},
-	BASE_CSS: 'base-v15.css',
+	BASE_CSS: 'base-v16.css',
 	BOARD_CSS: {
-		moe: 'moe-v1.css',
-		meta: 'gar-wtf.css',
+		moe: 'moe-v2.css',
+		meta: 'gar-v2.css',
 	},
 	GAME_BOARDS: ['moe'],
 	THREADS_PER_PAGE: 10,
