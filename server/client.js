@@ -2,7 +2,6 @@ var BOARD, THREAD, BUMP, PAGE, syncs = {};
 var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var $sizer = $('<span id="sizer"></span>');
-var commit_deferred = false;
 var lockedToBottom, lockKeyHeight;
 var options, outOfSync, postForm, preview, previewNum;
 var inputMinSize = 300, nashi = {opts: []};
@@ -367,9 +366,8 @@ function PostForm(dest, section) {
 	$name.change(prop).keyup(prop);
 	$email.change(prop).keyup(prop);
 
-	this.input.keydown($.proxy(this, 'on_key')
-			).bind('paste', $.proxy(this, 'on_paste')
-			).keyup($.proxy(this, 'on_key_up'));
+	this.input.keydown($.proxy(this, 'on_key_down'));
+	this.input.input($.proxy(this, 'on_input'));
 
 	if (!this.op)
 		this.blockquote.hide();
@@ -472,59 +470,21 @@ function find_time_param(params) {
 	return false;
 }
 
-var yasumono = {
-	SPACE_KEY: '  ', RETURN_KEY: '\n\n',
-	186: ';:', 187: '=+', 188: ',<', 189: '-_', 190: '.>', 191: '/?',
-	192: '`~', 219: '[{', 220: '\\|', 221: ']}', 222: '\'"'
-};
-var ishygddt = ')!@#$%^&*(';
-var metamono = [16, 17, 18, 27, 91];
-
-function predict_result(event, start, end, val) {
-	if (!event || typeof start != 'number' || typeof end != 'number')
-		return val;
-	var which = event.which;
-	if (!which || (which>32 && which<41) || metamono.indexOf(which) >= 0)
-		return val;
-	if (start == end) {
-		if (which == BKSP_KEY)
-			start--;
-		else if (which == DEL_KEY)
-			end++;
-	}
-	var before = val.substr(0, start), after = val.substr(end), mid = '';
-	if (which >= 48 && which < 90) {
-		mid = String.fromCharCode(which);
-		if (!event.shiftKey)
-			mid = mid.toLowerCase();
-		else if (which < 58)
-			mid = ishygddt[which - 48];
-	}
-	else if (which in yasumono)
-		mid = yasumono[which][event.shiftKey ? 1 : 0];
-	else if (which != BKSP_KEY && which != DEL_KEY)
-		mid = 'W'; /* guess */
-	return before + mid + after;
-}
-
-PF.on_shortcut = function (event) {
-	if (event.which == 83 && event.altKey)
+PF.on_key_down = function (event) {
+	if (event.which == 83 && event.altKey) {
 		this.finish_wrapped();
-	else
-		return false;
-	return true;
+		event.preventDefault();
+	}
+	if (lockedToBottom) {
+		lockKeyHeight = $DOC.height();
+		setTimeout(entryScrollLock, 0);
+	}
 };
 
-PF.on_key = function (event) {
-	if (event && event.preventDefault && this.on_shortcut(event)) {
-		event.preventDefault();
-		return;
-	}
+PF.on_input = function () {
 	var input = this.input;
 	var val = input.val();
 	var start = input[0].selectionStart, end = input[0].selectionEnd;
-	if (lockedToBottom)
-		lockKeyHeight = $DOC.height();
 
 	/* Turn YouTube links into proper refs */
 	var changed = false;
@@ -549,66 +509,42 @@ PF.on_key = function (event) {
 	if (changed)
 		input.val(val);
 
-	var prediction = predict_result(event, start, end, val);
-
-	var nl = prediction.lastIndexOf('\n');
-	if (event && nl >= 0) {
+	var nl = val.lastIndexOf('\n');
+	if (nl >= 0) {
 		var ok = val.substr(0, nl);
 		val = val.substr(nl+1);
-		prediction = prediction.substr(nl+1);
 		input.val(val);
 		if (this.sentAllocRequest || ok.match(/[^ ]/))
 			this.commit(ok + '\n');
-		if (event.preventDefault)
-			event.preventDefault();
 	}
 	else {
-		var len = prediction.length;
-		var revPred = prediction.split('').reverse().join('');
-		var m = revPred.match(/^(\s*\S+\s+\S+)\s+(?=\S)/);
+		var len = val.length;
+		var rev = val.split('').reverse().join('');
+		var m = rev.match(/^(\s*\S+\s+\S+)\s+(?=\S)/);
 		if (m) {
 			var lim = len - m[1].length, keep = len - m[1].length;
 			var destiny = val.substr(0, lim);
-			if (destiny == prediction.substr(0, lim)) {
-				/* Prefix of existing and prediction match */
-				this.commit(destiny);
-				val = val.substr(keep);
-				prediction = prediction.substr(keep);
-				this.input.val(val);
-				this.input[0].selectionStart = start - lim;
-				this.input[0].selectionEnd = end - lim;
-			}
-			else {
-				/* Ambiguous case. Wait until key-up */
-				commit_deferred = true;
-			}
+			this.commit(destiny);
+			val = val.substr(keep);
+			input.val(val);
+			input[0].selectionStart = start - lim;
+			input[0].selectionEnd = end - lim;
 		}
 	}
 
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
-	this.resize_input(prediction);
-	if (lockedToBottom)
-		setTimeout(entryScrollLock, 0);
+	this.resize_input(val);
 };
 
 function entryScrollLock() {
 	/* NOPE */
-	/* Deferred commit may change lockKeyHeight; save first */
-	var keyHeight = lockKeyHeight;
-
 	if (lockedToBottom) {
 		/* Special keyup<->down case */
 		var height = $DOC.height();
-		if (height > keyHeight)
-			window.scrollBy(0, height - keyHeight + 1);
+		if (height > lockKeyHeight)
+			window.scrollBy(0, height - lockKeyHeight + 1);
 	}
 }
-
-PF.on_key_up = function (event) {
-	if (commit_deferred)
-		this.on_key(null);
-	commit_deferred = false;
-};
 
 PF.resize_input = function (val) {
 	var input = this.input;
@@ -620,10 +556,6 @@ PF.resize_input = function (val) {
 	var size = $sizer.width() + INPUT_ROOM;
 	size = Math.max(size, inputMinSize - left);
 	input.css('width', size + 'px');
-};
-
-PF.on_paste = function (event) {
-	setTimeout($.proxy(this, 'on_key'), 0);
 };
 
 PF.upload_error = function (msg) {
@@ -866,11 +798,16 @@ function add_ref(num) {
 		open_post_box(num);
 	/* If a >>link exists, put this one on the next line */
 	var input = postForm.input;
-	if (input.val().match(/^>>\d+$/))
-		postForm.on_key.call(postForm, {which: RETURN_KEY});
-	input.val(input.val() + '>>' + num);
+	var val = input.val();
+	if (val.match(/^>>\d+$/)) {
+		input.val(val + '\n');
+		// XXX: Fix this dumb hack
+		postForm.on_input.call(postForm);
+		val = input.val();
+	}
+	input.val(val + '>>' + num);
 	input[0].selectionStart = input.val().length;
-	postForm.on_key.call(postForm, null);
+	postForm.on_input.call(postForm);
 	input.focus();
 };
 
