@@ -60,7 +60,10 @@ function save_ident() {
 }
 
 function send(msg) {
-	socket.send(JSON.stringify(msg));
+	msg = JSON.stringify(msg);
+	if (DEBUG)
+		console.log('<', msg);
+	socket.send(msg);
 }
 
 function make_reply_box() {
@@ -1160,6 +1163,8 @@ MIRU.reconnect_failed = function () {
 };
 
 MIRU.message = function (data) {
+	if (DEBUG)
+		console.log('>', data);
 	var msgs = JSON.parse(data);
 
 	with_dom(function () {
