@@ -135,6 +135,22 @@ function inject(frag) {
 	return out;
 }
 
+// TODO: Unify self-updates with OneeSama; this is redundant
+function resolve_own_links(links) {
+	if (!postForm)
+		return;
+	postForm.buffer.find('.nope').each(function () {
+		var $a = $(this);
+		var m = $a.text().match(/^>>(\d+)$/);
+		if (!m)
+			return;
+		var num = m[1], op = links[num];
+		if (op)
+			$a.attr('href', post_url({op: op, num: num}, false)
+					).removeAttr('class');
+	});
+}
+
 function queue_roll(bit) {
 	var n = this.allRolls.sent++;
 	var info = this.allRolls[n];
@@ -224,6 +240,8 @@ dispatcher[INSERT_POST] = function (msg) {
 	if (msg.nonce && msg.nonce in nonces) {
 		delete nonces[msg.nonce];
 		ownPosts[num] = true;
+		if (msg.links)
+			resolve_own_links(msg.links);
 		if (msg.dice)
 			resolve_rolls(msg.dice);
 		return;
@@ -291,10 +309,11 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 };
 
 dispatcher[UPDATE_POST] = function (msg) {
-	var num = msg[0];
-	var extra = msg[5];
+	var num = msg[0], links = msg[4], extra = msg[5];
 	var dice = extra ? extra.dice : null;
 	if (num in ownPosts) {
+		if (links)
+			resolve_own_links(links);
 		if (dice)
 			resolve_rolls(dice);
 		return;
@@ -302,7 +321,7 @@ dispatcher[UPDATE_POST] = function (msg) {
 	var bq = $('#' + num + '>blockquote');
 	if (bq.length) {
 		oneeSama.dice = dice;
-		oneeSama.links = msg[4] || {};
+		oneeSama.links = links || {};
 		oneeSama.callback = inject;
 		oneeSama.buffer = bq;
 		oneeSama.state = [msg[2] || 0, msg[3] || 0];
@@ -400,7 +419,8 @@ function PostForm(dest, section) {
 		if (thread.length)
 			this.callback(make_link(num, extract_num(thread)));
 		else
-			this.callback('>>' + num);
+			this.callback(safe('<a class="nope">&gt;&gt;' + num
+					+ '</a>'));
 	});
 	this.imouto.callback = inject;
 	this.imouto.state = [0, 0];

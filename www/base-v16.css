@@ -8,6 +8,11 @@ a:visited {
 a:hover, blockquote a {
 	cursor: pointer;
 }
+a.nope {
+	cursor: inherit;
+	color: inherit !important;
+	text-decoration: none;
+}
 abbr {
 	text-decoration: none;
 }
