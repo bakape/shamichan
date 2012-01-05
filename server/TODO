@@ -11,5 +11,8 @@
 * Inline expansion messes with prediction?
 * Inline expansion should remake the img
 * YouTube expansions should be closeable
+* YouTube links should have a title
 * Don't use keys() for loading OPs
 * Incoming JSON schema checker
+* Upload cancelling doesn't work?
+* Cross-board links should be direct
