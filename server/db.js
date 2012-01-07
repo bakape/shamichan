@@ -710,7 +710,12 @@ Y.fetch_backlogs = function (watching, callback) {
 		r.lrange(key, sync, -1, function (err, log) {
 			if (err)
 				return cb(err);
-			combined.push.apply(combined, log);
+
+			/* TEMP */
+			log.forEach(function (entry) {
+				combined.push(entry + ',' + thread);
+			});
+
 			cb(null);
 		});
 	}, function (errs) {
