@@ -160,6 +160,7 @@ var oneeSama = new common.OneeSama(function (num) {
 function write_thread_html(reader, response, full_thread) {
 	reader.on('thread', function (op_post, omit, image_omit) {
 		oneeSama.full = full_thread;
+		op_post.omit = omit;
 		var first = oneeSama.monomono(op_post, full_thread && 'full');
 		first.pop();
 		response.write(first.join(''));
@@ -214,8 +215,11 @@ function make_board_meta(board, info) {
 	return make_link_rels(board, bits);
 }
 
-function make_thread_meta(board, num) {
-	return make_link_rels(board, [['index', 'live']]);
+function make_thread_meta(board, num, abbrev) {
+	var bits = [['index', 'live']];
+	if (abbrev)
+		bits.push(['canonical', num]);
+	return make_link_rels(board, bits);
 }
 
 function make_nav_html(info) {
@@ -623,7 +627,9 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		return redirect_thread(resp, num, op);
 	var yaku = new db.Yakusoku(board);
 	var reader = new db.Reader(yaku);
-	reader.get_thread(board, num, true, false);
+	var limit = 'last100' in req.query ?
+			(100 + config.ABBREVIATED_REPLIES) : 0;
+	reader.get_thread(board, num, true, limit);
 	reader.on('nomatch', render_404.bind(null, resp));
 	reader.on('redirect', redirect_thread.bind(null, resp, num));
 	reader.on('begin', function () {
@@ -631,7 +637,7 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		resp.write(indexTmpl[0]);
 		resp.write('/'+escape(board)+'/ - #' + op);
 		resp.write(indexTmpl[1]);
-		resp.write(make_thread_meta(board, num));
+		resp.write(make_thread_meta(board, num, limit));
 		resp.write(indexTmpl[2]);
 		resp.write('Thread #' + op);
 		resp.write(indexTmpl[3]);

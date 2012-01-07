@@ -342,8 +342,12 @@ function num_html(post) {
 			+ post_url(post, true) + '">' + post.num + '</a>');
 }
 
-function expand_html(num) {
-	return ' &nbsp; [<a href="' + num + '" class="expand">Expand</a>]';
+function expand_html(num, omit) {
+	var html = ' &nbsp; [<a href="' + num + '" class="expand">Expand</a>]';
+	if (omit > 100)
+		html += ' [<a href="' + num +
+				'?last100" class="expand">Last 100</a>]';
+	return html;
 }
 
 OS.monogatari = function (data, t) {
@@ -366,7 +370,7 @@ OS.monogatari = function (data, t) {
 			'">' + readable_time(data.time) + '</time> ' +
 			num_html(data)));
 	if (!this.full && !data.op)
-		header.push(safe(expand_html(data.num)));
+		header.push(safe(expand_html(data.num, data.omit)));
 	header.push(safe('</header>\n\t'));
 
 	this.dice = data.dice;

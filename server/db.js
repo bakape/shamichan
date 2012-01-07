@@ -781,7 +781,8 @@ Y._get_each_thread = function (reader, ix, nums) {
 	};
 	reader.on('end', next_please);
 	reader.on('nomatch', next_please);
-	reader.get_thread(this.tag, nums[ix], false, true);
+	reader.get_thread(this.tag, nums[ix], false,
+			config.ABBREVIATED_REPLIES || 5);
 };
 
 Y.report_error = function (info, ver, callback) {
@@ -837,15 +838,14 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 		with_body(r, key, pre_post, function (err, op_post) {
 			if (err)
 				return self.emit('error', err);
-			var shonen = abbrev ? -config.ABBREVIATED_REPLIES : 0;
 			var m = r.multi();
-			m.lrange(key + ':posts', shonen, -1);
+			m.lrange(key + ':posts', -abbrev, -1);
 			if (abbrev)
 				m.llen(key + ':posts');
 			m.exec(function (err, r) {
 				if (err)
 					return self.emit('error', err);
-				var omit = Math.max(r[1] + shonen, 0);
+				var omit = Math.max(r[1] - abbrev, 0);
 				extract(op_post);
 				self.emit('thread', op_post, omit);
 				self._get_each_reply(0, r[0]);
