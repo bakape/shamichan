@@ -15,3 +15,5 @@
 * Incoming JSON schema checker
 * Upload cancelling doesn't work?
 * Cross-board links should be direct
+* Should retrieve live body and hctr in one transaction
+* Links in last100 version all go to full version
