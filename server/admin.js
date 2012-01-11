@@ -32,6 +32,12 @@ function korosu() {
 	}
 }
 
+MIRU.connect = function () {
+	sync_status('Syncing...', false);
+	send([9, BOARD, syncs, BUMP, document.cookie]);
+};
+insert_pbs = function () {};
+
 window.fun = function () {
 	send([10, document.cookie, THREAD]);
 };

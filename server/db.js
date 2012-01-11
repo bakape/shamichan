@@ -860,12 +860,13 @@ exports.Reader = Reader;
 
 Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 	var r = this.y.connect();
-	var key = 'thread:' + num;
+	var graveyard = (tag == 'graveyard');
+	var key = (graveyard ? 'dead:' : 'thread:') + num;
 	var self = this;
 	r.hgetall(key, function (err, pre_post) {
 		if (err)
 			return self.emit('error', err);
-		if (pre_post.hide)
+		if (!graveyard && pre_post.hide)
 			return self.emit('nomatch');
 		if (common.is_empty(pre_post)) {
 			if (!redirect_ok)
@@ -882,7 +883,7 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 			return;
 		}
 		var tags = parse_tags(pre_post.tags);
-		if (tags.indexOf(tag) < 0) {
+		if (!graveyard && tags.indexOf(tag) < 0) {
 			/* XXX: Should redirect directly to correct thread */
 			if (!redirect_ok)
 				self.emit('nomatch');
@@ -905,13 +906,13 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 				var omit = Math.max(r[1] - abbrev, 0);
 				extract(op_post);
 				self.emit('thread', op_post, omit);
-				self._get_each_reply(0, r[0]);
+				self._get_each_reply(tag, 0, r[0]);
 			});
 		});
 	});
 };
 
-Reader.prototype._get_each_reply = function (ix, nums) {
+Reader.prototype._get_each_reply = function (tag, ix, nums) {
 	if (!nums || ix >= nums.length) {
 		this.emit('endthread');
 		this.emit('end');
@@ -920,12 +921,13 @@ Reader.prototype._get_each_reply = function (ix, nums) {
 	var r = this.y.connect();
 	var num = nums[ix];
 	var key = 'post:' + num;
-	var next_please = this._get_each_reply.bind(this, ix + 1, nums);
+	var next_please = this._get_each_reply.bind(this, tag, ix + 1, nums);
 	var self = this;
 	r.hgetall(key, function (err, pre_post) {
 		if (err)
 			return self.emit('error', err);
-		if (common.is_empty(pre_post) || pre_post.hide)
+		if (common.is_empty(pre_post)
+				|| (tag != 'graveyard' && pre_post.hide))
 			return next_please();
 		pre_post.num = num;
 		with_body(r, key, pre_post, function (err, post) {

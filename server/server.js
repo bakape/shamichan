@@ -39,6 +39,19 @@ OK.send = function (msg) {
 };
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
+	if (msg.length == 4) {
+		function checked(err, auth) {
+			if (err || auth.auth !== 'Admin')
+				return report("Bad protocol.", client);
+			synchronize(msg, client, auth);
+		}
+		return twitter.check_cookie(msg.pop(), false, checked);
+	}
+	else
+		return synchronize(msg, client, null);
+};
+
+function synchronize(msg, client, auth) {
 	if (msg.length != 3)
 		return false;
 	var board = msg[0], syncs = msg[1], live = msg[2];
@@ -49,7 +62,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		/* Sync logic is buggy; allow for now */
 		//return true;
 	}
-	if (!can_access(null, board))
+	if (!can_access(auth, board))
 		return false;
 	var dead_threads = [], count = 0, op;
 	for (var k in syncs) {
@@ -621,19 +634,21 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	else if (params[2][0] == '0')
 		return redirect(resp, '' + num);
 	var op = db.OPs[num];
-	if (!op)
-		return render_404(resp);
-	if (!db.OP_has_tag(board, op)) {
-		var tag = db.first_tag_of(op);
-		if (tag)
-			return redirect_thread(resp, num, op, tag);
-		else {
-			console.warn("Orphaned thread", op);
+	if (board != 'graveyard') {
+		if (!op)
 			return render_404(resp);
+		if (!db.OP_has_tag(board, op)) {
+			var tag = db.first_tag_of(op);
+			if (tag)
+				return redirect_thread(resp, num, op, tag);
+			else {
+				console.warn("Orphaned thread", op);
+				return render_404(resp);
+			}
 		}
+		if (op != num)
+			return redirect_thread(resp, num, op);
 	}
-	if (op != num)
-		return redirect_thread(resp, num, op);
 	var yaku = new db.Yakusoku(board);
 	var reader = new db.Reader(yaku);
 	var limit = 'last100' in req.query ?
@@ -808,6 +823,8 @@ function allocate_post(msg, image, client, callback) {
 		return callback('Bad nonce.');
 	if (client.post)
 		return callback("Already have a post.");
+	if (client.board == 'graveyard')
+		return callback("Can't post here.");
 	var post = {time: new Date().getTime(), nonce: msg.nonce};
 	var body = '';
 	var extra = {ip: client.ip, board: client.board};
