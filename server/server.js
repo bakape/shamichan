@@ -623,6 +623,15 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var op = db.OPs[num];
 	if (!op)
 		return render_404(resp);
+	if (!db.OP_has_tag(board, op)) {
+		var tag = db.first_tag_of(op);
+		if (tag)
+			return redirect_thread(resp, num, op, tag);
+		else {
+			console.warn("Orphaned thread", op);
+			return render_404(resp);
+		}
+	}
 	if (op != num)
 		return redirect_thread(resp, num, op);
 	var yaku = new db.Yakusoku(board);

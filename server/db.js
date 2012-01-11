@@ -9,6 +9,8 @@ var async = require('async'),
 
 var OPs = {};
 exports.OPs = OPs;
+var TAGS = {};
+exports.TAGS = TAGS;
 
 var SUBS = {};
 var YAKUMAN = 0;
@@ -113,10 +115,52 @@ S.has_no_listeners = function () {
 
 /* OP CACHE */
 
+function add_OP_tag(tagIndex, op) {
+	var tags = TAGS[op];
+	if (tags === undefined)
+		TAGS[op] = tagIndex;
+	else if (typeof tags == 'number') {
+		if (tagIndex != tags)
+			TAGS[op] = [tags, tagIndex];
+	}
+	else if (tags.indexOf(tagIndex) < 0)
+		tags.push(tagIndex);
+}
+
+exports.OP_has_tag = function (tag, op) {
+	var index = config.BOARDS.indexOf(tag);
+	if (index < 0)
+		return false;
+	var tags = TAGS[op];
+	if (tags === undefined)
+		return false;
+	if (typeof tags == 'number')
+		return index == tags;
+	else
+		return tags.indexOf(index) >= 0;
+};
+
+exports.first_tag_of = function (op) {
+	var tags = TAGS[op];
+	if (tags === undefined)
+		return false;
+	else if (typeof tags == 'number')
+		return config.BOARDS[tags];
+	else
+		return config.BOARDS[tags[0]];
+};
+
 function on_OP_message(pat, chan, msg) {
-	var op = parseInt(chan.match(/^thread:(\d+)/)[1]);
-	var info = msg.split(':', 2);
-	var num = parseInt(info[0]), kind = parseInt(info[1]);
+	if (pat == 'tag:*') {
+		var op = parseInt(msg.match(/^(\d+),/)[1], 10);
+		var tagIndex = config.BOARDS.indexOf(chan.slice(4));
+		add_OP_tag(tagIndex, op);
+		return;
+	}
+
+	var op = parseInt(chan.match(/^thread:(\d+)/)[1], 10);
+	var info = msg.split(',', 2);
+	var kind = parseInt(info[0], 10), num = parseInt(info[1], 10);
 	if (kind == common.INSERT_POST)
 		OPs[num] = op;
 }
@@ -124,36 +168,47 @@ function on_OP_message(pat, chan, msg) {
 exports.track_OPs = function (callback) {
 	var k = redis_client();
 	k.psubscribe('thread:*');
-	k.on('psubscribe', function () {
+	k.once('psubscribe', function () {
 		var r = redis_client();
 		load_OPs(r, function (err) {
 			r.quit();
 			callback(err);
 		});
+		k.psubscribe('tag:*');
 	});
 	k.on('pmessage', on_OP_message);
 };
 
 function load_OPs(r, callback) {
-	// TODO: Use the board maps instead
-	r.keys('thread:*', function (err, keys) {
-		if (err)
-			return callback(err);
-		async.forEach(keys, function (key, cb) {
-			var m = key.match(/^thread:(\d*)(:posts$)?/);
-			var op = parseInt(m[1]);
-			OPs[op] = op;
-			if (!m[2])
-				return cb();
-			r.lrange(key, 0, -1, function (err, posts) {
-				if (err)
-					return cb(err);
-				for (var i = 0; i < posts.length; i++)
-					OPs[parseInt(posts[i])] = op;
-				cb();
+	var boards = config.BOARDS;
+	// Want consistent ordering in the TAGS entries for multi-tag threads
+	// (so do them in series)
+	async.forEachSeries(boards, scan_board, callback);
+
+	function scan_board(tag, cb) {
+		var key = 'tag:' + tag.length + ':' + tag;
+		var go = scan_thread.bind(null, boards.indexOf(tag));
+		r.zrange(key + ':threads', 0, -1, function (err, threads) {
+			if (err)
+				return cb(err);
+			async.forEach(threads, go, cb);
+		});
+	}
+
+	function scan_thread(tagIndex, op, cb) {
+		op = parseInt(op, 10);
+		add_OP_tag(tagIndex, op);
+		OPs[op] = op;
+		var key = 'thread:' + op;
+		r.lrange(key + ':posts', 0, -1, function (err, posts) {
+			if (err)
+				return cb(err);
+			posts.forEach(function (num) {
+				OPs[parseInt(num, 10)] = op;
 			});
-		}, callback);
-	});
+			cb(null);
+		});
+	}
 }
 
 /* SOCIETY */
@@ -480,6 +535,7 @@ Y.remove_thread = function (op, callback) {
 	},
 	function (dead_ctr, next) {
 		/* Rename thread keys, move to graveyard */
+		/* TODO: Delete from ALL tags */
 		var m = r.multi();
 		m.zrem(self.tag_key() + ':threads', op);
 		m.zadd('tag:9:graveyard:threads', dead_ctr, op);
@@ -496,6 +552,7 @@ Y.remove_thread = function (op, callback) {
 		if (dels.some(function (x) { return x === 0; }))
 			return done("Already deleted?!");
 		delete OPs[op];
+		delete TAGS[op];
 		done();
 		/* Background, might not even be there */
 		var nop = function (err) {};
