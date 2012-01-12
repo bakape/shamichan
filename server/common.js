@@ -346,7 +346,7 @@ function expand_html(num, omit) {
 	var html = ' &nbsp; [<a href="' + num + '" class="expand">Expand</a>]';
 	if (omit > 100)
 		html += ' [<a href="' + num +
-				'?last100" class="expand">Last 100</a>]';
+				'?last100" class="expand">Last&nbsp;100</a>]';
 	return html;
 }
 
