@@ -420,7 +420,7 @@ exports.parse_name = function (name) {
 		}
 		tripcode = escape_html(tripcode);
 	}
-	name = name.trim().replace(config.NAME_STRIP_REGEXP,'');
+	name = name.trim().replace(config.EXCLUDE_REGEXP, '');
 	return [name.substr(0, 100), tripcode.substr(0, 128),
 			secure.substr(0, 128)];
 };

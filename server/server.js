@@ -833,7 +833,7 @@ function allocate_post(msg, image, client, callback) {
 			return callback('Bad post body.');
 		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback('Post is too long.');
-		body = msg.frag;
+		body = msg.frag.replace(config.EXCLUDE_REGEXP, '');
 		if (config.GAME_BOARDS.indexOf(client.board) >= 0)
 			games.roll_dice(body, post, extra);
 	}
@@ -935,6 +935,7 @@ function get_post_view(post) {
 function update_post(frag, client) {
 	if (typeof frag != 'string')
 		return false;
+	frag = frag.replace(config.EXCLUDE_REGEXP, '');
 	var post = client.post;
 	if (!post)
 		return false;
