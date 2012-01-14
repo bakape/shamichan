@@ -677,7 +677,7 @@ PF.insert_uploaded = function (info) {
 	/* Stop obnoxious wrap-around-image behaviour */
 	this.blockquote.css({
 		'margin-left': this.post.find('img').css('margin-right'),
-		'padding-left': info.dims[2] + 'px'
+		'padding-left': (info.dims[2] || info.dims[0]) + 'px'
 	});
 
 	this.resize_input();
