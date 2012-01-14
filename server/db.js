@@ -743,6 +743,8 @@ Y.finish_all = function (callback) {
 };
 
 Y._log = function (m, op, kind, msg) {
+	if (!common.is_pubsub(kind))
+		throw new Error('Not a loggable message: ' + kind);
 	msg.unshift(kind);
 	msg = JSON.stringify(msg).slice(1, -1);
 	console.log("Log:", msg);

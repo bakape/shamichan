@@ -19,8 +19,9 @@ DEFINES.MAX_POST_CHARS = 2000;
 DEFINES.WORD_LENGTH_LIMIT = 120;
 
 function is_pubsub(t) {
-	return t >= DEFINES.INSERT_POST && t <= DEFINES.DELETE_THREAD;
+	return t >= DEFINES.INSERT_POST && t <= DEFINES.INSERT_IMAGE;
 }
+exports.is_pubsub = is_pubsub;
 
 var entities = {'&' : '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'};
 function escape_html(html) {
