@@ -24,6 +24,7 @@ exports.redis_client = redis_client;
 
 function Subscription(target) {
 	events.EventEmitter.call(this);
+	this.setMaxListeners(0);
 	this.target = target;
 	this.subscription_callbacks = [];
 
