@@ -18,9 +18,6 @@ tripcode.node: .build tripcode.cc
 	node-waf build
 	@cp .build/*/$@ $@
 
-test:
-	node ghost.js
-
 .build: wscript
 	node-waf configure
 
@@ -32,4 +29,4 @@ client: $(CLIENT_JS)
 .PHONY: all client clean
 
 clean:
-	rm -rf -- .build jsmin tripcode.node ../www/js/client{.,-}*.js
+	rm -rf -- .build jsmin perceptual tripcode.node ../www/js/client{.,-}*.js
