@@ -1,5 +1,6 @@
 var BOARD, THREAD, BUMP, PAGE;
 var syncs = {}, nonces = {}, ownPosts = {};
+var readOnly = ['archive'];
 var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var $sizer = $('<pre></pre>');
@@ -73,8 +74,9 @@ function make_reply_box() {
 }
 
 function insert_pbs() {
-	if (outOfSync || postForm || (THREAD ? $('aside').length :
-			$ceiling.next().is('aside')))
+	if (outOfSync || postForm || readOnly.indexOf(BOARD) >= 0)
+		return;
+	if (THREAD ? $('aside').length : $ceiling.next().is('aside'))
 		return;
 	make_reply_box().appendTo('section');
 	if (!nashi.upload && (BUMP || PAGE == 0)) {

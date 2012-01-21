@@ -194,10 +194,11 @@ function load_OPs(r, callback) {
 				return cb(err);
 			async.forEach(threads, function (op, cb) {
 				op = parseInt(op, 10);
-				async.parallel([
-					scan_thread.bind(null, tagIndex, op),
-					refresh_expiry.bind(null, tag, op),
-				], cb);
+				var ps = [scan_thread.bind(null,tagIndex,op)];
+				if (config.THREAD_EXPIRY && tag != 'archive')
+					ps.push(refresh_expiry.bind(null,
+							tag, op));
+				async.parallel(ps, cb);
 			}, cb);
 		});
 	}
@@ -217,22 +218,23 @@ function load_OPs(r, callback) {
 		});
 	}
 
-	var lifetime = config.THREAD_EXPIRY * 1000;
 	var expiryKey = expiry_queue_key();
 	function refresh_expiry(tag, op, cb) {
-		if (!lifetime)
-			return cb(null);
-		var entry = op + ':' + tag.length + ':' + tag;
+		var entry = op + ':' + tag_key_bare(tag);
 		var queries = ['time', 'immortal'];
 		hmget_obj(r, 'thread:'+op, queries, function (err, thread) {
 			if (err)
 				return cb(err);
-			if (!lifetime || thread.immortal)
+			if (thread.immortal)
 				return r.zrem(expiryKey, entry, cb);
-			var end = parseInt(thread.time, 10) + lifetime;
-			r.zadd(expiryKey, Math.floor(end/1000), entry, cb);
+			var score = expiry_queue_score(thread.time);
+			r.zadd(expiryKey, score, entry, cb);
 		});
 	}
+}
+
+function expiry_queue_score(time) {
+	return Math.floor(parseInt(time, 10)/1000 + config.THREAD_EXPIRY);
 }
 
 function expiry_queue_key() {
@@ -405,7 +407,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 	if (op)
 		view.op = op;
 	else
-		view.tags = board.length + ':' + board;
+		view.tags = tag_key_bare(board);
 
 	var key = (op ? 'post:' : 'thread:') + num;
 	var bump = !op || !common.is_sage(view.email);
@@ -430,6 +432,9 @@ Y.insert_post = function (msg, body, extra, callback) {
 	}
 	else {
 		op = num;
+		var score = expiry_queue_score(msg.time);
+		var entry = num + ':' + tag_key_bare(this.tag);
+		m.zadd(expiry_queue_key(), score, entry);
 		/* Rate-limit new threads */
 		if (ip != '127.0.0.1')
 			m.setex('ip:' + ip, config.THREAD_THROTTLE, op);
@@ -556,16 +561,22 @@ Y.remove_thread = function (op, callback) {
 		async.map(nums, self.remove_post.bind(self, false), next);
 	},
 	function (dels, next) {
-		r.incr('tag:9:graveyard:bumpctr', next);
-	},
-	function (dead_ctr, next) {
-		/* Rename thread keys, move to graveyard */
-		/* TODO: Delete from ALL tags */
 		var m = r.multi();
-		m.zrem(tag_key(self.tag) + ':threads', op);
-		m.zadd('tag:9:graveyard:threads', dead_ctr, op);
-		/* XXX: Need to fix the "[op]" dependency in on_update */
-		self._log(m, op, common.DELETE_THREAD, [op]);
+		m.incr('tag:9:graveyard:bumpctr');
+		m.hget(key, 'tags');
+		m.exec(next);
+	},
+	function (rs, next) {
+		var deadCtr = rs[0], tags = parse_tags(rs[1]);
+		/* Rename thread keys, move to graveyard */
+		var m = r.multi();
+		var expiryKey = expiry_queue_key();
+		tags.forEach(function (tag) {
+			m.zrem(expiryKey, op + ':' + tag_key_bare(tag));
+			m.zrem(tag_key(tag) + ':threads', op);
+		});
+		m.zadd('tag:9:graveyard:threads', deadCtr, op);
+		self._log(m, op, common.DELETE_THREAD, [op], tags);
 		m.hset(key, 'hide', 1);
 		/* Next two vals are checked */
 		m.renamenx(key, dead_key);
@@ -585,6 +596,47 @@ Y.remove_thread = function (op, callback) {
 		r.renamenx(key + ':links', dead_key + ':links', nop);
 		self.finish_quietly(dead_key, warn);
 		self.hide_image(dead_key, warn);
+	}], callback);
+};
+
+Y.archive_thread = function (op, callback) {
+	var r = this.connect();
+	var key = 'thread:' + op;
+	var self = this;
+	async.waterfall([
+	function (next) {
+		var m = r.multi();
+		m.exists(key);
+		m.zscore('tag:9:graveyard:threads', op);
+		m.exec(next);
+	},
+	function (rs, next) {
+		if (!rs[0])
+			return callback('Thread does not exist.');
+		if (rs[1])
+			return callback('Thread is already deleted.');
+		var m = r.multi();
+		m.incr('tag:7:archive:bumpctr');
+		m.hget(key, 'tags');
+		m.exec(next);
+	},
+	function (rs, next) {
+		var bumpCtr = rs[0], tags = rs[1];
+		var m = r.multi();
+		// move to archive tag only
+		m.hset(key, 'origTags', tags);
+		m.hset(key, 'tags', '7:archive');
+		tags = parse_tags(tags);
+		tags.forEach(function (tag) {
+			m.zrem(tag_key(tag) + ':threads', op);
+		});
+		m.zadd('tag:7:archive:threads', bumpCtr, op);
+		self._log(m, op, common.DELETE_THREAD, [op], tags);
+		m.exec(next);
+	},
+	function (results, done) {
+		TAGS[op] = config.BOARDS.indexOf('archive');
+		done();
 	}], callback);
 };
 
@@ -767,7 +819,7 @@ Y.finish_all = function (callback) {
 	});
 };
 
-Y._log = function (m, op, kind, msg) {
+Y._log = function (m, op, kind, msg, tags) {
 	msg.unshift(kind);
 	msg = JSON.stringify(msg).slice(1, -1);
 	console.log("Log:", msg);
@@ -779,8 +831,12 @@ Y._log = function (m, op, kind, msg) {
 		m.hincrby(key, 'hctr', 1);
 	}
 	m.publish(key, msg);
-	/* TODO: Multiplex */
-	m.publish('tag:' + this.tag, op + ',' + msg);
+	msg = op + ',' + msg;
+	if (!tags)
+		tags = this.tag ? [this.tag] : [];
+	tags.forEach(function (tag) {
+		m.publish('tag:' + tag, msg);
+	});
 };
 
 Y.fetch_backlogs = function (watching, callback) {
@@ -1147,6 +1203,10 @@ function with_body(r, key, post, callback) {
 
 function tag_key(tag) {
 	return 'tag:' + tag.length + ':' + tag;
+}
+
+function tag_key_bare(tag) {
+	return tag.length + ':' + tag;
 }
 
 function parse_tags(input) {

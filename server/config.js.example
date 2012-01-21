@@ -6,21 +6,23 @@ var config = {
 
 	REDIS_PORT: 6379,
 
-	BOARDS: ['moe', 'gar', 'meta'],
+	BOARDS: ['moe', 'gar', 'meta', 'archive'],
 	TITLES: {
 		moe: "/moe/ - Sweets",
 		gar: "/gar/ - Hard Work &amp; Guts",
 		meta: "/meta/ - The Abyss",
+		archive: "/archive/",
 		graveyard: "/graveyard/",
 	},
 	BASE_CSS: 'base-v17.css',
 	BOARD_CSS: {
 		moe: 'moe-v2.css',
-		meta: 'gar-v2.css',
+		gar: 'gar-v2.css',
 		meta: 'meta-v1.css',
+		archive: 'archive-v1.css',
 		graveyard: 'meta-v1.css',
 	},
-	GAME_BOARDS: ['moe'],
+	GAME_BOARDS: ['moe', 'archive'],
 	THREADS_PER_PAGE: 10,
 	ABBREVIATED_REPLIES: 5,
 

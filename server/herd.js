@@ -1,16 +1,20 @@
 var config = require('./config'),
     db = require('./db');
 
-var R;
+var yaku;
 function connect() {
-	if (!R) {
-		R = db.redis_client();
-		R.on('error', function (err) {
+	var r;
+	if (!yaku) {
+		yaku = new db.Yakusoku('archive');
+		r = yaku.connect();
+		r.on('error', function (err) {
 			console.error(err);
 			process.exit(1);
 		});
 	}
-	return R;
+	else
+		r = yaku.connect();
+	return r;
 }
 
 function at_next_minute(func) {
@@ -30,11 +34,13 @@ function at_next_minute(func) {
 	return setTimeout(func, delay);
 }
 
+var CLEANING_LIMIT = 10; // per minute
+
 function clean_up() {
 	var r = connect();
 	var expiryKey = db.expiry_queue_key();
 	var now = Math.floor(new Date().getTime() / 1000);
-	r.zrangebyscore(expiryKey, 1, now, 'limit', 0, 10,
+	r.zrangebyscore(expiryKey, 1, now, 'limit', 0, CLEANING_LIMIT,
 				function (err, expired) {
 		if (err) {
 			console.error(err);
@@ -47,7 +53,17 @@ function clean_up() {
 			var op = parseInt(m[1], 10);
 			if (!op)
 				return;
-			console.log('CULL', op);
+			yaku.archive_thread(op, function (err) {
+				if (err)
+					return console.error(err);
+				r.zrem(expiryKey, entry, function (err, n) {
+					if (err)
+						return console.error(err)
+					console.log("Archived thread #" + op);
+					if (n != 1)
+						console.warn("Not archived?");
+				});
+			});
 		});
 	});
 }

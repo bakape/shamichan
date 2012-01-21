@@ -37,8 +37,8 @@ if (BOARD == 'graveyard') {
 		sync_status('Syncing...', false);
 		send([9, BOARD, syncs, BUMP, document.cookie]);
 	};
-	insert_pbs = function () {};
 }
+readOnly.push('graveyard');
 
 window.fun = function () {
 	send([10, document.cookie, THREAD]);

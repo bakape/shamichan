@@ -823,7 +823,7 @@ function allocate_post(msg, image, client, callback) {
 		return callback('Bad nonce.');
 	if (client.post)
 		return callback("Already have a post.");
-	if (client.board == 'graveyard')
+	if (['graveyard', 'archive'].indexOf(client.board) >= 0)
 		return callback("Can't post here.");
 	var post = {time: new Date().getTime(), nonce: msg.nonce};
 	var body = '';

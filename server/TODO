@@ -2,6 +2,7 @@
 * Actually tell user when a particular thread failed to sync
 * Extract common fields (num, op, type) from log (since these are duplicated in
   publications for filtering)
+ * Need to fix the "[op]" dependency in on_update (???)
 * Tokenize text instead of multiple levels of regexps
 * Look for memory leaks in the front page
   * Also redis connection count
