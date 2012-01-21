@@ -188,7 +188,7 @@ function load_OPs(r, callback) {
 
 	function scan_board(tag, cb) {
 		var tagIndex = boards.indexOf(tag);
-		var key = tag_key(tag);
+		var key = 'tag:' + tag_key(tag);
 		r.zrange(key + ':threads', 0, -1, function (err, threads) {
 			if (err)
 				return cb(err);
@@ -220,7 +220,7 @@ function load_OPs(r, callback) {
 
 	var expiryKey = expiry_queue_key();
 	function refresh_expiry(tag, op, cb) {
-		var entry = op + ':' + tag_key_bare(tag);
+		var entry = op + ':' + tag_key(tag);
 		var queries = ['time', 'immortal'];
 		hmget_obj(r, 'thread:'+op, queries, function (err, thread) {
 			if (err)
@@ -395,7 +395,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 	}
 
 	var view = {time: msg.time, ip: ip, state: msg.state.join()};
-	var tagKey = tag_key(this.tag);
+	var tagKey = 'tag:' + tag_key(this.tag);
 	if (msg.name)
 		view.name = msg.name;
 	if (msg.trip)
@@ -407,7 +407,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 	if (op)
 		view.op = op;
 	else
-		view.tags = tag_key_bare(board);
+		view.tags = tag_key(board);
 
 	var key = (op ? 'post:' : 'thread:') + num;
 	var bump = !op || !common.is_sage(view.email);
@@ -433,7 +433,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 	else {
 		op = num;
 		var score = expiry_queue_score(msg.time);
-		var entry = num + ':' + tag_key_bare(this.tag);
+		var entry = num + ':' + tag_key(this.tag);
 		m.zadd(expiry_queue_key(), score, entry);
 		/* Rate-limit new threads */
 		if (ip != '127.0.0.1')
@@ -550,6 +550,7 @@ Y.remove_thread = function (op, callback) {
 		return callback('Thread does not exist.');
 	var r = this.connect();
 	var key = 'thread:' + op, dead_key = 'dead:' + op;
+	var graveyardKey = 'tag:' + tag_key('graveyard');
 	var self = this;
 	async.waterfall([
 	function (next) {
@@ -562,7 +563,7 @@ Y.remove_thread = function (op, callback) {
 	},
 	function (dels, next) {
 		var m = r.multi();
-		m.incr('tag:9:graveyard:bumpctr');
+		m.incr(graveyardKey + ':bumpctr');
 		m.hget(key, 'tags');
 		m.exec(next);
 	},
@@ -572,10 +573,11 @@ Y.remove_thread = function (op, callback) {
 		var m = r.multi();
 		var expiryKey = expiry_queue_key();
 		tags.forEach(function (tag) {
-			m.zrem(expiryKey, op + ':' + tag_key_bare(tag));
-			m.zrem(tag_key(tag) + ':threads', op);
+			var tagKey = tag_key(tag);
+			m.zrem(expiryKey, op + ':' + tagKey);
+			m.zrem('tag:' + tagKey + ':threads', op);
 		});
-		m.zadd('tag:9:graveyard:threads', deadCtr, op);
+		m.zadd(graveyardKey + ':threads', deadCtr, op);
 		self._log(m, op, common.DELETE_THREAD, [op], tags);
 		m.hset(key, 'hide', 1);
 		/* Next two vals are checked */
@@ -601,13 +603,13 @@ Y.remove_thread = function (op, callback) {
 
 Y.archive_thread = function (op, callback) {
 	var r = this.connect();
-	var key = 'thread:' + op;
+	var key = 'thread:' + op, archiveKey = 'tag:' + tag_key('archive');
 	var self = this;
 	async.waterfall([
 	function (next) {
 		var m = r.multi();
 		m.exists(key);
-		m.zscore('tag:9:graveyard:threads', op);
+		m.zscore('tag:' + tag_key('graveyard') + ':threads', op);
 		m.exec(next);
 	},
 	function (rs, next) {
@@ -616,7 +618,7 @@ Y.archive_thread = function (op, callback) {
 		if (rs[1])
 			return callback('Thread is already deleted.');
 		var m = r.multi();
-		m.incr('tag:7:archive:bumpctr');
+		m.incr(archiveKey + ':bumpctr');
 		m.hget(key, 'tags');
 		m.exec(next);
 	},
@@ -625,12 +627,12 @@ Y.archive_thread = function (op, callback) {
 		var m = r.multi();
 		// move to archive tag only
 		m.hset(key, 'origTags', tags);
-		m.hset(key, 'tags', '7:archive');
+		m.hset(key, 'tags', tag_key('archive'));
 		tags = parse_tags(tags);
 		tags.forEach(function (tag) {
-			m.zrem(tag_key(tag) + ':threads', op);
+			m.zrem('tag:' + tag_key(tag) + ':threads', op);
 		});
-		m.zadd('tag:7:archive:threads', bumpCtr, op);
+		m.zadd(archiveKey + ':threads', bumpCtr, op);
 		self._log(m, op, common.DELETE_THREAD, [op], tags);
 		m.exec(next);
 	},
@@ -884,7 +886,7 @@ Y.get_post_op = function (num, callback) {
 Y.get_tag = function (page) {
 	var r = this.connect();
 	var self = this;
-	var key = tag_key(this.tag) + ':threads';
+	var key = 'tag:' + tag_key(this.tag) + ':threads';
 	var start = page * config.THREADS_PER_PAGE;
 	var end = start + config.THREADS_PER_PAGE - 1;
 	var m = r.multi();
@@ -1045,7 +1047,7 @@ F.connect = function () {
 F.get_all = function (limit) {
 	var self = this;
 	var r = this.connect();
-	r.zrange(tag_key(this.tag) + ':threads', 0, -1, go);
+	r.zrange('tag:' + tag_key(this.tag) + ':threads', 0, -1, go);
 	function go(err, threads) {
 		if (err)
 			return self.failure(err);
@@ -1202,10 +1204,6 @@ function with_body(r, key, post, callback) {
 };
 
 function tag_key(tag) {
-	return 'tag:' + tag.length + ':' + tag;
-}
-
-function tag_key_bare(tag) {
 	return tag.length + ':' + tag;
 }
 
