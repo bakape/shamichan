@@ -187,12 +187,18 @@ function load_OPs(r, callback) {
 	async.forEachSeries(boards, scan_board, callback);
 
 	function scan_board(tag, cb) {
+		var tagIndex = boards.indexOf(tag);
 		var key = 'tag:' + tag.length + ':' + tag;
-		var go = scan_thread.bind(null, boards.indexOf(tag));
 		r.zrange(key + ':threads', 0, -1, function (err, threads) {
 			if (err)
 				return cb(err);
-			async.forEach(threads, go, cb);
+			async.forEach(threads, function (op, cb) {
+				op = parseInt(op, 10);
+				async.parallel([
+					scan_thread.bind(null, tagIndex, op),
+					refresh_expiry.bind(null, tag, op),
+				], cb);
+			}, cb);
 		});
 	}
 
@@ -210,7 +216,30 @@ function load_OPs(r, callback) {
 			cb(null);
 		});
 	}
+
+	var lifetime = config.THREAD_EXPIRY * 1000;
+	var expiryKey = expiry_queue_key();
+	function refresh_expiry(tag, op, cb) {
+		if (!lifetime)
+			return cb(null);
+		var tagKey = tag.length + ':' + tag;
+		var entry = op + ':' + tagKey;
+		var queries = ['time', 'immortal'];
+		hmget_obj(r, 'thread:'+op, queries, function (err, thread) {
+			if (err)
+				return cb(err);
+			if (!lifetime || thread.immortal)
+				return r.zrem(expiryKey, entry, cb);
+			var end = parseInt(thread.time, 10) + lifetime;
+			r.zadd(expiryKey, Math.floor(end/1000), entry, cb);
+		});
+	}
 }
+
+function expiry_queue_key() {
+	return 'expiry:' + config.THREAD_EXPIRY;
+}
+exports.expiry_queue_key = expiry_queue_key;
 
 /* SOCIETY */
 
@@ -1141,4 +1170,15 @@ function parse_tags(input) {
 		input = input.slice(pre + len);
 	}
 	return tags;
+}
+
+function hmget_obj(r, key, keys, cb) {
+	r.hmget(key, keys, function (err, rs) {
+		if (err)
+			return cb(err);
+		var result = {};
+		for (var i = 0; i < keys.length; i++)
+			result[keys[i]] = rs[i];
+		cb(null, result);
+	});
 }
