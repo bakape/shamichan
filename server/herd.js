@@ -66,12 +66,10 @@ function clean_up() {
 			});
 		});
 	});
+	at_next_minute(clean_up);
 }
 
 if (require.main === module) {
-	// TEMP
-	clean_up();
-
 	connect();
 	at_next_minute(clean_up);
 }
