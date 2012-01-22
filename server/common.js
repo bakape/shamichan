@@ -87,7 +87,8 @@ function is_noko(email) {
 }
 exports.is_noko = is_noko;
 function is_sage(email) {
-	return email && email.indexOf('@') == -1 && email.match(/sage/i);
+	return config.SAGE_ENABLED && email &&
+			email.indexOf('@') == -1 && email.match(/sage/i);
 }
 exports.is_sage = is_sage;
 
