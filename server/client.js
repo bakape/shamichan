@@ -118,7 +118,7 @@ function inject(frag) {
 	var dest = this.buffer;
 	for (var i = 0; i < this.state[1]; i++)
 		dest = dest.children('del:last');
-	if (this.state[0] == 1)
+	if (this.state[0] == S_QUOTE)
 		dest = dest.children('em:last');
 	if (this.strong)
 		dest = dest.children('strong:last');
@@ -425,7 +425,7 @@ function PostForm(dest, section) {
 					+ '</a>'));
 	});
 	this.imouto.callback = inject;
-	this.imouto.state = [0, 0];
+	this.imouto.state = [S_BOL, 0];
 	this.imouto.buffer = this.buffer;
 	this.imouto.dice = GAME_BOARDS.indexOf(BOARD) >= 0;
 	this.imouto.queueRoll = queue_roll;

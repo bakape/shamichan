@@ -867,7 +867,7 @@ function allocate_post(msg, image, client, callback) {
 	}
 	if (image)
 		post.image = image;
-	post.state = [0, 0];
+	post.state = [common.S_BOL, 0];
 
 	if (typeof msg.auth != 'undefined') {
 		if (!twitter.check_cookie(msg.cookie, true, got_auth))
