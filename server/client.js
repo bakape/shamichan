@@ -23,19 +23,6 @@ var socket = io.connect('/', {
 	PAGE = p.match(/\/page(\d+)$/);
 	PAGE = PAGE ? parseInt(PAGE[1], 10) : -1;
 
-	try {
-		function load(key, f) {
-			if (!f()) {
-				var val = localStorage.getItem(key);
-				if (val)
-					f(val);
-			}
-		}
-		load('name', $.proxy($name, 'val'));
-		load('email', $.proxy($email, 'val'));
-	}
-	catch (e) {}
-
 	nashi.upload = !!$('<input type="file"/>').prop('disabled');
 	/* Ought to rely on dimensions instead */
 	if (navigator.platform.indexOf('iPod') >= 0
@@ -46,19 +33,64 @@ var socket = io.connect('/', {
 		nashi.opts.push('preview');
 })();
 
-function save_ident() {
+function load_ident() {
 	try {
-		function save(key, val) {
-			if (typeof val == 'string')
-				localStorage.setItem(key, val);
+		var id;
+		// TEMP migration
+		var oldName = localStorage.getItem('name');
+		var oldEmail = localStorage.getItem('email');
+		if (oldName || oldEmail) {
+			id = {};
+			if (oldName)
+				id.name = oldName;
+			if (oldEmail)
+				id.email = oldEmail;
+			localStorage.setItem('ident', JSON.stringify(id));
 		}
-		save('name', $name.val());
-		var email = $email.val();
-		if (is_noko(email) || !is_sage(email))
-			save('email', email);
+		else {
+			id = JSON.parse(localStorage.getItem('ident'));
+		}
+		localStorage.removeItem('name');
+		localStorage.removeItem('email');
+
+		if (id.name)
+			$name.val(id.name);
+		if (id.email)
+			$email.val(id.email);
 	}
 	catch (e) {}
 }
+
+function save_ident() {
+	try {
+		var name = $name.val(), email = $email.val();
+		if (is_sage(email) && !is_noko(email))
+			email = false;
+		var id = {};
+		if (name || email) {
+			if (name)
+				id.name = name;
+			if (email)
+				id.email = email;
+			localStorage.setItem('ident', JSON.stringify(id));
+		}
+		else
+			localStorage.removeItem('ident');
+	}
+	catch (e) {}
+}
+
+(function () {
+	load_ident();
+	var save = _.debounce(save_ident, 1000);
+	function prop() {
+		if (postForm)
+			postForm.propagate_ident();
+		save();
+	}
+	$name.input(prop);
+	$email.input(prop);
+})();
 
 function send(msg) {
 	msg = JSON.stringify(msg);
@@ -438,10 +470,7 @@ function PostForm(dest, section) {
 	this.uploadStatus = this.uploadForm.find('strong');
 	post.append(this.meta, this.blockquote, this.uploadForm);
 
-	var prop = $.proxy(this, 'propagate_fields');
-	prop();
-	$name.change(prop).keyup(prop);
-	$email.change(prop).keyup(prop);
+	this.propagate_ident();
 
 	this.input.keydown($.proxy(this, 'on_key_down'));
 	this.input.input($.proxy(this, 'on_input'));
@@ -459,7 +488,9 @@ function PostForm(dest, section) {
 }
 var PF = PostForm.prototype;
 
-PF.propagate_fields = function () {
+PF.propagate_ident = function () {
+	if (this.num)
+		return;
 	var parsed = parse_name($name.val().trim());
 	var meta = this.meta;
 	var $b = meta.find('b');
@@ -488,9 +519,6 @@ PF.on_allocation = function (msg) {
 	ownPosts[num] = true;
 	this.num = num;
 	this.flush_pending();
-	$name.unbind();
-	$email.unbind();
-	save_ident();
 	var meta = this.meta;
 	var $b = meta.find('b');
 	$b.text(msg.name || ANON);
