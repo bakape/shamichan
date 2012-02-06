@@ -14,7 +14,7 @@ var config = {
 		archive: "/archive/",
 		graveyard: "/graveyard/",
 	},
-	BASE_CSS: 'base-v17.css',
+	BASE_CSS: 'base-v18.css',
 	BOARD_CSS: {
 		moe: 'moe-v2.css',
 		gar: 'gar-v2.css',
