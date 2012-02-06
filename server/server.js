@@ -67,6 +67,7 @@ function synchronize(msg, client, auth) {
 	}
 	if (!can_access(auth, board))
 		return false;
+	client.auth = auth;
 	var dead_threads = [], count = 0, op;
 	for (var k in syncs) {
 		if (!k.match(/^\d+$/))
@@ -888,24 +889,12 @@ function allocate_post(msg, image, client, callback) {
 	post.state = [common.S_BOL, 0];
 
 	if (typeof msg.auth != 'undefined') {
-		var chunks = twitter.extract_cookie(msg.cookie);
-		if (!chunks)
-			return callback('Bad cookie.');
-		twitter.check_cookie(chunks, true, got_auth);
-	}
-	else
-		got_auth(null, null);
-
-	function got_auth(err, session) {
-		if (err)
+		if (!client.auth || msg.auth !== client.auth.auth)
 			return callback('Bad auth.');
-		if (msg.auth) {
-			if (msg.auth !== session.auth)
-				return callback('Bad auth.');
-			post.auth = msg.auth;
-		}
-		client.db.reserve_post(post.op, client.ip, got_reservation);
+		post.auth = msg.auth;
 	}
+	client.db.reserve_post(post.op, client.ip, got_reservation);
+
 	function got_reservation(err, num) {
 		if (err)
 			return callback(err);

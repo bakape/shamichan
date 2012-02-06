@@ -43,8 +43,6 @@ override(PF, 'make_alloc_request', function (orig, text) {
 	var msg = orig.call(this, text);
 	if ($('#'+AUTH).attr('checked'))
 		msg.auth = AUTH;
-	if (msg.auth)
-		msg.cookie = document.cookie;
 	return msg;
 });
 
