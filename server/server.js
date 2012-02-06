@@ -441,6 +441,9 @@ if (config.DEBUG) {
 	route_get(/^\/login$/, function (req, resp) {
 		twitter.set_cookie(resp, {auth: 'Admin'});
 	});
+	route_get(/^\/mod$/, function (req, resp) {
+		twitter.set_cookie(resp, {auth: 'Moderator'});
+	});
 }
 else {
 	route_get(/^\/login$/, twitter.login);

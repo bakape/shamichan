@@ -127,6 +127,15 @@ OS.trigger = function (name, param, context) {
 	return param;
 };
 
+function override(obj, orig, upgrade) {
+	var origFunc = obj[orig];
+	obj[orig] = function () {
+		var args = [].slice.apply(arguments);
+		args.unshift(origFunc);
+		return upgrade.apply(this, args);
+	};
+}
+
 OS.break_heart = function (frag) {
 	if (frag.safe)
 		return this.callback(frag);

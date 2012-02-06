@@ -313,8 +313,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 
-	if (oneeSama.check)
-		oneeSama.check(msg.op ? post : section);
+	oneeSama.trigger('afterInsert', msg.op ? post : section);
 	if (bump) {
 		var fencepost = $('body > aside');
 		section.insertAfter(fencepost.length ? fencepost : $ceiling
@@ -528,8 +527,7 @@ PF.on_allocation = function (msg) {
 		tag.attr('href', 'mailto:' + msg.email).attr('class', 'email');
 	else
 		tag.removeAttr('href').attr('class', 'emailcancel');
-	if (oneeSama.check)
-		oneeSama.check(this.post);
+	oneeSama.trigger('afterInsert', this.post);
 	this.post.attr('id', num);
 	var head_end = ' ' + num_html(msg);
 	if (this.op) {

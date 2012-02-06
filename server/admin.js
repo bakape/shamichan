@@ -1,6 +1,7 @@
 (function () {
 
 var $panel;
+var AUTH = 'Admin';
 
 function show_panel() {
 	if ($panel)
@@ -44,14 +45,14 @@ window.fun = function () {
 	send([10, document.cookie, THREAD]);
 };
 
-function make_alloc_admin(text) {
-	var msg = this.make_alloc_vanilla(text);
-	if ($('#admin').attr('checked'))
-		msg.auth = 'Admin';
+override(PF, 'make_alloc_request', function (orig, text) {
+	var msg = orig.call(this, text);
+	if ($('#'+AUTH).attr('checked'))
+		msg.auth = AUTH;
 	if (msg.auth)
 		msg.cookie = document.cookie;
 	return msg;
-}
+});
 
 $(document).click(function (event) {
 	var $box = $(event.target);
@@ -62,18 +63,14 @@ $(document).click(function (event) {
 $(document).ready(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
 	$('<input type=checkbox>').insertBefore('header>:first-child');
-	$name.after(' <input type=checkbox id=admin>' +
-			'<label for=admin>Admin</label>');
+	$name.after((' <input type=checkbox id="AUTH">' +
+			'<label for="AUTH">AUTH</label>'
+			).replace(/AUTH/g, AUTH));
 
-	/* Dumb hack, injecting auth. Should inherit or something? */
-	var pfp = PostForm.prototype;
-	pfp.make_alloc_vanilla = pfp.make_alloc_request;
-	pfp.make_alloc_request = make_alloc_admin;
-
-	oneeSama.check = function (target) {
+	oneeSama.hook('afterInsert', function (target) {
 		$('<input type=checkbox>').insertBefore(target.find(
 				'>header>:first-child'));
-	};
+	});
 });
 
 })();
