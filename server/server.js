@@ -160,7 +160,7 @@ OK.on_thread_sink = function (thread, err) {
 	console.log(thread, 'sank:', err);
 };
 
-var oneeSama = new common.OneeSama(function (num) {
+function tamashii(num) {
 	var op = db.OPs[num];
 	if (op)
 		this.callback(common.safe('<a href="'
@@ -168,9 +168,10 @@ var oneeSama = new common.OneeSama(function (num) {
 				+ '">&gt;&gt;' + num + '</a>'));
 	else
 		this.callback('>>' + num);
-});
+}
 
 function write_thread_html(reader, response, full_thread) {
+	var oneeSama = new common.OneeSama(tamashii);
 	reader.on('thread', function (op_post, omit, image_omit) {
 		oneeSama.full = full_thread;
 		op_post.omit = omit;
