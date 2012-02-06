@@ -448,9 +448,8 @@ function PostForm(dest, section) {
 	this.line_count = 1;
 	this.char_count = 0;
 	this.imouto = new OneeSama(function (num) {
-		var thread = $('#' + num).parents('*').andSelf().filter(
-				'section');
-		if (thread.length)
+		var thread = $('#' + num).parents('*').andSelf();
+		if (thread.is('section'))
 			this.callback(make_link(num, extract_num(thread)));
 		else
 			this.callback(safe('<a class="nope">&gt;&gt;' + num
@@ -773,8 +772,8 @@ function click_shita(event) {
 		}
 	}
 	if (options.inline) {
-		var img = target.filter('img');
-		if (img.length && !img.data('skipExpand')) {
+		var img = target;
+		if (img.is('img') && !img.data('skipExpand')) {
 			var thumb = img.data('thumbSrc');
 
 			with_dom(function () {
@@ -807,7 +806,7 @@ function click_shita(event) {
 			return;
 		}
 	}
-	if (target.filter('cite').length) {
+	if (target.is('cite')) {
 		var m = target.text().match(youtube_re);
 		var start = 0;
 		if (m[2]) {
@@ -868,8 +867,8 @@ function make_video(id, params, dims, start) {
 function mouseup_shita(event) {
 	/* Bypass expansion for non-left mouse clicks */
 	if (options.inline && event.which > 1) {
-		var img = $(event.target).filter('img');
-		if (img.length) {
+		var img = $(event.target);
+		if (img.is('img')) {
 			img.data('skipExpand', true);
 			setTimeout(function () {
 				img.removeData('skipExpand');
