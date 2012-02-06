@@ -55,6 +55,7 @@ var config = {
 	TWITTER_MODERATORS: ['doushiomod'],
 	LOGIN_COOKIE_DOMAIN: 'example.com',
 	LOGIN_SESSION_TIME: 60*60*24*14,
+	IP_MNEMONIC: true,
 };
 
 if (!config.DEBUG)

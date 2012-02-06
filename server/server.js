@@ -21,7 +21,8 @@ var dispatcher = {};
 var indexTmpl, notFoundHtml, modJs;
 
 /* I always use encodeURI anyway */
-escape = common.escape_html;
+var escape = common.escape_html;
+var safe = common.safe;
 
 function Okyaku(socket) {
 	this.ip = socket.handshake.address.address;
@@ -167,21 +168,38 @@ OK.on_thread_sink = function (thread, err) {
 function tamashii(num) {
 	var op = db.OPs[num];
 	if (op)
-		this.callback(common.safe('<a href="'
+		this.callback(safe('<a href="'
 				+ common.post_url({op: op, num: num}, false)
 				+ '">&gt;&gt;' + num + '</a>'));
 	else
 		this.callback('>>' + num);
 }
 
+var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,y,r,w,v,ts,ch'.split(',');
+var mnemonicEnds = "a,i,u,e,o,aa,ii,uu,ei,ou,ya,yi,yu,ye,yo,'".split(',');
+
+function ip_mnemonic(header, data) {
+	var mnemonic = data.ip;
+	var nums = mnemonic.split('.');
+	if (config.IP_MNEMONIC && nums.length == 4) {
+		mnemonic = '';
+		for (var i = 0; i < 4; i++) {
+			var n = parseInt(nums[i], 10);
+			mnemonic += mnemonicStarts[Math.floor(n / 16)] +
+					mnemonicEnds[n % 16];
+		}
+		header.push(safe(' <span title="'+escape(data.ip)+'">'),
+				mnemonic, safe('</span>'));
+	}
+	else
+		header.push(' ' + data.ip);
+	return header;
+}
+
 function write_thread_html(reader, response, auth, full_thread) {
 	var oneeSama = new common.OneeSama(tamashii);
-	if (auth && auth.auth == 'Admin') {
-		oneeSama.hook('header', function (header, data) {
-			header.push(' ' + data.ip);
-			return header;
-		});
-	}
+	if (auth && auth.auth == 'Admin')
+		oneeSama.hook('header', ip_mnemonic);
 	reader.on('thread', function (op_post, omit, image_omit) {
 		oneeSama.full = full_thread;
 		op_post.omit = omit;
