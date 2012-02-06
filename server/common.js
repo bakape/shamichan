@@ -99,6 +99,7 @@ exports.is_sage = is_sage;
 
 var OneeSama = function (t) {
 	this.tamashii = t;
+	this.hooks = {};
 };
 exports.OneeSama = OneeSama;
 var OS = OneeSama.prototype;
@@ -109,6 +110,22 @@ var ref_re = />>(\d+|>\/?(?:watch\?)?v[=\/][\w-]{11}(?:#t=[\dhms]{1,9})?)/;
 var youtube_re = /^>>>\/?(?:watch\?)?v[=\/]([\w-]{11})(#t=[\dhms]{1,9})?$/;
 var youtube_time_re = /^#t=(?:(\d\d?)h)?(?:(\d\d?)m)?(?:(\d\d?)s)?$/;
 var youtube_url_re = /(?:>>>*?)?(?:http:\/\/)?(?:www\.)?youtube\.com\/watch\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/;
+
+OS.hook = function (name, func) {
+	var hs = this.hooks[name];
+	if (!hs)
+		this.hooks[name] = hs = [func];
+	else if (hs.indexOf(func) < 0)
+		hs.push(func);
+};
+
+OS.trigger = function (name, param, context) {
+	var hs = this.hooks[name];
+	if (hs)
+		for (var i = 0; i < hs.length; i++)
+			param = hs[i].call(this, param, context);
+	return param;
+};
 
 OS.break_heart = function (frag) {
 	if (frag.safe)
@@ -367,6 +384,7 @@ OS.monogatari = function (data, t) {
 		header.push(safe(' <code>' + data.trip + '</code>'));
 	if (auth)
 		header.push(' ## ' + auth);
+	header = this.trigger('header', header, data);
 	header.push(safe('</b>'));
 	if (data.email) {
 		header.unshift(safe('<a class="email" href="mailto:'

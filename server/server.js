@@ -170,8 +170,14 @@ function tamashii(num) {
 		this.callback('>>' + num);
 }
 
-function write_thread_html(reader, response, full_thread) {
+function write_thread_html(reader, response, auth, full_thread) {
 	var oneeSama = new common.OneeSama(tamashii);
+	if (auth && auth.auth == 'Admin') {
+		oneeSama.hook('header', function (header, data) {
+			header.push(' ' + data.ip);
+			return header;
+		});
+	}
 	reader.on('thread', function (op_post, omit, image_omit) {
 		oneeSama.full = full_thread;
 		op_post.omit = omit;
@@ -565,7 +571,7 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(yaku, resp, false);
+	write_thread_html(yaku, resp, req.auth, false);
 	yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
@@ -608,7 +614,7 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(yaku, resp, false);
+	write_thread_html(yaku, resp, req.auth, false);
 	yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
@@ -668,7 +674,7 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		resp.write(indexTmpl[3]);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(reader, resp, true);
+	write_thread_html(reader, resp, req.auth, true);
 	reader.on('end', function () {
 		resp.write('[<a href=".">Return</a>]');
 		write_page_end(req, resp);
