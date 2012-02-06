@@ -43,7 +43,7 @@ del, del em {
 	color: black;
 	text-decoration: none;
 }
-del:hover, del:hover em {
+del:hover, del:hover em, del.reveal, del.reveal em {
 	color: white;
 }
 em {

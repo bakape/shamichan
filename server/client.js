@@ -825,6 +825,11 @@ function click_shita(event) {
 		with_dom(function () {
 			target.replaceWith($obj);
 		});
+		return;
+	}
+	if (target.is('del')) {
+		target.toggleClass('reveal');
+		return;
 	}
 }
 
