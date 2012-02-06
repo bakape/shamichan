@@ -108,16 +108,16 @@ function parse_cookie(header) {
 	return chunks;
 }
 
-exports.check_cookie = function (cookie, check_csrf, callback) {
-	if (typeof cookie != 'string')
+exports.extract_cookie = function (cookie) {
+	if (!cookie || typeof cookie != 'string')
 		return false;
 	var chunks = parse_cookie(cookie);
-	var pass = chunks.a;
-	if (!pass)
-		return false;
+	return chunks.a ? chunks : false;
+};
 
+exports.check_cookie = function (chunks, check_csrf, callback) {
 	var r = db.redis_client();
-	r.hgetall('session:' + pass, function (err, session) {
+	r.hgetall('session:' + chunks.a, function (err, session) {
 		r.quit();
 		if (err)
 			return callback(err);
@@ -131,7 +131,6 @@ exports.check_cookie = function (cookie, check_csrf, callback) {
 		}
 		callback(null, session);
 	});
-	return true;
 };
 
 function make_expiry() {

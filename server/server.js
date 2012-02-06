@@ -39,13 +39,16 @@ OK.send = function (msg) {
 };
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
-	if (msg.length == 4) {
-		function checked(err, auth) {
-			if (err || auth.auth !== 'Admin')
-				return report("Bad protocol.", client);
-			synchronize(msg, client, auth);
-		}
-		return twitter.check_cookie(msg.pop(), false, checked);
+	function checked(err, auth) {
+		if (err || !auth.auth)
+			return report("Bad protocol.", client);
+		if (!synchronize(msg, client, auth))
+			report("Bad protocol.", client);
+	}
+	var chunks = twitter.extract_cookie(msg.pop());
+	if (chunks) {
+		twitter.check_cookie(chunks, false, checked);
+		return true;
 	}
 	else
 		return synchronize(msg, client, null);
@@ -289,14 +292,17 @@ function route_get(pattern, handler) {
 }
 
 function auth_passthrough(handler, req, resp, params) {
-	if (!twitter.check_cookie(req.headers.cookie, false, go))
+	var chunks = twitter.extract_cookie(req.headers.cookie);
+	if (!chunks) {
 		handler(req, resp, params);
-
-	function go(err, session) {
-		if (!err)
-			req.auth = session;
-		handler(req, resp, params);
+		return;
 	}
+
+	twitter.check_cookie(chunks, false, function (err, auth) {
+		if (!err)
+			req.auth = auth;
+		handler(req, resp, params);
+	});
 }
 
 function route_get_auth(pattern, handler) {
@@ -348,8 +354,10 @@ function auth_checker(handler, is_post, req, resp, params) {
 		check_it();
 
 	function check_it() {
-		if (!twitter.check_cookie(req.headers.cookie, is_post, ack))
+		var chunks = twitter.extract_cookie(req.headers.cookie);
+		if (!chunks)
 			return forbidden('No cookie.');
+		twitter.check_cookie(chunks, is_post, ack);
 	}
 
 	function ack(err, session) {
@@ -880,8 +888,10 @@ function allocate_post(msg, image, client, callback) {
 	post.state = [common.S_BOL, 0];
 
 	if (typeof msg.auth != 'undefined') {
-		if (!twitter.check_cookie(msg.cookie, true, got_auth))
+		var chunks = twitter.extract_cookie(msg.cookie);
+		if (!chunks)
 			return callback('Bad cookie.');
+		twitter.check_cookie(chunks, true, got_auth);
 	}
 	else
 		got_auth(null, null);
@@ -1016,14 +1026,17 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 
 function auth_handled(func) {
 	return function (msg, client) {
-		if (!msg.length || !twitter.check_cookie(msg.shift(),false,go))
+		if (!msg.length)
 			return false;
-		function go(err, session) {
-			if (err || common.is_empty(session))
+		var chunks = twitter.extract_cookie(msg.shift());
+		if (!chunks)
+			return false;
+		twitter.check_cookie(chunks, false, function (err, auth) {
+			if (err)
 				report(err, client, 'Auth error.');
 			else
-				func(msg, client, session);
-		}
+				func(msg, client, auth);
+		});
 		return true;
 	};
 }

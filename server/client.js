@@ -1210,7 +1210,7 @@ MIRU.connecting = function () {
 
 MIRU.connect = function () {
 	sync_status('Syncing...', false);
-	send([SYNCHRONIZE, BOARD, syncs, BUMP]);
+	send([SYNCHRONIZE, BOARD, syncs, BUMP, document.cookie]);
 };
 
 MIRU.disconnect = function () {
