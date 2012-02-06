@@ -18,7 +18,7 @@ _.templateSettings = {
 
 var clients = {};
 var dispatcher = {};
-var indexTmpl, notFoundHtml, adminJs, modJs;
+var indexTmpl, notFoundHtml, modJs;
 
 /* I always use encodeURI anyway */
 escape = common.escape_html;
@@ -527,24 +527,23 @@ route_post_auth(/^\/admin$/, function (req, resp) {
 	});
 });
 
+function write_mod_js(resp, auth) {
+	resp.writeHead(200, {'Content-Type': 'text/javascript'});
+	resp.write('(');
+	resp.write(modJs);
+	resp.end(')(' + JSON.stringify(auth) + ');');
+}
+
 route_get_auth(/^\/admin\.js$/, function (req, resp, params) {
 	if (req.auth.auth != 'Admin')
 		return render_404(resp);
-	resp.writeHead(200, {'Content-Type': 'text/javascript'});
-	if (config.DEBUG)
-		resp.end(fs.readFileSync('admin.js'));
-	else
-		resp.end(adminJs);
+	write_mod_js(resp, 'Admin');
 });
 
 route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
 	if (req.auth.auth != 'Moderator')
 		return render_404(resp);
-	resp.writeHead(200, {'Content-Type': 'text/javascript'});
-	if (config.DEBUG)
-		resp.end(fs.readFileSync('mod.js'));
-	else
-		resp.end(modJs);
+	write_mod_js(resp, 'Moderator');
 });
 
 route_get(/^\/(\w+)$/, function (req, resp, params) {
@@ -1100,8 +1099,7 @@ function start_server() {
 		filterTmpl = _.template(fs.readFileSync('filter.html', 'UTF-8'),
 				config).split(/\$[A-Z]+/);
 		notFoundHtml = fs.readFileSync('../www/404.html');
-		adminJs = fs.readFileSync('admin.js');
-		modJs = fs.readFileSync('mod.js');
+		modJs = fs.readFileSync('mod.js', 'UTF-8');
 		db.track_OPs(function (err) {
 			if (err)
 				throw err;

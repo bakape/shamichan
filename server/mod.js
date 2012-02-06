@@ -1,7 +1,6 @@
-(function () {
+function (AUTH) {
 
 var $panel;
-var AUTH = 'Moderator';
 
 function show_panel() {
 	if ($panel)
@@ -33,9 +32,15 @@ function korosu() {
 	}
 }
 
+readOnly.push('graveyard');
+
+window.fun = function () {
+	send([10, THREAD]);
+};
+
 override(PF, 'make_alloc_request', function (orig, text) {
 	var msg = orig.call(this, text);
-	if ($('#'+AUTH).attr('checked'))
+	if ($('#authname').attr('checked'))
 		msg.auth = AUTH;
 	return msg;
 });
@@ -49,9 +54,8 @@ $(document).click(function (event) {
 $(document).ready(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
 	$('<input type=checkbox>').insertBefore('header>:first-child');
-	$name.after((' <input type=checkbox id="AUTH">' +
-			'<label for="AUTH">AUTH</label>'
-			).replace(/AUTH/g, AUTH));
+	$name.after(' <input type=checkbox id="authname">' +
+			' <label for="authname">' + AUTH + '</label>');
 
 	oneeSama.hook('afterInsert', function (target) {
 		$('<input type=checkbox>').insertBefore(target.find(
@@ -59,4 +63,4 @@ $(document).ready(function () {
 	});
 });
 
-})();
+}
