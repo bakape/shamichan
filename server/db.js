@@ -446,6 +446,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 	if (msg.links)
 		view.links = msg.links;
 	extract(view);
+	delete view.ip;
 	self._log(m, op, common.INSERT_POST, [num, view]);
 
 	if (ip) {
