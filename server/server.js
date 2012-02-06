@@ -1013,24 +1013,11 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	return true;
 }
 
-function auth_handled(func) {
-	return function (msg, client) {
-		if (!msg.length)
-			return false;
-		var chunks = twitter.extract_cookie(msg.shift());
-		if (!chunks)
-			return false;
-		twitter.check_cookie(chunks, false, function (err, auth) {
-			if (err)
-				report(err, client, 'Auth error.');
-			else
-				func(msg, client, auth);
-		});
-		return true;
-	};
-}
-
-dispatcher[common.DELETE_POSTS] = auth_handled(function (nums, client, auth) {
+dispatcher[common.DELETE_POSTS] = function (nums, client) {
+	if (!client.auth)
+		return false;
+	if (['Admin', 'Moderator'].indexOf(client.auth.auth) < 0)
+		return false;
 	if (!nums.length)
 		return false;
 	if (nums.some(function (n) { return typeof n != 'number' || n < 1; }))
@@ -1052,18 +1039,20 @@ dispatcher[common.DELETE_POSTS] = auth_handled(function (nums, client, auth) {
 			report(err, client, "Couldn't delete.");
 	});
 	return true;
-});
+};
 
-dispatcher[common.EXECUTE_JS] = auth_handled(function (msg, client, auth) {
-	if (auth.auth !== 'Admin' || typeof msg[0] != 'number')
-		return report(null, client);
+dispatcher[common.EXECUTE_JS] = function (msg, client) {
+	if (!client.auth || client.auth.auth !== 'Admin')
+		return false;
+	if (typeof msg[0] != 'number')
+		return false;
 	var op = msg[0];
 	client.db.set_fun_thread(op, function (err) {
 		if (err)
 			report(err, client, "No fun allowed.");
 	});
 	return true;
-});
+};
 
 function start_server() {
 	server.listen(config.PORT);

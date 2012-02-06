@@ -22,7 +22,7 @@ function korosu() {
 		}
 	});
 	if (ids.length) {
-		ids.unshift(5, document.cookie);
+		ids.unshift(5);
 		send(ids);
 	}
 	else {
@@ -36,7 +36,7 @@ function korosu() {
 readOnly.push('graveyard');
 
 window.fun = function () {
-	send([10, document.cookie, THREAD]);
+	send([10, THREAD]);
 };
 
 override(PF, 'make_alloc_request', function (orig, text) {

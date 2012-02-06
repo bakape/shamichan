@@ -22,7 +22,7 @@ function korosu() {
 		}
 	});
 	if (ids.length) {
-		ids.unshift(5, document.cookie);
+		ids.unshift(5);
 		send(ids);
 	}
 	else {
