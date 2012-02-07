@@ -175,8 +175,8 @@ function tamashii(num) {
 		this.callback('>>' + num);
 }
 
-var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,y,r,w,v,ts,ch'.split(',');
-var mnemonicEnds = "a,i,u,e,o,aa,ii,uu,ei,ou,ya,yi,yu,ye,yo,'".split(',');
+var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,f,r,g,z,l,ch'.split(',');
+var mnemonicEnds = "a,i,u,e,o,ā,ī,ū,ē,ō,ya,yi,yu,ye,yo,'".split(',');
 
 function ip_mnemonic(header, data) {
 	var mnemonic = data.ip;
@@ -185,8 +185,9 @@ function ip_mnemonic(header, data) {
 		mnemonic = '';
 		for (var i = 0; i < 4; i++) {
 			var n = parseInt(nums[i], 10);
-			mnemonic += mnemonicStarts[Math.floor(n / 16)] +
+			var s = mnemonicStarts[Math.floor(n / 16)] +
 					mnemonicEnds[n % 16];
+			mnemonic += s;
 		}
 		header.push(safe(' <span title="'+escape(data.ip)+'">'),
 				mnemonic, safe('</span>'));
