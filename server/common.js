@@ -384,7 +384,7 @@ function expand_html(num, omit) {
 	return html;
 }
 
-OS.monogatari = function (data, t) {
+OS.atama = function (data) {
 	var auth = data.auth;
 	var header = auth ? [safe('<b class="'),auth.toLowerCase(),safe('">')]
 			: [safe('<b>')];
@@ -407,7 +407,11 @@ OS.monogatari = function (data, t) {
 	if (!this.full && !data.op)
 		header.push(safe(expand_html(data.num, data.omit)));
 	header.push(safe('</header>\n\t'));
+	return header;
+};
 
+OS.monogatari = function (data, t) {
+	var header = this.atama(data);
 	this.dice = data.dice;
 	var body = this.karada(data.body);
 	body = [safe('<blockquote>'), body, safe('</blockquote>')];
