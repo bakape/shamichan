@@ -366,15 +366,20 @@ function datetime(time) {
 		pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
 }
 
-function post_url(post, quote) {
-	return (post.op || post.num) + (quote ? '#q' : '#') + post.num;
-}
-exports.post_url = post_url;
+OS.post_url = function (num, op, quote) {
+	return (op || num) + (quote ? '#q' : '#') + num;
+};
 
-function num_html(post) {
-	return ('<a href="' + post_url(post, false) + '">No.</a><a href="'
-			+ post_url(post, true) + '">' + post.num + '</a>');
-}
+OS.post_ref = function (num, op) {
+	return safe('<a href="' + this.post_url(num, op, false)
+			+ '">&gt;&gt;' + num + '</a>');
+};
+
+OS.num_html = function (post) {
+	var n = post.num, o = post.op;
+	return ('<a href="' + this.post_url(n, o, false) + '">No.</a><a href="'
+			+ this.post_url(n, o, true) + '">' + n + '</a>');
+};
 
 function expand_html(num, omit) {
 	var html = ' &nbsp; [<a href="' + num + '" class="expand">Expand</a>]';
@@ -403,7 +408,7 @@ OS.atama = function (data) {
 	header.unshift(safe('<header>'));
 	header.push(safe(' <time pubdate datetime="' + datetime(data.time) +
 			'">' + readable_time(data.time) + '</time> ' +
-			num_html(data)));
+			this.num_html(data)));
 	if (!this.full && !data.op)
 		header.push(safe(expand_html(data.num, data.omit)));
 	header.push(safe('</header>\n\t'));

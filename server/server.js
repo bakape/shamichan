@@ -168,9 +168,7 @@ OK.on_thread_sink = function (thread, err) {
 function tamashii(num) {
 	var op = db.OPs[num];
 	if (op)
-		this.callback(safe('<a href="'
-				+ common.post_url({op: op, num: num}, false)
-				+ '">&gt;&gt;' + num + '</a>'));
+		this.callback(this.post_ref(num, op));
 	else
 		this.callback('>>' + num);
 }

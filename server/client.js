@@ -132,15 +132,9 @@ function open_post_box(num) {
 	on_make_post.call(link.find('a'));
 }
 
-function make_link(num, op) {
-	var p = {num: num, op: op};
-	return safe('<a href="' + post_url(p, false) + '">&gt;&gt;'
-			+ num + '</a>');
-}
-
 var oneeSama = new OneeSama(function (num) {
 	if (this.links && num in this.links)
-		this.callback(make_link(num, this.links[num]));
+		this.callback(this.post_ref(num, this.links[num]));
 	else
 		this.callback('>>' + num);
 });
@@ -179,9 +173,10 @@ function resolve_own_links(links) {
 		if (!m)
 			return;
 		var num = m[1], op = links[num];
-		if (op)
-			$a.attr('href', post_url({op: op, num: num}, false)
-					).removeAttr('class');
+		if (op) {
+			var url = postForm.imouto.post_url(num, op, false);
+			$a.attr('href', url).removeAttr('class');
+		}
 	});
 }
 
@@ -416,7 +411,7 @@ dispatcher[EXECUTE_JS] = function (msg) {
 };
 
 function extract_num(q) {
-	return parseInt(q.attr('id'));
+	return parseInt(q.attr('id'), 10);
 }
 
 function insert_image(info, header, toppu) {
@@ -447,9 +442,11 @@ function PostForm(dest, section) {
 	this.line_count = 1;
 	this.char_count = 0;
 	this.imouto = new OneeSama(function (num) {
-		var thread = $('#' + num).parents('*').andSelf();
-		if (thread.is('section'))
-			this.callback(make_link(num, extract_num(thread)));
+		var $s = $('#' + num);
+		if (!$s.is('section'))
+			$s = $s.parents('section');
+		if ($s.is('section'))
+			this.callback(this.post_ref(num, extract_num($s)));
 		else
 			this.callback(safe('<a class="nope">&gt;&gt;' + num
 					+ '</a>'));
@@ -529,7 +526,7 @@ PF.on_allocation = function (msg) {
 		tag.removeAttr('href').attr('class', 'emailcancel');
 	oneeSama.trigger('afterInsert', this.post);
 	this.post.attr('id', num);
-	var head_end = ' ' + num_html(msg);
+	var head_end = ' ' + this.imouto.num_html(msg);
 	if (this.op) {
 		this.post.addClass('editing');
 	}
