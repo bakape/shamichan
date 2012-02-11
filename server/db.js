@@ -1138,7 +1138,6 @@ function extract(post) {
 function inline(dest, src) {
 	// Nondeterministic order... must be independent attrs
 	for (var attr in INLINES) {
-		console.log(attr);
 		var f = INLINES[attr];
 		f(dest, src[attr]);
 	}
