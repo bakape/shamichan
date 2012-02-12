@@ -367,7 +367,8 @@ function datetime(time) {
 }
 
 OS.post_url = function (num, op, quote) {
-	return (op || num) + (quote ? '#q' : '#') + num;
+	op = op || num;
+	return (this.op == op ? '' : op) + (quote ? '#q' : '#') + num;
 };
 
 OS.post_ref = function (num, op) {

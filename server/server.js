@@ -195,14 +195,16 @@ function ip_mnemonic(header, data) {
 	return header;
 }
 
-function write_thread_html(reader, response, auth, full_thread) {
+function write_thread_html(reader, response, auth, opts) {
+	opts = opts || {};
 	var oneeSama = new common.OneeSama(tamashii);
 	if (auth && auth.auth == 'Admin')
 		oneeSama.hook('header', ip_mnemonic);
 	reader.on('thread', function (op_post, omit, image_omit) {
-		oneeSama.full = full_thread;
 		op_post.omit = omit;
-		var first = oneeSama.monomono(op_post, full_thread && 'full');
+		var full = oneeSama.full = !!opts.fullPosts;
+		oneeSama.op = opts.fullLinks ? false : op_post.num;
+		var first = oneeSama.monomono(op_post, full && 'full');
 		first.pop();
 		response.write(first.join(''));
 		if (omit)
@@ -211,7 +213,6 @@ function write_thread_html(reader, response, auth, full_thread) {
 				'</span>\n');
 	});
 	reader.on('post', function (post) {
-		oneeSama.full = full_thread;
 		response.write(oneeSama.mono(post));
 	});
 	reader.on('endthread', function () {
@@ -599,7 +600,7 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(yaku, resp, req.auth, false);
+	write_thread_html(yaku, resp, req.auth, {fullLinks: true});
 	yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
@@ -642,7 +643,7 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(yaku, resp, req.auth, false);
+	write_thread_html(yaku, resp, req.auth, {fullLinks: true});
 	yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
@@ -702,7 +703,7 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		resp.write(indexTmpl[3]);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(reader, resp, req.auth, true);
+	write_thread_html(reader, resp, req.auth, {fullPosts: true});
 	reader.on('end', function () {
 		resp.write('[<a href=".">Return</a>]');
 		write_page_end(req, resp);

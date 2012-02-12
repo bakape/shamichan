@@ -138,7 +138,7 @@ var oneeSama = new OneeSama(function (num) {
 	else
 		this.callback('>>' + num);
 });
-oneeSama.full = THREAD;
+oneeSama.full = oneeSama.op = THREAD;
 
 function inject(frag) {
 	var dest = this.buffer;
@@ -452,6 +452,7 @@ function PostForm(dest, section) {
 					+ '</a>'));
 	});
 	this.imouto.callback = inject;
+	this.imouto.op = THREAD;
 	this.imouto.state = [S_BOL, 0];
 	this.imouto.buffer = this.buffer;
 	this.imouto.dice = GAME_BOARDS.indexOf(BOARD) >= 0;
@@ -744,7 +745,7 @@ function hover_shita(event) {
 	}
 }
 
-var samePage = new RegExp('^' + THREAD + '(#\\d+)$');
+var samePage = new RegExp('^(?:' + THREAD + ')?(#\\d+)$');
 function click_shita(event) {
 	var target = $(event.target);
 	var href = target.attr('href');
