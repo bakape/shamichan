@@ -687,8 +687,9 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	}
 	var yaku = new db.Yakusoku(board);
 	var reader = new db.Reader(yaku);
-	var limit = 'last100' in req.query ?
-			(100 + config.ABBREVIATED_REPLIES) : 0;
+	var lastN = config.THREAD_LAST_N;
+	var limit = ('last' + lastN) in req.query ?
+			(lastN + config.ABBREVIATED_REPLIES) : 0;
 	reader.get_thread(board, num, true, limit);
 	reader.on('nomatch', render_404.bind(null, resp));
 	reader.on('redirect', redirect_thread.bind(null, resp, num));

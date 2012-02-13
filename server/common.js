@@ -382,11 +382,12 @@ OS.num_html = function (post) {
 			+ this.post_url(n, o, true) + '">' + n + '</a>');
 };
 
+var lastNfrag = '?lastN" class="expand">Last&nbsp;N</a>]'.replace(/N/g,
+		config.THREAD_LAST_N);
 function expand_html(num, omit) {
 	var html = ' &nbsp; [<a href="' + num + '" class="expand">Expand</a>]';
-	if (omit > 100)
-		html += ' [<a href="' + num +
-				'?last100" class="expand">Last&nbsp;100</a>]';
+	if (omit > config.THREAD_LAST_N)
+		html += ' [<a href="' + num + lastNfrag;
 	return html;
 }
 
