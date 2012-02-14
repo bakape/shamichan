@@ -198,7 +198,7 @@ function ip_mnemonic(header, data) {
 function write_thread_html(reader, response, auth, opts) {
 	opts = opts || {};
 	var oneeSama = new common.OneeSama(tamashii);
-	if (auth && auth.auth == 'Admin')
+	if (is_mod_auth(auth))
 		oneeSama.hook('header', ip_mnemonic);
 	reader.on('thread', function (op_post, omit, image_omit) {
 		op_post.omit = omit;
@@ -550,6 +550,10 @@ function write_mod_js(resp, auth) {
 	resp.write('(');
 	resp.write(modJs);
 	resp.end(')(' + JSON.stringify(auth) + ');');
+}
+
+function is_mod_auth(auth) {
+	return auth && (auth.auth === 'Admin' || auth.auth === 'Moderator');
 }
 
 route_get_auth(/^\/admin\.js$/, function (req, resp, params) {
@@ -1034,7 +1038,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 dispatcher[common.DELETE_POSTS] = function (nums, client) {
 	if (!client.auth)
 		return false;
-	if (['Admin', 'Moderator'].indexOf(client.auth.auth) < 0)
+	if (!is_mod_auth(client.auth))
 		return false;
 	if (!nums.length)
 		return false;
