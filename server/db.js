@@ -979,6 +979,7 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 		}
 		self.emit('begin');
 		pre_post.num = num;
+		pre_post.time = parseInt(pre_post.time, 10);
 		with_body(r, key, pre_post, function (err, op_post) {
 			if (err)
 				return self.emit('error', err);
@@ -1005,7 +1006,7 @@ Reader.prototype._get_each_reply = function (tag, ix, nums) {
 		return;
 	}
 	var r = this.y.connect();
-	var num = nums[ix];
+	var num = parseInt(nums[ix], 10);
 	var key = 'post:' + num;
 	var next_please = this._get_each_reply.bind(this, tag, ix + 1, nums);
 	var self = this;
@@ -1016,6 +1017,8 @@ Reader.prototype._get_each_reply = function (tag, ix, nums) {
 				|| (tag != 'graveyard' && pre_post.hide))
 			return next_please();
 		pre_post.num = num;
+		pre_post.time = parseInt(pre_post.time, 10);
+		pre_post.op = parseInt(pre_post.op, 10);
 		with_body(r, key, pre_post, function (err, post) {
 			if (err)
 				return self.emit('error', err);
@@ -1178,10 +1181,6 @@ EXTRACTS.push(games.extract_dice);
 INLINES.dice = games.inline_dice;
 
 function with_body(r, key, post, callback) {
-	/* Convenience */
-	post.time = parseInt(post.time);
-	post.op = parseInt(post.op);
-
 	if (post.body !== undefined)
 		callback(null, post);
 	else
