@@ -206,18 +206,18 @@ IU.process = function (err) {
 		var time = new Date().getTime();
 		image.src = time + image.ext;
 		var dest, mvs;
-		dest = path.join(config.MEDIA_DIR, 'src', image.src);
+		dest = media_path('src', image.src);
 		mvs = [mv_file.bind(null, image.path, dest)];
 		if (nail) {
 			nail = time + '.jpg';
 			image.thumb = nail;
-			nail = path.join(config.MEDIA_DIR, 'thumb', nail);
+			nail = media_path('thumb', nail);
 			mvs.push(mv_file.bind(null, image.thumb_path, nail));
 		}
 		if (comp) {
 			comp = time + 's' + image.spoiler + '.jpg';
 			image.composite = comp;
-			comp = path.join(config.MEDIA_DIR, 'thumb', comp);
+			comp = media_path('thumb', comp);
 			mvs.push(mv_file.bind(null, image.comp_path, comp));
 			delete image.spoiler;
 		}
@@ -238,8 +238,13 @@ IU.process = function (err) {
 
 function composite_src(spoiler, pinky) {
 	var file = 'spoiler' + (pinky ? 's' : '') + spoiler + '.png';
-	return path.join(config.MEDIA_DIR, 'kana', file);
+	return media_path('kana', file);
 }
+
+function media_path(dir, filename) {
+	return path.join(config.MEDIA_DIR, dir, filename);
+}
+exports.media_path = media_path;
 
 IU.read_image_filesize = function (callback) {
 	var self = this;
@@ -258,15 +263,16 @@ IU.read_image_filesize = function (callback) {
 function MD5_file(path, callback) {
 	child_process.exec('md5sum -b ' + path, function (err, stdout, stderr) {
 		if (!err) {
-			var m = stdout.match(/^([\da-f]{32})/);
+			var m = stdout.match(/^([\da-f]{32})/i);
 			if (m)
-				return callback(null, m[1]);
+				return callback(null, m[1].toLowerCase());
 		}
 		console.log(stdout);
 		console.error(stderr);
 		return callback('Hashing error.');
 	});
 }
+exports.MD5_file = MD5_file;
 
 function mv_file(src, dest, callback) {
 	var mv = child_process.spawn('/bin/mv', ['-n', src, dest]);
@@ -278,6 +284,7 @@ function mv_file(src, dest, callback) {
 		callback(code ? 'mv error' : null);
 	});
 }
+exports.mv_file = mv_file;
 
 function perceptual_hash(src, callback) {
 	var tmp = '/tmp/hash' + (''+Math.random()).substr(2) + '.gray';
@@ -333,7 +340,7 @@ exports.bury_image = function (src, thumb, altThumb, callback) {
 	try_thumb(altThumb);
 	async.parallel(mvs, callback);
 	function mv(p, nm, cb) {
-		mv_file(path.join(config.MEDIA_DIR, p, nm),
+		mv_file(media_path(p, nm),
 			path.join(config.DEAD_DIR, p, nm), cb);
 	}
 };
