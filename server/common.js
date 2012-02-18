@@ -330,6 +330,10 @@ OS.gazou = function (info, toppu) {
 		tw = sp[0];
 		th = sp[1];
 	}
+	else if (info.vintage) {
+		tw = tw || w;
+		th = th || h;
+	}
 	else if (info.thumb)
 		thumb = encodeURI(media + 'thumb/' + info.thumb);
 	else {
