@@ -405,7 +405,11 @@ IU.failure = function (err_desc) {
 };
 
 exports.image_attrs = ['src', 'thumb', 'dims', 'size', 'MD5', 'hash', 'imgnm',
-		'spoiler', 'realthumb'];
+		'spoiler', 'realthumb', 'vint'];
+
+exports.is_image = function (image) {
+	return image && (image.src || image.vint);
+};
 
 IU.publish = function () {
 	var client = this.client;

@@ -1148,9 +1148,10 @@ function inline(dest, src) {
 
 var image_attrs;
 EXTRACTS.push(function (post) {
+	var pix = require('./pix');
 	if (!image_attrs)
-		image_attrs = require('./pix').image_attrs;
-	if (!(image_attrs[0] in post))
+		image_attrs = pix.image_attrs;
+	if (!pix.is_image(post))
 		return;
 	var image = {};
 	image_attrs.forEach(function (key) {

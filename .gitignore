@@ -12,3 +12,4 @@ server/perceptual
 www/js/client*.js
 www/src/*
 www/thumb/*
+www/vint/*

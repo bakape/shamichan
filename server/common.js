@@ -311,7 +311,15 @@ function chibi(text) {
 
 OS.gazou = function (info, toppu) {
 	var media = config.MEDIA_URL;
-	var src = encodeURI(media + 'src/' + info.src);
+	var src, name;
+	if (info.vint) {
+		src = encodeURI(media + 'vint/' + info.vint);
+		srcname = info.MD5;
+	}
+	else {
+		src = encodeURI(media + 'src/' + info.src);
+		srcname = info.src;
+	}
 	var thumb = src, d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
 	if (info.spoiler) {
@@ -330,7 +338,7 @@ OS.gazou = function (info, toppu) {
 	}
 	return [safe('<figure data-MD5="' + info.MD5 + '">' +
 		'<figcaption>Image <a href="' + src + '" target="_blank">' +
-		info.src + '</a> <i>(' + readable_filesize(info.size) + ', ' +
+		srcname + '</a> <i>(' + readable_filesize(info.size) + ', ' +
 		w + 'x' + h), this.full ? chibi(info.imgnm) : '',
 		safe(')</i></figcaption><a href="'+src+'" target="_blank">' +
 		'<img src="' + thumb + '" width="' +
