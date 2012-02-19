@@ -39,7 +39,8 @@ R.recycle_post = function (post, cb) {
 			var m = r.multi();
 			var key = post.op ? 'post:' + post.num
 					: 'thread:' + post.num;
-			m.hdel(key, ['src', 'thumb']);
+			m.hdel(key, 'src');
+			m.hdel(key, 'thumb');
 			m.hset(key, 'vint', dest);
 			m.exec(function (err) {
 				if (err) {
