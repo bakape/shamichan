@@ -330,7 +330,7 @@ OS.gazou = function (info, toppu) {
 		tw = sp[0];
 		th = sp[1];
 	}
-	else if (info.vintage) {
+	else if (info.vint) {
 		tw = tw || w;
 		th = th || h;
 	}

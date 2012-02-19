@@ -6,8 +6,8 @@ var async = require('async'),
     pix = require('./pix');
 
 function Recycler() {
-	this.y = new db.Yakusoku('archive');
 	this.tag = 'archive';
+	this.y = new db.Yakusoku(this.tag);
 }
 
 var R = Recycler.prototype;
@@ -53,7 +53,6 @@ R.recycle_post = function (post, cb) {
 					return;
 				}
 
-				console.log('Vintaged', src, 'to', dest);
 				toDelete.forEach(fs.unlink);
 				cb(null);
 			});
