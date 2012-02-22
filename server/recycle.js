@@ -88,7 +88,7 @@ R.recycle_archive = function (cb) {
 	r.zrange(key + ':threads', 0, -1, function (err, threads) {
 		if (err)
 			return cb(err);
-		async.forEach(threads, do_thread, cb);
+		async.forEachSeries(threads, do_thread, cb);
 	});
 };
 
