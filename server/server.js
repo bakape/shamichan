@@ -1093,8 +1093,11 @@ function start_server() {
 			var d = socketIo.Manager.prototype.handshakeData.call(
 					this, data);
 			var realIP = data.request.headers['x-forwarded-for'];
-			if (realIP)
-				d.address.address = realIP;
+			if (realIP) {
+				if (realIP.indexOf(',') >= 0)
+					realIP = realIP.split(',', 1)[0];
+				d.address.address = realIP.trim();
+			}
 			return d;
 		};
 	}
