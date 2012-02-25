@@ -80,12 +80,15 @@ else
 
 config.SERVER_DEPS = [
 	'lib/underscore.js',
-	'admin.js',
 	'common.js',
 	'config.js',
 	'db.js',
+	'games.js',
+	'get.js',
+	'mod.js',
 	'pix.js',
 	'server.js',
+	'state.js',
 	'twitter.js',
 	'tripcode.cc',
 	'filter.html',

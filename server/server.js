@@ -7,18 +7,16 @@ var _ = require('./lib/underscore'),
     get_version = require('./get').get_version,
     http = require('http'),
     pix = require('./pix'),
+    STATE = require('./state');
     twitter = require('./twitter'),
-    tripcode,
+    tripcode = require('./tripcode'),
     url_parse = require('url').parse,
     util = require('util');
 
-_.templateSettings = {
-	interpolate: /\{\{(.+?)\}\}/g
-};
+var RES = STATE.resources;
 
 var clients = {};
 var dispatcher = {};
-var indexTmpl, notFoundHtml, modJs;
 
 /* I always use encodeURI anyway */
 var escape = common.escape_html;
@@ -438,7 +436,7 @@ var preamble = '<!doctype html><meta charset=utf-8>';
 
 function render_404(resp) {
 	resp.writeHead(404, noCacheHeaders);
-	resp.end(notFoundHtml);
+	resp.end(RES.notFoundHtml);
 }
 
 function redirect(resp, uri, code) {
@@ -481,7 +479,6 @@ route_get(/^\/login\/$/, function (req, resp) {
 	redirect(resp, '../login');
 });
 
-var filterTmpl;
 route_get_auth(/^\/admin$/, function (req, resp) {
 	if (req.auth.auth != 'Admin')
 		return render_404(resp);
@@ -498,7 +495,7 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 	var ctr = 0;
 
 	resp.writeHead(200);
-	resp.write(filterTmpl[0]);
+	resp.write(RES.filterTmpl[0]);
 	resp.write('<h2>Limit ' + limit + '</h2>\n');
 
 	var filter = new db.Filter(board);
@@ -510,7 +507,7 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 	});
 	filter.once('end', function () {
 		resp.write('<br>' + ctr + ' thread(s).');
-		resp.end(filterTmpl[1]);
+		resp.end(RES.filterTmpl[1]);
 	});
 	filter.once('error', function (err) {
 		resp.end('<br><br>Error: ' + escape(err));
@@ -548,7 +545,7 @@ route_post_auth(/^\/admin$/, function (req, resp) {
 function write_mod_js(resp, auth) {
 	resp.writeHead(200, {'Content-Type': 'text/javascript'});
 	resp.write('(');
-	resp.write(modJs);
+	resp.write(RES.modJs);
 	resp.end(')(' + JSON.stringify(auth) + ');');
 }
 
@@ -588,7 +585,7 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 		return render_404(resp);
 	var yaku = new db.Yakusoku(board);
 	yaku.get_tag(0);
-	var nav_html;
+	var indexTmpl = RES.indexTmpl, nav_html;
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
 		resp.writeHead(200, noCacheHeaders);
@@ -631,7 +628,7 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 		return redirect(resp, 'page' + page);
 	yaku.get_tag(page);
 	yaku.on('nomatch', render_404.bind(null, resp));
-	var nav_html;
+	var indexTmpl = RES.indexTmpl, nav_html;
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, page);
 		resp.writeHead(200, noCacheHeaders);
@@ -698,6 +695,7 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	reader.on('nomatch', render_404.bind(null, resp));
 	reader.on('redirect', redirect_thread.bind(null, resp, num));
 	reader.on('begin', function () {
+		var indexTmpl = RES.indexTmpl;
 		resp.writeHead(200, noCacheHeaders);
 		resp.write(indexTmpl[0]);
 		resp.write('/'+escape(board)+'/ - #' + op);
@@ -728,7 +726,7 @@ route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
 });
 
 function write_page_end(req, resp) {
-	resp.write(indexTmpl[4]);
+	resp.write(RES.indexTmpl[4]);
 	if (req.auth) {
 		if (req.auth.auth == 'Admin')
 			resp.write('<script src="../admin.js"></script>\n');
@@ -1110,22 +1108,10 @@ function start_server() {
 	});
 }
 
-(function () {
-	var deps = config.CLIENT_DEPS;
-	get_version(deps, function (err, version) {
+if (require.main == module) {
+	STATE.reset_resources(function (err) {
 		if (err)
 			throw err;
-		tripcode = require('./tripcode');
-		if (config.DEBUG)
-			version = 'debug';
-		config.CLIENT_JS = 'client' + (config.DEBUG ? '.debug.js'
-				: '-' + version + '.js');
-		indexTmpl = _.template(fs.readFileSync('index.html', 'UTF-8'),
-				config).split(/\$[A-Z]+/);
-		filterTmpl = _.template(fs.readFileSync('filter.html', 'UTF-8'),
-				config).split(/\$[A-Z]+/);
-		notFoundHtml = fs.readFileSync('../www/404.html');
-		modJs = fs.readFileSync('mod.js', 'UTF-8');
 		db.track_OPs(function (err) {
 			if (err)
 				throw err;
@@ -1138,4 +1124,4 @@ function start_server() {
 			});
 		});
 	});
-})();
+}

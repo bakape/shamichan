@@ -1,4 +1,5 @@
 var async = require('async'),
+    cache = require('./state').dbCache,
     common = require('./common'),
     config = require('./config'),
     events = require('events'),
@@ -7,13 +8,9 @@ var async = require('async'),
     redis = require('redis'),
     util = require('util');
 
-var OPs = {};
-exports.OPs = OPs;
-var TAGS = {};
-exports.TAGS = TAGS;
-
-var SUBS = {};
-var YAKUMAN = 0;
+var OPs = exports.OPs = cache.OPs;
+var TAGS = exports.TAGS = cache.opTags;
+var SUBS = exports.SUBS = cache.threadSubs;
 
 function redis_client() {
 	return redis.createClient(config.REDIS_PORT || undefined);
@@ -250,7 +247,7 @@ exports.is_board = function (board) {
 
 function Yakusoku(board) {
 	events.EventEmitter.call(this);
-	this.id = ++YAKUMAN;
+	this.id = ++(cache.YAKUMAN);
 	this.tag = board;
 }
 
@@ -1102,10 +1099,8 @@ F.cleanup = function () {
 
 /* AMUSEMENT */
 
-var funThread;
-
 Y.get_fun = function (op, callback) {
-	if (funThread && op == funThread) {
+	if (cache.funThread && op == cache.funThread) {
 		/* Don't cache, for extra fun */
 		fs.readFile('fun.js', 'UTF-8', callback);
 	}
@@ -1120,7 +1115,7 @@ Y.set_fun_thread = function (op, callback) {
 	fs.readFile('fun.js', 'UTF-8', function (err, funJs) {
 		if (err)
 			return callback(err);
-		funThread = op;
+		cache.funThread = op;
 		var m = self.connect().multi();
 		self._log(m, op, common.EXECUTE_JS, [op, funJs]);
 		m.exec(callback);
