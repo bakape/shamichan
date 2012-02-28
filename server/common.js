@@ -313,7 +313,7 @@ OS.gazou = function (info, toppu) {
 	var media = config.MEDIA_URL;
 	var src, name;
 	if (info.vint) {
-		src = encodeURI(media + 'vint/' + info.vint);
+		src = encodeURI('../outbound/' + info.MD5);
 		srcname = info.MD5;
 	}
 	else {
