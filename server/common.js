@@ -311,16 +311,17 @@ function chibi(text) {
 
 OS.gazou = function (info, toppu) {
 	var media = config.MEDIA_URL;
-	var src, name;
+	var src, thumb, name;
 	if (info.vint) {
 		src = encodeURI('../outbound/' + info.MD5);
+		thumb = media + 'vint/' + info.vint;
 		srcname = info.MD5;
 	}
 	else {
-		src = encodeURI(media + 'src/' + info.src);
+		src = thumb = encodeURI(media + 'src/' + info.src);
 		srcname = info.src;
 	}
-	var thumb = src, d = info.dims;
+	var d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
 	if (info.spoiler) {
 		thumb = encodeURI(media + 'kana/spoiler' + (toppu ? '' : 's')
