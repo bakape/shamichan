@@ -126,6 +126,10 @@ function add_OP_tag(tagIndex, op) {
 		tags.push(tagIndex);
 }
 
+function set_OP_tag(tagIndex, op) {
+	TAGS[op] = tagIndex;
+}
+
 exports.OP_has_tag = function (tag, op) {
 	var index = config.BOARDS.indexOf(tag);
 	if (index < 0)
@@ -150,18 +154,31 @@ exports.first_tag_of = function (op) {
 };
 
 function on_OP_message(pat, chan, msg) {
+	// This sucks. Need to unify this damn format.
+	var op, num, kind, tag;
 	if (pat == 'tag:*') {
-		var op = parseInt(msg.match(/^(\d+),/)[1], 10);
-		var tagIndex = config.BOARDS.indexOf(chan.slice(4));
-		add_OP_tag(tagIndex, op);
-		return;
+		var m = msg.match(/^(\d+),(\d+)/);
+		op = num = parseInt(m[1], 10);
+		kind = parseInt(m[2], 10);
+		tag = chan.slice(4);
+	}
+	else {
+		op = parseInt(chan.match(/^thread:(\d+)/)[1], 10);
+		var m = msg.match(/^(\d+),(\d+)/);
+		kind = parseInt(m[1], 10);
+		num = parseInt(m[2], 10);
+		tag = false;
 	}
 
-	var op = parseInt(chan.match(/^thread:(\d+)/)[1], 10);
-	var info = msg.split(',', 2);
-	var kind = parseInt(info[0], 10), num = parseInt(info[1], 10);
-	if (kind == common.INSERT_POST)
-		OPs[num] = op;
+	if (kind == common.INSERT_POST) {
+		if (tag)
+			add_OP_tag(config.BOARDS.indexOf(tag), op);
+		else
+			OPs[num] = op;
+	}
+	else if (tag && kind == common.MOVE_THREAD) {
+		set_OP_tag(config.BOARDS.indexOf(tag), op);
+	}
 }
 
 exports.track_OPs = function (callback) {
@@ -618,11 +635,15 @@ Y.archive_thread = function (op, callback) {
 			return callback('Thread is already deleted.');
 		var m = r.multi();
 		m.incr(archiveKey + ':bumpctr');
-		m.hget(key, 'tags');
+		m.hgetall(key);
+		m.hgetall(key + ':links');
+		m.llen(key + ':posts');
 		m.exec(next);
 	},
 	function (rs, next) {
-		var bumpCtr = rs[0], tags = rs[1];
+		var bumpCtr = rs[0], view = rs[1], links = rs[2],
+				replyCount = rs[3];
+		var tags = view.tags;
 		var m = r.multi();
 		// move to archive tag only
 		m.hset(key, 'origTags', tags);
@@ -633,6 +654,15 @@ Y.archive_thread = function (op, callback) {
 		});
 		m.zadd(archiveKey + ':threads', bumpCtr, op);
 		self._log(m, op, common.DELETE_THREAD, [op], tags);
+
+		// shallow thread insertion message in archive
+		if (!_.isEmpty(links))
+			view.links = msg.links;
+		extract(view);
+		delete view.ip;
+		view.replyctr = replyCount;
+		self._log(m, op, common.MOVE_THREAD, [op, view], ['archive']);
+
 		m.exec(next);
 	},
 	function (results, done) {

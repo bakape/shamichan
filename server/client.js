@@ -319,6 +319,30 @@ dispatcher[INSERT_POST] = function (msg) {
 		orig_focus.focus();
 };
 
+dispatcher[MOVE_THREAD] = function (msg) {
+	var num = msg[0];
+	msg = msg[1];
+	msg.num = num;
+	var orig_focus = get_focus();
+	oneeSama.links = msg.links;
+
+	var section = $(oneeSama.monomono(msg).join(''));
+	var hr = $('<hr/>');
+	// No make_reply_box since this is archive-only for now
+	if (!BUMP) {
+		section.hide();
+		hr.hide();
+	}
+
+	oneeSama.trigger('afterInsert', section);
+	var fencepost = $('body > aside');
+	section.insertAfter(fencepost.length ? fencepost : $ceiling
+			).after(hr);
+	spill_page();
+	if (orig_focus)
+		orig_focus.focus();
+};
+
 dispatcher[IMAGE_STATUS] = function (msg) {
 	postForm.uploadStatus.text(msg[0]);
 };
