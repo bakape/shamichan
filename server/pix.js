@@ -262,14 +262,18 @@ IU.read_image_filesize = function (callback) {
 
 function MD5_file(path, callback) {
 	child_process.exec('md5sum -b ' + path, function (err, stdout, stderr) {
-		if (!err) {
-			var m = stdout.match(/^([\da-f]{32})/i);
-			if (m)
-				return callback(null, m[1].toLowerCase());
+		if (err) {
+			console.log(stdout);
+			console.error(stderr);
+			return callback('Hashing error.');
 		}
-		console.log(stdout);
-		console.error(stderr);
-		return callback('Hashing error.');
+		var m = stdout.match(/^([\da-f]{32})/i);
+		if (!m)
+			return callback('Hashing error.');
+		var hash = new Buffer(m[1], 'hex').toString('base64');
+		if (!hash)
+			return callback('Hashing error.');
+		callback(null, hash.replace(/=*$/, ''));
 	});
 }
 exports.MD5_file = MD5_file;
