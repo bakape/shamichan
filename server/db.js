@@ -1,4 +1,5 @@
-var async = require('async'),
+var _ = require('./lib/underscore'),
+    async = require('async'),
     cache = require('./state').dbCache,
     common = require('./common'),
     config = require('./config'),
@@ -531,7 +532,7 @@ Y.remove_posts = function (nums, callback) {
 		if (already_gone.length)
 			console.warn("Tried to delete missing posts: ",
 					already_gone);
-		if (common.is_empty(threads))
+		if (_.isEmpty(threads))
 			return callback(null);
 		var m = self.connect().multi();
 		for (var op in threads) {
@@ -736,7 +737,7 @@ Y.append_post = function (post, tail, old_state, extra, cb) {
 		var now = new Date().getTime();
 		update_throughput(m, extra.ip, now, tail.length);
 	}
-	if (!common.is_empty(extra.new_links))
+	if (!_.isEmpty(extra.new_links))
 		m.hmset(key + ':links', extra.new_links);
 	if (extra.new_dice) {
 		// Only need to update when new dice are rolled
@@ -951,7 +952,7 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 			return self.emit('error', err);
 		if (!graveyard && pre_post.hide)
 			return self.emit('nomatch');
-		if (common.is_empty(pre_post)) {
+		if (_.isEmpty(pre_post)) {
 			if (!redirect_ok)
 				return self.emit('nomatch');
 			r.hget('post:' + num, 'op',
@@ -1010,7 +1011,7 @@ Reader.prototype._get_each_reply = function (tag, ix, nums) {
 	r.hgetall(key, function (err, pre_post) {
 		if (err)
 			return self.emit('error', err);
-		if (common.is_empty(pre_post)
+		if (_.isEmpty(pre_post)
 				|| (tag != 'graveyard' && pre_post.hide))
 			return next_please();
 		pre_post.num = num;

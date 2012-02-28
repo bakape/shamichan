@@ -833,7 +833,7 @@ function valid_links(frag, state, callback) {
 	onee.callback = function (frag) {};
 	onee.state = state;
 	onee.fragment(frag);
-	callback(null, common.is_empty(links) ? null : links);
+	callback(null, _.isEmpty(links) ? null : links);
 }
 
 dispatcher[common.ALLOCATE_POST] = function (msg, client) {

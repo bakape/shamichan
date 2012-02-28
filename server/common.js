@@ -77,16 +77,6 @@ function map_unsafe(frags, func) {
 	return frags;
 }
 
-function is_empty(o) {
-	if (!o)
-		return true;
-	for (k in o)
-		if (o.hasOwnProperty(k))
-			return false;
-	return true;
-}
-exports.is_empty = is_empty;
-
 function is_noko(email) {
 	return email && email.indexOf('@') == -1 && email.match(/noko/i);
 }
