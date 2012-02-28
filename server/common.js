@@ -340,9 +340,9 @@ OS.gazou = function (info, toppu) {
 		tw = w;
 		th = h;
 	}
-	return [safe('<figure data-MD5="' + info.MD5 + '">' +
-		'<figcaption>Image <a href="' + src + '" target="_blank">' +
-		srcname + '</a> <i>(' + readable_filesize(info.size) + ', ' +
+	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>' +
+		'Image <a href="' + src + '" target="_blank">'), srcname,
+		safe('</a> <i>(' + readable_filesize(info.size) + ', ' +
 		w + 'x' + h), this.full ? chibi(info.imgnm) : '',
 		safe(')</i></figcaption><a href="'+src+'" target="_blank">' +
 		'<img src="' + thumb + '" width="' +
