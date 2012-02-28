@@ -469,7 +469,10 @@ function PostForm(dest, section) {
 	this.propagate_ident();
 
 	this.input.keydown($.proxy(this, 'on_key_down'));
-	this.input.input($.proxy(this, 'on_input'));
+	var self = this;
+	this.input.input(function () {
+		self.on_input();
+	});
 
 	if (!this.op)
 		this.blockquote.hide();
@@ -572,23 +575,36 @@ function find_time_param(params) {
 }
 
 PF.on_key_down = function (event) {
-	if (event.which == 83 && event.altKey) {
-		this.finish_wrapped();
-		event.preventDefault();
-	}
 	if (lockedToBottom) {
 		lockKeyHeight = $DOC.height();
 		setTimeout(entryScrollLock, 0);
 	}
+	switch (event.which) {
+	case 83:
+		if (event.altKey) {
+			this.finish_wrapped();
+			event.preventDefault();
+		}
+		break;
+	case 13:
+		event.preventDefault();
+	case 32:
+		var c = event.which == 13 ? '\n' : ' ';
+		// predict result
+		var input = this.input;
+		var val = input.val();
+		val = val.slice(0, input[0].selectionStart) + c +
+				val.slice(input[0].selectionEnd);
+		this.on_input(val);
+		break;
+	}
 };
 
-var workaroundA = navigator.userAgent.indexOf('Chrome') > -1;
-var workaroundB = navigator.userAgent.indexOf('Safari') > -1;
-
-PF.on_input = function () {
+PF.on_input = function (val) {
 	var input = this.input;
-	var val = input.val();
 	var start = input[0].selectionStart, end = input[0].selectionEnd;
+	if (val === undefined)
+		val = input.val();
 
 	/* Turn YouTube links into proper refs */
 	var changed = false;
@@ -633,18 +649,7 @@ PF.on_input = function () {
 			start -= lim;
 			end -= lim;
 			input.val(val);
-			// XXX: FUUUUUUUUCK
-			var p = input[0];
-			if (workaroundA)
-				setTimeout(function () {
-					p.setSelectionRange(start+1, end+1);
-				}, 0);
-			else if (workaroundB)
-				setTimeout(function () {
-					p.setSelectionRange(start+1, end);
-				}, 0);
-			else
-				p.setSelectionRange(start, end);
+			input[0].setSelectionRange(start, end);
 		}
 	}
 
