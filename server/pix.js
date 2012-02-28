@@ -273,6 +273,7 @@ function MD5_file(path, callback) {
 		var hash = new Buffer(m[1], 'hex').toString('base64');
 		if (!hash)
 			return callback('Hashing error.');
+		hash = hash.replace(/\//g, '_');
 		callback(null, hash.replace(/=*$/, ''));
 	});
 }
