@@ -968,6 +968,7 @@ function get_post_view(post) {
 	if (post.links) view.links = post.links;
 	if (post.image) view.image = post.image;
 	if (post.dice) view.dice = post.dice;
+	if (post.auth) view.auth = post.auth;
 	return view;
 }
 

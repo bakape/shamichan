@@ -546,28 +546,15 @@ PF.on_allocation = function (msg) {
 	ownPosts[num] = true;
 	this.num = num;
 	this.flush_pending();
-	var meta = this.meta;
-	var $b = meta.find('b');
-	$b.text(msg.name || ANON);
-	if (msg.trip)
-		$b.append(' <code>' + escape_html(msg.trip) + '</code>');
-	var tag = meta.children('a:first');
-	if (msg.email)
-		tag.attr('href', 'mailto:' + msg.email).attr('class', 'email');
+	var header = $(flatten(oneeSama.atama(msg)).join(''));
+	this.meta.replaceWith(header);
+	this.meta = header;
+	if (this.op)
+		this.post.addClass('editing');
 	else
-		tag.removeAttr('href').attr('class', 'emailcancel');
+		spill_page();
 	oneeSama.trigger('afterInsert', this.post);
 	this.post.attr('id', num);
-	var head_end = ' ' + this.imouto.num_html(msg);
-	if (this.op) {
-		this.post.addClass('editing');
-	}
-	else {
-		head_end += expand_html(num);
-		spill_page();
-	}
-	meta.children('time').text(readable_time(msg.time)
-		).attr('datetime', datetime(msg.time)).after(head_end);
 
 	if (msg.image)
 		this.insert_uploaded(msg.image);
