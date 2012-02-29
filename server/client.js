@@ -333,6 +333,10 @@ dispatcher[MOVE_THREAD] = function (msg) {
 		section.hide();
 		hr.hide();
 	}
+	if (msg.replyctr > 0) {
+		var omitMsg = abbrev_msg(msg.replyctr, msg.imgctr - 1);
+		$('<span class="omit"/>').text(omitMsg).appendTo(section);
+	}
 
 	oneeSama.trigger('afterInsert', section);
 	var fencepost = $('body > aside');
