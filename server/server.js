@@ -738,7 +738,7 @@ function write_page_end(req, resp) {
 	resp.end();
 }
 
-route_get(/^\/outbound\/([a-zA-Z0-9+\/]{22})$/, function (req, resp, params) {
+route_get(/^\/outbound\/([\w+\/]{22})$/, function (req, resp, params) {
 	// TEMP
 	var service = 'http://archive.foolz.us/a/image/';
 	var headers = {Location: service + escape(params[1]) + '/',

@@ -790,6 +790,9 @@ function click_shita(event) {
 	if (options.inline) {
 		var img = target;
 		if (img.is('img') && !img.data('skipExpand')) {
+			var href = img.parent().attr('href');
+			if (href.match(/^\.\.\/outbound\//))
+				return;
 			var thumb = img.data('thumbSrc');
 
 			with_dom(function () {
@@ -813,8 +816,7 @@ function click_shita(event) {
 					thumbWidth: img.width(),
 					thumbHeight: img.height(),
 					thumbSrc: img.attr('src')}
-					).attr('src', img.parent().attr('href')
-					).width(w).height(h));
+					).attr('src',href).width(w).height(h));
 			}
 			});
 
