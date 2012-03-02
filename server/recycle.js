@@ -54,7 +54,12 @@ R.recycle_post = function (post, cb) {
 					return;
 				}
 
-				toDelete.forEach(fs.unlink);
+				toDelete.forEach(function (victim) {
+					fs.unlink(victim, function (err) {
+						if (err)
+							console.error(err);
+					});
+				});
 				cb(null);
 			});
 		});
