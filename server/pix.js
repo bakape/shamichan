@@ -4,9 +4,44 @@ var async = require('async'),
     db = require('../db'),
     formidable = require('formidable'),
     fs = require('fs'),
+    hooks = require('../hooks'),
     im = require('imagemagick'),
     path = require('path'),
     util = require('util');
+
+var image_attrs = ('src thumb dims size MD5 hash imgnm spoiler realthumb vint'
+		.split(' '));
+
+function is_image(image) {
+	return image && (image.src || image.vint);
+};
+
+hooks.hook('extractPost', function (post) {
+	if (!is_image(post))
+		return;
+	var image = {};
+	image_attrs.forEach(function (key) {
+		if (key in post) {
+			image[key] = post[key];
+			delete post[key];
+		}
+	});
+	if (image.dims.split)
+		image.dims = image.dims.split(',');
+	image.size = parseInt(image.size);
+	delete image.hash;
+	post.image = image;
+});
+
+hooks.hook('inlinePost', function (info) {
+	var post = info.dest, image = info.src.image;
+	if (!image)
+		return;
+	image_attrs.forEach(function (key) {
+		if (key in image)
+			post[key] = image[key];
+	});
+});
 
 function get_thumb_specs(w, h, pinky) {
 	var QUALITY = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
@@ -409,18 +444,11 @@ IU.failure = function (err_desc) {
 		this.client.uploading = false;
 };
 
-exports.image_attrs = ['src', 'thumb', 'dims', 'size', 'MD5', 'hash', 'imgnm',
-		'spoiler', 'realthumb', 'vint'];
-
-exports.is_image = function (image) {
-	return image && (image.src || image.vint);
-};
-
 IU.publish = function () {
 	var client = this.client;
 	var view = {};
 	var self = this;
-	exports.image_attrs.forEach(function (key) {
+	image_attrs.forEach(function (key) {
 		if (key in self.image)
 			view[key] = self.image[key];
 	});

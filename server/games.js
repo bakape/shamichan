@@ -1,4 +1,5 @@
-var common = require('../common');
+var common = require('../common'),
+    hooks = require('../hooks');
 
 var rollLimit = 5;
 
@@ -34,14 +35,20 @@ exports.roll_dice = function (frag, post, extra) {
 	}
 };
 
-exports.inline_dice = function (post, dice) {
+
+function inline_dice(post, dice) {
 	if (dice && dice.length) {
 		dice = JSON.stringify(dice);
 		post.dice = dice.substring(1, dice.length - 1);
 	}
-};
+}
+exports.inline_dice = inline_dice;
 
-exports.extract_dice = function (post) {
+hooks.hook('inlinePost', function (info) {
+	inline_dice(info.dest, info.src.dice);
+});
+
+hooks.hook('extractPost', function (post) {
 	if (!post.dice)
 		return;
 	try {
@@ -50,4 +57,4 @@ exports.extract_dice = function (post) {
 	catch (e) {
 		delete post.dice;
 	}
-};
+});

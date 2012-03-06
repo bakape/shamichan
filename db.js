@@ -6,6 +6,7 @@ var _ = require('./lib/underscore'),
     events = require('events'),
     fs = require('fs'),
     games = require('./server/games'),
+    hooks = require('./hooks'),
     redis = require('redis'),
     util = require('util');
 
@@ -1155,57 +1156,13 @@ Y.set_fun_thread = function (op, callback) {
 
 /* HELPERS */
 
-var EXTRACTS = [];
-var INLINES = {};
-
 function extract(post) {
-	EXTRACTS.forEach(function (f) {
-		f(post);
-	});
+	hooks.trigger('extractPost', post);
 }
 
 function inline(dest, src) {
-	// Nondeterministic order... must be independent attrs
-	for (var attr in INLINES) {
-		var f = INLINES[attr];
-		f(dest, src[attr]);
-	}
+	hooks.trigger('inlinePost', {dest: dest, src: src});
 }
-
-var image_attrs;
-EXTRACTS.push(function (post) {
-	var pix = require('./server/pix');
-	if (!image_attrs)
-		image_attrs = pix.image_attrs;
-	if (!pix.is_image(post))
-		return;
-	var image = {};
-	image_attrs.forEach(function (key) {
-		if (key in post) {
-			image[key] = post[key];
-			delete post[key];
-		}
-	});
-	if (image.dims.split)
-		image.dims = image.dims.split(',');
-	image.size = parseInt(image.size);
-	delete image.hash;
-	post.image = image;
-});
-
-INLINES.image = function (post, image) {
-	if (!image_attrs)
-		image_attrs = require('./server/pix').image_attrs;
-	if (!image)
-		return;
-	image_attrs.forEach(function (key) {
-		if (key in image)
-			post[key] = image[key];
-	});
-};
-
-EXTRACTS.push(games.extract_dice);
-INLINES.dice = games.inline_dice;
 
 function with_body(r, key, post, callback) {
 	if (post.body !== undefined)
