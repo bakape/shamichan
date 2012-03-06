@@ -4,7 +4,7 @@ var _ = require('../lib/underscore'),
     db = require('../db'),
     fs = require('fs'),
     games = require('./games'),
-    get_version = require('./get').get_version,
+    get_version = require('../get').get_version,
     http = require('http'),
     pix = require('./pix'),
     STATE = require('./state');
@@ -1120,19 +1120,19 @@ function start_server() {
 }
 
 if (require.main == module) {
-	STATE.reset_resources(function (err) {
+	require('async').series([
+		STATE.make_media_dirs,
+		STATE.reset_resources,
+		db.track_OPs,
+	], function (err) {
 		if (err)
 			throw err;
-		db.track_OPs(function (err) {
+		var yaku = new db.Yakusoku(null);
+		yaku.finish_all(function (err) {
 			if (err)
 				throw err;
-			var yaku = new db.Yakusoku(null);
-			yaku.finish_all(function (err) {
-				if (err)
-					throw err;
-				yaku.disconnect();
-				setTimeout(start_server, 0);
-			});
+			yaku.disconnect();
+			_.defer(start_server);
 		});
 	});
 }
