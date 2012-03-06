@@ -1,4 +1,5 @@
 var _ = require('../lib/underscore'),
+    async = require('async'),
     common = require('../common'),
     config = require('../config'),
     db = require('../db'),
@@ -237,8 +238,9 @@ function page_nav(thread_count, cur_page) {
 }
 
 function make_link_rels(board, bits) {
-	bits.push(['stylesheet', config.MEDIA_URL + config.BASE_CSS]);
-	bits.push(['stylesheet', config.MEDIA_URL + config.BOARD_CSS[board]]);
+	bits.push(['stylesheet', config.MEDIA_URL + STATE.hot.BASE_CSS]);
+	bits.push(['stylesheet', config.MEDIA_URL +
+			STATE.hot.BOARD_CSS[board]]);
 	return bits.map(function (p) {
 		return '\t<link rel="'+p[0]+'" href="'+p[1]+'">\n';
 	}).join('');
@@ -589,7 +591,7 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
 		resp.writeHead(200, noCacheHeaders);
-		var title = config.TITLES[board] || escape(board);
+		var title = STATE.hot.TITLES[board] || escape(board);
 		resp.write(indexTmpl[0]);
 		resp.write(title);
 		resp.write(indexTmpl[1]);
@@ -632,7 +634,7 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, page);
 		resp.writeHead(200, noCacheHeaders);
-		var title = config.TITLES[board] || escape(board);
+		var title = STATE.hot.TITLES[board] || escape(board);
 		resp.write(indexTmpl[0]);
 		resp.write(title);
 		resp.write(indexTmpl[1]);
@@ -1118,7 +1120,10 @@ function start_server() {
 		console.log(err);
 	});
 	process.on('SIGHUP', function () {
-		STATE.reset_resources(function (err) {
+		async.series([
+			STATE.reload_hot,
+			STATE.reset_resources,
+		], function (err) {
 			if (err)
 				throw err;
 			console.log('Reloaded initial state.');
@@ -1127,7 +1132,8 @@ function start_server() {
 }
 
 if (require.main == module) {
-	require('async').series([
+	async.series([
+		STATE.reload_hot,
 		STATE.make_media_dirs,
 		STATE.reset_resources,
 		db.track_OPs,

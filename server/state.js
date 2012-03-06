@@ -3,7 +3,8 @@ var _ = require('../lib/underscore'),
     config = require('../config'),
     fs = require('fs'),
     get_version = require('../get').get_version,
-    path = require('path');
+    path = require('path'),
+    vm = require('vm');
 
 _.templateSettings = {
 	interpolate: /\{\{(.+?)\}\}/g
@@ -17,7 +18,32 @@ exports.dbCache = {
 	funThread: 0,
 };
 
+var HOT = exports.hot = {};
 var RES = exports.resources = {};
+
+exports.reload_hot = function (cb) {
+	fs.readFile('hot.js', 'UTF-8', function (err, js) {
+		if (err)
+			cb(err);
+		var hot = {};
+		try {
+			vm.runInNewContext(js, hot);
+		}
+		catch (e) {
+			return cb(e);
+		}
+		if (!hot || !hot.hot)
+			return cb('Bad hot config.');
+
+		// Overwrite the original object just in case
+		Object.keys(HOT).forEach(function (k) {
+			delete HOT[k];
+		});
+		_.extend(HOT, hot.hot);
+
+		cb(null);
+	});
+};
 
 function make_dir(base, key, cb) {
 	var dir;

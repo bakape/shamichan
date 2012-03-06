@@ -1,0 +1,17 @@
+this.hot = {
+	TITLES: {
+		moe: "/moe/ - Sweets",
+		gar: "/gar/ - Hard Work &amp; Guts",
+		meta: "/meta/ - The Abyss",
+		archive: "/archive/",
+		graveyard: "/graveyard/",
+	},
+	BASE_CSS: 'base-v18.css',
+	BOARD_CSS: {
+		moe: 'moe-v2.css',
+		gar: 'gar-v2.css',
+		meta: 'meta-v1.css',
+		archive: 'archive-v1.css',
+		graveyard: 'meta-v1.css',
+	},
+};

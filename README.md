@@ -5,6 +5,7 @@ Setup:
 
 * Install deps and npm deps
 * Copy config.js.example to config.js and configure
+* Copy hot.js.example to hot.js and configure
 * Run `make` to build some essential components
 * Run `node builder.js` to run an auto-reloading development server
 * Run `node server.js` for just the server

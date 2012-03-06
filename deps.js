@@ -29,6 +29,7 @@ exports.SERVER_DEPS = [
 // Changes to these only require a state.js reload
 exports.SERVER_STATE = [
 	'client/mod.js',
+	'hot.js',
 	'tmpl/filter.html',
 	'tmpl/index.html',
 ];
