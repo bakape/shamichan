@@ -5,10 +5,10 @@
 .lock*
 dead/src/*
 dead/thumb/*
-server/builder
-server/config.js
-server/jsmin
-server/perceptual
+builder
+config.js
+jsmin
+perceptual
 www/js/client*.js
 www/src/*
 www/thumb/*
