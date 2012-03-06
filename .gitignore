@@ -10,6 +10,6 @@ config.js
 jsmin
 perceptual
 www/js/client*.js
-www/src/*
-www/thumb/*
-www/vint/*
+www/src
+www/thumb
+www/vint
