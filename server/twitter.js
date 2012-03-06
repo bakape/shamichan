@@ -1,5 +1,5 @@
-var config = require('./config'),
-    db = require('./db'),
+var config = require('../config'),
+    db = require('../db'),
     OAuth = require('oauth').OAuth;
 
 var oauth = new OAuth('https://api.twitter.com/oauth/request_token',

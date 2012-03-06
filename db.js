@@ -1,11 +1,11 @@
 var _ = require('./lib/underscore'),
     async = require('async'),
-    cache = require('./state').dbCache,
+    cache = require('./server/state').dbCache,
     common = require('./common'),
     config = require('./config'),
     events = require('events'),
     fs = require('fs'),
-    games = require('./games'),
+    games = require('./server/games'),
     redis = require('redis'),
     util = require('util');
 
@@ -683,8 +683,8 @@ Y.hide_image = function (key, callback) {
 			return callback(null);
 		hash = pics[0];
 		if (pics[1])
-			require('./pix').bury_image(pics[1], pics[2], pics[3],
-					free_hash);
+			require('./server/pix').bury_image(pics[1], pics[2],
+					pics[3], free_hash);
 		else
 			free_hash(null);
 	}
@@ -1174,7 +1174,7 @@ function inline(dest, src) {
 
 var image_attrs;
 EXTRACTS.push(function (post) {
-	var pix = require('./pix');
+	var pix = require('./server/pix');
 	if (!image_attrs)
 		image_attrs = pix.image_attrs;
 	if (!pix.is_image(post))
@@ -1195,7 +1195,7 @@ EXTRACTS.push(function (post) {
 
 INLINES.image = function (post, image) {
 	if (!image_attrs)
-		image_attrs = require('./pix').image_attrs;
+		image_attrs = require('./server/pix').image_attrs;
 	if (!image)
 		return;
 	image_attrs.forEach(function (key) {

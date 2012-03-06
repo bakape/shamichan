@@ -1,6 +1,6 @@
-var _ = require('./lib/underscore'),
+var _ = require('../lib/underscore'),
     async = require('async'),
-    config = require('./config'),
+    config = require('../config'),
     fs = require('fs'),
     path = require('path');
 
