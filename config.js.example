@@ -59,40 +59,4 @@ var config = {
 	IP_MNEMONIC: true,
 };
 
-if (!config.DEBUG)
-	config.CLIENT_DEPS = [
-		'lib/underscore-min.js',
-		'lib/backbone-min.js',
-		'lib/socket.io.min.js',
-		'lib/oninput.min.js',
-		'common.js',
-		'client.js',
-	];
-else
-	config.CLIENT_DEPS = [
-		'lib/underscore.js',
-		'lib/backbone.js',
-		'lib/socket.io.js',
-		'lib/oninput.js',
-		'common.js',
-		'client.js',
-	];
-
-config.SERVER_DEPS = [
-	'lib/underscore.js',
-	'common.js',
-	'config.js',
-	'db.js',
-	'games.js',
-	'get.js',
-	'mod.js',
-	'pix.js',
-	'server.js',
-	'state.js',
-	'twitter.js',
-	'tripcode.cc',
-	'filter.html',
-	'index.html',
-];
-
 module.exports = config;
