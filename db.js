@@ -1133,7 +1133,7 @@ F.cleanup = function () {
 Y.get_fun = function (op, callback) {
 	if (cache.funThread && op == cache.funThread) {
 		/* Don't cache, for extra fun */
-		fs.readFile('fun.js', 'UTF-8', callback);
+		fs.readFile('client/fun.js', 'UTF-8', callback);
 	}
 	else
 		callback(null);
@@ -1143,7 +1143,7 @@ Y.set_fun_thread = function (op, callback) {
 	if (OPs[op] != op)
 		return callback("Thread not found.");
 	var self = this;
-	fs.readFile('fun.js', 'UTF-8', function (err, funJs) {
+	fs.readFile('client/fun.js', 'UTF-8', function (err, funJs) {
 		if (err)
 			return callback(err);
 		cache.funThread = op;

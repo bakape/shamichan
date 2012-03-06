@@ -1,5 +1,5 @@
-var _ = require('./lib/underscore'),
-    common = require('./common'),
+var _ = require('../lib/underscore'),
+    common = require('../common'),
     config = require('./config'),
     db = require('./db'),
     fs = require('fs'),

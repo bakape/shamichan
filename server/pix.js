@@ -242,7 +242,7 @@ function composite_src(spoiler, pinky) {
 }
 
 function media_path(dir, filename) {
-	return path.join(config.MEDIA_DIR, dir, filename);
+	return path.join(config.MEDIA_DIRS[dir], filename);
 }
 exports.media_path = media_path;
 
@@ -346,7 +346,7 @@ exports.bury_image = function (src, thumb, altThumb, callback) {
 	async.parallel(mvs, callback);
 	function mv(p, nm, cb) {
 		mv_file(media_path(p, nm),
-			path.join(config.DEAD_DIR, p, nm), cb);
+			path.join(config.MEDIA_DIRS.dead, p, nm), cb);
 	}
 };
 

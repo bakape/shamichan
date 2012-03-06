@@ -20,18 +20,18 @@ var RES = exports.resources = {};
 
 exports.reset_resources = function (cb) {
 	var deps = config.CLIENT_DEPS;
-	function read(file) {
-		return fs.readFile.bind(fs, file, 'UTF-8');
+	function read(dir, file) {
+		return fs.readFile.bind(fs, path.join(dir, file), 'UTF-8');
 	}
 	function tmpl(data) {
 		return _.template(data, config).split(/\$[A-Z]+/);
 	}
 	async.parallel({
 		version: require('./get').get_version.bind(null, deps),
-		index: read('index.html'),
-		filter: read('filter.html'),
-		notFound: read(path.join(config.MEDIA_DIR, '404.html')),
-		modJs: read('mod.js'),
+		index: read('tmpl', 'index.html'),
+		filter: read('tmpl', 'filter.html'),
+		notFound: read('www', '404.html'),
+		modJs: read('client', 'mod.js'),
 	}, function (err, res) {
 		if (err)
 			return cb(err);
