@@ -15,8 +15,8 @@ if (process.argv[1] == __filename) {
 		process.exit(-1);
 	}
 	var arg = process.argv[2];
+	var deps = require('./deps');
 	if (arg == '--client-version') {
-		var deps = require('./deps');
 		get_version(deps.CLIENT_DEPS, function (err, version) {
 			if (err)
 				throw err;
@@ -24,8 +24,8 @@ if (process.argv[1] == __filename) {
 				console.log(version);
 		});
 	}
-	else if (arg.match(/^(CLIENT|SERVER)_DEPS/)) {
-		console.log(require('./deps')[arg].join(' '));
+	else if (arg in deps) {
+		console.log(deps[arg].join(' '));
 	}
 	else {
 		var config = require('./config');

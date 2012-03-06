@@ -1,17 +1,17 @@
 var _ = require('./lib/underscore'),
     config = require('./config'),
+    deps = require('./deps'),
     fs = require('fs'),
     child_process = require('child_process');
 
-var server_deps = config.SERVER_DEPS.slice();
-var client_deps = config.CLIENT_DEPS.slice();
-server_deps.push('index.html');
+var server_deps = deps.SERVER_DEPS.slice();
+var client_deps = deps.CLIENT_DEPS.slice();
 
 var server;
 var start_server = _.debounce(function () {
 	if (server)
 		server.kill('SIGTERM');
-	server = child_process.spawn('node', ['server.js']);
+	server = child_process.spawn('node', ['server/server.js']);
 	server.stdout.pipe(process.stdout);
 	server.stderr.pipe(process.stderr);
 }, 500);
