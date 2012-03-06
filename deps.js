@@ -12,7 +12,6 @@ exports.CLIENT_DEPS = [
 ];
 
 exports.SERVER_DEPS = [
-	'client/mod.js',
 	'common.js',
 	'config.js',
 	'db.js',
@@ -25,6 +24,11 @@ exports.SERVER_DEPS = [
 	'server/state.js',
 	'server/twitter.js',
 	'server/tripcode.cc',
+];
+
+// Changes to these only require a state.js reload
+exports.SERVER_STATE = [
+	'client/mod.js',
 	'tmpl/filter.html',
 	'tmpl/index.html',
 ];

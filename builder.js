@@ -4,9 +4,6 @@ var _ = require('./lib/underscore'),
     fs = require('fs'),
     child_process = require('child_process');
 
-var server_deps = deps.SERVER_DEPS.slice();
-var client_deps = deps.CLIENT_DEPS.slice();
-
 var server;
 var start_server = _.debounce(function () {
 	if (server)
@@ -14,6 +11,11 @@ var start_server = _.debounce(function () {
 	server = child_process.spawn('node', ['server/server.js']);
 	server.stdout.pipe(process.stdout);
 	server.stderr.pipe(process.stderr);
+}, 500);
+
+var reload_state = _.debounce(function () {
+	if (server)
+		server.kill('SIGHUP');
 }, 500);
 
 var build_client = _.debounce(function () {
@@ -28,8 +30,9 @@ var build_client = _.debounce(function () {
 	});
 }, 500);
 
-server_deps.forEach(monitor.bind(null, start_server));
-client_deps.forEach(monitor.bind(null, build_client));
+deps.SERVER_DEPS.forEach(monitor.bind(null, start_server));
+deps.SERVER_STATE.forEach(monitor.bind(null, reload_state));
+deps.CLIENT_DEPS.forEach(monitor.bind(null, build_client));
 
 function monitor(func, dep) {
 	var mtime = new Date;

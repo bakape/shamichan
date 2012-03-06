@@ -1117,6 +1117,13 @@ function start_server() {
 	io.sockets.on('error', function (err) {
 		console.log(err);
 	});
+	process.on('SIGHUP', function () {
+		STATE.reset_resources(function (err) {
+			if (err)
+				throw err;
+			console.log('Reloaded initial state.');
+		});
+	});
 }
 
 if (require.main == module) {
