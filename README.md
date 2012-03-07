@@ -1,5 +1,5 @@
 Real-time imageboard.
-MIT Licensed.
+MIT licensed.
 
 Setup:
 
@@ -8,7 +8,7 @@ Setup:
 * Copy hot.js.example to hot.js and configure
 * Run `make` to build some essential components
 * Run `node builder.js` to run an auto-reloading development server
-* Run `node server.js` for just the server
+* Run `node server/server.js` for just the server
 * Be sure to `make client` for any client-affecting change
 
 Dependencies:
