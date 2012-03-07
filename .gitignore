@@ -3,10 +3,9 @@
 *.swp
 .build
 .lock*
-dead/src/*
-dead/thumb/*
 builder
 config.js
+graveyard
 hot.js
 jsmin
 perceptual
