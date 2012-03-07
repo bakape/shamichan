@@ -690,26 +690,25 @@ Y.archive_thread = function (op, callback) {
 Y.hide_image = function (key, callback) {
 	var r = this.connect();
 	var hash;
-	r.hmget(key, ['hash', 'src', 'thumb', 'realthumb'], move_dead);
+	var imgKeys = ['hash', 'src', 'thumb', 'realthumb'];
+	r.hmget(key, imgKeys, move_dead);
 
-	function move_dead(err, pics) {
+	function move_dead(err, rs) {
 		if (err)
 			return callback(err);
-		if (!pics)
+		if (!rs)
 			return callback(null);
-		hash = pics[0];
-		if (pics[1])
-			require('./server/pix').bury_image(pics[1], pics[2],
-					pics[3], free_hash);
-		else
-			free_hash(null);
+		var info = {};
+		for (var i = 0; i < rs.length; i++)
+			info[imgKeys[i]] = rs[i];
+		hooks.trigger("buryImage", info, free_hash);
 	}
 
-	function free_hash(err) {
+	function free_hash(err, info) {
 		if (err)
 			return callback(err);
-		if (hash)
-			r.del('hash:' + hash, callback);
+		if (info.hash)
+			r.del('hash:' + info.hash, callback);
 		else
 			callback(null);
 	}

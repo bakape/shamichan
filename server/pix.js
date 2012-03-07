@@ -365,12 +365,14 @@ function perceptual_hash(src, callback) {
 	});
 }
 
-exports.bury_image = function (src, thumb, altThumb, callback) {
+hooks.hook("buryImage", function (info, callback) {
+	if (!info.src)
+		return callback(null);
 	/* Just in case */
 	var m = /^\d+\w*\.\w+$/;
-	if (!src.match(m))
+	if (!info.src.match(m))
 		return callback('Invalid image.');
-	var mvs = [mv.bind(null, 'src', src)];
+	var mvs = [mv.bind(null, 'src', info.src)];
 	function try_thumb(t) {
 		if (!t)
 			return;
@@ -378,14 +380,14 @@ exports.bury_image = function (src, thumb, altThumb, callback) {
 			return callback('Invalid thumbnail.');
 		mvs.push(mv.bind(null, 'thumb', t));
 	}
-	try_thumb(thumb);
-	try_thumb(altThumb);
+	try_thumb(info.thumb);
+	try_thumb(info.realthumb);
 	async.parallel(mvs, callback);
 	function mv(p, nm, cb) {
 		mv_file(media_path(p, nm),
 			path.join(config.MEDIA_DIRS.dead, p, nm), cb);
 	}
-};
+});
 
 function setup_im_args(o, args) {
 	var args = [], dims = o.dims;
