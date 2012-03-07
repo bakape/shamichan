@@ -343,6 +343,11 @@ Y.kikanai = function (targets) {
 	}
 };
 
+function post_volume(view, body) {
+	return (body ? body.length : 0) +
+		((view && view.image) ? config.IMAGE_CHARACTER_WORTH : 0);
+}
+
 function update_throughput(m, ip, when, quant) {
 	var key = 'ip:' + ip + ':';
 	var shortKey = key + short_term_timeslot(when);
@@ -428,61 +433,69 @@ Y.insert_post = function (msg, body, extra, callback) {
 	var key = (op ? 'post:' : 'thread:') + num;
 	var bump = !op || !common.is_sage(view.email);
 	var m = r.multi();
-	m.incr(tagKey + ':postctr');
+	m.incr(tagKey + ':postctr'); // must be first
 	if (bump)
 		m.incr(tagKey + ':bumpctr');
-	inline(view, msg);
-	if (msg.image) {
-		if (op)
-			m.hincrby('thread:' + op, 'imgctr', 1);
-		else
-			view.imgctr = 1;
-		note_hash(m, msg.image.hash, msg.num);
-	}
-	m.hmset(key, view);
-	m.set(key + ':body', body);
-	if (msg.links)
-		m.hmset(key + ':links', msg.links);
-	if (op) {
-		m.rpush('thread:' + op + ':posts', num);
-	}
-	else {
-		op = num;
-		var score = expiry_queue_score(msg.time);
-		var entry = num + ':' + tag_key(this.tag);
-		m.zadd(expiry_queue_key(), score, entry);
-		/* Rate-limit new threads */
-		if (ip != '127.0.0.1')
-			m.setex('ip:' + ip, config.THREAD_THROTTLE, op);
-	}
-
-	/* Denormalize for backlog */
-	view.nonce = msg.nonce;
-	view.body = body;
-	if (msg.links)
-		view.links = msg.links;
-	extract(view);
-	delete view.ip;
-	self._log(m, op, common.INSERT_POST, [num, view]);
-
-	if (ip) {
-		var len = (body ? body.length : 0) + (view.image
-				? config.IMAGE_CHARACTER_WORTH : 0);
-		if (len > 0)
-			update_throughput(m, ip, view.time, len);
-	}
-
-	m.exec(function (err, results) {
-		if (err) {
-			delete OPs[num];
+	inline(view, msg, function (err) {
+		if (err)
 			return callback(err);
+		if (msg.image) {
+			if (op)
+				m.hincrby('thread:' + op, 'imgctr', 1);
+			else
+				view.imgctr = 1;
+			note_hash(m, msg.image.hash, msg.num);
 		}
-		if (!bump)
-			return callback(null);
-		r.zadd(tagKey + ':threads', results[0], op,
-					function (err) {
-			if (err)
-				console.error("Bump error: " + err);
+		m.hmset(key, view);
+		m.set(key + ':body', body);
+		if (msg.links)
+			m.hmset(key + ':links', msg.links);
+		if (op) {
+			m.rpush('thread:' + op + ':posts', num);
+		}
+		else {
+			op = num;
+			var score = expiry_queue_score(msg.time);
+			var entry = num + ':' + tag_key(this.tag);
+			m.zadd(expiry_queue_key(), score, entry);
+			/* Rate-limit new threads */
+			if (ip != '127.0.0.1')
+				m.setex('ip:'+ip, config.THREAD_THROTTLE, op);
+		}
+
+		/* Denormalize for backlog */
+		view.nonce = msg.nonce;
+		view.body = body;
+		if (msg.links)
+			view.links = msg.links;
+
+		async.waterfall([
+		function (next) {
+			extract(view, next);
+		},
+		function (v, next) {
+			view = v;
+			delete view.ip;
+			self._log(m, op, common.INSERT_POST, [num, view]);
+
+			if (ip) {
+				var n = post_volume(view, body);
+				if (n > 0)
+					update_throughput(m, ip, view.time, n);
+			}
+			m.exec(next);
+		},
+		function (results, next) {
+			if (!bump)
+				return next();
+			var postctr = results[0];
+			r.zadd(tagKey + ':threads', postctr, op, next);
+		}],
+		function (err) {
+			if (err) {
+				delete OPs[num];
+				return callback(err);
+			}
 			callback(null);
 		});
 	});
@@ -659,12 +672,15 @@ Y.archive_thread = function (op, callback) {
 		// shallow thread insertion message in archive
 		if (!_.isEmpty(links))
 			view.links = msg.links;
-		extract(view);
-		delete view.ip;
-		view.replyctr = replyCount;
-		self._log(m, op, common.MOVE_THREAD, [op, view], ['archive']);
-
-		m.exec(next);
+		extract(view, function (err) {
+			if (err)
+				return next(err);
+			delete view.ip;
+			view.replyctr = replyCount;
+			self._log(m, op, common.MOVE_THREAD, [op, view],
+					['archive']);
+			m.exec(next);
+		});
 	},
 	function (results, done) {
 		TAGS[op] = config.BOARDS.indexOf('archive');
@@ -751,7 +767,8 @@ Y.add_image = function (post, image, ip, callback) {
 		self._log(m, op, common.INSERT_IMAGE, [num, image]);
 
 		var now = new Date().getTime();
-		update_throughput(m, ip, now, config.IMAGE_CHARACTER_WORTH);
+		var n = post_volume({image: true});
+		update_throughput(m, ip, now, post_volume({image: true}));
 		m.exec(callback);
 	});
 };
@@ -766,7 +783,7 @@ Y.append_post = function (post, tail, old_state, extra, cb) {
 		m.hset(key, 'state', post.state.join());
 	if (extra.ip) {
 		var now = new Date().getTime();
-		update_throughput(m, extra.ip, now, tail.length);
+		update_throughput(m, extra.ip, now, post_volume(null, tail));
 	}
 	if (!_.isEmpty(extra.new_links))
 		m.hmset(key + ':links', extra.new_links);
@@ -1009,21 +1026,29 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 		self.emit('begin');
 		pre_post.num = num;
 		pre_post.time = parseInt(pre_post.time, 10);
-		with_body(r, key, pre_post, function (err, op_post) {
-			if (err)
-				return self.emit('error', err);
+		var post_nums, omit;
+		async.waterfall([
+		function (next) {
+			with_body(r, key, pre_post, next);
+		},
+		function (op_post, next) {
 			var m = r.multi();
 			m.lrange(key + ':posts', -abbrev, -1);
 			if (abbrev)
 				m.llen(key + ':posts');
-			m.exec(function (err, r) {
+			m.exec(function (err, rs) {
 				if (err)
-					return self.emit('error', err);
-				var omit = Math.max(r[1] - abbrev, 0);
-				extract(op_post);
-				self.emit('thread', op_post, omit);
-				self._get_each_reply(tag, 0, r[0]);
+					return next(err);
+				post_nums = rs[0];
+				omit = Math.max(rs[1] - abbrev, 0);
+				extract(op_post, next);
 			});
+		}],
+		function (err, op_post) {
+			if (err)
+				return self.emit('error', err);
+			self.emit('thread', op_post, omit);
+			self._get_each_reply(tag, 0, post_nums);
 		});
 	});
 };
@@ -1039,22 +1064,27 @@ Reader.prototype._get_each_reply = function (tag, ix, nums) {
 	var key = 'post:' + num;
 	var next_please = this._get_each_reply.bind(this, tag, ix + 1, nums);
 	var self = this;
-	r.hgetall(key, function (err, pre_post) {
-		if (err)
-			return self.emit('error', err);
+	async.waterfall([
+	function (next) {
+		r.hgetall(key, next);
+	},
+	function (pre_post, next) {
 		if (_.isEmpty(pre_post)
 				|| (tag != 'graveyard' && pre_post.hide))
 			return next_please();
 		pre_post.num = num;
 		pre_post.time = parseInt(pre_post.time, 10);
 		pre_post.op = parseInt(pre_post.op, 10);
-		with_body(r, key, pre_post, function (err, post) {
-			if (err)
-				return self.emit('error', err);
-			extract(post);
-			self.emit('post', post);
-			next_please();
-		});
+		with_body(r, key, pre_post, next);
+	},
+	function (post, next) {
+		extract(post, next);
+	}],
+	function (err, post) {
+		if (err)
+			return self.emit('error', err);
+		self.emit('post', post);
+		next_please();
 	});
 };
 
@@ -1156,12 +1186,12 @@ Y.set_fun_thread = function (op, callback) {
 
 /* HELPERS */
 
-function extract(post) {
-	hooks.trigger('extractPost', post);
+function extract(post, cb) {
+	hooks.trigger('extractPost', post, cb);
 }
 
-function inline(dest, src) {
-	hooks.trigger('inlinePost', {dest: dest, src: src});
+function inline(dest, src, cb) {
+	hooks.trigger('inlinePost', {dest: dest, src: src}, cb);
 }
 
 function with_body(r, key, post, callback) {

@@ -44,17 +44,19 @@ function inline_dice(post, dice) {
 }
 exports.inline_dice = inline_dice;
 
-hooks.hook('inlinePost', function (info) {
+hooks.hook('inlinePost', function (info, cb) {
 	inline_dice(info.dest, info.src.dice);
+	cb(null);
 });
 
-hooks.hook('extractPost', function (post) {
+hooks.hook('extractPost', function (post, cb) {
 	if (!post.dice)
-		return;
+		return cb(null);
 	try {
 		post.dice = JSON.parse('[' + post.dice + ']');
 	}
 	catch (e) {
 		delete post.dice;
 	}
+	cb(null);
 });

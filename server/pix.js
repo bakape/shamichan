@@ -16,9 +16,9 @@ function is_image(image) {
 	return image && (image.src || image.vint);
 };
 
-hooks.hook('extractPost', function (post) {
+hooks.hook('extractPost', function (post, cb) {
 	if (!is_image(post))
-		return;
+		return cb(null);
 	var image = {};
 	image_attrs.forEach(function (key) {
 		if (key in post) {
@@ -31,16 +31,18 @@ hooks.hook('extractPost', function (post) {
 	image.size = parseInt(image.size);
 	delete image.hash;
 	post.image = image;
+	cb(null);
 });
 
-hooks.hook('inlinePost', function (info) {
+hooks.hook('inlinePost', function (info, cb) {
 	var post = info.dest, image = info.src.image;
 	if (!image)
-		return;
+		return cb(null);
 	image_attrs.forEach(function (key) {
 		if (key in image)
 			post[key] = image[key];
 	});
+	cb(null);
 });
 
 function get_thumb_specs(w, h, pinky) {
