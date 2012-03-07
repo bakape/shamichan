@@ -42,7 +42,15 @@ function inline_dice(post, dice) {
 		post.dice = dice.substring(1, dice.length - 1);
 	}
 }
-exports.inline_dice = inline_dice;
+
+hooks.hook('attachToPost', function (attached, cb) {
+	var new_dice = attached.extra.new_dice;
+	if (new_dice) {
+		attached.attach.dice = new_dice;
+		inline_dice(attached.writeKeys, attached.post.dice);
+	}
+	cb(null);
+});
 
 hooks.hook('inlinePost', function (info, cb) {
 	inline_dice(info.dest, info.src.dice);

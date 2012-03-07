@@ -5,7 +5,6 @@ var _ = require('./lib/underscore'),
     config = require('./config'),
     events = require('events'),
     fs = require('fs'),
-    games = require('./server/games'),
     hooks = require('./hooks'),
     redis = require('redis'),
     util = require('util');
@@ -787,26 +786,34 @@ Y.append_post = function (post, tail, old_state, extra, cb) {
 	}
 	if (!_.isEmpty(extra.new_links))
 		m.hmset(key + ':links', extra.new_links);
-	if (extra.new_dice) {
-		// Only need to update when new dice are rolled
-		var flat = {};
-		// This is a little janky... possibly change inline API?
-		games.inline_dice(flat, post.dice);
-		m.hset(key, 'dice', flat.dice);
-	}
-	var msg = [post.num, tail];
-	var links = extra.links || {};
-	if (extra.new_dice)
-		msg.push(old_state[0], old_state[1], links,
-				{dice: extra.new_dice});
-	else if (extra.links)
-		msg.push(old_state[0], old_state[1], links);
-	else if (old_state[1])
-		msg.push(old_state[0], old_state[1]);
-	else if (old_state[0])
-		msg.push(old_state[0]);
-	this._log(m, post.op || post.num, common.UPDATE_POST, msg);
-	m.exec(cb);
+
+	// possibly attach data for dice rolls etc. to the update
+	var attached = {post: post, extra: extra, writeKeys: {}, attach: {}};
+	var self = this;
+	hooks.trigger("attachToPost", attached, function (err, attached) {
+		if (err)
+			return cb(err);
+		for (var h in attached.writeKeys)
+			m.hset(key, h, attached.writeKeys[h]);
+		var msg = [post.num, tail];
+		var links = extra.links || {};
+
+		var a = old_state[0], b = old_state[1];
+		// message tail is [... a, b, links, attachment]
+		// default values [... 0, 0, {}, {}] don't need to be sent
+		// to minimize log output
+		if (!_.isEmpty(attached.attach))
+			msg.push(a, b, links, attached.attach);
+		else if (!_.isEmpty(links))
+			msg.push(a, b, links);
+		else if (b)
+			msg.push(a, b);
+		else if (a)
+			msg.push(a);
+
+		self._log(m, post.op || post.num, common.UPDATE_POST, msg);
+		m.exec(cb);
+	});
 };
 
 function finish_off(m, key, body) {
