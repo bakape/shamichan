@@ -423,7 +423,7 @@ function resize_image(o, comp, callback) {
 function im_callback(cb, err, stdout, stderr) {
 	if (err) {
 		console.error(stderr);
-		return callback('Conversion error.');
+		return cb('Conversion error.');
 	}
 	if (config.DEBUG)
 		setTimeout(cb, 1000);
