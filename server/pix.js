@@ -275,7 +275,7 @@ IU.process = function (err) {
 
 function composite_src(spoiler, pinky) {
 	var file = 'spoiler' + (pinky ? 's' : '') + spoiler + '.png';
-	return media_path('kana', file);
+	return path.join('www', 'kana', file);
 }
 
 function media_path(dir, filename) {
