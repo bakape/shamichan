@@ -1,9 +1,9 @@
 var async = require('async'),
-    config = require('./config'),
-    db = require('./db'),
+    config = require('../config'),
+    db = require('../db'),
     fs = require('fs'),
     path = require('path'),
-    pix = require('./pix');
+    pix = require('../server/pix');
 
 function Recycler() {
 	this.tag = 'archive';
