@@ -435,6 +435,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 	m.incr(tagKey + ':postctr'); // must be first
 	if (bump)
 		m.incr(tagKey + ':bumpctr');
+	var self = this;
 	inline(view, msg, function (err) {
 		if (err)
 			return callback(err);
@@ -455,7 +456,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 		else {
 			op = num;
 			var score = expiry_queue_score(msg.time);
-			var entry = num + ':' + tag_key(this.tag);
+			var entry = num + ':' + tag_key(self.tag);
 			m.zadd(expiry_queue_key(), score, entry);
 			/* Rate-limit new threads */
 			if (ip != '127.0.0.1')
