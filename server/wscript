@@ -13,4 +13,7 @@ def build(bld):
     obj = bld.new_task_gen('cxx', 'shlib', 'node_addon')
     obj.target = 'tripcode'
     obj.source = 'tripcode.cc'
-    obj.env.append_value('LINKFLAGS', '-lcrypt') # uselib doesn't seem to work
+    # uselib doesn't seem to work
+    import platform
+    crypt = 'crypto' if platform.system() == 'Darwin' else 'crypt'
+    obj.env.append_value('LINKFLAGS', '-l' + crypt)
