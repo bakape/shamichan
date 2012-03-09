@@ -274,18 +274,13 @@ exports.Yakusoku = Yakusoku;
 var Y = Yakusoku.prototype;
 
 Y.connect = function () {
-	if (!this.r) {
-		this.r = redis_client();
-		this.r.on('error', console.error.bind(console));
-	}
-	return this.r;
+	// multiple redis connections are pointless (without slaves)
+	if (!cache.sharedConnection)
+		cache.sharedConnection = redis_client();
+	return cache.sharedConnection;
 };
 
 Y.disconnect = function () {
-	if (this.r) {
-		this.r.quit();
-		this.r.removeAllListeners('error');
-	}
 	this.removeAllListeners('end');
 };
 
