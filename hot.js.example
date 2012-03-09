@@ -14,4 +14,8 @@ this.hot = {
 		archive: 'archive-v1.css',
 		graveyard: 'meta-v1.css',
 	},
+
+	SPECIAL_TRIPCODES: {
+		kyubey: "／人◕ ‿‿ ◕人＼",
+	},
 };

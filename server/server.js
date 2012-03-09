@@ -899,7 +899,7 @@ function allocate_post(msg, image, client, callback) {
 			return callback('Invalid name.');
 		var parsed = common.parse_name(msg.name);
 		post.name = parsed[0];
-		var spec = config.SPECIAL_TRIPCODES;
+		var spec = STATE.hot.SPECIAL_TRIPCODES;
 		if (spec && parsed[1] && parsed[1] in spec) {
 			post.trip = spec[parsed[1]];
 		}
