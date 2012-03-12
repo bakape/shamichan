@@ -40,8 +40,10 @@ OK.send = function (msg) {
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	function checked(err, auth) {
-		if (err || !auth.auth)
-			return report("Bad protocol.", client);
+		if (err)
+			auth = null;
+		else if (auth && !auth.auth)
+			auth = null;
 		if (!synchronize(msg, client, auth))
 			report("Bad protocol.", client);
 	}
