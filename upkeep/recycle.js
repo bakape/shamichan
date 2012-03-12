@@ -32,7 +32,7 @@ R.recycle_post = function (post, cb) {
 			return cb(null);
 		}
 		var dest = MD5 + path.extname(src);
-		var dest_path = path.join(config.MEDIA_DIR, 'vint', dest);
+		var dest_path = path.join(config.MEDIA_DIRS.vint, dest);
 		pix.mv_file(src, dest_path, function (err) {
 			if (err)
 				return cb(err);
