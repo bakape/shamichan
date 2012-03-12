@@ -299,11 +299,8 @@ IU.read_image_filesize = function (callback) {
 
 function MD5_file(path, callback) {
 	child_process.exec('md5sum -b ' + path, function (err, stdout, stderr) {
-		if (err) {
-			console.log(stdout);
-			console.error(stderr);
+		if (err)
 			return callback('Hashing error.');
-		}
 		var m = stdout.match(/^([\da-f]{32})/i);
 		if (!m)
 			return callback('Hashing error.');
