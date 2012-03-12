@@ -14,4 +14,3 @@
 * Incoming JSON schema checker
 * Upload cancelling doesn't work?
 * Should retrieve live body and hctr in one transaction
-* Links in last100 version all go to full version
