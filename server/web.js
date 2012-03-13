@@ -157,7 +157,7 @@ function debug_static(req, resp) {
 var vanillaHeaders = {'Content-Type': 'text/html; charset=UTF-8'};
 var noCacheHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
-		'Cache-Control': 'no-cache'};
+		'Cache-Control': 'no-cache, no-store'};
 var preamble = '<!doctype html><meta charset=utf-8>';
 
 exports.vanillaHeaders = vanillaHeaders;
