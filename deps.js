@@ -26,6 +26,7 @@ exports.SERVER_DEPS = [
 	'server/state.js',
 	'server/twitter.js',
 	'server/tripcode.cc',
+	'server/web.js',
 ];
 
 // Changes to these only require a state.js reload

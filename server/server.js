@@ -3,16 +3,13 @@ var _ = require('../lib/underscore'),
     common = require('../common'),
     config = require('../config'),
     db = require('../db'),
-    fs = require('fs'),
     games = require('./games'),
     get_version = require('../get').get_version,
-    http = require('http'),
     pix = require('./pix'),
     STATE = require('./state');
     twitter = require('./twitter'),
     tripcode = require('./tripcode'),
-    url_parse = require('url').parse,
-    util = require('util');
+    web = require('./web');
 
 var RES = STATE.resources;
 
@@ -284,213 +281,51 @@ function make_nav_html(info) {
 	return bits.join('');
 }
 
-var server = http.createServer(function (req, resp) {
-	var method = req.method.toLowerCase(), numRoutes = routes.length;
-	var parsed = url_parse(req.url, true);
-	req.url = parsed.pathname;
-	req.query = parsed.query;
-	for (var i = 0; i < numRoutes; i++) {
-		var route = routes[i];
-		if (method != route.method)
-			continue;
-		var m = req.url.match(route.pattern);
-		if (m) {
-			route.handler(req, resp, m);
-			return;
-		}
-	}
-	if (debug_static)
-		debug_static(req, resp);
-	else
-		render_404(resp);
-});
-
-var routes = [];
-
-function route_get(pattern, handler) {
-	routes.push({method: 'get', pattern: pattern,
-			handler: auth_passthrough.bind(null, handler)});
-}
-
-function auth_passthrough(handler, req, resp, params) {
-	var chunks = twitter.extract_cookie(req.headers.cookie);
-	if (!chunks) {
-		handler(req, resp, params);
-		return;
-	}
-
-	twitter.check_cookie(chunks, false, function (err, auth) {
-		if (!err)
-			req.auth = auth;
-		handler(req, resp, params);
-	});
-}
-
-function route_get_auth(pattern, handler) {
-	routes.push({method: 'get', pattern: pattern,
-			handler: auth_checker.bind(null, handler, false)});
-}
-
-function parse_post_body(req, callback) {
-	// jesus christ
-	var buf = [], len = 0;
-	req.on('data', function (data) {
-		buf.push(data);
-		len += data.length;
-	});
-	req.once('end', function () {
-		var i = 0;
-		var dest = new Buffer(len);
-		buf.forEach(function (b) {
-			b.copy(dest, i, 0);
-			i += b.length;
-		});
-		var combined = dest.toString('utf-8');
-		var body = {};
-		combined.split('&').forEach(function (param) {
-			var m = param.match(/^(.*?)=(.*)$/);
-			if (m)
-				body[decodeURIComponent(m[1])] = (
-					decodeURIComponent(m[2]));
-		});
-		buf = dest = combined = null;
-		callback(null, body);
-	});
-	req.once('close', callback);
-}
-
-function auth_checker(handler, is_post, req, resp, params) {
-	if (is_post) {
-		parse_post_body(req, function (err, body) {
-			if (err) {
-				resp.writeHead(500, noCacheHeaders);
-				resp.end(preamble + escape(err));
-				return;
-			}
-			req.body = body;
-			check_it();
-		});
-	}
-	else
-		check_it();
-
-	function check_it() {
-		var chunks = twitter.extract_cookie(req.headers.cookie);
-		if (!chunks)
-			return forbidden('No cookie.');
-		twitter.check_cookie(chunks, is_post, ack);
-	}
-
-	function ack(err, session) {
-		if (err)
-			return forbidden(err);
-		req.auth = session;
-		handler(req, resp, params);
-	}
-
-	function forbidden(err) {
-		resp.writeHead(401, noCacheHeaders);
-		resp.end(preamble + escape(err));
-	}
-}
-
-function route_post_auth(pattern, handler) {
-	routes.push({method: 'post', pattern: pattern,
-			handler: auth_checker.bind(null, handler, true)});
-}
-
 function can_access(auth, board) {
 	if (auth && auth.auth == 'Admin' && board == 'graveyard')
 		return true;
 	return db.is_board(board);
 }
 
-
-var debug_static = !config.DEBUG ? false : function (req, resp) {
-	/* Highly insecure. */
-	var url = req.url.replace(/\.\.+/g, '');
-	var path = require('path').join(__dirname, '..', 'www', url);
-	var s = fs.createReadStream(path);
-	s.once('error', function (err) {
-		if (err.code == 'ENOENT')
-			render_404(resp);
-		else {
-			resp.writeHead(500, noCacheHeaders);
-			resp.end(preamble + escape(err.message));
-		}
-	});
-	s.once('open', function () {
-		var h = {};
-		try {
-			var mime = require('connect').utils.mime;
-			var ext = require('path').extname(path);
-			h['Content-Type'] = mime.type(ext);
-		} catch (e) {}
-		resp.writeHead(200, h);
-		util.pump(s, resp);
-	});
-	return true;
-};
-
-var vanillaHeaders = {'Content-Type': 'text/html; charset=UTF-8'};
-var noCacheHeaders = {'Content-Type': 'text/html; charset=UTF-8',
-		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
-		'Cache-Control': 'no-cache'};
-var preamble = '<!doctype html><meta charset=utf-8>';
-
-function render_404(resp) {
-	resp.writeHead(404, noCacheHeaders);
-	resp.end(RES.notFoundHtml);
-}
-
-function redirect(resp, uri, code) {
-	var headers = {Location: uri};
-	for (var k in vanillaHeaders)
-		headers[k] = vanillaHeaders[k];
-	resp.writeHead(code || 303, headers);
-	resp.end(preamble + '<title>Redirect</title>'
-		+ '<a href="' + encodeURI(uri) + '">Proceed</a>.');
-}
-
 function redirect_thread(resp, num, op, tag) {
 	var board = tag ? '../'+tag+'/' : '';
-	redirect(resp, board + op + '#' + num);
+	web.redirect(resp, board + op + '#' + num);
 }
 
-routes.push({method: 'post', pattern: /^\/img$/, handler: function (req,resp) {
+web.route_post(/^\/img$/, function (req, resp) {
 	var upload = new pix.ImageUpload(clients, allocate_post, image_status);
 	upload.handle_request(req, resp);
-}});
+});
 
-route_get(/^\/$/, function (req, resp) {
-	redirect(resp, 'moe/');
+web.route_get(/^\/$/, function (req, resp) {
+	web.redirect(resp, 'moe/');
 });
 
 if (config.DEBUG) {
-	route_get(/^\/login$/, function (req, resp) {
+	web.route_get(/^\/login$/, function (req, resp) {
 		twitter.set_cookie(resp, {auth: 'Admin'});
 	});
-	route_get(/^\/mod$/, function (req, resp) {
+	web.route_get(/^\/mod$/, function (req, resp) {
 		twitter.set_cookie(resp, {auth: 'Moderator'});
 	});
 }
 else {
-	route_get(/^\/login$/, twitter.login);
-	route_get(/^\/verify$/, twitter.verify);
+	web.route_get(/^\/login$/, twitter.login);
+	web.route_get(/^\/verify$/, twitter.verify);
 }
 
-route_get(/^\/login\/$/, function (req, resp) {
-	redirect(resp, '../login');
+web.route_get(/^\/login\/$/, function (req, resp) {
+	web.redirect(resp, '../login');
 });
 
-route_get_auth(/^\/admin$/, function (req, resp) {
+web.route_get_auth(/^\/admin$/, function (req, resp) {
 	if (req.auth.auth != 'Admin')
-		return render_404(resp);
+		return web.render_404(resp);
 	var who = req.auth.user || 'unknown';
 
 	var board = req.board || 'moe';
 	if (!can_access(req.auth, board))
-		return render_404(resp);
+		return web.render_404(resp);
 	var img = _.template('<a href="' + board + '/{{num}}">'
 			+ '<img alt="{{num}}" title="Thread {{num}}" src="'
 			+ config.MEDIA_URL + 'thumb/{{thumb}}" width=50 '
@@ -518,7 +353,7 @@ route_get_auth(/^\/admin$/, function (req, resp) {
 	});
 });
 
-route_post_auth(/^\/admin$/, function (req, resp) {
+web.route_post_auth(/^\/admin$/, function (req, resp) {
 
 	var threads = req.body.threads.split(',').map(function (x) {
 		return parseInt(x, 10);
@@ -537,11 +372,10 @@ route_post_auth(/^\/admin$/, function (req, resp) {
 		}, 30 * 1000);
 
 		if (err) {
-			resp.writeHead(500, noCacheHeaders);
-			resp.end(preamble + escape(err));
+			web.dump_server_error(resp, err);
 			return;
 		}
-		resp.writeHead(200, noCacheHeaders);
+		resp.writeHead(200, web.noCacheHeaders);
 		resp.end();
 	});
 });
@@ -557,42 +391,42 @@ function is_mod_auth(auth) {
 	return auth && (auth.auth === 'Admin' || auth.auth === 'Moderator');
 }
 
-route_get_auth(/^\/admin\.js$/, function (req, resp, params) {
+web.route_get_auth(/^\/admin\.js$/, function (req, resp, params) {
 	if (req.auth.auth != 'Admin')
-		return render_404(resp);
+		return web.render_404(resp);
 	write_mod_js(resp, 'Admin');
 });
 
-route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
+web.route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
 	if (req.auth.auth != 'Moderator')
-		return render_404(resp);
+		return web.render_404(resp);
 	write_mod_js(resp, 'Moderator');
 });
 
-route_get(/^\/(\w+)$/, function (req, resp, params) {
+web.route_get(/^\/(\w+)$/, function (req, resp, params) {
 	var board = params[1];
 	if (!can_access(req.auth, board))
-		return render_404(resp);
+		return web.render_404(resp);
 	/* If arbitrary boards were allowed, need to escape this: */
-	redirect(resp, board + '/live');
+	web.redirect(resp, board + '/live');
 });
-route_get(/^\/(\w+)\/$/, function (req, resp, params) {
+web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 	var board = params[1];
 	if (!can_access(req.auth, board))
-		return render_404(resp);
-	redirect(resp, 'live');
+		return web.render_404(resp);
+	web.redirect(resp, 'live');
 });
 
-route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
+web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	var board = params[1];
 	if (!can_access(req.auth, board))
-		return render_404(resp);
+		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board);
 	yaku.get_tag(0);
 	var indexTmpl = RES.indexTmpl, nav_html;
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
-		resp.writeHead(200, noCacheHeaders);
+		resp.writeHead(200, web.noCacheHeaders);
 		var title = STATE.hot.TITLES[board] || escape(board);
 		resp.write(indexTmpl[0]);
 		resp.write(title);
@@ -618,24 +452,24 @@ route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	});
 	return true;
 });
-route_get(/^\/\w+\/live\/$/, function (req, resp, params) {
-	redirect(resp, '../live');
+web.route_get(/^\/\w+\/live\/$/, function (req, resp, params) {
+	web.redirect(resp, '../live');
 });
 
-route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
+web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	var board = params[1];
 	if (!can_access(req.auth, board))
-		return render_404(resp);
+		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board);
 	var page = parseInt(params[2], 10);
 	if (page > 0 && params[2][0] == '0') /* leading zeroes? */
-		return redirect(resp, 'page' + page);
+		return web.redirect(resp, 'page' + page);
 	yaku.get_tag(page);
-	yaku.on('nomatch', render_404.bind(null, resp));
+	yaku.on('nomatch', web.render_404.bind(null, resp));
 	var indexTmpl = RES.indexTmpl, nav_html;
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, page);
-		resp.writeHead(200, noCacheHeaders);
+		resp.writeHead(200, web.noCacheHeaders);
 		var title = STATE.hot.TITLES[board] || escape(board);
 		resp.write(indexTmpl[0]);
 		resp.write(title);
@@ -661,30 +495,30 @@ route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	});
 	return true;
 });
-route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
-	redirect(resp, '../page' + params[1]);
+web.route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
+	web.redirect(resp, '../page' + params[1]);
 });
 
-route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
+web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var board = params[1];
 	if (!can_access(req.auth, board))
-		return render_404(resp);
+		return web.render_404(resp);
 	var num = parseInt(params[2], 10);
 	if (!num)
-		return render_404(resp);
+		return web.render_404(resp);
 	else if (params[2][0] == '0')
-		return redirect(resp, '' + num);
+		return web.redirect(resp, '' + num);
 	var op = db.OPs[num];
 	if (board != 'graveyard') {
 		if (!op)
-			return render_404(resp);
+			return web.render_404(resp);
 		if (!db.OP_has_tag(board, op)) {
 			var tag = db.first_tag_of(op);
 			if (tag)
 				return redirect_thread(resp, num, op, tag);
 			else {
 				console.warn("Orphaned thread", op);
-				return render_404(resp);
+				return web.render_404(resp);
 			}
 		}
 		if (op != num)
@@ -696,11 +530,11 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var limit = ('last' + lastN) in req.query ?
 			(lastN + config.ABBREVIATED_REPLIES) : 0;
 	reader.get_thread(board, num, true, limit);
-	reader.on('nomatch', render_404.bind(null, resp));
+	reader.on('nomatch', web.render_404.bind(null, resp));
 	reader.on('redirect', redirect_thread.bind(null, resp, num));
 	reader.on('begin', function () {
 		var indexTmpl = RES.indexTmpl;
-		resp.writeHead(200, noCacheHeaders);
+		resp.writeHead(200, web.noCacheHeaders);
 		resp.write(indexTmpl[0]);
 		resp.write('/'+escape(board)+'/ - #' + op);
 		resp.write(indexTmpl[1]);
@@ -725,8 +559,8 @@ route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	yaku.on('error', on_err);
 	return true;
 });
-route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
-	redirect(resp, '../' + params[1]);
+web.route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
+	web.redirect(resp, '../' + params[1]);
 });
 
 function write_page_end(req, resp) {
@@ -742,7 +576,7 @@ function write_page_end(req, resp) {
 	resp.end();
 }
 
-route_get(/^\/outbound\/([\w+\/]{22})$/, function (req, resp, params) {
+web.route_get(/^\/outbound\/([\w+\/]{22})$/, function (req, resp, params) {
 	// TEMP
 	var service = 'http://archive.foolz.us/a/image/';
 	var headers = {Location: service + escape(params[1]) + '/',
@@ -1089,10 +923,16 @@ dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	return true;
 };
 
+function propagate_resources() {
+	web.notFoundHtml = RES.notFoundHtml;
+}
+
 function start_server() {
-	server.listen(config.PORT);
+	web.server.listen(config.PORT);
+	if (config.DEBUG)
+		web.enable_debug();
 	var socketIo = require('socket.io');
-	var io = socketIo.listen(server, {
+	var io = socketIo.listen(web.server, {
 		heartbeats: !config.DEBUG,
 		'log level': config.DEBUG ? 2 : 1,
 		'flash policy server': false,
@@ -1128,6 +968,7 @@ function start_server() {
 		], function (err) {
 			if (err)
 				throw err;
+			propagate_resources();
 			console.log('Reloaded initial state.');
 		});
 	});
@@ -1142,6 +983,7 @@ if (require.main == module) {
 	], function (err) {
 		if (err)
 			throw err;
+		propagate_resources();
 		var yaku = new db.Yakusoku(null);
 		yaku.finish_all(function (err) {
 			if (err)
