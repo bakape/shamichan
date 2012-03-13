@@ -1,5 +1,4 @@
-var async = require('async'),
-    config = require('../config'),
+var config = require('../config'),
     db = require('../db'),
     fs = require('fs'),
     path = require('path'),
@@ -87,7 +86,7 @@ R.recycle_thread = function (op, cb) {
 			posts.push(post);
 		});
 		reader.on('endthread', function () {
-			async.forEachSeries(posts, do_post, cb);
+			forEachSeries(posts, do_post, cb);
 		});
 		reader.on('error', cb);
 	});
@@ -100,9 +99,23 @@ R.recycle_archive = function (cb) {
 	r.zrange(key + ':threads', 0, -1, function (err, threads) {
 		if (err)
 			return cb(err);
-		async.forEachSeries(threads, do_thread, cb);
+		forEachSeries(threads, do_thread, cb);
 	});
 };
+
+// avoids stack overflow for long lists
+function forEachSeries(array, func, callback) {
+	step(0);
+	function step(i) {
+		if (i >= array.length)
+			return callback(null);
+		func(array[i], function (err) {
+			if (err)
+				return callback(err);
+			setTimeout(step.bind(null, i + 1), 0);
+		});
+	}
+}
 
 if (require.main === module) {
 	var recycler = new Recycler;
