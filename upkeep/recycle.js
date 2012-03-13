@@ -109,5 +109,6 @@ if (require.main === module) {
 	recycler.recycle_archive(function (err) {
 		if (err) throw err;
 		recycler.y.disconnect();
+		process.exit(0);
 	});
 }
