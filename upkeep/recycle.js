@@ -24,7 +24,7 @@ R.recycle_post = function (post, cb) {
 		src = pix.media_path('thumb', image.thumb);
 	}
 	if (image.realthumb) {
-		toDelete.push(image.realthumb);
+		toDelete.push(pix.media_path('thumb', image.realthumb));
 	}
 	pix.MD5_file(src, function (err, MD5) {
 		if (err) {
