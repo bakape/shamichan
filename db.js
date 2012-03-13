@@ -1126,9 +1126,11 @@ F.get_all = function (limit) {
 			len = parseInt(len);
 			if (len > limit)
 				return cb(null);
-			r.hmget(key, ['thumb', 'src'], function (err, rs) {
+			var thumbKeys = ['thumb', 'realthumb', 'src'];
+			r.hmget(key, thumbKeys, function (err, rs) {
 				if (err)
 					cb(err);
+				var thumb = rs[0] || rs[1] || rs[2];
 				self.emit('thread', {num: op, thumb: thumb});
 				cb(null);
 			});
