@@ -1,5 +1,6 @@
 var _ = require('../lib/underscore'),
     async = require('async'),
+    caps = require('./caps'),
     common = require('../common'),
     config = require('../config'),
     db = require('../db'),
@@ -10,6 +11,8 @@ var _ = require('../lib/underscore'),
     twitter = require('./twitter'),
     tripcode = require('./tripcode'),
     web = require('./web');
+
+require('./panel');
 
 var RES = STATE.resources;
 
@@ -64,7 +67,7 @@ function synchronize(msg, client, auth) {
 		/* Sync logic is buggy; allow for now */
 		//return true;
 	}
-	if (!can_access(auth, board))
+	if (!caps.can_access(auth, board))
 		return false;
 	client.auth = auth;
 	var dead_threads = [], count = 0, op;
@@ -281,12 +284,6 @@ function make_nav_html(info) {
 	return bits.join('');
 }
 
-function can_access(auth, board) {
-	if (auth && auth.auth == 'Admin' && board == 'graveyard')
-		return true;
-	return db.is_board(board);
-}
-
 function redirect_thread(resp, num, op, tag) {
 	var board = tag ? '../'+tag+'/' : '';
 	web.redirect(resp, board + op + '#' + num);
@@ -318,68 +315,6 @@ web.route_get(/^\/login\/$/, function (req, resp) {
 	web.redirect(resp, '../login');
 });
 
-web.route_get_auth(/^\/admin$/, function (req, resp) {
-	if (req.auth.auth != 'Admin')
-		return web.render_404(resp);
-	var who = req.auth.user || 'unknown';
-
-	var board = req.board || 'moe';
-	if (!can_access(req.auth, board))
-		return web.render_404(resp);
-	var img = _.template('<a href="' + board + '/{{num}}">'
-			+ '<img alt="{{num}}" title="Thread {{num}}" src="'
-			+ config.MEDIA_URL + 'thumb/{{thumb}}" width=50 '
-			+ 'height=50></a>\n');
-	var limit = parseInt(req.query.limit, 10) || 0;
-	var ctr = 0;
-
-	resp.writeHead(200);
-	resp.write(RES.filterTmpl[0]);
-	resp.write('<h2>Limit ' + limit + '</h2>\n');
-
-	var filter = new db.Filter(board);
-	filter.get_all(limit);
-
-	filter.on('thread', function (thread) {
-		resp.write(img(thread));
-		ctr += 1;
-	});
-	filter.once('end', function () {
-		resp.write('<br>' + ctr + ' thread(s).');
-		resp.end(RES.filterTmpl[1]);
-	});
-	filter.once('error', function (err) {
-		resp.end('<br><br>Error: ' + escape(err));
-	});
-});
-
-web.route_post_auth(/^\/admin$/, function (req, resp) {
-
-	var threads = req.body.threads.split(',').map(function (x) {
-		return parseInt(x, 10);
-	}).filter(function (x) {
-		return !isNaN(x);
-	});
-
-	var yaku = new db.Yakusoku(null);
-	yaku.remove_posts(threads, function (err, dels) {
-
-		// XXX: Can't disconnect right away.
-		//      Does its business in the background.
-		//      Grrr. Hack for now.
-		setTimeout(function () {
-			yaku.disconnect();
-		}, 30 * 1000);
-
-		if (err) {
-			web.dump_server_error(resp, err);
-			return;
-		}
-		resp.writeHead(200, web.noCacheHeaders);
-		resp.end();
-	});
-});
-
 function write_mod_js(resp, auth) {
 	resp.writeHead(200, {'Content-Type': 'text/javascript'});
 	resp.write('(');
@@ -405,21 +340,21 @@ web.route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
 
 web.route_get(/^\/(\w+)$/, function (req, resp, params) {
 	var board = params[1];
-	if (!can_access(req.auth, board))
+	if (!caps.can_access(req.auth, board))
 		return web.render_404(resp);
 	/* If arbitrary boards were allowed, need to escape this: */
 	web.redirect(resp, board + '/live');
 });
 web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 	var board = params[1];
-	if (!can_access(req.auth, board))
+	if (!caps.can_access(req.auth, board))
 		return web.render_404(resp);
 	web.redirect(resp, 'live');
 });
 
 web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	var board = params[1];
-	if (!can_access(req.auth, board))
+	if (!caps.can_access(req.auth, board))
 		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board);
 	yaku.get_tag(0);
@@ -458,7 +393,7 @@ web.route_get(/^\/\w+\/live\/$/, function (req, resp, params) {
 
 web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	var board = params[1];
-	if (!can_access(req.auth, board))
+	if (!caps.can_access(req.auth, board))
 		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board);
 	var page = parseInt(params[2], 10);
@@ -501,7 +436,7 @@ web.route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
 
 web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var board = params[1];
-	if (!can_access(req.auth, board))
+	if (!caps.can_access(req.auth, board))
 		return web.render_404(resp);
 	var num = parseInt(params[2], 10);
 	if (!num)
