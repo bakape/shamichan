@@ -80,7 +80,7 @@ R.recycle_thread = function (op, cb) {
 			posts.push(post);
 		});
 		reader.on('endthread', function () {
-			async.forEach(posts, do_post, cb);
+			async.forEachSeries(posts, do_post, cb);
 		});
 		reader.on('error', cb);
 	});
