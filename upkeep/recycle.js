@@ -26,6 +26,7 @@ R.recycle_post = function (post, cb) {
 	if (image.realthumb) {
 		toDelete.push(pix.media_path('thumb', image.realthumb));
 	}
+
 	pix.MD5_file(src, function (err, MD5) {
 		if (err) {
 			console.warn(src + " doesn't exist.");
@@ -60,6 +61,12 @@ R.recycle_post = function (post, cb) {
 							console.error(err);
 					});
 				});
+				if (toDelete.length) {
+					var info = post.num + ': del ' +
+							toDelete.length;
+					console.log(info);
+				}
+
 				cb(null);
 			});
 		});
