@@ -1,6 +1,10 @@
 var config = require('../config'),
     db = require('../db');
 
+// Load hooks
+require('../server/pix');
+require('../server/games');
+
 var yaku;
 function connect() {
 	var r;
