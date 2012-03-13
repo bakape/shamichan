@@ -666,7 +666,7 @@ Y.archive_thread = function (op, callback) {
 
 		// shallow thread insertion message in archive
 		if (!_.isEmpty(links))
-			view.links = msg.links;
+			view.links = links;
 		extract(view, function (err) {
 			if (err)
 				return next(err);
