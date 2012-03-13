@@ -165,10 +165,11 @@ exports.noCacheHeaders = noCacheHeaders;
 
 exports.notFoundHtml = preamble + '<title>404</title>404';
 
-exports.render_404 = function (resp) {
+function render_404(resp) {
 	resp.writeHead(404, noCacheHeaders);
 	resp.end(exports.notFoundHtml);
 };
+exports.render_404 = render_404;
 
 exports.redirect = function (resp, uri, code) {
 	var headers = {Location: uri};
