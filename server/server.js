@@ -23,19 +23,15 @@ var dispatcher = {};
 var escape = common.escape_html;
 var safe = common.safe;
 
-function Okyaku(socket) {
-	this.ip = socket.handshake.address.address;
-	this.id = socket.id;
+function Okyaku(socket, ip) {
 	this.socket = socket;
+	this.ip = ip;
 	this.watching = {};
-	socket.on('message', this.on_message.bind(this));
-	socket.on('disconnect', this.on_disconnect.bind(this));
-	socket.on('error', console.error.bind(console, 'socket:'));
 }
 var OK = Okyaku.prototype;
 
 OK.send = function (msg) {
-	this.socket.send(JSON.stringify([msg]));
+	this.socket.write(JSON.stringify([msg]));
 };
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
@@ -57,9 +53,17 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 };
 
 function synchronize(msg, client, auth) {
-	if (msg.length != 3)
+	if (msg.length != 4)
 		return false;
-	var board = msg[0], syncs = msg[1], live = msg[2];
+	var id = msg[0], board = msg[1], syncs = msg[2], live = msg[3];
+	if (!id || typeof id != 'number' || id < 0 || Math.round(id) != id)
+		return false;
+	if (id in clients) {
+		console.error("Duplicate client id " + id);
+		return false;
+	}
+	client.id = id;
+	clients[id] = client;
 	if (!syncs || typeof syncs != 'object')
 		return false;
 	if (client.synced) {
@@ -67,7 +71,7 @@ function synchronize(msg, client, auth) {
 		/* Sync logic is buggy; allow for now */
 		//return true;
 	}
-	if (!caps.can_access(auth, board))
+	if (!board || !caps.can_access(auth, board))
 		return false;
 	client.auth = auth;
 	var dead_threads = [], count = 0, op;
@@ -131,7 +135,7 @@ function synchronize(msg, client, auth) {
 		if (dead_threads.length)
 			sync += ',' + JSON.stringify(dead_threads);
 		logs.push(sync);
-		client.socket.send('[[' + logs.join('],[') + ']]');
+		client.socket.write('[[' + logs.join('],[') + ']]');
 		client.synced = true;
 
 		if (!live && count == 1) {
@@ -158,7 +162,7 @@ OK.on_update = function(op, num, kind, msg) {
 		if (this.post.num == op || this.post.op == op)
 			delete this.post;
 	}
-	this.socket.send('[[' + msg + ',' + op + ']]');
+	this.socket.write('[[' + msg + ',' + op + ']]');
 };
 
 OK.on_thread_sink = function (thread, err) {
@@ -541,8 +545,11 @@ OK.on_message = function (data) {
 	}
 };
 
-OK.on_disconnect = function () {
-	delete clients[this.id];
+OK.on_close = function () {
+	if (this.id) {
+		delete clients[this.id];
+		delete this.id;
+	}
 	this.synced = false;
 	var db = this.db;
 	if (db) {
@@ -862,40 +869,56 @@ function propagate_resources() {
 	web.notFoundHtml = RES.notFoundHtml;
 }
 
+var sockjs_log;
+if (config.DEBUG) {
+	sockjs_log = function (sev, message) {
+		if (sev == 'info')
+			console.log(message);
+		else if (sev == 'error')
+			console.error(message);
+	};
+}
+else {
+	sockjs_log = function (sev, message) {
+		if (sev == 'error')
+			console.error(message);
+	};
+}
+
 function start_server() {
 	web.server.listen(config.PORT);
 	if (config.DEBUG)
 		web.enable_debug();
-	var socketIo = require('socket.io');
-	var io = socketIo.listen(web.server, {
-		heartbeats: !config.DEBUG,
-		'log level': config.DEBUG ? 2 : 1,
-		'flash policy server': false,
-		'browser client': false,
+	var sockOpts = {
+		sockjs_url: config.MEDIA_URL + 'js/sockjs-0.2.min.js',
+		prefix: config.SOCKET_PATH,
+		jsessionid: false,
+		log: sockjs_log,
+	};
+	var sockJs = require('sockjs').createServer(sockOpts);
+	web.server.on('upgrade', function (req, resp) {
+		resp.end();
 	});
-	if (config.TRUST_X_FORWARDED_FOR) {
-		/* Dumb hotpatch, merge this shit in socket.io! */
-		if (!io.handshakeData)
-			throw new Error("No handshakeData to patch!");
-		io.handshakeData = function (data) {
-			var d = socketIo.Manager.prototype.handshakeData.call(
-					this, data);
-			var realIP = data.request.headers['x-forwarded-for'];
-			if (realIP) {
-				if (realIP.indexOf(',') >= 0)
-					realIP = realIP.split(',', 1)[0];
-				d.address.address = realIP.trim();
+	sockJs.installHandlers(web.server);
+
+	sockJs.on('connection', function (socket) {
+		var ip = socket.remoteAddress;
+		if (config.TRUST_X_FORWARDED_FOR) {
+			var ff = socket.headers['x-forwarded-for'];
+			if (ff) {
+				if (ff.indexOf(',') >= 0)
+					ff = ff.split(',', 1)[0];
+				ff = ff.trim();
+				if (ff)
+					ip = ff;
 			}
-			return d;
-		};
-	}
-	io.sockets.on('connection', function on_client (socket) {
-		var client = new Okyaku(socket);
-		clients[client.id] = client;
+		}
+
+		var client = new Okyaku(socket, ip);
+		socket.on('data', client.on_message.bind(client));
+		socket.on('close', client.on_close.bind(client));
 	});
-	io.sockets.on('error', function (err) {
-		console.log(err);
-	});
+
 	process.on('SIGHUP', function () {
 		async.series([
 			STATE.reload_hot,

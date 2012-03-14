@@ -10,9 +10,8 @@ var inputMinSize = 300, nashi = {opts: []};
 var spoilerImages = config.SPOILER_IMAGES;
 var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
 
-var socket = io.connect('/', {
-	transports: ['htmlfile', 'xhr-polling', 'jsonp-polling']
-});
+var socket = new SockJS(SOCKET_PATH);
+var sessionId;
 
 (function () {
 	var p = location.pathname;
@@ -1089,9 +1088,9 @@ PF.make_upload_form = function () {
 		+ '<input type="file" name="image"/> '
 		+ '<a id="toggle">Spoiler</a> <strong/>'
 		+ '<input type="hidden" name="spoiler"/>'
-		+ '<input type="hidden" name="client_id" value="'
-		+ socket.socket.sessionid + '"/> '
+		+ '<input type="hidden" name="client_id"/>'
 		+ '<iframe src="" name="upload"/></form>');
+	form.find('input[name=client_id]').val(sessionId);
 	this.$cancel = form.find('input[type=button]').click($.proxy(this,
 			'cancel_upload'));
 	this.$iframe = form.find('iframe');
@@ -1175,7 +1174,7 @@ function drop_shita(e) {
 
 	var fd = new FormData();
 	fd.append('image', files[0]);
-	fd.append('client_id', socket.socket.sessionid);
+	fd.append('client_id', sessionId);
 	if (!postForm.num) {
 		var request = postForm.make_alloc_request(null);
 		fd.append('alloc', JSON.stringify(request));
@@ -1224,27 +1223,23 @@ function sync_status(msg, hover) {
 }
 
 var MIRU = {};
-MIRU.connecting = function () {
-	sync_status('Connecting...', false);
-};
 
-MIRU.connect = function () {
+MIRU.onopen = function () {
 	sync_status('Syncing...', false);
-	send([SYNCHRONIZE, BOARD, syncs, BUMP, document.cookie]);
+	sessionId = Math.floor(Math.random() * 1e17) + 1;
+	send([SYNCHRONIZE, sessionId, BOARD, syncs, BUMP, document.cookie]);
 };
 
-MIRU.disconnect = function () {
-	sync_status('Dropped. Reconnecting...', true);
-};
-
-MIRU.reconnect_failed = function () {
+MIRU.onclose = function (e) {
+	if (DEBUG)
+		console.error('E:', e);
 	sync_status('Dropped.', true);
 };
 
-MIRU.message = function (data) {
+MIRU.onmessage = function (e) {
 	if (DEBUG)
-		console.log('>', data);
-	var msgs = JSON.parse(data);
+		console.log('>', e.data);
+	var msgs = JSON.parse(e.data);
 
 	with_dom(function () {
 
@@ -1264,9 +1259,12 @@ MIRU.message = function (data) {
 };
 
 function socket_miru(setup) {
-	var f = $.proxy(socket, setup ? 'on' : 'removeAllListeners');
-	for (var ku in MIRU)
-		f(ku, MIRU[ku]);
+	for (var ku in MIRU) {
+		if (setup)
+			socket[ku] = MIRU[ku];
+		else
+			socket[ku] = null;
+	}
 }
 
 dispatcher[SYNCHRONIZE] = function (msg) {
@@ -1289,7 +1287,7 @@ dispatcher[INVALID] = function (msg) {
 	sync_status(msg, true);
 	outOfSync = true;
 	socket_miru(false);
-	socket.disconnect();
+	socket.close();
 	if (postForm)
 		postForm.finish();
 	$('aside').remove();
@@ -1331,6 +1329,7 @@ function toggle_opts() {
 
 $(function () {
 	socket_miru(true);
+	sync_status('Connecting...');
 
 	$('section').each(function () {
 		var s = $(this);

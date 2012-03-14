@@ -25,4 +25,4 @@ npm modules:
 * imagemagick
 * oauth
 * redis
-* socket.io
+* sockjs
