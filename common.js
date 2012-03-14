@@ -62,9 +62,7 @@ FSM.prototype.wild = function (tok, dest) {
 
 FSM.prototype.feed = function (ev, param) {
 	var from = this.state, acts = this.acts[from];
-	if (!acts)
-		return;
-	var to = acts[ev] || this.wilds[ev];
+	var to = (acts && acts[ev]) || this.wilds[ev];
 	if (to && from != to) {
 		this.state = to;
 		var fs = this.ons[to];

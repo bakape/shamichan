@@ -1211,13 +1211,11 @@ function setup_upload_drop(e) {
 	go('drop', drop_shita);
 }
 
-function sync_status(msg, hover) {
-	$('#sync').text(msg).attr('class', hover ? 'error' : '');
-}
+dispatcher[SYNCHRONIZE] = connSM.feeder('sync');
+dispatcher[INVALID] = connSM.feeder('invalid');
 
-dispatcher[SYNCHRONIZE] = function (msg) {
+connSM.on('synced', function (msg) {
 	var dead_threads = msg.length ? msg[0] : []; /* TODO */
-	sync_status('Synced.', false);
 	insert_pbs();
 
 	var m = window.location.hash.match(/^#q(\d+)$/);
@@ -1228,9 +1226,7 @@ dispatcher[SYNCHRONIZE] = function (msg) {
 			add_ref(id);
 		}
 	}
-};
-
-dispatcher[INVALID] = connSM.feeder('invalid');
+});
 
 connSM.on('out', function () {
 	if (postForm)
