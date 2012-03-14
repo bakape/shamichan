@@ -23,11 +23,8 @@ var sessionId;
 	PAGE = PAGE ? parseInt(PAGE[1], 10) : -1;
 
 	nashi.upload = !!$('<input type="file"/>').prop('disabled');
-	/* Ought to rely on dimensions instead */
-	if (navigator.platform.indexOf('iPod') >= 0
-			|| navigator.platform.indexOf('iPhone') >= 0) {
+	if (window.screen && screen.width <= 320)
 		inputMinSize = 50;
-	}
 	if ('ontouchstart' in window)
 		nashi.opts.push('preview');
 })();
