@@ -29,6 +29,57 @@ function is_pubsub(t) {
 }
 exports.is_pubsub = is_pubsub;
 
+function FSM(start) {
+	this.state = start;
+	this.acts = {};
+	this.ons = {};
+	this.wilds = {};
+}
+exports.FSM = FSM;
+
+FSM.prototype.on = function (key, f) {
+	var ons = this.ons[key];
+	if (ons)
+		ons.push(f);
+	else
+		this.ons[key] = [f];
+	return this;
+};
+
+FSM.prototype.act = function (tok, dests) {
+	var acts = this.acts[tok];
+	if (!acts)
+		acts = this.acts[tok] = {};
+	for (var k in dests)
+		acts[k] = dests[k];
+	return this;
+};
+
+FSM.prototype.wild = function (tok, dest) {
+	this.wilds[tok] = dest;
+	return this;
+};
+
+FSM.prototype.feed = function (ev, param) {
+	var from = this.state, acts = this.acts[from];
+	if (!acts)
+		return;
+	var to = acts[ev] || this.wilds[ev];
+	if (to && from != to) {
+		this.state = to;
+		var fs = this.ons[to];
+		for (var i = 0; fs && i < fs.length; i++)
+			fs[i].call(this, param);
+	}
+};
+
+FSM.prototype.feeder = function (ev) {
+	var self = this;
+	return function (param) {
+		self.feed(ev, param);
+	};
+};
+
 var entities = {'&' : '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'};
 function escape_html(html) {
 	return html.replace(/[&<>"]/g, function (c) {
