@@ -207,3 +207,13 @@ pre, #trans {
 		display: block;
 	}
 }
+
+@media screen and (-webkit-min-device-pixel-ratio: 1.5),
+	screen and (-o-device-pixel-ratio: 3/2),
+	screen and (min--moz-device-pixel-ratio: 1.5),
+	screen and (min-device-pixel-ratio: 1.5) {
+	#lock {
+		background: url(lock2x.png) no-repeat top left;
+		background-size: 10px 13px;
+	}
+}
