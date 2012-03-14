@@ -5,12 +5,12 @@ var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
 var $sizer = $('<pre></pre>');
 var lockedToBottom, lockKeyHeight;
-var options, outOfSync, postForm, preview, previewNum;
+var options, postForm, preview, previewNum;
 var inputMinSize = 300, nashi = {opts: []};
 var spoilerImages = config.SPOILER_IMAGES;
 var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
 
-var socket = new SockJS(SOCKET_PATH);
+var connSM = new FSM('load');
 var sessionId;
 
 (function () {
@@ -91,13 +91,6 @@ function save_ident() {
 	$email.input(prop);
 })();
 
-function send(msg) {
-	msg = JSON.stringify(msg);
-	if (DEBUG)
-		console.log('<', msg);
-	socket.send(msg);
-}
-
 function make_reply_box() {
 	var box = $('<aside>[<a>Reply</a>]</aside>');
 	box.find('a').click(on_make_post);
@@ -105,7 +98,7 @@ function make_reply_box() {
 }
 
 function insert_pbs() {
-	if (outOfSync || postForm || readOnly.indexOf(BOARD) >= 0)
+	if (connSM.state == 'out' || postForm || readOnly.indexOf(BOARD) >= 0)
 		return;
 	if (THREAD ? $('aside').length : $ceiling.next().is('aside'))
 		return;
@@ -1222,51 +1215,6 @@ function sync_status(msg, hover) {
 	$('#sync').text(msg).attr('class', hover ? 'error' : '');
 }
 
-var MIRU = {};
-
-MIRU.onopen = function () {
-	sync_status('Syncing...', false);
-	sessionId = Math.floor(Math.random() * 1e17) + 1;
-	send([SYNCHRONIZE, sessionId, BOARD, syncs, BUMP, document.cookie]);
-};
-
-MIRU.onclose = function (e) {
-	if (DEBUG)
-		console.error('E:', e);
-	sync_status('Dropped.', true);
-};
-
-MIRU.onmessage = function (e) {
-	if (DEBUG)
-		console.log('>', e.data);
-	var msgs = JSON.parse(e.data);
-
-	with_dom(function () {
-
-	for (var i = 0; i < msgs.length; i++) {
-		var msg = msgs[i];
-		var type = msg.shift();
-		/* Pub-sub messages have an extra OP-num entry */
-		var op;
-		if (is_pubsub(type)) {
-			op = msg.pop();
-			syncs[op]++;
-		}
-		dispatcher[type](msg, op);
-	}
-
-	});
-};
-
-function socket_miru(setup) {
-	for (var ku in MIRU) {
-		if (setup)
-			socket[ku] = MIRU[ku];
-		else
-			socket[ku] = null;
-	}
-}
-
 dispatcher[SYNCHRONIZE] = function (msg) {
 	var dead_threads = msg.length ? msg[0] : []; /* TODO */
 	sync_status('Synced.', false);
@@ -1282,17 +1230,14 @@ dispatcher[SYNCHRONIZE] = function (msg) {
 	}
 };
 
-dispatcher[INVALID] = function (msg) {
-	msg = msg[0] ? 'Out of sync: ' + msg[0] : 'Out of sync.';
-	sync_status(msg, true);
-	outOfSync = true;
-	socket_miru(false);
-	socket.close();
+dispatcher[INVALID] = connSM.feeder('invalid');
+
+connSM.on('out', function () {
 	if (postForm)
 		postForm.finish();
 	$('aside').remove();
 	$('.editing').removeClass('editing');
-};
+});
 
 var toggles = {};
 toggles.inline = function (b) {
@@ -1328,9 +1273,6 @@ function toggle_opts() {
 }
 
 $(function () {
-	socket_miru(true);
-	sync_status('Connecting...');
-
 	$('section').each(function () {
 		var s = $(this);
 		syncs[s.attr('id')] = parseInt(s.attr('data-sync'));

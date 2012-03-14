@@ -8,6 +8,7 @@ exports.CLIENT_DEPS = [
 	'lib/oninput' + minJs,
 	'common.js',
 	'client/client.js',
+	'client/conn.js',
 ];
 
 exports.SERVER_DEPS = [
