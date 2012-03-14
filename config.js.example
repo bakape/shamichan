@@ -2,6 +2,7 @@ var config = {
 	PORT: 8000,
 	DEBUG: true,
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
+	SOCKET_PATH: '/hana',
 	TRUST_X_FORWARDED_FOR: false,
 
 	REDIS_PORT: 6379,
