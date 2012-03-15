@@ -75,7 +75,7 @@ R.recycle_post = function (post, cb) {
 R.recycle_thread = function (op, cb) {
 	op = parseInt(op, 10);
 	var reader = new db.Reader(this.y);
-	reader.get_thread(this.tag, op, false, false);
+	reader.get_thread(this.tag, op, {});
 	var do_post = this.recycle_post.bind(this);
 	reader.on('thread', function (thread) {
 		if (thread.immortal)

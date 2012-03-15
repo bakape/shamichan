@@ -462,7 +462,7 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var lastN = config.THREAD_LAST_N;
 	var limit = ('last' + lastN) in req.query ?
 			(lastN + config.ABBREVIATED_REPLIES) : 0;
-	reader.get_thread(board, num, true, limit);
+	reader.get_thread(board, num, {redirect: true, abbrev: limit});
 	reader.on('nomatch', web.render_404.bind(null, resp));
 	reader.on('redirect', redirect_thread.bind(null, resp, num));
 	reader.on('begin', function () {

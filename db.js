@@ -972,8 +972,9 @@ Y._get_each_thread = function (reader, ix, nums) {
 	};
 	reader.on('end', next_please);
 	reader.on('nomatch', next_please);
-	reader.get_thread(this.tag, nums[ix], false,
-			config.ABBREVIATED_REPLIES || 5);
+	reader.get_thread(this.tag, nums[ix], {
+			abbrev: config.ABBREVIATED_REPLIES || 5
+	});
 };
 
 Y.report_error = function (info, ver, callback) {
@@ -992,7 +993,7 @@ function Reader(yakusoku) {
 util.inherits(Reader, events.EventEmitter);
 exports.Reader = Reader;
 
-Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
+Reader.prototype.get_thread = function (tag, num, opts) {
 	var r = this.y.connect();
 	var graveyard = (tag == 'graveyard');
 	var key = (graveyard ? 'dead:' : 'thread:') + num;
@@ -1003,7 +1004,7 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 		if (!graveyard && pre_post.hide)
 			return self.emit('nomatch');
 		if (_.isEmpty(pre_post)) {
-			if (!redirect_ok)
+			if (!opts.redirect)
 				return self.emit('nomatch');
 			r.hget('post:' + num, 'op',
 						function (err, op) {
@@ -1019,7 +1020,7 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 		var tags = parse_tags(pre_post.tags);
 		if (!graveyard && tags.indexOf(tag) < 0) {
 			/* XXX: Should redirect directly to correct thread */
-			if (!redirect_ok)
+			if (!opts.redirect)
 				self.emit('nomatch');
 			else
 				self.emit('redirect', num, tags[0]);
@@ -1035,6 +1036,7 @@ Reader.prototype.get_thread = function (tag, num, redirect_ok, abbrev) {
 		},
 		function (op_post, next) {
 			var m = r.multi();
+			var abbrev = opts.abbrev || 0;
 			m.lrange(key + ':posts', -abbrev, -1);
 			if (abbrev)
 				m.llen(key + ':posts');
