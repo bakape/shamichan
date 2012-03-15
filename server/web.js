@@ -115,8 +115,11 @@ function auth_checker(handler, is_post, req, resp, params) {
 }
 
 exports.route_post = function (pattern, handler) {
-	routes.push({method: 'post', pattern: pattern,
-			handler: auth_passthrough.bind(null, handler)});
+	// auth_passthrough conflicts with formidable
+	// (by the time the cookie check comes back, formidable can't
+	// catch the form data)
+	// We don't need the auth here anyway currently thanks to client_id
+	routes.push({method: 'post', pattern: pattern, handler: handler});
 };
 
 exports.route_post_auth = function (pattern, handler) {
