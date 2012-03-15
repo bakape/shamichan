@@ -1164,7 +1164,7 @@ function drop_shita(e) {
 
 	var fd = new FormData();
 	fd.append('image', files[0]);
-	fd.append('client_id', sessionId);
+	fd.append('client_id', sessionId.toFixed());
 	if (!postForm.num) {
 		var request = postForm.make_alloc_request(null);
 		fd.append('alloc', JSON.stringify(request));

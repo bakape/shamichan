@@ -51,7 +51,7 @@ function connect() {
 connSM.act('conn', {open: 'syncing'}).act('reconn', {open: 'syncing'});
 connSM.on('syncing', function () {
 	sync_status('Syncing...', false);
-	sessionId = Math.floor(Math.random() * 1e17) + 1;
+	sessionId = Math.floor(Math.random() * 1e16) + 1;
 	send([SYNCHRONIZE, sessionId, BOARD, syncs, BUMP, document.cookie]);
 });
 
