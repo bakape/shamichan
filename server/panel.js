@@ -7,13 +7,12 @@ var _ = require('../lib/underscore'),
 var RES = require('./state').resources;
 
 web.route_get_auth(/^\/admin$/, function (req, resp) {
-	if (req.auth.auth != 'Admin')
+	if (!caps.is_admin_ident(req.ident))
 		return web.render_404(resp);
-	var who = req.auth.user || 'unknown';
-
 	var board = req.board || 'moe';
-	if (!caps.can_access(req.auth, board))
+	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
+
 	var img = _.template('<a href="' + board + '/{{num}}">'
 			+ '<img alt="{{num}}" title="Thread {{num}}" src="'
 			+ config.MEDIA_URL + 'thumb/{{thumb}}" width=50 '
@@ -42,6 +41,8 @@ web.route_get_auth(/^\/admin$/, function (req, resp) {
 });
 
 web.route_post_auth(/^\/admin$/, function (req, resp) {
+	if (!caps.is_admin_ident(req.ident))
+		return web.render_404(resp);
 
 	var threads = req.body.threads.split(',').map(function (x) {
 		return parseInt(x, 10);

@@ -39,9 +39,9 @@ function auth_passthrough(handler, req, resp, params) {
 		return;
 	}
 
-	twitter.check_cookie(chunks, false, function (err, auth) {
+	twitter.check_cookie(chunks, false, function (err, ident) {
 		if (!err)
-			req.auth = auth;
+			req.ident = ident;
 		handler(req, resp, params);
 	});
 }
@@ -104,7 +104,7 @@ function auth_checker(handler, is_post, req, resp, params) {
 	function ack(err, session) {
 		if (err)
 			return forbidden(err);
-		req.auth = session;
+		req.ident = session;
 		handler(req, resp, params);
 	}
 

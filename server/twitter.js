@@ -69,7 +69,12 @@ exports.verify = function (req, resp) {
 		results.secret = secret;
 		results.user = results.screen_name;
 		results.twitter_id = results.user_id;
-		results.auth = admin ? 'Admin' : 'Moderator';
+		if (admin)
+			results.auth = 'Admin';
+		else if (mod)
+			results.auth = 'Moderator';
+		else
+			delete results.auth;
 		delete results.screen_name;
 		delete results.user_id;
 		exports.set_cookie(resp, results, r);

@@ -35,12 +35,10 @@ OK.send = function (msg) {
 };
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
-	function checked(err, auth) {
+	function checked(err, ident) {
 		if (err)
-			auth = null;
-		else if (auth && !auth.auth)
-			auth = null;
-		if (!synchronize(msg, client, auth))
+			ident = null;
+		if (!synchronize(msg, client, ident))
 			report("Bad protocol.", client);
 	}
 	var chunks = twitter.extract_cookie(msg.pop());
@@ -52,7 +50,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		return synchronize(msg, client, null);
 };
 
-function synchronize(msg, client, auth) {
+function synchronize(msg, client, ident) {
 	if (msg.length != 4)
 		return false;
 	var id = msg[0], board = msg[1], syncs = msg[2], live = msg[3];
@@ -71,9 +69,9 @@ function synchronize(msg, client, auth) {
 		/* Sync logic is buggy; allow for now */
 		//return true;
 	}
-	if (!board || !caps.can_access(auth, board))
+	if (!board || !caps.can_access(ident, board))
 		return false;
-	client.auth = auth;
+	client.ident = ident;
 	var dead_threads = [], count = 0, op;
 	for (var k in syncs) {
 		if (!k.match(/^\d+$/))
@@ -200,10 +198,10 @@ function ip_mnemonic(header, data) {
 	return header;
 }
 
-function write_thread_html(reader, response, auth, opts) {
+function write_thread_html(reader, response, ident, opts) {
 	opts = opts || {};
 	var oneeSama = new common.OneeSama(tamashii);
-	if (is_mod_auth(auth))
+	if (caps.is_mod_ident(ident))
 		oneeSama.hook('header', ip_mnemonic);
 	reader.on('thread', function (op_post, omit, image_omit) {
 		op_post.omit = omit;
@@ -319,46 +317,42 @@ web.route_get(/^\/login\/$/, function (req, resp) {
 	web.redirect(resp, '../login');
 });
 
-function write_mod_js(resp, auth) {
+function write_mod_js(resp, ident) {
 	resp.writeHead(200, {'Content-Type': 'text/javascript'});
 	resp.write('(');
 	resp.write(RES.modJs);
-	resp.end(')(' + JSON.stringify(auth) + ');');
-}
-
-function is_mod_auth(auth) {
-	return auth && (auth.auth === 'Admin' || auth.auth === 'Moderator');
+	resp.end(')(' + JSON.stringify(ident) + ');');
 }
 
 web.route_get_auth(/^\/admin\.js$/, function (req, resp, params) {
-	if (req.auth.auth != 'Admin')
+	if (req.ident.auth != 'Admin')
 		return web.render_404(resp);
 	write_mod_js(resp, 'Admin');
 });
 
 web.route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
-	if (req.auth.auth != 'Moderator')
+	if (req.ident.auth != 'Moderator')
 		return web.render_404(resp);
 	write_mod_js(resp, 'Moderator');
 });
 
 web.route_get(/^\/(\w+)$/, function (req, resp, params) {
 	var board = params[1];
-	if (!caps.can_access(req.auth, board))
+	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	/* If arbitrary boards were allowed, need to escape this: */
 	web.redirect(resp, board + '/live');
 });
 web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 	var board = params[1];
-	if (!caps.can_access(req.auth, board))
+	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	web.redirect(resp, 'live');
 });
 
 web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	var board = params[1];
-	if (!caps.can_access(req.auth, board))
+	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board);
 	yaku.get_tag(0);
@@ -378,7 +372,7 @@ web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(yaku, resp, req.auth, {fullLinks: true});
+	write_thread_html(yaku, resp, req.ident, {fullLinks: true});
 	yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
@@ -397,7 +391,7 @@ web.route_get(/^\/\w+\/live\/$/, function (req, resp, params) {
 
 web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	var board = params[1];
-	if (!caps.can_access(req.auth, board))
+	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board);
 	var page = parseInt(params[2], 10);
@@ -421,7 +415,7 @@ web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(yaku, resp, req.auth, {fullLinks: true});
+	write_thread_html(yaku, resp, req.ident, {fullLinks: true});
 	yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
@@ -440,7 +434,7 @@ web.route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
 
 web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var board = params[1];
-	if (!caps.can_access(req.auth, board))
+	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	var num = parseInt(params[2], 10);
 	if (!num)
@@ -483,7 +477,7 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		resp.write(indexTmpl[3]);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(reader, resp, req.auth, {fullPosts: true});
+	write_thread_html(reader, resp, req.ident, {fullPosts: true});
 	reader.on('end', function () {
 		resp.write('[<a href=".">Return</a>]');
 		write_page_end(req, resp);
@@ -504,13 +498,11 @@ web.route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
 
 function write_page_end(req, resp) {
 	resp.write(RES.indexTmpl[4]);
-	if (req.auth) {
-		if (req.auth.auth == 'Admin')
+	if (req.ident) {
+		if (req.ident.auth == 'Admin')
 			resp.write('<script src="../admin.js"></script>\n');
-		else if (req.auth.auth == 'Moderator')
+		else if (req.ident.auth == 'Moderator')
 			resp.write('<script src="../mod.js"></script>\n');
-		else
-			console.error("Unknown auth: " + req.auth.auth);
 	}
 	resp.end();
 }
@@ -699,7 +691,7 @@ function allocate_post(msg, image, client, callback) {
 	post.state = [common.S_BOL, 0];
 
 	if (typeof msg.auth != 'undefined') {
-		if (!client.auth || msg.auth !== client.auth.auth)
+		if (!client.ident || msg.auth !== client.ident.auth)
 			return callback('Bad auth.');
 		post.auth = msg.auth;
 	}
@@ -825,9 +817,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 }
 
 dispatcher[common.DELETE_POSTS] = function (nums, client) {
-	if (!client.auth)
-		return false;
-	if (!is_mod_auth(client.auth))
+	if (!caps.is_mod_ident(client.ident))
 		return false;
 	if (!nums.length)
 		return false;
@@ -853,7 +843,7 @@ dispatcher[common.DELETE_POSTS] = function (nums, client) {
 };
 
 dispatcher[common.EXECUTE_JS] = function (msg, client) {
-	if (!client.auth || client.auth.auth !== 'Admin')
+	if (!caps.is_admin_ident(client.ident))
 		return false;
 	if (typeof msg[0] != 'number')
 		return false;
