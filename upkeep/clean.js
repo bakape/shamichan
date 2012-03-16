@@ -6,7 +6,7 @@ var config = require('../config'),
 
 function Recycler() {
 	this.tag = 'archive';
-	this.y = new db.Yakusoku(this.tag);
+	this.y = new db.Yakusoku(this.tag, db.UPKEEP_IDENT);
 }
 
 var R = Recycler.prototype;

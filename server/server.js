@@ -105,7 +105,7 @@ function synchronize(msg, client, ident) {
 
 	if (client.db)
 		client.db.disconnect();
-	client.db = new db.Yakusoku(board);
+	client.db = new db.Yakusoku(board, ident);
 	client.db.on('error', console.error.bind(console, 'redis:'));
 	/* Race between subscribe and backlog fetch; client must de-dup */
 	client.db.kiku(client.watching, client.on_update.bind(client),
@@ -354,7 +354,7 @@ web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	var board = params[1];
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
-	var yaku = new db.Yakusoku(board);
+	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(0);
 	var indexTmpl = RES.indexTmpl, nav_html;
 	yaku.on('begin', function (thread_count) {
@@ -393,7 +393,7 @@ web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	var board = params[1];
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
-	var yaku = new db.Yakusoku(board);
+	var yaku = new db.Yakusoku(board, req.ident);
 	var page = parseInt(params[2], 10);
 	if (page > 0 && params[2][0] == '0') /* leading zeroes? */
 		return web.redirect(resp, 'page' + page);
@@ -457,7 +457,7 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		if (op != num)
 			return redirect_thread(resp, num, op);
 	}
-	var yaku = new db.Yakusoku(board);
+	var yaku = new db.Yakusoku(board, req.ident);
 	var reader = new db.Reader(yaku);
 	var lastN = config.THREAD_LAST_N;
 	var limit = ('last' + lastN) in req.query ?
@@ -578,7 +578,7 @@ function report(error, client, client_msg) {
 		return;
 	}
 	if (!error_db)
-		error_db = new db.Yakusoku(null);
+		error_db = new db.Yakusoku(null, db.UPKEEP_IDENT);
 	var ver = git_version || 'ffffff';
 	var msg = client_msg || 'Server error.';
 	var ip = client && client.ip;
@@ -932,7 +932,7 @@ if (require.main == module) {
 		if (err)
 			throw err;
 		propagate_resources();
-		var yaku = new db.Yakusoku(null);
+		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
 		yaku.finish_all(function (err) {
 			if (err)
 				throw err;

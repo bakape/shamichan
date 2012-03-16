@@ -9,7 +9,7 @@ var yaku;
 function connect() {
 	var r;
 	if (!yaku) {
-		yaku = new db.Yakusoku('archive');
+		yaku = new db.Yakusoku('archive', db.UPKEEP_IDENT);
 		r = yaku.connect();
 		r.on('error', function (err) {
 			console.error(err);
