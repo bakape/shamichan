@@ -11,21 +11,19 @@ using namespace v8;
 static char SECURE_SALT[21] = "$5$";
 #define TRIP_MAX 128
 
-static int load_secure_salt(void) {
-	FILE *fp = popen("node get.js SECURE_SALT", "r");
-	if (!fp) {
-		perror("popen");
-		return 0;
-	}
-	if (fread(SECURE_SALT + 3, 1, 16, fp) != 16) {
-		fprintf(stderr, "Invalid SECURE_SALT.\n");
-		pclose(fp);
-		return 0;
-	}
-	pclose(fp);
+static Handle<Value> setup_callback(Arguments const &args) {
+	if (args.Length() != 1)
+		return False();
+	String::Utf8Value saltVal(args[0]->ToString());
+	if (saltVal.length() != 16)
+		return False();
+	char *salt = *saltVal;
+	if (!salt)
+		return False();
+	memcpy(SECURE_SALT + 3, salt, 16);
 	SECURE_SALT[19] = '$';
 	SECURE_SALT[20] = 0;
-	return 1;
+	return True();
 }
 
 static void fix_char(char &c) {
@@ -129,7 +127,10 @@ static Handle<Value> hash_callback(Arguments const &args) {
 }
 
 extern "C" void init(Handle<Object> target) {
-	if (load_secure_salt() && setup_conv())
-		target->Set(String::New("hash"),
+	if (!setup_conv())
+		return;
+	target->Set(String::New("setSalt"),
+			FunctionTemplate::New(&setup_callback)->GetFunction());
+	target->Set(String::New("hash"),
 			FunctionTemplate::New(&hash_callback)->GetFunction());
 }

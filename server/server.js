@@ -864,6 +864,8 @@ dispatcher[common.EXECUTE_JS] = function (msg, client) {
 };
 
 function propagate_resources() {
+	if (!tripcode.setSalt(config.SECURE_SALT))
+		throw "Bad SECURE_SALT";
 	web.notFoundHtml = RES.notFoundHtml;
 }
 
