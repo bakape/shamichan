@@ -1194,8 +1194,9 @@ var F = Filter.prototype;
 
 F.connect = function () {
 	if (!this.r) {
-		this.r = redis_client();
-		this.r.on('error', console.error.bind(console));
+		if (!cache.sharedConnection)
+			cache.sharedConnection = redis_client();
+		this.r = cache.sharedConnection;
 	}
 	return this.r;
 };
@@ -1247,8 +1248,6 @@ F.failure = function (err) {
 };
 
 F.cleanup = function () {
-	if (this.r)
-		this.r.quit();
 	this.removeAllListeners('error');
 	this.removeAllListeners('thread');
 	this.removeAllListeners('end');
