@@ -1,11 +1,17 @@
 var config = require('../config'),
-    db = require('../db'),
+    RES = require('./state').resources,
     OAuth = require('oauth').OAuth;
 
 var oauth = new OAuth('https://api.twitter.com/oauth/request_token',
 		'https://api.twitter.com/oauth/access_token',
 		config.TWITTER_API.key, config.TWITTER_API.secret,
 		'1.0', config.TWITTER_API.callback, 'HMAC-SHA1');
+
+function connect() {
+	if (!RES.sharedConnection)
+		RES.sharedConnection = require('../db').redis_client();
+	return RES.sharedConnection;
+}
 
 function oauth_error(resp, err) {
 	if (err)
@@ -20,9 +26,8 @@ exports.login = function (req, resp) {
 			return oauth_error(resp, err);
 		var uri = 'https://api.twitter.com/oauth/authorize' +
 				'?oauth_token=' + encodeURI(token);
-		var r = db.redis_client();
+		var r = connect();
 		r.setex('oauth:' + token, 5*60, secret, function (err) {
-			r.quit();
 			if (err)
 				return oauth_error(resp, err);
 			resp.writeHead(307, {Location: uri,
@@ -34,11 +39,10 @@ exports.login = function (req, resp) {
 };
 
 exports.verify = function (req, resp) {
-	var r = db.redis_client();
+	var r = connect();
 	var token = req.query.oauth_token;
 	r.get('oauth:' + token, function (err, secret) {
 		if (err || !secret) {
-			r.quit();
 			return oauth_error(resp, err);
 		}
 		r.del('oauth:' + token);
@@ -53,7 +57,6 @@ exports.verify = function (req, resp) {
 			}
 			else
 				oauth_error(resp, err);
-			r.quit();
 			return;
 		}
 		var user = results.screen_name;
@@ -62,7 +65,6 @@ exports.verify = function (req, resp) {
 		if (!admin && !mod) {
 			resp.writeHead(401);
 			resp.end('Invalid user.');
-			r.quit();
 			return;
 		}
 		results.token = token;
@@ -83,7 +85,7 @@ exports.verify = function (req, resp) {
 
 exports.set_cookie = function (resp, info, r) {
 	if (!r)
-		r = db.redis_client();
+		r = connect();
 	var pass = random_str();
 	var second = random_str();
 	info.csrf = second;
@@ -91,7 +93,6 @@ exports.set_cookie = function (resp, info, r) {
 	m.hmset('session:'+pass, info);
 	m.expire('session:'+pass, config.LOGIN_SESSION_TIME);
 	m.exec(function (err) {
-		r.quit();
 		if (err)
 			return oauth_error(resp, err);
 		var expiry = make_expiry();
@@ -121,9 +122,8 @@ exports.extract_cookie = function (cookie) {
 };
 
 exports.check_cookie = function (chunks, check_csrf, callback) {
-	var r = db.redis_client();
+	var r = connect();
 	r.hgetall('session:' + chunks.a, function (err, session) {
-		r.quit();
 		if (err)
 			return callback(err);
 		else if (!session || !Object.keys(session).length)
