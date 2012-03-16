@@ -198,11 +198,19 @@ function ip_mnemonic(header, data) {
 	return header;
 }
 
+function denote_priv(header, data) {
+	if (data.priv)
+		header.push(' (priv)');
+	return header;
+}
+
 function write_thread_html(reader, response, ident, opts) {
 	opts = opts || {};
 	var oneeSama = new common.OneeSama(tamashii);
 	if (caps.is_mod_ident(ident))
 		oneeSama.hook('header', ip_mnemonic);
+	if (caps.is_admin_ident(ident))
+		oneeSama.hook('header', denote_priv);
 	reader.on('thread', function (op_post, omit, image_omit) {
 		op_post.omit = omit;
 		var full = oneeSama.full = !!opts.fullPosts;

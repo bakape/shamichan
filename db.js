@@ -1,6 +1,7 @@
 var _ = require('./lib/underscore'),
     async = require('async'),
     cache = require('./server/state').dbCache,
+    caps = require('./server/caps'),
     common = require('./common'),
     config = require('./config'),
     events = require('events'),
@@ -998,6 +999,8 @@ Y.report_error = function (info, ver, callback) {
 function Reader(yakusoku) {
 	events.EventEmitter.call(this);
 	this.y = yakusoku;
+	if (caps.is_admin_ident(yakusoku.ident))
+		this.showPrivs = true;
 }
 
 util.inherits(Reader, events.EventEmitter);
@@ -1086,8 +1089,11 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 		function (err, opPost) {
 			if (err)
 				return self.emit('error', err);
-			if (priv)
+			if (priv) {
 				nums = merge_posts(nums, privNums, abbrev);
+				if (self.showPrivs)
+					self.privNums = privNums;
+			}
 			var omit = Math.max(total - abbrev, 0);
 			self.emit('thread', opPost, omit);
 			self._get_each_reply(tag, 0, nums);
@@ -1162,6 +1168,9 @@ Reader.prototype._get_each_reply = function (tag, ix, nums) {
 		with_body(r, key, pre_post, next);
 	},
 	function (post, next) {
+		if (self.privNums &&
+				self.privNums.indexOf(num.toString()) >= 0)
+			post.priv = true;
 		extract(post, next);
 	}],
 	function (err, post) {
