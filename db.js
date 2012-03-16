@@ -1046,8 +1046,8 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 		pre_post.num = num;
 		pre_post.time = parseInt(pre_post.time, 10);
 
-		var posts = {}, opPost;
-		var abbrev = opts.abbrev || 0, priv = self.y.ident.priv;
+		var nums, privNums, opPost, priv = self.y.ident.priv;
+		var abbrev = opts.abbrev || 0, total = 0;
 		async.waterfall([
 		function (next) {
 			with_body(r, key, pre_post, next);
@@ -1072,14 +1072,13 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 		},
 		function (rs, next) {
 			// get results in the same order as before
-			posts.nums = rs.shift();
+			nums = rs.shift();
 			if (abbrev)
-				posts.omit = Math.max(0, rs.shift() - abbrev);
+				total += parseInt(rs.shift(), 10);
 			if (priv) {
-				posts.privNums = rs.shift();
+				privNums = rs.shift();
 				if (abbrev)
-					posts.privOmit = Math.max(0,
-							rs.shift() - abbrev);
+					total += parseInt(rs.shift(), 10);
 			}
 
 			extract(opPost, next);
@@ -1088,43 +1087,39 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 			if (err)
 				return self.emit('error', err);
 			if (priv)
-				merge_posts(posts, abbrev);
-			self.emit('thread', opPost, posts.omit);
-			self._get_each_reply(tag, 0, posts.nums);
+				nums = merge_posts(nums, privNums, abbrev);
+			var omit = Math.max(total - abbrev, 0);
+			self.emit('thread', opPost, omit);
+			self._get_each_reply(tag, 0, nums);
 		});
 	});
 };
 
-function merge_posts(info, abbrev) {
-	// TODO: omits
-	var nums = [];
-	var len = info.nums.length, pLen = info.privNums.length;
-	if (!pLen)
-		return;
-	var i = 0, pi = 0;
-	while (true) {
-		if (i < len && pi < pLen) {
-			var num = info.nums[i], pNum = info.privNums[pi];
+function merge_posts(nums, privNums, abbrev) {
+	var i = nums.length - 1, pi = privNums.length - 1;
+	if (pi < 0)
+		return nums;
+	var merged = [];
+	while (!abbrev || merged.length < abbrev) {
+		if (i >= 0 && pi >= 0) {
+			var num = nums[i], pNum = privNums[pi];
 			if (parseInt(num, 10) < parseInt(pNum, 10)) {
-				nums.push(num);
-				i++;
+				merged.unshift(num);
+				i--;
 			}
 			else {
-				nums.push(pNum);
-				pi++;
+				merged.unshift(pNum);
+				pi--;
 			}
 		}
-		else if (i < len) {
-			nums.push(info.nums[i++]);
-		}
-		else if (pi < pLen) {
-			nums.push(info.privNums[pi++]);
-		}
-		else {
+		else if (i >= 0)
+			merged.unshift(nums[i--]);
+		else if (pi >= 0)
+			merged.unshift(privNums[pi--]);
+		else
 			break;
-		}
 	}
-	info.nums = nums;
+	return merged;
 }
 
 function can_see_priv(priv, ident) {
