@@ -1075,7 +1075,7 @@ PF.make_upload_form = function () {
 	var form = $('<form method="post" enctype="multipart/form-data" '
 		+ 'action="/img" target="upload">'
 		+ '<input type="button" value="Cancel"/>'
-		+ '<input type="file" name="image"/> '
+		+ '<input type="file" name="image" accept="image/*"/> '
 		+ '<a id="toggle">Spoiler</a> <strong/>'
 		+ '<input type="hidden" name="spoiler"/>'
 		+ '<input type="hidden" name="client_id"/>'
