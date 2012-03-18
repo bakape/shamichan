@@ -778,8 +778,7 @@ function click_shita(event) {
 	}
 
 	if (options.inline && target.is('img') && !target.data('skipExpand')) {
-		toggle_expansion(target);
-		event.preventDefault();
+		toggle_expansion(target, event);
 	}
 	else if (target.is('cite')) {
 		var m = target.text().match(youtube_re);
@@ -805,8 +804,8 @@ function click_shita(event) {
 	}
 }
 
-
-function toggle_expansion(img) {
+function toggle_expansion(img, event) {
+	event.preventDefault();
 	var href = img.parent().attr('href');
 	if (href.match(/^\.\.\/outbound\//))
 		return;
@@ -814,9 +813,17 @@ function toggle_expansion(img) {
 
 	with_dom(function () {
 		if (thumb) {
+			// try to keep the thumbnail in-window for large images
+			var h = img.height();
+			var th = parseInt(img.data('thumbHeight'), 10);
+			var y = img.offset().top, t = $(window).scrollTop();
+			if (y < t && th < h)
+				window.scrollBy(0, Math.max(th - h,
+						y - t - event.clientY + th/2));
+
 			img.replaceWith($('<img>')
 				.width(img.data('thumbWidth'))
-				.height(img.data('thumbHeight'))
+				.height(th)
 				.attr('src', thumb));
 			return;
 		}
