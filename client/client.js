@@ -776,44 +776,12 @@ function click_shita(event) {
 			}
 		}
 	}
-	if (options.inline) {
-		var img = target;
-		if (img.is('img') && !img.data('skipExpand')) {
-			var href = img.parent().attr('href');
-			if (href.match(/^\.\.\/outbound\//))
-				return;
-			var thumb = img.data('thumbSrc');
 
-			with_dom(function () {
-			if (thumb) {
-				img.replaceWith($('<img>'
-					).width(img.data('thumbWidth')
-					).height(img.data('thumbHeight')
-					).attr('src', thumb));
-			}
-			else {
-				var caption = img.parent().prev().text();
-				var dims = caption.match(/(\d+)x(\d+)/);
-				var w = parseInt(dims[1],10),
-					h = parseInt(dims[2],10),
-					r = window.devicePixelRatio;
-				if (r && r > 1) {
-					w /= r;
-					h /= r;
-				}
-				img.replaceWith($('<img>').data({
-					thumbWidth: img.width(),
-					thumbHeight: img.height(),
-					thumbSrc: img.attr('src')}
-					).attr('src',href).width(w).height(h));
-			}
-			});
-
-			event.preventDefault();
-			return;
-		}
+	if (options.inline && target.is('img') && !target.data('skipExpand')) {
+		toggle_expansion(target);
+		event.preventDefault();
 	}
-	if (target.is('cite')) {
+	else if (target.is('cite')) {
 		var m = target.text().match(youtube_re);
 		var start = 0;
 		if (m[2]) {
@@ -831,12 +799,41 @@ function click_shita(event) {
 		with_dom(function () {
 			target.replaceWith($obj);
 		});
-		return;
 	}
-	if (target.is('del')) {
+	else if (target.is('del')) {
 		target.toggleClass('reveal');
-		return;
 	}
+}
+
+
+function toggle_expansion(img) {
+	var href = img.parent().attr('href');
+	if (href.match(/^\.\.\/outbound\//))
+		return;
+	var thumb = img.data('thumbSrc');
+
+	with_dom(function () {
+		if (thumb) {
+			img.replaceWith($('<img>')
+				.width(img.data('thumbWidth'))
+				.height(img.data('thumbHeight'))
+				.attr('src', thumb));
+			return;
+		}
+		var caption = img.parent().prev().text();
+		var dims = caption.match(/(\d+)x(\d+)/);
+		var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10),
+			r = window.devicePixelRatio;
+		if (r && r > 1) {
+			w /= r;
+			h /= r;
+		}
+		img.replaceWith($('<img>').data({
+			thumbWidth: img.width(),
+			thumbHeight: img.height(),
+			thumbSrc: img.attr('src')
+		}).attr('src', href).width(w).height(h));
+	});
 }
 
 function make_video(id, params, dims, start) {
