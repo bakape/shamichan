@@ -1139,11 +1139,8 @@ function drop_shita(e) {
 	e.stopPropagation();
 	e.preventDefault();
 	var files = e.dataTransfer.files;
-	if (files.length != 1) {
-		if (files.length > 1)
-			alert('Too many files.');
+	if (!files.length)
 		return;
-	}
 	if (!postForm) {
 		with_dom(function () {
 			if (THREAD)
@@ -1158,6 +1155,10 @@ function drop_shita(e) {
 	}
 	else if (postForm.uploading || postForm.uploaded)
 		return;
+	if (files.length > 1) {
+		postForm.upload_error('Too many files.');
+		return;
+	}
 
 	postForm.prep_upload();
 	postForm.$imageInput.attr('disabled', true);
