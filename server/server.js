@@ -175,41 +175,10 @@ function tamashii(num) {
 		this.callback('>>' + num);
 }
 
-var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,f,r,g,z,l,ch'.split(',');
-var mnemonicEnds = "a,i,u,e,o,ā,ī,ū,ē,ō,ya,yi,yu,ye,yo,'".split(',');
-
-function ip_mnemonic(header, data) {
-	var mnemonic = data.ip;
-	var nums = mnemonic.split('.');
-	if (config.IP_MNEMONIC && nums.length == 4) {
-		mnemonic = '';
-		for (var i = 0; i < 4; i++) {
-			var n = parseInt(nums[i], 10);
-			var s = mnemonicStarts[Math.floor(n / 16)] +
-					mnemonicEnds[n % 16];
-			mnemonic += s;
-		}
-		header.push(safe(' <span title="'+escape(data.ip)+'">'),
-				mnemonic, safe('</span>'));
-	}
-	else
-		header.push(' ' + data.ip);
-	return header;
-}
-
-function denote_priv(header, data) {
-	if (data.priv)
-		header.push(' (priv)');
-	return header;
-}
-
 function write_thread_html(reader, response, ident, opts) {
 	opts = opts || {};
 	var oneeSama = new common.OneeSama(tamashii);
-	if (caps.is_mod_ident(ident))
-		oneeSama.hook('header', ip_mnemonic);
-	if (caps.is_admin_ident(ident))
-		oneeSama.hook('header', denote_priv);
+	caps.augment_oneesama(oneeSama, ident);
 	reader.on('thread', function (op_post, omit, image_omit) {
 		op_post.omit = omit;
 		var full = oneeSama.full = !!opts.fullPosts;
