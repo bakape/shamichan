@@ -129,7 +129,7 @@ function synchronize(msg, client, ident) {
 			});
 		}
 
-		var sync = '' + common.SYNCHRONIZE;
+		var sync = '0,' + common.SYNCHRONIZE;
 		if (dead_threads.length)
 			sync += ',' + JSON.stringify(dead_threads);
 		logs.push(sync);
@@ -141,26 +141,27 @@ function synchronize(msg, client, ident) {
 				if (err)
 					console.error(err);
 				else if (js)
-					client.send([common.EXECUTE_JS,op,js]);
+					client.send([op, common.EXECUTE_JS,
+							js]);
 			});
 		}
 	}
 	return true;
 }
 
-OK.on_update = function(op, num, kind, msg) {
+OK.on_update = function (op, kind, msg) {
+	// Special cases for operations that overwrite a client's state
 	if (this.post && kind == common.DELETE_POSTS) {
-		/* grr special case */
-		var nums = JSON.parse('[' + msg + ']').slice(1);
+		var nums = JSON.parse(msg)[0].slice(2);
 		if (nums.indexOf(this.post.num) >= 0)
 			delete this.post;
 	}
 	else if (this.post && kind == common.DELETE_THREAD) {
-		/* GRR */
 		if (this.post.num == op || this.post.op == op)
 			delete this.post;
 	}
-	this.socket.write('[[' + msg + ',' + op + ']]');
+
+	this.socket.write(msg);
 };
 
 OK.on_thread_sink = function (thread, err) {
@@ -232,7 +233,7 @@ function write_thread_html(reader, response, ident, opts) {
 }
 
 function image_status(status) {
-	this.client.send([common.IMAGE_STATUS, status]);
+	this.client.send([0, common.IMAGE_STATUS, status]);
 }
 
 function page_nav(thread_count, cur_page) {
@@ -597,7 +598,7 @@ function report(error, client, client_msg) {
 		ver = ' (#' + ver + '-' + pad3(num) + ')';
 		console.error((error || msg) + ' ' + ip + ver);
 		if (client) {
-			client.send([common.INVALID, msg + ver]);
+			client.send([0, common.INVALID, msg + ver]);
 			client.synced = false;
 		}
 	});
@@ -635,8 +636,9 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 				niceErr = "Couldn't allocate post.";
 			return report(err, client, niceErr);
 		}
+		var op = alloc.op || alloc.num;
 		var go = client.send.bind(client,
-				[common.ALLOCATE_POST, alloc]);
+				[op, common.ALLOCATE_POST, alloc]);
 		if (!config.DEBUG)
 			go();
 		else

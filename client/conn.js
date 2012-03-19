@@ -18,13 +18,10 @@ function on_message(e) {
 
 	for (var i = 0; i < msgs.length; i++) {
 		var msg = msgs[i];
+		var op = msg.shift();
 		var type = msg.shift();
-		/* Pub-sub messages have an extra OP-num entry */
-		var op;
-		if (is_pubsub(type)) {
-			op = msg.pop();
+		if (is_pubsub(type))
 			syncs[op]++;
-		}
 		dispatcher[type](msg, op);
 	}
 

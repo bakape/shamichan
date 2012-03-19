@@ -308,10 +308,9 @@ dispatcher[INSERT_POST] = function (msg) {
 		orig_focus.focus();
 };
 
-dispatcher[MOVE_THREAD] = function (msg) {
-	var num = msg[0];
-	msg = msg[1];
-	msg.num = num;
+dispatcher[MOVE_THREAD] = function (msg, op) {
+	msg = msg[0];
+	msg.num = op;
 	var orig_focus = get_focus();
 	oneeSama.links = msg.links;
 
@@ -416,11 +415,11 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 	$('section#' + op).next('hr').andSelf().remove();
 };
 
-dispatcher[EXECUTE_JS] = function (msg) {
-	if (THREAD != msg[0])
+dispatcher[EXECUTE_JS] = function (msg, op) {
+	if (THREAD != op)
 		return;
 	try {
-		eval(msg[1]);
+		eval(msg[0]);
 	}
 	catch (e) {
 		/* fgsfds */

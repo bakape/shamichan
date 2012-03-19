@@ -56,24 +56,10 @@ S.on_sub = function () {
 };
 
 S.on_message = function (chan, msg) {
-	var thread, info, kind, num;
-	var m = chan.match(/^thread:(\d+)$/);
-	if (m) {
-		thread = parseInt(m[1], 10);
-		info = msg.match(/^(\d+),(\d+)/);
-		kind = parseInt(info[1], 10);
-		num = parseInt(info[2], 10);
-	}
-	else {
-		/* TEMP: Want to keep these uniform really... */
-		info = msg.match(/^(\d+),(\d+),(\d+)/);
-		thread = parseInt(info[1], 10);
-		kind = parseInt(info[2], 10);
-		num = parseInt(info[3], 10);
-		/* BLEH */
-		msg = msg.slice(info[1].length + 1);
-	}
-	this.emit('update', thread, num, kind, msg);
+	var m = msg.match(/^(\d+),(\d+)/);
+	var op = parseInt(m[1], 10);
+	var kind = parseInt(m[2], 10);
+	this.emit('update', op, kind, '[[' + msg + ']]');
 };
 
 S.on_sub_error = function (err) {
@@ -155,27 +141,28 @@ exports.first_tag_of = function (op) {
 };
 
 function on_OP_message(pat, chan, msg) {
-	// This sucks. Need to unify this damn format.
-	var op, num, kind, tag;
-	if (pat == 'tag:*') {
-		var m = msg.match(/^(\d+),(\d+)/);
-		op = num = parseInt(m[1], 10);
-		kind = parseInt(m[2], 10);
-		tag = chan.slice(4);
-	}
-	else {
-		op = parseInt(chan.match(/^thread:(\d+)/)[1], 10);
-		var m = msg.match(/^(\d+),(\d+)/);
-		kind = parseInt(m[1], 10);
-		num = parseInt(m[2], 10);
-		tag = false;
-	}
+	var m = msg.match(/^(\d+),(\d+)/);
+	var op = parseInt(m[1], 10);
+	if (!op)
+		return;
+	var kind = parseInt(m[2], 10);
+	m = chan.match(/^tag:(.*)/);
+	var tag = m ? chan.slice(4) : false;
 
 	if (kind == common.INSERT_POST) {
 		if (tag)
 			add_OP_tag(config.BOARDS.indexOf(tag), op);
-		else
+		else {
+			var num;
+			if (tag)
+				num = op;
+			else {
+				// dumb!
+				var m = msg.match(/^\d+,\d+,(\d+)/);
+				num = parseInt(m[1], 10);
+			}
 			OPs[num] = op;
+		}
 	}
 	else if (tag && kind == common.MOVE_THREAD) {
 		set_OP_tag(config.BOARDS.indexOf(tag), op);
@@ -614,7 +601,7 @@ Y.remove_thread = function (op, callback) {
 			m.zrem('tag:' + tagKey + ':threads', op);
 		});
 		m.zadd(graveyardKey + ':threads', deadCtr, op);
-		self._log(m, op, common.DELETE_THREAD, [op], tags);
+		self._log(m, op, common.DELETE_THREAD, [], tags);
 		m.hset(key, 'hide', 1);
 		/* Next two vals are checked */
 		m.renamenx(key, dead_key);
@@ -673,7 +660,7 @@ Y.archive_thread = function (op, callback) {
 			m.zrem('tag:' + tag_key(tag) + ':threads', op);
 		});
 		m.zadd(archiveKey + ':threads', bumpCtr, op);
-		self._log(m, op, common.DELETE_THREAD, [op], tags);
+		self._log(m, op, common.DELETE_THREAD, [], tags);
 
 		// shallow thread insertion message in archive
 		if (!_.isEmpty(links))
@@ -683,7 +670,7 @@ Y.archive_thread = function (op, callback) {
 				return next(err);
 			delete view.ip;
 			view.replyctr = replyCount;
-			self._log(m, op, common.MOVE_THREAD, [op, view],
+			self._log(m, op, common.MOVE_THREAD, [view],
 					['archive']);
 			m.exec(next);
 		});
@@ -892,8 +879,8 @@ Y._log = function (m, op, kind, msg, tags) {
 		m.rpush(key + ':history', msg);
 		m.hincrby(key, 'hctr', 1);
 	}
-	m.publish(key, msg);
 	msg = op + ',' + msg;
+	m.publish(key, msg);
 	if (!tags)
 		tags = this.tag ? [this.tag] : [];
 	tags.forEach(function (tag) {
@@ -913,9 +900,9 @@ Y.fetch_backlogs = function (watching, callback) {
 			if (err)
 				return cb(err);
 
-			/* TEMP */
+			var prefix = thread + ',';
 			log.forEach(function (entry) {
-				combined.push(entry + ',' + thread);
+				combined.push(prefix + entry);
 			});
 
 			cb(null);
@@ -1273,7 +1260,7 @@ Y.set_fun_thread = function (op, callback) {
 			return callback(err);
 		cache.funThread = op;
 		var m = self.connect().multi();
-		self._log(m, op, common.EXECUTE_JS, [op, funJs]);
+		self._log(m, op, common.EXECUTE_JS, [funJs]);
 		m.exec(callback);
 	});
 };
