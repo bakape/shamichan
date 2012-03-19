@@ -911,11 +911,7 @@ function scroll_shita() {
 
 function set_scroll_locked(lock) {
 	lockedToBottom = lock;
-	var ind = $('#lock');
-	if (lockedToBottom)
-		ind.show();
-	else
-		ind.hide();
+	$('#lock').css({visibility: lock ? 'visible' : 'hidden'});
 }
 
 function with_dom(func) {
@@ -1322,7 +1318,7 @@ $(function () {
 	}
 	else {
 		$('<span id="lock">Locked to bottom</span>'
-				).hide().appendTo('body');
+				).css({visibility: 'hidden'}).appendTo('body');
 		$(document).scroll(scroll_shita);
 		scroll_shita();
 	}

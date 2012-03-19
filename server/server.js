@@ -439,6 +439,8 @@ web.route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
 	web.redirect(resp, '../page' + params[1]);
 });
 
+var returnHTML = '<span id="return">[<a href=".">Return</a>]</span>';
+
 web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var board = params[1];
 	if (!caps.can_access(req.ident, board))
@@ -486,7 +488,7 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	});
 	write_thread_html(reader, resp, req.ident, {fullPosts: true});
 	reader.on('end', function () {
-		resp.write('[<a href=".">Return</a>]');
+		resp.write(returnHTML);
 		write_page_end(req, resp);
 		yaku.disconnect();
 	});

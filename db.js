@@ -140,14 +140,17 @@ exports.first_tag_of = function (op) {
 		return config.BOARDS[tags[0]];
 };
 
-function on_OP_message(pat, chan, msg) {
-	var m = msg.match(/^(\d+),(\d+)/);
+function update_thread_cache(pat, chan, msg) {
+	var m = msg.match(/^(\d+),(\d+),?/);
+	var headerLen = m[0].length;
 	var op = parseInt(m[1], 10);
 	if (!op)
 		return;
 	var kind = parseInt(m[2], 10);
 	m = chan.match(/^tag:(.*)/);
 	var tag = m ? chan.slice(4) : false;
+
+	var payload = function () { return msg.slice(headerLen); };
 
 	if (kind == common.INSERT_POST) {
 		if (tag)
@@ -156,16 +159,17 @@ function on_OP_message(pat, chan, msg) {
 			var num;
 			if (tag)
 				num = op;
-			else {
-				// dumb!
-				var m = msg.match(/^\d+,\d+,(\d+)/);
-				num = parseInt(m[1], 10);
-			}
+			else
+				num = parseInt(payload().match(/\d+/)[0], 10);
 			OPs[num] = op;
 		}
 	}
 	else if (tag && kind == common.MOVE_THREAD) {
 		set_OP_tag(config.BOARDS.indexOf(tag), op);
+	}
+	else if (tag && kind == common.UPDATE_BANNER) {
+		var msg = JSON.parse(payload());
+		cache.bannerState = {tag: tag, op: op, message: msg};
 	}
 }
 
@@ -180,7 +184,7 @@ exports.track_OPs = function (callback) {
 		});
 		k.psubscribe('tag:*');
 	});
-	k.on('pmessage', on_OP_message);
+	k.on('pmessage', update_thread_cache);
 };
 
 function load_OPs(r, callback) {
@@ -1263,6 +1267,19 @@ Y.set_fun_thread = function (op, callback) {
 		self._log(m, op, common.EXECUTE_JS, [funJs]);
 		m.exec(callback);
 	});
+};
+
+Y.get_banner = function (op, cb) {
+	if (cache.bannerState.op == op)
+		cb(null, cache.bannerState.message);
+	else
+		cb(null, false);
+};
+
+Y.set_banner = function (op, message, cb) {
+	var m = this.connect().multi();
+	this._log(m, op, common.UPDATE_BANNER, [message]);
+	m.exec(cb);
 };
 
 /* HELPERS */

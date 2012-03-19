@@ -17,6 +17,7 @@ exports.dbCache = {
 	sharedConnection: null,
 	YAKUMAN: 0,
 	funThread: 0,
+	bannerState: {},
 };
 
 var HOT = exports.hot = {};

@@ -9,6 +9,7 @@ exports.CLIENT_DEPS = [
 	'common.js',
 	'client/client.js',
 	'client/conn.js',
+	'client/banner.js',
 ];
 
 exports.SERVER_DEPS = [

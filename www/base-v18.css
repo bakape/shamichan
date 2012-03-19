@@ -114,6 +114,12 @@ section {
 section p {
 	display: inline;
 }
+#banner {
+	color: gray;
+	display: block;
+	overflow: hidden;
+	text-align: center;
+}
 .email, .email * {
 	text-decoration: underline;
 }
@@ -151,6 +157,11 @@ section p {
 	display: block;
 	float: right;
 	margin-bottom: 2px;
+}
+#return {
+	float: left;
+	margin-bottom: 7px;
+	min-width: 100px;
 }
 pre {
 	height: auto;
