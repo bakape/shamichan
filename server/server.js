@@ -6,12 +6,14 @@ var _ = require('../lib/underscore'),
     db = require('../db'),
     games = require('./games'),
     get_version = require('../get').get_version,
+    hooks = require('../hooks'),
     pix = require('./pix'),
     STATE = require('./state');
     twitter = require('./twitter'),
     tripcode = require('./tripcode'),
     web = require('./web');
 
+require('./amusement');
 require('./panel');
 
 var RES = STATE.resources;
@@ -136,15 +138,11 @@ function synchronize(msg, client, ident) {
 		client.socket.write('[[' + logs.join('],[') + ']]');
 		client.synced = true;
 
-		if (!live && count == 1) {
-			client.db.get_fun(op, function (err, js) {
-				if (err)
-					console.error(err);
-				else if (js)
-					client.send([op, common.EXECUTE_JS,
-							js]);
-			});
-		}
+		var info = {client: client, live: live, count: count, op: op};
+		hooks.trigger('clientSynced', info, function (err) {
+			if (err)
+				console.error(err);
+		});
 	}
 	return true;
 }

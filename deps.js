@@ -19,6 +19,7 @@ exports.SERVER_DEPS = [
 	'get.js',
 	'hooks.js',
 	'lib/underscore.js',
+	'server/amusement.js',
 	'server/caps.js',
 	'server/games.js',
 	'server/panel.js',
