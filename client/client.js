@@ -673,18 +673,6 @@ function preview_miru(event, num) {
 	return true;
 }
 
-function hover_shita(event) {
-	if (event.target.tagName.match(/^A$/i)) {
-		var m = $(event.target).text().match(/^>>(\d+)$/);
-		if (m && preview_miru(event, parseInt(m[1], 10)))
-			return;
-	}
-	if (preview) {
-		preview.remove();
-		preview = previewNum = null;
-	}
-}
-
 var samePage = new RegExp('^(?:' + THREAD + ')?(#\\d+)$');
 function click_shita(event) {
 	var target = $(event.target);
@@ -804,19 +792,6 @@ function make_video(id, params, dims, start) {
 	$('<embed></embed>').attr(params).attr(dims).attr({src: uri,
 		type: 'application/x-shockwave-flash'}).appendTo($obj);
 	return $obj;
-}
-
-function mouseup_shita(event) {
-	/* Bypass expansion for non-left mouse clicks */
-	if (options.inline && event.which > 1) {
-		var img = $(event.target);
-		if (img.is('img')) {
-			img.data('skipExpand', true);
-			setTimeout(function () {
-				img.removeData('skipExpand');
-			}, 100);
-		}
-	}
 }
 
 function tsugi() {
@@ -1163,21 +1138,6 @@ connSM.on('out', function () {
 	$('aside').remove();
 	$('.editing').removeClass('editing');
 });
-
-toggles.inline = function (b) {
-	if (b)
-		$(document).mouseup(mouseup_shita);
-	else
-		$(document).unbind('mouseup', mouseup_shita);
-};
-toggles.inline.label = 'Inline image expansion';
-toggles.preview = function (b) {
-	if (b)
-		$(document).mousemove(hover_shita);
-	else
-		$(document).unbind('mousemove', hover_shita);
-}
-toggles.preview.label = 'Hover preview';
 
 $(function () {
 	$('section').each(function () {
