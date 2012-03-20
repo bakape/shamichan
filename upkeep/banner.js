@@ -24,19 +24,27 @@ function monitor(last) {
 			console.error(err);
 		else
 			info = format_now_playing(mounts);
-		if (!info || _.isEqual(info, last)) {
-			var wait = info ? SHORT_INTERVAL : LONG_INTERVAL;
-			setTimeout(monitor.bind(null, last), wait);
-			return;
+		var interval = SHORT_INTERVAL;
+		if (!info && last) {
+			// stopped playing, clear
+			info = last;
+			info.message = '';
+			interval = LONG_INTERVAL;
 		}
-		update_banner(info, function (err, cb) {
-			var interval = SHORT_INTERVAL;
-			if (err) {
-				console.error(err);
+		if (!info || _.isEqual(info, last)) {
+			if (!info)
 				interval = LONG_INTERVAL;
-			}
-			setTimeout(monitor.bind(null, info), interval);
-		});
+			setTimeout(monitor.bind(null, last), interval);
+		}
+		else {
+			update_banner(info, function (err, cb) {
+				if (err) {
+					console.error(err);
+					interval = LONG_INTERVAL;
+				}
+				setTimeout(monitor.bind(null, info), interval);
+			});
+		}
 	});
 }
 
