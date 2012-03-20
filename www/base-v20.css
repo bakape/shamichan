@@ -119,6 +119,7 @@ section p {
 	display: block;
 	overflow: hidden;
 	text-align: center;
+	white-space: nowrap;
 }
 section #banner {
 	margin-top: 1em;
@@ -211,6 +212,10 @@ pre, #trans {
 	}
 	section {
 		margin: 0;
+	}
+	#return {
+		min-width: inherit;
+		margin-right: 0.5em;
 	}
 }
 
