@@ -19,20 +19,20 @@ function update_banner(info, cb) {
 
 function monitor(last) {
 	poll(POLL_URL, function (err, mounts) {
-		var info;
+		var info, clear = false;
 		if (err)
 			console.error(err);
 		else
 			info = format_now_playing(mounts);
 		var interval = SHORT_INTERVAL;
 		if (!info && last) {
-			// stopped playing, clear
+			clear = true;
 			info = last;
 			info.message = '';
-			last = null;
 			interval = LONG_INTERVAL;
 		}
-		if (!info || _.isEqual(info, last)) {
+		var sameAsLast = _.isEqual(info, last);
+		if (!clear && (!info || sameAsLast)) {
 			if (!info)
 				interval = LONG_INTERVAL;
 			setTimeout(monitor.bind(null, last), interval);
@@ -43,6 +43,8 @@ function monitor(last) {
 					console.error(err);
 					interval = LONG_INTERVAL;
 				}
+				if (clear)
+					info = null;
 				setTimeout(monitor.bind(null, info), interval);
 			});
 		}
