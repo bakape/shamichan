@@ -24,7 +24,6 @@ function monitor(last) {
 			console.error(err);
 		else
 			info = format_now_playing(mounts);
-		console.log(info);
 		if (!info || _.isEqual(info, last)) {
 			var wait = info ? SHORT_INTERVAL : LONG_INTERVAL;
 			setTimeout(monitor.bind(null, last), wait);
@@ -71,7 +70,7 @@ function format_now_playing(mounts) {
 		return;
 	var count = parseInt(radio.listeners, 10);
 	count = count + ' listener' + (count == 1 ? '' : 's');
-	var msg = count + (radio.title ? (': ' + radio.title) : '(none)');
+	var msg = count + (radio.title ? (': ' + radio.title) : '');
 	return {board: board, op: op, message: msg};
 }
 
