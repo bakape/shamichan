@@ -23,24 +23,7 @@ var inputMinSize = 300, nashi;
 
 function load_ident() {
 	try {
-		var id;
-		// TEMP migration
-		var oldName = localStorage.getItem('name');
-		var oldEmail = localStorage.getItem('email');
-		if (oldName || oldEmail) {
-			id = {};
-			if (oldName)
-				id.name = oldName;
-			if (oldEmail)
-				id.email = oldEmail;
-			localStorage.setItem('ident', JSON.stringify(id));
-		}
-		else {
-			id = JSON.parse(localStorage.getItem('ident'));
-		}
-		localStorage.removeItem('name');
-		localStorage.removeItem('email');
-
+		var id = JSON.parse(localStorage.ident);
 		if (id.name)
 			$name.val(id.name);
 		if (id.email)
