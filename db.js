@@ -1269,11 +1269,8 @@ Y.set_fun_thread = function (op, callback) {
 	});
 };
 
-Y.get_banner = function (op, cb) {
-	if (cache.bannerState.op == op)
-		cb(null, cache.bannerState.message);
-	else
-		cb(null, false);
+Y.get_banner = function (cb) {
+	cb(null, cache.bannerState.op && cache.bannerState);
 };
 
 Y.set_banner = function (op, message, cb) {

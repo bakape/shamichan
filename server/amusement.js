@@ -19,16 +19,15 @@ hooks.hook('clientSynced', function (info, cb) {
 });
 
 hooks.hook('clientSynced', function (info, cb) {
-	if (!info.live && info.count == 1) {
-		var op = info.op, client = info.client;
-		client.db.get_banner(op, function (err, msg) {
-			if (err)
-				return cb(err);
-			if (msg)
-				client.send([op, common.UPDATE_BANNER, msg]);
-			cb(null);
-		});
-	}
-	else
+	var client = info.client;
+	client.db.get_banner(function (err, banner) {
+		if (err)
+			return cb(err);
+		if (!banner || banner.tag != client.board)
+			return cb(null);
+		var msg = banner.message;
+		if (msg)
+			client.send([banner.op, common.UPDATE_BANNER, msg]);
 		cb(null);
+	});
 });

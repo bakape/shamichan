@@ -120,6 +120,10 @@ section p {
 	overflow: hidden;
 	text-align: center;
 }
+section #banner {
+	margin-top: 1em;
+	text-align: left;
+}
 .email, .email * {
 	text-decoration: underline;
 }

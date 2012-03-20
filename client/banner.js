@@ -3,11 +3,20 @@
 var $banner;
 
 dispatcher[UPDATE_BANNER] = function (msg, op) {
-	if (THREAD != op)
-		return;
-	if (!$banner)
-		$banner = $('<span id="banner"/>').insertAfter('#lock');
-	$banner.text(msg[0]);
+	if (!$banner) {
+		var dest;
+		if (THREAD == op)
+			dest = '#lock';
+		else {
+			var $s = $('#' + op);
+			if ($s.is('section'))
+				dest = $s.children('header');
+		}
+		if (dest)
+			$banner = $('<span id="banner"/>').insertAfter(dest);
+	}
+	if ($banner)
+		$banner.text(msg[0]);
 };
 
 })();
