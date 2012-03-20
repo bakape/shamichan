@@ -29,6 +29,7 @@ function monitor(last) {
 			// stopped playing, clear
 			info = last;
 			info.message = '';
+			last = null;
 			interval = LONG_INTERVAL;
 		}
 		if (!info || _.isEqual(info, last)) {

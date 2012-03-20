@@ -3,6 +3,7 @@
 var $banner;
 
 dispatcher[UPDATE_BANNER] = function (msg, op) {
+	msg = msg[0];
 	if (!$banner) {
 		var dest;
 		if (THREAD == op)
@@ -15,8 +16,14 @@ dispatcher[UPDATE_BANNER] = function (msg, op) {
 		if (dest)
 			$banner = $('<span id="banner"/>').insertAfter(dest);
 	}
-	if ($banner)
-		$banner.text(msg[0]);
+	if ($banner) {
+		if (msg)
+			$banner.text(msg);
+		else {
+			$banner.remove();
+			$banner = null;
+		}
+	}
 };
 
 })();
