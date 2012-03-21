@@ -7,6 +7,7 @@ exports.CLIENT_DEPS = [
 	'lib/backbone' + minJs,
 	'lib/oninput' + minJs,
 	'common.js',
+	'client/state.js',
 	'client/options.js',
 	'client/client.js',
 	'client/postform.js',

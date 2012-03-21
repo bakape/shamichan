@@ -1,6 +1,11 @@
 var $name, $email;
-var options, toggles = {};
-var inputMinSize = 300, nashi;
+var options, inputMinSize = 300, nashi;
+
+var themes = [
+	{name: 'moe', val: 'moe-v2'},
+	{name: 'gar', val: 'gar-v2'},
+	{name: 'mawaru', val: 'meta-v1'},
+];
 
 (function () {
 	try {
@@ -83,20 +88,32 @@ function mouseup_shita(event) {
 	}
 }
 
-toggles.inline = function (b) {
+var optSpecs = [];
+function add_spec(id, label, func, type) {
+	id = id.replace(/\$BOARD/g, BOARD);
+	optSpecs.push({id: id, label: label, func: func, type: type});
+}
+
+add_spec('inline', 'Inline image expansion', function (b) {
 	if (b)
 		$(document).mouseup(mouseup_shita);
 	else
 		$(document).unbind('mouseup', mouseup_shita);
-};
-toggles.inline.label = 'Inline image expansion';
-toggles.preview = function (b) {
+}, 'checkbox');
+
+add_spec('preview', 'Hover preview', function (b) {
 	if (b)
 		$(document).mousemove(hover_shita);
 	else
 		$(document).unbind('mousemove', hover_shita);
-};
-toggles.preview.label = 'Hover preview';
+}, 'checkbox');
+
+add_spec('board.$BOARD.theme', 'Theme', function (theme) {
+	if (!theme)
+		return;
+	var $link = $('head link[rel=stylesheet]:last');
+	$link.attr('href', MEDIA_URL + theme + '.css');
+}, themes);
 
 $(function () {
 	$name = $('input[name=name]');
@@ -112,22 +129,42 @@ $(function () {
 	$email.input(prop);
 
 	var $opts = $('<div class="modal"/>').change(function (event) {
-		var $o = $(event.target), id = $o.attr('id');
-		var val = options[id] = !!$o.prop('checked');
+		var $o = $(event.target), id = $o.attr('id'), val;
+		var spec = _.find(optSpecs, function (s) {
+			return s.id == id;
+		});
+		if (spec.type == 'checkbox')
+			val = !!$o.prop('checked');
+		else
+			val = $o.val();
+		options[id] = val;
 		save_opts();
-		toggles[id](val);
+		(spec.func)(val);
 	});
-	for (var id in toggles) {
+	_.each(optSpecs, function (spec) {
+		var id = spec.id;
 		if (nashi.opts.indexOf(id) >= 0)
-			continue;
-		var val = options[id], b = toggles[id];
-		var $check = $('<input type="checkbox" />')
-			.attr('id', id)
-			.prop('checked', val ? 'checked' : null);
-		var $label = $('<label/>').attr('for', id).text(b.label);
-		$opts.append($check, ' ', $label, '<br>');
-		b(val);
-	}
+			return;
+		var val = options[id], $input, type = spec.type;
+		if (type == 'checkbox') {
+			$input = $('<input type="checkbox" />')
+				.prop('checked', val ? 'checked' : null);
+		}
+		else if (type instanceof Array) {
+			$input = $('<select/>');
+			_.each(type, function (item) {
+				$('<option/>')
+					.text(item.name)
+					.val(item.val)
+					.appendTo($input);
+			});
+			if (type.indexOf(val) >= 0)
+				$input.val(val);
+		}
+		var $label = $('<label/>').attr('for', id).text(spec.label);
+		$opts.append($input.attr('id', id), ' ', $label, '<br>');
+		(spec.func)(val);
+	});
 	$opts.hide().appendTo(document.body);
 	$('<a id="options">Options</a>').click(function () {
 		$opts.toggle('fast');

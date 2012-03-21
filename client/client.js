@@ -1,4 +1,3 @@
-var BOARD, THREAD, BUMP, PAGE;
 var syncs = {}, nonces = {}, ownPosts = {};
 var readOnly = ['archive'];
 var $ceiling, $sizer;
@@ -9,16 +8,6 @@ var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
 
 var connSM = new FSM('load');
 var sessionId;
-
-(function () {
-	var p = location.pathname;
-	BOARD = p.match(/^\/(.+?)\//)[1];
-	var t = p.match(/\/(\d+)$/);
-	THREAD = t ? parseInt(t[1], 10) : 0;
-	BUMP = !!p.match(/\/live$/);
-	PAGE = p.match(/\/page(\d+)$/);
-	PAGE = PAGE ? parseInt(PAGE[1], 10) : -1;
-})();
 
 function make_reply_box() {
 	var box = $('<aside>[<a>Reply</a>]</aside>');
