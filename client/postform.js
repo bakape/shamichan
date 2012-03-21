@@ -31,9 +31,7 @@ function PostForm(dest, section) {
 	this.imouto.op = THREAD;
 	this.imouto.state = [S_BOL, 0];
 	this.imouto.buffer = this.buffer;
-	this.imouto.dice = GAME_BOARDS.indexOf(BOARD) >= 0;
-	this.imouto.queueRoll = queue_roll;
-	this.imouto.allRolls = {sent: 0, seen: 0};
+	oneeSama.trigger('imouto', this.imouto);
 
 	shift_replies(section);
 	var post = this.post;

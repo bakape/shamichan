@@ -1,10 +1,10 @@
 var _ = require('../lib/underscore'),
+    amusement = require('./amusement'),
     async = require('async'),
     caps = require('./caps'),
     common = require('../common'),
     config = require('../config'),
     db = require('../db'),
-    games = require('./games'),
     get_version = require('../get').get_version,
     hooks = require('../hooks'),
     pix = require('./pix'),
@@ -13,7 +13,6 @@ var _ = require('../lib/underscore'),
     tripcode = require('./tripcode'),
     web = require('./web');
 
-require('./amusement');
 require('./panel');
 
 var RES = STATE.resources;
@@ -635,7 +634,7 @@ function allocate_post(msg, image, client, callback) {
 			return callback('Post is too long.');
 		body = msg.frag.replace(config.EXCLUDE_REGEXP, '');
 		if (config.GAME_BOARDS.indexOf(client.board) >= 0)
-			games.roll_dice(body, post, extra);
+			amusement.roll_dice(body, post, extra);
 	}
 	if (msg.op !== undefined) {
 		if (typeof msg.op != 'number' || msg.op < 1)
@@ -738,7 +737,7 @@ function update_post(frag, client) {
 		frag = frag.substr(0, combined - limit);
 	var extra = {ip: client.ip};
 	if (config.GAME_BOARDS.indexOf(client.board) >= 0)
-		games.roll_dice(frag, post, extra);
+		amusement.roll_dice(frag, post, extra);
 	post.body += frag;
 	/* imporant: broadcast prior state */
 	var old_state = post.state.slice();

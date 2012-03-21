@@ -85,9 +85,9 @@ function inject(frag) {
 }
 
 // TODO: Unify self-updates with OneeSama; this is redundant
-function resolve_own_links(links) {
-	if (!postForm)
-		return;
+oneeSama.hook('insertOwnPost', function (links, info) {
+	if (!postForm || !links)
+		return links;
 	postForm.buffer.find('.nope').each(function () {
 		var $a = $(this);
 		var m = $a.text().match(/^>>(\d+)$/);
@@ -99,35 +99,8 @@ function resolve_own_links(links) {
 			$a.attr('href', url).removeAttr('class');
 		}
 	});
-}
-
-function queue_roll(bit) {
-	var n = this.allRolls.sent++;
-	var info = this.allRolls[n];
-	if (!info)
-		info = this.allRolls[n] = {};
-	info.bit = bit;
-	info.$tag = $(this.callback(safe('<strong>')));
-	this.strong = true;
-	this.callback(info.dice ? readable_dice(bit, info.dice) : bit);
-	this.strong = false;
-	this.callback(safe('</strong>'));
-}
-
-function resolve_rolls(dice) {
-	if (!postForm || !postForm.imouto)
-		return;
-	var rolls = postForm.imouto.allRolls;
-	for (var i = 0; i < dice.length; i++) {
-		var n = rolls.seen++;
-		var info = rolls[n];
-		if (!info)
-			info = rolls[n] = {};
-		info.dice = dice[i];
-		if (info.$tag)
-			info.$tag.text(readable_dice(info.bit, info.dice));
-	}
-}
+	return links;
+});
 
 function get_focus() {
 	var focus = window.getSelection().focusNode;
@@ -198,10 +171,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	if (msg.nonce && msg.nonce in nonces) {
 		delete nonces[msg.nonce];
 		ownPosts[num] = true;
-		if (msg.links)
-			resolve_own_links(msg.links);
-		if (msg.dice)
-			resolve_rolls(msg.dice);
+		oneeSama.trigger('insertOwnPost', msg.links, msg);
 		return;
 	}
 	msg.num = num;
@@ -295,17 +265,13 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 
 dispatcher[UPDATE_POST] = function (msg) {
 	var num = msg[0], links = msg[4], extra = msg[5];
-	var dice = extra ? extra.dice : null;
 	if (num in ownPosts) {
-		if (links)
-			resolve_own_links(links);
-		if (dice)
-			resolve_rolls(dice);
+		oneeSama.trigger('insertOwnPost', links, extra);
 		return;
 	}
 	var bq = $('#' + num + '>blockquote');
 	if (bq.length) {
-		oneeSama.dice = dice;
+		oneeSama.dice = extra && extra.dice;
 		oneeSama.links = links || {};
 		oneeSama.callback = inject;
 		oneeSama.buffer = bq;
