@@ -26,4 +26,15 @@ dispatcher[UPDATE_BANNER] = function (msg, op) {
 	}
 };
 
+dispatcher[EXECUTE_JS] = function (msg, op) {
+	if (THREAD != op)
+		return;
+	try {
+		eval(msg[0]);
+	}
+	catch (e) {
+		/* fgsfds */
+	}
+};
+
 })();

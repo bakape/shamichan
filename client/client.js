@@ -347,17 +347,6 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 	$('section#' + op).next('hr').andSelf().remove();
 };
 
-dispatcher[EXECUTE_JS] = function (msg, op) {
-	if (THREAD != op)
-		return;
-	try {
-		eval(msg[0]);
-	}
-	catch (e) {
-		/* fgsfds */
-	}
-};
-
 function extract_num(q) {
 	return parseInt(q.attr('id'), 10);
 }
