@@ -219,9 +219,12 @@ function page_nav(thread_count, cur_page) {
 function make_link_rels(board, bits) {
 	bits.push(['stylesheet', config.MEDIA_URL + STATE.hot.BASE_CSS]);
 	bits.push(['stylesheet', config.MEDIA_URL +
-			STATE.hot.BOARD_CSS[board]]);
+			STATE.hot.BOARD_CSS[board], 'theme']);
 	return bits.map(function (p) {
-		return '\t<link rel="'+p[0]+'" href="'+p[1]+'">\n';
+		var html = '\t<link rel="'+p[0]+'" href="'+p[1]+'"';
+		if (p[2])
+			html += ' id="' + p[2] + '"';
+		return html + '>\n';
 	}).join('');
 }
 

@@ -1,5 +1,5 @@
 var $name, $email;
-var options, inputMinSize = 300, nashi;
+var nashi, inputMinSize = 300;
 
 var themes = [
 	{name: 'moe', val: 'moe-v2'},
@@ -8,13 +8,6 @@ var themes = [
 ];
 
 (function () {
-	try {
-		options = JSON.parse(localStorage.options);
-	}
-	catch (e) { }
-	if (!options)
-		options = {};
-
 	nashi = {
 		opts: [],
 		upload: !!$('<input type="file"/>').prop('disabled'),
@@ -111,8 +104,7 @@ add_spec('preview', 'Hover preview', function (b) {
 add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 	if (!theme)
 		return;
-	var $link = $('head link[rel=stylesheet]:last');
-	$link.attr('href', MEDIA_URL + theme + '.css');
+	$('#theme').attr('href', MEDIA_URL + theme + '.css');
 }, themes);
 
 $(function () {
@@ -152,14 +144,17 @@ $(function () {
 		}
 		else if (type instanceof Array) {
 			$input = $('<select/>');
+			var using;
 			_.each(type, function (item) {
 				$('<option/>')
 					.text(item.name)
 					.val(item.val)
 					.appendTo($input);
+				if (item.val == val)
+					using = val;
 			});
-			if (type.indexOf(val) >= 0)
-				$input.val(val);
+			if (using)
+				$input.val(using);
 		}
 		var $label = $('<label/>').attr('for', id).text(spec.label);
 		$opts.append($input.attr('id', id), ' ', $label, '<br>');
