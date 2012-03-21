@@ -10,7 +10,7 @@ exports.CLIENT_DEPS = [
 	'client/options.js',
 	'client/client.js',
 	'client/conn.js',
-	'client/banner.js',
+	'client/amusement.js',
 ];
 
 exports.SERVER_DEPS = [
