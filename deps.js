@@ -9,6 +9,7 @@ exports.CLIENT_DEPS = [
 	'common.js',
 	'client/options.js',
 	'client/client.js',
+	'client/postform.js',
 	'client/conn.js',
 	'client/amusement.js',
 ];
