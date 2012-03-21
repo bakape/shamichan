@@ -80,7 +80,7 @@ PF.propagate_ident = function () {
 		tag.attr('href', 'mailto:' + email).attr('class', 'email');
 	else
 		tag.removeAttr('href').attr('class', 'emailcancel');
-}
+};
 
 PF.on_allocation = function (msg) {
 	var num = msg.num;
@@ -346,7 +346,7 @@ PF.cancel_upload = function () {
 	}
 	else
 		this.finish_wrapped();
-}
+};
 
 PF.finish = function () {
 	if (this.num) {
@@ -407,7 +407,7 @@ PF.make_upload_form = function () {
 			'cancel_upload'));
 	this.$iframe = form.find('iframe');
 	this.$imageInput = form.find('input[name=image]').change(
-			on_image_chosen);
+			$.proxy(this, 'on_image_chosen'));
 	this.$toggle = form.find('#toggle').click($.proxy(this, 'on_toggle'));
 	if (nashi.upload) {
 		this.$imageInput.hide();
@@ -418,22 +418,22 @@ PF.make_upload_form = function () {
 	return form;
 };
 
-function on_image_chosen() {
-	if (!$(this).val()) {
-		postForm.uploadStatus.text('');
+PF.on_image_chosen = function () {
+	if (!this.$imageInput.val()) {
+		this.uploadStatus.text('');
 		return;
 	}
-	postForm.prep_upload();
+	this.prep_upload();
 	var form = postForm.uploadForm;
-	if (!postForm.num) {
+	if (!this.num) {
 		var alloc = $('<input type="hidden" name="alloc"/>');
-		var request = postForm.make_alloc_request(null);
+		var request = this.make_alloc_request(null);
 		form.append(alloc.val(JSON.stringify(request)));
 	}
-	form.find('input[name=spoiler]').val(postForm.spoiler);
+	form.find('input[name=spoiler]').val(this.spoiler);
 	form.submit();
-	$(this).attr('disabled', true);
-}
+	this.$imageInput.attr('disabled', true);
+};
 
 PF.on_toggle = function (event) {
 	var self = this;

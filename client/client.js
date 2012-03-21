@@ -276,7 +276,8 @@ dispatcher[MOVE_THREAD] = function (msg, op) {
 };
 
 dispatcher[IMAGE_STATUS] = function (msg) {
-	postForm.uploadStatus.text(msg[0]);
+	if (postForm)
+		postForm.uploadStatus.text(msg[0]);
 };
 
 dispatcher[INSERT_IMAGE] = function (msg) {
