@@ -21,10 +21,15 @@ exports.redis_client = redis_client;
 
 /* REAL-TIME UPDATES */
 
-function Subscription(target) {
+function Subscription(fullKey, target, channel) {
 	events.EventEmitter.call(this);
 	this.setMaxListeners(0);
+
+	this.fullKey = fullKey;
 	this.target = target;
+	this.channel = channel;
+	SUBS[this.fullKey] = this;
+
 	this.subscription_callbacks = [];
 
 	this.k = redis_client();
@@ -35,6 +40,25 @@ function Subscription(target) {
 
 util.inherits(Subscription, events.EventEmitter);
 var S = Subscription.prototype;
+
+Subscription.full_key = function (key, ident) {
+	var channel;
+	if (caps.is_mod_ident(ident))
+		channel = 'auth';
+	return channel ? (channel + ':' + key) : key;
+};
+
+Subscription.get = function (key, ident) {
+	var channel;
+	if (caps.is_mod_ident(ident))
+		channel = 'auth';
+	var fullKey = channel ? (channel + ':' + key) : key;
+
+	var sub = SUBS[fullKey];
+	if (!sub)
+		sub = new Subscription(fullKey, key, channel);
+	return sub;
+};
 
 S.when_ready = function (cb) {
 	if (this.subscription_callbacks)
@@ -55,11 +79,28 @@ S.on_sub = function () {
 	delete this.subscription_callbacks;
 };
 
+function parse_pub_message(msg) {
+	var m = msg.match(/^(\d+)\|/);
+	var prefixLen = m[0].length;
+	var bodyLen = parseInt(m[1], 10);
+	var info = {body: msg.substr(prefixLen, bodyLen)};
+	var suffixPos = prefixLen + bodyLen;
+	if (msg.length > suffixPos)
+		info.suffixPos = suffixPos;
+	return info;
+}
+
 S.on_message = function (chan, msg) {
+	var parsed = parse_pub_message(msg), extra;
+	if (this.channel && parsed.suffixPos) {
+		var suffix = JSON.parse(msg.slice(parsed.suffixPos));
+		extra = suffix[this.channel];
+	}
+	msg = parsed.body;
 	var m = msg.match(/^(\d+),(\d+)/);
 	var op = parseInt(m[1], 10);
 	var kind = parseInt(m[2], 10);
-	this.emit('update', op, kind, '[[' + msg + ']]');
+	this.emit('update', op, kind, '[[' + msg + ']]', extra);
 };
 
 S.on_sub_error = function (err) {
@@ -84,8 +125,8 @@ S.commit_sudoku = function () {
 	k.removeAllListeners('message');
 	k.removeAllListeners('subscribe');
 	k.quit();
-	if (SUBS[this.target] === this)
-		delete SUBS[this.target];
+	if (SUBS[this.fullKey] === this)
+		delete SUBS[this.fullKey];
 	this.removeAllListeners('update');
 	this.removeAllListeners('error');
 };
@@ -141,6 +182,7 @@ exports.first_tag_of = function (op) {
 };
 
 function update_thread_cache(pat, chan, msg) {
+	msg = parse_pub_message(msg).body;
 	var m = msg.match(/^(\d+),(\d+),?/);
 	var headerLen = m[0].length;
 	var op = parseInt(m[1], 10);
@@ -299,21 +341,16 @@ function forEachInObject(obj, f, callback) {
 		callback(errors.length ? errors : null);
 }
 
-Y.target_key = function (key) {
-	return (key == 'live') ? 'tag:' + this.tag : 'thread:' + key;
+Y.target_key = function (id) {
+	return (id == 'live') ? 'tag:' + this.tag : 'thread:' + id;
 };
 
 Y.kiku = function (targets, on_update, on_sink, callback) {
 	var self = this;
 	this.on_update = on_update;
 	this.on_sink = on_sink;
-	forEachInObject(targets, function (target, cb) {
-		var key = self.target_key(target);
-		var sub = SUBS[key];
-		if (!sub) {
-			sub = new Subscription(key);
-			SUBS[key] = sub;
-		}
+	forEachInObject(targets, function (id, cb) {
+		var sub = Subscription.get(self.target_key(id), self.ident);
 		sub.on('update', on_update);
 		sub.on('error', on_sink);
 		sub.when_ready(cb);
@@ -322,7 +359,9 @@ Y.kiku = function (targets, on_update, on_sink, callback) {
 
 Y.kikanai = function (targets) {
 	for (var target in targets) {
-		var sub = SUBS[this.target_key(target)];
+		var key = this.target_key(target);
+		key = Subscription.full_key(key, this.ident);
+		var sub = SUBS[key];
 		if (sub) {
 			sub.removeListener('update', this.on_update);
 			sub.removeListener('error', this.on_sink);
@@ -473,13 +512,17 @@ Y.insert_post = function (msg, body, extra, callback) {
 		function (v, next) {
 			view = v;
 			delete view.ip;
-			self._log(m, op, common.INSERT_POST, [num, view]);
 
+			var etc = {};
 			if (ip) {
 				var n = post_volume(view, body);
 				if (n > 0)
 					update_throughput(m, ip, view.time, n);
+				etc.auth = {ip: ip};
 			}
+
+			self._log(m, op, common.INSERT_POST, [num, view], etc);
+
 			m.exec(next);
 		},
 		function (results, next) {
@@ -605,7 +648,7 @@ Y.remove_thread = function (op, callback) {
 			m.zrem('tag:' + tagKey + ':threads', op);
 		});
 		m.zadd(graveyardKey + ':threads', deadCtr, op);
-		self._log(m, op, common.DELETE_THREAD, [], tags);
+		self._log(m, op, common.DELETE_THREAD, [], {tags: tags});
 		m.hset(key, 'hide', 1);
 		/* Next two vals are checked */
 		m.renamenx(key, dead_key);
@@ -664,7 +707,7 @@ Y.archive_thread = function (op, callback) {
 			m.zrem('tag:' + tag_key(tag) + ':threads', op);
 		});
 		m.zadd(archiveKey + ':threads', bumpCtr, op);
-		self._log(m, op, common.DELETE_THREAD, [], tags);
+		self._log(m, op, common.DELETE_THREAD, [], {tags: tags});
 
 		// shallow thread insertion message in archive
 		if (!_.isEmpty(links))
@@ -675,7 +718,7 @@ Y.archive_thread = function (op, callback) {
 			delete view.ip;
 			view.replyctr = replyCount;
 			self._log(m, op, common.MOVE_THREAD, [view],
-					['archive']);
+					{tags: ['archive']});
 			m.exec(next);
 		});
 	},
@@ -872,7 +915,7 @@ Y.finish_all = function (callback) {
 	});
 };
 
-Y._log = function (m, op, kind, msg, tags) {
+Y._log = function (m, op, kind, msg, opts) {
 	msg.unshift(kind);
 	msg = JSON.stringify(msg).slice(1, -1);
 	console.log("Log:", msg);
@@ -883,10 +926,18 @@ Y._log = function (m, op, kind, msg, tags) {
 		m.rpush(key + ':history', msg);
 		m.hincrby(key, 'hctr', 1);
 	}
-	msg = op + ',' + msg;
+
+	var opBit = op + ',';
+	var len = opBit.length + msg.length;
+	msg = len + '|' + opBit + msg;
+
+	var suffix;
+	if (opts && opts.auth)
+		suffix = {auth: opts.auth};
+	if (suffix)
+		msg += JSON.stringify(suffix);
 	m.publish(key, msg);
-	if (!tags)
-		tags = this.tag ? [this.tag] : [];
+	var tags = (opts && opts.tags) || (this.tag ? [this.tag] : []);
 	tags.forEach(function (tag) {
 		m.publish('tag:' + tag, msg);
 	});
