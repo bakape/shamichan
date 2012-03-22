@@ -4,8 +4,8 @@ var authcommon = require('../authcommon'),
     db = require('../db');
 
 exports.can_access = function (ident, board) {
-	if (is_admin_ident(ident))
-		return true; // including graveyard
+	if (board == 'graveyard' && is_admin_ident(ident))
+		return true;
 	return db.is_board(board);
 };
 
