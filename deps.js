@@ -12,6 +12,7 @@ exports.CLIENT_DEPS = [
 	'client/postform.js',
 	'client/conn.js',
 	'client/amusement.js',
+	'client/youtube.js',
 ];
 
 exports.SERVER_DEPS = [
