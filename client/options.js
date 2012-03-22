@@ -56,6 +56,8 @@ function save_opts() {
 	catch (e) {}
 }
 
+/* HOVER PREVIEW */
+
 function hover_shita(event) {
 	if (event.target.tagName.match(/^A$/i)) {
 		var m = $(event.target).text().match(/^>>(\d+)$/);
@@ -68,7 +70,34 @@ function hover_shita(event) {
 	}
 }
 
-function mouseup_shita(event) {
+function preview_miru(event, num) {
+	if (num != previewNum) {
+		var post = $('article#' + num);
+		if (!post.length)
+			return false;
+		if (preview)
+			preview.remove();
+		preview = $('<div class="preview">' + post.html() + '</div>');
+	}
+	var height = preview.height();
+	if (height < 5) {
+		preview.hide();
+		$(document.body).append(preview);
+		height = preview.height();
+		preview.detach().show();
+	}
+	preview.css({left: (event.pageX + 20) + 'px',
+		top: (event.pageY - height - 20) + 'px'});
+	if (num != previewNum) {
+		$(document.body).append(preview);
+		previewNum = num;
+	}
+	return true;
+}
+
+/* INLINE EXPANSION */
+
+$(document).on('mouseup', function (event) {
 	/* Bypass expansion for non-left mouse clicks */
 	if (options.inline && event.which > 1) {
 		var img = $(event.target);
@@ -79,7 +108,7 @@ function mouseup_shita(event) {
 			}, 100);
 		}
 	}
-}
+});
 
 $(document).on('click', 'img', function (event) {
 	if (options.inline) {
@@ -131,15 +160,12 @@ function toggle_expansion(img, event) {
 var optSpecs = [];
 function add_spec(id, label, func, type) {
 	id = id.replace(/\$BOARD/g, BOARD);
+	if (!func)
+		func = function () {};
 	optSpecs.push({id: id, label: label, func: func, type: type});
 }
 
-add_spec('inline', 'Inline image expansion', function (b) {
-	if (b)
-		$(document).mouseup(mouseup_shita);
-	else
-		$(document).unbind('mouseup', mouseup_shita);
-}, 'checkbox');
+add_spec('inline', 'Inline image expansion', null, 'checkbox');
 
 add_spec('preview', 'Hover preview', function (b) {
 	if (b)

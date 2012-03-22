@@ -323,31 +323,6 @@ function insert_image(info, header, toppu) {
 		header.after(fig);
 }
 
-function preview_miru(event, num) {
-	if (num != previewNum) {
-		var post = $('article#' + num);
-		if (!post.length)
-			return false;
-		if (preview)
-			preview.remove();
-		preview = $('<div class="preview">' + post.html() + '</div>');
-	}
-	var height = preview.height();
-	if (height < 5) {
-		preview.hide();
-		$(document.body).append(preview);
-		height = preview.height();
-		preview.detach().show();
-	}
-	preview.css({left: (event.pageX + 20) + 'px',
-		top: (event.pageY - height - 20) + 'px'});
-	if (num != previewNum) {
-		$(document.body).append(preview);
-		previewNum = num;
-	}
-	return true;
-}
-
 var samePage = new RegExp('^(?:' + THREAD + ')?(#\\d+)$');
 $(document).on('click', 'a', function (event) {
 	var target = $(event.target);
