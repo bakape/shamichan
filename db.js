@@ -100,7 +100,15 @@ S.on_message = function (chan, msg) {
 	var m = msg.match(/^(\d+),(\d+)/);
 	var op = parseInt(m[1], 10);
 	var kind = parseInt(m[2], 10);
-	this.emit('update', op, kind, '[[' + msg + ']]', extra);
+
+	if (extra) {
+		var modified = inject_extra(op, kind, msg, extra);
+		// currently this won't modify op or kind,
+		// but will have to watch out for that if that changes
+		if (modified)
+			msg = modified;
+	}
+	this.emit('update', op, kind, '[[' + msg + ']]');
 };
 
 S.on_sub_error = function (err) {
@@ -139,6 +147,16 @@ S.has_no_listeners = function () {
 			self.commit_sudoku();
 	}, 30 * 1000);
 };
+
+function inject_extra(op, kind, msg, extra) {
+	// Just one kind of insertion right now
+	if (kind == common.INSERT_POST && extra.ip) {
+		var m = msg.match(/^(\d+,\d+,\d+,)(.+)$/);
+		var post = JSON.parse(m[2]);
+		post.ip = extra.ip;
+		return m[1] + JSON.stringify(post);
+	}
+}
 
 /* OP CACHE */
 

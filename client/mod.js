@@ -1,5 +1,3 @@
-function (AUTH) {
-
 var $panel;
 
 function show_panel() {
@@ -60,7 +58,6 @@ $(document).ready(function () {
 	oneeSama.hook('afterInsert', function (target) {
 		$('<input type=checkbox>').insertBefore(target.find(
 				'>header>:first-child'));
+		return target;
 	});
 });
-
-}

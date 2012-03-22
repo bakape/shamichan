@@ -48,7 +48,7 @@ async.forEachSeries(files, function (file, cb) {
 		var line = lines[j];
 		if (line.match(/^var\s+DEFINES\s*=\s*exports\s*;\s*$/))
 			continue;
-		if (line.match(/^var\s+config\s*=\s*require.*$/))
+		if (line.match(/^var\s+(config|common)\s*=\s*require.*$/))
 			continue;
 		m = line.match(/^DEFINES\.(\w+)\s*=\s*(.+);$/);
 		if (m) {
@@ -61,6 +61,9 @@ async.forEachSeries(files, function (file, cb) {
 		m = line.match(/^exports\.(\w+)\s*=\s*(.*)$/);
 		if (m)
 			line = 'var ' + m[1] + ' = ' + m[2];
+
+		// XXX: risky
+		line = line.replace(/\bcommon\.\b/g, '');
 
 		while (true) {
 			var m = line.match(config_re);

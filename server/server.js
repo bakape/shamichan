@@ -296,10 +296,11 @@ web.route_get(/^\/login\/$/, function (req, resp) {
 });
 
 function write_mod_js(resp, ident) {
-	resp.writeHead(200, {'Content-Type': 'text/javascript'});
-	resp.write('(');
+	resp.writeHead(200, {
+			'Content-Type': 'text/javascript; charset=UTF-8'});
+	resp.write('(function (AUTH) {');
 	resp.write(RES.modJs);
-	resp.end(')(' + JSON.stringify(ident) + ');');
+	resp.end('})(' + JSON.stringify(ident) + ');');
 }
 
 web.route_get_auth(/^\/admin\.js$/, function (req, resp, params) {

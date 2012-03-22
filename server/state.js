@@ -1,5 +1,6 @@
 var _ = require('../lib/underscore'),
     async = require('async'),
+    child_process = require('child_process'),
     config = require('../config'),
     fs = require('fs'),
     get_version = require('../get').get_version,
@@ -93,7 +94,7 @@ exports.reset_resources = function (cb) {
 		index: read('tmpl', 'index.html'),
 		filter: read('tmpl', 'filter.html'),
 		notFound: read('www', '404.html'),
-		modJs: read('client', 'mod.js'),
+		modJs: make_mod_js,
 	}, function (err, res) {
 		if (err)
 			return cb(err);
@@ -108,3 +109,14 @@ exports.reset_resources = function (cb) {
 		cb(null);
 	});
 };
+
+function make_mod_js(cb) {
+	child_process.exec('make -s modjs', function (err, stdout, stderr) {
+		if (err)
+			cb(err);
+		else if (stderr && stderr.trim())
+			cb(stderr.trim());
+		else
+			cb(null, stdout);
+	});
+}

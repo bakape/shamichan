@@ -15,6 +15,7 @@ exports.CLIENT_DEPS = [
 ];
 
 exports.SERVER_DEPS = [
+	'authcommon.js',
 	'common.js',
 	'config.js',
 	'db.js',
@@ -40,4 +41,9 @@ exports.SERVER_STATE = [
 	'hot.js',
 	'tmpl/filter.html',
 	'tmpl/index.html',
+];
+
+exports.MOD_CLIENT_DEPS = [
+	'authcommon.js',
+	'client/mod.js',
 ];

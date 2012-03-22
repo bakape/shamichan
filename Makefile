@@ -17,7 +17,10 @@ $(CLIENT_JS): $(CLIENT_SRC) jsmin config.js deps.js
 
 client: $(CLIENT_JS)
 
-.PHONY: all client clean
+modjs:
+	node make_client.js $(shell node get.js MOD_CLIENT_DEPS)
+
+.PHONY: all client clean modjs
 
 clean:
 	rm -rf -- .build jsmin www/js/client{.,-}*.js
