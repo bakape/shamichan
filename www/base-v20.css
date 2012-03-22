@@ -52,11 +52,6 @@ em {
 fieldset {
 	border: 0;
 }
-fieldset label {
-	display: inline-block;
-	text-align: right;
-	width: 4em;
-}
 figcaption {
 	display: block;
 	margin: 1px 0;
@@ -97,6 +92,11 @@ hr {
 }
 iframe {
 	display: none;
+}
+label.ident {
+	display: inline-block;
+	text-align: right;
+	width: 3em;
 }
 nav {
 	display: inline-block;
