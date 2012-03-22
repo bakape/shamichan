@@ -23,7 +23,7 @@ oneeSama.hook('imouto', function (imouto) {
 });
 
 oneeSama.hook('insertOwnPost', function (links, extra) {
-	if (!postForm || !postForm.imouto)
+	if (!postForm || !postForm.imouto || !extra || !extra.dice)
 		return links;
 	var rolls = postForm.imouto.allRolls;
 	for (var i = 0; i < extra.dice.length; i++) {
