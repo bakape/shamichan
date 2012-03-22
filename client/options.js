@@ -81,6 +81,53 @@ function mouseup_shita(event) {
 	}
 }
 
+$(document).on('click', 'img', function (event) {
+	if (options.inline) {
+		var $target = $(event.target);
+		if (!$target.data('skipExpand'))
+			toggle_expansion($target, event);
+	}
+});
+
+function toggle_expansion(img, event) {
+	event.preventDefault();
+	var href = img.parent().attr('href');
+	if (href.match(/^\.\.\/outbound\//))
+		return;
+	var thumb = img.data('thumbSrc');
+
+	with_dom(function () {
+		if (thumb) {
+			// try to keep the thumbnail in-window for large images
+			var h = img.height();
+			var th = parseInt(img.data('thumbHeight'), 10);
+			var y = img.offset().top, t = $(window).scrollTop();
+			if (y < t && th < h)
+				window.scrollBy(0, Math.max(th - h,
+						y - t - event.clientY + th/2));
+
+			img.replaceWith($('<img>')
+				.width(img.data('thumbWidth'))
+				.height(th)
+				.attr('src', thumb));
+			return;
+		}
+		var caption = img.parent().prev().text();
+		var dims = caption.match(/(\d+)x(\d+)/);
+		var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10),
+			r = window.devicePixelRatio;
+		if (r && r > 1) {
+			w /= r;
+			h /= r;
+		}
+		img.replaceWith($('<img>').data({
+			thumbWidth: img.width(),
+			thumbHeight: img.height(),
+			thumbSrc: img.attr('src')
+		}).attr('src', href).width(w).height(h));
+	});
+}
+
 var optSpecs = [];
 function add_spec(id, label, func, type) {
 	id = id.replace(/\$BOARD/g, BOARD);

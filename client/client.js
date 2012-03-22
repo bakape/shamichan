@@ -349,7 +349,7 @@ function preview_miru(event, num) {
 }
 
 var samePage = new RegExp('^(?:' + THREAD + ')?(#\\d+)$');
-function click_shita(event) {
+$(document).on('click', 'a', function (event) {
 	var target = $(event.target);
 	var href = target.attr('href');
 	if (href && (THREAD || postForm)) {
@@ -359,68 +359,24 @@ function click_shita(event) {
 			with_dom(function () {
 				add_ref(parseInt(q[1], 10));
 			});
-			return;
 		}
-		if (THREAD) {
+		else if (THREAD) {
 			q = href.match(samePage);
 			if (q) {
 				$('.highlight').removeClass('highlight');
 				$(q[1]).addClass('highlight');
-				return;
 			}
 		}
 	}
+});
 
-	if (options.inline && target.is('img') && !target.data('skipExpand')) {
-		toggle_expansion(target, event);
-	}
-	else if (target.is('del')) {
-		target.toggleClass('reveal');
-	}
-}
+$(document).on('click', 'del', function (event) {
+	$(event.target).toggleClass('reveal');
+});
 
-function toggle_expansion(img, event) {
-	event.preventDefault();
-	var href = img.parent().attr('href');
-	if (href.match(/^\.\.\/outbound\//))
-		return;
-	var thumb = img.data('thumbSrc');
-
-	with_dom(function () {
-		if (thumb) {
-			// try to keep the thumbnail in-window for large images
-			var h = img.height();
-			var th = parseInt(img.data('thumbHeight'), 10);
-			var y = img.offset().top, t = $(window).scrollTop();
-			if (y < t && th < h)
-				window.scrollBy(0, Math.max(th - h,
-						y - t - event.clientY + th/2));
-
-			img.replaceWith($('<img>')
-				.width(img.data('thumbWidth'))
-				.height(th)
-				.attr('src', thumb));
-			return;
-		}
-		var caption = img.parent().prev().text();
-		var dims = caption.match(/(\d+)x(\d+)/);
-		var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10),
-			r = window.devicePixelRatio;
-		if (r && r > 1) {
-			w /= r;
-			h /= r;
-		}
-		img.replaceWith($('<img>').data({
-			thumbWidth: img.width(),
-			thumbHeight: img.height(),
-			thumbSrc: img.attr('src')
-		}).attr('src', href).width(w).height(h));
-	});
-}
-
-function tsugi() {
+$(document).on('click', 'nav input', function (event) {
 	location.href = $('link[rel=next]').prop('href');
-}
+});
 
 var $DOC = $(document);
 if (window.scrollMaxY !== undefined) {
@@ -585,8 +541,6 @@ $(function () {
 	if (m)
 		$('#' + m[1]).addClass('highlight');
 
-	$(document).click(click_shita);
-	$('nav input').click(tsugi);
 	setup_upload_drop(document.body);
 
 	var ts = $('time'), ti = 0;
