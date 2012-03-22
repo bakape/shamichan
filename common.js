@@ -197,8 +197,10 @@ OS.break_heart = function (frag) {
 				else
 					this.tamashii(parseInt(m, 10));
 			}
-			else if (i % 2)
-				this.geimu(m + ' ');
+			else if (i % 2) {
+				this.geimu(m);
+				this.callback(safe('<wbr>'));
+			}
 			else
 				this.geimu(m);
 		}
