@@ -3,7 +3,7 @@ var config = require('../config'),
 
 // Load hooks
 require('../server/pix');
-require('../server/games');
+require('../server/amusement');
 
 var yaku;
 function connect() {
