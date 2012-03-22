@@ -1,4 +1,5 @@
-var config = require('../config'),
+var _ = require('../lib/underscore'),
+    config = require('../config'),
     RES = require('./state').resources,
     OAuth = require('oauth').OAuth;
 
@@ -126,7 +127,7 @@ exports.check_cookie = function (chunks, check_csrf, callback) {
 	r.hgetall('session:' + chunks.a, function (err, session) {
 		if (err)
 			return callback(err);
-		else if (!session || !Object.keys(session).length)
+		else if (_.isEmpty(session))
 			return callback('Not logged in.');
 		if (check_csrf) {
 			if (!session.csrf)
@@ -134,8 +135,33 @@ exports.check_cookie = function (chunks, check_csrf, callback) {
 			if (chunks.b !== session.csrf)
 				return callback('Possible CSRF.');
 		}
+		//session.priv = 'face';
 		callback(null, session);
 	});
+};
+
+exports.logout = function (req, resp) {
+	var r = connect();
+	var chunks = parse_cookie(req.headers.cookie);
+	r.hgetall('session:' + chunks.a, function (err, session) {
+		if (err)
+			return fail(err);
+		if (session.csrf && chunks.b !== session.csrf)
+			return fail('Possible CSRF: ' + chunks.b);
+		if (!_.isEmpty(session)) {
+			// not a huge deal if this fails
+			r.del('session:' + chunks.a);
+		}
+		var cookies = 'a=; b=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+		var headers = {Location: '..', 'Set-Cookie': cookies};
+		resp.writeHead(303, headers);
+		resp.end('Logged out.');
+	});
+	function fail(err) {
+		console.error(err);
+		resp.writeHead(500);
+		resp.end('Logout failure.');
+	}
 };
 
 function make_expiry() {

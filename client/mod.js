@@ -49,11 +49,14 @@ $(document).click(function (event) {
 		show_panel();
 });
 
-$(document).ready(function () {
+$(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
 	$('<input type=checkbox>').insertBefore('header>:first-child');
 	$name.after(' <input type=checkbox id="authname">' +
 			' <label for="authname">' + AUTH + '</label>');
+	$email.after(' <form action="../logout" method=POST ' +
+			'style="display: inline">' +
+			'<input type=submit value=Logout></form>');
 
 	oneeSama.hook('afterInsert', function (target) {
 		$('<input type=checkbox>').insertBefore(target.find(

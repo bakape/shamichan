@@ -295,6 +295,14 @@ web.route_get(/^\/login\/$/, function (req, resp) {
 	web.redirect(resp, '../login');
 });
 
+web.route_post(/^\/logout$/, twitter.logout);
+if (config.DEBUG) {
+	web.route_get(/^\/logout$/, twitter.logout);
+	web.route_get(/^\/logout\/$/, function (req, resp) {
+		web.redirect(resp, '../logout');
+	});
+}
+
 function write_mod_js(resp, ident) {
 	resp.writeHead(200, {
 			'Content-Type': 'text/javascript; charset=UTF-8'});
