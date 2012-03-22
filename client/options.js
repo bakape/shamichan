@@ -1,23 +1,14 @@
 var $name, $email;
-var nashi, inputMinSize = 300;
-
-var themes = [
-	{name: 'moe', val: 'moe-v2'},
-	{name: 'gar', val: 'gar-v2'},
-	{name: 'mawaru', val: 'meta-v1'},
-];
+var nashi = {opts: []}, inputMinSize = 300;
 
 (function () {
-	nashi = {
-		opts: [],
-		upload: !!$('<input type="file"/>').prop('disabled'),
-	};
-	if (window.screen && screen.width <= 320)
-		inputMinSize = 50;
-	if ('ontouchstart' in window)
-		nashi.opts.push('preview');
-})();
 
+nashi.upload = !!$('<input type="file"/>').prop('disabled');
+
+if (window.screen && screen.width <= 320)
+	inputMinSize = 50;
+if ('ontouchstart' in window)
+	nashi.opts.push('preview');
 
 function load_ident() {
 	try {
@@ -56,7 +47,36 @@ function save_opts() {
 	catch (e) {}
 }
 
+var optSpecs = [];
+function add_spec(id, label, func, type) {
+	id = id.replace(/\$BOARD/g, BOARD);
+	if (!func)
+		func = function () {};
+	optSpecs.unshift({id: id, label: label, func: func, type: type});
+}
+
+/* THEMES */
+
+var themes = [
+	{name: 'moe', val: 'moe-v2'},
+	{name: 'gar', val: 'gar-v2'},
+	{name: 'mawaru', val: 'meta-v1'},
+];
+
+add_spec('board.$BOARD.theme', 'Theme', function (theme) {
+	if (theme)
+		$('#theme').attr('href', MEDIA_URL + theme + '.css');
+}, themes);
+
+
 /* HOVER PREVIEW */
+
+add_spec('preview', 'Hover preview', function (b) {
+	if (b)
+		$(document).mousemove(hover_shita);
+	else
+		$(document).unbind('mousemove', hover_shita);
+}, 'checkbox');
 
 function hover_shita(event) {
 	if (event.target.tagName.match(/^A$/i)) {
@@ -96,6 +116,8 @@ function preview_miru(event, num) {
 }
 
 /* INLINE EXPANSION */
+
+add_spec('inline', 'Inline image expansion', null, 'checkbox');
 
 $(document).on('mouseup', function (event) {
 	/* Bypass expansion for non-left mouse clicks */
@@ -157,29 +179,6 @@ function toggle_expansion(img, event) {
 	});
 }
 
-var optSpecs = [];
-function add_spec(id, label, func, type) {
-	id = id.replace(/\$BOARD/g, BOARD);
-	if (!func)
-		func = function () {};
-	optSpecs.push({id: id, label: label, func: func, type: type});
-}
-
-add_spec('inline', 'Inline image expansion', null, 'checkbox');
-
-add_spec('preview', 'Hover preview', function (b) {
-	if (b)
-		$(document).mousemove(hover_shita);
-	else
-		$(document).unbind('mousemove', hover_shita);
-}, 'checkbox');
-
-add_spec('board.$BOARD.theme', 'Theme', function (theme) {
-	if (!theme)
-		return;
-	$('#theme').attr('href', MEDIA_URL + theme + '.css');
-}, themes);
-
 $(function () {
 	$name = $('input[name=name]');
 	$email = $('input[name=email]');
@@ -238,3 +237,5 @@ $(function () {
 		$opts.toggle('fast');
 	}).insertAfter('#sync');
 });
+
+})();
