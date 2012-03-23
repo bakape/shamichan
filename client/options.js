@@ -188,6 +188,8 @@ function contract_image($img, event) {
 }
 
 function expand_image($img) {
+	if ($img.data('thumbSrc'))
+		return;
 	var a = $img.parent();
 	var href = a.attr('href');
 	if (!href)
