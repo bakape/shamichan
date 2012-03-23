@@ -140,10 +140,10 @@ $(document).on('click', 'img', function (event) {
 });
 
 function toggle_expansion(img, event) {
-	event.preventDefault();
 	var href = img.parent().attr('href');
 	if (href.match(/^\.\.\/outbound\//))
 		return;
+	event.preventDefault();
 	var thumb = img.data('thumbSrc');
 
 	with_dom(function () {
