@@ -57,15 +57,14 @@ function add_spec(id, label, func, type) {
 
 /* THEMES */
 
-var themes = [
-	{name: 'moe', val: 'moe-v2'},
-	{name: 'gar', val: 'gar-v2'},
-	{name: 'mawaru', val: 'meta-v1'},
-];
+var themes = ['moe', 'gar', 'mawaru'];
+var globalVersion = 3;
 
 add_spec('board.$BOARD.theme', 'Theme', function (theme) {
-	if (theme)
-		$('#theme').attr('href', MEDIA_URL + theme + '.css');
+	if (theme) {
+		var css = theme + '-v' + globalVersion + '.css';
+		$('#theme').attr('href', MEDIA_URL + css);
+	}
 }, themes);
 
 
@@ -216,17 +215,13 @@ $(function () {
 		}
 		else if (type instanceof Array) {
 			$input = $('<select/>');
-			var using;
 			_.each(type, function (item) {
 				$('<option/>')
-					.text(item.name)
-					.val(item.val)
+					.text(item).val(item)
 					.appendTo($input);
-				if (item.val == val)
-					using = val;
 			});
-			if (using)
-				$input.val(using);
+			if (type.indexOf(val) >= 0)
+				$input.val(val);
 		}
 		var $label = $('<label/>').attr('for', id).text(spec.label);
 		$opts.append($input.attr('id', id), ' ', $label, '<br>');
