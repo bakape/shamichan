@@ -1,29 +1,25 @@
-a, header a.expand {
+a {
 	color: #444;
 }
-a:hover, blockquote a, .email *:hover {
-	color: #666 !important;
+a:hover, blockquote a, .email b:hover {
+	color: #666;
 }
-aside, nav {
-	background-color: #ddd;
-	border-right: 1px solid #ccc;
-	border-bottom: 1px solid #ccc;
-}
-article {
+article, aside, body > nav {
 	background-color: #ddd;
 	border-right: 1px solid #ccc;
 	border-bottom: 1px solid #ccc;
 }
 article.highlight {
 	background-color: #ccc;
-	border-right: 1px solid #bbb;
-	border-bottom: 1px solid #bbb;
+	border-color: #bbb;
 }
 /* shouldn't happen */
 article.editing {
 	background-color: #fa6;
-	border-right: 1px solid #e95;
-	border-bottom: 1px solid #e95;
+	border-color: #e95;
+}
+b {
+	color: #444;
 }
 b.admin {
 	color: #f00000;
@@ -51,16 +47,13 @@ h2 {
 	color: #999;
 	font-family: Tahoma;
 }
-header a {
+header nav a {
 	color: black;
-}
-header b {
-	color: #444;
 }
 hr {
 	border-top: 1px solid #ccc;
 }
-.email, .email * {
+.email, .email b {
 	color: #0f0c5d;
 }
 .modal, .preview {

@@ -2,15 +2,8 @@ a {
 	border: none;
 	text-decoration: underline;
 }
-a:visited {
+a.nope, a.nope:hover {
 	color: inherit;
-}
-a:hover, blockquote a {
-	cursor: pointer;
-}
-a.nope {
-	cursor: inherit;
-	color: inherit !important;
 	text-decoration: none;
 }
 abbr {
@@ -20,6 +13,9 @@ article, aside {
 	display: table;
 	margin: 2px;
 	padding: 4px 10px;
+}
+aside a, #options {
+	cursor: pointer;
 }
 article figure img {
 	margin-bottom: 0;
@@ -54,7 +50,7 @@ fieldset {
 }
 figcaption {
 	display: block;
-	margin: 1px 0;
+	margin: 2px 0;
 }
 figcaption i {
 	font-style: normal;
@@ -73,14 +69,8 @@ figure img {
 h1, h2 {
 	text-align: center;
 }
-header a {
+header nav a {
 	text-decoration: none;
-}
-header a.expand {
-	text-decoration: underline;
-}
-header b {
-	font-weight: bold;
 }
 header code {
 	font-family: inherit;
@@ -98,12 +88,12 @@ label.ident {
 	text-align: right;
 	width: 3em;
 }
-nav {
+body > nav {
 	display: inline-block;
 	padding: 2px 10px;
 	margin: 1px 0;
 }
-nav a, nav b {
+body > nav a, body > nav b {
 	display: inline-block;
 	padding: 4px;
 }
@@ -111,7 +101,7 @@ section {
 	display: block;
 	margin: 0 1em 1em 1em;
 }
-section p {
+section nav, section p, .preview nav {
 	display: inline;
 }
 #banner {
@@ -125,13 +115,8 @@ section #banner {
 	margin-top: 1em;
 	text-align: left;
 }
-.email, .email * {
+.email {
 	text-decoration: underline;
-}
-.emailcancel {
-	color: inherit !important;
-	cursor: inherit !important;
-	text-decoration: none;
 }
 .error {
 	position: fixed;

@@ -432,16 +432,17 @@ OS.post_ref = function (num, op) {
 			+ '">&gt;&gt;' + num + '</a>');
 };
 
-OS.num_html = function (post) {
+OS.post_nav = function (post) {
 	var n = post.num, o = post.op;
-	return ('<a href="' + this.post_url(n, o, false) + '">No.</a><a href="'
-			+ this.post_url(n, o, true) + '">' + n + '</a>');
+	return safe('<nav><a href="' + this.post_url(n, o, false) +
+			'">No.</a><a href="' + this.post_url(n, o, true) +
+			'">' + n + '</a></nav>');
 };
 
-var lastNfrag = '?lastN" class="expand">Last&nbsp;N</a>]'.replace(/N/g,
+var lastNfrag = '?lastN">Last&nbsp;N</a>]'.replace(/N/g,
 		config.THREAD_LAST_N);
 function expand_html(num, omit) {
-	var html = ' &nbsp; [<a href="' + num + '" class="expand">Expand</a>]';
+	var html = ' &nbsp; [<a href="' + num + '">Expand</a>]';
 	if (omit > config.THREAD_LAST_N)
 		html += ' [<a href="' + num + lastNfrag;
 	return html;
@@ -465,8 +466,8 @@ OS.atama = function (data) {
 	}
 	header.unshift(safe('<header>'));
 	header.push(safe(' <time pubdate datetime="' + datetime(data.time) +
-			'">' + readable_time(data.time) + '</time> ' +
-			this.num_html(data)));
+			'">' + readable_time(data.time) + '</time> '),
+			this.post_nav(data));
 	if (!this.full && !data.op)
 		header.push(safe(expand_html(data.num, data.omit)));
 	header.push(safe('</header>\n\t'));

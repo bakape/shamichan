@@ -9,7 +9,7 @@ function PostForm(dest, section) {
 
 	this.buffer = $('<p/>');
 	this.line_buffer = $('<p/>');
-	this.meta = $('<header><a class="emailcancel"><b/></a>' +
+	this.meta = $('<header><a class="nope"><b/></a>' +
 			' <time/></header>');
 	this.input = $('<textarea name="body" id="trans" rows="1"/>');
 	this.submit = $('<input type="button" value="Done"/>');
@@ -77,7 +77,7 @@ PF.propagate_ident = function () {
 	if (email)
 		tag.attr('href', 'mailto:' + email).attr('class', 'email');
 	else
-		tag.removeAttr('href').attr('class', 'emailcancel');
+		tag.removeAttr('href').attr('class', 'nope');
 };
 
 PF.on_allocation = function (msg) {

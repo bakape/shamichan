@@ -1,23 +1,24 @@
-a, header a.expand {
+a {
 	color: #c22;
 }
-a:hover, blockquote a, .email *:hover {
-	color: #513fd3 !important;
+a:hover, blockquote a, .email b:hover {
+	color: #513fd3;
 }
-article, aside, nav {
+article, aside, body > nav {
 	background-color: #222;
 	border-right: 1px solid #111;
 	border-bottom: 1px solid #111;
 }
 article.highlight {
 	background-color: #333;
-	border-right: 1px solid #222;
-	border-bottom: 1px solid #222;
+	border-color: #222;
 }
 article.editing {
 	background-color: #311;
-	border-right: 1px solid #200;
-	border-bottom: 1px solid #200;
+	border-color: #200;
+}
+b {
+	color: #666;
 }
 b.admin {
 	color: #f00;
@@ -45,16 +46,13 @@ h2 {
 	color: #900;
 	font-family: Tahoma;
 }
-header, header a, figcaption {
+header, header nav a, figcaption {
 	color: #555;
-}
-header b {
-	color: #666;
 }
 hr {
 	border-top: 1px solid #300;
 }
-.email, .email * {
+.email, .email b {
 	color: #0f0c5d;
 }
 .modal {
