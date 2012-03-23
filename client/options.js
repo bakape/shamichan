@@ -144,38 +144,68 @@ function toggle_expansion(img, event) {
 	if (href.match(/^\.\.\/outbound\//))
 		return;
 	event.preventDefault();
-	var thumb = img.data('thumbSrc');
+	var expand = !img.data('thumbSrc');
+	var $imgs = img;
+	if (THREAD && (event.altKey || event.shiftKey)) {
+		var post = img.closest('article');
+		if (post.length)
+			$imgs = post.nextAll(':has(img):lt(4)').andSelf();
+		else
+			$imgs = img.closest('section').children(
+					':has(img):lt(5)');
+		$imgs = $imgs.find('img');
+	}
 
 	with_dom(function () {
-		if (thumb) {
-			// try to keep the thumbnail in-window for large images
-			var h = img.height();
-			var th = parseInt(img.data('thumbHeight'), 10);
-			var y = img.offset().top, t = $(window).scrollTop();
-			if (y < t && th < h)
-				window.scrollBy(0, Math.max(th - h,
-						y - t - event.clientY + th/2));
-
-			img.replaceWith($('<img>')
-				.width(img.data('thumbWidth'))
-				.height(th)
-				.attr('src', thumb));
-			return;
-		}
-		var caption = img.parent().prev().text();
-		var dims = caption.match(/(\d+)x(\d+)/);
-		var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10),
-			r = window.devicePixelRatio;
-		if (r && r > 1) {
-			w /= r;
-			h /= r;
-		}
-		img.replaceWith($('<img>').data({
-			thumbWidth: img.width(),
-			thumbHeight: img.height(),
-			thumbSrc: img.attr('src')
-		}).attr('src', href).width(w).height(h));
+		$imgs.each(function () {
+			var $img = $(this);
+			if (expand)
+				expand_image($img);
+			else {
+				contract_image($img, event);
+				event = null; // de-zoom to first image only
+			}
+		});
 	});
+}
+
+function contract_image($img, event) {
+	var thumb = $img.data('thumbSrc');
+	if (!thumb)
+		return;
+	// try to keep the thumbnail in-window for large images
+	var h = $img.height();
+	var th = parseInt($img.data('thumbHeight'), 10);
+	if (event) {
+		var y = $img.offset().top, t = $(window).scrollTop();
+		if (y < t && th < h)
+			window.scrollBy(0, Math.max(th - h,
+					y - t - event.clientY + th/2));
+	}
+	$img.replaceWith($('<img>')
+			.width($img.data('thumbWidth')).height(th)
+			.attr('src', thumb));
+}
+
+function expand_image($img) {
+	var a = $img.parent();
+	var href = a.attr('href');
+	if (!href)
+		return;
+	var dims = a.prev().text().match(/(\d+)x(\d+)/);
+	if (!dims)
+		return;
+	var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10);
+	var r = window.devicePixelRatio;
+	if (r && r > 1) {
+		w /= r;
+		h /= r;
+	}
+	$img.replaceWith($('<img>').data({
+		thumbWidth: $img.width(),
+		thumbHeight: $img.height(),
+		thumbSrc: $img.attr('src'),
+	}).attr('src', href).width(w).height(h));
 }
 
 $(function () {
