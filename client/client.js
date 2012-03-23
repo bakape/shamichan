@@ -10,9 +10,7 @@ var connSM = new FSM('load');
 var sessionId;
 
 function make_reply_box() {
-	var box = $('<aside class="act"><a>Reply</a></aside>');
-	box.find('a').click(on_make_post);
-	return box;
+	return $('<aside class="act"><a>Reply</a></aside>');
 }
 
 function insert_pbs() {
@@ -21,17 +19,16 @@ function insert_pbs() {
 	if (THREAD ? $('aside').length : $ceiling.next().is('aside'))
 		return;
 	make_reply_box().appendTo('section');
-	if (!nashi.upload && (BUMP || PAGE == 0)) {
-		var box = $('<aside class="act"><a>New thread</a></aside>');
-		box.find('a').click(on_make_post);
-		$ceiling.after(box);
-	}
+	if (!nashi.upload && (BUMP || PAGE == 0))
+		$ceiling.after('<aside class="act"><a>New thread</a></aside>');
 }
 
 var on_make_post = _.wrap(function () {
 	var link = $(this);
 	postForm = new PostForm(link.parent(), link.parents('section'));
 }, with_dom);
+
+$(document).on('click', 'aside a', on_make_post);
 
 function open_post_box(num) {
 	var link = $('#' + num);
