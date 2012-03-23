@@ -4,7 +4,7 @@ a {
 a:hover, blockquote a, .email b:hover {
 	color: #513fd3;
 }
-article, aside, body > nav {
+article, aside, body > nav, .modal {
 	background-color: #222;
 	border-right: 1px solid #111;
 	border-bottom: 1px solid #111;
@@ -46,7 +46,7 @@ h2 {
 	color: #900;
 	font-family: Tahoma;
 }
-header, header nav a, figcaption {
+header, figcaption, .act {
 	color: #555;
 }
 hr {
@@ -59,12 +59,7 @@ hr {
 	content: "]";
 }
 .email, .email b {
-	color: #0f0c5d;
-}
-.modal {
-	background-color: #222;
-	border-right: 1px solid #111;
-	border-bottom: 1px solid #111;
+	color: #88c;
 }
 .preview {
 	background-color: #111;
