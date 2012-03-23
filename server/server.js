@@ -251,12 +251,12 @@ function make_nav_html(info) {
 	if (cur >= 0)
 		bits.push('<a href="live">live</a>');
 	else
-		bits.push('<b>live</b>');
+		bits.push('<strong>live</strong>');
 	for (var i = 0; i < info.pages; i++) {
 		if (i != cur)
 			bits.push('<a href="page' + i + '">' + i + '</a>');
 		else
-			bits.push('<b>' + i + '</b>');
+			bits.push('<strong>' + i + '</strong>');
 	}
 	if (info.next_page)
 		bits.push(' <input type="button" value="Next">'); // TODO
