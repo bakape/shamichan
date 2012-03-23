@@ -10,7 +10,7 @@ var connSM = new FSM('load');
 var sessionId;
 
 function make_reply_box() {
-	var box = $('<aside>[<a>Reply</a>]</aside>');
+	var box = $('<aside class="act"><a>Reply</a></aside>');
 	box.find('a').click(on_make_post);
 	return box;
 }
@@ -22,7 +22,7 @@ function insert_pbs() {
 		return;
 	make_reply_box().appendTo('section');
 	if (!nashi.upload && (BUMP || PAGE == 0)) {
-		var box = $('<aside>[<a>New thread</a>]</aside>');
+		var box = $('<aside class="act"><a>New thread</a></aside>');
 		box.find('a').click(on_make_post);
 		$ceiling.after(box);
 	}

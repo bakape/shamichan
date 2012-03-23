@@ -419,7 +419,7 @@ web.route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
 	web.redirect(resp, '../page' + params[1]);
 });
 
-var returnHTML = '<span id="return">[<a href=".">Return</a>]</span>';
+var returnHTML = '<span id="return" class="act"><a href=".">Return</a></span>';
 
 web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var board = params[1];

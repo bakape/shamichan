@@ -439,12 +439,13 @@ OS.post_nav = function (post) {
 			'">' + n + '</a></nav>');
 };
 
-var lastNfrag = '?lastN">Last&nbsp;N</a>]'.replace(/N/g,
+var lastNfrag = '?lastN">Last&nbsp;N</a></span>'.replace(/N/g,
 		config.THREAD_LAST_N);
 function expand_html(num, omit) {
-	var html = ' &nbsp; [<a href="' + num + '">Expand</a>]';
+	var html = ' &nbsp; <span class="act"><a href="' + num +
+			'">Expand</a></span>';
 	if (omit > config.THREAD_LAST_N)
-		html += ' [<a href="' + num + lastNfrag;
+		html += ' <span class="act"><a href="' + num + lastNfrag;
 	return html;
 }
 

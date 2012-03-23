@@ -51,6 +51,12 @@ header nav a {
 hr {
 	border-top: 1px solid #b7c5d9;
 }
+.act:before {
+	content: "[";
+}
+.act:after {
+	content: "]";
+}
 .email, .email b {
 	color: #0f0c5d;
 }

@@ -52,6 +52,12 @@ header, header nav a, figcaption {
 hr {
 	border-top: 1px solid #300;
 }
+.act:before {
+	content: "[";
+}
+.act:after {
+	content: "]";
+}
 .email, .email b {
 	color: #0f0c5d;
 }
