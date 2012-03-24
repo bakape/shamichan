@@ -868,7 +868,7 @@ else {
 }
 
 function start_server() {
-	web.server.listen(config.PORT);
+	web.server.listen(config.LISTEN_PORT, config.LISTEN_HOST);
 	if (config.DEBUG)
 		web.enable_debug();
 	var sockOpts = {
