@@ -154,6 +154,8 @@ dispatcher[ALLOCATE_POST] = function (msg) {
 dispatcher[INSERT_POST] = function (msg) {
 	var num = msg[0];
 	msg = msg[1];
+	if (!msg.op)
+		syncs[num] = 1;
 	if (msg.nonce && msg.nonce in nonces) {
 		delete nonces[msg.nonce];
 		ownPosts[num] = true;

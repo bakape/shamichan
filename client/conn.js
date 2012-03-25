@@ -20,7 +20,7 @@ function on_message(e) {
 		var msg = msgs[i];
 		var op = msg.shift();
 		var type = msg.shift();
-		if (is_pubsub(type))
+		if (is_pubsub(type) && op in syncs)
 			syncs[op]++;
 		dispatcher[type](msg, op);
 	}
