@@ -4,7 +4,6 @@
 * When navigating away from a page, commit any outstanding text
 * Backbone.js
 * Hover previews of threads
-* YouTube expansions should be closeable
 * YouTube links should have a title
 * Incoming JSON schema checker
 * Upload cancelling doesn't work?

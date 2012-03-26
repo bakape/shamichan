@@ -32,7 +32,15 @@ function make_video(id, params, dims, start) {
 
 $(document).on('click', 'cite', function (event) {
 	var $target = $(event.target);
-	var m = $target.text().match(youtube_re);
+	var link = $target.data('link');
+	if (link) {
+		$target.removeData('link').empty().text(link);
+		return;
+	}
+	link = $target.text();
+	var m = link.match(youtube_re);
+	if (!m)
+		return;
 	var start = 0;
 	if (m[2]) {
 		var t = m[2].match(youtube_time_re);
@@ -47,6 +55,6 @@ $(document).on('click', 'cite', function (event) {
 	}
 	var $obj = make_video(m[1], null, null, start);
 	with_dom(function () {
-		$target.replaceWith($obj);
+		$target.data('link', link).append('<br>', $obj);
 	});
 });
