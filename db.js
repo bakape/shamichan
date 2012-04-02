@@ -735,8 +735,16 @@ Y.archive_thread = function (op, callback) {
 				return next(err);
 			delete view.ip;
 			view.replyctr = replyCount;
+			view.hctr = 0;
 			self._log(m, op, common.MOVE_THREAD, [view],
 					{tags: ['archive']});
+
+			// clear history; note new history could be added
+			// for deletion in the archive
+			// (a bit silly right after adding a new entry)
+			m.hdel(key, 'hctr');
+			m.del(key + ':history');
+
 			m.exec(next);
 		});
 	},
