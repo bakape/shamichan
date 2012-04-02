@@ -1403,6 +1403,7 @@ function parse_tags(input) {
 	}
 	return tags;
 }
+exports.parse_tags = parse_tags;
 
 function hmget_obj(r, key, keys, cb) {
 	r.hmget(key, keys, function (err, rs) {
