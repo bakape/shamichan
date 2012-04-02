@@ -1048,12 +1048,6 @@ Y._get_each_thread = function (reader, ix, nums) {
 	});
 };
 
-Y.report_error = function (info, ver, callback) {
-	var r = this.connect();
-	info.time = new Date().getTime();
-	r.rpush('error:' + ver, JSON.stringify(info), callback);
-};
-
 /* LURKERS */
 
 function Reader(yakusoku) {

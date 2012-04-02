@@ -549,39 +549,15 @@ function pad3(n) {
 	return (n < 10 ? '00' : (n < 100 ? '0' : '')) + n;
 }
 
-var git_version;
-var error_db;
 function report(error, client, client_msg) {
-	if (typeof git_version == 'undefined') {
-		git_version = null;
-		get_version([], function (err, ver) {
-			if (err) {
-				console.error(err);
-				console.error(error);
-			}
-			else {
-				git_version = ver;
-				report(error, client, client_msg);
-			}
-		});
-		return;
-	}
-	if (!error_db)
-		error_db = new db.Yakusoku(null, db.UPKEEP_IDENT);
-	var ver = git_version || 'ffffff';
+	var error_db = new db.Yakusoku(null, db.UPKEEP_IDENT);
 	var msg = client_msg || 'Server error.';
 	var ip = client && client.ip;
-	var info = {error: error, msg: msg, ip: ip};
-	error_db.report_error(info, ver, function (err, num) {
-		if (err)
-			console.error(err);
-		ver = ' (#' + ver + '-' + pad3(num) + ')';
-		console.error((error || msg) + ' ' + ip + ver);
-		if (client) {
-			client.send([0, common.INVALID, msg + ver]);
-			client.synced = false;
-		}
-	});
+	console.error('Error by ' + ip + ': ' + (error || msg));
+	if (client) {
+		client.send([0, common.INVALID, msg]);
+		client.synced = false;
+	}
 }
 
 /* Must be prepared to receive callback instantly */
