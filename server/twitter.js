@@ -1,7 +1,8 @@
 var _ = require('../lib/underscore'),
     config = require('../config'),
     RES = require('./state').resources,
-    OAuth = require('oauth').OAuth;
+    OAuth = require('oauth').OAuth,
+    winston = require('winston');
 
 var oauth = new OAuth('https://api.twitter.com/oauth/request_token',
 		'https://api.twitter.com/oauth/access_token',
@@ -16,7 +17,7 @@ function connect() {
 
 function oauth_error(resp, err) {
 	if (err)
-		console.error(err);
+		winston.error(err);
 	resp.writeHead(500);
 	resp.end('Twitter auth error. Try again later.');
 }
@@ -158,7 +159,7 @@ exports.logout = function (req, resp) {
 		resp.end('Logged out.');
 	});
 	function fail(err) {
-		console.error(err);
+		winston.error(err);
 		resp.writeHead(500);
 		resp.end('Logout failure.');
 	}

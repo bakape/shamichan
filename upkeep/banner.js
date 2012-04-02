@@ -1,7 +1,8 @@
 var _ = require('../lib/underscore'),
     db = require('../db'),
     expat = require('node-expat'),
-    request = require('request');
+    request = require('request'),
+    winston = require('winston');
 
 var RADIO_IDENT = {auth: 'Radio'};
 var RADIO_MOUNT = '/radio';
@@ -21,7 +22,7 @@ function monitor(last) {
 	poll(POLL_URL, function (err, mounts) {
 		var info, clear = false;
 		if (err)
-			console.error(err);
+			winston.error(err);
 		else
 			info = format_now_playing(mounts);
 		var interval = SHORT_INTERVAL;
@@ -40,7 +41,7 @@ function monitor(last) {
 		else {
 			update_banner(info, function (err, cb) {
 				if (err) {
-					console.error(err);
+					winston.error(err);
 					interval = LONG_INTERVAL;
 				}
 				if (clear)
@@ -56,7 +57,7 @@ function poll(url, cb) {
 		if (err)
 			return cb(err);
 		if (resp.statusCode != 200)
-			return console.error("Got " + resp.statusCode);
+			return winston.error("Got " + resp.statusCode);
 		parse(body, function (err, mounts) {
 			if (err)
 				cb(err);
@@ -105,7 +106,7 @@ function parse(input, cb) {
 	parser.on('endElement', function (name) {
 		if (thisKey) {
 			if (name != thisKey)
-				console.error("Unmatched or nested?!");
+				winston.error("Unmatched or nested?!");
 			curMount[thisKey] = thisVal.join('').trim();
 			thisKey = thisVal = null;
 		}
@@ -113,7 +114,7 @@ function parse(input, cb) {
 			if (curMount.point)
 				mounts[curMount.point] = curMount;
 			else
-				console.warn("Unknown mount", curMount);
+				winston.warn("Unknown mount", curMount);
 			curMount = null;
 		}
 		else if (name == 'mounts') {
@@ -134,7 +135,7 @@ if (require.main === module) {
 		var info = {board: args[2], op: op, message: args[4]};
 		update_banner(info, function (err) {
 			if (err)
-				console.error(err);
+				winston.error(err);
 			process.exit(err ? -1 : 0);
 		});
 	}

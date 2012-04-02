@@ -8,7 +8,8 @@ var _ = require('./lib/underscore'),
     fs = require('fs'),
     hooks = require('./hooks'),
     redis = require('redis'),
-    util = require('util');
+    util = require('util'),
+    winston = require('winston');
 
 var OPs = exports.OPs = cache.OPs;
 var TAGS = exports.TAGS = cache.opTags;
@@ -112,7 +113,7 @@ S.on_message = function (chan, msg) {
 };
 
 S.on_sub_error = function (err) {
-	console.log("Subscription error:", err.stack || err); /* TEMP? */
+	winston.error("Subscription error:", (err.stack || err));
 	this.commit_sudoku();
 	this.subscription_callbacks.forEach(function (cb) {
 		cb(err);
@@ -426,7 +427,7 @@ Y.reserve_post = function (op, ip, callback) {
 	var longTerm = key + long_term_timeslot(now);
 	r.mget([shortTerm, longTerm], function (err, quants) {
 		if (err) {
-			console.error(err);
+			winston.error(err);
 			return callback("Limiter failure.");
 		}
 		if (quants[0] > config.SHORT_TERM_LIMIT ||
@@ -586,7 +587,7 @@ Y.remove_post = function (from_thread, num, callback) {
 		r.hset(key, 'hide', '1', function (err) {
 			if (err) {
 				/* Difficult to recover. Whatever. */
-				console.error(err);
+				winston.warn("Couldn't hide:", err);
 			}
 			delete OPs[num];
 			callback(null, [op, num]);
@@ -616,10 +617,10 @@ Y.remove_posts = function (nums, callback) {
 			else if (del < 0)
 				already_gone.push(-del);
 			else if (del)
-				console.warn('Unknown del:', del);
+				winston.warn('Unknown del:', del);
 		});
 		if (already_gone.length)
-			console.warn("Tried to delete missing posts: ",
+			winston.warn("Tried to delete missing posts:",
 					already_gone);
 		if (_.isEmpty(threads))
 			return callback(null);
@@ -783,7 +784,7 @@ Y.hide_image = function (key, callback) {
 
 function warn(err) {
 	if (err)
-		console.warn('Warning: ' + err);
+		winston.warn('Warning:', err);
 }
 
 Y.check_throttle = function (ip, callback) {
@@ -944,7 +945,7 @@ Y.finish_all = function (callback) {
 Y._log = function (m, op, kind, msg, opts) {
 	msg.unshift(kind);
 	msg = JSON.stringify(msg).slice(1, -1);
-	console.log("Log:", msg);
+	winston.info("Log:", msg);
 	if (!op)
 		throw new Error('No OP.');
 	var key = 'thread:' + op;

@@ -1,5 +1,6 @@
 var config = require('../config'),
-    db = require('../db');
+    db = require('../db'),
+    winston = require('winston');
 
 // Load hooks
 require('../server/pix');
@@ -12,7 +13,7 @@ function connect() {
 		yaku = new db.Yakusoku('archive', db.UPKEEP_IDENT);
 		r = yaku.connect();
 		r.on('error', function (err) {
-			console.error(err);
+			winston.error(err);
 			process.exit(1);
 		});
 	}
@@ -47,7 +48,7 @@ function clean_up() {
 	r.zrangebyscore(expiryKey, 1, now, 'limit', 0, CLEANING_LIMIT,
 				function (err, expired) {
 		if (err) {
-			console.error(err);
+			winston.error(err);
 			return;
 		}
 		expired.forEach(function (entry) {
@@ -59,13 +60,13 @@ function clean_up() {
 				return;
 			yaku.archive_thread(op, function (err) {
 				if (err)
-					return console.error(err);
+					return winston.error(err);
 				r.zrem(expiryKey, entry, function (err, n) {
 					if (err)
-						return console.error(err)
-					console.log("Archived thread #" + op);
+						return winston.error(err)
+					winston.info("Archived thread #" + op);
 					if (n != 1)
-						console.warn("Not archived?");
+						winston.warn("Not archived?");
 				});
 			});
 		});

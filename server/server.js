@@ -11,7 +11,8 @@ var _ = require('../lib/underscore'),
     STATE = require('./state');
     twitter = require('./twitter'),
     tripcode = require('./tripcode'),
-    web = require('./web');
+    web = require('./web'),
+    winston = require('winston');
 
 require('./panel');
 
@@ -58,7 +59,7 @@ function synchronize(msg, client, ident) {
 	if (!id || typeof id != 'number' || id < 0 || Math.round(id) != id)
 		return false;
 	if (id in clients) {
-		console.error("Duplicate client id " + id);
+		winston.error("Duplicate client id " + id);
 		return false;
 	}
 	client.id = id;
@@ -66,7 +67,7 @@ function synchronize(msg, client, ident) {
 	if (!syncs || typeof syncs != 'object')
 		return false;
 	if (client.synced) {
-		console.warn("Client tried to sync twice");
+		//winston.warn("Client tried to sync twice");
 		/* Sync logic is buggy; allow for now */
 		//return true;
 	}
@@ -107,7 +108,6 @@ function synchronize(msg, client, ident) {
 	if (client.db)
 		client.db.disconnect();
 	client.db = new db.Yakusoku(board, ident);
-	client.db.on('error', console.error.bind(console, 'redis:'));
 	/* Race between subscribe and backlog fetch; client must de-dup */
 	client.db.kiku(client.watching, client.on_update.bind(client),
 			client.on_thread_sink.bind(client), listening);
@@ -140,7 +140,7 @@ function synchronize(msg, client, ident) {
 		var info = {client: client, live: live, count: count, op: op};
 		hooks.trigger('clientSynced', info, function (err) {
 			if (err)
-				console.error(err);
+				winston.error(err);
 		});
 	}
 	return true;
@@ -163,7 +163,7 @@ OK.on_update = function (op, kind, msg) {
 
 OK.on_thread_sink = function (thread, err) {
 	/* TODO */
-	console.log(thread, 'sank:', err);
+	winston.error(thread, 'sank:', err);
 };
 
 function tamashii(num) {
@@ -366,7 +366,7 @@ web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 		yaku.disconnect();
 	});
 	yaku.on('error', function (err) {
-		console.error('index:', err);
+		winston.error('index:', err);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -409,7 +409,7 @@ web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 		yaku.disconnect();
 	});
 	yaku.on('error', function (err) {
-		console.error('page', page + ':', err);
+		winston.error('page', page + ':', err);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -439,7 +439,7 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 			if (tag)
 				return redirect_thread(resp, num, op, tag);
 			else {
-				console.warn("Orphaned thread", op);
+				winston.warn("Orphaned thread", op);
 				return web.render_404(resp);
 			}
 		}
@@ -473,7 +473,7 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		yaku.disconnect();
 	});
 	function on_err(err) {
-		console.error('thread '+num+':', err);
+		winston.error('thread '+num+':', err);
 		resp.end();
 		yaku.disconnect();
 	}
@@ -521,7 +521,7 @@ OK.on_message = function (data) {
 		type = common.INVALID;
 	var func = dispatcher[type];
 	if (!func || !func(msg, this)) {
-		console.error("Got invalid message " + data);
+		winston.warn("Got invalid message " + data);
 		report(null, this, "Bad protocol.");
 	}
 };
@@ -553,7 +553,7 @@ function report(error, client, client_msg) {
 	var error_db = new db.Yakusoku(null, db.UPKEEP_IDENT);
 	var msg = client_msg || 'Server error.';
 	var ip = client && client.ip;
-	console.error('Error by ' + ip + ': ' + (error || msg));
+	winston.error('Error by ' + ip + ': ' + (error || msg));
 	if (client) {
 		client.send([0, common.INVALID, msg]);
 		client.synced = false;
@@ -674,7 +674,7 @@ function allocate_post(msg, image, client, callback) {
 	}
 	function got_links(err, links) {
 		if (err) {
-			console.error('valid_links: ' + err);
+			winston.error('valid_links: ' + err);
 			if (client.post === post)
 				delete client.post;
 			return callback("Post reference error.");
@@ -686,7 +686,7 @@ function allocate_post(msg, image, client, callback) {
 		if (err) {
 			if (client.post === post)
 				delete client.post;
-			console.error(err);
+			winston.error(err);
 			return callback("Couldn't allocate post.");
 		}
 		post.body = body;
@@ -827,20 +827,15 @@ function propagate_resources() {
 	web.notFoundHtml = RES.notFoundHtml;
 }
 
-var sockjs_log;
-if (config.DEBUG) {
-	sockjs_log = function (sev, message) {
-		if (sev == 'info')
-			console.log(message);
-		else if (sev == 'error')
-			console.error(message);
-	};
+function sockjs_log(sev, message) {
+	if (sev == 'info')
+		winston.verbose(message);
+	else if (sev == 'error')
+		winston.error(message);
 }
-else {
-	sockjs_log = function (sev, message) {
-		if (sev == 'error')
-			console.error(message);
-	};
+if (config.DEBUG) {
+	winston.remove(winston.transports.Console);
+	winston.add(winston.transports.Console, {level: 'verbose'});
 }
 
 function start_server() {
@@ -885,7 +880,7 @@ function start_server() {
 			if (err)
 				throw err;
 			propagate_resources();
-			console.log('Reloaded initial state.');
+			winston.info('Reloaded initial state.');
 		});
 	});
 }

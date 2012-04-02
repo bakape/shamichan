@@ -26,3 +26,4 @@ npm modules:
 * oauth
 * redis
 * sockjs
+* winston

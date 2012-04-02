@@ -7,7 +7,8 @@ var async = require('async'),
     hooks = require('../hooks'),
     im = require('imagemagick'),
     path = require('path'),
-    util = require('util');
+    util = require('util'),
+    winston = require('winston');
 
 var image_attrs = ('src thumb dims size MD5 hash imgnm spoiler realthumb vint'
 		.split(' '));
@@ -91,14 +92,14 @@ IU.handle_request = function (req, resp) {
 		form.parse(req, this.parse_form.bind(this));
 	}
 	catch (err) {
-		console.error(err);
+		winston.error(err);
 		this.failure("Invalid request.");
 	}
 };
 
 IU.parse_form = function (err, fields, files) {
 	if (err) {
-		console.error("Upload error: " + err);
+		winston.error("Upload error: " + err);
 		return this.failure('Invalid upload.');
 	}
 	var image = files.image;
@@ -165,7 +166,7 @@ IU.process = function (err) {
 
 	function verified(err, rs) {
 		if (err) {
-			console.error(err);
+			winston.error(err);
 			return self.failure('Bad image.');
 		}
 		var w = rs.dims.width, h = rs.dims.height;
@@ -260,7 +261,7 @@ IU.process = function (err) {
 		}
 		async.parallel(mvs, function (err, rs) {
 			if (err) {
-				console.error(err);
+				winston.error(err);
 				return self.failure("Distro failure.");
 			}
 			image.path = dest;
@@ -287,7 +288,7 @@ IU.read_image_filesize = function (callback) {
 	var self = this;
 	fs.stat(this.image.path, function (err, stat) {
 		if (err) {
-			console.error(err);
+			winston.error(err);
 			callback('Internal filesize error.');
 		}
 		else if (stat.size > config.IMAGE_FILESIZE_MAX)
@@ -334,7 +335,7 @@ function perceptual_hash(src, callback) {
 			tmp];
 	im.convert(args, function (err, stdout, stderr) {
 		if (err) {
-			console.error(stderr);
+			winston.error(stderr);
 			return callback('Hashing error.');
 		}
 		var bin = path.join(__dirname, 'perceptual');
@@ -421,7 +422,7 @@ function resize_image(o, comp, callback) {
 
 function im_callback(cb, err, stdout, stderr) {
 	if (err) {
-		console.error(stderr);
+		winston.error(stderr);
 		return cb('Conversion error.');
 	}
 	if (config.DEBUG)
@@ -471,7 +472,7 @@ IU.publish = function () {
 	}
 	self.allocate_post(self.alloc, view, client, function (err, alloc) {
 		if (err) {
-			console.error(err);
+			winston.error(err);
 			return self.failure('Bad post.');
 		}
 		client.uploading = false;
