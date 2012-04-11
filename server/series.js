@@ -11,3 +11,18 @@ exports.forEach = function (array, func, callback) {
 		});
 	}
 };
+
+exports.map = function (array, func, callback) {
+	var results = [];
+	step(0);
+	function step(i) {
+		if (i >= array.length)
+			return callback(null, results);
+		func(array[i], function (err, res) {
+			if (err)
+				return callback(err);
+			results.push(res);
+			setTimeout(step.bind(null, i + 1), 0);
+		});
+	}
+};

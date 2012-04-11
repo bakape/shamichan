@@ -8,6 +8,7 @@ var _ = require('./lib/underscore'),
     fs = require('fs'),
     hooks = require('./hooks'),
     redis = require('redis'),
+    series = require('./server/series'),
     util = require('util'),
     winston = require('winston');
 
@@ -601,7 +602,7 @@ Y.remove_post = function (from_thread, num, callback) {
 
 Y.remove_posts = function (nums, callback) {
 	var self = this;
-	async.map(nums, this.remove_post.bind(this, true), all_gone);
+	series.map(nums, this.remove_post.bind(this, true), all_gone);
 
 	function all_gone(err, dels) {
 		if (err)
@@ -648,7 +649,7 @@ Y.remove_thread = function (op, callback) {
 	function (nums, next) {
 		if (!nums || !nums.length)
 			return next(null, []);
-		async.map(nums, self.remove_post.bind(self, false), next);
+		series.map(nums, self.remove_post.bind(self, false), next);
 	},
 	function (dels, next) {
 		var m = r.multi();
