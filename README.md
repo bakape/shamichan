@@ -27,3 +27,8 @@ npm modules:
 * redis
 * sockjs
 * winston
+
+Optional npm deps for various features:
+
+* daemon
+* icecast banners: node-expat, request

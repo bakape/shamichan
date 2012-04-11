@@ -883,6 +883,15 @@ function start_server() {
 			winston.info('Reloaded initial state.');
 		});
 	});
+
+	if (config.DAEMON) {
+		var cfg = config.DAEMON;
+		var daemon = require('daemon');
+		var pid = daemon.start(process.stdout.fd, process.stderr.fd);
+		var lock = require('path').join(cfg.PID_PATH, 'server.pid');
+		daemon.lock(lock);
+		winston.remove(winston.transports.Console);
+	}
 }
 
 if (require.main == module) {
