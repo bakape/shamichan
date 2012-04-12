@@ -4,6 +4,9 @@ var _ = require('./lib/underscore'),
     fs = require('fs'),
     child_process = require('child_process');
 
+if (config.DAEMON)
+	throw "Can't run dev server in daemon mode.";
+
 var server;
 var start_server = _.debounce(function () {
 	if (server)
