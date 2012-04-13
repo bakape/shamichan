@@ -31,3 +31,23 @@ exports.augment_oneesama = function (oneeSama, ident) {
 	if (is_admin_ident(ident))
 		oneeSama.hook('header', denote_priv);
 };
+
+function parse_ip(ip) {
+	var m = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)(?:\/(\d+))?$/);
+	if (!m)
+		return false;
+	// damn you signed int32s!
+	var num = 0;
+	for (var i = 4, shift = 1; i > 0; i--) {
+		num += parseInt(m[i], 10) * shift;
+		shift *= 256;
+	}
+	var info = {ip: num};
+	if (m[5]) {
+		var bits = parseInt(m[5], 10);
+		if (bits > 0 && bits <= 32)
+			info.mask = 0x100000000 - Math.pow(2, 32 - bits);
+	}
+	return info;
+}
+exports.parse_ip = parse_ip;
