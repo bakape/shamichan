@@ -499,6 +499,8 @@ Y.insert_post = function (msg, body, extra, callback) {
 		m.set(key + ':body', body);
 		if (msg.links)
 			m.hmset(key + ':links', msg.links);
+
+		var etc = {augments: {}};
 		var priv = self.ident.priv;
 		if (op) {
 			var pre = 'thread:' + op;
@@ -533,12 +535,11 @@ Y.insert_post = function (msg, body, extra, callback) {
 			view = v;
 			delete view.ip;
 
-			var etc = {};
 			if (ip) {
 				var n = post_volume(view, body);
 				if (n > 0)
 					update_throughput(m, ip, view.time, n);
-				etc.auth = {ip: ip};
+				etc.augments.auth = {ip: ip};
 			}
 
 			self._log(m, op, common.INSERT_POST, [num, view], etc);
@@ -944,6 +945,7 @@ Y.finish_all = function (callback) {
 };
 
 Y._log = function (m, op, kind, msg, opts) {
+	opts = opts || {};
 	msg.unshift(kind);
 	msg = JSON.stringify(msg).slice(1, -1);
 	winston.info("Log:", msg);
@@ -959,13 +961,10 @@ Y._log = function (m, op, kind, msg, opts) {
 	var len = opBit.length + msg.length;
 	msg = len + '|' + opBit + msg;
 
-	var suffix;
-	if (opts && opts.auth)
-		suffix = {auth: opts.auth};
-	if (suffix)
-		msg += JSON.stringify(suffix);
+	if (!_.isEmpty(opts.augments))
+		msg += JSON.stringify(opts.augments);
 	m.publish(key, msg);
-	var tags = (opts && opts.tags) || (this.tag ? [this.tag] : []);
+	var tags = opts.tags || (this.tag ? [this.tag] : []);
 	tags.forEach(function (tag) {
 		m.publish('tag:' + tag, msg);
 	});
