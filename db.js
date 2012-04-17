@@ -771,16 +771,7 @@ Y.hide_image = function (key, callback) {
 		var info = {};
 		for (var i = 0; i < rs.length; i++)
 			info[imgKeys[i]] = rs[i];
-		hooks.trigger("buryImage", info, free_hash);
-	}
-
-	function free_hash(err, info) {
-		if (err)
-			return callback(err);
-		if (info.hash)
-			r.del('hash:' + info.hash, callback);
-		else
-			callback(null);
+		hooks.trigger("buryImage", info, callback);
 	}
 };
 
