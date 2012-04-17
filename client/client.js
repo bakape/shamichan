@@ -316,6 +316,19 @@ dispatcher[DELETE_IMAGES] = function (msg, op) {
 	});
 };
 
+dispatcher[SPOILER_IMAGES] = function (msg, op) {
+	_.each(msg, function (num) {
+		var post = $('#' + num);
+		var $img = post.children('figure').find('img');
+		if ($img.length) {
+			var sp = spoiler_info(config.FORCED_SPOILER,
+					post.is('section'));
+			$img.replaceWith($('<img>').attr('src', sp.thumb
+				).width(sp.dims[0]).height(sp.dims[1]));
+		}
+	});
+};
+
 function extract_num(q) {
 	return parseInt(q.attr('id'), 10);
 }

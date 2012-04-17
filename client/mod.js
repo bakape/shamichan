@@ -1,17 +1,27 @@
 var $panel;
-var $delPost, $delImage;
-
 var nopeMsg = 'Nothing selected.';
 
 function show_panel() {
 	if ($panel)
 		return;
-	$delPost = $('<input type=button value=Delete>').click(korosu);
-	$delImage = $('<input type=button value="Del Image">').click(korosu);
-	$panel = $('<div></div>').append($delPost, '<br>', $delImage).css({
+	var specs = [
+		{name: 'Spoiler', kind: 7},
+		{name: 'Delete Image', kind: 8},
+		{name: 'Delete', kind: 9},
+	];
+	$panel = $('<div></div>').css({
 		position: 'fixed', bottom: '1em', right: '1em',
 		"text-align": 'right'
-	}).appendTo('body');
+	});
+	var first = true;
+	_.each(specs, function (spec) {
+		if (!first)
+			$panel.append('<br>');
+		first = false;
+		$('<input type=button>').val(spec.name).data('kind', spec.kind
+				).click(korosu).appendTo($panel);
+	});
+	$panel.appendTo('body');
 }
 
 function korosu() {
@@ -25,8 +35,7 @@ function korosu() {
 	});
 	var $button = $(this);
 	if (ids.length) {
-		var img = $button.is($delImage);
-		ids.unshift(img ? 7 : 8);
+		ids.unshift(parseInt($button.data('kind'), 10));
 		send(ids);
 	}
 	else {
@@ -41,7 +50,7 @@ function korosu() {
 readOnly.push('graveyard');
 
 window.fun = function () {
-	send([12, THREAD]);
+	send([33, THREAD]);
 };
 
 override(PF, 'make_alloc_request', function (orig, text) {

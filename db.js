@@ -767,6 +767,8 @@ Y.archive_thread = function (op, callback) {
 	}], callback);
 };
 
+/* BOILERPLATE CITY */
+
 Y.remove_images = function (nums, callback) {
 	var threads = {};
 	var rem = this.remove_image.bind(this, threads);
@@ -830,6 +832,50 @@ Y.hide_image = function (key, callback) {
 		hooks.trigger("buryImage", info, callback);
 	}
 };
+
+Y.force_image_spoilers = function (nums, callback) {
+	var threads = {};
+	var rem = this.spoiler_image.bind(this, threads);
+	var self = this;
+	series.forEach(nums, rem, function (err) {
+		if (err)
+			return callback(err);
+		var m = self.connect().multi();
+		for (var op in threads)
+			self._log(m, op, common.SPOILER_IMAGES, threads[op],
+					{tags: tags_of(op)});
+		m.exec(callback);
+	});
+};
+
+Y.spoiler_image = function (threads, num, callback) {
+	var r = this.connect();
+	var op = OPs[num];
+	if (!op)
+		callback(null, false);
+	var key = (op == num ? 'thread:' : 'post:') + num;
+	var self = this;
+	var spoilerKeys = ['src', 'spoiler', 'realthumb'];
+	r.hmget(key, spoilerKeys, function (err, info) {
+		if (err)
+			return callback(err);
+		/* no image or already spoilt */
+		if (!info[0] || info[1] || info[2])
+			return callback(null);
+		r.hmset(key, 'spoiler', config.FORCED_SPOILER, function (err) {
+			if (err)
+				return callback(err);
+
+			if (threads[op])
+				threads[op].push(num);
+			else
+				threads[op] = [num];
+			callback(null);
+		});
+	});
+};
+
+/* END BOILERPLATE CITY */
 
 function warn(err) {
 	if (err)

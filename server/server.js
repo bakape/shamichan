@@ -823,6 +823,22 @@ dispatcher[common.DELETE_IMAGES] = function (nums, client) {
 	return true;
 };
 
+dispatcher[common.SPOILER_IMAGES] = function (nums, client) {
+	/* grr copy pasted */
+	if (!caps.is_mod_ident(client.ident))
+		return false;
+	if (!nums.length)
+		return false;
+	if (nums.some(function (n) { return typeof n != 'number' || n < 1; }))
+		return false;
+
+	client.db.force_image_spoilers(nums, function (err) {
+		if (err)
+			report(err, client, "Couldn't spoiler images.");
+	});
+	return true;
+};
+
 dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	if (!caps.is_admin_ident(client.ident))
 		return false;

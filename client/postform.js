@@ -451,6 +451,6 @@ PF.on_toggle = function (event) {
 	}
 	function set_image(path) {
 		self.$toggle.css('background-image', 'url("'
-				+ config.MEDIA_URL + 'kana/' + path + '")');
+				+ mediaURL + 'kana/' + path + '")');
 	}
 };

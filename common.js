@@ -1,20 +1,23 @@
 var config = require('./config');
 var DEFINES = exports;
 DEFINES.INVALID = 0;
-DEFINES.ALLOCATE_POST = 1;
+
 DEFINES.INSERT_POST = 2;
 DEFINES.UPDATE_POST = 3;
 DEFINES.FINISH_POST = 4;
 DEFINES.CATCH_UP = 5;
 DEFINES.INSERT_IMAGE = 6;
-DEFINES.DELETE_IMAGES = 7;
-DEFINES.DELETE_POSTS = 8;
-DEFINES.DELETE_THREAD = 9;
-DEFINES.IMAGE_STATUS = 10;
-DEFINES.SYNCHRONIZE = 11;
-DEFINES.EXECUTE_JS = 12;
-DEFINES.MOVE_THREAD = 13;
-DEFINES.UPDATE_BANNER = 14;
+DEFINES.SPOILER_IMAGES = 7;
+DEFINES.DELETE_IMAGES = 8;
+DEFINES.DELETE_POSTS = 9;
+DEFINES.DELETE_THREAD = 10;
+
+DEFINES.ALLOCATE_POST = 30;
+DEFINES.IMAGE_STATUS = 31;
+DEFINES.SYNCHRONIZE = 32;
+DEFINES.EXECUTE_JS = 33;
+DEFINES.MOVE_THREAD = 34;
+DEFINES.UPDATE_BANNER = 35;
 
 DEFINES.ANON = 'Anonymous';
 DEFINES.INPUT_ROOM = 20;
@@ -26,6 +29,8 @@ DEFINES.S_NORMAL = 0;
 DEFINES.S_BOL = 1;
 DEFINES.S_QUOTE = 2;
 DEFINES.S_SPOIL = 3;
+
+var mediaURL = config.MEDIA_URL;
 
 function is_pubsub(t) {
 	return t >= DEFINES.INSERT_POST && t <= DEFINES.DELETE_THREAD;
@@ -354,34 +359,40 @@ function chibi(text) {
 		safe('(&hellip;)'), m[2], safe('</abbr>')];
 }
 
+function spoiler_info(index, toppu) {
+	return {
+		thumb: encodeURI(mediaURL + 'kana/spoiler' + (toppu ? '' : 's')
+				+ index + '.png'),
+		dims: toppu ? config.THUMB_DIMENSIONS
+				: config.PINKY_DIMENSIONS,
+	};
+}
+
 OS.gazou = function (info, toppu) {
-	var media = config.MEDIA_URL;
 	var src, thumb, name;
 	if (info.vint) {
 		src = encodeURI('../outbound/' + info.MD5);
-		thumb = media + 'vint/' + info.vint;
+		thumb = mediaURL + 'vint/' + info.vint;
 		srcname = info.MD5;
 	}
 	else {
-		src = thumb = encodeURI(media + 'src/' + info.src);
+		src = thumb = encodeURI(mediaURL + 'src/' + info.src);
 		srcname = info.src;
 	}
 	var d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
 	if (info.spoiler) {
-		thumb = encodeURI(media + 'kana/spoiler' + (toppu ? '' : 's')
-				+ info.spoiler + '.png');
-		var sp = toppu ? config.THUMB_DIMENSIONS
-				: config.PINKY_DIMENSIONS;
-		tw = sp[0];
-		th = sp[1];
+		var sp = spoiler_info(info.spoiler, toppu);
+		thumb = sp.thumb;
+		tw = sp.dims[0];
+		th = sp.dims[1];
 	}
 	else if (info.vint) {
 		tw = tw || w;
 		th = th || h;
 	}
 	else if (info.thumb)
-		thumb = encodeURI(media + 'thumb/' + info.thumb);
+		thumb = encodeURI(mediaURL + 'thumb/' + info.thumb);
 	else {
 		tw = w;
 		th = h;
