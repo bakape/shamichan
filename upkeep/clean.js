@@ -13,7 +13,7 @@ function Recycler() {
 var R = Recycler.prototype;
 
 R.recycle_post = function (post, cb) {
-	if (!post.image || !post.image.src)
+	if (!post.image || !post.image.src || post.hideimg)
 		return cb(null);
 	var r = this.y.connect();
 	var image = post.image

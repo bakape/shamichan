@@ -1,11 +1,16 @@
 var $panel;
+var $delPost, $delImage;
+
+var nopeMsg = 'Nothing selected.';
 
 function show_panel() {
 	if ($panel)
 		return;
-	var $del = $('<input type=button value=Delete>').click(korosu);
-	$panel = $('<div></div>').append($del).css({
-		position: 'fixed', bottom: 0, right: 0
+	$delPost = $('<input type=button value=Delete>').click(korosu);
+	$delImage = $('<input type=button value="Del Image">').click(korosu);
+	$panel = $('<div></div>').append($delPost, '<br>', $delImage).css({
+		position: 'fixed', bottom: '1em', right: '1em',
+		"text-align": 'right'
 	}).appendTo('body');
 }
 
@@ -18,22 +23,25 @@ function korosu() {
 			ids.push(parseInt(id));
 		}
 	});
+	var $button = $(this);
 	if (ids.length) {
-		ids.unshift(5);
+		var img = $button.is($delImage);
+		ids.unshift(img ? 7 : 8);
 		send(ids);
 	}
 	else {
-		var $button = $(this);
+		var orig = $button.val();
 		var caption = _.bind($button.val, $button);
-		caption('Nothing selected.');
-		_.delay(caption, 2000, 'Delete');
+		caption(nopeMsg);
+		if (orig != nopeMsg)
+			_.delay(caption, 2000, orig);
 	}
 }
 
 readOnly.push('graveyard');
 
 window.fun = function () {
-	send([10, THREAD]);
+	send([12, THREAD]);
 };
 
 override(PF, 'make_alloc_request', function (orig, text) {

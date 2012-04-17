@@ -310,6 +310,12 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 	$('section#' + op).next('hr').andSelf().remove();
 };
 
+dispatcher[DELETE_IMAGES] = function (msg, op) {
+	_.each(msg, function (num) {
+		$('#' + num + '>figure').remove();
+	});
+};
+
 function extract_num(q) {
 	return parseInt(q.attr('id'), 10);
 }

@@ -808,6 +808,21 @@ dispatcher[common.DELETE_POSTS] = function (nums, client) {
 	return true;
 };
 
+dispatcher[common.DELETE_IMAGES] = function (nums, client) {
+	if (!caps.is_mod_ident(client.ident))
+		return false;
+	if (!nums.length)
+		return false;
+	if (nums.some(function (n) { return typeof n != 'number' || n < 1; }))
+		return false;
+
+	client.db.remove_images(nums, function (err, dels) {
+		if (err)
+			report(err, client, "Couldn't delete images.");
+	});
+	return true;
+};
+
 dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	if (!caps.is_admin_ident(client.ident))
 		return false;

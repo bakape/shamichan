@@ -201,6 +201,16 @@ exports.first_tag_of = function (op) {
 		return config.BOARDS[tags[0]];
 };
 
+function tags_of(op) {
+	var tags = TAGS[op];
+	if (tags === undefined)
+		return false;
+	else if (typeof tags == 'number')
+		return [config.BOARDS[tags]];
+	else
+		return tags.map(function (i) { return config.BOARDS[i]; });
+}
+
 function update_thread_cache(pat, chan, msg) {
 	msg = parse_pub_message(msg).body;
 	var m = msg.match(/^(\d+),(\d+),?/);
@@ -757,10 +767,54 @@ Y.archive_thread = function (op, callback) {
 	}], callback);
 };
 
+Y.remove_images = function (nums, callback) {
+	var threads = {};
+	var rem = this.remove_image.bind(this, threads);
+	var self = this;
+	series.forEach(nums, rem, function (err) {
+		if (err)
+			return callback(err);
+		var m = self.connect().multi();
+		for (var op in threads)
+			self._log(m, op, common.DELETE_IMAGES, threads[op],
+					{tags: tags_of(op)});
+		m.exec(callback);
+	});
+};
+
+Y.remove_image = function (threads, num, callback) {
+	var r = this.connect();
+	var op = OPs[num];
+	if (!op)
+		callback(null, false);
+	var key = (op == num ? 'thread:' : 'post:') + num;
+	var self = this;
+	r.hexists(key, 'src', function (err, exists) {
+		if (err)
+			return callback(err);
+		if (!exists)
+			return callback(null);
+		self.hide_image(key, function (err) {
+			if (err)
+				return callback(err);
+			r.hset(key, 'hideimg', 1, function (err) {
+				if (err)
+					return callback(err);
+
+				if (threads[op])
+					threads[op].push(num);
+				else
+					threads[op] = [num];
+				callback(null);
+			});
+		});
+	});
+};
+
 Y.hide_image = function (key, callback) {
 	var r = this.connect();
 	var hash;
-	var imgKeys = ['hash', 'src', 'thumb', 'realthumb'];
+	var imgKeys = ['hideimg', 'hash', 'src', 'thumb', 'realthumb'];
 	r.hmget(key, imgKeys, move_dead);
 
 	function move_dead(err, rs) {
@@ -771,6 +825,8 @@ Y.hide_image = function (key, callback) {
 		var info = {};
 		for (var i = 0; i < rs.length; i++)
 			info[imgKeys[i]] = rs[i];
+		if (info.hideimg) /* already gone */
+			return callback(null);
 		hooks.trigger("buryImage", info, callback);
 	}
 };

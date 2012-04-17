@@ -6,14 +6,15 @@ DEFINES.INSERT_POST = 2;
 DEFINES.UPDATE_POST = 3;
 DEFINES.FINISH_POST = 4;
 DEFINES.CATCH_UP = 5;
-DEFINES.DELETE_POSTS = 6;
-DEFINES.DELETE_THREAD = 7;
-DEFINES.INSERT_IMAGE = 8;
-DEFINES.IMAGE_STATUS = 9;
-DEFINES.SYNCHRONIZE = 10;
-DEFINES.EXECUTE_JS = 11;
-DEFINES.MOVE_THREAD = 12;
-DEFINES.UPDATE_BANNER = 13;
+DEFINES.INSERT_IMAGE = 6;
+DEFINES.DELETE_IMAGES = 7;
+DEFINES.DELETE_POSTS = 8;
+DEFINES.DELETE_THREAD = 9;
+DEFINES.IMAGE_STATUS = 10;
+DEFINES.SYNCHRONIZE = 11;
+DEFINES.EXECUTE_JS = 12;
+DEFINES.MOVE_THREAD = 13;
+DEFINES.UPDATE_BANNER = 14;
 
 DEFINES.ANON = 'Anonymous';
 DEFINES.INPUT_ROOM = 20;
@@ -27,7 +28,7 @@ DEFINES.S_QUOTE = 2;
 DEFINES.S_SPOIL = 3;
 
 function is_pubsub(t) {
-	return t >= DEFINES.INSERT_POST && t <= DEFINES.INSERT_IMAGE;
+	return t >= DEFINES.INSERT_POST && t <= DEFINES.DELETE_THREAD;
 }
 exports.is_pubsub = is_pubsub;
 
@@ -481,7 +482,7 @@ OS.monogatari = function (data, t) {
 	this.dice = data.dice;
 	var body = this.karada(data.body);
 	body = [safe('<blockquote>'), body, safe('</blockquote>')];
-	if (!data.image)
+	if (!data.image || data.hideimg)
 		return {header: header, body: body};
 	return {header: header, image: this.gazou(data.image, t), body: body};
 };
