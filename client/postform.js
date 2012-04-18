@@ -396,12 +396,12 @@ PF.make_upload_form = function () {
 		+ 'action="/img" target="upload">'
 		+ '<input type="button" value="Cancel"/>'
 		+ '<input type="file" name="image" accept="image/*"/> '
-		+ '<a id="toggle">Spoiler</a> <strong/>'
+		+ '<input type="button" id="toggle"> <strong/>'
 		+ '<input type="hidden" name="spoiler"/>'
 		+ '<input type="hidden" name="client_id"/>'
 		+ '<iframe src="" name="upload"/></form>');
 	form.find('input[name=client_id]').val(sessionId);
-	this.$cancel = form.find('input[type=button]').click($.proxy(this,
+	this.$cancel = form.find('input[value=Cancel]').click($.proxy(this,
 			'cancel_upload'));
 	this.$iframe = form.find('iframe');
 	this.$imageInput = form.find('input[name=image]').change(

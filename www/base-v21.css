@@ -166,11 +166,9 @@ pre, #trans {
 	padding: 0;
 }
 #toggle {
-	background-image: url('kana/pane.png');
-	display: inline-block;
+	background: url('kana/pane.png') transparent;
+	border: 0;
 	height: 19px;
-	text-indent: -9001em;
-	user-select: none;
 	width: 78px;
 }
 #trans {
