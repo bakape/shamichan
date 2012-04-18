@@ -8,7 +8,7 @@ var _ = require('./lib/underscore'),
     fs = require('fs'),
     hooks = require('./hooks'),
     redis = require('redis'),
-    series = require('./server/series'),
+    stackless = require('./server/stackless'),
     util = require('util'),
     winston = require('winston');
 
@@ -263,7 +263,7 @@ function load_OPs(r, callback) {
 	var boards = config.BOARDS;
 	// Want consistent ordering in the TAGS entries for multi-tag threads
 	// (so do them in series)
-	async.forEachSeries(boards, scan_board, callback);
+	stackless.forEach(boards, scan_board, callback);
 
 	function scan_board(tag, cb) {
 		var tagIndex = boards.indexOf(tag);
@@ -613,7 +613,7 @@ Y.remove_post = function (from_thread, num, callback) {
 
 Y.remove_posts = function (nums, callback) {
 	var self = this;
-	series.map(nums, this.remove_post.bind(this, true), all_gone);
+	stackless.map(nums, this.remove_post.bind(this, true), all_gone);
 
 	function all_gone(err, dels) {
 		if (err)
@@ -660,7 +660,7 @@ Y.remove_thread = function (op, callback) {
 	function (nums, next) {
 		if (!nums || !nums.length)
 			return next(null, []);
-		series.map(nums, self.remove_post.bind(self, false), next);
+		stackless.map(nums, self.remove_post.bind(self, false), next);
 	},
 	function (dels, next) {
 		var m = r.multi();
@@ -773,7 +773,7 @@ Y.remove_images = function (nums, callback) {
 	var threads = {};
 	var rem = this.remove_image.bind(this, threads);
 	var self = this;
-	series.forEach(nums, rem, function (err) {
+	stackless.forEach(nums, rem, function (err) {
 		if (err)
 			return callback(err);
 		var m = self.connect().multi();
@@ -837,7 +837,7 @@ Y.force_image_spoilers = function (nums, callback) {
 	var threads = {};
 	var rem = this.spoiler_image.bind(this, threads);
 	var self = this;
-	series.forEach(nums, rem, function (err) {
+	stackless.forEach(nums, rem, function (err) {
 		if (err)
 			return callback(err);
 		var m = self.connect().multi();

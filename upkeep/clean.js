@@ -3,7 +3,7 @@ var config = require('../config'),
     fs = require('fs'),
     path = require('path'),
     pix = require('../server/pix'),
-    series = require('../server/series');
+    stackless = require('../server/stackless');
 
 function Recycler() {
 	this.tag = 'archive';
@@ -87,7 +87,7 @@ R.recycle_thread = function (op, cb) {
 			posts.push(post);
 		});
 		reader.on('endthread', function () {
-			series.forEach(posts, do_post, cb);
+			stackless.forEach(posts, do_post, cb);
 		});
 		reader.on('error', cb);
 	});
@@ -100,7 +100,7 @@ R.recycle_archive = function (cb) {
 	r.zrange(key + ':threads', 0, -1, function (err, threads) {
 		if (err)
 			return cb(err);
-		series.forEach(threads, do_thread, cb);
+		stackless.forEach(threads, do_thread, cb);
 	});
 };
 
