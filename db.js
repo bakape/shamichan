@@ -494,7 +494,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 	m.incr(tagKey + ':postctr'); // must be first
 	if (bump)
 		m.incr(tagKey + ':bumpctr');
-	m.sadd('liveposts', num);
+	m.sadd('liveposts', key);
 	var self = this;
 	inline(view, msg, function (err) {
 		if (err)
@@ -983,7 +983,7 @@ function finish_off(m, key, body) {
 	m.hset(key, 'body', body);
 	m.del(key.replace('dead', 'thread') + ':body');
 	m.hdel(key, 'state');
-	m.srem('liveposts', key.match(/\d+/)[0]);
+	m.srem('liveposts', key);
 }
 
 Y.finish_post = function (post, callback) {
