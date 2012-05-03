@@ -70,6 +70,8 @@ add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 
 /* HOVER PREVIEW */
 
+var preview, previewNum;
+
 add_spec('preview', 'Hover preview', function (b) {
 	if (b)
 		$(document).mousemove(hover_shita);

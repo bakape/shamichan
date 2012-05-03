@@ -1,3 +1,7 @@
+var postForm;
+var spoilerImages = config.SPOILER_IMAGES;
+var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
+
 function PostForm(dest, section) {
 	if (section.length) {
 		this.thread = section;
@@ -422,7 +426,7 @@ PF.on_image_chosen = function () {
 		return;
 	}
 	this.prep_upload();
-	var form = postForm.uploadForm;
+	var form = this.uploadForm;
 	if (!this.num) {
 		var alloc = $('<input type="hidden" name="alloc"/>');
 		var request = this.make_alloc_request(null);

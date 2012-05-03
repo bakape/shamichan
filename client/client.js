@@ -2,9 +2,6 @@ var syncs = {}, nonces = {}, ownPosts = {};
 var readOnly = ['archive'];
 var $ceiling, $sizer;
 var lockedToBottom, lockKeyHeight;
-var postForm, preview, previewNum;
-var spoilerImages = config.SPOILER_IMAGES;
-var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
 
 var connSM = new FSM('load');
 var sessionId;
