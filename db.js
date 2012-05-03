@@ -1016,15 +1016,14 @@ Y.finish_quietly = function (key, callback) {
 Y.finish_all = function (callback) {
 	var r = this.connect();
 	var self = this;
-	/* TODO: Don't use keys command (migrating to liveposts set) */
-	r.keys('*:body', function (err, keys) {
+	r.smembers('liveposts', function (err, keys) {
 		if (err)
 			return callback(err);
-		async.forEach(keys, function (body_key, cb) {
-			var key = body_key.slice(0, -5);
+		async.forEach(keys, function (key, cb) {
 			var m = r.multi();
-			m.get(body_key);
-			if (key.slice(0, 5) == 'post:')
+			m.get(key + ':body');
+			var isPost = key.slice(0, 5) == 'post:';
+			if (isPost)
 				m.hget(key, 'op');
 			m.exec(function (err, rs) {
 				if (err)
@@ -1032,8 +1031,9 @@ Y.finish_all = function (callback) {
 				m = r.multi();
 				finish_off(m, key, rs[0]);
 				var n = parseInt(key.match(/:(\d+)$/)[1]);
-				var op = parseInt(rs[1]) || n;
+				var op = isPost ? parseInt(rs[1], 10) : n;
 				self._log(m, op, common.FINISH_POST, [n]);
+				m.srem('liveposts', key);
 				m.exec(cb);
 			});
 		}, callback);
