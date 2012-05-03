@@ -18,6 +18,7 @@ function PostForm(dest, section) {
 	this.input = $('<textarea name="body" id="trans" rows="1"/>');
 	this.submit = $('<input type="button" value="Done"/>');
 	this.blockquote = $('<blockquote/>');
+	this.$sizer = $('<pre/>').appendTo('body');
 	this.pending = '';
 	this.line_count = 1;
 	this.char_count = 0;
@@ -230,9 +231,9 @@ PF.resize_input = function (val) {
 	if (typeof val != 'string')
 		val = input.val();
 
-	$sizer.text(val);
+	this.$sizer.text(val);
 	var left = input.offset().left - this.post.offset().left;
-	var size = $sizer.width() + INPUT_ROOM;
+	var size = this.$sizer.width() + INPUT_ROOM;
 	size = Math.max(size, inputMinSize - left);
 	input.css('width', size + 'px');
 };
@@ -377,6 +378,7 @@ PF.clean_up = function (remove) {
 			this.post.next('hr').remove();
 		this.post.remove();
 	}
+	this.$sizer.remove();
 
 	postForm = null;
 	insert_pbs();

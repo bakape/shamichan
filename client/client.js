@@ -1,6 +1,6 @@
 var syncs = {}, nonces = {}, ownPosts = {};
 var readOnly = ['archive'];
-var $ceiling, $sizer;
+var $ceiling;
 var lockedToBottom, lockKeyHeight;
 
 var connSM = new FSM('load');
@@ -571,6 +571,4 @@ $(function () {
 	}
 
 	$ceiling = $('hr:first');
-	$sizer = $('<pre></pre>');
-	$(document.body).append($sizer);
 });
