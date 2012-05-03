@@ -1,7 +1,6 @@
 var syncs = {}, nonces = {}, ownPosts = {};
 var readOnly = ['archive'];
 var $ceiling;
-var lockedToBottom, lockKeyHeight;
 
 var connSM = new FSM('load');
 var sessionId;
@@ -25,7 +24,7 @@ var on_make_post = _.wrap(function () {
 	postForm = new PostForm(link.parent(), link.parents('section'));
 }, with_dom);
 
-$(document).on('click', 'aside a', on_make_post);
+$DOC.on('click', 'aside a', on_make_post);
 
 function open_post_box(num) {
 	var link = $('#' + num);
@@ -339,7 +338,7 @@ function insert_image(info, header, toppu) {
 }
 
 var samePage = new RegExp('^(?:' + THREAD + ')?(#\\d+)$');
-$(document).on('click', 'a', function (event) {
+$DOC.on('click', 'a', function (event) {
 	var target = $(event.target);
 	var href = target.attr('href');
 	if (href && (THREAD || postForm)) {
@@ -360,49 +359,13 @@ $(document).on('click', 'a', function (event) {
 	}
 });
 
-$(document).on('click', 'del', function (event) {
+$DOC.on('click', 'del', function (event) {
 	$(event.target).toggleClass('reveal');
 });
 
-$(document).on('click', 'nav input', function (event) {
+$DOC.on('click', 'nav input', function (event) {
 	location.href = $('link[rel=next]').prop('href');
 });
-
-var $DOC = $(document);
-if (window.scrollMaxY !== undefined) {
-	function at_bottom() {
-		return window.scrollMaxY <= window.scrollY;
-	}
-}
-else {
-	function at_bottom() {
-		return window.scrollY + window.innerHeight >= $DOC.height();
-	}
-}
-
-function scroll_shita() {
-	var lock = at_bottom();
-	if (lock != lockedToBottom)
-		set_scroll_locked(lock);
-}
-
-function set_scroll_locked(lock) {
-	lockedToBottom = lock;
-	$('#lock').css({visibility: lock ? 'visible' : 'hidden'});
-}
-
-function with_dom(func) {
-	var lockHeight, locked = lockedToBottom;
-	if (locked)
-		lockHeight = $DOC.height();
-	var ret = func.call(this);
-	if (locked) {
-		var height = $DOC.height();
-		if (height > lockHeight)
-			window.scrollBy(0, height - lockHeight + 1);
-	}
-	return ret;
-}
 
 function add_ref(num) {
 	/* Make the post form if none exists yet */
@@ -562,12 +525,6 @@ $(function () {
 			setTimeout(img_omit, 0);
 		}
 		img_omit();
-	}
-	else {
-		$('<span id="lock">Locked to bottom</span>'
-				).css({visibility: 'hidden'}).appendTo('body');
-		$(document).scroll(scroll_shita);
-		scroll_shita();
 	}
 
 	$ceiling = $('hr:first');

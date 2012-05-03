@@ -8,6 +8,7 @@ exports.CLIENT_DEPS = [
 	'lib/oninput' + minJs,
 	'common.js',
 	'client/options.js',
+	'client/scroll.js',
 	'client/client.js',
 	'client/postform.js',
 	'client/conn.js',
