@@ -28,7 +28,7 @@ $DOC.on('click', 'aside a', on_make_post);
 
 function open_post_box(num) {
 	var link = $('#' + num);
-	if (link[0].tagName.match(/^section$/i))
+	if (link.is('section'))
 		link = link.children('aside');
 	else
 		link = link.siblings('aside');
@@ -85,9 +85,9 @@ oneeSama.hook('insertOwnPost', function (links, info) {
 });
 
 function get_focus() {
-	var focus = window.getSelection().focusNode;
-	if (focus && focus.tagName && focus.tagName.match(/^blockquote$/i))
-		return $(focus).find('textarea');
+	var $focus = $(window.getSelection().focusNode);
+	if ($focus.is('blockquote'))
+		return $focus.find('textarea');
 }
 
 function section_abbrev(section) {
