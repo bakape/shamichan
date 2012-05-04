@@ -54,17 +54,34 @@ FSM.prototype.on = function (key, f) {
 	return this;
 };
 
-FSM.prototype.act = function (tok, dests) {
-	var acts = this.acts[tok];
-	if (!acts)
-		acts = this.acts[tok] = {};
-	for (var k in dests)
-		acts[k] = dests[k];
-	return this;
-};
-
-FSM.prototype.wild = function (tok, dest) {
-	this.wilds[tok] = dest;
+FSM.prototype.act = function (spec, on_func) {
+	var halves = spec.split('->');
+	if (halves.length != 2)
+		throw new Error("Bad FSM spec: " + spec);
+	var parts = halves[0].split(',');
+	var dest = halves[1].match(/^\s*(\w+)\s*$/)[1];
+	var tok;
+	for (var i = parts.length-1; i >= 0; i--) {
+		var part = parts[i];
+		var m = part.match(/^\s*(\*|\w+)\s*(?:\+\s*(\w+)\s*)?$/);
+		if (!m)
+			throw new Error("Bad FSM spec portion: " + part);
+		if (m[2])
+			tok = m[2];
+		if (!tok)
+			throw new Error("Tokenless FSM action: " + part);
+		var src = m[1];
+		if (src == '*')
+			this.wilds[tok] = dest;
+		else {
+			var acts = this.acts[src];
+			if (!acts)
+				this.acts[src] = acts = {};
+			acts[tok] = dest;
+		}
+	}
+	if (on_func)
+		this.on(dest, on_func);
 	return this;
 };
 

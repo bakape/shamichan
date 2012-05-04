@@ -32,7 +32,7 @@ function sync_status(msg, hover) {
 	$('#sync').text(msg).attr('class', hover ? 'error' : '');
 }
 
-connSM.act('load', {start: 'conn'}).on('conn', function () {
+connSM.act('load + start -> conn', function () {
 	sync_status('Connecting...', false);
 	attempts = 0;
 	connect();
@@ -45,22 +45,20 @@ function connect() {
 	socket.onmessage = on_message;
 }
 
-connSM.act('conn', {open: 'syncing'}).act('reconn', {open: 'syncing'});
-connSM.on('syncing', function () {
+connSM.act('conn, reconn + open -> syncing', function () {
 	sync_status('Syncing...', false);
 	sessionId = Math.floor(Math.random() * 1e16) + 1;
 	send([SYNCHRONIZE, sessionId, BOARD, syncs, BUMP, document.cookie]);
 });
 
-connSM.act('syncing', {sync: 'synced'}).on('synced', function () {
+connSM.act('syncing + sync -> synced', function () {
 	sync_status('Synced.', false);
 	attemptTimer = setTimeout(function () {
 		attempts = 0;
 	}, 10000);
 });
 
-connSM.wild('close', 'dropped');
-connSM.on('dropped', function (e) {
+connSM.act('* + close -> dropped', function (e) {
 	if (DEBUG)
 		console.error('E:', e);
 	if (attemptTimer) {
@@ -72,13 +70,12 @@ connSM.on('dropped', function (e) {
 		setTimeout(connSM.feeder('retry'), 250 * Math.pow(2,attempts));
 });
 
-connSM.act('dropped', {retry: 'reconn'}).on('reconn', function () {
+connSM.act('dropped + retry -> reconn', function () {
 	sync_status('Dropped. Reconnecting...', true);
 	connect();
 });
 
-connSM.wild('invalid', 'out').act('out', {close: 'out'});
-connSM.on('out', function (msg) {
+connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 	msg = (msg && msg[0]) ? 'Out of sync: ' + msg[0] : 'Out of sync.';
 	sync_status(msg, true);
 	if (attemptTimer) {
