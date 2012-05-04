@@ -3,37 +3,8 @@ var readOnly = ['archive'];
 var $ceiling;
 
 var connSM = new FSM('load');
+var postSM = new FSM('none');
 var sessionId;
-
-function make_reply_box() {
-	return $('<aside class="act"><a>Reply</a></aside>');
-}
-
-function insert_pbs() {
-	if (connSM.state == 'out' || postForm || readOnly.indexOf(BOARD) >= 0)
-		return;
-	if (THREAD ? $('aside').length : $ceiling.next().is('aside'))
-		return;
-	make_reply_box().appendTo('section');
-	if (!nashi.upload && (BUMP || PAGE == 0))
-		$ceiling.after('<aside class="act"><a>New thread</a></aside>');
-}
-
-var on_make_post = _.wrap(function () {
-	var link = $(this);
-	postForm = new PostForm(link.parent(), link.parents('section'));
-}, with_dom);
-
-$DOC.on('click', 'aside a', on_make_post);
-
-function open_post_box(num) {
-	var link = $('#' + num);
-	if (link.is('section'))
-		link = link.children('aside');
-	else
-		link = link.siblings('aside');
-	on_make_post.call(link.find('a'));
-}
 
 var oneeSama = new OneeSama(function (num) {
 	if (this.links && num in this.links)
@@ -141,10 +112,7 @@ function spill_page() {
 var dispatcher = {};
 
 dispatcher[ALLOCATE_POST] = function (msg) {
-	if (postForm)
-		postForm.on_allocation(msg[0]);
-	else
-		send([FINISH_POST]); // Huh. Just tidy up.
+	postSM.feed('alloc', msg[0]);
 };
 
 dispatcher[INSERT_POST] = function (msg) {
@@ -274,7 +242,7 @@ dispatcher[DELETE_POSTS] = function (msg, op) {
 	var ownNum = postForm && postForm.num;
 	_.each(msg, function (num) {
 		if (num === ownNum)
-			return postForm.clean_up(true);
+			return postSM.feed('done');
 		var post = $('#' + num);
 		if (post.length)
 			post.remove();
@@ -299,7 +267,7 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 	if (postForm) {
 		var num = postForm.num;
 		if ((postForm.op || num) == op)
-			postForm.clean_up(true);
+			postSM.feed('done');
 		if (num == op)
 			return;
 	}
@@ -465,7 +433,6 @@ dispatcher[INVALID] = connSM.feeder('invalid');
 
 connSM.on('synced', function (msg) {
 	var dead_threads = msg.length ? msg[0] : []; /* TODO */
-	insert_pbs();
 
 	var m = window.location.hash.match(/^#q(\d+)$/);
 	if (m) {
@@ -475,13 +442,6 @@ connSM.on('synced', function (msg) {
 			add_ref(id);
 		}
 	}
-});
-
-connSM.on('out', function () {
-	if (postForm)
-		postForm.finish();
-	$('aside').remove();
-	$('.editing').removeClass('editing');
 });
 
 $(function () {

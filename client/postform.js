@@ -2,6 +2,65 @@ var postForm;
 var spoilerImages = config.SPOILER_IMAGES;
 var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
 
+connSM.on('synced', postSM.feeder('sync'));
+connSM.on('dropped', postSM.feeder('desync'));
+connSM.on('desynced', postSM.feeder('desync'));
+
+postSM.act('* + desync -> none', function () {
+	if (postForm) {
+		postForm.post.removeClass('editing');
+		postForm.input.val('');
+		postForm.finish();
+		postForm = null;
+	}
+	$('aside').remove();
+});
+
+postSM.act('none + sync, draft, alloc + done -> ready', function () {
+	if (postForm) {
+		postForm.remove();
+		postForm = null;
+	}
+	insert_pbs();
+});
+
+postSM.act('ready + new -> draft', function (link) {
+	postForm = new PostForm(link.parent(), link.parents('section'));
+});
+
+postSM.act('draft + alloc -> alloc', function (msg) {
+	postForm.on_allocation(msg);
+});
+
+var on_make_post = _.wrap(function () {
+	postSM.feed('new', $(this));
+}, with_dom);
+
+$DOC.on('click', 'aside a', on_make_post);
+
+function open_post_box(num) {
+	var link = $('#' + num);
+	if (link.is('section'))
+		link = link.children('aside');
+	else
+		link = link.siblings('aside');
+	on_make_post.call(link.find('a'));
+}
+
+function make_reply_box() {
+	return $('<aside class="act"><a>Reply</a></aside>');
+}
+
+function insert_pbs() {
+	if (readOnly.indexOf(BOARD) >= 0)
+		return;
+	if (THREAD ? $('aside').length : $ceiling.next().is('aside'))
+		return;
+	make_reply_box().appendTo('section');
+	if (!nashi.upload && (BUMP || PAGE == 0))
+		$ceiling.after('<aside class="act"><a>New thread</a></aside>');
+}
+
 function PostForm(dest, section) {
 	if (section.length) {
 		this.thread = section;
@@ -117,8 +176,10 @@ PF.on_allocation = function (msg) {
 	}
 };
 
-PF.on_allocation_wrapped = function (msg) {
-	with_dom(_.bind(this.on_allocation, this, msg));
+PF.on_image_alloc = function (msg) {
+	with_dom(function () {
+		postSM.feed('alloc', msg);
+	});
 };
 
 function entryScrollLock() {
@@ -364,24 +425,20 @@ PF.finish = function () {
 		this.line_buffer.remove();
 		this.blockquote.css({'margin-left': '', 'padding-left': ''});
 		send([FINISH_POST]);
-		this.clean_up(false);
+		this.preserve = true;
 	}
-	else
-		this.clean_up(true);
+	postSM.feed('done');
 };
 
 PF.finish_wrapped = _.wrap(PF.finish, with_dom);
 
-PF.clean_up = function (remove) {
-	if (remove) {
+PF.remove = function () {
+	if (!this.preserve) {
 		if (!this.op)
 			this.post.next('hr').remove();
 		this.post.remove();
 	}
 	this.$sizer.remove();
-
-	postForm = null;
-	insert_pbs();
 };
 
 PF.update_buttons = function () {
