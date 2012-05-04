@@ -1,5 +1,8 @@
 
-all: perceptual tripcode.node
+all: findapng perceptual tripcode.node
+
+findapng: findapng.c
+	gcc -O2 -o $@ $(shell pkg-config libpng --cflags --libs) $^
 
 perceptual: perceptual.c
 	gcc -O2 -o $@ $^

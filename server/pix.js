@@ -11,7 +11,7 @@ var async = require('async'),
     winston = require('winston');
 
 var image_attrs = ('src thumb dims size MD5 hash imgnm spoiler realthumb vint'
-		.split(' '));
+		+ ' apng').split(' ');
 
 function is_image(image) {
 	return image && (image.src || image.vint);
@@ -159,10 +159,13 @@ IU.process = function (err) {
 	var image = this.image;
 	var tagged_path = image.ext.replace('.', '') + ':' + image.path;
 	var self = this;
-	async.parallel({
+	var checks = {
 		stat: fs.stat.bind(fs, image.path),
-		dims: im.identify.bind(im, tagged_path)
-	}, verified);
+		dims: im.identify.bind(im, tagged_path),
+	};
+	if (image.ext == '.png')
+		checks.apng = detect_APNG.bind(null, image.path);
+	async.parallel(checks, verified);
 
 	function verified(err, rs) {
 		if (err) {
@@ -178,6 +181,8 @@ IU.process = function (err) {
 			return self.failure('Image is too wide.');
 		if (h > config.IMAGE_HEIGHT_MAX)
 			return self.failure('Image is too tall.');
+		if (rs.apng)
+			image.apng = 1;
 
 		async.parallel({
 			MD5: MD5_file.bind(null, image.path),
@@ -205,6 +210,7 @@ IU.process = function (err) {
 		var sp = image.spoiler;
 		if (!sp && image.size < 30*1024
 				&& ['.jpg', '.png'].indexOf(image.ext) >= 0
+				&& !image.apng
 				&& w <= specs.dims[0] && h <= specs.dims[1]) {
 			return got_thumbnail(false, false, null);
 		}
@@ -360,6 +366,20 @@ function perceptual_hash(src, callback) {
 				return callback('Hashing problem.');
 			callback(null, hash);
 		});
+	});
+}
+
+function detect_APNG(fnm, callback) {
+	var bin = path.join(__dirname, 'findapng');
+	child_process.exec(bin + ' ' + fnm, function (err, stdout, stderr) {
+		if (err)
+			return callback(stderr);
+		else if (stdout.match(/^APNG/))
+			return callback(null, true);
+		else if (stdout.match(/^PNG/))
+			return callback(null, false);
+		else
+			return callback(stderr);
 	});
 }
 
