@@ -10,7 +10,7 @@ exports.CLIENT_DEPS = [
 	'client/options.js',
 	'client/scroll.js',
 	'client/client.js',
-	'client/postform.js',
+	'client/posting.js',
 	'client/conn.js',
 	'client/amusement.js',
 	'client/youtube.js',
