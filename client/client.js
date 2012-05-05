@@ -1,6 +1,6 @@
 var syncs = {}, nonces = {}, ownPosts = {};
 var readOnly = ['archive'];
-var $ceiling;
+var $ceiling = $('hr:first');
 
 var connSM = new FSM('load');
 var postSM = new FSM('none');
@@ -344,6 +344,17 @@ $(function () {
 	$('section').each(function () {
 		var s = $(this);
 		syncs[s.attr('id')] = parseInt(s.attr('data-sync'));
+
+		/* Insert image omission count (kinda dumb) */
+		if (!THREAD) {
+			var img = parseInt(s.attr('data-imgs')) -
+					s.find('img').length;
+			if (img > 0) {
+				var stat = s.find('.omit');
+				var o = stat.text().match(/(\d*)/)[0];
+				stat.text(abbrev_msg(parseInt(o), img));
+			}
+		}
 	});
 
 	var m = window.location.hash.match(/^#q?(\d+)$/);
@@ -361,25 +372,4 @@ $(function () {
 		setTimeout(make_local, 0);
 	}
 	make_local();
-
-	if (!THREAD) {
-		/* Insert image omission count (kinda dumb) */
-		var ss = $('section'), si = 0;
-		function img_omit() {
-			if (si >= ss.length)
-				return;
-			var s = $(ss[si++]);
-			var img = parseInt(s.attr('data-imgs')) -
-					s.find('img').length;
-			if (img > 0) {
-				var stat = s.find('.omit');
-				var o = stat.text().match(/(\d*)/)[0];
-				stat.text(abbrev_msg(parseInt(o), img));
-			}
-			setTimeout(img_omit, 0);
-		}
-		img_omit();
-	}
-
-	$ceiling = $('hr:first');
 });
