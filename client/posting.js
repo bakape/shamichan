@@ -33,27 +33,22 @@ postSM.act('none + sync, draft, alloc + done -> ready', function () {
 	}
 });
 
-postSM.act('ready + new -> draft', function (link) {
-	postForm = new PostForm(link.parent(), link.parents('section'));
+postSM.act('ready + new -> draft', function (aside) {
+	postForm = new PostForm(aside, aside.parents('section'));
 });
 
 postSM.act('draft + alloc -> alloc', function (msg) {
 	postForm.on_allocation(msg);
 });
 
-var on_make_post = _.wrap(function () {
-	postSM.feed('new', $(this));
-}, with_dom);
-
-$DOC.on('click', 'aside a', on_make_post);
+$DOC.on('click', 'aside a', _.wrap(function () {
+	postSM.feed('new', $(this).parent());
+}, with_dom));
 
 function open_post_box(num) {
-	var link = $('#' + num);
-	if (link.is('section'))
-		link = link.children('aside');
-	else
-		link = link.siblings('aside');
-	on_make_post.call(link.find('a'));
+	var a = $('#' + num);
+	postSM.feed('new', a.is('section')
+			? a.children('aside') : a.siblings('aside'));
 }
 
 function make_reply_box() {
