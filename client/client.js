@@ -314,7 +314,9 @@ $DOC.on('click', 'a', function (event) {
 		if (q) {
 			event.preventDefault();
 			with_dom(function () {
-				add_ref(parseInt(q[1], 10));
+				var id = parseInt(q[1], 10);
+				open_post_box(id);
+				postForm.add_ref(id);
 			});
 		}
 		else if (THREAD) {
