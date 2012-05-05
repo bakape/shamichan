@@ -12,6 +12,7 @@ exports.CLIENT_DEPS = [
 	'client/client.js',
 	'client/posting.js',
 	'client/conn.js',
+	'client/drop.js',
 	'client/amusement.js',
 	'client/youtube.js',
 ];
