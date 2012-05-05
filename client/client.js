@@ -337,7 +337,9 @@ $DOC.on('click', 'nav input', function (event) {
 
 function add_ref(num) {
 	/* Make the post form if none exists yet */
-	if (!postForm)
+	if (postSM.state == 'none')
+		return;
+	if (postSM.state == 'ready')
 		open_post_box(num);
 	/* If a >>link exists, put this one on the next line */
 	var input = postForm.input;
@@ -430,19 +432,6 @@ function setup_upload_drop(e) {
 
 dispatcher[SYNCHRONIZE] = connSM.feeder('sync');
 dispatcher[INVALID] = connSM.feeder('invalid');
-
-connSM.on('synced', function (msg) {
-	var dead_threads = msg.length ? msg[0] : []; /* TODO */
-
-	var m = window.location.hash.match(/^#q(\d+)$/);
-	if (m) {
-		var id = parseInt(m[1], 10);
-		if ($('#' + id).hasClass('highlight')) {
-			window.location.hash = '#' + id;
-			add_ref(id);
-		}
-	}
-});
 
 $(function () {
 	$('section').each(function () {

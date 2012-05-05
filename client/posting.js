@@ -22,6 +22,15 @@ postSM.act('none + sync, draft, alloc + done -> ready', function () {
 		postForm = null;
 	}
 	insert_pbs();
+
+	var m = window.location.hash.match(/^#q(\d+)$/);
+	if (m) {
+		var id = parseInt(m[1], 10);
+		if ($('#' + id).hasClass('highlight')) {
+			window.location.hash = '#' + id;
+			add_ref(id);
+		}
+	}
 });
 
 postSM.act('ready + new -> draft', function (link) {
