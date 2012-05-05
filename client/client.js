@@ -335,27 +335,6 @@ $DOC.on('click', 'nav input', function (event) {
 	location.href = $('link[rel=next]').prop('href');
 });
 
-function add_ref(num) {
-	/* Make the post form if none exists yet */
-	if (postSM.state == 'none')
-		return;
-	if (postSM.state == 'ready')
-		open_post_box(num);
-	/* If a >>link exists, put this one on the next line */
-	var input = postForm.input;
-	var val = input.val();
-	if (val.match(/^>>\d+$/)) {
-		input.val(val + '\n');
-		// XXX: Fix this dumb hack
-		postForm.on_input.call(postForm);
-		val = input.val();
-	}
-	input.val(val + '>>' + num);
-	input[0].selectionStart = input.val().length;
-	postForm.on_input.call(postForm);
-	input.focus();
-};
-
 function drop_shita(e) {
 	e.stopPropagation();
 	e.preventDefault();
