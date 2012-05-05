@@ -37,6 +37,10 @@ postSM.act('ready + new -> draft', function (aside) {
 	postForm = new PostForm(aside, aside.parents('section'));
 });
 
+postSM.preflight('draft', function (aside) {
+	return aside.is('aside');
+});
+
 postSM.act('draft + alloc -> alloc', function (msg) {
 	postForm.on_allocation(msg);
 });

@@ -42,9 +42,11 @@ function FSM(start) {
 	this.acts = {};
 	this.ons = {};
 	this.wilds = {};
+	this.preflights = {};
 }
 exports.FSM = FSM;
 
+// Handlers on arriving to a new state
 FSM.prototype.on = function (key, f) {
 	var ons = this.ons[key];
 	if (ons)
@@ -54,6 +56,16 @@ FSM.prototype.on = function (key, f) {
 	return this;
 };
 
+// Sanity checks before attempting a transition
+FSM.prototype.preflight = function (key, f) {
+	var pres = this.preflights[key];
+	if (pres)
+		pres.push(f);
+	else
+		this.preflights[key] = [f];
+};
+
+// Specify transitions and an optional handler function
 FSM.prototype.act = function (spec, on_func) {
 	var halves = spec.split('->');
 	if (halves.length != 2)
@@ -89,11 +101,16 @@ FSM.prototype.feed = function (ev, param) {
 	var from = this.state, acts = this.acts[from];
 	var to = (acts && acts[ev]) || this.wilds[ev];
 	if (to && from != to) {
+		var ps = this.preflights[to];
+		for (var i = 0; ps && i < ps.length; i++)
+			if (!ps[i].call(this, param))
+				return false;
 		this.state = to;
 		var fs = this.ons[to];
 		for (var i = 0; fs && i < fs.length; i++)
 			fs[i].call(this, param);
 	}
+	return true;
 };
 
 FSM.prototype.feeder = function (ev) {
