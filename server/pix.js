@@ -1,4 +1,5 @@
 var async = require('async'),
+    common = require('../common'),
     config = require('../config'),
     child_process = require('child_process'),
     db = require('../db'),
@@ -333,7 +334,7 @@ function mv_file(src, dest, callback) {
 exports.mv_file = mv_file;
 
 function perceptual_hash(src, callback) {
-	var tmp = '/tmp/hash' + (''+Math.random()).substr(2) + '.gray';
+	var tmp = '/tmp/hash' + common.random_id() + '.gray';
 	var args = [src + '[0]',
 			'-background', 'white', '-mosaic', '+matte',
 			'-scale', '16x16!',

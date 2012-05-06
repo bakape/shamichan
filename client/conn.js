@@ -49,7 +49,7 @@ function connect() {
 
 connSM.act('conn, reconn + open -> syncing', function () {
 	sync_status('Syncing...', false);
-	sessionId = Math.floor(Math.random() * 1e16) + 1;
+	sessionId = random_id();
 	send([SYNCHRONIZE, sessionId, BOARD, syncs, BUMP, document.cookie]);
 });
 

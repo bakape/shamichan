@@ -575,3 +575,7 @@ exports.parse_name = function (name) {
 	return [name.substr(0, 100), tripcode.substr(0, 128),
 			secure.substr(0, 128)];
 };
+
+exports.random_id = function () {
+	return Math.floor(Math.random() * 1e16) + 1;
+};

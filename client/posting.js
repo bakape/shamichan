@@ -358,7 +358,7 @@ PF.insert_uploaded = function (info) {
 };
 
 PF.make_alloc_request = function (text) {
-	var nonce = Math.floor(Math.random() * 1e16) + 1;
+	var nonce = random_id();
 	// TODO: Ought to clear out nonces that never arrive eventually
 	nonces[nonce] = true;
 	var msg = {
