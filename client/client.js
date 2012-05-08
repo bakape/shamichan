@@ -205,8 +205,8 @@ dispatcher[IMAGE_STATUS] = function (msg) {
 dispatcher[INSERT_IMAGE] = function (msg) {
 	var focus = get_focus();
 	var num = msg[0];
-	if (num in ownPosts)
-		return;
+	if (postForm && postForm.num == num)
+		return postForm.insert_uploaded(msg[1]);
 	var hd = $('#' + num + '>header');
 	if (hd.length) {
 		insert_image(msg[1], hd, false);

@@ -25,20 +25,16 @@ function drop_shita(e) {
 		return;
 	}
 
-	postForm.prep_upload();
+	var extra = postForm.prep_upload();
 	postForm.$imageInput.attr('disabled', true);
 
 	var fd = new FormData();
 	fd.append('image', files[0]);
-	fd.append('client_id', sessionId.toFixed());
-	if (!postForm.num) {
-		var request = postForm.make_alloc_request(null);
-		fd.append('alloc', JSON.stringify(request));
-	}
-	fd.append('spoiler', postForm.spoiler);
+	for (var k in extra)
+		fd.append(k, extra[k]);
 	/* Can't seem to jQuery this shit */
 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', '/img');
+	xhr.open('POST', 'upload');
 	xhr.setRequestHeader('Accept', 'application/json');
 	xhr.onreadystatechange = upload_shita;
 	xhr.send(fd);

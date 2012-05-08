@@ -19,6 +19,7 @@ exports.dbCache = {
 	YAKUMAN: 0,
 	funThread: 0,
 	bannerState: {},
+	imageAllocCleanups: {},
 };
 
 var HOT = exports.hot = {};

@@ -56,17 +56,22 @@ function get_thumb_specs(w, h, pinky) {
 			bg_color: bg, bound: bound};
 }
 
-exports.ImageUpload = function (clients, allocate_post, status) {
-	this.clients = clients;
-	this.allocate_post = allocate_post;
-	this.status = status;
+exports.ImageUpload = function (db, status) {
+	this.db = db;
+	this.statusCallback = status;
 };
 
 var IU = exports.ImageUpload.prototype;
 
-var validFields = ['client_id', 'alloc', 'spoiler'];
+var validFields = ['client_id', 'spoiler', 'op'];
 
-IU.handle_request = function (req, resp) {
+IU.status = function (msg) {
+	if (this.client_id)
+		this.statusCallback.call(null, this.client_id, msg);
+};
+
+IU.handle_request = function (req, resp, board) {
+	this.board = board;
 	this.resp = resp;
 	var accepts = (req.headers.accept || '').split(',');
 	for (var i = 0; i < accepts.length; i++) {
@@ -103,40 +108,12 @@ IU.parse_form = function (err, fields, files) {
 		winston.error("Upload error: " + err);
 		return this.failure('Invalid upload.');
 	}
-	var image = files.image;
-	if (!image)
+	if (!files.image)
 		return this.failure('No image.');
-	this.image = image;
-	var client = this.clients[fields.client_id];
-	if (!client)
-		return this.failure('Invalid client id.');
-	this.client = client;
+	this.image = files.image;
+	this.client_id = fields.client_id;
+	this.pinky = !!fields.op;
 
-	if (client.uploading) {
-		this.failure('Already uploading.');
-		/* previous line negated client.uploading, so restore it */
-		client.uploading = true;
-		return;
-	}
-	client.uploading = true;
-	if (client.post && client.post.image)
-		return this.failure('Image already exists.');
-	image.ext = path.extname(image.filename).toLowerCase();
-	if (image.ext == '.jpeg')
-		image.ext = '.jpg';
-	if (['.png', '.jpg', '.gif'].indexOf(image.ext) < 0)
-		return this.failure('Invalid image format.');
-	if (fields.alloc) {
-		try {
-			this.alloc = JSON.parse(fields.alloc);
-		}
-		catch (e) {
-			return this.failure('Bad alloc.');
-		}
-	}
-	else if (!client.post)
-		return this.failure('Missing alloc.');
-	image.imgnm = image.filename.substr(0, 256);
 	var spoiler = parseInt(fields.spoiler, 10);
 	if (spoiler) {
 		var sps = config.SPOILER_IMAGES;
@@ -146,18 +123,22 @@ IU.parse_form = function (err, fields, files) {
 		image.spoiler = spoiler;
 	}
 
-	/* Only throttle new threads for now */
-	if (client.post || (this.alloc && this.alloc.op))
-		this.process(null);
-	else
-		client.db.check_throttle(client.ip, this.process.bind(this));
-}
+	this.db.track_temporaries([this.image.path], null,
+			this.process.bind(this));
+};
 
 IU.process = function (err) {
 	if (err)
-		return this.failure(err);
-	this.status('Verifying...');
+		winston.warn("Temp tracking error: " + err);
 	var image = this.image;
+	image.ext = path.extname(image.filename).toLowerCase();
+	if (image.ext == '.jpeg')
+		image.ext = '.jpg';
+	if (['.png', '.jpg', '.gif'].indexOf(image.ext) < 0)
+		return this.failure('Invalid image format.');
+	image.imgnm = image.filename.substr(0, 256);
+
+	this.status('Verifying...');
 	var tagged_path = image.ext.replace('.', '') + ':' + image.path;
 	var self = this;
 	var checks = {
@@ -196,15 +177,14 @@ IU.process = function (err) {
 			return self.failure(err);
 		image.MD5 = rs.MD5;
 		image.hash = rs.hash;
-		self.client.db.check_duplicate(image.hash, deduped);
+		self.db.check_duplicate(image.hash, deduped);
 	}
 
 	function deduped(err, rs) {
 		if (err)
 			return self.failure(err);
 		image.thumb_path = image.path + '_thumb';
-		var pinky = (self.client.post && self.client.post.op) ||
-				(self.alloc && self.alloc.op);
+		var pinky = self.pinky;
 		var w = image.dims[0], h = image.dims[1];
 		var specs = get_thumb_specs(w, h, pinky);
 		/* Determine if we really need a thumbnail */
@@ -271,12 +251,19 @@ IU.process = function (err) {
 				winston.error(err);
 				return self.failure("Distro failure.");
 			}
+			var olds = [image.path];
+			var news = [dest];
 			image.path = dest;
-			if (nail)
+			if (nail) {
 				image.thumb_path = nail;
-			if (comp)
+				news.push(nail);
+			}
+			if (comp) {
 				image.comp_path = comp;
-			self.publish();
+				news.push(comp);
+			}
+			self.db.track_temporaries(news, olds,
+					self.record_image.bind(self));
 		});
 	}
 }
@@ -452,23 +439,33 @@ function im_callback(cb, err, stdout, stderr) {
 		cb();
 }
 
+function image_files(image) {
+	var files = [];
+	if (image.path)
+		files.push(image.path);
+	if (image.thumb_path)
+		files.push(image.thumb_path);
+	if (image.comp_path)
+		files.push(image.comp_path);
+	return files;
+}
+
 IU.failure = function (err_desc) {
 	this.form_call('upload_error', err_desc);
-	var image = this.image;
-	if (image) {
-		if (image.path)
-			fs.unlink(image.path);
-		if (image.thumb_path)
-			fs.unlink(image.thumb_path);
-		if (image.comp_path)
-			fs.unlink(image.comp_path);
+	if (this.image) {
+		var files = image_files(this.image);
+		files.forEach(fs.unlink.bind(fs));
+		this.db.track_temporaries(null, files, function (err) {
+			if (err)
+				winston.warn("Tracking failure: " + err);
+		});
 	}
-	if (this.client)
-		this.client.uploading = false;
+	this.db.disconnect();
 };
 
-IU.publish = function () {
-	var client = this.client;
+IU.record_image = function (err) {
+	if (err)
+		winston.warn("Tracking failure: " + err);
 	var view = {};
 	var self = this;
 	image_attrs.forEach(function (key) {
@@ -479,25 +476,14 @@ IU.publish = function () {
 		view.realthumb = view.thumb;
 		view.thumb = this.image.composite;
 	}
-	if (client.post) {
-		/* Text beat us here, discard alloc (if any) */
-		client.db.add_image(client.post, view, client.ip,
-					function (err) {
-			if (err || !client.post)
-				return self.failure("Publishing failure.");
-			client.post.image = view;
-			client.uploading = false;
-			self.form_call('upload_complete', view);
-		});
-		return;
-	}
-	self.allocate_post(self.alloc, view, client, function (err, alloc) {
-		if (err) {
-			winston.error(err);
-			return self.failure('Bad post.');
-		}
-		client.uploading = false;
-		self.form_call('on_image_alloc', alloc);
+	view.pinky = this.pinky;
+	var image_id = common.random_id().toFixed();
+	var alloc = {image: view, paths: image_files(this.image)};
+	this.db.record_image_alloc(image_id, alloc, function (err) {
+		if (err)
+			return this.failure("Publishing failure.");
+		self.form_call('on_image_alloc', image_id);
+		self.db.disconnect();
 	});
 };
 

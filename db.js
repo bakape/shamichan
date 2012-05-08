@@ -488,6 +488,13 @@ Y.insert_post = function (msg, body, extra, callback) {
 	else
 		view.tags = tag_key(board);
 
+	if (extra.image_alloc) {
+		msg.image = extra.image_alloc.image;
+		if (!op == msg.image.pinky)
+			return callback("Image is the wrong size.");
+		delete msg.image.pinky;
+	}
+
 	var key = (op ? 'post:' : 'thread:') + num;
 	var bump = !op || !common.is_sage(view.email);
 	var m = r.multi();
@@ -505,6 +512,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 			else
 				view.imgctr = 1;
 			note_hash(m, msg.image.hash, msg.num);
+			make_image_nontemporary(m, extra.image_alloc);
 		}
 		m.hmset(key, view);
 		m.set(key + ':body', body);
@@ -908,11 +916,118 @@ Y.check_duplicate = function (hash, callback) {
 	});
 };
 
-Y.add_image = function (post, image, ip, callback) {
+/* IMAGE ALLOCATIONS */
+
+var IMG_EXPIRY = 20;
+
+Y.track_temporaries = function (adds, dels, callback) {
+	var m = this.connect().multi();
+	var cleans = cache.imageAllocCleanups;
+	if (adds && adds.length) {
+		m.sadd('temps', adds);
+		adds.forEach(function (add) {
+			cleans[add] = setTimeout(
+				cleanup_image_alloc.bind(null, add),
+				(IMG_EXPIRY+1) * 1000);
+		});
+	}
+	if (dels && dels.length) {
+		m.srem('temps', dels);
+		dels.forEach(function (del) {
+			if (del in cleans) {
+				clearTimeout(cleans[del]);
+				delete cleans[del];
+			}
+		});
+	}
+	m.exec(callback);
+};
+
+// if an image doesn't get used in a post in a timely fashion, delete it
+function cleanup_image_alloc(path) {
+	delete cache.imageAllocCleanups[path];
+	var r = cache.sharedConnection;
+	r.srem('temps', path, function (err, n) {
+		if (err)
+			return winston.warn(err);
+		if (n)
+			fs.unlink(path);
+	});
+}
+
+// catch any dangling images on server startup
+Y.delete_temporaries = function (callback) {
+	var r = this.connect();
+	r.smembers('temps', function (err, temps) {
+		if (err)
+			return callback(err);
+		stackless.forEach(temps, function (temp, cb) {
+			fs.unlink(temp, function (err) {
+				if (err)
+					winston.warn('temp: ' + err);
+				else
+					winston.info('del temp ' + temp);
+				cb(null);
+			});
+		}, function (err) {
+			if (err)
+				return callback(err);
+			r.del('temps', callback);
+		});
+	});
+};
+
+Y.record_image_alloc = function (id, alloc, callback) {
+	var r = this.connect();
+	r.setex('image:' + id, IMG_EXPIRY, JSON.stringify(alloc), callback);
+};
+
+Y.obtain_image_alloc = function (id, callback) {
+	var m = this.connect().multi();
+	var key = 'image:' + id;
+	m.get(key);
+	m.setnx('lock:' + key, '1');
+	m.expire('lock:' + key, IMG_EXPIRY);
+	m.exec(function (err, rs) {
+		if (err)
+			return callback(err);
+		if (rs[1] != 1)
+			return callback("Image in use.");
+		if (!rs[0])
+			return callback("Image lost.");
+		var alloc = JSON.parse(rs[0]);
+		alloc.id = id;
+		callback(null, alloc);
+	});
+};
+
+function make_image_nontemporary(m, alloc) {
+	// We should already hold the lock at this point.
+	var key = 'image:' + alloc.id;
+	m.del(key);
+	m.del('lock:' + key);
+	var cleans = cache.imageAllocCleanups;
+	alloc.paths.forEach(function (path) {
+		if (path && path in cleans) {
+			clearTimeout(cleans[path]);
+			delete cleans[path];
+			m.srem('temps', path);
+		}
+	});
+};
+
+/* END IMAGE ALLOCATIONS */
+
+Y.add_image = function (post, alloc, ip, callback) {
 	var r = this.connect();
 	var num = post.num, op = post.op;
 	if (!op)
 		return callback("Can't add another image to an OP.");
+	var image = alloc.image;
+	if (!image.pinky)
+		return callback("Image is wrong size.");
+	delete image.pinky;
+
 	var key = 'post:' + num;
 	var self = this;
 	r.exists(key, function (err, exists) {
@@ -931,6 +1046,7 @@ Y.add_image = function (post, image, ip, callback) {
 		var now = new Date().getTime();
 		var n = post_volume({image: true});
 		update_throughput(m, ip, now, post_volume({image: true}));
+		make_image_nontemporary(m, alloc);
 		m.exec(callback);
 	});
 };

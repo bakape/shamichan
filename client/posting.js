@@ -186,9 +186,14 @@ PF.on_allocation = function (msg) {
 };
 
 PF.on_image_alloc = function (msg) {
-	with_dom(function () {
-		postSM.feed('alloc', msg);
-	});
+	if (!this.num && !this.sentAllocRequest) {
+		send([ALLOCATE_POST, this.make_alloc_request(null, msg)]);
+		this.sentAllocRequest = true;
+		this.update_buttons();
+	}
+	else {
+		send([INSERT_IMAGE, msg]);
+	}
 };
 
 function entryScrollLock() {
@@ -357,7 +362,7 @@ PF.insert_uploaded = function (info) {
 	this.resize_input();
 };
 
-PF.make_alloc_request = function (text) {
+PF.make_alloc_request = function (text, image) {
 	var nonce = random_id();
 	// TODO: Ought to clear out nonces that never arrive eventually
 	nonces[nonce] = true;
@@ -368,6 +373,8 @@ PF.make_alloc_request = function (text) {
 	};
 	if (text)
 		msg.frag = text;
+	if (image)
+		msg.image = image;
 	if (this.op)
 		msg.op = this.op;
 	return msg;
@@ -395,7 +402,7 @@ PF.commit = function (text) {
 
 	/* Either get an allocation or send the committed text */
 	if (!this.num && !this.sentAllocRequest) {
-		send([ALLOCATE_POST, this.make_alloc_request(text)]);
+		send([ALLOCATE_POST, this.make_alloc_request(text, null)]);
 		this.sentAllocRequest = true;
 		this.update_buttons();
 	}
@@ -476,18 +483,16 @@ PF.prep_upload = function () {
 	this.input.focus();
 	this.uploading = true;
 	this.update_buttons();
+	return {spoiler: this.spoiler, op: this.op, client_id: sessionId};
 };
 
 PF.make_upload_form = function () {
 	var form = $('<form method="post" enctype="multipart/form-data" '
-		+ 'action="/img" target="upload">'
+		+ 'action="upload" target="upload">'
 		+ '<input type="button" value="Cancel"/>'
 		+ '<input type="file" name="image" accept="image/*"/> '
 		+ '<input type="button" id="toggle"> <strong/>'
-		+ '<input type="hidden" name="spoiler"/>'
-		+ '<input type="hidden" name="client_id"/>'
 		+ '<iframe src="" name="upload"/></form>');
-	form.find('input[name=client_id]').val(sessionId);
 	this.$cancel = form.find('input[value=Cancel]').click($.proxy(this,
 			'cancel_upload'));
 	this.$iframe = form.find('iframe');
@@ -508,15 +513,11 @@ PF.on_image_chosen = function () {
 		this.uploadStatus.text('');
 		return;
 	}
-	this.prep_upload();
-	var form = this.uploadForm;
-	if (!this.num) {
-		var alloc = $('<input type="hidden" name="alloc"/>');
-		var request = this.make_alloc_request(null);
-		form.append(alloc.val(JSON.stringify(request)));
-	}
-	form.find('input[name=spoiler]').val(this.spoiler);
-	form.submit();
+	var extra = this.prep_upload();
+	for (var k in extra)
+		$('<input type=hidden>').attr('name', k).val(extra[k]
+				).appendTo(this.uploadForm);
+	this.uploadForm.submit();
 	this.$imageInput.attr('disabled', true);
 };
 

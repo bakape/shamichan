@@ -198,8 +198,10 @@ function write_thread_html(reader, response, ident, opts) {
 	});
 }
 
-function image_status(status) {
-	this.client.send([0, common.IMAGE_STATUS, status]);
+function image_status(client_id, status) {
+	var client = clients[client_id];
+	if (client)
+		client.send([0, common.IMAGE_STATUS, status]);
 }
 
 function page_nav(thread_count, cur_page) {
@@ -269,9 +271,13 @@ function redirect_thread(resp, num, op, tag) {
 	web.redirect(resp, board + op + '#' + num);
 }
 
-web.route_post(/^\/img$/, function (req, resp) {
-	var upload = new pix.ImageUpload(clients, allocate_post, image_status);
-	upload.handle_request(req, resp);
+web.route_post(/^\/(\w+)\/upload$/, function (req, resp, params) {
+	var board = params[1];
+	if (!caps.can_access(req.ident, board))
+		return web.render_404(resp);
+	var yaku = new db.Yakusoku(board, req.ident);
+	var upload = new pix.ImageUpload(yaku, image_status);
+	upload.handle_request(req, resp, board);
 });
 
 web.route_get(/^\/$/, function (req, resp) {
@@ -577,14 +583,17 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	if (msg.length != 1)
 		return false;
 	msg = msg[0];
-	if (!msg || typeof msg != 'object' || !msg.op)
+	if (!msg || typeof msg != 'object')
 		return false;
 	if (client.post)
 		return update_post(msg.frag, client);
 	var frag = msg.frag;
-	if (!frag || frag.match(/^\s*$/g))
+	if (frag && (typeof frag != 'string' || frag.match(/^\s*$/g)))
 		return false;
-	allocate_post(msg, null, client, function (err, alloc) {
+	if (!frag && !msg.image)
+		return false;
+
+	allocate_post(msg, client, function (err, alloc) {
 		if (err) {
 			var niceErr = "Couldn't post: " + err;
 			/* TEMP: Need better nice-error-message policy */
@@ -603,7 +612,7 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 	return true;
 }
 
-function allocate_post(msg, image, client, callback) {
+function allocate_post(msg, client, callback) {
 	if (!msg || typeof msg != 'object')
 		return callback('Bad alloc.');
 	if (typeof msg.nonce != 'number' || !msg.nonce || msg.nonce < 1)
@@ -615,6 +624,12 @@ function allocate_post(msg, image, client, callback) {
 	var post = {time: new Date().getTime(), nonce: msg.nonce};
 	var body = '';
 	var extra = {ip: client.ip, board: client.board};
+	var image_alloc;
+	if (msg.image !== undefined) {
+		if (typeof msg.image != 'string' || !msg.image.match(/^\d+$/))
+			return callback('Bad image token.');
+		image_alloc = msg.image;
+	}
 	if (msg.frag !== undefined) {
 		if (typeof msg.frag != 'string' || msg.frag.match(/^\s*$/g))
 			return callback('Bad post body.');
@@ -629,6 +644,8 @@ function allocate_post(msg, image, client, callback) {
 			return callback('Invalid thread.');
 		post.op = msg.op;
 	}
+	else if (!image_alloc)
+		return callback('Image missing.');
 	/* TODO: Check against client.watching? */
 	if (msg.name !== undefined) {
 		if (typeof msg.name != 'string')
@@ -652,8 +669,6 @@ function allocate_post(msg, image, client, callback) {
 		if (common.is_noko(post.email))
 			delete post.email;
 	}
-	if (image)
-		post.image = image;
 	post.state = [common.S_BOL, 0];
 
 	if (typeof msg.auth != 'undefined') {
@@ -661,7 +676,17 @@ function allocate_post(msg, image, client, callback) {
 			return callback('Bad auth.');
 		post.auth = msg.auth;
 	}
-	client.db.reserve_post(post.op, client.ip, got_reservation);
+
+	if (post.op)
+		throttled(null);
+	else
+		client.db.check_throttle(client.ip, throttled);
+
+	function throttled(err) {
+		if (err)
+			return callback(err);
+		client.db.reserve_post(post.op, client.ip, got_reservation);
+	}
 
 	function got_reservation(err, num) {
 		if (err)
@@ -670,16 +695,24 @@ function allocate_post(msg, image, client, callback) {
 			return callback('Already have a post.');
 		client.post = post;
 		post.num = num;
-		valid_links(body, post.state, got_links);
+		var supplements = {
+			links: valid_links.bind(null, body, post.state),
+		};
+		if (image_alloc)
+			supplements.image = client.db.obtain_image_alloc.bind(
+					client.db, image_alloc);
+		async.parallel(supplements, got_supplements);
 	}
-	function got_links(err, links) {
+	function got_supplements(err, rs) {
 		if (err) {
-			winston.error('valid_links: ' + err);
+			winston.error('supplements: ' + err);
 			if (client.post === post)
 				delete client.post;
-			return callback("Post reference error.");
+			return callback("Attachment error.");
 		}
-		post.links = links;
+		post.links = rs.links;
+		if (rs.image)
+			extra.image_alloc = rs.image;
 		client.db.insert_post(post, body, extra, inserted);
 	}
 	function inserted(err) {
@@ -823,6 +856,26 @@ dispatcher[common.DELETE_IMAGES] = function (nums, client) {
 	return true;
 };
 
+dispatcher[common.INSERT_IMAGE] = function (msg, client) {
+	if (msg.length != 1)
+		return false;
+	var alloc = msg[0];
+	if (!alloc || typeof alloc != 'string')
+		return false;
+	if (!client.post || client.post.image)
+		return false;
+	client.db.obtain_image_alloc(alloc, function (err, alloc) {
+		if (!client.post || client.post.image)
+			return;
+		client.db.add_image(client.post, alloc, client.ip,
+					function (err) {
+			if (err)
+				report(err, client, "Image insertion error.");
+		});
+	});
+	return true;
+};
+
 dispatcher[common.SPOILER_IMAGES] = function (nums, client) {
 	/* grr copy pasted */
 	if (!caps.is_mod_ident(client.ident))
@@ -936,7 +989,10 @@ if (require.main == module) {
 			throw err;
 		propagate_resources();
 		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
-		yaku.finish_all(function (err) {
+		async.series([
+			yaku.finish_all.bind(yaku),
+			yaku.delete_temporaries.bind(yaku),
+		], function (err) {
 			if (err)
 				throw err;
 			yaku.disconnect();
