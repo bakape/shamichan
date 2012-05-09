@@ -53,8 +53,8 @@ window.fun = function () {
 	send([33, THREAD]);
 };
 
-override(PF, 'make_alloc_request', function (orig, text) {
-	var msg = orig.call(this, text);
+override(PF, 'make_alloc_request', function (orig, text, img) {
+	var msg = orig.call(this, text, img);
 	if ($('#authname').attr('checked'))
 		msg.auth = AUTH;
 	return msg;
