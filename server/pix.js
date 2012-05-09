@@ -120,7 +120,7 @@ IU.parse_form = function (err, fields, files) {
 		if (sps.normal.indexOf(spoiler) < 0
 				&& sps.trans.indexOf(spoiler) < 0)
 			return this.failure('Bad spoiler.');
-		image.spoiler = spoiler;
+		this.image.spoiler = spoiler;
 	}
 
 	this.db.track_temporaries([this.image.path], null,
