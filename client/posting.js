@@ -338,10 +338,6 @@ PF.upload_error = function (msg) {
 		this.uploadForm.find('input[name=alloc]').remove();
 };
 
-PF.upload_complete = function (info) {
-	with_dom(_.bind(this.insert_uploaded, this, info));
-};
-
 PF.insert_uploaded = function (info) {
 	var form = this.uploadForm, op = this.op;
 	insert_image(info, form.siblings('header'), !op);
