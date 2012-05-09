@@ -350,9 +350,10 @@ PF.insert_uploaded = function (info) {
 	this.sentAllocRequest = true;
 	this.update_buttons();
 	/* Stop obnoxious wrap-around-image behaviour */
+	var $img = this.post.find('img');
 	this.blockquote.css({
-		'margin-left': this.post.find('img').css('margin-right'),
-		'padding-left': (info.dims[2] || info.dims[0]) + 'px'
+		'margin-left': $img.css('margin-right'),
+		'padding-left': $img.width(),
 	});
 
 	this.resize_input();
