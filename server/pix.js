@@ -112,7 +112,7 @@ IU.parse_form = function (err, fields, files) {
 		return this.failure('No image.');
 	this.image = files.image;
 	this.client_id = fields.client_id;
-	this.pinky = !!fields.op;
+	this.pinky = !!parseInt(fields.op, 10);
 
 	var spoiler = parseInt(fields.spoiler, 10);
 	if (spoiler) {

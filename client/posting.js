@@ -480,7 +480,7 @@ PF.prep_upload = function () {
 	this.input.focus();
 	this.uploading = true;
 	this.update_buttons();
-	return {spoiler: this.spoiler, op: this.op, client_id: sessionId};
+	return {spoiler: this.spoiler, op: this.op || 0, client_id: sessionId};
 };
 
 PF.make_upload_form = function () {
