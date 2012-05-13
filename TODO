@@ -2,8 +2,6 @@
 * Actually tell user when a particular thread failed to sync
 * Tokenize text instead of multiple levels of regexps
 * When navigating away from a page, commit any outstanding text
-* Backbone.js
-* YouTube links should have a title
 * Incoming JSON schema checker
 * Upload cancelling doesn't work?
 * Should retrieve live body and hctr in one transaction
