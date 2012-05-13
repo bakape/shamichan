@@ -93,12 +93,15 @@ function hover_shita(event) {
 
 function preview_miru(event, num) {
 	if (num != previewNum) {
-		var post = $('article#' + num);
+		var post = $('#' + num);
 		if (!post.length)
 			return false;
 		if (preview)
 			preview.remove();
-		preview = $('<div class="preview">' + post.html() + '</div>');
+		var bits = post.children();
+		if (post.is('section'))
+			bits = bits.slice(0, 3);
+		preview = $('<div class="preview"/>').append(bits.clone());
 	}
 	var height = preview.height();
 	if (height < 5) {
