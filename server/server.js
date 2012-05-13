@@ -251,7 +251,7 @@ function make_thread_meta(board, num, abbrev) {
 function make_nav_html(info) {
 	var bits = ['<nav>'], cur = info.cur_page;
 	if (cur >= 0)
-		bits.push('<a href="live">live</a>');
+		bits.push('<a href=".">live</a>');
 	else
 		bits.push('<strong>live</strong>');
 	for (var i = 0; i < info.pages; i++) {
@@ -334,16 +334,16 @@ web.route_get(/^\/(\w+)$/, function (req, resp, params) {
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	/* If arbitrary boards were allowed, need to escape this: */
-	web.redirect(resp, board + '/live');
+	web.redirect(resp, board + '/');
 });
-web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
+web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	var board = params[1];
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
-	web.redirect(resp, 'live');
+	web.redirect(resp, '.');
 });
 
-web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
+web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 	var board = params[1];
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
@@ -379,7 +379,7 @@ web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	return true;
 });
 web.route_get(/^\/\w+\/live\/$/, function (req, resp, params) {
-	web.redirect(resp, '../live');
+	web.redirect(resp, '..');
 });
 
 web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
