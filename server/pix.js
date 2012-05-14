@@ -454,7 +454,13 @@ IU.failure = function (err_desc) {
 	this.form_call('upload_error', err_desc);
 	if (this.image) {
 		var files = image_files(this.image);
-		files.forEach(fs.unlink.bind(fs));
+		files.forEach(function (file) {
+			fs.unlink(file, function (err) {
+				if (err)
+					winston.warn("Deleting " +
+						file + ": " + err);
+			});
+		});
 		this.db.track_temporaries(null, files, function (err) {
 			if (err)
 				winston.warn("Tracking failure: " + err);
