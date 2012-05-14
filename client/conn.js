@@ -91,4 +91,10 @@ connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 
 $(connSM.feeder('start'));
 
+$(function () {
+	$(window).focus(function () {
+		setTimeout(connSM.feeder('retry'), 20);
+	});
+});
+
 })();
