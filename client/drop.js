@@ -71,7 +71,6 @@ function setup_upload_drop(e) {
 }
 
 $(function () {
-	console.log("drop");
 	setup_upload_drop(document.body);
 });
 
