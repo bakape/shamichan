@@ -11,7 +11,6 @@ postSM.act('* + desync -> none', function () {
 		postForm.post.removeClass('editing');
 		postForm.input.val('');
 		postForm.finish();
-		postForm = null;
 	}
 	$('aside').remove();
 });
