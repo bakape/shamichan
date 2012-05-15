@@ -213,7 +213,8 @@ PF.on_key_down = function (event) {
 	switch (event.which) {
 	case 83:
 		if (event.altKey) {
-			this.finish_wrapped();
+			if (!this.submit.attr('disabled'))
+				this.finish_wrapped();
 			event.preventDefault();
 		}
 		break;
