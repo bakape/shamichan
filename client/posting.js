@@ -470,9 +470,11 @@ PF.remove = function () {
 };
 
 PF.update_buttons = function () {
-	var d = this.uploading || (this.sentAllocRequest && !this.num);
+	var allocWait = this.sentAllocRequest && !this.num;
+	var d = this.uploading || allocWait;
 	/* Beware of undefined! */
 	this.submit.attr('disabled', !!d);
+	this.$cancel.attr('disabled', !!allocWait);
 };
 
 PF.prep_upload = function () {
