@@ -592,6 +592,8 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 		return false;
 	if (!frag && !msg.image)
 		return false;
+	if (config.DEBUG)
+		debug_command(client, frag);
 
 	allocate_post(msg, client, function (err, alloc) {
 		if (err) {
@@ -746,6 +748,8 @@ function get_post_view(post) {
 function update_post(frag, client) {
 	if (typeof frag != 'string')
 		return false;
+	if (config.DEBUG)
+		debug_command(client, frag);
 	frag = frag.replace(config.EXCLUDE_REGEXP, '');
 	var post = client.post;
 	if (!post)
@@ -790,6 +794,15 @@ function update_post(frag, client) {
 	return true;
 }
 dispatcher[common.UPDATE_POST] = update_post;
+
+function debug_command(client, frag) {
+	if (!frag)
+		return;
+	if (frag.match(/\bfail\b/))
+		report("debug", client, "Failure requested.");
+	else if (frag.match(/\bclose\b/))
+		client.socket.close();
+}
 
 OK.finish_post = function (callback) {
 	/* TODO: Should we check this.uploading? */
