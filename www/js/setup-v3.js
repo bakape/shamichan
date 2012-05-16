@@ -18,21 +18,6 @@ var BOARD, THREAD, BUMP, PAGE, options;
 
 	var theme = options['board.'+BOARD+'.theme'];
 	if (theme) {
-
-		// TEMP MIGRATION
-		var m = theme.match(/(.*)-v\d+$/);
-		if (m) {
-			theme = m[1];
-			if (theme == 'meta')
-				theme = 'mawaru';
-			options['board.'+BOARD+'.theme'] = theme;
-			try {
-				localStorage.options = JSON.stringify(options);
-			}
-			catch (e) { }
-		}
-		// END MIGRATION
-
 		var link = document.getElementById('theme');
 		var m = link.href.match(/^(.*\/)[^\/]+(-v\d+)\.css$/);
 		if (m)
