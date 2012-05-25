@@ -41,20 +41,12 @@ function drop_shita(e) {
 }
 
 function upload_shita() {
-	if (this.readyState != 4)
+	if (this.readyState != 4 || this.status == 202)
 		return;
-	if (this.status == 200) {
-		var info;
-		try {
-			info = JSON.parse(this.responseText);
-		}
-		catch (e) {
-			postForm.upload_error("Bad response.");
-		}
-		postForm[info.func](info.arg);
-	}
-	else
-		postForm.upload_error("Couldn't get response.");
+	var err = this.responseText;
+	if (this.status != 500 || !err || err.length > 100)
+		err = "Couldn't get response.";
+	postForm.upload_error(err)
 }
 
 function stop_drag(e) {

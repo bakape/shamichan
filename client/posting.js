@@ -328,6 +328,10 @@ PF.resize_input = function (val) {
 	input.css('width', size + 'px');
 };
 
+PF.upload_status = function (msg) {
+	this.uploadStatus.text(msg);
+};
+
 PF.upload_error = function (msg) {
 	/* TODO: Reset allocation if necessary */
 	this.$imageInput.attr('disabled', false);

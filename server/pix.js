@@ -66,21 +66,18 @@ var IU = exports.ImageUpload.prototype;
 var validFields = ['client_id', 'spoiler', 'op'];
 
 IU.status = function (msg) {
+	if (this.resp) {
+		this.resp.writeHead(202);
+		this.resp.end();
+		delete this.resp;
+	}
 	if (this.client_id)
-		this.statusCallback.call(null, this.client_id, msg);
+		this.form_call('upload_status', msg);
 };
 
 IU.handle_request = function (req, resp, board) {
 	this.board = board;
 	this.resp = resp;
-	var accepts = (req.headers.accept || '').split(',');
-	for (var i = 0; i < accepts.length; i++) {
-		var mime = accepts[i].split(';')[0].trim();
-		if (mime == 'application/json') {
-			this.json_response = true;
-			break;
-		}
-	}
 	var len = parseInt(req.headers['content-length'], 10);
 	if (len > 0 && len > config.IMAGE_FILESIZE_MAX + (20*1024))
 		return this.failure('File is too large.');
@@ -451,6 +448,11 @@ function image_files(image) {
 }
 
 IU.failure = function (err_desc) {
+	if (this.resp) {
+		this.resp.writeHead(500, {'Content-Type': 'text/plain'});
+		this.resp.end(err_desc);
+		delete this.resp;
+	}
 	this.form_call('upload_error', err_desc);
 	if (this.image) {
 		var files = image_files(this.image);
@@ -494,14 +496,8 @@ IU.record_image = function (err) {
 };
 
 IU.form_call = function (func, param) {
-	var resp = this.resp;
-	if (this.json_response) {
-		resp.writeHead(200, {'Content-Type': 'application/json'});
-		resp.end(JSON.stringify({func: func, arg: param}));
-		return;
+	if (this.client_id) {
+		var msg = {func: func, arg: param};
+		this.statusCallback.call(null, this.client_id, msg);
 	}
-	param = param ? JSON.stringify(param) : '';
-	resp.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-	resp.end('<!doctype html>\n<title></title>\n<script>'
-		+ 'parent.postForm.' + func + '(' + param + ');</script>');
 };

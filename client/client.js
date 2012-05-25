@@ -199,7 +199,7 @@ dispatcher[MOVE_THREAD] = function (msg, op) {
 
 dispatcher[IMAGE_STATUS] = function (msg) {
 	if (postForm)
-		postForm.uploadStatus.text(msg[0]);
+		PF[msg[0].func].call(postForm, msg[0].arg);
 };
 
 dispatcher[INSERT_IMAGE] = function (msg) {
