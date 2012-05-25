@@ -10,8 +10,8 @@ article, aside, body > nav {
 	border-bottom: 1px solid #d1c29b;
 }
 article.highlight {
-	background-color: #ff83c5;
-	border-color: #df63a5;
+	background-color: #ffb8d5;
+	border-color: #ef93c5;
 }
 article.editing {
 	background-image: url('chevrons.png');
