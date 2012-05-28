@@ -147,9 +147,7 @@ function debug_static(req, resp) {
 	s.once('open', function () {
 		var h = {};
 		try {
-			var mime = require('connect').utils.mime;
-			var ext = require('path').extname(path);
-			h['Content-Type'] = mime.type(ext);
+			h['Content-Type'] = require('mime').lookup(path);
 		} catch (e) {}
 		resp.writeHead(200, h);
 		util.pump(s, resp);
