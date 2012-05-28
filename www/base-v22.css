@@ -191,13 +191,18 @@ pre, #trans {
 		clear: both;
 	}
 	body {
+		margin: 1px;
 		-webkit-text-size-adjust: none;
 	}
 	blockquote {
-		margin: 1em;
+		margin: 0.5em;
 	}
 	section {
 		margin: 0;
+	}
+	section > blockquote, section > header, section > .omit {
+		margin-left: 0.5em;
+		margin-right: 0.5em;
 	}
 	#return {
 		min-width: inherit;
