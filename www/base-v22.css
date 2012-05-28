@@ -129,6 +129,9 @@ section #banner {
 	float: right;
 	padding-left: 15px;
 }
+.omit {
+	line-height: 200%;
+}
 .modal {
 	overflow: hidden;
 	padding: 1em;

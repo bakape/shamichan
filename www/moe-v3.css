@@ -65,3 +65,6 @@ hr {
 	border-right: 1px solid #eee;
 	border-bottom: 1px solid #eee;
 }
+.omit {
+	color: gray;
+}

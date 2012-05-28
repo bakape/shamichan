@@ -70,3 +70,6 @@ hr {
 	border-right: 1px solid #e9e0c9;
 	border-bottom: 1px solid #e9e0c9;
 }
+.omit {
+	color: #555;
+}
