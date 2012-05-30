@@ -124,6 +124,17 @@ dispatcher[INSERT_POST] = function (msg) {
 		delete nonces[msg.nonce];
 		ownPosts[num] = true;
 		oneeSama.trigger('insertOwnPost', msg.links, msg);
+
+		/* XXX: Need insert/alloc unification already! */
+		if (!CurThread || !postForm || !postForm.post)
+			return;
+		var post = new Post({id: num});
+		var article = new Article({model: post, id: num,
+				el: postForm.post[0]});
+		post.view = article;
+		CurThread.add(post);
+		add_post_links(post, msg.links);
+
 		return;
 	}
 	msg.num = num;
@@ -135,10 +146,10 @@ dispatcher[INSERT_POST] = function (msg) {
 		section = $('#' + msg.op);
 		if (!section.length)
 			return;
-		var post = $(oneeSama.mono(msg));
+		var $article = $(oneeSama.mono(msg));
 		shift_replies(section);
 		section.children('blockquote,.omit,form,article[id]:last'
-				).last().after(post);
+				).last().after($article);
 		if (!BUMP || is_sage(msg.email)) {
 			bump = false;
 		}
@@ -146,6 +157,15 @@ dispatcher[INSERT_POST] = function (msg) {
 			hr = section.next();
 			section.detach();
 			hr.detach();
+		}
+
+		if (CurThread) {
+			var post = new Post({id: num});
+			var article = new Article({model: post, id: num,
+					el: $article[0]});
+			post.view = article;
+			CurThread.add(post);
+			add_post_links(post, msg.links);
 		}
 	}
 	else {
@@ -217,6 +237,8 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 
 dispatcher[UPDATE_POST] = function (msg) {
 	var num = msg[0], links = msg[4], extra = msg[5];
+	if (CurThread)
+		add_post_links(CurThread.get(num), links);
 	if (num in ownPosts) {
 		oneeSama.trigger('insertOwnPost', links, extra);
 		return;
@@ -292,10 +314,6 @@ dispatcher[SPOILER_IMAGES] = function (msg, op) {
 		}
 	});
 };
-
-function extract_num(q) {
-	return parseInt(q.attr('id'), 10);
-}
 
 function insert_image(info, header, toppu) {
 	var fig = $(flatten(oneeSama.gazou(info, toppu)).join(''));

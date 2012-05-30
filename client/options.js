@@ -1,6 +1,10 @@
 var $name, $email;
 var nashi = {opts: []}, inputMinSize = 300;
 
+function extract_num(q) {
+	return parseInt(q.attr('id'), 10);
+}
+
 (function () {
 
 nashi.upload = !!$('<input type="file"/>').prop('disabled');
@@ -67,6 +71,50 @@ add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 	}
 }, themes);
 
+/* BACKLINKS */
+
+add_spec('backlinks', 'Local backlinks', function (b) {
+	if (b)
+		show_backlinks();
+	else
+		$('small').remove();
+}, 'checkbox');
+
+function show_backlinks() {
+	if (!CurThread)
+		return;
+	if (load_page_backlinks) {
+		load_page_backlinks();
+		load_page_backlinks = null;
+	}
+	else {
+		CurThread.each(function (reply) {
+			if (reply.has('backlinks'))
+				reply.trigger('change:backlinks');
+		});
+	}
+}
+
+var load_page_backlinks = function () {
+	$('blockquote a').each(function () {
+		var $a = $(this);
+		var m = $a.attr('href').match(/^#(\d+)$/);
+		if (!m)
+			return;
+		var destId = parseInt(m[1], 10);
+		if (!CurThread.get(destId)) // local backlinks only for now
+			return;
+		var $post = $a.parents('article');
+		if (!$post.length)
+			$post = $a.parents('section');
+		var src = CurThread.get(extract_num($post));
+		if (!src)
+			return;
+		var update = {};
+		update[destId] = THREAD;
+		add_post_links(src, update);
+	});
+};
 
 /* HOVER PREVIEW */
 

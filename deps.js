@@ -4,8 +4,10 @@ var minJs = config.DEBUG ? '.js' : '.min.js';
 
 exports.CLIENT_DEPS = [
 	'lib/underscore' + minJs,
+	'lib/backbone' + minJs,
 	'lib/oninput' + minJs,
 	'common.js',
+	'client/models.js',
 	'client/options.js',
 	'client/scroll.js',
 	'client/client.js',
