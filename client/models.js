@@ -4,6 +4,7 @@ var Thread = Backbone.Collection.extend({model: Post});
 
 /* TODO: Multiplex */
 var CurThread;
+var UnknownThread = new Thread([]);
 
 /* XXX: Move into own views module once more substantial */
 var Article = Backbone.View.extend({
@@ -57,8 +58,12 @@ function add_post_links(src, links) {
 	for (var destId in links) {
 		var dest = CurThread.get(destId);
 		if (!dest) {
-			/* TODO: Also track remote posts (shallowly) */
-			continue;
+			dest = UnknownThread.get(destId);
+			if (!dest) {
+				/* Dest doesn't exist yet; track it anyway */
+				dest = new Post({id: destId, shallow: true});
+				UnknownThread.add(dest);
+			}
 		}
 		var srcLinks = src.get('links') || [];
 		var destLinks = dest.get('backlinks') || [];

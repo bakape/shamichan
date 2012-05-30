@@ -128,7 +128,16 @@ dispatcher[INSERT_POST] = function (msg) {
 		/* XXX: Need insert/alloc unification already! */
 		if (!CurThread || !postForm || !postForm.post)
 			return;
-		var post = new Post({id: num});
+		var post = UnknownThread.get(num);
+		if (post) {
+			UnknownThread.remove(num);
+			post.unset('shallow', {silent: true});
+			changedPosts[num] = post;
+			queue_post_change_flush();
+		}
+		else {
+			post = new Post({id: num});
+		}
 		var article = new Article({model: post, id: num,
 				el: postForm.post[0]});
 		post.view = article;
@@ -160,7 +169,16 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 
 		if (CurThread) {
-			var post = new Post({id: num});
+			var post = UnknownThread.get(num);
+			if (post) {
+				UnknownThread.remove(num);
+				post.unset('shallow', {silent: true});
+				changedPosts[num] = post;
+				queue_post_change_flush();
+			}
+			else {
+				post = new Post({id: num});
+			}
 			var article = new Article({model: post, id: num,
 					el: $article[0]});
 			post.view = article;
