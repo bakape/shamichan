@@ -141,21 +141,21 @@ dispatcher[INSERT_POST] = function (msg) {
 	msg.editing = true;
 	var orig_focus = get_focus();
 	oneeSama.links = msg.links;
-	var section, hr, bump = true;
+	var $article, $section, hr, bump = true;
 	if (msg.op) {
-		section = $('#' + msg.op);
-		if (!section.length)
+		$section = $('#' + msg.op);
+		if (!$section.length)
 			return;
-		var $article = $(oneeSama.mono(msg));
-		shift_replies(section);
-		section.children('blockquote,.omit,form,article[id]:last'
+		$article = $(oneeSama.mono(msg));
+		shift_replies($section);
+		$section.children('blockquote,.omit,form,article[id]:last'
 				).last().after($article);
 		if (!BUMP || is_sage(msg.email)) {
 			bump = false;
 		}
 		else {
-			hr = section.next();
-			section.detach();
+			hr = $section.next();
+			$section.detach();
 			hr.detach();
 		}
 
@@ -169,20 +169,20 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 	else {
-		section = $(oneeSama.monomono(msg).join(''));
+		$section = $(oneeSama.monomono(msg).join(''));
 		hr = $('<hr/>');
 		if (!postForm)
-			section.append(make_reply_box());
+			$section.append(make_reply_box());
 		if (!BUMP) {
-			section.hide();
+			$section.hide();
 			hr.hide();
 		}
 	}
 
-	oneeSama.trigger('afterInsert', msg.op ? post : section);
+	oneeSama.trigger('afterInsert', msg.op ? $article : $section);
 	if (bump) {
 		var fencepost = $('body > aside');
-		section.insertAfter(fencepost.length ? fencepost : $ceiling
+		$section.insertAfter(fencepost.length ? fencepost : $ceiling
 				).after(hr);
 		spill_page();
 	}
