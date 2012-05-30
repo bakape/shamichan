@@ -6,6 +6,10 @@ var Thread = Backbone.Collection.extend({model: Post});
 var CurThread;
 var UnknownThread = new Thread([]);
 
+function lookup_post(id) {
+	return CurThread.get(id) || UnknownThread.get(id);
+}
+
 /* XXX: Move into own views module once more substantial */
 var Article = Backbone.View.extend({
 	tagName: 'article',
@@ -56,14 +60,11 @@ function add_post_links(src, links) {
 	if (!src || !links)
 		return;
 	for (var destId in links) {
-		var dest = CurThread.get(destId);
+		var dest = lookup_post(destId);
 		if (!dest) {
-			dest = UnknownThread.get(destId);
-			if (!dest) {
-				/* Dest doesn't exist yet; track it anyway */
-				dest = new Post({id: destId, shallow: true});
-				UnknownThread.add(dest);
-			}
+			/* Dest doesn't exist yet; track it anyway */
+			dest = new Post({id: destId, shallow: true});
+			UnknownThread.add(dest);
 		}
 		var srcLinks = src.get('links') || [];
 		var destLinks = dest.get('backlinks') || [];
@@ -73,20 +74,58 @@ function add_post_links(src, links) {
 			continue;
 		srcLinks.splice(i, 0, dest.id);
 		destLinks.splice(_.sortedIndex(destLinks, src.id), 0, src.id);
-		/* XXX: We mutated the existing array, so `change` won't fire.
-		   Dumb hack ensues. Should extend Backbone or something. */
-		var opts = {silent: true};
-		src.set('links', null, opts);
-		src.set('links', srcLinks, opts);
-		dest.set('backlinks', null, opts);
-		dest.set('backlinks', destLinks, opts);
-		/* Defer `change` kickoffs */
-		if (!(src.id in changedPosts))
-			changedPosts[src.id] = src;
-		if (!(dest.id in changedPosts))
-			changedPosts[dest.id] = dest;
-		queue_post_change_flush();
+		force_post_change(src, 'links', srcLinks);
+		force_post_change(dest, 'backlinks', destLinks);
 	}
+}
+
+function force_post_change(post, attr, val) {
+	/* XXX: We mutated the existing array, so `change` won't fire.
+	   Dumb hack ensues. Should extend Backbone or something. */
+	var opts = {silent: true};
+	post.set(attr, null, opts);
+	if (val !== undefined)
+		post.set(attr, val, opts);
+	else
+		post.unset(attr, opts);
+	/* Defer `change` kickoffs */
+	if (!(post.id in changedPosts))
+		changedPosts[post.id] = post;
+	queue_post_change_flush();
+}
+
+function clear_post_links(post) {
+	if (!post)
+		return;
+	_.each(post.get('links') || [], function (destId) {
+		var dest = lookup_post(destId);
+		if (!dest)
+			return;
+		var backlinks = dest.get('backlinks') || [];
+		var i = backlinks.indexOf(post.id);
+		if (i < 0)
+			return;
+		backlinks.splice(i, 1);
+		if (!backlinks.length)
+			backlinks = undefined;
+		force_post_change(dest, 'backlinks', backlinks);
+	});
+	post.unset('links', {silent: true});
+	_.each(post.get('backlinks') || [], function (srcId) {
+		var src = lookup_post(srcId);
+		if (!src)
+			return;
+		var links = src.get('links') || [];
+		var i = links.indexOf(post.id);
+		if (i < 0)
+			return;
+		links.splice(i, 1);
+		if (!links.length)
+			links = undefined;
+		force_post_change(src, 'links', links);
+	});
+	post.unset('backlinks', {silent: true});
+	changedPosts[post.id] = post;
 }
 
 (function () {

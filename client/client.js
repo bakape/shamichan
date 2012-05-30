@@ -256,7 +256,7 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 dispatcher[UPDATE_POST] = function (msg) {
 	var num = msg[0], links = msg[4], extra = msg[5];
 	if (CurThread)
-		add_post_links(CurThread.get(num), links);
+		add_post_links(lookup_post(num), links);
 	if (num in ownPosts) {
 		oneeSama.trigger('insertOwnPost', links, extra);
 		return;
@@ -281,6 +281,8 @@ dispatcher[FINISH_POST] = function (msg) {
 dispatcher[DELETE_POSTS] = function (msg, op) {
 	var ownNum = postForm && postForm.num;
 	_.each(msg, function (num) {
+		if (CurThread)
+			clear_post_links(lookup_post(num));
 		if (num === ownNum)
 			return postSM.feed('done');
 		var post = $('#' + num);
@@ -310,6 +312,10 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 			postSM.feed('done');
 		if (num == op)
 			return;
+	}
+	if (CurThread && op == THREAD) {
+		_.each(CurThread.models, clear_post_links);
+		CurThread.reset();
 	}
 	$('section#' + op).next('hr').andSelf().remove();
 };
