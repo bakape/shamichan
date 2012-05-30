@@ -20,8 +20,8 @@ var Article = Backbone.View.extend({
 			return this;
 		}
 		if (!$list.length)
-			$list = $('<small>Replies:</small>').insertAfter(
-					this.$el.find('blockquote'));
+			$list = $('<small>Replies:</small>').appendTo(
+					this.$el);
 		// TODO: Sync up DOM gracefully instead of clobbering
 		$list.find('a').remove();
 		_.each(backlinks, function (num) {
