@@ -6,7 +6,7 @@ this.hot = {
 		archive: "/archive/",
 		graveyard: "/graveyard/",
 	},
-	BASE_CSS: 'base-v23.css',
+	BASE_CSS: 'base-v24.css',
 	BOARD_CSS: {
 		moe: 'moe-v4.css',
 		gar: 'gar-v4.css',
