@@ -41,7 +41,7 @@ exports.SERVER_DEPS = [
 
 // Changes to these only require a state.js reload
 exports.SERVER_STATE = [
-	'client/mod.js',
+	'client/admin.js',
 	'hot.js',
 	'tmpl/filter.html',
 	'tmpl/index.html',
@@ -49,5 +49,5 @@ exports.SERVER_STATE = [
 
 exports.MOD_CLIENT_DEPS = [
 	'authcommon.js',
-	'client/mod.js',
+	'client/admin.js',
 ];
