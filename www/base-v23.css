@@ -104,6 +104,11 @@ section {
 section nav, section p, .preview nav {
 	display: inline;
 }
+small {
+	clear: left;
+	display: block;
+	padding-top: 0.5em;
+}
 #banner {
 	color: gray;
 	display: block;
