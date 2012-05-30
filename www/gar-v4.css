@@ -45,7 +45,7 @@ h2 {
 	color: black;
 	font-family: Tahoma;
 }
-header, header nav a {
+header, header nav a, small {
 	color: #444;
 }
 hr {
