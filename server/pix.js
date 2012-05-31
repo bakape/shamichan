@@ -94,6 +94,8 @@ IU.handle_request = function (req, resp, board) {
 	form.once('aborted', function (err) {
 		self.failure('Upload was aborted.');
 	});
+	this.lastProgress = -1;
+	form.on('progress', this.upload_progress_status.bind(this));
 
 	try {
 		form.parse(req, this.parse_form.bind(this));
@@ -103,6 +105,16 @@ IU.handle_request = function (req, resp, board) {
 		if (typeof err != 'string')
 			err = 'Invalid request.';
 		self.failure(err);
+	}
+};
+
+IU.upload_progress_status = function (received, total) {
+	var percent = Math.floor(100 * received / total);
+	var increment = (total > (512 * 1024)) ? 25 : 10;
+	var quantized = Math.floor(percent / increment) * increment;
+	if (quantized > this.lastProgress) {
+		this.status(percent + '% received...');
+		this.lastProgress = quantized;
 	}
 };
 
