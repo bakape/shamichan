@@ -66,13 +66,7 @@ var IU = exports.ImageUpload.prototype;
 var validFields = ['client_id', 'spoiler', 'op'];
 
 IU.status = function (msg) {
-	if (this.resp) {
-		this.resp.writeHead(202);
-		this.resp.end();
-		delete this.resp;
-	}
-	if (this.client_id)
-		this.form_call('upload_status', msg);
+	this.form_call('upload_status', msg);
 };
 
 IU.handle_request = function (req, resp, board) {
@@ -81,8 +75,9 @@ IU.handle_request = function (req, resp, board) {
 	var len = parseInt(req.headers['content-length'], 10);
 	if (len > 0 && len > config.IMAGE_FILESIZE_MAX + (20*1024))
 		return this.failure('File is too large.');
+
 	var form = new formidable.IncomingForm();
-	form.maxFieldsSize = 2048;
+	form.maxFieldsSize = 10 * 1024;
 	form.onPart = function (part) {
 		if (part.filename && part.name == 'image')
 			form.handlePart(part);
@@ -91,12 +86,23 @@ IU.handle_request = function (req, resp, board) {
 		else
 			this._error('Superfluous field.');
 	};
+	var self = this;
+	form.once('error', function (err) {
+		winston.error('formidable: ' + err);
+		self.failure('Upload request problem.');
+	});
+	form.once('aborted', function (err) {
+		self.failure('Upload was aborted.');
+	});
+
 	try {
 		form.parse(req, this.parse_form.bind(this));
 	}
 	catch (err) {
-		winston.error(err);
-		this.failure("Invalid request.");
+		winston.error('caught: ' + err);
+		if (typeof err != 'string')
+			err = 'Invalid request.';
+		self.failure(err);
 	}
 };
 
@@ -492,6 +498,11 @@ IU.record_image = function (err) {
 			return this.failure("Publishing failure.");
 		self.form_call('on_image_alloc', image_id);
 		self.db.disconnect();
+		if (self.resp) {
+			self.resp.writeHead(202);
+			self.resp.end();
+			delete self.resp;
+		}
 	});
 };
 
