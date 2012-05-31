@@ -95,6 +95,10 @@ IU.handle_request = function (req, resp, board) {
 		self.failure('Upload was aborted.');
 	});
 	this.lastProgress = -1;
+	form.on('field', function (key, value) {
+		if (key == 'client_id')
+			self.client_id = value;
+	});
 	form.on('progress', this.upload_progress_status.bind(this));
 
 	try {
