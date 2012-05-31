@@ -41,7 +41,7 @@ var changedPosts = {}, changeFlushTimeout = 0;
 
 function queue_post_change_flush() {
 	if (!changeFlushTimeout)
-		changeFlushTimeout = setTimeout(flush_post_changes, 0);
+		changeFlushTimeout = setTimeout(flush_wrapped, 0);
 }
 
 function flush_post_changes() {
@@ -53,6 +53,8 @@ function flush_post_changes() {
 		changedPosts[id].change();
 	changedPosts = {};
 }
+
+var flush_wrapped = _.wrap(flush_post_changes, with_dom);
 
 /* LINKS */
 
