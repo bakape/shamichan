@@ -522,6 +522,21 @@ PF.on_image_chosen = function () {
 				).appendTo(this.uploadForm);
 	this.uploadForm.submit();
 	this.$imageInput.attr('disabled', true);
+	this.$iframe.load(function (event) {
+		if (!postForm)
+			return;
+		var doc = this.contentWindow || this.contentDocument;
+		if (!doc)
+			return;
+		var error = $(doc.document || doc).text();
+		if (error.match(/^\s*OK\s*$/))
+			return;
+		/* sanity check for weird browser responses */
+		if (error.length < 5 || error.length > 100)
+			error = 'Unknown upload error.';
+		postForm.upload_error(error);
+	});
+
 };
 
 PF.on_toggle = function (event) {

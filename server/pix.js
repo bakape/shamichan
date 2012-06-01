@@ -516,7 +516,7 @@ IU.record_image = function (err) {
 		self.db.disconnect();
 		if (self.resp) {
 			self.resp.writeHead(202);
-			self.resp.end();
+			self.resp.end('OK');
 			delete self.resp;
 		}
 	});
