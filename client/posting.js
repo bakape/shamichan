@@ -350,6 +350,7 @@ PF.insert_uploaded = function (info) {
 	this.uploading = false;
 	this.uploaded = true;
 	this.sentAllocRequest = true;
+	this.submit.css({'margin-left': '0'});
 	this.update_buttons();
 	/* Stop obnoxious wrap-around-image behaviour */
 	var $img = this.post.find('img');
