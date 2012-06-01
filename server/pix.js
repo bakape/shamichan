@@ -149,6 +149,8 @@ IU.parse_form = function (err, fields, files) {
 IU.process = function (err) {
 	if (err)
 		winston.warn("Temp tracking error: " + err);
+	if (this.failed)
+		return;
 	var image = this.image;
 	image.ext = path.extname(image.filename).toLowerCase();
 	if (image.ext == '.jpeg')
@@ -475,7 +477,10 @@ IU.failure = function (err_desc) {
 		this.resp.end(err_desc);
 		delete this.resp;
 	}
-	this.form_call('upload_error', err_desc);
+	if (!this.failed) {
+		this.form_call('upload_error', err_desc);
+		this.failed = true;
+	}
 	if (this.image) {
 		var files = image_files(this.image);
 		files.forEach(function (file) {
