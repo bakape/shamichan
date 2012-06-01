@@ -183,6 +183,8 @@ PF.on_allocation = function (msg) {
 };
 
 PF.on_image_alloc = function (msg) {
+	if (this.cancelled)
+		return;
 	if (!this.num && !this.sentAllocRequest) {
 		send([ALLOCATE_POST, this.make_alloc_request(null, msg)]);
 		this.sentAllocRequest = true;
@@ -331,7 +333,8 @@ PF.upload_status = function (msg) {
 };
 
 PF.upload_error = function (msg) {
-	/* TODO: Reset allocation if necessary */
+	if (this.cancelled)
+		return;
 	this.$imageInput.attr('disabled', false);
 	this.uploadStatus.text(msg);
 	this.uploading = false;
@@ -432,12 +435,12 @@ PF.flush_pending = function () {
 };
 
 PF.cancel = function () {
-	/* XXX: This is a dumb patch-over and it will fail on races */
 	if (this.uploading) {
 		this.$iframe.remove();
 		this.$iframe = $('<iframe src="" name="upload"/></form>');
 		this.uploadForm.append(this.$iframe);
 		this.upload_error('');
+		this.cancelled = true;
 	}
 	else
 		this.finish_wrapped();
@@ -488,6 +491,7 @@ PF.prep_upload = function () {
 	this.uploadStatus.text('Uploading...');
 	this.input.focus();
 	this.uploading = true;
+	this.cancelled = false;
 	this.update_buttons();
 	return {spoiler: this.spoiler, op: this.op || 0, client_id: sessionId};
 };
