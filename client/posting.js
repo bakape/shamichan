@@ -172,10 +172,8 @@ PF.on_allocation = function (msg) {
 	else
 		this.update_buttons();
 	this.submit.click($.proxy(this, 'finish_wrapped'));
-	if (this.uploadForm) {
-		this.$cancel.remove();
+	if (this.uploadForm)
 		this.uploadForm.append(this.submit);
-	}
 	else
 		this.blockquote.after(this.submit);
 	if (!this.op) {
@@ -432,7 +430,7 @@ PF.flush_pending = function () {
 	}
 };
 
-PF.cancel_upload = function () {
+PF.cancel = function () {
 	/* XXX: This is a dumb patch-over and it will fail on races */
 	if (this.uploading) {
 		this.$iframe.remove();
@@ -479,6 +477,10 @@ PF.update_buttons = function () {
 	/* Beware of undefined! */
 	this.submit.attr('disabled', !!d);
 	this.$cancel.attr('disabled', !!allocWait);
+	if (this.num && !this.uploading)
+		this.$cancel.hide();
+	else
+		this.$cancel.show();
 };
 
 PF.prep_upload = function () {
@@ -497,7 +499,7 @@ PF.make_upload_form = function () {
 		+ '<input type="button" id="toggle"> <strong/>'
 		+ '<iframe src="" name="upload"/></form>');
 	this.$cancel = form.find('input[value=Cancel]').click($.proxy(this,
-			'cancel_upload'));
+			'cancel'));
 	this.$iframe = form.find('iframe');
 	this.$imageInput = form.find('input[name=image]').change(
 			$.proxy(this, 'on_image_chosen'));
@@ -536,7 +538,7 @@ PF.on_image_chosen = function () {
 			error = 'Unknown upload error.';
 		postForm.upload_error(error);
 	});
-
+	this.update_buttons();
 };
 
 PF.on_toggle = function (event) {
