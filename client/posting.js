@@ -329,6 +329,8 @@ PF.resize_input = function (val) {
 };
 
 PF.upload_status = function (msg) {
+	if (this.cancelled)
+		return;
 	this.uploadStatus.text(msg);
 };
 
