@@ -267,8 +267,11 @@ function make_nav_html(info) {
 }
 
 function redirect_thread(resp, num, op, tag) {
-	var board = tag ? '../'+tag+'/' : '';
-	web.redirect(resp, board + op + '#' + num);
+	if (!tag)
+		web.redirect(resp, op + '#' + num);
+	else
+		/* Use a JS redirect to preserve the hash */
+		web.redirect_js(resp, '../' + tag + '/' + op + '#' + num);
 }
 
 web.route_post(/^\/(\w+)\/upload$/, function (req, resp, params) {

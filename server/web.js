@@ -181,6 +181,15 @@ exports.redirect = function (resp, uri, code) {
 		+ '<a href="' + encodeURI(uri) + '">Proceed</a>.');
 };
 
+var redirectJsTmpl = require('fs').readFileSync('tmpl/redirect.html');
+
+exports.redirect_js = function (resp, uri) {
+	resp.writeHead(200, web.noCacheHeaders);
+	resp.write(preamble + '<title>Redirecting...</title>');
+	resp.write('<script>var dest = "' + encodeURI(uri) + '";</script>');
+	resp.end(redirectJsTmpl);
+};
+
 exports.dump_server_error = function (resp, err) {
 	resp.writeHead(500, noCacheHeaders);
 	resp.write(preamble + '<title>Server error</title>\n<pre>');
