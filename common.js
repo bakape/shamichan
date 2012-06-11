@@ -506,19 +506,19 @@ OS.atama = function (data) {
 		header.push(safe(' <code>' + data.trip + '</code>'));
 	if (auth)
 		header.push(' ## ' + auth);
-	header = this.trigger('header', header, data);
+	header = this.trigger('headerName', header, data);
 	header.push(safe('</b>'));
 	if (data.email) {
 		header.unshift(safe('<a class="email" href="mailto:'
 				+ encodeURI(data.email) + '">'));
 		header.push(safe('</a>'));
 	}
-	header.unshift(safe('<header>'));
 	header.push(safe(' <time pubdate datetime="' + datetime(data.time) +
 			'">' + readable_time(data.time) + '</time> '),
 			this.post_nav(data));
 	if (!this.full && !data.op)
 		header.push(safe(expand_html(data.num, data.omit)));
+	header.unshift(safe('<header>'));
 	header.push(safe('</header>\n\t'));
 	return header;
 };

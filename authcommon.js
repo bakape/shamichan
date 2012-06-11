@@ -27,7 +27,7 @@ function ip_mnemonic(header, data) {
 
 if (typeof AUTH != 'undefined') {
 	/* client */
-	oneeSama.hook('header', ip_mnemonic);
+	oneeSama.hook('headerName', ip_mnemonic);
 }
 else {
 	exports.ip_mnemonic = ip_mnemonic;
