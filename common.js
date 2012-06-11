@@ -518,6 +518,7 @@ OS.atama = function (data) {
 			this.post_nav(data));
 	if (!this.full && !data.op)
 		header.push(safe(expand_html(data.num, data.omit)));
+	header = this.trigger('headerFinish', header, data);
 	header.unshift(safe('<header>'));
 	header.push(safe('</header>\n\t'));
 	return header;

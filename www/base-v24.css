@@ -69,6 +69,12 @@ figure img {
 h1, h2 {
 	text-align: center;
 }
+header {
+	background: url(box.png) left 3px no-repeat;
+	margin-left: -3px;
+	padding-left: 14px;
+	position: relative;
+}
 header nav a {
 	text-decoration: none;
 }
@@ -108,6 +114,38 @@ small {
 	clear: left;
 	display: block;
 	padding-top: 0.5em;
+}
+ul {
+	background: black url(box.png) 10px 10px no-repeat;
+	border-bottom: none;
+	position: absolute;
+	margin: 0;
+	padding: 5px;
+	top: -9px;
+	left: -9px;
+
+	user-select: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+ul li {
+	list-style: none;
+	margin: 0;
+	padding: 3px 3px 3px 21px;
+}
+ul li:hover {
+	background-color: white;
+}
+.control {
+	cursor: pointer;
+	display: inline-block;
+	height: 12px;
+	left: -1px;
+	position: absolute;
+	top: 2px;
+	width: 12px;
 }
 #banner {
 	color: gray;
@@ -228,6 +266,10 @@ pre, #trans {
 	screen and (-o-device-pixel-ratio: 3/2),
 	screen and (min--moz-device-pixel-ratio: 1.5),
 	screen and (min-device-pixel-ratio: 1.5) {
+	header, ul {
+		background-image: url(box2x.png);
+		background-size: 10px 10px;
+	}
 	#lock {
 		background: url(lock2x.png) no-repeat top left;
 		background-size: 10px 13px;

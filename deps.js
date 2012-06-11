@@ -12,6 +12,7 @@ exports.CLIENT_DEPS = [
 	'client/scroll.js',
 	'client/client.js',
 	'client/posting.js',
+	'client/menu.js',
 	'client/conn.js',
 	'client/drop.js',
 	'client/amusement.js',

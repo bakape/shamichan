@@ -60,7 +60,7 @@ hr {
 .email, .email b {
 	color: #0f0c5d;
 }
-.modal, .preview {
+.modal, .preview, ul {
 	background-color: white;
 	border-right: 1px solid #eee;
 	border-bottom: 1px solid #eee;

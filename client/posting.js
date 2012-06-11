@@ -111,6 +111,7 @@ function PostForm(dest, section) {
 	this.uploadForm = this.make_upload_form();
 	this.uploadStatus = this.uploadForm.find('strong');
 	post.append(this.meta, this.blockquote, this.uploadForm);
+	oneeSama.trigger('draft', post);
 
 	this.propagate_ident();
 
