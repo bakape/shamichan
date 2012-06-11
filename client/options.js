@@ -5,6 +5,11 @@ function extract_num(q) {
 	return parseInt(q.attr('id'), 10);
 }
 
+function parent_post($el) {
+	var $post = $el.parents('article');
+	return $post.length ? $post : $el.parents('section');
+}
+
 (function () {
 
 nashi.upload = !!$('<input type="file"/>').prop('disabled');
@@ -104,10 +109,7 @@ var load_page_backlinks = function () {
 		var destId = parseInt(m[1], 10);
 		if (!CurThread.get(destId)) // local backlinks only for now
 			return;
-		var $post = $a.parents('article');
-		if (!$post.length)
-			$post = $a.parents('section');
-		var src = CurThread.get(extract_num($post));
+		var src = CurThread.get(extract_num(parent_post($a)));
 		if (!src)
 			return;
 		var update = {};
