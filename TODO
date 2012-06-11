@@ -4,3 +4,4 @@
 * When navigating away from a page, commit any outstanding text
 * Incoming JSON schema checker
 * Should retrieve live body and hctr in one transaction
+* Consolidate or disambiguate the (three!) different hook/trigger mechanisms

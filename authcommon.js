@@ -7,7 +7,7 @@ var mnemonicEnds = "a,i,u,e,o,ā,ī,ū,ē,ō,ya,yi,yu,ye,yo,'".split(',');
 function ip_mnemonic(header, data) {
 	var mnemonic = data.ip;
 	if (!mnemonic)
-		return header;
+		return;
 	var nums = mnemonic.split('.');
 	if (config.IP_MNEMONIC && nums.length == 4) {
 		mnemonic = '';
@@ -22,7 +22,6 @@ function ip_mnemonic(header, data) {
 	}
 	else
 		header.push(' ' + mnemonic);
-	return header;
 }
 
 if (typeof AUTH != 'undefined') {

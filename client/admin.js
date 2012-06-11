@@ -78,6 +78,5 @@ $(function () {
 	oneeSama.hook('afterInsert', function (target) {
 		$('<input type=checkbox>').insertBefore(target.find(
 				'>header>:first-child'));
-		return target;
 	});
 });

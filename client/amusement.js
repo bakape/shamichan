@@ -19,12 +19,11 @@ oneeSama.hook('imouto', function (imouto) {
 	imouto.dice = GAME_BOARDS.indexOf(BOARD) >= 0;
 	imouto.queueRoll = queue_roll;
 	imouto.allRolls = {sent: 0, seen: 0};
-	return imouto;
 });
 
 oneeSama.hook('insertOwnPost', function (links, extra) {
 	if (!postForm || !postForm.imouto || !extra || !extra.dice)
-		return links;
+		return;
 	var rolls = postForm.imouto.allRolls;
 	for (var i = 0; i < extra.dice.length; i++) {
 		var n = rolls.seen++;
@@ -35,7 +34,6 @@ oneeSama.hook('insertOwnPost', function (links, extra) {
 		if (info.$tag)
 			info.$tag.text(readable_dice(info.bit, info.dice));
 	}
-	return links;
 });
 
 dispatcher[UPDATE_BANNER] = function (msg, op) {

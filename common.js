@@ -205,8 +205,7 @@ OS.trigger = function (name, param, context) {
 	var hs = this.hooks[name];
 	if (hs)
 		for (var i = 0; i < hs.length; i++)
-			param = hs[i].call(this, param, context);
-	return param;
+			hs[i].call(this, param, context);
 };
 
 function override(obj, orig, upgrade) {
@@ -506,7 +505,7 @@ OS.atama = function (data) {
 		header.push(safe(' <code>' + data.trip + '</code>'));
 	if (auth)
 		header.push(' ## ' + auth);
-	header = this.trigger('headerName', header, data);
+	this.trigger('headerName', header, data);
 	header.push(safe('</b>'));
 	if (data.email) {
 		header.unshift(safe('<a class="email" href="mailto:'
@@ -518,7 +517,7 @@ OS.atama = function (data) {
 			this.post_nav(data));
 	if (!this.full && !data.op)
 		header.push(safe(expand_html(data.num, data.omit)));
-	header = this.trigger('headerFinish', header, data);
+	this.trigger('headerFinish', header, data);
 	header.unshift(safe('<header>'));
 	header.push(safe('</header>\n\t'));
 	return header;

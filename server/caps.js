@@ -19,17 +19,16 @@ function is_admin_ident(ident) {
 }
 exports.is_admin_ident = is_admin_ident;
 
-function denote_priv(header, data) {
-	if (data.priv)
-		header.push(' (priv)');
-	return header;
+function denote_priv(info) {
+	if (info.data.priv)
+		info.header.push(' (priv)');
 }
 
 exports.augment_oneesama = function (oneeSama, ident) {
 	if (is_mod_ident(ident))
-		oneeSama.hook('header', authcommon.ip_mnemonic);
+		oneeSama.hook('headerName', authcommon.ip_mnemonic);
 	if (is_admin_ident(ident))
-		oneeSama.hook('header', denote_priv);
+		oneeSama.hook('headerName', denote_priv);
 };
 
 function parse_ip(ip) {

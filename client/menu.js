@@ -50,7 +50,6 @@ $DOC.on('mouseenter', 'ul', function (event) {
 
 oneeSama.hook('headerFinish', function (header) {
 	header.unshift(safe('<span class="control"/>'));
-	return header;
 });
 
 oneeSama.hook('draft', function ($post) {

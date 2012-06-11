@@ -40,7 +40,7 @@ function inject(frag) {
 // TODO: Unify self-updates with OneeSama; this is redundant
 oneeSama.hook('insertOwnPost', function (links, info) {
 	if (!postForm || !links)
-		return links;
+		return;
 	postForm.buffer.find('.nope').each(function () {
 		var $a = $(this);
 		var m = $a.text().match(/^>>(\d+)$/);
@@ -52,7 +52,6 @@ oneeSama.hook('insertOwnPost', function (links, info) {
 			$a.attr('href', url).removeAttr('class');
 		}
 	});
-	return links;
 });
 
 function get_focus() {
