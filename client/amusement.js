@@ -21,7 +21,7 @@ oneeSama.hook('imouto', function (imouto) {
 	imouto.allRolls = {sent: 0, seen: 0};
 });
 
-oneeSama.hook('insertOwnPost', function (links, extra) {
+oneeSama.hook('insertOwnPost', function (extra) {
 	if (!postForm || !postForm.imouto || !extra || !extra.dice)
 		return;
 	var rolls = postForm.imouto.allRolls;

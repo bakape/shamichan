@@ -38,15 +38,15 @@ function inject(frag) {
 }
 
 // TODO: Unify self-updates with OneeSama; this is redundant
-oneeSama.hook('insertOwnPost', function (links, info) {
-	if (!postForm || !links)
+oneeSama.hook('insertOwnPost', function (info) {
+	if (!postForm || !info.links)
 		return;
 	postForm.buffer.find('.nope').each(function () {
 		var $a = $(this);
 		var m = $a.text().match(/^>>(\d+)$/);
 		if (!m)
 			return;
-		var num = m[1], op = links[num];
+		var num = m[1], op = info.links[num];
 		if (op) {
 			var url = postForm.imouto.post_url(num, op, false);
 			$a.attr('href', url).removeAttr('class');
@@ -122,7 +122,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	if (msg.nonce && msg.nonce in nonces) {
 		delete nonces[msg.nonce];
 		ownPosts[num] = true;
-		oneeSama.trigger('insertOwnPost', msg.links, msg);
+		oneeSama.trigger('insertOwnPost', msg);
 
 		/* XXX: Need insert/alloc unification already! */
 		if (!CurThread || !postForm || !postForm.post)
@@ -257,7 +257,8 @@ dispatcher[UPDATE_POST] = function (msg) {
 	if (CurThread)
 		add_post_links(lookup_post(num), links);
 	if (num in ownPosts) {
-		oneeSama.trigger('insertOwnPost', links, extra);
+		extra.links = links;
+		oneeSama.trigger('insertOwnPost', extra);
 		return;
 	}
 	var bq = $('#' + num + '>blockquote');

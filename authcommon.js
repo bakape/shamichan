@@ -4,24 +4,24 @@ var common = require('./common');
 var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,f,r,g,z,l,ch'.split(',');
 var mnemonicEnds = "a,i,u,e,o,ā,ī,ū,ē,ō,ya,yi,yu,ye,yo,'".split(',');
 
-function ip_mnemonic(header, data) {
-	var mnemonic = data.ip;
-	if (!mnemonic)
+function ip_mnemonic(info) {
+	var header = info.header, ip = info.data.ip;
+	if (!ip)
 		return;
-	var nums = mnemonic.split('.');
+	var nums = ip.split('.');
 	if (config.IP_MNEMONIC && nums.length == 4) {
-		mnemonic = '';
+		var mnemonic = '';
 		for (var i = 0; i < 4; i++) {
 			var n = parseInt(nums[i], 10);
 			var s = mnemonicStarts[Math.floor(n / 16)] +
 					mnemonicEnds[n % 16];
 			mnemonic += s;
 		}
-		header.push(common.safe(' <span title="'+escape(data.ip)+'">'),
+		header.push(common.safe(' <span title="'+escape(ip)+'">'),
 				mnemonic, common.safe('</span>'));
 	}
 	else
-		header.push(' ' + mnemonic);
+		header.push(' ' + ip);
 }
 
 if (typeof AUTH != 'undefined') {

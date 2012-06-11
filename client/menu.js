@@ -48,8 +48,8 @@ $DOC.on('mouseenter', 'ul', function (event) {
 	}
 });
 
-oneeSama.hook('headerFinish', function (header) {
-	header.unshift(safe('<span class="control"/>'));
+oneeSama.hook('headerFinish', function (info) {
+	info.header.unshift(safe('<span class="control"/>'));
 });
 
 oneeSama.hook('draft', function ($post) {
