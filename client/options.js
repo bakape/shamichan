@@ -263,7 +263,7 @@ function expand_image($img) {
 	}).attr('src', href).width(w).height(h));
 }
 
-$(function () {
+(function () {
 	$name = $('input[name=name]');
 	$email = $('input[name=email]');
 	load_ident();
@@ -316,6 +316,6 @@ $(function () {
 	$('<a id="options">Options</a>').click(function () {
 		$opts.toggle('fast');
 	}).insertAfter('#sync');
-});
+})();
 
 })();

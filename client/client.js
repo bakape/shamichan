@@ -382,7 +382,11 @@ $DOC.on('click', 'nav input', function (event) {
 dispatcher[SYNCHRONIZE] = connSM.feeder('sync');
 dispatcher[INVALID] = connSM.feeder('invalid');
 
-$(function () {
+(function () {
+	var m = window.location.hash.match(/^#q?(\d+)$/);
+	if (m)
+		$('#' + m[1]).addClass('highlight');
+
 	$('section').each(function () {
 		var s = $(this);
 		syncs[s.attr('id')] = parseInt(s.attr('data-sync'));
@@ -399,19 +403,10 @@ $(function () {
 		}
 	});
 
-	var m = window.location.hash.match(/^#q?(\d+)$/);
-	if (m)
-		$('#' + m[1]).addClass('highlight');
-
-	var ts = $('time'), ti = 0;
-	function make_local() {
-		if (ti >= ts.length)
-			return;
-		var t = $(ts[ti++]);
+	$('time').each(function () {
+		var t = $(this);
 		var d = t.attr('datetime').replace(/-/g, '/'
 			).replace('T', ' ').replace('Z', ' GMT');
 		t.text(readable_time(new Date(d).getTime()));
-		setTimeout(make_local, 0);
-	}
-	make_local();
-});
+	});
+})();
