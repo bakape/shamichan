@@ -513,7 +513,7 @@ OS.atama = function (data) {
 				+ encodeURI(data.email) + '">'));
 		header.push(safe('</a>'));
 	}
-	header.push(safe(' <time pubdate datetime="' + datetime(data.time) +
+	header.push(safe(' <time datetime="' + datetime(data.time) +
 			'">' + readable_time(data.time) + '</time> '),
 			this.post_nav(data));
 	if (!this.full && !data.op)
