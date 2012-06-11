@@ -205,7 +205,7 @@ pre, #trans {
 	section {
 		margin: 0;
 	}
-	section > blockquote, section > header, section > .omit {
+	section > blockquote, section > header, section > #banner, section > .omit {
 		margin-left: 0.5em;
 		margin-right: 0.5em;
 	}
