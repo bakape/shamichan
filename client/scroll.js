@@ -1,4 +1,3 @@
-var $DOC = $(document);
 var lockedToBottom, lockKeyHeight;
 
 function with_dom(func) {

@@ -1,4 +1,3 @@
-var $name, $email;
 var nashi = {opts: []}, inputMinSize = 300;
 
 function extract_num(q) {
@@ -266,8 +265,6 @@ function expand_image($img) {
 }
 
 (function () {
-	$name = $('input[name=name]');
-	$email = $('input[name=email]');
 	load_ident();
 	var save = _.debounce(save_ident, 1000);
 	function prop() {

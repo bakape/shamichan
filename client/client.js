@@ -1,6 +1,5 @@
 var syncs = {}, nonces = {}, ownPosts = {};
 var readOnly = ['archive'];
-var $ceiling = $('hr:first');
 
 var connSM = new FSM('load');
 var postSM = new FSM('none');

@@ -1,4 +1,3 @@
-var menuOptions = ['Focus', 'Report...'];
 
 (function () {
 
