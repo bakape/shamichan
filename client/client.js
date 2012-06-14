@@ -257,7 +257,10 @@ dispatcher[UPDATE_POST] = function (msg) {
 	if (CurThread)
 		add_post_links(lookup_post(num), links);
 	if (num in ownPosts) {
-		extra.links = links;
+		if (extra)
+			extra.links = links;
+		else
+			extra = {links: links};
 		oneeSama.trigger('insertOwnPost', extra);
 		return;
 	}
