@@ -243,10 +243,6 @@ pre, #trans {
 	section {
 		margin: 0;
 	}
-	section > blockquote, section > header, section > #banner, section > .omit {
-		margin-left: 0.5em;
-		margin-right: 0.5em;
-	}
 	#return {
 		min-width: inherit;
 		margin-right: 0.5em;
@@ -254,6 +250,10 @@ pre, #trans {
 }
 
 @media screen and (max-device-width: 480px) and (orientation: portrait) {
+	section > blockquote, section > header, section > #banner, section > .omit {
+		margin-left: 0.5em;
+		margin-right: 0.5em;
+	}
 	section > header {
 		clear: both;
 	}
