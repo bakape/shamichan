@@ -99,7 +99,7 @@ function show_backlinks() {
 	}
 }
 
-var load_page_backlinks = function () {
+var load_page_backlinks = with_dom(function () {
 	$('blockquote a').each(function () {
 		var $a = $(this);
 		var m = $a.attr('href').match(/^#(\d+)$/);
@@ -115,7 +115,7 @@ var load_page_backlinks = function () {
 		update[destId] = THREAD;
 		add_post_links(src, update);
 	});
-};
+});
 
 /* HOVER PREVIEW */
 

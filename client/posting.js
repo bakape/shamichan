@@ -198,7 +198,7 @@ PF.on_image_alloc = function (msg) {
 
 function entryScrollLock() {
 	/* NOPE */
-	if (lockedToBottom) {
+	if (lockTarget == PAGE_BOTTOM) {
 		/* Special keyup<->down case */
 		var height = $DOC.height();
 		if (height > lockKeyHeight)
@@ -207,7 +207,7 @@ function entryScrollLock() {
 }
 
 PF.on_key_down = function (event) {
-	if (lockedToBottom) {
+	if (lockTarget == PAGE_BOTTOM) {
 		lockKeyHeight = $DOC.height();
 		setTimeout(entryScrollLock, 0);
 	}

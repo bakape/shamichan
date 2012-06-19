@@ -287,6 +287,8 @@ dispatcher[DELETE_POSTS] = function (msg, op) {
 			clear_post_links(lookup_post(num));
 		if (num === ownNum)
 			return postSM.feed('done');
+		if (num == lockTarget)
+			lockTarget = null;
 		var post = $('#' + num);
 		if (post.length)
 			post.remove();
@@ -349,7 +351,7 @@ function insert_image(info, header, toppu) {
 		header.after(fig);
 }
 
-var samePage = new RegExp('^(?:' + THREAD + ')?(#\\d+)$');
+var samePage = new RegExp('^(?:' + THREAD + ')?#(\\d+)$');
 $DOC.on('click', 'a', function (event) {
 	var target = $(event.target);
 	var href = target.attr('href');
@@ -357,6 +359,7 @@ $DOC.on('click', 'a', function (event) {
 		var q = href.match(/#q(\d+)/);
 		if (q) {
 			event.preventDefault();
+			set_lock_target(null);
 			with_dom(function () {
 				var id = parseInt(q[1], 10);
 				open_post_box(id);
@@ -365,10 +368,8 @@ $DOC.on('click', 'a', function (event) {
 		}
 		else if (THREAD) {
 			q = href.match(samePage);
-			if (q) {
-				$('.highlight').removeClass('highlight');
-				$(q[1]).addClass('highlight');
-			}
+			if (q)
+				set_lock_target(q[1]);
 		}
 	}
 });
@@ -385,10 +386,6 @@ dispatcher[SYNCHRONIZE] = connSM.feeder('sync');
 dispatcher[INVALID] = connSM.feeder('invalid');
 
 (function () {
-	var m = window.location.hash.match(/^#q?(\d+)$/);
-	if (m)
-		$('#' + m[1]).addClass('highlight');
-
 	$('section').each(function () {
 		var s = $(this);
 		syncs[s.attr('id')] = parseInt(s.attr('data-sync'));
