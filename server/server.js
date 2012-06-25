@@ -5,6 +5,7 @@ var _ = require('../lib/underscore'),
     common = require('../common'),
     config = require('../config'),
     db = require('../db'),
+    fs = require('fs'),
     get_version = require('../get').get_version,
     hooks = require('../hooks'),
     pix = require('./pix'),
@@ -927,6 +928,11 @@ function propagate_resources() {
 	web.notFoundHtml = RES.notFoundHtml;
 }
 
+function get_sockjs_script_sync() {
+	var src = fs.readFileSync('tmpl/index.html', 'UTF-8');
+	return src.match(/sockjs-[\d.]+(?:\.min)?\.js/)[0];
+}
+
 function sockjs_log(sev, message) {
 	if (sev == 'info')
 		winston.verbose(message);
@@ -942,8 +948,9 @@ function start_server() {
 	web.server.listen(config.LISTEN_PORT, config.LISTEN_HOST);
 	if (config.DEBUG)
 		web.enable_debug();
+	var sockjsPath = 'js/' + get_sockjs_script_sync();
 	var sockOpts = {
-		sockjs_url: config.MEDIA_URL + 'js/sockjs-0.2.min.js',
+		sockjs_url: config.MEDIA_URL + sockjsPath,
 		prefix: config.SOCKET_PATH,
 		jsessionid: false,
 		log: sockjs_log,
