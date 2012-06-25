@@ -1,0 +1,37 @@
+a:hover {
+	color: #d00;
+}
+article.highlight {
+	background-color: #f5f5f5;
+}
+article.editing {
+	background-color: #fa6;
+}
+b.admin {
+	color: #f00000;
+}
+b.moderator {
+	color: purple;
+}
+body, pre, #trans {
+	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro";
+	font-size: 12pt;
+}
+em {
+	color: #789922;
+}
+nav a {
+	color: black;
+}
+.act a {
+	color: blue;
+}
+.modal, .preview {
+	background-color: #f5f5f5;
+}
+.omit {
+	color: gray;
+}
+#trans {
+	margin-bottom: -7px;
+}
