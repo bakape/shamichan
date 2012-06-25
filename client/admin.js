@@ -26,7 +26,7 @@ function show_panel() {
 
 function korosu() {
 	var ids = [];
-	$('header>input').each(function () {
+	$('header > input').each(function () {
 		var $check = $(this);
 		if ($check.attr('checked')) {
 			var id = $check.parent().parent().attr('id');
@@ -68,7 +68,7 @@ $(document).click(function (event) {
 
 $(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
-	$('<input type=checkbox>').insertBefore('header>:first-child');
+	$('<input type=checkbox>').insertBefore('header > :first-child');
 	$name.after(' <input type=checkbox id="authname">' +
 			' <label for="authname">' + AUTH + '</label>');
 	$email.after(' <form action="../logout" method=POST ' +
@@ -77,6 +77,6 @@ $(function () {
 
 	oneeSama.hook('afterInsert', function (target) {
 		$('<input type=checkbox>').insertBefore(target.find(
-				'>header>:first-child'));
+				'> header > :first-child'));
 	});
 });

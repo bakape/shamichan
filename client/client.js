@@ -243,7 +243,7 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 	var num = msg[0];
 	if (postForm && postForm.num == num)
 		return postForm.insert_uploaded(msg[1]);
-	var hd = $('#' + num + '>header');
+	var hd = $('#' + num + ' > header');
 	if (hd.length) {
 		insert_image(msg[1], hd, false);
 		if (focus)
@@ -263,7 +263,7 @@ dispatcher[UPDATE_POST] = function (msg) {
 		oneeSama.trigger('insertOwnPost', extra);
 		return;
 	}
-	var bq = $('#' + num + '>blockquote');
+	var bq = $('#' + num + ' > blockquote');
 	if (bq.length) {
 		oneeSama.dice = extra && extra.dice;
 		oneeSama.links = links || {};
@@ -326,7 +326,7 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 
 dispatcher[DELETE_IMAGES] = function (msg, op) {
 	_.each(msg, function (num) {
-		$('#' + num + '>figure').remove();
+		$('#' + num + ' > figure').remove();
 	});
 };
 
