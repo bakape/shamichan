@@ -38,8 +38,19 @@ function set_lock_target(num) {
 		$lockTarget = $('#' + num).addClass('scroll-lock');
 	else
 		$lockTarget = null;
-	if ($lockIndicator)
-		$lockIndicator.css({visibility: bottom ? 'visible' : 'hidden'});
+
+	var $ind = $lockIndicator;
+	if ($ind) {
+		$ind.css({visibility: lockTarget ? 'visible' : 'hidden'});
+		if (bottom)
+			$ind.text('Locked to bottom');
+		else if (num) {
+			$ind.empty().append($('<a/>', {
+				text: '>>' + num,
+				href: '#' + num,
+			}));
+		}
+	}
 }
 
 (function () {
@@ -61,8 +72,9 @@ function set_lock_target(num) {
 	}
 
 	if (THREAD) {
-		$lockIndicator = $('<span id="lock">Locked to bottom</span>'
-				).css({visibility: 'hidden'}).appendTo('body');
+		$lockIndicator = $('<span id=lock>Locked to bottom</span>', {
+			css: {visibility: 'hidden'},
+		}).appendTo('body');
 		$DOC.scroll(scroll_shita);
 		scroll_shita();
 	}
