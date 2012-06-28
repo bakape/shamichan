@@ -26,12 +26,10 @@ function show_panel() {
 
 function korosu() {
 	var ids = [];
-	$('header > input').each(function () {
-		var $check = $(this);
-		if ($check.attr('checked')) {
-			var id = $check.parent().parent().attr('id');
-			ids.push(parseInt(id));
-		}
+	$('.selected').each(function () {
+		var id = parseInt($(this).parent().attr('id'), 10);
+		if (id)
+			ids.push(id);
 	});
 	var $button = $(this);
 	if (ids.length) {
@@ -48,6 +46,33 @@ function korosu() {
 }
 
 readOnly.push('graveyard');
+menuOptions.push('Select');
+
+var multiSelecting = false;
+
+menuHandlers['Select'] = function ($post) {
+	var oldTarget = lockTarget;
+	set_lock_target(extract_num($post));
+	with_dom(function () {
+	if (!multiSelecting) {
+		$('body').addClass('multi-select');
+		make_selection_handle().prependTo('article');
+		$post.find('.select-handle').addClass('selected');
+		show_panel();
+		multiSelecting = true;
+	}
+	else {
+		$('body').removeClass('multi-select');
+		$('.select-handle').remove();
+		multiSelecting = false;
+	}
+	});
+	set_lock_target(oldTarget);
+};
+
+function make_selection_handle() {
+	return $('<a class="select-handle" href="#"/>');
+}
 
 window.fun = function () {
 	send([33, THREAD]);
@@ -60,15 +85,13 @@ override(PF, 'make_alloc_request', function (orig, text, img) {
 	return msg;
 });
 
-$(document).click(function (event) {
-	var $box = $(event.target);
-	if ($box.attr('type') == 'checkbox' && $box.parent('header').length)
-		show_panel();
+$DOC.on('click', '.select-handle', function (event) {
+	event.preventDefault();
+	$(event.target).toggleClass('selected');
 });
 
 $(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
-	$('<input type=checkbox>').insertBefore('header > :first-child');
 	$name.after(' <input type=checkbox id="authname">' +
 			' <label for="authname">' + AUTH + '</label>');
 	$email.after(' <form action="../logout" method=POST ' +
@@ -76,7 +99,7 @@ $(function () {
 			'<input type=submit value=Logout></form>');
 
 	oneeSama.hook('afterInsert', function (target) {
-		$('<input type=checkbox>').insertBefore(target.find(
-				'> header > :first-child'));
+		if (multiSelecting)
+			make_selection_handle().prependTo(target);
 	});
 });

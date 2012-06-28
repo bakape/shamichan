@@ -191,6 +191,27 @@ section #banner {
 	background-image: url('ui/lock.png');
 	background-position: 0 0;
 }
+
+.multi-select article {
+	margin-left: 50px;
+}
+.multi-select section > header {
+	clear: both;
+}
+.select-handle {
+	width: 35px;
+	height: 35px;
+	margin-left: -55px;
+	float: left;
+	border: solid 1px gray;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+}
+.selected {
+	background: url('ui/sel.png') no-repeat center center;
+}
+
 #options, #sync {
 	clear: right;
 	color: gray;

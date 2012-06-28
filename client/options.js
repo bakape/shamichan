@@ -148,6 +148,11 @@ function preview_miru(event, num) {
 		if (preview)
 			preview.remove();
 		var bits = post.children();
+
+		/* stupid hack, should be using views */
+		if (bits[0] && $(bits[0]).is('.select-handle'))
+			bits = bits.slice(1);
+
 		if (post.is('section'))
 			bits = bits.slice(0, 3);
 		preview = $('<div class="preview"/>').append(bits.clone());
