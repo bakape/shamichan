@@ -35,6 +35,7 @@ function korosu() {
 	if (ids.length) {
 		ids.unshift(parseInt($button.data('kind'), 10));
 		send(ids);
+		$('.selected').removeClass('selected');
 	}
 	else {
 		var orig = $button.val();
