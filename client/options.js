@@ -152,15 +152,20 @@ function preview_miru(event, num) {
 			bits = bits.slice(0, 3);
 		preview = $('<div class="preview"/>').append(bits.clone());
 	}
+	var width = preview.width();
 	var height = preview.height();
 	if (height < 5) {
 		preview.hide();
 		$(document.body).append(preview);
+		width = preview.width();
 		height = preview.height();
 		preview.detach().show();
 	}
-	preview.css({left: (event.pageX + 20) + 'px',
-		top: (event.pageY - height - 20) + 'px'});
+	var x = event.pageX + 20;
+	var y = event.pageY - height - 20;
+	if (x + width > window.innerWidth)
+		x = Math.max(0, event.pageX - width - 20);
+	preview.css({left: x + 'px', top: y + 'px'});
 	if (num != previewNum) {
 		$(document.body).append(preview);
 		previewNum = num;
