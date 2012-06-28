@@ -7,8 +7,9 @@ function with_dom(func) {
 		lockHeight = $DOC.height();
 	else if (locked) {
 		$post = $('#' + locked);
-		if ($post.length)
-			lockHeight = $post[0].getBoundingClientRect().top;
+		var r = $post.length && $post[0].getBoundingClientRect();
+		if (r && r.bottom > 0 && r.top < window.innerHeight)
+			lockHeight = r.top;
 		else
 			locked = false;
 	}
@@ -32,9 +33,9 @@ function set_lock_target(num) {
 	lockTarget = num;
 	var bottom = lockTarget == PAGE_BOTTOM;
 	if ($lockTarget)
-		$lockTarget.removeClass('highlight');
+		$lockTarget.removeClass('scroll-lock');
 	if (num && !bottom)
-		$lockTarget = $('#' + num).addClass('highlight');
+		$lockTarget = $('#' + num).addClass('scroll-lock');
 	else
 		$lockTarget = null;
 	if ($lockIndicator)
@@ -42,10 +43,6 @@ function set_lock_target(num) {
 }
 
 (function () {
-	var m = window.location.hash.match(/^#q?(\d+)$/);
-	if (m)
-		set_lock_target(m[1]);
-
 	menuHandlers.Focus = function ($post) {
 		set_lock_target(extract_num($post));
 	};
@@ -59,13 +56,7 @@ function set_lock_target(num) {
 		};
 
 	function scroll_shita() {
-		var lockBottom = lockTarget == PAGE_BOTTOM;
-		var clear = true;
-		if (lockTarget && !lockBottom) {
-			var r = $lockTarget[0].getBoundingClientRect();
-			clear = r.bottom < 0 || r.top > window.innerHeight;
-		}
-		if (clear)
+		if (!lockTarget || (lockTarget == PAGE_BOTTOM))
 			set_lock_target(at_bottom() && PAGE_BOTTOM);
 	}
 

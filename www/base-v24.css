@@ -187,6 +187,13 @@ section #banner {
 	padding: 4px 10px;
 	position: absolute;
 }
+.scroll-lock {
+	margin-left: -10px;
+}
+.scroll-lock header {
+	background-image: url(lock.png);
+	background-position: 0 0;
+}
 #options, #sync {
 	clear: right;
 	color: gray;
@@ -243,6 +250,9 @@ pre, #trans {
 	section {
 		margin: 0;
 	}
+	.scroll-lock {
+		margin-left: -3px;
+	}
 	#return {
 		min-width: inherit;
 		margin-right: 0.5em;
@@ -274,4 +284,9 @@ pre, #trans {
 		background: url(lock2x.png) no-repeat top left;
 		background-size: 10px 13px;
 	}
+	.scroll-lock header {
+		background-image: url(lock2x.png);
+		background-size: 10px 13px;
+	}
+
 }
