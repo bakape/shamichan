@@ -6,13 +6,13 @@ this.hot = {
 		archive: "/archive/",
 		graveyard: "/graveyard/",
 	},
-	BASE_CSS: 'base-v24.css',
+	BASE_CSS: 'base-v25.css',
 	BOARD_CSS: {
-		moe: 'moe-v4.css',
-		gar: 'gar-v4.css',
-		meta: 'mawaru-v4.css',
-		archive: 'archive-v4.css',
-		graveyard: 'mawaru-v4.css',
+		moe: 'moe-v5.css',
+		gar: 'gar-v5.css',
+		meta: 'mawaru-v5.css',
+		archive: 'archive-v5.css',
+		graveyard: 'mawaru-v5.css',
 	},
 
 	SPECIAL_TRIPCODES: {
