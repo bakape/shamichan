@@ -28,6 +28,8 @@ function with_dom(func) {
 }
 
 function set_lock_target(num) {
+	if (!num && at_bottom())
+		num = PAGE_BOTTOM;
 	if (num == lockTarget)
 		return;
 	lockTarget = num;
@@ -53,22 +55,25 @@ function set_lock_target(num) {
 	}
 }
 
+var at_bottom = function() {
+	return window.scrollY + window.innerHeight >= $DOC.height();
+}
+if (window.scrollMaxY !== undefined)
+	at_bottom = function () {
+		return window.scrollMaxY <= window.scrollY;
+	};
+
 (function () {
 	menuHandlers.Focus = function ($post) {
 		set_lock_target(extract_num($post));
 	};
-
-	var at_bottom = function () {
-		return window.scrollY + window.innerHeight >= $DOC.height();
+	menuHandlers.Unfocus = function ($post) {
+		set_lock_target(null);
 	};
-	if (window.scrollMaxY !== undefined)
-		at_bottom = function () {
-			return window.scrollMaxY <= window.scrollY;
-		};
 
 	function scroll_shita() {
 		if (!lockTarget || (lockTarget == PAGE_BOTTOM))
-			set_lock_target(at_bottom() && PAGE_BOTTOM);
+			set_lock_target(null);
 	}
 
 	if (THREAD) {

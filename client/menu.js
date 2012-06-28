@@ -13,12 +13,18 @@ $DOC.on('click', '.control', function (event) {
 		$menu.remove();
 	else {
 		$menu = $('<ul/>');
-		var opts = menuOptions;
+		var opts = menuOptions.slice();
 
 		/* TODO: Use model lookup */
 		var $post = parent_post($target);
-		if ($post.length && !$post.attr('id'))
+		var num = $post.attr('id');
+		if ($post.length && !num)
 			opts = ['Focus']; /* Just a draft, can't do much */
+
+		if (lockTarget && lockTarget == num) {
+			opts.shift();
+			opts.unshift('Unfocus');
+		}
 
 		_.each(opts, function (opt) {
 			$('<li/>').text(opt).appendTo($menu);
