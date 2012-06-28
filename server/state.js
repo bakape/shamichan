@@ -88,7 +88,9 @@ exports.reset_resources = function (cb) {
 		return fs.readFile.bind(fs, path.join(dir, file), 'UTF-8');
 	}
 	function tmpl(data) {
-		return _.template(data, config).split(/\$[A-Z]+/);
+		var templateVars = _.clone(HOT);
+		_.extend(templateVars, config);
+		return _.template(data, templateVars).split(/\$[A-Z]+/);
 	}
 	async.parallel({
 		version: get_version.bind(null, deps.CLIENT_DEPS),
