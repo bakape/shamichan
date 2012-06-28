@@ -3,6 +3,7 @@
 *.swp
 .build
 .lock*
+.DS_Store
 builder
 config.js
 graveyard
