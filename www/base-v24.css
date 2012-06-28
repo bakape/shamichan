@@ -70,7 +70,7 @@ h1, h2 {
 	text-align: center;
 }
 header {
-	background: url(box.png) left 3px no-repeat;
+	background: url('ui/box.png') left 3px no-repeat;
 	margin-left: -3px;
 	padding-left: 14px;
 	position: relative;
@@ -116,7 +116,7 @@ small {
 	padding-top: 0.5em;
 }
 ul {
-	background: url(box.png) 10px 10px no-repeat;
+	background: url('ui/box.png') 10px 10px no-repeat;
 	border-bottom: none;
 	position: absolute;
 	margin: 0;
@@ -164,7 +164,7 @@ section #banner {
 	right: 8px;
 }
 #lock {
-	background: url(lock.png) no-repeat left;
+	background: url('ui/lock.png') no-repeat left;
 	color: gray;
 	float: right;
 	padding-left: 15px;
@@ -188,7 +188,7 @@ section #banner {
 	margin-left: -10px;
 }
 .scroll-lock header {
-	background-image: url(lock.png);
+	background-image: url('ui/lock.png');
 	background-position: 0 0;
 }
 #options, #sync {
@@ -274,15 +274,15 @@ pre, #trans {
 	screen and (min--moz-device-pixel-ratio: 1.5),
 	screen and (min-device-pixel-ratio: 1.5) {
 	header, ul {
-		background-image: url(box2x.png);
+		background-image: url('ui/box2x.png');
 		background-size: 10px 10px;
 	}
 	#lock {
-		background: url(lock2x.png) no-repeat top left;
+		background: url('ui/lock2x.png') no-repeat top left;
 		background-size: 10px 13px;
 	}
 	.scroll-lock header {
-		background-image: url(lock2x.png);
+		background-image: url('ui/lock2x.png');
 		background-size: 10px 13px;
 	}
 

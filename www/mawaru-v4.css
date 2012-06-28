@@ -73,7 +73,7 @@ li:hover {
 	color: #999;
 }
 #lock, .scroll-lock header {
-	background-image: url(invlock.png);
+	background-image: url('ui/invlock.png');
 }
 #trans {
 	color: gray;
@@ -84,6 +84,6 @@ li:hover {
 	screen and (min--moz-device-pixel-ratio: 1.5),
 	screen and (min-device-pixel-ratio: 1.5) {
 	#lock, .scroll-lock header {
-		background-image: url(invlock2x.png);
+		background-image: url('ui/invlock2x.png');
 	}
 }
