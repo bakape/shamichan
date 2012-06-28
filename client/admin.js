@@ -27,7 +27,7 @@ function show_panel() {
 function korosu() {
 	var ids = [];
 	$('.selected').each(function () {
-		var id = parseInt($(this).parent().attr('id'), 10);
+		var id = extract_num(parent_post($(this)));
 		if (id)
 			ids.push(id);
 	});
@@ -57,6 +57,7 @@ menuHandlers['Select'] = function ($post) {
 	if (!multiSelecting) {
 		$('body').addClass('multi-select');
 		make_selection_handle().prependTo('article');
+		make_selection_handle().prependTo('section > header');
 		$post.find('.select-handle').addClass('selected');
 		show_panel();
 		multiSelecting = true;

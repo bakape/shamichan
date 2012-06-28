@@ -197,6 +197,10 @@ section #banner {
 }
 .multi-select section > header {
 	clear: both;
+	margin-left: 55px;
+}
+.multi-select section > header .select-handle {
+	margin-left: -65px;
 }
 .select-handle {
 	width: 35px;
