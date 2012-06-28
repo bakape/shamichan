@@ -26,6 +26,9 @@ li:hover {
 nav a {
 	color: black;
 }
+small a {
+	color: gray;
+}
 .act a {
 	color: blue;
 }
