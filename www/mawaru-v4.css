@@ -52,6 +52,9 @@ header, figcaption, figcaption a, small, .act {
 hr {
 	border-top: 1px solid #300;
 }
+li:hover {
+	background-color: white;
+}
 .act:before {
 	content: "[";
 }

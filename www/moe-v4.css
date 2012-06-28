@@ -51,6 +51,9 @@ header nav a {
 hr {
 	border-top: 1px solid #b7c5d9;
 }
+li:hover {
+	background-color: #f5f5f5;
+}
 .act:before {
 	content: "[";
 }

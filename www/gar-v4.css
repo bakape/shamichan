@@ -51,6 +51,9 @@ header, header nav a, small {
 hr {
 	border-top: 1px solid #b7c5d9;
 }
+li:hover {
+	background-color: #f5f5f5;
+}
 .act:before {
 	content: "[";
 }
@@ -60,7 +63,7 @@ hr {
 .email, .email b {
 	color: #0f0c5d;
 }
-.modal {
+.modal, ul {
 	background-color: white;
 	border-right: 1px solid #eee;
 	border-bottom: 1px solid #eee;

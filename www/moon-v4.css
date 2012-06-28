@@ -20,13 +20,16 @@ body, pre, #trans {
 em {
 	color: #789922;
 }
+li:hover {
+	background-color: white;
+}
 nav a {
 	color: black;
 }
 .act a {
 	color: blue;
 }
-.modal, .preview {
+.modal, .preview, ul {
 	background-color: #f5f5f5;
 }
 .omit {
