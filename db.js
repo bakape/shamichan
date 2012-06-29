@@ -1181,9 +1181,8 @@ Y._log = function (m, op, kind, msg, opts) {
 	winston.info("Log:", msg);
 	if (!op)
 		throw new Error('No OP.');
-	var key = 'thread:' + op;
-	if (opts.channel)
-		key = opts.channel + ':' + key;
+	var prefix = opts.channel ? (opts.channel + ':' + key) : '';
+	var key = prefix + 'thread:' + op;
 
 	if (common.is_pubsub(kind)) {
 		m.rpush(key + ':history', msg);
@@ -1199,7 +1198,7 @@ Y._log = function (m, op, kind, msg, opts) {
 	m.publish(key, msg);
 	var tags = opts.tags || (this.tag ? [this.tag] : []);
 	tags.forEach(function (tag) {
-		m.publish('tag:' + tag, msg);
+		m.publish(prefix + 'tag:' + tag, msg);
 	});
 };
 
