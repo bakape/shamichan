@@ -180,6 +180,9 @@ function preview_miru(event, num) {
 
 /* INLINE EXPANSION */
 
+if (window.devicePixelRatio > 1)
+	add_spec('nohighres', 'High-res expansions', null, 'revcheckbox');
+
 add_spec('inline', 'Inline image expansion', null, 'checkbox');
 
 $(document).on('mouseup', function (event) {
@@ -263,7 +266,7 @@ function expand_image($img) {
 		return;
 	var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10);
 	var r = window.devicePixelRatio;
-	if (r && r > 1) {
+	if (!options.nohighres && r && r > 1) {
 		w /= r;
 		h /= r;
 	}
@@ -292,6 +295,8 @@ function expand_image($img) {
 		});
 		if (spec.type == 'checkbox')
 			val = !!$o.prop('checked');
+		else if (spec.type == 'revcheckbox')
+			val = !$o.prop('checked');
 		else
 			val = $o.val();
 		options[id] = val;
@@ -303,9 +308,10 @@ function expand_image($img) {
 		if (nashi.opts.indexOf(id) >= 0)
 			return;
 		var val = options[id], $input, type = spec.type;
-		if (type == 'checkbox') {
+		if (type == 'checkbox' || type == 'revcheckbox') {
+			var b = (type == 'revcheckbox') ? !val : val;
 			$input = $('<input type="checkbox" />')
-				.prop('checked', val ? 'checked' : null);
+				.prop('checked', b ? 'checked' : null);
 		}
 		else if (type instanceof Array) {
 			$input = $('<select/>');
