@@ -53,6 +53,12 @@ oneeSama.hook('insertOwnPost', function (info) {
 	});
 });
 
+/* Mobile */
+function touchable_spoiler_tag(del) {
+	del.html = '<del onclick="void(0)">';
+}
+oneeSama.hook('spoilerTag', touchable_spoiler_tag);
+
 function get_focus() {
 	var $focus = $(window.getSelection().focusNode);
 	if ($focus.is('blockquote'))
@@ -417,4 +423,6 @@ dispatcher[INVALID] = connSM.feeder('invalid');
 			).replace('T', ' ').replace('Z', ' GMT');
 		t.text(readable_time(new Date(d).getTime()));
 	});
+
+	$('del').attr('onclick', 'void(0)');
 })();

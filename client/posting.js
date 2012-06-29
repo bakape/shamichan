@@ -103,6 +103,7 @@ function PostForm(dest, section) {
 	this.imouto.op = THREAD;
 	this.imouto.state = [S_BOL, 0];
 	this.imouto.buffer = this.buffer;
+	this.imouto.hook('spoilerTag', touchable_spoiler_tag);
 	oneeSama.trigger('imouto', this.imouto);
 
 	shift_replies(section);

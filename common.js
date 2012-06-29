@@ -265,7 +265,9 @@ OS.iku = function (token, to) {
 			this.callback(safe('</del>'));
 		}
 		else {
-			this.callback(safe('<del>'));
+			var del = {html: '<del>'};
+			this.trigger('spoilerTag', del);
+			this.callback(safe(del.html));
 			state[1]++;
 		}
 		break;
