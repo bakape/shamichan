@@ -403,13 +403,15 @@ function spoiler_info(index, toppu) {
 
 OS.gazou = function (info, toppu) {
 	var src, thumb, name;
+	var paths = {src: mediaURL + 'src/', thumb: mediaURL + 'thumb/'};
+	this.trigger('mediaPaths', paths);
 	if (info.vint) {
 		src = encodeURI('../outbound/' + info.MD5);
 		thumb = mediaURL + 'vint/' + info.vint;
 		srcname = info.MD5;
 	}
 	else {
-		src = thumb = encodeURI(mediaURL + 'src/' + info.src);
+		src = thumb = encodeURI(paths.src + info.src);
 		srcname = info.src;
 	}
 	var d = info.dims;
@@ -425,7 +427,7 @@ OS.gazou = function (info, toppu) {
 		th = th || h;
 	}
 	else if (info.thumb)
-		thumb = encodeURI(mediaURL + 'thumb/' + info.thumb);
+		thumb = encodeURI(paths.thumb + info.thumb);
 	else {
 		tw = w;
 		th = h;

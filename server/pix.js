@@ -299,6 +299,10 @@ function media_path(dir, filename) {
 }
 exports.media_path = media_path;
 
+function dead_path(dir, filename) {
+	return path.join(config.MEDIA_DIRS.dead, dir, filename);
+}
+
 IU.read_image_filesize = function (callback) {
 	var self = this;
 	fs.stat(this.image.path, function (err, stat) {
@@ -411,8 +415,7 @@ hooks.hook("buryImage", function (info, callback) {
 	try_thumb(info.realthumb);
 	async.parallel(mvs, callback);
 	function mv(p, nm, cb) {
-		mv_file(media_path(p, nm),
-			path.join(config.MEDIA_DIRS.dead, p, nm), cb);
+		mv_file(media_path(p, nm), dead_path(p, nm), cb);
 	}
 });
 
@@ -532,4 +535,28 @@ IU.form_call = function (func, param) {
 		var msg = {func: func, arg: param};
 		this.statusCallback.call(null, this.client_id, msg);
 	}
+};
+
+exports.send_dead_image = function (kind, filename, resp) {
+	filename = dead_path(kind, filename);
+	var stream = fs.createReadStream(filename);
+	stream.once('error', function (err) {
+		if (err.code == 'ENOENT') {
+			console.log(filename);
+			resp.writeHead(404);
+			resp.end('Image not found');
+		}
+		else {
+			winston.error(err);
+			resp.end();
+		}
+	});
+	stream.once('open', function () {
+		var h = {};
+		try {
+			h['Content-Type'] = require('mime').lookup(filename);
+		} catch (e) {}
+		resp.writeHead(200, h);
+		stream.pipe(resp);
+	});
 };

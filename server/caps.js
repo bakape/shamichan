@@ -24,11 +24,19 @@ function denote_priv(info) {
 		info.header.push(' (priv)');
 }
 
-exports.augment_oneesama = function (oneeSama, ident) {
+function dead_media_paths(paths) {
+	paths.src = '../dead/src/';
+	paths.thumb = '../dead/thumb/';
+}
+
+exports.augment_oneesama = function (oneeSama, opts) {
+	var ident = opts.ident;
 	if (is_mod_ident(ident))
 		oneeSama.hook('headerName', authcommon.ip_mnemonic);
 	if (is_admin_ident(ident))
 		oneeSama.hook('headerName', denote_priv);
+	if (is_admin_ident(ident) && opts.board == 'graveyard')
+		oneeSama.hook('mediaPaths', dead_media_paths);
 };
 
 function parse_ip(ip) {

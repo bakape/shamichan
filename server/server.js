@@ -175,10 +175,9 @@ function tamashii(num) {
 		this.callback('>>' + num);
 }
 
-function write_thread_html(reader, response, ident, opts) {
-	opts = opts || {};
+function write_thread_html(reader, response, opts) {
 	var oneeSama = new common.OneeSama(tamashii);
-	caps.augment_oneesama(oneeSama, ident);
+	caps.augment_oneesama(oneeSama, opts);
 	reader.on('thread', function (op_post, omit, image_omit) {
 		op_post.omit = omit;
 		var full = oneeSama.full = !!opts.fullPosts;
@@ -369,7 +368,8 @@ web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(yaku, resp, req.ident, {fullLinks: true});
+	var opts = {fullLinks: true, ident: req.ident, board: board};
+	write_thread_html(yaku, resp, opts);
 	yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
@@ -412,7 +412,8 @@ web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(yaku, resp, req.ident, {fullLinks: true});
+	var opts = {fullLinks: true, ident: req.ident, board: board};
+	write_thread_html(yaku, resp, opts);
 	yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
@@ -480,7 +481,8 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		resp.write(indexTmpl[3]);
 		resp.write('<hr>\n');
 	});
-	write_thread_html(reader, resp, req.ident, {fullPosts: true});
+	var opts = {fullPosts: true, ident: req.ident, board: board};
+	write_thread_html(reader, resp, opts);
 	reader.on('end', function () {
 		resp.write(returnHTML);
 		write_page_end(req, resp);
@@ -517,6 +519,13 @@ web.route_get(/^\/outbound\/([\w+\/]{22})$/, function (req, resp, params) {
 			'X-Robots-Tag': 'nofollow'};
 	resp.writeHead(303, headers);
 	resp.end();
+});
+
+web.route_get_auth(/^\/dead\/(src|thumb)\/(\w+\.\w{3})$/,
+			function (req, resp, params) {
+	if (req.ident.auth != 'Admin')
+		return web.render_404(resp);
+	pix.send_dead_image(params[1], params[2], resp);
 });
 
 
