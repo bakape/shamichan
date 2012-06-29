@@ -557,8 +557,7 @@ OK.on_close = function () {
 	this.synced = false;
 	var db = this.db;
 	if (db) {
-		if (this.watching)
-			db.kikanai(this.watching);
+		db.kikanai();
 		if (this.post)
 			this.finish_post(function () {
 				db.disconnect();

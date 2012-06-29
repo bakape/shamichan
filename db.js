@@ -23,13 +23,13 @@ exports.redis_client = redis_client;
 
 /* REAL-TIME UPDATES */
 
-function Subscription(fullKey, target, channel) {
+function Subscription(targetInfo) {
 	events.EventEmitter.call(this);
 	this.setMaxListeners(0);
 
-	this.fullKey = fullKey;
-	this.target = target;
-	this.channel = channel;
+	this.fullKey = targetInfo.key;
+	this.target = targetInfo.target;
+	this.channel = targetInfo.channel;
 	SUBS[this.fullKey] = this;
 
 	this.subscription_callbacks = [];
@@ -37,28 +37,27 @@ function Subscription(fullKey, target, channel) {
 	this.k = redis_client();
 	this.k.on('error', this.on_sub_error.bind(this));
 	this.k.on('subscribe', this.on_sub.bind(this));
-	this.k.subscribe(target);
+	this.k.subscribe(this.target);
 };
 
 util.inherits(Subscription, events.EventEmitter);
 var S = Subscription.prototype;
 
-Subscription.full_key = function (key, ident) {
+Subscription.full_key = function (target, ident) {
 	var channel;
-	if (caps.is_mod_ident(ident))
+	if (ident && ident.priv)
+		channel = 'priv:' + ident.priv;
+	else if (caps.is_mod_ident(ident))
 		channel = 'auth';
-	return channel ? (channel + ':' + key) : key;
+	var key = channel ? channel + ':' + target : target;
+	return {key: key, channel: channel, target: target};
 };
 
-Subscription.get = function (key, ident) {
-	var channel;
-	if (caps.is_mod_ident(ident))
-		channel = 'auth';
-	var fullKey = channel ? (channel + ':' + key) : key;
-
-	var sub = SUBS[fullKey];
+Subscription.get = function (target, ident) {
+	var full = Subscription.full_key(target, ident);
+	var sub = SUBS[full.key];
 	if (!sub)
-		sub = new Subscription(fullKey, key, channel);
+		sub = new Subscription(full);
 	return sub;
 };
 
@@ -334,6 +333,7 @@ function Yakusoku(board, ident) {
 	this.id = ++(cache.YAKUMAN);
 	this.tag = board;
 	this.ident = ident || {};
+	this.subs = [];
 }
 
 util.inherits(Yakusoku, events.EventEmitter);
@@ -380,25 +380,39 @@ Y.kiku = function (targets, on_update, on_sink, callback) {
 	this.on_update = on_update;
 	this.on_sink = on_sink;
 	forEachInObject(targets, function (id, cb) {
-		var sub = Subscription.get(self.target_key(id), self.ident);
+		var target = self.target_key(id);
+		var sub = Subscription.get(target, self.ident);
 		sub.on('update', on_update);
 		sub.on('error', on_sink);
-		sub.when_ready(cb);
+		self.subs.push(sub.fullKey);
+		if (!sub.channel)
+			sub.when_ready(cb);
+		else {
+			sub.when_ready(function (err) {
+				if (err)
+					return cb(err);
+				var sub = Subscription.get(target);
+				sub.on('update', on_update);
+				sub.on('error', on_sink);
+				self.subs.push(sub.fullKey);
+				sub.when_ready(cb);
+			});
+		}
 	}, callback);
 };
 
-Y.kikanai = function (targets) {
-	for (var target in targets) {
-		var key = this.target_key(target);
-		key = Subscription.full_key(key, this.ident);
+Y.kikanai = function () {
+	var self = this;
+	this.subs.forEach(function (key) {
 		var sub = SUBS[key];
 		if (sub) {
-			sub.removeListener('update', this.on_update);
-			sub.removeListener('error', this.on_sink);
+			sub.removeListener('update', self.on_update);
+			sub.removeListener('error', self.on_sink);
 			if (sub.listeners('update').length == 0)
 				sub.has_no_listeners();
 		}
-	}
+	});
+	this.subs = [];
 };
 
 function post_volume(view, body) {
@@ -521,6 +535,8 @@ Y.insert_post = function (msg, body, extra, callback) {
 
 		var etc = {augments: {}};
 		var priv = self.ident.priv;
+		if (priv)
+			etc.channel = 'priv:' + priv;
 		if (op) {
 			var pre = 'thread:' + op;
 			if (priv) {
@@ -531,6 +547,8 @@ Y.insert_post = function (msg, body, extra, callback) {
 				m.rpush(pre + ':posts', num);
 		}
 		else {
+			// TODO: Add to alternate thread list?
+			// set conditional hide?
 			op = num;
 			var score = expiry_queue_score(msg.time);
 			var entry = num + ':' + tag_key(self.tag);
@@ -1164,6 +1182,9 @@ Y._log = function (m, op, kind, msg, opts) {
 	if (!op)
 		throw new Error('No OP.');
 	var key = 'thread:' + op;
+	if (opts.channel)
+		key = opts.channel + ':' + key;
+
 	if (common.is_pubsub(kind)) {
 		m.rpush(key + ':history', msg);
 		m.hincrby(key, 'hctr', 1);
@@ -1384,7 +1405,7 @@ function merge_posts(nums, privNums, abbrev) {
 	while (!abbrev || merged.length < abbrev) {
 		if (i >= 0 && pi >= 0) {
 			var num = nums[i], pNum = privNums[pi];
-			if (parseInt(num, 10) < parseInt(pNum, 10)) {
+			if (parseInt(num, 10) > parseInt(pNum, 10)) {
 				merged.unshift(num);
 				i--;
 			}
