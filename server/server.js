@@ -440,8 +440,12 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		return web.render_404(resp);
 	else if (params[2][0] == '0')
 		return web.redirect(resp, '' + num);
-	var op = db.OPs[num];
-	if (board != 'graveyard') {
+	var op;
+	if (board == 'graveyard') {
+		op = num;
+	}
+	else {
+		op = db.OPs[num];
 		if (!op)
 			return web.render_404(resp);
 		if (!db.OP_has_tag(board, op)) {
