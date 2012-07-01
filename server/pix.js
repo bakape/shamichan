@@ -478,7 +478,7 @@ IU.failure = function (err_desc) {
 	if (this.resp) {
 		this.resp.writeHead(500, {'Content-Type': 'text/plain'});
 		this.resp.end(err_desc);
-		delete this.resp;
+		this.resp = null;
 	}
 	if (!this.failed) {
 		this.form_call('upload_error', err_desc);
@@ -525,7 +525,7 @@ IU.record_image = function (err) {
 		if (self.resp) {
 			self.resp.writeHead(202);
 			self.resp.end('OK');
-			delete self.resp;
+			self.resp = null;
 		}
 	});
 };

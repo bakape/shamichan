@@ -77,7 +77,7 @@ S.on_sub = function () {
 	this.subscription_callbacks.forEach(function (cb) {
 		cb(null);
 	});
-	delete this.subscription_callbacks;
+	this.subscription_callbacks = null;
 };
 
 function parse_pub_message(msg) {
@@ -118,7 +118,7 @@ S.on_sub_error = function (err) {
 	this.subscription_callbacks.forEach(function (cb) {
 		cb(err);
 	});
-	delete this.subscription_callbacks;
+	this.subscription_callbacks = null;
 };
 
 S.sink_sub = function (err) {

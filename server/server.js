@@ -152,11 +152,11 @@ OK.on_update = function (op, kind, msg) {
 	if (this.post && kind == common.DELETE_POSTS) {
 		var nums = JSON.parse(msg)[0].slice(2);
 		if (nums.indexOf(this.post.num) >= 0)
-			delete this.post;
+			this.post = null;
 	}
 	else if (this.post && kind == common.DELETE_THREAD) {
 		if (this.post.num == op || this.post.op == op)
-			delete this.post;
+			this.post = null;
 	}
 
 	this.socket.write(msg);
@@ -552,7 +552,7 @@ OK.on_message = function (data) {
 OK.on_close = function () {
 	if (this.id) {
 		delete clients[this.id];
-		delete this.id;
+		this.id = null;
 	}
 	this.synced = false;
 	var db = this.db;
@@ -725,7 +725,7 @@ function allocate_post(msg, client, callback) {
 		if (err) {
 			winston.error('supplements: ' + err);
 			if (client.post === post)
-				delete client.post;
+				client.post = null;
 			return callback("Attachment error.");
 		}
 		post.links = rs.links;
@@ -736,7 +736,7 @@ function allocate_post(msg, client, callback) {
 	function inserted(err) {
 		if (err) {
 			if (client.post === post)
-				delete client.post;
+				client.post = null;
 			winston.error(err);
 			return callback("Couldn't allocate post.");
 		}
@@ -828,7 +828,7 @@ OK.finish_post = function (callback) {
 			callback(err);
 		else {
 			self.last_num = self.post.num;
-			delete self.post;
+			self.post = null;
 			callback(null);
 		}
 	});
