@@ -289,6 +289,7 @@ dispatcher[FINISH_POST] = function (msg) {
 dispatcher[DELETE_POSTS] = function (msg, op) {
 	var ownNum = postForm && postForm.num;
 	_.each(msg, function (num) {
+		delete ownPosts[num];
 		if (CurThread)
 			clear_post_links(lookup_post(num));
 		if (num === ownNum)
@@ -316,6 +317,7 @@ dispatcher[DELETE_POSTS] = function (msg, op) {
 
 dispatcher[DELETE_THREAD] = function (msg, op) {
 	delete syncs[op];
+	delete ownPosts[op];
 	if (postForm) {
 		var num = postForm.num;
 		if ((postForm.op || num) == op)

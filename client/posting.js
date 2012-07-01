@@ -371,8 +371,11 @@ PF.insert_uploaded = function (info) {
 
 PF.make_alloc_request = function (text, image) {
 	var nonce = random_id();
-	// TODO: Ought to clear out nonces that never arrive eventually
 	nonces[nonce] = true;
+	setTimeout(function () {
+		delete nonces[nonce];
+	}, 20 * 60 * 1000);
+
 	var msg = {
 		name: $name.val().trim(),
 		email: $email.val().trim(),
