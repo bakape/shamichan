@@ -85,7 +85,7 @@ exports.curfew_ending_time = function (board) {
 	config.CURFEW_HOURS.forEach(function (hour) {
 		candidates.push(makeToday(hour), makeTomorrow(hour));
 	});
-	candidates.sort();
+	candidates.sort(compare_dates);
 	for (var i = 0; i < candidates.length; i++)
 		if (candidates[i] > now)
 			return candidates[i];
@@ -103,16 +103,20 @@ exports.curfew_starting_time = function (board) {
 	/* Even dumber brute-force algorithm */
 	var candidates = [];
 	config.CURFEW_HOURS.forEach(function (hour) {
-		hour++;
+		hour = (hour + 1) % 24;
 		if (config.CURFEW_HOURS.indexOf(hour) < 0)
 			candidates.push(makeToday(hour), makeTomorrow(hour));
 	});
-	candidates.sort();
+	candidates.sort(compare_dates);
 	for (var i = 0; i < candidates.length; i++)
 		if (candidates[i] > now)
 			return candidates[i];
 	return null;
 };
+
+function compare_dates(a, b) {
+	return a.getTime() - b.getTime();
+}
 
 function day_after(today) {
 	/* Leap shenanigans? This is probably broken somehow. Yay dates. */
