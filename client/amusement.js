@@ -107,7 +107,13 @@ function shut_down_something() {
 	setTimeout(shut_down_something, 500);
 }
 
-dispatcher[TEARDOWN] = shut_down_something;
+var tearingDown = false;
+dispatcher[TEARDOWN] = function () {
+	if (tearingDown)
+		return;
+	tearingDown = true;
+	shut_down_something();
+};
 
 function pick_random($items, proportion) {
 	var len = $items.length;

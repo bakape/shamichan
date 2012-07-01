@@ -96,6 +96,7 @@ exports.reset_resources = function (cb) {
 		version: get_version.bind(null, deps.CLIENT_DEPS),
 		index: read('tmpl', 'index.html'),
 		filter: read('tmpl', 'filter.html'),
+		curfew: read('tmpl', 'curfew.html'),
 		notFound: read('www', '404.html'),
 		modJs: make_mod_js,
 	}, function (err, res) {
@@ -107,6 +108,7 @@ exports.reset_resources = function (cb) {
 			config.CLIENT_JS = 'client-' + res.version + '.js';
 		RES.indexTmpl = tmpl(res.index);
 		RES.filterTmpl = tmpl(res.filter);
+		RES.curfewTmpl = tmpl(res.curfew);
 		RES.notFoundHtml = res.notFound;
 		RES.modJs = res.modJs;
 		cb(null);

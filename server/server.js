@@ -334,13 +334,19 @@ web.route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
 
 web.route_get(/^\/(\w+)$/, function (req, resp, params) {
 	var board = params[1];
+	/* If arbitrary boards were allowed, need to escape this: */
+	var dest = board + '/';
+	if (caps.under_curfew(req.ident, board))
+		return web.redirect(resp, dest);
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
-	/* If arbitrary boards were allowed, need to escape this: */
-	web.redirect(resp, board + '/');
+	web.redirect(resp, dest);
 });
+
 web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	var board = params[1];
+	if (caps.under_curfew(req.ident, board))
+		return web.redirect(resp, '.');
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	web.redirect(resp, '.');
@@ -348,6 +354,16 @@ web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 
 web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 	var board = params[1];
+	if (caps.under_curfew(req.ident, board)) {
+		resp.writeHead(200, web.noCacheHeaders);
+		resp.write(RES.curfewTmpl[0]);
+		resp.write('/' + board + '/');
+		resp.write(RES.curfewTmpl[1]);
+		var ending = caps.curfew_ending_time(board);
+		resp.write(ending ? ''+ending.getTime() : 'null');
+		resp.end(RES.curfewTmpl[2]);
+		return;
+	}
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board, req.ident);
@@ -382,12 +398,11 @@ web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 	});
 	return true;
 });
-web.route_get(/^\/\w+\/live\/$/, function (req, resp, params) {
-	web.redirect(resp, '..');
-});
 
 web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	var board = params[1];
+	if (caps.under_curfew(req.ident, board))
+		return web.redirect(resp, '..', 302);
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board, req.ident);
@@ -426,14 +441,19 @@ web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	});
 	return true;
 });
-web.route_get(/^\/\w+\/page(\d+)\/$/, function (req, resp, params) {
-	web.redirect(resp, '../page' + params[1]);
+web.route_get(/^\/(\w+)\/page(\d+)\/$/, function (req, resp, params) {
+	var board = params[1];
+	if (caps.under_curfew(req.ident, board))
+		return web.redirect(resp, '..', 302);
+	web.redirect(resp, '../page' + params[2]);
 });
 
 var returnHTML = '<span id="return" class="act"><a href=".">Return</a></span>';
 
 web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var board = params[1];
+	if (caps.under_curfew(req.ident, board))
+		return web.redirect(resp, '.', 302);
 	if (!caps.can_access(req.ident, board))
 		return web.render_404(resp);
 	var num = parseInt(params[2], 10);
@@ -497,8 +517,11 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	yaku.on('error', on_err);
 	return true;
 });
-web.route_get(/^\/\w+\/(\d+)\/$/, function (req, resp, params) {
-	web.redirect(resp, '../' + params[1]);
+web.route_get(/^\/(\w+)\/(\d+)\/$/, function (req, resp, params) {
+	var board = params[1];
+	if (caps.under_curfew(req.ident, board))
+		return web.redirect(resp, '..', 302);
+	web.redirect(resp, '../' + params[2]);
 });
 
 function write_page_end(req, resp) {

@@ -6,6 +6,8 @@ var authcommon = require('../authcommon'),
 exports.can_access = function (ident, board) {
 	if (board == 'graveyard' && is_admin_ident(ident))
 		return true;
+	if (under_curfew(ident, board))
+		return false;
 	return db.is_board(board);
 };
 
@@ -58,3 +60,72 @@ function parse_ip(ip) {
 	return info;
 }
 exports.parse_ip = parse_ip;
+
+function under_curfew(ident, board) {
+	if (is_admin_ident(ident))
+		return false;
+	var curfew = config.CURFEW_HOURS;
+	if (!curfew || (config.CURFEW_BOARDS || []).indexOf(board) < 0)
+		return false;
+	var hour = new Date().getUTCHours();
+	return curfew.indexOf(hour) < 0;
+}
+exports.under_curfew = under_curfew;
+
+exports.curfew_ending_time = function (board) {
+	var curfew = config.CURFEW_HOURS;
+	if (!curfew || (config.CURFEW_BOARDS || []).indexOf(board) < 0)
+		return null;
+	var now = new Date();
+	var tomorrow = day_after(now);
+	var makeToday = hour_date_maker(now);
+	var makeTomorrow = hour_date_maker(tomorrow);
+	/* Dumb brute-force algorithm */
+	var candidates = [];
+	config.CURFEW_HOURS.forEach(function (hour) {
+		candidates.push(makeToday(hour), makeTomorrow(hour));
+	});
+	candidates.sort();
+	for (var i = 0; i < candidates.length; i++)
+		if (candidates[i] > now)
+			return candidates[i];
+	return null;
+};
+
+exports.curfew_starting_time = function (board) {
+	var curfew = config.CURFEW_HOURS;
+	if (!curfew || (config.CURFEW_BOARDS || []).indexOf(board) < 0)
+		return null;
+	var now = new Date();
+	var tomorrow = day_after(now);
+	var makeToday = hour_date_maker(now);
+	var makeTomorrow = hour_date_maker(tomorrow);
+	/* Even dumber brute-force algorithm */
+	var candidates = [];
+	config.CURFEW_HOURS.forEach(function (hour) {
+		hour++;
+		if (config.CURFEW_HOURS.indexOf(hour) < 0)
+			candidates.push(makeToday(hour), makeTomorrow(hour));
+	});
+	candidates.sort();
+	for (var i = 0; i < candidates.length; i++)
+		if (candidates[i] > now)
+			return candidates[i];
+	return null;
+};
+
+function day_after(today) {
+	/* Leap shenanigans? This is probably broken somehow. Yay dates. */
+	var tomorrow = new Date(today.getTime() + 24*3600*1000);
+	if (tomorrow.getUTCDate() == today.getUTCDate())
+		tomorrow = new Date(tomorrow.getTime() + 12*3600*1000);
+	return tomorrow;
+}
+
+function hour_date_maker(date) {
+	var prefix = date.getUTCFullYear() + '/' + (date.getUTCMonth()+1)
+			+ '/' + date.getUTCDate() + ' ';
+	return (function (hour) {
+		return new Date(prefix + hour + ':00:00 GMT');
+	});
+}

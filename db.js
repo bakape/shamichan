@@ -1571,6 +1571,20 @@ Y.set_banner = function (op, message, cb) {
 	m.exec(cb);
 };
 
+Y.teardown = function (board, cb) {
+	var m = this.connect().multi();
+	var filter = new Filter(board);
+	var self = this;
+	filter.get_all(NaN); // no length limit
+	filter.on('thread', function (thread) {
+		self._log(m, thread.num, common.TEARDOWN, []);
+	});
+	filter.on('error', cb);
+	filter.on('end', function () {
+		m.exec(cb);
+	});
+};
+
 /* HELPERS */
 
 function extract(post, cb) {
