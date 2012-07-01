@@ -385,19 +385,7 @@ Y.kiku = function (targets, on_update, on_sink, callback) {
 		sub.on('update', on_update);
 		sub.on('error', on_sink);
 		self.subs.push(sub.fullKey);
-		if (!sub.channel)
-			sub.when_ready(cb);
-		else {
-			sub.when_ready(function (err) {
-				if (err)
-					return cb(err);
-				var sub = Subscription.get(target);
-				sub.on('update', on_update);
-				sub.on('error', on_sink);
-				self.subs.push(sub.fullKey);
-				sub.when_ready(cb);
-			});
-		}
+		sub.when_ready(cb);
 	}, callback);
 };
 
