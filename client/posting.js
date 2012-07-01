@@ -1,4 +1,5 @@
 var postForm;
+var nonces = {};
 var spoilerImages = config.SPOILER_IMAGES;
 var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
 
@@ -188,7 +189,7 @@ PF.on_image_alloc = function (msg) {
 	if (this.cancelled)
 		return;
 	if (!this.num && !this.sentAllocRequest) {
-		send([ALLOCATE_POST, this.make_alloc_request(null, msg)]);
+		send([INSERT_POST, this.make_alloc_request(null, msg)]);
 		this.sentAllocRequest = true;
 		this.update_buttons();
 	}
@@ -372,6 +373,7 @@ PF.insert_uploaded = function (info) {
 PF.make_alloc_request = function (text, image) {
 	var nonce = random_id();
 	nonces[nonce] = true;
+	this.nonce = nonce;
 	setTimeout(function () {
 		delete nonces[nonce];
 	}, 20 * 60 * 1000);
@@ -412,7 +414,7 @@ PF.commit = function (text) {
 
 	/* Either get an allocation or send the committed text */
 	if (!this.num && !this.sentAllocRequest) {
-		send([ALLOCATE_POST, this.make_alloc_request(text, null)]);
+		send([INSERT_POST, this.make_alloc_request(text, null)]);
 		this.sentAllocRequest = true;
 		this.update_buttons();
 	}

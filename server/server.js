@@ -595,7 +595,7 @@ function valid_links(frag, state, callback) {
 	callback(null, _.isEmpty(links) ? null : links);
 }
 
-dispatcher[common.ALLOCATE_POST] = function (msg, client) {
+dispatcher[common.INSERT_POST] = function (msg, client) {
 	if (msg.length != 1)
 		return false;
 	msg = msg[0];
@@ -619,13 +619,6 @@ dispatcher[common.ALLOCATE_POST] = function (msg, client) {
 				niceErr = "Couldn't allocate post.";
 			return report(err, client, niceErr);
 		}
-		var op = alloc.op || alloc.num;
-		var go = client.send.bind(client,
-				[op, common.ALLOCATE_POST, alloc]);
-		if (!config.DEBUG)
-			go();
-		else
-			setTimeout(go, 500);
 	});
 	return true;
 }

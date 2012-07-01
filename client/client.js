@@ -1,4 +1,4 @@
-var syncs = {}, nonces = {}, ownPosts = {};
+var syncs = {}, ownPosts = {};
 var readOnly = ['archive'];
 
 var connSM = new FSM('load');
@@ -115,10 +115,6 @@ function spill_page() {
 
 var dispatcher = {};
 
-dispatcher[ALLOCATE_POST] = function (msg) {
-	postSM.feed('alloc', msg[0]);
-};
-
 dispatcher[INSERT_POST] = function (msg) {
 	var num = msg[0];
 	msg = msg[1];
@@ -128,10 +124,13 @@ dispatcher[INSERT_POST] = function (msg) {
 		delete nonces[msg.nonce];
 		ownPosts[num] = true;
 		oneeSama.trigger('insertOwnPost', msg);
+		msg.num = num;
+		postSM.feed('alloc', msg);
+		delete msg.num;
 
-		/* XXX: Need insert/alloc unification already! */
 		if (!CurThread || !postForm || !postForm.post)
 			return;
+		/* Unify with code below once we have a fuller model */
 		var post = UnknownThread.get(num);
 		if (post) {
 			UnknownThread.remove(num);
