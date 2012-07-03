@@ -32,12 +32,19 @@ function Subscription(targetInfo) {
 	this.channel = targetInfo.channel;
 	SUBS[this.fullKey] = this;
 
+	this.pending_subscriptions = [];
 	this.subscription_callbacks = [];
 
 	this.k = redis_client();
 	this.k.on('error', this.on_sub_error.bind(this));
-	this.k.on('subscribe', this.on_sub.bind(this));
+	this.k.on('subscribe', this.on_one_sub.bind(this));
 	this.k.subscribe(this.target);
+	this.subscriptions = [this.target];
+	this.pending_subscriptions.push(this.target);
+	if (this.target != this.fullKey) {
+		this.k.subscribe(this.fullKey);
+		this.pending_subscriptions.push(this.fullKey);
+	}
 };
 
 util.inherits(Subscription, events.EventEmitter);
@@ -68,7 +75,16 @@ S.when_ready = function (cb) {
 		cb(null);
 };
 
-S.on_sub = function () {
+S.on_one_sub = function (name) {
+	var i = this.pending_subscriptions.indexOf(name);
+	if (i < 0)
+		throw "Obtained unasked-for subscription " + name + "?!";
+	this.pending_subscriptions.splice(i, 1);
+	if (this.pending_subscriptions.length == 0)
+		this.on_all_subs();
+};
+
+S.on_all_subs = function () {
 	var k = this.k;
 	k.removeAllListeners('subscribe');
 	k.on('message', this.on_message.bind(this));
@@ -77,7 +93,8 @@ S.on_sub = function () {
 	this.subscription_callbacks.forEach(function (cb) {
 		cb(null);
 	});
-	this.subscription_callbacks = null;
+	delete this.pending_subscriptions;
+	delete this.subscription_callbacks;
 };
 
 function parse_pub_message(msg) {
@@ -92,6 +109,7 @@ function parse_pub_message(msg) {
 }
 
 S.on_message = function (chan, msg) {
+	/* Do we need to clarify whether this came from target or fullKey? */
 	var parsed = parse_pub_message(msg), extra;
 	if (this.channel && parsed.suffixPos) {
 		var suffix = JSON.parse(msg.slice(parsed.suffixPos));
@@ -335,7 +353,7 @@ function Yakusoku(board, ident) {
 	events.EventEmitter.call(this);
 	this.id = ++(cache.YAKUMAN);
 	this.tag = board;
-	this.ident = ident || {};
+	this.ident = ident;
 	this.subs = [];
 }
 
@@ -526,8 +544,6 @@ Y.insert_post = function (msg, body, extra, callback) {
 
 		var etc = {augments: {}};
 		var priv = self.ident.priv;
-		if (priv)
-			etc.channel = 'priv:' + priv;
 		if (op) {
 			var pre = 'thread:' + op;
 			if (priv) {
@@ -1172,7 +1188,8 @@ Y._log = function (m, op, kind, msg, opts) {
 	winston.info("Log:", msg);
 	if (!op)
 		throw new Error('No OP.');
-	var prefix = opts.channel ? (opts.channel + ':' + key) : '';
+	var priv = this.ident.priv;
+	var prefix = priv ? ('priv:' + priv + ':') : '';
 	var key = prefix + 'thread:' + op;
 
 	if (common.is_pubsub(kind)) {
