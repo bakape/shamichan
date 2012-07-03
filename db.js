@@ -143,7 +143,10 @@ S.commit_sudoku = function () {
 S.has_no_listeners = function () {
 	/* Possibly idle out after a while */
 	var self = this;
-	setTimeout(function () {
+	if (this.idleOutTimer)
+		clearTimeout(this.idleOutTimer);
+	this.idleOutTimer = setTimeout(function () {
+		self.idleOutTimer = null;
 		if (self.listeners('update').length == 0)
 			self.commit_sudoku();
 	}, 30 * 1000);
