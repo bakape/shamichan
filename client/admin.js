@@ -47,7 +47,7 @@ function korosu() {
 }
 
 readOnly.push('graveyard');
-menuOptions.push('Select');
+menuOptions.unshift('Select');
 
 var multiSelecting = false;
 
