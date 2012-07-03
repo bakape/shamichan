@@ -231,52 +231,36 @@ function tags_of(op) {
 		return tags.map(function (i) { return config.BOARDS[i]; });
 }
 
-function update_thread_cache(pat, chan, msg) {
-	msg = parse_pub_message(msg).body;
-	var m = msg.match(/^(\d+),(\d+),?/);
-	var headerLen = m[0].length;
-	var op = parseInt(m[1], 10);
-	if (!op)
-		return;
-	var kind = parseInt(m[2], 10);
-	m = chan.match(/^tag:(.*)/);
-	var tag = m ? chan.slice(4) : false;
-
-	var payload = function () { return msg.slice(headerLen); };
+function update_thread_cache(chan, msg) {
+	msg = JSON.parse(msg);
+	var op = msg.op, kind = msg.kind, tag = msg.tag;
 
 	if (kind == common.INSERT_POST) {
-		if (tag)
+		if (msg.num)
+			OPs[msg.num] = op;
+		else
 			add_OP_tag(config.BOARDS.indexOf(tag), op);
-		else {
-			var num;
-			if (tag)
-				num = op;
-			else
-				num = parseInt(payload().match(/\d+/)[0], 10);
-			OPs[num] = op;
-		}
 	}
-	else if (tag && kind == common.MOVE_THREAD) {
+	else if (kind == common.MOVE_THREAD) {
 		set_OP_tag(config.BOARDS.indexOf(tag), op);
 	}
-	else if (tag && kind == common.UPDATE_BANNER) {
-		var msg = JSON.parse(payload());
-		cache.bannerState = {tag: tag, op: op, message: msg};
+	else if (kind == common.UPDATE_BANNER) {
+		cache.bannerState = {tag: tag, op: op, message: msg.msg};
 	}
 }
 
 exports.track_OPs = function (callback) {
 	var k = redis_client();
-	k.psubscribe('thread:*');
-	k.once('psubscribe', function () {
+	k.subscribe('cache');
+	k.once('subscribe', function () {
 		var r = redis_client();
 		load_OPs(r, function (err) {
 			r.quit();
 			callback(err);
 		});
-		k.psubscribe('tag:*');
 	});
-	k.on('pmessage', update_thread_cache);
+	k.on('message', update_thread_cache);
+	/* k persists for the purpose of cache updates */
 };
 
 function load_OPs(r, callback) {
@@ -542,9 +526,10 @@ Y.insert_post = function (msg, body, extra, callback) {
 		if (msg.links)
 			m.hmset(key + ':links', msg.links);
 
-		var etc = {augments: {}};
+		var etc = {augments: {}, cacheUpdate: {}};
 		var priv = self.ident.priv;
 		if (op) {
+			etc.cacheUpdate.num = num;
 			var pre = 'thread:' + op;
 			if (priv) {
 				m.sadd(pre + ':privs', priv);
@@ -783,8 +768,8 @@ Y.archive_thread = function (op, callback) {
 			delete view.ip;
 			view.replyctr = replyCount;
 			view.hctr = 0;
-			self._log(m, op, common.MOVE_THREAD, [view],
-					{tags: ['archive']});
+			var etc = {tags: ['archive'], cacheUpdate: {}};
+			self._log(m, op, common.MOVE_THREAD, [view], etc);
 
 			// clear history; note new history could be added
 			// for deletion in the archive
@@ -1208,6 +1193,12 @@ Y._log = function (m, op, kind, msg, opts) {
 	tags.forEach(function (tag) {
 		m.publish(prefix + 'tag:' + tag, msg);
 	});
+
+	if (opts.cacheUpdate) {
+		var info = {kind: kind, tag: tags[0], op: op};
+		_.extend(info, opts.cacheUpdate);
+		m.publish('cache', JSON.stringify(info));
+	}
 };
 
 Y.fetch_backlogs = function (watching, callback) {
@@ -1587,7 +1578,8 @@ Y.get_banner = function (cb) {
 
 Y.set_banner = function (op, message, cb) {
 	var m = this.connect().multi();
-	this._log(m, op, common.UPDATE_BANNER, [message]);
+	var etc = {cacheUpdate: {msg: message}};
+	this._log(m, op, common.UPDATE_BANNER, [message], etc);
 	m.exec(cb);
 };
 
