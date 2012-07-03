@@ -326,7 +326,7 @@ exports.is_board = function (board) {
 	return config.BOARDS.indexOf(board) >= 0;
 };
 
-exports.UPKEEP_IDENT = {auth: 'Upkeep'};
+exports.UPKEEP_IDENT = {auth: 'Upkeep', ip: '127.0.0.1'};
 
 function Yakusoku(board, ident) {
 	events.EventEmitter.call(this);

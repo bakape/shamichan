@@ -3,10 +3,8 @@ var _ = require('../lib/underscore'),
     caps = require('../server/caps'),
     winston = require('winston');
 
-var CURFEW_IDENT = {auth: 'Curfew'};
-
 function shutdown(board, cb) {
-	var yaku = new db.Yakusoku(board, CURFEW_IDENT);
+	var yaku = new db.Yakusoku(board, db.UPKEEP_IDENT);
 	yaku.teardown(board, function (err) {
 		yaku.disconnect();
 		cb(err);

@@ -4,7 +4,7 @@ var _ = require('../lib/underscore'),
     request = require('request'),
     winston = require('winston');
 
-var RADIO_IDENT = {auth: 'Radio'};
+var RADIO_IDENT = {auth: 'Radio', ip: '127.0.0.1'};
 var RADIO_MOUNT = '/radio';
 var POLL_URL = 'http://localhost:5555/poll.xsl';
 var SHORT_INTERVAL = 3 * 1000;

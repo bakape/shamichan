@@ -1,4 +1,7 @@
-var twitter = require('./twitter'),
+var _ = require('../lib/underscore'),
+    caps = require('./caps'),
+    config = require('../config'),
+    twitter = require('./twitter'),
     url_parse = require('url').parse,
     util = require('util');
 
@@ -6,6 +9,12 @@ var escape = require('../common').escape_html;
 var routes = [];
 
 var server = require('http').createServer(function (req, resp) {
+	var ip = req.connection.remoteAddress;
+	if (config.TRUST_X_FORWARDED_FOR)
+		ip = parse_forwarded_for(req.headers) || ip;
+	if (!ip)
+		throw "No IP?!";
+	req.ident = caps.lookup_ident(ip);
 	var method = req.method.toLowerCase(), numRoutes = routes.length;
 	var parsed = url_parse(req.url, true);
 	req.url = parsed.pathname;
@@ -32,6 +41,15 @@ exports.route_get = function (pattern, handler) {
 			handler: auth_passthrough.bind(null, handler)});
 };
 
+function parse_forwarded_for(ff) {
+	if (!ff)
+		return null;
+	if (ff.indexOf(',') >= 0)
+		ff = ff.split(',', 1)[0];
+	return ff.trim();
+}
+exports.parse_forwarded_for = parse_forwarded_for;
+
 function auth_passthrough(handler, req, resp, params) {
 	var chunks = twitter.extract_cookie(req.headers.cookie);
 	if (!chunks) {
@@ -41,7 +59,7 @@ function auth_passthrough(handler, req, resp, params) {
 
 	twitter.check_cookie(chunks, false, function (err, ident) {
 		if (!err)
-			req.ident = ident;
+			_.extend(req.ident, ident);
 		handler(req, resp, params);
 	});
 }
@@ -104,7 +122,7 @@ function auth_checker(handler, is_post, req, resp, params) {
 	function ack(err, session) {
 		if (err)
 			return forbidden(err);
-		req.ident = session;
+		_.extend(req.ident, session);
 		handler(req, resp, params);
 	}
 

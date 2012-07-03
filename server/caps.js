@@ -1,7 +1,8 @@
 var authcommon = require('../authcommon'),
     common = require('../common'),
     config = require('../config'),
-    db = require('../db');
+    db = require('../db'),
+    hooks = require('../hooks');
 
 exports.can_access = function (ident, board) {
 	if (board == 'graveyard' && is_admin_ident(ident))
@@ -12,12 +13,12 @@ exports.can_access = function (ident, board) {
 };
 
 function is_mod_ident(ident) {
-	return ident && (ident.auth === 'Admin' || ident.auth === 'Moderator');
+	return (ident.auth === 'Admin' || ident.auth === 'Moderator');
 }
 exports.is_mod_ident = is_mod_ident;
 
 function is_admin_ident(ident) {
-	return ident && ident.auth === 'Admin';
+	return ident.auth === 'Admin';
 }
 exports.is_admin_ident = is_admin_ident;
 
@@ -60,6 +61,10 @@ function parse_ip(ip) {
 	return info;
 }
 exports.parse_ip = parse_ip;
+
+exports.lookup_ident = function (ip) {
+	return {ip: ip};
+};
 
 function under_curfew(ident, board) {
 	if (is_admin_ident(ident))

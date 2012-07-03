@@ -136,7 +136,6 @@ exports.check_cookie = function (chunks, check_csrf, callback) {
 			if (chunks.b !== session.csrf)
 				return callback('Possible CSRF.');
 		}
-		//session.priv = 'face';
 		callback(null, session);
 	});
 };

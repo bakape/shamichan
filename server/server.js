@@ -28,7 +28,7 @@ var safe = common.safe;
 
 function Okyaku(socket, ip) {
 	this.socket = socket;
-	this.ip = ip;
+	this.ident = caps.lookup_ident(ip);
 	this.watching = {};
 }
 var OK = Okyaku.prototype;
@@ -39,9 +39,9 @@ OK.send = function (msg) {
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	function checked(err, ident) {
-		if (err)
-			ident = null;
-		if (!synchronize(msg, client, ident))
+		if (!err)
+			_.extend(client.ident, ident);
+		if (!synchronize(msg, client))
 			report("Bad protocol.", client);
 	}
 	var chunks = twitter.extract_cookie(msg.pop());
@@ -50,10 +50,10 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		return true;
 	}
 	else
-		return synchronize(msg, client, null);
+		return synchronize(msg, client);
 };
 
-function synchronize(msg, client, ident) {
+function synchronize(msg, client) {
 	if (msg.length != 4)
 		return false;
 	var id = msg[0], board = msg[1], syncs = msg[2], live = msg[3];
@@ -72,9 +72,8 @@ function synchronize(msg, client, ident) {
 		/* Sync logic is buggy; allow for now */
 		//return true;
 	}
-	if (!board || !caps.can_access(ident, board))
+	if (!board || !caps.can_access(client.ident, board))
 		return false;
-	client.ident = ident;
 	var dead_threads = [], count = 0, op;
 	for (var k in syncs) {
 		if (!k.match(/^\d+$/))
@@ -108,7 +107,7 @@ function synchronize(msg, client, ident) {
 
 	if (client.db)
 		client.db.disconnect();
-	client.db = new db.Yakusoku(board, ident);
+	client.db = new db.Yakusoku(board, client.ident);
 	/* Race between subscribe and backlog fetch; client must de-dup */
 	client.db.kiku(client.watching, client.on_update.bind(client),
 			client.on_thread_sink.bind(client), listening);
@@ -597,7 +596,7 @@ function pad3(n) {
 function report(error, client, client_msg) {
 	var error_db = new db.Yakusoku(null, db.UPKEEP_IDENT);
 	var msg = client_msg || 'Server error.';
-	var ip = client && client.ip;
+	var ip = client && client.ident.ip;
 	winston.error('Error by ' + ip + ': ' + (error || msg));
 	if (client) {
 		client.send([0, common.INVALID, msg]);
@@ -657,7 +656,8 @@ function allocate_post(msg, client, callback) {
 		return callback("Can't post here.");
 	var post = {time: new Date().getTime(), nonce: msg.nonce};
 	var body = '';
-	var extra = {ip: client.ip, board: client.board};
+	var ip = client.ident.ip;
+	var extra = {ip: ip, board: client.board};
 	var image_alloc;
 	if (msg.image !== undefined) {
 		if (typeof msg.image != 'string' || !msg.image.match(/^\d+$/))
@@ -714,12 +714,12 @@ function allocate_post(msg, client, callback) {
 	if (post.op)
 		throttled(null);
 	else
-		client.db.check_throttle(client.ip, throttled);
+		client.db.check_throttle(ip, throttled);
 
 	function throttled(err) {
 		if (err)
 			return callback(err);
-		client.db.reserve_post(post.op, client.ip, got_reservation);
+		client.db.reserve_post(post.op, ip, got_reservation);
 	}
 
 	function got_reservation(err, num) {
@@ -792,7 +792,7 @@ function update_post(frag, client) {
 	var combined = post.length + frag.length;
 	if (combined > limit)
 		frag = frag.substr(0, combined - limit);
-	var extra = {ip: client.ip};
+	var extra = {ip: client.ident.ip};
 	if (config.GAME_BOARDS.indexOf(client.board) >= 0)
 		amusement.roll_dice(frag, post, extra);
 	post.body += frag;
@@ -912,7 +912,7 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 	client.db.obtain_image_alloc(alloc, function (err, alloc) {
 		if (!client.post || client.post.image)
 			return;
-		client.db.add_image(client.post, alloc, client.ip,
+		client.db.add_image(client.post, alloc, client.ident.ip,
 					function (err) {
 			if (err)
 				report(err, client, "Image insertion error.");
@@ -992,14 +992,10 @@ function start_server() {
 	sockJs.on('connection', function (socket) {
 		var ip = socket.remoteAddress;
 		if (config.TRUST_X_FORWARDED_FOR) {
-			var ff = socket.headers['x-forwarded-for'];
-			if (ff) {
-				if (ff.indexOf(',') >= 0)
-					ff = ff.split(',', 1)[0];
-				ff = ff.trim();
-				if (ff)
-					ip = ff;
-			}
+			var ff = web.parse_forwarded_for(
+					socket.headers['x-forwarded-for']);
+			if (ff)
+				ip = ff;
 		}
 
 		var client = new Okyaku(socket, ip);
