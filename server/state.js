@@ -4,6 +4,7 @@ var _ = require('../lib/underscore'),
     config = require('../config'),
     fs = require('fs'),
     get_version = require('../get').get_version,
+    hooks = require('../hooks'),
     path = require('path'),
     vm = require('vm');
 
@@ -44,8 +45,7 @@ exports.reload_hot = function (cb) {
 			delete HOT[k];
 		});
 		_.extend(HOT, hot.hot);
-
-		cb(null);
+		hooks.trigger('reloadHot', HOT, cb);
 	});
 };
 

@@ -52,7 +52,8 @@ function parse_ip(ip) {
 		num += parseInt(m[i], 10) * shift;
 		shift *= 256;
 	}
-	var info = {ip: num};
+
+	var info = {full: ip, num: num};
 	if (m[5]) {
 		var bits = parseInt(m[5], 10);
 		if (bits > 0 && bits <= 32)
@@ -60,10 +61,32 @@ function parse_ip(ip) {
 	}
 	return info;
 }
-exports.parse_ip = parse_ip;
+
+var hotBoxes = [];
+
+hooks.hook('reloadHot', function (hot, cb) {
+	var boxes = hot.BOXES;
+	if (!boxes) {
+		hotBoxes = [];
+		return cb(null);
+	}
+	boxes = boxes.map(parse_ip);
+	boxes.sort(function (a, b) { return a.num - b.num; });
+	hotBoxes = boxes;
+	cb(null);
+});
 
 exports.lookup_ident = function (ip) {
-	return {ip: ip};
+	var ident = {ip: ip};
+	var num = parse_ip(ip).num;
+	/* Ideally would have a tree lookup here or something */
+	for (var i = 0; i < hotBoxes.length; i++) {
+		var box = hotBoxes[i];
+		/* sint32 issue here doesn't matter for realistic ranges */
+		if ((num & box.mask) === box.num)
+			ident.priv = box.full; /* fall through */
+	}
+	return ident;
 };
 
 function under_curfew(ident, board) {
