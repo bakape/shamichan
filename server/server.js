@@ -473,7 +473,8 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 			if (tag)
 				return redirect_thread(resp, num, op, tag);
 			else {
-				winston.warn("Orphaned thread", op);
+				winston.warn("Orphaned post", num,
+					"with tagless OP", op);
 				return web.render_404(resp);
 			}
 		}

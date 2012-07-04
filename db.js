@@ -231,7 +231,7 @@ function tags_of(op) {
 		return tags.map(function (i) { return config.BOARDS[i]; });
 }
 
-function update_thread_cache(chan, msg) {
+function update_cache(chan, msg) {
 	msg = JSON.parse(msg);
 	var op = msg.op, kind = msg.kind, tag = msg.tag;
 
@@ -243,6 +243,17 @@ function update_thread_cache(chan, msg) {
 	}
 	else if (kind == common.MOVE_THREAD) {
 		set_OP_tag(config.BOARDS.indexOf(tag), op);
+	}
+	else if (kind == common.DELETE_POSTS) {
+		msg.nums.forEach(function (num) {
+			delete OPs[num];
+		});
+		delete TAGS[op];
+	}
+	else if (kind == common.DELETE_THREAD) {
+		msg.nums.forEach(function (num) {
+			delete OPs[num];
+		});
 	}
 	else if (kind == common.UPDATE_BANNER) {
 		cache.bannerState = {tag: tag, op: op, message: msg.msg};
@@ -259,7 +270,7 @@ exports.track_OPs = function (callback) {
 			callback(err);
 		});
 	});
-	k.on('message', update_thread_cache);
+	k.on('message', update_cache);
 	/* k persists for the purpose of cache updates */
 };
 
@@ -659,7 +670,8 @@ Y.remove_posts = function (nums, callback) {
 		for (var op in threads) {
 			var nums = threads[op];
 			nums.sort();
-			self._log(m, op, common.DELETE_POSTS, nums);
+			var opts = {cacheUpdate: {nums: nums}};
+			self._log(m, op, common.DELETE_POSTS, nums, opts);
 		}
 		m.exec(callback);
 	}
@@ -671,12 +683,14 @@ Y.remove_thread = function (op, callback) {
 	var r = this.connect();
 	var key = 'thread:' + op, dead_key = 'dead:' + op;
 	var graveyardKey = 'tag:' + tag_key('graveyard');
+	var etc = {cacheUpdate: {}};
 	var self = this;
 	async.waterfall([
 	function (next) {
 		r.lrange(key + ':posts', 0, -1, next);
 	},
 	function (nums, next) {
+		etc.cacheUpdate.nums = nums;
 		if (!nums || !nums.length)
 			return next(null, []);
 		stackless.map(nums, self.remove_post.bind(self, false), next);
@@ -698,7 +712,8 @@ Y.remove_thread = function (op, callback) {
 			m.zrem('tag:' + tagKey + ':threads', op);
 		});
 		m.zadd(graveyardKey + ':threads', deadCtr, op);
-		self._log(m, op, common.DELETE_THREAD, [], {tags: tags});
+		etc.tags = tags;
+		self._log(m, op, common.DELETE_THREAD, [], etc);
 		m.hset(key, 'hide', 1);
 		/* Next two vals are checked */
 		m.renamenx(key, dead_key);
@@ -1168,8 +1183,8 @@ Y.finish_all = function (callback) {
 
 Y._log = function (m, op, kind, msg, opts) {
 	opts = opts || {};
-	msg.unshift(kind);
 	msg = JSON.stringify(msg).slice(1, -1);
+	msg = msg.length ? (kind + ',' + msg) : ('' + kind);
 	winston.info("Log:", msg);
 	if (!op)
 		throw new Error('No OP.');
