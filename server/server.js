@@ -81,7 +81,7 @@ function synchronize(msg, client) {
 		k = parseInt(k, 10);
 		if (!k || typeof syncs[k] != 'number')
 			return false;
-		if (db.OPs[k] != k) {
+		if (db.OPs[k] != k || !db.OP_has_tag(board)) {
 			delete syncs[k];
 			dead_threads.push(k);
 		}
@@ -468,8 +468,11 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 			return web.render_404(resp);
 		if (!db.OP_has_tag(board, op)) {
 			var tag = db.first_tag_of(op);
-			if (tag)
+			if (tag) {
+				if (!caps.can_access(req.ident, tag))
+					return web.render_404(resp);
 				return redirect_thread(resp, num, op, tag);
+			}
 			else {
 				winston.warn("Orphaned post", num,
 					"with tagless OP", op);
