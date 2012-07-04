@@ -11,7 +11,7 @@ var routes = [];
 var server = require('http').createServer(function (req, resp) {
 	var ip = req.connection.remoteAddress;
 	if (config.TRUST_X_FORWARDED_FOR)
-		ip = parse_forwarded_for(req.headers) || ip;
+		ip = parse_forwarded_for(req.headers['x-forwarded-for']) || ip;
 	if (!ip)
 		throw "No IP?!";
 	req.ident = caps.lookup_ident(ip);
