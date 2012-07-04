@@ -98,6 +98,7 @@ exports.reset_resources = function (cb) {
 		filter: read('tmpl', 'filter.html'),
 		curfew: read('tmpl', 'curfew.html'),
 		notFound: read('www', '404.html'),
+		serverError: read('www', '50x.html'),
 		modJs: make_mod_js,
 	}, function (err, res) {
 		if (err)
@@ -110,6 +111,7 @@ exports.reset_resources = function (cb) {
 		RES.filterTmpl = tmpl(res.filter);
 		RES.curfewTmpl = tmpl(res.curfew);
 		RES.notFoundHtml = res.notFound;
+		RES.serverErrorHtml = res.serverError;
 		RES.modJs = res.modJs;
 		cb(null);
 	});

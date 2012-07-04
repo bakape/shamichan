@@ -15,6 +15,8 @@ var server = require('http').createServer(function (req, resp) {
 	if (!ip)
 		throw "No IP?!";
 	req.ident = caps.lookup_ident(ip);
+	if (req.ident.ban)
+		return render_500(resp);
 	var method = req.method.toLowerCase(), numRoutes = routes.length;
 	var parsed = url_parse(req.url, true);
 	req.url = parsed.pathname;
@@ -183,12 +185,19 @@ exports.vanillaHeaders = vanillaHeaders;
 exports.noCacheHeaders = noCacheHeaders;
 
 exports.notFoundHtml = preamble + '<title>404</title>404';
+exports.serverErrorHtml = preamble + '<title>500</title>Server error';
 
 function render_404(resp) {
 	resp.writeHead(404, noCacheHeaders);
 	resp.end(exports.notFoundHtml);
 };
 exports.render_404 = render_404;
+
+function render_500(resp) {
+	resp.writeHead(500, noCacheHeaders);
+	resp.end(exports.serverErrorHtml);
+}
+exports.render_500 = render_500;
 
 exports.redirect = function (resp, uri, code) {
 	var headers = {Location: uri};

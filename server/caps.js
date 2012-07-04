@@ -7,6 +7,8 @@ var authcommon = require('../authcommon'),
 exports.can_access = function (ident, board) {
 	if (board == 'graveyard' && is_admin_ident(ident))
 		return true;
+	if (ident.ban)
+		return false;
 	if (under_curfew(ident, board))
 		return false;
 	return db.is_board(board);
@@ -63,29 +65,45 @@ function parse_ip(ip) {
 }
 
 var hotBoxes = [];
+var hotBans = [];
+
+function parse_ranges(ranges) {
+	if (!ranges)
+		return [];
+	ranges = ranges.map(parse_ip);
+	ranges.sort(function (a, b) { return a.num - b.num; });
+	return ranges;
+}
+
+function range_lookup(ranges, num) {
+	/* Ideally would have a tree lookup here or something */
+	var full = null;
+	for (var i = 0; i < ranges.length; i++) {
+		var box = ranges[i];
+		/* sint32 issue here doesn't matter for realistic ranges */
+		if ((num & box.mask) === box.num)
+			full = box.full; /* fall through */
+	}
+	return full;
+}
 
 hooks.hook('reloadHot', function (hot, cb) {
-	var boxes = hot.BOXES;
-	if (!boxes) {
-		hotBoxes = [];
-		return cb(null);
-	}
-	boxes = boxes.map(parse_ip);
-	boxes.sort(function (a, b) { return a.num - b.num; });
-	hotBoxes = boxes;
+	hotBoxes = parse_ranges(hot.BOXES);
+	hotBans = parse_ranges(hot.BANS);
 	cb(null);
 });
 
 exports.lookup_ident = function (ip) {
 	var ident = {ip: ip};
 	var num = parse_ip(ip).num;
-	/* Ideally would have a tree lookup here or something */
-	for (var i = 0; i < hotBoxes.length; i++) {
-		var box = hotBoxes[i];
-		/* sint32 issue here doesn't matter for realistic ranges */
-		if ((num & box.mask) === box.num)
-			ident.priv = box.full; /* fall through */
+	var ban = range_lookup(hotBans, num);
+	if (ban) {
+		ident.ban = ban;
+		return ident;
 	}
+	var priv = range_lookup(hotBoxes, num);
+	if (priv)
+		ident.priv = priv;
 	return ident;
 };
 

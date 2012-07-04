@@ -955,6 +955,7 @@ function propagate_resources() {
 	if (!tripcode.setSalt(config.SECURE_SALT))
 		throw "Bad SECURE_SALT";
 	web.notFoundHtml = RES.notFoundHtml;
+	web.serverErrorHtml = RES.serverErrorHtml;
 }
 
 function get_sockjs_script_sync() {
