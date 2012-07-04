@@ -7,6 +7,8 @@ var authcommon = require('../authcommon'),
 exports.can_access = function (ident, board) {
 	if (board == 'graveyard' && is_admin_ident(ident))
 		return true;
+	if (board == config.STAFF_BOARD && !is_mod_ident(ident))
+		return false;
 	if (ident.ban)
 		return false;
 	if (under_curfew(ident, board))

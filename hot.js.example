@@ -5,6 +5,7 @@ this.hot = {
 		meta: "/meta/ - The Abyss",
 		archive: "/archive/",
 		graveyard: "/graveyard/",
+		staff: "/staff/",
 	},
 	BASE_CSS: 'base-v25.css',
 	BOARD_CSS: {
@@ -13,6 +14,7 @@ this.hot = {
 		meta: 'mawaru-v5.css',
 		archive: 'archive-v5.css',
 		graveyard: 'mawaru-v5.css',
+		staff: 'moe-v5.css',
 	},
 
 	SPECIAL_TRIPCODES: {

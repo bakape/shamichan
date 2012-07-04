@@ -503,8 +503,11 @@ Y.insert_post = function (msg, body, extra, callback) {
 		view.auth = msg.auth;
 	if (op)
 		view.op = op;
-	else
+	else {
 		view.tags = tag_key(board);
+		if (board == config.STAFF_BOARD)
+			view.immortal = 1;
+	}
 
 	if (extra.image_alloc) {
 		msg.image = extra.image_alloc.image;
@@ -553,9 +556,11 @@ Y.insert_post = function (msg, body, extra, callback) {
 			// TODO: Add to alternate thread list?
 			// set conditional hide?
 			op = num;
-			var score = expiry_queue_score(msg.time);
-			var entry = num + ':' + tag_key(self.tag);
-			m.zadd(expiry_queue_key(), score, entry);
+			if (!view.immortal) {
+				var score = expiry_queue_score(msg.time);
+				var entry = num + ':' + tag_key(self.tag);
+				m.zadd(expiry_queue_key(), score, entry);
+			}
 			/* Rate-limit new threads */
 			if (ip != '127.0.0.1')
 				m.setex('ip:'+ip, config.THREAD_THROTTLE, op);

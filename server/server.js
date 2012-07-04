@@ -275,8 +275,6 @@ function redirect_thread(resp, num, op, tag) {
 
 web.route_post(/^\/(\w+)\/upload$/, function (req, resp, params) {
 	var board = params[1];
-	if (!caps.can_access(req.ident, board))
-		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board, req.ident);
 	var upload = new pix.ImageUpload(yaku, image_status);
 	upload.handle_request(req, resp, board);
