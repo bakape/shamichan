@@ -247,7 +247,7 @@ pre, #trans {
 	padding: 0;
 }
 #toggle {
-	background: url('kana/pane.png') transparent;
+	background: url('../kana/pane.png') transparent;
 	border: 0;
 	height: 19px;
 	width: 78px;

@@ -71,7 +71,7 @@ var globalVersion = 5;
 add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 	if (theme) {
 		var css = theme + '-v' + globalVersion + '.css';
-		$('#theme').attr('href', mediaURL + css);
+		$('#theme').attr('href', mediaURL + 'css/' + css);
 	}
 }, themes);
 
