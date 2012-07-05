@@ -1,4 +1,0 @@
-# Jesus christ how horrifying
-User-agent: *
-Disallow: /outbound/
-Disallow: /src/
