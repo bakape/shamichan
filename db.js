@@ -302,7 +302,7 @@ function load_OPs(r, callback) {
 		op = parseInt(op, 10);
 		add_OP_tag(tagIndex, op);
 		OPs[op] = op;
-		get_all_reply_nums(r, op, function (err, posts) {
+		get_all_replies_and_privs(r, op, function (err, posts) {
 			if (err)
 				return cb(err);
 			posts.forEach(function (num) {
@@ -688,14 +688,16 @@ Y.remove_thread = function (op, callback) {
 	var r = this.connect();
 	var key = 'thread:' + op, dead_key = 'dead:' + op;
 	var graveyardKey = 'tag:' + tag_key('graveyard');
+	var privs = null;
 	var etc = {cacheUpdate: {}};
 	var self = this;
 	async.waterfall([
 	function (next) {
-		get_all_reply_nums(r, op, next);
+		get_all_replies_and_privs(r, op, next);
 	},
-	function (nums, next) {
+	function (nums, threadPrivs, next) {
 		etc.cacheUpdate.nums = nums;
+		privs = threadPrivs;
 		if (!nums || !nums.length)
 			return next(null, []);
 		stackless.map(nums, self.remove_post.bind(self, false), next);
@@ -731,11 +733,22 @@ Y.remove_thread = function (op, callback) {
 			return done("Already deleted?!");
 		delete OPs[op];
 		delete TAGS[op];
-		done();
+
+		/* Extra renames now that we have renamenx exclusivity */
+		var m = r.multi();
+		m.rename(key + ':posts', dead_key + ':posts');
+		m.rename(key + ':links', dead_key + ':links');
+		if (privs.length) {
+			m.rename(key + ':privs', dead_key + ':privs');
+			privs.forEach(function (priv) {
+				var suff = ':privs:' + priv;
+				m.rename(key + suff, dead_key + suff);
+			});
+		}
+		m.exec(function (err) {
+			done(err, null); /* second arg is remove_posts dels */
+		});
 		/* Background, might not even be there */
-		var nop = function (err) {};
-		r.renamenx(key + ':posts', dead_key + ':posts', nop);
-		r.renamenx(key + ':links', dead_key + ':links', nop);
 		self.finish_quietly(dead_key, warn);
 		self.hide_image(dead_key, warn);
 	}], callback);
@@ -1496,7 +1509,7 @@ Reader.prototype._get_each_reply = function (tag, ix, nums) {
 };
 
 /* Including hidden or private. Not in-order. */
-function get_all_reply_nums(r, op, cb) {
+function get_all_replies_and_privs(r, op, cb) {
 	var key = 'thread:' + op;
 	var m = r.multi();
 	m.lrange(key + ':posts', 0, -1);
@@ -1506,7 +1519,7 @@ function get_all_reply_nums(r, op, cb) {
 			return cb(err);
 		var nums = rs[0], privs = rs[1];
 		if (!privs.length)
-			return cb(null, nums);
+			return cb(null, nums, privs);
 		var m = r.multi();
 		privs.forEach(function (priv) {
 			m.lrange(key + ':privs:' + priv, 0, -1);
@@ -1517,7 +1530,7 @@ function get_all_reply_nums(r, op, cb) {
 			rs.forEach(function (ns) {
 				nums.push.apply(nums, ns);
 			});
-			cb(null, nums);
+			cb(null, nums, privs);
 		});
 	});
 };
