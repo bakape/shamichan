@@ -81,7 +81,7 @@ function synchronize(msg, client) {
 		k = parseInt(k, 10);
 		if (!k || typeof syncs[k] != 'number')
 			return false;
-		if (db.OPs[k] != k || !db.OP_has_tag(board)) {
+		if (db.OPs[k] != k || !db.OP_has_tag(board, k)) {
 			delete syncs[k];
 			dead_threads.push(k);
 		}
