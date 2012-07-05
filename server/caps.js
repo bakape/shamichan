@@ -4,7 +4,7 @@ var authcommon = require('../authcommon'),
     db = require('../db'),
     hooks = require('../hooks');
 
-exports.can_access = function (ident, board) {
+function can_access_board(ident, board) {
 	if (board == 'graveyard' && is_admin_ident(ident))
 		return true;
 	if (board == config.STAFF_BOARD && !is_mod_ident(ident))
@@ -14,6 +14,17 @@ exports.can_access = function (ident, board) {
 	if (under_curfew(ident, board))
 		return false;
 	return db.is_board(board);
+}
+exports.can_access_board = can_access_board;
+
+exports.can_access_thread = function (ident, op) {
+	var tags = db.tags_of(op);
+	if (!tags)
+		return false;
+	for (var i = 0; i < tags.length; i++)
+		if (can_access_board(ident, tags[i]))
+			return true;
+	return false;
 };
 
 function is_mod_ident(ident) {
@@ -38,6 +49,7 @@ function dead_media_paths(paths) {
 
 exports.augment_oneesama = function (oneeSama, opts) {
 	var ident = opts.ident;
+	oneeSama.ident = ident;
 	if (is_mod_ident(ident))
 		oneeSama.hook('headerName', authcommon.ip_mnemonic);
 	if (is_admin_ident(ident))

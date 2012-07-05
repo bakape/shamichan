@@ -72,7 +72,7 @@ function synchronize(msg, client) {
 		/* Sync logic is buggy; allow for now */
 		//return true;
 	}
-	if (!board || !caps.can_access(client.ident, board))
+	if (!board || !caps.can_access_board(client.ident, board))
 		return false;
 	var dead_threads = [], count = 0, op;
 	for (var k in syncs) {
@@ -168,7 +168,7 @@ OK.on_thread_sink = function (thread, err) {
 
 function tamashii(num) {
 	var op = db.OPs[num];
-	if (op)
+	if (op && caps.can_access_thread(this.ident, op))
 		this.callback(this.post_ref(num, op));
 	else
 		this.callback('>>' + num);
@@ -335,7 +335,7 @@ web.route_get(/^\/(\w+)$/, function (req, resp, params) {
 	var dest = board + '/';
 	if (caps.under_curfew(req.ident, board))
 		return web.redirect(resp, dest);
-	if (!caps.can_access(req.ident, board))
+	if (!caps.can_access_board(req.ident, board))
 		return web.render_404(resp);
 	web.redirect(resp, dest);
 });
@@ -344,7 +344,7 @@ web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
 	var board = params[1];
 	if (caps.under_curfew(req.ident, board))
 		return web.redirect(resp, '.');
-	if (!caps.can_access(req.ident, board))
+	if (!caps.can_access_board(req.ident, board))
 		return web.render_404(resp);
 	web.redirect(resp, '.');
 });
@@ -361,7 +361,7 @@ web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 		resp.end(RES.curfewTmpl[2]);
 		return;
 	}
-	if (!caps.can_access(req.ident, board))
+	if (!caps.can_access_board(req.ident, board))
 		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(0);
@@ -400,7 +400,7 @@ web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
 	var board = params[1];
 	if (caps.under_curfew(req.ident, board))
 		return web.redirect(resp, '..', 302);
-	if (!caps.can_access(req.ident, board))
+	if (!caps.can_access_board(req.ident, board))
 		return web.render_404(resp);
 	var yaku = new db.Yakusoku(board, req.ident);
 	var page = parseInt(params[2], 10);
@@ -451,7 +451,7 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var board = params[1];
 	if (caps.under_curfew(req.ident, board))
 		return web.redirect(resp, '.', 302);
-	if (!caps.can_access(req.ident, board))
+	if (!caps.can_access_board(req.ident, board))
 		return web.render_404(resp);
 	var num = parseInt(params[2], 10);
 	if (!num)
@@ -469,7 +469,7 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		if (!db.OP_has_tag(board, op)) {
 			var tag = db.first_tag_of(op);
 			if (tag) {
-				if (!caps.can_access(req.ident, tag))
+				if (!caps.can_access_board(req.ident, tag))
 					return web.render_404(resp);
 				return redirect_thread(resp, num, op, tag);
 			}
@@ -482,6 +482,9 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 		if (op != num)
 			return redirect_thread(resp, num, op);
 	}
+	if (!caps.can_access_thread(req.ident, op))
+		return web.render_404(resp);
+
 	var yaku = new db.Yakusoku(board, req.ident);
 	var reader = new db.Reader(yaku);
 	var lastN = config.THREAD_LAST_N;
@@ -607,10 +610,11 @@ function report(error, client, client_msg) {
 }
 
 /* Must be prepared to receive callback instantly */
-function valid_links(frag, state, callback) {
+function valid_links(frag, state, ident, callback) {
 	var links = {};
 	var onee = new common.OneeSama(function (num) {
-		if (num in db.OPs)
+		var op = db.OPs[num];
+		if (op && caps.can_access_thread(ident, op))
 			links[num] = db.OPs[num];
 	});
 	onee.callback = function (frag) {};
@@ -732,7 +736,8 @@ function allocate_post(msg, client, callback) {
 		client.post = post;
 		post.num = num;
 		var supplements = {
-			links: valid_links.bind(null, body, post.state),
+			links: valid_links.bind(null, body, post.state,
+					client.ident),
 		};
 		if (image_alloc)
 			supplements.image = client.db.obtain_image_alloc.bind(
@@ -801,7 +806,7 @@ function update_post(frag, client) {
 	/* imporant: broadcast prior state */
 	var old_state = post.state.slice();
 
-	valid_links(frag, post.state, function (err, links) {
+	valid_links(frag, post.state, client.ident, function (err, links) {
 		if (err)
 			links = null; /* oh well */
 		if (links) {

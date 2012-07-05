@@ -10,7 +10,7 @@ web.route_get_auth(/^\/admin$/, function (req, resp) {
 	if (!caps.is_admin_ident(req.ident))
 		return web.render_404(resp);
 	var board = req.board || 'moe';
-	if (!caps.can_access(req.ident, board))
+	if (!caps.can_access_board(req.ident, board))
 		return web.render_404(resp);
 
 	var img = _.template('<a href="' + board + '/{{num}}">'

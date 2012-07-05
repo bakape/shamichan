@@ -230,6 +230,7 @@ function tags_of(op) {
 	else
 		return tags.map(function (i) { return config.BOARDS[i]; });
 }
+exports.tags_of = tags_of;
 
 function update_cache(chan, msg) {
 	msg = JSON.parse(msg);
