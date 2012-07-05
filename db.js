@@ -302,8 +302,7 @@ function load_OPs(r, callback) {
 		op = parseInt(op, 10);
 		add_OP_tag(tagIndex, op);
 		OPs[op] = op;
-		var key = 'thread:' + op;
-		r.lrange(key + ':posts', 0, -1, function (err, posts) {
+		get_all_reply_nums(r, op, function (err, posts) {
 			if (err)
 				return cb(err);
 			posts.forEach(function (num) {
@@ -693,7 +692,7 @@ Y.remove_thread = function (op, callback) {
 	var self = this;
 	async.waterfall([
 	function (next) {
-		r.lrange(key + ':posts', 0, -1, next);
+		get_all_reply_nums(r, op, next);
 	},
 	function (nums, next) {
 		etc.cacheUpdate.nums = nums;
@@ -1495,6 +1494,34 @@ Reader.prototype._get_each_reply = function (tag, ix, nums) {
 		next_please();
 	});
 };
+
+/* Including hidden or private. Not in-order. */
+function get_all_reply_nums(r, op, cb) {
+	var key = 'thread:' + op;
+	var m = r.multi();
+	m.lrange(key + ':posts', 0, -1);
+	m.smembers(key + ':privs');
+	m.exec(function (err, rs) {
+		if (err)
+			return cb(err);
+		var nums = rs[0], privs = rs[1];
+		if (!privs.length)
+			return cb(null, nums);
+		var m = r.multi();
+		privs.forEach(function (priv) {
+			m.lrange(key + ':privs:' + priv, 0, -1);
+		});
+		m.exec(function (err, rs) {
+			if (err)
+				return cb(err);
+			rs.forEach(function (ns) {
+				nums.push.apply(nums, ns);
+			});
+			cb(null, nums);
+		});
+	});
+};
+
 
 /* AUTHORITY */
 
