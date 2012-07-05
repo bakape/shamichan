@@ -73,7 +73,7 @@ dispatcher[EXECUTE_JS] = function (msg, op) {
 
 function game_over() {
 	setTimeout(function () {
-		history.go(0);
+		location.reload(true);
 	}, 2000);
 	$DOC.children().remove();
 }

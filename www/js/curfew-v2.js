@@ -14,7 +14,7 @@ function countdown() {
 		$remain.text('Open SOON.');
 		clearInterval(countdownInterval);
 		if (ticks > 3)
-			history.go(0);
+			location.reload(true);
 	}
 	var hours = Math.floor(diff / 3600);
 	var minutes = Math.floor(diff / 60) % 60;
