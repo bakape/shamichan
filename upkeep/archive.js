@@ -76,5 +76,13 @@ function clean_up() {
 
 if (require.main === module) {
 	connect();
+	var args = process.argv;
+	if (args.length == 3) {
+		yaku.archive_thread(parseInt(args[2], 10), function (err) {
+			if (err)
+				throw err;
+			process.exit(0);
+		});
+	}
 	at_next_minute(clean_up);
 }
