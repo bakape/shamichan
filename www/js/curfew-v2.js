@@ -40,4 +40,9 @@ else {
 
 $('div').append($title, $remain);
 
+$('#bgm')[0].addEventListener('ended', function () {
+	this.currentTime = 6.02;
+	this.play();
+});
+
 })();
