@@ -771,15 +771,17 @@ Y.archive_thread = function (op, callback) {
 		if (rs[1])
 			return callback('Thread is already deleted.');
 		var m = r.multi();
+		// order counts
 		m.incr(archiveKey + ':bumpctr');
 		m.hgetall(key);
 		m.hgetall(key + ':links');
 		m.llen(key + ':posts');
+		m.smembers(key + ':privs');
 		m.exec(next);
 	},
 	function (rs, next) {
 		var bumpCtr = rs[0], view = rs[1], links = rs[2],
-				replyCount = rs[3];
+				replyCount = rs[3], privs = rs[4];
 		var tags = view.tags;
 		var m = r.multi();
 		// move to archive tag only
@@ -810,11 +812,18 @@ Y.archive_thread = function (op, callback) {
 			m.hdel(key, 'hctr');
 			m.del(key + ':history');
 
+			if (privs.length) {
+				m.del(key + ':privs');
+				privs.forEach(function (priv) {
+					m.del(key + ':privs:' + priv);
+				});
+			}
+
 			m.exec(next);
 		});
 	},
 	function (results, done) {
-		TAGS[op] = config.BOARDS.indexOf('archive');
+		set_OP_tag(config.BOARDS.indexOf('archive'), op);
 		done();
 	}], callback);
 };
