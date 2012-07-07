@@ -317,8 +317,22 @@ IU.read_image_filesize = function (callback) {
 	});
 };
 
+function which(name, callback) {
+	child_process.exec('which ' + name, function (err, stdout, stderr) {
+		if (err)
+			throw err;
+		callback(stdout.trim());
+	});
+}
+
+var md5sum;
+which('md5sum', function (fullPath) {
+	md5sum = fullPath;
+});
+
 function MD5_file(path, callback) {
-	child_process.exec('md5sum -b ' + path, function (err, stdout, stderr) {
+	child_process.execFile(md5sum, ['-b', path],
+				function (err, stdout, stderr) {
 		if (err)
 			return callback('Hashing error.');
 		var m = stdout.match(/^([\da-f]{32})/i);
@@ -334,13 +348,13 @@ function MD5_file(path, callback) {
 exports.MD5_file = MD5_file;
 
 function mv_file(src, dest, callback) {
-	var mv = child_process.spawn('/bin/mv', ['-n', src, dest]);
-	mv.on('error', callback);
-	mv.stderr.on('data', function (buf) {
-		process.stderr.write(buf);
-	});
-	mv.on('exit', function (code) {
-		callback(code ? 'mv error' : null);
+	child_process.execFile('/bin/mv', ['-n', src, dest],
+				function (err, stdout, stderr) {
+		if (err) {
+			winston.error(stderr);
+			return callback(err);
+		}
+		callback(null);
 	});
 }
 exports.mv_file = mv_file;
@@ -358,23 +372,14 @@ function perceptual_hash(src, callback) {
 			return callback('Hashing error.');
 		}
 		var bin = path.join(__dirname, 'perceptual');
-		var hasher = child_process.spawn(bin, [tmp]);
-		hasher.on('error', function (err) {
+		child_process.execFile(bin, [tmp],
+					function (err, stdout, stderr) {
 			fs.unlink(tmp);
-			callback(err);
-		});
-		var hash = [];
-		hasher.stdout.on('data', function (buf) {
-			hash.push(buf.toString('ascii'));
-		});
-		hasher.stderr.on('data', function (buf) {
-			process.stderr.write(buf);
-		});
-		hasher.on('exit', function (code) {
-			fs.unlink(tmp);
-			if (code != 0)
+			if (err) {
+				winston.error(stderr);
 				return callback('Hashing error.');
-			hash = hash.join('').trim();
+			}
+			var hash = stdout.trim();
 			if (hash.length != 64)
 				return callback('Hashing problem.');
 			callback(null, hash);
@@ -384,7 +389,7 @@ function perceptual_hash(src, callback) {
 
 function detect_APNG(fnm, callback) {
 	var bin = path.join(__dirname, 'findapng');
-	child_process.exec(bin + ' ' + fnm, function (err, stdout, stderr) {
+	child_process.execFile(bin, [fnm], function (err, stdout, stderr) {
 		if (err)
 			return callback(stderr);
 		else if (stdout.match(/^APNG/))
