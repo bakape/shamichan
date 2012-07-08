@@ -850,8 +850,10 @@ OK.finish_post = function (callback) {
 		if (err)
 			callback(err);
 		else {
-			self.last_num = self.post.num;
-			self.post = null;
+			if (self.post) {
+				self.last_num = self.post.num;
+				self.post = null;
+			}
 			callback(null);
 		}
 	});
