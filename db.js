@@ -249,12 +249,12 @@ function update_cache(chan, msg) {
 		msg.nums.forEach(function (num) {
 			delete OPs[num];
 		});
-		delete TAGS[op];
 	}
 	else if (kind == common.DELETE_THREAD) {
 		msg.nums.forEach(function (num) {
 			delete OPs[num];
 		});
+		delete TAGS[op];
 	}
 	else if (kind == common.UPDATE_BANNER) {
 		cache.bannerState = {tag: tag, op: op, message: msg.msg};
