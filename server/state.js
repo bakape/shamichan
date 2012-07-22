@@ -73,7 +73,7 @@ function make_dir(base, key, cb) {
 }
 
 exports.make_media_dirs = function (cb) {
-	var keys = ['src', 'thumb', 'vint', 'dead'];
+	var keys = ['src', 'thumb', 'vint', 'dead', 'tmp'];
 	async.forEach(keys, make_dir.bind(null, null), function (err) {
 		if (err)
 			return cb(err);

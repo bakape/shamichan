@@ -77,7 +77,8 @@ IU.handle_request = function (req, resp, board) {
 		return this.failure('File is too large.');
 
 	var form = new formidable.IncomingForm();
-	form.maxFieldsSize = 10 * 1024;
+	form.uploadDir = config.MEDIA_DIRS.tmp;
+	form.maxFieldsSize = 50 * 1024;
 	form.onPart = function (part) {
 		if (part.filename && part.name == 'image')
 			form.handlePart(part);
