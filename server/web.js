@@ -1,6 +1,7 @@
 var _ = require('../lib/underscore'),
     caps = require('./caps'),
     config = require('../config'),
+    formidable = require('formidable'),
     twitter = require('./twitter'),
     url_parse = require('url').parse,
     util = require('util');
@@ -71,43 +72,18 @@ exports.route_get_auth = function (pattern, handler) {
 			handler: auth_checker.bind(null, handler, false)});
 };
 
-function parse_post_body(req, callback) {
-	// jesus christ
-	var buf = [], len = 0;
-	req.on('data', function (data) {
-		buf.push(data);
-		len += data.length;
-	});
-	req.once('end', function () {
-		var i = 0;
-		var dest = new Buffer(len);
-		buf.forEach(function (b) {
-			b.copy(dest, i, 0);
-			i += b.length;
-		});
-		var combined = dest.toString('utf-8');
-		var body = {};
-		combined.split('&').forEach(function (param) {
-			var m = param.match(/^(.*?)=(.*)$/);
-			if (m)
-				body[decodeURIComponent(m[1])] = (
-					decodeURIComponent(m[2]));
-		});
-		buf = dest = combined = null;
-		callback(null, body);
-	});
-	req.once('close', callback);
-}
-
 function auth_checker(handler, is_post, req, resp, params) {
 	if (is_post) {
-		parse_post_body(req, function (err, body) {
+		var form = new formidable.IncomingForm();
+		form.maxFieldsSize = 50 * 1024;
+		form.type = 'urlencoded';
+		form.parse(req, function (err, fields) {
 			if (err) {
 				resp.writeHead(500, noCacheHeaders);
 				resp.end(preamble + escape(err));
 				return;
 			}
-			req.body = body;
+			req.body = fields;
 			check_it();
 		});
 	}
