@@ -50,7 +50,7 @@ web.route_post_auth(/^\/admin$/, function (req, resp) {
 		return !isNaN(x);
 	});
 
-	var yaku = new db.Yakusoku(null);
+	var yaku = new db.Yakusoku(null, req.ident);
 	yaku.remove_posts(threads, function (err, dels) {
 
 		// XXX: Can't disconnect right away.
