@@ -4,7 +4,8 @@ var config = require('../config'),
     fs = require('fs'),
     path = require('path'),
     pix = require('../server/pix'),
-    stackless = require('../server/stackless');
+    stackless = require('../server/stackless'),
+    winston = require('winston');
 
 function Recycler() {
 	this.tag = 'archive';
@@ -31,9 +32,9 @@ R.recycle_post = function (post, cb) {
 	MD5_file(src, function (err, MD5) {
 		if (err) {
 			if (err.code == 'ENOENT')
-				console.warn(src + " doesn't exist.");
+				winston.warn(src + " doesn't exist.");
 			else
-				console.error(err);
+				winston.error(err);
 			return cb(null);
 		}
 		var dest = MD5 + path.extname(src);
@@ -53,7 +54,7 @@ R.recycle_post = function (post, cb) {
 					pix.mv_file(dest_path, src,
 							function (e) {
 						if (e)
-							console.error(e);
+							winston.error(e);
 						return cb(err);
 					});
 					return;
@@ -62,13 +63,13 @@ R.recycle_post = function (post, cb) {
 				toDelete.forEach(function (victim) {
 					fs.unlink(victim, function (err) {
 						if (err)
-							console.error(err);
+							winston.error(err);
 					});
 				});
 				if (toDelete.length) {
 					var info = post.num + ': del ' +
 							toDelete.length;
-					console.log(info);
+					winston.info(info);
 				}
 
 				cb(null);
