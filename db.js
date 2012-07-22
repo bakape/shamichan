@@ -8,7 +8,7 @@ var _ = require('./lib/underscore'),
     fs = require('fs'),
     hooks = require('./hooks'),
     redis = require('redis'),
-    stackless = require('./server/stackless'),
+    tail = require('./tail'),
     util = require('util'),
     winston = require('winston');
 
@@ -279,7 +279,7 @@ function load_OPs(r, callback) {
 	var boards = config.BOARDS;
 	// Want consistent ordering in the TAGS entries for multi-tag threads
 	// (so do them in series)
-	stackless.forEach(boards, scan_board, callback);
+	tail.forEach(boards, scan_board, callback);
 
 	function scan_board(tag, cb) {
 		var tagIndex = boards.indexOf(tag);
@@ -648,7 +648,7 @@ Y.remove_post = function (from_thread, num, callback) {
 
 Y.remove_posts = function (nums, callback) {
 	var self = this;
-	stackless.map(nums, this.remove_post.bind(this, true), all_gone);
+	tail.map(nums, this.remove_post.bind(this, true), all_gone);
 
 	function all_gone(err, dels) {
 		if (err)
@@ -700,7 +700,7 @@ Y.remove_thread = function (op, callback) {
 		privs = threadPrivs;
 		if (!nums || !nums.length)
 			return next(null, []);
-		stackless.map(nums, self.remove_post.bind(self, false), next);
+		tail.map(nums, self.remove_post.bind(self, false), next);
 	},
 	function (dels, next) {
 		var m = r.multi();
@@ -834,7 +834,7 @@ Y.remove_images = function (nums, callback) {
 	var threads = {};
 	var rem = this.remove_image.bind(this, threads);
 	var self = this;
-	stackless.forEach(nums, rem, function (err) {
+	tail.forEach(nums, rem, function (err) {
 		if (err)
 			return callback(err);
 		var m = self.connect().multi();
@@ -898,7 +898,7 @@ Y.force_image_spoilers = function (nums, callback) {
 	var threads = {};
 	var rem = this.spoiler_image.bind(this, threads);
 	var self = this;
-	stackless.forEach(nums, rem, function (err) {
+	tail.forEach(nums, rem, function (err) {
 		if (err)
 			return callback(err);
 		var m = self.connect().multi();
@@ -1013,7 +1013,7 @@ Y.delete_temporaries = function (callback) {
 	r.smembers('temps', function (err, temps) {
 		if (err)
 			return callback(err);
-		stackless.forEach(temps, function (temp, cb) {
+		tail.forEach(temps, function (temp, cb) {
 			fs.unlink(temp, function (err) {
 				if (err)
 					winston.warn('temp: ' + err);
