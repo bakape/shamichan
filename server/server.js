@@ -42,7 +42,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		if (!err)
 			_.extend(client.ident, ident);
 		if (!synchronize(msg, client))
-			report("Bad protocol.", client);
+			client.report(db.Muggle("Bad protocol."));
 	}
 	var chunks = twitter.extract_cookie(msg.pop());
 	if (chunks) {
@@ -113,7 +113,8 @@ function synchronize(msg, client) {
 			client.on_thread_sink.bind(client), listening);
 	function listening(errs) {
 		if (errs && errs.length >= count)
-			return report("Couldn't sync to board.", client);
+			return client.report(db.Muggle(
+					"Couldn't sync to board."));
 		else if (errs) {
 			dead_threads.push.apply(dead_threads, errs);
 			errs.forEach(function (thread) {
@@ -572,7 +573,7 @@ OK.on_message = function (data) {
 	var func = dispatcher[type];
 	if (!func || !func(msg, this)) {
 		winston.warn("Got invalid message " + data);
-		report(null, this, "Bad protocol.");
+		this.report(db.Muggle("Bad protocol."));
 	}
 };
 
@@ -598,15 +599,16 @@ function pad3(n) {
 	return (n < 10 ? '00' : (n < 100 ? '0' : '')) + n;
 }
 
-function report(error, client, client_msg) {
-	var error_db = new db.Yakusoku(null, db.UPKEEP_IDENT);
-	var msg = client_msg || 'Server error.';
-	var ip = client && client.ident.ip;
-	winston.error('Error by ' + ip + ': ' + (error || msg));
-	if (client) {
-		client.send([0, common.INVALID, msg]);
-		client.synced = false;
+OK.report = function (error) {
+	var msg = 'Server error.';
+	if (error instanceof db.Muggle) {
+		msg = error.most_precise_error_message();
+		error = error.deepest_reason();
 	}
+	winston.error('Error by ' + JSON.stringify(this.ident) + ': '
+			+ (error || msg));
+	this.send([0, common.INVALID, msg]);
+	this.synced = false;
 }
 
 /* Must be prepared to receive callback instantly */
@@ -640,13 +642,8 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 		debug_command(client, frag);
 
 	allocate_post(msg, client, function (err, alloc) {
-		if (err) {
-			var niceErr = "Couldn't post: " + err;
-			/* TEMP: Need better nice-error-message policy */
-			if (niceErr.length > 40)
-				niceErr = "Couldn't allocate post.";
-			return report(err, client, niceErr);
-		}
+		if (err)
+			client.report(db.Muggle("Allocation failure.", err));
 	});
 	return true;
 }
@@ -827,7 +824,8 @@ function update_post(frag, client) {
 		client.db.append_post(post, frag, old_state, extra,
 					function (err) {
 			if (err)
-				report(err, client, "Couldn't add text.");
+				client.report(db.Muggle("Couldn't add text.",
+						err));
 		});
 	});
 	return true;
@@ -838,7 +836,7 @@ function debug_command(client, frag) {
 	if (!frag)
 		return;
 	if (frag.match(/\bfail\b/))
-		report("debug", client, "Failure requested.");
+		client.report(db.Muggle("Failure requested."));
 	else if (frag.match(/\bclose\b/))
 		client.socket.close();
 }
@@ -864,7 +862,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 		return false;
 	client.finish_post(function (err) {
 		if (err)
-			report(err, client, "Couldn't finish post.");
+			client.report(db.Muggle("Couldn't finish post.", err));
 	});
 	return true;
 }
@@ -890,7 +888,7 @@ dispatcher[common.DELETE_POSTS] = function (nums, client) {
 
 	client.db.remove_posts(nums, function (err, dels) {
 		if (err)
-			report(err, client, "Couldn't delete.");
+			client.report(db.Muggle("Couldn't delete.", err));
 	});
 	return true;
 };
@@ -905,7 +903,7 @@ dispatcher[common.DELETE_IMAGES] = function (nums, client) {
 
 	client.db.remove_images(nums, function (err, dels) {
 		if (err)
-			report(err, client, "Couldn't delete images.");
+			client.report(db.Muggle("Couldn't delete images.", err));
 	});
 	return true;
 };
@@ -924,7 +922,8 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 		client.db.add_image(client.post, alloc, client.ident.ip,
 					function (err) {
 			if (err)
-				report(err, client, "Image insertion error.");
+				client.report(db.Muggle(
+					"Image insertion problem.", err));
 		});
 	});
 	return true;
@@ -941,7 +940,8 @@ dispatcher[common.SPOILER_IMAGES] = function (nums, client) {
 
 	client.db.force_image_spoilers(nums, function (err) {
 		if (err)
-			report(err, client, "Couldn't spoiler images.");
+			client.report(db.Muggle("Couldn't spoiler images.",
+					err));
 	});
 	return true;
 };
@@ -954,7 +954,7 @@ dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	var op = msg[0];
 	client.db.set_fun_thread(op, function (err) {
 		if (err)
-			report(err, client, "No fun allowed.");
+			client.report(err);
 	});
 	return true;
 };

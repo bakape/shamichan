@@ -14,6 +14,8 @@ var async = require('async'),
 var image_attrs = ('src thumb dims size MD5 hash imgnm spoiler realthumb vint'
 		+ ' apng').split(' ');
 
+var Muggle = db.Muggle;
+
 function is_image(image) {
 	return image && (image.src || image.vint);
 };
@@ -88,11 +90,10 @@ IU.handle_request = function (req, resp, board) {
 	};
 	var self = this;
 	form.once('error', function (err) {
-		winston.error('formidable: ' + err);
-		self.failure('Upload request problem.');
+		self.failure(Muggle('Upload request problem.', err));
 	});
 	form.once('aborted', function (err) {
-		self.failure('Upload was aborted.');
+		self.failure(Muggle('Upload was aborted.', err));
 	});
 	this.lastProgress = -1;
 	form.on('field', function (key, value) {
@@ -105,9 +106,6 @@ IU.handle_request = function (req, resp, board) {
 		form.parse(req, this.parse_form.bind(this));
 	}
 	catch (err) {
-		winston.error('caught: ' + err);
-		if (typeof err != 'string')
-			err = 'Invalid request.';
 		self.failure(err);
 	}
 };
@@ -123,12 +121,10 @@ IU.upload_progress_status = function (received, total) {
 };
 
 IU.parse_form = function (err, fields, files) {
-	if (err) {
-		winston.error("Upload error: " + err);
-		return this.failure('Invalid upload.');
-	}
+	if (err)
+		return this.failure(Muggle('Invalid upload.', err));
 	if (!files.image)
-		return this.failure('No image.');
+		return this.failure(Muggle('No image.'));
 	this.image = files.image;
 	this.client_id = fields.client_id;
 	this.pinky = !!parseInt(fields.op, 10);
@@ -138,7 +134,7 @@ IU.parse_form = function (err, fields, files) {
 		var sps = config.SPOILER_IMAGES;
 		if (sps.normal.indexOf(spoiler) < 0
 				&& sps.trans.indexOf(spoiler) < 0)
-			return this.failure('Bad spoiler.');
+			return this.failure(Muggle('Bad spoiler.'));
 		this.image.spoiler = spoiler;
 	}
 
@@ -159,7 +155,7 @@ IU.process = function (err) {
 	if (image.ext == '.jpeg')
 		image.ext = '.jpg';
 	if (['.png', '.jpg', '.gif'].indexOf(image.ext) < 0)
-		return this.failure('Invalid image format.');
+		return this.failure(Muggle('Invalid image format.'));
 	image.imgnm = image.filename.substr(0, 256);
 
 	this.status('Verifying...');
@@ -174,19 +170,20 @@ IU.process = function (err) {
 	async.parallel(checks, verified);
 
 	function verified(err, rs) {
-		if (err) {
-			winston.error(err);
-			return self.failure('Bad image.');
-		}
+		if (err)
+			return self.failure(Muggle('Bad image.', err));
 		var w = rs.dims.width, h = rs.dims.height;
 		image.size = rs.stat.size;
 		image.dims = [w, h];
 		if (!w || !h)
-			return self.failure('Invalid image dimensions.');
+			return self.failure(Muggle('Bad image dimensions.'));
+		if (w > config.IMAGE_WIDTH_MAX && h > config.IMAGE_HEIGHT_MAX)
+			return self.failure(Muggle('Image is too wide'
+					+ ' and too tall.'));
 		if (w > config.IMAGE_WIDTH_MAX)
-			return self.failure('Image is too wide.');
+			return self.failure(Muggle('Image is too wide.'));
 		if (h > config.IMAGE_HEIGHT_MAX)
-			return self.failure('Image is too tall.');
+			return self.failure(Muggle('Image is too tall.'));
 		if (rs.apng)
 			image.apng = 1;
 
@@ -265,10 +262,9 @@ IU.process = function (err) {
 			delete image.spoiler;
 		}
 		async.parallel(mvs, function (err, rs) {
-			if (err) {
-				winston.error(err);
-				return self.failure("Distro failure.");
-			}
+			if (err)
+				return self.failure(Muggle("Distro failure.",
+						err));
 			var olds = [image.path];
 			var news = [dest];
 			image.path = dest;
@@ -303,12 +299,10 @@ function dead_path(dir, filename) {
 IU.read_image_filesize = function (callback) {
 	var self = this;
 	fs.stat(this.image.path, function (err, stat) {
-		if (err) {
-			winston.error(err);
-			callback('Internal filesize error.');
-		}
+		if (err)
+			callback(Muggle('Internal filesize error.', err));
 		else if (stat.size > config.IMAGE_FILESIZE_MAX)
-			callback('File is too large.');
+			callback(Muggle('File is too large.'));
 		else
 			callback(null, stat.size);
 	});
@@ -324,11 +318,11 @@ exports.squish_MD5 = squish_MD5;
 function mv_file(src, dest, callback) {
 	child_process.execFile('/bin/mv', ['-n', src, dest],
 				function (err, stdout, stderr) {
-		if (err) {
-			winston.error(stderr);
-			return callback(err);
-		}
-		callback(null);
+		if (err)
+			callback(Muggle("Couldn't move file into place.",
+					stderr || err));
+		else
+			callback(null);
 	});
 }
 exports.mv_file = mv_file;
@@ -341,21 +335,18 @@ function perceptual_hash(src, callback) {
 			'-type', 'grayscale', '-depth', '8',
 			tmp];
 	im.convert(args, function (err, stdout, stderr) {
-		if (err) {
-			winston.error(stderr);
-			return callback('Hashing error.');
-		}
+		if (err)
+			return callback(Muggle('Hashing error.', err));
 		var bin = path.join(__dirname, 'perceptual');
 		child_process.execFile(bin, [tmp],
 					function (err, stdout, stderr) {
 			fs.unlink(tmp);
-			if (err) {
-				winston.error(stderr);
-				return callback('Hashing error.');
-			}
+			if (err)
+				return callback(Muggle('Hashing error.',
+						stderr || err));
 			var hash = stdout.trim();
 			if (hash.length != 64)
-				return callback('Hashing problem.');
+				return callback(Muggle('Hashing problem.'));
 			callback(null, hash);
 		});
 	});
@@ -365,13 +356,15 @@ function detect_APNG(fnm, callback) {
 	var bin = path.join(__dirname, 'findapng');
 	child_process.execFile(bin, [fnm], function (err, stdout, stderr) {
 		if (err)
-			return callback(stderr);
+			return callback(Muggle('APNG detector problem.',
+					stderr || err));
 		else if (stdout.match(/^APNG/))
 			return callback(null, true);
 		else if (stdout.match(/^PNG/))
 			return callback(null, false);
 		else
-			return callback(stderr);
+			return callback(Muggle('APNG detector acting up.',
+					stderr || err));
 	});
 }
 
@@ -381,13 +374,13 @@ hooks.hook("buryImage", function (info, callback) {
 	/* Just in case */
 	var m = /^\d+\w*\.\w+$/;
 	if (!info.src.match(m))
-		return callback('Invalid image.');
+		return callback(Muggle('Invalid image.'));
 	var mvs = [mv.bind(null, 'src', info.src)];
 	function try_thumb(t) {
 		if (!t)
 			return;
 		if (!t.match(m))
-			return callback('Invalid thumbnail.');
+			return callback(Muggle('Invalid thumbnail.'));
 		mvs.push(mv.bind(null, 'thumb', t));
 	}
 	try_thumb(info.thumb);
@@ -432,10 +425,8 @@ function resize_image(o, comp, callback) {
 }
 
 function im_callback(cb, err, stdout, stderr) {
-	if (err) {
-		winston.error(stderr);
-		return cb('Conversion error.');
-	}
+	if (err)
+		return cb(Muggle('Conversion error.', stderr || err));
 	if (config.DEBUG)
 		setTimeout(cb, 1000);
 	else
@@ -453,7 +444,16 @@ function image_files(image) {
 	return files;
 }
 
-IU.failure = function (err_desc) {
+IU.failure = function (err) {
+	var err_desc = 'Unknown image processing error.'
+	if (err instanceof Muggle) {
+		err_desc = err.most_precise_error_message();
+		err = err.deepest_reason();
+	}
+	/* Don't bother logging PEBKAC errors */
+	if (!(err instanceof Muggle))
+		winston.error(err);
+
 	if (this.resp) {
 		this.resp.writeHead(500, {'Content-Type': 'text/plain'});
 		this.resp.end(err_desc);

@@ -455,13 +455,11 @@ Y.reserve_post = function (op, ip, callback) {
 	var shortTerm = key + short_term_timeslot(now);
 	var longTerm = key + long_term_timeslot(now);
 	r.mget([shortTerm, longTerm], function (err, quants) {
-		if (err) {
-			winston.error(err);
-			return callback("Limiter failure.");
-		}
+		if (err)
+			return callback(Muggle("Limiter failure.", err));
 		if (quants[0] > config.SHORT_TERM_LIMIT ||
 				quants[1] > config.LONG_TERM_LIMIT)
-			return callback('Reduce your speed.');
+			return callback(Muggle('Reduce your speed.'));
 
 		reserve();
 	});
@@ -479,16 +477,16 @@ Y.reserve_post = function (op, ip, callback) {
 Y.insert_post = function (msg, body, extra, callback) {
 	var r = this.connect();
 	if (!this.tag)
-		return callback("Can't retrieve board for posting.");
+		return callback(Muggle("Can't retrieve board for posting."));
 	var self = this;
 	var ip = extra.ip, board = extra.board, num = msg.num, op = msg.op;
 	if (!num)
-		return callback("No post num.");
+		return callback(Muggle("No post num."));
 	else if (!ip)
-		return callback("No IP.");
+		return callback(Muggle("No IP."));
 	else if (op && OPs[op] != op) {
 		delete OPs[num];
-		return callback('Thread does not exist.');
+		return callback(Muggle('Thread does not exist.'));
 	}
 
 	var view = {time: msg.time, ip: ip, state: msg.state.join()};
@@ -512,7 +510,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 	if (extra.image_alloc) {
 		msg.image = extra.image_alloc.image;
 		if (!op == msg.image.pinky)
-			return callback("Image is the wrong size.");
+			return callback(Muggle("Image is the wrong size."));
 		delete msg.image.pinky;
 	}
 
@@ -611,7 +609,7 @@ Y.remove_post = function (from_thread, num, callback) {
 	num = parseInt(num);
 	var op = OPs[num];
 	if (!op)
-		return callback('No such post.');
+		return callback(Muggle('No such post.'));
 	if (op == num) {
 		if (!from_thread)
 			return callback('Deletion loop?!');
@@ -684,7 +682,7 @@ Y.remove_posts = function (nums, callback) {
 
 Y.remove_thread = function (op, callback) {
 	if (OPs[op] != op)
-		return callback('Thread does not exist.');
+		return callback(Muggle('Thread does not exist.'));
 	var r = this.connect();
 	var key = 'thread:' + op, dead_key = 'dead:' + op;
 	var graveyardKey = 'tag:' + tag_key('graveyard');
@@ -767,9 +765,9 @@ Y.archive_thread = function (op, callback) {
 	},
 	function (rs, next) {
 		if (!rs[0])
-			return callback('Thread does not exist.');
+			return callback(Muggle('Thread does not exist.'));
 		if (rs[1])
-			return callback('Thread is already deleted.');
+			return callback(Muggle('Thread is already deleted.'));
 		var m = r.multi();
 		// order counts
 		m.incr(archiveKey + ':bumpctr');
@@ -948,7 +946,7 @@ Y.check_throttle = function (ip, callback) {
 		if (err)
 			callback(err);
 		else
-			callback(exists ? 'Too soon.' : null);
+			callback(exists ? Muggle('Too soon.') : null);
 	});
 };
 
@@ -962,7 +960,7 @@ Y.check_duplicate = function (hash, callback) {
 		if (err)
 			callback(err);
 		else if (num)
-			callback('Duplicate of >>' + num + '.');
+			callback(Muggle('Duplicate of >>' + num + '.'));
 		else
 			callback(false);
 	});
@@ -1044,9 +1042,9 @@ Y.obtain_image_alloc = function (id, callback) {
 		if (err)
 			return callback(err);
 		if (rs[1] != 1)
-			return callback("Image in use.");
+			return callback(Muggle("Image in use."));
 		if (!rs[0])
-			return callback("Image lost.");
+			return callback(Muggle("Image lost."));
 		var alloc = JSON.parse(rs[0]);
 		alloc.id = id;
 		callback(null, alloc);
@@ -1074,10 +1072,10 @@ Y.add_image = function (post, alloc, ip, callback) {
 	var r = this.connect();
 	var num = post.num, op = post.op;
 	if (!op)
-		return callback("Can't add another image to an OP.");
+		return callback(Muggle("Can't add another image to an OP."));
 	var image = alloc.image;
 	if (!image.pinky)
-		return callback("Image is wrong size.");
+		return callback(Muggle("Image is wrong size."));
 	delete image.pinky;
 
 	var key = 'post:' + num;
@@ -1086,7 +1084,7 @@ Y.add_image = function (post, alloc, ip, callback) {
 		if (err)
 			return callback(err);
 		if (!exists)
-			return callback("Post does not exist.");
+			return callback(Muggle("Post does not exist."));
 		var m = r.multi();
 		note_hash(m, image.hash, post.num);
 		m.hmset(key, image);
@@ -1630,7 +1628,7 @@ Y.get_fun = function (op, callback) {
 
 Y.set_fun_thread = function (op, callback) {
 	if (OPs[op] != op)
-		return callback("Thread not found.");
+		return callback(Muggle("Thread not found."));
 	var self = this;
 	fs.readFile('client/fun.js', 'UTF-8', function (err, funJs) {
 		if (err)
@@ -1668,6 +1666,37 @@ Y.teardown = function (board, cb) {
 };
 
 /* HELPERS */
+
+/* Non-wizard-friendly error message */
+function Muggle(message, reason) {
+	if (!(this instanceof Muggle))
+		return new Muggle(message, reason);
+	Error.call(this, message);
+	Error.captureStackTrace(this, this.constructor);
+	this.message = message;
+}
+util.inherits(Muggle, Error);
+exports.Muggle = Muggle;
+
+Muggle.prototype.most_precise_error_message = function () {
+	var deepest = this.message;
+	var muggle = this;
+	var sanity = 10;
+	while (muggle.reason && muggle.reason instanceof Muggle) {
+		muggle = muggle.reason;
+		if (muggle.message && typeof muggle.message == 'string')
+			deepest = muggle.message;
+		if (--sanity <= 0)
+			break;
+	}
+	return deepest;
+};
+
+Muggle.prototype.deepest_reason = function () {
+	if (this.reason && this.reason instanceof Muggle)
+		return this.reason.deepest_reason();
+	return this;
+};
 
 function extract(post, cb) {
 	hooks.trigger('extractPost', post, cb);
