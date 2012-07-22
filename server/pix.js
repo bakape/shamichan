@@ -85,8 +85,6 @@ IU.handle_request = function (req, resp, board) {
 			form.handlePart(part);
 		else if (!part.filename && validFields.indexOf(part.name) >= 0)
 			form.handlePart(part);
-		else
-			this._error('Superfluous field.');
 	};
 	var self = this;
 	form.once('error', function (err) {
