@@ -14,7 +14,6 @@ Setup:
 Dependencies:
 
 * ImageMagick
-* md5sum
 * node.js
 * redis
 

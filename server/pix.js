@@ -79,6 +79,7 @@ IU.handle_request = function (req, resp, board) {
 	var form = new formidable.IncomingForm();
 	form.uploadDir = config.MEDIA_DIRS.tmp;
 	form.maxFieldsSize = 50 * 1024;
+	form.hash = 'md5';
 	form.onPart = function (part) {
 		if (part.filename && part.name == 'image')
 			form.handlePart(part);
@@ -143,6 +144,9 @@ IU.parse_form = function (err, fields, files) {
 		this.image.spoiler = spoiler;
 	}
 
+	this.image.MD5 = squish_MD5(this.image.hash);
+	this.image.hash = null;
+
 	this.db.track_temporaries([this.image.path], null,
 			this.process.bind(this));
 };
@@ -188,18 +192,12 @@ IU.process = function (err) {
 		if (rs.apng)
 			image.apng = 1;
 
-		async.parallel({
-			MD5: MD5_file.bind(null, image.path),
-			hash: perceptual_hash.bind(null, tagged_path)
-		}, hashed);
-	}
-
-	function hashed(err, rs) {
-		if (err)
-			return self.failure(err);
-		image.MD5 = rs.MD5;
-		image.hash = rs.hash;
-		self.db.check_duplicate(image.hash, deduped);
+		perceptual_hash(tagged_path, function (err, hash) {
+			if (err)
+				return self.failure(err);
+			image.hash = rs.hash;
+			self.db.check_duplicate(image.hash, deduped);
+		});
 	}
 
 	function deduped(err, rs) {
@@ -318,35 +316,12 @@ IU.read_image_filesize = function (callback) {
 	});
 };
 
-function which(name, callback) {
-	child_process.exec('which ' + name, function (err, stdout, stderr) {
-		if (err)
-			throw err;
-		callback(stdout.trim());
-	});
+function squish_MD5(hash) {
+	if (typeof hash == 'string')
+		hash = new Buffer(hash, 'hex');
+	return hash.toString('base64').replace(/\//g, '_').replace(/=*$/, '');
 }
-
-var md5sum;
-which('md5sum', function (fullPath) {
-	md5sum = fullPath;
-});
-
-function MD5_file(path, callback) {
-	child_process.execFile(md5sum, ['-b', path],
-				function (err, stdout, stderr) {
-		if (err)
-			return callback('Hashing error.');
-		var m = stdout.match(/^([\da-f]{32})/i);
-		if (!m)
-			return callback('Hashing error.');
-		var hash = new Buffer(m[1], 'hex').toString('base64');
-		if (!hash)
-			return callback('Hashing error.');
-		hash = hash.replace(/\//g, '_');
-		callback(null, hash.replace(/=*$/, ''));
-	});
-}
-exports.MD5_file = MD5_file;
+exports.squish_MD5 = squish_MD5;
 
 function mv_file(src, dest, callback) {
 	child_process.execFile('/bin/mv', ['-n', src, dest],

@@ -1,4 +1,5 @@
 var config = require('../config'),
+    crypto = require('crypto'),
     db = require('../db'),
     fs = require('fs'),
     path = require('path'),
@@ -27,9 +28,12 @@ R.recycle_post = function (post, cb) {
 		toDelete.push(pix.media_path('thumb', image.realthumb));
 	}
 
-	pix.MD5_file(src, function (err, MD5) {
+	MD5_file(src, function (err, MD5) {
 		if (err) {
-			console.warn(src + " doesn't exist.");
+			if (err.code == 'ENOENT')
+				console.warn(src + " doesn't exist.");
+			else
+				console.error(err);
 			return cb(null);
 		}
 		var dest = MD5 + path.extname(src);
@@ -103,6 +107,24 @@ R.recycle_archive = function (cb) {
 		stackless.forEach(threads, do_thread, cb);
 	});
 };
+
+function MD5_file(path, callback) {
+	var stream = fs.createReadStream(path);
+	var hash = crypto.createHash('md5');
+	stream.once('error', function (err) {
+		stream.destroy();
+		callback(err);
+	});
+	stream.on('data', function (buf) {
+		hash.update(buf);
+	});
+	stream.on('end', function () {
+		stream.destroy();
+		/* grr stupid digest() won't give us a Buffer */
+		hash = new Buffer(hash.digest('binary'), 'binary');
+		callback(null, pix.squish_MD5(hash));
+	});
+}
 
 if (require.main === module) {
 	var recycler = new Recycler;
