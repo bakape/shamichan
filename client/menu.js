@@ -21,10 +21,8 @@ $DOC.on('click', '.control', function (event) {
 		if ($post.length && !num)
 			opts = ['Focus']; /* Just a draft, can't do much */
 
-		if (lockTarget && lockTarget == num) {
-			opts.shift();
-			opts.unshift('Unfocus');
-		}
+		if (lockTarget && lockTarget == num)
+			opts.splice(opts.indexOf('Focus'), 1, 'Unfocus');
 
 		_.each(opts, function (opt) {
 			$('<li/>').text(opt).appendTo($menu);
