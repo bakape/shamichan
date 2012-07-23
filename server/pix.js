@@ -6,7 +6,6 @@ var async = require('async'),
     formidable = require('formidable'),
     fs = require('fs'),
     hooks = require('../hooks'),
-    im = require('imagemagick'),
     path = require('path'),
     util = require('util'),
     winston = require('winston');
@@ -163,7 +162,7 @@ IU.process = function (err) {
 	var self = this;
 	var checks = {
 		stat: fs.stat.bind(fs, image.path),
-		dims: im.identify.bind(im, tagged_path),
+		dims: identify.bind(null, tagged_path),
 	};
 	if (image.ext == '.png')
 		checks.apng = detect_APNG.bind(null, image.path);
@@ -308,6 +307,66 @@ IU.read_image_filesize = function (callback) {
 	});
 };
 
+function which(name, callback) {
+	child_process.exec('which ' + name, function (err, stdout, stderr) {
+		if (err)
+			throw err;
+		callback(stdout.trim());
+	});
+}
+
+/* Look up imagemagick paths */
+var identifyBin, convertBin;
+which('identify', function (bin) { identifyBin = bin; });
+which('convert', function (bin) { convertBin = bin; });
+
+function identify(taggedName, callback) {
+	var m = taggedName.match(/^(\w{3,4}):/);
+	var kind = m && m[1];
+	child_process.execFile(identifyBin, [taggedName],
+				function (err, stdout, stderr) {
+		if (err) {
+			var msg = "Bad image.";
+			if (stderr.match(/no such file/i))
+				msg = "Image went missing.";
+			else if (stderr.match(/improper image header/i)) {
+				kind = kind ? 'a ' + kind.toUpperCase()
+						: 'an image';
+				msg = 'File is not ' + kind + '.';
+			}
+			else if (stderr.match(/no decode delegate/i))
+				msg = "Unsupported file type.";
+			return callback(Muggle(msg, stderr));
+		}
+
+		var line = stdout.trim();
+		/* Remove filename first to avoid confusing filenames */
+		var name = taggedName;
+		if (line.substr(0, name.length) == name)
+			line = line.substr(name.length);
+		if (line.substr(0, 2) == '=>')
+			line = line.substr(2);
+		if (kind) {
+			name = name.substr(kind.length + 1);
+			if (line.substr(0, name.length) == name)
+				line = line.substr(name.length);
+		}
+
+		var m = line.match(/(\d+)x(\d+)/);
+		if (!m)
+			callback(Muggle("Couldn't read image dimensions."));
+		else
+			callback(null, {width: parseInt(m[1], 10),
+					height: parseInt(m[2], 10)});
+	});
+}
+
+function convert(args, callback) {
+	child_process.execFile(convertBin, args, function (err,stdout,stderr) {
+		callback(err ? (stderr || err) : null);
+	});
+}
+
 function squish_MD5(hash) {
 	if (typeof hash == 'string')
 		hash = new Buffer(hash, 'hex');
@@ -334,7 +393,7 @@ function perceptual_hash(src, callback) {
 			'-scale', '16x16!',
 			'-type', 'grayscale', '-depth', '8',
 			tmp];
-	im.convert(args, function (err, stdout, stderr) {
+	convert(args, function (err) {
 		if (err)
 			return callback(Muggle('Hashing error.', err));
 		var bin = path.join(__dirname, 'perceptual');
@@ -421,16 +480,14 @@ function resize_image(o, comp, callback) {
 	else
 		args.push('-layers', 'mosaic', '+matte');
 	args.push('-strip', '-quality', o.quality, comp ? o.compDest : o.dest);
-	im.convert(args, im_callback.bind(null, callback));
-}
-
-function im_callback(cb, err, stdout, stderr) {
-	if (err)
-		return cb(Muggle('Conversion error.', stderr || err));
-	if (config.DEBUG)
-		setTimeout(cb, 1000);
-	else
-		cb();
+	convert(args, function (err) {
+		if (err)
+			callback(Muggle("Resizing error.", err));
+		else if (config.DEBUG)
+			setTimeout(callback.bind(null, null), 1000);
+		else
+			callback(null);
+	});
 }
 
 function image_files(image) {

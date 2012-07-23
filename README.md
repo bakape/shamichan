@@ -21,7 +21,6 @@ npm modules:
 
 * async
 * formidable
-* imagemagick
 * oauth
 * redis
 * sockjs
