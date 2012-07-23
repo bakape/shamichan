@@ -75,8 +75,12 @@ connSM.act('* + close -> dropped', function (e) {
 });
 
 connSM.act('dropped + retry -> reconn', function () {
-	sync_status('Dropped. Reconnecting...', true);
 	connect();
+	/* Don't show this immediately so we don't thrash on network loss */
+	setTimeout(function () {
+		if (connSM.state == 'reconn')
+			sync_status('Dropped. Reconnecting...', true);
+	}, 100);
 });
 
 connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
