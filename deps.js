@@ -28,6 +28,7 @@ exports.SERVER_DEPS = [
 	'deps.js',
 	'get.js',
 	'hooks.js',
+	'tail.js',
 	'lib/underscore.js',
 	'server/amusement.js',
 	'server/caps.js',
@@ -49,6 +50,7 @@ exports.SERVER_STATE = [
 	'tmpl/curfew.html',
 	'tmpl/filter.html',
 	'tmpl/index.html',
+	'tmpl/redirect.html',
 ];
 
 exports.MOD_CLIENT_DEPS = [
