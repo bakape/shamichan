@@ -190,7 +190,7 @@ IU.process = function (err) {
 		perceptual_hash(tagged_path, function (err, hash) {
 			if (err)
 				return self.failure(err);
-			image.hash = rs.hash;
+			image.hash = hash;
 			self.db.check_duplicate(image.hash, deduped);
 		});
 	}
