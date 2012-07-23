@@ -2,6 +2,7 @@ var _ = require('../lib/underscore'),
     amusement = require('./amusement'),
     async = require('async'),
     caps = require('./caps'),
+    check = require('./msgcheck').check,
     common = require('../common'),
     config = require('../config'),
     db = require('../db'),
@@ -54,33 +55,27 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 };
 
 function synchronize(msg, client) {
-	if (msg.length != 4)
+	if (!check(['id', 'string', 'id=>nat', 'boolean'], msg))
 		return false;
 	var id = msg[0], board = msg[1], syncs = msg[2], live = msg[3];
-	if (!id || typeof id != 'number' || id < 0 || Math.round(id) != id)
-		return false;
 	if (id in clients) {
 		winston.error("Duplicate client id " + id);
 		return false;
 	}
 	client.id = id;
 	clients[id] = client;
-	if (!syncs || typeof syncs != 'object')
-		return false;
 	if (client.synced) {
 		//winston.warn("Client tried to sync twice");
 		/* Sync logic is buggy; allow for now */
 		//return true;
 	}
-	if (!board || !caps.can_access_board(client.ident, board))
+	if (!caps.can_access_board(client.ident, board))
 		return false;
 	var dead_threads = [], count = 0, op;
+	if (_.isEmpty(syncs))
+		return false;
 	for (var k in syncs) {
-		if (!k.match(/^\d+$/))
-			return false;
 		k = parseInt(k, 10);
-		if (!k || typeof syncs[k] != 'number')
-			return false;
 		if (db.OPs[k] != k || !db.OP_has_tag(board, k)) {
 			delete syncs[k];
 			dead_threads.push(k);
@@ -625,16 +620,24 @@ function valid_links(frag, state, ident, callback) {
 	callback(null, _.isEmpty(links) ? null : links);
 }
 
+var insertSpec = [{
+	frag: 'opt string',
+	image: 'opt string',
+	nonce: 'id',
+	op: 'opt id',
+	name: 'opt string',
+	email: 'opt string',
+	auth: 'opt string',
+}];
+
 dispatcher[common.INSERT_POST] = function (msg, client) {
-	if (msg.length != 1)
+	if (!check(insertSpec, msg))
 		return false;
 	msg = msg[0];
-	if (!msg || typeof msg != 'object')
-		return false;
 	if (client.post)
 		return update_post(msg.frag, client);
 	var frag = msg.frag;
-	if (frag && (typeof frag != 'string' || frag.match(/^\s*$/g)))
+	if (frag && frag.match(/^\s*$/g))
 		return false;
 	if (!frag && !msg.image)
 		return false;
@@ -649,10 +652,6 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 }
 
 function allocate_post(msg, client, callback) {
-	if (!msg || typeof msg != 'object')
-		return callback('Bad alloc.');
-	if (typeof msg.nonce != 'number' || !msg.nonce || msg.nonce < 1)
-		return callback('Bad nonce.');
 	if (client.post)
 		return callback("Already have a post.");
 	if (['graveyard', 'archive'].indexOf(client.board) >= 0)
@@ -662,13 +661,13 @@ function allocate_post(msg, client, callback) {
 	var ip = client.ident.ip;
 	var extra = {ip: ip, board: client.board};
 	var image_alloc;
-	if (msg.image !== undefined) {
-		if (typeof msg.image != 'string' || !msg.image.match(/^\d+$/))
+	if (msg.image) {
+		if (!msg.image.match(/^\d+$/))
 			return callback('Bad image token.');
 		image_alloc = msg.image;
 	}
-	if (msg.frag !== undefined) {
-		if (typeof msg.frag != 'string' || msg.frag.match(/^\s*$/g))
+	if (msg.frag) {
+		if (msg.frag.match(/^\s*$/g))
 			return callback('Bad post body.');
 		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback('Post is too long.');
@@ -676,17 +675,14 @@ function allocate_post(msg, client, callback) {
 		if (config.GAME_BOARDS.indexOf(client.board) >= 0)
 			amusement.roll_dice(body, post, extra);
 	}
-	if (msg.op !== undefined) {
-		if (typeof msg.op != 'number' || msg.op < 1)
-			return callback('Invalid thread.');
+
+	if (msg.op)
 		post.op = msg.op;
-	}
 	else if (!image_alloc)
 		return callback('Image missing.');
+
 	/* TODO: Check against client.watching? */
-	if (msg.name !== undefined) {
-		if (typeof msg.name != 'string')
-			return callback('Invalid name.');
+	if (msg.name) {
 		var parsed = common.parse_name(msg.name);
 		post.name = parsed[0];
 		var spec = STATE.hot.SPECIAL_TRIPCODES;
@@ -699,17 +695,16 @@ function allocate_post(msg, client, callback) {
 				post.trip = trip;
 		}
 	}
-	if (msg.email !== undefined) {
-		if (typeof msg.email != 'string')
-			return callback('Invalid email.');
+	if (msg.email) {
 		post.email = msg.email.trim().substr(0, 320);
 		if (common.is_noko(post.email))
 			delete post.email;
 	}
 	post.state = [common.S_BOL, 0];
 
-	if (typeof msg.auth != 'undefined') {
-		if (!client.ident || msg.auth !== client.ident.auth)
+	if ('auth' in msg) {
+		if (!msg.auth || !client.ident
+				|| msg.auth !== client.ident.auth)
 			return callback('Bad auth.');
 		post.auth = msg.auth;
 	}
@@ -858,8 +853,10 @@ OK.finish_post = function (callback) {
 }
 
 dispatcher[common.FINISH_POST] = function (msg, client) {
-	if (msg.length || !client.post)
+	if (!check([], msg))
 		return false;
+	if (!client.post)
+		return true; /* whatever */
 	client.finish_post(function (err) {
 		if (err)
 			client.report(db.Muggle("Couldn't finish post.", err));
@@ -870,9 +867,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 dispatcher[common.DELETE_POSTS] = function (nums, client) {
 	if (!caps.is_mod_ident(client.ident))
 		return false;
-	if (!nums.length)
-		return false;
-	if (nums.some(function (n) { return typeof n != 'number' || n < 1; }))
+	if (!check('id...', nums))
 		return false;
 
 	/* Omit to-be-deleted posts that are inside to-be-deleted threads */
@@ -896,9 +891,7 @@ dispatcher[common.DELETE_POSTS] = function (nums, client) {
 dispatcher[common.DELETE_IMAGES] = function (nums, client) {
 	if (!caps.is_mod_ident(client.ident))
 		return false;
-	if (!nums.length)
-		return false;
-	if (nums.some(function (n) { return typeof n != 'number' || n < 1; }))
+	if (!check('id...', nums))
 		return false;
 
 	client.db.remove_images(nums, function (err, dels) {
@@ -909,11 +902,9 @@ dispatcher[common.DELETE_IMAGES] = function (nums, client) {
 };
 
 dispatcher[common.INSERT_IMAGE] = function (msg, client) {
-	if (msg.length != 1)
+	if (!check(['str'], msg))
 		return false;
 	var alloc = msg[0];
-	if (!alloc || typeof alloc != 'string')
-		return false;
 	if (!client.post || client.post.image)
 		return false;
 	client.db.obtain_image_alloc(alloc, function (err, alloc) {
@@ -933,9 +924,7 @@ dispatcher[common.SPOILER_IMAGES] = function (nums, client) {
 	/* grr copy pasted */
 	if (!caps.is_mod_ident(client.ident))
 		return false;
-	if (!nums.length)
-		return false;
-	if (nums.some(function (n) { return typeof n != 'number' || n < 1; }))
+	if (!check('id...', nums))
 		return false;
 
 	client.db.force_image_spoilers(nums, function (err) {
@@ -949,7 +938,7 @@ dispatcher[common.SPOILER_IMAGES] = function (nums, client) {
 dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	if (!caps.is_admin_ident(client.ident))
 		return false;
-	if (typeof msg[0] != 'number')
+	if (!check(['id'], msg))
 		return false;
 	var op = msg[0];
 	client.db.set_fun_thread(op, function (err) {

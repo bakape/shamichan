@@ -378,17 +378,16 @@ PF.make_alloc_request = function (text, image) {
 		delete nonces[nonce];
 	}, 20 * 60 * 1000);
 
-	var msg = {
-		name: $name.val().trim(),
-		email: $email.val().trim(),
-		nonce: nonce,
-	};
-	if (text)
-		msg.frag = text;
-	if (image)
-		msg.image = image;
-	if (this.op)
-		msg.op = this.op;
+	var msg = {nonce: nonce};
+	function opt(key, val) {
+		if (val)
+			msg[key] = val;
+	}
+	opt('name', $name.val().trim());
+	opt('email', $email.val().trim());
+	opt('frag', text);
+	opt('image', image);
+	opt('op', this.op);
 	return msg;
 };
 

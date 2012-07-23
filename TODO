@@ -2,6 +2,5 @@
 * Actually tell user when a particular thread failed to sync
 * Tokenize text instead of multiple levels of regexps
 * When navigating away from a page, commit any outstanding text
-* Incoming JSON schema checker
 * Should retrieve live body and hctr in one transaction
 * Consolidate or disambiguate the (three!) different hook/trigger mechanisms

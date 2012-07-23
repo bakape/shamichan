@@ -31,6 +31,7 @@ exports.SERVER_DEPS = [
 	'lib/underscore.js',
 	'server/amusement.js',
 	'server/caps.js',
+	'server/msgcheck.js',
 	'server/panel.js',
 	'server/perceptual.c',
 	'server/pix.js',
