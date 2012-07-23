@@ -64,13 +64,17 @@ exports.ImageUpload = function (db, status) {
 
 var IU = exports.ImageUpload.prototype;
 
-var validFields = ['client_id', 'spoiler', 'op'];
+var validFields = ['spoiler', 'op'];
 
 IU.status = function (msg) {
 	this.form_call('upload_status', msg);
 };
 
 IU.handle_request = function (req, resp, board) {
+	this.client_id = parseInt(req.query.id, 10);
+	if (!this.client_id || this.client_id < 1)
+		return this.failure(Muggle('Bad client ID.'));
+
 	this.board = board;
 	this.resp = resp;
 	var len = parseInt(req.headers['content-length'], 10);
@@ -95,10 +99,6 @@ IU.handle_request = function (req, resp, board) {
 		self.failure(Muggle('Upload was aborted.', err));
 	});
 	this.lastProgress = -1;
-	form.on('field', function (key, value) {
-		if (key == 'client_id')
-			self.client_id = value;
-	});
 	form.on('progress', this.upload_progress_status.bind(this));
 
 	try {
@@ -125,7 +125,6 @@ IU.parse_form = function (err, fields, files) {
 	if (!files.image)
 		return this.failure(Muggle('No image.'));
 	this.image = files.image;
-	this.client_id = fields.client_id;
 	this.pinky = !!parseInt(fields.op, 10);
 
 	var spoiler = parseInt(fields.spoiler, 10);
@@ -567,10 +566,8 @@ IU.record_image = function (err) {
 };
 
 IU.form_call = function (func, param) {
-	if (this.client_id) {
-		var msg = {func: func, arg: param};
-		this.statusCallback.call(null, this.client_id, msg);
-	}
+	var msg = {func: func, arg: param};
+	this.statusCallback.call(null, this.client_id, msg);
 };
 
 exports.send_dead_image = function (kind, filename, resp) {
