@@ -79,7 +79,7 @@ IU.handle_request = function (req, resp, board) {
 	this.resp = resp;
 	var len = parseInt(req.headers['content-length'], 10);
 	if (len > 0 && len > config.IMAGE_FILESIZE_MAX + (20*1024))
-		return this.failure('File is too large.');
+		return this.failure(Muggle('File is too large.'));
 
 	var form = new formidable.IncomingForm();
 	form.uploadDir = config.MEDIA_DIRS.tmp;

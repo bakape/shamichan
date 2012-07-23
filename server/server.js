@@ -567,8 +567,8 @@ OK.on_message = function (data) {
 		type = common.INVALID;
 	var func = dispatcher[type];
 	if (!func || !func(msg, this)) {
-		winston.warn("Got invalid message " + data);
-		this.report(db.Muggle("Bad protocol."));
+		this.report(db.Muggle("Bad protocol.", new Error(
+				"Invalid message: " + JSON.stringify(data))));
 	}
 };
 
@@ -653,9 +653,9 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 
 function allocate_post(msg, client, callback) {
 	if (client.post)
-		return callback("Already have a post.");
+		return callback(db.Muggle("Already have a post."));
 	if (['graveyard', 'archive'].indexOf(client.board) >= 0)
-		return callback("Can't post here.");
+		return callback(db.Muggle("Can't post here."));
 	var post = {time: new Date().getTime(), nonce: msg.nonce};
 	var body = '';
 	var ip = client.ident.ip;
@@ -663,14 +663,14 @@ function allocate_post(msg, client, callback) {
 	var image_alloc;
 	if (msg.image) {
 		if (!msg.image.match(/^\d+$/))
-			return callback('Bad image token.');
+			return callback(db.Muggle('Expired image token.'));
 		image_alloc = msg.image;
 	}
 	if (msg.frag) {
 		if (msg.frag.match(/^\s*$/g))
-			return callback('Bad post body.');
+			return callback(db.Muggle('Bad post body.'));
 		if (msg.frag.length > common.MAX_POST_CHARS)
-			return callback('Post is too long.');
+			return callback(db.Muggle('Post is too long.'));
 		body = msg.frag.replace(config.EXCLUDE_REGEXP, '');
 		if (config.GAME_BOARDS.indexOf(client.board) >= 0)
 			amusement.roll_dice(body, post, extra);
@@ -679,7 +679,7 @@ function allocate_post(msg, client, callback) {
 	if (msg.op)
 		post.op = msg.op;
 	else if (!image_alloc)
-		return callback('Image missing.');
+		return callback(db.Muggle('Image missing.'));
 
 	/* TODO: Check against client.watching? */
 	if (msg.name) {
@@ -705,7 +705,7 @@ function allocate_post(msg, client, callback) {
 	if ('auth' in msg) {
 		if (!msg.auth || !client.ident
 				|| msg.auth !== client.ident.auth)
-			return callback('Bad auth.');
+			return callback(db.Muggle('Bad auth.'));
 		post.auth = msg.auth;
 	}
 
@@ -724,7 +724,7 @@ function allocate_post(msg, client, callback) {
 		if (err)
 			return callback(err);
 		if (client.post)
-			return callback('Already have a post.');
+			return callback(db.Muggle('Already have a post.'));
 		client.post = post;
 		post.num = num;
 		var supplements = {
@@ -738,10 +738,9 @@ function allocate_post(msg, client, callback) {
 	}
 	function got_supplements(err, rs) {
 		if (err) {
-			winston.error('supplements: ' + err);
 			if (client.post === post)
 				client.post = null;
-			return callback("Attachment error.");
+			return callback(db.Muggle("Attachment error.", err));
 		}
 		post.links = rs.links;
 		if (rs.image)
@@ -752,8 +751,8 @@ function allocate_post(msg, client, callback) {
 		if (err) {
 			if (client.post === post)
 				client.post = null;
-			winston.error(err);
-			return callback("Couldn't allocate post.");
+			return callback(db.Muggle("Couldn't allocate post.",
+					err));
 		}
 		post.body = body;
 		callback(null, get_post_view(post));
@@ -896,7 +895,8 @@ dispatcher[common.DELETE_IMAGES] = function (nums, client) {
 
 	client.db.remove_images(nums, function (err, dels) {
 		if (err)
-			client.report(db.Muggle("Couldn't delete images.", err));
+			client.report(db.Muggle("Couldn't delete images.",
+					err));
 	});
 	return true;
 };
