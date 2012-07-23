@@ -98,7 +98,7 @@ IU.handle_request = function (req, resp, board) {
 	form.once('aborted', function (err) {
 		self.failure(Muggle('Upload was aborted.', err));
 	});
-	this.lastProgress = -1;
+	this.lastProgress = 0;
 	form.on('progress', this.upload_progress_status.bind(this));
 
 	try {
