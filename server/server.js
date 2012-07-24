@@ -228,7 +228,7 @@ function make_link_rels(board, bits) {
 function make_board_meta(board, info) {
 	var bits = [];
 	if (info.cur_page >= 0)
-		bits.push(['index', 'live']);
+		bits.push(['index', '.']);
 	if (info.prev_page)
 		bits.push(['prev', info.prev_page]);
 	if (info.next_page)
@@ -237,7 +237,7 @@ function make_board_meta(board, info) {
 }
 
 function make_thread_meta(board, num, abbrev) {
-	var bits = [['index', 'live']];
+	var bits = [['index', '.']];
 	if (abbrev)
 		bits.push(['canonical', num]);
 	return make_link_rels(board, bits);
