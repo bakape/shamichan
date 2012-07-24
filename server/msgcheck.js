@@ -1,13 +1,13 @@
 
 function check(schema, msg) {
 	/* Primitives */
-	if (schema == 'id' || schema == 'nat')
+	if (schema === 'id' || schema === 'nat')
 		return typeof msg == 'number' && (msg || msg === 0) &&
 				msg >= (schema == 'id' ? 1 : 0) &&
 				Math.round(msg) === msg;
-	else if (schema == 'string')
+	else if (schema === 'string')
 		return typeof msg == 'string';
-	else if (schema == 'boolean')
+	else if (schema === 'boolean')
 		return typeof msg == 'boolean';
 
 	/* Arrays */
@@ -19,7 +19,7 @@ function check(schema, msg) {
 				return false;
 		return true;
 	}
-	else if (schema == 'id...') {
+	else if (schema === 'id...') {
 		if (!(msg instanceof Array) || !msg.length)
 			return false;
 		return msg.every(check.bind(null, 'id'));
@@ -47,7 +47,7 @@ function check(schema, msg) {
 		}
 		return true;
 	}
-	else if (schema == 'id=>nat') {
+	else if (schema === 'id=>nat') {
 		if (typeof msg != 'object' || msg instanceof Array)
 			return false;
 		for (var k in msg) {

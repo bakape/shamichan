@@ -902,7 +902,7 @@ dispatcher[common.DELETE_IMAGES] = function (nums, client) {
 };
 
 dispatcher[common.INSERT_IMAGE] = function (msg, client) {
-	if (!check(['str'], msg))
+	if (!check(['string'], msg))
 		return false;
 	var alloc = msg[0];
 	if (!client.post || client.post.image)
