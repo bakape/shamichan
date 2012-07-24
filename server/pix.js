@@ -111,7 +111,7 @@ IU.handle_request = function (req, resp, board) {
 
 IU.upload_progress_status = function (received, total) {
 	var percent = Math.floor(100 * received / total);
-	var increment = (total > (512 * 1024)) ? 25 : 10;
+	var increment = (total > (512 * 1024)) ? 10 : 25;
 	var quantized = Math.floor(percent / increment) * increment;
 	if (quantized > this.lastProgress) {
 		this.status(percent + '% received...');
