@@ -528,7 +528,8 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			}
 			headers = _.clone(web.vanillaHeaders);
 			headers.ETag = etag;
-			headers['Cache-Control'] = 'must-revalidate';
+			headers['Cache-Control'] = (
+					'private, max-age=0, must-revalidate');
 		}
 		else
 			headers = web.noCacheHeaders;
