@@ -85,7 +85,8 @@ function resource_second_handler(req, resp, resource, err, act, arg) {
 	}
 	else if (act == 'ok') {
 		if (method == 'head') {
-			resp.writeHead(200);
+			var headers = (arg && arg.headers) || vanillaHeaders;
+			resp.writeHead(200, headers);
 			resp.end();
 			if (resource.tear_down)
 				resource.tear_down.call(arg);
@@ -97,6 +98,10 @@ function resource_second_handler(req, resp, resource, err, act, arg) {
 				};
 			resource.get.call(arg, req, resp);
 		}
+	}
+	else if (act == 304) {
+		resp.writeHead(304);
+		resp.end();
 	}
 	else if (act == 'redirect' || (act >= 300 && act < 400)) {
 		if (act == 'redirect')

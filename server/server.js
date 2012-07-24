@@ -518,8 +518,25 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		redirect_thread(cb, num, op);
 		yaku.disconnect();
 	});
-	reader.on('begin', function () {
+	reader.on('begin', function (hctr) {
+		var headers;
+		if (hctr) {
+			/* ought to take into account changes in the tmpl */
+			/* (otherwise users might get stale js, etc.) */
+			var etag = 'W/' + hctr;
+			if (req.headers['if-none-match'] === etag) {
+				yaku.disconnect();
+				return cb(null, 304);
+			}
+			headers = _.clone(web.vanillaHeaders);
+			headers.ETag = etag;
+			headers['Cache-Control'] = 'must-revalidate';
+		}
+		else
+			headers = web.noCacheHeaders;
+
 		cb(null, 'ok', {
+			headers: headers,
 			board: board, op: op, num: num,
 			yaku: yaku, reader: reader, limit: limit,
 		});
@@ -529,7 +546,7 @@ function (req, resp) {
 	var board = this.board, op = this.op, num = this.op;
 
 	var indexTmpl = RES.indexTmpl;
-	resp.writeHead(200, web.noCacheHeaders);
+	resp.writeHead(200, this.headers);
 	resp.write(indexTmpl[0]);
 	resp.write('/'+escape(board)+'/ - #' + op);
 	resp.write(indexTmpl[1]);
