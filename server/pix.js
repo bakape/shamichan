@@ -575,7 +575,6 @@ exports.send_dead_image = function (kind, filename, resp) {
 	var stream = fs.createReadStream(filename);
 	stream.once('error', function (err) {
 		if (err.code == 'ENOENT') {
-			console.log(filename);
 			resp.writeHead(404);
 			resp.end('Image not found');
 		}
