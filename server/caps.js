@@ -132,6 +132,10 @@ function under_curfew(ident, board) {
 }
 exports.under_curfew = under_curfew;
 
+exports.can_ever_access_board = function (ident, board) {
+	return can_access_board(ident, board) || under_curfew(ident, board);
+};
+
 exports.curfew_ending_time = function (board) {
 	var curfew = config.CURFEW_HOURS;
 	if (!curfew || (config.CURFEW_BOARDS || []).indexOf(board) < 0)

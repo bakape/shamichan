@@ -8,6 +8,7 @@ var _ = require('../lib/underscore'),
 
 var escape = require('../common').escape_html;
 var routes = [];
+var resources = [];
 
 var server = require('http').createServer(function (req, resp) {
 	var ip = req.connection.remoteAddress;
@@ -18,10 +19,12 @@ var server = require('http').createServer(function (req, resp) {
 	req.ident = caps.lookup_ident(ip);
 	if (req.ident.ban)
 		return render_500(resp);
-	var method = req.method.toLowerCase(), numRoutes = routes.length;
+	var method = req.method.toLowerCase();
 	var parsed = url_parse(req.url, true);
 	req.url = parsed.pathname;
 	req.query = parsed.query;
+
+	var numRoutes = routes.length;
 	for (var i = 0; i < numRoutes; i++) {
 		var route = routes[i];
 		if (method != route.method)
@@ -32,6 +35,12 @@ var server = require('http').createServer(function (req, resp) {
 			return;
 		}
 	}
+
+	if (method == 'get' || method == 'head')
+		for (var i = 0; i < resources.length; i++)
+			if (handle_resource(req, resp, resources[i]))
+				return;
+
 	if (debug_static.enabled)
 		debug_static(req, resp);
 	else
@@ -39,9 +48,101 @@ var server = require('http').createServer(function (req, resp) {
 });
 exports.server = server;
 
+function handle_resource(req, resp, resource) {
+	var m = req.url.match(resource.pattern);
+	if (!m)
+		return false;
+	var args = [req];
+	if (resource.headParams)
+		args.push(m);
+	args.push(resource_second_handler.bind(null, req, resp, resource));
+
+	var chunks = twitter.extract_cookie(req.headers.cookie);
+	if (chunks) {
+		twitter.check_cookie(chunks, false, function (err, ident) {
+			if (err && !resource.authPassthrough)
+				return forbidden(resp, 'No cookie.');
+			else if (!err)
+				_.extend(req.ident, ident);
+			resource.head.apply(null, args);
+		});
+	}
+	else if (!resource.authPassthrough)
+		render_404(resp);
+	else
+		resource.head.apply(null, args);
+	return true;
+}
+
+function resource_second_handler(req, resp, resource, err, act, arg) {
+	var method = req.method.toLowerCase();
+	if (err) {
+		if (err == 404)
+			return render_404(resp);
+		else if (err != 500)
+			winston.error(err);
+		return render_500(resp);
+	}
+	else if (act == 'ok') {
+		if (method == 'head') {
+			resp.writeHead(200);
+			resp.end();
+			if (resource.tear_down)
+				resource.tear_down.call(arg);
+		}
+		else {
+			if (resource.tear_down)
+				arg.finished = function () {
+					resource.tear_down.call(arg);
+				};
+			resource.get.call(arg, req, resp);
+		}
+	}
+	else if (act == 'redirect' || (act >= 300 && act < 400)) {
+		if (act == 'redirect')
+			act = 303;
+		if (method == 'head') {
+			resp.writeHead(act, {Location: arg});
+			resp.end();
+		}
+		else
+			redirect(resp, arg, act);
+	}
+	else if (act == 'redirect_js') {
+		if (method == 'head') {
+			resp.writeHead(303, {Location: arg});
+			resp.end();
+		}
+		else
+			redirect_js(resp, arg);
+	}
+	else
+		throw new Error("Unknown resource handler: " + act);
+}
+
 exports.route_get = function (pattern, handler) {
 	routes.push({method: 'get', pattern: pattern,
 			handler: auth_passthrough.bind(null, handler)});
+};
+
+exports.resource = function (pattern, head, get, tear_down) {
+	var res = {pattern: pattern, head: head, authPassthrough: true};
+	res.headParams = (head.length == 3);
+	if (get)
+		res.get = get;
+	if (tear_down)
+		res.tear_down = tear_down;
+	resources.push(res);
+};
+
+exports.resource_auth = function (pattern, head, get, finished) {
+	var res = {pattern: pattern, head: head, authPassthrough: false};
+	res.headParams = (head.length == 3);
+	if (get)
+		res.get = get;
+	if (finished)
+		res.finished = finished;
+	resources.push(res);
 };
 
 function parse_forwarded_for(ff) {
@@ -93,21 +194,21 @@ function auth_checker(handler, is_post, req, resp, params) {
 	function check_it() {
 		var chunks = twitter.extract_cookie(req.headers.cookie);
 		if (!chunks)
-			return forbidden('No cookie.');
+			return forbidden(resp, 'No cookie.');
 		twitter.check_cookie(chunks, is_post, ack);
 	}
 
 	function ack(err, session) {
 		if (err)
-			return forbidden(err);
+			return forbidden(resp, err);
 		_.extend(req.ident, session);
 		handler(req, resp, params);
 	}
+}
 
-	function forbidden(err) {
-		resp.writeHead(401, noCacheHeaders);
-		resp.end(preamble + escape(err));
-	}
+function forbidden(resp, err) {
+	resp.writeHead(401, noCacheHeaders);
+	resp.end(preamble + escape(err));
 }
 
 exports.route_post = function (pattern, handler) {
@@ -175,23 +276,25 @@ function render_500(resp) {
 }
 exports.render_500 = render_500;
 
-exports.redirect = function (resp, uri, code) {
+function redirect(resp, uri, code) {
 	var headers = {Location: uri};
 	for (var k in vanillaHeaders)
 		headers[k] = vanillaHeaders[k];
 	resp.writeHead(code || 303, headers);
 	resp.end(preamble + '<title>Redirect</title>'
 		+ '<a href="' + encodeURI(uri) + '">Proceed</a>.');
-};
+}
+exports.redirect = redirect;
 
 var redirectJsTmpl = require('fs').readFileSync('tmpl/redirect.html');
 
-exports.redirect_js = function (resp, uri) {
+function redirect_js(resp, uri) {
 	resp.writeHead(200, web.noCacheHeaders);
 	resp.write(preamble + '<title>Redirecting...</title>');
 	resp.write('<script>var dest = "' + encodeURI(uri) + '";</script>');
 	resp.end(redirectJsTmpl);
-};
+}
+exports.redirect_js = redirect_js;
 
 exports.dump_server_error = function (resp, err) {
 	resp.writeHead(500, noCacheHeaders);

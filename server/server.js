@@ -261,12 +261,12 @@ function make_nav_html(info) {
 	return bits.join('');
 }
 
-function redirect_thread(resp, num, op, tag) {
+function redirect_thread(cb, num, op, tag) {
 	if (!tag)
-		web.redirect(resp, op + '#' + num);
+		cb(null, 'redirect', op + '#' + num);
 	else
 		/* Use a JS redirect to preserve the hash */
-		web.redirect_js(resp, '../' + tag + '/' + op + '#' + num);
+		cb(null, 'redirect_js', '../' + tag + '/' + op + '#' + num);
 }
 
 web.route_post(/^\/(\w+)\/upload$/, function (req, resp, params) {
@@ -276,8 +276,8 @@ web.route_post(/^\/(\w+)\/upload$/, function (req, resp, params) {
 	upload.handle_request(req, resp, board);
 });
 
-web.route_get(/^\/$/, function (req, resp) {
-	web.redirect(resp, 'moe/');
+web.resource(/^\/$/, function (req, cb) {
+	cb(null, 'redirect', 'moe/');
 });
 
 if (config.DEBUG) {
@@ -293,16 +293,13 @@ else {
 	web.route_get(/^\/verify$/, twitter.verify);
 }
 
-web.route_get(/^\/login\/$/, function (req, resp) {
-	web.redirect(resp, '../login');
+web.resource(/^\/login\/$/, function (req, cb) {
+	cb(null, 'redirect', '../login');
 });
 
 web.route_post(/^\/logout$/, twitter.logout);
 if (config.DEBUG) {
 	web.route_get(/^\/logout$/, twitter.logout);
-	web.route_get(/^\/logout\/$/, function (req, resp) {
-		web.redirect(resp, '../logout');
-	});
 }
 
 function write_mod_js(resp, ident) {
@@ -313,40 +310,52 @@ function write_mod_js(resp, ident) {
 	resp.end('})(' + JSON.stringify(ident) + ');');
 }
 
-web.route_get_auth(/^\/admin\.js$/, function (req, resp, params) {
+web.resource_auth(/^\/admin\.js$/, function (req, cb) {
 	if (req.ident.auth != 'Admin')
-		return web.render_404(resp);
+		cb(404);
+	else
+		cb(null, 'ok');
+},
+function (req, resp) {
 	write_mod_js(resp, 'Admin');
 });
 
-web.route_get_auth(/^\/mod\.js$/, function (req, resp, params) {
+web.resource_auth(/^\/mod\.js$/, function (req, cb) {
 	if (req.ident.auth != 'Moderator')
-		return web.render_404(resp);
+		cb(404);
+	else
+		cb(null, 'ok');
+},
+function (req, resp) {
 	write_mod_js(resp, 'Moderator');
 });
 
-web.route_get(/^\/(\w+)$/, function (req, resp, params) {
+web.resource(/^\/(\w+)$/, function (req, params, cb) {
 	var board = params[1];
 	/* If arbitrary boards were allowed, need to escape this: */
 	var dest = board + '/';
-	if (caps.under_curfew(req.ident, board))
-		return web.redirect(resp, dest);
-	if (!caps.can_access_board(req.ident, board))
-		return web.render_404(resp);
-	web.redirect(resp, dest);
+	if (!caps.can_ever_access_board(req.ident, board))
+		cb(404);
+	else
+		cb(null, 'redirect', dest);
 });
 
-web.route_get(/^\/(\w+)\/live$/, function (req, resp, params) {
-	var board = params[1];
-	if (caps.under_curfew(req.ident, board))
-		return web.redirect(resp, '.');
-	if (!caps.can_access_board(req.ident, board))
-		return web.render_404(resp);
-	web.redirect(resp, '.');
+web.resource(/^\/(\w+)\/live$/, function (req, params, cb) {
+	if (!caps.can_ever_access_board(req.ident, params[1]))
+		cb(404);
+	else
+		cb(null, 'redirect', '.');
 });
 
-web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
+web.resource(/^\/(\w+)\/$/, function (req, params, cb) {
 	var board = params[1];
+	if (!caps.can_ever_access_board(req.ident, board))
+		cb(404);
+	else
+		cb(null, 'ok', {board: board});
+},
+function (req, resp) {
+	var board = this.board;
 	if (caps.under_curfew(req.ident, board)) {
 		resp.writeHead(200, web.noCacheHeaders);
 		resp.write(RES.curfewTmpl[0]);
@@ -357,8 +366,7 @@ web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 		resp.end(RES.curfewTmpl[2]);
 		return;
 	}
-	if (!caps.can_access_board(req.ident, board))
-		return web.render_404(resp);
+
 	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(0);
 	var indexTmpl = RES.indexTmpl, nav_html;
@@ -389,71 +397,86 @@ web.route_get(/^\/(\w+)\/$/, function (req, resp, params) {
 		resp.end();
 		yaku.disconnect();
 	});
-	return true;
 });
 
-web.route_get(/^\/(\w+)\/page(\d+)$/, function (req, resp, params) {
+web.resource(/^\/(\w+)\/page(\d+)$/, function (req, params, cb) {
 	var board = params[1];
 	if (caps.under_curfew(req.ident, board))
-		return web.redirect(resp, '..', 302);
-	if (!caps.can_access_board(req.ident, board))
-		return web.render_404(resp);
-	var yaku = new db.Yakusoku(board, req.ident);
+		return cb(null, 302, '..');
+	else if (!caps.can_access_board(req.ident, board))
+		return cb(404);
 	var page = parseInt(params[2], 10);
 	if (page > 0 && params[2][0] == '0') /* leading zeroes? */
-		return web.redirect(resp, 'page' + page);
+		return cb(null, 'redirect', 'page' + page);
+
+	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(page);
-	yaku.on('nomatch', web.render_404.bind(null, resp));
-	var indexTmpl = RES.indexTmpl, nav_html;
-	yaku.on('begin', function (thread_count) {
-		var nav = page_nav(thread_count, page);
-		resp.writeHead(200, web.noCacheHeaders);
-		var title = STATE.hot.TITLES[board] || escape(board);
-		resp.write(indexTmpl[0]);
-		resp.write(title);
-		resp.write(indexTmpl[1]);
-		resp.write(make_board_meta(board, nav));
-		resp.write(indexTmpl[2]);
-		resp.write(title);
-		resp.write(indexTmpl[3]);
-		nav_html = make_nav_html(nav);
-		resp.write(nav_html);
-		resp.write('<hr>\n');
+	yaku.on('nomatch', function () {
+		cb(404);
+		yaku.disconnect();
 	});
+	yaku.on('begin', function (threadCount) {
+		cb(null, 'ok', {
+			board: board, page: page, yaku: yaku,
+			threadCount: threadCount,
+		});
+	});
+},
+function (req, resp) {
+	var board = this.board;
+	var indexTmpl = RES.indexTmpl;
+	var nav = page_nav(this.threadCount, this.page);
+	resp.writeHead(200, web.noCacheHeaders);
+	var title = STATE.hot.TITLES[board] || escape(board);
+	resp.write(indexTmpl[0]);
+	resp.write(title);
+	resp.write(indexTmpl[1]);
+	resp.write(make_board_meta(board, nav));
+	resp.write(indexTmpl[2]);
+	resp.write(title);
+	resp.write(indexTmpl[3]);
+	var nav_html = make_nav_html(nav);
+	resp.write(nav_html);
+	resp.write('<hr>\n');
+
 	var opts = {fullLinks: true, ident: req.ident, board: board};
-	write_thread_html(yaku, resp, opts);
-	yaku.on('end', function () {
+	write_thread_html(this.yaku, resp, opts);
+	var self = this;
+	this.yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
-		yaku.disconnect();
+		self.finished();
 	});
-	yaku.on('error', function (err) {
-		winston.error('page', page + ':', err);
+	this.yaku.on('error', function (err) {
+		winston.error('page', self.page + ':', err);
 		resp.end();
-		yaku.disconnect();
+		self.finished();
 	});
-	return true;
+},
+function () {
+	this.yaku.disconnect();
 });
-web.route_get(/^\/(\w+)\/page(\d+)\/$/, function (req, resp, params) {
-	var board = params[1];
-	if (caps.under_curfew(req.ident, board))
-		return web.redirect(resp, '..', 302);
-	web.redirect(resp, '../page' + params[2]);
+
+web.resource(/^\/(\w+)\/page(\d+)\/$/, function (req, params, cb) {
+	if (caps.under_curfew(req.ident, params[1]))
+		cb(null, 302, '..');
+	else
+		cb(null, 'redirect', '../page' + params[2]);
 });
 
 var returnHTML = '<span id="return" class="act"><a href=".">Return</a></span>';
 
-web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
+web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	var board = params[1];
 	if (caps.under_curfew(req.ident, board))
-		return web.redirect(resp, '.', 302);
+		return cb(null, 302, '.');
 	if (!caps.can_access_board(req.ident, board))
-		return web.render_404(resp);
+		return cb(404);
 	var num = parseInt(params[2], 10);
 	if (!num)
-		return web.render_404(resp);
+		return cb(404);
 	else if (params[2][0] == '0')
-		return web.redirect(resp, '' + num);
+		return cb(null, 'redirect', '' + num);
 	var op;
 	if (board == 'graveyard') {
 		op = num;
@@ -461,25 +484,25 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	else {
 		op = db.OPs[num];
 		if (!op)
-			return web.render_404(resp);
+			return cb(404);
 		if (!db.OP_has_tag(board, op)) {
 			var tag = db.first_tag_of(op);
 			if (tag) {
 				if (!caps.can_access_board(req.ident, tag))
-					return web.render_404(resp);
-				return redirect_thread(resp, num, op, tag);
+					return cb(404);
+				return redirect_thread(cb, num, op, tag);
 			}
 			else {
 				winston.warn("Orphaned post", num,
 					"with tagless OP", op);
-				return web.render_404(resp);
+				return cb(404);
 			}
 		}
 		if (op != num)
-			return redirect_thread(resp, num, op);
+			return redirect_thread(cb, num, op);
 	}
 	if (!caps.can_access_thread(req.ident, op))
-		return web.render_404(resp);
+		return cb(404);
 
 	var yaku = new db.Yakusoku(board, req.ident);
 	var reader = new db.Reader(yaku);
@@ -487,41 +510,60 @@ web.route_get(/^\/(\w+)\/(\d+)$/, function (req, resp, params) {
 	var limit = ('last' + lastN) in req.query ?
 			(lastN + config.ABBREVIATED_REPLIES) : 0;
 	reader.get_thread(board, num, {redirect: true, abbrev: limit});
-	reader.on('nomatch', web.render_404.bind(null, resp));
-	reader.on('redirect', redirect_thread.bind(null, resp, num));
-	reader.on('begin', function () {
-		var indexTmpl = RES.indexTmpl;
-		resp.writeHead(200, web.noCacheHeaders);
-		resp.write(indexTmpl[0]);
-		resp.write('/'+escape(board)+'/ - #' + op);
-		resp.write(indexTmpl[1]);
-		resp.write(make_thread_meta(board, num, limit));
-		resp.write(indexTmpl[2]);
-		resp.write('Thread #' + op);
-		resp.write(indexTmpl[3]);
-		resp.write('<hr>\n');
+	reader.on('nomatch', function () {
+		cb(404);
+		yaku.disconnect();
 	});
+	reader.on('redirect', function (op) {
+		redirect_thread(cb, num, op);
+		yaku.disconnect();
+	});
+	reader.on('begin', function () {
+		cb(null, 'ok', {
+			board: board, op: op, num: num,
+			yaku: yaku, reader: reader, limit: limit,
+		});
+	});
+},
+function (req, resp) {
+	var board = this.board, op = this.op, num = this.op;
+
+	var indexTmpl = RES.indexTmpl;
+	resp.writeHead(200, web.noCacheHeaders);
+	resp.write(indexTmpl[0]);
+	resp.write('/'+escape(board)+'/ - #' + op);
+	resp.write(indexTmpl[1]);
+	resp.write(make_thread_meta(board, num, this.limit));
+	resp.write(indexTmpl[2]);
+	resp.write('Thread #' + op);
+	resp.write(indexTmpl[3]);
+	resp.write('<hr>\n');
+
 	var opts = {fullPosts: true, ident: req.ident, board: board};
-	write_thread_html(reader, resp, opts);
-	reader.on('end', function () {
+	write_thread_html(this.reader, resp, opts);
+	var self = this;
+	this.reader.on('end', function () {
 		resp.write(returnHTML);
 		write_page_end(req, resp);
-		yaku.disconnect();
+		self.finished();
 	});
 	function on_err(err) {
 		winston.error('thread '+num+':', err);
 		resp.end();
-		yaku.disconnect();
+		self.finished();
 	}
-	reader.on('error', on_err);
-	yaku.on('error', on_err);
-	return true;
+	this.reader.on('error', on_err);
+	this.yaku.on('error', on_err);
+},
+function () {
+	this.yaku.disconnect();
 });
-web.route_get(/^\/(\w+)\/(\d+)\/$/, function (req, resp, params) {
-	var board = params[1];
-	if (caps.under_curfew(req.ident, board))
-		return web.redirect(resp, '..', 302);
-	web.redirect(resp, '../' + params[2]);
+
+web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
+	if (caps.under_curfew(req.ident, params[1]))
+		cb(null, 302, '..');
+	else
+		cb(null, 'redirect', '../' + params[2]);
 });
 
 function write_page_end(req, resp) {
@@ -535,6 +577,7 @@ function write_page_end(req, resp) {
 	resp.end();
 }
 
+// ought to be a resource
 web.route_get(/^\/outbound\/([\w+\/]{22})$/, function (req, resp, params) {
 	// TEMP
 	var service = 'http://archive.foolz.us/a/image/';
