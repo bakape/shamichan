@@ -2,6 +2,7 @@ var _ = require('../lib/underscore'),
     async = require('async'),
     child_process = require('child_process'),
     config = require('../config'),
+    crypto = require('crypto'),
     fs = require('fs'),
     get_version = require('../get').get_version,
     hooks = require('../hooks'),
@@ -90,7 +91,9 @@ exports.reset_resources = function (cb) {
 	function tmpl(data) {
 		var templateVars = _.clone(HOT);
 		_.extend(templateVars, config);
-		return _.template(data, templateVars).split(/\$[A-Z]+/);
+		var expanded = _.template(data, templateVars);
+		return {tmpl: expanded.split(/\$[A-Z]+/),
+			src: expanded};
 	}
 	async.parallel({
 		version: get_version.bind(null, deps.CLIENT_DEPS),
@@ -107,9 +110,14 @@ exports.reset_resources = function (cb) {
 			config.CLIENT_JS = 'client.debug.js';
 		else
 			config.CLIENT_JS = 'client-' + res.version + '.js';
-		RES.indexTmpl = tmpl(res.index);
-		RES.filterTmpl = tmpl(res.filter);
-		RES.curfewTmpl = tmpl(res.curfew);
+
+		var index = tmpl(res.index);
+		RES.indexTmpl = index.tmpl;
+		var hash = crypto.createHash('md5').update(index.src);
+		RES.indexHash = hash.digest('hex').slice(0, 8);
+
+		RES.filterTmpl = tmpl(res.filter).tmpl;
+		RES.curfewTmpl = tmpl(res.curfew).tmpl;
 		RES.notFoundHtml = res.notFound;
 		RES.serverErrorHtml = res.serverError;
 		RES.modJs = res.modJs;

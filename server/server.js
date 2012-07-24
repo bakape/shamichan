@@ -521,9 +521,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	reader.on('begin', function (hctr) {
 		var headers;
 		if (hctr) {
-			/* ought to take into account changes in the tmpl */
-			/* (otherwise users might get stale js, etc.) */
-			var etag = 'W/' + hctr;
+			var etag = 'W/' + hctr + '-' + RES.indexHash;
 			if (req.headers['if-none-match'] === etag) {
 				yaku.disconnect();
 				return cb(null, 304);
