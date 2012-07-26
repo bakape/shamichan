@@ -403,18 +403,27 @@ function spoiler_info(index, toppu) {
 	};
 }
 
+function new_tab_link(srcEncoded, inside) {
+	return [safe('<a href="' + srcEncoded + '" target="_blank"' +
+		' rel="nofollow">'), inside, safe('</a>')];
+}
+
 OS.gazou = function (info, toppu) {
-	var src, thumb, name;
+	var src, thumb, name, caption;
 	var paths = {src: mediaURL + 'src/', thumb: mediaURL + 'thumb/'};
 	this.trigger('mediaPaths', paths);
 	if (info.vint) {
-		src = encodeURI('../outbound/' + info.MD5);
+		src = encodeURI('../outbound/hash/' + info.MD5);
+		var google = encodeURI('../outbound/g/' + info.vint);
+		var iqdb = encodeURI('../outbound/iqdb/' + info.vint);
 		thumb = mediaURL + 'vint/' + info.vint;
-		srcname = info.MD5;
+		caption = ['Search ', new_tab_link(google, '[Google]'), ' ',
+			new_tab_link(iqdb, '[iqdb]'), ' ',
+			new_tab_link(src, '[foolz]')];
 	}
 	else {
 		src = thumb = encodeURI(paths.src + info.src);
-		srcname = info.src;
+		caption = ['Image ', new_tab_link(src, info.src)];
 	}
 	var d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
@@ -434,14 +443,12 @@ OS.gazou = function (info, toppu) {
 		tw = w;
 		th = h;
 	}
-	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>' +
-		'Image <a href="' + src + '" target="_blank">'), srcname,
-		safe('</a> <i>(' + readable_filesize(info.size) + ', ' +
+	var img = safe('<img src="'+thumb+'" width="'+tw+'" height="'+th+'">');
+	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
+		caption, safe(' <i>(' + readable_filesize(info.size) + ', ' +
 		w + 'x' + h), info.apng ? ', APNG' : '',
-		this.full ? chibi(info.imgnm) : '',
-		safe(')</i></figcaption><a href="'+src+'" target="_blank">' +
-		'<img src="' + thumb + '" width="' +
-		tw + '" height="' + th + '"></a>' + '</figure>\n\t')];
+		this.full ? chibi(info.imgnm) : '', safe(')</i></figcaption>'),
+		new_tab_link(src, img), safe('</figure>\n\t')];
 };
 
 function readable_filesize(size) {
