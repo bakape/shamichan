@@ -596,7 +596,7 @@ function write_page_end(req, resp) {
 // ought to be a resource
 web.route_get(/^\/outbound\/([\w+\/]{22})$/, function (req, resp, params) {
 	// TEMP
-	var service = 'http://archive.foolz.us/a/image/';
+	var service = 'http://archive.foolz.us/search/image/';
 	var headers = {Location: service + escape(params[1]) + '/',
 			'X-Robots-Tag': 'nofollow'};
 	resp.writeHead(303, headers);
