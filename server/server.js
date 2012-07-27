@@ -1094,6 +1094,8 @@ function start_server() {
 }
 
 if (require.main == module) {
+	if (!process.getuid())
+		throw new Error("Refusing to run as root.");
 	async.series([
 		STATE.reload_hot,
 		STATE.make_media_dirs,
