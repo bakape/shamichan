@@ -446,7 +446,7 @@ PF.cancel = function () {
 	if (this.uploading) {
 		this.$iframe.remove();
 		this.$iframe = $('<iframe src="" name="upload"/></form>');
-		this.uploadForm.append(this.$iframe);
+		this.$iframe.appendTo('body');
 		this.upload_error('');
 		this.cancelled = true;
 	}
@@ -462,6 +462,8 @@ PF.finish = function () {
 		this.submit.remove();
 		if (this.uploadForm)
 			this.uploadForm.remove();
+		if (this.$iframe)
+			this.$iframe.remove();
 		this.imouto.fragment(this.line_buffer.text());
 		this.buffer.replaceWith(this.buffer.contents());
 		this.line_buffer.remove();
@@ -481,6 +483,8 @@ PF.remove = function () {
 		this.post.remove();
 	}
 	this.$sizer.remove();
+	if (this.$iframe)
+		this.$iframe.remove();
 };
 
 PF.update_buttons = function () {
@@ -509,11 +513,10 @@ PF.make_upload_form = function () {
 		+ 'target="upload">'
 		+ '<input type="button" value="Cancel"/>'
 		+ '<input type="file" name="image" accept="image/*"/> '
-		+ '<input type="button" id="toggle"> <strong/>'
-		+ '<iframe src="" name="upload"/></form>');
+		+ '<input type="button" id="toggle"> <strong/></form>');
 	this.$cancel = form.find('input[value=Cancel]').click($.proxy(this,
 			'cancel'));
-	this.$iframe = form.find('iframe');
+	this.$iframe = $('<iframe src="" name="upload"/>').appendTo('body');
 	this.$imageInput = form.find('input[name=image]').change(
 			$.proxy(this, 'on_image_chosen'));
 	this.$toggle = form.find('#toggle').click($.proxy(this, 'on_toggle'));
