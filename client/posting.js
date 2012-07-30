@@ -432,6 +432,7 @@ PF.commit = function (text) {
 	}
 	else {
 		line_buffer.append(document.createTextNode(text));
+		line_buffer[0].normalize();
 	}
 };
 

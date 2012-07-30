@@ -281,7 +281,9 @@ dispatcher[UPDATE_POST] = function (msg) {
 
 dispatcher[FINISH_POST] = function (msg) {
 	var num = msg[0];
-	$('#' + num).removeClass('editing');
+	var post = $('#' + num);
+	post.removeClass('editing');
+	post[0].normalize();
 	delete ownPosts[num];
 };
 
