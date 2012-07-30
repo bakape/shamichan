@@ -1,0 +1,72 @@
+a, blockquote a:hover, b.moderator {
+	color: #81a2be;
+}
+a:hover, blockquote a, .email b:hover {
+	color: #5f89ac;
+}
+article, aside, body > nav, .modal {
+	background-color: #282a2e;
+	border: 1px solid #282a2e;
+}
+article.highlight, .preview, ul {
+	background-color: #1d1d21;
+	border-color: #111;
+}
+article.editing {
+	background-color: #420;
+	border-color: #310;
+}
+b.admin {
+	color: #f00000;
+}
+body {
+	background-color: #1d1f21;
+	color: #c5c8c6;
+}
+body, pre, #trans {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+}
+cite {
+	background-color: white;
+}
+em {
+	color: #b5bd68;
+}
+h1 {
+	font: bolder 28px Tahoma;
+	letter-spacing: -2px;
+}
+h2 {
+	font-family: Tahoma;
+}
+hr {
+	border-top: 1px solid #282a2e;
+}
+li:hover {
+	background-color: #136;
+}
+.act:before {
+	content: "[";
+}
+.act:after {
+	content: "]";
+}
+.omit {
+	color: #707070;
+}
+#lock, .scroll-lock header {
+	background-image: url('ui/invlock.png');
+}
+#trans {
+	color: #aaa;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 1.5),
+	screen and (-o-device-pixel-ratio: 3/2),
+	screen and (min--moz-device-pixel-ratio: 1.5),
+	screen and (min-device-pixel-ratio: 1.5) {
+	#lock, .scroll-lock header {
+		background-image: url('ui/invlock2x.png');
+	}
+}

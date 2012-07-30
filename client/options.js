@@ -65,7 +65,7 @@ function add_spec(id, label, func, type) {
 
 /* THEMES */
 
-var themes = ['moe', 'gar', 'mawaru', 'moon'];
+var themes = ['moe', 'gar', 'mawaru', 'moon', 'ashita'];
 var globalVersion = 5;
 
 add_spec('board.$BOARD.theme', 'Theme', function (theme) {
