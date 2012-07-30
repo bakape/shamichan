@@ -59,7 +59,7 @@ menuHandlers['Select'] = function ($post) {
 		$('body').addClass('multi-select');
 		make_selection_handle().prependTo('article');
 		make_selection_handle().prependTo('section > header');
-		$post.find('.select-handle').addClass('selected');
+		$post.find('.select-handle:first').addClass('selected');
 		show_panel();
 		multiSelecting = true;
 	}
