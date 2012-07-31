@@ -52,7 +52,7 @@ body {
 	padding: 0;
 }
 body, pre, #trans {
-	font-family: "MS Pゴシック", "MS PGothic", Mona, Monaco, "Andale Mono", Courier;
+	font-family: Monaco, "Andale Mono", Courier, monospace;
 	font-size: 10pt;
 	color: #ccc;
 }
