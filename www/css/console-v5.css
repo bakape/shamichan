@@ -1,0 +1,142 @@
+a, .act a {
+	color: white;
+}
+a:hover, #sync.error {
+	color: #e50000;
+}
+article, aside {
+	display: block;
+	margin: 0;
+	padding: 10pt;
+}
+article form {
+	margin-top: 10pt;
+}
+article.highlight {
+	background-color: #222;
+}
+article.editing {
+	background-color: #0000b2;
+}
+article.editing header {
+	color: white;
+}
+b {
+	font-weight: normal;
+}
+b.admin, b.admin code {
+	background-color: #e50000;
+	color: black;
+}
+b.moderator, b.moderator code {
+	background-color: #00e500;
+	color: black;
+}
+blockquote {
+	margin: 10pt 0 0 0;
+	max-width: 80em;
+}
+blockquote a {
+	color: #00e5e5;
+}
+blockquote strong {
+	color: #00e500;
+	font-weight: normal;
+}
+header a {
+	color: #00a5b2;
+}
+body {
+	background-color: black;
+	margin: 0;
+	padding: 0;
+}
+body, pre, #trans {
+	font-family: "MS Pゴシック", "MS PGothic", Mona, Monaco, "Andale Mono", Courier;
+	font-size: 10pt;
+	color: #ccc;
+}
+del, del em {
+	background-color: white;
+	color: white;
+}
+del:hover, del:hover em, del.reveal, del.reveal em {
+	color: black;
+}
+em {
+	color: #b200b2;
+}
+cite {
+	background-color: rgba(255, 255, 255, 0.25);
+	border-radius: 0;
+	-moz-border-radius: 0;
+	-webkit-border-radius: 0;
+	margin: 0;
+	padding: 0;
+}
+code {
+	color: #5833fe;
+}
+figcaption, figcaption a {
+	color: #989800;
+	text-transform: lowercase;
+}
+fieldset, hr, img, nav input, .control {
+	display: none;
+}
+header {
+	color: gray;
+	background-image: none;
+	margin: 0;
+	padding: 0;
+}
+h1, h2 {
+	color: white;
+	font-size: inherit;
+	font-weight: bold;
+}
+h1:before {
+	content: "= ";
+}
+h1:after {
+	content: " =";
+}
+li:hover {
+	background-color: white;
+}
+section {
+	margin: 30pt 10pt 10pt 10pt;
+	padding: 0;
+}
+small {
+	font-size: 10pt;
+	color: #444;
+}
+small a {
+	color: #666;
+}
+.act, .omit {
+	color: #444;
+}
+.act:before {
+	content: ">";
+}
+.act:after {
+	content: "<";
+}
+.email, .email b {
+	color: #2020ff;
+}
+.modal, .preview, ul {
+	background-color: #111;
+}
+#feedback {
+	right: 0;
+	top: 5pt;
+}
+#trans {
+	margin-bottom: -4px;
+}
+#lock, .scroll-lock header {
+	background-image: none;
+}
