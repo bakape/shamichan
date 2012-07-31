@@ -5,14 +5,6 @@ var connSM = new FSM('load');
 var postSM = new FSM('none');
 var sessionId;
 
-var oneeSama = new OneeSama(function (num) {
-	if (this.links && num in this.links)
-		this.callback(this.post_ref(num, this.links[num]));
-	else
-		this.callback('>>' + num);
-});
-oneeSama.full = oneeSama.op = THREAD;
-
 function inject(frag) {
 	var dest = this.buffer;
 	for (var i = 0; i < this.state[1]; i++)
