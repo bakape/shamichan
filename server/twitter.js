@@ -106,20 +106,7 @@ exports.set_cookie = function (resp, info, r) {
 	});
 };
 
-function parse_cookie(header) {
-	var chunks = {};
-	(header || '').split(';').forEach(function (part) {
-		var bits = part.match(/^([^=]*)=(.*)$/);
-		if (bits)
-			chunks[bits[1].trim()] = bits[2].trim();
-	});
-	return chunks;
-}
-
-exports.extract_cookie = function (cookie) {
-	if (!cookie || typeof cookie != 'string')
-		return false;
-	var chunks = parse_cookie(cookie);
+exports.extract_cookie = function (chunks) {
 	return chunks.a ? chunks : false;
 };
 
@@ -142,7 +129,7 @@ exports.check_cookie = function (chunks, check_csrf, callback) {
 
 exports.logout = function (req, resp) {
 	var r = connect();
-	var chunks = parse_cookie(req.headers.cookie);
+	var chunks = require('./web').parse_cookie(req.headers.cookie);
 	r.hgetall('session:' + chunks.a, function (err, session) {
 		if (err)
 			return fail(err);

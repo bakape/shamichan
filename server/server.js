@@ -45,7 +45,8 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		if (!synchronize(msg, client))
 			client.report(db.Muggle("Bad protocol."));
 	}
-	var chunks = twitter.extract_cookie(msg.pop());
+	var chunks = web.parse_cookie(msg.pop());
+	chunks = twitter.extract_cookie(chunks);
 	if (chunks) {
 		twitter.check_cookie(chunks, false, checked);
 		return true;
@@ -170,9 +171,14 @@ function tamashii(num) {
 		this.callback('>>' + num);
 }
 
-function write_thread_html(reader, response, opts) {
+function write_thread_html(reader, req, response, opts) {
 	var oneeSama = new common.OneeSama(tamashii);
+
+	opts.ident = req.ident;
 	caps.augment_oneesama(oneeSama, opts);
+	if (web.parse_cookie(req.headers.cookie).img == 'no')
+		oneeSama.hideImgs = true;
+
 	reader.on('thread', function (op_post, omit, image_omit) {
 		op_post.omit = omit;
 		var full = oneeSama.full = !!opts.fullPosts;
@@ -385,8 +391,8 @@ function (req, resp) {
 		resp.write(nav_html);
 		resp.write('<hr>\n');
 	});
-	var opts = {fullLinks: true, ident: req.ident, board: board};
-	write_thread_html(yaku, resp, opts);
+	var opts = {fullLinks: true, board: board};
+	write_thread_html(yaku, req, resp, opts);
 	yaku.on('end', function () {
 		resp.write(nav_html);
 		write_page_end(req, resp);
@@ -439,8 +445,8 @@ function (req, resp) {
 	resp.write(nav_html);
 	resp.write('<hr>\n');
 
-	var opts = {fullLinks: true, ident: req.ident, board: board};
-	write_thread_html(this.yaku, resp, opts);
+	var opts = {fullLinks: true, board: board};
+	write_thread_html(this.yaku, req, resp, opts);
 	var self = this;
 	this.yaku.on('end', function () {
 		resp.write(nav_html);
@@ -522,6 +528,9 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		var headers;
 		if (hctr) {
 			var etag = 'W/' + hctr + '-' + RES.indexHash;
+			var chunks = web.parse_cookie(req.headers.cookie);
+			if (chunks.img == 'no')
+				etag += '-noimg';
 			if (req.headers['if-none-match'] === etag) {
 				yaku.disconnect();
 				return cb(null, 304);
@@ -555,8 +564,8 @@ function (req, resp) {
 	resp.write(indexTmpl[3]);
 	resp.write('<hr>\n');
 
-	var opts = {fullPosts: true, ident: req.ident, board: board};
-	write_thread_html(this.reader, resp, opts);
+	var opts = {fullPosts: true, board: board};
+	write_thread_html(this.reader, req, resp, opts);
 	var self = this;
 	this.reader.on('end', function () {
 		resp.write(returnHTML);

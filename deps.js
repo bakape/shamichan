@@ -6,6 +6,7 @@ exports.CLIENT_DEPS = [
 	'lib/underscore' + minJs,
 	'lib/backbone' + minJs,
 	'lib/oninput' + minJs,
+	'lib/jquery.cookie' + minJs,
 	'common.js',
 	'client/init.js',
 	'client/models.js',

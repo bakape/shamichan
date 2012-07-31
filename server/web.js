@@ -57,7 +57,7 @@ function handle_resource(req, resp, resource) {
 		args.push(m);
 	args.push(resource_second_handler.bind(null, req, resp, resource));
 
-	var chunks = twitter.extract_cookie(req.headers.cookie);
+	var chunks = twitter.extract_cookie(parse_cookie(req.headers.cookie));
 	if (chunks) {
 		twitter.check_cookie(chunks, false, function (err, ident) {
 			if (err && !resource.authPassthrough)
@@ -160,7 +160,7 @@ function parse_forwarded_for(ff) {
 exports.parse_forwarded_for = parse_forwarded_for;
 
 function auth_passthrough(handler, req, resp, params) {
-	var chunks = twitter.extract_cookie(req.headers.cookie);
+	var chunks = twitter.extract_cookie(parse_cookie(req.headers.cookie));
 	if (!chunks) {
 		handler(req, resp, params);
 		return;
@@ -197,7 +197,8 @@ function auth_checker(handler, is_post, req, resp, params) {
 		check_it();
 
 	function check_it() {
-		var chunks = twitter.extract_cookie(req.headers.cookie);
+		var chunks = parse_cookie(req.headers.cookie);
+		chunks = twitter.extract_cookie(chunks);
 		if (!chunks)
 			return forbidden(resp, 'No cookie.');
 		twitter.check_cookie(chunks, is_post, ack);
@@ -307,3 +308,14 @@ exports.dump_server_error = function (resp, err) {
 	resp.write(escape(util.inspect(err)));
 	resp.end('</pre>');
 };
+
+function parse_cookie(header) {
+	var chunks = {};
+	(header || '').split(';').forEach(function (part) {
+		var bits = part.match(/^([^=]*)=(.*)$/);
+		if (bits)
+			chunks[bits[1].trim()] = bits[2].trim();
+	});
+	return chunks;
+}
+exports.parse_cookie = parse_cookie;

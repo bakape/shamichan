@@ -443,12 +443,15 @@ OS.gazou = function (info, toppu) {
 		tw = w;
 		th = h;
 	}
-	var img = safe('<img src="'+thumb+'" width="'+tw+'" height="'+th+'">');
+	var img = '';
+	if (!this.hideImgs)
+		img = new_tab_link(src, safe('<img src="'+thumb+'" width="'
+				+tw+'" height="'+th+'">'));
 	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
 		caption, safe(' <i>(' + readable_filesize(info.size) + ', ' +
 		w + 'x' + h), info.apng ? ', APNG' : '',
 		this.full ? chibi(info.imgnm) : '', safe(')</i></figcaption>'),
-		new_tab_link(src, img), safe('</figure>\n\t')];
+		img, safe('</figure>\n\t')];
 };
 
 function readable_filesize(size) {

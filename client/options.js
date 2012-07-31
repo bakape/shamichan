@@ -72,8 +72,21 @@ add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 	if (theme) {
 		var css = theme + '-v' + globalVersion + '.css';
 		$('#theme').attr('href', mediaURL + 'css/' + css);
+		text_only(theme == 'console');
 	}
 }, themes);
+
+function text_only(on) {
+	if (on) {
+		$('img').hide();
+		$.cookie('img', 'no', {expires: 9000});
+	}
+	else {
+		$('img').show();
+		$.cookie('img', null);
+	}
+	oneeSama.hideImgs = on;
+}
 
 /* BACKLINKS */
 
