@@ -9,12 +9,12 @@ this.hot = {
 	},
 	BASE_CSS: 'base-v25.css',
 	BOARD_CSS: {
-		moe: 'moe-v5.css',
-		gar: 'gar-v5.css',
-		meta: 'mawaru-v5.css',
-		archive: 'archive-v5.css',
-		graveyard: 'mawaru-v5.css',
-		staff: 'moe-v5.css',
+		moe: 'moe-v6.css',
+		gar: 'gar-v6.css',
+		meta: 'mawaru-v6.css',
+		archive: 'archive-v6.css',
+		graveyard: 'mawaru-v6.css',
+		staff: 'moe-v6.css',
 	},
 
 	SPECIAL_TRIPCODES: {
