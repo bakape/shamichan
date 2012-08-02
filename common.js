@@ -403,6 +403,19 @@ function spoiler_info(index, toppu) {
 	};
 }
 
+function pick_spoiler(metaIndex) {
+	var imgs = config.SPOILER_IMAGES;
+	var n = imgs.normal.length;
+	var count = n + imgs.trans.length;
+	var i;
+	if (metaIndex < 0)
+		i = Math.floor(Math.random() * count);
+	else
+		i = metaIndex % count;
+	var spoiler = i < n ? imgs.normal[i] : imgs.trans[i - n];
+	return {index: spoiler, next: (i+1) % count};
+}
+
 function new_tab_link(srcEncoded, inside) {
 	return [safe('<a href="' + srcEncoded + '" target="_blank"' +
 		' rel="nofollow">'), inside, safe('</a>')];

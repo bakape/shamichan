@@ -1,7 +1,5 @@
 var postForm;
 var nonces = {};
-var spoilerImages = config.SPOILER_IMAGES;
-var spoilerCount = spoilerImages.normal.length + spoilerImages.trans.length;
 
 connSM.on('synced', postSM.feeder('sync'));
 connSM.on('dropped', postSM.feeder('desync'));
@@ -526,7 +524,7 @@ PF.make_upload_form = function () {
 		this.$toggle.hide();
 	}
 	this.spoiler = 0;
-	this.nextSpoiler = Math.floor(Math.random() * spoilerCount);
+	this.nextSpoiler = -1;
 	return form;
 };
 
@@ -569,11 +567,10 @@ PF.on_toggle = function (event) {
 			set_image('pane.png');
 			return;
 		}
-		var imgs = spoilerImages;
-		var i = this.nextSpoiler, n = imgs.normal.length;
-		this.spoiler = i < n ? imgs.normal[i] : imgs.trans[i - n];
-		this.nextSpoiler = (i+1) % spoilerCount;
-		set_image('spoil' + this.spoiler + '.png');
+		var pick = pick_spoiler(this.nextSpoiler);
+		this.spoiler = pick.index;
+		this.nextSpoiler = pick.next;
+		set_image('spoil' + pick.index + '.png');
 	}
 	function set_image(path) {
 		self.$toggle.css('background-image', 'url("'
