@@ -34,7 +34,7 @@ function drop_shita(e) {
 		fd.append(k, extra[k]);
 	/* Can't seem to jQuery this shit */
 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', 'upload?id=' + sessionId);
+	xhr.open('POST', '../upload/?id=' + sessionId);
 	xhr.setRequestHeader('Accept', 'application/json');
 	xhr.onreadystatechange = upload_shita;
 	xhr.send(fd);

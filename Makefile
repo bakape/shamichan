@@ -8,6 +8,7 @@ endif
 
 all: client
 	$(MAKE) -C server
+	$(MAKE) -C imager
 
 jsmin: lib/jsmin.c
 	gcc -o $@ $^
@@ -25,3 +26,4 @@ modjs:
 clean:
 	rm -rf -- .build jsmin www/js/client{.,-}*.js
 	$(MAKE) -C server -w clean
+	$(MAKE) -C imager -w clean

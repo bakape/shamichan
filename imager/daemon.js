@@ -1,52 +1,21 @@
 var async = require('async'),
     common = require('../common'),
-    config = require('../config'),
+    config = require('./config'),
     child_process = require('child_process'),
-    db = require('../db'),
+    imagerDb = require('./db'),
+    index = require('./'),
     formidable = require('formidable'),
     fs = require('fs'),
-    hooks = require('../hooks'),
+    Muggle = require('../muggle').Muggle,
     path = require('path'),
-    util = require('util'),
+    urlParse = require('url').parse,
     winston = require('winston');
 
-var image_attrs = ('src thumb dims size MD5 hash imgnm spoiler realthumb vint'
-		+ ' apng').split(' ');
-
-var Muggle = db.Muggle;
-
-function is_image(image) {
-	return image && (image.src || image.vint);
-};
-
-hooks.hook('extractPost', function (post, cb) {
-	if (!is_image(post))
-		return cb(null);
-	var image = {};
-	image_attrs.forEach(function (key) {
-		if (key in post) {
-			image[key] = post[key];
-			delete post[key];
-		}
-	});
-	if (image.dims.split)
-		image.dims = image.dims.split(',');
-	image.size = parseInt(image.size);
-	delete image.hash;
-	post.image = image;
-	cb(null);
-});
-
-hooks.hook('inlinePost', function (info, cb) {
-	var post = info.dest, image = info.src.image;
-	if (!image)
-		return cb(null);
-	image_attrs.forEach(function (key) {
-		if (key in image)
-			post[key] = image[key];
-	});
-	cb(null);
-});
+function new_upload(req, resp) {
+	var upload = new ImageUpload;
+	upload.handle_request(req, resp);
+}
+exports.new_upload = new_upload;
 
 function get_thumb_specs(w, h, pinky) {
 	var QUALITY = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
@@ -57,25 +26,37 @@ function get_thumb_specs(w, h, pinky) {
 			bg_color: bg, bound: bound};
 }
 
-exports.ImageUpload = function (db, status) {
-	this.db = db;
-	this.statusCallback = status;
+var ImageUpload = function (client_id) {
+	this.db = new imagerDb.Onegai;
+	this.client_id = client_id;
 };
 
-var IU = exports.ImageUpload.prototype;
+var IU = ImageUpload.prototype;
 
 var validFields = ['spoiler', 'op'];
 
 IU.status = function (msg) {
-	this.form_call('upload_status', msg);
+	this.client_call('upload_status', msg);
 };
 
-IU.handle_request = function (req, resp, board) {
-	this.client_id = parseInt(req.query.id, 10);
-	if (!this.client_id || this.client_id < 1)
-		return this.failure(Muggle('Bad client ID.'));
+IU.client_call = function (func, msg) {
+	this.db.client_message(this.client_id, {func: func, arg: msg});
+};
 
-	this.board = board;
+IU.handle_request = function (req, resp) {
+	if (req.method.toLowerCase() != 'post') {
+		resp.writeHead(400);
+		resp.end("Need an upload.");
+		return;
+	}
+	var query = req.query || urlParse(req.url, true).query;
+	this.client_id = parseInt(query.id, 10);
+	if (!this.client_id || this.client_id < 1) {
+		resp.writeHead(400);
+		resp.end("Bad client ID.");
+		return;
+	}
+
 	this.resp = resp;
 	var len = parseInt(req.headers['content-length'], 10);
 	if (len > 0 && len > config.IMAGE_FILESIZE_MAX + (20*1024))
@@ -244,6 +225,7 @@ IU.process = function (err) {
 		var time = new Date().getTime();
 		image.src = time + image.ext;
 		var dest, mvs;
+		var media_path = index.media_path, mv_file = index.mv_file;
 		dest = media_path('src', image.src);
 		mvs = [mv_file.bind(null, image.path, dest)];
 		if (nail) {
@@ -283,15 +265,6 @@ IU.process = function (err) {
 function composite_src(spoiler, pinky) {
 	var file = 'spoiler' + (pinky ? 's' : '') + spoiler + '.png';
 	return path.join('www', 'kana', file);
-}
-
-function media_path(dir, filename) {
-	return path.join(config.MEDIA_DIRS[dir], filename);
-}
-exports.media_path = media_path;
-
-function dead_path(dir, filename) {
-	return path.join(config.MEDIA_DIRS.dead, dir, filename);
 }
 
 IU.read_image_filesize = function (callback) {
@@ -373,18 +346,6 @@ function squish_MD5(hash) {
 }
 exports.squish_MD5 = squish_MD5;
 
-function mv_file(src, dest, callback) {
-	child_process.execFile('/bin/mv', ['-n', src, dest],
-				function (err, stdout, stderr) {
-		if (err)
-			callback(Muggle("Couldn't move file into place.",
-					stderr || err));
-		else
-			callback(null);
-	});
-}
-exports.mv_file = mv_file;
-
 function perceptual_hash(src, callback) {
 	var tmp = '/tmp/hash' + common.random_id() + '.gray';
 	var args = [src + '[0]',
@@ -426,29 +387,6 @@ function detect_APNG(fnm, callback) {
 	});
 }
 
-hooks.hook("buryImage", function (info, callback) {
-	if (!info.src)
-		return callback(null);
-	/* Just in case */
-	var m = /^\d+\w*\.\w+$/;
-	if (!info.src.match(m))
-		return callback(Muggle('Invalid image.'));
-	var mvs = [mv.bind(null, 'src', info.src)];
-	function try_thumb(t) {
-		if (!t)
-			return;
-		if (!t.match(m))
-			return callback(Muggle('Invalid thumbnail.'));
-		mvs.push(mv.bind(null, 'thumb', t));
-	}
-	try_thumb(info.thumb);
-	try_thumb(info.realthumb);
-	async.parallel(mvs, callback);
-	function mv(p, nm, cb) {
-		mv_file(media_path(p, nm), dead_path(p, nm), cb);
-	}
-});
-
 function setup_im_args(o, args) {
 	var args = [], dims = o.dims;
 	if (o.ext == '.jpg')
@@ -482,8 +420,6 @@ function resize_image(o, comp, callback) {
 	convert(args, function (err) {
 		if (err)
 			callback(Muggle("Resizing error.", err));
-		else if (config.DEBUG)
-			setTimeout(callback.bind(null, null), 1000);
 		else
 			callback(null);
 	});
@@ -516,7 +452,7 @@ IU.failure = function (err) {
 		this.resp = null;
 	}
 	if (!this.failed) {
-		this.form_call('upload_error', err_desc);
+		this.client_call('upload_error', err_desc);
 		this.failed = true;
 	}
 	if (this.image) {
@@ -541,7 +477,7 @@ IU.record_image = function (err) {
 		winston.warn("Tracking failure: " + err);
 	var view = {};
 	var self = this;
-	image_attrs.forEach(function (key) {
+	index.image_attrs.forEach(function (key) {
 		if (key in self.image)
 			view[key] = self.image[key];
 	});
@@ -555,7 +491,7 @@ IU.record_image = function (err) {
 	this.db.record_image_alloc(image_id, alloc, function (err) {
 		if (err)
 			return this.failure("Publishing failure.");
-		self.form_call('on_image_alloc', image_id);
+		self.client_call('on_image_alloc', image_id);
 		self.db.disconnect();
 		if (self.resp) {
 			self.resp.writeHead(202);
@@ -565,30 +501,6 @@ IU.record_image = function (err) {
 	});
 };
 
-IU.form_call = function (func, param) {
-	var msg = {func: func, arg: param};
-	this.statusCallback.call(null, this.client_id, msg);
-};
-
-exports.send_dead_image = function (kind, filename, resp) {
-	filename = dead_path(kind, filename);
-	var stream = fs.createReadStream(filename);
-	stream.once('error', function (err) {
-		if (err.code == 'ENOENT') {
-			resp.writeHead(404);
-			resp.end('Image not found');
-		}
-		else {
-			winston.error(err);
-			resp.end();
-		}
-	});
-	stream.once('open', function () {
-		var h = {};
-		try {
-			h['Content-Type'] = require('mime').lookup(filename);
-		} catch (e) {}
-		resp.writeHead(200, h);
-		stream.pipe(resp);
-	});
-};
+if (require.main == module) {
+	require('http').createServer(new_upload).listen(config.UPLOAD_PORT);
+}

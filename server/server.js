@@ -9,14 +9,16 @@ var _ = require('../lib/underscore'),
     fs = require('fs'),
     get_version = require('../get').get_version,
     hooks = require('../hooks'),
-    pix = require('./pix'),
-    STATE = require('./state');
+    imager = require('../imager'),
+    Muggle = require('../muggle').Muggle,
+    STATE = require('./state'),
     twitter = require('./twitter'),
     tripcode = require('./tripcode'),
     web = require('./web'),
     winston = require('winston');
 
 require('./panel');
+require('../imager/daemon');
 
 var RES = STATE.resources;
 
@@ -43,7 +45,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		if (!err)
 			_.extend(client.ident, ident);
 		if (!synchronize(msg, client))
-			client.report(db.Muggle("Bad protocol."));
+			client.report(Muggle("Bad protocol."));
 	}
 	var chunks = web.parse_cookie(msg.pop());
 	chunks = twitter.extract_cookie(chunks);
@@ -107,7 +109,7 @@ function synchronize(msg, client) {
 			client.on_thread_sink.bind(client), listening);
 	function listening(errs) {
 		if (errs && errs.length >= count)
-			return client.report(db.Muggle(
+			return client.report(Muggle(
 					"Couldn't sync to board."));
 		else if (errs) {
 			dead_threads.push.apply(dead_threads, errs);
@@ -197,6 +199,15 @@ function write_thread_html(reader, req, response, opts) {
 	});
 }
 
+function setup_imager_relay(cb) {
+	var onegai = new imager.Onegai;
+	onegai.relay_client_messages();
+	onegai.once('relaying', function () {
+		onegai.on('message', image_status);
+		cb(null);
+	});
+}
+
 function image_status(client_id, status) {
 	var client = clients[client_id];
 	if (client)
@@ -218,7 +229,7 @@ function page_nav(thread_count, cur_page) {
 }
 
 function make_link_rels(board, bits) {
-	var path = config.MEDIA_URL + 'css/';
+	var path = imager.config.MEDIA_URL + 'css/';
 	bits.push(['stylesheet', path + STATE.hot.BASE_CSS]);
 	bits.push(['stylesheet', path + STATE.hot.BOARD_CSS[board], 'theme']);
 	return bits.map(function (p) {
@@ -273,12 +284,7 @@ function redirect_thread(cb, num, op, tag) {
 		cb(null, 'redirect_js', '../' + tag + '/' + op + '#' + num);
 }
 
-web.route_post(/^\/(\w+)\/upload$/, function (req, resp, params) {
-	var board = params[1];
-	var yaku = new db.Yakusoku(board, req.ident);
-	var upload = new pix.ImageUpload(yaku, image_status);
-	upload.handle_request(req, resp, board);
-});
+web.route_post(/^\/upload\/$/, require('../imager/daemon').new_upload);
 
 web.resource(/^\/$/, function (req, cb) {
 	cb(null, 'redirect', 'moe/');
@@ -603,7 +609,7 @@ function write_page_end(req, resp) {
 // ought to be a resource
 web.route_get(/^\/outbound\/(g|iqdb)\/([\w+\/]{22}\.jpg)$/,
 		function (req, resp, params) {
-	var thumb = config.MEDIA_URL + 'vint/' + params[2];
+	var thumb = imager.config.MEDIA_URL + 'vint/' + params[2];
 	var service = params[1] == 'iqdb' ? 'http://iqdb.org/?url='
 			: 'http://google.com/searchbyimage?image_url=';
 	var dest = service + encodeURIComponent(thumb);
@@ -624,7 +630,7 @@ web.route_get_auth(/^\/dead\/(src|thumb)\/(\w+\.\w{3})$/,
 			function (req, resp, params) {
 	if (req.ident.auth != 'Admin')
 		return web.render_404(resp);
-	pix.send_dead_image(params[1], params[2], resp);
+	imager.send_dead_image(params[1], params[2], resp);
 });
 
 
@@ -643,7 +649,7 @@ OK.on_message = function (data) {
 		type = common.INVALID;
 	var func = dispatcher[type];
 	if (!func || !func(msg, this)) {
-		this.report(db.Muggle("Bad protocol.", new Error(
+		this.report(Muggle("Bad protocol.", new Error(
 				"Invalid message: " + JSON.stringify(data))));
 	}
 };
@@ -672,7 +678,7 @@ function pad3(n) {
 
 OK.report = function (error) {
 	var msg = 'Server error.';
-	if (error instanceof db.Muggle) {
+	if (error instanceof Muggle) {
 		msg = error.most_precise_error_message();
 		error = error.deepest_reason();
 	}
@@ -722,16 +728,16 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 
 	allocate_post(msg, client, function (err, alloc) {
 		if (err)
-			client.report(db.Muggle("Allocation failure.", err));
+			client.report(Muggle("Allocation failure.", err));
 	});
 	return true;
 }
 
 function allocate_post(msg, client, callback) {
 	if (client.post)
-		return callback(db.Muggle("Already have a post."));
+		return callback(Muggle("Already have a post."));
 	if (['graveyard', 'archive'].indexOf(client.board) >= 0)
-		return callback(db.Muggle("Can't post here."));
+		return callback(Muggle("Can't post here."));
 	var post = {time: new Date().getTime(), nonce: msg.nonce};
 	var body = '';
 	var ip = client.ident.ip;
@@ -739,14 +745,14 @@ function allocate_post(msg, client, callback) {
 	var image_alloc;
 	if (msg.image) {
 		if (!msg.image.match(/^\d+$/))
-			return callback(db.Muggle('Expired image token.'));
+			return callback(Muggle('Expired image token.'));
 		image_alloc = msg.image;
 	}
 	if (msg.frag) {
 		if (msg.frag.match(/^\s*$/g))
-			return callback(db.Muggle('Bad post body.'));
+			return callback(Muggle('Bad post body.'));
 		if (msg.frag.length > common.MAX_POST_CHARS)
-			return callback(db.Muggle('Post is too long.'));
+			return callback(Muggle('Post is too long.'));
 		body = msg.frag.replace(config.EXCLUDE_REGEXP, '');
 		if (config.GAME_BOARDS.indexOf(client.board) >= 0)
 			amusement.roll_dice(body, post, extra);
@@ -755,7 +761,7 @@ function allocate_post(msg, client, callback) {
 	if (msg.op)
 		post.op = msg.op;
 	else if (!image_alloc)
-		return callback(db.Muggle('Image missing.'));
+		return callback(Muggle('Image missing.'));
 
 	/* TODO: Check against client.watching? */
 	if (msg.name) {
@@ -781,7 +787,7 @@ function allocate_post(msg, client, callback) {
 	if ('auth' in msg) {
 		if (!msg.auth || !client.ident
 				|| msg.auth !== client.ident.auth)
-			return callback(db.Muggle('Bad auth.'));
+			return callback(Muggle('Bad auth.'));
 		post.auth = msg.auth;
 	}
 
@@ -800,7 +806,7 @@ function allocate_post(msg, client, callback) {
 		if (err)
 			return callback(err);
 		if (client.post)
-			return callback(db.Muggle('Already have a post.'));
+			return callback(Muggle('Already have a post.'));
 		client.post = post;
 		post.num = num;
 		var supplements = {
@@ -808,15 +814,15 @@ function allocate_post(msg, client, callback) {
 					client.ident),
 		};
 		if (image_alloc)
-			supplements.image = client.db.obtain_image_alloc.bind(
-					client.db, image_alloc);
+			supplements.image = imager.obtain_image_alloc.bind(
+					null, image_alloc);
 		async.parallel(supplements, got_supplements);
 	}
 	function got_supplements(err, rs) {
 		if (err) {
 			if (client.post === post)
 				client.post = null;
-			return callback(db.Muggle("Attachment error.", err));
+			return callback(Muggle("Attachment error.", err));
 		}
 		post.links = rs.links;
 		if (rs.image)
@@ -827,8 +833,7 @@ function allocate_post(msg, client, callback) {
 		if (err) {
 			if (client.post === post)
 				client.post = null;
-			return callback(db.Muggle("Couldn't allocate post.",
-					err));
+			return callback(Muggle("Couldn't allocate post.",err));
 		}
 		post.body = body;
 		callback(null, get_post_view(post));
@@ -894,7 +899,7 @@ function update_post(frag, client) {
 		client.db.append_post(post, frag, old_state, extra,
 					function (err) {
 			if (err)
-				client.report(db.Muggle("Couldn't add text.",
+				client.report(Muggle("Couldn't add text.",
 						err));
 		});
 	});
@@ -906,7 +911,7 @@ function debug_command(client, frag) {
 	if (!frag)
 		return;
 	if (frag.match(/\bfail\b/))
-		client.report(db.Muggle("Failure requested."));
+		client.report(Muggle("Failure requested."));
 	else if (frag.match(/\bclose\b/))
 		client.socket.close();
 }
@@ -934,7 +939,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 		return true; /* whatever */
 	client.finish_post(function (err) {
 		if (err)
-			client.report(db.Muggle("Couldn't finish post.", err));
+			client.report(Muggle("Couldn't finish post.", err));
 	});
 	return true;
 }
@@ -958,7 +963,7 @@ dispatcher[common.DELETE_POSTS] = function (nums, client) {
 
 	client.db.remove_posts(nums, function (err, dels) {
 		if (err)
-			client.report(db.Muggle("Couldn't delete.", err));
+			client.report(Muggle("Couldn't delete.", err));
 	});
 	return true;
 };
@@ -971,8 +976,7 @@ dispatcher[common.DELETE_IMAGES] = function (nums, client) {
 
 	client.db.remove_images(nums, function (err, dels) {
 		if (err)
-			client.report(db.Muggle("Couldn't delete images.",
-					err));
+			client.report(Muggle("Couldn't delete images.", err));
 	});
 	return true;
 };
@@ -983,13 +987,13 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 	var alloc = msg[0];
 	if (!client.post || client.post.image)
 		return false;
-	client.db.obtain_image_alloc(alloc, function (err, alloc) {
+	imager.obtain_image_alloc(alloc, function (err, alloc) {
 		if (!client.post || client.post.image)
 			return;
 		client.db.add_image(client.post, alloc, client.ident.ip,
 					function (err) {
 			if (err)
-				client.report(db.Muggle(
+				client.report(Muggle(
 					"Image insertion problem.", err));
 		});
 	});
@@ -1005,8 +1009,7 @@ dispatcher[common.SPOILER_IMAGES] = function (nums, client) {
 
 	client.db.force_image_spoilers(nums, function (err) {
 		if (err)
-			client.report(db.Muggle("Couldn't spoiler images.",
-					err));
+			client.report(Muggle("Couldn't spoiler images.", err));
 	});
 	return true;
 };
@@ -1053,7 +1056,7 @@ function start_server() {
 		web.enable_debug();
 	var sockjsPath = 'js/' + get_sockjs_script_sync();
 	var sockOpts = {
-		sockjs_url: config.MEDIA_URL + sockjsPath,
+		sockjs_url: imager.config.MEDIA_URL + sockjsPath,
 		prefix: config.SOCKET_PATH,
 		jsessionid: false,
 		log: sockjs_log,
@@ -1105,7 +1108,8 @@ if (require.main == module) {
 		throw new Error("Refusing to run as root.");
 	async.series([
 		STATE.reload_hot,
-		STATE.make_media_dirs,
+		imager.make_media_dirs,
+		setup_imager_relay,
 		STATE.reset_resources,
 		db.track_OPs,
 	], function (err) {
@@ -1113,13 +1117,15 @@ if (require.main == module) {
 			throw err;
 		propagate_resources();
 		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
+		var onegai = new imager.Onegai;
 		async.series([
 			yaku.finish_all.bind(yaku),
-			yaku.delete_temporaries.bind(yaku),
+			onegai.delete_temporaries.bind(onegai),
 		], function (err) {
 			if (err)
 				throw err;
 			yaku.disconnect();
+			onegai.disconnect();
 			_.defer(start_server);
 		});
 	});

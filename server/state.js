@@ -50,39 +50,6 @@ exports.reload_hot = function (cb) {
 	});
 };
 
-function make_dir(base, key, cb) {
-	var dir;
-	if (base)
-		dir = path.join(base, key);
-	else
-		dir = config.MEDIA_DIRS[key];
-	fs.stat(dir, function (err, info) {
-		var make = false;
-		if (err) {
-			if (err.code == 'ENOENT')
-				make = true;
-			else
-				return cb(err);
-		}
-		else if (!info.isDirectory())
-			return cb(dir + " is not a directory");
-		if (make)
-			fs.mkdir(dir, cb);
-		else
-			cb(null);
-	});
-}
-
-exports.make_media_dirs = function (cb) {
-	var keys = ['src', 'thumb', 'vint', 'dead', 'tmp'];
-	async.forEach(keys, make_dir.bind(null, null), function (err) {
-		if (err)
-			return cb(err);
-		var dead = config.MEDIA_DIRS.dead;
-		async.forEach(['src', 'thumb'], make_dir.bind(null, dead), cb);
-	});
-}
-
 exports.reset_resources = function (cb) {
 	var deps = require('../deps');
 	function read(dir, file) {
@@ -90,6 +57,7 @@ exports.reset_resources = function (cb) {
 	}
 	function tmpl(data) {
 		var templateVars = _.clone(HOT);
+		_.extend(templateVars, require('../imager/config'));
 		_.extend(templateVars, config);
 		var expanded = _.template(data, templateVars);
 		return {tmpl: expanded.split(/\$[A-Z]+/),

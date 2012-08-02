@@ -1,12 +1,16 @@
 var async = require('async'),
     child_process = require('child_process'),
     config = require('./config'),
+    imagerConfig = require('./imager/config'),
     fs = require('fs'),
     util = require('util');
 
 var defines = {};
 for (var k in config)
 	defines[k] = JSON.stringify(config[k]);
+for (var k in imagerConfig)
+	defines[k] = JSON.stringify(imagerConfig[k]);
+
 var files = [];
 for (var i = 2; i < process.argv.length; i++) {
 	var arg = process.argv[i];
@@ -18,6 +22,13 @@ for (var i = 2; i < process.argv.length; i++) {
 		util.error('Unrecognized option ' + arg);
 		process.exit(1);
 	}
+}
+
+function lookup_config(key) {
+	var val = config[key];
+	if (val === undefined)
+		val = imagerConfig[key];
+	return val;
 }
 
 var config_re = /\bconfig\.(\w+)\b/;
@@ -69,7 +80,7 @@ async.forEachSeries(files, function (file, cb) {
 			var m = line.match(config_re);
 			if (!m)
 				break;
-			var cfg = config[m[1]];
+			var cfg = lookup_config(m[1]);
 			if (cfg === undefined) {
 				console.error("No such config var " + m[1]);
 				process.exit(1);

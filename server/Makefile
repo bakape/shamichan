@@ -1,11 +1,5 @@
 
-all: findapng perceptual tripcode.node
-
-findapng: findapng.c
-	gcc -O2 -o $@ $(shell pkg-config libpng --cflags --libs) $^
-
-perceptual: perceptual.c
-	gcc -O2 -o $@ $^
+all: tripcode.node
 
 tripcode.node: .build tripcode.cc
 	node-waf build
@@ -17,4 +11,4 @@ tripcode.node: .build tripcode.cc
 .PHONY: all clean
 
 clean:
-	rm -rf -- .build perceptual tripcode.node
+	rm -rf -- .build tripcode.node

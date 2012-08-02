@@ -7,10 +7,13 @@ var _ = require('./lib/underscore'),
     events = require('events'),
     fs = require('fs'),
     hooks = require('./hooks'),
+    muggle = require('./muggle'),
     redis = require('redis'),
     tail = require('./tail'),
     util = require('util'),
     winston = require('winston');
+
+var imager = require('./imager'); /* set up hooks */
 
 var OPs = exports.OPs = cache.OPs;
 var TAGS = exports.TAGS = cache.opTags;
@@ -531,7 +534,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 			else
 				view.imgctr = 1;
 			note_hash(m, msg.image.hash, msg.num);
-			make_image_nontemporary(m, extra.image_alloc);
+			imager.make_image_nontemporary(m, extra.image_alloc);
 		}
 		m.hmset(key, view);
 		m.set(key + ':body', body);
@@ -955,119 +958,6 @@ function note_hash(m, hash, num) {
 	var key = 'hash:' + hash;
 	m.setex(key, config.DEBUG ? 30 : 3600, num);
 }
-
-Y.check_duplicate = function (hash, callback) {
-	this.connect().get('hash:'+hash, function (err, num) {
-		if (err)
-			callback(err);
-		else if (num)
-			callback(Muggle('Duplicate of >>' + num + '.'));
-		else
-			callback(false);
-	});
-};
-
-/* IMAGE ALLOCATIONS */
-
-var IMG_EXPIRY = 20;
-
-Y.track_temporaries = function (adds, dels, callback) {
-	var m = this.connect().multi();
-	var cleans = cache.imageAllocCleanups;
-	if (adds && adds.length) {
-		m.sadd('temps', adds);
-		adds.forEach(function (add) {
-			cleans[add] = setTimeout(
-				cleanup_image_alloc.bind(null, add),
-				(IMG_EXPIRY+1) * 1000);
-		});
-	}
-	if (dels && dels.length) {
-		m.srem('temps', dels);
-		dels.forEach(function (del) {
-			if (del in cleans) {
-				clearTimeout(cleans[del]);
-				delete cleans[del];
-			}
-		});
-	}
-	m.exec(callback);
-};
-
-// if an image doesn't get used in a post in a timely fashion, delete it
-function cleanup_image_alloc(path) {
-	delete cache.imageAllocCleanups[path];
-	var r = cache.sharedConnection;
-	r.srem('temps', path, function (err, n) {
-		if (err)
-			return winston.warn(err);
-		if (n)
-			fs.unlink(path);
-	});
-}
-
-// catch any dangling images on server startup
-Y.delete_temporaries = function (callback) {
-	var r = this.connect();
-	r.smembers('temps', function (err, temps) {
-		if (err)
-			return callback(err);
-		tail.forEach(temps, function (temp, cb) {
-			fs.unlink(temp, function (err) {
-				if (err)
-					winston.warn('temp: ' + err);
-				else
-					winston.info('del temp ' + temp);
-				cb(null);
-			});
-		}, function (err) {
-			if (err)
-				return callback(err);
-			r.del('temps', callback);
-		});
-	});
-};
-
-Y.record_image_alloc = function (id, alloc, callback) {
-	var r = this.connect();
-	r.setex('image:' + id, IMG_EXPIRY, JSON.stringify(alloc), callback);
-};
-
-Y.obtain_image_alloc = function (id, callback) {
-	var m = this.connect().multi();
-	var key = 'image:' + id;
-	m.get(key);
-	m.setnx('lock:' + key, '1');
-	m.expire('lock:' + key, IMG_EXPIRY);
-	m.exec(function (err, rs) {
-		if (err)
-			return callback(err);
-		if (rs[1] != 1)
-			return callback(Muggle("Image in use."));
-		if (!rs[0])
-			return callback(Muggle("Image lost."));
-		var alloc = JSON.parse(rs[0]);
-		alloc.id = id;
-		callback(null, alloc);
-	});
-};
-
-function make_image_nontemporary(m, alloc) {
-	// We should already hold the lock at this point.
-	var key = 'image:' + alloc.id;
-	m.del(key);
-	m.del('lock:' + key);
-	var cleans = cache.imageAllocCleanups;
-	alloc.paths.forEach(function (path) {
-		if (path && path in cleans) {
-			clearTimeout(cleans[path]);
-			delete cleans[path];
-			m.srem('temps', path);
-		}
-	});
-};
-
-/* END IMAGE ALLOCATIONS */
 
 Y.add_image = function (post, alloc, ip, callback) {
 	var r = this.connect();
@@ -1667,37 +1557,6 @@ Y.teardown = function (board, cb) {
 };
 
 /* HELPERS */
-
-/* Non-wizard-friendly error message */
-function Muggle(message, reason) {
-	if (!(this instanceof Muggle))
-		return new Muggle(message, reason);
-	Error.call(this, message);
-	Error.captureStackTrace(this, this.constructor);
-	this.message = message;
-}
-util.inherits(Muggle, Error);
-exports.Muggle = Muggle;
-
-Muggle.prototype.most_precise_error_message = function () {
-	var deepest = this.message;
-	var muggle = this;
-	var sanity = 10;
-	while (muggle.reason && muggle.reason instanceof Muggle) {
-		muggle = muggle.reason;
-		if (muggle.message && typeof muggle.message == 'string')
-			deepest = muggle.message;
-		if (--sanity <= 0)
-			break;
-	}
-	return deepest;
-};
-
-Muggle.prototype.deepest_reason = function () {
-	if (this.reason && this.reason instanceof Muggle)
-		return this.reason.deepest_reason();
-	return this;
-};
 
 function extract(post, cb) {
 	hooks.trigger('extractPost', post, cb);

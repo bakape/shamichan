@@ -504,7 +504,7 @@ PF.prep_upload = function () {
 	this.uploading = true;
 	this.cancelled = false;
 	this.update_buttons();
-	return {spoiler: this.spoiler, op: this.op || 0, client_id: sessionId};
+	return {spoiler: this.spoiler, op: this.op || 0};
 };
 
 PF.make_upload_form = function () {
@@ -537,7 +537,7 @@ PF.on_image_chosen = function () {
 	for (var k in extra)
 		$('<input type=hidden>').attr('name', k).val(extra[k]
 				).appendTo(this.uploadForm);
-	this.uploadForm.prop('action', 'upload?id=' + sessionId);
+	this.uploadForm.prop('action', '../upload/?id=' + sessionId);
 	this.uploadForm.submit();
 	this.$imageInput.attr('disabled', true);
 	this.$iframe.load(function (event) {
