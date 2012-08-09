@@ -163,6 +163,25 @@ section #banner {
 	top: 12px;
 	right: 8px;
 }
+figure {
+	position: relative;
+}
+.hat, .expanded .hat {
+	background: url('ui/hat.png') no-repeat;
+	position: absolute;
+	left: 10px;
+	top: -90px;
+	width: 70px;
+	height: 141px;
+	display: block;
+}
+article .hat {
+	width: 35px;
+	height: 70px;
+	left: 10px;
+	top: -45px;
+	background-size: 35px 70px;
+}
 #lock {
 	background: url('ui/lock.png') no-repeat left;
 	color: gray;

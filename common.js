@@ -457,9 +457,12 @@ OS.gazou = function (info, toppu) {
 		th = h;
 	}
 	var img = '';
-	if (!this.hideImgs)
-		img = new_tab_link(src, safe('<img src="'+thumb+'" width="'
-				+tw+'" height="'+th+'">'));
+	if (!this.hideImgs) {
+		img = '<img src="'+thumb+'" width="' +tw+'" height="'+th+'">';
+		if (config.IMAGE_HATS)
+			img = '<span class="hat"></span>' + img;
+		img = new_tab_link(src, safe(img));
+	}
 	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
 		caption, safe(' <i>(' + readable_filesize(info.size) + ', ' +
 		w + 'x' + h), info.apng ? ', APNG' : '',
