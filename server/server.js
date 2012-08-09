@@ -526,7 +526,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	});
 	reader.on('begin', function (hctr) {
 		var headers;
-		if (hctr) {
+		if (!config.DEBUG && hctr) {
 			var etag = 'W/' + hctr + '-' + RES.indexHash;
 			var chunks = web.parse_cookie(req.headers.cookie);
 			if (chunks.img == 'no')
