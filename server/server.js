@@ -73,8 +73,6 @@ function synchronize(msg, client) {
 	if (!caps.can_access_board(client.ident, board))
 		return false;
 	var dead_threads = [], count = 0, op;
-	if (_.isEmpty(syncs))
-		return false;
 	for (var k in syncs) {
 		k = parseInt(k, 10);
 		if (db.OPs[k] != k || !db.OP_has_tag(board, k)) {
