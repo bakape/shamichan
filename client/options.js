@@ -225,6 +225,10 @@ function toggle_expansion(img, event) {
 		return;
 	event.preventDefault();
 	var expand = !img.data('thumbSrc');
+	if (expand)
+		img.closest('figure').addClass('expanded');
+	else
+		img.closest('figure').removeClass('expanded');
 	var $imgs = img;
 	if (THREAD && (event.altKey || event.shiftKey)) {
 		var post = img.closest('article');
