@@ -15,7 +15,9 @@ article, aside {
 	padding: 4px 10px;
 }
 aside a, #options {
+	position: relative;
 	cursor: pointer;
+	z-index: 100;
 }
 article figure img {
 	margin-bottom: 0;
