@@ -198,22 +198,20 @@ if (window.devicePixelRatio > 1)
 
 add_spec('inline', 'Inline image expansion', null, 'checkbox');
 
-$(document).on('mouseup', function (event) {
+$(document).on('mouseup', 'img', function (event) {
 	/* Bypass expansion for non-left mouse clicks */
 	if (options.inline && event.which > 1) {
-		var img = $(event.target);
-		if (img.is('img')) {
-			img.data('skipExpand', true);
-			setTimeout(function () {
-				img.removeData('skipExpand');
-			}, 100);
-		}
+		var img = $(this);
+		img.data('skipExpand', true);
+		setTimeout(function () {
+			img.removeData('skipExpand');
+		}, 100);
 	}
 });
 
 $(document).on('click', 'img', function (event) {
 	if (options.inline) {
-		var $target = $(event.target);
+		var $target = $(this);
 		if (!$target.data('skipExpand'))
 			toggle_expansion($target, event);
 	}
@@ -278,7 +276,7 @@ function expand_image($img) {
 	var href = a.attr('href');
 	if (!href)
 		return;
-	var dims = a.prev().text().match(/(\d+)x(\d+)/);
+	var dims = a.siblings('figcaption').text().match(/(\d+)x(\d+)/);
 	if (!dims)
 		return;
 	var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10);
