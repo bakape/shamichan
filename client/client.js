@@ -359,7 +359,7 @@ function set_highlighted_post(num) {
 
 var samePage = new RegExp('^(?:' + THREAD + ')?#(\\d+)$');
 $DOC.on('click', 'a', function (event) {
-	var target = $(event.target);
+	var target = $(this);
 	var href = target.attr('href');
 	if (href && (THREAD || postForm)) {
 		var q = href.match(/#q(\d+)/);
@@ -381,7 +381,10 @@ $DOC.on('click', 'a', function (event) {
 });
 
 $DOC.on('click', 'del', function (event) {
-	$(event.target).toggleClass('reveal');
+	if (!event.spoilt) {
+		event.spoilt = true;
+		$(event.target).toggleClass('reveal');
+	}
 });
 
 $DOC.on('click', 'nav input', function (event) {
