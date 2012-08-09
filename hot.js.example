@@ -7,7 +7,7 @@ this.hot = {
 		graveyard: "/graveyard/",
 		staff: "/staff/",
 	},
-	BASE_CSS: 'base-v25.css',
+	BASE_CSS: 'base-v26.css',
 	BOARD_CSS: {
 		moe: 'moe-v6.css',
 		gar: 'gar-v6.css',
