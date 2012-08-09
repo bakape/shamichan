@@ -415,6 +415,7 @@ function pick_spoiler(metaIndex) {
 	var spoiler = i < n ? imgs.normal[i] : imgs.trans[i - n];
 	return {index: spoiler, next: (i+1) % count};
 }
+exports.pick_spoiler = pick_spoiler;
 
 function new_tab_link(srcEncoded, inside) {
 	return [safe('<a href="' + srcEncoded + '" target="_blank"' +

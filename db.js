@@ -921,14 +921,15 @@ Y.spoiler_image = function (threads, num, callback) {
 		/* no image or already spoilt */
 		if (!info[0] || info[1] || info[2])
 			return callback(null);
-		r.hmset(key, 'spoiler', config.FORCED_SPOILER, function (err) {
+		var index = common.pick_spoiler(-1).index;
+		r.hmset(key, 'spoiler', index, function (err) {
 			if (err)
 				return callback(err);
 
 			if (threads[op])
-				threads[op].push(num);
+				threads[op].push([num, index]);
 			else
-				threads[op] = [num];
+				threads[op] = [[num, index]];
 			callback(null);
 		});
 	});

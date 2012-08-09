@@ -332,14 +332,15 @@ dispatcher[DELETE_IMAGES] = function (msg, op) {
 };
 
 dispatcher[SPOILER_IMAGES] = function (msg, op) {
-	_.each(msg, function (num) {
-		var post = $('#' + num);
+	_.each(msg, function (info) {
+		var post = $('#' + info[0]);
 		var $img = post.children('figure').find('img');
 		if ($img.length) {
-			var sp = spoiler_info(config.FORCED_SPOILER,
-					post.is('section'));
-			$img.replaceWith($('<img>').attr('src', sp.thumb
-				).width(sp.dims[0]).height(sp.dims[1]));
+			var sp = spoiler_info(info[1], post.is('section'));
+			$img.replaceWith($('<img>', {
+				src: sp.thumb,
+				width: sp.dims[0], height: sp.dims[1],
+			}));
 		}
 	});
 };
