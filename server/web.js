@@ -295,7 +295,7 @@ exports.redirect = redirect;
 var redirectJsTmpl = require('fs').readFileSync('tmpl/redirect.html');
 
 function redirect_js(resp, uri) {
-	resp.writeHead(200, web.noCacheHeaders);
+	resp.writeHead(200, noCacheHeaders);
 	resp.write(preamble + '<title>Redirecting...</title>');
 	resp.write('<script>var dest = "' + encodeURI(uri) + '";</script>');
 	resp.end(redirectJsTmpl);
