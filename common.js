@@ -1,4 +1,5 @@
 var config = require('./config');
+var imagerConfig = require('./imager/config');
 var DEFINES = exports;
 DEFINES.INVALID = 0;
 
@@ -30,7 +31,7 @@ DEFINES.S_BOL = 1;
 DEFINES.S_QUOTE = 2;
 DEFINES.S_SPOIL = 3;
 
-var mediaURL = config.MEDIA_URL;
+var mediaURL = imagerConfig.MEDIA_URL;
 
 function is_pubsub(t) {
 	return t >= DEFINES.INSERT_POST && t <= DEFINES.DELETE_THREAD;
@@ -398,13 +399,13 @@ function spoiler_info(index, toppu) {
 	return {
 		thumb: encodeURI(mediaURL + 'kana/spoiler' + (toppu ? '' : 's')
 				+ index + '.png'),
-		dims: toppu ? config.THUMB_DIMENSIONS
-				: config.PINKY_DIMENSIONS,
+		dims: toppu ? imagerConfig.THUMB_DIMENSIONS
+				: imagerConfig.PINKY_DIMENSIONS,
 	};
 }
 
 function pick_spoiler(metaIndex) {
-	var imgs = config.SPOILER_IMAGES;
+	var imgs = imagerConfig.SPOILER_IMAGES;
 	var n = imgs.normal.length;
 	var count = n + imgs.trans.length;
 	var i;
@@ -460,7 +461,7 @@ OS.gazou = function (info, toppu) {
 	var img = '';
 	if (!this.hideImgs) {
 		img = '<img src="'+thumb+'" width="' +tw+'" height="'+th+'">';
-		if (config.IMAGE_HATS)
+		if (imagerConfig.IMAGE_HATS)
 			img = '<span class="hat"></span>' + img;
 		img = new_tab_link(src, safe(img));
 	}

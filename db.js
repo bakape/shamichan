@@ -987,7 +987,7 @@ Y.add_image = function (post, alloc, ip, callback) {
 		var now = new Date().getTime();
 		var n = post_volume({image: true});
 		update_throughput(m, ip, now, post_volume({image: true}));
-		make_image_nontemporary(m, alloc);
+		imager.make_image_nontemporary(m, alloc);
 		m.exec(callback);
 	});
 };

@@ -31,7 +31,7 @@ function lookup_config(key) {
 	return val;
 }
 
-var config_re = /\bconfig\.(\w+)\b/;
+var config_re = /\b(\w+onfig)\.(\w+)\b/;
 
 async.forEachSeries(files, function (file, cb) {
 	if (file.match(/^lib\//)) {
@@ -59,7 +59,7 @@ async.forEachSeries(files, function (file, cb) {
 		var line = lines[j];
 		if (line.match(/^var\s+DEFINES\s*=\s*exports\s*;\s*$/))
 			continue;
-		if (line.match(/^var\s+(config|common)\s*=\s*require.*$/))
+		if (line.match(/^var\s+(\w+onfig|common)\s*=\s*require.*$/))
 			continue;
 		m = line.match(/^DEFINES\.(\w+)\s*=\s*(.+);$/);
 		if (m) {
@@ -80,9 +80,10 @@ async.forEachSeries(files, function (file, cb) {
 			var m = line.match(config_re);
 			if (!m)
 				break;
-			var cfg = lookup_config(m[1]);
+			var dict = m[1] == 'config' ? config : imagerConfig;
+			var cfg = dict[m[2]];
 			if (cfg === undefined) {
-				console.error("No such config var " + m[1]);
+				console.error("No such "+m[1]+" var "+m[2]);
 				process.exit(1);
 			}
 			// Bleh
