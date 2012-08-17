@@ -117,7 +117,7 @@ IU.parse_form = function (err, fields, files) {
 		this.image.spoiler = spoiler;
 	}
 
-	this.image.MD5 = squish_MD5(this.image.hash);
+	this.image.MD5 = index.squish_MD5(this.image.hash);
 	this.image.hash = null;
 
 	this.db.track_temporaries([this.image.path], null,
@@ -338,13 +338,6 @@ function convert(args, callback) {
 		callback(err ? (stderr || err) : null);
 	});
 }
-
-function squish_MD5(hash) {
-	if (typeof hash == 'string')
-		hash = new Buffer(hash, 'hex');
-	return hash.toString('base64').replace(/\//g, '_').replace(/=*$/, '');
-}
-exports.squish_MD5 = squish_MD5;
 
 function perceptual_hash(src, image, callback) {
 	var tmp = path.join(config.MEDIA_DIRS.tmp,

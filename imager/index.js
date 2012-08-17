@@ -148,6 +148,12 @@ exports.make_media_dirs = function (cb) {
 	});
 }
 
+exports.squish_MD5 = function (hash) {
+	if (typeof hash == 'string')
+		hash = new Buffer(hash, 'hex');
+	return hash.toString('base64').replace(/\//g, '_').replace(/=*$/, '');
+};
+
 /* Dumb forwards */
 exports.obtain_image_alloc = function (id, cb) {
 	var onegai = new db.Onegai;

@@ -1,9 +1,9 @@
-var config = require('../config'),
+var imgConfig = require('../imager/config'),
     crypto = require('crypto'),
     db = require('../db'),
     fs = require('fs'),
     path = require('path'),
-    pix = require('../server/pix'),
+    imager = require('../imager'),
     tail = require('../tail'),
     winston = require('winston');
 
@@ -19,14 +19,14 @@ R.recycle_post = function (post, cb) {
 		return cb(null);
 	var r = this.y.connect();
 	var image = post.image
-	var src = pix.media_path('src', image.src);
+	var src = imager.media_path('src', image.src);
 	var toDelete = [];
 	if (image.thumb) {
 		toDelete.push(src);
-		src = pix.media_path('thumb', image.thumb);
+		src = imager.media_path('thumb', image.thumb);
 	}
 	if (image.realthumb) {
-		toDelete.push(pix.media_path('thumb', image.realthumb));
+		toDelete.push(imager.media_path('thumb', image.realthumb));
 	}
 
 	MD5_file(src, function (err, MD5) {
@@ -38,8 +38,8 @@ R.recycle_post = function (post, cb) {
 			return cb(null);
 		}
 		var dest = MD5 + path.extname(src);
-		var dest_path = path.join(config.MEDIA_DIRS.vint, dest);
-		pix.mv_file(src, dest_path, function (err) {
+		var dest_path = imager.media_path('vint', dest);
+		imager.mv_file(src, dest_path, function (err) {
 			if (err)
 				return cb(err);
 			var m = r.multi();
@@ -51,7 +51,7 @@ R.recycle_post = function (post, cb) {
 			m.exec(function (err) {
 				if (err) {
 					// move it back
-					pix.mv_file(dest_path, src,
+					imager.mv_file(dest_path, src,
 							function (e) {
 						if (e)
 							winston.error(e);
@@ -123,7 +123,7 @@ function MD5_file(path, callback) {
 		stream.destroy();
 		/* grr stupid digest() won't give us a Buffer */
 		hash = new Buffer(hash.digest('binary'), 'binary');
-		callback(null, pix.squish_MD5(hash));
+		callback(null, imager.squish_MD5(hash));
 	});
 }
 
