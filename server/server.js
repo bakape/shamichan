@@ -718,6 +718,8 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 	msg = msg[0];
 	if (client.post)
 		return update_post(msg.frag, client);
+	if (!caps.can_access_board(client.ident, client.board))
+		return false;
 	var frag = msg.frag;
 	if (frag && frag.match(/^\s*$/g))
 		return false;
