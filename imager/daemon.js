@@ -166,7 +166,7 @@ IU.process = function (err) {
 		if (rs.apng)
 			image.apng = 1;
 
-		perceptual_hash(tagged_path, function (err, hash) {
+		perceptual_hash(tagged_path, image, function (err, hash) {
 			if (err)
 				return self.failure(err);
 			image.hash = hash;
@@ -346,13 +346,15 @@ function squish_MD5(hash) {
 }
 exports.squish_MD5 = squish_MD5;
 
-function perceptual_hash(src, callback) {
+function perceptual_hash(src, image, callback) {
 	var tmp = '/tmp/hash' + common.random_id() + '.gray';
-	var args = [src + '[0]',
-			'-background', 'white', '-mosaic', '+matte',
+	var args = [src + '[0]'];
+	if (image.dims.width > 1000 || image.dims.height > 1000)
+		args.push('-sample', '800x800');
+	args.push('-background', 'white', '-mosaic', '+matte',
 			'-scale', '16x16!',
 			'-type', 'grayscale', '-depth', '8',
-			tmp];
+			tmp);
 	convert(args, function (err) {
 		if (err)
 			return callback(Muggle('Hashing error.', err));
