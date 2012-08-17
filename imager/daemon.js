@@ -388,10 +388,11 @@ function detect_APNG(fnm, callback) {
 }
 
 function setup_im_args(o, args) {
-	var args = [], dims = o.dims;
+	var args = ['-limit', 'memory', '32', '-limit', 'map', '64'];
+	var dims = o.dims;
+	var samp = dims[0]*2 + 'x' + dims[1]*2;
 	if (o.ext == '.jpg')
-		args.push('-define', 'jpeg:size=' + (dims[0] * 2) + 'x' +
-				(dims[1] * 2));
+		args.push('-define', 'jpeg:size=' + samp);
 	if (!o.setup) {
 		o.src += '[0]';
 		o.dest = 'jpg:' + o.dest;
@@ -403,7 +404,10 @@ function setup_im_args(o, args) {
 		o.quality += '';
 		o.setup = true;
 	}
-	args.push(o.src, '-gamma', '0.454545', '-filter', 'box');
+	args.push(o.src);
+	if (o.ext != '.jpg')
+		args.push('-sample', samp);
+	args.push('-gamma', '0.454545', '-filter', 'box');
 	return args;
 }
 
