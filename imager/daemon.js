@@ -347,7 +347,8 @@ function squish_MD5(hash) {
 exports.squish_MD5 = squish_MD5;
 
 function perceptual_hash(src, image, callback) {
-	var tmp = '/tmp/hash' + common.random_id() + '.gray';
+	var tmp = path.join(config.MEDIA_DIRS.tmp,
+			'hash' + common.random_id() + '.gray');
 	var args = [src + '[0]'];
 	if (image.dims.width > 1000 || image.dims.height > 1000)
 		args.push('-sample', '800x800');
