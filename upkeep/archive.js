@@ -3,7 +3,7 @@ var config = require('../config'),
     winston = require('winston');
 
 // Load hooks
-require('../server/pix');
+require('../imager');
 require('../server/amusement');
 
 var yaku;
