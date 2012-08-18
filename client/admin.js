@@ -2,40 +2,42 @@ var $panel;
 var nopeMsg = 'Nothing selected.';
 
 function show_panel() {
-	if ($panel)
-		return;
 	var specs = [
+		{name: 'Select', kind: 'select'},
 		{name: 'Spoiler', kind: 7},
 		{name: 'Delete Image', kind: 8},
 		{name: 'Delete', kind: 9},
 	];
-	$panel = $('<div></div>').css({
-		position: 'fixed', bottom: '1em', right: '1em',
-		"text-align": 'right'
-	});
-	var first = true;
+	$panel = $('<div></div>', {css: {'margin': '0.5em 0.5em 0.5em 1em'}});
 	_.each(specs, function (spec) {
-		if (!first)
-			$panel.append('<br>');
-		first = false;
-		$('<input type=button>').val(spec.name).data('kind', spec.kind
-				).click(korosu).appendTo($panel);
+		$panel.append($('<input />', {
+			type: 'button',
+			val: spec.name,
+			data: {kind: spec.kind},
+		}), ' ');
 	});
-	$panel.appendTo('body');
+	$panel.on('click', 'input', panel_click).insertBefore(
+			THREAD ? 'hr:last' : $ceiling);
 }
 
-function korosu() {
+function panel_click(event) {
 	var ids = [];
-	$('.selected').each(function () {
+	var $sel = $('.selected');
+	$sel.each(function () {
 		var id = extract_num(parent_post($(this)));
 		if (id)
 			ids.push(id);
 	});
 	var $button = $(this);
-	if (ids.length) {
-		ids.unshift(parseInt($button.data('kind'), 10));
+	var kind = $button.data('kind');
+	if (kind == 'select') {
+		toggle_multi_selecting(null);
+		$button.val(multiSelecting ? 'Deselect' : 'Select');
+	}
+	else if (ids.length) {
+		ids.unshift(parseInt(kind, 10));
 		send(ids);
-		$('.selected').removeClass('selected');
+		$sel.removeClass('selected');
 	}
 	else {
 		var orig = $button.val();
@@ -51,16 +53,20 @@ menuOptions.unshift('Select');
 
 var multiSelecting = false;
 
-menuHandlers['Select'] = function ($post) {
-	var oldTarget = lockTarget;
-	set_lock_target(extract_num($post));
+function toggle_multi_selecting($post) {
+	var oldTarget;
+	if ($post) {
+		oldTarget = lockTarget;
+		set_lock_target(extract_num($post));
+	}
 	with_dom(function () {
 	if (!multiSelecting) {
 		$('body').addClass('multi-select');
 		make_selection_handle().prependTo('article');
 		make_selection_handle().prependTo('section > header');
-		$post.find('.select-handle:first').addClass('selected');
-		show_panel();
+		if ($post)
+			$post.find('.select-handle:first'
+					).addClass('selected');
 		multiSelecting = true;
 	}
 	else {
@@ -69,8 +75,11 @@ menuHandlers['Select'] = function ($post) {
 		multiSelecting = false;
 	}
 	});
-	set_lock_target(oldTarget);
-};
+	if ($post)
+		set_lock_target(oldTarget);
+}
+
+menuHandlers.Select = toggle_multi_selecting;
 
 function make_selection_handle() {
 	return $('<a class="select-handle" href="#"/>');
@@ -104,4 +113,5 @@ $(function () {
 		if (multiSelecting)
 			make_selection_handle().prependTo(target);
 	});
+	show_panel();
 });
