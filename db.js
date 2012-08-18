@@ -1299,7 +1299,8 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 			self.emit('nomatch');
 			return;
 		}
-		self.emit('begin', parseInt(pre_post.hctr, 10) || 0);
+		self.emit('begin', parseInt(pre_post.hctr, 10) || 0,
+				pre_post.locked);
 		pre_post.num = num;
 		pre_post.time = parseInt(pre_post.time, 10);
 

@@ -528,13 +528,15 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		redirect_thread(cb, num, op);
 		yaku.disconnect();
 	});
-	reader.on('begin', function (hctr) {
+	reader.on('begin', function (hctr, locked) {
 		var headers;
 		if (!config.DEBUG && hctr) {
 			var etag = 'W/' + hctr + '-' + RES.indexHash;
 			var chunks = web.parse_cookie(req.headers.cookie);
 			if (chunks.img == 'no')
 				etag += '-noimg';
+			if (locked)
+				etag += '-locked';
 			if (req.headers['if-none-match'] === etag) {
 				yaku.disconnect();
 				return cb(null, 304);
