@@ -938,6 +938,26 @@ Y.spoiler_image = function (threads, num, callback) {
 	});
 };
 
+Y.toggle_thread_lock = function (op, callback) {
+	if (OPs[op] != op)
+		return callback(Muggle('Thread does not exist.'));
+	var r = this.connect();
+	var key = 'thread:' + op;
+	var self = this;
+	r.hexists(key, 'locked', function (err, locked) {
+		if (err)
+			return callback(err);
+		var m = r.multi();
+		if (locked)
+			m.hdel(key, 'locked');
+		else
+			m.hset(key, 'locked', '1');
+		var act = locked ? common.UNLOCK_THREAD : common.LOCK_THREAD;
+		self._log(m, op, act, []);
+		m.exec(callback);
+	});
+};
+
 /* END BOILERPLATE CITY */
 
 function warn(err) {

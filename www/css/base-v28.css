@@ -190,6 +190,9 @@ article .hat {
 	float: right;
 	padding-left: 15px;
 }
+.locked:after {
+	content: "This thread is locked.";
+}
 .locked > header nav:after {
 	content: " (locked)";
 }

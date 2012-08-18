@@ -1,12 +1,12 @@
 var $panel;
-var nopeMsg = 'Nothing selected.';
 
 function show_panel() {
 	var specs = [
 		{name: 'Select', kind: 'select'},
-		{name: 'Spoiler', kind: 7},
-		{name: 'Delete Image', kind: 8},
+		{name: 'Spoil', kind: 7},
+		{name: 'Lewd', kind: 8},
 		{name: 'Delete', kind: 9},
+		{name: 'Lock', kind: 11},
 	];
 	$panel = $('<div></div>', {css: {'margin': '0.5em 0.5em 0.5em 1em'}});
 	_.each(specs, function (spec) {
@@ -30,10 +30,8 @@ function panel_click(event) {
 	});
 	var $button = $(this);
 	var kind = $button.data('kind');
-	if (kind == 'select') {
+	if (kind == 'select')
 		toggle_multi_selecting(null);
-		$button.val(multiSelecting ? 'Deselect' : 'Select');
-	}
 	else if (ids.length) {
 		ids.unshift(parseInt(kind, 10));
 		send(ids);
@@ -42,8 +40,8 @@ function panel_click(event) {
 	else {
 		var orig = $button.val();
 		var caption = _.bind($button.val, $button);
-		caption(nopeMsg);
-		if (orig != nopeMsg)
+		caption('Nope.');
+		if (orig != 'Nope.')
 			_.delay(caption, 2000, orig);
 	}
 }

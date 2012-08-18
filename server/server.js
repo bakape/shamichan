@@ -971,6 +971,21 @@ dispatcher[common.DELETE_POSTS] = function (nums, client) {
 	return true;
 };
 
+dispatcher[common.LOCK_THREAD] = function (ops, client) {
+	if (!caps.is_mod_ident(client.ident))
+		return false;
+	if (!check('id...', ops))
+		return false;
+
+	ops = ops.filter(function (op) { return db.OPs[op] == op; });
+	async.forEach(ops, client.db.toggle_thread_lock.bind(client.db),
+				function (err) {
+		if (err)
+			client.report(Muggle("Couldn't (un)lock thread.",err));
+	});
+	return true;
+};
+
 dispatcher[common.DELETE_IMAGES] = function (nums, client) {
 	if (!caps.is_mod_ident(client.ident))
 		return false;
