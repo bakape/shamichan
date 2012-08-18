@@ -794,11 +794,11 @@ function allocate_post(msg, client, callback) {
 	}
 
 	if (post.op)
-		throttled(null);
+		client.db.check_thread_locked(post.op, checked);
 	else
-		client.db.check_throttle(ip, throttled);
+		client.db.check_throttle(ip, checked);
 
-	function throttled(err) {
+	function checked(err) {
 		if (err)
 			return callback(err);
 		client.db.reserve_post(post.op, ip, got_reservation);
@@ -855,6 +855,7 @@ function get_post_view(post) {
 	if (post.image) view.image = post.image;
 	if (post.dice) view.dice = post.dice;
 	if (post.auth) view.auth = post.auth;
+	if (post.locked) view.locked = post.locked;
 	return view;
 }
 

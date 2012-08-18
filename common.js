@@ -575,6 +575,8 @@ OS.mono = function (data) {
 };
 
 OS.monomono = function (data, cls) {
+	if (data.locked)
+		cls = cls ? cls+' locked' : 'locked';
 	var o = safe('<section id="' + data.num +
 		(cls ? '" class="' + cls : '') +
 		'" data-sync="' + (data.hctr || 0) +

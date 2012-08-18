@@ -945,6 +945,15 @@ function warn(err) {
 		winston.warn('Warning:', err);
 }
 
+Y.check_thread_locked = function (op, callback) {
+	this.connect().hexists('thread:' + op, 'locked', function (err, lock) {
+		if (err)
+			callback(err);
+		else
+			callback(lock ? Muggle('Thread is locked.') : null);
+	});
+};
+
 Y.check_throttle = function (ip, callback) {
 	this.connect().exists('ip:' + ip, function (err, exists) {
 		if (err)

@@ -190,6 +190,12 @@ article .hat {
 	float: right;
 	padding-left: 15px;
 }
+.locked > header nav:after {
+	content: " (locked)";
+}
+.locked aside {
+	display: none;
+}
 .omit {
 	line-height: 200%;
 }
