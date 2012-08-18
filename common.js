@@ -42,37 +42,34 @@ exports.is_pubsub = is_pubsub;
 
 function FSM(start) {
 	this.state = start;
-	this.acts = {};
-	this.ons = {};
-	this.wilds = {};
-	this.preflights = {};
+	this.spec = {acts: {}, ons: {}, wilds: {}, preflights: {}};
 }
 exports.FSM = FSM;
 
 // Handlers on arriving to a new state
 FSM.prototype.on = function (key, f) {
-	var ons = this.ons[key];
+	var ons = this.spec.ons[key];
 	if (ons)
 		ons.push(f);
 	else
-		this.ons[key] = [f];
+		this.spec.ons[key] = [f];
 	return this;
 };
 
 // Sanity checks before attempting a transition
 FSM.prototype.preflight = function (key, f) {
-	var pres = this.preflights[key];
+	var pres = this.spec.preflights[key];
 	if (pres)
 		pres.push(f);
 	else
-		this.preflights[key] = [f];
+		this.spec.preflights[key] = [f];
 };
 
 // Specify transitions and an optional handler function
-FSM.prototype.act = function (spec, on_func) {
-	var halves = spec.split('->');
+FSM.prototype.act = function (trans_spec, on_func) {
+	var halves = trans_spec.split('->');
 	if (halves.length != 2)
-		throw new Error("Bad FSM spec: " + spec);
+		throw new Error("Bad FSM spec: " + trans_spec);
 	var parts = halves[0].split(',');
 	var dest = halves[1].match(/^\s*(\w+)\s*$/)[1];
 	var tok;
@@ -87,11 +84,11 @@ FSM.prototype.act = function (spec, on_func) {
 			throw new Error("Tokenless FSM action: " + part);
 		var src = m[1];
 		if (src == '*')
-			this.wilds[tok] = dest;
+			this.spec.wilds[tok] = dest;
 		else {
-			var acts = this.acts[src];
+			var acts = this.spec.acts[src];
 			if (!acts)
-				this.acts[src] = acts = {};
+				this.spec.acts[src] = acts = {};
 			acts[tok] = dest;
 		}
 	}
@@ -101,15 +98,16 @@ FSM.prototype.act = function (spec, on_func) {
 };
 
 FSM.prototype.feed = function (ev, param) {
-	var from = this.state, acts = this.acts[from];
-	var to = (acts && acts[ev]) || this.wilds[ev];
+	var spec = this.spec;
+	var from = this.state, acts = spec.acts[from];
+	var to = (acts && acts[ev]) || spec.wilds[ev];
 	if (to && from != to) {
-		var ps = this.preflights[to];
+		var ps = spec.preflights[to];
 		for (var i = 0; ps && i < ps.length; i++)
 			if (!ps[i].call(this, param))
 				return false;
 		this.state = to;
-		var fs = this.ons[to];
+		var fs = spec.ons[to];
 		for (var i = 0; fs && i < fs.length; i++)
 			fs[i].call(this, param);
 	}
