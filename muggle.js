@@ -7,6 +7,7 @@ function Muggle(message, reason) {
 	Error.call(this, message);
 	Error.captureStackTrace(this, this.constructor);
 	this.message = message;
+	this.reason = reason;
 }
 util.inherits(Muggle, Error);
 exports.Muggle = Muggle;

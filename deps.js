@@ -29,6 +29,7 @@ exports.SERVER_DEPS = [
 	'deps.js',
 	'get.js',
 	'hooks.js',
+	'muggle.js',
 	'tail.js',
 	'lib/underscore.js',
 	'imager/config.js',
