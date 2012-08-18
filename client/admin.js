@@ -30,6 +30,11 @@ function panel_click(event) {
 	});
 	var $button = $(this);
 	var kind = $button.data('kind');
+
+	/* On a thread page there's only one thread to lock, so... */
+	if (kind == 11 && THREAD && !ids.length)
+		ids = [THREAD];
+
 	if (kind == 'select')
 		toggle_multi_selecting(null);
 	else if (ids.length) {
