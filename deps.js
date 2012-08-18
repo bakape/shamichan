@@ -39,6 +39,7 @@ exports.SERVER_DEPS = [
 	'server/amusement.js',
 	'server/caps.js',
 	'server/msgcheck.js',
+	'server/okyaku.js',
 	'server/panel.js',
 	'server/perceptual.c',
 	'server/server.js',

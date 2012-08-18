@@ -26,6 +26,7 @@ exports.dbCache = {
 
 var HOT = exports.hot = {};
 var RES = exports.resources = {};
+exports.clients = {};
 
 exports.reload_hot = function (cb) {
 	fs.readFile('hot.js', 'UTF-8', function (err, js) {

@@ -11,6 +11,7 @@ var _ = require('../lib/underscore'),
     hooks = require('../hooks'),
     imager = require('../imager'),
     Muggle = require('../muggle').Muggle,
+    okyaku = require('./okyaku'),
     STATE = require('./state'),
     twitter = require('./twitter'),
     tripcode = require('./tripcode'),
@@ -22,23 +23,11 @@ require('../imager/daemon');
 
 var RES = STATE.resources;
 
-var clients = {};
-var dispatcher = {};
+var dispatcher = okyaku.dispatcher;
 
 /* I always use encodeURI anyway */
 var escape = common.escape_html;
 var safe = common.safe;
-
-function Okyaku(socket, ip) {
-	this.socket = socket;
-	this.ident = caps.lookup_ident(ip);
-	this.watching = {};
-}
-var OK = Okyaku.prototype;
-
-OK.send = function (msg) {
-	this.socket.write(JSON.stringify([msg]));
-};
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	function checked(err, ident) {
@@ -61,12 +50,12 @@ function synchronize(msg, client) {
 	if (!check(['id', 'string', 'id=>nat', 'boolean'], msg))
 		return false;
 	var id = msg[0], board = msg[1], syncs = msg[2], live = msg[3];
-	if (id in clients) {
+	if (id in STATE.clients) {
 		winston.error("Duplicate client id " + id);
 		return false;
 	}
 	client.id = id;
-	clients[id] = client;
+	STATE.clients[id] = client;
 	if (client.synced) {
 		//winston.warn("Client tried to sync twice");
 		/* Sync logic is buggy; allow for now */
@@ -143,26 +132,6 @@ function synchronize(msg, client) {
 	return true;
 }
 
-OK.on_update = function (op, kind, msg) {
-	// Special cases for operations that overwrite a client's state
-	if (this.post && kind == common.DELETE_POSTS) {
-		var nums = JSON.parse(msg)[0].slice(2);
-		if (nums.indexOf(this.post.num) >= 0)
-			this.post = null;
-	}
-	else if (this.post && kind == common.DELETE_THREAD) {
-		if (this.post.num == op || this.post.op == op)
-			this.post = null;
-	}
-
-	this.socket.write(msg);
-};
-
-OK.on_thread_sink = function (thread, err) {
-	/* TODO */
-	winston.error(thread, 'sank:', err);
-};
-
 function tamashii(num) {
 	var op = db.OPs[num];
 	if (op && caps.can_access_thread(this.ident, op))
@@ -209,7 +178,7 @@ function setup_imager_relay(cb) {
 }
 
 function image_status(client_id, status) {
-	var client = clients[client_id];
+	var client = STATE.clients[client_id];
 	if (client)
 		client.send([0, common.IMAGE_STATUS, status]);
 }
@@ -636,60 +605,6 @@ web.route_get_auth(/^\/dead\/(src|thumb)\/(\w+\.\w{3})$/,
 });
 
 
-OK.on_message = function (data) {
-	var msg;
-	try { msg = JSON.parse(data); }
-	catch (e) {}
-	var type = common.INVALID;
-	if (msg) {
-		if (this.post && typeof msg == 'string')
-			type = common.UPDATE_POST;
-		else if (msg.constructor == Array)
-			type = msg.shift();
-	}
-	if (!this.synced && type != common.SYNCHRONIZE)
-		type = common.INVALID;
-	var func = dispatcher[type];
-	if (!func || !func(msg, this)) {
-		this.report(Muggle("Bad protocol.", new Error(
-				"Invalid message: " + JSON.stringify(data))));
-	}
-};
-
-OK.on_close = function () {
-	if (this.id) {
-		delete clients[this.id];
-		this.id = null;
-	}
-	this.synced = false;
-	var db = this.db;
-	if (db) {
-		db.kikanai();
-		if (this.post)
-			this.finish_post(function () {
-				db.disconnect();
-			});
-		else
-			db.disconnect();
-	}
-};
-
-function pad3(n) {
-	return (n < 10 ? '00' : (n < 100 ? '0' : '')) + n;
-}
-
-OK.report = function (error) {
-	var msg = 'Server error.';
-	if (error instanceof Muggle) {
-		msg = error.most_precise_error_message();
-		error = error.deepest_reason();
-	}
-	winston.error('Error by ' + JSON.stringify(this.ident) + ': '
-			+ (error || msg));
-	this.send([0, common.INVALID, msg]);
-	this.synced = false;
-}
-
 /* Must be prepared to receive callback instantly */
 function valid_links(frag, state, ident, callback) {
 	var links = {};
@@ -921,22 +836,6 @@ function debug_command(client, frag) {
 		client.socket.close();
 }
 
-OK.finish_post = function (callback) {
-	/* TODO: Should we check this.uploading? */
-	var self = this;
-	this.db.finish_post(this.post, function (err) {
-		if (err)
-			callback(err);
-		else {
-			if (self.post) {
-				self.last_num = self.post.num;
-				self.post = null;
-			}
-			callback(null);
-		}
-	});
-}
-
 dispatcher[common.FINISH_POST] = function (msg, client) {
 	if (!check([], msg))
 		return false;
@@ -1071,7 +970,7 @@ function start_server() {
 				ip = ff;
 		}
 
-		var client = new Okyaku(socket, ip);
+		var client = new okyaku.Okyaku(socket, ip);
 		socket.on('data', client.on_message.bind(client));
 		socket.on('close', client.on_close.bind(client));
 	});

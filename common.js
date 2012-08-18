@@ -46,6 +46,12 @@ function FSM(start) {
 }
 exports.FSM = FSM;
 
+FSM.prototype.clone = function () {
+	var second = new FSM(this.state);
+	second.spec = this.spec;
+	return second;
+};
+
 // Handlers on arriving to a new state
 FSM.prototype.on = function (key, f) {
 	var ons = this.spec.ons[key];
