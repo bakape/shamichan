@@ -36,7 +36,7 @@ DEFINES.S_SPOIL = 3;
 var mediaURL = imagerConfig.MEDIA_URL;
 
 function is_pubsub(t) {
-	return t >= DEFINES.INSERT_POST && t <= DEFINES.DELETE_THREAD;
+	return t > 0 && t < 30;
 }
 exports.is_pubsub = is_pubsub;
 

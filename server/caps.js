@@ -1,4 +1,5 @@
 var authcommon = require('../authcommon'),
+    check = require('./msgcheck').check,
     common = require('../common'),
     config = require('../config'),
     db = require('../db'),
@@ -56,6 +57,24 @@ exports.augment_oneesama = function (oneeSama, opts) {
 		oneeSama.hook('headerName', denote_priv);
 	if (is_admin_ident(ident) && opts.board == 'graveyard')
 		oneeSama.hook('mediaPaths', dead_media_paths);
+};
+
+exports.mod_handler = function (func) {
+	return function (nums, client) {
+		if (!is_mod_ident(client.ident))
+			return false;
+		var opts = nums.shift();
+		if (!check({when: 'string'}, opts) || !check('id...', nums))
+			return false;
+		if (!(opts.when in authcommon.delayDurations))
+			return false;
+		var delay = authcommon.delayDurations[opts.when];
+		if (!delay)
+			func(nums, client);
+		else
+			setTimeout(func.bind(null, nums, client), delay*1000);
+		return true;
+	};
 };
 
 function parse_ip(ip) {

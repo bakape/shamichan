@@ -16,11 +16,22 @@ function show_panel() {
 			data: {kind: spec.kind},
 		}), ' ');
 	});
-	$panel.on('click', 'input', panel_click).insertBefore(
+	$panel.on('click', 'input[type=button]', panel_action).insertBefore(
 			THREAD ? 'hr:last' : $ceiling);
+
+	_.each(delayNames, function (when, i) {
+		var id = 'delay-' + when;
+		var $label = $('<label/>', {text: when, 'for': id});
+		var $radio = $('<input/>', {
+			id: id, type: 'radio', val: when, name: 'delay',
+		});
+		if (i == 0)
+			$radio.prop('checked', true);
+		$panel.append($radio, $label, ' ');
+	});
 }
 
-function panel_click(event) {
+function panel_action(event) {
 	var ids = [];
 	var $sel = $('.selected');
 	$sel.each(function () {
@@ -30,15 +41,16 @@ function panel_click(event) {
 	});
 	var $button = $(this);
 	var kind = $button.data('kind');
+	if (kind == 'select')
+		return toggle_multi_selecting(null);
 
 	/* On a thread page there's only one thread to lock, so... */
 	if (kind == 11 && THREAD && !ids.length)
 		ids = [THREAD];
 
-	if (kind == 'select')
-		toggle_multi_selecting(null);
-	else if (ids.length) {
-		ids.unshift(parseInt(kind, 10));
+	if (ids.length) {
+		var when = $('input:radio[name=delay]:checked').val();
+		ids.unshift(parseInt(kind, 10), {when: when});
 		send(ids);
 		$sel.removeClass('selected');
 	}

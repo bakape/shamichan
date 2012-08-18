@@ -949,12 +949,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	return true;
 }
 
-dispatcher[common.DELETE_POSTS] = function (nums, client) {
-	if (!caps.is_mod_ident(client.ident))
-		return false;
-	if (!check('id...', nums))
-		return false;
-
+dispatcher[common.DELETE_POSTS] = caps.mod_handler(function (nums, client) {
 	/* Omit to-be-deleted posts that are inside to-be-deleted threads */
 	var ops = {}, OPs = db.OPs;
 	nums.forEach(function (num) {
@@ -970,36 +965,23 @@ dispatcher[common.DELETE_POSTS] = function (nums, client) {
 		if (err)
 			client.report(Muggle("Couldn't delete.", err));
 	});
-	return true;
-};
+});
 
-dispatcher[common.LOCK_THREAD] = function (ops, client) {
-	if (!caps.is_mod_ident(client.ident))
-		return false;
-	if (!check('id...', ops))
-		return false;
-
-	ops = ops.filter(function (op) { return db.OPs[op] == op; });
-	async.forEach(ops, client.db.toggle_thread_lock.bind(client.db),
+dispatcher[common.LOCK_THREAD] = caps.mod_handler(function (nums, client) {
+	nums = nums.filter(function (op) { return db.OPs[op] == op; });
+	async.forEach(nums, client.db.toggle_thread_lock.bind(client.db),
 				function (err) {
 		if (err)
 			client.report(Muggle("Couldn't (un)lock thread.",err));
 	});
-	return true;
-};
+});
 
-dispatcher[common.DELETE_IMAGES] = function (nums, client) {
-	if (!caps.is_mod_ident(client.ident))
-		return false;
-	if (!check('id...', nums))
-		return false;
-
+dispatcher[common.DELETE_IMAGES] = caps.mod_handler(function (nums, client) {
 	client.db.remove_images(nums, function (err, dels) {
 		if (err)
 			client.report(Muggle("Couldn't delete images.", err));
 	});
-	return true;
-};
+});
 
 dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 	if (!check(['string'], msg))
@@ -1020,19 +1002,12 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 	return true;
 };
 
-dispatcher[common.SPOILER_IMAGES] = function (nums, client) {
-	/* grr copy pasted */
-	if (!caps.is_mod_ident(client.ident))
-		return false;
-	if (!check('id...', nums))
-		return false;
-
+dispatcher[common.SPOILER_IMAGES] = caps.mod_handler(function (nums, client) {
 	client.db.force_image_spoilers(nums, function (err) {
 		if (err)
 			client.report(Muggle("Couldn't spoiler images.", err));
 	});
-	return true;
-};
+});
 
 dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	if (!caps.is_admin_ident(client.ident))
