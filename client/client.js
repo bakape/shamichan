@@ -327,14 +327,10 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 
 dispatcher[LOCK_THREAD] = function (msg, op) {
 	$('#' + op).addClass('locked');
-	if (CurThread && op == THREAD)
-		CurThread.set('locked', true);
 };
 
 dispatcher[UNLOCK_THREAD] = function (msg, op) {
 	$('#' + op).removeClass('locked');
-	if (CurThread && op == THREAD)
-		CurThread.set('locked', false);
 };
 
 dispatcher[DELETE_IMAGES] = function (msg, op) {
