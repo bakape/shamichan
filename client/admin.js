@@ -1,23 +1,31 @@
-var $panel;
+var $selectButton, $controls;
 
 function show_panel() {
 	var specs = [
-		{name: 'Select', kind: 'select'},
 		{name: 'Spoil', kind: 7},
 		{name: 'Lewd', kind: 8},
 		{name: 'Delete', kind: 9},
 		{name: 'Lock', kind: 11},
 	];
-	$panel = $('<div></div>', {css: {'margin': '0.5em 0.5em 0.5em 1em'}});
+	var $panel = $('<div></div>', {
+		css: {'margin': '0.5em 0.5em 0.5em 1em'},
+	});
+
+	$selectButton = $('<input />', {
+		type: 'button', val: 'Select',
+		click: function (e) { toggle_multi_selecting(); },
+	});
+	$panel.append($selectButton, ' ');
+
+	$controls = $('<span></span>').hide();
 	_.each(specs, function (spec) {
-		$panel.append($('<input />', {
+		$controls.append($('<input />', {
 			type: 'button',
 			val: spec.name,
 			data: {kind: spec.kind},
 		}), ' ');
 	});
-	$panel.on('click', 'input[type=button]', panel_action).insertBefore(
-			THREAD ? 'hr:last' : $ceiling);
+	$controls.on('click', 'input[type=button]', panel_action);
 
 	_.each(delayNames, function (when, i) {
 		var id = 'delay-' + when;
@@ -27,8 +35,10 @@ function show_panel() {
 		});
 		if (i == 0)
 			$radio.prop('checked', true);
-		$panel.append($radio, $label, ' ');
+		$controls.append($radio, $label, ' ');
 	});
+
+	$panel.append($controls).insertBefore(THREAD ? 'hr:last' : $ceiling);
 }
 
 function panel_action(event) {
@@ -41,8 +51,6 @@ function panel_action(event) {
 	});
 	var $button = $(this);
 	var kind = $button.data('kind');
-	if (kind == 'select')
-		return toggle_multi_selecting(null);
 
 	/* On a thread page there's only one thread to lock, so... */
 	if (kind == 11 && THREAD && !ids.length)
@@ -75,19 +83,22 @@ function toggle_multi_selecting($post) {
 		set_lock_target(extract_num($post));
 	}
 	with_dom(function () {
-	if (!multiSelecting) {
+	multiSelecting = !multiSelecting;
+	if (multiSelecting) {
 		$('body').addClass('multi-select');
 		make_selection_handle().prependTo('article');
 		make_selection_handle().prependTo('section > header');
 		if ($post)
 			$post.find('.select-handle:first'
 					).addClass('selected');
-		multiSelecting = true;
+		$controls.show();
+		$selectButton.val('X');
 	}
 	else {
 		$('body').removeClass('multi-select');
 		$('.select-handle').remove();
-		multiSelecting = false;
+		$controls.hide();
+		$selectButton.val('Select');
 	}
 	});
 	if ($post)
