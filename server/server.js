@@ -724,6 +724,8 @@ function allocate_post(msg, client, callback) {
 	function got_reservation(err, num) {
 		if (err)
 			return callback(err);
+		if (!client.synced)
+			return callback(Muggle('Dropped; post aborted.'));
 		if (client.post)
 			return callback(Muggle('Already have a post.'));
 		client.post = post;
@@ -743,6 +745,8 @@ function allocate_post(msg, client, callback) {
 				client.post = null;
 			return callback(Muggle("Attachment error.", err));
 		}
+		if (!client.synced)
+			return callback(Muggle('Dropped; post aborted.'));
 		post.links = rs.links;
 		if (rs.image)
 			extra.image_alloc = rs.image;
