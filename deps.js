@@ -36,6 +36,7 @@ exports.SERVER_DEPS = [
 	'imager/daemon.js',
 	'imager/db.js',
 	'imager/index.js',
+	'imager/jobs.js',
 	'server/amusement.js',
 	'server/caps.js',
 	'server/msgcheck.js',

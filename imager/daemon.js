@@ -6,9 +6,11 @@ var async = require('async'),
     index = require('./'),
     formidable = require('formidable'),
     fs = require('fs'),
+    jobs = require('./jobs'),
     Muggle = require('../muggle').Muggle,
     path = require('path'),
     urlParse = require('url').parse,
+    util = require('util'),
     winston = require('winston');
 
 function new_upload(req, resp) {
@@ -333,10 +335,27 @@ function identify(taggedName, callback) {
 	});
 }
 
-function convert(args, callback) {
-	child_process.execFile(convertBin, args, function (err,stdout,stderr) {
-		callback(err ? (stderr || err) : null);
+function ConvertJob(args, src) {
+	jobs.Job.call(this);
+	this.args = args;
+	this.src = src;
+}
+util.inherits(ConvertJob, jobs.Job);
+
+ConvertJob.prototype.perform_job = function () {
+	var self = this;
+	child_process.execFile(convertBin, this.args,
+				function (err, stdout, stderr) {
+		self.finish_job(err ? (stderr || err) : null);
 	});
+};
+
+ConvertJob.prototype.describe_job = function () {
+	return "ImageMagick conversion of " + this.src;
+};
+
+function convert(args, src, callback) {
+	jobs.schedule(new ConvertJob(args, src), callback);
 }
 
 function perceptual_hash(src, image, callback) {
@@ -349,7 +368,7 @@ function perceptual_hash(src, image, callback) {
 			'-scale', '16x16!',
 			'-type', 'grayscale', '-depth', '8',
 			tmp);
-	convert(args, function (err) {
+	convert(args, src, function (err) {
 		if (err)
 			return callback(Muggle('Hashing error.', err));
 		var bin = path.join(__dirname, 'perceptual');
@@ -417,7 +436,7 @@ function resize_image(o, comp, callback) {
 	else
 		args.push('-layers', 'mosaic', '+matte');
 	args.push('-strip', '-quality', o.quality, comp ? o.compDest : o.dest);
-	convert(args, function (err) {
+	convert(args, o.src, function (err) {
 		if (err)
 			callback(Muggle("Resizing error.", err));
 		else
