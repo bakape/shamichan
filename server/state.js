@@ -47,7 +47,9 @@ exports.reload_hot = function (cb) {
 			delete HOT[k];
 		});
 		_.extend(HOT, hot.hot);
-		hooks.trigger('reloadHot', HOT, cb);
+		read_exits('exits.txt', function () {
+			hooks.trigger('reloadHot', HOT, cb);
+		});
 	});
 };
 
@@ -102,5 +104,22 @@ function make_mod_js(cb) {
 			cb(stderr.trim());
 		else
 			cb(null, stdout);
+	});
+}
+
+function read_exits(file, cb) {
+	fs.readFile(file, 'UTF-8', function (err, lines) {
+		if (err)
+			return cb(err);
+		var exits = [], dest = HOT.BANS;
+		lines.split(/\n/g).forEach(function (line) {
+			var m = line.match(/^(?:^#\d)*(\d+\.\d+\.\d+\.\d+)/);
+			if (!m)
+				return;
+			var exit = m[1];
+			if (dest.indexOf(exit) < 0)
+				dest.push(exit);
+		});
+		cb(null);
 	});
 }
