@@ -2,8 +2,8 @@ var $selectButton, $controls;
 
 function show_panel() {
 	var specs = [
-		{name: 'Spoil', kind: 7},
-		{name: 'Lewd', kind: 8},
+		{name: 'Lewd', kind: 7},
+		{name: 'Porn', kind: 8},
 		{name: 'Delete', kind: 9},
 		{name: 'Lock', kind: 11},
 	];
