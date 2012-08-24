@@ -51,7 +51,9 @@ dispatcher[UPDATE_BANNER] = function (msg, op) {
 			$banner = $('<span id="banner"/>').insertAfter(dest);
 	}
 	if ($banner) {
-		if (msg)
+		if (_.isArray(msg))
+			construct_banner(msg);
+		else if (msg)
 			$banner.text(msg);
 		else {
 			$banner.remove();
@@ -59,6 +61,17 @@ dispatcher[UPDATE_BANNER] = function (msg, op) {
 		}
 	}
 };
+
+function construct_banner(parts) {
+	$banner.empty();
+	_.forEach(parts, function (part) {
+		if (part.href)
+			$('<a></a>', _.extend({target: '_blank'}, part)
+					).appendTo($banner);
+		else
+			$banner.append(document.createTextNode(part));
+	});
+}
 
 dispatcher[EXECUTE_JS] = function (msg, op) {
 	if (THREAD != op)

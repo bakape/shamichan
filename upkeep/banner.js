@@ -7,6 +7,7 @@ var _ = require('../lib/underscore'),
 var RADIO_IDENT = {auth: 'Radio', ip: '127.0.0.1'};
 var RADIO_MOUNT = '/radio';
 var POLL_URL = 'http://localhost:5555/poll.xsl';
+var M3U_URL = 'http://doushio.com/radio.m3u';
 var SHORT_INTERVAL = 3 * 1000;
 var LONG_INTERVAL = 30 * 1000;
 
@@ -82,7 +83,9 @@ function format_now_playing(mounts) {
 		return;
 	var count = parseInt(radio.listeners, 10);
 	count = count + ' listener' + (count == 1 ? '' : 's');
-	var msg = count + (radio.title ? (': ' + radio.title) : '');
+	var msg = [{text: count, href: M3U_URL}];
+	if (radio.title)
+		msg.push(': ' + radio.title);
 	return {board: board, op: op, message: msg};
 }
 
