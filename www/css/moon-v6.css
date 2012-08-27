@@ -13,7 +13,7 @@ b.admin {
 b.moderator {
 	color: purple;
 }
-body, pre, #trans {
+body, pre, .themed {
 	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro";
 	font-size: 12pt;
 }

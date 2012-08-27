@@ -120,7 +120,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		postSM.feed('alloc', msg);
 		delete msg.num;
 
-		if (!CurThread || !postForm || !postForm.post)
+		if (!CurThread || !postForm || !postForm.el)
 			return;
 		/* Unify with code below once we have a fuller model */
 		var post = UnknownThread.get(num);
@@ -134,7 +134,7 @@ dispatcher[INSERT_POST] = function (msg) {
 			post = new Post({id: num});
 		}
 		var article = new Article({model: post, id: num,
-				el: postForm.post[0]});
+				el: postForm.el});
 		post.view = article;
 		CurThread.add(post);
 		add_post_links(post, msg.links);
@@ -232,7 +232,7 @@ dispatcher[MOVE_THREAD] = function (msg, op) {
 
 dispatcher[IMAGE_STATUS] = function (msg) {
 	if (postForm)
-		PF[msg[0].func].call(postForm, msg[0].arg);
+		ComposerView.prototype[msg[0].func].call(postForm, msg[0].arg);
 };
 
 dispatcher[INSERT_IMAGE] = function (msg) {

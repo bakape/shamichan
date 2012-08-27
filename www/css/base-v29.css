@@ -245,6 +245,11 @@ article .hat {
 .selected {
 	background: url('ui/sel.png') no-repeat center center;
 }
+.themed {
+	background-color: transparent;
+	color: #444;
+	outline: none;
+}
 
 #feedback {
 	color: gray;
@@ -272,7 +277,7 @@ pre {
 	width: auto;
 	visibility: hidden;
 }
-pre, #trans {
+pre, .themed {
 	border: 0;
 	padding: 0;
 }
@@ -283,11 +288,8 @@ pre, #trans {
 	width: 78px;
 }
 #trans {
-	background-color: transparent;
-	color: #444;
 	display: inline;
 	margin: 0 0 -3px 0;
-	outline: none;
 	overflow-y: hidden;
 	resize: none;
 	text-wrap: none;

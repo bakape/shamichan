@@ -7,7 +7,7 @@ connSM.on('desynced', postSM.feeder('desync'));
 
 postSM.act('* + desync -> none', function () {
 	if (postForm) {
-		postForm.post.removeClass('editing');
+		postForm.$el.removeClass('editing');
 		postForm.input.val('');
 		postForm.finish();
 	}
@@ -33,7 +33,7 @@ postSM.act('none + sync, draft, alloc + done -> ready', function () {
 });
 
 postSM.act('ready + new -> draft', function (aside) {
-	postForm = new PostForm(aside, aside.parents('section'));
+	postForm = new ComposerView(aside);
 });
 
 postSM.preflight('draft', function (aside) {
@@ -68,21 +68,32 @@ function insert_pbs() {
 		$ceiling.after('<aside class="act"><a>New thread</a></aside>');
 }
 
-function PostForm(dest, section) {
+var ComposerView = Backbone.View.extend({
+
+initialize: function (dest) {
+	var section = dest.closest('section');
+	var post;
 	if (section.length) {
 		this.thread = section;
+		post = $('<article/>');
 		this.op = extract_num(section);
-		this.post = $('<article/>');
 	}
 	else
-		this.post = this.thread = $('<section/>');
+		post = this.thread = $('<section/>');
+	this.setElement(post[0]);
 
 	this.buffer = $('<p/>');
 	this.line_buffer = $('<p/>');
-	this.meta = $('<header><a class="nope"><b/></a>' +
-			' <time/></header>');
-	this.input = $('<textarea name="body" id="trans" rows="1"/>');
+	this.meta = $('<header><a class="nope"><b/></a> <time/></header>');
+	this.input = $('<textarea name="body" id="trans" rows="1" '
+			+ 'class="themed" />');
 	this.submit = $('<input type="button" value="Done"/>');
+	this.$subject = $('<input/>', {
+		id: 'subject',
+		'class': 'themed',
+		maxlength: 80,
+		width: '80%',
+	});
 	this.blockquote = $('<blockquote/>');
 	this.$sizer = $('<pre/>').appendTo('body');
 	this.pending = '';
@@ -91,7 +102,7 @@ function PostForm(dest, section) {
 	this.imouto = new OneeSama(function (num) {
 		var $s = $('#' + num);
 		if (!$s.is('section'))
-			$s = $s.parents('section');
+			$s = $s.closest('section');
 		if ($s.is('section'))
 			this.callback(this.post_ref(num, extract_num($s)));
 		else
@@ -106,35 +117,36 @@ function PostForm(dest, section) {
 	oneeSama.trigger('imouto', this.imouto);
 
 	shift_replies(section);
-	var post = this.post;
 	this.blockquote.append(this.buffer, this.line_buffer, this.input);
+	post.append(this.meta, this.blockquote);
+	if (!this.op) {
+		post.append('<label for="subject">Subject: </label>',
+				this.$subject);
+		this.blockquote.hide();
+	}
 	this.uploadForm = this.make_upload_form();
-	this.uploadStatus = this.uploadForm.find('strong');
-	post.append(this.meta, this.blockquote, this.uploadForm);
+	post.append(this.uploadForm);
 	oneeSama.trigger('draft', post);
 
 	this.propagate_ident();
+	dest.replaceWith(post);
 
 	this.input.keydown($.proxy(this, 'on_key_down'));
-	var self = this;
-	this.input.input(function () {
-		self.on_input();
-	});
+	this.input.input(_.bind(this.on_input, this, undefined));
 
-	if (!this.op)
-		this.blockquote.hide();
-	dest.replaceWith(post);
-	if (!this.op)
+	if (this.op) {
+		this.resize_input();
+		this.input.focus();
+	}
+	else {
 		post.after('<hr/>');
-
+		this.$subject.focus().input($.proxy(this,'propagate_subject'));
+		this.propagate_subject();
+	}
 	$('aside').remove();
+},
 
-	this.resize_input();
-	this.input.focus();
-}
-var PF = PostForm.prototype;
-
-PF.propagate_ident = function () {
+propagate_ident: function () {
 	if (this.num)
 		return;
 	var parsed = parse_name($name.val().trim());
@@ -151,9 +163,14 @@ PF.propagate_ident = function () {
 		tag.attr('href', 'mailto:' + email).attr('class', 'email');
 	else
 		tag.removeAttr('href').attr('class', 'nope');
-};
+},
 
-PF.on_allocation = function (msg) {
+propagate_subject: function () {
+	var noSubject = !this.$subject.val().trim();
+	this.$imageInput.attr('disabled', noSubject);
+},
+
+on_allocation: function (msg) {
 	var num = msg.num;
 	ownPosts[num] = true;
 	this.num = num;
@@ -162,11 +179,11 @@ PF.on_allocation = function (msg) {
 	this.meta.replaceWith(header);
 	this.meta = header;
 	if (this.op)
-		this.post.addClass('editing');
+		this.$el.addClass('editing');
 	else
 		spill_page();
-	oneeSama.trigger('afterInsert', this.post);
-	this.post.attr('id', num);
+	oneeSama.trigger('afterInsert', this.$el);
+	this.$el.attr('id', num);
 
 	if (msg.image)
 		this.insert_uploaded(msg.image);
@@ -178,12 +195,14 @@ PF.on_allocation = function (msg) {
 	else
 		this.blockquote.after(this.submit);
 	if (!this.op) {
+		this.$subject.siblings('label').andSelf().remove();
 		this.blockquote.show();
+		this.resize_input();
 		this.input.focus();
 	}
-};
+},
 
-PF.on_image_alloc = function (msg) {
+on_image_alloc: function (msg) {
 	if (this.cancelled)
 		return;
 	if (!this.num && !this.sentAllocRequest) {
@@ -194,9 +213,9 @@ PF.on_image_alloc = function (msg) {
 	else {
 		send([INSERT_IMAGE, msg]);
 	}
-};
+},
 
-function entryScrollLock() {
+entry_scroll_lock: function () {
 	/* NOPE */
 	if (lockTarget == PAGE_BOTTOM) {
 		/* Special keyup<->down case */
@@ -204,12 +223,12 @@ function entryScrollLock() {
 		if (height > lockKeyHeight)
 			window.scrollBy(0, height - lockKeyHeight + 1);
 	}
-}
+},
 
-PF.on_key_down = function (event) {
+on_key_down: function (event) {
 	if (lockTarget == PAGE_BOTTOM) {
 		lockKeyHeight = $DOC.height();
-		setTimeout(entryScrollLock, 0);
+		_.defer($.proxy(this, 'entry_scroll_lock'));
 	}
 	switch (event.which) {
 	case 83:
@@ -231,9 +250,9 @@ PF.on_key_down = function (event) {
 		this.on_input(val);
 		break;
 	}
-};
+},
 
-PF.on_input = function (val) {
+on_input: function (val) {
 	var input = this.input;
 	var start = input[0].selectionStart, end = input[0].selectionEnd;
 	if (val === undefined)
@@ -247,7 +266,7 @@ PF.on_input = function (val) {
 			break;
 		/* Substitute */
 		var t = m[4] || '';
-		t = find_time_param(m[3]) || find_time_param(m[1]) || t;
+		t = this.find_time_arg(m[3]) || this.find_time_arg(m[1]) || t;
 		var v = '>>>/watch?v=' + m[2] + t;
 		var old = m[0].length;
 		val = val.substr(0, m.index) + v + val.substr(m.index + old);
@@ -288,9 +307,9 @@ PF.on_input = function (val) {
 
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 	this.resize_input(val);
-};
+},
 
-PF.add_ref = function (num) {
+add_ref: function (num) {
 	/* If a >>link exists, put this one on the next line */
 	var input = this.input;
 	var val = input.val();
@@ -303,9 +322,9 @@ PF.add_ref = function (num) {
 	input[0].selectionStart = input.val().length;
 	this.on_input();
 	input.focus();
-};
+},
 
-function find_time_param(params) {
+find_time_arg: function (params) {
 	if (!params || params.indexOf('t=') < 0)
 		return false;
 	params = params.split('&');
@@ -315,27 +334,27 @@ function find_time_param(params) {
 			return pair;
 	}
 	return false;
-}
+},
 
-PF.resize_input = function (val) {
+resize_input: function (val) {
 	var input = this.input;
 	if (typeof val != 'string')
 		val = input.val();
 
 	this.$sizer.text(val);
-	var left = input.offset().left - this.post.offset().left;
+	var left = input.offset().left - this.$el.offset().left;
 	var size = this.$sizer.width() + INPUT_ROOM;
 	size = Math.max(size, inputMinSize - left);
 	input.css('width', size + 'px');
-};
+},
 
-PF.upload_status = function (msg) {
+upload_status: function (msg) {
 	if (this.cancelled)
 		return;
 	this.uploadStatus.text(msg);
-};
+},
 
-PF.upload_error = function (msg) {
+upload_error: function (msg) {
 	if (this.cancelled)
 		return;
 	this.$imageInput.attr('disabled', false);
@@ -344,9 +363,9 @@ PF.upload_error = function (msg) {
 	this.update_buttons();
 	if (this.uploadForm)
 		this.uploadForm.find('input[name=alloc]').remove();
-};
+},
 
-PF.insert_uploaded = function (info) {
+insert_uploaded: function (info) {
 	var form = this.uploadForm, op = this.op;
 	insert_image(info, form.siblings('header'), !op);
 	this.$imageInput.siblings('strong').andSelf().add(this.$cancel
@@ -359,16 +378,16 @@ PF.insert_uploaded = function (info) {
 	this.submit.css({'margin-left': '0'});
 	this.update_buttons();
 	/* Stop obnoxious wrap-around-image behaviour */
-	var $img = this.post.find('img');
+	var $img = this.$el.find('img');
 	this.blockquote.css({
 		'margin-left': $img.css('margin-right'),
 		'padding-left': $img.width(),
 	});
 
 	this.resize_input();
-};
+},
 
-PF.make_alloc_request = function (text, image) {
+make_alloc_request: function (text, image) {
 	var nonce = random_id();
 	nonces[nonce] = true;
 	this.nonce = nonce;
@@ -383,13 +402,14 @@ PF.make_alloc_request = function (text, image) {
 	}
 	opt('name', $name.val().trim());
 	opt('email', $email.val().trim());
+	opt('subject', this.$subject.val().trim());
 	opt('frag', text);
 	opt('image', image);
 	opt('op', this.op);
 	return msg;
-};
+},
 
-PF.commit = function (text) {
+commit: function (text) {
 	var lines;
 	if (text.indexOf('\n') >= 0) {
 		lines = text.split('\n');
@@ -432,16 +452,16 @@ PF.commit = function (text) {
 		line_buffer.append(document.createTextNode(text));
 		line_buffer[0].normalize();
 	}
-};
+},
 
-PF.flush_pending = function () {
+flush_pending: function () {
 	if (this.pending) {
 		send(this.pending);
 		this.pending = '';
 	}
-};
+},
 
-PF.cancel = function () {
+cancel: function () {
 	if (this.uploading) {
 		this.$iframe.remove();
 		this.$iframe = $('<iframe src="" name="upload"/></form>');
@@ -451,9 +471,9 @@ PF.cancel = function () {
 	}
 	else
 		this.finish_wrapped();
-};
+},
 
-PF.finish = function () {
+finish: function () {
 	if (this.num) {
 		this.flush_pending();
 		this.commit(this.input.val());
@@ -471,22 +491,20 @@ PF.finish = function () {
 		this.preserve = true;
 	}
 	postSM.feed('done');
-};
+},
 
-PF.finish_wrapped = _.wrap(PF.finish, with_dom);
-
-PF.remove = function () {
+remove: function () {
 	if (!this.preserve) {
 		if (!this.op)
-			this.post.next('hr').remove();
-		this.post.remove();
+			this.$el.next('hr').remove();
+		this.$el.remove();
 	}
 	this.$sizer.remove();
 	if (this.$iframe)
 		this.$iframe.remove();
-};
+},
 
-PF.update_buttons = function () {
+update_buttons: function () {
 	var allocWait = this.sentAllocRequest && !this.num;
 	var d = this.uploading || allocWait;
 	/* Beware of undefined! */
@@ -496,29 +514,36 @@ PF.update_buttons = function () {
 		this.$cancel.hide();
 	else
 		this.$cancel.show();
-};
+},
 
-PF.prep_upload = function () {
+prep_upload: function () {
 	this.uploadStatus.text('Uploading...');
 	this.input.focus();
 	this.uploading = true;
 	this.cancelled = false;
 	this.update_buttons();
 	return {spoiler: this.spoiler, op: this.op || 0};
-};
+},
 
-PF.make_upload_form = function () {
+make_upload_form: function () {
 	var form = $('<form method="post" enctype="multipart/form-data" '
-		+ 'target="upload">'
-		+ '<input type="button" value="Cancel"/>'
-		+ '<input type="file" name="image" accept="image/*"/> '
-		+ '<input type="button" id="toggle"> <strong/></form>');
-	this.$cancel = form.find('input[value=Cancel]').click($.proxy(this,
-			'cancel'));
+		+ 'target="upload"></form>');
+	this.$cancel = $('<input>', {
+		type: 'button', value: 'Cancel',
+		click: $.proxy(this, 'cancel'),
+	});
+	this.$imageInput = $('<input>', {
+		type: 'file', id: 'image', name: 'image', accept: 'image/*',
+		change: $.proxy(this, 'on_image_chosen'),
+	});
+	this.$toggle = $('<input>', {
+		type: 'button', id: 'toggle',
+		click: $.proxy(this, 'on_toggle'),
+	});
+	this.uploadStatus = $('<strong/>');
+	form.append(this.$cancel, this.$imageInput, this.$toggle, ' ',
+			this.uploadStatus);
 	this.$iframe = $('<iframe src="" name="upload"/>').appendTo('body');
-	this.$imageInput = form.find('input[name=image]').change(
-			$.proxy(this, 'on_image_chosen'));
-	this.$toggle = form.find('#toggle').click($.proxy(this, 'on_toggle'));
 	if (nashi.upload) {
 		this.$imageInput.hide();
 		this.$toggle.hide();
@@ -526,9 +551,9 @@ PF.make_upload_form = function () {
 	this.spoiler = 0;
 	this.nextSpoiler = -1;
 	return form;
-};
+},
 
-PF.on_image_chosen = function () {
+on_image_chosen: function () {
 	if (!this.$imageInput.val()) {
 		this.uploadStatus.text('');
 		return;
@@ -555,9 +580,9 @@ PF.on_image_chosen = function () {
 		postForm.upload_error(error);
 	});
 	this.update_buttons();
-};
+},
 
-PF.on_toggle = function (event) {
+on_toggle: function (event) {
 	var self = this;
 	if (!this.uploading && !this.uploaded) {
 		event.preventDefault();
@@ -576,4 +601,11 @@ PF.on_toggle = function (event) {
 		self.$toggle.css('background-image', 'url("'
 				+ mediaURL + 'kana/' + path + '")');
 	}
-};
+},
+
+});
+
+(function () {
+	var CV = ComposerView.prototype;
+	CV.finish_wrapped = _.wrap(CV.finish, with_dom);
+})();

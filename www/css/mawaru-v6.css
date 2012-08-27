@@ -30,7 +30,7 @@ body {
 	color: #eee;
 	background: black url('95.png');
 }
-body, pre, #trans {
+body, pre, .themed {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
 }
@@ -75,7 +75,7 @@ li:hover {
 #lock, .scroll-lock header {
 	background-image: url('ui/invlock.png');
 }
-#trans {
+.themed {
 	color: gray;
 }
 

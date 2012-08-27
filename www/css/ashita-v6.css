@@ -26,7 +26,7 @@ article.editing em {
 article.editing li {
 	color: #ddd;
 }
-article.editing #trans {
+article.editing .themed {
 	color: #333;
 }
 b.admin {
@@ -36,7 +36,7 @@ body {
 	background-color: #1d1f21;
 	color: #c5c8c6;
 }
-body, pre, #trans {
+body, pre, .themed {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
 }
@@ -71,7 +71,7 @@ li:hover {
 #lock, .scroll-lock header {
 	background-image: url('ui/invlock.png');
 }
-#trans {
+.themed {
 	color: #999;
 }
 

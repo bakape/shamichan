@@ -115,7 +115,8 @@ window.fun = function () {
 	send([33, THREAD]);
 };
 
-override(PF, 'make_alloc_request', function (orig, text, img) {
+override(ComposerView.prototype, 'make_alloc_request',
+			function (orig, text, img) {
 	var msg = orig.call(this, text, img);
 	if ($('#authname').attr('checked'))
 		msg.auth = AUTH;
