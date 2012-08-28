@@ -38,6 +38,8 @@ function drop_shita(e) {
 	xhr.setRequestHeader('Accept', 'application/json');
 	xhr.onreadystatechange = upload_shita;
 	xhr.send(fd);
+
+	postForm.notify_uploading();
 }
 
 function upload_shita() {

@@ -1,4 +1,4 @@
-var postForm;
+var saku, postForm;
 var nonces = {};
 
 connSM.on('synced', postSM.feeder('sync'));
@@ -18,6 +18,7 @@ postSM.act('none + sync, draft, alloc + done -> ready', function () {
 	if (postForm) {
 		postForm.remove();
 		postForm = null;
+		saku = null;
 	}
 	insert_pbs();
 
@@ -33,7 +34,16 @@ postSM.act('none + sync, draft, alloc + done -> ready', function () {
 });
 
 postSM.act('ready + new -> draft', function (aside) {
-	postForm = new ComposerView(aside);
+	var op = null;
+	var $sec = aside.closest('section');
+	if ($sec.length) {
+		op = extract_num($sec);
+	}
+	else {
+		$sec = $('<section/>');
+	}
+	saku = new Saku({op: op});
+	postForm = new ComposerView({model: saku, dest: aside, thread: $sec});
 });
 
 postSM.preflight('draft', function (aside) {
@@ -68,18 +78,24 @@ function insert_pbs() {
 		$ceiling.after('<aside class="act"><a>New thread</a></aside>');
 }
 
+var Saku = Backbone.Model.extend({
+
+idAttribute: 'num',
+
+initialize: function () {
+},
+
+});
+
 var ComposerView = Backbone.View.extend({
 
 initialize: function (dest) {
-	var section = dest.closest('section');
-	var post;
-	if (section.length) {
-		this.thread = section;
-		post = $('<article/>');
-		this.op = extract_num(section);
-	}
-	else
-		post = this.thread = $('<section/>');
+
+	this.model.on('change', this.render_buttons, this);
+
+	var attrs = this.model.attributes;
+	var op = attrs.op;
+	var post = op ? $('<article/>') : this.options.thread;
 	this.setElement(post[0]);
 
 	this.buffer = $('<p/>');
@@ -116,10 +132,10 @@ initialize: function (dest) {
 	this.imouto.hook('spoilerTag', touchable_spoiler_tag);
 	oneeSama.trigger('imouto', this.imouto);
 
-	shift_replies(section);
+	shift_replies(this.options.thread);
 	this.blockquote.append(this.buffer, this.line_buffer, this.input);
 	post.append(this.meta, this.blockquote);
-	if (!this.op) {
+	if (!op) {
 		post.append('<label for="subject">Subject: </label>',
 				this.$subject);
 		this.blockquote.hide();
@@ -129,12 +145,12 @@ initialize: function (dest) {
 	oneeSama.trigger('draft', post);
 
 	this.propagate_ident();
-	dest.replaceWith(post);
+	this.options.dest.replaceWith(post);
 
 	this.input.keydown($.proxy(this, 'on_key_down'));
 	this.input.input(_.bind(this.on_input, this, undefined));
 
-	if (this.op) {
+	if (op) {
 		this.resize_input();
 		this.input.focus();
 	}
@@ -147,7 +163,7 @@ initialize: function (dest) {
 },
 
 propagate_ident: function () {
-	if (this.num)
+	if (this.model.get('num'))
 		return;
 	var parsed = parse_name($name.val().trim());
 	var meta = this.meta;
@@ -173,12 +189,13 @@ propagate_subject: function () {
 on_allocation: function (msg) {
 	var num = msg.num;
 	ownPosts[num] = true;
-	this.num = num;
+	this.model.set({num: num});
 	this.flush_pending();
 	var header = $(flatten(oneeSama.atama(msg)).join(''));
 	this.meta.replaceWith(header);
 	this.meta = header;
-	if (this.op)
+	var op = this.model.get('op');
+	if (op)
 		this.$el.addClass('editing');
 	else
 		spill_page();
@@ -187,14 +204,13 @@ on_allocation: function (msg) {
 
 	if (msg.image)
 		this.insert_uploaded(msg.image);
-	else
-		this.update_buttons();
+
 	this.submit.click($.proxy(this, 'finish_wrapped'));
 	if (this.uploadForm)
 		this.uploadForm.append(this.submit);
 	else
 		this.blockquote.after(this.submit);
-	if (!this.op) {
+	if (!op) {
 		this.$subject.siblings('label').andSelf().remove();
 		this.blockquote.show();
 		this.resize_input();
@@ -203,12 +219,12 @@ on_allocation: function (msg) {
 },
 
 on_image_alloc: function (msg) {
-	if (this.cancelled)
+	var attrs = this.model.attributes;
+	if (attrs.cancelled)
 		return;
-	if (!this.num && !this.sentAllocRequest) {
+	if (!attrs.num && !attrs.sentAllocRequest) {
 		send([INSERT_POST, this.make_alloc_request(null, msg)]);
-		this.sentAllocRequest = true;
-		this.update_buttons();
+		this.model.set({sentAllocRequest: true});
 	}
 	else {
 		send([INSERT_IMAGE, msg]);
@@ -286,7 +302,7 @@ on_input: function (val) {
 		var ok = val.substr(0, nl);
 		val = val.substr(nl+1);
 		input.val(val);
-		if (this.sentAllocRequest || ok.match(/[^ ]/))
+		if (this.model.get('sentAllocRequest') || ok.match(/[^ ]/))
 			this.commit(ok + '\n');
 	}
 	else {
@@ -349,34 +365,31 @@ resize_input: function (val) {
 },
 
 upload_status: function (msg) {
-	if (this.cancelled)
+	if (this.model.get('cancelled'))
 		return;
 	this.uploadStatus.text(msg);
 },
 
 upload_error: function (msg) {
-	if (this.cancelled)
+	if (this.model.get('cancelled'))
 		return;
-	this.$imageInput.attr('disabled', false);
 	this.uploadStatus.text(msg);
-	this.uploading = false;
-	this.update_buttons();
+	this.model.set({uploading: false});
 	if (this.uploadForm)
 		this.uploadForm.find('input[name=alloc]').remove();
 },
 
 insert_uploaded: function (info) {
-	var form = this.uploadForm, op = this.op;
+	var form = this.uploadForm, op = this.model.get('op');
 	insert_image(info, form.siblings('header'), !op);
 	this.$imageInput.siblings('strong').andSelf().add(this.$cancel
 			).remove();
 	form.find('#toggle').remove();
 	this.flush_pending();
-	this.uploading = false;
-	this.uploaded = true;
-	this.sentAllocRequest = true;
 	this.submit.css({'margin-left': '0'});
-	this.update_buttons();
+	this.model.set({uploading: false, uploaded: true,
+			sentAllocRequest: true});
+
 	/* Stop obnoxious wrap-around-image behaviour */
 	var $img = this.$el.find('img');
 	this.blockquote.css({
@@ -405,7 +418,7 @@ make_alloc_request: function (text, image) {
 	opt('subject', this.$subject.val().trim());
 	opt('frag', text);
 	opt('image', image);
-	opt('op', this.op);
+	opt('op', this.model.get('op'));
 	return msg;
 },
 
@@ -430,12 +443,12 @@ commit: function (text) {
 	this.char_count += text.length;
 
 	/* Either get an allocation or send the committed text */
-	if (!this.num && !this.sentAllocRequest) {
+	var attrs = this.model.attributes;
+	if (!attrs.num && !attrs.sentAllocRequest) {
 		send([INSERT_POST, this.make_alloc_request(text, null)]);
-		this.sentAllocRequest = true;
-		this.update_buttons();
+		this.model.set({sentAllocRequest: true});
 	}
-	else if (this.num)
+	else if (attrs.num)
 		send(text);
 	else
 		this.pending += text;
@@ -462,27 +475,29 @@ flush_pending: function () {
 },
 
 cancel: function () {
-	if (this.uploading) {
+	if (this.model.get('uploading')) {
 		this.$iframe.remove();
 		this.$iframe = $('<iframe src="" name="upload"/></form>');
 		this.$iframe.appendTo('body');
 		this.upload_error('');
-		this.cancelled = true;
+		this.model.set({cancelled: true});
 	}
 	else
 		this.finish_wrapped();
 },
 
 finish: function () {
-	if (this.num) {
+	if (this.model.get('num')) {
 		this.flush_pending();
 		this.commit(this.input.val());
 		this.input.remove();
 		this.submit.remove();
 		if (this.uploadForm)
 			this.uploadForm.remove();
-		if (this.$iframe)
+		if (this.$iframe) {
 			this.$iframe.remove();
+			this.$iframe = null;
+		}
 		this.imouto.fragment(this.line_buffer.text());
 		this.buffer.replaceWith(this.buffer.contents());
 		this.line_buffer.remove();
@@ -495,34 +510,37 @@ finish: function () {
 
 remove: function () {
 	if (!this.preserve) {
-		if (!this.op)
+		if (!this.model.get('op'))
 			this.$el.next('hr').remove();
 		this.$el.remove();
 	}
 	this.$sizer.remove();
-	if (this.$iframe)
+	if (this.$iframe) {
 		this.$iframe.remove();
+		this.$iframe = null;
+	}
 },
 
-update_buttons: function () {
-	var allocWait = this.sentAllocRequest && !this.num;
-	var d = this.uploading || allocWait;
+render_buttons: function () {
+	var attrs = this.model.attributes;
+	var allocWait = attrs.sentAllocRequest && !attrs.num;
+	var d = attrs.uploading || allocWait;
 	/* Beware of undefined! */
-	this.submit.attr('disabled', !!d);
-	this.$cancel.attr('disabled', !!allocWait);
-	if (this.num && !this.uploading)
-		this.$cancel.hide();
-	else
-		this.$cancel.show();
+	this.submit.prop('disabled', !!d);
+	this.$cancel.prop('disabled', !!allocWait);
+	this.$cancel.toggle(!attrs.num || attrs.uploading);
+	this.$imageInput.prop('disabled', attrs.uploading);
 },
 
 prep_upload: function () {
 	this.uploadStatus.text('Uploading...');
 	this.input.focus();
-	this.uploading = true;
-	this.cancelled = false;
-	this.update_buttons();
-	return {spoiler: this.spoiler, op: this.op || 0};
+	var attrs = this.model.attributes;
+	return {spoiler: attrs.spoiler, op: attrs.op || 0};
+},
+
+notify_uploading: function () {
+	this.model.set({uploading: true, cancelled: false});
 },
 
 make_upload_form: function () {
@@ -548,8 +566,7 @@ make_upload_form: function () {
 		this.$imageInput.hide();
 		this.$toggle.hide();
 	}
-	this.spoiler = 0;
-	this.nextSpoiler = -1;
+	this.model.set({spoiler: 0, nextSpoiler: -1});
 	return form;
 },
 
@@ -564,7 +581,6 @@ on_image_chosen: function () {
 				).appendTo(this.uploadForm);
 	this.uploadForm.prop('action', '../upload/?id=' + sessionId);
 	this.uploadForm.submit();
-	this.$imageInput.attr('disabled', true);
 	this.$iframe.load(function (event) {
 		if (!postForm)
 			return;
@@ -579,22 +595,22 @@ on_image_chosen: function () {
 			error = 'Unknown upload error.';
 		postForm.upload_error(error);
 	});
-	this.update_buttons();
+	this.notify_uploading();
 },
 
 on_toggle: function (event) {
 	var self = this;
-	if (!this.uploading && !this.uploaded) {
+	var attrs = this.model.attributes;
+	if (!attrs.uploading && !attrs.uploaded) {
 		event.preventDefault();
-		if (this.spoiler) {
-			this.spoiler = 0;
+		if (attrs.spoiler) {
+			this.model.set({spoiler: 0});
 			/* XXX: Removing the style attr is buggy... */
 			set_image('pane.png');
 			return;
 		}
-		var pick = pick_spoiler(this.nextSpoiler);
-		this.spoiler = pick.index;
-		this.nextSpoiler = pick.next;
+		var pick = pick_spoiler(attrs.nextSpoiler);
+		this.model.set({spoiler: pick.index, nextSpoiler: pick.next});
 		set_image('spoil' + pick.index + '.png');
 	}
 	function set_image(path) {

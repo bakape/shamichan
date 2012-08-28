@@ -238,7 +238,7 @@ dispatcher[IMAGE_STATUS] = function (msg) {
 dispatcher[INSERT_IMAGE] = function (msg) {
 	var focus = get_focus();
 	var num = msg[0];
-	if (postForm && postForm.num == num)
+	if (saku && saku.get('num') == num)
 		return postForm.insert_uploaded(msg[1]);
 	var hd = $('#' + num + ' > header');
 	if (hd.length) {
