@@ -101,6 +101,9 @@ h1:before {
 h1:after {
 	content: " =";
 }
+h3 {
+	color: #0e0;
+}
 li:hover {
 	background-color: white;
 }

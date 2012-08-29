@@ -627,6 +627,7 @@ var insertSpec = [{
 	name: 'opt string',
 	email: 'opt string',
 	auth: 'opt string',
+	subject: 'opt string',
 }];
 
 dispatcher[common.INSERT_POST] = function (msg, client) {
@@ -645,7 +646,7 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 	if (config.DEBUG)
 		debug_command(client, frag);
 
-	allocate_post(msg, client, function (err, alloc) {
+	allocate_post(msg, client, function (err) {
 		if (err)
 			client.report(Muggle("Allocation failure.", err));
 	});
@@ -679,8 +680,17 @@ function allocate_post(msg, client, callback) {
 
 	if (msg.op)
 		post.op = msg.op;
-	else if (!image_alloc)
-		return callback(Muggle('Image missing.'));
+	else {
+		if (!image_alloc)
+			return callback(Muggle('Image missing.'));
+		var subject = (msg.subject || '').trim();
+		subject = subject.replace(config.EXCLUDE_REGEXP, '');
+		subject = subject.replace(/[「」]/g, '');
+		subject = subject.slice(0, config.SUBJECT_MAX_LENGTH);
+		if (!subject)
+			return callback(Muggle('Subject missing.'));
+		post.subject = subject;
+	}
 
 	/* TODO: Check against client.watching? */
 	if (msg.name) {
@@ -759,25 +769,9 @@ function allocate_post(msg, client, callback) {
 			return callback(Muggle("Couldn't allocate post.",err));
 		}
 		post.body = body;
-		callback(null, get_post_view(post));
+		callback(null);
 	}
 	return true;
-}
-
-function get_post_view(post) {
-	var view = {num: post.num, body: post.body, time: post.time};
-	if (post.nonce) view.nonce = post.nonce;
-	if (post.op) view.op = post.op;
-	if (post.name) view.name = post.name;
-	if (post.trip) view.trip = post.trip;
-	if (post.email) view.email = post.email;
-	if (post.editing) view.editing = post.editing;
-	if (post.links) view.links = post.links;
-	if (post.image) view.image = post.image;
-	if (post.dice) view.dice = post.dice;
-	if (post.auth) view.auth = post.auth;
-	if (post.locked) view.locked = post.locked;
-	return view;
 }
 
 function update_post(frag, client) {

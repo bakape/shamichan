@@ -46,6 +46,9 @@ h2 {
 	color: #900;
 	font-family: Tahoma;
 }
+h3 {
+	color: yellow;
+}
 header, figcaption, figcaption a, small, .act {
 	color: #555;
 }

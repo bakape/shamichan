@@ -538,6 +538,8 @@ OS.atama = function (data) {
 	var auth = data.auth;
 	var header = auth ? [safe('<b class="'),auth.toLowerCase(),safe('">')]
 			: [safe('<b>')];
+	if (data.subject)
+		header.push(safe('<h3>「'), data.subject, safe('」</h3> '));
 	header.push(data.name || DEFINES.ANON);
 	if (data.trip)
 		header.push(safe(' <code>' + data.trip + '</code>'));
@@ -561,14 +563,14 @@ OS.atama = function (data) {
 	return header;
 };
 
-OS.monogatari = function (data, t) {
-	var header = this.atama(data);
+OS.monogatari = function (data, toppu) {
+	var tale = {header: this.atama(data)};
 	this.dice = data.dice;
 	var body = this.karada(data.body);
-	body = [safe('<blockquote>'), body, safe('</blockquote>')];
-	if (!data.image || data.hideimg)
-		return {header: header, body: body};
-	return {header: header, image: this.gazou(data.image, t), body: body};
+	tale.body = [safe('<blockquote>'), body, safe('</blockquote>')];
+	if (data.image && !data.hideimg)
+		tale.image = this.gazou(data.image, toppu);
+	return tale;
 };
 
 OS.mono = function (data) {

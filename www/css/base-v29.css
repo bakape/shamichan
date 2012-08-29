@@ -71,6 +71,10 @@ figure img {
 h1, h2 {
 	text-align: center;
 }
+h3 {
+	display: inline;
+	font-size: inherit;
+}
 header {
 	background: url('ui/box.png') left 3px no-repeat;
 	margin-left: -3px;

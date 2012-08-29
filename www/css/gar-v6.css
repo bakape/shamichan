@@ -45,6 +45,9 @@ h2 {
 	color: black;
 	font-family: Tahoma;
 }
+h3 {
+	color: #730;
+}
 header, header nav a, small {
 	color: #444;
 }

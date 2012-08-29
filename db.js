@@ -477,6 +477,8 @@ Y.reserve_post = function (op, ip, callback) {
 	}
 };
 
+var optPostFields = 'name trip email auth subject'.split(' ');
+
 Y.insert_post = function (msg, body, extra, callback) {
 	var r = this.connect();
 	if (!this.tag)
@@ -493,15 +495,11 @@ Y.insert_post = function (msg, body, extra, callback) {
 	}
 
 	var view = {time: msg.time, ip: ip, state: msg.state.join()};
+	optPostFields.forEach(function (field) {
+		if (msg[field])
+			view[field] = msg[field];
+	});
 	var tagKey = 'tag:' + tag_key(this.tag);
-	if (msg.name)
-		view.name = msg.name;
-	if (msg.trip)
-		view.trip = msg.trip;
-	if (msg.email)
-		view.email = msg.email;
-	if (msg.auth)
-		view.auth = msg.auth;
 	if (op)
 		view.op = op;
 	else {
