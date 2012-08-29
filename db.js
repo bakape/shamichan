@@ -875,15 +875,18 @@ Y.remove_image = function (threads, num, callback) {
 		self.hide_image(key, function (err) {
 			if (err)
 				return callback(err);
-			r.hset(key, 'hideimg', 1, function (err) {
+			r.hset(key, 'hideimg', 1, function (err, affected) {
 				if (err)
 					return callback(err);
+				if (!affected)
+					return callback(null);
 
 				if (threads[op])
 					threads[op].push(num);
 				else
 					threads[op] = [num];
-				callback(null);
+				r.hincrby('thread:' + op, 'imgctr', -1,
+						callback);
 			});
 		});
 	});
