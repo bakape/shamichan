@@ -89,6 +89,12 @@ initialize: function () {
 
 var ComposerView = Backbone.View.extend({
 
+events: {
+	'input #subject': model_link('subject'),
+	'keydown #trans': 'on_key_down',
+	'click #done': 'finish_wrapped',
+},
+
 initialize: function (dest) {
 
 	this.model.on('change', this.render_buttons, this);
@@ -103,7 +109,7 @@ initialize: function (dest) {
 	this.meta = $('<header><a class="nope"><b/></a> <time/></header>');
 	this.input = $('<textarea name="body" id="trans" rows="1" '
 			+ 'class="themed" />');
-	this.submit = $('<input type="button" value="Done"/>');
+	this.submit = $('<input type="button" id="done" value="Done"/>');
 	this.$subject = $('<input/>', {
 		id: 'subject',
 		'class': 'themed',
@@ -147,7 +153,7 @@ initialize: function (dest) {
 	this.propagate_ident();
 	this.options.dest.replaceWith(post);
 
-	this.input.keydown($.proxy(this, 'on_key_down'));
+	//this.input.keydown($.proxy(this, 'on_key_down'));
 	this.input.input(_.bind(this.on_input, this, undefined));
 
 	if (op) {
@@ -156,8 +162,8 @@ initialize: function (dest) {
 	}
 	else {
 		post.after('<hr/>');
-		this.$subject.focus().input($.proxy(this,'propagate_subject'));
-		this.propagate_subject();
+		this.$subject.focus();
+		this.model.set({needSubject: true});
 	}
 	$('aside').remove();
 },
@@ -181,15 +187,10 @@ propagate_ident: function () {
 		tag.removeAttr('href').attr('class', 'nope');
 },
 
-propagate_subject: function () {
-	var noSubject = !this.$subject.val().trim();
-	this.$imageInput.attr('disabled', noSubject);
-},
-
 on_allocation: function (msg) {
 	var num = msg.num;
 	ownPosts[num] = true;
-	this.model.set({num: num});
+	this.model.set({num: num, needSubject: false});
 	this.flush_pending();
 	var header = $(flatten(oneeSama.atama(msg)).join(''));
 	this.meta.replaceWith(header);
@@ -205,7 +206,6 @@ on_allocation: function (msg) {
 	if (msg.image)
 		this.insert_uploaded(msg.image);
 
-	this.submit.click($.proxy(this, 'finish_wrapped'));
 	if (this.uploadForm)
 		this.uploadForm.append(this.submit);
 	else
@@ -386,7 +386,6 @@ insert_uploaded: function (info) {
 			).remove();
 	form.find('#toggle').remove();
 	this.flush_pending();
-	this.submit.css({'margin-left': '0'});
 	this.model.set({uploading: false, uploaded: true,
 			sentAllocRequest: true});
 
@@ -527,9 +526,12 @@ render_buttons: function () {
 	var d = attrs.uploading || allocWait;
 	/* Beware of undefined! */
 	this.submit.prop('disabled', !!d);
+	if (attrs.uploaded)
+		this.submit.css({'margin-left': '0'});
 	this.$cancel.prop('disabled', !!allocWait);
 	this.$cancel.toggle(!attrs.num || attrs.uploading);
-	this.$imageInput.prop('disabled', attrs.uploading);
+	var noSubject = attrs.needSubject && !this.$subject.val().trim();
+	this.$imageInput.prop('disabled', !!(attrs.uploading || noSubject));
 },
 
 prep_upload: function () {

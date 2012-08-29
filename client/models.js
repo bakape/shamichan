@@ -10,6 +10,12 @@ function lookup_post(id) {
 	return CurThread.get(id) || UnknownThread.get(id);
 }
 
+function model_link(key) {
+	return function (event) {
+		this.model.set(key, $(event.target).val());
+	};
+}
+
 /* XXX: Move into own views module once more substantial */
 var Article = Backbone.View.extend({
 	tagName: 'article',
