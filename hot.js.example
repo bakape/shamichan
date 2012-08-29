@@ -7,14 +7,14 @@ this.hot = {
 		graveyard: "/graveyard/",
 		staff: "/staff/",
 	},
-	BASE_CSS: 'base-v29.css',
+	BASE_CSS: 'base-v30.css',
 	BOARD_CSS: {
-		moe: 'moe-v6.css',
-		gar: 'gar-v6.css',
-		meta: 'mawaru-v6.css',
-		archive: 'archive-v6.css',
-		graveyard: 'mawaru-v6.css',
-		staff: 'moe-v6.css',
+		moe: 'moe-v7.css',
+		gar: 'gar-v7.css',
+		meta: 'mawaru-v7.css',
+		archive: 'archive-v7.css',
+		graveyard: 'mawaru-v7.css',
+		staff: 'moe-v7.css',
 	},
 
 	SPECIAL_TRIPCODES: {
