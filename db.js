@@ -519,6 +519,8 @@ Y.insert_post = function (msg, body, extra, callback) {
 	var bump = !op || !common.is_sage(view.email);
 	var m = r.multi();
 	m.incr(tagKey + ':postctr'); // must be first
+	if (op)
+		m.hget('thread:' + op, 'subject'); // must be second
 	if (bump)
 		m.incr(tagKey + ':bumpctr');
 	m.sadd('liveposts', key);
@@ -594,7 +596,13 @@ Y.insert_post = function (msg, body, extra, callback) {
 			if (!bump)
 				return next();
 			var postctr = results[0];
-			r.zadd(tagKey + ':threads', postctr, op, next);
+			var subject = subject_val(op,
+					op==num ? view.subject : results[1]);
+			var m = r.multi();
+			m.zadd(tagKey + ':threads', postctr, op);
+			if (subject)
+				m.zadd(tagKey + ':subjects', postctr, subject);
+			m.exec(next);
 		}],
 		function (err) {
 			if (err) {
@@ -704,11 +712,13 @@ Y.remove_thread = function (op, callback) {
 	function (dels, next) {
 		var m = r.multi();
 		m.incr(graveyardKey + ':bumpctr');
-		m.hget(key, 'tags');
+		m.hmget(key, ['tags', 'subject']);
 		m.exec(next);
 	},
 	function (rs, next) {
-		var deadCtr = rs[0], tags = parse_tags(rs[1]);
+		var deadCtr = rs[0], misc = rs[1];
+		var tags = parse_tags(misc[0]);
+		var subject = subject_val(op, misc[1]);
 		/* Rename thread keys, move to graveyard */
 		var m = r.multi();
 		var expiryKey = expiry_queue_key();
@@ -716,6 +726,8 @@ Y.remove_thread = function (op, callback) {
 			var tagKey = tag_key(tag);
 			m.zrem(expiryKey, op + ':' + tagKey);
 			m.zrem('tag:' + tagKey + ':threads', op);
+			if (subject)
+				m.zrem('tag:' + tagKey + ':subjects', subject);
 		});
 		m.zadd(graveyardKey + ':threads', deadCtr, op);
 		etc.tags = tags;
@@ -781,6 +793,7 @@ Y.archive_thread = function (op, callback) {
 	function (rs, next) {
 		var bumpCtr = rs[0], view = rs[1], links = rs[2],
 				replyCount = rs[3], privs = rs[4];
+		var subject = subject_val(op, view.subject);
 		var tags = view.tags;
 		var m = r.multi();
 		// move to archive tag only
@@ -788,7 +801,10 @@ Y.archive_thread = function (op, callback) {
 		m.hset(key, 'tags', tag_key('archive'));
 		tags = parse_tags(tags);
 		tags.forEach(function (tag) {
-			m.zrem('tag:' + tag_key(tag) + ':threads', op);
+			var tagKey = 'tag:' + tag_key(tag);
+			m.zrem(tagKey + ':threads', op);
+			if (subject)
+				m.zrem(tagKey + ':subjects', subject);
 		});
 		m.zadd(archiveKey + ':threads', bumpCtr, op);
 		self._log(m, op, common.DELETE_THREAD, [], {tags: tags});
@@ -1615,6 +1631,10 @@ function with_body(r, key, post, callback) {
 			});
 		});
 };
+
+function subject_val(op, subject) {
+	return subject && (op + ':' + subject);
+}
 
 function tag_key(tag) {
 	return tag.length + ':' + tag;
