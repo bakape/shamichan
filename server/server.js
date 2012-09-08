@@ -443,7 +443,7 @@ web.resource(/^\/(\w+)\/page(\d+)\/$/, function (req, params, cb) {
 		cb(null, 'redirect', '../page' + params[2]);
 });
 
-var returnHTML = '<span id="return" class="act"><a href=".">Return</a></span>';
+var returnHTML = '<span id="bottom" class="act"><a href=".">Return</a></span>';
 
 web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	var board = params[1];
@@ -537,6 +537,7 @@ function (req, resp) {
 	resp.write(indexTmpl[2]);
 	resp.write('Thread #' + op);
 	resp.write(indexTmpl[3]);
+	resp.write(nav_link_html('Bottom', '#bottom'));
 	resp.write('<hr>\n');
 
 	var opts = {fullPosts: true, board: board};
@@ -558,6 +559,10 @@ function (req, resp) {
 function () {
 	this.yaku.disconnect();
 });
+
+function nav_link_html(name, href) {
+	return '<span class="act"><a href="'+href+'">'+name+'</a></span>';
+}
 
 web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
 	if (caps.under_curfew(req.ident, params[1]))

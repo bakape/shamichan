@@ -255,6 +255,11 @@ article .hat {
 	outline: none;
 }
 
+#bottom {
+	float: left;
+	margin-bottom: 7px;
+	min-width: 100px;
+}
 #feedback {
 	color: gray;
 	position: absolute;
@@ -267,11 +272,6 @@ article .hat {
 	display: block;
 	float: right;
 	margin-bottom: 2px;
-}
-#return {
-	float: left;
-	margin-bottom: 7px;
-	min-width: 100px;
 }
 pre {
 	height: auto;
