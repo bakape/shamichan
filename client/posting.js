@@ -529,7 +529,7 @@ render_buttons: function () {
 	if (attrs.uploaded)
 		this.submit.css({'margin-left': '0'});
 	this.$cancel.prop('disabled', !!allocWait);
-	this.$cancel.toggle(!attrs.num || attrs.uploading);
+	this.$cancel.toggle(!!(!attrs.num || attrs.uploading));
 	var noSubject = attrs.needSubject && !this.$subject.val().trim();
 	this.$imageInput.prop('disabled', !!(attrs.uploading || noSubject));
 },
