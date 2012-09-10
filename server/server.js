@@ -497,14 +497,14 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		redirect_thread(cb, num, op);
 		yaku.disconnect();
 	});
-	reader.on('begin', function (hctr, locked) {
+	reader.on('begin', function (preThread) {
 		var headers;
-		if (!config.DEBUG && hctr) {
-			var etag = 'W/' + hctr + '-' + RES.indexHash;
+		if (!config.DEBUG && preThread.hctr) {
+			var etag = 'W/' + preThread.hctr + '-' + RES.indexHash;
 			var chunks = web.parse_cookie(req.headers.cookie);
 			if (chunks.img == 'no')
 				etag += '-noimg';
-			if (locked)
+			if (preThread.locked)
 				etag += '-locked';
 			if (req.headers['if-none-match'] === etag) {
 				yaku.disconnect();
@@ -521,17 +521,23 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		cb(null, 'ok', {
 			headers: headers,
 			board: board, op: op, num: num,
+			subject: preThread.subject,
 			yaku: yaku, reader: reader, limit: limit,
 		});
 	});
 },
 function (req, resp) {
 	var board = this.board, op = this.op, num = this.op;
+	var title = '/'+escape(board)+'/ - ';
+	if (this.subject)
+		title += escape(this.subject) + ' (#' + op + ')';
+	else
+		title += '#' + op;
 
 	var indexTmpl = RES.indexTmpl;
 	resp.writeHead(200, this.headers);
 	resp.write(indexTmpl[0]);
-	resp.write('/'+escape(board)+'/ - #' + op);
+	resp.write(title);
 	resp.write(indexTmpl[1]);
 	resp.write(make_thread_meta(board, num, this.limit));
 	resp.write(indexTmpl[2]);
