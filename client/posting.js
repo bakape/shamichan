@@ -163,7 +163,6 @@ initialize: function (dest) {
 	else {
 		post.after('<hr/>');
 		this.$subject.focus();
-		this.model.set({needSubject: true});
 	}
 	$('aside').remove();
 },
@@ -190,7 +189,7 @@ propagate_ident: function () {
 on_allocation: function (msg) {
 	var num = msg.num;
 	ownPosts[num] = true;
-	this.model.set({num: num, needSubject: false});
+	this.model.set({num: num});
 	this.flush_pending();
 	var header = $(flatten(oneeSama.atama(msg)).join(''));
 	this.meta.replaceWith(header);
@@ -530,8 +529,7 @@ render_buttons: function () {
 		this.submit.css({'margin-left': '0'});
 	this.$cancel.prop('disabled', !!allocWait);
 	this.$cancel.toggle(!!(!attrs.num || attrs.uploading));
-	var noSubject = attrs.needSubject && !this.$subject.val().trim();
-	this.$imageInput.prop('disabled', !!(attrs.uploading || noSubject));
+	this.$imageInput.prop('disabled', !!attrs.uploading);
 },
 
 prep_upload: function () {

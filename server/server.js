@@ -701,9 +701,8 @@ function allocate_post(msg, client, callback) {
 		subject = subject.replace(config.EXCLUDE_REGEXP, '');
 		subject = subject.replace(/[「」]/g, '');
 		subject = subject.slice(0, config.SUBJECT_MAX_LENGTH);
-		if (!subject)
-			return callback(Muggle('Subject missing.'));
-		post.subject = subject;
+		if (subject)
+			post.subject = subject;
 	}
 
 	/* TODO: Check against client.watching? */
