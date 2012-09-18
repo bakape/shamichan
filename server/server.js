@@ -155,10 +155,13 @@ function write_thread_html(reader, req, response, opts) {
 		var first = oneeSama.monomono(op_post, full && 'full');
 		first.pop();
 		response.write(first.join(''));
-		if (omit)
-			response.write('\t<span class="omit">' +
-				common.abbrev_msg(omit, image_omit) +
-				'</span>\n');
+		if (omit) {
+			var o = common.abbrev_msg(omit, image_omit);
+			if (opts.loadAllPostsLink)
+				o += ' <span class="act"><a href="' +
+					op_post.num + '">See all</a></span>';
+			response.write('\t<span class="omit">'+o+'</span>\n');
+		}
 	});
 	reader.on('post', function (post) {
 		response.write(oneeSama.mono(post));
@@ -546,7 +549,7 @@ function (req, resp) {
 	resp.write(nav_link_html('Bottom', '#bottom'));
 	resp.write('<hr>\n');
 
-	var opts = {fullPosts: true, board: board};
+	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
 	write_thread_html(this.reader, req, resp, opts);
 	var self = this;
 	this.reader.on('end', function () {
