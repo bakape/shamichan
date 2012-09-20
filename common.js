@@ -516,6 +516,8 @@ OS.post_ref = function (num, op) {
 	var ref = '&gt;&gt;' + num;
 	if (this.op && this.op != op)
 		ref += ' \u2192';
+	else if (num == op && this.op == op)
+		ref += ' (OP)';
 	return safe('<a href="'+this.post_url(num, op, false)+'">'+ref+'</a>');
 };
 
