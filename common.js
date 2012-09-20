@@ -513,8 +513,10 @@ OS.post_url = function (num, op, quote) {
 };
 
 OS.post_ref = function (num, op) {
-	return safe('<a href="' + this.post_url(num, op, false)
-			+ '">&gt;&gt;' + num + '</a>');
+	var ref = '&gt;&gt;' + num;
+	if (this.op && this.op != op)
+		ref += ' \u2192';
+	return safe('<a href="'+this.post_url(num, op, false)+'">'+ref+'</a>');
 };
 
 OS.post_nav = function (post) {

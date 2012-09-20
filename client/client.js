@@ -34,14 +34,19 @@ oneeSama.hook('insertOwnPost', function (info) {
 		return;
 	postForm.buffer.find('.nope').each(function () {
 		var $a = $(this);
-		var m = $a.text().match(/^>>(\d+)$/);
+		var text = $a.text();
+		var m = text.match(/^>>(\d+)/);
 		if (!m)
 			return;
 		var num = m[1], op = info.links[num];
-		if (op) {
-			var url = postForm.imouto.post_url(num, op, false);
-			$a.attr('href', url).removeAttr('class');
-		}
+		if (!op)
+			return;
+		var realRef = postForm.imouto.post_ref(num, op, false);
+		var $ref = $(flatten([realRef]).join(''));
+		$a.attr('href', $ref.attr('href')).removeAttr('class');
+		var refText = $ref.text();
+		if (refText != text)
+			$a.text(refText);
 	});
 });
 

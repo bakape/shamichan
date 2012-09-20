@@ -143,7 +143,7 @@ add_spec('preview', 'Hover preview', function (b) {
 
 function hover_shita(event) {
 	if (event.target.tagName.match(/^A$/i)) {
-		var m = $(event.target).text().match(/^>>(\d+)$/);
+		var m = $(event.target).text().match(/^>>(\d+)/);
 		if (m && preview_miru(event, parseInt(m[1], 10)))
 			return;
 	}
