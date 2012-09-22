@@ -15,8 +15,16 @@ nashi.upload = !!$('<input type="file"/>').prop('disabled');
 
 if (window.screen && screen.width <= 320)
 	inputMinSize = 50;
-if ('ontouchstart' in window)
-	nashi.opts.push('preview');
+
+/* Touch detection is unreliable, so wait for an actual touch event */
+document.addEventListener('touchstart', touch_screen_event, false);
+function touch_screen_event() {
+	/* Remove hover preview option */
+	var $preview = $('#preview');
+	var $label = $preview.next();
+	$label.next().andSelf().add($preview).remove();
+	document.removeEventListener('touchstart', touch_screen_event, false);
+}
 
 function load_ident() {
 	try {
