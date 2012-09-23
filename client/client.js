@@ -67,7 +67,8 @@ function section_abbrev(section) {
 	var m = stat.text().match(/(\d+)\D+(\d+)?/);
 	if (!m)
 		return false;
-	return {stat: stat, omit: parseInt(m[1]), img: parseInt(m[2] || 0)};
+	return {stat: stat, omit: parseInt(m[1], 10),
+			img: parseInt(m[2] || 0, 10)};
 }
 
 function shift_replies(section) {
@@ -88,6 +89,7 @@ function shift_replies(section) {
 		$stat = $('<span class="omit"></span>');
 		section.children('blockquote,form').last().after($stat);
 	}
+	var omitsBefore = omit;
 	for (var i = 0; i < shown.length; i++) {
 		var cull = $(shown[i]);
 		if (rem-- < ABBREVIATED_REPLIES)
@@ -98,6 +100,13 @@ function shift_replies(section) {
 		cull.remove();
 	}
 	$stat.text(abbrev_msg(omit, img));
+	if (omitsBefore <= THREAD_LAST_N && omit > THREAD_LAST_N) {
+		var $expand = section.find('header .act');
+		if ($expand.length == 1) {
+			var $lastN = $(last_n_html(extract_num(section)));
+			$expand.after(' ', $lastN);
+		}
+	}
 }
 
 function spill_page() {

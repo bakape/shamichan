@@ -528,13 +528,16 @@ OS.post_nav = function (post) {
 			'">' + n + '</a></nav>');
 };
 
-var lastNfrag = '?lastN">Last&nbsp;N</a></span>'.replace(/N/g,
-		config.THREAD_LAST_N);
+var lastNfrag = '<span class="act"><a href="THREAD?lastN">Last&nbsp;N</a></span>'.replace(/N/g, config.THREAD_LAST_N);
+function last_n_html(num) {
+	return lastNfrag.replace('THREAD', num);
+}
+
 function expand_html(num, omit) {
 	var html = ' &nbsp; <span class="act"><a href="' + num +
 			'">Expand</a></span>';
 	if (omit > config.THREAD_LAST_N)
-		html += ' <span class="act"><a href="' + num + lastNfrag;
+		html += ' ' + last_n_html(num);
 	return html;
 }
 
