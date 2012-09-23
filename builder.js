@@ -36,6 +36,7 @@ var build_client = _.debounce(function () {
 deps.SERVER_DEPS.forEach(monitor.bind(null, start_server));
 deps.SERVER_STATE.forEach(monitor.bind(null, reload_state));
 deps.CLIENT_DEPS.forEach(monitor.bind(null, build_client));
+monitor(build_client, 'config.js');
 
 function monitor(func, dep) {
 	var mtime = new Date;
