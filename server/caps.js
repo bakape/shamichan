@@ -114,7 +114,7 @@ function range_lookup(ranges, num) {
 	for (var i = 0; i < ranges.length; i++) {
 		var box = ranges[i];
 		/* sint32 issue here doesn't matter for realistic ranges */
-		if ((num & box.mask) === box.num)
+		if ((box.mask ? (num & box.mask) : num) === box.num)
 			full = box.full; /* fall through */
 	}
 	return full;

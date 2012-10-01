@@ -133,6 +133,8 @@ exports.logout = function (req, resp) {
 	r.hgetall('session:' + chunks.a, function (err, session) {
 		if (err)
 			return fail(err);
+		if (_.isEmpty(session))
+			return fail('Not logged in.');
 		if (session.csrf && chunks.b !== session.csrf)
 			return fail('Possible CSRF: ' + chunks.b);
 		if (!_.isEmpty(session)) {
