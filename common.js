@@ -166,16 +166,6 @@ function safe(frag) {
 }
 exports.safe = safe;
 
-function map_unsafe(frags, func) {
-	for (var i = 0; i < frags.length; i++) {
-		if (typeof(frags[i]) == 'string')
-			frags[i] = func(frags[i]);
-		else if (frags[i].constructor == Array)
-			frags[i] = map_unsafe(frags[i], func);
-	}
-	return frags;
-}
-
 function is_noko(email) {
 	return email && email.indexOf('@') == -1 && email.match(/noko/i);
 }
