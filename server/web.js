@@ -104,14 +104,15 @@ function resource_second_handler(req, resp, resource, err, act, arg) {
 		resp.end();
 	}
 	else if (act == 'redirect' || (act >= 300 && act < 400)) {
+		var headers = {Location: arg};
 		if (act == 'redirect')
 			act = 303;
-		if (method == 'head') {
-			resp.writeHead(act, {Location: arg});
-			resp.end();
+		else if (act == 303.1) {
+			act = 303;
+			headers['X-Robots-Tag'] = 'nofollow';
 		}
-		else
-			redirect(resp, arg, act);
+		resp.writeHead(act, headers);
+		resp.end();
 	}
 	else if (act == 'redirect_js') {
 		if (method == 'head') {

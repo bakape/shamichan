@@ -591,24 +591,18 @@ function write_page_end(req, resp) {
 	resp.end();
 }
 
-// ought to be a resource
-web.route_get(/^\/outbound\/(g|iqdb)\/([\w+\/]{22}\.jpg)$/,
-		function (req, resp, params) {
+web.resource(/^\/outbound\/(g|iqdb)\/([\w+\/]{22}\.jpg)$/,
+			function (req, params, cb) {
 	var thumb = imager.config.MEDIA_URL + 'vint/' + params[2];
 	var service = params[1] == 'iqdb' ? 'http://iqdb.org/?url='
 			: 'http://google.com/searchbyimage?image_url=';
 	var dest = service + encodeURIComponent(thumb);
-	var headers = {Location: dest, 'X-Robots-Tag': 'nofollow'};
-	resp.writeHead(303, headers);
-	resp.end();
+	cb(null, 303.1, dest);
 });
 
-web.route_get(/^\/outbound\/hash\/([\w+\/]{22})$/,
-		function (req, resp, params) {
+web.resource(/^\/outbound\/hash\/([\w+\/]{22})$/, function (req, params, cb) {
 	var dest = 'http://archive.foolz.us/search/image/' + escape(params[1]);
-	var headers = {Location: dest, 'X-Robots-Tag': 'nofollow'};
-	resp.writeHead(303, headers);
-	resp.end();
+	cb(null, 303.1, dest);
 });
 
 web.route_get_auth(/^\/dead\/(src|thumb)\/(\w+\.\w{3})$/,
