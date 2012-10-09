@@ -71,6 +71,7 @@ exports.reset_resources = function (cb) {
 		index: read('tmpl', 'index.html'),
 		filter: read('tmpl', 'filter.html'),
 		curfew: read('tmpl', 'curfew.html'),
+		aLookup: read('tmpl', 'alookup.html'),
 		notFound: read('www', '404.html'),
 		serverError: read('www', '50x.html'),
 		modJs: make_mod_js,
@@ -89,6 +90,7 @@ exports.reset_resources = function (cb) {
 
 		RES.filterTmpl = tmpl(res.filter).tmpl;
 		RES.curfewTmpl = tmpl(res.curfew).tmpl;
+		RES.aLookupHtml = res.aLookup;
 		RES.notFoundHtml = res.notFound;
 		RES.serverErrorHtml = res.serverError;
 		RES.modJs = res.modJs;
