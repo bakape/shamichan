@@ -1,4 +1,4 @@
-var _ = require('underscore');
+var _ = require('./lib/underscore');
 var config = require('./config');
 var imagerConfig = require('./imager/config');
 var DEFINES = exports;
