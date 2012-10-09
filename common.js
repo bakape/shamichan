@@ -185,8 +185,8 @@ var OS = OneeSama.prototype;
 
 var break_re = new RegExp("(\\S{" + DEFINES.WORD_LENGTH_LIMIT + "})");
 /* internal refs and youtube videos */
-var ref_re = />>(\d+|>\/?(?:watch\?)?v[=\/][\w-]{11}(?:#t=[\dhms]{1,9})?)/;
-var youtube_re = /^>>>\/?(?:watch\?)?v[=\/]([\w-]{11})(#t=[\dhms]{1,9})?$/;
+var ref_re = />>(\d+|>\/watch\?v=[\w-]{11}(?:#t=[\dhms]{1,9})?|>\/(?:a|foolz)\/\d{0,10})/;
+var youtube_re = /^>>>\/watch\?v=([\w-]{11})(#t=[\dhms]{1,9})?$/;
 var youtube_time_re = /^#t=(?:(\d\d?)h)?(?:(\d\d?)m)?(?:(\d\d?)s)?$/;
 var youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\/?\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/;
 
@@ -215,8 +215,21 @@ function override(obj, orig, upgrade) {
 }
 
 OS.red_string = function (ref) {
-	if (ref.slice(0, 8) == '>/watch?')
+	var prefix = ref.slice(0, 3);
+	if (prefix == '>/w')
 		this.callback([safe('<cite>'), '>>'+ref, safe('</cite>')]);
+	else if (prefix == '>/a') {
+		var num = parseInt(ref.slice(4), 10);
+		num = num ? ''+num : '';
+		var dest = '../outbound/a/' + num;
+		this.callback(new_tab_link(dest, '>>>/a/' + num));
+	}
+	else if (prefix == '>/f') {
+		var num = parseInt(ref.slice(8), 10);
+		num = num ? ''+num : '';
+		var dest = '../outbound/foolz/' + num;
+		this.callback(new_tab_link(dest, '>>>/foolz/' + num));
+	}
 	else
 		this.tamashii(parseInt(ref, 10));
 };
