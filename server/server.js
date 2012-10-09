@@ -673,10 +673,16 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 	return true;
 }
 
+function inactive_board_check(client) {
+	if (caps.is_admin_ident(client.ident))
+		return true;
+	return ['graveyard', 'archive'].indexOf(client.board) == -1;
+}
+
 function allocate_post(msg, client, callback) {
 	if (client.post)
 		return callback(Muggle("Already have a post."));
-	if (['graveyard', 'archive'].indexOf(client.board) >= 0)
+	if (!inactive_board_check(client))
 		return callback(Muggle("Can't post here."));
 	var post = {time: new Date().getTime(), nonce: msg.nonce};
 	var body = '';
@@ -866,6 +872,8 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 }
 
 dispatcher[common.DELETE_POSTS] = caps.mod_handler(function (nums, client) {
+	if (!inactive_board_check(client))
+		return client.report(Muggle("Couldn't delete."));
 	/* Omit to-be-deleted posts that are inside to-be-deleted threads */
 	var ops = {}, OPs = db.OPs;
 	nums.forEach(function (num) {
@@ -884,6 +892,8 @@ dispatcher[common.DELETE_POSTS] = caps.mod_handler(function (nums, client) {
 });
 
 dispatcher[common.LOCK_THREAD] = caps.mod_handler(function (nums, client) {
+	if (!inactive_board_check(client))
+		return client.report(Muggle("Couldn't (un)lock thread."));
 	nums = nums.filter(function (op) { return db.OPs[op] == op; });
 	async.forEach(nums, client.db.toggle_thread_lock.bind(client.db),
 				function (err) {
@@ -893,6 +903,8 @@ dispatcher[common.LOCK_THREAD] = caps.mod_handler(function (nums, client) {
 });
 
 dispatcher[common.DELETE_IMAGES] = caps.mod_handler(function (nums, client) {
+	if (!inactive_board_check(client))
+		return client.report(Muggle("Couldn't delete images."));
 	client.db.remove_images(nums, function (err, dels) {
 		if (err)
 			client.report(Muggle("Couldn't delete images.", err));
@@ -919,6 +931,8 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 };
 
 dispatcher[common.SPOILER_IMAGES] = caps.mod_handler(function (nums, client) {
+	if (!inactive_board_check(client))
+		return client.report(Muggle("Couldn't spoiler images."));
 	client.db.force_image_spoilers(nums, function (err) {
 		if (err)
 			client.report(Muggle("Couldn't spoiler images.", err));
