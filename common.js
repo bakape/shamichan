@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var config = require('./config');
 var imagerConfig = require('./imager/config');
 var DEFINES = exports;
@@ -145,7 +146,6 @@ function escape_fragment(frag) {
 		return frag.toString();
 	else
 		return '???';
-
 }
 exports.escape_fragment = escape_fragment;
 
@@ -153,7 +153,7 @@ function flatten(frags) {
 	var out = [];
 	for (var i = 0; i < frags.length; i++) {
 		var frag = frags[i];
-		if (frag.constructor == Array)
+		if (_.isArray(frag))
 			out = out.concat(flatten(frag));
 		else
 			out.push(escape_fragment(frag));
@@ -214,6 +214,13 @@ function override(obj, orig, upgrade) {
 	};
 }
 
+OS.red_string = function (ref) {
+	if (ref.slice(0, 8) == '>/watch?')
+		this.callback([safe('<cite>'), '>>'+ref, safe('</cite>')]);
+	else
+		this.tamashii(parseInt(ref, 10));
+};
+
 OS.break_heart = function (frag) {
 	if (frag.safe)
 		return this.callback(frag);
@@ -223,17 +230,8 @@ OS.break_heart = function (frag) {
 		var morsels = bits[i].split(ref_re);
 		for (var j = 0; j < morsels.length; j++) {
 			var m = morsels[j];
-			if (j % 2) {
-				if (m[0] == '>') {
-					/* This is alright since it's always
-					   a single word */
-					this.callback(safe('<cite>' +
-							escape_html('>>' + m) +
-							'</cite>'));
-				}
-				else
-					this.tamashii(parseInt(m, 10));
-			}
+			if (j % 2)
+				this.red_string(m);
 			else if (i % 2) {
 				this.geimu(m);
 				this.callback(safe('<wbr>'));

@@ -59,7 +59,7 @@ async.forEachSeries(files, function (file, cb) {
 		var line = lines[j];
 		if (line.match(/^var\s+DEFINES\s*=\s*exports\s*;\s*$/))
 			continue;
-		if (line.match(/^var\s+(\w+onfig|common)\s*=\s*require.*$/))
+		if (line.match(/^var\s+(\w+onfig|common|_)\s*=\s*require.*$/))
 			continue;
 		m = line.match(/^DEFINES\.(\w+)\s*=\s*(.+);$/);
 		if (m) {

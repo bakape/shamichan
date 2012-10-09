@@ -21,8 +21,12 @@ function inject(frag) {
 		else if (frag.safe.match(/^<\/\w+>$/))
 			out = '';
 	}
-	if (out === null)
-		out = escape_fragment(frag);
+	if (out === null) {
+		if (_.isArray(frag))
+			out = $(flatten(frag).join(''));
+		else
+			out = escape_fragment(frag);
+	}
 	if (out)
 		dest.append(out);
 	return out;
