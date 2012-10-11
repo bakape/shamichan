@@ -66,7 +66,7 @@ del:hover, del:hover em, del.reveal, del.reveal em {
 em {
 	color: #b200b2;
 }
-cite {
+.watch {
 	background-color: rgba(255, 255, 255, 0.25);
 	border-radius: 0;
 	-moz-border-radius: 0;

@@ -25,7 +25,7 @@ article figure img {
 body > aside {
 	margin: 1em;
 }
-cite {
+.watch {
 	background-color: rgba(255, 255, 255, 0.5);
 	border-radius: 4px;
 	-moz-border-radius: 4px;
@@ -35,6 +35,10 @@ cite {
 	font-style: normal;
 	margin: -2px;
 	padding: 2px;
+	text-decoration: none;
+}
+.watch, .watch:hover {
+	color: inherit;
 }
 del, del em {
 	background-color: black;

@@ -30,17 +30,22 @@ function make_video(id, params, dims, start) {
 	return $obj;
 }
 
-$(document).on('click', 'cite', function (event) {
+$(document).on('click', '.watch', function (event) {
+	if (event.which > 1)
+		return;
 	var $target = $(event.target);
 	var link = $target.data('link');
 	if (link) {
 		$target.removeData('link').empty().text(link);
+		event.preventDefault();
 		return;
 	}
 	link = $target.text();
 	var m = link.match(youtube_re);
-	if (!m)
+	if (!m) {
+		/* Shouldn't happen, but degrade to normal click action */
 		return;
+	}
 	var start = 0;
 	if (m[2]) {
 		var t = m[2].match(youtube_time_re);
@@ -57,4 +62,5 @@ $(document).on('click', 'cite', function (event) {
 	with_dom(function () {
 		$target.data('link', link).append('<br>', $obj);
 	});
+	event.preventDefault();
 });

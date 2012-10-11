@@ -216,22 +216,24 @@ function override(obj, orig, upgrade) {
 
 OS.red_string = function (ref) {
 	var prefix = ref.slice(0, 3);
-	if (prefix == '>/w')
-		this.callback([safe('<cite>'), '>>'+ref, safe('</cite>')]);
+	var dest, linkClass;
+	if (prefix == '>/w') {
+		dest = 'http://www.youtube.com/' + ref.slice(2);
+		linkClass = 'watch';
+	}
 	else if (prefix == '>/a') {
 		var num = parseInt(ref.slice(4), 10);
-		num = num ? ''+num : '';
-		var dest = '../outbound/a/' + num;
-		this.callback(new_tab_link(dest, '>>>/a/' + num));
+		dest = '../outbound/a/' + (num ? ''+num : '');
 	}
 	else if (prefix == '>/f') {
 		var num = parseInt(ref.slice(8), 10);
-		num = num ? ''+num : '';
-		var dest = '../outbound/foolz/' + num;
-		this.callback(new_tab_link(dest, '>>>/foolz/' + num));
+		dest = '../outbound/foolz/' + (num ? ''+num : '');
 	}
-	else
+	else {
 		this.tamashii(parseInt(ref, 10));
+		return;
+	}
+	this.callback(new_tab_link(encodeURI(dest), '>>' + ref, linkClass));
 };
 
 OS.break_heart = function (frag) {
@@ -425,8 +427,9 @@ function pick_spoiler(metaIndex) {
 }
 exports.pick_spoiler = pick_spoiler;
 
-function new_tab_link(srcEncoded, inside) {
+function new_tab_link(srcEncoded, inside, cls) {
 	return [safe('<a href="' + srcEncoded + '" target="_blank"' +
+		(cls ? ' class="'+cls+'"' : '') +
 		' rel="nofollow">'), inside, safe('</a>')];
 }
 
