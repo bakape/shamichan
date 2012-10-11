@@ -1,3 +1,6 @@
+var youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\/?\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/;
+var youtube_time_re = /^#t=(?:(\d\d?)h)?(?:(\d\d?)m)?(?:(\d\d?)s)?$/;
+
 function make_video(id, params, dims, start) {
 	if (!dims)
 		dims = {width: 425, height: 355};
@@ -34,21 +37,20 @@ $(document).on('click', '.watch', function (event) {
 	if (event.which > 1)
 		return;
 	var $target = $(event.target);
-	var link = $target.data('link');
-	if (link) {
-		$target.removeData('link').empty().text(link);
+	var $video = $target.find('object');
+	if ($video.length) {
+		$video.siblings('br').andSelf().remove();
 		event.preventDefault();
 		return;
 	}
-	link = $target.text();
-	var m = link.match(youtube_re);
+	var m = $target.attr('href').match(youtube_url_re);
 	if (!m) {
 		/* Shouldn't happen, but degrade to normal click action */
 		return;
 	}
 	var start = 0;
-	if (m[2]) {
-		var t = m[2].match(youtube_time_re);
+	if (m[3]) {
+		var t = m[3].match(youtube_time_re);
 		if (t) {
 			if (t[1])
 				start += parseInt(t[1], 10) * 3600;
@@ -58,9 +60,44 @@ $(document).on('click', '.watch', function (event) {
 				start += parseInt(t[3], 10);
 		}
 	}
-	var $obj = make_video(m[1], null, null, start);
+	var $obj = make_video(m[2], null, null, start);
 	with_dom(function () {
-		$target.data('link', link).append('<br>', $obj);
+		$target.append('<br>', $obj);
 	});
 	event.preventDefault();
+});
+
+$(document).on('mouseenter', '.watch', function (event) {
+	var $target = $(event.target);
+	if ($target.data('requestedTitle'))
+		return;
+	$target.data('requestedTitle', true);
+	/* Edit textNode in place so that we don't mess with the embed */
+	var node = $target.contents().filter(function () {
+		return this.nodeType === 3;
+	})[0];
+	if (!node)
+		return;
+	var orig = node.textContent;
+	node.textContent = orig + '...';
+	var m = $target.attr('href').match(youtube_url_re);
+	if (!m)
+		return;
+	$.ajax({
+		url: '//gdata.youtube.com/feeds/api/videos/' + m[2],
+		data: {v: '2', alt: 'jsonc'},
+		dataType: 'json',
+		success: function (data) {
+			var title = data && data.data && data.data.title;
+			if (title) {
+				node.textContent = orig + ': ' + title;
+				$target.css({color: 'black'});
+			}
+			else
+				node.textContent = orig + ' (gone?)';
+		},
+		error: function () {
+			node.textContent = orig + '???';
+		},
+	});
 });
