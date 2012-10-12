@@ -24,7 +24,7 @@ function delete_selected() {
 	$.ajax({
 		type: 'POST',
 		url: 'admin',
-		data: {threads: threads.join()},
+		data: {threads: threads.join(), csrf: $CSRF},
 		success: function (data) {
 			$del_button.val('Deleted. Refresh.');
 		},

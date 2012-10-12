@@ -24,13 +24,9 @@ var config = {
 	EXCLUDE_REGEXP: /[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g,
 	SAGE_ENABLED: true,
 
-	TWITTER_API: {
-		key: '',
-		secret: '',
-		callback: 'http://example.com/verify',
-	},
-	TWITTER_ADMINS: ['doushio'],
-	TWITTER_MODERATORS: ['doushiomod'],
+	ADMIN_PERSONAS: ['lalc@doushio.com'],
+	MODERATOR_PERSONAS: ['mod@doushio.com'],
+	PERSONA_AUDIENCE: 'http://example.com:80',
 	LOGIN_COOKIE_DOMAIN: 'example.com',
 	LOGIN_SESSION_TIME: 60*60*24*14,
 	IP_MNEMONIC: true,

@@ -12,8 +12,8 @@ var _ = require('../lib/underscore'),
     imager = require('../imager'),
     Muggle = require('../muggle').Muggle,
     okyaku = require('./okyaku'),
+    persona = require('./persona'),
     STATE = require('./state'),
-    twitter = require('./twitter'),
     tripcode = require('./tripcode'),
     web = require('./web'),
     winston = require('winston');
@@ -37,9 +37,9 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			client.report(Muggle("Bad protocol."));
 	}
 	var chunks = web.parse_cookie(msg.pop());
-	chunks = twitter.extract_cookie(chunks);
-	if (chunks) {
-		twitter.check_cookie(chunks, false, checked);
+	cookie = persona.extract_login_cookie(chunks);
+	if (cookie) {
+		persona.check_cookie(cookie, checked);
 		return true;
 	}
 	else
@@ -262,32 +262,22 @@ web.resource(/^\/$/, function (req, cb) {
 	cb(null, 'redirect', 'moe/');
 });
 
+web.route_post(/^\/login$/, persona.login);
+web.route_post_auth(/^\/logout$/, persona.logout);
 if (config.DEBUG) {
 	web.route_get(/^\/login$/, function (req, resp) {
-		twitter.set_cookie(resp, {auth: 'Admin'});
+		persona.set_cookie(resp, {auth: 'Admin'});
 	});
 	web.route_get(/^\/mod$/, function (req, resp) {
-		twitter.set_cookie(resp, {auth: 'Moderator'});
+		persona.set_cookie(resp, {auth: 'Moderator'});
 	});
-}
-else {
-	web.route_get(/^\/login$/, twitter.login);
-	web.route_get(/^\/verify$/, twitter.verify);
-}
-
-web.resource(/^\/login\/$/, function (req, cb) {
-	cb(null, 'redirect', '../login');
-});
-
-web.route_post(/^\/logout$/, twitter.logout);
-if (config.DEBUG) {
-	web.route_get(/^\/logout$/, twitter.logout);
+	web.route_get(/^\/logout$/, persona.logout);
 }
 
 function write_mod_js(resp, ident) {
 	resp.writeHead(200, {
 			'Content-Type': 'text/javascript; charset=UTF-8'});
-	resp.write('(function (AUTH) {');
+	resp.write('(function (IDENT) {');
 	resp.write(RES.modJs);
 	resp.end('})(' + JSON.stringify(ident) + ');');
 }
@@ -299,7 +289,10 @@ web.resource_auth(/^\/admin\.js$/, function (req, cb) {
 		cb(null, 'ok');
 },
 function (req, resp) {
-	write_mod_js(resp, 'Admin');
+	write_mod_js(resp, {
+		auth: 'Admin', email: req.ident.email,
+		csrf: req.ident.csrf,
+	});
 });
 
 web.resource_auth(/^\/mod\.js$/, function (req, cb) {
@@ -309,7 +302,10 @@ web.resource_auth(/^\/mod\.js$/, function (req, cb) {
 		cb(null, 'ok');
 },
 function (req, resp) {
-	write_mod_js(resp, 'Moderator');
+	write_mod_js(resp, {
+		auth: 'Moderator', email: req.ident.email,
+		csrf: req.ident.csrf,
+	});
 });
 
 web.resource(/^\/(\w+)$/, function (req, params, cb) {

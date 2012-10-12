@@ -1,4 +1,5 @@
 var $selectButton, $controls;
+window.loggedInUser = IDENT.email;
 
 function show_panel() {
 	var specs = [
@@ -115,11 +116,31 @@ window.fun = function () {
 	send([33, THREAD]);
 };
 
+window.logout_admin = function (cb) {
+	$.ajax({
+		type: 'POST',
+		url: '../logout',
+		data: {csrf: IDENT.csrf},
+		dataType: 'json',
+		success: function (res) {
+			if (res && res.status == 'okay')
+				cb(null);
+			else
+				cb(res.message || 'Unknown error.');
+		},
+		error: function (res) {
+			console.log(res);
+			window.stuff = res;
+			cb('Network error.');
+		},
+	});
+};
+
 override(ComposerView.prototype, 'make_alloc_request',
 			function (orig, text, img) {
 	var msg = orig.call(this, text, img);
 	if ($('#authname').attr('checked'))
-		msg.auth = AUTH;
+		msg.auth = IDENT.auth;
 	return msg;
 });
 
@@ -131,10 +152,7 @@ $DOC.on('click', '.select-handle', function (event) {
 $(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
 	$name.after(' <input type=checkbox id="authname">' +
-			' <label for="authname">' + AUTH + '</label>');
-	$email.after(' <form action="../logout" method=POST ' +
-			'style="display: inline">' +
-			'<input type=submit value=Logout></form>');
+			' <label for="authname">' + IDENT.auth + '</label>');
 
 	oneeSama.hook('afterInsert', function (target) {
 		if (multiSelecting)

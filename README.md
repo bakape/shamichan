@@ -22,7 +22,6 @@ npm modules:
 
 * async
 * formidable
-* oauth
 * redis
 * sockjs
 * winston

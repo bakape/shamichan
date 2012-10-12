@@ -2,9 +2,10 @@ var _ = require('../lib/underscore'),
     caps = require('./caps'),
     config = require('../config'),
     formidable = require('formidable'),
-    twitter = require('./twitter'),
+    persona = require('./persona'),
     url_parse = require('url').parse,
-    util = require('util');
+    util = require('util'),
+    winston = require('winston');
 
 var escape = require('../common').escape_html;
 var routes = [];
@@ -57,9 +58,10 @@ function handle_resource(req, resp, resource) {
 		args.push(m);
 	args.push(resource_second_handler.bind(null, req, resp, resource));
 
-	var chunks = twitter.extract_cookie(parse_cookie(req.headers.cookie));
-	if (chunks) {
-		twitter.check_cookie(chunks, false, function (err, ident) {
+	var chunks = parse_cookie(req.headers.cookie);
+	var cookie = persona.extract_login_cookie(chunks);
+	if (cookie) {
+		persona.check_cookie(cookie, function (err, ident) {
 			if (err && !resource.authPassthrough)
 				return forbidden(resp, 'No cookie.');
 			else if (!err)
@@ -161,13 +163,14 @@ function parse_forwarded_for(ff) {
 exports.parse_forwarded_for = parse_forwarded_for;
 
 function auth_passthrough(handler, req, resp, params) {
-	var chunks = twitter.extract_cookie(parse_cookie(req.headers.cookie));
-	if (!chunks) {
+	var chunks = parse_cookie(req.headers.cookie);
+	var cookie = persona.extract_login_cookie(chunks);
+	if (!cookie) {
 		handler(req, resp, params);
 		return;
 	}
 
-	twitter.check_cookie(chunks, false, function (err, ident) {
+	persona.check_cookie(cookie, function (err, ident) {
 		if (!err)
 			_.extend(req.ident, ident);
 		handler(req, resp, params);
@@ -184,30 +187,38 @@ function auth_checker(handler, is_post, req, resp, params) {
 		var form = new formidable.IncomingForm();
 		form.maxFieldsSize = 50 * 1024;
 		form.type = 'urlencoded';
-		form.parse(req, function (err, fields) {
-			if (err) {
-				resp.writeHead(500, noCacheHeaders);
-				resp.end(preamble + escape(err));
-				return;
-			}
-			req.body = fields;
-			check_it();
-		});
+		try {
+			form.parse(req, function (err, fields) {
+				if (err) {
+					resp.writeHead(500, noCacheHeaders);
+					resp.end(preamble + escape(err));
+					return;
+				}
+				req.body = fields;
+				check_it();
+			});
+		}
+		catch (e) {
+			winston.error('formidable threw', e);
+			return forbidden(resp, 'Bad request.');
+		}
 	}
 	else
 		check_it();
 
 	function check_it() {
 		var chunks = parse_cookie(req.headers.cookie);
-		chunks = twitter.extract_cookie(chunks);
-		if (!chunks)
+		cookie = persona.extract_login_cookie(chunks);
+		if (!cookie)
 			return forbidden(resp, 'No cookie.');
-		twitter.check_cookie(chunks, is_post, ack);
+		persona.check_cookie(cookie, ack);
 	}
 
 	function ack(err, session) {
 		if (err)
 			return forbidden(resp, err);
+		if (is_post && session.csrf != req.body.csrf)
+			return forbidden(resp, "Possible CSRF.");
 		_.extend(req.ident, session);
 		handler(req, resp, params);
 	}

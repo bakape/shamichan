@@ -33,7 +33,9 @@ web.route_get_auth(/^\/admin$/, function (req, resp) {
 	});
 	filter.once('end', function () {
 		resp.write('<br>' + ctr + ' thread(s).');
-		resp.end(RES.filterTmpl[1]);
+		resp.write(RES.filterTmpl[1]);
+		resp.write(JSON.stringify(req.ident.csrf));
+		resp.end(RES.filterTmpl[2]);
 	});
 	filter.once('error', function (err) {
 		resp.end('<br><br>Error: ' + escape(err));

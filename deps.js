@@ -3,6 +3,7 @@ var config = require('./config');
 var minJs = config.DEBUG ? '.js' : '.min.js';
 
 exports.CLIENT_DEPS = [
+	'lib/yepnope' + minJs,
 	'lib/underscore' + minJs,
 	'lib/backbone' + minJs,
 	'lib/oninput' + minJs,
@@ -43,9 +44,9 @@ exports.SERVER_DEPS = [
 	'server/okyaku.js',
 	'server/panel.js',
 	'server/perceptual.c',
+	'server/persona.js',
 	'server/server.js',
 	'server/state.js',
-	'server/twitter.js',
 	'server/tripcode.cc',
 	'server/web.js',
 ];
