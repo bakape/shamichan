@@ -40,6 +40,7 @@ $(document).on('click', '.watch', function (event) {
 	var $video = $target.find('object');
 	if ($video.length) {
 		$video.siblings('br').andSelf().remove();
+		$target.css('width', 'auto');
 		event.preventDefault();
 		return;
 	}
@@ -62,7 +63,7 @@ $(document).on('click', '.watch', function (event) {
 	}
 	var $obj = make_video(m[2], null, null, start);
 	with_dom(function () {
-		$target.append('<br>', $obj);
+		$target.css('width', '425px').append('<br>', $obj);
 	});
 	event.preventDefault();
 });
