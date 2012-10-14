@@ -1,9 +1,7 @@
 var youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\/?\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/;
 var youtube_time_re = /^#t=(?:(\d\d?)h)?(?:(\d\d?)m)?(?:(\d\d?)s)?$/;
 
-function make_video(id, params, dims, start) {
-	if (!dims)
-		dims = {width: 425, height: 355};
+function make_video(id, params, start) {
 	if (!params)
 		params = {allowFullScreen: 'true'};
 	params.allowScriptAccess = 'always';
@@ -24,6 +22,7 @@ function make_video(id, params, dims, start) {
 				encodeURIComponent(query[k]));
 	var uri = encodeURI('http://www.youtube.com/v/' + id) + '?' +
 			bits.join('&');
+	var dims = video_dims();
 	var $obj = $('<object></object>').attr(dims);
 	for (var name in params)
 		$obj.append($('<param></param>').attr({name: name,
@@ -31,6 +30,13 @@ function make_video(id, params, dims, start) {
 	$('<embed></embed>').attr(params).attr(dims).attr({src: uri,
 		type: 'application/x-shockwave-flash'}).appendTo($obj);
 	return $obj;
+}
+
+function video_dims() {
+	if (window.screen && screen.width <= 320)
+		return {width: 240, height: 200};
+	else
+		return {width: 425, height: 355};
 }
 
 $(document).on('click', '.watch', function (event) {
@@ -61,9 +67,10 @@ $(document).on('click', '.watch', function (event) {
 				start += parseInt(t[3], 10);
 		}
 	}
-	var $obj = make_video(m[2], null, null, start);
+
+	var $obj = make_video(m[2], null, start);
 	with_dom(function () {
-		$target.css('width', '425px').append('<br>', $obj);
+		$target.css('width', video_dims().width).append('<br>', $obj);
 	});
 	event.preventDefault();
 });
