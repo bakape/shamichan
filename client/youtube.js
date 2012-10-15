@@ -56,8 +56,8 @@ $(document).on('click', '.watch', function (event) {
 		return;
 	}
 	var start = 0;
-	if (m[3]) {
-		var t = m[3].match(youtube_time_re);
+	if (m[4]) {
+		var t = m[4].match(youtube_time_re);
 		if (t) {
 			if (t[1])
 				start += parseInt(t[1], 10) * 3600;
