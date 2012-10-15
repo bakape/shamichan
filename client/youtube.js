@@ -50,6 +50,8 @@ $(document).on('click', '.watch', function (event) {
 		event.preventDefault();
 		return;
 	}
+	if ($target.data('noembed'))
+		return;
 	var m = $target.attr('href').match(youtube_url_re);
 	if (!m) {
 		/* Shouldn't happen, but degrade to normal click action */
@@ -103,6 +105,12 @@ $(document).on('mouseenter', '.watch', function (event) {
 			}
 			else
 				node.textContent = orig + ' (gone?)';
+
+			if (data && data.data && data.data.accessControl &&
+				data.data.accessControl.embed == 'denied') {
+				node.textContent += ' (EMBEDDING DISABLED)';
+				$target.data('noembed', true);
+			}
 		},
 		error: function () {
 			node.textContent = orig + '???';
