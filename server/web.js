@@ -3,6 +3,7 @@ var _ = require('../lib/underscore'),
     config = require('../config'),
     formidable = require('formidable'),
     persona = require('./persona'),
+    send = require('send'),
     url_parse = require('url').parse,
     util = require('util'),
     winston = require('winston');
@@ -45,7 +46,7 @@ var server = require('http').createServer(function (req, resp) {
 	if (debug_static.enabled)
 		debug_static(req, resp);
 	else
-		render_404(resp);
+		send(req, req.url).root('www/').pipe(resp);
 });
 exports.server = server;
 
