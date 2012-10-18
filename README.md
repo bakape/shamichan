@@ -27,7 +27,6 @@ npm modules:
 * async
 * formidable
 * redis
-* send
 * sockjs
 * winston
 
@@ -35,3 +34,4 @@ Optional npm deps for various features:
 
 * daemon
 * icecast banners: node-expat, request
+* (send)[https://github.com/visionmedia/send] (for serving static files using node.js)

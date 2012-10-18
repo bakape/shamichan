@@ -3,10 +3,12 @@ var _ = require('../lib/underscore'),
     config = require('../config'),
     formidable = require('formidable'),
     persona = require('./persona'),
-    send = require('send'),
     url_parse = require('url').parse,
     util = require('util'),
     winston = require('winston');
+
+if (config.SERVE_STATIC_FILES)
+  var send = require('send');
 
 var escape = require('../common').escape_html;
 var routes = [];
@@ -45,8 +47,10 @@ var server = require('http').createServer(function (req, resp) {
 
 	if (debug_static.enabled)
 		debug_static(req, resp);
-	else
+	else if(config.SERVE_STATIC_FILES)
 		send(req, req.url).root('www/').pipe(resp);
+  else
+    render_404(resp);
 });
 exports.server = server;
 
