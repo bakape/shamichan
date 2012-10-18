@@ -45,9 +45,7 @@ var server = require('http').createServer(function (req, resp) {
 			if (handle_resource(req, resp, resources[i]))
 				return;
 
-	if (debug_static.enabled)
-		debug_static(req, resp);
-	else if(config.SERVE_STATIC_FILES)
+	if(config.SERVE_STATIC_FILES)
 		send(req, req.url).root('www/').pipe(resp);
   else
     render_404(resp);
@@ -245,34 +243,6 @@ exports.route_post = function (pattern, handler) {
 exports.route_post_auth = function (pattern, handler) {
 	routes.push({method: 'post', pattern: pattern,
 			handler: auth_checker.bind(null, handler, true)});
-};
-
-exports.enable_debug = function () {
-	debug_static.enabled = true;
-};
-
-function debug_static(req, resp) {
-	/* Highly insecure. */
-	var url = req.url.replace(/\.\.+/g, '');
-	var path = require('path').join(__dirname, '..', 'www', url);
-	var s = require('fs').createReadStream(path);
-	s.once('error', function (err) {
-		if (err.code == 'ENOENT')
-			render_404(resp);
-		else {
-			resp.writeHead(500, noCacheHeaders);
-			resp.end(preamble + escape(err.message));
-		}
-	});
-	s.once('open', function () {
-		var h = {};
-		try {
-			h['Content-Type'] = require('mime').lookup(path);
-		} catch (e) {}
-		resp.writeHead(200, h);
-		util.pump(s, resp);
-	});
-	return true;
 };
 
 var vanillaHeaders = {'Content-Type': 'text/html; charset=UTF-8'};
