@@ -12,7 +12,6 @@ Setup:
 
 Production:
 
-* Have your webserver serve the static assets in `www`. Make sure `imager/config.js`'s `MEDIA_URL` corresponds to that URL.
 * Run `node server/server.js` for just the server
 * `config.DAEMON` support is broken for now.
 * Be sure to `make client` for any client-affecting change
@@ -35,3 +34,4 @@ Optional npm deps for various features:
 
 * daemon
 * icecast banners: node-expat, request
+* (send)[https://github.com/visionmedia/send] (for serving static files using node.js)

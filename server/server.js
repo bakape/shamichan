@@ -978,8 +978,6 @@ if (config.DEBUG) {
 
 function start_server() {
 	web.server.listen(config.LISTEN_PORT, config.LISTEN_HOST);
-	if (config.DEBUG)
-		web.enable_debug();
 	var sockjsPath = 'js/' + get_sockjs_script_sync();
 	var sockOpts = {
 		sockjs_url: imager.config.MEDIA_URL + sockjsPath,
