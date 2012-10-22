@@ -4,7 +4,7 @@ a {
 a:hover, blockquote a, .email b:hover {
 	color: #513fd3;
 }
-article, aside, body > nav, .modal {
+article, aside, .modal, .pagination {
 	background-color: #222;
 	border-right: 1px solid #111;
 	border-bottom: 1px solid #111;

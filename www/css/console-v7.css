@@ -81,7 +81,7 @@ figcaption, figcaption a {
 	color: #989800;
 	text-transform: lowercase;
 }
-fieldset, hr, nav input, .control {
+fieldset, hr, .pagination input, .control {
 	display: none;
 }
 header {

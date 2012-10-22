@@ -261,8 +261,8 @@ function make_thread_meta(board, num, abbrev) {
 	return make_link_rels(board, bits);
 }
 
-function make_nav_html(info) {
-	var bits = ['<nav>'], cur = info.cur_page;
+function make_pagination_html(info) {
+	var bits = ['<nav class="pagination">'], cur = info.cur_page;
 	if (cur >= 0)
 		bits.push('<a href=".">live</a>');
 	else
@@ -274,7 +274,7 @@ function make_nav_html(info) {
 			bits.push('<strong>' + i + '</strong>');
 	}
 	if (info.next_page)
-		bits.push(' <input type="button" value="Next">'); // TODO
+		bits.push(' <input type="button" value="Next">');
 	bits.push('</nav>');
 	return bits.join('');
 }
@@ -378,19 +378,19 @@ function (req, resp) {
 
 	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(0);
-	var nav_html;
+	var paginationHtml;
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
 		resp.writeHead(200, web.noCacheHeaders);
 		write_board_head(resp, board, nav);
-		nav_html = make_nav_html(nav);
-		resp.write(nav_html);
+		paginationHtml = make_pagination_html(nav);
+		resp.write(paginationHtml);
 		resp.write('<hr>\n');
 	});
 	var opts = {fullLinks: true, board: board};
 	write_thread_html(yaku, req, resp, opts);
 	yaku.on('end', function () {
-		resp.write(nav_html);
+		resp.write(paginationHtml);
 		write_page_end(req, resp);
 		yaku.disconnect();
 	});
@@ -429,15 +429,15 @@ function (req, resp) {
 	var nav = page_nav(this.threadCount, this.page);
 	resp.writeHead(200, web.noCacheHeaders);
 	write_board_head(resp, board, nav);
-	var nav_html = make_nav_html(nav);
-	resp.write(nav_html);
+	var paginationHtml = make_pagination_html(nav);
+	resp.write(paginationHtml);
 	resp.write('<hr>\n');
 
 	var opts = {fullLinks: true, board: board};
 	write_thread_html(this.yaku, req, resp, opts);
 	var self = this;
 	this.yaku.on('end', function () {
-		resp.write(nav_html);
+		resp.write(paginationHtml);
 		write_page_end(req, resp);
 		self.finished();
 	});

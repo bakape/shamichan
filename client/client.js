@@ -414,7 +414,7 @@ $DOC.on('click', 'del', function (event) {
 	}
 });
 
-$DOC.on('click', 'nav input', function (event) {
+$DOC.on('click', '.pagination input', function (event) {
 	location.href = $('link[rel=next]').prop('href');
 });
 
