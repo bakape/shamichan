@@ -212,6 +212,37 @@ function make_link_rels(board, bits) {
 	}).join('');
 }
 
+function write_board_head(resp, board, nav) {
+	var indexTmpl = RES.indexTmpl;
+	var title = STATE.hot.TITLES[board] || escape(board);
+	resp.write(indexTmpl[0]);
+	resp.write(title);
+	resp.write(indexTmpl[1]);
+	resp.write(make_board_meta(board, nav));
+	resp.write(indexTmpl[2]);
+	resp.write(title);
+	resp.write(indexTmpl[3]);
+}
+
+function write_thread_head(resp, board, op, subject, limit) {
+	var indexTmpl = RES.indexTmpl;
+	var title = '/'+escape(board)+'/ - ';
+	if (subject)
+		title += escape(subject) + ' (#' + op + ')';
+	else
+		title += '#' + op;
+
+	resp.write(indexTmpl[0]);
+	resp.write(title);
+	resp.write(indexTmpl[1]);
+	resp.write(make_thread_meta(board, op, limit));
+	resp.write(indexTmpl[2]);
+	resp.write('Thread #' + op);
+	resp.write(indexTmpl[3]);
+	resp.write(common.action_link_html('#bottom', 'Bottom'));
+	resp.write('<hr>\n');
+}
+
 function make_board_meta(board, info) {
 	var bits = [];
 	if (info.cur_page >= 0)
@@ -347,18 +378,11 @@ function (req, resp) {
 
 	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(0);
-	var indexTmpl = RES.indexTmpl, nav_html;
+	var nav_html;
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
 		resp.writeHead(200, web.noCacheHeaders);
-		var title = STATE.hot.TITLES[board] || escape(board);
-		resp.write(indexTmpl[0]);
-		resp.write(title);
-		resp.write(indexTmpl[1]);
-		resp.write(make_board_meta(board, nav));
-		resp.write(indexTmpl[2]);
-		resp.write(title);
-		resp.write(indexTmpl[3]);
+		write_board_head(resp, board, nav);
 		nav_html = make_nav_html(nav);
 		resp.write(nav_html);
 		resp.write('<hr>\n');
@@ -402,17 +426,9 @@ web.resource(/^\/(\w+)\/page(\d+)$/, function (req, params, cb) {
 },
 function (req, resp) {
 	var board = this.board;
-	var indexTmpl = RES.indexTmpl;
 	var nav = page_nav(this.threadCount, this.page);
 	resp.writeHead(200, web.noCacheHeaders);
-	var title = STATE.hot.TITLES[board] || escape(board);
-	resp.write(indexTmpl[0]);
-	resp.write(title);
-	resp.write(indexTmpl[1]);
-	resp.write(make_board_meta(board, nav));
-	resp.write(indexTmpl[2]);
-	resp.write(title);
-	resp.write(indexTmpl[3]);
+	write_board_head(resp, board, nav);
 	var nav_html = make_nav_html(nav);
 	resp.write(nav_html);
 	resp.write('<hr>\n');
@@ -520,31 +536,17 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 
 		cb(null, 'ok', {
 			headers: headers,
-			board: board, op: op, num: num,
+			board: board, op: op,
 			subject: preThread.subject,
 			yaku: yaku, reader: reader, limit: limit,
 		});
 	});
 },
 function (req, resp) {
-	var board = this.board, op = this.op, num = this.op;
-	var title = '/'+escape(board)+'/ - ';
-	if (this.subject)
-		title += escape(this.subject) + ' (#' + op + ')';
-	else
-		title += '#' + op;
+	var board = this.board, op = this.op;
 
-	var indexTmpl = RES.indexTmpl;
 	resp.writeHead(200, this.headers);
-	resp.write(indexTmpl[0]);
-	resp.write(title);
-	resp.write(indexTmpl[1]);
-	resp.write(make_thread_meta(board, num, this.limit));
-	resp.write(indexTmpl[2]);
-	resp.write('Thread #' + op);
-	resp.write(indexTmpl[3]);
-	resp.write(common.action_link_html('#bottom', 'Bottom'));
-	resp.write('<hr>\n');
+	write_thread_head(resp, board, op, this.subject, this.limit);
 
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
 	write_thread_html(this.reader, req, resp, opts);
