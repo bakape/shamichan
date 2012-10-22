@@ -87,6 +87,7 @@ exports.reset_resources = function (cb) {
 		RES.indexTmpl = index.tmpl;
 		var hash = crypto.createHash('md5').update(index.src);
 		RES.indexHash = hash.digest('hex').slice(0, 8);
+		RES.navigationHtml = make_navigation_html();
 
 		RES.filterTmpl = tmpl(res.filter).tmpl;
 		RES.curfewTmpl = tmpl(res.curfew).tmpl;
@@ -97,6 +98,21 @@ exports.reset_resources = function (cb) {
 		cb(null);
 	});
 };
+
+function make_navigation_html() {
+	if (!HOT.INTER_BOARD_NAVIGATION)
+		return '';
+	var bits = ['<nav>['];
+	config.BOARDS.forEach(function (board, i) {
+		if (board == config.STAFF_BOARD)
+			return;
+		if (i > 0)
+			bits.push(' / ');
+		bits.push('<a href="../'+board+'/">'+board+'</a>');
+	});
+	bits.push(']</nav>');
+	return bits.join('');
+}
 
 function make_mod_js(cb) {
 	child_process.exec('make -s modjs', function (err, stdout, stderr) {

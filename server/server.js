@@ -220,8 +220,11 @@ function write_board_head(resp, board, nav) {
 	resp.write(indexTmpl[1]);
 	resp.write(make_board_meta(board, nav));
 	resp.write(indexTmpl[2]);
-	resp.write(title);
+	if (RES.navigationHtml)
+		resp.write(RES.navigationHtml);
 	resp.write(indexTmpl[3]);
+	resp.write(title);
+	resp.write(indexTmpl[4]);
 }
 
 function write_thread_head(resp, board, op, subject, limit) {
@@ -237,8 +240,11 @@ function write_thread_head(resp, board, op, subject, limit) {
 	resp.write(indexTmpl[1]);
 	resp.write(make_thread_meta(board, op, limit));
 	resp.write(indexTmpl[2]);
-	resp.write('Thread #' + op);
+	if (RES.navigationHtml)
+		resp.write(RES.navigationHtml);
 	resp.write(indexTmpl[3]);
+	resp.write('Thread #' + op);
+	resp.write(indexTmpl[4]);
 	resp.write(common.action_link_html('#bottom', 'Bottom'));
 	resp.write('<hr>\n');
 }
@@ -391,7 +397,7 @@ function (req, resp) {
 	write_thread_html(yaku, req, resp, opts);
 	yaku.on('end', function () {
 		resp.write(paginationHtml);
-		write_page_end(req, resp);
+		write_page_end(req, resp, false);
 		yaku.disconnect();
 	});
 	yaku.on('error', function (err) {
@@ -438,7 +444,7 @@ function (req, resp) {
 	var self = this;
 	this.yaku.on('end', function () {
 		resp.write(paginationHtml);
-		write_page_end(req, resp);
+		write_page_end(req, resp, false);
 		self.finished();
 	});
 	this.yaku.on('error', function (err) {
@@ -457,9 +463,6 @@ web.resource(/^\/(\w+)\/page(\d+)\/$/, function (req, params, cb) {
 	else
 		cb(null, 'redirect', '../page' + params[2]);
 });
-
-var returnHTML = common.action_link_html('.', 'Return').replace(
-		'span', 'span id="bottom"');
 
 web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	var board = params[1];
@@ -552,8 +555,7 @@ function (req, resp) {
 	write_thread_html(this.reader, req, resp, opts);
 	var self = this;
 	this.reader.on('end', function () {
-		resp.write(returnHTML);
-		write_page_end(req, resp);
+		write_page_end(req, resp, true);
 		self.finished();
 	});
 	function on_err(err) {
@@ -575,8 +577,16 @@ web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
 		cb(null, 'redirect', '../' + params[2]);
 });
 
-function write_page_end(req, resp) {
-	resp.write(RES.indexTmpl[4]);
+var returnHTML = common.action_link_html('.', 'Return').replace(
+		'span', 'span id="bottom"');
+
+function write_page_end(req, resp, returnLink) {
+	resp.write(RES.indexTmpl[5]);
+	if (returnLink)
+		resp.write(returnHTML);
+	else if (RES.navigationHtml)
+		resp.write('<br><br>' + RES.navigationHtml);
+	resp.write(RES.indexTmpl[6]);
 	if (req.ident) {
 		if (req.ident.auth == 'Admin')
 			resp.write('<script src="../admin.js"></script>\n');

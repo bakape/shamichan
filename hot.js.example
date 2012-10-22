@@ -17,6 +17,7 @@ this.hot = {
 		graveyard: 'mawaru-v7.css',
 		staff: 'moe-v7.css',
 	},
+	INTER_BOARD_NAVIGATION: true,
 
 	SPECIAL_TRIPCODES: {
 		kyubey: "／人◕ ‿‿ ◕人＼",
