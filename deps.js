@@ -18,6 +18,7 @@ exports.CLIENT_DEPS = [
 	'client/menu.js',
 	'client/conn.js',
 	'client/drop.js',
+	'client/hover.js',
 	'client/amusement.js',
 	'client/youtube.js',
 ];
