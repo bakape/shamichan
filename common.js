@@ -529,14 +529,18 @@ OS.post_nav = function (post) {
 			'">' + n + '</a></nav>');
 };
 
-var lastNfrag = '<span class="act"><a href="THREAD?lastN">Last&nbsp;N</a></span>'.replace(/N/g, config.THREAD_LAST_N);
+function action_link_html(href, name) {
+	return '<span class="act"><a href="'+href+'">'+name+'</a></span>';
+}
+exports.action_link_html = action_link_html;
+
 function last_n_html(num) {
-	return lastNfrag.replace('THREAD', num);
+	return action_link_html('THREAD?lastN', 'Last&nbsp;N').replace(
+		/N/g, config.THREAD_LAST_N).replace('THREAD', num);
 }
 
-function expand_html(num, omit) {
-	var html = ' &nbsp; <span class="act"><a href="' + num +
-			'">Expand</a></span>';
+function expansion_links_html(num, omit) {
+	var html = ' &nbsp; ' + action_link_html(num, 'Expand');
 	if (omit > config.THREAD_LAST_N)
 		html += ' ' + last_n_html(num);
 	return html;
@@ -564,7 +568,7 @@ OS.atama = function (data) {
 			'">' + readable_time(data.time) + '</time> '),
 			this.post_nav(data));
 	if (!this.full && !data.op)
-		header.push(safe(expand_html(data.num, data.omit)));
+		header.push(safe(expansion_links_html(data.num, data.omit)));
 	this.trigger('headerFinish', {header: header, data: data});
 	header.unshift(safe('<header>'));
 	header.push(safe('</header>\n\t'));

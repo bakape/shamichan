@@ -158,8 +158,8 @@ function write_thread_html(reader, req, response, opts) {
 		if (omit) {
 			var o = common.abbrev_msg(omit, image_omit);
 			if (opts.loadAllPostsLink)
-				o += ' <span class="act"><a href="' +
-					op_post.num + '">See all</a></span>';
+				o += common.action_link_html(op_post.num,
+						'See all');
 			response.write('\t<span class="omit">'+o+'</span>\n');
 		}
 	});
@@ -442,7 +442,8 @@ web.resource(/^\/(\w+)\/page(\d+)\/$/, function (req, params, cb) {
 		cb(null, 'redirect', '../page' + params[2]);
 });
 
-var returnHTML = '<span id="bottom" class="act"><a href=".">Return</a></span>';
+var returnHTML = common.action_link_html('.', 'Return').replace(
+		'span', 'span id="bottom"');
 
 web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	var board = params[1];
@@ -542,7 +543,7 @@ function (req, resp) {
 	resp.write(indexTmpl[2]);
 	resp.write('Thread #' + op);
 	resp.write(indexTmpl[3]);
-	resp.write(nav_link_html('Bottom', '#bottom'));
+	resp.write(common.action_link_html('#bottom', 'Bottom'));
 	resp.write('<hr>\n');
 
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
@@ -564,10 +565,6 @@ function (req, resp) {
 function () {
 	this.yaku.disconnect();
 });
-
-function nav_link_html(name, href) {
-	return '<span class="act"><a href="'+href+'">'+name+'</a></span>';
-}
 
 web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
 	if (caps.under_curfew(req.ident, params[1]))
