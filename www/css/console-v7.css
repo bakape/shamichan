@@ -51,7 +51,7 @@ body {
 	margin: 0;
 	padding: 0;
 }
-body, pre, .themed {
+body, pre, .themed, fieldset input {
 	font-family: Monaco, "Andale Mono", Courier, monospace;
 	font-size: 10pt;
 	color: #ccc;
@@ -65,6 +65,13 @@ del:hover, del:hover em, del.reveal, del.reveal em {
 }
 em {
 	color: #b200b2;
+}
+fieldset input {
+	background-color: transparent;
+	border: solid 1px gray;
+}
+fieldset label {
+	color: gray;
 }
 .watch {
 	background-color: rgba(255, 255, 255, 0.25);
@@ -81,7 +88,7 @@ figcaption, figcaption a {
 	color: #989800;
 	text-transform: lowercase;
 }
-fieldset, hr, .pagination input, .control {
+hr, .pagination input, .control {
 	display: none;
 }
 header {
