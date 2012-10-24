@@ -89,31 +89,40 @@ $(document).on('mouseenter', '.watch', function (event) {
 	if (!node)
 		return;
 	var orig = node.textContent;
-	node.textContent = orig + '...';
+	with_dom(function () {
+		node.textContent = orig + '...';
+	});
 	var m = $target.attr('href').match(youtube_url_re);
 	if (!m)
 		return;
+
 	$.ajax({
 		url: '//gdata.youtube.com/feeds/api/videos/' + m[2],
 		data: {v: '2', alt: 'jsonc'},
 		dataType: 'json',
 		success: function (data) {
-			var title = data && data.data && data.data.title;
-			if (title) {
-				node.textContent = orig + ': ' + title;
-				$target.css({color: 'black'});
-			}
-			else
-				node.textContent = orig + ' (gone?)';
-
-			if (data && data.data && data.data.accessControl &&
-				data.data.accessControl.embed == 'denied') {
-				node.textContent += ' (EMBEDDING DISABLED)';
-				$target.data('noembed', true);
-			}
+			with_dom(gotInfo.bind(null, data));
 		},
 		error: function () {
-			node.textContent = orig + '???';
+			with_dom(function () {
+				node.textContent = orig + '???';
+			});
 		},
 	});
+
+	function gotInfo(data) {
+		var title = data && data.data && data.data.title;
+		if (title) {
+			node.textContent = orig + ': ' + title;
+			$target.css({color: 'black'});
+		}
+		else
+			node.textContent = orig + ' (gone?)';
+
+		if (data && data.data && data.data.accessControl &&
+				data.data.accessControl.embed == 'denied') {
+			node.textContent += ' (EMBEDDING DISABLED)';
+			$target.data('noembed', true);
+		}
+	}
 });
