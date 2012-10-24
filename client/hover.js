@@ -45,9 +45,13 @@ function preview_miru(event, num) {
 	var $w = $(window);
 	if (x + width > $w.innerWidth())
 		x = Math.max(0, event.pageX - width - 20);
-	if (y < $w.scrollTop())
-		y = event.pageY + 20;
-	preview.css({left: x + 'px', top: y + 'px'});
+	var scrollTop = $w.scrollTop();
+	if (y < scrollTop) {
+		var newY = event.pageY + 20;
+		if (newY + height <= scrollTop + $w.height())
+			y = newY;
+	}
+	preview.css({left: x, top: y});
 	if (num != previewNum) {
 		$(document.body).append(preview);
 		previewNum = num;
