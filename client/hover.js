@@ -2,8 +2,10 @@
 
 var preview, previewNum;
 
-$DOC.mousemove(function (event) {
-	if (event.target.tagName.match(/^A$/i)) {
+$DOC.mousemove(mouse_ugoku);
+
+function mouse_ugoku(event) {
+	if (!nashi.hover && event.target.tagName.match(/^A$/i)) {
 		var m = $(event.target).text().match(/^>>(\d+)/);
 		if (m && preview_miru(event, parseInt(m[1], 10)))
 			return;
@@ -12,7 +14,7 @@ $DOC.mousemove(function (event) {
 		preview.remove();
 		preview = previewNum = null;
 	}
-});
+}
 
 function preview_miru(event, num) {
 	if (num != previewNum) {
@@ -57,6 +59,17 @@ function preview_miru(event, num) {
 		previewNum = num;
 	}
 	return true;
+}
+
+/* We'll get annoying preview pop-ups on touch screens, so disable it.
+   Touch detection is unreliable, so wait for an actual touch event */
+document.addEventListener('touchstart', touch_screen_event, false);
+function touch_screen_event() {
+	nashi.hover = true;
+	if (preview)
+		preview.remove();
+	$DOC.unbind('mousemove', mouse_ugoku);
+	document.removeEventListener('touchstart', touch_screen_event, false);
 }
 
 })();
