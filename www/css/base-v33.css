@@ -120,6 +120,9 @@ small {
 	display: block;
 	padding-top: 0.5em;
 }
+span.control ul {
+  z-index:10;
+}
 ul {
 	background: url('ui/box.png') 10px 10px no-repeat;
 	border-bottom: none;
@@ -171,6 +174,11 @@ section #banner {
 figure {
 	display: block;
 	position: relative;
+}
+section > figure a {
+  position:relative;
+  z-index:5;
+  float:left;
 }
 .hat, .expanded .hat {
 	background: url('ui/hat.png') no-repeat;
