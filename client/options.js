@@ -74,11 +74,12 @@ add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 	if (theme) {
 		var css = theme + '-v' + globalVersion + '.css';
 		$('#theme').attr('href', mediaURL + 'css/' + css);
-		text_only(theme == 'console');
 	}
 }, themes);
 
-function text_only(on) {
+/* IMAGE HIDING */
+
+add_spec('hideimages', 'Hide images', function (on) {
 	if (on) {
 		$('img').hide();
 		$.cookie('img', 'no', {expires: 9000});
@@ -88,7 +89,7 @@ function text_only(on) {
 		$.cookie('img', null);
 	}
 	oneeSama.hideImgs = on;
-}
+}, 'checkbox');
 
 /* BACKLINKS */
 
