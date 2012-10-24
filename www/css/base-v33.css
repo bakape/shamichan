@@ -81,9 +81,13 @@ h3 {
 }
 header {
 	background: url('ui/box.png') left 3px no-repeat;
-	margin-left: -3px;
+	margin-left: -14px;
 	padding-left: 14px;
 	position: relative;
+}
+article header {
+  margin-left: -3px;
+  padding-left: 14px;
 }
 header nav a {
 	text-decoration: none;
@@ -221,9 +225,6 @@ article .hat {
 .preview {
 	padding: 4px 10px;
 	position: absolute;
-}
-.scroll-lock {
-	margin-left: -10px;
 }
 .scroll-lock header {
 	background-image: url('ui/lock.png');
