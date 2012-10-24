@@ -93,12 +93,14 @@ add_spec('hideimages', 'Hide images', function (on) {
 
 /* BACKLINKS */
 
-add_spec('nobacklinks', 'Backlinks', function (b) {
-	if (b)
-		show_backlinks();
-	else
-		$('small').remove();
-}, 'revcheckbox');
+if (THREAD) {
+	add_spec('nobacklinks', 'Backlinks', function (b) {
+		if (b)
+			$('small').remove();
+		else
+			show_backlinks();
+	}, 'revcheckbox');
+}
 
 function show_backlinks() {
 	if (!CurThread)
