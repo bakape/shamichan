@@ -92,12 +92,12 @@ function text_only(on) {
 
 /* BACKLINKS */
 
-add_spec('backlinks', 'Local backlinks', function (b) {
+add_spec('nobacklinks', 'Backlinks', function (b) {
 	if (b)
 		show_backlinks();
 	else
 		$('small').remove();
-}, 'checkbox');
+}, 'revcheckbox');
 
 function show_backlinks() {
 	if (!CurThread)
