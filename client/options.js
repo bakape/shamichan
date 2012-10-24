@@ -274,7 +274,9 @@ function hocus_pocus() {
 			val = $o.val();
 		options[id] = val;
 		save_opts();
-		(spec.func)(val);
+		with_dom(function () {
+			(spec.func)(val);
+		});
 	});
 	_.each(optSpecs, function (spec) {
 		var id = spec.id;
