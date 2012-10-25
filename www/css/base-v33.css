@@ -86,8 +86,8 @@ header {
 	position: relative;
 }
 article header {
-  margin-left: -3px;
-  padding-left: 14px;
+	margin-left: -3px;
+	padding-left: 14px;
 }
 header nav a {
 	text-decoration: none;
@@ -121,7 +121,7 @@ small {
 	padding-top: 0.5em;
 }
 span.control ul {
-  z-index:10;
+	z-index: 10;
 }
 ul {
 	background: url('ui/box.png') 10px 10px no-repeat;
@@ -176,9 +176,9 @@ figure {
 	position: relative;
 }
 section > figure a {
-  position:relative;
-  z-index:5;
-  float:left;
+	z-index: 5;
+	float: left;
+	position: relative;
 }
 .hat, .expanded .hat {
 	background: url('ui/hat.png') no-repeat;
