@@ -1,5 +1,5 @@
 this.hot = {
-    EMAIL: "lalc@doushio.com",
+	EMAIL: "lalc@doushio.com",
 	TITLES: {
 		moe: "/moe/ - Sweets",
 		gar: "/gar/ - Hard Work &amp; Guts",

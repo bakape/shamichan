@@ -7,8 +7,9 @@ var _ = require('../lib/underscore'),
     util = require('util'),
     winston = require('winston');
 
+var send;
 if (config.SERVE_STATIC_FILES)
-  var send = require('send');
+	send = require('send');
 
 var escape = require('../common').escape_html;
 var routes = [];
@@ -47,8 +48,8 @@ var server = require('http').createServer(function (req, resp) {
 
 	if(config.SERVE_STATIC_FILES)
 		send(req, req.url).root('www/').pipe(resp);
-  else
-    render_404(resp);
+	else
+		render_404(resp);
 });
 exports.server = server;
 

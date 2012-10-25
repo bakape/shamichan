@@ -5,7 +5,7 @@ var config = {
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
 	SOCKET_PATH: '/hana',
 	TRUST_X_FORWARDED_FOR: false,
-  SERVE_STATIC_FILES: false,
+	SERVE_STATIC_FILES: false,
 
 	REDIS_PORT: 6379,
 
