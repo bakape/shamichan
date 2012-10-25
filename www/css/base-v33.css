@@ -234,7 +234,7 @@ article .hat {
 	padding: 4px 10px;
 	position: absolute;
 }
-.scroll-lock header {
+.scroll-lock > header {
 	background-image: url('ui/lock.png');
 	background-position: 0 0;
 }
