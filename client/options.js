@@ -79,7 +79,7 @@ add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 
 /* IMAGE HIDING */
 
-add_spec('hideimages', 'Hide images', function (on) {
+add_spec('board.$BOARD.hideimages', 'Hide images', function (on) {
 	if (on) {
 		$('img').hide();
 		$.cookie('img', 'no', {expires: 9000});
