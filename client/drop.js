@@ -18,16 +18,18 @@ function drop_shita(e) {
 			}
 		});
 	}
-	else if (postForm.uploading || postForm.uploaded)
-		return;
+	else {
+		var attrs = postForm.model.attributes;
+		if (attrs.uploading || attrs.uploaded)
+			return;
+	}
+
 	if (files.length > 1) {
 		postForm.upload_error('Too many files.');
 		return;
 	}
 
 	var extra = postForm.prep_upload();
-	postForm.$imageInput.attr('disabled', true);
-
 	var fd = new FormData();
 	fd.append('image', files[0]);
 	for (var k in extra)
