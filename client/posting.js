@@ -366,14 +366,13 @@ resize_input: function (val) {
 upload_status: function (msg) {
 	if (this.model.get('cancelled'))
 		return;
-	this.uploadStatus.text(msg);
+	this.model.set('uploadStatus', msg);
 },
 
 upload_error: function (msg) {
 	if (this.model.get('cancelled'))
 		return;
-	this.uploadStatus.text(msg);
-	this.model.set({uploading: false});
+	this.model.set({uploadStatus: msg, uploading: false});
 	if (this.uploadForm)
 		this.uploadForm.find('input[name=alloc]').remove();
 },
@@ -523,17 +522,21 @@ render_buttons: function () {
 	var attrs = this.model.attributes;
 	var allocWait = attrs.sentAllocRequest && !attrs.num;
 	var d = attrs.uploading || allocWait;
-	/* Beware of undefined! */
-	this.submit.prop('disabled', !!d);
-	if (attrs.uploaded)
-		this.submit.css({'margin-left': '0'});
-	this.$cancel.prop('disabled', !!allocWait);
-	this.$cancel.toggle(!!(!attrs.num || attrs.uploading));
-	this.$imageInput.prop('disabled', !!attrs.uploading);
+	var self = this;
+	with_dom(function () {
+		/* Beware of undefined! */
+		self.submit.prop('disabled', !!d);
+		if (attrs.uploaded)
+			self.submit.css({'margin-left': '0'});
+		self.$cancel.prop('disabled', !!allocWait);
+		self.$cancel.toggle(!!(!attrs.num || attrs.uploading));
+		self.$imageInput.prop('disabled', !!attrs.uploading);
+		self.$uploadStatus.text(attrs.uploadStatus);
+	});
 },
 
 prep_upload: function () {
-	this.uploadStatus.text('Uploading...');
+	this.model.set('uploadStatus', 'Uploading...');
 	this.input.focus();
 	var attrs = this.model.attributes;
 	return {spoiler: attrs.spoiler, op: attrs.op || 0};
@@ -558,9 +561,9 @@ make_upload_form: function () {
 		type: 'button', id: 'toggle',
 		click: $.proxy(this, 'on_toggle'),
 	});
-	this.uploadStatus = $('<strong/>');
+	this.$uploadStatus = $('<strong/>');
 	form.append(this.$cancel, this.$imageInput, this.$toggle, ' ',
-			this.uploadStatus);
+			this.$uploadStatus);
 	this.$iframe = $('<iframe src="" name="upload"/>').appendTo('body');
 	if (nashi.upload) {
 		this.$imageInput.hide();
@@ -572,7 +575,7 @@ make_upload_form: function () {
 
 on_image_chosen: function () {
 	if (!this.$imageInput.val()) {
-		this.uploadStatus.text('');
+		this.model.set('uploadStatus', '');
 		return;
 	}
 	var extra = this.prep_upload();
