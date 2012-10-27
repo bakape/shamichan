@@ -1131,7 +1131,7 @@ Y.finish_all = function (callback) {
 			m.exec(function (err, rs) {
 				if (err)
 					return cb(err);
-				m = r.multi();
+				var m = r.multi();
 				finish_off(m, key, rs[0]);
 				var n = parseInt(key.match(/:(\d+)$/)[1]);
 				var op = isPost ? parseInt(rs[1], 10) : n;
