@@ -15,9 +15,9 @@ article, aside {
 	padding: 4px 10px;
 }
 aside a, #options {
-	position: relative;
 	cursor: pointer;
-	z-index: 100;
+	position: relative;
+	z-index: 15;
 }
 article figure img {
 	margin-bottom: 0;
@@ -233,6 +233,7 @@ article .hat {
 .preview {
 	padding: 4px 10px;
 	position: absolute;
+	z-index: 20;
 }
 .scroll-lock > header {
 	background-image: url('ui/lock.png');
