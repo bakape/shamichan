@@ -928,6 +928,8 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 	if (!client.post || client.post.image)
 		return false;
 	imager.obtain_image_alloc(alloc, function (err, alloc) {
+		if (err)
+			return client.report(Muggle("Image lost.", err));
 		if (!client.post || client.post.image)
 			return;
 		client.db.add_image(client.post, alloc, client.ident.ip,
