@@ -175,10 +175,10 @@ figure {
 	display: block;
 	position: relative;
 }
-section > figure a {
-	z-index: 5;
+section > figure > a {
 	float: left;
 	position: relative;
+	z-index: 5;
 }
 .hat, .expanded .hat {
 	background: url('ui/hat.png') no-repeat;
