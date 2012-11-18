@@ -158,7 +158,7 @@ function write_thread_html(reader, req, response, opts) {
 		if (omit) {
 			var o = common.abbrev_msg(omit, image_omit);
 			if (opts.loadAllPostsLink)
-				o += common.action_link_html(op_post.num,
+				o += ' '+common.action_link_html(op_post.num,
 						'See all');
 			response.write('\t<span class="omit">'+o+'</span>\n');
 		}
