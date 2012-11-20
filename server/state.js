@@ -115,7 +115,9 @@ function make_navigation_html() {
 }
 
 function make_mod_js(cb) {
-	child_process.exec('make -s modjs', function (err, stdout, stderr) {
+	var makeBin = config.GNU_MAKE || '/usr/bin/make';
+	var cmd = makeBin + ' -s modjs';
+	child_process.exec(cmd, function (err, stdout, stderr) {
 		if (err)
 			cb(err);
 		else if (stderr && stderr.trim())

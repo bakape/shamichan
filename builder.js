@@ -22,12 +22,13 @@ var reload_state = _.debounce(function () {
 }, 500);
 
 var build_client = _.debounce(function () {
-	var make = child_process.execFile('make', ['-s', '-q', 'client']);
+	var makeBin = config.GNU_MAKE || '/usr/bin/make';
+	var make = child_process.execFile(makeBin, ['-s', '-q', 'client']);
 	make.once('exit', function (code) {
 		if (!code)
 			return;
 		console.log('make client');
-		var make = child_process.execFile('make', ['-s', 'client']);
+		var make = child_process.execFile(makeBin, ['-s', 'client']);
 		make.stdout.pipe(process.stdout);
 		make.stderr.pipe(process.stderr);
 	});
