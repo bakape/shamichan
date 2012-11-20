@@ -1644,7 +1644,7 @@ function tag_key(tag) {
 
 function parse_tags(input) {
 	if (!input)
-		return ['moe'];
+		return [config.DEFAULT_BOARD];
 	var tags = [];
 	while (input.length) {
 		var m = input.match(/^(\d+):/);

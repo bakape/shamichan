@@ -10,6 +10,7 @@ var config = {
 	REDIS_PORT: 6379,
 
 	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
+	DEFAULT_BOARD: 'moe',
 	GAME_BOARDS: ['moe', 'archive'],
 	STAFF_BOARD: 'staff',
 	THREADS_PER_PAGE: 10,

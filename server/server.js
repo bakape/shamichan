@@ -296,7 +296,7 @@ function redirect_thread(cb, num, op, tag) {
 web.route_post(/^\/upload\/$/, require('../imager/daemon').new_upload);
 
 web.resource(/^\/$/, function (req, cb) {
-	cb(null, 'redirect', 'moe/');
+	cb(null, 'redirect', config.DEFAULT_BOARD + '/');
 });
 
 web.route_post(/^\/login$/, persona.login);
