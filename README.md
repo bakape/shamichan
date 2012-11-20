@@ -12,8 +12,9 @@ Setup:
 
 Production:
 
+* Have your webserver serve www/ (or wherever you've moved src, thumb, etc.)
 * Run `node server/server.js` for just the server
-* `config.DAEMON` support is broken for now.
+* config.DAEMON support is broken for now
 * Be sure to `make client` for any client-affecting change
 
 Dependencies:
