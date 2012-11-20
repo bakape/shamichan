@@ -32,6 +32,6 @@ npm modules:
 
 Optional npm deps for various features:
 
-* <s>daemon</s> (broken currently)
+* ~~daemon~~ (broken currently)
 * icecast now-playing banners: node-expat, request
 * [send](https://github.com/visionmedia/send) (if you want to serve static files directly from the node.js process; useful in debug mode also)
