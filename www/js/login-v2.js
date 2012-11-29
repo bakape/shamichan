@@ -22,20 +22,14 @@ function setup_button() {
 	if (!window.loggedInUser) {
 		inform('Invoke your Persona', 'orange');
 		$button.click(function (event) {
-			if (navigator.id)
-				navigator.id.request();
-			else
-				inform('Persona system not loaded.', 'dark');
+			navigator.id.request();
 			event.preventDefault();
 		});
 	}
 	else {
 		inform('Logout', 'blue');
 		$button.click(function (event) {
-			if (navigator.id)
-				navigator.id.logout();
-			else
-				inform('Persona system not loaded.', 'dark');
+			navigator.id.logout();
 			event.preventDefault();
 		});
 	}
