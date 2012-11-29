@@ -138,6 +138,8 @@ exports.route_get = function (pattern, handler) {
 };
 
 exports.resource = function (pattern, head, get, tear_down) {
+	if (head === true)
+		head = function (req, cb) { cb(null, 'ok'); };
 	var res = {pattern: pattern, head: head, authPassthrough: true};
 	res.headParams = (head.length == 3);
 	if (get)
@@ -148,6 +150,8 @@ exports.resource = function (pattern, head, get, tear_down) {
 };
 
 exports.resource_auth = function (pattern, head, get, finished) {
+	if (head === true)
+		head = function (req, cb) { cb(null, 'ok'); };
 	var res = {pattern: pattern, head: head, authPassthrough: false};
 	res.headParams = (head.length == 3);
 	if (get)

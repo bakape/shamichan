@@ -70,6 +70,7 @@ exports.reset_resources = function (cb) {
 		version: get_version.bind(null, deps.CLIENT_DEPS),
 		index: read('tmpl', 'index.html'),
 		filter: read('tmpl', 'filter.html'),
+		login: read('tmpl', 'login.html'),
 		curfew: read('tmpl', 'curfew.html'),
 		aLookup: read('tmpl', 'alookup.html'),
 		notFound: read('www', '404.html'),
@@ -91,6 +92,7 @@ exports.reset_resources = function (cb) {
 
 		RES.filterTmpl = tmpl(res.filter).tmpl;
 		RES.curfewTmpl = tmpl(res.curfew).tmpl;
+		RES.loginHtml = tmpl(res.login).tmpl;
 		RES.aLookupHtml = res.aLookup;
 		RES.notFoundHtml = res.notFound;
 		RES.serverErrorHtml = res.serverError;

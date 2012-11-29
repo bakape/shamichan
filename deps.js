@@ -60,6 +60,7 @@ exports.SERVER_STATE = [
 	'tmpl/curfew.html',
 	'tmpl/filter.html',
 	'tmpl/index.html',
+	'tmpl/login.html',
 	'tmpl/redirect.html',
 ];
 

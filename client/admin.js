@@ -1,5 +1,6 @@
 var $selectButton, $controls;
 window.loggedInUser = IDENT.email;
+window.x_csrf = IDENT.csrf;
 
 function show_panel() {
 	var specs = [
@@ -114,26 +115,6 @@ function make_selection_handle() {
 
 window.fun = function () {
 	send([33, THREAD]);
-};
-
-window.logout_admin = function (cb) {
-	$.ajax({
-		type: 'POST',
-		url: '../logout',
-		data: {csrf: IDENT.csrf},
-		dataType: 'json',
-		success: function (res) {
-			if (res && res.status == 'okay')
-				cb(null);
-			else
-				cb(res.message || 'Unknown error.');
-		},
-		error: function (res) {
-			console.log(res);
-			window.stuff = res;
-			cb('Network error.');
-		},
-	});
 };
 
 override(ComposerView.prototype, 'make_alloc_request',

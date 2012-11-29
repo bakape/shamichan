@@ -302,6 +302,7 @@ web.resource(/^\/$/, function (req, cb) {
 web.route_post(/^\/login$/, persona.login);
 web.route_post_auth(/^\/logout$/, persona.logout);
 if (config.DEBUG) {
+	/* Shortcuts for convenience */
 	web.route_get(/^\/login$/, function (req, resp) {
 		persona.set_cookie(resp, {auth: 'Admin'});
 	});
@@ -310,6 +311,34 @@ if (config.DEBUG) {
 	});
 	web.route_get(/^\/logout$/, persona.logout);
 }
+else {
+	/* Production login/out endpoint */
+	web.resource(/^\/login$/, true, function (req, resp) {
+		resp.writeHead(200, web.noCacheHeaders);
+		resp.write(RES.loginHtml[0]);
+		resp.write('{}');
+		resp.end(RES.loginHtml[1]);
+	});
+
+	web.resource(/^\/logout$/, function (req, cb) {
+		if (req.ident.auth)
+			cb(null, 'ok');
+		else
+			cb(null, 'redirect', config.DEFAULT_BOARD+'/');
+	},
+	function (req, resp) {
+		resp.writeHead(200, web.noCacheHeaders);
+		resp.write(RES.loginHtml[0]);
+		resp.write(JSON.stringify({
+			loggedInUser: req.ident.email,
+			x_csrf: req.ident.csrf,
+		}));
+		resp.end(RES.loginHtml[1]);
+	});
+}
+web.resource(/^\/(login|logout)\/$/, true, function (req, params, cb) {
+	cb(null, 'redirect', '../' + params[1]);
+});
 
 function write_mod_js(resp, ident) {
 	resp.writeHead(200, {
