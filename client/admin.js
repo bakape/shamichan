@@ -1,3 +1,6 @@
+/* NOTE: This file is processed by server/state.js
+         and served by server/server.js (to auth'd users only) */
+
 var $selectButton, $controls;
 window.loggedInUser = IDENT.email;
 window.x_csrf = IDENT.csrf;
