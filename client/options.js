@@ -247,7 +247,7 @@ function is_magic_word(w) {
 
 function hocus_pocus() {
 	$email.val('');
-	yepnope(mediaURL + 'js/login-v1.js');
+	yepnope(mediaURL + 'js/login-v2.js');
 }
 
 (function () {
