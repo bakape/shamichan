@@ -1065,6 +1065,10 @@ function start_server() {
 		daemon.lock(lock);
 		winston.remove(winston.transports.Console);
 	}
+	else {
+		winston.info('Listening on ' + (config.LISTEN_HOST || '')
+				+ ':' + config.LISTEN_PORT + '.');
+	}
 }
 
 if (require.main == module) {
