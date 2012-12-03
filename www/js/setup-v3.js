@@ -5,9 +5,9 @@ var BOARD, THREAD, BUMP, PAGE, options;
 	BOARD = p.match(/^\/(.+?)\//)[1];
 	var t = p.match(/\/(\d+)$/);
 	THREAD = t ? parseInt(t[1], 10) : 0;
-	BUMP = !!p.match(/\/$/);
-	PAGE = p.match(/\/page(\d+)$/);
-	PAGE = PAGE ? parseInt(PAGE[1], 10) : -1;
+	BUMP = /\/$/.test(p);
+	t = p.match(/\/page(\d+)$/);
+	PAGE = t ? parseInt(t[1], 10) : -1;
 
 	try {
 		options = JSON.parse(localStorage.options);

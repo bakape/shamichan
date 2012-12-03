@@ -301,7 +301,7 @@ on_input: function (val) {
 		var ok = val.substr(0, nl);
 		val = val.substr(nl+1);
 		input.val(val);
-		if (this.model.get('sentAllocRequest') || ok.match(/[^ ]/))
+		if (this.model.get('sentAllocRequest') || /[^ ]/.test(ok))
 			this.commit(ok + '\n');
 	}
 	else {
@@ -328,7 +328,7 @@ add_ref: function (num) {
 	/* If a >>link exists, put this one on the next line */
 	var input = this.input;
 	var val = input.val();
-	if (val.match(/^>>\d+$/)) {
+	if (/^>>\d+$/.test(val)) {
 		input.val(val + '\n');
 		this.on_input();
 		val = input.val();
@@ -345,7 +345,7 @@ find_time_arg: function (params) {
 	params = params.split('&');
 	for (var i = 0; i < params.length; i++) {
 		var pair = '#' + params[i];
-		if (pair.match(youtube_time_re))
+		if (youtube_time_re.test(pair))
 			return pair;
 	}
 	return false;
@@ -591,7 +591,7 @@ on_image_chosen: function () {
 		if (!doc)
 			return;
 		var error = $(doc.document || doc).text();
-		if (error.match(/^\s*OK\s*$/))
+		if (/^\s*OK\s*$/.test(error))
 			return;
 		/* sanity check for weird browser responses */
 		if (error.length < 5 || error.length > 100)

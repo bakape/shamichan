@@ -167,12 +167,12 @@ function safe(frag) {
 exports.safe = safe;
 
 function is_noko(email) {
-	return email && email.indexOf('@') == -1 && email.match(/noko/i);
+	return email && email.indexOf('@') == -1 && /noko/i.test(email);
 }
 exports.is_noko = is_noko;
 function is_sage(email) {
 	return config.SAGE_ENABLED && email &&
-			email.indexOf('@') == -1 && email.match(/sage/i);
+			email.indexOf('@') == -1 && /sage/i.test(email);
 }
 exports.is_sage = is_sage;
 

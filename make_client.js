@@ -34,12 +34,12 @@ function lookup_config(key) {
 var config_re = /\b(\w+onfig)\.(\w+)\b/;
 
 async.forEachSeries(files, function (file, cb) {
-	if (file.match(/^lib\//)) {
+	if (/^lib\//.test(file)) {
 		process.stdout.write(fs.readFileSync(file));
 		process.stdout.write('\n');
 		return cb(null);
 	}
-	if (file.match(/^config\.js/))
+	if (/^config\.js/.test(file))
 		return cb("config.js shouldn't be in client");
 	var lines = fs.readFileSync(file, 'UTF-8').split('\n');
 	var out;
@@ -57,9 +57,9 @@ async.forEachSeries(files, function (file, cb) {
 	}
 	for (var j = 0; j < lines.length; j++) {
 		var line = lines[j];
-		if (line.match(/^var\s+DEFINES\s*=\s*exports\s*;\s*$/))
+		if (/^var\s+DEFINES\s*=\s*exports\s*;\s*$/.test(line))
 			continue;
-		if (line.match(/^var\s+(\w+onfig|common|_)\s*=\s*require.*$/))
+		if (/^var\s+(\w+onfig|common|_)\s*=\s*require.*$/.test(line))
 			continue;
 		m = line.match(/^DEFINES\.(\w+)\s*=\s*(.+);$/);
 		if (m) {

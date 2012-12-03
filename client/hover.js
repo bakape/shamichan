@@ -5,7 +5,7 @@ var preview, previewNum;
 $DOC.mousemove(mouse_ugoku);
 
 function mouse_ugoku(event) {
-	if (!nashi.hover && event.target.tagName.match(/^A$/i)) {
+	if (!nashi.hover && /^A$/i.test(event.target.tagName)) {
 		var m = $(event.target).text().match(/^>>(\d+)/);
 		if (m && preview_miru(event, parseInt(m[1], 10)))
 			return;

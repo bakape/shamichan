@@ -34,7 +34,7 @@ function check(schema, msg) {
 		for (var k in schema) {
 			var spec = schema[k];
 			/* optional key */
-			if (typeof spec == 'string' && spec.match(/^opt /)) {
+			if (typeof spec == 'string' && /^opt /.test(spec)) {
 				if (!(k in msg))
 					continue;
 				spec = spec.slice(4);
@@ -51,7 +51,7 @@ function check(schema, msg) {
 		if (typeof msg != 'object' || msg instanceof Array)
 			return false;
 		for (var k in msg) {
-			if (!k.match(/^[1-9]\d*$/))
+			if (!/^[1-9]\d*$/.test(k))
 				return false;
 			if (!check('nat', msg[k]))
 				return false;

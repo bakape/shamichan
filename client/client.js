@@ -18,7 +18,7 @@ function inject(frag) {
 		var m = frag.safe.match(/^<(\w+)>$/);
 		if (m)
 			out = document.createElement(m[1]);
-		else if (frag.safe.match(/^<\/\w+>$/))
+		else if (/^<\/\w+>$/.test(frag.safe))
 			out = '';
 	}
 	if (out === null) {

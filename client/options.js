@@ -163,7 +163,7 @@ $(document).on('click', 'img', function (event) {
 
 function toggle_expansion(img, event) {
 	var href = img.parent().attr('href');
-	if (href.match(/^\.\.\/outbound\//))
+	if (/^\.\.\/outbound\//.test(href))
 		return;
 	event.preventDefault();
 	var expand = !img.data('thumbSrc');

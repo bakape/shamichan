@@ -698,7 +698,7 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 	if (!caps.can_access_board(client.ident, client.board))
 		return false;
 	var frag = msg.frag;
-	if (frag && frag.match(/^\s*$/g))
+	if (frag && /^\s*$/g.test(frag))
 		return false;
 	if (!frag && !msg.image)
 		return false;
@@ -729,12 +729,12 @@ function allocate_post(msg, client, callback) {
 	var extra = {ip: ip, board: client.board};
 	var image_alloc;
 	if (msg.image) {
-		if (!msg.image.match(/^\d+$/))
+		if (!/^\d+$/.test(msg.image))
 			return callback(Muggle('Expired image token.'));
 		image_alloc = msg.image;
 	}
 	if (msg.frag) {
-		if (msg.frag.match(/^\s*$/g))
+		if (/^\s*$/g.test(msg.frag))
 			return callback(Muggle('Bad post body.'));
 		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback(Muggle('Post is too long.'));
@@ -892,9 +892,9 @@ dispatcher[common.UPDATE_POST] = update_post;
 function debug_command(client, frag) {
 	if (!frag)
 		return;
-	if (frag.match(/\bfail\b/))
+	if (/\bfail\b/.test(frag))
 		client.report(Muggle("Failure requested."));
-	else if (frag.match(/\bclose\b/))
+	else if (/\bclose\b/.test(frag))
 		client.socket.close();
 }
 

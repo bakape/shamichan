@@ -124,7 +124,7 @@ exports.set_cookie = function (resp, info) {
 function extract_login_cookie(chunks) {
 	if (!chunks || !chunks.a)
 		return false;
-	return chunks.a.match(/^[a-zA-Z0-9+\/]{20}$/) ? chunks.a : false;
+	return /^[a-zA-Z0-9+\/]{20}$/.test(chunks.a) ? chunks.a : false;
 }
 exports.extract_login_cookie = extract_login_cookie;
 
