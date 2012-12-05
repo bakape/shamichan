@@ -1,7 +1,8 @@
 module.exports = {
 	IMAGE_FILESIZE_MAX: 1024 * 1024 * 3,
-	IMAGE_WIDTH_MAX: 5000,
-	IMAGE_HEIGHT_MAX: 5000,
+	IMAGE_WIDTH_MAX: 6000,
+	IMAGE_HEIGHT_MAX: 6000,
+	IMAGE_PIXELS_MAX: 4500*4500,
 	MEDIA_DIRS: {
 		src: 'www/src',
 		thumb: 'www/thumb',

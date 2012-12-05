@@ -158,6 +158,8 @@ IU.process = function (err) {
 		image.dims = [w, h];
 		if (!w || !h)
 			return self.failure(Muggle('Bad image dimensions.'));
+		if (config.IMAGE_PIXELS_MAX && w * h > config.IMAGE_PIXELS_MAX)
+			return self.failure(Muggle('Way too many pixels.'));
 		if (w > config.IMAGE_WIDTH_MAX && h > config.IMAGE_HEIGHT_MAX)
 			return self.failure(Muggle('Image is too wide'
 					+ ' and too tall.'));
