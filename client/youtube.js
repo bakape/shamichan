@@ -34,9 +34,9 @@ function make_video(id, params, start) {
 
 function video_dims() {
 	if (window.screen && screen.width <= 320)
-		return {width: 240, height: 200};
+		return {width: 250, height: 150};
 	else
-		return {width: 425, height: 355};
+		return {width: 560, height: 340};
 }
 
 $(document).on('click', '.watch', function (event) {
