@@ -715,7 +715,7 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 }
 
 function inactive_board_check(client) {
-	if (caps.is_admin_ident(client.ident))
+	if (caps.can_administrate(client.ident))
 		return true;
 	return ['graveyard', 'archive'].indexOf(client.board) == -1;
 }
@@ -983,7 +983,7 @@ dispatcher[common.SPOILER_IMAGES] = caps.mod_handler(function (nums, client) {
 });
 
 dispatcher[common.EXECUTE_JS] = function (msg, client) {
-	if (!caps.is_admin_ident(client.ident))
+	if (!caps.can_administrate(client.ident))
 		return false;
 	if (!check(['id'], msg))
 		return false;

@@ -57,7 +57,7 @@ Subscription.full_key = function (target, ident) {
 	var channel;
 	if (ident && ident.priv)
 		channel = 'priv:' + ident.priv;
-	else if (caps.is_mod_ident(ident))
+	else if (caps.can_moderate(ident))
 		channel = 'auth';
 	var key = channel ? channel + ':' + target : target;
 	return {key: key, channel: channel, target: target};
@@ -1270,7 +1270,7 @@ Y._get_each_thread = function (reader, ix, nums) {
 function Reader(yakusoku) {
 	events.EventEmitter.call(this);
 	this.y = yakusoku;
-	if (caps.is_admin_ident(yakusoku.ident))
+	if (caps.can_administrate(yakusoku.ident))
 		this.showPrivs = true;
 }
 

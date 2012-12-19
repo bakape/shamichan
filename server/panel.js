@@ -7,7 +7,7 @@ var _ = require('../lib/underscore'),
 var RES = require('./state').resources;
 
 web.route_get_auth(/^\/admin$/, function (req, resp) {
-	if (!caps.is_admin_ident(req.ident))
+	if (!caps.can_administrate(req.ident))
 		return web.render_404(resp);
 	var board = req.board || config.DEFAULT_BOARD;
 	if (!caps.can_access_board(req.ident, board))
@@ -43,7 +43,7 @@ web.route_get_auth(/^\/admin$/, function (req, resp) {
 });
 
 web.route_post_auth(/^\/admin$/, function (req, resp) {
-	if (!caps.is_admin_ident(req.ident))
+	if (!caps.can_administrate(req.ident))
 		return web.render_404(resp);
 
 	var threads = req.body.threads.split(',').map(function (x) {

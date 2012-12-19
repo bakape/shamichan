@@ -6,9 +6,9 @@ var authcommon = require('../authcommon'),
     hooks = require('../hooks');
 
 function can_access_board(ident, board) {
-	if (board == 'graveyard' && is_admin_ident(ident))
+	if (board == 'graveyard' && can_administrate(ident))
 		return true;
-	if (board == config.STAFF_BOARD && !is_mod_ident(ident))
+	if (board == config.STAFF_BOARD && !can_moderate(ident))
 		return false;
 	if (ident.ban)
 		return false;
@@ -28,15 +28,15 @@ exports.can_access_thread = function (ident, op) {
 	return false;
 };
 
-function is_mod_ident(ident) {
+function can_moderate(ident) {
 	return (ident.auth === 'Admin' || ident.auth === 'Moderator');
 }
-exports.is_mod_ident = is_mod_ident;
+exports.can_moderate = can_moderate;
 
-function is_admin_ident(ident) {
+function can_administrate(ident) {
 	return ident.auth === 'Admin';
 }
-exports.is_admin_ident = is_admin_ident;
+exports.can_administrate = can_administrate;
 
 function denote_priv(info) {
 	if (info.data.priv)
@@ -51,17 +51,17 @@ function dead_media_paths(paths) {
 exports.augment_oneesama = function (oneeSama, opts) {
 	var ident = opts.ident;
 	oneeSama.ident = ident;
-	if (is_mod_ident(ident))
+	if (can_moderate(ident))
 		oneeSama.hook('headerName', authcommon.ip_mnemonic);
-	if (is_admin_ident(ident))
+	if (can_administrate(ident))
 		oneeSama.hook('headerName', denote_priv);
-	if (is_admin_ident(ident) && opts.board == 'graveyard')
+	if (can_administrate(ident) && opts.board == 'graveyard')
 		oneeSama.hook('mediaPaths', dead_media_paths);
 };
 
 exports.mod_handler = function (func) {
 	return function (nums, client) {
-		if (!is_mod_ident(client.ident))
+		if (!can_moderate(client.ident))
 			return false;
 		var opts = nums.shift();
 		if (!check({when: 'string'}, opts) || !check('id...', nums))
@@ -141,7 +141,7 @@ exports.lookup_ident = function (ip) {
 };
 
 function under_curfew(ident, board) {
-	if (is_admin_ident(ident))
+	if (can_administrate(ident))
 		return false;
 	var curfew = config.CURFEW_HOURS;
 	if (!curfew || (config.CURFEW_BOARDS || []).indexOf(board) < 0)
