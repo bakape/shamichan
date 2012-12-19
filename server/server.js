@@ -554,6 +554,8 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 				etag += '-noimg';
 			if (preThread.locked)
 				etag += '-locked';
+			if (req.ident.auth)
+				etag += '-auth';
 			if (req.headers['if-none-match'] === etag) {
 				yaku.disconnect();
 				return cb(null, 304);
