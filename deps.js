@@ -17,6 +17,7 @@ exports.CLIENT_DEPS = [
 	'client/posting.js',
 	'client/menu.js',
 	'client/conn.js',
+	'client/unread.js',
 	'client/drop.js',
 	'client/hover.js',
 	'client/amusement.js',
