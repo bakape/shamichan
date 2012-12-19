@@ -349,7 +349,7 @@ function write_mod_js(resp, ident) {
 }
 
 web.resource_auth(/^\/admin\.js$/, function (req, cb) {
-	if (req.ident.auth != 'Admin')
+	if (!caps.can_administrate(req.ident))
 		cb(404);
 	else
 		cb(null, 'ok');
@@ -362,7 +362,7 @@ function (req, resp) {
 });
 
 web.resource_auth(/^\/mod\.js$/, function (req, cb) {
-	if (req.ident.auth != 'Moderator')
+	if (!caps.can_moderate(req.ident))
 		cb(404);
 	else
 		cb(null, 'ok');
@@ -619,9 +619,9 @@ function write_page_end(req, resp, returnLink) {
 		resp.write('<br><br>' + RES.navigationHtml);
 	resp.write(RES.indexTmpl[6]);
 	if (req.ident) {
-		if (req.ident.auth == 'Admin')
+		if (caps.can_administrate(req.ident))
 			resp.write('<script src="../admin.js"></script>\n');
-		else if (req.ident.auth == 'Moderator')
+		else if (caps.can_moderate(req.ident))
 			resp.write('<script src="../mod.js"></script>\n');
 	}
 	resp.end();
@@ -660,7 +660,7 @@ web.resource(/^\/outbound\/foolz\/(\d{0,10})$/, function (req, params, cb) {
 
 web.route_get_auth(/^\/dead\/(src|thumb)\/(\w+\.\w{3})$/,
 			function (req, resp, params) {
-	if (req.ident.auth != 'Admin')
+	if (!caps.can_administrate(req.ident))
 		return web.render_404(resp);
 	imager.send_dead_image(params[1], params[2], resp);
 });
