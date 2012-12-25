@@ -1,25 +1,45 @@
 (function () {
 
+// Should be part of a greater thread model
+var Unread = new Backbone.Model({unreadCount: 0});
+
 var normalTitle = document.title;
-var updateCount = 0;
-var blurred = false;
 
 window.addEventListener('focus', function () {
-	blurred = false;
-	updateCount = 0;
-	document.title = normalTitle;
+	Unread.set({blurred: false, unreadCount: 0});
 }, false);
 
 window.addEventListener('blur', function () {
-	blurred = true;
-	updateCount = 0;
+	Unread.set({blurred: true, unreadCount: 0});
 }, false);
 
+connSM.on('synced', function () {
+	Unread.set('alert', false);
+});
+
+function dropped() {
+	Unread.set('alert', true);
+}
+connSM.on('dropped', dropped);
+connSM.on('desynced', dropped);
+
 oneeSama.hook('afterInsert', function () {
-	if (!blurred)
+	if (Unread.get('blurred'))
+		Unread.set('unreadCount', Unread.get('unreadCount') + 1);
+});
+
+Unread.on('change', function (model) {
+	var attrs = model.attributes;
+	if (!attrs.blurred) {
+		document.title = normalTitle;
 		return;
-	updateCount++;
-	document.title = '(' + updateCount + ') ' + normalTitle;
+	}
+	var prefix = '';
+	if (attrs.alert)
+		prefix = '--- ';
+	else if (attrs.unreadCount)
+		prefix = '(' + attrs.unreadCount + ') ';
+	document.title = prefix + normalTitle;
 });
 
 })();
