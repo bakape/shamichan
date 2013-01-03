@@ -123,7 +123,11 @@ function synchronize(msg, client) {
 		client.socket.write('[[' + logs.join('],[') + ']]');
 		client.synced = true;
 
-		var info = {client: client, live: live, count: count, op: op};
+		var info = {client: client, live: live};
+		if (!live && count == 1)
+			info.op = op;
+		else
+			info.board = board;
 		hooks.trigger('clientSynced', info, function (err) {
 			if (err)
 				winston.error(err);

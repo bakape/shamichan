@@ -71,8 +71,8 @@ hooks.hook('extractPost', function (post, cb) {
 // This is looking rather boilerplatey
 
 hooks.hook('clientSynced', function (info, cb) {
-	if (!info.live && info.count == 1) {
-		var op = info.op, client = info.client;
+	var op = info.op, client = info.client;
+	if (op) {
 		client.db.get_fun(op, function (err, js) {
 			if (err)
 				return cb(err);
