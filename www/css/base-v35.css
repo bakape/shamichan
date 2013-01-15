@@ -320,7 +320,7 @@ pre, .themed {
 		clear: both;
 	}
 	body {
-		margin: 1px;
+		margin: 1px 0;
 		-webkit-text-size-adjust: none;
 	}
 	blockquote {
