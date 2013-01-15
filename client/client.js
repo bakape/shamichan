@@ -421,6 +421,39 @@ $DOC.on('click', '.pagination input', function (event) {
 dispatcher[SYNCHRONIZE] = connSM.feeder('sync');
 dispatcher[INVALID] = connSM.feeder('invalid');
 
+function lookup_model_path(path) {
+	var o = window;
+	if (!_.isArray(path))
+		return o[path];
+	o = o[path[0]];
+	if (o) {
+		for (var i = 1; i < path.length; i++) {
+			o = o.get(path[i]);
+			if (!o)
+				break;
+		}
+	}
+	return o;
+}
+
+dispatcher[MODEL_SET] = function (msg, op) {
+	var target = lookup_model_path(msg[0]);
+	if (target && target.set)
+		target.set(msg[1]);
+};
+
+dispatcher[COLLECTION_RESET] = function (msg, op) {
+	var target = lookup_model_path(msg[0]);
+	if (target && target.reset)
+		target.reset(msg[1]);
+};
+
+dispatcher[COLLECTION_ADD] = function (msg, op) {
+	var target = lookup_model_path(msg[0]);
+	if (target && target.add)
+		target.add(msg[1]);
+};
+
 (function () {
 	var m = window.location.hash.match(/^#q?(\d+)$/);
 	if (m)
