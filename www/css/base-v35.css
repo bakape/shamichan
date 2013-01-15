@@ -131,7 +131,8 @@ ul {
 	padding: 5px;
 	top: -9px;
 	left: -9px;
-
+}
+ul, .act {
 	user-select: none;
 	-webkit-user-select: none;
 	-khtml-user-select: none;
