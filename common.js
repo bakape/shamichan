@@ -434,23 +434,39 @@ function new_tab_link(srcEncoded, inside, cls) {
 		' rel="nofollow">'), inside, safe('</a>')];
 }
 
+var imgPaths = {src: mediaURL + 'src/', thumb: mediaURL + 'thumb/'};
+
 OS.gazou = function (info, toppu) {
-	var src, thumb, name, caption;
-	var paths = {src: mediaURL + 'src/', thumb: mediaURL + 'thumb/'};
-	this.trigger('mediaPaths', paths);
+	var src, name, caption;
+	this.trigger('mediaPaths', imgPaths);
 	if (info.vint) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
 		var google = encodeURI('../outbound/g/' + info.vint);
 		var iqdb = encodeURI('../outbound/iqdb/' + info.vint);
-		thumb = mediaURL + 'vint/' + info.vint;
 		caption = ['Search ', new_tab_link(google, '[Google]'), ' ',
 			new_tab_link(iqdb, '[iqdb]'), ' ',
 			new_tab_link(src, '[foolz]')];
 	}
 	else {
-		src = thumb = encodeURI(paths.src + info.src);
+		src = encodeURI(imgPaths.src + info.src);
 		caption = ['Image ', new_tab_link(src, info.src)];
 	}
+
+	var img = this.hideImgs ? '' : this.gazou_img(info, toppu);
+	var dims = info.dims[0] + 'x' + info.dims[1];
+
+	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
+		caption, safe(' <i>('), readable_filesize(info.size) + ', ',
+		dims, (info.apng ? ', APNG' : ''),
+		this.full ? chibi(info.imgnm) : '', safe(')</i></figcaption>'),
+		img, safe('</figure>\n\t')];
+};
+
+OS.gazou_img = function (info, toppu) {
+	var src, thumb;
+	if (!info.vint)
+		src = thumb = encodeURI(imgPaths.src + info.src);
+
 	var d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
 	if (info.spoiler) {
@@ -462,25 +478,25 @@ OS.gazou = function (info, toppu) {
 	else if (info.vint) {
 		tw = tw || w;
 		th = th || h;
+		src = encodeURI('../outbound/hash/' + info.MD5);
+		thumb = mediaURL + 'vint/' + info.vint;
 	}
 	else if (info.thumb)
-		thumb = encodeURI(paths.thumb + info.thumb);
+		thumb = encodeURI(imgPaths.thumb + info.thumb);
 	else {
 		tw = w;
 		th = h;
 	}
-	var img = '';
-	if (!this.hideImgs) {
-		img = '<img src="'+thumb+'" width="' +tw+'" height="'+th+'">';
-		if (imagerConfig.IMAGE_HATS)
-			img = '<span class="hat"></span>' + img;
-		img = new_tab_link(src, safe(img));
-	}
-	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
-		caption, safe(' <i>(' + readable_filesize(info.size) + ', ' +
-		w + 'x' + h), info.apng ? ', APNG' : '',
-		this.full ? chibi(info.imgnm) : '', safe(')</i></figcaption>'),
-		img, safe('</figure>\n\t')];
+
+	var img = '<img src="'+thumb+'"';
+	if (tw && th)
+		img += ' width="' +tw+'" height="'+th+'">';
+	else
+		img += '>';
+	if (imagerConfig.IMAGE_HATS)
+		img = '<span class="hat"></span>' + img;
+	img = new_tab_link(src, safe(img));
+	return img;
 };
 
 function readable_filesize(size) {

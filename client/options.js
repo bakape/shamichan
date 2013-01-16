@@ -83,13 +83,43 @@ add_spec('board.$BOARD.hideimages', 'Hide images', function (on) {
 	if (on) {
 		$('img').hide();
 		$.cookie('img', 'no', {expires: 9000});
+		$DOC.on('click', 'article', reveal_thumbnail);
 	}
 	else {
 		$('img').show();
 		$.cookie('img', null);
+		$DOC.off('click', 'article', reveal_thumbnail);
 	}
 	oneeSama.hideImgs = on;
 }, 'checkbox');
+
+function reveal_thumbnail(event) {
+	if (!event.altKey)
+		return;
+	var $article = $(event.target);
+	var $img = $article.find('img');
+	if ($img.length) {
+		with_dom(function () { $img.show(); });
+		return false;
+	}
+
+	/* look up the image info and make the thumbnail */
+	var id = extract_num($article);
+	if (!CurThread || !id)
+		return;
+	var post = CurThread.get(id);
+	if (!post)
+		return;
+	var info = post.get('image');
+	if (!info)
+		return;
+
+	with_dom(function () {
+		$article.find('figcaption').after($.parseHTML(flatten(
+				oneeSama.gazou_img(info, false)).join('')));
+	});
+	return false;
+}
 
 /* BACKLINKS */
 
@@ -142,7 +172,7 @@ if (window.devicePixelRatio > 1)
 
 add_spec('inline', 'Inline image expansion', null, 'checkbox');
 
-$(document).on('mouseup', 'img', function (event) {
+$DOC.on('mouseup', 'img', function (event) {
 	/* Bypass expansion for non-left mouse clicks */
 	if (options.inline && event.which > 1) {
 		var img = $(this);
@@ -153,7 +183,7 @@ $(document).on('mouseup', 'img', function (event) {
 	}
 });
 
-$(document).on('click', 'img', function (event) {
+$DOC.on('click', 'img', function (event) {
 	if (options.inline) {
 		var $target = $(this);
 		if (!$target.data('skipExpand'))
