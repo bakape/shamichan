@@ -58,6 +58,19 @@ $DOC.on('click', 'aside a', _.wrap(function () {
 	postSM.feed('new', $(this).parent());
 }, with_dom));
 
+$DOC.on('keydown', function (event) {
+	if (event.altKey && event.which == 78) {
+		/* alt-N for new post */
+		var $aside = THREAD ? $('aside') : $ceiling.next();
+		if ($aside.is('aside') && $aside.length == 1) {
+			with_dom(function () {
+				postSM.feed('new', $aside);
+			});
+			return false;
+		}
+	}
+});
+
 function open_post_box(num) {
 	var a = $('#' + num);
 	postSM.feed('new', a.is('section')
