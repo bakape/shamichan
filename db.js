@@ -424,7 +424,8 @@ Y.kikanai = function () {
 
 function post_volume(view, body) {
 	return (body ? body.length : 0) +
-		((view && view.image) ? config.IMAGE_CHARACTER_WORTH : 0);
+		(view ? (config.NEW_POST_WORTH || 0) : 0) +
+		((view && view.image) ? (config.IMAGE_WORTH || 0) : 0);
 }
 
 function update_throughput(m, ip, when, quant) {
