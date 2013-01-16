@@ -193,7 +193,7 @@ dispatcher[INSERT_POST] = function (msg) {
 				post = new Post({id: num});
 			}
 			var article = new Article({model: post, id: num,
-					el: $article[0]});
+					el: $article.filter('article')[0]});
 			post.view = article;
 			CurThread.add(post);
 			add_post_links(post, msg.links);
