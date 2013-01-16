@@ -43,12 +43,16 @@ $(document).on('click', '.watch', function (event) {
 	if (event.which > 1)
 		return;
 	var $target = $(event.target);
+
+	/* maybe squash that double-play bug? ugh, really */
+	if (!$target.is('a'))
+		return;
+
 	var $video = $target.find('object');
 	if ($video.length) {
 		$video.siblings('br').andSelf().remove();
 		$target.css('width', 'auto');
-		event.preventDefault();
-		return;
+		return false;
 	}
 	if ($target.data('noembed'))
 		return;
@@ -74,7 +78,7 @@ $(document).on('click', '.watch', function (event) {
 	with_dom(function () {
 		$target.css('width', video_dims().width).append('<br>', $obj);
 	});
-	event.preventDefault();
+	return false;
 });
 
 $(document).on('mouseenter', '.watch', function (event) {
