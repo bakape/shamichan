@@ -168,7 +168,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		$section = $('#' + msg.op);
 		if (!$section.length)
 			return;
-		$article = $.parseHTML(oneeSama.mono(msg));
+		$article = $($.parseHTML(oneeSama.mono(msg)));
 		shift_replies($section);
 		$section.children('blockquote,.omit,form,article[id]:last'
 				).last().after($article);
@@ -200,7 +200,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 	else {
-		$section = $.parseHTML(oneeSama.monomono(msg).join(''));
+		$section = $($.parseHTML(oneeSama.monomono(msg).join('')));
 		hr = $('<hr/>');
 		if (!postForm)
 			$section.append(make_reply_box());
@@ -227,7 +227,7 @@ dispatcher[MOVE_THREAD] = function (msg, op) {
 	var orig_focus = get_focus();
 	oneeSama.links = msg.links;
 
-	var section = $.parseHTML(oneeSama.monomono(msg).join(''));
+	var section = $($.parseHTML(oneeSama.monomono(msg).join('')));
 	var hr = $('<hr/>');
 	// No make_reply_box since this is archive-only for now
 	if (!BUMP) {
@@ -292,8 +292,10 @@ dispatcher[UPDATE_POST] = function (msg) {
 dispatcher[FINISH_POST] = function (msg) {
 	var num = msg[0];
 	var post = $('#' + num);
-	post.removeClass('editing');
-	post[0].normalize();
+	if (post.length) {
+		post.removeClass('editing');
+		post[0].normalize();
+	}
 	delete ownPosts[num];
 };
 
