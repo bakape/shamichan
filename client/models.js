@@ -142,13 +142,47 @@ function clear_post_links(post) {
 	changedPosts[post.id] = post;
 }
 
+function extract_model_info($article) {
+	/* incomplete */
+	var info = {};
+	var $header = $article.children('header');
+	var $b = $header.find('b');
+	if ($b)
+		info.name = $b.text();
+	var $time = $header.find('time');
+	if ($time.length)
+		info.time = new Date($time.attr('datetime')).getTime();
+
+	var $fig = $article.children('figure');
+	if ($fig.length) {
+		var $cap = $fig.children('figcaption');
+		var image = {
+			MD5: $fig.data('md5'),
+			src: $cap.find('a').text(),
+		};
+
+		/* guess for now */
+		image.thumb = image.src;
+
+		var m = $cap.find('i').text().match(
+				/^\(\d+ \w+, (\d+)x(\d+),/);
+		if (m)
+			image.dims = [parseInt(m[1], 10), parseInt(m[2], 10)];
+		info.image = image;
+	}
+	return info;
+}
+
 (function () {
 	if (!THREAD)
 		return;
 	var replies = [];
 	$('article').each(function () {
-		var id = extract_num($(this));
-		var post = new Post({id: id});
+		var $article = $(this);
+		var info = extract_model_info($article);
+		var id = extract_num($article);
+		info.id = id;
+		var post = new Post(info);
 		var article = new Article({model: post, id: id, el: this});
 		post.view = article; // bleh
 		replies.push(post);

@@ -151,6 +151,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		else {
 			post = new Post({id: num});
 		}
+		post.set(msg);
 		var article = new Article({model: post, id: num,
 				el: postForm.el});
 		post.view = article;
@@ -192,6 +193,7 @@ dispatcher[INSERT_POST] = function (msg) {
 			else {
 				post = new Post({id: num});
 			}
+			post.set(msg);
 			var article = new Article({model: post, id: num,
 					el: $article.filter('article')[0]});
 			post.view = article;
