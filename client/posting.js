@@ -175,7 +175,7 @@ propagate_ident: function () {
 	var $b = meta.find('b');
 	$b.text(parsed[0] || ANON);
 	if (parsed[1] || parsed[2])
-		$b.append(' <code>!?</code>');
+		$b.append($.parseHTML(' <code>!?</code>'));
 	var email = $email.val().trim();
 	if (is_noko(email))
 		email = '';

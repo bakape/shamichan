@@ -135,8 +135,8 @@ $DOC.on('click', '.select-handle', function (event) {
 
 $(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
-	$name.after(' <input type=checkbox id="authname">' +
-			' <label for="authname">' + IDENT.auth + '</label>');
+	$name.after(' ', $('<label/>', {text: ' '+IDENT.auth}).prepend(
+			$('<input>', {type: 'checkbox', id: 'authname'})));
 
 	oneeSama.hook('afterInsert', function (target) {
 		if (multiSelecting)

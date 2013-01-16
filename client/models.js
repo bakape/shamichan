@@ -32,12 +32,13 @@ var Article = Backbone.View.extend({
 			return this;
 		}
 		if (!$list.length)
-			$list = $('<small>Replies:</small>').appendTo(
+			$list = $('<small/>', {text: 'Replies:'}).appendTo(
 					this.$el);
 		// TODO: Sync up DOM gracefully instead of clobbering
 		$list.find('a').remove();
 		_.each(backlinks, function (num) {
-			$list.append(' <a href="#'+num+'">&gt;&gt;'+num+'</a>');
+			var $a = $('<a/>', {href: '#'+num, text: '>>'+num});
+			$list.append(' ', $a);
 		});
 		return this;
 	},
