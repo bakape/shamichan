@@ -106,7 +106,7 @@ function show_backlinks() {
 	if (!CurThread)
 		return;
 	if (load_page_backlinks) {
-		load_page_backlinks();
+		with_dom(load_page_backlinks);
 		load_page_backlinks = null;
 	}
 	else {
@@ -117,7 +117,7 @@ function show_backlinks() {
 	}
 }
 
-var load_page_backlinks = with_dom(function () {
+var load_page_backlinks = function () {
 	$('blockquote a').each(function () {
 		var $a = $(this);
 		var m = $a.attr('href').match(/^#(\d+)$/);
@@ -133,7 +133,7 @@ var load_page_backlinks = with_dom(function () {
 		update[destId] = THREAD;
 		add_post_links(src, update);
 	});
-});
+};
 
 /* INLINE EXPANSION */
 

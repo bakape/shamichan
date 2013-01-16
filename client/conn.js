@@ -27,8 +27,6 @@ function on_message(e) {
 		dispatcher[type](msg, op);
 	}
 
-	flush_post_changes();
-
 	});
 }
 

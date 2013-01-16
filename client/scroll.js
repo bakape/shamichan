@@ -1,7 +1,12 @@
 var lockTarget, lockKeyHeight;
 var $lockTarget, $lockIndicator;
 
+var nestLevel = 0;
+
 function with_dom(func) {
+try {
+	nestLevel++;
+
 	var lockHeight, locked = lockTarget, $post;
 	if (locked == PAGE_BOTTOM)
 		lockHeight = $DOC.height();
@@ -25,6 +30,12 @@ function with_dom(func) {
 	}
 
 	return ret;
+
+} finally {
+	nestLevel--;
+	if (!nestLevel)
+		Backbone.trigger('flushDomUpdates');
+}
 }
 
 function set_lock_target(num) {

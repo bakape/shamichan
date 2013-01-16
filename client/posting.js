@@ -97,7 +97,7 @@ events: {
 
 initialize: function (dest) {
 
-	this.model.on('change', this.render_buttons, this);
+	this.listenTo(this.model, 'change', this.render_buttons);
 
 	var attrs = this.model.attributes;
 	var op = attrs.op;

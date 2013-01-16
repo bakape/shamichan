@@ -20,7 +20,8 @@ function model_link(key) {
 var Article = Backbone.View.extend({
 	tagName: 'article',
 	initialize: function () {
-		this.model.on('change:backlinks', this.renderBacklinks, this);
+		this.listenTo(this.model, 'change:backlinks',
+				this.renderBacklinks);
 	},
 	renderBacklinks: function () {
 		if (options.nobacklinks)
@@ -46,24 +47,26 @@ var Article = Backbone.View.extend({
 
 /* BATCH DOM UPDATE DEFER */
 
-var changedPosts = {}, changeFlushTimeout = 0;
+var deferredChanges = {links: {}, backlinks: {}};
+var haveDeferredChanges = false;
 
-function queue_post_change_flush() {
-	if (!changeFlushTimeout)
-		changeFlushTimeout = setTimeout(flush_wrapped, 0);
-}
+/* this runs after EVERY outermost wrap_dom completion */
+Backbone.on('flushDomUpdates', function () {
+	if (!haveDeferredChanges)
+		return;
+	haveDeferredChanges = false;
 
-function flush_post_changes() {
-	if (changeFlushTimeout) {
-		clearTimeout(changeFlushTimeout);
-		changeFlushTimeout = 0;
+	for (var attr in deferredChanges) {
+		var deferred = deferredChanges[attr];
+		var empty = true;
+		for (var id in deferred) {
+			deferred[id].trigger('change:'+attr);
+			empty = false;
+		}
+		if (!empty)
+			deferredChanges[attr] = {};
 	}
-	for (var id in changedPosts)
-		changedPosts[id].change();
-	changedPosts = {};
-}
-
-var flush_wrapped = _.wrap(flush_post_changes, with_dom);
+});
 
 /* LINKS */
 
@@ -91,18 +94,18 @@ function add_post_links(src, links) {
 }
 
 function force_post_change(post, attr, val) {
-	/* XXX: We mutated the existing array, so `change` won't fire.
-	   Dumb hack ensues. Should extend Backbone or something. */
-	var opts = {silent: true};
-	post.set(attr, null, opts);
-	if (val !== undefined)
-		post.set(attr, val, opts);
-	else
-		post.unset(attr, opts);
-	/* Defer `change` kickoffs */
-	if (!(post.id in changedPosts))
-		changedPosts[post.id] = post;
-	queue_post_change_flush();
+	if (val === undefined && post.has(attr))
+		post.unset(attr);
+	else if (post.get(attr) !== val)
+		post.set(attr, val);
+	else if (!(post.id in deferredChanges[attr])) {
+		/* We mutated the existing array, so `change` won't fire.
+		   Dumb hack ensues. Should extend Backbone or something. */
+		/* Also, here we coalesce multiple changes just in case. */
+		/* XXX: holding a direct reference to post is gross */
+		deferredChanges[attr][post.id] = post;
+		haveDeferredChanges = true;
+	}
 }
 
 function clear_post_links(post) {
