@@ -125,6 +125,9 @@ function spill_page() {
 
 var dispatcher = {};
 
+/* stupid `links` conflict */
+var modelSafeKeys = ['op', 'name', 'trip', 'image', 'time'];
+
 dispatcher[INSERT_POST] = function (msg) {
 	var num = msg[0];
 	msg = msg[1];
@@ -151,7 +154,12 @@ dispatcher[INSERT_POST] = function (msg) {
 		else {
 			post = new Post({id: num});
 		}
-		post.set(msg);
+
+		_.forEach(modelSafeKeys, function (k) {
+			if (msg[k])
+				post.set(k, msg[k]);
+		});
+
 		var article = new Article({model: post, id: num,
 				el: postForm.el});
 		post.view = article;
@@ -193,7 +201,12 @@ dispatcher[INSERT_POST] = function (msg) {
 			else {
 				post = new Post({id: num});
 			}
-			post.set(msg);
+
+			_.forEach(modelSafeKeys, function (k) {
+				if (msg[k])
+					post.set(k, msg[k]);
+			});
+
 			var article = new Article({model: post, id: num,
 					el: $article.filter('article')[0]});
 			post.view = article;
