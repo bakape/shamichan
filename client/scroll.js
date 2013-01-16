@@ -16,8 +16,8 @@ function with_dom(func) {
 	var ret = func.call(this);
 	if (locked == PAGE_BOTTOM) {
 		var height = $DOC.height();
-		if (height > lockHeight)
-			window.scrollBy(0, height - lockHeight + 1);
+		if (height > lockHeight - 10)
+			window.scrollBy(0, height - lockHeight + 10);
 	}
 	else if (locked && lockTarget == locked) {
 		var newY = $post[0].getBoundingClientRect().top;
