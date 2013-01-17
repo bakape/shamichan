@@ -147,13 +147,10 @@ dispatcher[INSERT_POST] = function (msg) {
 		var post = UnknownThread.get(num);
 		if (post) {
 			UnknownThread.remove(num);
-			post.unset('shallow', {silent: true});
-			changedPosts[num] = post;
-			queue_post_change_flush();
+			post.unset('shallow');
 		}
-		else {
+		else
 			post = new Post({id: num});
-		}
 
 		_.forEach(modelSafeKeys, function (k) {
 			if (msg[k])
@@ -194,13 +191,10 @@ dispatcher[INSERT_POST] = function (msg) {
 			var post = UnknownThread.get(num);
 			if (post) {
 				UnknownThread.remove(num);
-				post.unset('shallow', {silent: true});
-				changedPosts[num] = post;
-				queue_post_change_flush();
+				post.unset('shallow');
 			}
-			else {
+			else
 				post = new Post({id: num});
-			}
 
 			_.forEach(modelSafeKeys, function (k) {
 				if (msg[k])

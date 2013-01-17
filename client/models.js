@@ -124,7 +124,6 @@ function clear_post_links(post) {
 			backlinks = undefined;
 		force_post_change(dest, 'backlinks', backlinks);
 	});
-	post.unset('links', {silent: true});
 	_.each(post.get('backlinks') || [], function (srcId) {
 		var src = lookup_post(srcId);
 		if (!src)
@@ -138,8 +137,8 @@ function clear_post_links(post) {
 			links = undefined;
 		force_post_change(src, 'links', links);
 	});
-	post.unset('backlinks', {silent: true});
-	changedPosts[post.id] = post;
+	post.unset('links', {silent: true});
+	post.unset('backlinks');
 }
 
 function extract_model_info($article) {
