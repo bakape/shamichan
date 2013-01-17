@@ -7,6 +7,8 @@ var CurThread;
 var UnknownThread = new Thread([]);
 
 function lookup_post(id) {
+	if (!CurThread || !id)
+		return null;
 	return CurThread.get(id) || UnknownThread.get(id);
 }
 

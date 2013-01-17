@@ -104,10 +104,7 @@ function reveal_thumbnail(event) {
 	}
 
 	/* look up the image info and make the thumbnail */
-	var id = extract_num($article);
-	if (!CurThread || !id)
-		return;
-	var post = CurThread.get(id);
+	var post = lookup_post(extract_num($article));
 	if (!post)
 		return;
 	var info = post.get('image');

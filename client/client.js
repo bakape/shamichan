@@ -265,11 +265,10 @@ dispatcher[IMAGE_STATUS] = function (msg) {
 dispatcher[INSERT_IMAGE] = function (msg) {
 	var focus = get_focus();
 	var num = msg[0];
-	if (CurThread) {
-		var post = CurThread.get(num);
-		if (post)
-			post.set('image', msg[1]);
-	}
+	var post = lookup_post(num);
+	if (post)
+		post.set('image', msg[1]);
+
 	if (saku && saku.get('num') == num)
 		return postForm.insert_uploaded(msg[1]);
 	var hd = $('#' + num + ' > header');
