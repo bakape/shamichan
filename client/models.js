@@ -24,6 +24,8 @@ var Article = Backbone.View.extend({
 	initialize: function () {
 		this.listenTo(this.model, 'change:backlinks',
 				this.renderBacklinks);
+		this.listenTo(this.model, 'change:editing',
+				this.renderEditing);
 		this.listenTo(this.model, 'change:image',
 				this.renderImage);
 	},
@@ -47,6 +49,12 @@ var Article = Backbone.View.extend({
 			$list.append(' ', $a);
 		});
 		return this;
+	},
+
+	renderEditing: function (model, editing) {
+		this.$el.toggleClass('editing', !!editing);
+		if (!editing)
+			this.$('blockquote')[0].normalize();
 	},
 
 	renderImage: function (model, image) {

@@ -156,6 +156,7 @@ dispatcher[INSERT_POST] = function (msg) {
 			if (msg[k])
 				post.set(k, msg[k]);
 		});
+		post.set('editing', true);
 
 		var article = new Article({model: post, id: num,
 				el: postForm.el});
@@ -308,12 +309,19 @@ dispatcher[UPDATE_POST] = function (msg) {
 
 dispatcher[FINISH_POST] = function (msg) {
 	var num = msg[0];
+	delete ownPosts[num];
+	var post = lookup_post(num);
+	if (post) {
+		post.set('editing', false);
+		return;
+	}
+
+	/* fallback */
 	var post = $('#' + num);
 	if (post.length) {
 		post.removeClass('editing');
 		post[0].normalize();
 	}
-	delete ownPosts[num];
 };
 
 dispatcher[DELETE_POSTS] = function (msg, op) {
