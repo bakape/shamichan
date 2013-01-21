@@ -92,12 +92,7 @@ function insert_pbs() {
 }
 
 var Saku = Backbone.Model.extend({
-
-idAttribute: 'num',
-
-initialize: function () {
-},
-
+	idAttribute: 'num',
 });
 
 var ComposerView = Backbone.View.extend({

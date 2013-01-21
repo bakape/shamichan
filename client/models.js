@@ -24,7 +24,10 @@ var Article = Backbone.View.extend({
 	initialize: function () {
 		this.listenTo(this.model, 'change:backlinks',
 				this.renderBacklinks);
+		this.listenTo(this.model, 'change:image',
+				this.renderImage);
 	},
+
 	renderBacklinks: function () {
 		if (options.nobacklinks)
 			return this; /* ought to disconnect handler? */
@@ -44,6 +47,21 @@ var Article = Backbone.View.extend({
 			$list.append(' ', $a);
 		});
 		return this;
+	},
+
+	renderImage: function (model, image) {
+		var hd = this.$('header'), fig = this.$('figure');
+		if (!image)
+			fig.remove();
+		else if (hd.length && !fig.length) {
+			/* Is this focus business necessary here? */
+			var focus = get_focus();
+
+			insert_image(image, hd, false);
+
+			if (focus)
+				focus.focus();
+		}
 	},
 });
 

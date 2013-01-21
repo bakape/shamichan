@@ -266,11 +266,15 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 	var focus = get_focus();
 	var num = msg[0];
 	var post = lookup_post(num);
-	if (post)
-		post.set('image', msg[1]);
 
-	if (saku && saku.get('num') == num)
+	if (saku && saku.get('num') == num) {
+		post.set('image', msg[1], {silent: true}); // TEMP
 		return postForm.insert_uploaded(msg[1]);
+	}
+	if (post)
+		return post.set('image', msg[1]);
+
+	/* old fallback */
 	var hd = $('#' + num + ' > header');
 	if (hd.length) {
 		insert_image(msg[1], hd, false);
@@ -368,6 +372,12 @@ dispatcher[UNLOCK_THREAD] = function (msg, op) {
 
 dispatcher[DELETE_IMAGES] = function (msg, op) {
 	_.each(msg, function (num) {
+		var post = lookup_post(num);
+		if (post && post.get('image')) {
+			post.unset('image');
+			return;
+		}
+		/* old fallback */
 		$('#' + num + ' > figure').remove();
 	});
 };
