@@ -98,10 +98,13 @@ function resource_second_handler(req, resp, resource, err, act, arg) {
 				resource.tear_down.call(arg);
 		}
 		else {
-			if (resource.tear_down)
+			if (resource.tear_down) {
+				if (!arg)
+					arg = {};
 				arg.finished = function () {
 					resource.tear_down.call(arg);
 				};
+			}
 			resource.get.call(arg, req, resp);
 		}
 	}
