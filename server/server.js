@@ -444,7 +444,9 @@ web.resource(/^\/(\w+)\/page(\d+)$/, function (req, params, cb) {
 	var board = params[1];
 	if (caps.under_curfew(req.ident, board))
 		return cb(null, 302, '..');
-	else if (!caps.can_access_board(req.ident, board))
+	if (req.ident.suspension)
+		return cb(null, 'ok'); /* TEMP */
+	if (!caps.can_access_board(req.ident, board))
 		return cb(404);
 	var page = parseInt(params[2], 10);
 	if (page > 0 && params[2][0] == '0') /* leading zeroes? */
@@ -464,6 +466,10 @@ web.resource(/^\/(\w+)\/page(\d+)$/, function (req, params, cb) {
 	});
 },
 function (req, resp) {
+	/* TEMP */
+	if (req.ident.suspension)
+		return render_suspension(req, resp);
+
 	var board = this.board;
 	var nav = page_nav(this.threadCount, this.page);
 	resp.writeHead(200, web.noCacheHeaders);
@@ -501,6 +507,8 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	var board = params[1];
 	if (caps.under_curfew(req.ident, board))
 		return cb(null, 302, '.');
+	if (req.ident.suspension)
+		return cb(null, 'ok'); /* TEMP */
 	if (!caps.can_access_board(req.ident, board))
 		return cb(404);
 	var num = parseInt(params[2], 10);
@@ -581,6 +589,10 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	});
 },
 function (req, resp) {
+	/* TEMP */
+	if (req.ident.suspension)
+		return render_suspension(req, resp);
+
 	var board = this.board, op = this.op;
 
 	resp.writeHead(200, this.headers);
@@ -998,6 +1010,18 @@ dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	});
 	return true;
 };
+
+function render_suspension(req, resp) {
+setTimeout(function () {
+	var ban = req.ident.suspension, tmpl = RES.suspensionTmpl;
+	resp.writeHead(200, web.noCacheHeaders);
+	resp.write(tmpl[0]);
+	resp.write(escape(ban.why || ''));
+	resp.write(tmpl[1]);
+	resp.write(escape(ban.until || ''));
+	resp.end(tmpl[2]);
+}, 2000);
+}
 
 function propagate_resources() {
 	if (!tripcode.setSalt(config.SECURE_SALT))

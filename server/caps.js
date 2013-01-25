@@ -10,7 +10,7 @@ function can_access_board(ident, board) {
 		return true;
 	if (board == config.STAFF_BOARD && !can_moderate(ident))
 		return false;
-	if (ident.ban)
+	if (ident.ban || ident.suspension)
 		return false;
 	if (under_curfew(ident, board))
 		return false;
@@ -99,30 +99,40 @@ function parse_ip(ip) {
 
 var hotBoxes = [];
 var hotBans = [];
+var hotSuspensions = [];
 
 function parse_ranges(ranges) {
 	if (!ranges)
 		return [];
-	ranges = ranges.map(parse_ip);
-	ranges.sort(function (a, b) { return a.num - b.num; });
+	ranges = ranges.map(function (o) {
+		if (typeof o == 'object') {
+			o.ip = parse_ip(o.ip);
+			return o;
+		}
+		else
+			return {ip: parse_ip(o)};
+	});
+	ranges.sort(function (a, b) { return a.ip.num - b.ip.num; });
 	return ranges;
 }
 
 function range_lookup(ranges, num) {
 	/* Ideally would have a tree lookup here or something */
-	var full = null;
+	var result = null;
 	for (var i = 0; i < ranges.length; i++) {
-		var box = ranges[i];
+		var box = ranges[i].ip;
 		/* sint32 issue here doesn't matter for realistic ranges */
 		if ((box.mask ? (num & box.mask) : num) === box.num)
-			full = box.full; /* fall through */
+			result = ranges[i];
+		/* don't break out of loop */
 	}
-	return full;
+	return result;
 }
 
 hooks.hook('reloadHot', function (hot, cb) {
 	hotBoxes = parse_ranges(hot.BOXES);
 	hotBans = parse_ranges(hot.BANS);
+	hotSuspensions = parse_ranges(hot.SUSPENSIONS);
 	cb(null);
 });
 
@@ -131,12 +141,17 @@ exports.lookup_ident = function (ip) {
 	var num = parse_ip(ip).num;
 	var ban = range_lookup(hotBans, num);
 	if (ban) {
-		ident.ban = ban;
+		ident.ban = ban.ip.full;
+		return ident;
+	}
+	var suspension = range_lookup(hotSuspensions, num);
+	if (suspension) {
+		ident.suspension = suspension;
 		return ident;
 	}
 	var priv = range_lookup(hotBoxes, num);
 	if (priv)
-		ident.priv = priv;
+		ident.priv = priv.ip.full;
 	return ident;
 };
 
