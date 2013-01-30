@@ -123,7 +123,7 @@ window.fun = function () {
 override(ComposerView.prototype, 'make_alloc_request',
 			function (orig, text, img) {
 	var msg = orig.call(this, text, img);
-	if ($('#authname').prop('checked'))
+	if ($('#authname').is(':checked'))
 		msg.auth = IDENT.auth;
 	return msg;
 });
@@ -135,8 +135,21 @@ $DOC.on('click', '.select-handle', function (event) {
 
 $(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
-	$name.after(' ', $('<label/>', {text: ' '+IDENT.auth}).prepend(
-			$('<input>', {type: 'checkbox', id: 'authname'})));
+	var $authname = $('<input>', {type: 'checkbox', id: 'authname'});
+	var $label = $('<label/>', {text: ' '+IDENT.auth}).prepend($authname);
+	$name.after(' ', $label);
+
+	/* really ought to be done with model observation! */
+	$authname.change(function () {
+		if (postForm)
+			postForm.propagate_ident();
+	});
+	oneeSama.hook('fillMyName', function ($el) {
+		var auth = $('#authname').is(':checked');
+		$el.toggleClass(IDENT.auth.toLowerCase(), auth);
+		if (auth)
+			$el.append(' ## ' + IDENT.auth)
+	});
 
 	oneeSama.hook('afterInsert', function (target) {
 		if (multiSelecting)

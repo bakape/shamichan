@@ -182,6 +182,7 @@ propagate_ident: function () {
 	var meta = this.meta;
 	var $b = meta.find('b');
 	$b.text(parsed[0] || ANON);
+	oneeSama.trigger('fillMyName', $b);
 	if (parsed[1] || parsed[2])
 		$b.append($.parseHTML(' <code>!?</code>'));
 	var email = $email.val().trim();
