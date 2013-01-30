@@ -1080,8 +1080,11 @@ function start_server() {
 			STATE.reload_hot,
 			STATE.reset_resources,
 		], function (err) {
-			if (err)
-				throw err;
+			if (err) {
+				winston.error("Error trying to reload:");
+				winston.error(err);
+				return;
+			}
 			propagate_resources();
 			winston.info('Reloaded initial state.');
 		});
