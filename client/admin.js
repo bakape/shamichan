@@ -123,7 +123,7 @@ window.fun = function () {
 override(ComposerView.prototype, 'make_alloc_request',
 			function (orig, text, img) {
 	var msg = orig.call(this, text, img);
-	if ($('#authname').attr('checked'))
+	if ($('#authname').prop('checked'))
 		msg.auth = IDENT.auth;
 	return msg;
 });
