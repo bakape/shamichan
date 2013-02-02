@@ -6,7 +6,7 @@ var delayDurations = {now: 0, soon: 60, later: 20*60};
 exports.delayDurations = delayDurations;
 
 var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,f,r,g,z,l,ch'.split(',');
-var mnemonicEnds = "a,i,u,e,o,ā,ī,ū,ē,ō,ya,yi,yu,ye,yo,'".split(',');
+var mnemonicEnds = "a,i,u,e,o,a,i,u,e,o,ya,yi,yu,ye,yo,'".split(',');
 
 function ip_mnemonic(info) {
 	var header = info.header, ip = info.data.ip;
