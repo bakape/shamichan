@@ -10,6 +10,13 @@ function Okyaku(socket, ip) {
 	this.socket = socket;
 	this.ident = caps.lookup_ident(ip);
 	this.watching = {};
+	this.ip = ip;
+
+	var clients = STATE.clientsByIP[ip];
+	if (clients)
+		clients.push(this);
+	else
+		STATE.clientsByIP[ip] = [this];
 }
 exports.Okyaku = Okyaku;
 
@@ -60,6 +67,15 @@ OK.on_message = function (data) {
 };
 
 OK.on_close = function () {
+	var clientList = STATE.clientsByIP[this.ip];
+	if (clientList) {
+		var i = clientList.indexOf(this);
+		if (i >= 0)
+			clientList.splice(i, 1);
+		if (!clientList.length)
+			delete STATE.clientsByIP[this.ip];
+	}
+
 	if (this.id) {
 		delete STATE.clients[this.id];
 		this.id = null;
@@ -103,4 +119,16 @@ OK.finish_post = function (callback) {
 			callback(null);
 		}
 	});
+};
+
+exports.scan_client_caps = function () {
+	for (var ip in STATE.clientsByIP) {
+		var ident = caps.lookup_ident(ip);
+		STATE.clientsByIP[ip].forEach(function (okyaku) {
+			if (!okyaku.id || !okyaku.board)
+				return;
+			if (!caps.can_access_board(ident, okyaku.board))
+				okyaku.socket.close();
+		});
+	}
 };

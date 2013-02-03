@@ -1086,6 +1086,7 @@ function start_server() {
 				return;
 			}
 			propagate_resources();
+			okyaku.scan_client_caps();
 			winston.info('Reloaded initial state.');
 		});
 	});
