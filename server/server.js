@@ -1027,7 +1027,9 @@ setTimeout(function () {
 	resp.write(escape(ban.why || ''));
 	resp.write(tmpl[1]);
 	resp.write(escape(ban.until || ''));
-	resp.end(tmpl[2]);
+	resp.write(tmpl[2]);
+	resp.write(escape(STATE.hot.EMAIL || '<missing>'));
+	resp.end(tmpl[3]);
 }, 2000);
 }
 
