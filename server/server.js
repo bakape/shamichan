@@ -382,27 +382,35 @@ web.resource(/^\/(\w+)$/, function (req, params, cb) {
 	var board = params[1];
 	/* If arbitrary boards were allowed, need to escape this: */
 	var dest = board + '/';
+	if (req.ident.suspension)
+		return cb(null, 'redirect', dest); /* TEMP */
 	if (!caps.can_ever_access_board(req.ident, board))
-		cb(404);
-	else
-		cb(null, 'redirect', dest);
+		return cb(404);
+	cb(null, 'redirect', dest);
 });
 
 web.resource(/^\/(\w+)\/live$/, function (req, params, cb) {
+	if (req.ident.suspension)
+		return cb(null, 'redirect', '.'); /* TEMP */
 	if (!caps.can_ever_access_board(req.ident, params[1]))
-		cb(404);
-	else
-		cb(null, 'redirect', '.');
+		return cb(404);
+	cb(null, 'redirect', '.');
 });
 
 web.resource(/^\/(\w+)\/$/, function (req, params, cb) {
 	var board = params[1];
+	if (req.ident.suspension)
+		return cb(null, 'ok'); /* TEMP */
 	if (!caps.can_ever_access_board(req.ident, board))
-		cb(404);
-	else
-		cb(null, 'ok', {board: board});
+		return cb(404);
+
+	cb(null, 'ok', {board: board});
 },
 function (req, resp) {
+	/* TEMP */
+	if (req.ident.suspension)
+		return render_suspension(req, resp);
+
 	var board = this.board;
 	if (caps.under_curfew(req.ident, board)) {
 		resp.writeHead(200, web.noCacheHeaders);
