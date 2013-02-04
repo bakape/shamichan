@@ -127,8 +127,12 @@ exports.scan_client_caps = function () {
 		STATE.clientsByIP[ip].forEach(function (okyaku) {
 			if (!okyaku.id || !okyaku.board)
 				return;
-			if (!caps.can_access_board(ident, okyaku.board))
-				okyaku.socket.close();
+			if (!caps.can_access_board(ident, okyaku.board)) {
+				try {
+					okyaku.socket.close();
+				}
+				catch (e) { /* bleh */ }
+			}
 		});
 	}
 };
