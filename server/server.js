@@ -1075,21 +1075,7 @@ function start_server() {
 		socket.on('close', client.on_close.bind(client));
 	});
 
-	process.on('SIGHUP', function () {
-		async.series([
-			STATE.reload_hot,
-			STATE.reset_resources,
-		], function (err) {
-			if (err) {
-				winston.error("Error trying to reload:");
-				winston.error(err);
-				return;
-			}
-			propagate_resources();
-			okyaku.scan_client_caps();
-			winston.info('Reloaded initial state.');
-		});
-	});
+	process.on('SIGHUP', hot_reloader);
 
 	if (config.DAEMON) {
 		var cfg = config.DAEMON;
@@ -1098,10 +1084,47 @@ function start_server() {
 		var lock = require('path').join(cfg.PID_PATH, 'server.pid');
 		daemon.lock(lock);
 		winston.remove(winston.transports.Console);
+		return;
 	}
-	else {
-		winston.info('Listening on ' + (config.LISTEN_HOST || '')
-				+ ':' + config.LISTEN_PORT + '.');
+
+	process.nextTick(non_daemon_pid_setup);
+
+	winston.info('Listening on ' + (config.LISTEN_HOST || '')
+			+ ':' + config.LISTEN_PORT + '.');
+}
+
+function hot_reloader() {
+	async.series([
+		STATE.reload_hot,
+		STATE.reset_resources,
+	], function (err) {
+		if (err) {
+			winston.error("Error trying to reload:");
+			winston.error(err);
+			return;
+		}
+		propagate_resources();
+		okyaku.scan_client_caps();
+		winston.info('Reloaded initial state.');
+	});
+}
+
+function non_daemon_pid_setup() {
+	var path = require('path');
+	var pidFile = path.join(path.dirname(module.filename), '.server.pid');
+	fs.writeFile(pidFile, process.pid+'\n', function (err) {
+		if (err)
+			return winston.warn("Couldn't write pid:", err);
+		process.once('SIGINT', delete_pid);
+		process.once('SIGTERM', delete_pid);
+	});
+
+	function delete_pid() {
+		try {
+			fs.unlinkSync(pidFile);
+		}
+		catch (e) { }
+		process.exit(1);
 	}
 }
 
@@ -1128,7 +1151,7 @@ if (require.main == module) {
 				throw err;
 			yaku.disconnect();
 			onegai.disconnect();
-			_.defer(start_server);
+			process.nextTick(start_server);
 		});
 	});
 }
