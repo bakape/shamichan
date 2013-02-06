@@ -269,7 +269,8 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 	var post = lookup_post(num);
 
 	if (saku && saku.get('num') == num) {
-		post.set('image', msg[1], {silent: true}); // TEMP
+		if (post)
+			post.set('image', msg[1], {silent: true}); // TEMP
 		return postForm.insert_uploaded(msg[1]);
 	}
 	if (post)
