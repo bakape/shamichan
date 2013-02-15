@@ -26,6 +26,13 @@ var server = require('http').createServer(function (req, resp) {
 		return timeout(resp);
 	if (req.ident.ban)
 		return render_500(resp);
+	if (req.ident.slow)
+		return slow_request(req, resp);
+	handle_request(req, resp);
+});
+exports.server = server;
+
+function handle_request(req, resp) {
 	var method = req.method.toLowerCase();
 	var parsed = url_parse(req.url, true);
 	req.url = parsed.pathname;
@@ -52,8 +59,7 @@ var server = require('http').createServer(function (req, resp) {
 		send(req, req.url).root('www/').pipe(resp);
 	else
 		render_404(resp);
-});
-exports.server = server;
+}
 
 function handle_resource(req, resp, resource) {
 	var m = req.url.match(resource.pattern);
@@ -278,6 +284,19 @@ function render_500(resp) {
 	resp.end(exports.serverErrorHtml);
 }
 exports.render_500 = render_500;
+
+function slow_request(req, resp) {
+	var n = Math.floor(1000 + Math.random() * 500);
+	if (Math.random() < 0.1)
+		n *= 10;
+	setTimeout(function () {
+		if (resp.finished)
+			return;
+		if (resp.socket && resp.socket.destroyed)
+			return resp.end();
+		handle_request(req, resp);
+	}, n);
+}
 
 function timeout(resp) {
 	var n = Math.random();

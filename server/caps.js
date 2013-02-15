@@ -127,7 +127,7 @@ function range_lookup(ranges, num) {
 	return result;
 }
 
-var settings = ['boxes', 'bans', 'suspensions', 'timeouts'];
+var settings = ['boxes', 'bans', 'slows', 'suspensions', 'timeouts'];
 
 hooks.hook('reloadHot', function (hot, cb) {
 	settings.forEach(function (setting) {
@@ -155,9 +155,15 @@ exports.lookup_ident = function (ip) {
 		ident.suspension = suspension;
 		return ident;
 	}
+
 	var priv = range_lookup(RANGES.boxes, num);
 	if (priv)
 		ident.priv = priv.ip.full;
+
+	var slow = range_lookup(RANGES.slows, num);
+	if (slow)
+		ident.slow = slow;
+
 	return ident;
 };
 
