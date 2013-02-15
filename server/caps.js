@@ -5,6 +5,8 @@ var authcommon = require('../authcommon'),
     db = require('../db'),
     hooks = require('../hooks');
 
+var RANGES = {};
+
 function can_access_board(ident, board) {
 	if (board == 'graveyard' && can_administrate(ident))
 		return true;
@@ -97,10 +99,6 @@ function parse_ip(ip) {
 	return info;
 }
 
-var hotBoxes = [];
-var hotBans = [];
-var hotSuspensions = [];
-
 function parse_ranges(ranges) {
 	if (!ranges)
 		return [];
@@ -129,27 +127,29 @@ function range_lookup(ranges, num) {
 	return result;
 }
 
+var settings = ['boxes', 'bans', 'suspensions'];
+
 hooks.hook('reloadHot', function (hot, cb) {
-	hotBoxes = parse_ranges(hot.BOXES);
-	hotBans = parse_ranges(hot.BANS);
-	hotSuspensions = parse_ranges(hot.SUSPENSIONS);
+	settings.forEach(function (setting) {
+		RANGES[setting] = parse_ranges(hot[setting.toUpperCase()]);
+	});
 	cb(null);
 });
 
 exports.lookup_ident = function (ip) {
 	var ident = {ip: ip};
 	var num = parse_ip(ip).num;
-	var ban = range_lookup(hotBans, num);
+	var ban = range_lookup(RANGES.bans, num);
 	if (ban) {
 		ident.ban = ban.ip.full;
 		return ident;
 	}
-	var suspension = range_lookup(hotSuspensions, num);
+	var suspension = range_lookup(RANGES.suspensions, num);
 	if (suspension) {
 		ident.suspension = suspension;
 		return ident;
 	}
-	var priv = range_lookup(hotBoxes, num);
+	var priv = range_lookup(RANGES.boxes, num);
 	if (priv)
 		ident.priv = priv.ip.full;
 	return ident;
