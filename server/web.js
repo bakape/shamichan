@@ -22,6 +22,8 @@ var server = require('http').createServer(function (req, resp) {
 	if (!ip)
 		throw "No IP?!";
 	req.ident = caps.lookup_ident(ip);
+	if (req.ident.timeout)
+		return timeout(resp);
 	if (req.ident.ban)
 		return render_500(resp);
 	var method = req.method.toLowerCase();
@@ -276,6 +278,16 @@ function render_500(resp) {
 	resp.end(exports.serverErrorHtml);
 }
 exports.render_500 = render_500;
+
+function timeout(resp) {
+	var n = Math.random();
+	n = Math.round(9000 + n*n*50000);
+	setTimeout(function () {
+		if (resp.socket && !resp.socket.destroyed)
+			resp.socket.destroy();
+		resp.end();
+	}, n);
+}
 
 function redirect(resp, uri, code) {
 	var headers = {Location: uri};

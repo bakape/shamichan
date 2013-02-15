@@ -127,7 +127,7 @@ function range_lookup(ranges, num) {
 	return result;
 }
 
-var settings = ['boxes', 'bans', 'suspensions'];
+var settings = ['boxes', 'bans', 'suspensions', 'timeouts'];
 
 hooks.hook('reloadHot', function (hot, cb) {
 	settings.forEach(function (setting) {
@@ -142,6 +142,12 @@ exports.lookup_ident = function (ip) {
 	var ban = range_lookup(RANGES.bans, num);
 	if (ban) {
 		ident.ban = ban.ip.full;
+		return ident;
+	}
+	ban = range_lookup(RANGES.timeouts, num);
+	if (ban) {
+		ident.ban = ban.ip.full;
+		ident.timeout = true;
 		return ident;
 	}
 	var suspension = range_lookup(RANGES.suspensions, num);
