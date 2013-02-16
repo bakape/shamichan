@@ -11,10 +11,12 @@ function countdown() {
 	var now = new Date();
 	var diff = Math.floor((END - now.getTime()) / 1000);
 	if (diff < 0.5) {
-		$remain.text('Open SOON.');
+		$remain.text('Open season.');
 		clearInterval(countdownInterval);
 		if (ticks > 3)
-			location.reload(true);
+			setTimeout(function () {
+				location.reload(true);
+			}, 1500);
 	}
 	var hours = Math.floor(diff / 3600);
 	var minutes = Math.floor(diff / 60) % 60;
