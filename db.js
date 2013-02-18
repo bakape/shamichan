@@ -242,8 +242,10 @@ function update_cache(chan, msg) {
 	if (kind == common.INSERT_POST) {
 		if (msg.num)
 			OPs[msg.num] = op;
-		else
+		else {
 			add_OP_tag(config.BOARDS.indexOf(tag), op);
+			OPs[op] = op;
+		}
 	}
 	else if (kind == common.MOVE_THREAD) {
 		set_OP_tag(config.BOARDS.indexOf(tag), op);
