@@ -19,13 +19,14 @@ function new_upload(req, resp) {
 }
 exports.new_upload = new_upload;
 
-function get_thumb_specs(w, h, pinky) {
+function get_thumb_specs(dims, pinky, scale) {
+	var w = dims[0], h = dims[1];
 	var quality = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var bg = pinky ? '#d6daf0' : '#eef2ff';
-	var dims = [Math.round(w/r), Math.round(h/r)];
-	return {dims: dims, quality: quality, bg_color: bg, bound: bound};
+	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
+	return {dims: dims, quality: quality, bg: bg, bound: bound};
 }
 
 var ImageUpload = function (client_id) {
@@ -190,14 +191,19 @@ IU.verified = function () {
 	});
 };
 
+IU.fill_in_specs = function (specs, kind) {
+	specs.src = this.tagged_path;
+	specs.ext = this.image.ext;
+	specs.dest = this.image.path + '_' + kind;
+	this.image[kind + '_path'] = specs.dest;
+};
+
 IU.deduped = function (err) {
 	if (this.failed)
 		return;
 	var image = this.image;
-	image.thumb_path = image.path + '_thumb';
-	var pinky = this.pinky;
+	var specs = get_thumb_specs(image.dims, this.pinky, 1);
 	var w = image.dims[0], h = image.dims[1];
-	var specs = get_thumb_specs(w, h, pinky);
 
 	/* Determine whether we really need a thumbnail */
 	var sp = image.spoiler;
@@ -208,27 +214,20 @@ IU.deduped = function (err) {
 		return this.got_nails();
 	}
 	this.haveNail = true;
+	this.fill_in_specs(specs, 'thumb');
 
-	var info = {
-		src: this.tagged_path,
-		ext: image.ext,
-		dest: image.thumb_path,
-		dims: specs.dims,
-		quality: specs.quality,
-		bg: specs.bg_color,
-	};
 	var self = this;
 	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0) {
 		this.status('Spoilering...');
-		var comp = composite_src(sp, pinky);
+		var comp = composite_src(sp, this.pinky);
 		image.comp_path = image.path + '_comp';
 		image.dims = [w, h].concat(specs.bound);
-		info.composite = comp;
-		info.compDest = image.comp_path;
-		info.compDims = specs.bound;
+		specs.composite = comp;
+		specs.compDest = image.comp_path;
+		specs.compDims = specs.bound;
 		async.parallel([
-			resize_image.bind(null, info, false),
-			resize_image.bind(null, info, true),
+			resize_image.bind(null, specs, false),
+			resize_image.bind(null, specs, true),
 		], function (err) {
 			if (err)
 				return self.failure(err);
@@ -241,7 +240,7 @@ IU.deduped = function (err) {
 		if (!sp)
 			this.status('Thumbnailing...');
 
-		resize_image(info, false, function (err) {
+		resize_image(specs, false, function (err) {
 			if (err)
 				return self.failure(err);
 			self.got_nails();
@@ -257,21 +256,22 @@ IU.got_nails = function () {
 	var image = this.image;
 	var time = new Date().getTime();
 	image.src = time + image.ext;
-	var dest, mvs;
+	var dest, mvs, pathUpdates = {};
 	var media_path = index.media_path, mv_file = index.mv_file;
 	dest = media_path('src', image.src);
 	mvs = [mv_file.bind(null, image.path, dest)];
 
-	var nail, comp;
 	if (this.haveNail) {
-		image.thumb = nail = time + '.jpg';
-		nail = media_path('thumb', nail);
+		image.thumb = time + '.jpg';
+		var nail = media_path('thumb', image.thumb);
 		mvs.push(mv_file.bind(null, image.thumb_path, nail));
+		pathUpdates.thumb_path = nail;
 	}
 	if (this.haveComp) {
-		image.composite = comp = time + 's' + image.spoiler + '.jpg';
-		comp = media_path('thumb', comp);
+		image.composite = time + 's' + image.spoiler + '.jpg';
+		var comp = media_path('thumb', image.composite);
 		mvs.push(mv_file.bind(null, image.comp_path, comp));
+		pathUpdates.comp_path = comp;
 		delete image.spoiler;
 	}
 
@@ -282,13 +282,9 @@ IU.got_nails = function () {
 		var olds = [image.path];
 		var news = [dest];
 		image.path = dest;
-		if (nail) {
-			image.thumb_path = nail;
-			news.push(nail);
-		}
-		if (comp) {
-			image.comp_path = comp;
-			news.push(comp);
+		for (var k in pathUpdates) {
+			image[k] = pathUpdates[k];
+			news.push(pathUpdates[k]);
 		}
 		self.db.track_temporaries(news, olds, function (err) {
 			if (err)
