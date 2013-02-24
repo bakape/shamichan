@@ -20,12 +20,12 @@ function new_upload(req, resp) {
 exports.new_upload = new_upload;
 
 function get_thumb_specs(w, h, pinky) {
-	var QUALITY = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
+	var quality = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var bg = pinky ? '#d6daf0' : '#eef2ff';
-	return {dims: [Math.round(w/r), Math.round(h/r)], quality: QUALITY,
-			bg_color: bg, bound: bound};
+	var dims = [Math.round(w/r), Math.round(h/r)];
+	return {dims: dims, quality: quality, bg_color: bg, bound: bound};
 }
 
 var ImageUpload = function (client_id) {
@@ -205,8 +205,9 @@ IU.deduped = function (err) {
 			&& ['.jpg', '.png'].indexOf(image.ext) >= 0
 			&& !image.apng
 			&& w <= specs.dims[0] && h <= specs.dims[1]) {
-		return this.got_nails(false, false, null);
+		return this.got_nails();
 	}
+	this.haveNail = true;
 
 	var info = {
 		src: this.tagged_path,
@@ -216,6 +217,7 @@ IU.deduped = function (err) {
 		quality: specs.quality,
 		bg: specs.bg_color,
 	};
+	var self = this;
 	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0) {
 		this.status('Spoilering...');
 		var comp = composite_src(sp, pinky);
@@ -227,22 +229,29 @@ IU.deduped = function (err) {
 		async.parallel([
 			resize_image.bind(null, info, false),
 			resize_image.bind(null, info, true),
-		], this.got_nails.bind(this, true, comp));
+		], function (err) {
+			if (err)
+				return self.failure(err);
+			self.haveComp = true;
+			self.got_nails();
+		});
 	}
 	else {
 		image.dims = [w, h].concat(specs.dims);
 		if (!sp)
 			this.status('Thumbnailing...');
-		resize_image(info, false,
-				this.got_nails.bind(this, true, false));
+
+		resize_image(info, false, function (err) {
+			if (err)
+				return self.failure(err);
+			self.got_nails();
+		});
 	}
 };
 
-IU.got_nails = function (nail, comp, err) {
+IU.got_nails = function () {
 	if (this.failed)
 		return;
-	if (err)
-		return this.failure(err);
 
 	this.status('Publishing...');
 	var image = this.image;
@@ -252,15 +261,15 @@ IU.got_nails = function (nail, comp, err) {
 	var media_path = index.media_path, mv_file = index.mv_file;
 	dest = media_path('src', image.src);
 	mvs = [mv_file.bind(null, image.path, dest)];
-	if (nail) {
-		nail = time + '.jpg';
-		image.thumb = nail;
+
+	var nail, comp;
+	if (this.haveNail) {
+		image.thumb = nail = time + '.jpg';
 		nail = media_path('thumb', nail);
 		mvs.push(mv_file.bind(null, image.thumb_path, nail));
 	}
-	if (comp) {
-		comp = time + 's' + image.spoiler + '.jpg';
-		image.composite = comp;
+	if (this.haveComp) {
+		image.composite = comp = time + 's' + image.spoiler + '.jpg';
 		comp = media_path('thumb', comp);
 		mvs.push(mv_file.bind(null, image.comp_path, comp));
 		delete image.spoiler;
