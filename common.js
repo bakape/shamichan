@@ -434,7 +434,11 @@ function new_tab_link(srcEncoded, inside, cls) {
 		' rel="nofollow">'), inside, safe('</a>')];
 }
 
-var imgPaths = {src: mediaURL + 'src/', thumb: mediaURL + 'thumb/'};
+var imgPaths = {
+	src: mediaURL + 'src/',
+	thumb: mediaURL + 'thumb/',
+	vint: mediaURL + 'vint/',
+};
 
 OS.gazou = function (info, toppu) {
 	var src, name, caption;
@@ -479,7 +483,7 @@ OS.gazou_img = function (info, toppu) {
 		tw = tw || w;
 		th = th || h;
 		src = encodeURI('../outbound/hash/' + info.MD5);
-		thumb = mediaURL + 'vint/' + info.vint;
+		thumb = imagePaths.vint + info.vint;
 	}
 	else if (info.thumb)
 		thumb = encodeURI(imgPaths.thumb + info.thumb);
