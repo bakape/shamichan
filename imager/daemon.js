@@ -122,13 +122,15 @@ IU.parse_form = function (err, fields, files) {
 	this.image.MD5 = index.squish_MD5(this.image.hash);
 	this.image.hash = null;
 
-	this.db.track_temporaries([this.image.path], null,
-			this.process.bind(this));
+	var self = this;
+	this.db.track_temporaries([this.image.path], null, function (err) {
+		if (err)
+			winston.warn("Temp tracking error: " + err);
+		self.process();
+	});
 };
 
-IU.process = function (err) {
-	if (err)
-		winston.warn("Temp tracking error: " + err);
+IU.process = function () {
 	if (this.failed)
 		return;
 	var image = this.image;
@@ -140,131 +142,152 @@ IU.process = function (err) {
 	image.imgnm = image.filename.substr(0, 256);
 
 	this.status('Verifying...');
-	var tagged_path = image.ext.replace('.', '') + ':' + image.path;
-	var self = this;
+	this.tagged_path = image.ext.replace('.', '') + ':' + image.path;
 	var checks = {
 		stat: fs.stat.bind(fs, image.path),
-		dims: identify.bind(null, tagged_path),
+		dims: identify.bind(null, this.tagged_path),
 	};
 	if (image.ext == '.png')
 		checks.apng = detect_APNG.bind(null, image.path);
-	async.parallel(checks, verified);
 
-	function verified(err, rs) {
+	var self = this;
+	async.parallel(checks, function (err, rs) {
 		if (err)
-			return self.failure(Muggle('Bad image.', err));
-		var w = rs.dims.width, h = rs.dims.height;
+			return self.failure(Muggle('Bad image.'));
 		image.size = rs.stat.size;
-		image.dims = [w, h];
-		if (!w || !h)
-			return self.failure(Muggle('Bad image dimensions.'));
-		if (config.IMAGE_PIXELS_MAX && w * h > config.IMAGE_PIXELS_MAX)
-			return self.failure(Muggle('Way too many pixels.'));
-		if (w > config.IMAGE_WIDTH_MAX && h > config.IMAGE_HEIGHT_MAX)
-			return self.failure(Muggle('Image is too wide'
-					+ ' and too tall.'));
-		if (w > config.IMAGE_WIDTH_MAX)
-			return self.failure(Muggle('Image is too wide.'));
-		if (h > config.IMAGE_HEIGHT_MAX)
-			return self.failure(Muggle('Image is too tall.'));
+		image.dims = [rs.dims.width, rs.dims.height];
 		if (rs.apng)
 			image.apng = 1;
+		self.verified();
+	});
+};
 
-		perceptual_hash(tagged_path, image, function (err, hash) {
+IU.verified = function () {
+	if (this.failed)
+		return;
+	var w = this.image.dims[0], h = this.image.dims[1];
+	if (!w || !h)
+		return this.failure(Muggle('Bad image dimensions.'));
+	if (config.IMAGE_PIXELS_MAX && w * h > config.IMAGE_PIXELS_MAX)
+		return this.failure(Muggle('Way too many pixels.'));
+	if (w > config.IMAGE_WIDTH_MAX && h > config.IMAGE_HEIGHT_MAX)
+		return this.failure(Muggle('Image is too wide and too tall.'));
+	if (w > config.IMAGE_WIDTH_MAX)
+		return this.failure(Muggle('Image is too wide.'));
+	if (h > config.IMAGE_HEIGHT_MAX)
+		return this.failure(Muggle('Image is too tall.'));
+
+	var self = this;
+	perceptual_hash(this.tagged_path, this.image, function (err, hash) {
+		if (err)
+			return self.failure(err);
+		self.image.hash = hash;
+		self.db.check_duplicate(hash, function (err) {
 			if (err)
 				return self.failure(err);
-			image.hash = hash;
-			self.db.check_duplicate(image.hash, deduped);
+			self.deduped();
 		});
+	});
+};
+
+IU.deduped = function (err) {
+	if (this.failed)
+		return;
+	var image = this.image;
+	image.thumb_path = image.path + '_thumb';
+	var pinky = this.pinky;
+	var w = image.dims[0], h = image.dims[1];
+	var specs = get_thumb_specs(w, h, pinky);
+
+	/* Determine whether we really need a thumbnail */
+	var sp = image.spoiler;
+	if (!sp && image.size < 30*1024
+			&& ['.jpg', '.png'].indexOf(image.ext) >= 0
+			&& !image.apng
+			&& w <= specs.dims[0] && h <= specs.dims[1]) {
+		return this.got_nails(false, false, null);
 	}
 
-	function deduped(err, rs) {
-		if (err)
-			return self.failure(err);
-		image.thumb_path = image.path + '_thumb';
-		var pinky = self.pinky;
-		var w = image.dims[0], h = image.dims[1];
-		var specs = get_thumb_specs(w, h, pinky);
-		/* Determine if we really need a thumbnail */
-		var sp = image.spoiler;
-		if (!sp && image.size < 30*1024
-				&& ['.jpg', '.png'].indexOf(image.ext) >= 0
-				&& !image.apng
-				&& w <= specs.dims[0] && h <= specs.dims[1]) {
-			return got_thumbnail(false, false, null);
-		}
-		var info = {
-			src: tagged_path,
-			ext: image.ext,
-			dest: image.thumb_path,
-			dims: specs.dims,
-			quality: specs.quality,
-			bg: specs.bg_color,
-		};
-		if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0) {
-			self.status('Spoilering...');
-			var comp = composite_src(sp, pinky);
-			image.comp_path = image.path + '_comp';
-			image.dims = [w, h].concat(specs.bound);
-			info.composite = comp;
-			info.compDest = image.comp_path;
-			info.compDims = specs.bound;
-			async.parallel([resize_image.bind(null, info, false),
-				resize_image.bind(null, info, true)],
-				got_thumbnail.bind(null, true, comp));
-		}
-		else {
-			image.dims = [w, h].concat(specs.dims);
-			if (!sp)
-				self.status('Thumbnailing...');
-			resize_image(info, false,
-					got_thumbnail.bind(null, true, false));
-		}
+	var info = {
+		src: this.tagged_path,
+		ext: image.ext,
+		dest: image.thumb_path,
+		dims: specs.dims,
+		quality: specs.quality,
+		bg: specs.bg_color,
+	};
+	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0) {
+		this.status('Spoilering...');
+		var comp = composite_src(sp, pinky);
+		image.comp_path = image.path + '_comp';
+		image.dims = [w, h].concat(specs.bound);
+		info.composite = comp;
+		info.compDest = image.comp_path;
+		info.compDims = specs.bound;
+		async.parallel([
+			resize_image.bind(null, info, false),
+			resize_image.bind(null, info, true),
+		], this.got_nails.bind(this, true, comp));
+	}
+	else {
+		image.dims = [w, h].concat(specs.dims);
+		if (!sp)
+			this.status('Thumbnailing...');
+		resize_image(info, false,
+				this.got_nails.bind(this, true, false));
+	}
+};
+
+IU.got_nails = function (nail, comp, err) {
+	if (this.failed)
+		return;
+	if (err)
+		return this.failure(err);
+
+	this.status('Publishing...');
+	var image = this.image;
+	var time = new Date().getTime();
+	image.src = time + image.ext;
+	var dest, mvs;
+	var media_path = index.media_path, mv_file = index.mv_file;
+	dest = media_path('src', image.src);
+	mvs = [mv_file.bind(null, image.path, dest)];
+	if (nail) {
+		nail = time + '.jpg';
+		image.thumb = nail;
+		nail = media_path('thumb', nail);
+		mvs.push(mv_file.bind(null, image.thumb_path, nail));
+	}
+	if (comp) {
+		comp = time + 's' + image.spoiler + '.jpg';
+		image.composite = comp;
+		comp = media_path('thumb', comp);
+		mvs.push(mv_file.bind(null, image.comp_path, comp));
+		delete image.spoiler;
 	}
 
-	function got_thumbnail(nail, comp, err) {
+	var self = this;
+	async.parallel(mvs, function (err, rs) {
 		if (err)
-			return self.failure(err);
-		self.status('Publishing...');
-		var time = new Date().getTime();
-		image.src = time + image.ext;
-		var dest, mvs;
-		var media_path = index.media_path, mv_file = index.mv_file;
-		dest = media_path('src', image.src);
-		mvs = [mv_file.bind(null, image.path, dest)];
+			return self.failure(Muggle("Distro failure.", err));
+		var olds = [image.path];
+		var news = [dest];
+		image.path = dest;
 		if (nail) {
-			nail = time + '.jpg';
-			image.thumb = nail;
-			nail = media_path('thumb', nail);
-			mvs.push(mv_file.bind(null, image.thumb_path, nail));
+			image.thumb_path = nail;
+			news.push(nail);
 		}
 		if (comp) {
-			comp = time + 's' + image.spoiler + '.jpg';
-			image.composite = comp;
-			comp = media_path('thumb', comp);
-			mvs.push(mv_file.bind(null, image.comp_path, comp));
-			delete image.spoiler;
+			image.comp_path = comp;
+			news.push(comp);
 		}
-		async.parallel(mvs, function (err, rs) {
+		self.db.track_temporaries(news, olds, function (err) {
 			if (err)
-				return self.failure(Muggle("Distro failure.",
-						err));
-			var olds = [image.path];
-			var news = [dest];
-			image.path = dest;
-			if (nail) {
-				image.thumb_path = nail;
-				news.push(nail);
-			}
-			if (comp) {
-				image.comp_path = comp;
-				news.push(comp);
-			}
-			self.db.track_temporaries(news, olds,
-					self.record_image.bind(self));
+				winston.warn("Tracking failure: " + err);
+			self.record_image();
 		});
-	}
-}
+	});
+};
 
 function composite_src(spoiler, pinky) {
 	var file = 'spoiler' + (pinky ? 's' : '') + spoiler + '.png';
@@ -493,9 +516,9 @@ IU.failure = function (err) {
 	this.db.disconnect();
 };
 
-IU.record_image = function (err) {
-	if (err)
-		winston.warn("Tracking failure: " + err);
+IU.record_image = function () {
+	if (this.failed)
+		return;
 	var view = {};
 	var self = this;
 	index.image_attrs.forEach(function (key) {
