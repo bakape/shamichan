@@ -17,6 +17,8 @@ exports.Onegai = Onegai;
 var O = Onegai.prototype;
 
 O.connect = function () {
+	if (!cache.sharedConnection)
+		cache.sharedConnection = require('../db').redis_client();
 	return cache.sharedConnection;
 };
 

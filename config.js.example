@@ -8,6 +8,7 @@ var config = {
 	SERVE_STATIC_FILES: false,
 
 	REDIS_PORT: 6379,
+	READ_ONLY: false,
 
 	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
 	DEFAULT_BOARD: 'moe',

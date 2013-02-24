@@ -1151,12 +1151,17 @@ if (require.main == module) {
 		if (err)
 			throw err;
 		propagate_resources();
+
 		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
 		var onegai = new imager.Onegai;
-		async.series([
-			yaku.finish_all.bind(yaku),
-			onegai.delete_temporaries.bind(onegai),
-		], function (err) {
+		var writes = [];
+		if (!config.READ_ONLY) {
+			writes.push(
+				yaku.finish_all.bind(yaku),
+				onegai.delete_temporaries.bind(onegai)
+			);
+		}
+		async.series(writes, function (err) {
 			if (err)
 				throw err;
 			yaku.disconnect();
