@@ -6,7 +6,7 @@ var cache = require('../server/state').dbCache,
     util = require('util'),
     winston = require('winston');
 
-var IMG_EXPIRY = 20;
+var IMG_EXPIRY = 60;
 
 function Onegai() {
 	events.EventEmitter.call(this);
