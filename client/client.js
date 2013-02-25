@@ -396,7 +396,8 @@ dispatcher[SPOILER_IMAGES] = function (msg, op) {
 		var post = $('#' + info[0]);
 		var $img = post.children('figure').find('img');
 		if ($img.length) {
-			var sp = spoiler_info(info[1], post.is('section'));
+			var sp = oneeSama.spoiler_info(info[1],
+					post.is('section'));
 			$img.replaceWith($('<img>', {
 				src: sp.thumb,
 				width: sp.dims[0], height: sp.dims[1],

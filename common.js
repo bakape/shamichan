@@ -405,14 +405,16 @@ function chibi(text) {
 		safe('(&hellip;)'), m[2], safe('</abbr>')];
 }
 
-function spoiler_info(index, toppu) {
+OS.spoiler_info = function (index, toppu) {
+	var large = toppu || this.thumbStyle == 'large';
+	var hd = toppu || this.thumbStyle != 'small';
 	return {
-		thumb: encodeURI(mediaURL + 'kana/spoiler' + (toppu ? '' : 's')
+		thumb: encodeURI(mediaURL + 'kana/spoiler' + (hd ? '' : 's')
 				+ index + '.png'),
-		dims: toppu ? imagerConfig.THUMB_DIMENSIONS
+		dims: large ? imagerConfig.THUMB_DIMENSIONS
 				: imagerConfig.PINKY_DIMENSIONS,
 	};
-}
+};
 
 function pick_spoiler(metaIndex) {
 	var imgs = imagerConfig.SPOILER_IMAGES;
@@ -477,7 +479,7 @@ OS.gazou_img = function (info, toppu) {
 	var d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
 	if (info.spoiler) {
-		var sp = spoiler_info(info.spoiler, toppu);
+		var sp = this.spoiler_info(info.spoiler, toppu);
 		thumb = sp.thumb;
 		tw = sp.dims[0];
 		th = sp.dims[1];
