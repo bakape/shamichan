@@ -488,7 +488,7 @@ OS.gazou_img = function (info, toppu) {
 		tw = tw || w;
 		th = th || h;
 		src = encodeURI('../outbound/hash/' + info.MD5);
-		thumb = imagePaths.vint + info.vint;
+		thumb = imgPaths.vint + info.vint;
 	}
 	else if (this.thumbStyle != 'small' && info.mid) {
 		thumb = encodeURI(imgPaths.mid + info.mid);
