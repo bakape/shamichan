@@ -152,7 +152,7 @@ function write_thread_html(reader, req, response, opts) {
 	var cookies = web.parse_cookie(req.headers.cookie);
 	if (cookies.img == 'no')
 		oneeSama.hideImgs = true;
-	if (cookies.thumb && common.thumbStyles.indexOf(cookies.thumb) >= 0)
+	if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 		oneeSama.thumbStyle = cookies.thumb;
 
 	reader.on('thread', function (op_post, omit, image_omit) {
@@ -575,6 +575,8 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			var chunks = web.parse_cookie(req.headers.cookie);
 			if (chunks.img == 'no')
 				etag += '-noimg';
+			if (common.thumbStyles.indexOf(chunks.thumb) >= 0)
+				etag += '-' + chunks.thumb;
 			if (preThread.locked)
 				etag += '-locked';
 			if (req.ident.auth)
