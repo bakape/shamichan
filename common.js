@@ -437,6 +437,7 @@ function new_tab_link(srcEncoded, inside, cls) {
 var imgPaths = {
 	src: mediaURL + 'src/',
 	thumb: mediaURL + 'thumb/',
+	mid: mediaURL + 'mid/',
 	vint: mediaURL + 'vint/',
 };
 
@@ -466,6 +467,8 @@ OS.gazou = function (info, toppu) {
 		img, safe('</figure>\n\t')];
 };
 
+exports.thumbStyles = ['small', 'sharp', 'large'];
+
 OS.gazou_img = function (info, toppu) {
 	var src, thumb;
 	if (!info.vint)
@@ -484,6 +487,13 @@ OS.gazou_img = function (info, toppu) {
 		th = th || h;
 		src = encodeURI('../outbound/hash/' + info.MD5);
 		thumb = imagePaths.vint + info.vint;
+	}
+	else if (this.thumbStyle != 'small' && info.mid) {
+		thumb = encodeURI(imgPaths.mid + info.mid);
+		if (this.thumbStyle == 'large') {
+			tw *= 2;
+			th *= 2;
+		}
 	}
 	else if (info.thumb)
 		thumb = encodeURI(imgPaths.thumb + info.thumb);

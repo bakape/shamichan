@@ -149,8 +149,11 @@ function write_thread_html(reader, req, response, opts) {
 
 	opts.ident = req.ident;
 	caps.augment_oneesama(oneeSama, opts);
-	if (web.parse_cookie(req.headers.cookie).img == 'no')
+	var cookies = web.parse_cookie(req.headers.cookie);
+	if (cookies.img == 'no')
 		oneeSama.hideImgs = true;
+	if (cookies.thumb && common.thumbStyles.indexOf(cookies.thumb) >= 0)
+		oneeSama.thumbStyle = cookies.thumb;
 
 	reader.on('thread', function (op_post, omit, image_omit) {
 		op_post.omit = omit;

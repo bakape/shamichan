@@ -243,9 +243,29 @@ IU.deduped = function (err) {
 		resize_image(specs, false, function (err) {
 			if (err)
 				return self.failure(err);
-			self.got_nails();
+
+			if (config.EXTRA_MID_THUMBNAILS)
+				self.middle_nail();
+			else
+				self.got_nails();
 		});
 	}
+};
+
+IU.middle_nail = function () {
+	if (this.failed)
+		return;
+
+	var specs = get_thumb_specs(this.image.dims, this.pinky, 2);
+	this.fill_in_specs(specs, 'mid');
+
+	var self = this;
+	resize_image(specs, false, function (err) {
+		if (err)
+			self.failure(err);
+		self.haveMiddle = true;
+		self.got_nails();
+	});
 };
 
 IU.got_nails = function () {
@@ -266,6 +286,12 @@ IU.got_nails = function () {
 		var nail = media_path('thumb', image.thumb);
 		mvs.push(mv_file.bind(null, image.thumb_path, nail));
 		pathUpdates.thumb_path = nail;
+	}
+	if (this.haveMiddle) {
+		image.mid = time + '.jpg';
+		var mid = media_path('mid', image.mid);
+		mvs.push(mv_file.bind(null, image.mid_path, mid));
+		pathUpdates.mid_path = mid;
 	}
 	if (this.haveComp) {
 		image.composite = time + 's' + image.spoiler + '.jpg';
@@ -480,6 +506,8 @@ function image_files(image) {
 		files.push(image.path);
 	if (image.thumb_path)
 		files.push(image.thumb_path);
+	if (image.mid_path)
+		files.push(image.mid_path);
 	if (image.comp_path)
 		files.push(image.comp_path);
 	return files;

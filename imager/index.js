@@ -12,7 +12,7 @@ exports.Onegai = db.Onegai;
 exports.config = config;
 
 var image_attrs = ('src thumb dims size MD5 hash imgnm spoiler realthumb vint'
-		+ ' apng').split(' ');
+		+ ' apng mid').split(' ');
 exports.image_attrs = image_attrs;
 
 function mv_file(src, dest, callback) {
@@ -87,15 +87,16 @@ hooks.hook("buryImage", function (info, callback) {
 	if (!info.src.match(m))
 		return callback(Muggle('Invalid image.'));
 	var mvs = [mv.bind(null, 'src', info.src)];
-	function try_thumb(t) {
+	function try_thumb(path, t) {
 		if (!t)
 			return;
 		if (!t.match(m))
 			return callback(Muggle('Invalid thumbnail.'));
-		mvs.push(mv.bind(null, 'thumb', t));
+		mvs.push(mv.bind(null, path, t));
 	}
-	try_thumb(info.thumb);
-	try_thumb(info.realthumb);
+	try_thumb('thumb', info.thumb);
+	try_thumb('thumb', info.realthumb);
+	try_thumb('mid', info.mid);
 	async.parallel(mvs, callback);
 	function mv(p, nm, cb) {
 		mv_file(media_path(p, nm), dead_path(p, nm), cb);
@@ -140,11 +141,16 @@ function make_dir(base, key, cb) {
 
 exports.make_media_dirs = function (cb) {
 	var keys = ['src', 'thumb', 'vint', 'dead', 'tmp'];
+	if (config.EXTRA_MID_THUMBNAILS)
+		keys.push('mid');
 	async.forEach(keys, make_dir.bind(null, null), function (err) {
 		if (err)
 			return cb(err);
 		var dead = config.MEDIA_DIRS.dead;
-		async.forEach(['src', 'thumb'], make_dir.bind(null, dead), cb);
+		var keys = ['src', 'thumb'];
+		if (config.EXTRA_MID_THUMBNAILS)
+			keys.push('mid');
+		async.forEach(keys, make_dir.bind(null, dead), cb);
 	});
 }
 

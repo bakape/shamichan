@@ -11,7 +11,9 @@ findapng
 hot.js
 jsmin
 perceptual
+imager/tmp
 www/js/client*.js
 www/src
 www/thumb
+www/mid
 www/vint

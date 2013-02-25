@@ -77,6 +77,15 @@ add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 	}
 }, themes);
 
+/* THUMBNAIL OPTIONS */
+
+add_spec('thumbs', 'Thumbnails', function (type) {
+	$.cookie('thumb', type);
+	// really ought to apply the style immediately
+	// need pinky/mid distinction in the model to do properly
+	oneeSama.thumbStyle = type;
+}, thumbStyles);
+
 /* IMAGE HIDING */
 
 add_spec('board.$BOARD.hideimages', 'Hide images', function (on) {

@@ -28,6 +28,9 @@ R.recycle_post = function (post, cb) {
 	if (image.realthumb) {
 		toDelete.push(imager.media_path('thumb', image.realthumb));
 	}
+	if (image.mid) {
+		toDelete.push(imager.media_path('mid', image.mid));
+	}
 
 	MD5_file(src, function (err, MD5) {
 		if (err) {
@@ -47,6 +50,7 @@ R.recycle_post = function (post, cb) {
 					: 'thread:' + post.num;
 			m.hdel(key, 'src');
 			m.hdel(key, 'thumb');
+			m.hdel(key, 'mid');
 			m.hset(key, 'vint', dest);
 			m.exec(function (err) {
 				if (err) {

@@ -910,7 +910,7 @@ Y.hide_image = function (key, callback) {
 		return callback(Muggle("Read-only right now."));
 	var r = this.connect();
 	var hash;
-	var imgKeys = ['hideimg', 'hash', 'src', 'thumb', 'realthumb'];
+	var imgKeys = ['hideimg', 'hash', 'src', 'thumb', 'realthumb', 'mid'];
 	r.hmget(key, imgKeys, move_dead);
 
 	function move_dead(err, rs) {
