@@ -492,7 +492,7 @@ OS.gazou_img = function (info, toppu) {
 	}
 	else if (this.thumbStyle != 'small' && info.mid) {
 		thumb = encodeURI(imgPaths.mid + info.mid);
-		if (this.thumbStyle == 'large') {
+		if (!toppu && this.thumbStyle == 'large') {
 			tw *= 2;
 			th *= 2;
 		}
