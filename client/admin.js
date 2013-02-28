@@ -5,14 +5,14 @@ var $selectButton, $controls;
 window.loggedInUser = IDENT.email;
 window.x_csrf = IDENT.csrf;
 
-function show_panel() {
+function show_toolbox() {
 	var specs = [
 		{name: 'Lewd', kind: 7},
 		{name: 'Porn', kind: 8},
 		{name: 'Delete', kind: 9},
 		{name: 'Lock', kind: 11},
 	];
-	var $panel = $('<div></div>', {
+	var $toolbox = $('<div></div>', {
 		css: {'margin': '0.5em 0.5em 0.5em 1em'},
 	});
 
@@ -20,7 +20,7 @@ function show_panel() {
 		type: 'button', val: 'Select',
 		click: function (e) { toggle_multi_selecting(); },
 	});
-	$panel.append($selectButton, ' ');
+	$toolbox.append($selectButton, ' ');
 
 	$controls = $('<span></span>').hide();
 	_.each(specs, function (spec) {
@@ -30,7 +30,7 @@ function show_panel() {
 			data: {kind: spec.kind},
 		}), ' ');
 	});
-	$controls.on('click', 'input[type=button]', panel_action);
+	$controls.on('click', 'input[type=button]', tool_action);
 
 	_.each(delayNames, function (when, i) {
 		var id = 'delay-' + when;
@@ -43,10 +43,10 @@ function show_panel() {
 		$controls.append($radio, $label, ' ');
 	});
 
-	$panel.append($controls).insertBefore(THREAD ? 'hr:last' : $ceiling);
+	$toolbox.append($controls).insertBefore(THREAD ? 'hr:last' : $ceiling);
 }
 
-function panel_action(event) {
+function tool_action(event) {
 	var ids = [];
 	var $sel = $('.selected');
 	$sel.each(function () {
@@ -155,5 +155,5 @@ $(function () {
 		if (multiSelecting)
 			make_selection_handle().prependTo(target);
 	});
-	show_panel();
+	show_toolbox();
 });
