@@ -525,6 +525,7 @@ remove: function () {
 		this.$iframe.remove();
 		this.$iframe = null;
 	}
+	this.stopListening();
 },
 
 render_buttons: function () {
