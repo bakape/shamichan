@@ -12,6 +12,8 @@ function show_toolbox() {
 		{name: 'Delete', kind: 9},
 		{name: 'Lock', kind: 11},
 	];
+	if (IDENT.auth == 'Admin')
+		specs.push({name: 'Panel', kind: 'panel'});
 	var $toolbox = $('<div></div>', {
 		css: {'margin': '0.5em 0.5em 0.5em 1em'},
 	});
@@ -56,6 +58,8 @@ function tool_action(event) {
 	});
 	var $button = $(this);
 	var kind = $button.data('kind');
+	if (kind == 'panel')
+		return toggle_panel();
 
 	/* On a thread page there's only one thread to lock, so... */
 	if (kind == 11 && THREAD && !ids.length)
@@ -157,3 +161,64 @@ $(function () {
 	});
 	show_toolbox();
 });
+
+var $panel;
+
+window.adminState = new Backbone.Model;
+
+var PanelView = Backbone.View.extend({
+	id: 'panel',
+
+	initialize: function () {
+		this.listenTo(this.model, 'change:visible', this.renderVis);
+		this.listenTo(this.model, 'change:ips', this.renderIPs);
+		this.listenTo(this.model, 'change:memoryUsage',
+				this.renderMemory);
+		$('<div/>', {id: 'ips'}).appendTo(this.el);
+		$('<div/>', {id: 'mem'}).appendTo(this.el);
+	},
+
+	renderVis: function (model, vis) {
+		this.$el.toggle(!!vis);
+	},
+
+	renderIPs: function (model, ipMap) {
+		var $ips = this.$('#ips').empty();
+		var ips = _.keys(ipMap);
+		ips.sort();
+		_.forEach(ips, function (ip) {
+			var $entry = $('<div/>', {text: ip + ' '});
+			var n = ipMap[ip];
+			if (n > 1)
+				$entry.append('<b>(' + n + ' sessions)</b>');
+			$entry.appendTo($ips);
+		});
+	},
+
+	renderMemory: function (model, mem) {
+		function mb(n) {
+			return Math.round(n/1000000) + ' MB';
+		}
+		this.$('#mem').html(
+			Math.round(mem.heapUsed/1000000) + '/' +
+			mb(mem.heapTotal) + ' heap used.<br>' +
+			mb(mem.rss) + ' resident.'
+		);
+	},
+});
+
+function toggle_panel() {
+	var show = !adminState.get('visible');
+	send([show ? 60 : 61, 'adminState']);
+}
+
+if (IDENT.auth == 'Admin') (function () {
+	var style = {
+		position: 'fixed', right: '0', bottom: '30px',
+		color: 'black', 'background-color': 'white',
+		padding: '1em',
+	};
+	var $panel = $('<div/>', {id: 'panel', css: style}).hide();
+	var view = new PanelView({model: adminState, el: $panel[0]});
+	$panel.appendTo('body');
+})();
