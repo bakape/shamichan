@@ -18,7 +18,6 @@ var _ = require('../lib/underscore'),
     web = require('./web'),
     winston = require('winston');
 
-require('./panel');
 require('../imager/daemon');
 
 var RES = STATE.resources;
