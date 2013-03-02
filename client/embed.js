@@ -29,7 +29,7 @@ function video_dims() {
 }
 
 $(document).on('click', '.watch', function (event) {
-	if (event.which > 1)
+	if (event.which > 1 || event.ctrlKey || event.altKey || event.shiftKey)
 		return;
 	var $target = $(event.target);
 
