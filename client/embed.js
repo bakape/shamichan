@@ -16,19 +16,17 @@ function make_video(id, params, start) {
 		query.playlist = id;
 	}
 
-	var bits = [];
-	for (var k in query)
-		bits.push(encodeURIComponent(k) + '=' +
-				encodeURIComponent(query[k]));
 	var uri = encodeURI('http://www.youtube.com/v/' + id) + '?' +
-			bits.join('&');
+			$.param(query);
 	var dims = video_dims();
-	var $obj = $('<object></object>').attr(dims);
+	var $obj = $('<object/>', {attr: video_dims()});
 	for (var name in params)
-		$obj.append($('<param></param>').attr({name: name,
-				value: params[name]}));
-	$('<embed></embed>').attr(params).attr(dims).attr({src: uri,
-		type: 'application/x-shockwave-flash'}).appendTo($obj);
+		$('<param/>', {
+			attr: {name: name, value: params[name]},
+		}).appendTo($obj);
+	$('<embed/>', {
+		src: uri, type: 'application/x-shockwave-flash',
+	}).attr(dims).attr(params).appendTo($obj);
 	return $obj;
 }
 
