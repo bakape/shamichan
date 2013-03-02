@@ -73,7 +73,7 @@ fieldset input {
 fieldset label {
 	color: gray;
 }
-.watch {
+.embed {
 	background-color: rgba(255, 255, 255, 0.25);
 	border-radius: 0;
 	-moz-border-radius: 0;

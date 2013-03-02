@@ -25,7 +25,7 @@ article figure img {
 body > aside {
 	margin: 1em;
 }
-.watch {
+.embed {
 	background-color: rgba(255, 255, 255, 0.5);
 	border-radius: 4px;
 	-moz-border-radius: 4px;
@@ -37,7 +37,7 @@ body > aside {
 	padding: 2px;
 	text-decoration: none;
 }
-.watch, .watch:hover {
+.embed, .embed:hover {
 	color: inherit;
 }
 del, del em {

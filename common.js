@@ -222,7 +222,7 @@ OS.red_string = function (ref) {
 	var dest, linkClass;
 	if (prefix == '>/w') {
 		dest = 'http://www.youtube.com/' + ref.slice(2);
-		linkClass = 'watch';
+		linkClass = 'embed watch';
 	}
 	else if (prefix == '>/a') {
 		var num = parseInt(ref.slice(4), 10);
