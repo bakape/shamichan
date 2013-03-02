@@ -18,16 +18,7 @@ function make_video(id, params, start) {
 
 	var uri = encodeURI('http://www.youtube.com/v/' + id) + '?' +
 			$.param(query);
-	var dims = video_dims();
-	var $obj = $('<object/>', {attr: video_dims()});
-	for (var name in params)
-		$('<param/>', {
-			attr: {name: name, value: params[name]},
-		}).appendTo($obj);
-	$('<embed/>', {
-		src: uri, type: 'application/x-shockwave-flash',
-	}).attr(dims).attr(params).appendTo($obj);
-	return $obj;
+	return make_embed(uri, params, video_dims());
 }
 
 function video_dims() {
@@ -128,3 +119,15 @@ $(document).on('mouseenter', '.watch', function (event) {
 		}
 	}
 });
+
+function make_embed(uri, params, dims) {
+	var $obj = $('<object/>', {attr: dims});
+	for (var name in params)
+		$('<param/>', {
+			attr: {name: name, value: params[name]},
+		}).appendTo($obj);
+	$('<embed/>', {
+		src: uri, type: 'application/x-shockwave-flash',
+	}).attr(dims).attr(params).appendTo($obj);
+	return $obj;
+}
