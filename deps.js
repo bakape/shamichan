@@ -21,7 +21,7 @@ exports.CLIENT_DEPS = [
 	'client/drop.js',
 	'client/hover.js',
 	'client/amusement.js',
-	'client/youtube.js',
+	'client/embed.js',
 ];
 
 exports.SERVER_DEPS = [
