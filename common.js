@@ -190,8 +190,8 @@ exports.OneeSama = OneeSama;
 var OS = OneeSama.prototype;
 
 var break_re = new RegExp("(\\S{" + DEFINES.WORD_LENGTH_LIMIT + "})");
-/* internal refs and youtube videos */
-var ref_re = />>(\d+|>\/watch\?v=[\w-]{11}(?:#t=[\dhms]{1,9})?|>\/(?:a|foolz)\/\d{0,10})/;
+/* internal refs, embeds */
+var ref_re = />>(\d+|>\/watch\?v=[\w-]{11}(?:#t=[\dhms]{1,9})?|>\/soundcloud\/[\w-]{1,40}\/[\w-]{1,80}|>\/(?:a|foolz)\/\d{0,10})/;
 
 OS.hook = function (name, func) {
 	var hs = this.hooks[name];
@@ -223,6 +223,10 @@ OS.red_string = function (ref) {
 	if (prefix == '>/w') {
 		dest = 'http://www.youtube.com/' + ref.slice(2);
 		linkClass = 'embed watch';
+	}
+	else if (prefix == '>/s') {
+		dest = 'http://soundcloud.com/' + ref.slice(13);
+		linkClass = 'embed soundcloud';
 	}
 	else if (prefix == '>/a') {
 		var num = parseInt(ref.slice(4), 10);

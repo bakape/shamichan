@@ -1,3 +1,5 @@
+/* YOUTUBE */
+
 var youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\/?\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/;
 var youtube_time_re = /^#t=(?:(\d\d?)h)?(?:(\d{1,3})m)?(?:(\d{1,3})s)?$/;
 
@@ -131,3 +133,38 @@ function make_embed(uri, params, dims) {
 	}).attr(dims).attr(params).appendTo($obj);
 	return $obj;
 }
+
+/* SOUNDCLOUD */
+
+var soundcloud_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.)?soundcloud\.com\/([\w-]{1,40}\/[\w-]{1,80})\/?/;
+
+function make_soundcloud(path, dims) {
+	var query = {url: 'http://soundcloud.com/' + path};
+	var uri = 'http://player.soundcloud.com/player.swf?' + $.param(query);
+	var params = {movie: uri};
+	return make_embed(uri, params, dims);
+}
+
+$(document).on('click', '.soundcloud', function (event) {
+	if (event.which > 1 || event.ctrlKey || event.altKey || event.shiftKey)
+		return;
+	var $target = $(event.target);
+
+	var $obj = $target.find('object');
+	if ($obj.length) {
+		$obj.siblings('br').andSelf().remove();
+		$target.css('width', 'auto');
+		return false;
+	}
+	var m = $target.attr('href').match(soundcloud_url_re);
+	if (!m) {
+		/* Shouldn't happen, but degrade to normal click action */
+		return;
+	}
+	var width = Math.round($(window).innerWidth() * 0.75);
+	var $obj = make_soundcloud(m[1], {width: width, height: 81});
+	with_dom(function () {
+		$target.css('width', width).append('<br>', $obj);
+	});
+	return false;
+});

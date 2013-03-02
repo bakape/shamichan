@@ -302,6 +302,21 @@ on_input: function (val) {
 			end -= diff;
 		}
 	}
+	/* and SoundCloud links */
+	while (true) {
+		var m = val.match(soundcloud_url_re);
+		if (!m)
+			break;
+		var sc = '>>>/soundcloud/' + m[1];
+		var old = m[0].length;
+		val = val.substr(0, m.index) + sc + val.substr(m.index + old);
+		changed = true;
+		if (m.index < start) {
+			var diff = old - sc.length;
+			start -= diff;
+			end -= diff;
+		}
+	}
 	if (changed)
 		input.val(val);
 
