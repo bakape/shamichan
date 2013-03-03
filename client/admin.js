@@ -185,11 +185,15 @@ var PanelView = Backbone.View.extend({
 	renderIPs: function () {
 		var ipMap = this.model.get('ips');
 		var $ips = this.$('#ips').empty();
-		var ips = _.keys(ipMap);
+		var ips = _.map(_.keys(ipMap), function (ip) {
+			return ip_mnemonic(ip) + ' ' + ip;
+		});
 		ips.sort();
 		_.forEach(ips, function (ip) {
 			var $entry = $('<div/>', {text: ip + ' '});
-			var n = ipMap[ip];
+			// ugh gross
+			var justIP = ip.slice(ip.indexOf(' ')+1);
+			var n = ipMap[justIP];
 			if (n > 1)
 				$entry.append('<b>(' + n + ' sessions)</b>');
 			$entry.appendTo($ips);
