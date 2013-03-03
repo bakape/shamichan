@@ -8,30 +8,36 @@ exports.delayDurations = delayDurations;
 var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,f,r,g,z,l,ch'.split(',');
 var mnemonicEnds = "a,i,u,e,o,a,i,u,e,o,ya,yi,yu,ye,yo,'".split(',');
 
-function ip_mnemonic(info) {
+function ip_mnemonic(ip) {
+	var nums = ip.split('.');
+	if (nums.length != 4)
+		return '<bad IP>';
+	var mnemonic = '';
+	for (var i = 0; i < 4; i++) {
+		var n = parseInt(nums[i], 10);
+		var s = mnemonicStarts[Math.floor(n / 16)] +
+				mnemonicEnds[n % 16];
+		mnemonic += s;
+	}
+	return mnemonic;
+}
+
+function append_mnemonic(info) {
 	var header = info.header, ip = info.data.ip;
 	if (!ip)
 		return;
-	var nums = ip.split('.');
-	if (config.IP_MNEMONIC && nums.length == 4) {
-		var mnemonic = '';
-		for (var i = 0; i < 4; i++) {
-			var n = parseInt(nums[i], 10);
-			var s = mnemonicStarts[Math.floor(n / 16)] +
-					mnemonicEnds[n % 16];
-			mnemonic += s;
-		}
+	if (config.IP_MNEMONIC)
 		header.push(common.safe(' <span title="'+escape(ip)+'">'),
-				mnemonic, common.safe('</span>'));
-	}
+				ip_mnemonic(ip), common.safe('</span>'));
 	else
 		header.push(' ' + ip);
 }
 
 if (typeof IDENT != 'undefined') {
 	/* client */
-	oneeSama.hook('headerName', ip_mnemonic);
+	window.ip_mnemonic = ip_mnemonic;
+	oneeSama.hook('headerName', append_mnemonic);
 }
 else {
-	exports.ip_mnemonic = ip_mnemonic;
+	exports.append_mnemonic = append_mnemonic;
 }

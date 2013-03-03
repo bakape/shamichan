@@ -54,7 +54,7 @@ exports.augment_oneesama = function (oneeSama, opts) {
 	var ident = opts.ident;
 	oneeSama.ident = ident;
 	if (can_moderate(ident))
-		oneeSama.hook('headerName', authcommon.ip_mnemonic);
+		oneeSama.hook('headerName', authcommon.append_mnemonic);
 	if (can_administrate(ident))
 		oneeSama.hook('headerName', denote_priv);
 	if (can_administrate(ident) && opts.board == 'graveyard')
