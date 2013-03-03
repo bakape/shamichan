@@ -13,6 +13,8 @@ _.templateSettings = {
 	interpolate: /\{\{(.+?)\}\}/g
 };
 
+exports.emitter = new (require('events').EventEmitter);
+
 exports.dbCache = {
 	OPs: {},
 	opTags: {},

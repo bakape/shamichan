@@ -1,12 +1,16 @@
 var caps = require('./caps'),
     common = require('../common'),
+    events = require('events'),
     Muggle = require('../muggle').Muggle,
     STATE = require('./state'),
+    util = require('util'),
     winston = require('winston');
 
 var dispatcher = exports.dispatcher = {};
 
 function Okyaku(socket, ip) {
+	events.EventEmitter.call(this);
+
 	this.socket = socket;
 	this.ident = caps.lookup_ident(ip);
 	this.watching = {};
@@ -16,8 +20,10 @@ function Okyaku(socket, ip) {
 	if (clients)
 		clients.push(this);
 	else
-		STATE.clientsByIP[ip] = [this];
+		clients = STATE.clientsByIP[ip] = [this];
+	STATE.emitter.emit('change:clientsByIP', ip, clients);
 }
+util.inherits(Okyaku, events.EventEmitter);
 exports.Okyaku = Okyaku;
 
 var OK = Okyaku.prototype;
@@ -74,6 +80,7 @@ OK.on_close = function () {
 			clientList.splice(i, 1);
 		if (!clientList.length)
 			delete STATE.clientsByIP[this.ip];
+		STATE.emitter.emit('change:clientsByIP', this.ip, clientList);
 	}
 
 	if (this.id) {
@@ -91,6 +98,8 @@ OK.on_close = function () {
 		else
 			db.disconnect();
 	}
+
+	this.emit('close');
 };
 
 OK.report = function (error) {
