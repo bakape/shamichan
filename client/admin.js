@@ -182,7 +182,8 @@ var PanelView = Backbone.View.extend({
 		this.$el.toggle(!!vis);
 	},
 
-	renderIPs: function (model, ipMap) {
+	renderIPs: function () {
+		var ipMap = this.model.get('ips');
 		var $ips = this.$('#ips').empty();
 		var ips = _.keys(ipMap);
 		ips.sort();
