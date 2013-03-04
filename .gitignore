@@ -12,6 +12,7 @@ hot.js
 jsmin
 perceptual
 imager/tmp
+upkeep/credentials.json
 www/js/client*.js
 www/src
 www/thumb
