@@ -204,12 +204,11 @@ var PanelView = Backbone.View.extend({
 
 	renderMemory: function (model, mem) {
 		function mb(n) {
-			return Math.round(n/1000000) + ' MB';
+			return Math.round(n/1000000);
 		}
-		this.$('#mem').html(
-			Math.round(mem.heapUsed/1000000) + '/' +
-			mb(mem.heapTotal) + ' heap used.<br>' +
-			mb(mem.rss) + ' resident.'
+		this.$('#mem').text(
+			mb(mem.heapUsed) + '/' + mb(mem.heapTotal) +
+			' MB heap used.'
 		);
 	},
 });
