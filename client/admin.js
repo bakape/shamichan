@@ -190,12 +190,14 @@ var PanelView = Backbone.View.extend({
 		});
 		ips.sort();
 		_.forEach(ips, function (ip) {
-			var $entry = $('<div/>', {text: ip + ' '});
 			// ugh gross
 			var justIP = ip.slice(ip.indexOf(' ')+1);
 			var n = ipMap[justIP];
+			if (!n)
+				return;
+			var $entry = $('<div/>', {text: ip});
 			if (n > 1)
-				$entry.append('<b>(' + n + ' sessions)</b>');
+				$entry.append(' (' + n + ')');
 			$entry.appendTo($ips);
 		});
 	},
