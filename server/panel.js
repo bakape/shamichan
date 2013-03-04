@@ -10,15 +10,15 @@ function on_client_ip(ip, clients) {
 	this.send([0, common.MODEL_EXTEND, ['adminState', 'ips'], amend]);
 }
 
-function on_mem_usage(usage) {
-	this.send([0, common.MODEL_SET, 'adminState', {memoryUsage: usage}]);
+function on_refresh(info) {
+	this.send([0, common.MODEL_SET, 'adminState', info]);
 }
 
 var panelListeners = 0, panelInterval = 0;
 
 function listen_panel(client) {
 	STATE.emitter.on('change:clientsByIP', client.on_client_ip);
-	STATE.emitter.on('change:memoryUsage', client.on_mem_usage);
+	STATE.emitter.on('refresh', client.on_refresh);
 
 	panelListeners++;
 	if (panelListeners == 1) {
@@ -28,7 +28,7 @@ function listen_panel(client) {
 
 function unlisten_panel(client) {
 	STATE.emitter.removeListener('change:clientsByIP',client.on_client_ip);
-	STATE.emitter.removeListener('change:memoryUsage',client.on_mem_usage);
+	STATE.emitter.removeListener('refresh', client.on_refresh);
 
 	panelListeners--;
 	if (panelListeners == 0) {
@@ -38,7 +38,10 @@ function unlisten_panel(client) {
 }
 
 function refresh_panel_state() {
-	STATE.emitter.emit('change:memoryUsage', process.memoryUsage());
+	STATE.emitter.emit('refresh', {
+		memoryUsage: process.memoryUsage(),
+		uptime: process.uptime(),
+	});
 }
 
 function subscribe() {
@@ -46,7 +49,7 @@ function subscribe() {
 		return false;
 
 	this.on_client_ip = on_client_ip.bind(this);
-	this.on_mem_usage = on_mem_usage.bind(this);
+	this.on_refresh = on_refresh.bind(this);
 	this.unsubscribe_admin_state = unsubscribe.bind(this);
 	this.once('close', this.unsubscribe_admin_state);
 	listen_panel(this);
@@ -72,7 +75,7 @@ function unsubscribe() {
 	unlisten_panel(this);
 	this.removeListener('close', this.unsubscribe_admin_state);
 	this.on_client_ip = null;
-	this.on_mem_usage = null;
+	this.on_refresh = null;
 	this.unsubscribe_admin_state = null;
 
 	this.send([0, common.MODEL_SET, 'adminState', {visible: false}]);
