@@ -174,8 +174,10 @@ var PanelView = Backbone.View.extend({
 		this.listenTo(this.model, 'change:ips', this.renderIPs);
 		this.listenTo(this.model, 'change:memoryUsage',
 				this.renderMemory);
+		this.listenTo(this.model, 'change:uptime', this.renderUptime);
 		$('<div/>', {id: 'ips'}).appendTo(this.el);
 		$('<div/>', {id: 'mem'}).appendTo(this.el);
+		$('<div/>', {id: 'uptime'}).appendTo(this.el);
 	},
 
 	renderVis: function (model, vis) {
@@ -210,6 +212,15 @@ var PanelView = Backbone.View.extend({
 			mb(mem.heapUsed) + '/' + mb(mem.heapTotal) +
 			' MB heap used.'
 		);
+	},
+
+	renderUptime: function (model, s) {
+		var m = Math.floor(s / 60) % 60;
+		var h = Math.floor(s / 3600) % 60;
+		var d = Math.floor(s / (3600*24));
+		h = h ? h+'h' : '';
+		d = d ? d+'d' : '';
+		this.$('#uptime').text('Up '+ d + h + m +'m.');
 	},
 });
 
