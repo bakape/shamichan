@@ -106,6 +106,7 @@ events: {
 initialize: function (dest) {
 
 	this.listenTo(this.model, 'change', this.render_buttons);
+	this.listenTo(this.model, 'change:spoiler', this.render_spoiler_pane);
 
 	var attrs = this.model.attributes;
 	var op = attrs.op;
@@ -627,24 +628,21 @@ on_image_chosen: function () {
 },
 
 on_toggle: function (event) {
-	var self = this;
 	var attrs = this.model.attributes;
 	if (!attrs.uploading && !attrs.uploaded) {
 		event.preventDefault();
 		if (attrs.spoiler) {
 			this.model.set({spoiler: 0});
-			/* XXX: Removing the style attr is buggy... */
-			set_image('pane.png');
 			return;
 		}
 		var pick = pick_spoiler(attrs.nextSpoiler);
 		this.model.set({spoiler: pick.index, nextSpoiler: pick.next});
-		set_image('spoil' + pick.index + '.png');
 	}
-	function set_image(path) {
-		self.$toggle.css('background-image', 'url("'
-				+ mediaURL + 'kana/' + path + '")');
-	}
+},
+
+render_spoiler_pane: function (model, sp) {
+	var img = mediaURL + 'kana/' + (sp ? 'spoil'+sp : 'pane') + '.png';
+	this.$toggle.css('background-image', 'url("' + img + '")');
 },
 
 });
