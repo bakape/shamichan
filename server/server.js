@@ -447,12 +447,12 @@ function (req, resp) {
 	var paginationHtml;
 	yaku.on('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
-		resp.writeHead(200, web.noCacheHeaders);
 		write_board_head(resp, board, nav);
 		paginationHtml = make_pagination_html(nav);
 		resp.write(paginationHtml);
 		resp.write('<hr>\n');
 	});
+	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	var opts = {fullLinks: true, board: board};
 	write_thread_html(yaku, req, resp, opts);
 	yaku.on('end', function () {
@@ -499,7 +499,7 @@ function (req, resp) {
 
 	var board = this.board;
 	var nav = page_nav(this.threadCount, this.page);
-	resp.writeHead(200, web.noCacheHeaders);
+	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	write_board_head(resp, board, nav);
 	var paginationHtml = make_pagination_html(nav);
 	resp.write(paginationHtml);
@@ -624,12 +624,7 @@ function (req, resp) {
 
 	var board = this.board, op = this.op;
 
-	// TEMP testing
-	if (op == 773121)
-		resp = write_gzip_head(req, resp, this.headers);
-	else
-		resp.writeHead(200, this.headers);
-
+	resp = write_gzip_head(req, resp, this.headers);
 	write_thread_head(resp, board, op, this.subject, this.limit);
 
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
