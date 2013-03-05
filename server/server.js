@@ -445,7 +445,7 @@ function (req, resp) {
 	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(0);
 	var paginationHtml;
-	yaku.on('begin', function (thread_count) {
+	yaku.once('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
 		write_board_head(resp, board, nav);
 		paginationHtml = make_pagination_html(nav);
@@ -455,12 +455,12 @@ function (req, resp) {
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	var opts = {fullLinks: true, board: board};
 	write_thread_html(yaku, req, resp, opts);
-	yaku.on('end', function () {
+	yaku.once('end', function () {
 		resp.write(paginationHtml);
 		write_page_end(req, resp, false);
 		yaku.disconnect();
 	});
-	yaku.on('error', function (err) {
+	yaku.once('error', function (err) {
 		winston.error('index:', err);
 		resp.end();
 		yaku.disconnect();
@@ -481,11 +481,11 @@ web.resource(/^\/(\w+)\/page(\d+)$/, function (req, params, cb) {
 
 	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(page);
-	yaku.on('nomatch', function () {
+	yaku.once('nomatch', function () {
 		cb(404);
 		yaku.disconnect();
 	});
-	yaku.on('begin', function (threadCount) {
+	yaku.once('begin', function (threadCount) {
 		cb(null, 'ok', {
 			board: board, page: page, yaku: yaku,
 			threadCount: threadCount,
@@ -508,12 +508,12 @@ function (req, resp) {
 	var opts = {fullLinks: true, board: board};
 	write_thread_html(this.yaku, req, resp, opts);
 	var self = this;
-	this.yaku.on('end', function () {
+	this.yaku.once('end', function () {
 		resp.write(paginationHtml);
 		write_page_end(req, resp, false);
 		self.finished();
 	});
-	this.yaku.on('error', function (err) {
+	this.yaku.once('error', function (err) {
 		winston.error('page', self.page + ':', err);
 		resp.end();
 		self.finished();
@@ -576,15 +576,15 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	var limit = ('last' + lastN) in req.query ?
 			(lastN + config.ABBREVIATED_REPLIES) : 0;
 	reader.get_thread(board, num, {redirect: true, abbrev: limit});
-	reader.on('nomatch', function () {
+	reader.once('nomatch', function () {
 		cb(404);
 		yaku.disconnect();
 	});
-	reader.on('redirect', function (op) {
+	reader.once('redirect', function (op) {
 		redirect_thread(cb, num, op);
 		yaku.disconnect();
 	});
-	reader.on('begin', function (preThread) {
+	reader.once('begin', function (preThread) {
 		var headers;
 		if (!config.DEBUG && preThread.hctr) {
 			var etag = 'W/' + preThread.hctr + '-' + RES.indexHash;
@@ -630,7 +630,7 @@ function (req, resp) {
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
 	write_thread_html(this.reader, req, resp, opts);
 	var self = this;
-	this.reader.on('end', function () {
+	this.reader.once('end', function () {
 		write_page_end(req, resp, true);
 		self.finished();
 	});
@@ -639,8 +639,8 @@ function (req, resp) {
 		resp.end();
 		self.finished();
 	}
-	this.reader.on('error', on_err);
-	this.yaku.on('error', on_err);
+	this.reader.once('error', on_err);
+	this.yaku.once('error', on_err);
 },
 function () {
 	this.yaku.disconnect();
