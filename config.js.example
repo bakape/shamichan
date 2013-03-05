@@ -6,6 +6,7 @@ var config = {
 	SOCKET_PATH: '/hana',
 	TRUST_X_FORWARDED_FOR: false,
 	SERVE_STATIC_FILES: false,
+	GZIP: false,
 
 	REDIS_PORT: 6379,
 	READ_ONLY: false,

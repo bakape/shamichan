@@ -256,6 +256,22 @@ function write_thread_head(resp, board, op, subject, limit) {
 	resp.write('<hr>\n');
 }
 
+function write_gzip_head(req, resp, headers) {
+	if (!config.GZIP || req.headers['accept-encoding'].indexOf('gzip')<0) {
+		resp.writeHead(200, headers);
+		return resp;
+	}
+	resp.writeHead(200, _.extend({}, headers, {
+		'Content-Encoding': 'gzip',
+		Vary: 'Accept-Encoding',
+	}));
+
+	// XXX in-node impl blocks node while deflating... not good!
+	var gz = require('zlib').createGzip();
+	gz.pipe(resp);
+	return gz;
+}
+
 function make_board_meta(board, info) {
 	var bits = [];
 	if (info.cur_page >= 0)
@@ -608,7 +624,12 @@ function (req, resp) {
 
 	var board = this.board, op = this.op;
 
-	resp.writeHead(200, this.headers);
+	// TEMP testing
+	if (op == 773121)
+		resp = write_gzip_head(req, resp, this.headers);
+	else
+		resp.writeHead(200, this.headers);
+
 	write_thread_head(resp, board, op, this.subject, this.limit);
 
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
