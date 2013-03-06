@@ -257,7 +257,8 @@ function write_thread_head(resp, board, op, subject, limit) {
 }
 
 function write_gzip_head(req, resp, headers) {
-	if (!config.GZIP || req.headers['accept-encoding'].indexOf('gzip')<0) {
+	var encoding = config.GZIP && req.headers['accept-encoding'];
+	if (!encoding || encoding.indexOf('gzip') < 0) {
 		resp.writeHead(200, headers);
 		return resp;
 	}
