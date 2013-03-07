@@ -1,0 +1,11 @@
+.mod#toolbox {
+	margin: 0.5em 0.5em 0.5em 1.0em;
+}
+.mod#panel {
+	background-color: white;
+	bottom: 30px;
+	color: black;
+	padding: 1em;
+	position: fixed;
+	right: 0;
+}

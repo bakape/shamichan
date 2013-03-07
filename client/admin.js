@@ -1,6 +1,8 @@
 /* NOTE: This file is processed by server/state.js
          and served by server/server.js (to auth'd users only) */
 
+yepnope(mediaURL + 'css/mod-v1.css');
+
 var $selectButton, $controls;
 window.loggedInUser = IDENT.email;
 window.x_csrf = IDENT.csrf;
@@ -14,9 +16,7 @@ function show_toolbox() {
 	];
 	if (IDENT.auth == 'Admin')
 		specs.push({name: 'Panel', kind: 'panel'});
-	var $toolbox = $('<div></div>', {
-		css: {'margin': '0.5em 0.5em 0.5em 1em'},
-	});
+	var $toolbox = $('<div/>', {id: 'toolbox', "class": 'mod'});
 
 	$selectButton = $('<input />', {
 		type: 'button', val: 'Select',
@@ -242,12 +242,7 @@ function toggle_panel() {
 }
 
 if (IDENT.auth == 'Admin') (function () {
-	var style = {
-		position: 'fixed', right: '0', bottom: '30px',
-		color: 'black', 'background-color': 'white',
-		padding: '1em',
-	};
-	var $panel = $('<div/>', {id: 'panel', css: style}).hide();
+	var $panel = $('<div/>', {id: 'panel', "class": 'mod'}).hide();
 	var view = new PanelView({model: adminState, el: $panel[0]});
 	$panel.appendTo('body');
 })();
