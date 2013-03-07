@@ -8,7 +8,7 @@ function on_client_ip(ip, clients) {
 	var addr = {ip: ip, count: clients.length};
 	// This will leak 0-count clients.
 	// I want them to expire after a delay, really. Should reduce churn.
-	this.send([0, common.COLLECTION_ADD, ['adminState', 'ips'], addr]);
+	this.send([0, common.COLLECTION_ADD, 'addrs', addr]);
 }
 
 function on_refresh(info) {
@@ -66,7 +66,7 @@ function subscribe() {
 		ips.push({ip: ip, count: STATE.clientsByIP[ip].length});
 
 	this.send([0, common.MODEL_SET, 'adminState', state]);
-	this.send([0, common.COLLECTION_RESET, ['adminState', 'ips'], ips]);
+	this.send([0, common.COLLECTION_RESET, 'addrs', ips]);
 	return true;
 }
 

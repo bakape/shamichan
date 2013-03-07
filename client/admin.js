@@ -174,10 +174,11 @@ var Addresses = Backbone.Collection.extend({
 	comparator: function (a) { return ip_mnemonic(a.ip); },
 });
 
+window.addrs = new Addresses;
+
 var $panel;
 
 window.adminState = new Backbone.Model({
-	ips: new Addresses,
 });
 
 var PanelView = Backbone.View.extend({
@@ -185,7 +186,7 @@ var PanelView = Backbone.View.extend({
 
 	initialize: function () {
 		this.listenTo(this.model, 'change:visible', this.renderVis);
-		this.listenTo(this.model.get('ips'), 'add change reset',
+		this.listenTo(window.addrs, 'add change reset',
 				this.renderIPs);
 		this.listenTo(this.model, 'change:memoryUsage',
 				this.renderMemory);
@@ -200,9 +201,8 @@ var PanelView = Backbone.View.extend({
 	},
 
 	renderIPs: function () {
-		var addrs = this.model.get('ips');
 		var $ips = this.$('#ips').empty();
-		addrs.forEach(function (addr) {
+		window.addrs.forEach(function (addr) {
 			var attrs = addr.attributes;
 			if (!attrs.count)
 				return;
