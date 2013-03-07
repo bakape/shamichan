@@ -72,15 +72,28 @@ OK.on_message = function (data) {
 	}
 };
 
+var ip_expiries = {};
+
 OK.on_close = function () {
-	var clientList = STATE.clientsByIP[this.ip];
+	var ip = this.ip;
+	var clientList = STATE.clientsByIP[ip];
 	if (clientList) {
 		var i = clientList.indexOf(this);
-		if (i >= 0)
+		if (i >= 0) {
 			clientList.splice(i, 1);
-		if (!clientList.length)
-			delete STATE.clientsByIP[this.ip];
-		STATE.emitter.emit('change:clientsByIP', this.ip, clientList);
+			STATE.emitter.emit('change:clientsByIP',ip,clientList);
+		}
+		if (!clientList.length) {
+			// Expire this list after a short delay
+			if (ip_expiries[ip])
+				clearTimeout(ip_expiries[ip]);
+			ip_expiries[ip] = setTimeout(function () {
+				var list = STATE.clientsByIP[ip];
+				if (list && list.length === 0)
+					delete STATE.clientsByIP[ip];
+				delete ip_expiries[ip];
+			}, 5000);
+		}
 	}
 
 	if (this.id) {
