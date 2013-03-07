@@ -20,7 +20,7 @@ okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
 	if (!caps.can_moderate(client.ident))
 		return false;
 	var ip = msg[0];
-	if (typeof ip != 'string' || !/^\d+\.\d+\.\d+\.\d+$/.exec(ip))
+	if (!authcommon.is_valid_ip(ip))
 		return false;
 	var clients = STATE.clientsByIP[ip] || [];
 	var addr = {ip: ip, count: clients.length, shallow: false};
