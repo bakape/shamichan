@@ -28,11 +28,10 @@ function append_mnemonic(info) {
 	var header = info.header, ip = info.data.ip;
 	if (!ip)
 		return;
-	if (config.IP_MNEMONIC)
-		header.push(common.safe(' <span title="'+escape(ip)+'">'),
-				ip_mnemonic(ip), common.safe('</span>'));
-	else
-		header.push(' ' + ip);
+	var mnemonic = config.IP_MNEMONIC && ip_mnemonic(ip);
+	var title = mnemonic ? ' title="'+escape(ip)+'"' : '';
+	header.push(common.safe(' <a href="#" class="mod addr"' + title + '>'),
+			mnemonic || ip, common.safe('</a>'));
 }
 
 if (typeof IDENT != 'undefined') {

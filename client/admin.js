@@ -162,10 +162,40 @@ $(function () {
 	show_toolbox();
 });
 
+$DOC.on('click', 'a.mod.addr', function (event) {
+	event.preventDefault();
+	var $a = $(event.currentTarget);
+	var existing = $a.data('view');
+	if (existing) {
+		existing.remove();
+		$a.attr('href', '#').removeData('view');
+		return;
+	}
+	var ip = $a.prop('title') || $a.text();
+	if (!ip || ip == '<bad IP>')
+		return;
+	var addr = window.addrs.get(ip);
+	if (!addr)
+		return;
+	var view = new AddressView({model: addr})
+	$a.removeAttr('href').data('view', view).append(view.render().el);
+});
+
 var Address = Backbone.Model.extend({
 	idAttribute: 'ip',
 	defaults: {
 		count: 1,
+	},
+});
+
+var AddressView = Backbone.View.extend({
+	className: 'mod address',
+	initialize: function () {
+		this.listenTo(this.model, 'change', this.render);
+	},
+	render: function () {
+		this.$el.text(this.model.get('ip'));
+		return this;
 	},
 });
 
@@ -209,7 +239,9 @@ var PanelView = Backbone.View.extend({
 			var text = ip_mnemonic(attrs.ip);
 			if (attrs.count > 1)
 				text += ' (' + attrs.count + ')';
-			$('<div/>', {
+			$('<a/>', {
+				"class": 'mod addr',
+				href: '#',
 				text: text,
 				title: attrs.ip,
 			}).appendTo($ips);

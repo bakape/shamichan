@@ -1,3 +1,14 @@
+.mod.addr {
+	display: inline-block;
+	position: static;
+	text-decoration: none;
+}
+.mod.address {
+	background-color: white;
+	bottom: 1em;
+	position: absolute;
+	padding: 1em;
+}
 .mod#toolbox {
 	margin: 0.5em 0.5em 0.5em 1.0em;
 }
