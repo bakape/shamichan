@@ -175,8 +175,11 @@ $DOC.on('click', 'a.mod.addr', function (event) {
 	if (!ip || ip == '<bad IP>')
 		return;
 	var addr = window.addrs.get(ip);
-	if (!addr)
-		return;
+	if (!addr) {
+		send([101, ip]);
+		addr = new Address({ip: ip, shallow: true});
+		window.addrs.add(addr);
+	}
 	var view = new AddressView({model: addr})
 	$a.removeAttr('href').data('view', view).append(view.render().el);
 });
@@ -193,7 +196,14 @@ var AddressView = Backbone.View.extend({
 	initialize: function () {
 		this.listenTo(this.model, 'change', this.render);
 	},
+
 	render: function () {
+		var attrs = this.model.attributes;
+		if (attrs.shallow) {
+			this.$el.hide();
+			return this;
+		}
+		this.$el.show();
 		this.$el.text(this.model.get('ip'));
 		return this;
 	},
@@ -216,7 +226,7 @@ var PanelView = Backbone.View.extend({
 
 	initialize: function () {
 		this.listenTo(this.model, 'change:visible', this.renderVis);
-		this.listenTo(window.addrs, 'add change reset',
+		this.listenTo(window.addrs, 'add change:count reset',
 				this.renderIPs);
 		this.listenTo(this.model, 'change:memoryUsage',
 				this.renderMemory);

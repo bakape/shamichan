@@ -1,6 +1,8 @@
 var config = require('./config');
 var common = require('./common');
 
+exports.FETCH_ADDRESS = 101;
+
 var delayNames = ['now', 'soon', 'later'];
 var delayDurations = {now: 0, soon: 60, later: 20*60};
 exports.delayDurations = delayDurations;

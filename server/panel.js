@@ -1,4 +1,5 @@
 var _ = require('../lib/underscore'),
+    authcommon = require('../authcommon'),
     caps = require('./caps'),
     common = require('../common'),
     okyaku = require('./okyaku'),
@@ -14,6 +15,18 @@ function on_client_ip(ip, clients) {
 function on_refresh(info) {
 	this.send([0, common.MODEL_SET, 'adminState', info]);
 }
+
+okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
+	if (!caps.can_moderate(client.ident))
+		return false;
+	var ip = msg[0];
+	if (typeof ip != 'string' || !/^\d+\.\d+\.\d+\.\d+$/.exec(ip))
+		return false;
+	var clients = STATE.clientsByIP[ip] || [];
+	var addr = {ip: ip, count: clients.length, shallow: false};
+	client.send([0, common.COLLECTION_ADD, 'addrs', addr]);
+	return true;
+};
 
 var panelListeners = 0, panelInterval = 0;
 
