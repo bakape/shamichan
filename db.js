@@ -433,7 +433,7 @@ function post_volume(view, body) {
 }
 
 function update_throughput(m, ip, when, quant) {
-	var key = 'ip:' + ip + ':';
+	var key = 'ip:' + ip + ':throttle:';
 	var shortKey = key + short_term_timeslot(when);
 	var longKey = key + long_term_timeslot(when);
 	m.incrby(shortKey, quant);
@@ -460,7 +460,7 @@ Y.reserve_post = function (op, ip, callback) {
 	if (ip == '127.0.0.1')
 		return reserve();
 
-	var key = 'ip:' + ip + ':';
+	var key = 'ip:' + ip + ':throttle:';
 	var now = new Date().getTime();
 	var shortTerm = key + short_term_timeslot(now);
 	var longTerm = key + long_term_timeslot(now);
@@ -573,7 +573,8 @@ Y.insert_post = function (msg, body, extra, callback) {
 			}
 			/* Rate-limit new threads */
 			if (ip != '127.0.0.1')
-				m.setex('ip:'+ip, config.THREAD_THROTTLE, op);
+				m.setex('ip:'+ip+':throttle:thread',
+						config.THREAD_THROTTLE, op);
 		}
 
 		/* Denormalize for backlog */
@@ -1013,7 +1014,8 @@ Y.check_thread_locked = function (op, callback) {
 };
 
 Y.check_throttle = function (ip, callback) {
-	this.connect().exists('ip:' + ip, function (err, exists) {
+	var key = 'ip:' + ip + ':throttle:thread';
+	this.connect().exists(key, function (err, exists) {
 		if (err)
 			callback(err);
 		else
