@@ -171,7 +171,7 @@ var Address = Backbone.Model.extend({
 
 var Addresses = Backbone.Collection.extend({
 	model: Address,
-	comparator: function (a) { return a.ip && ip_mnemonic(a.ip); },
+	comparator: function (a) { return ip_mnemonic(a.ip); },
 });
 
 var $panel;

@@ -9,6 +9,8 @@ var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,f,r,g,z,l,ch'.split(',');
 var mnemonicEnds = "a,i,u,e,o,a,i,u,e,o,ya,yi,yu,ye,yo,'".split(',');
 
 function ip_mnemonic(ip) {
+	if (typeof ip != 'string')
+		return '<bad IP>';
 	var nums = ip.split('.');
 	if (nums.length != 4)
 		return '<bad IP>';
