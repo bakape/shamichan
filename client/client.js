@@ -497,7 +497,7 @@ dispatcher[COLLECTION_RESET] = function (msg, op) {
 dispatcher[COLLECTION_ADD] = function (msg, op) {
 	var target = lookup_model_path(msg[0]);
 	if (target && target.add)
-		target.add(msg[1]);
+		target.add(msg[1], {merge: true});
 };
 
 (function () {

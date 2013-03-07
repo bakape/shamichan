@@ -162,16 +162,31 @@ $(function () {
 	show_toolbox();
 });
 
+var Address = Backbone.Model.extend({
+	idAttribute: 'ip',
+	defaults: {
+		count: 1,
+	},
+});
+
+var Addresses = Backbone.Collection.extend({
+	model: Address,
+	comparator: function (a) { return a.ip && ip_mnemonic(a.ip); },
+});
+
 var $panel;
 
-window.adminState = new Backbone.Model;
+window.adminState = new Backbone.Model({
+	ips: new Addresses,
+});
 
 var PanelView = Backbone.View.extend({
 	id: 'panel',
 
 	initialize: function () {
 		this.listenTo(this.model, 'change:visible', this.renderVis);
-		this.listenTo(this.model, 'change:ips', this.renderIPs);
+		this.listenTo(this.model.get('ips'), 'add change reset',
+				this.renderIPs);
 		this.listenTo(this.model, 'change:memoryUsage',
 				this.renderMemory);
 		this.listenTo(this.model, 'change:uptime', this.renderUptime);
@@ -185,22 +200,19 @@ var PanelView = Backbone.View.extend({
 	},
 
 	renderIPs: function () {
-		var ipMap = this.model.get('ips');
+		var addrs = this.model.get('ips');
 		var $ips = this.$('#ips').empty();
-		var ips = _.map(_.keys(ipMap), function (ip) {
-			return ip_mnemonic(ip) + ' ' + ip;
-		});
-		ips.sort();
-		_.forEach(ips, function (ip) {
-			// ugh gross
-			var justIP = ip.slice(ip.indexOf(' ')+1);
-			var n = ipMap[justIP];
-			if (!n)
+		addrs.forEach(function (addr) {
+			var attrs = addr.attributes;
+			if (!attrs.count)
 				return;
-			var $entry = $('<div/>', {text: ip});
-			if (n > 1)
-				$entry.append(' (' + n + ')');
-			$entry.appendTo($ips);
+			var text = ip_mnemonic(attrs.ip);
+			if (attrs.count > 1)
+				text += ' (' + attrs.count + ')';
+			$('<div/>', {
+				text: text,
+				title: attrs.ip,
+			}).appendTo($ips);
 		});
 	},
 

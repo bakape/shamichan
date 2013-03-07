@@ -5,9 +5,10 @@ var _ = require('../lib/underscore'),
     STATE = require('./state');
 
 function on_client_ip(ip, clients) {
-	var amend = {};
-	amend[ip] = clients.length;
-	this.send([0, common.MODEL_EXTEND, ['adminState', 'ips'], amend]);
+	var addr = {ip: ip, count: clients.length};
+	// This will leak 0-count clients.
+	// I want them to expire after a delay, really. Should reduce churn.
+	this.send([0, common.COLLECTION_ADD, ['adminState', 'ips'], addr]);
 }
 
 function on_refresh(info) {
@@ -60,11 +61,12 @@ function subscribe() {
 		visible: true,
 	};
 
-	state.ips = {};
+	var ips = [];
 	for (var ip in STATE.clientsByIP)
-		state.ips[ip] = STATE.clientsByIP[ip].length;
+		ips.push({ip: ip, count: STATE.clientsByIP[ip].length});
 
 	this.send([0, common.MODEL_SET, 'adminState', state]);
+	this.send([0, common.COLLECTION_RESET, ['adminState', 'ips'], ips]);
 	return true;
 }
 
