@@ -477,17 +477,6 @@ dispatcher[MODEL_SET] = function (msg, op) {
 		target.set(msg[1]);
 };
 
-dispatcher[MODEL_EXTEND] = function (msg, op) {
-	var path = msg[0];
-	var target = lookup_model_path(path);
-	if (_.isObject(target))
-		_.extend(target, msg[1]);
-	// Temp hack due to lack of collection
-	var parent = lookup_model_path(path[0]);
-	if (parent.trigger && typeof path[1] == 'string')
-		parent.trigger('change:' + path[1]);
-};
-
 dispatcher[COLLECTION_RESET] = function (msg, op) {
 	var target = lookup_model_path(msg[0]);
 	if (target && target.reset)
