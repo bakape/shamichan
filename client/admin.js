@@ -137,7 +137,7 @@ $DOC.on('click', '.select-handle', function (event) {
 	$(event.target).toggleClass('selected');
 });
 
-$(function () {
+with_dom(function () {
 	$('h1').text('Moderation - ' + $('h1').text());
 	var $authname = $('<input>', {type: 'checkbox', id: 'authname'});
 	var $label = $('<label/>', {text: ' '+IDENT.auth}).prepend($authname);
@@ -162,50 +162,86 @@ $(function () {
 	show_toolbox();
 });
 
-$DOC.on('click', 'a.mod.addr', function (event) {
-	event.preventDefault();
-	var $a = $(event.currentTarget);
-	var existing = $a.data('view');
-	if (existing) {
-		existing.remove();
-		$a.attr('href', '#').removeData('view');
-		return;
-	}
-	var ip = $a.prop('title') || $a.text();
-	if (!ip || ip == '<bad IP>')
-		return;
-	var addr = window.addrs.get(ip);
-	if (!addr) {
-		send([101, ip]);
-		addr = new Address({ip: ip, shallow: true});
-		window.addrs.add(addr);
-	}
-	var view = new AddressView({model: addr})
-	$a.removeAttr('href').data('view', view).append(view.render().el);
-});
-
 var Address = Backbone.Model.extend({
 	idAttribute: 'ip',
 	defaults: {
-		count: 1,
+		count: 0,
 	},
 });
 
 var AddressView = Backbone.View.extend({
 	className: 'mod address',
 	initialize: function () {
+		this.$el.append(
+			$('<span/>', {"class": 'ip'})
+		);
 		this.listenTo(this.model, 'change', this.render);
 	},
 
 	render: function () {
 		var attrs = this.model.attributes;
 		if (attrs.shallow) {
-			this.$el.hide();
+			this.$('.ip').text('Loading...');
 			return this;
 		}
-		this.$el.show();
-		this.$el.text(this.model.get('ip'));
+		this.$('.ip').text(attrs.ip);
 		return this;
+	},
+
+	remove: function () {
+		this.trigger('preremove');
+		Backbone.View.prototype.remove.call(this);
+	},
+});
+
+// basically just a link
+var AddrView = Backbone.View.extend({
+	tagName: 'a',
+	className: 'mod addr',
+
+	events: {
+		click: 'toggle_expansion',
+	},
+
+	initialize: function () {
+		this.$el.attr('href', '#');
+		this.listenTo(this.model, 'change:name', this.render);
+	},
+
+	render: function () {
+		var attrs = this.model.attributes;
+		var text = ip_mnemonic(attrs.ip);
+		if (attrs.name)
+			text += ' "' + attrs.name + '"';
+		this.$el.attr('title', attrs.ip).text(text);
+		return this;
+	},
+
+	toggle_expansion: function (event) {
+		if (event.target !== this.el)
+			return;
+		event.preventDefault();
+
+		if (this.expansion)
+			return this.expansion.remove();
+
+		this.expansion = new AddressView({model: this.model});
+		this.$el.after(this.expansion.render().el);
+		this.listenTo(this.expansion, 'preremove',
+				this.expansion_removed);
+
+		if (this.model.get('shallow'))
+			send([101, this.model.id]);
+	},
+
+	remove: function () {
+		if (this.expansion)
+			this.expansion.remove();
+		Backbone.View.prototype.remove.call(this);
+	},
+
+	expansion_removed: function () {
+		this.expansion = null;
 	},
 });
 
@@ -216,7 +252,40 @@ var Addresses = Backbone.Collection.extend({
 
 window.addrs = new Addresses;
 
-var $panel;
+function hook_up_address($a) {
+	if (!$a.is('a.mod.addr')) {
+		$a = $a.find('a.mod.addr');
+		if (!$a.is('a.mod.addr'))
+			return;
+	}
+	var ip = $a.prop('title') || $a.text();
+	var givenName;
+	var m = $a.text().match(/^([\w'.]+) "(.+)"$/);
+	if (m) {
+		if (is_valid_ip(m[1]))
+			ip = m[1];
+		givenName = m[2];
+	}
+	if (!is_valid_ip(ip))
+		return;
+
+	var address = window.addrs.get(ip);
+	if (!address) {
+		address = new Address({ip: ip});
+		address.set(givenName ? {name: givenName} : {shallow: true});
+		window.addrs.add(address);
+	}
+	var view = new AddrView({model: address, el: $a[0]});
+	if (address.get('name'))
+		view.render();
+}
+oneeSama.hook('afterInsert', hook_up_address);
+
+with_dom(function () {
+	$('a.mod.addr').each(function () {
+		hook_up_address($(this));
+	});
+});
 
 window.adminState = new Backbone.Model({
 });
@@ -243,18 +312,11 @@ var PanelView = Backbone.View.extend({
 	renderIPs: function () {
 		var $ips = this.$('#ips').empty();
 		window.addrs.forEach(function (addr) {
-			var attrs = addr.attributes;
-			if (!attrs.count)
+			var n = addr.get('count');
+			if (!n)
 				return;
-			var text = ip_mnemonic(attrs.ip);
-			if (attrs.count > 1)
-				text += ' (' + attrs.count + ')';
-			$('<a/>', {
-				"class": 'mod addr',
-				href: '#',
-				text: text,
-				title: attrs.ip,
-			}).appendTo($ips);
+			var el = new AddrView({model: addr}).render().el;
+			$ips.append(el, n>1 ? ' ('+n+')' : '', '<br>');
 		});
 	},
 

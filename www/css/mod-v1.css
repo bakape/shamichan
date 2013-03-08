@@ -5,9 +5,11 @@
 }
 .mod.address {
 	background-color: white;
-	bottom: 1em;
+	bottom: 1.2em;
+	color: #444;
 	position: absolute;
 	padding: 1em;
+	z-index: 30;
 }
 .mod#toolbox {
 	margin: 0.5em 0.5em 0.5em 1.0em;

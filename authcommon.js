@@ -30,7 +30,7 @@ function append_mnemonic(info) {
 		return;
 	var mnemonic = config.IP_MNEMONIC && ip_mnemonic(ip);
 	var title = mnemonic ? ' title="'+escape(ip)+'"' : '';
-	header.push(common.safe(' <a href="#" class="mod addr"' + title + '>'),
+	header.push(common.safe(' <a class="mod addr"' + title + '>'),
 			mnemonic || ip, common.safe('</a>'));
 }
 
