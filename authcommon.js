@@ -2,6 +2,10 @@ var config = require('./config');
 var common = require('./common');
 
 exports.FETCH_ADDRESS = 101;
+exports.SET_ADDRESS_NAME = 102;
+
+var modCache = {}; // TEMP
+exports.modCache = modCache;
 
 var delayNames = ['now', 'soon', 'later'];
 var delayDurations = {now: 0, soon: 60, later: 20*60};
@@ -29,6 +33,14 @@ function append_mnemonic(info) {
 	if (!ip)
 		return;
 	var mnemonic = config.IP_MNEMONIC && ip_mnemonic(ip);
+
+	// Terrible hack.
+	if (mnemonic && modCache.addresses) {
+		var addr = modCache.addresses[ip];
+		if (addr && addr.name)
+			mnemonic += ' "' + addr.name + '"';
+	}
+
 	var title = mnemonic ? ' title="'+escape(ip)+'"' : '';
 	header.push(common.safe(' <a class="mod addr"' + title + '>'),
 			mnemonic || ip, common.safe('</a>'));

@@ -24,6 +24,7 @@ exports.dbCache = {
 	funThread: 0,
 	bannerState: {},
 	imageAllocCleanups: {},
+	addresses: {},
 };
 
 var HOT = exports.hot = {};

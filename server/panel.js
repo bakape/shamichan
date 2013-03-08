@@ -5,6 +5,9 @@ var _ = require('../lib/underscore'),
     okyaku = require('./okyaku'),
     STATE = require('./state');
 
+var ADDRS = STATE.dbCache.addresses;
+authcommon.modCache.addresses = ADDRS;
+
 function on_client_ip(ip, clients) {
 	var addr = {ip: ip, count: clients.length};
 	// This will leak 0-count clients.
@@ -16,15 +19,77 @@ function on_refresh(info) {
 	this.send([0, common.MODEL_SET, 'adminState', info]);
 }
 
+function connect() {
+	return STATE.dbCache.sharedConnection;
+}
+
+function address_view(addr) {
+	addr = _.extend({}, addr);
+	addr.shallow = false;
+	var clients = STATE.clientsByIP[addr.ip];
+	if (clients && clients.length)
+		addr.count = clients.length;
+	return addr;
+}
+
 okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
 	if (!caps.can_moderate(client.ident))
 		return false;
 	var ip = msg[0];
 	if (!authcommon.is_valid_ip(ip))
 		return false;
-	var clients = STATE.clientsByIP[ip] || [];
-	var addr = {ip: ip, count: clients.length, shallow: false};
-	client.send([0, common.COLLECTION_ADD, 'addrs', addr]);
+	var addr = ADDRS[ip];
+	if (addr) {
+		client.send([0, common.COLLECTION_ADD, 'addrs',
+				address_view(addr)]);
+		return true;
+	}
+
+	// Cache miss
+	ADDRS[ip] = addr = {ip: ip, shallow: true};
+	var r = connect();
+	r.hget('ip:'+ip, 'name', function (err, name) {
+		if (err) {
+			if (ADDRS[ip] === addr)
+				delete ADDRS[ip];
+			return client.report(err);
+		}
+		if (ADDRS[ip] !== addr)
+			return;
+
+		addr.name = name;
+		client.send([0, common.COLLECTION_ADD, 'addrs',
+				address_view(addr)]);
+	});
+	return true;
+}
+
+okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
+	if (!caps.can_moderate(client.ident))
+		return false;
+	var ip = msg[0], name = msg[1];
+	if (!authcommon.is_valid_ip(ip) || typeof name != 'string')
+		return false;
+	name = name.trim().slice(0, 30);
+	var r = connect();
+	if (!name)
+		r.hdel('ip:' + ip, 'name', cb);
+	else
+		r.hset('ip:' + ip, 'name', name, cb);
+
+	function cb(err) {
+		if (err)
+			return client.report(err);
+
+		// should observe a publication for this cache update
+		var addr = ADDRS[ip];
+		if (!addr)
+			addr = ADDRS[ip] = {ip: ip};
+		addr.name = name;
+
+		var amend = {name: name};
+		client.send([0, common.MODEL_SET, ['addrs', ip], amend]);
+	}
 	return true;
 };
 
@@ -75,8 +140,13 @@ function subscribe() {
 	};
 
 	var ips = [];
-	for (var ip in STATE.clientsByIP)
-		ips.push({ip: ip, count: STATE.clientsByIP[ip].length});
+	for (var ip in STATE.clientsByIP) {
+		var a = ADDRS[ip];
+		ips.push(a ? address_view(a) : {
+			ip: ip, shallow: true,
+			count: STATE.clientsByIP[ip].length
+		});
+	}
 
 	this.send([0, common.MODEL_SET, 'adminState', state]);
 	this.send([0, common.COLLECTION_RESET, 'addrs', ips]);

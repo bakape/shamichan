@@ -171,9 +171,14 @@ var Address = Backbone.Model.extend({
 
 var AddressView = Backbone.View.extend({
 	className: 'mod address',
+	events: {
+		'keydown .name': 'entered_name',
+	},
+
 	initialize: function () {
 		this.$el.append(
-			$('<span/>', {"class": 'ip'})
+			$('<span/>', {"class": 'ip'}), '<br>',
+			$('<input>', {"class": 'name', placeholder: 'Name'})
 		);
 		this.listenTo(this.model, 'change', this.render);
 	},
@@ -185,7 +190,26 @@ var AddressView = Backbone.View.extend({
 			return this;
 		}
 		this.$('.ip').text(attrs.ip);
+		var $name = this.$('.name');
+		if (!this.focusedName) {
+			_.defer(function () {
+				$name.focus();
+			});
+			this.focusedName = true;
+		}
+		if (attrs.name != $name.val()) {
+			$name.val(attrs.name);
+		}
 		return this;
+	},
+
+	entered_name: function (event) {
+		if (event.which != 13)
+			return;
+		event.preventDefault();
+		var name = this.$('.name').val().trim();
+		send([102, this.model.id, name]);
+		this.remove();
 	},
 
 	remove: function () {
