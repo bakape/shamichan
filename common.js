@@ -648,9 +648,14 @@ OS.monomono = function (data, cls) {
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
 };
 
+function pluralize(n, noun) {
+	return n + ' ' + noun + (n == 1 ? '' : 's');
+}
+exports.pluralize = pluralize;
+
 exports.abbrev_msg = function (omit, img_omit) {
 	return omit + (omit==1 ? ' reply' : ' replies') + (img_omit
-		? ' and ' + img_omit + ' image' + (img_omit==1 ? '' : 's')
+		? ' and ' + pluralize(img_omit, 'image')
 		: '') + ' omitted.';
 };
 

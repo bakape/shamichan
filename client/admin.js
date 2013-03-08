@@ -360,7 +360,7 @@ var PanelView = Backbone.View.extend({
 	},
 
 	renderAddrs: function (model, count) {
-		this.$('#addrs').text(count+' addr'+(count==1?'':'s')+'.');
+		this.$('#addrs').text(pluralize(count, 'addr') + '.');
 	},
 
 	renderUptime: function (model, s) {
