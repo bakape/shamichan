@@ -193,7 +193,10 @@ var AddressView = Backbone.View.extend({
 		var $name = this.$('.name');
 		if (!this.focusedName) {
 			_.defer(function () {
-				$name.focus();
+				$name.focus().prop({
+					selectionStart: 0,
+					selectionEnd: $name.val().length,
+				});
 			});
 			this.focusedName = true;
 		}
