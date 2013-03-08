@@ -116,11 +116,20 @@ function unlisten_panel(client) {
 	}
 }
 
-function refresh_panel_state() {
-	STATE.emitter.emit('refresh', {
+function snapshot_panel() {
+	var addrCount = 0;
+	for (var ip in ADDRS)
+		addrCount++;
+
+	return {
 		memoryUsage: process.memoryUsage(),
 		uptime: process.uptime(),
-	});
+		addrs: addrCount,
+	};
+}
+
+function refresh_panel_state() {
+	STATE.emitter.emit('refresh', snapshot_panel());
 }
 
 function subscribe() {
@@ -133,11 +142,9 @@ function subscribe() {
 	this.once('close', this.unsubscribe_admin_state);
 	listen_panel(this);
 
-	var state = {
-		uptime: process.uptime(),
-		memoryUsage: process.memoryUsage(),
-		visible: true,
-	};
+	var state = snapshot_panel();
+	state.visible = true;
+	this.send([0, common.MODEL_SET, 'adminState', state]);
 
 	var ips = [];
 	for (var ip in STATE.clientsByIP) {
@@ -147,9 +154,8 @@ function subscribe() {
 			count: STATE.clientsByIP[ip].length
 		});
 	}
-
-	this.send([0, common.MODEL_SET, 'adminState', state]);
 	this.send([0, common.COLLECTION_RESET, 'addrs', ips]);
+
 	return true;
 }
 
