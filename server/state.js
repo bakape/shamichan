@@ -25,6 +25,7 @@ exports.dbCache = {
 	bannerState: {},
 	imageAllocCleanups: {},
 	addresses: {},
+	ranges: {},
 };
 
 var HOT = exports.hot = {};

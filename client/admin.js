@@ -326,11 +326,12 @@ var PanelView = Backbone.View.extend({
 				this.renderIPs);
 		this.listenTo(this.model, 'change:memoryUsage',
 				this.renderMemory);
-		this.listenTo(this.model, 'change:addrs', this.renderAddrs);
+		this.listenTo(this.model, 'change:addrs change:bans',
+				this.renderCounts);
 		this.listenTo(this.model, 'change:uptime', this.renderUptime);
 		$('<div/>', {id: 'ips'}).appendTo(this.el);
 		$('<div/>', {id: 'mem'}).appendTo(this.el);
-		$('<div/>', {id: 'addrs'}).appendTo(this.el);
+		$('<div/>', {id: 'counts'}).appendTo(this.el);
 		$('<div/>', {id: 'uptime'}).appendTo(this.el);
 	},
 
@@ -359,8 +360,10 @@ var PanelView = Backbone.View.extend({
 		);
 	},
 
-	renderAddrs: function (model, count) {
-		this.$('#addrs').text(pluralize(count, 'addr') + '.');
+	renderCounts: function (model) {
+		var a = model.attributes;
+		this.$('#counts').text(pluralize(a.addrs, 'addr') + ', ' +
+				pluralize(a.bans, 'ban') + '.');
 	},
 
 	renderUptime: function (model, s) {

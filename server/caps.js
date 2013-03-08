@@ -5,7 +5,7 @@ var authcommon = require('../authcommon'),
     db = require('../db'),
     hooks = require('../hooks');
 
-var RANGES = {};
+var RANGES = require('./state').dbCache.ranges;
 
 function can_access_board(ident, board) {
 	if (board == 'graveyard' && can_administrate(ident))

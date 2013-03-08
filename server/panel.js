@@ -125,10 +125,14 @@ function snapshot_panel() {
 	for (var ip in ADDRS)
 		addrCount++;
 
+	var ranges = STATE.dbCache.ranges;
+	var banCount = ranges.bans ? ranges.bans.length : 0;
+
 	return {
 		memoryUsage: process.memoryUsage(),
 		uptime: process.uptime(),
 		addrs: addrCount,
+		bans: banCount,
 	};
 }
 
