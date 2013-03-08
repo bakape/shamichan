@@ -71,13 +71,17 @@ okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
 	if (!authcommon.is_valid_ip(ip) || typeof name != 'string')
 		return false;
 	name = name.trim().slice(0, 30);
-	var r = connect();
-	if (!name)
-		r.hdel('ip:' + ip, 'name', cb);
-	else
-		r.hset('ip:' + ip, 'name', name, cb);
+	var m = connect().multi();
+	if (!name) {
+		m.hdel('ip:' + ip, 'name');
+		m.srem('namedIPs', ip);
+	}
+	else {
+		m.hset('ip:' + ip, 'name', name);
+		m.sadd('namedIPs', ip);
+	}
 
-	function cb(err) {
+	m.exec(function (err) {
 		if (err)
 			return client.report(err);
 
@@ -89,7 +93,7 @@ okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
 
 		var amend = {name: name};
 		client.send([0, common.MODEL_SET, ['addrs', ip], amend]);
-	}
+	});
 	return true;
 };
 
