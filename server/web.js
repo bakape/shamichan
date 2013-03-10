@@ -3,6 +3,7 @@ var _ = require('../lib/underscore'),
     config = require('../config'),
     formidable = require('formidable'),
     persona = require('./persona'),
+    Stream = require('stream'),
     url_parse = require('url').parse,
     util = require('util'),
     winston = require('winston');
@@ -294,7 +295,7 @@ function slow_request(req, resp) {
 			return;
 		if (resp.socket && resp.socket.destroyed)
 			return resp.end();
-		handle_request(req, resp);
+		handle_request(req, new Debuff(resp));
 	}, n);
 }
 
@@ -345,3 +346,160 @@ function parse_cookie(header) {
 	return chunks;
 }
 exports.parse_cookie = parse_cookie;
+
+function Debuff(stream) {
+	Stream.call(this);
+	this.out = stream;
+	this.buf = [];
+	this.timer = 0;
+	this.writable = true;
+	this.destroyed = false;
+	this.closing = false;
+	this._flush = this._flush.bind(this);
+	this.on_close = this.destroy.bind(this);
+	this.on_error = this.on_error.bind(this);
+	stream.once('close', this.on_close);
+	stream.on('error', this.on_error);
+	this.timeout = setTimeout(this.destroy.bind(this), 120*1000);
+}
+util.inherits(Debuff, Stream);
+
+var D = Debuff.prototype;
+
+D.writeHead = function () {
+	if (!this._check())
+		return false;
+	this.buf.push({_head: [].slice.call(arguments)});
+	this._queue();
+	return true;
+};
+
+D.write = function (data, encoding) {
+	if (!this._check())
+		return false;
+	if (encoding)
+		this.buf.push({_enc: encoding, _data: data});
+	else
+		this.buf.push(data);
+	this._queue();
+	return true;
+};
+
+D.end = function (data, encoding) {
+	if (!this._check())
+		return;
+	if (encoding)
+		this.buf.push({_enc: encoding, _data: data});
+	else if (data)
+		this.buf.push(data);
+	this._queue();
+	this.closing = true;
+	this.cleanEnd = true;
+};
+
+D._check = function () {
+	if (!this.writable)
+		return false;
+	if (!this.out.writable) {
+		this.destroy();
+		return false;
+	}
+	if (this.out.sock && this.out.sock.destroyed) {
+		this.destroy();
+		return false;
+	}
+	return true;
+};
+
+D._queue = function () {
+	if (this.timer)
+		return;
+	var wait = 500 + Math.floor(Math.random() * 5000);
+	if (Math.random() < 0.5)
+		wait *= 2;
+	this.timer = setTimeout(this._flush, wait);
+};
+
+D._flush = function () {
+	var limit = 50 + Math.floor(Math.random() * 1000);
+	if (Math.random() < 0.05)
+		limit *= 3;
+
+	var count = 0;
+	while (this.out.writable && this.buf.length && count < limit) {
+		var o = this.buf.shift();
+		if (o._head) {
+			this.out.writeHead.apply(this.out, o._head);
+			this.statusCode = this.out.statusCode;
+			continue;
+		}
+		else if (o._enc && o._data)
+			this.out.write(o._data, o._enc);
+		count += o.length;
+		if (!this.out.write(o))
+			break;
+	}
+	console.log('wrote', count, '/', limit);
+	this.timer = 0;
+	if (this.out.writable && this.buf.length)
+		this._queue();
+	else if (this.closing) {
+		if (this.cleanEnd) {
+			this.out.end();
+			console.log('ended cleanly.');
+			this._clean_up();
+			this.emit('close');
+		}
+		else {
+			this.destroy();
+		}
+	}
+	else
+		this.emit('drain');
+};
+
+D.destroy = function () {
+	if (this.destroyed)
+		return;
+	this._clean_up();
+	this.cleanEnd = false;
+	this.emit('close');
+};
+
+D.destroySoon = function () {
+	if (!this.timer)
+		return this.destroy();
+	this.writable = false;
+	this.closing = true;
+};
+
+D.on_error = function (err) {
+	if (!this.destroyed)
+		this._clean_up();
+	this.cleanEnd = false;
+	this.emit('error', err);
+};
+
+D._clean_up = function () {
+	this.writable = false;
+	this.destroyed = true;
+	this.closing = false;
+	this.out.removeListener('close', this.on_close);
+	this.out.removeListener('error', this.on_error);
+	if (this.timer) {
+		clearTimeout(this.timer);
+		this.timer = 0;
+	}
+	if (this.timeout) {
+		clearTimeout(this.timeout);
+		this.timeout = 0;
+	}
+	if (!this.out.finished) {
+		this.out.destroy();
+	}
+};
+
+D.getHeader = function (name) { return this.out.getHeader(name); };
+D.setHeader = function (k, v) { this.out.setHeader(k, v); };
+D.removeHeader = function (name) { return this.out.removeHeader(name); };
+D.addTrailers = function (headers) { this.out.addTrailers(headers); };
