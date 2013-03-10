@@ -20,7 +20,8 @@ else {
 		require('child_process').exec('kill -HUP ' + pid,
 					function (err) {
 			if (err) throw err;
-			console.log('Sent HUP.');
+			if (process.argv.indexOf('--silent') < 2)
+				console.log('Sent HUP.');
 		});
 	});
 }
