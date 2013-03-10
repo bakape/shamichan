@@ -44,12 +44,15 @@ function poll_for_lastsave_after(lastSave, seconds, cb) {
 	});
 }
 
-function check_mtime(path, mtime, cb) {
+function check_mtime(path, lastsave, cb) {
+	console.log('  redis lastsave:', lastsave);
 	fs.stat(path, function (err, stat) {
 		if (err)
 			return cb(err);
-		if (stat.mtime.getTime() !== mtime*1000)
-			return cb("Bad mtime on " + path);
+		var mtime = Math.floor(stat.mtime.getTime() / 1000);
+		console.log('  ' + path + ' mtime:', mtime);
+		if (mtime != lastsave)
+			return cb("Bad mtime: "+lastsave+" != "+mtime);
 		cb(null);
 	});
 }
