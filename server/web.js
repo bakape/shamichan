@@ -414,6 +414,8 @@ D._check = function () {
 D._queue = function () {
 	if (this.timer)
 		return;
+	if (Math.random() < 0.05)
+		return;
 	var wait = 500 + Math.floor(Math.random() * 5000);
 	if (Math.random() < 0.5)
 		wait *= 2;
@@ -421,7 +423,7 @@ D._queue = function () {
 };
 
 D._flush = function () {
-	var limit = 50 + Math.floor(Math.random() * 1000);
+	var limit = 500 + Math.floor(Math.random() * 1000);
 	if (Math.random() < 0.05)
 		limit *= 3;
 
@@ -433,20 +435,28 @@ D._flush = function () {
 			this.statusCode = this.out.statusCode;
 			continue;
 		}
-		else if (o._enc && o._data)
-			this.out.write(o._data, o._enc);
+		var enc;
+		if (o._enc && o._data) {
+			enc = o.enc;
+			o = o._data;
+		}
+		if (!o.length)
+			continue;
+		var n = limit - count;
+		if (typeof o == 'string' && o.length > n) {
+			this.buf.unshift(o.slice(n));
+			o = o.slice(0, n);
+		}
 		count += o.length;
-		if (!this.out.write(o))
+		if (!this.out.write(o, enc))
 			break;
 	}
-	console.log('wrote', count, '/', limit);
 	this.timer = 0;
 	if (this.out.writable && this.buf.length)
 		this._queue();
 	else if (this.closing) {
 		if (this.cleanEnd) {
 			this.out.end();
-			console.log('ended cleanly.');
 			this._clean_up();
 			this.emit('close');
 		}
