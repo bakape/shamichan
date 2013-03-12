@@ -44,8 +44,12 @@ OK.on_update = function (op, kind, msg) {
 			this.post = null;
 	}
 
+	if (this.blackhole && HOLED_UPDATES.indexOf(kind) >= 0)
+		return;
 	this.socket.write(msg);
 };
+
+const HOLED_UPDATES = [common.DELETE_POSTS, common.DELETE_THREAD];
 
 OK.on_thread_sink = function (thread, err) {
 	/* TODO */
