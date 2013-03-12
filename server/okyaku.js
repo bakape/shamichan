@@ -52,6 +52,8 @@ OK.on_thread_sink = function (thread, err) {
 	winston.error(thread, 'sank:', err);
 };
 
+const WORMHOLES = [common.SYNCHRONIZE, common.FINISH_POST];
+
 OK.on_message = function (data) {
 	var msg;
 	try { msg = JSON.parse(data); }
@@ -65,6 +67,8 @@ OK.on_message = function (data) {
 	}
 	if (!this.synced && type != common.SYNCHRONIZE)
 		type = common.INVALID;
+	if (this.blackhole && WORMHOLES.indexOf(type) < 0)
+		return;
 	var func = dispatcher[type];
 	if (!func || !func(msg, this)) {
 		this.report(Muggle("Bad protocol.", new Error(
@@ -116,6 +120,8 @@ OK.on_close = function () {
 };
 
 OK.report = function (error) {
+	if (this.blackhole)
+		return;
 	var msg = 'Server error.';
 	if (error instanceof Muggle) {
 		msg = error.most_precise_error_message();
@@ -149,6 +155,10 @@ exports.scan_client_caps = function () {
 		STATE.clientsByIP[ip].forEach(function (okyaku) {
 			if (!okyaku.id || !okyaku.board)
 				return;
+			if (ident.timeout) {
+				okyaku.blackhole = true;
+				return;
+			}
 			if (!caps.can_access_board(ident, okyaku.board)) {
 				try {
 					okyaku.socket.close();
