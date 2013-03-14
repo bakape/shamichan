@@ -1625,6 +1625,22 @@ Y.teardown = function (board, cb) {
 	});
 };
 
+Y.get_current_body = function (num, cb) {
+	var key = (OPs[num] == num ? 'thread:' : 'post:') + num;
+	var m = this.connect().multi();
+	m.hmget(key, 'hide', 'body');
+	m.get(key + ':body');
+	m.exec(function (err, rs) {
+		if (err)
+			return cb(err);
+		var hide = rs[0][0], liveBody = rs[0][1];
+		var body = rs[1];
+		if (hide)
+			return cb(null);
+		cb(null, liveBody || body || '');
+	});
+};
+
 /* HELPERS */
 
 function extract(post, cb) {

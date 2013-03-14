@@ -20,6 +20,8 @@ var _ = require('../lib/underscore'),
 
 require('./panel');
 require('../imager/daemon');
+if (config.VOICE_PATH)
+	require('../voice/server');
 
 var RES = STATE.resources;
 

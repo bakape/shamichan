@@ -22,6 +22,7 @@ exports.CLIENT_DEPS = [
 	'client/hover.js',
 	'client/amusement.js',
 	'client/embed.js',
+	'voice/client.js',
 ];
 
 exports.SERVER_DEPS = [
@@ -51,6 +52,7 @@ exports.SERVER_DEPS = [
 	'server/state.js',
 	'server/tripcode.cc',
 	'server/web.js',
+	'voice/server.js',
 ];
 
 // Changes to these only require a state.js reload
