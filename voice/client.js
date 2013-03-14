@@ -14,7 +14,12 @@ menuHandlers.Speak = function ($post) {
 		src: $post.attr('id') + '/voice',
 		attr: {autoplay: 'autoplay'},
 	});
-	$audio[0].addEventListener('ended', function () {
+	var a = $audio[0];
+	if (a.canPlayType && !a.canPlayType('audio/mpeg;').replace(/no/, '')) {
+		alert("Can't play in this browser, sorry.");
+		return;
+	}
+	a.addEventListener('ended', function () {
 		$audio.remove();
 	}, false);
 	// TODO notify error
