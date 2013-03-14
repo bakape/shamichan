@@ -14,13 +14,11 @@ menuHandlers.Speak = function ($post) {
 		src: $post.attr('id') + '/voice',
 		attr: {autoplay: 'autoplay'},
 	});
-	$audio.prop({
-		onended: $.proxy($audio, 'remove'),
-		onerror: function (err) {
-			// TODO
-			console.error('audio error', err);
-		},
-	}).appendTo('body');
+	$audio[0].addEventListener('ended', function () {
+		$audio.remove();
+	}, false);
+	// TODO notify error
+	$audio.appendTo('body');
 };
 
 })();
