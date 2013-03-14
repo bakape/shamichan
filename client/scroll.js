@@ -66,6 +66,12 @@ function set_lock_target(num) {
 	}
 }
 
+oneeSama.hook('menuOptions', function (info) {
+	var opts = info.options;
+	if (lockTarget && lockTarget == info.num)
+		opts.splice(opts.indexOf('Focus'), 1, 'Unfocus');
+});
+
 var at_bottom = function() {
 	return window.scrollY + window.innerHeight >= $DOC.height();
 }

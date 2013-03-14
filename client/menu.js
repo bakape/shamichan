@@ -21,8 +21,7 @@ $DOC.on('click', '.control', function (event) {
 		if ($post.length && !num)
 			opts = ['Focus']; /* Just a draft, can't do much */
 
-		if (lockTarget && lockTarget == num)
-			opts.splice(opts.indexOf('Focus'), 1, 'Unfocus');
+		oneeSama.trigger('menuOptions', {options: opts, num: num});
 
 		_.each(opts, function (opt) {
 			$('<li/>').text(opt).appendTo($menu);
