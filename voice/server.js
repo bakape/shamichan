@@ -39,10 +39,10 @@ function tts(msg, dest, cb) {
 web.resource(/^\/(\w+)\/(\d+)\/voice$/, function (req, params, cb) {
 	var board = params[1], num = parseInt(params[2], 10);
 	if (!num || !caps.can_access_board(req.ident, board))
-		return false;
+		return cb(404);
 	var op = db.OPs[num];
 	if (!op || !db.OP_has_tag(board, op))
-		return false;
+		return cb(404);
 	var yaku = new db.Yakusoku(null, req.ident);
 	yaku.get_current_body(num, function (err, body) {
 		if (err)
