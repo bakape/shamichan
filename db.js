@@ -1633,11 +1633,13 @@ Y.get_current_body = function (num, cb) {
 	m.exec(function (err, rs) {
 		if (err)
 			return cb(err);
-		var hide = rs[0][0], liveBody = rs[0][1];
-		var body = rs[1];
+		var hide = rs[0][0], finalBody = rs[0][1];
+		var liveBody = rs[1];
 		if (hide)
 			return cb(null);
-		cb(null, liveBody || body || '');
+		if (finalBody)
+			return cb(null, finalBody, true);
+		cb(null, liveBody || '', false);
 	});
 };
 

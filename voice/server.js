@@ -44,7 +44,7 @@ web.resource(/^\/(\w+)\/(\d+)\/voice$/, function (req, params, cb) {
 	if (!op || !db.OP_has_tag(board, op))
 		return cb(404);
 	var yaku = new db.Yakusoku(null, req.ident);
-	yaku.get_current_body(num, function (err, body) {
+	yaku.get_current_body(num, function (err, body, isFinal) {
 		if (err)
 			return cb(err);
 		body = body && body.trim();
@@ -54,13 +54,14 @@ web.resource(/^\/(\w+)\/(\d+)\/voice$/, function (req, params, cb) {
 		var MD5 = crypto.createHash('md5').update(body).digest('hex');
 		var MP3 = 'v' + imager.squish_MD5(MD5) + '.mp3';
 		var path = joinPath(config.VOICE_PATH, MP3);
+		var context = {path: path, temp: !isFinal};
 		fs.exists(path, function (exists) {
 			if (exists)
-				return cb(null, 'ok', {path: path});
+				return cb(null, 'ok', context);
 			tts(body, path, function (err) {
 				if (err)
 					return cb(err);
-				cb(null, 'ok', {path: path});
+				cb(null, 'ok', context);
 			});
 		});
 	});
@@ -68,7 +69,7 @@ web.resource(/^\/(\w+)\/(\d+)\/voice$/, function (req, params, cb) {
 function (req, resp) {
 	resp.writeHead(200, {
 		'Content-Type': 'audio/mpeg',
-		'Cache-Control': 'max-age=600000',
+		'Cache-Control': this.temp ? 'no-cache' : 'max-age=600000',
 	});
 	var stream = fs.createReadStream(this.path);
 	stream.pipe(resp);
