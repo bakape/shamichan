@@ -47,7 +47,7 @@ web.resource(/^\/(\w+)\/(\d+)\/voice$/, function (req, params, cb) {
 	yaku.get_current_body(num, function (err, body, isFinal) {
 		if (err)
 			return cb(err);
-		body = body && body.trim();
+		body = body && body.trim().slice(0, 100);
 		if (!body)
 			return cb(Muggle("No text."));
 
