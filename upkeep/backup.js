@@ -51,7 +51,7 @@ function check_mtime(path, lastsave, cb) {
 			return cb(err);
 		var mtime = Math.floor(stat.mtime.getTime() / 1000);
 		console.log('  ' + path + ' mtime:', mtime);
-		if (mtime != lastsave)
+		if (Math.abs(mtime - lastsave) > 1000)
 			return cb("Bad mtime: "+lastsave+" != "+mtime);
 		cb(null);
 	});
