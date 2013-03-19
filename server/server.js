@@ -576,9 +576,12 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	var yaku = new db.Yakusoku(board, req.ident);
 	var reader = new db.Reader(yaku);
 	var lastN = config.THREAD_LAST_N;
-	var limit = ('last' + lastN) in req.query ?
-			(lastN + config.ABBREVIATED_REPLIES) : 0;
-	reader.get_thread(board, num, {redirect: true, abbrev: limit});
+	var opts = {redirect: true};
+	if (('last'+lastN) in req.query)
+		opts.limit = lastN + config.ABBREVIATED_REPLIES;
+	if (caps.can_administrate(req.ident) && 'showdead' in req.query)
+		opts.showDead = true;
+	reader.get_thread(board, num, opts);
 	reader.once('nomatch', function () {
 		cb(404);
 		yaku.disconnect();
@@ -616,7 +619,8 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			headers: headers,
 			board: board, op: op,
 			subject: preThread.subject,
-			yaku: yaku, reader: reader, limit: limit,
+			yaku: yaku, reader: reader,
+			limit: opts.limit,
 		});
 	});
 },

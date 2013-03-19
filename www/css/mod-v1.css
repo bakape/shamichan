@@ -11,6 +11,9 @@
 	padding: 1em;
 	z-index: 30;
 }
+.mod.hidden {
+	color: red;
+}
 .mod#toolbox {
 	margin: 0.5em 0.5em 0.5em 1.0em;
 }

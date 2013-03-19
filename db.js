@@ -1324,6 +1324,8 @@ exports.Reader = Reader;
 Reader.prototype.get_thread = function (tag, num, opts) {
 	var r = this.y.connect();
 	var graveyard = (tag == 'graveyard');
+	if (graveyard)
+		opts.showDead = true;
 	var key = (graveyard ? 'dead:' : 'thread:') + num;
 	var self = this;
 	r.hgetall(key, function (err, pre_post) {
@@ -1344,7 +1346,7 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 			return;
 		}
 		var exists = true;
-		if (!graveyard && pre_post.hide)
+		if (pre_post.hide && !opts.showDead)
 			exists = false;
 		else if (!can_see_priv(pre_post.priv, self.ident))
 			exists = false;
@@ -1364,7 +1366,7 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 		pre_post.num = num;
 		pre_post.time = parseInt(pre_post.time, 10);
 
-		var nums, privNums, opPost, priv = self.y.ident.priv;
+		var nums, deadNums, privNums, opPost, priv = self.y.ident.priv;
 		var abbrev = opts.abbrev || 0, total = 0;
 		async.waterfall([
 		function (next) {
@@ -1379,6 +1381,12 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 			m.lrange(postsKey, -abbrev, -1);
 			if (abbrev)
 				m.llen(postsKey);
+			if (opts.showDead) {
+				var deadKey = key + ':dels';
+				m.lrange(deadKey, -abbrev, -1);
+				if (abbrev)
+					m.llen(deadKey);
+			}
 			if (priv) {
 				var privsKey = key + ':privs:' + priv;
 				m.lrange(privsKey, -abbrev, -1);
@@ -1393,6 +1401,11 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 			nums = rs.shift();
 			if (abbrev)
 				total += parseInt(rs.shift(), 10);
+			if (opts.showDead) {
+				deadNums = rs.shift();
+				if (abbrev)
+					total += parseInt(rs.shift(), 10);
+			}
 			if (priv) {
 				privNums = rs.shift();
 				if (abbrev)
@@ -1404,6 +1417,8 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 		function (err, opPost) {
 			if (err)
 				return self.emit('error', err);
+			if (deadNums)
+				nums = merge_posts(nums, deadNums, abbrev);
 			if (priv) {
 				nums = merge_posts(nums, privNums, abbrev);
 				if (self.showPrivs)
@@ -1411,7 +1426,7 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 			}
 			var omit = Math.max(total - abbrev, 0);
 			self.emit('thread', opPost, omit);
-			self._get_each_reply(tag, 0, nums);
+			self._get_each_reply(tag, 0, nums, opts);
 		});
 	});
 };
@@ -1453,7 +1468,7 @@ function can_see_priv(priv, ident) {
 	return priv == ident.priv;
 }
 
-Reader.prototype._get_each_reply = function (tag, ix, nums) {
+Reader.prototype._get_each_reply = function (tag, ix, nums, opts) {
 	if (!nums || ix >= nums.length) {
 		this.emit('endthread');
 		this.emit('end');
@@ -1463,7 +1478,7 @@ Reader.prototype._get_each_reply = function (tag, ix, nums) {
 	var num = parseInt(nums[ix], 10);
 	var key = 'post:' + num;
 	var next_please = this._get_each_reply.bind(this, tag, ix + 1,
-			nums);
+			nums, opts);
 	var self = this;
 	async.waterfall([
 	function (next) {
@@ -1471,7 +1486,7 @@ Reader.prototype._get_each_reply = function (tag, ix, nums) {
 	},
 	function (pre_post, next) {
 		var exists = !(_.isEmpty(pre_post));
-		if (tag != 'graveyard' && pre_post.hide)
+		if (pre_post.hide && !opts.showDead)
 			exists = false;
 		if (!exists) {
 			next_please();

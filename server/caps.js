@@ -55,8 +55,10 @@ exports.augment_oneesama = function (oneeSama, opts) {
 	oneeSama.ident = ident;
 	if (can_moderate(ident))
 		oneeSama.hook('headerName', authcommon.append_mnemonic);
-	if (can_administrate(ident))
+	if (can_administrate(ident)) {
 		oneeSama.hook('headerName', denote_priv);
+		oneeSama.hook('headerName', authcommon.denote_hidden);
+	}
 	if (can_administrate(ident) && opts.board == 'graveyard')
 		oneeSama.hook('mediaPaths', dead_media_paths);
 };

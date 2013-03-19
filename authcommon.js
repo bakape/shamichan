@@ -46,6 +46,13 @@ function append_mnemonic(info) {
 			mnemonic || ip, common.safe('</a>'));
 }
 
+function denote_hidden(info) {
+	if (info.data.hide)
+		info.header.push(common.safe(
+				' <em class="mod hidden">(hidden)</em>'));
+}
+exports.denote_hidden = denote_hidden;
+
 function is_valid_ip(ip) {
 	if (typeof ip != 'string' || !/^\d+\.\d+\.\d+\.\d+$/.exec(ip))
 		return false;
@@ -65,6 +72,7 @@ if (typeof IDENT != 'undefined') {
 	/* client */
 	window.ip_mnemonic = ip_mnemonic;
 	oneeSama.hook('headerName', append_mnemonic);
+	oneeSama.hook('headerName', denote_hidden);
 }
 else {
 	exports.append_mnemonic = append_mnemonic;
