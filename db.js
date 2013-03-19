@@ -637,23 +637,35 @@ Y.remove_post = function (from_thread, num, callback) {
 
 	var r = this.connect();
 	var self = this;
-	if (from_thread)
-		r.lrem('thread:' + op + ':posts', -1, num, gone_from_thread);
+	if (from_thread) {
+		var key = 'thread:' + op;
+		r.lrem(key + ':posts', -1, num, function (err, delCount) {
+			if (err)
+				return callback(err);
+			/* did someone else already delete this? */
+			if (delCount != 1)
+				return callback(null, -num);
+			/* record deletion */
+			r.rpush(key + ':dels', num, function (err) {
+				if (err)
+					winston.warn(err);
+				gone_from_thread();
+			});
+		});
+	}
 	else
-		gone_from_thread(null, 1);
+		gone_from_thread();
 
-	function gone_from_thread(err, deleted) {
-		if (err)
-			return callback(err);
-		if (deleted != 1)
-			return callback(null, -num); /* already gone */
+	function gone_from_thread() {
 		var key = 'post:' + num;
 		r.hset(key, 'hide', '1', function (err) {
 			if (err) {
 				/* Difficult to recover. Whatever. */
 				winston.warn("Couldn't hide:", err);
 			}
+			/* TODO push cache update? */
 			delete OPs[num];
+
 			callback(null, [op, num]);
 
 			/* In the background, try to finish the post */
@@ -798,11 +810,13 @@ Y.archive_thread = function (op, callback) {
 		m.hgetall(key + ':links');
 		m.llen(key + ':posts');
 		m.smembers(key + ':privs');
+		m.lrange(key + ':dels', 0, -1);
 		m.exec(next);
 	},
 	function (rs, next) {
 		var bumpCtr = rs[0], view = rs[1], links = rs[2],
-				replyCount = rs[3], privs = rs[4];
+				replyCount = rs[3], privs = rs[4],
+				dels = rs[5];
 		var subject = subject_val(op, view.subject);
 		var tags = view.tags;
 		var m = r.multi();
@@ -836,6 +850,13 @@ Y.archive_thread = function (op, callback) {
 			// (a bit silly right after adding a new entry)
 			m.hdel(key, 'hctr');
 			m.del(key + ':history');
+
+			// delete hidden posts
+			dels.forEach(function (num) {
+				m.del('post:' + num);
+				m.del('post:' + num + ':links');
+			});
+			m.del(key + ':dels');
 
 			if (privs.length) {
 				m.del(key + ':privs');
