@@ -58,9 +58,25 @@ $DOC.on('click', 'aside a', _.wrap(function () {
 	postSM.feed('new', $(this).parent());
 }, with_dom));
 
-$DOC.on('keydown', function (event) {
-	if (event.altKey && event.which == 78) {
-		/* alt-N for new post */
+$DOC.on('keydown', handle_shortcut);
+
+function handle_shortcut(event) {
+	if (!event.altKey)
+		return;
+
+	switch (event.which) {
+	case 83: /* alt-S to toggle spoiler */
+		if (postForm)
+			postForm.on_toggle(event);
+		break;
+	case 68: /* alt-D for done */
+		if (postForm) {
+			if (!postForm.submit.attr('disabled'))
+				postForm.finish_wrapped();
+			return false;
+		}
+		break;
+	case 78: /* alt-N for new post */
 		var $aside = THREAD ? $('aside') : $ceiling.next();
 		if ($aside.is('aside') && $aside.length == 1) {
 			with_dom(function () {
@@ -68,8 +84,9 @@ $DOC.on('keydown', function (event) {
 			});
 			return false;
 		}
+		break;
 	}
-});
+}
 
 function open_post_box(num) {
 	var a = $('#' + num);
@@ -101,6 +118,7 @@ events: {
 	'input #subject': model_link('subject'),
 	'keydown #trans': 'on_key_down',
 	'click #done': 'finish_wrapped',
+	'click #toggle': 'on_toggle',
 },
 
 initialize: function (dest) {
@@ -256,15 +274,9 @@ on_key_down: function (event) {
 		_.defer($.proxy(this, 'entry_scroll_lock'));
 	}
 	switch (event.which) {
-	case 83:
-		if (event.altKey) {
-			if (!this.submit.attr('disabled'))
-				this.finish_wrapped();
-			event.preventDefault();
-		}
-		break;
 	case 13:
 		event.preventDefault();
+		/* fall-through */
 	case 32:
 		var c = event.which == 13 ? '\n' : ' ';
 		// predict result
@@ -274,6 +286,8 @@ on_key_down: function (event) {
 				val.slice(input[0].selectionEnd);
 		this.on_input(val);
 		break;
+	default:
+		handle_shortcut(event);
 	}
 },
 
@@ -585,7 +599,6 @@ make_upload_form: function () {
 	});
 	this.$toggle = $('<input>', {
 		type: 'button', id: 'toggle',
-		click: $.proxy(this, 'on_toggle'),
 	});
 	this.$uploadStatus = $('<strong/>');
 	form.append(this.$cancel, this.$imageInput, this.$toggle, ' ',
@@ -631,6 +644,7 @@ on_toggle: function (event) {
 	var attrs = this.model.attributes;
 	if (!attrs.uploading && !attrs.uploaded) {
 		event.preventDefault();
+		event.stopImmediatePropagation();
 		if (attrs.spoiler) {
 			this.model.set({spoiler: 0});
 			return;
