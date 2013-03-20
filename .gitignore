@@ -1,7 +1,6 @@
 *.node
 *.pid
 *.swp
-.build
 .lock*
 .DS_Store
 builder
@@ -12,6 +11,8 @@ hot.js
 jsmin
 perceptual
 imager/tmp
+tripcode/.build
+tripcode/build
 upkeep/credentials.json
 www/js/client*.js
 www/src

@@ -14,7 +14,7 @@ var _ = require('../lib/underscore'),
     okyaku = require('./okyaku'),
     persona = require('./persona'),
     STATE = require('./state'),
-    tripcode = require('./tripcode'),
+    tripcode = require('./../tripcode/tripcode'),
     web = require('./web'),
     winston = require('winston');
 

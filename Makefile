@@ -7,8 +7,8 @@ CLIENT_JS := www/js/client-$(shell node get.js --client-version).js
 endif
 
 all: client
-	$(MAKE) -C server
 	$(MAKE) -C imager
+	$(MAKE) -C tripcode
 
 jsmin: lib/jsmin.c
 	gcc -o $@ $^
@@ -25,5 +25,5 @@ modjs:
 
 clean:
 	rm -rf -- .build jsmin www/js/client{.,-}*.js
-	$(MAKE) -C server -w clean
 	$(MAKE) -C imager -w clean
+	$(MAKE) -C tripcode -w clean

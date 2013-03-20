@@ -50,8 +50,8 @@ exports.SERVER_DEPS = [
 	'server/persona.js',
 	'server/server.js',
 	'server/state.js',
-	'server/tripcode.cc',
 	'server/web.js',
+	'tripcode/tripcode.cc',
 	'voice/server.js',
 ];
 
