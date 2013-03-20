@@ -60,7 +60,7 @@ static void hash_trip(char *key, size_t len, char *dest) {
 
 static void hash_secure(char *key, size_t len, char *dest) {
 	size_t i;
-	char buf[21] = "$5$", *digest;
+	char *digest;
 	if (len > TRIP_MAX) {
 		len = TRIP_MAX;
 		key[TRIP_MAX] = 0;
