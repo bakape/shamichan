@@ -134,9 +134,12 @@ initialize: function (dest) {
 	this.buffer = $('<p/>');
 	this.line_buffer = $('<p/>');
 	this.meta = $('<header><a class="nope"><b/></a> <time/></header>');
-	this.input = $('<textarea name="body" id="trans" rows="1" '
-			+ 'class="themed" />');
-	this.submit = $('<input type="button" id="done" value="Done"/>');
+	this.input = $('<textarea/>', {
+		name: 'body', id: 'trans', rows: '1', "class": 'themed',
+	});
+	this.submit = $('<input>', {
+		id: 'done', type: 'button', value: 'Done',
+	});
 	this.$subject = $('<input/>', {
 		id: 'subject',
 		'class': 'themed',
@@ -180,7 +183,6 @@ initialize: function (dest) {
 	this.propagate_ident();
 	this.options.dest.replaceWith(post);
 
-	//this.input.keydown($.proxy(this, 'on_key_down'));
 	this.input.input(_.bind(this.on_input, this, undefined));
 
 	if (op) {
