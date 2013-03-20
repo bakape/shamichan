@@ -236,7 +236,7 @@ function write_board_head(resp, board, nav) {
 	resp.write(indexTmpl[4]);
 }
 
-function write_thread_head(resp, board, op, subject, limit) {
+function write_thread_head(resp, board, op, subject, abbrev) {
 	var indexTmpl = RES.indexTmpl;
 	var title = '/'+escape(board)+'/ - ';
 	if (subject)
@@ -247,7 +247,7 @@ function write_thread_head(resp, board, op, subject, limit) {
 	resp.write(indexTmpl[0]);
 	resp.write(title);
 	resp.write(indexTmpl[1]);
-	resp.write(make_thread_meta(board, op, limit));
+	resp.write(make_thread_meta(board, op, abbrev));
 	resp.write(indexTmpl[2]);
 	if (RES.navigationHtml)
 		resp.write(RES.navigationHtml);
@@ -578,7 +578,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	var lastN = config.THREAD_LAST_N;
 	var opts = {redirect: true};
 	if (('last'+lastN) in req.query)
-		opts.limit = lastN + config.ABBREVIATED_REPLIES;
+		opts.abbrev = lastN + config.ABBREVIATED_REPLIES;
 	if (caps.can_administrate(req.ident) && 'showdead' in req.query)
 		opts.showDead = true;
 	reader.get_thread(board, num, opts);
@@ -620,7 +620,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			board: board, op: op,
 			subject: preThread.subject,
 			yaku: yaku, reader: reader,
-			limit: opts.limit,
+			abbrev: opts.abbrev,
 		});
 	});
 },
@@ -632,7 +632,7 @@ function (req, resp) {
 	var board = this.board, op = this.op;
 
 	resp = write_gzip_head(req, resp, this.headers);
-	write_thread_head(resp, board, op, this.subject, this.limit);
+	write_thread_head(resp, board, op, this.subject, this.abbrev);
 
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
 	write_thread_html(this.reader, req, resp, opts);
