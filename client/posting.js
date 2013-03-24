@@ -65,23 +65,23 @@ function handle_shortcut(event) {
 		return;
 
 	switch (event.which) {
-	case 83: /* alt-S to toggle spoiler */
-		if (postForm)
-			postForm.on_toggle(event);
-		break;
-	case 68: /* alt-D for done */
-		if (postForm) {
-			if (!postForm.submit.attr('disabled'))
-				postForm.finish_wrapped();
-			return false;
-		}
-		break;
-	case 78: /* alt-N for new post */
+	case shortcutKeys['new']:
 		var $aside = THREAD ? $('aside') : $ceiling.next();
 		if ($aside.is('aside') && $aside.length == 1) {
 			with_dom(function () {
 				postSM.feed('new', $aside);
 			});
+			return false;
+		}
+		break;
+	case shortcutKeys.togglespoiler:
+		if (postForm)
+			postForm.on_toggle(event);
+		break;
+	case shortcutKeys.done:
+		if (postForm) {
+			if (!postForm.submit.attr('disabled'))
+				postForm.finish_wrapped();
 			return false;
 		}
 		break;

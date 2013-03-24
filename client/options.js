@@ -1,4 +1,5 @@
 var nashi = {opts: []}, inputMinSize = 300;
+var shortcutKeys = {};
 
 function extract_num(q) {
 	return parseInt(q.attr('id'), 10);
@@ -286,6 +287,60 @@ function hocus_pocus() {
 	yepnope(mediaURL + 'js/login-v2.js');
 }
 
+/* SHORTCUT KEYS */
+
+var shortcuts = [
+	{label: 'New post', name: 'new', which: 78},
+	{label: 'Image spoiler', name: 'togglespoiler', which: 83},
+	{label: 'Finish post', name: 'done', which: 68},
+];
+
+function toggle_shortcuts(event) {
+	event.preventDefault();
+	var $shortcuts = $('#shortcuts');
+	if ($shortcuts.length)
+		return $shortcuts.remove();
+	$shortcuts = $('<div/>', {
+		id: 'shortcuts',
+		click: select_shortcut,
+		keyup: change_shortcut,
+	});
+	shortcuts.forEach(function (s) {
+		var value = String.fromCharCode(shortcutKeys[s.name]);
+		var $label = $('<label>', {text: s.label});
+		$('<input>', {
+			id: s.name, maxlength: 1, val: value,
+		}).prependTo($label);
+		$label.prepend(document.createTextNode('Alt+'));
+		$shortcuts.append($label, '<br>');
+	});
+	$shortcuts.appendTo('#options-panel');
+}
+
+function select_shortcut(event) {
+	if ($(event.target).is('input'))
+		$(event.target).val('');
+}
+
+function change_shortcut(event) {
+	if (event.which == 13)
+		return false;
+	var $input = $(event.target);
+	var letter = $input.val();
+	if (!(/^[a-z]$/i.exec(letter)))
+		return;
+	var which = letter.toUpperCase().charCodeAt(0);
+	var name = $input.attr('id');
+	if (!(name in shortcutKeys))
+		return;
+	shortcutKeys[name] = which;
+	if (!_.isObject(options.shortcuts))
+		options.shortcuts = {};
+	options.shortcuts[name] = which;
+	save_opts();
+	$input.blur();
+}
+
 (function () {
 	load_ident();
 	var save = _.debounce(save_ident, 1000);
@@ -297,11 +352,28 @@ function hocus_pocus() {
 	$name.input(prop);
 	$email.input(prop);
 
-	var $opts = $('<div class="modal"/>').change(function (event) {
+	$('<a id="options">Options</a>').click(function () {
+		var $opts = $('#options-panel');
+		if (!$opts.length)
+			$opts = make_options_panel().appendTo('body');
+		$opts.toggle('fast');
+	}).insertAfter('#sync');
+
+	var prefs = options.shortcuts || {};
+	shortcuts.forEach(function (s) {
+		shortcutKeys[s.name] = prefs[s.name] || s.which;
+	});
+})();
+
+function make_options_panel() {
+	var $opts = $('<div/>', {"class": 'modal', id: 'options-panel'});
+	$opts.change(function (event) {
 		var $o = $(event.target), id = $o.attr('id'), val;
 		var spec = _.find(optSpecs, function (s) {
 			return s.id == id;
 		});
+		if (!spec)
+			return;
 		if (spec.type == 'checkbox')
 			val = !!$o.prop('checked');
 		else if (spec.type == 'revcheckbox')
@@ -338,10 +410,13 @@ function hocus_pocus() {
 		$opts.append($input.attr('id', id), ' ', $label, '<br>');
 		(spec.func)(val);
 	});
-	$opts.hide().appendTo(document.body);
-	$('<a id="options">Options</a>').click(function () {
-		$opts.toggle('fast');
-	}).insertAfter('#sync');
-})();
+	if (!nashi.shortcuts) {
+		$opts.append($('<a/>', {
+			href: '#', text: 'Shortcuts',
+			click: toggle_shortcuts,
+		}));
+	}
+	return $opts.hide();
+}
 
 })();

@@ -66,6 +66,7 @@ function preview_miru(event, num) {
 document.addEventListener('touchstart', touch_screen_event, false);
 function touch_screen_event() {
 	nashi.hover = true;
+	nashi.shortcuts = true;
 	if (preview)
 		preview.remove();
 	$DOC.unbind('mousemove', mouse_ugoku);

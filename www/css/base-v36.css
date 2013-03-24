@@ -288,6 +288,14 @@ article .hat {
 	float: right;
 	margin-bottom: 2px;
 }
+#shortcuts {
+	margin-top: 1em;
+}
+#shortcuts input {
+	border: none;
+	width: 2em;
+	margin-right: 1em;
+}
 pre {
 	height: auto;
 	margin: 0;
