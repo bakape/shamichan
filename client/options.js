@@ -359,6 +359,10 @@ function change_shortcut(event) {
 		$opts.toggle('fast');
 	}).insertAfter('#sync');
 
+	_.each(optSpecs, function (spec) {
+		(spec.func)(options[spec.id]);
+	});
+
 	var prefs = options.shortcuts || {};
 	shortcuts.forEach(function (s) {
 		shortcutKeys[s.name] = prefs[s.name] || s.which;
@@ -408,7 +412,6 @@ function make_options_panel() {
 		}
 		var $label = $('<label/>').attr('for', id).text(spec.label);
 		$opts.append($input.attr('id', id), ' ', $label, '<br>');
-		(spec.func)(val);
 	});
 	if (!nashi.shortcuts) {
 		$opts.append($('<a/>', {
