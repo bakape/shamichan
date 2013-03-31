@@ -465,7 +465,7 @@ OS.gazou = function (info, toppu) {
 		caption = ['Image ', new_tab_link(src, info.src)];
 	}
 
-	var img = this.hideImgs ? '' : this.gazou_img(info, toppu);
+	var img = this.thumbStyle=='hide' ? '' : this.gazou_img(info, toppu);
 	var dims = info.dims[0] + 'x' + info.dims[1];
 
 	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
@@ -475,7 +475,7 @@ OS.gazou = function (info, toppu) {
 		img, safe('</figure>\n\t')];
 };
 
-exports.thumbStyles = ['small', 'sharp', 'large'];
+exports.thumbStyles = ['small', 'sharp', 'large', 'hide'];
 
 OS.gazou_img = function (info, toppu) {
 	var src, thumb;

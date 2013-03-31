@@ -152,10 +152,13 @@ function write_thread_html(reader, req, response, opts) {
 	opts.ident = req.ident;
 	caps.augment_oneesama(oneeSama, opts);
 	var cookies = web.parse_cookie(req.headers.cookie);
-	if (cookies.img == 'no')
-		oneeSama.hideImgs = true;
+
 	if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 		oneeSama.thumbStyle = cookies.thumb;
+
+	/* TEMP migration */
+	if (cookies.img == 'no')
+		oneeSama.thumbStyle = 'hide';
 
 	reader.on('thread', function (op_post, omit, image_omit) {
 		op_post.omit = omit;
@@ -595,8 +598,6 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		if (!config.DEBUG && preThread.hctr) {
 			var etag = 'W/' + preThread.hctr + '-' + RES.indexHash;
 			var chunks = web.parse_cookie(req.headers.cookie);
-			if (chunks.img == 'no')
-				etag += '-noimg';
 			if (common.thumbStyles.indexOf(chunks.thumb) >= 0)
 				etag += '-' + chunks.thumb;
 			if (preThread.locked)

@@ -81,29 +81,50 @@ add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 
 /* THUMBNAIL OPTIONS */
 
-add_spec('thumbs', 'Thumbnails', function (type) {
+/* TEMP migration */
+(function () {
+	$.cookie('img', null);
+	var old = 'board.' + BOARD + '.hideimages';
+	var key = 'board.' + BOARD + '.thumbs';
+	var changed = false;
+	if (options.thumbs) {
+		if (!options[key]) {
+			options[key] = options.thumbs;
+			changed = true;
+		}
+		/* later: delete options.thumbs */
+	}
+	if (old in options) {
+		if (options[old])
+			options[key] = 'hide';
+		delete options[old];
+		changed = true;
+	}
+	if (changed)
+		save_opts();
+})();
+
+var revealSetup = false;
+
+add_spec('board.$BOARD.thumbs', 'Thumbnails', function (type) {
 	$.cookie('thumb', type);
 	// really ought to apply the style immediately
 	// need pinky/mid distinction in the model to do properly
 	oneeSama.thumbStyle = type;
+	var hide = type == 'hide';
+	if (hide)
+		$('img').hide();
+	else
+		$('img').show();
+
+	if (hide && !revealSetup)
+		$DOC.on('click', 'article', reveal_thumbnail);
+	else if (!hide && revealSetup)
+		$DOC.off('click', 'article', reveal_thumbnail);
+	revealSetup = hide;
 }, thumbStyles);
 
-/* IMAGE HIDING */
-
-add_spec('board.$BOARD.hideimages', 'Hide images', function (on) {
-	if (on) {
-		$('img').hide();
-		$.cookie('img', 'no', {expires: 9000});
-		$DOC.on('click', 'article', reveal_thumbnail);
-	}
-	else {
-		$('img').show();
-		$.cookie('img', null);
-		$DOC.off('click', 'article', reveal_thumbnail);
-	}
-	oneeSama.hideImgs = on;
-}, 'checkbox');
-
+/* Alt-click a post to reveal its thumbnail if hidden */
 function reveal_thumbnail(event) {
 	if (!event.altKey)
 		return;
