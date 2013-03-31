@@ -31,8 +31,9 @@ function load_ident() {
 function save_ident() {
 	try {
 		var name = $name.val(), email = $email.val();
-		if (is_magic_word(email)) {
-			hocus_pocus();
+		if (email == 'misaki') {
+			$email.val('');
+			yepnope(mediaURL + 'js/login-v2.js');
 			email = false;
 		}
 		else if (is_sage(email) && !is_noko(email))
@@ -271,20 +272,6 @@ function expand_image($img) {
 		thumbHeight: $img.height(),
 		thumbSrc: $img.attr('src'),
 	}).attr('src', href).width(w).height(h));
-}
-
-function is_magic_word(w) {
-	/* lol */
-	var s = "ptn|vt";
-	var ok = w.length == s.length;
-	for (var i = 0; i < s.length; i++)
-		ok &= ((w.charCodeAt(i) ^ 29) & 255) == s.charCodeAt(i);
-	return ok;
-}
-
-function hocus_pocus() {
-	$email.val('');
-	yepnope(mediaURL + 'js/login-v2.js');
 }
 
 /* SHORTCUT KEYS */
