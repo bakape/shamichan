@@ -194,6 +194,12 @@ var load_page_backlinks = function () {
 	});
 };
 
+/* IMAGE SCALING */
+
+add_spec('nofitwidth', 'Fit to width', function (fit) {
+	/* TODO: do it live */
+}, 'revcheckbox');
+
 /* INLINE EXPANSION */
 
 if (window.devicePixelRatio > 1)
@@ -288,11 +294,29 @@ function expand_image($img) {
 		w /= r;
 		h /= r;
 	}
-	$img.replaceWith($('<img>').data({
+	$img = $('<img>').data({
 		thumbWidth: $img.width(),
 		thumbHeight: $img.height(),
 		thumbSrc: $img.attr('src'),
-	}).attr('src', href).width(w).height(h));
+	}).attr('src', href).width(w).height(h).replaceAll($img);
+
+	if (!options.nofitwidth) {
+		var $post = parent_post($img);
+		var overflow = 0;
+		var innerWidth = $(window).innerWidth();
+		var rect = $post.length && $post[0].getBoundingClientRect();
+		if ($post.is('article'))
+			overflow = rect.right - innerWidth;
+		else if ($post.is('section'))
+			overflow = w - (innerWidth - rect.left*2);
+
+		if (overflow > 0 && (w - overflow) > 50) {
+			var aspect = h / w;
+			w -= overflow;
+			h = aspect * w;
+			$img.width(w).height(h);
+		}
+	}
 }
 
 /* SHORTCUT KEYS */
