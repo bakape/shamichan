@@ -89,6 +89,9 @@ article header {
 	margin-left: -3px;
 	padding-left: 14px;
 }
+.preview header {
+	background-image: none;
+}
 header nav a {
 	text-decoration: none;
 }
