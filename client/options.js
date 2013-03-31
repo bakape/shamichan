@@ -1,4 +1,4 @@
-var nashi = {opts: []}, inputMinSize = 300;
+var nashi = {opts: []}, inputMinSize = 300, fullWidthExpansion = false;
 var shortcutKeys = {};
 
 function extract_num(q) {
@@ -14,8 +14,10 @@ function parent_post($el) {
 
 nashi.upload = !!$('<input type="file"/>').prop('disabled');
 
-if (window.screen && screen.width <= 320)
+if (window.screen && screen.width <= 320) {
 	inputMinSize = 50;
+	fullWidthExpansion = true;
+}
 
 function load_ident() {
 	try {
@@ -273,6 +275,8 @@ function contract_image($img, event) {
 			window.scrollBy(0, Math.max(th - h,
 					y - t - event.clientY + th/2));
 	}
+	if (fullWidthExpansion)
+		contract_full_width(parent_post($img));
 	$img.replaceWith($('<img>')
 			.width($img.data('thumbWidth')).height(th)
 			.attr('src', thumb));
@@ -305,8 +309,14 @@ function expand_image($img) {
 		var overflow = 0;
 		var innerWidth = $(window).innerWidth();
 		var rect = $post.length && $post[0].getBoundingClientRect();
-		if ($post.is('article'))
-			overflow = rect.right - innerWidth;
+		if ($post.is('article')) {
+			if (fullWidthExpansion && w > innerWidth) {
+				overflow = w - innerWidth;
+				expand_full_width($img, $post, rect);
+			}
+			else
+				overflow = rect.right - innerWidth;
+		}
 		else if ($post.is('section'))
 			overflow = w - (innerWidth - rect.left*2);
 
@@ -316,6 +326,29 @@ function expand_image($img) {
 			h = aspect * w;
 			$img.width(w).height(h);
 		}
+	}
+}
+
+function expand_full_width($img, $post, rect) {
+	var img = $img[0].getBoundingClientRect();
+	$img.css('margin-left', -img.left + 'px');
+	var over = rect.right - img.right;
+	if (over > 0) {
+		$post.css({
+			'margin-right': -over+'px',
+			'padding-right': 0,
+			'border-right': 'none',
+		});
+	}
+}
+
+function contract_full_width($post) {
+	if ($post.css('margin-right')[0] == '-') {
+		$post.css({
+			'margin-right': '',
+			'padding-right': '',
+			'border-right': '',
+		});
 	}
 }
 
