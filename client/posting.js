@@ -60,7 +60,21 @@ $DOC.on('click', 'aside a', _.wrap(function () {
 
 $DOC.on('keydown', handle_shortcut);
 
+var wcombo = 0;
+
 function handle_shortcut(event) {
+	if (wcombo < 0) {
+		// already active
+	}
+	else if (event.shiftKey && event.which == 87) {
+		if (++wcombo > 10) {
+			wcombo = -1;
+			yepnope(mediaURL + 'js/wordfilter-v1.js');
+		}
+	}
+	else
+		wcombo = 0;
+
 	if (!event.altKey)
 		return;
 
@@ -344,6 +358,7 @@ on_input: function (val) {
 	var nl = val.lastIndexOf('\n');
 	if (nl >= 0) {
 		var ok = val.substr(0, nl);
+		ok = this.word_filter(ok);
 		val = val.substr(nl+1);
 		input.val(val);
 		if (this.model.get('sentAllocRequest') || /[^ ]/.test(ok))
@@ -356,6 +371,7 @@ on_input: function (val) {
 		if (m) {
 			var lim = len - m[1].length;
 			var destiny = val.substr(0, lim);
+			destiny = this.word_filter(destiny);
 			this.commit(destiny);
 			val = val.substr(lim);
 			start -= lim;
@@ -367,6 +383,10 @@ on_input: function (val) {
 
 	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 	this.resize_input(val);
+},
+
+word_filter: function (words) {
+	return words;
 },
 
 add_ref: function (num) {
@@ -531,7 +551,7 @@ cancel: function () {
 finish: function () {
 	if (this.model.get('num')) {
 		this.flush_pending();
-		this.commit(this.input.val());
+		this.commit(this.word_filter(this.input.val()));
 		this.input.remove();
 		this.submit.remove();
 		if (this.uploadForm)
