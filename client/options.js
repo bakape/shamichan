@@ -356,8 +356,8 @@ function contract_full_width($post) {
 
 var shortcuts = [
 	{label: 'New post', name: 'new', which: 78},
-	{label: 'Image spoiler', name: 'togglespoiler', which: 83},
-	{label: 'Finish post', name: 'done', which: 68},
+	{label: 'Image spoiler', name: 'togglespoiler', which: 73},
+	{label: 'Finish post', name: 'done', which: 83},
 ];
 
 function toggle_shortcuts(event) {
