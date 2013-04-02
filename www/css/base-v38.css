@@ -184,9 +184,6 @@ section > figure > a {
 	position: relative;
 	z-index: 5;
 }
-.expanded img {
-	margin-right: 0;
-}
 .hat, .expanded .hat {
 	background: url('ui/hat.png') no-repeat;
 	position: absolute;
@@ -342,6 +339,9 @@ pre, .themed {
 	}
 	section {
 		margin: 0;
+	}
+	.expanded img {
+		margin-right: 0;
 	}
 	.scroll-lock {
 		margin-left: -3px;
