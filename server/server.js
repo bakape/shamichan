@@ -488,7 +488,7 @@ web.resource(/^\/(\w+)\/page(\d+)$/, function (req, params, cb) {
 	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(page);
 	yaku.once('nomatch', function () {
-		cb(404);
+		cb(null, 302, '.');
 		yaku.disconnect();
 	});
 	yaku.once('begin', function (threadCount) {
