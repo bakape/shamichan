@@ -30,10 +30,10 @@ function video_dims() {
 		return {width: 560, height: 340};
 }
 
-$(document).on('click', '.watch', function (event) {
-	if (event.which > 1 || event.ctrlKey || event.altKey || event.shiftKey)
+$(document).on('click', '.watch', function (e) {
+	if (e.which > 1 || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey)
 		return;
-	var $target = $(event.target);
+	var $target = $(e.target);
 
 	/* maybe squash that double-play bug? ugh, really */
 	if (!$target.is('a'))
@@ -145,10 +145,10 @@ function make_soundcloud(path, dims) {
 	return make_embed(uri, params, dims);
 }
 
-$(document).on('click', '.soundcloud', function (event) {
-	if (event.which > 1 || event.ctrlKey || event.altKey || event.shiftKey)
+$(document).on('click', '.soundcloud', function (e) {
+	if (e.which > 1 || e.ctrlKey || e.altKey || e.shiftKey || e.metaKey)
 		return;
-	var $target = $(event.target);
+	var $target = $(e.target);
 
 	var $obj = $target.find('object');
 	if ($obj.length) {
