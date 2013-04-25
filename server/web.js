@@ -176,9 +176,11 @@ exports.resource_auth = function (pattern, head, get, finished) {
 function parse_forwarded_for(ff) {
 	if (!ff)
 		return null;
-	if (ff.indexOf(',') >= 0)
-		ff = ff.split(',', 1)[0];
-	return ff.trim();
+	var ips = ff.split(',');
+	for (var i = 0; i < ips.length; i++)
+		if (/^\s*\d+\.\d+\.\d+.\d+\s*$/.test(ips[i]))
+			return ips[i].trim();
+	return null;
 }
 exports.parse_forwarded_for = parse_forwarded_for;
 
