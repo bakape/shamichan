@@ -135,12 +135,13 @@ IU.process = function () {
 	if (this.failed)
 		return;
 	var image = this.image;
-	image.ext = path.extname(image.filename).toLowerCase();
+	var filename = image.filename || image.name;
+	image.ext = path.extname(filename).toLowerCase();
 	if (image.ext == '.jpeg')
 		image.ext = '.jpg';
 	if (['.png', '.jpg', '.gif'].indexOf(image.ext) < 0)
 		return this.failure(Muggle('Invalid image format.'));
-	image.imgnm = image.filename.substr(0, 256);
+	image.imgnm = filename.substr(0, 256);
 
 	this.status('Verifying...');
 	this.tagged_path = image.ext.replace('.', '') + ':' + image.path;
