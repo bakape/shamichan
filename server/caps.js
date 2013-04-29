@@ -95,8 +95,10 @@ function parse_ip(ip) {
 	var info = {full: ip, num: num};
 	if (m[5]) {
 		var bits = parseInt(m[5], 10);
-		if (bits > 0 && bits <= 32)
+		if (bits > 0 && bits <= 32) {
 			info.mask = 0x100000000 - Math.pow(2, 32 - bits);
+			info.num &= info.mask;
+		}
 	}
 	return info;
 }
