@@ -321,6 +321,8 @@ function load_OPs(r, callback) {
 
 	var expiryKey = expiry_queue_key();
 	function refresh_expiry(tag, op, cb) {
+		if (tag == config.STAFF_BOARD)
+			return cb(null);
 		var entry = op + ':' + tag_key(tag);
 		var queries = ['time', 'immortal'];
 		hmget_obj(r, 'thread:'+op, queries, function (err, thread) {
