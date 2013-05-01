@@ -243,8 +243,10 @@ var AddressView = Backbone.View.extend({
 		if (!models.length)
 			return;
 		enable_multi_selecting();
-		$.each(models, function () {
-			select_post($('#' + this.id));
+		with_dom(function () {
+			$.each(models, function () {
+				select_post($('#' + this.id));
+			});
 		});
 	},
 });
