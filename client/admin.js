@@ -311,7 +311,7 @@ var Addresses = Backbone.Collection.extend({
 window.addrs = new Addresses;
 
 function hook_up_address($post) {
-	var $a = $post.find('a.mod.addr');
+	var $a = $post.find('a.mod.addr:first');
 	if (!$a.length)
 		return;
 	var ip = $a.prop('title') || $a.text();
