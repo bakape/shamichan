@@ -248,6 +248,7 @@ var AddressView = Backbone.View.extend({
 				select_post($('#' + this.id));
 			});
 		});
+		this.remove();
 	},
 });
 
