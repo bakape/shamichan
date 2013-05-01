@@ -343,7 +343,7 @@ function hook_up_address($post) {
 oneeSama.hook('afterInsert', hook_up_address);
 
 with_dom(function () {
-	$('article').each(function () {
+	$('article, section').each(function () {
 		hook_up_address($(this));
 	});
 });
