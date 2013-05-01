@@ -98,8 +98,7 @@ function toggle_multi_selecting($post) {
 		make_selection_handle().prependTo('article');
 		make_selection_handle().prependTo('section > header');
 		if ($post)
-			$post.find('.select-handle:first'
-					).addClass('selected');
+			select_post($post);
 		$controls.show();
 		$selectButton.val('X');
 	}
@@ -115,6 +114,10 @@ function toggle_multi_selecting($post) {
 }
 
 menuHandlers.Select = toggle_multi_selecting;
+
+function select_post($post) {
+	$post.find('.select-handle:first').addClass('selected');
+}
 
 function make_selection_handle() {
 	return $('<a class="select-handle" href="#"/>');
