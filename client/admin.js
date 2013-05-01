@@ -115,6 +115,11 @@ function toggle_multi_selecting($post) {
 
 menuHandlers.Select = toggle_multi_selecting;
 
+function enable_multi_selecting() {
+	if (!multiSelecting)
+		toggle_multi_selecting();
+}
+
 function select_post($post) {
 	$post.find('.select-handle:first').addClass('selected');
 }
@@ -176,11 +181,21 @@ var AddressView = Backbone.View.extend({
 	className: 'mod address',
 	events: {
 		'keydown .name': 'entered_name',
+		'click .sel-all': 'select_all',
 	},
 
 	initialize: function () {
-		this.$el.append(
-			$('<span/>', {"class": 'ip'}), '<br>',
+		var $el = this.$el;
+		$('<span/>', {"class": 'ip'}).appendTo($el);
+		if (CurThread) {
+			$el.append(' &nbsp; ', $('<input/>', {
+				"class": 'sel-all',
+				type: 'button',
+				val: 'Sel All'
+			}));
+		}
+		$el.append(
+			'<br>',
 			$('<input>', {"class": 'name', placeholder: 'Name'})
 		);
 		this.listenTo(this.model, 'change', this.render);
@@ -221,6 +236,16 @@ var AddressView = Backbone.View.extend({
 	remove: function () {
 		this.trigger('preremove');
 		Backbone.View.prototype.remove.call(this);
+	},
+
+	select_all: function () {
+		var models = CurThread.where({ip: this.model.get('ip')});
+		if (!models.length)
+			return;
+		enable_multi_selecting();
+		$.each(models, function () {
+			select_post($('#' + this.id));
+		});
 	},
 });
 
@@ -307,6 +332,13 @@ function hook_up_address($post) {
 	var view = new AddrView({model: address, el: $a[0]});
 	if (address.get('name'))
 		view.render();
+
+	/* Augment post with IP */
+	if (CurThread) {
+		var post = CurThread.get($post.attr('id'));
+		if (post && !post.has('ip'))
+			post.set('ip', ip);
+	}
 }
 oneeSama.hook('afterInsert', hook_up_address);
 
