@@ -282,12 +282,10 @@ var Addresses = Backbone.Collection.extend({
 
 window.addrs = new Addresses;
 
-function hook_up_address($a) {
-	if (!$a.is('a.mod.addr')) {
-		$a = $a.find('a.mod.addr');
-		if (!$a.is('a.mod.addr'))
-			return;
-	}
+function hook_up_address($post) {
+	var $a = $post.find('a.mod.addr');
+	if (!$a.length)
+		return;
 	var ip = $a.prop('title') || $a.text();
 	var givenName;
 	var m = $a.text().match(/^([\w'.]+) "(.+)"$/);
@@ -299,6 +297,7 @@ function hook_up_address($a) {
 	if (!is_valid_ip(ip))
 		return;
 
+	/* Activate this address link */
 	var address = window.addrs.get(ip);
 	if (!address) {
 		address = new Address({ip: ip});
@@ -312,7 +311,7 @@ function hook_up_address($a) {
 oneeSama.hook('afterInsert', hook_up_address);
 
 with_dom(function () {
-	$('a.mod.addr').each(function () {
+	$('article').each(function () {
 		hook_up_address($(this));
 	});
 });
