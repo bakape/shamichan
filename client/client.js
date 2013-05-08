@@ -326,7 +326,7 @@ dispatcher[FINISH_POST] = function (msg) {
 };
 
 dispatcher[DELETE_POSTS] = function (msg, op) {
-	var ownNum = postForm && postForm.num;
+	var ownNum = saku && saku.get('num');
 	_.each(msg, function (num) {
 		delete ownPosts[num];
 		if (CurThread)
@@ -357,9 +357,9 @@ dispatcher[DELETE_POSTS] = function (msg, op) {
 dispatcher[DELETE_THREAD] = function (msg, op) {
 	delete syncs[op];
 	delete ownPosts[op];
-	if (postForm) {
-		var num = postForm.num;
-		if ((postForm.op || num) == op)
+	if (saku) {
+		var num = saku.get('num');
+		if ((saku.get('op') || num) == op)
 			postSM.feed('done');
 		if (num == op)
 			return;
