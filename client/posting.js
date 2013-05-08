@@ -245,6 +245,10 @@ on_allocation: function (msg) {
 		this.resize_input();
 		this.input.focus();
 	}
+
+	window.onbeforeunload = function () {
+		return "You have an unfinished post.";
+	};
 },
 
 on_image_alloc: function (msg) {
@@ -558,6 +562,7 @@ remove: function () {
 		this.$iframe = null;
 	}
 	this.stopListening();
+	window.onbeforeunload = null;
 },
 
 render_buttons: function () {
