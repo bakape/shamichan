@@ -630,9 +630,17 @@ OS.monogatari = function (data, toppu) {
 };
 
 OS.mono = function (data) {
-	var o = safe(data.editing
-			? '\t<article id="' + data.num + '" class="editing">'
-			: '\t<article id="' + data.num + '">'),
+	var info = {
+		data: data,
+		classes: data.editing ? ['editing'] : [],
+		style: ''
+	};
+	this.trigger('openArticle', info);
+	var cls = info.classes.length && info.classes.join(' '),
+	    o = safe('\t<article id="'+data.num+'"' +
+			(cls && ' class="'+cls+'"') +
+			(info.style && ' style="'+info.style+'"') +
+			'>'),
 	    c = safe('</article>\n'),
 	    gen = this.monogatari(data, false);
 	return flatten([o, gen.header, gen.image || '', gen.body, c]).join('');
