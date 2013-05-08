@@ -536,7 +536,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 		m.incr(tagKey + ':bumpctr');
 	m.sadd('liveposts', key);
 	var self = this;
-	inline(view, msg, function (err) {
+	hooks.trigger('inlinePost', {src: msg, dest: view}, function (err) {
 		if (err)
 			return callback(err);
 		if (msg.image) {
@@ -1685,10 +1685,6 @@ Y.get_current_body = function (num, cb) {
 
 function extract(post, cb) {
 	hooks.trigger('extractPost', post, cb);
-}
-
-function inline(dest, src, cb) {
-	hooks.trigger('inlinePost', {dest: dest, src: src}, cb);
 }
 
 function with_body(r, key, post, callback) {
