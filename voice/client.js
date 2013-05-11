@@ -9,9 +9,9 @@ oneeSama.hook('menuOptions', function (info) {
 		info.options.push('Speak');
 });
 
-menuHandlers.Speak = function ($post) {
+menuHandlers.Speak = function (num) {
 	var $audio = $('<audio/>', {
-		src: $post.attr('id') + '/voice',
+		src: num + '/voice',
 		attr: {autoplay: 'autoplay'},
 	});
 	var a = $audio[0];

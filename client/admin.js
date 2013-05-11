@@ -85,11 +85,11 @@ menuOptions.unshift('Select');
 
 var multiSelecting = false;
 
-function toggle_multi_selecting($post) {
+function toggle_multi_selecting(num, $post) {
 	var oldTarget;
 	if ($post) {
 		oldTarget = lockTarget;
-		set_lock_target(extract_num($post));
+		set_lock_target(num);
 	}
 	with_dom(function () {
 	multiSelecting = !multiSelecting;

@@ -81,10 +81,8 @@ if (window.scrollMaxY !== undefined)
 	};
 
 (function () {
-	menuHandlers.Focus = function ($post) {
-		set_lock_target(extract_num($post));
-	};
-	menuHandlers.Unfocus = function ($post) {
+	menuHandlers.Focus = set_lock_target;
+	menuHandlers.Unfocus = function () {
 		set_lock_target(null);
 	};
 

@@ -5,8 +5,10 @@ $DOC.on('click', '.control', function (event) {
 	var $target = $(event.target);
 	if ($target.is('li')) {
 		var handler = menuHandlers[$target.text()];
-		if (handler)
-			handler(parent_post($target));
+		if (handler) {
+			var $post = parent_post($target);
+			handler(extract_num($post), $post);
+		}
 	}
 	var $menu = $(this).find('ul');
 	if ($menu.length)
