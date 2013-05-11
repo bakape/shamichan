@@ -1,3 +1,4 @@
+var optSpecs = [];
 var nashi = {opts: []}, inputMinSize = 300, fullWidthExpansion = false;
 var shortcutKeys = {};
 
@@ -11,6 +12,17 @@ function parent_post($el) {
 }
 
 (function () {
+
+/* OPTIONS LIST */
+optSpecs.push(option_inline_expansion);
+if (window.devicePixelRatio > 1)
+	optSpecs.push(option_high_res);
+optSpecs.push(option_fitwidth);
+if (THREAD)
+	optSpecs.push(option_backlinks);
+optSpecs.push(option_thumbs);
+optSpecs.push(option_theme);
+
 
 nashi.upload = !!$('<input type="file"/>').prop('disabled');
 
@@ -61,25 +73,20 @@ function save_opts() {
 	catch (e) {}
 }
 
-var optSpecs = [];
-function add_spec(id, label, func, type) {
-	id = id.replace(/\$BOARD/g, BOARD);
-	if (!func)
-		func = function () {};
-	optSpecs.unshift({id: id, label: label, func: func, type: type});
-}
-
 /* THEMES */
 
 var themes = ['moe', 'gar', 'mawaru', 'moon', 'ashita', 'console'];
 var globalVersion = 8;
 
-add_spec('board.$BOARD.theme', 'Theme', function (theme) {
+function option_theme(theme) {
 	if (theme) {
 		var css = theme + '-v' + globalVersion + '.css';
 		$('#theme').attr('href', mediaURL + 'css/' + css);
 	}
-}, themes);
+}
+option_theme.id = 'board.$BOARD.theme';
+option_theme.label = 'Theme';
+option_theme.type = themes;
 
 /* THUMBNAIL OPTIONS */
 
@@ -108,7 +115,7 @@ add_spec('board.$BOARD.theme', 'Theme', function (theme) {
 
 var revealSetup = false;
 
-add_spec('board.$BOARD.thumbs', 'Thumbnails', function (type) {
+function option_thumbs(type) {
 	$.cookie('thumb', type);
 	// really ought to apply the style immediately
 	// need pinky/mid distinction in the model to do properly
@@ -124,7 +131,10 @@ add_spec('board.$BOARD.thumbs', 'Thumbnails', function (type) {
 	else if (!hide && revealSetup)
 		$DOC.off('click', 'article', reveal_thumbnail);
 	revealSetup = hide;
-}, thumbStyles);
+}
+option_thumbs.id = 'board.$BOARD.thumbs';
+option_thumbs.label = 'Thumbnails';
+option_thumbs.type = thumbStyles;
 
 /* Alt-click a post to reveal its thumbnail if hidden */
 function reveal_thumbnail(event) {
@@ -154,14 +164,15 @@ function reveal_thumbnail(event) {
 
 /* BACKLINKS */
 
-if (THREAD) {
-	add_spec('nobacklinks', 'Backlinks', function (b) {
-		if (b)
-			$('small').remove();
-		else
-			show_backlinks();
-	}, 'revcheckbox');
+function option_backlinks(b) {
+	if (b)
+		$('small').remove();
+	else
+		show_backlinks();
 }
+option_backlinks.id = 'nobacklinks';
+option_backlinks.label = 'Backlinks';
+option_backlinks.type = 'revcheckbox';
 
 function show_backlinks() {
 	if (!CurThread)
@@ -198,16 +209,26 @@ var load_page_backlinks = function () {
 
 /* IMAGE SCALING */
 
-add_spec('nofitwidth', 'Fit to width', function (fit) {
+function option_fitwidth() {
 	/* TODO: do it live */
-}, 'revcheckbox');
+}
+option_fitwidth.id = 'nofitwidth';
+option_fitwidth.label = 'Fit to width';
+option_fitwidth.type = 'revcheckbox';
 
 /* INLINE EXPANSION */
 
-if (window.devicePixelRatio > 1)
-	add_spec('nohighres', 'High-res expansions', null, 'revcheckbox');
+function option_inline_expansion() {
+}
+option_inline_expansion.id = 'inline';
+option_inline_expansion.label = 'Inline image expansion';
+option_inline_expansion.type = 'checkbox';
 
-add_spec('inline', 'Inline image expansion', null, 'checkbox');
+function option_high_res() {
+}
+option_high_res.id = 'nohighres';
+option_high_res.label = 'High-res expansions';
+option_high_res.type = 'revcheckbox';
 
 $DOC.on('mouseup', 'img', function (event) {
 	/* Bypass expansion for non-left mouse clicks */
@@ -406,7 +427,7 @@ function change_shortcut(event) {
 	$input.blur();
 }
 
-(function () {
+_.defer(function () {
 	load_ident();
 	var save = _.debounce(save_ident, 1000);
 	function prop() {
@@ -417,6 +438,10 @@ function change_shortcut(event) {
 	$name.input(prop);
 	$email.input(prop);
 
+	_.each(optSpecs, function (spec) {
+		spec.id = spec.id.replace(/\$BOARD/g, BOARD);
+	});
+
 	$('<a id="options">Options</a>').click(function () {
 		var $opts = $('#options-panel');
 		if (!$opts.length)
@@ -425,14 +450,14 @@ function change_shortcut(event) {
 	}).insertAfter('#sync');
 
 	_.each(optSpecs, function (spec) {
-		(spec.func)(options[spec.id]);
+		spec(options[spec.id]);
 	});
 
 	var prefs = options.shortcuts || {};
 	shortcuts.forEach(function (s) {
 		shortcutKeys[s.name] = prefs[s.name] || s.which;
 	});
-})();
+});
 
 function make_options_panel() {
 	var $opts = $('<div/>', {"class": 'modal', id: 'options-panel'});
@@ -452,7 +477,7 @@ function make_options_panel() {
 		options[id] = val;
 		save_opts();
 		with_dom(function () {
-			(spec.func)(val);
+			spec(val);
 		});
 	});
 	_.each(optSpecs, function (spec) {
