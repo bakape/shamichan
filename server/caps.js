@@ -14,7 +14,7 @@ function can_access_board(ident, board) {
 		return false;
 	if (ident.ban || ident.suspension)
 		return false;
-	if (under_curfew(ident, board))
+	if (!temporal_access_check(ident, board))
 		return false;
 	return db.is_board(board);
 }
@@ -27,6 +27,21 @@ exports.can_access_thread = function (ident, op) {
 	for (var i = 0; i < tags.length; i++)
 		if (can_access_board(ident, tags[i]))
 			return true;
+	return false;
+};
+
+function temporal_access_check(ident, board) {
+	var info = {ident: ident, board: board, access: true};
+	hooks.trigger_sync('temporalAccessCheck', info);
+	return info.access;
+}
+exports.temporal_access_check = temporal_access_check;
+
+exports.can_ever_access_board = function (ident, board) {
+	if (can_access_board(ident, board))
+		return true;
+	if (!temporal_access_check(ident, board))
+		return true;
 	return false;
 };
 
@@ -171,79 +186,4 @@ exports.lookup_ident = function (ip) {
 	return ident;
 };
 
-function under_curfew(ident, board) {
-	if (can_administrate(ident))
-		return false;
-	var curfew = config.CURFEW_HOURS;
-	if (!curfew || (config.CURFEW_BOARDS || []).indexOf(board) < 0)
-		return false;
-	var hour = new Date().getUTCHours();
-	return curfew.indexOf(hour) < 0;
-}
-exports.under_curfew = under_curfew;
 
-exports.can_ever_access_board = function (ident, board) {
-	return can_access_board(ident, board) || under_curfew(ident, board);
-};
-
-exports.curfew_ending_time = function (board) {
-	var curfew = config.CURFEW_HOURS;
-	if (!curfew || (config.CURFEW_BOARDS || []).indexOf(board) < 0)
-		return null;
-	var now = new Date();
-	var tomorrow = day_after(now);
-	var makeToday = hour_date_maker(now);
-	var makeTomorrow = hour_date_maker(tomorrow);
-	/* Dumb brute-force algorithm */
-	var candidates = [];
-	config.CURFEW_HOURS.forEach(function (hour) {
-		candidates.push(makeToday(hour), makeTomorrow(hour));
-	});
-	candidates.sort(compare_dates);
-	for (var i = 0; i < candidates.length; i++)
-		if (candidates[i] > now)
-			return candidates[i];
-	return null;
-};
-
-exports.curfew_starting_time = function (board) {
-	var curfew = config.CURFEW_HOURS;
-	if (!curfew || (config.CURFEW_BOARDS || []).indexOf(board) < 0)
-		return null;
-	var now = new Date();
-	var tomorrow = day_after(now);
-	var makeToday = hour_date_maker(now);
-	var makeTomorrow = hour_date_maker(tomorrow);
-	/* Even dumber brute-force algorithm */
-	var candidates = [];
-	config.CURFEW_HOURS.forEach(function (hour) {
-		hour = (hour + 1) % 24;
-		if (config.CURFEW_HOURS.indexOf(hour) < 0)
-			candidates.push(makeToday(hour), makeTomorrow(hour));
-	});
-	candidates.sort(compare_dates);
-	for (var i = 0; i < candidates.length; i++)
-		if (candidates[i] > now)
-			return candidates[i];
-	return null;
-};
-
-function compare_dates(a, b) {
-	return a.getTime() - b.getTime();
-}
-
-function day_after(today) {
-	/* Leap shenanigans? This is probably broken somehow. Yay dates. */
-	var tomorrow = new Date(today.getTime() + 24*3600*1000);
-	if (tomorrow.getUTCDate() == today.getUTCDate())
-		tomorrow = new Date(tomorrow.getTime() + 12*3600*1000);
-	return tomorrow;
-}
-
-function hour_date_maker(date) {
-	var prefix = date.getUTCFullYear() + '/' + (date.getUTCMonth()+1)
-			+ '/' + date.getUTCDate() + ' ';
-	return (function (hour) {
-		return new Date(prefix + hour + ':00:00 GMT');
-	});
-}

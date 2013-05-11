@@ -1,6 +1,6 @@
 var _ = require('../lib/underscore'),
     db = require('../db'),
-    caps = require('../server/caps'),
+    curfew = require('./server'),
     winston = require('winston');
 
 function shutdown(board, cb) {
@@ -12,7 +12,7 @@ function shutdown(board, cb) {
 }
 
 function at_next_curfew_start(board, func) {
-	var when = caps.curfew_starting_time(board);
+	var when = curfew.curfew_starting_time(board);
 	winston.info('Next curfew for ' + board + ' at ' + when.toUTCString());
 	setTimeout(func, when.getTime() - new Date().getTime());
 }

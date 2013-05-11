@@ -20,6 +20,8 @@ var _ = require('../lib/underscore'),
 
 require('./panel');
 require('../imager/daemon');
+if (config.CURFEW_BOARDS)
+	require('../curfew/server');
 if (config.VOICE_PATH)
 	require('../voice/server');
 
@@ -437,16 +439,10 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board;
-	if (caps.under_curfew(req.ident, board)) {
-		resp.writeHead(200, web.noCacheHeaders);
-		resp.write(RES.curfewTmpl[0]);
-		resp.write('/' + board + '/');
-		resp.write(RES.curfewTmpl[1]);
-		var ending = caps.curfew_ending_time(board);
-		resp.write(ending ? ''+ending.getTime() : 'null');
-		resp.end(RES.curfewTmpl[2]);
+	var info = {board: board, ident: req.ident, resp: resp};
+	hooks.trigger_sync('boardDiversion', info);
+	if (info.diverted)
 		return;
-	}
 
 	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(0);
@@ -475,7 +471,7 @@ function (req, resp) {
 
 web.resource(/^\/(\w+)\/page(\d+)$/, function (req, params, cb) {
 	var board = params[1];
-	if (caps.under_curfew(req.ident, board))
+	if (!caps.temporal_access_check(req.ident, board))
 		return cb(null, 302, '..');
 	if (req.ident.suspension)
 		return cb(null, 'ok'); /* TEMP */
@@ -530,7 +526,7 @@ function () {
 });
 
 web.resource(/^\/(\w+)\/page(\d+)\/$/, function (req, params, cb) {
-	if (caps.under_curfew(req.ident, params[1]))
+	if (!caps.temporal_access_check(req.ident, params[1]))
 		cb(null, 302, '..');
 	else
 		cb(null, 'redirect', '../page' + params[2]);
@@ -538,7 +534,7 @@ web.resource(/^\/(\w+)\/page(\d+)\/$/, function (req, params, cb) {
 
 web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	var board = params[1];
-	if (caps.under_curfew(req.ident, board))
+	if (!caps.temporal_access_check(req.ident, board))
 		return cb(null, 302, '.');
 	if (req.ident.suspension)
 		return cb(null, 'ok'); /* TEMP */
@@ -655,7 +651,7 @@ function () {
 });
 
 web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
-	if (caps.under_curfew(req.ident, params[1]))
+	if (!caps.temporal_access_check(req.ident, params[1]))
 		cb(null, 302, '..');
 	else
 		cb(null, 'redirect', '../' + params[2]);

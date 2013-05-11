@@ -22,6 +22,7 @@ exports.CLIENT_DEPS = [
 	'client/hover.js',
 	'client/amusement.js',
 	'client/embed.js',
+	'curfew/client.js',
 	'voice/client.js',
 ];
 
@@ -35,6 +36,7 @@ exports.SERVER_DEPS = [
 	'hooks.js',
 	'muggle.js',
 	'tail.js',
+	'curfew/server.js',
 	'lib/underscore.js',
 	'imager/config.js',
 	'imager/daemon.js',
