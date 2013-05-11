@@ -1,6 +1,6 @@
 var async = require('async');
 
-var HOOKS = {};
+var HOOKS = {}, SYNC_HOOKS = {};
 
 exports.hook = function (key, func) {
 	var hs = HOOKS[key];
@@ -19,5 +19,20 @@ exports.trigger = function (key, arg, cb) {
 			cb(err);
 		else
 			cb(null, arg);
+	});
+};
+
+exports.hook_sync = function (key, func) {
+	var hs = SYNC_HOOKS[key];
+	if (hs)
+		hs.push(func);
+	else
+		SYNC_HOOKS[key] = [func];
+};
+
+exports.trigger_sync = function (key, arg) {
+	var hs = SYNC_HOOKS[key] || [];
+	hs.forEach(function (func) {
+		func(arg);
 	});
 };
