@@ -343,7 +343,11 @@ function parse_cookie(header) {
 	(header || '').split(';').forEach(function (part) {
 		var bits = part.match(/^([^=]*)=(.*)$/);
 		if (bits)
-			chunks[bits[1].trim()] = bits[2].trim();
+			try {
+				chunks[bits[1].trim()] = decodeURIComponent(
+						bits[2].trim());
+			}
+			catch (e) {}
 	});
 	return chunks;
 }
