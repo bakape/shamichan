@@ -446,6 +446,8 @@ _.defer(function () {
 		var $opts = $('#options-panel');
 		if (!$opts.length)
 			$opts = make_options_panel().appendTo('body');
+		if ($opts.is(':hidden'))
+			oneeSama.trigger('renderOptions', $opts);
 		$opts.toggle('fast');
 	}).insertAfter('#sync');
 
@@ -509,6 +511,7 @@ function make_options_panel() {
 			click: toggle_shortcuts,
 		}));
 	}
+	oneeSama.trigger('initOptions', $opts);
 	return $opts.hide();
 }
 

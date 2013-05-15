@@ -57,6 +57,27 @@ function expire_hidden() {
 	}
 }
 
+/* Options menu clear control */
+
+var $clear = $('<input>', {
+	type: 'button',
+	val: 'Clear hidden',
+	css: {display: 'block', 'margin-top': '1em'},
+	click: function () {
+		write_hidden();
+		$clear.hide();
+	},
+});
+
+oneeSama.hook('initOptions', function ($opts) {
+	$opts.append($clear);
+});
+
+oneeSama.hook('renderOptions', function ($opts) {
+	$clear.toggle(!_.isEmpty(read_hidden()));
+});
+
+
 expire_hidden();
 
 })();
