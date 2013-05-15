@@ -19,6 +19,7 @@ exports.CLIENT_DEPS = [
 	'client/conn.js',
 	'client/unread.js',
 	'client/drop.js',
+	'client/hide.js',
 	'client/hover.js',
 	'client/amusement.js',
 	'client/embed.js',

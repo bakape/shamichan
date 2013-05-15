@@ -158,11 +158,22 @@ function write_thread_html(reader, req, response, opts) {
 	if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 		oneeSama.thumbStyle = cookies.thumb;
 
+	var hidden = {};
+	if (cookies.hide) {
+		cookies.hide.slice(0, 200).split(',').forEach(function (num) {
+			num = parseInt(num, 10);
+			if (num)
+				hidden[num] = null;
+		});
+	}
+
 	/* TEMP migration */
 	if (cookies.img == 'no')
 		oneeSama.thumbStyle = 'hide';
 
 	reader.on('thread', function (op_post, omit, image_omit) {
+		if (op_post.num in hidden)
+			return;
 		op_post.omit = omit;
 		var full = oneeSama.full = !!opts.fullPosts;
 		oneeSama.op = opts.fullLinks ? false : op_post.num;
@@ -176,13 +187,17 @@ function write_thread_html(reader, req, response, opts) {
 						'See all');
 			response.write('\t<span class="omit">'+o+'</span>\n');
 		}
+		reader.once('endthread', close_section);
 	});
 	reader.on('post', function (post) {
+		if (post.num in hidden || post.op in hidden)
+			return;
 		response.write(oneeSama.mono(post));
 	});
-	reader.on('endthread', function () {
+
+	function close_section() {
 		response.write('</section><hr>\n');
-	});
+	}
 }
 
 function setup_imager_relay(cb) {
