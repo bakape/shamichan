@@ -159,7 +159,7 @@ function write_thread_html(reader, req, response, opts) {
 		oneeSama.thumbStyle = cookies.thumb;
 
 	var hidden = {};
-	if (cookies.hide) {
+	if (cookies.hide && !caps.can_moderate(req.ident)) {
 		cookies.hide.slice(0, 200).split(',').forEach(function (num) {
 			num = parseInt(num, 10);
 			if (num)

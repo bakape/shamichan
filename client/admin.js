@@ -82,6 +82,7 @@ function tool_action(event) {
 
 readOnly.push('graveyard');
 menuOptions.unshift('Select');
+menuHandlers.Hide = function () { alert('nope.avi'); };
 
 var multiSelecting = false;
 
