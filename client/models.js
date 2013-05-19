@@ -12,13 +12,16 @@ var Thread = Backbone.Model.extend({
 	},
 });
 
-var CurThread;
+var ThreadCollection = Backbone.Collection.extend({model: Thread});
+
+var Threads = new ThreadCollection();
 var UnknownThread = new Thread();
 
 function lookup_post(id) {
-	if (!CurThread || !id)
+	var thread = Threads.get(THREAD);
+	if (!id || !thread)
 		return null;
-	return CurThread.get('replies').get(id) ||
+	return thread.get('replies').get(id) ||
 			UnknownThread.get('replies').get(id);
 }
 
@@ -28,6 +31,25 @@ function model_link(key) {
 	};
 }
 
+var Section = Backbone.View.extend({
+	tagName: 'section',
+
+	initialize: function () {
+		this.listenTo(this.model, {
+			destroy: this.remove,
+		});
+	},
+
+	remove: function () {
+		var replies = this.model.get('replies');
+		_.each(replies.models, clear_post_links);
+		replies.reset();
+
+		this.$el.next('hr').andSelf().remove();
+		this.stopListening();
+	},
+});
+
 /* XXX: Move into own views module once more substantial */
 var Article = Backbone.View.extend({
 	tagName: 'article',
@@ -36,6 +58,7 @@ var Article = Backbone.View.extend({
 			'change:backlinks': this.renderBacklinks,
 			'change:editing': this.renderEditing,
 			'change:image': this.renderImage,
+			'destroy': this.remove,
 		});
 	},
 
@@ -222,11 +245,9 @@ function extract_thread_model($section) {
 	});
 }
 
-(function () {
-	if (THREAD) {
-		var $section = $('section');
-		if (!$section.length)
-			return;
-		CurThread = extract_thread_model($section);
-	}
-})();
+$('section').each(function () {
+	var $section = $(this);
+	var thread = extract_thread_model($section);
+	new Section({model: thread, el: this});
+	Threads.add(thread);
+});

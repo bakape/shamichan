@@ -141,7 +141,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		postSM.feed('alloc', msg);
 		delete msg.num;
 
-		if (!CurThread || !postForm || !postForm.el)
+		if (!THREAD || !postForm || !postForm.el)
 			return;
 		/* Unify with code below once we have a fuller model */
 		var post = UnknownThread.get('replies').get(num);
@@ -160,7 +160,9 @@ dispatcher[INSERT_POST] = function (msg) {
 
 		var article = new Article({model: post, id: num,
 				el: postForm.el});
-		CurThread.get('replies').add(post);
+		var thread = Threads.get(post.get('op'));
+		if (thread)
+			thread.get('replies').add(post);
 		add_post_links(post, msg.links);
 
 		return;
@@ -187,7 +189,8 @@ dispatcher[INSERT_POST] = function (msg) {
 			hr.detach();
 		}
 
-		if (CurThread) {
+		var thread = Threads.get(msg.op);
+		if (thread) {
 			var post = UnknownThread.get('replies').get(num);
 			if (post) {
 				UnknownThread.get('replies').remove(num);
@@ -203,7 +206,7 @@ dispatcher[INSERT_POST] = function (msg) {
 
 			var article = new Article({model: post, id: num,
 					el: $article.filter('article')[0]});
-			CurThread.get('replies').add(post);
+			thread.get('replies').add(post);
 			add_post_links(post, msg.links);
 		}
 	}
@@ -285,8 +288,7 @@ dispatcher[INSERT_IMAGE] = function (msg) {
 
 dispatcher[UPDATE_POST] = function (msg) {
 	var num = msg[0], links = msg[4], extra = msg[5];
-	if (CurThread)
-		add_post_links(lookup_post(num), links);
+	add_post_links(lookup_post(num), links);
 	if (num in ownPosts) {
 		if (extra)
 			extra.links = links;
@@ -327,12 +329,15 @@ dispatcher[DELETE_POSTS] = function (msg, op) {
 	var ownNum = saku && saku.get('num');
 	_.each(msg, function (num) {
 		delete ownPosts[num];
-		if (CurThread)
-			clear_post_links(lookup_post(num));
+		clear_post_links(lookup_post(num));
 		if (num === ownNum)
 			return postSM.feed('done');
 		if (num == lockTarget)
 			set_lock_target(null);
+		var post = lookup_post(num);
+		if (post)
+			return post.trigger('destroy', post, post.collection);
+		// fallback
 		var post = $('#' + num);
 		if (post.length)
 			post.remove();
@@ -362,12 +367,11 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 		if (num == op)
 			return;
 	}
-	if (CurThread && op == THREAD) {
-		var replies = CurThread.get('replies');
-		_.each(replies.models, clear_post_links);
-		replies.reset();
-	}
-	$('section#' + op).next('hr').andSelf().remove();
+	var thread = Threads.get(op);
+	if (thread)
+		thread.trigger('destroy', thread, thread.collection);
+	else
+		$('section#' + op).next('hr').andSelf().remove(); // fallback
 };
 
 dispatcher[LOCK_THREAD] = function (msg, op) {

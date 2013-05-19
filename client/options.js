@@ -175,23 +175,27 @@ option_backlinks.label = 'Backlinks';
 option_backlinks.type = 'revcheckbox';
 
 function show_backlinks() {
-	if (!CurThread)
+	if (load_thread_backlinks) {
+		with_dom(function () {
+			$('section').each(function () {
+				load_thread_backlinks($(this));
+			});
+		});
+		load_thread_backlinks = null;
 		return;
-	if (load_page_backlinks) {
-		with_dom(load_page_backlinks);
-		load_page_backlinks = null;
 	}
-	else {
-		CurThread.get('replies').each(function (reply) {
+
+	Threads.each(function (thread) {
+		thread.get('replies').each(function (reply) {
 			if (reply.has('backlinks'))
 				reply.trigger('change:backlinks');
 		});
-	}
+	});
 }
 
-var load_page_backlinks = function () {
-	var replies = CurThread.get('replies');
-	$('blockquote a').each(function () {
+var load_thread_backlinks = function ($section) {
+	var replies = Threads.get(extract_num($section)).get('replies');
+	$section.find('blockquote a').each(function () {
 		var $a = $(this);
 		var m = $a.attr('href').match(/^#(\d+)$/);
 		if (!m)

@@ -188,13 +188,11 @@ var AddressView = Backbone.View.extend({
 	initialize: function () {
 		var $el = this.$el;
 		$('<span/>', {"class": 'ip'}).appendTo($el);
-		if (CurThread) {
-			$el.append(' &nbsp; ', $('<input/>', {
-				"class": 'sel-all',
-				type: 'button',
-				val: 'Sel All'
-			}));
-		}
+		$el.append(' &nbsp; ', $('<input/>', {
+			"class": 'sel-all',
+			type: 'button',
+			val: 'Sel All'
+		}));
 		$el.append(
 			'<br>',
 			$('<input>', {"class": 'name', placeholder: 'Name'})
@@ -240,7 +238,9 @@ var AddressView = Backbone.View.extend({
 	},
 
 	select_all: function () {
-		var models = CurThread.get('replies').where({
+		if (!THREAD)
+			return alert('TODO');
+		var models = Threads.get(THREAD).get('replies').where({
 			ip: this.model.get('ip'),
 		});
 		if (!models.length)
@@ -340,11 +340,9 @@ function hook_up_address($post) {
 		view.render();
 
 	/* Augment post with IP */
-	if (CurThread) {
-		var post = CurThread.get('replies').get($post.attr('id'));
-		if (post && !post.has('ip'))
-			post.set('ip', ip);
-	}
+	var post = lookup_post(extract_num($post));
+	if (post && !post.has('ip'))
+		post.set('ip', ip);
 }
 oneeSama.hook('afterInsert', hook_up_address);
 
