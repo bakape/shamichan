@@ -240,7 +240,9 @@ var AddressView = Backbone.View.extend({
 	},
 
 	select_all: function () {
-		var models = CurThread.where({ip: this.model.get('ip')});
+		var models = CurThread.get('replies').where({
+			ip: this.model.get('ip'),
+		});
 		if (!models.length)
 			return;
 		enable_multi_selecting();
@@ -339,7 +341,7 @@ function hook_up_address($post) {
 
 	/* Augment post with IP */
 	if (CurThread) {
-		var post = CurThread.get($post.attr('id'));
+		var post = CurThread.get('replies').get($post.attr('id'));
 		if (post && !post.has('ip'))
 			post.set('ip', ip);
 	}

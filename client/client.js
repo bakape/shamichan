@@ -144,13 +144,13 @@ dispatcher[INSERT_POST] = function (msg) {
 		if (!CurThread || !postForm || !postForm.el)
 			return;
 		/* Unify with code below once we have a fuller model */
-		var post = UnknownThread.get(num);
+		var post = UnknownThread.get('replies').get(num);
 		if (post) {
-			UnknownThread.remove(num);
+			UnknownThread.get('replies').remove(num);
 			post.unset('shallow');
 		}
 		else
-			post = new Post({id: num});
+			post = new Post({num: num});
 
 		_.forEach(modelSafeKeys, function (k) {
 			if (msg[k])
@@ -160,8 +160,7 @@ dispatcher[INSERT_POST] = function (msg) {
 
 		var article = new Article({model: post, id: num,
 				el: postForm.el});
-		post.view = article;
-		CurThread.add(post);
+		CurThread.get('replies').add(post);
 		add_post_links(post, msg.links);
 
 		return;
@@ -189,13 +188,13 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 
 		if (CurThread) {
-			var post = UnknownThread.get(num);
+			var post = UnknownThread.get('replies').get(num);
 			if (post) {
-				UnknownThread.remove(num);
+				UnknownThread.get('replies').remove(num);
 				post.unset('shallow');
 			}
 			else
-				post = new Post({id: num});
+				post = new Post({num: num});
 
 			_.forEach(modelSafeKeys, function (k) {
 				if (msg[k])
@@ -204,8 +203,7 @@ dispatcher[INSERT_POST] = function (msg) {
 
 			var article = new Article({model: post, id: num,
 					el: $article.filter('article')[0]});
-			post.view = article;
-			CurThread.add(post);
+			CurThread.get('replies').add(post);
 			add_post_links(post, msg.links);
 		}
 	}
@@ -365,8 +363,9 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 			return;
 	}
 	if (CurThread && op == THREAD) {
-		_.each(CurThread.models, clear_post_links);
-		CurThread.reset();
+		var replies = CurThread.get('replies');
+		_.each(replies.models, clear_post_links);
+		replies.reset();
 	}
 	$('section#' + op).next('hr').andSelf().remove();
 };

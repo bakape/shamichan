@@ -182,7 +182,7 @@ function show_backlinks() {
 		load_page_backlinks = null;
 	}
 	else {
-		CurThread.each(function (reply) {
+		CurThread.get('replies').each(function (reply) {
 			if (reply.has('backlinks'))
 				reply.trigger('change:backlinks');
 		});
@@ -190,15 +190,16 @@ function show_backlinks() {
 }
 
 var load_page_backlinks = function () {
+	var replies = CurThread.get('replies');
 	$('blockquote a').each(function () {
 		var $a = $(this);
 		var m = $a.attr('href').match(/^#(\d+)$/);
 		if (!m)
 			return;
 		var destId = parseInt(m[1], 10);
-		if (!CurThread.get(destId)) // local backlinks only for now
+		if (!replies.get(destId)) // local backlinks only for now
 			return;
-		var src = CurThread.get(extract_num(parent_post($a)));
+		var src = replies.get(extract_num(parent_post($a)));
 		if (!src)
 			return;
 		var update = {};

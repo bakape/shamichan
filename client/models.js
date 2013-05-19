@@ -1,15 +1,25 @@
-var Post = Backbone.Model.extend({});
+var Post = Backbone.Model.extend({
+	idAttribute: 'num',
+});
 
 var Replies = Backbone.Collection.extend({model: Post});
 
-/* TODO: Multiplex */
+var Thread = Backbone.Model.extend({
+	idAttribute: 'num',
+	initialize: function () {
+		if (!this.get('replies'))
+			this.set('replies', new Replies([]));
+	},
+});
+
 var CurThread;
-var UnknownThread = new Replies([]);
+var UnknownThread = new Thread();
 
 function lookup_post(id) {
 	if (!CurThread || !id)
 		return null;
-	return CurThread.get(id) || UnknownThread.get(id);
+	return CurThread.get('replies').get(id) ||
+			UnknownThread.get('replies').get(id);
 }
 
 function model_link(key) {
@@ -100,14 +110,14 @@ Backbone.on('flushDomUpdates', function () {
 function add_post_links(src, links) {
 	if (!src || !links)
 		return;
+	var srcLinks = src.get('links') || [];
 	for (var destId in links) {
 		var dest = lookup_post(destId);
 		if (!dest) {
 			/* Dest doesn't exist yet; track it anyway */
 			dest = new Post({id: destId, shallow: true});
-			UnknownThread.add(dest);
+			UnknownThread.get('replies').add(dest);
 		}
-		var srcLinks = src.get('links') || [];
 		var destLinks = dest.get('backlinks') || [];
 		/* Update links and backlinks arrays in-order */
 		var i = _.sortedIndex(srcLinks, dest.id);
@@ -168,9 +178,9 @@ function clear_post_links(post) {
 	post.unset('backlinks');
 }
 
-function extract_model_info($article) {
+function extract_post_model($article) {
 	/* incomplete */
-	var info = {};
+	var info = {num: extract_num($article)};
 	var $header = $article.children('header');
 	var $b = $header.find('b');
 	if ($b)
@@ -196,22 +206,27 @@ function extract_model_info($article) {
 			image.dims = [parseInt(m[1], 10), parseInt(m[2], 10)];
 		info.image = image;
 	}
-	return info;
+	return new Post(info);
+}
+
+function extract_thread_model($section) {
+	var replies = [];
+	$section.find('article').each(function () {
+		var post = extract_post_model($(this));
+		new Article({model: post, id: post.id, el: this});
+		replies.push(post);
+	});
+	return new Thread({
+		num: extract_num($section),
+		replies: new Replies(replies),
+	});
 }
 
 (function () {
-	if (!THREAD)
-		return;
-	var replies = [];
-	$('article').each(function () {
-		var $article = $(this);
-		var info = extract_model_info($article);
-		var id = extract_num($article);
-		info.id = id;
-		var post = new Post(info);
-		var article = new Article({model: post, id: id, el: this});
-		post.view = article; // bleh
-		replies.push(post);
-	});
-	CurThread = new Replies(replies);
+	if (THREAD) {
+		var $section = $('section');
+		if (!$section.length)
+			return;
+		CurThread = extract_thread_model($section);
+	}
 })();
