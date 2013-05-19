@@ -1,10 +1,10 @@
 var Post = Backbone.Model.extend({});
 
-var Thread = Backbone.Collection.extend({model: Post});
+var Replies = Backbone.Collection.extend({model: Post});
 
 /* TODO: Multiplex */
 var CurThread;
-var UnknownThread = new Thread([]);
+var UnknownThread = new Replies([]);
 
 function lookup_post(id) {
 	if (!CurThread || !id)
@@ -213,5 +213,5 @@ function extract_model_info($article) {
 		post.view = article; // bleh
 		replies.push(post);
 	});
-	CurThread = new Thread(replies);
+	CurThread = new Replies(replies);
 })();
