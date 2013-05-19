@@ -78,7 +78,7 @@ var Article = Backbone.View.extend({
 var deferredChanges = {links: {}, backlinks: {}};
 var haveDeferredChanges = false;
 
-/* this runs after EVERY outermost wrap_dom completion */
+/* this runs just before every _outermost_ wrap_dom completion */
 Backbone.on('flushDomUpdates', function () {
 	if (!haveDeferredChanges)
 		return;
