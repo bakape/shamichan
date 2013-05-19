@@ -126,24 +126,37 @@ function spill_page() {
 var dispatcher = {};
 
 /* stupid `links` conflict */
-var modelSafeKeys = ['op', 'name', 'trip', 'image', 'time'];
+var modelSafeKeys = ['op', 'name', 'trip', 'image', 'time', 'editing'];
+function copy_safe_keys(src, dest) {
+	_.forEach(modelSafeKeys, function (k) {
+		if (src[k])
+			dest.set(k, src[k]);
+	});
+}
 
 dispatcher[INSERT_POST] = function (msg) {
+	var orig_focus = get_focus();
 	var num = msg[0];
 	msg = msg[1];
 	if (!msg.op)
 		syncs[num] = 1;
+	msg.editing = true;
+	msg.num = num;
+
+	var el;
 	if (msg.nonce && msg.nonce in nonces) {
 		delete nonces[msg.nonce];
 		ownPosts[num] = true;
 		oneeSama.trigger('insertOwnPost', msg);
-		msg.num = num;
 		postSM.feed('alloc', msg);
-		delete msg.num;
 
-		if (!THREAD || !postForm || !postForm.el)
-			return;
-		/* Unify with code below once we have a fuller model */
+		if (postForm && postForm.el)
+			el = postForm.el;
+	}
+
+	oneeSama.links = msg.links;
+	var $section, $hr, bump = true;
+	if (msg.op) {
 		var post = UnknownThread.get('replies').get(num);
 		if (post) {
 			UnknownThread.get('replies').remove(num);
@@ -152,80 +165,59 @@ dispatcher[INSERT_POST] = function (msg) {
 		else
 			post = new Post({num: num});
 
-		_.forEach(modelSafeKeys, function (k) {
-			if (msg[k])
-				post.set(k, msg[k]);
-		});
-		post.set('editing', true);
+		copy_safe_keys(msg, post);
 
-		var article = new Article({model: post, id: num,
-				el: postForm.el});
-		var thread = Threads.get(post.get('op'));
-		if (thread)
-			thread.get('replies').add(post);
+		if (!el) {
+			var $article = $($.parseHTML(oneeSama.mono(msg)));
+			el = $article.filter('article')[0];
+		}
+		var article = new Article({model: post, id: num, el: el});
+
+		var thread = Threads.get(msg.op) || UnknownThread;
+		thread.get('replies').add(post);
 		add_post_links(post, msg.links);
 
-		return;
-	}
-	msg.num = num;
-	msg.editing = true;
-	var orig_focus = get_focus();
-	oneeSama.links = msg.links;
-	var $article, $section, hr, bump = true;
-	if (msg.op) {
 		$section = $('#' + msg.op);
-		if (!$section.length)
-			return;
-		$article = $($.parseHTML(oneeSama.mono(msg)));
 		shift_replies($section);
 		$section.children('blockquote,.omit,form,article[id]:last'
-				).last().after($article);
+				).last().after(el);
 		if (!BUMP || is_sage(msg.email)) {
 			bump = false;
 		}
 		else {
-			hr = $section.next();
+			$hr = $section.next();
 			$section.detach();
-			hr.detach();
-		}
-
-		var thread = Threads.get(msg.op);
-		if (thread) {
-			var post = UnknownThread.get('replies').get(num);
-			if (post) {
-				UnknownThread.get('replies').remove(num);
-				post.unset('shallow');
-			}
-			else
-				post = new Post({num: num});
-
-			_.forEach(modelSafeKeys, function (k) {
-				if (msg[k])
-					post.set(k, msg[k]);
-			});
-
-			var article = new Article({model: post, id: num,
-					el: $article.filter('article')[0]});
-			thread.get('replies').add(post);
-			add_post_links(post, msg.links);
+			$hr.detach();
 		}
 	}
 	else {
-		$section = $($.parseHTML(oneeSama.monomono(msg).join('')));
-		hr = $('<hr/>');
+		var thread = new Thread({num: num});
+		copy_safe_keys(msg, thread);
+		Threads.add(thread);
+
+		if (!el) {
+			$section = $($.parseHTML(oneeSama.monomono(msg
+					).join('')));
+			el = $section.filter('section')[0];
+		}
+		else {
+			$section = $(el);
+		}
+		var section = new Section({model: thread, id: num, el: el});
+		$hr = $('<hr/>');
 		if (!postForm)
 			$section.append(make_reply_box());
 		if (!BUMP) {
 			$section.hide();
-			hr.hide();
+			$hr.hide();
 		}
 	}
 
-	oneeSama.trigger('afterInsert', msg.op ? $article : $section);
+	oneeSama.trigger('afterInsert', $(el));
 	if (bump) {
 		var fencepost = $('body > aside');
 		$section.insertAfter(fencepost.length ? fencepost : $ceiling
-				).after(hr);
+				).after($hr);
 		spill_page();
 	}
 	if (orig_focus)
