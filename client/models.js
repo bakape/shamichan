@@ -22,12 +22,11 @@ function model_link(key) {
 var Article = Backbone.View.extend({
 	tagName: 'article',
 	initialize: function () {
-		this.listenTo(this.model, 'change:backlinks',
-				this.renderBacklinks);
-		this.listenTo(this.model, 'change:editing',
-				this.renderEditing);
-		this.listenTo(this.model, 'change:image',
-				this.renderImage);
+		this.listenTo(this.model, {
+			'change:backlinks': this.renderBacklinks,
+			'change:editing': this.renderEditing,
+			'change:image': this.renderImage,
+		});
 	},
 
 	renderBacklinks: function () {
