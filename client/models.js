@@ -38,6 +38,9 @@ var Section = Backbone.View.extend({
 		this.listenTo(this.model, {
 			destroy: this.remove,
 		});
+		this.listenTo(this.model.get('replies'), {
+			remove: this.removePost,
+		});
 	},
 
 	remove: function () {
@@ -47,6 +50,10 @@ var Section = Backbone.View.extend({
 
 		this.$el.next('hr').andSelf().remove();
 		this.stopListening();
+	},
+
+	removePost: function (model) {
+		model.trigger('removeSelf');
 	},
 });
 
@@ -58,7 +65,7 @@ var Article = Backbone.View.extend({
 			'change:backlinks': this.renderBacklinks,
 			'change:editing': this.renderEditing,
 			'change:image': this.renderImage,
-			'destroy': this.remove,
+			'removeSelf': this.remove,
 		});
 	},
 

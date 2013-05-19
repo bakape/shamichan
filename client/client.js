@@ -126,7 +126,7 @@ function spill_page() {
 var dispatcher = {};
 
 /* stupid `links` conflict */
-var modelSafeKeys = ['op', 'name', 'trip', 'image', 'time', 'editing'];
+var modelSafeKeys = ['op', 'name', 'trip', 'image', 'time', 'editing', 'body'];
 function copy_safe_keys(src, dest) {
 	_.forEach(modelSafeKeys, function (k) {
 		if (src[k])
@@ -256,31 +256,34 @@ dispatcher[IMAGE_STATUS] = function (msg) {
 		ComposerView.prototype[msg[0].func].call(postForm, msg[0].arg);
 };
 
-dispatcher[INSERT_IMAGE] = function (msg) {
+dispatcher[INSERT_IMAGE] = function (msg, op) {
 	var focus = get_focus();
 	var num = msg[0];
-	var post = lookup_post(num);
+	var thread = Threads.get(op) || UnknownThread;
+	var post = thread.get('replies').get(num);
 
 	if (saku && saku.get('num') == num) {
 		if (post)
 			post.set('image', msg[1], {silent: true}); // TEMP
-		return postForm.insert_uploaded(msg[1]);
+		postForm.insert_uploaded(msg[1]);
 	}
-	if (post)
-		return post.set('image', msg[1]);
+	else if (post)
+		post.set('image', msg[1]);
 
-	/* old fallback */
-	var hd = $('#' + num + ' > header');
-	if (hd.length) {
-		insert_image(msg[1], hd, false);
-		if (focus)
-			focus.focus();
-	}
+	if (focus)
+		focus.focus();
 };
 
-dispatcher[UPDATE_POST] = function (msg) {
+dispatcher[UPDATE_POST] = function (msg, op) {
 	var num = msg[0], links = msg[4], extra = msg[5];
-	add_post_links(lookup_post(num), links);
+	var thread = Threads.get(op) || UnknownThread;
+	var post = op == num ? thread : thread.get('replies').get(num);
+	if (post) {
+		add_post_links(post, links);
+		var body = post.get('body') || '';
+		post.set('body', body + msg[1]);
+	}
+
 	if (num in ownPosts) {
 		if (extra)
 			extra.links = links;
@@ -300,42 +303,45 @@ dispatcher[UPDATE_POST] = function (msg) {
 	}
 };
 
-dispatcher[FINISH_POST] = function (msg) {
+dispatcher[FINISH_POST] = function (msg, op) {
 	var num = msg[0];
 	delete ownPosts[num];
-	var post = lookup_post(num);
-	if (post) {
-		post.set('editing', false);
-		return;
+	var thread = Threads.get(op);
+	var post;
+	if (op == num) {
+		if (!thread)
+			return;
+		post = thread;
+	}
+	else {
+		if (!thread)
+			thread = UnknownThread;
+		post = thread.get('replies').get(num);
 	}
 
-	/* fallback */
-	var post = $('#' + num);
-	if (post.length) {
-		post.removeClass('editing');
-		post[0].normalize();
-	}
+	if (post)
+		post.set('editing', false);
 };
 
 dispatcher[DELETE_POSTS] = function (msg, op) {
+	var replies = (Threads.get(op) || UnknownThread).get('replies');
+	var $section = $('#' + op);
 	var ownNum = saku && saku.get('num');
 	_.each(msg, function (num) {
+		var postVisible = $('#' + num).is('article');
 		delete ownPosts[num];
 		clear_post_links(lookup_post(num));
 		if (num === ownNum)
 			return postSM.feed('done');
 		if (num == lockTarget)
 			set_lock_target(null);
-		var post = lookup_post(num);
+		var post = replies.get(num);
 		if (post)
-			return post.trigger('destroy', post, post.collection);
-		// fallback
-		var post = $('#' + num);
-		if (post.length)
-			post.remove();
-		else if (!THREAD) {
+			replies.remove(post);
+
+		if (!THREAD && !postVisible) {
 			/* post not visible; decrease omit count */
-			var info = section_abbrev($('section#' + op));
+			var info = section_abbrev($section);
 			if (info && info.omit > 0) {
 				/* No way to know if there was an image. Doh */
 				var omit = info.omit - 1;
@@ -346,6 +352,7 @@ dispatcher[DELETE_POSTS] = function (msg, op) {
 					info.stat.remove();
 			}
 		}
+
 	});
 };
 
@@ -362,8 +369,6 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 	var thread = Threads.get(op);
 	if (thread)
 		thread.trigger('destroy', thread, thread.collection);
-	else
-		$('section#' + op).next('hr').andSelf().remove(); // fallback
 };
 
 dispatcher[LOCK_THREAD] = function (msg, op) {
@@ -375,14 +380,11 @@ dispatcher[UNLOCK_THREAD] = function (msg, op) {
 };
 
 dispatcher[DELETE_IMAGES] = function (msg, op) {
+	var replies = (Threads.get(op) || UnknownThread).get('replies');
 	_.each(msg, function (num) {
-		var post = lookup_post(num);
-		if (post && post.get('image')) {
+		var post = replies.get(num);
+		if (post)
 			post.unset('image');
-			return;
-		}
-		/* old fallback */
-		$('#' + num + ' > figure').remove();
 	});
 };
 
