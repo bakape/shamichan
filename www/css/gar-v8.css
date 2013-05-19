@@ -14,7 +14,7 @@ article.highlight {
 	border-color: #ef93c5;
 }
 article.editing {
-	background-image: url('chevrons.png');
+	background: #b7bbb6 url('chevrons.png');
 	border-color: gray;
 }
 b {
