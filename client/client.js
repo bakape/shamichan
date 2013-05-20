@@ -393,17 +393,12 @@ dispatcher[DELETE_IMAGES] = function (msg, op) {
 };
 
 dispatcher[SPOILER_IMAGES] = function (msg, op) {
+	var replies = (Threads.get(op) || UnknownThread).get('replies');
 	_.each(msg, function (info) {
-		var post = $('#' + info[0]);
-		var $img = post.children('figure').find('img');
-		if ($img.length) {
-			var sp = oneeSama.spoiler_info(info[1],
-					post.is('section'));
-			$img.replaceWith($('<img>', {
-				src: sp.thumb,
-				width: sp.dims[0], height: sp.dims[1],
-			}));
-		}
+		var num = info[0];
+		var post = num == op ? Threads.get(num) : replies.get(num);
+		if (post)
+			post.set('spoiler', info[1]);
 	});
 };
 

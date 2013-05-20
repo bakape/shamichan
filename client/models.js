@@ -37,6 +37,7 @@ var Section = Backbone.View.extend({
 	initialize: function () {
 		this.listenTo(this.model, {
 			'change:locked': this.renderLocked,
+			'change:spoiler': this.renderSpoiler,
 			destroy: this.remove,
 		});
 		this.listenTo(this.model.get('replies'), {
@@ -46,6 +47,14 @@ var Section = Backbone.View.extend({
 
 	renderLocked: function (model, locked) {
 		this.$el.toggleClass('locked', !!locked);
+	},
+
+	renderSpoiler: function (model, spoiler) {
+		var $img = this.$el.children('figure').find('img');
+		var sp = oneeSama.spoiler_info(spoiler, true);
+		$img.replaceWith($('<img>', {
+			src: sp.thumb, width: sp.dims[0], height: sp.dims[1],
+		}));
 	},
 
 	remove: function () {
@@ -70,6 +79,7 @@ var Article = Backbone.View.extend({
 			'change:backlinks': this.renderBacklinks,
 			'change:editing': this.renderEditing,
 			'change:image': this.renderImage,
+			'change:spoiler': this.renderSpoiler,
 			'removeSelf': this.remove,
 		});
 	},
@@ -114,6 +124,15 @@ var Article = Backbone.View.extend({
 			if (focus)
 				focus.focus();
 		}
+	},
+
+	renderSpoiler: function (model, spoiler) {
+		var $img = this.$('figure').find('img');
+		var sp = oneeSama.spoiler_info(spoiler, false);
+		$img.replaceWith($('<img>', {
+			src: sp.thumb,
+			width: sp.dims[0], height: sp.dims[1],
+		}));
 	},
 });
 
