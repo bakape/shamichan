@@ -23,7 +23,7 @@ function dropped() {
 connSM.on('dropped', dropped);
 connSM.on('desynced', dropped);
 
-oneeSama.hook('afterInsert', function () {
+Backbone.on('afterInsert', function () {
 	if (Unread.get('blurred'))
 		Unread.set('unreadCount', Unread.get('unreadCount') + 1);
 });

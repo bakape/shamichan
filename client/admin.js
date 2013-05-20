@@ -164,9 +164,9 @@ with_dom(function () {
 			$el.append(' ## ' + IDENT.auth)
 	});
 
-	oneeSama.hook('afterInsert', function (target) {
+	Backbone.on('afterInsert', function ($el) {
 		if (multiSelecting)
-			make_selection_handle().prependTo(target);
+			make_selection_handle().prependTo($el);
 	});
 	show_toolbox();
 });
@@ -348,7 +348,7 @@ function hook_up_address($post, op) {
 			post.set('ip', ip);
 	}
 }
-oneeSama.hook('afterInsert', hook_up_address);
+Backbone.on('afterInsert', hook_up_address);
 
 with_dom(function () {
 	$('section').each(function () {

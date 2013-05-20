@@ -229,7 +229,7 @@ on_allocation: function (msg) {
 		this.$el.addClass('editing');
 	else
 		spill_page();
-	oneeSama.trigger('afterInsert', this.$el);
+	Backbone.trigger('afterInsert', this.$el, op || num);
 	this.$el.attr('id', num);
 
 	if (msg.image)

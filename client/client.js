@@ -213,7 +213,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 
-	oneeSama.trigger('afterInsert', $(el));
+	Backbone.trigger('afterInsert', $(el), msg.op || num);
 	if (bump) {
 		var fencepost = $('body > aside');
 		$section.insertAfter(fencepost.length ? fencepost : $ceiling
@@ -242,7 +242,7 @@ dispatcher[MOVE_THREAD] = function (msg, op) {
 		$('<span class="omit"/>').text(omitMsg).appendTo(section);
 	}
 
-	oneeSama.trigger('afterInsert', section);
+	Backbone.trigger('afterInsert', section, op);
 	var fencepost = $('body > aside');
 	section.insertAfter(fencepost.length ? fencepost : $ceiling
 			).after(hr);
