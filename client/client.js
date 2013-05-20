@@ -126,7 +126,7 @@ function spill_page() {
 var dispatcher = {};
 
 /* stupid `links` conflict */
-var modelSafeKeys = ['op', 'name', 'trip', 'image', 'time', 'editing', 'body'];
+var modelSafeKeys = 'op,name,trip,image,time,editing,body,state'.split(',');
 function copy_safe_keys(src, dest) {
 	_.forEach(modelSafeKeys, function (k) {
 		if (src[k])
@@ -274,12 +274,13 @@ dispatcher[INSERT_IMAGE] = function (msg, op) {
 
 dispatcher[UPDATE_POST] = function (msg, op) {
 	var num = msg[0], links = msg[4], extra = msg[5];
+	var state = [msg[2] || 0, msg[3] || 0];
 	var thread = Threads.get(op) || UnknownThread;
 	var post = op == num ? thread : thread.get('replies').get(num);
 	if (post) {
 		add_post_links(post, links, op);
 		var body = post.get('body') || '';
-		post.set('body', body + msg[1]);
+		post.set({body: body + msg[1], state: state});
 	}
 
 	if (num in ownPosts) {
@@ -296,7 +297,7 @@ dispatcher[UPDATE_POST] = function (msg, op) {
 		oneeSama.links = links || {};
 		oneeSama.callback = inject;
 		oneeSama.buffer = bq;
-		oneeSama.state = [msg[2] || 0, msg[3] || 0];
+		oneeSama.state = state;
 		oneeSama.fragment(msg[1]);
 	}
 };
