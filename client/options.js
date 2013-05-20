@@ -18,8 +18,7 @@ optSpecs.push(option_inline_expansion);
 if (window.devicePixelRatio > 1)
 	optSpecs.push(option_high_res);
 optSpecs.push(option_fitwidth);
-if (THREAD)
-	optSpecs.push(option_backlinks);
+optSpecs.push(option_backlinks);
 optSpecs.push(option_thumbs);
 optSpecs.push(option_theme);
 
@@ -198,7 +197,7 @@ var load_thread_backlinks = function ($section) {
 	var replies = Threads.get(op).get('replies');
 	$section.find('blockquote a').each(function () {
 		var $a = $(this);
-		var m = $a.attr('href').match(/^#(\d+)$/);
+		var m = $a.attr('href').match(/^\d*#(\d+)$/);
 		if (!m)
 			return;
 		var destId = parseInt(m[1], 10);
@@ -208,7 +207,7 @@ var load_thread_backlinks = function ($section) {
 		if (!src)
 			return;
 		var update = {};
-		update[destId] = THREAD;
+		update[destId] = op;
 		add_post_links(src, update, op);
 	});
 };
