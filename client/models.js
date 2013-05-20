@@ -36,11 +36,16 @@ var Section = Backbone.View.extend({
 
 	initialize: function () {
 		this.listenTo(this.model, {
+			'change:locked': this.renderLocked,
 			destroy: this.remove,
 		});
 		this.listenTo(this.model.get('replies'), {
 			remove: this.removePost,
 		});
+	},
+
+	renderLocked: function (model, locked) {
+		this.$el.toggleClass('locked', !!locked);
 	},
 
 	remove: function () {

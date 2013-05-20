@@ -372,11 +372,15 @@ dispatcher[DELETE_THREAD] = function (msg, op) {
 };
 
 dispatcher[LOCK_THREAD] = function (msg, op) {
-	$('#' + op).addClass('locked');
+	var thread = Threads.get(op);
+	if (thread)
+		thread.set('locked', true);
 };
 
 dispatcher[UNLOCK_THREAD] = function (msg, op) {
-	$('#' + op).removeClass('locked');
+	var thread = Threads.get(op);
+	if (thread)
+		thread.set('locked', false);
 };
 
 dispatcher[DELETE_IMAGES] = function (msg, op) {
