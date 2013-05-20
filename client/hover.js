@@ -35,13 +35,13 @@ function preview_miru(event, num) {
 		preview = $('<div class="preview"/>').append(bits.clone());
 	}
 
-	var overflow = position_preview(event);
+	var overflow = position_preview(event, preview);
 
 	/* Add it to the page if it's new */
 	if (num != previewNum) {
 		if (overflow > 0) {
 			scale_down_to_fit(preview.find('img'), overflow);
-			position_preview(event);
+			position_preview(event, preview);
 		}
 		$(document.body).append(preview);
 		previewNum = num;
@@ -49,15 +49,15 @@ function preview_miru(event, num) {
 	return true;
 }
 
-function position_preview(event) {
-	var width = preview.width();
-	var height = preview.height();
+function position_preview(event, $el) {
+	var width = $el.width();
+	var height = $el.height();
 	if (height < 5) {
-		preview.hide();
-		$(document.body).append(preview);
-		width = preview.width();
-		height = preview.height();
-		preview.detach().show();
+		$el.hide();
+		$(document.body).append($el);
+		width = $el.width();
+		height = $el.height();
+		$el.detach().show();
 	}
 	var x = event.pageX + 20;
 	var y = event.pageY - height - 20;
@@ -73,7 +73,7 @@ function position_preview(event) {
 		if (newY + height <= scrollTop + $w.height())
 			y = newY;
 	}
-	preview.css({left: x, top: y});
+	$el.css({left: x, top: y});
 	return overflow;
 }
 
