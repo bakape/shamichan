@@ -147,7 +147,10 @@ function reveal_thumbnail(event) {
 	}
 
 	/* look up the image info and make the thumbnail */
-	var post = lookup_post(extract_num($article));
+	var thread = Threads.get(extract_num($article.closest('section')));
+	if (!thread)
+		return;
+	var post = thread.get('replies').get(extract_num($article));
 	if (!post)
 		return;
 	var info = post.get('image');

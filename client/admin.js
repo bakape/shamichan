@@ -313,7 +313,7 @@ var Addresses = Backbone.Collection.extend({
 
 window.addrs = new Addresses;
 
-function hook_up_address($post) {
+function hook_up_address($post, op) {
 	var $a = $post.find('a.mod.addr:first');
 	if (!$a.length)
 		return;
@@ -340,15 +340,24 @@ function hook_up_address($post) {
 		view.render();
 
 	/* Augment post with IP */
-	var post = lookup_post(extract_num($post));
-	if (post && !post.has('ip'))
-		post.set('ip', ip);
+	var thread = Threads.get(op);
+	if (thread) {
+		var num = extract_num($post);
+		var post = num==op ? thread : thread.get('replies').get(num);
+		if (post && !post.has('ip'))
+			post.set('ip', ip);
+	}
 }
 oneeSama.hook('afterInsert', hook_up_address);
 
 with_dom(function () {
-	$('article, section').each(function () {
-		hook_up_address($(this));
+	$('section').each(function () {
+		var $section = $(this);
+		var op = extract_num($section);
+		hook_up_address($section, op);
+		$section.find('article').each(function () {
+			hook_up_address($(this), op);
+		});
 	});
 });
 

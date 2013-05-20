@@ -17,14 +17,6 @@ var ThreadCollection = Backbone.Collection.extend({model: Thread});
 var Threads = new ThreadCollection();
 var UnknownThread = new Thread();
 
-function lookup_post(id) {
-	var thread = Threads.get(THREAD);
-	if (!id || !thread)
-		return null;
-	return thread.get('replies').get(id) ||
-			UnknownThread.get('replies').get(id);
-}
-
 function model_link(key) {
 	return function (event) {
 		this.model.set(key, $(event.target).val());
