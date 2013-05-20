@@ -167,11 +167,9 @@ dispatcher[INSERT_POST] = function (msg) {
 
 		copy_safe_keys(msg, post);
 
-		if (!el) {
-			var $article = $($.parseHTML(oneeSama.mono(msg)));
-			el = $article.filter('article')[0];
-		}
 		var article = new Article({model: post, id: num, el: el});
+		if (!el)
+			el = article.render().el;
 
 		var thread = Threads.get(msg.op) || UnknownThread;
 		thread.get('replies').add(post);

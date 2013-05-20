@@ -78,6 +78,12 @@ var Article = Backbone.View.extend({
 		});
 	},
 
+	render: function () {
+		var html = oneeSama.mono(this.model.attributes);
+		this.setElement($($.parseHTML(html)).filter('article')[0]);
+		return this;
+	},
+
 	renderBacklinks: function () {
 		if (options.nobacklinks)
 			return this; /* ought to disconnect handler? */
