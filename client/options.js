@@ -194,7 +194,8 @@ function show_backlinks() {
 }
 
 var load_thread_backlinks = function ($section) {
-	var replies = Threads.get(extract_num($section)).get('replies');
+	var op = extract_num($section);
+	var replies = Threads.get(op).get('replies');
 	$section.find('blockquote a').each(function () {
 		var $a = $(this);
 		var m = $a.attr('href').match(/^#(\d+)$/);
@@ -208,7 +209,7 @@ var load_thread_backlinks = function ($section) {
 			return;
 		var update = {};
 		update[destId] = THREAD;
-		add_post_links(src, update);
+		add_post_links(src, update, op);
 	});
 };
 

@@ -175,7 +175,7 @@ dispatcher[INSERT_POST] = function (msg) {
 
 		var thread = Threads.get(msg.op) || UnknownThread;
 		thread.get('replies').add(post);
-		add_post_links(post, msg.links);
+		add_post_links(post, msg.links, msg.op);
 
 		$section = $('#' + msg.op);
 		shift_replies($section);
@@ -279,7 +279,7 @@ dispatcher[UPDATE_POST] = function (msg, op) {
 	var thread = Threads.get(op) || UnknownThread;
 	var post = op == num ? thread : thread.get('replies').get(num);
 	if (post) {
-		add_post_links(post, links);
+		add_post_links(post, links, op);
 		var body = post.get('body') || '';
 		post.set('body', body + msg[1]);
 	}
@@ -330,12 +330,12 @@ dispatcher[DELETE_POSTS] = function (msg, op) {
 	_.each(msg, function (num) {
 		var postVisible = $('#' + num).is('article');
 		delete ownPosts[num];
-		clear_post_links(lookup_post(num));
+		var post = replies.get(num);
+		clear_post_links(post, replies);
 		if (num === ownNum)
 			return postSM.feed('done');
 		if (num == lockTarget)
 			set_lock_target(null);
-		var post = replies.get(num);
 		if (post)
 			replies.remove(post);
 

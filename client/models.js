@@ -59,7 +59,9 @@ var Section = Backbone.View.extend({
 
 	remove: function () {
 		var replies = this.model.get('replies');
-		_.each(replies.models, clear_post_links);
+		_.each(replies.models, function (post) {
+			clear_post_links(post, replies);
+		});
 		replies.reset();
 
 		this.$el.next('hr').andSelf().remove();
@@ -161,12 +163,13 @@ Backbone.on('flushDomUpdates', function () {
 
 /* LINKS */
 
-function add_post_links(src, links) {
+function add_post_links(src, links, op) {
 	if (!src || !links)
 		return;
+	var thread = Threads.get(op);
 	var srcLinks = src.get('links') || [];
 	for (var destId in links) {
-		var dest = lookup_post(destId);
+		var dest = thread && thread.get('replies').get(destId);
 		if (!dest) {
 			/* Dest doesn't exist yet; track it anyway */
 			dest = new Post({id: destId, shallow: true});
@@ -199,11 +202,11 @@ function force_post_change(post, attr, val) {
 	}
 }
 
-function clear_post_links(post) {
+function clear_post_links(post, replies) {
 	if (!post)
 		return;
 	_.each(post.get('links') || [], function (destId) {
-		var dest = lookup_post(destId);
+		var dest = replies.get(destId);
 		if (!dest)
 			return;
 		var backlinks = dest.get('backlinks') || [];
@@ -216,7 +219,7 @@ function clear_post_links(post) {
 		force_post_change(dest, 'backlinks', backlinks);
 	});
 	_.each(post.get('backlinks') || [], function (srcId) {
-		var src = lookup_post(srcId);
+		var src = replies.get(srcId);
 		if (!src)
 			return;
 		var links = src.get('links') || [];
