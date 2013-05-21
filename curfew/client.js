@@ -41,6 +41,7 @@ dispatcher[TEARDOWN] = function () {
 	if (tearingDown)
 		return;
 	tearingDown = true;
+	window.onbeforeunload = null;
 	shut_down_something();
 };
 
