@@ -286,10 +286,11 @@ function load_OPs(r, callback) {
 	// (so do them in series)
 	tail.forEach(boards, scan_board, callback);
 
+	var threadsKey;
 	function scan_board(tag, cb) {
 		var tagIndex = boards.indexOf(tag);
-		var key = 'tag:' + tag_key(tag);
-		r.zrange(key + ':threads', 0, -1, function (err, threads) {
+		threadsKey = 'tag:' + tag_key(tag) + ':threads';
+		r.zrange(threadsKey, 0, -1, function (err, threads) {
 			if (err)
 				return cb(err);
 			async.forEach(threads, function (op, cb) {
@@ -328,6 +329,14 @@ function load_OPs(r, callback) {
 		hmget_obj(r, 'thread:'+op, queries, function (err, thread) {
 			if (err)
 				return cb(err);
+			if (!thread.time) {
+				winston.warn('Thread', op, "doesn't exist.");
+				var m = r.multi();
+				m.zrem(threadsKey, op);
+				m.zrem(expiryKey, entry);
+				m.exec(cb);
+				return;
+			}
 			if (thread.immortal)
 				return r.zrem(expiryKey, entry, cb);
 			var score = expiry_queue_score(thread.time);
