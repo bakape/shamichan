@@ -129,7 +129,7 @@ var dispatcher = {};
 var modelSafeKeys = 'op,name,trip,image,time,editing,body,state'.split(',');
 function copy_safe_keys(src, dest) {
 	_.forEach(modelSafeKeys, function (k) {
-		if (src[k])
+		if (k in src)
 			dest.set(k, src[k]);
 	});
 }
