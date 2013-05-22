@@ -125,15 +125,6 @@ function spill_page() {
 
 var dispatcher = {};
 
-/* stupid `links` conflict */
-var modelSafeKeys = 'op,name,trip,image,time,editing,body,state'.split(',');
-function copy_safe_keys(src, dest) {
-	_.forEach(modelSafeKeys, function (k) {
-		if (k in src)
-			dest.set(k, src[k]);
-	});
-}
-
 dispatcher[INSERT_POST] = function (msg) {
 	var orig_focus = get_focus();
 	var num = msg[0];
@@ -153,19 +144,22 @@ dispatcher[INSERT_POST] = function (msg) {
 		if (postForm && postForm.el)
 			el = postForm.el;
 	}
+	delete msg.nonce;
 
+	/* This conflict is really dumb. */
 	oneeSama.links = msg.links;
+	delete msg.links;
+
 	var $section, $hr, bump = true;
 	if (msg.op) {
 		var post = UnknownThread.get('replies').get(num);
 		if (post) {
 			UnknownThread.get('replies').remove(num);
 			post.unset('shallow');
+			post.set(msg);
 		}
 		else
-			post = new Post({num: num});
-
-		copy_safe_keys(msg, post);
+			post = new Post(msg);
 
 		var article = new Article({model: post, id: num, el: el});
 		if (!el)
@@ -189,8 +183,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 	else {
-		var thread = new Thread({num: num});
-		copy_safe_keys(msg, thread);
+		var thread = new Thread(msg);
 		Threads.add(thread);
 
 		if (!el) {
