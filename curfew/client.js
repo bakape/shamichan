@@ -22,13 +22,15 @@ function shut_down_something() {
 		return setTimeout(shut_down_everything, 500);
 	var $posts = pick_random($posts, 0.1);
 	$posts.each(function () {
-		var num = extract_num($(this));
-		if (CurThread) {
-			try {
-				clear_post_links(lookup_post(num));
-			}
-			catch (e) {}
+		var $post = $(this);
+		var $section = $post.closest('section');
+		try {
+			var thread = Threads.get(extract_num($section));
+			var replies = thread.get('replies');
+			var num = extract_num($post);
+			clear_post_links(replies.get(num), replies);
 		}
+		catch (e) {}
 	});
 	$posts.remove();
 	if (Math.random() < 0.2)
