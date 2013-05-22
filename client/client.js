@@ -147,7 +147,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	delete msg.nonce;
 
 	/* This conflict is really dumb. */
-	oneeSama.links = msg.links;
+	var links = oneeSama.links = msg.links;
 	delete msg.links;
 
 	var $section, $hr, bump = true;
@@ -167,7 +167,7 @@ dispatcher[INSERT_POST] = function (msg) {
 
 		var thread = Threads.get(msg.op) || UnknownThread;
 		thread.get('replies').add(post);
-		add_post_links(post, msg.links, msg.op);
+		add_post_links(post, links, msg.op);
 
 		$section = $('#' + msg.op);
 		shift_replies($section);
