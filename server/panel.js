@@ -1,5 +1,5 @@
 var _ = require('../lib/underscore'),
-    authcommon = require('../authcommon'),
+    authcommon = require('../admin/common'),
     caps = require('./caps'),
     common = require('../common'),
     okyaku = require('./okyaku'),

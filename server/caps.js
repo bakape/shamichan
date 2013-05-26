@@ -1,5 +1,5 @@
 var async = require('async'),
-    authcommon = require('../authcommon'),
+    authcommon = require('../admin/common'),
     check = require('./msgcheck').check,
     common = require('../common'),
     config = require('../config'),

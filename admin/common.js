@@ -1,5 +1,5 @@
-var config = require('./config');
-var common = require('./common');
+var config = require('../config');
+var common = require('../common');
 
 exports.FETCH_ADDRESS = 101;
 exports.SET_ADDRESS_NAME = 102;

@@ -28,7 +28,7 @@ exports.CLIENT_DEPS = [
 ];
 
 exports.SERVER_DEPS = [
-	'authcommon.js',
+	'admin/common.js',
 	'common.js',
 	'config.js',
 	'db.js',
@@ -60,7 +60,7 @@ exports.SERVER_DEPS = [
 
 // Changes to these only require a state.js reload
 exports.SERVER_STATE = [
-	'client/admin.js',
+	'admin/client.js',
 	'hot.js',
 	'tmpl/alookup.html',
 	'tmpl/curfew.html',
@@ -71,6 +71,6 @@ exports.SERVER_STATE = [
 ];
 
 exports.MOD_CLIENT_DEPS = [
-	'authcommon.js',
-	'client/admin.js',
+	'admin/common.js',
+	'admin/client.js',
 ];
