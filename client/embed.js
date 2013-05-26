@@ -30,6 +30,7 @@ function make_video(id, params, start) {
 		type: 'text/html', src: uri,
 		frameborder: '0',
 		attr: video_dims(),
+		"class": 'youtube-player',
 	});
 }
 
