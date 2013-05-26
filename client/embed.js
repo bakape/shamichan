@@ -7,8 +7,14 @@ function make_video(id, params, start) {
 	if (!params)
 		params = {allowFullScreen: 'true'};
 	params.allowScriptAccess = 'always';
-	var query = {version: 3, autohide: 1, showinfo: 0, fs: 1,
-		modestbranding: 1};
+	var query = {
+		autohide: 1,
+		fs: 1,
+		modestbranding: 1,
+		origin: document.location.origin,
+		rel: 0,
+		showinfo: 0,
+	};
 	if (start)
 		query.start = start;
 	if (params.autoplay)
@@ -18,9 +24,13 @@ function make_video(id, params, start) {
 		query.playlist = id;
 	}
 
-	var uri = encodeURI('http://www.youtube.com/v/' + id) + '?' +
+	var uri = encodeURI('http://www.youtube.com/embed/' + id) + '?' +
 			$.param(query);
-	return make_embed(uri, params, video_dims());
+	return $('<iframe/>', {
+		type: 'text/html', src: uri,
+		frameborder: '0',
+		attr: video_dims(),
+	});
 }
 
 function video_dims() {
@@ -39,7 +49,7 @@ $(document).on('click', '.watch', function (e) {
 	if (!$target.is('a'))
 		return;
 
-	var $video = $target.find('object');
+	var $video = $target.find('iframe');
 	if ($video.length) {
 		$video.siblings('br').andSelf().remove();
 		$target.css('width', 'auto');
