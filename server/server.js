@@ -560,7 +560,8 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		return cb(404);
 	else if (params[2][0] == '0')
 		return cb(null, 'redirect', '' + num);
-	var op;
+
+	var op, json = web.prefers_json(req.headers.accept);
 	if (board == 'graveyard') {
 		op = num;
 	}
@@ -568,7 +569,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		op = db.OPs[num];
 		if (!op)
 			return cb(404);
-		if (!db.OP_has_tag(board, op)) {
+		if (!json && !db.OP_has_tag(board, op)) {
 			var tag = db.first_tag_of(op);
 			if (tag) {
 				if (!caps.can_access_board(req.ident, tag))
@@ -581,11 +582,13 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 				return cb(404);
 			}
 		}
-		if (op != num)
+		if (!json && op != num)
 			return redirect_thread(cb, num, op);
 	}
 	if (!caps.can_access_thread(req.ident, op))
 		return cb(404);
+	if (json)
+		return cb(null, 'ok', {json: true, num: num});
 
 	var yaku = new db.Yakusoku(board, req.ident);
 	var reader = new db.Reader(yaku);
@@ -640,6 +643,8 @@ function (req, resp) {
 	/* TEMP */
 	if (req.ident.suspension)
 		return render_suspension(req, resp);
+	if (this.json)
+		return write_json_post(req, resp, this.num);
 
 	var board = this.board, op = this.op;
 
@@ -664,6 +669,17 @@ function (req, resp) {
 function () {
 	this.yaku.disconnect();
 });
+
+function write_json_post(req, resp, num) {
+	var json = {TODO: true};
+
+	var cache = json.editing ? 'no-cache' : 'private, max-age=86400';
+	resp = write_gzip_head(req, resp, {
+		'Content-Type': 'application/json',
+		'Cache-Control': cache,
+	});
+	resp.end(JSON.stringify(json));
+}
 
 web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
 	if (!caps.temporal_access_check(req.ident, params[1]))
