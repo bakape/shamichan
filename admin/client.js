@@ -228,7 +228,7 @@ var AddressView = Backbone.View.extend({
 			return;
 		event.preventDefault();
 		var name = this.$('.name').val().trim();
-		send([102, this.model.id, name]);
+		send([SET_ADDRESS_NAME, this.model.id, name]);
 		this.remove();
 	},
 
@@ -292,7 +292,7 @@ var AddrView = Backbone.View.extend({
 				this.expansion_removed);
 
 		if (this.model.get('shallow'))
-			send([101, this.model.id]);
+			send([FETCH_ADDRESS, this.model.id]);
 	},
 
 	remove: function () {
