@@ -103,7 +103,7 @@ hr {
 	border: none;
 	clear: both;
 }
-iframe {
+#hidden-upload {
 	display: none;
 }
 label.ident {
