@@ -20,7 +20,7 @@ function on_refresh(info) {
 }
 
 function connect() {
-	return STATE.dbCache.sharedConnection;
+	return global.redis;
 }
 
 function address_view(addr) {

@@ -8,9 +8,7 @@ var _ = require('../lib/underscore'),
     winston = require('winston');
 
 function connect() {
-	if (!RES.sharedConnection)
-		RES.sharedConnection = require('../db').redis_client();
-	return RES.sharedConnection;
+	return global.redis;
 }
 
 exports.login = function (req, resp) {

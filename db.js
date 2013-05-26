@@ -8,7 +8,6 @@ var _ = require('./lib/underscore'),
     fs = require('fs'),
     hooks = require('./hooks'),
     Muggle = require('./muggle').Muggle,
-    redis = require('redis'),
     tail = require('./tail'),
     util = require('util'),
     winston = require('winston');
@@ -20,9 +19,11 @@ var TAGS = exports.TAGS = cache.opTags;
 var SUBS = exports.SUBS = cache.threadSubs;
 
 function redis_client() {
-	return redis.createClient(config.REDIS_PORT || undefined);
+	return require('redis').createClient(config.REDIS_PORT || undefined);
 }
 exports.redis_client = redis_client;
+
+global.redis = redis_client();
 
 /* REAL-TIME UPDATES */
 
@@ -270,17 +271,14 @@ exports.track_OPs = function (callback) {
 	var k = redis_client();
 	k.subscribe('cache');
 	k.once('subscribe', function () {
-		var r = redis_client();
-		load_OPs(r, function (err) {
-			r.quit();
-			callback(err);
-		});
+		load_OPs(callback);
 	});
 	k.on('message', update_cache);
 	/* k persists for the purpose of cache updates */
 };
 
-function load_OPs(r, callback) {
+function load_OPs(callback) {
+	var r = global.redis;
 	var boards = config.BOARDS;
 	// Want consistent ordering in the TAGS entries for multi-tag threads
 	// (so do them in series)
@@ -376,9 +374,7 @@ var Y = Yakusoku.prototype;
 
 Y.connect = function () {
 	// multiple redis connections are pointless (without slaves)
-	if (!cache.sharedConnection)
-		cache.sharedConnection = redis_client();
-	return cache.sharedConnection;
+	return global.redis;
 };
 
 Y.disconnect = function () {
@@ -1563,9 +1559,7 @@ var F = Filter.prototype;
 
 F.connect = function () {
 	if (!this.r) {
-		if (!cache.sharedConnection)
-			cache.sharedConnection = redis_client();
-		this.r = cache.sharedConnection;
+		this.r = global.redis;
 	}
 	return this.r;
 };

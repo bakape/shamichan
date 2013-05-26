@@ -19,7 +19,6 @@ exports.dbCache = {
 	OPs: {},
 	opTags: {},
 	threadSubs: {},
-	sharedConnection: null,
 	YAKUMAN: 0,
 	funThread: 0,
 	bannerState: {},
