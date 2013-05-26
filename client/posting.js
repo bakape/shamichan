@@ -78,6 +78,7 @@ function handle_shortcut(event) {
 	if (!event.altKey)
 		return;
 
+	var used = false;
 	switch (event.which) {
 	case shortcutKeys['new']:
 		var $aside = THREAD ? $('aside') : $ceiling.next();
@@ -85,20 +86,28 @@ function handle_shortcut(event) {
 			with_dom(function () {
 				postSM.feed('new', $aside);
 			});
-			return false;
+			used = true;
 		}
 		break;
 	case shortcutKeys.togglespoiler:
-		if (postForm)
+		if (postForm) {
 			postForm.on_toggle(event);
+			used = true;
+		}
 		break;
 	case shortcutKeys.done:
 		if (postForm) {
-			if (!postForm.submit.attr('disabled'))
+			if (!postForm.submit.attr('disabled')) {
 				postForm.finish_wrapped();
-			return false;
+				used = true;
+			}
 		}
 		break;
+	}
+
+	if (used) {
+		event.stopImmediatePropagation();
+		event.preventDefault();
 	}
 }
 
