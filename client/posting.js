@@ -548,7 +548,7 @@ flush_pending: function () {
 cancel: function () {
 	if (this.model.get('uploading')) {
 		this.$iframe.remove();
-		this.$iframe = $('<iframe/>', {
+		this.$iframe = $('<iframe></iframe>', {
 			src: '', name: 'upload', id: 'hidden-upload',
 		}).appendTo('body');
 		this.upload_error('');
@@ -640,7 +640,7 @@ make_upload_form: function () {
 	this.$uploadStatus = $('<strong/>');
 	form.append(this.$cancel, this.$imageInput, this.$toggle, ' ',
 			this.$uploadStatus);
-	this.$iframe = $('<iframe/>', {
+	this.$iframe = $('<iframe></iframe>', {
 		src: '', name: 'upload', id: 'hidden-upload',
 	}).appendTo('body');
 	if (nashi.upload) {

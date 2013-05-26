@@ -26,7 +26,7 @@ function make_video(id, params, start) {
 
 	var uri = encodeURI('http://www.youtube.com/embed/' + id) + '?' +
 			$.param(query);
-	return $('<iframe/>', {
+	return $('<iframe></iframe>', {
 		type: 'text/html', src: uri,
 		frameborder: '0',
 		attr: video_dims(),
