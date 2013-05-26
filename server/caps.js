@@ -1,4 +1,5 @@
-var authcommon = require('../authcommon'),
+var async = require('async'),
+    authcommon = require('../authcommon'),
     check = require('./msgcheck').check,
     common = require('../common'),
     config = require('../config'),
@@ -146,14 +147,38 @@ function range_lookup(ranges, num) {
 	return result;
 }
 
-var settings = ['boxes', 'bans', 'slows', 'suspensions', 'timeouts'];
+var rangeKeys = ['boxes', 'bans', 'slows', 'suspensions', 'timeouts'];
 
 hooks.hook('reloadHot', function (hot, cb) {
-	settings.forEach(function (setting) {
-		RANGES[setting] = parse_ranges(hot[setting.toUpperCase()]);
-	});
-	cb(null);
+	var r = global.redis;
+	async.forEach(rangeKeys, function (key, cb) {
+		global.redis.smembers('hot:' + key, function (err, ranges) {
+			if (err)
+				return cb(err);
+			if (key == 'suspensions')
+				ranges = parse_suspensions(ranges);
+			var up = key.toUpperCase();
+			hot[up] = (hot[up] || []).concat(ranges || []);
+			RANGES[key] = parse_ranges(hot[up]);
+			cb(null);
+		});
+	}, cb);
 });
+
+function parse_suspensions(suspensions) {
+	if (!suspensions)
+		return [];
+	var parsed = [];
+	suspensions.forEach(function (s) {
+		try {
+			parsed.push(JSON.parse(s));
+		}
+		catch (e) {
+			winston.error("Bad suspension JSON: " + s);
+		}
+	});
+	return parsed;
+}
 
 exports.lookup_ident = function (ip) {
 	var ident = {ip: ip};
