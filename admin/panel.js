@@ -1,9 +1,9 @@
 var _ = require('../lib/underscore'),
-    authcommon = require('../admin/common'),
-    caps = require('./caps'),
+    authcommon = require('./common'),
+    caps = require('../server/caps'),
     common = require('../common'),
-    okyaku = require('./okyaku'),
-    STATE = require('./state');
+    okyaku = require('../server/okyaku'),
+    STATE = require('../server/state');
 
 var ADDRS = STATE.dbCache.addresses;
 authcommon.modCache.addresses = ADDRS;

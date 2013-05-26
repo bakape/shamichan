@@ -18,7 +18,7 @@ var _ = require('../lib/underscore'),
     web = require('./web'),
     winston = require('winston');
 
-require('./panel');
+require('../admin/panel');
 require('../imager/daemon');
 if (config.CURFEW_BOARDS)
 	require('../curfew/server');
