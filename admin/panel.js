@@ -48,7 +48,7 @@ okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
 	// Cache miss
 	ADDRS[ip] = addr = {ip: ip, shallow: true};
 	var r = connect();
-	r.hget('ip:'+ip, 'name', function (err, name) {
+	r.hgetall('ip:'+ip, function (err, info) {
 		if (err) {
 			if (ADDRS[ip] === addr)
 				delete ADDRS[ip];
@@ -57,7 +57,7 @@ okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
 		if (ADDRS[ip] !== addr)
 			return;
 
-		addr.name = name;
+		_.extend(addr, info);
 		client.send([0, common.COLLECTION_ADD, 'addrs',
 				address_view(addr)]);
 	});
