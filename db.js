@@ -277,6 +277,14 @@ exports.track_OPs = function (callback) {
 	/* k persists for the purpose of cache updates */
 };
 
+exports.on_pub = function (name, handler) {
+	// TODO: share redis connection
+	var k = redis_client();
+	k.subscribe(name);
+	k.on('message', handler);
+	/* k persists */
+};
+
 function load_OPs(callback) {
 	var r = global.redis;
 	var boards = config.BOARDS;

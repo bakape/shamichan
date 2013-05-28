@@ -1142,6 +1142,7 @@ function start_server() {
 	});
 
 	process.on('SIGHUP', hot_reloader);
+	db.on_pub('reloadHot', hot_reloader);
 
 	if (config.DAEMON) {
 		var cfg = config.DAEMON;
