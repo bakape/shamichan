@@ -183,6 +183,7 @@ var AddressView = Backbone.View.extend({
 	events: {
 		'keydown .name': 'entered_name',
 		'click .sel-all': 'select_all',
+		'click .ban': 'ban',
 	},
 
 	initialize: function () {
@@ -193,6 +194,13 @@ var AddressView = Backbone.View.extend({
 			type: 'button',
 			val: 'Sel All'
 		}));
+		if (IDENT.auth == 'Admin')
+			$el.append($('<input/>', {
+				"class": 'ban',
+				type: 'button',
+				val: 'Ban'
+			}));
+
 		$el.append(
 			'<br>',
 			$('<input>', {"class": 'name', placeholder: 'Name'})
@@ -220,6 +228,9 @@ var AddressView = Backbone.View.extend({
 		if (attrs.name != $name.val()) {
 			$name.val(attrs.name);
 		}
+		this.$('.ban')
+			.prop('disabled', !!attrs.ban)
+			.val(attrs.ban ? attrs.ban : 'Ban');
 		return this;
 	},
 
@@ -252,6 +263,14 @@ var AddressView = Backbone.View.extend({
 			});
 		});
 		this.remove();
+	},
+
+	ban: function () {
+		var ip = this.model.get('ip');
+		if (!confirm('Ban ' + ip + '?'))
+			return;
+		send([BAN, ip]);
+		this.$('.ban').val('...');
 	},
 });
 

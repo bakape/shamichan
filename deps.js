@@ -29,6 +29,7 @@ exports.CLIENT_DEPS = [
 
 exports.SERVER_DEPS = [
 	'admin/common.js',
+	'admin/index.js',
 	'admin/panel.js',
 	'common.js',
 	'config.js',

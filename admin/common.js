@@ -4,6 +4,7 @@ var common = require('../common');
 var DEFINES = exports;
 DEFINES.FETCH_ADDRESS = 101;
 DEFINES.SET_ADDRESS_NAME = 102;
+DEFINES.BAN = 103;
 
 var modCache = {}; // TEMP
 exports.modCache = modCache;
