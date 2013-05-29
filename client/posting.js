@@ -8,7 +8,7 @@ connSM.on('desynced', postSM.feeder('desync'));
 postSM.act('* + desync -> none', function () {
 	if (postForm) {
 		postForm.$el.removeClass('editing');
-		postForm.input.val('');
+		postForm.$input.val('');
 		postForm.finish();
 	}
 	$('aside').remove();
@@ -157,7 +157,7 @@ initialize: function (dest) {
 	this.buffer = $('<p/>');
 	this.line_buffer = $('<p/>');
 	this.meta = $('<header><a class="nope"><b/></a> <time/></header>');
-	this.input = $('<textarea/>', {
+	this.$input = $('<textarea/>', {
 		name: 'body', id: 'trans', rows: '1', "class": 'themed',
 	});
 	this.submit = $('<input>', {
@@ -192,7 +192,7 @@ initialize: function (dest) {
 	oneeSama.trigger('imouto', this.imouto);
 
 	shift_replies(this.options.thread);
-	this.blockquote.append(this.buffer, this.line_buffer, this.input);
+	this.blockquote.append(this.buffer, this.line_buffer, this.$input);
 	post.append(this.meta, this.blockquote);
 	if (!op) {
 		post.append('<label for="subject">Subject: </label>',
@@ -206,11 +206,11 @@ initialize: function (dest) {
 	this.propagate_ident();
 	this.options.dest.replaceWith(post);
 
-	this.input.input(_.bind(this.on_input, this, undefined));
+	this.$input.input(_.bind(this.on_input, this, undefined));
 
 	if (op) {
 		this.resize_input();
-		this.input.focus();
+		this.$input.focus();
 	}
 	else {
 		post.after('<hr/>');
@@ -266,7 +266,7 @@ on_allocation: function (msg) {
 		this.$subject.siblings('label').andSelf().remove();
 		this.blockquote.show();
 		this.resize_input();
-		this.input.focus();
+		this.$input.focus();
 	}
 
 	window.onbeforeunload = function () {
@@ -309,10 +309,10 @@ on_key_down: function (event) {
 	case 32:
 		var c = event.which == 13 ? '\n' : ' ';
 		// predict result
-		var input = this.input;
-		var val = input.val();
-		val = val.slice(0, input[0].selectionStart) + c +
-				val.slice(input[0].selectionEnd);
+		var input = this.$input[0];
+		var val = this.$input.val();
+		val = val.slice(0, input.selectionStart) + c +
+				val.slice(input.selectionEnd);
 		this.on_input(val);
 		break;
 	default:
@@ -321,10 +321,10 @@ on_key_down: function (event) {
 },
 
 on_input: function (val) {
-	var input = this.input;
-	var start = input[0].selectionStart, end = input[0].selectionEnd;
+	var $input = this.$input;
+	var start = $input[0].selectionStart, end = $input[0].selectionEnd;
 	if (val === undefined)
-		val = input.val();
+		val = $input.val();
 
 	/* Turn YouTube links into proper refs */
 	var changed = false;
@@ -362,14 +362,14 @@ on_input: function (val) {
 		}
 	}
 	if (changed)
-		input.val(val);
+		$input.val(val);
 
 	var nl = val.lastIndexOf('\n');
 	if (nl >= 0) {
 		var ok = val.substr(0, nl);
 		ok = this.word_filter(ok);
 		val = val.substr(nl+1);
-		input.val(val);
+		$input.val(val);
 		if (this.model.get('sentAllocRequest') || /[^ ]/.test(ok))
 			this.commit(ok + '\n');
 	}
@@ -385,12 +385,12 @@ on_input: function (val) {
 			val = val.substr(lim);
 			start -= lim;
 			end -= lim;
-			input.val(val);
-			input[0].setSelectionRange(start, end);
+			$input.val(val);
+			$input[0].setSelectionRange(start, end);
 		}
 	}
 
-	input.attr('maxlength', MAX_POST_CHARS - this.char_count);
+	$input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 	this.resize_input(val);
 },
 
@@ -400,17 +400,17 @@ word_filter: function (words) {
 
 add_ref: function (num) {
 	/* If a >>link exists, put this one on the next line */
-	var input = this.input;
-	var val = input.val();
+	var $input = this.$input;
+	var val = $input.val();
 	if (/^>>\d+$/.test(val)) {
-		input.val(val + '\n');
+		$input.val(val + '\n');
 		this.on_input();
-		val = input.val();
+		val = $input.val();
 	}
-	input.val(val + '>>' + num);
-	input[0].selectionStart = input.val().length;
+	$input.val(val + '>>' + num);
+	$input[0].selectionStart = $input.val().length;
 	this.on_input();
-	input.focus();
+	$input.focus();
 },
 
 find_time_arg: function (params) {
@@ -426,15 +426,15 @@ find_time_arg: function (params) {
 },
 
 resize_input: function (val) {
-	var input = this.input;
+	var $input = this.$input;
 	if (typeof val != 'string')
-		val = input.val();
+		val = $input.val();
 
 	this.$sizer.text(val);
-	var left = input.offset().left - this.$el.offset().left;
+	var left = $input.offset().left - this.$el.offset().left;
 	var size = this.$sizer.width() + INPUT_ROOM;
 	size = Math.max(size, inputMinSize - left);
-	input.css('width', size + 'px');
+	$input.css('width', size + 'px');
 },
 
 upload_status: function (msg) {
@@ -561,8 +561,8 @@ cancel: function () {
 finish: function () {
 	if (this.model.get('num')) {
 		this.flush_pending();
-		this.commit(this.word_filter(this.input.val()));
-		this.input.remove();
+		this.commit(this.word_filter(this.$input.val()));
+		this.$input.remove();
 		this.submit.remove();
 		if (this.uploadForm)
 			this.uploadForm.remove();
@@ -614,7 +614,7 @@ render_buttons: function () {
 
 prep_upload: function () {
 	this.model.set('uploadStatus', 'Uploading...');
-	this.input.focus();
+	this.$input.focus();
 	var attrs = this.model.attributes;
 	return {spoiler: attrs.spoiler, op: attrs.op || 0};
 },
