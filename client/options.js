@@ -91,25 +91,10 @@ option_theme.type = themes;
 
 /* TEMP migration */
 (function () {
-	$.cookie('img', null);
-	var old = 'board.' + BOARD + '.hideimages';
-	var key = 'board.' + BOARD + '.thumbs';
-	var changed = false;
 	if (options.thumbs) {
-		if (!options[key]) {
-			options[key] = options.thumbs;
-			changed = true;
-		}
-		/* later: delete options.thumbs */
-	}
-	if (old in options) {
-		if (options[old])
-			options[key] = 'hide';
-		delete options[old];
-		changed = true;
-	}
-	if (changed)
+		delete options.thumbs;
 		save_opts();
+	}
 })();
 
 var revealSetup = false;

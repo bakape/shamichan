@@ -167,10 +167,6 @@ function write_thread_html(reader, req, response, opts) {
 		});
 	}
 
-	/* TEMP migration */
-	if (cookies.img == 'no')
-		oneeSama.thumbStyle = 'hide';
-
 	reader.on('thread', function (op_post, omit, image_omit) {
 		if (op_post.num in hidden)
 			return;
