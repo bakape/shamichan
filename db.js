@@ -823,7 +823,6 @@ Y.archive_thread = function (op, callback) {
 			return callback(Muggle(key + ' is already deleted.'));
 		var m = r.multi();
 		// order counts
-		m.incr(archiveKey + ':bumpctr');
 		m.hgetall(key);
 		m.hgetall(key + ':links');
 		m.llen(key + ':posts');
@@ -832,9 +831,8 @@ Y.archive_thread = function (op, callback) {
 		m.exec(next);
 	},
 	function (rs, next) {
-		var bumpCtr = rs[0], view = rs[1], links = rs[2],
-				replyCount = rs[3], privs = rs[4],
-				dels = rs[5];
+		var view = rs[0], links = rs[1], replyCount = rs[2],
+				privs = rs[3], dels = rs[4];
 		var subject = subject_val(op, view.subject);
 		var tags = view.tags;
 		var m = r.multi();
@@ -848,7 +846,7 @@ Y.archive_thread = function (op, callback) {
 			if (subject)
 				m.zrem(tagKey + ':subjects', subject);
 		});
-		m.zadd(archiveKey + ':threads', bumpCtr, op);
+		m.zadd(archiveKey + ':threads', op, op);
 		self._log(m, op, common.DELETE_THREAD, [], {tags: tags});
 
 		// shallow thread insertion message in archive
