@@ -1289,7 +1289,10 @@ Y.get_tag = function (page) {
 	var start = page * config.THREADS_PER_PAGE;
 	var end = start + config.THREADS_PER_PAGE - 1;
 	var m = r.multi();
-	m.zrevrange(key, start, end);
+	if (this.tag == 'archive')
+		m.zrange(key, start, end);
+	else
+		m.zrevrange(key, start, end);
 	m.zcard(key);
 	m.exec(function (err, res) {
 		if (err)
