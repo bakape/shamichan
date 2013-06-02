@@ -1284,6 +1284,8 @@ Y.get_tag = function (page) {
 	var r = this.connect();
 	var self = this;
 	var key = 'tag:' + tag_key(this.tag) + ':threads';
+	if (page < 0 && this.tag != 'archive')
+		page = 0;
 	var start = page * config.THREADS_PER_PAGE;
 	var end = start + config.THREADS_PER_PAGE - 1;
 	var m = r.multi();
@@ -1296,7 +1298,7 @@ Y.get_tag = function (page) {
 		if (err)
 			return self.emit('error', err);
 		var ns = res[0];
-		if (page && !ns.length)
+		if (page > 0 && !ns.length)
 			return self.emit('nomatch');
 		self.emit('begin', res[1]);
 		var reader = new Reader(self);

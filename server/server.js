@@ -456,7 +456,7 @@ function (req, resp) {
 		return;
 
 	var yaku = new db.Yakusoku(board, req.ident);
-	yaku.get_tag(0);
+	yaku.get_tag(-1);
 	var paginationHtml;
 	yaku.once('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1);
