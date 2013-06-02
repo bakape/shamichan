@@ -810,14 +810,17 @@ Y.archive_thread = function (op, callback) {
 	function (next) {
 		var m = r.multi();
 		m.exists(key);
+		m.hget(key, 'immortal');
 		m.zscore('tag:' + tag_key('graveyard') + ':threads', op);
 		m.exec(next);
 	},
 	function (rs, next) {
 		if (!rs[0])
-			return callback(Muggle('Thread does not exist.'));
-		if (rs[1])
-			return callback(Muggle('Thread is already deleted.'));
+			return callback(Muggle(key + ' does not exist.'));
+		if (parseInt(rs[1], 10))
+			return callback(Muggle(key + ' is immortal.'));
+		if (rs[2])
+			return callback(Muggle(key + ' is already deleted.'));
 		var m = r.multi();
 		// order counts
 		m.incr(archiveKey + ':bumpctr');
