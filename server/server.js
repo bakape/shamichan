@@ -211,16 +211,18 @@ function image_status(client_id, status) {
 		client.send([0, common.IMAGE_STATUS, status]);
 }
 
-function page_nav(thread_count, cur_page) {
+function page_nav(thread_count, cur_page, ascending) {
 	var page_count = Math.ceil(thread_count / config.THREADS_PER_PAGE);
 	page_count = Math.max(page_count, 1);
 	var info = {pages: page_count, threads: thread_count,
-		cur_page: cur_page};
-	var next = Math.max(cur_page, 0) + 1;
-	if (next < page_count)
+		cur_page: cur_page, ascending: ascending};
+
+	var step = ascending ? -1 : 1;
+	var next = Math.max(cur_page, 0) + step;
+	if (next >= 0 && next < page_count)
 		info.next_page = 'page' + next;
-	var prev = cur_page - 1;
-	if (prev >= 0)
+	var prev = cur_page - step;
+	if (prev >= 0 && prev < page_count)
 		info.prev_page = 'page' + prev;
 	return info;
 }
@@ -315,7 +317,12 @@ function make_pagination_html(info) {
 		bits.push('<a href=".">live</a>');
 	else
 		bits.push('<strong>live</strong>');
-	for (var i = 0; i < info.pages; i++) {
+	var start = 0, end = info.pages, step = 1;
+	if (info.ascending) {
+		start = end - 1;
+		end = step = -1;
+	}
+	for (var i = start; i != end; i += step) {
 		if (i != cur)
 			bits.push('<a href="page' + i + '">' + i + '</a>');
 		else
@@ -459,7 +466,7 @@ function (req, resp) {
 	yaku.get_tag(-1);
 	var paginationHtml;
 	yaku.once('begin', function (thread_count) {
-		var nav = page_nav(thread_count, -1);
+		var nav = page_nav(thread_count, -1, board == 'archive');
 		write_board_head(resp, board, nav);
 		paginationHtml = make_pagination_html(nav);
 		resp.write(paginationHtml);
@@ -511,7 +518,7 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board;
-	var nav = page_nav(this.threadCount, this.page);
+	var nav = page_nav(this.threadCount, this.page, board == 'archive');
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	write_board_head(resp, board, nav);
 	var paginationHtml = make_pagination_html(nav);
