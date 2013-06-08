@@ -1284,12 +1284,13 @@ Y.get_tag = function (page) {
 	var r = this.connect();
 	var self = this;
 	var key = 'tag:' + tag_key(this.tag) + ':threads';
-	if (page < 0 && this.tag != 'archive')
+	var reverseOrder = this.tag == 'archive';
+	if (page < 0 && !reverseOrder)
 		page = 0;
 	var start = page * config.THREADS_PER_PAGE;
 	var end = start + config.THREADS_PER_PAGE - 1;
 	var m = r.multi();
-	if (this.tag == 'archive')
+	if (reverseOrder)
 		m.zrange(key, start, end);
 	else
 		m.zrevrange(key, start, end);
@@ -1297,16 +1298,18 @@ Y.get_tag = function (page) {
 	m.exec(function (err, res) {
 		if (err)
 			return self.emit('error', err);
-		var ns = res[0];
-		if (page > 0 && !ns.length)
+		var nums = res[0];
+		if (page > 0 && !nums.length)
 			return self.emit('nomatch');
+		if (reverseOrder)
+			nums.reverse();
 		self.emit('begin', res[1]);
 		var reader = new Reader(self);
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));
 		reader.on('post', self.emit.bind(self, 'post'));
 		reader.on('endthread', self.emit.bind(self, 'endthread'));
-		self._get_each_thread(reader, 0, ns);
+		self._get_each_thread(reader, 0, nums);
 	});
 };
 
