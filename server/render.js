@@ -15,7 +15,7 @@ function tamashii(num) {
 		this.callback('>>' + num);
 }
 
-exports.write_thread_html = function (reader, req, response, opts) {
+exports.write_thread_html = function (reader, req, out, opts) {
 	var oneeSama = new common.OneeSama(tamashii);
 
 	opts.ident = req.ident;
@@ -42,24 +42,24 @@ exports.write_thread_html = function (reader, req, response, opts) {
 		oneeSama.op = opts.fullLinks ? false : op_post.num;
 		var first = oneeSama.monomono(op_post, full && 'full');
 		first.pop();
-		response.write(first.join(''));
+		out.write(first.join(''));
 		if (omit) {
 			var o = common.abbrev_msg(omit, image_omit);
 			if (opts.loadAllPostsLink)
 				o += ' '+common.action_link_html(op_post.num,
 						'See all');
-			response.write('\t<span class="omit">'+o+'</span>\n');
+			out.write('\t<span class="omit">'+o+'</span>\n');
 		}
 		reader.once('endthread', close_section);
 	});
 	reader.on('post', function (post) {
 		if (post.num in hidden || post.op in hidden)
 			return;
-		response.write(oneeSama.mono(post));
+		out.write(oneeSama.mono(post));
 	});
 
 	function close_section() {
-		response.write('</section><hr>\n');
+		out.write('</section><hr>\n');
 	}
 };
 
@@ -75,22 +75,22 @@ function make_link_rels(board, bits) {
 	}).join('');
 }
 
-exports.write_board_head = function (resp, board, nav) {
+exports.write_board_head = function (out, board, nav) {
 	var indexTmpl = RES.indexTmpl;
 	var title = STATE.hot.TITLES[board] || escape(board);
-	resp.write(indexTmpl[0]);
-	resp.write(title);
-	resp.write(indexTmpl[1]);
-	resp.write(make_board_meta(board, nav));
-	resp.write(indexTmpl[2]);
+	out.write(indexTmpl[0]);
+	out.write(title);
+	out.write(indexTmpl[1]);
+	out.write(make_board_meta(board, nav));
+	out.write(indexTmpl[2]);
 	if (RES.navigationHtml)
-		resp.write(RES.navigationHtml);
-	resp.write(indexTmpl[3]);
-	resp.write(title);
-	resp.write(indexTmpl[4]);
+		out.write(RES.navigationHtml);
+	out.write(indexTmpl[3]);
+	out.write(title);
+	out.write(indexTmpl[4]);
 };
 
-exports.write_thread_head = function (resp, board, op, subject, abbrev) {
+exports.write_thread_head = function (out, board, op, subject, abbrev) {
 	var indexTmpl = RES.indexTmpl;
 	var title = '/'+escape(board)+'/ - ';
 	if (subject)
@@ -98,18 +98,18 @@ exports.write_thread_head = function (resp, board, op, subject, abbrev) {
 	else
 		title += '#' + op;
 
-	resp.write(indexTmpl[0]);
-	resp.write(title);
-	resp.write(indexTmpl[1]);
-	resp.write(make_thread_meta(board, op, abbrev));
-	resp.write(indexTmpl[2]);
+	out.write(indexTmpl[0]);
+	out.write(title);
+	out.write(indexTmpl[1]);
+	out.write(make_thread_meta(board, op, abbrev));
+	out.write(indexTmpl[2]);
 	if (RES.navigationHtml)
-		resp.write(RES.navigationHtml);
-	resp.write(indexTmpl[3]);
-	resp.write('Thread #' + op);
-	resp.write(indexTmpl[4]);
-	resp.write(common.action_link_html('#bottom', 'Bottom'));
-	resp.write('<hr>\n');
+		out.write(RES.navigationHtml);
+	out.write(indexTmpl[3]);
+	out.write('Thread #' + op);
+	out.write(indexTmpl[4]);
+	out.write(common.action_link_html('#bottom', 'Bottom'));
+	out.write('<hr>\n');
 };
 
 function make_board_meta(board, info) {
@@ -156,18 +156,18 @@ exports.make_pagination_html = function (info) {
 var returnHTML = common.action_link_html('.', 'Return').replace(
 		'span', 'span id="bottom"');
 
-exports.write_page_end = function (req, resp, returnLink) {
-	resp.write(RES.indexTmpl[5]);
+exports.write_page_end = function (req, out, returnLink) {
+	out.write(RES.indexTmpl[5]);
 	if (returnLink)
-		resp.write(returnHTML);
+		out.write(returnHTML);
 	else if (RES.navigationHtml)
-		resp.write('<br><br>' + RES.navigationHtml);
-	resp.write(RES.indexTmpl[6]);
+		out.write('<br><br>' + RES.navigationHtml);
+	out.write(RES.indexTmpl[6]);
 	if (req.ident) {
 		if (caps.can_administrate(req.ident))
-			resp.write('<script src="../admin.js"></script>\n');
+			out.write('<script src="../admin.js"></script>\n');
 		else if (caps.can_moderate(req.ident))
-			resp.write('<script src="../mod.js"></script>\n');
+			out.write('<script src="../mod.js"></script>\n');
 	}
-	resp.end();
+	out.end();
 };
