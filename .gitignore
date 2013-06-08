@@ -9,6 +9,7 @@ graveyard
 findapng
 hot.js
 jsmin
+node_modules/
 perceptual
 imager/tmp
 tripcode/.build

@@ -1,0 +1,25 @@
+{
+	"name": "doushio",
+	"version": "0.3.0",
+	"description": "Real-time imageboard",
+	"keywords": ["realtime", "imageboard", "redis"],
+	"homepage": "https://github.com/lalcmellkmal/doushio",
+	"license": "MIT",
+	"scripts": {
+		"dev": "node builder.js",
+		"preinstall": "make",
+		"start": "node server/server.js"
+	},
+	"dependencies": {
+		"async": ">=0.2",
+		"formidable": ">=1.0",
+		"redis": ">=0.8",
+		"sockjs": ">=0.3.3",
+		"winston": ">=0.7"
+	},
+	"optionalDependencies": {
+		"hiredis": ">=0.1.10",
+		"node-expat": ">=2.0",
+		"request": ">=2.20"
+	}
+}
