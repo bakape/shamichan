@@ -32,7 +32,7 @@ var RES = exports.resources = {};
 exports.clients = {};
 exports.clientsByIP = {};
 
-exports.reload_hot = function (cb) {
+function reload_hot_config(cb) {
 	fs.readFile('hot.js', 'UTF-8', function (err, js) {
 		if (err)
 			cb(err);
@@ -55,9 +55,9 @@ exports.reload_hot = function (cb) {
 			hooks.trigger('reloadHot', HOT, cb);
 		});
 	});
-};
+}
 
-exports.reset_resources = function (cb) {
+function reload_resources(cb) {
 	var deps = require('../deps');
 	function read(dir, file) {
 		return fs.readFile.bind(fs, path.join(dir, file), 'UTF-8');
@@ -105,7 +105,11 @@ exports.reset_resources = function (cb) {
 		RES.modJs = res.modJs;
 		hooks.trigger('reloadResources', RES, cb);
 	});
-};
+}
+
+exports.reload_hot_resources = function (cb) {
+	async.series([reload_hot_config, reload_resources], cb);
+}
 
 function make_navigation_html() {
 	if (!HOT.INTER_BOARD_NAVIGATION)

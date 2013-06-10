@@ -996,10 +996,7 @@ function start_server() {
 }
 
 function hot_reloader() {
-	async.series([
-		STATE.reload_hot,
-		STATE.reset_resources,
-	], function (err) {
+	STATE.reload_hot_resources(function (err) {
 		if (err) {
 			winston.error("Error trying to reload:");
 			winston.error(err);
@@ -1035,10 +1032,9 @@ if (require.main == module) {
 	if (!tripcode.setSalt(config.SECURE_SALT))
 		throw "Bad SECURE_SALT";
 	async.series([
-		STATE.reload_hot,
 		imager.make_media_dirs,
 		setup_imager_relay,
-		STATE.reset_resources,
+		STATE.reload_hot_resources,
 		db.track_OPs,
 	], function (err) {
 		if (err)
