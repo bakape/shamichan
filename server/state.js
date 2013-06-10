@@ -103,7 +103,7 @@ exports.reset_resources = function (cb) {
 		RES.notFoundHtml = res.notFound;
 		RES.serverErrorHtml = res.serverError;
 		RES.modJs = res.modJs;
-		cb(null);
+		hooks.trigger('reloadResources', RES, cb);
 	});
 };
 

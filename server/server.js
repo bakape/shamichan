@@ -931,13 +931,6 @@ setTimeout(function () {
 }, 2000);
 }
 
-function propagate_resources() {
-	if (!tripcode.setSalt(config.SECURE_SALT))
-		throw "Bad SECURE_SALT";
-	web.notFoundHtml = RES.notFoundHtml;
-	web.serverErrorHtml = RES.serverErrorHtml;
-}
-
 function get_sockjs_script_sync() {
 	var src = fs.readFileSync('tmpl/index.html', 'UTF-8');
 	return src.match(/sockjs-[\d.]+(?:\.min)?\.js/)[0];
@@ -1012,7 +1005,6 @@ function hot_reloader() {
 			winston.error(err);
 			return;
 		}
-		propagate_resources();
 		okyaku.scan_client_caps();
 		winston.info('Reloaded initial state.');
 	});
@@ -1040,6 +1032,8 @@ function non_daemon_pid_setup() {
 if (require.main == module) {
 	if (!process.getuid())
 		throw new Error("Refusing to run as root.");
+	if (!tripcode.setSalt(config.SECURE_SALT))
+		throw "Bad SECURE_SALT";
 	async.series([
 		STATE.reload_hot,
 		imager.make_media_dirs,
@@ -1049,7 +1043,6 @@ if (require.main == module) {
 	], function (err) {
 		if (err)
 			throw err;
-		propagate_resources();
 
 		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
 		var onegai = new imager.Onegai;
