@@ -3,11 +3,11 @@ MIT licensed.
 
 Setup:
 
-* Install deps and npm deps
+* Install dependencies listed below
 * Copy config.js.example to config.js and configure
 * Copy hot.js.example to hot.js and configure
 * Copy imager/config.js.example to imager/config.js and configure
-* Run `npm install`
+* Run `npm install` to install npm deps and compile a few helpers
 * Run `node builder.js` to run an auto-reloading development server
 
 Production:
