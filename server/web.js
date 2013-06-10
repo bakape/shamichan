@@ -222,7 +222,7 @@ function auth_checker(handler, is_post, req, resp, params) {
 			});
 		}
 		catch (e) {
-			winston.error('formidable threw', e);
+			winston.error('formidable threw: ' + e);
 			return forbidden(resp, 'Bad request.');
 		}
 	}

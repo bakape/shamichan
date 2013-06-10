@@ -337,7 +337,7 @@ function (req, resp) {
 		yaku.disconnect();
 	});
 	yaku.once('error', function (err) {
-		winston.error('index:', err);
+		winston.error('index:' + err);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -391,7 +391,7 @@ function (req, resp) {
 		self.finished();
 	});
 	this.yaku.once('error', function (err) {
-		winston.error('page', self.page + ':', err);
+		winston.error('page' + self.page + ': ' + err);
 		resp.end();
 		self.finished();
 	});
@@ -437,8 +437,8 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 				return redirect_thread(cb, num, op, tag);
 			}
 			else {
-				winston.warn("Orphaned post", num,
-					"with tagless OP", op);
+				winston.warn("Orphaned post " + num +
+					"with tagless OP " + op);
 				return cb(404);
 			}
 		}
@@ -1012,7 +1012,7 @@ function non_daemon_pid_setup() {
 	var pidFile = path.join(path.dirname(module.filename), '.server.pid');
 	fs.writeFile(pidFile, process.pid+'\n', function (err) {
 		if (err)
-			return winston.warn("Couldn't write pid:", err);
+			return winston.warn("Couldn't write pid: " + err);
 		process.once('SIGINT', delete_pid);
 		process.once('SIGTERM', delete_pid);
 	});

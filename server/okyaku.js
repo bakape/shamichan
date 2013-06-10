@@ -53,7 +53,7 @@ const HOLED_UPDATES = [common.DELETE_POSTS, common.DELETE_THREAD];
 
 OK.on_thread_sink = function (thread, err) {
 	/* TODO */
-	winston.error(thread, 'sank:', err);
+	winston.error(thread + ' sank: ' + err);
 };
 
 const WORMHOLES = [common.SYNCHRONIZE, common.FINISH_POST];

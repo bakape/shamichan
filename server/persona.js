@@ -19,14 +19,14 @@ exports.login = function (req, resp) {
 		form.parse(req, verify_persona.bind(null, resp));
 	}
 	catch (e) {
-		winston.error('formidable threw', e);
+		winston.error('formidable threw ' + e);
 		respond_error(resp, "Bad request.");
 	}
 };
 
 function verify_persona(resp, err, fields) {
 	if (err) {
-		winston.error("Bad POST", err);
+		winston.error("Bad POST: " + err);
 		return respond_error(resp, 'POST error.');
 	}
 	if (!fields.assertion || typeof fields.assertion != 'string')
@@ -46,11 +46,11 @@ function verify_persona(resp, err, fields) {
 	};
 	var req = https.request(opts, function (verResp) {
 		if (verResp.statusCode != 200) {
-			winston.error('Code', verResp.statusCode);
+			winston.error('Code ' + verResp.statusCode);
 			return respond_error(resp, 'Persona.org error.');
 		}
 		verResp.once('error', function (err) {
-			winston.error("Persona response error", err);
+			winston.error("Persona response error " + err);
 			respond_error(resp, "Couldn't read Persona.");
 		});
 		verResp.setEncoding('utf8');
@@ -64,7 +64,7 @@ function verify_persona(resp, err, fields) {
 				packet = JSON.parse(packet);
 			}
 			catch (e) {
-				winston.error('Bad packet:', packet);
+				winston.error('Bad packet: ' + packet);
 				return respond_error(resp,
 						'Received corrupt Persona.');
 			}
@@ -72,7 +72,7 @@ function verify_persona(resp, err, fields) {
 		});
 	});
 	req.once('error', function (err) {
-		winston.error("Bad persona request", err);
+		winston.error("Bad persona request: " + err);
 		respond_error(resp, "Couldn't contact persona.org.");
 	});
 	req.end(payload);

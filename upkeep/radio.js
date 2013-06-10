@@ -117,7 +117,7 @@ function parse(input, cb) {
 			if (curMount.point)
 				mounts[curMount.point] = curMount;
 			else
-				winston.warn("Unknown mount", curMount);
+				winston.warn("Unknown mount: " + curMount);
 			curMount = null;
 		}
 		else if (name == 'mounts') {

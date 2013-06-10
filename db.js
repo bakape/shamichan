@@ -336,7 +336,7 @@ function load_OPs(callback) {
 			if (err)
 				return cb(err);
 			if (!thread.time) {
-				winston.warn('Thread', op, "doesn't exist.");
+				winston.warn('Thread '+op+" doesn't exist.");
 				var m = r.multi();
 				m.zrem(threadsKey, op);
 				m.zrem(expiryKey, entry);
@@ -676,7 +676,7 @@ Y.remove_post = function (from_thread, num, callback) {
 		r.hset(key, 'hide', '1', function (err) {
 			if (err) {
 				/* Difficult to recover. Whatever. */
-				winston.warn("Couldn't hide:", err);
+				winston.warn("Couldn't hide: " + err);
 			}
 			/* TODO push cache update? */
 			delete OPs[num];
@@ -708,10 +708,10 @@ Y.remove_posts = function (nums, callback) {
 			else if (del < 0)
 				already_gone.push(-del);
 			else if (del)
-				winston.warn('Unknown del:', del);
+				winston.warn('Unknown del: ' + del);
 		});
 		if (already_gone.length)
-			winston.warn("Tried to delete missing posts:",
+			winston.warn("Tried to delete missing posts: " +
 					already_gone);
 		if (_.isEmpty(threads))
 			return callback(null);
@@ -1038,7 +1038,7 @@ Y.toggle_thread_lock = function (op, callback) {
 
 function warn(err) {
 	if (err)
-		winston.warn('Warning:', err);
+		winston.warn('Warning: ' + err);
 }
 
 Y.check_thread_locked = function (op, callback) {
@@ -1207,7 +1207,7 @@ Y._log = function (m, op, kind, msg, opts) {
 	opts = opts || {};
 	msg = JSON.stringify(msg).slice(1, -1);
 	msg = msg.length ? (kind + ',' + msg) : ('' + kind);
-	winston.info("Log:", msg);
+	winston.info("Log: " + msg);
 	if (!op)
 		throw new Error('No OP.');
 	var priv = this.ident.priv;
