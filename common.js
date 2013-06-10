@@ -595,7 +595,7 @@ OS.atama = function (data) {
 	var header = auth ? [safe('<b class="'),auth.toLowerCase(),safe('">')]
 			: [safe('<b>')];
 	if (data.subject)
-		header.push(safe('<h3>「'), data.subject, safe('」</h3> '));
+		header.unshift(safe('<h3>「'), data.subject, safe('」</h3> '));
 	header.push(data.name || DEFINES.ANON);
 	if (data.trip)
 		header.push(safe(' <code>' + data.trip + '</code>'));
