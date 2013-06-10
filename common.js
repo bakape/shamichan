@@ -638,8 +638,8 @@ OS.mono = function (data) {
 	this.trigger('openArticle', info);
 	var cls = info.classes.length && info.classes.join(' '),
 	    o = safe('\t<article id="'+data.num+'"' +
-			(cls && ' class="'+cls+'"') +
-			(info.style && ' style="'+info.style+'"') +
+			(cls ? ' class="'+cls+'"' : '') +
+			(info.style ? ' style="'+info.style+'"' : '') +
 			'>'),
 	    c = safe('</article>\n'),
 	    gen = this.monogatari(data, false);
