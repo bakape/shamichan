@@ -6,6 +6,7 @@ var caps = require('./caps'),
     web = require('./web');
 
 var RES = STATE.resources;
+var escape = common.escape_html;
 
 function tamashii(num) {
 	var op = db.OPs[num];
