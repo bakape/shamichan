@@ -20,8 +20,8 @@ exports.write_thread_html = function (reader, req, out, opts) {
 
 	opts.ident = req.ident;
 	caps.augment_oneesama(oneeSama, opts);
-	var cookies = web.parse_cookie(req.headers.cookie);
 
+	var cookies = web.parse_cookie(req.headers.cookie);
 	if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 		oneeSama.thumbStyle = cookies.thumb;
 
@@ -156,18 +156,17 @@ exports.make_pagination_html = function (info) {
 var returnHTML = common.action_link_html('.', 'Return').replace(
 		'span', 'span id="bottom"');
 
-exports.write_page_end = function (req, out, returnLink) {
+exports.write_page_end = function (out, ident, returnLink) {
 	out.write(RES.indexTmpl[5]);
 	if (returnLink)
 		out.write(returnHTML);
 	else if (RES.navigationHtml)
 		out.write('<br><br>' + RES.navigationHtml);
 	out.write(RES.indexTmpl[6]);
-	if (req.ident) {
-		if (caps.can_administrate(req.ident))
+	if (ident) {
+		if (caps.can_administrate(ident))
 			out.write('<script src="../admin.js"></script>\n');
-		else if (caps.can_moderate(req.ident))
+		else if (caps.can_moderate(ident))
 			out.write('<script src="../mod.js"></script>\n');
 	}
-	out.end();
 };

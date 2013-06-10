@@ -332,7 +332,8 @@ function (req, resp) {
 	render.write_thread_html(yaku, req, resp, opts);
 	yaku.once('end', function () {
 		resp.write(paginationHtml);
-		render.write_page_end(req, resp, false);
+		render.write_page_end(resp, req.ident, false);
+		resp.end();
 		yaku.disconnect();
 	});
 	yaku.once('error', function (err) {
@@ -385,7 +386,8 @@ function (req, resp) {
 	var self = this;
 	this.yaku.once('end', function () {
 		resp.write(paginationHtml);
-		render.write_page_end(req, resp, false);
+		render.write_page_end(resp, req.ident, false);
+		resp.end();
 		self.finished();
 	});
 	this.yaku.once('error', function (err) {
@@ -513,7 +515,8 @@ function (req, resp) {
 	render.write_thread_html(this.reader, req, resp, opts);
 	var self = this;
 	this.reader.once('end', function () {
-		render.write_page_end(req, resp, true);
+		render.write_page_end(resp, req.ident, true);
+		resp.end();
 		self.finished();
 	});
 	function on_err(err) {
