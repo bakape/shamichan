@@ -6,8 +6,7 @@
 	"homepage": "https://github.com/lalcmellkmal/doushio",
 	"license": "MIT",
 	"scripts": {
-		"dev": "node builder.js",
-		"preinstall": "make",
+		"postinstall": "make",
 		"start": "node server/server.js"
 	},
 	"dependencies": {
