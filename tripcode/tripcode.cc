@@ -1,10 +1,8 @@
 #define _XOPEN_SOURCE
 #include <errno.h>
 #include <iconv.h>
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
-#include <v8.h>
+#include <node.h>
 
 using namespace v8;
 
@@ -129,8 +127,10 @@ static Handle<Value> hash_callback(Arguments const &args) {
 extern "C" void init(Handle<Object> target) {
 	if (!setup_conv())
 		return;
-	target->Set(String::New("setSalt"),
+	target->Set(String::NewSymbol("setSalt"),
 			FunctionTemplate::New(&setup_callback)->GetFunction());
-	target->Set(String::New("hash"),
+	target->Set(String::NewSymbol("hash"),
 			FunctionTemplate::New(&hash_callback)->GetFunction());
 }
+
+NODE_MODULE(tripcode, init);
