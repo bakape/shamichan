@@ -10,6 +10,8 @@ static char SECURE_SALT[21] = "$5$";
 #define TRIP_MAX 128
 
 static Handle<Value> setup_callback(Arguments const &args) {
+	HandleScope scope;
+
 	if (args.Length() != 1)
 		return False();
 	String::Utf8Value saltVal(args[0]->ToString());
@@ -113,15 +115,17 @@ static void with_SJIS(String::Utf8Value &trip, trip_f func, char *ret) {
 }
 
 static Handle<Value> hash_callback(Arguments const &args) {
+	HandleScope scope;
 	if (args.Length() != 2)
 		return Null();
+
 	String::Utf8Value trip(args[0]->ToString()),
 			secure(args[1]->ToString());
 	char digest[24];
 	digest[0] = 0;
 	with_SJIS(trip, &hash_trip, digest);
 	with_SJIS(secure, &hash_secure, digest + strlen(digest));
-	return String::New(digest);
+	return scope.Close(String::New(digest));
 }
 
 extern "C" void init(Handle<Object> target) {
