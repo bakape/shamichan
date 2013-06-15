@@ -23,13 +23,11 @@ D.on_thread = function (op_post) {
 		this.needComma = false;
 	}
 	this.op = op_post.num;
-	tweak_post(op_post);
-	this.out.write('[\n' + JSON.stringify(op_post));
+	this.out.write('[\n' + JSON.stringify(tweak_post(op_post)));
 };
 
 D.on_post = function (post) {
-	tweak_post(post, this.op);
-	this.out.write(',\n' + JSON.stringify(post));
+	this.out.write(',\n' + JSON.stringify(tweak_post(post, this.op)));
 };
 
 D.on_endthread = function () {
@@ -47,24 +45,29 @@ D.destroy = function () {
 };
 
 function tweak_post(post, known_op) {
+	post = _.clone(post);
+
 	/* thread-only */
 	if (typeof post.tags == 'string')
 		post.tags = db.parse_tags(post.tags);
 	if (typeof post.origTags == 'string')
 		post.origTags = db.parse_tags(post.origTags);
-	delete post.imgctr;
+	if (typeof post.hctr == 'string')
+		post.hctr = parseInt(post.hctr, 10);
+	if (typeof post.imgctr == 'string')
+		post.imgctr = parseInt(post.imgctr, 10);
 
 	/* post-only */
 	if (known_op == post.op)
 		delete post.op;
 
-	var img = post.image;
-	if (img) {
-		if (img.thumb == img.src)
-			img.thumb = true;
-		if (img.mid == img.src)
-			img.mid = true;
+	if (post.hideimg) {
+		delete post.image;
+		delete post.hideimg;
 	}
+	if (post.body == '')
+		delete post.body;
+	return post;
 }
 
 function dump_thread(op, board, ident, outputs, cb) {
