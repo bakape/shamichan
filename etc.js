@@ -14,19 +14,7 @@ exports.movex = function (src, dest, callback) {
 };
 
 exports.checked_mkdir = function (dir, cb) {
-	fs.stat(dir, function (err, info) {
-		var make = false;
-		if (err) {
-			if (err.code == 'ENOENT')
-				make = true;
-			else
-				return cb(err);
-		}
-		else if (!info.isDirectory())
-			return cb(dir + " is not a directory");
-		if (make)
-			fs.mkdir(dir, cb);
-		else
-			cb(null);
+	fs.mkdir(dir, function (err) {
+		cb(err && err.code == 'EEXIST' ? null : err);
 	});
 };
