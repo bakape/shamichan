@@ -45,11 +45,8 @@ D.destroy = function () {
 function dump_thread(op, board, ident, outputs, cb) {
 	if (!caps.can_access_board(ident, board))
 		return cb(404);
-	/*
-	TODO: we don't have the thread DB loaded so this will fail
 	if (!caps.can_access_thread(ident, op))
 		return cb(404);
-	*/
 
 	var yaku = new db.Yakusoku(board, ident);
 	var reader = new db.Reader(yaku);
@@ -103,13 +100,16 @@ function close_stream(stream, cb) {
 }
 
 function load_state(cb) {
-	require('../server/state').reload_hot_resources(cb);
+	async.series([
+		require('../server/state').reload_hot_resources,
+		db.track_OPs,
+	], cb);
 }
 
 if (require.main === module) (function () {
 	var op = parseInt(process.argv[2], 10), board = process.argv[3];
-	if (!op || !board) {
-		console.error('Usage: node upkeep/dump.js <thread> <board>');
+	if (!op) {
+		console.error('Usage: node upkeep/dump.js <thread>');
 		process.exit(-1);
 	}
 
@@ -117,6 +117,14 @@ if (require.main === module) (function () {
 	load_state(function (err) {
 		if (err)
 			throw err;
+
+		if (!board)
+			board = db.first_tag_of(op);
+		if (!board) {
+			console.error(op + ' has no tags.');
+			process.exit(-1);
+		}
+
 		console.log('Dumping thread...');
 
 		var outputs = {
