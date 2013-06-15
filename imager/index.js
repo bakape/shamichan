@@ -50,9 +50,9 @@ exports.send_dead_image = function (kind, filename, resp) {
 	});
 };
 
-hooks.hook('extractPost', function (post, cb) {
+hooks.hook_sync('extractPost', function (post) {
 	if (!is_image(post))
-		return cb(null);
+		return;
 	var image = {};
 	image_attrs.forEach(function (key) {
 		if (key in post) {
@@ -65,18 +65,16 @@ hooks.hook('extractPost', function (post, cb) {
 	image.size = parseInt(image.size);
 	delete image.hash;
 	post.image = image;
-	cb(null);
 });
 
-hooks.hook('inlinePost', function (info, cb) {
+hooks.hook_sync('inlinePost', function (info) {
 	var post = info.dest, image = info.src.image;
 	if (!image)
-		return cb(null);
+		return;
 	image_attrs.forEach(function (key) {
 		if (key in image)
 			post[key] = image[key];
 	});
-	cb(null);
 });
 
 hooks.hook("buryImage", function (info, callback) {

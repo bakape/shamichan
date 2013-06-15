@@ -507,7 +507,6 @@ Y.insert_post = function (msg, body, extra, callback) {
 	var r = this.connect();
 	if (!this.tag)
 		return callback(Muggle("Can't retrieve board for posting."));
-	var self = this;
 	var ip = extra.ip, board = extra.board, num = msg.num, op = msg.op;
 	if (!num)
 		return callback(Muggle("No post num."));
@@ -548,94 +547,88 @@ Y.insert_post = function (msg, body, extra, callback) {
 	if (bump)
 		m.incr(tagKey + ':bumpctr');
 	m.sadd('liveposts', key);
+
+	hooks.trigger_sync('inlinePost', {src: msg, dest: view});
+	if (msg.image) {
+		if (op)
+			m.hincrby('thread:' + op, 'imgctr', 1);
+		else
+			view.imgctr = 1;
+		note_hash(m, msg.image.hash, msg.num);
+		imager.make_image_nontemporary(m, extra.image_alloc);
+	}
+	m.hmset(key, view);
+	m.set(key + ':body', body);
+	if (msg.links)
+		m.hmset(key + ':links', msg.links);
+
+	var etc = {augments: {}, cacheUpdate: {}};
+	var priv = this.ident.priv;
+	if (op) {
+		etc.cacheUpdate.num = num;
+		var pre = 'thread:' + op;
+		if (priv) {
+			m.sadd(pre + ':privs', priv);
+			m.rpush(pre + ':privs:' + priv, num);
+		}
+		else
+			m.rpush(pre + ':posts', num);
+	}
+	else {
+		// TODO: Add to alternate thread list?
+		// set conditional hide?
+		op = num;
+		if (!view.immortal) {
+			var score = expiry_queue_score(msg.time);
+			var entry = num + ':' + tag_key(this.tag);
+			m.zadd(expiry_queue_key(), score, entry);
+		}
+		/* Rate-limit new threads */
+		if (ip != '127.0.0.1')
+			m.setex('ip:'+ip+':throttle:thread',
+					config.THREAD_THROTTLE, op);
+	}
+
+	/* Denormalize for backlog */
+	view.nonce = msg.nonce;
+	view.body = body;
+	if (msg.links)
+		view.links = msg.links;
+	extract(view);
+	delete view.ip;
+
 	var self = this;
-	hooks.trigger('inlinePost', {src: msg, dest: view}, function (err) {
-		if (err)
+	async.waterfall([
+	function (next) {
+		if (ip) {
+			var n = post_volume(view, body);
+			if (n > 0)
+				update_throughput(m, ip, view.time, n);
+			etc.augments.auth = {ip: ip};
+		}
+
+		self._log(m, op, common.INSERT_POST, [num, view], etc);
+
+		m.exec(next);
+	},
+	function (results, next) {
+		if (!bump)
+			return next();
+		var postctr = results[0];
+		var subject = subject_val(op,
+				op==num ? view.subject : results[1]);
+		var m = r.multi();
+		m.zadd(tagKey + ':threads', postctr, op);
+		if (subject)
+			m.zadd(tagKey + ':subjects', postctr, subject);
+		m.exec(next);
+	}],
+	function (err) {
+		if (err) {
+			delete OPs[num];
 			return callback(err);
-		if (msg.image) {
-			if (op)
-				m.hincrby('thread:' + op, 'imgctr', 1);
-			else
-				view.imgctr = 1;
-			note_hash(m, msg.image.hash, msg.num);
-			imager.make_image_nontemporary(m, extra.image_alloc);
 		}
-		m.hmset(key, view);
-		m.set(key + ':body', body);
-		if (msg.links)
-			m.hmset(key + ':links', msg.links);
-
-		var etc = {augments: {}, cacheUpdate: {}};
-		var priv = self.ident.priv;
-		if (op) {
-			etc.cacheUpdate.num = num;
-			var pre = 'thread:' + op;
-			if (priv) {
-				m.sadd(pre + ':privs', priv);
-				m.rpush(pre + ':privs:' + priv, num);
-			}
-			else
-				m.rpush(pre + ':posts', num);
-		}
-		else {
-			// TODO: Add to alternate thread list?
-			// set conditional hide?
-			op = num;
-			if (!view.immortal) {
-				var score = expiry_queue_score(msg.time);
-				var entry = num + ':' + tag_key(self.tag);
-				m.zadd(expiry_queue_key(), score, entry);
-			}
-			/* Rate-limit new threads */
-			if (ip != '127.0.0.1')
-				m.setex('ip:'+ip+':throttle:thread',
-						config.THREAD_THROTTLE, op);
-		}
-
-		/* Denormalize for backlog */
-		view.nonce = msg.nonce;
-		view.body = body;
-		if (msg.links)
-			view.links = msg.links;
-
-		async.waterfall([
-		function (next) {
-			extract(view, next);
-		},
-		function (v, next) {
-			view = v;
-			delete view.ip;
-
-			if (ip) {
-				var n = post_volume(view, body);
-				if (n > 0)
-					update_throughput(m, ip, view.time, n);
-				etc.augments.auth = {ip: ip};
-			}
-
-			self._log(m, op, common.INSERT_POST, [num, view], etc);
-
-			m.exec(next);
-		},
-		function (results, next) {
-			if (!bump)
-				return next();
-			var postctr = results[0];
-			var subject = subject_val(op,
-					op==num ? view.subject : results[1]);
-			var m = r.multi();
-			m.zadd(tagKey + ':threads', postctr, op);
-			if (subject)
-				m.zadd(tagKey + ':subjects', postctr, subject);
-			m.exec(next);
-		}],
-		function (err) {
-			if (err) {
-				delete OPs[num];
-				return callback(err);
-			}
-			callback(null);
-		});
+		callback(null);
 	});
 };
 
@@ -852,37 +845,34 @@ Y.archive_thread = function (op, callback) {
 		// shallow thread insertion message in archive
 		if (!_.isEmpty(links))
 			view.links = links;
-		extract(view, function (err) {
-			if (err)
-				return next(err);
-			delete view.ip;
-			view.replyctr = replyCount;
-			view.hctr = 0;
-			var etc = {tags: ['archive'], cacheUpdate: {}};
-			self._log(m, op, common.MOVE_THREAD, [view], etc);
+		extract(view);
+		delete view.ip;
+		view.replyctr = replyCount;
+		view.hctr = 0;
+		var etc = {tags: ['archive'], cacheUpdate: {}};
+		self._log(m, op, common.MOVE_THREAD, [view], etc);
 
-			// clear history; note new history could be added
-			// for deletion in the archive
-			// (a bit silly right after adding a new entry)
-			m.hdel(key, 'hctr');
-			m.del(key + ':history');
+		// clear history; note new history could be added
+		// for deletion in the archive
+		// (a bit silly right after adding a new entry)
+		m.hdel(key, 'hctr');
+		m.del(key + ':history');
 
-			// delete hidden posts
-			dels.forEach(function (num) {
-				m.del('post:' + num);
-				m.del('post:' + num + ':links');
-			});
-			m.del(key + ':dels');
-
-			if (privs.length) {
-				m.del(key + ':privs');
-				privs.forEach(function (priv) {
-					m.del(key + ':privs:' + priv);
-				});
-			}
-
-			m.exec(next);
+		// delete hidden posts
+		dels.forEach(function (num) {
+			m.del('post:' + num);
+			m.del('post:' + num + ':links');
 		});
+		m.del(key + ':dels');
+
+		if (privs.length) {
+			m.del(key + ':privs');
+			privs.forEach(function (priv) {
+				m.del(key + ':privs:' + priv);
+			});
+		}
+
+		m.exec(next);
 	},
 	function (results, done) {
 		set_OP_tag(config.BOARDS.indexOf('archive'), op);
@@ -1436,9 +1426,10 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 					total += parseInt(rs.shift(), 10);
 			}
 
-			extract(opPost, next);
+			extract(opPost);
+			next(null);
 		}],
-		function (err, opPost) {
+		function (err) {
 			if (err)
 				return self.emit('error', err);
 			if (deadNums)
@@ -1525,7 +1516,8 @@ Reader.prototype._get_each_reply = function (tag, ix, nums, opts) {
 		if (self.privNums &&
 				self.privNums.indexOf(num.toString()) >= 0)
 			post.priv = true;
-		extract(post, next);
+		extract(post);
+		next(null, post);
 	}],
 	function (err, post) {
 		if (err)
@@ -1703,8 +1695,8 @@ Y.get_current_body = function (num, cb) {
 
 /* HELPERS */
 
-function extract(post, cb) {
-	hooks.trigger('extractPost', post, cb);
+function extract(post) {
+	hooks.trigger_sync('extractPost', post);
 }
 
 function with_body(r, key, post, callback) {

@@ -51,21 +51,19 @@ hooks.hook('attachToPost', function (attached, cb) {
 	cb(null);
 });
 
-hooks.hook('inlinePost', function (info, cb) {
+hooks.hook_sync('inlinePost', function (info) {
 	inline_dice(info.dest, info.src.dice);
-	cb(null);
 });
 
-hooks.hook('extractPost', function (post, cb) {
+hooks.hook_sync('extractPost', function (post) {
 	if (!post.dice)
-		return cb(null);
+		return;
 	try {
 		post.dice = JSON.parse('[' + post.dice + ']');
 	}
 	catch (e) {
 		delete post.dice;
 	}
-	cb(null);
 });
 
 // This is looking rather boilerplatey
