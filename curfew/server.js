@@ -1,7 +1,10 @@
-var caps = require('../server/caps'),
+var _ = require('../lib/underscore'),
+    caps = require('../server/caps'),
     config = require('../config'),
+    db = require('../db'),
     hooks = require('../hooks'),
-    web = require('../server/web');
+    web = require('../server/web'),
+    winston = require('winston');
 
 var RES = require('../server/state').resources;
 
@@ -56,7 +59,7 @@ function curfew_ending_time(board) {
 	return null;
 }
 
-exports.curfew_starting_time = function (board) {
+function curfew_starting_time(board) {
 	var curfew = config.CURFEW_HOURS;
 	if (!curfew || (config.CURFEW_BOARDS || []).indexOf(board) < 0)
 		return null;
@@ -97,3 +100,34 @@ function hour_date_maker(date) {
 		return new Date(prefix + hour + ':00:00 GMT');
 	});
 }
+
+/* DAEMON */
+
+function shutdown(board, cb) {
+	var yaku = new db.Yakusoku(board, db.UPKEEP_IDENT);
+	yaku.teardown(board, function (err) {
+		yaku.disconnect();
+		cb(err);
+	});
+}
+
+function at_next_curfew_start(board, func) {
+	var when = curfew_starting_time(board);
+	winston.info('Next curfew for ' + board + ' at ' + when.toUTCString());
+	setTimeout(func, when.getTime() - new Date().getTime());
+}
+
+function enforce(board) {
+	at_next_curfew_start(board, function () {
+		winston.info('Curfew ' + board + ' at ' +
+				new Date().toUTCString());
+		shutdown(board, function (err) {
+			if (err)
+				winston.error(err);
+		});
+		setTimeout(enforce.bind(null, board), 30 * 1000);
+	});
+}
+
+if (config.CURFEW_BOARDS && config.CURFEW_HOURS)
+	config.CURFEW_BOARDS.forEach(enforce);
