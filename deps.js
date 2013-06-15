@@ -35,6 +35,7 @@ exports.SERVER_DEPS = [
 	'config.js',
 	'db.js',
 	'deps.js',
+	'etc.js',
 	'get.js',
 	'hooks.js',
 	'muggle.js',

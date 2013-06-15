@@ -2,6 +2,7 @@ var async = require('async'),
     config = require('./config'),
     child_process = require('child_process'),
     db = require('./db'),
+    etc = require('../etc'),
     fs = require('fs'),
     hooks = require('../hooks'),
     Muggle = require('../muggle').Muggle,
@@ -14,18 +15,6 @@ exports.config = config;
 var image_attrs = ('src thumb dims size MD5 hash imgnm spoiler realthumb vint'
 		+ ' apng mid').split(' ');
 exports.image_attrs = image_attrs;
-
-function mv_file(src, dest, callback) {
-	child_process.execFile('/bin/mv', ['-n', src, dest],
-				function (err, stdout, stderr) {
-		if (err)
-			callback(Muggle("Couldn't move file into place.",
-					stderr || err));
-		else
-			callback(null);
-	});
-}
-exports.mv_file = mv_file;
 
 exports.send_dead_image = function (kind, filename, resp) {
 	filename = dead_path(kind, filename);
@@ -101,7 +90,7 @@ hooks.hook("buryImage", function (info, callback) {
 	try_thumb('mid', info.mid);
 	async.parallel(mvs, callback);
 	function mv(p, nm, cb) {
-		mv_file(media_path(p, nm), dead_path(p, nm), cb);
+		etc.movex(media_path(p, nm), dead_path(p, nm), cb);
 	}
 });
 
@@ -119,26 +108,8 @@ function dead_path(dir, filename) {
 }
 
 function make_dir(base, key, cb) {
-	var dir;
-	if (base)
-		dir = path.join(base, key);
-	else
-		dir = config.MEDIA_DIRS[key];
-	fs.stat(dir, function (err, info) {
-		var make = false;
-		if (err) {
-			if (err.code == 'ENOENT')
-				make = true;
-			else
-				return cb(err);
-		}
-		else if (!info.isDirectory())
-			return cb(dir + " is not a directory");
-		if (make)
-			fs.mkdir(dir, cb);
-		else
-			cb(null);
-	});
+	var dir = base ? path.join(base, key) : config.MEDIA_DIRS[key];
+	etc.checked_mkdir(dir, cb);
 }
 
 exports.make_media_dirs = function (cb) {

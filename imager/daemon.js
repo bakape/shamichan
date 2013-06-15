@@ -2,6 +2,7 @@ var async = require('async'),
     common = require('../common'),
     config = require('./config'),
     child_process = require('child_process'),
+    etc = require('../etc'),
     imagerDb = require('./db'),
     index = require('./'),
     formidable = require('formidable'),
@@ -278,7 +279,7 @@ IU.got_nails = function () {
 	var time = new Date().getTime();
 	image.src = time + image.ext;
 	var dest, mvs, pathUpdates = {};
-	var media_path = index.media_path, mv_file = index.mv_file;
+	var media_path = index.media_path, mv_file = etc.movex;
 	dest = media_path('src', image.src);
 	mvs = [mv_file.bind(null, image.path, dest)];
 

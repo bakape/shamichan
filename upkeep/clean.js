@@ -1,6 +1,7 @@
 var imgConfig = require('../imager/config'),
     crypto = require('crypto'),
     db = require('../db'),
+    etc = require('../etc'),
     fs = require('fs'),
     path = require('path'),
     imager = require('../imager'),
@@ -42,7 +43,7 @@ R.recycle_post = function (post, cb) {
 		}
 		var dest = MD5 + path.extname(src);
 		var dest_path = imager.media_path('vint', dest);
-		imager.mv_file(src, dest_path, function (err) {
+		etc.movex(src, dest_path, function (err) {
 			if (err)
 				return cb(err);
 			var m = r.multi();
@@ -55,7 +56,7 @@ R.recycle_post = function (post, cb) {
 			m.exec(function (err) {
 				if (err) {
 					// move it back
-					imager.mv_file(dest_path, src,
+					etc.movex(dest_path, src,
 							function (e) {
 						if (e)
 							winston.error(e);
