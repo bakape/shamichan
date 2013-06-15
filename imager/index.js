@@ -61,11 +61,15 @@ hooks.hook_sync('extractPost', function (post) {
 		}
 	});
 	if (image.dims.split)
-		image.dims = image.dims.split(',');
-	image.size = parseInt(image.size);
+		image.dims = image.dims.split(',').map(parse_number);
+	image.size = parse_number(image.size);
 	delete image.hash;
 	post.image = image;
 });
+
+function parse_number(n) {
+	return parseInt(n, 10);
+}
 
 hooks.hook_sync('inlinePost', function (info) {
 	var post = info.dest, image = info.src.image;
