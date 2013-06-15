@@ -22,11 +22,13 @@ D.on_thread = function (op_post) {
 		this.out.write(',\n');
 		this.needComma = false;
 	}
-	this.out.write('[\n\t' + JSON.stringify(op_post));
+	tweak_post(op_post);
+	this.out.write('[\n' + JSON.stringify(op_post));
 };
 
 D.on_post = function (post) {
-	this.out.write(',\n\t' + JSON.stringify(post));
+	tweak_post(post);
+	this.out.write(',\n' + JSON.stringify(post));
 };
 
 D.on_endthread = function () {
@@ -41,6 +43,16 @@ D.destroy = function () {
 	this.reader = null;
 	this.out = null;
 };
+
+function tweak_post(post) {
+	var img = post.image;
+	if (img) {
+		if (img.thumb == img.src)
+			img.thumb = true;
+		if (img.mid == img.src)
+			img.mid = true;
+	}
+}
 
 function dump_thread(op, board, ident, outputs, cb) {
 	if (!caps.can_access_board(ident, board))
