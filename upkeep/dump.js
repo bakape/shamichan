@@ -22,18 +22,20 @@ D.on_thread = function (op_post) {
 		this.out.write(',\n');
 		this.needComma = false;
 	}
+	this.op = op_post.num;
 	tweak_post(op_post);
 	this.out.write('[\n' + JSON.stringify(op_post));
 };
 
 D.on_post = function (post) {
-	tweak_post(post);
+	tweak_post(post, this.op);
 	this.out.write(',\n' + JSON.stringify(post));
 };
 
 D.on_endthread = function () {
 	this.out.write('\n]');
 	this.needComma = true;
+	this.op = null;
 };
 
 D.destroy = function () {
@@ -44,7 +46,18 @@ D.destroy = function () {
 	this.out = null;
 };
 
-function tweak_post(post) {
+function tweak_post(post, known_op) {
+	/* thread-only */
+	if (typeof post.tags == 'string')
+		post.tags = db.parse_tags(post.tags);
+	if (typeof post.origTags == 'string')
+		post.origTags = db.parse_tags(post.origTags);
+	delete post.imgctr;
+
+	/* post-only */
+	if (known_op == post.op)
+		delete post.op;
+
 	var img = post.image;
 	if (img) {
 		if (img.thumb == img.src)
