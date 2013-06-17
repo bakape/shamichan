@@ -1,7 +1,7 @@
 var cache = require('../server/state').dbCache,
     events = require('events'),
     fs = require('fs'),
-    Muggle = require('../muggle').Muggle,
+    Muggle = require('../etc').Muggle,
     tail = require('../tail'),
     util = require('util'),
     winston = require('winston');

@@ -1,7 +1,7 @@
 var caps = require('./caps'),
     common = require('../common'),
     events = require('events'),
-    Muggle = require('../muggle').Muggle,
+    Muggle = require('../etc').Muggle,
     STATE = require('./state'),
     util = require('util'),
     winston = require('winston');

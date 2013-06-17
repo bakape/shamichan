@@ -38,7 +38,6 @@ exports.SERVER_DEPS = [
 	'etc.js',
 	'get.js',
 	'hooks.js',
-	'muggle.js',
 	'tail.js',
 	'curfew/server.js',
 	'lib/underscore.js',

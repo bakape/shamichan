@@ -2,10 +2,10 @@ var caps = require('../server/caps'),
     config = require('../config');
     crypto = require('crypto'),
     db = require('../db'),
+    etc = require('../etc'),
     fs = require('fs'),
     imager = require('../imager'),
     joinPath = require('path').join,
-    Muggle = require('../muggle').Muggle,
     request = require('request'),
     winston = require('winston'),
     web = require('../server/web');
@@ -49,7 +49,7 @@ web.resource(/^\/(\w+)\/(\d+)\/voice$/, function (req, params, cb) {
 			return cb(err);
 		body = body && body.trim().slice(0, 100);
 		if (!body)
-			return cb(Muggle("No text."));
+			return cb(etc.Muggle("No text."));
 
 		var MD5 = crypto.createHash('md5').update(body).digest('hex');
 		var MP3 = 'v' + imager.squish_MD5(MD5) + '.mp3';

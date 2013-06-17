@@ -5,7 +5,6 @@ var async = require('async'),
     etc = require('../etc'),
     fs = require('fs'),
     hooks = require('../hooks'),
-    Muggle = require('../muggle').Muggle,
     path = require('path'),
     winston = require('winston');
 
@@ -76,13 +75,13 @@ hooks.hook("buryImage", function (info, callback) {
 	/* Just in case */
 	var m = /^\d+\w*\.\w+$/;
 	if (!info.src.match(m))
-		return callback(Muggle('Invalid image.'));
+		return callback(etc.Muggle('Invalid image.'));
 	var mvs = [mv.bind(null, 'src', info.src)];
 	function try_thumb(path, t) {
 		if (!t)
 			return;
 		if (!t.match(m))
-			return callback(Muggle('Invalid thumbnail.'));
+			return callback(etc.Muggle('Invalid thumbnail.'));
 		mvs.push(mv.bind(null, path, t));
 	}
 	try_thumb('thumb', info.thumb);
