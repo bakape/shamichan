@@ -539,7 +539,7 @@ function readable_time(time) {
 	var d = new Date(time - new Date().getTimezoneOffset() * 60000);
 	var k = "日月火水木金土"[d.getUTCDay()];
 	return (d.getUTCFullYear() + '/' + pad(d.getUTCMonth()+1) + '/' +
-		pad(d.getUTCDate()) + '(' + k + ') ' +
+		pad(d.getUTCDate()) + '&nbsp;(' + k + ') ' +
 		pad(d.getUTCHours()) + ':' +
 		pad(d.getUTCMinutes()));
 }

@@ -513,7 +513,7 @@ dispatcher[COLLECTION_ADD] = function (msg, op) {
 		var t = $(this);
 		var d = t.attr('datetime').replace(/-/g, '/'
 			).replace('T', ' ').replace('Z', ' GMT');
-		t.text(readable_time(new Date(d).getTime()));
+		t.html(readable_time(new Date(d).getTime()));
 	});
 
 	$('del').attr('onclick', 'void(0)');
