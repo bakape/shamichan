@@ -122,8 +122,19 @@ function close_stream(stream, cb) {
 		stream.once('drain', close);
 
 	function close() {
-		try { stream.end(); } catch (e) {}
-		cb(null);
+		// deal with process.stdout not being closable
+		try {
+			stream.destroySoon(function (err) {
+				if (cb)
+					cb(err);
+				cb = null;
+			});
+		}
+		catch (e) {
+			if (cb)
+				cb(null);
+			cb = null;
+		}
 	}
 }
 
@@ -165,16 +176,17 @@ if (require.main === module) (function () {
 			if (err)
 				throw err;
 
-			async.each(streams, close_stream, function (err) {
-				// crappy flush for stdout (can't close it)
-				if (process.stdout.write(''))
-					process.exit(0);
-				else
-					process.stdout.on('drain', function () {
-						process.exit(0);
-					});
-			});
-
+			async.each(streams, close_stream, quit);
 		});
 	});
+
+	function quit() {
+		// crappy flush for stdout (can't close it)
+		if (process.stdout.write(''))
+			process.exit(0);
+		else
+			process.stdout.on('drain', function () {
+				process.exit(0);
+			});
+	}
 })();
