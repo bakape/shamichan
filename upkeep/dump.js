@@ -1,9 +1,13 @@
 var _ = require('../lib/underscore'),
     async = require('async'),
     caps = require('../server/caps'),
+    etc = require('../etc'),
     fs = require('fs'),
+    joinPath = require('path').join,
     render = require('../server/render'),
     db = require('../db');
+
+var DUMP_DIR = 'www/archive';
 
 var DUMP_IDENT = {ip: '127.0.0.1', auth: 'dump'};
 
@@ -140,6 +144,7 @@ function close_stream(stream, cb) {
 
 function load_state(cb) {
 	async.series([
+		etc.checked_mkdir.bind(null, DUMP_DIR),
 		require('../server/state').reload_hot_resources,
 		db.track_OPs,
 	], cb);
@@ -166,16 +171,19 @@ if (require.main === module) (function () {
 
 		console.log('Dumping thread...');
 
+		var base = joinPath(DUMP_DIR, op.toString());
 		var outputs = {
-			json: process.stdout,
-			html: fs.createWriteStream('dump.html'),
+			json: fs.createWriteStream(base + '.json'),
+			html: fs.createWriteStream(base + '.html'),
 		};
-		var streams = [outputs.json, outputs.html];
 
 		dump_thread(op, board, DUMP_IDENT, outputs, function (err) {
 			if (err)
 				throw err;
 
+			var streams = [];
+			for (var k in outputs)
+				streams.push(outputs[k]);
 			async.each(streams, close_stream, quit);
 		});
 	});
