@@ -23,7 +23,9 @@ function dropped() {
 connSM.on('dropped', dropped);
 connSM.on('desynced', dropped);
 
-Backbone.on('afterInsert', function () {
+Backbone.on('afterInsert', function (model) {
+	if (model && model.get('mine'))
+		return; // It's ours, don't notify unread
 	if (Unread.get('blurred'))
 		Unread.set('unreadCount', Unread.get('unreadCount') + 1);
 });

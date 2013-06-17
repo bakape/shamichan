@@ -135,7 +135,8 @@ dispatcher[INSERT_POST] = function (msg) {
 	msg.num = num;
 
 	var el;
-	if (msg.nonce && msg.nonce in nonces) {
+	var isOwn = !!(msg.nonce && msg.nonce in nonces);
+	if (isOwn) {
 		delete nonces[msg.nonce];
 		ownPosts[num] = true;
 		oneeSama.trigger('insertOwnPost', msg);
@@ -204,6 +205,8 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 
+	if (isOwn)
+		model.set('mine', true);
 	Backbone.trigger('afterInsert', model, $(el));
 	if (bump) {
 		var fencepost = $('body > aside');
