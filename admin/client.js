@@ -164,7 +164,7 @@ with_dom(function () {
 			$el.append(' ## ' + IDENT.auth)
 	});
 
-	Backbone.on('afterInsert', function ($el) {
+	Backbone.on('afterInsert', function (model, $el) {
 		if (multiSelecting)
 			make_selection_handle().prependTo($el);
 	});
@@ -332,7 +332,7 @@ var Addresses = Backbone.Collection.extend({
 
 window.addrs = new Addresses;
 
-function hook_up_address($post, op) {
+function hook_up_address(model, $post) {
 	var $a = $post.find('a.mod.addr:first');
 	if (!$a.length)
 		return;
@@ -358,24 +358,21 @@ function hook_up_address($post, op) {
 	if (address.get('name'))
 		view.render();
 
-	/* Augment post with IP */
-	var thread = Threads.get(op);
-	if (thread) {
-		var num = extract_num($post);
-		var post = num==op ? thread : thread.get('replies').get(num);
-		if (post && !post.has('ip'))
-			post.set('ip', ip);
-	}
+	if (model && model.set && !model.has('ip'))
+		model.set('ip', ip);
 }
 Backbone.on('afterInsert', hook_up_address);
 
 with_dom(function () {
 	$('section').each(function () {
 		var $section = $(this);
-		var op = extract_num($section);
-		hook_up_address($section, op);
+		var thread = Threads.get(extract_num($section));
+		hook_up_address(thread, $section);
+		var replies = thread && thread.get('replies');
 		$section.find('article').each(function () {
-			hook_up_address($(this), op);
+			var $post = $(this);
+			var model = replies && replies.get(extract_num($post));
+			hook_up_address(model, $post);
 		});
 	});
 });

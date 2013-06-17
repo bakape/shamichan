@@ -150,24 +150,24 @@ dispatcher[INSERT_POST] = function (msg) {
 	var links = oneeSama.links = msg.links;
 	delete msg.links;
 
-	var $section, $hr, bump = true;
+	var model, $section, $hr, bump = true;
 	if (msg.op) {
-		var post = UnknownThread.get('replies').get(num);
-		if (post) {
+		model = UnknownThread.get('replies').get(num);
+		if (model) {
 			UnknownThread.get('replies').remove(num);
-			post.unset('shallow');
-			post.set(msg);
+			model.unset('shallow');
+			model.set(msg);
 		}
 		else
-			post = new Post(msg);
+			model = new Post(msg);
 
-		var article = new Article({model: post, id: num, el: el});
+		var article = new Article({model: model, id: num, el: el});
 		if (!el)
 			el = article.render().el;
 
 		var thread = Threads.get(msg.op) || UnknownThread;
-		thread.get('replies').add(post);
-		add_post_links(post, links, msg.op);
+		thread.get('replies').add(model);
+		add_post_links(model, links, msg.op);
 
 		$section = $('#' + msg.op);
 		shift_replies($section);
@@ -183,8 +183,8 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 	else {
-		var thread = new Thread(msg);
-		Threads.add(thread);
+		model = new Thread(msg);
+		Threads.add(model);
 
 		if (!el) {
 			$section = $($.parseHTML(oneeSama.monomono(msg
@@ -194,7 +194,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		else {
 			$section = $(el);
 		}
-		var section = new Section({model: thread, id: num, el: el});
+		var section = new Section({model: model, id: num, el: el});
 		$hr = $('<hr/>');
 		if (!postForm)
 			$section.append(make_reply_box());
@@ -204,7 +204,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 
-	Backbone.trigger('afterInsert', $(el), msg.op || num);
+	Backbone.trigger('afterInsert', model, $(el));
 	if (bump) {
 		var fencepost = $('body > aside');
 		$section.insertAfter(fencepost.length ? fencepost : $ceiling
@@ -219,25 +219,33 @@ dispatcher[MOVE_THREAD] = function (msg, op) {
 	msg = msg[0];
 	msg.num = op;
 	var orig_focus = get_focus();
-	oneeSama.links = msg.links;
 
-	var section = $($.parseHTML(oneeSama.monomono(msg).join('')));
-	var hr = $('<hr/>');
+	var model = new Thread(msg);
+	Threads.add(model);
+
+	oneeSama.links = msg.links;
+	var $el = $($.parseHTML(oneeSama.monomono(msg).join('')));
+	var el = $el.filter('section')[0];
+
+	var section = new Section({model: model, id: op, el: el});
+	var $hr = $('<hr/>');
 	// No make_reply_box since this is archive-only for now
 	if (!BUMP) {
-		section.hide();
-		hr.hide();
+		$el.hide();
+		$hr.hide();
 	}
 	if (msg.replyctr > 0) {
 		var omitMsg = abbrev_msg(msg.replyctr, msg.imgctr - 1);
-		$('<span class="omit"/>').text(omitMsg).appendTo(section);
+		$('<span class="omit"/>').text(omitMsg).appendTo($el);
 	}
 
-	Backbone.trigger('afterInsert', section, op);
-	var fencepost = $('body > aside');
-	section.insertAfter(fencepost.length ? fencepost : $ceiling
-			).after(hr);
-	spill_page();
+	Backbone.trigger('afterInsert', model, $el);
+	if (BUMP) {
+		var fencepost = $('body > aside');
+		$el.insertAfter(fencepost.length ? fencepost : $ceiling
+				).after($hr);
+		spill_page();
+	}
 	if (orig_focus)
 		orig_focus.focus();
 };
