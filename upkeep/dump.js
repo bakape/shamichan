@@ -1,13 +1,15 @@
 var _ = require('../lib/underscore'),
     async = require('async'),
     caps = require('../server/caps'),
+    db = require('../db'),
     etc = require('../etc'),
     fs = require('fs'),
     joinPath = require('path').join,
     render = require('../server/render'),
-    db = require('../db');
+    util = require('util');
 
 var DUMP_DIR = 'www/archive';
+var AUTH_DUMP_DIR = 'authdump';
 
 var DUMP_IDENT = {ip: '127.0.0.1', auth: 'dump'};
 
@@ -48,6 +50,37 @@ D.destroy = function () {
 	this.out = null;
 };
 
+
+function AuthDumper(reader, out) {
+	Dumper.call(this, reader, out);
+}
+util.inherits(AuthDumper, Dumper);
+var AD = AuthDumper.prototype;
+
+AD.on_thread = function (post) {
+	this.out.write('{"ips":{');
+
+	if (post.num && post.ip) {
+		this.out.write('"'+post.num+'":'+JSON.stringify(post.ip));
+		this.needComma = true;
+	}
+};
+
+AD.on_post = function (post) {
+	if (post.num && post.ip) {
+		if (this.needComma)
+			this.out.write(',');
+		else
+			this.needComma = true;
+		this.out.write('"'+post.num+'":'+JSON.stringify(post.ip));
+	}
+};
+
+AD.on_endthread = function () {
+	this.out.write('}}');
+	this.needComma = false;
+};
+
 function tweak_post(post, known_op) {
 	post = _.clone(post);
 
@@ -71,6 +104,10 @@ function tweak_post(post, known_op) {
 	}
 	if (post.body == '')
 		delete post.body;
+
+	/* blacklisting is bad... */
+	delete post.ip;
+
 	return post;
 }
 
@@ -93,6 +130,7 @@ function dump_thread(op, board, ident, outputs, cb) {
 	});
 	reader.once('begin', function (preThread) {
 		var dumper = new Dumper(reader, outputs.json);
+		var authDumper = new AuthDumper(reader, outputs.auth);
 
 		var out = outputs.html;
 		render.write_thread_head(out, board, op, preThread.subject);
@@ -103,6 +141,7 @@ function dump_thread(op, board, ident, outputs, cb) {
 
 		reader.once('end', function () {
 			outputs.json.write('\n');
+			outputs.auth.write('\n');
 			render.write_page_end(out, ident, true);
 			yaku.disconnect();
 			cb(null);
@@ -145,6 +184,7 @@ function close_stream(stream, cb) {
 function load_state(cb) {
 	async.series([
 		etc.checked_mkdir.bind(null, DUMP_DIR),
+		etc.checked_mkdir.bind(null, AUTH_DUMP_DIR),
 		require('../server/state').reload_hot_resources,
 		db.track_OPs,
 	], cb);
@@ -172,7 +212,9 @@ if (require.main === module) (function () {
 		console.log('Dumping thread...');
 
 		var base = joinPath(DUMP_DIR, op.toString());
+		var authBase = joinPath(AUTH_DUMP_DIR, op.toString());
 		var outputs = {
+			auth: fs.createWriteStream(authBase + '.json'),
 			json: fs.createWriteStream(base + '.json'),
 			html: fs.createWriteStream(base + '.html'),
 		};

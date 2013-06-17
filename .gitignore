@@ -3,7 +3,7 @@
 *.swp
 .lock*
 .DS_Store
-builder
+authdump
 config.js
 graveyard
 findapng
