@@ -1730,8 +1730,10 @@ function tag_key(tag) {
 }
 
 function parse_tags(input) {
-	if (!input)
-		return [config.DEFAULT_BOARD];
+	if (!input) {
+		winston.warn('Blank tag!');
+		return [];
+	}
 	var tags = [];
 	while (input.length) {
 		var m = input.match(/^(\d+):/);
