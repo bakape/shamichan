@@ -742,13 +742,13 @@ Y.remove_thread = function (op, callback) {
 	function (dels, next) {
 		var m = r.multi();
 		m.incr(graveyardKey + ':bumpctr');
-		m.hmget(key, ['tags', 'subject']);
+		m.hgetall(key);
 		m.exec(next);
 	},
 	function (rs, next) {
-		var deadCtr = rs[0], misc = rs[1];
-		var tags = parse_tags(misc[0]);
-		var subject = subject_val(op, misc[1]);
+		var deadCtr = rs[0], post = rs[1];
+		var tags = parse_tags(post.tags);
+		var subject = subject_val(op, post.subject);
 		/* Rename thread keys, move to graveyard */
 		var m = r.multi();
 		var expiryKey = expiry_queue_key();
