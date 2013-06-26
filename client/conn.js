@@ -77,7 +77,7 @@ connSM.act('dropped + retry -> reconn', function () {
 	/* Don't show this immediately so we don't thrash on network loss */
 	setTimeout(function () {
 		if (connSM.state == 'reconn')
-			sync_status('Dropped. Reconnecting...', true);
+			sync_status('Reconnecting...', true);
 	}, 100);
 });
 
