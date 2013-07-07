@@ -324,7 +324,7 @@ IU.got_nails = function () {
 
 function composite_src(spoiler, pinky) {
 	var file = 'spoiler' + (pinky ? 's' : '') + spoiler + '.png';
-	return path.join('www', 'kana', file);
+	return path.join(config.SPOILER_DIR, file);
 }
 
 IU.read_image_filesize = function (callback) {
