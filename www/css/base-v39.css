@@ -312,7 +312,8 @@ pre, .themed {
 	padding: 0;
 }
 #toggle {
-	background: url('../kana/pane.png') transparent;
+	background: url('ui/pane.png') transparent;
+	background-size: 78px 19px;
 	border: 0;
 	height: 19px;
 	width: 78px;
