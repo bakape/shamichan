@@ -422,8 +422,10 @@ OS.spoiler_info = function (index, toppu) {
 	};
 };
 
+var spoilerImages = imagerConfig.SPOILER_IMAGES;
+
 function pick_spoiler(metaIndex) {
-	var imgs = imagerConfig.SPOILER_IMAGES;
+	var imgs = spoilerImages;
 	var n = imgs.normal.length;
 	var count = n + imgs.trans.length;
 	var i;

@@ -693,13 +693,26 @@ on_toggle: function (event) {
 },
 
 render_spoiler_pane: function (model, sp) {
-	var img = mediaURL + 'kana/' + (sp ? 'spoil'+sp : 'pane') + '.png';
+	var img = sp ? spoiler_pane_url(sp) : mediaURL + 'css/ui/pane.png';
 	this.$toggle.css('background-image', 'url("' + img + '")');
 },
 
 });
 
+function spoiler_pane_url(sp) {
+	return mediaURL + 'kana/spoil' + sp + '.png';
+}
+
+function preload_panes() {
+	var all = spoilerImages.normal.concat(spoilerImages.trans);
+	for (var i = 0; i < all.length; i++) {
+		var img = new Image;
+		img.src = spoiler_pane_url(i);
+	}
+}
+
 (function () {
 	var CV = ComposerView.prototype;
 	CV.finish_wrapped = _.wrap(CV.finish, with_dom);
+	preload_panes();
 })();
