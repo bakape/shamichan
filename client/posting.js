@@ -707,7 +707,7 @@ function preload_panes() {
 	var all = spoilerImages.normal.concat(spoilerImages.trans);
 	for (var i = 0; i < all.length; i++) {
 		var img = new Image;
-		img.src = spoiler_pane_url(i);
+		img.src = spoiler_pane_url(all[i]);
 	}
 }
 
