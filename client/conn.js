@@ -41,11 +41,15 @@ connSM.act('load + start -> conn', function () {
 });
 
 function connect() {
-	socket = new SockJS(SOCKET_PATH);
+	socket = window.new_socket(attempts);
 	socket.onopen = connSM.feeder('open');
 	socket.onclose = connSM.feeder('close');
 	socket.onmessage = on_message;
 }
+
+window.new_socket = function (attempt) {
+	return new SockJS(SOCKET_PATH);
+};
 
 connSM.act('conn, reconn + open -> syncing', function () {
 	sync_status('Syncing...', false);
@@ -93,9 +97,8 @@ connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 	socket = null;
 });
 
-$(connSM.feeder('start'));
-
 $(function () {
+	_.defer(connSM.feeder('start'));
 	$(window).focus(function () {
 		setTimeout(connSM.feeder('retry'), 20);
 	});
