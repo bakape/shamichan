@@ -14,7 +14,7 @@ $DOC.on('click', '.control', function (event) {
 	if ($menu.length)
 		$menu.remove();
 	else {
-		$menu = $('<ul/>');
+		$menu = $('<ul/>', {"class": 'popup-menu'});
 		var opts = menuOptions.slice();
 
 		/* TODO: Use model lookup */
@@ -32,7 +32,7 @@ $DOC.on('click', '.control', function (event) {
 	}
 });
 
-$DOC.on('mouseleave', 'ul', function (event) {
+$DOC.on('mouseleave', '.popup-menu', function (event) {
 	var $ul = $(this);
 	if (!$ul.is('ul'))
 		return;
@@ -45,7 +45,7 @@ $DOC.on('mouseleave', 'ul', function (event) {
 	$ul.data('closetimer', timer);
 });
 
-$DOC.on('mouseenter', 'ul', function (event) {
+$DOC.on('mouseenter', '.popup-menu', function (event) {
 	var $ul = $(this);
 	var timer = $ul.data('closetimer');
 	if (timer) {

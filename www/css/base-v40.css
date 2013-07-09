@@ -123,10 +123,10 @@ small {
 	display: block;
 	padding-top: 0.5em;
 }
-span.control ul {
+span.control .popup-menu {
 	z-index: 10;
 }
-ul {
+.popup-menu {
 	background: url('ui/box.png') 10px 10px no-repeat;
 	border-bottom: none;
 	position: absolute;
@@ -135,14 +135,14 @@ ul {
 	top: -9px;
 	left: -9px;
 }
-ul, .act {
+.popup-menu, .act {
 	user-select: none;
 	-webkit-user-select: none;
 	-khtml-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
 }
-ul li {
+.popup-menu li {
 	list-style: none;
 	margin: 0;
 	padding: 3px 3px 3px 21px;
@@ -370,7 +370,7 @@ pre, .themed {
 	screen and (-o-device-pixel-ratio: 3/2),
 	screen and (min--moz-device-pixel-ratio: 1.5),
 	screen and (min-device-pixel-ratio: 1.5) {
-	header, ul {
+	header, .popup-menu {
 		background-image: url('ui/box2x.png');
 		background-size: 10px 10px;
 	}

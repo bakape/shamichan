@@ -20,7 +20,7 @@ body, pre, .themed {
 em {
 	color: #789922;
 }
-li:hover {
+.popup-menu li:hover {
 	background-color: white;
 }
 nav a {
@@ -32,7 +32,7 @@ small a {
 .act a {
 	color: blue;
 }
-.modal, .preview, ul {
+.modal, .preview, .popup-menu {
 	background-color: #f5f5f5;
 }
 .omit {

@@ -8,7 +8,7 @@ article, aside, .modal, .pagination {
 	background-color: #282a2e;
 	border: 1px solid #282a2e;
 }
-article.highlight, .preview, ul {
+article.highlight, .preview, .popup-menu {
 	background-color: #1d1d21;
 	border-color: #111;
 }
@@ -59,7 +59,7 @@ h3 {
 hr {
 	border-top: 1px solid #282a2e;
 }
-li:hover {
+.popup-menu li:hover {
 	background-color: #136;
 }
 .act:before {

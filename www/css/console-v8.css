@@ -111,7 +111,7 @@ h1:after {
 h3 {
 	color: #0e0;
 }
-li:hover {
+.popup-menu li:hover {
 	background-color: white;
 }
 section {
@@ -137,7 +137,7 @@ small a {
 .email, .email b {
 	color: #2020ff;
 }
-.modal, .preview, ul {
+.modal, .preview, .popup-menu {
 	background-color: #111;
 }
 #feedback {

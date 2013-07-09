@@ -55,7 +55,7 @@ header, figcaption, figcaption a, small, .act {
 hr {
 	border-top: 1px solid #300;
 }
-li:hover {
+.popup-menu li:hover {
 	background-color: white;
 }
 .act:before {
@@ -67,7 +67,7 @@ li:hover {
 .email, .email b {
 	color: #88c;
 }
-.preview, ul {
+.preview, .popup-menu {
 	background-color: #111;
 	border-right: 1px solid #000;
 	border-bottom: 1px solid #000;
