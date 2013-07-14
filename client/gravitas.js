@@ -1,6 +1,6 @@
 (function () {
 
-Backbone.on('afterInsert', function (model, $el) {
+Backbone.on('afterInsert', function (model) {
 	if (model.id != MILLION)
 		return;
 
