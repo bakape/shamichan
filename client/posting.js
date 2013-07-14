@@ -256,6 +256,8 @@ on_allocation: function (msg) {
 
 	if (msg.image)
 		this.insert_uploaded(msg.image);
+	if (num == MILLION)
+		this.add_own_gravitas(msg);
 
 	if (this.uploadForm)
 		this.uploadForm.append(this.submit);

@@ -68,6 +68,7 @@ function make_link_rels(board, bits) {
 	var path = imager.config.MEDIA_URL + 'css/';
 	bits.push(['stylesheet', path + STATE.hot.BASE_CSS]);
 	bits.push(['stylesheet', path + STATE.hot.BOARD_CSS[board], 'theme']);
+	bits.push(['stylesheet', path + 'gravitas-v1.css']);
 	return bits.map(function (p) {
 		var html = '\t<link rel="'+p[0]+'" href="'+p[1]+'"';
 		if (p[2])
