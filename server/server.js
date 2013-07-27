@@ -667,8 +667,13 @@ function allocate_post(msg, client, callback) {
 			amusement.roll_dice(body, post, extra);
 	}
 
-	if (msg.op)
+	if (msg.op) {
+		if (db.OPs[msg.op] != msg.op)
+			return callback(Muggle('Thread does not exist.'));
+		if (!db.OP_has_tag(extra.board, msg.op))
+			return callback(Muggle('Thread does not exist.'));
 		post.op = msg.op;
+	}
 	else {
 		if (!image_alloc)
 			return callback(Muggle('Image missing.'));

@@ -202,7 +202,7 @@ function set_OP_tag(tagIndex, op) {
 	TAGS[op] = tagIndex;
 }
 
-exports.OP_has_tag = function (tag, op) {
+function OP_has_tag(tag, op) {
 	var index = config.BOARDS.indexOf(tag);
 	if (index < 0)
 		return false;
@@ -214,6 +214,7 @@ exports.OP_has_tag = function (tag, op) {
 	else
 		return tags.indexOf(index) >= 0;
 };
+exports.OP_has_tag = OP_has_tag;
 
 exports.first_tag_of = function (op) {
 	var tags = TAGS[op];
@@ -512,9 +513,11 @@ Y.insert_post = function (msg, body, extra, callback) {
 		return callback(Muggle("No post num."));
 	else if (!ip)
 		return callback(Muggle("No IP."));
-	else if (op && OPs[op] != op) {
-		delete OPs[num];
-		return callback(Muggle('Thread does not exist.'));
+	else if (op) {
+		if (OPs[op] != op || !OP_has_tag(board, op)) {
+			delete OPs[num];
+			return callback(Muggle('Thread does not exist.'));
+		}
 	}
 
 	var view = {time: msg.time, ip: ip, state: msg.state.join()};
