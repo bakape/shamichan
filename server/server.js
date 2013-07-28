@@ -240,7 +240,7 @@ else {
 		resp.end(RES.loginHtml[1]);
 	});
 }
-web.resource(/^\/(login|logout)\/$/, true, function (req, params, cb) {
+web.resource(/^\/(login|logout)\/$/, function (req, params, cb) {
 	cb(null, 'redirect', '../' + params[1]);
 });
 
