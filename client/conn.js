@@ -72,8 +72,12 @@ connSM.act('* + close -> dropped', function (e) {
 		attemptTimer = 0;
 	}
 	sync_status('Dropped.', true);
-	if (attempts++ < 10)
-		setTimeout(connSM.feeder('retry'), 250 * Math.pow(2,attempts));
+
+	attempts++;
+	var n = Math.min(Math.floor(attempts/2), 12);
+	var wait = 500 * Math.pow(1.5, n);
+	// wait maxes out at ~1min
+	setTimeout(connSM.feeder('retry'), wait);
 });
 
 connSM.act('dropped + retry -> reconn', function () {
