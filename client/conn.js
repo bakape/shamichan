@@ -3,8 +3,12 @@
 var socket, attempts, attemptTimer;
 
 window.send = function (msg) {
+	// need deferral or reporting on these lost messages...
 	if (connSM.state != 'synced' && connSM.state != 'syncing')
 		return;
+	if (socket.readyState != 1)
+		return;
+
 	msg = JSON.stringify(msg);
 	if (DEBUG)
 		console.log('<', msg);
