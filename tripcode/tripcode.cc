@@ -3,6 +3,7 @@
 #include <iconv.h>
 #include <unistd.h>
 #include <node.h>
+#include <string.h>
 
 using namespace v8;
 
