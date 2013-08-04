@@ -74,7 +74,15 @@ function save_opts() {
 
 /* THEMES */
 
-var themes = ['moe', 'gar', 'mawaru', 'moon', 'ashita', 'console'];
+var themes = [
+	'moe',
+	'gar',
+	'mawaru',
+	'moon',
+	'ashita',
+	'console',
+	'tea',
+];
 var globalVersion = 8;
 
 function option_theme(theme) {

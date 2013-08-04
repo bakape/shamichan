@@ -1,0 +1,83 @@
+a, blockquote a {
+	color: #54578c;
+}
+a:hover, .email b:hover {
+	color: #d17c43;
+}
+article, aside, .pagination {
+	background-color: #d9f0d6;
+	border-right: 1px solid #b9d9b7;
+	border-bottom: 1px solid #b9d9b7;
+}
+article.highlight {
+	background-color: #b9ccb4;
+	border-color: #9fbf9d;
+}
+article.editing {
+	background-color: #f0e5ba;
+	border-color: #dbd1aa;
+}
+b {
+	color: #1a8522;
+}
+b.admin {
+	color: #d60000;
+}
+b.moderator {
+	color: #7800b3;
+}
+body {
+  color: #0a0a0a;
+	background-color: #f4ffee;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 10pt;
+}
+pre, .themed {
+  color: #59543f;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 10pt;
+}
+em {
+	color: #6e9e06;
+}
+h1 {
+	color: #b32407;
+	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
+	font-size: 30px;
+	text-shadow: #8e3523 1px 1px 0px;
+	letter-spacing: 1px;
+}
+h2 {
+	color: #b32407;
+	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
+	text-shadow: #8e3523 1px 1px 0px;
+}
+h3 {
+	color: #2f4d0c;
+}
+header nav a {
+	color: #0a0a0a;
+}
+hr {
+	border-top: 1px solid #bac9b7;
+}
+.popup-menu li:hover {
+	background-color: #f9fcf7;
+}
+.act:before {
+	content: "[";
+}
+.act:after {
+	content: "]";
+}
+.email, .email b {
+	color: #54578c;
+}
+.modal, .preview, .popup-menu {
+	background-color: #f6faf3;
+	border-right: 1px solid #e5e8e2;
+	border-bottom: 1px solid #e5e8e2;
+}
+.omit {
+	color: #73806c;
+}
