@@ -97,14 +97,6 @@ option_theme.type = themes;
 
 /* THUMBNAIL OPTIONS */
 
-/* TEMP migration */
-(function () {
-	if (options.thumbs) {
-		delete options.thumbs;
-		save_opts();
-	}
-})();
-
 var revealSetup = false;
 
 function option_thumbs(type) {
