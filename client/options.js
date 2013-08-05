@@ -23,6 +23,9 @@ optSpecs.push(option_thumbs);
 optSpecs.push(option_theme);
 
 
+options = new Backbone.Model(options);
+
+
 nashi.upload = !!$('<input type="file"/>').prop('disabled');
 
 if (window.screen && screen.width <= 320) {
@@ -65,12 +68,12 @@ function save_ident() {
 	catch (e) {}
 }
 
-function save_opts() {
+options.on('change', function () {
 	try {
 		localStorage.options = JSON.stringify(options);
 	}
 	catch (e) {}
-}
+});
 
 /* THEMES */
 
@@ -225,7 +228,7 @@ option_high_res.type = 'revcheckbox';
 
 $DOC.on('mouseup', 'img', function (event) {
 	/* Bypass expansion for non-left mouse clicks */
-	if (options.inline && event.which > 1) {
+	if (options.get('inline') && event.which > 1) {
 		var img = $(this);
 		img.data('skipExpand', true);
 		setTimeout(function () {
@@ -235,7 +238,7 @@ $DOC.on('mouseup', 'img', function (event) {
 });
 
 $DOC.on('click', 'img', function (event) {
-	if (options.inline) {
+	if (options.get('inline')) {
 		var $target = $(this);
 		if (!$target.data('skipExpand'))
 			toggle_expansion($target, event);
@@ -308,7 +311,7 @@ function expand_image($img) {
 		return;
 	var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10);
 	var r = window.devicePixelRatio;
-	if (!options.nohighres && r && r > 1) {
+	if (!options.get('nohighres') && r && r > 1) {
 		w /= r;
 		h /= r;
 	}
@@ -318,7 +321,7 @@ function expand_image($img) {
 		thumbSrc: $img.attr('src'),
 	}).attr('src', href).width(w).height(h).replaceAll($img);
 
-	if (!options.nofitwidth) {
+	if (!options.get('nofitwidth')) {
 		var $post = parent_post($img);
 		var overflow = 0;
 		var innerWidth = $(window).innerWidth();
@@ -413,10 +416,18 @@ function change_shortcut(event) {
 	if (!(name in shortcutKeys))
 		return;
 	shortcutKeys[name] = which;
-	if (!_.isObject(options.shortcuts))
-		options.shortcuts = {};
-	options.shortcuts[name] = which;
-	save_opts();
+
+	var shorts = options.get('shortcuts')
+	if (!_.isObject(shorts)) {
+		shorts = {};
+		shorts[name] = which;
+		options.set('shortcuts', shorts);
+	}
+	else {
+		shorts[name] = which;
+		options.trigger('change'); // force save
+	}
+
 	$input.blur();
 }
 
@@ -445,10 +456,10 @@ _.defer(function () {
 	}).insertAfter('#sync');
 
 	_.each(optSpecs, function (spec) {
-		spec(options[spec.id]);
+		spec(options.get(spec.id));
 	});
 
-	var prefs = options.shortcuts || {};
+	var prefs = options.get('shortcuts') || {};
 	shortcuts.forEach(function (s) {
 		shortcutKeys[s.name] = prefs[s.name] || s.which;
 	});
@@ -469,8 +480,7 @@ function make_options_panel() {
 			val = !$o.prop('checked');
 		else
 			val = $o.val();
-		options[id] = val;
-		save_opts();
+		options.set(id, val);
 		with_dom(function () {
 			spec(val);
 		});
@@ -479,7 +489,7 @@ function make_options_panel() {
 		var id = spec.id;
 		if (nashi.opts.indexOf(id) >= 0)
 			return;
-		var val = options[id], $input, type = spec.type;
+		var val = options.get(id), $input, type = spec.type;
 		if (type == 'checkbox' || type == 'revcheckbox') {
 			var b = (type == 'revcheckbox') ? !val : val;
 			$input = $('<input type="checkbox" />')

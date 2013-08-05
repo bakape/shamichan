@@ -85,7 +85,7 @@ var Article = Backbone.View.extend({
 	},
 
 	renderBacklinks: function () {
-		if (options.nobacklinks)
+		if (options.get('nobacklinks'))
 			return this; /* ought to disconnect handler? */
 		var backlinks = this.model.get('backlinks');
 		var $list = this.$el.find('small');

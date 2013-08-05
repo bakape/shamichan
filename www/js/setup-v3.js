@@ -1,4 +1,5 @@
 var BOARD, THREAD, BUMP, PAGE, options;
+// NOTE: options gets turned into a backbone model later
 
 (function () {
 	var p = location.pathname;
