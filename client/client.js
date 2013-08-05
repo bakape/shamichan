@@ -107,7 +107,8 @@ function shift_replies(section) {
 	if (omitsBefore <= THREAD_LAST_N && omit > THREAD_LAST_N) {
 		var $expand = section.find('header .act');
 		if ($expand.length == 1) {
-			var $lastN = $(last_n_html(extract_num(section)));
+			var num = extract_num(section);
+			var $lastN = $(oneeSama.last_n_html(num));
 			$expand.after(' ', $lastN);
 		}
 	}

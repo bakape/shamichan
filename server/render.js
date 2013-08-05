@@ -1,5 +1,6 @@
 var caps = require('./caps'),
     common = require('../common'),
+    config = require('../config'),
     db = require('../db'),
     imager = require('../imager'),
     STATE = require('./state'),
@@ -25,6 +26,11 @@ exports.write_thread_html = function (reader, req, out, opts) {
 	var cookies = web.parse_cookie(req.headers.cookie);
 	if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 		oneeSama.thumbStyle = cookies.thumb;
+
+	var lastN = cookies.lastn && parseInt(cookies.lastn, 10);
+	if (!lastN || !common.reasonable_last_n(lastN))
+		lastN = config.THREAD_LAST_N;
+	oneeSama.lastN = lastN;
 
 	var hidden = {};
 	if (cookies.hide && !caps.can_moderate(req.ident)) {

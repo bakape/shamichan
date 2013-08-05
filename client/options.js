@@ -21,8 +21,12 @@ optSpecs.push(option_fitwidth);
 optSpecs.push(option_backlinks);
 optSpecs.push(option_thumbs);
 optSpecs.push(option_theme);
+optSpecs.push(option_last_n);
 
 
+_.defaults(options, {
+	lastn: config.THREAD_LAST_N,
+});
 options = new Backbone.Model(options);
 
 
@@ -73,6 +77,23 @@ options.on('change', function () {
 		localStorage.options = JSON.stringify(options);
 	}
 	catch (e) {}
+});
+
+/* LAST N CONFIG */
+
+function option_last_n(n) {
+	if (!reasonable_last_n(n))
+		return;
+	$.cookie('lastn', n);
+	// should really load/hide posts as appropriate
+}
+option_last_n.id = 'lastn';
+option_last_n.label = '[Last #]';
+option_last_n.type = 'positive';
+
+oneeSama.lastN = options.get('lastn');
+options.on('change:lastn', function (model, lastN) {
+	oneeSama.lastN = lastN;
 });
 
 /* THEMES */
@@ -478,6 +499,8 @@ function make_options_panel() {
 			val = !!$o.prop('checked');
 		else if (spec.type == 'revcheckbox')
 			val = !$o.prop('checked');
+		else if (spec.type == 'positive')
+			val = Math.max(parseInt($o.val(), 10), 1);
 		else
 			val = $o.val();
 		options.set(id, val);
@@ -494,6 +517,13 @@ function make_options_panel() {
 			var b = (type == 'revcheckbox') ? !val : val;
 			$input = $('<input type="checkbox" />')
 				.prop('checked', b ? 'checked' : null);
+		}
+		else if (type == 'positive') {
+			$input = $('<input />', {
+				width: '4em',
+				maxlength: 4,
+				val: val,
+			});
 		}
 		else if (type instanceof Array) {
 			$input = $('<select/>');

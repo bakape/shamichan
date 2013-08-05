@@ -580,17 +580,21 @@ function action_link_html(href, name) {
 }
 exports.action_link_html = action_link_html;
 
-function last_n_html(num) {
-	return action_link_html('THREAD?lastN', 'Last&nbsp;N').replace(
-		/N/g, config.THREAD_LAST_N).replace('THREAD', num);
-}
+exports.reasonable_last_n = function (n) {
+	return n >= 5 && n <= 500;
+};
 
-function expansion_links_html(num, omit) {
+OS.last_n_html = function (num) {
+	return action_link_html(num + '?last' + this.lastN,
+			'Last&nbsp;' + this.lastN);
+};
+
+OS.expansion_links_html = function (num, omit) {
 	var html = ' &nbsp; ' + action_link_html(num, 'Expand');
-	if (omit > config.THREAD_LAST_N)
-		html += ' ' + last_n_html(num);
+	if (omit > this.lastN)
+		html += ' ' + this.last_n_html(num);
 	return html;
-}
+};
 
 OS.atama = function (data) {
 	var auth = data.auth;
@@ -613,8 +617,10 @@ OS.atama = function (data) {
 	header.push(safe(' <time datetime="' + datetime(data.time) +
 			'">' + readable_time(data.time) + '</time> '),
 			this.post_nav(data));
-	if (!this.full && !data.op)
-		header.push(safe(expansion_links_html(data.num, data.omit)));
+	if (!this.full && !data.op) {
+		var ex = this.expansion_links_html(data.num, data.omit);
+		header.push(safe(ex));
+	}
 	this.trigger('headerFinish', {header: header, data: data});
 	header.unshift(safe('<header>'));
 	header.push(safe('</header>\n\t'));

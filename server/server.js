@@ -452,10 +452,12 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 
 	var yaku = new db.Yakusoku(board, req.ident);
 	var reader = new db.Reader(yaku);
-	var lastN = config.THREAD_LAST_N;
 	var opts = {redirect: true};
-	if (('last'+lastN) in req.query)
+
+	var lastN = detect_last_n(req.query);
+	if (lastN)
 		opts.abbrev = lastN + config.ABBREVIATED_REPLIES;
+
 	if (caps.can_administrate(req.ident) && 'showdead' in req.query)
 		opts.showDead = true;
 	reader.get_thread(board, num, opts);
@@ -474,6 +476,8 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			var chunks = web.parse_cookie(req.headers.cookie);
 			if (common.thumbStyles.indexOf(chunks.thumb) >= 0)
 				etag += '-' + chunks.thumb;
+			if (lastN)
+				etag += '-last' + lastN;
 			if (preThread.locked)
 				etag += '-locked';
 			if (req.ident.auth)
@@ -540,6 +544,18 @@ function write_json_post(req, resp, num) {
 		'Cache-Control': cache,
 	});
 	resp.end(JSON.stringify(json));
+}
+
+function detect_last_n(query) {
+	for (var k in query) {
+		var m = /^last(\d+)$/.exec(k);
+		if (m) {
+			var n = parseInt(m[1], 10);
+			if (common.reasonable_last_n(n))
+				return n;
+		}
+	}
+	return 0;
 }
 
 web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
