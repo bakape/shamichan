@@ -152,8 +152,15 @@ function setup_imager_relay(cb) {
 
 function image_status(client_id, status) {
 	var client = STATE.clients[client_id];
-	if (client)
-		client.send([0, common.IMAGE_STATUS, status]);
+	if (client) {
+		try {
+			client.send([0, common.IMAGE_STATUS, status]);
+		}
+		catch (e) {
+			// Swallow EINTR
+			// anta baka?
+		}
+	}
 }
 
 function page_nav(thread_count, cur_page, ascending) {
