@@ -135,6 +135,8 @@ function parse_ranges(ranges) {
 }
 
 function range_lookup(ranges, num) {
+	if (!ranges)
+		return null;
 	/* Ideally would have a tree lookup here or something */
 	var result = null;
 	for (var i = 0; i < ranges.length; i++) {
