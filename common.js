@@ -401,18 +401,19 @@ OS.geimu = function (text) {
 	}
 };
 
-function chibi(text, src) {
-	var bits = [safe('<a href="'),src,safe('" download="'),text,safe('"')];
-	var m = text.match(/^(.{30}).{8,}(\.\w{3,4})$/);
-	var caption;
+function chibi(imgnm, src) {
+	var name = '', ext = '';
+	var m = imgnm.match(/^(.*)(\.\w{3,4})$/);
 	if (m) {
-		bits.push(safe(' title="' + escape_html(text) + '"'));
-		caption = [m[1], safe('(&hellip;)'), m[2]];
+		name = m[1];
+		ext = m[2];
 	}
-	else {
-		caption = text;
+	var bits = [safe('<a href="'), src, safe('" download="'), name];
+	if (name.length >= 38) {
+		bits.push(safe('" title="'), imgnm);
+		imgnm = [name.slice(0, 30), safe('(&hellip;)'), ext];
 	}
-	bits.push(safe(' rel="nofollow">'), caption, safe('</a>'));
+	bits.push(safe('" rel="nofollow">'), imgnm, safe('</a>'));
 	return bits;
 }
 
