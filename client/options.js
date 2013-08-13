@@ -167,8 +167,9 @@ function reveal_thumbnail(event) {
 		return;
 
 	with_dom(function () {
-		$article.find('figcaption').after($.parseHTML(flatten(
-				oneeSama.gazou_img(info, false)).join('')));
+		var img = oneeSama.gazou_img(info, false);
+		var $img = $.parseHTML(flatten(img.html).join(''));
+		$article.find('figcaption').after($img);
 	});
 	return false;
 }

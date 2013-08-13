@@ -6,9 +6,6 @@ a.nope, a.nope:hover {
 	color: inherit;
 	text-decoration: none;
 }
-abbr {
-	text-decoration: none;
-}
 article, aside {
 	display: table;
 	margin: 2px;
@@ -60,6 +57,10 @@ figcaption {
 }
 figcaption i {
 	font-style: normal;
+}
+figcaption i a {
+	color: inherit;
+	text-decoration: none;
 }
 figure {
 	display: inline;

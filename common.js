@@ -401,14 +401,19 @@ OS.geimu = function (text) {
 	}
 };
 
-function chibi(text) {
+function chibi(text, src) {
+	var bits = [safe('<a href="'),src,safe('" download="'),text,safe('"')];
 	var m = text.match(/^(.{30}).{8,}(\.\w{3,4})$/);
-	/* Comma inlined for convience in OS.gazou (beware of concatenating
-	 * lists with strings) */
-	if (!m)
-		return ', ' + text;
-	return [safe(', <abbr title="'), text, safe('">'), m[1],
-		safe('(&hellip;)'), m[2], safe('</abbr>')];
+	var caption;
+	if (m) {
+		bits.push(safe(' title="' + escape_html(text) + '"'));
+		caption = [m[1], safe('(&hellip;)'), m[2]];
+	}
+	else {
+		caption = text;
+	}
+	bits.push(safe(' rel="nofollow">'), caption, safe('</a>'));
+	return bits;
 }
 
 OS.spoiler_info = function (index, toppu) {
@@ -467,14 +472,16 @@ OS.gazou = function (info, toppu) {
 		caption = ['Image ', new_tab_link(src, info.src)];
 	}
 
-	var img = this.thumbStyle=='hide' ? '' : this.gazou_img(info, toppu);
+	var img = this.gazou_img(info, toppu);
 	var dims = info.dims[0] + 'x' + info.dims[1];
 
 	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
 		caption, safe(' <i>('), readable_filesize(info.size) + ', ',
 		dims, (info.apng ? ', APNG' : ''),
-		this.full ? chibi(info.imgnm) : '', safe(')</i></figcaption>'),
-		img, safe('</figure>\n\t')];
+		this.full ? [', ', chibi(info.imgnm, img.src)] : '',
+		safe(')</i></figcaption>'),
+		this.thumbStyle == 'hide' ? '' : img.html,
+		safe('</figure>\n\t')];
 };
 
 exports.thumbStyles = ['small', 'sharp', 'large', 'hide'];
@@ -520,7 +527,7 @@ OS.gazou_img = function (info, toppu) {
 	if (imagerConfig.IMAGE_HATS)
 		img = '<span class="hat"></span>' + img;
 	img = new_tab_link(src, safe(img));
-	return img;
+	return {html: img, src: src};
 };
 
 function readable_filesize(size) {

@@ -249,7 +249,7 @@ function extract_post_model($article) {
 		var $cap = $fig.children('figcaption');
 		var image = {
 			MD5: $fig.data('md5'),
-			src: $cap.find('a').text(),
+			src: $cap.children('a').text(),
 		};
 
 		/* guess for now */
