@@ -7,7 +7,7 @@ exports.forEach = function (array, func, callback) {
 		func(array[i], function (err) {
 			if (err)
 				return callback(err);
-			process.nextTick(step.bind(null, i + 1));
+			setImmediate(step, i + 1);
 		});
 	}
 };
@@ -22,7 +22,7 @@ exports.map = function (array, func, callback) {
 			if (err)
 				return callback(err);
 			results.push(res);
-			process.nextTick(step.bind(null, i + 1));
+			setImmediate(step, i + 1);
 		});
 	}
 };
