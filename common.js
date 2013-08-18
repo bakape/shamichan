@@ -450,16 +450,22 @@ function new_tab_link(srcEncoded, inside, cls) {
 		' rel="nofollow">'), inside, safe('</a>')];
 }
 
-var imgPaths = {
-	src: mediaURL + 'src/',
-	thumb: mediaURL + 'thumb/',
-	mid: mediaURL + 'mid/',
-	vint: mediaURL + 'vint/',
+
+OS.image_paths = function () {
+	if (!this._imgPaths) {
+		this._imgPaths = {
+			src: mediaURL + 'src/',
+			thumb: mediaURL + 'thumb/',
+			mid: mediaURL + 'mid/',
+			vint: mediaURL + 'vint/',
+		};
+		this.trigger('mediaPaths', this._imgPaths);
+	}
+	return this._imgPaths;
 };
 
 OS.gazou = function (info, toppu) {
 	var src, name, caption;
-	this.trigger('mediaPaths', imgPaths);
 	if (info.vint) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
 		var google = encodeURI('../outbound/g/' + info.vint);
@@ -469,7 +475,7 @@ OS.gazou = function (info, toppu) {
 			new_tab_link(src, '[foolz]')];
 	}
 	else {
-		src = encodeURI(imgPaths.src + info.src);
+		src = encodeURI(this.image_paths().src + info.src);
 		caption = ['Image ', new_tab_link(src, info.src)];
 	}
 
@@ -489,6 +495,7 @@ exports.thumbStyles = ['small', 'sharp', 'large', 'hide'];
 
 OS.gazou_img = function (info, toppu) {
 	var src, thumb;
+	var imgPaths = this.image_paths();
 	if (!info.vint)
 		src = thumb = encodeURI(imgPaths.src + info.src);
 
@@ -655,7 +662,8 @@ function gravitas_body() {
 }
 
 OS.gravitas_style = function (idata, cssy) {
-	var src = "url('" + encodeURI(imgPaths.src + idata.src) + "')";
+	var src = this.image_paths().src + idata.src;
+	src = "url('" + encodeURI(url) + "')";
 	return cssy ? ("background-image: " + src + ";") : src;
 };
 
