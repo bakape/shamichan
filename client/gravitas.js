@@ -11,7 +11,7 @@ Backbone.on('afterInsert', function (model) {
 ComposerView.prototype.add_own_gravitas = function (msg) {
 	var $el = this.$el.addClass('gravitas');
 	if (msg.image) {
-		$el.css('background-image', gravitas_style(msg.image));
+		$el.css('background-image', oneeSama.gravitas_style(msg.image));
 		var bg = $el.css('background-color');
 		$el.css('background-color', 'black');
 		setTimeout(function () { $el.css('background-color', bg); }, 500);

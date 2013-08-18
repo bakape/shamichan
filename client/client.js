@@ -275,7 +275,7 @@ dispatcher[INSERT_IMAGE] = function (msg, op) {
 
 	if (num == MILLION) {
 		var $el = $('#' + num);
-		$el.css('background-image', gravitas_style(msg[1]));
+		$el.css('background-image', oneeSama.gravitas_style(msg[1]));
 		var bg = $el.css('background-color');
 		$el.css('background-color', 'black');
 		setTimeout(function () { $el.css('background-color', bg); }, 500);

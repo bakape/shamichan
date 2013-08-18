@@ -654,10 +654,10 @@ function gravitas_body() {
 	$('body').css({margin: 0});
 }
 
-function gravitas_style(idata, cssy) {
+OS.gravitas_style = function (idata, cssy) {
 	var src = "url('" + encodeURI(imgPaths.src + idata.src) + "')";
 	return cssy ? ("background-image: " + src + ";") : src;
-}
+};
 
 OS.mono = function (data) {
 	var info = {
@@ -668,7 +668,7 @@ OS.mono = function (data) {
 	if (data.num == MILLION) {
 		info.classes.push('gravitas');
 		if (data.image)
-			info.style = gravitas_style(data.image, true);
+			info.style = this.gravitas_style(data.image, true);
 	}
 	this.trigger('openArticle', info);
 	var cls = info.classes.length && info.classes.join(' '),
@@ -688,7 +688,7 @@ OS.monomono = function (data, cls) {
 	if (data.num == MILLION) {
 		cls = cls ? cls+' gravitas' : 'gravitas';
 		if (data.image)
-			style = gravitas_style(data.image, true);
+			style = this.gravitas_style(data.image, true);
 	}
 	var o = safe('<section id="' + data.num +
 		(cls ? '" class="' + cls : '') +
