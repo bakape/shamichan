@@ -5,7 +5,6 @@ a:hover, #sync.error {
 	color: #e50000;
 }
 article, aside {
-	display: block;
 	margin: 0;
 	padding: 10pt;
 }
@@ -20,6 +19,9 @@ article.editing {
 }
 article.editing header {
 	color: white;
+}
+article header {
+	padding-left: 0;
 }
 b {
 	font-weight: normal;
@@ -88,7 +90,7 @@ figcaption, figcaption a {
 	color: #989800;
 	text-transform: lowercase;
 }
-hr, .pagination input, .control {
+.pagination input, .control {
 	display: none;
 }
 header {
@@ -110,6 +112,9 @@ h1:after {
 }
 h3 {
 	color: #0e0;
+}
+hr {
+	visibility: hidden;
 }
 .popup-menu li:hover {
 	background-color: white;
