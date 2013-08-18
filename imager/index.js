@@ -126,6 +126,17 @@ exports.make_media_dirs = function (cb) {
 	});
 }
 
+exports.serve_image = function (req, resp) {
+	var m = /^\/(src|thumb|mid|vint)(\/\d+\.\w+)$/.exec(req.url);
+	if (!m)
+		return false;
+	var root = config.MEDIA_DIRS[m[1]];
+	if (!root)
+		return false;
+	require('send')(req, m[2]).root(root).pipe(resp);
+	return true;
+};
+
 exports.squish_MD5 = function (hash) {
 	if (typeof hash == 'string')
 		hash = new Buffer(hash, 'hex');

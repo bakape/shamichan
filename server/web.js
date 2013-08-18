@@ -57,6 +57,11 @@ function handle_request(req, resp) {
 			if (handle_resource(req, resp, resources[i]))
 				return;
 
+	if (config.SERVE_IMAGES) {
+		if (require('../imager').serve_image(req, resp))
+			return;
+	}
+
 	if (config.SERVE_STATIC_FILES) {
 		send(req, req.url).root('www/').pipe(resp);
 		return;
