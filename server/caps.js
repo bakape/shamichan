@@ -64,6 +64,7 @@ function denote_priv(info) {
 function dead_media_paths(paths) {
 	paths.src = '../dead/src/';
 	paths.thumb = '../dead/thumb/';
+	paths.mid = '../dead/mid/';
 }
 
 exports.augment_oneesama = function (oneeSama, opts) {
