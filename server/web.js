@@ -57,10 +57,11 @@ function handle_request(req, resp) {
 			if (handle_resource(req, resp, resources[i]))
 				return;
 
-	if(config.SERVE_STATIC_FILES)
+	if (config.SERVE_STATIC_FILES) {
 		send(req, req.url).root('www/').pipe(resp);
-	else
-		render_404(resp);
+		return;
+	}
+	render_404(resp);
 }
 
 function handle_resource(req, resp, resource) {
