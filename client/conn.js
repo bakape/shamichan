@@ -45,6 +45,10 @@ connSM.act('load + start -> conn', function () {
 });
 
 function connect() {
+	if (window.location.protocol == 'file:') {
+		console.log("Page downloaded locally; refusing to sync.");
+		return;
+	}
 	socket = window.new_socket(attempts);
 	socket.onopen = connSM.feeder('open');
 	socket.onclose = connSM.feeder('close');
