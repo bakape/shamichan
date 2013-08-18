@@ -13,13 +13,13 @@
 		"async": ">=0.2",
 		"formidable": ">=1.0",
 		"redis": ">=0.8.4",
+		"request": ">=2.20",
 		"sockjs": ">=0.3.3",
 		"winston": ">=0.7"
 	},
 	"optionalDependencies": {
 		"hiredis": ">=0.1.10",
 		"node-expat": ">=2.0",
-		"request": ">=2.20",
 		"send": ">=0.1.4"
 	}
 }

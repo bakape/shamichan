@@ -2,9 +2,9 @@ var _ = require('../lib/underscore'),
     config = require('../config'),
     crypto = require('crypto'),
     formidable = require('formidable'),
-    https = require('https'),
     querystring = require('querystring'),
     RES = require('./state').resources,
+    request = require('request'),
     winston = require('winston');
 
 function connect() {
@@ -31,51 +31,27 @@ function verify_persona(resp, err, fields) {
 	}
 	if (!fields.assertion || typeof fields.assertion != 'string')
 		return respond_error(resp, 'Bad Persona assertion.');
-	var payload = new Buffer(querystring.stringify({
+	var payload = {
 		assertion: fields.assertion,
 		audience: config.PERSONA_AUDIENCE,
-	}), 'utf8');
-	var opts = {
-		host: 'verifier.login.persona.org',
-		method: 'POST',
-		path: '/verify',
-		headers: {
-			'Content-Length': payload.length,
-			'Content-Type': 'application/x-www-form-urlencoded',
-		},
 	};
-	var req = https.request(opts, function (verResp) {
+	var opts = {
+		url: 'https://verifier.login.persona.org/verify',
+		body: payload,
+		json: true,
+	};
+	request.post(opts, function (err, verResp, packet) {
+		if (err) {
+			winston.error("Bad persona request: " + err);
+			respond_error(resp, "Couldn't contact persona.org.");
+			return;
+		}
 		if (verResp.statusCode != 200) {
 			winston.error('Code ' + verResp.statusCode);
 			return respond_error(resp, 'Persona.org error.');
 		}
-		verResp.once('error', function (err) {
-			winston.error("Persona response error " + err);
-			respond_error(resp, "Couldn't read Persona.");
-		});
-		verResp.setEncoding('utf8');
-		var answer = [];
-		verResp.on('data', function (s) {
-			answer.push(s);
-		});
-		verResp.once('end', function () {
-			var packet = answer.join('');
-			try {
-				packet = JSON.parse(packet);
-			}
-			catch (e) {
-				winston.error('Bad packet: ' + packet);
-				return respond_error(resp,
-						'Received corrupt Persona.');
-			}
-			verify_auth(resp, packet);
-		});
+		verify_auth(resp, packet);
 	});
-	req.once('error', function (err) {
-		winston.error("Bad persona request: " + err);
-		respond_error(resp, "Couldn't contact persona.org.");
-	});
-	req.end(payload);
 }
 
 function verify_auth(resp, packet) {
