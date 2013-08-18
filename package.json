@@ -19,6 +19,7 @@
 	"optionalDependencies": {
 		"hiredis": ">=0.1.10",
 		"node-expat": ">=2.0",
-		"request": ">=2.20"
+		"request": ">=2.20",
+		"send": ">=0.1.4"
 	}
 }
