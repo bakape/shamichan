@@ -39,7 +39,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		if (!err)
 			_.extend(client.ident, ident);
 		if (!synchronize(msg, client))
-			client.report(Muggle("Bad protocol."));
+			client.kotowaru(Muggle("Bad protocol."));
 	}
 	var chunks = web.parse_cookie(msg.pop());
 	cookie = persona.extract_login_cookie(chunks);
@@ -103,7 +103,7 @@ function synchronize(msg, client) {
 			client.on_thread_sink.bind(client), listening);
 	function listening(errs) {
 		if (errs && errs.length >= count)
-			return client.report(Muggle(
+			return client.kotowaru(Muggle(
 					"Couldn't sync to board."));
 		else if (errs) {
 			dead_threads.push.apply(dead_threads, errs);
@@ -654,7 +654,7 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 
 	allocate_post(msg, client, function (err) {
 		if (err)
-			client.report(Muggle("Allocation failure.", err));
+			client.kotowaru(Muggle("Allocation failure.", err));
 	});
 	return true;
 }
@@ -833,7 +833,7 @@ function update_post(frag, client) {
 		client.db.append_post(post, frag, old_state, extra,
 					function (err) {
 			if (err)
-				client.report(Muggle("Couldn't add text.",
+				client.kotowaru(Muggle("Couldn't add text.",
 						err));
 		});
 	});
@@ -845,7 +845,7 @@ function debug_command(client, frag) {
 	if (!frag)
 		return;
 	if (/\bfail\b/.test(frag))
-		client.report(Muggle("Failure requested."));
+		client.kotowaru(Muggle("Failure requested."));
 	else if (/\bclose\b/.test(frag))
 		client.socket.close();
 }
@@ -857,14 +857,14 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 		return true; /* whatever */
 	client.finish_post(function (err) {
 		if (err)
-			client.report(Muggle("Couldn't finish post.", err));
+			client.kotowaru(Muggle("Couldn't finish post.", err));
 	});
 	return true;
 }
 
 dispatcher[common.DELETE_POSTS] = caps.mod_handler(function (nums, client) {
 	if (!inactive_board_check(client))
-		return client.report(Muggle("Couldn't delete."));
+		return client.kotowaru(Muggle("Couldn't delete."));
 	/* Omit to-be-deleted posts that are inside to-be-deleted threads */
 	var ops = {}, OPs = db.OPs;
 	nums.forEach(function (num) {
@@ -878,27 +878,28 @@ dispatcher[common.DELETE_POSTS] = caps.mod_handler(function (nums, client) {
 
 	client.db.remove_posts(nums, function (err, dels) {
 		if (err)
-			client.report(Muggle("Couldn't delete.", err));
+			client.kotowaru(Muggle("Couldn't delete.", err));
 	});
 });
 
 dispatcher[common.LOCK_THREAD] = caps.mod_handler(function (nums, client) {
 	if (!inactive_board_check(client))
-		return client.report(Muggle("Couldn't (un)lock thread."));
+		return client.kotowaru(Muggle("Couldn't (un)lock thread."));
 	nums = nums.filter(function (op) { return db.OPs[op] == op; });
 	async.forEach(nums, client.db.toggle_thread_lock.bind(client.db),
 				function (err) {
 		if (err)
-			client.report(Muggle("Couldn't (un)lock thread.",err));
+			client.kotowaru(Muggle(
+					"Couldn't (un)lock thread.", err));
 	});
 });
 
 dispatcher[common.DELETE_IMAGES] = caps.mod_handler(function (nums, client) {
 	if (!inactive_board_check(client))
-		return client.report(Muggle("Couldn't delete images."));
+		return client.kotowaru(Muggle("Couldn't delete images."));
 	client.db.remove_images(nums, function (err, dels) {
 		if (err)
-			client.report(Muggle("Couldn't delete images.", err));
+			client.kotowaru(Muggle("Couldn't delete images.",err));
 	});
 });
 
@@ -910,13 +911,13 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 		return false;
 	imager.obtain_image_alloc(alloc, function (err, alloc) {
 		if (err)
-			return client.report(Muggle("Image lost.", err));
+			return client.kotowaru(Muggle("Image lost.", err));
 		if (!client.post || client.post.image)
 			return;
 		client.db.add_image(client.post, alloc, client.ident.ip,
 					function (err) {
 			if (err)
-				client.report(Muggle(
+				client.kotowaru(Muggle(
 					"Image insertion problem.", err));
 		});
 	});
@@ -925,10 +926,11 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 
 dispatcher[common.SPOILER_IMAGES] = caps.mod_handler(function (nums, client) {
 	if (!inactive_board_check(client))
-		return client.report(Muggle("Couldn't spoiler images."));
+		return client.kotowaru(Muggle("Couldn't spoiler images."));
 	client.db.force_image_spoilers(nums, function (err) {
 		if (err)
-			client.report(Muggle("Couldn't spoiler images.", err));
+			client.kotowaru(Muggle("Couldn't spoiler images.",
+					err));
 	});
 });
 
@@ -940,7 +942,7 @@ dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	var op = msg[0];
 	client.db.set_fun_thread(op, function (err) {
 		if (err)
-			client.report(err);
+			client.kotowaru(err);
 	});
 	return true;
 };

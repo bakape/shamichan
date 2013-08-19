@@ -75,7 +75,7 @@ OK.on_message = function (data) {
 		return;
 	var func = dispatcher[type];
 	if (!func || !func(msg, this)) {
-		this.report(Muggle("Bad protocol.", new Error(
+		this.kotowaru(Muggle("Bad protocol.", new Error(
 				"Invalid message: " + JSON.stringify(data))));
 	}
 };
@@ -123,7 +123,7 @@ OK.on_close = function () {
 	this.emit('close');
 };
 
-OK.report = function (error) {
+OK.kotowaru = function (error) {
 	if (this.blackhole)
 		return;
 	var msg = 'Server error.';

@@ -35,7 +35,7 @@ okyaku.dispatcher[authcommon.BAN] = function (msg, client) {
 	ban(m, client, ip, 'timeout');
 	m.exec(function (err) {
 		if (err)
-			return client.report(err);
+			return client.kotowaru(err);
 
 		/* XXX not DRY */
 		var ADDRS = authcommon.modCache.addresses;

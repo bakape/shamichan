@@ -52,7 +52,7 @@ okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
 		if (err) {
 			if (ADDRS[ip] === addr)
 				delete ADDRS[ip];
-			return client.report(err);
+			return client.kotowaru(err);
 		}
 		if (ADDRS[ip] !== addr)
 			return;
@@ -83,7 +83,7 @@ okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
 
 	m.exec(function (err) {
 		if (err)
-			return client.report(err);
+			return client.kotowaru(err);
 
 		// should observe a publication for this cache update
 		var addr = ADDRS[ip];
