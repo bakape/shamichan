@@ -179,3 +179,48 @@ $(document).on('click', '.soundcloud', function (e) {
 	});
 	return false;
 });
+
+/* lol copy pasta */
+$(document).on('mouseenter', '.soundcloud', function (event) {
+	var $target = $(event.target);
+	if ($target.data('requestedTitle'))
+		return;
+	$target.data('requestedTitle', true);
+	/* Edit textNode in place so that we don't mess with the embed */
+	var node = $target.contents().filter(function () {
+		return this.nodeType === 3;
+	})[0];
+	if (!node)
+		return;
+	var orig = node.textContent;
+	with_dom(function () {
+		node.textContent = orig + '...';
+	});
+	var m = $target.attr('href').match(soundcloud_url_re);
+	if (!m)
+		return;
+
+	$.ajax({
+		url: '//soundcloud.com/oembed',
+		data: {format: 'json', url: 'http://soundcloud.com/' + m[1]},
+		dataType: 'json',
+		success: function (data) {
+			with_dom(gotInfo.bind(null, data));
+		},
+		error: function () {
+			with_dom(function () {
+				node.textContent = orig + '???';
+			});
+		},
+	});
+
+	function gotInfo(data) {
+		var title = data && data.title;
+		if (title) {
+			node.textContent = orig + ': ' + title;
+			$target.css({color: 'black'});
+		}
+		else
+			node.textContent = orig + ' (gone?)';
+	}
+});
