@@ -663,7 +663,7 @@ function gravitas_body() {
 
 OS.gravitas_style = function (idata, cssy) {
 	var src = this.image_paths().src + idata.src;
-	src = "url('" + encodeURI(url) + "')";
+	src = "url('" + encodeURI(src) + "')";
 	return cssy ? ("background-image: " + src + ";") : src;
 };
 
