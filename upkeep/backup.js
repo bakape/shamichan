@@ -64,26 +64,23 @@ function upload(kind, filename, cb) {
 	var name = dir+'-'+pad2(now.getUTCDate()) + '-' + kind + '-' + random;
 	var key = dir + '/' + name;
 
+	var stream = fs.createReadStream(filename);
 	var params = {
 		ACL: ACL,
 		Bucket: BUCKET,
 		Key: key,
+		Body: stream,
 	};
 
-	fs.readFile(filename, function (err, buf) {
-		if (err)
+	process.stdout.write('Writing s3://'+BUCKET+'/'+key+' ...');
+	s3.putObject(params, function (err, data) {
+		if (err) {
+			console.log('failed!');
 			return cb(err);
-		params.Body = buf;
-		process.stdout.write('Writing s3://'+BUCKET+'/'+key+' ...');
-		s3.putObject(params, function (err, data) {
-			if (err) {
-				console.log('failed!');
-				return cb(err);
-			}
-			console.log('done.');
-			console.log('ETag:', data.ETag);
-			cb(null);
-		});
+		}
+		console.log('done.');
+		console.log('ETag:', data.ETag);
+		cb(null);
 	});
 }
 
