@@ -10,7 +10,7 @@
 		"start": "node server/server.js"
 	},
 	"dependencies": {
-		"async": ">=0.2",
+		"async": "0.2.9",
 		"formidable": ">=1.0",
 		"redis": ">=0.8.4",
 		"request": ">=2.20",
