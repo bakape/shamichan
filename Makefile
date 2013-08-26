@@ -10,10 +10,7 @@ all: client
 	$(MAKE) -C imager
 	$(MAKE) -C tripcode
 
-jsmin: lib/jsmin.c
-	gcc -o $@ $^
-
-$(CLIENT_JS): $(CLIENT_SRC) jsmin config.js deps.js
+$(CLIENT_JS): $(CLIENT_SRC) config.js deps.js
 	node make_client.js $(CLIENT_SRC) > $@
 
 client: $(CLIENT_JS)
@@ -24,6 +21,6 @@ modjs:
 .PHONY: all client clean modjs
 
 clean:
-	rm -rf -- .build jsmin www/js/client{.,-}*.js
+	rm -rf -- .build www/js/client{.,-}*.js
 	$(MAKE) -C imager -w clean
 	$(MAKE) -C tripcode -w clean

@@ -102,6 +102,42 @@ fs.readFile(file, 'UTF-8', function (err, fullFile) {
 
 exports.make_client = make_client;
 
+function make_minified(files, out, cb) {
+
+	// would be nice if uglify streamed...
+	require('tmp').file({
+		postfix: '.gen.js',
+	},
+	function (err, tmp, fd) {
+		if (err) return cb(err);
+		var out = fs.createWriteStream(null, {fd: fd});
+		out.once('error', cb);
+		make_client(files, out, function (err) {
+			if (err)
+				return cb(err);
+			out.end(function () {
+				minify(tmp);
+			});
+		});
+	});
+
+	function minify(file) {
+		var UglifyJS = require('uglify-js');
+		var ugly;
+		try {
+			ugly = UglifyJS.minify(file, {
+				mangle: false,
+			});
+		}
+		catch (e) {
+			return cb(e);
+		}
+		out.write(ugly.code, cb);
+	}
+};
+
+exports.make_minified = make_minified;
+
 if (require.main === module) {
 	var files = [];
 	for (var i = 2; i < process.argv.length; i++) {
@@ -117,20 +153,12 @@ if (require.main === module) {
 	}
 
 	var out;
-	if (config.DEBUG) {
-		out = process.stdout;
-	}
-	else {
-		var jsmin = child_process.spawn('./jsmin');
-		jsmin.stdout.pipe(process.stdout, {end: false});
-		jsmin.stderr.pipe(process.stderr, {end: false});
-		jsmin.on('exit', cb);
-		jsmin.stdin.on('error', cb);
-		jsmin.stdout.on('error', cb);
-		out = jsmin.stdin;
-	}
+	if (config.DEBUG)
+		make_client(files, process.stdout, handler);
+	else
+		make_minified(files, process.stdout, handler);
 
-	make_client(files, out, function (err) {
+	function handler(err) {
 		if (err) throw err;
-	});
+	}
 }
