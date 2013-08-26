@@ -5,24 +5,13 @@ var async = require('async'),
     fs = require('fs'),
     util = require('util');
 
+function make_client(inputs, out, cb) {
+
 var defines = {};
 for (var k in config)
 	defines[k] = JSON.stringify(config[k]);
 for (var k in imagerConfig)
 	defines[k] = JSON.stringify(imagerConfig[k]);
-
-var files = [];
-for (var i = 2; i < process.argv.length; i++) {
-	var arg = process.argv[i];
-	if (arg[0] != '-') {
-		files.push(arg);
-		continue;
-	}
-	else {
-		util.error('Unrecognized option ' + arg);
-		process.exit(1);
-	}
-}
 
 function lookup_config(key) {
 	var val = config[key];
@@ -33,28 +22,26 @@ function lookup_config(key) {
 
 var config_re = /\b(\w+onfig)\.(\w+)\b/;
 
-async.forEachSeries(files, function (file, cb) {
+function convert(file, cb) {
 	if (/^lib\//.test(file)) {
-		process.stdout.write(fs.readFileSync(file));
-		process.stdout.write('\n');
-		return cb(null);
+		fs.readFile(file, 'UTF-8', function (err, lib) {
+			if (err)
+				return cb(err);
+			out.write(lib);
+			out.write('\n');
+			cb(null);
+		});
+		return;
 	}
 	if (/^config\.js/.test(file))
 		return cb("config.js shouldn't be in client");
-	var lines = fs.readFileSync(file, 'UTF-8').split('\n');
-	var out;
-	if (config.DEBUG) {
-		out = process.stdout;
-	}
-	else {
-		var jsmin = child_process.spawn('./jsmin');
-		jsmin.stdout.pipe(process.stdout, {end: false});
-		jsmin.stderr.pipe(process.stderr, {end: false});
-		jsmin.on('exit', cb);
-		jsmin.stdin.on('error', cb);
-		jsmin.stdout.on('error', cb);
-		out = jsmin.stdin;
-	}
+
+fs.readFile(file, 'UTF-8', function (err, fullFile) {
+	if (err)
+		return cb(err);
+
+	var lines = fullFile.split('\n');
+	var waitForDrain = false;
 	for (var j = 0; j < lines.length; j++) {
 		var line = lines[j];
 		if (/^var\s+DEFINES\s*=\s*exports\s*;\s*$/.test(line))
@@ -83,8 +70,7 @@ async.forEachSeries(files, function (file, cb) {
 			var dict = m[1] == 'config' ? config : imagerConfig;
 			var cfg = dict[m[2]];
 			if (cfg === undefined) {
-				console.error("No such "+m[1]+" var "+m[2]);
-				process.exit(1);
+				return cb("No such "+m[1]+" var "+m[2]);
 			}
 			// Bleh
 			if (cfg instanceof RegExp)
@@ -100,13 +86,51 @@ async.forEachSeries(files, function (file, cb) {
 					+ '\\b', 'g');
 			line = line.replace(regexp, defines[src]);
 		}
-		out.write(line+'\n', 'UTF-8');
+		waitForDrain = !out.write(line+'\n', 'UTF-8');
 	}
-	if (config.DEBUG)
-		cb(null);
+	if (waitForDrain)
+		out.once('drain', function () { cb(null); });
 	else
-		out.end();
-}, function (err) {
-	if (err)
-		throw err;
-});
+		cb(null);
+
+}); // readFile
+}
+
+	// kick off
+	async.eachSeries(inputs, convert, cb);
+};
+
+exports.make_client = make_client;
+
+if (require.main === module) {
+	var files = [];
+	for (var i = 2; i < process.argv.length; i++) {
+		var arg = process.argv[i];
+		if (arg[0] != '-') {
+			files.push(arg);
+			continue;
+		}
+		else {
+			util.error('Unrecognized option ' + arg);
+			process.exit(1);
+		}
+	}
+
+	var out;
+	if (config.DEBUG) {
+		out = process.stdout;
+	}
+	else {
+		var jsmin = child_process.spawn('./jsmin');
+		jsmin.stdout.pipe(process.stdout, {end: false});
+		jsmin.stderr.pipe(process.stderr, {end: false});
+		jsmin.on('exit', cb);
+		jsmin.stdin.on('error', cb);
+		jsmin.stdout.on('error', cb);
+		out = jsmin.stdin;
+	}
+
+	make_client(files, out, function (err) {
+		if (err) throw err;
+	});
+}
