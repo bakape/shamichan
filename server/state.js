@@ -1,12 +1,11 @@
 var _ = require('../lib/underscore'),
     async = require('async'),
-    child_process = require('child_process'),
     config = require('../config'),
     crypto = require('crypto'),
     fs = require('fs'),
-    get_version = require('../get').get_version,
     hooks = require('../hooks'),
     path = require('path'),
+    pipeline = require('../pipeline'),
     vm = require('vm');
 
 _.templateSettings = {
@@ -57,8 +56,38 @@ function reload_hot_config(cb) {
 	});
 }
 
+function reload_scripts(cb) {
+	var json = path.join('state', 'scripts.json');
+	fs.readFile(json, 'UTF-8', function (err, json) {
+		if (err)
+			cb(err);
+		var js;
+		try {
+			js = JSON.parse(json);
+		}
+		catch (e) {
+			return cb(e);
+		}
+		if (!js || !js.vendor || !js.client)
+			return cb('Bad state/scripts.json.');
+
+		HOT.VENDOR_JS = js.vendor;
+		HOT.CLIENT_JS = js.client;
+
+		var modJs = path.join('state', js.mod);
+		fs.readFile(modJs, 'UTF-8', function (err, modSrc) {
+			if (err)
+				return cb(err);
+			RES.modJs = modSrc;
+			cb(null);
+		});
+	});
+}
+
 function reload_resources(cb) {
+
 	var deps = require('../deps');
+
 	function read(dir, file) {
 		return fs.readFile.bind(fs, path.join(dir, file), 'UTF-8');
 	}
@@ -71,7 +100,6 @@ function reload_resources(cb) {
 			src: expanded};
 	}
 	async.parallel({
-		version: get_version.bind(null, deps.CLIENT_DEPS),
 		index: read('tmpl', 'index.html'),
 		filter: read('tmpl', 'filter.html'),
 		login: read('tmpl', 'login.html'),
@@ -80,14 +108,9 @@ function reload_resources(cb) {
 		aLookup: read('tmpl', 'alookup.html'),
 		notFound: read('www', '404.html'),
 		serverError: read('www', '50x.html'),
-		modJs: make_mod_js,
 	}, function (err, res) {
 		if (err)
 			return cb(err);
-		if (config.DEBUG)
-			config.CLIENT_JS = 'client.debug.js';
-		else
-			config.CLIENT_JS = 'client-' + res.version + '.js';
 
 		var index = tmpl(res.index);
 		RES.indexTmpl = index.tmpl;
@@ -102,13 +125,20 @@ function reload_resources(cb) {
 		RES.aLookupHtml = res.aLookup;
 		RES.notFoundHtml = res.notFound;
 		RES.serverErrorHtml = res.serverError;
-		RES.modJs = res.modJs;
+
 		hooks.trigger('reloadResources', RES, cb);
 	});
 }
 
 exports.reload_hot_resources = function (cb) {
-	async.series([reload_hot_config, reload_resources], cb);
+	pipeline.refresh_deps();
+
+	async.series([
+		reload_hot_config,
+		pipeline.rebuild,
+		reload_scripts,
+		reload_resources,
+	], cb);
 }
 
 function make_navigation_html() {
@@ -124,19 +154,6 @@ function make_navigation_html() {
 	});
 	bits.push(']</nav>');
 	return bits.join('');
-}
-
-function make_mod_js(cb) {
-	var makeBin = config.GNU_MAKE || '/usr/bin/make';
-	var cmd = makeBin + ' -s modjs';
-	child_process.exec(cmd, function (err, stdout, stderr) {
-		if (err)
-			cb(err);
-		else if (stderr && stderr.trim())
-			cb(stderr.trim());
-		else
-			cb(null, stdout);
-	});
 }
 
 function read_exits(file, cb) {

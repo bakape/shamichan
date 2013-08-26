@@ -23,16 +23,8 @@ function lookup_config(key) {
 var config_re = /\b(\w+onfig)\.(\w+)\b/;
 
 function convert(file, cb) {
-	if (/^lib\//.test(file)) {
-		fs.readFile(file, 'UTF-8', function (err, lib) {
-			if (err)
-				return cb(err);
-			out.write(lib);
-			out.write('\n');
-			cb(null);
-		});
-		return;
-	}
+	if (/^lib\//.test(file))
+		return cb("lib/* should be in VENDOR_DEPS");
 	if (/^config\.js/.test(file))
 		return cb("config.js shouldn't be in client");
 
@@ -138,6 +130,15 @@ function make_minified(files, out, cb) {
 
 exports.make_minified = make_minified;
 
+function make_maybe_minified(files, out, cb) {
+	if (config.DEBUG)
+		make_client(files, out, cb);
+	else
+		make_minified(files, out, cb);
+}
+
+exports.make_maybe_minified = make_maybe_minified;
+
 if (require.main === module) {
 	var files = [];
 	for (var i = 2; i < process.argv.length; i++) {
@@ -152,13 +153,7 @@ if (require.main === module) {
 		}
 	}
 
-	var out;
-	if (config.DEBUG)
-		make_client(files, process.stdout, handler);
-	else
-		make_minified(files, process.stdout, handler);
-
-	function handler(err) {
+	make_maybe_minified(files, process.stdout, function (err) {
 		if (err) throw err;
-	}
+	});
 }

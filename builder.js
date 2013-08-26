@@ -21,23 +21,9 @@ var reload_state = _.debounce(function () {
 		server.kill('SIGHUP');
 }, 500);
 
-var build_client = _.debounce(function () {
-	var makeBin = config.GNU_MAKE || '/usr/bin/make';
-	var make = child_process.execFile(makeBin, ['-s', '-q', 'client']);
-	make.once('exit', function (code) {
-		if (!code)
-			return;
-		console.log('make client');
-		var make = child_process.execFile(makeBin, ['-s', 'client']);
-		make.stdout.pipe(process.stdout);
-		make.stderr.pipe(process.stderr);
-	});
-}, 500);
-
 deps.SERVER_DEPS.forEach(monitor.bind(null, start_server));
 deps.SERVER_STATE.forEach(monitor.bind(null, reload_state));
-deps.CLIENT_DEPS.forEach(monitor.bind(null, build_client));
-monitor(build_client, 'config.js');
+deps.CLIENT_DEPS.forEach(monitor.bind(null, reload_state));
 
 function monitor(func, dep) {
 	var mtime = new Date;
@@ -50,4 +36,3 @@ function monitor(func, dep) {
 }
 
 start_server();
-build_client();

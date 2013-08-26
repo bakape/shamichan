@@ -7,7 +7,6 @@ var _ = require('../lib/underscore'),
     config = require('../config'),
     db = require('../db'),
     fs = require('fs'),
-    get_version = require('../get').get_version,
     hooks = require('../hooks'),
     imager = require('../imager'),
     Muggle = require('../etc').Muggle,
@@ -252,8 +251,15 @@ web.resource(/^\/(login|logout)\/$/, function (req, params, cb) {
 });
 
 function write_mod_js(resp, ident) {
-	resp.writeHead(200, {
-			'Content-Type': 'text/javascript; charset=UTF-8'});
+	if (!RES.modJs) {
+		resp.writeHead(500);
+		resp.end('Mod js not built?!');
+		return;
+	}
+
+	var noCacheJs = _.clone(web.noCacheHeaders);
+	noCacheJs['Content-Type'] = 'text/javascript; charset=UTF-8';
+	resp.writeHead(200, noCacheJs);
 	resp.write('(function (IDENT) {');
 	resp.write(RES.modJs);
 	resp.end('})(' + JSON.stringify(ident) + ');');

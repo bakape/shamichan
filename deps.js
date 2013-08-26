@@ -2,12 +2,15 @@ var config = require('./config');
 
 var minJs = config.DEBUG ? '.js' : '.min.js';
 
-exports.CLIENT_DEPS = [
+exports.VENDOR_DEPS = [
 	'lib/yepnope' + minJs,
 	'lib/underscore' + minJs,
 	'lib/backbone' + minJs,
 	'lib/oninput' + minJs,
 	'lib/jquery.cookie' + minJs,
+];
+
+exports.CLIENT_DEPS = [
 	'common.js',
 	'client/init.js',
 	'client/models.js',
@@ -37,8 +40,9 @@ exports.SERVER_DEPS = [
 	'db.js',
 	'deps.js',
 	'etc.js',
-	'get.js',
 	'hooks.js',
+	'make_client.js',
+	'pipeline.js',
 	'tail.js',
 	'curfew/server.js',
 	'lib/underscore.js',

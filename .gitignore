@@ -1,8 +1,10 @@
 *.node
 *.pid
 *.swp
+.build
 .lock*
 .DS_Store
+assets.json
 authdump
 config.js
 graveyard
@@ -12,12 +14,14 @@ jsmin
 node_modules/
 perceptual
 imager/tmp
+state
 tripcode/.build
 tripcode/build
 upkeep/credentials.json
 voice/*.mp3
 www/archive
 www/js/client*.js
+www/js/vendor*.js
 www/src
 www/thumb
 www/mid

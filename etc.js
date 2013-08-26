@@ -34,6 +34,17 @@ Muggle.prototype.deepest_reason = function () {
 	return this;
 };
 
+exports.move = function (src, dest, callback) {
+	child_process.execFile('/bin/mv', ['--', src, dest],
+				function (err, stdout, stderr) {
+		if (err)
+			callback(Muggle("Couldn't move file into place.",
+					stderr || err));
+		else
+			callback(null);
+	});
+};
+
 exports.movex = function (src, dest, callback) {
 	child_process.execFile('/bin/mv', ['-n', '--', src, dest],
 				function (err, stdout, stderr) {

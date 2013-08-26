@@ -15,7 +15,7 @@ Production:
 * Have your webserver serve www/ (or wherever you've moved src, thumb, etc.)
 * Run `node server/server.js` for just the server
 * config.DAEMON support is broken for now
-* Be sure to `make client` for any client-affecting change
+* You can update client code & hot.js on-the-fly with `node server/kill.js`
 
 Dependencies:
 
