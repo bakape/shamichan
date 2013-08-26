@@ -11,17 +11,17 @@
 	},
 	"dependencies": {
 		"async": "0.2.9",
-		"formidable": ">=1.0",
-		"redis": ">=0.8.4",
-		"request": ">=2.20",
-		"sockjs": ">=0.3.3",
+		"formidable": "1.0.14",
+		"redis": "0.8.4",
+		"request": "2.27",
+		"sockjs": "0.3.7",
 		"tmp": "0.0.21",
 		"uglify-js": "2.4.0",
-		"winston": ">=0.7"
+		"winston": "0.7.2"
 	},
 	"optionalDependencies": {
-		"hiredis": ">=0.1.10",
-		"node-expat": ">=2.0",
-		"send": ">=0.1.4"
+		"hiredis": "0.1.15",
+		"node-expat": "2.0.0",
+		"send": "0.1.4"
 	}
 }
