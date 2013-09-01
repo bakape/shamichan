@@ -59,7 +59,8 @@ function end_and_move_js(stream, dir, prefix, cb) {
 function make_hashing_stream(cb) {
 	// ideally the stream would be returned immediately and handle
 	// this step internally...
-	tmp_file({dir: '.build', postfix: '.gen.js'}, function (err, tmp, fd) {
+	var opts = {dir: '.build', postfix: '.gen.js', mode: 0644};
+	tmp_file(opts, function (err, tmp, fd) {
 		if (err)
 			return cb(err);
 		var out = fs.createWriteStream(null, {fd: fd});
