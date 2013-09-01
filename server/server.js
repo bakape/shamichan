@@ -273,8 +273,9 @@ web.resource_auth(/^\/admin\.js$/, function (req, cb) {
 },
 function (req, resp) {
 	write_mod_js(resp, {
-		auth: 'Admin', email: req.ident.email,
+		auth: req.ident.auth,
 		csrf: req.ident.csrf,
+		email: req.ident.email,
 	});
 });
 
@@ -286,8 +287,9 @@ web.resource_auth(/^\/mod\.js$/, function (req, cb) {
 },
 function (req, resp) {
 	write_mod_js(resp, {
-		auth: 'Moderator', email: req.ident.email,
+		auth: req.ident.auth,
 		csrf: req.ident.csrf,
+		email: req.ident.email,
 	});
 });
 
