@@ -409,7 +409,7 @@ function toggle_shortcuts(event) {
 		click: select_shortcut,
 		keyup: change_shortcut,
 	});
-	shortcuts.forEach(function (s) {
+	_.each(shortcuts, function (s) {
 		var value = String.fromCharCode(shortcutKeys[s.name]);
 		var $label = $('<label>', {text: s.label});
 		$('<input>', {
@@ -482,7 +482,7 @@ _.defer(function () {
 	});
 
 	var prefs = options.get('shortcuts') || {};
-	shortcuts.forEach(function (s) {
+	_.each(shortcuts, function (s) {
 		shortcutKeys[s.name] = prefs[s.name] || s.which;
 	});
 });
