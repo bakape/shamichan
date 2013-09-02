@@ -22,6 +22,8 @@ require('../admin');
 require('../imager/daemon');
 if (config.CURFEW_BOARDS)
 	require('../curfew/server');
+if (config.RECAPTCHA_PUBLIC_KEY)
+	require('../report/server');
 if (config.VOICE_PATH)
 	require('../voice/server');
 

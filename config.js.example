@@ -38,6 +38,9 @@ var config = {
 	IP_MNEMONIC: true,
 
 	VOICE_PATH: 'voice',
+
+	RECAPTCHA_PUBLIC_KEY: '',
+	RECAPTCHA_PRIVATE_KEY: '',
 };
 
 module.exports = config;

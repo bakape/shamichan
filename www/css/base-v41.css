@@ -295,6 +295,23 @@ article .hat {
 	right: 70px;
 	top: 70px;
 }
+#report-panel {
+	position: fixed;
+	right: 10px;
+	bottom: 10px;
+}
+#report-panel #captcha, #report-panel .message {
+	margin: 1em 0;
+}
+#report-panel .error {
+	color: red;
+}
+#report-panel .close {
+	float: right;
+	font-weight: bold;
+	padding-left: 1em;
+	text-decoration: none;
+}
 #shortcuts {
 	margin-top: 1em;
 }

@@ -28,6 +28,7 @@ exports.CLIENT_DEPS = [
 	'client/embed.js',
 	'client/gravitas.js',
 	'curfew/client.js',
+	'report/client.js',
 	'voice/client.js',
 ];
 
@@ -51,6 +52,7 @@ exports.SERVER_DEPS = [
 	'imager/db.js',
 	'imager/index.js',
 	'imager/jobs.js',
+	'report/server.js',
 	'server/amusement.js',
 	'server/caps.js',
 	'server/msgcheck.js',
