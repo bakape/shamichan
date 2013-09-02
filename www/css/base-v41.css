@@ -221,10 +221,8 @@ article .hat {
 .modal {
 	overflow: hidden;
 	padding: 1em;
-	position: absolute;
-	right: 70px;
-	top: 70px;
 	white-space: nowrap;
+	z-index: 20;
 }
 .pagination {
 	display: inline-block;
@@ -238,7 +236,7 @@ article .hat {
 .preview {
 	padding: 4px 10px;
 	position: absolute;
-	z-index: 20;
+	z-index: 30;
 }
 .scroll-lock > header {
 	background-image: url('ui/lock.png');
@@ -291,6 +289,11 @@ article .hat {
 	display: block;
 	float: right;
 	margin-bottom: 2px;
+}
+#options-panel {
+	position: absolute;
+	right: 70px;
+	top: 70px;
 }
 #shortcuts {
 	margin-top: 1em;
