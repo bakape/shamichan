@@ -88,7 +88,7 @@ hooks.hook('clientSynced', function (info, cb) {
 	client.db.get_banner(function (err, banner) {
 		if (err)
 			return cb(err);
-		if (!banner || banner.tag != client.board)
+		if (!banner)
 			return cb(null);
 		var msg = banner.message;
 		if (msg)

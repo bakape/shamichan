@@ -20,7 +20,6 @@ exports.dbCache = {
 	threadSubs: {},
 	YAKUMAN: 0,
 	funThread: 0,
-	bannerState: {},
 	imageAllocCleanups: {},
 	addresses: {},
 	ranges: {},

@@ -263,9 +263,6 @@ function update_cache(chan, msg) {
 		});
 		delete TAGS[op];
 	}
-	else if (kind == common.UPDATE_BANNER) {
-		cache.bannerState = {tag: tag, op: op, message: msg.msg};
-	}
 }
 
 exports.track_OPs = function (callback) {
@@ -1654,14 +1651,29 @@ Y.set_fun_thread = function (op, callback) {
 };
 
 Y.get_banner = function (cb) {
-	cb(null, cache.bannerState.op && cache.bannerState);
+	var key = 'tag:' + tag_key(this.tag) + ':banner';
+	this.connect().hgetall(key, cb);
 };
 
 Y.set_banner = function (op, message, cb) {
-	var m = this.connect().multi();
-	var etc = {cacheUpdate: {msg: message}};
-	this._log(m, op, common.UPDATE_BANNER, [message], etc);
-	m.exec(cb);
+	var r = this.connect();
+
+	var key = 'tag:' + tag_key(this.tag) + ':banner';
+	var self = this;
+	r.hgetall(key, function (err, old) {
+		if (err)
+			return cb(err);
+		var m = r.multi();
+		if (old && old.op != op) {
+			// clear previous thread's banner
+			self._log(m, old.op, common.UPDATE_BANNER, [null]);
+		}
+
+		// write new banner
+		m.hmset(key, {op: op, message: message});
+		self._log(m, op, common.UPDATE_BANNER, [message]);
+		m.exec(cb);
+	});
 };
 
 Y.teardown = function (board, cb) {
