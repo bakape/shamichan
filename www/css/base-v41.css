@@ -171,7 +171,7 @@ section #banner {
 .email {
 	text-decoration: underline;
 }
-.error {
+#sync.error {
 	position: fixed;
 	top: 12px;
 	right: 8px;
