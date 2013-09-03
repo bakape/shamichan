@@ -4,7 +4,19 @@ var caps = require('../server/caps'),
     db = require('../db'),
     msgcheck = require('../server/msgcheck'),
     okyaku = require('../server/okyaku'),
-    recaptcha = require('recaptcha');
+    recaptcha = require('recaptcha'),
+    winston = require('winston');
+
+const MAIL_FROM = "Reports <reports@doushio.com>";
+const URL_BASE = 'http://localhost:8000/';
+
+var SMTP = require('nodemailer').createTransport('SMTP', {
+	service: 'Gmail',
+	auth: {
+		user: "reports@doushio.com",
+		pass: "",
+	},
+});
 
 const ERRORS = {
 	'invalid-site-private-key': "Sorry, the server isn't set up with reCAPTCHA properly.",
@@ -13,9 +25,37 @@ const ERRORS = {
 	'captcha-timeout': "Sorry, you took too long. Please try again.",
 };
 
-function report(num, cb) {
-	// stub
-	cb(null);
+
+function report(reporter_ident, op, num, cb) {
+
+	var board = caps.can_access_thread(reporter_ident, op);
+	if (!board)
+		return cb("Post does not exist.");
+
+	var noun;
+	var url = URL_BASE + board + '/' + op;
+	if (op == num) {
+		noun = 'Thread';
+	}
+	else {
+		noun = 'Post';
+		url += '#' + num;
+	}
+
+	var body = url;
+	var reporter = reporter_ident.ip;
+
+	var opts = {
+		from: MAIL_FROM,
+		to: config.REPORT_EMAILS.join(', '),
+		subject: noun + ' #' + num + ' reported by ' + reporter,
+		text: body,
+	};
+	SMTP.sendMail(opts, function (err, resp) {
+		if (err)
+			return cb(err);
+		cb(null);
+	});
 }
 
 okyaku.dispatcher[common.REPORT_POST] = function (msg, client) {
@@ -48,9 +88,11 @@ okyaku.dispatcher[common.REPORT_POST] = function (msg, client) {
 		var op = db.OPs[num];
 		if (!op)
 			return reply_error("Post does not exist.");
-		report(num, function (err) {
-			if (err)
-				return reply_error(err);
+		report(client.ident, op, num, function (err) {
+			if (err) {
+				winston.error(err);
+				return reply_error("Couldn't send report.");
+			}
 			// success!
 			client.send([op, common.REPORT_POST, num]);
 		});

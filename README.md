@@ -4,6 +4,7 @@ MIT licensed.
 Setup:
 
 * Install dependencies listed below
+* Sign up for reCAPTCHA
 * Copy config.js.example to config.js and configure
 * Copy hot.js.example to hot.js and configure
 * Copy imager/config.js.example to imager/config.js and configure

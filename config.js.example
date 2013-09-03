@@ -39,6 +39,8 @@ var config = {
 
 	VOICE_PATH: 'voice',
 
+	/* configure emailer in report/server.js */
+	REPORT_EMAILS: ['lalc@doushio.com'],
 	RECAPTCHA_PUBLIC_KEY: '',
 	RECAPTCHA_PRIVATE_KEY: '',
 };

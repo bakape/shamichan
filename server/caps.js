@@ -27,7 +27,7 @@ exports.can_access_thread = function (ident, op) {
 		return false;
 	for (var i = 0; i < tags.length; i++)
 		if (can_access_board(ident, tags[i]))
-			return true;
+			return tags[i];
 	return false;
 };
 
