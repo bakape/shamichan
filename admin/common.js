@@ -77,5 +77,6 @@ if (typeof IDENT != 'undefined') {
 	oneeSama.hook('headerName', denote_hidden);
 }
 else {
+	exports.ip_mnemonic = ip_mnemonic;
 	exports.append_mnemonic = append_mnemonic;
 }

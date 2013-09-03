@@ -43,7 +43,14 @@ function report(reporter_ident, op, num, cb) {
 	}
 
 	var body = url;
+
 	var reporter = reporter_ident.ip;
+	if (reporter && config.IP_MNEMONIC) {
+		var authcommon = require('../admin/common');
+		reporter = authcommon.ip_mnemonic(reporter);
+	}
+	if (!reporter)
+		reporter = '???';
 
 	var opts = {
 		from: MAIL_FROM,
