@@ -1489,11 +1489,20 @@ Reader.prototype._get_each_reply = function (tag, ix, nums, opts) {
 		this.emit('end');
 		return;
 	}
-	var r = this.y.connect();
 	var num = parseInt(nums[ix], 10);
+	var self = this;
+	this.get_post(num, opts, function (err, post) {
+		if (err)
+			return self.emit('error', err);
+		if (post)
+			self.emit('post', post);
+		self._get_each_reply(tag, ix + 1, nums, opts);
+	});
+};
+
+Reader.prototype.get_post = function (num, opts, cb) {
+	var r = this.y.connect();
 	var key = 'post:' + num;
-	var next_please = this._get_each_reply.bind(this, tag, ix + 1,
-			nums, opts);
 	var self = this;
 	async.waterfall([
 	function (next) {
@@ -1503,28 +1512,22 @@ Reader.prototype._get_each_reply = function (tag, ix, nums, opts) {
 		var exists = !(_.isEmpty(pre_post));
 		if (pre_post.hide && !opts.showDead)
 			exists = false;
-		if (!exists) {
-			next_please();
-			return;
-		}
+		if (!exists)
+			return next(null, null);
 		pre_post.num = num;
 		pre_post.time = parseInt(pre_post.time, 10);
 		pre_post.op = parseInt(pre_post.op, 10);
 		with_body(r, key, pre_post, next);
 	},
 	function (post, next) {
-		if (self.privNums &&
-				self.privNums.indexOf(num.toString()) >= 0)
-			post.priv = true;
-		extract(post);
+		if (post) {
+			var ps = self.privNums;
+			if (ps && _.contains(ps, num.toString()))
+				post.priv = true;
+			extract(post);
+		}
 		next(null, post);
-	}],
-	function (err, post) {
-		if (err)
-			return self.emit('error', err);
-		self.emit('post', post);
-		next_please();
-	});
+	}], cb);
 };
 
 /* Including hidden or private. Not in-order. */
