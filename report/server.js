@@ -32,6 +32,32 @@ function report(reporter_ident, op, num, cb) {
 	if (!board)
 		return cb("Post does not exist.");
 
+	var reporter = maybe_mnemonic(reporter_ident.ip) || '???';
+
+	var yaku = new db.Yakusoku(board, {auth: 'Moderator'});
+	var reader = new db.Reader(yaku);
+	reader.get_post(num, {}, function (err, post) {
+		if (err || !post) {
+			if (err)
+				console.error(err);
+			send_report(reporter, board, op, num, '', cb);
+			return;
+		}
+
+		var name = (post.name || common.ANON)
+		if (name.length > 23)
+			name = name.slice(0, 20) + '...';
+		if (post.trip)
+			name += ' # ' + post.trip;
+		if (post.ip)
+			name += ' # ' + maybe_mnemonic(post.ip);
+		var body = 'Offender: ' + name;
+
+		send_report(reporter, board, op, num, body, cb);
+	});
+}
+
+function send_report(reporter, board, op, num, body, cb) {
 	var noun;
 	var url = URL_BASE + board + '/' + op;
 	if (op == num) {
@@ -41,16 +67,7 @@ function report(reporter_ident, op, num, cb) {
 		noun = 'Post';
 		url += '#' + num;
 	}
-
-	var body = url;
-
-	var reporter = reporter_ident.ip;
-	if (reporter && config.IP_MNEMONIC) {
-		var authcommon = require('../admin/common');
-		reporter = authcommon.ip_mnemonic(reporter);
-	}
-	if (!reporter)
-		reporter = '???';
+	body = body ? (body + '\n\n' + url) : url;
 
 	var opts = {
 		from: MAIL_FROM,
@@ -63,6 +80,14 @@ function report(reporter_ident, op, num, cb) {
 			return cb(err);
 		cb(null);
 	});
+}
+
+function maybe_mnemonic(ip) {
+	if (ip && config.IP_MNEMONIC) {
+		var authcommon = require('../admin/common');
+		ip = authcommon.ip_mnemonic(ip);
+	}
+	return ip;
 }
 
 okyaku.dispatcher[common.REPORT_POST] = function (msg, client) {
