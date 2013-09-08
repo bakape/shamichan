@@ -409,7 +409,7 @@ function chibi(imgnm, src) {
 		name = m[1];
 		ext = m[2];
 	}
-	var bits = [safe('<a href="'), src, safe('" download="'), name];
+	var bits = [safe('<a href="'), src, safe('" download="'), imgnm];
 	if (name.length >= 38) {
 		bits.push(safe('" title="'), imgnm);
 		imgnm = [name.slice(0, 30), safe('(&hellip;)'), ext];
