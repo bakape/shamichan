@@ -1,4 +1,5 @@
 var _ = require('../lib/underscore'),
+    caps = require('../server/caps'),
     db = require('../db'),
     expat = require('node-expat'),
     request = require('request'),
@@ -73,21 +74,29 @@ function format_icecast(mounts) {
 	var radio = mounts[RADIO_MOUNT];
 	if (!radio || !radio.url)
 		return null;
-	var m = radio.url.match(/\/(\w+)\/(\d+)/);
-	if (!m)
+	var info = extract_thread(radio.url);
+	if (!info)
 		return null;
-	var board = m[1];
-	if (!db.is_board(board))
-		return;
-	var op = parseInt(m[2], 10);
-	if (!op)
-		return;
 	var count = parseInt(radio.listeners, 10);
 	count = count + ' listener' + (count == 1 ? '' : 's');
 	var msg = [{text: count, href: M3U_URL}];
 	if (radio.title)
 		msg.push(': ' + radio.title);
-	return {board: board, op: op, msg: msg};
+	info.msg = msg;
+	return info;
+}
+
+function extract_thread(url) {
+	var m = /\/(\w+)\/(\d+)/.exec(url);
+	if (!m)
+		return;
+	var board = m[1];
+	if (!db.is_board(board) || !caps.can_access_board(RADIO_IDENT, board))
+		return;
+	var op = parseInt(m[2], 10);
+	if (!op)
+		return;
+	return {board: board, op: op};
 }
 
 function parse_icecast(input, cb) {
