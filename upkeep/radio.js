@@ -59,7 +59,7 @@ function poll_icecast(cb) {
 		if (err)
 			return cb(err);
 		if (resp.statusCode != 200)
-			return winston.error("Got " + resp.statusCode);
+			return cb("Got " + resp.statusCode);
 		parse_icecast(body, function (err, mounts) {
 			if (err)
 				cb(err);
