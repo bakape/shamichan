@@ -6,7 +6,7 @@ var _ = require('../lib/underscore'),
 
 var RADIO_IDENT = {auth: 'Radio', ip: '127.0.0.1'};
 var RADIO_MOUNT = '/radio';
-var POLL_URL = 'http://localhost:5555/poll.xsl';
+var ICECAST_POLL_URL = 'http://localhost:5555/poll.xsl';
 var M3U_URL = 'http://doushio.com/radio.m3u';
 var SHORT_INTERVAL = 3 * 1000;
 var LONG_INTERVAL = 30 * 1000;
@@ -19,13 +19,12 @@ function update_banner(info, cb) {
 	});
 }
 
+function make_monitor(poll) {
 function monitor(last) {
-	poll(POLL_URL, function (err, mounts) {
-		var info, clear = false;
+	poll(function (err, info) {
 		if (err)
-			winston.error(err);
-		else
-			info = format_now_playing(mounts);
+			winston.error(err); // fall through
+		var clear = false;
 		var interval = SHORT_INTERVAL;
 		if (!info && last) {
 			clear = true;
@@ -52,23 +51,25 @@ function monitor(last) {
 		}
 	});
 }
+	return monitor;
+}
 
-function poll(url, cb) {
-	request.get(url, function (err, resp, body) {
+function poll_icecast(cb) {
+	request.get(ICECAST_POLL_URL, function (err, resp, body) {
 		if (err)
 			return cb(err);
 		if (resp.statusCode != 200)
 			return winston.error("Got " + resp.statusCode);
-		parse(body, function (err, mounts) {
+		parse_icecast(body, function (err, mounts) {
 			if (err)
 				cb(err);
 			else
-				cb(null, mounts);
+				cb(null, format_icecast(mounts));
 		});
 	});
 }
 
-function format_now_playing(mounts) {
+function format_icecast(mounts) {
 	var radio = mounts[RADIO_MOUNT];
 	if (!radio || !radio.url)
 		return null;
@@ -89,7 +90,7 @@ function format_now_playing(mounts) {
 	return {board: board, op: op, msg: msg};
 }
 
-function parse(input, cb) {
+function parse_icecast(input, cb) {
 	var mounts = {}, curMount, thisKey, thisVal;
 	var parser = new expat.Parser('UTF-8');
 	parser.on('startElement', function (name, data) {
@@ -131,8 +132,10 @@ function parse(input, cb) {
 
 if (require.main === module) {
 	var args = process.argv;
-	if (args.length == 2)
-		monitor();
+	if (args.length == 2) {
+		winston.info('Polling ' + ICECAST_POLL_URL + '.');
+		make_monitor(poll_icecast)();
+	}
 	else if (args.length == 5) {
 		var op = parseInt(args[3], 10);
 		var info = {board: args[2], op: op, msg: args[4]};
