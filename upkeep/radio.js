@@ -139,6 +139,38 @@ function parse_icecast(input, cb) {
 	parser.parse(input);
 }
 
+var R_A_D_IO_POLL_URL = 'http://r-a-d.io/api.php';
+
+function poll_r_a_d_io(cb) {
+	var opts = {
+		url: R_A_D_IO_POLL_URL,
+		qs: {q: 1, lp: 1},
+		json: true,
+	};
+	request.get(opts, function (err, resp, body) {
+		if (err)
+			return cb(err);
+		if (resp.statusCode != 200)
+			return cb("Got " + resp.statusCode);
+		cb(null, format_r_a_d_io(body));
+	});
+}
+
+function format_r_a_d_io(json) {
+	if (!json || !json.online)
+		return null;
+	var info = extract_thread(json.thread);
+	if (!info)
+		return null;
+	var count = parseInt(json.list, 10) || '???';
+	count = count + ' listener' + (count == 1 ? '' : 's');
+	var msg = [{text: count, href: 'http://r-a-d.io/'}];
+	if (json.np && typeof json.np == 'string')
+		msg.push(': ' + json.np.slice(0, 100));
+	info.msg = msg;
+	return info;
+}
+
 if (require.main === module) {
 	var args = process.argv;
 	if (args.length == 2) {
@@ -153,5 +185,9 @@ if (require.main === module) {
 				winston.error(err);
 			process.exit(err ? -1 : 0);
 		});
+	}
+	else if (args[2] == '--r-a-d-io') {
+		winston.info('Polling ' + R_A_D_IO_POLL_URL + '.');
+		make_monitor(poll_r_a_d_io)();
 	}
 }
