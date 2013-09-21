@@ -1673,7 +1673,7 @@ Y.set_banner = function (op, message, cb) {
 		}
 
 		// write new banner
-		m.hmset(key, {op: op, message: message});
+		m.hmset(key, {op: op, msg: message});
 		self._log(m, op, common.UPDATE_BANNER, [message]);
 		m.exec(cb);
 	});

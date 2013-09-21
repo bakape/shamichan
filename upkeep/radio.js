@@ -13,7 +13,7 @@ var LONG_INTERVAL = 30 * 1000;
 
 function update_banner(info, cb) {
 	var yaku = new db.Yakusoku(info.board, RADIO_IDENT);
-	yaku.set_banner(info.op, info.message, function (err, res) {
+	yaku.set_banner(info.op, info.msg, function (err, res) {
 		yaku.disconnect();
 		cb(err, res);
 	});
@@ -30,7 +30,7 @@ function monitor(last) {
 		if (!info && last) {
 			clear = true;
 			info = last;
-			info.message = '';
+			info.msg = '';
 			interval = LONG_INTERVAL;
 		}
 		var sameAsLast = _.isEqual(info, last);
@@ -86,7 +86,7 @@ function format_now_playing(mounts) {
 	var msg = [{text: count, href: M3U_URL}];
 	if (radio.title)
 		msg.push(': ' + radio.title);
-	return {board: board, op: op, message: msg};
+	return {board: board, op: op, msg: msg};
 }
 
 function parse(input, cb) {
@@ -135,7 +135,7 @@ if (require.main === module) {
 		monitor();
 	else if (args.length == 5) {
 		var op = parseInt(args[3], 10);
-		var info = {board: args[2], op: op, message: args[4]};
+		var info = {board: args[2], op: op, msg: args[4]};
 		update_banner(info, function (err) {
 			if (err)
 				winston.error(err);
