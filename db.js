@@ -1510,7 +1510,7 @@ Reader.prototype.get_post = function (num, opts, cb) {
 	},
 	function (pre_post, next) {
 		var exists = !(_.isEmpty(pre_post));
-		if (pre_post.hide && !opts.showDead)
+		if (exists && pre_post.hide && !opts.showDead)
 			exists = false;
 		if (!exists)
 			return next(null, null);
