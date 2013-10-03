@@ -36,7 +36,8 @@ function report(reporter_ident, op, num, cb) {
 
 	var yaku = new db.Yakusoku(board, {auth: 'Moderator'});
 	var reader = new db.Reader(yaku);
-	reader.get_post(num, {}, function (err, post) {
+	var kind = op == num ? 'thread' : 'post';
+	reader.get_post(kind, num, {}, function (err, post) {
 		if (err || !post) {
 			if (err)
 				console.error(err);

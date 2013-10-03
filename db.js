@@ -1491,7 +1491,7 @@ Reader.prototype._get_each_reply = function (tag, ix, nums, opts) {
 	}
 	var num = parseInt(nums[ix], 10);
 	var self = this;
-	this.get_post(num, opts, function (err, post) {
+	this.get_post('post', num, opts, function (err, post) {
 		if (err)
 			return self.emit('error', err);
 		if (post)
@@ -1500,9 +1500,9 @@ Reader.prototype._get_each_reply = function (tag, ix, nums, opts) {
 	});
 };
 
-Reader.prototype.get_post = function (num, opts, cb) {
+Reader.prototype.get_post = function (kind, num, opts, cb) {
 	var r = this.y.connect();
-	var key = 'post:' + num;
+	var key = kind + ':' + num;
 	var self = this;
 	async.waterfall([
 	function (next) {
@@ -1512,11 +1512,20 @@ Reader.prototype.get_post = function (num, opts, cb) {
 		var exists = !(_.isEmpty(pre_post));
 		if (exists && pre_post.hide && !opts.showDead)
 			exists = false;
+		if (exists && !can_see_priv(pre_post.priv, self.ident))
+			exists = false;
 		if (!exists)
 			return next(null, null);
+
 		pre_post.num = num;
 		pre_post.time = parseInt(pre_post.time, 10);
-		pre_post.op = parseInt(pre_post.op, 10);
+		if (kind == 'post') {
+			pre_post.op = parseInt(pre_post.op, 10);
+		}
+		else {
+			var tags = parse_tags(pre_post.tags);
+			// TODO: filter by ident eligibility and attach
+		}
 		with_body(r, key, pre_post, next);
 	},
 	function (post, next) {
