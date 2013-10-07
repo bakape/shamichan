@@ -165,10 +165,20 @@ function format_r_a_d_io(json) {
 	var count = parseInt(json.list, 10) || '???';
 	count = count + ' listener' + (count == 1 ? '' : 's');
 	var msg = [{text: count, href: 'http://r-a-d.io/'}];
-	if (json.np && typeof json.np == 'string')
-		msg.push(': ' + json.np.slice(0, 100));
+	if (json.np && typeof json.np == 'string') {
+		var np = reduce_entities(json.np);
+		msg.push(': ' + np.slice(0, 100));
+	}
 	info.msg = msg;
 	return info;
+}
+
+var reduce_regexp = /&(?:amp|lt|gt|quot);/g;
+var reductions = {'&amp;' : '&', '&lt;': '<', '&gt;': '>', '&quot;': '"'};
+function reduce_entities(html) {
+	return html.replace(reduce_regexp, function (c) {
+		return reductions[c];
+	});
 }
 
 if (require.main === module) {
