@@ -227,9 +227,9 @@ else {
 	/* Production login/out endpoint */
 	web.resource(/^\/login$/, true, function (req, resp) {
 		resp.writeHead(200, web.noCacheHeaders);
-		resp.write(RES.loginHtml[0]);
+		resp.write(RES.loginTmpl[0]);
 		resp.write('{}');
-		resp.end(RES.loginHtml[1]);
+		resp.end(RES.loginTmpl[1]);
 	});
 
 	web.resource(/^\/logout$/, function (req, cb) {
@@ -240,12 +240,12 @@ else {
 	},
 	function (req, resp) {
 		resp.writeHead(200, web.noCacheHeaders);
-		resp.write(RES.loginHtml[0]);
+		resp.write(RES.loginTmpl[0]);
 		resp.write(JSON.stringify({
 			loggedInUser: req.ident.email,
 			x_csrf: req.ident.csrf,
 		}));
-		resp.end(RES.loginHtml[1]);
+		resp.end(RES.loginTmpl[1]);
 	});
 }
 web.resource(/^\/(login|logout)\/$/, function (req, params, cb) {

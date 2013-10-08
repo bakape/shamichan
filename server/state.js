@@ -120,7 +120,7 @@ function reload_resources(cb) {
 		RES.filterTmpl = tmpl(res.filter).tmpl;
 		RES.curfewTmpl = tmpl(res.curfew).tmpl;
 		RES.suspensionTmpl = tmpl(res.suspension).tmpl;
-		RES.loginHtml = tmpl(res.login).tmpl;
+		RES.loginTmpl = tmpl(res.login).tmpl;
 		RES.aLookupHtml = res.aLookup;
 		RES.notFoundHtml = res.notFound;
 		RES.serverErrorHtml = res.serverError;
