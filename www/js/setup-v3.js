@@ -1,4 +1,4 @@
-var BOARD, THREAD, BUMP, PAGE, options;
+var BOARD, THREAD, BUMP, PAGE, mediaURL, options;
 // NOTE: options gets turned into a backbone model later
 
 (function () {
@@ -9,6 +9,19 @@ var BOARD, THREAD, BUMP, PAGE, options;
 	BUMP = /\/$/.test(p);
 	t = p.match(/\/page(\d+)$/);
 	PAGE = t ? parseInt(t[1], 10) : -1;
+
+	if (!mediaURL) {
+		var sc = document.getElementsByTagName('script');
+		for (var i = 0; i < sc.length; i++) {
+			var m = /^(.*)js\/setup-v\d+.js$/.exec(sc[i].src);
+			if (m) {
+				mediaURL = m[1];
+				break;
+			}
+		}
+	}
+	if (!mediaURL)
+		alert("Couldn't determine mediaURL! Hardcode it.");
 
 	try {
 		options = JSON.parse(localStorage.options);

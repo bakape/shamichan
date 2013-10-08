@@ -41,7 +41,8 @@ DEFINES.S_BOL = 1;
 DEFINES.S_QUOTE = 2;
 DEFINES.S_SPOIL = 3;
 
-var mediaURL = imagerConfig.MEDIA_URL;
+if (typeof mediaURL == 'undefined' || !mediaURL)
+	mediaURL = imagerConfig.MEDIA_URL;
 
 function is_pubsub(t) {
 	return t > 0 && t < 30;
