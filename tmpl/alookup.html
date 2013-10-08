@@ -4,7 +4,7 @@
 <script>
 (function () {
 var target = document.location.pathname.match(/(\d+)$/)[1];
-var url = 'http://archive.foolz.us/api/chan/post/?board=a&num='+target;
+var url = 'http://archive.foolz.us/_/api/chan/post/?board=a&num='+target;
 var req = new XMLHttpRequest();
 req.open('GET', url, true);
 req.overrideMimeType('application/json');
