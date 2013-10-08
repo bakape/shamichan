@@ -90,14 +90,6 @@ function reload_resources(cb) {
 	function read(dir, file) {
 		return fs.readFile.bind(fs, path.join(dir, file), 'UTF-8');
 	}
-	function tmpl(data) {
-		var templateVars = _.clone(HOT);
-		_.extend(templateVars, require('../imager/config'));
-		_.extend(templateVars, config);
-		var expanded = _.template(data, templateVars);
-		return {tmpl: expanded.split(/\$[A-Z]+/),
-			src: expanded};
-	}
 	async.parallel({
 		index: read('tmpl', 'index.html'),
 		filter: read('tmpl', 'filter.html'),
@@ -111,22 +103,40 @@ function reload_resources(cb) {
 		if (err)
 			return cb(err);
 
-		var index = tmpl(res.index);
-		RES.indexTmpl = index.tmpl;
-		var hash = crypto.createHash('md5').update(index.src);
-		RES.indexHash = hash.digest('hex').slice(0, 8);
-		RES.navigationHtml = make_navigation_html();
-
-		RES.filterTmpl = tmpl(res.filter).tmpl;
-		RES.curfewTmpl = tmpl(res.curfew).tmpl;
-		RES.suspensionTmpl = tmpl(res.suspension).tmpl;
-		RES.loginTmpl = tmpl(res.login).tmpl;
-		RES.aLookupHtml = res.aLookup;
-		RES.notFoundHtml = res.notFound;
-		RES.serverErrorHtml = res.serverError;
+		_.extend(RES, expand_templates(res));
 
 		hooks.trigger('reloadResources', RES, cb);
 	});
+}
+
+function expand_templates(res) {
+	var templateVars = _.clone(HOT);
+	_.extend(templateVars, require('../imager/config'));
+	_.extend(templateVars, config);
+
+	function tmpl(data) {
+		var expanded = _.template(data, templateVars);
+		return {tmpl: expanded.split(/\$[A-Z]+/),
+			src: expanded};
+	}
+
+	var ex = {
+		navigationHtml: make_navigation_html(),
+		filterTmpl: tmpl(res.filter).tmpl,
+		curfewTmpl: tmpl(res.curfew).tmpl,
+		suspensionTmpl: tmpl(res.suspension).tmpl,
+		loginTmpl: tmpl(res.login).tmpl,
+		aLookupHtml: res.aLookup,
+		notFoundHtml: res.notFound,
+		serverErrorHtml: res.serverError,
+	};
+
+	var index = tmpl(res.index);
+	ex.indexTmpl = index.tmpl;
+	var hash = crypto.createHash('md5').update(index.src);
+	ex.indexHash = hash.digest('hex').slice(0, 8);
+
+	return ex;
 }
 
 exports.reload_hot_resources = function (cb) {
