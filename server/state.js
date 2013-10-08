@@ -87,9 +87,21 @@ function reload_resources(cb) {
 
 	var deps = require('../deps');
 
+	read_templates(function (err, tmpls) {
+		if (err)
+			return cb(err);
+
+		_.extend(RES, expand_templates(tmpls));
+
+		hooks.trigger('reloadResources', RES, cb);
+	});
+}
+
+function read_templates(cb) {
 	function read(dir, file) {
 		return fs.readFile.bind(fs, path.join(dir, file), 'UTF-8');
 	}
+
 	async.parallel({
 		index: read('tmpl', 'index.html'),
 		filter: read('tmpl', 'filter.html'),
@@ -99,14 +111,7 @@ function reload_resources(cb) {
 		aLookup: read('tmpl', 'alookup.html'),
 		notFound: read('www', '404.html'),
 		serverError: read('www', '50x.html'),
-	}, function (err, res) {
-		if (err)
-			return cb(err);
-
-		_.extend(RES, expand_templates(res));
-
-		hooks.trigger('reloadResources', RES, cb);
-	});
+	}, cb);
 }
 
 function expand_templates(res) {
