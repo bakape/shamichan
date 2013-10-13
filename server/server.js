@@ -15,6 +15,7 @@ var _ = require('../lib/underscore'),
     render = require('./render'),
     STATE = require('./state'),
     tripcode = require('./../tripcode/tripcode'),
+    urlParse = require('url').parse,
     web = require('./web'),
     winston = require('winston');
 
@@ -585,6 +586,14 @@ web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
 web.resource(/^\/outbound\/(g|iqdb)\/([\w+\/]{22}\.jpg)$/,
 			function (req, params, cb) {
 	var thumb = imager.config.MEDIA_URL + 'vint/' + params[2];
+
+	// attempt to make protocol more absolute
+	var u = urlParse(thumb, false, true);
+	if (!u.protocol) {
+		u.protocol = 'http:';
+		thumb = u.format();
+	}
+
 	var service = params[1] == 'iqdb' ? 'http://iqdb.org/?url='
 			: 'http://google.com/searchbyimage?image_url=';
 	var dest = service + encodeURIComponent(thumb);
