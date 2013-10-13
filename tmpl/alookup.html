@@ -31,7 +31,12 @@ req.onreadystatechange = function () {
 };
 function jump(thread, post) {
 	var href = 'http://boards.4chan.org/a/res/'+thread;
-	document.location = post ? href+'#p'+post : href;
+	if (post)
+		href = href + '#p' + post;
+	if (document.location.replace)
+		document.location.replace(href);
+	else
+		document.location = href;
 }
 function bail() { jump(target); }
 if (req.readyState != 4)
