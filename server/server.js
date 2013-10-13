@@ -595,7 +595,7 @@ web.resource(/^\/outbound\/(g|iqdb)\/([\w+\/]{22}\.jpg)$/,
 	}
 
 	var service = params[1] == 'iqdb' ? 'http://iqdb.org/?url='
-			: 'http://google.com/searchbyimage?image_url=';
+			: 'https://www.google.com/searchbyimage?image_url=';
 	var dest = service + encodeURIComponent(thumb);
 	cb(null, 303.1, dest);
 });
