@@ -238,9 +238,9 @@ option_fitwidth.type = 'revcheckbox';
 
 function option_inline_expansion() {
 }
-option_inline_expansion.id = 'inline';
+option_inline_expansion.id = 'noinline';
 option_inline_expansion.label = 'Inline image expansion';
-option_inline_expansion.type = 'checkbox';
+option_inline_expansion.type = 'revcheckbox';
 
 function option_high_res() {
 }
@@ -250,7 +250,7 @@ option_high_res.type = 'revcheckbox';
 
 $DOC.on('mouseup', 'img', function (event) {
 	/* Bypass expansion for non-left mouse clicks */
-	if (options.get('inline') && event.which > 1) {
+	if (!options.get('noinline') && event.which > 1) {
 		var img = $(this);
 		img.data('skipExpand', true);
 		setTimeout(function () {
@@ -260,7 +260,7 @@ $DOC.on('mouseup', 'img', function (event) {
 });
 
 $DOC.on('click', 'img', function (event) {
-	if (options.get('inline')) {
+	if (!options.get('noinline')) {
 		var $target = $(this);
 		if (!$target.data('skipExpand'))
 			toggle_expansion($target, event);
