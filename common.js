@@ -619,9 +619,13 @@ OS.atama = function (data) {
 			: [safe('<b>')];
 	if (data.subject)
 		header.unshift(safe('<h3>「'), data.subject, safe('」</h3> '));
-	header.push(data.name || DEFINES.ANON);
+	if (data.name || !data.trip) {
+		header.push(data.name || DEFINES.ANON);
+		if (data.trip)
+			header.push(' ');
+	}
 	if (data.trip)
-		header.push(safe(' <code>' + data.trip + '</code>'));
+		header.push(safe('<code>' + data.trip + '</code>'));
 	if (auth)
 		header.push(' ## ' + auth);
 	this.trigger('headerName', {header: header, data: data});
