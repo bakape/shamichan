@@ -86,10 +86,13 @@ function make_link_rels(board, bits) {
 exports.write_board_head = function (out, board, nav) {
 	var indexTmpl = RES.indexTmpl;
 	var title = STATE.hot.TITLES[board] || escape(board);
+	var metaDesc = "Real-time imageboard";
 
 	var i = 0;
 	out.write(indexTmpl[i++]);
 	out.write(title);
+	out.write(indexTmpl[i++]);
+	out.write(escape(metaDesc));
 	out.write(indexTmpl[i++]);
 	out.write(make_board_meta(board, nav));
 	out.write(indexTmpl[i++]);
@@ -107,10 +110,13 @@ exports.write_thread_head = function (out, board, op, subject, abbrev) {
 		title += escape(subject) + ' (#' + op + ')';
 	else
 		title += '#' + op;
+	var metaDesc = "Real-time imageboard thread";
 
 	var i = 0;
 	out.write(indexTmpl[i++]);
 	out.write(title);
+	out.write(indexTmpl[i++]);
+	out.write(escape(metaDesc));
 	out.write(indexTmpl[i++]);
 	out.write(make_thread_meta(board, op, abbrev));
 	out.write(indexTmpl[i++]);
