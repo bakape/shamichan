@@ -223,12 +223,16 @@ propagate_ident: function () {
 	if (this.model.get('num'))
 		return;
 	var parsed = parse_name($name.val().trim());
+	var haveTrip = parsed[1] || parsed[2];
 	var meta = this.meta;
 	var $b = meta.find('b');
-	$b.text(parsed[0] || ANON);
-	oneeSama.trigger('fillMyName', $b);
-	if (parsed[1] || parsed[2])
+	if (parsed[0])
+		$b.text(parsed[0] + ' ');
+	else
+		$b.text(haveTrip ? '' : ANON);
+	if (haveTrip)
 		$b.append($.parseHTML(' <code>!?</code>'));
+	oneeSama.trigger('fillMyName', $b);
 	var email = $email.val().trim();
 	if (is_noko(email))
 		email = '';
