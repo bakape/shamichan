@@ -86,16 +86,18 @@ function make_link_rels(board, bits) {
 exports.write_board_head = function (out, board, nav) {
 	var indexTmpl = RES.indexTmpl;
 	var title = STATE.hot.TITLES[board] || escape(board);
-	out.write(indexTmpl[0]);
+
+	var i = 0;
+	out.write(indexTmpl[i++]);
 	out.write(title);
-	out.write(indexTmpl[1]);
+	out.write(indexTmpl[i++]);
 	out.write(make_board_meta(board, nav));
-	out.write(indexTmpl[2]);
+	out.write(indexTmpl[i++]);
 	if (RES.navigationHtml)
 		out.write(RES.navigationHtml);
-	out.write(indexTmpl[3]);
+	out.write(indexTmpl[i++]);
 	out.write(title);
-	out.write(indexTmpl[4]);
+	out.write(indexTmpl[i++]);
 };
 
 exports.write_thread_head = function (out, board, op, subject, abbrev) {
@@ -106,16 +108,17 @@ exports.write_thread_head = function (out, board, op, subject, abbrev) {
 	else
 		title += '#' + op;
 
-	out.write(indexTmpl[0]);
+	var i = 0;
+	out.write(indexTmpl[i++]);
 	out.write(title);
-	out.write(indexTmpl[1]);
+	out.write(indexTmpl[i++]);
 	out.write(make_thread_meta(board, op, abbrev));
-	out.write(indexTmpl[2]);
+	out.write(indexTmpl[i++]);
 	if (RES.navigationHtml)
 		out.write(RES.navigationHtml);
-	out.write(indexTmpl[3]);
+	out.write(indexTmpl[i++]);
 	out.write('Thread #' + op);
-	out.write(indexTmpl[4]);
+	out.write(indexTmpl[i++]);
 	out.write(common.action_link_html('#bottom', 'Bottom'));
 	out.write('<hr>\n');
 };
@@ -165,12 +168,12 @@ var returnHTML = common.action_link_html('.', 'Return').replace(
 		'span', 'span id="bottom"');
 
 exports.write_page_end = function (out, ident, returnLink) {
-	out.write(RES.indexTmpl[5]);
 	if (returnLink)
 		out.write(returnHTML);
 	else if (RES.navigationHtml)
 		out.write('<br><br>' + RES.navigationHtml);
-	out.write(RES.indexTmpl[6]);
+	var last = RES.indexTmpl.length - 1;
+	out.write(RES.indexTmpl[last]);
 	if (ident) {
 		if (caps.can_administrate(ident))
 			out.write('<script src="../admin.js"></script>\n');
