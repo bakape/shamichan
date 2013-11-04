@@ -476,15 +476,18 @@ insert_uploaded: function (info) {
 	this.resize_input();
 },
 
-make_alloc_request: function (text, image) {
+generate_post_nonce: function () {
 	var nonce = random_id();
 	nonces[nonce] = true;
 	this.nonce = nonce;
 	setTimeout(function () {
 		delete nonces[nonce];
 	}, 20 * 60 * 1000);
+	return nonce;
+},
 
-	var msg = {nonce: nonce};
+make_alloc_request: function (text, image) {
+	var msg = {nonce: this.generate_post_nonce()};
 	function opt(key, val) {
 		if (val)
 			msg[key] = val;
