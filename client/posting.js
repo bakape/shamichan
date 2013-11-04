@@ -665,7 +665,7 @@ on_image_chosen: function () {
 	for (var k in extra)
 		$('<input type=hidden>').attr('name', k).val(extra[k]
 				).appendTo(this.uploadForm);
-	this.uploadForm.prop('action', '../upload/?id=' + sessionId);
+	this.uploadForm.prop('action', '../upload/?id=' + CONN_ID);
 	this.uploadForm.submit();
 	this.$iframe.load(function (event) {
 		if (!postForm)

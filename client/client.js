@@ -3,7 +3,7 @@ var readOnly = ['archive'];
 
 var connSM = new FSM('load');
 var postSM = new FSM('none');
-var sessionId;
+var CONN_ID;
 
 function inject(frag) {
 	var dest = this.buffer;

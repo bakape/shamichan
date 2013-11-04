@@ -61,8 +61,8 @@ window.new_socket = function (attempt) {
 
 connSM.act('conn, reconn + open -> syncing', function () {
 	sync_status('Syncing...', false);
-	sessionId = random_id();
-	send([SYNCHRONIZE, sessionId, BOARD, syncs, BUMP, document.cookie]);
+	CONN_ID = random_id();
+	send([SYNCHRONIZE, CONN_ID, BOARD, syncs, BUMP, document.cookie]);
 });
 
 connSM.act('syncing + sync -> synced', function () {
