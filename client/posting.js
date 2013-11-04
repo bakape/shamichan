@@ -480,9 +480,6 @@ generate_post_nonce: function () {
 	var nonce = random_id();
 	nonces[nonce] = true;
 	this.nonce = nonce;
-	setTimeout(function () {
-		delete nonces[nonce];
-	}, 20 * 60 * 1000);
 	return nonce;
 },
 
