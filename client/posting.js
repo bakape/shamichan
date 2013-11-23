@@ -1,5 +1,4 @@
 var saku, postForm;
-var nonces = {};
 
 connSM.on('synced', postSM.feeder('sync'));
 connSM.on('dropped', postSM.feeder('desync'));
@@ -129,6 +128,71 @@ function insert_pbs() {
 	make_reply_box().appendTo('section');
 	if (!nashi.upload && (BUMP || PAGE == 0))
 		$ceiling.after('<aside class="act"><a>New thread</a></aside>');
+}
+
+function get_nonces() {
+	var nonces;
+	if (window.localStorage) {
+		try {
+			nonces = JSON.parse(localStorage.postNonces);
+		}
+		catch (e) {}
+	}
+	else {
+		nonces = ComposerView.nonces;
+	}
+	return nonces || {};
+}
+
+function save_nonces(nonces) {
+	if (window.localStorage)
+		localStorage.postNonces = JSON.stringify(nonces);
+	else
+		ComposerView.nonces = nonces;
+}
+
+function today_id() {
+	return Math.floor(new Date().getTime() / (1000*60*60*24));
+}
+
+function create_nonce() {
+	var nonces = get_nonces();
+	var nonce = random_id();
+	nonces[nonce] = {
+		tab: TAB_ID,
+		day: today_id(),
+	};
+	save_nonces(nonces);
+	return nonce;
+}
+
+function expire_nonces() {
+	if (!window.localStorage)
+		return;
+	// we need a lock on postNonces really
+	var nonces = get_nonces();
+
+	// people messing with their system clock will mess with expiry, doh
+	var changed = false;
+	var yesterday = today_id() - 1;
+	for (var nonce in nonces) {
+		if (nonces[nonce].day >= yesterday)
+			continue;
+		delete nonces[nonce];
+		changed = true;
+	}
+
+	if (changed)
+		save_nonces(nonces);
+}
+setTimeout(expire_nonces, Math.floor(Math.random()*5000));
+
+function destroy_nonce(nonce) {
+	var nonces = get_nonces();
+	if (!nonces[nonce])
+		return;
+	delete nonces[nonce];
+	save_nonces(nonces);
 }
 
 var Saku = Backbone.Model.extend({
@@ -476,15 +540,8 @@ insert_uploaded: function (info) {
 	this.resize_input();
 },
 
-generate_post_nonce: function () {
-	var nonce = random_id();
-	nonces[nonce] = true;
-	this.nonce = nonce;
-	return nonce;
-},
-
 make_alloc_request: function (text, image) {
-	var msg = {nonce: this.generate_post_nonce()};
+	var msg = {nonce: create_nonce()};
 	function opt(key, val) {
 		if (val)
 			msg[key] = val;

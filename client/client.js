@@ -3,6 +3,7 @@ var readOnly = ['archive'];
 
 var connSM = new FSM('load');
 var postSM = new FSM('none');
+var TAB_ID = random_id();
 var CONN_ID;
 
 function inject(frag) {
@@ -136,17 +137,20 @@ dispatcher[INSERT_POST] = function (msg) {
 	msg.num = num;
 
 	var el;
-	var isOwn = !!(msg.nonce && msg.nonce in nonces);
-	if (isOwn) {
-		delete nonces[msg.nonce];
+	var nonce = msg.nonce;
+	delete msg.nonce;
+	var myNonce = get_nonces()[nonce];
+	if (myNonce && myNonce.tab == TAB_ID) {
+		// posted in this tab; transform placeholder
 		ownPosts[num] = true;
 		oneeSama.trigger('insertOwnPost', msg);
 		postSM.feed('alloc', msg);
-
+		// delete only after a delay so all tabs notice that it's ours
+		setTimeout(_.bind(destroy_nonce, null, nonce), 10*1000);
+		// if we've already made a placeholder for this post, use it
 		if (postForm && postForm.el)
 			el = postForm.el;
 	}
-	delete msg.nonce;
 
 	/* This conflict is really dumb. */
 	var links = oneeSama.links = msg.links;
@@ -206,7 +210,8 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 
-	if (isOwn)
+	// if a tab in this browser posted it, suppress unread++ with `mine`
+	if (myNonce)
 		model.set('mine', true);
 	Backbone.trigger('afterInsert', model, $(el));
 	if (bump) {
