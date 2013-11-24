@@ -460,23 +460,30 @@ function detect_APNG(fnm, callback) {
 	});
 }
 
-function setup_im_args(o, args) {
+function setup_image_params(o) {
+	// only the first time!
+	if (o.setup) return;
+	o.setup = true;
+
+	o.src += '[0]';
+
+	var thumbFormat = 'jpg:';
+	o.dest = thumbFormat + o.dest;
+	if (o.compDest)
+		o.compDest = thumbFormat + o.compDest;
+	o.flatDims = o.dims[0] + 'x' + o.dims[1];
+	if (o.compDims)
+		o.compDims = o.compDims[0] + 'x' + o.compDims[1];
+	o.quality += '';
+}
+
+function build_im_args(o, args) {
 	var args = ['-limit', 'memory', '32', '-limit', 'map', '64'];
 	var dims = o.dims;
 	var samp = dims[0]*2 + 'x' + dims[1]*2;
 	if (o.ext == '.jpg')
 		args.push('-define', 'jpeg:size=' + samp);
-	if (!o.setup) {
-		o.src += '[0]';
-		o.dest = 'jpg:' + o.dest;
-		if (o.compDest)
-			o.compDest = 'jpg:' + o.compDest;
-		o.flatDims = o.dims[0] + 'x' + o.dims[1];
-		if (o.compDims)
-			o.compDims = o.compDims[0] + 'x' + o.compDims[1];
-		o.quality += '';
-		o.setup = true;
-	}
+	setup_image_params(o);
 	args.push(o.src);
 	if (o.ext != '.jpg')
 		args.push('-sample', samp);
@@ -485,7 +492,7 @@ function setup_im_args(o, args) {
 }
 
 function resize_image(o, comp, callback) {
-	var args = setup_im_args(o);
+	var args = build_im_args(o);
 	var dims = comp ? o.compDims : o.flatDims;
 	args.push('-resize', dims + (comp ? '^' : '!'));
 	args.push('-gamma', '2.2', '-background', o.bg);
