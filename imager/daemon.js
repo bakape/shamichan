@@ -354,14 +354,14 @@ which('convert', function (bin) { convertBin = bin; });
 
 function identify(taggedName, callback) {
 	var m = taggedName.match(/^(\w{3,4}):/);
-	var kind = m && m[1];
-	child_process.execFile(identifyBin, [taggedName],
-				function (err, stdout, stderr) {
+	var args = ['-format', '%Wx%H', taggedName + '[0]'];
+	child_process.execFile(identifyBin, args, function (err,stdout,stderr){
 		if (err) {
 			var msg = "Bad image.";
 			if (stderr.match(/no such file/i))
 				msg = "Image went missing.";
 			else if (stderr.match(/improper image header/i)) {
+				var kind = m && m[1];
 				kind = kind ? 'a ' + kind.toUpperCase()
 						: 'an image';
 				msg = 'File is not ' + kind + '.';
@@ -372,18 +372,6 @@ function identify(taggedName, callback) {
 		}
 
 		var line = stdout.trim();
-		/* Remove filename first to avoid confusing filenames */
-		var name = taggedName;
-		if (line.substr(0, name.length) == name)
-			line = line.substr(name.length);
-		if (line.substr(0, 2) == '=>')
-			line = line.substr(2);
-		if (kind) {
-			name = name.substr(kind.length + 1);
-			if (line.substr(0, name.length) == name)
-				line = line.substr(name.length);
-		}
-
 		var m = line.match(/(\d+)x(\d+)/);
 		if (!m)
 			callback(Muggle("Couldn't read image dimensions."));
