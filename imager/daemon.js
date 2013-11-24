@@ -422,6 +422,7 @@ function perceptual_hash(src, image, callback) {
 	var args = [src + '[0]'];
 	if (image.dims.width > 1000 || image.dims.height > 1000)
 		args.push('-sample', '800x800');
+	// do you believe in magic?
 	args.push('-background', 'white', '-mosaic', '+matte',
 			'-scale', '16x16!',
 			'-type', 'grayscale', '-depth', '8',
@@ -465,7 +466,7 @@ function setup_image_params(o) {
 	if (o.setup) return;
 	o.setup = true;
 
-	o.src += '[0]';
+	o.src += '[0]'; // just the first frame of the animation
 
 	var thumbFormat = 'jpg:';
 	o.dest = thumbFormat + o.dest;
@@ -474,12 +475,16 @@ function setup_image_params(o) {
 	o.flatDims = o.dims[0] + 'x' + o.dims[1];
 	if (o.compDims)
 		o.compDims = o.compDims[0] + 'x' + o.compDims[1];
-	o.quality += '';
+
+	o.quality += ''; // coerce to string
 }
 
 function build_im_args(o, args) {
+	// avoid OOM killer
 	var args = ['-limit', 'memory', '32', '-limit', 'map', '64'];
 	var dims = o.dims;
+	// resample from twice the thumbnail size
+	// (avoid sampling from the entirety of enormous 6000x6000 images etc)
 	var samp = dims[0]*2 + 'x' + dims[1]*2;
 	if (o.ext == '.jpg')
 		args.push('-define', 'jpeg:size=' + samp);
@@ -487,6 +492,7 @@ function build_im_args(o, args) {
 	args.push(o.src);
 	if (o.ext != '.jpg')
 		args.push('-sample', samp);
+	// gamma-correct yet shitty downsampling
 	args.push('-gamma', '0.454545', '-filter', 'box');
 	return args;
 }
@@ -494,12 +500,15 @@ function build_im_args(o, args) {
 function resize_image(o, comp, callback) {
 	var args = build_im_args(o);
 	var dims = comp ? o.compDims : o.flatDims;
+	// in the composite case, zoom to fit. otherwise, force new size
 	args.push('-resize', dims + (comp ? '^' : '!'));
+	// add background
 	args.push('-gamma', '2.2', '-background', o.bg);
 	if (comp)
 		args.push(o.composite, '-layers', 'flatten', '-extent', dims);
 	else
 		args.push('-layers', 'mosaic', '+matte');
+	// disregard metadata, acquire artifacts
 	args.push('-strip', '-quality', o.quality, comp ? o.compDest : o.dest);
 	convert(args, o.src, function (err) {
 		if (err)
