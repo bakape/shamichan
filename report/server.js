@@ -1,22 +1,14 @@
 var caps = require('../server/caps'),
-    config = require('../config'),
+    config = require('./config'),
     common = require('../common'),
     db = require('../db'),
+    mainConfig = require('../config'),
     msgcheck = require('../server/msgcheck'),
     okyaku = require('../server/okyaku'),
     recaptcha = require('recaptcha'),
     winston = require('winston');
 
-const MAIL_FROM = "Reports <reports@doushio.com>";
-const URL_BASE = 'http://localhost:8000/';
-
-var SMTP = require('nodemailer').createTransport('SMTP', {
-	service: 'Gmail',
-	auth: {
-		user: "reports@doushio.com",
-		pass: "",
-	},
-});
+var SMTP = require('nodemailer').createTransport('SMTP', config.SMTP);
 
 const ERRORS = {
 	'invalid-site-private-key': "Sorry, the server isn't set up with reCAPTCHA properly.",
@@ -60,7 +52,7 @@ function report(reporter_ident, op, num, cb) {
 
 function send_report(reporter, board, op, num, body, cb) {
 	var noun;
-	var url = URL_BASE + board + '/' + op;
+	var url = config.MAIL_THREAD_URL_BASE + board + '/' + op;
 	if (op == num) {
 		noun = 'Thread';
 	}
@@ -71,8 +63,8 @@ function send_report(reporter, board, op, num, body, cb) {
 	body = body ? (body + '\n\n' + url) : url;
 
 	var opts = {
-		from: MAIL_FROM,
-		to: config.REPORT_EMAILS.join(', '),
+		from: config.MAIL_FROM,
+		to: config.MAIL_TO.join(', '),
 		subject: noun + ' #' + num + ' reported by ' + reporter,
 		text: body,
 	};
@@ -84,7 +76,7 @@ function send_report(reporter, board, op, num, body, cb) {
 }
 
 function maybe_mnemonic(ip) {
-	if (ip && config.IP_MNEMONIC) {
+	if (ip && mainConfig.IP_MNEMONIC) {
 		var authcommon = require('../admin/common');
 		ip = authcommon.ip_mnemonic(ip);
 	}

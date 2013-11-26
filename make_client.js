@@ -2,6 +2,7 @@ var async = require('async'),
     child_process = require('child_process'),
     config = require('./config'),
     imagerConfig = require('./imager/config'),
+    reportConfig = require('./report/config'),
     fs = require('fs'),
     util = require('util');
 
@@ -12,12 +13,21 @@ for (var k in config)
 	defines[k] = JSON.stringify(config[k]);
 for (var k in imagerConfig)
 	defines[k] = JSON.stringify(imagerConfig[k]);
+for (var k in reportConfig)
+	defines[k] = JSON.stringify(reportConfig[k]);
 
-function lookup_config(key) {
-	var val = config[key];
-	if (val === undefined)
-		val = imagerConfig[key];
-	return val;
+// UGH
+var configDictLookup = {
+	config: config,
+	imagerConfig: imagerConfig,
+	reportConfig: reportConfig,
+};
+
+function lookup_config(dictName, key) {
+	var dict = configDictLookup[dictName];
+	if (key.indexOf('SECURE') >= 0 || key.indexOf('PRIVATE') >= 0)
+		throw new Error("Refusing " + key + " in client code!");
+	return dict[key];
 }
 
 var config_re = /\b(\w+onfig)\.(\w+)\b/;
@@ -59,8 +69,7 @@ fs.readFile(file, 'UTF-8', function (err, fullFile) {
 			var m = line.match(config_re);
 			if (!m)
 				break;
-			var dict = m[1] == 'config' ? config : imagerConfig;
-			var cfg = dict[m[2]];
+			var cfg = lookup_config(m[1], m[2]);
 			if (cfg === undefined) {
 				return cb("No such "+m[1]+" var "+m[2]);
 			}

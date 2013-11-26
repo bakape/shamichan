@@ -23,8 +23,11 @@ require('../admin');
 require('../imager/daemon');
 if (config.CURFEW_BOARDS)
 	require('../curfew/server');
-if (config.RECAPTCHA_PUBLIC_KEY)
-	require('../report/server');
+try {
+	var reportConfig = require('../report/config');
+	if (reportConfig.RECAPTCHA_PUBLIC_KEY)
+		require('../report/server');
+} catch (e) {}
 if (config.VOICE_PATH)
 	require('../voice/server');
 

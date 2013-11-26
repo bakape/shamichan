@@ -38,11 +38,6 @@ var config = {
 	IP_MNEMONIC: true,
 
 	VOICE_PATH: 'voice',
-
-	/* configure emailer in report/server.js */
-	REPORT_EMAILS: ['lalc@doushio.com'],
-	RECAPTCHA_PUBLIC_KEY: '',
-	RECAPTCHA_PRIVATE_KEY: '',
 };
 
 module.exports = config;
