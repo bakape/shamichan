@@ -17,6 +17,7 @@ const ERRORS = {
 	'captcha-timeout': "Sorry, you took too long. Please try again.",
 };
 
+var safe = common.safe;
 
 function report(reporter_ident, op, num, cb) {
 
@@ -33,7 +34,7 @@ function report(reporter_ident, op, num, cb) {
 		if (err || !post) {
 			if (err)
 				console.error(err);
-			send_report(reporter, board, op, num, '', cb);
+			send_report(reporter, board, op, num, '', [], cb);
 			return;
 		}
 
@@ -45,12 +46,24 @@ function report(reporter_ident, op, num, cb) {
 		if (post.ip)
 			name += ' # ' + maybe_mnemonic(post.ip);
 		var body = 'Offender: ' + name;
+		var html = ['Offender: ', safe('<b>'), name, safe('</b>')];
 
-		send_report(reporter, board, op, num, body, cb);
+		var img;
+		if (post.image && !post.hideimg)
+			img = image_preview(post.image);
+		if (img) {
+			body += '\nThumbnail: ' + img.src;
+			html.push(safe('<br><br><img src="'), img.src,
+				safe('" width="'), img.width,
+				safe('" height="'), img.height,
+				safe('" title="'), img.title, safe('">'));
+		}
+
+		send_report(reporter, board, op, num, body, html, cb);
 	});
 }
 
-function send_report(reporter, board, op, num, body, cb) {
+function send_report(reporter, board, op, num, body, html, cb) {
 	var noun;
 	var url = config.MAIL_THREAD_URL_BASE + board + '/' + op;
 	if (op == num) {
@@ -60,19 +73,54 @@ function send_report(reporter, board, op, num, body, cb) {
 		noun = 'Post';
 		url += '#' + num;
 	}
+
 	body = body ? (body + '\n\n' + url) : url;
+	if (html.length)
+		html.push(safe('<br><br>'));
+	html.push(safe('<a href="'), url, safe('">'), '>>'+num, safe('</a>'));
 
 	var opts = {
 		from: config.MAIL_FROM,
 		to: config.MAIL_TO.join(', '),
 		subject: noun + ' #' + num + ' reported by ' + reporter,
 		text: body,
+		html: common.flatten(html).join(''),
 	};
 	SMTP.sendMail(opts, function (err, resp) {
 		if (err)
 			return cb(err);
 		cb(null);
 	});
+}
+
+function image_preview(info) {
+	if (!info.dims)
+		return;
+	var tw = info.dims[2], th = info.dims[3];
+	if (info.mid) {
+		tw *= 2;
+		th *= 2;
+	}
+	if (!tw || !th) {
+		tw = info.dims[0];
+		th = info.dims[1];
+	}
+	if (!tw || !th)
+		return;
+
+	var mediaURL = config.MAIL_MEDIA_URL;
+	if (!mediaURL)
+		mediaURL = require('../imager/config').MEDIA_URL;
+	var src;
+	if (info.mid)
+		src = mediaURL + '/mid/' + info.mid;
+	else if (info.realthumb || info.thumb)
+		src = mediaURL + '/thumb/' + (info.realthumb || info.thumb);
+	else
+		return;
+
+	var title = common.readable_filesize(info.size);
+	return {src: src, width: tw, height: th, title: title};
 }
 
 function maybe_mnemonic(ip) {

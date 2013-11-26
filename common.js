@@ -168,6 +168,7 @@ function flatten(frags) {
 	}
 	return out;
 }
+exports.flatten = flatten;
 
 function safe(frag) {
 	return {safe: frag};
@@ -549,6 +550,7 @@ function readable_filesize(size) {
 	size = Math.round(size / 100000).toString();
 	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
 }
+exports.readable_filesize = readable_filesize;
 
 function pad(n) {
 	return (n < 10 ? '0' : '') + n;
