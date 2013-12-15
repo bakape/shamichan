@@ -238,8 +238,11 @@ function extract_post_model($article) {
 	var info = {num: extract_num($article)};
 	var $header = $article.children('header');
 	var $b = $header.find('b');
-	if ($b)
+	if ($b.length)
 		info.name = $b.text();
+	var $code = $header.find('code');
+	if ($code.length)
+		info.trip = $code.text();
 	var $time = $header.find('time');
 	if ($time.length)
 		info.time = new Date($time.attr('datetime')).getTime();
