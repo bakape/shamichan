@@ -146,6 +146,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		ownPosts[num] = true;
 		oneeSama.trigger('insertOwnPost', msg);
 		postSM.feed('alloc', msg);
+		bump = false;
 		// delete only after a delay so all tabs notice that it's ours
 		setTimeout(_.bind(destroy_nonce, null, nonce), 10*1000);
 		// if we've already made a placeholder for this post, use it
