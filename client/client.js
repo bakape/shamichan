@@ -140,6 +140,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	var nonce = msg.nonce;
 	delete msg.nonce;
 	var myNonce = get_nonces()[nonce];
+	var bump = BUMP;
 	if (myNonce && myNonce.tab == TAB_ID) {
 		// posted in this tab; transform placeholder
 		ownPosts[num] = true;
@@ -156,7 +157,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	var links = oneeSama.links = msg.links;
 	delete msg.links;
 
-	var model, $section, $hr, bump = true;
+	var model, $section, $hr;
 	if (msg.op) {
 		model = UnknownThread.get('replies').get(num);
 		if (model) {
@@ -179,10 +180,10 @@ dispatcher[INSERT_POST] = function (msg) {
 		shift_replies($section);
 		$section.children('blockquote,.omit,form,article[id]:last'
 				).last().after(el);
-		if (!BUMP || is_sage(msg.email)) {
+		if (is_sage(msg.email)) {
 			bump = false;
 		}
-		else {
+		if (bump) {
 			$hr = $section.next();
 			$section.detach();
 			$hr.detach();
@@ -204,7 +205,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		$hr = $('<hr/>');
 		if (!postForm)
 			$section.append(make_reply_box());
-		if (!BUMP) {
+		if (!bump) {
 			$section.hide();
 			$hr.hide();
 		}
