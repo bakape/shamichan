@@ -141,7 +141,8 @@ dispatcher[INSERT_POST] = function (msg) {
 	delete msg.nonce;
 	var myNonce = get_nonces()[nonce];
 	var bump = BUMP;
-	if (myNonce && myNonce.tab == TAB_ID) {
+	var myTab = myNonce && myNonce.tab == TAB_ID;
+	if (myTab) {
 		// posted in this tab; transform placeholder
 		ownPosts[num] = true;
 		oneeSama.trigger('insertOwnPost', msg);
@@ -206,7 +207,9 @@ dispatcher[INSERT_POST] = function (msg) {
 		$hr = $('<hr/>');
 		if (!postForm)
 			$section.append(make_reply_box());
-		if (!bump) {
+
+		if (!myTab && PAGE >= 0) {
+			// don't show new threads when on /pageX
 			$section.hide();
 			$hr.hide();
 		}
