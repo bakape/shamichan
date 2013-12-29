@@ -126,7 +126,7 @@ function insert_pbs() {
 	if (THREAD ? $('aside').length : $ceiling.next().is('aside'))
 		return;
 	make_reply_box().appendTo('section');
-	if (!nashi.upload && (BUMP || PAGE == 0))
+	if (!nashi.upload && BUMP)
 		$ceiling.after('<aside class="act"><a>New thread</a></aside>');
 }
 
