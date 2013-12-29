@@ -198,7 +198,8 @@ dispatcher[INSERT_POST] = function (msg) {
 		if (!el) {
 			$section = $($.parseHTML(oneeSama.monomono(msg
 					).join('')));
-			el = $section.filter('section')[0];
+			$section = $section.filter('section');
+			el = $section[0];
 		}
 		else {
 			$section = $(el);
