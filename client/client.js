@@ -185,6 +185,10 @@ dispatcher[INSERT_POST] = function (msg) {
 		if (is_sage(msg.email)) {
 			bump = false;
 		}
+		if (postForm) {
+			// don't bump due to replies while posting (!)
+			bump = false;
+		}
 		if (bump) {
 			$hr = $section.next();
 			$section.detach();
