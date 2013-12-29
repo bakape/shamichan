@@ -194,7 +194,10 @@ dispatcher[INSERT_POST] = function (msg) {
 	else {
 		model = new Thread(msg);
 		Threads.add(model);
+	}
 
+	// only add new threads on /live
+	if (!msg.op && BUMP) {
 		if (!el) {
 			$section = $($.parseHTML(oneeSama.monomono(msg
 					).join('')));
@@ -208,12 +211,6 @@ dispatcher[INSERT_POST] = function (msg) {
 		$hr = $('<hr/>');
 		if (!postForm)
 			$section.append(make_reply_box());
-
-		if (!myTab && PAGE >= 0) {
-			// don't show new threads when on /pageX
-			$section.hide();
-			$hr.hide();
-		}
 	}
 
 	// if a tab in this browser posted it, suppress unread++ with `mine`
