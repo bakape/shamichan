@@ -169,6 +169,8 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 		else
 			model = new Post(msg);
+		if (myNonce)
+			model.set('mine', true);
 
 		var article = new Article({model: model, id: num, el: el});
 		if (!el)
@@ -197,6 +199,8 @@ dispatcher[INSERT_POST] = function (msg) {
 	}
 	else {
 		model = new Thread(msg);
+		if (myNonce)
+			model.set('mine', true);
 		Threads.add(model);
 	}
 
@@ -217,9 +221,6 @@ dispatcher[INSERT_POST] = function (msg) {
 			$section.append(make_reply_box());
 	}
 
-	// if a tab in this browser posted it, suppress unread++ with `mine`
-	if (myNonce)
-		model.set('mine', true);
 	Backbone.trigger('afterInsert', model, $(el));
 	if (bump) {
 		var fencepost = $('body > aside');
