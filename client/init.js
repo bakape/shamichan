@@ -7,9 +7,15 @@ var menuOptions = ['Focus'];
 var menuHandlers = {};
 
 var oneeSama = new OneeSama(function (num) {
-	if (this.links && num in this.links)
-		this.callback(this.post_ref(num, this.links[num]));
+	var frag;
+	if (this.links && num in this.links) {
+		var op = this.links[num];
+		var post = Threads.lookup(num, op);
+		var desc = post && post.get('mine') && '(You)';
+		frag = this.post_ref(num, op, desc);
+	}
 	else
-		this.callback('>>' + num);
+		frag = '>>' + num;
+	this.callback(frag);
 });
 oneeSama.full = oneeSama.op = THREAD;
