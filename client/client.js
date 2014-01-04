@@ -415,10 +415,11 @@ dispatcher[DELETE_IMAGES] = function (msg, op) {
 };
 
 dispatcher[SPOILER_IMAGES] = function (msg, op) {
-	var replies = (Threads.get(op) || UnknownThread).get('replies');
+	var thread = Threads.get(op);
+	var replies = thread.get('replies');
 	_.each(msg, function (info) {
 		var num = info[0];
-		var post = num == op ? Threads.get(num) : replies.get(num);
+		var post = (num == op) ? thread : replies.get(num);
 		if (post)
 			post.set('spoiler', info[1]);
 	});
