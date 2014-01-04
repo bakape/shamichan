@@ -12,7 +12,14 @@ var Thread = Backbone.Model.extend({
 	},
 });
 
-var ThreadCollection = Backbone.Collection.extend({model: Thread});
+var ThreadCollection = Backbone.Collection.extend({
+	model: Thread,
+
+	lookup: function (num, op) {
+		var thread = this.get(op) || UnknownThread;
+		return (num == op) ? thread : thread.get('replies').get(num);
+	},
+});
 
 var Threads = new ThreadCollection();
 var UnknownThread = new Thread();

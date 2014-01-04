@@ -174,7 +174,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		if (!el)
 			el = article.render().el;
 
-		var thread = Threads.get(msg.op) || UnknownThread;
+		var thread = Threads.lookup(msg.op, msg.op);
 		thread.get('replies').add(model);
 		add_post_links(model, links, msg.op);
 
@@ -274,8 +274,7 @@ dispatcher[IMAGE_STATUS] = function (msg) {
 dispatcher[INSERT_IMAGE] = function (msg, op) {
 	var focus = get_focus();
 	var num = msg[0];
-	var thread = Threads.get(op) || UnknownThread;
-	var post = thread.get('replies').get(num);
+	var post = Threads.lookup(num, op);
 
 	if (saku && saku.get('num') == num) {
 		if (post)
@@ -300,8 +299,7 @@ dispatcher[INSERT_IMAGE] = function (msg, op) {
 dispatcher[UPDATE_POST] = function (msg, op) {
 	var num = msg[0], links = msg[4], extra = msg[5];
 	var state = [msg[2] || 0, msg[3] || 0];
-	var thread = Threads.get(op) || UnknownThread;
-	var post = op == num ? thread : thread.get('replies').get(num);
+	var post = Threads.lookup(num, op);
 	if (post) {
 		add_post_links(post, links, op);
 		var body = post.get('body') || '';
@@ -348,7 +346,7 @@ dispatcher[FINISH_POST] = function (msg, op) {
 };
 
 dispatcher[DELETE_POSTS] = function (msg, op) {
-	var replies = (Threads.get(op) || UnknownThread).get('replies');
+	var replies = Threads.lookup(op, op).get('replies');
 	var $section = $('#' + op);
 	var ownNum = saku && saku.get('num');
 	_.each(msg, function (num) {
@@ -408,7 +406,7 @@ dispatcher[UNLOCK_THREAD] = function (msg, op) {
 };
 
 dispatcher[DELETE_IMAGES] = function (msg, op) {
-	var replies = (Threads.get(op) || UnknownThread).get('replies');
+	var replies = Threads.lookup(op, op).get('replies');
 	_.each(msg, function (num) {
 		var post = replies.get(num);
 		if (post)
