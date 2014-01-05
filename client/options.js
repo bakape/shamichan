@@ -19,6 +19,7 @@ if (window.devicePixelRatio > 1)
 	optSpecs.push(option_high_res);
 optSpecs.push(option_fitwidth);
 optSpecs.push(option_backlinks);
+optSpecs.push(option_reply_at_right);
 optSpecs.push(option_thumbs);
 optSpecs.push(option_theme);
 optSpecs.push(option_last_n);
@@ -173,6 +174,21 @@ function reveal_thumbnail(event) {
 	});
 	return false;
 }
+
+/* REPLY AT RIGHT */
+
+function option_reply_at_right(r) {
+	if (r)
+		$('<style/>', {
+			id: 'reply-at-right',
+			text: 'aside { margin: -26px 0 2px auto; }',
+		}).appendTo('head');
+	else
+		$('#reply-at-right').remove();
+}
+option_reply_at_right.id = 'replyright';
+option_reply_at_right.label = '[Reply] at right';
+option_reply_at_right.type = 'checkbox';
 
 /* BACKLINKS */
 
