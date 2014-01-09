@@ -173,6 +173,7 @@ function add_post_links(src, links, op) {
 		return;
 	var thread = Threads.get(op);
 	var srcLinks = src.get('links') || [];
+	var repliedToMe = false;
 	for (var destId in links) {
 		var dest = thread && thread.get('replies').get(destId);
 		if (!dest) {
@@ -180,6 +181,8 @@ function add_post_links(src, links, op) {
 			dest = new Post({id: destId, shallow: true});
 			UnknownThread.get('replies').add(dest);
 		}
+		if (dest.get('mine'))
+			repliedToMe = true;
 		var destLinks = dest.get('backlinks') || [];
 		/* Update links and backlinks arrays in-order */
 		var i = _.sortedIndex(srcLinks, dest.id);
@@ -189,6 +192,11 @@ function add_post_links(src, links, op) {
 		destLinks.splice(_.sortedIndex(destLinks, src.id), 0, src.id);
 		force_post_change(src, 'links', srcLinks);
 		force_post_change(dest, 'backlinks', destLinks);
+	}
+
+	if (repliedToMe && !src.get('mine')) {
+		/* Should really be triggered only on the thread */
+		Backbone.trigger('repliedToMe');
 	}
 }
 
