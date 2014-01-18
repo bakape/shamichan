@@ -29,7 +29,10 @@ exports.send_dead_image = function (kind, filename, resp) {
 		}
 	});
 	stream.once('open', function () {
-		var h = {};
+		var h = {
+			'Cache-Control': 'no-cache, no-store',
+			'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
+		};
 		try {
 			h['Content-Type'] = require('mime').lookup(filename);
 		} catch (e) {}
