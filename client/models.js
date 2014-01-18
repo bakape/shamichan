@@ -248,9 +248,11 @@ function clear_post_links(post, replies) {
 	post.unset('backlinks');
 }
 
-function extract_post_model($article) {
+function extract_post_model(el) {
 	/* incomplete */
-	var info = {num: extract_num($article)};
+	var info = {num: parseInt(el.id, 10)};
+	var $article = $(el);
+	/* TODO: do these all in one pass */
 	var $header = $article.children('header');
 	var $b = $header.find('b');
 	if ($b.length)
@@ -282,22 +284,32 @@ function extract_post_model($article) {
 	return new Post(info);
 }
 
-function extract_thread_model($section) {
+function extract_thread_model(section) {
 	var replies = [];
-	$section.find('article').each(function () {
-		var post = extract_post_model($(this));
-		new Article({model: post, id: post.id, el: this});
+	for (var i = 0; i < section.childElementCount; i++) {
+		var el = section.children[i];
+		if (el.tagName != 'ARTICLE')
+			continue;
+		var post = extract_post_model(el);
+		new Article({model: post, el: el});
 		replies.push(post);
-	});
+	}
 	return new Thread({
-		num: extract_num($section),
+		num: parseInt(section.id, 10),
 		replies: new Replies(replies),
 	});
 }
 
-$('section').each(function () {
-	var $section = $(this);
-	var thread = extract_thread_model($section);
-	new Section({model: thread, el: this});
-	Threads.add(thread);
-});
+(function scan_threads_for_extraction() {
+	var bod = document.body;
+	var threads = [];
+	for (var i = 0; i < bod.childElementCount; i++) {
+		var el = bod.children[i];
+		if (el.tagName != 'SECTION')
+			continue;
+		var thread = extract_thread_model(el);
+		new Section({model: thread, el: el});
+		threads.push(thread);
+	}
+	Threads.add(threads);
+})();
