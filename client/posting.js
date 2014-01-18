@@ -768,14 +768,12 @@ function spoiler_pane_url(sp) {
 
 function preload_panes() {
 	var all = spoilerImages.normal.concat(spoilerImages.trans);
-	for (var i = 0; i < all.length; i++) {
-		var img = new Image;
-		img.src = spoiler_pane_url(all[i]);
-	}
+	for (var i = 0; i < all.length; i++)
+		new Image().src = spoiler_pane_url(all[i]);
 }
 
 (function () {
 	var CV = ComposerView.prototype;
 	CV.finish_wrapped = _.wrap(CV.finish, with_dom);
-	preload_panes();
+	setTimeout(preload_panes, 10*1000);
 })();
