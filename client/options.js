@@ -7,8 +7,7 @@ function extract_num(q) {
 }
 
 function parent_post($el) {
-	var $post = $el.parents('article');
-	return $post.length ? $post : $el.parents('section');
+	return $el.closest('article, section');
 }
 
 (function () {
