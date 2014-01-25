@@ -29,6 +29,7 @@ exports.CLIENT_DEPS = [
 	'client/gravitas.js',
 	'curfew/client.js',
 	'report/client.js',
+	'time/client.js',
 	'voice/client.js',
 ];
 
