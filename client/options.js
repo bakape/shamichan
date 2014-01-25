@@ -10,6 +10,25 @@ function parent_post($el) {
 	return $el.closest('article, section');
 }
 
+function parent_model($el) {
+	var $a = parent_post($el);
+	var op = extract_num($a);
+	if (!op)
+		return null;
+	if ($a.is('section'))
+		return Threads.get(op);
+	var $s = $a.parent('section');
+	if (!$s.length) {
+		// when we have better hover/inline expansion we will have to
+		// deal with this, probably by setting data-op on the post
+		console.warn($a, "'s parent is not thread?!");
+		return null;
+	}
+	var num = op;
+	op = extract_num($s);
+	return Threads.lookup(num, op);
+}
+
 (function () {
 
 /* OPTIONS LIST */
