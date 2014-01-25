@@ -82,6 +82,6 @@ oneeSama.hook('renderOptions', function ($opts) {
 });
 
 
-expire_hidden();
+setTimeout(expire_hidden, 9000);
 
 })();
