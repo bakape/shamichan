@@ -17,13 +17,11 @@ $DOC.on('click', '.control', function (event) {
 		$menu = $('<ul/>', {"class": 'popup-menu'});
 		var opts = menuOptions.slice();
 
-		/* TODO: Use model lookup */
-		var $post = parent_post($target);
-		var num = $post.attr('id');
-		if ($post.length && !num)
+		var model = parent_model($target);
+		if (!model)
 			opts = ['Focus']; /* Just a draft, can't do much */
 
-		oneeSama.trigger('menuOptions', {options: opts, num: num});
+		oneeSama.trigger('menuOptions', {options: opts, model: model});
 
 		_.each(opts, function (opt) {
 			$('<li/>').text(opt).appendTo($menu);

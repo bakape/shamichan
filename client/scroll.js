@@ -69,7 +69,7 @@ function set_lock_target(num) {
 
 oneeSama.hook('menuOptions', function (info) {
 	var opts = info.options;
-	if (lockTarget && lockTarget == info.num)
+	if (lockTarget && info.model && lockTarget == info.model.id)
 		opts.splice(opts.indexOf('Focus'), 1, 'Unfocus');
 });
 

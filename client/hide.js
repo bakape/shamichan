@@ -5,10 +5,8 @@
 var EXPIRY = 14;
 
 oneeSama.hook('menuOptions', function (info) {
-	// TODO: use a model lookup for this check
 	// should bail out if we're posting in here...
-	var $thread = $('#' + info.num);
-	if (!$thread.length || !$thread.is('section'))
+	if (!(info.model instanceof Thread))
 		return;
 	info.options.push('Hide');
 });
