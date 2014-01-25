@@ -1,5 +1,9 @@
 (function () {
 
+// How many days before forgetting that we hid a given post
+// (Otherwise the cookie will balloon in size)
+var EXPIRY = 14;
+
 oneeSama.hook('menuOptions', function (info) {
 	// TODO: use a model lookup for this check
 	// should bail out if we're posting in here...
@@ -36,7 +40,7 @@ function write_hidden(hidden) {
 		nums.sort(function (a, b) {
 			return parseInt(a, 10) - parseInt(b, 10);
 		});
-		$.cookie('hide', nums.join(','), {expires: 30});
+		$.cookie('hide', nums.join(','), {expires: EXPIRY});
 	}
 }
 
@@ -45,7 +49,7 @@ function expire_hidden() {
 	var now = new Date().getTime()/1000, expired = [];
 	for (var num in hidden) {
 		var time = hidden[num];
-		if (now > time + 60*60*24*30) {
+		if (now > time + 60*60*24*EXPIRY) {
 			expired.push(num);
 		}
 	}
