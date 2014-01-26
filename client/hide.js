@@ -4,6 +4,8 @@
 // (Otherwise the cookie will balloon in size)
 var EXPIRY = 14;
 
+var Hidden = new Kioku('hide', EXPIRY);
+
 oneeSama.hook('menuOptions', function (info) {
 	// should bail out if we're posting in here...
 	if (!(info.model instanceof Thread))
@@ -12,52 +14,9 @@ oneeSama.hook('menuOptions', function (info) {
 });
 
 menuHandlers.Hide = function (num, $thread) {
-	var hidden = read_hidden();
-	hidden[num] = Math.floor(new Date().getTime() / 1000);
-	write_hidden(hidden);
+	Hidden.write(num, Hidden.now());
 	$thread.next('hr').andSelf().hide();
 };
-
-function read_hidden() {
-	var hidden;
-	try {
-		hidden = JSON.parse(localStorage.getItem('hide'));
-	}
-	catch (e) {}
-	return _.isObject(hidden) ? hidden : {};
-}
-
-function write_hidden(hidden) {
-	if (_.isEmpty(hidden)) {
-		localStorage.removeItem('hide');
-		$.cookie('hide', null);
-	}
-	else {
-		localStorage.setItem('hide', JSON.stringify(hidden));
-		var nums = _.keys(hidden);
-		nums.sort(function (a, b) {
-			return parseInt(a, 10) - parseInt(b, 10);
-		});
-		$.cookie('hide', nums.join(','), {expires: EXPIRY});
-	}
-}
-
-function expire_hidden() {
-	var hidden = read_hidden();
-	var now = new Date().getTime()/1000, expired = [];
-	for (var num in hidden) {
-		var time = hidden[num];
-		if (now > time + 60*60*24*EXPIRY) {
-			expired.push(num);
-		}
-	}
-	if (expired.length) {
-		_.forEach(expired, function (num) {
-			delete hidden[num];
-		});
-		write_hidden(hidden);
-	}
-}
 
 /* Options menu clear control */
 
@@ -66,7 +25,7 @@ var $clear = $('<input>', {
 	val: 'Clear hidden',
 	css: {display: 'block', 'margin-top': '1em'},
 	click: function () {
-		write_hidden();
+		Hidden.purge_all();
 		$clear.hide();
 	},
 });
@@ -76,10 +35,9 @@ oneeSama.hook('initOptions', function ($opts) {
 });
 
 oneeSama.hook('renderOptions', function ($opts) {
-	$clear.toggle(!_.isEmpty(read_hidden()));
+	$clear.toggle(!_.isEmpty(Hidden.read_all()));
 });
 
-
-setTimeout(expire_hidden, 9000);
+Hidden.purge_expired_soon();
 
 })();
