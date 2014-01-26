@@ -115,14 +115,13 @@ exports.check_cookie = function (cookie, callback) {
 
 exports.logout = function (req, resp) {
 	var r = connect();
-	var chunks = require('./web').parse_cookie(req.headers.cookie);
-	var cookie = extract_login_cookie(chunks);
+	var cookie = extract_login_cookie(req.cookies);
 	if (!cookie)
 		return respond_error(resp, "No login cookie for logout.");
 	r.hgetall('session:' + cookie, function (err, session) {
 		if (err)
 			return respond_error(resp, "Logout error.");
-		r.del('session:' + chunks.a);
+		r.del('session:' + req.cookies.a);
 		respond_ok(resp, 'a=; expires=Thu, 01 Jan 1970 00:00:00 GMT');
 	});
 };

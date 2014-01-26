@@ -47,7 +47,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			client.kotowaru(Muggle("Bad protocol."));
 	}
 	var chunks = web.parse_cookie(msg.pop());
-	cookie = persona.extract_login_cookie(chunks);
+	var cookie = persona.extract_login_cookie(chunks);
 	if (cookie) {
 		persona.check_cookie(cookie, checked);
 		return true;
@@ -494,9 +494,10 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		var headers;
 		if (!config.DEBUG && preThread.hctr) {
 			var etag = 'W/' + preThread.hctr + '-' + RES.indexHash;
-			var chunks = web.parse_cookie(req.headers.cookie);
-			if (common.thumbStyles.indexOf(chunks.thumb) >= 0)
-				etag += '-' + chunks.thumb;
+
+			var thumb = req.cookies.thumb;
+			if (thumb && common.thumbStyles.indexOf(thumb) >= 0)
+				etag += '-' + thumb;
 			if (lastN)
 				etag += '-last' + lastN;
 			if (preThread.locked)

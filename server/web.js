@@ -39,6 +39,7 @@ function handle_request(req, resp) {
 	var parsed = url_parse(req.url, true);
 	req.url = parsed.pathname;
 	req.query = parsed.query;
+	req.cookies = parse_cookie(req.headers.cookie);
 
 	var numRoutes = routes.length;
 	for (var i = 0; i < numRoutes; i++) {
@@ -78,8 +79,7 @@ function handle_resource(req, resp, resource) {
 		args.push(m);
 	args.push(resource_second_handler.bind(null, req, resp, resource));
 
-	var chunks = parse_cookie(req.headers.cookie);
-	var cookie = persona.extract_login_cookie(chunks);
+	var cookie = persona.extract_login_cookie(req.cookies);
 	if (cookie) {
 		persona.check_cookie(cookie, function (err, ident) {
 			if (err && !resource.authPassthrough)
@@ -192,8 +192,7 @@ function parse_forwarded_for(ff) {
 exports.parse_forwarded_for = parse_forwarded_for;
 
 function auth_passthrough(handler, req, resp, params) {
-	var chunks = parse_cookie(req.headers.cookie);
-	var cookie = persona.extract_login_cookie(chunks);
+	var cookie = persona.extract_login_cookie(req.cookies);
 	if (!cookie) {
 		handler(req, resp, params);
 		return;
@@ -236,8 +235,7 @@ function auth_checker(handler, is_post, req, resp, params) {
 		check_it();
 
 	function check_it() {
-		var chunks = parse_cookie(req.headers.cookie);
-		cookie = persona.extract_login_cookie(chunks);
+		cookie = persona.extract_login_cookie(req.cookies);
 		if (!cookie)
 			return forbidden(resp, 'No cookie.');
 		persona.check_cookie(cookie, ack);
