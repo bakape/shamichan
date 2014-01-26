@@ -13,6 +13,7 @@ exports.VENDOR_DEPS = [
 exports.CLIENT_DEPS = [
 	'common.js',
 	'client/init.js',
+	'client/memory.js',
 	'client/models.js',
 	'client/options.js',
 	'client/scroll.js',
