@@ -13,6 +13,16 @@ function date_from_time_el(el) {
 	return new Date(d);
 }
 
-adjust_all_times();
+function is_skewed() {
+	var el = document.querySelector('time');
+	if (!el)
+		return false;
+	var d = date_from_time_el(el);
+	return readable_time(d.getTime()) != el.innerHTML;
+}
+
+if (is_skewed()) {
+	adjust_all_times();
+}
 
 })();
