@@ -1,5 +1,7 @@
 (function () {
 
+var readable_time = oneeSama.readable_time;
+
 function adjust_all_times() {
 	$('time').each(function () {
 		var date = date_from_time_el(this);

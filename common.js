@@ -556,15 +556,14 @@ function pad(n) {
 	return (n < 10 ? '0' : '') + n;
 }
 
-function readable_time(time) {
+OS.readable_time = function (time) {
 	var d = new Date(time - new Date().getTimezoneOffset() * 60000);
 	var k = "日月火水木金土"[d.getUTCDay()];
 	return (d.getUTCFullYear() + '/' + pad(d.getUTCMonth()+1) + '/' +
 		pad(d.getUTCDate()) + '&nbsp;(' + k + ') ' +
 		pad(d.getUTCHours()) + ':' +
 		pad(d.getUTCMinutes()));
-}
-exports.readable_time = readable_time;
+};
 
 function datetime(time) {
 	var d = new Date(time);
@@ -640,7 +639,7 @@ OS.atama = function (data) {
 		header.push(safe('</a>'));
 	}
 	header.push(safe(' <time datetime="' + datetime(data.time) +
-			'">' + readable_time(data.time) + '</time> '),
+			'">' + this.readable_time(data.time) + '</time> '),
 			this.post_nav(data));
 	if (!this.full && !data.op) {
 		var ex = this.expansion_links_html(data.num, data.omit);
