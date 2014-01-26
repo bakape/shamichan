@@ -1,0 +1,107 @@
+a, blockquote a {
+	color: #99225c;
+}
+a:hover, .email b:hover {
+	color: #af005f;
+}
+article, aside, .pagination, .preview {
+	opacity: 0.95;
+	background-color: #2e2e2e;
+	border-right: 1px solid #262626;
+	border-bottom: 1px solid #262626;
+}
+article.highlight {
+	background-color: #2c2c33;
+	border-color: #21212c;
+}
+article.editing {
+	background-color: #332929;
+	border-color: #2c2121;
+}
+b {
+	color: #808080;
+}
+b.admin {
+	color: #dc322f;
+}
+b.moderator {
+	color: #5f5faf;
+}
+body {
+	color: #999999;
+	background-color: #1e1e1e;
+	background-image: url('higan.jpg');
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-attachment: fixed;
+	background-position: right bottom;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 10pt;
+}
+pre, .themed {
+	color: #8a8a8a;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 10pt;
+}
+em {
+	color: #859900;
+}
+h1 {
+	color: #731a19;
+	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
+	font-size: 30px;
+	text-shadow: #590030 1px 1px 0px;
+	letter-spacing: 1px;
+}
+h2 {
+	color: #731a19;
+	font-family: Tahoma;
+}
+h3 {
+	color: #ab2b16;
+}
+header nav a {
+	color: #999999;
+}
+hr {
+	border-top: 1px solid #2e2e2e;
+}
+.popup-menu li:hover {
+	background-color: #e4e4e4;
+}
+.act:before {
+	content: "[";
+}
+.act:after {
+	content: "]";
+}
+.email, .email b {
+	color: #99225c;
+}
+
+.embed {
+	background-color: #e4e4e4;
+}
+.modal, .popup-menu {
+	background-color: #262626;
+	border-right: 1px solid #212121;
+	border-bottom: 1px solid #212121;
+}
+.omit {
+	color: #626262;
+}
+#lock, .scroll-lock header {
+	background-image: url('ui/invlock.png');
+}
+.themed {
+	color: #8a8a8a;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 1.5),
+	screen and (-o-device-pixel-ratio: 3/2),
+	screen and (min--moz-device-pixel-ratio: 1.5),
+	screen and (min-device-pixel-ratio: 1.5) {
+	#lock, .scroll-lock header {
+		background-image: url('ui/invlock2x.png');
+	}
+}

@@ -125,6 +125,7 @@ var themes = [
 	'ashita',
 	'console',
 	'tea',
+	'higan',
 ];
 var globalVersion = 8;
 
