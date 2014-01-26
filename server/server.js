@@ -28,6 +28,7 @@ try {
 	if (reportConfig.RECAPTCHA_PUBLIC_KEY)
 		require('../report/server');
 } catch (e) {}
+require('../time/server');
 if (config.VOICE_PATH)
 	require('../voice/server');
 
@@ -325,6 +326,10 @@ web.resource(/^\/(\w+)\/$/, function (req, params, cb) {
 	if (!caps.can_ever_access_board(req.ident, board))
 		return cb(404);
 
+	// we don't do board etags yet
+	var info = {etag: 'dummy', req: req};
+	hooks.trigger_sync('buildETag', info);
+
 	cb(null, 'ok', {board: board});
 },
 function (req, resp) {
@@ -383,6 +388,10 @@ web.resource(/^\/(\w+)\/page(\d+)$/, function (req, params, cb) {
 		yaku.disconnect();
 	});
 	yaku.once('begin', function (threadCount) {
+		// we don't do board etags yet
+		var info = {etag: 'dummy', req: req};
+		hooks.trigger_sync('buildETag', info);
+
 		cb(null, 'ok', {
 			board: board, page: page, yaku: yaku,
 			threadCount: threadCount,
@@ -504,6 +513,11 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 				etag += '-locked';
 			if (req.ident.auth)
 				etag += '-auth';
+
+			var info = {etag: etag, req: req};
+			hooks.trigger_sync('buildETag', info);
+			etag = info.etag;
+
 			if (req.headers['if-none-match'] === etag) {
 				yaku.disconnect();
 				return cb(null, 304);

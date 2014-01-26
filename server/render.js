@@ -19,6 +19,7 @@ function tamashii(num) {
 
 exports.write_thread_html = function (reader, req, out, opts) {
 	var oneeSama = new common.OneeSama(tamashii);
+	oneeSama.tz_offset = req.tz_offset;
 
 	opts.ident = req.ident;
 	caps.augment_oneesama(oneeSama, opts);

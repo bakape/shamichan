@@ -66,6 +66,7 @@ exports.SERVER_DEPS = [
 	'server/server.js',
 	'server/state.js',
 	'server/web.js',
+	'time/server.js',
 	'tripcode/tripcode.cc',
 	'voice/server.js',
 ];

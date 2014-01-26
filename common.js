@@ -557,7 +557,13 @@ function pad(n) {
 }
 
 OS.readable_time = function (time) {
-	var d = new Date(time - new Date().getTimezoneOffset() * 60000);
+	var h = this.tz_offset;
+	var offset;
+	if (h || h == 0)
+		offset = h * 60 * 60 * 1000;
+	else /* would be nice not to construct new Dates all the time */
+		offset = new Date().getTimezoneOffset() * -60 * 1000;
+	var d = new Date(time + offset);
 	var k = "日月火水木金土"[d.getUTCDay()];
 	return (d.getUTCFullYear() + '/' + pad(d.getUTCMonth()+1) + '/' +
 		pad(d.getUTCDate()) + '&nbsp;(' + k + ') ' +

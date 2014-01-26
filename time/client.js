@@ -25,6 +25,12 @@ function is_skewed() {
 
 if (is_skewed()) {
 	adjust_all_times();
+
+	setTimeout(function () {
+		// next request, have the server render the right times
+		var tz = -new Date().getTimezoneOffset() / 60;
+		$.cookie('timezone', tz, { expires: 90 });
+	}, 3000);
 }
 
 })();
