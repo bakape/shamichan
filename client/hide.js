@@ -7,15 +7,18 @@ var EXPIRY = 14;
 var Hidden = new Kioku('hide', EXPIRY);
 
 oneeSama.hook('menuOptions', function (info) {
-	// should bail out if we're posting in here...
-	if (!(info.model instanceof Thread))
-		return;
+	if (!info.model)
+		return; // can't hide drafts
+	if (postForm && postForm.model.id == info.model.id)
+		return; // can't hide own post
 	info.options.push('Hide');
 });
 
-menuHandlers.Hide = function (num, $thread) {
+menuHandlers.Hide = function (num, $post) {
 	Hidden.write(num, Hidden.now());
-	$thread.next('hr').andSelf().hide();
+	if ($post.is('section'))
+		$post = $post.next('hr').andSelf();
+	$post.hide();
 };
 
 /* Options menu clear control */
