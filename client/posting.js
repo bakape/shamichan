@@ -281,6 +281,8 @@ initialize: function (dest) {
 		this.$subject.focus();
 	}
 	$('aside').remove();
+
+	preload_panes();
 },
 
 propagate_ident: function () {
@@ -775,5 +777,4 @@ function preload_panes() {
 (function () {
 	var CV = ComposerView.prototype;
 	CV.finish_wrapped = _.wrap(CV.finish, with_dom);
-	setTimeout(preload_panes, 10*1000);
 })();
