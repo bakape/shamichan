@@ -38,7 +38,6 @@ var Report = Backbone.Model.extend({
 			clearTimeout(this.get('timeout'));
 			this.set('timeout', 0);
 		}
-		this.set({status: 'done'});
 
 		var self = this;
 		setTimeout(function () {
