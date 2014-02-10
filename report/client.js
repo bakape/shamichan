@@ -84,6 +84,12 @@ var ReportPanel = Backbone.View.extend({
 		.append(this.$submit)
 		.append(' ', $hideLabel);
 
+		/* HACK */
+		if (window.x_csrf) {
+			this.model.set('hideAfter', false);
+			$hideLabel.remove();
+		}
+
 		this.listenTo(this.model, {
 			'change:error': this.error_changed,
 			'change:status': this.status_changed,
