@@ -11,6 +11,7 @@ if (pubKey)
 var Report = Backbone.Model.extend({
 	defaults: {
 		status: 'setup',
+		hideAfter: true,
 	},
 
 	request_new: function () {
@@ -43,6 +44,9 @@ var Report = Backbone.Model.extend({
 		setTimeout(function () {
 			self.trigger('destroy');
 		}, 1500);
+
+		if (this.get('hideAfter'))
+			this.get('post').set('hide', true);
 	},
 });
 
@@ -54,12 +58,20 @@ var ReportPanel = Backbone.View.extend({
 	events: {
 		submit: 'submit',
 		'click .close': 'remove',
+		'click .hideAfter': 'hide_after_changed',
 	},
 
 	initialize: function () {
 		this.$captcha = $('<div id="captcha"/>');
 		this.$message = $('<div class="message"/>');
 		this.$submit = $('<input>', {type: 'submit', val: 'Report'});
+		var $hideAfter = $('<input>', {
+			'class': 'hideAfter',
+			type: 'checkbox',
+			checked: this.model.get('hideAfter'),
+		});
+		var $hideLabel = $('<label>and hide</label>')
+			.append($hideAfter);
 
 		var num = this.model.id;
 
@@ -69,7 +81,8 @@ var ReportPanel = Backbone.View.extend({
 		.append('<a class="close" href="#">x</a>')
 		.append(this.$message)
 		.append(this.$captcha)
-		.append(this.$submit);
+		.append(this.$submit)
+		.append(' ', $hideLabel);
 
 		this.listenTo(this.model, {
 			'change:error': this.error_changed,
@@ -105,6 +118,8 @@ var ReportPanel = Backbone.View.extend({
 			.val(status=='reporting' ? 'Reporting...' : 'Report');
 		this.$captcha.toggle(
 			_.contains(['ready', 'reporting', 'error'], status));
+		if (status == 'done')
+			this.$('label').remove();
 
 		var msg;
 		if (status == 'done')
@@ -129,6 +144,10 @@ var ReportPanel = Backbone.View.extend({
 			this.model.request_new();
 	},
 
+	hide_after_changed: function (e) {
+		this.model.set('hideAfter', e.target.checked);
+	},
+
 	focus: function () {
 		Recaptcha.focus_response_field();
 	},
@@ -149,7 +168,7 @@ menuHandlers.Report = function (post) {
 	var num = post.id;
 	var model = REPORTS[num];
 	if (!model)
-		REPORTS[num] = model = new Report({id: num});
+		REPORTS[num] = model = new Report({id: num, post: post});
 
 	if (PANEL) {
 		if (PANEL.model === model) {
