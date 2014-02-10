@@ -14,8 +14,8 @@ oneeSama.hook('menuOptions', function (info) {
 	info.options.push('Hide');
 });
 
-menuHandlers.Hide = function (num, $post) {
-	Hidden.write(num, Hidden.now());
+menuHandlers.Hide = function (model, $post) {
+	Hidden.write(model.id, Hidden.now());
 	if ($post.is('section'))
 		$post = $post.next('hr').andSelf();
 	$post.hide();

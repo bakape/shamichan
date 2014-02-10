@@ -11,9 +11,9 @@ oneeSama.hook('menuOptions', function (info) {
 		info.options.push('Speak');
 });
 
-menuHandlers.Speak = function (num) {
+menuHandlers.Speak = function (model) {
 	var $audio = $('<audio/>', {
-		src: num + '/voice',
+		src: model.id + '/voice',
 		attr: {autoplay: 'autoplay'},
 	});
 	var a = $audio[0];

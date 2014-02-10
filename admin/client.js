@@ -86,11 +86,11 @@ menuHandlers.Hide = function () { alert('nope.avi'); };
 
 var multiSelecting = false;
 
-function toggle_multi_selecting(num, $post) {
+function toggle_multi_selecting(model, $post) {
 	var oldTarget;
-	if ($post) {
+	if ($post && model) {
 		oldTarget = lockTarget;
-		set_lock_target(num);
+		set_lock_target(model.id);
 	}
 	with_dom(function () {
 	multiSelecting = !multiSelecting;

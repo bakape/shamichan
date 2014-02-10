@@ -145,7 +145,8 @@ var ReportPanel = Backbone.View.extend({
 
 var ajaxJs = 'http://www.google.com/recaptcha/api/js/recaptcha_ajax.js';
 
-menuHandlers.Report = function (num) {
+menuHandlers.Report = function (post) {
+	var num = post.id;
 	var model = REPORTS[num];
 	if (!model)
 		REPORTS[num] = model = new Report({id: num});

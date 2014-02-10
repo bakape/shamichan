@@ -7,7 +7,8 @@ $DOC.on('click', '.control', function (event) {
 		var handler = menuHandlers[$target.text()];
 		if (handler) {
 			var $post = parent_post($target);
-			handler(extract_num($post), $post);
+			var model = parent_model($target);
+			handler(model, $post);
 		}
 	}
 	var $menu = $(this).find('ul');
