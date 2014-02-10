@@ -16,9 +16,7 @@ oneeSama.hook('menuOptions', function (info) {
 
 menuHandlers.Hide = function (model, $post) {
 	Hidden.write(model.id, Hidden.now());
-	if ($post.is('section'))
-		$post = $post.next('hr').andSelf();
-	$post.hide();
+	model.set('hide', true);
 };
 
 /* Options menu clear control */

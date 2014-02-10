@@ -35,6 +35,7 @@ var Section = Backbone.View.extend({
 
 	initialize: function () {
 		this.listenTo(this.model, {
+			'change:hide': this.renderHide,
 			'change:locked': this.renderLocked,
 			'change:spoiler': this.renderSpoiler,
 			destroy: this.remove,
@@ -42,6 +43,10 @@ var Section = Backbone.View.extend({
 		this.listenTo(this.model.get('replies'), {
 			remove: this.removePost,
 		});
+	},
+
+	renderHide: function (model, hide) {
+		this.$el.next('hr').andSelf().toggle(!hide);
 	},
 
 	renderLocked: function (model, locked) {
@@ -79,6 +84,7 @@ var Article = Backbone.View.extend({
 		this.listenTo(this.model, {
 			'change:backlinks': this.renderBacklinks,
 			'change:editing': this.renderEditing,
+			'change:hide': this.renderHide,
 			'change:image': this.renderImage,
 			'change:spoiler': this.renderSpoiler,
 			'removeSelf': this.remove,
@@ -116,6 +122,10 @@ var Article = Backbone.View.extend({
 		this.$el.toggleClass('editing', !!editing);
 		if (!editing)
 			this.$('blockquote')[0].normalize();
+	},
+
+	renderHide: function (model, hide) {
+		this.$el.toggle(!hide);
 	},
 
 	renderImage: function (model, image) {
