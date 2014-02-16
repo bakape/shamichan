@@ -131,7 +131,8 @@ dispatcher[INSERT_POST] = function (msg) {
 	var orig_focus = get_focus();
 	var num = msg[0];
 	msg = msg[1];
-	if (!msg.op)
+	var isThread = !msg.op;
+	if (isThread)
 		syncs[num] = 1;
 	msg.editing = true;
 	msg.num = num;
@@ -160,7 +161,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	delete msg.links;
 
 	var model, $section, $hr;
-	if (msg.op) {
+	if (!isThread) {
 		model = UnknownThread.get('replies').get(num);
 		if (model) {
 			UnknownThread.get('replies').remove(num);
@@ -205,7 +206,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	}
 
 	// only add new threads on /live
-	if (!msg.op && BUMP) {
+	if (isThread && BUMP) {
 		if (!el) {
 			$section = $($.parseHTML(oneeSama.monomono(msg
 					).join('')));
