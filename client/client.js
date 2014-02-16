@@ -170,9 +170,16 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 		else
 			model = new Post(msg);
-		if (myNonce)
-			model.set('mine', true);
+	}
+	else {
+		model = new Thread(msg);
+	}
 
+	if (myNonce) {
+		model.set('mine', true);
+	}
+
+	if (!isThread) {
 		var article = new Article({model: model, id: num, el: el});
 		if (!el)
 			el = article.render().el;
@@ -199,9 +206,6 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 	}
 	else {
-		model = new Thread(msg);
-		if (myNonce)
-			model.set('mine', true);
 		Threads.add(model);
 	}
 
