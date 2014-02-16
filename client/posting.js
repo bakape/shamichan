@@ -716,6 +716,8 @@ make_upload_form: function () {
 },
 
 on_image_chosen: function () {
+	if (this.model.get('uploading') || this.model.get('uploaded'))
+		return;
 	if (!this.$imageInput.val()) {
 		this.model.set('uploadStatus', '');
 		return;
