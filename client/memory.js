@@ -62,10 +62,10 @@ Kioku.prototype.write = function (k, v) {
 Kioku.prototype.write_all = function (o) {
 	if (_.isEmpty(o)) {
 		this.purge_all();
+		return;
 	}
-	else {
-		localStorage.setItem(this.key, JSON.stringify(o));
-		var baked = this.bake_cookie(o);
+	localStorage.setItem(this.key, JSON.stringify(o));
+	var baked = this.bake_cookie(o);
+	if (baked)
 		$.cookie(this.key, baked, {expires: this.expiry});
-	}
 };
