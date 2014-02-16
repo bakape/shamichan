@@ -137,6 +137,7 @@ dispatcher[INSERT_POST] = function (msg) {
 	msg.editing = true;
 	msg.num = num;
 
+	// did I create this post?
 	var el;
 	var nonce = msg.nonce;
 	delete msg.nonce;
@@ -160,7 +161,8 @@ dispatcher[INSERT_POST] = function (msg) {
 	var links = oneeSama.links = msg.links;
 	delete msg.links;
 
-	var model, $section, $hr;
+	// create model or fill existing shallow model
+	var model;
 	if (!isThread) {
 		model = UnknownThread.get('replies').get(num);
 		if (model) {
@@ -179,6 +181,8 @@ dispatcher[INSERT_POST] = function (msg) {
 		model.set('mine', true);
 	}
 
+	// insert it into the DOM
+	var $section, $hr;
 	if (!isThread) {
 		var article = new Article({model: model, id: num, el: el});
 		if (!el)
