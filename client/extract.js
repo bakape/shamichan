@@ -1,3 +1,5 @@
+(function () {
+
 function extract_post_model(el) {
 	/* incomplete */
 	var info = {num: parseInt(el.id, 10)};
@@ -50,7 +52,7 @@ function extract_thread_model(section) {
 	});
 }
 
-(function scan_threads_for_extraction() {
+function scan_threads_for_extraction() {
 	var bod = document.body;
 	var threads = [];
 	for (var i = 0; i < bod.childElementCount; i++) {
@@ -62,4 +64,8 @@ function extract_thread_model(section) {
 		threads.push(thread);
 	}
 	Threads.add(threads);
+}
+
+scan_threads_for_extraction();
+
 })();
