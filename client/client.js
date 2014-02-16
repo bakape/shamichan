@@ -233,8 +233,9 @@ dispatcher[INSERT_POST] = function (msg) {
 	Backbone.trigger('afterInsert', model, $(el));
 	if (bump) {
 		var fencepost = $('body > aside');
-		$section.insertAfter(fencepost.length ? fencepost : $ceiling
-				).after($hr);
+		$section.insertAfter(fencepost.length ? fencepost : $ceiling);
+		if ($hr)
+			$section.after($hr);
 		spill_page();
 	}
 	if (orig_focus)
