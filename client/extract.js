@@ -1,4 +1,9 @@
+// remember which posts are mine for two days
+var Mine = new Kioku('mine', 2);
+
 (function () {
+
+var mine = Mine.read_all();
 
 function extract_post_model(el) {
 	/* incomplete */
@@ -33,6 +38,8 @@ function extract_post_model(el) {
 			image.dims = [parseInt(m[1], 10), parseInt(m[2], 10)];
 		info.image = image;
 	}
+	if (mine[info.num])
+		info.mine = true;
 	return new Post(info);
 }
 
@@ -46,10 +53,13 @@ function extract_thread_model(section) {
 		new Article({model: post, el: el});
 		replies.push(post);
 	}
-	return new Thread({
+	var thread = new Thread({
 		num: parseInt(section.id, 10),
 		replies: new Replies(replies),
 	});
+	if (mine[thread.num])
+		thread.set('mine', true);
+	return thread;
 }
 
 function scan_threads_for_extraction() {
@@ -67,5 +77,6 @@ function scan_threads_for_extraction() {
 }
 
 scan_threads_for_extraction();
+Mine.purge_expired_soon();
 
 })();

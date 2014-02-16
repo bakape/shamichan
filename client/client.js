@@ -179,6 +179,7 @@ dispatcher[INSERT_POST] = function (msg) {
 
 	if (myNonce) {
 		model.set('mine', true);
+		Mine.write(num, true);
 	}
 
 	// insert it into the DOM
