@@ -2,7 +2,7 @@
 
 // How many days before forgetting that we hid a given post
 // (Otherwise the cookie will balloon in size)
-var EXPIRY = 14;
+var EXPIRY = 7;
 
 var Hidden = new Kioku('hide', EXPIRY);
 
