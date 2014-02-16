@@ -15,6 +15,7 @@ exports.CLIENT_DEPS = [
 	'client/init.js',
 	'client/memory.js',
 	'client/models.js',
+	'client/extract.js',
 	'client/options.js',
 	'client/scroll.js',
 	'client/client.js',
