@@ -45,6 +45,7 @@ optSpecs.push(option_last_n);
 
 _.defaults(options, {
 	lastn: config.THREAD_LAST_N,
+	inlinefit: 'width',
 });
 options = new Backbone.Model(options);
 
@@ -265,9 +266,9 @@ var load_thread_backlinks = function ($section) {
 function option_fitwidth() {
 	/* TODO: do it live */
 }
-option_fitwidth.id = 'nofitwidth';
-option_fitwidth.label = 'Fit to width';
-option_fitwidth.type = 'revcheckbox';
+option_fitwidth.id = 'inlinefit';
+option_fitwidth.label = 'Image fitting';
+option_fitwidth.type = ['none', 'width', 'height', 'both'];
 
 /* INLINE EXPANSION */
 
@@ -378,29 +379,53 @@ function expand_image($img) {
 		thumbSrc: $img.attr('src'),
 	}).attr('src', href).width(w).height(h).replaceAll($img);
 
-	if (!options.get('nofitwidth')) {
-		var $post = parent_post($img);
-		var overflow = 0;
+	var fit = options.get('inlinefit');
+	if (fit != 'none') {
+		var both = fit == 'both';
+		fit_to_window($img, w, h, both || fit == 'width',
+				both || fit == 'height');
+	}
+}
+
+function fit_to_window($img, w, h, widthFlag, heightFlag) {
+	var $post = parent_post($img);
+	var overX = 0, overY = 0;
+	if (widthFlag) {
 		var innerWidth = $(window).innerWidth();
 		var rect = $post.length && $post[0].getBoundingClientRect();
 		if ($post.is('article')) {
 			if (fullWidthExpansion && w > innerWidth) {
-				overflow = w - innerWidth;
+				overX = w - innerWidth;
 				expand_full_width($img, $post, rect);
+				heightFlag = false;
 			}
 			else
-				overflow = rect.right - innerWidth;
+				overX = rect.right - innerWidth;
 		}
 		else if ($post.is('section'))
-			overflow = w - (innerWidth - rect.left*2);
+			overX = w - (innerWidth - rect.left*2);
+	}
+	if (heightFlag) {
+		overY = h - ($(window).innerHeight() - 20);
+	}
 
-		if (overflow > 0 && (w - overflow) > 50) {
-			var aspect = h / w;
-			w -= overflow;
-			h = aspect * w;
-			$img.width(w).height(h);
+	var aspect = h / w;
+	var newW, newH;
+	if (overX > 0) {
+		newW = w - overX;
+		newH = aspect * newW;
+	}
+	if (overY > 0) {
+		// might have to fit to both width and height
+		var maybeH = h - overY;
+		if (!newH || maybeH < newH) {
+			newH = maybeH;
+			newW = newH / aspect;
 		}
 	}
+
+	if (newW > 50 && newH > 50)
+		$img.width(newW).height(newH);
 }
 
 function expand_full_width($img, $post, rect) {
