@@ -588,9 +588,11 @@ function make_options_panel() {
 		}
 		else if (type instanceof Array) {
 			$input = $('<select/>');
-			_.each(type, function (item) {
+			var labels = spec.labels || {};
+			_.each(type, function (item, i) {
+				var label = labels[i] || item;
 				$('<option/>')
-					.text(item).val(item)
+					.text(label).val(item)
 					.appendTo($input);
 			});
 			if (type.indexOf(val) >= 0)
