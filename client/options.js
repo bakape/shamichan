@@ -35,7 +35,6 @@ function parent_model($el) {
 optSpecs.push(option_inline_expansion);
 if (window.devicePixelRatio > 1)
 	optSpecs.push(option_high_res);
-optSpecs.push(option_fitwidth);
 optSpecs.push(option_backlinks);
 optSpecs.push(option_reply_at_right);
 optSpecs.push(option_thumbs);
@@ -261,22 +260,16 @@ var load_thread_backlinks = function ($section) {
 	});
 };
 
-/* IMAGE SCALING */
-
-function option_fitwidth() {
-	/* TODO: do it live */
-}
-option_fitwidth.id = 'inlinefit';
-option_fitwidth.label = 'Image fitting';
-option_fitwidth.type = ['none', 'width', 'height', 'both'];
-
 /* INLINE EXPANSION */
 
 function option_inline_expansion() {
+	/* TODO: do it live */
 }
-option_inline_expansion.id = 'noinline';
-option_inline_expansion.label = 'Inline image expansion';
-option_inline_expansion.type = 'revcheckbox';
+option_inline_expansion.id = 'inlinefit';
+option_inline_expansion.label = 'Expansion';
+option_inline_expansion.type = ['none', 'full', 'width', 'height', 'both'];
+option_inline_expansion.labels = ['no', 'full-size', 'fit to width',
+		'fit to height', 'fit to both'];
 
 function option_high_res() {
 }
@@ -286,7 +279,7 @@ option_high_res.type = 'revcheckbox';
 
 $DOC.on('mouseup', 'img', function (event) {
 	/* Bypass expansion for non-left mouse clicks */
-	if (!options.get('noinline') && event.which > 1) {
+	if (options.get('inlinefit') != 'none' && event.which > 1) {
 		var img = $(this);
 		img.data('skipExpand', true);
 		setTimeout(function () {
@@ -296,7 +289,7 @@ $DOC.on('mouseup', 'img', function (event) {
 });
 
 $DOC.on('click', 'img', function (event) {
-	if (!options.get('noinline')) {
+	if (options.get('inlinefit') != 'none') {
 		var $target = $(this);
 		if (!$target.data('skipExpand'))
 			toggle_expansion($target, event);
