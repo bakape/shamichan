@@ -35,9 +35,9 @@ function parent_model($el) {
 optSpecs.push(option_inline_expansion);
 if (window.devicePixelRatio > 1)
 	optSpecs.push(option_high_res);
+optSpecs.push(option_thumbs);
 optSpecs.push(option_backlinks);
 optSpecs.push(option_reply_at_right);
-optSpecs.push(option_thumbs);
 optSpecs.push(option_theme);
 optSpecs.push(option_last_n);
 
