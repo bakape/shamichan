@@ -340,7 +340,7 @@ function hook_up_address(model, $post) {
 	var givenName;
 	var m = $a.text().match(/^([\w'.]+) "(.+)"$/);
 	if (m) {
-		if (is_valid_ip(m[1]))
+		if (is_IPv4_ip(m[1]))
 			ip = m[1];
 		givenName = m[2];
 	}

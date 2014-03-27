@@ -184,10 +184,13 @@ function parse_forwarded_for(ff) {
 	if (!ff)
 		return null;
 	var ips = ff.split(',');
-	for (var i = ips.length - 1; i >= 0; i--)
-		if (/^\s*\d+\.\d+\.\d+.\d+\s*$/.test(ips[i]))
-			return ips[i].trim();
-	return null;
+	if (!ips.length)
+		return null;
+	var last = ips[ips.length - 1].trim();
+	/* check that it looks like some kind of IPv4/v6 address */
+	if (!/^[\da-fA-F.:]{3,45}$/.test(last))
+		return null;
+	return last;
 }
 exports.parse_forwarded_for = parse_forwarded_for;
 

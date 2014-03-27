@@ -17,8 +17,8 @@ var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,f,r,g,z,l,ch'.split(',');
 var mnemonicEnds = "a,i,u,e,o,a,i,u,e,o,ya,yi,yu,ye,yo,'".split(',');
 
 function ip_mnemonic(ip) {
-	if (!is_valid_ip(ip))
-		return '<bad IP>';
+	if (!is_IPv4_ip(ip))
+		return null;
 	var nums = ip.split('.');
 	var mnemonic = '';
 	for (var i = 0; i < 4; i++) {
@@ -55,7 +55,7 @@ function denote_hidden(info) {
 }
 exports.denote_hidden = denote_hidden;
 
-function is_valid_ip(ip) {
+function is_IPv4_ip(ip) {
 	if (typeof ip != 'string' || !/^\d+\.\d+\.\d+\.\d+$/.exec(ip))
 		return false;
 	var nums = ip.split('.');
@@ -68,7 +68,11 @@ function is_valid_ip(ip) {
 	}
 	return true;
 }
-exports.is_valid_ip = is_valid_ip;
+exports.is_IPv4_ip = is_IPv4_ip;
+
+exports.is_valid_ip = function (ip) {
+	return typeof ip == 'string' && /^[\da-fA-F.:]{3,45}$/.test(ip);
+}
 
 if (typeof IDENT != 'undefined') {
 	/* client */
