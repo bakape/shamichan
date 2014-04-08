@@ -5,6 +5,10 @@
 	"keywords": ["realtime", "imageboard", "redis"],
 	"homepage": "https://github.com/lalcmellkmal/doushio",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/lalcmellkmal/doushio.git"
+	},
 	"scripts": {
 		"postinstall": "make",
 		"start": "node server/server.js"
