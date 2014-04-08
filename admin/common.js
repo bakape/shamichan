@@ -1,3 +1,4 @@
+var _ = require('../lib/underscore');
 var config = require('../config');
 var common = require('../common');
 
@@ -17,6 +18,8 @@ var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,f,r,g,z,l,ch'.split(',');
 var mnemonicEnds = "a,i,u,e,o,a,i,u,e,o,ya,yi,yu,ye,yo,'".split(',');
 
 function ip_mnemonic(ip) {
+	if (/^[a-fA-F0-9:]{3,45}$/.test(ip))
+		return ipv6_mnemonic(ip);
 	if (!is_IPv4_ip(ip))
 		return null;
 	var nums = ip.split('.');
@@ -28,6 +31,75 @@ function ip_mnemonic(ip) {
 		mnemonic += s;
 	}
 	return mnemonic;
+}
+
+var ipv6kana = (
+	',a,i,u,e,o,ka,ki,' +
+	'ku,ke,ko,sa,shi,su,se,so,' +
+	'ta,chi,tsu,te,to,na,ni,nu,' +
+	'ne,no,ha,hi,fu,he,ho,ma,' +
+	'mi,mu,me,mo,ya,yu,yo,ra,' +
+	'ri,ru,re,ro,wa,wo,ga,gi,' +
+	'gu,ge,go,za,ji,zu,ze,zo,' +
+	'da,de,do,ba,bi,bu,be,bo'
+).split(',');
+if (ipv6kana.length != 64)
+	throw new Error('bad ipv6 kana!');
+
+var ipv6alts = {
+	sa: 'sha', su: 'shu', so: 'sho',
+	ta: 'cha', tsu: 'chu', to: 'cho',
+	fu: 'hyu',
+	za: 'ja', zu: 'ju', zo: 'jo',
+};
+
+function ipv6_mnemonic(ip) {
+	var groups = ip.split(':');
+	if (groups.length != 8)
+		return null; // TODO deal with :: shortening
+
+	// takes 8 bits, returns kana
+	function p(n) {
+		// bits 0-5 are lookup; 6-7 are modifier
+		var kana = ipv6kana[n & 0x1f];
+		if (!kana)
+			return kana;
+		var mod = (n >> 6) & 3;
+		// posibly modify the kana
+		if (mod > 1 && kana[0] == 'b')
+			kana = 'p' + kana[1];
+		if (mod == 3) {
+			var alt = ipv6alts[kana];
+			if (alt)
+				return alt;
+			var v = kana[kana.length - 1];
+			if ('knhmrgbp'.indexOf(kana[0]) >= 0 && 'auo'.indexOf(v) >= 0)
+				kana = kana[0] + 'y' + kana.slice(1);
+		}
+		return kana;
+	}
+
+	var nope = false;
+	var ks = _.map(groups, function (hex) {
+		var n = hex != '' ? parseInt(hex, 16) : 0;
+		if (_.isNaN(n) || n > 0xffff) {
+			nope = true;
+			return;
+		}
+		return p(n >> 8) + p(n);
+	});
+	if (nope)
+		return null;
+
+	function cap(s) {
+		return s[0].toUpperCase() + s.slice(1);
+	}
+
+	// discard first group (RIR etc)
+	// also discard some other groups for length/anonymity
+	var sur = ks.slice(1, 4).join('');
+	var given = ks.slice(6, 8).join('');
+	return cap(sur) + ' ' + cap(given);
 }
 
 function append_mnemonic(info) {
