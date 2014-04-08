@@ -115,9 +115,10 @@ function append_mnemonic(info) {
 			mnemonic += ' "' + addr.name + '"';
 	}
 
-	var title = mnemonic ? ' title="'+escape(ip)+'"' : '';
-	header.push(common.safe(' <a class="mod addr"' + title + '>'),
-			mnemonic || ip, common.safe('</a>'));
+	var s = common.safe;
+	var title = mnemonic ? [s(' title="'), ip, s('"')] : '';
+	header.push(s(' <a class="mod addr"'), title, s('>'),
+			mnemonic || ip, s('</a>'));
 }
 
 function denote_hidden(info) {
