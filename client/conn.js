@@ -6,8 +6,11 @@ window.send = function (msg) {
 	// need deferral or reporting on these lost messages...
 	if (connSM.state != 'synced' && connSM.state != 'syncing')
 		return;
-	if (socket.readyState != 1)
+	if (socket.readyState != SockJS.OPEN) {
+		if (console)
+			console.warn("Attempting to send while socket closed");
 		return;
+	}
 
 	msg = JSON.stringify(msg);
 	if (DEBUG)
