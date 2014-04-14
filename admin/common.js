@@ -55,8 +55,18 @@ var ipv6alts = {
 
 function ipv6_mnemonic(ip) {
 	var groups = ip.split(':');
+	var gap = groups.indexOf('');
+	if (gap >= 0 || groups.length != 8) {
+		// expand ::
+		if (gap < 0 || gap != groups.lastIndexOf(''))
+			return null;
+		var zeroes = [gap, 1];
+		for (var i = groups.length; i < 9; i++)
+			zeroes.push('0');
+		groups.splice.apply(groups, zeroes);
+	}
 	if (groups.length != 8)
-		return null; // TODO deal with :: shortening
+		return null;
 
 	// takes 8 bits, returns kana
 	function p(n) {
