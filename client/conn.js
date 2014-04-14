@@ -126,7 +126,10 @@ function window_focused() {
 	if (s == 'synced' || s == 'syncing' || s == 'conn') {
 		var rs = socket.readyState;
 		if (rs != SockJS.OPEN && rs != SockJS.CONNECTING) {
-			attempts = 0;
+			connSM.feed('close');
+			return;
+		}
+		else if (navigator.onLine === false) {
 			connSM.feed('close');
 			return;
 		}
@@ -140,6 +143,7 @@ $(function () {
 		setTimeout(window_focused, 20);
 	});
 	window.addEventListener('online', connSM.feeder('retry'));
+	window.addEventListener('offline', connSM.feeder('close'));
 });
 
 })();
