@@ -276,7 +276,7 @@ IU.got_nails = function () {
 
 	this.status('Publishing...');
 	var image = this.image;
-	var time = new Date().getTime();
+	var time = Date.now();
 	image.src = time + image.ext;
 	var dest, mvs, pathUpdates = {};
 	var media_path = index.media_path, mv_file = etc.movex;

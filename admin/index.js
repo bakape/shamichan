@@ -14,7 +14,7 @@ function ban(m, mod, ip, type) {
 	m.sadd('hot:' + type + 's', ip);
 	m.hset('ip:' + ip, 'ban', type);
 
-	var now = new Date().getTime();
+	var now = Date.now();
 	var info = {ip: ip, type: type, time: now};
 	if (mod.ident.email)
 		info.email = mod.ident.email;

@@ -707,7 +707,7 @@ function allocate_post(msg, client, callback) {
 		return callback(Muggle("Already have a post."));
 	if (!inactive_board_check(client))
 		return callback(Muggle("Can't post here."));
-	var post = {time: new Date().getTime(), nonce: msg.nonce};
+	var post = {time: Date.now(), nonce: msg.nonce};
 	var body = '';
 	var ip = client.ident.ip;
 	var extra = {ip: ip, board: client.board};

@@ -474,7 +474,7 @@ Y.reserve_post = function (op, ip, callback) {
 		return reserve();
 
 	var key = 'ip:' + ip + ':throttle:';
-	var now = new Date().getTime();
+	var now = Date.now();
 	var shortTerm = key + short_term_timeslot(now);
 	var longTerm = key + long_term_timeslot(now);
 	r.mget([shortTerm, longTerm], function (err, quants) {
@@ -1080,7 +1080,7 @@ Y.add_image = function (post, alloc, ip, callback) {
 		delete image.hash;
 		self._log(m, op, common.INSERT_IMAGE, [num, image]);
 
-		var now = new Date().getTime();
+		var now = Date.now();
 		var n = post_volume({image: true});
 		update_throughput(m, ip, now, post_volume({image: true}));
 		imager.make_image_nontemporary(m, alloc);
@@ -1097,7 +1097,7 @@ Y.append_post = function (post, tail, old_state, extra, cb) {
 	if (old_state[0] != post.state[0] || old_state[1] != post.state[1])
 		m.hset(key, 'state', post.state.join());
 	if (extra.ip) {
-		var now = new Date().getTime();
+		var now = Date.now();
 		update_throughput(m, extra.ip, now, post_volume(null, tail));
 	}
 	if (!_.isEmpty(extra.new_links))

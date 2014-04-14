@@ -63,7 +63,7 @@ function verify_auth(resp, packet) {
 		return respond_error(resp, 'Bad Persona audience.');
 	}
 	delete packet.audience;
-	if (packet.expires && packet.expires < new Date().getTime())
+	if (packet.expires && packet.expires < Date.now())
 		return respond_error(resp, 'Login attempt expired.');
 	var email = packet.email;
 	var admin = config.ADMIN_PERSONAS.indexOf(email) >= 0;
@@ -141,7 +141,7 @@ function respond_ok(resp, cookie) {
 }
 
 function make_expiry() {
-	var expiry = new Date(new Date().getTime()
+	var expiry = new Date(Date.now()
 		+ config.LOGIN_SESSION_TIME*1000).toUTCString();
 	/* Change it to the expected dash-separated format */
 	var m = expiry.match(/^(\w+,\s+\d+)\s+(\w+)\s+(\d+\s+[\d:]+\s+\w+)$/);

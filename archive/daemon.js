@@ -23,7 +23,7 @@ function connect() {
 }
 
 function at_next_minute(func) {
-	var now = new Date().getTime();
+	var now = Date.now();
 	var inFive = new Date(now + 5000);
 
 	var nextMinute = inFive.getTime();
@@ -44,7 +44,7 @@ var CLEANING_LIMIT = 10; // per minute
 function clean_up() {
 	var r = connect();
 	var expiryKey = db.expiry_queue_key();
-	var now = Math.floor(new Date().getTime() / 1000);
+	var now = Math.floor(Date.now() / 1000);
 	r.zrangebyscore(expiryKey, 1, now, 'limit', 0, CLEANING_LIMIT,
 				function (err, expired) {
 		if (err) {

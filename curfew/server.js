@@ -114,7 +114,7 @@ function shutdown(board, cb) {
 function at_next_curfew_start(board, func) {
 	var when = curfew_starting_time(board);
 	winston.info('Next curfew for ' + board + ' at ' + when.toUTCString());
-	setTimeout(func, when.getTime() - new Date().getTime());
+	setTimeout(func, when.getTime() - Date.now());
 }
 
 function enforce(board) {
