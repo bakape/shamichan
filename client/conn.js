@@ -78,9 +78,17 @@ connSM.act('syncing + sync -> synced', function () {
 	sync_status('Synced.', false);
 	attemptTimer = setTimeout(function () {
 		attemptTimer = 0;
-		attempts = 0;
+		reset_attempts();
 	}, 10000);
 });
+
+function reset_attempts() {
+	if (attemptTimer) {
+		clearTimeout(attemptTimer);
+		attemptTimer = 0;
+	}
+	attempts = 0;
+}
 
 connSM.act('* + close -> dropped', function (e) {
 	if (socket) {
@@ -151,7 +159,10 @@ $(function () {
 	$(window).focus(function () {
 		setTimeout(window_focused, 20);
 	});
-	window.addEventListener('online', connSM.feeder('retry'));
+	window.addEventListener('online', function () {
+		reset_attempts();
+		connSM.feed('retry');
+	});
 	window.addEventListener('offline', connSM.feeder('close'));
 });
 
