@@ -135,6 +135,7 @@ $(function () {
 	$(window).focus(function () {
 		setTimeout(window_focused, 20);
 	});
+	window.addEventListener('online', connSM.feeder('retry'));
 });
 
 })();
