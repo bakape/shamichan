@@ -48,6 +48,10 @@ connSM.act('load + start -> conn', function () {
 });
 
 function connect() {
+	if (socket) {
+		socket.onclose = null;
+		socket.onmessage = null;
+	}
 	if (window.location.protocol == 'file:') {
 		console.log("Page downloaded locally; refusing to sync.");
 		return;
@@ -79,6 +83,10 @@ connSM.act('syncing + sync -> synced', function () {
 });
 
 connSM.act('* + close -> dropped', function (e) {
+	if (socket) {
+		socket.onclose = null;
+		socket.onmessage = null;
+	}
 	if (DEBUG)
 		console.error('E:', e);
 	if (attemptTimer) {
@@ -110,7 +118,8 @@ connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 		clearTimeout(attemptTimer);
 		attemptTimer = 0;
 	}
-	delete socket.onclose;
+	socket.onclose = null;
+	socket.onmessage = null;
 	socket.close();
 	socket = null;
 	if (DEBUG)
