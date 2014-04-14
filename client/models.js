@@ -63,7 +63,7 @@ var Section = Backbone.View.extend({
 
 	remove: function () {
 		var replies = this.model.get('replies');
-		_.each(replies.models, function (post) {
+		replies.each(function (post) {
 			clear_post_links(post, replies);
 		});
 		replies.reset();
@@ -111,7 +111,7 @@ var Article = Backbone.View.extend({
 					this.$el);
 		// TODO: Sync up DOM gracefully instead of clobbering
 		$list.find('a').remove();
-		_.each(backlinks, function (num) {
+		backlinks.forEach(function (num) {
 			var $a = $('<a/>', {href: '#'+num, text: '>>'+num});
 			$list.append(' ', $a);
 		});
@@ -228,7 +228,7 @@ function force_post_change(post, attr, val) {
 function clear_post_links(post, replies) {
 	if (!post)
 		return;
-	_.each(post.get('links') || [], function (destId) {
+	(post.get('links') || []).forEach(function (destId) {
 		var dest = replies.get(destId);
 		if (!dest)
 			return;
@@ -241,7 +241,7 @@ function clear_post_links(post, replies) {
 			backlinks = undefined;
 		force_post_change(dest, 'backlinks', backlinks);
 	});
-	_.each(post.get('backlinks') || [], function (srcId) {
+	(post.get('backlinks') || []).forEach(function (srcId) {
 		var src = replies.get(srcId);
 		if (!src)
 			return;

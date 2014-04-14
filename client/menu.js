@@ -24,7 +24,7 @@ $DOC.on('click', '.control', function (event) {
 
 		oneeSama.trigger('menuOptions', {options: opts, model: model});
 
-		_.each(opts, function (opt) {
+		opts.forEach(function (opt) {
 			$('<li/>').text(opt).appendTo($menu);
 		});
 		$menu.appendTo(this);

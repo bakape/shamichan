@@ -270,7 +270,7 @@ initialize: function (dest) {
 	this.propagate_ident();
 	this.options.dest.replaceWith(post);
 
-	this.$input.input(_.bind(this.on_input, this, undefined));
+	this.$input.input(this.on_input.bind(this, undefined));
 
 	if (op) {
 		this.resize_input();

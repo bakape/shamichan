@@ -462,7 +462,7 @@ function toggle_shortcuts(event) {
 		click: select_shortcut,
 		keyup: change_shortcut,
 	});
-	_.each(shortcuts, function (s) {
+	shortcuts.forEach(function (s) {
 		var value = String.fromCharCode(shortcutKeys[s.name]);
 		var $label = $('<label>', {text: s.label});
 		$('<input>', {
@@ -517,7 +517,7 @@ _.defer(function () {
 	$name.input(prop);
 	$email.input(prop);
 
-	_.each(optSpecs, function (spec) {
+	optSpecs.forEach(function (spec) {
 		spec.id = spec.id.replace(/\$BOARD/g, BOARD);
 	});
 
@@ -530,12 +530,12 @@ _.defer(function () {
 		$opts.toggle('fast');
 	}).insertAfter('#sync');
 
-	_.each(optSpecs, function (spec) {
+	optSpecs.forEach(function (spec) {
 		spec(options.get(spec.id));
 	});
 
 	var prefs = options.get('shortcuts') || {};
-	_.each(shortcuts, function (s) {
+	shortcuts.forEach(function (s) {
 		shortcutKeys[s.name] = prefs[s.name] || s.which;
 	});
 });
@@ -562,7 +562,7 @@ function make_options_panel() {
 			spec(val);
 		});
 	});
-	_.each(optSpecs, function (spec) {
+	optSpecs.forEach(function (spec) {
 		var id = spec.id;
 		if (nashi.opts.indexOf(id) >= 0)
 			return;
@@ -582,7 +582,7 @@ function make_options_panel() {
 		else if (type instanceof Array) {
 			$input = $('<select/>');
 			var labels = spec.labels || {};
-			_.each(type, function (item, i) {
+			type.forEach(function (item, i) {
 				var label = labels[i] || item;
 				$('<option/>')
 					.text(label).val(item)

@@ -23,7 +23,7 @@ function inject(frag) {
 			out = '';
 	}
 	if (out === null) {
-		if (_.isArray(frag))
+		if (Array.isArray(frag))
 			out = $(flatten(frag).join(''));
 		else
 			out = escape_fragment(frag);
@@ -151,7 +151,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		postSM.feed('alloc', msg);
 		bump = false;
 		// delete only after a delay so all tabs notice that it's ours
-		setTimeout(_.bind(destroy_nonce, null, nonce), 10*1000);
+		setTimeout(destroy_nonce.bind(null, nonce), 10*1000);
 		// if we've already made a placeholder for this post, use it
 		if (postForm && postForm.el)
 			el = postForm.el;
@@ -361,7 +361,7 @@ dispatcher[DELETE_POSTS] = function (msg, op) {
 	var replies = Threads.lookup(op, op).get('replies');
 	var $section = $('#' + op);
 	var ownNum = saku && saku.get('num');
-	_.each(msg, function (num) {
+	msg.forEach(function (num) {
 		var postVisible = $('#' + num).is('article');
 		delete ownPosts[num];
 		var post = replies.get(num);
@@ -419,7 +419,7 @@ dispatcher[UNLOCK_THREAD] = function (msg, op) {
 
 dispatcher[DELETE_IMAGES] = function (msg, op) {
 	var replies = Threads.lookup(op, op).get('replies');
-	_.each(msg, function (num) {
+	msg.forEach(function (num) {
 		var post = replies.get(num);
 		if (post)
 			post.unset('image');
@@ -429,7 +429,7 @@ dispatcher[DELETE_IMAGES] = function (msg, op) {
 dispatcher[SPOILER_IMAGES] = function (msg, op) {
 	var thread = Threads.get(op);
 	var replies = thread.get('replies');
-	_.each(msg, function (info) {
+	msg.forEach(function (info) {
 		var num = info[0];
 		var post = (num == op) ? thread : replies.get(num);
 		if (post)
@@ -489,7 +489,7 @@ dispatcher[INVALID] = connSM.feeder('invalid');
 
 function lookup_model_path(path) {
 	var o = window;
-	if (!_.isArray(path))
+	if (!Array.isArray(path))
 		return o[path];
 	o = o[path[0]];
 	if (o) {

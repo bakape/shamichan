@@ -4,7 +4,7 @@ function Kioku(key, expiry) {
 }
 
 Kioku.prototype.bake_cookie = function (o) {
-	var nums = _.keys(o);
+	var nums = Object.keys(o);
 	nums.sort(function (a, b) {
 		return parseInt(a, 10) - parseInt(b, 10);
 	});
@@ -31,7 +31,7 @@ Kioku.prototype.purge_expired = function () {
 			expired.push(k);
 	}
 	if (expired.length) {
-		_.forEach(expired, function (k) {
+		expired.forEach(function (k) {
 			delete o[k];
 		});
 		this.write_all(o);
@@ -40,7 +40,7 @@ Kioku.prototype.purge_expired = function () {
 
 Kioku.prototype.purge_expired_soon = function () {
 	var delay = 5000 * Math.floor(Math.random() * 5000);
-	setTimeout(_.bind(this.purge_expired, this), delay);
+	setTimeout(this.purge_expired.bind(this), delay);
 };
 
 Kioku.prototype.read_all = function () {

@@ -1,4 +1,3 @@
-var _ = require('./lib/underscore');
 var config = require('./config');
 var imagerConfig = require('./imager/config');
 var DEFINES = exports;
@@ -161,7 +160,7 @@ function flatten(frags) {
 	var out = [];
 	for (var i = 0; i < frags.length; i++) {
 		var frag = frags[i];
-		if (_.isArray(frag))
+		if (Array.isArray(frag))
 			out = out.concat(flatten(frag));
 		else
 			out.push(escape_fragment(frag));

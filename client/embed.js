@@ -107,7 +107,7 @@ $(document).on('mouseenter', '.watch', function (event) {
 		data: {v: '2', alt: 'jsonc'},
 		dataType: 'json',
 		success: function (data) {
-			with_dom(_.bind(gotInfo, null, data));
+			with_dom(gotInfo.bind(null, data));
 		},
 		error: function () {
 			with_dom(function () {
@@ -205,7 +205,7 @@ $(document).on('mouseenter', '.soundcloud', function (event) {
 		data: {format: 'json', url: 'http://soundcloud.com/' + m[1]},
 		dataType: 'json',
 		success: function (data) {
-			with_dom(_.bind(gotInfo, null, data));
+			with_dom(gotInfo.bind(null, data));
 		},
 		error: function () {
 			with_dom(function () {
