@@ -56,6 +56,8 @@ function connect() {
 	socket.onopen = connSM.feeder('open');
 	socket.onclose = connSM.feeder('close');
 	socket.onmessage = on_message;
+	if (DEBUG)
+		window.socket = socket;
 }
 
 window.new_socket = function (attempt) {
@@ -111,6 +113,8 @@ connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 	delete socket.onclose;
 	socket.close();
 	socket = null;
+	if (DEBUG)
+		window.socket = null;
 });
 
 function window_focused() {
