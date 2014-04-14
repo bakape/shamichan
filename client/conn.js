@@ -68,6 +68,7 @@ connSM.act('conn, reconn + open -> syncing', function () {
 connSM.act('syncing + sync -> synced', function () {
 	sync_status('Synced.', false);
 	attemptTimer = setTimeout(function () {
+		attemptTimer = 0;
 		attempts = 0;
 	}, 10000);
 });
