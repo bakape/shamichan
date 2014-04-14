@@ -110,10 +110,27 @@ connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 	socket = null;
 });
 
+function window_focused() {
+	var s = connSM.state;
+	if (s == 'desynced')
+		return;
+	// might have just been suspended;
+	// try to get our SM up to date if possible
+	if (s == 'synced' || s == 'syncing' || s == 'conn') {
+		var rs = socket.readyState;
+		if (rs != SockJS.OPEN && rs != SockJS.CONNECTING) {
+			attempts = 0;
+			connSM.feed('close');
+			return;
+		}
+	}
+	connSM.feed('retry');
+}
+
 $(function () {
 	_.defer(connSM.feeder('start'));
 	$(window).focus(function () {
-		setTimeout(connSM.feeder('retry'), 20);
+		setTimeout(window_focused, 20);
 	});
 });
 
