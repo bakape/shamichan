@@ -168,6 +168,12 @@ function explode_IPv6_ip(ip) {
 }
 
 function ip_key(ip) {
+	if (!is_IPv4_ip(ip)) {
+		// chop off the last half of IPv6 ips
+		var bits = explode_IPv6_ip(ip);
+		if (bits && bits.length == 8)
+			return bits.slice(0, 4).join(':');
+	}
 	return ip;
 }
 exports.ip_key = ip_key;
