@@ -54,18 +54,8 @@ var ipv6alts = {
 };
 
 function ipv6_mnemonic(ip) {
-	var groups = ip.split(':');
-	var gap = groups.indexOf('');
-	if (gap >= 0 || groups.length != 8) {
-		// expand ::
-		if (gap < 0 || gap != groups.lastIndexOf(''))
-			return null;
-		var zeroes = [gap, 1];
-		for (var i = groups.length; i < 9; i++)
-			zeroes.push('0');
-		groups.splice.apply(groups, zeroes);
-	}
-	if (groups.length != 8)
+	var groups = explode_IPv6_ip(ip);
+	if (!groups || groups.length != 8)
 		return null;
 
 	// takes 8 bits, returns kana
@@ -89,17 +79,10 @@ function ipv6_mnemonic(ip) {
 		return kana;
 	}
 
-	var nope = false;
-	var ks = _.map(groups, function (hex) {
-		var n = hex != '' ? parseInt(hex, 16) : 0;
-		if (_.isNaN(n) || n > 0xffff) {
-			nope = true;
-			return;
-		}
+	var ks = groups.map(function (hex) {
+		var n = parseInt(hex, 16);
 		return p(n >> 8) + p(n);
 	});
-	if (nope)
-		return null;
 
 	function cap(s) {
 		return s[0].toUpperCase() + s.slice(1);
@@ -155,6 +138,33 @@ exports.is_IPv4_ip = is_IPv4_ip;
 
 exports.is_valid_ip = function (ip) {
 	return typeof ip == 'string' && /^[\da-fA-F.:]{3,45}$/.test(ip);
+}
+
+function explode_IPv6_ip(ip) {
+	if (typeof ip != 'string')
+		return null;
+
+	var groups = ip.split(':');
+	var gap = groups.indexOf('');
+	if (gap >= 0 || groups.length != 8) {
+		// expand ::
+		if (gap < 0 || gap != groups.lastIndexOf(''))
+			return null;
+		var zeroes = [gap, 1];
+		for (var i = groups.length; i < 9; i++)
+			zeroes.push('0');
+		groups.splice.apply(groups, zeroes);
+	}
+
+	// check hex components
+	for (var i = 0; i < groups.length; i++) {
+		var n = parseInt(groups[i], 16);
+		if (_.isNaN(n) || n > 0xffff)
+			return null;
+		groups[i] = n.toString(16);
+	}
+
+	return groups;
 }
 
 if (typeof IDENT != 'undefined') {
