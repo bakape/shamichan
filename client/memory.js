@@ -44,7 +44,7 @@ Kioku.prototype.purge_expired = function () {
 };
 
 Kioku.prototype.purge_expired_soon = function () {
-	var delay = 5000 * Math.floor(Math.random() * 5000);
+	var delay = 5000 + Math.floor(Math.random() * 5000);
 	setTimeout(this.purge_expired.bind(this), delay);
 };
 
