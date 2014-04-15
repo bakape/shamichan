@@ -338,7 +338,7 @@ function hook_up_address(model, $post) {
 		return;
 	var ip = $a.prop('title') || $a.text();
 	var givenName;
-	var m = $a.text().match(/^([\w'.]+) "(.+)"$/);
+	var m = $a.text().match(/^([\w'.:]+(?: [\w'.:]*)?) "(.+)"$/);
 	if (m) {
 		if (is_IPv4_ip(m[1]))
 			ip = m[1];
