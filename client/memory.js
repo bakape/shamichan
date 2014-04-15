@@ -27,6 +27,11 @@ Kioku.prototype.purge_expired = function () {
 	var now = this.now(), expired = [];
 	for (var k in o) {
 		var time = o[k];
+		// TEMP cleanup
+		if (time === true) {
+			expired.push(k);
+			continue;
+		}
 		if (time && now > time + 60*60*24*this.expiry)
 			expired.push(k);
 	}
