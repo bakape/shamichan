@@ -38,7 +38,8 @@ okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
 	var ip = msg[0];
 	if (!authcommon.is_valid_ip(ip))
 		return false;
-	var addr = ADDRS[ip];
+	var key = authcommon.ip_key(ip);
+	var addr = ADDRS[key];
 	if (addr) {
 		client.send([0, common.COLLECTION_ADD, 'addrs',
 				address_view(addr)]);
@@ -46,15 +47,15 @@ okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
 	}
 
 	// Cache miss
-	ADDRS[ip] = addr = {ip: ip, shallow: true};
+	ADDRS[key] = addr = {ip: ip, key: key, shallow: true};
 	var r = connect();
-	r.hgetall('ip:'+ip, function (err, info) {
+	r.hgetall('ip:'+key, function (err, info) {
 		if (err) {
-			if (ADDRS[ip] === addr)
-				delete ADDRS[ip];
+			if (ADDRS[key] === addr)
+				delete ADDRS[key];
 			return client.kotowaru(err);
 		}
-		if (ADDRS[ip] !== addr)
+		if (ADDRS[key] !== addr)
 			return;
 
 		_.extend(addr, info);
@@ -70,15 +71,16 @@ okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
 	var ip = msg[0], name = msg[1];
 	if (!authcommon.is_valid_ip(ip) || typeof name != 'string')
 		return false;
+	var key = authcommon.ip_key(ip);
 	name = name.trim().slice(0, 30);
 	var m = connect().multi();
 	if (!name) {
-		m.hdel('ip:' + ip, 'name');
-		m.srem('namedIPs', ip);
+		m.hdel('ip:' + key, 'name');
+		m.srem('namedIPs', key);
 	}
 	else {
-		m.hset('ip:' + ip, 'name', name);
-		m.sadd('namedIPs', ip);
+		m.hset('ip:' + key, 'name', name);
+		m.sadd('namedIPs', key);
 	}
 
 	m.exec(function (err) {
@@ -86,13 +88,13 @@ okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
 			return client.kotowaru(err);
 
 		// should observe a publication for this cache update
-		var addr = ADDRS[ip];
+		var addr = ADDRS[key];
 		if (!addr)
-			addr = ADDRS[ip] = {ip: ip};
+			addr = ADDRS[key] = {ip: ip};
 		addr.name = name;
 
 		var amend = {name: name};
-		client.send([0, common.MODEL_SET, ['addrs', ip], amend]);
+		client.send([0, common.MODEL_SET, ['addrs', key], amend]);
 	});
 	return true;
 };

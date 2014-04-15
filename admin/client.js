@@ -172,7 +172,7 @@ with_dom(function () {
 });
 
 var Address = Backbone.Model.extend({
-	idAttribute: 'ip',
+	idAttribute: 'key',
 	defaults: {
 		count: 0,
 	},
@@ -239,7 +239,8 @@ var AddressView = Backbone.View.extend({
 			return;
 		event.preventDefault();
 		var name = this.$('.name').val().trim();
-		send([SET_ADDRESS_NAME, this.model.id, name]);
+		var ip = this.model.get('ip');
+		send([SET_ADDRESS_NAME, ip, name]);
 		this.remove();
 	},
 
@@ -251,6 +252,7 @@ var AddressView = Backbone.View.extend({
 	select_all: function () {
 		if (!THREAD)
 			return alert('TODO');
+		// TODO: do where query by ip_key lookup
 		var models = Threads.get(THREAD).get('replies').where({
 			ip: this.model.get('ip'),
 		});
@@ -304,6 +306,9 @@ var AddrView = Backbone.View.extend({
 
 		if (this.expansion)
 			return this.expansion.remove();
+		var ip = this.model.get('ip');
+		if (!ip)
+			return;
 
 		this.expansion = new AddressView({model: this.model});
 		this.$el.after(this.expansion.render().el);
@@ -311,7 +316,7 @@ var AddrView = Backbone.View.extend({
 				this.expansion_removed);
 
 		if (this.model.get('shallow'))
-			send([FETCH_ADDRESS, this.model.id]);
+			send([FETCH_ADDRESS, ip]);
 	},
 
 	remove: function () {
@@ -348,9 +353,10 @@ function hook_up_address(model, $post) {
 		return;
 
 	/* Activate this address link */
-	var address = window.addrs.get(ip);
+	var key = ip_key(ip);
+	var address = window.addrs.get(key);
 	if (!address) {
-		address = new Address({ip: ip});
+		address = new Address({ip: ip, key: key});
 		address.set(givenName ? {name: givenName} : {shallow: true});
 		window.addrs.add(address);
 	}

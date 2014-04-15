@@ -167,6 +167,11 @@ function explode_IPv6_ip(ip) {
 	return groups;
 }
 
+function ip_key(ip) {
+	return ip;
+}
+exports.ip_key = ip_key;
+
 if (typeof IDENT != 'undefined') {
 	/* client */
 	window.ip_mnemonic = ip_mnemonic;
