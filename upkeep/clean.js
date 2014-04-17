@@ -1,3 +1,7 @@
+/* Deletes the original images and thumbnails of archived posts,
+ * leaving just the 'vint' thumbnail.
+ */
+
 var imgConfig = require('../imager/config'),
     crypto = require('crypto'),
     db = require('../db'),

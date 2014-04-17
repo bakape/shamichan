@@ -1,3 +1,7 @@
+/* Dumps the given thread to JSON.
+ * Not production-ready.
+ */
+
 var _ = require('../lib/underscore'),
     async = require('async'),
     caps = require('../server/caps'),

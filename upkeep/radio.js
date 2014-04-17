@@ -1,3 +1,7 @@
+/* Polls an icecast2 server for now-playing info, and broadcasts it.
+ * Configure here, and install poll.xsl into icecast http root.
+ */
+
 var _ = require('../lib/underscore'),
     caps = require('../server/caps'),
     db = require('../db'),

@@ -1,3 +1,7 @@
+/* Dumps the redis DB to rdb, then uploads that to S3.
+ * Configure below, and provide upkeep/credentials.json.
+ */
+
 var AWS = require('aws-sdk'),
     config = require('../config'),
     crypto = require('crypto'),

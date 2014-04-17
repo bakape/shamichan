@@ -30,3 +30,10 @@ Optional npm deps for various features:
 * ~~daemon~~ (broken currently)
 * icecast now-playing banners: node-expat
 * [send](https://github.com/visionmedia/send) (if you want to serve static files directly from the node.js process; useful in debug mode also)
+
+Standalone upkeep scripts:
+
+* archive/daemon.js - moves old threads to the archive
+* upkeep/backup.js - uploads rdb to S3
+* upkeep/clean.js - deletes archived images
+* upkeep/radio.js - icecast2 server integration

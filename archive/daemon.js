@@ -1,3 +1,7 @@
+/* Copies old threads to the archive board.
+ * Run this in parallel with the main server.
+ */
+
 var config = require('../config'),
     db = require('../db'),
     winston = require('winston');
