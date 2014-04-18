@@ -1,5 +1,6 @@
 #include <png.h>
 #include <stdio.h>
+#include <string.h>
 
 #define FAIL(format, args...) do { fprintf(stderr, format "\n", ## args); \
 		goto done; } while (0)
