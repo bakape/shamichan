@@ -8,6 +8,10 @@ var cache = require('../server/state').dbCache,
 
 var IMG_EXPIRY = 60;
 
+function redis_client() {
+	return require('../db').redis_client();
+}
+
 function Onegai() {
 	events.EventEmitter.call(this);
 }
@@ -135,7 +139,7 @@ O.client_message = function (client_id, msg) {
 };
 
 O.relay_client_messages = function () {
-	var r = require('../db').redis_client();
+	var r = redis_client();
 	r.psubscribe('client:*');
 	var self = this;
 	r.once('psubscribe', function () {
