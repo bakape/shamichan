@@ -1,4 +1,5 @@
-var cache = require('../server/state').dbCache,
+var config = require('./config'),
+    cache = require('../server/state').dbCache,
     events = require('events'),
     fs = require('fs'),
     Muggle = require('../etc').Muggle,
@@ -7,6 +8,7 @@ var cache = require('../server/state').dbCache,
     winston = require('winston');
 
 var IMG_EXPIRY = 60;
+var STANDALONE = !!config.DAEMON;
 
 function redis_client() {
 	return require('../db').redis_client();
@@ -21,6 +23,11 @@ exports.Onegai = Onegai;
 var O = Onegai.prototype;
 
 O.connect = function () {
+	if (STANDALONE) {
+		if (!global.imagerRedis)
+			global.imagerRedis = redis_client();
+		return global.imagerRedis;
+	}
 	return global.redis;
 };
 
