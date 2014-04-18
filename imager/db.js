@@ -1,5 +1,4 @@
 var config = require('./config'),
-    cache = require('../server/state').dbCache,
     events = require('events'),
     fs = require('fs'),
     Muggle = require('../etc').Muggle,
@@ -9,6 +8,8 @@ var config = require('./config'),
 
 var IMG_EXPIRY = 60;
 var STANDALONE = !!config.DAEMON;
+
+var ALLOC_CLEANUPS = {};
 
 function redis_client() {
 	return require('../db').redis_client();
@@ -35,7 +36,7 @@ O.disconnect = function () {};
 
 O.track_temporaries = function (adds, dels, callback) {
 	var m = this.connect().multi();
-	var cleans = cache.imageAllocCleanups;
+	var cleans = ALLOC_CLEANUPS;
 	var self = this;
 	if (adds && adds.length) {
 		m.sadd('temps', adds);
@@ -59,7 +60,7 @@ O.track_temporaries = function (adds, dels, callback) {
 
 // if an image doesn't get used in a post in a timely fashion, delete it
 O.cleanup_image_alloc = function (path) {
-	delete cache.imageAllocCleanups[path];
+	delete ALLOC_CLEANUPS[path];
 	var r = this.connect();
 	r.srem('temps', path, function (err, n) {
 		if (err)
@@ -131,7 +132,7 @@ exports.make_image_nontemporary = function (m, alloc) {
 	var key = 'image:' + alloc.id;
 	m.del(key);
 	m.del('lock:' + key);
-	var cleans = cache.imageAllocCleanups;
+	var cleans = ALLOC_CLEANUPS;
 	alloc.paths.forEach(function (path) {
 		if (path && path in cleans) {
 			clearTimeout(cleans[path]);
