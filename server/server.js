@@ -220,6 +220,8 @@ web.route_post(/^\/login$/, persona.login);
 web.route_post_auth(/^\/logout$/, persona.logout);
 if (config.DEBUG) {
 	/* Shortcuts for convenience */
+	winston.warn("Running in (insecure) debug mode.");
+	winston.warn("Do not use on the public internet.");
 	web.route_get(/^\/login$/, function (req, resp) {
 		persona.set_cookie(resp, {auth: 'Admin'});
 	});
