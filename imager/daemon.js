@@ -1,5 +1,4 @@
 var async = require('async'),
-    common = require('../common'),
     config = require('./config'),
     child_process = require('child_process'),
     etc = require('../etc'),
@@ -406,7 +405,7 @@ function convert(args, src, callback) {
 
 function perceptual_hash(src, image, callback) {
 	var tmp = path.join(config.MEDIA_DIRS.tmp,
-			'hash' + common.random_id() + '.gray');
+			'hash' + etc.random_id() + '.gray');
 	var args = [src + '[0]'];
 	if (image.dims.width > 1000 || image.dims.height > 1000)
 		args.push('-sample', '800x800');
@@ -569,7 +568,7 @@ IU.record_image = function () {
 		view.thumb = this.image.composite;
 	}
 	view.pinky = this.pinky;
-	var image_id = common.random_id().toFixed();
+	var image_id = etc.random_id().toFixed();
 	var alloc = {image: view, paths: image_files(this.image)};
 	this.db.record_image_alloc(image_id, alloc, function (err) {
 		if (err)

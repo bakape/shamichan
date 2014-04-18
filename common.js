@@ -751,6 +751,6 @@ exports.parse_name = function (name) {
 			secure.substr(0, 128)];
 };
 
-exports.random_id = function () {
+function random_id() {
 	return Math.floor(Math.random() * 1e16) + 1;
-};
+}

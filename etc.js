@@ -61,3 +61,8 @@ exports.checked_mkdir = function (dir, cb) {
 		cb(err && err.code == 'EEXIST' ? null : err);
 	});
 };
+
+// TEMP duplicated from common.js for imager daemon sanity
+exports.random_id = function () {
+	return Math.floor(Math.random() * 1e16) + 1;
+};
