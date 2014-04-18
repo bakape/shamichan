@@ -31,6 +31,10 @@ module.exports = {
 	/*
 	DAEMON: {
 		LISTEN_PORT: 9000,
+
+		// this doesn't have to (and shouldn't) be the same redis db
+		// as is used by the main doushio server.
+		REDIS_PORT: 6379,
 	},
 	*/
 };

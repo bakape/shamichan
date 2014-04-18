@@ -12,7 +12,12 @@ var STANDALONE = !!config.DAEMON;
 var ALLOC_CLEANUPS = {};
 
 function redis_client() {
-	return require('../db').redis_client();
+	if (STANDALONE) {
+		return require('redis').createClient(config.DAEMON.REDIS_PORT);
+	}
+	else {
+		return require('../db').redis_client();
+	}
 }
 
 function Onegai() {
