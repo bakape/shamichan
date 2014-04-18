@@ -583,6 +583,18 @@ IU.record_image = function () {
 	});
 };
 
+function run_daemon() {
+	if (!index.is_standalone())
+		throw new Error("Please enable DAEMON in imager/config.js");
+
+	var server = require('http').createServer(new_upload);
+	server.listen(config.DAEMON.LISTEN_PORT);
+
+	winston.info('Imager daemon listening on '
+			+ (config.DAEMON.LISTEN_HOST || '')
+			+ ':' + config.DAEMON.LISTEN_PORT + '.');
+}
+
 if (require.main == module) {
-	require('http').createServer(new_upload).listen(config.UPLOAD_PORT);
+	run_daemon();
 }

@@ -12,6 +12,7 @@ module.exports = {
 		tmp: 'imager/tmp',
 	},
 	MEDIA_URL: '../',
+	UPLOAD_URL: null,
 	PINKY_QUALITY: 50,
 	PINKY_DIMENSIONS: [125, 125],
 	THUMB_QUALITY: 50,
@@ -22,5 +23,14 @@ module.exports = {
 	SPOILER_IMAGES: {normal: [], trans: [4, 5, 6, 7, 8, 9, 10, 11]},
 	IMAGE_HATS: false,
 
-	UPLOAD_PORT: 9000,
+	// uncomment DAEMON if you will run `node imager/daemon.js` separately.
+	// if so, either
+	// 1) customize UPLOAD_URL above appropriately, or
+	// 2) configure your reverse proxy so that requests for /upload/
+	//    are forwarded to LISTEN_PORT.
+	/*
+	DAEMON: {
+		LISTEN_PORT: 9000,
+	},
+	*/
 };

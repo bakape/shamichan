@@ -20,7 +20,8 @@ var _ = require('../lib/underscore'),
     winston = require('winston');
 
 require('../admin');
-require('../imager/daemon');
+if (!imager.is_standalone())
+	require('../imager/daemon'); // preload and confirm it works
 if (config.CURFEW_BOARDS)
 	require('../curfew/server');
 try {
@@ -210,7 +211,10 @@ function redirect_thread(cb, num, op, tag) {
 		cb(null, 'redirect_js', '../' + tag + '/' + op + '#' + num);
 }
 
-web.route_post(/^\/upload\/$/, require('../imager/daemon').new_upload);
+// unless imager.config.DAEMON, we deal with image uploads in-process.
+if (!imager.is_standalone()) {
+	web.route_post(/^\/upload\/$/, require('../imager/daemon').new_upload);
+}
 
 web.resource(/^\/$/, function (req, cb) {
 	cb(null, 'redirect', config.DEFAULT_BOARD + '/');

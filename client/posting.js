@@ -1,4 +1,5 @@
 var saku, postForm;
+var imageUploadURL = imagerConfig.UPLOAD_URL || '../upload/';
 
 connSM.on('synced', postSM.feeder('sync'));
 connSM.on('dropped', postSM.feeder('desync'));
@@ -726,7 +727,7 @@ on_image_chosen: function () {
 	for (var k in extra)
 		$('<input type=hidden>').attr('name', k).val(extra[k]
 				).appendTo(this.uploadForm);
-	this.uploadForm.prop('action', '../upload/?id=' + CONN_ID);
+	this.uploadForm.prop('action', imageUploadURL + '?id=' + CONN_ID);
 	this.uploadForm.submit();
 	this.$iframe.load(function (event) {
 		if (!postForm)

@@ -155,4 +155,5 @@ exports.obtain_image_alloc = function (id, cb) {
 	});
 };
 
+exports.is_standalone = db.is_standalone;
 exports.make_image_nontemporary = db.make_image_nontemporary;

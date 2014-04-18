@@ -127,6 +127,8 @@ O.obtain_image_alloc = function (id, callback) {
 	});
 };
 
+exports.is_standalone = function () { return STANDALONE; };
+
 exports.make_image_nontemporary = function (m, alloc) {
 	// We should already hold the lock at this point.
 	var key = 'image:' + alloc.id;
