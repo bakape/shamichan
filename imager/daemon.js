@@ -49,8 +49,8 @@ IU.client_call = function (func, msg) {
 
 IU.handle_request = function (req, resp) {
 	if (req.method.toLowerCase() != 'post') {
-		resp.writeHead(400);
-		resp.end("Need an upload.");
+		resp.writeHead(405, {Allow: 'POST'});
+		resp.end();
 		return;
 	}
 	var query = req.query || urlParse(req.url, true).query;
