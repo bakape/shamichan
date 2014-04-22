@@ -46,8 +46,7 @@ O.track_temporaries = function (adds, dels, callback) {
 	if (adds && adds.length) {
 		m.sadd('temps', adds);
 		adds.forEach(function (add) {
-			cleans[add] = setTimeout(
-				self.cleanup_image_alloc.bind(self, add),
+			cleans[add] = setTimeout(self.del_temp.bind(self, add),
 				(IMG_EXPIRY+1) * 1000);
 		});
 	}
@@ -63,15 +62,32 @@ O.track_temporaries = function (adds, dels, callback) {
 	m.exec(callback);
 };
 
+O.del_temp = function (path) {
+	this.cleanup_image_alloc(path, function (err, deleted) {
+		if (err) {
+			winston.warn('unlink ' + path + ': '
+					+ err);
+		}
+	});
+};
+
 // if an image doesn't get used in a post in a timely fashion, delete it
-O.cleanup_image_alloc = function (path) {
+O.cleanup_image_alloc = function (path, cb) {
 	delete ALLOC_CLEANUPS[path];
 	var r = this.connect();
 	r.srem('temps', path, function (err, n) {
 		if (err)
 			return winston.warn(err);
-		if (n)
-			fs.unlink(path);
+		if (n) {
+			fs.unlink(path, function (err) {
+				if (err)
+					return cb(err);
+				cb(null, true);
+			});
+		}
+		else {
+			cb(null, false); // wasn't found
+		}
 	});
 };
 
@@ -134,9 +150,10 @@ O.obtain_image_alloc = function (id, callback) {
 
 exports.is_standalone = function () { return STANDALONE; };
 
-exports.make_image_nontemporary = function (m, alloc) {
+O.commit_image_alloc = function (alloc, cb) {
 	// We should already hold the lock at this point.
 	var key = 'image:' + alloc.id;
+	var m = this.connect().multi();
 	m.del(key);
 	m.del('lock:' + key);
 	var cleans = ALLOC_CLEANUPS;
@@ -147,6 +164,7 @@ exports.make_image_nontemporary = function (m, alloc) {
 			m.srem('temps', path);
 		}
 	});
+	m.exec(cb);
 };
 
 O.client_message = function (client_id, msg) {

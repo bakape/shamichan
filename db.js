@@ -555,7 +555,6 @@ Y.insert_post = function (msg, body, extra, callback) {
 		else
 			view.imgctr = 1;
 		note_hash(m, msg.image.hash, msg.num);
-		imager.make_image_nontemporary(m, extra.image_alloc);
 	}
 	m.hmset(key, view);
 	m.set(key + ':body', body);
@@ -599,6 +598,12 @@ Y.insert_post = function (msg, body, extra, callback) {
 
 	var self = this;
 	async.waterfall([
+	function (next) {
+		if (!msg.image)
+			return next(null);
+
+		imager.commit_image_alloc(extra.image_alloc, next);
+	},
 	function (next) {
 		if (ip) {
 			var n = post_volume(view, body);
@@ -1066,12 +1071,21 @@ Y.add_image = function (post, alloc, ip, callback) {
 	delete image.pinky;
 
 	var key = 'post:' + num;
-	var self = this;
 	r.exists(key, function (err, exists) {
 		if (err)
 			return callback(err);
 		if (!exists)
 			return callback(Muggle("Post does not exist."));
+
+		imager.commit_image_alloc(alloc, function (err) {
+			if (err)
+				return callback(err);
+			add_it();
+		});
+	});
+
+	var self = this;
+	function add_it() {
 		var m = r.multi();
 		note_hash(m, image.hash, post.num);
 		m.hmset(key, image);
@@ -1083,9 +1097,8 @@ Y.add_image = function (post, alloc, ip, callback) {
 		var now = Date.now();
 		var n = post_volume({image: true});
 		update_throughput(m, ip, now, post_volume({image: true}));
-		imager.make_image_nontemporary(m, alloc);
 		m.exec(callback);
-	});
+	}
 };
 
 Y.append_post = function (post, tail, old_state, extra, cb) {

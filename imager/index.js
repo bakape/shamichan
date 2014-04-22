@@ -155,5 +155,12 @@ exports.obtain_image_alloc = function (id, cb) {
 	});
 };
 
+exports.commit_image_alloc = function (alloc, cb) {
+	var o = new db.Onegai;
+	o.commit_image_alloc(alloc, function (err) {
+		o.disconnect();
+		cb(err);
+	});
+};
+
 exports.is_standalone = db.is_standalone;
-exports.make_image_nontemporary = db.make_image_nontemporary;
