@@ -9,8 +9,6 @@ var config = require('./config'),
 var IMG_EXPIRY = 60;
 var STANDALONE = !!config.DAEMON;
 
-var ALLOC_CLEANUPS = {};
-
 function redis_client() {
 	if (STANDALONE) {
 		return require('redis').createClient(config.DAEMON.REDIS_PORT);
@@ -41,23 +39,16 @@ O.disconnect = function () {};
 
 O.track_temporaries = function (adds, dels, callback) {
 	var m = this.connect().multi();
-	var cleans = ALLOC_CLEANUPS;
 	var self = this;
 	if (adds && adds.length) {
 		m.sadd('temps', adds);
 		adds.forEach(function (add) {
-			cleans[add] = setTimeout(self.del_temp.bind(self, add),
+			setTimeout(self.del_temp.bind(self, add),
 				(IMG_EXPIRY+1) * 1000);
 		});
 	}
 	if (dels && dels.length) {
 		m.srem('temps', dels);
-		dels.forEach(function (del) {
-			if (del in cleans) {
-				clearTimeout(cleans[del]);
-				delete cleans[del];
-			}
-		});
 	}
 	m.exec(callback);
 };
@@ -73,7 +64,6 @@ O.del_temp = function (path) {
 
 // if an image doesn't get used in a post in a timely fashion, delete it
 O.cleanup_image_alloc = function (path, cb) {
-	delete ALLOC_CLEANUPS[path];
 	var r = this.connect();
 	r.srem('temps', path, function (err, n) {
 		if (err)
@@ -156,14 +146,7 @@ O.commit_image_alloc = function (alloc, cb) {
 	var m = this.connect().multi();
 	m.del(key);
 	m.del('lock:' + key);
-	var cleans = ALLOC_CLEANUPS;
-	alloc.paths.forEach(function (path) {
-		if (path && path in cleans) {
-			clearTimeout(cleans[path]);
-			delete cleans[path];
-			m.srem('temps', path);
-		}
-	});
+	m.srem('temps', alloc.paths);
 	m.exec(cb);
 };
 
