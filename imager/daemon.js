@@ -580,6 +580,12 @@ IU.record_image = function () {
 			self.resp.end('OK');
 			self.resp = null;
 		}
+
+		if (index.is_standalone()) {
+			var where = alloc.paths[0];
+			var size = Math.ceil(view.size / 1000) + 'kb';
+			winston.info('upload: ' + where + ' ' + size);
+		}
 	});
 };
 
