@@ -115,7 +115,9 @@ function make_dir(base, key, cb) {
 }
 
 exports.make_media_dirs = function (cb) {
-	var keys = ['src', 'thumb', 'vint', 'dead', 'tmp'];
+	var keys = ['src', 'thumb', 'vint', 'dead'];
+	if (!is_standalone())
+		keys.push('tmp');
 	if (config.EXTRA_MID_THUMBNAILS)
 		keys.push('mid');
 	async.forEach(keys, make_dir.bind(null, null), function (err) {
@@ -163,4 +165,4 @@ exports.commit_image_alloc = function (alloc, cb) {
 	});
 };
 
-exports.is_standalone = db.is_standalone;
+var is_standalone = exports.is_standalone = db.is_standalone;
