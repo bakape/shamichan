@@ -113,6 +113,7 @@ function make_dir(base, key, cb) {
 	var dir = base ? path.join(base, key) : config.MEDIA_DIRS[key];
 	etc.checked_mkdir(dir, cb);
 }
+exports._make_media_dir = make_dir;
 
 exports.make_media_dirs = function (cb) {
 	var keys = ['src', 'thumb', 'vint', 'dead'];

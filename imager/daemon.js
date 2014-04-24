@@ -605,6 +605,8 @@ function run_daemon() {
 		fs.chmodSync(cd.LISTEN_PORT, '777'); // TEMP
 	}
 
+	index._make_media_dir(null, 'tmp', function (err) {});
+
 	winston.info('Imager daemon listening on '
 			+ (cd.LISTEN_HOST || '')
 			+ (is_unix_socket ? '' : ':')
