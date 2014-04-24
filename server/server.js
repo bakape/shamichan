@@ -1021,7 +1021,16 @@ if (config.DEBUG) {
 }
 
 function start_server() {
+	var is_unix_socket = (typeof config.LISTEN_PORT == 'string');
+	if (is_unix_socket) {
+		try { fs.unlinkSync(config.LISTEN_PORT); } catch (e) {}
+	}
 	web.server.listen(config.LISTEN_PORT, config.LISTEN_HOST);
+	if (is_unix_socket) {
+		fs.chmodSync(config.LISTEN_PORT, '777'); // TEMP
+	}
+
+
 	var sockjsPath = 'js/' + get_sockjs_script_sync();
 	var sockOpts = {
 		sockjs_url: imager.config.MEDIA_URL + sockjsPath,
@@ -1064,8 +1073,10 @@ function start_server() {
 
 	process.nextTick(non_daemon_pid_setup);
 
-	winston.info('Listening on ' + (config.LISTEN_HOST || '')
-			+ ':' + config.LISTEN_PORT + '.');
+	winston.info('Listening on '
+			+ (config.LISTEN_HOST || '')
+			+ (is_unix_socket ? '' : ':')
+			+ (config.LISTEN_PORT + '.'));
 }
 
 function hot_reloader() {

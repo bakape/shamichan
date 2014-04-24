@@ -593,12 +593,22 @@ function run_daemon() {
 	if (!index.is_standalone())
 		throw new Error("Please enable DAEMON in imager/config.js");
 
+	var cd = config.DAEMON;
+	var is_unix_socket = (typeof cd.LISTEN_PORT == 'string');
+	if (is_unix_socket) {
+		try { fs.unlinkSync(cd.LISTEN_PORT); } catch (e) {}
+	}
+
 	var server = require('http').createServer(new_upload);
-	server.listen(config.DAEMON.LISTEN_PORT);
+	server.listen(cd.LISTEN_PORT);
+	if (is_unix_socket) {
+		fs.chmodSync(cd.LISTEN_PORT, '777'); // TEMP
+	}
 
 	winston.info('Imager daemon listening on '
-			+ (config.DAEMON.LISTEN_HOST || '')
-			+ ':' + config.DAEMON.LISTEN_PORT + '.');
+			+ (cd.LISTEN_HOST || '')
+			+ (is_unix_socket ? '' : ':')
+			+ (cd.LISTEN_PORT + '.'));
 }
 
 if (require.main == module) {
