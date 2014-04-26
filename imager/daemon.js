@@ -46,21 +46,30 @@ IU.client_call = function (func, msg) {
 	this.db.client_message(this.client_id, {func: func, arg: msg});
 };
 
+IU.respond = function (code, msg) {
+	if (!this.resp)
+		return;
+	this.resp.writeHead(code, {
+		'Content-Type': 'text/plain',
+	});
+	this.resp.end(msg);
+	this.resp = null;
+};
+
 IU.handle_request = function (req, resp) {
 	if (req.method.toLowerCase() != 'post') {
 		resp.writeHead(405, {Allow: 'POST'});
 		resp.end();
 		return;
 	}
+	this.resp = resp;
 	var query = req.query || urlParse(req.url, true).query;
 	this.client_id = parseInt(query.id, 10);
 	if (!this.client_id || this.client_id < 1) {
-		resp.writeHead(400);
-		resp.end("Bad client ID.");
+		this.respond(400, "Bad client ID.");
 		return;
 	}
 
-	this.resp = resp;
 	var len = parseInt(req.headers['content-length'], 10);
 	if (len > 0 && len > config.IMAGE_FILESIZE_MAX + (20*1024))
 		return this.failure(Muggle('File is too large.'));
@@ -528,11 +537,7 @@ IU.failure = function (err) {
 	if (!(err instanceof Muggle))
 		winston.error(err);
 
-	if (this.resp) {
-		this.resp.writeHead(500, {'Content-Type': 'text/plain'});
-		this.resp.end(err_desc);
-		this.resp = null;
-	}
+	this.respond(500, err_desc);
 	if (!this.failed) {
 		this.client_call('upload_error', err_desc);
 		this.failed = true;
@@ -575,11 +580,7 @@ IU.record_image = function () {
 			return this.failure("Publishing failure.");
 		self.client_call('on_image_alloc', image_id);
 		self.db.disconnect();
-		if (self.resp) {
-			self.resp.writeHead(202);
-			self.resp.end('OK');
-			self.resp = null;
-		}
+		self.respond(202, 'OK');
 
 		if (index.is_standalone()) {
 			var where = alloc.paths[0];
