@@ -510,6 +510,21 @@ resize_input: function (val) {
 	$input.css('width', size + 'px');
 },
 
+dispatch: function (msg) {
+	var a = msg.arg;
+	switch (msg.t) {
+		case 'alloc':
+			this.on_image_alloc(a);
+			break;
+		case 'error':
+			this.upload_error(a);
+			break;
+		case 'status':
+			this.upload_status(a);
+			break;
+	}
+},
+
 upload_status: function (msg) {
 	if (this.model.get('cancelled'))
 		return;
@@ -782,6 +797,11 @@ render_spoiler_pane: function (model, sp) {
 },
 
 });
+
+dispatcher[IMAGE_STATUS] = function (msg) {
+	if (postForm)
+		postForm.dispatch(msg[0]);
+};
 
 function spoiler_pane_url(sp) {
 	return mediaURL + 'kana/spoil' + sp + '.png';

@@ -278,11 +278,6 @@ dispatcher[MOVE_THREAD] = function (msg, op) {
 		orig_focus.focus();
 };
 
-dispatcher[IMAGE_STATUS] = function (msg) {
-	if (postForm)
-		ComposerView.prototype[msg[0].func].call(postForm, msg[0].arg);
-};
-
 dispatcher[INSERT_IMAGE] = function (msg, op) {
 	var focus = get_focus();
 	var num = msg[0];

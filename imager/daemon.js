@@ -39,11 +39,11 @@ var IU = ImageUpload.prototype;
 var validFields = ['spoiler', 'op'];
 
 IU.status = function (msg) {
-	this.client_call('upload_status', msg);
+	this.client_call('status', msg);
 };
 
-IU.client_call = function (func, msg) {
-	this.db.client_message(this.client_id, {func: func, arg: msg});
+IU.client_call = function (t, msg) {
+	this.db.client_message(this.client_id, {t: t, arg: msg});
 };
 
 IU.respond = function (code, msg) {
@@ -539,7 +539,7 @@ IU.failure = function (err) {
 
 	this.respond(500, err_desc);
 	if (!this.failed) {
-		this.client_call('upload_error', err_desc);
+		this.client_call('error', err_desc);
 		this.failed = true;
 	}
 	if (this.image) {
@@ -578,7 +578,7 @@ IU.record_image = function () {
 	this.db.record_image_alloc(image_id, alloc, function (err) {
 		if (err)
 			return this.failure("Publishing failure.");
-		self.client_call('on_image_alloc', image_id);
+		self.client_call('alloc', image_id);
 		self.db.disconnect();
 		self.respond(202, 'OK');
 

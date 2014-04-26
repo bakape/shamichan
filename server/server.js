@@ -158,6 +158,8 @@ function setup_imager_relay(cb) {
 }
 
 function image_status(client_id, status) {
+	if (!check('id', client_id))
+		return;
 	var client = STATE.clients[client_id];
 	if (client) {
 		try {
