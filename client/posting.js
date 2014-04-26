@@ -523,6 +523,14 @@ upload_error: function (msg) {
 		this.uploadForm.find('input[name=alloc]').remove();
 },
 
+upload_finished_fallback: function () {
+	// this is just a fallback message for when we can't tell
+	// if there was an error due to cross-origin restrictions
+	var a = this.model.attributes;
+	if (!a.cancelled && a.uploading && !a.uploadStatus)
+		this.model.set('uploadStatus', 'Image transferred.');
+},
+
 insert_uploaded: function (info) {
 	var form = this.uploadForm, op = this.model.get('op');
 	insert_image(info, form.siblings('header'), !op);
@@ -735,13 +743,19 @@ on_image_chosen: function () {
 		var doc = this.contentWindow || this.contentDocument;
 		if (!doc)
 			return;
-		var error = $(doc.document || doc).text();
-		if (/^\s*OK\s*$/.test(error))
-			return;
-		/* sanity check for weird browser responses */
-		if (error.length < 5 || error.length > 100)
-			error = 'Unknown upload error.';
-		postForm.upload_error(error);
+		try {
+			var error = $(doc.document || doc).text();
+			if (/^\s*OK\s*$/.test(error))
+				return;
+			// sanity check for weird browser responses
+			if (error.length < 5 || error.length > 100)
+				error = 'Unknown upload error.';
+			postForm.upload_error(error);
+		}
+		catch (e) {
+			// likely cross-origin restriction
+			postForm.upload_finished_fallback();
+		}
 	});
 	this.notify_uploading();
 },
