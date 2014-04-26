@@ -1,5 +1,6 @@
 var saku, postForm;
 var imageUploadURL = imagerConfig.UPLOAD_URL || '../upload/';
+var UPLOADING_MSG = 'Uploading...';
 
 connSM.on('synced', postSM.feeder('sync'));
 connSM.on('dropped', postSM.feeder('desync'));
@@ -527,7 +528,8 @@ upload_finished_fallback: function () {
 	// this is just a fallback message for when we can't tell
 	// if there was an error due to cross-origin restrictions
 	var a = this.model.attributes;
-	if (!a.cancelled && a.uploading && !a.uploadStatus)
+	var stat = a.uploadStatus;
+	if (!a.cancelled && a.uploading && (!stat || stat == UPLOADING_MSG))
 		this.model.set('uploadStatus', 'Image transferred.');
 },
 
@@ -686,7 +688,7 @@ render_buttons: function () {
 },
 
 prep_upload: function () {
-	this.model.set('uploadStatus', 'Uploading...');
+	this.model.set('uploadStatus', UPLOADING_MSG);
 	this.$input.focus();
 	var attrs = this.model.attributes;
 	return {spoiler: attrs.spoiler, op: attrs.op || 0};
