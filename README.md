@@ -22,7 +22,8 @@ Production:
 Dependencies:
 
 * ImageMagick
-* node.js
+* libpng
+* node.js + npm
 * redis
 
 Optional npm deps for various features:
