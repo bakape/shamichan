@@ -512,8 +512,10 @@ function resize_image(o, comp, callback) {
 	// disregard metadata, acquire artifacts
 	args.push('-strip', '-quality', o.quality, comp ? o.compDest : o.dest);
 	convert(args, o.src, function (err) {
-		if (err)
+		if (err) {
+			winston.warn(err);
 			callback(Muggle("Resizing error.", err));
+		}
 		else
 			callback(null);
 	});
