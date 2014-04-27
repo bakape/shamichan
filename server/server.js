@@ -1127,19 +1127,22 @@ if (require.main == module) {
 			throw err;
 
 		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
-		var onegai = new imager.Onegai;
+		var onegai;
 		var writes = [];
 		if (!config.READ_ONLY) {
-			writes.push(
-				yaku.finish_all.bind(yaku),
-				onegai.delete_temporaries.bind(onegai)
-			);
+			writes.push(yaku.finish_all.bind(yaku));
+			if (!imager.is_standalone()) {
+				onegai = new imager.Onegai;
+				writes.push(onegai.delete_temporaries.bind(
+						onegai));
+			}
 		}
 		async.series(writes, function (err) {
 			if (err)
 				throw err;
 			yaku.disconnect();
-			onegai.disconnect();
+			if (onegai)
+				onegai.disconnect();
 			process.nextTick(start_server);
 		});
 	});

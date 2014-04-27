@@ -596,9 +596,6 @@ IU.record_image = function () {
 };
 
 function run_daemon() {
-	if (!index.is_standalone())
-		throw new Error("Please enable DAEMON in imager/config.js");
-
 	var cd = config.DAEMON;
 	var is_unix_socket = (typeof cd.LISTEN_PORT == 'string');
 	if (is_unix_socket) {
@@ -619,6 +616,15 @@ function run_daemon() {
 			+ (cd.LISTEN_PORT + '.'));
 }
 
-if (require.main == module) {
-	run_daemon();
-}
+if (require.main == module) (function () {
+	if (!index.is_standalone())
+		throw new Error("Please enable DAEMON in imager/config.js");
+
+	var onegai = new imagerDb.Onegai;
+	onegai.delete_temporaries(function (err) {
+		onegai.disconnect();
+		if (err)
+			throw err;
+		process.nextTick(run_daemon);
+	});
+})();
