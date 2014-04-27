@@ -761,7 +761,9 @@ on_image_chosen: function () {
 			return;
 		try {
 			var error = $(doc.document || doc).text();
-			if (/^\s*OK\s*$/.test(error))
+			// if it's a real response, it'll postMessage to us,
+			// so we don't have to do anything.
+			if (/legitimate imager response/.test(error))
 				return;
 			// sanity check for weird browser responses
 			if (error.length < 5 || error.length > 100)
@@ -806,6 +808,14 @@ dispatcher[IMAGE_STATUS] = function (msg) {
 	if (postForm)
 		postForm.dispatch(msg[0]);
 };
+
+window.addEventListener('message', function (event) {
+	var msg = event.data;
+	if (msg == 'OK')
+		return;
+	else if (postForm)
+		postForm.upload_error(msg);
+}, false);
 
 function spoiler_pane_url(sp) {
 	return mediaURL + 'kana/spoil' + sp + '.png';
