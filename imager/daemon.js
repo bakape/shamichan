@@ -54,7 +54,7 @@ IU.respond = function (code, msg) {
 		'Access-Control-Allow-Origin': config.MAIN_SERVER_ORIGIN,
 	});
 	this.resp.end('<!doctype html><title>Upload result</title>\n'
-		+ '<!-- magic string: "legitimate imager response" -->\n'
+		+ 'This is a legitimate imager response.\n'
 		+ '<script>\nparent.postMessage(' + JSON.stringify(msg)
 		+ ', ' + JSON.stringify(config.MAIN_SERVER_ORIGIN) + ');\n'
 		+ '</script>\n');
