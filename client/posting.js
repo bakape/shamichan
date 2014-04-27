@@ -1,5 +1,4 @@
 var saku, postForm;
-var imageUploadURL = imagerConfig.UPLOAD_URL || '../upload/';
 var UPLOADING_MSG = 'Uploading...';
 
 connSM.on('synced', postSM.feeder('sync'));
@@ -752,7 +751,7 @@ on_image_chosen: function () {
 	for (var k in extra)
 		$('<input type=hidden>').attr('name', k).val(extra[k]
 				).appendTo(this.uploadForm);
-	this.uploadForm.prop('action', imageUploadURL + '?id=' + CONN_ID);
+	this.uploadForm.prop('action', image_upload_url());
 	this.uploadForm.submit();
 	this.$iframe.load(function (event) {
 		if (!postForm)
@@ -797,6 +796,11 @@ render_spoiler_pane: function (model, sp) {
 },
 
 });
+
+function image_upload_url() {
+	var url = imagerConfig.UPLOAD_URL || '../upload/';
+	return url + '?id=' + CONN_ID
+}
 
 dispatcher[IMAGE_STATUS] = function (msg) {
 	if (postForm)
