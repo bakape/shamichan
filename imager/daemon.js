@@ -51,6 +51,7 @@ IU.respond = function (code, msg) {
 		return;
 	this.resp.writeHead(code, {
 		'Content-Type': 'text/plain',
+		'Access-Control-Allow-Origin': config.MAIN_SERVER_ORIGIN,
 	});
 	this.resp.end(msg);
 	this.resp = null;

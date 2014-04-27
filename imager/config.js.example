@@ -13,6 +13,11 @@ module.exports = {
 	},
 	MEDIA_URL: '../',
 	UPLOAD_URL: null,
+
+	// this should be the same as location.origin
+	// in your browser's javascript console
+	MAIN_SERVER_ORIGIN: 'http://localhost:8000',
+
 	PINKY_QUALITY: 50,
 	PINKY_DIMENSIONS: [125, 125],
 	THUMB_QUALITY: 50,
