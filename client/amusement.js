@@ -36,6 +36,8 @@ oneeSama.hook('insertOwnPost', function (extra) {
 	}
 });
 
+var bannerExtra = null; //$.parseHTML('<b>Other stream info</b>');
+
 dispatcher[UPDATE_BANNER] = function (msg, op) {
 	msg = msg[0];
 	if (!$banner) {
@@ -51,10 +53,19 @@ dispatcher[UPDATE_BANNER] = function (msg, op) {
 			$banner = $('<span id="banner"/>').insertAfter(dest);
 	}
 	if ($banner) {
-		if (Array.isArray(msg))
+		if (Array.isArray(msg)) {
 			construct_banner(msg);
-		else if (msg)
+			if (bannerExtra)
+				$banner.append(' / ', bannerExtra);
+		}
+		else if (msg) {
 			$banner.text(msg);
+			if (bannerExtra)
+				$banner.append(' / ', bannerExtra);
+		}
+		else if (bannerExtra) {
+			$banner.empty().append(bannerExtra);
+		}
 		else {
 			$banner.remove();
 			$banner = null;
