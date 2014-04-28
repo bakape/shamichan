@@ -72,6 +72,29 @@ hooks.hook_sync('inlinePost', function (info) {
 	});
 });
 
+function publish(alloc, cb) {
+	var mvs = [];
+	var haveComp = alloc.tmps.comp && alloc.image.realthumb;
+	for (var kind in alloc.tmps) {
+		var src = media_path('tmp', alloc.tmps[kind]);
+
+		// both comp and thumb go in thumb/
+		var destDir = (kind == 'comp') ? 'thumb' : kind;
+		// hack for stupid thumb/realthumb business
+		var destKey = kind;
+		if (haveComp) {
+			if (kind == 'thumb')
+				destKey = 'realthumb';
+			else if (kind == 'comp')
+				destKey = 'thumb';
+		}
+		var dest = media_path(destDir, alloc.image[destKey]);
+
+		mvs.push(etc.movex.bind(etc, src, dest));
+	}
+	async.parallel(mvs, cb);
+}
+
 hooks.hook("buryImage", function (info, callback) {
 	if (!info.src)
 		return callback(null);
@@ -159,10 +182,15 @@ exports.obtain_image_alloc = function (id, cb) {
 };
 
 exports.commit_image_alloc = function (alloc, cb) {
-	var o = new db.Onegai;
-	o.commit_image_alloc(alloc, function (err) {
-		o.disconnect();
-		cb(err);
+	publish(alloc, function (err) {
+		if (err)
+			return cb(err);
+
+		var o = new db.Onegai;
+		o.commit_image_alloc(alloc, function (err) {
+			o.disconnect();
+			cb(err);
+		});
 	});
 };
 

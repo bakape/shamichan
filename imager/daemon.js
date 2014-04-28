@@ -287,52 +287,28 @@ IU.got_nails = function () {
 	if (this.failed)
 		return;
 
-	this.status('Publishing...');
 	var image = this.image;
 	var time = Date.now();
 	image.src = time + image.ext;
-	var dest, mvs, pathUpdates = {};
-	var media_path = index.media_path, mv_file = etc.movex;
-	dest = media_path('src', image.src);
-	mvs = [mv_file.bind(null, image.path, dest)];
+	var media_path = index.media_path;
+	var base = path.basename;
+	var tmps = {src: base(image.path)};
 
 	if (this.haveNail) {
 		image.thumb = time + '.jpg';
-		var nail = media_path('thumb', image.thumb);
-		mvs.push(mv_file.bind(null, image.thumb_path, nail));
-		pathUpdates.thumb_path = nail;
+		tmps.thumb = base(image.thumb_path);
 	}
 	if (this.haveMiddle) {
 		image.mid = time + '.jpg';
-		var mid = media_path('mid', image.mid);
-		mvs.push(mv_file.bind(null, image.mid_path, mid));
-		pathUpdates.mid_path = mid;
+		tmps.mid = base(image.mid_path);
 	}
 	if (this.haveComp) {
 		image.composite = time + 's' + image.spoiler + '.jpg';
-		var comp = media_path('thumb', image.composite);
-		mvs.push(mv_file.bind(null, image.comp_path, comp));
-		pathUpdates.comp_path = comp;
+		tmps.comp = base(image.comp_path);
 		delete image.spoiler;
 	}
 
-	var self = this;
-	async.parallel(mvs, function (err, rs) {
-		if (err)
-			return self.failure(Muggle("Distro failure.", err));
-		var olds = [image.path];
-		var news = [dest];
-		image.path = dest;
-		for (var k in pathUpdates) {
-			image[k] = pathUpdates[k];
-			news.push(pathUpdates[k]);
-		}
-		self.db.track_temporaries(news, olds, function (err) {
-			if (err)
-				winston.warn("Tracking failure: " + err);
-			self.record_image();
-		});
-	});
+	this.record_image(tmps);
 };
 
 function composite_src(spoiler, pinky) {
@@ -566,7 +542,7 @@ IU.failure = function (err) {
 	this.db.disconnect();
 };
 
-IU.record_image = function () {
+IU.record_image = function (tmps) {
 	if (this.failed)
 		return;
 	var view = {};
@@ -581,16 +557,16 @@ IU.record_image = function () {
 	}
 	view.pinky = this.pinky;
 	var image_id = etc.random_id().toFixed();
-	var alloc = {image: view, paths: image_files(this.image)};
+	var alloc = {image: view, tmps: tmps};
 	this.db.record_image_alloc(image_id, alloc, function (err) {
 		if (err)
-			return this.failure("Publishing failure.");
+			return this.failure("Image storage failure.");
 		self.client_call('alloc', image_id);
 		self.db.disconnect();
 		self.respond(202, 'OK');
 
 		if (index.is_standalone()) {
-			var where = alloc.paths[0];
+			var where = view.src;
 			var size = Math.ceil(view.size / 1000) + 'kb';
 			winston.info('upload: ' + where + ' ' + size);
 		}
