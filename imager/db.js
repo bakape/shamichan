@@ -37,20 +37,22 @@ O.connect = function () {
 
 O.disconnect = function () {};
 
-O.track_temporaries = function (adds, dels, callback) {
-	var m = this.connect().multi();
+O.track_temporary = function (path, cb) {
+	var m = this.connect();
 	var self = this;
-	if (adds && adds.length) {
-		m.sadd('temps', adds);
-		adds.forEach(function (add) {
-			setTimeout(self.del_temp.bind(self, add),
+	m.sadd('temps', path, function (err, tracked) {
+		if (err)
+			return cb(err);
+		if (tracked > 0) {
+			setTimeout(self.del_temp.bind(self, path),
 				(IMG_EXPIRY+1) * 1000);
-		});
-	}
-	if (dels && dels.length) {
-		m.srem('temps', dels);
-	}
-	m.exec(callback);
+		}
+		cb(null);
+	});
+};
+
+O.lose_temporaries = function (files, cb) {
+	this.connect().srem('temps', files, cb);
 };
 
 O.del_temp = function (path) {

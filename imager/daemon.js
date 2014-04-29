@@ -138,7 +138,7 @@ IU.parse_form = function (err, fields, files) {
 	this.image.hash = null;
 
 	var self = this;
-	this.db.track_temporaries([this.image.path], null, function (err) {
+	this.db.track_temporary(this.image.path, function (err) {
 		if (err)
 			winston.warn("Temp tracking error: " + err);
 		self.process();
@@ -509,7 +509,7 @@ IU.resize_and_track = function (o, comp, cb) {
 		if (m)
 			fnm = m[1];
 
-		self.db.track_temporaries([fnm], null, cb);
+		self.db.track_temporary(fnm, cb);
 	});
 };
 
@@ -550,7 +550,7 @@ IU.failure = function (err) {
 						file + ": " + err);
 			});
 		});
-		this.db.track_temporaries(null, files, function (err) {
+		this.db.lose_temporaries(files, function (err) {
 			if (err)
 				winston.warn("Tracking failure: " + err);
 		});
