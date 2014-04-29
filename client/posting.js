@@ -544,7 +544,7 @@ upload_finished_fallback: function () {
 	var a = this.model.attributes;
 	var stat = a.uploadStatus;
 	if (!a.cancelled && a.uploading && (!stat || stat == UPLOADING_MSG))
-		this.model.set('uploadStatus', 'Image transferred.');
+		this.model.set('uploadStatus', 'Unknown result.');
 },
 
 insert_uploaded: function (info) {
@@ -772,7 +772,10 @@ on_image_chosen: function () {
 		}
 		catch (e) {
 			// likely cross-origin restriction
-			postForm.upload_finished_fallback();
+			// wait before erroring in case the message shows up
+			setTimeout(function () {
+				postForm.upload_finished_fallback();
+			}, 500);
 		}
 	});
 	this.notify_uploading();
