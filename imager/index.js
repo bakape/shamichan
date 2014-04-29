@@ -90,7 +90,7 @@ function publish(alloc, cb) {
 		}
 		var dest = media_path(destDir, alloc.image[destKey]);
 
-		mvs.push(etc.movex.bind(etc, src, dest));
+		mvs.push(etc.cpx.bind(etc, src, dest));
 	}
 	async.parallel(mvs, cb);
 }

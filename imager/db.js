@@ -146,7 +146,6 @@ O.commit_image_alloc = function (alloc, cb) {
 	var m = this.connect().multi();
 	m.del(key);
 	m.del('lock:' + key);
-	m.srem('temps', alloc.paths);
 	m.exec(cb);
 };
 
