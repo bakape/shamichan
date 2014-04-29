@@ -95,6 +95,21 @@ function publish(alloc, cb) {
 	async.parallel(mvs, cb);
 }
 
+function validate_alloc(alloc) {
+	if (!alloc || !alloc.image || !alloc.tmps)
+		return;
+	for (var dir in alloc.tmps) {
+		var fnm = alloc.tmps[dir];
+		if (!/^[\w_]+$/.test(fnm)) {
+			winston.warn("Suspicious filename: "
+					+ JSON.stringify(fnm));
+			return;
+		}
+	}
+	return true;
+}
+
+
 hooks.hook("buryImage", function (info, callback) {
 	if (!info.src)
 		return callback(null);
@@ -172,12 +187,17 @@ exports.squish_MD5 = function (hash) {
 	return hash.toString('base64').replace(/\//g, '_').replace(/=*$/, '');
 };
 
-/* Dumb forwards */
 exports.obtain_image_alloc = function (id, cb) {
 	var onegai = new db.Onegai;
 	onegai.obtain_image_alloc(id, function (err, alloc) {
 		onegai.disconnect();
-		cb(err, alloc);
+		if (err)
+			return cb(err);
+
+		if (validate_alloc(alloc))
+			cb(null, alloc);
+		else
+			cb("Invalid image alloc");
 	});
 };
 
