@@ -241,8 +241,8 @@ IU.deduped = function (err) {
 		specs.compDest = image.comp_path;
 		specs.compDims = specs.bound;
 		async.parallel([
-			resize_image.bind(null, specs, false),
-			resize_image.bind(null, specs, true),
+			self.resize_and_track.bind(self, specs, false),
+			self.resize_and_track.bind(self, specs, true),
 		], function (err) {
 			if (err)
 				return self.failure(err);
@@ -255,7 +255,7 @@ IU.deduped = function (err) {
 		if (!sp)
 			this.status('Thumbnailing...');
 
-		resize_image(specs, false, function (err) {
+		self.resize_and_track(specs, false, function (err) {
 			if (err)
 				return self.failure(err);
 
@@ -275,7 +275,7 @@ IU.middle_nail = function () {
 	this.fill_in_specs(specs, 'mid');
 
 	var self = this;
-	resize_image(specs, false, function (err) {
+	this.resize_and_track(specs, false, function (err) {
 		if (err)
 			self.failure(err);
 		self.haveMiddle = true;
@@ -496,6 +496,22 @@ function resize_image(o, comp, callback) {
 			callback(null);
 	});
 }
+
+IU.resize_and_track = function (o, comp, cb) {
+	var self = this;
+	resize_image(o, comp, function (err) {
+		if (err)
+			return cb(err);
+		var fnm = comp ? o.compDest : o.dest;
+
+		// HACK: strip IM type tag
+		var m = /^\w{3,4}:(.+)$/.exec(fnm);
+		if (m)
+			fnm = m[1];
+
+		self.db.track_temporaries([fnm], null, cb);
+	});
+};
 
 function image_files(image) {
 	var files = [];
