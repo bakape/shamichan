@@ -21,8 +21,12 @@ var server = require('http').createServer(function (req, resp) {
 	var ip = req.connection.remoteAddress;
 	if (config.TRUST_X_FORWARDED_FOR)
 		ip = parse_forwarded_for(req.headers['x-forwarded-for']) || ip;
-	if (!ip)
-		throw "No IP?!";
+	if (!ip) {
+		resp.writeHead(500, {'Content-Type': 'text/plain'});
+		resp.end("Your IP could not be determined. "
+				+ "This server is misconfigured.");
+		return;
+	}
 	req.ident = caps.lookup_ident(ip);
 	if (req.ident.timeout)
 		return timeout(resp);
