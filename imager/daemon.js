@@ -290,7 +290,6 @@ IU.got_nails = function () {
 	var image = this.image;
 	var time = Date.now();
 	image.src = time + image.ext;
-	var media_path = index.media_path;
 	var base = path.basename;
 	var tmps = {src: base(image.path)};
 
@@ -394,7 +393,7 @@ function convert(args, src, callback) {
 }
 
 function perceptual_hash(src, image, callback) {
-	var tmp = path.join(config.MEDIA_DIRS.tmp,
+	var tmp = index.media_path('tmp',
 			'hash' + etc.random_id() + '.gray');
 	var args = [src + '[0]'];
 	if (image.dims.width > 1000 || image.dims.height > 1000)
