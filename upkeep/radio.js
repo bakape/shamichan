@@ -143,12 +143,11 @@ function parse_icecast(input, cb) {
 	parser.parse(input);
 }
 
-var R_A_D_IO_POLL_URL = 'http://r-a-d.io/api.php';
+var R_A_D_IO_POLL_URL = 'http://r-a-d.io/api';
 
 function poll_r_a_d_io(cb) {
 	var opts = {
 		url: R_A_D_IO_POLL_URL,
-		qs: {q: 1, lp: 1},
 		json: true,
 	};
 	request.get(opts, function (err, resp, body) {
@@ -161,16 +160,18 @@ function poll_r_a_d_io(cb) {
 }
 
 function format_r_a_d_io(json) {
-	if (!json || !json.online)
+	if (!json || !json.main)
 		return null;
-	var info = extract_thread(json.thread);
+	var station = json.main;
+	var info = extract_thread(station.thread);
 	if (!info)
 		return null;
-	var count = parseInt(json.list, 10) || '???';
+	var count = station.listeners || '???';
 	count = count + ' listener' + (count == 1 ? '' : 's');
 	var msg = [{text: count, href: 'http://r-a-d.io/'}];
-	if (json.np && typeof json.np == 'string') {
-		var np = reduce_entities(json.np);
+
+	var np = station.np;
+	if (typeof np == 'string' && np) {
 		msg.push(': ' + np.slice(0, 100));
 	}
 	info.msg = msg;
