@@ -13,6 +13,8 @@ var async = require('async'),
     util = require('util'),
     winston = require('winston');
 
+var IMAGE_EXTS = ['.png', '.jpg', '.gif'];
+
 function new_upload(req, resp) {
 	var upload = new ImageUpload;
 	upload.handle_request(req, resp);
@@ -153,7 +155,7 @@ IU.process = function () {
 	image.ext = path.extname(filename).toLowerCase();
 	if (image.ext == '.jpeg')
 		image.ext = '.jpg';
-	if (['.png', '.jpg', '.gif'].indexOf(image.ext) < 0)
+	if (IMAGE_EXTS.indexOf(image.ext) < 0)
 		return this.failure(Muggle('Invalid image format.'));
 	image.imgnm = filename.substr(0, 256);
 
