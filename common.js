@@ -482,10 +482,11 @@ OS.gazou = function (info, toppu) {
 	}
 
 	var img = this.gazou_img(info, toppu);
+	var size = info.size ? readable_filesize(info.size) + ', ' : '';
 	var dims = info.dims[0] + 'x' + info.dims[1];
 
 	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
-		caption, safe(' <i>('), readable_filesize(info.size) + ', ',
+		caption, safe(' <i>('), size,
 		dims, (info.apng ? ', APNG' : ''),
 		this.full ? [', ', chibi(info.imgnm, img.src)] : '',
 		safe(')</i></figcaption>'),

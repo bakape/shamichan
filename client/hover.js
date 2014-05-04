@@ -25,16 +25,23 @@ function preview_miru(event, num) {
 		if (preview)
 			preview.remove();
 		var bits = post.children();
+		if (bits.find('video').length) {
+			preview = proper_preview(event, num);
+		}
+		else {
+			/* stupid hack, should be using views */
+			if (bits[0] && $(bits[0]).is('.select-handle'))
+				bits = bits.slice(1);
 
-		/* stupid hack, should be using views */
-		if (bits[0] && $(bits[0]).is('.select-handle'))
-			bits = bits.slice(1);
-
-		if (post.is('section'))
-			bits = bits.slice(0, 3);
-		preview = $('<div class="preview"/>').append(bits.clone());
+			if (post.is('section'))
+				bits = bits.slice(0, 3);
+			preview = $('<div class="preview"/>').append(
+					bits.clone());
+		}
 	}
 
+	if (!preview)
+		return false;
 	var overflow = position_preview(event, preview);
 
 	/* Add it to the page if it's new */
@@ -47,6 +54,23 @@ function preview_miru(event, num) {
 		previewNum = num;
 	}
 	return true;
+}
+
+function proper_preview(event, num) {
+	var model = Threads.get(num);
+	if (!model) {
+		var $s = $(event.target).closest('section');
+		if ($s.length)
+			model = Threads.lookup(num, extract_num($s));
+	}
+	if (!model)
+		return false;
+	// TEMP: OPs not extracted
+	if (!model.get('image'))
+		return false;
+
+	var article = new Article({model: model});
+	return $(article.render().el).addClass('preview');
 }
 
 function position_preview(event, $el) {
