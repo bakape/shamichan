@@ -32,15 +32,24 @@ function extract_post_model(el) {
 			src: $cap.children('a').text(),
 		};
 
-		/* guess for now */
-		image.thumb = image.src;
-
-		var m = $cap.find('i').text().match(
-				/^\(\d+ \w+, (\d+)x(\d+),/);
+		var $i = $cap.children('i');
+		var t = $i.length && $i[0].childNodes[0];
+		var m = /^\((?:[\d.]+ \w+, )?(\d+)x(\d+)/.exec(t && t.data);
 		if (m)
 			image.dims = [parseInt(m[1], 10), parseInt(m[2], 10)];
+		image.size = 0; // TODO
+		var $nm = $i.find('a');
+		image.imgnm = $nm.attr('title') || $nm.text() || '';
+
+		var $img = $fig.find('img');
+		image.thumb = $img.attr('src');
+		if (image.dims && $img.length) {
+			image.dims.push($img.width(), $img.height());
+		}
+
 		info.image = image;
 	}
+	info.body = ''; // TODO
 	if (mine[info.num])
 		info.mine = true;
 	return new Post(info);
