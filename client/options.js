@@ -300,6 +300,8 @@ function toggle_expansion(img, event) {
 	var href = img.parent().attr('href');
 	if (/^\.\.\/outbound\//.test(href))
 		return;
+	if (event.metaKey)
+		return;
 	event.preventDefault();
 	var expand = !img.data('thumbSrc');
 	if (expand)
