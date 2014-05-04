@@ -14,6 +14,12 @@ var async = require('async'),
     winston = require('winston');
 
 var IMAGE_EXTS = ['.png', '.jpg', '.gif'];
+if (config.WEBM) {
+	IMAGE_EXTS.push('.webm');
+	if (!config.DAEMON) {
+		console.warn("Please enable imager.config.DAEMON security.");
+	}
+}
 
 function new_upload(req, resp) {
 	var upload = new ImageUpload;
@@ -160,9 +166,78 @@ IU.process = function () {
 	image.imgnm = filename.substr(0, 256);
 
 	this.status('Verifying...');
+	if (image.ext == '.webm')
+		video_still(image.path, this.verify_webm.bind(this));
+	else
+		this.verify_image();
+};
+
+function video_still(src, cb) {
+	var dest = index.media_path('tmp', 'still_'+etc.random_id());
+	var args = ['-hide_banner', '-loglevel', 'info',
+			'-i', src,
+			'-f', 'image2', '-vframes', '1', '-vcodec', 'png',
+			'-y', dest];
+	var opts = {env: {AV_LOG_FORCE_NOCOLOR: '1'}};
+	child_process.execFile(ffmpegBin, args, opts,
+				function (err, stdout, stderr) {
+		var lines = stderr ? stderr.split('\n') : [];
+		var first = lines[0];
+		if (err) {
+			var msg = "Unknown video reading error.";
+			if (/no such file or directory/i.test(first))
+				msg = "Video went missing.";
+			else if (/invalid data found when/i.test(first))
+				msg = "Invalid video file.";
+			fs.unlink(dest, function (err) {
+				cb(Muggle(msg, stderr));
+			});
+			return;
+		}
+		var is_webm = /matroska,webm/i.test(first);
+		if (!is_webm) {
+			fs.unlink(dest, function (err) {
+				cb(Muggle('Video stream is not WebM.'));
+			});
+			return;
+		}
+
+		/* Could have false positives due to chapter titles. Bah. */
+		var has_audio = /audio:\s*vorbis/i.test(stderr);
+
+		cb(null, {
+			still_path: dest,
+			has_audio: has_audio,
+		});
+	});
+}
+
+IU.verify_webm = function (err, info) {
+	if (err)
+		return this.failure(err);
+	var self = this;
+	this.db.track_temporary(info.still_path, function (err) {
+		if (err)
+			winston.warn("Tracking error: " + err);
+
+		if (info.has_audio)
+			return self.failure(Muggle('Audio is not allowed.'));
+
+		// pretend it's a PNG for the next steps
+		var image = self.image;
+		image.video = image.path;
+		image.path = info.still_path;
+		image.ext = '.png';
+
+		self.verify_image();
+	});
+};
+
+IU.verify_image = function () {
+	var image = this.image;
 	this.tagged_path = image.ext.replace('.', '') + ':' + image.path;
 	var checks = {
-		stat: fs.stat.bind(fs, image.path),
+		stat: fs.stat.bind(fs, image.video || image.path),
 		dims: identify.bind(null, this.tagged_path),
 	};
 	if (image.ext == '.png')
@@ -226,7 +301,7 @@ IU.deduped = function (err) {
 	var sp = image.spoiler;
 	if (!sp && image.size < 30*1024
 			&& ['.jpg', '.png'].indexOf(image.ext) >= 0
-			&& !image.apng
+			&& !image.apng && !image.video
 			&& w <= specs.dims[0] && h <= specs.dims[1]) {
 		return this.got_nails();
 	}
@@ -290,6 +365,13 @@ IU.got_nails = function () {
 		return;
 
 	var image = this.image;
+	if (image.video) {
+		// stop pretending this is just a still image
+		image.path = image.video;
+		image.ext = '.webm';
+		delete image.video;
+	}
+
 	var time = Date.now();
 	image.src = time + image.ext;
 	var base = path.basename;
@@ -341,6 +423,11 @@ function which(name, callback) {
 var identifyBin, convertBin;
 which('identify', function (bin) { identifyBin = bin; });
 which('convert', function (bin) { convertBin = bin; });
+
+var ffmpegBin;
+if (config.WEBM) {
+	which('ffmpeg', function (bin) { ffmpegBin = bin; });
+}
 
 function identify(taggedName, callback) {
 	var m = taggedName.match(/^(\w{3,4}):/);

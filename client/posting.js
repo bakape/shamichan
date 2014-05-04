@@ -720,7 +720,8 @@ make_upload_form: function () {
 		click: $.proxy(this, 'cancel'),
 	});
 	this.$imageInput = $('<input>', {
-		type: 'file', id: 'image', name: 'image', accept: 'image/*',
+		type: 'file', id: 'image', name: 'image',
+		accept: imagerConfig.WEBM ? 'imager/*;.webm' : 'image/*',
 		change: $.proxy(this, 'on_image_chosen'),
 	});
 	this.$toggle = $('<input>', {

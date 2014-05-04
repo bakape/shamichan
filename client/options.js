@@ -277,7 +277,7 @@ option_high_res.id = 'nohighres';
 option_high_res.label = 'High-res expansions';
 option_high_res.type = 'revcheckbox';
 
-$DOC.on('mouseup', 'img', function (event) {
+$DOC.on('mouseup', 'img, video', function (event) {
 	/* Bypass expansion for non-left mouse clicks */
 	if (options.get('inlinefit') != 'none' && event.which > 1) {
 		var img = $(this);
@@ -288,7 +288,7 @@ $DOC.on('mouseup', 'img', function (event) {
 	}
 });
 
-$DOC.on('click', 'img', function (event) {
+$DOC.on('click', 'img, video', function (event) {
 	if (options.get('inlinefit') != 'none') {
 		var $target = $(this);
 		if (!$target.data('skipExpand'))
@@ -372,14 +372,17 @@ function expand_image($img) {
 		}
 	}
 
-	$img = $('<img>', {
+	$img.remove();
+	var video = /\.webm$/i.test(href);
+	$img = $(video ? '<video>' : '<img>', {
 		src: href,
 		width: w, height: h,
 		data: {
 			thumbWidth: tw, thumbHeight: th,
 			thumbSrc: $img.attr('src'),
 		},
-	}).replaceAll($img);
+		prop: video ? {autoplay: true, loop: true} : {},
+	}).appendTo(a);
 
 	var fit = options.get('inlinefit');
 	if (fit != 'none') {
