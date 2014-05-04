@@ -25,6 +25,7 @@ Dependencies:
 * libpng
 * node.js + npm
 * redis
+* ffmpeg 2.2+ if supporting WebM
 
 Optional npm deps for various features:
 
