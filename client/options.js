@@ -37,6 +37,7 @@ if (window.devicePixelRatio > 1)
 	optSpecs.push(option_high_res);
 optSpecs.push(option_thumbs);
 optSpecs.push(option_backlinks);
+optSpecs.push(option_spoiler);
 optSpecs.push(option_reply_at_right);
 optSpecs.push(option_theme);
 optSpecs.push(option_last_n);
@@ -261,6 +262,17 @@ var load_thread_backlinks = function ($section) {
 		add_post_links(src, update, op);
 	});
 };
+
+/* SPOILER TOGGLE */
+
+
+function option_spoiler(spoilertoggle) {
+	$.cookie('spoil',spoilertoggle);
+	oneeSama.spoilToggle = spoilertoggle;
+}
+option_spoiler.id = 'nospoilertoggle';
+option_spoiler.label = 'Spoilered Images';
+option_spoiler.type = 'revcheckbox';
 
 /* INLINE EXPANSION */
 

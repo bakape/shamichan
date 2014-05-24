@@ -55,10 +55,17 @@ var Section = Backbone.View.extend({
 
 	renderSpoiler: function (model, spoiler) {
 		var $img = this.$el.children('figure').find('img');
+		var $spoiltag = this.$el.children('figure').find('i');
 		var sp = oneeSama.spoiler_info(spoiler, true);
-		$img.replaceWith($('<img>', {
-			src: sp.thumb, width: sp.dims[0], height: sp.dims[1],
-		}));
+		if (oneeSama.spoilToggle) {
+			$fcap.textContent.prepend('[Spoilered Image] ');
+		}
+		else
+		{
+			$img.replaceWith($('<img>', {
+				src: sp.thumb, width: sp.dims[0], height: sp.dims[1],
+			}));
+		}
 	},
 
 	remove: function () {
@@ -145,11 +152,18 @@ var Article = Backbone.View.extend({
 
 	renderSpoiler: function (model, spoiler) {
 		var $img = this.$('figure').find('img');
+		var $spoiltag = this.$el.children('figure').find('i');
 		var sp = oneeSama.spoiler_info(spoiler, false);
-		$img.replaceWith($('<img>', {
-			src: sp.thumb,
-			width: sp.dims[0], height: sp.dims[1],
-		}));
+		if (oneeSama.spoilToggle) {
+			$fcap.textContent.prepend('[Spoilered Images] ');
+		}
+		else
+		{
+			$img.replaceWith($('<img>', {
+				src: sp.thumb,
+				width: sp.dims[0], height: sp.dims[1],
+			}));
+		}
 	},
 });
 

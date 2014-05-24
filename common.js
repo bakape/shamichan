@@ -490,12 +490,14 @@ OS.gazou = function (info, toppu) {
 	}
 
 	var img = this.gazou_img(info, toppu);
+	var size = info.size ? readable_filesize(info.size) + ', ' : '';
 	var dims = info.dims[0] + 'x' + info.dims[1];
 
 	return [safe('<figure data-MD5="'), info.MD5,
 		safe('" data-size="'), info.size, safe('"><figcaption>'),
 		caption, safe(' <i>('),
 		info.audio ? (audioIndicator + ', ') : '',
+		(spoilertoggle && (info.spoiler || info.realthumb) ? '[Spoilered Image] ' : ''),
 		readable_filesize(info.size), ', ',
 		dims, (info.apng ? ', APNG' : ''),
 		this.full ? [', ', chibi(info.imgnm, img.src)] : '',
@@ -509,12 +511,13 @@ exports.thumbStyles = ['small', 'sharp', 'large', 'hide'];
 OS.gazou_img = function (info, toppu) {
 	var src, thumb;
 	var imgPaths = this.image_paths();
+	var spoilertoggle = (this.spoilToggle == true);
 	if (!info.vint)
 		src = thumb = encodeURI(imgPaths.src + info.src);
 
 	var d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
-	if (info.spoiler) {
+	if (info.spoiler && !spoilertoggle) {
 		var sp = this.spoiler_info(info.spoiler, toppu);
 		thumb = sp.thumb;
 		tw = sp.dims[0];
@@ -531,6 +534,15 @@ OS.gazou_img = function (info, toppu) {
 		if (!toppu && this.thumbStyle == 'large') {
 			tw *= 2;
 			th *= 2;
+		}
+	}
+	else if (spoilertoggle && info.realthumb) {
+		thumb = encodeURI(imgPaths.thumb + info.realthumb);
+		if (w > h) {
+			th = Math.round(tw/w*h);
+		}
+		else {
+			tw = Math.round(th/h*w);
 		}
 	}
 	else if (info.thumb)

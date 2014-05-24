@@ -515,10 +515,12 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		var headers;
 		if (!config.DEBUG && preThread.hctr) {
 			var etag = 'W/' + preThread.hctr + '-' + RES.indexHash;
-
+			var chunks = web.parse_cookie(req.headers.cookie);
 			var thumb = req.cookies.thumb;
 			if (thumb && common.thumbStyles.indexOf(thumb) >= 0)
 				etag += '-' + thumb;
+			if (chunks.spoil == 'true' || chunks.spoil == 'false')
+				etag += '-sp_' + chunks.spoil;
 			if (lastN)
 				etag += '-last' + lastN;
 			if (preThread.locked)
