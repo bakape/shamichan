@@ -476,6 +476,7 @@ var audioIndicator = "\u266B"; // musical note
 
 OS.gazou = function (info, toppu) {
 	var src, name, caption;
+	var spoilertoggle = (this.spoilToggle == true);
 	if (info.vint) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
 		var google = encodeURI('../outbound/g/' + info.vint);
