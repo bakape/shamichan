@@ -18,6 +18,7 @@ Production:
 * Run `node server/server.js` for just the server
 * config.DAEMON support is broken for now
 * You can update client code & hot.js on-the-fly with `node server/kill.js`
+* If you plan to host with Nginx, refer to nginx.config.example for a sample configuration
 
 Dependencies:
 
