@@ -1,6 +1,6 @@
 # Requires nginx >=1.3.13. This is a basic configuration that will work.
 # For performance optimisations refer to the Nginx documentation.
-# Place this file under sites-enabled in your Ngingx config root.
+# Place this file under sites-enabled/ in your Ngingx config root.
 
 upstream node {
         # Address of the doushio node.js server
@@ -8,18 +8,6 @@ upstream node {
 }
 
 access_log /var/log/nginx/doushio.log;
-
-# Separate virtual server for serving static content. Requires "SERVE_STATIC_FILES: false," in ./config.js
-server {
-        # Port or IP:port for the virtual server
-        listen 8080;
-        # Set MEDIA_URL in ./imager/config.js to correspond to this address:port/address
-        server_name static.mydomain.com;
-
-        location / {
-                root /path/to/doushio/www/;
-        }
-}
 
 server {
         # Address the website will be hosted on
@@ -31,7 +19,7 @@ server {
         # If you are reverse proxying the node.js server directly to mydomain.com/ , you will
         # need this for the favicon to bypass the reverse proxy. Place the favicon in ./www
         location = /favicon.ico {
-                return http://static.mydomain.com:8080/favicon.ico;
+                alias http://mydomain.com/static/favicon.ico;
         }
         
         # Address your doushio image board will be hosted on. "/" = "mydomain.com/"
@@ -45,5 +33,11 @@ server {
                 proxy_http_version 1.1;
                 proxy_set_header Upgrade $http_upgrade;
                 proxy_set_header Connection "upgrade";
+        }
+        
+        # Address for serving static files. Requires "SERVE_STATIC_FILES: false," in ./config.js
+        # Set MEDIA_URL in ./imager/config.js to 'http://mydomain.com/static/' The trailing "/" is important.
+        location /static/ {
+                alias /path/to/doushio/www/;
         }
 }
