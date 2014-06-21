@@ -19,7 +19,7 @@ server {
         # If you are reverse proxying the node.js server directly to mydomain.com/ , you will
         # need this for the favicon to bypass the reverse proxy. Place the favicon in ./www
         location = /favicon.ico {
-                alias http://mydomain.com/static/favicon.ico;
+                return http://mydomain.com/static/favicon.ico;
         }
         
         # Address your doushio image board will be hosted on. "/" = "mydomain.com/"
