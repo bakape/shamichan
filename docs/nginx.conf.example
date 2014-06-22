@@ -24,8 +24,8 @@ server {
 
 	# You can forward various root-directory static files here.
 	root /path/to/doushio/www/;
-	location = /favicon.ico {};
-	location = /robots.txt {};
+	location = /favicon.ico {}
+	location = /robots.txt {}
 
 	# Handles static assets (images, JS, CSS, etc.)
 	# Requires "SERVE_STATIC_FILES: false" in ./config.js
