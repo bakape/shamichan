@@ -557,7 +557,10 @@ function (req, resp) {
 	var board = this.board, op = this.op;
 
 	resp = write_gzip_head(req, resp, this.headers);
-	render.write_thread_head(resp, board, op, this.subject, this.abbrev);
+	render.write_thread_head(resp, board, op, {
+		subject: this.subject,
+		abbrev: this.abbrev,
+	});
 
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
 	render.write_thread_html(this.reader, req, resp, opts);
