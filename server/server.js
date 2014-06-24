@@ -630,7 +630,7 @@ web.resource(/^\/outbound\/(g|iqdb)\/([\w+\/]{22}\.jpg)$/,
 });
 
 web.resource(/^\/outbound\/hash\/([\w+\/]{22})$/, function (req, params, cb) {
-	var dest = 'http://archive.foolz.us/search/image/' + escape(params[1]);
+	var dest = 'http://archive.foolz.us/_/search/image/' + escape(params[1]);
 	cb(null, 303.1, dest);
 });
 
