@@ -30,7 +30,7 @@ req.onreadystatechange = function () {
 	jump(thread, post);
 };
 function jump(thread, post) {
-	var href = 'http://boards.4chan.org/a/res/'+thread;
+	var href = 'http://boards.4chan.org/a/thread/'+thread;
 	if (post)
 		href = href + '#p' + post;
 	if (document.location.replace)

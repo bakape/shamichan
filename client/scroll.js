@@ -74,8 +74,13 @@ oneeSama.hook('menuOptions', function (info) {
 		opts.splice(opts.indexOf('Focus'), 1, 'Unfocus');
 });
 
+Backbone.on('hide', function (model) {
+	if (model && model.id == lockTarget)
+		set_lock_target(null);
+});
+
 var at_bottom = function() {
-	return window.scrollY + window.innerHeight >= $DOC.height();
+	return window.scrollY + window.innerHeight >= $DOC.height() - 5;
 }
 if (window.scrollMaxY !== undefined)
 	at_bottom = function () {

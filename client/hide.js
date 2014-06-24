@@ -17,6 +17,7 @@ oneeSama.hook('menuOptions', function (info) {
 menuHandlers.Hide = function (model, $post) {
 	Hidden.write(model.id, Hidden.now());
 	model.set('hide', true);
+	Backbone.trigger('hide', model); // bit of a hack...
 };
 
 /* Options menu clear control */

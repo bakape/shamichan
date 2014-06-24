@@ -104,11 +104,11 @@ exports.write_board_head = function (out, board, nav) {
 	out.write(indexTmpl[i++]);
 };
 
-exports.write_thread_head = function (out, board, op, subject, abbrev) {
+exports.write_thread_head = function (out, board, op, opts) {
 	var indexTmpl = RES.indexTmpl;
 	var title = '/'+escape(board)+'/ - ';
-	if (subject)
-		title += escape(subject) + ' (#' + op + ')';
+	if (opts.subject)
+		title += escape(opts.subject) + ' (#' + op + ')';
 	else
 		title += '#' + op;
 	var metaDesc = "Real-time imageboard thread";
@@ -119,7 +119,7 @@ exports.write_thread_head = function (out, board, op, subject, abbrev) {
 	out.write(indexTmpl[i++]);
 	out.write(escape(metaDesc));
 	out.write(indexTmpl[i++]);
-	out.write(make_thread_meta(board, op, abbrev));
+	out.write(make_thread_meta(board, op, opts.abbrev));
 	out.write(indexTmpl[i++]);
 	if (RES.navigationHtml)
 		out.write(RES.navigationHtml);

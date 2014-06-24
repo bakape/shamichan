@@ -137,7 +137,9 @@ function dump_thread(op, board, ident, outputs, cb) {
 		var authDumper = new AuthDumper(reader, outputs.auth);
 
 		var out = outputs.html;
-		render.write_thread_head(out, board, op, preThread.subject);
+		render.write_thread_head(out, board, op, {
+			subject: preThread.subject,
+		});
 
 		var fakeReq = {ident: ident, headers: {}};
 		var opts = {fullPosts: true, board: board};
