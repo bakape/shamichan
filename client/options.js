@@ -127,6 +127,7 @@ var themes = [
 	'console',
 	'tea',
 	'higan',
+    'rave',
 ];
 var globalVersion = 8;
 
