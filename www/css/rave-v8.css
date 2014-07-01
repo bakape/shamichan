@@ -6,11 +6,11 @@ a:hover, blockquote a, .email b:hover, article.editing a:hover {
 }
 article, aside, .modal, .pagination {
 	background-image: url(rave_bg.gif);
-	opacity: 0.75;
+	opacity: 0.9;
 }
 article.highlight, .preview, .popup-menu {
 	background-image: url(rave_bg.gif);
-	opacity: 0.75;
+	opacity: 0.9;
 }
 article.editing {
 	background-color: #cec952;
