@@ -219,10 +219,10 @@ IU.verify_webm = function (err, info) {
 	this.db.track_temporary(info.still_path, function (err) {
 		if (err)
 			winston.warn("Tracking error: " + err);
-
+        /*
 		if (info.has_audio)
 			return self.failure(Muggle('Audio is not allowed.'));
-
+        */
 		// pretend it's a PNG for the next steps
 		var image = self.image;
 		image.video = image.path;

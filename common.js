@@ -647,7 +647,7 @@ OS.atama = function (data) {
 	if (data.trip)
 		header.push(safe('<code>' + data.trip + '</code>'));
 	if (auth)
-		header.push(' ## ' + auth);
+		header.push(' ## Mahou Shoujo');
 	this.trigger('headerName', {header: header, data: data});
 	header.push(safe('</b>'));
 	if (data.email) {
