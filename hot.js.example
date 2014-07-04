@@ -22,4 +22,8 @@ this.hot = {
 	SPECIAL_TRIPCODES: {
 		kyubey: "／人◕ ‿‿ ◕人＼",
 	},
+    
+    SPECIAL_NAME_TRIPCODES: {
+        name: "!tripcode",
+    },
 };
