@@ -336,12 +336,36 @@ OS.karada = function (body) {
 	return output;
 }
 
-var dice_re = /(#flip|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
+var dice_re = /(#flip|#8ball|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
 exports.dice_re = dice_re;
+
+var eight_ball = [
+    "Yes",
+    "No",
+    "Maybe",
+    "You're waifu a shit",
+    "It can't be helped",
+    "You'll have to use THAT",
+    "The purest form of love",
+    "Pls no bully",
+    "Lurk more",
+    "Go whine in the IRC",
+    "Google it",
+    "Hell yeah, motherfucker",
+    "Best Girl",
+    "Give her the D",
+    "Become the little girl",
+    "Objectively shit",
+    ">>>/d/",
+    'Ara ara',
+    "That is my fetish",
+];
 
 function parse_dice(frag) {
 	if (frag == '#flip')
 		return {n: 1, faces: 2};
+    if (frag == '#8ball')
+        return {n: 1, faces: eight_ball.length};
 	var m = frag.match(/^#(\d*)d(\d+)([+-]\d+)?$/i);
 	if (!m)
 		return false;
@@ -358,6 +382,8 @@ exports.parse_dice = parse_dice;
 function readable_dice(bit, d) {
 	if (bit == '#flip')
 		return '#flip (' + (d[1] == 2) + ')';
+    if (bit == '#8ball')
+        return '#8ball (' + eight_ball[d[1]- 1] + ')';
 	var f = d[0], n = d.length, b = 0;
 	if (d[n-1] && typeof d[n-1] == 'object') {
 		b = d[n-1].bias;
