@@ -1,16 +1,19 @@
 a, blockquote a:hover, b.moderator {
 	color: #ef9d6a;
 }
+a#options, span#sync, a#feedback{
+    color: white;
+}
 a:hover, blockquote a, .email b:hover, article.editing a:hover {
 	color: #ef9d6a;
 }
 article, aside, .modal, .pagination {
 	background: url(wood.jpg);
-    color: #ecc390;
+    color: white;
 }
 article.highlight, .preview, .popup-menu {
 	background: url(wood.jpg);
-    color: #ecc390;
+    color: white;
 }
 article.editing {
 	background:
@@ -19,19 +22,19 @@ article.editing {
            rgba(239, 157, 106, 0.25)
         ),
         url(wood.jpg);
-	color: #ecc390;
+	color: white;
 }
 article.editing a, article.editing header {
-	color: #ecc390;
+	color: white;
 }
 article.editing em {
 	color: #B7BA3E;
 }
 article.editing li {
-	color: #ecc390;
+	color: white;
 }
 article.editing .themed {
-	color: #ecc390;
+	color: white;
 }
 b.admin {
 	color: #f00000;
@@ -46,29 +49,32 @@ body, pre, .themed {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
     text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+    color:white
 }
 .embed {
 	background-color: white;
 }
 em {
-	color: #B7BA3E;
-    
+	color: #B7BA3E;   
 }
 h1 {
 	font: bolder 28px Tahoma;
 	letter-spacing: -2px;
+    color: white;
 }
 h2 {
 	font-family: Tahoma;
+    color: white;
 }
 h3 {
-	color: #ce52c9;
+	color: white;
 }
 hr {
 	border-top: 1px solid #282a2e;
 }
 .popup-menu li:hover {
 	background-color: #136;
+    color: white;
 }
 .act:before {
 	content: "[";
@@ -77,13 +83,13 @@ hr {
 	content: "]";
 }
 .omit {
-	color: #ecc390;
+	color: white;
 }
 #lock, .scroll-lock header {
 	background-image: url('ui/invlock.png');
 }
 .themed {
-	color: #ecc390;
+	color: white;
 }
 
 @media screen and (-webkit-min-device-pixel-ratio: 1.5),
