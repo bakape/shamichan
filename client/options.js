@@ -128,6 +128,7 @@ var themes = [
 	'tea',
 	'higan',
     'rave',
+    'tavern',
 ];
 var globalVersion = 8;
 
