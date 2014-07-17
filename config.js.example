@@ -38,6 +38,27 @@ var config = {
 	IP_MNEMONIC: true,
 
 	VOICE_PATH: 'voice',
+
+    EIGHT_BALL: [
+        "Yes",
+        "No",
+        "Maybe",
+        "You're waifu a shit",
+        "It can't be helped",
+        "You'll have to use THAT",
+        "The purest form of love",
+        "Pls no bully",
+        "Lurk more",
+        "Go whine in the IRC",
+        "Google it",
+        "Hell yeah, motherfucker",
+        "Best Girl",
+        "Give her the D",
+        "Become the little girl",
+        ">>>/d/",
+        'Ara ara',
+        "That is my fetish",
+    ],
 };
 
 module.exports = config;

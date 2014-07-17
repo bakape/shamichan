@@ -339,27 +339,7 @@ OS.karada = function (body) {
 var dice_re = /(#flip|#8ball|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
 exports.dice_re = dice_re;
 
-var eight_ball = [
-    "Yes",
-    "No",
-    "Maybe",
-    "You're waifu a shit",
-    "It can't be helped",
-    "You'll have to use THAT",
-    "The purest form of love",
-    "Pls no bully",
-    "Lurk more",
-    "Go whine in the IRC",
-    "Google it",
-    "Hell yeah, motherfucker",
-    "Best Girl",
-    "Give her the D",
-    "Become the little girl",
-    "Objectively shit",
-    ">>>/d/",
-    'Ara ara',
-    "That is my fetish",
-];
+var eight_ball = config.EIGHT_BALL;
 
 function parse_dice(frag) {
 	if (frag == '#flip')
