@@ -48,8 +48,6 @@ do_reload()
         su -l $USER -c "cd $DOUSHIO_DIR; /usr/bin/node server/server/kill.js"
 }
 
-alias do_restart='do_start'
-
 case "$1" in
     start)
     echo "Starting $DESC"
@@ -60,13 +58,13 @@ stop)
     echo "Stopping $DESC"
     do_stop
     ;;
-
 restart)
     echo "Restarting $DESC"
-    do_restart
+	do_start
     ;;
 reload)
     echo "Reloading $DESC"
+	do_reload
     ;;
 *)
     echo "Usage: $SCRIPTNAME {start|stop|reload|restart}" >&2
