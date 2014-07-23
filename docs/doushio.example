@@ -9,7 +9,6 @@
 # Description:       Custom init wrapper script for the doushio image board node.js server
 ### END INIT INFO
 
-# PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="doushio image board node.js server"
 NAME=doushio
@@ -33,7 +32,7 @@ do_start()
         cd $DOUSHIO_DIR; /usr/bin/node server/server.js 1>/dev/null  2>>$LOG &
         echo \$! > doushio.pid
         node archive/daemon.js 1>/dev/null 2>>$LOG &
-        node upkeep/radio.js --r-a-dio 1>/dev/null 2>>$LOG & " $USER
+        node upkeep/radio.js --r-a-d-io 1>/dev/null 2>>$LOG & " $USER
         cat ${DOUSHIO_DIR}/doushio.pid > $PIDFILE
 }
 
@@ -45,15 +44,14 @@ do_stop()
 
 do_reload()
 {
-        su -l $USER -c "cd $DOUSHIO_DIR; /usr/bin/node server/server/kill.js"
+        su -l $USER -c "cd $DOUSHIO_DIR; /usr/bin/node server/kill.js"
 }
 
 case "$1" in
-    start)
+start)
     echo "Starting $DESC"
     do_start
     ;;
-
 stop)
     echo "Stopping $DESC"
     do_stop
