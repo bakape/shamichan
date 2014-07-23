@@ -45,7 +45,7 @@ do_stop()
 
 do_reload()
 {
-        su -l $USER -c "cd $DOUSHIO_DIR; /usr/bin/node server/server/kill.js"
+        su -l $USER -c "cd $DOUSHIO_DIR; /usr/bin/node server/kill.js"
 }
 
 case "$1" in
