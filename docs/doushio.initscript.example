@@ -1,0 +1,74 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          doushio
+# Required-Start:    redis-server
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Custom init wrapper script for the doushio image board node.js server
+# Description:       Custom init wrapper script for the doushio image board node.js server
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="doushio image board node.js server"
+NAME=doushio
+USER=doushio
+DOUSHIO_DIR=/home/${USER}/server
+NODE=/usr/bin/node
+DAEMON=${DOUSHIO_DIR}/server/server.js
+SCRIPTNAME=/etc/init.d/$NAME
+LOG=/var/log/doushio.error.log
+
+do_start()
+{
+    if ps -p $(cat ${DOUSHIO_DIR}/doushio.pid) >/dev/null; then
+        do_stop
+    fi
+    if [ ! -f $LOG ]; then
+        touch $LOG
+        chown $USER $LOG
+    fi
+    su -l $USER -c "echo [`date -u +%Y-%m-%dT%T.%3NZ`] Starting >> $LOG
+    cd $DOUSHIO_DIR
+    $NODE server/server.js 1>/dev/null 2>>$LOG &
+    echo \$! > doushio.pid
+    $NODE archive/daemon.js 1>/dev/null 2>>$LOG &
+    echo \$! > doushio.archive.pid" $USER
+}
+
+do_stop()
+{
+    kill $(cat ${DOUSHIO_DIR}/doushio.archive.pid)
+    kill $(cat ${DOUSHIO_DIR}/doushio.pid)
+    su -l $USER -c "echo [`date -u +%Y-%m-%dT%T.%3NZ`] Stopping >> $LOG"
+}
+
+do_reload()
+{
+    su -l $USER -c "cd $DOUSHIO_DIR; $NODE server/kill.js --pid doushio.pid"
+}
+
+case "$1" in
+start)
+    echo "Starting $DESC"
+    do_start
+    ;;
+stop)
+    echo "Stopping $DESC"
+    do_stop
+    ;;
+restart)
+    echo "Restarting $DESC"
+    do_start
+    ;;
+reload)
+    echo "Reloading $DESC"
+    do_reload
+    ;;
+*)
+    echo "Usage: $SCRIPTNAME {start|stop|reload|restart}" >&2
+    exit 3
+    ;;
+esac
+
+:
