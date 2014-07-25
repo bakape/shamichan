@@ -36,7 +36,7 @@ oneeSama.hook('insertOwnPost', function (extra) {
 	}
 });
 
-var bannerExtra = $.parseHTML('<b id="radioBanner"></b><script src="../static/js/radio-api-parse-v1.js"></script><script>rb_init();</script>', document, true);
+var bannerExtra = config.CUSTOM_BANNER ? $.parseHTML(config.CUSTOM_BANNER, document, true) : null;
 
 if (!$banner && bannerExtra) {
 	var dest;
