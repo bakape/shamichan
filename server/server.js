@@ -1,3 +1,6 @@
+var opts = require('./opts');
+if (require.main == module) opts.parse_args();
+
 var _ = require('../lib/underscore'),
     amusement = require('./amusement'),
     async = require('async'),
