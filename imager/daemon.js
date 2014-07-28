@@ -219,15 +219,16 @@ IU.verify_webm = function (err, info) {
 	this.db.track_temporary(info.still_path, function (err) {
 		if (err)
 			winston.warn("Tracking error: " + err);
-        /*
-		if (info.has_audio)
+
+		if (info.has_audio && imager.config.WEBM_AUDIO == false)
 			return self.failure(Muggle('Audio is not allowed.'));
-        */
+
 		// pretend it's a PNG for the next steps
 		var image = self.image;
 		image.video = image.path;
 		image.path = info.still_path;
 		image.ext = '.png';
+		image.has_audio = info.has_audio;
 
 		self.verify_image();
 	});
@@ -309,7 +310,24 @@ IU.deduped = function (err) {
 	this.fill_in_specs(specs, 'thumb');
 
 	var self = this;
-	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0) {
+	if (self.image.has_audio){
+		this.status('Overlaying...');
+		var comp = composite_has_audio(this.pinky);
+		image.comp_path = image.path + '_audio';
+		image.dims = [w, h].concat(specs.dims);
+		specs.composite = comp;
+		specs.compDest = image.comp_path;
+		specs.compDims = specs.bound;
+		async.parallel([
+			self.resize_and_track.bind(self, specs, false),
+			self.resize_and_track.bind(self, specs, true),
+		], function (err) {
+			if (err)
+				return self.failure(err);
+			self.haveComp = true;
+			self.got_nails();
+		});
+	} else if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0) {
 		this.status('Spoilering...');
 		var comp = composite_src(sp, this.pinky);
 		image.comp_path = image.path + '_comp';
@@ -393,6 +411,11 @@ IU.got_nails = function () {
 
 	this.record_image(tmps);
 };
+
+function composite_has_audio(pinky){
+	var file = 'has_audio' + (pinky ? 's' : '') + '.png';
+	return path.join('./', file);
+}
 
 function composite_src(spoiler, pinky) {
 	var file = 'spoiler' + (pinky ? 's' : '') + spoiler + '.png';
@@ -562,14 +585,16 @@ function build_im_args(o, args) {
 	return args;
 }
 
-function resize_image(o, comp, callback) {
+function resize_image(o, comp, has_audio, callback) {
 	var args = build_im_args(o);
-	var dims = comp ? o.compDims : o.flatDims;
+	var dims = has_audio ? o.flatDims : (comp ? o.compDims : o.flatDims);
 	// in the composite case, zoom to fit. otherwise, force new size
 	args.push('-resize', dims + (comp ? '^' : '!'));
 	// add background
 	args.push('-gamma', '2.2', '-background', o.bg);
-	if (comp)
+	if (has_audio)
+		args.push(o.composite, '-layers', 'flatten', '-extent', dims);
+	else if (comp)
 		args.push(o.composite, '-layers', 'flatten', '-extent', dims);
 	else
 		args.push('-layers', 'mosaic', '+matte');
@@ -587,7 +612,8 @@ function resize_image(o, comp, callback) {
 
 IU.resize_and_track = function (o, comp, cb) {
 	var self = this;
-	resize_image(o, comp, function (err) {
+	var has_audio = self.image.has_audio;
+	resize_image(o, comp, has_audio, function (err) {
 		if (err)
 			return cb(err);
 		var fnm = comp ? o.compDest : o.dest;
