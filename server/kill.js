@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 var config = require('../config'),
+    opts = require('./opts'),
     path = require('path');
+
+opts.parse_args();
+opts.load_defaults();
+var lock = config.PID_FILE;
 
 var cfg = config.DAEMON;
 if (cfg) {
-	var lock = path.join(cfg.PID_PATH, 'server.pid');
 	require('daemon').kill(lock, function (err) {
 		if (err)
 			throw err;
@@ -12,8 +16,7 @@ if (cfg) {
 }
 else {
 	/* non-daemon version for hot reloads */
-	var file = path.join(path.dirname(module.filename), '.server.pid');
-	require('fs').readFile(file, function (err, pid) {
+	require('fs').readFile(lock, function (err, pid) {
 		pid = parseInt(pid, 10);
 		if (err || !pid)
 			return console.warn('No pid.');
