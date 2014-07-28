@@ -1,5 +1,6 @@
 var opts = require('./opts');
 if (require.main == module) opts.parse_args();
+opts.load_defaults();
 
 var _ = require('../lib/underscore'),
     amusement = require('./amusement'),
@@ -1073,7 +1074,7 @@ function start_server() {
 		var cfg = config.DAEMON;
 		var daemon = require('daemon');
 		var pid = daemon.start(process.stdout.fd, process.stderr.fd);
-		var lock = require('path').join(cfg.PID_PATH, 'server.pid');
+		var lock = config.PID_FILE;
 		daemon.lock(lock);
 		winston.remove(winston.transports.Console);
 		return;
@@ -1100,13 +1101,13 @@ function hot_reloader() {
 }
 
 function non_daemon_pid_setup() {
-	var path = require('path');
-	var pidFile = path.join(path.dirname(module.filename), '.server.pid');
+	var pidFile = config.PID_FILE;
 	fs.writeFile(pidFile, process.pid+'\n', function (err) {
 		if (err)
 			return winston.warn("Couldn't write pid: " + err);
 		process.once('SIGINT', delete_pid);
 		process.once('SIGTERM', delete_pid);
+		winston.info('PID ' + process.pid + ' written in ' + pidFile);
 	});
 
 	function delete_pid() {
