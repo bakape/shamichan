@@ -184,11 +184,15 @@ function video_still(src, cb) {
 		var lines = stderr ? stderr.split('\n') : [];
 		var first = lines[0];
 		if (err) {
-			var msg = "Unknown video reading error.";
+			var msg;
 			if (/no such file or directory/i.test(first))
 				msg = "Video went missing.";
 			else if (/invalid data found when/i.test(first))
 				msg = "Invalid video file.";
+			else {
+				msg = "Unknown video reading error.";
+				winston.warn("Unknown ffmpeg output: "+first);
+			}
 			fs.unlink(dest, function (err) {
 				cb(Muggle(msg, stderr));
 			});
