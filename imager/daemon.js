@@ -234,8 +234,11 @@ IU.verify_webm = function (err, info) {
 		image.video = image.path;
 		image.path = info.still_path;
 		image.ext = '.png';
-		if (info.has_audio)
+		if (info.has_audio) {
 			image.audio = true;
+			if (config.WEBM_AUDIO_SPOILER)
+				image.spoiler = config.WEBM_AUDIO_SPOILER;
+		}
 
 		self.verify_image();
 	});
@@ -316,19 +319,21 @@ IU.deduped = function (err) {
 	this.haveNail = true;
 	this.fill_in_specs(specs, 'thumb');
 
-	// was a composited spoiler selected?
+	// was a composited spoiler selected or forced?
+	if (image.audio && config.WEBM_AUDIO_SPOILER)
+		specs.comp = specs.overlay = true;
 	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0)
 		specs.comp = true;
 
 	var self = this;
 	if (specs.comp) {
-		this.status('Spoilering...');
+		this.status(specs.overlay ? 'Overlaying...' : 'Spoilering...');
 		var comp = composite_src(sp, this.pinky);
 		image.comp_path = image.path + '_comp';
-		image.dims = [w, h].concat(specs.bound);
+		specs.compDims = specs.overlay ? specs.dims : specs.bound;
+		image.dims = [w, h].concat(specs.compDims);
 		specs.composite = comp;
 		specs.compDest = image.comp_path;
-		specs.compDims = specs.bound;
 		async.parallel([
 			self.resize_and_track.bind(self, specs, false),
 			self.resize_and_track.bind(self, specs, true),

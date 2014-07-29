@@ -25,6 +25,9 @@ module.exports = {
 	EXTRA_MID_THUMBNAILS: true,
 	WEBM: false,
 	WEBM_AUDIO: false,
+	// set this to a spoiler index to have all audio WebMs overlaid with
+	// the corresponding spoiler image
+	WEBM_AUDIO_THUMBNAIL: 0,
 
 	SPOILER_DIR: '../assets/kana',
 	SPOILER_IMAGES: {normal: [], trans: [4, 5, 6, 7, 8, 9, 10, 11]},
