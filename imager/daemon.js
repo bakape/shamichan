@@ -226,7 +226,7 @@ IU.verify_webm = function (err, info) {
 		if (err)
 			winston.warn("Tracking error: " + err);
 
-		if (info.has_audio)
+		if (info.has_audio && !config.WEBM_AUDIO)
 			return self.failure(Muggle('Audio is not allowed.'));
 
 		// pretend it's a PNG for the next steps
@@ -234,6 +234,8 @@ IU.verify_webm = function (err, info) {
 		image.video = image.path;
 		image.path = info.still_path;
 		image.ext = '.png';
+		if (info.has_audio)
+			image.audio = true;
 
 		self.verify_image();
 	});
