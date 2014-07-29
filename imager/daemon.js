@@ -189,6 +189,8 @@ function video_still(src, cb) {
 				msg = "Video went missing.";
 			else if (/invalid data found when/i.test(first))
 				msg = "Invalid video file.";
+			else if (/^ffmpeg version/i.test(first))
+				msg = "Server's ffmpeg is too old.";
 			else {
 				msg = "Unknown video reading error.";
 				winston.warn("Unknown ffmpeg output: "+first);
