@@ -573,6 +573,7 @@ function build_im_args(o, args) {
 function resize_image(o, comp, callback) {
 	var args = build_im_args(o);
 	var dims = comp ? o.compDims : o.flatDims;
+	var dest = comp ? o.compDest : o.dest;
 	// in the composite case, zoom to fit. otherwise, force new size
 	args.push('-resize', dims + (comp ? '^' : '!'));
 	// add background
@@ -582,23 +583,23 @@ function resize_image(o, comp, callback) {
 	else
 		args.push('-layers', 'mosaic', '+matte');
 	// disregard metadata, acquire artifacts
-	args.push('-strip', '-quality', o.quality, comp ? o.compDest : o.dest);
+	args.push('-strip', '-quality', o.quality);
+	args.push(dest);
 	convert(args, o.src, function (err) {
 		if (err) {
 			winston.warn(err);
 			callback(Muggle("Resizing error.", err));
 		}
 		else
-			callback(null);
+			callback(null, dest);
 	});
 }
 
 IU.resize_and_track = function (o, comp, cb) {
 	var self = this;
-	resize_image(o, comp, function (err) {
+	resize_image(o, comp, function (err, fnm) {
 		if (err)
 			return cb(err);
-		var fnm = comp ? o.compDest : o.dest;
 
 		// HACK: strip IM type tag
 		var m = /^\w{3,4}:(.+)$/.exec(fnm);
