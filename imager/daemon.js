@@ -316,8 +316,12 @@ IU.deduped = function (err) {
 	this.haveNail = true;
 	this.fill_in_specs(specs, 'thumb');
 
+	// was a composited spoiler selected?
+	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0)
+		specs.comp = true;
+
 	var self = this;
-	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0) {
+	if (specs.comp) {
 		this.status('Spoilering...');
 		var comp = composite_src(sp, this.pinky);
 		image.comp_path = image.path + '_comp';
