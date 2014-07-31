@@ -1800,3 +1800,15 @@ function hmget_obj(r, key, keys, cb) {
 		cb(null, result);
 	});
 }
+
+/* ANON HOURS */
+
+function anon_hours_get(cb){
+	redis_client().hgetall('anonhours', cb); 
+}
+exports.anon_hours_get = anon_hours_get;
+
+function anon_hours_set(date, hours){
+	redis_client().hmset('anonhours', 'date', date, 'hours', hours);
+}
+exports.anon_hours_set = anon_hours_set;
