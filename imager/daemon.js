@@ -269,17 +269,18 @@ IU.verify_image = function () {
 IU.verified = function () {
 	if (this.failed)
 		return;
+	var desc = this.image.video ? 'Video' : 'Image';
 	var w = this.image.dims[0], h = this.image.dims[1];
 	if (!w || !h)
 		return this.failure(Muggle('Bad image dimensions.'));
 	if (config.IMAGE_PIXELS_MAX && w * h > config.IMAGE_PIXELS_MAX)
 		return this.failure(Muggle('Way too many pixels.'));
 	if (w > config.IMAGE_WIDTH_MAX && h > config.IMAGE_HEIGHT_MAX)
-		return this.failure(Muggle('Image is too wide and too tall.'));
+		return this.failure(Muggle(desc+' is too wide and too tall.'));
 	if (w > config.IMAGE_WIDTH_MAX)
-		return this.failure(Muggle('Image is too wide.'));
+		return this.failure(Muggle(desc+' is too wide.'));
 	if (h > config.IMAGE_HEIGHT_MAX)
-		return this.failure(Muggle('Image is too tall.'));
+		return this.failure(Muggle(desc+' is too tall.'));
 
 	var self = this;
 	perceptual_hash(this.tagged_path, this.image, function (err, hash) {
