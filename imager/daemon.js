@@ -172,13 +172,24 @@ IU.process = function () {
 		this.verify_image();
 };
 
-function video_still(src, cb) {
+function StillJob(src) {
+	jobs.Job.call(this);
+	this.src = src;
+}
+util.inherits(StillJob, jobs.Job);
+
+StillJob.prototype.describe_job = function () {
+	return "FFmpeg video still of " + this.src;
+};
+
+StillJob.prototype.perform_job = function () {
 	var dest = index.media_path('tmp', 'still_'+etc.random_id());
 	var args = ['-hide_banner', '-loglevel', 'info',
-			'-i', src,
+			'-i', this.src,
 			'-f', 'image2', '-vframes', '1', '-vcodec', 'png',
 			'-y', dest];
 	var opts = {env: {AV_LOG_FORCE_NOCOLOR: '1'}};
+	var self = this;
 	child_process.execFile(ffmpegBin, args, opts,
 				function (err, stdout, stderr) {
 		var lines = stderr ? stderr.split('\n') : [];
@@ -196,7 +207,7 @@ function video_still(src, cb) {
 				winston.warn("Unknown ffmpeg output: "+first);
 			}
 			fs.unlink(dest, function (err) {
-				cb(Muggle(msg, stderr));
+				self.finish_job(Muggle(msg, stderr));
 			});
 			return;
 		}
@@ -211,11 +222,15 @@ function video_still(src, cb) {
 		/* Could have false positives due to chapter titles. Bah. */
 		var has_audio = /audio:\s*vorbis/i.test(stderr);
 
-		cb(null, {
+		self.finish_job(null, {
 			still_path: dest,
 			has_audio: has_audio,
 		});
 	});
+};
+
+function video_still(src, cb) {
+	jobs.schedule(new StillJob(src), cb);
 }
 
 IU.verify_webm = function (err, info) {
