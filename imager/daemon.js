@@ -172,13 +172,24 @@ IU.process = function () {
 		this.verify_image();
 };
 
-function video_still(src, cb) {
+function StillJob(src) {
+	jobs.Job.call(this);
+	this.src = src;
+}
+util.inherits(StillJob, jobs.Job);
+
+StillJob.prototype.describe_job = function () {
+	return "FFmpeg video still of " + this.src;
+};
+
+StillJob.prototype.perform_job = function () {
 	var dest = index.media_path('tmp', 'still_'+etc.random_id());
 	var args = ['-hide_banner', '-loglevel', 'info',
-			'-i', src,
+			'-i', this.src,
 			'-f', 'image2', '-vframes', '1', '-vcodec', 'png',
 			'-y', dest];
 	var opts = {env: {AV_LOG_FORCE_NOCOLOR: '1'}};
+	var self = this;
 	child_process.execFile(ffmpegBin, args, opts,
 				function (err, stdout, stderr) {
 		var lines = stderr ? stderr.split('\n') : [];
@@ -196,7 +207,7 @@ function video_still(src, cb) {
 				winston.warn("Unknown ffmpeg output: "+first);
 			}
 			fs.unlink(dest, function (err) {
-				cb(Muggle(msg, stderr));
+				self.finish_job(Muggle(msg, stderr));
 			});
 			return;
 		}
@@ -211,11 +222,15 @@ function video_still(src, cb) {
 		/* Could have false positives due to chapter titles. Bah. */
 		var has_audio = /audio:\s*vorbis/i.test(stderr);
 
-		cb(null, {
+		self.finish_job(null, {
 			still_path: dest,
 			has_audio: has_audio,
 		});
 	});
+};
+
+function video_still(src, cb) {
+	jobs.schedule(new StillJob(src), cb);
 }
 
 IU.verify_webm = function (err, info) {
@@ -234,10 +249,12 @@ IU.verify_webm = function (err, info) {
 		image.video = image.path;
 		image.path = info.still_path;
 		image.ext = '.png';
-		if (info.has_audio){
+		if (info.has_audio) {
 			image.audio = true;
-			image.spoiler = 'a';
+			if (config.WEBM_AUDIO_SPOILER)
+				image.spoiler = config.WEBM_AUDIO_SPOILER;
 		}
+
 		self.verify_image();
 	});
 };
@@ -267,17 +284,18 @@ IU.verify_image = function () {
 IU.verified = function () {
 	if (this.failed)
 		return;
+	var desc = this.image.video ? 'Video' : 'Image';
 	var w = this.image.dims[0], h = this.image.dims[1];
 	if (!w || !h)
 		return this.failure(Muggle('Bad image dimensions.'));
 	if (config.IMAGE_PIXELS_MAX && w * h > config.IMAGE_PIXELS_MAX)
 		return this.failure(Muggle('Way too many pixels.'));
 	if (w > config.IMAGE_WIDTH_MAX && h > config.IMAGE_HEIGHT_MAX)
-		return this.failure(Muggle('Image is too wide and too tall.'));
+		return this.failure(Muggle(desc+' is too wide and too tall.'));
 	if (w > config.IMAGE_WIDTH_MAX)
-		return this.failure(Muggle('Image is too wide.'));
+		return this.failure(Muggle(desc+' is too wide.'));
 	if (h > config.IMAGE_HEIGHT_MAX)
-		return this.failure(Muggle('Image is too tall.'));
+		return this.failure(Muggle(desc+' is too tall.'));
 
 	var self = this;
 	perceptual_hash(this.tagged_path, this.image, function (err, hash) {
@@ -317,16 +335,21 @@ IU.deduped = function (err) {
 	this.haveNail = true;
 	this.fill_in_specs(specs, 'thumb');
 
+	// was a composited spoiler selected or forced?
+	if (image.audio && config.WEBM_AUDIO_SPOILER)
+		specs.comp = specs.overlay = true;
+	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0)
+		specs.comp = true;
+
 	var self = this;
-	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0 || image.audio) {
-		this.status(image.audio ? 'Overlaying...' : 'Spoilering...');
+	if (specs.comp) {
+		this.status(specs.overlay ? 'Overlaying...' : 'Spoilering...');
 		var comp = composite_src(sp, this.pinky);
 		image.comp_path = image.path + '_comp';
-		image.dims = [w, h].concat(image.audio ? specs.dims : specs.bound);
+		specs.compDims = specs.overlay ? specs.dims : specs.bound;
+		image.dims = [w, h].concat(specs.compDims);
 		specs.composite = comp;
 		specs.compDest = image.comp_path;
-		specs.compDims = specs.bound;
-		specs.audio = image.audio;
 		async.parallel([
 			self.resize_and_track.bind(self, specs, false),
 			self.resize_and_track.bind(self, specs, true),
@@ -574,7 +597,8 @@ function build_im_args(o, args) {
 
 function resize_image(o, comp, callback) {
 	var args = build_im_args(o);
-	var dims = o.audio ? o.flatDims : (comp ? o.compDims : o.flatDims);
+	var dims = comp ? o.compDims : o.flatDims;
+	var dest = comp ? o.compDest : o.dest;
 	// in the composite case, zoom to fit. otherwise, force new size
 	args.push('-resize', dims + (comp ? '^' : '!'));
 	// add background
@@ -584,23 +608,23 @@ function resize_image(o, comp, callback) {
 	else
 		args.push('-layers', 'mosaic', '+matte');
 	// disregard metadata, acquire artifacts
-	args.push('-strip', '-quality', o.quality, comp ? o.compDest : o.dest);
+	args.push('-strip', '-quality', o.quality);
+	args.push(dest);
 	convert(args, o.src, function (err) {
 		if (err) {
 			winston.warn(err);
 			callback(Muggle("Resizing error.", err));
 		}
 		else
-			callback(null);
+			callback(null, dest);
 	});
 }
 
 IU.resize_and_track = function (o, comp, cb) {
 	var self = this;
-	resize_image(o, comp, function (err) {
+	resize_image(o, comp, function (err, fnm) {
 		if (err)
 			return cb(err);
-		var fnm = comp ? o.compDest : o.dest;
 
 		// HACK: strip IM type tag
 		var m = /^\w{3,4}:(.+)$/.exec(fnm);

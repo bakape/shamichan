@@ -495,6 +495,7 @@ OS.gazou = function (info, toppu) {
 	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
 		caption, safe(' <i>('), (spoilertoggle && (info.spoiler || info.realthumb) ? 'Spoiler, ' : ''), size,
 		dims, (info.apng ? ', APNG' : ''),
+		info.audio ? ", \u266B" : '',
 		this.full ? [', ', chibi(info.imgnm, img.src)] : '',
 		safe(')</i></figcaption>'),
 		this.thumbStyle == 'hide' ? '' : img.html,
