@@ -32,7 +32,20 @@ module.exports = {
 	*/
 
 	SPOILER_DIR: '../assets/kana',
-	SPOILER_IMAGES: {normal: [], trans: [4, 5, 6, 7, 8, 9, 10, 11]},
+
+	// this indicates which spoiler images may be selected by posters.
+	// each number or ID corresponds to a set of images in SPOILER_DIR
+	// (named spoilX.png, spoilerX.png and spoilersX.png)
+	// (e.g. https://github.com/lalcmellkmal/assets/tree/master/kana)
+	//
+	// the spoilers in the `normal` list are simple images,
+	// while the spoilers in the `trans` list are composited on top
+	// of the original image semi-opaquely (and must be transparent PNGs)
+	SPOILER_IMAGES: {
+		normal: [],
+		trans: [4, 5, 6, 7, 8, 9, 10, 11]
+	},
+
 	IMAGE_HATS: false,
 
 	// uncomment DAEMON if you will run `node imager/daemon.js` separately.
