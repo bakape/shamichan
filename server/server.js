@@ -45,54 +45,6 @@ var dispatcher = okyaku.dispatcher;
 var escape = common.escape_html;
 var safe = common.safe;
 
-var anon_hours = [];
-if (config.ANON_HOURS){
-	db.anon_hours_get(
-		function(err, read){
-			if (!read)
-				anon_hours_timer(true);
-			else {
-				date = new Date().getUTCDate();
-				if (read.date == date){
-					anon_hours = read.hours.split(',');
-					anon_hours_timer(false);
-				} else
-					anon_hours_timer(true);
-			}
-		}
-	);
-}
-
-function anon_hours_timer(init){
-	var min = new Date().getUTCMinutes();
-	if (min != 0)
-		var sleep = (60 - min) * 60 * 1000;
-	else
-		var sleep = 60 * 60 * 1000;
-	if (init)
-		anon_hours_gen();
-	setTimeout(
-		function(){
-			anon_hours_gen();
-			setInterval(anon_hours_gen, 3600 * 1000);
-		}, sleep
-	);
-}
-
-function anon_hours_gen(){
-	var sections = config.ANON_HOURS_PER_DAY;
-	var ah = [];
-	while (ah.length < sections) {
-		var s = 24 / sections;
-		var m = (ah.length * s) - 1;
-		var p = Math.round(Math.random() * s);
-		ah.push(m + p);
-	}
-	anon_hours = ah;
-	var date = new Date().getUTCDate();
-	db.anon_hours_set(date, ah.join());
-}
-
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	function checked(err, ident) {
 		if (!err)
@@ -811,8 +763,7 @@ function allocate_post(msg, client, callback) {
 	}
 
 	/* TODO: Check against client.watching? */
-	var utc_date = new Date().getUTCHours();
-	if (msg.name && anon_hours.indexOf(utc_date) >= 0) {
+	if (msg.name) {
 		var parsed = common.parse_name(msg.name);
 		post.name = parsed[0];
 		var spec = STATE.hot.SPECIAL_TRIPCODES;
