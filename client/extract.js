@@ -34,9 +34,12 @@ function extract_post_model(el) {
 
 		var $i = $cap.children('i');
 		var t = $i.length && $i[0].childNodes[0];
-		var m = /^\((?:[\d.]+ \w+, )?(\d+)x(\d+)/.exec(t && t.data);
+		t = t && t.data;
+		var m = /(\d+)x(\d+)/.exec(t);
 		if (m)
 			image.dims = [parseInt(m[1], 10), parseInt(m[2], 10)];
+		if (t && t.indexOf(audioIndicator) == 1)
+			image.audio = true;
 		image.size = 0; // TODO
 		var $nm = $i.find('a');
 		image.imgnm = $nm.attr('title') || $nm.text() || '';

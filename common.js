@@ -477,6 +477,8 @@ OS.image_paths = function () {
 	return this._imgPaths;
 };
 
+var audioIndicator = "\u266B"; // musical note
+
 OS.gazou = function (info, toppu) {
 	var src, name, caption;
 	if (info.vint) {
@@ -497,9 +499,10 @@ OS.gazou = function (info, toppu) {
 	var dims = info.dims[0] + 'x' + info.dims[1];
 
 	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
-		caption, safe(' <i>('), size,
+		caption, safe(' <i>('),
+		info.audio ? (audioIndicator + ', ') : '',
+		size,
 		dims, (info.apng ? ', APNG' : ''),
-		info.audio ? ", \u266B" : '',
 		this.full ? [', ', chibi(info.imgnm, img.src)] : '',
 		safe(')</i></figcaption>'),
 		this.thumbStyle == 'hide' ? '' : img.html,
