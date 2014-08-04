@@ -30,11 +30,12 @@ exports.new_upload = new_upload;
 function get_thumb_specs(dims, pinky, scale) {
 	var w = dims[0], h = dims[1];
 	var quality = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
+	var png_quality = config.PNG_THUMB_QUALITY;
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var bg = pinky ? '#d6daf0' : '#eef2ff';
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
-	return {dims: dims, quality: quality, bg: bg, bound: bound};
+	return {dims: dims, quality: quality, png_quality: png_quality, bg: bg, bound: bound};
 }
 
 var ImageUpload = function (client_id) {
@@ -341,6 +342,9 @@ IU.deduped = function (err) {
 	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0)
 		specs.comp = true;
 
+	if (image.ext == '.png' && config.PNG_THUMBS)
+		specs.png = true;
+		
 	var self = this;
 	if (specs.comp) {
 		this.status(specs.overlay ? 'Overlaying...' : 'Spoilering...');
@@ -383,6 +387,9 @@ IU.middle_nail = function () {
 
 	var specs = get_thumb_specs(this.image.dims, this.pinky, 2);
 	this.fill_in_specs(specs, 'mid');
+
+        if (this.image.ext == '.png' && config.PNG_THUMBS)
+                specs.png = true;
 
 	var self = this;
 	this.resize_and_track(specs, false, function (err) {
@@ -566,14 +573,15 @@ function setup_image_params(o) {
 
 	o.src += '[0]'; // just the first frame of the animation
 
-	var thumbFormat = 'jpg:';
+	var thumbFormat = o.png ? 'png:' : 'jpg:';
 	o.dest = thumbFormat + o.dest;
 	if (o.compDest)
 		o.compDest = thumbFormat + o.compDest;
 	o.flatDims = o.dims[0] + 'x' + o.dims[1];
 	if (o.compDims)
 		o.compDims = o.compDims[0] + 'x' + o.compDims[1];
-
+	if (o.png)
+		o.quality = o.png_quality;
 	o.quality += ''; // coerce to string
 }
 
@@ -602,10 +610,12 @@ function resize_image(o, comp, callback) {
 	// in the composite case, zoom to fit. otherwise, force new size
 	args.push('-resize', dims + (comp ? '^' : '!'));
 	// add background
-	args.push('-gamma', '2.2', '-background', o.bg);
+	args.push('-gamma', '2.2');
+	if (!o.png)
+		args.push('-background', o.bg);
 	if (comp)
 		args.push(o.composite, '-layers', 'flatten', '-extent', dims);
-	else
+	else if (!o.png)
 		args.push('-layers', 'mosaic', '+matte');
 	// disregard metadata, acquire artifacts
 	args.push('-strip', '-quality', o.quality);
