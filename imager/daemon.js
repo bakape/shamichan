@@ -29,12 +29,19 @@ exports.new_upload = new_upload;
 
 function get_thumb_specs(dims, pinky, scale) {
 	var w = dims[0], h = dims[1];
-	var quality = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
-	var bg = pinky ? '#d6daf0' : '#eef2ff';
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
-	return {dims: dims, quality: quality, bg: bg, bound: bound};
+	var specs = {bound: bound, dims: dims, format: 'jpg:'};
+	if (pinky) {
+		specs.bg = '#d6daf0';
+		specs.quality = config.PINKY_QUALITY;
+	}
+	else {
+		specs.bg = '#eef2ff';
+		specs.quality = config.THUMB_QUALITY;
+	}
+	return specs;
 }
 
 var ImageUpload = function (client_id) {
@@ -566,10 +573,9 @@ function setup_image_params(o) {
 
 	o.src += '[0]'; // just the first frame of the animation
 
-	var thumbFormat = 'jpg:';
-	o.dest = thumbFormat + o.dest;
+	o.dest = o.format + o.dest;
 	if (o.compDest)
-		o.compDest = thumbFormat + o.compDest;
+		o.compDest = o.format + o.compDest;
 	o.flatDims = o.dims[0] + 'x' + o.dims[1];
 	if (o.compDims)
 		o.compDims = o.compDims[0] + 'x' + o.compDims[1];
@@ -602,10 +608,12 @@ function resize_image(o, comp, callback) {
 	// in the composite case, zoom to fit. otherwise, force new size
 	args.push('-resize', dims + (comp ? '^' : '!'));
 	// add background
-	args.push('-gamma', '2.2', '-background', o.bg);
+	args.push('-gamma', '2.2');
+	if (o.bg)
+		args.push('-background', o.bg);
 	if (comp)
 		args.push(o.composite, '-layers', 'flatten', '-extent', dims);
-	else
+	else if (o.bg)
 		args.push('-layers', 'mosaic', '+matte');
 	// disregard metadata, acquire artifacts
 	args.push('-strip', '-quality', o.quality);
