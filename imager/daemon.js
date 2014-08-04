@@ -33,7 +33,10 @@ function get_thumb_specs(image, pinky, scale) {
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
 	var specs = {bound: bound, dims: dims, format: 'jpg:'};
-	if (config.PNG_THUMBS && image.ext == '.png') {
+	// Note: WebMs pretend to be PNGs at this step,
+	//       but those don't need transparent backgrounds.
+	//       (well... WebMs *can* have alpha channels...)
+	if (config.PNG_THUMBS && image.ext == '.png' && !image.video) {
 		specs.format = 'png:';
 		specs.quality = config.PNG_THUMB_QUALITY;
 	}
