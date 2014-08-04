@@ -27,8 +27,8 @@ function new_upload(req, resp) {
 }
 exports.new_upload = new_upload;
 
-function get_thumb_specs(dims, pinky, scale) {
-	var w = dims[0], h = dims[1];
+function get_thumb_specs(image, pinky, scale) {
+	var w = image.dims[0], h = image.dims[1];
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
@@ -328,7 +328,7 @@ IU.deduped = function (err) {
 	if (this.failed)
 		return;
 	var image = this.image;
-	var specs = get_thumb_specs(image.dims, this.pinky, 1);
+	var specs = get_thumb_specs(image, this.pinky, 1);
 	var w = image.dims[0], h = image.dims[1];
 
 	/* Determine whether we really need a thumbnail */
@@ -388,7 +388,7 @@ IU.middle_nail = function () {
 	if (this.failed)
 		return;
 
-	var specs = get_thumb_specs(this.image.dims, this.pinky, 2);
+	var specs = get_thumb_specs(this.image, this.pinky, 2);
 	this.fill_in_specs(specs, 'mid');
 
 	var self = this;
