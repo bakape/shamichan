@@ -33,7 +33,11 @@ function get_thumb_specs(image, pinky, scale) {
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
 	var specs = {bound: bound, dims: dims, format: 'jpg:'};
-	if (pinky) {
+	if (config.PNG_THUMBS && image.ext == '.png') {
+		specs.format = 'png:';
+		specs.quality = config.PNG_THUMB_QUALITY;
+	}
+	else if (pinky) {
 		specs.bg = '#d6daf0';
 		specs.quality = config.PINKY_QUALITY;
 	}
