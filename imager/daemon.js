@@ -32,12 +32,12 @@ function get_thumb_specs(image, pinky, scale) {
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
-	var specs = {bound: bound, dims: dims, format: 'jpg:'};
+	var specs = {bound: bound, dims: dims, format: 'jpg'};
 	// Note: WebMs pretend to be PNGs at this step,
 	//       but those don't need transparent backgrounds.
 	//       (well... WebMs *can* have alpha channels...)
 	if (config.PNG_THUMBS && image.ext == '.png' && !image.video) {
-		specs.format = 'png:';
+		specs.format = 'png';
 		specs.quality = config.PNG_THUMB_QUALITY;
 	}
 	else if (pinky) {
@@ -580,9 +580,9 @@ function setup_image_params(o) {
 
 	o.src += '[0]'; // just the first frame of the animation
 
-	o.dest = o.format + o.dest;
+	o.dest = o.format + ':' + o.dest;
 	if (o.compDest)
-		o.compDest = o.format + o.compDest;
+		o.compDest = o.format + ':' + o.compDest;
 	o.flatDims = o.dims[0] + 'x' + o.dims[1];
 	if (o.compDims)
 		o.compDims = o.compDims[0] + 'x' + o.compDims[1];
