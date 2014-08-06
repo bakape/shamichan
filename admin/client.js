@@ -184,6 +184,7 @@ var AddressView = Backbone.View.extend({
 		'keydown .name': 'entered_name',
 		'click .sel-all': 'select_all',
 		'click .ban': 'ban',
+		'click .unban': 'unban',
 	},
 
 	initialize: function () {
@@ -194,13 +195,20 @@ var AddressView = Backbone.View.extend({
 			type: 'button',
 			val: 'Sel All'
 		}));
-		if (IDENT.auth == 'Admin')
+		if (IDENT.auth == 'Admin'){
 			$el.append($('<input/>', {
 				"class": 'ban',
 				type: 'button',
 				val: 'Ban'
 			}));
-
+			$el.append($('<input/>', {
+				'class': 'unban',
+				type: 'button',
+				val: 'Ban'
+				}
+			));
+		}
+		
 		$el.append(
 			'<br>',
 			$('<input>', {"class": 'name', placeholder: 'Name'})
@@ -231,6 +239,9 @@ var AddressView = Backbone.View.extend({
 		this.$('.ban')
 			.prop('disabled', !!attrs.ban)
 			.val(attrs.ban ? attrs.ban : 'Ban');
+		this.$('.unban')
+			.prop('disabled', !!!attrs.ban)
+			.val(attrs.ban ? 'Unbanned' : attrs.ban);
 		return this;
 	},
 
@@ -273,6 +284,14 @@ var AddressView = Backbone.View.extend({
 			return;
 		send([BAN, ip]);
 		this.$('.ban').val('...');
+	},
+	
+	unban: function(){
+		var ip = this.model.get('ip');
+		if (!confirm('Ban' + ip + '?'))
+			return;
+		send([UNBAN, ip]);
+		this.$('.unban').val('...');
 	},
 });
 

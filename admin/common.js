@@ -6,6 +6,7 @@ var DEFINES = exports;
 DEFINES.FETCH_ADDRESS = 101;
 DEFINES.SET_ADDRESS_NAME = 102;
 DEFINES.BAN = 103;
+DEFINES.UNBAN = 104;
 
 var modCache = {}; // TEMP
 exports.modCache = modCache;

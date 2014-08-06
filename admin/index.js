@@ -24,6 +24,19 @@ function ban(m, mod, ip, type) {
 	m.publish('reloadHot', 'caps');
 }
 
+function unban(m, mod, ip) {
+	m.srem ('hot:timeouts', ip);
+	m.del('ip:'+ ip);
+	
+	var now = Date.now();
+	var info = {ip: ip, type: 'unban', time: now};
+	if (mod.ident.email)
+		info.email = mod.ident.email;
+	m.rpush('auditLog', JSON.stringify(info));
+	
+	m.publish('reloadHot', 'caps');
+}
+
 okyaku.dispatcher[authcommon.BAN] = function (msg, client) {
 	if (!caps.can_administrate(client.ident))
 		return false;
@@ -46,4 +59,21 @@ okyaku.dispatcher[authcommon.BAN] = function (msg, client) {
 		client.send([0, common.MODEL_SET, ['addrs', ip], a]);
 	});
 	return true;
+};
+
+okyaku.dispatcher[authcommon.UNBAN] = function(msg, cleint){
+	if (!caps.can_administrate(client.ident))
+		return false;
+	var ip = msg[0];
+	if (!authcommon.is_valid_ip(ip))
+		return false;
+	
+	var m = connect().multi();
+	unban(m, client, ip);
+	m.exec(
+		function(err){
+			if (err)
+				return client.kotowaru(err);
+		}
+	)
 };
