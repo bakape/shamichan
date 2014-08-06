@@ -346,7 +346,6 @@ IU.deduped = function (err) {
 			&& w <= specs.dims[0] && h <= specs.dims[1]) {
 		return this.got_nails();
 	}
-	this.haveNail = true;
 	this.fill_in_specs(specs, 'thumb');
 
 	// was a composited spoiler selected or forced?
@@ -370,7 +369,6 @@ IU.deduped = function (err) {
 		], function (err) {
 			if (err)
 				return self.failure(err);
-			self.haveComp = true;
 			self.got_nails();
 		});
 	}
@@ -402,7 +400,6 @@ IU.middle_nail = function () {
 	this.resize_and_track(specs, false, function (err) {
 		if (err)
 			self.failure(err);
-		self.haveMiddle = true;
 		self.got_nails();
 	});
 };
@@ -424,15 +421,15 @@ IU.got_nails = function () {
 	var base = path.basename;
 	var tmps = {src: base(image.path)};
 
-	if (this.haveNail) {
+	if (image.thumb_path) {
 		image.thumb = time + '.jpg';
 		tmps.thumb = base(image.thumb_path);
 	}
-	if (this.haveMiddle) {
+	if (image.mid_path) {
 		image.mid = time + '.jpg';
 		tmps.mid = base(image.mid_path);
 	}
-	if (this.haveComp) {
+	if (image.comp_path) {
 		image.composite = time + 's' + image.spoiler + '.jpg';
 		tmps.comp = base(image.comp_path);
 		delete image.spoiler;
