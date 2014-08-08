@@ -11,9 +11,22 @@ function connect() {
 }
 
 function ban(m, mod, ip, type) {
-	m.sadd('hot:' + type + 's', ip);
-	m.hset('ip:' + ip, 'ban', type);
+	if (type == 'unban') {
+		// unban from every type of suspension
+		authcommon.suspensionKeys.forEach(function (suffix) {
+			m.srem('hot:' + suffix, ip);
+		});
+		m.hdel('ip:' + ip, 'ban');
+	}
+	else {
+		// need to validate that this is a valid ban type
+		// TODO: elaborate
+		if (type != 'timeout')
+			return false;
 
+		m.sadd('hot:' + type + 's', ip);
+		m.hset('ip:' + ip, 'ban', type);
+	}
 	var now = Date.now();
 	var info = {ip: ip, type: type, time: now};
 	if (mod.ident.email)
@@ -22,27 +35,33 @@ function ban(m, mod, ip, type) {
 
 	// trigger reload
 	m.publish('reloadHot', 'caps');
+
+	return true;
 }
 
 okyaku.dispatcher[authcommon.BAN] = function (msg, client) {
 	if (!caps.can_administrate(client.ident))
 		return false;
 	var ip = msg[0];
+	var type = msg[1];
 	if (!authcommon.is_valid_ip(ip))
 		return false;
 
 	var m = connect().multi();
-	ban(m, client, ip, 'timeout');
+	if (!ban(m, client, ip, type))
+		return false;
+
 	m.exec(function (err) {
 		if (err)
 			return client.kotowaru(err);
+		var wasBanned = type != 'unban';
 
 		/* XXX not DRY */
 		var ADDRS = authcommon.modCache.addresses;
 		if (ADDRS[ip])
-			ADDRS[ip].ban = true;
+			ADDRS[ip].ban = wasBanned;
 
-		var a = {ban: true};
+		var a = {ban: wasBanned};
 		client.send([0, common.MODEL_SET, ['addrs', ip], a]);
 	});
 	return true;

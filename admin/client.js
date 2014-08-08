@@ -229,8 +229,7 @@ var AddressView = Backbone.View.extend({
 			$name.val(attrs.name);
 		}
 		this.$('.ban')
-			.prop('disabled', !!attrs.ban)
-			.val(attrs.ban ? attrs.ban : 'Ban');
+			.val(attrs.ban ? 'Unban' : 'Ban');
 		return this;
 	},
 
@@ -269,9 +268,20 @@ var AddressView = Backbone.View.extend({
 
 	ban: function () {
 		var ip = this.model.get('ip');
-		if (!confirm('Ban ' + ip + '?'))
+		var attrs = this.model.attributes;
+		var act, type;
+		if (!attrs.ban) {
+			act = 'Ban';
+			type = 'timeout';
+		} else {
+			act = 'Unban';
+			type = 'unban';
+		}
+		if (!confirm(act + ' ' + ip + '?'))
 			return;
-		send([BAN, ip]);
+
+		send([BAN, ip, type]);
+		// show ... while processing
 		this.$('.ban').val('...');
 	},
 });
