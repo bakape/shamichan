@@ -646,7 +646,7 @@ OS.atama = function (data) {
 	if (data.trip)
 		header.push(safe('<code>' + data.trip + '</code>'));
 	if (auth)
-		header.push(' ## Mahou Shoujo');
+		header.push(' ## ' + (auth == 'Admin' ? config.ADMIN_ALIAS : config.MOD_ALIAS));
 	this.trigger('headerName', {header: header, data: data});
 	header.push(safe('</b>'));
 	if (data.email) {
