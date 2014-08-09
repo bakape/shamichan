@@ -361,13 +361,15 @@ function expand_image($img) {
 	var href = a.attr('href');
 	if (!href)
 		return;
+	var video = /\.webm$/i.test(href);
 	var dims = a.siblings('figcaption').text().match(/(\d+)x(\d+)/);
 	if (!dims)
 		return;
 	var tw = $img.width(), th = $img.height();
 	var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10);
+	// if this is a high-density screen, reduce image size appropriately
 	var r = window.devicePixelRatio;
-	if (!options.get('nohighres') && r && r > 1) {
+	if (!options.get('nohighres') && !video && r && r > 1) {
 		if (w/r > tw && h/r > th) {
 			w /= r;
 			h /= r;
@@ -375,7 +377,6 @@ function expand_image($img) {
 	}
 
 	$img.remove();
-	var video = /\.webm$/i.test(href);
 	$img = $(video ? '<video>' : '<img>', {
 		src: href,
 		width: w, height: h,

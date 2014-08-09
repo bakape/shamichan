@@ -29,15 +29,18 @@ function extract_post_model(el) {
 		var $cap = $fig.children('figcaption');
 		var image = {
 			MD5: $fig.data('md5'),
+			size: $fig.data('size'),
 			src: $cap.children('a').text(),
 		};
 
 		var $i = $cap.children('i');
 		var t = $i.length && $i[0].childNodes[0];
-		var m = /^\((?:[\d.]+ \w+, )?(\d+)x(\d+)/.exec(t && t.data);
+		t = t && t.data;
+		var m = /(\d+)x(\d+)/.exec(t);
 		if (m)
 			image.dims = [parseInt(m[1], 10), parseInt(m[2], 10)];
-		image.size = 0; // TODO
+		if (t && t.indexOf(audioIndicator) == 1)
+			image.audio = true;
 		var $nm = $i.find('a');
 		image.imgnm = $nm.attr('title') || $nm.text() || '';
 

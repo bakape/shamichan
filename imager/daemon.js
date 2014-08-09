@@ -27,15 +27,28 @@ function new_upload(req, resp) {
 }
 exports.new_upload = new_upload;
 
-function get_thumb_specs(dims, pinky, scale) {
-	var w = dims[0], h = dims[1];
-	var quality = config[pinky ? 'PINKY_QUALITY' : 'THUMB_QUALITY'];
-	var png_quality = config.PNG_THUMB_QUALITY;
+function get_thumb_specs(image, pinky, scale) {
+	var w = image.dims[0], h = image.dims[1];
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
-	var bg = pinky ? '#d6daf0' : '#eef2ff';
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
-	return {dims: dims, quality: quality, png_quality: png_quality, bg: bg, bound: bound};
+	var specs = {bound: bound, dims: dims, format: 'jpg'};
+	// Note: WebMs pretend to be PNGs at this step,
+	//       but those don't need transparent backgrounds.
+	//       (well... WebMs *can* have alpha channels...)
+	if (config.PNG_THUMBS && image.ext == '.png' && !image.video) {
+		specs.format = 'png';
+		specs.quality = config.PNG_THUMB_QUALITY;
+	}
+	else if (pinky) {
+		specs.bg = '#d6daf0';
+		specs.quality = config.PINKY_QUALITY;
+	}
+	else {
+		specs.bg = '#eef2ff';
+		specs.quality = config.THUMB_QUALITY;
+	}
+	return specs;
 }
 
 var ImageUpload = function (client_id) {
@@ -322,7 +335,7 @@ IU.deduped = function (err) {
 	if (this.failed)
 		return;
 	var image = this.image;
-	var specs = get_thumb_specs(image.dims, this.pinky, 1);
+	var specs = get_thumb_specs(image, this.pinky, 1);
 	var w = image.dims[0], h = image.dims[1];
 
 	/* Determine whether we really need a thumbnail */
@@ -333,7 +346,6 @@ IU.deduped = function (err) {
 			&& w <= specs.dims[0] && h <= specs.dims[1]) {
 		return this.got_nails();
 	}
-	this.haveNail = true;
 	this.fill_in_specs(specs, 'thumb');
 
 	// was a composited spoiler selected or forced?
@@ -342,9 +354,6 @@ IU.deduped = function (err) {
 	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0)
 		specs.comp = true;
 
-	if (image.ext == '.png' && config.PNG_THUMBS)
-		specs.png = true;
-		
 	var self = this;
 	if (specs.comp) {
 		this.status(specs.overlay ? 'Overlaying...' : 'Spoilering...');
@@ -360,7 +369,6 @@ IU.deduped = function (err) {
 		], function (err) {
 			if (err)
 				return self.failure(err);
-			self.haveComp = true;
 			self.got_nails();
 		});
 	}
@@ -385,17 +393,13 @@ IU.middle_nail = function () {
 	if (this.failed)
 		return;
 
-	var specs = get_thumb_specs(this.image.dims, this.pinky, 2);
+	var specs = get_thumb_specs(this.image, this.pinky, 2);
 	this.fill_in_specs(specs, 'mid');
-
-        if (this.image.ext == '.png' && config.PNG_THUMBS)
-                specs.png = true;
 
 	var self = this;
 	this.resize_and_track(specs, false, function (err) {
 		if (err)
 			self.failure(err);
-		self.haveMiddle = true;
 		self.got_nails();
 	});
 };
@@ -417,15 +421,15 @@ IU.got_nails = function () {
 	var base = path.basename;
 	var tmps = {src: base(image.path)};
 
-	if (this.haveNail) {
+	if (image.thumb_path) {
 		image.thumb = time + '.jpg';
 		tmps.thumb = base(image.thumb_path);
 	}
-	if (this.haveMiddle) {
+	if (image.mid_path) {
 		image.mid = time + '.jpg';
 		tmps.mid = base(image.mid_path);
 	}
-	if (this.haveComp) {
+	if (image.comp_path) {
 		image.composite = time + 's' + image.spoiler + '.jpg';
 		tmps.comp = base(image.comp_path);
 		delete image.spoiler;
@@ -573,15 +577,13 @@ function setup_image_params(o) {
 
 	o.src += '[0]'; // just the first frame of the animation
 
-	var thumbFormat = o.png ? 'png:' : 'jpg:';
-	o.dest = thumbFormat + o.dest;
+	o.dest = o.format + ':' + o.dest;
 	if (o.compDest)
-		o.compDest = thumbFormat + o.compDest;
+		o.compDest = o.format + ':' + o.compDest;
 	o.flatDims = o.dims[0] + 'x' + o.dims[1];
 	if (o.compDims)
 		o.compDims = o.compDims[0] + 'x' + o.compDims[1];
-	if (o.png)
-		o.quality = o.png_quality;
+
 	o.quality += ''; // coerce to string
 }
 
@@ -611,11 +613,11 @@ function resize_image(o, comp, callback) {
 	args.push('-resize', dims + (comp ? '^' : '!'));
 	// add background
 	args.push('-gamma', '2.2');
-	if (!o.png)
+	if (o.bg)
 		args.push('-background', o.bg);
 	if (comp)
 		args.push(o.composite, '-layers', 'flatten', '-extent', dims);
-	else if (!o.png)
+	else if (o.bg)
 		args.push('-layers', 'mosaic', '+matte');
 	// disregard metadata, acquire artifacts
 	args.push('-strip', '-quality', o.quality);
