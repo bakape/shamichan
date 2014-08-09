@@ -493,7 +493,7 @@ OS.gazou = function (info, toppu) {
 	var dims = info.dims[0] + 'x' + info.dims[1];
 
 	return [safe('<figure data-MD5="'), info.MD5, safe('"><figcaption>'),
-		caption, safe(' <i>('), (spoilertoggle && (info.spoiler || info.realthumb) ? 'Spoiler, ' : ''), size,
+		caption, safe(' <i>'), (spoilertoggle && (info.spoiler || info.realthumb) ? '[Spoilered Image] ' : ''), '(', size,
 		dims, (info.apng ? ', APNG' : ''),
 		info.audio ? ", \u266B" : '',
 		this.full ? [', ', chibi(info.imgnm, img.src)] : '',

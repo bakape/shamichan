@@ -58,7 +58,7 @@ var Section = Backbone.View.extend({
 		var $spoiltag = this.$el.children('figure').find('i');
 		var sp = oneeSama.spoiler_info(spoiler, true);
 		if (oneeSama.spoilToggle) {
-			$spoiltag.first().text($spoiltag.first().text().replace(/^\(/,"\(Spoiler, "));
+			$fcap.textContent.prepend('[Spoilered Image] ');
 		}
 		else
 		{
@@ -155,7 +155,7 @@ var Article = Backbone.View.extend({
 		var $spoiltag = this.$el.children('figure').find('i');
 		var sp = oneeSama.spoiler_info(spoiler, false);
 		if (oneeSama.spoilToggle) {
-			$spoiltag.first().text($spoiltag.first().text().replace(/^\(/,"\(Spoiler, "));
+			$fcap.textContent.prepend('[Spoilered Images] ');
 		}
 		else
 		{
