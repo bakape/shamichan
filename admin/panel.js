@@ -7,9 +7,10 @@ var _ = require('../lib/underscore'),
 
 var ADDRS = STATE.dbCache.addresses;
 authcommon.modCache.addresses = ADDRS;
+var ip_key = authcommon.ip_key;
 
 function on_client_ip(ip, clients) {
-	var addr = {ip: ip, count: clients.length};
+	var addr = {key: ip_key(ip), ip: ip, count: clients.length};
 	// This will leak 0-count clients.
 	// I want them to expire after a delay, really. Should reduce churn.
 	this.send([0, common.COLLECTION_ADD, 'addrs', addr]);
@@ -38,7 +39,7 @@ okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
 	var ip = msg[0];
 	if (!authcommon.is_valid_ip(ip))
 		return false;
-	var key = authcommon.ip_key(ip);
+	var key = ip_key(ip);
 	var addr = ADDRS[key];
 	if (addr) {
 		client.send([0, common.COLLECTION_ADD, 'addrs',
@@ -71,7 +72,7 @@ okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
 	var ip = msg[0], name = msg[1];
 	if (!authcommon.is_valid_ip(ip) || typeof name != 'string')
 		return false;
-	var key = authcommon.ip_key(ip);
+	var key = ip_key(ip);
 	name = name.trim().slice(0, 30);
 	var m = connect().multi();
 	if (!name) {
@@ -90,7 +91,7 @@ okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
 		// should observe a publication for this cache update
 		var addr = ADDRS[key];
 		if (!addr)
-			addr = ADDRS[key] = {ip: ip};
+			addr = ADDRS[key] = {key: key, ip: ip};
 		addr.name = name;
 
 		var amend = {name: name};
@@ -124,7 +125,7 @@ function unlisten_panel(client) {
 
 function snapshot_panel() {
 	var addrCount = 0;
-	for (var ip in ADDRS)
+	for (var key in ADDRS)
 		addrCount++;
 
 	var ranges = STATE.dbCache.ranges;
@@ -158,9 +159,10 @@ function subscribe() {
 
 	var ips = [];
 	for (var ip in STATE.clientsByIP) {
-		var a = ADDRS[ip];
+		var key = ip_key(ip);
+		var a = ADDRS[key];
 		ips.push(a ? address_view(a) : {
-			ip: ip, shallow: true,
+			key: key, ip: ip, shallow: true,
 			count: STATE.clientsByIP[ip].length
 		});
 	}

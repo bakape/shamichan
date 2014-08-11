@@ -10,13 +10,13 @@ function connect() {
 	return global.redis;
 }
 
-function ban(m, mod, ip, type) {
+function ban(m, mod, ip, key, type) {
 	if (type == 'unban') {
 		// unban from every type of suspension
 		authcommon.suspensionKeys.forEach(function (suffix) {
-			m.srem('hot:' + suffix, ip);
+			m.srem('hot:' + suffix, key);
 		});
-		m.hdel('ip:' + ip, 'ban');
+		m.hdel('ip:' + key, 'ban');
 	}
 	else {
 		// need to validate that this is a valid ban type
@@ -24,11 +24,13 @@ function ban(m, mod, ip, type) {
 		if (type != 'timeout')
 			return false;
 
-		m.sadd('hot:' + type + 's', ip);
-		m.hset('ip:' + ip, 'ban', type);
+		m.sadd('hot:' + type + 's', key);
+		m.hset('ip:' + key, 'ban', type);
 	}
 	var now = Date.now();
-	var info = {ip: ip, type: type, time: now};
+	var info = {ip: key, type: type, time: now};
+	if (key !== ip)
+		info.realip = ip;
 	if (mod.ident.email)
 		info.email = mod.ident.email;
 	m.rpush('auditLog', JSON.stringify(info));
@@ -46,9 +48,10 @@ okyaku.dispatcher[authcommon.BAN] = function (msg, client) {
 	var type = msg[1];
 	if (!authcommon.is_valid_ip(ip))
 		return false;
+	var key = authcommon.ip_key(ip);
 
 	var m = connect().multi();
-	if (!ban(m, client, ip, type))
+	if (!ban(m, client, ip, key, type))
 		return false;
 
 	m.exec(function (err) {
@@ -58,11 +61,11 @@ okyaku.dispatcher[authcommon.BAN] = function (msg, client) {
 
 		/* XXX not DRY */
 		var ADDRS = authcommon.modCache.addresses;
-		if (ADDRS[ip])
-			ADDRS[ip].ban = wasBanned;
+		if (ADDRS[key])
+			ADDRS[key].ban = wasBanned;
 
 		var a = {ban: wasBanned};
-		client.send([0, common.MODEL_SET, ['addrs', ip], a]);
+		client.send([0, common.MODEL_SET, ['addrs', key], a]);
 	});
 	return true;
 };

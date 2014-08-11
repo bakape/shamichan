@@ -103,10 +103,11 @@ function append_mnemonic(info) {
 	if (!ip)
 		return;
 	var mnemonic = config.IP_MNEMONIC && ip_mnemonic(ip);
+	var key = ip_key(ip);
 
 	// Terrible hack.
 	if (mnemonic && modCache.addresses) {
-		var addr = modCache.addresses[ip];
+		var addr = modCache.addresses[key];
 		if (addr && addr.name)
 			mnemonic += ' "' + addr.name + '"';
 	}
