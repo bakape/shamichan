@@ -10,6 +10,9 @@ DEFINES.BAN = 103;
 var modCache = {}; // TEMP
 exports.modCache = modCache;
 
+var suspensionKeys = ['boxes', 'bans', 'slows', 'suspensions', 'timeouts'];
+exports.suspensionKeys = suspensionKeys;
+
 var delayNames = ['now', 'soon', 'later'];
 var delayDurations = {now: 0, soon: 60, later: 20*60};
 exports.delayDurations = delayDurations;
