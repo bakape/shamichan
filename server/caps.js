@@ -150,11 +150,9 @@ function range_lookup(ranges, num) {
 	return result;
 }
 
-var rangeKeys = ['boxes', 'bans', 'slows', 'suspensions', 'timeouts'];
-
 hooks.hook('reloadHot', function (hot, cb) {
 	var r = global.redis;
-	async.forEach(rangeKeys, function (key, cb) {
+	async.forEach(authcommon.suspensionKeys, function (key, cb) {
 		global.redis.smembers('hot:' + key, function (err, ranges) {
 			if (err)
 				return cb(err);

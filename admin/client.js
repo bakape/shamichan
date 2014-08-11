@@ -269,18 +269,20 @@ var AddressView = Backbone.View.extend({
 	ban: function () {
 		var ip = this.model.get('ip');
 		var attrs = this.model.attributes;
-		if (!attrs.ban){
-			if (!confirm('Ban ' + ip + '?'))
-				return;
-			var type = 'timeout';
+		var act, type;
+		if (!attrs.ban) {
+			act = 'Ban';
+			type = 'timeout';
 		} else {
-			if (!confirm('Unban ' + ip + '?'))
-				return;
-			var type = 'unban';
+			act = 'Unban';
+			type = 'unban';
 		}
+		if (!confirm(act + ' ' + ip + '?'))
+			return;
 
 		send([BAN, ip, type]);
-		this.$('.ban').prop('disabled', true);
+		// show ... while processing
+		this.$('.ban').val('...');
 	},
 });
 

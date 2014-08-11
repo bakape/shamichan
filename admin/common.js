@@ -10,6 +10,9 @@ DEFINES.BAN = 103;
 var modCache = {}; // TEMP
 exports.modCache = modCache;
 
+var suspensionKeys = ['boxes', 'bans', 'slows', 'suspensions', 'timeouts'];
+exports.suspensionKeys = suspensionKeys;
+
 var delayNames = ['now', 'soon', 'later'];
 var delayDurations = {now: 0, soon: 60, later: 20*60};
 exports.delayDurations = delayDurations;
@@ -100,10 +103,11 @@ function append_mnemonic(info) {
 	if (!ip)
 		return;
 	var mnemonic = config.IP_MNEMONIC && ip_mnemonic(ip);
+	var key = ip_key(ip);
 
 	// Terrible hack.
 	if (mnemonic && modCache.addresses) {
-		var addr = modCache.addresses[ip];
+		var addr = modCache.addresses[key];
 		if (addr && addr.name)
 			mnemonic += ' "' + addr.name + '"';
 	}
