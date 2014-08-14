@@ -15,12 +15,14 @@
 	},
 	"dependencies": {
 		"async": "0.2.9",
+		"cron": "1.0.4",
 		"formidable": "1.0.14",
 		"minimist": "0.2.0",
 		"recaptcha": "1.2.0",
 		"redis": "0.8.4",
 		"request": "2.27",
 		"sockjs": "0.3.7",
+		"time": "0.11.0",
 		"tmp": "0.0.21",
 		"uglify-js": "2.4.0",
 		"winston": "0.7.2"

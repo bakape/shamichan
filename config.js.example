@@ -43,6 +43,9 @@ var config = {
 
 	VOICE_PATH: 'voice',
 
+	ANON_HOURS: false,
+	ANON_HOURS_PER_DAY: 2, /* Accepted values are [1, 2, 3, 4, 6, 12, 24] */
+
     EIGHT_BALL: [
         "Yes",
         "No",
