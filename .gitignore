@@ -4,6 +4,7 @@
 .build
 .lock*
 .DS_Store
+.project
 authdump
 config.js
 graveyard
