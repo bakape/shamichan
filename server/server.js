@@ -1209,7 +1209,7 @@ function ah_check(){
 	db.ah_get(
 		function(err, read){
 			var hours = new Date().getUTCHours();
-			anon_hour = (read.hours.indexOf(String(hours)) > -1);
+			anon_hour = (read.hours.split(',').indexOf(String(hours)) > -1);
 		}
 	);
 }
