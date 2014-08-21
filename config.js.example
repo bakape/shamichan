@@ -68,7 +68,7 @@ var config = {
     ],
 
 	/* Client-side custom site-wide banner.*/ 
-	CUSTOM_BANNER: '<b id="radioBanner"></b><script src="../js/radio-api-parse-v1.js"></script><script>rb_init();</script>',
+	CUSTOM_BANNER: false,
 };
 
 module.exports = config;
