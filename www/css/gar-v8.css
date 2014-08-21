@@ -26,6 +26,9 @@ b.admin {
 b.moderator {
 	color: #128e3c;
 }
+#banner {
+	background: rgba(233, 224, 201, 0.7);
+}
 body {
 	background: #eee url('scales.png');
 }

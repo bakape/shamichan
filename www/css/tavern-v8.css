@@ -39,6 +39,10 @@ article.editing .themed {
 b.admin {
 	color: #f00000;
 }
+#banner {
+	background: url(wood.jpg);
+	color: white;
+}
 body {
 	background: url(tavern.jpg);
     background-repeat:no-repeat;

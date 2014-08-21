@@ -13,6 +13,9 @@ b.admin {
 b.moderator {
 	color: purple;
 }
+#banner {
+	background: rgba(255, 255, 255, 0.7);
+}
 body, pre, .themed {
 	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro";
 	font-size: 12pt;

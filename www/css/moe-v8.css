@@ -26,6 +26,9 @@ b.admin {
 b.moderator {
 	color: purple;
 }
+#banner {
+	background: rgba(214, 218, 240, 0.7);
+}
 body {
 	background-color: #eef2ff;
 }

@@ -39,6 +39,10 @@ article.editing .themed {
 b.admin {
 	color: #f00000;
 }
+#banner {
+	background-image: url(rave_bg.gif);
+	opacity: 0.9;
+}
 body{
 	background-image: url(rave_dance.gif),
 		url(rave_tint.gif);	
