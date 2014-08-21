@@ -157,6 +157,10 @@ span.control .popup-menu {
 	top: 2px;
 	width: 12px;
 }
+body > nav {
+  position: relative;
+  z-index: 101;
+}
 #banner {
 	display: block;
 	overflow: hidden;
