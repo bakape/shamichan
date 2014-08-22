@@ -6,6 +6,5 @@ function write_banner(){
         document.getElementById('banner').innerHTML = info;
     });
 }
-document.body.innerHTML += '<span id="banner"></span>';
 write_banner();
 setInterval(write_banner, 10000);
