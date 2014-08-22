@@ -1804,9 +1804,9 @@ function hmget_obj(r, key, keys, cb) {
 /* ANON HOURS */
 
 exports.ah_get = function(cb){
- 	redis_client().hgetall('anonhours', cb);
+ 	global.redis.hgetall('anonhours', cb);
 };
 
 exports.ah_set = function(date, hours, cb){
- 	redis_client().hmset('anonhours', 'date', date, 'hours', hours, cb);
+ 	global.redis.hmset('anonhours', 'date', date, 'hours', hours, cb);
 };

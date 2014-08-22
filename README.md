@@ -34,6 +34,7 @@ Optional npm deps for various features:
 * ~~daemon~~ (broken currently)
 * icecast now-playing banners: node-expat
 * [send](https://github.com/visionmedia/send) (if you want to serve static files directly from the node.js process; useful in debug mode also)
+* forced anonymity hours: cron
 
 Standalone upkeep scripts:
 
