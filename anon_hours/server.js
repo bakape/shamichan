@@ -1,6 +1,8 @@
 var db = require('../db'),
 	config = require('../config'),
-	cronJob = require('cron').CronJob;
+	common = require('../common'),
+	cronJob = require('cron').CronJob,
+	tripcode = require('./../tripcode/tripcode');
 
 exports.ah_init = function(){
 	db.ah_get(
@@ -41,12 +43,56 @@ function ah_gen(){
 }
 
 // Check if the current hour is an anon hour
+var nameDB;
 function ah_check(){
 	db.ah_get(
 		function(err, read){
 			var hours = new Date().getHours();
-			module.exports.anon_hour = (read.hours.split(',').indexOf(String(hours)) > -1);
+			var anon_hour = (read.hours.split(',').indexOf(String(hours)) > -1);
+			module.exports.anon_hour = anon_hour;
+			
+			var random_name_hour = false;
+			if (anon_hour){
+				// Roll for anon hour becoming a random name hour
+				var chance = config.RANDOM_NAME_HOURS;
+				if (chance < 10){
+					for (i = 1; i < chance; i++){
+						if (Math.random() > 0.9)
+							random_name_hour = true;
+					}
+				} else
+					random_name_hour = true;
+			}
+			// Load used name set from redis
+			db.nameDB_get(
+				function(err, res){
+					if (err || !res)
+						random_name_hour = false;
+					nameDB = res;
+					module.exports.random_name_hour = random_name_hour;
+				}
+			);
 		}
 	);
 }
 
+// Pick a random name + tripcode from the currently loaded posted name set
+exports.random_name = function(post){
+	var combined = nameDB[Math.floor(Math.random() * nameDB.length)];
+	var name = /^(.+?)\|\|\|.*?$/.exec(combined);
+	var trip = /^.*?\|\|\|(.+?)$/.exec(combined);
+	if (name)
+		post.name = name[1];
+	if (trip)
+		post.trip = trip[1];
+};
+
+// Parse msg.name and write to used name set
+exports.name_parse = function(msg){
+	var parsed = common.parse_name(msg);
+	var trip = '';
+	if (parsed[1] || parsed[2])
+		trip = tripcode.hash(parsed[1], parsed[2]);
+	var combined = parsed[0] + '|||' + trip;
+	db.nameDB_add(combined);
+};

@@ -766,8 +766,13 @@ function allocate_post(msg, client, callback) {
 			post.subject = subject;
 	}
 
-	if(config.ANON_HOURS)
+	if(config.ANON_HOURS){
 		var anon_hour = ah.anon_hour;
+		if (msg.name)
+			ah.name_parse(msg.name);
+		if (ah.random_name_hour)
+			ah.random_name(post);
+	}
 
 	/* TODO: Check against client.watching? */
 	if (msg.name && !anon_hour) {
