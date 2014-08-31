@@ -269,18 +269,35 @@ var AddressView = Backbone.View.extend({
 	ban: function () {
 		var ip = this.model.get('ip');
 		var attrs = this.model.attributes;
-		var act, type;
+		var act, type, sentence, description;
 		if (!attrs.ban) {
 			act = 'Ban';
 			type = 'timeout';
+			var input = prompt('Enter a space-seperated ban duritation in the "days hours minutes" format! ' +
+				'Enter "perma" to ban permanently!', '0 0 0').trim();
+			if (!/^\d+ \d+ \d+$|^perma$/.test(input))
+				return alert('Incorrect input value.');
+			if (input == 'perma'){
+				sentence = 'perma';
+				description = ' permanently?';
+			} else {
+				var i_array = input.split(' ');
+				var days = i_array[0];
+				var hours = i_array[1];
+				var minutes = i_array[2];
+				sentence = (((days * 24) + hours) * 60 + minutes) * 60 * 1000;
+				description = ' for ' + days + ' days, ' + hours + ' hours and ' + minutes + '\u00b19 minutes?';
+			}
 		} else {
 			act = 'Unban';
 			type = 'unban';
+			sentence = 0;
+			description = '?'; 
 		}
-		if (!confirm(act + ' ' + ip + '?'))
+		if (!confirm(act + ' ' + ip + description))
 			return;
 
-		send([BAN, ip, type]);
+		send([BAN, ip, type, sentence]);
 		// show ... while processing
 		this.$('.ban').val('...');
 	},
