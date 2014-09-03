@@ -70,7 +70,7 @@ function clean_up() {
 							return winston.error(err);
 						winston.info("Purged thread #" + op);
 						if (n != 1)
-							winston.warn("Not archived?");
+							winston.warn("Not purged?");
 					});
 				});
 			} else {
