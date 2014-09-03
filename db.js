@@ -7,6 +7,7 @@ var _ = require('./lib/underscore'),
     events = require('events'),
     fs = require('fs'),
     hooks = require('./hooks'),
+    imager = require('./imager'),
     Muggle = require('./etc').Muggle,
     tail = require('./tail'),
     util = require('util'),
@@ -798,6 +799,83 @@ Y.remove_thread = function (op, callback) {
 		self.finish_quietly(dead_key, warn);
 		self.hide_image(dead_key, warn);
 	}], callback);
+};
+
+// Purges all the thread's keys from the database and delete's all images contained
+Y.purge_thread = function(op, callback){
+	var r = this.connect();
+	var key = 'thread:' + op;
+	var self = this;
+	async.waterfall([
+		// Confirm thread can be deleted
+		function(next){
+			var m = r.multi();
+			m.exists(key);
+			m.hget(key, 'immortal');
+			m.exec(next);
+		},
+		function(res, next){
+			if (!res[0])
+				return callback(Muggle(key + ' does not exist.'));
+			if (parseInt(res[1], 10))
+				return callback(Muggle(key + ' is immortal.'));
+			// Get post list
+			r.lrange(key + ':posts', 0, -1, next);
+		},
+		// Read all thread's hashes
+		function(res, next){
+			var m = r.multi();
+			m.hgetall(key);
+			if (res){
+				res.forEach(function(el){
+					m.hgetall('post:' + el);
+				});
+			}
+			m.exec(next);
+		},
+		function(res, next){
+			// Delete images
+			var to_delete = [];
+			var imp = imager.media_path;
+			var m = r.multi();
+			for (i = 0; i < res.length; i++){
+				if (res[i].src)
+					to_delete.push(imp('src', res[i].src));
+				if (res[i].thumb)
+					to_delete.push(imp('thumb', res[i].thumb));
+				if (res[i].mid)
+					to_delete.push(imp('mid', res[i].mid));
+			}
+			to_delete.forEach(function(el){
+				fs.unlink(el, function(err){
+					if (err)
+						winston.error(err);
+				});
+			});
+			m.lrange(key + ':posts', 0, -1);
+			m.zrem('tag:' + res[0].tags + ':threads', op);
+			m.exec(next);
+		},
+		function(res, done){
+			// Delete post keys
+			var m = r.multi();
+			if (res[0]){
+				res[0].forEach(function(entry){
+					m.del('post:' + entry);
+					m.del('post:' + entry + ':links');
+				});
+			}
+			// Delete thread keys
+			m.del(key);
+			m.del(key + ':links');
+			m.del(key + ':privs');
+			m.del(key + ':dels');
+			m.del(key + ':history');
+			m.del(key + ':posts');
+			m.exec(done);
+		},
+		callback
+	]);
 };
 
 Y.archive_thread = function (op, callback) {

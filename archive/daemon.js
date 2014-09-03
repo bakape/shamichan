@@ -62,17 +62,30 @@ function clean_up() {
 			var op = parseInt(m[1], 10);
 			if (!op)
 				return;
-			yaku.archive_thread(op, function (err) {
-				if (err)
-					return winston.error(err);
-				r.zrem(expiryKey, entry, function (err, n) {
-					if (err)
-						return winston.error(err)
-					winston.info("Archived thread #" + op);
-					if (n != 1)
-						winston.warn("Not archived?");
+			
+			if (config.VOLATILE){
+				yaku.purge_thread(op, function(){
+					r.zrem(expiryKey, entry, function (err, n) {
+						if (err)
+							return winston.error(err);
+						winston.info("Purged thread #" + op);
+						if (n != 1)
+							winston.warn("Not archived?");
+					});
 				});
-			});
+			} else {
+				yaku.archive_thread(op, function (err) {
+					if (err)
+						return winston.error(err);
+					r.zrem(expiryKey, entry, function (err, n) {
+						if (err)
+							return winston.error(err);
+						winston.info("Archived thread #" + op);
+						if (n != 1)
+							winston.warn("Not archived?");
+					});
+				});
+			}
 		});
 	});
 	at_next_minute(clean_up);

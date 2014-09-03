@@ -26,6 +26,10 @@ var config = {
 	LONG_TERM_LIMIT: 2000*20*12,
 	NEW_POST_WORTH: 50,
 	IMAGE_WORTH: 50,
+	// Instructs archive/daemon.js to permanently delete threads instead of archiving them
+	// Existing archives will not be removed
+	// Note: upkeep/clean.js is not needed with this option enabled
+	VOLATILE: false,
 	SUBJECT_MAX_LENGTH: 50,
 	EXCLUDE_REGEXP: /[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g,
 	SAGE_ENABLED: true,
