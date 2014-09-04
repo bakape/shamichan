@@ -38,8 +38,10 @@ function ah_gen(){
 			p = Math.floor(Math.random() * s);
 		ah.push(m + p);
 	}
-	var date = new Date().getDate();
-	db.ah_set(date, ah.join(), ah_check);
+	var d = new Date();
+	var date = d.getDate();
+	var month = d.getMonth();
+	db.ah_set(date, ah.join(), month, ah_check);
 }
 
 // Check if the current hour is an anon hour
@@ -47,10 +49,12 @@ var nameDB;
 function ah_check(){
 	db.ah_get(
 		function(err, read){
-			var hours = new Date().getHours();
+			var d = new Date();
+			var hours = d.getHours();
+			var month = d.getMonth();
 			var anon_hour = (read.hours.split(',').indexOf(String(hours)) > -1);
 			module.exports.anon_hour = anon_hour;
-			
+						
 			var random_name_hour = false;
 			if (anon_hour){
 				// Roll for anon hour becoming a random name hour
@@ -63,15 +67,21 @@ function ah_check(){
 				} else
 					random_name_hour = true;
 			}
-			// Load used name set from redis
-			db.nameDB_get(
-				function(err, res){
-					if (err || !res)
-						random_name_hour = false;
-					nameDB = res;
-					module.exports.random_name_hour = random_name_hour;
-				}
-			);
+			// Clear the used name set at the start of a new month
+			if (read.month != month){
+				global.redis.del('nameDB');
+				module.exports.random_name_hour = false;
+			} else {
+				// Load used name set from redis
+				db.nameDB_get(
+					function(err, res){
+						if (err || !res)
+							random_name_hour = false;
+						nameDB = res;
+						module.exports.random_name_hour = random_name_hour;
+					}
+				);
+			}
 		}
 	);
 }

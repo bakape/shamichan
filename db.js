@@ -1887,8 +1887,8 @@ exports.ah_get = function(cb){
 };
 
 // Write anon hour set to redis
-exports.ah_set = function(date, hours, cb){
- 	global.redis.hmset('anonhours', 'date', date, 'hours', hours, cb);
+exports.ah_set = function(date, hours, month, cb){
+ 	global.redis.hmset('anonhours', 'date', date, 'hours', hours, 'month', month, cb);
 };
 
 // Read posted name set from redis
