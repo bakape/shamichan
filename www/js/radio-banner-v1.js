@@ -15,7 +15,7 @@ function banner_left(){
     xhr.onload = function() {
         var text = xhr.responseText;
         document.getElementById('banner_left').innerHTML = '&nbsp;&nbsp;' + text;
-    }
+    };
     xhr.send(null);
 }
 
