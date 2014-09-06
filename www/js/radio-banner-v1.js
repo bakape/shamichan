@@ -1,5 +1,5 @@
 function write_banner(cb){
-    $.getJSON('http://r-a-d.io/api', function(data){
+    $.getJSON('https://r-a-d.io/api', function(data){
         var main = data.main;
         var info ='<a href="http://r-a-d.io/" target="_blank">' + '[' + main.listeners + '] ' +
             main.dj.djname + '</a>' + '&nbsp;&nbsp;' + main.np;
@@ -20,5 +20,6 @@ function banner_left(){
 }
 
 write_banner(banner_left);
-setInterval(write_banner, 10000);
-setInterval(banner_left, 60000);
+setInterval(function(){
+	write_banner(banner_left);
+}, 10000);
