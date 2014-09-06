@@ -38,6 +38,7 @@ if (window.devicePixelRatio > 1)
 optSpecs.push(option_thumbs);
 optSpecs.push(option_backlinks);
 optSpecs.push(option_spoiler);
+optSpecs.push(option_illya_dance);
 optSpecs.push(option_reply_at_right);
 optSpecs.push(option_theme);
 optSpecs.push(option_last_n);
@@ -273,6 +274,24 @@ function option_spoiler(spoilertoggle) {
 option_spoiler.id = 'nospoilertoggle';
 option_spoiler.label = 'Spoilered Images';
 option_spoiler.type = 'revcheckbox';
+
+/* ILLYA DANCE */
+
+function option_illya_dance(illyatoggle){
+	var dancer = '<video autoplay loop id="bgvid" ' +
+		'style="position:fixed; right:0; top:0; width:100%; height:auto; z-index:-100; background-size:cover;">' + 
+			'<source src="http://meguca.org/static/illya.webm" type="video/webm">' +
+			'<source src="http://meguca.org/static/illya.mp4" type="video/mp4">' +
+		'</video>';
+	if (illyatoggle)
+		$("body").append(dancer);
+	else 
+		$("#bgvid").remove();
+}
+
+option_illya_dance.id = 'board.$BOARD.illyaBGToggle';
+option_illya_dance.label = 'Illya Dance';
+option_illya_dance.type = 'checkbox';
 
 /* INLINE EXPANSION */
 
