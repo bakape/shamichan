@@ -15,7 +15,6 @@ function build_faq(){
 	var answers = [
 		"Lewd is good", 
 		"No 3D porn", 
-		"Spoiler NSFW images", 
 		"Image size limit is 20 MB", 
 		"mumble.meguca.org:64738", 
 		"github.com/bakape/doushio", 
