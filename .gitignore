@@ -22,7 +22,6 @@ voice/*.mp3
 www/archive
 www/js/client*.js
 www/js/vendor*.js
-www/js/banner_left.html
 www/src
 www/thumb
 www/mid

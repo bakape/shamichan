@@ -1,25 +1,36 @@
-function write_banner(cb){
+var info;
+function write_banner(){
     $.getJSON('https://r-a-d.io/api', function(data){
         var main = data.main;
-        var info ='<a href="http://r-a-d.io/" target="_blank">' + '[' + main.listeners + '] ' +
+        var new_info ='<a href="http://r-a-d.io/" target="_blank">' + '[' + main.listeners + '] ' +
             main.dj.djname + '</a>' + '&nbsp;&nbsp;' + main.np;
-        document.getElementById('banner_center').innerHTML = info;
-	if (cb)
-            cb();
+		if (new_info != info){
+			info = new_info;
+        	document.getElementById('banner_center').innerHTML = info;
+       	}
     });
 }
 
-function banner_left(){
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://meguca.org/static/js/banner_left.html", true);
-    xhr.onload = function() {
-        var text = xhr.responseText;
-        document.getElementById('banner_left').innerHTML = '&nbsp;&nbsp;' + text;
-    };
-    xhr.send(null);
+function build_faq(){
+	var answers = [
+		"Lewd is good", 
+		"No 3D porn", 
+		"Spoiler NSFW images", 
+		"Image size limit is 20 MB", 
+		"mumble.meguca.org:64738", 
+		"github.com/bakape/doushio", 
+		"The admin is drunk"
+	];
+	var list = ['<ul>'];
+	answers.forEach(function(entry){
+		list.push('<li>' + entry + '<li>');
+	});
+	list.push('<ul>');
+	document.getElementById('FAQ').innerHTML = list.join('');
 }
 
-write_banner(banner_left);
-setInterval(function(){
-	write_banner(banner_left);
-}, 10000);
+window.onload = function(){
+	build_faq();
+	write_banner();
+	setInterval(write_banner, 10000);	
+};

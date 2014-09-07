@@ -164,7 +164,6 @@ body > nav {
 }
 #banner {
 	display: block;
-	overflow: hidden;
 	text-align: center;
 	white-space: nowrap;
 	position: fixed;
@@ -174,9 +173,31 @@ body > nav {
 	margin-left: -8px;
 	margin-right: -8px;
 }
-#banner_left {
-	float: left;
-	width: 0;
+#banner_FAQ {
+	float: right;
+	margin-right: 0.5em;
+}
+#FAQ {
+	display: none;
+	text-align: left;
+	z-index: 200;
+	background-color: white;
+	top: 30px;
+	color: black;
+	padding: 1em;
+	margin-right: 0.5em;
+	position: fixed;
+	right: 0;
+	overflow-y: hidden;
+	max-height: 80%;
+}
+#FAQ > ul {
+	list-style-type:none;
+	-webkit-margin-before: 0em;
+	-webkit-margin-after: 0em;
+	-webkit-margin-start: 0px;
+	-webkit-margin-end: 0px;
+	-webkit-padding-start: 0px;
 }
 section #banner {
 	margin-top: 1em;

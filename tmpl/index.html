@@ -17,9 +17,12 @@ $NAV
 <label for="email" class="ident">Email:</label> <input id="email" name="email"><br>
 </fieldset>
 <span id="banner">
-	<b id="banner_left"></b>
 	<b id="banner_center"></b>
+	<b id="banner_FAQ">
+		<a onmouseover="document.getElementById('FAQ').style.display = 'block';" onmouseout="document.getElementById('FAQ').style.display = 'none';">FAQ</a>
+	</b>
 </span>
+<div id="FAQ"></div>
 $THREADS
 $NAV
 <script src="{{MEDIA_URL}}js/jquery-1.10.2.min.js"></script>
