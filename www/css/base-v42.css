@@ -165,7 +165,6 @@ body > nav {
 #banner {
 	display: block;
 	text-align: center;
-	white-space: nowrap;
 	position: fixed;
 	top: 0;
 	width: 100%;
