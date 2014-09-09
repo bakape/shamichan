@@ -202,6 +202,15 @@ section #banner {
 	margin-top: 1em;
 	text-align: left;
 }
+#bgvid {
+	position: fixed;
+	right: 0;
+	top: 0;
+	width: 100%;
+	height: auto;
+	z-index: -100;
+	background-size: cover;
+}
 .email {
 	text-decoration: underline;
 }
