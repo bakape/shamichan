@@ -622,9 +622,9 @@ web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
 		cb(null, 'redirect', '../' + params[2]);
 });
 
-web.resource(/^\/outbound\/(g|iqdb)\/([\w+\/]{22}\.jpg)$/,
+web.resource(/^\/outbound\/(g|iqdb)\/(\d+\.jpg)$/,
 			function (req, params, cb) {
-	var thumb = imager.config.MEDIA_URL + 'vint/' + params[2];
+	var thumb = imager.config.MEDIA_URL + 'thumb/' + params[2];
 
 	// attempt to make protocol more absolute
 	var u = urlParse(thumb, false, true);

@@ -486,8 +486,16 @@ OS.gazou = function (info, toppu) {
 			new_tab_link(src, '[foolz]')];
 	}
 	else {
+		var google = encodeURI('../outbound/g/' + info.thumb);
+		var iqdb = encodeURI('../outbound/iqdb/' + info.thumb);
+		var foolz = encodeURI('../outbound/hash/' + info.MD5);
 		src = encodeURI(this.image_paths().src + info.src);
-		caption = ['Image ', new_tab_link(src, info.src)];
+		caption = [
+			new_tab_link(src, info.src), ' ',
+			new_tab_link(google, '[google]'),
+			new_tab_link(iqdb, '[iqdb]'),
+			new_tab_link(foolz, '[foolz]'), ' '
+		];
 	}
 
 	var img = this.gazou_img(info, toppu);
