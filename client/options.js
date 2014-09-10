@@ -40,6 +40,7 @@ optSpecs.push(option_backlinks);
 optSpecs.push(option_spoiler);
 optSpecs.push(option_illya_dance);
 optSpecs.push(option_illya_mute);
+optSpecs.push(option_horizontal);
 optSpecs.push(option_reply_at_right);
 optSpecs.push(option_theme);
 optSpecs.push(option_last_n);
@@ -314,6 +315,20 @@ function option_illya_mute(toggle){
 option_illya_mute.id = 'illyaMuteToggle';
 option_illya_mute.label = 'Mute Illya';
 option_illya_mute.type = 'checkbox';
+
+/* HORIZONTAL POSTING */
+
+function option_horizontal(toggle){
+	var style = '<style id="horizontal">article,aside{display:inline-block;}</style>';
+	if (toggle)
+		$('body').append(style);
+	else 
+		$('#horizontal').remove();
+}
+
+option_horizontal.id = 'horizontalPosting';
+option_horizontal.label = 'Horizontal Posting';
+option_horizontal.type = 'checkbox';
 
 /* INLINE EXPANSION */
 
