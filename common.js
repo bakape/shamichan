@@ -492,9 +492,9 @@ OS.gazou = function (info, toppu) {
 		src = encodeURI(this.image_paths().src + info.src);
 		caption = [
 			new_tab_link(src, info.src), ' ',
-			new_tab_link(google, '[google]'),
-			new_tab_link(iqdb, '[iqdb]'),
-			new_tab_link(foolz, '[foolz]'), ' '
+			new_tab_link(google, '[GI]'),
+			new_tab_link(iqdb, '[IQ]'),
+			new_tab_link(foolz, '[FZ]'), ' '
 		];
 	}
 
