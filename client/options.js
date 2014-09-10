@@ -132,6 +132,7 @@ var themes = [
 	'higan',
     'rave',
     'tavern',
+    'glass'
 ];
 var globalVersion = 8;
 

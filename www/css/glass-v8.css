@@ -1,0 +1,80 @@
+a, blockquote a:hover, b.moderator {
+	color: Lavender;
+	text-shadow: -0.5px 0 grey , 0 0.5px grey , 0.5px 0 grey, 0 -0.5px grey;
+}
+blockquote, time, #FAQ {
+	color: white;
+	text-shadow: -0.5px 0 black, 0 0.5px black, 0.5px 0 black, 0 -0.5px black;
+}
+article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview {
+	background-color: rgba(40, 42, 46, 0.5);
+}
+article.editing {
+	border: 1px solid white;
+}
+b.admin {
+	color: #f00000;
+}
+#banner {
+	background-color: rgba(40, 42, 46, 0.5);
+}
+body {
+    color:white;
+    background-color: rgba(40, 42, 46, 0.5);
+}
+body, pre, .themed {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+}
+em {
+	color: #b5bd68;
+	text-shadow: -0.5px 0 green, 0 0.5px green, 0.5px 0 green, 0 -0.5px green;
+}
+.embed, .embed:hover {
+	color: black;
+	text-shadow: none;
+}
+#feedback, #options, #sync {
+	color: white;
+	text-shadow: none;
+}
+h1 {
+	font: bolder 28px Tahoma;
+	letter-spacing: -2px;
+}
+h2 {
+	font-family: Tahoma;
+}
+h3 {
+	color: #ce52c9;
+}
+hr {
+	border-top: 1px solid #282a2e;
+}
+i, i > a {
+	text-shadow: -1px 0 black, 0 0.5px black, 0.5px 0 black, 0 -0.5px black;
+}
+.act:before {
+	content: "[";
+}
+.act:after {
+	content: "]";
+}
+#lock, .scroll-lock header {
+	background-image: url('ui/invlock.png');
+}
+.popup-menu li:hover {
+	background-color: rgba(40, 42, 46, 0.6);
+}
+.themed {
+	color: white;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 1.5),
+	screen and (-o-device-pixel-ratio: 3/2),
+	screen and (min--moz-device-pixel-ratio: 1.5),
+	screen and (min-device-pixel-ratio: 1.5) {
+	#lock, .scroll-lock header {
+		background-image: url('ui/invlock2x.png');
+	}
+}
