@@ -43,6 +43,8 @@ optSpecs.push(option_illya_mute);
 optSpecs.push(option_horizontal);
 optSpecs.push(option_reply_at_right);
 optSpecs.push(option_theme);
+optSpecs.push(option_user_bg);
+optSpecs.push(option_user_bg_set);
 optSpecs.push(option_last_n);
 
 
@@ -330,6 +332,28 @@ function option_horizontal(toggle){
 option_horizontal.id = 'horizontalPosting';
 option_horizontal.label = 'Horizontal Posting';
 option_horizontal.type = 'checkbox';
+
+/* CUSTOM USER-SET BACKGROUND */
+
+function option_user_bg(toggle){
+	if ($.cookie('user_bg') && toggle){
+		var bg = '<img id="user_bg" src="' + $.cookie('user_bg') + '"></img>';
+		$('body').append(bg);
+	} else 
+		$('#user_bg').remove();
+}
+
+option_user_bg.id = 'board.$BOARD.userBG';
+option_user_bg.label = 'Custom Background';
+option_user_bg.type = 'checkbox';
+
+function option_user_bg_set(image){
+	$.cookie('user_bg', image);
+}
+
+option_user_bg_set.id = 'userBGimage';
+option_user_bg_set.label = ' ';
+option_user_bg_set.type = 'image';
 
 /* INLINE EXPANSION */
 
@@ -639,6 +663,11 @@ function make_options_panel() {
 			val = !$o.prop('checked');
 		else if (spec.type == 'positive')
 			val = Math.max(parseInt($o.val(), 10), 1);
+		else if (spec.type == 'image'){
+			var trimmed = $o.val().trim();
+			if (/^$|\.(jpe?g|png|gif)$/.test(trimmed))
+				val = trimmed;
+		}
 		else
 			val = $o.val();
 		options.set(id, val);
@@ -661,6 +690,11 @@ function make_options_panel() {
 				width: '4em',
 				maxlength: 4,
 				val: val,
+			});
+		} else if (type == 'image'){
+			$input = $('<input />', {
+				placeholder: 'Image URL',
+				val: val
 			});
 		}
 		else if (type instanceof Array) {

@@ -203,7 +203,7 @@ section #banner {
 	margin-top: 1em;
 	text-align: left;
 }
-#bgvid {
+#bgvid, #user_bg {
 	position: fixed;
 	right: 0;
 	top: 0;
