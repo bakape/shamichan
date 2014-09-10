@@ -157,10 +157,11 @@ span.control .popup-menu {
 	top: 2px;
 	width: 12px;
 }
-body > nav {
-  position: relative;
+#navTop {
+  position: fixed;
   z-index: 101;
-  margin-top: 1.5em;
+  top: 0;
+  font-weight: bold;
 }
 #banner {
 	display: block;

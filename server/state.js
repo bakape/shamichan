@@ -157,7 +157,7 @@ exports.reload_hot_resources = function (cb) {
 function make_navigation_html() {
 	if (!HOT.INTER_BOARD_NAVIGATION)
 		return '';
-	var bits = ['<nav>['];
+	var bits = ['<nav id="navTop">['];
 	config.BOARDS.forEach(function (board, i) {
 		if (board == config.STAFF_BOARD)
 			return;
