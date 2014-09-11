@@ -337,19 +337,19 @@ option_horizontal.type = 'checkbox';
 
 function option_user_bg(toggle){
 	if ($.cookie('user_bg') && toggle){
+		var image = $.cookie('user_bg');
 		$('body').append($('<div />', {
 			'id': 'user_bg'
 		}));
 		$('#user_bg').append($('<img />', {
 			'id': 'user_bg_image',
-			'src': $.cookie('user_bg')
+			'src': image
 		}));
 		
 		// Workaround image unloading on focus loss Chrome bug
 		if (typeof document.webkitHidden !== "undefined"){
 			var hidden = "webkitHidden";
 			var visibilityChange = "webkitvisibilitychange";
-			var image = $('#user_bg_image').attr('src');
 			
 			function handleVisibilityChange(){
 				if (document[hidden]) {
