@@ -337,10 +337,37 @@ option_horizontal.type = 'checkbox';
 
 function option_user_bg(toggle){
 	if ($.cookie('user_bg') && toggle){
-		var bg = '<img id="user_bg" src="' + $.cookie('user_bg') + '"></img>';
-		$('body').append(bg);
-	} else 
+		$('body').append($('<div />', {
+			'id': 'user_bg'
+		}));
+		$('#user_bg').append($('<img />', {
+			'id': 'user_bg_image',
+			'src': $.cookie('user_bg')
+		}));
+		
+		// Workaround image unloading on focus loss Chrome bug
+		if (typeof document.webkitHidden !== "undefined"){
+			var hidden = "webkitHidden";
+			var visibilityChange = "webkitvisibilitychange";
+			var image = $('#user_bg_image').attr('src');
+			
+			function handleVisibilityChange(){
+				if (document[hidden]) {
+					$('#user_bg_image').attr('src', '');
+				} else {
+					$('#user_bg_image').attr('src', image);
+				}
+			}
+			
+			document.addEventListener(visibilityChange, handleVisibilityChange, false);
+		}	
+	} else {
 		$('#user_bg').remove();
+		
+		// Remove workaround listener
+		if (typeof document.webkitHidden !== "undefined")
+			document.removeEventListener(visibilityChange, handleVisibilityChange);
+	}
 }
 
 option_user_bg.id = 'board.$BOARD.userBG';
