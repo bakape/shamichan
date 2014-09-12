@@ -175,7 +175,9 @@ span.control .popup-menu {
 }
 #banner_FAQ {
 	float: right;
-	margin-right: 0.5em;
+	margin-right: 0.2em;
+	position: absolute;
+	right: 0.2em;
 }
 #FAQ {
 	display: none;
@@ -185,7 +187,7 @@ span.control .popup-menu {
 	top: 30px;
 	color: black;
 	padding: 1em;
-	margin-right: 0.5em;
+	margin-right: 0.2em;
 	position: fixed;
 	right: 0;
 	overflow-y: hidden;
@@ -194,10 +196,15 @@ span.control .popup-menu {
 #FAQ > ul {
 	list-style-type:none;
 	-webkit-margin-before: 0em;
+	margin-top: 0em;
 	-webkit-margin-after: 0em;
+	margin-bottom: 0em;
 	-webkit-margin-start: 0px;
 	-webkit-margin-end: 0px;
 	-webkit-padding-start: 0px;
+	-moz-margin-start: 0em;
+	-moz-margin-end: 0px;
+	-moz-padding-start: 0px;
 }
 section #banner {
 	margin-top: 1em;
