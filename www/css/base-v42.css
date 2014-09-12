@@ -174,22 +174,24 @@ span.control .popup-menu {
 	margin-right: -8px;
 }
 #banner_FAQ {
-	float: right;
-	margin-right: 0.2em;
 	position: absolute;
-	right: 0.2em;
+	right: 0.4em;
+}
+#FAQ-container {
+	display: none;
+	z-index: 200;
+	padding-top: 1em;
+	position: fixed;
+	top: 0;
+	right: 0.4em;
 }
 #FAQ {
-	display: none;
+	display: inherit;
+	z-index: inherit;
 	text-align: left;
-	z-index: 200;
 	background-color: white;
-	top: 30px;
 	color: black;
 	padding: 1em;
-	margin-right: 0.2em;
-	position: fixed;
-	right: 0;
 	overflow-y: hidden;
 	max-height: 80%;
 }
