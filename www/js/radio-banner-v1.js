@@ -28,6 +28,19 @@ function build_faq(){
 	document.getElementById('FAQ').innerHTML = list.join('');
 }
 
+function bannerFAQ_mouseon(){
+	$('#FAQ-container').show();
+}
+
+function bannerFAQ_mouseoff(){
+	if (!$('#FAQ-container').is(':hover'))
+		$('#FAQ-container').hide();
+}
+
+function hide_Listener(el){
+	el.hide();
+}
+
 window.onload = function(){
 	build_faq();
 	write_banner();
