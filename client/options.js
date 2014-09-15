@@ -723,7 +723,7 @@ function make_options_panel() {
 			val = Math.max(parseInt($o.val(), 10), 1);
 		else if (spec.type == 'image'){
 			var trimmed = $o.val().trim();
-			if (/^$|\.(jpe?g|png|gif)$/.test(trimmed))
+			if (/^$|\.(jpe?g|png|gif)$/i.test(trimmed))
 				val = trimmed;
 		}
 		else
