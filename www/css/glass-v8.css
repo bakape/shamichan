@@ -2,7 +2,7 @@
 a, blockquote a:hover, b.moderator {
 	color: Lavender;
 }
-article {
+article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner, #banner_info {
 	background-color: rgba(40, 42, 46, 0.5);
 }
 article.editing {
@@ -13,9 +13,6 @@ blockquote, time, #FAQ {
 }
 b.admin {
 	color: #f00000;
-}
-#banner, #banner_info {
-	background: rgba(40, 42, 46, 0.7);
 }
 body {
     color:white;
