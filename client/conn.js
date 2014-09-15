@@ -42,7 +42,7 @@ function sync_status(msg, hover) {
 }
 
 connSM.act('load + start -> conn', function () {
-	sync_status('Connecting...', false);
+	sync_status('Connecting', false);
 	attempts = 0;
 	connect();
 });
@@ -69,13 +69,13 @@ window.new_socket = function (attempt) {
 };
 
 connSM.act('conn, reconn + open -> syncing', function () {
-	sync_status('Syncing...', false);
+	sync_status('Syncing', false);
 	CONN_ID = random_id();
 	send([SYNCHRONIZE, CONN_ID, BOARD, syncs, BUMP, document.cookie]);
 });
 
 connSM.act('syncing + sync -> synced', function () {
-	sync_status('Synced.', false);
+	sync_status('Synced', false);
 	attemptTimer = setTimeout(function () {
 		attemptTimer = 0;
 		reset_attempts();
@@ -101,7 +101,7 @@ connSM.act('* + close -> dropped', function (e) {
 		clearTimeout(attemptTimer);
 		attemptTimer = 0;
 	}
-	sync_status('Dropped.', true);
+	sync_status('Dropped', true);
 
 	attempts++;
 	var n = Math.min(Math.floor(attempts/2), 12);
@@ -115,12 +115,12 @@ connSM.act('dropped + retry -> reconn', function () {
 	/* Don't show this immediately so we don't thrash on network loss */
 	setTimeout(function () {
 		if (connSM.state == 'reconn')
-			sync_status('Reconnecting...', true);
+			sync_status('Reconnecting', true);
 	}, 100);
 });
 
 connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
-	msg = (msg && msg[0]) ? 'Out of sync: ' + msg[0] : 'Out of sync.';
+	msg = (msg && msg[0]) ? 'Out of sync: ' + msg[0] : 'Out of sync';
 	sync_status(msg, true);
 	if (attemptTimer) {
 		clearTimeout(attemptTimer);

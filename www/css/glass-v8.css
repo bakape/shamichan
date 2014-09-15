@@ -1,22 +1,18 @@
+/* Based on ashita */
 a, blockquote a:hover, b.moderator {
 	color: Lavender;
-	text-shadow: -0.5px 0 grey , 0 0.5px grey , 0.5px 0 grey, 0 -0.5px grey;
 }
-blockquote, time, #FAQ {
-	color: white;
-	text-shadow: -0.5px 0 black, 0 0.5px black, 0.5px 0 black, 0 -0.5px black;
-}
-article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview {
+article {
 	background-color: rgba(40, 42, 46, 0.5);
 }
 article.editing {
-	border: 1px solid white;
+	background-color: rgba(145, 145, 145, 0.5);
+}
+blockquote, time, #FAQ {
+	color: white;
 }
 b.admin {
 	color: #f00000;
-}
-#banner {
-	background-color: rgba(40, 42, 46, 0.5);
 }
 body {
     color:white;
@@ -28,15 +24,9 @@ body, pre, .themed {
 }
 em {
 	color: #b5bd68;
-	text-shadow: -0.5px 0 green, 0 0.5px green, 0.5px 0 green, 0 -0.5px green;
 }
 .embed, .embed:hover {
 	color: black;
-	text-shadow: none;
-}
-#feedback, #options, #sync {
-	color: white;
-	text-shadow: none;
 }
 h1 {
 	font: bolder 28px Tahoma;
@@ -51,9 +41,6 @@ h3 {
 hr {
 	border-top: 1px solid #282a2e;
 }
-i, i > a {
-	text-shadow: -1px 0 black, 0 0.5px black, 0.5px 0 black, 0 -0.5px black;
-}
 .act:before {
 	content: "[";
 }
@@ -62,6 +49,7 @@ i, i > a {
 }
 #lock, .scroll-lock header {
 	background-image: url('ui/invlock.png');
+	color: white;
 }
 .popup-menu li:hover {
 	background-color: rgba(40, 42, 46, 0.6);

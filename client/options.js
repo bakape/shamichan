@@ -143,7 +143,37 @@ function option_theme(theme) {
 		var css = theme + '-v' + globalVersion + '.css';
 		$('#theme').attr('href', mediaURL + 'css/' + css);
 	}
+	gen_glass();
 }
+
+function gen_glass(){
+	// Check if theme is glass and user-bg is set
+	if (/glass/.test($('#theme').attr('href')) && $.cookie('user_bg')){
+		var img = new Image();
+		img.src = $.cookie('user_bg');
+		img.onload = function(){
+			$(this).remove(); // prevent memory leaks
+			// Blur image with Pixastic and apply new backgrounds
+			Pixastic.process(img, 'blurfast', {amount: 1.5}, function(blurred){
+				var bg = 'url(' + blurred.toDataURL() + ') center fixed; background-size: cover;}' ;
+				var gradient_dark = 'linear-gradient(rgba(40, 42, 46, 0.5), rgba(40, 42, 46, 0.5)),';
+				var gradient_light = 'linear-gradient(rgba(145, 145, 145, 0.5), rgba(145, 145, 145, 0.5)),';
+				$('body').append($('<style />', {
+					id: 'blurred'
+				}));
+				$('#blurred').append(
+					'article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {' +
+						'background:' + gradient_dark + bg
+				);
+				$('#blurred').append('article.editing{' +
+					'background:' + gradient_light + bg
+				);
+			});
+		};
+	} else
+		$('#blurred').remove();
+}
+
 option_theme.id = 'board.$BOARD.theme';
 option_theme.label = 'Theme';
 option_theme.type = themes;
@@ -337,32 +367,33 @@ option_horizontal.type = 'checkbox';
 
 function option_user_bg(toggle){
 	if ($.cookie('user_bg') && toggle){
-		var image = $.cookie('user_bg');
-		$('body').append($('<div />', {
-			'id': 'user_bg'
-		}));
-		$('#user_bg').append($('<img />', {
-			'id': 'user_bg_image',
-			'src': image
+		var image = $.cookie('user_bg');		
+		$('body').append($('<img />', {
+			id: 'user_bg',
+			src: image
 		}));
 		
-		// Workaround image unloading on focus loss Chrome bug
+		// Generate transparent BG, if theme is glass
+		if (!$('#blurred').length)
+			gen_glass();
+		
+		// Workaround for image unloading on tab focus loss Chrome bug
+		// Basically, reloads the element to prevent the aggresive buggy caching or something
 		if (typeof document.webkitHidden !== "undefined"){
 			var hidden = "webkitHidden";
 			var visibilityChange = "webkitvisibilitychange";
 			
 			function handleVisibilityChange(){
-				if (document[hidden]) {
-					$('#user_bg_image').attr('src', '');
-				} else {
-					$('#user_bg_image').attr('src', image);
-				}
+				if (document[hidden])
+					$('#user_bg').attr('src', '');
+				else
+					$('#user_bg').attr('src', image);
 			}
-			
 			document.addEventListener(visibilityChange, handleVisibilityChange, false);
 		}	
 	} else {
 		$('#user_bg').remove();
+		$('#blurred').remove();
 		
 		// Remove workaround listener
 		if (typeof document.webkitHidden !== "undefined")
@@ -375,10 +406,10 @@ option_user_bg.label = 'Custom Background';
 option_user_bg.type = 'checkbox';
 
 function option_user_bg_set(image){
-	$.cookie('user_bg', image);
+	$.cookie('user_bg', image, {path: '/' + BOARD});
 }
 
-option_user_bg_set.id = 'userBGimage';
+option_user_bg_set.id = 'board.$BOARD.userBGimage';
 option_user_bg_set.label = ' ';
 option_user_bg_set.type = 'image';
 
@@ -720,7 +751,7 @@ function make_options_panel() {
 			});
 		} else if (type == 'image'){
 			$input = $('<input />', {
-				placeholder: 'Image URL',
+				placeholder: 'Local Image URL',
 				val: val
 			});
 		}
