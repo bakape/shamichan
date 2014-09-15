@@ -13,7 +13,7 @@ b.admin {
 b.moderator {
 	color: purple;
 }
-#banner {
+#banner, #banner_info {
 	background: rgba(255, 255, 255, 0.7);
 }
 body, pre, .themed {

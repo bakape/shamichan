@@ -26,6 +26,9 @@ article header {
 b {
 	font-weight: normal;
 }
+#banner, #banner_info {
+	background: rgba(0, 0, 0, 1);
+}
 b.admin, b.admin code {
 	background-color: #e50000;
 	color: black;

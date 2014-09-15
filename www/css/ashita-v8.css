@@ -32,7 +32,7 @@ article.editing .themed {
 b.admin {
 	color: #f00000;
 }
-#banner {
+#banner, #banner_info {
 	background: rgba(40, 42, 46, 0.7);
 }
 body {

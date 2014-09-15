@@ -26,4 +26,6 @@ this.hot = {
     SPECIAL_NAME_TRIPCODES: {
         name: "!tripcode",
     },
+    
+    BANNERINFO: '',
 };

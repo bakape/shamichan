@@ -14,6 +14,9 @@ blockquote, time, #FAQ {
 b.admin {
 	color: #f00000;
 }
+#banner, #banner_info {
+	background: rgba(40, 42, 46, 0.7);
+}
 body {
     color:white;
     background-color: rgba(40, 42, 46, 0.5);

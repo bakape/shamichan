@@ -163,22 +163,28 @@ span.control .popup-menu {
   top: 0;
   font-weight: bold;
 }
-#banner {
+#banner, #banner_info {
 	display: block;
 	text-align: center;
-	padding-bottom: 0.2em;
 	position: fixed;
-	top: 0;
 	width: 100%;
-	z-index: 100;
 	margin-left: -8px;
 	margin-right: -8px;
+}
+#banner {
+	top: 0;
+	z-index: 100;
+	padding-bottom: 0.1em;
 }
 #banner_FAQ {
 	float: right;
 	margin-right: 0.2em;
 	position: absolute;
 	right: 0.2em;
+}
+#banner_info{
+	top: 1.25em;
+	z-index: 99;
 }
 #FAQ {
 	display: none;

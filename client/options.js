@@ -162,7 +162,7 @@ function gen_glass(){
 					id: 'blurred'
 				}));
 				$('#blurred').append(
-					'article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {' +
+					'article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner, #banner_info {' +
 						'background:' + gradient_dark + bg
 				);
 				$('#blurred').append('article.editing{' +

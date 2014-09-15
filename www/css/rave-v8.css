@@ -39,7 +39,7 @@ article.editing .themed {
 b.admin {
 	color: #f00000;
 }
-#banner {
+#banner, #banner_info {
 	background-image: url(rave_bg.gif);
 	opacity: 0.9;
 }
