@@ -148,7 +148,7 @@ function option_theme(theme) {
 
 function gen_glass(){
 	// Check if theme is glass and user-bg is set
-	if (/glass/.test($('#theme').attr('href')) && $.cookie('user_bg')){
+	if (/glass/.test($('#theme').attr('href')) && $.cookie('user_bg') != '' && $.cookie('user_bg_state') == 'true'){
 		var img = new Image();
 		img.src = $.cookie('user_bg');
 		img.onload = function(){
@@ -366,7 +366,8 @@ option_horizontal.type = 'checkbox';
 /* CUSTOM USER-SET BACKGROUND */
 
 function option_user_bg(toggle){
-	if ($.cookie('user_bg') && toggle){
+	if ($.cookie('user_bg') != '' && toggle){
+		$.cookie('user_bg_state', 'true');
 		var image = $.cookie('user_bg');		
 		$('body').append($('<img />', {
 			id: 'user_bg',
