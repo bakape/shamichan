@@ -13,6 +13,7 @@ function show_toolbox() {
 		{name: 'Porn', kind: 8},
 		{name: 'Delete', kind: 9},
 		{name: 'Lock', kind: 11},
+		{name: 'Mnemonics', kind: 12},
 	];
 	if (IDENT.auth == 'Admin')
 		specs.push({name: 'Panel', kind: 'panel'});
@@ -60,7 +61,10 @@ function tool_action(event) {
 	var kind = $button.data('kind');
 	if (kind == 'panel')
 		return toggle_panel();
-
+	
+	if (kind == 12)
+		return toggle_mnemonics();
+	
 	/* On a thread page there's only one thread to lock, so... */
 	if (kind == 11 && THREAD && !ids.length)
 		ids = [THREAD];
@@ -475,6 +479,13 @@ var PanelView = Backbone.View.extend({
 function toggle_panel() {
 	var show = !adminState.get('visible');
 	send([show ? 60 : 61, 'adminState']);
+}
+
+function toggle_mnemonics(){
+	if (!$('#no_mnemonic').length)
+		$('body').append('<style id="no_mnemonic">.mod.addr{display:none;}</style>');
+	else 
+		$('#no_mnemonic').remove();
 }
 
 if (IDENT.auth == 'Admin') (function () {
