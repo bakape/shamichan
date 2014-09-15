@@ -73,6 +73,9 @@ figure img {
 	margin: 3px 20px 20px 0;
 	vertical-align: top;
 }
+h1 {
+	margin-top: 2em;
+}
 h1, h2 {
 	text-align: center;
 }
