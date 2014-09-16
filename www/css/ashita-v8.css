@@ -4,7 +4,7 @@ a, blockquote a:hover, b.moderator {
 a:hover, blockquote a, .email b:hover, article.editing a:hover {
 	color: #5f89ac;
 }
-article, aside, .modal, .pagination {
+article, aside, .modal, .pagination, #FAQ {
 	background-color: #282a2e;
 	border: 1px solid #282a2e;
 }
@@ -32,7 +32,7 @@ article.editing .themed {
 b.admin {
 	color: #f00000;
 }
-#banner, #banner_info {
+#banner {
 	background: rgba(40, 42, 46, 0.7);
 }
 body {

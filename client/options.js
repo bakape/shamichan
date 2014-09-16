@@ -162,7 +162,7 @@ function gen_glass(){
 					id: 'blurred'
 				}));
 				$('#blurred').append(
-					'article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner, #banner_info {' +
+					'article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {' +
 						'background:' + gradient_dark + bg
 				);
 				$('#blurred').append('article.editing{' +
@@ -694,8 +694,12 @@ _.defer(function () {
 			$opts = make_options_panel().appendTo('body');
 		if ($opts.is(':hidden'))
 			oneeSama.trigger('renderOptions', $opts);
+		var top = $('#banner').outerHeight() + 5 + 'px';
+		$('#options-panel').css('top', top);
+		if ($('#FAQ').is(":visible"))
+			$('#FAQ').toggle('fast');
 		$opts.toggle('fast');
-	}).insertAfter('#sync');
+	}).insertBefore('#banner_FAQ');
 
 	optSpecs.forEach(function (spec) {
 		spec(options.get(spec.id));

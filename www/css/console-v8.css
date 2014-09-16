@@ -26,7 +26,7 @@ article header {
 b {
 	font-weight: normal;
 }
-#banner, #banner_info {
+#banner {
 	background: rgba(0, 0, 0, 1);
 }
 b.admin, b.admin code {

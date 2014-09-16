@@ -8,22 +8,23 @@
 $META	<!--[if lt IE 9]><script src="{{MEDIA_URL}}js/ie.js"></script><![endif]-->
 	<script src="{{MEDIA_URL}}js/setup-v4.js"></script>
 </head>
-<a id="feedback" href="mailto:{{EMAIL}}">Feedback</a>
 $NAV
 <h1>$TITLE</h1>
-<span id="sync">Not synched</span>
 <fieldset>
 <label for="name" class="ident">Name:</label> <input id="name" name="name"><br>
 <label for="email" class="ident">Email:</label> <input id="email" name="email"><br>
 </fieldset>
 <span id="banner">
+    {{NAVTOP}}
 	<b id="banner_center"></b>
-	<b id="banner_FAQ">
-		<a onclick="FAQ_onclick();">FAQ</a>
-	</b>
+    <b id="banner_FAQ">
+        <a onclick="FAQ_onclick();">FAQ</a>
+    </b>
+    <b id="banner_info">{{BANNERINFO}}</b>
+	<a id="feedback" href="mailto:{{EMAIL}}" target="_blank">Feedback</a>
+   <b id="sync">Not synched</b>
 </span>
-<span id="banner_info"><b>{{BANNERINFO}}</b></span>
-<div id="FAQ"></div>
+<div id="FAQ" class="modal"></div>
 $THREADS
 $NAV
 <script src="{{MEDIA_URL}}js/jquery-1.10.2.min.js"></script>

@@ -11,10 +11,12 @@ article, aside {
 	margin: 2px;
 	padding: 4px 10px;
 }
-aside a, #options {
-	cursor: pointer;
+aside a {
 	position: relative;
 	z-index: 15;
+}
+a, aside, #options, #banner_FAQ, #feedback {
+	cursor: pointer;
 }
 article figure img {
 	margin-bottom: 0;
@@ -160,42 +162,32 @@ span.control .popup-menu {
 	top: 2px;
 	width: 12px;
 }
-#navTop {
-  position: fixed;
-  z-index: 101;
-  top: 0;
-  font-weight: bold;
-}
-#banner, #banner_info {
-	display: block;
+#banner{
+	display: inline-block;
 	text-align: center;
 	position: fixed;
 	width: 100%;
 	margin-left: -8px;
 	margin-right: -8px;
-}
-#banner {
 	top: 0;
 	z-index: 100;
-	padding-bottom: 0.1em;
 }
-#banner_FAQ {
+#feedback, #options, #sync, #banner_FAQ{
+	font-weight: bold;
 	float: right;
-	margin-right: 0.2em;
-	position: absolute;
-	right: 0.2em;
+	margin: 0.15em;
 }
-#banner_info{
-	top: 1.25em;
-	z-index: 99;
+#options {
+	margin-right: 0.2em;
+}
+#navTop {
+	float: left;
+	margin-left: 8px;
 }
 #FAQ {
 	display: none;
 	text-align: left;
 	z-index: 200;
-	background-color: white;
-	top: 2em;
-	color: black;
 	padding: 1em;
 	margin-right: 0.2em;
 	position: fixed;
@@ -344,28 +336,11 @@ article .hat {
 	margin-bottom: 7px;
 	min-width: 100px;
 }
-#feedback, #options, #sync, #sync.error {
-	position: fixed;
-	top: 0;
-	font-weight: bold;
-	right: 0;
-	margin-top: 0;
-	z-index: 102;
-}
-#feedback {
-	margin-right: 2.7em;
-}
-#options {
-	margin-right: 7.5em;
-}
-#sync, #sync.error {
-	margin-right: 11.5em;
-}
 #options-panel {
 	position: fixed;
 	right: 0;
 	margin-right: 0.2em;
-	top: 2em;
+	z-index: 200;
 }
 #report-panel {
 	position: fixed;
@@ -456,6 +431,10 @@ pre, .themed {
 	}
 	.full figcaption i {
 		display: block;
+	}
+	#banner {
+		margin-left: 0;
+		margin-right: 0;
 	}
 }
 

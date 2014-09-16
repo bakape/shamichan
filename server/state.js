@@ -117,6 +117,9 @@ function expand_templates(res) {
 	var templateVars = _.clone(HOT);
 	_.extend(templateVars, require('../imager/config'));
 	_.extend(templateVars, config);
+	_.extend(templateVars, make_navigation_html());
+	if (templateVars.BANNERINFO != '')
+		templateVars.BANNERINFO = '&nbsp;&nbsp;&nbsp;[' + templateVars.BANNERINFO + ']';
 
 	function tmpl(data) {
 		var expanded = _.template(data, templateVars);
@@ -125,7 +128,6 @@ function expand_templates(res) {
 	}
 
 	var ex = {
-		navigationHtml: make_navigation_html(),
 		filterTmpl: tmpl(res.filter).tmpl,
 		curfewTmpl: tmpl(res.curfew).tmpl,
 		suspensionTmpl: tmpl(res.suspension).tmpl,
@@ -157,7 +159,7 @@ exports.reload_hot_resources = function (cb) {
 function make_navigation_html() {
 	if (!HOT.INTER_BOARD_NAVIGATION)
 		return '';
-	var bits = ['<nav id="navTop">['];
+	var bits = ['<b id="navTop">['];
 	config.BOARDS.forEach(function (board, i) {
 		if (board == config.STAFF_BOARD)
 			return;
@@ -165,8 +167,8 @@ function make_navigation_html() {
 			bits.push(' / ');
 		bits.push('<a href="../'+board+'/">'+board+'</a>');
 	});
-	bits.push(']</nav>');
-	return bits.join('');
+	bits.push(']</b>');
+	return {NAVTOP: bits.join('')};
 }
 
 function read_exits(file, cb) {

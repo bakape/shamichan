@@ -32,8 +32,9 @@ window.onload = function(){
 };
 
 function FAQ_onclick(){
-	if ($('#FAQ').css('display') == 'none')
-		$('#FAQ').show();
-	else
-		$('#FAQ').hide();
+		var top = $('#banner').outerHeight() + 5 + 'px';
+		$('#FAQ').css('top', top);
+		if ($('#options-panel').is(":visible"))
+			$('#options-panel').toggle('fast');
+		$('#FAQ').toggle('fast');
 }

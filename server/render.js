@@ -100,8 +100,6 @@ exports.write_board_head = function (out, board, nav) {
 	out.write(indexTmpl[i++]);
 	out.write(make_board_meta(board, nav));
 	out.write(indexTmpl[i++]);
-	if (RES.navigationHtml)
-		out.write(RES.navigationHtml);
 	out.write(indexTmpl[i++]);
 	out.write(title);
 	out.write(indexTmpl[i++]);
@@ -124,8 +122,6 @@ exports.write_thread_head = function (out, board, op, opts) {
 	out.write(indexTmpl[i++]);
 	out.write(make_thread_meta(board, op, opts.abbrev));
 	out.write(indexTmpl[i++]);
-	if (RES.navigationHtml)
-		out.write(RES.navigationHtml);
 	out.write(indexTmpl[i++]);
 	out.write('Thread #' + op);
 	out.write(indexTmpl[i++]);
@@ -180,8 +176,6 @@ var returnHTML = common.action_link_html('.', 'Return').replace(
 exports.write_page_end = function (out, ident, returnLink) {
 	if (returnLink)
 		out.write(returnHTML);
-	else if (RES.navigationHtml)
-		out.write('<br><br>' + RES.navigationHtml);
 	var last = RES.indexTmpl.length - 1;
 	out.write(RES.indexTmpl[last]);
 	if (ident) {

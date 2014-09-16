@@ -39,7 +39,7 @@ article.editing .themed {
 b.admin {
 	color: #f00000;
 }
-#banner, #banner_info {
+#banner {
 	background: url(wood.jpg);
 	color: white;
 }

@@ -2,7 +2,7 @@
 a, blockquote a:hover, b.moderator {
 	color: Lavender;
 }
-article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner, #banner_info {
+article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {
 	background-color: rgba(40, 42, 46, 0.5);
 }
 article.editing {
