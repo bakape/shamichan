@@ -28,6 +28,9 @@ exports.write_thread_html = function (reader, req, out, opts) {
 	if (cookies.spoil == 'true')
 		oneeSama.spoilToggle = (cookies.spoil == 'true');
 
+	if (cookies.agif == 'true')
+		oneeSama.autoGif = (cookies.agif == 'true');
+
 	if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 		oneeSama.thumbStyle = cookies.thumb;
 

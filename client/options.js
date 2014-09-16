@@ -37,6 +37,7 @@ if (window.devicePixelRatio > 1)
 	optSpecs.push(option_high_res);
 optSpecs.push(option_thumbs);
 optSpecs.push(option_image_hover);
+optSpecs.push(option_autogif);
 optSpecs.push(option_spoiler);
 optSpecs.push(option_backlinks);
 optSpecs.push(option_illya_dance);
@@ -267,6 +268,17 @@ function option_spoiler(spoilertoggle) {
 option_spoiler.id = 'nospoilertoggle';
 option_spoiler.label = 'Image Spoilers';
 option_spoiler.type = 'revcheckbox';
+
+/* Autogif TOGGLE */
+
+
+function option_autogif(autogif) {
+	$.cookie('agif',autogif);
+	oneeSama.autoGif = autogif;
+}
+option_autogif.id = 'autogiftoggle';
+option_autogif.label = 'Animated GIF Thumbnails';
+option_autogif.type = 'checkbox';
 
 /* ILLYA DANCE */
 
