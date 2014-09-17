@@ -482,11 +482,17 @@ function toggle_panel() {
 }
 
 function toggle_mnemonics(){
-	if (!$('#no_mnemonic').length)
+	if (!$('#no_mnemonic').length){
 		$('body').append('<style id="no_mnemonic">.mod.addr{display:none;}</style>');
-	else 
+		$.cookie('no_mnemonics', 'true');
+	} else {
 		$('#no_mnemonic').remove();
+		$.cookie('no_mnemonics', 'false');
+	}
 }
+
+if ($.cookie('no_mnemonics') == 'true')
+	$('body').append('<style id="no_mnemonic">.mod.addr{display:none;}</style>');
 
 if (IDENT.auth == 'Admin') (function () {
 	var $panel = $('<div/>', {id: 'panel', "class": 'mod'}).hide();
