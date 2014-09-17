@@ -155,7 +155,7 @@ function gen_glass(){
 			$(this).remove(); // prevent memory leaks
 			// Blur image with Pixastic and apply new backgrounds
 			Pixastic.process(img, 'blurfast', {amount: 1.5}, function(blurred){
-				var bg = 'url(' + blurred.toDataURL() + ') center fixed; background-size: cover;}' ;
+				var bg = 'url(' + blurred.toDataURL() + ') center fixed no-repeat; background-size: cover;}' ;
 				var gradient_dark = 'linear-gradient(rgba(40, 42, 46, 0.5), rgba(40, 42, 46, 0.5)),';
 				var gradient_light = 'linear-gradient(rgba(145, 145, 145, 0.5), rgba(145, 145, 145, 0.5)),';
 				$('body').append($('<style />', {
