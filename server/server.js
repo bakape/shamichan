@@ -1046,6 +1046,7 @@ function start_server() {
 		prefix: config.SOCKET_PATH,
 		jsessionid: false,
 		log: sockjs_log,
+		websocket: config.USE_WEBSOCKETS,
 	};
 	var sockJs = require('sockjs').createServer(sockOpts);
 	web.server.on('upgrade', function (req, resp) {
