@@ -63,7 +63,7 @@ function tool_action(event) {
 		return toggle_panel();
 	
 	if (kind == 12)
-		return toggle_mnemonics();
+		return options.set('noMnemonics', !options.get('noMnemonics'));
 	
 	/* On a thread page there's only one thread to lock, so... */
 	if (kind == 11 && THREAD && !ids.length)
@@ -464,18 +464,12 @@ function toggle_panel() {
 	send([show ? 60 : 61, 'adminState']);
 }
 
-function toggle_mnemonics(){
-	if (!$('#no_mnemonic').length){
-		$('body').append('<style id="no_mnemonic">.mod.addr{display:none;}</style>');
-		$.cookie('no_mnemonics', 'true');
-	} else {
-		$('#no_mnemonic').remove();
-		$.cookie('no_mnemonics', 'false');
-	}
-}
-
-if ($.cookie('no_mnemonics') == 'true')
-	$('body').append('<style id="no_mnemonic">.mod.addr{display:none;}</style>');
+// Togglle mnemonic display
+$('body').append('<style id="noMnemonics">.mod.addr{display:none;}</style>');
+$('#noMnemonics').prop('disabled', !options.get('noMnemonics'));
+options.on('change:noMnemonics', function(model, noMnemonics){
+	$('#noMnemonics').prop('disabled', !noMnemonics);
+});
 
 if (IDENT.auth == 'Admin') (function () {
 	var $panel = $('<div/>', {id: 'panel', "class": 'mod'}).hide();
