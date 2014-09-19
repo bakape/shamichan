@@ -158,18 +158,19 @@ function gen_glass(){
 				// Blur image with Pixastic and apply new backgrounds
 				Pixastic.process(img, 'blurfast', {amount: 1.5}, function(blurred){
 					var bg = 'url(' + blurred.toDataURL() + ') center fixed no-repeat; background-size: cover;}' ;
-					var gradient_dark = 'linear-gradient(rgba(40, 42, 46, 0.5), rgba(40, 42, 46, 0.5)),';
-					var gradient_light = 'linear-gradient(rgba(145, 145, 145, 0.5), rgba(145, 145, 145, 0.5)),';
-					$('body').append($('<style />', {
-						id: 'blurred'
-					}));
-					$('#blurred').append(
-						'article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {' +
-							'background:' + gradient_dark + bg
-					);
-					$('#blurred').append('article.editing{' +
-						'background:' + gradient_light + bg
-					);
+					$('#blurred').remove();
+					$('<style />', {id: 'blurred'})
+						.appendTo('body')
+						.html(
+							'article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {\
+								background:\
+									linear-gradient(rgba(40, 42, 46, 0.5), rgba(40, 42, 46, 0.5)),' + 
+									bg + 
+							'article.editing{\
+								background:\
+									linear-gradient(rgba(145, 145, 145, 0.5), rgba(145, 145, 145, 0.5)),' + 
+									bg
+						);
 				});
 			};
 	} else
