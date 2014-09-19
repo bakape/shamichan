@@ -5,6 +5,7 @@ opts.load_defaults();
 var _ = require('../lib/underscore'),
     amusement = require('./amusement'),
     async = require('async'),
+    aJ = require('../autoJoe/server'),
     caps = require('./caps'),
     check = require('./msgcheck').check,
     common = require('../common'),
@@ -766,16 +767,25 @@ function allocate_post(msg, client, callback) {
 			post.subject = subject;
 	}
 
-	if(config.ANON_HOURS){
+	if(config.ANON_HOURS && !aJ.isJoe && !aJ.isSpecial && !aJ.isJapanese && !aJ.isMan){
 		var anon_hour = ah.anon_hour;
 		if (msg.name)
 			ah.name_parse(msg.name);
 		if (ah.random_name_hour)
 			ah.random_name(post);
 	}
+	
+	if (aJ.isJoe)
+		post.name = 'Joe';
+	if (aJ.isSpecial)
+		post.name = 'Super Special';
+	if (aJ.isJapanese)
+		post.name = '\u540D\u7121\u3057';
+	if (aJ.isMan)
+		post.name = 'Pretty Little Girl in a Frilly Dress';
 
 	/* TODO: Check against client.watching? */
-	if (msg.name && !anon_hour) {
+	if (msg.name && !anon_hour && !aJ.isJoe && !aJ.isSpecial && !aJ.isJapanese && !aJ.isMan) {
 		var parsed = common.parse_name(msg.name);
 		post.name = parsed[0];
 		var spec = STATE.hot.SPECIAL_TRIPCODES;
