@@ -316,19 +316,16 @@ option_spoiler.type = 'revcheckbox';
 
 function option_illya_dance(illyatoggle){
 	var muted = ' ';
-	if ($.cookie('bgvid_mute') == 'true')
+	if (options.get(option_illya_mute.id))
 		muted = 'muted';
 	var dancer = '<video autoplay ' + muted + ' loop id="bgvid" >' +
 			'<source src="http://meguca.org/static/illya.webm" type="video/webm">' +
 			'<source src="http://meguca.org/static/illya.mp4" type="video/mp4">' +
 		'</video>';
-	if (illyatoggle){
+	if (illyatoggle)
 		$("body").append(dancer);
-		$.cookie('bgvid', 'true');
-	} else {
+	else
 		$("#bgvid").remove();
-		$.cookie('bgvid', 'false');
-	}
 }
 
 option_illya_dance.id = 'board.$BOARD.illyaBGToggle';
@@ -336,12 +333,7 @@ option_illya_dance.label = 'Illya Dance';
 option_illya_dance.type = 'checkbox';
 
 function option_illya_mute(toggle){
-	if (toggle)
-		$.cookie('bgvid_mute', 'true');
-	else 
-		$.cookie('bgvid_mute', 'false');
-		
-	if ($.cookie('bgvid') == 'true'){
+	if (options.get(option_illya_dance.id)){
 		option_illya_dance(false);
 		option_illya_dance(true);
 	}	
