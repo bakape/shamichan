@@ -433,7 +433,7 @@ function option_image_hover(toggle){
 	}
 	
 	function fadein(html){
-		$('#hover_overlay_image').remove();
+		$('#hover_overlay').html('');
 		$('#hover_overlay').append(html);
 		$('#hover_overlay_image').fadeIn({duration: 200});
 	}
@@ -441,7 +441,9 @@ function option_image_hover(toggle){
 	function mouseout(){
 		if ($(this).closest('figure').hasClass('expanded'))
 			return;
-		$('#hover_overlay_image').fadeOut({duration: 200});
+		$('#hover_overlay_image').fadeOut({duration: 200, complete: function(){
+			$('#hover_overlay_image').attr('src', '');
+		}});
 	}
 	
 	function fadeout(cb){
