@@ -489,12 +489,14 @@ OS.gazou = function (info, toppu) {
 		var google = encodeURI('../outbound/g/' + info.thumb);
 		var iqdb = encodeURI('../outbound/iqdb/' + info.thumb);
 		var foolz = encodeURI('../outbound/hash/' + info.MD5);
+		var exhentai = encodeURI('../outbound/exh/' + info.SHA1);
 		src = encodeURI(this.image_paths().src + info.src);
 		caption = [
 			new_tab_link(src, info.src), ' ',
 			new_tab_link(google, '[Go]'),
 			new_tab_link(iqdb, '[Iq]'),
-			new_tab_link(foolz, '[Fz]'), ' '
+			new_tab_link(foolz, '[Fz]'),
+			new_tab_link(exhentai, '[Ex]'), ' '
 		];
 	}
 

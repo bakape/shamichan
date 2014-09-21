@@ -640,8 +640,10 @@ web.resource(/^\/outbound\/(g|iqdb)\/(\d+\.jpg)$/,
 	cb(null, 303.1, dest);
 });
 
-web.resource(/^\/outbound\/hash\/([\w+\/]{22})$/, function (req, params, cb) {
-	var dest = 'http://archive.foolz.us/_/search/image/' + escape(params[1]);
+web.resource(/^\/outbound\/(hash|exh)\/([\w+\/]{22}|[\w+\/]{40})$/, function (req, params, cb) {
+	var url = params[1] == 'hash' ? 'http://archive.foolz.us/_/search/image/' :
+		'http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=';
+	var dest = url + escape(params[2]);
 	cb(null, 303.1, dest);
 });
 
