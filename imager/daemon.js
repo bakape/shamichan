@@ -1,5 +1,6 @@
 var async = require('async'),
     config = require('./config'),
+    crypto = require('crypto'),
     child_process = require('child_process'),
     etc = require('../etc'),
     Muggle = etc.Muggle,
@@ -32,7 +33,7 @@ function get_thumb_specs(image, pinky, scale) {
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
-	var specs = {bound: bound, dims: dims, format: 'jpg'};
+	var specs = {bound: bound, dims: dims, format: 'jpg', SHA1: image.SHA1};
 	// Note: WebMs pretend to be PNGs at this step,
 	//       but those don't need transparent backgrounds.
 	//       (well... WebMs *can* have alpha channels...)
@@ -163,14 +164,28 @@ IU.parse_form = function (err, fields, files) {
 	this.db.track_temporary(this.image.path, function (err) {
 		if (err)
 			winston.warn("Temp tracking error: " + err);
-		self.process();
+		self.sha1();
 	});
 };
 
-IU.process = function () {
+IU.sha1 = function(){
+	var f = fs.ReadStream(this.image.path);
+	var sha1sum = crypto.createHash('sha1');
+	var self = this;
+	f.on('data', function(d){
+		sha1sum.update(d);
+	});
+	f.on('end', function(){
+		self.process(sha1sum.digest('hex'));
+	});
+};
+
+IU.process = function (SHA1) {
 	if (this.failed)
 		return;
 	var image = this.image;
+	if (SHA1)
+		image.SHA1 = SHA1;
 	var filename = image.filename || image.name;
 	image.ext = path.extname(filename).toLowerCase();
 	if (image.ext == '.jpeg')

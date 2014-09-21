@@ -29,6 +29,7 @@ function extract_post_model(el) {
 		var $cap = $fig.children('figcaption');
 		var image = {
 			MD5: $fig.data('md5'),
+			SHA1: $fig.data('sha1'),
 			size: $fig.data('size'),
 			src: $cap.children('a').text(),
 		};
