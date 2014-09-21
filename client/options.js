@@ -310,7 +310,7 @@ function option_spoiler(spoilertoggle) {
 	oneeSama.spoilToggle = spoilertoggle;
 }
 option_spoiler.id = 'nospoilertoggle';
-option_spoiler.label = 'Spoilered Images';
+option_spoiler.label = 'Image Spoilers';
 option_spoiler.type = 'revcheckbox';
 
 /* ILLYA DANCE */
