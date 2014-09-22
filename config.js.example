@@ -7,7 +7,7 @@ var config = {
 	TRUST_X_FORWARDED_FOR: false,
 	SERVE_STATIC_FILES: false,
 	SERVE_IMAGES: false,
-	GZIP: false,
+	GZIP: false, /* not preferred; use nginx (or other)'s gzipping */
 	USE_WEBSOCKETS: true,
 
 	REDIS_PORT: 6379,
