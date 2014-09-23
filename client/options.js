@@ -454,7 +454,11 @@ function option_image_hover(toggle){
 		$DOC
 			.on('mouseenter', 'img, video', mousein)
 			.on('mouseleave', 'img, video', mouseout)
-			.on('click', 'img, video', fadeout);
+			.on('click', 'img, video', function(){
+				fadeout(function(){
+					$('#hover_overlay_image').attr('src', '');
+				});
+			});
 	} else {
 		$DOC
 			.off('mouseenter', 'img, video')
