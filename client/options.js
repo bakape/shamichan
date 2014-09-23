@@ -137,7 +137,7 @@ var themes = [
     'tavern',
     'glass'
 ];
-var globalVersion = 8;
+var globalVersion = 9;
 
 function option_theme(theme) {
 	if (theme) {
