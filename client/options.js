@@ -371,29 +371,10 @@ function option_user_bg(toggle){
 		
 		// Generate transparent BG, if theme is glass
 		if (options.get(option_theme.id) == 'glass')
-			gen_glass();
-		
-		// Workaround for image unloading on tab focus loss Chrome bug
-		// Basically, reloads the element to prevent the aggresive buggy caching or something
-		if (typeof document.webkitHidden !== "undefined"){
-			var hidden = "webkitHidden";
-			var visibilityChange = "webkitvisibilitychange";
-			
-			function handleVisibilityChange(){
-				if (document[hidden])
-					$('#user_bg').attr('src', '');
-				else
-					$('#user_bg').attr('src', image);
-			}
-			document.addEventListener(visibilityChange, handleVisibilityChange, false);
-		}	
+			gen_glass();	
 	} else {
 		$('#user_bg').remove();
 		$('#blurred').remove();
-		
-		// Remove workaround listener
-		if (typeof document.webkitHidden !== "undefined")
-			document.removeEventListener(visibilityChange, handleVisibilityChange);
 	}
 }
 
