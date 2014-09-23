@@ -433,7 +433,6 @@ function option_image_hover(toggle){
 	}
 	
 	function fadein(html){
-		$('#hover_overlay').html('');
 		$('#hover_overlay').append(html);
 		$('#hover_overlay_image').fadeIn({duration: 200});
 	}
@@ -441,13 +440,11 @@ function option_image_hover(toggle){
 	function mouseout(){
 		if ($(this).closest('figure').hasClass('expanded'))
 			return;
-		$('#hover_overlay_image').fadeOut({duration: 200, complete: function(){
-			$('#hover_overlay_image').attr('src', '');
-		}});
+		$('#hover_overlay_image').fadeOut({duration: 200, complete: function(){$('#hover_overlay_image').remove();}});
 	}
 	
 	function fadeout(cb){
-		$('#hover_overlay_image').fadeOut({duration: 200, complete: cb});
+		$('#hover_overlay_image').fadeOut({duration: 200, complete: function(){$('#hover_overlay_image').remove();}});
 	}
 	
 	if (toggle){
