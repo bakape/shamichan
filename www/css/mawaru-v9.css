@@ -32,6 +32,7 @@ b.moderator {
 body {
 	color: #eee;
 	background: black url('95.png');
+	background-attachment: fixed;
 }
 body, pre, .themed {
 	font-family: Arial, Helvetica, sans-serif;
