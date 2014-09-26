@@ -344,18 +344,19 @@ function load_OPs(callback) {
 			}
 			if (thread.immortal)
 				return r.zrem(expiryKey, entry, cb);
-			var score = expiry_queue_score(thread.time);
+			var score = expiry_queue_score(thread.time, tag);
 			r.zadd(expiryKey, score, entry, cb);
 		});
 	}
 }
 
-function expiry_queue_score(time) {
-	return Math.floor(parseInt(time, 10)/1000 + config.THREAD_EXPIRY);
+function expiry_queue_score(time, board) {
+	var expiry = config.THREAD_EXPIRY[board];
+	return Math.floor(parseInt(time, 10)/1000 + expiry);
 }
 
 function expiry_queue_key() {
-	return 'expiry:' + config.THREAD_EXPIRY;
+	return 'expiry:all';
 }
 exports.expiry_queue_key = expiry_queue_key;
 
@@ -579,7 +580,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 		// set conditional hide?
 		op = num;
 		if (!view.immortal) {
-			var score = expiry_queue_score(msg.time);
+			var score = expiry_queue_score(msg.time, board);
 			var entry = num + ':' + tag_key(this.tag);
 			m.zadd(expiry_queue_key(), score, entry);
 		}

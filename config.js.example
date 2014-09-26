@@ -21,7 +21,11 @@ var config = {
 	THREAD_LAST_N: 100,
 
 	THREAD_THROTTLE: 60,
-	THREAD_EXPIRY: 3600 * 24 * 7,
+	THREAD_EXPIRY: {
+		moe: 3600 * 24 * 7,
+		gar: 3600 * 24 * 7,
+		meta: 3600 * 24 * 7,
+	},
 	SHORT_TERM_LIMIT: 2000,
 	LONG_TERM_LIMIT: 2000*20*12,
 	NEW_POST_WORTH: 50,
