@@ -412,7 +412,7 @@ pre, .themed {
 	vertical-align: baseline;
 }
 
-@media screen and (max-device-width: 480px) {
+@media screen and (max-device-width: 700px) {
 	article {
 		clear: both;
 	}
@@ -436,9 +436,14 @@ pre, .themed {
 		min-width: inherit;
 		margin-right: 0.5em;
 	}
+	#banner {
+		margin-left: 0;
+		margin-right: 0;
+		position: absolute;
+	}
 }
 
-@media screen and (max-device-width: 480px) and (orientation: portrait) {
+@media screen and (max-device-width: 700px) and (orientation: portrait) {
 	section > blockquote, section > header, section > #banner, section > .omit {
 		margin-left: 0.5em;
 		margin-right: 0.5em;
@@ -448,10 +453,6 @@ pre, .themed {
 	}
 	.full figcaption i {
 		display: block;
-	}
-	#banner {
-		margin-left: 0;
-		margin-right: 0;
 	}
 }
 
