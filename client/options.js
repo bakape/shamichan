@@ -331,7 +331,7 @@ option_horizontal.type = 'checkbox';
 /* CUSTOM USER-SET BACKGROUND */
 
 function option_user_bg(toggle){
-	if (options.get(option_user_bg_image.id) && toggle){
+	if (options.get(option_user_bg_image.id) != '' && toggle){
 		var image = options.get(option_user_bg_image.id);		
 		$('body').append($('<img />', {
 			id: 'user_bg',
@@ -340,10 +340,13 @@ function option_user_bg(toggle){
 		
 		// Append transparent BG, if theme is glass
 		append_glass();
-	} else {
-		$('#user_bg').remove();
-		$('#blurred').remove();
-	}
+	} else
+		clear_bg();
+}
+
+function clear_bg(){
+	$('#user_bg').remove();
+	$('#blurred').remove();
 }
 
 option_user_bg.id = 'board.$BOARD.userBG';
@@ -352,7 +355,9 @@ option_user_bg.type = 'checkbox';
 
 // Generate a new blurred BG on BG change
 function option_user_bg_image(image){
-	if (image != options.get(BOARD + '.BGCached')){
+	if (image == '')
+		clear_bg();
+	 else if (image != options.get(BOARD + '.BGCached')){
 		var img = new Image();
 		img.src = image;
 		img.onload = function(){
@@ -361,6 +366,9 @@ function option_user_bg_image(image){
 			// Blur with Pixastic and write to localstorage
 			Pixastic.process(img, 'blurfast', {amount: 1.5}, function(blurred){
 				localStorage.setItem(BOARD + '.BGBlurred', blurred.toDataURL('image/jpeg', 0.9));
+				options.set(BOARD + '.BGCached', image);
+				if (options.get(option_user_bg.id))
+					option_user_bg(true);
 				append_glass();
 			});
 		};
@@ -371,7 +379,7 @@ function option_user_bg_image(image){
 function append_glass(){
 	// Check if theme is glass, user-bg is set and blurred BG is generated
 	if (options.get(option_theme.id) == 'glass' &&
-		options.get(option_user_bg_image.id) &&
+		options.get(option_user_bg_image.id) != '' &&
 		options.get(option_user_bg.id) &&
 		localStorage.getItem(BOARD + '.BGBlurred')){
 			// Apply blurred background
@@ -774,10 +782,8 @@ function make_options_panel() {
 			val = Math.max(parseInt($o.val(), 10), 1);
 		else if (spec.type == 'image'){
 			var trimmed = $o.val().trim();
-			if (/\.(jpe?g|png|gif)$/i.test(trimmed))
+			if (/^$|\.(jpe?g|png|gif)$/i.test(trimmed))
 				val = trimmed;
-			else if (/^$/.test(trimmed))
-				val = false;
 		}
 		else
 			val = $o.val();
@@ -804,7 +810,7 @@ function make_options_panel() {
 			});
 		} else if (type == 'image'){
 			$input = $('<input />', {
-				placeholder: 'Local Image URL',
+				placeholder: mediaURL + 'src/*',
 				val: val
 			});
 		}
