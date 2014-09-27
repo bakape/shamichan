@@ -42,6 +42,9 @@ DEFINES.S_SPOIL = 3;
 
 if (typeof mediaURL == 'undefined' || !mediaURL)
 	mediaURL = imagerConfig.MEDIA_URL;
+	
+if (typeof globalVersion == 'undefined' || !globalVersion)
+	globalVersion = config.THEME_CSS_VERSION;
 
 function is_pubsub(t) {
 	return t > 0 && t < 30;

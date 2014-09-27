@@ -137,11 +137,10 @@ var themes = [
     'tavern',
     'glass'
 ];
-var globalVersion = 9;
 
 function option_theme(theme) {
 	if (theme) {
-		var css = theme + '-v' + globalVersion + '.css';
+		var css = theme + '.css' + '?v=' + globalVersion;
 		$('#theme').attr('href', mediaURL + 'css/' + css);
 	}
 	append_glass();

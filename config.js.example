@@ -45,6 +45,9 @@ var config = {
 	LOGIN_SESSION_TIME: 60*60*24*14,
 	IP_MNEMONIC: true,
 	
+	BASE_CSS_VERION: 44,
+	THEME_CSS_VERSION: 9,
+	
 	// Staff title aliases
 	ADMIN_ALIAS: 'Admin',
 	MOD_ALIAS: 'Moderator',
