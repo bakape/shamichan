@@ -12,21 +12,4 @@ window.onload = function(){
 	       	setTimeout(write_banner, 10000);
 	    });
 	})();
-	
-	(function build_faq(){
-		var answers = [
-			"Lewd is good", 
-			"No 3D porn", 
-			"Image size limit is 20 MB", 
-			"mumble.meguca.org:64738", 
-			"github.com/bakape/doushio", 
-			"The admin is drunk"
-		];
-		var list = ['<ul>'];
-		answers.forEach(function(entry){
-			list.push('<li>' + entry + '<li>');
-		});
-		list.push('<ul>');
-		document.getElementById('FAQ').innerHTML = list.join('');
-	})();
 };

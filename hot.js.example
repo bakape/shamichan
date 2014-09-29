@@ -37,4 +37,12 @@ this.hot = {
     	Sat: {plans: '', time: ''},
     	Sun: {plans: '', time: ''},
     },
+    
+    FAQ: [
+		"Lewd is good", 
+		"No 3D porn", 
+		"Image size limit is 20 MB", 
+		"github.com/bakape/doushio", 
+		"The admin is drunk"
+    ]
 };

@@ -119,6 +119,7 @@ function expand_templates(res) {
 	_.extend(templateVars, config);
 	_.extend(templateVars, make_navigation_html());
 	_.extend(templateVars, build_schedule(templateVars.SCHEDULE));
+	_.extend(templateVars, build_FAQ(templateVars.FAQ));
 	
 	// Format info banner
 	if (templateVars.BANNERINFO != '')
@@ -163,6 +164,17 @@ function build_schedule(schedule){
 	}
 	table.push('</table>');
 	return {SCHEDULE: table.join('')};
+}
+
+function build_FAQ(faq){
+	if (faq.length > 0){
+		var list = ['<ul>'];
+		faq.forEach(function(entry){
+			list.push('<li>' + entry + '</li>');
+		});
+		list.push('<ul>');
+		return {FAQ: list.join('')};
+	}
 }
 
 exports.reload_hot_resources = function (cb) {
