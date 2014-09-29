@@ -118,9 +118,12 @@ function expand_templates(res) {
 	_.extend(templateVars, require('../imager/config'));
 	_.extend(templateVars, config);
 	_.extend(templateVars, make_navigation_html());
+	_.extend(templateVars, build_schedule(templateVars.SCHEDULE));
+	
+	// Format info banner
 	if (templateVars.BANNERINFO != '')
 		templateVars.BANNERINFO = '&nbsp;&nbsp;&nbsp;[' + templateVars.BANNERINFO + ']';
-
+	
 	function tmpl(data) {
 		var expanded = _.template(data, templateVars);
 		return {tmpl: expanded.split(/\$[A-Z]+/),
@@ -143,6 +146,23 @@ function expand_templates(res) {
 	ex.indexHash = hash.digest('hex').slice(0, 8);
 
 	return ex;
+}
+
+function build_schedule(schedule){
+	var filler = ['drink & fap', 'fap & drink', 'tea & keiki'];
+	var table = ['<table>'];
+	for (day in schedule){
+		var plans = schedule[day].plans;
+		var time = schedule[day].time;
+		// Fill empty slots
+		if (plans == '')
+			plans = filler[Math.floor(Math.random() * filler.length)];
+		if (time == '')
+			time = 'all day';
+		table.push('<tr><td><b>[', day + ']&nbsp;&nbsp;', '</b></td><td>', plans + '&nbsp;&nbsp;', '</td><td>', time, '</td></tr>');
+	}
+	table.push('</table>');
+	return {SCHEDULE: table.join('')};
 }
 
 exports.reload_hot_resources = function (cb) {

@@ -30,11 +30,3 @@ window.onload = function(){
 		document.getElementById('FAQ').innerHTML = list.join('');
 	})();
 };
-
-function FAQ_onclick(){
-		var top = $('#banner').outerHeight() + 5 + 'px';
-		$('#FAQ').css('top', top);
-		if ($('#options-panel').is(":visible"))
-			$('#options-panel').toggle('fast');
-		$('#FAQ').toggle('fast');
-}

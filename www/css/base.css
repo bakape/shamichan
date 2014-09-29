@@ -189,7 +189,7 @@ span.control .popup-menu {
 	top: 0;
 	z-index: 100;
 }
-#feedback, #options, #sync, #banner_FAQ{
+#feedback, #options, #sync, #banner_FAQ, #banner_schedule {
 	font-weight: bold;
 	float: right;
 	margin: 0.15em;
@@ -201,7 +201,7 @@ span.control .popup-menu {
 	float: left;
 	margin-left: 8px;
 }
-#FAQ {
+#FAQ, #schedule {
 	display: none;
 	text-align: left;
 	z-index: 200;
@@ -212,7 +212,7 @@ span.control .popup-menu {
 	overflow-y: hidden;
 	max-height: 80%;
 }
-#FAQ > ul {
+#FAQ > ul, #schedule > table {
 	list-style-type:none;
 	-webkit-margin-before: 0em;
 	margin-top: 0em;

@@ -27,4 +27,14 @@ this.hot = {
     },
      
     BANNERINFO: '',
+    
+    SCHEDULE: {
+    	Mon: {plans: '', time: ''},
+    	Tue: {plans: '', time: ''},
+    	Wed: {plans: '', time: ''},
+    	Thu: {plans: '', time: ''},
+    	Fri: {plans: '', time: ''},
+    	Sat: {plans: '', time: ''},
+    	Sun: {plans: '', time: ''},
+    },
 };

@@ -733,11 +733,7 @@ _.defer(function () {
 			$opts = make_options_panel().appendTo('body');
 		if ($opts.is(':hidden'))
 			oneeSama.trigger('renderOptions', $opts);
-		var top = $('#banner').outerHeight() + 5 + 'px';
-		$('#options-panel').css('top', top);
-		if ($('#FAQ').is(":visible"))
-			$('#FAQ').toggle('fast');
-		$opts.toggle('fast');
+		position_bmodal('#options-panel');
 	}).insertBefore('#banner_FAQ');
 
 	optSpecs.forEach(function (spec) {
@@ -750,8 +746,24 @@ _.defer(function () {
 	});
 });
 
+function position_bmodal(target){
+	if (!$(target).is(':visible')){
+		$(target).css('top', $('#banner').outerHeight() + 5 + 'px');
+		$('.bmodal:visible').toggle('fast');
+	}
+	$(target).toggle('fast');
+}
+
+$('#banner_FAQ').click(function(){
+	position_bmodal('#FAQ');
+});
+
+$('#banner_schedule').click(function(){
+	position_bmodal('#schedule');
+});
+
 function make_options_panel() {
-	var $opts = $('<div/>', {"class": 'modal', id: 'options-panel'});
+	var $opts = $('<div/>', {"class": 'modal bmodal', id: 'options-panel'});
 	$opts.change(function (event) {
 		var $o = $(event.target), id = $o.attr('id'), val;
 		var spec = _.find(optSpecs, function (s) {
