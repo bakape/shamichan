@@ -124,23 +124,9 @@ options.on('change:lastn', function (model, lastN) {
 
 /* THEMES */
 
-var themes = [
-	'moe',
-	'gar',
-	'mawaru',
-	'moon',
-	'ashita',
-	'console',
-	'tea',
-	'higan',
-    'rave',
-    'tavern',
-    'glass'
-];
-
 function option_theme(theme) {
 	if (theme) {
-		var css = theme + '.css' + '?v=' + globalVersion;
+		var css = theme + '-v' + globalVersion + '.css';
 		$('#theme').attr('href', mediaURL + 'css/' + css);
 	}
 	append_glass();

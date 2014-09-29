@@ -9,12 +9,12 @@ this.hot = {
 		staff: "/staff/",
 	},
 	BOARD_CSS: {
-		moe: 'moe.css',
-		gar: 'gar.css',
-		meta: 'mawaru.css',
-		archive: 'archive.css',
-		graveyard: 'mawaru.css',
-		staff: 'moe.css',
+		moe: 'moe',
+		gar: 'gar',
+		meta: 'mawaru',
+		archive: 'archive',
+		graveyard: 'mawaru',
+		staff: 'moe',
 	},
 	INTER_BOARD_NAVIGATION: true,
 

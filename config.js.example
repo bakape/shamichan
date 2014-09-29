@@ -47,6 +47,21 @@ var config = {
 	
 	BASE_CSS_VERSION: 44,
 	THEME_CSS_VERSION: 9,
+	MOD_CSS_VERSION: 1,
+	GRAVITAS_CSS_VERSION: 1,
+	THEMES: [
+		'moe',
+		'gar',
+		'mawaru',
+		'moon',
+		'ashita',
+		'console',
+		'tea',
+		'higan',
+		'rave',
+		'tavern',
+		'glass'
+	],
 	
 	// Staff title aliases
 	ADMIN_ALIAS: 'Admin',

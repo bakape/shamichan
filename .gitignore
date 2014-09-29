@@ -19,6 +19,7 @@ tripcode/.build
 tripcode/build
 upkeep/credentials.json
 voice/*.mp3
+www/css/*-v*.css
 www/archive
 www/js/client*.js
 www/js/vendor*.js
