@@ -727,7 +727,7 @@ _.defer(function () {
 		spec.id = spec.id.replace(/\$BOARD/g, BOARD);
 	});
 
-	$('<a id="options">Options</a>').click(function () {
+	$('<a id="options" class="bfloat">Options</a>').click(function () {
 		var $opts = $('#options-panel');
 		if (!$opts.length)
 			$opts = make_options_panel().appendTo('body');
