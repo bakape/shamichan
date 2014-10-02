@@ -38,7 +38,7 @@ function on_message(e) {
 }
 
 function sync_status(msg, hover) {
-	$('#sync').text(msg).attr('class', hover ? 'error' : '');
+	$('#sync').text(msg).attr('class', 'bfloat');
 }
 
 connSM.act('load + start -> conn', function () {
