@@ -5,27 +5,10 @@ var db = require('../db'),
 	tripcode = require('./../tripcode/tripcode');
 
 exports.ah_init = function(){
-	db.ah_get(
-		function(err, read){
-			// First time execution
-			if (read == null)
-				ah_gen();
-			else{
-				var date = new Date().getDate();
-				// Generate a new set of anon hours on a new day
-				if (read.date == date)
-					ah_check();
-				else 
-					ah_gen();
-			}
-			// Check if a new hour is anon hour
-			var hourly = new cronJob('0 0 1-23 * * *', ah_check, null, false);
-			// Regenerate set at the start of a new day
-			var daily = new cronJob('0 0 0 * * *', ah_gen, null, false);
-			hourly.start();
-			daily.start();
-		}
-	);
+	ah_check();
+	// Launch ah_check a the start of each hour
+	var hourly = new cronJob('0 0 * * * *', ah_check, null, false);
+	hourly.start();
 };
 
 // Generate a new set of anon hours
@@ -44,15 +27,22 @@ function ah_gen(){
 	db.ah_set(date, ah.join(), month, ah_check);
 }
 
-// Check if the current hour is an anon hour
 var nameDB;
 function ah_check(){
 	db.ah_get(
 		function(err, read){
+			// First time execution
+			if (!read)
+				return ah_gen();
 			var d = new Date();
-			var hours = d.getHours();
+			var hour = d.getHours();
+			var date = d.getDate();
 			var month = d.getMonth();
-			var anon_hour = (read.hours.split(',').indexOf(String(hours)) > -1);
+			// Regenerate hour set on a new day
+			if (read.date != date)
+				return ah_gen();
+			// Check if current hour is anonhour
+			var anon_hour = (read.hours.split(',').indexOf(String(hour)) > -1);
 			module.exports.anon_hour = anon_hour;
 						
 			var random_name_hour = false;
