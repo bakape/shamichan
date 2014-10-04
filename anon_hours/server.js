@@ -4,6 +4,8 @@ var db = require('../db'),
 	cronJob = require('cron').CronJob,
 	tripcode = require('./../tripcode/tripcode');
 
+var r = global.redis;
+
 exports.ah_init = function(){
 	ah_check();
 	// Launch ah_check a the start of each hour
@@ -12,7 +14,7 @@ exports.ah_init = function(){
 };
 
 // Generate a new set of anon hours
-function ah_gen(){
+function ah_gen(hour, date, month){
 	var sections = config.ANON_HOURS_PER_DAY,
 		ah = [],
 		s = 24 / sections;
@@ -21,26 +23,25 @@ function ah_gen(){
 			p = Math.floor(Math.random() * s);
 		ah.push(m + p);
 	}
-	var d = new Date();
-	var date = d.getDate();
-	var month = d.getMonth();
-	db.ah_set(date, ah.join(), month, ah_check);
+	// Write anon hour set to redis
+	r.hmset('anonhours', 'hours', ah.join(), 'date', date, 'month', month, ah_check);
 }
 
 var nameDB;
 function ah_check(){
-	db.ah_get(
+	// Read anon hour set from redis
+	r.hgetall('anonhours',
 		function(err, read){
-			// First time execution
-			if (!read)
-				return ah_gen();
 			var d = new Date();
 			var hour = d.getHours();
 			var date = d.getDate();
 			var month = d.getMonth();
+			// First time execution
+			if (!read)
+				return ah_gen(hour, date, month);
 			// Regenerate hour set on a new day
 			if (read.date != date)
-				return ah_gen();
+				return ah_gen(hour, date, month);
 			// Check if current hour is anonhour
 			var anon_hour = (read.hours.split(',').indexOf(String(hour)) > -1);
 			module.exports.anon_hour = anon_hour;
@@ -59,11 +60,11 @@ function ah_check(){
 			}
 			// Clear the used name set at the start of a new month
 			if (read.month != month){
-				global.redis.del('nameDB');
+				r.del('nameDB');
 				module.exports.random_name_hour = false;
 			} else {
 				// Load used name set from redis
-				db.nameDB_get(
+				r.smembers('nameDB',
 					function(err, res){
 						if (err || !res)
 							random_name_hour = false;
@@ -87,12 +88,12 @@ exports.random_name = function(post){
 		post.trip = trip[1];
 };
 
-// Parse msg.name and write to used name set
+// Parse msg.name and write to redis
 exports.name_parse = function(msg){
 	var parsed = common.parse_name(msg);
 	var trip = '';
 	if (parsed[1] || parsed[2])
 		trip = tripcode.hash(parsed[1], parsed[2]);
 	var combined = parsed[0] + '|||' + trip;
-	db.nameDB_add(combined);
+	r.sadd('nameDB', combined);
 };

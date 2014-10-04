@@ -1880,24 +1880,3 @@ function hmget_obj(r, key, keys, cb) {
 	});
 }
 
-/* ANON HOURS */
-
-// Read anon hour set from redis
-exports.ah_get = function(cb){
- 	global.redis.hgetall('anonhours', cb);
-};
-
-// Write anon hour set to redis
-exports.ah_set = function(date, hours, month, cb){
- 	global.redis.hmset('anonhours', 'date', date, 'hours', hours, 'month', month, cb);
-};
-
-// Read posted name set from redis
-exports.nameDB_get = function(cb){
-	global.redis.smembers('nameDB', cb);
-};
-
-// Write a name + tripcode to redis
-exports.nameDB_add = function(combined){
-	global.redis.sadd('nameDB', combined);
-};
