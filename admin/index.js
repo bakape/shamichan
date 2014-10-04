@@ -75,7 +75,7 @@ okyaku.dispatcher[authcommon.BAN] = function (msg, client) {
 var lift_expired_bans;
 (function lift_expired_bans(){
 	var r = global.redis;
-	var again = setTimeout(lift_expired_bans, 600000);
+	var again = setTimeout(lift_expired_bans, 60000);
 	// Get banned IP hashes
 	r.smembers('hot:timeouts', function(err, banned){
 		if (err || !banned)

@@ -290,7 +290,7 @@ var AddressView = Backbone.View.extend({
 				var hours = i_array[1];
 				var minutes = i_array[2];
 				sentence = (((days * 24) + hours) * 60 + minutes) * 60 * 1000;
-				description = ' for ' + days + ' days, ' + hours + ' hours and ' + minutes + '\u00b19 minutes?';
+				description = ' for ' + days + ' days, ' + hours + ' hours and ' + minutes + '?';
 			}
 		} else {
 			act = 'Unban';
