@@ -8,6 +8,7 @@ var config = {
 	SERVE_STATIC_FILES: false,
 	SERVE_IMAGES: false,
 	GZIP: false,
+	USE_WEBSOCKETS: true,
 
 	REDIS_PORT: 6379,
 	READ_ONLY: false,

@@ -65,7 +65,12 @@ function connect() {
 }
 
 window.new_socket = function (attempt) {
-	return new SockJS(SOCKET_PATH);
+	var protocols = ['xdr-streaming', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xdr-polling', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
+	if (config.USE_WEBSOCKETS)
+		protocols.unshift('websocket');
+	return new SockJS(SOCKET_PATH, null, {
+		protocols_whitelist: protocols,
+	});
 };
 
 connSM.act('conn, reconn + open -> syncing', function () {
