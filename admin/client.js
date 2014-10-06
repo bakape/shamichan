@@ -9,11 +9,11 @@ window.x_csrf = IDENT.csrf;
 
 function show_toolbox() {
 	var specs = [
-		{name: 'Spoiler Image', kind: 7},
-		{name: 'Delete Image', kind: 8},
-		{name: 'Delete Post', kind: 9},
-		{name: 'Lock Thread', kind: 11},
-		{name: 'Toggle Mnemonics', kind: 12},
+		{name: 'Spoiler', kind: 7},
+		{name: 'Del Img', kind: 8},
+		{name: 'Del Post', kind: 9},
+		{name: 'Lock', kind: 11},
+		{name: 'Mnemonics', kind: 12},
 	];
 	if (IDENT.auth == 'Admin')
 		specs.push({name: 'Panel', kind: 'panel'});
