@@ -488,6 +488,11 @@ if (config.WEBM) {
 	which('ffmpeg', function (bin) { ffmpegBin = bin; });
 }
 
+var pngquantBin;
+if (config.PNG_THUMBS){
+	which('pngquant', function (bin) { pngquantBin = bin; });
+}
+
 function identify(taggedName, callback) {
 	var m = taggedName.match(/^(\w{3,4}):/);
 	var args = ['-format', '%Wx%H', taggedName + '[0]'];
@@ -635,12 +640,26 @@ function resize_image(o, comp, callback) {
 	else if (o.bg)
 		args.push('-layers', 'mosaic', '+matte');
 	// disregard metadata, acquire artifacts
-	args.push('-strip', '-quality', o.quality);
+	args.push('-strip');
+	if (o.bg || comp)
+		args.push('-quality', o.quality);
 	args.push(dest);
 	convert(args, o.src, function (err) {
 		if (err) {
 			winston.warn(err);
 			callback(Muggle("Resizing error.", err));
+		}
+		// Lossify PNG thumbnail
+		else if(!o.bg){
+			var pqDest = dest.slice(4);
+			child_process.execFile(pngquantBin, ['-f', '-o', pqDest, '--quality', o.quality, pqDest],
+				function(err, stdout, stderr){
+					if (err) {
+						winston.warn(stderr);
+						callback(Muggle("Resizing error.", stderr));
+					} else
+						callback(null, dest);
+			});
 		}
 		else
 			callback(null, dest);

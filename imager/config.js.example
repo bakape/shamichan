@@ -24,9 +24,9 @@ module.exports = {
 	THUMB_DIMENSIONS: [250, 250],
 	EXTRA_MID_THUMBNAILS: true,
 	// PNG thumbnails for PNG images. This enables thumbnail transparency.
-	// Warning: significantly increases page size for large threads.
 	PNG_THUMBS: false,
-	PNG_THUMB_QUALITY: 105,
+	// pngquant quality setting
+	PNG_THUMB_QUALITY: 10,
 	WEBM: false,
 	WEBM_AUDIO: false,
 	// uncomment this to have all audio WebMs overlaid with
