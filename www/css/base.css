@@ -15,8 +15,11 @@ aside a {
 	position: relative;
 	z-index: 15;
 }
-a, aside, #options, #banner_FAQ, #feedback, #banner_identity{
+a, aside, .bfloat {
 	cursor: pointer;
+}
+#sync {
+	cursor: auto;
 }
 article figure img {
 	margin-bottom: 0;
