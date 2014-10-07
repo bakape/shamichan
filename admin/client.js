@@ -461,7 +461,7 @@ function toggle_panel() {
 }
 
 if (IDENT.auth == 'Admin') (function () {
-	var $panel = $('<div/>', {id: 'panel', "class": 'mod'}).hide();
+	var $panel = $('<div/>', {id: 'panel', "class": 'mod modal'}).hide();
 	var view = new PanelView({model: adminState, el: $panel[0]});
 	$panel.appendTo('body');
 })();
