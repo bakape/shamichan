@@ -739,14 +739,14 @@ _.defer(function () {
 		spec.id = spec.id.replace(/\$BOARD/g, BOARD);
 	});
 
-	$('<a id="options" class="bfloat">Options</a>').click(function () {
+	$('#options').click(function () {
 		var $opts = $('#options-panel');
 		if (!$opts.length)
 			$opts = make_options_panel().appendTo('body');
 		if ($opts.is(':hidden'))
 			oneeSama.trigger('renderOptions', $opts);
 		position_bmodal('#options-panel');
-	}).insertBefore('#banner_identity');
+	});
 
 	optSpecs.forEach(function (spec) {
 		spec(options.get(spec.id));
