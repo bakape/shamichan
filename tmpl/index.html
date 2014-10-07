@@ -10,7 +10,7 @@ $META	<!--[if lt IE 9]><script src="{{MEDIA_URL}}js/ie.js"></script><![endif]-->
 </head>
 $NAV
 <h1>$TITLE</h1>
-<fieldset>
+<fieldset id="identity" class="modal bmodal">
 <label for="name" class="ident">Name:</label> <input id="name" name="name"><br>
 <label for="email" class="ident">Email:</label> <input id="email" name="email"><br>
 </fieldset>
@@ -18,6 +18,7 @@ $NAV
 <span id="banner">
     {{NAVTOP}}
 	<b id="banner_center"></b>
+	<a id="banner_identity" class="bfloat">Identity</a>
     <b id="banner_FAQ" class="bfloat">
         <a onclick="FAQ_onclick();">FAQ</a>
     </b>

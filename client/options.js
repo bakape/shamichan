@@ -746,7 +746,7 @@ _.defer(function () {
 		if ($opts.is(':hidden'))
 			oneeSama.trigger('renderOptions', $opts);
 		position_bmodal('#options-panel');
-	}).insertBefore('#banner_FAQ');
+	}).insertBefore('#banner_identity');
 
 	optSpecs.forEach(function (spec) {
 		spec(options.get(spec.id));
@@ -772,6 +772,10 @@ $('#banner_FAQ').click(function(){
 
 $('#banner_schedule').click(function(){
 	position_bmodal('#schedule');
+});
+
+$('#banner_identity').click(function(){
+	position_bmodal('#identity');
 });
 
 function make_options_panel() {
