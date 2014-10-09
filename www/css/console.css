@@ -1,6 +1,9 @@
 a, .act a {
 	color: white;
 }
+.bfloat > svg {
+	fill: white;
+}
 a:hover, #sync.error {
 	color: #e50000;
 }

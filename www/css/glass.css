@@ -2,6 +2,9 @@
 a, blockquote a:hover, b.moderator {
 	color: Lavender;
 }
+.bfloat > svg {
+	fill: Lavender;
+}
 article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {
 	background-color: rgba(40, 42, 46, 0.5);
 }

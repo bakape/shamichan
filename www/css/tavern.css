@@ -1,6 +1,9 @@
 a, blockquote a:hover, b.moderator {
 	color: #ef9d6a;
 }
+.bfloat > svg {
+	fill: #ef9d6a;
+}
 a:hover, blockquote a, .email b:hover, article.editing a:hover {
 	color: #ef9d6a;
 }

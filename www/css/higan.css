@@ -1,6 +1,9 @@
 a, blockquote a {
 	color: #99225c;
 }
+.bfloat > svg {
+	fill: #99225c;
+}
 a:hover, .email b:hover {
 	color: #af005f;
 }

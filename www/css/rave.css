@@ -2,6 +2,9 @@ a, blockquote a:hover, b.moderator {
 	color: black;
     font-weight:bold;
 }
+.bfloat > svg {
+	fill: black;
+}
 a:hover, blockquote a, .email b:hover, article.editing a:hover {
 	color: black;
     font-weight:bold;
