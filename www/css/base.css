@@ -197,6 +197,9 @@ span.control .popup-menu {
 	float: right;
 	margin: 0.15em;
 }
+#options {
+	margin-right: 0.2em;
+}
 #navTop {
 	float: left;
 	margin-left: 8px;
@@ -433,6 +436,12 @@ pre, .themed {
 	}
 	#banner {
 		margin-left: 0;
+		margin-right: 0;
+	}
+	#navTop {
+		margin-left: 0;
+	}
+	#options {
 		margin-right: 0;
 	}
 }
