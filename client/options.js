@@ -40,6 +40,7 @@ optSpecs.push(option_image_hover);
 optSpecs.push(option_autogif);
 optSpecs.push(option_spoiler);
 optSpecs.push(option_backlinks);
+optSpecs.push(option_now_playing);
 optSpecs.push(option_illya_dance);
 optSpecs.push(option_illya_mute);
 optSpecs.push(option_horizontal);
@@ -257,6 +258,36 @@ var load_thread_backlinks = function ($section) {
 		add_post_links(src, update, op);
 	});
 };
+
+/* R/A/DIO NOW PLAYING BANNER */
+
+var now_playing_timer;
+function option_now_playing(toggle){
+	if (!toggle){
+		var info;
+		(function write_banner(){
+			// Query the r/a/dio API
+		    $.getJSON('https://r-a-d.io/api', function(data){
+		        var main = data.main;
+		        var new_info ='<a href="http://r-a-d.io/" target="_blank">' + '[' + main.listeners + '] ' +
+		            main.dj.djname + '</a>' + '&nbsp;&nbsp;' + main.np;
+				if (new_info != info){
+					info = new_info;
+		        	$('#banner_center').html(info);
+		       	}
+		       	now_playing_timer = setTimeout(write_banner, 10000);
+		    });
+		})();
+	} else {
+		// Stop updating the banner
+		clearTimeout(now_playing_timer);
+		$('#banner_center').html('');
+	}
+}
+
+option_now_playing.id = 'nowPlaying';
+option_now_playing.label = 'Now Playing Banner';
+option_now_playing.type = 'revcheckbox';
 
 /* SPOILER TOGGLE */
 
