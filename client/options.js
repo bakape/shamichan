@@ -287,8 +287,8 @@ function option_illya_dance(illyatoggle){
 	if (options.get(option_illya_mute.id))
 		muted = 'muted';
 	var dancer = '<video autoplay ' + muted + ' loop id="bgvid" >' +
-			'<source src="http://meguca.org/static/illya.webm" type="video/webm">' +
-			'<source src="http://meguca.org/static/illya.mp4" type="video/mp4">' +
+			'<source src="' + mediaURL + 'illya.webm" type="video/webm">' +
+			'<source src="' + mediaURL + 'illya.mp4" type="video/mp4">' +
 		'</video>';
 	if (illyatoggle)
 		$("body").append(dancer);
