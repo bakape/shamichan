@@ -434,10 +434,6 @@ pre, .themed {
 	#banner {
 		margin-left: 0;
 		margin-right: 0;
-		position: absolute;
-	}
-	.bmodal {
-		position: absolute;
 	}
 }
 
