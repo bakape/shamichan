@@ -637,6 +637,10 @@ web.resource(/^\/outbound\/(g|iqdb)\/(\d+\.jpg)$/,
 		thumb = u.format();
 	}
 
+	// Pass unencrypted URL to IQDB to avoid problems with Cloudflare's SSL
+	if (params[1] == 'iqdb')
+		thumb = thumb.replace(/https:\/\//, 'http://');
+
 	var service = params[1] == 'iqdb' ? 'http://iqdb.org/?url='
 			: 'https://www.google.com/searchbyimage?image_url=';
 	var dest = service + encodeURIComponent(thumb);
