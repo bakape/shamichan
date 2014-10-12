@@ -209,7 +209,6 @@ function write_gzip_head(req, resp, headers) {
 		Vary: 'Accept-Encoding',
 	}));
 
-	// XXX in-node impl blocks node while deflating... not good!
 	var gz = require('zlib').createGzip();
 	gz.pipe(resp);
 	return gz;
