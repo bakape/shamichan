@@ -97,9 +97,6 @@ var config = {
 		"Doki doki",
 		"Anta baka?"
 	],
-
-	/* Client-side custom site-wide banner.*/ 
-	CUSTOM_BANNER: false,
 };
 
 module.exports = config;
