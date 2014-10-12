@@ -1,9 +1,9 @@
 /* Based on ashita */
 a, blockquote a:hover, b.moderator {
-	color: Lavender;
+	color: #C8C8D9;
 }
 .bfloat > svg {
-	fill: Lavender;
+	fill: #C8C8D9;
 }
 article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {
 	background-color: rgba(40, 42, 46, 0.5);
