@@ -1,4 +1,5 @@
 this.hot = {
+	// User feedback email
 	EMAIL: "lalc@doushio.com",
 	TITLES: {
 		moe: "/moe/ - Sweets",
@@ -8,6 +9,7 @@ this.hot = {
 		graveyard: "/graveyard/",
 		staff: "/staff/",
 	},
+	// Default CSS theme setting per board
 	BOARD_CSS: {
 		moe: 'moe',
 		gar: 'gar',
@@ -17,27 +19,25 @@ this.hot = {
 		staff: 'moe',
 	},
 	INTER_BOARD_NAVIGATION: true,
-
 	SPECIAL_TRIPCODES: {
 		kyubey: "／人◕ ‿‿ ◕人＼",
 	},
-    
-    SPECIAL_NAME_TRIPCODES: {
-        name: "!tripcode",
-    },
-     
-    BANNERINFO: '',
-    
-    SCHEDULE: {
-    	Mon: {plans: '', time: ''},
-    	Tue: {plans: '', time: ''},
-    	Wed: {plans: '', time: ''},
-    	Thu: {plans: '', time: ''},
-    	Fri: {plans: '', time: ''},
-    	Sat: {plans: '', time: ''},
-    	Sun: {plans: '', time: ''},
-    },
-    
+	SPECIAL_NAME_TRIPCODES: {
+		name: "!tripcode",
+	},
+	// Information to display in the top banner. Accepts HTML
+	BANNERINFO: '',
+	// Planned event schedule to display in the banner's Schedule list
+	SCHEDULE: {
+		Mon: {plans: '', time: ''},
+		Tue: {plans: '', time: ''},
+		Wed: {plans: '', time: ''},
+		Thu: {plans: '', time: ''},
+		Fri: {plans: '', time: ''},
+		Sat: {plans: '', time: ''},
+		Sun: {plans: '', time: ''},
+	},
+    // Entries for the banner's FAQ list
     FAQ: [
 		"Lewd is good", 
 		"No 3D porn", 
