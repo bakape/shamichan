@@ -42,8 +42,10 @@ optSpecs.push(option_spoiler);
 optSpecs.push(option_backlinks);
 if (radioBanner)
 	optSpecs.push(option_now_playing);
-optSpecs.push(option_illya_dance);
-optSpecs.push(option_illya_mute);
+if (illyaDance){
+	optSpecs.push(option_illya_dance);
+	optSpecs.push(option_illya_mute);
+}
 optSpecs.push(option_horizontal);
 optSpecs.push(option_reply_at_right);
 optSpecs.push(option_theme);

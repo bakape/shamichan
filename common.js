@@ -51,6 +51,8 @@ if (typeof modVersion == 'undefined' || !modVersion)
 	modVersion = config.MOD_CSS_VERSION;
 if (typeof radioBanner == 'undefined' || !radioBanner)
 	radioBanner = config.RADIO_BANNER;
+if (typeof illyaDance == 'undefined' || !illyaDance)
+	illyaDance = config.RADIO_BANNER;
 
 function is_pubsub(t) {
 	return t > 0 && t < 30;
