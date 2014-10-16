@@ -5,7 +5,6 @@ opts.load_defaults();
 var _ = require('../lib/underscore'),
     amusement = require('./amusement'),
     async = require('async'),
-    aJ = require('../autoJoe/server'),
     caps = require('./caps'),
     check = require('./msgcheck').check,
     common = require('../common'),
@@ -34,6 +33,9 @@ if (config.ANON_HOURS){
 	var ah = require('../anon_hours/server');
 	ah.ah_init();
 }
+var aJ = false;
+if (config.AUTOJOE)
+	aJ = require('../autoJoe/server');
 try {
 	var reportConfig = require('../report/config');
 	if (reportConfig.RECAPTCHA_PUBLIC_KEY)

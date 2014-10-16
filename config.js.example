@@ -117,6 +117,11 @@ var config = {
 		"Doki doki",
 		"Anta baka?"
 	],
+	
+	/* Silly little things you probably should not care about */
+	
+	// Automatic name assignement by parsing https://r-a-d.io/api
+	AUTOJOE: false,
 };
 
 module.exports = config;
