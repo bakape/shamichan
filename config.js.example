@@ -122,6 +122,8 @@ var config = {
 	
 	// Automatic name assignement by parsing https://r-a-d.io/api
 	AUTOJOE: false,
+	// Display r/a/dio now playing information in the top banner
+	RADIO_BANNER: false,
 };
 
 module.exports = config;

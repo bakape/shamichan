@@ -40,7 +40,8 @@ optSpecs.push(option_image_hover);
 optSpecs.push(option_autogif);
 optSpecs.push(option_spoiler);
 optSpecs.push(option_backlinks);
-optSpecs.push(option_now_playing);
+if (radioBanner)
+	optSpecs.push(option_now_playing);
 optSpecs.push(option_illya_dance);
 optSpecs.push(option_illya_mute);
 optSpecs.push(option_horizontal);
@@ -286,7 +287,7 @@ function option_now_playing(toggle){
 }
 
 // Disable by default on smartphones
-if (!localStorage.getItem(options) && $(window).width() < 1000)
+if (radioBanner && !localStorage.getItem(options) && $(window).width() < 1000)
 	options.set('nowPlaying', true);
 
 option_now_playing.id = 'nowPlaying';
