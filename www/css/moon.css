@@ -35,7 +35,7 @@ small a {
 .act a {
 	color: blue;
 }
-.modal, .preview, .popup-menu {
+.modal, .bmodal, .preview, .popup-menu {
 	background-color: #f5f5f5;
 }
 .omit {

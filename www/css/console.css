@@ -148,7 +148,7 @@ small a {
 .email, .email b {
 	color: #2020ff;
 }
-.modal, .preview, .popup-menu {
+.modal, .bmodal, .preview, .popup-menu {
 	background-color: #111;
 }
 #feedback {

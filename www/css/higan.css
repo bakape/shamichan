@@ -87,7 +87,7 @@ hr {
 .embed {
 	background-color: #e4e4e4;
 }
-.modal, .popup-menu {
+.modal, .bmodal, .popup-menu {
 	background-color: #262626;
 	border-right: 1px solid #212121;
 	border-bottom: 1px solid #212121;

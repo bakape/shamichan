@@ -14,7 +14,7 @@ a#options, span#sync, a#feedback{
      color: black;
 }
 
-article, aside, .modal, .pagination {
+article, aside, .modal, .bmodal, .pagination {
 	background-image: url(rave_bg.gif);
 	opacity: 0.9;
 }

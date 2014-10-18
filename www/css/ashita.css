@@ -7,7 +7,7 @@ a, blockquote a:hover, b.moderator {
 a:hover, blockquote a, .email b:hover, article.editing a:hover {
 	color: #5f89ac;
 }
-article, aside, .modal, .pagination, #FAQ {
+article, aside, .modal, .bmodal, .pagination, #FAQ {
 	background-color: #282a2e;
 	border: 1px solid #282a2e;
 }

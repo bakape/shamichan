@@ -5,7 +5,7 @@ a, blockquote a:hover, b.moderator {
 .bfloat > svg {
 	fill: #C8C8D9;
 }
-article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {
+article, aside, .pagination, .popup-menu, .modal, .bmodal, .preview, #banner {
 	background-color: rgba(40, 42, 46, 0.5);
 }
 article.editing {

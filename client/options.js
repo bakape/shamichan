@@ -424,7 +424,7 @@ function append_glass(){
 			$('<style />', {id: 'blurred'})
 				.appendTo('body')
 				.html(
-					'article, aside, .pagination, .popup-menu, .modal, #FAQ, .preview, #banner {\
+					'article, aside, .pagination, .popup-menu, .modal, .bmodal, .preview, #banner {\
 						background:\
 							linear-gradient(rgba(40, 42, 46, 0.5), rgba(40, 42, 46, 0.5)),' +
 							bg +
@@ -816,7 +816,7 @@ $('#banner_identity').click(function(){
 });
 
 function make_options_panel() {
-	var $opts = $('<div/>', {"class": 'modal bmodal', id: 'options-panel'});
+	var $opts = $('<div/>', {"class": 'bmodal', id: 'options-panel'});
 	$opts.change(function (event) {
 		var $o = $(event.target), id = $o.attr('id'), val;
 		var spec = _.find(optSpecs, function (s) {
