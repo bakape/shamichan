@@ -51,7 +51,8 @@ hr {
 	content: "]";
 }
 #lock, .scroll-lock header {
-	background-image: url('ui/invlock.png');
+	background-image: url('ui/invlock.svg');
+	background-size: 1em 1em;
 	color: white;
 }
 .popup-menu li:hover {
@@ -59,13 +60,4 @@ hr {
 }
 .themed {
 	color: white;
-}
-
-@media screen and (-webkit-min-device-pixel-ratio: 1.5),
-	screen and (-o-device-pixel-ratio: 3/2),
-	screen and (min--moz-device-pixel-ratio: 1.5),
-	screen and (min-device-pixel-ratio: 1.5) {
-	#lock, .scroll-lock header {
-		background-image: url('ui/invlock2x.png');
-	}
 }

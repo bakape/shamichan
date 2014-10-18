@@ -280,7 +280,8 @@ article .hat {
 	background-size: 35px 70px;
 }
 #lock {
-	background: url('ui/lock.png') no-repeat left;
+	background: url('ui/lock.svg') no-repeat left;
+	background-size: 1em 1em;
 	color: gray;
 	float: right;
 	padding-left: 15px;
@@ -318,7 +319,8 @@ article .hat {
 	z-index: 30;
 }
 .scroll-lock > header {
-	background-image: url('ui/lock.png');
+	background-image: url('ui/lock.svg');
+	background-size: 1em 1em;
 	background-position: 0 0;
 }
 
@@ -456,23 +458,4 @@ pre, .themed {
 	.full figcaption i {
 		display: block;
 	}
-}
-
-@media screen and (-webkit-min-device-pixel-ratio: 1.5),
-	screen and (-o-device-pixel-ratio: 3/2),
-	screen and (min--moz-device-pixel-ratio: 1.5),
-	screen and (min-device-pixel-ratio: 1.5) {
-	header, .popup-menu {
-		background-image: url('ui/box2x.png');
-		background-size: 10px 10px;
-	}
-	#lock {
-		background: url('ui/lock2x.png') no-repeat top left;
-		background-size: 10px 13px;
-	}
-	.scroll-lock header {
-		background-image: url('ui/lock2x.png');
-		background-size: 10px 13px;
-	}
-
 }

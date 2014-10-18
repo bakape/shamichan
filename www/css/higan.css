@@ -96,7 +96,8 @@ hr {
 	color: #626262;
 }
 #lock, .scroll-lock header {
-	background-image: url('ui/invlock.png');
+	background-image: url('ui/invlock.svg');
+	background-size: 1em 1em;
 }
 .themed {
 	color: #8a8a8a;
@@ -107,11 +108,4 @@ hr {
 		background-attachment: scroll;
 	}
 }
-@media screen and (-webkit-min-device-pixel-ratio: 1.5),
-	screen and (-o-device-pixel-ratio: 3/2),
-	screen and (min--moz-device-pixel-ratio: 1.5),
-	screen and (min-device-pixel-ratio: 1.5) {
-	#lock, .scroll-lock header {
-		background-image: url('ui/invlock2x.png');
-	}
-}
+
