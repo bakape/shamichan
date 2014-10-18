@@ -622,11 +622,11 @@ OS.readable_time = function (time) {
 	else /* would be nice not to construct new Dates all the time */
 		offset = new Date().getTimezoneOffset() * -60 * 1000;
 	var d = new Date(time + offset);
-	var k = "日月火水木金土"[d.getUTCDay()];
-	return (d.getUTCFullYear() + '/' + pad(d.getUTCMonth()+1) + '/' +
-		pad(d.getUTCDate()) + '&nbsp;(' + k + ') ' +
-		pad(d.getUTCHours()) + ':' +
-		pad(d.getUTCMinutes()));
+	var week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+	var year = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+	return pad(d.getUTCDate()) + '&nbsp;' + year[d.getUTCMonth()] + '&nbsp;' +
+		d.getUTCFullYear() + '(' + week[d.getUTCDay()] + ')' + pad(d.getUTCHours()) + ':' +
+		pad(d.getUTCMinutes());
 };
 
 function datetime(time) {
