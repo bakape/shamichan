@@ -430,6 +430,7 @@ var PanelView = Backbone.View.extend({
 				this.renderCounts);
 		this.listenTo(this.model, 'change:uptime', this.renderUptime);
 		$('<div/>', {id: 'ips'}).appendTo(this.el);
+		$('<div/>', {id: 'connections'}).appendTo(this.el);
 		$('<div/>', {id: 'mem'}).appendTo(this.el);
 		$('<div/>', {id: 'counts'}).appendTo(this.el);
 		$('<div/>', {id: 'uptime'}).appendTo(this.el);
@@ -448,6 +449,7 @@ var PanelView = Backbone.View.extend({
 			var el = new AddrView({model: addr}).render().el;
 			$ips.append(el, n>1 ? ' ('+n+')' : '', '<br>');
 		});
+		this.$('#connections').text(pluralize(this.$('#ips > a').length, 'connection'));
 	},
 
 	renderMemory: function (model, mem) {
