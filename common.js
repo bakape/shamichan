@@ -600,12 +600,12 @@ OS.gazou_img = function (info, toppu) {
 };
 
 function readable_filesize(size) {
-	/* Metric. Deal with it. */
-	if (size < 1000)
+	/* Dealt with it. */
+	if (size < 1024)
 		return size + ' B';
-	if (size < 1000000)
-		return Math.round(size / 1000) + ' KB';
-	size = Math.round(size / 100000).toString();
+	if (size < 1048576)
+		return Math.round(size / 1024) + ' KB';
+	size = Math.round(size / 104857.6).toString();
 	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
 }
 exports.readable_filesize = readable_filesize;
