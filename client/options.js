@@ -829,6 +829,8 @@ _.defer(function () {
 	});
 });
 
+/* TOGGLER FOR TOP BANNER BUTTONS */
+
 function position_bmodal(target){
 	if (!$(target).is(':visible')){
 		$(target).css('top', $('#banner').outerHeight() + 5 + 'px');
@@ -836,15 +838,12 @@ function position_bmodal(target){
 	}
 	$(target).toggle('fast');
 }
-
 $('#banner_FAQ').click(function(){
 	position_bmodal('#FAQ');
 });
-
 $('#banner_schedule').click(function(){
 	position_bmodal('#schedule');
 });
-
 $('#banner_identity').click(function(){
 	position_bmodal('#identity');
 });
