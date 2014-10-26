@@ -848,6 +848,25 @@ $('#banner_identity').click(function(){
 	position_bmodal('#identity');
 });
 
+// Highlight options button, if no options are set
+if (!localStorage.getItem('options')){
+	$('#options').addClass('noOptions');
+	function fadeout(){
+		$('.noOptions').fadeOut(fadein);
+	}
+	function fadein(){
+		// Stop animation, if options pannel is opened
+		if (!$('.noOptions').length)
+			$('#options').fadeIn();
+		$('.noOptions').fadeIn(fadeout);
+	}
+	fadeout();
+	
+	$('#options').click(function(){
+		$('#options').removeClass('noOptions');
+	});
+}
+
 function make_options_panel() {
 	var $opts = $('<div/>', {"class": 'bmodal', id: 'options-panel'});
 	$opts.change(function (event) {
