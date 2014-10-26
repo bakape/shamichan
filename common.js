@@ -629,6 +629,27 @@ OS.readable_time = function (time) {
 		pad(d.getUTCMinutes());
 };
 
+// Readable elapsed time since post
+OS.relative_time = function(then, now){
+	function format(time, unit){
+		return pluralize(time, unit) + ' ago';
+	}
+	
+	var min  = Math.floor((now - then) / (60 * 1000));
+	if (min == 0)
+		return 'just now';
+	if (min < 60)
+		return format(min, 'minute');
+	var hours = Math.floor(min/60);
+	if (hours < 24)
+		return format(hours, 'hour');
+	var days = Math.floor(hours/24);
+	if (days < 30)
+		return format(days, 'day');
+	var months = Math.floor(days/30);
+	return format(months, 'month');
+};
+
 function datetime(time) {
 	var d = new Date(time);
 	return (d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' +
@@ -702,9 +723,13 @@ OS.atama = function (data) {
 				+ encodeURI(data.email) + '">'));
 		header.push(safe('</a>'));
 	}
-	header.push(safe(' <time datetime="' + datetime(data.time) +
-			'">' + this.readable_time(data.time) + '</time> '),
-			this.post_nav(data));
+	// Format according to client's relative post timestamp setting
+	var title = this.rTime ? this.readable_time(data.time) : '';
+	var text = this.rTime ? this.relative_time(data.time, new Date().getTime()) : this.readable_time(data.time);
+	header.push(safe(' <time datetime="' + datetime(data.time) + '"' +
+		'title="' + title + '"' +
+		'>' + text + '</time> '),
+		this.post_nav(data));
 	if (!this.full && !data.op) {
 		var ex = this.expansion_links_html(data.num, data.omit);
 		header.push(safe(ex));

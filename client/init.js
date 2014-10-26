@@ -19,3 +19,7 @@ var oneeSama = new OneeSama(function (num) {
 	this.callback(frag);
 });
 oneeSama.full = oneeSama.op = THREAD;
+
+// Pass relative post timestamp setting to the client-side oneeSama
+if ($.cookie('rTime') == 'true')
+	oneeSama.rTime = true;
