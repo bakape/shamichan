@@ -636,7 +636,7 @@ OS.relative_time = function(then, now){
 	}
 	
 	var min  = Math.floor((now - then) / (60 * 1000));
-	if (min == 0)
+	if (min < 1)
 		return 'just now';
 	if (min < 60)
 		return format(min, 'minute');
