@@ -282,7 +282,7 @@ function option_relative_time(toggle){
 option_relative_time.id = 'relativeTime';
 option_relative_time.label = 'Relative Timestamps';
 option_relative_time.type = 'checkbox';
-option_relative_time.tooltip = 'Relative post timestamps. Ex.: "1 hour ago. Requires page refresh"';
+option_relative_time.tooltip = 'Relative post timestamps. Ex.: "1 hour ago." Requires page refresh';
 
 /* R/A/DIO NOW PLAYING BANNER */
 
