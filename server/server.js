@@ -639,11 +639,11 @@ web.resource(/^\/outbound\/(g|iqdb|sn)\/(\d+\.jpg)$/,
 	}
 
 	// Pass unencrypted URL to IQDB and SauceNao to avoid problems with Cloudflare's SSL
-	if (params[1] == ('iqdb' || 'sn'))
+	if (params[1] == 'iqdb' || params[1] == 'sn')
 		thumb = thumb.replace(/https:\/\//, 'http://');
 
 	if (params[1] == 'iqdb')
-		var sercice = 'http://iqdb.org/?url=';
+		var service = 'http://iqdb.org/?url=';
 	else if (params[1] == 'g')
 		var service = 'https://www.google.com/searchbyimage?image_url=';
 	else

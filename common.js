@@ -507,7 +507,7 @@ OS.gazou = function (info, toppu) {
 			new_tab_link(src, info.src), ' [',
 			new_tab_link(google, 'G', 'imageSearch'), '][',
 			new_tab_link(iqdb, 'Iq', 'imageSearch'), '][',
-			new_tab_link(iqdb, 'Sn', 'imageSearch'), '][',
+			new_tab_link(saucenao, 'Sn', 'imageSearch'), '][',
 			new_tab_link(foolz, 'Fz', 'imageSearch'), '][',
 			new_tab_link(exhentai, 'Ex', 'imageSearch'), ']'
 		];
