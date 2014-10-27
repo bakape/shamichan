@@ -1,70 +1,71 @@
 var config = {
 	LISTEN_PORT: 8000,
-	// Host address to listen on. Use null for localhost
+// Host address to listen on. Use null for localhost
 	LISTEN_HOST: null,
-	// Debuging mode. Do not use in production
+// Debuging mode. Do not use in production
 	DEBUG: true,
-	// Secure tripcode encryption salt
+// Secure tripcode encryption salt
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
 	SOCKET_PATH: '/hana',
-	// Honour X-Forwarded-For HTTP headers for client IP determination
+// Honour X-Forwarded-For HTTP headers for client IP determination
 	TRUST_X_FORWARDED_FOR: false,
-	// Use internal HTTP server to serve these resources.
-	// It is recommended to serve the www directory with a dedicated webserver, like nginx, 
-	// and set MEDIAURL in imager/config.js to the served directory's address.
+// Use internal HTTP server to serve these resources.
+// It is recommended to serve the www directory with a dedicated webserver, like nginx, 
+// and set MEDIAURL in imager/config.js to the served directory's address.
 	SERVE_STATIC_FILES: false,
 	SERVE_IMAGES: false,
-	GZIP: false, /* not preferred; use nginx (or other)'s gzipping */
-	// Force usage of websocket protocol
+// Not preferred; use nginx (or other)'s gzipping
+	GZIP: false, 
+// Force usage of websocket protocol
 	USE_WEBSOCKETS: true,
 
 	REDIS_PORT: 6379,
 	READ_ONLY: false,
-
+	
 	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
 	DEFAULT_BOARD: 'moe',
 	GAME_BOARDS: ['moe', 'archive'],
 	STAFF_BOARD: 'staff',
 	THREADS_PER_PAGE: 10,
-	// Replies to display under each thread on the board's root page
+// Replies to display under each thread on the board's root page
 	ABBREVIATED_REPLIES: 5,
-	// Default number of posts to display, when thread is expanded with the "Last N" link
+// Default number of posts to display, when thread is expanded with the "Last N" link
 	THREAD_LAST_N: 100,
 
-	// Thread creation cooldown for the same IP in seconds
+// Thread creation cooldown for the same IP in seconds
 	THREAD_THROTTLE: 60,
-	// Per board thread expiry configuration. Expired threads will be either archived or deleted
-	// by archive/daemon.js. Set in seconds.
+// Per board thread expiry configuration. Expired threads will be either archived or deleted
+// by archive/daemon.js. Set in seconds.
 	THREAD_EXPIRY: {
 		moe: 3600 * 24 * 7,
 		gar: 3600 * 24 * 7,
 		meta: 3600 * 24 * 7,
 	},
-	// Posting speed throttling settings
+// Posting speed throttling settings
 	SHORT_TERM_LIMIT: 2000,
 	LONG_TERM_LIMIT: 2000*20*12,
 	NEW_POST_WORTH: 50,
 	IMAGE_WORTH: 50,
-	// Instructs archive/daemon.js to permanently delete threads instead of archiving them
-	// Existing archives will not be removed
-	// Note: upkeep/clean.js is not needed with this option enabled
+// Instructs archive/daemon.js to permanently delete threads instead of archiving them
+// Existing archives will not be removed
+// Note: upkeep/clean.js is not needed with this option enabled
 	VOLATILE: false,
 	SUBJECT_MAX_LENGTH: 50,
 	EXCLUDE_REGEXP: /[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g,
 	SAGE_ENABLED: true,
 
-	// Doushio uses Mozilla's Persona system for moderator authentication. Set login emails here.
-	// Loging in can be done by either going to the /login/ board or typing "misaki" into the email field.
+// Doushio uses Mozilla's Persona system for moderator authentication. Set login emails here.
+// Loging in can be done by either going to the /login/ board or typing "misaki" into the email field.
 	ADMIN_PERSONAS: ['lalc@doushio.com'],
 	MODERATOR_PERSONAS: ['mod@doushio.com'],
-	// URL to pass to Mozilla's servers. 
+// URL to pass to Mozilla's servers. 
 	PERSONA_AUDIENCE: 'http://example.com:80',
 	LOGIN_COOKIE_DOMAIN: 'example.com',
 	LOGIN_SESSION_TIME: 60*60*24*14,
-	// Translate IP's into more human-readable mnemonics
+// Translate IP's into more human-readable mnemonics
 	IP_MNEMONIC: true,
-	
-	// CSS file versioning. Increment the version number on each change to CSS for transparent user transition
+
+// CSS file versioning. Increment the version number on each change to CSS for transparent user transition
 	BASE_CSS_VERSION: 44,
 	THEME_CSS_VERSION: 9,
 	MOD_CSS_VERSION: 1,
@@ -82,22 +83,23 @@ var config = {
 		'tavern',
 		'glass'
 	],
-	
-	// Titles for staff that will be displayed in their posts' header
+
+// Titles for staff that will be displayed in their posts' header
 	ADMIN_ALIAS: 'Admin',
 	MOD_ALIAS: 'Moderator',
 
 	VOICE_PATH: 'voice',
 
-	// A semi random set of hours each day will make all posts Anonymous
+// A semi random set of hours each day will make all posts Anonymous
 	ANON_HOURS: false,
-	ANON_HOURS_PER_DAY: 2, /* Accepted values are [1, 2, 3, 4, 6, 12, 24] */
-	// Sets a semi-random ratio of anon hours to he converted into random name hours
-	// All posts will have a random name assigned to them from the posted name set
-	// Set to integer from 0 to 10. 0 disables random name hours. 10 makes all anon hours random name hours
+// Accepted values are [1, 2, 3, 4, 6, 12, 24]
+	ANON_HOURS_PER_DAY: 2, 
+// Sets a semi-random ratio of anon hours to he converted into random name hours
+// All posts will have a random name assigned to them from the posted name set
+// Set to integer from 0 to 10. 0 disables random name hours. 10 makes all anon hours random name hours
 	RANDOM_NAME_HOURS: 0, 
 
-	// Array of answers for the 8ball random wisdom dispenser. To use, type "#8ball" in post, followed by enter. 
+// Array of answers for the 8ball random wisdom dispenser. To use, type "#8ball" in post, followed by enter. 
 	EIGHT_BALL: [
 		"Yes",
 		"No",
@@ -111,15 +113,15 @@ var config = {
 		"That is my fetish",
 		"Anta baka?",
 	],
-	
-	/* Silly little things you probably should not care about */
-	
-	// Local http://loli.dance/ implementation. Videos not included in git tree.
-	// Place illya.webm and illya.mp4 into the www directory, if you want this.
+
+/* Silly little things you probably should not care about */
+
+// Local http://loli.dance/ implementation. Videos not included in git tree.
+// Place illya.webm and illya.mp4 into the www directory, if you want this.
 	ILLYA_DANCE: false,
-	// Automatic name assignement by parsing https://r-a-d.io/api
+// Automatic name assignement by parsing https://r-a-d.io/api
 	AUTOJOE: false,
-	// Display r/a/dio now playing information in the top banner
+// Display r/a/dio now playing information in the top banner
 	RADIO_BANNER: false,
 };
 

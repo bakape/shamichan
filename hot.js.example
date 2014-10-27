@@ -1,5 +1,5 @@
 this.hot = {
-	// User feedback email
+// User feedback email
 	EMAIL: "lalc@doushio.com",
 	TITLES: {
 		moe: "/moe/ - Sweets",
@@ -9,7 +9,7 @@ this.hot = {
 		graveyard: "/graveyard/",
 		staff: "/staff/",
 	},
-	// Default CSS theme setting per board
+// Default CSS theme setting per board
 	BOARD_CSS: {
 		moe: 'moe',
 		gar: 'gar',
@@ -25,9 +25,9 @@ this.hot = {
 	SPECIAL_NAME_TRIPCODES: {
 		name: "!tripcode",
 	},
-	// Information to display in the top banner. Accepts HTML
+// Information to display in the top banner. Accepts HTML
 	BANNERINFO: '',
-	// Planned event schedule to display in the banner's Schedule list
+// Planned event schedule to display in the banner's Schedule list
 	SCHEDULE: {
 		Mon: {plans: '', time: ''},
 		Tue: {plans: '', time: ''},
@@ -37,7 +37,7 @@ this.hot = {
 		Sat: {plans: '', time: ''},
 		Sun: {plans: '', time: ''},
 	},
-    // Entries for the banner's FAQ list
+// Entries for the banner's FAQ list
     FAQ: [
 		"Lewd is good", 
 		"No 3D porn", 
