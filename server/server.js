@@ -627,7 +627,7 @@ web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
 		cb(null, 'redirect', '../' + params[2]);
 });
 
-web.resource(/^\/outbound\/(g|iqdb)\/(\d+\.jpg)$/,
+web.resource(/^\/outbound\/(g|iqdb|sn)\/(\d+\.jpg)$/,
 			function (req, params, cb) {
 	var thumb = imager.config.MEDIA_URL + 'thumb/' + params[2];
 
@@ -638,12 +638,17 @@ web.resource(/^\/outbound\/(g|iqdb)\/(\d+\.jpg)$/,
 		thumb = u.format();
 	}
 
-	// Pass unencrypted URL to IQDB to avoid problems with Cloudflare's SSL
-	if (params[1] == 'iqdb')
+	// Pass unencrypted URL to IQDB and SauceNao to avoid problems with Cloudflare's SSL
+	if (params[1] == ('iqdb' || 'sn'))
 		thumb = thumb.replace(/https:\/\//, 'http://');
 
-	var service = params[1] == 'iqdb' ? 'http://iqdb.org/?url='
-			: 'https://www.google.com/searchbyimage?image_url=';
+	if (params[1] == 'iqdb')
+		var sercice = 'http://iqdb.org/?url=';
+	else if (params[1] == 'g')
+		var service = 'https://www.google.com/searchbyimage?image_url=';
+	else
+		var service = 'http://saucenao.com/search.php?db=999&url=';
+	
 	var dest = service + encodeURIComponent(thumb);
 	cb(null, 303.1, dest);
 });
