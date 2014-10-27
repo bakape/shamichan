@@ -67,6 +67,10 @@ figcaption i {
 figcaption i a {
 	text-decoration: none;
 }
+.imageSearch {
+	font-weight: bold;
+	text-decoration: none;
+}
 figure {
 	display: inline;
 	margin: 0;

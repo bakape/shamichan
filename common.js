@@ -503,11 +503,11 @@ OS.gazou = function (info, toppu) {
 		var exhentai = encodeURI('../outbound/exh/' + info.SHA1);
 		src = encodeURI(this.image_paths().src + info.src);
 		caption = [
-			new_tab_link(src, info.src), ' ',
-			new_tab_link(google, '[GO]'),
-			new_tab_link(iqdb, '[IQ]'),
-			new_tab_link(foolz, '[FZ]'),
-			new_tab_link(exhentai, '[EX]'), ' '
+			new_tab_link(src, info.src), ' [',
+			new_tab_link(google, 'G', 'imageSearch'), '][',
+			new_tab_link(iqdb, 'Iq', 'imageSearch'), '][',
+			new_tab_link(foolz, 'Fz', 'imageSearch'), '][',
+			new_tab_link(exhentai, 'Ex', 'imageSearch'), ']'
 		];
 	}
 
