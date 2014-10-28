@@ -721,7 +721,7 @@ OS.atama = function (data) {
 	this.trigger('headerName', {header: header, data: data});
 	header.push(safe('</b>'));
 	if (data.email) {
-		header.unshift(safe('<a class="email" href="mailto:'
+		header.unshift(safe('<a class="email" target="_blank" href="mailto:'
 				+ encodeURI(data.email) + '">'));
 		header.push(safe('</a>'));
 	}
