@@ -310,10 +310,6 @@ function option_now_playing(toggle){
 	}
 }
 
-// Disable by default on smartphones
-if (radioBanner && !localStorage.getItem(options) && $(window).width() < 1000)
-	options.set('nowPlaying', true);
-
 option_now_playing.id = 'nowPlaying';
 option_now_playing.label = 'Now Playing Banner';
 option_now_playing.type = 'revcheckbox';
