@@ -200,7 +200,7 @@ StillJob.prototype.perform_job = function () {
 	var dest = index.media_path('tmp', 'still_'+etc.random_id());
 	var args = ['-hide_banner', '-loglevel', 'info',
 			'-i', this.src,
-			'-f', 'image2', '-vframes', '1', '-vcodec', 'png',
+			'-f', 'image2', '-vf', 'thumbnail', '-vframes', '1', '-vcodec', 'png',
 			'-y', dest];
 	var opts = {env: {AV_LOG_FORCE_NOCOLOR: '1'}};
 	var self = this;
