@@ -653,10 +653,10 @@ function resize_image(o, comp, callback) {
 		else if(!o.bg){
 			var pqDest = dest.slice(4);
 			child_process.execFile(pngquantBin, ['-f', '-o', pqDest, '--quality', o.quality, pqDest],
-				function(err, stdout, stderr){
+				function(err){
 					if (err) {
-						winston.warn(stderr);
-						callback(Muggle("Pngquant thumbnailing error.", stderr));
+						winston.warn(err);
+						callback(Muggle("Pngquant thumbnailing error.", err));
 					} else
 						callback(null, dest);
 			});
