@@ -656,7 +656,7 @@ function resize_image(o, comp, callback) {
 				function(err, stdout, stderr){
 					if (err) {
 						winston.warn(stderr);
-						callback(Muggle("Resizing error.", stderr));
+						callback(Muggle("Pngquant thumbnailing error.", stderr));
 					} else
 						callback(null, dest);
 			});
