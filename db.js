@@ -873,6 +873,7 @@ Y.purge_thread = function(op, callback){
 			m.del(key + ':dels');
 			m.del(key + ':history');
 			m.del(key + ':posts');
+			m.del(key + ':body');
 			m.exec(done);
 		},
 		callback
