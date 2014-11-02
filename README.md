@@ -11,6 +11,8 @@ Setup:
 * Copy report/config.js.example to report/config.js and configure
 * Run `npm install` to install npm deps and compile a few helpers
 * Run `node builder.js` to run an auto-reloading development server
+* Alternatevly, you can run `curl -Ls https://raw.githubusercontent.com/bakape/doushio/master/DEPLOY.sh | bash -`
+	as root for a basic semiautomatic production setup. Currently Ubuntu-only
 
 Production:
 
