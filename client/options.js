@@ -301,8 +301,11 @@ function option_now_playing(toggle){
 					info = new_info;
 		        	$('#banner_center').html(info);
 		       	}
-		       	now_playing_timer = setTimeout(write_banner, 10000);
-		    });
+		    })
+				// Schedule a new requests, even if the fetch fails
+				.always(function(){
+					now_playing_timer = setTimeout(write_banner, 10000);
+				});
 		})();
 	} else {
 		// Stop updating the banner
