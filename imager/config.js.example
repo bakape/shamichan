@@ -30,8 +30,8 @@ module.exports = {
 	EXTRA_MID_THUMBNAILS: true,
 // PNG thumbnails for PNG images. This enables thumbnail transparency.
 	PNG_THUMBS: false,
-// pngquant quality setting
-	PNG_THUMB_QUALITY: 10,
+// pngquant quality setting. Consult the manpages for more details
+	PNG_THUMB_QUALITY: '0-10',
 // Allow WebM video upload
 	WEBM: false,
 // Allow upload of WebM video with sound

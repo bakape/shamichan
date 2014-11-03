@@ -30,7 +30,7 @@ Dependencies:
 * node.js + npm
 * redis
 * ffmpeg 2.2+ if supporting WebM
-* pngquant 2.2.0+ if PNG thumbnails enabled
+* pngquant  2.3.1+ for PNG thumbnails
 
 Optional npm deps for various features:
 
