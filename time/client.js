@@ -12,7 +12,11 @@ function adjust_all_times() {
 }
 
 function date_from_time_el(el) {
-	var d = el.getAttribute('datetime').replace(/-/g, '/'
+	var dTime = el.getAttribute('datetime');
+	// Don't crash the function, if scanning an unsynced post in progress
+	if (!dTime)
+		return new Date();
+	var d = dTime.replace(/-/g, '/'
 		).replace('T', ' ').replace('Z', ' GMT');
 	return new Date(d);
 }
