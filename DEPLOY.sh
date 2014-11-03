@@ -38,6 +38,8 @@ function ask_repo(){
 	else
 		echo -e "\e[31mInvalid answer\e[0m"
 		ask_repo
+		# Prevent duplicate `git clone`
+		exit
 	fi
 	echo -e "\e[31mCloning git repository into $DOUSHIO_DIR\e[0m"
 	git clone https://github.com/${REPO}/doushio.git server
