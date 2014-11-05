@@ -39,6 +39,9 @@ function ah_check(){
 			// First time execution
 			if (!read)
 				return ah_gen(hour, date, month);
+			// Clear the used name set at the start of a new month
+			if (read.month != month)
+				return r.del('nameDB', ah_gen);
 			// Regenerate hour set on a new day
 			if (read.date != date)
 				return ah_gen(hour, date, month);
@@ -58,21 +61,13 @@ function ah_check(){
 				} else
 					random_name_hour = true;
 			}
-			// Clear the used name set at the start of a new month
-			if (read.month != month){
-				r.del('nameDB');
-				module.exports.random_name_hour = false;
-			} else {
-				// Load used name set from redis
-				r.smembers('nameDB',
-					function(err, res){
-						if (err || !res)
-							random_name_hour = false;
-						nameDB = res;
-						module.exports.random_name_hour = random_name_hour;
-					}
-				);
-			}
+			// Load used name set from redis
+			r.smembers('nameDB', function(err, res){
+				if (err || !res)
+					random_name_hour = false;
+				nameDB = res;
+				module.exports.random_name_hour = random_name_hour;
+			});
 		}
 	);
 }
