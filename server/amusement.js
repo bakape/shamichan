@@ -1,7 +1,10 @@
 var common = require('../common'),
+	db = require('../db'),
     hooks = require('../hooks');
 
 var rollLimit = 5;
+var pyu_counter;
+var r = global.redis;
 
 exports.roll_dice = function (frag, post, extra) {
 	var ms = frag.split(common.dice_re);
@@ -11,11 +14,23 @@ exports.roll_dice = function (frag, post, extra) {
 		if (!info)
 			continue;
 		var f = info.faces;
-		var rolls = [f];
-		for (var j = 0; j < info.n; j++)
-			rolls.push(Math.floor(Math.random() * f) + 1);
+		var rolls = [];
+		console.log(pyu_counter);
+		// Pyu counter
+		if (info.pyu){
+			if (info.pyu == 'increment'){
+				pyu_counter++;
+				r.incr('pCounter');
+			}
+			rolls.push(pyu_counter);
+		}
+		else {
+			rolls.push(f);
+			for (var j = 0; j < info.n; j++)
+				rolls.push(Math.floor(Math.random() * f) + 1);
+		}
 		if (info.bias)
-			rolls.push({bias: info.bias})
+			rolls.push({bias: info.bias});
 		dice.push(rolls);
 	}
 	if (dice.length) {
@@ -41,6 +56,18 @@ function inline_dice(post, dice) {
 		post.dice = dice.substring(1, dice.length - 1);
 	}
 }
+
+// Load counter from redis on server boot
+(function(){
+	r.get('pCounter', function(err, res){
+		if (err)
+			return pyu_counter = false;
+		// Initial query
+		if (!res)
+			return pyu_counter = parseInt(0, 10);
+		pyu_counter = parseInt(res, 10);
+	});
+})();
 
 hooks.hook('attachToPost', function (attached, cb) {
 	var new_dice = attached.extra.new_dice;
