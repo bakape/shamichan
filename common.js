@@ -52,7 +52,7 @@ if (typeof modVersion == 'undefined' || !modVersion)
 if (typeof radioBanner == 'undefined' || !radioBanner)
 	radioBanner = config.RADIO_BANNER;
 if (typeof illyaDance == 'undefined' || !illyaDance)
-	illyaDance = config.RADIO_BANNER;
+	illyaDance = config.ILLYA_DANCE;
 
 function is_pubsub(t) {
 	return t > 0 && t < 30;
