@@ -6,13 +6,6 @@ var db = require('../db'),
 
 var r = global.redis;
 
-exports.ah_init = function(){
-	ah_check();
-	// Launch ah_check a the start of each hour
-	var hourly = new cronJob('0 0 * * * *', ah_check, null, false);
-	hourly.start();
-};
-
 // Generate a new set of anon hours
 function ah_gen(hour, date, month){
 	var sections = config.ANON_HOURS_PER_DAY,
@@ -92,3 +85,11 @@ exports.name_parse = function(msg){
 	var combined = parsed[0] + '|||' + trip;
 	r.sadd('nameDB', combined);
 };
+
+// Start the module
+(function(){
+	ah_check();
+	// Launch ah_check a the start of each hour
+	var hourly = new cronJob('0 0 * * * *', ah_check, null, false);
+	hourly.start();
+})();

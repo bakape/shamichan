@@ -29,10 +29,9 @@ if (!imager.is_standalone())
 	require('../imager/daemon'); // preload and confirm it works
 if (config.CURFEW_BOARDS)
 	require('../curfew/server');
-if (config.ANON_HOURS){
-	var ah = require('../anon_hours/server');
-	ah.ah_init();
-}
+var anon_hours;
+if (config.ANON_HOURS)
+	anon_hours = require('../anon_hours/server');
 var autoJoe;
 if (config.AUTOJOE){
 	autoJoe = require('../autoJoe/server');
@@ -784,12 +783,14 @@ function allocate_post(msg, client, callback) {
 			post.subject = subject;
 	}
 
-	if(config.ANON_HOURS && (!autoJoe || !autoJoe.isJoe)){
-		var anon_hour = ah.anon_hour;
+	// Anon hours name replacement
+	if(anon_hours && (!autoJoe || !autoJoe.isJoe)){
+		// Add name to used name list for random name hours
 		if (msg.name)
-			ah.name_parse(msg.name);
-		if (ah.random_name_hour)
-			ah.random_name(post);
+			anon_hours.name_parse(msg.name);
+		// Pull random name from name list
+		if (anon_hours.random_name_hour)
+			anon_hours.random_name(post);
 	}
 	// Replace names, when a song plays on r/a/dio
 	if (autoJoe){
@@ -797,7 +798,7 @@ function allocate_post(msg, client, callback) {
 			post.name = autoJoe.name;
 	}
 	/* TODO: Check against client.watching? */
-	if (msg.name && !anon_hour && (!autoJoe || !autoJoe.isJoe)) {
+	if (msg.name && (!anon_hours || !anon_hours.anon_hour) && (!autoJoe || !autoJoe.isJoe)) {
 		var parsed = common.parse_name(msg.name);
 		post.name = parsed[0];
 		var spec = STATE.hot.SPECIAL_TRIPCODES;
