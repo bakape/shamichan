@@ -33,9 +33,11 @@ if (config.ANON_HOURS){
 	var ah = require('../anon_hours/server');
 	ah.ah_init();
 }
-var aJ = false;
-if (config.AUTOJOE)
-	aJ = require('../autoJoe/server');
+var autoJoe;
+if (config.AUTOJOE){
+	autoJoe = require('../autoJoe/server');
+	autoJoe.isJoe = false;
+}
 try {
 	var reportConfig = require('../report/config');
 	if (reportConfig.RECAPTCHA_PUBLIC_KEY)
@@ -782,25 +784,20 @@ function allocate_post(msg, client, callback) {
 			post.subject = subject;
 	}
 
-	if(config.ANON_HOURS && !aJ.isJoe && !aJ.isSpecial && !aJ.isJapanese && !aJ.isMan){
+	if(config.ANON_HOURS && (!autoJoe || !autoJoe.isJoe)){
 		var anon_hour = ah.anon_hour;
 		if (msg.name)
 			ah.name_parse(msg.name);
 		if (ah.random_name_hour)
 			ah.random_name(post);
 	}
-	
-	if (aJ.isJoe)
-		post.name = 'Joe';
-	if (aJ.isSpecial)
-		post.name = 'Super Special';
-	if (aJ.isJapanese)
-		post.name = '\u540D\u7121\u3057';
-	if (aJ.isMan)
-		post.name = 'Pretty Little Girl in a Frilly Dress';
-
+	// Replace names, when a song plays on r/a/dio
+	if (autoJoe){
+		if (autoJoe.isJoe)
+			post.name = autoJoe.name;
+	}
 	/* TODO: Check against client.watching? */
-	if (msg.name && !anon_hour && !aJ.isJoe && !aJ.isSpecial && !aJ.isJapanese && !aJ.isMan) {
+	if (msg.name && !anon_hour && (!autoJoe || !autoJoe.isJoe)) {
 		var parsed = common.parse_name(msg.name);
 		post.name = parsed[0];
 		var spec = STATE.hot.SPECIAL_TRIPCODES;
