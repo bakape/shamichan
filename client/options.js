@@ -294,6 +294,8 @@ function option_now_playing(toggle){
 		(function write_banner(){
 			// Query the r/a/dio API
 		    $.getJSON('https://r-a-d.io/api', function(data){
+				if (!data || !data.main)
+					return;
 		        var main = data.main;
 		        var new_info ='<a href="http://r-a-d.io/" target="_blank">' + '[' + main.listeners + '] ' +
 		            main.dj.djname + '</a>' + '&nbsp;&nbsp;' + main.np;
