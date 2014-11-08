@@ -484,7 +484,7 @@ function toggle_panel() {
 }
 
 // Togglle mnemonic display
-$('body').append('<style id="noMnemonics">b>.mod.addr{display:none;}</style>');
+$('head').append('<style id="noMnemonics">b>.mod.addr{display:none;}</style>');
 $('#noMnemonics').prop('disabled', !options.get('noMnemonics'));
 options.on('change:noMnemonics', function(model, noMnemonics){
 	$('#noMnemonics').prop('disabled', !noMnemonics);

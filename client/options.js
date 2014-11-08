@@ -383,7 +383,7 @@ option_illya_mute.tooltip = 'Mute dancing loli';
 function option_horizontal(toggle){
 	var style = '<style id="horizontal">article,aside{display:inline-block;}</style>';
 	if (toggle)
-		$('body').append(style);
+		$('head').append(style);
 	else 
 		$('#horizontal').remove();
 }
@@ -453,7 +453,7 @@ function append_glass(){
 			var bg = 'url(' + blurred + ') center fixed no-repeat; background-size: cover;}' ;
 			$('#blurred').remove();
 			$('<style />', {id: 'blurred'})
-				.appendTo('body')
+				.appendTo('head')
 				.html(
 					'article, aside, .pagination, .popup-menu, .modal, .bmodal, .preview, #banner {\
 						background:\
