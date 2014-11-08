@@ -38,11 +38,17 @@ this.hot = {
 		Sun: {plans: '', time: ''},
 	},
 // Entries for the banner's FAQ list
-    FAQ: [
-		"Lewd is good", 
-		"No 3D porn", 
-		"Image size limit is 20 MB", 
-		"github.com/bakape/doushio", 
-		"The admin is drunk"
-    ]
+	FAQ: [
+		'Upload size limit is 100 MB',
+		'Accepted upload file types: JPG, JPEG, PNG, APNG, GIF, WEBM',
+		'&nbsp;',
+		'Hash commands: ',
+		'#<number of dice(1-10)>d<dice sides(1-100)> - Roll dice',
+		'#flip - Coinflip',
+		'#8ball - An 8ball',
+		'#pyu - Missle launched',
+		'#pcount - Launch count',
+		'&nbsp;',
+		'Source code repository: <a href="https://github.com/bakape/doushio" target="_blank">github.com/bakape/doushio</a>',
+	]
 };
