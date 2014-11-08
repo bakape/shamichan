@@ -53,6 +53,8 @@ if (typeof radioBanner == 'undefined' || !radioBanner)
 	radioBanner = config.RADIO_BANNER;
 if (typeof illyaDance == 'undefined' || !illyaDance)
 	illyaDance = config.ILLYA_DANCE;
+if (typeof postedFrom == 'undefined' || !postedFrom)
+	postedFrom = config.POSTED_FROM;
 
 function is_pubsub(t) {
 	return t > 0 && t < 30;

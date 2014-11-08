@@ -23,3 +23,15 @@ oneeSama.full = oneeSama.op = THREAD;
 // Pass relative post timestamp setting to the client-side oneeSama
 if ($.cookie('rTime') == 'true')
 	oneeSama.rTime = true;
+
+var UAMessage;
+// Query user agent with ua-parser
+if (postedFrom){
+	(function(){
+		var common = '\n\nPosted from ';
+		var browser = new UAParser().getResult().browser;
+		if (!browser || !browser.name)
+			return UAMessage = common + 'NSA headquarters~';
+		UAMessage = common + browser.name + '~';
+	})();
+}

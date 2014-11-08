@@ -123,6 +123,8 @@ var config = {
 	AUTOJOE: false,
 // Display r/a/dio now playing information in the top banner
 	RADIO_BANNER: false,
+// Append "Posted from Browser~" to posts
+	POSTED_FROM: false,
 };
 
 module.exports = config;

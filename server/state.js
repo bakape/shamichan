@@ -4,6 +4,7 @@ var _ = require('../lib/underscore'),
     crypto = require('crypto'),
     fs = require('fs'),
     hooks = require('../hooks'),
+    imager = require('../imager/config'),
     path = require('path'),
     pipeline = require('../pipeline'),
     vm = require('vm');
@@ -115,7 +116,7 @@ function read_templates(cb) {
 
 function expand_templates(res) {
 	var templateVars = _.clone(HOT);
-	_.extend(templateVars, require('../imager/config'));
+	_.extend(templateVars, imager);
 	_.extend(templateVars, config);
 	_.extend(templateVars, make_navigation_html());
 	_.extend(templateVars, build_schedule(templateVars.SCHEDULE));
@@ -124,6 +125,9 @@ function expand_templates(res) {
 	// Format info banner
 	if (templateVars.BANNERINFO != '')
 		templateVars.BANNERINFO = '&nbsp;&nbsp;&nbsp;[' + templateVars.BANNERINFO + ']';
+	// Source ua-parser in templates
+	templateVars.POSTEDFROM = config.POSTED_FROM ?  '<script src="' + imager.MEDIA_URL +
+		'js/ua-parser.min.js"></script>' : '';
 	
 	function tmpl(data) {
 		var expanded = _.template(data, templateVars);
