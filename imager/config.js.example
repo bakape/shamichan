@@ -41,6 +41,8 @@ module.exports = {
 	/*
 	WEBM_AUDIO_SPOILER: 20,
 	*/
+// Enable SVG upload
+	SVG: false,
 
 // Location of the spoiler directory. By default the assets directory has to be placed into doushio root
 // directory's parent folder.

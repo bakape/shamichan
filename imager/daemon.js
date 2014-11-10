@@ -21,6 +21,8 @@ if (config.WEBM) {
 		console.warn("Please enable imager.config.DAEMON security.");
 	}
 }
+if (config.SVG)
+	IMAGE_EXTS.push('.svg');
 
 function new_upload(req, resp) {
 	var upload = new ImageUpload;
