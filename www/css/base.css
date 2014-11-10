@@ -289,7 +289,7 @@ article .hat {
 }
 #lock {
 	background: url('ui/lock.svg') no-repeat left;
-	background-size: 1em 1em;
+	background-size: 0.9em 0.9em;
 	color: gray;
 	float: right;
 	padding-left: 15px;
