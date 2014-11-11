@@ -223,11 +223,11 @@ OS.red_string = function (ref) {
 	var prefix = ref.slice(0, 3);
 	var dest, linkClass;
 	if (prefix == '>/w') {
-		dest = 'http://www.youtube.com/' + ref.slice(2);
+		dest = 'https://www.youtube.com/' + ref.slice(2);
 		linkClass = 'embed watch';
 	}
 	else if (prefix == '>/s') {
-		dest = 'http://soundcloud.com/' + ref.slice(13);
+		dest = 'https://soundcloud.com/' + ref.slice(13);
 		linkClass = 'embed soundcloud';
 	}
 	else if (prefix == '>/a') {
