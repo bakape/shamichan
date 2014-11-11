@@ -14,6 +14,11 @@ module.exports = {
 // If using an external web server, set this to the served address of the www directory
 // Trailing slash required 
 	MEDIA_URL: '../',
+// If using Cloudflare with global SSL forwarding, you might encounter problems with IQDB and
+// Saucenao image search failing the SSL handshake. You can set a custom query string here to
+// be appended to the thumbnail URL for these services and set a page rule on Cloudflare
+// to forward to the HTTP URL. Example: '?ssl=off'
+	NO_SSL_QUERY_STRING: null,
 // Set to separate upload address, if needed. Otherwise null
 	UPLOAD_URL: null,
 
