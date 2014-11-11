@@ -760,7 +760,7 @@ function allocate_post(msg, client, callback) {
 			return callback(Muggle('Bad post body.'));
 		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback(Muggle('Post is too long.'));
-		body = msg.frag.replace(config.EXCLUDE_REGEXP, '');
+		body = hot_filter(msg.frag.replace(config.EXCLUDE_REGEXP, ''));
 		if (config.GAME_BOARDS.indexOf(client.board) >= 0)
 			amusement.roll_dice(body, post, extra);
 	}
@@ -888,7 +888,7 @@ function update_post(frag, client) {
 		return false;
 	if (config.DEBUG)
 		debug_command(client, frag);
-	frag = frag.replace(config.EXCLUDE_REGEXP, '');
+	frag = hot_filter(frag.replace(config.EXCLUDE_REGEXP, ''));
 	var post = client.post;
 	if (!post)
 		return false;
@@ -1039,6 +1039,17 @@ dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	});
 	return true;
 };
+
+// Regex replacement filter
+function hot_filter(frag){
+	var filter = STATE.hot.FILTER;
+	if (!filter)
+		return frag;
+	for (i =0; i < filter.length; i++){
+		frag = frag.replace(filter[i].pattern, filter[i].replacement);
+	}
+	return frag;
+}
 
 function render_suspension(req, resp) {
 setTimeout(function () {

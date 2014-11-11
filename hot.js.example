@@ -50,5 +50,9 @@ this.hot = {
 		'#pcount - Launch count',
 		'&nbsp;',
 		'Source code repository: <a href="https://github.com/bakape/doushio" target="_blank">github.com/bakape/doushio</a>',
-	]
+	],
+// Word replacament filter. Pattern must not contain spaces or newlines
+	FILTER: [
+		{pattern: /\/moe\//ig, replacement: 'Disneyland'},
+	],
 };
