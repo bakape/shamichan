@@ -378,7 +378,7 @@ function parse_dice(frag) {
 	var sw = frag.match(/^#syncwatch(\d+):(\d+):(\d+)([+-]\d+)?$/i);
 	if (sw!=null){
 		var hour= parseInt(sw[1], 10),min = parseInt(sw[2], 10), sec = parseInt(sw[3], 10);
-		return {hour:hour,min: min,sec:sec};
+		return {hour:hour,min: min,sec:sec,start:Date.now()};
 	}
 }
 exports.parse_dice = parse_dice;

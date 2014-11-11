@@ -23,8 +23,8 @@ exports.roll_dice = function (frag, post, extra) {
 				r.incr('pCounter');
 			}
 			rolls.push(pyu_counter);
-		}else if(info.hour || info.min || info.sec){ 	//syncwatch
-			rolls.push({start:post.time, hour:info.hour, min:info.min, sec:info.sec});
+		}else if(info.start){ 	//syncwatch
+			rolls.push({start:info.start, hour:info.hour, min:info.min, sec:info.sec});
 		}
 		else {
 			rolls.push(f);
