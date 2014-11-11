@@ -349,9 +349,9 @@ OS.karada = function (body) {
 	return output;
 }
 
-var dice_re = /(#flip|#8ball|#pyu|#pcount|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
+var dice_re = /(#flip|#8ball|#pyu|#pcount|#syncwatch\d{0,2}:\d{0,2}:\d{0,2}|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
 exports.dice_re = dice_re;
-
+    
 var eight_ball = config.EIGHT_BALL;
 
 function parse_dice(frag) {
@@ -366,15 +366,20 @@ function parse_dice(frag) {
 	if (frag == '#pcount')
 		return {pyu: 'print'};
 	var m = frag.match(/^#(\d*)d(\d+)([+-]\d+)?$/i);
-	if (!m)
-		return false;
-	var n = parseInt(m[1], 10) || 1, faces = parseInt(m[2], 10);
-	if (n < 1 || n > 10 || faces < 2 || faces > 100)
-		return false;
-	var info = {n: n, faces: faces};
-	if (m[3])
-		info.bias = parseInt(m[3], 10);
-	return info;
+	if (m!=null){
+		var n = parseInt(m[1], 10) || 1, faces = parseInt(m[2], 10);
+		if (n < 1 || n > 10 || faces < 2 || faces > 100)
+			return false;
+		var info = {n: n, faces: faces};
+		if (m[3])
+			info.bias = parseInt(m[3], 10);
+		return info;
+	}
+	var sw = frag.match(/^#syncwatch(\d+):(\d+):(\d+)([+-]\d+)?$/i);
+	if (sw!=null){
+		var hour= parseInt(sw[1], 10),min = parseInt(sw[2], 10), sec = parseInt(sw[3], 10);
+		return {hour:hour,min: min,sec:sec};
+	}
 }
 exports.parse_dice = parse_dice;
 
@@ -387,6 +392,13 @@ function readable_dice(bit, d) {
 		return '#pyu(' + d + ')';
 	if (bit == '#pcount')
 		return '#pcount(' + d + ')';
+	if((/^#syncwatch/).test(bit)){
+		return safe('<syncwatch start='+d[0].start+
+				" hour="+d[0].hour+
+				" min="+d[0].min+
+				" sec="+d[0].sec+
+				' >'+bit+'</syncwatch>');
+	}
 	var f = d[0], n = d.length, b = 0;
 	if (d[n-1] && typeof d[n-1] == 'object') {
 		b = d[n-1].bias;
@@ -404,7 +416,7 @@ function readable_dice(bit, d) {
 	for (var j = 0; j < n; j++)
 		sum += r[j];
 	return bit + (eq ? ' = ' : '') + sum + ')';
-}
+}	
 
 OS.geimu = function (text) {
 	if (!this.dice)
