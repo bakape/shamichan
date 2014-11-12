@@ -15,7 +15,6 @@ exports.roll_dice = function (frag, post, extra) {
 			continue;
 		var f = info.faces;
 		var rolls = [];
-		console.log(pyu_counter);
 		// Pyu counter
 		if (info.pyu){
 			if (info.pyu == 'increment'){
