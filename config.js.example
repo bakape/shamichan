@@ -24,7 +24,6 @@ var config = {
 	
 	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
 	DEFAULT_BOARD: 'moe',
-	GAME_BOARDS: ['moe', 'archive'],
 	STAFF_BOARD: 'staff',
 	THREADS_PER_PAGE: 10,
 // Replies to display under each thread on the board's root page

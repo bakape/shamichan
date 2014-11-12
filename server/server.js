@@ -761,8 +761,7 @@ function allocate_post(msg, client, callback) {
 		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback(Muggle('Post is too long.'));
 		body = hot_filter(msg.frag.replace(config.EXCLUDE_REGEXP, ''));
-		if (config.GAME_BOARDS.indexOf(client.board) >= 0)
-			amusement.roll_dice(body, post, extra);
+		amusement.roll_dice(body, post, extra);
 	}
 
 	if (msg.op) {
@@ -899,8 +898,7 @@ function update_post(frag, client) {
 	if (combined > limit)
 		frag = frag.substr(0, combined - limit);
 	var extra = {ip: client.ident.ip};
-	if (config.GAME_BOARDS.indexOf(client.board) >= 0)
-		amusement.roll_dice(frag, post, extra);
+	amusement.roll_dice(frag, post, extra);
 	post.body += frag;
 	/* imporant: broadcast prior state */
 	var old_state = post.state.slice();
