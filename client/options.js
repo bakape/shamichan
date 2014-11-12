@@ -292,6 +292,9 @@ function option_now_playing(toggle){
 	if (!toggle){
 		var info;
 		(function write_banner(){
+			// Disable on small screens, if no options are set
+			if (!localStorage.getItem('options') && $(window).width() < 700)
+				return;
 			// Query the r/a/dio API
 		    $.getJSON('https://r-a-d.io/api', function(data){
 				if (!data || !data.main)
@@ -320,7 +323,8 @@ function option_now_playing(toggle){
 option_now_playing.id = 'nowPlaying';
 option_now_playing.label = 'Now Playing Banner';
 option_now_playing.type = 'revcheckbox';
-option_now_playing.tooltip = 'Currently playing song on r/a/dio and other stream information in the top banner';
+option_now_playing.tooltip = 'Currently playing song on r/a/dio and other stream information in the top banner. '+
+	'Hidden by default on mobile.';
 
 /* SPOILER TOGGLE */
 
