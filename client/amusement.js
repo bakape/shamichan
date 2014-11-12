@@ -31,8 +31,13 @@ oneeSama.hook('insertOwnPost', function (extra) {
 		if (!info)
 			info = rolls[n] = {};
 		info.dice = extra.dice[i];
-		if (info.$tag)
-			info.$tag.text(readable_dice(info.bit, info.dice));
+		if (info.$tag){
+			var r= readable_dice(info.bit, info.dice);
+			if(r.safe)
+				info.$tag.html(r.safe);
+			else
+				info.$tag.text(r);
+		}
 	}
 });
 
