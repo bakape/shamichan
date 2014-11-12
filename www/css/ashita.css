@@ -38,6 +38,9 @@ b.admin {
 #banner {
 	background: rgba(40, 42, 46, 0.7);
 }
+a>b {
+	color: #c5c8c6;
+}
 body {
 	background-color: #1d1f21;
 	color: #c5c8c6;

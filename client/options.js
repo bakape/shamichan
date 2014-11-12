@@ -299,7 +299,7 @@ function option_now_playing(toggle){
 		        var main = data.main;
 		        var new_info ='<a href="http://r-a-d.io/" target="_blank">' + '[' + main.listeners + '] ' +
 					main.dj.djname + '</a>' + '&nbsp;&nbsp;<a href="https://google.com/search?q=' + encodeURIComponent(main.np) +
-					'" target="_blank">' + main.np + '</a>';
+					'" target="_blank"><b>' + main.np + '</b></a>';
 				if (new_info != info){
 					info = new_info;
 		        	$('#banner_center').html(info);

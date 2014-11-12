@@ -43,13 +43,16 @@ b.admin {
 	background: url(wood.jpg);
 	color: white;
 }
+a>b {
+	color: #c5c8c6;
+}
 body {
 	background: url(tavern.jpg);
     background-repeat:no-repeat;
     background-size:cover;
     background-attachment: fixed;
 }
-body, pre, .themed {
+body, pre, .themed, a>b {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
     text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;

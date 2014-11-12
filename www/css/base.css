@@ -195,6 +195,9 @@ span.control .popup-menu {
 	top: 0;
 	z-index: 100;
 }
+#banner a {
+	text-decoration: none;
+}
 .bfloat {
 	font-weight: bold;
 	float: right;
