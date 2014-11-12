@@ -349,9 +349,9 @@ OS.karada = function (body) {
 	return output;
 }
 
-var dice_re = /(#flip|#8ball|#pyu|#pcount|#syncwatch\d{0,2}:\d{0,2}:\d{0,2}|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
+var dice_re = /(#flip|#8ball|#pyu|#pcount|#syncwatch\d{0,2}:\d{0,2}:\d{0,2}(?:[+-]\d+)?|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
 exports.dice_re = dice_re;
-    
+
 var eight_ball = config.EIGHT_BALL;
 
 function parse_dice(frag) {
@@ -366,7 +366,8 @@ function parse_dice(frag) {
 	if (frag == '#pcount')
 		return {pyu: 'print'};
 	var m = frag.match(/^#(\d*)d(\d+)([+-]\d+)?$/i);
-	if (m!=null){
+	// Regular dice
+	if (m){
 		var n = parseInt(m[1], 10) || 1, faces = parseInt(m[2], 10);
 		if (n < 1 || n > 10 || faces < 2 || faces > 100)
 			return false;
@@ -376,9 +377,16 @@ function parse_dice(frag) {
 		return info;
 	}
 	var sw = frag.match(/^#syncwatch(\d+):(\d+):(\d+)([+-]\d+)?$/i);
-	if (sw!=null){
+	if (sw){
 		var hour= parseInt(sw[1], 10),min = parseInt(sw[2], 10), sec = parseInt(sw[3], 10);
-		return {hour:hour,min: min,sec:sec,start:Date.now()};
+		var time = new Date().getTime();
+		// Offset the start. If the start is in the future, a countdown will be displayed
+		if (sw[4]){
+			var symbol = sw[4].slice(0, 1);
+			var offset = sw[4].slice(1) * 1000;
+			time = symbol == '+' ? time + offset : time - offset;
+		}
+		return {hour:hour,min: min,sec:sec,start: datetime(time)};
 	}
 }
 exports.parse_dice = parse_dice;
@@ -392,8 +400,8 @@ function readable_dice(bit, d) {
 		return '#pyu(' + d + ')';
 	if (bit == '#pcount')
 		return '#pcount(' + d + ')';
-	if((/^#syncwatch/).test(bit)){
-		return safe('<syncwatch start='+d[0].start+
+	if(/^#syncwatch/.test(bit)){
+		return safe('<syncwatch class="embed" datetime='+d[0].start+
 				" hour="+d[0].hour+
 				" min="+d[0].min+
 				" sec="+d[0].sec+
@@ -416,7 +424,7 @@ function readable_dice(bit, d) {
 	for (var j = 0; j < n; j++)
 		sum += r[j];
 	return bit + (eq ? ' = ' : '') + sum + ')';
-}	
+}
 
 OS.geimu = function (text) {
 	if (!this.dice)

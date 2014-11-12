@@ -33,15 +33,15 @@ body > aside {
 	border-radius: 4px;
 	-moz-border-radius: 4px;
 	-webkit-border-radius: 4px;
-	cursor: pointer;
 	display: inline-block;
 	font-style: normal;
 	margin: -2px;
 	padding: 2px;
 	text-decoration: none;
+	color: black;
 }
-.embed, .embed:hover {
-	color: inherit;
+.soundcloud, .watch {
+	cursor: pointer;
 }
 del, del em {
 	background-color: black;
@@ -70,9 +70,6 @@ figcaption i a {
 .imageSearch {
 	font-weight: bold;
 	text-decoration: none;
-}
-syncwatch {
-	color: Yellow;
 }
 figure {
 	display: inline;

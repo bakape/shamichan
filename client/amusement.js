@@ -33,10 +33,7 @@ oneeSama.hook('insertOwnPost', function (extra) {
 		info.dice = extra.dice[i];
 		if (info.$tag){
 			var r= readable_dice(info.bit, info.dice);
-			if(r.safe)
-				info.$tag.html(r.safe);
-			else
-				info.$tag.text(r);
+			info.$tag.html(r.safe ? r.safe : r);
 		}
 	}
 });

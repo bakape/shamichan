@@ -1,3 +1,13 @@
+function date_from_time_el(el) {
+	var dTime = el.getAttribute('datetime');
+	// Don't crash the function, if scanning an unsynced post in progress
+	if (!dTime)
+		return new Date();
+	var d = dTime.replace(/-/g, '/'
+		).replace('T', ' ').replace('Z', ' GMT');
+	return new Date(d);
+}
+
 (function () {
 
 var readable_time = oneeSama.readable_time;
@@ -9,16 +19,6 @@ function adjust_all_times() {
 		var date = date_from_time_el(this);
 		this.innerHTML = readable_time(date.getTime());
 	});
-}
-
-function date_from_time_el(el) {
-	var dTime = el.getAttribute('datetime');
-	// Don't crash the function, if scanning an unsynced post in progress
-	if (!dTime)
-		return new Date();
-	var d = dTime.replace(/-/g, '/'
-		).replace('T', ' ').replace('Z', ' GMT');
-	return new Date(d);
 }
 
 var is_skewed = (function(){
@@ -53,7 +53,7 @@ if (rTime){
 		setTimeout(function(){
 			$('time').each(function(){
 				var time = date_from_time_el(this).getTime();
-				$(this).innerHTML(relative_time(time, new Date().getTime()));
+				$(this).html(relative_time(time, new Date().getTime()));
 			});
 			increment_time();
 		} ,60000);
@@ -62,9 +62,11 @@ if (rTime){
 
 })();
 
+/* #syncwatch */
+
 function timer_from_el(el) {
-	var now = Date.now()
-	var start= el.getAttribute('start');
+	var now = Date.now();
+	var start= date_from_time_el(el).getTime();
 	var diff=now-start;
 	var hour = Math.floor(diff/1000/60/60);
 	diff-= hour*1000*60*60;
@@ -74,26 +76,19 @@ function timer_from_el(el) {
 	var maxh = el.getAttribute('hour');
 	var maxm = el.getAttribute('min');
 	var maxs = el.getAttribute('sec');
+	// If the start time is in the future
+	if (start > now)
+		return 'Countdown: ' + Math.round((start-now)/1000);
 	if((hour>maxh) || (hour==maxh && min>maxm) || (hour==maxh && min==maxm && sec>maxs)) //If we passed the time
 		return "Finished";
-	return "Now at: "+hour+":"+min+":"+sec+"\\"+maxh+":"+maxm+":"+maxs;
+	return "Now at: "+pad(hour)+":"+pad(min)+":"+pad(sec)+" / "+pad(maxh)+":"+pad(maxm)+":"+pad(maxs);
 }
 
-var syncwatch = (function(){
-	var el = document.querySelector('syncwatch');
-	return (el!=null);
-})();
-
-
 (function mouikkai(){
-	if (syncwatch){
-		setTimeout(function(){
-				$('syncwatch').each(function(){	
-					$(this).text(timer_from_el(this));
-				});
-				mouikkai();
-			} ,1000);
-	}else{
-		setTimeout(function(){mouikkai()} ,10000); //if there are no syncwatches we search for one every 10 secons
-	}
+	setTimeout(function(){
+		$('syncwatch').each(function(){
+			$(this).text(timer_from_el(this));
+		});
+		mouikkai();
+	} ,1000);
 })();
