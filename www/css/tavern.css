@@ -57,6 +57,7 @@ body, pre, .themed {
 }
 .embed {
 	background-color: white;
+	text-shadow: none;
 }
 em {
 	color: #B7BA3E;   
