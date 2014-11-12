@@ -638,7 +638,7 @@ OS.readable_time = function (time) {
 	var d = new Date(time + offset);
 	var week = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 	var year = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-	return pad(d.getUTCDate()) + '&nbsp;' + year[d.getUTCMonth()] + '&nbsp;' +
+	return pad(d.getUTCDate()) + ' ' + year[d.getUTCMonth()] + ' ' +
 		d.getUTCFullYear() + '(' + week[d.getUTCDay()] + ')' + pad(d.getUTCHours()) + ':' +
 		pad(d.getUTCMinutes());
 };
