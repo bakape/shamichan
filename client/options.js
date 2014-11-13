@@ -354,7 +354,9 @@ option_autogif.tooltip = 'Animate GIF thumbnails. Requires page refresh';
 /* NOTIFICATIONS */
 
 
-function option_notification() {
+function option_notification(notifToggle) {
+	if(notifToggle && (Notification.permission !== "granted"))
+		Notification.requestPermission();
 }
 option_notification.id = 'notification';
 option_notification.label = 'Desktop Notifications';
