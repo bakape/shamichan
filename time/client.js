@@ -62,11 +62,21 @@ if (rTime){
 
 })();
 
+// Get a more accurate server-client time offset, for interclient syncing
+// Does not account for latency, but good enough for our purposes
+var serverTimeOffset;
+dispatcher[GET_TIME] = function(msg){
+	if (msg[0]){
+		var clientTime = new Date().getTime();
+		serverTimeOffset = clientTime - msg[0];
+	}
+};
+
 /* #syncwatch */
 
 function timer_from_el(el) {
-	var now = Date.now();
-	var start= date_from_time_el(el).getTime();
+	var now = new Date().getTime() + serverTimeOffset;
+	var start= el.getAttribute('datetime');
 	var diff=now-start;
 	var hour = Math.floor(diff/1000/60/60);
 	diff-= hour*1000*60*60;

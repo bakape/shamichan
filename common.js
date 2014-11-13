@@ -29,6 +29,8 @@ DEFINES.COLLECTION_ADD = 56;
 DEFINES.SUBSCRIBE = 60;
 DEFINES.UNSUBSCRIBE = 61;
 
+DEFINES.GET_TIME = 62;
+
 DEFINES.ANON = 'Anonymous';
 DEFINES.INPUT_ROOM = 20;
 DEFINES.MAX_POST_LINES = 30;
@@ -386,7 +388,7 @@ function parse_dice(frag) {
 			var offset = sw[4].slice(1) * 1000;
 			time = symbol == '+' ? time + offset : time - offset;
 		}
-		return {hour:hour,min: min,sec:sec,start: datetime(time)};
+		return {hour:hour,min: min,sec:sec,start: time};
 	}
 }
 exports.parse_dice = parse_dice;

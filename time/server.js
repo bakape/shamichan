@@ -1,3 +1,4 @@
+var common = require('../common');
 var hooks = require('../hooks');
 
 function parse_timezone(tz) {
@@ -15,4 +16,11 @@ hooks.hook_sync('buildETag', function (info) {
 		info.req.tz_offset = tz;
 		info.etag += '-tz' + tz;
 	}
+});
+
+// Send server time to client
+hooks.hook('clientSynced', function(info, cb){
+	var time = new Date().getTime();
+	info.client.send([0, common.GET_TIME, time]);
+	cb(null);
 });
