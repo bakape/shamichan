@@ -50,6 +50,7 @@ if (illyaDance){
 }
 optSpecs.push(option_horizontal);
 optSpecs.push(option_reply_at_right);
+optSpecs.push(option_notification);
 optSpecs.push(option_theme);
 optSpecs.push(option_user_bg);
 optSpecs.push(option_user_bg_image);
@@ -349,6 +350,18 @@ option_autogif.id = 'autogiftoggle';
 option_autogif.label = 'Animated GIF Thumbnails';
 option_autogif.type = 'checkbox';
 option_autogif.tooltip = 'Animate GIF thumbnails. Requires page refresh';
+
+/* NOTIFICATIONS */
+
+
+function option_notification(notifToggle) {
+	if(notifToggle && (Notification.permission !== "granted"))
+		Notification.requestPermission();
+}
+option_notification.id = 'notification';
+option_notification.label = 'Desktop Notifications';
+option_notification.type = 'checkbox';
+option_notification.tooltip = 'Get desktop notifications when quoted or a syncwatch is about to start';
 
 /* ILLYA DANCE */
 
