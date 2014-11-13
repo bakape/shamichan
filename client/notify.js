@@ -23,7 +23,17 @@ function dropped() {
 connSM.on('dropped', dropped);
 connSM.on('desynced', dropped);
 
-Backbone.on('repliedToMe', function () {
+Backbone.on('repliedToMe', function (post) {
+	if (options.get('notification')) {
+		if(Notification.permission !== "granted")
+				Notification.requestPermission();
+		var body = post.get('body');
+		if(body && Unread.get('blurred')) //TODO: fix this, checking for body it's a shitty way to avoid loading notifications.
+			new Notification('You have been quoted',{
+					body: body,
+			});
+	}
+			
 	Unread.set({reply: true});
 });
 

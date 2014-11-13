@@ -50,6 +50,7 @@ if (illyaDance){
 }
 optSpecs.push(option_horizontal);
 optSpecs.push(option_reply_at_right);
+optSpecs.push(option_notification);
 optSpecs.push(option_theme);
 optSpecs.push(option_user_bg);
 optSpecs.push(option_user_bg_image);
@@ -349,6 +350,16 @@ option_autogif.id = 'autogiftoggle';
 option_autogif.label = 'Animated GIF Thumbnails';
 option_autogif.type = 'checkbox';
 option_autogif.tooltip = 'Animate GIF thumbnails. Requires page refresh';
+
+/* NOTIFICATIONS */
+
+
+function option_notification() {
+}
+option_notification.id = 'notification';
+option_notification.label = 'Desktop Notifications';
+option_notification.type = 'checkbox';
+option_notification.tooltip = 'Get a desktop notification when quoted';
 
 /* ILLYA DANCE */
 

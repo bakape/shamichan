@@ -220,7 +220,7 @@ function add_post_links(src, links, op) {
 
 	if (repliedToMe && !src.get('mine')) {
 		/* Should really be triggered only on the thread */
-		Backbone.trigger('repliedToMe');
+		Backbone.trigger('repliedToMe',src);
 	}
 }
 
