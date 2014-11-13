@@ -359,7 +359,7 @@ function option_notification() {
 option_notification.id = 'notification';
 option_notification.label = 'Desktop Notifications';
 option_notification.type = 'checkbox';
-option_notification.tooltip = 'Get a desktop notification when quoted';
+option_notification.tooltip = 'Get desktop notifications when quoted or a syncwatch is about to start';
 
 /* ILLYA DANCE */
 

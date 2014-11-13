@@ -77,8 +77,12 @@ function timer_from_el(el) {
 	var maxm = el.getAttribute('min');
 	var maxs = el.getAttribute('sec');
 	// If the start time is in the future
-	if (start > now)
-		return 'Countdown: ' + Math.round((start-now)/1000);
+	if (start > now) {
+		var countdown = Math.round((start-now)/1000);
+		if(countdown==10 || countdown==5)
+			Backbone.trigger('syncCountdown',countdown);
+		return 'Countdown: ' + countdown;
+	}
 	if((hour>maxh) || (hour==maxh && min>maxm) || (hour==maxh && min==maxm && sec>maxs)) //If we passed the time
 		return "Finished";
 	return "Now at: "+pad(hour)+":"+pad(min)+":"+pad(sec)+" / "+pad(maxh)+":"+pad(maxm)+":"+pad(maxs);

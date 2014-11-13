@@ -36,7 +36,16 @@ Backbone.on('repliedToMe', function (post) {
 			
 	Unread.set({reply: true});
 });
-
+Backbone.on('syncCountdown', function(time){
+	if (options.get('notification')) {
+		if(Notification.permission !== "granted")
+				Notification.requestPermission();
+		if(Unread.get('blurred'))
+			new Notification('Syncwatch Starting',{
+					body: 'syncwatch starting in : '+time+' seconds',
+			});
+	}
+});
 Backbone.on('afterInsert', function (model) {
 	if (model && model.get('mine'))
 		return; // It's ours, don't notify unread
