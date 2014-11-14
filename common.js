@@ -351,7 +351,7 @@ OS.karada = function (body) {
 	return output;
 }
 
-var dice_re = /(#flip|#8ball|#pyu|#pcount|#syncwatch\d{0,2}:\d{0,2}:\d{0,2}(?:[+-]\d+)?|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
+var dice_re = /(#flip|#8ball|#pyu|#pcount|#syncwatch\d{0,2}:\d{0,2}:\d{0,2}(?:[+-]\d+)?|#\d{1,2}:\d{1,2}|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
 exports.dice_re = dice_re;
 
 var eight_ball = config.EIGHT_BALL;
@@ -390,6 +390,11 @@ function parse_dice(frag) {
 		}
 		return {hour:hour,min: min,sec:sec,start: time};
 	}
+	var ti = frag.match(/^#(\d{1,2}):(\d{1,2})$/i);
+	if (ti){
+		var hour=parseInt(ti[1],10),min=parseInt(ti[2],10);
+		return {time:new Date(0,0,0,(hour<23) ? hour: 23 ,(min<59) ? min: 59).getTime()}; 
+	}
 }
 exports.parse_dice = parse_dice;
 
@@ -408,6 +413,9 @@ function readable_dice(bit, d) {
 				" min="+d[0].min+
 				" sec="+d[0].sec+
 				' >'+bit+'</syncwatch>');
+	}
+	if(/^#{1,2}/.test(bit)){ //Time;
+		return safe(' <time datetime="' + datetime(d[0].time) + '">#'+readable_time_small(d[0].time)+  '</time> ');
 	}
 	var f = d[0], n = d.length, b = 0;
 	if (d[n-1] && typeof d[n-1] == 'object') {
@@ -665,6 +673,17 @@ OS.readable_time = function (time) {
 		pad(d.getUTCMinutes());
 };
 
+//same as OS.readable_time but ignoring year/month/day
+function readable_time_small(time) {
+	var h = this.tz_offset;
+	var offset;
+	if (h || h == 0)
+		offset = h * 60 * 60 * 1000;
+	else /* would be nice not to construct new Dates all the time */
+		offset = new Date().getTimezoneOffset() * -60 * 1000;
+	var d = new Date(time + offset);
+	return  pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes());
+};
 // Readable elapsed time since post
 OS.relative_time = function(then, now){
 	function format(time, unit){
