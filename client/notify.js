@@ -27,22 +27,21 @@ Backbone.on('repliedToMe', function (post) {
 	if (options.get('notification')) {
 		var body = post.get('body');
 		var image = post.get('image');
-		if((body || image) && Unread.get('blurred'))	//TODO: fix this, checking for body it's a shitty way to avoid loading notifications.
+		if((body || image) && document.hidden)
 			new Notification('You have been quoted',{
-				        icon: (image ? encodeURI(mediaURL+'thumb/'+image.thumb): '/favicon.ico'), //if the post doesn't have a image we usa the favicon
-					body: body,
+				// if the post doesn't have a image we us a bigger favicon
+				icon: encodeURI(mediaURL+ (image ? 'thumb/'+image.thumb : '/css/ui/favbig.png')),
+				body: body,
 			});
 	}
-			
+
 	Unread.set({reply: true});
 });
 Backbone.on('syncCountdown', function(time){
 	if (options.get('notification')) {
-		if(Notification.permission !== "granted")
-				Notification.requestPermission();
-		if(Unread.get('blurred'))
+		if(document.hidden)
 			new Notification('Syncwatch Starting',{
-					body: 'syncwatch starting in : '+time+' seconds',
+				body: 'syncwatch starting in : '+time+' seconds',
 			});
 	}
 });
