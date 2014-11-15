@@ -351,7 +351,7 @@ OS.karada = function (body) {
 	return output;
 }
 
-var dice_re = /(#flip|#8ball|#pyu|#pcount|#syncwatch\d{0,2}:\d{0,2}:\d{0,2}(?:[+-]\d+)?|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
+var dice_re = /(#flip|#8ball|#pyu|#pcount|#syncwatch(?:\d{1,2}:)?\d{1,2}:\d{1,2}(?:[+-]\d+)?|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
 exports.dice_re = dice_re;
 
 var eight_ball = config.EIGHT_BALL;
@@ -378,9 +378,9 @@ function parse_dice(frag) {
 			info.bias = parseInt(m[3], 10);
 		return info;
 	}
-	var sw = frag.match(/^#syncwatch(\d+):(\d+):(\d+)([+-]\d+)?$/i);
+	var sw = frag.match(/^#syncwatch(\d+:)?(\d+):(\d+)([+-]\d+)?$/i);//first capture group may or may not be present.
 	if (sw){
-		var hour= parseInt(sw[1], 10),min = parseInt(sw[2], 10), sec = parseInt(sw[3], 10);
+		var hour= parseInt(sw[1], 10) || 0,min = parseInt(sw[2], 10), sec = parseInt(sw[3], 10);
 		var time = new Date().getTime();
 		// Offset the start. If the start is in the future, a countdown will be displayed
 		if (sw[4]){
