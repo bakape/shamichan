@@ -1,11 +1,3 @@
-var syncs = {}, ownPosts = {};
-var readOnly = ['archive'];
-
-var connSM = new FSM('load');
-var postSM = new FSM('none');
-var TAB_ID = random_id();
-var CONN_ID;
-
 function inject(frag) {
 	var dest = this.buffer;
 	for (var i = 0; i < this.state[1]; i++)
