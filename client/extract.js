@@ -89,6 +89,9 @@ function scan_threads_for_extraction() {
 		threads.push(thread);
 	}
 	Threads.add(threads);
+
+	if (THREAD)
+		CurThread = Threads.get(THREAD);
 }
 
 scan_threads_for_extraction();
