@@ -529,4 +529,12 @@ dispatcher[COLLECTION_ADD] = function (msg, op) {
 	});
 
 	$('del').attr('onclick', 'void(0)');
+
+	// On non-iOS mobile devices, provide a [Top] link
+	var mobile = typeof window.orientation != 'undefined';
+	var ios = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);
+	if (mobile && !ios) {
+		var t = $.parseHTML(action_link_html('#', 'Top'))[0];
+		$('#bottom').css('min-width', 'inherit').after('&nbsp;', t);
+	}
 })();
