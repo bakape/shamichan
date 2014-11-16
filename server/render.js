@@ -54,11 +54,15 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		first.pop();
 		out.write(first.join(''));
 
-		write_see_all_link = omit && function () {
+		write_see_all_link = omit && function (first_reply_num) {
 			var o = common.abbrev_msg(omit, image_omit);
-			if (opts.loadAllPostsLink)
-				o += ' '+common.action_link_html(op_post.num,
+			if (opts.loadAllPostsLink) {
+				var url = '' + op_post.num;
+				if (first_reply_num)
+					url += '#' + first_reply_num;
+				o += ' '+common.action_link_html(url,
 						'See all');
+			}
 			out.write('\t<span class="omit">'+o+'</span>\n');
 		};
 
@@ -70,7 +74,7 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		if (post.num in hidden || post.op in hidden)
 			return;
 		if (write_see_all_link) {
-			write_see_all_link();
+			write_see_all_link(post.num);
 			write_see_all_link = null;
 		}
 		out.write(oneeSama.mono(post));
