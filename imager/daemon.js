@@ -228,7 +228,8 @@ StillJob.prototype.perform_job = function () {
 		var is_webm = /matroska,webm/i.test(first);
 		if (!is_webm) {
 			fs.unlink(dest, function (err) {
-				cb(Muggle('Video stream is not WebM.'));
+				self.finish_job(Muggle(
+						'Video stream is not WebM.'));
 			});
 			return;
 		}
