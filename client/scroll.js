@@ -82,6 +82,22 @@ Backbone.on('hide', function (model) {
 		set_lock_target(null);
 });
 
+connSM.on('dropped', function () {
+	// On connection drop, focus the last post.
+	// This to prevent jumping to thread bottom on reconnect.
+	if (CurThread && !lockedManually) {
+		var last = CurThread.get('replies').last();
+		if (last)
+			set_locked_target(last.id, false);
+	}
+});
+
+connSM.on('synced', function () {
+	// If we dropped earlier, stop focusing now.
+	if (!lockedManually)
+		set_lock_target(null);
+});
+
 var at_bottom = function() {
 	return window.scrollY + window.innerHeight >= $DOC.height() - 5;
 }
