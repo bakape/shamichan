@@ -1,5 +1,6 @@
 var lockTarget, lockKeyHeight;
 var $lockTarget, $lockIndicator;
+var lockedManually;
 
 var nestLevel = 0;
 
@@ -39,8 +40,9 @@ function with_dom(func) {
 	return ret;
 }
 
-function set_lock_target(model) {
-	var num = model && model.id;
+function set_lock_target(num, manually) {
+	lockedManually = manually;
+
 	if (!num && at_bottom())
 		num = PAGE_BOTTOM;
 	if (num == lockTarget)
@@ -49,14 +51,15 @@ function set_lock_target(model) {
 	var bottom = lockTarget == PAGE_BOTTOM;
 	if ($lockTarget)
 		$lockTarget.removeClass('scroll-lock');
-	if (num && !bottom)
+	if (num && !bottom && manually)
 		$lockTarget = $('#' + num).addClass('scroll-lock');
 	else
 		$lockTarget = null;
 
 	var $ind = $lockIndicator;
 	if ($ind) {
-		$ind.css({visibility: lockTarget ? 'visible' : 'hidden'});
+		var visible = bottom || manually;
+		$ind.css({visibility: visible ? 'visible' : 'hidden'});
 		if (bottom)
 			$ind.text('Locked to bottom');
 		else if (num) {
@@ -88,7 +91,10 @@ if (window.scrollMaxY !== undefined)
 	};
 
 (function () {
-	menuHandlers.Focus = set_lock_target;
+	menuHandlers.Focus = function (model) {
+		var num = model && model.id;
+		set_lock_target(num, true);
+	};
 	menuHandlers.Unfocus = function () {
 		set_lock_target(null);
 	};
