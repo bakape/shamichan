@@ -120,7 +120,7 @@ function spill_page() {
 		return;
 	/* Ugh, this could be smarter. */
 	var ss = $('body > section[id]:visible');
-	for (i = THREADS_PER_PAGE; i < ss.length; i++)
+	for (var i = THREADS_PER_PAGE; i < ss.length; i++)
 		$(ss[i]).prev('hr').andSelf().hide();
 
 }
