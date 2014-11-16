@@ -1,6 +1,7 @@
 var lockTarget, lockKeyHeight;
 var $lockTarget, $lockIndicator;
 var lockedManually;
+var dropAndLockTimer;
 
 var nestLevel = 0;
 
@@ -83,19 +84,30 @@ Backbone.on('hide', function (model) {
 });
 
 connSM.on('dropped', function () {
+	if (!dropAndLockTimer)
+		dropAndLockTimer = setTimeout(drop_and_lock, 10 * 1000);
+});
+
+function drop_and_lock() {
+	if (connSM.state == 'synced')
+		return;
 	// On connection drop, focus the last post.
 	// This to prevent jumping to thread bottom on reconnect.
 	if (CurThread && !lockedManually) {
 		var last = CurThread.get('replies').last();
 		if (last)
-			set_locked_target(last.id, false);
+			set_lock_target(last.id, false);
 	}
-});
+}
 
 connSM.on('synced', function () {
 	// If we dropped earlier, stop focusing now.
 	if (!lockedManually)
 		set_lock_target(null);
+	if (dropAndLockTimer) {
+		clearTimeout(dropAndLockTimer);
+		dropAndLockTimer = null;
+	}
 });
 
 var at_bottom = function() {
