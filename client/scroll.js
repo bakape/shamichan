@@ -40,8 +40,7 @@ function with_dom(func) {
 }
 
 function set_lock_target(model) {
-	// Is Argument post number or model?
-	var num = (typeof model === 'number') ? model : model && model.id;
+	var num = model && model.id;
 	if (!num && at_bottom())
 		num = PAGE_BOTTOM;
 	if (num == lockTarget)
