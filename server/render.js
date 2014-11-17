@@ -51,6 +51,8 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		});
 	}
 
+	var write_see_all_link;
+
 	reader.on('thread', function (op_post, omit, image_omit) {
 		if (op_post.num in hidden)
 			return;
@@ -60,18 +62,30 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		var first = oneeSama.monomono(op_post, full && 'full');
 		first.pop();
 		out.write(first.join(''));
-		if (omit) {
+
+		write_see_all_link = omit && function (first_reply_num) {
 			var o = common.abbrev_msg(omit, image_omit);
-			if (opts.loadAllPostsLink)
-				o += ' '+common.action_link_html(op_post.num,
+			if (opts.loadAllPostsLink) {
+				var url = '' + op_post.num;
+				if (first_reply_num)
+					url += '#' + first_reply_num;
+				o += ' '+common.action_link_html(url,
 						'See all');
+			}
 			out.write('\t<span class="omit">'+o+'</span>\n');
-		}
+		};
+
 		reader.once('endthread', close_section);
 	});
+
+
 	reader.on('post', function (post) {
 		if (post.num in hidden || post.op in hidden)
 			return;
+		if (write_see_all_link) {
+			write_see_all_link(post.num);
+			write_see_all_link = null;
+		}
 		out.write(oneeSama.mono(post));
 	});
 

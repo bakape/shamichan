@@ -1,5 +1,7 @@
 var lockTarget, lockKeyHeight;
 var $lockTarget, $lockIndicator;
+var lockedManually;
+var dropAndLockTimer;
 
 var nestLevel = 0;
 
@@ -39,8 +41,9 @@ function with_dom(func) {
 	return ret;
 }
 
-function set_lock_target(model) {
-	var num = model && model.id;
+function set_lock_target(num, manually) {
+	lockedManually = manually;
+
 	if (!num && at_bottom())
 		num = PAGE_BOTTOM;
 	if (num == lockTarget)
@@ -49,14 +52,15 @@ function set_lock_target(model) {
 	var bottom = lockTarget == PAGE_BOTTOM;
 	if ($lockTarget)
 		$lockTarget.removeClass('scroll-lock');
-	if (num && !bottom)
+	if (num && !bottom && manually)
 		$lockTarget = $('#' + num).addClass('scroll-lock');
 	else
 		$lockTarget = null;
 
 	var $ind = $lockIndicator;
 	if ($ind) {
-		$ind.css({visibility: lockTarget ? 'visible' : 'hidden'});
+		var visible = bottom || manually;
+		$ind.css({visibility: visible ? 'visible' : 'hidden'});
 		if (bottom)
 			$ind.text('Locked to bottom');
 		else if (num) {
@@ -79,6 +83,33 @@ Backbone.on('hide', function (model) {
 		set_lock_target(null);
 });
 
+connSM.on('dropped', function () {
+	if (!dropAndLockTimer)
+		dropAndLockTimer = setTimeout(drop_and_lock, 10 * 1000);
+});
+
+function drop_and_lock() {
+	if (connSM.state == 'synced')
+		return;
+	// On connection drop, focus the last post.
+	// This to prevent jumping to thread bottom on reconnect.
+	if (CurThread && !lockedManually) {
+		var last = CurThread.get('replies').last();
+		if (last)
+			set_lock_target(last.id, false);
+	}
+}
+
+connSM.on('synced', function () {
+	// If we dropped earlier, stop focusing now.
+	if (!lockedManually)
+		set_lock_target(null);
+	if (dropAndLockTimer) {
+		clearTimeout(dropAndLockTimer);
+		dropAndLockTimer = null;
+	}
+});
+
 var at_bottom = function() {
 	return window.scrollY + window.innerHeight >= $DOC.height() - 5;
 }
@@ -88,7 +119,10 @@ if (window.scrollMaxY !== undefined)
 	};
 
 (function () {
-	menuHandlers.Focus = set_lock_target;
+	menuHandlers.Focus = function (model) {
+		var num = model && model.id;
+		set_lock_target(num, true);
+	};
 	menuHandlers.Unfocus = function () {
 		set_lock_target(null);
 	};

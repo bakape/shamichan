@@ -1,11 +1,3 @@
-var syncs = {}, ownPosts = {};
-var readOnly = ['archive'];
-
-var connSM = new FSM('load');
-var postSM = new FSM('none');
-var TAB_ID = random_id();
-var CONN_ID;
-
 function inject(frag) {
 	var dest = this.buffer;
 	for (var i = 0; i < this.state[1]; i++)
@@ -120,7 +112,7 @@ function spill_page() {
 		return;
 	/* Ugh, this could be smarter. */
 	var ss = $('body > section[id]:visible');
-	for (i = THREADS_PER_PAGE; i < ss.length; i++)
+	for (var i = THREADS_PER_PAGE; i < ss.length; i++)
 		$(ss[i]).prev('hr').andSelf().hide();
 
 }
@@ -537,4 +529,12 @@ dispatcher[COLLECTION_ADD] = function (msg, op) {
 	});
 
 	$('del').attr('onclick', 'void(0)');
+
+	// On non-iOS mobile devices, provide a [Top] link
+	var mobile = typeof window.orientation != 'undefined';
+	var ios = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);
+	if (mobile && !ios) {
+		var t = $.parseHTML(action_link_html('#', 'Top'))[0];
+		$('#bottom').css('min-width', 'inherit').after('&nbsp;', t);
+	}
 })();

@@ -1,3 +1,5 @@
+var CurThread;
+
 var $DOC = $(document);
 var $name = $('input[name=name]'), $email = $('input[name=email]');
 var $ceiling = $('hr:first');
@@ -5,6 +7,14 @@ var $ceiling = $('hr:first');
 DEFINES.PAGE_BOTTOM = -1;
 var menuOptions = ['Focus'];
 var menuHandlers = {};
+
+var syncs = {}, ownPosts = {};
+var readOnly = ['archive'];
+
+var connSM = new FSM('load');
+var postSM = new FSM('none');
+var TAB_ID = random_id();
+var CONN_ID;
 
 var oneeSama = new OneeSama(function (num) {
 	var frag;
