@@ -804,10 +804,8 @@ function allocate_post(msg, client, callback) {
 		if (client.post)
 			return callback(Muggle('Already have a post.'));
 
-		if (body.length) {
-			if (config.GAME_BOARDS.indexOf(client.board) >= 0)
-				amusement.roll_dice(body, post, extra);
-		}
+		if (body.length && is_game_board(client.board))
+			amusement.roll_dice(body, post, extra);
 
 		client.post = post;
 		post.num = num;
@@ -861,7 +859,7 @@ function update_post(frag, client) {
 	if (combined > limit)
 		frag = frag.substr(0, combined - limit);
 	var extra = {ip: client.ident.ip};
-	if (config.GAME_BOARDS.indexOf(client.board) >= 0)
+	if (is_game_board(client.board))
 		amusement.roll_dice(frag, post, extra);
 	post.body += frag;
 	/* imporant: broadcast prior state */
@@ -1001,6 +999,10 @@ dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	});
 	return true;
 };
+
+function is_game_board(board) {
+	return config.GAME_BOARDS.indexOf(board) >= 0;
+}
 
 function render_suspension(req, resp) {
 setTimeout(function () {
