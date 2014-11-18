@@ -737,8 +737,6 @@ function allocate_post(msg, client, callback) {
 		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback(Muggle('Post is too long.'));
 		body = msg.frag.replace(config.EXCLUDE_REGEXP, '');
-		if (config.GAME_BOARDS.indexOf(client.board) >= 0)
-			amusement.roll_dice(body, post, extra);
 	}
 
 	if (msg.op) {
@@ -805,6 +803,12 @@ function allocate_post(msg, client, callback) {
 			return callback(Muggle('Dropped; post aborted.'));
 		if (client.post)
 			return callback(Muggle('Already have a post.'));
+
+		if (body.length) {
+			if (config.GAME_BOARDS.indexOf(client.board) >= 0)
+				amusement.roll_dice(body, post, extra);
+		}
+
 		client.post = post;
 		post.num = num;
 		var supplements = {
