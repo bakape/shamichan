@@ -24,7 +24,7 @@ function make_video(id, params, start) {
 		query.playlist = id;
 	}
 
-	var uri = encodeURI('http://www.youtube.com/embed/' + id) + '?' +
+	var uri = encodeURI('https://www.youtube.com/embed/' + id) + '?' +
 			$.param(query);
 	return $('<iframe></iframe>', {
 		type: 'text/html', src: uri,
@@ -151,7 +151,7 @@ var soundcloud_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.)?soundcloud\.com\/([
 
 function make_soundcloud(path, dims) {
 	var query = {url: 'http://soundcloud.com/' + path};
-	var uri = 'http://player.soundcloud.com/player.swf?' + $.param(query);
+	var uri = 'https://player.soundcloud.com/player.swf?' + $.param(query);
 	var params = {movie: uri};
 	return make_embed(uri, params, dims);
 }
