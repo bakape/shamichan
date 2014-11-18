@@ -430,18 +430,18 @@ function readable_dice(bit, d) {
 
 OS.geimu = function (text) {
 	if (!this.dice)
-		return this.callback(text);
+		return this.linkify(text);
 	var bits = text.split(dice_re);
 	for (var i = 0, x = 0; i < bits.length; i++) {
 		var bit = bits[i];
 		if (!(i % 2) || !parse_dice(bit)) {
-			this.callback(bit);
+			this.linkify(bit);
 		}
 		else if (this.queueRoll) {
 			this.queueRoll(bit);
 		}
 		else if (!this.dice[0]) {
-			this.callback(bit);
+			this.linkify(bit);
 		}
 		else {
 			var d = this.dice.shift();
@@ -451,6 +451,20 @@ OS.geimu = function (text) {
 			this.strong = false;
 			this.callback(safe('</strong>'));
 		}
+	}
+};
+
+// Convert text URLs to clickable links
+var links_re = /(https?:\/\/[\S]+)/;
+
+OS.linkify = function(text){
+	var bits = text.split(links_re);
+	for (var i = 0; i < bits.length; i++){
+		var bit = bits[i];
+		if (!links_re.test(bit))
+			this.callback(bit);
+		else
+			this.callback(safe('<a href="'+bit+'" target="_blank">'+bit+'</a>'));
 	}
 };
 
