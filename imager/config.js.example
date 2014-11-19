@@ -17,7 +17,7 @@ module.exports = {
 // If using Cloudflare with global SSL forwarding, you might encounter problems with IQDB and
 // Saucenao image search failing the SSL handshake. You can set a custom query string here to
 // be appended to the thumbnail URL for these services and set a page rule on Cloudflare
-// to forward to the HTTP URL. Example: '?ssl=off'
+// to disable HTTPS in URLs with it present. Example: '?ssl=off'
 	NO_SSL_QUERY_STRING: null,
 // Set to separate upload address, if needed. Otherwise null
 	UPLOAD_URL: null,
