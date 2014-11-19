@@ -45,12 +45,6 @@ DEFINES.S_SPOIL = 3;
 // Expand configuration variables
 if (typeof mediaURL == 'undefined' || !mediaURL)
 	mediaURL = imagerConfig.MEDIA_URL;
-if (typeof globalVersion == 'undefined' || !globalVersion)
-	globalVersion = config.THEME_CSS_VERSION;
-if (typeof themes == 'undefined' || !themes)
-	themes = config.THEMES;
-if (typeof modVersion == 'undefined' || !modVersion)
-	modVersion = config.MOD_CSS_VERSION;
 if (typeof radioBanner == 'undefined' || !radioBanner)
 	radioBanner = config.RADIO_BANNER;
 if (typeof illyaDance == 'undefined' || !illyaDance)
