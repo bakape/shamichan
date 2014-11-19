@@ -232,11 +232,11 @@ OS.red_string = function (ref) {
 	var prefix = ref.slice(0, 3);
 	var dest, linkClass;
 	if (prefix == '>/w') {
-		dest = 'http://www.youtube.com/' + ref.slice(2);
+		dest = 'https://www.youtube.com/' + ref.slice(2);
 		linkClass = 'embed watch';
 	}
 	else if (prefix == '>/s') {
-		dest = 'http://soundcloud.com/' + ref.slice(13);
+		dest = 'https://soundcloud.com/' + ref.slice(13);
 		linkClass = 'embed soundcloud';
 	}
 	else if (prefix == '>/a') {
@@ -422,20 +422,27 @@ function readable_dice(bit, d) {
 	return bit + (eq ? ' = ' : '') + sum + ')';
 }
 
+// Convert text URLs to clickable links
+// *Not* recommended. Use at your own risk.
+var LINKIFY = false;
+
 OS.geimu = function (text) {
-	if (!this.dice)
-		return this.linkify(text);
+	if (!this.dice) {
+		LINKIFY ? this.linkify(text) : this.callback(text);
+		return;
+	}
+
 	var bits = text.split(dice_re);
 	for (var i = 0, x = 0; i < bits.length; i++) {
 		var bit = bits[i];
 		if (!(i % 2) || !parse_dice(bit)) {
-			this.linkify(bit);
+			LINKIFY ? this.linkify(bit) : this.callback(text);
 		}
 		else if (this.queueRoll) {
 			this.queueRoll(bit);
 		}
 		else if (!this.dice[0]) {
-			this.linkify(bit);
+			LINKIFY ? this.linkify(bit) : this.callback(text);
 		}
 		else {
 			var d = this.dice.shift();
@@ -448,19 +455,21 @@ OS.geimu = function (text) {
 	}
 };
 
-// Convert text URLs to clickable links
-var links_re = /(https?:\/\/[\S]+)/;
+if (LINKIFY) { OS.linkify = function (text) {
 
-OS.linkify = function(text){
-	var bits = text.split(links_re);
-	for (var i = 0; i < bits.length; i++){
-		var bit = bits[i];
-		if (!links_re.test(bit))
-			this.callback(bit);
+	var bits = text.split(/(https?:\/\/[^\s"<>]*[^\s"<>'.,!?:;])/);
+	for (var i = 0; i < bits.length; i++) {
+		if (i % 2) {
+			var e = escape_html(bits[i]);
+			// open in new tab, and disavow target
+			this.callback(safe('<a href="' + e +
+					'" rel="nofollow" target="_blank">' +
+					e + '</a>'));
+		}
 		else
-			this.callback(safe('<a href="'+bit+'" target="_blank">'+bit+'</a>'));
+			this.callback(bits[i]);
 	}
-};
+}; }
 
 function chibi(imgnm, src) {
 	var name = '', ext = '';
