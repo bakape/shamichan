@@ -75,7 +75,7 @@ dispatcher[GET_TIME] = function(msg){
 /* #syncwatch */
 
 function timer_from_el(el) {
-	var now = new Date().getTime() + serverTimeOffset;
+	var now = new Date().getTime() - serverTimeOffset;
 	var start= el.getAttribute('datetime');
 	var diff=now-start;
 	var hour = Math.floor(diff/1000/60/60);
