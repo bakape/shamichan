@@ -131,7 +131,7 @@ var globalVersion = 8;
 
 function option_theme(theme) {
 	if (theme) {
-		var css = theme + '-v' + globalVersion + '.css';
+		var css = theme + '.css?v=' + globalVersion;
 		$('#theme').attr('href', mediaURL + 'css/' + css);
 	}
 }

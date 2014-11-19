@@ -33,8 +33,8 @@ var BOARD, THREAD, BUMP, PAGE, mediaURL, options;
 	var theme = options['board.'+BOARD+'.theme'];
 	if (theme) {
 		var link = document.getElementById('theme');
-		var m = link.href.match(/^(.*\/)[^\/]+(-v\d+)\.css$/);
+		var m = link.href.match(/^(.*\/)[^\/]+?(\.css\?v=\d+)$/);
 		if (m)
-			link.href = m[1] + theme + m[2] + '.css';
+			link.href = m[1] + theme + m[2];
 	}
 })();

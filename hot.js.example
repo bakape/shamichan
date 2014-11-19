@@ -8,15 +8,21 @@ this.hot = {
 		graveyard: "/graveyard/",
 		staff: "/staff/",
 	},
-	BASE_CSS: 'base-v42.css',
+	/* Default theme to use on each board */
 	BOARD_CSS: {
-		moe: 'moe-v8.css',
-		gar: 'gar-v8.css',
-		meta: 'mawaru-v8.css',
-		archive: 'archive-v8.css',
-		graveyard: 'mawaru-v8.css',
-		staff: 'moe-v8.css',
+		moe: 'moe',
+		gar: 'gar',
+		meta: 'mawaru',
+		archive: 'archive',
+		graveyard: 'mawaru',
+		staff: 'moe',
 	},
+
+	/* Bump this version whenever you change base.css */
+	BASE_CSS_VERSION: 42,
+	/* Bump this version whenever you modify any existing theme CSS */
+	THEME_CSS_VERSION: 8,
+
 	INTER_BOARD_NAVIGATION: true,
 
 	SPECIAL_TRIPCODES: {
