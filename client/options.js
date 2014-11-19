@@ -87,7 +87,7 @@ function save_ident() {
 		var name = $name.val(), email = $email.val();
 		if (email == 'misaki') {
 			$email.val('');
-			yepnope(mediaURL + 'js/login-v2.js');
+			yepnope(mediaURL + 'js/login.js?v=2');
 			email = false;
 		}
 		else if (is_sage(email) && !is_noko(email))
@@ -133,9 +133,24 @@ options.on('change:lastn', function (model, lastN) {
 
 /* THEMES */
 
+var themes = [
+	'moe',
+	'gar',
+	'mawaru',
+	'moon',
+	'ashita',
+	'console',
+	'tea',
+	'higan',
+	'rave',
+	'tavern',
+	'glass',
+];
+var globalVersion = 8;
+
 function option_theme(theme) {
 	if (theme) {
-		var css = theme + '-v' + globalVersion + '.css';
+		var css = theme + '.css?v=' + globalVersion;
 		$('#theme').attr('href', mediaURL + 'css/' + css);
 	}
 	append_glass();

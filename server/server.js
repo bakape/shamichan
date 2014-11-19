@@ -9,7 +9,6 @@ var _ = require('../lib/underscore'),
     check = require('./msgcheck').check,
     common = require('../common'),
     config = require('../config'),
-    css = require('./css'),
     db = require('../db'),
     fs = require('fs'),
     hooks = require('../hooks'),
@@ -761,7 +760,6 @@ function allocate_post(msg, client, callback) {
 		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback(Muggle('Post is too long.'));
 		body = hot_filter(msg.frag.replace(config.EXCLUDE_REGEXP, ''));
-		amusement.roll_dice(body, post, extra);
 	}
 
 	if (msg.op) {
@@ -846,6 +844,10 @@ function allocate_post(msg, client, callback) {
 			return callback(Muggle('Dropped; post aborted.'));
 		if (client.post)
 			return callback(Muggle('Already have a post.'));
+
+		if (body.length)
+			amusement.roll_dice(body, post, extra);
+
 		client.post = post;
 		post.num = num;
 		var supplements = {

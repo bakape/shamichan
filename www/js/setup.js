@@ -13,7 +13,7 @@ var BOARD, THREAD, BUMP, PAGE, mediaURL, options;
 	if (!mediaURL) {
 		var sc = document.getElementsByTagName('script');
 		for (var i = 0; i < sc.length; i++) {
-			var m = /^(.*)js\/setup-v\d+.js$/.exec(sc[i].src);
+			var m = /^(.*)js\/setup.js\?v=\d+$/.exec(sc[i].src);
 			if (m) {
 				mediaURL = m[1];
 				break;
@@ -33,8 +33,8 @@ var BOARD, THREAD, BUMP, PAGE, mediaURL, options;
 	var theme = options['board.'+BOARD+'.theme'];
 	if (theme) {
 		var link = document.getElementById('theme');
-		var m = link.href.match(/^(.*\/)[^\/]+(-v\d+)\.css$/);
+		var m = link.href.match(/^(.*\/)[^\/]+?(\.css\?v=\d+)$/);
 		if (m)
-			link.href = m[1] + theme + m[2] + '.css';
+			link.href = m[1] + theme + m[2];
 	}
 })();

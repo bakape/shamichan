@@ -69,7 +69,7 @@ function handle_shortcut(event) {
 	else if (event.shiftKey && event.which == 87) {
 		if (++wcombo > 10) {
 			wcombo = -1;
-			yepnope(mediaURL + 'js/wordfilter-v1.js');
+			yepnope(mediaURL + 'js/wordfilter.js?v=1');
 		}
 	}
 	else

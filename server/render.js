@@ -96,9 +96,15 @@ exports.write_thread_html = function (reader, req, out, opts) {
 
 function make_link_rels(board, bits) {
 	var path = imager.config.MEDIA_URL + 'css/';
-	bits.push(['stylesheet', path + 'base-v' + config.BASE_CSS_VERSION + '.css']);
-	bits.push(['stylesheet', path + STATE.hot.BOARD_CSS[board]  + '-v' + config.THEME_CSS_VERSION + '.css', 'theme']);
-	bits.push(['stylesheet', path + 'gravitas-v' + config.GRAVITAS_CSS_VERSION + '.css']);
+
+	var base = 'base.css?v=' + STATE.hot.BASE_CSS_VERSION;
+	bits.push(['stylesheet', path + base]);
+
+	var theme = STATE.hot.BOARD_CSS[board];
+	var theme_css = theme + '.css?v=' + STATE.hot.THEME_CSS_VERSION;
+	bits.push(['stylesheet', path + theme_css, 'theme']);
+
+	bits.push(['stylesheet', path + 'gravitas.css?v=1']);
 	return bits.map(function (p) {
 		var html = '\t<link rel="'+p[0]+'" href="'+p[1]+'"';
 		if (p[2])
@@ -191,7 +197,7 @@ exports.make_pagination_html = function (info) {
 };
 
 var returnHTML = common.action_link_html('.', 'Return').replace(
-		'span', 'span id="bottom"').replace('</span>', '] [<a href="#">Top</a></span>');
+		'span', 'span id="bottom"');
 
 exports.write_page_end = function (out, ident, returnLink) {
 	if (returnLink)

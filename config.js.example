@@ -64,25 +64,6 @@ var config = {
 // Translate IP's into more human-readable mnemonics
 	IP_MNEMONIC: true,
 
-// CSS file versioning. Increment the version number on each change to CSS for transparent user transition
-	BASE_CSS_VERSION: 44,
-	THEME_CSS_VERSION: 9,
-	MOD_CSS_VERSION: 1,
-	GRAVITAS_CSS_VERSION: 1,
-	THEMES: [
-		'moe',
-		'gar',
-		'mawaru',
-		'moon',
-		'ashita',
-		'console',
-		'tea',
-		'higan',
-		'rave',
-		'tavern',
-		'glass'
-	],
-
 // Titles for staff that will be displayed in their posts' header
 	ADMIN_ALIAS: 'Admin',
 	MOD_ALIAS: 'Moderator',

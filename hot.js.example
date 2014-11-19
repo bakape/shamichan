@@ -9,7 +9,7 @@ this.hot = {
 		graveyard: "/graveyard/",
 		staff: "/staff/",
 	},
-// Default CSS theme setting per board
+// Default theme to use on each board
 	BOARD_CSS: {
 		moe: 'moe',
 		gar: 'gar',
@@ -18,6 +18,12 @@ this.hot = {
 		graveyard: 'mawaru',
 		staff: 'moe',
 	},
+
+// Bump this version whenever you change base.css
+	BASE_CSS_VERSION: 42,
+// Bump this version whenever you modify any existing theme CSS
+	THEME_CSS_VERSION: 8,
+
 	INTER_BOARD_NAVIGATION: true,
 	SPECIAL_TRIPCODES: {
 		kyubey: "／人◕ ‿‿ ◕人＼",
