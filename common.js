@@ -399,7 +399,7 @@ OS.geimu = function (text) {
 	}
 
 	var bits = text.split(dice_re);
-	for (var i = 0, x = 0; i < bits.length; i++) {
+	for (var i = 0; i < bits.length; i++) {
 		var bit = bits[i];
 		if (!(i % 2) || !parse_dice(bit)) {
 			LINKIFY ? this.linkify(bit) : this.callback(text);
