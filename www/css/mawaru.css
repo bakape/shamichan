@@ -16,9 +16,9 @@ article.highlight {
 	background-color: #333;
 	border-color: #222;
 }
-article.editing {
-	background-color: #311;
-	border-color: #200;
+.editing {
+	background-color: #311 !important;
+	border-color: #200 !important;
 }
 b {
 	color: #666;

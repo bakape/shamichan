@@ -17,11 +17,11 @@ article form {
 article.highlight {
 	background-color: #222;
 }
-article.editing {
-	background-color: #0000b2;
+.editing {
+	background-color: #0000b2 !important;
 }
-article.editing header {
-	color: white;
+.editing header {
+	color: white !important;
 }
 article header {
 	padding-left: 0;

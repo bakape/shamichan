@@ -16,9 +16,9 @@ article.highlight {
 	background-color: rgba(44,44,51,.95);
 	border-color: #21212c;
 }
-article.editing {
-	background-color: rgba(51,41,41,.95);
-	border-color: #2c2121;
+.editing {
+	background-color: rgba(51,41,41,.95) !important;
+	border-color: #2c2121 !important;
 }
 b {
 	color: #808080;

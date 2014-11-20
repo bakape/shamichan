@@ -14,7 +14,7 @@ article.highlight {
 	border-color: #bbb;
 }
 /* shouldn't happen */
-article.editing {
+.editing {
 	background-color: #fa6;
 	border-color: #e95;
 }

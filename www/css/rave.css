@@ -5,7 +5,7 @@ a, blockquote a:hover, b.moderator {
 .bfloat > svg {
 	fill: black;
 }
-a:hover, blockquote a, .email b:hover, article.editing a:hover {
+a:hover, blockquote a, .email b:hover, .editing a:hover {
 	color: black;
     font-weight:bold;
 }
@@ -22,21 +22,21 @@ article.highlight, .preview, .popup-menu {
 	background-image: url(rave_bg.gif);
 	opacity: 0.9;
 }
-article.editing {
+.editing {
 	background-color: #cec952;
 	border-color: #aa3;
 	color: black;
 }
-article.editing a, article.editing header {
+.editing a, .editing header {
 	color: #222;
 }
-article.editing em {
+.editing em {
 	color: #656d28;
 }
-article.editing li {
+.editing li {
 	color: #ddd;
 }
-article.editing .themed {
+.editing .themed {
 	color: #333;
 }
 b.admin {
