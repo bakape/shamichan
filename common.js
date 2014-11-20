@@ -679,7 +679,7 @@ OS.atama = function (data) {
 	header.push(safe('</b>'));
 	if (data.email) {
 		header.unshift(safe('<a class="email" href="mailto:'
-				+ encodeURI(data.email) + '">'));
+			+ encodeURI(data.email) + '" target="_blank">'));
 		header.push(safe('</a>'));
 	}
 	header.push(safe(' <time datetime="' + datetime(data.time) +

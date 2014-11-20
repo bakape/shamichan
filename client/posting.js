@@ -305,9 +305,11 @@ propagate_ident: function () {
 		email = '';
 	var tag = meta.children('a:first');
 	if (email)
-		tag.attr('href', 'mailto:' + email).attr('class', 'email');
+		tag.attr({href: 'mailto:' + email, target: '_blank',
+				'class': 'email'});
 	else
-		tag.removeAttr('href').attr('class', 'nope');
+		tag.removeAttr('href').removeAttr('target').attr('class',
+				'nope');
 },
 
 on_allocation: function (msg) {
