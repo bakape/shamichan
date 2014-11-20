@@ -4,7 +4,7 @@ a, blockquote a:hover, b.moderator {
 .bfloat > svg {
 	fill: #81a2be;
 }
-a:hover, blockquote a, .email b:hover, article.editing a:hover {
+a:hover, blockquote a, .email b:hover, .editing a:hover {
 	color: #5f89ac;
 }
 article, aside, .modal, .bmodal, .pagination, #FAQ {
@@ -15,22 +15,22 @@ article.highlight, .preview, .popup-menu {
 	background-color: #1d1d21;
 	border-color: #111;
 }
-article.editing {
-	background-color: #cec952;
-	border-color: #aa3;
-	color: black;
+.editing {
+	background-color: #cec952 !important;
+	border-color: #aa3 !important;
+	color: black !important;
 }
-article.editing a, article.editing header {
-	color: #222;
+.editing a, .editing header {
+	color: #222 !important;
 }
-article.editing em {
-	color: #656d28;
+.editing em {
+	color: #656d28 !important;
 }
-article.editing li {
-	color: #ddd;
+.editing li {
+	color: #ddd !important;
 }
-article.editing .themed {
-	color: #333;
+.editing .themed {
+	color: #333 !important;
 }
 b.admin {
 	color: #f00000;

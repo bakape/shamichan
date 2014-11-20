@@ -4,7 +4,7 @@ a, blockquote a:hover, b.moderator {
 .bfloat > svg {
 	fill: #ef9d6a;
 }
-a:hover, blockquote a, .email b:hover, article.editing a:hover {
+a:hover, blockquote a, .email b:hover, .editing a:hover {
 	color: #ef9d6a;
 }
 article, aside, .modal, .bmodal, .pagination {
@@ -15,26 +15,26 @@ article.highlight, .preview, .popup-menu {
 	background: url(wood.jpg);
     color: white;
 }
-article.editing {
+.editing {
 	background:
         linear-gradient(
            rgba(239, 157, 106, 0.25),
            rgba(239, 157, 106, 0.25)
         ),
-        url(wood.jpg);
-	color: white;
+        url(wood.jpg) !important;
+	color: white !important;
 }
-article.editing a, article.editing header {
-	color: white;
+.editing a, .editing header {
+	color: white !important;
 }
-article.editing em {
-	color: #B7BA3E;
+.editing em {
+	color: #B7BA3E !important;
 }
-article.editing li {
-	color: white;
+.editing li {
+	color: white !important;
 }
-article.editing .themed {
-	color: white;
+.editing .themed {
+	color: white !important;
 }
 b.admin {
 	color: #f00000;

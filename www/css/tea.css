@@ -16,10 +16,6 @@ article.highlight {
 	background-color: #b9ccb4;
 	border-color: #9fbf9d;
 }
-article.editing {
-	background-color: #f0e5ba;
-	border-color: #dbd1aa;
-}
 b {
 	color: #1a8522;
 }
@@ -83,6 +79,10 @@ hr {
 	background-color: #f6faf3;
 	border-right: 1px solid #e5e8e2;
 	border-bottom: 1px solid #e5e8e2;
+}
+.editing {
+	background-color: #f0e5ba !important;
+	border-color: #dbd1aa !important;
 }
 .omit {
 	color: #73806c;

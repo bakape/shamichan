@@ -11,7 +11,7 @@ article, aside, .pagination, .popup-menu, .modal, .bmodal, .preview, #banner {
 a>b {
 	color: white;
 }
-article.editing {
+.editing {
 	background-color: rgba(145, 145, 145, 0.5);
 }
 blockquote, time, #FAQ {

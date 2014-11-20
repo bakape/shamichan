@@ -482,7 +482,6 @@ function append_glass(){
 		localStorage.getItem(BOARD + '.BGBlurred')){
 			// Apply blurred background
 			var blurred = localStorage.getItem(BOARD + '.BGBlurred');
-			var bg = 'url(' + blurred + ') center fixed no-repeat; background-size: cover;}' ;
 			$('#blurred').remove();
 			$('<style />', {id: 'blurred'})
 				.appendTo('head')
@@ -490,11 +489,11 @@ function append_glass(){
 					'article, aside, .pagination, .popup-menu, .modal, .bmodal, .preview, #banner {\
 						background:\
 							linear-gradient(rgba(40, 42, 46, 0.5), rgba(40, 42, 46, 0.5)),' +
-							bg +
-					'article.editing{\
+							'url(' + blurred + ') center fixed no-repeat; background-size: cover;}' +
+					'.editing{\
 						background:\
 							linear-gradient(rgba(145, 145, 145, 0.5), rgba(145, 145, 145, 0.5)),' +
-							bg
+							'url(' + blurred + ') center fixed no-repeat !important; background-size: cover;}'
 				);
 	} else
 		$('#blurred').remove();
