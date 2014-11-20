@@ -402,13 +402,13 @@ OS.geimu = function (text) {
 	for (var i = 0; i < bits.length; i++) {
 		var bit = bits[i];
 		if (!(i % 2) || !parse_dice(bit)) {
-			LINKIFY ? this.linkify(bit) : this.callback(text);
+			LINKIFY ? this.linkify(bit) : this.callback(bit);
 		}
 		else if (this.queueRoll) {
 			this.queueRoll(bit);
 		}
 		else if (!this.dice[0]) {
-			LINKIFY ? this.linkify(bit) : this.callback(text);
+			LINKIFY ? this.linkify(bit) : this.callback(bit);
 		}
 		else {
 			var d = this.dice.shift();
