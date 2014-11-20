@@ -35,8 +35,10 @@ function preview_miru(event, num) {
 
 			if (post.is('section'))
 				bits = bits.slice(0, 3);
-			preview = $('<div class="preview"/>').append(
+			preview = $('<article class="preview"/>').append(
 					bits.clone());
+			if((/^editing/).test(post[0].className))	//check if the post is being edited
+				preview[0].classList.add("editing");
 		}
 	}
 
