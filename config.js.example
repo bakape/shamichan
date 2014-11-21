@@ -96,9 +96,6 @@ var config = {
 
 /* Silly little things you probably should not care about */
 
-// Local http://loli.dance/ implementation. Videos not included in git tree.
-// Place illya.webm and illya.mp4 into the www directory, if you want this.
-	ILLYA_DANCE: false,
 // Automatic name assignement by parsing https://r-a-d.io/api
 	AUTOJOE: false,
 // Autojoe song patterns and name replacement

@@ -45,8 +45,6 @@ DEFINES.S_SPOIL = 3;
 // Expand configuration variables
 if (typeof mediaURL == 'undefined' || !mediaURL)
 	mediaURL = imagerConfig.MEDIA_URL;
-if (typeof illyaDance == 'undefined' || !illyaDance)
-	illyaDance = config.ILLYA_DANCE;
 if (typeof postedFrom == 'undefined' || !postedFrom)
 	postedFrom = config.POSTED_FROM;
 

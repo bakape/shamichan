@@ -68,4 +68,7 @@ this.hot = {
 
 // Display r/a/dio now playing information in the top banner
 	RADIO_BANNER: false,
+// Local http://loli.dance/ implementation. Videos not included in git tree.
+// Place illya.webm and illya.mp4 into the www directory, if you want this.
+	ILLYA_DANCE: false,
 };
