@@ -105,8 +105,6 @@ var config = {
 		{pattern: /Turning Japanese/i, name: '\u540D\u7121\u3057'},
 		{pattern: /Make a Man Out of You|Be a Man/i, name: 'Cute Little Girl'},
 	],
-// Append "Posted from Browser~" to posts
-	POSTED_FROM: false,
 };
 
 module.exports = config;

@@ -42,11 +42,8 @@ DEFINES.S_BOL = 1;
 DEFINES.S_QUOTE = 2;
 DEFINES.S_SPOIL = 3;
 
-// Expand configuration variables
 if (typeof mediaURL == 'undefined' || !mediaURL)
 	mediaURL = imagerConfig.MEDIA_URL;
-if (typeof postedFrom == 'undefined' || !postedFrom)
-	postedFrom = config.POSTED_FROM;
 
 function is_pubsub(t) {
 	return t > 0 && t < 30;
