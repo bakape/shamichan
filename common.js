@@ -433,7 +433,7 @@ OS.geimu = function (text) {
 	}
 
 	var bits = text.split(dice_re);
-	for (var i = 0, x = 0; i < bits.length; i++) {
+	for (var i = 0; i < bits.length; i++) {
 		var bit = bits[i];
 		if (!(i % 2) || !parse_dice(bit)) {
 			LINKIFY ? this.linkify(bit) : this.callback(bit);
@@ -772,8 +772,8 @@ OS.atama = function (data) {
 	this.trigger('headerName', {header: header, data: data});
 	header.push(safe('</b>'));
 	if (data.email) {
-		header.unshift(safe('<a class="email" target="_blank" href="mailto:'
-				+ encodeURI(data.email) + '">'));
+		header.unshift(safe('<a class="email" href="mailto:'
+			+ encodeURI(data.email) + '" target="_blank">'));
 		header.push(safe('</a>'));
 	}
 	// Format according to client's relative post timestamp setting

@@ -1,4 +1,4 @@
-var BOARD, THREAD, BUMP, PAGE, mediaURL, options;
+var BOARD, THREAD, BUMP, PAGE, mediaURL, options, themeVersion;
 // NOTE: options gets turned into a backbone model later
 
 (function () {
@@ -30,11 +30,17 @@ var BOARD, THREAD, BUMP, PAGE, mediaURL, options;
 	if (!options)
 		options = {};
 
-	var theme = options['board.'+BOARD+'.theme'];
-	if (theme) {
-		var link = document.getElementById('theme');
-		var m = link.href.match(/^(.*\/)[^\/]+?(\.css\?v=\d+)$/);
-		if (m)
-			link.href = m[1] + theme + m[2];
+	var link = document.getElementById('theme');
+	var m = link.href.match(/^(.*\/)[^\/]+?\.css\?v=(\d+)$/);
+	if (m) {
+		var v = parseInt(m[2], 10);
+		themeVersion = v;
+
+		var theme = options['board.'+BOARD+'.theme'];
+		if (theme)
+			link.href = m[1] + theme + '.css?v=' + v;
 	}
+
+	if (!themeVersion)
+		alert("Couldn't determine themeVersion! Hardcode it.");
 })();
