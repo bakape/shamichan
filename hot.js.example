@@ -63,4 +63,9 @@ this.hot = {
 	FILTER: [
 		{pattern: /\/moe\//ig, replacement: 'Disneyland'},
 	],
+
+/* Silly little things you probably should not care about */
+
+// Display r/a/dio now playing information in the top banner
+	RADIO_BANNER: false,
 };
