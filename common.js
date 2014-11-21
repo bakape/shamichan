@@ -565,6 +565,7 @@ OS.gazou = function (info, toppu) {
 		safe('" data-size="'), info.size, safe('"><figcaption>'),
 		caption, safe(' <i>('),
 		info.audio ? (audioIndicator + ', ') : '',
+		info.length ? (info.length + ', ') : '',
 		(spoilertoggle && (info.spoiler || info.realthumb) ? '[Spoilered Image] ' : ''),
 		readable_filesize(info.size), ', ',
 		dims, (info.apng ? ', APNG' : ''),
