@@ -12,10 +12,10 @@ var config = {
 // Use internal HTTP server to serve these resources.
 // It is recommended to serve the www directory with a dedicated webserver, like nginx, 
 // and set MEDIAURL in imager/config.js to the served directory's address.
-	SERVE_STATIC_FILES: false,
-	SERVE_IMAGES: false,
+	SERVE_STATIC_FILES: true,
+	SERVE_IMAGES: true,
 // Not preferred; use nginx (or other)'s gzipping
-	GZIP: false, 
+	GZIP: true,
 // Force usage of websocket protocol
 	USE_WEBSOCKETS: true,
 
