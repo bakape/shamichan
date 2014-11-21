@@ -799,13 +799,9 @@ function allocate_post(msg, client, callback) {
 		var parsed = common.parse_name(msg.name);
 		post.name = parsed[0];
 		var spec = STATE.hot.SPECIAL_TRIPCODES;
-        var spec_name = STATE.hot.SPECIAL_NAME_TRIPCODES;
 		if (spec && parsed[1] && parsed[1] in spec) {
 			post.trip = spec[parsed[1]];
 		}
-        else if ( spec_name && parsed[0] && parsed[0] in spec_name) {
-            post.trip = spec_name[parsed[1]];
-        }
 		else if (parsed[1] || parsed[2]) {
 			var trip = tripcode.hash(parsed[1], parsed[2]);
 			if (trip)

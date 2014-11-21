@@ -28,9 +28,6 @@ this.hot = {
 	SPECIAL_TRIPCODES: {
 		kyubey: "／人◕ ‿‿ ◕人＼",
 	},
-	SPECIAL_NAME_TRIPCODES: {
-		name: "!tripcode",
-	},
 // Information to display in the top banner. Accepts HTML
 	BANNERINFO: '',
 // Planned event schedule to display in the banner's Schedule list
