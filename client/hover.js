@@ -35,8 +35,19 @@ function preview_miru(event, num) {
 
 			if (post.is('section'))
 				bits = bits.slice(0, 3);
+			
+			//get id of parent post
+			var parent=event.target.parentNode.parentElement; //gets the parent of the links in: "Replies:"
+			parent= parent.id ? parent :parent.parentElement; //gets the parent of the normal links
+			
+			var newBits=bits.clone();
+			var reg = new RegExp('(a href="#'+parent.id+'">)(&gt;&gt;'+parent.id+')',"g"); //This regex searches for links to the original post
+			for(i=1;i<3;i++)	//check in both, reply text and normal text
+				if(newBits[i])
+					newBits[i].innerHTML=newBits[i].innerHTML.replace(reg,"$1<referenced>$2</referenced>");
+			
 			preview = $('<div class="preview"/>').append(
-					bits.clone());
+					newBits);
 			if((/^editing/).test(post[0].className))	//check if the post is being edited
 				preview[0].classList.add("editing");
 		}
