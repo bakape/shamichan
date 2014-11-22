@@ -6,6 +6,9 @@ a.nope, a.nope:hover {
 	color: inherit;
 	text-decoration: none;
 }
+a > referenced{
+	border: 2px solid orange;
+}
 article, aside {
 	display: table;
 	margin: 2px;
