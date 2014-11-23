@@ -1,11 +1,17 @@
 a {
 	color: #34345c;
 }
+a.referenced {
+	border-bottom: 1px dashed #34345c;
+}
 .bfloat > svg {
 	fill: #34345c;
 }
 a:hover, blockquote a, .email b:hover {
 	color: #d00;
+}
+blockquote a.referenced {
+	border-bottom: 1px dashed #d00;
 }
 article, aside, .pagination {
 	background-color: #d6daf0;

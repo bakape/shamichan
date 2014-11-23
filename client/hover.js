@@ -39,15 +39,9 @@ function preview_miru(event, num) {
 			//get id of parent post
 			var parent=event.target.parentNode.parentElement; //gets the parent of the links in: "Replies:"
 			parent= parent.id ? parent :parent.parentElement; //gets the parent of the normal links
-			
-			var newBits=bits.clone();
-			var reg = new RegExp('(a href="#'+parent.id+'">)(&gt;&gt;'+parent.id+')',"g"); //This regex searches for links to the original post
-			for(i=1;i<3;i++)	//check in both, reply text and normal text
-				if(newBits[i])
-					newBits[i].innerHTML=newBits[i].innerHTML.replace(reg,"$1<b>$2</b>");
-			
+
 			preview = $('<div class="preview"/>').append(
-					newBits);
+				bits.clone());
 			if((/^editing/).test(post[0].className))	//check if the post is being edited
 				preview[0].classList.add("editing");
 		}
@@ -65,6 +59,7 @@ function preview_miru(event, num) {
 		}
 		$(document.body).append(preview);
 		previewNum = num;
+		$('.preview').find('a[href="#'+parent.id+'"]').addClass('referenced');
 	}
 	return true;
 }

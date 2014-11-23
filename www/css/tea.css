@@ -1,6 +1,9 @@
 a, blockquote a {
 	color: #54578c;
 }
+a.referenced {
+	border-bottom: 1px dashed #54578c;
+}
 .bfloat > svg {
 	fill: #54578c;
 }

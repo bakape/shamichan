@@ -2,6 +2,9 @@ a {
 	border: none;
 	text-decoration: underline;
 }
+a.referenced {
+	text-decoration: none;
+}
 a.nope, a.nope:hover {
 	color: inherit;
 	text-decoration: none;

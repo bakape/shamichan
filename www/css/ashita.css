@@ -4,8 +4,14 @@ a, blockquote a:hover, b.moderator {
 .bfloat > svg {
 	fill: #81a2be;
 }
+a.referenced {
+	border-bottom: 1px dashed #81a2be;
+}
 a:hover, blockquote a, .email b:hover, .editing a:hover {
 	color: #5f89ac;
+}
+blockquote a.referenced {
+	border-bottom: 1px dashed #5f89ac;
 }
 article, aside, .modal, .bmodal, .pagination, #FAQ {
 	background-color: #282a2e;
