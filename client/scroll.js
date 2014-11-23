@@ -140,3 +140,12 @@ if (window.scrollMaxY !== undefined)
 		scroll_shita();
 	}
 })();
+
+// Account for banner height, when scrolling to an anchor
+function scroll_above_banner(){
+	if (!!location.hash)
+		$(window).scrollTop($(window).scrollTop()-$('#banner').height());
+}
+
+window.onpopstate = scroll_above_banner;
+window.onload = scroll_above_banner;
