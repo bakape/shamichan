@@ -512,7 +512,7 @@ var allow_webm_hover = false;
 function option_image_hover(toggle){
 	function preview(){
 		// Check if hovering over image or image is expanded by clicking
-		if (!$(target).is('img') || $(target).closest('figure').hasClass('expanded'))
+		if (!$(target).is('img') || !!$(target).data('thumbSrc'))
 			return fadeout();
 		var src = $(target).closest('a').attr('href');
 		var oldSrc = $('#hover_overlay_image').attr('src');
