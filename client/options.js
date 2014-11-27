@@ -485,22 +485,19 @@ option_horizontal.tooltip = '38chan nostalgia';
 /* CUSTOM USER-SET BACKGROUND */
 
 function option_user_bg(toggle){
-	if (options.get(option_user_bg_image.id) != '' && toggle){
-		var image = options.get(option_user_bg_image.id);		
+	if (localStorage.userBG && toggle){
+		var image = localStorage.userBG;
 		$('body').append($('<img />', {
 			id: 'user_bg',
 			src: image
 		}));
-		
-		// Append transparent BG, if theme is glass
+		// Append blurred BG, if theme is glass
 		append_glass();
-	} else
-		clear_bg();
-}
-
-function clear_bg(){
-	$('#user_bg').remove();
-	$('#blurred').remove();
+	}
+	else {
+		$('#user_bg').remove();
+		$('#blurred').remove();
+	}
 }
 
 option_user_bg.id = 'board.$BOARD.userBG';
@@ -508,37 +505,35 @@ option_user_bg.label = 'Custom Background';
 option_user_bg.type = 'checkbox';
 option_user_bg.tooltip = 'Toggle custom page background';
 
-// Generate a new blurred BG on BG change
-function option_user_bg_image(image){
-	if (image == '')
-		clear_bg();
-	 else if (image != options.get(BOARD + '.BGCached')){
-		var img = new Image();
-		img.src = image;
-		img.onload = function(){
-			// Prevent memory leaks
-			$(this).remove();
-			// Blur with Pixastic and write to localstorage
-			Pixastic.process(img, 'blurfast', {amount: 1.5}, function(blurred){
-				localStorage.setItem(BOARD + '.BGBlurred', blurred.toDataURL('image/jpeg', 0.9));
-				options.set(BOARD + '.BGCached', image);
-				if (options.get(option_user_bg.id))
-					option_user_bg(true);
-				append_glass();
-			});
+function option_user_bg_image(target){
+	if (target){
+		// Read image from disk
+		var reader = new FileReader();
+		reader.onload = function(event){
+			var img = new Image();
+			img.onload = function(){
+				// Prevent memory leaks
+				$(this).remove();
+				localStorage.userBG = img.src;
+				// Blur with Pixastic
+				Pixastic.process(img, 'blurfast', {amount: 1.5}, function(blurred){
+					localStorage.userBGBlurred = blurred.toDataURL('image/jpeg', 0.9);
+					if (options.get(option_user_bg.id))
+						option_user_bg(true);
+				});
+			};
+			img.src = event.target.result;
 		};
-	} else
-		append_glass();
+		reader.readAsDataURL(target.files[0]);
+	}
 }
 
 function append_glass(){
 	// Check if theme is glass, user-bg is set and blurred BG is generated
-	if (options.get(option_theme.id) == 'glass' &&
-		options.get(option_user_bg_image.id) != '' &&
-		options.get(option_user_bg.id) &&
-		localStorage.getItem(BOARD + '.BGBlurred')){
+	if (options.get(option_theme.id) == 'glass' && options.get(option_user_bg.id) &&
+		localStorage.userBG && localStorage.userBGBlurred){
 			// Apply blurred background
-			var blurred = localStorage.getItem(BOARD + '.BGBlurred');
+			var blurred = localStorage.userBGBlurred;
 			$('#blurred').remove();
 			$('<style />', {id: 'blurred'})
 				.appendTo('head')
@@ -556,11 +551,10 @@ function append_glass(){
 		$('#blurred').remove();
 }
 
-option_user_bg_image.id = 'board.$BOARD.userBGimage';
-option_user_bg_image.label = ' ';
+option_user_bg_image.id = 'userBGimage';
+option_user_bg_image.label = '';
 option_user_bg_image.type = 'image';
-option_user_bg_image.tooltip = "Image URL to use as the board background. " + 
-	"URL must be from this website's domain for glass theme blurring to work.";
+option_user_bg_image.tooltip = "Image to use as the background";
 
 /* IMAGE HOVER EXPANSION */
 
@@ -988,11 +982,8 @@ function make_options_panel() {
 			val = !$o.prop('checked');
 		else if (spec.type == 'positive')
 			val = Math.max(parseInt($o.val(), 10), 1);
-		else if (spec.type == 'image'){
-			var trimmed = $o.val().trim();
-			if (/^$|\.(jpe?g|png|gif)$/i.test(trimmed))
-				val = trimmed;
-		}
+		else if (spec.type == 'image')
+			val = event.target;
 		else
 			val = $o.val();
 		options.set(id, val);
@@ -1018,8 +1009,8 @@ function make_options_panel() {
 			});
 		} else if (type == 'image'){
 			$input = $('<input />', {
-				placeholder: 'Image URL',
-				val: val
+				type: 'file',
+				title: spec.tooltip,
 			});
 		}
 		else if (type instanceof Array) {
