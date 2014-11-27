@@ -45,6 +45,11 @@ optSpecs.push(option_notification);
 optSpecs.push(option_relative_time);
 if (radioBanner)
 	optSpecs.push(option_now_playing);
+optSpecs.push(option_google);
+optSpecs.push(option_iqdb);
+optSpecs.push(option_saucenao);
+optSpecs.push(option_foolz);
+optSpecs.push(option_exhentai);
 if (illyaDance){
 	optSpecs.push(option_illya_dance);
 	optSpecs.push(option_illya_mute);
@@ -340,6 +345,58 @@ option_now_playing.label = 'Now Playing Banner';
 option_now_playing.type = 'revcheckbox';
 option_now_playing.tooltip = 'Currently playing song on r/a/dio and other stream information in the top banner. '+
 	'Hidden by default on mobile.';
+
+/* IMAGE SEARCH LINK TOGGLE */
+
+$('head').append('<style id="googleToggle">.google{display:none;}</style>');
+$('head').append('<style id="iqdbToggle">.iqdb{display:none;}</style>');
+$('head').append('<style id="saucenaoToggle">.saucenao{display:none;}</style>');
+$('head').append('<style id="foolzToggle">.foolz{display:none;}</style>');
+$('head').append('<style id="exhentaiToggle">.exhentai{display:none;}</style>');
+
+function toggle_image_search(toggle, cls){
+	$('#'+cls+'Toggle').prop('disabled', toggle);
+}
+
+function option_google(toggle){
+	toggle_image_search(toggle, 'google');
+}
+option_google.id = 'google';
+option_google.label = 'Google Image Search';
+option_google.type = 'checkbox';
+option_google.tooltip = 'Show/hide Google image search links';
+
+function option_iqdb(toggle){
+	toggle_image_search(toggle, 'iqdb');
+}
+option_iqdb.id = 'iqdb';
+option_iqdb.label = 'IQDB Image Search';
+option_iqdb.type = 'checkbox';
+option_iqdb.tooltip = 'Show/hide IQDB image search links';
+
+function option_saucenao(toggle){
+	toggle_image_search(toggle, 'saucenao');
+}
+option_saucenao.id = 'saucenao';
+option_saucenao.label = 'Saucenao Image Search';
+option_saucenao.type = 'checkbox';
+option_saucenao.tooltip = 'Show/hide Saucenao image search links';
+
+function option_foolz(toggle){
+	toggle_image_search(toggle, 'foolz');
+}
+option_foolz.id = 'foolz';
+option_foolz.label = 'Foolz Archive Image Search';
+option_foolz.type = 'checkbox';
+option_foolz.tooltip = 'Show/hide Foolz archive image search links';
+
+function option_exhentai(toggle){
+	toggle_image_search(toggle, 'exhentai');
+}
+option_exhentai.id = 'exhentai';
+option_exhentai.label = 'Exhentai Image Search';
+option_exhentai.type = 'checkbox';
+option_exhentai.tooltip = 'Show/hide Exhentai image search links';
 
 /* SPOILER TOGGLE */
 

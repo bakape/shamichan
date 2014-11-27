@@ -507,7 +507,9 @@ function pick_spoiler(metaIndex) {
 }
 exports.pick_spoiler = pick_spoiler;
 
-function new_tab_link(srcEncoded, inside, cls) {
+function new_tab_link(srcEncoded, inside, cls, brackets) {
+	if (brackets)
+		inside = '['+inside+'] ';
 	return [safe('<a href="' + srcEncoded + '" target="_blank"' +
 		(cls ? ' class="'+cls+'"' : '') +
 		' rel="nofollow">'), inside, safe('</a>')];
@@ -548,12 +550,12 @@ OS.gazou = function (info, toppu) {
 		var exhentai = encodeURI('../outbound/exh/' + info.SHA1);
 		src = encodeURI(this.image_paths().src + info.src);
 		caption = [
-			new_tab_link(src, info.src), ' [',
-			new_tab_link(google, 'G', 'imageSearch'), '][',
-			new_tab_link(iqdb, 'Iq', 'imageSearch'), '][',
-			new_tab_link(saucenao, 'Sn', 'imageSearch'), '][',
-			new_tab_link(foolz, 'Fz', 'imageSearch'), '][',
-			new_tab_link(exhentai, 'Ex', 'imageSearch'), ']'
+			new_tab_link(src, info.src), ' ',
+			new_tab_link(google, 'G', 'imageSearch google', true),
+			new_tab_link(iqdb, 'Iq', 'imageSearch iqdb', true),
+			new_tab_link(saucenao, 'Sn', 'imageSearch saucenao', true),
+			new_tab_link(foolz, 'Fz', 'imageSearch foolz', true),
+			new_tab_link(exhentai, 'Ex', 'imageSearch exhentai', true),
 		];
 	}
 
