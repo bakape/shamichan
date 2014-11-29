@@ -352,7 +352,7 @@ IU.verified = function () {
 		self.db.check_duplicate(hash, function (err) {
 			if (err)
 				return self.failure(err);
-			self.deduped();
+			self.exifdel();
 		});
 	});
 };
@@ -362,6 +362,18 @@ IU.fill_in_specs = function (specs, kind) {
 	specs.ext = this.image.ext;
 	specs.dest = this.image.path + '_' + kind;
 	this.image[kind + '_path'] = specs.dest;
+};
+
+IU.exifdel = function (err) {
+	var image = this.image, self = this;
+	if (image.ext == '.webm' || image.ext == '.svg' || !config.DEL_EXIF)
+		return self.deduped();
+	child_process.execFile(exiftoolBin, ['-all=', image.path],
+	function(err, stdout, stderr){
+		if (err)
+			self.status('Exiftool error: '+stderr);
+		self.deduped();
+	});
 };
 
 IU.deduped = function (err) {
@@ -500,6 +512,11 @@ function which(name, callback) {
 var identifyBin, convertBin;
 which('identify', function (bin) { identifyBin = bin; });
 which('convert', function (bin) { convertBin = bin; });
+
+var exiftoolBin;
+if (config.DEL_EXIF) {
+	which('exiftool', function (bin) { exiftoolBin = bin; });
+}
 
 var ffmpegBin;
 if (config.WEBM) {
