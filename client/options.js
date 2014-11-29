@@ -123,7 +123,7 @@ options.on('change', function () {
 function option_last_n(n) {
 	if (!reasonable_last_n(n))
 		return;
-	$.cookie('lastn', n);
+	$.cookie('lastn', n, {path: '/'});
 	// should really load/hide posts as appropriate
 }
 option_last_n.id = 'lastn';
@@ -297,7 +297,7 @@ var load_thread_backlinks = function ($section) {
 /* RELATIVE POST TIMESTAMPS */
 
 function option_relative_time(toggle){
-	$.cookie('rTime', toggle);
+	$.cookie('rTime', toggle, {path: '/'});
 }
 
 option_relative_time.id = 'relativeTime';
@@ -402,7 +402,7 @@ option_exhentai.tooltip = 'Show/hide Exhentai image search links';
 
 
 function option_spoiler(spoilertoggle) {
-	$.cookie('spoil',spoilertoggle);
+	$.cookie('spoil',spoilertoggle, {path: '/'});
 	oneeSama.spoilToggle = spoilertoggle;
 }
 option_spoiler.id = 'nospoilertoggle';
@@ -414,7 +414,7 @@ option_spoiler.tooltip = "Don't spoiler images. Requires page refresh";
 
 
 function option_autogif(autogif) {
-	$.cookie('agif',autogif);
+	$.cookie('agif',autogif, {path: '/'});
 	oneeSama.autoGif = autogif;
 }
 option_autogif.id = 'autogiftoggle';

@@ -36,7 +36,7 @@ if (is_skewed) {
 	setTimeout(function () {
 		// next request, have the server render the right times
 		var tz = -new Date().getTimezoneOffset() / 60;
-		$.cookie('timezone', tz, { expires: 90 });
+		$.cookie('timezone', tz, {expires: 90, path: '/'});
 	}, 3000);
 }
 
