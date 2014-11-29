@@ -27,16 +27,14 @@ exports.write_thread_html = function (reader, req, out, opts) {
 	var cookies = web.parse_cookie(req.headers.cookie);
 	if (cookies.spoil == 'true')
 		oneeSama.spoilToggle = (cookies.spoil == 'true');
-
 	if (cookies.agif == 'true')
 		oneeSama.autoGif = (cookies.agif == 'true');
-		
 	if (cookies.rTime == 'true')
 		oneeSama.rTime = true;
-
+	if (cookies.linkify == 'true')
+		oneeSama.eLinkify = true;
 	if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 		oneeSama.thumbStyle = cookies.thumb;
-
 	var lastN = cookies.lastn && parseInt(cookies.lastn, 10);
 	if (!lastN || !common.reasonable_last_n(lastN))
 		lastN = config.THREAD_LAST_N;

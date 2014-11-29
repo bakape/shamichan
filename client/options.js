@@ -41,6 +41,7 @@ optSpecs.push(option_webm_hover);
 optSpecs.push(option_autogif);
 optSpecs.push(option_spoiler);
 optSpecs.push(option_backlinks);
+optSpecs.push(option_linkify);
 optSpecs.push(option_notification);
 optSpecs.push(option_relative_time);
 if (radioBanner)
@@ -293,6 +294,17 @@ var load_thread_backlinks = function ($section) {
 		add_post_links(src, update, op);
 	});
 };
+
+/* LINKIFY TEXT URLS */
+
+function option_linkify(toggle){
+	$.cookie('linkify', toggle, {path: '/'});
+}
+
+option_linkify.id = 'linkify';
+option_linkify.label = 'Linkify text URLs';
+option_linkify.type = 'checkbox';
+option_linkify.tooltip = 'Convert in-post text URLs to clickable links. WARNING: Potential security hazard (XSS). Requires page refresh.';
 
 /* RELATIVE POST TIMESTAMPS */
 

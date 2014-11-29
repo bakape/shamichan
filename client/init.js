@@ -33,7 +33,9 @@ oneeSama.full = oneeSama.op = THREAD;
 // Pass relative post timestamp setting to the client-side oneeSama
 if ($.cookie('rTime') == 'true')
 	oneeSama.rTime = true;
-
+// Pass linkification setting to client-side oneeSama
+if ($.cookie('linkify') == 'true')
+	oneeSama.eLinkify = true;
 var UAMessage;
 // Query user agent with ua-parser
 if (postedFrom){

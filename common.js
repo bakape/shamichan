@@ -415,13 +415,9 @@ function readable_dice(bit, d) {
 	return bit + (eq ? ' = ' : '') + sum + ')';
 }
 
-// Convert text URLs to clickable links
-// *Not* recommended. Use at your own risk.
-var LINKIFY = false;
-
 OS.geimu = function (text) {
 	if (!this.dice) {
-		LINKIFY ? this.linkify(text) : this.callback(text);
+		this.eLinkify ? this.linkify(text) : this.callback(text);
 		return;
 	}
 
@@ -429,13 +425,13 @@ OS.geimu = function (text) {
 	for (var i = 0; i < bits.length; i++) {
 		var bit = bits[i];
 		if (!(i % 2) || !parse_dice(bit)) {
-			LINKIFY ? this.linkify(bit) : this.callback(bit);
+			this.eLinkify ? this.linkify(bit) : this.callback(bit);
 		}
 		else if (this.queueRoll) {
 			this.queueRoll(bit);
 		}
 		else if (!this.dice[0]) {
-			LINKIFY ? this.linkify(bit) : this.callback(bit);
+			this.eLinkify ? this.linkify(bit) : this.callback(bit);
 		}
 		else {
 			var d = this.dice.shift();
@@ -448,7 +444,7 @@ OS.geimu = function (text) {
 	}
 };
 
-if (LINKIFY) { OS.linkify = function (text) {
+OS.linkify = function (text) {
 
 	var bits = text.split(/(https?:\/\/[^\s"<>]*[^\s"<>'.,!?:;])/);
 	for (var i = 0; i < bits.length; i++) {
@@ -462,7 +458,7 @@ if (LINKIFY) { OS.linkify = function (text) {
 		else
 			this.callback(bits[i]);
 	}
-}; }
+};
 
 function chibi(imgnm, src) {
 	var name = '', ext = '';
