@@ -716,6 +716,7 @@ prep_upload: function () {
 
 notify_uploading: function () {
 	this.model.set({uploading: true, cancelled: false});
+	this.$input.focus();
 },
 
 make_upload_form: function () {
