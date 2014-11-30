@@ -677,6 +677,8 @@ OS.readable_time = function (time) {
 // Readable elapsed time since post
 OS.relative_time = function(then, now){
 	var s = Math.floor((now - then) / 1000);
+	if (s < 0)
+		s = 0;
 	var min  = Math.floor(s/60);
 	if (min < 1)
 		return time_ago(s, 'second');
