@@ -51,7 +51,7 @@ this.hot = {
 		'#8ball - An 8ball',
 		'#pyu - Missle launched',
 		'#pcount - Launch count',
-		'#syncwatch&#60;hours(optional)&#62;:&#60;minutes&#62;:&#60;seconds&#62;[+-]&#60;offset seconds(optional)&#62 - Syncronised duration timer',
+		'#sw&#60;hours(optional)&#62;:&#60;minutes&#62;:&#60;seconds&#62;[+-]&#60;offset seconds(optional)&#62 - Syncronised duration timer',
 		'&emsp;A positive offset adds a countdown. A negative offset starts the timer n seconds into the episode.',
 		'&nbsp;',
 		'Source code repository: <a href="https://github.com/bakape/doushio" target="_blank">github.com/bakape/doushio</a>',

@@ -68,7 +68,7 @@ dispatcher[GET_TIME] = function(msg){
 	}
 };
 
-/* #syncwatch */
+/* syncwatch */
 
 function timer_from_el(el) {
 	var now = new Date().getTime() - serverTimeOffset;
