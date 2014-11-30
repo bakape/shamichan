@@ -96,6 +96,8 @@ var Article = Backbone.View.extend({
 			'change:spoiler': this.renderSpoiler,
 			'removeSelf': this.remove,
 		});
+		if (oneeSama.rTime)
+			this.renderRelativeTime();
 	},
 
 	render: function () {
@@ -164,6 +166,13 @@ var Article = Backbone.View.extend({
 				width: sp.dims[0], height: sp.dims[1],
 			}));
 		}
+	},
+	renderRelativeTime: function(model){
+		var $time = this.$('header').find('time');
+		var t = date_from_time_el($time[0]).getTime();
+		setInterval(function(){
+			$time.html(oneeSama.relative_time(t, new Date().getTime()));
+		}, 60000);
 	},
 });
 
