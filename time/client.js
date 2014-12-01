@@ -10,8 +10,6 @@ function date_from_time_el(el) {
 	return new Date(d);
 }
 
-var tzOffset = serverTzOffset - new Date().getTimezoneOffset();
-
 (function () {
 
 var readable_time = oneeSama.readable_time;
@@ -25,7 +23,13 @@ function adjust_all_times() {
 	});
 }
 
-var is_skewed = (tzOffset != 0);
+var is_skewed = (function(){
+	var el = document.querySelector('time');
+	if (!el)
+		return false;
+	var d = date_from_time_el(el);
+	return readable_time(d.getTime()) != el.innerHTML;
+})();
 
 if (is_skewed) {
 	if (!rTime)

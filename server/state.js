@@ -122,8 +122,6 @@ function expand_templates(res) {
 	_.extend(templateVars, build_schedule(templateVars.SCHEDULE));
 	_.extend(templateVars, build_FAQ(templateVars.FAQ));
 	
-	// Pass server's timezone offset
-	templateVars.SERVERTZOFFSET = new Date().getTimezoneOffset();
 	// Format info banner
 	if (templateVars.BANNERINFO != '')
 		templateVars.BANNERINFO = '&nbsp;&nbsp;&nbsp;[' + templateVars.BANNERINFO + ']';
