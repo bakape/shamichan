@@ -13,8 +13,6 @@ function date_from_time_el(el) {
 (function () {
 
 var readable_time = oneeSama.readable_time;
-var relative_time = oneeSama.relative_time;
-var rTime = oneeSama.rTime;
 
 function adjust_all_times() {
 	$('time').each(function () {
@@ -32,7 +30,7 @@ var is_skewed = (function(){
 })();
 
 if (is_skewed) {
-	if (!rTime)
+	if (!oneeSama.rTime)
 		adjust_all_times();
 
 	setTimeout(function () {
