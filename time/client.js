@@ -53,34 +53,41 @@ dispatcher[GET_TIME] = function(msg){
 
 /* syncwatch */
 
-function timer_from_el(el) {
-	var now = new Date().getTime() - serverTimeOffset;
-	var start= el.getAttribute('datetime');
-	var diff=now-start;
-	var hour = Math.floor(diff/1000/60/60);
-	diff-= hour*1000*60*60;
-	var min= Math.floor(diff/1000/60);
-	diff-= min*1000*60;
-	var sec=Math.floor(diff/1000);
-	var maxh = el.getAttribute('hour');
-	var maxm = el.getAttribute('min');
-	var maxs = el.getAttribute('sec');
-	// If the start time is in the future
-	if (start > now) {
-		var countdown = Math.round((start-now)/1000);
-		if(countdown==10 || countdown==5)
-			Backbone.trigger('syncCountdown',countdown);
-		return 'Countdown: ' + countdown;
-	}
-	if((hour>maxh) || (hour==maxh && min>maxm) || (hour==maxh && min==maxm && sec>maxs)) //If we passed the time
-		return "Finished";
-	return "Now at: "+pad(hour)+":"+pad(min)+":"+pad(sec)+" / "+pad(maxh)+":"+pad(maxm)+":"+pad(maxs);
+function timer_from_el($el) {
+	$el.addClass('timerTicking');
+	var start= $el.attr('start')-serverTimeOffset;
+	var end = $el.attr('end')-serverTimeOffset;
+	var maxh = pad($el.attr('hour'));
+	var maxm = pad($el.attr('min'));
+	var maxs = pad($el.attr('sec'));
+
+	(function moumouikkai(){
+		var now = new Date().getTime()-serverTimeOffset;
+		if (now > end)
+			return $el.text('Finished');
+		// If the start time is in the future
+		if (start > now) {
+			var countdown = Math.round((start-now)/1000);
+			if(countdown==10 || countdown==5)
+				Backbone.trigger('syncCountdown',countdown);
+			$el.text('Countdown: ' + countdown);
+			return setTimeout(moumouikkai, 1000);
+		}
+		var diff=now-start;
+		var hour = Math.floor(diff/1000/60/60);
+		diff-= hour*1000*60*60;
+		var min= Math.floor(diff/1000/60);
+		diff-= min*1000*60;
+		var sec=Math.floor(diff/1000);
+		$el.text("Now at: "+pad(hour)+":"+pad(min)+":"+pad(sec)+" / "+maxh+":"+maxm+":"+maxs);
+		return setTimeout(moumouikkai, 1000);
+	})();
 }
 
 (function mouikkai(){
 	setTimeout(function(){
-		$('syncwatch').each(function(){
-			$(this).text(timer_from_el(this));
+		$('syncwatch').not('.timerTicking').each(function(){
+			timer_from_el($(this));
 		});
 		mouikkai();
 	} ,1000);

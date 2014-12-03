@@ -336,7 +336,7 @@ OS.karada = function (body) {
 	for (var i = 0; i < this.state[1]; i++)
 		output.push(safe('</del>'));
 	return output;
-}
+};
 
 var dice_re = /(#flip|#8ball|#pyu|#pcount|#sw(?:\d{1,2}:)?\d{1,2}:\d{1,2}(?:[+-]\d+)?|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
 exports.dice_re = dice_re;
@@ -375,7 +375,8 @@ function parse_dice(frag) {
 			var offset = sw[4].slice(1) * 1000;
 			time = symbol == '+' ? time + offset : time - offset;
 		}
-		return {hour:hour,min: min,sec:sec,start: time};
+		var end = ((hour*60+min)*60+sec)*1000+time;
+		return {hour:hour,min: min,sec:sec,start:time,end:end};
 	}
 }
 exports.parse_dice = parse_dice;
@@ -390,7 +391,8 @@ function readable_dice(bit, d) {
 	if (bit == '#pcount')
 		return '#pcount(' + d + ')';
 	if(/^#sw/.test(bit)){
-		return safe('<syncwatch class="embed" datetime='+d[0].start+
+		return safe('<syncwatch class="embed" start='+d[0].start+
+				" end="+d[0].end+
 				" hour="+d[0].hour+
 				" min="+d[0].min+
 				" sec="+d[0].sec+
