@@ -676,25 +676,24 @@ OS.readable_time = function (time) {
 
 // Readable elapsed time since post
 OS.relative_time = function(then, now){
-	var s = Math.floor((now - then) / 1000);
-	if (s < 0)
-		s = 0;
-	var min  = Math.floor(s/60);
+	var min  = Math.floor((now - then) / (60 * 1000));
 	if (min < 1)
-		return time_ago(s, 'second');
+		return 'just now';
 	if (min < 60)
-		return time_ago(min, 'minute');
+		return format_time(min, 'minute');
 	var hours = Math.floor(min/60);
 	if (hours < 24)
-		return time_ago(hours, 'hour');
+		return format_time(hours, 'hour');
 	var days = Math.floor(hours/24);
 	if (days < 30)
-		return time_ago(days, 'day');
+		return format_time(days, 'day');
 	var months = Math.floor(days/30);
-	return time_ago(months, 'month');
+	if (months < 12)
+		return format_time(months, 'month');
+	return format_time(Math.floor(months/12), 'year');
 };
 
-function time_ago(time, unit){
+function format_time(time, unit){
 	return pluralize(time, unit) + ' ago';
 }
 
