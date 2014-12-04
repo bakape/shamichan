@@ -131,7 +131,7 @@ Project map:
 	* __wscript__		Builds node tripcode module
 * __upkeep/__
 	* __backup.js__		Amazon S3 backup script
-	* __clean.js__		Delete's archived thread images
+	* __clean.js__		Deletes archived thread images
 	* __poll.xsl__		Icecast configuration file
 	* __radio.js__		Icecast polling and now-playing-banner updater
 * __voice/__
