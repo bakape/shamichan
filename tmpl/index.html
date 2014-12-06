@@ -45,4 +45,14 @@ $NAV
 {{UAPARSER}}
 <script src="{{MEDIA_URL}}js/sockjs-0.3.4.min.js"></script>
 <script src="{{MEDIA_URL}}js/{{VENDOR_JS}}"></script>
+<script>
+	var lso = localStorage.options;
+	if (lso)
+		_.extend(options, JSON.parse(lso));
+	_.defaults(options, {
+		lastn: {{THREAD_LAST_N}},
+		inlinefit: 'width',
+	});
+	options = new Backbone.Model(options);
+</script>
 <script src="{{MEDIA_URL}}js/{{CLIENT_JS}}"></script>

@@ -62,14 +62,6 @@ optSpecs.push(option_user_bg);
 optSpecs.push(option_user_bg_image);
 optSpecs.push(option_last_n);
 
-
-_.defaults(options, {
-	lastn: config.THREAD_LAST_N,
-	inlinefit: 'width',
-});
-options = new Backbone.Model(options);
-
-
 nashi.upload = !!$('<input type="file"/>').prop('disabled');
 
 if (window.screen && screen.width <= 320) {
