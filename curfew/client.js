@@ -12,7 +12,7 @@ function shut_down_everything() {
 	if (!$threads.length)
 		return setTimeout(game_over, 1000);
 	pick_random($threads, 0.2).remove();
-	pick_random($('hr, aside, h1, fieldset'), 0.2).remove();
+	pick_random($('hr.sectionHr, aside, h1, fieldset'), 0.2).remove();
 	setTimeout(shut_down_everything, 500);
 }
 

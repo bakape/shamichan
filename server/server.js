@@ -370,7 +370,7 @@ function (req, resp) {
 		render.write_board_head(resp, board, nav);
 		paginationHtml = render.make_pagination_html(nav);
 		resp.write(paginationHtml);
-		resp.write('<hr>\n');
+		resp.write('<hr class="sectionHr">\n');
 	});
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	var opts = {fullLinks: true, board: board};
@@ -428,7 +428,7 @@ function (req, resp) {
 	render.write_board_head(resp, board, nav);
 	var paginationHtml = render.make_pagination_html(nav);
 	resp.write(paginationHtml);
-	resp.write('<hr>\n');
+	resp.write('<hr class="sectionHr">\n');
 
 	var opts = {fullLinks: true, board: board};
 	render.write_thread_html(this.yaku, req, resp, opts);

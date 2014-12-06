@@ -219,7 +219,7 @@ dispatcher[INSERT_POST] = function (msg) {
 		}
 		var section = new Section({model: model, id: num, el: el});
 		renderRelativeTime.bind(section)();
-		$hr = $('<hr/>');
+		$hr = $('<hr class="sectionHr"/>');
 		if (!postForm)
 			$section.append(make_reply_box());
 	}

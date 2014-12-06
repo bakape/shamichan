@@ -57,7 +57,7 @@ var Section = Backbone.View.extend({
 	},
 
 	renderHide: function (model, hide) {
-		this.$el.next('hr').andSelf().toggle(!hide);
+		this.$el.next('hr.sectionHr').andSelf().toggle(!hide);
 	},
 
 	renderLocked: function (model, locked) {
@@ -86,7 +86,7 @@ var Section = Backbone.View.extend({
 		});
 		replies.reset();
 
-		this.$el.next('hr').andSelf().remove();
+		this.$el.next('hr.sectionHr').andSelf().remove();
 		this.stopListening();
 	},
 

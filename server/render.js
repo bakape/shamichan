@@ -88,7 +88,7 @@ exports.write_thread_html = function (reader, req, out, opts) {
 	});
 
 	function close_section() {
-		out.write('</section><hr>\n');
+		out.write('</section><hr class="sectionHr">\n');
 	}
 };
 
@@ -150,7 +150,7 @@ exports.write_thread_head = function (out, board, op, opts) {
 	out.write('Thread #' + op);
 	out.write(indexTmpl[i++]);
 	out.write(common.action_link_html('#bottom', 'Bottom'));
-	out.write('<hr>\n');
+	out.write('<hr class="sectionHr">\n');
 };
 
 function make_board_meta(board, info) {

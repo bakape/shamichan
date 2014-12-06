@@ -279,7 +279,7 @@ initialize: function (dest) {
 		this.$input.focus();
 	}
 	else {
-		post.after('<hr/>');
+		post.after('<hr class="sectionHr"/>');
 		this.$subject.focus();
 	}
 	$('aside').remove();
@@ -678,7 +678,7 @@ finish: function () {
 remove: function () {
 	if (!this.preserve) {
 		if (!this.model.get('op'))
-			this.$el.next('hr').remove();
+			this.$el.next('hr.sectionHr').remove();
 		this.$el.remove();
 	}
 	this.$sizer.remove();
