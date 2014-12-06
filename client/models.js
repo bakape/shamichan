@@ -108,7 +108,6 @@ var Article = Backbone.View.extend({
 			'removeSelf': this.remove,
 			'add': renderRelativeTime,
 		});
-		Backbone.once('extracted', renderRelativeTime, this);
 	},
 
 	render: function () {

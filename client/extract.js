@@ -67,6 +67,7 @@ function extract_thread_model(section) {
 			continue;
 		var post = extract_post_model(el);
 		new Article({model: post, el: el});
+		post.trigger('add');
 		replies.push(post);
 	}
 	var thread = new Thread({
@@ -93,7 +94,6 @@ function scan_threads_for_extraction() {
 
 	if (THREAD)
 		CurThread = Threads.get(THREAD);
-	Backbone.trigger('extracted');
 }
 
 scan_threads_for_extraction();
