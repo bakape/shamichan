@@ -54,6 +54,8 @@ dispatcher[GET_TIME] = function(msg){
 /* syncwatch */
 
 function timer_from_el($el) {
+	if (!serverTimeOffset)
+		return;
 	$el.addClass('timerTicking');
 	var start= $el.attr('start')-serverTimeOffset;
 	var end = $el.attr('end')-serverTimeOffset;
