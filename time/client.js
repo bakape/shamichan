@@ -86,11 +86,24 @@ function timer_from_el($el) {
 	})();
 }
 
-(function mouikkai(){
-	setTimeout(function(){
+// Read from option initially
+if (options.get('syncWatch'))
+	mouikkai();
+var mouikkaier;
+// Change on option change
+options.on('change:syncWatch', function(e, v){
+	if (v)
+		mouikkai();
+	else
+		clearTimeout(mouikkaier);
+});
+
+function mouikkai(){
+	mouikkaier= setTimeout(function(){
 		$('syncwatch').not('.timerTicking').each(function(){
 			timer_from_el($(this));
 		});
 		mouikkai();
 	} ,1000);
-})();
+}
+

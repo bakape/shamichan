@@ -44,6 +44,7 @@ optSpecs.push(option_backlinks);
 optSpecs.push(option_linkify);
 optSpecs.push(option_notification);
 optSpecs.push(option_relative_time);
+optSpecs.push(option_syncwatch);
 if (radioBanner)
 	optSpecs.push(option_now_playing);
 optSpecs.push(option_google);
@@ -308,6 +309,15 @@ option_relative_time.id = 'relativeTime';
 option_relative_time.label = 'Relative Timestamps';
 option_relative_time.type = 'checkbox';
 option_relative_time.tooltip = 'Relative post timestamps. Ex.: "1 hour ago." Requires page refresh';
+
+/* SYNCWATCH */
+
+function option_syncwatch(toggle){}
+
+option_syncwatch.id = 'syncWatch';
+option_syncwatch.label = 'Enable Syncwatch';
+option_syncwatch.type = 'checkbox';
+option_syncwatch.tooltip = 'Transform #sw hash commands into syncronised duration progress timers. Does not stop already running timers. Not recommended on mobile devices.';
 
 /* R/A/DIO NOW PLAYING BANNER */
 
