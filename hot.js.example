@@ -56,9 +56,9 @@ this.hot = {
 		'<hr>',
 		'Source code repository: <a href="https://github.com/bakape/doushio" target="_blank">github.com/bakape/meguca</a>',
 	],
-// Word replacament filter. Pattern must not contain spaces or newlines
+// Word replacament filter. {pattern: /foo/, replacement: 'bar'} Pattern must not contain spaces or newlines
 	FILTER: [
-		{pattern: /\/moe\//ig, replacement: 'Disneyland'},
+		{p: /\/moe\//ig, r: 'Disneyland'},
 	],
 
 /* Silly little things you probably should not care about */

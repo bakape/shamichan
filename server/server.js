@@ -1042,7 +1042,22 @@ function hot_filter(frag){
 	if (!filter)
 		return frag;
 	for (i =0; i < filter.length; i++){
-		frag = frag.replace(filter[i].pattern, filter[i].replacement);
+		var f = filter[i];
+		var m = frag.match(f.p);
+		if (m){
+			// Case sensitivity
+			if (m[0].length > 2){
+				var first = m[0].charAt(0);
+				var second = m[0].charAt(1);
+				if (/[A-Z]/.test(second))
+					f.r = f.r.toUpperCase();
+				else if (/[A-Z]/.test(first)){
+					console.log(f.r);
+					f.r = f.r.charAt(0).toUpperCase()+f.r.slice(1);
+				}
+			}
+			return frag.replace(f.p, f.r);
+		}
 	}
 	return frag;
 }
