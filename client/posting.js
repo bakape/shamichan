@@ -442,7 +442,6 @@ on_input: function (val) {
 	var nl = val.lastIndexOf('\n');
 	if (nl >= 0) {
 		var ok = val.substr(0, nl);
-		ok = this.word_filter(ok);
 		val = val.substr(nl+1);
 		$input.val(val);
 		if (this.model.get('sentAllocRequest') || /[^ ]/.test(ok))
@@ -455,7 +454,6 @@ on_input: function (val) {
 		if (m) {
 			var lim = len - m[1].length;
 			var destiny = val.substr(0, lim);
-			destiny = this.word_filter(destiny);
 			this.commit(destiny);
 			val = val.substr(lim);
 			start -= lim;
@@ -467,10 +465,6 @@ on_input: function (val) {
 
 	$input.attr('maxlength', MAX_POST_CHARS - this.char_count);
 	this.resize_input(val);
-},
-
-word_filter: function (words) {
-	return words;
 },
 
 add_ref: function (num) {
@@ -653,7 +647,7 @@ cancel: function () {
 finish: function () {
 	if (this.model.get('num')) {
 		this.flush_pending();
-		this.commit(this.word_filter(this.$input.val()));
+		this.commit(this.$input.val());
 		// Append "Posted from <browser>~"
 		if (postedFrom && UAMessage)
 			this.commit(UAMessage);
