@@ -40,6 +40,8 @@ exports.SERVER_DEPS = [
 	'admin/common.js',
 	'admin/index.js',
 	'admin/panel.js',
+	'anon_hours/server.js',
+	'autoJoe/server.js',
 	'common.js',
 	'config.js',
 	'db.js',
