@@ -357,6 +357,8 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board;
+	// Only render <threads> for pushState() updates
+	var min = !!req.query.minimal;
 	var info = {board: board, ident: req.ident, resp: resp};
 	hooks.trigger_sync('boardDiversion', info);
 	if (info.diverted)
@@ -367,7 +369,8 @@ function (req, resp) {
 	var paginationHtml;
 	yaku.once('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1, board == 'archive');
-		render.write_board_head(resp, board, nav);
+		if (!min)
+			render.write_board_head(resp, board, nav);
 		paginationHtml = render.make_pagination_html(nav);
 		resp.write(paginationHtml);
 		resp.write('<hr class="sectionHr">\n');
@@ -377,7 +380,8 @@ function (req, resp) {
 	render.write_thread_html(yaku, req, resp, opts);
 	yaku.once('end', function () {
 		resp.write(paginationHtml);
-		render.write_page_end(resp, req.ident, false);
+		if (!min)
+			render.write_page_end(resp, req.ident, false);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -423,9 +427,12 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board;
+	var min = !!req.query.minimal;
+	console.log(min);
 	var nav = page_nav(this.threadCount, this.page, board == 'archive');
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
-	render.write_board_head(resp, board, nav);
+	if (!min)
+		render.write_board_head(resp, board, nav);
 	var paginationHtml = render.make_pagination_html(nav);
 	resp.write(paginationHtml);
 	resp.write('<hr class="sectionHr">\n');
@@ -435,7 +442,8 @@ function (req, resp) {
 	var self = this;
 	this.yaku.once('end', function () {
 		resp.write(paginationHtml);
-		render.write_page_end(resp, req.ident, false);
+		if (!min)
+			render.write_page_end(resp, req.ident, false);
 		resp.end();
 		self.finished();
 	});
@@ -570,18 +578,21 @@ function (req, resp) {
 		return write_json_post(req, resp, this.num);
 
 	var board = this.board, op = this.op;
+	var min = !!req.query.minimal;
 
 	resp = write_gzip_head(req, resp, this.headers);
-	render.write_thread_head(resp, board, op, {
-		subject: this.subject,
-		abbrev: this.abbrev,
-	});
-
+	if (!min){
+		render.write_thread_head(resp, board, op, {
+			subject: this.subject,
+			abbrev: this.abbrev,
+		});
+	}
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
 	render.write_thread_html(this.reader, req, resp, opts);
 	var self = this;
 	this.reader.once('end', function () {
-		render.write_page_end(resp, req.ident, true);
+		if (!min)
+			render.write_page_end(resp, req.ident, true);
 		resp.end();
 		self.finished();
 	});

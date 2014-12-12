@@ -10,16 +10,12 @@ $META	<!--[if lt IE 9]><script src="{{MEDIA_URL}}js/ie.js"></script><![endif]-->
 	<!-- Pass configuration variables -->
 	<script>var radioBanner = {{RADIO_BANNER}}, illyaDance = {{ILLYA_DANCE}}, postedFrom = {{POSTED_FROM}};</script>
 </head>
-<!-- Page navigation -->
-$NAV
-<h1>$TITLE</h1>
 <fieldset id="identity" class="bmodal">
 <label for="name" class="ident">Name:</label> <input id="name" name="name"><br>
 <label for="email" class="ident">Email:</label> <input id="email" name="email"><br>
 </fieldset>
 <div id="hover_overlay"></div>
 <span id="banner">
-	<!-- Board navigation -->
     {{NAVTOP}}
 	<b id="banner_center"></b>
 	<a id="options" class="bfloat" title="Options">
@@ -41,6 +37,8 @@ $NAV
 </span>
 <div id="FAQ" class="bmodal">{{FAQ}}</div>
 <div id="schedule" class="bmodal">{{SCHEDULE}}</div>
+$NAV
+<h1>$TITLE</h1>
 $THREADS
 $NAV
 <script src="{{MEDIA_URL}}js/jquery-2.1.1.min.js"></script>
