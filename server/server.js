@@ -609,13 +609,10 @@ function write_json_post(req, resp, num) {
 }
 
 function detect_last_n(query) {
-	for (var k in query) {
-		var m = /^last(\d+)$/.exec(k);
-		if (m) {
-			var n = parseInt(m[1], 10);
-			if (common.reasonable_last_n(n))
-				return n;
-		}
+	if (!!query.last){
+		var n = parseInt(query.last);
+		if (common.reasonable_last_n(n))
+			return n;
 	}
 	return 0;
 }

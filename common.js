@@ -739,7 +739,7 @@ exports.reasonable_last_n = function (n) {
 };
 
 OS.last_n_html = function (num) {
-	return action_link_html(num + '?last' + this.lastN,
+	return action_link_html(num + '?last=' + this.lastN,
 			'Last&nbsp;' + this.lastN);
 };
 
