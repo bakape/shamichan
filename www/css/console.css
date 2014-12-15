@@ -31,6 +31,7 @@ b {
 }
 #banner {
 	background: rgba(0, 0, 0, 1);
+	border-bottom: 1px solid white;
 }
 b.admin, b.admin code {
 	background-color: #e50000;

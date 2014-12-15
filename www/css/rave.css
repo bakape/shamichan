@@ -48,6 +48,7 @@ b.admin {
 #banner {
 	background-image: url(rave_bg.gif);
 	opacity: 0.9;
+	border-bottom: 1px solid black;
 }
 body{
 	background-image: url(rave_dance.gif),

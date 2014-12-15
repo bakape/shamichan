@@ -43,6 +43,7 @@ b.admin {
 }
 #banner {
 	background: rgba(40, 42, 46, 0.7);
+	border-bottom: 1px solid #282a2e;
 }
 a>b {
 	color: #c5c8c6;

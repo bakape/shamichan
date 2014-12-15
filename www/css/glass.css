@@ -11,6 +11,9 @@ a.referenced {
 article, aside, .pagination, .popup-menu, .modal, .bmodal, .preview, #banner {
 	background-color: rgba(40, 42, 46, 0.5);
 }
+#banner {
+	border-bottom: 1px solid #282a2e;
+}
 a>b {
 	color: white;
 }

@@ -37,6 +37,7 @@ b.moderator {
 }
 #banner {
 	background: rgba(214, 218, 240, 0.7);
+	border-bottom: 1px solid #b7c5d9;
 }
 body {
 	background-color: #eef2ff;

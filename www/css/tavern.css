@@ -48,6 +48,7 @@ b.admin {
 #banner {
 	background: url(wood.jpg);
 	color: white;
+	border-bottom: 1px solid #282a2e;
 }
 a>b {
 	color: #c5c8c6;
