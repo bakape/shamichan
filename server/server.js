@@ -371,6 +371,8 @@ function (req, resp) {
 		var nav = page_nav(thread_count, -1, board == 'archive');
 		if (!min)
 			render.write_board_head(resp, board, nav);
+		else
+			render.write_board_title(resp, board);
 		paginationHtml = render.make_pagination_html(nav);
 		resp.write(paginationHtml);
 		resp.write('<hr class="sectionHr">\n');
@@ -380,8 +382,7 @@ function (req, resp) {
 	render.write_thread_html(yaku, req, resp, opts);
 	yaku.once('end', function () {
 		resp.write(paginationHtml);
-		if (!min)
-			render.write_page_end(resp, req.ident, false);
+		render.write_page_end(resp, req.ident, false, min);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -433,6 +434,8 @@ function (req, resp) {
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	if (!min)
 		render.write_board_head(resp, board, nav);
+	else
+		render.write_board_title(resp, board);
 	var paginationHtml = render.make_pagination_html(nav);
 	resp.write(paginationHtml);
 	resp.write('<hr class="sectionHr">\n');
@@ -442,8 +445,7 @@ function (req, resp) {
 	var self = this;
 	this.yaku.once('end', function () {
 		resp.write(paginationHtml);
-		if (!min)
-			render.write_page_end(resp, req.ident, false);
+		render.write_page_end(resp, req.ident, false, min);
 		resp.end();
 		self.finished();
 	});
@@ -587,12 +589,17 @@ function (req, resp) {
 			abbrev: this.abbrev,
 		});
 	}
+	else {
+		render.write_thread_title(resp, board, op, {
+			subject: this.subject,
+			abbrev: this.abbrev,
+		});
+	}
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
 	render.write_thread_html(this.reader, req, resp, opts);
 	var self = this;
 	this.reader.once('end', function () {
-		if (!min)
-			render.write_page_end(resp, req.ident, true);
+		render.write_page_end(resp, req.ident, true, min);
 		resp.end();
 		self.finished();
 	});
