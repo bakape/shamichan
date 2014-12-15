@@ -49,9 +49,6 @@ $NAV
 <script src="{{MEDIA_URL}}js/{{VENDOR_JS}}"></script>
 <!-- Bootstrap options model, so that it is available on model extraction -->
 <script>
-	var lso = localStorage.options;
-	if (lso)
-		_.extend(options, JSON.parse(lso));
 	_.defaults(options, {
 		lastn: {{THREAD_LAST_N}},
 		inlinefit: 'width',
