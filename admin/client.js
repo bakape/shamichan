@@ -286,9 +286,9 @@ var AddressView = Backbone.View.extend({
 				description = ' permanently?';
 			} else {
 				var i_array = input.split(' ');
-				var days = i_array[0];
-				var hours = i_array[1];
-				var minutes = i_array[2];
+				var days = parseInt(i_array[0], 10);
+				var hours = parseInt(i_array[1], 10);
+				var minutes = parseInt(i_array[2], 10);
 				sentence = (((days * 24) + hours) * 60 + minutes) * 60 * 1000;
 				description = ' for ' + days + ' days, ' + hours + ' hours and ' + minutes + '?';
 			}
