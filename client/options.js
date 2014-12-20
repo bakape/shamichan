@@ -62,6 +62,7 @@ optSpecs.push(option_theme);
 optSpecs.push(option_user_bg);
 optSpecs.push(option_user_bg_image);
 optSpecs.push(option_last_n);
+optSpecs.push(option_postUnloading);
 
 nashi.upload = !!$('<input type="file"/>').prop('disabled');
 
@@ -129,6 +130,17 @@ oneeSama.lastN = options.get('lastn');
 options.on('change:lastn', function (model, lastN) {
 	oneeSama.lastN = lastN;
 });
+
+/* KEEP THREAD LENGTH WITHIN LASTN */
+
+function option_postUnloading(toggle){}
+
+option_postUnloading.id = 'postUnloading';
+option_postUnloading.label = 'Dynamic Post Unloading';
+option_postUnloading.type = 'revcheckbox';
+option_postUnloading.tooltip = 'Improves thread responsiveness by unloading posts from the'+
+		' top of the thread, so that post count stays within the Last # value. Only applies to '+
+		'Last # enabled threads';
 
 /* THEMES */
 

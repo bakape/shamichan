@@ -40,6 +40,19 @@ function renderRelativeTime(){
 	}
 }
 
+// Keeps threads non-laggy by keeping displayed post count within lastN
+function unloadTopPost(){
+	var m = location.search.match(/last=(\d+)/);
+	if (!m || CurThread.get('replies').length <= parseInt(m[1], 10)+5)
+		return;
+	CurThread.get('replies').shift().trigger('removeSelf');
+	var omit = $('.omit').html();
+	var m = omit.match(/^(\d+)(.*)/);
+	if (m)
+		$('.omit').html(parseInt(m[1])+1+m[2]);
+	unloadTopPost();
+}
+
 var Section = Backbone.View.extend({
 	tagName: 'section',
 
@@ -108,6 +121,10 @@ var Article = Backbone.View.extend({
 			'removeSelf': this.bumplessRemove,
 			'add': renderRelativeTime,
 		});
+		if (!options.get('postUnloading') && CurThread)
+			this.listenTo(this.model, {
+				'add': unloadTopPost
+			});
 	},
 
 	render: function () {
