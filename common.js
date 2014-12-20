@@ -738,16 +738,8 @@ exports.reasonable_last_n = function (n) {
 	return n >= 5 && n <= 500;
 };
 
-OS.last_n_html = function (num) {
-	return action_link_html(num + '?last=' + this.lastN,
-			'Last&nbsp;' + this.lastN);
-};
-
 OS.expansion_links_html = function (num, omit) {
-	var html = ' &nbsp; ' + action_link_html(num, 'Expand');
-	if (omit > this.lastN)
-		html += ' ' + this.last_n_html(num);
-	return html;
+	return ' &nbsp; ' + action_link_html(num + '?last=' + this.lastN, 'Expand');
 };
 
 OS.atama = function (data) {

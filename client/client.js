@@ -97,14 +97,6 @@ function shift_replies(section) {
 		cull.remove();
 	}
 	$stat.text(abbrev_msg(omit, img));
-	if (omitsBefore <= THREAD_LAST_N && omit > THREAD_LAST_N) {
-		var $expand = section.find('header .act');
-		if ($expand.length == 1) {
-			var num = extract_num(section);
-			var $lastN = $(oneeSama.last_n_html(num));
-			$expand.after(' ', $lastN);
-		}
-	}
 }
 
 function spill_page() {
