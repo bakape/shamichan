@@ -105,7 +105,7 @@ var Article = Backbone.View.extend({
 			'change:hide': this.renderHide,
 			'change:image': this.renderImage,
 			'change:spoiler': this.renderSpoiler,
-			'removeSelf': this.remove,
+			'removeSelf': this.bumplessRemove,
 			'add': renderRelativeTime,
 		});
 	},
@@ -176,6 +176,14 @@ var Article = Backbone.View.extend({
 				width: sp.dims[0], height: sp.dims[1],
 			}));
 		}
+	},
+	// To not shift the scroll position on remove
+	bumplessRemove: function(){
+		var pos = $(window).scrollTop();
+		if (this.$el.offset().top < pos)
+			// Not sure why we need the extra 2 pixels, but we do
+			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
+		this.remove();
 	},
 });
 
