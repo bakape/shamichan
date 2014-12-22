@@ -46,7 +46,7 @@ function renderRelativeTime(){
 // Keeps threads non-laggy by keeping displayed post count within lastN
 function unloadTopPost(){
 	var m = location.search.match(/last=(\d+)/);
-	if (!m || CurThread.get('replies').length <= parseInt(m[1], 10)+5)
+	if (!m || $(mouseoverTarget).is('a, img, video') || CurThread.get('replies').length <= parseInt(m[1], 10)+5)
 		return;
 	CurThread.get('replies').shift().trigger('removeSelf');
 	var omit = $('.omit').html();
