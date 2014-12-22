@@ -1,6 +1,8 @@
 Real-time imageboard.
 MIT licensed.
 
+Note: The git master branch contains the development version of the board. For more stable revisions, please download the latest release.
+
 Setup:
 
 * Install dependencies listed below
