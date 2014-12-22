@@ -200,7 +200,7 @@ var Article = Backbone.View.extend({
 	// To not shift the scroll position on remove
 	bumplessRemove: function(){
 		var pos = $(window).scrollTop();
-		if (this.$el.offset().top < pos)
+		if (!at_bottom && this.$el.offset().top < pos)
 			// Not sure why we need the extra 2 pixels, but we do
 			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
 		this.remove();
