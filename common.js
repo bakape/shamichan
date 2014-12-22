@@ -852,11 +852,12 @@ function pluralize(n, noun) {
 }
 exports.pluralize = pluralize;
 
-exports.abbrev_msg = function (omit, img_omit) {
+function abbrev_msg(omit, img_omit) {
 	return omit + (omit==1 ? ' reply' : ' replies') + (img_omit
 		? ' and ' + pluralize(img_omit, 'image')
 		: '') + ' omitted.';
 };
+exports.abbrev_msg = abbrev_msg;
 
 exports.parse_name = function (name) {
 	var tripcode = '', secure = '';

@@ -49,10 +49,19 @@ function unloadTopPost(){
 	if (!m || $(mouseoverTarget).is('a, img, video') || CurThread.get('replies').length <= parseInt(m[1], 10)+5)
 		return;
 	CurThread.get('replies').shift().trigger('removeSelf');
-	var omit = $('.omit').html();
-	var m = omit.match(/^(\d+)(.*)/);
-	if (m)
+	var $omit = $('.omit');
+	if (!$omit.length){
+		$omit = $('\t<span/>', {'class': 'omit'}).text(abbrev_msg(1));
+		var url = THREAD;
+		if (!!location.hash)
+			url += location.hash;
+		$omit.append(action_link_html(url, 'See all')+'\n');
+		$('section>blockquote').after($omit);
+	}
+	else {
+		var m = $omit.html().match(/^(\d+)(.*)/);
 		$('.omit').html(parseInt(m[1])+1+m[2]);
+	}
 	unloadTopPost();
 }
 
