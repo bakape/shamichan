@@ -29,6 +29,8 @@ function parent_model($el) {
 	return Threads.lookup(num, op);
 }
 
+var isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/.test(navigator.userAgent);
+
 (function () {
 
 /* OPTIONS LIST */
@@ -36,31 +38,35 @@ optSpecs.push(option_inline_expansion);
 if (window.devicePixelRatio > 1)
 	optSpecs.push(option_high_res);
 optSpecs.push(option_thumbs);
-optSpecs.push(option_image_hover);
-optSpecs.push(option_webm_hover);
-optSpecs.push(option_autogif);
+if (!isMobile){
+	optSpecs.push(option_image_hover);
+	optSpecs.push(option_webm_hover);
+	optSpecs.push(option_autogif);
+}
 optSpecs.push(option_spoiler);
 optSpecs.push(option_backlinks);
 optSpecs.push(option_linkify);
 optSpecs.push(option_notification);
 optSpecs.push(option_relative_time);
 optSpecs.push(option_syncwatch);
-if (radioBanner)
+if (radioBanner && !isMobile)
 	optSpecs.push(option_now_playing);
 optSpecs.push(option_google);
 optSpecs.push(option_iqdb);
 optSpecs.push(option_saucenao);
 optSpecs.push(option_foolz);
 optSpecs.push(option_exhentai);
-if (illyaDance){
+if (illyaDance && !isMobile){
 	optSpecs.push(option_illya_dance);
 	optSpecs.push(option_illya_mute);
 }
 optSpecs.push(option_horizontal);
 optSpecs.push(option_reply_at_right);
 optSpecs.push(option_theme);
-optSpecs.push(option_user_bg);
-optSpecs.push(option_user_bg_image);
+if (!isMobile){
+	optSpecs.push(option_user_bg);
+	optSpecs.push(option_user_bg_image);
+}
 optSpecs.push(option_last_n);
 optSpecs.push(option_postUnloading);
 
@@ -338,9 +344,6 @@ function option_now_playing(toggle){
 	if (!toggle){
 		var info;
 		(function write_banner(){
-			// Disable on small screens, if no options are set
-			if (!localStorage.getItem('options') && $(window).width() < 700)
-				return;
 			// Query the r/a/dio API
 		    $.getJSON('https://r-a-d.io/api', function(data){
 				if (!data || !data.main)
@@ -369,8 +372,7 @@ function option_now_playing(toggle){
 option_now_playing.id = 'nowPlaying';
 option_now_playing.label = 'Now Playing Banner';
 option_now_playing.type = 'revcheckbox';
-option_now_playing.tooltip = 'Currently playing song on r/a/dio and other stream information in the top banner. '+
-	'Hidden by default on mobile.';
+option_now_playing.tooltip = 'Currently playing song on r/a/dio and other stream information in the top banner.';
 
 /* IMAGE SEARCH LINK TOGGLE */
 
