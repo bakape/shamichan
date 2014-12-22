@@ -464,6 +464,11 @@ $DOC.on('click', '.pagination input', function (event) {
 	location.href = $('link[rel=next]').prop('href');
 });
 
+var mouseoverTarget;
+$DOC.on('mouseover', function(e){
+	mouseoverTarget = e.target;
+});
+
 dispatcher[SYNCHRONIZE] = connSM.feeder('sync');
 dispatcher[INVALID] = connSM.feeder('invalid');
 

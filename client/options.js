@@ -589,9 +589,9 @@ var allow_webm_hover = false;
 function option_image_hover(toggle){
 	function preview(){
 		// Check if hovering over image or image is expanded by clicking
-		if (!$(target).is('img') || !!$(target).data('thumbSrc'))
+		if (!$(mouseoverTarget).is('img') || !!$(mouseoverTarget).data('thumbSrc'))
 			return fadeout();
-		var src = $(target).closest('a').attr('href');
+		var src = $(mouseoverTarget).closest('a').attr('href');
 		var oldSrc = $('#hover_overlay_image').attr('src');
 		// Do nothing, if still hovering the same image
 		if (src == oldSrc)
@@ -631,18 +631,9 @@ function option_image_hover(toggle){
 			}});
 		}
 	}
-	
-	// Currently hovered over element
-	var target;
-	
-	if (toggle){
-		$DOC
-			.on('mouseover', function(e){
-				target = e.target;
-			})
-			.on('mousemove', preview)
-			.on('click', 'img, video', fadeout);
-	}
+
+	if (toggle)
+		$DOC.on('mousemove', preview).on('click', 'img, video', fadeout);
 }
 
 option_image_hover.id = 'imageHover';
