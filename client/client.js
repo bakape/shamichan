@@ -527,11 +527,4 @@ dispatcher[COLLECTION_ADD] = function (msg, op) {
 	});
 
 	$('del').attr('onclick', 'void(0)');
-
-	// Android browsers have no easy way to return to the top, so link it
-	var android = /Android/.test(navigator.userAgent);
-	if (android) {
-		var t = $.parseHTML(action_link_html('#', 'Top'))[0];
-		$('#bottom').css('min-width', 'inherit').after('&nbsp;', t);
-	}
 })();
