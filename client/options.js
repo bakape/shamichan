@@ -342,21 +342,21 @@ option_syncwatch.tooltip = 'Transform #sw hash commands into syncronised duratio
 var now_playing_timer;
 function option_now_playing(toggle){
 	if (!toggle){
-		var info;
+		var song;
 		(function write_banner(){
 			// Query the r/a/dio API
-		    $.getJSON('https://r-a-d.io/api', function(data){
+			$.getJSON('https://r-a-d.io/api', function(data){
 				if (!data || !data.main)
 					return;
-		        var main = data.main;
-		        var new_info ='<a href="http://r-a-d.io/" target="_blank">' + '[' + main.listeners + '] ' +
-					main.dj.djname + '</a>' + '&nbsp;&nbsp;<a href="https://google.com/search?q=' + encodeURIComponent(main.np) +
-					'" target="_blank"><b>' + main.np + '</b></a>';
-				if (new_info != info){
-					info = new_info;
-		        	$('#banner_center').html(info);
-		       	}
-		    })
+				var main = data.main;
+				// No changes, no need to rewite banner
+				if (song == main.np)
+					return;
+				var info ='<a href="http://r-a-d.io/" target="_blank">' + '[' + main.listeners + '] ' +
+						main.dj.djname + '</a>' + '&nbsp;&nbsp;<a title="Click to google song" href="https://google.com/search?q=' +
+						encodeURIComponent(main.np) + '" target="_blank"><b>' + main.np + '</b></a>';
+				$('#banner_center').html(info);
+			})
 				// Schedule a new requests, even if the fetch fails
 				.always(function(){
 					now_playing_timer = setTimeout(write_banner, 10000);
