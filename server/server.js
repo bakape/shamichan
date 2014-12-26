@@ -1051,6 +1051,16 @@ dispatcher[common.EXECUTE_JS] = function (msg, client) {
 	return true;
 };
 
+// Online count
+hooks.hook('clientSynced', function(info, cb){
+	info.client.send([0, common.ONLINE_COUNT, Object.keys(STATE.clientsByIP).length]);
+	cb(null);
+});
+
+STATE.emitter.on('change:clientsByIP', function(){
+	okyaku.push([0, common.ONLINE_COUNT, Object.keys(STATE.clientsByIP).length]);
+});
+
 // Regex replacement filter
 function hot_filter(frag){
 	var filter = STATE.hot.FILTER;

@@ -472,6 +472,10 @@ $DOC.on('mouseover', function(e){
 dispatcher[SYNCHRONIZE] = connSM.feeder('sync');
 dispatcher[INVALID] = connSM.feeder('invalid');
 
+dispatcher[ONLINE_COUNT] = function(msg, op){
+	$('#onlineCount').text('['+msg[0]+']');
+};
+
 function lookup_model_path(path) {
 	var o = window;
 	if (!Array.isArray(path))
