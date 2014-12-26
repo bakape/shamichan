@@ -1,4 +1,6 @@
-var caps = require('./caps'),
+var _ = require('../lib/underscore'),
+	async = require('async'),
+	caps = require('./caps'),
     common = require('../common'),
     events = require('events'),
     Muggle = require('../etc').Muggle,
@@ -171,4 +173,14 @@ exports.scan_client_caps = function () {
 			}
 		});
 	}
+};
+
+// Push message to all clients
+exports.push = function(msg){
+	async.each(_.values(STATE.clients), function(client){
+		try {
+			client.send(msg);
+		}
+		catch(e){/* Client died, but we don't care */}
+	});
 };
