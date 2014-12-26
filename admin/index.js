@@ -43,7 +43,7 @@ function ban(m, mod, ip, key, type, sentence) {
 }
 
 okyaku.dispatcher[authcommon.BAN] = function (msg, client) {
-	if (!caps.can_administrate(client.ident))
+	if (!caps.can_moderate(client.ident))
 		return false;
 	var ip = msg[0];
 	var type = msg[1];

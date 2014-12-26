@@ -198,12 +198,11 @@ var AddressView = Backbone.View.extend({
 			type: 'button',
 			val: 'Sel All'
 		}));
-		if (IDENT.auth == 'Admin')
-			$el.append($('<input/>', {
-				"class": 'ban',
-				type: 'button',
-				val: 'Ban'
-			}));
+		$el.append($('<input/>', {
+			"class": 'ban',
+			type: 'button',
+			val: 'Ban'
+		}));
 
 		$el.append(
 			'<br>',
