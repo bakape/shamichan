@@ -133,6 +133,7 @@ Project map:
 	* __wscript__		Builds node tripcode module
 * __upkeep/__
 	* __backup.js__		Amazon S3 backup script
+	* __backup.sh__		MEGA backup script
 	* __clean.js__		Deletes archived thread images
 	* __poll.xsl__		Icecast configuration file
 	* __purge_bans.sh__	Removes all bans
