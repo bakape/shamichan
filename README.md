@@ -135,6 +135,7 @@ Project map:
 	* __backup.js__		Amazon S3 backup script
 	* __clean.js__		Deletes archived thread images
 	* __poll.xsl__		Icecast configuration file
+	* __purge_bans.sh__	Removes all bans
 	* __radio.js__		Icecast polling and now-playing-banner updater
 * __voice/__			Text-to-speach for Japanese
 	* __client.js__
