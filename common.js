@@ -532,7 +532,7 @@ var audioIndicator = "\u266B"; // musical note
 
 OS.gazou = function (info, toppu) {
 	var src, name, caption;
-	var spoilertoggle = (this.spoilToggle == true);
+	// TODO: Unify archive and normal thread caption logic
 	if (info.vint) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
 		var google = encodeURI('../outbound/g/' + info.vint);
@@ -567,7 +567,7 @@ OS.gazou = function (info, toppu) {
 		caption, safe(' <i>('),
 		info.audio ? (audioIndicator + ', ') : '',
 		info.length ? (info.length + ', ') : '',
-		(spoilertoggle && (info.spoiler || info.realthumb) ? '[Spoilered Image] ' : ''),
+		(this.spoilToggle && (info.spoiler || info.realthumb) ? '[Spoilered] ' : ''),
 		readable_filesize(info.size), ', ',
 		dims, (info.apng ? ', APNG' : ''),
 		this.full ? [', ', chibi(info.imgnm, img.src)] : '',
@@ -583,13 +583,12 @@ OS.gazou_img = function (info, toppu) {
 	var imgPaths = this.image_paths();
 	var m = info.src ? info.src.match(/.*.gif$/) : false;
 	var autogif = (this.autoGif == true);
-	var spoilertoggle = (this.spoilToggle == true);
 	if (!info.vint)
 		src = thumb = encodeURI(imgPaths.src + info.src);
 
 	var d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
-	if (info.spoiler && !spoilertoggle) {
+	if (info.spoiler && !this.spoilToggle) {
 		var sp = this.spoiler_info(info.spoiler, toppu);
 		thumb = sp.thumb;
 		tw = sp.dims[0];
@@ -613,7 +612,7 @@ OS.gazou_img = function (info, toppu) {
 			th *= 2;
 		}
 	}
-	else if (spoilertoggle && info.realthumb) {
+	else if (this.spoilToggle && info.realthumb) {
 		if (m && autogif) {
 			thumb = src;
 		} else {
