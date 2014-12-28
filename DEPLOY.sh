@@ -71,7 +71,7 @@ function install_ffmpeg(){
 		installer libvpx-dev
 		installer libvorbis-dev
 		installer yasm
-		su doushio -c -l compile_ffmpeg
+		su $DOUSHIO_USER -c -l compile_ffmpeg
 		cd ${DOUSHIO_HOME}/ffmpeg
 		make install
 	fi
@@ -115,10 +115,10 @@ installer pkg-config
 installer build-essential
 # Fetch doushio
 if [[ ! -a $DOUSHIO_DIR ]]; then
-	su doushio -c -l ask_repo
+	su $DOUSHIO_USER -c -l ask_repo
 fi
 # Initialise server folder for production
-su doushio -c -l initialise
+su $DOUSHIO_USER -c -l initialise
 if [[ -z `which ffmpeg` ]]; then
 	install_ffmpeg
 fi
@@ -127,7 +127,7 @@ if [[ ! -a /etc/init.d/doushio ]]; then
 fi
 # Test start doushio
 echo -e "\e[31mTesting doushio server. Doushio should now be accessible from http://your-IP-address:8000 and/or http://your-domain:8000. Use Ctrl+C to exit.\e[0m"
-su doushio -c -l "
+su $DOUSHIO_USER -c -l "
 	cd $DOUSHIO_DIR
 	node builder.js
 "
