@@ -480,7 +480,7 @@ function chibi(imgnm, src) {
 }
 
 OS.spoiler_info = function (index, toppu) {
-	var large = toppu || this.thumbStyle == 'large';
+	var large = toppu;
 	var hd = toppu || this.thumbStyle != 'small';
 	return {
 		thumb: encodeURI(mediaURL + 'kana/spoiler' + (hd ? '' : 's')
@@ -581,8 +581,7 @@ exports.thumbStyles = ['small', 'sharp', 'large', 'hide'];
 OS.gazou_img = function (info, toppu) {
 	var src, thumb;
 	var imgPaths = this.image_paths();
-	var m = info.src ? info.src.match(/.*.gif$/) : false;
-	var autogif = (this.autoGif == true);
+	var m = info.src ? /.gif$/.test(info.src) : false;
 	if (!info.vint)
 		src = thumb = encodeURI(imgPaths.src + info.src);
 
@@ -600,24 +599,10 @@ OS.gazou_img = function (info, toppu) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
 		thumb = imgPaths.vint + info.vint;
 	}
-	else if (this.thumbStyle != 'small' && info.mid) {
-		if (m && autogif) {
-			thumb = src;
-		}
-		else {
-			thumb = encodeURI(imgPaths.mid + info.mid);
-		}
-		if (!toppu && this.thumbStyle == 'large') {
-			tw *= 2;
-			th *= 2;
-		}
-	}
+	else if (this.thumbStyle != 'small' && info.mid)
+		thumb = (m && this.autogif) ? src : encodeURI(imgPaths.mid + info.mid);
 	else if (this.spoilToggle && info.realthumb) {
-		if (m && autogif) {
-			thumb = src;
-		} else {
-			thumb = encodeURI(imgPaths.thumb + info.realthumb);
-		}
+		thumb = (m && this.autogif) ? src : encodeURI(imgPaths.thumb + info.realthumb);
 		if (w > h) {
 			th = Math.round(tw/w*h);
 		}
@@ -627,9 +612,8 @@ OS.gazou_img = function (info, toppu) {
 	}
 	else if (info.thumb)
 		thumb = encodeURI(imgPaths.thumb + info.thumb);
-	else if (m && autogif && !info.spoiler) {
+	else if (m && this.autogif && !info.spoiler)
 		thumb = src;
-	}
 	else {
 		tw = w;
 		th = h;
