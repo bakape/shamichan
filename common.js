@@ -600,9 +600,9 @@ OS.gazou_img = function (info, toppu) {
 		thumb = imgPaths.vint + info.vint;
 	}
 	else if (this.thumbStyle != 'small' && info.mid)
-		thumb = (m && this.autogif) ? src : encodeURI(imgPaths.mid + info.mid);
+		thumb = (m && this.autoGif) ? src : encodeURI(imgPaths.mid + info.mid);
 	else if (this.spoilToggle && info.realthumb) {
-		thumb = (m && this.autogif) ? src : encodeURI(imgPaths.thumb + info.realthumb);
+		thumb = (m && this.autoGif) ? src : encodeURI(imgPaths.thumb + info.realthumb);
 		if (w > h) {
 			th = Math.round(tw/w*h);
 		}
@@ -612,7 +612,7 @@ OS.gazou_img = function (info, toppu) {
 	}
 	else if (info.thumb)
 		thumb = encodeURI(imgPaths.thumb + info.thumb);
-	else if (m && this.autogif && !info.spoiler)
+	else if (m && this.autoGif && !info.spoiler)
 		thumb = src;
 	else {
 		tw = w;
