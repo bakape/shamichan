@@ -411,6 +411,10 @@ with_dom(function () {
 			hook_up_address(model, $post);
 		});
 	});
+
+	if (/reported/.test(window.location.search))
+		enable_multi_selecting();
+
 });
 
 window.adminState = new Backbone.Model({
