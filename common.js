@@ -563,16 +563,18 @@ OS.gazou = function (info, toppu) {
 	var dims = info.dims[0] + 'x' + info.dims[1];
 
 	// We need da data for da client to walk da podium
-	var data = encodeURIComponent(JSON.stringify({
-		MD5: info.MD5,
-		SHA1: info.SHA1,
-		size: info.size,
-		dims: info.dims,
-		src: info.src,
-		thumb: info.thumb,
-		mid: info.mid,
-	}));
-	return [safe('<figure data-img="'), data,
+	if (typeof navigator === 'undefined'){
+		var data = encodeURIComponent(JSON.stringify({
+			MD5: info.MD5,
+			SHA1: info.SHA1,
+			size: info.size,
+			dims: info.dims,
+			src: info.src,
+			thumb: info.thumb,
+			mid: info.mid,
+		}));
+	}
+	return [safe('<figure data-img="'), data || '',
 		safe('"><figcaption>'),
 		caption, safe(' <i>('),
 		info.audio ? (audioIndicator + ', ') : '',
