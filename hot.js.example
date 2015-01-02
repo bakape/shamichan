@@ -54,6 +54,10 @@ this.hot = {
 		'#sw&#60;hours(optional)&#62;:&#60;minutes&#62;:&#60;seconds&#62;[+-]&#60;offset seconds(optional)&#62 - Syncronised duration timer',
 		'&emsp;A positive offset adds a countdown. A negative offset starts the timer n seconds into the episode.',
 		'<hr>',
+		'Key shortcuts:',
+		'Shift click an image to expand the next 5 images',
+		'Shift click a post, when thumbnails are hidden, to reveal thumbnail',
+		'<hr>',
 		'Source code repository: <a href="https://github.com/bakape/doushio" target="_blank">github.com/bakape/meguca</a>',
 	],
 // Word replacament filter. {pattern: /foo/, replacement: 'bar'} Pattern must not contain spaces or newlines

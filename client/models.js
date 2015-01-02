@@ -170,6 +170,10 @@ var Article = Backbone.View.extend({
 		return this;
 	},
 
+	events: {
+		'click': 'revealThumbnail',
+	},
+
 	renderBacklinks: function () {
 		if (options.get('nobacklinks'))
 			return this; /* ought to disconnect handler? */
@@ -238,6 +242,14 @@ var Article = Backbone.View.extend({
 			// Not sure why we need the extra 2 pixels, but we do
 			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
 		this.remove();
+	},
+	// Shift click post to reveal thumbnail, when hidden
+	revealThumbnail: function(e){
+		if (isMobile || options.get('thumbs') != 'hide' || !this.model.get('image') || !e.shiftKey)
+			return;
+		var revealed = this.thumbnailRevealed;
+		changeThumbnailStyle.bind(this)(null, revealed ? 'hide' : 'sharp');
+		this.thumbnailRevealed = !revealed;
 	},
 });
 

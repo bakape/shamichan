@@ -16,6 +16,8 @@ var postSM = new FSM('none');
 var TAB_ID = random_id();
 var CONN_ID;
 
+var isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/.test(navigator.userAgent);
+
 var oneeSama = new OneeSama(function (num) {
 	var frag;
 	if (this.links && num in this.links) {

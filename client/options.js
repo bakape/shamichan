@@ -29,8 +29,6 @@ function parent_model($el) {
 	return Threads.lookup(num, op);
 }
 
-var isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/.test(navigator.userAgent);
-
 (function () {
 
 /* OPTIONS LIST */
@@ -184,52 +182,16 @@ var revealSetup = false;
 function option_thumbs(type) {
 	$.cookie('thumb', type);
 	oneeSama.thumbStyle = type;
-	// TODO: reimplement in-model
-	/* if (hide && !revealSetup)
-		$DOC.on('click', 'article', reveal_thumbnail);
-	else if (!hide && revealSetup)
-		$DOC.off('click', 'article', reveal_thumbnail);
-	revealSetup = hide;*/
 }
+
 option_thumbs.id = 'thumbs';
 option_thumbs.label = 'Thumbnails';
 option_thumbs.type = thumbStyles;
 option_thumbs.tooltip = 'Set thumbnail type: ' +
 	'Small: 125x125, small file size; ' +
 	'Sharp: 125x125, more detailed; ' +
-	'Expand All: expand all images; ' +
 	'Hide: hide all images; ' +
 	'Requires page refresh';
-
-/* Alt-click a post to reveal its thumbnail if hidden */
-/*function reveal_thumbnail(event) {
-	if (!event.altKey)
-		return;
-	var $article = $(event.target);
-	var $img = $article.find('img');
-	if ($img.length) {
-		with_dom(function () { $img.show(); });
-		return false;
-	}
-
-	// look up the image info and make the thumbnail
-	var thread = Threads.get(extract_num($article.closest('section')));
-	if (!thread)
-		return;
-	var post = thread.get('replies').get(extract_num($article));
-	if (!post)
-		return;
-	var info = post.get('image');
-	if (!info)
-		return;
-
-	with_dom(function () {
-		var img = oneeSama.gazou_img(info, false);
-		var $img = $.parseHTML(flatten(img.html).join(''));
-		$article.find('figcaption').after($img);
-	});
-	return false;
-}*/
 
 /* REPLY AT RIGHT */
 
