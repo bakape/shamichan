@@ -27,15 +27,7 @@ function extract_post_model(el) {
 	var $fig = $el.children('figure');
 	if ($fig.length) {
 		var $cap = $fig.children('figcaption');
-		var image = {
-			MD5: $fig.data('md5'),
-			SHA1: $fig.data('sha1'),
-			size: $fig.data('size'),
-			dims: $fig.data('dims').split(','),
-			thumb: $fig.data('thumb'),
-			mid: $fig.data('mid'),
-			src: $fig.data('src'),
-		};
+		var image = JSON.parse(decodeURIComponent($fig.data('img')));
 
 		var $i = $cap.children('i');
 		var t = $i.length && $i[0].childNodes[0];
