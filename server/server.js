@@ -499,7 +499,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	if (lastN)
 		opts.abbrev = lastN + config.ABBREVIATED_REPLIES;
 
-	if (caps.can_administrate(req.ident) && 'showdead' in req.query)
+	if (caps.can_administrate(req.ident) && 'reported' in req.query)
 		opts.showDead = true;
 	reader.get_thread(board, num, opts);
 	reader.once('nomatch', function () {

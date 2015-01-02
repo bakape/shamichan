@@ -65,7 +65,7 @@ function report(reporter_ident, op, num, cb) {
 
 function send_report(reporter, board, op, num, body, html, cb) {
 	var noun;
-	var url = config.MAIL_THREAD_URL_BASE + board + '/' + op;
+	var url = config.MAIL_THREAD_URL_BASE + board + '/' + op + '?reported';
 	if (op == num) {
 		noun = 'Thread';
 	}
