@@ -549,7 +549,7 @@ OS.gazou = function (info, toppu) {
 		var exhentai = encodeURI('../outbound/exh/' + info.SHA1);
 		src = encodeURI(this.image_paths().src + info.src);
 		caption = [
-			new_tab_link(src, info.src), ' ',
+			new_tab_link(src, (this.thumbStyle == 'hide') ? '[Show]' : info.src, 'imageSrc'), ' ',
 			new_tab_link(google, 'G', 'imageSearch google', true),
 			new_tab_link(iqdb, 'Iq', 'imageSearch iqdb', true),
 			new_tab_link(saucenao, 'Sn', 'imageSearch saucenao', true),

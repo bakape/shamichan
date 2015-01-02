@@ -75,8 +75,11 @@ function changeThumbnailStyle(model, type){
 	var $fig = this.$el.children('figure');
 	var $a = $fig.children('a');
 	var $img = $a.children($img);
-	if (type == 'hide')
+	if (type == 'hide'){
+		$fig.find('.imageSrc').text('[Show]');
 		return $img.hide();
+	}
+	$fig.find('.imageSrc').text(img.src);
 	img = flatten(oneeSama.gazou_img(img, true).html).join('');
 	$a.remove();
 	$img = $(img);
@@ -101,6 +104,10 @@ var Section = Backbone.View.extend({
 		this.listenTo(options, {
 			'change:thumbs': changeThumbnailStyle,
 		});
+	},
+
+	events: {
+		'click >figure>figcaption>.imageSrc': 'revealThumbnail',
 	},
 
 	renderHide: function (model, hide) {
@@ -140,6 +147,16 @@ var Section = Backbone.View.extend({
 	removePost: function (model) {
 		model.trigger('removeSelf');
 	},
+	// Shift click post to reveal thumbnail, when hidden
+	revealThumbnail: function(e){
+		if (options.get('thumbs') != 'hide' || !this.model.get('image'))
+			return;
+		e.preventDefault();
+		var revealed = this.thumbnailRevealed;
+		changeThumbnailStyle.bind(this)(null, revealed ? 'hide' : 'sharp');
+		this.$el.children('figure').find('.imageSrc').text(revealed ? '[Show]' : '[Hide]');
+		this.thumbnailRevealed = !revealed;
+	},
 });
 
 /* XXX: Move into own views module once more substantial */
@@ -171,7 +188,7 @@ var Article = Backbone.View.extend({
 	},
 
 	events: {
-		'click': 'revealThumbnail',
+		'click .imageSrc': 'revealThumbnail',
 	},
 
 	renderBacklinks: function () {
@@ -243,12 +260,14 @@ var Article = Backbone.View.extend({
 			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
 		this.remove();
 	},
-	// Shift click post to reveal thumbnail, when hidden
+
 	revealThumbnail: function(e){
-		if (isMobile || options.get('thumbs') != 'hide' || !this.model.get('image') || !e.shiftKey)
+		if (options.get('thumbs') != 'hide' || !this.model.get('image'))
 			return;
+		e.preventDefault();
 		var revealed = this.thumbnailRevealed;
 		changeThumbnailStyle.bind(this)(null, revealed ? 'hide' : 'sharp');
+		this.$el.find('.imageSrc').text(revealed ? '[Show]' : '[Hide]');
 		this.thumbnailRevealed = !revealed;
 	},
 });

@@ -56,7 +56,6 @@ this.hot = {
 		'<hr>',
 		'Key shortcuts:',
 		'Shift click an image to expand the next 5 images',
-		'Shift click a post, when thumbnails are hidden, to reveal thumbnail',
 		'<hr>',
 		'Source code repository: <a href="https://github.com/bakape/doushio" target="_blank">github.com/bakape/meguca</a>',
 	],
