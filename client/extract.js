@@ -34,7 +34,7 @@ function extract_post_model(el) {
 			dims: $fig.data('dims').split(','),
 			thumb: $fig.data('thumb'),
 			mid: $fig.data('mid'),
-			src: $cap.children('a').text(),
+			src: $fig.data('src'),
 		};
 
 		var $i = $cap.children('i');

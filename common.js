@@ -568,6 +568,7 @@ OS.gazou = function (info, toppu) {
 		safe('" data-size="'), info.size,
 		safe('" data-dims="'), info.dims.join(),
 		safe('" data-thumb="'), info.thumb,
+		safe('" data-src="'), info.src,
 		info.mid ? safe('" data-mid="'+info.mid) : '',
 		safe('"><figcaption>'),
 		caption, safe(' <i>('),
