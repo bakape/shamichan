@@ -65,6 +65,25 @@ function unloadTopPost(){
 	unloadTopPost();
 }
 
+function changeThumbnailStyle(model, type){
+	var img = this.model.get('image');
+	// Shitty hack
+	// TODO: remove when options model is rewritten
+	oneeSama.thumbStyle = type;
+	if (!img)
+		return;
+	var $fig = this.$el.children('figure');
+	var $a = $fig.children('a');
+	var $img = $a.children($img);
+	if (type == 'hide')
+		return $img.hide();
+	img = flatten(oneeSama.gazou_img(img, true).html).join('');
+	$a.remove();
+	$img = $(img);
+	$img.appendTo($fig);
+	$img.show;
+}
+
 var Section = Backbone.View.extend({
 	tagName: 'section',
 
@@ -78,6 +97,9 @@ var Section = Backbone.View.extend({
 		});
 		this.listenTo(this.model.get('replies'), {
 			remove: this.removePost,
+		});
+		this.listenTo(options, {
+			'change:thumbs': changeThumbnailStyle,
 		});
 	},
 
@@ -132,6 +154,9 @@ var Article = Backbone.View.extend({
 			'change:spoiler': this.renderSpoiler,
 			'removeSelf': this.bumplessRemove,
 			'add': renderRelativeTime,
+		});
+		this.listenTo(options, {
+			'change:thumbs': changeThumbnailStyle,
 		});
 		if (!options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {
