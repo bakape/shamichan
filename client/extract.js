@@ -11,9 +11,9 @@ var mine = Mine.read_all();
 function extract_post_model(el) {
 	/* incomplete */
 	var info = {num: parseInt(el.id, 10)};
-	var $article = $(el);
+	var $el = $(el);
 	/* TODO: do these all in one pass */
-	var $header = $article.children('header');
+	var $header = $el.children('header');
 	var $b = $header.find('b');
 	if ($b.length)
 		info.name = $b.text();
@@ -24,29 +24,28 @@ function extract_post_model(el) {
 	if ($time.length)
 		info.time = new Date($time.attr('datetime')).getTime();
 
-	var $fig = $article.children('figure');
+	var $fig = $el.children('figure');
 	if ($fig.length) {
 		var $cap = $fig.children('figcaption');
 		var image = {
 			MD5: $fig.data('md5'),
 			SHA1: $fig.data('sha1'),
 			size: $fig.data('size'),
+			dims: $fig.data('dims').split(','),
+			thumb: $fig.data('thumb'),
+			mid: $fig.data('mid'),
 			src: $cap.children('a').text(),
 		};
 
 		var $i = $cap.children('i');
 		var t = $i.length && $i[0].childNodes[0];
 		t = t && t.data;
-		var m = /(\d+)x(\d+)/.exec(t);
-		if (m)
-			image.dims = [parseInt(m[1], 10), parseInt(m[2], 10)];
 		if (t && t.indexOf(audioIndicator) == 1)
 			image.audio = true;
 		var $nm = $i.find('a');
 		image.imgnm = $nm.attr('title') || $nm.text() || '';
 
 		var $img = $fig.find('img');
-		image.thumb = $img.attr('src');
 		if (image.dims && $img.length) {
 			image.dims.push($img.width(), $img.height());
 		}
@@ -56,7 +55,7 @@ function extract_post_model(el) {
 	info.body = ''; // TODO
 	if (mine[info.num])
 		info.mine = true;
-	return new Post(info);
+	return info;
 }
 
 function extract_thread_model(section) {
@@ -65,17 +64,13 @@ function extract_thread_model(section) {
 		var el = section.children[i];
 		if (el.tagName != 'ARTICLE')
 			continue;
-		var post = extract_post_model(el);
+		var post = new Post(extract_post_model(el));
 		new Article({model: post, el: el});
 		post.trigger('add');
 		replies.push(post);
 	}
-	var thread = new Thread({
-		num: parseInt(section.id, 10),
-		replies: new Replies(replies),
-	});
-	if (mine[thread.num])
-		thread.set('mine', true);
+	var thread = new Thread(extract_post_model(section));
+	thread.set('replies', new Replies(replies));
 	return thread;
 }
 
