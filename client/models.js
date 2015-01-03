@@ -72,7 +72,8 @@ function changeThumbnailStyle(model, type){
 	oneeSama.thumbStyle = type;
 	if (!img)
 		return;
-	var $fig = this.$el.children('figure');
+	var $el = this.$el;
+	var $fig = $el.children('figure');
 	var $a = $fig.children('a');
 	var $img = $a.children($img);
 	if (type == 'hide'){
@@ -80,7 +81,7 @@ function changeThumbnailStyle(model, type){
 		return $img.hide();
 	}
 	$fig.find('.imageSrc').text(img.src);
-	img = flatten(oneeSama.gazou_img(img, true).html).join('');
+	img = flatten(oneeSama.gazou_img(img, $el.is('section')).html).join('');
 	$a.remove();
 	$img = $(img);
 	$img.appendTo($fig);
