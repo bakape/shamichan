@@ -1076,10 +1076,8 @@ function hot_filter(frag){
 				var second = m[0].charAt(1);
 				if (/[A-Z]/.test(second))
 					f.r = f.r.toUpperCase();
-				else if (/[A-Z]/.test(first)){
-					console.log(f.r);
+				else if (/[A-Z]/.test(first))
 					f.r = f.r.charAt(0).toUpperCase()+f.r.slice(1);
-				}
 			}
 			return frag.replace(f.p, f.r);
 		}
