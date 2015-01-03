@@ -33,7 +33,6 @@ exports.CLIENT_DEPS = [
 	'curfew/client.js',
 	'report/client.js',
 	'time/client.js',
-	'voice/client.js',
 ];
 
 exports.SERVER_DEPS = [
@@ -73,7 +72,6 @@ exports.SERVER_DEPS = [
 	'server/web.js',
 	'time/server.js',
 	'tripcode/tripcode.cc',
-	'voice/server.js',
 ];
 
 // Changes to these only require a state.js reload

@@ -68,8 +68,6 @@ var config = {
 	ADMIN_ALIAS: 'Admin',
 	MOD_ALIAS: 'Moderator',
 
-	VOICE_PATH: 'voice',
-
 // A semi random set of hours each day will make all posts Anonymous
 	ANON_HOURS: false,
 // Accepted values are [1, 2, 3, 4, 6, 12, 24]

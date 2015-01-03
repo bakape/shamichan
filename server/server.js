@@ -42,8 +42,6 @@ try {
 		require('../report/server');
 } catch (e) {}
 require('../time/server');
-if (config.VOICE_PATH)
-	require('../voice/server');
 
 var RES = STATE.resources;
 

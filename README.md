@@ -138,9 +138,6 @@ Project map:
 	* __poll.xsl__		Icecast configuration file
 	* __purge_bans.sh__	Removes all bans
 	* __radio.js__		Icecast polling and now-playing-banner updater
-* __voice/__			Text-to-speach for Japanese
-	* __client.js__
-	* __server.js__
 * __www/__				This folder is to be served by a webserver on default configuration
 	* __css/__
 		* __ui/__					Global user interface assets
