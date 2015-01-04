@@ -67,15 +67,15 @@ function unloadTopPost(){
 
 function changeThumbnailStyle(model, type){
 	var img = this.model.get('image');
+	if (!img)
+		return;
 	// Shitty hack
 	// TODO: remove when options model is rewritten
 	oneeSama.thumbStyle = type;
-	if (!img)
-		return;
 	var $el = this.$el;
 	var $fig = $el.children('figure');
 	var $a = $fig.children('a');
-	var $img = $a.children($img);
+	var $img = $a.children('img');
 	if (type == 'hide'){
 		$fig.find('.imageSrc').text('[Show]');
 		return $img.hide();
@@ -86,6 +86,20 @@ function changeThumbnailStyle(model, type){
 	$img = $(img);
 	$img.appendTo($fig);
 	$img.show;
+}
+
+// Rerenders all thumbnails, which is pretty expensive, but good enough for now
+function toggleSpoiler(model, toggle){
+	var img = this.model.get('image');
+	if (!img || options.get('thumbs') == 'hide')
+		return;
+	oneeSama.spoilToggle = toggle;
+	var $el = this.$el;
+	var $fig = $el.children('figure');
+	var $a = $fig.children('a');
+	var $img = $(flatten(oneeSama.gazou_img(img, $el.is('section')).html).join(''));
+	$a.remove();
+	$img.appendTo($fig);
 }
 
 var Section = Backbone.View.extend({
@@ -104,6 +118,7 @@ var Section = Backbone.View.extend({
 		});
 		this.listenTo(options, {
 			'change:thumbs': changeThumbnailStyle,
+			'change:nospoilertoggle': toggleSpoiler,
 		});
 	},
 
@@ -175,6 +190,7 @@ var Article = Backbone.View.extend({
 		});
 		this.listenTo(options, {
 			'change:thumbs': changeThumbnailStyle,
+			'change:nospoilertoggle': toggleSpoiler,
 		});
 		if (!options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {
