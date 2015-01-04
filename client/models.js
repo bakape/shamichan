@@ -72,7 +72,11 @@ function changeThumbnailStyle(model, type){
 	// Shitty hack
 	// TODO: remove when options model is rewritten
 	oneeSama.thumbStyle = type;
-	var $el = this.$el;
+	rerenderThumbnail(this.$el, img, type);
+}
+
+// Rerenders all thumbnails, which is pretty expensive, but good enough for now
+function rerenderThumbnail($el, img, type){
 	var $fig = $el.children('figure');
 	var $a = $fig.children('a');
 	var $img = $a.children('img');
@@ -81,25 +85,26 @@ function changeThumbnailStyle(model, type){
 		return $img.hide();
 	}
 	$fig.find('.imageSrc').text(img.src);
-	img = flatten(oneeSama.gazou_img(img, $el.is('section')).html).join('');
+	$img = $(flatten(oneeSama.gazou_img(img, $el.is('section')).html).join(''));
 	$a.remove();
-	$img = $(img);
 	$img.appendTo($fig);
 	$img.show;
 }
 
-// Rerenders all thumbnails, which is pretty expensive, but good enough for now
 function toggleSpoiler(model, toggle){
 	var img = this.model.get('image');
 	if (!img || options.get('thumbs') == 'hide')
 		return;
 	oneeSama.spoilToggle = toggle;
-	var $el = this.$el;
-	var $fig = $el.children('figure');
-	var $a = $fig.children('a');
-	var $img = $(flatten(oneeSama.gazou_img(img, $el.is('section')).html).join(''));
-	$a.remove();
-	$img.appendTo($fig);
+	rerenderThumbnail(this.$el, img, null);
+}
+
+function toggleAutogif(model, toggle){
+	var img = this.model.get('image');
+	if (!img || !/\.gif$/i.test(img.src) || options.get('thumbs') == 'hide')
+		return;
+	oneeSama.autoGif = toggle;
+	rerenderThumbnail(this.$el, img, null);
 }
 
 var Section = Backbone.View.extend({
@@ -118,7 +123,8 @@ var Section = Backbone.View.extend({
 		});
 		this.listenTo(options, {
 			'change:thumbs': changeThumbnailStyle,
-			'change:nospoilertoggle': toggleSpoiler,
+			'change:noSpoilers': toggleSpoiler,
+			'change:autogif': toggleAutogif,
 		});
 	},
 
@@ -190,7 +196,8 @@ var Article = Backbone.View.extend({
 		});
 		this.listenTo(options, {
 			'change:thumbs': changeThumbnailStyle,
-			'change:nospoilertoggle': toggleSpoiler,
+			'change:noSpoilers': toggleSpoiler,
+			'change:autogif': toggleAutogif,
 		});
 		if (!options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {

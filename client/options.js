@@ -190,8 +190,7 @@ option_thumbs.type = thumbStyles;
 option_thumbs.tooltip = 'Set thumbnail type: ' +
 	'Small: 125x125, small file size; ' +
 	'Sharp: 125x125, more detailed; ' +
-	'Hide: hide all images; ' +
-	'Requires page refresh';
+	'Hide: hide all images;';
 
 /* REPLY AT RIGHT */
 
@@ -388,10 +387,10 @@ function option_spoiler(spoilertoggle) {
 	$.cookie('spoil',spoilertoggle, {path: '/'});
 	oneeSama.spoilToggle = spoilertoggle;
 }
-option_spoiler.id = 'nospoilertoggle';
+option_spoiler.id = 'noSpoilers';
 option_spoiler.label = 'Image Spoilers';
 option_spoiler.type = 'revcheckbox';
-option_spoiler.tooltip = "Don't spoiler images. Requires page refresh";
+option_spoiler.tooltip = "Don't spoiler images";
 
 /* Autogif TOGGLE */
 
@@ -400,10 +399,10 @@ function option_autogif(autogif) {
 	$.cookie('agif',autogif, {path: '/'});
 	oneeSama.autoGif = autogif;
 }
-option_autogif.id = 'autogiftoggle';
+option_autogif.id = 'autogif';
 option_autogif.label = 'Animated GIF Thumbnails';
 option_autogif.type = 'checkbox';
-option_autogif.tooltip = 'Animate GIF thumbnails. Requires page refresh';
+option_autogif.tooltip = 'Animate GIF thumbnails';
 
 /* NOTIFICATIONS */
 
