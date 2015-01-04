@@ -288,7 +288,7 @@ option_relative_time.tooltip = 'Relative post timestamps. Ex.: "1 hour ago." Req
 function option_syncwatch(toggle){}
 
 option_syncwatch.id = 'syncWatch';
-option_syncwatch.label = 'Enable Syncwatch';
+option_syncwatch.label = 'Syncwatch';
 option_syncwatch.type = 'checkbox';
 option_syncwatch.tooltip = 'Transform #sw hash commands into syncronised duration progress timers. Does not stop already running timers. Not recommended on mobile devices.';
 
