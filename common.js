@@ -603,21 +603,12 @@ OS.gazou_img = function (info, toppu) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
 		thumb = imgPaths.vint + info.vint;
 	}
-	else if (this.thumbStyle != 'small' && info.mid)
-		thumb = (m && this.autoGif) ? src : encodeURI(imgPaths.mid + info.mid);
-	else if (this.spoilToggle && info.realthumb) {
-		thumb = (m && this.autoGif) ? src : encodeURI(imgPaths.thumb + info.realthumb);
-		if (w > h) {
-			th = Math.round(tw/w*h);
-		}
-		else {
-			tw = Math.round(th/h*w);
-		}
-	}
+	else if (m && this.autoGif)
+		thumb = src;
+	else if (this.thumbStyle == 'sharp' && info.mid)
+		thumb = encodeURI(imgPaths.mid + info.mid);
 	else if (info.thumb)
 		thumb = encodeURI(imgPaths.thumb + info.thumb);
-	else if (m && this.autoGif && !info.spoiler)
-		thumb = src;
 	else {
 		tw = w;
 		th = h;
