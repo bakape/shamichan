@@ -106,6 +106,17 @@ function toggleAutogif(model, toggle){
 	rerenderThumbnail(this.$el, img, null);
 }
 
+// Reveal hidden thumbnail by clicking [Show]
+function revealThumbnail(e){
+	if (options.get('thumbs') != 'hide' || !this.model.get('image'))
+		return;
+	e.preventDefault();
+	var revealed = this.thumbnailRevealed;
+	changeThumbnailStyle.bind(this)(null, revealed ? 'hide' : 'sharp');
+	this.$el.children('figure').find('.imageSrc').text(revealed ? '[Show]' : '[Hide]');
+	this.thumbnailRevealed = !revealed;
+}
+
 var Section = Backbone.View.extend({
 	tagName: 'section',
 
@@ -168,15 +179,9 @@ var Section = Backbone.View.extend({
 	removePost: function (model) {
 		model.trigger('removeSelf');
 	},
-	// Shift click post to reveal thumbnail, when hidden
+	
 	revealThumbnail: function(e){
-		if (options.get('thumbs') != 'hide' || !this.model.get('image'))
-			return;
-		e.preventDefault();
-		var revealed = this.thumbnailRevealed;
-		changeThumbnailStyle.bind(this)(null, revealed ? 'hide' : 'sharp');
-		this.$el.children('figure').find('.imageSrc').text(revealed ? '[Show]' : '[Hide]');
-		this.thumbnailRevealed = !revealed;
+		revealThumbnail.bind(this)(e);	
 	},
 });
 
@@ -285,13 +290,7 @@ var Article = Backbone.View.extend({
 	},
 
 	revealThumbnail: function(e){
-		if (options.get('thumbs') != 'hide' || !this.model.get('image'))
-			return;
-		e.preventDefault();
-		var revealed = this.thumbnailRevealed;
-		changeThumbnailStyle.bind(this)(null, revealed ? 'hide' : 'sharp');
-		this.$el.find('.imageSrc').text(revealed ? '[Show]' : '[Hide]');
-		this.thumbnailRevealed = !revealed;
+		revealThumbnail.bind(this)(e);
 	},
 });
 
