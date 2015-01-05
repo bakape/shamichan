@@ -607,6 +607,14 @@ OS.gazou_img = function (info, toppu) {
 		thumb = src;
 	else if (this.thumbStyle == 'sharp' && info.mid)
 		thumb = encodeURI(imgPaths.mid + info.mid);
+	// For composite spoilers
+	else if (this.spoilToggle && info.realthumb) {
+		thumb = encodeURI(imgPaths.thumb + info.realthumb);
+		if (w > h)
+			th = Math.round(tw/w*h);
+		else
+			tw = Math.round(th/h*w);
+	}
 	else if (info.thumb)
 		thumb = encodeURI(imgPaths.thumb + info.thumb);
 	else {
