@@ -88,7 +88,6 @@ function rerenderThumbnail($el, img, type){
 	$img = $(flatten(oneeSama.gazou_img(img, $el.is('section')).html).join(''));
 	$a.remove();
 	$img.appendTo($fig);
-	$img.show;
 }
 
 function toggleSpoiler(model, toggle){
