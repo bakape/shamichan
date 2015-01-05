@@ -465,9 +465,11 @@ $DOC.on('click', '.pagination input', function (event) {
 });
 
 var mouseoverTarget;
-$DOC.on('mouseover', function(e){
-	mouseoverTarget = e.target;
-});
+if (!isMobile){
+	$DOC.on('mouseover', function(e){
+		mouseoverTarget = e.target;
+	});
+}
 
 dispatcher[SYNCHRONIZE] = connSM.feeder('sync');
 dispatcher[INVALID] = connSM.feeder('invalid');
