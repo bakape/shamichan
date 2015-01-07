@@ -114,8 +114,8 @@ function image_preview(info) {
 	var src;
 	if (info.mid)
 		src = mediaURL + '/mid/' + info.mid;
-	else if (info.realthumb || info.thumb)
-		src = mediaURL + '/thumb/' + (info.realthumb || info.thumb);
+	else if (info.thumb)
+		src = mediaURL + '/thumb/' + info.thumb;
 	else
 		return;
 

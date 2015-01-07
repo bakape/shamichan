@@ -827,9 +827,8 @@ function spoiler_pane_url(sp) {
 }
 
 function preload_panes() {
-	var all = spoilerImages.normal.concat(spoilerImages.trans);
-	for (var i = 0; i < all.length; i++)
-		new Image().src = spoiler_pane_url(all[i]);
+	for (var i = 0; i < spoilerImages.length; i++)
+		new Image().src = spoiler_pane_url(spoilerImages[i]);
 }
 
 (function () {

@@ -1023,7 +1023,7 @@ Y.hide_image = function (key, callback) {
 		return callback(Muggle("Read-only right now."));
 	var r = this.connect();
 	var hash;
-	var imgKeys = ['hideimg', 'hash', 'src', 'thumb', 'realthumb', 'mid'];
+	var imgKeys = ['hideimg', 'hash', 'src', 'thumb', 'mid'];
 	r.hmget(key, imgKeys, move_dead);
 
 	function move_dead(err, rs) {
@@ -1066,7 +1066,7 @@ Y.spoiler_image = function (threads, num, callback) {
 		callback(null, false);
 	var key = (op == num ? 'thread:' : 'post:') + num;
 	var self = this;
-	var spoilerKeys = ['src', 'spoiler', 'realthumb'];
+	var spoilerKeys = ['src', 'spoiler'];
 	r.hmget(key, spoilerKeys, function (err, info) {
 		if (err)
 			return callback(err);
@@ -1695,7 +1695,7 @@ F.get_all = function (limit) {
 			len = parseInt(len);
 			if (len > limit)
 				return cb(null);
-			var thumbKeys = ['thumb', 'realthumb', 'src'];
+			var thumbKeys = ['thumb', 'src'];
 			r.hmget(key, thumbKeys, function (err, rs) {
 				if (err)
 					cb(err);

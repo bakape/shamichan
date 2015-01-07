@@ -152,9 +152,7 @@ IU.parse_form = function (err, fields, files) {
 
 	var spoiler = parseInt(fields.spoiler, 10);
 	if (spoiler) {
-		var sps = config.SPOILER_IMAGES;
-		if (sps.normal.indexOf(spoiler) < 0
-				&& sps.trans.indexOf(spoiler) < 0)
+		if (config.SPOILER_IMAGES.indexOf(spoiler) < 0)
 			return this.failure(Muggle('Bad spoiler.'));
 		this.image.spoiler = spoiler;
 	}
@@ -294,11 +292,8 @@ IU.verify_webm = function (err, info) {
 		image.video = image.path;
 		image.path = info.still_path;
 		image.ext = '.png';
-		if (info.has_audio) {
+		if (info.has_audio)
 			image.audio = true;
-			if (config.WEBM_AUDIO_SPOILER)
-				image.spoiler = config.WEBM_AUDIO_SPOILER;
-		}
 		if (info.length)
 			image.length = info.length;
 
@@ -393,45 +388,20 @@ IU.deduped = function (err) {
 	}
 	this.fill_in_specs(specs, 'thumb');
 
-	// was a composited spoiler selected or forced?
-	if (image.audio && config.WEBM_AUDIO_SPOILER)
-		specs.comp = specs.overlay = true;
-	if (sp && config.SPOILER_IMAGES.trans.indexOf(sp) >= 0)
-		specs.comp = true;
-
 	var self = this;
-	if (specs.comp) {
-		this.status(specs.overlay ? 'Overlaying...' : 'Spoilering...');
-		var comp = composite_src(sp, this.pinky);
-		image.comp_path = image.path + '_comp';
-		specs.compDims = specs.overlay ? specs.dims : specs.bound;
-		image.dims = [w, h].concat(specs.compDims);
-		specs.composite = comp;
-		specs.compDest = image.comp_path;
-		async.parallel([
-			self.resize_and_track.bind(self, specs, false),
-			self.resize_and_track.bind(self, specs, true),
-		], function (err) {
-			if (err)
-				return self.failure(err);
+	image.dims = [w, h].concat(specs.dims);
+	if (!sp)
+		this.status('Thumbnailing...');
+
+	self.resize_and_track(specs, function (err) {
+		if (err)
+			return self.failure(err);
+
+		if (config.EXTRA_MID_THUMBNAILS)
+			self.middle_nail();
+		else
 			self.got_nails();
-		});
-	}
-	else {
-		image.dims = [w, h].concat(specs.dims);
-		if (!sp)
-			this.status('Thumbnailing...');
-
-		self.resize_and_track(specs, false, function (err) {
-			if (err)
-				return self.failure(err);
-
-			if (config.EXTRA_MID_THUMBNAILS)
-				self.middle_nail();
-			else
-				self.got_nails();
-		});
-	}
+	});
 };
 
 IU.middle_nail = function () {
@@ -442,7 +412,7 @@ IU.middle_nail = function () {
 	this.fill_in_specs(specs, 'mid');
 
 	var self = this;
-	this.resize_and_track(specs, false, function (err) {
+	this.resize_and_track(specs, function (err) {
 		if (err)
 			self.failure(err);
 		self.got_nails();
@@ -474,19 +444,9 @@ IU.got_nails = function () {
 		image.mid = time + '.jpg';
 		tmps.mid = base(image.mid_path);
 	}
-	if (image.comp_path) {
-		image.composite = time + 's' + image.spoiler + '.jpg';
-		tmps.comp = base(image.comp_path);
-		delete image.spoiler;
-	}
 
 	this.record_image(tmps);
 };
-
-function composite_src(spoiler, pinky) {
-	var file = 'spoiler' + (pinky ? 's' : '') + spoiler + '.png';
-	return path.join(config.SPOILER_DIR, file);
-}
 
 IU.read_image_filesize = function (callback) {
 	var self = this;
@@ -633,12 +593,7 @@ function setup_image_params(o) {
 	o.src += '[0]'; // just the first frame of the animation
 
 	o.dest = o.format + ':' + o.dest;
-	if (o.compDest)
-		o.compDest = o.format + ':' + o.compDest;
 	o.flatDims = o.dims[0] + 'x' + o.dims[1];
-	if (o.compDims)
-		o.compDims = o.compDims[0] + 'x' + o.compDims[1];
-
 	o.quality += ''; // coerce to string
 }
 
@@ -660,23 +615,19 @@ function build_im_args(o, args) {
 	return args;
 }
 
-function resize_image(o, comp, callback) {
+function resize_image(o, callback) {
 	var args = build_im_args(o);
-	var dims = comp ? o.compDims : o.flatDims;
-	var dest = comp ? o.compDest : o.dest;
-	// in the composite case, zoom to fit. otherwise, force new size
-	args.push('-resize', dims + (comp ? '^' : '!'));
+	var dims = o.flatDims;
+	var dest = o.dest;
+	// force new size
+	args.push('-resize', dims + '!');
 	// add background
 	args.push('-gamma', '2.2');
 	if (o.bg)
-		args.push('-background', o.bg);
-	if (comp)
-		args.push(o.composite, '-layers', 'flatten', '-extent', dims);
-	else if (o.bg)
-		args.push('-layers', 'mosaic', '+matte');
+		args.push('-background', o.bg, '-layers', 'mosaic', '+matte');
 	// disregard metadata, acquire artifacts
 	args.push('-strip');
-	if (o.bg || comp)
+	if (o.bg)
 		args.push('-quality', o.quality);
 	args.push(dest);
 	convert(args, o.src, function (err) {
@@ -701,9 +652,9 @@ function resize_image(o, comp, callback) {
 	});
 }
 
-IU.resize_and_track = function (o, comp, cb) {
+IU.resize_and_track = function (o, cb) {
 	var self = this;
-	resize_image(o, comp, function (err, fnm) {
+	resize_image(o, function (err, fnm) {
 		if (err)
 			return cb(err);
 
@@ -724,8 +675,6 @@ function image_files(image) {
 		files.push(image.thumb_path);
 	if (image.mid_path)
 		files.push(image.mid_path);
-	if (image.comp_path)
-		files.push(image.comp_path);
 	return files;
 }
 
@@ -770,10 +719,6 @@ IU.record_image = function (tmps) {
 		if (key in self.image)
 			view[key] = self.image[key];
 	});
-	if (this.image.composite) {
-		view.realthumb = view.thumb;
-		view.thumb = this.image.composite;
-	}
 	view.pinky = this.pinky;
 	var image_id = etc.random_id().toFixed();
 	var alloc = {image: view, tmps: tmps};

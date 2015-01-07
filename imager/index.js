@@ -11,7 +11,7 @@ var async = require('async'),
 exports.Onegai = db.Onegai;
 exports.config = config;
 
-var image_attrs = ('src thumb dims size MD5 SHA1 hash imgnm spoiler realthumb vint'
+var image_attrs = ('src thumb dims size MD5 SHA1 hash imgnm spoiler vint'
 		+ ' apng mid audio length').split(' ');
 exports.image_attrs = image_attrs;
 
@@ -74,20 +74,11 @@ hooks.hook_sync('inlinePost', function (info) {
 
 function publish(alloc, cb) {
 	var mvs = [];
-	var haveComp = alloc.tmps.comp && alloc.image.realthumb;
 	for (var kind in alloc.tmps) {
 		var src = media_path('tmp', alloc.tmps[kind]);
 
-		// both comp and thumb go in thumb/
-		var destDir = (kind == 'comp') ? 'thumb' : kind;
-		// hack for stupid thumb/realthumb business
+		var destDir = kind;
 		var destKey = kind;
-		if (haveComp) {
-			if (kind == 'thumb')
-				destKey = 'realthumb';
-			else if (kind == 'comp')
-				destKey = 'thumb';
-		}
 		var dest = media_path(destDir, alloc.image[destKey]);
 
 		mvs.push(etc.cpx.bind(etc, src, dest));
@@ -126,7 +117,6 @@ hooks.hook("buryImage", function (info, callback) {
 		mvs.push(mv.bind(null, path, t));
 	}
 	try_thumb('thumb', info.thumb);
-	try_thumb('thumb', info.realthumb);
 	try_thumb('mid', info.mid);
 	async.parallel(mvs, callback);
 	function mv(p, nm, cb) {

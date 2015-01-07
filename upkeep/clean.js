@@ -30,9 +30,6 @@ R.recycle_post = function (post, cb) {
 		toDelete.push(src);
 		src = imager.media_path('thumb', image.thumb);
 	}
-	if (image.realthumb) {
-		toDelete.push(imager.media_path('thumb', image.realthumb));
-	}
 	if (image.mid) {
 		toDelete.push(imager.media_path('mid', image.mid));
 	}

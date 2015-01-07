@@ -494,15 +494,13 @@ var spoilerImages = imagerConfig.SPOILER_IMAGES;
 
 function pick_spoiler(metaIndex) {
 	var imgs = spoilerImages;
-	var n = imgs.normal.length;
-	var count = n + imgs.trans.length;
+	var n = imgs.length;
 	var i;
 	if (metaIndex < 0)
-		i = Math.floor(Math.random() * count);
+		i = Math.floor(Math.random() * n);
 	else
-		i = metaIndex % count;
-	var spoiler = i < n ? imgs.normal[i] : imgs.trans[i - n];
-	return {index: spoiler, next: (i+1) % count};
+		i = metaIndex % n;
+	return {index: imgs[i], next: (i+1) % n};
 }
 exports.pick_spoiler = pick_spoiler;
 
@@ -571,7 +569,7 @@ OS.gazou = function (info, toppu) {
 		caption, safe(' <i>('),
 		info.audio ? (audioIndicator + ', ') : '',
 		info.length ? (info.length + ', ') : '',
-		(this.spoilToggle && (info.spoiler || info.realthumb) ? '[Spoilered] ' : ''),
+		(this.spoilToggle && info.spoiler ? '[Spoilered] ' : ''),
 		readable_filesize(info.size), ', ',
 		dims, (info.apng ? ', APNG' : ''),
 		this.full ? [', ', chibi(info.imgnm, img.src)] : '',
@@ -607,14 +605,6 @@ OS.gazou_img = function (info, toppu) {
 		thumb = src;
 	else if (this.thumbStyle == 'sharp' && info.mid)
 		thumb = encodeURI(imgPaths.mid + info.mid);
-	// For composite spoilers
-	else if (this.spoilToggle && info.realthumb) {
-		thumb = encodeURI(imgPaths.thumb + info.realthumb);
-		if (w > h)
-			th = Math.round(tw/w*h);
-		else
-			tw = Math.round(th/h*w);
-	}
 	else if (info.thumb)
 		thumb = encodeURI(imgPaths.thumb + info.thumb);
 	else {
