@@ -86,11 +86,6 @@ var Section = Backbone.View.extend({
 		});
 	},
 
-	events: {
-		'click >figure>figcaption>.imageSrc': 'revealThumbnail',
-		'click >figure>a': 'toggleImageExpansion',
-	},
-
 	renderHide: function (model, hide) {
 		this.$el.next('hr.sectionHr').andSelf().toggle(!hide);
 	},
@@ -128,27 +123,8 @@ var Section = Backbone.View.extend({
 	removePost: function (model) {
 		model.trigger('removeSelf');
 	},
-	
-	changeThumbnailStyle: function(model, type){
-		new Hidamari(this).style(type);
-	},
-	
-	toggleSpoiler: function(model, toggle){
-		new Hidamari(this).spoiler(toggle);
-	},
-	
-	toggleAutogif: function(model, toggle){
-		new Hidamari(this).autogif(toggle);
-	},
-	
-	revealThumbnail: function(e){
-		new Hidamari(this).reveal(e);	
-	},
-
-	toggleImageExpansion: function(e){
-		new Hidamari(this).toggleExpansion(e);
-	},
 });
+_.extend(Section.prototype, Hidamari);
 
 /* XXX: Move into own views module once more substantial */
 var Article = Backbone.View.extend({
@@ -178,11 +154,6 @@ var Article = Backbone.View.extend({
 		var html = oneeSama.mono(this.model.attributes);
 		this.setElement($($.parseHTML(html)).filter('article')[0]);
 		return this;
-	},
-
-	events: {
-		'click .imageSrc': 'revealThumbnail',
-		'click >figure>a': 'toggleImageExpansion',
 	},
 
 	renderBacklinks: function () {
@@ -254,27 +225,8 @@ var Article = Backbone.View.extend({
 			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
 		this.remove();
 	},
-
-	changeThumbnailStyle: function(model, type){
-		new Hidamari(this).style(type);
-	},
-	
-	toggleSpoiler: function(model, toggle){
-		new Hidamari(this).spoiler(toggle);
-	},
-	
-	toggleAutogif: function(model, toggle){
-		new Hidamari(this).autogif(toggle);
-	},
-	
-	revealThumbnail: function(e){
-		new Hidamari(this).reveal(e);	
-	},
-
-	toggleImageExpansion: function(e){
-		new Hidamari(this).toggleExpansion(e);
-	},
 });
+_.extend(Article.prototype, Hidamari);
 
 /* BATCH DOM UPDATE DEFER */
 
