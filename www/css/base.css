@@ -21,7 +21,7 @@ aside a {
 a, aside, .bfloat {
 	cursor: pointer;
 }
-#sync {
+#sync, #onlineCount {
 	cursor: auto;
 }
 article figure img {
