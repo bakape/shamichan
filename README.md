@@ -133,12 +133,13 @@ Project map:
 	* __tripcode.cc__	Compiles into tripcode hash utility on build
 	* __wscript__		Builds node tripcode module
 * __upkeep/__
-	* __backup.js__		Amazon S3 backup script
-	* __backup.sh__		MEGA backup script
-	* __clean.js__		Deletes archived thread images
-	* __poll.xsl__		Icecast configuration file
-	* __purge_bans.sh__	Removes all bans
-	* __radio.js__		Icecast polling and now-playing-banner updater
+	* __backup.js__				Amazon S3 backup script
+	* __backup.sh__				MEGA backup script
+	* __clean.js__				Deletes archived thread images
+	* __poll.xsl__				Icecast configuration file
+	* __purge_bans.sh__			Removes all bans
+	* __purge_mod_sessions.sh__	Closes all active moderator sessions
+	* __radio.js__				Icecast polling and now-playing-banner updater
 * __www/__				This folder is to be served by a webserver on default configuration
 	* __css/__
 		* __ui/__					Global user interface assets
