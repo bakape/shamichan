@@ -1,5 +1,5 @@
 var optSpecs = [];
-var nashi = {opts: []}, inputMinSize = 300, fullWidthExpansion = false;
+var nashi = {opts: []}, inputMinSize = 300;
 var shortcutKeys = {};
 
 function extract_num(q) {
@@ -33,8 +33,6 @@ function parent_model($el) {
 
 /* OPTIONS LIST */
 optSpecs.push(option_inline_expansion);
-if (window.devicePixelRatio > 1)
-	optSpecs.push(option_high_res);
 optSpecs.push(option_thumbs);
 if (!isMobile){
 	optSpecs.push(option_image_hover);
@@ -70,10 +68,8 @@ optSpecs.push(option_postUnloading);
 
 nashi.upload = !!$('<input type="file"/>').prop('disabled');
 
-if (window.screen && screen.width <= 320) {
+if (window.screen && screen.width <= 320)
 	inputMinSize = 50;
-	fullWidthExpansion = true;
-}
 
 function load_ident() {
 	try {
@@ -609,202 +605,14 @@ option_webm_hover.tooltip = 'Display WebM previews on hover. Requires Image Hove
 
 /* INLINE EXPANSION */
 
-function option_inline_expansion() {
-	/* TODO: do it live */
-}
+function option_inline_expansion() {}
+
 option_inline_expansion.id = 'inlinefit';
 option_inline_expansion.label = 'Expansion';
 option_inline_expansion.type = ['none', 'full', 'width', 'height', 'both'];
-option_inline_expansion.labels = ['no', 'full-size', 'fit to width',
+option_inline_expansion.labels = ['none', 'full-size', 'fit to width',
 		'fit to height', 'fit to both'];
 option_inline_expansion.tooltip = "Expand images inside the parent post and resize according to setting";
-
-function option_high_res() {
-}
-option_high_res.id = 'nohighres';
-option_high_res.label = 'High-res expansions';
-option_high_res.type = 'revcheckbox';
-option_high_res.tooltip = 'High resolution image expansion for high DPI screens';
-
-$DOC.on('mouseup', 'img, video', function (event) {
-	/* Bypass expansion for non-left mouse clicks */
-	if (options.get('inlinefit') != 'none' && event.which > 1) {
-		var img = $(this);
-		img.data('skipExpand', true);
-		setTimeout(function () {
-			img.removeData('skipExpand');
-		}, 100);
-	}
-});
-
-$DOC.on('click', 'img, video', function (event) {
-	if (options.get('inlinefit') != 'none') {
-		var $target = $(this);
-		if (!$target.data('skipExpand'))
-			toggle_expansion($target, event);
-	}
-});
-
-function toggle_expansion(img, event) {
-	var href = img.parent().attr('href');
-	if (/^\.\.\/outbound\//.test(href))
-		return;
-	if (event.metaKey)
-		return;
-	event.preventDefault();
-	var expand = !img.data('thumbSrc');
-	if (expand)
-		img.closest('figure').addClass('expanded');
-	else
-		img.closest('figure').removeClass('expanded');
-	var $imgs = img;
-	if (THREAD && (event.altKey || event.shiftKey)) {
-		var post = img.closest('article');
-		if (post.length)
-			$imgs = post.nextAll(':has(img):lt(4)').andSelf();
-		else
-			$imgs = img.closest('section').children(
-					':has(img):lt(5)');
-		$imgs = $imgs.find('img');
-	}
-
-	with_dom(function () {
-		$imgs.each(function () {
-			var $img = $(this);
-			if (expand)
-				expand_image($img);
-			else {
-				contract_image($img, event);
-				event = null; // de-zoom to first image only
-			}
-		});
-	});
-}
-
-function contract_image($img, event) {
-	var thumb = $img.data('thumbSrc');
-	if (!thumb)
-		return;
-	// try to keep the thumbnail in-window for large images
-	var h = $img.height();
-	var th = parseInt($img.data('thumbHeight'), 10);
-	if (event) {
-		var y = $img.offset().top, t = $(window).scrollTop();
-		if (y < t && th < h)
-			window.scrollBy(0, Math.max(th - h,
-					y - t - event.clientY + th/2));
-	}
-	if (fullWidthExpansion)
-		contract_full_width(parent_post($img));
-	$img.replaceWith($('<img>')
-			.width($img.data('thumbWidth')).height(th)
-			.attr('src', thumb));
-}
-
-function expand_image($img) {
-	if ($img.data('thumbSrc'))
-		return;
-	var a = $img.parent();
-	var href = a.attr('href');
-	if (!href)
-		return;
-	var video = /\.webm$/i.test(href);
-	var dims = a.siblings('figcaption').text().match(/(\d+)x(\d+)/);
-	if (!dims)
-		return;
-	var tw = $img.width(), th = $img.height();
-	var w = parseInt(dims[1], 10), h = parseInt(dims[2], 10);
-	// if this is a high-density screen, reduce image size appropriately
-	var r = window.devicePixelRatio;
-	if (!options.get('nohighres') && !video && r && r > 1) {
-		if (w/r > tw && h/r > th) {
-			w /= r;
-			h /= r;
-		}
-	}
-
-	$img.remove();
-	$img = $(video ? '<video>' : '<img>', {
-		src: href,
-		width: w, height: h,
-		data: {
-			thumbWidth: tw, thumbHeight: th,
-			thumbSrc: $img.attr('src'),
-		},
-		prop: video ? {autoplay: true, loop: true} : {},
-	}).appendTo(a);
-
-	var fit = options.get('inlinefit');
-	if (fit != 'none') {
-		var both = fit == 'both';
-		fit_to_window($img, w, h, both || fit == 'width',
-				both || fit == 'height');
-	}
-}
-
-function fit_to_window($img, w, h, widthFlag, heightFlag) {
-	var $post = parent_post($img);
-	var overX = 0, overY = 0;
-	if (widthFlag) {
-		var innerWidth = $(window).innerWidth();
-		var rect = $post.length && $post[0].getBoundingClientRect();
-		if ($post.is('article')) {
-			if (fullWidthExpansion && w > innerWidth) {
-				overX = w - innerWidth;
-				expand_full_width($img, $post, rect);
-				heightFlag = false;
-			}
-			else
-				overX = rect.right - innerWidth;
-		}
-		else if ($post.is('section'))
-			overX = w - (innerWidth - rect.left*2);
-	}
-	if (heightFlag) {
-		overY = h - ($(window).innerHeight() - 20);
-	}
-
-	var aspect = h / w;
-	var newW, newH;
-	if (overX > 0) {
-		newW = w - overX;
-		newH = aspect * newW;
-	}
-	if (overY > 0) {
-		// might have to fit to both width and height
-		var maybeH = h - overY;
-		if (!newH || maybeH < newH) {
-			newH = maybeH;
-			newW = newH / aspect;
-		}
-	}
-
-	if (newW > 50 && newH > 50)
-		$img.width(newW).height(newH);
-}
-
-function expand_full_width($img, $post, rect) {
-	var img = $img[0].getBoundingClientRect();
-	$img.css('margin-left', -img.left + 'px');
-	var over = rect.right - img.right;
-	if (over > 0) {
-		$post.css({
-			'margin-right': -over+'px',
-			'padding-right': 0,
-			'border-right': 'none',
-		});
-	}
-}
-
-function contract_full_width($post) {
-	if ($post.css('margin-right')[0] == '-') {
-		$post.css({
-			'margin-right': '',
-			'padding-right': '',
-			'border-right': '',
-		});
-	}
-}
 
 /* SHORTCUT KEYS */
 

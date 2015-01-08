@@ -65,58 +65,6 @@ function unloadTopPost(){
 	unloadTopPost();
 }
 
-function changeThumbnailStyle(model, type){
-	var img = this.model.get('image');
-	if (!img)
-		return;
-	// Shitty hack
-	// TODO: remove when options model is rewritten
-	oneeSama.thumbStyle = type;
-	rerenderThumbnail(this.$el, img, type);
-}
-
-// Rerenders all thumbnails, which is pretty expensive, but good enough for now
-function rerenderThumbnail($el, img, type){
-	var $fig = $el.children('figure');
-	var $a = $fig.children('a');
-	var $img = $a.children('img');
-	if (type == 'hide'){
-		$fig.find('.imageSrc').text('[Show]');
-		return $img.hide();
-	}
-	$fig.find('.imageSrc').text(img.src);
-	$img = $(flatten(oneeSama.gazou_img(img, $el.is('section')).html).join(''));
-	$a.remove();
-	$img.appendTo($fig);
-}
-
-function toggleSpoiler(model, toggle){
-	var img = this.model.get('image');
-	if (!img || options.get('thumbs') == 'hide')
-		return;
-	oneeSama.spoilToggle = toggle;
-	rerenderThumbnail(this.$el, img, null);
-}
-
-function toggleAutogif(model, toggle){
-	var img = this.model.get('image');
-	if (!img || !/\.gif$/i.test(img.src) || options.get('thumbs') == 'hide')
-		return;
-	oneeSama.autoGif = toggle;
-	rerenderThumbnail(this.$el, img, null);
-}
-
-// Reveal hidden thumbnail by clicking [Show]
-function revealThumbnail(e){
-	if (options.get('thumbs') != 'hide' || !this.model.get('image'))
-		return;
-	e.preventDefault();
-	var revealed = this.thumbnailRevealed;
-	changeThumbnailStyle.bind(this)(null, revealed ? 'hide' : 'sharp');
-	this.$el.children('figure').find('.imageSrc').text(revealed ? '[Show]' : '[Hide]');
-	this.thumbnailRevealed = !revealed;
-}
-
 var Section = Backbone.View.extend({
 	tagName: 'section',
 
@@ -132,14 +80,15 @@ var Section = Backbone.View.extend({
 			remove: this.removePost,
 		});
 		this.listenTo(options, {
-			'change:thumbs': changeThumbnailStyle,
-			'change:noSpoilers': toggleSpoiler,
-			'change:autogif': toggleAutogif,
+			'change:thumbs': this.changeThumbnailStyle,
+			'change:noSpoilers': this.toggleSpoiler,
+			'change:autogif': this.toggleAutogif,
 		});
 	},
 
 	events: {
 		'click >figure>figcaption>.imageSrc': 'revealThumbnail',
+		'click >figure>a': 'toggleImageExpansion',
 	},
 
 	renderHide: function (model, hide) {
@@ -180,8 +129,24 @@ var Section = Backbone.View.extend({
 		model.trigger('removeSelf');
 	},
 	
+	changeThumbnailStyle: function(model, type){
+		new Hidamari(this).style(type);
+	},
+	
+	toggleSpoiler: function(model, toggle){
+		new Hidamari(this).spoiler(toggle);
+	},
+	
+	toggleAutogif: function(model, toggle){
+		new Hidamari(this).autogif(toggle);
+	},
+	
 	revealThumbnail: function(e){
-		revealThumbnail.bind(this)(e);	
+		new Hidamari(this).reveal(e);	
+	},
+
+	toggleImageExpansion: function(e){
+		new Hidamari(this).toggleExpansion(e);
 	},
 });
 
@@ -199,9 +164,9 @@ var Article = Backbone.View.extend({
 			'add': renderRelativeTime,
 		});
 		this.listenTo(options, {
-			'change:thumbs': changeThumbnailStyle,
-			'change:noSpoilers': toggleSpoiler,
-			'change:autogif': toggleAutogif,
+			'change:thumbs': this.changeThumbnailStyle,
+			'change:noSpoilers': this.toggleSpoiler,
+			'change:autogif': this.toggleAutogif,
 		});
 		if (!options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {
@@ -217,6 +182,7 @@ var Article = Backbone.View.extend({
 
 	events: {
 		'click .imageSrc': 'revealThumbnail',
+		'click >figure>a': 'toggleImageExpansion',
 	},
 
 	renderBacklinks: function () {
@@ -289,8 +255,24 @@ var Article = Backbone.View.extend({
 		this.remove();
 	},
 
+	changeThumbnailStyle: function(model, type){
+		new Hidamari(this).style(type);
+	},
+	
+	toggleSpoiler: function(model, toggle){
+		new Hidamari(this).spoiler(toggle);
+	},
+	
+	toggleAutogif: function(model, toggle){
+		new Hidamari(this).autogif(toggle);
+	},
+	
 	revealThumbnail: function(e){
-		revealThumbnail.bind(this)(e);
+		new Hidamari(this).reveal(e);	
+	},
+
+	toggleImageExpansion: function(e){
+		new Hidamari(this).toggleExpansion(e);
 	},
 });
 

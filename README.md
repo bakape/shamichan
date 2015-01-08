@@ -74,6 +74,7 @@ Project map:
 	* __gravitas.js__	1000000th post congratulatory formatting
 	* __hide.js__		Hide user-set posts and threads
 	* __hover.js__		Hover post link preview and Youtube/Soundcload embed expansion
+	* __imager.js__		Thumbnail and image rendering
 	* __init.js__		Initialise client
 	* __memory.js__		LocalStorage memory controller
 	* __menu.js__		Post actions menu (the in the upper left corner)
