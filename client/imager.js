@@ -6,6 +6,11 @@ var Hidamari = {
 		'click >figure>a': 'toggleImageExpansion',
 	},
 	
+	renderSpoiler: function (model, spoiler) {
+		this.model.get('image').set('spoiler', spoiler);
+		this.renderThumbnail();
+	},
+
 	changeThumbnailStyle: function(model, type){
 		if (!this.model.has('image'))
 			return;
@@ -20,6 +25,8 @@ var Hidamari = {
 		var $fig = this.$el.children('figure');
 		var $a = $fig.children('a');
 		var $img = $a.children('img, video');
+		if (hide === undefined)
+			hide = options.get('thumbs') == 'hide';
 		if (hide){
 			$fig.find('.imageSrc').text('[Show]');
 			this.model.set({imageExpanded: false, thumbnailRevealed: false});

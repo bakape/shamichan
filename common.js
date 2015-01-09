@@ -571,7 +571,6 @@ OS.gazou = function (info, toppu) {
 		caption, safe(' <i>('),
 		info.audio ? (audioIndicator + ', ') : '',
 		info.length ? (info.length + ', ') : '',
-		(this.spoilToggle && info.spoiler ? '[Spoilered] ' : ''),
 		readable_filesize(info.size), ', ',
 		dims, (info.apng ? ', APNG' : ''),
 		this.full ? [', ', chibi(info.imgnm, img.src)] : '',

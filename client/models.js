@@ -94,21 +94,6 @@ var Section = Backbone.View.extend({
 		this.$el.toggleClass('locked', !!locked);
 	},
 
-	renderSpoiler: function (model, spoiler) {
-		var $img = this.$el.children('figure').find('img');
-		var $spoiltag = this.$el.children('figure').find('i');
-		var sp = oneeSama.spoiler_info(spoiler, true);
-		if (oneeSama.spoilToggle) {
-			$spoiltag.first().text($spoiltag.first().text().replace(/^\(/,"\(Spoiler, "));
-		}
-		else
-		{
-			$img.replaceWith($('<img>', {
-				src: sp.thumb, width: sp.dims[0], height: sp.dims[1],
-			}));
-		}
-	},
-
 	remove: function () {
 		var replies = this.model.get('replies');
 		replies.each(function (post) {
@@ -202,21 +187,6 @@ var Article = Backbone.View.extend({
 		}
 	},
 
-	renderSpoiler: function (model, spoiler) {
-		var $img = this.$('figure').find('img');
-		var $spoiltag = this.$el.children('figure').find('i');
-		var sp = oneeSama.spoiler_info(spoiler, false);
-		if (oneeSama.spoilToggle) {
-			$spoiltag.first().text($spoiltag.first().text().replace(/^\(/,"\(Spoiler, "));
-		}
-		else
-		{
-			$img.replaceWith($('<img>', {
-				src: sp.thumb,
-				width: sp.dims[0], height: sp.dims[1],
-			}));
-		}
-	},
 	// To not shift the scroll position on remove
 	bumplessRemove: function(){
 		var pos = $(window).scrollTop();
