@@ -1,13 +1,13 @@
 {
-	"name": "doushio",
-	"version": "0.3.1",
+	"name": "meguca",
+	"version": "0.6.0",
 	"description": "Real-time imageboard",
 	"keywords": ["realtime", "imageboard", "redis"],
-	"homepage": "https://github.com/lalcmellkmal/doushio",
+	"homepage": "https://github.com/bakape/doushio",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/lalcmellkmal/doushio.git"
+		"url": "https://github.com/bakape/meguca.git"
 	},
 	"scripts": {
 		"postinstall": "make",
