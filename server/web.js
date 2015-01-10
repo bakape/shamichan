@@ -68,7 +68,7 @@ function handle_request(req, resp) {
 	}
 
 	if (config.SERVE_STATIC_FILES) {
-		send(req, req.url).root('www/').pipe(resp);
+		send(req, req.url, {root: 'www/'}).pipe(resp);
 		return;
 	}
 	render_404(resp);

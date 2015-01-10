@@ -167,7 +167,7 @@ exports.serve_image = function (req, resp) {
 	var root = config.MEDIA_DIRS[m[1]];
 	if (!root)
 		return false;
-	require('send')(req, m[2]).root(root).pipe(resp);
+	require('send')(req, m[2], {root: root}).pipe(resp);
 	return true;
 };
 
