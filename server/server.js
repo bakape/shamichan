@@ -427,7 +427,6 @@ function (req, resp) {
 
 	var board = this.board;
 	var min = !!req.query.minimal;
-	console.log(min);
 	var nav = page_nav(this.threadCount, this.page, board == 'archive');
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	if (!min)
