@@ -130,7 +130,7 @@ function expand_templates(res) {
 		'js/ua-parser.min.js"></script>' : '';
 	
 	function tmpl(data) {
-		var expanded = _.template(data, templateVars);
+		var expanded = _.template(data)(templateVars);
 		return {tmpl: expanded.split(/\$[A-Z]+/),
 			src: expanded};
 	}

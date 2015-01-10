@@ -216,7 +216,7 @@ initialize: function (dest) {
 
 	var attrs = this.model.attributes;
 	var op = attrs.op;
-	var post = op ? $('<article/>') : this.options.thread;
+	var post = op ? $('<article/>') : dest.thread;
 	this.setElement(post[0]);
 
 	this.buffer = $('<p/>');
@@ -257,7 +257,7 @@ initialize: function (dest) {
 	this.imouto.hook('spoilerTag', touchable_spoiler_tag);
 	oneeSama.trigger('imouto', this.imouto);
 
-	shift_replies(this.options.thread);
+	shift_replies(dest.thread);
 	this.blockquote.append(this.buffer, this.line_buffer, this.$input);
 	post.append(this.meta, this.blockquote);
 	if (!op) {
@@ -270,7 +270,7 @@ initialize: function (dest) {
 	oneeSama.trigger('draft', post);
 
 	this.propagate_ident();
-	this.options.dest.replaceWith(post);
+	dest.dest.replaceWith(post);
 
 	this.$input.input(this.on_input.bind(this, undefined));
 
