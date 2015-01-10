@@ -37,7 +37,7 @@ function renderRelativeTime(){
 		var timer = setInterval(function(){
 			$time.html(oneeSama.relative_time(t, new Date().getTime()));
 		}, 60000);
-		this.listenTo(this.model, 'removeSelf', function(){
+		this.listenToOnce(this.model, 'removeSelf', function(){
 			clearInterval(timer);
 		});
 	}
