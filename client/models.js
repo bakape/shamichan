@@ -72,7 +72,7 @@ var Section = Backbone.View.extend({
 		this.listenTo(this.model, {
 			'change:hide': this.renderHide,
 			'change:locked': this.renderLocked,
-			'change:spoiler': this.renderSpoiler,
+			'spoiler': this.renderSpoiler,
 			destroy: this.remove,
 			'add': renderRelativeTime,
 		});
@@ -120,7 +120,7 @@ var Article = Backbone.View.extend({
 			'change:editing': this.renderEditing,
 			'change:hide': this.renderHide,
 			'change:image': this.renderImage,
-			'change:spoiler': this.renderSpoiler,
+			'spoiler': this.renderSpoiler,
 			'removeSelf': this.bumplessRemove,
 			'add': renderRelativeTime,
 		});

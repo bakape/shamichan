@@ -6,8 +6,8 @@ var Hidamari = {
 		'click >figure>a': 'toggleImageExpansion',
 	},
 	
-	renderSpoiler: function (model, spoiler) {
-		this.model.get('image').set('spoiler', spoiler);
+	renderSpoiler: function(spoiler){
+		this.model.get('image').spoiler = spoiler;
 		this.renderThumbnail();
 	},
 

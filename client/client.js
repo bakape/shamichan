@@ -413,7 +413,7 @@ dispatcher[SPOILER_IMAGES] = function (msg, op) {
 		var num = info[0];
 		var post = (num == op) ? thread : replies.get(num);
 		if (post)
-			post.set('spoiler', info[1]);
+			post.trigger('spoiler', info[1]);
 	});
 };
 
