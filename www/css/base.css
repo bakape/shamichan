@@ -85,6 +85,9 @@ figure img {
 	margin: 3px 20px 20px 0;
 	vertical-align: top;
 }
+.fullWidth {
+	margin-right: 0;
+}
 h1 {
 	margin-top: 2em;
 }
@@ -278,7 +281,7 @@ section > figure > a {
 	position: relative;
 	z-index: 5;
 }
-.hat, .expanded .hat {
+.hat {
 	background: url('ui/hat.png') no-repeat;
 	position: absolute;
 	left: 10px;
@@ -438,9 +441,6 @@ pre, .themed {
 	}
 	section {
 		margin: 0;
-	}
-	.expanded img {
-		margin-right: 0;
 	}
 	.scroll-lock {
 		margin-left: -3px;

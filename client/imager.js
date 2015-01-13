@@ -89,14 +89,18 @@ var Hidamari = {
 		var widthFlag = both || fit == 'width';
 		var heightFlag = both || fit == 'height';
 		var aspect = width / height;
+		var isArticle = this.$el.is('article');
+		var fullWidth, fullHeight;
 		if (widthFlag){
 			var maxWidth = $(window).width() -
-					this.$el.closest('section')[0].getBoundingClientRect().left*2;
-			if (this.$el.is('article'))
-				maxWidth -= this.$el.outerWidth() - this.$el.width();
+					// We have to go wider
+					this.$el.closest('section')[0].getBoundingClientRect().left* (isArticle ? 1 : 2);
+			if (isArticle)
+				maxWidth -= this.$el.outerWidth() - this.$el.width() + 5;
 			if (newWidth > maxWidth){
 				newWidth = maxWidth;
 				newHeight = newWidth / aspect;
+				fullWidth = true;
 			}
 		}
 		if (heightFlag){
@@ -104,16 +108,17 @@ var Hidamari = {
 			if (newHeight > maxHeight){
 				newHeight = maxHeight;
 				newWidth = newHeight * aspect;
+				fullHeight = true;
 			}
 		}
 		if (newWidth > 50 && newHeight > 50){
 			width = newWidth;
 			height = newHeight;
 		}
-		this.expandImage(width, height, video);
+		this.expandImage(width, height, video, fullWidth && !fullHeight);
 	},
 
-	expandImage: function(width, height, video){
+	expandImage: function(width, height, video, fullWidth){
 		var $fig = this.$el.children('figure');
 		$fig.find('img, video').replaceWith($('<'+ (video ? 'video' : 'img') +'/>', {
 			src: $fig.find('.imageSrc').attr('href'),
@@ -121,6 +126,8 @@ var Hidamari = {
 			height: height,
 			autoplay: true,
 			loop: true,
+			// Even wider
+			'class': fullWidth ? 'fullWidth' : '',
 		}));
 		this.model.set('imageExpanded', true);
 	},
