@@ -536,67 +536,66 @@ option_user_bg_image.tooltip = "Image to use as the background";
 
 /* IMAGE HOVER EXPANSION */
 
-var allow_webm_hover = false;
+function imageHoverPreview(){
+	// Check if hovering over image or image is expanded by clicking
+	var $target = $(mouseoverTarget);
+	if (!$target.is('img') || $target.hasClass('expanded'))
+		return fadeOutHoverOverlay();
+	var src = $target.closest('a').attr('href');
+	var isWebm = /\.webm/i.test(src);
+	// Check if WebM hover expansion is enabled
+	if (isWebm && !options.get('webmHover'))
+		return fadeOutHoverOverlay();
+	var $img  = $(isWebm ? '<video />' : '<img />', {
+		id: 'hover_overlay_image',
+		'src': src,
+		autoplay: true,
+		loop: true,
+	});
+	// Gracefully fade out previous image
+	var $old = $('#hover_overlay_image');
+	if ($old.length){
+		fadeOutHoverOverlay(function(){
+			fadeInHoverOverlay($img);
+		});
+	}
+	else
+		fadeInHoverOverlay($img);
+}
+
+function fadeInHoverOverlay($img){
+	$('#hover_overlay').append($img);
+	$('#hover_overlay_image').fadeIn({duration: 200});
+}
+
+function fadeOutHoverOverlay(cb){
+	// Do nothing, if image is already removed
+	var $img = $('#hover_overlay_image');
+	if (!$img.length)
+		return;
+	$img.fadeOut({duration: 200, complete: function(){
+		$img.remove();
+		// More responsive transition with fast pointer movements
+		imageHoverPreview();
+	}});
+	if (cb)
+		cb();
+}
 
 function option_image_hover(toggle){
-	function preview(){
-		// Check if hovering over image or image is expanded by clicking
-		if (!$(mouseoverTarget).is('img') || !!$(mouseoverTarget).data('thumbSrc'))
-			return fadeout();
-		var src = $(mouseoverTarget).closest('a').attr('href');
-		var oldSrc = $('#hover_overlay_image').attr('src');
-		// Do nothing, if still hovering the same image
-		if (src == oldSrc)
-			return;
-		var isWebm = /\.webm/i.test(src);
-		// Check if WebM hover expansion is enabled
-		if (isWebm && !allow_webm_hover)
-			return fadeout();
-		var tag =  isWebm ? '<video />' : '<img />';
-		var html  = $(tag, {
-			id: 'hover_overlay_image',
-			'src': src,
-			autoplay: '',
-			loop: ''
-		});
-		// Gracefully fade out previous image
-		if ($('#hover_overlay_image').length){
-				$('#hover_overlay_image').fadeOut({duration: 200, complete: function(){
-					fadein(html);
-			}});
-		} else
-			fadein(html);
-	}
-	
-	function fadein(html){
-		$('#hover_overlay').html(html);
-		$('#hover_overlay_image').fadeIn({duration: 200});
-	}
-	
-	function fadeout(){
-		// Do nothing, if image is already removed
-		if ($('#hover_overlay_image').length){
-			$('#hover_overlay_image').fadeOut({duration: 200, complete: function(){
-				$('#hover_overlay_image').remove();
-				// More responsive transition with fast pouinter movements
-				preview();
-			}});
-		}
-	}
-
 	if (toggle)
-		$DOC.on('mousemove', preview).on('click', 'img, video', fadeout);
+		$DOC.on('mouseover', imageHoverPreview).on('click', 'img, video', fadeOutHoverOverlay);
+	else
+		$DOC.off('mouseover', imageHoverPreview).off('click', 'img, video', fadeOutHoverOverlay);
 }
 
 option_image_hover.id = 'imageHover';
 option_image_hover.label = 'Image Hover Expansion';
 option_image_hover.type = 'checkbox';
-option_image_hover.tooltip = 'Display image previews on hover. Requires page refresh';
+option_image_hover.tooltip = 'Display image previews on hover';
 
 // Toogle hover expansion of WebM
-function option_webm_hover(toggle){
-	allow_webm_hover = toggle;
-}
+function option_webm_hover(){}
 
 option_webm_hover.id = 'webmHover';
 option_webm_hover.label = 'WebM Hover Expansion';
