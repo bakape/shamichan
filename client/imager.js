@@ -3,7 +3,7 @@
 var Hidamari = {
 	events: {
 		'click >figure>figcaption>.imageSrc': 'revealThumbnail',
-		'click >figure>a': 'toggleImageExpansion',
+		'click >figure>a': 'imageClicked',
 	},
 	
 	renderSpoiler: function(spoiler){
@@ -66,13 +66,24 @@ var Hidamari = {
 		this.renderThumbnail(revealed);
 		this.$el.children('figure').find('.imageSrc').text(revealed ? '[Show]' : '[Hide]');
 	},
-	
-	toggleImageExpansion: function(e){
-		var img = this.model.get('image');
-		var fit = options.get('inlinefit');
-		if (!img || fit == 'none' || e.which != 1)
+
+	imageClicked: function(e){
+		if (options.get('inlinefit') == 'none' || e.which != 1)
 			return;
 		e.preventDefault();
+		this.toggleImageExpansion();
+	},
+
+	autoExpandImage: function(){
+		if (massExpander.get('expand'))
+			this.toggleImageExpansion();
+	},
+
+	toggleImageExpansion: function(){
+		var img = this.model.get('image');
+		var fit = options.get('inlinefit');
+		if (!img || fit == 'none')
+			return;
 		if (this.model.get('imageExpanded') != true)
 			this.fitImage(img, fit);
 		else
@@ -132,3 +143,16 @@ var Hidamari = {
 		this.model.set('imageExpanded', true);
 	},
 };
+
+var Shell = Backbone.Model.extend();
+
+var massExpander = new Shell({
+	expand: false
+});
+
+$('#expandImages').click(function(e){
+	e.preventDefault();
+	var expand = massExpander.get('expand');
+	$(e.target).text((expand ? 'Expand' : 'Contract')+' Images');
+	massExpander.set('expand', !expand);
+});

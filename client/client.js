@@ -188,6 +188,8 @@ dispatcher[INSERT_POST] = function (msg) {
 			// don't bump due to replies while posting (!)
 			bump = false;
 		}
+		else
+			article.autoExpandImage();
 		if (bump) {
 			$hr = $section.next();
 			$section.detach();

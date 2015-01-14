@@ -84,6 +84,9 @@ var Section = Backbone.View.extend({
 			'change:noSpoilers': this.toggleSpoiler,
 			'change:autogif': this.toggleAutogif,
 		});
+		this.listenTo(massExpander, {
+			'change:expand': this.toggleImageExpansion,
+		});
 	},
 
 	renderHide: function (model, hide) {
@@ -128,6 +131,9 @@ var Article = Backbone.View.extend({
 			'change:thumbs': this.changeThumbnailStyle,
 			'change:noSpoilers': this.toggleSpoiler,
 			'change:autogif': this.toggleAutogif,
+		});
+		this.listenTo(massExpander, {
+			'change:expand': this.toggleImageExpansion,
 		});
 		if (!options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {
@@ -184,6 +190,7 @@ var Article = Backbone.View.extend({
 
 			if (focus)
 				focus.focus();
+			this.autoExpandImage();
 		}
 	},
 
