@@ -85,7 +85,7 @@ var Section = Backbone.View.extend({
 			'change:autogif': this.toggleAutogif,
 		});
 		this.listenTo(massExpander, {
-			'change:expand': this.autoExpandImage,
+			'change:expand': this.toggleImageExpansion,
 		});
 	},
 
@@ -133,7 +133,7 @@ var Article = Backbone.View.extend({
 			'change:autogif': this.toggleAutogif,
 		});
 		this.listenTo(massExpander, {
-			'change:expand': this.autoExpandImage,
+			'change:expand': this.toggleImageExpansion,
 		});
 		if (!options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {

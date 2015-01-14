@@ -75,18 +75,22 @@ var Hidamari = {
 	},
 
 	autoExpandImage: function(){
-		var img = this.model.get('image');
-		// Don't autoexpand WebM
-		if (img && massExpander.get('expand') && !/\.webm$/i.test(img.src))
-			this.toggleImageExpansion();
+		var expand = massExpander.get('expand');
+		if (expand)
+			this.toggleImageExpansion(null, expand);
 	},
 
-	toggleImageExpansion: function(){
+	toggleImageExpansion: function(model, expand){
 		var img = this.model.get('image');
 		var fit = options.get('inlinefit');
 		if (!img || fit == 'none')
 			return;
-		if (this.model.get('imageExpanded') != true)
+		// Don't autoexpand webm with Expand All enabled
+		if (expand !== undefined && /\.webm$/i.test(img.src))
+			return;
+		if  (expand != false)
+			expand = expand || this.model.get('imageExpanded') != true;
+		if (expand)
 			this.fitImage(img, fit);
 		else
 			this.renderThumbnail(options.get('thumbs') == 'hide', true);
