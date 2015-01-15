@@ -1,4 +1,4 @@
-var _ = require('./lib/underscore'),
+var _ = require('underscore'),
     async = require('async'),
     cache = require('./server/state').dbCache,
     caps = require('./server/caps'),

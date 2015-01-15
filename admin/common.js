@@ -1,4 +1,4 @@
-var _ = require('../lib/underscore');
+var _ = require('underscore');
 var config = require('../config');
 var common = require('../common');
 

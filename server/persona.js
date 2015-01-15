@@ -1,4 +1,4 @@
-var _ = require('../lib/underscore'),
+var _ = require('underscore'),
     config = require('../config'),
     crypto = require('crypto'),
     formidable = require('formidable'),

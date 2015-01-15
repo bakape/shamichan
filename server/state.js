@@ -1,4 +1,4 @@
-var _ = require('../lib/underscore'),
+var _ = require('underscore'),
     async = require('async'),
     config = require('../config'),
     crypto = require('crypto'),
@@ -67,10 +67,9 @@ function reload_scripts(cb) {
 		catch (e) {
 			return cb(e);
 		}
-		if (!js || !js.vendor || !js.client)
+		if (!js || !js.client)
 			return cb('Bad state/scripts.json.');
 
-		HOT.VENDOR_JS = js.vendor;
 		HOT.CLIENT_JS = js.client;
 
 		var modJs = path.join('state', js.mod);

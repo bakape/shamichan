@@ -33,8 +33,6 @@ function lookup_config(dictName, key) {
 var config_re = /\b(\w+onfig)\.(\w+)\b/;
 
 function convert(file, cb) {
-	if (/^lib\//.test(file))
-		return cb("lib/* should be in VENDOR_DEPS");
 	if (/^config\.js/.test(file))
 		return cb("config.js shouldn't be in client");
 

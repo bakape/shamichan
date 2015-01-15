@@ -1,4 +1,4 @@
-var _ = require('../lib/underscore'),
+var _ = require('underscore'),
 	async = require('async'),
 	caps = require('./caps'),
     common = require('../common'),

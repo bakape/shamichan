@@ -1,4 +1,4 @@
-var _ = require('../lib/underscore'),
+var _ = require('underscore'),
     authcommon = require('./common'),
     caps = require('../server/caps'),
     common = require('../common'),

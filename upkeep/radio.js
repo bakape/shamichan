@@ -2,7 +2,7 @@
  * Configure here, and install poll.xsl into icecast http root.
  */
 
-var _ = require('../lib/underscore'),
+var _ = require('underscore'),
     caps = require('../server/caps'),
     db = require('../db'),
     expat = require('node-expat'),

@@ -78,25 +78,6 @@ function make_hashing_stream(cb) {
 	});
 }
 
-function build_vendor_js(cb) {
-	var deps = require('./deps');
-	make_hashing_stream(function (err, stream) {
-		if (err)
-			return cb(err);
-		async.eachSeries(deps.VENDOR_DEPS, function (file, cb) {
-			fs.readFile(file, function (err, buf) {
-				if (err)
-					return cb(err);
-				stream.write(buf, cb);
-			});
-		}, function (err) {
-			if (err)
-				return cb(err);
-			end_and_move_js(stream, PUBLIC_JS, 'vendor', cb);
-		});
-	});
-}
-
 function build_client_js(cb) {
 	var deps = require('./deps');
 	make_hashing_stream(function (err, stream) {
@@ -140,7 +121,6 @@ function rebuild(cb) {
 	etc.checked_mkdir('.build', function (err) {
 		if (err) return cb(err);
 		async.parallel({
-			vendor: build_vendor_js,
 			client: build_client_js,
 			mod: build_mod_client_js,
 		}, function (err, hashes) {

@@ -2,7 +2,7 @@ var opts = require('./opts');
 if (require.main == module) opts.parse_args();
 opts.load_defaults();
 
-var _ = require('../lib/underscore'),
+var _ = require('underscore'),
     amusement = require('./amusement'),
     async = require('async'),
     caps = require('./caps'),

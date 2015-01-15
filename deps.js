@@ -1,16 +1,5 @@
 var config = require('./config');
 
-var minJs = config.DEBUG ? '.js' : '.min.js';
-
-exports.VENDOR_DEPS = [
-	'lib/es5-shim' + minJs,
-	'lib/yepnope' + minJs,
-	'lib/underscore' + minJs,
-	'lib/backbone' + minJs,
-	'lib/oninput' + minJs,
-	'lib/jquery.cookie' + minJs,
-];
-
 exports.CLIENT_DEPS = [
 	'common.js',
 	'client/init.js',
@@ -52,7 +41,7 @@ exports.SERVER_DEPS = [
 	'pipeline.js',
 	'tail.js',
 	'curfew/server.js',
-	'lib/underscore.js',
+	'node_modules/underscore/underscore.js',
 	'imager/config.js',
 	'imager/daemon.js',
 	'imager/db.js',
