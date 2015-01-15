@@ -175,10 +175,6 @@ function make_board_meta(board, info) {
 	var bits = [];
 	if (info.cur_page >= 0)
 		bits.push(['index', '.']);
-	if (info.prev_page)
-		bits.push(['prev', info.prev_page]);
-	if (info.next_page)
-		bits.push(['next', info.next_page]);
 	return make_link_rels(board, bits);
 }
 
@@ -190,7 +186,7 @@ function make_thread_meta(board, num, abbrev) {
 }
 
 exports.make_pagination_html = function (info) {
-	var bits = ['<nav class="pagination">'], cur = info.cur_page;
+	var bits = ['<nav class="pagination act">'], cur = info.cur_page;
 	if (cur >= 0)
 		bits.push('<a href=".">live</a>');
 	else
@@ -206,8 +202,6 @@ exports.make_pagination_html = function (info) {
 		else
 			bits.push('<strong>' + i + '</strong>');
 	}
-	if (info.next_page)
-		bits.push(' <input type="button" value="Next">');
 	bits.push('</nav>');
 	return bits.join('');
 };

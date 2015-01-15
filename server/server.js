@@ -185,17 +185,8 @@ function image_status(client_id, status) {
 function page_nav(thread_count, cur_page, ascending) {
 	var page_count = Math.ceil(thread_count / config.THREADS_PER_PAGE);
 	page_count = Math.max(page_count, 1);
-	var info = {pages: page_count, threads: thread_count,
+	return {pages: page_count, threads: thread_count,
 		cur_page: cur_page, ascending: ascending};
-
-	var step = ascending ? -1 : 1;
-	var next = Math.max(cur_page, 0) + step;
-	if (next >= 0 && next < page_count)
-		info.next_page = 'page' + next;
-	var prev = cur_page - step;
-	if (prev >= 0 && prev < page_count)
-		info.prev_page = 'page' + prev;
-	return info;
 }
 
 function write_gzip_head(req, resp, headers) {
