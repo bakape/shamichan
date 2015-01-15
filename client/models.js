@@ -30,19 +30,6 @@ function model_link(key) {
 	};
 }
 
-function renderRelativeTime(){
-	if (oneeSama.rTime){
-		var $time = this.$el.find('time').first();
-		var t = date_from_time_el($time[0]).getTime();
-		var timer = setInterval(function(){
-			$time.html(oneeSama.relative_time(t, new Date().getTime()));
-		}, 60000);
-		this.listenToOnce(this.model, 'removeSelf', function(){
-			clearInterval(timer);
-		});
-	}
-}
-
 // Keeps threads non-laggy by keeping displayed post count within lastN
 function unloadTopPost(){
 	var m = location.search.match(/last=(\d+)/);
@@ -65,6 +52,32 @@ function unloadTopPost(){
 	unloadTopPost();
 }
 
+var PostMixins = {
+	commonListeners: function(){
+		this.listenTo(options, {
+			'change:thumbs': this.changeThumbnailStyle,
+			'change:noSpoilers': this.toggleSpoiler,
+			'change:autogif': this.toggleAutogif,
+		});
+		this.listenTo(massExpander, {
+			'change:expand': this.toggleImageExpansion,
+		});
+	},
+
+	renderRelativeTime: function(){
+		if (oneeSama.rTime){
+			var $time = this.$el.find('time').first();
+			var t = date_from_time_el($time[0]).getTime();
+			var timer = setInterval(function(){
+				$time.html(oneeSama.relative_time(t, new Date().getTime()));
+			}, 60000);
+			this.listenToOnce(this.model, 'removeSelf', function(){
+				clearInterval(timer);
+			});
+		}
+	},
+};
+
 var Section = Backbone.View.extend({
 	tagName: 'section',
 
@@ -74,19 +87,12 @@ var Section = Backbone.View.extend({
 			'change:locked': this.renderLocked,
 			'spoiler': this.renderSpoiler,
 			destroy: this.remove,
-			'add': renderRelativeTime,
+			'add': this.renderRelativeTime,
 		});
 		this.listenTo(this.model.get('replies'), {
 			remove: this.removePost,
 		});
-		this.listenTo(options, {
-			'change:thumbs': this.changeThumbnailStyle,
-			'change:noSpoilers': this.toggleSpoiler,
-			'change:autogif': this.toggleAutogif,
-		});
-		this.listenTo(massExpander, {
-			'change:expand': this.toggleImageExpansion,
-		});
+		this.commonListeners();
 	},
 
 	renderHide: function (model, hide) {
@@ -112,7 +118,7 @@ var Section = Backbone.View.extend({
 		model.trigger('removeSelf');
 	},
 });
-_.extend(Section.prototype, Hidamari);
+_.extend(Section.prototype, Hidamari, PostMixins);
 
 /* XXX: Move into own views module once more substantial */
 var Article = Backbone.View.extend({
@@ -125,16 +131,9 @@ var Article = Backbone.View.extend({
 			'change:image': this.renderImage,
 			'spoiler': this.renderSpoiler,
 			'removeSelf': this.bumplessRemove,
-			'add': renderRelativeTime,
+			'add': this.renderRelativeTime,
 		});
-		this.listenTo(options, {
-			'change:thumbs': this.changeThumbnailStyle,
-			'change:noSpoilers': this.toggleSpoiler,
-			'change:autogif': this.toggleAutogif,
-		});
-		this.listenTo(massExpander, {
-			'change:expand': this.toggleImageExpansion,
-		});
+		this.commonListeners();
 		if (!options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {
 				'add': unloadTopPost
@@ -203,7 +202,7 @@ var Article = Backbone.View.extend({
 		this.remove();
 	},
 });
-_.extend(Article.prototype, Hidamari);
+_.extend(Article.prototype, Hidamari, PostMixins);
 
 /* BATCH DOM UPDATE DEFER */
 
