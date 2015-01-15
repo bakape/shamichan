@@ -71,6 +71,4 @@ this.hot = {
 // Local http://loli.dance/ implementation. Videos not included in git tree.
 // Place illya.webm and illya.mp4 into the www directory, if you want this.
 	ILLYA_DANCE: false,
-// Append "Posted from Browser~" to posts
-	POSTED_FROM: false,
 };

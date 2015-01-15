@@ -124,9 +124,6 @@ function expand_templates(res) {
 	// Format info banner
 	if (templateVars.BANNERINFO != '')
 		templateVars.BANNERINFO = '&nbsp;&nbsp;&nbsp;[' + templateVars.BANNERINFO + ']';
-	// Source ua-parser in templates
-	templateVars.UAPARSER = templateVars.POSTED_FROM ?  '<script src="' + imager.MEDIA_URL +
-		'js/ua-parser.min.js"></script>' : '';
 	
 	function tmpl(data) {
 		var expanded = _.template(data)(templateVars);

@@ -648,9 +648,6 @@ finish: function () {
 	if (this.model.get('num')) {
 		this.flush_pending();
 		this.commit(this.$input.val());
-		// Append "Posted from <browser>~"
-		if (postedFrom && UAMessage)
-			this.commit(UAMessage);
 		this.$input.remove();
 		this.submit.remove();
 		if (this.uploadForm)

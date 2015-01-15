@@ -38,14 +38,3 @@ if ($.cookie('rTime') == 'true')
 // Pass linkification setting to client-side oneeSama
 if ($.cookie('linkify') == 'true')
 	oneeSama.eLinkify = true;
-var UAMessage;
-// Query user agent with ua-parser
-if (postedFrom){
-	(function(){
-		var common = '\n\nPosted from ';
-		var browser = new UAParser().getResult().browser;
-		if (!browser || !browser.name)
-			return UAMessage = common + 'NSA headquarters~';
-		UAMessage = common + browser.name + '~';
-	})();
-}
