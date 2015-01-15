@@ -57,6 +57,9 @@ function FSM(start) {
 }
 exports.FSM = FSM;
 
+// Runing on the server
+var isNode = (typeof navigator === 'undefined');
+
 FSM.prototype.clone = function () {
 	var second = new FSM(this.state);
 	second.spec = this.spec;
@@ -527,8 +530,6 @@ OS.image_paths = function () {
 };
 
 var audioIndicator = "\u266B"; // musical note
-// Runing on the server
-var isNode = (typeof navigator === 'undefined');
 
 OS.gazou = function (info, toppu) {
 	var src, name, caption;
@@ -563,10 +564,7 @@ OS.gazou = function (info, toppu) {
 	var dims = info.dims[0] + 'x' + info.dims[1];
 
 	// We need da data for da client to walk da podium
-	if (isNode)
-		var data = encodeURIComponent(JSON.stringify(info));
-
-	return [safe('<figure data-img="'), data || '',
+	return [safe('<figure data-img="'), (isNode ? escapeJSON(info) : ''),
 		safe('"><figcaption>'),
 		caption, safe(' <i>('),
 		info.audio ? (audioIndicator + ', ') : '',
@@ -623,6 +621,14 @@ OS.gazou_img = function (info, toppu) {
 	img = new_tab_link(src, safe(img));
 	return {html: img, src: src};
 };
+
+function escapeJSON(obj){
+	return encodeURIComponent(JSON.stringify(obj));
+}
+
+function catchJSON(string){
+	return JSON.parse(decodeURIComponent(string));
+}
 
 function readable_filesize(size) {
 	/* Dealt with it. */
@@ -763,7 +769,8 @@ OS.monogatari = function (data, toppu) {
 	var tale = {header: this.atama(data)};
 	this.dice = data.dice;
 	var body = this.karada(data.body);
-	tale.body = [safe('<blockquote>'), body, safe('</blockquote>')];
+	tale.body = [safe('<blockquote'+ (isNode ? ' data-body="'+ escapeJSON(data.body) +'"' : '') +'>'),
+			body, safe('</blockquote>')];
 	if (data.num == MILLION) {
 		tale.body.splice(1, 0, safe('<script>window.gravitas=true;</script>'));
 	}

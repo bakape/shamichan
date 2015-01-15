@@ -25,26 +25,15 @@ function extract_post_model(el) {
 		info.time = new Date($time.attr('datetime')).getTime();
 
 	var $fig = $el.children('figure');
-	if ($fig.length) {
-		var $cap = $fig.children('figcaption');
-		var image = JSON.parse(decodeURIComponent($fig.data('img')));
-
-		var $i = $cap.children('i');
-		var t = $i.length && $i[0].childNodes[0];
-		t = t && t.data;
-		if (t && t.indexOf(audioIndicator) == 1)
-			image.audio = true;
-		var $nm = $i.find('a');
-		image.imgnm = $nm.attr('title') || $nm.text() || '';
-
-		var $img = $fig.find('img');
-		if (image.dims && $img.length) {
-			image.dims.push($img.width(), $img.height());
-		}
-
-		info.image = image;
+	if ($fig.length){
+		info.image = catchJSON($fig.data('img'));
+		// These data attributes are only used for model extraction
+		// Clean up for a prettier DOM
+		$fig.removeAttr('data-img');
 	}
-	info.body = ''; // TODO
+	var $block = $el.children('blockquote');
+	info.body = catchJSON($block.data('body'));
+	$block.removeAttr('data-body');
 	if (mine[info.num])
 		info.mine = true;
 	return info;
