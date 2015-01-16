@@ -16,7 +16,7 @@ function show_toolbox() {
 		{name: 'Mnemonics', kind: 12},
 	];
 	if (IDENT.auth == 'Admin')
-		specs.push({name: 'Panel', kind: 'panel'});
+		specs.push({name: 'Fun', kind: 13}, {name: 'Panel', kind: 'panel'});
 	var $toolbox = $('<div/>', {id: 'toolbox', "class": 'mod'});
 
 	$selectButton = $('<input />', {
@@ -61,10 +61,10 @@ function tool_action(event) {
 	var kind = $button.data('kind');
 	if (kind == 'panel')
 		return toggle_panel();
-	
 	if (kind == 12)
 		return options.set('noMnemonics', !options.get('noMnemonics'));
-	
+	if (kind == 13)
+		return fun();
 	/* On a thread page there's only one thread to lock, so... */
 	if (kind == 11 && THREAD && !ids.length)
 		ids = [THREAD];
