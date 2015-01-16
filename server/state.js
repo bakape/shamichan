@@ -27,6 +27,8 @@ exports.dbCache = {
 
 var HOT = exports.hot = {};
 var RES = exports.resources = {};
+exports.clientHot = {};
+exports.clientHotHash = '';
 exports.clients = {};
 exports.clientsByIP = {};
 
@@ -49,6 +51,13 @@ function reload_hot_config(cb) {
 			delete HOT[k];
 		});
 		_.extend(HOT, hot.hot);
+		// Pass some of the hot variables to the client
+		var clientHot = exports.clientHot = {
+			RADIO_BANNER: HOT.RADIO_BANNER,
+			ILLYA_DANCE: HOT.ILLYA_DANCE,
+		};
+		HOT.CLIENT_HOT = JSON.stringify(clientHot);
+		exports.clientHotHash = HOT.CLIENT_HOT_HASH = crypto.createHash('MD5').update(HOT.CLIENT_HOT).digest('hex');
 		read_exits('exits.txt', function () {
 			hooks.trigger('reloadHot', HOT, cb);
 		});
@@ -118,11 +127,11 @@ function expand_templates(res) {
 	_.extend(templateVars, imager);
 	_.extend(templateVars, config);
 	_.extend(templateVars, make_navigation_html());
-	_.extend(templateVars, build_schedule(templateVars.SCHEDULE));
-	_.extend(templateVars, build_FAQ(templateVars.FAQ));
-	
+
+	templateVars.SCHEDULE = build_schedule(templateVars.SCHEDULE);
+	templateVars.FAQ = build_FAQ(templateVars.FAQ);
 	// Format info banner
-	if (templateVars.BANNERINFO != '')
+	if (templateVars.BANNERINFO)
 		templateVars.BANNERINFO = '&nbsp;&nbsp;&nbsp;[' + templateVars.BANNERINFO + ']';
 	
 	function tmpl(data) {
@@ -163,7 +172,7 @@ function build_schedule(schedule){
 		table.push('<tr><td><b>[', day + ']&nbsp;&nbsp;', '</b></td><td>', plans + '&nbsp;&nbsp;', '</td><td>', time, '</td></tr>');
 	}
 	table.push('</table>');
-	return {SCHEDULE: table.join('')};
+	return table.join('');
 }
 
 function build_FAQ(faq){
@@ -173,7 +182,7 @@ function build_FAQ(faq){
 			list.push('<li>' + entry + '</li>');
 		});
 		list.push('<ul>');
-		return {FAQ: list.join('')};
+		return list.join('');
 	}
 }
 
@@ -186,7 +195,7 @@ exports.reload_hot_resources = function (cb) {
 		reload_scripts,
 		reload_resources,
 	], cb);
-}
+};
 
 function make_navigation_html() {
 	if (!HOT.INTER_BOARD_NAVIGATION)

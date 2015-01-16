@@ -46,7 +46,7 @@ fs.readFile(file, 'UTF-8', function (err, fullFile) {
 		var line = lines[j];
 		if (/^var\s+DEFINES\s*=\s*exports\s*;\s*$/.test(line))
 			continue;
-		if (/^var\s+(\w+onfig|common|_)\s*=\s*require.*$/.test(line))
+		if (/^var\s+(\w+onfig|common|_|HOT)\s*=\s*require.*$/.test(line))
 			continue;
 		m = line.match(/^DEFINES\.(\w+)\s*=\s*(.+);$/);
 		if (m) {

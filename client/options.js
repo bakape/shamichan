@@ -45,14 +45,14 @@ optSpecs.push(option_linkify);
 optSpecs.push(option_notification);
 optSpecs.push(option_relative_time);
 optSpecs.push(option_syncwatch);
-if (radioBanner && !isMobile)
+if (HOT.RADIO_BANNER && !isMobile)
 	optSpecs.push(option_now_playing);
 optSpecs.push(option_google);
 optSpecs.push(option_iqdb);
 optSpecs.push(option_saucenao);
 optSpecs.push(option_foolz);
 optSpecs.push(option_exhentai);
-if (illyaDance && !isMobile){
+if (HOT.ILLYA_DANCE && !isMobile){
 	optSpecs.push(option_illya_dance);
 	optSpecs.push(option_illya_mute);
 }
