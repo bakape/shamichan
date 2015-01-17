@@ -64,6 +64,19 @@ this.hot = {
 		{p: /\/moe\//ig, r: 'Disneyland'},
 	],
 
+// Array of answers for the 8ball random wisdom dispenser. To use, type "#8ball" in post, followed by enter.
+        EIGHT_BALL: [
+                "Yes",
+                "No",
+                "Maybe",
+                "It can't be helped",
+                "Hell yeah, motherfucker",
+                'Ara ara~',
+                "That is my fetish",
+                "Anta baka?",
+        ],
+
+
 /* Silly little things you probably should not care about */
 
 // Display r/a/dio now playing information in the top banner

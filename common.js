@@ -1,4 +1,5 @@
 var config = require('./config');
+var HOT = require('./server/state').hot;
 var imagerConfig = require('./imager/config');
 var DEFINES = exports;
 DEFINES.INVALID = 0;
@@ -302,7 +303,7 @@ OS.iku = function (token, to) {
 		break;
 	}
 	state[0] = to;
-}
+};
 
 OS.fragment = function (frag) {
 	var chunks = frag.split(/(\[\/?spoiler\])/i);
@@ -346,13 +347,11 @@ OS.karada = function (body) {
 var dice_re = /(#flip|#8ball|#pyu|#pcount|#sw(?:\d{1,2}:)?\d{1,2}:\d{1,2}(?:[+-]\d+)?|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
 exports.dice_re = dice_re;
 
-var eight_ball = config.EIGHT_BALL;
-
 function parse_dice(frag) {
 	if (frag == '#flip')
 		return {n: 1, faces: 2};
     if (frag == '#8ball')
-        return {n: 1, faces: eight_ball.length};
+        return {n: 1, faces: HOT.EIGHT_BALL.length};
 	// Increment counter
 	if (frag == '#pyu')
 		return {pyu: 'increment'};
@@ -390,7 +389,7 @@ function readable_dice(bit, d) {
 	if (bit == '#flip')
 		return '#flip (' + (d[1] == 2) + ')';
     if (bit == '#8ball')
-        return '#8ball (' + eight_ball[d[1]- 1] + ')';
+        return '#8ball (' + HOT.EIGHT_BALL[d[1]- 1] + ')';
 	if (bit == '#pyu')
 		return '#pyu(' + d + ')';
 	if (bit == '#pcount')

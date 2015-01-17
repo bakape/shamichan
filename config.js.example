@@ -77,21 +77,6 @@ var config = {
 // Set to integer from 0 to 10. 0 disables random name hours. 10 makes all anon hours random name hours
 	RANDOM_NAME_HOURS: 0, 
 
-// Array of answers for the 8ball random wisdom dispenser. To use, type "#8ball" in post, followed by enter. 
-	EIGHT_BALL: [
-		"Yes",
-		"No",
-		"Maybe",
-		"You're waifu a shit",
-		"It can't be helped",
-		"Lurk more",
-		"Google it",
-		"Hell yeah, motherfucker",
-		'Ara ara',
-		"That is my fetish",
-		"Anta baka?",
-	],
-
 /* Silly little things you probably should not care about */
 
 // Automatic name assignement by parsing https://r-a-d.io/api
