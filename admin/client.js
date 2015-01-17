@@ -15,8 +15,11 @@ function show_toolbox() {
 		{name: 'Lock', kind: 11},
 		{name: 'Mnemonics', kind: 12},
 	];
-	if (IDENT.auth == 'Admin')
-		specs.push({name: 'Fun', kind: 13}, {name: 'Panel', kind: 'panel'});
+	if (IDENT.auth == 'Admin'){
+		if (THREAD)
+			specs.push({name: 'Fun', kind: 13});
+		specs.push({name: 'Panel', kind: 'panel'});
+	}
 	var $toolbox = $('<div/>', {id: 'toolbox', "class": 'mod'});
 
 	$selectButton = $('<input />', {
