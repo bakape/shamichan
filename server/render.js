@@ -37,7 +37,7 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		oneeSama.thumbStyle = cookies.thumb;
 	var lastN = cookies.lastn && parseInt(cookies.lastn, 10);
 	if (!lastN || !common.reasonable_last_n(lastN))
-		lastN = config.THREAD_LAST_N;
+		lastN = STATE.hot.THREAD_LAST_N;
 	oneeSama.lastN = lastN;
 
 	var hidden = {};

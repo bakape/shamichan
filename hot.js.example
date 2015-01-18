@@ -18,12 +18,21 @@ this.hot = {
 		graveyard: 'mawaru',
 		staff: 'moe',
 	},
-
 // Bump this version whenever you change base.css
 	BASE_CSS_VERSION: 42,
 // Bump this version whenever you modify any existing theme CSS
 	THEME_CSS_VERSION: 8,
 
+	THREADS_PER_PAGE: 10,
+// Replies to display under each thread on the board's root page
+	ABBREVIATED_REPLIES: 5,
+// Default number of posts to display, when thread is expanded with the "Last N" link
+	THREAD_LAST_N: 100,
+	SUBJECT_MAX_LENGTH: 50,
+	EXCLUDE_REGEXP: /[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g,
+// Titles for staff that will be displayed in their posts' headers
+	ADMIN_ALIAS: 'Admin',
+	MOD_ALIAS: 'Moderator',
 	INTER_BOARD_NAVIGATION: true,
 	SPECIAL_TRIPCODES: {
 		kyubey: "／人◕ ‿‿ ◕人＼",
@@ -63,7 +72,6 @@ this.hot = {
 	FILTER: [
 		{p: /\/moe\//ig, r: 'Disneyland'},
 	],
-
 // Array of answers for the 8ball random wisdom dispenser. To use, type "#8ball" in post, followed by enter.
         EIGHT_BALL: [
                 "Yes",
@@ -75,7 +83,6 @@ this.hot = {
                 "That is my fetish",
                 "Anta baka?",
         ],
-
 
 /* Silly little things you probably should not care about */
 

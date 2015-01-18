@@ -25,11 +25,6 @@ var config = {
 	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
 	DEFAULT_BOARD: 'moe',
 	STAFF_BOARD: 'staff',
-	THREADS_PER_PAGE: 10,
-// Replies to display under each thread on the board's root page
-	ABBREVIATED_REPLIES: 5,
-// Default number of posts to display, when thread is expanded with the "Last N" link
-	THREAD_LAST_N: 100,
 
 // Thread creation cooldown for the same IP in seconds
 	THREAD_THROTTLE: 60,
@@ -49,8 +44,6 @@ var config = {
 // Existing archives will not be removed
 // Note: upkeep/clean.js is not needed with this option enabled
 	VOLATILE: false,
-	SUBJECT_MAX_LENGTH: 50,
-	EXCLUDE_REGEXP: /[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g,
 	SAGE_ENABLED: true,
 
 // Doushio uses Mozilla's Persona system for moderator authentication. Set login emails here.
@@ -63,10 +56,6 @@ var config = {
 	LOGIN_SESSION_TIME: 60*60*24*14,
 // Translate IP's into more human-readable mnemonics
 	IP_MNEMONIC: true,
-
-// Titles for staff that will be displayed in their posts' header
-	ADMIN_ALIAS: 'Admin',
-	MOD_ALIAS: 'Moderator',
 
 // A semi random set of hours each day will make all posts Anonymous
 	ANON_HOURS: false,

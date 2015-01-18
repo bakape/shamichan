@@ -93,7 +93,7 @@ function synchronize(msg, client) {
 			dead_threads.push(k);
 		}
 		op = k;
-		if (++count > config.THREADS_PER_PAGE) {
+		if (++count > STATE.hot.THREADS_PER_PAGE) {
 			/* Sync logic isn't great yet; allow this for now */
 			// return false;
 		}
@@ -183,7 +183,7 @@ function image_status(client_id, status) {
 }
 
 function page_nav(thread_count, cur_page, ascending) {
-	var page_count = Math.ceil(thread_count / config.THREADS_PER_PAGE);
+	var page_count = Math.ceil(thread_count / STATE.hot.THREADS_PER_PAGE);
 	page_count = Math.max(page_count, 1);
 	return {pages: page_count, threads: thread_count,
 		cur_page: cur_page, ascending: ascending};
@@ -503,7 +503,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 
 	var lastN = detect_last_n(req.query);
 	if (lastN)
-		opts.abbrev = lastN + config.ABBREVIATED_REPLIES;
+		opts.abbrev = lastN + STATE.hot.ABBREVIATED_REPLIES;
 
 	if (caps.can_administrate(req.ident) && 'reported' in req.query)
 		opts.showDead = true;
@@ -762,7 +762,7 @@ function allocate_post(msg, client, callback) {
 			return callback(Muggle('Bad post body.'));
 		if (msg.frag.length > common.MAX_POST_CHARS)
 			return callback(Muggle('Post is too long.'));
-		body = hot_filter(msg.frag.replace(config.EXCLUDE_REGEXP, ''));
+		body = hot_filter(msg.frag.replace(STATE.hot.EXCLUDE_REGEXP, ''));
 	}
 
 	if (msg.op) {
@@ -776,9 +776,9 @@ function allocate_post(msg, client, callback) {
 		if (!image_alloc)
 			return callback(Muggle('Image missing.'));
 		var subject = (msg.subject || '').trim();
-		subject = subject.replace(config.EXCLUDE_REGEXP, '');
+		subject = subject.replace(STATE.hot.EXCLUDE_REGEXP, '');
 		subject = subject.replace(/[「」]/g, '');
-		subject = subject.slice(0, config.SUBJECT_MAX_LENGTH);
+		subject = subject.slice(0, STATE.hot.SUBJECT_MAX_LENGTH);
 		if (subject)
 			post.subject = subject;
 	}
@@ -888,7 +888,7 @@ function update_post(frag, client) {
 		return false;
 	if (config.DEBUG)
 		debug_command(client, frag);
-	frag = hot_filter(frag.replace(config.EXCLUDE_REGEXP, ''));
+	frag = hot_filter(frag.replace(STATE.hot.EXCLUDE_REGEXP, ''));
 	var post = client.post;
 	if (!post)
 		return false;

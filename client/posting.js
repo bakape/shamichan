@@ -231,7 +231,7 @@ initialize: function (dest) {
 	this.$subject = $('<input/>', {
 		id: 'subject',
 		'class': 'themed',
-		maxlength: config.SUBJECT_MAX_LENGTH,
+		maxlength: HOT.SUBJECT_MAX_LENGTH,
 		width: '80%',
 	});
 	this.blockquote = $('<blockquote/>');

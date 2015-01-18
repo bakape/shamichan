@@ -73,7 +73,7 @@ function shift_replies(section) {
 		return;
 	var shown = section.children('article[id]:not(:has(form))');
 	var rem = shown.length;
-	if (rem < ABBREVIATED_REPLIES)
+	if (rem < HOT.ABBREVIATED_REPLIES)
 		return;
 	var $stat, omit = 0, img = 0;
 	var info = section_abbrev(section);
@@ -89,7 +89,7 @@ function shift_replies(section) {
 	var omitsBefore = omit;
 	for (var i = 0; i < shown.length; i++) {
 		var cull = $(shown[i]);
-		if (rem-- < ABBREVIATED_REPLIES)
+		if (rem-- < HOT.ABBREVIATED_REPLIES)
 			break;
 		if (cull.has('figure').length)
 			img++;
@@ -104,7 +104,7 @@ function spill_page() {
 		return;
 	/* Ugh, this could be smarter. */
 	var ss = $('body > section[id]:visible');
-	for (var i = THREADS_PER_PAGE; i < ss.length; i++)
+	for (var i = HOT.THREADS_PER_PAGE; i < ss.length; i++)
 		$(ss[i]).prev('hr').andSelf().hide();
 
 }

@@ -21,7 +21,7 @@ $META	<!--[if lt IE 9]><script src="{{MEDIA_URL}}js/ie.js"></script><![endif]-->
 		var HOT_HASH = '{{CLIENT_HOT_HASH}}';
 		// Bootstrap options model, so that it is available on model extraction
 		_.defaults(options, {
-			lastn: {{THREAD_LAST_N}},
+			lastn: HOT.THREAD_LAST_N,
 			inlinefit: 'width',
 		});
 		options = new Backbone.Model(options);

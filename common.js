@@ -740,7 +740,7 @@ OS.atama = function (data) {
 	if (data.trip)
 		header.push(safe('<code>' + data.trip + '</code>'));
 	if (auth)
-		header.push(' ## ' + (auth == 'Admin' ? config.ADMIN_ALIAS : config.MOD_ALIAS));
+		header.push(' ## ' + (auth == 'Admin' ? HOT.ADMIN_ALIAS : HOT.MOD_ALIAS));
 	this.trigger('headerName', {header: header, data: data});
 	header.push(safe('</b>'));
 	if (data.email) {
@@ -857,7 +857,7 @@ exports.parse_name = function (name) {
 		}
 		tripcode = escape_html(tripcode);
 	}
-	name = name.trim().replace(config.EXCLUDE_REGEXP, '');
+	name = name.trim().replace(HOT.EXCLUDE_REGEXP, '');
 	return [name.substr(0, 100), tripcode.substr(0, 128),
 			secure.substr(0, 128)];
 };
