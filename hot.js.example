@@ -30,6 +30,7 @@ this.hot = {
 	THREAD_LAST_N: 100,
 	SUBJECT_MAX_LENGTH: 50,
 	EXCLUDE_REGEXP: /[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g,
+	SAGE_ENABLED: true,
 // Titles for staff that will be displayed in their posts' headers
 	ADMIN_ALIAS: 'Admin',
 	MOD_ALIAS: 'Moderator',

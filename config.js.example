@@ -44,7 +44,6 @@ var config = {
 // Existing archives will not be removed
 // Note: upkeep/clean.js is not needed with this option enabled
 	VOLATILE: false,
-	SAGE_ENABLED: true,
 
 // Doushio uses Mozilla's Persona system for moderator authentication. Set login emails here.
 // Loging in can be done by either going to the /login/ board or typing "misaki" into the email field.
