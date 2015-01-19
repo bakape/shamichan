@@ -559,24 +559,14 @@ function perceptual_hash(src, image, callback) {
 	convert(args, src, function(err) {
 		if (err)
 			return callback(Muggle('Hashing error.', err));
-		var hash='';
-		fs.open(tmp, 'r',function(err,fd) {
-			if (err){
-				fs.unlinkt(tmp);
-				return callback(Muggle('Hashing error.', err));
-			}
-			var buffer = new Buffer(1);
-			
-			for(i=0; i<32;i++) {
-				fs.readSync(fd,buffer,0,1,null);
-				hash+= String.fromCharCode(buffer[0]);
-			}
+		fs.readFile(tmp, 'utf8', function (err,data){
+			var hash=data
 			fs.unlink(tmp);
 			if (hash.length!= 32)
 				return callback(Muggle('Hashing problem'));
 			callback(null,hash);
+			});
 		});
-	});
 }
 
 function detect_APNG(fnm, callback) {
