@@ -548,23 +548,33 @@ function perceptual_hash(src, image, callback) {
 		args.push('-sample', '800x800');
 	// do you believe in magic?
 	args.push('-background', 'white', '-mosaic', '+matte',
-			'-scale', '16x16!',
+			'-scale', '160x160',
 			'-type', 'grayscale', '-depth', '8',
+			'-blur', '2x2',
+			'-normalize',
+			'-equalize',
+			'-scale', '16x16',
+			'-depth', '1',
 			tmp);
-	convert(args, src, function (err) {
+	convert(args, src, function(err) {
 		if (err)
 			return callback(Muggle('Hashing error.', err));
-		var bin = path.join(__dirname, 'perceptual');
-		child_process.execFile(bin, [tmp],
-					function (err, stdout, stderr) {
+		var hash='';
+		fs.open(tmp, 'r',function(err,fd) {
+			if (err){
+				fs.unlinkt(tmp);
+				return callback(Muggle('Hashing error.', err));
+			}
+			var buffer = new Buffer(1);
+			
+			for(i=0; i<32;i++) {
+				fs.readSync(fd,buffer,0,1,null);
+				hash+= String.fromCharCode(buffer[0]);
+			}
 			fs.unlink(tmp);
-			if (err)
-				return callback(Muggle('Hashing error.',
-						stderr || err));
-			var hash = stdout.trim();
-			if (hash.length != 64)
-				return callback(Muggle('Hashing problem.'));
-			callback(null, hash);
+			if (hash.length!= 32)
+				return callback(Muggle('Hashing problem'));
+			callback(null,hash);
 		});
 	});
 }
