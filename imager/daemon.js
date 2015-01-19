@@ -548,8 +548,8 @@ function perceptual_hash(src, image, callback) {
 		args.push('-sample', '800x800');
 	// do you believe in magic?
 	args.push('-background', 'white', '-mosaic', '+matte',
-			'-scale', '160x160',
-			'-type', 'grayscale', '-depth', '8',
+			'-scale', '160x160!',
+			'-type', 'grayscale',
 			'-blur', '2x2',
 			'-normalize',
 			'-equalize',
