@@ -132,6 +132,7 @@ var Article = Backbone.View.extend({
 			'spoiler': this.renderSpoiler,
 			'removeSelf': this.bumplessRemove,
 			'add': this.renderRelativeTime,
+			'add': this.fun,
 		});
 		this.commonListeners();
 		if (!options.get('postUnloading') && CurThread)
@@ -200,6 +201,10 @@ var Article = Backbone.View.extend({
 			// Not sure why we need the extra 2 pixels, but we do
 			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
 		this.remove();
+	},
+	
+	fun: function(){
+		// Fun goes here
 	},
 });
 _.extend(Article.prototype, Hidamari, PostMixins);
