@@ -548,23 +548,22 @@ function perceptual_hash(src, image, callback) {
 		args.push('-sample', '800x800');
 	// do you believe in magic?
 	args.push('-background', 'white', '-mosaic', '+matte',
-			'-scale', '16x16!',
+			'-scale', '160x160',
 			'-type', 'grayscale', '-depth', '8',
+			'-blur', '2x2',
+			'-normalize',
+			'-equalize',
+			'-scale', '16x16',
+			'-depth', '1',
 			tmp);
-	convert(args, src, function (err) {
+	convert(args, src, function(err) {
 		if (err)
 			return callback(Muggle('Hashing error.', err));
-		var bin = path.join(__dirname, 'perceptual');
-		child_process.execFile(bin, [tmp],
-					function (err, stdout, stderr) {
+		fs.readFile(tmp, 'base64', function (err,data){
 			fs.unlink(tmp);
-			if (err)
-				return callback(Muggle('Hashing error.',
-						stderr || err));
-			var hash = stdout.trim();
-			if (hash.length != 64)
-				return callback(Muggle('Hashing problem.'));
-			callback(null, hash);
+			if (err || !data)
+				return callback(Muggle('Hashing problem'));
+			callback(null,data);
 		});
 	});
 }
