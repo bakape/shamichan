@@ -131,9 +131,11 @@ var Article = Backbone.View.extend({
 			'change:image': this.renderImage,
 			'spoiler': this.renderSpoiler,
 			'removeSelf': this.bumplessRemove,
-			'add': this.renderRelativeTime,
-			'add': this.fun,
-		});
+			'add': function(){
+					this.renderRelativeTime();
+					this.fun();
+				},
+			});
 		this.commonListeners();
 		if (!options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {
