@@ -555,13 +555,13 @@ function perceptual_hash(src, image, callback) {
 			'-equalize',
 			'-scale', '16x16',
 			'-depth', '1',
-			tmp);
+			'r:'+tmp);
 	convert(args, src, function(err) {
 		if (err)
 			return callback(Muggle('Hashing error.', err));
 		fs.readFile(tmp, 'base64', function (err,data){
 			fs.unlink(tmp);
-			if (err || !data)
+			if (err || data.length != 44)
 				return callback(Muggle('Hashing problem'));
 			callback(null,data);
 		});
