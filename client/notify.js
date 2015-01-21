@@ -3,8 +3,9 @@
 // Should be part of a greater thread model
 var Unread = new Backbone.Model({unreadCount: 0});
 
-// Remember replies that don't need a new desktop notification for 30 days
-var Replies = new Kioku('replies', 30);
+// Remember replies that don't need a new desktop notification for 3 days
+// Own post are remember for 2 days, so lets keep 1 day as a buffer
+var Replies = new Kioku('replies', 3);
 var readReplies = Replies.read_all();
 Replies.purge_expired_soon();
 
