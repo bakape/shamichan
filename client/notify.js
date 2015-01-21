@@ -27,12 +27,17 @@ Backbone.on('repliedToMe', function (post) {
 	if (options.get('notification')) {
 		var body = post.get('body');
 		var image = post.get('image');
-		if((body || image) && document.hidden)
-			new Notification('You have been quoted',{
+		if((body || image) && document.hidden){
+			var n = new Notification('You have been quoted',{
 				// if the post doesn't have a image we us a bigger favicon
 				icon: encodeURI(mediaURL+ (image ? 'thumb/'+image.thumb : '/css/ui/favbig.png')),
 				body: body,
 			});
+			n.onclick = function(){
+				window.focus();
+				location.hash = '#'+post.get('num');
+			};
+		}
 	}
 
 	Unread.set({reply: true});
