@@ -47,7 +47,7 @@ var serverTimeOffset;
 dispatcher[GET_TIME] = function(msg){
 	if (msg[0]){
 		var clientTime = new Date().getTime();
-		serverTimeOffset = clientTime - msg[0];
+		serverTimeOffset = msg[0] -clientTime;
 	}
 };
 
@@ -64,7 +64,7 @@ function timer_from_el($el) {
 	var maxs = pad($el.attr('sec'));
 
 	(function moumouikkai(){
-		var now = new Date().getTime()-serverTimeOffset;
+		var now = new Date().getTime();
 		if (now > end)
 			return $el.text('Finished');
 		// If the start time is in the future
