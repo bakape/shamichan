@@ -231,7 +231,7 @@ initialize: function (dest) {
 	this.$subject = $('<input/>', {
 		id: 'subject',
 		'class': 'themed',
-		maxlength: HOT.SUBJECT_MAX_LENGTH,
+		maxlength: hotConfig.SUBJECT_MAX_LENGTH,
 		width: '80%',
 	});
 	this.blockquote = $('<blockquote/>');
@@ -251,7 +251,7 @@ initialize: function (dest) {
 	});
 	this.imouto.callback = inject;
 	this.imouto.op = THREAD;
-	this.imouto.state = [S_BOL, 0];
+	this.imouto.state = [DEF.S_BOL, 0];
 	this.imouto.buffer = this.buffer;
 	this.imouto.eLinkify = oneeSama.eLinkify;
 	this.imouto.hook('spoilerTag', touchable_spoiler_tag);
@@ -297,7 +297,7 @@ propagate_ident: function () {
 	if (parsed[0])
 		$b.text(parsed[0] + ' ');
 	else
-		$b.text(haveTrip ? '' : ANON);
+		$b.text(haveTrip ? '' : DEF.ANON);
 	if (haveTrip)
 		$b.append($.parseHTML(' <code>!?</code>'));
 	oneeSama.trigger('fillMyName', $b);
@@ -354,11 +354,11 @@ on_image_alloc: function (msg) {
 	if (attrs.cancelled)
 		return;
 	if (!attrs.num && !attrs.sentAllocRequest) {
-		send([INSERT_POST, this.make_alloc_request(null, msg)]);
+		send([DEF.INSERT_POST, this.make_alloc_request(null, msg)]);
 		this.model.set({sentAllocRequest: true});
 	}
 	else {
-		send([INSERT_IMAGE, msg]);
+		send([DEF.INSERT_IMAGE, msg]);
 	}
 },
 
@@ -463,7 +463,7 @@ on_input: function (val) {
 		}
 	}
 
-	$input.attr('maxlength', MAX_POST_CHARS - this.char_count);
+	$input.attr('maxlength', DEF.MAX_POST_CHARS - this.char_count);
 	this.resize_input(val);
 },
 
@@ -501,7 +501,7 @@ resize_input: function (val) {
 
 	this.$sizer.text(val);
 	var left = $input.offset().left - this.$el.offset().left;
-	var size = this.$sizer.width() + INPUT_ROOM;
+	var size = this.$sizer.width() + DEF.INPUT_ROOM;
 	size = Math.max(size, inputMinSize - left);
 	$input.css('width', size + 'px');
 },
@@ -584,15 +584,15 @@ commit: function (text) {
 	if (text.indexOf('\n') >= 0) {
 		lines = text.split('\n');
 		this.line_count += lines.length - 1;
-		var breach = this.line_count - MAX_POST_LINES + 1;
+		var breach = this.line_count - DEF.MAX_POST_LINES + 1;
 		if (breach > 0) {
 			for (var i = 0; i < breach; i++)
 				lines.pop();
 			text = lines.join('\n');
-			this.line_count = MAX_POST_LINES;
+			this.line_count = DEF.MAX_POST_LINES;
 		}
 	}
-	var left = MAX_POST_CHARS - this.char_count;
+	var left = DEF.MAX_POST_CHARS - this.char_count;
 	if (left < text.length)
 		text = text.substr(0, left);
 	if (!text)
@@ -602,7 +602,7 @@ commit: function (text) {
 	/* Either get an allocation or send the committed text */
 	var attrs = this.model.attributes;
 	if (!attrs.num && !attrs.sentAllocRequest) {
-		send([INSERT_POST, this.make_alloc_request(text, null)]);
+		send([DEF.INSERT_POST, this.make_alloc_request(text, null)]);
 		this.model.set({sentAllocRequest: true});
 	}
 	else if (attrs.num)
@@ -660,7 +660,7 @@ finish: function () {
 		this.buffer.replaceWith(this.buffer.contents());
 		this.line_buffer.remove();
 		this.blockquote.css({'margin-left': '', 'padding-left': ''});
-		send([FINISH_POST]);
+		send([DEF.FINISH_POST]);
 		this.preserve = true;
 	}
 	postSM.feed('done');
@@ -806,7 +806,7 @@ function image_upload_url() {
 	return url + '?id=' + CONN_ID
 }
 
-dispatcher[IMAGE_STATUS] = function (msg) {
+dispatcher[DEF.IMAGE_STATUS] = function (msg) {
 	if (postForm)
 		postForm.dispatch(msg[0]);
 };

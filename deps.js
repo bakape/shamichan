@@ -1,5 +1,53 @@
 var config = require('./config');
 
+exports.SERVER_DEPS = [
+	'admin/common.js',
+	'admin/index.js',
+	'admin/panel.js',
+	'anon_hours/server.js',
+	'autoJoe/server.js',
+	'common.js',
+	'config.js',
+	'db.js',
+	'deps.js',
+	'etc.js',
+	'hooks.js',
+	'tail.js',
+	'curfew/server.js',
+	'imager/config.js',
+	'imager/daemon.js',
+	'imager/db.js',
+	'imager/index.js',
+	'imager/jobs.js',
+	'report/config.js',
+	'report/server.js',
+	'server/amusement.js',
+	'server/caps.js',
+	'server/msgcheck.js',
+	'server/okyaku.js',
+	'server/opts.js',
+	'server/perceptual.c',
+	'server/persona.js',
+	'server/render.js',
+	'server/server.js',
+	'server/state.js',
+	'server/web.js',
+	'time/server.js',
+	'tripcode/tripcode.cc',
+];
+
+/* Changes to the below only require a state.js reload */
+
+exports.VENDOR_DEPS = [
+	'./node_modules/jquery/dist/jquery.js',
+	'./yepnope.js',
+	'./node_modules/underscore/underscore.js',
+	'./node_modules/backbone/backbone.js',
+	'./lib/oninput.js',
+	'./node_modules/jquery.cookie/jquery.cookie.js',
+	'./lib/pixastic.blurfast.min.js',
+];
+
 exports.CLIENT_DEPS = [
 	'common.js',
 	'client/init.js',
@@ -25,46 +73,6 @@ exports.CLIENT_DEPS = [
 	'time/client.js',
 ];
 
-exports.SERVER_DEPS = [
-	'admin/common.js',
-	'admin/index.js',
-	'admin/panel.js',
-	'anon_hours/server.js',
-	'autoJoe/server.js',
-	'common.js',
-	'config.js',
-	'db.js',
-	'deps.js',
-	'etc.js',
-	'hooks.js',
-	'make_client.js',
-	'pipeline.js',
-	'tail.js',
-	'curfew/server.js',
-	'node_modules/underscore/underscore.js',
-	'imager/config.js',
-	'imager/daemon.js',
-	'imager/db.js',
-	'imager/index.js',
-	'imager/jobs.js',
-	'report/config.js',
-	'report/server.js',
-	'server/amusement.js',
-	'server/caps.js',
-	'server/msgcheck.js',
-	'server/okyaku.js',
-	'server/opts.js',
-	'server/perceptual.c',
-	'server/persona.js',
-	'server/render.js',
-	'server/server.js',
-	'server/state.js',
-	'server/web.js',
-	'time/server.js',
-	'tripcode/tripcode.cc',
-];
-
-// Changes to these only require a state.js reload
 exports.SERVER_STATE = [
 	'admin/client.js',
 	'hot.js',

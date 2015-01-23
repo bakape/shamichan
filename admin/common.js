@@ -1,21 +1,21 @@
-var _ = require('underscore');
-var config = require('../config');
-var common = require('../common');
+var isNode = typeof navigator === 'undefined';
+if (isNode){
+	var _ = require('underscore');
+	var config = require('../config');
+	var common = require('../common');
+	var DEF = exports;
+}
 
-var DEFINES = exports;
-DEFINES.FETCH_ADDRESS = 101;
-DEFINES.SET_ADDRESS_NAME = 102;
-DEFINES.BAN = 103;
+DEF.FETCH_ADDRESS = 101;
+DEF.SET_ADDRESS_NAME = 102;
+DEF.BAN = 103;
 
 var modCache = {}; // TEMP
-exports.modCache = modCache;
 
 var suspensionKeys = ['boxes', 'bans', 'slows', 'suspensions', 'timeouts'];
-exports.suspensionKeys = suspensionKeys;
 
 var delayNames = ['now', 'soon', 'later'];
 var delayDurations = {now: 0, soon: 60, later: 20*60};
-exports.delayDurations = delayDurations;
 
 var mnemonicStarts = ',k,s,t,d,n,h,b,p,m,f,r,g,z,l,ch'.split(',');
 var mnemonicEnds = "a,i,u,e,o,a,i,u,e,o,ya,yi,yu,ye,yo,'".split(',');
@@ -123,7 +123,6 @@ function denote_hidden(info) {
 		info.header.push(common.safe(
 				' <em class="mod hidden">(hidden)</em>'));
 }
-exports.denote_hidden = denote_hidden;
 
 function is_IPv4_ip(ip) {
 	if (typeof ip != 'string' || !/^\d+\.\d+\.\d+\.\d+$/.exec(ip))
@@ -138,9 +137,8 @@ function is_IPv4_ip(ip) {
 	}
 	return true;
 }
-exports.is_IPv4_ip = is_IPv4_ip;
 
-exports.is_valid_ip = function (ip) {
+var is_valid_ip = function (ip) {
 	return typeof ip == 'string' && /^[\da-fA-F.:]{3,45}$/.test(ip);
 }
 
@@ -180,7 +178,6 @@ function ip_key(ip) {
 	}
 	return ip;
 }
-exports.ip_key = ip_key;
 
 if (typeof IDENT != 'undefined') {
 	/* client */
@@ -188,7 +185,17 @@ if (typeof IDENT != 'undefined') {
 	oneeSama.hook('headerName', append_mnemonic);
 	oneeSama.hook('headerName', denote_hidden);
 }
-else {
+else if (isNode) {
 	exports.ip_mnemonic = ip_mnemonic;
 	exports.append_mnemonic = append_mnemonic;
+}
+
+if (isNode){
+	exports.modCache = modCache;
+	exports.suspensionKeys = suspensionKeys;
+	exports.delayDurations = delayDurations;
+	exports.denote_hidden = denote_hidden;
+	exports.is_IPv4_ip = is_IPv4_ip;
+	exports.is_valid_ip = is_valid_ip;
+	exports.ip_key = ip_key;
 }

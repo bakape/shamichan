@@ -1,49 +1,60 @@
-var config = require('./config');
-var HOT = require('./server/state').hot;
-var imagerConfig = require('./imager/config');
-var DEFINES = exports;
-DEFINES.INVALID = 0;
+// This file is used both by the server and client
+// Keep that in mind, when making modifications
 
-DEFINES.INSERT_POST = 2;
-DEFINES.UPDATE_POST = 3;
-DEFINES.FINISH_POST = 4;
-DEFINES.CATCH_UP = 5;
-DEFINES.INSERT_IMAGE = 6;
-DEFINES.SPOILER_IMAGES = 7;
-DEFINES.DELETE_IMAGES = 8;
-DEFINES.DELETE_POSTS = 9;
-DEFINES.DELETE_THREAD = 10;
-DEFINES.LOCK_THREAD = 11;
-DEFINES.UNLOCK_THREAD = 12;
-DEFINES.REPORT_POST = 13;
+// Runing on the server
+var isNode = typeof navigator === 'undefined';
+var DEF = {};
 
-DEFINES.IMAGE_STATUS = 31;
-DEFINES.SYNCHRONIZE = 32;
-DEFINES.EXECUTE_JS = 33;
-DEFINES.MOVE_THREAD = 34;
-DEFINES.UPDATE_BANNER = 35;
-DEFINES.TEARDOWN = 36;
-DEFINES.ONLINE_COUNT = 37;
-DEFINES.HOT_INJECTION = 38;
+if (isNode){
+	var config = require('./config');
+	var hotConfig = require('./server/state').hot;
+	var imagerConfig = require('./imager/config');
+	DEF = exports;
+}
 
-DEFINES.MODEL_SET = 50;
-DEFINES.COLLECTION_RESET = 55;
-DEFINES.COLLECTION_ADD = 56;
-DEFINES.SUBSCRIBE = 60;
-DEFINES.UNSUBSCRIBE = 61;
+DEF.INVALID = 0;
 
-DEFINES.GET_TIME = 62;
+DEF.INSERT_POST = 2;
+DEF.UPDATE_POST = 3;
+DEF.FINISH_POST = 4;
+// Legacy?
+DEF.CATCH_UP = 5;
+DEF.INSERT_IMAGE = 6;
+DEF.SPOILER_IMAGES = 7;
+DEF.DELETE_IMAGES = 8;
+DEF.DELETE_POSTS = 9;
+DEF.DELETE_THREAD = 10;
+DEF.LOCK_THREAD = 11;
+DEF.UNLOCK_THREAD = 12;
+DEF.REPORT_POST = 13;
 
-DEFINES.ANON = 'Anonymous';
-DEFINES.INPUT_ROOM = 20;
-DEFINES.MAX_POST_LINES = 30;
-DEFINES.MAX_POST_CHARS = 2000;
-DEFINES.WORD_LENGTH_LIMIT = 120;
+DEF.IMAGE_STATUS = 31;
+DEF.SYNCHRONIZE = 32;
+DEF.EXECUTE_JS = 33;
+DEF.MOVE_THREAD = 34;
+DEF.UPDATE_BANNER = 35;
+DEF.TEARDOWN = 36;
+DEF.ONLINE_COUNT = 37;
+DEF.HOT_INJECTION = 38;
 
-DEFINES.S_NORMAL = 0;
-DEFINES.S_BOL = 1;
-DEFINES.S_QUOTE = 2;
-DEFINES.S_SPOIL = 3;
+DEF.MODEL_SET = 50;
+DEF.COLLECTION_RESET = 55;
+DEF.COLLECTION_ADD = 56;
+DEF.SUBSCRIBE = 60;
+DEF.UNSUBSCRIBE = 61;
+
+DEF.GET_TIME = 62;
+
+DEF.ANON = 'Anonymous';
+DEF.INPUT_ROOM = 20;
+DEF.MAX_POST_LINES = 30;
+DEF.MAX_POST_CHARS = 2000;
+DEF.WORD_LENGTH_LIMIT = 300;
+
+DEF.S_NORMAL = 0;
+DEF.S_BOL = 1;
+DEF.S_QUOTE = 2;
+DEF.S_SPOIL = 3;
 
 if (typeof mediaURL == 'undefined' || !mediaURL)
 	mediaURL = imagerConfig.MEDIA_URL;
@@ -51,16 +62,11 @@ if (typeof mediaURL == 'undefined' || !mediaURL)
 function is_pubsub(t) {
 	return t > 0 && t < 30;
 }
-exports.is_pubsub = is_pubsub;
 
 function FSM(start) {
 	this.state = start;
 	this.spec = {acts: {}, ons: {}, wilds: {}, preflights: {}};
 }
-exports.FSM = FSM;
-
-// Runing on the server
-var isNode = (typeof navigator === 'undefined');
 
 FSM.prototype.clone = function () {
 	var second = new FSM(this.state);
@@ -149,7 +155,6 @@ function escape_html(html) {
 		return entities[c];
 	});
 }
-exports.escape_html = escape_html;
 
 function escape_fragment(frag) {
 	var t = typeof(frag);
@@ -162,7 +167,6 @@ function escape_fragment(frag) {
 	else
 		return '???';
 }
-exports.escape_fragment = escape_fragment;
 
 function flatten(frags) {
 	var out = [];
@@ -175,31 +179,29 @@ function flatten(frags) {
 	}
 	return out;
 }
-exports.flatten = flatten;
 
 function safe(frag) {
 	return {safe: frag};
 }
-exports.safe = safe;
 
 function is_noko(email) {
 	return email && email.indexOf('@') == -1 && /noko/i.test(email);
 }
-exports.is_noko = is_noko;
+
 function is_sage(email) {
-	return HOT.SAGE_ENABLED && email &&
+	return hotConfig.SAGE_ENABLED && email &&
 			email.indexOf('@') == -1 && /sage/i.test(email);
 }
-exports.is_sage = is_sage;
+
 
 var OneeSama = function (t) {
 	this.tamashii = t;
 	this.hooks = {};
 };
-exports.OneeSama = OneeSama;
+
 var OS = OneeSama.prototype;
 
-var break_re = new RegExp("(\\S{" + DEFINES.WORD_LENGTH_LIMIT + "})");
+var break_re = new RegExp("(\\S{" + DEF.WORD_LENGTH_LIMIT + "})");
 /* internal refs, embeds */
 var ref_re = />>(\d+|>\/watch\?v=[\w-]{11}(?:#t=[\dhms]{1,9})?|>\/soundcloud\/[\w-]{1,40}\/[\w-]{1,80}|>\/(?:a|foolz)\/\d{0,10})/;
 
@@ -276,17 +278,17 @@ OS.break_heart = function (frag) {
 
 OS.iku = function (token, to) {
 	var state = this.state;
-	if (state[0] == DEFINES.S_QUOTE && to != DEFINES.S_QUOTE)
+	if (state[0] == DEF.S_QUOTE && to != DEF.S_QUOTE)
 		this.callback(safe('</em>'));
 	switch (to) {
-	case DEFINES.S_QUOTE:
-		if (state[0] != DEFINES.S_QUOTE) {
+	case DEF.S_QUOTE:
+		if (state[0] != DEF.S_QUOTE) {
 			this.callback(safe('<em>'));
-			state[0] = DEFINES.S_QUOTE;
+			state[0] = DEF.S_QUOTE;
 		}
 		this.break_heart(token);
 		break;
-	case DEFINES.S_SPOIL:
+	case DEF.S_SPOIL:
 		if (token[1] == '/') {
 			state[1]--;
 			this.callback(safe('</del>'));
@@ -309,11 +311,11 @@ OS.fragment = function (frag) {
 	var chunks = frag.split(/(\[\/?spoiler\])/i);
 	var state = this.state;
 	for (var i = 0; i < chunks.length; i++) {
-		var chunk = chunks[i], q = (state[0] === DEFINES.S_QUOTE);
+		var chunk = chunks[i], q = (state[0] === DEF.S_QUOTE);
 		if (i % 2) {
-			var to = DEFINES.S_SPOIL;
+			var to = DEF.S_SPOIL;
 			if (chunk[1] == '/' && state[1] < 1)
-				to = q ? DEFINES.S_QUOTE : DEFINES.S_NORMAL;
+				to = q ? DEF.S_QUOTE : DEF.S_NORMAL;
 			this.iku(chunk, to);
 			continue;
 		}
@@ -321,23 +323,23 @@ OS.fragment = function (frag) {
 		for (var l = 0; l < lines.length; l++) {
 			var line = lines[l];
 			if (l % 2)
-				this.iku(safe('<br>'), DEFINES.S_BOL);
-			else if (state[0] === DEFINES.S_BOL && line[0] == '>')
-				this.iku(line, DEFINES.S_QUOTE);
+				this.iku(safe('<br>'), DEF.S_BOL);
+			else if (state[0] === DEF.S_BOL && line[0] == '>')
+				this.iku(line, DEF.S_QUOTE);
 			else if (line)
-				this.iku(line, q ? DEFINES.S_QUOTE
-						: DEFINES.S_NORMAL);
+				this.iku(line, q ? DEF.S_QUOTE
+						: DEF.S_NORMAL);
 		}
 	}
 };
 
 OS.karada = function (body) {
 	var output = [];
-	this.state = [DEFINES.S_BOL, 0];
+	this.state = [DEF.S_BOL, 0];
 	this.callback = function (frag) { output.push(frag); }
 	this.fragment(body);
 	this.callback = null;
-	if (this.state[0] == DEFINES.S_QUOTE)
+	if (this.state[0] == DEF.S_QUOTE)
 		output.push(safe('</em>'));
 	for (var i = 0; i < this.state[1]; i++)
 		output.push(safe('</del>'));
@@ -345,13 +347,13 @@ OS.karada = function (body) {
 };
 
 var dice_re = /(#flip|#8ball|#pyu|#pcount|#sw(?:\d{1,2}:)?\d{1,2}:\d{1,2}(?:[+-]\d+)?|#\d{0,2}d\d{1,4}(?:[+-]\d{1,4})?)/i;
-exports.dice_re = dice_re;
+
 
 function parse_dice(frag) {
 	if (frag == '#flip')
 		return {n: 1, faces: 2};
     if (frag == '#8ball')
-        return {n: 1, faces: HOT.EIGHT_BALL.length};
+        return {n: 1, faces: hotConfig.EIGHT_BALL.length};
 	// Increment counter
 	if (frag == '#pyu')
 		return {pyu: 'increment'};
@@ -383,13 +385,12 @@ function parse_dice(frag) {
 		return {hour:hour,min: min,sec:sec,start:time,end:end};
 	}
 }
-exports.parse_dice = parse_dice;
 
 function readable_dice(bit, d) {
 	if (bit == '#flip')
 		return '#flip (' + (d[1] == 2) + ')';
     if (bit == '#8ball')
-        return '#8ball (' + HOT.EIGHT_BALL[d[1]- 1] + ')';
+        return '#8ball (' + hotConfig.EIGHT_BALL[d[1]- 1] + ')';
 	if (bit == '#pyu')
 		return '#pyu(' + d + ')';
 	if (bit == '#pcount')
@@ -505,7 +506,6 @@ function pick_spoiler(metaIndex) {
 		i = metaIndex % n;
 	return {index: imgs[i], next: (i+1) % n};
 }
-exports.pick_spoiler = pick_spoiler;
 
 function new_tab_link(srcEncoded, inside, cls, brackets) {
 	if (brackets)
@@ -577,7 +577,7 @@ OS.gazou = function (info, toppu) {
 		safe('</figure>\n\t')];
 };
 
-exports.thumbStyles = ['small', 'sharp', 'hide'];
+thumbStyles = ['small', 'sharp', 'hide'];
 
 OS.gazou_img = function (info, toppu) {
 	var src, thumb;
@@ -639,7 +639,6 @@ function readable_filesize(size) {
 	size = Math.round(size / 104857.6).toString();
 	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
 }
-exports.readable_filesize = readable_filesize;
 
 function pad(n) {
 	return (n < 10 ? '0' : '') + n;
@@ -716,9 +715,8 @@ OS.post_nav = function (post) {
 function action_link_html(href, name, id) {
 	return '<span class="act"><a href="'+href+'"'+ (id?' id="'+id+'"':'') +'>'+name+'</a></span>';
 }
-exports.action_link_html = action_link_html;
 
-exports.reasonable_last_n = function (n) {
+reasonable_last_n = function (n) {
 	return n >= 5 && n <= 500;
 };
 
@@ -733,14 +731,14 @@ OS.atama = function (data) {
 	if (data.subject)
 		header.unshift(safe('<h3>「'), data.subject, safe('」</h3> '));
 	if (data.name || !data.trip) {
-		header.push(data.name || DEFINES.ANON);
+		header.push(data.name || DEF.ANON);
 		if (data.trip)
 			header.push(' ');
 	}
 	if (data.trip)
 		header.push(safe('<code>' + data.trip + '</code>'));
 	if (auth)
-		header.push(' ## ' + (auth == 'Admin' ? HOT.ADMIN_ALIAS : HOT.MOD_ALIAS));
+		header.push(' ## ' + (auth == 'Admin' ? hotConfig.ADMIN_ALIAS : hotConfig.MOD_ALIAS));
 	this.trigger('headerName', {header: header, data: data});
 	header.push(safe('</b>'));
 	if (data.email) {
@@ -835,16 +833,14 @@ OS.monomono = function (data, cls) {
 function pluralize(n, noun) {
 	return n + ' ' + noun + (n == 1 ? '' : 's');
 }
-exports.pluralize = pluralize;
 
 function abbrev_msg(omit, img_omit) {
 	return omit + (omit==1 ? ' reply' : ' replies') + (img_omit
 		? ' and ' + pluralize(img_omit, 'image')
 		: '') + ' omitted.';
 };
-exports.abbrev_msg = abbrev_msg;
 
-exports.parse_name = function (name) {
+parse_name = function (name) {
 	var tripcode = '', secure = '';
 	var hash = name.indexOf('#');
 	if (hash >= 0) {
@@ -857,11 +853,34 @@ exports.parse_name = function (name) {
 		}
 		tripcode = escape_html(tripcode);
 	}
-	name = name.trim().replace(HOT.EXCLUDE_REGEXP, '');
+	name = name.trim().replace(hotConfig.EXCLUDE_REGEXP, '');
 	return [name.substr(0, 100), tripcode.substr(0, 128),
 			secure.substr(0, 128)];
 };
 
 function random_id() {
 	return Math.floor(Math.random() * 1e16) + 1;
+}
+
+// Batch exports. We don't wan't these on the client.
+if (isNode){
+	exports.is_pubsub = is_pubsub;
+	exports.FSM = FSM;
+	exports.escape_html = escape_html;
+	exports.escape_fragment = escape_fragment;
+	exports.flatten = flatten;
+	exports.safe = safe;
+	exports.is_noko = is_noko;
+	exports.is_sage = is_sage;
+	exports.OneeSama = OneeSama;
+	exports.dice_re = dice_re;
+	exports.parse_dice = parse_dice;
+	exports.pick_spoiler = pick_spoiler;
+	exports.thumbStyles = thumbStyles;
+	exports.readable_filesize = readable_filesize;
+	exports.action_link_html = action_link_html;
+	exports.reasonable_last_n = reasonable_last_n;
+	exports.pluralize = pluralize;
+	exports.abbrev_msg = abbrev_msg;
+	exports.parse_name = parse_name;
 }

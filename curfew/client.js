@@ -39,7 +39,7 @@ function shut_down_something() {
 }
 
 var tearingDown = false;
-dispatcher[TEARDOWN] = function () {
+dispatcher[DEF.TEARDOWN] = function () {
 	if (tearingDown)
 		return;
 	tearingDown = true;

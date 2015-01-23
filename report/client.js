@@ -106,7 +106,7 @@ var ReportPanel = Backbone.View.extend({
 	submit: function () {
 		if (this.model.get('status') != 'ready')
 			return false;
-		send([REPORT_POST, this.model.id, Recaptcha.get_challenge(),
+		send([DEF.REPORT_POST, this.model.id, Recaptcha.get_challenge(),
 				Recaptcha.get_response()]);
 		this.model.set('status', 'reporting');
 		return false;
@@ -196,7 +196,7 @@ menuHandlers.Report = function (post) {
 	}});
 };
 
-dispatcher[REPORT_POST] = function (msg, op) {
+dispatcher[DEF.REPORT_POST] = function (msg, op) {
 	var num = msg[0], etc = msg[1];
 	var report = REPORTS[num];
 	if (report)

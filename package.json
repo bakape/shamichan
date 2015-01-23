@@ -1,38 +1,48 @@
 {
-	"name": "meguca",
-	"version": "0.7.0",
-	"description": "Real-time imageboard",
-	"keywords": ["realtime", "imageboard", "redis"],
-	"homepage": "https://github.com/bakape/doushio",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/bakape/meguca.git"
-	},
-	"scripts": {
-		"postinstall": "make",
-		"start": "node server/server.js"
-	},
-	"dependencies": {
-		"async": "0.9.0",
-		"backbone": "1.1.2",
-		"formidable": "1.0.16",
-		"jquery": "2.1.3",
-		"minimist": "0.2.0",
-		"recaptcha": "1.2.0",
-		"redis": "0.12.1",
-		"request": "2.51.0",
-		"sockjs": "0.3.12",
-		"tmp": "0.0.24",
-		"uglify-js": "2.4.16",
-		"underscore": "1.7.0",
-		"winston": "0.8.3"
-	},
-	"optionalDependencies": {
-		"cron": "1.0.5",
-		"hiredis": "0.1.17",
-		"node-expat": "2.3.4",
-		"nodemailer": "0.5.2",
-		"send": "0.11.0"
-	}
+  "name": "meguca",
+  "version": "0.7.0",
+  "description": "Real-time imageboard",
+  "keywords": [
+    "realtime",
+    "imageboard",
+    "redis"
+  ],
+  "homepage": "https://github.com/bakape/doushio",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bakape/meguca.git"
+  },
+  "scripts": {
+    "postinstall": "make",
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "async": "0.9.0",
+    "backbone": "1.1.2",
+    "formidable": "1.0.16",
+    "gulp": "3.8.10",
+    "gulp-concat": "2.4.3",
+    "gulp-if": "1.2.5",
+    "gulp-rename": "1.2.0",
+    "gulp-rev": "3.0.0",
+    "gulp-uglify": "1.1.0",
+    "jquery": "2.1.3",
+    "jquery.cookie": "1.4.1",
+    "minimist": "0.2.0",
+    "recaptcha": "1.2.0",
+    "redis": "0.12.1",
+    "request": "2.51.0",
+    "sockjs": "0.3.12",
+    "tmp": "0.0.24",
+    "underscore": "1.7.0",
+    "winston": "0.8.3"
+  },
+  "optionalDependencies": {
+    "cron": "1.0.5",
+    "hiredis": "0.1.17",
+    "node-expat": "2.3.4",
+    "nodemailer": "0.5.2",
+    "send": "0.11.0"
+  }
 }

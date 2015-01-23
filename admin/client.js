@@ -245,7 +245,7 @@ var AddressView = Backbone.View.extend({
 		event.preventDefault();
 		var name = this.$('.name').val().trim();
 		var ip = this.model.get('ip');
-		send([SET_ADDRESS_NAME, ip, name]);
+		send([DEF.SET_ADDRESS_NAME, ip, name]);
 		this.remove();
 	},
 
@@ -303,7 +303,7 @@ var AddressView = Backbone.View.extend({
 		if (!confirm(act + ' ' + ip + description))
 			return;
 
-		send([BAN, ip, type, sentence]);
+		send([DEF.BAN, ip, type, sentence]);
 		// show ... while processing
 		this.$('.ban').val('...');
 	},
@@ -349,7 +349,7 @@ var AddrView = Backbone.View.extend({
 				this.expansion_removed);
 
 		if (this.model.get('shallow'))
-			send([FETCH_ADDRESS, ip]);
+			send([DEF.FETCH_ADDRESS, ip]);
 	},
 
 	remove: function () {

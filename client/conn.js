@@ -13,13 +13,13 @@ window.send = function (msg) {
 	}
 
 	msg = JSON.stringify(msg);
-	if (DEBUG)
+	if (config.DEBUG)
 		console.log('<', msg);
 	socket.send(msg);
 };
 
 function on_message(e) {
-	if (DEBUG)
+	if (config.DEBUG)
 		console.log('>', e.data);
 	var msgs = JSON.parse(e.data);
 
@@ -60,7 +60,7 @@ function connect() {
 	socket.onopen = connSM.feeder('open');
 	socket.onclose = connSM.feeder('close');
 	socket.onmessage = on_message;
-	if (DEBUG)
+	if (config.DEBUG)
 		window.socket = socket;
 }
 
@@ -68,7 +68,7 @@ window.new_socket = function (attempt) {
 	var protocols = ['xdr-streaming', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xdr-polling', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
 	if (config.USE_WEBSOCKETS)
 		protocols.unshift('websocket');
-	return new SockJS(SOCKET_PATH, null, {
+	return new SockJS(config.SOCKET_PATH, null, {
 		protocols_whitelist: protocols,
 	});
 };
@@ -76,7 +76,7 @@ window.new_socket = function (attempt) {
 connSM.act('conn, reconn + open -> syncing', function () {
 	sync_status('Syncing');
 	CONN_ID = random_id();
-	send([SYNCHRONIZE, CONN_ID, BOARD, syncs, BUMP, document.cookie]);
+	send([DEF.SYNCHRONIZE, CONN_ID, BOARD, syncs, BUMP, document.cookie]);
 });
 
 connSM.act('syncing + sync -> synced', function () {
@@ -100,7 +100,7 @@ connSM.act('* + close -> dropped', function (e) {
 		socket.onclose = null;
 		socket.onmessage = null;
 	}
-	if (DEBUG)
+	if (config.DEBUG)
 		console.error('E:', e);
 	if (attemptTimer) {
 		clearTimeout(attemptTimer);
@@ -134,7 +134,7 @@ connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 	socket.onmessage = null;
 	socket.close();
 	socket = null;
-	if (DEBUG)
+	if (config.DEBUG)
 		window.socket = null;
 });
 

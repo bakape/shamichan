@@ -7,7 +7,7 @@ var _ = require('underscore'),
     events = require('events'),
     fs = require('fs'),
     hooks = require('./hooks'),
-    HOT = require('./server/state').hot,
+    hot = require('./server/state').hot,
     imager = require('./imager'),
     Muggle = require('./etc').Muggle,
     tail = require('./tail'),
@@ -1371,8 +1371,8 @@ Y.get_tag = function (page) {
 	var reverseOrder = this.tag == 'archive';
 	if (page < 0 && !reverseOrder)
 		page = 0;
-	var start = page * HOT.THREADS_PER_PAGE;
-	var end = start + HOT.THREADS_PER_PAGE - 1;
+	var start = page * hot.THREADS_PER_PAGE;
+	var end = start + hot.THREADS_PER_PAGE - 1;
 	var m = r.multi();
 	if (reverseOrder)
 		m.zrange(key, start, end);
@@ -1413,7 +1413,7 @@ Y._get_each_thread = function (reader, ix, nums) {
 	reader.on('end', next_please);
 	reader.on('nomatch', next_please);
 	reader.get_thread(this.tag, nums[ix], {
-			abbrev: HOT.ABBREVIATED_REPLIES || 5
+			abbrev: hot.ABBREVIATED_REPLIES || 5
 	});
 };
 

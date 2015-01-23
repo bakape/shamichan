@@ -44,7 +44,7 @@ if (is_skewed) {
 // Get a more accurate server-client time offset, for interclient syncing
 // Does not account for latency, but good enough for our purposes
 var serverTimeOffset;
-dispatcher[GET_TIME] = function(msg){
+dispatcher[DEF.GET_TIME] = function(msg){
 	if (msg[0]){
 		var clientTime = new Date().getTime();
 		serverTimeOffset = msg[0] -clientTime;

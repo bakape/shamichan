@@ -40,7 +40,7 @@ oneeSama.hook('insertOwnPost', function (extra) {
 
 var bannerExtra = null; //$.parseHTML('<b>Other stream info</b>');
 
-dispatcher[UPDATE_BANNER] = function (msg, op) {
+dispatcher[DEF.UPDATE_BANNER] = function (msg, op) {
 	msg = msg[0];
 	if (!$banner) {
 		var dest;
@@ -86,7 +86,7 @@ function construct_banner(parts) {
 	});
 }
 
-dispatcher[EXECUTE_JS] = function (msg, op) {
+dispatcher[DEF.EXECUTE_JS] = function (msg, op) {
 	if (THREAD != op)
 		return;
 	try {

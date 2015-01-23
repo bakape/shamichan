@@ -30,10 +30,11 @@ Dependencies:
 * ImageMagick
 * libpng
 * node.js + npm
+* gulp (installed globally with `# npm install --global gulp`)
 * redis
-* ffmpeg 2.2+ if supporting WebM
+* ffmpeg 2.2+ for WebM support
 * pngquant  2.3.1+ for PNG thumbnails
-* exiftool, if you want to strip images of their exif (must be enabled in config.js)
+* exiftool, for stripping images off their EXIF data
 
 Optional npm deps for various features:
 
@@ -98,6 +99,7 @@ Project map:
 	* __jobs.js__			Image & Video processing scheduler
 	* __Makefile__			Compiles findapng.c and perceptual.c
 	* __perceptual.c__		Compiles into perceptual hash generator on build
+* __lib/__					Various client libraries
 * __report/__
 	* __client.js__			Renders report panel
 	* __config.js.example__	Sample reports configuration
@@ -162,9 +164,8 @@ Project map:
 * __db.js__				Handles Redis writes and listeners
 * __deps.js__			Lists dependancies
 * __etc.js__			Various helper functions
+* __gulpfile.js___		Builds the client files
 * __hooks.js__			Hooks for server-client and viseversa code execution
 * __hot.js.example__	Sample hot-reloadable configurations file
-* __make_client.js__	Generates the main client javascript files to be served
 * __package.json__		NPM configuration
-* __pipeline.js__		Creates and hashes client-side javascript files
 * __tail.js__			No clue
