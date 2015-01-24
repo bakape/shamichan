@@ -40,7 +40,7 @@ exports.SERVER_DEPS = [
 
 exports.VENDOR_DEPS = [
 	'./node_modules/jquery/dist/jquery.js',
-	'./yepnope.js',
+	'./lib/yepnope.js',
 	'./node_modules/underscore/underscore.js',
 	'./node_modules/backbone/backbone.js',
 	'./lib/oninput.js',

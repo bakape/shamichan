@@ -6,9 +6,10 @@ var isNode = typeof navigator === 'undefined';
 var DEF = {};
 
 if (isNode){
-	var config = require('./config');
-	var hotConfig = require('./server/state').hot;
-	var imagerConfig = require('./imager/config');
+	// Assigned, not initialised, so they don't get hoisted on the client
+	config = require('./config');
+	hotConfig = require('./server/state').hot;
+	imagerConfig = require('./imager/config');
 	DEF = exports;
 }
 

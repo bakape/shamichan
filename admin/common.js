@@ -1,11 +1,14 @@
 var isNode = typeof navigator === 'undefined';
+var common;
 if (isNode){
-	var _ = require('underscore');
-	var config = require('../config');
-	var common = require('../common');
-	var DEF = exports;
+	// Assigned, not initialised, so they don't get hoisted on the client
+	_ = require('underscore');
+	config = require('../config');
+	common = require('../common');
+	DEF = exports;
 }
-
+else
+	common = window;
 DEF.FETCH_ADDRESS = 101;
 DEF.SET_ADDRESS_NAME = 102;
 DEF.BAN = 103;

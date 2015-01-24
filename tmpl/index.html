@@ -7,21 +7,6 @@
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
 $META	<!--[if lt IE 9]><script src="{{MEDIA_URL}}js/ie.js"></script><![endif]-->
 	<script src="{{MEDIA_URL}}js/setup.js?v=6"></script>
-	<script src="{{MEDIA_URL}}js/sockjs-0.3.4.min.js"></script>
-	<script src="{{MEDIA_URL}}js/{{VENDOR_JS}}"></script>
-	<script>
-		var config = {{CLIENT_CONFIG}};
-		var imagerConfig = {{CLIENT_IMAGER}};
-		var reportConfig = {{CLIENT_REPORT}};
-		var hotConfig = {{CLIENT_HOT}};
-		var configHash = '{{CLIENT_CONFIG_HASH}}';
-		// Bootstrap options model, so that it is available on model extraction
-		_.defaults(options, {
-			lastn: hotConfig.THREAD_LAST_N,
-			inlinefit: 'width',
-		});
-		options = new Backbone.Model(options);
-	</script>
 </head>
 <fieldset id="identity" class="bmodal">
 <label for="name" class="ident">Name:</label> <input id="name" name="name"><br>
@@ -56,4 +41,19 @@ $NAV
 <h1>$TITLE</h1>
 $THREADS
 $NAV
+<script src="{{MEDIA_URL}}js/sockjs-0.3.4.min.js"></script>
+<script src="{{MEDIA_URL}}js/{{VENDOR_JS}}"></script>
+<script>
+	var config = {{CLIENT_CONFIG}};
+	var imagerConfig = {{CLIENT_IMAGER}};
+	var reportConfig = {{CLIENT_REPORT}};
+	var hotConfig = {{CLIENT_HOT}};
+	var configHash = '{{CLIENT_CONFIG_HASH}}';
+	// Bootstrap options model, so that it is available on model extraction
+	_.defaults(options, {
+	lastn: hotConfig.THREAD_LAST_N,
+	inlinefit: 'width',
+	});
+	options = new Backbone.Model(options);
+</script>
 <script src="{{MEDIA_URL}}js/{{CLIENT_JS}}"></script>
