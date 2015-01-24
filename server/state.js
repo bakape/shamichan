@@ -2,6 +2,7 @@ var _ = require('underscore'),
 	async = require('async'),
 	config = require('../config'),
 	crypto = require('crypto'),
+	etc = require('../etc'),
 	exec = require('child_process').execFile,
 	fs = require('fs'),
 	gulp = require('../gulpfile'),
@@ -217,10 +218,13 @@ function build_FAQ(faq){
 }
 
 function buildClient(cb){
-	exec('/usr/bin/gulp', ['client', 'mod', 'vendor'], function(err, stdout, stderr){
-		if (err)
-			return console.error('Error: Failed to build client:', err, stderr);
-		cb();
+	// XXX: Reruns which each hot reload
+	etc.which('gulp', function(gulp){
+		exec(gulp, ['client', 'mod', 'vendor'], function(err, stdout, stderr){
+			if (err)
+				return console.error('Error: Failed to build client:', err, stderr);
+			cb();
+		});
 	});
 }
 

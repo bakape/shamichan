@@ -460,33 +460,18 @@ IU.read_image_filesize = function (callback) {
 	});
 };
 
-function which(name, callback) {
-	child_process.exec('which ' + name, function (err, stdout, stderr) {
-		if (err)
-			throw err;
-		callback(stdout.trim());
-	});
-}
 
-/* Look up imagemagick paths */
-var identifyBin, convertBin;
-which('identify', function (bin) { identifyBin = bin; });
-which('convert', function (bin) { convertBin = bin; });
 
-var exiftoolBin;
-if (config.DEL_EXIF) {
-	which('exiftool', function (bin) { exiftoolBin = bin; });
-}
-
-var ffmpegBin;
-if (config.WEBM) {
-	which('ffmpeg', function (bin) { ffmpegBin = bin; });
-}
-
-var pngquantBin;
-if (config.PNG_THUMBS){
-	which('pngquant', function (bin) { pngquantBin = bin; });
-}
+// Look up binary paths
+var identifyBin, convertBin, exiftoolBin, ffmpegBin, pngquantBin;
+etc.which('identify', function (bin) { identifyBin = bin; });
+etc.which('convert', function (bin) { convertBin = bin; });
+if (config.DEL_EXIF)
+	etc.which('exiftool', function (bin) { exiftoolBin = bin; });
+if (config.WEBM)
+	etc.which('ffmpeg', function (bin) { ffmpegBin = bin; });
+if (config.PNG_THUMBS)
+	etc.which('pngquant', function (bin) { pngquantBin = bin; });
 
 function identify(taggedName, callback) {
 	var m = taggedName.match(/^(\w{3,4}):/);

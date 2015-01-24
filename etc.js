@@ -77,3 +77,12 @@ exports.checked_mkdir = function (dir, cb) {
 exports.random_id = function () {
 	return Math.floor(Math.random() * 1e16) + 1;
 };
+
+// Get binary absolute path
+exports.which = function(name, callback) {
+	child_process.exec('which ' + name, function (err, stdout, stderr) {
+		if (err)
+			throw err;
+		callback(stdout.trim());
+	});
+};
