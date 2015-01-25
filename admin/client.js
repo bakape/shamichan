@@ -13,11 +13,12 @@ function show_toolbox() {
 		{name: 'Del Img', kind: 8},
 		{name: 'Del Post', kind: 9},
 		{name: 'Lock', kind: 11},
-		{name: 'Mnemonics', kind: 12},
+		{name: 'Mnemonics', kind: 'mnemonics'},
 	];
 	if (IDENT.auth == 'Admin'){
+		specs.push({name: 'Notification', kind: 'notification'});
 		if (THREAD)
-			specs.push({name: 'Fun', kind: 13});
+			specs.push({name: 'Fun', kind: 'fun'});
 		specs.push({name: 'Panel', kind: 'panel'});
 	}
 	var $toolbox = $('<div/>', {id: 'toolbox', "class": 'mod'});
@@ -64,10 +65,12 @@ function tool_action(event) {
 	var kind = $button.data('kind');
 	if (kind == 'panel')
 		return toggle_panel();
-	if (kind == 12)
+	if (kind == 'mnemonics')
 		return options.set('noMnemonics', !options.get('noMnemonics'));
-	if (kind == 13)
+	if (kind == 'fun')
 		return fun();
+	if (kind == 'notification')
+		return globalNotification();
 	/* On a thread page there's only one thread to lock, so... */
 	if (kind == 11 && THREAD && !ids.length)
 		ids = [THREAD];
@@ -485,6 +488,13 @@ var PanelView = Backbone.View.extend({
 function toggle_panel() {
 	var show = !adminState.get('visible');
 	send([show ? 60 : 61, 'adminState']);
+}
+
+// XXX: This really should be a backbone view, but we need to turn showtoolbox()
+// into a view for that first
+function globalNotification(){
+	var msg = prompt('Enter notification message here:').trim();
+	send([DEF.NOTIFICATION, msg]);
 }
 
 // Togglle mnemonic display

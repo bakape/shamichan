@@ -71,6 +71,7 @@ exports.CLIENT_DEPS = [
 	'curfew/client.js',
 	'report/client.js',
 	'time/client.js',
+	'client/banner.js',
 ];
 
 exports.SERVER_STATE = [

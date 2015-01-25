@@ -1063,6 +1063,16 @@ hooks.hook('clientSynced', function(info, cb){
 	cb(null);
 });
 
+// Non-persistent global live admin notifications
+dispatcher[common.NOTIFICATION] = function(msg, client){
+	if (!caps.can_administrate(client.ident))
+		return false;
+	if (!check(['string'], msg))
+		return false;
+	okyaku.push([0, common.NOTIFICATION, msg[0]]);
+	return true;
+};
+
 // Regex replacement filter
 function hot_filter(frag){
 	var filter = STATE.hot.FILTER;

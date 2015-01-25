@@ -232,6 +232,11 @@ span.control .popup-menu {
 	max-height: 80%;
 	max-width: 80%;
 }
+.notification {
+	position: fixed;
+	left: 50%;
+	transform: translate(-50%, 0);
+}
 #FAQ > ul, #schedule > table {
 	list-style-type:none;
 	-webkit-margin-before: 0em;
