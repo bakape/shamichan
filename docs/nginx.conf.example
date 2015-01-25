@@ -22,10 +22,25 @@ server {
 	# Domain the website will be hosted on.
 	server_name mydomain.com;
 
+	# SSL
+	#listen 443 ssl;
+	#ssl_certificate /etc/nginx/ssl/nginx.crt;
+	#ssl_certificate_key /etc/nginx/ssl/nginx.key;
+
+
 	# You can forward various root-directory static files here.
 	root /path/to/doushio/www/;
 	location = /favicon.ico {}
-	location = /robots.txt {}
+	location = /bg.jpg {}
+	location = /MadokaRunes.ttf {}
+	location = /50x.ico {}
+	location = /50x.html {}
+
+	# Gzip compression
+	gzip on;
+	gzip_proxied any;
+	gzip_comp_level 1;
+	gzip_types text/plain text/css application/json application/javascript application/x-javascript text/javascript;
 
 	# Handles static assets (images, JS, CSS, etc.)
 	# Requires "SERVE_STATIC_FILES: false" in ./config.js
@@ -66,5 +81,7 @@ server {
 
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip; # CloudFlare
+		 # Custom error page. Changing to 503 to not trip Cloudflare
+		 error_page 500 502 503 504 =503 /50x.html;
 	}
 }
