@@ -168,7 +168,7 @@ var ReportPanel = Backbone.View.extend({
 	},
 });
 
-var ajaxJs = 'http://www.google.com/recaptcha/api/js/recaptcha_ajax.js';
+var ajaxJs = 'https://www.google.com/recaptcha/api/js/recaptcha_ajax.js';
 
 menuHandlers.Report = function (post) {
 	var num = post.id;
