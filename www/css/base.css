@@ -232,6 +232,11 @@ span.control .popup-menu {
 	max-height: 80%;
 	max-width: 80%;
 }
+/* Proper fixed element renderring with dynamic animated backgrounds */
+#banner, .bmodal, .modal {
+	-webkit-backface-visibility: hidden;
+	-webkit-transform: translateZ(0);
+}
 .notification {
 	position: fixed;
 	left: 50%;
