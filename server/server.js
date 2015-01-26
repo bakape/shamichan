@@ -1069,7 +1069,7 @@ dispatcher[common.NOTIFICATION] = function(msg, client){
 		return false;
 	if (!check(['string'], msg))
 		return false;
-	okyaku.push([0, common.NOTIFICATION, msg[0]]);
+	okyaku.push([0, common.NOTIFICATION, common.escape_html(msg[0])]);
 	return true;
 };
 
