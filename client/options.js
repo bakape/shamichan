@@ -713,11 +713,14 @@ _.defer(function () {
 /* TOGGLER FOR TOP BANNER BUTTONS */
 
 function position_bmodal(target){
-	if (!$(target).is(':visible')){
-		$(target).css('top', $('#banner').outerHeight() + 5 + 'px');
+	var $t = $(target);
+	if (!$t.is(':visible')){
+		// Place 5 pixels bellow banner
+		$t.css('top', $('#banner').outerHeight() + 5 + 'px');
+		// Hide other visible modal windows
 		$('.bmodal:visible').toggle('fast');
 	}
-	$(target).toggle('fast');
+	$t.toggle('fast');
 }
 $('#banner_FAQ').click(function(){
 	position_bmodal('#FAQ');
