@@ -200,7 +200,7 @@ function option_reply_at_right(r) {
 		$('#reply-at-right').remove();
 }
 option_reply_at_right.id = 'replyright';
-option_reply_at_right.label = '[Reply] at right';
+option_reply_at_right.label = '[Reply] at Right';
 option_reply_at_right.type = 'checkbox';
 option_reply_at_right.tooltip = 'Move Reply button to the right side of the page';
 
@@ -616,10 +616,10 @@ option_inline_expansion.tooltip = "Expand images inside the parent post and resi
 /* SHORTCUT KEYS */
 
 var shortcuts = [
-	{label: 'New post', name: 'new', which: 78},
-	{label: 'Image spoiler', name: 'togglespoiler', which: 73},
+	{label: 'New Post', name: 'new', which: 78},
+	{label: 'Image Spoiler', name: 'togglespoiler', which: 73},
 	{label: 'Text Spoiler', name: 'textSpoiler', which: 68},
-	{label: 'Finish post', name: 'done', which: 83},
+	{label: 'Finish Post', name: 'done', which: 83},
 ];
 
 function toggle_shortcuts(event) {

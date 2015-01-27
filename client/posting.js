@@ -95,7 +95,7 @@ function handle_shortcut(event) {
 				var $input = this.$input;
 				var state = this.imouto.state2.spoiler;
 				// Was spoiler already started?
-				var sp = ' ['+(state?'/':'')+'spoiler] ';
+				var sp = (state?'[/':' [')+'spoiler]';
 				this.imouto.state2.spoiler = !state;
 				$input.val($input.val()+sp);
 				used = true;
