@@ -150,9 +150,7 @@ var Hidamari = {
 	},
 };
 
-var Shell = Backbone.Model.extend();
-
-var massExpander = new Shell({
+var massExpander = new Backbone.Model({
 	expand: false
 });
 
