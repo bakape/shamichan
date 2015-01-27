@@ -60,49 +60,47 @@ $DOC.on('click', 'aside a', _.wrap(function () {
 
 $DOC.on('keydown', handle_shortcut);
 
-var wcombo = 0;
-
 function handle_shortcut(event) {
-	if (wcombo < 0) {
-		// already active
-	}
-	else if (event.shiftKey && event.which == 87) {
-		if (++wcombo > 10) {
-			wcombo = -1;
-			yepnope(mediaURL + 'js/wordfilter.js?v=1');
-		}
-	}
-	else
-		wcombo = 0;
-
 	if (!event.altKey)
 		return;
 
 	var used = false;
 	switch (event.which) {
-	case shortcutKeys['new']:
-		var $aside = THREAD ? $('aside') : $ceiling.next();
-		if ($aside.is('aside') && $aside.length == 1) {
-			with_dom(function () {
-				postSM.feed('new', $aside);
-			});
-			used = true;
-		}
-		break;
-	case shortcutKeys.togglespoiler:
-		if (postForm) {
-			postForm.on_toggle(event);
-			used = true;
-		}
-		break;
-	case shortcutKeys.done:
-		if (postForm) {
-			if (!postForm.submit.attr('disabled')) {
-				postForm.finish_wrapped();
+		case shortcutKeys['new']:
+			var $aside = THREAD ? $('aside') : $ceiling.next();
+			if ($aside.is('aside') && $aside.length == 1) {
+				with_dom(function () {
+					postSM.feed('new', $aside);
+				});
 				used = true;
 			}
-		}
-		break;
+			break;
+		case shortcutKeys.togglespoiler:
+			if (postForm) {
+				postForm.on_toggle(event);
+				used = true;
+			}
+			break;
+		case shortcutKeys.done:
+			if (postForm) {
+				if (!postForm.submit.attr('disabled')) {
+					postForm.finish_wrapped();
+					used = true;
+				}
+			}
+			break;
+		// Insert text spoiler
+		case shortcutKeys.textSpoiler:
+			if (postForm){
+				var $input = this.$input;
+				var state = this.imouto.state2.spoiler;
+				// Was spoiler already started?
+				var sp = ' ['+(state?'/':'')+'spoiler] ';
+				this.imouto.state2.spoiler = !state;
+				$input.val($input.val()+sp);
+				used = true;
+			}
+			break;
 	}
 
 	if (used) {
@@ -252,6 +250,8 @@ initialize: function (dest) {
 	this.imouto.callback = inject;
 	this.imouto.op = THREAD;
 	this.imouto.state = [DEF.S_BOL, 0];
+	// TODO: Convert current OneeSama.state array to more flexible object
+	this.imouto.state2 = {spoiler: 0};
 	this.imouto.buffer = this.buffer;
 	this.imouto.eLinkify = oneeSama.eLinkify;
 	this.imouto.hook('spoilerTag', touchable_spoiler_tag);
@@ -378,20 +378,20 @@ on_key_down: function (event) {
 		_.defer($.proxy(this, 'entry_scroll_lock'));
 	}
 	switch (event.which) {
-	case 13:
-		event.preventDefault();
-		/* fall-through */
-	case 32:
-		var c = event.which == 13 ? '\n' : ' ';
-		// predict result
-		var input = this.$input[0];
-		var val = this.$input.val();
-		val = val.slice(0, input.selectionStart) + c +
-				val.slice(input.selectionEnd);
-		this.on_input(val);
-		break;
-	default:
-		handle_shortcut(event);
+		case 13:
+			event.preventDefault();
+			/* fall-through */
+		case 32:
+			var c = event.which == 13 ? '\n' : ' ';
+			// predict result
+			var input = this.$input[0];
+			var val = this.$input.val();
+			val = val.slice(0, input.selectionStart) + c +
+					val.slice(input.selectionEnd);
+			this.on_input(val);
+			break;
+		default:
+			handle_shortcut.bind(this)(event);
 	}
 },
 
