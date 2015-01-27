@@ -6,8 +6,6 @@
 </head>
 <body>
 </body>
-<script src="{{MEDIA_URL}}js/yepnope-1.5.min.js"></script>
-<script src="{{MEDIA_URL}}js/jquery-2.1.3.min.js"></script>
 <script>
 var state = $STATE;
 for (var k in state)
@@ -15,4 +13,5 @@ for (var k in state)
 window.personaExitURL = "{{DEFAULT_BOARD}}/";
 window.mediaURL = "{{MEDIA_URL}}";
 </script>
+<script src="{{MEDIA_URL}}js/{{VENDOR_JS}}"></script>
 <script src="{{MEDIA_URL}}js/login.js?v=2"></script>
