@@ -493,8 +493,11 @@ function toggle_panel() {
 // XXX: This really should be a backbone view, but we need to turn showtoolbox()
 // into a view for that first
 function globalNotification(){
-	var msg = prompt('Enter notification message here:').trim();
-	send([DEF.NOTIFICATION, msg]);
+	var msg = prompt('Enter notification message here:');
+	// Canceled
+	if (!msg)
+		return;
+	send([DEF.NOTIFICATION, msg.trim()]);
 }
 
 // Togglle mnemonic display
