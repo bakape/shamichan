@@ -97,8 +97,7 @@ Project map:
 	* __finapng.c__			Compiles into APNG detection utility on build
 	* __ndex.js__			Handles various image-related structured information
 	* __jobs.js__			Image & Video processing scheduler
-	* __Makefile__			Compiles findapng.c and perceptual.c
-	* __perceptual.c__		Compiles into perceptual hash generator on build
+	* __Makefile__			Compiles findapng.c
 * __lib/__					Various client libraries
 * __report/__
 	* __client.js__			Renders report panel
