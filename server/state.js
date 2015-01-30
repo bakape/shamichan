@@ -58,7 +58,7 @@ function reload_hot_config(cb) {
 		// Pass some of the config variables to the client
 		// TODO: Once using gulp, could write this to the start of the client file instead
 		var clientHot = _.pick(HOT, 'RADIO_BANNER', 'ILLYA_DANCE', 'EIGHT_BALL','THREADS_PER_PAGE', 'ABBREVIATED_REPLIES',
-				'SUBJECT_MAX_LENGTH', 'EXCLUDE_REGEXP','ADMIN_ALIAS', 'MOD_ALIAS', 'SAGE_ENABLED');
+				'SUBJECT_MAX_LENGTH', 'EXCLUDE_REGEXP','ADMIN_ALIAS', 'MOD_ALIAS', 'SAGE_ENABLED', 'THREAD_LAST_N');
 		HOT.CLIENT_CONFIG = JSON.stringify(clientConfig);
 		HOT.CLIENT_IMAGER = JSON.stringify(clientImager);
 		HOT.CLIENT_REPORT = JSON.stringify(clientReport);
@@ -108,10 +108,6 @@ function reload_scripts(cb) {
 			cb(null);
 		});
 	});
-}
-
-function getScriptRevision(name, cb){
-
 }
 
 function reload_resources(cb) {
