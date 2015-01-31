@@ -204,6 +204,12 @@ span.control .popup-menu {
 #banner a {
 	text-decoration: none;
 }
+#banner_center .mobile:-webkit-full-screen, #banner_center .mobile:-moz-full-screen {
+	display: block;	
+}
+#banner_center.mobile {
+	display: none;
+}
 .bfloat {
 	font-weight: bold;
 	float: right;

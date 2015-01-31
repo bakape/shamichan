@@ -1,0 +1,20 @@
+{
+    "name": "Meguca.org",
+    "description": "Realtime imageboard",
+    "developer": {
+        "name": "bakape",
+        "url": "https://github.com/bakape/meguca"
+    },
+    "launch_path": "/",
+    "icons": {
+        "48": "/mobile/icon48",
+        "72": "/mobile/icon72",
+        "96": "/mobile/icon96",
+        "128": "/mobile/icon128",
+        "144": "/mobile/icon144",
+        "192": "/mobile/icon192",
+        "512": "/mobile/icon512"
+    },
+    "default_locale": "en",
+    "fullscreen": true
+}

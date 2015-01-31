@@ -50,6 +50,11 @@ server {
 		alias /path/to/doushio/www/;
 	}
 
+	# Mobile assets
+	location /mobile/ {
+		alias /path/to/doushio/www/mobile/;
+	}
+
 	# Handles image uploads.
 	location /upload/ {
 		# If you use imager/config DAEMON, add an upstream for the
