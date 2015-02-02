@@ -158,7 +158,7 @@ exports.make_media_dirs = function (cb) {
 			keys.push('mid');
 		async.forEach(keys, make_dir.bind(null, dead), cb);
 	});
-}
+};
 
 exports.serve_image = function (req, resp) {
 	var m = /^\/(src|thumb|mid|vint)(\/\d+\.\w+)$/.exec(req.url);

@@ -1,4 +1,5 @@
-var config = require('./config'),
+var compare = require('./compare.node').hashCompareCpp,
+	 config = require('./config'),
     events = require('events'),
     fs = require('fs'),
     Muggle = require('../etc').Muggle,
@@ -105,14 +106,17 @@ O.delete_temporaries = function (callback) {
 	});
 };
 
-O.check_duplicate = function (hash, callback) {
-	this.connect().get('hash:'+hash, function (err, num) {
+O.check_duplicate = function (image, callback) {
+	this.connect().zrangebyscore('imageDups', Date.now(), '+inf', function (err, hashes) {
 		if (err)
-			callback(err);
-		else if (num)
-			callback(Muggle('Duplicate of >>' + num + '.'));
-		else
-			callback(false);
+			return callback(err);
+		if (!hashes)
+			return callback(false);
+		// Compare image hashes with C++ addon
+		var isDup = compare(config.DUPLICATE_THRESHOLD, image, hashes);
+		if (isDup)
+			isDup = Muggle('Duplicate of >>' + isDup + '.');
+		callback(isDup);
 	});
 };
 

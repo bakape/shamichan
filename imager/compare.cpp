@@ -117,4 +117,4 @@ void Init(Handle<Object> exports) {
   exports->Set(String::NewSymbol("hashCompareCpp"),
     FunctionTemplate::New(hashCompareCpp)->GetFunction());
 }
-NODE_MODULE(compareModule,Init)
+NODE_MODULE(compare,Init)

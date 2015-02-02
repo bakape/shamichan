@@ -57,8 +57,6 @@ Project map:
 	* __common.js__		Functions common to all admin modules
 	* __index.js__		Server-side communication and database handler
 	* __panel.js__		Renders the administrator panel
-* __anonhours/__
-	* __server.js__		Anonymity and random name hour logic
 * __archive/__
 	* __daemon.js__		Archiver/thread deletion daemon
 	* __dump.js__		Static archiver. Currently not ready for use
@@ -91,6 +89,7 @@ Project map:
 	* __doushio.initscript.example__	Sample init script
 	* __nginx.conf.example__			Sample nginx configuration file
 * __imager/__
+	* __compare.*__			Image duplicate detection node.js addon
 	* __config.js.example__	Sample image & video processing configuration
 	* __daemon.js__			Recieves and processes images and video from clients
 	* __db.js__				Handles Redis image keys

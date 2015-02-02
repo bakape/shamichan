@@ -1137,8 +1137,7 @@ Y.check_throttle = function (ip, callback) {
 };
 
 function note_hash(m, hash, num) {
-	var key = 'hash:' + hash;
-	m.setex(key, config.DEBUG ? 30 : 3600, num);
+	m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000), num + ':' + hash);
 }
 
 Y.add_image = function (post, alloc, ip, callback) {
@@ -1882,3 +1881,9 @@ function hmget_obj(r, key, keys, cb) {
 	});
 }
 
+// Remove expired duplicate image hashes
+function cleanUpDups(){
+	global.redis.zremrangebyscore('imageDups', 0, Date.now());
+}
+
+setInterval(cleanUpDups, 60000);

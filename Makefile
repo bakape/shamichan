@@ -9,6 +9,6 @@ client:
 .PHONY: all clean client
 
 clean:
-	rm -rf -- .build state www/js/(client,vendor}{.,-}*.js
+	rm -rf -- .build state www/js/{client,vendor}{.,-}*.js
 	$(MAKE) -C imager -w clean
 	$(MAKE) -C tripcode -w clean

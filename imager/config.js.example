@@ -26,6 +26,8 @@ module.exports = {
 // in your browser's javascript console
 	MAIN_SERVER_ORIGIN: 'http://localhost:8000',
 
+// Image duplicate detection threshold. Integer [0 - 256]. Higher is more agressive
+	DUPLICATE_THRESHOLD: 26,
 // Thubnail conkfiguration for both the "small" and "large" thumbnail quality settings
 	PINKY_QUALITY: 50,
 	PINKY_DIMENSIONS: [125, 125],

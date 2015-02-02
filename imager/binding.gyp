@@ -1,7 +1,7 @@
 {
     "targets": [
         {
-            "target_name": "compareModule",
+            "target_name": "compare",
             "sources": [ "compare.cpp"]
         }
     ]
