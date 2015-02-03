@@ -93,17 +93,24 @@ function drop_and_lock() {
 		return;
 	// On connection drop, focus the last post.
 	// This to prevent jumping to thread bottom on reconnect.
-	if (CurThread && !lockedManually) {
+	autoUnlock(true);
+}
+
+function autoUnlock(unlock){
+	if (!CurThread && lockedManually)
+		return;
+	if (unlock){
 		var last = CurThread.get('replies').last();
 		if (last)
 			set_lock_target(last.id, false);
 	}
+	else
+		set_lock_target(null);
 }
 
 connSM.on('synced', function () {
 	// If we dropped earlier, stop focusing now.
-	if (!lockedManually)
-		set_lock_target(null);
+	autoUnlock(false);
 	if (dropAndLockTimer) {
 		clearTimeout(dropAndLockTimer);
 		dropAndLockTimer = null;
@@ -112,7 +119,7 @@ connSM.on('synced', function () {
 
 var at_bottom = function() {
 	return window.scrollY + window.innerHeight >= $DOC.height() - 5;
-}
+};
 if (window.scrollMaxY !== undefined)
 	at_bottom = function () {
 		return window.scrollMaxY <= window.scrollY;

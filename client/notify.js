@@ -16,6 +16,8 @@ document.addEventListener('visibilitychange', function (e) {
 	var hidden = !!e.target.hidden;
 	// Unread post count will reset 
 	Unread.set({hidden: hidden, unreadCount: 0, reply: !hidden});
+	// Prevent scrolling with new posts, if page isn't visible
+	autoUnlock(hidden);
 }, false);
 
 connSM.on('synced', function () {
