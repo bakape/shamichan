@@ -56,15 +56,6 @@ var config = {
 // Translate IP's into more human-readable mnemonics
 	IP_MNEMONIC: true,
 
-// A semi random set of hours each day will make all posts Anonymous
-	ANON_HOURS: false,
-// Accepted values are [1, 2, 3, 4, 6, 12, 24]
-	ANON_HOURS_PER_DAY: 2, 
-// Sets a semi-random ratio of anon hours to he converted into random name hours
-// All posts will have a random name assigned to them from the posted name set
-// Set to integer from 0 to 10. 0 disables random name hours. 10 makes all anon hours random name hours
-	RANDOM_NAME_HOURS: 0, 
-
 /* Silly little things you probably should not care about */
 
 // Automatic name assignement by parsing https://r-a-d.io/api

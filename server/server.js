@@ -28,9 +28,6 @@ if (!imager.is_standalone())
 	require('../imager/daemon'); // preload and confirm it works
 if (config.CURFEW_BOARDS)
 	require('../curfew/server');
-var anon_hours;
-if (config.ANON_HOURS)
-	anon_hours = require('../anon_hours/server');
 var autoJoe;
 if (config.AUTOJOE){
 	autoJoe = require('../autoJoe/server');
@@ -734,7 +731,7 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 			client.kotowaru(Muggle("Allocation failure.", err));
 	});
 	return true;
-}
+};
 
 function inactive_board_check(client) {
 	if (caps.can_administrate(client.ident))
@@ -783,22 +780,11 @@ function allocate_post(msg, client, callback) {
 			post.subject = subject;
 	}
 
-	// Anon hours name replacement
-	if(anon_hours && (!autoJoe || !autoJoe.isJoe)){
-		// Add name to used name list for random name hours
-		if (msg.name)
-			anon_hours.name_parse(msg.name);
-		// Pull random name from name list
-		if (anon_hours.random_name_hour)
-			anon_hours.random_name(post);
-	}
 	// Replace names, when a song plays on r/a/dio
-	if (autoJoe){
-		if (autoJoe.isJoe)
-			post.name = autoJoe.name;
-	}
+	if (autoJoe && autoJoe.isJoe)
+		post.name = autoJoe.name;
 	/* TODO: Check against client.watching? */
-	if (msg.name && (!anon_hours || !anon_hours.anon_hour) && (!autoJoe || !autoJoe.isJoe)) {
+	else if (msg.name) {
 		var parsed = common.parse_name(msg.name);
 		post.name = parsed[0];
 		var spec = STATE.hot.SPECIAL_TRIPCODES;
