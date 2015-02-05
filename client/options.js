@@ -65,6 +65,7 @@ if (!isMobile){
 }
 optSpecs.push(option_last_n);
 optSpecs.push(option_postUnloading);
+optSpecs.push(option_alwaysLock);
 
 nashi.upload = !!$('<input type="file"/>').prop('disabled');
 
@@ -141,6 +142,15 @@ option_postUnloading.type = 'revcheckbox';
 option_postUnloading.tooltip = 'Improves thread responsiveness by unloading posts from the'+
 		' top of the thread, so that post count stays within the Last # value. Only applies to '+
 		'Last # enabled threads';
+
+/* LOCK TO BOTTOM EVEN WHEN DOCUMENT HIDDEN*/
+
+function option_alwaysLock(){}
+
+option_alwaysLock.id = 'alwaysLock';
+option_alwaysLock.label = 'Always Lock to Bottom';
+option_alwaysLock.type = 'checkbox';
+option_alwaysLock.tooltip = 'Lock scrolling to page bottom even when tab is hidden';
 
 /* THEMES */
 

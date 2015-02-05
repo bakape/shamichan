@@ -99,7 +99,7 @@ function drop_and_lock() {
 function autoUnlock(unlock){
 	if (!CurThread && lockedManually)
 		return;
-	if (unlock){
+	if (unlock && !options.get('alwaysLock')){
 		var last = CurThread.get('replies').last();
 		if (last)
 			set_lock_target(last.id, false);
