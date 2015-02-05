@@ -12,7 +12,8 @@ var async = require('async'),
     path = require('path'),
     urlParse = require('url').parse,
     util = require('util'),
-    winston = require('winston');
+    winston = require('winston'),
+    findapng = require('./findapng.node').findapngCpp;
 
 var IMAGE_EXTS = ['.png', '.jpg', '.gif'];
 if (config.WEBM) {
@@ -556,19 +557,7 @@ function perceptual_hash(src, image, callback) {
 }
 
 function detect_APNG(fnm, callback) {
-	var bin = path.join(__dirname, 'findapng');
-	child_process.execFile(bin, [fnm], function (err, stdout, stderr) {
-		if (err)
-			return callback(Muggle('APNG detector problem.',
-					stderr || err));
-		else if (stdout.match(/^APNG/))
-			return callback(null, true);
-		else if (stdout.match(/^PNG/))
-			return callback(null, false);
-		else
-			return callback(Muggle('APNG detector acting up.',
-					stderr || err));
-	});
+	callback(null,findapng(fnm));
 }
 
 function setup_image_params(o) {
