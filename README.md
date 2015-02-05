@@ -28,7 +28,8 @@ Production:
 Dependencies:
 
 * ImageMagick
-* libpng
+* gcc, g++, make
+* libpng with development headers
 * node.js + npm
 * gulp (installed globally with `# npm install --global gulp`)
 * redis
