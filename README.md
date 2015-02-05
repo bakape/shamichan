@@ -93,7 +93,7 @@ Project map:
 	* __config.js.example__	Sample image & video processing configuration
 	* __daemon.js__			Recieves and processes images and video from clients
 	* __db.js__				Handles Redis image keys
-	* __finapng.c__			Compiles into APNG detection utility on build
+	* __findapng.*__		APNG detection node.js addon
 	* __ndex.js__			Handles various image-related structured information
 	* __jobs.js__			Image & Video processing scheduler
 	* __Makefile__			Compiles findapng.c
