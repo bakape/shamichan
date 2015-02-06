@@ -134,11 +134,11 @@ options.on('change:lastn', function (model, lastN) {
 
 /* KEEP THREAD LENGTH WITHIN LASTN */
 
-function option_postUnloading(toggle){}
+function option_postUnloading(){}
 
 option_postUnloading.id = 'postUnloading';
 option_postUnloading.label = 'Dynamic Post Unloading';
-option_postUnloading.type = 'revcheckbox';
+option_postUnloading.type = 'checkbox';
 option_postUnloading.tooltip = 'Improves thread responsiveness by unloading posts from the'+
 		' top of the thread, so that post count stays within the Last # value. Only applies to '+
 		'Last # enabled threads';
@@ -447,7 +447,7 @@ function option_illya_mute(toggle){
 	if (options.get(option_illya_dance.id)){
 		option_illya_dance(false);
 		option_illya_dance(true);
-	}	
+	}
 }
 
 option_illya_mute.id = 'illyaMuteToggle';
@@ -461,7 +461,7 @@ function option_horizontal(toggle){
 	var style = '<style id="horizontal">article,aside{display:inline-block;}</style>';
 	if (toggle)
 		$('head').append(style);
-	else 
+	else
 		$('#horizontal').remove();
 }
 
@@ -755,7 +755,7 @@ if (!localStorage.getItem('options')){
 		$('.noOptions').fadeIn(fadeout);
 	}
 	fadeout();
-	
+
 	$('#options').click(function(){
 		$('#options').removeClass('noOptions');
 	});
