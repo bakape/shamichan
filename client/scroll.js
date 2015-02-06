@@ -97,7 +97,7 @@ function drop_and_lock() {
 }
 
 function autoUnlock(unlock){
-	if (!CurThread && lockedManually)
+	if (!CurThread || lockedManually)
 		return;
 	if (unlock && !options.get('alwaysLock')){
 		var last = CurThread.get('replies').last();
