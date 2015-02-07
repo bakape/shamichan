@@ -403,7 +403,7 @@ function readable_dice(bit, d) {
 				" hour="+d[0].hour+
 				" min="+d[0].min+
 				" sec="+d[0].sec+
-				' >Syncwatch disabled in options</syncwatch>');
+				' >syncwatch</syncwatch>');
 	}
 	var f = d[0], n = d.length, b = 0;
 	if (d[n-1] && typeof d[n-1] == 'object') {
