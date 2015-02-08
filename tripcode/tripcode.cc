@@ -4,27 +4,28 @@
 #include <unistd.h>
 #include <node.h>
 #include <string.h>
+#include <nan.h>
 
 using namespace v8;
 
 static char SECURE_SALT[21] = "$5$";
 #define TRIP_MAX 128
 
-static Handle<Value> setup_callback(Arguments const &args) {
-	HandleScope scope;
+static NAN_METHOD(setup_callback) {
+	NanScope();
 
 	if (args.Length() != 1)
-		return False();
-	String::Utf8Value saltVal(args[0]->ToString());
+		NanReturnValue(NanFalse());
+	NanUtf8String saltVal(args[0]);
 	if (saltVal.length() != 16)
-		return False();
+		NanReturnValue(NanFalse());
 	char *salt = *saltVal;
 	if (!salt)
-		return False();
+		NanReturnValue(NanFalse());
 	memcpy(SECURE_SALT + 3, salt, 16);
 	SECURE_SALT[19] = '$';
 	SECURE_SALT[20] = 0;
-	return True();
+	NanReturnValue(NanTrue());
 }
 
 static void fix_char(char &c) {
@@ -92,7 +93,7 @@ static int setup_conv() {
 
 typedef void (*trip_f)(char *, size_t, char *);
 
-static void with_SJIS(String::Utf8Value &trip, trip_f func, char *ret) {
+static void with_SJIS(NanUtf8String &trip, trip_f func, char *ret) {
 	char *src = *trip;
 	if (!src)
 		return;
@@ -115,27 +116,26 @@ static void with_SJIS(String::Utf8Value &trip, trip_f func, char *ret) {
 	}
 }
 
-static Handle<Value> hash_callback(Arguments const &args) {
-	HandleScope scope;
+NAN_METHOD(hash_callback) {
+	NanScope();
 	if (args.Length() != 2)
-		return Null();
+		NanReturnValue(NanNull());
 
-	String::Utf8Value trip(args[0]->ToString()),
-			secure(args[1]->ToString());
+	NanUtf8String trip(args[0]),secure(args[1]);
 	char digest[24];
 	digest[0] = 0;
 	with_SJIS(trip, &hash_trip, digest);
 	with_SJIS(secure, &hash_secure, digest + strlen(digest));
-	return scope.Close(String::New(digest));
+	NanReturnValue(NanNew<String>(digest));
 }
 
 extern "C" void init(Handle<Object> target) {
 	if (!setup_conv())
 		return;
-	target->Set(String::NewSymbol("setSalt"),
-			FunctionTemplate::New(&setup_callback)->GetFunction());
-	target->Set(String::NewSymbol("hash"),
-			FunctionTemplate::New(&hash_callback)->GetFunction());
+	target->Set(NanNew<String>("setSalt"),
+			NanNew<FunctionTemplate>(&setup_callback)->GetFunction());
+	target->Set(NanNew<String>("hash"),
+		NanNew<FunctionTemplate>(&hash_callback)->GetFunction());
 }
 
-NODE_MODULE(tripcode, init);
+NODE_MODULE(tripcode, init)
