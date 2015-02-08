@@ -137,7 +137,7 @@ var Article = Backbone.View.extend({
 			},
 		});
 		this.commonListeners();
-		if (!options.get('postUnloading') && CurThread)
+		if (options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {
 				'add': unloadTopPost
 			});
@@ -204,7 +204,7 @@ var Article = Backbone.View.extend({
 			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
 		this.remove();
 	},
-	
+
 	fun: function(){
 		// Fun goes here
 	},
