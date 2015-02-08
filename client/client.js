@@ -86,7 +86,6 @@ function shift_replies(section) {
 		$stat = $('<span class="omit"></span>');
 		section.children('blockquote,form').last().after($stat);
 	}
-	var omitsBefore = omit;
 	for (var i = 0; i < shown.length; i++) {
 		var cull = $(shown[i]);
 		if (rem-- < hotConfig.ABBREVIATED_REPLIES)

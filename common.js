@@ -722,8 +722,9 @@ reasonable_last_n = function (n) {
 	return n >= 5 && n <= 500;
 };
 
-OS.expansion_links_html = function (num, omit) {
-	return ' &nbsp; ' + action_link_html(num + '?last=' + this.lastN, 'Expand');
+OS.expansion_links_html = function (num) {
+	return ' &nbsp; ' + action_link_html(num, 'Expand') + ' '
+		+ action_link_html(num + '?last=' + this.lastN, 'Last&nbsp;' + this.lastN);
 };
 
 OS.atama = function (data) {
@@ -756,7 +757,7 @@ OS.atama = function (data) {
 		'>' + text + '</time> '),
 		this.post_nav(data));
 	if (!this.full && !data.op) {
-		var ex = this.expansion_links_html(data.num, data.omit);
+		var ex = this.expansion_links_html(data.num);
 		header.push(safe(ex));
 	}
 	this.trigger('headerFinish', {header: header, data: data});
