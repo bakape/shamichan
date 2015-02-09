@@ -557,7 +557,7 @@ function setup_image_params(o) {
 	o.quality += ''; // coerce to string
 }
 
-function build_im_args(o, args) {
+function build_im_args(o) {
 	// avoid OOM killer
 	var args = ['-limit', 'memory', '32', '-limit', 'map', '64'];
 	var dims = o.dims;
@@ -581,8 +581,8 @@ function resize_image(o, callback) {
 	var dest = o.dest;
 	// force new size
 	args.push('-resize', dims + '!');
-	// add background
 	args.push('-gamma', '2.2');
+	// add background
 	if (o.bg)
 		args.push('-background', o.bg, '-layers', 'mosaic', '+matte');
 	// disregard metadata, acquire artifacts
@@ -602,7 +602,7 @@ function resize_image(o, callback) {
 				function(err){
 					if (err) {
 						winston.warn(err);
-						callback(Muggle("Pngquant thumbnailing error.", err));
+						callback(Muggle("Pngquant thumbnailing error: ", err));
 					} else
 						callback(null, dest);
 			});
