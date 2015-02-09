@@ -453,20 +453,6 @@ IU.got_nails = function () {
 	this.record_image(tmps);
 };
 
-IU.read_image_filesize = function (callback) {
-	var self = this;
-	fs.stat(this.image.path, function (err, stat) {
-		if (err)
-			callback(Muggle('Internal filesize error.', err));
-		else if (stat.size > config.IMAGE_FILESIZE_MAX)
-			callback(Muggle('File is too large.'));
-		else
-			callback(null, stat.size);
-	});
-};
-
-
-
 // Look up binary paths
 var identifyBin, convertBin, exiftoolBin, ffmpegBin, pngquantBin;
 etc.which('identify', function (bin) { identifyBin = bin; });
