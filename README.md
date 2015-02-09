@@ -31,7 +31,7 @@ Dependencies:
 * gcc, g++, make
 * libpng with development headers
 * node.js + npm
-* gulp (installed globally with `# npm install --global gulp`)
+* gulp
 * redis
 * ffmpeg 2.2+ for WebM support
 * pngquant  2.3.1+ for PNG thumbnails

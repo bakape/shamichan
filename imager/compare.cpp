@@ -11,8 +11,9 @@
 #include <cstdlib>
 #include <string>
 #include <bitset>
+
 #include <node.h>
-#include <v8.h>
+#include <nan.h>
 
 #include "compare.h"
 
@@ -81,22 +82,22 @@ unsigned int countDiff(const std::vector<BYTE>& a, const std::vector<BYTE>& b)
 		buf+=(std::bitset<8>(a[i]^b[i])).count();
 	return buf;
 }
-Handle<Value> hashCompareCpp(const Arguments& args)
+NAN_METHOD(hashCompareCpp)
 {
-  HandleScope scope;
+  NanScope();
   if(args.Length()<3){
-    ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
-    return scope.Close(Number::New(-1));
+    NanThrowTypeError("Wrong number of arguments");
+    NanReturnValue(NanNew<Number>(-1));
   }
   if(!args[0]->IsNumber() || !args[1]->IsString() || !args[2]->IsArray()){
-    ThrowException(Exception::TypeError(String::New("Wrong arguments")));
-    return scope.Close(Number::New(-1));
+    NanThrowTypeError("Wrong arguments");
+    NanReturnValue(NanNew<Number>(-1));
   }
 
   unsigned int threshold = args[0]->Uint32Value();
 
-  String::Utf8Value param1(args[1]->ToString()); //change from node string to c++ string
-  std::vector<BYTE> posted = base64Decode(std::string(*param1));
+
+  std::vector<BYTE> posted = base64Decode(*NanUtf8String(args[1]));
 
   Handle<Array> toTest = Handle<Array>::Cast(args[2]);
   for(unsigned int i=0; i<toTest->Length();i++) {	//Compare posted with other hashes
@@ -108,13 +109,13 @@ Handle<Value> hashCompareCpp(const Arguments& args)
     std::vector<BYTE> tested = base64Decode(numHash.substr(numPos+1,numHash.length()));
 
 		if(countDiff(posted,tested)<threshold)
-			return scope.Close(Number::New(atoi(numHash.substr(0,numPos).c_str())));
+      NanReturnValue(NanNew<Number>(atoi(numHash.substr(0,numPos).c_str())));
 	}
-  return scope.Close(Number::New(0));
+  NanReturnValue(NanNew<Number>(0));
 }
 
 void Init(Handle<Object> exports) {
-  exports->Set(String::NewSymbol("hashCompareCpp"),
-    FunctionTemplate::New(hashCompareCpp)->GetFunction());
+  exports->Set(NanNew<String>("hashCompareCpp"),
+    NanNew<FunctionTemplate>(hashCompareCpp)->GetFunction());
 }
 NODE_MODULE(compare,Init)

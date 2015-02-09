@@ -1,19 +1,19 @@
 var async = require('async'),
-    config = require('./config'),
-    crypto = require('crypto'),
-    child_process = require('child_process'),
-    etc = require('../etc'),
-    Muggle = etc.Muggle,
-    imagerDb = require('./db'),
-    index = require('./'),
-    formidable = require('formidable'),
-    fs = require('fs'),
-    jobs = require('./jobs'),
-    path = require('path'),
-    urlParse = require('url').parse,
-    util = require('util'),
-    winston = require('winston'),
-    findapng = require('./findapng.node').findapngCpp;
+	config = require('./config'),
+	crypto = require('crypto'),
+	child_process = require('child_process'),
+	etc = require('../etc'),
+	Muggle = etc.Muggle,
+	imagerDb = require('./db'),
+	index = require('./'),
+	findapng = require('./findapng.node').findapngCpp,
+	formidable = require('formidable'),
+	fs = require('fs'),
+	jobs = require('./jobs'),
+	path = require('path'),
+	urlParse = require('url').parse,
+	util = require('util'),
+	winston = require('winston');
 
 var IMAGE_EXTS = ['.png', '.jpg', '.gif'];
 if (config.WEBM) {
@@ -37,7 +37,7 @@ function get_thumb_specs(image, pinky, scale) {
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
-	var specs = {bound: bound, dims: dims, format: 'jpg', SHA1: image.SHA1};
+	var specs = {bound: bound, dims: dims, format: 'jpg'};
 	// Note: WebMs pretend to be PNGs at this step,
 	//       but those don't need transparent backgrounds.
 	//       (well... WebMs *can* have alpha channels...)
@@ -166,28 +166,14 @@ IU.parse_form = function (err, fields, files) {
 	this.db.track_temporary(this.image.path, function (err) {
 		if (err)
 			winston.warn("Temp tracking error: " + err);
-		self.sha1();
+		self.process();
 	});
 };
 
-IU.sha1 = function(){
-	var f = fs.ReadStream(this.image.path);
-	var sha1sum = crypto.createHash('sha1');
-	var self = this;
-	f.on('data', function(d){
-		sha1sum.update(d);
-	});
-	f.on('end', function(){
-		self.process(sha1sum.digest('hex'));
-	});
-};
-
-IU.process = function (SHA1) {
+IU.process = function () {
 	if (this.failed)
 		return;
 	var image = this.image;
-	if (SHA1)
-		image.SHA1 = SHA1;
 	var filename = image.filename || image.name;
 	image.ext = path.extname(filename).toLowerCase();
 	if (image.ext == '.jpeg')
@@ -307,6 +293,7 @@ IU.verify_image = function () {
 	var image = this.image;
 	this.tagged_path = image.ext.replace('.', '') + ':' + image.path;
 	var checks = {
+		// Get more accurate filesize. Formidable passes the gzipped one
 		stat: fs.stat.bind(fs, image.video || image.path),
 		dims: identify.bind(null, this.tagged_path),
 	};
@@ -325,8 +312,12 @@ IU.verify_image = function () {
 			return self.failure(Muggle('Bad image.'));
 		image.size = rs.stat.size;
 		image.dims = [rs.dims.width, rs.dims.height];
-		if (rs.apng)
-			image.apng = 1;
+		if (rs.apng !== undefined){
+			if (rs.apg < 0)
+				return self.failure(Muggle('Not PNG or APNG.'));
+			if (rs.apng)
+				image.apng = 1;
+		}
 		self.verified();
 	});
 };
@@ -367,19 +358,36 @@ IU.fill_in_specs = function (specs, kind) {
 	this.image[kind + '_path'] = specs.dest;
 };
 
-IU.exifdel = function (err) {
+IU.exifdel = function () {
 	var image = this.image, self = this;
 	if (image.ext == '.webm' || image.ext == '.svg' || !config.DEL_EXIF)
-		return self.deduped();
+		return self.sha1();
 	child_process.execFile(exiftoolBin, ['-all=', image.path],
-	function(err, stdout, stderr){
-		if (err)
-			self.status('Exiftool error: '+stderr);
+		function(err, stdout, stderr){
+			if (err)
+				return self.failure(Muggle('Exiftool error: ' + stderr));
+			self.sha1();
+		}
+	);
+};
+
+IU.sha1 = function(){
+	var f = fs.ReadStream(this.image.path);
+	var sha1sum = crypto.createHash('sha1');
+	var self = this;
+	f.on('data', function(d){
+		sha1sum.update(d);
+	});
+	f.on('error', function(err){
+		self.failure(Muggle('SHA1 hashing error: ' + err));
+	});
+	f.on('end', function(){
+		self.image.SHA1 = sha1sum.digest('hex');
 		self.deduped();
 	});
 };
 
-IU.deduped = function (err) {
+IU.deduped = function () {
 	if (this.failed)
 		return;
 	var image = this.image;
@@ -387,20 +395,16 @@ IU.deduped = function (err) {
 	var w = image.dims[0], h = image.dims[1];
 
 	/* Determine whether we really need a thumbnail */
-	var sp = image.spoiler;
-	if (!sp && image.size < 30*1024
+	if (image.size < 30*1024
 			&& ['.jpg', '.png'].indexOf(image.ext) >= 0
 			&& !image.apng && !image.video
 			&& w <= specs.dims[0] && h <= specs.dims[1]) {
 		return this.got_nails();
 	}
 	this.fill_in_specs(specs, 'thumb');
-
 	var self = this;
 	image.dims = [w, h].concat(specs.dims);
-	if (!sp)
-		this.status('Thumbnailing...');
-
+	this.status('Thumbnailing...');
 	self.resize_and_track(specs, function (err) {
 		if (err)
 			return self.failure(err);
@@ -455,20 +459,6 @@ IU.got_nails = function () {
 
 	this.record_image(tmps);
 };
-
-IU.read_image_filesize = function (callback) {
-	var self = this;
-	fs.stat(this.image.path, function (err, stat) {
-		if (err)
-			callback(Muggle('Internal filesize error.', err));
-		else if (stat.size > config.IMAGE_FILESIZE_MAX)
-			callback(Muggle('File is too large.'));
-		else
-			callback(null, stat.size);
-	});
-};
-
-
 
 // Look up binary paths
 var identifyBin, convertBin, exiftoolBin, ffmpegBin, pngquantBin;
@@ -575,7 +565,7 @@ function setup_image_params(o) {
 	o.quality += ''; // coerce to string
 }
 
-function build_im_args(o, args) {
+function build_im_args(o) {
 	// avoid OOM killer
 	var args = ['-limit', 'memory', '32', '-limit', 'map', '64'];
 	var dims = o.dims;
@@ -599,8 +589,8 @@ function resize_image(o, callback) {
 	var dest = o.dest;
 	// force new size
 	args.push('-resize', dims + '!');
-	// add background
 	args.push('-gamma', '2.2');
+	// add background
 	if (o.bg)
 		args.push('-background', o.bg, '-layers', 'mosaic', '+matte');
 	// disregard metadata, acquire artifacts
@@ -620,7 +610,7 @@ function resize_image(o, callback) {
 				function(err){
 					if (err) {
 						winston.warn(err);
-						callback(Muggle("Pngquant thumbnailing error.", err));
+						callback(Muggle("Pngquant thumbnailing error: ", err));
 					} else
 						callback(null, dest);
 			});
@@ -657,7 +647,7 @@ function image_files(image) {
 }
 
 IU.failure = function (err) {
-	var err_desc = 'Unknown image processing error.'
+	var err_desc = 'Unknown image processing error.';
 	if (err instanceof Muggle) {
 		err_desc = err.most_precise_error_message();
 		err = err.deepest_reason();

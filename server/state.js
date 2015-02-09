@@ -3,7 +3,7 @@ var _ = require('underscore'),
 	config = require('../config'),
 	crypto = require('crypto'),
 	etc = require('../etc'),
-	exec = require('child_process').execFile,
+	exec = require('child_process').exec,
 	fs = require('fs'),
 	gulp = require('../gulpfile'),
 	hooks = require('../hooks'),
@@ -111,9 +111,6 @@ function reload_scripts(cb) {
 }
 
 function reload_resources(cb) {
-
-	var deps = require('../deps');
-
 	read_templates(function (err, tmpls) {
 		if (err)
 			return cb(err);
@@ -152,7 +149,7 @@ function expand_templates(res) {
 	// Format info banner
 	if (templateVars.BANNERINFO)
 		templateVars.BANNERINFO = '&nbsp;&nbsp;&nbsp;[' + templateVars.BANNERINFO + ']';
-	
+
 	function tmpl(data) {
 		var expanded = _.template(data)(templateVars);
 		return {tmpl: expanded.split(/\$[A-Z]+/),
@@ -207,13 +204,10 @@ function build_FAQ(faq){
 }
 
 function buildClient(cb){
-	// XXX: Reruns which each hot reload
-	etc.which('gulp', function(gulp){
-		exec(gulp, ['client', 'mod', 'vendor'], function(err, stdout, stderr){
-			if (err)
-				return console.error('Error: Failed to build client:', err, stderr);
-			cb();
-		});
+	exec('./node_modules/gulp/bin/gulp.js client mod vendor', function(err, stdout, stderr){
+		if (err)
+			return console.error('Error: Failed to build client:', err, stderr);
+		cb();
 	});
 }
 
