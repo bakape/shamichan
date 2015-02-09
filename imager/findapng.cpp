@@ -16,7 +16,7 @@ bool isPNG(std::ifstream &in)
 }
 /*Checks if a file is png or apng.
 Input: filename
-Output: true if apng, false if png,Undefined(and throws and exception) if there is an error.*/
+Output: true if apng, false if png,-1 if file isn't a png or apng and Undefined(and throws and exception) if there is an error.*/
 Handle<Value> findapngCpp(const Arguments& args)
 {
   HandleScope scope;
@@ -36,10 +36,8 @@ Handle<Value> findapngCpp(const Arguments& args)
     return scope.Close(Undefined());
   }
 
-  if(!isPNG(in)){
-    ThrowException(Exception::Error(String::New("File isn't a png")));
-    return scope.Close(Undefined());
-  }
+  if(!isPNG(in))
+    return scope.Close(Number::New(-1));
 
   std::istream_iterator<unsigned char> sta(in);
   std::istream_iterator<unsigned char> end;
