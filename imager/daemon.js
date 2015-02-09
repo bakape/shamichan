@@ -36,7 +36,7 @@ function get_thumb_specs(image, pinky, scale) {
 	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
 	var r = Math.max(w / bound[0], h / bound[1], 1);
 	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
-	var specs = {bound: bound, dims: dims, format: 'jpg', SHA1: image.SHA1};
+	var specs = {bound: bound, dims: dims, format: 'jpg'};
 	// Note: WebMs pretend to be PNGs at this step,
 	//       but those don't need transparent backgrounds.
 	//       (well... WebMs *can* have alpha channels...)
@@ -165,28 +165,14 @@ IU.parse_form = function (err, fields, files) {
 	this.db.track_temporary(this.image.path, function (err) {
 		if (err)
 			winston.warn("Temp tracking error: " + err);
-		self.sha1();
+		self.process();
 	});
 };
 
-IU.sha1 = function(){
-	var f = fs.ReadStream(this.image.path);
-	var sha1sum = crypto.createHash('sha1');
-	var self = this;
-	f.on('data', function(d){
-		sha1sum.update(d);
-	});
-	f.on('end', function(){
-		self.process(sha1sum.digest('hex'));
-	});
-};
-
-IU.process = function (SHA1) {
+IU.process = function () {
 	if (this.failed)
 		return;
 	var image = this.image;
-	if (SHA1)
-		image.SHA1 = SHA1;
 	var filename = image.filename || image.name;
 	image.ext = path.extname(filename).toLowerCase();
 	if (image.ext == '.jpeg')
@@ -364,20 +350,36 @@ IU.fill_in_specs = function (specs, kind) {
 	this.image[kind + '_path'] = specs.dest;
 };
 
-IU.exifdel = function (err) {
+IU.exifdel = function () {
 	var image = this.image, self = this;
 	if (image.ext == '.webm' || image.ext == '.svg' || !config.DEL_EXIF)
-		return self.deduped();
+		return self.sha1();
 	child_process.execFile(exiftoolBin, ['-all=', image.path],
 		function(err, stdout, stderr){
 			if (err)
 				return self.failure(Muggle('Exiftool error: ' + stderr));
-			self.deduped();
+			self.sha1();
 		}
 	);
 };
 
-IU.deduped = function (err) {
+IU.sha1 = function(){
+	var f = fs.ReadStream(this.image.path);
+	var sha1sum = crypto.createHash('sha1');
+	var self = this;
+	f.on('data', function(d){
+		sha1sum.update(d);
+	});
+	f.on('error', function(err){
+		self.failure(Muggle('SHA1 hashing error: ' + err));
+	});
+	f.on('end', function(){
+		self.image.SHA1 = sha1sum.digest('hex');
+		self.deduped();
+	});
+};
+
+IU.deduped = function () {
 	if (this.failed)
 		return;
 	var image = this.image;
