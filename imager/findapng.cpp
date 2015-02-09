@@ -18,7 +18,7 @@ bool isPNG(std::ifstream &in)
 }
 /*Checks if a file is png or apng.
 Input: filename
-Output: true if apng, false if png,Undefined(and throws and exception) if there is an error.*/
+Output: true if apng, false if png, -1if file isn't a png or apng and Undefined(and throws and exception) if there is an error.*/
 NAN_METHOD(findapngCpp)
 {
   NanScope();
@@ -37,10 +37,8 @@ NAN_METHOD(findapngCpp)
     NanReturnUndefined();
   }
 
-  if(!isPNG(in)){
-    NanThrowError("File isn't a png");
-    NanReturnUndefined();
-  }
+  if(!isPNG(in))
+    NanReturnValue(NanNew<Number>(-1));
 
   std::istream_iterator<unsigned char> sta(in);
   std::istream_iterator<unsigned char> end;

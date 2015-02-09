@@ -298,7 +298,10 @@ IU.verify_image = function () {
 	};
 	if (image.ext == '.png'){
 		checks.apng = function(callback){
-			callback(null,findapng(image.path));
+			var isapng = findapng(image.path);
+			if (isapng < 0)
+				return self.failure(Muggle('File is not a PNG or APNG.'));
+			callback(null,isapng);
 		};
 	}
 
