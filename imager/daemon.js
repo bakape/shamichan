@@ -18,9 +18,10 @@ var async = require('async'),
 var IMAGE_EXTS = ['.png', '.jpg', '.gif'];
 if (config.WEBM) {
 	IMAGE_EXTS.push('.webm');
-	if (!config.DAEMON) {
+	// Daemon currently broken
+	/*if (!config.DAEMON) {
 		console.warn("Please enable imager.config.DAEMON security.");
-	}
+	}*/
 }
 if (config.SVG)
 	IMAGE_EXTS.push('.svg');
