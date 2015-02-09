@@ -641,14 +641,14 @@ web.resource(/^\/outbound\/(g|iqdb|sn)\/(\d+\.jpg)$/,
 	// Pass unencrypted URL to IQDB and SauceNao to avoid problems with Cloudflare's SSL
 	if ((params[1] == 'iqdb' || params[1] == 'sn') && imager.config.NO_SSL_QUERY_STRING)
 		thumb = thumb.replace(/https:\/\//, 'http://') + imager.config.NO_SSL_QUERY_STRING;
-
+	var service;
 	if (params[1] == 'iqdb')
-		var service = 'http://iqdb.org/?url=';
+		service = 'http://iqdb.org/?url=';
 	else if (params[1] == 'g')
-		var service = 'https://www.google.com/searchbyimage?image_url=';
+		service = 'https://www.google.com/searchbyimage?image_url=';
 	else
-		var service = 'http://saucenao.com/search.php?db=999&url=';
-	
+		service = 'http://saucenao.com/search.php?db=999&url=';
+
 	var dest = service + encodeURIComponent(thumb);
 	cb(null, 303.1, dest);
 });
