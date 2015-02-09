@@ -694,7 +694,7 @@ render_buttons: function () {
 		self.$cancel.prop('disabled', !!allocWait);
 		self.$cancel.toggle(!!(!attrs.num || attrs.uploading));
 		self.$imageInput.prop('disabled', !!attrs.uploading);
-		self.$uploadStatus.text(attrs.uploadStatus);
+		self.$uploadStatus.html(attrs.uploadStatus);
 	});
 },
 

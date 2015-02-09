@@ -115,7 +115,7 @@ O.check_duplicate = function (image, callback) {
 		// Compare image hashes with C++ addon
 		var isDup = compare(config.DUPLICATE_THRESHOLD, image, hashes);
 		if (isDup)
-			isDup = Muggle('Duplicate of >>' + isDup + '.');
+			isDup = Muggle('Duplicate of <a href="./' + isDup + '" target="_blank">>>' + isDup + '</a>.');
 		callback(isDup);
 	});
 };
