@@ -385,19 +385,16 @@ IU.deduped = function (err) {
 	var w = image.dims[0], h = image.dims[1];
 
 	/* Determine whether we really need a thumbnail */
-	var sp = image.spoiler;
-	if (!sp && image.size < 30*1024
+	if (image.size < 30*1024
 			&& ['.jpg', '.png'].indexOf(image.ext) >= 0
 			&& !image.apng && !image.video
 			&& w <= specs.dims[0] && h <= specs.dims[1]) {
 		return this.got_nails();
 	}
 	this.fill_in_specs(specs, 'thumb');
-
 	var self = this;
 	image.dims = [w, h].concat(specs.dims);
 	this.status('Thumbnailing...');
-
 	self.resize_and_track(specs, function (err) {
 		if (err)
 			return self.failure(err);
@@ -640,7 +637,7 @@ function image_files(image) {
 }
 
 IU.failure = function (err) {
-	var err_desc = 'Unknown image processing error.'
+	var err_desc = 'Unknown image processing error.';
 	if (err instanceof Muggle) {
 		err_desc = err.most_precise_error_message();
 		err = err.deepest_reason();
