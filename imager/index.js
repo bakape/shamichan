@@ -11,7 +11,7 @@ var async = require('async'),
 exports.Onegai = db.Onegai;
 exports.config = config;
 
-var image_attrs = ('src thumb dims size MD5 SHA1 hash imgnm spoiler vint'
+var image_attrs = ('src thumb ext dims size MD5 SHA1 hash imgnm spoiler vint'
 		+ ' apng mid audio length').split(' ');
 exports.image_attrs = image_attrs;
 
