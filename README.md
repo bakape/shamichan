@@ -30,7 +30,7 @@ Dependencies:
 * ImageMagick
 * gcc, g++, make
 * libpng with development headers
-* node.js + npm
+* io.js 1.2.0+
 * gulp
 * redis
 * ffmpeg 2.2+ for WebM support
