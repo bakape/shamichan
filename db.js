@@ -520,7 +520,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 		}
 	}
 
-	var view = {time: msg.time, ip: ip, state: msg.state.join()};
+	var view = {time: msg.time, num: num, board: board, ip: ip, state: msg.state.join()};
 	optPostFields.forEach(function (field) {
 		if (msg[field])
 			view[field] = msg[field];
@@ -807,7 +807,6 @@ Y.remove_thread = function (op, callback) {
 Y.purge_thread = function(op, callback){
 	var r = this.connect();
 	var key = 'thread:' + op;
-	var self = this;
 	async.waterfall([
 		// Confirm thread can be deleted
 		function(next){
@@ -1845,9 +1844,9 @@ function subject_val(op, subject) {
 	return subject && (op + ':' + subject);
 }
 
-function tag_key(tag) {
+var tag_key = exports.tag_key =  function(tag) {
 	return tag.length + ':' + tag;
-}
+};
 
 function parse_tags(input) {
 	if (!input) {

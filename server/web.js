@@ -376,18 +376,6 @@ function parse_cookie(header) {
 }
 exports.parse_cookie = parse_cookie;
 
-exports.prefers_json = function (accept) {
-	/* Not technically correct but whatever */
-	var mimes = (accept || '').split(',');
-	for (var i = 0; i < mimes.length; i++) {
-		if (/json/i.test(mimes[i]))
-			return true;
-		else if (/(html|xml|plain|image)/i.test(mimes[i]))
-			return false;
-	}
-	return false;
-};
-
 function Debuff(stream) {
 	Stream.call(this);
 	this.out = stream;

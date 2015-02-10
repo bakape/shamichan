@@ -4,13 +4,15 @@ var config = {
 	LISTEN_HOST: null,
 // Debuging mode. Do not use in production
 	DEBUG: true,
+// API webserver listening port
+	API_PORT: 8002,
 // Secure tripcode encryption salt
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
 	SOCKET_PATH: '/hana',
 // Honour X-Forwarded-For HTTP headers for client IP determination
 	TRUST_X_FORWARDED_FOR: false,
 // Use internal HTTP server to serve these resources.
-// It is recommended to serve the www directory with a dedicated webserver, like nginx, 
+// It is recommended to serve the www directory with a dedicated webserver, like nginx,
 // and set MEDIAURL in imager/config.js to the served directory's address.
 	SERVE_STATIC_FILES: true,
 	SERVE_IMAGES: true,
@@ -21,7 +23,7 @@ var config = {
 
 	REDIS_PORT: 6379,
 	READ_ONLY: false,
-	
+
 	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
 	DEFAULT_BOARD: 'moe',
 	STAFF_BOARD: 'staff',
@@ -49,7 +51,7 @@ var config = {
 // Loging in can be done by either going to the /login/ board or typing "misaki" into the email field.
 	ADMIN_PERSONAS: ['lalc@doushio.com'],
 	MODERATOR_PERSONAS: ['mod@doushio.com'],
-// URL to pass to Mozilla's servers. 
+// URL to pass to Mozilla's servers.
 	PERSONA_AUDIENCE: 'http://example.com:80',
 	LOGIN_COOKIE_DOMAIN: 'example.com',
 	LOGIN_SESSION_TIME: 60*60*24*14,
