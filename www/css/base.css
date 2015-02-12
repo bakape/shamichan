@@ -238,7 +238,35 @@ span.control .popup-menu {
 	max-height: 80%;
 	max-width: 80%;
 }
-/* Proper fixed element renderring with dynamic animated backgrounds */
+.option_tab_sel {
+	display: inline;
+	-webkit-padding-start: 0px;
+	-moz-padding-start: 0px;
+}
+.option_tab_sel li{
+	list-style-type: none;
+	float:left;
+}
+.option_tab_sel a{
+	display: inline-block;
+	padding: 7px;
+	text-decoration: none;
+	border-bottom: 1px solid;
+}
+.option_tab_cont{
+	padding-top: 10px;
+	padding-left: 5px;
+	margin-bottom: 0px;
+}
+.option_tab_cont li{
+	display: none;
+	float: left;
+}
+.option_tab_cont li.tab_sel{
+	display: inline-block;
+	padding-top: 5px;
+}
+/* Proper fixed element rendering with dynamic animated backgrounds */
 #banner, .bmodal, .modal {
 	-webkit-backface-visibility: hidden;
 	-webkit-transform: translateZ(0);
@@ -414,9 +442,6 @@ article .hat {
 	font-weight: bold;
 	padding-left: 1em;
 	text-decoration: none;
-}
-#shortcuts {
-	margin-top: 1em;
 }
 #shortcuts input {
 	border: none;

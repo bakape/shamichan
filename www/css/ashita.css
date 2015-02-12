@@ -94,3 +94,6 @@ hr {
 .themed {
 	color: #999;
 }
+.option_tab_sel a.tab_sel{
+	color: #add8e6;
+}

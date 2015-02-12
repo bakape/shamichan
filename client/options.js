@@ -113,8 +113,15 @@ options.on('change', function () {
 	catch (e) {}
 });
 
-/* LAST N CONFIG */
+var tabs = Object.freeze({
+	General: "General",
+	Style: "Style",
+	ImageSearch: "Image Search",
+	Fun: "Fun",
+	Shortcuts: "Shortcuts",
+});
 
+/* LAST N CONFIG */
 function option_last_n(n) {
 	if (!reasonable_last_n(n))
 		return;
@@ -125,6 +132,7 @@ option_last_n.id = 'lastn';
 option_last_n.label = '[Last #]';
 option_last_n.type = 'positive';
 option_last_n.tooltip = 'Number of posts to display with the "Last n" thread expansion link';
+option_last_n.tab = tabs.General;
 
 oneeSama.lastN = options.get('lastn');
 options.on('change:lastn', function (model, lastN) {
@@ -141,6 +149,7 @@ option_postUnloading.type = 'checkbox';
 option_postUnloading.tooltip = 'Improves thread responsiveness by unloading posts from the'+
 		' top of the thread, so that post count stays within the Last # value. Only applies to '+
 		'Last # enabled threads';
+option_postUnloading.tab = tabs.General;
 
 /* LOCK TO BOTTOM EVEN WHEN DOCUMENT HIDDEN*/
 
@@ -150,6 +159,7 @@ option_alwaysLock.id = 'alwaysLock';
 option_alwaysLock.label = 'Always Lock to Bottom';
 option_alwaysLock.type = 'checkbox';
 option_alwaysLock.tooltip = 'Lock scrolling to page bottom even when tab is hidden';
+option_alwaysLock.tab = tabs.General;
 
 /* THEMES */
 
@@ -179,6 +189,7 @@ option_theme.id = 'board.$BOARD.theme';
 option_theme.label = 'Theme';
 option_theme.type = themes;
 option_theme.tooltip = 'Select CSS theme';
+option_theme.tab = tabs.Style;
 
 /* THUMBNAIL OPTIONS */
 
@@ -196,6 +207,7 @@ option_thumbs.tooltip = 'Set thumbnail type: ' +
 	'Small: 125x125, small file size; ' +
 	'Sharp: 125x125, more detailed; ' +
 	'Hide: hide all images;';
+option_thumbs.tab = tabs.Style;
 
 /* REPLY AT RIGHT */
 
@@ -212,6 +224,7 @@ option_reply_at_right.id = 'replyright';
 option_reply_at_right.label = '[Reply] at Right';
 option_reply_at_right.type = 'checkbox';
 option_reply_at_right.tooltip = 'Move Reply button to the right side of the page';
+option_reply_at_right.tab = tabs.Style;
 
 /* BACKLINKS */
 
@@ -225,6 +238,7 @@ option_backlinks.id = 'nobacklinks';
 option_backlinks.label = 'Backlinks';
 option_backlinks.type = 'revcheckbox';
 option_backlinks.tooltip = 'Links to replies of current post';
+option_backlinks.tab = tabs.General;
 
 function show_backlinks() {
 	if (load_thread_backlinks) {
@@ -275,6 +289,7 @@ option_linkify.id = 'linkify';
 option_linkify.label = 'Linkify text URLs';
 option_linkify.type = 'checkbox';
 option_linkify.tooltip = 'Convert in-post text URLs to clickable links. WARNING: Potential security hazard (XSS). Requires page refresh.';
+option_linkify.tab = tabs.General;
 
 /* RELATIVE POST TIMESTAMPS */
 
@@ -286,6 +301,7 @@ option_relative_time.id = 'relativeTime';
 option_relative_time.label = 'Relative Timestamps';
 option_relative_time.type = 'checkbox';
 option_relative_time.tooltip = 'Relative post timestamps. Ex.: "1 hour ago." Requires page refresh';
+option_relative_time.tab = tabs.General;
 
 /* R/A/DIO NOW PLAYING BANNER */
 
@@ -323,6 +339,7 @@ option_now_playing.id = 'nowPlaying';
 option_now_playing.label = 'Now Playing Banner';
 option_now_playing.type = 'revcheckbox';
 option_now_playing.tooltip = 'Currently playing song on r/a/dio and other stream information in the top banner.';
+option_now_playing.tab = tabs.Fun;
 
 /* IMAGE SEARCH LINK TOGGLE */
 
@@ -343,6 +360,7 @@ option_google.id = 'google';
 option_google.label = 'Google Image Search';
 option_google.type = 'checkbox';
 option_google.tooltip = 'Show/hide Google image search links';
+option_google.tab = tabs.ImageSearch;
 
 function option_iqdb(toggle){
 	toggle_image_search(toggle, 'iqdb');
@@ -351,6 +369,7 @@ option_iqdb.id = 'iqdb';
 option_iqdb.label = 'IQDB Image Search';
 option_iqdb.type = 'checkbox';
 option_iqdb.tooltip = 'Show/hide IQDB image search links';
+option_iqdb.tab = tabs.ImageSearch;
 
 function option_saucenao(toggle){
 	toggle_image_search(toggle, 'saucenao');
@@ -359,6 +378,7 @@ option_saucenao.id = 'saucenao';
 option_saucenao.label = 'Saucenao Image Search';
 option_saucenao.type = 'checkbox';
 option_saucenao.tooltip = 'Show/hide Saucenao image search links';
+option_saucenao.tab = tabs.ImageSearch;
 
 function option_foolz(toggle){
 	toggle_image_search(toggle, 'foolz');
@@ -367,6 +387,7 @@ option_foolz.id = 'foolz';
 option_foolz.label = 'Foolz Archive Image Search';
 option_foolz.type = 'checkbox';
 option_foolz.tooltip = 'Show/hide Foolz archive image search links';
+option_foolz.tab = tabs.ImageSearch;
 
 function option_exhentai(toggle){
 	toggle_image_search(toggle, 'exhentai');
@@ -375,9 +396,9 @@ option_exhentai.id = 'exhentai';
 option_exhentai.label = 'Exhentai Image Search';
 option_exhentai.type = 'checkbox';
 option_exhentai.tooltip = 'Show/hide Exhentai image search links';
+option_exhentai.tab = tabs.ImageSearch;
 
 /* SPOILER TOGGLE */
-
 
 function option_spoiler(spoilertoggle) {
 	$.cookie('spoil',spoilertoggle, {path: '/'});
@@ -387,9 +408,9 @@ option_spoiler.id = 'noSpoilers';
 option_spoiler.label = 'Image Spoilers';
 option_spoiler.type = 'revcheckbox';
 option_spoiler.tooltip = "Don't spoiler images";
+option_spoiler.tab = tabs.Style;
 
 /* Autogif TOGGLE */
-
 
 function option_autogif(autogif) {
 	$.cookie('agif',autogif, {path: '/'});
@@ -399,6 +420,7 @@ option_autogif.id = 'autogif';
 option_autogif.label = 'Animated GIF Thumbnails';
 option_autogif.type = 'checkbox';
 option_autogif.tooltip = 'Animate GIF thumbnails';
+option_autogif.tab = tabs.General;
 
 /* NOTIFICATIONS */
 
@@ -411,6 +433,7 @@ option_notification.id = 'notification';
 option_notification.label = 'Desktop Notifications';
 option_notification.type = 'checkbox';
 option_notification.tooltip = 'Get desktop notifications when quoted or a syncwatch is about to start';
+option_notification.tab = tabs.General;
 
 /* ILLYA DANCE */
 
@@ -432,6 +455,7 @@ option_illya_dance.id = 'board.$BOARD.illyaBGToggle';
 option_illya_dance.label = 'Illya Dance';
 option_illya_dance.type = 'checkbox';
 option_illya_dance.tooltip = 'Dancing loli in the background';
+option_illya_dance.tab = tabs.Fun;
 
 function option_illya_mute(toggle){
 	if (options.get(option_illya_dance.id)){
@@ -444,6 +468,7 @@ option_illya_mute.id = 'illyaMuteToggle';
 option_illya_mute.label = 'Mute Illya';
 option_illya_mute.type = 'checkbox';
 option_illya_mute.tooltip = 'Mute dancing loli';
+option_illya_mute.tab = tabs.Fun;
 
 /* HORIZONTAL POSTING */
 
@@ -459,6 +484,7 @@ option_horizontal.id = 'horizontalPosting';
 option_horizontal.label = 'Horizontal Posting';
 option_horizontal.type = 'checkbox';
 option_horizontal.tooltip = '38chan nostalgia';
+option_horizontal.tab = tabs.Fun;
 
 /* CUSTOM USER-SET BACKGROUND */
 
@@ -482,6 +508,7 @@ option_user_bg.id = 'board.$BOARD.userBG';
 option_user_bg.label = 'Custom Background';
 option_user_bg.type = 'checkbox';
 option_user_bg.tooltip = 'Toggle custom page background';
+option_user_bg.tab = tabs.Style;
 
 function option_user_bg_image(target){
 	if (target){
@@ -533,6 +560,7 @@ option_user_bg_image.id = 'userBGimage';
 option_user_bg_image.label = '';
 option_user_bg_image.type = 'image';
 option_user_bg_image.tooltip = "Image to use as the background";
+option_user_bg_image.tab = tabs.Style;
 
 /* IMAGE HOVER EXPANSION */
 
@@ -593,14 +621,17 @@ option_image_hover.id = 'imageHover';
 option_image_hover.label = 'Image Hover Expansion';
 option_image_hover.type = 'checkbox';
 option_image_hover.tooltip = 'Display image previews on hover';
+option_image_hover.tab = tabs.General;
 
 // Toogle hover expansion of WebM
+
 function option_webm_hover(){}
 
 option_webm_hover.id = 'webmHover';
 option_webm_hover.label = 'WebM Hover Expansion';
 option_webm_hover.type = 'checkbox';
 option_webm_hover.tooltip = 'Display WebM previews on hover. Requires Image Hover Expansion enabled.';
+option_webm_hover.tab = tabs.General;
 
 /* INLINE EXPANSION */
 
@@ -612,6 +643,7 @@ option_inline_expansion.type = ['none', 'full', 'width', 'height', 'both'];
 option_inline_expansion.labels = ['none', 'full-size', 'fit to width',
 		'fit to height', 'fit to both'];
 option_inline_expansion.tooltip = "Expand images inside the parent post and resize according to setting";
+option_inline_expansion.tab = tabs.Style;
 
 /* SHORTCUT KEYS */
 
@@ -621,28 +653,6 @@ var shortcuts = [
 	{label: 'Text Spoiler', name: 'textSpoiler', which: 68},
 	{label: 'Finish Post', name: 'done', which: 83},
 ];
-
-function toggle_shortcuts(event) {
-	event.preventDefault();
-	var $shortcuts = $('#shortcuts');
-	if ($shortcuts.length)
-		return $shortcuts.remove();
-	$shortcuts = $('<div/>', {
-		id: 'shortcuts',
-		click: select_shortcut,
-		keyup: change_shortcut,
-	});
-	shortcuts.forEach(function (s) {
-		var value = String.fromCharCode(shortcutKeys[s.name]);
-		var $label = $('<label>', {text: s.label});
-		$('<input>', {
-			id: s.name, maxlength: 1, val: value,
-		}).prependTo($label);
-		$label.prepend(document.createTextNode('Alt+'));
-		$shortcuts.append($label, '<br>');
-	});
-	$shortcuts.appendTo('#options-panel');
-}
 
 function select_shortcut(event) {
 	if ($(event.target).is('input'))
@@ -775,6 +785,7 @@ function make_options_panel() {
 			spec(val);
 		});
 	});
+	var tabCont= {}	//will contain the html for the content of each tab
 	optSpecs.forEach(function (spec) {
 		var id = spec.id;
 		if (nashi.opts.indexOf(id) >= 0)
@@ -810,14 +821,69 @@ function make_options_panel() {
 				$input.val(val);
 		}
 		var $label = $('<label/>').attr('for', id).attr('title', spec.tooltip).text(spec.label);
-		$opts.append($input.attr('id', id).attr('title', spec.tooltip), ' ', $label, '<br>');
+		if(tabCont[spec.tab]==undefined)
+			tabCont[spec.tab]=[];
+		tabCont[spec.tab].push($input.attr('id', id).attr('title', spec.tooltip), ' ', $label, '<br>');
 	});
 	if (!nashi.shortcuts) {
-		$opts.append($('<a/>', {
-			href: '#', text: 'Keyboard Shortcuts',
-			click: toggle_shortcuts,
-		}));
+		var $shortcuts;
+		$shortcuts = $('<div/>', {
+			id: 'shortcuts',
+			click: select_shortcut,
+			keyup: change_shortcut,
+		});
+		shortcuts.forEach(function (s) {
+			var value = String.fromCharCode(shortcutKeys[s.name]);
+			var $label = $('<label>', {text: s.label});
+			$('<input>', {
+				id: s.name, maxlength: 1, val: value,
+			}).prependTo($label);
+			$label.prepend(document.createTextNode('Alt+'));
+			$shortcuts.append($label, '<br>');
+		});
+		tabCont[tabs.Shortcuts] = $shortcuts;
 	}
+	var $tabSel = $('<ul/>', {"class": 'option_tab_sel'});
+	var $tabCont = $('<ul/>',{"class": 'option_tab_cont'});
+	for(var tab in tabs){
+		if(tabs[tab].length>0){
+			$tabSel.append($('<li>').append($('<a>', { 	//tab selector
+				'data-content':tab,
+				href: ('#'+tab),
+				text: tab,
+			})));
+			$tabCont.append($("<li\>",{					//tab content
+				'data-content':tab
+			}).append(tabCont[tabs[tab]]));
+		}
+	}
+	var tabButts = $tabSel.children().children(); 	//tab buttons
+	tabButts.on('click',function(event){
+		event.preventDefault();
+		var sel=$(this);
+		if(!sel.hasClass('tab_sel')){
+			tabButts.removeClass('tab_sel');
+			var selCont =$tabCont.find('li[data-content="'+sel.data('content')+'"]');
+			sel.addClass('tab_sel');
+			selCont.siblings('li').removeClass('tab_sel');
+			if(!isMobile)
+				$tabCont.animate({
+					'height': selCont.height(),
+				},{
+					complete: function(){ selCont.addClass('tab_sel'); },
+					duration: 150
+				});
+			else selCont.addClass('tab_sel');
+		}
+	});
+
+	$opts.append($tabSel);
+	$opts.append($tabCont);
+
+	var clickEvent = document.createEvent('MouseEvent');
+	clickEvent.initEvent('click',true,true);
+	tabButts[0].dispatchEvent(clickEvent); //tabButts[0].click() doesn't work in mobiles
+
 	oneeSama.trigger('initOptions', $opts);
 	return $opts.hide();
 }
