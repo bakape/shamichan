@@ -114,10 +114,11 @@ options.on('change', function () {
 });
 
 var tabs = Object.freeze({
-	General:"General",
-	Style:"Style",
-	ImageSearch:"Image Search",
-	Fun:"Fun",
+	General: "General",
+	Style: "Style",
+	ImageSearch: "Image Search",
+	Fun: "Fun",
+	Shortcuts: "Shortcuts",
 });
 
 /* LAST N CONFIG */
@@ -653,28 +654,6 @@ var shortcuts = [
 	{label: 'Finish Post', name: 'done', which: 83},
 ];
 
-function toggle_shortcuts(event) {
-	event.preventDefault();
-	var $shortcuts = $('#shortcuts');
-	if ($shortcuts.length)
-		return $shortcuts.remove();
-	$shortcuts = $('<div/>', {
-		id: 'shortcuts',
-		click: select_shortcut,
-		keyup: change_shortcut,
-	});
-	shortcuts.forEach(function (s) {
-		var value = String.fromCharCode(shortcutKeys[s.name]);
-		var $label = $('<label>', {text: s.label});
-		$('<input>', {
-			id: s.name, maxlength: 1, val: value,
-		}).prependTo($label);
-		$label.prepend(document.createTextNode('Alt+'));
-		$shortcuts.append($label, '<br>');
-	});
-	$shortcuts.appendTo($('li.tab_sel'));
-}
-
 function select_shortcut(event) {
 	if ($(event.target).is('input'))
 		$(event.target).val('');
@@ -781,7 +760,9 @@ if (!localStorage.getItem('options')){
 		$('#options').removeClass('noOptions');
 	});
 }
-
+function add_shortcuts() {
+	
+}
 function make_options_panel() {
 	var $opts = $('<div/>', {"class": 'bmodal', id: 'options-panel'});
 	$opts.change(function (event) {
@@ -847,10 +828,22 @@ function make_options_panel() {
 		tabCont[spec.tab].push($input.attr('id', id).attr('title', spec.tooltip), ' ', $label, '<br>');
 	});
 	if (!nashi.shortcuts) {
-		tabCont[tabs.General].push($('<a/>', {
-			href: '#', text: 'Keyboard Shortcuts',
-			click: toggle_shortcuts,
-		}));
+		var $shortcuts;
+		$shortcuts = $('<div/>', {
+			id: 'shortcuts',
+			click: select_shortcut,
+			keyup: change_shortcut,
+		});
+		shortcuts.forEach(function (s) {
+			var value = String.fromCharCode(shortcutKeys[s.name]);
+			var $label = $('<label>', {text: s.label});
+			$('<input>', {
+				id: s.name, maxlength: 1, val: value,
+			}).prependTo($label);
+			$label.prepend(document.createTextNode('Alt+'));
+			$shortcuts.append($label, '<br>');
+		});
+		tabCont[tabs.Shortcuts] = $shortcuts;
 	}
 	var $tabSel = $('<ul/>', {"class": 'option_tab_sel'});
 	var $tabCont = $('<ul/>',{"class": 'option_tab_cont'});
@@ -875,7 +868,6 @@ function make_options_panel() {
 			var selCont =$tabCont.find('li[data-content="'+sel.data('content')+'"]');
 			sel.addClass('tab_sel');
 			selCont.siblings('li').removeClass('tab_sel');
-			console.log(selCont.innerHeight(),selCont.height(),selCont.outerHeight());
 			if(!isMobile)
 				$tabCont.animate({
 					'height': selCont.height(),
