@@ -67,6 +67,10 @@ hr {
 .popup-menu li:hover {
 	background-color: rgba(40, 42, 46, 0.6);
 }
+.option_tab_sel a.tab_sel{
+	background-color: rgba(255,255,255,0.2);
+	color: #EAEAF0;
+}
 .themed {
 	color: white;
 }

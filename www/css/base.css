@@ -240,6 +240,8 @@ span.control .popup-menu {
 }
 .option_tab_sel {
 	display: inline;
+	-webkit-padding-start: 0px;
+	-moz-padding-start: 0px;
 }
 .option_tab_sel li{
 	list-style-type: none;
@@ -250,9 +252,6 @@ span.control .popup-menu {
 	padding: 7px;
 	text-decoration: none;
 	border-bottom: 1px solid;
-}
-.option_tab_sel a.tab_sel{
-	color: #add8e6;
 }
 .option_tab_cont{
 	padding-top: 10px;
@@ -265,6 +264,7 @@ span.control .popup-menu {
 }
 .option_tab_cont li.tab_sel{
 	display: inline-block;
+	padding-top: 5px;
 }
 /* Proper fixed element rendering with dynamic animated backgrounds */
 #banner, .bmodal, .modal {
@@ -442,9 +442,6 @@ article .hat {
 	font-weight: bold;
 	padding-left: 1em;
 	text-decoration: none;
-}
-#shortcuts {
-	margin-top: 1em;
 }
 #shortcuts input {
 	border: none;
