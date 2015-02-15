@@ -45,6 +45,9 @@ small a.referenced {
 .modal, .bmodal, .preview, .popup-menu {
 	background-color: #f5f5f5;
 }
+.option_tab_sel a.tab_sel{
+	color: orange;
+}
 .omit {
 	color: gray;
 }

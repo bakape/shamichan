@@ -175,3 +175,6 @@ small a.referenced {
 		margin-right: 0;
 	}
 }
+.option_tab_sel a.tab_sel{
+	outline: double;
+}

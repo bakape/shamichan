@@ -86,6 +86,9 @@ hr {
 	border-right: 1px solid #eee;
 	border-bottom: 1px solid #eee;
 }
+.option_tab_sel a.tab_sel{
+	color: red;
+}
 .preview {
 	background-color: #f9f0d9;
 	border-right: 1px solid #e9e0c9;

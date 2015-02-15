@@ -95,6 +95,9 @@ hr {
 	background-image: url('ui/invlock.svg');
 	background-size: 1em 1em;
 }
+.option_tab_sel a.tab_sel{
+	color: white;
+}
 .themed {
 	color: #999;
 }
