@@ -6,15 +6,18 @@
 #include <nan.h>
 
 using namespace v8;
-/*Checks the PNG magic number, returns false if it doesn't correspond to a png
-or it is too short*/
+
 const std::string apng("acTL");
 const std::string magicNum("\211PNG\r\n\032\n");
+/*Checks the PNG magic number, returns false if it doesn't correspond to a png
+or it is too short*/
 bool isPNG(std::ifstream &in)
 {
-  char buf[8];
+  char * buf=new char[8];
   in.read(buf,8);
-  return (buf==magicNum);
+  std::string str(buf,8);
+  delete[] buf;
+  return (str==magicNum);
 }
 /*Checks if a file is png or apng.
 Input: filename
