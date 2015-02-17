@@ -9,7 +9,7 @@
 			'conditions': [
 				['OS=="linux"', {'libraries': ['-lcrypt']}],
 				['OS=="freebsd"', {'libraries': ['-lcrypt']}],
-				['OS=="mac"', {'libraries': ['-lcrypto']}]
+				['OS=="mac"', {'libraries': ['-lcrypto', '/usr/lib/libiconv.dylib']}]
 			]
 		}
 	}]
