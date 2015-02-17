@@ -2,6 +2,28 @@
 All notable changes to this project will be documented in this file.
 Project uses Semantic Versioning http://semver.org/
 
+##0.9.0 - 2015-02-17
+###Added
+- Chrome for Android home screen webapp support
+- Option to unlock from page bottom on tab visibility loss
+- Tabbed UI for options menu
+
+###Fixed
+- Administrator notifications on smaller screens
+- ffmpeg RAM usage (still need plenty of RAM to thumbnail large WebM)
+
+###Removed
+- Anon hours
+
+###Changed
+- APNG detection and image duplicate comparison now use native C++ node addons
+- Dynamic post unloading now off by default
+- Syncwatch now always on
+- All threads now have both [Expand] and [Last n] links
+- Now using [io.js](https://iojs.org) instead of node.js. At the moment of writing should still
+  be compatible with node.js v0.12.x. When upgrading be sure to run 
+`make clean; npm update; npm install` from meguca's root directory
+
 ## 0.8.0 - 2015-01-30
 ### Changed
 - Acquire most dependancies through npm
