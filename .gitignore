@@ -5,6 +5,7 @@
 .lock*
 .DS_Store
 .project
+.vagrant
 authdump
 config.js
 graveyard

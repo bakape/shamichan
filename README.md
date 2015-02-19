@@ -16,6 +16,12 @@ Setup:
 * Alternatevly, you can run `curl -Ls https://raw.githubusercontent.com/bakape/doushio/master/DEPLOY.sh | bash -`
 	as root for a basic semiautomatic production setup. Currently Ubuntu-only
 
+Automatic cross-platform development setup:
+* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and [Vagrant](http://www.vagrantup.com/downloads.html)
+* Open a shell in meguca's root directory and run `vagrant up`
+* Grab a coffee
+* Run `vagrant ssh` and `node builder`, once logged in. Your changes will automatically sync both ways. [More info](https://www.vagrantup.com/)
+
 Production:
 
 * Have your webserver serve www/ (or wherever you've moved src, thumb, etc.)
