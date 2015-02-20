@@ -51,7 +51,9 @@ function extract_thread_model(section) {
 		Posts.add(post);
 		replies.push(post);
 	}
-	var thread = new Thread(extract_post_model(section));
+	var threadModel = extract_post_model(section),
+		thread = new Thread(threadModel);
+	Posts.add(threadModel);
 	thread.set('replies', new Replies(replies));
 	return thread;
 }
