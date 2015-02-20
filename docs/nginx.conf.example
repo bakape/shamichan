@@ -69,7 +69,8 @@ server {
 		# For forwarding IPs:
 		# Set "TRUST_X_FORWARDED_FOR: true" in ./config.js
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip; # CloudFlare
+		# CloudFlare
+		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
 
 		# Adjust this to your imager/config IMAGE_FILESIZE_MAX.
 		client_max_body_size 5m;
@@ -85,12 +86,26 @@ server {
 		proxy_buffering off;
 
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip; # CloudFlare
+		# CloudFlare
+		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
 	}
 
-	# Handles the imageboard.
+	# For HTML
 	location / {
 		proxy_pass      http://node;
+		proxy_buffering off;
+
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		 # CloudFlare
+		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
+
+		# Custom error page. Changing to 503 to not trip Cloudflare
+		error_page 500 502 503 504 =503 /50x.html;
+	}
+
+	# For websocket connections. Change to match config.SOCKET_PATH
+	location /hana/ {
+		proxy_pass      http://node/hana/;
 		proxy_buffering off;
 
 		# WebSockets support.
@@ -99,8 +114,7 @@ server {
 		proxy_set_header   Connection $connection_upgrade;
 
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip; # CloudFlare
-		# Custom error page. Changing to 503 to not trip Cloudflare
-		error_page 500 502 503 504 =503 /50x.html;
+		# CloudFlare
+		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
 	}
 }
