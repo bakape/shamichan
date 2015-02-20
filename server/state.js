@@ -73,7 +73,7 @@ function reload_hot_config(cb) {
 	});
 }
 
-var clientConfig = _.pick(config,'IP_MNEMONIC', 'USE_WEBSOCKETS', 'SOCKET_PATH', 'DEBUG', 'READ_ONLY');
+var clientConfig = _.pick(config,'IP_MNEMONIC', 'USE_WEBSOCKETS', 'SOCKET_PATH', 'DEBUG', 'READ_ONLY', 'API_URL');
 var clientImager = _.pick(imager,'WEBM', 'UPLOAD_URL','MEDIA_URL', 'THUMB_DIMENSIONS','PINKY_DIMENSIONS',
 		'SPOILER_IMAGES', 'IMAGE_HATS');
 var clientReport = _.pick(report, 'RECAPTCHA_PUBLIC_KEY');
