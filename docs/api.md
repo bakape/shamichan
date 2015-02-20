@@ -7,20 +7,20 @@ The API currently supports 3 modes of query - post, thread and catalog.
 |   post  |   /api/post/${post number}   |        single post object       |
 |  thread | /api/thread/${thread number} |      array of post objects      |
 |  board  |   /api/board/${board name}   | array of arrays of post objects |
-| catalog |  /api/catalog/${board name}  | array of arrays of post objects |
+| catalog |  /api/catalog/${board name}  |      array of post objects      |
 
 ####Values
 |   Key   |                                                       Value                                                      | Optional | Exclusive |                   Example                  |
 |:-------:|:----------------------------------------------------------------------------------------------------------------:|:--------:|:---------:|:------------------------------------------:|
 |   time  |                                    Unix time of post in the server's timezone                                    |    no    |     no    |               "1423578435043"              |
-|   num   |                                                    post number                                                   |    no    |     no    |                    "19"                    |
+|   num*  |                                                    post number                                                   |    no    |     no    |                    "19"                    |
 |    op   |                                               thread OP post number                                              |    no    |   reply   |                    "18"                    |
-|  board  |                                                    post board                                                    |    no    |     no    |                     "a"                    |
+|  board* |                                                    post board                                                    |    no    |     no    |                     "a"                    |
 | replies |                                           number of replies in a thread                                          |    no    |     OP    |                    "3541"                  |
 |   src   |                                      image file name as hosted on the server                                     |    yes   |     no    |            "1423578439604.webm"            |
 |  thumb  |                                               image thumbnail name                                               |    yes   |     no    |             "1423578439604.jpg"            |
 |   mid   |                       high quality thumbnail name; presence depends on server configuration                      |    yes   |     no    |             "1423578439604.jpg"            |
-|   ext   |                                                  image extension                                                 |    yes   |     no    |                   ".webm"                  |
+|   ext*  |                                                  image extension                                                 |    yes   |     no    |                   ".webm"                  |
 |   dims  | comma-separated list of image dimension; "${image width},${image height},${thumbnail width},${thumbnail height}" |    yes   |     no    |              "640,900,89,125"              |
 |   size  |                                             image file size in bytes                                             |    yes   |     no    |                  "105805"                  |
 |   MD5   |                                                  image MD5 hash                                                  |    yes   |     no    |          "teVHnYA9Va1SRs2gPRIQ0A"          |
@@ -32,3 +32,5 @@ The API currently supports 3 modes of query - post, thread and catalog.
 |  email  |                                                   poster email                                                   |    yes   |     no    |                   "sage"                   |
 |   body  |                                                  post test body                                                  |    no    |     no    |       ">implying this is an example"       |
 |  links  |        object containing "${post number}: ${thread number}" key-value pairs the current post is linking to       |    yes   |     no    |            {"18":"17","27":"26"}           |
+
+\* Will not be defined, when reading older posts created prior to 068b99941d7d60a0524d8252b814fd0053a0da1d (v0.10.0)

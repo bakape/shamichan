@@ -32,7 +32,7 @@ app.get(/api\/(post|thread)\/([0-9]+)\/?/, function(req, res){
 		if (!posts ||posts.length === 0)
 			return res.sendStatus(404);
 		// Threads and posts come as an array inside and array, for interoperability with
-		// catalog and boards requests
+		// catalog and board requests
 		res.json(posts[0]);
 	}
 
@@ -46,15 +46,16 @@ app.get(/api\/(post|thread)\/([0-9]+)\/?/, function(req, res){
 
 app.get(/\/api\/(catalog|board)\/([a-z0-9]+)\/?/, function(req, res){
 	res.set(JSONHeaders);
+	var par = req.params;;
 
-	if (invalid(req, req.params[1]))
+	if (invalid(req, par[1]))
 		return res.sendStatus(404);
 
 	// Limit of replies to read
-	var limit = req.params[0] == 'board' ? state.hot.THREADS_PER_PAGE : 0;
+	var limit = par[0] == 'board' ? state.hot.THREADS_PER_PAGE : 0;
 
 	// Read threads in reverse order from redis
-	r.zrange(`tag:${db.tag_key(req.params[1])}:threads`, 0, -1, function(err, nums) {
+	r.zrange(`tag:${db.tag_key(par[1])}:threads`, 0, -1, function(err, nums) {
 		if (err)
 			return res.send(err);
 		if (!nums || nums.length === 0)
@@ -65,6 +66,9 @@ app.get(/\/api\/(catalog|board)\/([a-z0-9]+)\/?/, function(req, res){
 				res.send(err);
 			if (!threads || threads.length === 0)
 				return res.sendStatus(404);
+			// Arrays of arrays with only one element is uneeded complexity
+			if (par[0] == 'catalog')
+				threads = _.flatten(threads);
 			res.json(threads);
 		});
 	});
@@ -139,10 +143,10 @@ function getThreads(nums, replyLimit, cb) {
 			return cb(err);
 		var op, links, dels, replies, allReplies = [];
 		for (var i = 0; i < data.length; i += 4) {
-			op = data[0];
-			links = data[1];
-			dels = data[2];
-			replies = data[3];
+			op = data[i];
+			links = data[i + 1];
+			dels = data[i + 2];
+			replies = data[i + 3];
 			if (!op)
 				continue;
 			pruneData(op);
