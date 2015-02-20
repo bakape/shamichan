@@ -1,5 +1,5 @@
 Currently the read-only JSON API is hosted on a separate webserver on its own port (8002 by default), thus it is recommended to reverse proxy it as shown in the sample nginx configuration file.
-The API currently supports 3 modes of query - post, thread and catalog.
+The API currently supports 4 modes of query.
 
 ####Format
 |  Query  |              URL             |             Returns             |
