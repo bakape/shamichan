@@ -93,7 +93,8 @@ function shift_replies(section) {
 		if (cull.has('figure').length)
 			img++;
 		omit++;
-		cull.remove();
+		// Trigger the remove even on the appropriate post model
+		Posts.findWhere({num: extract_num(cull)}).trigger('removeSelf');
 	}
 	$stat.text(abbrev_msg(omit, img));
 }
@@ -211,12 +212,13 @@ dispatcher[DEF.INSERT_POST] = function (msg) {
 			$section = $(el);
 		}
 		var section = new Section({model: model, id: num, el: el});
-		model.trigger('add');
 		$hr = $('<hr class="sectionHr"/>');
 		if (!postForm)
 			$section.append(make_reply_box());
 	}
 
+	// Add to all post collection
+	Posts.add(model);
 	Backbone.trigger('afterInsert', model, $(el));
 	if (bump) {
 		var fencepost = $('body > aside');
@@ -464,13 +466,6 @@ $DOC.on('click', 'del', function (event) {
 $DOC.on('click', '.pagination input', function (event) {
 	location.href = $('link[rel=next]').prop('href');
 });
-
-var mouseoverTarget;
-if (!isMobile){
-	$DOC.on('mouseover', function(e){
-		mouseoverTarget = e.target;
-	});
-}
 
 dispatcher[DEF.SYNCHRONIZE] = connSM.feeder('sync');
 dispatcher[DEF.INVALID] = connSM.feeder('invalid');

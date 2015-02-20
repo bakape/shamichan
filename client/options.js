@@ -566,7 +566,7 @@ option_user_bg_image.tab = tabs.Style;
 
 function imageHoverPreview(){
 	// Check if hovering over image or image is expanded by clicking
-	var $target = $(mouseoverTarget);
+	var $target = $(Mouseover.get('target'));
 	if (!$target.is('img') || $target.hasClass('expanded'))
 		return fadeOutHoverOverlay();
 	var src = $target.closest('a').attr('href');

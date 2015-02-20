@@ -21,6 +21,9 @@ var ThreadCollection = Backbone.Collection.extend({
 	},
 });
 
+// All posts currently displayed
+var Posts = new Backbone.Collection();
+
 var Threads = new ThreadCollection();
 var UnknownThread = new Thread();
 
@@ -33,7 +36,7 @@ function model_link(key) {
 // Keeps threads non-laggy by keeping displayed post count within lastN
 function unloadTopPost(){
 	var m = location.search.match(/last=(\d+)/);
-	if (!m || $(mouseoverTarget).is('a, img, video') || CurThread.get('replies').length <= parseInt(m[1], 10)+5)
+	if (!m || $(Mouseover.get('target')).is('a, img, video') || CurThread.get('replies').length <= parseInt(m[1], 10)+5)
 		return;
 	CurThread.get('replies').shift().trigger('removeSelf');
 	var $omit = $('.omit');
@@ -87,7 +90,11 @@ var Section = Backbone.View.extend({
 			'change:locked': this.renderLocked,
 			'spoiler': this.renderSpoiler,
 			destroy: this.remove,
-			'add': this.renderRelativeTime,
+		});
+		// Sections get added to multiple collections as both thread OPs and
+		// generic posts. Prevent duplication by calling only once
+		this.listenToOnce(this.model, {
+			'add': this.renderRelativeTime
 		});
 		this.listenTo(this.model.get('replies'), {
 			remove: this.removePost,
@@ -111,6 +118,8 @@ var Section = Backbone.View.extend({
 		replies.reset();
 
 		this.$el.next('hr.sectionHr').andSelf().remove();
+		// Remove from all Posts collection
+		Posts.remove(this.model);
 		this.stopListening();
 	},
 
@@ -202,6 +211,7 @@ var Article = Backbone.View.extend({
 		if (!at_bottom() && this.$el.offset().top < pos)
 			// Not sure why we need the extra 2 pixels, but we do
 			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
+		Posts.remove(this.model);
 		this.remove();
 	},
 
@@ -233,6 +243,15 @@ Backbone.on('flushDomUpdates', function () {
 			deferredChanges[attr] = {};
 	}
 });
+
+// Centralised mouseover target tracking
+var Mouseover = new Backbone.Model({target: null});
+
+if (!isMobile) {
+	$DOC.on('mouseover', function(e) {
+		Mouseover.set('target', e.target);
+	});
+}
 
 /* LINKS */
 
