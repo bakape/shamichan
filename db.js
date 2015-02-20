@@ -204,6 +204,11 @@ function set_OP_tag(tagIndex, op) {
 	TAGS[op] = tagIndex;
 }
 
+function removeOPTag(op) {
+	delete OPs[op];
+	delete TAGS[op];
+}
+
 function OP_has_tag(tag, op) {
 	var index = config.BOARDS.indexOf(tag);
 	if (index < 0)
@@ -241,18 +246,20 @@ exports.tags_of = tags_of;
 
 function update_cache(chan, msg) {
 	msg = JSON.parse(msg);
-	var op = msg.op, kind = msg.kind, tag = msg.tag;
+	var op = msg.op,
+		kind = msg.kind,
+		tag = config.BOARDS.indexOf(msg.tag);
 
 	if (kind == common.INSERT_POST) {
 		if (msg.num)
 			OPs[msg.num] = op;
 		else {
-			add_OP_tag(config.BOARDS.indexOf(tag), op);
+			add_OP_tag(tag, op);
 			OPs[op] = op;
 		}
 	}
 	else if (kind == common.MOVE_THREAD) {
-		set_OP_tag(config.BOARDS.indexOf(tag), op);
+		set_OP_tag(tag, op);
 	}
 	else if (kind == common.DELETE_POSTS) {
 		msg.nums.forEach(function (num) {
@@ -780,8 +787,7 @@ Y.remove_thread = function (op, callback) {
 		var dels = results.slice(-2);
 		if (dels.some(function (x) { return x === 0; }))
 			return done("Already deleted?!");
-		delete OPs[op];
-		delete TAGS[op];
+		removeOPTag(op);
 
 		/* Extra renames now that we have renamenx exclusivity */
 		var m = r.multi();
@@ -875,6 +881,7 @@ Y.purge_thread = function(op, callback){
 			m.del(key + ':posts');
 			m.del(key + ':body');
 			m.exec(done);
+			removeOPTag(op);
 		},
 		callback
 	]);
