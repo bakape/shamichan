@@ -81,7 +81,7 @@ server {
 
 	# Handles the JSON API
 	location /api/ {
-		proxy_pass http://api/api;
+		proxy_pass http://api/api/;
 		proxy_buffering off;
 
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
