@@ -209,11 +209,12 @@ var AddressView = Backbone.View.extend({
 			type: 'button',
 			val: 'Ban'
 		}));
-
-		$el.append(
-			'<br>',
-			$('<input>', {"class": 'name', placeholder: 'Name'})
-		);
+		if (config.IP_TAGGING) {
+			$el.append(
+				'<br>',
+				$('<input>', {"class": 'name', placeholder: 'Name'})
+			);
+		}
 		this.listenTo(this.model, 'change', this.render);
 	},
 
@@ -224,18 +225,20 @@ var AddressView = Backbone.View.extend({
 			return this;
 		}
 		this.$('.ip').text(attrs.ip);
-		var $name = this.$('.name');
-		if (!this.focusedName) {
-			_.defer(function () {
-				$name.focus().prop({
-					selectionStart: 0,
-					selectionEnd: $name.val().length,
+		if (config.IP_TAGGING) {
+			var $name = this.$('.name');
+			if (!this.focusedName) {
+				_.defer(function () {
+					$name.focus().prop({
+						selectionStart: 0,
+						selectionEnd: $name.val().length,
+					});
 				});
-			});
-			this.focusedName = true;
-		}
-		if (attrs.name != $name.val()) {
-			$name.val(attrs.name);
+				this.focusedName = true;
+			}
+			if (attrs.name != $name.val()) {
+				$name.val(attrs.name);
+			}
 		}
 		this.$('.ban')
 			.val(attrs.ban ? 'Unban' : 'Ban');
@@ -301,7 +304,7 @@ var AddressView = Backbone.View.extend({
 			act = 'Unban';
 			type = 'unban';
 			sentence = 0;
-			description = '?'; 
+			description = '?';
 		}
 		if (!confirm(act + ' ' + ip + description))
 			return;
@@ -329,7 +332,7 @@ var AddrView = Backbone.View.extend({
 	render: function () {
 		var attrs = this.model.attributes;
 		var text = ip_mnemonic(attrs.ip);
-		if (attrs.name)
+		if (attrs.name && config.IP_TAGGING)
 			text += ' "' + attrs.name + '"';
 		this.$el.attr('title', attrs.ip).text(text);
 		return this;

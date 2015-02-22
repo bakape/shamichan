@@ -2,6 +2,7 @@ var _ = require('underscore'),
     authcommon = require('./common'),
     caps = require('../server/caps'),
     common = require('../common'),
+	config = require('../config'),
     okyaku = require('../server/okyaku'),
     STATE = require('../server/state');
 
@@ -69,6 +70,9 @@ okyaku.dispatcher[authcommon.FETCH_ADDRESS] = function (msg, client) {
 okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
 	if (!caps.can_moderate(client.ident))
 		return false;
+	// Ignore the request, if IP tagging is disabled
+	if (!config.IP_tagging)
+		return true;
 	var ip = msg[0], name = msg[1];
 	if (!authcommon.is_valid_ip(ip) || typeof name != 'string')
 		return false;

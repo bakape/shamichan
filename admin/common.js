@@ -111,7 +111,7 @@ function append_mnemonic(info) {
 	// Terrible hack.
 	if (mnemonic && modCache.addresses) {
 		var addr = modCache.addresses[key];
-		if (addr && addr.name)
+		if (addr && addr.name && config.IP_TAGGING)
 			mnemonic += ' "' + addr.name + '"';
 	}
 
