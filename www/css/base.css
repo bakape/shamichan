@@ -238,6 +238,16 @@ span.control .popup-menu {
 	max-height: 80%;
 	max-width: 80%;
 }
+#catalog > article {
+	width: 165px;
+	max-height: 320px;
+	display: inline-block;
+	text-align: center;
+	word-wrap:break-word;
+	overflow: hidden;
+	vertical-align: top;
+	padding: 0.6em 0.6em 0.6em 0.6em;
+}
 .option_tab_sel {
 	display: inline;
 	-webkit-padding-start: 0px;

@@ -72,6 +72,7 @@ exports.CLIENT_DEPS = [
 	'report/client.js',
 	'time/client.js',
 	'client/banner.js',
+	'client/catalog.js',
 	'client/mobile.js',
 ];
 

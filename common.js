@@ -581,7 +581,7 @@ OS.gazou = function (info, toppu) {
 
 thumbStyles = ['small', 'sharp', 'hide'];
 
-OS.gazou_img = function (info, toppu) {
+OS.gazou_img = function (info, toppu, href) {
 	var src, thumb;
 	var imgPaths = this.image_paths();
 	var m = info.src ? /.gif$/.test(info.src) : false;
@@ -620,7 +620,8 @@ OS.gazou_img = function (info, toppu) {
 		img += '>';
 	if (imagerConfig.IMAGE_HATS)
 		img = '<span class="hat"></span>' + img;
-	img = new_tab_link(src, safe(img));
+	// Override src with href, if specified
+	img = new_tab_link(href || src, safe(img));
 	return {html: img, src: src};
 };
 
