@@ -18,7 +18,7 @@
 		});
 		// Remove threads
 		$start.nextUntil($('hr.sectionHr').last()).remove();
-		$('.pagination').remove();
+		$('.pagination').html('<a onclick="location.reload();">Return</a>');
 
 		var data,$post, html;
 		for (var i = 0; i < json.length; i++) {

@@ -14,7 +14,7 @@ var normalTitle = document.title;
 // Pass visibility changes to Unread model
 document.addEventListener('visibilitychange', function (e) {
 	var hidden = !!e.target.hidden;
-	// Unread post count will reset 
+	// Unread post count will reset
 	Unread.set({hidden: hidden, unreadCount: 0, reply: !hidden});
 	// Prevent scrolling with new posts, if page isn't visible
 	autoUnlock(hidden);
@@ -32,8 +32,8 @@ connSM.on('desynced', dropped);
 
 Backbone.on('repliedToMe', function (post) {
 	var num = post.get('num');
-	// Already read reply
-	if (readReplies[num])
+	// Already read reply || catalog view
+	if (readReplies[num]|| !BUMP)
 		return;
 	if (options.get('notification')) {
 		var body = post.get('body');
@@ -107,5 +107,5 @@ Unread.on('change', function (model) {
 	favicon(icon);
 	document.title = prefix + normalTitle;
 });
-	
+
 })();
