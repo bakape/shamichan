@@ -12,6 +12,12 @@
 	}
 
 	function render(json) {
+		// If not synced yet, try again in 0.1s
+		if (connSM.state != 'synced')
+			return setTimeout(function() {
+					render(json);
+				}, 100
+			);
 		var $start = $('aside.act').first();
 		var $el = $('<div/>', {
 			id: 'catalog',
