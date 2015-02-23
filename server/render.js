@@ -202,7 +202,7 @@ exports.make_pagination_html = function (info) {
 		else
 			bits.push('<strong>' + i + '</strong>');
 	}
-	bits.push('] [<a id="catalogLink">Catalog</a>');
+	bits.push('] [<a class="catalogLink">Catalog</a>');
 	bits.push('</nav>');
 	return bits.join('');
 };

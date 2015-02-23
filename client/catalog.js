@@ -1,5 +1,5 @@
 (function() {
-	$('#catalogLink').click(function() {
+	$('.catalogLink').click(function() {
 		fetchJSON(render);
 	});
 
