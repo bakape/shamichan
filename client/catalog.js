@@ -18,7 +18,7 @@
 					render(json);
 				}, 100
 			);
-		var $start = $('aside.act').first();
+		var $start = $('hr.sectionHr').first();
 		var $el = $('<div/>', {
 			id: 'catalog',
 		});
@@ -50,6 +50,12 @@
 		}
 		// Prevent insertion of new threads
 		BUMP = false;
+		CATALOG = true;
 		$start.after($el);
+		// Thread creation can currently be done only on the 'live' page of the board
+		// There are some more deaply-rooted issues in posting.js that prevent this on the
+		// other pages
+		if (PAGE == -1)
+			$start.after('<aside class="act"><a>New thread</a></aside>');
 	}
 })();

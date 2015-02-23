@@ -1,4 +1,4 @@
-var CurThread;
+var CurThread, CATALOG;
 
 var $DOC = $(document);
 var $name = $('input[name=name]'), $email = $('input[name=email]');
