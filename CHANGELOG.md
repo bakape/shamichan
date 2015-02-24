@@ -2,6 +2,24 @@
 All notable changes to this project will be documented in this file.
 Project uses Semantic Versioning http://semver.org/
 
+##0.10.0 - 2015-02-24
+###Added
+- Vagrant support
+- Readonly JSON API
+- Store more values in post hashes (features that depend on these will not work on threads created prior to 0.10.0)
+- Thread catalog
+- Option to disable staff IP tagging
+- Adding custom URLs to board navigation
+- youtu.be link embedding support
+
+###Fixed
+- io.js and node >= 0.12.0 compilation on OSX
+- websocket hangups on node server disconnect
+- Caching issues on Android
+
+###Changed
+- Expanded and reorganised documentation
+
 ##0.9.0 - 2015-02-17
 ###Added
 - Chrome for Android home screen webapp support
