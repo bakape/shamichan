@@ -53,7 +53,7 @@ this.hot = {
 // Entries for the banner's FAQ list
 	FAQ: [
 		'Upload size limit is 100 MB',
-		'Accepted upload file types: JPG, JPEG, PNG, APNG, GIF, WEBM, SVG',
+		'Accepted upload file types: JPG, JPEG, PNG, APNG, GIF, WEBM, SVG, PDF',
 		'<hr>',
 		'Hash commands: ',
 		'#&#60;number of dice(1-10, optional)&#62;d&#60;dice sides(1-100)&#62; - Roll dice',
