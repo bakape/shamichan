@@ -5,7 +5,7 @@ var Hidamari = {
 		'click >figure>figcaption>.imageSrc': 'revealThumbnail',
 		'click >figure>a': 'imageClicked',
 	},
-	
+
 	renderSpoiler: function(spoiler){
 		this.model.get('image').spoiler = spoiler;
 		this.renderThumbnail();
@@ -85,8 +85,8 @@ var Hidamari = {
 		var fit = options.get('inlinefit');
 		if (!img || fit == 'none')
 			return;
-		// Don't autoexpand webm with Expand All enabled
-		if (expand !== undefined && /\.webm$/i.test(img.src))
+		// Don't autoexpand webm or PDF with Expand All enabled
+		if (expand !== undefined && (img.ext == '.webm' || img.ext == '.pdf'))
 			return;
 		if  (expand != false)
 			expand = expand || this.model.get('imageExpanded') != true;
@@ -97,6 +97,9 @@ var Hidamari = {
 	},
 
 	fitImage: function(img, fit){
+		// Open PDF in a new tab on click
+		if (img.ext == '.pdf')
+			return window.open(mediaURL + 'src/' + img.src, '_blank');
 		var width = newWidth = img.dims[0];
 		var height = newHeight = img.dims[1];
 		var video = !!img.length;

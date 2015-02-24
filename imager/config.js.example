@@ -12,7 +12,7 @@ module.exports = {
 		tmp: 'imager/tmp',
 	},
 // If using an external web server, set this to the served address of the www directory
-// Trailing slash required 
+// Trailing slash required
 	MEDIA_URL: '../',
 // If using Cloudflare with global SSL forwarding, you might encounter problems with IQDB and
 // Saucenao image search failing the SSL handshake. You can set a custom query string here to
@@ -45,6 +45,8 @@ module.exports = {
 	WEBM_AUDIO: false,
 // Enable SVG upload
 	SVG: false,
+// Enable PDF upload
+	PDF: false,
 // Delete EXIF data from image.
 	DEL_EXIF: false,
 

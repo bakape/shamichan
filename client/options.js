@@ -570,7 +570,10 @@ function imageHoverPreview(){
 	if (!$target.is('img') || $target.hasClass('expanded'))
 		return fadeOutHoverOverlay();
 	var src = $target.closest('a').attr('href');
-	var isWebm = /\.webm/i.test(src);
+	// Nothing to preview for PDF
+	if (/\.pdf$/.test(src))
+		return;
+	var isWebm = /\.webm$/i.test(src);
 	// Check if WebM hover expansion is enabled
 	if (isWebm && !options.get('webmHover'))
 		return fadeOutHoverOverlay();
