@@ -1,8 +1,8 @@
 /* YOUTUBE */
-
 var youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.|m.)?youtube\.com\/watch\/?\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/;
+var youtube_short_re =/(?:>>>*?)?(?:https?:\/\/)?(?:www\.|m.)?youtu.be\/([\w-]{11})\??(t=[\dhms]{1,9})?/;
 var youtube_time_re = /^#t=(?:(\d\d?)h)?(?:(\d{1,3})m)?(?:(\d{1,3})s)?$/;
-
+var youtube_short_time_re = /^t=(?:(\d\d?)h)?(?:(\d{1,3})m)?(?:(\d{1,3})s)?$/
 function make_video(id, params, start) {
 	if (!params)
 		params = {allowFullScreen: 'true'};
@@ -58,14 +58,20 @@ $(document).on('click', '.watch', function (e) {
 	}
 	if ($target.data('noembed'))
 		return;
-	var m = $target.attr('href').match(youtube_url_re);
-	if (!m) {
+        //check if longURL, if that fails, check if shortURL
+        var m = $target.attr('href').match(youtube_url_re);
+        if (!m) {
+            m = $target.attr('href').match(youtube_short_re);
+            if (!m)
 		/* Shouldn't happen, but degrade to normal click action */
 		return;
-	}
-	var start = 0;
-	if (m[4]) {
-		var t = m[4].match(youtube_time_re);
+            timeCall(m[1],m[2],youtube_short_time_re);
+        }
+        timeCall(m[2],m[4],youtube_time_re);
+    function timeCall(url, time, timeRex){    
+            var start = 0;
+            if (time){
+                var t = time.match(timeRex);
 		if (t) {
 			if (t[1])
 				start += parseInt(t[1], 10) * 3600;
@@ -74,13 +80,13 @@ $(document).on('click', '.watch', function (e) {
 			if (t[3])
 				start += parseInt(t[3], 10);
 		}
-	}
-
-	var $obj = make_video(m[2], null, start);
-	with_dom(function () {
+            }
+            var $obj = make_video(url, null, start);
+            with_dom(function () {
 		$target.css('width', video_dims().width).append('<br>', $obj);
 	});
-	return false;
+    }
+    return false;
 });
 
 $(document).on('mouseenter', '.watch', function (event) {
@@ -99,8 +105,25 @@ $(document).on('mouseenter', '.watch', function (event) {
 		node.textContent = orig + '...';
 	});
 	var m = $target.attr('href').match(youtube_url_re);
-	if (!m)
-		return;
+	if (!m){
+            m = $target.attr('href').match(youtube_short_re);
+            if(!m)
+                return;
+            $.ajax({
+		url: '//gdata.youtube.com/feeds/api/videos/' + m[1],
+		data: {v: '2', alt: 'jsonc'},
+		dataType: 'json',
+		success: function (data) {
+			with_dom(gotInfo.bind(null, data));
+		},
+		error: function () {
+			with_dom(function () {
+				node.textContent = orig + '???';
+			});
+		},
+	});
+        }
+
 
 	$.ajax({
 		url: '//gdata.youtube.com/feeds/api/videos/' + m[2],

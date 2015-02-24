@@ -421,6 +421,25 @@ on_input: function (val) {
 			end -= diff;
 		}
 	}
+        while(true){
+            var m = val.match(youtube_short_re);
+		if (!m)
+			break;
+		// Substitute 
+		var t = this.find_time_arg(m[2]) || '';
+		var v = '>>>/watch?v=' + m[1] + t;
+		var old = m[0].length;
+		val = val.substr(0, m.index) + v + val.substr(m.index + old);
+		changed = true;
+		// Compensate caret position 
+		if (m.index < start) {
+			var diff = old - v.length;
+			start -= diff;
+			end -= diff;
+		}
+           
+        }
+        
 	/* and SoundCloud links */
 	while (true) {
 		var m = val.match(soundcloud_url_re);
@@ -489,7 +508,7 @@ find_time_arg: function (params) {
 	for (var i = 0; i < params.length; i++) {
 		var pair = '#' + params[i];
 		if (youtube_time_re.test(pair))
-			return pair;
+                        return pair;
 	}
 	return false;
 },
