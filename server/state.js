@@ -223,6 +223,7 @@ function make_navigation_html() {
 	if (!HOT.INTER_BOARD_NAVIGATION)
 		return '';
 	var bits = ['<b id="navTop">['];
+	// Actual boards
 	config.BOARDS.forEach(function (board, i) {
 		if (board == config.STAFF_BOARD)
 			return;
@@ -230,6 +231,10 @@ function make_navigation_html() {
 			bits.push(' / ');
 		bits.push('<a href="../'+board+'/">'+board+'</a>');
 	});
+	// Add custom URLs to board navigation
+	config.PSUEDO_BOARDS.forEach(function(item) {
+		bits.push(' / <a href="'+item[1]+'/">'+item[0]+'</a>')
+	})
 	bits.push(']</b>');
 	return {NAVTOP: bits.join('')};
 }

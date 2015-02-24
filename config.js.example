@@ -29,6 +29,10 @@ var config = {
 
 	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
 	DEFAULT_BOARD: 'moe',
+	// Add links to the navigator menu to custom URLs
+	PSUEDO_BOARDS: [
+		['g', 'https://google.com']
+	],
 	STAFF_BOARD: 'staff',
 
 // Thread creation cooldown for the same IP in seconds
