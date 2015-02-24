@@ -425,21 +425,21 @@ on_input: function (val) {
             var m = val.match(youtube_short_re);
 		if (!m)
 			break;
-		// Substitute 
+		// Substitute
 		var t = this.find_time_arg(m[2]) || '';
 		var v = '>>>/watch?v=' + m[1] + t;
 		var old = m[0].length;
 		val = val.substr(0, m.index) + v + val.substr(m.index + old);
 		changed = true;
-		// Compensate caret position 
+		// Compensate caret position
 		if (m.index < start) {
 			var diff = old - v.length;
 			start -= diff;
 			end -= diff;
 		}
-           
+
         }
-        
+
 	/* and SoundCloud links */
 	while (true) {
 		var m = val.match(soundcloud_url_re);
@@ -486,7 +486,7 @@ on_input: function (val) {
 	this.resize_input(val);
 },
 
-add_ref: function (num) {
+add_ref: function (num, sel) {
 	/* If a >>link exists, put this one on the next line */
 	var $input = this.$input;
 	var val = $input.val();
@@ -494,6 +494,15 @@ add_ref: function (num) {
 		$input.val(val + '\n');
 		this.on_input();
 		val = $input.val();
+	}
+	// Quote selected text automatically
+	if (sel != '') {
+		sel = sel.split('\n');
+		// Prepend > to each line
+		for (var i = 0; i < sel.length; i++) {
+			sel[i] = '>' + sel[i];
+		}
+		num += '\n' + sel.join('\n') + '\n';
 	}
 	$input.val(val + '>>' + num);
 	$input[0].selectionStart = $input.val().length;

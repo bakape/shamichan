@@ -441,11 +441,12 @@ $DOC.on('click', 'a', function (event) {
 		var q = href.match(/#q(\d+)/);
 		if (q) {
 			event.preventDefault();
-			var id = parseInt(q[1], 10);
+			var id = parseInt(q[1], 10),
+				sel = getSelection().toString();
 			set_highlighted_post(id);
 			with_dom(function () {
 				open_post_box(id);
-				postForm.add_ref(id);
+				postForm.add_ref(id, sel);
 			});
 		}
 		else if (THREAD) {
