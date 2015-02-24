@@ -666,8 +666,6 @@ cancel: function () {
 finish: function () {
 	if (this.model.get('num')) {
 		this.flush_pending();
- //               if (m)
- //                   this.blockquote.append('<br>'+m[1]+' <b>'+wikiGrab(m[1])+'</b>');
 		this.commit(this.$input.val());
 		this.$input.remove();
 		this.submit.remove();
