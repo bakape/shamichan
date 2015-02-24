@@ -519,10 +519,10 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			var thumb = req.cookies.thumb;
 			if (thumb && common.thumbStyles.indexOf(thumb) >= 0)
 				etag += '-' + thumb;
-			if (chunks.spoil == 'true' || chunks.spoil == 'false')
-				etag += '-sp_' + chunks.spoil;
-			if (chunks.agif == 'true' || chunks.agif == 'false')
-				etag += '-ag_' + chunks.agif;
+			for (var i of ['spoil', 'agif', 'rtime', 'linkify']) {
+				if (chunks[i])
+					etag += '-' + i;
+			}
 			if (lastN)
 				etag += '-last' + lastN;
 			if (preThread.locked)
