@@ -514,4 +514,5 @@ if (IDENT.auth == 'Admin') (function () {
 	var $panel = $('<div/>', {id: 'panel', "class": 'mod modal'}).hide();
 	var view = new PanelView({model: adminState, el: $panel[0]});
 	$panel.appendTo('body');
+// The function head is appended on write to client
 })();

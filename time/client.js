@@ -11,34 +11,33 @@ function date_from_time_el(el) {
 }
 
 (function () {
+	var readable_time = oneeSama.readable_time;
 
-var readable_time = oneeSama.readable_time;
+	function adjust_all_times() {
+		$('time').each(function () {
+			var date = date_from_time_el(this);
+			this.innerHTML = readable_time(date.getTime());
+		});
+	}
 
-function adjust_all_times() {
-	$('time').each(function () {
-		var date = date_from_time_el(this);
-		this.innerHTML = readable_time(date.getTime());
-	});
-}
+	var is_skewed = (function(){
+		var el = document.querySelector('time');
+		if (!el)
+			return false;
+		var d = date_from_time_el(el);
+		return readable_time(d.getTime()) != el.innerHTML;
+	})();
 
-var is_skewed = (function(){
-	var el = document.querySelector('time');
-	if (!el)
-		return false;
-	var d = date_from_time_el(el);
-	return readable_time(d.getTime()) != el.innerHTML;
-})();
+	if (is_skewed) {
+		if (!oneeSama.rTime)
+			adjust_all_times();
 
-if (is_skewed) {
-	if (!oneeSama.rTime)
-		adjust_all_times();
-
-	setTimeout(function () {
-		// next request, have the server render the right times
-		var tz = -new Date().getTimezoneOffset() / 60;
-		$.cookie('timezone', tz, {expires: 90, path: '/'});
-	}, 3000);
-}
+		setTimeout(function () {
+			// next request, have the server render the right times
+			var tz = -new Date().getTimezoneOffset() / 60;
+			$.cookie('timezone', tz, {expires: 90, path: '/'});
+		}, 3000);
+	}
 })();
 
 // Get a more accurate server-client time offset, for interclient syncing
