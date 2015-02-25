@@ -207,6 +207,7 @@ var break_re = new RegExp("(\\S{" + DEF.WORD_LENGTH_LIMIT + "})");
 var ref_re = '>>(\\d+';
 ref_re += '|>\\/watch\\?v=[\\w-]{11}(?:#t=[\\dhms]{1,9})?';
 ref_re += '|>\\/soundcloud\\/[\\w-]{1,40}\\/[\\w-]{1,80}';
+ref_re += '|>\\/pastebin\\/\\w+';
 
 for (var i = 0; i < config.BOARDS.length; i++) {
     ref_re += '|>\\/' + config.BOARDS[i] + '\\/(?:\\d+)?';
@@ -248,6 +249,10 @@ OS.red_string = function (ref) {
 	else if (/^>\/soundcloud/.test(ref)) {
 		dest = 'https://soundcloud.com/' + ref.slice(13);
 		linkClass = 'embed soundcloud';
+	}
+	else if (/^>\/pastebin/.test(ref)){
+		dest = dest = 'https://pastebin.com/' + ref.slice(11);
+		linkClass = 'embed pastebin';
 	}
 
 	// Linkify >>>/board/ URLs
