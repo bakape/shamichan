@@ -3,6 +3,8 @@ var youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.|m.)?youtube\.com\/watch
 var youtube_short_re =/(?:>>>*?)?(?:https?:\/\/)?(?:www\.|m.)?youtu.be\/([\w-]{11})\??(t=[\dhms]{1,9})?/;
 var youtube_time_re = /^#t=(?:(\d\d?)h)?(?:(\d{1,3})m)?(?:(\d{1,3})s)?$/;
 var youtube_short_time_re = /^t=(?:(\d\d?)h)?(?:(\d{1,3})m)?(?:(\d{1,3})s)?$/
+var danbooru_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.)?danbooru\.donmai\.us\/posts\/?\?(?:utf8=%E2%9C%93&)?tags=(.*)/;
+
 function make_video(id, params, start) {
 	if (!params)
 		params = {allowFullScreen: 'true'};
@@ -138,7 +140,8 @@ $(document).on('mouseenter', '.watch', function (event) {
 			});
 		},
 	});
-
+        //Creates the Titles upon hover
+        //Note: Condense gotInfos into single function
 	function gotInfo(data) {
 		var title = data && data.data && data.data.title;
 		if (title) {
@@ -246,4 +249,39 @@ $(document).on('mouseenter', '.soundcloud', function (event) {
 		else
 			node.textContent = orig + ' (gone?)';
 	}
+});
+
+// PASTEBIN
+var pastebin_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.|m.)?pastebin\.com\/(.*)/;
+//Pastebin's API seems built for MAKING pastebins but not sharing them.
+
+$(document).on('click', '.pastebin', function(event){
+    if (event.which > 1 || event.ctrlKey || event.altKey || event.shiftKey || event.metaKey)
+		return;
+	var $target = $(event.target);
+
+	var $obj = $target.find('iframe');
+	if ($obj.length) {
+		$obj.siblings('br').andSelf().remove();
+		$target.css('width', 'auto');
+		return false;
+	}
+    
+    var m = $target.attr('href').match(pastebin_re);
+    if (!m)
+        return;
+    var width = Math.round($(window).innerWidth() * 0.65);
+    var uri = 'https://pastebin.com/embed_iframe.php?i='+ m[1];
+    var $obj = $('<iframe></iframe>', {
+		type: 'text/html', 
+                src: uri,
+		frameborder: '0',
+                width: width
+                });
+                
+                
+    with_dom(function () {
+		$target.css('width', width).append('<br>', $obj);
+        });
+    return false;
 });

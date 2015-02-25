@@ -411,16 +411,9 @@ on_input: function (val) {
 		var t = m[4] || '';
 		t = this.find_time_arg(m[3]) || this.find_time_arg(m[1]) || t;
 		var v = '>>>/watch?v=' + m[2] + t;
-		var old = m[0].length;
-		val = val.substr(0, m.index) + v + val.substr(m.index + old);
-		changed = true;
-		/* Compensate caret position */
-		if (m.index < start) {
-			var diff = old - v.length;
-			start -= diff;
-			end -= diff;
-		}
+		val = embedRewrite(m,v);
 	}
+        //Youtu.be links
         while(true){
             var m = val.match(youtube_short_re);
 		if (!m)
@@ -428,34 +421,36 @@ on_input: function (val) {
 		// Substitute 
 		var t = this.find_time_arg(m[2]) || '';
 		var v = '>>>/watch?v=' + m[1] + t;
-		var old = m[0].length;
-		val = val.substr(0, m.index) + v + val.substr(m.index + old);
-		changed = true;
-		// Compensate caret position 
-		if (m.index < start) {
-			var diff = old - v.length;
-			start -= diff;
-			end -= diff;
-		}
-           
+		val = embedRewrite(m, v);
         }
-        
+       
 	/* and SoundCloud links */
 	while (true) {
 		var m = val.match(soundcloud_url_re);
 		if (!m)
 			break;
 		var sc = '>>>/soundcloud/' + m[1];
-		var old = m[0].length;
-		val = val.substr(0, m.index) + sc + val.substr(m.index + old);
-		changed = true;
-		if (m.index < start) {
-			var diff = old - sc.length;
-			start -= diff;
-			end -= diff;
-		}
+		val = embedRewrite(m, sc);
 	}
-	if (changed)
+        
+	/* Danbooru links - To be revisited
+        while (true){
+            var m = val.match(danbooru_re);
+            if (!m)
+                break;
+            var danb = '>>>/danbooru/' + m[1];
+            val = embedRewrite(m, danb);
+        }*/
+    
+        // Pastebin links
+        while(true){
+            var m = val.match(pastebin_re);
+            if (!m)
+                break;
+            var pbin = '>>>/pastebin/' +m[1];
+            val = embedRewrite(m, pbin);
+        }
+        if (changed)
 		$input.val(val);
 
 	var nl = val.lastIndexOf('\n');
@@ -484,6 +479,17 @@ on_input: function (val) {
 
 	$input.attr('maxlength', DEF.MAX_POST_CHARS - this.char_count);
 	this.resize_input(val);
+        function embedRewrite(m, rw){
+                var old = m[0].length;
+                var newVal = val.substr(0, m.index) + rw + val.substr(m.index + old);
+		changed = true;
+		if (m.index < start) {
+			var diff = old - rw.length;
+			start -= diff;
+			end -= diff;
+		}
+                return newVal;
+        }
 },
 
 add_ref: function (num) {
