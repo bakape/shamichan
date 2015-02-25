@@ -56,11 +56,6 @@ function can_administrate(ident) {
 }
 exports.can_administrate = can_administrate;
 
-function denote_priv(info) {
-	if (info.data.priv)
-		info.header.push(' (priv)');
-}
-
 function dead_media_paths(paths) {
 	paths.src = '../dead/src/';
 	paths.thumb = '../dead/thumb/';
@@ -72,10 +67,8 @@ exports.augment_oneesama = function (oneeSama, opts) {
 	oneeSama.ident = ident;
 	if (can_moderate(ident))
 		oneeSama.hook('headerName', authcommon.append_mnemonic);
-	if (can_administrate(ident)) {
-		oneeSama.hook('headerName', denote_priv);
+	if (can_administrate(ident))
 		oneeSama.hook('headerName', authcommon.denote_hidden);
-	}
 	if (can_administrate(ident) && opts.board == 'graveyard')
 		oneeSama.hook('mediaPaths', dead_media_paths);
 };
@@ -200,10 +193,6 @@ exports.lookup_ident = function (ip) {
 		ident.suspension = suspension;
 		return ident;
 	}
-
-	var priv = range_lookup(RANGES.boxes, num);
-	if (priv)
-		ident.priv = priv.ip.full;
 
 	var slow = range_lookup(RANGES.slows, num);
 	if (slow)

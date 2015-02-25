@@ -58,9 +58,7 @@ var S = Subscription.prototype;
 
 Subscription.full_key = function (target, ident) {
 	var channel;
-	if (ident && ident.priv)
-		channel = 'priv:' + ident.priv;
-	else if (caps.can_moderate(ident))
+	if (caps.can_moderate(ident))
 		channel = 'auth';
 	var key = channel ? channel + ':' + target : target;
 	return {key: key, channel: channel, target: target};
@@ -323,7 +321,7 @@ function load_OPs(callback) {
 		op = parseInt(op, 10);
 		add_OP_tag(tagIndex, op);
 		OPs[op] = op;
-		get_all_replies_and_privs(r, op, function (err, posts) {
+		get_all_replies(r, op, function (err, posts) {
 			if (err)
 				return cb(err);
 			posts.forEach(function (num) {
@@ -572,16 +570,10 @@ Y.insert_post = function (msg, body, extra, callback) {
 		m.hmset(key + ':links', msg.links);
 
 	var etc = {augments: {}, cacheUpdate: {}};
-	var priv = this.ident.priv;
 	if (op) {
 		etc.cacheUpdate.num = num;
 		var pre = 'thread:' + op;
-		if (priv) {
-			m.sadd(pre + ':privs', priv);
-			m.rpush(pre + ':privs:' + priv, num);
-		}
-		else
-			m.rpush(pre + ':posts', num);
+		m.rpush(pre + ':posts', num);
 	}
 	else {
 		// TODO: Add to alternate thread list?
@@ -740,16 +732,14 @@ Y.remove_thread = function (op, callback) {
 	var r = this.connect();
 	var key = 'thread:' + op, dead_key = 'dead:' + op;
 	var graveyardKey = 'tag:' + tag_key('graveyard');
-	var privs = null;
 	var etc = {cacheUpdate: {}};
 	var self = this;
 	async.waterfall([
 	function (next) {
-		get_all_replies_and_privs(r, op, next);
+		get_all_replies(r, op, next);
 	},
-	function (nums, threadPrivs, next) {
+	function (nums, next) {
 		etc.cacheUpdate.nums = nums;
-		privs = threadPrivs;
 		if (!nums || !nums.length)
 			return next(null, []);
 		tail.map(nums, self.remove_post.bind(self, false), next);
@@ -793,13 +783,6 @@ Y.remove_thread = function (op, callback) {
 		var m = r.multi();
 		m.rename(key + ':posts', dead_key + ':posts');
 		m.rename(key + ':links', dead_key + ':links');
-		if (privs.length) {
-			m.rename(key + ':privs', dead_key + ':privs');
-			privs.forEach(function (priv) {
-				var suff = ':privs:' + priv;
-				m.rename(key + suff, dead_key + suff);
-			});
-		}
 		m.exec(function (err) {
 			done(err, null); /* second arg is remove_posts dels */
 		});
@@ -875,7 +858,6 @@ Y.purge_thread = function(op, callback){
 			// Delete thread keys
 			m.del(key);
 			m.del(key + ':links');
-			m.del(key + ':privs');
 			m.del(key + ':dels');
 			m.del(key + ':history');
 			m.del(key + ':posts');
@@ -911,13 +893,11 @@ Y.archive_thread = function (op, callback) {
 		m.hgetall(key);
 		m.hgetall(key + ':links');
 		m.llen(key + ':posts');
-		m.smembers(key + ':privs');
 		m.lrange(key + ':dels', 0, -1);
 		m.exec(next);
 	},
 	function (rs, next) {
-		var view = rs[0], links = rs[1], replyCount = rs[2],
-				privs = rs[3], dels = rs[4];
+		var view = rs[0], links = rs[1], replyCount = rs[2], dels = rs[3];
 		var subject = subject_val(op, view.subject);
 		var tags = view.tags;
 		var m = r.multi();
@@ -956,13 +936,6 @@ Y.archive_thread = function (op, callback) {
 			m.del('post:' + num + ':links');
 		});
 		m.del(key + ':dels');
-
-		if (privs.length) {
-			m.del(key + ':privs');
-			privs.forEach(function (priv) {
-				m.del(key + ':privs:' + priv);
-			});
-		}
 
 		m.exec(next);
 	},
@@ -1299,9 +1272,7 @@ Y._log = function (m, op, kind, msg, opts) {
 	winston.info("Log: " + msg);
 	if (!op)
 		throw new Error('No OP.');
-	var priv = this.ident.priv;
-	var prefix = priv ? ('priv:' + priv + ':') : '';
-	var key = prefix + 'thread:' + op;
+	var key = 'thread:' + op;
 
 	if (common.is_pubsub(kind)) {
 		m.rpush(key + ':history', msg);
@@ -1317,7 +1288,7 @@ Y._log = function (m, op, kind, msg, opts) {
 	m.publish(key, msg);
 	var tags = opts.tags || (this.tag ? [this.tag] : []);
 	tags.forEach(function (tag) {
-		m.publish(prefix + 'tag:' + tag, msg);
+		m.publish('tag:' + tag, msg);
 	});
 
 	if (opts.cacheUpdate) {
@@ -1427,8 +1398,6 @@ Y._get_each_thread = function (reader, ix, nums) {
 function Reader(yakusoku) {
 	events.EventEmitter.call(this);
 	this.y = yakusoku;
-	if (caps.can_administrate(yakusoku.ident))
-		this.showPrivs = true;
 }
 
 util.inherits(Reader, events.EventEmitter);
@@ -1461,8 +1430,6 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 		var exists = true;
 		if (pre_post.hide && !opts.showDead)
 			exists = false;
-		else if (!can_see_priv(pre_post.priv, self.ident))
-			exists = false;
 		var tags = parse_tags(pre_post.tags);
 		if (!graveyard && tags.indexOf(tag) < 0) {
 			/* XXX: Should redirect directly to correct thread */
@@ -1479,7 +1446,7 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 		pre_post.num = num;
 		pre_post.time = parseInt(pre_post.time, 10);
 
-		var nums, deadNums, privNums, opPost, priv = self.y.ident.priv;
+		var nums, deadNums, opPost;
 		var abbrev = opts.abbrev || 0, total = 0;
 		async.waterfall([
 		function (next) {
@@ -1500,13 +1467,6 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 				if (abbrev)
 					m.llen(deadKey);
 			}
-			if (priv) {
-				var privsKey = key + ':privs:' + priv;
-				m.lrange(privsKey, -abbrev, -1);
-				if (abbrev)
-					m.llen(privsKey);
-			}
-
 			m.exec(next);
 		},
 		function (rs, next) {
@@ -1519,11 +1479,6 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 				if (abbrev)
 					total += parseInt(rs.shift(), 10);
 			}
-			if (priv) {
-				privNums = rs.shift();
-				if (abbrev)
-					total += parseInt(rs.shift(), 10);
-			}
 
 			extract(opPost);
 			next(null);
@@ -1533,11 +1488,6 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 				return self.emit('error', err);
 			if (deadNums)
 				nums = merge_posts(nums, deadNums, abbrev);
-			if (priv) {
-				nums = merge_posts(nums, privNums, abbrev);
-				if (self.showPrivs)
-					self.privNums = privNums;
-			}
 			var omit = Math.max(total - abbrev, 0);
 			self.emit('thread', opPost, omit);
 			self._get_each_reply(tag, 0, nums, opts);
@@ -1545,14 +1495,14 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 	});
 };
 
-function merge_posts(nums, privNums, abbrev) {
-	var i = nums.length - 1, pi = privNums.length - 1;
+function merge_posts(nums, deadNums, abbrev) {
+	var i = nums.length - 1, pi = deadNums.length - 1;
 	if (pi < 0)
 		return nums;
 	var merged = [];
 	while (!abbrev || merged.length < abbrev) {
 		if (i >= 0 && pi >= 0) {
-			var num = nums[i], pNum = privNums[pi];
+			var num = nums[i], pNum = deadNums[pi];
 			if (parseInt(num, 10) > parseInt(pNum, 10)) {
 				merged.unshift(num);
 				i--;
@@ -1565,21 +1515,11 @@ function merge_posts(nums, privNums, abbrev) {
 		else if (i >= 0)
 			merged.unshift(nums[i--]);
 		else if (pi >= 0)
-			merged.unshift(privNums[pi--]);
+			merged.unshift(deadNums[pi--]);
 		else
 			break;
 	}
 	return merged;
-}
-
-function can_see_priv(priv, ident) {
-	if (!priv)
-		return true; // not private
-	if (!ident)
-		return false;
-	if (ident.showPriv)
-		return true;
-	return priv == ident.priv;
 }
 
 Reader.prototype._get_each_reply = function (tag, ix, nums, opts) {
@@ -1611,8 +1551,6 @@ Reader.prototype.get_post = function (kind, num, opts, cb) {
 		var exists = !(_.isEmpty(pre_post));
 		if (exists && pre_post.hide && !opts.showDead)
 			exists = false;
-		if (exists && !can_see_priv(pre_post.priv, self.ident))
-			exists = false;
 		if (!exists)
 			return next(null, null);
 
@@ -1628,43 +1566,20 @@ Reader.prototype.get_post = function (kind, num, opts, cb) {
 		with_body(r, key, pre_post, next);
 	},
 	function (post, next) {
-		if (post) {
-			var ps = self.privNums;
-			if (ps && _.contains(ps, num.toString()))
-				post.priv = true;
+		if (post)
 			extract(post);
-		}
 		next(null, post);
 	}], cb);
 };
 
-/* Including hidden or private. Not in-order. */
-function get_all_replies_and_privs(r, op, cb) {
+function get_all_replies(r, op, cb) {
 	var key = 'thread:' + op;
-	var m = r.multi();
-	m.lrange(key + ':posts', 0, -1);
-	m.smembers(key + ':privs');
-	m.exec(function (err, rs) {
+	r.lrange(key + ':posts', 0, -1, function(err, nums) {
 		if (err)
 			return cb(err);
-		var nums = rs[0], privs = rs[1];
-		if (!privs.length)
-			return cb(null, nums, privs);
-		var m = r.multi();
-		privs.forEach(function (priv) {
-			m.lrange(key + ':privs:' + priv, 0, -1);
-		});
-		m.exec(function (err, rs) {
-			if (err)
-				return cb(err);
-			rs.forEach(function (ns) {
-				nums.push.apply(nums, ns);
-			});
-			cb(null, nums, privs);
-		});
+		return cb(null, nums);
 	});
 };
-
 
 /* AUTHORITY */
 
