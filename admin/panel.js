@@ -71,7 +71,7 @@ okyaku.dispatcher[authcommon.SET_ADDRESS_NAME] = function (msg, client) {
 	if (!caps.can_moderate(client.ident))
 		return false;
 	// Ignore the request, if IP tagging is disabled
-	if (!config.IP_tagging)
+	if (!config.IP_TAGGING)
 		return true;
 	var ip = msg[0], name = msg[1];
 	if (!authcommon.is_valid_ip(ip) || typeof name != 'string')
