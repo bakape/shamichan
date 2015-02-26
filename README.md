@@ -7,11 +7,8 @@ Note: The git master branch contains the development version of the board. For m
 
 * Install dependencies listed below
 * Sign up for reCAPTCHA
-* Copy config.js.example to config.js and configure
-* Copy hot.js.example to hot.js and configure
-* Copy imager/config.js.example to imager/config.js and configure
-* Copy report/config.js.example to report/config.js and configure
-* Run `npm install` to install npm deps and compile a few helpers
+* Run `npm install` to install npm deps and compile C++ addons
+* Configure config.js, hot.js, imager/config.js and report/config.js
 * Run `node builder.js` to run an auto-reloading development server
 * Alternatively, you can run `curl -Ls https://raw.githubusercontent.com/bakape/doushio/master/DEPLOY.sh | bash -`
 	as root for a basic semiautomatic production setup. Currently Ubuntu-only
@@ -28,7 +25,6 @@ Note: The git master branch contains the development version of the board. For m
 * Run `node server/server.js` for just the server
 * config.DAEMON support is broken for now
 * You can update client code & hot.js on-the-fly with `node server/kill.js`
-* For a sample init script, refer to docs/doushio.initscript.example
 
 ##Dependencies
 
@@ -42,7 +38,7 @@ Note: The git master branch contains the development version of the board. For m
 
 * ffmpeg 2.2+ for WebM support
 * pngquant  2.3.1+ for PNG thumbnails
-* exiftool for stripping images off EXIF data
+* exiftool for stripping images of EXIF data
 
 ###Optional npm dependancies
 * ~~daemon~~ (broken currently)
