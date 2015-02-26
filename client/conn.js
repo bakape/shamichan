@@ -159,7 +159,12 @@
 
 	$(function () {
 		_.defer(connSM.feeder('start'));
-		$(window).focus(function () {
+		// Check for connectivity each time tab visibility changes to visible
+		// A bit of an overhead, but should prevent unregistered disconnects,
+		// especially on mobile
+		document.addEventListener("visibilitychange", function (e) {
+			if (e.target.hidden)
+				return;
 			setTimeout(window_focused, 20);
 		});
 		window.addEventListener('online', function () {

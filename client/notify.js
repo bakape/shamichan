@@ -12,7 +12,7 @@
 
 	// Pass visibility changes to Unread model
 	document.addEventListener('visibilitychange', function (e) {
-		var hidden = !!e.target.hidden;
+		var hidden = e.target.hidden;
 		// Unread post count will reset
 		Unread.set({hidden: hidden, unreadCount: 0, reply: !hidden});
 		// Prevent scrolling with new posts, if page isn't visible
