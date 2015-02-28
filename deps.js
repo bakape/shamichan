@@ -45,6 +45,8 @@ exports.VENDOR_DEPS = [
 	'./node_modules/backbone/backbone.js',
 	'./lib/oninput.js',
 	'./node_modules/jquery.cookie/jquery.cookie.js',
+	'./node_modules/velocity-animate/velocity.min.js',
+	'./node_modules/velocity-animate/velocity.ui.js',
 	'./lib/pixastic.blurfast.min.js',
 ];
 
