@@ -563,61 +563,7 @@ function parent_model($el) {
 
 	/* IMAGE HOVER EXPANSION */
 
-	function imageHoverPreview(){
-		// Check if hovering over image or image is expanded by clicking
-		var $target = $(Mouseover.get('target'));
-		if (!$target.is('img') || $target.hasClass('expanded'))
-			return fadeOutHoverOverlay();
-		var src = $target.closest('a').attr('href');
-		// Nothing to preview for PDF
-		if (/\.pdf$/.test(src))
-			return;
-		var isWebm = /\.webm$/i.test(src);
-		// Check if WebM hover expansion is enabled
-		if (isWebm && !options.get('webmHover'))
-			return fadeOutHoverOverlay();
-		var $img  = $(isWebm ? '<video />' : '<img />', {
-			id: 'hover_overlay_image',
-			'src': src,
-			autoplay: true,
-			loop: true,
-		});
-		// Gracefully fade out previous image
-		var $old = $('#hover_overlay_image');
-		if ($old.length){
-			fadeOutHoverOverlay(function(){
-				fadeInHoverOverlay($img);
-			});
-		}
-		else
-			fadeInHoverOverlay($img);
-	}
-
-	function fadeInHoverOverlay($img){
-		$('#hover_overlay').append($img);
-		$('#hover_overlay_image').fadeIn({duration: 200});
-	}
-
-	function fadeOutHoverOverlay(cb){
-		// Do nothing, if image is already removed
-		var $img = $('#hover_overlay_image');
-		if (!$img.length)
-			return;
-		$img.fadeOut({duration: 200, complete: function(){
-			$img.remove();
-			// More responsive transition with fast pointer movements
-			imageHoverPreview();
-		}});
-		if (typeof cb === 'function')
-			cb();
-	}
-
-	function option_image_hover(toggle){
-		if (toggle)
-			$DOC.on('mouseover', imageHoverPreview).on('click', 'img, video', fadeOutHoverOverlay);
-		else
-			$DOC.off('mouseover', imageHoverPreview).off('click', 'img, video', fadeOutHoverOverlay);
-	}
+	function option_image_hover(toggle){}
 
 	option_image_hover.id = 'imageHover';
 	option_image_hover.label = 'Image Hover Expansion';

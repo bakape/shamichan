@@ -108,11 +108,11 @@ h3 {
 	display: flex;
 	z-index: 300;
 }
-#hover_overlay_image {
+#hover_overlay img, #hover_overlay video {
 	max-height: 100%;
 	max-width: 100%;
 	margin: auto auto;
-	display: none;
+	display: block;
 }
 header {
 	background: url('ui/box.png') left 3px no-repeat;
