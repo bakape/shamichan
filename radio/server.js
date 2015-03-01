@@ -31,7 +31,7 @@ function parse(main) {
 	// Test song name against regex
 	var name = null;
 	for (var i of songMap) {
-		if (i[0].test(!data.np))
+		if (!i[0].test(data.np))
 			continue;
 		// Assign name replacement
 		name = i[1];
