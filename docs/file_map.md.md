@@ -6,8 +6,6 @@
 * __archive/__
 	* __daemon.js__		Archiver/thread deletion daemon
 	* __dump.js__		Static archiver. Currently not ready for use
-* __autojoe/__
-	* __server.js__		Automatic poster name assignment by parsing r/a/dio song title
 * __client/__
 	* __amusement.js__	Hooks into the server for hash commands etc.
 	* __client.js__		Main client module. Handles parsing server communication
@@ -42,6 +40,7 @@
 	* __jobs.js__			Image & Video processing scheduler
 	* __Makefile__			Compiles findapng.c
 * __lib/__					Various client libraries
+* __radio__					r-a-d.io integration
 * __report/__
 	* __client.js__			Renders report panel
 	* __config.js.example__	Sample reports configuration

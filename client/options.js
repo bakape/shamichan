@@ -43,7 +43,7 @@ function parent_model($el) {
 	optSpecs.push(option_linkify);
 	optSpecs.push(option_notification);
 	optSpecs.push(option_relative_time);
-	if (hotConfig.RADIO_BANNER && !isMobile)
+	if (config.RADIO && !isMobile)
 		optSpecs.push(option_now_playing);
 	optSpecs.push(option_google);
 	optSpecs.push(option_iqdb);
@@ -304,34 +304,9 @@ function parent_model($el) {
 
 	/* R/A/DIO NOW PLAYING BANNER */
 
-	var now_playing_timer;
 	function option_now_playing(toggle){
-		if (!toggle){
-			var song;
-			(function write_banner(){
-				// Query the r/a/dio API
-				$.getJSON('https://r-a-d.io/api', function(data){
-					if (!data || !data.main)
-						return;
-					var main = data.main;
-					// No changes, no need to rewite banner
-					if (song == main.np)
-						return;
-					var info ='<a href="http://r-a-d.io/" target="_blank">' + '[' + main.listeners + '] ' +
-							main.dj.djname + '</a>' + '&nbsp;&nbsp;<a title="Click to google song" href="https://google.com/search?q=' +
-							encodeURIComponent(main.np) + '" target="_blank"><b>' + main.np + '</b></a>';
-					$('#banner_center').html(info);
-				})
-					// Schedule a new requests, even if the fetch fails
-					.always(function(){
-						now_playing_timer = setTimeout(write_banner, 10000);
-					});
-			})();
-		} else {
-			// Stop updating the banner
-			clearTimeout(now_playing_timer);
-			$('#banner_center').html('');
-		}
+		if (toggle)
+			Banner.clearRadio()
 	}
 
 	option_now_playing.id = 'nowPlaying';

@@ -67,17 +67,7 @@ var config = {
 // Enable staff to assign custom tags to poster IPs
 	IP_TAGGING: false,
 
-/* Silly little things you probably should not care about */
-
-// Automatic name assignement by parsing https://r-a-d.io/api
-	AUTOJOE: false,
-// Autojoe song patterns and name replacement
-	AUTOJOE_CONF: [
-		{pattern: /Girls,? Be Ambitious/i, name: 'Joe'},
-		{pattern: /Super Special/i, name: 'Super Special'},
-		{pattern: /Turning Japanese/i, name: '\u540D\u7121\u3057'},
-		{pattern: /Make a Man Out of You|Be a Man/i, name: 'Cute Little Girl'},
-	],
+// r/a/dio integration (https://r-a-d.io)
+	RADIO: false,
 };
-
 module.exports = config;
