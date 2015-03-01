@@ -442,11 +442,15 @@ $DOC.on('click', 'a', function (event) {
 		if (q) {
 			event.preventDefault();
 			var id = parseInt(q[1], 10),
-				sel = getSelection().toString();
+				gsel = getSelection(),
+				sel = gsel.toString()
+				selNum = extract_num($(gsel.focusNode && gsel.focusNode.parentElement)
+					.closest('article, section')
+				);
 			set_highlighted_post(id);
 			with_dom(function () {
 				open_post_box(id);
-				postForm.add_ref(id, sel);
+				postForm.add_ref(id, sel, selNum);
 			});
 		}
 		else if (THREAD) {

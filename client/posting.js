@@ -485,7 +485,7 @@ var ComposerView = Backbone.View.extend({
 		this.resize_input(val);
 	},
 
-	add_ref: function (num, sel) {
+	add_ref: function (num, sel, selNum) {
 		/* If a >>link exists, put this one on the next line */
 		var $input = this.$input;
 		var val = $input.val();
@@ -494,8 +494,8 @@ var ComposerView = Backbone.View.extend({
 			this.on_input();
 			val = $input.val();
 		}
-		// Quote selected text automatically
-		if (sel != '') {
+		// Quote selected text automatically, if selction ends in target post
+		if (sel != '' && selNum == num) {
 			sel = sel.split('\n');
 			// Prepend > to each line
 			for (var i = 0; i < sel.length; i++) {
