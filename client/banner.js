@@ -35,6 +35,10 @@ dispatcher[DEF.RADIO] = function(msg) {
 	Banner.renderRadio(msg[0]);
 };
 
+dispatcher[DEF.UPDATE_BANNER] = function(msg) {
+	Banner.renderInfo(msg[0]);
+};
+
 var BannerView = Backbone.View.extend({
 	initialize: function() {
 
@@ -48,6 +52,10 @@ var BannerView = Backbone.View.extend({
 			'</a>&nbsp;&nbsp;<a title="Click to google song" href="https://google.com/search?q=' +
 				encodeURIComponent(data.np) + '" target="_blank"><b>' + data.np + '</b></a>'
 		);
+	},
+
+	renderInfo: function(msg) {
+		this.$el.children('#banner_info').html(msg);
 	},
 
 	clearRadio: function() {

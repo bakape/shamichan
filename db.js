@@ -1677,27 +1677,20 @@ Y.set_fun_thread = function (op, callback) {
 };
 
 Y.get_banner = function (cb) {
-	var key = 'tag:' + tag_key(this.tag) + ':banner';
-	this.connect().hgetall(key, cb);
+	this.connect().get('banner:info', cb);
 };
 
-Y.set_banner = function (op, message, cb) {
+Y.set_banner = function (message, cb) {
 	var r = this.connect();
 
-	var key = 'tag:' + tag_key(this.tag) + ':banner';
 	var self = this;
-	r.hgetall(key, function (err, old) {
+	r.set('banner:info', message, function(err) {
 		if (err)
 			return cb(err);
-		var m = r.multi();
-		if (old && old.op != op) {
-			// clear previous thread's banner
-			self._log(m, old.op, common.UPDATE_BANNER, [null]);
-		}
 
-		// write new banner
-		m.hmset(key, {op: op, msg: message});
-		self._log(m, op, common.UPDATE_BANNER, [message]);
+		// Dispatch new banner
+		var m = r.multi();
+		self._log(m, 0, common.UPDATE_BANNER, [message]);
 		m.exec(cb);
 	});
 };

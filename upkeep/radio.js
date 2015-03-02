@@ -18,7 +18,7 @@ var LONG_INTERVAL = 30 * 1000;
 
 function update_banner(info, cb) {
 	var yaku = new db.Yakusoku(info.board, RADIO_IDENT);
-	yaku.set_banner(info.op, info.msg, function (err, res) {
+	yaku.set_banner(info.msg, function (err, res) {
 		yaku.disconnect();
 		cb(err, res);
 	});

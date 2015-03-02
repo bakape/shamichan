@@ -38,7 +38,8 @@ this.hot = {
 	SPECIAL_TRIPCODES: {
 		kyubey: "／人◕ ‿‿ ◕人＼",
 	},
-// Information to display in the top banner. Accepts HTML
+// Information to display in the top banner. Accepts HTML.
+// Is overriden by Y.set_banner()
 	BANNERINFO: '',
 // Planned event schedule to display in the banner's Schedule list
 	SCHEDULE: {
