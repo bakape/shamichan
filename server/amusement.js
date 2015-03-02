@@ -1,6 +1,7 @@
 var common = require('../common'),
 	db = require('../db'),
-    hooks = require('../hooks');
+    hooks = require('../hooks'),
+	radio = require('../radio/server');
 
 var rollLimit = 5;
 var pyu_counter;
@@ -23,8 +24,18 @@ exports.roll_dice = function (frag, post, extra) {
 			}
 			rolls.push(pyu_counter);
 		}
-		else if(info.start)	//syncwatch
-			rolls.push({start:info.start, end:info.end, hour:info.hour, min:info.min, sec:info.sec});
+		// r/a/dio song queue
+		else if (info.q)
+			rolls.push(radio.queue);
+		// Syncwatch
+		else if(info.start)
+			rolls.push({
+				start:info.start,
+				end:info.end,
+				hour:info.hour,
+				min:info.min,
+				sec:info.sec
+			});
 		else {
 			rolls.push(f);
 			for (var j = 0; j < info.n; j++)

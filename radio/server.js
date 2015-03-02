@@ -4,7 +4,6 @@ var common = require('../common'),
 	request = require('request');
 
 var	json,
-	queue = exports.queue = [],
 	songMap = [
 		[/Girls,? Be Ambitious/i, 'Joe'],
 		[/Super Special/i, 'Super Special'],
@@ -38,8 +37,16 @@ function parse(main) {
 		break;
 	}
 
+	// Build song queue
+	var queue = '';
+	for (var i = 0; i < main.queue.length; i++) {
+		if (i > 0)
+			queue += ' | ';
+		queue += main.queue[i].meta;
+	}
+
 	exports.name = name;
-	exports.queue = main.queue || [];
+	exports.queue = queue;
 }
 
 // Send r/a/dio banner on client sync
@@ -53,8 +60,7 @@ function fetch() {
 	request.get({url: 'https://r-a-d.io/api', json: true,},
 		function (err, resp, json){
 			if (err || resp.statusCode != 200 || !json || !json.main) {
-				exports.name = null;
-				exports.queue = [];
+				exports.name = exports.queue = null;
 				return again();
 			}
 			parse(json.main);

@@ -69,5 +69,7 @@ var config = {
 
 // r/a/dio integration (https://r-a-d.io)
 	RADIO: false,
+// Missle Launcher
+	PYU: false,
 };
 module.exports = config;

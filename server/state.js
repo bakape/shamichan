@@ -96,7 +96,8 @@ var clientConfig = _.pick(config,
 	'READ_ONLY',
 	'API_URL',
 	'IP_TAGGING',
-	'RADIO'
+	'RADIO',
+	'PYU'
 );
 var clientImager = _.pick(imager,
 	'WEBM',
