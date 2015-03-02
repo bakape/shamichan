@@ -1,14 +1,10 @@
-var isNode = typeof navigator === 'undefined';
-var common;
-if (isNode){
-	// Assigned, not initialised, so they don't get hoisted on the client
-	_ = require('underscore');
-	config = require('../config');
-	common = require('../common');
-	DEF = exports;
-}
-else
-	common = window;
+// Define vars both on server and client
+var isNode = typeof navigator === 'undefined',
+	_ = _ || require('underscore'),
+	common = isNode ? require('../common') : window,
+	config = config || require('../config'),
+	DEF = DEF || exports;
+
 DEF.FETCH_ADDRESS = 101;
 DEF.SET_ADDRESS_NAME = 102;
 DEF.BAN = 103;

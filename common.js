@@ -3,15 +3,12 @@
 
 // Runing on the server
 var isNode = typeof navigator === 'undefined';
-var DEF = {};
 
-if (isNode){
-	// Assigned, not initialised, so they don't get hoisted on the client
-	config = require('./config');
-	hotConfig = require('./server/state').hot;
-	imagerConfig = require('./imager/config');
-	DEF = exports;
-}
+// Define vars, if undefined (on the server)
+var DEF = isNode ? exports : {},
+	config = config || require('./config'),
+	hotConfig = hotConfig || require('./server/state').hot,
+	imagerConfig =  imagerConfig || require('./imager/config');
 
 DEF.INVALID = 0;
 
