@@ -213,7 +213,7 @@ span.control .popup-menu {
 .bfloat {
 	font-weight: bold;
 	float: right;
-	margin: 0.15em;
+	margin: 0 0.15em 0 0.15em;
 }
 .bfloat svg {
 	width: 1em;
