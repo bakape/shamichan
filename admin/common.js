@@ -1,9 +1,19 @@
 // Define vars both on server and client
-var isNode = typeof navigator === 'undefined',
-	_ = _ || require('underscore'),
-	common = isNode ? require('../common') : window,
-	config = config || require('../config'),
-	DEF = DEF || exports;
+var _, common, config, DEF,
+	isNode = typeof navigator === 'undefined';
+
+if (isNode) {
+	_ = require('underscore');
+	common = require('../common');
+	config = require('../config');
+	DEF = exports;
+}
+else {
+	_ = window._;
+	common = window;
+	config = window.config;
+	DEF = window.DEF;
+}
 
 DEF.FETCH_ADDRESS = 101;
 DEF.SET_ADDRESS_NAME = 102;
