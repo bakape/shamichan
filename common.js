@@ -202,8 +202,18 @@ var OneeSama = function (t) {
 var OS = OneeSama.prototype;
 
 var break_re = new RegExp("(\\S{" + DEF.WORD_LENGTH_LIMIT + "})");
-/* internal refs, embeds */
-var ref_re = />>(\d+|>\/watch\?v=[\w-]{11}(?:#t=[\dhms]{1,9})?|>\/soundcloud\/[\w-]{1,40}\/[\w-]{1,80}|>\/(?:a|foolz)\/\d{0,10})/;
+
+// Internal refs, embeds
+var ref_re = '>>(\\d+';
+ref_re += '|>\\/watch\\?v=[\\w-]{11}(?:#t=[\\dhms]{1,9})?';
+ref_re += '|>\\/soundcloud\\/[\\w-]{1,40}\\/[\\w-]{1,80}';
+
+for (var i = 0; i < config.BOARDS.length; i++) {
+    ref_re += '|>\\/' + config.BOARDS[i] + '\\/(?:\\d+)?';
+}
+
+ref_re += ')';
+ref_re = new RegExp(ref_re);
 
 OS.hook = function (name, func) {
 	var hs = this.hooks[name];
@@ -230,25 +240,28 @@ function override(obj, orig, upgrade) {
 }
 
 OS.red_string = function (ref) {
-	var prefix = ref.slice(0, 3);
 	var dest, linkClass;
-	if (prefix == '>/w') {
+	if (/^>\/watch/.test(ref)) {
 		dest = 'https://www.youtube.com/' + ref.slice(2);
 		linkClass = 'embed watch';
 	}
-	else if (prefix == '>/s') {
+	else if (/^>\/soundcloud/.test(ref)) {
 		dest = 'https://soundcloud.com/' + ref.slice(13);
 		linkClass = 'embed soundcloud';
 	}
-	else if (prefix == '>/a') {
-		var num = parseInt(ref.slice(4), 10);
-		dest = '../outbound/a/' + (num ? ''+num : '');
+
+	// Linkify >>>/board/ URLs
+	var board;
+	for (var i = 0; i < config.BOARDS.length; i++) {
+		board = config.BOARDS[i];
+		if (!new RegExp('^>\\/' + board + '\\/').test(ref))
+			continue;
+		dest = '../' + board;
+		linkClass = '';
+		break;
 	}
-	else if (prefix == '>/f') {
-		var num = parseInt(ref.slice(8), 10);
-		dest = '../outbound/foolz/' + (num ? ''+num : '');
-	}
-	else {
+
+	if (!dest) {
 		this.tamashii(parseInt(ref, 10));
 		return;
 	}
