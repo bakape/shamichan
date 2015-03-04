@@ -1205,6 +1205,9 @@ if (require.main == module) {
 			throw err;
 		// Start JSON API express server
 		require('./api');
+		// Start thread archiver
+		if (config.ARCHIVE)
+			require('./archive');
 		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
 		var onegai;
 		var writes = [];

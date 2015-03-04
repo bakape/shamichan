@@ -1,6 +1,5 @@
-/* Copies old threads to the archive board.
- * Run this in parallel with the main server.
- */
+// Copies old threads to the archive board
+// or deletes them permenanly with config.VOLATILE
 
 var config = require('../config'),
     db = require('../db'),
@@ -18,7 +17,6 @@ function connect() {
 		r = yaku.connect();
 		r.on('error', function (err) {
 			winston.error(err);
-			process.exit(1);
 		});
 	}
 	else
@@ -62,7 +60,7 @@ function clean_up() {
 			var op = parseInt(m[1], 10);
 			if (!op)
 				return;
-			
+
 			if (config.VOLATILE){
 				yaku.purge_thread(op, function(){
 					r.zrem(expiryKey, entry, function (err, n) {
@@ -91,15 +89,6 @@ function clean_up() {
 	at_next_minute(clean_up);
 }
 
-if (require.main === module) {
-	connect();
-	var args = process.argv;
-	if (args.length == 3) {
-		yaku.archive_thread(parseInt(args[2], 10), function (err) {
-			if (err)
-				throw err;
-			process.exit(0);
-		});
-	}
-	at_next_minute(clean_up);
-}
+// Start module
+connect();
+at_next_minute(clean_up);

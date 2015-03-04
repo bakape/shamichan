@@ -31,14 +31,11 @@ do_start()
     su -l $USER -c "echo [`date -u +%Y-%m-%dT%T.%3NZ`] Starting >> $LOG
     cd $DOUSHIO_DIR
     $NODE server/server.js 1>/dev/null 2>>$LOG &
-    echo \$! > doushio.pid
-    $NODE archive/daemon.js 1>/dev/null 2>>$LOG &
-    echo \$! > doushio.archive.pid" $USER
+    echo \$! > doushio.pid" $USER
 }
 
 do_stop()
 {
-    kill $(cat ${DOUSHIO_DIR}/doushio.archive.pid)
     kill $(cat ${DOUSHIO_DIR}/doushio.pid)
     su -l $USER -c "echo [`date -u +%Y-%m-%dT%T.%3NZ`] Stopping >> $LOG"
 }

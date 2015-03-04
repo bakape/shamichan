@@ -52,7 +52,6 @@ Note: The git master branch contains the development version of the board. For m
 
 ##Standalone upkeep scripts
 
-* archive/daemon.js - moves old threads to the archive
 * upkeep/backup.js - uploads rdb to S3
 * upkeep/backup.sh - MEGA backup script
 * upkeep/clean.js - deletes archived images

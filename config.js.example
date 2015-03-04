@@ -14,9 +14,9 @@ var config = {
 	SOCKET_PATH: '/hana',
 // Honour X-Forwarded-For HTTP headers for client IP determination
 	TRUST_X_FORWARDED_FOR: false,
-// Use internal HTTP server to serve these resources.
-// It is recommended to serve the www directory with a dedicated webserver, like nginx,
-// and set MEDIAURL in imager/config.js to the served directory's address.
+// Use internal HTTP server to serve these resources.It is recommended to serve
+// the www directory with a dedicated webserver, like nginx, and set MEDIAURL
+// in imager/config.js to the served directory's address.
 	SERVE_STATIC_FILES: true,
 	SERVE_IMAGES: true,
 // Not preferred; use nginx (or other)'s gzipping
@@ -37,25 +37,28 @@ var config = {
 
 // Thread creation cooldown for the same IP in seconds
 	THREAD_THROTTLE: 60,
-// Per board thread expiry configuration. Expired threads will be either archived or deleted
-// by archive/daemon.js. Set in seconds.
-	THREAD_EXPIRY: {
-		moe: 3600 * 24 * 7,
-		gar: 3600 * 24 * 7,
-		meta: 3600 * 24 * 7,
-	},
 // Posting speed throttling settings
 	SHORT_TERM_LIMIT: 2000,
 	LONG_TERM_LIMIT: 2000*20*12,
 	NEW_POST_WORTH: 50,
 	IMAGE_WORTH: 50,
-// Instructs archive/daemon.js to permanently delete threads instead of archiving them
-// Existing archives will not be removed
+
+// Per board thread expiry time. Set in seconds.
+	THREAD_EXPIRY: {
+		moe: 3600 * 24 * 7,
+		gar: 3600 * 24 * 7,
+		meta: 3600 * 24 * 7,
+	},
+// Archive expired threads
+	ARCHIVE: false,
+// Permanently delete threads instead of archiving them. Existing archives will
+// not be removed.
 // Note: upkeep/clean.js is not needed with this option enabled
 	VOLATILE: false,
 
-// Doushio uses Mozilla's Persona system for moderator authentication. Set login emails here.
-// Loging in can be done by either going to the /login/ board or typing "misaki" into the email field.
+// Doushio uses Mozilla's Persona system for moderator authentication.
+// Set login emails here. Loging in can be done by either going to the /login/
+//  board or typing "misaki" into the email field.
 	ADMIN_PERSONAS: ['lalc@doushio.com'],
 	MODERATOR_PERSONAS: ['mod@doushio.com'],
 // URL to pass to Mozilla's servers.
