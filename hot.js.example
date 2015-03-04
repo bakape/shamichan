@@ -68,10 +68,8 @@ this.hot = {
 		'<hr>',
 		'Source code repository: <a href="https://github.com/bakape/doushio" target="_blank">github.com/bakape/meguca</a>',
 	],
-// Word replacament filter. {pattern: /foo/, replacement: 'bar'} Pattern must not contain spaces or newlines
-	FILTER: [
-		{p: /\/moe\//ig, r: 'Disneyland'},
-	],
+// Word replacament filter. {p: /foo/, r: 'bar'} Pattern must not contain spaces or newlines
+	FILTER: [],
 // Array of answers for the 8ball random wisdom dispenser. To use, type "#8ball" in post, followed by enter.
 	EIGHT_BALL: [
 		"Yes",
