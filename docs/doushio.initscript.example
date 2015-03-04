@@ -22,20 +22,21 @@ PID=${DOUSHIO_DIR}/server/.server.pid
 
 do_start()
 {
-    if ps -p $(cat $PID) >/dev/null; then
-        do_stop
-    fi
-    su -l $USER -
-		echo [`date -u +%Y-%m-%dT%T.%3NZ`] Starting >> $LOG
+    su -l $USER -c "echo [`date -u +%Y-%m-%dT%T.%3NZ`] Starting >> $LOG
 		cd $DOUSHIO_DIR
-		$NODE server/server.js 1>/dev/null 2>>$LOG &
-    exit
+		$NODE server/server.js 1>/dev/null 2>>$LOG &"
 }
 
 do_stop()
 {
     kill $(cat $PID)
     su -l $USER -c "echo [`date -u +%Y-%m-%dT%T.%3NZ`] Stopping >> $LOG"
+}
+
+do_restart()
+{
+    do_stop
+    do_start
 }
 
 do_reload()
@@ -54,7 +55,7 @@ stop)
     ;;
 restart)
     echo "Restarting $DESC"
-    do_start
+    do_restart
     ;;
 reload)
     echo "Reloading $DESC"
