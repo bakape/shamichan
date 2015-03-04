@@ -386,7 +386,7 @@ function parse_dice(frag) {
 		var hour= parseInt(sw[1], 10) || 0,
 			min = parseInt(sw[2], 10),
 			sec = parseInt(sw[3], 10);
-		var time = new Date().getTime();
+		var time = serverTime();
 		// Offset the start. If the start is in the future,
 		// a countdown will be displayed
 		if (sw[4]){
@@ -397,6 +397,14 @@ function parse_dice(frag) {
 		var end = ((hour*60+min)*60+sec)*1000+time;
 		return {hour:hour,min: min,sec:sec,start:time,end:end};
 	}
+}
+
+function serverTime() {
+	var d = new Date().getTime();
+	// On the server or time difference not compared yet
+	if (isNode || !serverTimeOffset)
+		return d;
+	return d + serverTimeOffset;
 }
 
 function readable_dice(bit, d) {

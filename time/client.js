@@ -56,14 +56,14 @@ function timer_from_el($el) {
 	if (!serverTimeOffset)
 		return;
 	$el.addClass('timerTicking');
-	var start= $el.attr('start')-serverTimeOffset;
-	var end = $el.attr('end')-serverTimeOffset;
+	var start= $el.attr('start');
+	var end = $el.attr('end');
 	var maxh = pad($el.attr('hour'));
 	var maxm = pad($el.attr('min'));
 	var maxs = pad($el.attr('sec'));
 
 	(function moumouikkai(){
-		var now = new Date().getTime();
+		var now = serverTime();
 		if (now > end)
 			return $el.text('Finished');
 		// If the start time is in the future
