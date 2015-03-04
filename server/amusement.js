@@ -1,6 +1,10 @@
 var common = require('../common'),
+	config = require('../config'),
 	db = require('../db'),
-    hooks = require('../hooks'),
+    hooks = require('../hooks');
+
+var radio;
+if (config.RADIO)
 	radio = require('../radio/server');
 
 var rollLimit = 5;
@@ -25,7 +29,7 @@ exports.roll_dice = function (frag, post, extra) {
 			rolls.push(pyu_counter);
 		}
 		// r/a/dio song queue
-		else if (info.q)
+		else if (info.q && radio)
 			rolls.push(radio.queue);
 		// Syncwatch
 		else if(info.start)
