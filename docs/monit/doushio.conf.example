@@ -1,0 +1,11 @@
+check process doushio with pidfile /home/doushio/server/server/.server.pid
+  start program = "/etc/init.d/doushio start"
+  stop program  = "/etc/init.d/doushio stop"
+
+if failed port 8000 protocol HTTP
+  request /
+  with timeout 30 seconds
+  then restart
+
+  depends on redis-server
+  depends on nginx 

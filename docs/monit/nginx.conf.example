@@ -1,0 +1,4 @@
+check process nginx with pidfile /run/nginx.pid
+  start program = "/etc/init.d/nginx start"
+  stop program  = "/etc/init.d/nginx stop"
+ 

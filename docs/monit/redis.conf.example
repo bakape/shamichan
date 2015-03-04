@@ -1,0 +1,4 @@
+check process redis-server with pidfile /var/run/redis/redis-server.pid
+  start program = "/etc/init.d/redis-server start"
+  stop program  = "/etc/init.d/redis-server stop"
+ 
