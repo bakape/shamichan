@@ -16,7 +16,7 @@ var NotificationView = Backbone.View.extend({
 		this.$el = $('<span/>', {
 			'class': 'notification modal'
 		})
-			.html('<b>'+msg+'</b>')
+			.html('<b class="admin">' + msg + '</b>')
 			.css('top', $banner.outerHeight() + 5 + 'px')
 			.insertAfter($banner);
 		return this;
