@@ -91,7 +91,7 @@ function handle_shortcut(event) {
 			break;
 		// Insert text spoiler
 		case shortcutKeys.textSpoiler:
-			if (postForm){
+			if (postForm) {
 				var $input = this.$input;
 				var state = this.imouto.state2.spoiler;
 				// Was spoiler already started?
@@ -100,6 +100,10 @@ function handle_shortcut(event) {
 				$input.val($input.val()+sp);
 				used = true;
 			}
+			break;
+		case shortcutKeys.expandAll:
+			massExpander.set('expand', !massExpander.get('expand'));
+			used = true;
 			break;
 	}
 
@@ -417,12 +421,12 @@ var ComposerView = Backbone.View.extend({
 		    var m = val.match(youtube_short_re);
 			if (!m)
 				break;
-			// Substitute 
+			// Substitute
 			var t = this.find_time_arg(m[2]) || '';
 			var v = '>>>/watch?v=' + m[1] + t;
 			val = embedRewrite(m, v);
 		}
-	       
+
 		/* and SoundCloud links */
 		while (true) {
 			var m = val.match(soundcloud_url_re);
@@ -431,7 +435,7 @@ var ComposerView = Backbone.View.extend({
 			var sc = '>>>/soundcloud/' + m[1];
 			val = embedRewrite(m, sc);
 		}
-		
+
 		/* Danbooru links - To be revisited
 		while (true){
 		    var m = val.match(danbooru_re);
@@ -440,7 +444,7 @@ var ComposerView = Backbone.View.extend({
 		    var danb = '>>>/danbooru/' + m[1];
 		    val = embedRewrite(m, danb);
 		}*/
-	    
+
 		// Pastebin links
 		while(true){
 		    var m = val.match(pastebin_re);
