@@ -14,7 +14,6 @@
 	* __embed.js__		Embeds Youtube and Soundcloud links
 	* __extract.js__	Extracts models from server-rendered threads and posts
 	* __fun.js__		Is loaded in `fun_thread`, set by an Admin
-	* __gravitas.js__	1000000th post congratulatory formatting
 	* __hide.js__		Hide user-set posts and threads
 	* __hover.js__		Hover post link preview and Youtube/Soundcload embed expansion
 	* __imager.js__		Thumbnail and image rendering
@@ -88,7 +87,6 @@
 	* __css/__
 		* __ui/__					Global user interface assets
 		* __base.css__				Global board and thread CSS
-		* __gravitas.css__			100000th post CSS
 		* __mod.css__				Moderation interface CSS
 		* __persona-buttons.css__	CSS for logging in with 'misaki' in the email field
 		* __the rest __				various theme CSS and assets

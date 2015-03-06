@@ -333,8 +333,6 @@ var ComposerView = Backbone.View.extend({
 
 		if (msg.image)
 			this.insert_uploaded(msg.image);
-		if (num == MILLION)
-			this.add_own_gravitas(msg);
 
 		if (this.uploadForm)
 			this.uploadForm.append(this.submit);

@@ -810,26 +810,14 @@ OS.monogatari = function (data, toppu) {
 	var tale = {header: this.atama(data)};
 	this.dice = data.dice;
 	var body = this.karada(data.body);
-	tale.body = [safe('<blockquote'+ (isNode ? ' data-body="'+ escapeJSON(data.body) +'"' : '') +'>'),
-			body, safe('</blockquote>')];
-	if (data.num == MILLION) {
-		tale.body.splice(1, 0, safe('<script>window.gravitas=true;</script>'));
-	}
+	tale.body = [safe(
+		'<blockquote' +
+			(isNode ? ' data-body="'+ escapeJSON(data.body) +'"' : '') +'>'),
+		body, safe('</blockquote>'
+	)];
 	if (data.image && !data.hideimg)
 		tale.image = this.gazou(data.image, toppu);
 	return tale;
-};
-
-var MILLION = 1000000;
-
-function gravitas_body() {
-	$('body').css({margin: 0});
-}
-
-OS.gravitas_style = function (idata, cssy) {
-	var src = this.image_paths().src + idata.src;
-	src = "url('" + encodeURI(src) + "')";
-	return cssy ? ("background-image: " + src + ";") : src;
 };
 
 OS.mono = function (data) {
@@ -838,11 +826,6 @@ OS.mono = function (data) {
 		classes: data.editing ? ['editing'] : [],
 		style: ''
 	};
-	if (data.num == MILLION) {
-		info.classes.push('gravitas');
-		if (data.image)
-			info.style = this.gravitas_style(data.image, true);
-	}
 	this.trigger('openArticle', info);
 	var cls = info.classes.length && info.classes.join(' '),
 	    o = safe('\t<article id="'+data.num+'"' +
@@ -858,11 +841,6 @@ OS.monomono = function (data, cls) {
 	if (data.locked)
 		cls = cls ? cls+' locked' : 'locked';
 	var style;
-	if (data.num == MILLION) {
-		cls = cls ? cls+' gravitas' : 'gravitas';
-		if (data.image)
-			style = this.gravitas_style(data.image, true);
-	}
 	var o = safe('<section id="' + data.num +
 		(cls ? '" class="' + cls : '') +
 		(style ? '" style="' + style : '') +

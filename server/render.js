@@ -102,7 +102,6 @@ function make_link_rels(board, bits) {
 	var theme_css = theme + '.css?v=' + STATE.hot.THEME_CSS_VERSION;
 	bits.push(['stylesheet', path + theme_css, 'theme']);
 
-	bits.push(['stylesheet', path + 'gravitas.css?v=1']);
 	return bits.map(function (p) {
 		var html = '\t<link rel="'+p[0]+'" href="'+p[1]+'"';
 		if (p[2])
