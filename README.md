@@ -35,6 +35,7 @@ Note: The git master branch contains the development version of the board. For m
 ###Optional dependencies for various features
 
 * ffmpeg 2.2+ for WebM support
+  * with libmp3lame for MP3
 * pngquant  2.3.1+ for PNG thumbnails
 * exiftool for stripping images of EXIF data
 

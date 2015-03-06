@@ -64,7 +64,8 @@ var Hidamari = {
 		e.preventDefault();
 		var revealed = this.model.get('thumbnailRevealed');
 		this.renderThumbnail(revealed);
-		this.$el.children('figure').find('.imageSrc').text(revealed ? '[Show]' : '[Hide]');
+		this.$el.children('figure').find('.imageSrc')
+			.text(revealed ? '[Show]' : '[Hide]');
 	},
 
 	imageClicked: function(e){
@@ -85,9 +86,12 @@ var Hidamari = {
 		var fit = options.get('inlinefit');
 		if (!img || fit == 'none')
 			return;
-		// Don't autoexpand webm or PDF with Expand All enabled
-		if (expand !== undefined && (img.ext == '.webm' || img.ext == '.pdf'))
-			return;
+		// Don't autoexpand webm/PDF/MP3 with Expand All enabled
+		if (expand !== undefined
+			&& (img.ext == '.webm'
+			|| img.ext == '.pdf'
+			|| img.ext == '.mp3'))
+				return;
 		if  (expand != false)
 			expand = expand || this.model.get('imageExpanded') != true;
 		if (expand)
@@ -100,11 +104,13 @@ var Hidamari = {
 		// Open PDF in a new tab on click
 		if (img.ext == '.pdf')
 			return window.open(mediaURL + 'src/' + img.src, '_blank');
+		// Audio controls are always the same height and do not need to be fitted
+		if (img.ext == '.mp3')
+			return this.renderAudio();
 		var width = newWidth = img.dims[0];
 		var height = newHeight = img.dims[1];
-		var video = !!img.length;
 		if (fit == 'full')
-			return this.expandImage(width, height, video);
+			return this.expandImage(width, height, img.ext);
 		var both = fit == 'both';
 		var widthFlag = both || fit == 'width';
 		var heightFlag = both || fit == 'height';
@@ -113,8 +119,9 @@ var Hidamari = {
 		var fullWidth, fullHeight;
 		if (widthFlag){
 			var maxWidth = $(window).width() -
-					// We have to go wider
-					this.$el.closest('section')[0].getBoundingClientRect().left* (isArticle ? 1 : 2);
+				// We have to go wider
+				this.$el.closest('section')[0].getBoundingClientRect().left
+					* (isArticle ? 1 : 2);
 			if (isArticle)
 				maxWidth -= this.$el.outerWidth() - this.$el.width() + 5;
 			if (newWidth > maxWidth){
@@ -135,12 +142,17 @@ var Hidamari = {
 			width = newWidth;
 			height = newHeight;
 		}
-		this.expandImage(width, height, video, fullWidth && !fullHeight);
+		this.expandImage(width, height, img.ext, fullWidth && !fullHeight);
 	},
 
-	expandImage: function(width, height, video, fullWidth){
-		var $fig = this.$el.children('figure');
-		$fig.find('img, video').replaceWith($('<'+ (video ? 'video' : 'img') +'/>', {
+	expandImage: function(width, height, ext, fullWidth){
+		var $fig = this.$el.children('figure'),
+			tag;
+		if (ext == '.webm')
+			tag = 'video';
+		else
+			tag = 'img';
+		$fig.find('img, video').replaceWith($('<'+ tag +'/>', {
 			src: $fig.find('.imageSrc').attr('href'),
 			width: width,
 			height: height,
@@ -151,6 +163,20 @@ var Hidamari = {
 		}));
 		this.model.set('imageExpanded', true);
 	},
+
+	renderAudio: function() {
+		$a = this.$el.children('figure').children('a');
+		$('<audio/>', {
+			src: $a.attr('href'),
+			width: 300,
+			height: '3em',
+			autoplay: true,
+			loop: true,
+			controls: true
+		})
+			.appendTo($a);
+		this.model.set('imageExpanded', true);
+	}
 };
 
 var massExpander = new Backbone.Model({

@@ -23,6 +23,8 @@ if (config.WEBM) {
 		console.warn("Please enable imager.config.DAEMON security.");
 	}*/
 }
+if (config.MP3)
+	IMAGE_EXTS.push('.mp3');
 if (config.SVG)
 	IMAGE_EXTS.push('.svg');
 if (config.PDF)
@@ -185,7 +187,7 @@ IU.process = function () {
 	image.imgnm = filename.substr(0, 256);
 
 	this.status('Verifying...');
-	if (image.ext == '.webm')
+	if (image.ext == '.webm' || image.ext == '.mp3')
 		video_still(image.path, this.verify_webm.bind(this));
 	else
 		this.verify_image();
@@ -211,8 +213,10 @@ StillJob.prototype.perform_job = function () {
 	var self = this;
 	child_process.execFile(ffmpegBin, args, opts,
 				function (err, stdout, stderr) {
-		var lines = stderr ? stderr.split('\n') : [];
-		var first = lines[0];
+		var lines = stderr ? stderr.split('\n') : [],
+			first = lines[0],
+			is_webm = /matroska,webm/i.test(first),
+			isMP3 = /mp3/i.test(first);
 		if (err) {
 			var msg;
 			if (/no such file or directory/i.test(first))
@@ -221,6 +225,8 @@ StillJob.prototype.perform_job = function () {
 				msg = "Invalid video file.";
 			else if (/^ffmpeg version/i.test(first))
 				msg = "Server's ffmpeg is too old.";
+			else if (isMP3)
+				msg = 'MP3 has no cover art.'
 			else {
 				msg = "Unknown video reading error.";
 				winston.warn("Unknown ffmpeg output: "+first);
@@ -230,19 +236,17 @@ StillJob.prototype.perform_job = function () {
 			});
 			return;
 		}
-		var is_webm = /matroska,webm/i.test(first);
-		if (!is_webm) {
+		if (!is_webm  && !isMP3) {
 			fs.unlink(dest, function (err) {
-				self.finish_job(Muggle(
-						'Video stream is not WebM.'));
+				self.finish_job(Muggle('File format corrupted.'));
 			});
 			return;
 		}
 
 		/* Could have false positives due to chapter titles. Bah. */
-		var has_audio = /audio:\s*vorbis/i.test(stderr);
+		var has_audio = (is_webm && /audio:\s*vorbis/i.test(stderr)) || isMP3;
 
-		// Parse webm length
+		// Parse webm/mp3 length
 		var length;
 		var l = stderr.match(/Duration: (\d{2}:\d{2}:\d{2})/);
 		if (l){
@@ -258,6 +262,7 @@ StillJob.prototype.perform_job = function () {
 			still_path: dest,
 			has_audio: has_audio,
 			length: length,
+			mp3: isMP3
 		});
 	});
 };
@@ -286,6 +291,8 @@ IU.verify_webm = function (err, info) {
 			image.audio = true;
 		if (info.length)
 			image.length = info.length;
+		if (info.mp3)
+			image.mp3 = true;
 
 		self.verify_image();
 	});
@@ -435,11 +442,12 @@ IU.got_nails = function () {
 		return;
 
 	var image = this.image;
+	// stop pretending this is a PNG
 	if (image.video) {
-		// stop pretending this is just a still image
 		image.path = image.video;
-		image.ext = '.webm';
+		image.ext = image.mp3 ? '.mp3' : '.webm';
 		delete image.video;
+		delete image.mp3;
 	}
 
 	var time = Date.now();

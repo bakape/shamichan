@@ -43,6 +43,8 @@ module.exports = {
 	WEBM: false,
 // Allow upload of WebM video with sound
 	WEBM_AUDIO: false,
+// MP3 upload
+	MP3: false,
 // Enable SVG upload
 	SVG: false,
 // Enable PDF upload
