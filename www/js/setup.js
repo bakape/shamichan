@@ -30,17 +30,10 @@ var BOARD, THREAD, BUMP, PAGE, mediaURL, options, themeVersion;
 	if (!options)
 		options = {};
 
-	var link = document.getElementById('theme');
-	var m = link.href.match(/^(.*\/)[^\/]+?\.css\?v=(\d+)$/);
-	if (m) {
-		var v = parseInt(m[2], 10);
-		themeVersion = v;
-
-		var theme = options['board.'+BOARD+'.theme'];
-		if (theme)
-			link.href = m[1] + theme + '.css?v=' + v;
-	}
-
-	if (!themeVersion)
-		alert("Couldn't determine themeVersion! Hardcode it.");
+	// Set theme to match options
+	var link = document.getElementById('theme'),
+		m = link.href.match(/^(.*\/)[^\/]+?\.css$/),
+		theme = options['board.'+BOARD+'.theme'];
+	if (m && theme)
+		link.href = m[1] + hotConfig.css[theme + '.css'];
 })();

@@ -93,13 +93,13 @@ exports.write_thread_html = function (reader, req, out, opts) {
 };
 
 function make_link_rels(board, bits) {
-	var path = imager.config.MEDIA_URL + 'css/';
+	var path = imager.config.MEDIA_URL + 'css/',
+		// Object of CSS versions
+		css = STATE.hot.css;
 
-	var base = 'base.css?v=' + STATE.hot.BASE_CSS_VERSION;
-	bits.push(['stylesheet', path + base]);
+	bits.push(['stylesheet', path + css['base.css']]);
 
-	var theme = STATE.hot.BOARD_CSS[board];
-	var theme_css = theme + '.css?v=' + STATE.hot.THEME_CSS_VERSION;
+	var theme_css = css[STATE.hot.BOARD_CSS[board] + '.css'];
 	bits.push(['stylesheet', path + theme_css, 'theme']);
 
 	return bits.map(function (p) {

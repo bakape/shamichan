@@ -3,6 +3,7 @@ var concat = require('gulp-concat'),
 	deps = require('./deps'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
+	less = require('gulp-less'),
 	rename = require('gulp-rename'),
 	rev = require('gulp-rev'),
 	uglify = require('gulp-uglify');
@@ -19,6 +20,15 @@ function gulper(name, files, dest){
 			.pipe(gulp.dest('./state'));
 	});
 }
+
+gulp.task('css', function() {
+	gulp.src('./less/*.less')
+		.pipe(less({paths: ['.less/mixins']}))
+		.pipe(rev())
+		.pipe(gulp.dest('./www/css'))
+		.pipe(rev.manifest('css.json'))
+		.pipe(gulp.dest('./state'));
+});
 
 (function(){
 	gulper('client', deps.CLIENT_DEPS, './www/js');

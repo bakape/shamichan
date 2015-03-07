@@ -20,7 +20,7 @@ imager/build
 tripcode/.build
 tripcode/build
 upkeep/credentials.json
-www/css/*-v*.css
+www/css/*.css
 www/illya.mp4
 www/illya.webm
 www/archive

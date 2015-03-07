@@ -18,10 +18,6 @@ this.hot = {
 		graveyard: 'mawaru',
 		staff: 'moe',
 	},
-// Bump this version whenever you change base.css
-	BASE_CSS_VERSION: 42,
-// Bump this version whenever you modify any existing theme CSS
-	THEME_CSS_VERSION: 8,
 
 	THREADS_PER_PAGE: 10,
 // Replies to display under each thread on the board's root page

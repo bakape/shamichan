@@ -178,7 +178,7 @@ function parent_model($el) {
 
 	function option_theme(theme) {
 		if (theme) {
-			var css = theme + '.css?v=' + themeVersion;
+			var css = hotConfig.css[theme + '.css'];
 			$('#theme').attr('href', mediaURL + 'css/' + css);
 		}
 		append_glass();

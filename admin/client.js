@@ -1,7 +1,7 @@
 /* NOTE: This file is processed by server/state.js
          and served by server/server.js (to auth'd users only) */
 
-yepnope(mediaURL + 'css/mod.css?v=1');
+yepnope(mediaURL + 'css/' + hotConfig.css['mod.css']);
 
 var $selectButton, $controls;
 window.loggedInUser = IDENT.email;
