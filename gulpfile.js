@@ -4,6 +4,7 @@ var concat = require('gulp-concat'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
 	less = require('gulp-less'),
+	minifyCSS = require('gulp-minify-css'),
 	rename = require('gulp-rename'),
 	rev = require('gulp-rev'),
 	uglify = require('gulp-uglify');
@@ -23,7 +24,8 @@ function gulper(name, files, dest){
 
 gulp.task('css', function() {
 	gulp.src('./less/*.less')
-		.pipe(less({paths: ['.less/mixins']}))
+		.pipe(less({paths: ['./less/mixins']}))
+		.pipe(minifyCSS({rebase: false}))
 		.pipe(rev())
 		.pipe(gulp.dest('./www/css'))
 		.pipe(rev.manifest('css.json'))
