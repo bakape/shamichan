@@ -5,19 +5,20 @@
 @bold: #c5c8c6;
 @admin: #f00000;
 @mod: #ef9d6a;
+@wood: url(wood.jpg);
 
 blockquote a:hover {
 	color: #ef9d6a;
 }
 a:hover, blockquote a, .email b:hover, .editing a:hover {
-	color: url(wood.jpg);
+	color: @wood;
 }
 article, aside, .modal, .bmodal, .pagination {
-	background: url(wood.jpg);
+	background:@wood;
     color: white;
 }
 article.highlight, .preview, .popup-menu {
-	background: url(wood.jpg);
+	background: @wood;
     color: white;
 }
 .editing {
@@ -26,7 +27,7 @@ article.highlight, .preview, .popup-menu {
            rgba(239, 157, 106, 0.25),
            rgba(239, 157, 106, 0.25)
         ),
-        url(wood.jpg) !important;
+        @wood !important;
 	color: white !important;
 	a, header {
 		color: white !important;
@@ -95,4 +96,6 @@ hr {
 .themed {
 	color: white;
 }
-
+#banner {
+	background: @wood;
+}
