@@ -2,25 +2,16 @@
 @link: #C8C8D9;
 @postBG: rgba(40, 42, 46, 0.7);
 @border: 1px solid fade(@link, 5%);
+@bold: white;
+@admin: #f00000;
+@mod: #C8C8D9;
 
-blockquote a:hover, b.moderator {
-	color: #C8C8D9;
-}
 article, aside, .pagination, .popup-menu, .modal, .bmodal, .preview {
 	background-color: @postBG;
 	border: @border;
 }
-a>b {
-	color: white;
-}
 .editing {
 	background-color: rgba(145, 145, 145, 0.5);
-}
-blockquote, time, #FAQ {
-	color: white;
-}
-b.admin {
-	color: #f00000;
 }
 body {
     color:white;
@@ -48,12 +39,6 @@ h3 {
 }
 hr {
 	border-top: 1px solid #282a2e;
-}
-.act:before {
-	content: "[";
-}
-.act:after {
-	content: "]";
 }
 #lock, .scroll-lock header {
 	background-image: url('ui/invlock.svg');

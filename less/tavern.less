@@ -2,8 +2,11 @@
 @link: #ef9d6a;
 @postBG: black;
 @border: 1px solid #282a2e;
+@bold: #c5c8c6;
+@admin: #f00000;
+@mod: #ef9d6a;
 
-blockquote a:hover, b.moderator {
+blockquote a:hover {
 	color: #ef9d6a;
 }
 a:hover, blockquote a, .email b:hover, .editing a:hover {
@@ -25,27 +28,21 @@ article.highlight, .preview, .popup-menu {
         ),
         url(wood.jpg) !important;
 	color: white !important;
-}
-.editing a, .editing header {
-	color: white !important;
-}
-.editing em {
-	color: #B7BA3E !important;
-}
-.editing li {
-	color: white !important;
-}
-.editing .themed {
-	color: white !important;
-}
-b.admin {
-	color: #f00000;
+	a, header {
+		color: white !important;
+	}
+	em {
+		color: #B7BA3E !important
+	}
+	li {
+		color: white !important;
+	}
+	.themed {
+		color: white !important;
+	}
 }
 #banner {
 	color: white;
-}
-a>b {
-	color: #c5c8c6;
 }
 body {
 	background: url(tavern.jpg);
@@ -84,12 +81,6 @@ hr {
 .popup-menu li:hover {
 	background-color: #136;
     color: white;
-}
-.act:before {
-	content: "[";
-}
-.act:after {
-	content: "]";
 }
 .omit {
 	color: white;

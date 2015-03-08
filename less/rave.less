@@ -2,8 +2,11 @@
 @link: black;
 @postBG: red;
 @border: 1px solid black;
+@bold: black;
+@admin: red;
+@mod: black;
 
-blockquote a:hover, b.moderator {
+blockquote a:hover {
 	color: black;
     font-weight:bold;
 }
@@ -28,21 +31,18 @@ article.highlight, .preview, .popup-menu {
 	background-color: #cec952;
 	border-color: #aa3;
 	color: black;
-}
-.editing a, .editing header {
-	color: #222;
-}
-.editing em {
-	color: #656d28;
-}
-.editing li {
-	color: #ddd;
-}
-.editing .themed {
-	color: #333;
-}
-b.admin {
-	color: #f00000;
+	a , header{
+		color: #222;
+	}
+	em {
+		color: #656d28;
+	}
+	li {
+		color: #ddd;
+	}
+	.themed {
+		color: #333;
+	}
 }
 #banner {
 	opacity: 0.9;
@@ -78,12 +78,6 @@ hr {
 }
 .popup-menu li:hover {
 	background-color: #136;
-}
-.act:before {
-	content: "[";
-}
-.act:after {
-	content: "]";
 }
 .omit {
 	color: black;

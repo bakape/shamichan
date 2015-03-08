@@ -3,11 +3,20 @@ a {
 	&.referenced {
 		border-bottom: 1px dashed currentColor;
 	}
-} 
+}
 .bfloat > svg {
 	fill: @link;
 }
 #banner{
 	background: fade(@postBG, 70%);
 	border-bottom: @border;
+}
+b {
+	color: @bold;
+	&.admin {
+		color: @admin;
+	}
+	&.moderator {
+		color: @mod;
+	}
 }

@@ -138,7 +138,7 @@ header {
 	position: relative;
 	code {
 		font-family: inherit;
-		font-weight: normal;		
+		font-weight: normal;
 	}
 	nav a {
 		text-decoration: none;
@@ -199,6 +199,14 @@ span.control .popup-menu {
 	-khtml-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
+}
+.act:before {
+	&:before {
+		content: "[";
+	}
+	&:after {
+		content: "]";
+	}
 }
 .control {
 	cursor: pointer;
