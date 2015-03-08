@@ -1,19 +1,21 @@
 @import "common";
 @link: #444;
+@postBG: #ddd;
+@border: 1px solid #ccc;
 
 a:hover, blockquote a, .email b:hover {
 	color: #666;
 }
 article, aside, .pagination {
-	background-color: #ddd;
-	border-right: 1px solid #ccc;
-	border-bottom: 1px solid #ccc;
+	background-color: @postBG;
+	border-right: @border;
+	border-bottom: @border;
 }
 article.highlight {
 	background-color: #ccc;
 	border-color: #bbb;
 }
-/* shouldn't happen */
+// shouldn't happen
 .editing {
 	background-color: #fa6;
 	border-color: #e95;
@@ -26,10 +28,6 @@ b.admin {
 }
 b.moderator {
 	color: purple;
-}
-#banner{
-	background: rgba(221, 221, 221, 0.7);
-	border-bottom: 1px solid #ccc;
 }
 body {
 	background-color: #f0f0f0;

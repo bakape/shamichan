@@ -1,18 +1,14 @@
 @import "common";
 @link: #C8C8D9;
+@postBG: rgba(40, 42, 46, 0.7);
 @border: 1px solid fade(@link, 5%);
 
 blockquote a:hover, b.moderator {
 	color: #C8C8D9;
 }
-article, aside, .pagination, .popup-menu, .modal, .bmodal, .preview, #banner {
-	background-color: rgba(40, 42, 46, 0.5);
-	&:not(#banner) {
-		border: @border;
-	}
-}
-#banner {
-	border-bottom: @border;
+article, aside, .pagination, .popup-menu, .modal, .bmodal, .preview {
+	background-color: @postBG;
+	border: @border;
 }
 a>b {
 	color: white;

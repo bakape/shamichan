@@ -1,13 +1,15 @@
 @import "common";
 @link: #c22;
+@postBG: #222;
+@border: 1px solid #111;
 
 a:hover, blockquote a, .email b:hover {
 	color: #513fd3;
 }
 article, aside, .modal, .bmodal, .pagination {
-	background-color: #222;
-	border-right: 1px solid #111;
-	border-bottom: 1px solid #111;
+	background-color: @postBG;
+	border-right: @border;
+	border-bottom: @border;
 }
 article.highlight {
 	background-color: #333;
@@ -25,10 +27,6 @@ b.admin {
 }
 b.moderator {
 	color: #ffff33;
-}
-#banner {
-	background: rgba(34, 34, 34, 0.7);
-	border-bottom: 1px solid #300;
 }
 body {
 	color: #eee;

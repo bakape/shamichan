@@ -1,13 +1,15 @@
 @import "common";
 @link: #34345c;
+@postBG: #d6daf0;
+@border: 1px solid #b7c5d9;
 
 a:hover, blockquote a, .email b:hover {
 	color: #d00;
 }
 article, aside, .pagination {
-	background-color: #d6daf0;
-	border-right: 1px solid #b7c5d9;
-	border-bottom: 1px solid #b7c5d9;
+	background-color: @postBG;
+	border-right: @border;
+	border-bottom: @border;
 }
 article.highlight {
 	background-color: #d6bad0;
@@ -25,10 +27,6 @@ b.admin {
 }
 b.moderator {
 	color: purple;
-}
-#banner {
-	background: rgba(214, 218, 240, 0.7);
-	border-bottom: 1px solid #b7c5d9;
 }
 body {
 	background-color: #eef2ff;

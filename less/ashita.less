@@ -1,5 +1,7 @@
 @import "common";
 @link: #81a2be;
+@postBG: #282a2e;
+@border: 1px solid #282a2e;
 
 blockquote a:hover, b.moderator {
 	color: #81a2be;
@@ -8,8 +10,8 @@ a:hover, blockquote a, .email b:hover, .editing a:hover {
 	color: #5f89ac;
 }
 article, aside, .modal, .bmodal, .pagination, #FAQ {
-	background-color: #282a2e;
-	border: 1px solid #282a2e;
+	background-color: @postBG;
+	border: @border;
 }
 article.highlight, .preview, .popup-menu {
 	background-color: #1d1d21;
@@ -34,10 +36,6 @@ article.highlight, .preview, .popup-menu {
 }
 b.admin {
 	color: #f00000;
-}
-#banner {
-	background: rgba(40, 42, 46, 0.7);
-	border-bottom: 1px solid #282a2e;
 }
 a>b {
 	color: #c5c8c6;

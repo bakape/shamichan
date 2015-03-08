@@ -1,5 +1,7 @@
 @import "common";
 @link: #54578c;
+@postBG: #d9f0d6;
+@border: 1px solid #b9d9b7;
 
 blockquote a {
 	color: #54578c;
@@ -8,9 +10,9 @@ a:hover, .email b:hover {
 	color: #d17c43;
 }
 article, aside, .pagination {
-	background-color: #d9f0d6;
-	border-right: 1px solid #b9d9b7;
-	border-bottom: 1px solid #b9d9b7;
+	background-color: @postBG;
+	border-right: @border;
+	border-bottom: @border;
 }
 article.highlight {
 	background-color: #b9ccb4;
@@ -24,10 +26,6 @@ b.admin {
 }
 b.moderator {
 	color: #7800b3;
-}
-#banner {
-	background: rgba(217, 240, 214, 0.7);
-	border-bottom: 1px solid #bac9b7;
 }
 body {
   color: #0a0a0a;

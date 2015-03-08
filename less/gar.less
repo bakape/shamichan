@@ -1,13 +1,16 @@
 @import "common";
 @link: #a00;
+@postBG: #e9e0c9;
+@border:  1px solid #d1c29b;
+
 
 a:hover, blockquote a, .email b:hover {
 	color: #513fd3;
 }
 article, aside, .pagination {
-	background-color: #e9e0c9;
-	border-right: 1px solid #d1c29b;
-	border-bottom: 1px solid #d1c29b;
+	background-color: @postBG;
+	border-right: @border;
+	border-bottom: @border;
 }
 article.highlight {
 	background-color: #ffb8d5;
@@ -26,10 +29,6 @@ b.admin {
 }
 b.moderator {
 	color: #128e3c;
-}
-#banner {
-	background: rgba(233, 224, 201, 0.7);
-	border-bottom: 1px solid #b7c5d9;
 }
 body {
 	background: #eee url('scales.png');
