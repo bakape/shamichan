@@ -226,7 +226,7 @@ StillJob.prototype.perform_job = function () {
 			else if (/^ffmpeg version/i.test(first))
 				msg = "Server's ffmpeg is too old.";
 			else if (isMP3)
-				msg = 'MP3 has no cover art.'
+				msg = 'MP3 has no cover art.';
 			else {
 				msg = "Unknown video reading error.";
 				winston.warn("Unknown ffmpeg output: "+first);
@@ -479,7 +479,6 @@ if (config.PNG_THUMBS)
 	etc.which('pngquant', function (bin) { pngquantBin = bin; });
 
 function identify(taggedName, callback) {
-	var m = taggedName.match(/^(\w{3,4}):/);
 	var args = ['-format', '%Wx%H', taggedName + '[0]'];
 	child_process.execFile(identifyBin, args, function (err,stdout,stderr){
 		if (err) {
@@ -503,7 +502,7 @@ function identify(taggedName, callback) {
 			callback(Muggle("Couldn't read image dimensions."));
 		else
 			callback(null, {width: parseInt(m[1], 10),
-					height: parseInt(m[2], 10)});
+				height: parseInt(m[2], 10)});
 	});
 }
 
