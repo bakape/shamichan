@@ -47,8 +47,6 @@
 		if (this.readyState != 4 || this.status == 202)
 			return;
 		var err = this.responseText;
-		if (this.status != 500 || !err || err.length > 100)
-			err = "Couldn't get response.";
 		postForm.upload_error(err)
 	}
 
