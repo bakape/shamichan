@@ -1,12 +1,8 @@
 a {
 	border: none;
-	text-decoration: underline;
-	.referenced {
-		text-decoration: none;
-	}
+	text-decoration: none !important;
 	&.nope, &.nope:hover {
 		color: inherit;
-		text-decoration: none;
 	}
 }
 article, aside {
@@ -79,11 +75,9 @@ fieldset {
 figcaption {
 	display: block;
 	margin: 2px 0;
+	text-decoration: none;
 	i {
 		font-style: normal;
-		a {
-			text-decoration: none;
-		}
 	}
 }
 .imageSearch {
@@ -355,7 +349,7 @@ span.control .popup-menu {
 	margin: auto;
 }
 .email {
-	text-decoration: underline;
+	text-decoration: underline !important;
 }
 figure {
 	display: block;
