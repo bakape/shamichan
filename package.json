@@ -14,7 +14,7 @@
     "url": "https://github.com/bakape/meguca.git"
   },
   "scripts": {
-    "postinstall": "make clean; make; upkeep/bootstrap.sh",
+    "postinstall": "make; upkeep/bootstrap.sh",
     "start": "node server/server.js"
   },
   "dependencies": {
