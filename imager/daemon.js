@@ -352,7 +352,7 @@ IU.verified = function () {
 		self.db.check_duplicate(hash, function (err) {
 			if (err)
 				return self.failure(err);
-			self.exifdel();
+			self.sha1();
 		});
 	});
 };
@@ -362,19 +362,6 @@ IU.fill_in_specs = function (specs, kind) {
 	specs.ext = this.image.ext;
 	specs.dest = this.image.path + '_' + kind;
 	this.image[kind + '_path'] = specs.dest;
-};
-
-IU.exifdel = function () {
-	var image = this.image, self = this;
-	if (image.ext == '.webm' || image.ext == '.svg' || !config.DEL_EXIF)
-		return self.sha1();
-	child_process.execFile(exiftoolBin, ['-all=', image.path],
-		function(err, stdout, stderr){
-			if (err)
-				return self.failure(Muggle('Exiftool error: ' + stderr));
-			self.sha1();
-		}
-	);
 };
 
 IU.sha1 = function(){
