@@ -8,7 +8,8 @@ var _ = require('underscore'),
 	imager = require('../imager/config'),
 	path = require('path'),
 	report = require('../report/config'),
-	vm = require('vm');
+	vm = require('vm'),
+	winston = require('winston');
 
 _.templateSettings = {
 	interpolate: /\{\{(.+?)\}\}/g
@@ -261,6 +262,7 @@ function build_FAQ(faq){
 }
 
 function buildClient(cb){
+	winston.info('(Re)compiling client JS and CSS.');
 	exec('./node_modules/gulp/bin/gulp.js client mod vendor css',
 		function(err, stdout, stderr){
 			if (err)
