@@ -41,7 +41,8 @@ function parent_model($el) {
 	optSpecs.push(option_spoiler);
 	optSpecs.push(option_backlinks);
 	optSpecs.push(option_linkify);
-	optSpecs.push(option_notification);
+	if (!isMobile)
+		optSpecs.push(option_notification);
 	optSpecs.push(option_relative_time);
 	if (config.RADIO && !isMobile)
 		optSpecs.push(option_now_playing);
@@ -306,7 +307,7 @@ function parent_model($el) {
 
 	function option_now_playing(toggle){
 		if (toggle)
-			Banner.clearRadio()
+			Banner.clearRadio();
 	}
 
 	option_now_playing.id = 'nowPlaying';
@@ -709,7 +710,7 @@ function parent_model($el) {
 				spec(val);
 			});
 		});
-		var tabCont= {}	//will contain the html for the content of each tab
+		var tabCont= {};	//will contain the html for the content of each tab
 		optSpecs.forEach(function (spec) {
 			var id = spec.id;
 			if (nashi.opts.indexOf(id) >= 0)
