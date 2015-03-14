@@ -193,8 +193,6 @@ function parent_model($el) {
 
 	/* THUMBNAIL OPTIONS */
 
-	var revealSetup = false;
-
 	function option_thumbs(type) {
 		$.cookie('thumb', type);
 		oneeSama.thumbStyle = type;
