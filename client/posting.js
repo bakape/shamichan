@@ -224,7 +224,11 @@ var ComposerView = Backbone.View.extend({
 		this.line_buffer = $('<p/>');
 		this.meta = $('<header><a class="nope"><b/></a> <time/></header>');
 		this.$input = $('<textarea/>', {
-			name: 'body', id: 'trans', rows: '1', "class": 'themed',
+			name: 'body',
+			id: 'trans',
+			rows: '1',
+			"class": 'themed',
+			autocomplete: 'off'
 		});
 		this.submit = $('<input>', {
 			id: 'done', type: 'button', value: 'Done',
