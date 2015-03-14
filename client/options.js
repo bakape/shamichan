@@ -113,13 +113,16 @@ function parent_model($el) {
 		catch (e) {}
 	});
 
-	var tabs = Object.freeze({
+	var tabs = {
 		General: "General",
 		Style: "Style",
 		ImageSearch: "Image Search",
-		Fun: "Fun",
-		Shortcuts: "Shortcuts",
-	});
+		Fun: "Fun"
+	};
+	// Typically no keyboard on mobile, so don't need the tab
+	// XXX: Need to properly modularise this and other non-mobile shit
+	if (!isMobile)
+		tabs.Shortcuts = "Shortcuts";
 
 	/* LAST N CONFIG */
 	function option_last_n(n) {
