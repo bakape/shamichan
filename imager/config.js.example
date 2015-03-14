@@ -52,8 +52,6 @@ module.exports = {
 	SVG: false,
 // Enable PDF upload
 	PDF: false,
-// Delete EXIF data from image.
-	DEL_EXIF: false,
 
 // Location of the spoiler directory. By default the assets directory has to be
 // placed into doushio root directory's parent folder.
