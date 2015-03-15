@@ -13,7 +13,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 - MP3 uploads (currently MP3s must have cover art)
 - Keybind for expanding all images
 - Automatic CSS file versioning and minification
-- Changelog ican to the banner
+- Changelog icon to the banner
 
 ###Fixed
 - Administrator panel rendering on some configurations
