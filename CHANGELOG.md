@@ -1,6 +1,6 @@
 # Change Log
 All notable changes to this project will be documented in this file.
-Project uses Semantic Versioning http://semver.org/
+Project uses [Semantic Versioning](http://semver.org/)
 
 ##0.11.0 - 2015-15-03
 ###Added
@@ -163,5 +163,5 @@ install -g gulp` and rerun npm install)
 
 ## 0.4.0 - 2014-12-3
 ### Info
-- Started versioning seperately from
-https://github.com/lalcmellkmal/doushio
+- Started versioning seperately from [doushio]
+(https://github.com/lalcmellkmal/doushio)
