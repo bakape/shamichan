@@ -27,13 +27,14 @@
 			postForm.upload_error('Too many files.');
 			return;
 		}
-
+		// Drag and drop does not supply a fakepath to file, so we have to use
+		// a separate upload form from the postForm one. Meh.
 		var extra = postForm.prep_upload();
 		var fd = new FormData();
 		fd.append('image', files[0]);
 		for (var k in extra)
 			fd.append(k, extra[k]);
-		/* Can't seem to jQuery this shit */
+		// Can't seem to jQuery this shit
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', image_upload_url());
 		xhr.setRequestHeader('Accept', 'application/json');
@@ -47,7 +48,10 @@
 		if (this.readyState != 4 || this.status == 202)
 			return;
 		var err = this.responseText;
-		postForm.upload_error(err)
+		// Everything just fine. Don't need to report.
+		if (/legitimate imager response/.test(err))
+			return;
+		postForm.upload_error(err);
 	}
 
 	function stop_drag(e) {

@@ -841,7 +841,7 @@ var ComposerView = Backbone.View.extend({
 
 function image_upload_url() {
 	var url = imagerConfig.UPLOAD_URL || '../upload/';
-	return url + '?id=' + CONN_ID
+	return url + '?id=' + CONN_ID;
 }
 
 dispatcher[DEF.IMAGE_STATUS] = function (msg) {
