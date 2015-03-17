@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 Project uses Semantic Versioning http://semver.org/
 
+###Fixed
+- "Clear hidden" button now only renders on the General tab of options
+
 ##0.11.0 - 2015-15-03
 ###Added
 - PDF uploads

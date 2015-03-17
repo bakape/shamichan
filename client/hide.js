@@ -32,7 +32,8 @@
 	});
 
 	oneeSama.hook('initOptions', function ($opts) {
-		$opts.append($clear);
+		$opts.children('.option_tab_cont').children('li').first()
+			.append($clear);
 	});
 
 	oneeSama.hook('renderOptions', function ($opts) {
