@@ -805,7 +805,7 @@ function parent_model($el) {
 
 		// Configuration export and import links
 		var $general = $tabCont.children().first();
-		$general.append('<br>')
+		$general.append('<br>');
 		$('<a/>', {
 			title: "Export settings to file",
 		})
@@ -814,8 +814,11 @@ function parent_model($el) {
 			// link render
 			.click(function() {
 				var a = document.createElement('a');
-				a.setAttribute('href', 'data:application/json,'
-					+ JSON.stringify(localStorage));
+				a.setAttribute('href',
+					window.URL.createObjectURL(new Blob(
+						[JSON.stringify(localStorage)], {
+							type: 'octet/stream'
+					})));
 				a.setAttribute('download', 'meguca-config.json');
 				a.click();
 			})
