@@ -691,15 +691,22 @@ OS.readable_time = function (time) {
 	var offset;
 	if (h || h == 0)
 		offset = h * 60 * 60 * 1000;
-	else /* would be nice not to construct new Dates all the time */
+	else
+		// XXX: would be nice not to construct new Dates all the time
 		offset = new Date().getTimezoneOffset() * -60 * 1000;
-	var d = new Date(time + offset);
-	var week = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-	var year = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-	return pad(d.getUTCDate()) + ' ' + year[d.getUTCMonth()] + ' ' +
-		d.getUTCFullYear() + '(' + week[d.getUTCDay()] + ')' + pad(d.getUTCHours()) + ':' +
-		pad(d.getUTCMinutes());
+
+	return readableTime(new Date(time + offset));
 };
+
+function readableTime(d) {
+	var week = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+		year = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+			'Oct', 'Nov', 'Dec'];
+
+	return pad(d.getUTCDate()) + ' ' + year[d.getUTCMonth()] + ' '
+		+ d.getUTCFullYear() + '(' + week[d.getUTCDay()] + ')'
+		+ pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes());
+}
 
 // Readable elapsed time since post
 OS.relative_time = function(then, now){

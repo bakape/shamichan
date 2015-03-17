@@ -44,11 +44,44 @@ function date_from_time_el(el) {
 // Does not account for latency, but good enough for our purposes
 var serverTimeOffset;
 dispatcher[DEF.GET_TIME] = function(msg){
-	if (msg[0]){
-		var clientTime = new Date().getTime();
-		serverTimeOffset = msg[0] -clientTime;
-	}
+	if (!msg[0])
+		return;
+	serverTimeOffset = msg[0] - new Date().getTime();
 };
+
+// Append UTC clock to the top of the schedule
+(function() {
+	var seconds;
+	var $el = $('<span/>', {
+		title: 'Click to show seconds',
+		id: 'UTCClock'
+	})
+		.html('<b></b><hr>')
+		.prependTo('#schedule')
+		// Append seconds and render clock every second, if clicked
+		.one('click', function() {
+			seconds = true;
+			$(this).removeAttr('title');
+			render();
+		});
+	$el = $el.find('b');
+
+	function render() {
+		if (!serverTimeOffset)
+			return setTimeout(render, 1000);
+		var d = new Date(serverTime()),
+			html = readableTime(d);
+		if (seconds)
+			html += ':' + pad(d.getUTCSeconds());
+		html += ' UTC';
+		$el.html(html);
+		setTimeout(render, seconds ? 1000 : 60000);
+	};
+
+	render();
+})();
+
+
 
 /* syncwatch */
 
@@ -94,6 +127,6 @@ function timer_from_el($el) {
 			timer_from_el($(this));
 		});
 		mouikkai();
-	} ,1000);
+	}, 1000);
 })();
 
