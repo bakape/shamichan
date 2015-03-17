@@ -5,6 +5,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 ##vNext
 ###Added
 - UTC Clock to the schedule
+- Options export and import to/from file
 
 ###Fixed
 - "Clear hidden" button now only renders on the General tab of options

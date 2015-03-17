@@ -803,6 +803,66 @@ function parent_model($el) {
 			}
 		});
 
+		// Configuration export and import links
+		var $general = $tabCont.children().first();
+		$general.append('<br>')
+		$('<a/>', {
+			title: "Export settings to file",
+		})
+			.html('Export')
+			// A bit roundabout, but we need to generate the file on click, not
+			// link render
+			.click(function() {
+				var a = document.createElement('a');
+				a.setAttribute('href', 'data:application/json,'
+					+ JSON.stringify(localStorage));
+				a.setAttribute('download', 'meguca-config.json');
+				a.click();
+			})
+			.appendTo($general);
+		$general.append(' ');
+		$('<a/>', {
+			title: 'Import settings from file'
+		})
+			.html('Import')
+			.click(function(e) {
+				// Proxy to hidden file input
+				e.preventDefault();
+				var $input = $('#importSettings');
+				$input.click();
+				$input.one('change', function() {
+					var reader = new FileReader();
+					reader.readAsText($input[0].files[0]);
+					reader.onload = function(e) {
+						var json;
+						// In case of curruption
+						try {
+							json = JSON.parse(e.target.result);
+						}
+						catch (e) {
+							alert('Import failed. File corrupt');
+						}
+						if (!json)
+							return;
+						localStorage.clear();
+						for (var key in json) {
+							localStorage[key] = json[key];
+						}
+						alert('Import successfull. The page will now reload.');
+						location.reload();
+					};
+				});
+			})
+			.appendTo($general);
+		$('<input/>', {
+			type: 'file',
+			style: 'display: none;',
+			id: 'importSettings',
+			name: 'Import Settings'
+		})
+			.appendTo($general);
+		$general.append('<br>');
+
 		$opts.append($tabSel);
 		$opts.append($tabCont);
 
