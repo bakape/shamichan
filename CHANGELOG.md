@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##vNext
+###Added
+- UTC Clock to the schedule
+
 ##0.11.0 - 2015-15-03
 ###Added
 - PDF uploads
@@ -88,7 +92,7 @@ not work on threads created prior to 0.10.0)
 - All threads now have both [Expand] and [Last n] links
 - Now using [io.js](https://iojs.org) instead of node.js. At the moment
 of writing should still
-  be compatible with node.js v0.12.x. When upgrading be sure to run 
+  be compatible with node.js v0.12.x. When upgrading be sure to run
 `make clean; npm update; npm install` from meguca's root directory
 
 ## 0.8.0 - 2015-01-30
