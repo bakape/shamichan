@@ -56,11 +56,27 @@ function unloadTopPost(){
 }
 
 var PostMixins = {
-	commonListeners: function(){
+	initCommon: function(){
+		this.listenTo(this.model, {
+			'change:hide': this.renderHide,
+			'spoiler': this.renderSpoiler
+		});
+		// Models get added to multiple collections. Prevent duplication by
+		// calling only once
+		this.listenToOnce(this.model, {
+			add: function() {
+				this.renderRelativeTime();
+				this.fun();
+				// Anonymise on post insertion
+				if (options.get('anonymise'))
+					this.toggleAnonymisation(null, true);
+			}
+		});
 		this.listenTo(options, {
 			'change:thumbs': this.changeThumbnailStyle,
 			'change:noSpoilers': this.toggleSpoiler,
 			'change:autogif': this.toggleAutogif,
+			'change:anonymise': this.toggleAnonymisation
 		});
 		this.listenTo(massExpander, {
 			'change:expand': this.toggleImageExpansion,
@@ -79,6 +95,20 @@ var PostMixins = {
 			});
 		}
 	},
+
+	fun: function(){
+		// Fun goes here
+	},
+	// Self-delusion tripfag filter
+	toggleAnonymisation: function(model, toggle) {
+		var $el = this.$el.find('>header>b'),
+			name = this.model.get('name');
+		if (toggle)
+			$el.text(DEF.ANON);
+		// No need to change, if no name
+		else if (name)
+			$el.text(name);
+	}
 };
 
 var Section = Backbone.View.extend({
@@ -86,20 +116,16 @@ var Section = Backbone.View.extend({
 
 	initialize: function () {
 		this.listenTo(this.model, {
-			'change:hide': this.renderHide,
 			'change:locked': this.renderLocked,
-			'spoiler': this.renderSpoiler,
 			destroy: this.remove,
 		});
-		// Sections get added to multiple collections as both thread OPs and
-		// generic posts. Prevent duplication by calling only once
 		this.listenToOnce(this.model, {
 			'add': this.renderRelativeTime
 		});
 		this.listenTo(this.model.get('replies'), {
 			remove: this.removePost,
 		});
-		this.commonListeners();
+		this.initCommon();
 	},
 
 	renderHide: function (model, hide) {
@@ -136,18 +162,10 @@ var Article = Backbone.View.extend({
 		this.listenTo(this.model, {
 			'change:backlinks': this.renderBacklinks,
 			'change:editing': this.renderEditing,
-			'change:hide': this.renderHide,
 			'change:image': this.renderImage,
-			'spoiler': this.renderSpoiler,
 			'removeSelf': this.bumplessRemove
 		});
-		this.listenToOnce(this.model, {
-			'add': function() {
-				this.renderRelativeTime();
-				this.fun();
-			}
-		});
-		this.commonListeners();
+		this.initCommon();
 		if (options.get('postUnloading') && CurThread)
 			this.listenTo(this.model, {
 				'add': unloadTopPost
@@ -215,10 +233,6 @@ var Article = Backbone.View.extend({
 			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
 		Posts.remove(this.model);
 		this.remove();
-	},
-
-	fun: function(){
-		// Fun goes here
 	},
 });
 _.extend(Article.prototype, Hidamari, PostMixins);

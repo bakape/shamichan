@@ -43,6 +43,7 @@ function parent_model($el) {
 	optSpecs.push(option_linkify);
 	if (!isMobile)
 		optSpecs.push(option_notification);
+	optSpecs.push(option_anonymise);
 	optSpecs.push(option_relative_time);
 	if (config.RADIO && !isMobile)
 		optSpecs.push(option_now_playing);
@@ -291,6 +292,16 @@ function parent_model($el) {
 	option_linkify.type = 'checkbox';
 	option_linkify.tooltip = 'Convert in-post text URLs to clickable links. WARNING: Potential security hazard (XSS). Requires page refresh.';
 	option_linkify.tab = tabs.General;
+
+	/* ANONIMISE ALL POSTER NAMES */
+
+	function option_anonymise() {};
+
+	option_anonymise.id = 'anonymise';
+	option_anonymise.label = 'Anonymise';
+	option_anonymise.type = 'checkbox';
+	option_anonymise.tooltip = 'Display all posters as anonymous';
+	option_anonymise.tab = tabs.General;
 
 	/* RELATIVE POST TIMESTAMPS */
 
