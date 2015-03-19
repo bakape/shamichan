@@ -2,10 +2,12 @@
 All notable changes to this project will be documented in this file.
 Project uses Semantic Versioning http://semver.org/
 
+##0.11.2 - 2015-23-19
 ###Fixed
 - "Clear hidden" button now only renders on the General tab of options
+- No word auto completion in the blockquote on mobile
 
-##0.11.0 - 2015-15-03
+##0.11.0 - 2015-03-15
 ###Added
 - PDF uploads
 - Automatic selected tex quoting
