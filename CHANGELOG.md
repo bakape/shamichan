@@ -8,10 +8,12 @@ Project uses [Semantic Versioning](http://semver.org/)
 - Options export and import to/from file
 - Option to anonymise all posters
 
+##0.11.2 - 2015-23-19
 ###Fixed
 - "Clear hidden" button now only renders on the General tab of options
+- No word auto completion in the blockquote on mobile
 
-##0.11.0 - 2015-15-03
+##0.11.0 - 2015-03-15
 ###Added
 - PDF uploads
 - Automatic selected tex quoting

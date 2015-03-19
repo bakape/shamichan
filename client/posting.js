@@ -228,7 +228,7 @@ var ComposerView = Backbone.View.extend({
 			id: 'trans',
 			rows: '1',
 			"class": 'themed',
-			autocomplete: 'off'
+			autocomplete: isMobile
 		});
 		this.submit = $('<input>', {
 			id: 'done', type: 'button', value: 'Done',
