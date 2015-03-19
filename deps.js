@@ -1,5 +1,3 @@
-var config = require('./config');
-
 exports.SERVER_DEPS = [
 	'admin/common.js',
 	'admin/index.js',

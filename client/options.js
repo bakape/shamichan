@@ -320,6 +320,9 @@ function parent_model($el) {
 	function option_now_playing(toggle){
 		if (toggle)
 			Banner.clearRadio();
+		// Query the server for current stream info
+		else
+			send([DEF.RADIO]);
 	}
 
 	option_now_playing.id = 'nowPlaying';

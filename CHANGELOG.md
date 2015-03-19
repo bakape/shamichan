@@ -7,6 +7,8 @@ Project uses [Semantic Versioning](http://semver.org/)
 - UTC Clock to the schedule
 - Options export and import to/from file
 - Option to anonymise all posters
+###Fixed
+- Delay before r/a/dio banner appearing, when enabled
 
 ##0.11.2 - 2015-23-19
 ###Fixed

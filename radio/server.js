@@ -1,6 +1,7 @@
 var common = require('../common'),
 	hook =require('../hooks').hook,
 	push = require('../server/okyaku').push,
+	OK = require('../server/okyaku'),
 	request = require('request');
 
 var	json,
@@ -54,6 +55,12 @@ hook('clientSynced', function(info, cb) {
 	info.client.send([0, common.RADIO, json]);
 	cb(null);
 });
+
+// Send data to client on request
+OK.dispatcher[common.RADIO] = function(msg, client) {
+	client.send([0, common.RADIO, json]);
+	return true;
+}
 
 function fetch() {
 	// Query r/a/dio API
