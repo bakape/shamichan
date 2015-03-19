@@ -6,6 +6,7 @@ Project uses Semantic Versioning http://semver.org/
 ###Fixed
 - "Clear hidden" button now only renders on the General tab of options
 - No word auto completion in the blockquote on mobile
+- Auto quoting the header, when selected
 
 ##0.11.0 - 2015-03-15
 ###Added

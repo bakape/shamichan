@@ -506,8 +506,8 @@ var ComposerView = Backbone.View.extend({
 			this.on_input();
 			val = $input.val();
 		}
-		// Quote selected text automatically, if selction ends in target post
-		if (sel != '' && selNum == num) {
+		// Quote selected text automatically
+		if (sel) {
 			sel = sel.split('\n');
 			// Prepend > to each line
 			for (var i = 0; i < sel.length; i++) {

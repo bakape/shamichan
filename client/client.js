@@ -434,15 +434,11 @@ $DOC.on('click', 'a', function (event) {
 		if (q) {
 			event.preventDefault();
 			var id = parseInt(q[1], 10),
-				gsel = getSelection(),
-				sel = gsel.toString()
-				selNum = extract_num($(gsel.focusNode && gsel.focusNode.parentElement)
-					.closest('article, section')
-				);
+				sel = verifySelection(target);
 			set_highlighted_post(id);
 			with_dom(function () {
 				open_post_box(id);
-				postForm.add_ref(id, sel, selNum);
+				postForm.add_ref(id, sel);
 			});
 		}
 		else if (THREAD) {
@@ -452,6 +448,24 @@ $DOC.on('click', 'a', function (event) {
 		}
 	}
 });
+
+// Make sure the selection both starts and ends in the quoted post's blockquote
+// XXX: Handling quoting in-view should make this a lot simpler
+function verifySelection($target) {
+	var gsel = getSelection(),
+		$post = $target.closest('article, section');
+
+	function isInside(p) {
+		var $el = $(gsel[p] && gsel[p].parentElement);
+
+		return $el.closest('blockquote').length
+			&& $el.closest('article, section').is($post);
+	}
+
+	if (!isInside('baseNode') || !isInside('focusNode'))
+		return null;
+	return gsel.toString();
+}
 
 $DOC.on('click', 'del', function (event) {
 	if (!event.spoilt) {
