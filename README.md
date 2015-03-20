@@ -1,7 +1,8 @@
 Real-time imageboard.
 MIT licensed.
 
-Note: The git master branch contains the development version of the board. For more stable revisions, please download the latest release.
+Note: The git master branch contains the development version of the
+board. For more stable revisions, please download the latest release.
 
 ##Setup
 
@@ -12,24 +13,34 @@ Note: The git master branch contains the development version of the board. For m
 * Run `node builder.js` to run an auto-reloading development server
 
 ##Automatic cross-platform development setup:
-* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and [Vagrant](http://www.vagrantup.com/downloads.html)
+* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and
+[Vagrant](http://www.vagrantup.com/downloads.html)
 * Open a shell in meguca's root directory and run `vagrant up`
 * Grab a coffee
-* Run `vagrant ssh` and `node builder`, once logged in. Your changes will automatically sync both ways. [More info](https://www.vagrantup.com/)
+* Run `vagrant ssh` and `node builder`, once logged in. Your changes
+will automatically sync both ways. [More info](https://www.vagrantup.com/)
 
 ##Production
 
 * Have your webserver serve www/ (or wherever you've moved src, thumb, etc.)
 * Run `node server/server.js` for just the server
 * config.DAEMON support is broken for now
-* You can update client code & hot.js on-the-fly with `node server/kill.js`
+* You can update hot.js on-the-fly with `node server/kill.js`
+
+##Updating
+* To recompile client code & CSS run `make client`. The new files can be
+loaded into a running server with `node server/kill.js`
+* After upgrading a node.js/io.js version or a meguca release run
+`make upgrade` to recompile all dependancies
 
 ##Dependencies
 
 * ImageMagick
 * gcc, g++, make
 * libpng with development headers
-* [io.js](https://iojs.org) (Latest tested version is 1.6.0. At the moement of writing still compatible with node.js v0.12.0+, when run with the `--harmony` flag)
+* [io.js](https://iojs.org) (Latest tested version is 1.6.0. At the
+moment of writing still compatible with node.js v0.12.0+, when run with
+the `--harmony` flag)
 * redis
 
 ###Optional dependencies for various features
@@ -41,14 +52,16 @@ Note: The git master branch contains the development version of the board. For m
 ###Optional npm dependancies
 * ~~daemon~~ (broken currently)
 * node-expat for icecast now-playing banners
-* send (if you want to serve static files directly from the node.js process; useful in debug mode also)
+* send (if you want to serve static files directly from the node.js
+process; useful in debug mode also)
 
 ## Documentation
 
 * docs/api.md - JSON API documentation
 * docs/doushio.initscript.example - example init script
 * docs/filemap.md - project file map
-* docs/nginx.config.example - example ngingx reverse proxy configuration file
+* docs/nginx.config.example - example ngingx reverse proxy configuration
+file
 
 ##Standalone upkeep scripts
 

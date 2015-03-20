@@ -2,14 +2,12 @@ var _ = require('underscore'),
 	async = require('async'),
 	config = require('../config'),
 	crypto = require('crypto'),
-	exec = require('child_process').exec,
 	fs = require('fs'),
 	hooks = require('../hooks'),
 	imager = require('../imager/config'),
 	path = require('path'),
 	report = require('../report/config'),
-	vm = require('vm'),
-	winston = require('winston');
+	vm = require('vm');
 
 _.templateSettings = {
 	interpolate: /\{\{(.+?)\}\}/g
@@ -261,28 +259,12 @@ function build_FAQ(faq){
 	}
 }
 
-function buildClient(cb){
-	winston.info('(Re)compiling client JS and CSS.');
-	exec('./node_modules/gulp/bin/gulp.js client mod vendor css',
-		function(err, stdout, stderr){
-			if (err)
-				return console.error(
-					'Error: Failed to build client:',
-					err, stderr
-				);
-			cb();
-		}
-	);
-}
-
 exports.reload_hot_resources = function (cb) {
-	buildClient(function(){
-		async.series([
-			reload_hot_config,
-			reload_scripts,
-			reload_resources,
-		], cb);
-	});
+	async.series([
+		reload_hot_config,
+		reload_scripts,
+		reload_resources,
+	], cb);
 };
 
 function make_navigation_html() {

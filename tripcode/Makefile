@@ -8,15 +8,7 @@ tripcode.node: build tripcode.cc
 build: binding.gyp
 	node-gyp configure
 
-# Legacy build method: `make waf`
-waf: .build
-	node-waf build
-	@cp .build/*/tripcode.node tripcode.node
-
-.build: wscript
-	node-waf configure
-
-.PHONY: all clean waf
+.PHONY: all clean
 
 clean:
 	rm -rf -- .build build tripcode.node

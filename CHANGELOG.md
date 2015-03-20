@@ -9,6 +9,9 @@ Project uses [Semantic Versioning](http://semver.org/)
 - Option to anonymise all posters
 ###Fixed
 - Delay before r/a/dio banner appearing, when enabled
+###Changed
+- Meguca client compilation, install and upgrade procedures. See
+README.md
 
 ##0.11.2 - 2015-23-19
 ###Fixed
