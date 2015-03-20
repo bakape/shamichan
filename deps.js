@@ -50,7 +50,7 @@ exports.VENDOR_DEPS = [
 ];
 
 exports.CLIENT_DEPS = [
-	'common.js',
+	'client/common.js',
 	'client/init.js',
 	'client/memory.js',
 	'client/imager.js',

@@ -5,7 +5,7 @@
 var isNode = typeof navigator === 'undefined';
 
 // Define vars, if undefined (on the server)
-var DEF = exports,
+var DEF = isNode ? exports : {},
 	config = config || require('./config'),
 	hotConfig = hotConfig || require('./server/state').hot,
 	imagerConfig =  imagerConfig || require('./imager/config');
@@ -62,13 +62,11 @@ if (typeof mediaURL == 'undefined' || !mediaURL)
 function is_pubsub(t) {
 	return t > 0 && t < 30;
 }
-exports.is_pubsub = is_pubsub;
 
 function FSM(start) {
 	this.state = start;
 	this.spec = {acts: {}, ons: {}, wilds: {}, preflights: {}};
 }
-exports.FSM = FSM;
 
 FSM.prototype.clone = function () {
 	var second = new FSM(this.state);
@@ -157,7 +155,6 @@ function escape_html(html) {
 		return entities[c];
 	});
 }
-exports.escape_html = escape_html;
 
 function escape_fragment(frag) {
 	var t = typeof(frag);
@@ -170,7 +167,6 @@ function escape_fragment(frag) {
 	else
 		return '???';
 }
-exports.escape_fragment = escape_fragment;
 
 function flatten(frags) {
 	var out = [];
@@ -183,29 +179,25 @@ function flatten(frags) {
 	}
 	return out;
 }
-exports.flatten = flatten;
 
 function safe(frag) {
 	return {safe: frag};
 }
-exports.safe = safe;
 
 function is_noko(email) {
 	return email && email.indexOf('@') == -1 && /noko/i.test(email);
 }
-exports.is_noko = is_noko;
 
 function is_sage(email) {
 	return hotConfig.SAGE_ENABLED && email &&
 			email.indexOf('@') == -1 && /sage/i.test(email);
 }
-exports.is_sage = is_sage;
+
 
 var OneeSama = function (t) {
 	this.tamashii = t;
 	this.hooks = {};
 };
-exports.OneeSama = OneeSama;
 
 var OS = OneeSama.prototype;
 
@@ -362,7 +354,7 @@ OS.fragment = function (frag) {
 OS.karada = function (body) {
 	var output = [];
 	this.state = [DEF.S_BOL, 0];
-	this.callback = function (frag) { output.push(frag); };
+	this.callback = function (frag) { output.push(frag); }
 	this.fragment(body);
 	this.callback = null;
 	if (this.state[0] == DEF.S_QUOTE)
@@ -381,7 +373,6 @@ if (config.RADIO)
 	dice_re += '|#q';
 dice_re += ')';
 dice_re = new RegExp(dice_re, 'i');
-exports.dice_re = dice_re;
 
 function parse_dice(frag) {
 	if (frag == '#flip')
@@ -425,7 +416,6 @@ function parse_dice(frag) {
 		return {hour:hour,min: min,sec:sec,start:time,end:end};
 	}
 }
-exports.parse_dice = parse_dice;
 
 function serverTime() {
 	var d = new Date().getTime();
@@ -557,7 +547,6 @@ function pick_spoiler(metaIndex) {
 		i = metaIndex % n;
 	return {index: imgs[i], next: (i+1) % n};
 }
-exports.pick_spoiler = pick_spoiler;
 
 function new_tab_link(srcEncoded, inside, cls, brackets) {
 	if (brackets)
@@ -629,7 +618,7 @@ OS.gazou = function (info, toppu) {
 		safe('</figure>\n\t')];
 };
 
-exports.thumbStyles = thumbStyles = ['small', 'sharp', 'hide'];
+thumbStyles = ['small', 'sharp', 'hide'];
 
 OS.gazou_img = function (info, toppu, href) {
 	var src, thumb;
@@ -692,7 +681,6 @@ function readable_filesize(size) {
 	size = Math.round(size / 104857.6).toString();
 	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
 }
-exports.readable_filesize = readable_filesize;
 
 function pad(n) {
 	return (n < 10 ? '0' : '') + n;
@@ -776,12 +764,10 @@ OS.post_nav = function (post) {
 function action_link_html(href, name, id) {
 	return '<span class="act"><a href="'+href+'"'+ (id?' id="'+id+'"':'') +'>'+name+'</a></span>';
 }
-exports.action_link_html = action_link_html;
 
 reasonable_last_n = function (n) {
 	return n >= 5 && n <= 500;
 };
-exports.reasonable_last_n = reasonable_last_n;
 
 OS.expansion_links_html = function (num) {
 	return ' &nbsp; ' + action_link_html(num, 'Expand') + ' '
@@ -875,14 +861,12 @@ OS.monomono = function (data, cls) {
 function pluralize(n, noun) {
 	return n + ' ' + noun + (n == 1 ? '' : 's');
 }
-exports.pluralize = pluralize;
 
 function abbrev_msg(omit, img_omit) {
 	return omit + (omit==1 ? ' reply' : ' replies') + (img_omit
 		? ' and ' + pluralize(img_omit, 'image')
 		: '') + ' omitted.';
 };
-exports.abbrev_msg = abbrev_msg;
 
 parse_name = function (name) {
 	var tripcode = '', secure = '';
@@ -901,8 +885,30 @@ parse_name = function (name) {
 	return [name.substr(0, 100), tripcode.substr(0, 128),
 			secure.substr(0, 128)];
 };
-exports.parse_name = parse_name;
 
 function random_id() {
 	return Math.floor(Math.random() * 1e16) + 1;
+}
+
+// Batch exports. We don't wan't these on the client.
+if (isNode){
+	exports.is_pubsub = is_pubsub;
+	exports.FSM = FSM;
+	exports.escape_html = escape_html;
+	exports.escape_fragment = escape_fragment;
+	exports.flatten = flatten;
+	exports.safe = safe;
+	exports.is_noko = is_noko;
+	exports.is_sage = is_sage;
+	exports.OneeSama = OneeSama;
+	exports.dice_re = dice_re;
+	exports.parse_dice = parse_dice;
+	exports.pick_spoiler = pick_spoiler;
+	exports.thumbStyles = thumbStyles;
+	exports.readable_filesize = readable_filesize;
+	exports.action_link_html = action_link_html;
+	exports.reasonable_last_n = reasonable_last_n;
+	exports.pluralize = pluralize;
+	exports.abbrev_msg = abbrev_msg;
+	exports.parse_name = parse_name;
 }
