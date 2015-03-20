@@ -9,21 +9,21 @@ var concat = require('gulp-concat'),
 	rev = require('gulp-rev'),
 	uglify = require('gulp-uglify');
 
-function gulper(name, files, dest){
-	gulp.task(name, function(){
-		gulp.src(files)
+function gulper(name, files, dest) {
+	gulp.task(name, function() {
+		return gulp.src(files)
 			.pipe(concat(name))
 			.pipe(gulpif(!d, uglify()))
 			.pipe(rev())
-			.pipe(rename({ suffix: '.'+(d?'debug':'min')+'.js'}))
+			.pipe(rename({suffix: '.' + (d ? 'debug' : 'min') + '.js'}))
 			.pipe(gulp.dest(dest))
-			.pipe(rev.manifest(name+'.json'))
+			.pipe(rev.manifest(name + '.json'))
 			.pipe(gulp.dest('./state'));
 	});
 }
 
 gulp.task('css', function() {
-	gulp.src('./less/*.less')
+	return gulp.src('./less/*.less')
 		.pipe(less({paths: ['./less/mixins']}))
 		.pipe(minifyCSS({rebase: false}))
 		.pipe(rev())
@@ -32,7 +32,7 @@ gulp.task('css', function() {
 		.pipe(gulp.dest('./state'));
 });
 
-(function(){
+(function() {
 	gulper('client', deps.CLIENT_DEPS, './www/js');
 	gulper('vendor', deps.VENDOR_DEPS, './www/js');
 	gulper('mod', deps.MOD_CLIENT_DEPS, './state');
