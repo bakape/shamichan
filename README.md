@@ -26,6 +26,8 @@ will automatically sync both ways. [More info](https://www.vagrantup.com/)
 * Run `node server/server.js` for just the server
 * config.DAEMON support is broken for now
 * You can update hot.js on-the-fly with `node server/kill.js`
+* To remove compiled server dependancies run `make clean`
+* Similarly `make client_clean` removes compiled client files
 
 ##Updating
 * To recompile client code & CSS run `make client`. The new files can be

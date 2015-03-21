@@ -12,6 +12,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 ###Changed
 - Meguca client compilation, install and upgrade procedures. See
 README.md
+- Seperated client-related cleaning into `make client_clean`
 
 ##0.11.2 - 2015-23-19
 ###Fixed
