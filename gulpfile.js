@@ -38,12 +38,12 @@ gulp.task('alpha', function() {
 	// transform regular node stream to gulp (buffered vinyl) stream
 	var browserified = transform(function(filename) {
 		var b = browserify({entries: filename, debug: true})
-			.ignore('./config')
-			.ignore('./server/state')
-			.ignore('./imager/config');
+			.exclude('./config')
+			.exclude('./server/state')
+			.exclude('./imager/config');
 		return b.bundle();
 	});
-	return gulp.src('./alpha/alpha.js')
+	return gulp.src('./alpha/init.js')
 		.pipe(browserified)
 		.pipe(gulpif(!d, uglify()))
 		.pipe(rev())

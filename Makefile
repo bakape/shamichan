@@ -15,6 +15,6 @@ upgrade: clean
 	npm -- install
 
 clean:
-	rm -rf --  state www/js/client-*.js www/js/vendor-*.js www/js/alpha-*.js www/css/*.css
+	rm -rf --  state www/js/client-*.js www/js/vendor-*.js www/js/init-*.js www/css/*.css
 	$(MAKE) -C imager -w clean
 	$(MAKE) -C tripcode -w clean

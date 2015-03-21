@@ -2,7 +2,8 @@
  * Background controller. Wallpapers, proper fitting and video backgrounds
  */
 
-var Backbone = require('backbone');
+var $ = require('jquery'),
+	Backbone = require('backbone');
 
 // TODO: write it
 exports = new Backbone.View({

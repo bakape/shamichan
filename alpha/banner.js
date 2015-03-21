@@ -4,7 +4,7 @@
 
 var $ = require('jquery'),
 	Backbone = require('backbone'),
-// FIXME: Does not exist yet. Will hold the bigger part of dispatcher functions
+	common = require('../common'),
 	dispatcher = require('./dispatcher');
 
 // Notification messages bellow the banner
@@ -28,11 +28,11 @@ var NotificationView = exports.notification = Backbone.View.extend({
 	}
 });
 
-dispatcher[DEF.NOTIFICATION] = function(msg){
+dispatcher[common.NOTIFICATION] = function(msg){
 	new NotificationView(msg[0]);
 };
 
-dispatcher[DEF.UPDATE_BANNER] = function(msg) {
+dispatcher[common.UPDATE_BANNER] = function(msg) {
 	Banner.renderInfo(msg[0]);
 };
 
