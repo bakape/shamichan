@@ -110,8 +110,8 @@ function make_link_rels(board, bits) {
 	}).join('');
 }
 
-exports.write_board_head = function (out, board, nav) {
-	var indexTmpl = RES.indexTmpl;
+exports.write_board_head = function (out, board, nav, alpha) {
+	var indexTmpl = alpha ? RES.alphaTmpl : RES.indexTmpl;
 	var title = STATE.hot.TITLES[board] || escape(board);
 	var metaDesc = "Real-time imageboard";
 
@@ -209,12 +209,12 @@ exports.make_pagination_html = function (info) {
 var returnHTML = common.action_link_html('.', 'Return').replace(
 		'span', 'span id="bottom"').replace('</span>', '] [<a href="#">Top</a></span>');
 
-exports.write_page_end = function (out, ident, returnLink, min) {
+exports.write_page_end = function (out, ident, returnLink, min, alpha) {
 	if (returnLink)
 		out.write(returnHTML);
-	var last = RES.indexTmpl.length - 1;
+	var last = RES[alpha ? 'alphaTmpl' : 'indexTmpl'].length - 1;
 	if (!min)
-		out.write(RES.indexTmpl[last]);
+		out.write(RES[alpha ? 'alphaTmpl' : 'indexTmpl'][last]);
 	if (ident && !min) {
 		if (caps.can_administrate(ident))
 			out.write('<script src="../admin.js"></script>\n');

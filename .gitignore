@@ -26,6 +26,7 @@ www/illya.webm
 www/archive
 www/js/client*.js
 www/js/vendor*.js
+www/js/alpha*.js
 www/src
 www/thumb
 www/mid

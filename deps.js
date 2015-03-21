@@ -92,3 +92,9 @@ exports.MOD_CLIENT_DEPS = [
 	'admin/common.js',
 	'admin/client.js',
 ];
+
+exports.ALPHA = [
+	'alpha/client.js',
+	'alpha/models.js',
+	'alpha/extract.js'
+];

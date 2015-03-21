@@ -4,7 +4,7 @@ all: client
 	./upkeep/bootstrap.sh
 
 client: FORCE
-	./node_modules/gulp/bin/gulp.js -- client mod vendor css
+	./node_modules/gulp/bin/gulp.js -- client mod vendor css alpha
 
 FORCE:
 
@@ -15,6 +15,6 @@ upgrade: clean
 	npm -- install
 
 clean:
-	rm -rf --  state www/js/client-*.js www/js/vendor-*.js www/css/*.css
+	rm -rf --  state www/js/client-*.js www/js/vendor-*.js www/js/alpha-*.js www/css/*.css
 	$(MAKE) -C imager -w clean
 	$(MAKE) -C tripcode -w clean

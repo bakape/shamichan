@@ -115,12 +115,13 @@ var clientImager = _.pick(imager,
 var clientReport = _.pick(report, 'RECAPTCHA_PUBLIC_KEY');
 
 function reload_scripts(cb) {
-	async.mapSeries(['client', 'vendor', 'mod'], getRevision,
+	async.mapSeries(['client', 'vendor', 'mod', 'alpha'], getRevision,
 		function(err, js) {
 			if (err)
 				return cb(err);
 			HOT.CLIENT_JS = js[0].client;
 			HOT.VENDOR_JS = js[1].vendor;
+			HOT.ALPHA_JS = js[3]['alpha.js'];
 			// Read moderator js file
 			fs.readFile(path.join('state', js[2].mod), 'UTF-8',
 				function (err, modSrc) {
@@ -183,6 +184,7 @@ function read_templates(cb) {
 
 	async.parallel({
 		index: read('tmpl', 'index.html'),
+		alpha: read('tmpl', 'alpha.html'),
 		filter: read('tmpl', 'filter.html'),
 		login: read('tmpl', 'login.html'),
 		curfew: read('tmpl', 'curfew.html'),
@@ -222,10 +224,13 @@ function expand_templates(res) {
 		serverErrorHtml: res.serverError,
 	};
 
-	var index = tmpl(res.index);
-	ex.indexTmpl = index.tmpl;
-	var hash = crypto.createHash('md5').update(index.src);
-	ex.indexHash = hash.digest('hex').slice(0, 8);
+	var html, hash;
+	for (var i of ['index', 'alpha']) {
+		html = tmpl(res[i]);
+		ex[i + 'Tmpl'] = html.tmpl;
+		hash = crypto.createHash('md5').update(html.src);
+		ex[i + 'Hash'] = hash.digest('hex').slice(0, 8);
+	}
 
 	return ex;
 }

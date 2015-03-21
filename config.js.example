@@ -31,7 +31,7 @@ var config = {
 	DEFAULT_BOARD: 'moe',
 	// Add links to the navigator menu to custom URLs
 	PSUEDO_BOARDS: [
-		['g', 'https://google.com']
+		['alpha', 'http://localhost:8000/moe/?alpha=true']
 	],
 	STAFF_BOARD: 'staff',
 

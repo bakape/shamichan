@@ -343,7 +343,8 @@ function (req, resp) {
 
 	var board = this.board;
 	// Only render <threads> for pushState() updates
-	var min = !!req.query.minimal;
+	var min = !!req.query.minimal,
+		alpha = req.query.alpha;
 	var info = {board: board, ident: req.ident, resp: resp};
 	hooks.trigger_sync('boardDiversion', info);
 	if (info.diverted)
@@ -355,7 +356,7 @@ function (req, resp) {
 	yaku.once('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1, board == 'archive');
 		if (!min)
-			render.write_board_head(resp, board, nav);
+			render.write_board_head(resp, board, nav, alpha);
 		else
 			render.write_board_title(resp, board);
 		paginationHtml = render.make_pagination_html(nav);
@@ -367,7 +368,7 @@ function (req, resp) {
 	render.write_thread_html(yaku, req, resp, opts);
 	yaku.once('end', function () {
 		resp.write(paginationHtml);
-		render.write_page_end(resp, req.ident, false, min);
+		render.write_page_end(resp, req.ident, false, min, alpha);
 		resp.end();
 		yaku.disconnect();
 	});

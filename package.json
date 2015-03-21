@@ -20,6 +20,7 @@
   "dependencies": {
     "async": "^0.9.0",
     "backbone": "1.1.2",
+    "browserify": "^9.0.3",
     "express": "^4.11.2",
     "formidable": "^1.0.16",
     "gulp": "^3.8.11",
@@ -41,6 +42,7 @@
     "tmp": "^0.0.24",
     "underscore": "1.7.0",
     "velocity-animate": "^1.2.2",
+    "vinyl-transform": "^1.0.0",
     "winston": "^0.9.0"
   },
   "optionalDependencies": {
