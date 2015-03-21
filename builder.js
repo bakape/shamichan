@@ -9,13 +9,11 @@ if (config.DAEMON)
 
 var server;
 var start_server = _.debounce(function () {
-	rebuildClient(function() {
-		if (server)
-			server.kill('SIGTERM');
-		server = child_process.spawn('node', ['server/server.js']);
-		server.stdout.pipe(process.stdout);
-		server.stderr.pipe(process.stderr);
-	});
+	if (server)
+		server.kill('SIGTERM');
+	server = child_process.spawn('node', ['server/server.js']);
+	server.stdout.pipe(process.stdout);
+	server.stderr.pipe(process.stderr);
 }, 2000);
 
 function rebuildClient(cb) {
@@ -49,4 +47,4 @@ function monitor(func, dep) {
 	});
 }
 
-start_server();
+rebuildClient(start_server);
