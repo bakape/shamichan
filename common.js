@@ -6,9 +6,9 @@ var isNode = typeof navigator === 'undefined';
 
 // Define vars, if undefined (on the server)
 var DEF = exports,
-	config = config || require('./config'),
-	hotConfig = hotConfig || require('./server/state').hot,
-	imagerConfig =  imagerConfig || require('./imager/config');
+	config = isNode ? require('./config'): window.config,
+	hotConfig = isNode ? require('./server/state').hot : window.hotConfig,
+	imagerConfig = isNode ? require('./imager/config') : window.imagerConfig;
 
 DEF.INVALID = 0;
 

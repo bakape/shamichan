@@ -21,5 +21,5 @@ var c = ['config', 'imagerConfig', 'reportConfig', 'hotconfig'],
 	type;
 for (var i = 0; i < c.length; i++) {
 	type = c[i];
-	exports[type] = new Backbone.Model().set(window[type]);
+	exports[type] = new Backbone.Model(window[type]);
 }

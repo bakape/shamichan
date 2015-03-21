@@ -37,7 +37,10 @@ gulp.task('css', function() {
 gulp.task('alpha', function() {
 	// transform regular node stream to gulp (buffered vinyl) stream
 	var browserified = transform(function(filename) {
-		var b = browserify({entries: filename, debug: true});
+		var b = browserify({entries: filename, debug: true})
+			.ignore('./config')
+			.ignore('./server/state')
+			.ignore('./imager/config');
 		return b.bundle();
 	});
 	return gulp.src('./alpha/alpha.js')
