@@ -76,7 +76,7 @@ new OptionModel({
 	tab: 'General',
 	// Function for assesing if value is valid. Optional.
 	validation: common.reasonable_last_n,
-	'default': state.hotCsonfig.get('THREAD_LAST_N'),
+	'default': state.hotConfig.get('THREAD_LAST_N'),
 	// Function to execute on change. Optional.
 	exec: function(n) {
 		main.oneeSama.lastN = n;

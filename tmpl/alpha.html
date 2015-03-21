@@ -19,7 +19,7 @@
 		(function () {
 			var BOARD;
 			BOARD = location.pathname.match(/^\/(.+?)\//)[1];
-
+			var options;
 			try {
 				options = JSON.parse(localStorage.options);
 			}

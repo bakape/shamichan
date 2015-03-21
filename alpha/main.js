@@ -12,7 +12,10 @@ var $ = require('jquery'),
 	state = require('./state'),
 	common = require('../common');
 
+// Bind jquery to backbone
 Backbone.$ = $;
+// Register jquery plugin
+require('jquery.cookie');
 
 var isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/.test(
 	navigator.userAgent);
