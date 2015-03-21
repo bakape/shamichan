@@ -5,7 +5,7 @@
 var $ = require('jquery'),
 	Backbone = require('backbone'),
 	common = require('../common'),
-	dispatcher = require('./dispatcher');
+	main = require('./main');
 
 // Notification messages bellow the banner
 var NotificationView = exports.notification = Backbone.View.extend({
@@ -28,11 +28,11 @@ var NotificationView = exports.notification = Backbone.View.extend({
 	}
 });
 
-dispatcher[common.NOTIFICATION] = function(msg){
+main.dispatcher[common.NOTIFICATION] = function(msg){
 	new NotificationView(msg[0]);
 };
 
-dispatcher[common.UPDATE_BANNER] = function(msg) {
+main.dispatcher[common.UPDATE_BANNER] = function(msg) {
 	Banner.renderInfo(msg[0]);
 };
 

@@ -100,7 +100,6 @@ exports.ALPHA = [
 	'alpha/state.js',
 	'alpha/options.js',
 	'aplha/background.js',
-	'alpha/init.js',
+	'alpha/main.js',
 	'alpha/banner.js',
-	'alpha/dispatcher.js'
 ];

@@ -8,6 +8,7 @@ var browserify = require('browserify'),
 	minifyCSS = require('gulp-minify-css'),
 	rename = require('gulp-rename'),
 	rev = require('gulp-rev'),
+	sourcemaps = require('gulp-sourcemaps'),
 	transform = require('vinyl-transform'),
 	uglify = require('gulp-uglify');
 
@@ -43,11 +44,14 @@ gulp.task('alpha', function() {
 			.exclude('./imager/config');
 		return b.bundle();
 	});
-	return gulp.src('./alpha/init.js')
+	return gulp.src('./alpha/main.js')
 		.pipe(browserified)
+		.pipe(sourcemaps.init({loadMaps: true}))
 		.pipe(gulpif(!d, uglify()))
+		.pipe(rename({basename: 'alpha'}))
 		.pipe(rev())
-		.pipe(rename({suffix: '.' + (d ? 'debug' : 'min') + '.js'}))
+		.pipe(rename({extname: '.' + (d ? 'debug' : 'min') + '.js'}))
+		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest('./www/js'))
 		.pipe(rev.manifest('alpha.json'))
 		.pipe(gulp.dest('./state'));

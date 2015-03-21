@@ -122,7 +122,7 @@ function reload_scripts(cb) {
 				return cb(err);
 			HOT.CLIENT_JS = js[0].client;
 			HOT.VENDOR_JS = js[1].vendor;
-			HOT.ALPHA_JS = js[3]['init.js'];
+			HOT.ALPHA_JS = js[3]['alpha.js'];
 			// Read moderator js file
 			fs.readFile(path.join('state', js[2].mod), 'UTF-8',
 				function (err, modSrc) {

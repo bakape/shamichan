@@ -9,7 +9,7 @@ var _ = require('underscore'),
 	background = require('./background'),
 	// Will replace with './client' once stable
 	common = require('../common'),
-	init = require('./init'),
+	main = require('./main'),
 	state = require('./state');
 
 // Try to get options from local storage
@@ -49,7 +49,7 @@ var OptionModel = Backbone.Model.extend({
 		}
 		optionsCollection.add(this);
 		// Different value for each board
-		if (exec !== undefined) {
+		if (this.exec !== undefined) {
 			var id = this.id;
 			if (this.boardSpecific)
 				id = boardify(id);
@@ -76,10 +76,10 @@ new OptionModel({
 	tab: 'General',
 	// Function for assesing if value is valid. Optional.
 	validation: common.reasonable_last_n,
-	'default': state.hotconfig.get('THREAD_LAST_N'),
+	'default': state.hotCsonfig.get('THREAD_LAST_N'),
 	// Function to execute on change. Optional.
 	exec: function(n) {
-		init.oneeSama.lastN = n;
+		main.oneeSama.lastN = n;
 		$.cookie('lastn', n, {path: '/'});
 	}
 });
@@ -144,7 +144,7 @@ new OptionModel({
 	'default': 'small',
 	exec: function(type) {
 		$.cookie('thumb', type);
-		init.oneeSama.thumbStyle = type;
+		main.oneeSama.thumbStyle = type;
 	}
 });
 /* REPLY AT RIGHT */
@@ -217,7 +217,7 @@ new OptionModel({
 			banner.view.clearRadio();
 		// Query the server for current stream info
 		else
-			init.send([common.RADIO]);
+			main.send([common.RADIO]);
 	}
 });
 /* IMAGE SEARCH LINK TOGGLE */

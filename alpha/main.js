@@ -1,5 +1,5 @@
 /*
- * Loads the top priority dependancies
+ * Loads the depandancies in order and aggregates exports from various modules
  */
 
 /*
@@ -7,8 +7,12 @@
  * to be loaded first. The order seems pretty solid
  */
 
-var state = require('./state'),
+var $ = require('jquery'),
+	Backbone = require('backbone'),
+	state = require('./state'),
 	common = require('../common');
+
+Backbone.$ = $;
 
 var isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/.test(
 	navigator.userAgent);
@@ -27,8 +31,8 @@ var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {
 });
 oneeSama.full = oneeSama.op = state.page.get('thread');
 
-// Later gets overwrittten in conn.js
 exports.send = function() {};
+exports.dispatcher = {};
 
 var options = require('./options'),
 	models = require('./models'),
