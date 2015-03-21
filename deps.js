@@ -96,5 +96,7 @@ exports.MOD_CLIENT_DEPS = [
 exports.ALPHA = [
 	'alpha/client.js',
 	'alpha/models.js',
-	'alpha/extract.js'
+	'alpha/extract.js',
+	'alpha/state.js',
+	'alpha/options.js',
 ];
