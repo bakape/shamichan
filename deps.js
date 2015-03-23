@@ -102,4 +102,5 @@ exports.ALPHA = [
 	'aplha/background.js',
 	'alpha/main.js',
 	'alpha/banner.js',
+	'alpha/identity.js'
 ];

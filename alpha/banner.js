@@ -28,7 +28,7 @@ var NotificationView = exports.notification = Backbone.View.extend({
 	}
 });
 
-main.dispatcher[common.NOTIFICATION] = function(msg){
+main.dispatcher[common.NOTIFICATION] = function(msg) {
 	new NotificationView(msg[0]);
 };
 
@@ -38,10 +38,38 @@ main.dispatcher[common.UPDATE_BANNER] = function(msg) {
 
 var BannerView = Backbone.View.extend({
 	initialize: function() {},
-
+	events: {
+		'click .bfloat': 'revealBmodal'
+	},
 	renderInfo: function(msg) {
 		this.$el.children('#banner_info').html(msg);
 	},
+	// Toggle the display of the modal windows under the banner
+	revealBmodal: function(event) {
+		var $target = $(event.target).closest('.bfloat'),
+			id = $target.attr('id'),
+			bmodal;
+		if (id == 'options')
+			bmodal = 'options-panel';
+		else if (id == 'banner_identity')
+			bmodal = 'identity';
+		else if (id == 'banner_FAQ')
+			bmodal = 'FAQ';
+		else if (id == 'banner_schedule')
+			bmodal = 'schedule';
+
+		if (!bmodal)
+			return;
+		var $el = $('#' + bmodal),
+			isShown = $el.is(':visible');
+		$('.bmodal').hide();
+		// We hid the currently displayed window. All is well
+		if (isShown)
+			return;
+		// Place 5 pixels bellow banner
+		$el.css('top', $('#banner').outerHeight() + 5 + 'px');
+		$el.show();
+	}
 });
 
 var Banner = exports.view = new BannerView({

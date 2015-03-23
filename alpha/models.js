@@ -1,8 +1,7 @@
 /*
  * Core Backbone models
  */
-var $ = require('jquery'),
-	Backbone = require('backbone');
+var Backbone = require('backbone');
 
 var PostCollection = Backbone.Collection.extend({
 	idAttribute: 'num'

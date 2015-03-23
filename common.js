@@ -4,11 +4,20 @@
 // Runing on the server
 var isNode = typeof navigator === 'undefined';
 
-// Define vars, if undefined (on the server)
-var DEF = exports,
-	config = isNode ? require('./config'): window.config,
-	hotConfig = isNode ? require('./server/state').hot : window.hotConfig,
-	imagerConfig = isNode ? require('./imager/config') : window.imagerConfig;
+// Define vars, for the server and client sides
+var DEF = exports, state, config, hotConfig, imagerConfig;
+if (isNode) {
+	state = require('./server/state');
+	config = require('./config');
+	hotConfig = state.hot;
+	imagerConfig = require('./imager/config');
+}
+else {
+	state = require('./alpha/state');
+	config = state.config.attributes;
+	hotConfig = state.hotConfig.attributes;
+	imagerConfig = state.imagerConfig.attributes;
+}
 
 DEF.INVALID = 0;
 
@@ -584,7 +593,7 @@ OS.image_paths = function () {
 var audioIndicator = "\u266B"; // musical note
 
 OS.gazou = function (info, toppu) {
-	var src, name, caption;
+	var src, caption;
 	// TODO: Unify archive and normal thread caption logic
 	if (info.vint) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
