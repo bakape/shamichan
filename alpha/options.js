@@ -413,6 +413,7 @@ new OptionModel({
 	}
 ].forEach(function(short) {
 	short.type = 'shortcut';
+	short.tab = 'Shortcuts';
 	new OptionModel(short);
 });
 
@@ -526,7 +527,7 @@ var OptionsView = Backbone.View.extend({
 
 		// Show the first tab by default
 		$tabSel.children().first().addClass('tab_sel');
-		$tabCont.children().first().show();
+		$tabCont.children().first().addClass('tab_sel');
 
 		this.$el.append($tabSel, $tabCont);
 		this.$el.appendTo('body');
@@ -543,8 +544,8 @@ var OptionsView = Backbone.View.extend({
 		$a.addClass('tab_sel');
 		// Switch tabs
 		var $li = this.$el.children('.option_tab_cont').children('li');
-		$li.hide();
-		$li.filter('.' + $a.data('content')).show();
+		$li.removeClass('tab_sel');
+		$li.filter('.' + $a.data('content')).addClass('tab_sel');
 	}
 });
 
