@@ -47,35 +47,42 @@ var OptionModel = Backbone.Model.extend({
 		// No type = checkbox + default false
 		if (!obj.type)
 			this.set({type: 'checkbox', 'default': false});
-		// Different value for each board
+		/*
+		 * Some options differ per board. Store the id that will be used in the
+		 * options model for searching purposes.
+		 */
 		var id = obj.id;
-		if (obj.boardSpecific) {
-			id = boardify(id);
-			this.set('id', id);
-		}
-		// Store the initial value, for looking up from the optionsView
-		this.set('initId', obj.id);
+		if (obj.boardSpecific)
+			id = 'board.' + state.page.get('board') + '.' + id;
+		this.set('storedId', id);
+
 		if (obj.exec !== undefined) {
 			var opts = {};
-			opts['change:' + id] = obj.exec;
+			opts['change:' + id] = this.execListen;
 			this.listenTo(options, opts);
 			// Execute with current value
-			var val = options.get('id');
-			val = (val !== undefined) ? val : this.get('default');
-			obj.exec(val);
+			obj.exec(this.getValue());
 		}
 		optionsCollection.add(this);
 	},
-	// The untampered id, we get before boardification
-	initialId: function() {
-		var id = this.get('id');
-		return this.get('boardSpecific') ? id.slice('.')[2] : id;
+	// Set the option, taking into acount board specifics
+	setStored: function(val) {
+		options.set(this.get('storedId'), val);
+	},
+	// Return default, if unset
+	getValue: function() {
+		var val = options.get(this.get('storedId'));
+		return val === undefined ? this.get('default') : val;
+	},
+	validate: function(val) {
+		var valid = this.get('validation');
+		return valid ? valid(val) : true;
+	},
+	// Exec wrapper for listening events
+	execListen: function(model, val) {
+		this.get('exec')(val);
 	}
 });
-
-function boardify(id) {
-	return 'board.' + state.page.get('board') + '.' + id;
-}
 
 /* INLINE EXPANSION */
 new OptionModel({
@@ -86,7 +93,7 @@ new OptionModel({
 	tooltip: 'Expand images inside the parent post and resize according to'
 		+ ' setting',
 	tab: 'Style',
-	'default': 'width'
+	'default': 'fit to width'
 });
 /* THUMBNAIL OPTIONS */
 new OptionModel({
@@ -98,7 +105,7 @@ new OptionModel({
 		+ 'Small: 125x125, small file size; '
 		+ 'Sharp: 125x125, more detailed; '
 		+ 'Hide: hide all images;',
-	tab: 'style',
+	tab: 'Style',
 	'default': 'small',
 	exec: function(type) {
 		$.cookie('thumb', type);
@@ -203,7 +210,7 @@ new OptionModel({
 /* R/A/DIO NOW PLAYING BANNER */
 new OptionModel({
 	id: 'nowPlaying',
-	load: notMobile,
+	load: notMobile && state.config.get('RADIO'),
 	label: 'Now Playing Banner',
 	type: 'checkbox',
 	tooltip: 'Currently playing song on r/a/dio and other stream information in'
@@ -238,7 +245,7 @@ new OptionModel({
 /* ILLYA DANCE */
 var illyaDance = new OptionModel({
 	id: 'illyaBGToggle',
-	load: notMobile,
+	load: notMobile && state.hotConfig.get('ILLYA_DANCE'),
 	label: 'Illya Dance',
 	boardSpecific: true,
 	tooltip: 'Dancing loli in the background',
@@ -259,7 +266,7 @@ var illyaDance = new OptionModel({
 });
 new OptionModel({
 	id: 'illyaMuteToggle',
-	load: notMobile,
+	load: notMobile && state.hotConfig.get('ILLYA_DANCE'),
 	boardSpecific: true,
 	label: 'Mute Illya',
 	tooltip: 'Mute dancing loli',
@@ -330,6 +337,7 @@ new OptionModel({
 			$('#theme').attr('href', state.imagerConfig.get('MEDIA_URL')
 				+ 'css/' + css);
 		}
+		// FIXME: temp stub
 		// Call the background controller to generate, remove and/or append the glass
 		//background.glass(theme);
 	}
@@ -349,7 +357,8 @@ new OptionModel({
 	type: 'image',
 	tooltip: "Image to use as the background",
 	tab: 'Style',
-	exec: background.set
+	// FIXME
+	//exec: background.set
 });
 /* LAST N CONFIG */
 new OptionModel({
@@ -477,57 +486,58 @@ var OptionsView = Backbone.View.extend({
 				.appendTo($tabCont);
 		});
 		// Render all the options
-		var opts = options.attributes;
 		optionsCollection.models.forEach(function(model) {
-			var model = model.attributes,
-				val = (opts[model.id] !== undefined) ? opts[model.id]
-					: model.default,
-				$tab = $tabCont.children('.' + model.tab),
+			var val = model.getValue(),
+				$tab = $tabCont.children('.' + model.get('tab')),
+				type = model.get('type'),
+				id = model.get('id'),
+				tooltip = model.get('tooltip'),
 				$input;
 
-			if (model.type == 'checkbox') {
+			if (type == 'checkbox') {
 				$input = $('<input/>', {
 					type: 'checkbox',
 					checked: val
 				});
 			}
-			else if (model.type == 'number') {
+			else if (type == 'number') {
 				$input = $('<input/>', {
 					width: '4em',
 					maxlength: 4,
 					val: val
 				});
 			}
-			else if (model.type == 'image') {
+			else if (type == 'image') {
 				$input = $('<input/>', {
 					type: 'file'
 				});
 			}
-			else if (model.type instanceof Array) {
+			else if (type instanceof Array) {
 				$input = $('<select/>');
-				model.type.forEach(function(opt) {
+				type.forEach(function(opt) {
 					$input.append('<option value="' + opt + '">' + opt
 						+ '</option>');
 				});
+				$input.val(model.getValue());
 			}
-			else if (model.type == 'shortcut') {
+			else if (type == 'shortcut') {
 				$tab.append('Alt+');
 				$input = $('<input/>', {
-					id: model.id,
+					id: id,
 					maxlength: 1,
 					val: String.fromCharCode(val)
 				});
 			}
 			$tab.append([
 				$input.attr({
-					id: model.id,
-					title: model.tootlip
+					id: id,
+					title: tooltip
 				}),
 				$('<label/>', {
-					for : model.id,
-					title: model.tooltip
+					for : id,
+					title: tooltip
 				})
-					.html(model.label),
+					.html(model.get('label')),
 				'<br>'
 			]);
 		});
@@ -608,7 +618,7 @@ var OptionsView = Backbone.View.extend({
 	switchTab: function(event) {
 		event.preventDefault();
 		var $a = $(event.target);
-		// Unhighight all tabs1
+		// Unhighight all tabs
 		this.$el.children('.option_tab_sel').find('a').removeClass('tab_sel');
 		// Hightlight the new one
 		$a.addClass('tab_sel');
@@ -620,26 +630,27 @@ var OptionsView = Backbone.View.extend({
 	applyChange: function(event) {
 		var target = event.target, val,
 			model = optionsCollection.findWhere({
-				initId: target.id
+				id: target.id
 			});
 		if (!model)
 			return;
-		model = model.attributes;
-		if (model.type == 'checkbox')
+		var type = model.get('type');
+		if (type == 'checkbox')
 			val = !!target.checked;
-		else if (model.type == 'number')
+		else if (type == 'number')
 			val = parseInt(val);
 		// Not recorder; extracted directly by the background handler
-		else if (model.type == 'image')
-			return background.genCustom(target.result);
-		else if (model.type == 'shortcut')
+		else if (type == 'image')
+			// FIXME
+			return; //background.genCustom(target.result);
+		else if (type == 'shortcut')
 			val = target.val.charCodeAt(0);
 		else
-			val = target.val;
+			val = target.value;
 
-		if (model.validation && !model.validation(val))
+		if (!model.validate(val))
 			return target.val = '';
-		options.set(model.id, val);
+		model.setStored(val);
 	}
 });
 
