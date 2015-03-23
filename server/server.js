@@ -561,7 +561,8 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board, op = this.op;
-	var min = !!req.query.minimal;
+	var min = !!req.query.minimal,
+		alpha = req.query.alpha;
 
 	resp = write_gzip_head(req, resp, this.headers);
 	if (!min){
@@ -574,13 +575,14 @@ function (req, resp) {
 		render.write_thread_title(resp, board, op, {
 			subject: this.subject,
 			abbrev: this.abbrev,
+			alpha: alpha
 		});
 	}
 	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
 	render.write_thread_html(this.reader, req, resp, opts);
 	var self = this;
 	this.reader.once('end', function () {
-		render.write_page_end(resp, req.ident, true, min);
+		render.write_page_end(resp, req.ident, true, min, alpha);
 		resp.end();
 		self.finished();
 	});
