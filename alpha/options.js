@@ -442,12 +442,14 @@ new OptionModel({
 })();
 
 // Render options panel
-var OptionsView = Backbone.Model.extend({
+var OptionsView = Backbone.View.extend({
 	initialize: function() {
 		this.render();
 	},
+	tagName: 'div',
+	className: 'bmodal',
+	id: 'options-panel',
 	render: function() {
-		this.$el = $('<div/>', {"class": 'bmodal', id: 'options-panel'});
 		var $tabSel = $('<ul/>', {'class': 'option_tab_sel'}),
 			$tabCont = $('<ul/>', {'class': 'option_tab_cont'});
 		// Render tabs
@@ -528,6 +530,21 @@ var OptionsView = Backbone.Model.extend({
 
 		this.$el.append($tabSel, $tabCont);
 		this.$el.appendTo('body');
+	},
+	events: {
+		'click .option_tab_sel>li>a': 'switchTab'
+	},
+	switchTab: function(event) {
+		event.preventDefault();
+		var $a = $(event.target);
+		// Unhighight all tabs1
+		this.$el.children('.option_tab_sel').find('a').removeClass('tab_sel');
+		// Hightlight the new one
+		$a.addClass('tab_sel');
+		// Switch tabs
+		var $li = this.$el.children('.option_tab_cont').children('li');
+		$li.hide();
+		$li.filter('.' + $a.data('content')).show();
 	}
 });
 
