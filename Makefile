@@ -1,7 +1,7 @@
-all: client
+all: bootstrap client
 	$(MAKE) -C imager
 	$(MAKE) -C tripcode
-	./upkeep/bootstrap.sh
+	
 
 client: FORCE
 	./node_modules/gulp/bin/gulp.js -- client mod vendor css alpha
@@ -9,6 +9,9 @@ client: FORCE
 FORCE:
 
 .PHONY: all clean
+
+bootstrap:
+	./upkeep/bootstrap.sh
 
 upgrade: clean
 	rm -rf -- ./node_modules
