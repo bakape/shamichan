@@ -23,7 +23,7 @@ catch(e) {
 }
 if (!options)
 	options = {};
-options = exports = new Backbone.Model(options);
+options = module.exports = new Backbone.Model(options);
 
 // Persists entire model to localStorage on change
 options.on('change', function() {
@@ -47,18 +47,24 @@ var OptionModel = Backbone.Model.extend({
 		// No type = checkbox + default false
 		if (!obj.type)
 			this.set({type: 'checkbox', 'default': false});
-		optionsCollection.add(this);
+		// Different value for each board
+		var id = obj.id;
+		if (obj.boardSpecific) {
+			id = boardify(id);
+			this.set('id', id);
+		}
+		// Store the initial value, for looking up from the optionsView
+		this.set('initId', obj.id);
 		if (obj.exec !== undefined) {
-			var id = obj.id;
-			// Different value for each board
-			if (obj.boardSpecific) {
-				id = boardify(id);
-				this.set('id', id);
-			}
 			var opts = {};
 			opts['change:' + id] = obj.exec;
 			this.listenTo(options, opts);
+			// Execute with current value
+			var val = options.get('id');
+			val = (val !== undefined) ? val : this.get('default');
+			obj.exec(val);
 		}
+		optionsCollection.add(this);
 	},
 	// The untampered id, we get before boardification
 	initialId: function() {
@@ -124,7 +130,7 @@ new OptionModel({
 	tab: 'Style',
 	exec: function(autogif) {
 		$.cookie('agif', autogif, {path: '/'});
-		oneeSama.autoGif = autogif;
+		main.oneeSama.autoGif = autogif;
 	}
 });
 /* SPOILER TOGGLE */
@@ -138,7 +144,7 @@ new OptionModel({
 	'default': true,
 	exec: function(spoilertoggle) {
 		$.cookie('spoil', spoilertoggle, {path: '/'});
-		oneeSama.spoilToggle = spoilertoggle;
+		main.oneeSama.spoilToggle = spoilertoggle;
 	}
 });
 /* BACKLINKS */
@@ -239,7 +245,7 @@ var illyaDance = new OptionModel({
 	tab: 'Fun',
 	exec: function(illyatoggle) {
 		var muted = ' ';
-		if (options.get(option_illya_mute.id))
+		if (options.get('illyaMuteToggle'))
 			muted = 'muted';
 		var dancer = '<video autoplay ' + muted + ' loop id="bgvid" >' +
 			'<source src="' + mediaURL + 'illya.webm" type="video/webm">' +
@@ -258,8 +264,8 @@ new OptionModel({
 	label: 'Mute Illya',
 	tooltip: 'Mute dancing loli',
 	tab: 'Fun',
-	exec: function option_illya_mute() {
-		if (options.get(illyaBGToggle)) {
+	exec: function() {
+		if (options.get('illyaBGToggle')) {
 			illyaDance.exec(false);
 			illyaDance.exec(true);
 		}
@@ -321,11 +327,11 @@ new OptionModel({
 	exec: function(theme) {
 		if (theme) {
 			var css = hotConfig.css[theme + '.css'];
-			$('#theme').attr('href', state.imagerConfig.get('mediaURL')
+			$('#theme').attr('href', state.imagerConfig.get('MEDIA_URL')
 				+ 'css/' + css);
 		}
 		// Call the background controller to generate, remove and/or append the glass
-		background.glass(theme);
+		//background.glass(theme);
 	}
 });
 /* CUSTOM USER-SET BACKGROUND */
@@ -474,7 +480,8 @@ var OptionsView = Backbone.View.extend({
 		var opts = options.attributes;
 		optionsCollection.models.forEach(function(model) {
 			var model = model.attributes,
-				val = opts[model.id] || model.default,
+				val = (opts[model.id] !== undefined) ? opts[model.id]
+					: model.default,
 				$tab = $tabCont.children('.' + model.tab),
 				$input;
 
@@ -595,7 +602,8 @@ var OptionsView = Backbone.View.extend({
 		this.$el.appendTo('body');
 	},
 	events: {
-		'click .option_tab_sel>li>a': 'switchTab'
+		'click .option_tab_sel>li>a': 'switchTab',
+		'change': 'applyChange'
 	},
 	switchTab: function(event) {
 		event.preventDefault();
@@ -608,6 +616,30 @@ var OptionsView = Backbone.View.extend({
 		var $li = this.$el.children('.option_tab_cont').children('li');
 		$li.removeClass('tab_sel');
 		$li.filter('.' + $a.data('content')).addClass('tab_sel');
+	},
+	applyChange: function(event) {
+		var target = event.target, val,
+			model = optionsCollection.findWhere({
+				initId: target.id
+			});
+		if (!model)
+			return;
+		model = model.attributes;
+		if (model.type == 'checkbox')
+			val = !!target.checked;
+		else if (model.type == 'number')
+			val = parseInt(val);
+		// Not recorder; extracted directly by the background handler
+		else if (model.type == 'image')
+			return background.genCustom(target.result);
+		else if (model.type == 'shortcut')
+			val = target.val.charCodeAt(0);
+		else
+			val = target.val;
+
+		if (model.validation && !model.validation(val))
+			return target.val = '';
+		options.set(model.id, val);
 	}
 });
 

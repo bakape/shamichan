@@ -2,14 +2,19 @@
  * Background controller. Wallpapers, proper fitting and video backgrounds
  */
 
-var $ = require('jquery'),
-	Backbone = require('backbone');
+var Backbone = require('backbone');
 
 // TODO: write it
-exports = new Backbone.View({
-	$el: $('#user_bg'),
+module.exports = new Backbone.View({
+	el: document.getElementById('user_bg'),
 	model: new Backbone.Model(),
+	set: function(toggle) {
+
+	},
 	glass: function() {
+
+	},
+	genCustom: function(file) {
 
 	}
 });

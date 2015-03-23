@@ -94,6 +94,7 @@ exports.MOD_CLIENT_DEPS = [
 ];
 // Only used for monitoring by builder.js
 exports.ALPHA = [
+	'tmpl/alpha.html',
 	'alpha/client.js',
 	'alpha/models.js',
 	'alpha/extract.js',
@@ -102,5 +103,5 @@ exports.ALPHA = [
 	'aplha/background.js',
 	'alpha/main.js',
 	'alpha/banner.js',
-	'alpha/identity.js'
+	'alpha/identity.js',
 ];

@@ -33,11 +33,13 @@ main.dispatcher[common.NOTIFICATION] = function(msg) {
 };
 
 main.dispatcher[common.UPDATE_BANNER] = function(msg) {
-	Banner.renderInfo(msg[0]);
+	banner.renderInfo(msg[0]);
 };
 
 var BannerView = Backbone.View.extend({
-	initialize: function() {},
+	initialize: function() {
+		this.setElement(document.getElementById('banner'));
+	},
 	events: {
 		'click .bfloat': 'revealBmodal'
 	},
@@ -69,9 +71,28 @@ var BannerView = Backbone.View.extend({
 		// Place 5 pixels bellow banner
 		$el.css('top', $('#banner').outerHeight() + 5 + 'px');
 		$el.show();
+	},
+	// r/a/dio stream info rendering
+	renderRadio: function(data) {
+		data = JSON.parse(data);
+		this.$el.children('#banner_center').html(
+			'<a href="http://r-a-d.io/" target="_blank">'
+			+ '[' + data.listeners + '] ' + data.dj
+			+ '</a>&nbsp;&nbsp;<a title="Click to google song"'
+			+ 'href="https://google.com/search?q='
+			+ encodeURIComponent(data.np) + '" target="_blank"><b>'
+			+ data.np + '</b></a>'
+		);
+	},
+	clearRadio: function() {
+		this.$el.children('#banner_center').empty();
 	}
 });
 
-var Banner = exports.view = new BannerView({
-	el: $('#banner')[0]
-});
+var banner = exports.view = new BannerView();
+
+main.dispatcher[common.RADIO] = function(msg) {
+	// R/a/dio banner is disabled on mobile
+	if (!options.get('nowPlaying') || main.isMobile)
+		banner.renderRadio(msg[0]);
+};

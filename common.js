@@ -788,7 +788,7 @@ function action_link_html(href, name, id) {
 exports.action_link_html = action_link_html;
 
 reasonable_last_n = function (n) {
-	return n >= 5 && n <= 500;
+	return Number.isInteger(n) && n >= 5 && n <= 500;
 };
 exports.reasonable_last_n = reasonable_last_n;
 
