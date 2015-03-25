@@ -19,6 +19,8 @@ else {
 	imagerConfig = state.imagerConfig.attributes;
 }
 
+var lang = require('./lang/');
+
 DEF.INVALID = 0;
 
 DEF.INSERT_POST = 2;
@@ -54,7 +56,6 @@ DEF.UNSUBSCRIBE = 61;
 
 DEF.GET_TIME = 62;
 
-DEF.ANON = 'Anonymous';
 DEF.INPUT_ROOM = 20;
 DEF.MAX_POST_LINES = 30;
 DEF.MAX_POST_CHARS = 2000;
@@ -79,14 +80,14 @@ function FSM(start) {
 }
 exports.FSM = FSM;
 
-FSM.prototype.clone = function () {
+FSM.prototype.clone = function() {
 	var second = new FSM(this.state);
 	second.spec = this.spec;
 	return second;
 };
 
 // Handlers on arriving to a new state
-FSM.prototype.on = function (key, f) {
+FSM.prototype.on = function(key, f) {
 	var ons = this.spec.ons[key];
 	if (ons)
 		ons.push(f);
@@ -96,7 +97,7 @@ FSM.prototype.on = function (key, f) {
 };
 
 // Sanity checks before attempting a transition
-FSM.prototype.preflight = function (key, f) {
+FSM.prototype.preflight = function(key, f) {
 	var pres = this.spec.preflights[key];
 	if (pres)
 		pres.push(f);
@@ -105,14 +106,14 @@ FSM.prototype.preflight = function (key, f) {
 };
 
 // Specify transitions and an optional handler function
-FSM.prototype.act = function (trans_spec, on_func) {
+FSM.prototype.act = function(trans_spec, on_func) {
 	var halves = trans_spec.split('->');
 	if (halves.length != 2)
 		throw new Error("Bad FSM spec: " + trans_spec);
 	var parts = halves[0].split(',');
 	var dest = halves[1].match(/^\s*(\w+)\s*$/)[1];
 	var tok;
-	for (var i = parts.length-1; i >= 0; i--) {
+	for (var i = parts.length - 1; i >= 0; i--) {
 		var part = parts[i];
 		var m = part.match(/^\s*(\*|\w+)\s*(?:\+\s*(\w+)\s*)?$/);
 		if (!m)
@@ -136,7 +137,7 @@ FSM.prototype.act = function (trans_spec, on_func) {
 	return this;
 };
 
-FSM.prototype.feed = function (ev, param) {
+FSM.prototype.feed = function(ev, param) {
 	var spec = this.spec;
 	var from = this.state, acts = spec.acts[from];
 	var to = (acts && acts[ev]) || spec.wilds[ev];
@@ -153,24 +154,24 @@ FSM.prototype.feed = function (ev, param) {
 	return true;
 };
 
-FSM.prototype.feeder = function (ev) {
+FSM.prototype.feeder = function(ev) {
 	var self = this;
-	return function (param) {
+	return function(param) {
 		self.feed(ev, param);
 	};
 };
 
-var entities = {'&' : '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'};
+var entities = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'};
 function escape_html(html) {
-	return html.replace(/[&<>"]/g, function (c) {
+	return html.replace(/[&<>"]/g, function(c) {
 		return entities[c];
 	});
 }
 exports.escape_html = escape_html;
 
 function escape_fragment(frag) {
-	var t = typeof(frag);
-	if (t == 'object' && frag && typeof(frag.safe) == 'string')
+	var t = typeof (frag);
+	if (t == 'object' && frag && typeof (frag.safe) == 'string')
 		return frag.safe;
 	else if (t == 'string')
 		return escape_html(frag);
@@ -206,11 +207,11 @@ exports.is_noko = is_noko;
 
 function is_sage(email) {
 	return hotConfig.SAGE_ENABLED && email &&
-			email.indexOf('@') == -1 && /sage/i.test(email);
+		email.indexOf('@') == -1 && /sage/i.test(email);
 }
 exports.is_sage = is_sage;
 
-var OneeSama = function (t) {
+var OneeSama = function(t) {
 	this.tamashii = t;
 	this.hooks = {};
 };
@@ -227,13 +228,13 @@ ref_re += '|>\\/soundcloud\\/[\\w-]{1,40}\\/[\\w-]{1,80}';
 ref_re += '|>\\/pastebin\\/\\w+';
 
 for (var i = 0; i < config.BOARDS.length; i++) {
-    ref_re += '|>\\/' + config.BOARDS[i] + '\\/(?:\\d+)?';
+	ref_re += '|>\\/' + config.BOARDS[i] + '\\/(?:\\d+)?';
 }
 
 ref_re += ')';
 ref_re = new RegExp(ref_re);
 
-OS.hook = function (name, func) {
+OS.hook = function(name, func) {
 	var hs = this.hooks[name];
 	if (!hs)
 		this.hooks[name] = hs = [func];
@@ -241,7 +242,7 @@ OS.hook = function (name, func) {
 		hs.push(func);
 };
 
-OS.trigger = function (name, param) {
+OS.trigger = function(name, param) {
 	var hs = this.hooks[name];
 	if (hs)
 		for (var i = 0; i < hs.length; i++)
@@ -250,14 +251,21 @@ OS.trigger = function (name, param) {
 
 function override(obj, orig, upgrade) {
 	var origFunc = obj[orig];
-	obj[orig] = function () {
+	obj[orig] = function() {
 		var args = [].slice.apply(arguments);
 		args.unshift(origFunc);
 		return upgrade.apply(this, args);
 	};
 }
 
-OS.red_string = function (ref) {
+// Language mappings and settings
+OS.lang = function(phrase) {
+	return lang[this.language][phrase];
+};
+// Overriden by cookie or client-side setting
+OS.language = config.DEFAULT_LANG;
+
+OS.red_string = function(ref) {
 	var dest, linkClass;
 	if (/^>\/watch/.test(ref)) {
 		dest = 'https://www.youtube.com/' + ref.slice(2);
@@ -267,7 +275,7 @@ OS.red_string = function (ref) {
 		dest = 'https://soundcloud.com/' + ref.slice(13);
 		linkClass = 'embed soundcloud';
 	}
-	else if (/^>\/pastebin/.test(ref)){
+	else if (/^>\/pastebin/.test(ref)) {
 		dest = dest = 'https://pastebin.com/' + ref.slice(11);
 		linkClass = 'embed pastebin';
 	}
@@ -290,7 +298,7 @@ OS.red_string = function (ref) {
 	this.callback(new_tab_link(encodeURI(dest), '>>' + ref, linkClass));
 };
 
-OS.break_heart = function (frag) {
+OS.break_heart = function(frag) {
 	if (frag.safe)
 		return this.callback(frag);
 	var bits = frag.split(break_re);
@@ -311,38 +319,38 @@ OS.break_heart = function (frag) {
 	}
 };
 
-OS.iku = function (token, to) {
+OS.iku = function(token, to) {
 	var state = this.state;
 	if (state[0] == DEF.S_QUOTE && to != DEF.S_QUOTE)
 		this.callback(safe('</em>'));
-	switch (to) {
-	case DEF.S_QUOTE:
-		if (state[0] != DEF.S_QUOTE) {
-			this.callback(safe('<em>'));
-			state[0] = DEF.S_QUOTE;
-		}
-		this.break_heart(token);
-		break;
-	case DEF.S_SPOIL:
-		if (token[1] == '/') {
-			state[1]--;
-			this.callback(safe('</del>'));
-		}
-		else {
-			var del = {html: '<del>'};
-			this.trigger('spoilerTag', del);
-			this.callback(safe(del.html));
-			state[1]++;
-		}
-		break;
-	default:
-		this.break_heart(token);
-		break;
+	switch(to) {
+		case DEF.S_QUOTE:
+			if (state[0] != DEF.S_QUOTE) {
+				this.callback(safe('<em>'));
+				state[0] = DEF.S_QUOTE;
+			}
+			this.break_heart(token);
+			break;
+		case DEF.S_SPOIL:
+			if (token[1] == '/') {
+				state[1]--;
+				this.callback(safe('</del>'));
+			}
+			else {
+				var del = {html: '<del>'};
+				this.trigger('spoilerTag', del);
+				this.callback(safe(del.html));
+				state[1]++;
+			}
+			break;
+		default:
+			this.break_heart(token);
+			break;
 	}
 	state[0] = to;
 };
 
-OS.fragment = function (frag) {
+OS.fragment = function(frag) {
 	var chunks = frag.split(/(\[\/?spoiler\])/i);
 	var state = this.state;
 	for (var i = 0; i < chunks.length; i++) {
@@ -363,15 +371,17 @@ OS.fragment = function (frag) {
 				this.iku(line, DEF.S_QUOTE);
 			else if (line)
 				this.iku(line, q ? DEF.S_QUOTE
-						: DEF.S_NORMAL);
+					: DEF.S_NORMAL);
 		}
 	}
 };
 
-OS.karada = function (body) {
+OS.karada = function(body) {
 	var output = [];
 	this.state = [DEF.S_BOL, 0];
-	this.callback = function (frag) { output.push(frag); };
+	this.callback = function(frag) {
+		output.push(frag);
+	};
 	this.fragment(body);
 	this.callback = null;
 	if (this.state[0] == DEF.S_QUOTE)
@@ -395,8 +405,8 @@ exports.dice_re = dice_re;
 function parse_dice(frag) {
 	if (frag == '#flip')
 		return {n: 1, faces: 2};
-    if (frag == '#8ball')
-        return {n: 1, faces: hotConfig.EIGHT_BALL.length};
+	if (frag == '#8ball')
+		return {n: 1, faces: hotConfig.EIGHT_BALL.length};
 	// Increment counter
 	if (frag == '#pyu')
 		return {pyu: 'increment'};
@@ -407,7 +417,7 @@ function parse_dice(frag) {
 		return {q: true};
 	var m = frag.match(/^#(\d*)d(\d+)([+-]\d+)?$/i);
 	// Regular dice
-	if (m){
+	if (m) {
 		var n = parseInt(m[1], 10) || 1, faces = parseInt(m[2], 10);
 		if (n < 1 || n > 10 || faces < 2 || faces > 100)
 			return false;
@@ -418,20 +428,20 @@ function parse_dice(frag) {
 	}
 	// First capture group may or may not be present
 	var sw = frag.match(/^#sw(\d+:)?(\d+):(\d+)([+-]\d+)?$/i);
-	if (sw){
-		var hour= parseInt(sw[1], 10) || 0,
+	if (sw) {
+		var hour = parseInt(sw[1], 10) || 0,
 			min = parseInt(sw[2], 10),
 			sec = parseInt(sw[3], 10);
 		var time = serverTime();
 		// Offset the start. If the start is in the future,
 		// a countdown will be displayed
-		if (sw[4]){
+		if (sw[4]) {
 			var symbol = sw[4].slice(0, 1);
 			var offset = sw[4].slice(1) * 1000;
 			time = symbol == '+' ? time + offset : time - offset;
 		}
-		var end = ((hour*60+min)*60+sec)*1000+time;
-		return {hour:hour,min: min,sec:sec,start:time,end:end};
+		var end = ((hour * 60 + min) * 60 + sec) * 1000 + time;
+		return {hour: hour, min: min, sec: sec, start: time, end: end};
 	}
 }
 exports.parse_dice = parse_dice;
@@ -447,25 +457,25 @@ function serverTime() {
 function readable_dice(bit, d) {
 	if (bit == '#flip')
 		return '#flip (' + (d[1] == 2) + ')';
-    if (bit == '#8ball')
-        return '#8ball (' + hotConfig.EIGHT_BALL[d[1]- 1] + ')';
+	if (bit == '#8ball')
+		return '#8ball (' + hotConfig.EIGHT_BALL[d[1] - 1] + ')';
 	if (bit == '#pyu')
 		return '#pyu(' + d + ')';
 	if (bit == '#pcount')
 		return '#pcount(' + d + ')';
 	if (bit == '#q')
 		return '#q (' + d[0] + ')';
-	if(/^#sw/.test(bit)){
-		return safe('<syncwatch class="embed" start='+d[0].start+
-				" end="+d[0].end+
-				" hour="+d[0].hour+
-				" min="+d[0].min+
-				" sec="+d[0].sec+
-				' >syncwatch</syncwatch>');
+	if (/^#sw/.test(bit)) {
+		return safe('<syncwatch class="embed" start=' + d[0].start +
+			" end=" + d[0].end +
+			" hour=" + d[0].hour +
+			" min=" + d[0].min +
+			" sec=" + d[0].sec +
+			' >syncwatch</syncwatch>');
 	}
 	var n = d.length, b = 0;
-	if (d[n-1] && typeof d[n-1] == 'object') {
-		b = d[n-1].bias;
+	if (d[n - 1] && typeof d[n - 1] == 'object') {
+		b = d[n - 1].bias;
 		n--;
 	}
 	var r = d.slice(1, n);
@@ -482,7 +492,7 @@ function readable_dice(bit, d) {
 	return bit + (eq ? ' = ' : '') + sum + ')';
 }
 
-OS.geimu = function (text) {
+OS.geimu = function(text) {
 	if (!this.dice) {
 		this.eLinkify ? this.linkify(text) : this.callback(text);
 		return;
@@ -511,7 +521,7 @@ OS.geimu = function (text) {
 	}
 };
 
-OS.linkify = function (text) {
+OS.linkify = function(text) {
 
 	var bits = text.split(/(https?:\/\/[^\s"<>]*[^\s"<>'.,!?:;])/);
 	for (var i = 0; i < bits.length; i++) {
@@ -519,8 +529,8 @@ OS.linkify = function (text) {
 			var e = escape_html(bits[i]);
 			// open in new tab, and disavow target
 			this.callback(safe('<a href="' + e +
-					'" rel="nofollow" target="_blank">' +
-					e + '</a>'));
+				'" rel="nofollow" target="_blank">' +
+				e + '</a>'));
 		}
 		else
 			this.callback(bits[i]);
@@ -543,14 +553,14 @@ function chibi(imgnm, src) {
 	return bits;
 }
 
-OS.spoiler_info = function (index, toppu) {
+OS.spoiler_info = function(index, toppu) {
 	var large = toppu;
 	var hd = toppu || this.thumbStyle != 'small';
 	return {
 		thumb: encodeURI(mediaURL + 'kana/spoiler' + (hd ? '' : 's')
-				+ index + '.png'),
+			+ index + '.png'),
 		dims: large ? imagerConfig.THUMB_DIMENSIONS
-				: imagerConfig.PINKY_DIMENSIONS,
+			: imagerConfig.PINKY_DIMENSIONS,
 	};
 };
 
@@ -564,20 +574,20 @@ function pick_spoiler(metaIndex) {
 		i = Math.floor(Math.random() * n);
 	else
 		i = metaIndex % n;
-	return {index: imgs[i], next: (i+1) % n};
+	return {index: imgs[i], next: (i + 1) % n};
 }
 exports.pick_spoiler = pick_spoiler;
 
 function new_tab_link(srcEncoded, inside, cls, brackets) {
 	if (brackets)
-		inside = '['+inside+'] ';
+		inside = '[' + inside + '] ';
 	return [safe('<a href="' + srcEncoded + '" target="_blank"' +
-		(cls ? ' class="'+cls+'"' : '') +
-		' rel="nofollow">'), inside, safe('</a>')];
+			(cls ? ' class="' + cls + '"' : '') +
+			' rel="nofollow">'), inside, safe('</a>')];
 }
 
 
-OS.image_paths = function () {
+OS.image_paths = function() {
 	if (!this._imgPaths) {
 		this._imgPaths = {
 			src: mediaURL + 'src/',
@@ -592,14 +602,15 @@ OS.image_paths = function () {
 
 var audioIndicator = "\u266B"; // musical note
 
-OS.gazou = function (info, toppu) {
+OS.gazou = function(info, toppu) {
 	var src, caption;
 	// TODO: Unify archive and normal thread caption logic
 	if (info.vint) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
 		var google = encodeURI('../outbound/g/' + info.vint);
 		var iqdb = encodeURI('../outbound/iqdb/' + info.vint);
-		caption = ['Search ', new_tab_link(google, '[Google]'), ' ',
+		caption = [this.lang('search') + ' ', new_tab_link(google, '[Google]'),
+			' ',
 			new_tab_link(iqdb, '[iqdb]'), ' ',
 			new_tab_link(src, '[foolz]')];
 	}
@@ -611,7 +622,8 @@ OS.gazou = function (info, toppu) {
 		var exhentai = encodeURI('../outbound/exh/' + info.SHA1);
 		src = encodeURI(this.image_paths().src + info.src);
 		caption = [
-			new_tab_link(src, (this.thumbStyle == 'hide') ? '[Show]' : info.src, 'imageSrc'), ' ',
+			new_tab_link(src, (this.thumbStyle == 'hide') ? '[Show]'
+				: info.src, 'imageSrc'), ' ',
 			new_tab_link(google, 'G', 'imageSearch google', true),
 			new_tab_link(iqdb, 'Iq', 'imageSearch iqdb', true),
 			new_tab_link(saucenao, 'Sn', 'imageSearch saucenao', true),
@@ -638,9 +650,9 @@ OS.gazou = function (info, toppu) {
 		safe('</figure>\n\t')];
 };
 
-exports.thumbStyles = thumbStyles = ['small', 'sharp', 'hide'];
+exports.thumbStyles = ['small', 'sharp', 'hide'];
 
-OS.gazou_img = function (info, toppu, href) {
+OS.gazou_img = function(info, toppu, href) {
 	var src, thumb;
 	var imgPaths = this.image_paths();
 	var m = info.src ? /.gif$/.test(info.src) : false;
@@ -672,9 +684,9 @@ OS.gazou_img = function (info, toppu, href) {
 		th = h;
 	}
 
-	var img = '<img src="'+thumb+'"';
+	var img = '<img src="' + thumb + '"';
 	if (tw && th)
-		img += ' width="' +tw+'" height="'+th+'">';
+		img += ' width="' + tw + '" height="' + th + '">';
 	else
 		img += '>';
 	if (imagerConfig.IMAGE_HATS)
@@ -684,11 +696,11 @@ OS.gazou_img = function (info, toppu, href) {
 	return {html: img, src: src};
 };
 
-function escapeJSON(obj){
+function escapeJSON(obj) {
 	return encodeURIComponent(JSON.stringify(obj));
 }
 
-function catchJSON(string){
+function catchJSON(string) {
 	return JSON.parse(decodeURIComponent(string));
 }
 
@@ -707,7 +719,7 @@ function pad(n) {
 	return (n < 10 ? '0' : '') + n;
 }
 
-OS.readable_time = function (time) {
+OS.readable_time = function(time) {
 	var h = this.tz_offset;
 	var offset;
 	if (h || h == 0)
@@ -716,55 +728,48 @@ OS.readable_time = function (time) {
 		// XXX: would be nice not to construct new Dates all the time
 		offset = new Date().getTimezoneOffset() * -60 * 1000;
 
-	return readableTime(new Date(time + offset));
+	return this.readableDate(new Date(time + offset));
 };
 
-function readableTime(d) {
-	var week = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-		year = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-			'Oct', 'Nov', 'Dec'];
-
-	return pad(d.getUTCDate()) + ' ' + year[d.getUTCMonth()] + ' '
-		+ d.getUTCFullYear() + '(' + week[d.getUTCDay()] + ')'
+OS.readableDate = function(d) {
+	return pad(d.getUTCDate()) + ' ' + this.lang('year')[d.getUTCMonth()] + ' '
+		+ d.getUTCFullYear() + '(' + this.lang('week')[d.getUTCDay()] + ')'
 		+ pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes());
-}
+};
 
 // Readable elapsed time since post
-OS.relative_time = function(then, now){
-	var min  = Math.floor((now - then) / (60 * 1000));
+OS.relative_time = function(then, now) {
+	var min = Math.floor((now - then) / (60 * 1000)),
+		ago = this.lang('ago');
 	if (min < 1)
-		return 'just now';
+		return this.lang('just_now');
 	if (min < 60)
-		return format_time(min, 'minute');
-	var hours = Math.floor(min/60);
+		return ago(min, this.lang('unit_minute'));
+	var hours = Math.floor(min / 60);
 	if (hours < 24)
-		return format_time(hours, 'hour');
-	var days = Math.floor(hours/24);
+		return ago(hours, this.lang('unit_hour'));
+	var days = Math.floor(hours / 24);
 	if (days < 30)
-		return format_time(days, 'day');
-	var months = Math.floor(days/30);
+		return ago(days, this.lang('unit_day'));
+	var months = Math.floor(days / 30);
 	if (months < 12)
-		return format_time(months, 'month');
-	return format_time(Math.floor(months/12), 'year');
+		return ago(months, this.lang('unit_month'));
+	return ago(Math.floor(months / 12), this.lang('unit_year'));
 };
-
-function format_time(time, unit){
-	return pluralize(time, unit) + ' ago';
-}
 
 function datetime(time) {
 	var d = new Date(time);
-	return (d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' +
+	return (d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' +
 		pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' +
 		pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
 }
 
-OS.post_url = function (num, op, quote) {
+OS.post_url = function(num, op, quote) {
 	op = op || num;
 	return (this.op == op ? '' : op) + (quote ? '#q' : '#') + num;
 };
 
-OS.post_ref = function (num, op, desc_html) {
+OS.post_ref = function(num, op, desc_html) {
 	var ref = '&gt;&gt;' + num;
 	if (desc_html)
 		ref += ' ' + desc_html;
@@ -772,46 +777,51 @@ OS.post_ref = function (num, op, desc_html) {
 		ref += ' \u2192';
 	else if (num == op && this.op == op)
 		ref += ' (OP)';
-	return safe('<a href="'+this.post_url(num, op, false)+'">'+ref+'</a>');
+	return safe('<a href="' + this.post_url(num, op, false) + '">' + ref
+		+ '</a>');
 };
 
-OS.post_nav = function (post) {
+OS.post_nav = function(post) {
 	var n = post.num, o = post.op;
 	return safe('<nav><a href="' + this.post_url(n, o, false) +
-			'">No.</a><a href="' + this.post_url(n, o, true) +
-			'">' + n + '</a></nav>');
+		'">No.</a><a href="' + this.post_url(n, o, true) +
+		'">' + n + '</a></nav>');
 };
 
 function action_link_html(href, name, id) {
-	return '<span class="act"><a href="'+href+'"'+ (id?' id="'+id+'"':'') +'>'+name+'</a></span>';
+	return '<span class="act"><a href="' + href + '"'
+		+ (id ? ' id="' + id + '"' : '')
+		+ '>' + name + '</a></span>';
 }
 exports.action_link_html = action_link_html;
 
-reasonable_last_n = function (n) {
+reasonable_last_n = function(n) {
 	return Number.isInteger(n) && n >= 5 && n <= 500;
 };
 exports.reasonable_last_n = reasonable_last_n;
 
-OS.expansion_links_html = function (num) {
-	return ' &nbsp; ' + action_link_html(num, 'Expand') + ' '
-		+ action_link_html(num + '?last=' + this.lastN, 'Last&nbsp;' + this.lastN);
+OS.expansion_links_html = function(num) {
+	return ' &nbsp; ' + action_link_html(num, this.lang('expand')) + ' '
+		+ action_link_html(num + '?last=' + this.lastN, this.lang('last')
+			+ '&nbsp;' + this.lastN);
 };
 
-OS.atama = function (data) {
+OS.atama = function(data) {
 	var auth = data.auth;
-	var header = auth ? [safe('<b class="'),auth.toLowerCase(),safe('">')]
-			: [safe('<b>')];
+	var header = auth ? [safe('<b class="'), auth.toLowerCase(), safe('">')]
+		: [safe('<b>')];
 	if (data.subject)
 		header.unshift(safe('<h3>「'), data.subject, safe('」</h3> '));
 	if (data.name || !data.trip) {
-		header.push(data.name || DEF.ANON);
+		header.push(data.name || this.lang('anon'));
 		if (data.trip)
 			header.push(' ');
 	}
 	if (data.trip)
 		header.push(safe('<code>' + data.trip + '</code>'));
 	if (auth)
-		header.push(' ## ' + (auth == 'Admin' ? hotConfig.ADMIN_ALIAS : hotConfig.MOD_ALIAS));
+		header.push(' ## ' + (auth == 'Admin' ? hotConfig.ADMIN_ALIAS
+			: hotConfig.MOD_ALIAS));
 	this.trigger('headerName', {header: header, data: data});
 	header.push(safe('</b>'));
 	if (data.email) {
@@ -821,7 +831,8 @@ OS.atama = function (data) {
 	}
 	// Format according to client's relative post timestamp setting
 	var title = this.rTime ? this.readable_time(data.time) : '';
-	var text = this.rTime ? this.relative_time(data.time, new Date().getTime()) : this.readable_time(data.time);
+	var text = this.rTime ? this.relative_time(data.time, new Date().getTime())
+		: this.readable_time(data.time);
 	header.push(safe(' <time datetime="' + datetime(data.time) + '"' +
 		'title="' + title + '"' +
 		'>' + text + '</time> '),
@@ -836,21 +847,21 @@ OS.atama = function (data) {
 	return header;
 };
 
-OS.monogatari = function (data, toppu) {
+OS.monogatari = function(data, toppu) {
 	var tale = {header: this.atama(data)};
 	this.dice = data.dice;
 	var body = this.karada(data.body);
 	tale.body = [safe(
-		'<blockquote' +
-			(isNode ? ' data-body="'+ escapeJSON(data.body) +'"' : '') +'>'),
+			'<blockquote' +
+			(isNode ? ' data-body="' + escapeJSON(data.body) + '"' : '') + '>'),
 		body, safe('</blockquote>'
-	)];
+			)];
 	if (data.image && !data.hideimg)
 		tale.image = this.gazou(data.image, toppu);
 	return tale;
 };
 
-OS.mono = function (data) {
+OS.mono = function(data) {
 	var info = {
 		data: data,
 		classes: data.editing ? ['editing'] : [],
@@ -858,57 +869,45 @@ OS.mono = function (data) {
 	};
 	this.trigger('openArticle', info);
 	var cls = info.classes.length && info.classes.join(' '),
-	    o = safe('\t<article id="'+data.num+'"' +
-			(cls ? ' class="'+cls+'"' : '') +
-			(info.style ? ' style="'+info.style+'"' : '') +
+		o = safe('\t<article id="' + data.num + '"' +
+			(cls ? ' class="' + cls + '"' : '') +
+			(info.style ? ' style="' + info.style + '"' : '') +
 			'>'),
-	    c = safe('</article>\n'),
-	    gen = this.monogatari(data, false);
+		c = safe('</article>\n'),
+		gen = this.monogatari(data, false);
 	return flatten([o, gen.header, gen.image || '', gen.body, c]).join('');
 };
 
-OS.monomono = function (data, cls) {
+OS.monomono = function(data, cls) {
 	if (data.locked)
-		cls = cls ? cls+' locked' : 'locked';
+		cls = cls ? cls + ' locked' : 'locked';
 	var style;
 	var o = safe('<section id="' + data.num +
 		(cls ? '" class="' + cls : '') +
 		(style ? '" style="' + style : '') +
 		'" data-sync="' + (data.hctr || 0) +
-		(data.full ? '' : '" data-imgs="'+data.imgctr) + '">'),
-	    c = safe('</section>\n'),
-	    gen = this.monogatari(data, true);
+		(data.full ? '' : '" data-imgs="' + data.imgctr) + '">'),
+		c = safe('</section>\n'),
+		gen = this.monogatari(data, true);
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
 };
 
-function pluralize(n, noun) {
-	return n + ' ' + noun + (n == 1 ? '' : 's');
-}
-exports.pluralize = pluralize;
-
-function abbrev_msg(omit, img_omit) {
-	return omit + (omit==1 ? ' reply' : ' replies') + (img_omit
-		? ' and ' + pluralize(img_omit, 'image')
-		: '') + ' omitted.';
-};
-exports.abbrev_msg = abbrev_msg;
-
-parse_name = function (name) {
+parse_name = function(name) {
 	var tripcode = '', secure = '';
 	var hash = name.indexOf('#');
 	if (hash >= 0) {
-		tripcode = name.substr(hash+1);
+		tripcode = name.substr(hash + 1);
 		name = name.substr(0, hash);
 		hash = tripcode.indexOf('#');
 		if (hash >= 0) {
-			secure = escape_html(tripcode.substr(hash+1));
+			secure = escape_html(tripcode.substr(hash + 1));
 			tripcode = tripcode.substr(0, hash);
 		}
 		tripcode = escape_html(tripcode);
 	}
 	name = name.trim().replace(hotConfig.EXCLUDE_REGEXP, '');
 	return [name.substr(0, 100), tripcode.substr(0, 128),
-			secure.substr(0, 128)];
+		secure.substr(0, 128)];
 };
 exports.parse_name = parse_name;
 

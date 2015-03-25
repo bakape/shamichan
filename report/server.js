@@ -2,6 +2,7 @@ var caps = require('../server/caps'),
     config = require('./config'),
     common = require('../common'),
     db = require('../db'),
+	lang = require('../lang/'),
     mainConfig = require('../config'),
     msgcheck = require('../server/msgcheck'),
     okyaku = require('../server/okyaku'),
@@ -38,7 +39,7 @@ function report(reporter_ident, op, num, cb) {
 			return;
 		}
 
-		var name = (post.name || common.ANON)
+		var name = (post.name || lang[config.DEFAULT_LANG].anon)
 		if (name.length > 23)
 			name = name.slice(0, 20) + '...';
 		if (post.trip)

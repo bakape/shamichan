@@ -102,7 +102,9 @@ var clientConfig = _.pick(config,
 	'IP_TAGGING',
 	'RADIO',
 	'PYU',
-	'BOARDS'
+	'BOARDS',
+	'LANGS',
+	'DEFAULT_LANG'
 );
 var clientImager = _.pick(imager,
 	'WEBM',

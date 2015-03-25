@@ -1,6 +1,6 @@
 var caps = require('./caps'),
     common = require('../common'),
-    config = require('../config'),
+	config = require('../config'),
     db = require('../db'),
     imager = require('../imager'),
     STATE = require('./state'),
@@ -17,6 +17,12 @@ function tamashii(num) {
 		this.callback('>>' + num);
 }
 
+/*
+ * XXX: This entire module is a mess of redundancy and repitition.
+ * Everything but write_thread_html should be moved to OneeSama or the static
+ * templates. Some things can be offloaded to the client.
+ */
+
 exports.write_thread_html = function (reader, req, out, opts) {
 	var oneeSama = new common.OneeSama(tamashii);
 	oneeSama.tz_offset = req.tz_offset;
@@ -26,15 +32,17 @@ exports.write_thread_html = function (reader, req, out, opts) {
 
 	var cookies = web.parse_cookie(req.headers.cookie);
 	if (cookies.spoil == 'true')
-		oneeSama.spoilToggle = (cookies.spoil == 'true');
+		oneeSama.spoilToggle = true;
 	if (cookies.agif == 'true')
-		oneeSama.autoGif = (cookies.agif == 'true');
+		oneeSama.autoGif = true;
 	if (cookies.rTime == 'true')
 		oneeSama.rTime = true;
 	if (cookies.linkify == 'true')
 		oneeSama.eLinkify = true;
 	if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 		oneeSama.thumbStyle = cookies.thumb;
+	if (config.LANGS[cookies.lang])
+		oneeSama.language = cookies.lang;
 	var lastN = cookies.lastn && parseInt(cookies.lastn, 10);
 	if (!lastN || !common.reasonable_last_n(lastN))
 		lastN = STATE.hot.THREAD_LAST_N;
@@ -49,6 +57,23 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		});
 	}
 
+	// Top and bottom borders of the <threads> tag
+	// Chache pagination, as not to render twice
+	var pag;
+	reader.once('top', function(nav) {
+		// Navigation info is used to build pagination. None on thread pages
+		if (!nav)
+			out.write(threadsTop(oneeSama));
+		else {
+			pag = pagination(nav, oneeSama);
+			out.write(pag);
+		}
+		out.write('<hr class="sectionHr">\n');
+	});
+	reader.once('bottom', function() {
+		out.write(pag || threadsBottom(oneeSama));
+	});
+
 	var write_see_all_link;
 
 	reader.on('thread', function (op_post, omit, image_omit) {
@@ -62,20 +87,20 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		out.write(first.join(''));
 
 		write_see_all_link = omit && function (first_reply_num) {
-			var o = common.abbrev_msg(omit, image_omit);
+			var o = oneeSama.lang('abbrev_msg')(omit, image_omit);
 			if (opts.loadAllPostsLink) {
 				var url = '' + op_post.num;
 				if (first_reply_num)
 					url += '#' + first_reply_num;
-				o += ' '+common.action_link_html(url,
-						'See all');
+				o += ' '+common.action_link_html(url, oneeSama.lang('see_all'));
 			}
 			out.write('\t<span class="omit">'+o+'</span>\n');
 		};
 
-		reader.once('endthread', close_section);
+		reader.once('endthread', function() {
+			out.write('</section><hr class="sectionHr">\n');
+		});
 	});
-
 
 	reader.on('post', function (post) {
 		if (post.num in hidden || post.op in hidden)
@@ -86,11 +111,47 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		}
 		out.write(oneeSama.mono(post));
 	});
-
-	function close_section() {
-		out.write('</section><hr class="sectionHr">\n');
-	}
 };
+
+function pagination(info, oneeSama) {
+	var live = oneeSama.lang('live');
+	var bits = ['<nav class="pagination act">'], cur = info.cur_page;
+	if (cur >= 0)
+		bits.push('<a href=".">' + live + '</a>');
+	else
+		bits.push('<strong>' + live + '</strong>');
+	var start = 0, end = info.pages, step = 1;
+	if (info.ascending) {
+		start = end - 1;
+		end = step = -1;
+	}
+	for (var i = start; i != end; i += step) {
+		if (i != cur)
+			bits.push('<a href="page' + i + '">' + i + '</a>');
+		else
+			bits.push('<strong>' + i + '</strong>');
+	}
+	bits.push('] [<a class="catalogLink">' + oneeSama.lang('catalog') + '</a>');
+	bits.push('</nav>');
+	return bits.join('');
+}
+
+
+function threadsTop(oneeSama) {
+	return common.action_link_html('#bottom', oneeSama.lang('bottom'))
+		+ '&nbsp;'
+		+ common.action_link_html(
+			'',
+			oneeSama.lang('expand_images'),
+			'expandImages'
+		);
+}
+
+function threadsBottom(oneeSama) {
+	return common.action_link_html('.',	oneeSama.lang('return'), 'bottom')
+		+ '&nbsp;'
+		+ common.action_link_html('#', oneeSama.lang('top'));
+}
 
 function make_link_rels(board, bits) {
 	var path = imager.config.MEDIA_URL + 'css/',
@@ -153,9 +214,6 @@ exports.write_thread_head = function (out, board, op, opts) {
 	out.write(indexTmpl[i++]);
 	out.write(title);
 	out.write(indexTmpl[i++]);
-	out.write(common.action_link_html('#bottom', 'Bottom'));
-	out.write(common.action_link_html('', 'Expand Images', 'expandImages'));
-	out.write('<hr class="sectionHr">\n');
 };
 
 exports.write_thread_title = function(out, board, op, opts){
@@ -165,9 +223,6 @@ exports.write_thread_title = function(out, board, op, opts){
 	else
 		title += ' - #' + op;
 	out.write('<h1>'+title+'</h1>');
-	out.write(common.action_link_html('#bottom', 'Bottom'));
-	out.write(common.action_link_html('', 'Expand Images', 'expandImages'));
-	out.write('<hr class="sectionHr">\n');
 };
 
 function make_board_meta(board, info) {
@@ -184,38 +239,10 @@ function make_thread_meta(board, num, abbrev) {
 	return make_link_rels(board, bits);
 }
 
-exports.make_pagination_html = function (info) {
-	var bits = ['<nav class="pagination act">'], cur = info.cur_page;
-	if (cur >= 0)
-		bits.push('<a href=".">live</a>');
-	else
-		bits.push('<strong>live</strong>');
-	var start = 0, end = info.pages, step = 1;
-	if (info.ascending) {
-		start = end - 1;
-		end = step = -1;
-	}
-	for (var i = start; i != end; i += step) {
-		if (i != cur)
-			bits.push('<a href="page' + i + '">' + i + '</a>');
-		else
-			bits.push('<strong>' + i + '</strong>');
-	}
-	bits.push('] [<a class="catalogLink">Catalog</a>');
-	bits.push('</nav>');
-	return bits.join('');
-};
-
-var returnHTML = common.action_link_html('.', 'Return').replace(
-		'span', 'span id="bottom"').replace('</span>', '] [<a href="#">Top</a></span>');
-
-exports.write_page_end = function (out, ident, returnLink, min, alpha) {
-	if (returnLink)
-		out.write(returnHTML);
+exports.write_page_end = function (out, ident, alpha) {
 	var last = RES[alpha ? 'alphaTmpl' : 'indexTmpl'].length - 1;
-	if (!min)
 		out.write(RES[alpha ? 'alphaTmpl' : 'indexTmpl'][last]);
-	if (ident && !min) {
+	if (ident) {
 		if (caps.can_administrate(ident))
 			out.write('<script src="../admin.js"></script>\n');
 		else if (caps.can_moderate(ident))

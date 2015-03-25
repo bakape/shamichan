@@ -515,8 +515,8 @@ var OptionsView = Backbone.View.extend({
 			else if (type instanceof Array) {
 				$input = $('<select/>');
 				type.forEach(function(opt) {
-					$input.append('<option value="' + opt + '">' + opt
-						+ '</option>');
+					$input.append('<option value="' + opt + '">'
+						+ main.oneeSama.lang(opt) + '</option>');
 				});
 				$input.val(model.getValue());
 			}
@@ -639,7 +639,7 @@ var OptionsView = Backbone.View.extend({
 			val = !!target.checked;
 		else if (type == 'number')
 			val = parseInt(val);
-		// Not recorder; extracted directly by the background handler
+		// Not recorded; extracted directly by the background handler
 		else if (type == 'image')
 			// FIXME
 			return; //background.genCustom(target.result);

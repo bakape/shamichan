@@ -352,23 +352,25 @@ function (req, resp) {
 
 	var yaku = new db.Yakusoku(board, req.ident);
 	yaku.get_tag(-1);
-	var paginationHtml;
 	yaku.once('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1, board == 'archive');
 		if (!min)
 			render.write_board_head(resp, board, nav, alpha);
 		else
 			render.write_board_title(resp, board);
-		paginationHtml = render.make_pagination_html(nav);
-		resp.write(paginationHtml);
-		resp.write('<hr class="sectionHr">\n');
+		// Have write_thread_html render the top pagination
+		yaku.emit('top', nav);
 	});
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
-	var opts = {fullLinks: true, board: board};
-	render.write_thread_html(yaku, req, resp, opts);
+	render.write_thread_html(yaku, req, resp, {
+		fullLinks: true,
+		board: board
+	});
 	yaku.once('end', function () {
-		resp.write(paginationHtml);
-		render.write_page_end(resp, req.ident, false, min, alpha);
+		// Have write_thread_html append bottom pagination
+		yaku.emit('bottom');
+		if (!min)
+			render.write_page_end(resp, req.ident);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -421,16 +423,19 @@ function (req, resp) {
 		render.write_board_head(resp, board, nav);
 	else
 		render.write_board_title(resp, board);
-	var paginationHtml = render.make_pagination_html(nav);
-	resp.write(paginationHtml);
-	resp.write('<hr class="sectionHr">\n');
 
-	var opts = {fullLinks: true, board: board};
-	render.write_thread_html(this.yaku, req, resp, opts);
+	// XXX: Emitting right after defing the handler is retarded. Need to unify
+	// the render code some more
+	render.write_thread_html(this.yaku, req, resp, {
+		fullLinks: true,
+		board: board
+	});
+	this.yaku.emit('top', nav);
 	var self = this;
 	this.yaku.once('end', function () {
-		resp.write(paginationHtml);
-		render.write_page_end(resp, req.ident, false, min);
+		self.yaku.emit('bottom');
+		if (!min)
+			render.write_page_end(resp, req.ident);
 		resp.end();
 		self.finished();
 	});
@@ -519,10 +524,10 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			var thumb = req.cookies.thumb;
 			if (thumb && common.thumbStyles.indexOf(thumb) >= 0)
 				etag += '-' + thumb;
-			for (var i of ['spoil', 'agif', 'rtime', 'linkify']) {
-				if (chunks[i])
-					etag += '-' + i;
-			}
+			['spoil', 'agif', 'rtime', 'linkify', 'lang'].forEach(function(tag) {
+				if (chunks[tag])
+					etag += '-' + tag + '-' + chunks[tag];
+			});
 			if (lastN)
 				etag += '-last' + lastN;
 			if (preThread.locked)
@@ -561,8 +566,7 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board, op = this.op;
-	var min = !!req.query.minimal,
-		alpha = req.query.alpha;
+	var min = !!req.query.minimal;
 
 	resp = write_gzip_head(req, resp, this.headers);
 	if (!min){
@@ -575,14 +579,21 @@ function (req, resp) {
 		render.write_thread_title(resp, board, op, {
 			subject: this.subject,
 			abbrev: this.abbrev,
-			alpha: alpha
 		});
 	}
-	var opts = {fullPosts: true, board: board, loadAllPostsLink: true};
-	render.write_thread_html(this.reader, req, resp, opts);
+	render.write_thread_html(this.reader, req, resp, {
+		fullPosts: true,
+		board: board,
+		loadAllPostsLink: true,
+		ishread: true
+	});
+	this.reader.emit('top');
 	var self = this;
 	this.reader.once('end', function () {
-		render.write_page_end(resp, req.ident, true, min, alpha);
+		// Have write_thread_html write the [Return][Top]
+		self.reader.emit('bottom');
+		if (!min)
+			render.write_page_end(resp, req.ident);
 		resp.end();
 		self.finished();
 	});
