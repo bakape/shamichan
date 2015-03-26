@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses Semantic Versioning http://semver.org/
 
+##0.11.3 - 2015-23-19
+###Fixed
+- Server crash, when thread expiry is not defined for all boards
+
 ##0.11.2 - 2015-23-19
 ###Fixed
 - "Clear hidden" button now only renders on the General tab of options
@@ -94,7 +98,7 @@ not work on threads created prior to 0.10.0)
 - All threads now have both [Expand] and [Last n] links
 - Now using [io.js](https://iojs.org) instead of node.js. At the moment
 of writing should still
-  be compatible with node.js v0.12.x. When upgrading be sure to run 
+  be compatible with node.js v0.12.x. When upgrading be sure to run
 `make clean; npm update; npm install` from meguca's root directory
 
 ## 0.8.0 - 2015-01-30

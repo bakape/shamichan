@@ -357,7 +357,8 @@ function load_OPs(callback) {
 }
 
 function expiry_queue_score(time, board) {
-	var expiry = config.THREAD_EXPIRY[board];
+	// Use default of 7 days, if not configured
+	var expiry = config.THREAD_EXPIRY[board] || 3600 * 24 * 7;
 	return Math.floor(parseInt(time, 10)/1000 + expiry);
 }
 
