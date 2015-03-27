@@ -7,7 +7,7 @@ var async = require('async'),
 	Muggle = etc.Muggle,
 	imagerDb = require('./db'),
 	index = require('./'),
-	findapng = require('./findapng.node').findapngCpp,
+	findapng = require('./findapng.node'),
 	formidable = require('formidable'),
 	fs = require('fs'),
 	jobs = require('./jobs'),
@@ -133,10 +133,10 @@ IU.handle_request = function (req, resp) {
 	};
 	var self = this;
 	form.once('error', function (err) {
-		self.failure(Muggle(this.lang.im_req_problem, err));
+		self.failure(Muggle(self.lang.im_req_problem, err));
 	});
 	form.once('aborted', function (err) {
-		self.failure(Muggle(this.lang.im_aborted, err));
+		self.failure(Muggle(self.lang.im_aborted, err));
 	});
 	this.lastProgress = 0;
 	form.on('progress', this.upload_progress_status.bind(this));
@@ -180,7 +180,7 @@ IU.parse_form = function (err, fields, files) {
 	var self = this;
 	this.db.track_temporary(this.image.path, function (err) {
 		if (err)
-			winston.warn(this.lang.im_temp_tracking + err);
+			winston.warn(self.lang.im_temp_tracking + err);
 		self.process();
 	});
 };
@@ -310,40 +310,159 @@ IU.verify_webm = function (err, info) {
 };
 
 IU.verify_image = function () {
-	var image = this.image;
+	var image = this.image,
+		stream = fs.createReadStream(image.path);
 	this.tagged_path = image.ext.replace('.', '') + ':' + image.path;
+
+	var self = this;
+	stream.once('err', function(err) {
+		winston.error(err);
+		stream.close();
+		self.failure(Muggle(err));
+	});
 	var checks = {
 		// Get more accurate filesize. Formidable passes the gzipped one
 		stat: fs.stat.bind(fs, image.video || image.path),
-		dims: identify.bind(this, this.tagged_path),
+		dims: identify.bind(null, stream),
+		hash: perceptual_hash.bind(null, stream)
 	};
-	if (image.ext == '.png'){
-		checks.apng = function(callback){
-			callback(null, findapng(image.path));
-		};
-	}
+	if (image.ext == '.png')
+		checks.apng = detectAPNG.bind(null, stream);
 
-	var self = this;
 	async.parallel(checks, function (err, rs) {
 		if (err)
-			return self.failure(Muggle(self.lang.im_bad));
+			/*
+			 * All functions, except for fs.stat() will return a localisable
+			 * error message
+			 */
+			return self.failure(Muggle(self.lang[err] || err));
 		image.size = rs.stat.size;
 		image.dims = [rs.dims.width, rs.dims.height];
-		if (rs.apng !== undefined){
-			if (rs.apng < 0)
-				return self.failure(Muggle(self.lang.im_not_png));
-			if (rs.apng)
-				image.apng = 1;
-		}
+		image.hash = rs.hash;
+		if (rs.apng)
+			image.apng = true;
 		self.verified();
 	});
 };
 
+// Look up binary paths
+var identifyBin, convertBin, exiftoolBin, ffmpegBin, pngquantBin;
+etc.which('identify', function (bin) { identifyBin = bin; });
+etc.which('convert', function (bin) { convertBin = bin; });
+if (config.DEL_EXIF)
+	etc.which('exiftool', function (bin) { exiftoolBin = bin; });
+if (config.WEBM)
+	etc.which('ffmpeg', function (bin) { ffmpegBin = bin; });
+if (config.PNG_THUMBS)
+	etc.which('pngquant', function (bin) { pngquantBin = bin; });
+
+// Flow control and callbacks of stream -> child process jobs
+function undine(stream, child, cb) {
+	// Hold the response buffers for later concatenation
+	var stderr = [],
+		stdout = [];
+	stream.pipe(child.stdin);
+	// Proxy errors to stream
+	child.once('error', function(err) {
+		stream.emit('error', err);
+	});
+	child.stderr.on('data', function(data) {
+		stderr.push(data);
+	});
+	child.stdout.on('data', function(data) {
+		stdout.push(data);
+	});
+	child.once('close', function() {
+		stderr = stderr.length === 0 ? null : Buffer.concat(stderr);
+		cb(stderr, Buffer.concat(stdout));
+	});
+}
+
+// Pass file to imagemagick's identify
+function identify(stream, cb) {
+	undine(stream, child_process.spawn(identifyBin, ['-', '-format', '%Wx%H']),
+		function(err, out) {
+			if (err) {
+				var msg = 'im_bad';
+				err = err.toString();
+				if (err.match(/no such file/i))
+					msg = 'im_missing';
+				else if (err.match(/improper image header/i))
+					msg = 'im_not_image';
+				else if (err.match(/no decode delegate/i))
+					msg = 'im_unsupported';
+				return cb(msg);
+			}
+			const m = out.toString().trim().match(/(\d+)x(\d+)/);
+			if (!m)
+				return cb('im_dims_fail');
+			else {
+				return cb(null, {
+					width: parseInt(m[1], 10),
+					height: parseInt(m[2], 10)
+				});
+			}
+		}
+	);
+}
+
+function detectAPNG(stream, cb) {
+	var detector = new findapng.apngDetector(),
+		done;
+	/*
+	 * If it throws an exception, that's pretty much it for the server. Don't
+	 * know if there is actually a better method of error handling for native
+	 * code.
+	 */
+	stream.on('data', function(data) {
+		if (done)
+			return;
+		const result = detector.Detect(data),
+			isAPNG = result === 1;
+		if (isAPNG || result === 2) {
+			done = true;
+			cb(null, isAPNG);
+		}
+	});
+}
+
+/*
+ * In-memory image duplicate detection ala findimagedupes.pl.
+ * stream -> convert -> buffer
+ */
+function perceptual_hash(stream, cb) {
+	undine(stream, child_process.spawn(convertBin, [
+			'-',
+			'-background', 'white', '-mosaic', '+matte',
+			'-sample', '160x160!',
+			'-type', 'grayscale',
+			'-blur', '2x2',
+			'-normalize',
+			'-equalize', '1',
+			'-scale', '16x16',
+			'-depth', '1',
+			'r:-'
+		]),
+		function(err, out) {
+			/*
+			 * Let error fall trough silently. identify() can do the detailed
+			 * error logging.
+			 */
+			// Last char is always padding '='
+			out = out.toString('base64').slice(0, -1);
+			if (out.length !== 43)
+				return cb('im_hashing');
+			cb(null, out);
+		}
+	);
+}
+
 IU.verified = function() {
 	if (this.failed)
 		return;
-	var desc = this.image.video ? this.lang.im_video : this.lang.im_image;
-	var w = this.image.dims[0], h = this.image.dims[1];
+	const desc = this.image.video ? this.lang.im_video : this.lang.im_image,
+		w = this.image.dims[0],
+		h = this.image.dims[1];
 	if (!w || !h)
 		return this.failure(Muggle(this.lang.im_bad_dims));
 	if (config.IMAGE_PIXELS_MAX && w * h > config.IMAGE_PIXELS_MAX)
@@ -356,15 +475,11 @@ IU.verified = function() {
 		return this.failure(Muggle(desc + this.lang.im_too_tall));
 
 	var self = this;
-	perceptual_hash(this.tagged_path, this.image, function(err, hash) {
+	// Perform hash comparison against the database
+	self.db.check_duplicate(self.image.hash, function(err) {
 		if (err)
 			return self.failure(err);
-		self.image.hash = hash;
-		self.db.check_duplicate(hash, function(err) {
-			if (err)
-				return self.failure(err);
-			self.sha1();
-		});
+		self.sha1();
 	});
 };
 
@@ -465,42 +580,6 @@ IU.got_nails = function () {
 	this.record_image(tmps);
 };
 
-// Look up binary paths
-var identifyBin, convertBin, exiftoolBin, ffmpegBin, pngquantBin;
-etc.which('identify', function (bin) { identifyBin = bin; });
-etc.which('convert', function (bin) { convertBin = bin; });
-if (config.DEL_EXIF)
-	etc.which('exiftool', function (bin) { exiftoolBin = bin; });
-if (config.WEBM)
-	etc.which('ffmpeg', function (bin) { ffmpegBin = bin; });
-if (config.PNG_THUMBS)
-	etc.which('pngquant', function (bin) { pngquantBin = bin; });
-
-function identify(taggedName, callback) {
-	var args = ['-format', '%Wx%H', taggedName + '[0]'],
-		self = this;
-	child_process.execFile(identifyBin, args, function (err,stdout,stderr){
-		if (err) {
-			var msg = self.lang.im_bad;
-			if (stderr.match(/no such file/i))
-				msg = this.lang.im_missing;
-			else if (stderr.match(/improper image header/i))
-				msg = self.lang.im_not_image;
-			else if (stderr.match(/no decode delegate/i))
-				msg = self.lang.im_unsupported;
-			return callback(Muggle(msg, stderr));
-		}
-
-		var line = stdout.trim();
-		var m = line.match(/(\d+)x(\d+)/);
-		if (!m)
-			callback(Muggle(self.lang.im_dims_fail));
-		else
-			callback(null, {width: parseInt(m[1], 10),
-				height: parseInt(m[2], 10)});
-	});
-}
-
 function ConvertJob(args, src) {
 	jobs.Job.call(this);
 	this.args = args;
@@ -522,36 +601,6 @@ ConvertJob.prototype.describe_job = function () {
 
 function convert(args, src, callback) {
 	jobs.schedule(new ConvertJob(args, src), callback);
-}
-
-function perceptual_hash(src, image, callback) {
-	var tmp = index.media_path('tmp',
-			'hash' + etc.random_id() + '.gray');
-	var args = [src + '[0]'];
-	if (image.dims.width > 1000 || image.dims.height > 1000)
-		args.push('-sample', '800x800');
-	// do you believe in magic?
-	args.push('-background', 'white', '-mosaic', '+matte',
-			'-scale', '160x160!',
-			'-type', 'grayscale',
-			'-blur', '2x2',
-			'-normalize',
-			'-equalize',
-			'-scale', '16x16',
-			'-depth', '1',
-			'r:'+tmp);
-	convert(args, src, function(err) {
-		if (err)
-			return callback(Muggle(this.lang.im_hashing, err));
-		fs.readFile(tmp, 'base64', function (err,data){
-			fs.unlink(tmp);
-			// Last char is always padding (=)
-			data = data.slice(0, -1);
-			if (err || data.length != 43)
-				return callback(Muggle(this.lang.im_hashing));
-			callback(null,data);
-		});
-	});
 }
 
 function setup_image_params(o) {
