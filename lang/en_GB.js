@@ -88,14 +88,13 @@ const lang = {
 	im_too_wide_and_tall: ' is too wide and too tall.',
 	im_too_wide: ' is too wide.', // No such thing
 	im_too_tall: ' is too tall.',
-	im_sha1: 'SHA1 hashing error: ',
 	im_thumbnailing: 'Thumbnailing...',
 	im_not_image: 'File is not an image',
 	im_unsupported: "Unsupported file type.",
 	im_dims_fail: "Couldn't read image dimensions.",
 	im_hashing: 'Hashing error.',
 	im_resizing: "Resizing error.",
-	im_pngquant: "Pngquant thumbnailing error: ",
+	im_pngquant: "Pngquant thumbnailing error.",
 	im_unknown: 'Unknown image processing error.',
 };
 

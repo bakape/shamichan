@@ -12,7 +12,7 @@
             "include_dirs" : [
                 "<!(node -e \"require('nan')\")"
             ],
-            "sources": [ "findapng.cpp"]
+            "sources": [ "findapng.cpp","apngDetector.cpp"]
         }
     ]
 }

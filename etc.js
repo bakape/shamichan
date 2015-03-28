@@ -4,6 +4,11 @@ var child_process = require('child_process'),
 
 /* Non-wizard-friendly error message */
 function Muggle(message, reason) {
+	// Enable passing an array instead of 2 arguments
+	if (message instanceof Array) {
+		reason = message[1];
+		message = message[0];
+	}
 	if (!(this instanceof Muggle))
 		return new Muggle(message, reason);
 	Error.call(this, message);
