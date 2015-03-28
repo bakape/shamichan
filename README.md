@@ -49,7 +49,7 @@ the `--harmony` flag)
 
 * ffmpeg 2.2+ for WebM support
   * with libmp3lame for MP3
-* pngquant  2.3.1+ for PNG thumbnails
+* pngquant  2.3.0+ for PNG thumbnails
 
 ###Optional npm dependancies
 * ~~daemon~~ (broken currently)

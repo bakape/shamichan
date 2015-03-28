@@ -226,7 +226,7 @@ StillJob.prototype.perform_job = function () {
 		],
 		{env: {AV_LOG_FORCE_NOCOLOR: '1'}},
 		function (err, stdout, stderr) {
-			const lines = (stderr ? stderr.split('\n') : [])[0],
+			const first = (stderr ? stderr.split('\n') : [])[0],
 				is_webm = /matroska,webm/i.test(first),
 				isMP3 = /mp3/i.test(first);
 			if (err) {
@@ -348,14 +348,12 @@ IU.verify_image = function () {
 var identifyBin, convertBin, exiftoolBin, ffmpegBin, pngquantBin;
 etc.which('identify', function (bin) { identifyBin = bin; });
 etc.which('convert', function (bin) { convertBin = bin; });
-if (config.DEL_EXIF)
-	etc.which('exiftool', function (bin) { exiftoolBin = bin; });
-if (config.WEBM)
-	etc.which('ffmpeg', function (bin) { ffmpegBin = bin; });
 if (config.PNG_THUMBS)
 	etc.which('pngquant', function (bin) { pngquantBin = bin; });
+if (config.WEBM)
+	etc.which('ffmpeg', function (bin) { ffmpegBin = bin; });
 
-// Flow control and callbacks of stream -> child process jobs
+// Flow control and callbacks of stream -> child process -> buffer jobs
 function undine(stream, child, cb) {
 	// Hold the response buffers for later concatenation
 	var stderr = [],
@@ -372,8 +370,8 @@ function undine(stream, child, cb) {
 		stdout.push(data);
 	});
 	child.once('close', function() {
-		stderr = stderr.length === 0 ? null : Buffer.concat(stderr);
-		cb(stderr, Buffer.concat(stdout));
+		var err = stderr.length === 0 ? null : Buffer.concat(stderr);
+		cb(err, Buffer.concat(stdout));
 	});
 }
 
@@ -425,10 +423,7 @@ function detectAPNG(stream, cb) {
 	});
 }
 
-/*
- * In-memory image duplicate detection ala findimagedupes.pl.
- * stream -> convert -> buffer
- */
+// In-memory image duplicate detection ala findimagedupes.pl.
 function perceptual_hash(stream, cb) {
 	undine(stream, child_process.spawn(convertBin, [
 			'-',
@@ -478,7 +473,7 @@ IU.verified = function() {
 	self.db.check_duplicate(self.image.hash, function(err) {
 		if (err)
 			return self.failure(err);
-		self.sha1();
+		self.deduped();
 	});
 };
 
@@ -489,22 +484,7 @@ IU.fill_in_specs = function (specs, kind) {
 	this.image[kind + '_path'] = specs.dest;
 };
 
-IU.sha1 = function(){
-	var f = fs.ReadStream(this.image.path),
-		sha1sum = crypto.createHash('sha1'),
-		self = this;
-	f.on('data', function(d){
-		sha1sum.update(d);
-	});
-	f.on('error', function(err){
-		self.failure(Muggle(this.lang.sha1 + err));
-	});
-	f.on('end', function(){
-		self.image.SHA1 = sha1sum.digest('hex');
-		self.deduped();
-	});
-};
-
+// Start the thumbnailing pathway
 IU.deduped = function () {
 	if (this.failed)
 		return;
@@ -520,33 +500,159 @@ IU.deduped = function () {
 			&& w <= specs.dims[0] && h <= specs.dims[1]) {
 		return this.got_nails();
 	}
-	this.fill_in_specs(specs, 'thumb');
-	var self = this;
+
+	var self = this,
+		stream = fs.createReadStream(image.path);
+	stream.once('error', function(err) {
+		self.failure(Muggle(this.lang.im_resizing, err));
+	});
+	self.status(this.lang.im_thumbnailing);
+	self.fill_in_specs(specs, 'thumb');
 	image.dims = [w, h].concat(specs.dims);
-	this.status(this.lang.im_thumbnailing);
-	self.resize_and_track(specs, function (err) {
+	var pipes = {
+		// Default 125x125 thumbnail
+		thumb: function(cb) {
+			self.resize_image(specs, stream, cb);
+		},
+		sha1: sha1Hash.bind(null, stream)
+	};
+	if (config.EXTRA_MID_THUMBNAILS) {
+		// Extra 250x250 thumbnail
+		pipes.mid = function(cb) {
+			var specs = get_thumb_specs(image, self.pinky, 2);
+			self.fill_in_specs(specs, 'mid');
+			self.resize_image(specs, stream, cb);
+		}
+	}
+
+	async.parallel(pipes, function(err, res) {
 		if (err)
 			return self.failure(err);
-
-		if (config.EXTRA_MID_THUMBNAILS)
-			self.middle_nail();
-		else
-			self.got_nails();
+		self.image.SHA1 = res.sha1;
+		self.got_nails();
 	});
 };
 
-IU.middle_nail = function () {
-	if (this.failed)
+/*
+ * Currently only used for exhentai image search, but might as well do it for
+ * everything for consistency.
+ */
+function sha1Hash(stream, cb){
+	var sha1sum = crypto.createHash('sha1');
+	stream.on('data', function(data) {
+		sha1sum.update(data);
+	});
+	stream.once('error', function(err) {
+		stream.emit('error', err);
+	});
+	stream.once('end', function() {
+		cb(null, sha1sum.digest('hex'));
+	});
+};
+
+IU.resize_image = function(o, stream, cb) {
+	var args = build_im_args(o);
+	// force new size
+	args.push('-resize', o.flatDims + '!', '-gamma', '2.2');
+	// add background
+	if (o.bg)
+		args.push('-background', o.bg, '-layers', 'mosaic', '+matte');
+	// disregard metadata, acquire artifacts
+	args.push('-strip');
+	// o.quality differs for PNG and non-PNG thumbs
+	if (o.bg)
+		args.push('-quality', o.quality);
+	args.push(o.dest);
+
+	var self = this,
+		convert = child_process.spawn(convertBin, args),
+		stderr = [];
+	stream.pipe(convert.stdin);
+	convert.once('error', function(err) {
+		stream.emit('error', err);
+	});
+	convert.stderr.on('data', function(data) {
+		stderr.push(data);
+	});
+
+	// Lossy PNG compression
+	if (!o.bg)
+		return self.pngquant(stream, convert.stdout, o.fnm, o.quality, cb);
+
+	convert.once('close', function() {
+		if (stderr.length !== 0) {
+			var err = Buffer.concat(stderr).toString();
+			winston.warn(err);
+			return cb(Muggle(self.lang.im_resizing, err));
+		}
+		self.db.track_temporary(o.fnm, cb);
+	});
+};
+
+function build_im_args(o) {
+	// avoid OOM killer
+	var args = ['-limit', 'memory', '32', '-limit', 'map', '64'];
+	const dims = o.dims;
+	// resample from twice the thumbnail size
+	// (avoid sampling from the entirety of enormous 6000x6000 images etc)
+	const samp = dims[0]*2 + 'x' + dims[1]*2;
+	if (o.ext == '.jpg')
+		args.push('-define', 'jpeg:size=' + samp);
+	setup_image_params(o);
+	// Process only the first frame from stdin
+	args.push('-[0]');
+	if (o.ext != '.jpg')
+		args.push('-sample', samp);
+	// gamma-correct yet shitty downsampling
+	args.push('-gamma', '0.454545', '-filter', 'box');
+	return args;
+}
+
+function setup_image_params(o) {
+	// only the first time!
+	if (o.setup)
 		return;
+	o.setup = true;
 
-	var specs = get_thumb_specs(this.image, this.pinky, 2);
-	this.fill_in_specs(specs, 'mid');
+	// Store image filename without imagemagick prefix
+	o.fnm = o.dest;
+	/*
+	 * PNG files will also be piped into pngquant, if PNG_THUMBS enabled.
+	 * Otherwise will write straight to disk.
+	 */
+	o.dest = o.format + ':' + (o.bg ? o.dest : '-');
+	o.flatDims = o.dims[0] + 'x' + o.dims[1];
+	o.quality += ''; // coerce to string
+}
 
-	var self = this;
-	this.resize_and_track(specs, function (err) {
-		if (err)
-			self.failure(err);
-		self.got_nails();
+// Lossy PNG compression
+IU.pngquant = function(stream, out, dest, quality, cb) {
+	var child = child_process.spawn(pngquantBin, [
+		'--quality', quality, '-'
+	]);
+	var stderr = [];
+	out.pipe(child.stdin);
+	/*
+	 * pngquant can only pipe to sdtdout, when piped in through stdin. Retarded,
+	 * I know. So we need to pipe it back to node's writestream.
+	 */
+	child.stdout.pipe(fs.createWriteStream(dest));
+	child.once('error', function(err) {
+		stream.emit('error', err);
+	});
+	child.stderr.on('data', function(data) {
+		stderr.push(data);
+	});
+	var self =this;
+	child.once('close', function() {
+		if (stderr.length !==0) {
+			var err = Buffer.concat(stderr).toString();
+			winston.warn(err);
+			return cb(Muggle(self.lang.im_pngquant, err));
+		}
+		// PNG thumbnails generated
+		self.image.png_thumbs = true;
+		self.db.track_temporary(dest, cb);
 	});
 };
 
@@ -563,128 +669,23 @@ IU.got_nails = function () {
 		delete image.mp3;
 	}
 
-	var time = Date.now();
+	const time = Date.now();
 	image.src = time + image.ext;
-	var base = path.basename;
-	var tmps = {src: base(image.path)};
+	var	base = path.basename,
+		tmps = {src: base(image.path)};
+	// Thumbnail extension
+	const ext = image.png_thumbs ? '.png' : '.jpg';
 
 	if (image.thumb_path) {
-		image.thumb = time + '.jpg';
+		image.thumb = time + ext;
 		tmps.thumb = base(image.thumb_path);
 	}
 	if (image.mid_path) {
-		image.mid = time + '.jpg';
+		image.mid = time + ext;
 		tmps.mid = base(image.mid_path);
 	}
 
 	this.record_image(tmps);
-};
-
-function ConvertJob(args, src) {
-	jobs.Job.call(this);
-	this.args = args;
-	this.src = src;
-}
-util.inherits(ConvertJob, jobs.Job);
-
-ConvertJob.prototype.perform_job = function () {
-	var self = this;
-	child_process.execFile(convertBin, this.args,
-				function (err, stdout, stderr) {
-		self.finish_job(err ? (stderr || err) : null);
-	});
-};
-
-ConvertJob.prototype.describe_job = function () {
-	return "ImageMagick conversion of " + this.src;
-};
-
-function convert(args, src, callback) {
-	jobs.schedule(new ConvertJob(args, src), callback);
-}
-
-function setup_image_params(o) {
-	// only the first time!
-	if (o.setup) return;
-	o.setup = true;
-
-	o.src += '[0]'; // just the first frame of the animation
-
-	o.dest = o.format + ':' + o.dest;
-	o.flatDims = o.dims[0] + 'x' + o.dims[1];
-	o.quality += ''; // coerce to string
-}
-
-function build_im_args(o) {
-	// avoid OOM killer
-	var args = ['-limit', 'memory', '32', '-limit', 'map', '64'];
-	var dims = o.dims;
-	// resample from twice the thumbnail size
-	// (avoid sampling from the entirety of enormous 6000x6000 images etc)
-	var samp = dims[0]*2 + 'x' + dims[1]*2;
-	if (o.ext == '.jpg')
-		args.push('-define', 'jpeg:size=' + samp);
-	setup_image_params(o);
-	args.push(o.src);
-	if (o.ext != '.jpg')
-		args.push('-sample', samp);
-	// gamma-correct yet shitty downsampling
-	args.push('-gamma', '0.454545', '-filter', 'box');
-	return args;
-}
-
-IU.resize_image = function(o, callback) {
-	var args = build_im_args(o);
-	// force new size
-	args.push('-resize', o.flatDims + '!', '-gamma', '2.2');
-	// add background
-	if (o.bg)
-		args.push('-background', o.bg, '-layers', 'mosaic', '+matte');
-	// disregard metadata, acquire artifacts
-	args.push('-strip');
-	if (o.bg)
-		args.push('-quality', o.quality);
-	args.push(o.dest);
-	var self = this;
-	convert(args, o.src, function(err) {
-		if (err) {
-			winston.warn(err);
-			callback(Muggle(self.lang.im_resizing, err));
-		}
-		// Lossify PNG thumbnail
-		else if (!o.bg) {
-			var pqDest = o.dest.slice(4);
-			child_process.execFile(pngquantBin, [
-					'-f', '-o', pqDest,
-					'--quality', o.quality,
-					pqDest
-				],
-				function(err) {
-					if (err) {
-						winston.warn(err);
-						callback(Muggle(self.lang.im_pngquant, err));
-					} else
-						callback(null, o.dest);
-				});
-		}
-		else
-			callback(null, o.dest);
-	});
-};
-
-IU.resize_and_track = function (o, cb) {
-	var self = this;
-	this.resize_image(o, function (err, fnm) {
-		if (err)
-			return cb(err);
-
-		// HACK: strip IM type tag
-		var m = /^\w{3,4}:(.+)$/.exec(fnm);
-		if (m)
-			fnm = m[1];
-
-		self.db.track_temporary(fnm, cb);
-	});
 };
 
 function image_files(image) {
