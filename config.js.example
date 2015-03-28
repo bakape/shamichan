@@ -72,7 +72,7 @@ var config = {
 // Translate IP's into more human-readable mnemonics
 	IP_MNEMONIC: true,
 // Enable staff to assign custom tags to poster IPs
-	IP_TAGGING: false,
+	IP_TAGGING: true,
 
 // r/a/dio integration (https://r-a-d.io)
 	RADIO: false,
