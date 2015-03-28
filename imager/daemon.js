@@ -40,10 +40,11 @@ function new_upload(req, resp) {
 exports.new_upload = new_upload;
 
 function get_thumb_specs(image, pinky, scale) {
-	var w = image.dims[0], h = image.dims[1];
-	var bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'];
-	var r = Math.max(w / bound[0], h / bound[1], 1);
-	var dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
+	const w = image.dims[0],
+		h = image.dims[1],
+		bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'],
+		r = Math.max(w / bound[0], h / bound[1], 1),
+		dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
 	var specs = {bound: bound, dims: dims, format: 'jpg'};
 	// Note: WebMs pretend to be PNGs at this step,
 	//       but those don't need transparent backgrounds.
@@ -102,14 +103,13 @@ IU.handle_request = function (req, resp) {
 		return;
 	}
 	this.resp = resp;
-	var query = req.query || urlParse(req.url, true).query;
+	const query = req.query || urlParse(req.url, true).query;
 
 	// Set response language
 	// Check if client language is set and exixts on the server
-	var clientLanguage = configMain.LANGS[
-		web.parse_cookie(req.headers.cookie[lang])
-	];
-	this.lang = lang[clientLanguage || configMain.DEFAULT_LANG];
+	this.lang = lang[configMain.LANGS[
+			web.parse_cookie(req.headers.cookie[lang])
+		] || configMain.DEFAULT_LANG];
 
 	this.client_id = parseInt(query.id, 10);
 	if (!this.client_id || this.client_id < 1) {
@@ -117,7 +117,7 @@ IU.handle_request = function (req, resp) {
 		return;
 	}
 
-	var len = parseInt(req.headers['content-length'], 10);
+	const len = parseInt(req.headers['content-length'], 10);
 	if (len > 0 && len > config.IMAGE_FILESIZE_MAX + (20*1024))
 		return this.failure(Muggle(this.lang.im_too_large));
 
@@ -151,8 +151,8 @@ IU.handle_request = function (req, resp) {
 
 IU.upload_progress_status = function (received, total) {
 	var percent = Math.floor(100 * received / total);
-	var increment = (total > (512 * 1024)) ? 10 : 25;
-	var quantized = Math.floor(percent / increment) * increment;
+	const increment = (total > (512 * 1024)) ? 10 : 25,
+		quantized = Math.floor(percent / increment) * increment;
 	if (quantized > this.lastProgress) {
 		this.status(percent + this.lang.im_received);
 		this.lastProgress = quantized;
@@ -167,7 +167,7 @@ IU.parse_form = function (err, fields, files) {
 	this.image = files.image;
 	this.pinky = !!parseInt(fields.op, 10);
 
-	var spoiler = parseInt(fields.spoiler, 10);
+	const spoiler = parseInt(fields.spoiler, 10);
 	if (spoiler) {
 		if (config.SPOILER_IMAGES.indexOf(spoiler) < 0)
 			return this.failure(Muggle(this.lang.im_bad_spoiler));
@@ -189,7 +189,7 @@ IU.process = function () {
 	if (this.failed)
 		return;
 	var image = this.image;
-	var filename = image.filename || image.name;
+	const filename = image.filename || image.name;
 	image.ext = path.extname(filename).toLowerCase();
 	if (image.ext == '.jpeg')
 		image.ext = '.jpg';
@@ -215,67 +215,66 @@ StillJob.prototype.describe_job = function () {
 };
 
 StillJob.prototype.perform_job = function () {
-	var dest = index.media_path('tmp', 'still_'+etc.random_id());
-	var args = ['-hide_banner', '-loglevel', 'info',
-			'-i', this.src,
-			'-f', 'image2', '-vf', 'thumbnail=10', '-vframes', '1', '-vcodec', 'png',
-			'-y', dest];
-	var opts = {env: {AV_LOG_FORCE_NOCOLOR: '1'}};
+	const dest = index.media_path('tmp', 'still_' + etc.random_id());
 	var self = this;
-	child_process.execFile(ffmpegBin, args, opts,
-				function (err, stdout, stderr) {
-		var lines = stderr ? stderr.split('\n') : [],
-			first = lines[0],
-			is_webm = /matroska,webm/i.test(first),
-			isMP3 = /mp3/i.test(first);
-		if (err) {
-			var msg;
-			if (/no such file or directory/i.test(first))
-				msg = "Video went missing.";
-			else if (/invalid data found when/i.test(first))
-				msg = "Invalid video file.";
-			else if (/^ffmpeg version/i.test(first))
-				msg = "Server's ffmpeg is too old.";
-			else if (isMP3)
-				msg = 'MP3 has no cover art.';
-			else {
-				msg = "Unknown video reading error.";
-				winston.warn("Unknown ffmpeg output: "+first);
+	child_process.execFile(ffmpegBin, [
+			'-hide_banner', '-loglevel', 'info',
+			'-i', this.src,
+			'-f', 'image2',
+			'-vf', 'thumbnail=10', '-vframes', '1', '-vcodec', 'png',
+			'-y', dest
+		],
+		{env: {AV_LOG_FORCE_NOCOLOR: '1'}},
+		function (err, stdout, stderr) {
+			const lines = (stderr ? stderr.split('\n') : [])[0],
+				is_webm = /matroska,webm/i.test(first),
+				isMP3 = /mp3/i.test(first);
+			if (err) {
+				var msg;
+				if (/no such file or directory/i.test(first))
+					msg = "Video went missing.";
+				else if (/invalid data found when/i.test(first))
+					msg = "Invalid video file.";
+				else if (/^ffmpeg version/i.test(first))
+					msg = "Server's ffmpeg is too old.";
+				else if (isMP3)
+					msg = 'MP3 has no cover art.';
+				else {
+					msg = "Unknown video reading error.";
+					winston.warn("Unknown ffmpeg output: "+first);
+				}
+				fs.unlink(dest, function (err) {
+					self.finish_job(Muggle(msg, stderr));
+				});
+				return;
 			}
-			fs.unlink(dest, function (err) {
-				self.finish_job(Muggle(msg, stderr));
+			if (!is_webm  && !isMP3) {
+				fs.unlink(dest, function (err) {
+					self.finish_job(Muggle('File format corrupted.'));
+				});
+				return;
+			}
+
+			// Parse webm/mp3 length
+			var length;
+			const l = stderr.match(/Duration: (\d{2}:\d{2}:\d{2})/);
+			if (l){
+				var h = l[1].slice(0, 3),
+					m = l[1].slice(3,6);
+				h = (h == '00:') ? '' : h.replace(':', 'h');
+				m = (m == '00:') ? '' : m.replace(':', 'm');
+				length = h + m + l[1].slice(6) + 's';
+			}
+
+			self.finish_job(null, {
+				still_path: dest,
+				// Could have false positives due to chapter titles. Bah.
+				has_audio: (is_webm && /audio:\s*vorbis/i.test(stderr)) || isMP3,
+				length: length,
+				mp3: isMP3
 			});
-			return;
 		}
-		if (!is_webm  && !isMP3) {
-			fs.unlink(dest, function (err) {
-				self.finish_job(Muggle('File format corrupted.'));
-			});
-			return;
-		}
-
-		/* Could have false positives due to chapter titles. Bah. */
-		var has_audio = (is_webm && /audio:\s*vorbis/i.test(stderr)) || isMP3;
-
-		// Parse webm/mp3 length
-		var length;
-		var l = stderr.match(/Duration: (\d{2}:\d{2}:\d{2})/);
-		if (l){
-			var h = l[1].slice(0, 3);
-			var m = l[1].slice(3,6);
-			var s = l[1].slice(6) + 's';
-			h = (h == '00:') ? '' : h.replace(':', 'h');
-			m = (m == '00:') ? '' : m.replace(':', 'm');
-			length = h + m + s;
-		}
-
-		self.finish_job(null, {
-			still_path: dest,
-			has_audio: has_audio,
-			length: length,
-			mp3: isMP3
-		});
-	});
+	);
 };
 
 function video_still(src, cb) {
@@ -491,9 +490,9 @@ IU.fill_in_specs = function (specs, kind) {
 };
 
 IU.sha1 = function(){
-	var f = fs.ReadStream(this.image.path);
-	var sha1sum = crypto.createHash('sha1');
-	var self = this;
+	var f = fs.ReadStream(this.image.path),
+		sha1sum = crypto.createHash('sha1'),
+		self = this;
 	f.on('data', function(d){
 		sha1sum.update(d);
 	});
@@ -509,9 +508,10 @@ IU.sha1 = function(){
 IU.deduped = function () {
 	if (this.failed)
 		return;
-	var image = this.image;
-	var specs = get_thumb_specs(image, this.pinky, 1);
-	var w = image.dims[0], h = image.dims[1];
+	var image = this.image,
+		specs = get_thumb_specs(image, this.pinky, 1);
+	const w = image.dims[0],
+		h = image.dims[1];
 
 	/* Determine whether we really need a thumbnail */
 	if (image.size < 30*1024
@@ -635,11 +635,8 @@ function build_im_args(o) {
 
 IU.resize_image = function(o, callback) {
 	var args = build_im_args(o);
-	var dims = o.flatDims;
-	var dest = o.dest;
 	// force new size
-	args.push('-resize', dims + '!');
-	args.push('-gamma', '2.2');
+	args.push('-resize', o.flatDims + '!', '-gamma', '2.2');
 	// add background
 	if (o.bg)
 		args.push('-background', o.bg, '-layers', 'mosaic', '+matte');
@@ -647,7 +644,7 @@ IU.resize_image = function(o, callback) {
 	args.push('-strip');
 	if (o.bg)
 		args.push('-quality', o.quality);
-	args.push(dest);
+	args.push(o.dest);
 	var self = this;
 	convert(args, o.src, function(err) {
 		if (err) {
@@ -656,7 +653,7 @@ IU.resize_image = function(o, callback) {
 		}
 		// Lossify PNG thumbnail
 		else if (!o.bg) {
-			var pqDest = dest.slice(4);
+			var pqDest = o.dest.slice(4);
 			child_process.execFile(pngquantBin, [
 					'-f', '-o', pqDest,
 					'--quality', o.quality,
@@ -667,11 +664,11 @@ IU.resize_image = function(o, callback) {
 						winston.warn(err);
 						callback(Muggle(self.lang.im_pngquant, err));
 					} else
-						callback(null, dest);
+						callback(null, o.dest);
 				});
 		}
 		else
-			callback(null, dest);
+			callback(null, o.dest);
 	});
 };
 
