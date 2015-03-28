@@ -50,7 +50,7 @@ var lang = {
 	},
 	// 47 replies and 21 images omited
 	abbrev_msg:  function(omit, img_omit) {
-		return omit + lang.pluralize(omit, 'reply')
+		return lang.pluralize(omit, 'reply')
 			+ (img_omit ? ' and ' + lang.pluralize(img_omit, 'image') : '')
 			+ ' omitted.';
 	},
