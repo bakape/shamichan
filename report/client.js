@@ -65,7 +65,7 @@
 			this.$message = $('<div class="message"/>');
 			this.$submit = $('<input>', {type: 'submit', val: 'Report'});
 			var $hideAfter = $('<input>', {
-				'class': 'hideAfter',
+				class: 'hideAfter',
 				type: 'checkbox',
 				checked: this.model.get('hideAfter'),
 			});

@@ -34,8 +34,8 @@ options.on('change', function() {
 	}
 });
 
-var optionsCollection = new Backbone.Collection(),
-	tabs = ['General', 'Style', 'ImageSearch', 'Fun', 'Shortcuts'];
+var optionsCollection = new Backbone.Collection();
+const tabs = ['General', 'Style', 'ImageSearch', 'Fun', 'Shortcuts'];
 
 // Controller template for each individual option
 var OptionModel = Backbone.Model.extend({
@@ -71,11 +71,11 @@ var OptionModel = Backbone.Model.extend({
 	},
 	// Return default, if unset
 	getValue: function() {
-		var val = options.get(this.get('storedId'));
+		const val = options.get(this.get('storedId'));
 		return val === undefined ? this.get('default') : val;
 	},
 	validate: function(val) {
-		var valid = this.get('validation');
+		const valid = this.get('validation');
 		return valid ? valid(val) : true;
 	},
 	// Exec wrapper for listening events
@@ -466,33 +466,33 @@ var OptionsView = Backbone.View.extend({
 	className: 'bmodal',
 	id: 'options-panel',
 	render: function() {
-		var $tabSel = $('<ul/>', {'class': 'option_tab_sel'}),
-			$tabCont = $('<ul/>', {'class': 'option_tab_cont'});
+		var $tabSel = $('<ul/>', {class: 'option_tab_sel'}),
+			$tabCont = $('<ul/>', {class: 'option_tab_cont'});
 		// Render tabs
 		tabs.forEach(function(tab) {
 			$('<li/>').append(
 				$('<a/>', {
 					'data-content': tab,
 					href: '#' + tab,
-					'class': tab
+					class: tab
 				})
 				.html(tab)
 				)
 				.appendTo($tabSel);
 			$('<li/>', {
 				'data-content': tab,
-				'class': tab
+				class: tab
 			})
 				.appendTo($tabCont);
 		});
 		// Render all the options
 		optionsCollection.models.forEach(function(model) {
-			var val = model.getValue(),
-				$tab = $tabCont.children('.' + model.get('tab')),
+			var $tab = $tabCont.children('.' + model.get('tab')),
+				$input;
+			const val = model.getValue(),
 				type = model.get('type'),
 				id = model.get('id'),
-				tooltip = model.get('tooltip'),
-				$input;
+				tooltip = model.get('tooltip');
 
 			if (type == 'checkbox') {
 				$input = $('<input/>', {
@@ -628,7 +628,8 @@ var OptionsView = Backbone.View.extend({
 		$li.filter('.' + $a.data('content')).addClass('tab_sel');
 	},
 	applyChange: function(event) {
-		var target = event.target, val,
+		const target = event.target;
+		var	val,
 			model = optionsCollection.findWhere({
 				id: target.id
 			});

@@ -5,7 +5,7 @@
 	var $button = $('<a></a>', {
 		href: '#',
 		id: 'login-button',
-		'class': 'persona-button dark',
+		class: 'persona-button dark',
 		css: {'margin-top': '0.5em'},
 	});
 	var $caption = $('<span>Loading...</span>').appendTo($button);
