@@ -1,7 +1,7 @@
 /*
  * Mapping of configurable language options
  */
-var lang = {
+const lang = {
 	anon: 'Anonymous',
 	search: 'Search',
 	show: 'Show',
