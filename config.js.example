@@ -13,7 +13,7 @@ var config = {
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
 	SOCKET_PATH: '/hana',
 // Honour X-Forwarded-For HTTP headers for client IP determination
-	TRUST_X_FORWARDED_FOR: false,
+	TRUST_X_FORWARDED_FOR: true,
 // Use internal HTTP server to serve these resources.It is recommended to serve
 // the www directory with a dedicated webserver, like nginx, and set MEDIAURL
 // in imager/config.js to the served directory's address.
