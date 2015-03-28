@@ -343,8 +343,8 @@ function (req, resp) {
 
 	var board = this.board;
 	// Only render <threads> for pushState() updates
-	var min = !!req.query.minimal,
-		alpha = req.query.alpha;
+	const min = !!req.query.minimal,
+		alpha = !!req.query.alpha;
 	var info = {board: board, ident: req.ident, resp: resp};
 	hooks.trigger_sync('boardDiversion', info);
 	if (info.diverted)
@@ -370,7 +370,7 @@ function (req, resp) {
 		// Have write_thread_html append bottom pagination
 		yaku.emit('bottom');
 		if (!min)
-			render.write_page_end(resp, req.ident);
+			render.write_page_end(resp, req.ident, alpha);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -416,11 +416,12 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board;
-	var min = !!req.query.minimal;
+	const min = !!req.query.minimal,
+		alpha = !!req.query.alpha;
 	var nav = page_nav(this.threadCount, this.page, board == 'archive');
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	if (!min)
-		render.write_board_head(resp, board, nav);
+		render.write_board_head(resp, board, nav, alpha);
 	else
 		render.write_board_title(resp, board);
 
@@ -435,7 +436,7 @@ function (req, resp) {
 	this.yaku.once('end', function () {
 		self.yaku.emit('bottom');
 		if (!min)
-			render.write_page_end(resp, req.ident);
+			render.write_page_end(resp, req.ident, alpha);
 		resp.end();
 		self.finished();
 	});
@@ -566,13 +567,15 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board, op = this.op;
-	var min = !!req.query.minimal;
+	const min = !!req.query.minimal,
+		alpha = !!req.query.alpha;
 
 	resp = write_gzip_head(req, resp, this.headers);
 	if (!min){
 		render.write_thread_head(resp, board, op, {
 			subject: this.subject,
 			abbrev: this.abbrev,
+			alpha: alpha
 		});
 	}
 	else {
@@ -593,7 +596,7 @@ function (req, resp) {
 		// Have write_thread_html write the [Return][Top]
 		self.reader.emit('bottom');
 		if (!min)
-			render.write_page_end(resp, req.ident);
+			render.write_page_end(resp, req.ident, alpha);
 		resp.end();
 		self.finished();
 	});
