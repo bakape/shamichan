@@ -39,7 +39,7 @@ function report(reporter_ident, op, num, cb) {
 			return;
 		}
 
-		var name = (post.name || lang[config.DEFAULT_LANG].anon)
+		var name = (post.name || lang[mainConfig.DEFAULT_LANG].anon)
 		if (name.length > 23)
 			name = name.slice(0, 20) + '...';
 		if (post.trip)
