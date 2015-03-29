@@ -67,11 +67,6 @@ const lang = {
 	im_temp_tracking: "Temp tracking error: ",
 	im_invalid_format: 'Invalid image format.',
 	im_verifying: 'Verifying...',
-	/*
-	 * FIXME: Video responses will have to wait for the streaming imager patch.
-	 * The job queue should be eliminated by then and conversion jobs should be
-	 * back in the IU class.
-	 */
 	im_missing: "File went missing.",
 	im_video_invalid: "Invalid video file.",
 	im_ffmpeg_too_old: "Server's ffmpeg is too old.",

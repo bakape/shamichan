@@ -232,25 +232,25 @@ StillJob.prototype.perform_job = function () {
 			if (err) {
 				var msg;
 				if (/no such file or directory/i.test(first))
-					msg = "Video went missing.";
+					msg = 'im_missing';
 				else if (/invalid data found when/i.test(first))
-					msg = "Invalid video file.";
+					msg = "im_video_invalid";
 				else if (/^ffmpeg version/i.test(first))
-					msg = "Server's ffmpeg is too old.";
+					msg = "im_ffmpeg_too_old";
 				else if (isMP3)
-					msg = 'MP3 has no cover art.';
+					msg = 'im_mp3_no_cover';
 				else {
-					msg = "Unknown video reading error.";
-					winston.warn("Unknown ffmpeg output: "+first);
+					msg = "im_video_unknown";
+					winston.warn("Unknown ffmpeg output: " + first);
 				}
 				fs.unlink(dest, function (err) {
-					self.finish_job(Muggle(msg, stderr));
+					self.finish_job(msg);
 				});
 				return;
 			}
 			if (!is_webm  && !isMP3) {
 				fs.unlink(dest, function (err) {
-					self.finish_job(Muggle('File format corrupted.'));
+					self.finish_job('im_video_format');
 				});
 				return;
 			}
@@ -283,7 +283,7 @@ function video_still(src, cb) {
 
 IU.verify_webm = function (err, info) {
 	if (err)
-		return this.failure(err);
+		return this.failure(Muggle(this.lang[err] || err));
 	var self = this;
 	this.db.track_temporary(info.still_path, function (err) {
 		if (err)
