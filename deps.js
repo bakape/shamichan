@@ -105,4 +105,6 @@ exports.ALPHA = [
 	'alpha/main.js',
 	'alpha/banner.js',
 	'alpha/identity.js',
+	'alpha/imager.js',
+	'alpha/time.js',
 ];

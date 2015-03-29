@@ -711,9 +711,9 @@ function readable_filesize(size) {
 }
 exports.readable_filesize = readable_filesize;
 
-function pad(n) {
+const pad = exports.pad  = function(n) {
 	return (n < 10 ? '0' : '') + n;
-}
+};
 
 OS.readable_time = function(time) {
 	var h = this.tz_offset;
