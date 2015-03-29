@@ -10,7 +10,8 @@
 var $ = require('jquery'),
 	Backbone = require('backbone'),
 	state = require('./state'),
-	common = require('../common');
+	common = require('../common'),
+	lang = require('../lang/');
 
 // Register jquery plugins
 require('jquery.cookie');
@@ -18,8 +19,8 @@ require('jquery.cookie');
 // Bind jQuery to backbone
 Backbone.$ = $;
 
-var isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/.test(
-	navigator.userAgent);
+const isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
+	.test(navigator.userAgent);
 var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {
 	var frag;
 	if (this.links && num in this.links) {
@@ -35,6 +36,12 @@ var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {
 });
 oneeSama.full = oneeSama.op = state.page.get('thread');
 
+// Read language preference
+const langSet = state.config.get('LANGS')[$.cookie('lang')];
+if (langSet)
+	oneeSama.lang = lang[langSet];
+
+// Store them here, to avoid requiring modules in the wrong order
 exports.send = function() {};
 exports.dispatcher = {};
 

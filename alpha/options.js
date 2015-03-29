@@ -9,6 +9,7 @@ var _ = require('underscore'),
 	background = require('./background'),
 	banner = require('./banner'),
 	common = require('../common'),
+	lang = require('../lang/'),
 	main = require('./main'),
 	state = require('./state');
 
@@ -46,7 +47,26 @@ var OptionModel = Backbone.Model.extend({
 		this.set(obj);
 		// No type = checkbox + default false
 		if (!obj.type)
-			this.set({type: 'checkbox', 'default': false});
+			this.set({type: 'checkbox', default: false});
+		/*
+		 * Read label and tooltip from the language file. If .lang is defined,
+		 * use it as localisation function instead and pass the option id as
+		 * argument.
+		 */
+		const lang = main.oneeSama.lang.opts;
+		var label, tooltip;
+		if (obj.lang) {
+			label = lang[obj.lang][0](obj.id);
+			tooltip = lang[obj.lang][1](obj.id);
+		}
+		else {
+			label = lang[obj.id][0];
+			tooltip  = lang[obj.id][1];
+		}
+		this.set({
+			label: label,
+			tooltip: tooltip
+		});
 		/*
 		 * Some options differ per board. Store the id that will be used in the
 		 * options model for searching purposes.
@@ -84,29 +104,31 @@ var OptionModel = Backbone.Model.extend({
 	}
 });
 
+/* LANGUAGE SELECTION */
+new OptionModel({
+	id: 'lang',
+	type: state.config.get('LANGS'),
+	tab: 'General',
+	default: state.config.get('DEFAULT_LANG'),
+	exec: function(type) {
+		$.cookie('lang', type);
+		main.oneeSama.lang = lang[type];
+	}
+});
 /* INLINE EXPANSION */
 new OptionModel({
 	id: 'inlinefit',
-	label: 'Expansion',
-	type: ['none', 'full-size', 'fit to width', 'fit to height',
-		'fit to both'],
-	tooltip: 'Expand images inside the parent post and resize according to'
-		+ ' setting',
+	type: ['none', 'full', 'width', 'height', 'both'],
 	tab: 'Style',
-	'default': 'fit to width'
+	default: 'width'
 });
 /* THUMBNAIL OPTIONS */
 new OptionModel({
 	id: 'thumbs',
 	boardSpecific: true,
-	label: 'Thumbnails',
 	type: common.thumbStyles,
-	tooltip: 'Set thumbnail type: '
-		+ 'Small: 125x125, small file size; '
-		+ 'Sharp: 125x125, more detailed; '
-		+ 'Hide: hide all images;',
 	tab: 'Style',
-	'default': 'small',
+	default: 'small',
 	exec: function(type) {
 		$.cookie('thumb', type);
 		main.oneeSama.thumbStyle = type;
@@ -115,25 +137,18 @@ new OptionModel({
 /* IMAGE HOVER EXPANSION */
 new OptionModel({
 	id: 'imageHover',
-	label: 'Image Hover Expansion',
 	load: notMobile,
-	tooltip: 'Display image previews on hover',
 	tab: 'General',
 });
 new OptionModel({
 	id: 'webmHover',
-	label: 'WebM Hover Expansion',
 	load: notMobile,
-	tooltip: 'Display WebM previews on hover. Requires Image Hover Expansion'
-		+ ' enabled.',
 	tab: 'General'
 });
 /* Autogif TOGGLE */
 new OptionModel({
 	id: 'autogif',
 	load: notMobile,
-	label: 'Animated GIF Thumbnails',
-	tooltip: 'Animate GIF thumbnails',
 	tab: 'Style',
 	exec: function(autogif) {
 		$.cookie('agif', autogif, {path: '/'});
@@ -144,11 +159,9 @@ new OptionModel({
 new OptionModel({
 	id: 'noSpoilers',
 	boardSpecific: true,
-	label: 'Image Spoilers',
 	type: 'checkbox',
-	tooltip: "Don't spoiler images",
 	tab: 'Style',
-	'default': true,
+	default: true,
 	exec: function(spoilertoggle) {
 		$.cookie('spoil', spoilertoggle, {path: '/'});
 		main.oneeSama.spoilToggle = spoilertoggle;
@@ -157,20 +170,15 @@ new OptionModel({
 /* BACKLINKS */
 new OptionModel({
 	id: 'nobacklinks',
-	label: 'Backlinks',
 	type: 'checkbox',
-	tooltip: 'Links to replies of current post',
 	tab: 'General',
-	'default': true,
+	default: true,
 	// TODO: Implement backlinks in models.js
 	exec: function() {}
 });
 /* LINKIFY TEXT URLS */
 new OptionModel({
 	id: 'linkify',
-	label: 'Linkify text URLs',
-	tooltip: 'Convert in-post text URLs to clickable links. WARNING: Potential'
-		+ ' security hazard (XSS). Requires page refresh.',
 	tab: 'General',
 	exec: function(toggle) {
 		$.cookie('linkify', toggle, {path: '/'});
@@ -180,9 +188,6 @@ new OptionModel({
 new OptionModel({
 	id: 'notification',
 	load: notMobile,
-	label: 'Desktop Notifications',
-	tooltip: 'Get desktop notifications when quoted or a syncwatch is about to'
-		+ ' start',
 	tab: 'General',
 	exec: function(notifToggle) {
 		if (notifToggle && (Notification.permission !== "granted"))
@@ -192,16 +197,11 @@ new OptionModel({
 /* ANONIMISE ALL POSTER NAMES */
 new OptionModel({
 	id: 'anonymise',
-	label: 'Anonymise',
-	tooltip: 'Display all posters as anonymous',
 	tab: 'General'
 });
 /* RELATIVE POST TIMESTAMPS */
 new OptionModel({
 	id: 'relativeTime',
-	label: 'Relative Timestamps',
-	tooltip: 'Relative post timestamps. Ex.: "1 hour ago." Requires page'
-		+ ' refresh',
 	tab: 'General',
 	exec: function(toggle) {
 		$.cookie('rTime', toggle, {path: '/'});
@@ -211,12 +211,9 @@ new OptionModel({
 new OptionModel({
 	id: 'nowPlaying',
 	load: notMobile && state.config.get('RADIO'),
-	label: 'Now Playing Banner',
 	type: 'checkbox',
-	tooltip: 'Currently playing song on r/a/dio and other stream information in'
-		+ ' the top banner.',
 	tab: 'Fun',
-	'default': true,
+	default: true,
 	exec: function(toggle) {
 		if (toggle)
 			banner.view.clearRadio();
@@ -227,15 +224,14 @@ new OptionModel({
 });
 /* IMAGE SEARCH LINK TOGGLE */
 ['google', 'iqdb', 'saucenao', 'foolz', 'exhentai'].forEach(function(search) {
-	var capital = search[0].toUpperCase() + search.slice(1);
 	$('<style/>', {id: search + 'Toggle'})
 		.html('.' + search + '{display:none;}')
 		.appendTo('head');
 
 	new OptionModel({
 		id: search,
-		label: capital + ' Image Search',
-		tooltip: 'Show/Hide ' + capital + ' search search links',
+		// Use a custom internatiolisation function
+		lang: 'imageSearch',
 		tab: 'ImageSearch',
 		exec: function(toggle) {
 			$('#' + search + 'Toggle').prop('disabled', toggle);
@@ -246,9 +242,7 @@ new OptionModel({
 var illyaDance = new OptionModel({
 	id: 'illyaBGToggle',
 	load: notMobile && state.hotConfig.get('ILLYA_DANCE'),
-	label: 'Illya Dance',
 	boardSpecific: true,
-	tooltip: 'Dancing loli in the background',
 	tab: 'Fun',
 	exec: function(illyatoggle) {
 		var muted = ' ';
@@ -268,8 +262,6 @@ new OptionModel({
 	id: 'illyaMuteToggle',
 	load: notMobile && state.hotConfig.get('ILLYA_DANCE'),
 	boardSpecific: true,
-	label: 'Mute Illya',
-	tooltip: 'Mute dancing loli',
 	tab: 'Fun',
 	exec: function() {
 		if (options.get('illyaBGToggle')) {
@@ -282,8 +274,6 @@ new OptionModel({
 new OptionModel({
 	id: 'horizontalPosting',
 	boardSpecific: true,
-	label: 'Horizontal Posting',
-	tooltip: '38chan nostalgia',
 	tab: 'Fun',
 	exec: function(toggle) {
 		var style = '<style id="horizontal">article,aside{display:inline-block;}</style>';
@@ -296,8 +286,6 @@ new OptionModel({
 /* REPLY AT RIGHT */
 new OptionModel({
 	id: 'replyright',
-	label: '[Reply] at Right',
-	tooltip: 'Move Reply button to the right side of the page',
 	tab: 'Style',
 	exec: function(r) {
 		if (r)
@@ -313,7 +301,6 @@ new OptionModel({
 new OptionModel({
 	id: 'theme',
 	boardSpecific: true,
-	label: 'Theme',
 	// Arrays will turn into selection boxes
 	type: [
 		'moe',
@@ -328,9 +315,8 @@ new OptionModel({
 		'tavern',
 		'glass'
 	],
-	tooltip: 'Select CSS theme',
 	tab: 'Style',
-	'default': state.hotConfig.get('BOARD_CSS')[state.page.get('board')],
+	default: state.hotConfig.get('BOARD_CSS')[state.page.get('board')],
 	exec: function(theme) {
 		if (theme) {
 			var css = hotConfig.css[theme + '.css'];
@@ -346,16 +332,12 @@ new OptionModel({
 new OptionModel({
 	id: 'userBG',
 	load: notMobile,
-	label: 'Custom Background',
-	tooltip: 'Toggle custom page background',
 	tab: 'Style',
 });
 new OptionModel({
 	id: 'userBGimage',
 	load: notMobile,
-	label: '',
 	type: 'image',
-	tooltip: "Image to use as the background",
 	tab: 'Style',
 	// FIXME
 	//exec: background.set
@@ -364,17 +346,13 @@ new OptionModel({
 new OptionModel({
 	// Key name in the options model
 	id: 'lastn',
-	// Displayed label in the options panel
-	label: '[Last #]',
 	// Type of toggle
 	type: 'number',
-	// Hover tooltip
-	tooltip: 'Number of posts to display with the "Last n" thread expansion link',
 	// Tab of options panel
 	tab: 'General',
 	// Function for assesing if value is valid. Optional.
 	validation: common.reasonable_last_n,
-	'default': state.hotConfig.get('THREAD_LAST_N'),
+	default: state.hotConfig.get('THREAD_LAST_N'),
 	// Function to execute on change. Optional.
 	exec: function(n) {
 		main.oneeSama.lastN = n;
@@ -384,47 +362,30 @@ new OptionModel({
 /* KEEP THREAD LENGTH WITHIN LASTN */
 new OptionModel({
 	id: 'postUnloading',
-	label: 'Dynamic Post Unloading',
-	tooltip: 'Improves thread responsiveness by unloading posts from the top of'
-		+ ' the thread, so that post count stays within the Last # value. Only'
-		+ ' applies to Last # enabled threads',
 	tab: 'General',
 });
 /* LOCK TO BOTTOM EVEN WHEN DOCUMENT HIDDEN*/
 new OptionModel({
 	id: 'alwaysLock',
-	label: 'Always Lock to Bottom',
-	tootltip: 'Lock scrolling to page bottom even when tab is hidden',
 	tab: 'General',
 });
 /* SHORTCUT KEYS */
 [
 	{
-		label: 'New Post',
 		id: 'new',
 		default: 78,
-		tooltip: 'Open new post'
 	}, {
-		label: 'Image Spoiler',
 		id: 'togglespoiler',
 		default: 73,
-		tooltip: 'Toggle spoiler in the open post'
 	}, {
-		label: 'Text Spoiler',
 		id: 'textSpoiler',
 		default: 68,
-		tooltip: 'Insert text spoiler tag'
 	}, {
-		label: 'Finish Post',
 		id: 'done',
 		default: 83,
-		tooltip: 'Close open post'
 	}, {
-		label: 'Expand All Images',
 		id: 'expandAll',
 		default: 69,
-		tooltip: 'Expand all images. Webm, PDF and MP3 and your own post'
-			+ ' aren\'t affected. New post images are also expanded.'
 	}
 ].forEach(function(short) {
 	short.type = 'shortcut';
@@ -516,7 +477,7 @@ var OptionsView = Backbone.View.extend({
 				$input = $('<select/>');
 				type.forEach(function(opt) {
 					$input.append('<option value="' + opt + '">'
-						+ main.oneeSama.lang(opt) + '</option>');
+						+ (main.oneeSama.lang[opt] || opt) + '</option>');
 				});
 				$input.val(model.getValue());
 			}
@@ -656,7 +617,7 @@ var OptionsView = Backbone.View.extend({
 });
 
 var optionsView;
-// Rander it after the current stack clears,for a bit more responsiveness
+// Render it after the current stack clears,for a bit more responsiveness
 _.defer(function() {
 	optionsView = new OptionsView();
 });

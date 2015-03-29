@@ -44,6 +44,9 @@ const lang = {
 			noun = noun.slice(0, -1) + 'ie';
 		return n + ' ' + noun + (n == 1 ? '' : 's');
 	},
+	capitalize: function(word) {
+		return word[0].toUpperCase() + word.slice(1);
+	},
 	// 56 minutes ago
 	ago: function(time, unit) {
 		return lang.pluralize(time, unit) + ' ago';
@@ -91,6 +94,143 @@ const lang = {
 	im_resizing: "Resizing error.",
 	im_pngquant: "Pngquant thumbnailing error.",
 	im_unknown: 'Unknown image processing error.',
+
+	// Client-only
+
+	// Options; id: [label, tooltip]
+	opts: {
+		lang: [
+			'Language',
+			'Change interface language'
+		],
+		inlinefit: [
+			'Expansion',
+			'Expand images inside the parent post and resize according to setting'
+		],
+		thumbs: [
+			'Thumbnails',
+			'Set thumbnail type: '
+				+ 'Small: 125x125, small file size; '
+				+ 'Sharp: 125x125, more detailed; '
+				+ 'Hide: hide all images;',
+		],
+		imageHover: [
+			'Image Hover Expansion',
+			'Display image previews on hover'
+		],
+		webmHover: [
+			'WebM Hover Expansion',
+			'Display WebM previews on hover. Requires Image Hover Expansion enabled.'
+		],
+		autogif: [
+			'Animated GIF Thumbnails',
+			'Animate GIF thumbnails'
+		],
+		noSpoilers: [
+			'Image Spoilers',
+			"Don't spoiler images"
+		],
+		nobacklinks: [
+			'Backlinks',
+			'Links to replies of current post'
+		],
+		linkify: [
+			'Linkify text URLs',
+			'Convert in-post text URLs to clickable links. WARNING: Potential'
+				+ ' security hazard (XSS). Requires page refresh.'
+		],
+		notification: [
+			'Desktop Notifications',
+			'Get desktop notifications when quoted or a syncwatch is about to start'
+		],
+		anonymise: [
+			'Anonymise',
+			'Display all posters as anonymous'
+		],
+		relativeTime: [
+			'Relative Timestamps',
+			'Relative post timestamps. Ex.: "1 hour ago." Requires page refresh'
+		],
+		nowPlaying: [
+			'Now Playing Banner',
+			'Currently playing song on r/a/dio and other stream information in'
+				+ ' the top banner.'
+		],
+		// Custom localisation functions
+		imageSearch: [
+			function(site) {
+				return lang.capitalize(site)  + ' Image Search';
+			},
+			function(site) {
+				return 'Show/Hide ' + lang.capitalize(site) + ' search search links';
+			}
+		],
+		illyaBGToggle: [
+			'Illya Dance',
+			'Dancing loli in the background'
+		],
+		illyaMuteToggle: [
+			'Mute Illya',
+			'Mute dancing loli'
+		],
+		horizontalPosting: [
+			'Horizontal Posting',
+			'38chan nostalgia'
+		],
+		replyright: [
+			'[Reply] at Right',
+			'Move Reply button to the right side of the page'
+		],
+		theme: [
+			'Theme',
+			'Select CSS theme'
+		],
+		userBG: [
+			'Custom Background',
+			'Toggle custom page background'
+		],
+		userBGimage: [
+			'',
+			"Image to use as the background"
+		],
+		lastn: [
+			'[Last #]',
+			'Number of posts to display with the "Last n" thread expansion link'
+		],
+		postUnloading: [
+			'Dynamic Post Unloading',
+			'Improves thread responsiveness by unloading posts from the top of'
+				+ ' the thread, so that post count stays within the Last # value.'
+				+ ' Only applies to Last # enabled threads',
+		],
+		alwaysLock: [
+			'Always Lock to Bottom',
+			'Lock scrolling to page bottom even when tab is hidden'
+		],
+		// Shortcut keys
+		new: [
+			'New Post',
+			'Open new post'
+		],
+		togglespoiler: [
+			'Image Spoiler',
+			'Toggle spoiler in the open post'
+		],
+		textSpoiler: [
+			'Text Spoiler',
+			'Insert text spoiler tag'
+		],
+		done: [
+			'Finish Post',
+			'Close open post'
+		],
+		expandAll: [
+			'Expand All Images',
+			'Expand all images. Webm, PDF and MP3 and your own post'
+				+ ' aren\'t affected. New post images are also expanded.'
+		]
+	}
+
 };
 
 module.exports = lang;

@@ -41,8 +41,9 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		oneeSama.eLinkify = true;
 	if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 		oneeSama.thumbStyle = cookies.thumb;
-	if (config.LANGS[cookies.lang])
-		oneeSama.language = cookies.lang;
+	const language = config.LANGS[cookies.lang];
+	if (language)
+		oneeSama.lang = language;
 	var lastN = cookies.lastn && parseInt(cookies.lastn, 10);
 	if (!lastN || !common.reasonable_last_n(lastN))
 		lastN = STATE.hot.THREAD_LAST_N;
@@ -87,12 +88,12 @@ exports.write_thread_html = function (reader, req, out, opts) {
 		out.write(first.join(''));
 
 		write_see_all_link = omit && function (first_reply_num) {
-			var o = oneeSama.lang('abbrev_msg')(omit, image_omit);
+			var o = oneeSama.lang.abbrev_msg(omit, image_omit);
 			if (opts.loadAllPostsLink) {
 				var url = '' + op_post.num;
 				if (first_reply_num)
 					url += '#' + first_reply_num;
-				o += ' '+common.action_link_html(url, oneeSama.lang('see_all'));
+				o += ' '+common.action_link_html(url, oneeSama.lang.see_all);
 			}
 			out.write('\t<span class="omit">'+o+'</span>\n');
 		};
@@ -114,7 +115,7 @@ exports.write_thread_html = function (reader, req, out, opts) {
 };
 
 function pagination(info, oneeSama) {
-	var live = oneeSama.lang('live');
+	var live = oneeSama.lang.live;
 	var bits = ['<nav class="pagination act">'], cur = info.cur_page;
 	if (cur >= 0)
 		bits.push('<a href=".">' + live + '</a>');
@@ -131,26 +132,26 @@ function pagination(info, oneeSama) {
 		else
 			bits.push('<strong>' + i + '</strong>');
 	}
-	bits.push('] [<a class="catalogLink">' + oneeSama.lang('catalog') + '</a>');
+	bits.push('] [<a class="catalogLink">' + oneeSama.lang.catalog + '</a>');
 	bits.push('</nav>');
 	return bits.join('');
 }
 
 
 function threadsTop(oneeSama) {
-	return common.action_link_html('#bottom', oneeSama.lang('bottom'))
+	return common.action_link_html('#bottom', oneeSama.lang.bottom)
 		+ '&nbsp;'
 		+ common.action_link_html(
 			'',
-			oneeSama.lang('expand_images'),
+			oneeSama.lang.expand_images,
 			'expandImages'
 		);
 }
 
 function threadsBottom(oneeSama) {
-	return common.action_link_html('.',	oneeSama.lang('return'), 'bottom')
+	return common.action_link_html('.',	oneeSama.lang.return, 'bottom')
 		+ '&nbsp;'
-		+ common.action_link_html('#', oneeSama.lang('top'));
+		+ common.action_link_html('#', oneeSama.lang.top);
 }
 
 function make_link_rels(board, bits) {

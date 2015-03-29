@@ -258,12 +258,8 @@ function override(obj, orig, upgrade) {
 	};
 }
 
-// Language mappings and settings
-OS.lang = function(phrase) {
-	return lang[this.language][phrase];
-};
-// Overriden by cookie or client-side setting
-OS.language = config.DEFAULT_LANG;
+// Language mappings and settings. Overriden by cookie or client-side setting.
+OS.lang = lang[config.DEFAULT_LANG];
 
 OS.red_string = function(ref) {
 	var dest, linkClass;
@@ -609,7 +605,7 @@ OS.gazou = function(info, toppu) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
 		var google = encodeURI('../outbound/g/' + info.vint);
 		var iqdb = encodeURI('../outbound/iqdb/' + info.vint);
-		caption = [this.lang('search') + ' ', new_tab_link(google, '[Google]'),
+		caption = [this.lang.search + ' ', new_tab_link(google, '[Google]'),
 			' ',
 			new_tab_link(iqdb, '[iqdb]'), ' ',
 			new_tab_link(src, '[foolz]')];
@@ -732,29 +728,29 @@ OS.readable_time = function(time) {
 };
 
 OS.readableDate = function(d) {
-	return pad(d.getUTCDate()) + ' ' + this.lang('year')[d.getUTCMonth()] + ' '
-		+ d.getUTCFullYear() + '(' + this.lang('week')[d.getUTCDay()] + ')'
+	return pad(d.getUTCDate()) + ' ' + this.lang.year[d.getUTCMonth()] + ' '
+		+ d.getUTCFullYear() + '(' + this.lang.week[d.getUTCDay()] + ')'
 		+ pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes());
 };
 
 // Readable elapsed time since post
 OS.relative_time = function(then, now) {
 	var min = Math.floor((now - then) / (60 * 1000)),
-		ago = this.lang('ago');
+		ago = this.lang.ago;
 	if (min < 1)
-		return this.lang('just_now');
+		return this.lang.just_now;
 	if (min < 60)
-		return ago(min, this.lang('unit_minute'));
+		return ago(min, this.lang.unit_minute);
 	var hours = Math.floor(min / 60);
 	if (hours < 24)
-		return ago(hours, this.lang('unit_hour'));
+		return ago(hours, this.lang.unit_hour);
 	var days = Math.floor(hours / 24);
 	if (days < 30)
-		return ago(days, this.lang('unit_day'));
+		return ago(days, this.lang.unit_day);
 	var months = Math.floor(days / 30);
 	if (months < 12)
-		return ago(months, this.lang('unit_month'));
-	return ago(Math.floor(months / 12), this.lang('unit_year'));
+		return ago(months, this.lang.unit_month);
+	return ago(Math.floor(months / 12), this.lang.unit_year);
 };
 
 function datetime(time) {
@@ -801,8 +797,8 @@ reasonable_last_n = function(n) {
 exports.reasonable_last_n = reasonable_last_n;
 
 OS.expansion_links_html = function(num) {
-	return ' &nbsp; ' + action_link_html(num, this.lang('expand')) + ' '
-		+ action_link_html(num + '?last=' + this.lastN, this.lang('last')
+	return ' &nbsp; ' + action_link_html(num, this.lang.expand) + ' '
+		+ action_link_html(num + '?last=' + this.lastN, this.lang.last
 			+ '&nbsp;' + this.lastN);
 };
 
@@ -813,7 +809,7 @@ OS.atama = function(data) {
 	if (data.subject)
 		header.unshift(safe('<h3>「'), data.subject, safe('」</h3> '));
 	if (data.name || !data.trip) {
-		header.push(data.name || this.lang('anon'));
+		header.push(data.name || this.lang.anon);
 		if (data.trip)
 			header.push(' ');
 	}
