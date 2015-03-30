@@ -19,8 +19,7 @@
 		/* If there was an old preview of a different thread, remove it */
 		if (num != previewNum) {
 			var post = $('#' + num);
-			// Don't show, if visible on screen
-			if (!post.length || post.offset().top > $(window).scrollTop())
+			if (!post.length)
 				return false;
 			if (preview)
 				preview.remove();
