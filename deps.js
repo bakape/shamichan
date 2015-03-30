@@ -93,9 +93,9 @@ exports.MOD_CLIENT_DEPS = [
 	'admin/common.js',
 	'admin/client.js',
 ];
+
 // Only used for monitoring by builder.js
 exports.ALPHA = [
-	'tmpl/alpha.html',
 	'alpha/client.js',
 	'alpha/models.js',
 	'alpha/extract.js',
@@ -107,4 +107,5 @@ exports.ALPHA = [
 	'alpha/identity.js',
 	'alpha/imager.js',
 	'alpha/time.js',
+	'alpha/memory.js'
 ];

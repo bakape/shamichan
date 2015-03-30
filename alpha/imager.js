@@ -3,6 +3,7 @@
  */
 
 var $ = require('jquery'),
+	Backbone = require('backbone'),
 	main = require('./main'),
 	options = require('./options');
 

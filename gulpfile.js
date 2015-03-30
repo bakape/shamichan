@@ -38,11 +38,20 @@ gulp.task('css', function() {
 gulp.task('alpha', function() {
 	// transform regular node stream to gulp (buffered vinyl) stream
 	var browserified = transform(function(filename) {
-		var b = browserify({entries: filename, debug: true})
+		return browserify({entries: filename, debug: true})
 			.exclude('./config')
 			.exclude('./server/state')
-			.exclude('./imager/config');
-		return b.bundle();
+			.exclude('./imager/config')
+			/*
+			 * Make available outside the bundle with require().
+			 * Needed for mod.js
+			 */
+			.require([
+				'jquery',
+				'underscore',
+				'backbone'
+			])
+			.bundle();
 	});
 	return gulp.src('./alpha/main.js')
 		.pipe(browserified)

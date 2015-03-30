@@ -74,6 +74,7 @@ function is_pubsub(t) {
 }
 exports.is_pubsub = is_pubsub;
 
+// Finite State Machine
 function FSM(start) {
 	this.state = start;
 	this.spec = {acts: {}, ons: {}, wilds: {}, preflights: {}};
@@ -694,10 +695,6 @@ OS.gazou_img = function(info, toppu, href) {
 
 function escapeJSON(obj) {
 	return encodeURIComponent(JSON.stringify(obj));
-}
-
-function catchJSON(string) {
-	return JSON.parse(decodeURIComponent(string));
 }
 
 function readable_filesize(size) {

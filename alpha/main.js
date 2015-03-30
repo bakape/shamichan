@@ -4,9 +4,8 @@
 
 /*
  * Because we are going to attach listeners to these all over the place, have
- * to be loaded first. The order seems pretty solid
+ * to load soome core modules in specific order.
  */
-
 var $ = require('jquery'),
 	Backbone = require('backbone'),
 	state = require('./state'),
@@ -15,13 +14,11 @@ var $ = require('jquery'),
 
 // Register jquery plugins
 require('jquery.cookie');
-
 // Bind jQuery to backbone
 Backbone.$ = $;
 
-const isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
-	.test(navigator.userAgent);
-var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {
+// Core post link handler
+function tamashi(num) {
 	var frag;
 	if (this.links && num in this.links) {
 		var op = this.links[num];
@@ -33,21 +30,27 @@ var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {
 	else
 		frag = '>>' + num;
 	this.callback(frag);
-});
+}
+
+// Initialise main rendering object
+var oneeSama = exports.oneeSama = new common.OneeSama(tamashi);
 oneeSama.full = oneeSama.op = state.page.get('thread');
 
 // Read language preference
+// TODO: Remove, when options panel rendering is moved to server/state.js
 const langSet = state.config.get('LANGS')[$.cookie('lang')];
 if (langSet)
 	oneeSama.lang = lang[langSet];
 
+const isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
+	.test(navigator.userAgent);
 // Store them here, to avoid requiring modules in the wrong order
 exports.send = function() {};
 exports.dispatcher = {};
+// Cached jQuery objects
+exports.$doc = $(document);
+var $threads = exports.$threads = $('threads');
 
-var options = require('./options'),
-	models = require('./models'),
-	extract = require('./extract');
-
-
-//extract.extract_threads();
+// The require chain also loads some core dependancies
+var Extract = require('./extract');
+new Extract();

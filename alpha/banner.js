@@ -5,7 +5,8 @@
 var $ = require('jquery'),
 	Backbone = require('backbone'),
 	common = require('../common'),
-	main = require('./main');
+	main = require('./main'),
+	options = require('./options');
 
 // Notification messages bellow the banner
 var NotificationView = exports.notification = Backbone.View.extend({

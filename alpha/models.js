@@ -1,21 +1,36 @@
 /*
  * Core Backbone models
  */
-var _ = require('underscore'),
+var $ = require('jquery'),
+	_ = require('underscore'),
 	Backbone = require('backbone'),
 	imager = require('./imager'),
 	main = require('./main'),
 	options = require('./options'),
 	time = require('./time');
 
+var PostModel = exports.PostModel = Backbone.Model.extend({
+	idAttribute: 'num'
+});
+
 var PostCollection = Backbone.Collection.extend({
 	idAttribute: 'num'
 });
 
-// All posts currently displayed
-var posts = exports.posts = new PostCollection();
+var ThreadModel = exports.ThreadModel = PostModel.extend({
+	replies: new PostCollection()
+});
 
-var Section = Backbone.View.extend({
+// All posts currently displayed
+var posts = exports.posts = new PostCollection(),
+	/*
+	 * All threads currently displayed. Threads are also posts, so they are in
+	 * both collections. This seperation is needed, not to search through all
+	 * posts, to find a thread.
+	 */
+	 threads = exports.threads = new PostCollection();
+
+var Section = exports.Section = Backbone.View.extend({
 	tagName: 'section',
 
 	initialize: function () {
@@ -26,13 +41,8 @@ var Section = Backbone.View.extend({
 		this.listenToOnce(this.model, {
 			'add': this.renderRelativeTime
 		});
-		this.listenTo(this.model.get('replies'), {
-			remove: this.removePost,
-		});
 		this.initCommon();
 	},
-
-	replies: new PostCollection(),
 
 	renderHide: function (model, hide) {
 		this.$el.next('hr.sectionHr').andSelf().toggle(!hide);
@@ -54,14 +64,10 @@ var Section = Backbone.View.extend({
 		Posts.remove(this.model);
 		this.stopListening();
 	},
-
-	removePost: function (model) {
-		model.trigger('removeSelf');
-	},
 });
 
 // XXX: Move into own views module once more substantial
-var Article = Backbone.View.extend({
+var Article = exports.Article = Backbone.View.extend({
 	tagName: 'article',
 	initialize: function () {
 		this.listenTo(this.model, {
@@ -207,8 +213,8 @@ _.extend(Article.prototype, imager.Hidamari, PostMixins);
 // Centralised mouseover target tracking
 var mouseover = exports.mouseover = new Backbone.Model({target: null});
 
-if (!isMobile) {
-	$DOC.on('mouseover', function(e) {
+if (!main.isMobile) {
+	main.$doc.on('mouseover', function(e) {
 		mouseover.set('target', e.target);
 	});
 }

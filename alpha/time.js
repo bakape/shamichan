@@ -15,11 +15,9 @@ const date_from_time_el = exports.date_from_time_el = function(el) {
 	);
 };
 
-const readable_time = main.oneeSama.readable_time;
-
 function adjust_all_times() {
 	$('time').each(function () {
-		this.innerHTML = readable_time(date_from_time_el(this).getTime());
+		this.innerHTML = main.oneeSama.readable_time(date_from_time_el(this).getTime());
 	});
 }
 
@@ -28,7 +26,7 @@ const is_skewed = (function(){
 	if (!el)
 		return false;
 	var d = date_from_time_el(el);
-	return readable_time(d.getTime()) != el.innerHTML;
+	return main.oneeSama.readable_time(d.getTime()) != el.innerHTML;
 })();
 
 if (is_skewed) {
@@ -47,7 +45,7 @@ if (is_skewed) {
 // Get a more accurate server-client time offset, for interclient syncing
 // Does not account for latency, but good enough for our purposes
 var serverTimeOffset;
-main.dispatcher[DEF.GET_TIME] = function(msg){
+main.dispatcher[common.GET_TIME] = function(msg){
 	if (!msg[0])
 		return;
 	serverTimeOffset = msg[0] - new Date().getTime();
@@ -128,7 +126,7 @@ function timer_from_el($el) {
 
 (function mouikkai(){
 	setTimeout(function(){
-		$('syncwatch').not('.timerTicking').each(function(){
+		main.$threads.find('syncwatch').not('.timerTicking').each(function(){
 			timer_from_el($(this));
 		});
 		mouikkai();
