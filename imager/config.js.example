@@ -30,8 +30,11 @@ module.exports = {
 // Image duplicate detection threshold. Integer [0 - 256]. Higher is more
 // agressive
 	DUPLICATE_THRESHOLD: 26,
-// Thubnail conkfiguration for both the "small" and "large" thumbnail quality
-// settings
+/*
+ * Thumbnail configuration for OP and regular thumbnails. Changing these will
+ * cause existing images to have odd aspect ratios. It is recommended for THUMB
+ * to be twice as big as PINKY.
+ */
 	PINKY_QUALITY: 50,
 	PINKY_DIMENSIONS: [125, 125],
 	THUMB_QUALITY: 50,
