@@ -628,7 +628,7 @@ web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
 		cb(null, 'redirect', '../' + params[2]);
 });
 
-web.resource(/^\/outbound\/(g|iqdb|sn)\/(\d+\.jpg)$/,
+web.resource(/^\/outbound\/(g|iqdb|sn)\/(\d+\.(?:jpg|png))$/,
 			function (req, params, cb) {
 	var thumb = imager.config.MEDIA_URL + 'thumb/' + params[2];
 
