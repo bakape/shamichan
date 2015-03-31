@@ -7,14 +7,20 @@ Project uses [Semantic Versioning](http://semver.org/)
 - UTC Clock to the schedule
 - Options export and import to/from file
 - Option to anonymise all posters
+
 ###Fixed
 - Delay before r/a/dio banner appearing, when enabled
+
 ###Changed
 - Meguca client compilation, install and upgrade procedures. See
 README.md
 - Seperated client-related cleaning into `make client_clean`
 
-##0.11.2 - 2015-23-19
+##0.11.3 - 2015-03-31
+###Fixed
+- Server crash, when thread expiry is not defined for all boards
+
+##0.11.2 - 2015-03-19
 ###Fixed
 - "Clear hidden" button now only renders on the General tab of options
 - No word auto completion in the blockquote on mobile
