@@ -1,8 +1,8 @@
 Real-time imageboard.
 MIT licensed.
 
-Note: The git master branch contains the development version of the
-board. For more stable revisions, please download the latest release.
+**NOTE: The git master branch contains the development version of the
+board. Crashes are not uncommon as new features are added and patched. For more stable revisions, please download the latest release.**
 
 ##Setup
 
