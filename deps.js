@@ -107,5 +107,8 @@ exports.ALPHA = [
 	'alpha/identity.js',
 	'alpha/imager.js',
 	'alpha/time.js',
-	'alpha/memory.js'
+	'alpha/memory.js',
+	'alpha/connection.js',
+	'alpha/scroll.js',
+	'alpha/mobile.js',
 ];

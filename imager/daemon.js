@@ -1,4 +1,5 @@
 var async = require('async'),
+	common = require('../common'),
 	config = require('./config'),
 	configMain = require('../config'),
 	crypto = require('crypto'),
@@ -215,7 +216,7 @@ StillJob.prototype.describe_job = function () {
 };
 
 StillJob.prototype.perform_job = function () {
-	const dest = index.media_path('tmp', 'still_' + etc.random_id());
+	const dest = index.media_path('tmp', 'still_' + common.random_id());
 	var self = this;
 	child_process.execFile(ffmpegBin, [
 			'-hide_banner', '-loglevel', 'info',
@@ -741,7 +742,7 @@ IU.record_image = function (tmps) {
 			view[key] = self.image[key];
 	});
 	view.pinky = this.pinky;
-	var image_id = etc.random_id().toFixed();
+	var image_id = common.random_id().toFixed();
 	var alloc = {image: view, tmps: tmps};
 	this.db.record_image_alloc(image_id, alloc, function (err) {
 		if (err)

@@ -7,6 +7,7 @@ var $ = require('jquery'),
 	imager = require('./imager'),
 	main = require('./main'),
 	options = require('./options'),
+	state = require('./state'),
 	time = require('./time');
 
 var PostModel = exports.PostModel = Backbone.Model.extend({
@@ -77,7 +78,7 @@ var Article = exports.Article = Backbone.View.extend({
 			'removeSelf': this.bumplessRemove
 		});
 		this.initCommon();
-		if (options.get('postUnloading') && CurThread) {
+		if (options.get('postUnloading') && state.page.get('thread')) {
 			this.listenTo(this.model, {
 				'add': unloadTopPost
 			});

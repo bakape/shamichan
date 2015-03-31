@@ -904,6 +904,6 @@ parse_name = function(name) {
 };
 exports.parse_name = parse_name;
 
-function random_id() {
+exports.random_id = function() {
 	return Math.floor(Math.random() * 1e16) + 1;
-}
+};

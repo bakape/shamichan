@@ -47,6 +47,10 @@ const isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 // Store them here, to avoid requiring modules in the wrong order
 exports.send = function() {};
 exports.dispatcher = {};
+exports.syncs = {};
+exports.connSM = new common.FSM('load');
+exports.postSM = new common.FSM('none');
+
 // Cached jQuery objects
 exports.$doc = $(document);
 var $threads = exports.$threads = $('threads');
