@@ -44,6 +44,7 @@ if (langSet)
 
 const isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
+
 // Store them here, to avoid requiring modules in the wrong order
 exports.send = function() {};
 exports.dispatcher = {};
@@ -53,7 +54,7 @@ exports.postSM = new common.FSM('none');
 
 // Cached jQuery objects
 exports.$doc = $(document);
-var $threads = exports.$threads = $('threads');
+exports.$threads = $('threads');
 
 // The require chain also loads some core dependancies
 var Extract = require('./extract');

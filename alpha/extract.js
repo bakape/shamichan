@@ -1,11 +1,11 @@
 /*
- * Extact model data from the thread tree HTML and populate models
+ * Extact model data from the thread tree HTML and populate models and views
  */
 
 var $ = require('jquery'),
 	main = require('./main'),
 	memory = require('./memory'),
-	models = require('./models');
+	posts = require('./posts/');
 
 // remember which posts are mine for two days
 var Mine = new memory('mine', 2);
@@ -26,23 +26,23 @@ Extract.prototype.extractThread = function($section) {
 	var replies = [],
 		self = this;
 	$section.children('article').each(function() {
-		var post = new models.PostModel(self.extractModel($(this)));
-		new models.Article({
+		var post = new posts.PostModel(self.extractModel($(this)));
+		new posts.Article({
 			model: post,
 			el: this
 		});
 		replies.push(post);
 		// Add to displayed post collection
-		models.posts.add(post);
+		posts.posts.add(post);
 	});
 	// Extract the model of the OP
-	var threadModel = new models.ThreadModel(this.extractModel($section));
+	var threadModel = new posts.ThreadModel(this.extractModel($section));
 	// Add all replies to the threads reply collection
 	threadModel.replies.add(replies);
 	// Add to both collections, for less expensive searches
-	models.threads.add(threadModel);
-	models.posts.add(threadModel);
-	new models.Section({
+	posts.threads.add(threadModel);
+	posts.posts.add(threadModel);
+	new posts.Section({
 		model: threadModel,
 		el: $section[0]
 	});
