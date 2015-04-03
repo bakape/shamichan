@@ -270,7 +270,7 @@ StillJob.prototype.perform_job = function () {
 			self.finish_job(null, {
 				still_path: dest,
 				// Could have false positives due to chapter titles. Bah.
-				has_audio: (is_webm && /audio:\s*vorbis/i.test(stderr)) || isMP3,
+				has_audio: (is_webm && /audio:\s*(?:vorbis|opus)/i.test(stderr)) || isMP3,
 				length: length,
 				mp3: isMP3
 			});
