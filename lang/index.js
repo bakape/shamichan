@@ -1,5 +1,11 @@
 /*
- * Export your language config files here
+ * This file has no real purpose aside from easing requiring server-side.
+ * No extra code modification is required thanks to this. Just paste in your
+ * language pack and add it to the LANGS array in ./config.js
  */
 
-exports.en_GB = require('./en_GB');
+var config = require('../config');
+
+config.LANGS.forEach(function(lang) {
+	exports[lang] = require('./' + lang + '/server');
+});

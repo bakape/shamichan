@@ -343,8 +343,12 @@ function (req, resp) {
 
 	var board = this.board;
 	// Only render <threads> for pushState() updates
-	const min = !!req.query.minimal,
-		alpha = !!req.query.alpha;
+	const min = req.query.minimal == 'true',
+		alpha = req.query.alpha == 'true',
+		cookies = web.parse_cookie(req.headers.cookie),
+		lang = config.LANGS.indexOf(cookies.lang) > -1 ? cookies.lang
+			: config.DEFAULT_LANG;
+
 	var info = {board: board, ident: req.ident, resp: resp};
 	hooks.trigger_sync('boardDiversion', info);
 	if (info.diverted)
@@ -355,14 +359,14 @@ function (req, resp) {
 	yaku.once('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1, board == 'archive');
 		if (!min)
-			render.write_board_head(resp, board, nav, alpha);
+			render.write_board_head(resp, board, nav, alpha, lang);
 		else
 			render.write_board_title(resp, board);
 		// Have write_thread_html render the top pagination
 		yaku.emit('top', nav);
 	});
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
-	render.write_thread_html(yaku, req, resp, {
+	render.write_thread_html(yaku, req, resp, cookies, {
 		fullLinks: true,
 		board: board
 	});
@@ -370,7 +374,7 @@ function (req, resp) {
 		// Have write_thread_html append bottom pagination
 		yaku.emit('bottom');
 		if (!min)
-			render.write_page_end(resp, req.ident, alpha);
+			render.write_page_end(resp, req.ident, alpha, lang);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -416,18 +420,21 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board;
-	const min = !!req.query.minimal,
-		alpha = !!req.query.alpha;
+	const min = req.query.minimal == 'true',
+		alpha = req.query.alpha == 'true',
+		cookies = web.parse_cookie(req.headers.cookie),
+		lang = config.LANGS.indexOf(cookies.lang) > -1 ? cookies.lang
+			: config.DEFAULT_LANG;
 	var nav = page_nav(this.threadCount, this.page, board == 'archive');
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	if (!min)
-		render.write_board_head(resp, board, nav, alpha);
+		render.write_board_head(resp, board, nav, alpha, lang);
 	else
 		render.write_board_title(resp, board);
 
 	// XXX: Emitting right after defing the handler is retarded. Need to unify
 	// the render code some more
-	render.write_thread_html(this.yaku, req, resp, {
+	render.write_thread_html(this.yaku, req, resp, cookies, {
 		fullLinks: true,
 		board: board
 	});
@@ -436,7 +443,7 @@ function (req, resp) {
 	this.yaku.once('end', function () {
 		self.yaku.emit('bottom');
 		if (!min)
-			render.write_page_end(resp, req.ident, alpha);
+			render.write_page_end(resp, req.ident, alpha, lang);
 		resp.end();
 		self.finished();
 	});
@@ -520,7 +527,9 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 	reader.once('begin', function (preThread) {
 		var headers;
 		if (!config.DEBUG && preThread.hctr) {
-			var etag = 'W/' + preThread.hctr + '-' + RES.indexHash;
+			// XXX: Always uses the hash of the default language in the etag
+			var etag = 'W/' + preThread.hctr + '-'
+				+ RES['alphaHash-' + config.DEFAULT_LANG];
 			var chunks = web.parse_cookie(req.headers.cookie);
 			var thumb = req.cookies.thumb;
 			if (thumb && common.thumbStyles.indexOf(thumb) >= 0)
@@ -546,8 +555,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			}
 			headers = _.clone(web.vanillaHeaders);
 			headers.ETag = etag;
-			headers['Cache-Control'] = (
-					'private, max-age=0, must-revalidate');
+			headers['Cache-Control'] = ('private, max-age=0, must-revalidate');
 		}
 		else
 			headers = web.noCacheHeaders;
@@ -567,12 +575,15 @@ function (req, resp) {
 		return render_suspension(req, resp);
 
 	var board = this.board, op = this.op;
-	const min = !!req.query.minimal,
-		alpha = !!req.query.alpha;
+	const min = req.query.minimal == 'true',
+		alpha = req.query.alpha == 'true',
+		cookies = web.parse_cookie(req.headers.cookie),
+		lang = config.LANGS.indexOf(cookies.lang) > -1 ? cookies.lang
+			: config.DEFAULT_LANG;
 
 	resp = write_gzip_head(req, resp, this.headers);
 	if (!min){
-		render.write_thread_head(resp, board, op, {
+		render.write_thread_head(resp, board, op, lang, {
 			subject: this.subject,
 			abbrev: this.abbrev,
 			alpha: alpha
@@ -584,7 +595,7 @@ function (req, resp) {
 			abbrev: this.abbrev,
 		});
 	}
-	render.write_thread_html(this.reader, req, resp, {
+	render.write_thread_html(this.reader, req, resp, cookies, {
 		fullPosts: true,
 		board: board,
 		loadAllPostsLink: true,
@@ -596,7 +607,7 @@ function (req, resp) {
 		// Have write_thread_html write the [Return][Top]
 		self.reader.emit('bottom');
 		if (!min)
-			render.write_page_end(resp, req.ident, alpha);
+			render.write_page_end(resp, req.ident, alpha, lang);
 		resp.end();
 		self.finished();
 	});

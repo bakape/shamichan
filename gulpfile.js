@@ -39,9 +39,14 @@ gulp.task('alpha', function() {
 	// transform regular node stream to gulp (buffered vinyl) stream
 	var browserified = transform(function(filename) {
 		return browserify({entries: filename, debug: true})
+			// Ignore these requires on the client
 			.exclude('./config')
+			.exclude('../../config')
+			.exclude('../../hot')
+			.exclude('./lang/')
 			.exclude('./server/state')
 			.exclude('./imager/config')
+			.exclude('./hot')
 			/*
 			 * Make available outside the bundle with require().
 			 * Needed for mod.js

@@ -1,104 +1,86 @@
 /*
- * Mapping of configurable language options
+ * Server-only mapping of configurable language options
  */
-const lang = {
-	anon: 'Anonymous',
-	search: 'Search',
-	show: 'Show',
-	expand: 'Expand',
-	last: 'Last',
-	see_all: 'See all',
-	bottom: 'Bottom',
-	expand_images: 'Expand Images',
-	live: 'live',
-	catalog: 'Catalog',
-	return: 'Return',
-	top: 'Top',
-
-	// Thumbnail styles
-	small: 'small',
-	sharp: 'sharp',
-	hide: 'hide',
-	// Image fit modes
-	none: 'none',
-	full: 'full-size',
-	width: 'fit to width',
-	height: 'fit to height',
-	both: 'fit to both',
-
-	// Time-related
-	week: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-	year: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-		'Oct', 'Nov', 'Dec'],
-	just_now: 'just now',
-	unit_minute: 'minute',
-	unit_hour: 'hour',
-	unit_day: 'day',
-	unit_month: 'month',
-	unit_year: 'year',
-
-	// Format functions
-	pluralize: function(n, noun) {
-		// For words ending with 'y'
-		if (n != 1 && noun.slice(-1) == 'y')
-			noun = noun.slice(0, -1) + 'ie';
-		return n + ' ' + noun + (n == 1 ? '' : 's');
-	},
-	capitalize: function(word) {
-		return word[0].toUpperCase() + word.slice(1);
-	},
-	// 56 minutes ago
-	ago: function(time, unit) {
-		return lang.pluralize(time, unit) + ' ago';
-	},
-	// 47 replies and 21 images omited
-	abbrev_msg:  function(omit, img_omit) {
-		return lang.pluralize(omit, 'reply')
-			+ (img_omit ? ' and ' + lang.pluralize(img_omit, 'image') : '')
-			+ ' omitted.';
-	},
-
+var lang = {
 	// Imager responses
-	im_bad_client: "Bad client ID.",
-	im_too_large: 'File is too large.',
-	im_req_problem: 'Upload request problem.',
-	im_aborted: 'Upload was aborted.',
-	im_received: '% received...',
-	im_invalid: 'Invalid upload.',
-	im_no_image: 'No image.',
-	im_bad_spoiler: 'Bad spoiler.',
-	im_temp_tracking: "Temp tracking error: ",
-	im_invalid_format: 'Invalid image format.',
-	im_verifying: 'Verifying...',
-	im_missing: "File went missing.",
-	im_video_invalid: "Invalid video file.",
-	im_ffmpeg_too_old: "Server's ffmpeg is too old.",
-	im_mp3_no_cover: 'MP3 has no cover art.',
-	im_video_unknown: "Unknown video reading error.",
-	im_video_format: 'File format corrupted.',
-	im_audio_kinshi: 'Audio is not allowed.',
-	im_bad: 'Bad image.',
-	im_not_png: 'Not PNG or APNG.',
-	im_video: 'Video',
-	im_image: 'Image',
-	im_bad_dims: 'Bad image dimensions.',
-	im_too_many_pixels: 'Way too many pixels.',
-	im_too_wide_and_tall: ' is too wide and too tall.',
-	im_too_wide: ' is too wide.', // No such thing
-	im_too_tall: ' is too tall.',
-	im_thumbnailing: 'Thumbnailing...',
-	im_not_image: 'File is not an image',
-	im_unsupported: "Unsupported file type.",
-	im_dims_fail: "Couldn't read image dimensions.",
-	im_hashing: 'Hashing error.',
-	im_resizing: "Resizing error.",
-	im_pngquant: "Pngquant thumbnailing error.",
-	im_unknown: 'Unknown image processing error.',
+	im : {
+		bad_client: "Bad client ID.",
+		too_large: 'File is too large.',
+		req_problem: 'Upload request problem.',
+		aborted: 'Upload was aborted.',
+		received: '% received...',
+		invalid: 'Invalid upload.',
+		no_image: 'No image.',
+		bad_spoiler: 'Bad spoiler.',
+		temp_tracking: "Temp tracking error: ",
+		invalid_format: 'Invalid image format.',
+		verifying: 'Verifying...',
+		missing: "File went missing.",
+		video_invalid: "Invalid video file.",
+		ffmpeg_too_old: "Server's ffmpeg is too old.",
+		mp3_no_cover: 'MP3 has no cover art.',
+		video_unknown: "Unknown video reading error.",
+		video_format: 'File format corrupted.',
+		audio_kinshi: 'Audio is not allowed.',
+		bad: 'Bad image.',
+		not_png: 'Not PNG or APNG.',
+		video: 'Video',
+		image: 'Image',
+		bad_dims: 'Bad image dimensions.',
+		too_many_pixels: 'Way too many pixels.',
+		too_wide_and_tall: ' is too wide and too tall.',
+		too_wide: ' is too wide.', // No such thing
+		too_tall: ' is too tall.',
+		thumbnailing: 'Thumbnailing...',
+		not_image: 'File is not an image',
+		unsupported: "Unsupported file type.",
+		dims_fail: "Couldn't read image dimensions.",
+		hashing: 'Hashing error.',
+		resizing: "Resizing error.",
+		pngquant: "Pngquant thumbnailing error.",
+		unknown: 'Unknown image processing error.',
+	},
 
-	// Client-only
+	//Various template strings
+	tmpl: {
+		name: 'Name:',
+		email: 'Email:',
+		options: 'Options',
+		identity: 'Identity',
+		faq: 'FAQ',
+		schedule: 'Schedule',
+		feedback: 'Feedback',
+		changelog: 'Changelog',
+		onlineCounter: 'Online Counter',
+	},
 
-	// Options; id: [label, tooltip]
+	/*
+	 * Client options. The options panel is rendered on template generation, so
+	 * these are only needed by the server.
+	 * id: [label, tooltip]
+	 */
 	opts: {
+		// Thumbnail styles
+		small: 'small',
+		sharp: 'sharp',
+		hide: 'hide',
+		// Image fit modes
+		none: 'none',
+		full: 'full-size',
+		width: 'fit to width',
+		height: 'fit to height',
+		both: 'fit to both',
+
+		// Names for the options panel tabs
+		tabs: ['General', 'Style', 'ImageSearch', 'Fun', 'Shortcuts'],
+		export: [
+			'Export',
+			'Export options to file'
+		],
+		import: [
+			'Import',
+			'Import options from file'
+		],
 		lang: [
 			'Language',
 			'Change interface language'
@@ -159,10 +141,10 @@ const lang = {
 		// Custom localisation functions
 		imageSearch: [
 			function(site) {
-				return lang.capitalize(site)  + ' Image Search';
+				return lang.common.capitalize(site)  + ' Image Search';
 			},
 			function(site) {
-				return 'Show/Hide ' + lang.capitalize(site) + ' search search links';
+				return `Show/Hide ${lang.common.capitalize(site)} search links`;
 			}
 		],
 		illyaBGToggle: [
@@ -230,7 +212,8 @@ const lang = {
 				+ ' aren\'t affected. New post images are also expanded.'
 		]
 	}
-
 };
+
+lang.common = require('./common');
 
 module.exports = lang;

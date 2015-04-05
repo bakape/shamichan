@@ -96,6 +96,7 @@ exports.MOD_CLIENT_DEPS = [
 
 // Only used for monitoring by builder.js
 exports.ALPHA = [
+	'gulpfile.js',
 	'alpha/background.js',
 	'alpha/banner.js',
 	'alpha/client.js',
@@ -106,10 +107,13 @@ exports.ALPHA = [
 	'alpha/main.js',
 	'alpha/memory.js',
 	'alpha/mobile.js',
-	'alpha/options.js',
-	'alpha/posts/scroll.js',
-	'alpha/posts/state.js',
-	'alpha/posts/time.js',
+	'alpha/options',
+	'alpha/posts',
+	'alpha/scroll.js',
+	'alpha/state.js',
+	'alpha/time.js',
+	'alpha/options/common.js',
+	'alpha/options/index.js',
 	'alpha/posts/article.js',
 	'alpha/posts/common.js',
 	'alpha/posts/imager.js',

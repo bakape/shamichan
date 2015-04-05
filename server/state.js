@@ -5,6 +5,8 @@ var _ = require('underscore'),
 	fs = require('fs'),
 	hooks = require('../hooks'),
 	imager = require('../imager/config'),
+	lang = require('../lang'),
+	options = require('../alpha/options/common'),
 	path = require('path'),
 	report = require('../report/config'),
 	vm = require('vm');
@@ -200,19 +202,17 @@ function read_templates(cb) {
 
 function expand_templates(res) {
 	var templateVars = _.clone(HOT);
-	_.extend(templateVars, imager);
-	_.extend(templateVars, config);
-	_.extend(templateVars, make_navigation_html());
+	_.extend(templateVars, imager, config, make_navigation_html());
 
 	templateVars.SCHEDULE = build_schedule(templateVars.SCHEDULE);
 	templateVars.FAQ = build_FAQ(templateVars.FAQ);
 	// Format info banner
 	if (templateVars.BANNERINFO)
-		templateVars.BANNERINFO = '&nbsp;&nbsp;&nbsp;['
-				+ templateVars.BANNERINFO + ']';
+		templateVars.BANNERINFO = `&nbsp;&nbsp;[${templateVars.BANNERINFO}]`;
 
-	function tmpl(data) {
-		var expanded = _.template(data)(templateVars);
+	// Insert variables into the templates
+	function tmpl(data, vars) {
+		var expanded = _.template(data)(vars ||templateVars);
 		return {tmpl: expanded.split(/\$[A-Z]+/),
 			src: expanded};
 	}
@@ -227,13 +227,26 @@ function expand_templates(res) {
 		serverErrorHtml: res.serverError,
 	};
 
-	var html, hash;
-	for (var i of ['index', 'alpha']) {
-		html = tmpl(res[i]);
-		ex[i + 'Tmpl'] = html.tmpl;
+	// Build index templates for each language
+	config.LANGS.forEach(function(ln) {
+		var html, hash;
+		// Inject the localised variables
+		_.extend(templateVars, lang[ln].tmpl);
+		// Build localised options panel
+		templateVars.options_panel = buildOptions(lang[ln].opts);
+		templateVars.lang = JSON.stringify(lang[ln].common);
+		html = tmpl(res.alpha);
+		ex['alphaTmpl-' + ln] = html.tmpl;
 		hash = crypto.createHash('md5').update(html.src);
-		ex[i + 'Hash'] = hash.digest('hex').slice(0, 8);
-	}
+		ex['alphaHash-' + ln] = hash.digest('hex').slice(0, 8)
+	});
+
+	// Legacy client template
+	var html, hash;
+	html = tmpl(res.index);
+	ex.indexTmpl = html.tmpl;
+	hash = crypto.createHash('md5').update(html.src);
+	ex.indexHash = hash.digest('hex').slice(0, 8);
 
 	return ex;
 }
@@ -267,6 +280,91 @@ function build_FAQ(faq){
 	}
 }
 
+// Hardcore pornography
+function buildOptions(lang) {
+	var html = '<div class="bmodal" id="options-panel">'
+		+ '<ul class="option_tab_sel">';
+	;
+	lang.tabs.forEach(function(tab, index) {
+		html += `<li><a data-content="tab-${index}"`;
+		// Highlight the first tabButt by default
+		if (index === 0)
+			html += ' class="tab_sel"';
+		html += `>${tab}</a></li>`;
+	});
+	html += '</ul><ul class="option_tab_cont">';
+	lang.tabs.forEach(function(tab, index) {
+		var opts = _.filter(options, function(opt) {
+			/*
+			 * Pick the options for this specific tab. Don't know why we have
+			 * undefineds inside the array, but we do.
+			 */
+			if (!opt || opt.tab != index)
+				return false;
+			// Option should not be loaded, because of server-side configs
+			return !(opt.load !== undefined && !opt.load);
+		});
+		html += `<li class="tab-${index}`;
+		// Show the first tab by default
+		if (index == 0)
+			html += ' tab_sel';
+		html += '">';
+		// Render the actual options
+		opts.forEach(function(opt) {
+			const isShortcut = opt.type == 'shortcut',
+				isList = opt.type instanceof Array,
+				isCheckbox = opt.type == 'checkbox' || opt.type === undefined,
+				isNumber = opt.type == 'number',
+				isImage = opt.type == 'image';
+			if (isShortcut)
+				html += 'Alt+';
+			if (!isList) {
+				html += '<input';
+				if (isCheckbox || isImage)
+					html += ` type="${(isCheckbox ? 'checkbox' : 'file')}"`;
+				if (isNumber)
+					html += ' style="width: 4em;" maxlength="4"';
+				else if (isShortcut)
+					html += ' maxlength="1"';
+			}
+			else
+				html += '<select';
+			// Custom localisation functions
+			var title, tooltip;
+			if (opt.lang) {
+				title = lang[opt.lang][1](opt.id);
+				label = lang[opt.lang][0](opt.id);
+			}
+			else {
+				title = lang[opt.id][1];
+				label = lang[opt.id][0];
+			}
+			html += ` id="${opt.id}" title="${title}">`;
+
+			if (isList) {
+				opt.type.forEach(function(item) {
+					html += `<option value="${item}">${lang[item] || item}</option>`;
+				});
+				html += '</select>';
+			}
+			html += `<label for="${opt.id}" title="${title}">${label}</label><br>`;
+		});
+		// Append Export and Import links to first tab
+		if (index == 0) {
+			html += '<br>';
+			['export', 'import'].forEach(function(id) {
+				html += `<a id="${id}" title="${lang[id][1]}">${lang[id][0]}</a> `;
+			});
+			// Hidden file input for uploading the JSON
+			html += '<input type="file" style="display: none;" id="importSettings"'
+				+ ' name="Import Settings"></input>';
+		}
+		html += '</li>';
+	});
+	html += '</ul></div>';
+	return html;
+}
+
 exports.reload_hot_resources = function (cb) {
 	async.series([
 		reload_hot_config,
@@ -289,7 +387,7 @@ function make_navigation_html() {
 	});
 	// Add custom URLs to board navigation
 	config.PSUEDO_BOARDS.forEach(function(item) {
-		bits.push(' / <a href="'+item[1]+'/">'+item[0]+'</a>');
+		bits.push(' / <a href="'+item[1]+'">'+item[0]+'</a>');
 	});
 	bits.push(']</b>');
 	return {NAVTOP: bits.join('')};

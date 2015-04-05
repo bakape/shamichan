@@ -9,8 +9,7 @@
 var $ = require('jquery'),
 	Backbone = require('backbone'),
 	state = require('./state'),
-	common = require('../common'),
-	lang = require('../lang/');
+	common = require('../common');
 
 // Register jquery plugins
 require('jquery.cookie');
@@ -35,12 +34,6 @@ function tamashi(num) {
 // Initialise main rendering object
 var oneeSama = exports.oneeSama = new common.OneeSama(tamashi);
 oneeSama.full = oneeSama.op = state.page.get('thread');
-
-// Read language preference
-// TODO: Remove, when options panel rendering is moved to server/state.js
-const langSet = state.config.get('LANGS')[$.cookie('lang')];
-if (langSet)
-	oneeSama.lang = lang[langSet];
 
 const isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);

@@ -5,21 +5,21 @@
 var isNode = typeof navigator === 'undefined';
 
 // Define vars, for the server and client sides
-var DEF = exports, state, config, hotConfig, imagerConfig;
+var DEF = exports, state, config, hotConfig, imagerConfig, lang;
 if (isNode) {
 	state = require('./server/state');
 	config = require('./config');
 	hotConfig = state.hot;
 	imagerConfig = require('./imager/config');
+	lang = require('./lang/');
 }
 else {
 	state = require('./alpha/state');
 	config = state.config.attributes;
 	hotConfig = state.hotConfig.attributes;
 	imagerConfig = state.imagerConfig.attributes;
+	lang = window.lang;
 }
-
-var lang = require('./lang/');
 
 DEF.INVALID = 0;
 
@@ -259,8 +259,11 @@ function override(obj, orig, upgrade) {
 	};
 }
 
-// Language mappings and settings. Overriden by cookie or client-side setting.
-OS.lang = lang[config.DEFAULT_LANG];
+/*
+ * Language mappings and settings. Overriden by cookie server-side and
+ * bootstraped into the template client-side
+ */
+OS.lang = isNode ? lang[config.DEFAULT_LANG].common : lang;
 
 OS.red_string = function(ref) {
 	var dest, linkClass;
