@@ -70,12 +70,12 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 	// TODO: Make this prettier
 	var bq = $('#' + num + ' > blockquote');
 	if (bq.length) {
-		oneeSama.dice = extra && extra.dice;
-		oneeSama.links = links || {};
-		oneeSama.callback = inject;
-		oneeSama.buffer = bq;
-		oneeSama.state = state;
-		oneeSama.fragment(msg[1]);
+		main.oneeSama.dice = extra && extra.dice;
+		main.oneeSama.links = links || {};
+		main.oneeSama.callback = inject;
+		main.oneeSama.buffer = bq;
+		main.oneeSama.state = state;
+		main.oneeSama.fragment(msg[1]);
 	}
 };
 
