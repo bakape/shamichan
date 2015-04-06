@@ -15,7 +15,11 @@ var Article = module.exports = Backbone.View.extend({
 	tagName: 'article',
 
 	initialize: function () {
-		if (!this.el)
+		/*
+		 * XXX: A bit ineficient, because first an empty element is renderred
+		 * and then a proper one.
+		 */
+		if (this.$el.is(':empty'))
 			this.render();
 		this.listenTo(this.model, {
 			'change:backlinks': this.renderBacklinks,

@@ -14,7 +14,7 @@ var Section = module.exports = Backbone.View.extend({
 
 	initialize: function () {
 		// On the live page only
-		if (!this.el && state.page.get('page') === -1)
+		if (this.$el.is(':empty') && state.page.get('page') === -1)
 			this.render();
 		this.listenTo(this.model, {
 			'change:locked': this.renderLocked,
@@ -32,7 +32,6 @@ var Section = module.exports = Backbone.View.extend({
 		this.$el.prependTo(main.$threads);
 		this.$el.after('<hr class="sectionHr"/>');
 		return this;
-
 	},
 
 	renderHide: function (model, hide) {
