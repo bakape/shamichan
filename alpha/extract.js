@@ -32,16 +32,12 @@ Extract.prototype.extractThread = function($section) {
 			el: this
 		});
 		replies.push(post);
-		// Add to displayed post collection
-		posts.posts.add(post);
 	});
 	// Extract the model of the OP
-	var threadModel = new posts.ThreadModel(this.extractModel($section));
-	// Add all replies to the threads reply collection
-	threadModel.replies.add(replies);
-	// Add to both collections, for less expensive searches
-	posts.threads.add(threadModel);
-	posts.posts.add(threadModel);
+	var model = this.extractModel($section);
+	// Add all replies to the thread's reply collection
+	model.replies = replies;
+	var threadModel = new posts.ThreadModel(model);
 	new posts.Section({
 		model: threadModel,
 		el: $section[0]

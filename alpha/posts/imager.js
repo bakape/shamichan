@@ -13,6 +13,19 @@ var Hidamari = exports.Hidamari = {
 		'click >figure>a': 'imageClicked',
 	},
 
+	renderImage: function (model, image) {
+		var $fig = this.$el.children('figure');
+		// Remove image on mod deletion
+		if (!image)
+			$fig.remove();
+		// Insert figure. Only used for articles
+		else if (!$fig.length) {
+			$(common.flatten(main.oneeSama.gazou(image, false)).join(''))
+				.insertAfter(this.$el.children('header'));
+			this.autoExpandImage();
+		}
+	},
+
 	renderSpoiler: function(spoiler){
 		this.model.get('image').spoiler = spoiler;
 		this.renderThumbnail();

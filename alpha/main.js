@@ -35,7 +35,7 @@ function tamashi(num) {
 var oneeSama = exports.oneeSama = new common.OneeSama(tamashi);
 oneeSama.full = oneeSama.op = state.page.get('thread');
 
-const isMobile = exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
+exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
 
 // Store them here, to avoid requiring modules in the wrong order
@@ -52,3 +52,7 @@ exports.$threads = $('threads');
 // The require chain also loads some core dependancies
 var Extract = require('./extract');
 new Extract();
+
+// Connect and start the client
+require('./client');
+require('./connection');

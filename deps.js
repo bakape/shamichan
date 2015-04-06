@@ -97,6 +97,7 @@ exports.MOD_CLIENT_DEPS = [
 // Only used for monitoring by builder.js
 exports.ALPHA = [
 	'gulpfile.js',
+	'common.js',
 	'alpha/background.js',
 	'alpha/banner.js',
 	'alpha/client.js',

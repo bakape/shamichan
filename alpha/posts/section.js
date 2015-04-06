@@ -6,12 +6,16 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone'),
 	imager = require('./imager'),
-	postCommon = require('./common');
+	postCommon = require('./common'),
+	state = require('../state');
 
 var Section = module.exports = Backbone.View.extend({
 	tagName: 'section',
 
 	initialize: function () {
+		// On the live page only
+		if (!this.el && state.page.get('page') === -1)
+			this.render();
 		this.listenTo(this.model, {
 			'change:locked': this.renderLocked,
 			destroy: this.remove,
@@ -20,6 +24,15 @@ var Section = module.exports = Backbone.View.extend({
 			'add': this.renderRelativeTime
 		});
 		this.initCommon();
+	},
+
+	render: function() {
+		this.setElement($($.parseHTML(main.oneeSama.mono(this.model.attributes)))
+			.filter('section')[0]);
+		this.$el.prependTo(main.$threads);
+		this.$el.after('<hr class="sectionHr"/>');
+		return this;
+
 	},
 
 	renderHide: function (model, hide) {
@@ -31,16 +44,9 @@ var Section = module.exports = Backbone.View.extend({
 	},
 
 	remove: function () {
-		var replies = this.model.get('replies');
-		replies.each(function (post) {
-			clear_post_links(post, replies);
-		});
-		replies.reset();
-
 		this.$el.next('hr.sectionHr').andSelf().remove();
-		// Remove from all Posts collection
-		Posts.remove(this.model);
 		this.stopListening();
+		return this;
 	},
 });
 

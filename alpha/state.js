@@ -15,11 +15,8 @@ exports.page = new Backbone.Model({
 
 /*
  * Not sure how many of these are going to be  more useful than a property of
- * the window. We'll as we go, I guess.
+ * the window object. We'll as we go, I guess.
  */
-var c = ['config', 'imagerConfig', 'reportConfig', 'hotConfig'],
-	type;
-for (var i = 0; i < c.length; i++) {
-	type = c[i];
+['config', 'imagerConfig', 'reportConfig', 'hotConfig'].forEach(function(type) {
 	exports[type] = new Backbone.Model(window[type]);
-}
+});
