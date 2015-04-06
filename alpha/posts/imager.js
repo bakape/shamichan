@@ -121,7 +121,7 @@ var Hidamari = exports.Hidamari = {
 		// Audio controls are always the same height and do not need to be fitted
 		if (img.ext == '.mp3')
 			return this.renderAudio();
-		const width = newWidth = img.dims[0],
+		var width = newWidth = img.dims[0],
 			height = newHeight = img.dims[1];
 		if (fit == 'full')
 			return this.expandImage(width, height, img.ext);
