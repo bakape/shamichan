@@ -98,6 +98,7 @@ exports.MOD_CLIENT_DEPS = [
 exports.ALPHA = [
 	'gulpfile.js',
 	'common.js',
+	'alpha/amusement.js',
 	'alpha/background.js',
 	'alpha/banner.js',
 	'alpha/client.js',

@@ -28,16 +28,16 @@ window.send = function (msg) {
 function on_message(e) {
 	if (state.config.get('DEBUG'))
 		console.log('>', e.data);
-	const msgs = JSON.parse(e.data);
-
-	for (var i = 0; i < msgs.length; i++) {
-		var msg = msgs[i];
-		var op = msg.shift();
-		var type = msg.shift();
+	JSON.parse(e.data).forEach(function(msg) {
+		// TEMP: Log yet unsupported websocket calls
+		if (!main.dispatcher[msg[1]])
+			return console.error('Unsuported websocket call: ', msg);
+		const op = msg.shift(),
+			type = msg.shift();
 		if (common.is_pubsub(type) && op in main.syncs)
 			main.syncs[op]++;
 		main.dispatcher[type](msg, op);
-	}
+	});
 }
 
 function sync_status(msg) {

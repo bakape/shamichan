@@ -53,6 +53,5 @@ exports.$threads = $('threads');
 var Extract = require('./extract');
 new Extract();
 
-// Connect and start the client
+// Start the client
 require('./client');
-require('./connection');

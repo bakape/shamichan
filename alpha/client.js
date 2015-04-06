@@ -171,3 +171,9 @@ dispatcher[common.HOT_INJECTION] = function(msg){
 dispatcher[common.MODEL_SET] = function (msg, op) {};
 dispatcher[common.COLLECTION_RESET] = function (msg, op) {};
 dispatcher[common.COLLECTION_ADD] = function (msg, op) {};
+
+// Include other additional modules
+require('./amusement');
+
+// Connect to the server
+require('./connection');
