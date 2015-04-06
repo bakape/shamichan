@@ -55,12 +55,13 @@ var OptionModel = Backbone.Model.extend({
 			id = 'board.' + state.page.get('board') + '.' + id;
 		this.set('storedId', id);
 
-		if (obj.exec !== undefined && obj.execOnStart !== false) {
+		if (obj.exec !== undefined) {
 			var opts = {};
 			opts['change:' + id] = this.execListen;
 			this.listenTo(options, opts);
 			// Execute with current value
-			obj.exec(this.getValue());
+			if (obj.execOnStart !== false)
+				obj.exec(this.getValue());
 		}
 		optionsCollection.add(this);
 	},
