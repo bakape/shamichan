@@ -446,13 +446,13 @@ function parse_dice(frag) {
 }
 exports.parse_dice = parse_dice;
 
-function serverTime() {
+var serverTime = exports.serverTime = function() {
 	var d = new Date().getTime();
 	// On the server or time difference not compared yet
-	if (isNode || !serverTimeOffset)
+	if (isNode || !window.serverTimeOffset)
 		return d;
-	return d + serverTimeOffset;
-}
+	return d + window.serverTimeOffset;
+};
 
 function readable_dice(bit, d) {
 	if (bit == '#flip')

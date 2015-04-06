@@ -44,7 +44,7 @@ if (is_skewed) {
 
 // Get a more accurate server-client time offset, for interclient syncing
 // Does not account for latency, but good enough for our purposes
-var serverTimeOffset;
+var serverTimeOffset = window.serverTimeOffset;
 main.dispatcher[common.GET_TIME] = function(msg){
 	if (!msg[0])
 		return;
@@ -71,8 +71,8 @@ main.dispatcher[common.GET_TIME] = function(msg){
 	function render() {
 		if (!serverTimeOffset)
 			return setTimeout(render, 1000);
-		var d = new Date(serverTime()),
-			html = readableTime(d);
+		var d = new Date(common.serverTime()),
+			html = main.oneeSama.readable_time(d);
 		if (seconds)
 			html += ':' + common.pad(d.getUTCSeconds());
 		html += ' UTC';
@@ -82,8 +82,6 @@ main.dispatcher[common.GET_TIME] = function(msg){
 
 	render();
 })();
-
-
 
 /* syncwatch */
 

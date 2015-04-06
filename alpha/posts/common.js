@@ -3,7 +3,8 @@
  */
 var imager = require('./imager'),
 	main = require('../main'),
-	options = require('../options');
+	options = require('../options'),
+	time = require('../time');
 
 module.exports = {
 	initCommon: function(){
