@@ -36,7 +36,7 @@ var config = {
 	STAFF_BOARD: 'staff',
 
 // Language settings. You can easily map more. See ./lang/
-	LANGS: ['en_GB', 'pt_BR'],
+	LANGS: ['en_GB', 'pt_BR', 'es_ES'],
 	DEFAULT_LANG: 'en_GB',
 
 // Thread creation cooldown for the same IP in seconds
