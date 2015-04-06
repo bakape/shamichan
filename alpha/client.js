@@ -79,6 +79,33 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 	}
 };
 
+function inject(frag) {
+	var $dest = this.buffer;
+	for (var i = 0; i < this.state[1]; i++)
+		$dest = $dest.children('del:last');
+	if (this.state[0] == common.S_QUOTE)
+		$dest = $dest.children('em:last');
+	if (this.strong)
+		$dest = $dest.children('strong:last');
+	var out = null;
+	if (frag.safe) {
+		var m = frag.safe.match(/^<(\w+)>$/);
+		if (m)
+			out = document.createElement(m[1]);
+		else if (/^<\/\w+>$/.test(frag.safe))
+			out = '';
+	}
+	if (out === null) {
+		if (Array.isArray(frag))
+			out = $(common.flatten(frag).join(''));
+		else
+			out = common.escape_fragment(frag);
+	}
+	if (out)
+		$dest.append(out);
+	return out;
+}
+
 dispatcher[common.FINISH_POST] = function(msg) {
 	const num = msg[0];
 
