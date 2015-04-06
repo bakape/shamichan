@@ -196,7 +196,7 @@ exports.write_board_title = function(out, board){
 };
 
 exports.write_thread_head = function (out, board, op, opts) {
-	var indexTmpl = opts.alpha ? RES['alphaTmpl-' + opts.language]
+	var indexTmpl = opts.alpha ? RES['alphaTmpl-' + opts.lang]
 		: RES.indexTmpl;
 	var title = '/'+escape(board)+'/';
 	if (opts.subject)

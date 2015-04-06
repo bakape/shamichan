@@ -583,10 +583,11 @@ function (req, resp) {
 
 	resp = write_gzip_head(req, resp, this.headers);
 	if (!min){
-		render.write_thread_head(resp, board, op, lang, {
+		render.write_thread_head(resp, board, op, {
 			subject: this.subject,
 			abbrev: this.abbrev,
-			alpha: alpha
+			alpha: alpha,
+			lang: lang
 		});
 	}
 	else {
