@@ -5,7 +5,9 @@
 var $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone'),
+	hover = require('../hover'),
 	imager = require('./imager'),
+	index = require('./index'),
 	main = require('../main'),
 	options = require('../options'),
 	postCommon = require('./common'),
@@ -29,11 +31,13 @@ var Article = module.exports = Backbone.View.extend({
 			destroy: this.remove
 		});
 		this.initCommon();
+		/* TEMP: Disabled for now
 		if (options.get('postUnloading') && state.page.get('thread')) {
 			this.listenTo(this.model, {
 				'add': unloadTopPost
 			});
 		}
+		*/
 	},
 
 	render: function () {
@@ -79,6 +83,7 @@ var Article = module.exports = Backbone.View.extend({
 	},
 
 	// To not shift the scroll position on remove
+	// TODO: Rework, once scrolling code is done
 	bumplessRemove: function(){
 		const pos = $(window).scrollTop();
 		if (!at_bottom() && this.$el.offset().top < pos)
@@ -91,3 +96,31 @@ var Article = module.exports = Backbone.View.extend({
 
 // Extend with common mixins
 _.extend(Article.prototype, imager.Hidamari, postCommon);
+
+// Keeps threads non-laggy by keeping displayed post count within lastN
+function unloadTopPost(){
+	var m = location.search.match(/last=(\d+)/);
+	const threadNum = state.page.get('thread');
+	if (!m
+		|| $(hover.mouseover.get('target')).is('a, img, video')
+		|| threadNum > 0
+	) {
+		return;
+	}
+	var	thread = index.threads.get(threadNum);
+	if (thread.replies.length <= parseInt(m[1], 10) + 5)
+		return;
+	thread.replies.shift().destroy();
+	var $omit = $('.omit');
+	if (!$omit.length){
+		$omit = $('\t<span/>', {'class': 'omit'}).text(window.lang.abbrev_msg(1));
+		$omit.append(common.action_link_html(threadNum
+			+ location.hash, 'See all')+'\n');
+		$('section>blockquote').after($omit);
+	}
+	else {
+		var m = $omit.html().match(/^(\d+)(.*)/);
+		$('.omit').html(parseInt(m[1])+1+m[2]);
+	}
+	unloadTopPost();
+}
