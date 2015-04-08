@@ -41,8 +41,7 @@ var Article = module.exports = Backbone.View.extend({
 	},
 
 	render: function () {
-		this.setElement($($.parseHTML(main.oneeSama.mono(this.model.attributes)))
-			.filter('article')[0]);
+		this.setElement(main.oneeSama.mono(this.model.attributes));
 		// Insert into section
 		$('#' + this.model.get('op'))
 			.children('blockquote,.omit,form,article[id]:last')

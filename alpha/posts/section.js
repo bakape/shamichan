@@ -6,6 +6,7 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone'),
 	imager = require('./imager'),
+	main = require('../main'),
 	postCommon = require('./common'),
 	state = require('../state');
 
@@ -27,9 +28,8 @@ var Section = module.exports = Backbone.View.extend({
 	},
 
 	render: function() {
-		this.setElement($($.parseHTML(main.oneeSama.mono(this.model.attributes)))
-			.filter('section')[0]);
-		this.$el.prependTo(main.$threads);
+		this.setElement(main.oneeSama.monomono(this.model.attributes).join(''));
+		this.$el.insertAfter(main.$threads.children('hr.sectionHr').first());
 		this.$el.after('<hr class="sectionHr"/>');
 		return this;
 	},
