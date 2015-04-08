@@ -42,6 +42,11 @@ Extract.prototype.extractThread = function($section) {
 		model: threadModel,
 		el: $section[0]
 	});
+	/*
+	 * Read the sync ID of the thread. Used later for syncronising with the
+	 * server.
+	 */
+	main.syncs[$section.attr('id')] = parseInt($section.data('sync'), 10);
 };
 
 Extract.prototype.extractModel = function($el) {
