@@ -17,7 +17,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	const isThread = !msg.op;
 	if (isThread)
 		main.syncs[msg.num] = 1;
-	msg.editting = true;
+	msg.editing = true;
 
 	// TODO: Check, if post is mine
 	var el;
