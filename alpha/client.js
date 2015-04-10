@@ -34,6 +34,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 dispatcher[common.MOVE_THREAD] = function(msg) {
 	var msg = msg[0],
 		model = new posts.ThreadModel(msg);
+	main.oneeSama.links = msg.links;
 	new posts.Section({
 		model: model,
 		id: msg.num
@@ -41,7 +42,7 @@ dispatcher[common.MOVE_THREAD] = function(msg) {
 };
 
 dispatcher[common.INSERT_IMAGE] = function(msg) {
-	var model = posts.posts.get(msg[0]);
+	var model = main.posts.get(msg[0]);
 
 	// TODO: Check for postform
 
@@ -54,7 +55,7 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 		links = msg[4],
 		extra = msg[5],
 		state = [msg[2] || 0, msg[3] || 0];
-	var model = posts.posts.get(num);
+	var model = main.posts.get(num);
 
 	// TODO: Add backlinks
 
@@ -79,6 +80,7 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 	}
 };
 
+// Add various additional tags inside the blockqoute
 function inject(frag) {
 	var $dest = this.buffer;
 	for (var i = 0; i < this.state[1]; i++)
@@ -111,18 +113,18 @@ dispatcher[common.FINISH_POST] = function(msg) {
 
 	// TODO: Ownpost handling
 
-	var model = posts.posts.get(num);
+	var model = main.posts.get(num);
 	if (model)
 		model.set('editing', false);
 };
 
 dispatcher[common.DELETE_POSTS] = function(msg) {
 	msg.forEach(function(num) {
-		var model = posts.posts.get(num)
+		var model = main.posts.get(num)
 		if (model)
 			model.destroy();
 
-		// TODO: Free up post fucus, if any
+		// TODO: Free up post focus, if any
 	});
 };
 
@@ -131,26 +133,26 @@ dispatcher[common.DELETE_THREAD] = function(msg, op) {
 
 	// TODO: Ownposts & postForm
 
-	var model = posts.threads.get(op);
+	var model = main.threads.get(op);
 	if (model)
 		model.destroy();
 };
 
 dispatcher[common.LOCK_THREAD] = function(msg, op) {
-	var model = posts.threads.get(op);
+	var model = main.threads.get(op);
 	if (model)
 		model.set('locked', true);
 };
 
 dispatcher[common.UNLOCK_THREAD] = function(msg, op) {
-	var model = posts.threads.get(op);
+	var model = main.threads.get(op);
 	if (model)
 		model.set('locked', false);
 };
 
 dispatcher[common.DELETE_IMAGES] = function(msg) {
 	msg.forEach(function(num) {
-		var model = posts.posts.get(num);
+		var model = main.posts.get(num);
 		if (model)
 			model.unset('image');
 	});
@@ -158,7 +160,7 @@ dispatcher[common.DELETE_IMAGES] = function(msg) {
 
 dispatcher[common.SPOILER_IMAGES] = function(msg, op) {
 	msg.forEach(function(info) {
-		var model = posts.posts.get(info[0]);
+		var model = main.posts.get(info[0]);
 		if (model)
 			model.trigger('spoiler',info[1]);
 	});

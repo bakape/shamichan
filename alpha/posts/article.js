@@ -7,7 +7,6 @@ var $ = require('jquery'),
 	Backbone = require('backbone'),
 	hover = require('../hover'),
 	imager = require('./imager'),
-	index = require('./index'),
 	main = require('../main'),
 	options = require('../options'),
 	postCommon = require('./common'),
@@ -41,6 +40,13 @@ var Article = module.exports = Backbone.View.extend({
 	},
 
 	render: function () {
+		/*
+		 * Pass this model's links to oneeSama for renderring. The reason we
+		 * don't use the links attribute directly in OneeSama is different
+		 * rendering pathways on the server and client.
+		 * XXX: Unify this shit.
+		 */
+		main.oneeSama.links = this.model.get('links');
 		this.setElement(main.oneeSama.mono(this.model.attributes));
 		// Insert into section
 		$('#' + this.model.get('op'))
@@ -106,7 +112,7 @@ function unloadTopPost(){
 	) {
 		return;
 	}
-	var	thread = index.threads.get(threadNum);
+	var	thread = main.threads.get(threadNum);
 	if (thread.replies.length <= parseInt(m[1], 10) + 5)
 		return;
 	thread.replies.shift().destroy();

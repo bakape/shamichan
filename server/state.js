@@ -376,21 +376,21 @@ exports.reload_hot_resources = function (cb) {
 function make_navigation_html() {
 	if (!HOT.INTER_BOARD_NAVIGATION)
 		return '';
-	var bits = ['<b id="navTop">['];
+	var bits = '<b id="navTop">[';
 	// Actual boards
 	config.BOARDS.forEach(function (board, i) {
 		if (board == config.STAFF_BOARD)
 			return;
 		if (i > 0)
-			bits.push(' / ');
-		bits.push('<a href="../'+board+'/">'+board+'</a>');
+			bits += ' / ';
+		bits += `<a href="../${board}/" class="history">${board}</a>`;
 	});
 	// Add custom URLs to board navigation
 	config.PSUEDO_BOARDS.forEach(function(item) {
-		bits.push(' / <a href="'+item[1]+'">'+item[0]+'</a>');
+		bits += ` / <a href="${item[1]}">${item[0]}</a>`;
 	});
-	bits.push(']</b>');
-	return {NAVTOP: bits.join('')};
+	bits += ']</b>';
+	return {NAVTOP: bits};
 }
 
 function read_exits(file, cb) {

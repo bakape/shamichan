@@ -114,13 +114,15 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 	});
 };
 
+// [live 0 1 2 3] [Catalog]
 function pagination(info, oneeSama) {
-	var live = oneeSama.lang.live;
-	var bits = ['<nav class="pagination act">'], cur = info.cur_page;
+	const live = oneeSama.lang.live,
+		cur = info.cur_page;
+	var bits = '<nav class="pagination act">';
 	if (cur >= 0)
-		bits.push('<a href=".">' + live + '</a>');
+		bits += `<a href=".">${live}</a>`;
 	else
-		bits.push('<strong>' + live + '</strong>');
+		bits += `<strong>${live}</strong>`;
 	var start = 0, end = info.pages, step = 1;
 	if (info.ascending) {
 		start = end - 1;
@@ -128,13 +130,12 @@ function pagination(info, oneeSama) {
 	}
 	for (var i = start; i != end; i += step) {
 		if (i != cur)
-			bits.push('<a href="page' + i + '">' + i + '</a>');
+			bits += `<a href="page${i}" class="history">${i}</a>`;
 		else
-			bits.push('<strong>' + i + '</strong>');
+			bits += `<strong>${i}</strong>`;
 	}
-	bits.push('] [<a class="catalogLink">' + oneeSama.lang.catalog + '</a>');
-	bits.push('</nav>');
-	return bits.join('');
+	bits += `] [<a class="catalogLink">${oneeSama.lang.catalog}</a></nav>`;
+	return bits;
 }
 
 
@@ -149,7 +150,7 @@ function threadsTop(oneeSama) {
 }
 
 function threadsBottom(oneeSama) {
-	return common.action_link_html('.',	oneeSama.lang.return, 'bottom')
+	return common.action_link_html('.',	oneeSama.lang.return, 'bottom', 'history')
 		+ '&nbsp;'
 		+ common.action_link_html('#', oneeSama.lang.top);
 }

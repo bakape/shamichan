@@ -104,6 +104,7 @@ exports.ALPHA = [
 	'alpha/client.js',
 	'alpha/connection.js',
 	'alpha/extract.js',
+	'alpha/history.js',
 	'alpha/hover.js',
 	'alpha/identity.js',
 	'alpha/main.js',
