@@ -155,6 +155,7 @@ var opts = [
 		id: 'relativeTime',
 		tab: 0,
 		exec: function(toggle) {
+			main.oneeSama.rTime = toggle;
 			$.cookie('rTime', toggle, {path: '/'});
 		}
 	},
