@@ -16,7 +16,7 @@ const date_from_time_el = exports.date_from_time_el = function(el) {
 };
 
 function adjust_all_times() {
-	$('time').each(function () {
+	main.$threads.find('time').each(function () {
 		this.innerHTML = main.oneeSama.readable_time(date_from_time_el(this).getTime());
 	});
 }
