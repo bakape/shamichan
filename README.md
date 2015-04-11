@@ -57,10 +57,10 @@ process; useful in debug mode also)
 
 ## Documentation
 
-* docs/api.md - JSON API documentation
-* docs/doushio.initscript.example - example init script
-* docs/filemap.md - project file map
-* docs/nginx.config.example - example ngingx reverse proxy configuration
+* [docs/api.md](https://github.com/bakape/meguca/blob/master/docs/api.md) - JSON API documentation
+* [docs/doushio.initscript.example](https://github.com/bakape/meguca/blob/master/docs/doushio.initscript.example) - example init script
+* [docs/filemap.md](https://github.com/bakape/meguca/blob/master/docs/file_map.md.md) - project file map
+* [docs/nginx.config.example](https://github.com/bakape/meguca/blob/master/docs/nginx.conf.example) - example ngingx reverse proxy configuration
 file
 
 ##Standalone upkeep scripts
