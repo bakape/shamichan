@@ -391,7 +391,7 @@ function identify(stream, cb) {
 					msg = 'unsupported';
 				return cb(msg);
 			}
-			const m = out.toString().trim().match(/(\d+)x(\d+)/);
+			const m = out.toString().trim().match(/ (\d+)x(\d+)/);
 			if (!m)
 				return cb('dims_fail');
 			else {
