@@ -120,7 +120,7 @@ function pagination(info, oneeSama) {
 		cur = info.cur_page;
 	var bits = '<nav class="pagination act">';
 	if (cur >= 0)
-		bits += `<a href=".">${live}</a>`;
+		bits += `<a href="." class="history">${live}</a>`;
 	else
 		bits += `<strong>${live}</strong>`;
 	var start = 0, end = info.pages, step = 1;
@@ -202,8 +202,7 @@ function imageBanner() {
 
 exports.write_board_title = function(out, board){
 	var title = STATE.hot.TITLES[board] || escape(board);
-	out.write(imageBanner());
-	out.write('<h1>'+title+'</h1>');
+	out.write(`<h1>${imageBanner()}${title}</h1>`);
 };
 
 exports.write_thread_head = function (out, board, op, opts) {
@@ -236,8 +235,7 @@ exports.write_thread_title = function(out, board, op, opts){
 		title += ' - ' + escape(opts.subject) + ' (#' + op + ')';
 	else
 		title += ' - #' + op;
-	out.write(imageBanner());
-	out.write('<h1>'+title+'</h1>');
+	out.write(`<h1>${imageBanner()}${title}</h1>`);
 };
 
 function make_board_meta(board, info) {

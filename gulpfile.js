@@ -5,6 +5,7 @@ var browserify = require('browserify'),
 	deps = require('./deps'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
+	gutil = require('gulp-util'),
 	less = require('gulp-less'),
 	minifyCSS = require('gulp-minify-css'),
 	rename = require('gulp-rename'),
@@ -37,7 +38,7 @@ gulp.task('css', function() {
 });
 
 gulp.task('alpha', function() {
-	return browserify(require.resolve('./alpha/main.js'), {
+	var b = browserify(require.resolve('./alpha/main.js'), {
 		entry: true,
 		// Needed for sourcemaps
 		debug: true,
@@ -55,13 +56,15 @@ gulp.task('alpha', function() {
 		.exclude('./lang/')
 		.exclude('./server/state')
 		.exclude('./imager/config')
-		.exclude('./hot')
-		.bundle()
+		.exclude('./hot');
+	
+	return b.bundle()
 		// Transform into vinyl stream
 		.pipe(source('alpha.js'))
 		.pipe(buffer())
 		.pipe(sourcemaps.init({loadMaps: true}))
-		.pipe(gulpif(!debug, uglify()))
+		.pipe(gulpif(!debug, uglify))
+		.on('error', gutil.log)
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest('./www/js'));
 });

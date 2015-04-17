@@ -5,6 +5,7 @@
 var $ = require('jquery'),
 	main = require('./main'),
 	memory = require('./memory'),
+	state = require('./state'),
 	posts = require('./posts/');
 
 // remember which posts are mine for two days
@@ -26,12 +27,12 @@ Extract.prototype.extractThread = function($section) {
 	var replies = [],
 		self = this;
 	$section.children('article').each(function() {
-		var post = new posts.PostModel(self.extractModel($(this)));
+		var model = self.extractModel($(this));
 		new posts.Article({
-			model: post,
+			model: new posts.PostModel(model),
 			el: this
 		});
-		replies.push(post);
+		replies.push(model.num);
 	});
 	// Extract the model of the OP
 	var model = this.extractModel($section);
@@ -46,7 +47,7 @@ Extract.prototype.extractThread = function($section) {
 	 * Read the sync ID of the thread. Used later for syncronising with the
 	 * server.
 	 */
-	main.syncs[$section.attr('id')] = parseInt($section.data('sync'), 10);
+	state.syncs[$section.attr('id')] = parseInt($section.data('sync'), 10);
 };
 
 Extract.prototype.extractModel = function($el) {

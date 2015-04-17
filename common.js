@@ -5,7 +5,7 @@
 var isNode = typeof navigator === 'undefined';
 
 // Define vars, for the server and client sides
-var DEF = exports, state, config, hotConfig, imagerConfig, lang;
+var DEF = exports, state, config, hotConfig, imagerConfig, lang, main;
 if (isNode) {
 	state = require('./server/state');
 	config = require('./config');
@@ -14,11 +14,12 @@ if (isNode) {
 	lang = require('./lang/');
 }
 else {
+	main = require('./alpha/main');
 	state = require('./alpha/state');
 	config = state.config.attributes;
 	hotConfig = state.hotConfig.attributes;
 	imagerConfig = state.imagerConfig.attributes;
-	lang = window.lang;
+	lang = main.lang;
 }
 
 DEF.INVALID = 0;
@@ -47,6 +48,7 @@ DEF.ONLINE_COUNT = 37;
 DEF.HOT_INJECTION = 38;
 DEF.NOTIFICATION = 39;
 DEF.RADIO = 40;
+DEF.RESYNC = 41;
 
 DEF.MODEL_SET = 50;
 DEF.COLLECTION_RESET = 55;
@@ -449,9 +451,9 @@ exports.parse_dice = parse_dice;
 var serverTime = exports.serverTime = function() {
 	var d = new Date().getTime();
 	// On the server or time difference not compared yet
-	if (isNode || !window.serverTimeOffset)
+	if (isNode || !main.serverTimeOffset)
 		return d;
-	return d + window.serverTimeOffset;
+	return d + main.serverTimeOffset;
 };
 
 function readable_dice(bit, d) {

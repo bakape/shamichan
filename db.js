@@ -393,7 +393,7 @@ Y.connect = function () {
 };
 
 Y.disconnect = function () {
-	this.removeAllListeners('end');
+	this.removeAllListeners();
 };
 
 function forEachInObject(obj, f, callback) {
@@ -446,6 +446,7 @@ Y.kikanai = function () {
 		}
 	});
 	this.subs = [];
+	return this;
 };
 
 function post_volume(view, body) {

@@ -77,8 +77,8 @@ OK.on_message = function (data) {
 		return;
 	var func = dispatcher[type];
 	if (!func || !func(msg, this)) {
-		this.kotowaru(Muggle("Bad protocol.", new Error(
-				"Invalid message: " + JSON.stringify(data))));
+		this.kotowaru(Muggle("Bad protocol",
+			new Error("Invalid message: " + JSON.stringify(data))));
 	}
 };
 

@@ -112,13 +112,13 @@ function unloadTopPost(){
 	) {
 		return;
 	}
-	var	thread = main.threads.get(threadNum);
+	var	thread = state.getThread(threadNum);
 	if (thread.replies.length <= parseInt(m[1], 10) + 5)
 		return;
-	thread.replies.shift().destroy();
+	state.posts.get(thread.replies.shift()).destroy();
 	var $omit = $('.omit');
 	if (!$omit.length){
-		$omit = $('\t<span/>', {'class': 'omit'}).text(window.lang.abbrev_msg(1));
+		$omit = $('\t<span/>', {'class': 'omit'}).text(main.lang.abbrev_msg(1));
 		$omit.append(common.action_link_html(threadNum
 			+ location.hash, 'See all')+'\n');
 		$('section>blockquote').after($omit);

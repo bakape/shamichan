@@ -52,7 +52,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		if (!err)
 			_.extend(client.ident, ident);
 		if (!synchronize(msg, client))
-			client.kotowaru(Muggle("Bad protocol."));
+			client.kotowaru(Muggle("Bad protocol"));
 	}
 	var chunks = web.parse_cookie(msg.pop());
 	var cookie = persona.extract_login_cookie(chunks);
@@ -67,7 +67,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 function synchronize(msg, client) {
 	if (!check(['id', 'string', 'id=>nat', 'boolean'], msg))
 		return false;
-	var id = msg[0], board = msg[1], syncs = msg[2], live = msg[3];
+	const id = msg[0];
 	if (id in STATE.clients) {
 		winston.error("Duplicate client id " + id);
 		return false;
@@ -79,8 +79,16 @@ function synchronize(msg, client) {
 		/* Sync logic is buggy; allow for now */
 		//return true;
 	}
+	return linkToDatabase(msg[1], msg[2], msg[3], client);
+}
+
+// Establish database liteners and handlers for the client
+function linkToDatabase(board, syncs, live, client) {
 	if (!caps.can_access_board(client.ident, board))
 		return false;
+	if (client.db)
+		client.db.kikanai().disconnect();
+
 	var dead_threads = [], count = 0, op;
 	for (var k in syncs) {
 		k = parseInt(k, 10);
@@ -107,17 +115,13 @@ function synchronize(msg, client) {
 		count = 1;
 	}
 	client.board = board;
-
-	if (client.db)
-		client.db.disconnect();
 	client.db = new db.Yakusoku(board, client.ident);
-	/* Race between subscribe and backlog fetch; client must de-dup */
+	// Race between subscribe and backlog fetch; client must de-dup
 	client.db.kiku(client.watching, client.on_update.bind(client),
 			client.on_thread_sink.bind(client), listening);
 	function listening(errs) {
 		if (errs && errs.length >= count)
-			return client.kotowaru(Muggle(
-					"Couldn't sync to board."));
+			return client.kotowaru(Muggle("Couldn't sync to board."));
 		else if (errs) {
 			dead_threads.push.apply(dead_threads, errs);
 			errs.forEach(function (thread) {
@@ -153,6 +157,13 @@ function synchronize(msg, client) {
 	}
 	return true;
 }
+
+// Switch the serverside syncs, when client switches them with HTML5 History
+dispatcher[common.RESYNC] = function(msg, client) {
+	if (!check(['string', 'id=>nat', 'boolean'], msg))
+		return false;
+	return linkToDatabase(msg[0], msg[1], msg[2], client);
+};
 
 function setup_imager_relay(cb) {
 	var onegai = new imager.Onegai;
