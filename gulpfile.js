@@ -1,6 +1,7 @@
 var browserify = require('browserify'),
+	buffer = require('vinyl-buffer'),
 	concat = require('gulp-concat'),
-	d = require('./config').DEBUG,
+	debug = require('./config').DEBUG,
 	deps = require('./deps'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
@@ -8,17 +9,17 @@ var browserify = require('browserify'),
 	minifyCSS = require('gulp-minify-css'),
 	rename = require('gulp-rename'),
 	rev = require('gulp-rev'),
+	source = require('vinyl-source-stream'),
 	sourcemaps = require('gulp-sourcemaps'),
-	transform = require('vinyl-transform'),
 	uglify = require('gulp-uglify');
 
 function gulper(name, files, dest) {
 	gulp.task(name, function() {
 		return gulp.src(files)
 			.pipe(concat(name))
-			.pipe(gulpif(!d, uglify()))
+			.pipe(gulpif(!debug, uglify()))
 			.pipe(rev())
-			.pipe(rename({suffix: '.' + (d ? 'debug' : 'min') + '.js'}))
+			.pipe(rename({suffix: '.' + (debug ? 'debug' : 'min') + '.js'}))
 			.pipe(gulp.dest(dest))
 			.pipe(rev.manifest(name + '.json'))
 			.pipe(gulp.dest('./state'));
@@ -36,39 +37,33 @@ gulp.task('css', function() {
 });
 
 gulp.task('alpha', function() {
-	// transform regular node stream to gulp (buffered vinyl) stream
-	var browserified = transform(function(filename) {
-		return browserify({entries: filename, debug: true})
-			// Ignore these requires on the client
-			.exclude('./config')
-			.exclude('../../config')
-			.exclude('../../hot')
-			.exclude('./lang/')
-			.exclude('./server/state')
-			.exclude('./imager/config')
-			.exclude('./hot')
-			/*
-			 * Make available outside the bundle with require().
-			 * Needed for mod.js
-			 */
-			.require([
-				'jquery',
-				'underscore',
-				'backbone'
-			])
-			.bundle();
-	});
-	return gulp.src('./alpha/main.js')
-		.pipe(browserified)
+	return browserify(require.resolve('./alpha/main.js'), {
+		entry: true,
+		// Needed for sourcemaps
+		debug: true,
+		// Make available outside the bundle with require(). Needed for mod.js.
+		require: [
+			'jquery',
+			'underscore',
+			'backbone'
+		],
+	})
+		// Exclude these requires on the client
+		.exclude('./config')
+		.exclude('../../config')
+		.exclude('../../hot')
+		.exclude('./lang/')
+		.exclude('./server/state')
+		.exclude('./imager/config')
+		.exclude('./hot')
+		.bundle()
+		.pipe(source('alpha.js'))
+		.pipe(buffer())
 		.pipe(sourcemaps.init({loadMaps: true}))
-		.pipe(gulpif(!d, uglify()))
-		.pipe(rename({basename: 'alpha'}))
-		.pipe(rev())
-		.pipe(rename({extname: '.' + (d ? 'debug' : 'min') + '.js'}))
+		// TEMP: Disabled for now
+		//.pipe(gulpif(!debug, uglify()))
 		.pipe(sourcemaps.write('./'))
-		.pipe(gulp.dest('./www/js'))
-		.pipe(rev.manifest('alpha.json'))
-		.pipe(gulp.dest('./state'));
+		.pipe(gulp.dest('./www/js'));
 });
 
 (function() {
