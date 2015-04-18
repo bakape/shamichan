@@ -773,8 +773,8 @@ OS.post_ref = function(num, op, desc_html) {
 		ref += ' \u2192';
 	else if (num == op && this.op == op)
 		ref += ' (OP)';
-	return safe(`<a href="${this.post_url(num, op, false)}"`
-		+ `class="history">${ref}</a>`);
+	return safe('<a href="' + this.post_url(num, op, false) + '"'
+		+ ' class="history">' + ref + '</a>');
 };
 
 OS.post_nav = function(post) {
@@ -786,10 +786,10 @@ OS.post_nav = function(post) {
 
 // Various UI-related links wrapped in []
 var action_link_html = exports.action_link_html = function(href, name, id, cls) {
-	return `<span class="act"><a href="${href}"`
-		+ (id ? ` id="${id}"` : '')
-		+ (cls ? ` class="${cls}"` : '')
-		+ `>${name}</a></span>`;
+	return '<span class="act"><a href="' + href + '"'
+		+ (id ? ' id="' + id + '"' : '')
+		+ (cls ? ' class="' + cls + '"' : '')
+		+ '>' + name + '</a></span>';
 }
 
 var reasonable_last_n = exports.reasonable_last_n = function(n) {
@@ -797,10 +797,10 @@ var reasonable_last_n = exports.reasonable_last_n = function(n) {
 };
 
 OS.expansion_links_html = function(num) {
-	return ` &nbsp; ${action_link_html(num, this.lang.expand, null, 'history')}`
+	return ' &nbsp; ' + action_link_html(num, this.lang.expand, null, 'history')
 		+ ' '
-		+ action_link_html(`${num}?last=${this.lastN}`,
-			`${this.lang.last}&nbsp;${this.lastN}`, null, 'history');
+		+ action_link_html(num + '?last=' + this.lastN,
+			this.lang.last + '&nbsp;' + this.lastN, null, 'history');
 };
 
 OS.atama = function(data) {

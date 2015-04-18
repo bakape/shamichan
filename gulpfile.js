@@ -57,11 +57,11 @@ gulp.task('alpha', function() {
 		.exclude('./imager/config')
 		.exclude('./hot')
 		.bundle()
+		// Transform into vinyl stream
 		.pipe(source('alpha.js'))
 		.pipe(buffer())
 		.pipe(sourcemaps.init({loadMaps: true}))
-		// TEMP: Disabled for now
-		//.pipe(gulpif(!debug, uglify()))
+		.pipe(gulpif(!debug, uglify()))
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest('./www/js'));
 });
