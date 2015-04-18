@@ -186,11 +186,9 @@ var OptionsView = Backbone.View.extend({
 	// Dump options to file
 	export: function() {
 		var a = document.createElement('a');
-		a.setAttribute('href',
-			window.URL.createObjectURL(new Blob(
-				[JSON.stringify(localStorage)], {
-				type: 'octet/stream'
-			})));
+		a.setAttribute('href', window.URL
+			.createObjectURL(new Blob([JSON.stringify(localStorage)],
+				{type: 'octet/stream'})));
 		a.setAttribute('download', 'meguca-config.json');
 		a.click();
 	},
