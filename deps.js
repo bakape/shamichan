@@ -2,6 +2,7 @@ exports.SERVER_DEPS = [
 	'admin/common.js',
 	'admin/index.js',
 	'admin/panel.js',
+	'alpha/options/common.js',
 	'common.js',
 	'config.js',
 	'db.js',
