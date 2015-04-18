@@ -108,7 +108,7 @@ var opts = [
 	},
 	/* SPOILER TOGGLE */
 	{
-		id: 'noSpoilers',
+		id: 'spoilers',
 		boardSpecific: true,
 		type: 'checkbox',
 		tab: 1,
@@ -120,7 +120,7 @@ var opts = [
 	},
 	/* BACKLINKS */
 	{
-		id: 'nobacklinks',
+		id: 'backlinks',
 		type: 'checkbox',
 		tab: 0,
 		default: true,

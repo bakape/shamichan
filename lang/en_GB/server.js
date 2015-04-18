@@ -108,11 +108,11 @@ var lang = {
 			'Animated GIF Thumbnails',
 			'Animate GIF thumbnails'
 		],
-		noSpoilers: [
+		spoilers: [
 			'Image Spoilers',
 			"Don't spoiler images"
 		],
-		nobacklinks: [
+		backlinks: [
 			'Backlinks',
 			'Links to replies of current post'
 		],

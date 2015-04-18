@@ -557,7 +557,7 @@ OS.spoiler_info = function(index, toppu) {
 	var large = toppu;
 	var hd = toppu || this.thumbStyle != 'small';
 	return {
-		thumb: encodeURI(mediaURL + 'kana/spoiler' + (hd ? '' : 's')
+		thumb: encodeURI(mediaURL +  'spoil/spoiler' + (hd ? '' : 's')
 			+ index + '.png'),
 		dims: large ? imagerConfig.THUMB_DIMENSIONS
 			: imagerConfig.PINKY_DIMENSIONS,
@@ -661,7 +661,7 @@ OS.gazou_img = function(info, toppu, href) {
 
 	var d = info.dims;
 	var w = d[0], h = d[1], tw = d[2], th = d[3];
-	if (info.spoiler && !this.spoilToggle) {
+	if (info.spoiler && this.spoilToggle) {
 		var sp = this.spoiler_info(info.spoiler, toppu);
 		thumb = sp.thumb;
 		tw = sp.dims[0];

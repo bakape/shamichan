@@ -105,11 +105,11 @@ bad_client: "ID de client ruim.",
 			'Miniaturas de GIF animadas',
 			'Miniaturas de GIF animadas'
 		],
-		noSpoilers: [
+		spoilers: [
 			'Imagens em spoiler',
 			"Não colocar spoilers em imagens"
 		],
-		nobacklinks: [
+		backlinks: [
 			'Backlinks',
 			'Links para as respostas do post atual'
 		],

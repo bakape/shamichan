@@ -528,7 +528,7 @@ OS.spoiler_info = function (index, toppu) {
 	var large = toppu;
 	var hd = toppu || this.thumbStyle != 'small';
 	return {
-		thumb: encodeURI(mediaURL + 'kana/spoiler' + (hd ? '' : 's')
+		thumb: encodeURI(mediaURL + 'spoil/spoiler' + (hd ? '' : 's')
 				+ index + '.png'),
 		dims: large ? imagerConfig.THUMB_DIMENSIONS
 				: imagerConfig.PINKY_DIMENSIONS,

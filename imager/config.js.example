@@ -56,14 +56,9 @@ module.exports = {
 // Enable PDF upload
 	PDF: false,
 
-// Location of the spoiler directory. By default the assets directory has to be
-// placed into doushio root directory's parent folder.
-	SPOILER_DIR: '../assets/kana',
-
 // this indicates which spoiler images may be selected by posters.
-// each number or ID corresponds to a set of images in SPOILER_DIR
+// each number or ID corresponds to a set of images in ./www/spoil
 // (named spoilX.png, spoilerX.png and spoilersX.png)
-// (e.g. https://github.com/lalcmellkmal/assets/tree/master/kana)
 	SPOILER_IMAGES: [1, 2, 3],
 
 	IMAGE_HATS: false,

@@ -65,8 +65,7 @@ function reload_hot_config(cb) {
 			'ADMIN_ALIAS',
 			'MOD_ALIAS',
 			'SAGE_ENABLED',
-			'THREAD_LAST_N',
-			'BOARD_CSS'
+			'THREAD_LAST_N'
 		);
 
 		reloadCSS(clientHot, function(err) {
@@ -115,7 +114,9 @@ var clientImager = _.pick(imager,
 	'THUMB_DIMENSIONS',
 	'PINKY_DIMENSIONS',
 	'SPOILER_IMAGES',
-	'IMAGE_HATS'
+	'IMAGE_HATS',
+	'ASSETS_DIR',
+	'BANNERS'
 );
 var clientReport = _.pick(report, 'RECAPTCHA_PUBLIC_KEY');
 

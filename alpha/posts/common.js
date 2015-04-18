@@ -26,7 +26,7 @@ module.exports = {
 		});
 		this.listenTo(options, {
 			'change:thumbs': this.changeThumbnailStyle,
-			'change:noSpoilers': this.toggleSpoiler,
+			'change:spoilers': this.toggleSpoiler,
 			'change:autogif': this.toggleAutogif,
 			'change:anonymise': this.toggleAnonymisation
 		});

@@ -391,10 +391,10 @@ function parent_model($el) {
 	/* SPOILER TOGGLE */
 
 	function option_spoiler(spoilertoggle) {
-		$.cookie('spoil',spoilertoggle, {path: '/'});
+		$.cookie('spoil',!spoilertoggle, {path: '/'});
 		oneeSama.spoilToggle = spoilertoggle;
 	}
-	option_spoiler.id = 'noSpoilers';
+	option_spoiler.id = 'spoilers';
 	option_spoiler.label = 'Image Spoilers';
 	option_spoiler.type = 'revcheckbox';
 	option_spoiler.tooltip = "Don't spoiler images";
