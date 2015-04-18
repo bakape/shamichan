@@ -2,7 +2,7 @@ var caps = require('./caps'),
     common = require('../common'),
 	config = require('../config'),
     db = require('../db'),
-    imager = require('../imager'),
+    imager = require('../imager/config'),
 	lang = require('../lang/'),
     STATE = require('./state'),
     web = require('./web');
@@ -156,7 +156,7 @@ function threadsBottom(oneeSama) {
 }
 
 function make_link_rels(board, bits) {
-	var path = imager.config.MEDIA_URL + 'css/',
+	var path = imager.MEDIA_URL + 'css/',
 		// Object of CSS versions
 		css = STATE.hot.css;
 
@@ -187,12 +187,22 @@ exports.write_board_head = function (out, board, nav, alpha, language) {
 	out.write(make_board_meta(board, nav));
 	out.write(indexTmpl[i++]);
 	out.write(indexTmpl[i++]);
+	out.write(imageBanner());
 	out.write(title);
 	out.write(indexTmpl[i++]);
 };
 
+function imageBanner() {
+	var b = imager.BANNERS;
+	if (!b)
+		return '';
+	return `<img id="imgBanner" src="${imager.MEDIA_URL}banners/`
+		+ b[Math.floor(Math.random() * b.length)] + '"><br>';
+}
+
 exports.write_board_title = function(out, board){
 	var title = STATE.hot.TITLES[board] || escape(board);
+	out.write(imageBanner());
 	out.write('<h1>'+title+'</h1>');
 };
 
@@ -215,6 +225,7 @@ exports.write_thread_head = function (out, board, op, opts) {
 	out.write(make_thread_meta(board, op, opts.abbrev));
 	out.write(indexTmpl[i++]);
 	out.write(indexTmpl[i++]);
+	out.write(imageBanner());
 	out.write(title);
 	out.write(indexTmpl[i++]);
 };
@@ -225,6 +236,7 @@ exports.write_thread_title = function(out, board, op, opts){
 		title += ' - ' + escape(opts.subject) + ' (#' + op + ')';
 	else
 		title += ' - #' + op;
+	out.write(imageBanner());
 	out.write('<h1>'+title+'</h1>');
 };
 
