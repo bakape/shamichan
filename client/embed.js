@@ -263,25 +263,33 @@ $(document).on('click', '.pastebin', function(event){
 	var $obj = $target.find('iframe');
 	if ($obj.length) {
 		$obj.siblings('br').andSelf().remove();
-		$target.css('width', 'auto');
+		$target.css({
+			width: 'auto',
+			height: 'auto'
+		});
 		return false;
 	}
     
     var m = $target.attr('href').match(pastebin_re);
     if (!m)
         return;
-    var width = Math.round($(window).innerWidth() * 0.65);
-    var uri = 'https://pastebin.com/embed_iframe.php?i='+ m[1];
-    var $obj = $('<iframe></iframe>', {
-		type: 'text/html', 
-                src: uri,
-		frameborder: '0',
-                width: width
-                });
-                
+    var $window = $(window),
+		width = Math.round($window.innerWidth() * 0.65),
+		height = Math.round($window.innerHeight() * 0.65);
                 
     with_dom(function () {
-		$target.css('width', width).append('<br>', $obj);
-        });
+		$target
+			.css({
+				width: width,
+				height: height
+			})
+			.append('<br>', $('<iframe></iframe>', {
+				type: 'text/html',
+				src: 'https://pastebin.com/embed_iframe.php?i='+ m[1],
+				frameborder: '0',
+				width: width,
+				height: height
+			}));
+	});
     return false;
 });
