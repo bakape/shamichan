@@ -4,6 +4,7 @@
 
 var $ = require('jquery'),
 	Backbone = require('backbone'),
+	common = require('../../common'),
 	main = require('../main'),
 	options = require('../options');
 
