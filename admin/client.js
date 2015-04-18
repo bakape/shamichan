@@ -157,7 +157,6 @@ $DOC.on('click', '.select-handle', function (event) {
 });
 
 with_dom(function () {
-	$('h1').text('Moderation - ' + $('h1').text());
 	var $authname = $('<input>', {type: 'checkbox', id: 'authname'});
 	var $label = $('<label/>', {text: ' '+IDENT.auth}).prepend($authname);
 	$name.after(' ', $label);
