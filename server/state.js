@@ -65,7 +65,8 @@ function reload_hot_config(cb) {
 			'ADMIN_ALIAS',
 			'MOD_ALIAS',
 			'SAGE_ENABLED',
-			'THREAD_LAST_N'
+			'THREAD_LAST_N',
+			'BOARD_CSS'
 		);
 
 		reloadCSS(clientHot, function(err) {
