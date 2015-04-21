@@ -9,7 +9,7 @@ var $ = require('jquery'),
 
 var connSM = main.connSM, socket, attempts, attemptTimer;
 
-window.send = function (msg) {
+main.send = function (msg) {
 	// need deferral or reporting on these lost messages...
 	if (connSM.state != 'synced' && connSM.state != 'syncing')
 		return;
@@ -34,8 +34,8 @@ function on_message(e) {
 			return console.error('Unsuported websocket call: ', msg);
 		const op = msg.shift(),
 			type = msg.shift();
-		if (common.is_pubsub(type) && op in main.syncs)
-			main.syncs[op]++;
+		if (common.is_pubsub(type) && op in state.syncs)
+			state.syncs[op]++;
 		main.dispatcher[type](msg, op);
 	});
 }
@@ -59,7 +59,7 @@ function connect() {
 		console.log("Page downloaded locally; refusing to sync.");
 		return;
 	}
-	socket = window.new_socket(attempts);
+	socket = new_socket();
 	socket.onopen = connSM.feeder('open');
 	socket.onclose = connSM.feeder('close');
 	socket.onmessage = on_message;
@@ -67,7 +67,7 @@ function connect() {
 		window.socket = socket;
 }
 
-window.new_socket = function (attempt) {
+new_socket = function() {
 	var protocols = [
 		'xdr-streaming',
 		'xhr-streaming',
@@ -87,16 +87,14 @@ window.new_socket = function (attempt) {
 
 connSM.act('conn, reconn + open -> syncing', function () {
 	sync_status('Syncing');
-	const connID = common.random_id();
-	var page = state.page;
-	page.set('connID', connID);
-	send([
+	var connID = common.random_id(),
+		page = state.page;
+	main.send([
 		common.SYNCHRONIZE,
 		connID,
 		page.get('board'),
-		main.syncs,
-		// TEMP: Workaround for compatibility with old client websocket call
-		page.get('page') == -1 && page.get('thread') == 0,
+		state.syncs,
+		page.get('live'),
 		document.cookie
 	]);
 });

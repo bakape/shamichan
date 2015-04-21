@@ -65,7 +65,8 @@ function reload_hot_config(cb) {
 			'ADMIN_ALIAS',
 			'MOD_ALIAS',
 			'SAGE_ENABLED',
-			'THREAD_LAST_N'
+			'THREAD_LAST_N',
+			'BOARD_CSS'
 		);
 
 		reloadCSS(clientHot, function(err) {
@@ -250,7 +251,15 @@ function expand_templates(res) {
 		_.extend(templateVars, lang[ln].tmpl);
 		// Build localised options panel
 		templateVars.options_panel = buildOptions(lang[ln].opts);
-		templateVars.lang = JSON.stringify(lang[ln].common);
+
+		// Inject language pack
+		templateVars.lang = {};
+		for (var key in lang[ln].common) {
+			// Coerce to string, because you can not JSON.stringify() functions
+			templateVars.lang[key] = lang[ln].common[key].toString();
+		}
+		templateVars.lang = JSON.stringify(templateVars.lang);
+
 		html = tmpl(res.alpha);
 		ex['alphaTmpl-' + ln] = html.tmpl;
 		hash = crypto.createHash('md5').update(html.src);

@@ -16,7 +16,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	var msg = msg[1];
 	const isThread = !msg.op;
 	if (isThread)
-		main.syncs[msg.num] = 1;
+		state.syncs[msg.num] = 1;
 	msg.editing = true;
 
 	// TODO: Check, if post is mine
@@ -42,7 +42,7 @@ dispatcher[common.MOVE_THREAD] = function(msg) {
 };
 
 dispatcher[common.INSERT_IMAGE] = function(msg) {
-	var model = main.posts.get(msg[0]);
+	var model = state.posts.get(msg[0]);
 
 	// TODO: Check for postform
 
@@ -54,15 +54,15 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 	const num = msg[0],
 		links = msg[4],
 		extra = msg[5],
-		state = [msg[2] || 0, msg[3] || 0];
-	var model = main.posts.get(num);
+		msgState = [msg[2] || 0, msg[3] || 0];
+	var model = state.posts.get(num);
 
 	// TODO: Add backlinks
 
 	if (model) {
 		model.set({
 			body: model.get('body') + msg[1],
-			state: state
+			state: msgState
 		});
 	}
 
@@ -75,7 +75,7 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 		main.oneeSama.links = links || {};
 		main.oneeSama.callback = inject;
 		main.oneeSama.buffer = bq;
-		main.oneeSama.state = state;
+		main.oneeSama.state = msgState;
 		main.oneeSama.fragment(msg[1]);
 	}
 };
@@ -113,14 +113,14 @@ dispatcher[common.FINISH_POST] = function(msg) {
 
 	// TODO: Ownpost handling
 
-	var model = main.posts.get(num);
+	var model = state.posts.get(num);
 	if (model)
 		model.set('editing', false);
 };
 
 dispatcher[common.DELETE_POSTS] = function(msg) {
 	msg.forEach(function(num) {
-		var model = main.posts.get(num)
+		var model = state.posts.get(num)
 		if (model)
 			model.destroy();
 
@@ -129,30 +129,30 @@ dispatcher[common.DELETE_POSTS] = function(msg) {
 };
 
 dispatcher[common.DELETE_THREAD] = function(msg, op) {
-	delete main.syncs[op];
+	delete state.syncs[op];
 
 	// TODO: Ownposts & postForm
 
-	var model = main.threads.get(op);
+	var model = state.getThread(op);
 	if (model)
 		model.destroy();
 };
 
 dispatcher[common.LOCK_THREAD] = function(msg, op) {
-	var model = main.threads.get(op);
+	var model = state.getThread(op);
 	if (model)
 		model.set('locked', true);
 };
 
 dispatcher[common.UNLOCK_THREAD] = function(msg, op) {
-	var model = main.threads.get(op);
+	var model = state.getThread(op);
 	if (model)
 		model.set('locked', false);
 };
 
 dispatcher[common.DELETE_IMAGES] = function(msg) {
 	msg.forEach(function(num) {
-		var model = main.posts.get(num);
+		var model = state.posts.get(num);
 		if (model)
 			model.unset('image');
 	});
@@ -160,7 +160,7 @@ dispatcher[common.DELETE_IMAGES] = function(msg) {
 
 dispatcher[common.SPOILER_IMAGES] = function(msg, op) {
 	msg.forEach(function(info) {
-		var model = main.posts.get(info[0]);
+		var model = state.posts.get(info[0]);
 		if (model)
 			model.trigger('spoiler',info[1]);
 	});
@@ -176,11 +176,11 @@ dispatcher[common.ONLINE_COUNT] = function(msg){
 // Sync settings to server
 dispatcher[common.HOT_INJECTION] = function(msg){
 	// Request new varibles, if hashes don't match
-	if (msg[0] == false && msg[1] != window.configHash)
-		send([common.HOT_INJECTION, true]);
+	if (msg[0] == false && msg[1] != state.configHash)
+		main.send([common.HOT_INJECTION, true]);
 	// Update variables and hash
 	else if (msg[0] == true){
-		window.configHash = msg[1];
+		state.configHash = msg[1];
 		/*
 		 * XXX: We can probably just use the window object properties for most
 		 * of these. Time will tell, what can be discarded.
