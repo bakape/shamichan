@@ -35,6 +35,7 @@ function readingSteiner(url, event, needPush) {
 	 * CDN for HTML-only caching. This solution is already very fast on threads
 	 * that are not several thousand posts large.
 	 */
+	var $loading = $('#loadingImage').show();
 	$.get(address, function(data) {
 		if (!data)
 			return alert('Fetch failed: ' + url);
@@ -52,6 +53,7 @@ function readingSteiner(url, event, needPush) {
 			else
 				scroll.aboveBanner();
 		}
+		$loading.hide();
 	});
 }
 
