@@ -9,35 +9,23 @@ var $ = require('jquery'),
 
 // Click handler for post/thread/board links
 main.$doc.on ('click', 'a.history', function(event) {
-	var rs = new ReadingSteiner(this.href);
-	if (!rs.check())
-		return;
-	event.preventDefault();
-	rs.navigate();
-	rs.push();
+	readingSteiner(this.href, event, true);
 });
 
-function ReadingSteiner(url, needPush) {
-	this.url = url;
-	this.nextState = state.read(url);
-	this.needPush = needPush;
-}
+// Navigate to the URL
+function readingSteiner(url, event, needPush) {
+	var nextState = state.read(url);
+	// Does the link point to the same page as this one?
+	if (JSON.stringify(nextState) == JSON.stringify(state.page.attributes))
+		return;
+	if (event)
+		event.preventDefault();
 
-var RS = ReadingSteiner.prototype;
-
-// Does the link point to the same page as this one?
-RS.check = function() {
-	return JSON.stringify(this.nextState)
-		!= JSON.stringify(state.page.attributes);
-};
-
-// Go to the URL
-RS.navigate = function(cb) {
 	// Deal with hashes and query strings
-	var split = this.url.split('#'),
-		url = split[0] + (/\?/.test(split[0]) ? '&' : '?') + 'minimal=true';
+	var split = url.split('#');
+		address = split[0] + (/\?/.test(split[0]) ? '&' : '?') + 'minimal=true';
 	if (split.length !== 1)
-		url += '#' + split[1];
+		address += '#' + split[1];
 
 	/*
 	 * Fetch new DOM from the server
@@ -46,30 +34,25 @@ RS.navigate = function(cb) {
 	 * CDN for HTML-only caching. This solution is already very fast on threads
 	 * that are not several thousand posts large.
 	 */
-	var self = this;
-	$.get(url, function(data) {
+	$.get(address, function(data) {
 		if (!data)
 			return alert('Fetch failed: ' + url);
 
 		// Apply new state and DOM
-		state.replace(self.nextState, function() {
+		state.replace(nextState, function() {
 			main.$threads.html(data);
 			new Extract();
 		});
-		if (self.needPush)
-			self.push();
+		if (needPush){
+			history.pushState(null, null, url);
+			// Scroll to top on new pages with no hashes
+			if (!location.hash)
+				window.scrollTo(0, 0);
+		}
 	});
-};
-
-RS.push = function() {
-	history.pushState(null, null, this.nextState.href);
-};
+}
 
 // For back and forward history events
 window.onpopstate = function(event) {
-	var rs = new ReadingSteiner(event.target.location.href);
-	// Also protects against [Top] and [Bottom] triggers
-	if (!rs.check())
-		return;
-	rs.navigate();
+	readingSteiner(event.target.location.href);
 };
