@@ -5,6 +5,7 @@
 var $ = require('jquery'),
 	Extract = require('./extract'),
 	main = require('./main'),
+	scroll = require('./scroll'),
 	state = require('./state');
 
 // Click handler for post/thread/board links
@@ -48,6 +49,8 @@ function readingSteiner(url, event, needPush) {
 			// Scroll to top on new pages with no hashes
 			if (!location.hash)
 				window.scrollTo(0, 0);
+			else
+				scroll.aboveBanner();
 		}
 	});
 }
@@ -55,4 +58,5 @@ function readingSteiner(url, event, needPush) {
 // For back and forward history events
 window.onpopstate = function(event) {
 	readingSteiner(event.target.location.href);
+	scroll.aboveBanner();
 };
