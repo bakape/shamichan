@@ -67,8 +67,9 @@ function cache() {
 
 	// Because it's a Set()
 	var threads = [];
-	for (var thread of state.threads.keys())
-		threads.push(thread);
+	state.threads.forEach(function(thread) {
+		threads.push(thread);		
+	});
 	sessionStorage[key + 'threads'] = JSON.stringify(threads);
 }
 

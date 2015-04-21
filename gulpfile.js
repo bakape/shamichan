@@ -63,7 +63,7 @@ gulp.task('alpha', function() {
 		.pipe(source('alpha.js'))
 		.pipe(buffer())
 		.pipe(sourcemaps.init({loadMaps: true}))
-		.pipe(gulpif(!debug, uglify))
+		.pipe(gulpif(!debug, uglify()))
 		.on('error', gutil.log)
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest('./www/js'));

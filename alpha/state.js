@@ -34,9 +34,9 @@ var page = exports.page = new Backbone.Model(read(location.href));
  * Not sure how many of these are going to be  more useful than a property of
  * the window object. We'll as we go, I guess.
  */
-for (var type of ['config', 'imagerConfig', 'reportConfig', 'hotConfig']) {
+['config', 'imagerConfig', 'reportConfig', 'hotConfig'].forEach(function(type) {
 	exports[type] = new Backbone.Model(window[type]);
-}
+});
 // Hash of all the config variables
 exports.configHash = window.configHash;
 
@@ -55,7 +55,7 @@ exports.getThread = function(num) {
 	if (!threads.has(num))
 		return null;
 	return posts.get(num);
-}
+};
 
 // Tracks the synchronisation counter of each thread
 exports.syncs = {};
@@ -69,9 +69,9 @@ exports.replace = function(newState, render) {
 	 */
 	main.$threads.empty();
 	threads.clear();
-	for (var model of posts.models) {
-		model.destroy();
-	}
+	posts.models.forEach(function(model) {
+		model.destroy();		
+	});
 	// Prevent old threads from syncing
 	exports.syncs = {};
 	// Set new page state

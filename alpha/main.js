@@ -17,9 +17,9 @@ var $ = require('jquery'),
  * to functions.
  */
 exports.lang = window.lang;
-for (var func of ['pluralize', 'capitalize', 'ago', 'abbrev_msg']) {
+['pluralize', 'capitalize', 'ago', 'abbrev_msg'].forEach(function(func) {
 	eval('exports.lang[func] = ' + window.lang[func]);
-}
+});
 
 var common = require('../common');
 
