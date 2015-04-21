@@ -667,7 +667,7 @@ web.resource(/^\/outbound\/(g|iqdb|sn)\/(\d+\.(?:jpg|png))$/,
 });
 
 web.resource(/^\/outbound\/(hash|exh)\/([\w+\/]{22}|[\w+\/]{40})$/, function (req, params, cb) {
-	var url = params[1] == 'hash' ? 'http://archive.foolz.us/_/search/image/' :
+	var url = params[1] == 'hash' ? 'http://archive.moe/_/search/image/' :
 		'http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=';
 	var dest = url + escape(params[2]);
 	cb(null, 303.1, dest);
@@ -682,12 +682,6 @@ web.resource(/^\/outbound\/a\/(\d{0,10})$/, function (req, params, cb) {
 }, function (req, resp) {
 	resp.writeHead(200, web.noCacheHeaders);
 	resp.end(RES.aLookupHtml);
-});
-
-web.resource(/^\/outbound\/foolz\/(\d{0,10})$/, function (req, params, cb) {
-	var dest = 'http://archive.foolz.us/foolz/';
-	var thread = parseInt(params[1], 10);
-	cb(null, 303.1, thread ? dest+'thread/'+thread+'/' : dest);
 });
 
 web.route_get_auth(/^\/dead\/(src|thumb|mid)\/(\w+\.\w{3})$/,
