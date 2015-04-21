@@ -3,7 +3,6 @@
  */
 
 var $ = require('jquery'),
-	conn = require('./connection'),
 	Extract = require('./extract'),
 	main = require('./main'),
 	state = require('./state');
@@ -34,58 +33,19 @@ RS.check = function() {
 
 // Go to the URL
 RS.navigate = function(cb) {
-	cache();
-	/*
-	 * Board pages are too dynamic. Caching those will actually create overhead
-	 * as the client syncs through redis -> websocket -> client-side rendering.
-	 * Best just fetch them prerendered from the server each time.
-	 */
-	if (!this.nextState.thread)
-		return this.fetch(cb);
-	const key = storageKey(this.nextState),
-		html = sessionStorage[key + 'html'],
-		syncs = sessionStorage[key + 'syncs'];
-	var posts = sessionStorage[key + 'posts'],
-		threads = sessionStorage[key + 'threads'];
-	// Verify all keys exist. Deals with interuptions mid-cache.
-	//if (!html || !syncs || !posts || !threads)
-		return this.fetch(cb);
-	this.load(html, posts, threads);
-};
-
-// Dump page state to sessionStorage
-function cache() {
-	const page = state.page.attributes;
-	// Not a thread
-	if (!page.thread)
-		return;
-
-	const key = storageKey(page);
-	sessionStorage[key + 'html'] = main.$threads.html();
-	sessionStorage[key + 'syncs'] = JSON.stringify(state.syncs);
-	sessionStorage[key + 'posts'] = JSON.stringify(state.posts);
-
-	// Because it's a Set()
-	var threads = [];
-	state.threads.forEach(function(thread) {
-		threads.push(thread);		
-	});
-	sessionStorage[key + 'threads'] = JSON.stringify(threads);
-}
-
-// Generate key name
-function storageKey(page) {
-	return 'thread:' + page.thread + ':' + page.lastN + ':';
-}
-
-// Fetch new DOM from the server
-RS.fetch = function(cb) {
 	// Deal with hashes and query strings
 	var split = this.url.split('#'),
 		url = split[0] + (/\?/.test(split[0]) ? '&' : '?') + 'minimal=true';
 	if (split.length !== 1)
 		url += '#' + split[1];
 
+	/*
+	 * Fetch new DOM from the server
+	 *
+	 * Decided to go with a non-caching approach and instead relly on etags and
+	 * CDN for HTML-only caching. This solution is already very fast on threads
+	 * that are not several thousand posts large.
+	 */
 	var self = this;
 	$.get(url, function(data) {
 		if (!data)
@@ -102,7 +62,7 @@ RS.fetch = function(cb) {
 };
 
 RS.push = function() {
-	history.pushState(null, null, this.nextState.href)
+	history.pushState(null, null, this.nextState.href);
 };
 
 // For back and forward history events
