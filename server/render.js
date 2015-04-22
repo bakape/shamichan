@@ -1,11 +1,11 @@
 var caps = require('./caps'),
-    common = require('../common'),
+	common = require('../common'),
 	config = require('../config'),
-    db = require('../db'),
-    imager = require('../imager/config'),
+	db = require('../db'),
+	imager = require('../imager/config'),
 	lang = require('../lang/'),
-    STATE = require('./state'),
-    web = require('./web');
+	STATE = require('./state'),
+	web = require('./web');
 
 var RES = STATE.resources;
 var escape = common.escape_html;
@@ -60,7 +60,9 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 
 	// Top and bottom borders of the <threads> tag
 	// Chache pagination, as not to render twice
-	var pag;
+	var notReadOnly = !config.READ_ONLY
+			&& config.READ_ONLY_BOARDS.indexOf(opts.board) < 1,
+		pag;
 	reader.once('top', function(nav) {
 		// Navigation info is used to build pagination. None on thread pages
 		if (!nav)
@@ -70,6 +72,8 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 			out.write(pag);
 		}
 		out.write('<hr class="sectionHr">\n');
+		if (nav && notReadOnly)
+			out.write(oneeSama.newThreadBox());
 	});
 	reader.once('bottom', function() {
 		out.write(pag || threadsBottom(oneeSama));
@@ -99,6 +103,8 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 		};
 
 		reader.once('endthread', function() {
+			if (notReadOnly)
+				out.write(oneeSama.replyBox());
 			out.write('</section><hr class="sectionHr">\n');
 		});
 	});

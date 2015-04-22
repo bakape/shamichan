@@ -895,6 +895,14 @@ OS.monomono = function(data, cls) {
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
 };
 
+OS.replyBox = function() {
+	return '<aside class="act"><a>' + this.lang.reply + '</a></aside>';
+};
+
+OS.newThreadBox = function() {
+	return '<aside class="act"><a>' + this.lang.newThread + '</a></aside>';
+};
+
 parse_name = function(name) {
 	var tripcode = '', secure = '';
 	var hash = name.indexOf('#');

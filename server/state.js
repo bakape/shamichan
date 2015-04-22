@@ -106,7 +106,8 @@ var clientConfig = _.pick(config,
 	'PYU',
 	'BOARDS',
 	'LANGS',
-	'DEFAULT_LANG'
+	'DEFAULT_LANG',
+	'READ_ONLY_BOARDS'
 );
 var clientImager = _.pick(imager,
 	'WEBM',

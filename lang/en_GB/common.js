@@ -15,6 +15,8 @@ const lang = {
 	catalog: 'Catalog',
 	return: 'Return',
 	top: 'Top',
+	reply: 'Reply',
+	newThread: 'New thread',
 
 	// Time-related
 	week: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],

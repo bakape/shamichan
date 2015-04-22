@@ -29,6 +29,7 @@ var config = {
 
 	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
 	DEFAULT_BOARD: 'moe',
+	READ_ONLY_BOARDS: ['archive', 'graveyard'],
 	// Add links to the navigator menu to custom URLs
 	PSUEDO_BOARDS: [
 		['alpha', 'http://localhost:8000/moe/?alpha=true']
