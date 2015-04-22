@@ -89,7 +89,7 @@ var opts = [
 	{
 		id: 'imageHover',
 		load: notMobile,
-		tab: 0,
+		tab: 0
 	},
 	{
 		id: 'webmHover',
@@ -150,7 +150,7 @@ var opts = [
 		id: 'anonymise',
 		tab: 0
 	},
-	/* RELATIVE POST TIMESTAMPS */,
+	/* RELATIVE POST TIMESTAMPS */
 	{
 		id: 'relativeTime',
 		tab: 0,
@@ -250,7 +250,7 @@ opts.push(illyaDance,
 			if (r)
 				$('<style/>', {
 					id: 'reply-at-right',
-					text: 'aside { margin: -26px 0 2px auto; }',
+					text: 'aside { margin: -26px 0 2px auto; }'
 				}).appendTo('head');
 			else
 				$('#reply-at-right').remove();
@@ -291,13 +291,13 @@ opts.push(illyaDance,
 	{
 		id: 'userBG',
 		load: notMobile,
-		tab: 1,
+		tab: 1
 	},
 	{
 		id: 'userBGimage',
 		load: notMobile,
 		type: 'image',
-		tab: 1,
+		tab: 1
 		// FIXME
 		//exec: background.set
 	},
@@ -316,12 +316,12 @@ opts.push(illyaDance,
 	/* KEEP THREAD LENGTH WITHIN LASTN */
 	{
 		id: 'postUnloading',
-		tab: 0,
+		tab: 0
 	},
 	/* LOCK TO BOTTOM EVEN WHEN DOCUMENT HIDDEN*/
 	{
 		id: 'alwaysLock',
-		tab: 0,
+		tab: 0
 	}
 );
 
@@ -329,19 +329,19 @@ opts.push(illyaDance,
 [
 	{
 		id: 'new',
-		default: 78,
+		default: 78
 	}, {
 		id: 'togglespoiler',
-		default: 73,
+		default: 73
 	}, {
 		id: 'textSpoiler',
-		default: 68,
+		default: 68
 	}, {
 		id: 'done',
-		default: 83,
+		default: 83
 	}, {
 		id: 'expandAll',
-		default: 69,
+		default: 69
 	}
 ].forEach(function(short) {
 	short.type = 'shortcut';
