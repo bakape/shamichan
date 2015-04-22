@@ -37,6 +37,9 @@ exports.serverTimeOffset = 0;
 exports.dispatcher = {};
 exports.connSM = new common.FSM('load');
 exports.postSM = new common.FSM('none');
+// Read-only boards gets expanded later
+exports.readOnly = ['archive'];
+
 
 // Cached jQuery objects
 exports.$doc = $(document);
@@ -49,9 +52,8 @@ var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {
 	// Core post link handler
 	var frag;
 	if (this.links && num in this.links) {
-		var op = this.links[num];
-		// FIXME: Threads not done yet
-		var model = state.posts.get(num),
+		var op = this.links[num],
+			model = state.posts.get(num),
 			desc = model && model.get('mine') && '(You)';
 		frag = this.post_ref(num, op, desc);
 	}
