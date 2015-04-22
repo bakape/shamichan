@@ -146,12 +146,13 @@ FSM.prototype.feed = function(ev, param) {
 	var to = (acts && acts[ev]) || spec.wilds[ev];
 	if (to && from != to) {
 		var ps = spec.preflights[to];
-		for (var i = 0; ps && i < ps.length; i++)
+		for (var i = 0; ps && i < ps.length; i++) {
 			if (!ps[i].call(this, param))
 				return false;
+		}
 		this.state = to;
 		var fs = spec.ons[to];
-		for (var i = 0; fs && i < fs.length; i++)
+		for (i = 0; fs && i < fs.length; i++)
 			fs[i].call(this, param);
 	}
 	return true;
@@ -240,7 +241,7 @@ ref_re = new RegExp(ref_re);
 OS.hook = function(name, func) {
 	var hs = this.hooks[name];
 	if (!hs)
-		this.hooks[name] = hs = [func];
+		this.hooks[name] = [func];
 	else if (hs.indexOf(func) < 0)
 		hs.push(func);
 };
@@ -278,7 +279,7 @@ OS.red_string = function(ref) {
 		linkClass = 'embed soundcloud';
 	}
 	else if (/^>\/pastebin/.test(ref)) {
-		dest = dest = 'https://pastebin.com/' + ref.slice(11);
+		dest = 'https://pastebin.com/' + ref.slice(11);
 		linkClass = 'embed pastebin';
 	}
 
@@ -353,7 +354,7 @@ OS.iku = function(token, to) {
 };
 
 OS.fragment = function(frag) {
-	var chunks = frag.split(/(\[\/?spoiler\])/i);
+	var chunks = frag.split(/(\[\/?spoiler])/i);
 	var state = this.state;
 	for (var i = 0; i < chunks.length; i++) {
 		var chunk = chunks[i], q = (state[0] === DEF.S_QUOTE);
@@ -364,7 +365,7 @@ OS.fragment = function(frag) {
 			this.iku(chunk, to);
 			continue;
 		}
-		lines = chunk.split(/(\n)/);
+		var lines = chunk.split(/(\n)/);
 		for (var l = 0; l < lines.length; l++) {
 			var line = lines[l];
 			if (l % 2)
@@ -559,10 +560,10 @@ OS.spoiler_info = function(index, toppu) {
 	var large = toppu;
 	var hd = toppu || this.thumbStyle != 'small';
 	return {
-		thumb: encodeURI(mediaURL +  'spoil/spoiler' + (hd ? '' : 's')
+		thumb: encodeURI(mediaURL + 'spoil/spoiler' + (hd ? '' : 's')
 			+ index + '.png'),
 		dims: large ? imagerConfig.THUMB_DIMENSIONS
-			: imagerConfig.PINKY_DIMENSIONS,
+			: imagerConfig.PINKY_DIMENSIONS
 	};
 };
 
@@ -583,11 +584,12 @@ exports.pick_spoiler = pick_spoiler;
 function new_tab_link(srcEncoded, inside, cls, brackets) {
 	if (brackets)
 		inside = '[' + inside + '] ';
-	return [safe('<a href="' + srcEncoded + '" target="_blank"' +
+	return [
+		safe('<a href="' + srcEncoded + '" target="_blank"' +
 			(cls ? ' class="' + cls + '"' : '') +
-			' rel="nofollow">'), inside, safe('</a>')];
+			' rel="nofollow">'), inside, safe('</a>')
+	];
 }
-
 
 OS.image_paths = function() {
 	if (!this._imgPaths) {
@@ -595,7 +597,7 @@ OS.image_paths = function() {
 			src: mediaURL + 'src/',
 			thumb: mediaURL + 'thumb/',
 			mid: mediaURL + 'mid/',
-			vint: mediaURL + 'vint/',
+			vint: mediaURL + 'vint/'
 		};
 		this.trigger('mediaPaths', this._imgPaths);
 	}
@@ -607,18 +609,20 @@ var audioIndicator = "\u266B"; // musical note
 OS.gazou = function(info, toppu) {
 	var src, caption;
 	// TODO: Unify archive and normal thread caption logic
+	var google, iqdb;
 	if (info.vint) {
 		src = encodeURI('../outbound/hash/' + info.MD5);
-		var google = encodeURI('../outbound/g/' + info.vint);
-		var iqdb = encodeURI('../outbound/iqdb/' + info.vint);
-		caption = [this.lang.search + ' ', new_tab_link(google, '[Google]'),
-			' ',
+		google = encodeURI('../outbound/g/' + info.vint);
+		iqdb = encodeURI('../outbound/iqdb/' + info.vint);
+		caption = [
+			this.lang.search + ' ', new_tab_link(google, '[Google]'), ' ',
 			new_tab_link(iqdb, '[iqdb]'), ' ',
-			new_tab_link(src, '[foolz]')];
+			new_tab_link(src, '[foolz]')
+		];
 	}
 	else {
-		var google = encodeURI('../outbound/g/' + info.thumb);
-		var iqdb = encodeURI('../outbound/iqdb/' + info.thumb);
+		google = encodeURI('../outbound/g/' + info.thumb);
+		iqdb = encodeURI('../outbound/iqdb/' + info.thumb);
 		var saucenao = encodeURI('../outbound/sn/' + info.thumb);
 		var foolz = encodeURI('../outbound/hash/' + info.MD5);
 		var exhentai = encodeURI('../outbound/exh/' + info.SHA1);
@@ -630,16 +634,16 @@ OS.gazou = function(info, toppu) {
 			new_tab_link(iqdb, 'Iq', 'imageSearch iqdb', true),
 			new_tab_link(saucenao, 'Sn', 'imageSearch saucenao', true),
 			new_tab_link(foolz, 'Fz', 'imageSearch foolz', true),
-			new_tab_link(exhentai, 'Ex', 'imageSearch exhentai', true),
+			new_tab_link(exhentai, 'Ex', 'imageSearch exhentai', true)
 		];
 	}
 
 	var img = this.gazou_img(info, toppu);
-	var size = info.size ? readable_filesize(info.size) + ', ' : '';
 	var dims = info.dims[0] + 'x' + info.dims[1];
 
 	// We need da data for da client to walk da podium
-	return [safe('<figure data-img="'), (isNode ? escapeJSON(info) : ''),
+	return [
+		safe('<figure data-img="'), (isNode ? escapeJSON(info) : ''),
 		safe('"><figcaption>'),
 		caption, safe(' <i>('),
 		info.audio ? (audioIndicator + ', ') : '',
@@ -649,7 +653,8 @@ OS.gazou = function(info, toppu) {
 		this.full ? [', ', chibi(info.imgnm, img.src)] : '',
 		safe(')</i></figcaption>'),
 		this.thumbStyle == 'hide' ? '' : img.html,
-		safe('</figure>\n\t')];
+		safe('</figure>\n\t')
+	];
 };
 
 exports.thumbStyles = ['small', 'sharp', 'hide'];
@@ -713,7 +718,7 @@ function readable_filesize(size) {
 }
 exports.readable_filesize = readable_filesize;
 
-const pad = exports.pad  = function(n) {
+const pad = exports.pad = function(n) {
 	return (n < 10 ? '0' : '') + n;
 };
 
@@ -723,7 +728,7 @@ OS.readable_time = function(time) {
 	if (h || h == 0)
 		offset = h * 60 * 60 * 1000;
 	else
-		// XXX: would be nice not to construct new Dates all the time
+	// XXX: would be nice not to construct new Dates all the time
 		offset = new Date().getTimezoneOffset() * -60 * 1000;
 
 	return this.readableDate(new Date(time + offset));
@@ -757,9 +762,9 @@ OS.relative_time = function(then, now) {
 
 function datetime(time) {
 	var d = new Date(time);
-	return (d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' +
-		pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' +
-		pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
+	return (d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-'
+		+ pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':'
+		+ pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
 }
 
 OS.post_url = function(num, op, quote) {
@@ -792,7 +797,7 @@ var action_link_html = exports.action_link_html = function(href, name, id, cls) 
 		+ (id ? ' id="' + id + '"' : '')
 		+ (cls ? ' class="' + cls + '"' : '')
 		+ '>' + name + '</a></span>';
-}
+};
 
 var reasonable_last_n = exports.reasonable_last_n = function(n) {
 	return Number.isInteger(n) && n >= 5 && n <= 500;
@@ -820,7 +825,7 @@ OS.atama = function(data) {
 		header.push(safe('<code>' + data.trip + '</code>'));
 	if (auth)
 		header.push(' ## ' + (auth == 'Admin' ? hotConfig.ADMIN_ALIAS
-			: hotConfig.MOD_ALIAS));
+				: hotConfig.MOD_ALIAS));
 	this.trigger('headerName', {header: header, data: data});
 	header.push(safe('</b>'));
 	if (data.email) {
@@ -833,8 +838,8 @@ OS.atama = function(data) {
 	var text = this.rTime ? this.relative_time(data.time, new Date().getTime())
 		: this.readable_time(data.time);
 	header.push(safe(' <time datetime="' + datetime(data.time) + '"' +
-		'title="' + title + '"' +
-		'>' + text + '</time> '),
+			'title="' + title + '"' +
+			'>' + text + '</time> '),
 		this.post_nav(data));
 	if (!this.full && !data.op) {
 		var ex = this.expansion_links_html(data.num);
@@ -850,11 +855,13 @@ OS.monogatari = function(data, toppu) {
 	var tale = {header: this.atama(data)};
 	this.dice = data.dice;
 	var body = this.karada(data.body);
-	tale.body = [safe(
+	tale.body = [
+		safe(
 			'<blockquote' +
 			(isNode ? ' data-body="' + escapeJSON(data.body) + '"' : '') + '>'),
 		body, safe('</blockquote>'
-			)];
+		)
+	];
 	if (data.image && !data.hideimg)
 		tale.image = this.gazou(data.image, toppu);
 	return tale;
@@ -880,12 +887,10 @@ OS.mono = function(data) {
 OS.monomono = function(data, cls) {
 	if (data.locked)
 		cls = cls ? cls + ' locked' : 'locked';
-	var style;
 	var o = safe('<section id="' + data.num +
-		(cls ? '" class="' + cls : '') +
-		(style ? '" style="' + style : '') +
-		'" data-sync="' + (data.hctr || 0) +
-		(data.full ? '' : '" data-imgs="' + data.imgctr) + '">'),
+			(cls ? '" class="' + cls : '') +
+			'" data-sync="' + (data.hctr || 0) +
+			(data.full ? '' : '" data-imgs="' + data.imgctr) + '">'),
 		c = safe('</section>\n'),
 		gen = this.monogatari(data, true);
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
@@ -905,8 +910,10 @@ parse_name = function(name) {
 		tripcode = escape_html(tripcode);
 	}
 	name = name.trim().replace(hotConfig.EXCLUDE_REGEXP, '');
-	return [name.substr(0, 100), tripcode.substr(0, 128),
-		secure.substr(0, 128)];
+	return [
+		name.substr(0, 100), tripcode.substr(0, 128),
+		secure.substr(0, 128)
+	];
 };
 exports.parse_name = parse_name;
 
