@@ -604,7 +604,6 @@ OS.image_paths = function() {
 	return this._imgPaths;
 };
 
-var audioIndicator = "\u266B"; // musical note
 
 OS.gazou = function(info, toppu) {
 	var src, caption;
@@ -646,7 +645,7 @@ OS.gazou = function(info, toppu) {
 		safe('<figure data-img="'), (isNode ? escapeJSON(info) : ''),
 		safe('"><figcaption>'),
 		caption, safe(' <i>('),
-		info.audio ? (audioIndicator + ', ') : '',
+		info.audio ? ("\u266B" + ', ') : '', // musical note
 		info.length ? (info.length + ', ') : '',
 		readable_filesize(info.size), ', ',
 		dims, (info.apng ? ', APNG' : ''),
