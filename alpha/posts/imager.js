@@ -11,7 +11,7 @@ var $ = require('jquery'),
 var Hidamari = exports.Hidamari = {
 	events: {
 		'click >figure>figcaption>.imageSrc': 'revealThumbnail',
-		'click >figure>a': 'imageClicked',
+		'click >figure>a': 'imageClicked'
 	},
 
 	renderImage: function (model, image) {
@@ -135,7 +135,8 @@ var Hidamari = exports.Hidamari = {
 		// Audio controls are always the same height and do not need to be fitted
 		if (img.ext == '.mp3')
 			return this.renderAudio();
-		var width = newWidth = img.dims[0],
+		var newWidth, newHeight,
+			width = newWidth = img.dims[0],
 			height = newHeight = img.dims[1];
 		if (fit == 'full')
 			return this.expandImage(width, height, img.ext);
@@ -187,13 +188,13 @@ var Hidamari = exports.Hidamari = {
 			autoplay: true,
 			loop: true,
 			// Even wider
-			'class': 'expanded'+ (fullWidth ? ' fullWidth' : ''),
+			'class': 'expanded'+ (fullWidth ? ' fullWidth' : '')
 		}));
 		this.model.set('imageExpanded', true);
 	},
 
 	renderAudio: function() {
-		$a = this.$el.children('figure').children('a');
+		var $a = this.$el.children('figure').children('a');
 		$('<audio/>', {
 			src: $a.attr('href'),
 			width: 300,
