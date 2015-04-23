@@ -6,15 +6,15 @@ var index = require('./index');
 
 var state, config, hotConfig, imagerConfig, lang, main;
 if (index.isNode) {
-	state = require('./../server/state');
-	config = require('./../config');
+	state = require('../server/state');
+	config = require('../config');
 	hotConfig = state.hot;
-	imagerConfig = require('./../imager/config');
-	lang = require('./../lang/');
+	imagerConfig = require('../imager/config');
+	lang = require('../lang/');
 }
 else {
-	main = require('./../alpha/main');
-	state = require('./../alpha/state');
+	main = require('../alpha/main');
+	state = require('../alpha/state');
 	config = state.config.attributes;
 	hotConfig = state.hotConfig.attributes;
 	imagerConfig = state.imagerConfig.attributes;

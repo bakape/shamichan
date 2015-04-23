@@ -1,10 +1,9 @@
 exports.SERVER_DEPS = [
-	'admin/index.js',
-	'admin/index.js',
+	'admin/common.js',
 	'admin/panel.js',
-	'alpha/options/index.js',
 	'common/index.js',
 	'common/oneesama.js',
+	'common/options.js',
 	'config.js',
 	'db.js',
 	'deps.js',
@@ -53,7 +52,6 @@ exports.VENDOR_DEPS = [
 
 exports.CLIENT_DEPS = [
 	'client/common.js',
-	'client/index.js',
 	'client/init.js',
 	'client/memory.js',
 	'client/imager.js',
@@ -102,6 +100,7 @@ exports.ALPHA = [
 	'gulpfile.js',
 	'common/index.js',
 	'common/oneesama.js',
+	'common/options.js',
 	'alpha/amusement.js',
 	'alpha/background.js',
 	'alpha/banner.js',
@@ -119,7 +118,6 @@ exports.ALPHA = [
 	'alpha/scroll.js',
 	'alpha/state.js',
 	'alpha/time.js',
-	'alpha/options/index.js',
 	'alpha/options/index.js',
 	'alpha/posts/article.js',
 	'alpha/posts/index.js',

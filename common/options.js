@@ -7,23 +7,23 @@
  * Same shit as `./common/`. Need to make sure both node and the client
  * load only what they need and don't crash with refference errors.
  */
-var isNode = typeof navigator === 'undefined';
 
-var common = require('../../common/index'),
+var common = require('./index'),
+	isNode = common.isNode,
 	$, banner, config, hotConfig, main, notMobile, options, state;
 if (isNode) {
-	config = require('../../config');
+	config = require('../config');
 	//XXX: Uggly hack, but we need the hot variables before they are exported
-	hotConfig = require('../../hot').hot;
+	hotConfig = require('../hot').hot;
 	// For compatibility reasons
 	notMobile = true;
 }
 else {
 	$ = require('jquery');
-	banner = require('../banner');
-	main = require('../main');
-	options = require('./index');
-	state = require('../state');
+	banner = require('../alpha/banner');
+	main = require('../alpha/main');
+	options = require('./../alpha/options/index');
+	state = require('../alpha/state');
 
 	config =  state.config.attributes;
 	hotConfig = state.hotConfig.attributes;

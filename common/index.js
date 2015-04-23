@@ -9,10 +9,10 @@ var isNode = exports.isNode = typeof navigator === 'undefined';
 // Define vars, for the server and client sides
 var DEF = exports, state, config, hotConfig, imagerConfig, main;
 if (isNode) {
-	state = require('./../server/state');
-	config = require('./../config');
+	state = require('../server/state');
+	config = require('../config');
 	hotConfig = state.hot;
-	imagerConfig = require('./../imager/config');
+	imagerConfig = require('../imager/config');
 }
 else {
 	main = require('./../alpha/main');
