@@ -3,7 +3,7 @@
  */
 
 var $ = require('jquery'),
-	common = require('../common'),
+	common = require('../common/index'),
 	main = require('./main'),
 	state = require('./state');
 

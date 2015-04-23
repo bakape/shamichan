@@ -1,7 +1,7 @@
 var async = require('async'),
     authcommon = require('../admin/common'),
     check = require('./msgcheck').check,
-    common = require('../common'),
+    common = require('../common/index'),
     config = require('../config'),
     db = require('../db'),
     hooks = require('../hooks');

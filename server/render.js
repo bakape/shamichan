@@ -1,5 +1,5 @@
 var caps = require('./caps'),
-	common = require('../common'),
+	common = require('../common/index'),
 	config = require('../config'),
 	db = require('../db'),
 	imager = require('../imager/config'),

@@ -1,6 +1,6 @@
 var caps = require('../server/caps'),
     config = require('./config'),
-    common = require('../common'),
+    common = require('../common/index'),
     db = require('../db'),
 	lang = require('../lang/'),
     mainConfig = require('../config'),

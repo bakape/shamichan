@@ -21,7 +21,7 @@ exports.lang = window.lang;
 	eval('exports.lang[func] = ' + window.lang[func]);
 });
 
-var common = require('../common');
+var common = require('../common/index');
 
 // Register jquery plugins
 require('jquery.cookie');

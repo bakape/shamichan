@@ -4,12 +4,12 @@
  */
 
 /*
- * Same shit as `../../common.js`. Need to make sure both node and the client
+ * Same shit as `./common/`. Need to make sure both node and the client
  * load only what they need and don't crash with refference errors.
  */
 var isNode = typeof navigator === 'undefined';
 
-var common = require('../../common'),
+var common = require('../../common/index'),
 	$, banner, config, hotConfig, main, notMobile, options, state;
 if (isNode) {
 	config = require('../../config');

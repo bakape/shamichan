@@ -1,7 +1,7 @@
 var _ = require('underscore'),
 	async = require('async'),
 	caps = require('./caps'),
-    common = require('../common'),
+    common = require('../common/index'),
     events = require('events'),
     Muggle = require('../etc').Muggle,
     STATE = require('./state'),

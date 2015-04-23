@@ -3,7 +3,7 @@
  */
 
 var Backbone = require('backbone'),
-	common = require('../common'),
+	common = require('../common/index'),
 	main = require('./main');
 
 // Read page state by parsing a URL

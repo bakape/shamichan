@@ -1,6 +1,6 @@
 var $ = require('jquery'),
 	Backbone = require('backbone'),
-	common = require('../common'),
+	common = require('../common/index'),
 	main = require('./main');
 
 const date_from_time_el = exports.date_from_time_el = function(el) {

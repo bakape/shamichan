@@ -13,7 +13,7 @@ var send;
 if (config.SERVE_STATIC_FILES)
 	send = require('send');
 
-var escape = require('../common').escape_html;
+var escape = require('../common/index').escape_html;
 var routes = [];
 var resources = [];
 

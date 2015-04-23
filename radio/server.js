@@ -1,4 +1,4 @@
-var common = require('../common'),
+var common = require('../common/index'),
 	hook =require('../hooks').hook,
 	push = require('../server/okyaku').push,
 	OK = require('../server/okyaku'),

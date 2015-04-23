@@ -47,15 +47,16 @@ gulp.task('alpha', function() {
 			'jquery',
 			'underscore',
 			'backbone'
-		],
+		]
 	})
 		// Exclude these requires on the client
 		.exclude('./config')
 		.exclude('../../config')
+		.exclude('./../config')
 		.exclude('../../hot')
-		.exclude('./lang/')
-		.exclude('./server/state')
-		.exclude('./imager/config')
+		.exclude('./../lang/')
+		.exclude('./../server/state')
+		.exclude('./../imager/config')
 		.exclude('./hot');
 	
 	return b.bundle()

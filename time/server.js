@@ -1,4 +1,4 @@
-var common = require('../common');
+var common = require('../common/index');
 var hooks = require('../hooks');
 
 function parse_timezone(tz) {
