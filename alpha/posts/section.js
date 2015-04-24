@@ -30,7 +30,7 @@ var Section = module.exports = Backbone.View.extend({
 	render: function() {
 		main.oneeSama.links = this.mode.get('links');
 		this.setElement(main.oneeSama.monomono(this.model.attributes).join(''));
-		this.$el.insertAfter(main.$threads.children('hr.sectionHr').first());
+		this.$el.insertAfter(main.$threads.children('hr:first'));
 		this.$el.after('<hr class="sectionHr"/>');
 		return this;
 	},

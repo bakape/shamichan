@@ -44,6 +44,8 @@ exports.readOnly = ['archive'];
 // Cached jQuery objects
 exports.$doc = $(document);
 exports.$threads = $('threads');
+exports.$name = $('input[name=name]');
+exports.$email = $('input[name=email]');
 
 var state = require('./state');
 

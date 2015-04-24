@@ -22,7 +22,9 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	// TODO: Check, if post is mine
 	var el;
 
-	var view = new posts[isThread ? 'Section' : 'Article']({
+	// TODO: Shift the parrent sections replies on board pages
+
+	new posts[isThread ? 'Section' : 'Article']({
 		// Create model
 		model: new posts[isThread ? 'ThreadModel' : 'PostModel'](msg),
 		id: msg.num,
@@ -81,7 +83,7 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 };
 
 // Add various additional tags inside the blockqoute
-function inject(frag) {
+var inject = exports.inject = function(frag) {
 	var $dest = this.buffer;
 	for (var i = 0; i < this.state[1]; i++)
 		$dest = $dest.children('del:last');
@@ -106,7 +108,13 @@ function inject(frag) {
 	if (out)
 		$dest.append(out);
 	return out;
-}
+};
+
+// Make the text spoilers toggle revealing on click
+var touchable_spoiler_tag = exports.touchable_spoiler_tag = function(del) {
+	del.html = '<del onclick="void(0)">';
+};
+main.oneeSama.hook('spoilerTag', touchable_spoiler_tag);
 
 dispatcher[common.FINISH_POST] = function(msg) {
 	const num = msg[0];
@@ -120,7 +128,7 @@ dispatcher[common.FINISH_POST] = function(msg) {
 
 dispatcher[common.DELETE_POSTS] = function(msg) {
 	msg.forEach(function(num) {
-		var model = state.posts.get(num)
+		var model = state.posts.get(num);
 		if (model)
 			model.destroy();
 
