@@ -6,8 +6,7 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	common = require('../../common'),
 	main = require('../main'),
-	posting = require('./posting'),
-	state = require('../state');
+	posting = require('./posting');
 
 function load() {
 	try {
@@ -28,7 +27,7 @@ var save = _.debounce(function() {
 		if (email == 'misaki') {
 			$email.val('');
 			$('<scriptt/>', {
-				src: state.imagerConfig.get('MEDIA_URL') + 'js/login.js?v=2'
+				src: main.imagerConfig.MEDIA_URL + 'js/login.js?v=2'
 			}).appendTo('head');
 			email = false;
 		}

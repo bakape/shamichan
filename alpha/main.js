@@ -21,6 +21,16 @@ exports.lang = window.lang;
 	eval('exports.lang[func] = ' + window.lang[func]);
 });
 
+/*
+These configs really should not be randomly toggled frequently. No need to put
+them in state.js, as they should not be hot-loaded. Anything that needs to be,
+can be moved to hot.js. Should prevent some bugs, but also reduce flexibility,
+for frequent togglers. Hmm.
+ */
+exports.config = window.config;
+exports.imagerConfig = window.imagerConfig;
+exports.reportConfig = window.reportConfig;
+
 var common = require('../common/index');
 
 // Register jquery plugins

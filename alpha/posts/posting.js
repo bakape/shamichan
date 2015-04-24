@@ -286,7 +286,7 @@ var ComposerView = Backbone.View.extend({
 	renderSpoilerPane: function(model, sp) {
 		this.$toggle.css('background-image', 'url("'
 			+ (sp ? spoiler_pane_url(sp)
-				: state.imagerConfig.get('MEDIA_URL') + 'css/ui/pane.png')
+				: main.imagerConfig.MEDIA_URL + 'css/ui/pane.png')
 			+ '")');
 	},
 
@@ -302,7 +302,7 @@ var ComposerView = Backbone.View.extend({
 			type: 'file',
 			id: 'image',
 			name: 'image',
-			accept: state.imagerConfig.get('WEBM') ? 'imager/*;.webm' : 'image/*',
+			accept: main.imagerConfig.WEBM ? 'imager/*;.webm' : 'image/*',
 			change: $.proxy(this, 'on_image_chosen')
 		});
 		this.$toggle = $('<input/>', {
@@ -336,12 +336,12 @@ var ComposerView = Backbone.View.extend({
 });
 
 function spoiler_pane_url(sp) {
-	return state.imagerConfig.get('MEDIA_URL') + 'spoil/spoil' + sp + '.png';
+	return main.imagerConfig.MEDIA_URL + 'spoil/spoil' + sp + '.png';
 }
 
 // Preload the spoiler panes for smoother display
 function preload_panes() {
-	var spoilers = state.imagerConfig.get('SPOILER_IMAGES');
-	for (var i = 0; i < spoilers.length; i++)
-		new Image().src = spoiler_pane_url(spoilers[i]);
+	main.imagerConfig.SPOILER_IMAGES.forEach(function(spoiler) {
+		new Image().src = spoiler_pane_url(spoiler);
+	});
 }

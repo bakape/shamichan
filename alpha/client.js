@@ -187,16 +187,9 @@ dispatcher[common.HOT_INJECTION] = function(msg){
 	if (msg[0] == false && msg[1] != state.configHash)
 		main.send([common.HOT_INJECTION, true]);
 	// Update variables and hash
-	else if (msg[0] == true){
+	else if (msg[0] == true) {
 		state.configHash = msg[1];
-		/*
-		 * XXX: We can probably just use the window object properties for most
-		 * of these. Time will tell, what can be discarded.
-		 */
-		state.config.set(msg[2][0]);
-		state.imagerConfig.set(msg[2][1]);
-		state.reportConfig.set(msg[2][2]);
-		state.hotConfig.set(msg[2][3]);
+		state.hotConfig.set(msg[2]);
 	}
 };
 

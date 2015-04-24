@@ -30,13 +30,9 @@ var read = exports.read = function(url) {
 // Initial page state
 var page = exports.page = new Backbone.Model(read(location.href));
 
-/*
- * Not sure how many of these are going to be  more useful than a property of
- * the window object. We'll as we go, I guess.
- */
-['config', 'imagerConfig', 'reportConfig', 'hotConfig'].forEach(function(type) {
-	exports[type] = new Backbone.Model(window[type]);
-});
+// Hot-reloadable configuration
+// TODO: We need actual listeners to this model for hot reloads.
+exports.hotConfig = new Backbone.Model(window.hotConfig);
 // Hash of all the config variables
 exports.configHash = window.configHash;
 

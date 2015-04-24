@@ -17,9 +17,9 @@ if (isNode) {
 else {
 	main = require('./../alpha/main');
 	state = require('./../alpha/state');
-	config = state.config.attributes;
+	config = main.config;
 	hotConfig = state.hotConfig.attributes;
-	imagerConfig = state.imagerConfig.attributes;
+	imagerConfig = main.imagerConfig;
 }
 
 // Websocket message codes

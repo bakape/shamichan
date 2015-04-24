@@ -25,7 +25,7 @@ else {
 	options = require('./../alpha/options/index');
 	state = require('../alpha/state');
 
-	config =  state.config.attributes;
+	config =  main.config;
 	hotConfig = state.hotConfig.attributes;
 	notMobile = !main.isMobile;
 }
@@ -278,9 +278,8 @@ opts.push(illyaDance,
 		default: isNode ? null : hotConfig.BOARD_CSS[state.page.get('board')],
 		exec: function(theme) {
 			if (theme) {
-				var css = hotConfig.css[theme + '.css'];
-				$('#theme').attr('href', state.imagerConfig.get('MEDIA_URL')
-					+ 'css/' + css);
+				$('#theme').attr('href', main.imagerConfig.MEDIA_URL + 'css/'
+					+ hotConfig.css[theme + '.css']);
 			}
 			// FIXME: temp stub
 			// Call the background controller to generate, remove and/or append the glass
