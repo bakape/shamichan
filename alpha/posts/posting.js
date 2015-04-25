@@ -38,11 +38,11 @@ connSM.on('synced', postSM.feeder('sync'));
 connSM.on('dropped', postSM.feeder('desync'));
 connSM.on('desynced', postSM.feeder('desync'));
 
-postSM.act('* + desync -> none', function () {
+postSM.act('* + desync -> none', function() {
 	// TODO: Desync logic
 });
 
-postSM.act('none + sync, draft, alloc + done -> ready', function () {
+postSM.act('none + sync, draft, alloc + done -> ready', function() {
 	// TODO: Add unfinished post checking
 });
 
@@ -105,7 +105,7 @@ function handle_shortcut(event) {
 		case opts.done:
 			if (postForm) {
 				if (!postForm.submit.attr('disabled')) {
-					postForm.finish_wrapped();
+					postForm.finish();
 					used = true;
 				}
 			}
@@ -140,7 +140,9 @@ function $ceiling() {
 
 var ComposerView = Backbone.View.extend({
 	events: {
-		'input #trans': 'onInput'
+		'input #trans': 'onInput',
+		'keydown #trans': 'onKeyDown',
+		'click #done': 'finish'
 	},
 
 	initialize: function(args) {
@@ -162,7 +164,7 @@ var ComposerView = Backbone.View.extend({
 				this.callback(this.post_ref(num, extractNum($sec)));
 			else {
 				this.callback(common.safe('<a class="nope">&gt;&gt;'
-						+ num + '</a>'));
+					+ num + '</a>'));
 			}
 		});
 		// Initialise the renderer instance
@@ -210,7 +212,7 @@ var ComposerView = Backbone.View.extend({
 		 Allows keeping the input buffer sized as if the text was monospace,
 		 without actually displaying monospace font. Keeps the input buffer from
 		 shifting around needlessly.
-		  */
+		 */
 		this.$sizer = $('<pre/>').appendTo('body');
 
 		// TODO: Shift the parrent sections replies on board pages
@@ -229,17 +231,17 @@ var ComposerView = Backbone.View.extend({
 		this.renderIdentity();
 		args.$dest.replaceWith(this.$el);
 
-		 if (op) {
-			 this.resizeInput();
-			 this.$input.focus();
-		 }
-		 else {
-			 this.$el.after('<hr class="sectionHr"/>');
-			 this.$subject.focus();
-		 }
-		 $('aside').remove();
+		if (op) {
+			this.resizeInput();
+			this.$input.focus();
+		}
+		else {
+			this.$el.after('<hr class="sectionHr"/>');
+			this.$subject.focus();
+		}
+		$('aside').remove();
 
-		 preloadPanes();
+		preloadPanes();
 	},
 
 	// Render the name, email, and admin title, if any
@@ -347,7 +349,7 @@ var ComposerView = Backbone.View.extend({
 			m, time, video;
 
 		// Turn YouTube links into proper refs
-		while (true) {
+		while(true) {
 			m = val.match(embed.youtube_re);
 			if (!m)
 				break;
@@ -361,7 +363,7 @@ var ComposerView = Backbone.View.extend({
 		}
 
 		//Youtu.be links
-		while(true){
+		while(true) {
 			m = val.match(youtube_short_re);
 			if (!m)
 				break;
@@ -372,7 +374,7 @@ var ComposerView = Backbone.View.extend({
 		}
 
 		// SoundCloud links
-		while (true) {
+		while(true) {
 			m = val.match(soundcloud_url_re);
 			if (!m)
 				break;
@@ -381,16 +383,16 @@ var ComposerView = Backbone.View.extend({
 		}
 
 		// Pastebin links
-		while(true){
+		while(true) {
 			m = val.match(pastebin_re);
 			if (!m)
 				break;
-			var pbin = '>>>/pastebin/' +m[1];
+			var pbin = '>>>/pastebin/' + m[1];
 			val = embedRewrite(m, pbin);
 		}
 
 		// Rewite embedable URLs to native embed URL syntax
-		function embedRewrite(m, rw){
+		function embedRewrite(m, rw) {
 			var old = m[0].length;
 			var newVal = val.substr(0, m.index) + rw + val.substr(m.index + old);
 			changed = true;
@@ -401,14 +403,14 @@ var ComposerView = Backbone.View.extend({
 			}
 			return newVal;
 		}
-		
+
 		if (changed)
 			this.$input.val(val);
 
 		var nl = val.lastIndexOf('\n');
 		if (nl >= 0) {
 			var ok = val.substr(0, nl);
-			val = val.substr(nl+1);
+			val = val.substr(nl + 1);
 			this.$input.val(val);
 			if (this.model.get('sentAllocRequest') || /[^ ]/.test(ok))
 				this.commit(ok + '\n');
@@ -434,7 +436,7 @@ var ComposerView = Backbone.View.extend({
 		this.resize_input(val);
 	},
 
-	findTimeArg: function (params) {
+	findTimeArg: function(params) {
 		if (!params || params.indexOf('t=') < 0)
 			return false;
 		params = params.split('&');
@@ -448,7 +450,7 @@ var ComposerView = Backbone.View.extend({
 	},
 
 	// Commit any staged words to the server
-	commit: function (text) {
+	commit: function(text) {
 		var lines;
 		if (text.indexOf('\n') >= 0) {
 			lines = text.split('\n');
@@ -493,20 +495,72 @@ var ComposerView = Backbone.View.extend({
 	},
 
 	// Construct the message for post allocation in the database
-	allocationMessage: function (text, image) {
+	allocationMessage: function(text, image) {
 		function opt(key, val) {
 			if (val)
 				msg[key] = val;
 		}
-		
+
 		opt('name', main.$name.val().trim());
 		opt('email', main.$email.val().trim());
 		opt('subject', this.$subject.val().trim());
 		opt('frag', text);
 		opt('image', image);
 		opt('op', this.model.get('op'));
-		
+
 		return msg;
+	},
+
+	onKeyDown: function(event) {
+
+		// TODO: Scrolling and locking to bottom
+
+		switch (event.which) {
+			case 13:
+				event.preventDefault();
+			// fall-through
+			case 32:
+				// predict result
+				var input = this.$input[0];
+				var val = this.$input.val();
+				val = val.slice(0, input.selectionStart)
+					+ (event.which == 13 ? '\n' : ' ')
+					+ val.slice(input.selectionEnd);
+				this.onInput(val);
+				break;
+			default:
+				handle_shortcut.bind(this)(event);
+		}
+	},
+	
+	finish: function() {
+		if (this.model.get('num')) {
+			this.flushPending();
+			this.commit(this.$input.val());
+			this.$input.remove();
+			this.$submit.remove();
+			if (this.$uploadForm)
+				this.$uploadForm.remove();
+			if (this.$iframe) {
+				this.$iframe.remove();
+				this.$iframe = null;
+			}
+			this.imouto.fragment(this.$lineBuffer.text());
+			this.$buffer.replaceWith(this.$buffer.contents());
+			this.$lineBuffer.remove();
+			this.$blockquote.css({'margin-left': '', 'padding-left': ''});
+			main.send([common.FINISH_POST]);
+			this.preserve = true;
+		}
+		postSM.feed('done');
+	},
+	
+	// Send any unstaged words
+	flushPending: function () {
+		if (this.pending) {
+			main.send(this.pending);
+			this.pending = '';
+		}
 	}
 });
 
