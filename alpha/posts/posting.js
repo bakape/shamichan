@@ -98,7 +98,7 @@ function handle_shortcut(event) {
 			break;
 		case opts.togglespoiler:
 			if (postForm) {
-				postForm.on_toggle(event);
+				postForm.onToggle(event);
 				used = true;
 			}
 			break;
@@ -142,7 +142,8 @@ var ComposerView = Backbone.View.extend({
 	events: {
 		'input #trans': 'onInput',
 		'keydown #trans': 'onKeyDown',
-		'click #done': 'finish'
+		'click #done': 'finish',
+		'click #toggle': 'onToggle'
 	},
 
 	initialize: function(args) {
@@ -532,7 +533,7 @@ var ComposerView = Backbone.View.extend({
 				handle_shortcut.bind(this)(event);
 		}
 	},
-	
+
 	finish: function() {
 		if (this.model.get('num')) {
 			this.flushPending();
@@ -554,13 +555,27 @@ var ComposerView = Backbone.View.extend({
 		}
 		postSM.feed('done');
 	},
-	
+
 	// Send any unstaged words
 	flushPending: function () {
 		if (this.pending) {
 			main.send(this.pending);
 			this.pending = '';
 		}
+	},
+
+	onToggle: function(event) {
+		const attrs = this.model.attributes;
+		if (attrs.uploading || attrs.uploaded)
+			return;
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		if (attrs.spoiler) {
+			this.model.set({spoiler: 0});
+			return;
+		}
+		const pick = pick_spoiler(attrs.nextSpoiler);
+		this.model.set({spoiler: pick.index, nextSpoiler: pick.next});
 	}
 });
 
