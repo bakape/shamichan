@@ -7,6 +7,7 @@ var $ = require('jquery'),
 	Backbone = require('backbone'),
 	client = require('../client'),
 	common = require('../../common'),
+	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
 	index = require('./index'),
@@ -90,7 +91,7 @@ function handle_shortcut(event) {
 	switch(event.which) {
 		case opts.new:
 			var $aside = state.page.get('thread') ? $('aside') : $ceiling().next();
-			if ($aside.is('aside') && $aside.length == 1) {
+			if ($aside.is('aside') && $aside.length === 1) {
 				postSM.feed('new', $aside);
 				used = true;
 			}
@@ -138,6 +139,10 @@ function $ceiling() {
 }
 
 var ComposerView = Backbone.View.extend({
+	events: {
+		'input #trans': 'onInput'
+	},
+
 	initialize: function(args) {
 		this.listenTo(this.model, 'change', this.renderButtons);
 		this.listenTo(this.model, 'change:spoiler', this.renderSpoilerPane);
@@ -172,7 +177,6 @@ var ComposerView = Backbone.View.extend({
 		main.oneeSama.trigger('imouto', this.imouto);
 
 		this.render(args);
-		//this.$input.on('input', this.on_input.bind(this, undefined));
 	},
 
 	// Initial render
@@ -235,7 +239,7 @@ var ComposerView = Backbone.View.extend({
 		 }
 		 $('aside').remove();
 
-		 preload_panes();
+		 preloadPanes();
 	},
 
 	// Render the name, email, and admin title, if any
@@ -285,7 +289,7 @@ var ComposerView = Backbone.View.extend({
 
 	renderSpoilerPane: function(model, sp) {
 		this.$toggle.css('background-image', 'url("'
-			+ (sp ? spoiler_pane_url(sp)
+			+ (sp ? spoilerPaneUrl(sp)
 				: main.imagerConfig.MEDIA_URL + 'css/ui/pane.png')
 			+ '")');
 	},
@@ -325,23 +329,194 @@ var ComposerView = Backbone.View.extend({
 	},
 
 	resizeInput: function(val) {
-		if (typeof val != 'string')
+		if (typeof val !== 'string')
 			val = this.$input.val();
 		this.$sizer.text(val);
 		var size = this.$sizer.width() + common.INPUT_ROOM;
 		size = Math.max(size, inputMinSize
 			- this.$input.offset().left - this.$el.offset().left);
 		this.$input.css('width', size + 'px');
+	},
+
+	onInput: function() {
+		var val = this.$input.val(),
+			start = this.$input[0].selectionStart,
+			end = this.$input[0].selectionEnd;
+
+		var changed = false,
+			m, time, video;
+
+		// Turn YouTube links into proper refs
+		while (true) {
+			m = val.match(embed.youtube_re);
+			if (!m)
+				break;
+			// Substitute
+			time = this.findTimeArg(m[3])
+				|| this.findTimeArg(m[1])
+				|| m[4]
+				|| '';
+			video = '>>>/watch?v=' + m[2] + time;
+			val = embedRewrite(m, video);
+		}
+
+		//Youtu.be links
+		while(true){
+			m = val.match(youtube_short_re);
+			if (!m)
+				break;
+			// Substitute
+			time = this.findTimeArg(m[2]) || '';
+			video = '>>>/watch?v=' + m[1] + t;
+			val = embedRewrite(m, video);
+		}
+
+		// SoundCloud links
+		while (true) {
+			m = val.match(soundcloud_url_re);
+			if (!m)
+				break;
+			var sc = '>>>/soundcloud/' + m[1];
+			val = embedRewrite(m, sc);
+		}
+
+		// Pastebin links
+		while(true){
+			m = val.match(pastebin_re);
+			if (!m)
+				break;
+			var pbin = '>>>/pastebin/' +m[1];
+			val = embedRewrite(m, pbin);
+		}
+
+		// Rewite embedable URLs to native embed URL syntax
+		function embedRewrite(m, rw){
+			var old = m[0].length;
+			var newVal = val.substr(0, m.index) + rw + val.substr(m.index + old);
+			changed = true;
+			if (m.index < start) {
+				var diff = old - rw.length;
+				start -= diff;
+				end -= diff;
+			}
+			return newVal;
+		}
+		
+		if (changed)
+			this.$input.val(val);
+
+		var nl = val.lastIndexOf('\n');
+		if (nl >= 0) {
+			var ok = val.substr(0, nl);
+			val = val.substr(nl+1);
+			this.$input.val(val);
+			if (this.model.get('sentAllocRequest') || /[^ ]/.test(ok))
+				this.commit(ok + '\n');
+		}
+		else {
+			m = val
+				.split('')
+				.reverse()
+				.join('')
+				.match(/^(\s*\S+\s+\S+)\s+(?=\S)/);
+			if (m) {
+				var lim = val.length - m[1].length;
+				this.commit(val.substr(0, lim));
+				val = val.substr(lim);
+				start -= lim;
+				end -= lim;
+				this.$input.val(val);
+				this.$input[0].setSelectionRange(start, end);
+			}
+		}
+
+		this.$input.attr('maxlength', common.MAX_POST_CHARS - this.char_count);
+		this.resize_input(val);
+	},
+
+	findTimeArg: function (params) {
+		if (!params || params.indexOf('t=') < 0)
+			return false;
+		params = params.split('&');
+		var pair;
+		for (var i = 0; i < params.length; i++) {
+			pair = '#' + params[i];
+			if (embed.youtube_time_re.test(pair))
+				return pair;
+		}
+		return false;
+	},
+
+	// Commit any staged words to the server
+	commit: function (text) {
+		var lines;
+		if (text.indexOf('\n') >= 0) {
+			lines = text.split('\n');
+			this.line_count += lines.length - 1;
+			var breach = this.line_count - common.MAX_POST_LINES + 1;
+			if (breach > 0) {
+				for (var i = 0; i < breach; i++)
+					lines.pop();
+				text = lines.join('\n');
+				this.line_count = common.MAX_POST_LINES;
+			}
+		}
+		const left = common.MAX_POST_CHARS - this.char_count;
+		if (left < text.length)
+			text = text.substr(0, left);
+		if (!text)
+			return;
+		this.char_count += text.length;
+
+		// Either get an allocation or send the committed text
+		var attrs = this.model.attributes;
+		if (!attrs.num && !attrs.sentAllocRequest) {
+			main.send([common.INSERT_POST, this.allocationMessage(text, null)]);
+			this.model.set({sentAllocRequest: true});
+		}
+		else if (attrs.num)
+			send(text);
+		else
+			this.pending += text;
+
+		// Add it to the user's display
+		if (lines) {
+			lines[0] = this.$lineBuffer.text() + lines[0];
+			this.$lineBuffer.text(lines.pop());
+			for (var o = 0; o < lines.length; o++)
+				this.imouto.fragment(lines[o] + '\n');
+		}
+		else {
+			this.$lineBuffer.append(document.createTextNode(text));
+			this.$lineBuffer[0].normalize();
+		}
+	},
+
+	// Construct the message for post allocation in the database
+	allocationMessage: function (text, image) {
+		function opt(key, val) {
+			if (val)
+				msg[key] = val;
+		}
+		
+		opt('name', main.$name.val().trim());
+		opt('email', main.$email.val().trim());
+		opt('subject', this.$subject.val().trim());
+		opt('frag', text);
+		opt('image', image);
+		opt('op', this.model.get('op'));
+		
+		return msg;
 	}
 });
 
-function spoiler_pane_url(sp) {
+function spoilerPaneUrl(sp) {
 	return main.imagerConfig.MEDIA_URL + 'spoil/spoil' + sp + '.png';
 }
 
 // Preload the spoiler panes for smoother display
-function preload_panes() {
+function preloadPanes() {
 	main.imagerConfig.SPOILER_IMAGES.forEach(function(spoiler) {
-		new Image().src = spoiler_pane_url(spoiler);
+		new Image().src = spoilerPaneUrl(spoiler);
 	});
 }

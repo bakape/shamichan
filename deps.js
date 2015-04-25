@@ -120,6 +120,7 @@ exports.ALPHA = [
 	'alpha/time.js',
 	'alpha/options/index.js',
 	'alpha/posts/article.js',
+	'alpha/posts/embed.js',
 	'alpha/posts/identity.js',
 	'alpha/posts/index.js',
 	'alpha/posts/imager.js',
