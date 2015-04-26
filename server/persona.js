@@ -2,8 +2,6 @@ var _ = require('underscore'),
     config = require('../config'),
     crypto = require('crypto'),
     formidable = require('formidable'),
-    querystring = require('querystring'),
-    RES = require('./state').resources,
     request = require('request'),
     winston = require('winston');
 
@@ -33,12 +31,12 @@ function verify_persona(resp, err, fields) {
 		return respond_error(resp, 'Bad Persona assertion.');
 	var payload = {
 		assertion: fields.assertion,
-		audience: config.PERSONA_AUDIENCE,
+		audience: config.PERSONA_AUDIENCE
 	};
 	var opts = {
 		url: 'https://verifier.login.persona.org/verify',
 		body: payload,
-		json: true,
+		json: true
 	};
 	request.post(opts, function (err, verResp, packet) {
 		if (err) {
@@ -79,7 +77,7 @@ function verify_auth(resp, packet) {
 	else
 		delete packet.auth;
 	exports.set_cookie(resp, packet);
-};
+}
 
 exports.set_cookie = function (resp, info) {
 	var pass = random_str();
@@ -90,7 +88,8 @@ exports.set_cookie = function (resp, info) {
 	m.expire('session:'+pass, config.LOGIN_SESSION_TIME);
 	m.exec(function (err) {
 		if (err)
-			return oauth_error(resp, err);
+			// Samu plz, this would crash the server
+			return;//oauth_error(resp, err);
 		respond_ok(resp, make_cookie('a', pass, info.expires));
 	});
 };
@@ -134,7 +133,7 @@ function respond_error(resp, message) {
 function respond_ok(resp, cookie) {
 	var headers = {
 		'Content-Type': 'application/json',
-		'Set-Cookie': cookie,
+		'Set-Cookie': cookie
 	};
 	resp.writeHead(200, headers);
 	resp.end(JSON.stringify({status: 'okay'}));
