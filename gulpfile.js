@@ -37,8 +37,8 @@ gulp.task('css', function() {
 		.pipe(gulp.dest('./state'));
 });
 
-gulp.task('alpha', function() {
-	var b = browserify(require.resolve('./alpha/main.js'), {
+gulp.task('client', function() {
+	var b = browserify(require.resolve('./client/main.js'), {
 		entry: true,
 		// Needed for sourcemaps
 		debug: true,
@@ -61,7 +61,7 @@ gulp.task('alpha', function() {
 	
 	return b.bundle()
 		// Transform into vinyl stream
-		.pipe(source('alpha.js'))
+		.pipe(source('client.js'))
 		.pipe(buffer())
 		.pipe(sourcemaps.init({loadMaps: true}))
 		.pipe(gulpif(!debug, uglify()))
@@ -71,7 +71,5 @@ gulp.task('alpha', function() {
 });
 
 (function() {
-	gulper('client', deps.CLIENT_DEPS, './www/js');
-	gulper('vendor', deps.VENDOR_DEPS, './www/js');
 	gulper('mod', deps.MOD_CLIENT_DEPS, './state');
 })();

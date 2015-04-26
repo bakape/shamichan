@@ -20,10 +20,10 @@ if (isNode) {
 }
 else {
 	$ = require('jquery');
-	banner = require('../alpha/banner');
-	main = require('../alpha/main');
-	options = require('./../alpha/options/index');
-	state = require('../alpha/state');
+	banner = require('../client/banner');
+	main = require('../client/main');
+	options = require('../client/options');
+	state = require('../client/state');
 
 	config =  main.config;
 	hotConfig = state.hotConfig.attributes;

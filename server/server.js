@@ -355,7 +355,6 @@ function (req, resp) {
 	var board = this.board;
 	// Only render <threads> for pushState() updates
 	const min = req.query.minimal == 'true',
-		alpha = req.query.alpha == 'true',
 		cookies = web.parse_cookie(req.headers.cookie),
 		lang = config.LANGS.indexOf(cookies.lang) > -1 ? cookies.lang
 			: config.DEFAULT_LANG;
@@ -370,7 +369,7 @@ function (req, resp) {
 	yaku.once('begin', function (thread_count) {
 		var nav = page_nav(thread_count, -1, board == 'archive');
 		if (!min)
-			render.write_board_head(resp, board, nav, alpha, lang);
+			render.write_board_head(resp, board, nav, lang);
 		else
 			render.write_board_title(resp, board);
 		// Have write_thread_html render the top pagination
@@ -385,7 +384,7 @@ function (req, resp) {
 		// Have write_thread_html append bottom pagination
 		yaku.emit('bottom');
 		if (!min)
-			render.write_page_end(resp, req.ident, alpha, lang);
+			render.write_page_end(resp, req.ident, lang);
 		resp.end();
 		yaku.disconnect();
 	});
@@ -432,14 +431,13 @@ function (req, resp) {
 
 	var board = this.board;
 	const min = req.query.minimal == 'true',
-		alpha = req.query.alpha == 'true',
 		cookies = web.parse_cookie(req.headers.cookie),
 		lang = config.LANGS.indexOf(cookies.lang) > -1 ? cookies.lang
 			: config.DEFAULT_LANG;
 	var nav = page_nav(this.threadCount, this.page, board == 'archive');
 	resp = write_gzip_head(req, resp, web.noCacheHeaders);
 	if (!min)
-		render.write_board_head(resp, board, nav, alpha, lang);
+		render.write_board_head(resp, board, nav, lang);
 	else
 		render.write_board_title(resp, board);
 
@@ -454,7 +452,7 @@ function (req, resp) {
 	this.yaku.once('end', function () {
 		self.yaku.emit('bottom');
 		if (!min)
-			render.write_page_end(resp, req.ident, alpha, lang);
+			render.write_page_end(resp, req.ident, lang);
 		resp.end();
 		self.finished();
 	});
@@ -540,7 +538,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 		if (!config.DEBUG && preThread.hctr) {
 			// XXX: Always uses the hash of the default language in the etag
 			var etag = 'W/' + preThread.hctr + '-'
-				+ RES['alphaHash-' + config.DEFAULT_LANG];
+				+ RES['indexHash-' + config.DEFAULT_LANG];
 			var chunks = web.parse_cookie(req.headers.cookie);
 			var thumb = req.cookies.thumb;
 			if (thumb && common.thumbStyles.indexOf(thumb) >= 0)
@@ -587,7 +585,6 @@ function (req, resp) {
 
 	var board = this.board, op = this.op;
 	const min = req.query.minimal == 'true',
-		alpha = req.query.alpha == 'true',
 		cookies = web.parse_cookie(req.headers.cookie),
 		lang = config.LANGS.indexOf(cookies.lang) > -1 ? cookies.lang
 			: config.DEFAULT_LANG;
@@ -597,7 +594,6 @@ function (req, resp) {
 		render.write_thread_head(resp, board, op, {
 			subject: this.subject,
 			abbrev: this.abbrev,
-			alpha: alpha,
 			lang: lang
 		});
 	}
@@ -619,7 +615,7 @@ function (req, resp) {
 		// Have write_thread_html write the [Return][Top]
 		self.reader.emit('bottom');
 		if (!min)
-			render.write_page_end(resp, req.ident, alpha, lang);
+			render.write_page_end(resp, req.ident, lang);
 		resp.end();
 		self.finished();
 	});
@@ -684,24 +680,12 @@ web.resource(/^\/outbound\/(hash|exh)\/([\w+\/]{22}|[\w+\/]{40})$/, function (re
 	cb(null, 303.1, dest);
 });
 
-web.resource(/^\/outbound\/a\/(\d{0,10})$/, function (req, params, cb) {
-	var thread = parseInt(params[1], 10);
-	if (thread)
-		cb(null, 'ok');
-	else
-		cb(null, 303.1, 'http://boards.4chan.org/a/');
-}, function (req, resp) {
-	resp.writeHead(200, web.noCacheHeaders);
-	resp.end(RES.aLookupHtml);
-});
-
 web.route_get_auth(/^\/dead\/(src|thumb|mid)\/(\w+\.\w{3})$/,
 			function (req, resp, params) {
 	if (!caps.can_administrate(req.ident))
 		return web.render_404(resp);
 	imager.send_dead_image(params[1], params[2], resp);
 });
-
 
 /* Must be prepared to receive callback instantly */
 function valid_links(frag, state, ident, callback) {

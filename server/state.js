@@ -12,7 +12,7 @@ var _ = require('underscore'),
 	vm = require('vm');
 
 _.templateSettings = {
-	interpolate: /\{\{(.+?)\}\}/g
+	interpolate: /\{\{(.+?)}}/g
 };
 
 exports.emitter = new (require('events').EventEmitter);
@@ -24,7 +24,7 @@ exports.dbCache = {
 	YAKUMAN: 0,
 	funThread: 0,
 	addresses: {},
-	ranges: {},
+	ranges: {}
 };
 
 var HOT = exports.hot = {};
@@ -117,29 +117,24 @@ var clientImager = JSON.stringify(_.pick(imager,
 ));
 var clientReport = JSON.stringify(_.pick(report, 'RECAPTCHA_PUBLIC_KEY'));
 
-function reload_scripts(cb) {
-	async.mapSeries(['client', 'vendor', 'mod'], getRevision,
-		function(err, js) {
-			if (err)
-				return cb(err);
-			HOT.CLIENT_JS = js[0].client;
-			HOT.VENDOR_JS = js[1].vendor;
-			// Read moderator js file
-			fs.readFile(path.join('state', js[2].mod), 'UTF-8',
-				function (err, modSrc) {
-					if (err)
-						return cb(err);
-					RES.modJs = modSrc;
-					cb(null);
-				}
-			);
-		}
-	);
+function reloadModClient(cb) {
+	getRevision('mod', function(err, js) {
+		if (err)
+			return cb(err);
+		// Read moderator js file
+		fs.readFile(path.join('state', js.mod), 'UTF-8',
+			function (err, modSrc) {
+				if (err)
+					return cb(err);
+				RES.modJs = modSrc;
+				cb(null);
+			}
+		);
+	});
 }
 
-// TEMP: Non-DRY for now. Seperated for the new client.
-function reload_alpha_client(cb) {
-	var stream = fs.createReadStream('./www/js/alpha.js'),
+function reloadClient(cb) {
+	var stream = fs.createReadStream('./www/js/client.js'),
 		hash = crypto.createHash('md5');
 	stream.once('error', function(err) {
 		cb(err);
@@ -148,7 +143,7 @@ function reload_alpha_client(cb) {
 		hash.update(data);
 	});
 	stream.once('end', function() {
-		HOT.ALPHA_HASH = hash.digest('hex').slice(0, 8);
+		HOT.CLIENT_HASH = hash.digest('hex').slice(0, 8);
 		cb(null);
 	});
 }
@@ -176,7 +171,7 @@ function reloadCSS(hot, cb) {
 		if (err)
 			return cb(err);
 		// Only the curfew template is statically assigned a CSS file. The rest
-		// are inserted per request in server/render.js and www/js/setup.js
+		// are inserted per request in server/render.js
 		HOT.CURFEW_CSS = files['curfew.css'];
 		// Export to these modules and client
 		HOT.css = hot.css = files;
@@ -202,14 +197,11 @@ function read_templates(cb) {
 
 	async.parallel({
 		index: read('tmpl', 'index.html'),
-		alpha: read('tmpl', 'alpha.html'),
-		filter: read('tmpl', 'filter.html'),
 		login: read('tmpl', 'login.html'),
 		curfew: read('tmpl', 'curfew.html'),
 		suspension: read('tmpl', 'suspension.html'),
-		aLookup: read('tmpl', 'alookup.html'),
 		notFound: read('www', '404.html'),
-		serverError: read('www', '50x.html'),
+		serverError: read('www', '50x.html')
 	}, cb);
 }
 
@@ -231,13 +223,11 @@ function expand_templates(res) {
 	}
 
 	var ex = {
-		filterTmpl: tmpl(res.filter).tmpl,
 		curfewTmpl: tmpl(res.curfew).tmpl,
 		suspensionTmpl: tmpl(res.suspension).tmpl,
 		loginTmpl: tmpl(res.login).tmpl,
-		aLookupHtml: res.aLookup,
 		notFoundHtml: res.notFound,
-		serverErrorHtml: res.serverError,
+		serverErrorHtml: res.serverError
 	};
 
 	// Build index templates for each language
@@ -256,19 +246,11 @@ function expand_templates(res) {
 		}
 		templateVars.lang = JSON.stringify(templateVars.lang);
 
-		html = tmpl(res.alpha);
-		ex['alphaTmpl-' + ln] = html.tmpl;
+		html = tmpl(res.index);
+		ex['indexTmpl-' + ln] = html.tmpl;
 		hash = crypto.createHash('md5').update(html.src);
-		ex['alphaHash-' + ln] = hash.digest('hex').slice(0, 8)
+		ex['indexHash-' + ln] = hash.digest('hex').slice(0, 8)
 	});
-
-	// Legacy client template
-	var html, hash;
-	html = tmpl(res.index);
-	ex.indexTmpl = html.tmpl;
-	hash = crypto.createHash('md5').update(html.src);
-	ex.indexHash = hash.digest('hex').slice(0, 8);
-
 	return ex;
 }
 
@@ -305,7 +287,6 @@ function build_FAQ(faq){
 function buildOptions(lang) {
 	var html = '<div class="bmodal" id="options-panel">'
 		+ '<ul class="option_tab_sel">';
-	;
 	lang.tabs.forEach(function(tab, index) {
 		html += `<li><a data-content="tab-${index}"`;
 		// Highlight the first tabButt by default
@@ -351,7 +332,7 @@ function buildOptions(lang) {
 			else
 				html += '<select';
 			// Custom localisation functions
-			var title, tooltip;
+			var title, label;
 			if (opt.lang) {
 				title = lang[opt.lang][1](opt.id);
 				label = lang[opt.lang][0](opt.id);
@@ -389,9 +370,9 @@ function buildOptions(lang) {
 exports.reload_hot_resources = function (cb) {
 	async.series([
 		reload_hot_config,
-		reload_scripts,
-		reload_alpha_client,
-		reload_resources,
+		reloadModClient,
+		reloadClient,
+		reload_resources
 	], cb);
 };
 

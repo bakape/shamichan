@@ -25,7 +25,7 @@ www/css/*.css
 www/illya.mp4
 www/illya.webm
 www/archive
-www/js/client*.js
+www/js/client*.js*
 www/js/vendor*.js
 www/js/alpha*.js*
 www/src

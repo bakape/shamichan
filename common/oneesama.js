@@ -13,8 +13,8 @@ if (index.isNode) {
 	lang = require('../lang/');
 }
 else {
-	main = require('../alpha/main');
-	state = require('../alpha/state');
+	main = require('../client/main');
+	state = require('../client/state');
 	config = main.config;
 	hotConfig = state.hotConfig.attributes;
 	imagerConfig = main.imagerConfig;

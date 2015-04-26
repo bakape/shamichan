@@ -49,7 +49,7 @@ function get_thumb_specs(image, pinky, scale) {
 	var specs = {bound: bound, dims: dims, format: 'jpg'};
 	// Note: WebMs pretend to be PNGs at this step,
 	//       but those don't need transparent backgrounds.
-	//       (well... WebMs *can* have alpha channels...)
+	//       (well... WebMs *can* have client channels...)
 	if (config.PNG_THUMBS && image.ext == '.png' && !image.video) {
 		specs.format = 'png';
 		specs.quality = config.PNG_THUMB_QUALITY;

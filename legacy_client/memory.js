@@ -1,15 +1,7 @@
-/*
- * Self-expiring localStorage key controller
- */
-
-var $ = require('jquery'),
-	_ = require('underscore');
-
 function Kioku(key, expiry) {
 	this.key = key;
 	this.expiry = expiry;
 }
-module.exports = Kioku;
 
 Kioku.prototype.bake_cookie = function (o) {
 	var nums = Object.keys(o);
@@ -52,9 +44,8 @@ Kioku.prototype.purge_expired = function () {
 };
 
 Kioku.prototype.purge_expired_soon = function () {
-	setTimeout(this.purge_expired.bind(this),
-		5000 + Math.floor(Math.random() * 5000)
-	);
+	var delay = 5000 + Math.floor(Math.random() * 5000);
+	setTimeout(this.purge_expired.bind(this), delay);
 };
 
 Kioku.prototype.read_all = function () {

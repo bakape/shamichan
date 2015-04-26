@@ -179,8 +179,8 @@ function make_link_rels(board, bits) {
 	}).join('');
 }
 
-exports.write_board_head = function (out, board, nav, alpha, language) {
-	var indexTmpl = alpha ? RES['alphaTmpl-' + language] : RES.indexTmpl;
+exports.write_board_head = function (out, board, nav, language) {
+	var indexTmpl = RES['indexTmpl-' + language];
 	var title = STATE.hot.TITLES[board] || escape(board);
 	var metaDesc = "Real-time imageboard";
 
@@ -212,8 +212,7 @@ exports.write_board_title = function(out, board){
 };
 
 exports.write_thread_head = function (out, board, op, opts) {
-	var indexTmpl = opts.alpha ? RES['alphaTmpl-' + opts.lang]
-		: RES.indexTmpl;
+	const indexTmpl = RES['indexTmpl-' + opts.lang];
 	var title = '/'+escape(board)+'/';
 	if (opts.subject)
 		title += ' - ' + escape(opts.subject) + ' (#' + op + ')';
@@ -258,8 +257,8 @@ function make_thread_meta(board, num, abbrev) {
 	return make_link_rels(board, bits);
 }
 
-exports.write_page_end = function (out, ident, alpha, language) {
-	const tmpl = alpha ? 'alphaTmpl-' + language : 'indexTmpl';
+exports.write_page_end = function (out, ident, language) {
+	const tmpl = 'indexTmpl-' + language;
 	out.write(RES[tmpl][RES[tmpl].length - 1]);
 	if (ident) {
 		if (caps.can_administrate(ident))

@@ -1,79 +1,69 @@
-// remember which posts are mine for two days
-var Mine = new Kioku('mine', 2);
-// no cookie though
-Mine.bake_cookie = function () { return false; };
-$.cookie('mine', null); // TEMP
+/*
+ * Extact model data from the thread tree HTML and populate models and views
+ */
 
-(function () {
-	var mine = Mine.read_all();
+var $ = require('jquery'),
+	main = require('./main'),
+	state = require('./state'),
+	posts = require('./posts/');
 
-	function extract_post_model(el) {
-		/* incomplete */
-		var info = {num: parseInt(el.id, 10)};
-		var $el = $(el);
-		/* TODO: do these all in one pass */
-		var $header = $el.children('header');
-		var $b = $header.find('b');
-		if ($b.length)
-			info.name = $b.text();
-		var $code = $header.find('code');
-		if ($code.length)
-			info.trip = $code.text();
-		var $time = $header.find('time');
-		if ($time.length)
-			info.time = new Date($time.attr('datetime')).getTime();
+var Extract = module.exports = function() {
+	this.mine = state.mine.read_all();
+	var self = this;
+	main.$threads.children('section').each(function() {
+		self.extractThread($(this));
+	});
+};
 
-		var $fig = $el.children('figure');
-		if ($fig.length){
-			info.image = catchJSON($fig.data('img'));
-			// These data attributes are only used for model extraction
-			// Clean up for a prettier DOM
-			$fig.removeAttr('data-img');
-		}
-		var $block = $el.children('blockquote');
-		info.body = catchJSON($block.data('body'));
-		$block.removeAttr('data-body');
-		if (mine[info.num])
-			info.mine = true;
-		return info;
-	}
+Extract.prototype.extractThread = function($section) {
+	var replies = [],
+		self = this;
+	$section.children('article').each(function() {
+		var model = self.extractModel($(this));
+		new posts.Article({
+			model: new posts.PostModel(model),
+			el: this
+		});
+		replies.push(model.num);
+	});
+	// Extract the model of the OP
+	var model = this.extractModel($section);
+	// Add all replies to the thread's reply collection
+	model.replies = replies;
+	var threadModel = new posts.ThreadModel(model);
+	new posts.Section({
+		model: threadModel,
+		el: $section[0]
+	});
+	/*
+	 * Read the sync ID of the thread. Used later for syncronising with the
+	 * server.
+	 */
+	state.syncs[$section.attr('id')] = parseInt($section.data('sync'), 10);
+};
 
-	function extract_thread_model(section) {
-		var replies = [];
-		for (var i = 0; i < section.childElementCount; i++) {
-			var el = section.children[i];
-			if (el.tagName != 'ARTICLE')
-				continue;
-			var post = new Post(extract_post_model(el));
-			new Article({model: post, el: el});
-			// Add to all post collection
-			Posts.add(post);
-			replies.push(post);
-		}
-		var threadModel = extract_post_model(section),
-			thread = new Thread(threadModel);
-		Posts.add(threadModel);
-		thread.set('replies', new Replies(replies));
-		return thread;
-	}
+Extract.prototype.extractModel = function($el) {
+	var info = {num: parseInt($el.attr('id'), 10)};
+	var $header = $el.children('header'),
+		$b = $header.find('b');
+	if ($b.length)
+		info.name = $b.text();
+	var $code = $header.find('code');
+	if ($code.length)
+		info.trip = $code.text();
+	var $time = $header.find('time');
+	if ($time.length)
+		info.time = new Date($time.attr('datetime')).getTime();
 
-	function scan_threads_for_extraction() {
-		var bod = document.body;
-		var threads = [];
-		for (var i = 0; i < bod.childElementCount; i++) {
-			var el = bod.children[i];
-			if (el.tagName != 'SECTION')
-				continue;
-			var thread = extract_thread_model(el);
-			new Section({model: thread, el: el});
-			threads.push(thread);
-		}
-		Threads.add(threads);
+	var $fig = $el.children('figure');
+	if ($fig.length)
+		info.image = catchJSON($fig.data('img'));
+	info.body = catchJSON($el.children('blockquote').data('body'));
+	if (this.mine[info.num])
+		info.mine = true;
+	return info;
+};
 
-		if (THREAD)
-			CurThread = Threads.get(THREAD);
-	}
-
-	scan_threads_for_extraction();
-	Mine.purge_expired_soon();
-})();
+function catchJSON(string) {
+	return JSON.parse(decodeURIComponent(string));
+}

@@ -1,3 +1,0 @@
-/*
- * Various mobile-only code
- */

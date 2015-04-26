@@ -4,7 +4,7 @@ all: bootstrap client
 	
 
 client: FORCE
-	./node_modules/gulp/bin/gulp.js -- client mod vendor css alpha
+	./node_modules/gulp/bin/gulp.js -- client mod css
 
 FORCE:
 
@@ -22,4 +22,4 @@ clean:
 	$(MAKE) -C tripcode -w clean
 
 client_clean:
-	rm -rf --  state www/js/client-*.js www/js/vendor-*.js www/js/alpha-*.js* www/css/*.css
+	rm -rf --  state www/js/client*.js* www/js/vendor-*.js www/js/alpha*.js* www/css/*.css

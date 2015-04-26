@@ -35,7 +35,6 @@ var reload_state = _.debounce(function () {
 
 deps.SERVER_DEPS.forEach(monitor.bind(null, start_server));
 deps.SERVER_STATE.forEach(monitor.bind(null, reload_state));
-deps.CLIENT_DEPS.forEach(monitor.bind(null, reload_state));
 deps.ALPHA.forEach(monitor.bind(null, reload_state));
 
 function monitor(func, dep) {
