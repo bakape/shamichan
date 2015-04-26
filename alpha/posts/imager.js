@@ -144,7 +144,7 @@ var Hidamari = exports.Hidamari = {
 			widthFlag = both || fit == 'width',
 			heightFlag = both || fit == 'height',
 			aspect = width / height,
-			isArticle = this.$el.is('article');
+			isArticle = !!this.model.get('op');
 		var fullWidth, fullHeight;
 		if (widthFlag){
 			var maxWidth = $(window).width() -
