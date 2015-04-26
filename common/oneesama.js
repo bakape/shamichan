@@ -200,7 +200,7 @@ OS.geimu = function(text) {
 	var bits = text.split(index.dice_re);
 	for (var i = 0; i < bits.length; i++) {
 		var bit = bits[i];
-		if (!(i % 2) || !parse_dice(bit)) {
+		if (!(i % 2) || !index.parse_dice(bit)) {
 			this.eLinkify ? this.linkify(bit) : this.callback(bit);
 		}
 		else if (this.queueRoll) {

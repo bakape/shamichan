@@ -81,7 +81,7 @@ new_socket = function() {
 	if (config.USE_WEBSOCKETS)
 		protocols.unshift('websocket');
 	return new SockJS(main.config.SOCKET_PATH, null, {
-		protocols_whitelist: protocols,
+		protocols_whitelist: protocols
 	});
 };
 

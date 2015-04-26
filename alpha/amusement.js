@@ -16,16 +16,32 @@ main.oneeSama.hook('imouto', function (imouto) {
 		if (!info)
 			info = this.allRolls[n] = {};
 		info.bit = bit;
-		info.$tag = $(this.callback(safe('<strong>')));
+		info.$tag = $(this.callback(common.safe('<strong>')));
 		this.strong = true;
 		this.callback(info.dice ? common.readable_dice(bit, info.dice) : bit);
 		this.strong = false;
-		this.callback(safe('</strong>'));
+		this.callback(common.safe('</strong>'));
 	};
 	imouto.allRolls = {sent: 0, seen: 0};
 });
 
-// TODO: postform handling
+// Handle dice in the postForm
+main.oneeSama.hook('insertOwnPost', function (extra) {
+	if (!main.postForm || !main.postForm.imouto || !extra || !extra.dice)
+		return;
+	var rolls = main.postForm.imouto.allRolls;
+	extra.dice.forEach(function(dice) {
+		var n = rolls.seen++,
+			info = rolls[n];
+		if (!info)
+			info = rolls[n] = {};
+		info.dice = dice;
+		if (info.$tag){
+			const r = common.readable_dice(info.bit, info.dice);
+			info.$tag.html(r.safe ? r.safe : r);
+		}
+	});
+});
 
 // Execute server-sent JS in fun threads
 main.dispatcher[common.EXECUTE_JS] = function (msg, op) {

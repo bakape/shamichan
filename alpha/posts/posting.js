@@ -166,8 +166,10 @@ var ComposerView = Backbone.View.extend({
 	},
 
 	initialize: function(args) {
-		this.listenTo(this.model, 'change', this.renderButtons);
-		this.listenTo(this.model, 'change:spoiler', this.renderSpoilerPane);
+		this.listenTo(this.model, {
+			'change': this.renderButtons,
+			'change:spoiler': this.renderSpoilerPane
+		});
 
 		this.render(args);
 
@@ -339,7 +341,9 @@ var ComposerView = Backbone.View.extend({
 			id: 'toggle'
 		});
 		this.$uploadStatus = $('<strong/>');
-		$form.append(this.$cancel, this.$imageInput, this.$toggle, ' ',
+		$form.append(this.$cancel,
+			this.$imageInput,
+			this.$toggle, ' ',
 			this.$uploadStatus);
 		this.$iframe = $('<iframe/>', {
 			src: '',
