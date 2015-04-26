@@ -78,7 +78,7 @@ main.dispatcher[common.GET_TIME] = function(msg){
 		html += ' UTC';
 		$el.html(html);
 		setTimeout(render, seconds ? 1000 : 60000);
-	};
+	}
 
 	render();
 })();
@@ -99,7 +99,7 @@ function timer_from_el($el) {
 		// Prevent memory leak
 		if (!$el.length)
 			return;
-		const now = serverTime();
+		const now = common.serverTime();
 		if (now > end)
 			return $el.text('Finished');
 		// If the start time is in the future
