@@ -4,28 +4,28 @@
  */
 
 /*
- * Same shit as `../../common.js`. Need to make sure both node and the client
+ * Same shit as `./common/`. Need to make sure both node and the client
  * load only what they need and don't crash with refference errors.
  */
-var isNode = typeof navigator === 'undefined';
 
-var common = require('../../common'),
+var common = require('./index'),
+	isNode = common.isNode,
 	$, banner, config, hotConfig, main, notMobile, options, state;
 if (isNode) {
-	config = require('../../config');
+	config = require('../config');
 	//XXX: Uggly hack, but we need the hot variables before they are exported
-	hotConfig = require('../../hot').hot;
+	hotConfig = require('../hot').hot;
 	// For compatibility reasons
 	notMobile = true;
 }
 else {
 	$ = require('jquery');
-	banner = require('../banner');
-	main = require('../main');
-	options = require('./index');
-	state = require('../state');
+	banner = require('../alpha/banner');
+	main = require('../alpha/main');
+	options = require('./../alpha/options/index');
+	state = require('../alpha/state');
 
-	config =  state.config.attributes;
+	config =  main.config;
 	hotConfig = state.hotConfig.attributes;
 	notMobile = !main.isMobile;
 }
@@ -89,7 +89,7 @@ var opts = [
 	{
 		id: 'imageHover',
 		load: notMobile,
-		tab: 0,
+		tab: 0
 	},
 	{
 		id: 'webmHover',
@@ -150,7 +150,7 @@ var opts = [
 		id: 'anonymise',
 		tab: 0
 	},
-	/* RELATIVE POST TIMESTAMPS */,
+	/* RELATIVE POST TIMESTAMPS */
 	{
 		id: 'relativeTime',
 		tab: 0,
@@ -250,7 +250,7 @@ opts.push(illyaDance,
 			if (r)
 				$('<style/>', {
 					id: 'reply-at-right',
-					text: 'aside { margin: -26px 0 2px auto; }',
+					text: 'aside { margin: -26px 0 2px auto; }'
 				}).appendTo('head');
 			else
 				$('#reply-at-right').remove();
@@ -278,9 +278,8 @@ opts.push(illyaDance,
 		default: isNode ? null : hotConfig.BOARD_CSS[state.page.get('board')],
 		exec: function(theme) {
 			if (theme) {
-				var css = hotConfig.css[theme + '.css'];
-				$('#theme').attr('href', state.imagerConfig.get('MEDIA_URL')
-					+ 'css/' + css);
+				$('#theme').attr('href', main.imagerConfig.MEDIA_URL + 'css/'
+					+ hotConfig.css[theme + '.css']);
 			}
 			// FIXME: temp stub
 			// Call the background controller to generate, remove and/or append the glass
@@ -291,13 +290,13 @@ opts.push(illyaDance,
 	{
 		id: 'userBG',
 		load: notMobile,
-		tab: 1,
+		tab: 1
 	},
 	{
 		id: 'userBGimage',
 		load: notMobile,
 		type: 'image',
-		tab: 1,
+		tab: 1
 		// FIXME
 		//exec: background.set
 	},
@@ -316,12 +315,12 @@ opts.push(illyaDance,
 	/* KEEP THREAD LENGTH WITHIN LASTN */
 	{
 		id: 'postUnloading',
-		tab: 0,
+		tab: 0
 	},
 	/* LOCK TO BOTTOM EVEN WHEN DOCUMENT HIDDEN*/
 	{
 		id: 'alwaysLock',
-		tab: 0,
+		tab: 0
 	}
 );
 
@@ -329,19 +328,19 @@ opts.push(illyaDance,
 [
 	{
 		id: 'new',
-		default: 78,
+		default: 78
 	}, {
 		id: 'togglespoiler',
-		default: 73,
+		default: 73
 	}, {
 		id: 'textSpoiler',
-		default: 68,
+		default: 68
 	}, {
 		id: 'done',
-		default: 83,
+		default: 83
 	}, {
 		id: 'expandAll',
-		default: 69,
+		default: 69
 	}
 ].forEach(function(short) {
 	short.type = 'shortcut';

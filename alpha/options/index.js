@@ -30,7 +30,7 @@ options.on('change', function() {
 var	background = require('../background'),
 	banner = require('../banner'),
 	main = require('../main'),
-	optionsCommon = require('./common'),
+	optionsCommon = require('./../../common/options'),
 	state = require('../state');
 
 var optionsCollection = new Backbone.Collection();

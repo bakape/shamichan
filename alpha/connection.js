@@ -3,7 +3,7 @@
  */
 var $ = require('jquery'),
 	_ = require('underscore'),
-	common = require('../common'),
+	common = require('../common/index'),
 	main = require('./main'),
 	state = require('./state');
 
@@ -20,13 +20,13 @@ main.send = function (msg) {
 	}
 
 	msg = JSON.stringify(msg);
-	if (state.config.get('DEBUG'))
+	if (main.config.DEBUG)
 		console.log('<', msg);
 	socket.send(msg);
 };
 
 function on_message(e) {
-	if (state.config.get('DEBUG'))
+	if (main.config.DEBUG)
 		console.log('>', e.data);
 	JSON.parse(e.data).forEach(function(msg) {
 		// TEMP: Log yet unsupported websocket calls
@@ -63,7 +63,7 @@ function connect() {
 	socket.onopen = connSM.feeder('open');
 	socket.onclose = connSM.feeder('close');
 	socket.onmessage = on_message;
-	if (state.config.get('DEBUG'))
+	if (main.config.DEBUG)
 		window.socket = socket;
 }
 
@@ -80,15 +80,16 @@ new_socket = function() {
 	];
 	if (config.USE_WEBSOCKETS)
 		protocols.unshift('websocket');
-	return new SockJS(state.config.get('SOCKET_PATH'), null, {
-		protocols_whitelist: protocols,
+	return new SockJS(main.config.SOCKET_PATH, null, {
+		protocols_whitelist: protocols
 	});
 };
 
 connSM.act('conn, reconn + open -> syncing', function () {
 	sync_status('Syncing');
-	var connID = common.random_id(),
-		page = state.page;
+	const connID = common.random_id();
+	var page = state.page;
+	page.set('connID', connID);
 	main.send([
 		common.SYNCHRONIZE,
 		connID,
@@ -120,7 +121,7 @@ connSM.act('* + close -> dropped', function (e) {
 		socket.onclose = null;
 		socket.onmessage = null;
 	}
-	if (state.config.get('DEBUG'))
+	if (main.config.DEBUG)
 		console.error('E:', e);
 	if (attemptTimer) {
 		clearTimeout(attemptTimer);
@@ -154,7 +155,7 @@ connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 	socket.onmessage = null;
 	socket.close();
 	socket = null;
-	if (state.config.get('DEBUG'))
+	if (main.config.DEBUG)
 		window.socket = null;
 });
 

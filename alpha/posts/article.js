@@ -19,6 +19,8 @@ var Article = module.exports = Backbone.View.extend({
 		/*
 		 * XXX: A bit ineficient, because first an empty element is renderred
 		 * and then a proper one.
+		 *
+		 * An element is not empty only on postForms
 		 */
 		if (this.$el.is(':empty'))
 			this.render();

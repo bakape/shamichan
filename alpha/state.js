@@ -2,9 +2,11 @@
  * Central model keeping the state of the page
  */
 
-var Backbone = require('backbone'),
+var $ = require('jquery'),
+	Backbone = require('backbone'),
 	common = require('../common'),
-	main = require('./main');
+	main = require('./main'),
+	memory = require('./memory');
 
 // Read page state by parsing a URL
 var read = exports.read = function(url) {
@@ -30,13 +32,9 @@ var read = exports.read = function(url) {
 // Initial page state
 var page = exports.page = new Backbone.Model(read(location.href));
 
-/*
- * Not sure how many of these are going to be  more useful than a property of
- * the window object. We'll as we go, I guess.
- */
-['config', 'imagerConfig', 'reportConfig', 'hotConfig'].forEach(function(type) {
-	exports[type] = new Backbone.Model(window[type]);
-});
+// Hot-reloadable configuration
+// TODO: We need actual listeners to this model for hot reloads.
+exports.hotConfig = new Backbone.Model(window.hotConfig);
 // Hash of all the config variables
 exports.configHash = window.configHash;
 
@@ -59,6 +57,13 @@ exports.getThread = function(num) {
 
 // Tracks the synchronisation counter of each thread
 exports.syncs = {};
+// Posts I made in this tab
+exports.ownPosts = {};
+// remember which posts are mine for two days
+exports.mine = new memory('mine', 2);
+// no cookie though
+exports.mine.bake_cookie = function () { return false; };
+$.cookie('mine', null); // TEMP
 
 // Clear current post state, DOM and server synchronisation and apply the new
 exports.replace = function(newState, render) {

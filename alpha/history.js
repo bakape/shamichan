@@ -23,7 +23,7 @@ function readingSteiner(url, event, needPush) {
 		event.preventDefault();
 
 	// Deal with hashes and query strings
-	var split = url.split('#');
+	var split = url.split('#'),
 		address = split[0] + (/\?/.test(split[0]) ? '&' : '?') + 'minimal=true';
 	if (split.length !== 1)
 		address += '#' + split[1];

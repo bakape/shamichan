@@ -1,9 +1,9 @@
 exports.SERVER_DEPS = [
 	'admin/common.js',
-	'admin/index.js',
 	'admin/panel.js',
-	'alpha/options/common.js',
-	'common.js',
+	'common/index.js',
+	'common/oneesama.js',
+	'common/options.js',
 	'config.js',
 	'db.js',
 	'deps.js',
@@ -33,7 +33,7 @@ exports.SERVER_DEPS = [
 	'server/state.js',
 	'server/web.js',
 	'time/server.js',
-	'tripcode/tripcode.cc',
+	'tripcode/tripcode.cc'
 ];
 
 /* Changes to the below only require a state.js reload */
@@ -47,7 +47,7 @@ exports.VENDOR_DEPS = [
 	'./node_modules/jquery.cookie/jquery.cookie.js',
 	'./node_modules/velocity-animate/velocity.min.js',
 	'./node_modules/velocity-animate/velocity.ui.js',
-	'./lib/pixastic.blurfast.min.js',
+	'./lib/pixastic.blurfast.min.js'
 ];
 
 exports.CLIENT_DEPS = [
@@ -75,7 +75,7 @@ exports.CLIENT_DEPS = [
 	'client/banner.js',
 	'radio/client.js',
 	'client/catalog.js',
-	'client/mobile.js',
+	'client/mobile.js'
 ];
 
 exports.SERVER_STATE = [
@@ -87,18 +87,20 @@ exports.SERVER_STATE = [
 	'tmpl/filter.html',
 	'tmpl/index.html',
 	'tmpl/login.html',
-	'tmpl/redirect.html',
+	'tmpl/redirect.html'
 ];
 
 exports.MOD_CLIENT_DEPS = [
-	'admin/common.js',
-	'admin/client.js',
+	'admin/index.js',
+	'admin/client.js'
 ];
 
 // Only used for monitoring by builder.js
 exports.ALPHA = [
 	'gulpfile.js',
-	'common.js',
+	'common/index.js',
+	'common/oneesama.js',
+	'common/options.js',
 	'alpha/amusement.js',
 	'alpha/background.js',
 	'alpha/banner.js',
@@ -107,7 +109,6 @@ exports.ALPHA = [
 	'alpha/extract.js',
 	'alpha/history.js',
 	'alpha/hover.js',
-	'alpha/identity.js',
 	'alpha/main.js',
 	'alpha/memory.js',
 	'alpha/mobile.js',
@@ -116,11 +117,14 @@ exports.ALPHA = [
 	'alpha/scroll.js',
 	'alpha/state.js',
 	'alpha/time.js',
-	'alpha/options/common.js',
 	'alpha/options/index.js',
 	'alpha/posts/article.js',
-	'alpha/posts/common.js',
+	'alpha/posts/embed.js',
+	'alpha/posts/identity.js',
+	'alpha/posts/index.js',
 	'alpha/posts/imager.js',
 	'alpha/posts/index.js',
-	'alpha/posts/section.js',
+	'alpha/posts/nonce.js',
+	'alpha/posts/posting.js',
+	'alpha/posts/section.js'
 ];

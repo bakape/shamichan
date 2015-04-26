@@ -11,6 +11,11 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone');
 
+// Register jquery plugins
+require('jquery.cookie');
+// Bind jQuery to backbone
+Backbone.$ = $;
+
 /*
  * Since the language pack contains functions and we can not simply use those
  * with underscore templates, had to stringify those. Now we convert them back
@@ -21,37 +26,48 @@ exports.lang = window.lang;
 	eval('exports.lang[func] = ' + window.lang[func]);
 });
 
-var common = require('../common');
+/*
+These configs really should not be randomly toggled frequently. No need to put
+them in state.js, as they should not be hot-loaded. Anything that needs to be,
+can be moved to hot.js. Should prevent some bugs, but also reduce flexibility,
+for frequent togglers. Hmm.
+ */
+exports.config = window.config;
+exports.imagerConfig = window.imagerConfig;
+exports.reportConfig = window.reportConfig;
 
-// Register jquery plugins
-require('jquery.cookie');
-// Bind jQuery to backbone
-Backbone.$ = $;
+var common = require('../common/index');
 
 exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
-
 // Store them here, to avoid requiring modules in the wrong order
 exports.send = function() {};
 exports.serverTimeOffset = 0;
 exports.dispatcher = {};
 exports.connSM = new common.FSM('load');
 exports.postSM = new common.FSM('none');
+exports.postForm = null;
+exports.postModel = null;
+// Read-only boards gets expanded later
+exports.readOnly = ['archive'];
 
 // Cached jQuery objects
 exports.$doc = $(document);
 exports.$threads = $('threads');
+exports.$name = $('input[name=name]');
+exports.$email = $('input[name=email]');
 
 var state = require('./state');
+// WOO! Circular dependancy
+state.page.set('tabID', common.random_id());
 
 // Initialise main rendering object
 var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {
 	// Core post link handler
 	var frag;
 	if (this.links && num in this.links) {
-		var op = this.links[num];
-		// FIXME: Threads not done yet
-		var model = state.posts.get(num),
+		var op = this.links[num],
+			model = state.posts.get(num),
 			desc = model && model.get('mine') && '(You)';
 		frag = this.post_ref(num, op, desc);
 	}

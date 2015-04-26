@@ -6,7 +6,7 @@ var _ = require('underscore'),
 	hooks = require('../hooks'),
 	imager = require('../imager/config'),
 	lang = require('../lang'),
-	options = require('../alpha/options/common'),
+	options = require('../common/options'),
 	path = require('path'),
 	report = require('../report/config'),
 	vm = require('vm');
@@ -29,7 +29,7 @@ exports.dbCache = {
 
 var HOT = exports.hot = {};
 var RES = exports.resources = {};
-exports.clientConfig = [];
+exports.clientHotConfig = {};
 exports.clientConfigHash = '';
 exports.clients = {};
 exports.clientsByIP = {};
@@ -72,19 +72,14 @@ function reload_hot_config(cb) {
 		reloadCSS(clientHot, function(err) {
 			if (err)
 				return cb(err);
-			HOT.CLIENT_CONFIG = JSON.stringify(clientConfig);
-			HOT.CLIENT_IMAGER = JSON.stringify(clientImager);
-			HOT.CLIENT_REPORT = JSON.stringify(clientReport);
+			HOT.CLIENT_CONFIG = clientConfig;
+			HOT.CLIENT_IMAGER = clientImager;
+			HOT.CLIENT_REPORT = clientReport;
 			HOT.CLIENT_HOT = JSON.stringify(clientHot);
-			var combined = exports.clientConfig = [
-				clientConfig,
-				clientImager,
-				clientReport,
-				clientHot
-			];
+			// Hash the hot configuration
 			exports.clientConfigHash = HOT.CLIENT_CONFIG_HASH = crypto
 				.createHash('MD5')
-				.update(JSON.stringify(combined))
+				.update(JSON.stringify(clientHot))
 				.digest('hex');
 
 			read_exits('exits.txt', function() {
@@ -94,7 +89,7 @@ function reload_hot_config(cb) {
 	});
 }
 
-var clientConfig = _.pick(config,
+var clientConfig = JSON.stringify(_.pick(config,
 	'IP_MNEMONIC',
 	'USE_WEBSOCKETS',
 	'SOCKET_PATH',
@@ -106,9 +101,10 @@ var clientConfig = _.pick(config,
 	'PYU',
 	'BOARDS',
 	'LANGS',
-	'DEFAULT_LANG'
-);
-var clientImager = _.pick(imager,
+	'DEFAULT_LANG',
+	'READ_ONLY_BOARDS'
+));
+var clientImager = JSON.stringify(_.pick(imager,
 	'WEBM',
 	'UPLOAD_URL',
 	'MEDIA_URL',
@@ -118,8 +114,8 @@ var clientImager = _.pick(imager,
 	'IMAGE_HATS',
 	'ASSETS_DIR',
 	'BANNERS'
-);
-var clientReport = _.pick(report, 'RECAPTCHA_PUBLIC_KEY');
+));
+var clientReport = JSON.stringify(_.pick(report, 'RECAPTCHA_PUBLIC_KEY'));
 
 function reload_scripts(cb) {
 	async.mapSeries(['client', 'vendor', 'mod'], getRevision,

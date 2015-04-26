@@ -4,7 +4,7 @@ var _, common, config, DEF,
 
 if (isNode) {
 	_ = require('underscore');
-	common = require('../common');
+	common = require('../common/index');
 	config = require('../config');
 	DEF = exports;
 }

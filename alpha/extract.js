@@ -4,24 +4,16 @@
 
 var $ = require('jquery'),
 	main = require('./main'),
-	memory = require('./memory'),
 	state = require('./state'),
 	posts = require('./posts/');
 
-// remember which posts are mine for two days
-var Mine = new memory('mine', 2);
-// no cookie though
-Mine.bake_cookie = function () { return false; };
-$.cookie('mine', null); // TEMP
-
-function Extract() {
-	this.mine = Mine.read_all();
+var Extract = module.exports = function() {
+	this.mine = state.mine.read_all();
 	var self = this;
 	main.$threads.children('section').each(function() {
 		self.extractThread($(this));
 	});
-}
-module.exports = Extract;
+};
 
 Extract.prototype.extractThread = function($section) {
 	var replies = [],

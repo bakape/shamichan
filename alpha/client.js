@@ -3,8 +3,9 @@
  */
 
 var $ = require('jquery'),
-	common = require('../common'),
+	common = require('../common/index'),
 	main = require('./main'),
+	nonce = require('./posts/nonce'),
 	posts = require('./posts/'),
 	state = require('./state');
 
@@ -12,17 +13,41 @@ var $ = require('jquery'),
 var dispatcher = main.dispatcher;
 
 dispatcher[common.INSERT_POST] = function(msg) {
-	// FIXME: msg[0] is legacy. Could use a fix after we shift in the new client
-	var msg = msg[1];
+	// TODO: msg[0] is legacy. Could use a fix after we shift in the new client
+	msg = msg[1];
 	const isThread = !msg.op;
 	if (isThread)
 		state.syncs[msg.num] = 1;
 	msg.editing = true;
 
-	// TODO: Check, if post is mine
+	// Did I create this post?
 	var el;
+	const msgNonce = msg.nonce;
+	delete msg.nonce;
+	const myNonce = nonce.get_nonces()[msgNonce];
+	var bump = state.page.get('live');
+	if (myNonce && myNonce.tab === state.page.get('tabID')) {
+		// posted in this tab; transform placeholder
+		state.ownPosts[msg.num] = true;
+		main.oneeSama.trigger('insertOwnPost', msg);
+		main.postSM.feed('alloc', msg);
+		bump = false;
+		// delete only after a delay so all tabs notice that it's ours
+		setTimeout(nonce.destroy_nonce.bind(null, msgNonce), 10*1000);
+		// if we've already made a placeholder for this post, use it
+		if (main.postForm && main.postForm.el)
+			el = main.postForm.el;
+	}
 
-	var view = new posts[isThread ? 'Section' : 'Article']({
+	// Add to my post set
+	if (myNonce) {
+		msg.mine = true;
+		state.mine.write(msg.num, state.mine.now());
+	}
+
+	// TODO: Shift the parrent sections replies on board pages
+
+	new posts[isThread ? 'Section' : 'Article']({
 		// Create model
 		model: new posts[isThread ? 'ThreadModel' : 'PostModel'](msg),
 		id: msg.num,
@@ -32,8 +57,8 @@ dispatcher[common.INSERT_POST] = function(msg) {
 
 // Move thread to the archive board
 dispatcher[common.MOVE_THREAD] = function(msg) {
-	var msg = msg[0],
-		model = new posts.ThreadModel(msg);
+	msg = msg[0];
+	var model = new posts.ThreadModel(msg);
 	main.oneeSama.links = msg.links;
 	new posts.Section({
 		model: model,
@@ -43,19 +68,22 @@ dispatcher[common.MOVE_THREAD] = function(msg) {
 
 dispatcher[common.INSERT_IMAGE] = function(msg) {
 	var model = state.posts.get(msg[0]);
-
-	// TODO: Check for postform
-
-	if (model)
+	// Did I just upload this?
+	if (main.postModel && main.postModel.get('num') == msg[0]) {
+		if (model)
+			model.set('image', msg[1], {silent: true});
+		main.postForm.insertUploaded(msg[1]);
+	}
+	else if (model)
 		model.set('image', msg[1]);
 };
 
-dispatcher[common.UPDATE_POST] = function(msg, op) {
+dispatcher[common.UPDATE_POST] = function(msg) {
 	const num = msg[0],
 		links = msg[4],
-		extra = msg[5],
 		msgState = [msg[2] || 0, msg[3] || 0];
-	var model = state.posts.get(num);
+	var extra = msg[5],
+		model = state.posts.get(num);
 
 	// TODO: Add backlinks
 
@@ -66,7 +94,15 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 		});
 	}
 
-	// TODO: Check for own post
+	// Am I updating my own post?
+	if (num in state.ownPosts) {
+		if (extra)
+			extra.links = links;
+		else
+			extra = {links: links};
+		main.oneeSama.trigger('insertOwnPost', extra);
+		return;
+	}
 
 	// TODO: Make this prettier
 	var bq = $('#' + num + ' > blockquote');
@@ -81,7 +117,7 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 };
 
 // Add various additional tags inside the blockqoute
-function inject(frag) {
+var inject = exports.inject = function(frag) {
 	var $dest = this.buffer;
 	for (var i = 0; i < this.state[1]; i++)
 		$dest = $dest.children('del:last');
@@ -106,13 +142,17 @@ function inject(frag) {
 	if (out)
 		$dest.append(out);
 	return out;
-}
+};
+
+// Make the text spoilers toggle revealing on click
+var touchable_spoiler_tag = exports.touchable_spoiler_tag = function(del) {
+	del.html = '<del onclick="void(0)">';
+};
+main.oneeSama.hook('spoilerTag', touchable_spoiler_tag);
 
 dispatcher[common.FINISH_POST] = function(msg) {
 	const num = msg[0];
-
-	// TODO: Ownpost handling
-
+	delete state.ownPosts[num];
 	var model = state.posts.get(num);
 	if (model)
 		model.set('editing', false);
@@ -120,7 +160,7 @@ dispatcher[common.FINISH_POST] = function(msg) {
 
 dispatcher[common.DELETE_POSTS] = function(msg) {
 	msg.forEach(function(num) {
-		var model = state.posts.get(num)
+		var model = state.posts.get(num);
 		if (model)
 			model.destroy();
 
@@ -130,8 +170,15 @@ dispatcher[common.DELETE_POSTS] = function(msg) {
 
 dispatcher[common.DELETE_THREAD] = function(msg, op) {
 	delete state.syncs[op];
+	delete state.ownPosts[op];
 
-	// TODO: Ownposts & postForm
+	if (main.postModel) {
+		const num = main.postModel.get('num');
+		if ((main.postModel.get('op') || num) === op)
+			main.postSM.feed('done');
+		if (num === op)
+			return;
+	}
 
 	var model = state.getThread(op);
 	if (model)
@@ -158,7 +205,7 @@ dispatcher[common.DELETE_IMAGES] = function(msg) {
 	});
 };
 
-dispatcher[common.SPOILER_IMAGES] = function(msg, op) {
+dispatcher[common.SPOILER_IMAGES] = function(msg) {
 	msg.forEach(function(info) {
 		var model = state.posts.get(info[0]);
 		if (model)
@@ -179,16 +226,9 @@ dispatcher[common.HOT_INJECTION] = function(msg){
 	if (msg[0] == false && msg[1] != state.configHash)
 		main.send([common.HOT_INJECTION, true]);
 	// Update variables and hash
-	else if (msg[0] == true){
+	else if (msg[0] == true) {
 		state.configHash = msg[1];
-		/*
-		 * XXX: We can probably just use the window object properties for most
-		 * of these. Time will tell, what can be discarded.
-		 */
-		state.config.set(msg[2][0]);
-		state.imagerConfig.set(msg[2][1]);
-		state.reportConfig.set(msg[2][2]);
-		state.hotConfig.set(msg[2][3]);
+		state.hotConfig.set(msg[2]);
 	}
 };
 

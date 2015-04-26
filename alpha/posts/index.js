@@ -3,8 +3,6 @@
  */
 
 var Backbone = require('backbone'),
-	common = require('../../common'),
-	main = require('../main'),
 	state = require('../state');
 
 exports.Article = require('./article');
@@ -51,3 +49,10 @@ exports.ThreadModel = Backbone.Model.extend({
 	idAttribute: 'num',
 	replies: []
 });
+
+/*
+ * posting.js sources the index.js, so we put it at the end, to awoid incomplete
+ * loading of circular dependancies;
+ */
+var posting = require('./posting');
+

@@ -7,7 +7,7 @@ var _ = require('underscore'),
     async = require('async'),
     caps = require('./caps'),
     check = require('./msgcheck').check,
-    common = require('../common'),
+    common = require('../common/index'),
     config = require('../config'),
     db = require('../db'),
     fs = require('fs'),
@@ -1057,7 +1057,13 @@ STATE.emitter.on('change:clientsByIP', function(){
 dispatcher[common.HOT_INJECTION] = function(msg, client){
 	if (!check(['boolean'], msg) || msg[0] !== true)
 		return false;
-	client.send([0, common.HOT_INJECTION, true, STATE.clientConfigHash, STATE.clientConfig]);
+	client.send([
+		0,
+		common.HOT_INJECTION,
+		true,
+		STATE.clientConfigHash,
+		STATE.clientHotConfig
+	]);
 	return true;
 };
 

@@ -1,5 +1,5 @@
 var async = require('async'),
-	common = require('../common'),
+	common = require('../common/index'),
 	config = require('./config'),
 	configMain = require('../config'),
 	crypto = require('crypto'),

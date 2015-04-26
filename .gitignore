@@ -3,6 +3,7 @@
 *.swp
 .build
 .directory
+.idea
 .lock*
 .DS_Store
 .project
