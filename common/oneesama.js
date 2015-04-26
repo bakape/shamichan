@@ -225,7 +225,7 @@ OS.linkify = function(text) {
 	var bits = text.split(/(https?:\/\/[^\s"<>]*[^\s"<>'.,!?:;])/);
 	for (var i = 0; i < bits.length; i++) {
 		if (i % 2) {
-			var e = escape_html(bits[i]);
+			var e = index.escape_html(bits[i]);
 			// open in new tab, and disavow target
 			this.callback(index.safe('<a href="' + e +
 				'" rel="nofollow" target="_blank">' +
