@@ -87,8 +87,9 @@ new_socket = function() {
 
 connSM.act('conn, reconn + open -> syncing', function () {
 	sync_status('Syncing');
-	var connID = common.random_id(),
-		page = state.page;
+	const connID = common.random_id();
+	var page = state.page;
+	page.set('connID', connID);
 	main.send([
 		common.SYNCHRONIZE,
 		connID,
