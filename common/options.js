@@ -10,7 +10,7 @@
 
 var common = require('./index'),
 	isNode = common.isNode,
-	$, banner, config, hotConfig, main, notMobile, options, state;
+	$, banner, config, hotConfig, main, notMobile, options, state, mediaURL;
 if (isNode) {
 	config = require('../config');
 	//XXX: Uggly hack, but we need the hot variables before they are exported
@@ -27,6 +27,7 @@ else {
 
 	config =  main.config;
 	hotConfig = state.hotConfig.attributes;
+	mediaURL = main.imagerConfig.MEDIA_URL;
 	notMobile = !main.isMobile;
 }
 
@@ -278,7 +279,7 @@ opts.push(illyaDance,
 		default: isNode ? null : hotConfig.BOARD_CSS[state.page.get('board')],
 		exec: function(theme) {
 			if (theme) {
-				$('#theme').attr('href', main.imagerConfig.MEDIA_URL + 'css/'
+				$('#theme').attr('href', mediaURL + 'css/'
 					+ hotConfig.css[theme + '.css']);
 			}
 			// FIXME: temp stub
