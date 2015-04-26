@@ -73,7 +73,7 @@ postSM.preflight('draft', function(aside) {
 });
 
 postSM.act('draft + alloc -> alloc', function(msg) {
-	postForm.on_allocation(msg);
+	postForm.onAllocation(msg);
 });
 
 main.$doc.on('click', 'aside a', function() {
@@ -576,8 +576,81 @@ var ComposerView = Backbone.View.extend({
 		}
 		const pick = pick_spoiler(attrs.nextSpoiler);
 		this.model.set({spoiler: pick.index, nextSpoiler: pick.next});
+	},
+
+	onAllocation: function (msg) {
+		const num = msg.num;
+
+		// TODO: Ownposts
+
+		this.model.set({num: num});
+		this.flushPending();
+		var header = $(common.flatten(main.oneeSama.atama(msg)).join(''));
+		this.$meta.replaceWith(header);
+		this.$meta = header;
+		const op = this.model.get('op');
+		if (op)
+			this.$el.addClass('editing');
+
+		/*
+		 TODO: Hide threads that are over THREADS_PER_PAGE. Also would need to be
+		 removed from syncs client and server-side. Hmm.
+		  */
+
+		this.$el.attr('id', num);
+
+		if (msg.image)
+			this.insertUploaded(msg.image);
+
+		if (this.$uploadForm)
+			this.$uploadForm.append(this.$submit);
+		else
+			this.$blockquote.after(this.$submit);
+		if (!op) {
+			this.$subject.siblings('label').andSelf().remove();
+			this.$blockquote.show();
+			this.resizeInput();
+			this.$input.focus();
+		}
+
+		/*
+		 Ensures you are nagged at by the browser, when navigating away from an
+		 unfinished allocated post.
+		 */
+		window.onbeforeunload = function () {
+			return "You have an unfinished post.";
+		};
+	},
+
+	// Insert an image that has been uploaded and processed by the server
+	insertUploaded: function(info) {
+		this.renderImage(null, info);
+		this.$imageInput
+			.siblings('strong')
+			.andSelf()
+			.remove();
+		this.$cancel.remove();
+		this.$uploadForm.find('#toggle').remove();
+		this.flushPending();
+		this.model.set({
+			uploading: false,
+			uploaded: true,
+			sentAllocRequest: true
+		});
+
+		// Stop obnoxious wrap-around-image behaviour
+		var $img = this.$el.find('img');
+		this.blockquote.css({
+			'margin-left': $img.css('margin-right'),
+			'padding-left': $img.width()
+		});
+
+		this.resizeInput();
 	}
 });
+
+// Extend with imager.js methods
+_.extend(ComposerView, imager.Hidamari);
 
 function spoilerPaneUrl(sp) {
 	return main.imagerConfig.MEDIA_URL + 'spoil/spoil' + sp + '.png';

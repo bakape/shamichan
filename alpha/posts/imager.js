@@ -19,7 +19,7 @@ var Hidamari = exports.Hidamari = {
 		// Remove image on mod deletion
 		if (!image)
 			$fig.remove();
-		// Insert figure. Only used for articles
+		// Insert figure. Only used for Article and ComposerView
 		else if (!$fig.length) {
 			$(common.flatten(main.oneeSama.gazou(image, false)).join(''))
 				.insertAfter(this.$el.children('header'));
