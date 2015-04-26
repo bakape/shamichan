@@ -459,7 +459,7 @@ var ComposerView = Backbone.View.extend({
 
 		//Youtu.be links
 		while(true) {
-			m = val.match(youtube_short_re);
+			m = val.match(embed.youtube_short_re);
 			if (!m)
 				break;
 			// Substitute
@@ -470,7 +470,7 @@ var ComposerView = Backbone.View.extend({
 
 		// SoundCloud links
 		while(true) {
-			m = val.match(soundcloud_url_re);
+			m = val.match(embed.soundcloud_url_re);
 			if (!m)
 				break;
 			var sc = '>>>/soundcloud/' + m[1];
@@ -479,7 +479,7 @@ var ComposerView = Backbone.View.extend({
 
 		// Pastebin links
 		while(true) {
-			m = val.match(pastebin_re);
+			m = val.match(embed.pastebin_re);
 			if (!m)
 				break;
 			var pbin = '>>>/pastebin/' + m[1];
@@ -591,6 +591,8 @@ var ComposerView = Backbone.View.extend({
 
 	// Construct the message for post allocation in the database
 	allocationMessage: function(text, image) {
+		var msg = {};
+		
 		function opt(key, val) {
 			if (val)
 				msg[key] = val;
