@@ -197,7 +197,7 @@ OS.geimu = function(text) {
 		return;
 	}
 
-	var bits = text.split(dice_re);
+	var bits = text.split(index.dice_re);
 	for (var i = 0; i < bits.length; i++) {
 		var bit = bits[i];
 		if (!(i % 2) || !parse_dice(bit)) {

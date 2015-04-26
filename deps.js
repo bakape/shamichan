@@ -125,6 +125,7 @@ exports.ALPHA = [
 	'alpha/posts/index.js',
 	'alpha/posts/imager.js',
 	'alpha/posts/index.js',
+	'alpha/posts/nonce.js',
 	'alpha/posts/posting.js',
 	'alpha/posts/section.js'
 ];

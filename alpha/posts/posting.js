@@ -10,18 +10,17 @@ var $ = require('jquery'),
 	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
-	index = require('./index'),
 	main = require('../main'),
+	nonce = require('./nonce'),
 	options = require('../options'),
 	state = require('../state');
 
 var connSM = main.connSM,
-	postSM = main.postSM,
-	postModel;
+	postSM = main.postSM;
 
 const uploadingMessage = 'Uploading...';
 
-var postForm = exports.postForm,
+var postForm = main.postForm,
 // Minimal size of the input buffer
 	inputMinSize = 300;
 
@@ -29,9 +28,8 @@ var postForm = exports.postForm,
 if (window.screen && screen.width <= 320)
 	inputMinSize = 50;
 
-var ComposerModel = index.PostModel.extend({
-	status: 'inactive',
-	mine: true
+var ComposerModel = Backbone.Model.extend({
+	idAttribute: 'num'
 });
 
 // Synchronyse postform state with websocket connectivity
@@ -41,10 +39,23 @@ connSM.on('desynced', postSM.feeder('desync'));
 
 postSM.act('* + desync -> none', function() {
 	// TODO: Desync logic
+	if (postForm) {
+		postForm.$el.removeClass('editing');
+		postForm.$input.val('');
+		postForm.finish();
+	}
+	main.$threads.find('aside').hide();
 });
 
 postSM.act('none + sync, draft, alloc + done -> ready', function() {
 	// TODO: Add unfinished post checking
+
+	if (postForm) {
+		postForm.remove();
+		main.postForm = postForm = null;
+		main.postModel = null;
+	}
+	main.$threads.find('aside').show();
 });
 
 // Make new postform
@@ -56,9 +67,9 @@ postSM.act('ready + new -> draft', function($aside) {
 	else
 		$sec = $('<section/>');
 
-	postModel = new ComposerModel({op: op});
-	exports.postForm = new ComposerView({
-		model: postModel,
+	main.postModel = new ComposerModel({op: op});
+	main.postForm = postForm = new ComposerView({
+		model: main.postModel,
 		$dest: $aside,
 		$sec: $sec
 	});
@@ -97,7 +108,8 @@ function handle_shortcut(event) {
 		opts = options.attributes;
 	switch(event.which) {
 		case opts.new:
-			var $aside = state.page.get('thread') ? $('aside') : $ceiling().next();
+			var $aside = state.page.get('thread') ? main.$threads.find('aside')
+				: $ceiling().next();
 			if ($aside.is('aside') && $aside.length === 1) {
 				postSM.feed('new', $aside);
 				used = true;
@@ -157,7 +169,7 @@ var ComposerView = Backbone.View.extend({
 		this.listenTo(this.model, 'change', this.renderButtons);
 		this.listenTo(this.model, 'change:spoiler', this.renderSpoilerPane);
 
-		this.setElement((this.model.get('op') ? $('<article/>') : args.$sec)[0]);
+		this.render(args);
 
 		this.pending = '';
 		this.line_count = 1;
@@ -185,12 +197,11 @@ var ComposerView = Backbone.View.extend({
 		this.imouto.eLinkify = main.oneeSama.eLinkify;
 		this.imouto.hook('spoilerTag', client.touchable_spoiler_tag);
 		main.oneeSama.trigger('imouto', this.imouto);
-
-		this.render(args);
 	},
 
 	// Initial render
 	render: function(args) {
+		this.setElement((this.model.get('op') ? $('<article/>') : args.$sec)[0]);
 		// A defined op means the post is a reply, not a new thread
 		const op = !!this.model.get('op');
 
@@ -237,7 +248,11 @@ var ComposerView = Backbone.View.extend({
 		// Add a menu to the postform
 		main.oneeSama.trigger('draft', this.$el);
 		this.renderIdentity();
-		args.$dest.replaceWith(this.$el);
+		args.$dest.hide();
+		if (op)
+			this.$el.insertBefore(args.$dest);
+		else
+			this.$el.insertAfter(args.$dest);
 
 		if (op) {
 			this.resizeInput();
@@ -247,7 +262,7 @@ var ComposerView = Backbone.View.extend({
 			this.$el.after('<hr class="sectionHr"/>');
 			this.$subject.focus();
 		}
-		$('aside').remove();
+		main.$threads.find('aside').hide();
 
 		preloadPanes();
 	},
@@ -435,9 +450,10 @@ var ComposerView = Backbone.View.extend({
 		this.$input.css('width', size + 'px');
 	},
 
-	onInput: function() {
-		var val = this.$input.val(),
-			start = this.$input[0].selectionStart,
+	onInput: function(val) {
+		if (val === undefined || val instanceof $.Event)
+			val = this.$input.val();
+		var start = this.$input[0].selectionStart,
 			end = this.$input[0].selectionEnd;
 
 		var changed = false,
@@ -445,7 +461,7 @@ var ComposerView = Backbone.View.extend({
 
 		// Turn YouTube links into proper refs
 		while(true) {
-			m = val.match(embed.youtube_re);
+			m = val.match(embed.youtube_url_re);
 			if (!m)
 				break;
 			// Substitute
@@ -572,7 +588,7 @@ var ComposerView = Backbone.View.extend({
 			this.model.set({sentAllocRequest: true});
 		}
 		else if (attrs.num)
-			send(text);
+			main.send(text);
 		else
 			this.pending += text;
 
@@ -591,8 +607,8 @@ var ComposerView = Backbone.View.extend({
 
 	// Construct the message for post allocation in the database
 	allocationMessage: function(text, image) {
-		var msg = {};
-		
+		var msg = {nonce: nonce.create_nonce()};
+
 		function opt(key, val) {
 			if (val)
 				msg[key] = val;
@@ -736,7 +752,7 @@ var ComposerView = Backbone.View.extend({
 
 		// Stop obnoxious wrap-around-image behaviour
 		var $img = this.$el.find('img');
-		this.blockquote.css({
+		this.$blockquote.css({
 			'margin-left': $img.css('margin-right'),
 			'padding-left': $img.width()
 		});
@@ -765,11 +781,11 @@ var ComposerView = Backbone.View.extend({
 		if (attrs.cancelled)
 			return;
 		if (!attrs.num && !attrs.sentAllocRequest) {
-			send([common.INSERT_POST, this.allocationMessage(null, msg)]);
+			main.send([common.INSERT_POST, this.allocationMessage(null, msg)]);
 			this.model.set({sentAllocRequest: true});
 		}
 		else {
-			send([common.INSERT_IMAGE, msg]);
+			main.send([common.INSERT_IMAGE, msg]);
 		}
 	},
 
@@ -849,5 +865,5 @@ function imageUploadURL() {
 window.addEventListener('message', function (event) {
 	const msg = event.data;
 	if (msg !== 'OK' && postForm)
-		postForm.upload_error(msg);
+		postForm.uploadError(msg);
 }, false);

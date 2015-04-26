@@ -5,6 +5,7 @@
 var $ = require('jquery'),
 	common = require('../common/index'),
 	main = require('./main'),
+	nonce = require('./posts/nonce'),
 	posts = require('./posts/'),
 	state = require('./state');
 
@@ -12,15 +13,37 @@ var $ = require('jquery'),
 var dispatcher = main.dispatcher;
 
 dispatcher[common.INSERT_POST] = function(msg) {
-	// FIXME: msg[0] is legacy. Could use a fix after we shift in the new client
-	var msg = msg[1];
+	// TODO: msg[0] is legacy. Could use a fix after we shift in the new client
+	msg = msg[1];
 	const isThread = !msg.op;
 	if (isThread)
 		state.syncs[msg.num] = 1;
 	msg.editing = true;
 
-	// TODO: Check, if post is mine
+	// Did I create this post?
 	var el;
+	const msgNonce = msg.nonce;
+	delete msg.nonce;
+	const myNonce = nonce.get_nonces()[msgNonce];
+	var bump = state.page.get('live');
+	if (myNonce && myNonce.tab === state.page.get('tabID')) {
+		// posted in this tab; transform placeholder
+		state.ownPosts[msg.num] = true;
+		main.oneeSama.trigger('insertOwnPost', msg);
+		main.postSM.feed('alloc', msg);
+		bump = false;
+		// delete only after a delay so all tabs notice that it's ours
+		setTimeout(nonce.destroy_nonce.bind(null, msgNonce), 10*1000);
+		// if we've already made a placeholder for this post, use it
+		if (main.postForm && main.postForm.el)
+			el = main.postForm.el;
+	}
+
+	// Add to my post set
+	if (myNonce) {
+		msg.mine = true;
+		state.mine.write(msg.num, state.mine.now());
+	}
 
 	// TODO: Shift the parrent sections replies on board pages
 
@@ -34,8 +57,8 @@ dispatcher[common.INSERT_POST] = function(msg) {
 
 // Move thread to the archive board
 dispatcher[common.MOVE_THREAD] = function(msg) {
-	var msg = msg[0],
-		model = new posts.ThreadModel(msg);
+	msg = msg[0];
+	var model = new posts.ThreadModel(msg);
 	main.oneeSama.links = msg.links;
 	new posts.Section({
 		model: model,
@@ -45,19 +68,22 @@ dispatcher[common.MOVE_THREAD] = function(msg) {
 
 dispatcher[common.INSERT_IMAGE] = function(msg) {
 	var model = state.posts.get(msg[0]);
-
-	// TODO: Check for postform
-
-	if (model)
+	// Did I just upload this?
+	if (main.postModel && main.postModel.get('num') == msg[0]) {
+		if (model)
+			model.set('image', msg[1], {silent: true});
+		main.postForm.insertUploaded(msg[1]);
+	}
+	else if (model)
 		model.set('image', msg[1]);
 };
 
-dispatcher[common.UPDATE_POST] = function(msg, op) {
+dispatcher[common.UPDATE_POST] = function(msg) {
 	const num = msg[0],
 		links = msg[4],
-		extra = msg[5],
 		msgState = [msg[2] || 0, msg[3] || 0];
-	var model = state.posts.get(num);
+	var extra = msg[5],
+		model = state.posts.get(num);
 
 	// TODO: Add backlinks
 
@@ -68,7 +94,15 @@ dispatcher[common.UPDATE_POST] = function(msg, op) {
 		});
 	}
 
-	// TODO: Check for own post
+	// Am I updating my own post?
+	if (num in state.ownPosts) {
+		if (extra)
+			extra.links = links;
+		else
+			extra = {links: links};
+		main.oneeSama.trigger('insertOwnPost', extra);
+		return;
+	}
 
 	// TODO: Make this prettier
 	var bq = $('#' + num + ' > blockquote');
@@ -118,9 +152,7 @@ main.oneeSama.hook('spoilerTag', touchable_spoiler_tag);
 
 dispatcher[common.FINISH_POST] = function(msg) {
 	const num = msg[0];
-
-	// TODO: Ownpost handling
-
+	delete state.ownPosts[num];
 	var model = state.posts.get(num);
 	if (model)
 		model.set('editing', false);
@@ -138,8 +170,15 @@ dispatcher[common.DELETE_POSTS] = function(msg) {
 
 dispatcher[common.DELETE_THREAD] = function(msg, op) {
 	delete state.syncs[op];
+	delete state.ownPosts[op];
 
-	// TODO: Ownposts & postForm
+	if (main.postModel) {
+		const num = main.postModel.get('num');
+		if ((main.postModel.get('op') || num) === op)
+			main.postSM.feed('done');
+		if (num === op)
+			return;
+	}
 
 	var model = state.getThread(op);
 	if (model)
@@ -166,7 +205,7 @@ dispatcher[common.DELETE_IMAGES] = function(msg) {
 	});
 };
 
-dispatcher[common.SPOILER_IMAGES] = function(msg, op) {
+dispatcher[common.SPOILER_IMAGES] = function(msg) {
 	msg.forEach(function(info) {
 		var model = state.posts.get(info[0]);
 		if (model)

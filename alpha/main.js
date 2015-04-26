@@ -11,6 +11,11 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone');
 
+// Register jquery plugins
+require('jquery.cookie');
+// Bind jQuery to backbone
+Backbone.$ = $;
+
 /*
  * Since the language pack contains functions and we can not simply use those
  * with underscore templates, had to stringify those. Now we convert them back
@@ -33,23 +38,18 @@ exports.reportConfig = window.reportConfig;
 
 var common = require('../common/index');
 
-// Register jquery plugins
-require('jquery.cookie');
-// Bind jQuery to backbone
-Backbone.$ = $;
-
 exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
-
 // Store them here, to avoid requiring modules in the wrong order
 exports.send = function() {};
 exports.serverTimeOffset = 0;
 exports.dispatcher = {};
 exports.connSM = new common.FSM('load');
 exports.postSM = new common.FSM('none');
+exports.postForm = null;
+exports.postModel = null;
 // Read-only boards gets expanded later
 exports.readOnly = ['archive'];
-
 
 // Cached jQuery objects
 exports.$doc = $(document);
@@ -58,6 +58,8 @@ exports.$name = $('input[name=name]');
 exports.$email = $('input[name=email]');
 
 var state = require('./state');
+// WOO! Circular dependancy
+state.page.set('tabID', common.random_id());
 
 // Initialise main rendering object
 var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {

@@ -2,9 +2,11 @@
  * Central model keeping the state of the page
  */
 
-var Backbone = require('backbone'),
-	common = require('../common/index'),
-	main = require('./main');
+var $ = require('jquery'),
+	Backbone = require('backbone'),
+	common = require('../common'),
+	main = require('./main'),
+	memory = require('./memory');
 
 // Read page state by parsing a URL
 var read = exports.read = function(url) {
@@ -55,6 +57,13 @@ exports.getThread = function(num) {
 
 // Tracks the synchronisation counter of each thread
 exports.syncs = {};
+// Posts I made in this tab
+exports.ownPosts = {};
+// remember which posts are mine for two days
+exports.mine = new memory('mine', 2);
+// no cookie though
+exports.mine.bake_cookie = function () { return false; };
+$.cookie('mine', null); // TEMP
 
 // Clear current post state, DOM and server synchronisation and apply the new
 exports.replace = function(newState, render) {
