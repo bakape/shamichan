@@ -821,11 +821,12 @@ var ComposerView = Backbone.View.extend({
 		}
 		this.stopListening();
 		window.onbeforeunload = null;
-	}
-});
+	},
 
-// Extend with imager.js methods
-_.extend(ComposerView, imager.Hidamari);
+	// Extend with imager.js methods
+	renderImage: imager.Hidamari.renderImage,
+	autoExpandImage: imager.Hidamari.autoExpandImage
+});
 
 function spoilerPaneUrl(sp) {
 	return main.imagerConfig.MEDIA_URL + 'spoil/spoil' + sp + '.png';
