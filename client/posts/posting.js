@@ -696,9 +696,7 @@ var ComposerView = Backbone.View.extend({
 
 	onAllocation: function (msg) {
 		const num = msg.num;
-
-		// TODO: Ownposts
-
+		state.ownPosts[num] = num;
 		this.model.set({num: num});
 		this.flushPending();
 		var header = $(common.flatten(main.oneeSama.atama(msg)).join(''));
