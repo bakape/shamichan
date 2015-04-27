@@ -3,6 +3,7 @@
  */
 
 var $ = require('jquery'),
+	_ = require('underscore'),
 	Extract = require('./extract'),
 	main = require('./main'),
 	scroll = require('./scroll'),
@@ -15,9 +16,9 @@ main.$doc.on ('click', 'a.history', function(event) {
 
 // Navigate to the URL
 function readingSteiner(url, event, needPush) {
-	var nextState = state.read(url);
+	const nextState = state.read(url);
 	// Does the link point to the same page as this one?
-	if (JSON.stringify(nextState) == JSON.stringify(state.page.attributes))
+	if (_.isMatch(state.page.attributes, nextState))
 		return;
 	if (event)
 		event.preventDefault();
