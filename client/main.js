@@ -3,6 +3,11 @@
  */
 
 /*
+ The entire bundle uses strict mode through the strictify browserify plugin
+ */
+"use strict";
+
+/*
  * Because we are going to attach listeners to these all over the place, have
  * to load soome core modules in specific order. Also avoids nasty circular
  * dependaancy, by placing some of the exports here and not in child modules.

@@ -3,6 +3,8 @@
  * server to render the actual options panel.
  */
 
+'use strict';
+
 /*
  * Same shit as `./common/`. Need to make sure both node and the client
  * load only what they need and don't crash with refference errors.

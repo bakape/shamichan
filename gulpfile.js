@@ -12,6 +12,7 @@ var browserify = require('browserify'),
 	rev = require('gulp-rev'),
 	source = require('vinyl-source-stream'),
 	sourcemaps = require('gulp-sourcemaps'),
+	strict = require('strictify'),
 	uglify = require('gulp-uglify');
 
 function gulper(name, files, dest) {
@@ -49,6 +50,7 @@ gulp.task('client', function() {
 			'backbone'
 		]
 	})
+		.transform(strict)
 		// Exclude these requires on the client
 		.exclude('./config')
 		.exclude('../../config')

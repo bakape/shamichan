@@ -41,6 +41,7 @@
     "redis": "^0.12.1",
     "request": "^2.53.0",
     "sockjs": "^0.3.12",
+    "strictify": "^0.2.0",
     "tmp": "^0.0.24",
     "underscore": "^1.8.3",
     "velocity-animate": "^1.2.2",

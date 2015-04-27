@@ -67,7 +67,7 @@ function connect() {
 		window.socket = socket;
 }
 
-new_socket = function() {
+function new_socket() {
 	var protocols = [
 		'xdr-streaming',
 		'xhr-streaming',
@@ -83,7 +83,7 @@ new_socket = function() {
 	return new SockJS(main.config.SOCKET_PATH, null, {
 		protocols_whitelist: protocols
 	});
-};
+}
 
 connSM.act('conn, reconn + open -> syncing', function () {
 	sync_status('Syncing');

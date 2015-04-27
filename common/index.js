@@ -3,6 +3,8 @@
  Keep that in mind, when making modifications
  */
 
+'use strict';
+
 // Runing on the server
 var isNode = exports.isNode = typeof navigator === 'undefined';
 

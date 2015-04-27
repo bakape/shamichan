@@ -2,6 +2,8 @@
  Core rendering object both on the client and server
  */
 
+'use strict';
+
 var index = require('./index');
 
 var state, config, hotConfig, imagerConfig, lang, main;
