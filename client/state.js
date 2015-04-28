@@ -11,21 +11,23 @@ var $ = require('jquery'),
 // Read page state by parsing a URL
 var read = exports.read = function(url) {
 	const href = url.split('#')[0],
-		thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
-		page = href.match(/\/page(\d+)$/),
 		// Display last N posts setting on thread pages
 		lastN = href.match(/[\?&]last=(\d+)/);
+	var thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
+		page = href.match(/\/page(\d+)$/);
+	thread = thread ? parseInt(thread[1], 10) : 0;
+	page = page ? parseInt(page[1], 10) : -1;
 	return {
-		href: href,
+		href,
 		board: href.match(/\/([a-zA-Z0-9]+?)\//)[1],
-		thread: thread ? parseInt(thread[1], 10) : 0,
-		page: page ? parseInt(page[1], 10) : -1,
+		thread,
+		page,
 		lastN: lastN ? parseInt(lastN[1], 10) : 0,
 		/*
 		 * Indicates if on the 'live' board page, which needs extra server-side
 		 * logic.
 		 */
-		live: page == -1 && thread == 0
+		live: page === -1 && thread === 0
 	};
 };
 
