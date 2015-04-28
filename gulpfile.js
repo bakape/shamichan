@@ -1,4 +1,5 @@
-var browserify = require('browserify'),
+var babelify = require('babelify'),
+	browserify = require('browserify'),
 	buffer = require('vinyl-buffer'),
 	concat = require('gulp-concat'),
 	debug = require('./config').DEBUG,
@@ -12,7 +13,6 @@ var browserify = require('browserify'),
 	rev = require('gulp-rev'),
 	source = require('vinyl-source-stream'),
 	sourcemaps = require('gulp-sourcemaps'),
-	strict = require('strictify'),
 	uglify = require('gulp-uglify');
 
 function gulper(name, files, dest) {
@@ -50,9 +50,17 @@ gulp.task('client', function() {
 			'backbone'
 		]
 	})
-		.transform(strict)
+		// Transpile to ES5
+		.transform(babelify.configure({
+			blacklist: [
+				'es6.constants',
+				'flow',
+				'react',
+				'reactCompat',
+				'regenerator'
+			]
+		}))
 		// Exclude these requires on the client
-		.exclude('./config')
 		.exclude('../../config')
 		.exclude('../config')
 		.exclude('../hot')
