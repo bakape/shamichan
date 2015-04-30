@@ -5,32 +5,21 @@
 
 'use strict';
 
-/*
- * Same shit as `./common/`. Need to make sure both node and the client
- * load only what they need and don't crash with refference errors.
- */
-
-var common = require('./index'),
-	isNode = common.isNode,
-	$, banner, config, hotConfig, main, notMobile, options, state, mediaURL;
-if (isNode) {
-	config = require('../config');
-	//XXX: Uggly hack, but we need the hot variables before they are exported
-	hotConfig = require('../hot').hot;
-	// For compatibility reasons
+var imports = require('./imports'),
+	index = require('./index'),
+	util = require('./util'),
+	$, banner, notMobile, options, state, mediaURL;
+if (imports.isNode)
+// TEMP: Will build separate templates and bundles for mobile eventually
 	notMobile = true;
-}
 else {
 	$ = require('jquery');
 	banner = require('../client/banner');
-	main = require('../client/main');
 	options = require('../client/options');
 	state = require('../client/state');
 
-	config =  main.config;
-	hotConfig = state.hotConfig.attributes;
-	mediaURL = main.imagerConfig.MEDIA_URL;
-	notMobile = !main.isMobile;
+	mediaURL = imports.main.imagerConfig.MEDIA_URL;
+	notMobile = !imports.main.isMobile;
 }
 
 /*
@@ -56,9 +45,9 @@ var opts = [
 	/* LANGUAGE SELECTION */
 	{
 		id: 'lang',
-		type: config.LANGS,
+		type: imports.config.LANGS,
 		tab: 0,
-		default: config.DEFAULT_LANG,
+		default: imports.config.DEFAULT_LANG,
 		// True by default
 		execOnStart: false,
 		// Exec is not used on the server
@@ -85,7 +74,7 @@ var opts = [
 		default: 'small',
 		exec: function(type) {
 			$.cookie('thumb', type);
-			main.oneeSama.thumbStyle = type;
+			imports.main.oneeSama.thumbStyle = type;
 		}
 	},
 	/* IMAGE HOVER EXPANSION */
@@ -106,7 +95,7 @@ var opts = [
 		tab: 1,
 		exec: function(autogif) {
 			$.cookie('agif', autogif, {path: '/'});
-			main.oneeSama.autoGif = autogif;
+			imports.main.oneeSama.autoGif = autogif;
 		}
 	},
 	/* SPOILER TOGGLE */
@@ -118,7 +107,7 @@ var opts = [
 		default: true,
 		exec: function(spoilertoggle) {
 			$.cookie('spoil', spoilertoggle, {path: '/'});
-			main.oneeSama.spoilToggle = spoilertoggle;
+			imports.main.oneeSama.spoilToggle = spoilertoggle;
 		}
 	},
 	/* BACKLINKS */
@@ -128,7 +117,8 @@ var opts = [
 		tab: 0,
 		default: true,
 		// TODO: Implement backlinks in ./posts/index.js
-		exec: function() {}
+		exec: function() {
+		}
 	},
 	/* LINKIFY TEXT URLS */
 	{
@@ -158,14 +148,14 @@ var opts = [
 		id: 'relativeTime',
 		tab: 0,
 		exec: function(toggle) {
-			main.oneeSama.rTime = toggle;
+			imports.main.oneeSama.rTime = toggle;
 			$.cookie('rTime', toggle, {path: '/'});
 		}
 	},
 	/* R/A/DIO NOW PLAYING BANNER */
 	{
 		id: 'nowPlaying',
-		load: notMobile && config.RADIO,
+		load: notMobile && index.RADIO,
 		type: 'checkbox',
 		tab: 3,
 		default: true,
@@ -174,7 +164,7 @@ var opts = [
 				banner.view.clearRadio();
 			// Query the server for current stream info
 			else
-				main.send([common.RADIO]);
+				imports.main.send([index.RADIO]);
 		}
 	}
 ];
@@ -201,7 +191,13 @@ var opts = [
 /* ILLYA DANCE */
 var illyaDance = {
 	id: 'illyaBGToggle',
-	load: notMobile && hotConfig.ILLYA_DANCE,
+	/*
+	 The getters ensure there isn't any funny business with dependancy order on
+	 the server;
+	 */
+	get load() {
+		return notMobile && imports.hotConfig.ILLYA_DANCE;
+	},
 	boardSpecific: true,
 	tab: 3,
 	exec: function(illyatoggle) {
@@ -222,7 +218,9 @@ var illyaDance = {
 opts.push(illyaDance,
 	{
 		id: 'illyaMuteToggle',
-		load: notMobile && hotConfig.ILLYA_DANCE,
+		get load() {
+			return notMobile && imports.hotConfig.ILLYA_DANCE;
+		},
 		boardSpecific: true,
 		tab: 3,
 		exec: function() {
@@ -278,7 +276,9 @@ opts.push(illyaDance,
 			'glass'
 		],
 		tab: 1,
-		default: isNode ? null : hotConfig.BOARD_CSS[state.page.get('board')],
+		get default() {
+			return hotConfig.BOARD_CSS[state.page.get('board')];
+		},
 		exec: function(theme) {
 			if (theme) {
 				$('#theme').attr('href', mediaURL + 'css/'
@@ -308,10 +308,12 @@ opts.push(illyaDance,
 		id: 'lastn',
 		type: 'number',
 		tab: 0,
-		validation: common.reasonable_last_n,
-		default: hotConfig.THREAD_LAST_N,
+		validation: util.reasonable_last_n,
+		get default() {
+			return imports.hotConfig.THREAD_LAST_N;
+		},
 		exec: function(n) {
-			main.oneeSama.lastN = n;
+			imports.main.oneeSama.lastN = n;
 			$.cookie('lastn', n, {path: '/'});
 		}
 	},
@@ -333,22 +335,22 @@ opts.push(illyaDance,
 		id: 'new',
 		default: 78
 	}, {
-		id: 'togglespoiler',
-		default: 73
-	}, {
-		id: 'textSpoiler',
-		default: 68
-	}, {
-		id: 'done',
-		default: 83
-	}, {
-		id: 'expandAll',
-		default: 69
-	}
+	id: 'togglespoiler',
+	default: 73
+}, {
+	id: 'textSpoiler',
+	default: 68
+}, {
+	id: 'done',
+	default: 83
+}, {
+	id: 'expandAll',
+	default: 69
+}
 ].forEach(function(short) {
-	short.type = 'shortcut';
-	short.tab = 4;
-	opts.push(short);
-});
+		short.type = 'shortcut';
+		short.tab = 4;
+		opts.push(short);
+	});
 
 module.exports = opts;

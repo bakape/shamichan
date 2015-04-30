@@ -41,30 +41,28 @@ exports.config = window.config;
 exports.imagerConfig = window.imagerConfig;
 exports.reportConfig = window.reportConfig;
 
-var common = require('../common/index');
-
 exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
 // Store them here, to avoid requiring modules in the wrong order
 exports.send = function() {};
 exports.serverTimeOffset = 0;
 exports.dispatcher = {};
-exports.connSM = new common.FSM('load');
-exports.postSM = new common.FSM('none');
 exports.postForm = null;
 exports.postModel = null;
 // Read-only boards gets expanded later
 exports.readOnly = ['archive'];
+
+var state = require('./state'),
+	common = require('../common');
+exports.connSM = new common.FSM('load');
+exports.postSM = new common.FSM('none');
+state.page.set('tabID', common.random_id());
 
 // Cached jQuery objects
 exports.$doc = $(document);
 exports.$threads = $('threads');
 exports.$name = $('input[name=name]');
 exports.$email = $('input[name=email]');
-
-var state = require('./state');
-// WOO! Circular dependancy
-state.page.set('tabID', common.random_id());
 
 // Initialise main rendering object
 var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {

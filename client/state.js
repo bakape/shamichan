@@ -4,8 +4,6 @@
 
 var $ = require('jquery'),
 	Backbone = require('backbone'),
-	common = require('../common'),
-	main = require('./main'),
 	memory = require('./memory');
 
 // Read page state by parsing a URL
@@ -66,32 +64,3 @@ exports.mine = new memory('mine', 2);
 // no cookie though
 exports.mine.bake_cookie = function () { return false; };
 $.cookie('mine', null); // TEMP
-
-// Clear current post state, DOM and server synchronisation and apply the new
-exports.replace = function(newState, render) {
-	/*
-	 * Emptying the whole element should be faster than removing each post
-	 * individually through models and listeners. Not that the `remove()`s
-	 * don't fire anymore...
-	 */
-	main.$threads.empty();
-	threads.clear();
-	posts.models.forEach(function(model) {
-		model.destroy();		
-	});
-	// Prevent old threads from syncing
-	exports.syncs = {};
-	// Set new page state
-	// TODO: Reload board-specific options on change
-	page.set(newState);
-	// Rendering and extraction as needed
-	render();
-
-	// Swap the database controller server-side
-	main.send([
-		common.RESYNC,
-		page.get('board'),
-		exports.syncs,
-		page.get('live')
-	]);
-};

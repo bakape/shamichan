@@ -1,9 +1,11 @@
 exports.SERVER_DEPS = [
 	'admin/common.js',
 	'admin/panel.js',
+	'common/imports.js',
 	'common/index.js',
 	'common/oneesama.js',
 	'common/options.js',
+	'common/util.js',
 	'config.js',
 	'db.js',
 	'deps.js',
@@ -55,9 +57,11 @@ exports.MOD_CLIENT_DEPS = [
 // Only used for monitoring by builder.js
 exports.ALPHA = [
 	'gulpfile.js',
+	'common/imports.js',
 	'common/index.js',
 	'common/oneesama.js',
 	'common/options.js',
+	'common/util.js',
 	'client/amusement.js',
 	'client/background.js',
 	'client/banner.js',

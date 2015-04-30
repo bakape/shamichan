@@ -4,6 +4,7 @@
 
 var $ = require('jquery'),
 	_ = require('underscore'),
+	common = require('../common'),
 	Extract = require('./extract'),
 	main = require('./main'),
 	scroll = require('./scroll'),
@@ -41,11 +42,32 @@ function readingSteiner(url, event, needPush) {
 		if (!data)
 			return alert('Fetch failed: ' + url);
 
-		// Apply new state and DOM
-		state.replace(nextState, function() {
-			main.$threads.html(data);
-			new Extract();
+		/*
+		 * Emptying the whole element should be faster than removing each post
+		 * individually through models and listeners. Not that the `remove()`s
+		 * don't fire anymore...
+		 */
+		main.$threads.empty();
+		state.threads.clear();
+		state.posts.models.forEach(function(model) {
+			model.destroy();
 		});
+		// Prevent old threads from syncing
+		state.syncs = {};
+		// Set new page state
+		// TODO: Reload board-specific options on change
+		state.page.set(nextState);
+		// Apply new DOM and load models
+		main.$threads.html(data);
+		new Extract();
+		// Swap the database controller server-side
+		main.send([
+			common.RESYNC,
+			state.page.get('board'),
+			state.syncs,
+			state.page.get('live')
+		]);
+
 		if (needPush){
 			history.pushState(null, null, url);
 			// Scroll to top on new pages with no hashes
