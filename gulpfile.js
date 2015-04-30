@@ -77,5 +77,5 @@ gulp.task('client', function() {
 });
 
 (function() {
-	gulper('mod', deps.MOD_CLIENT_DEPS, './state');
+	gulper('mod', deps.mod, './state');
 })();
