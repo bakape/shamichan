@@ -81,6 +81,7 @@ exports.ALPHA = [
 	'client/posts/index.js',
 	'client/posts/imager.js',
 	'client/posts/index.js',
+	'client/posts/models.js',
 	'client/posts/nonce.js',
 	'client/posts/posting.js',
 	'client/posts/section.js'

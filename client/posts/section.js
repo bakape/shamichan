@@ -19,7 +19,7 @@ var Section = module.exports = Backbone.View.extend({
 			this.render();
 		this.listenTo(this.model, {
 			'change:locked': this.renderLocked,
-			destroy: this.remove,
+			destroy: this.remove
 		});
 		this.listenToOnce(this.model, {
 			'add': this.renderRelativeTime
@@ -48,6 +48,14 @@ var Section = module.exports = Backbone.View.extend({
 		this.stopListening();
 		return this;
 	},
+
+	/*
+	 Remove the top reply on board pages, if over limit, when a new reply is
+	 added
+	 */
+	shiftReplies: function() {
+
+	}
 });
 
 // Extend with common mixins

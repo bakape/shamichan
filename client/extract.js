@@ -5,7 +5,7 @@
 var $ = require('jquery'),
 	main = require('./main'),
 	state = require('./state'),
-	posts = require('./posts/');
+	posts = require('./posts');
 
 var Extract = module.exports = function() {
 	this.mine = state.mine.read_all();
@@ -21,7 +21,7 @@ Extract.prototype.extractThread = function($section) {
 	$section.children('article').each(function() {
 		var model = self.extractModel($(this));
 		new posts.Article({
-			model: new posts.PostModel(model),
+			model: new posts.models.Post(model),
 			el: this
 		});
 		replies.push(model.num);
@@ -30,7 +30,7 @@ Extract.prototype.extractThread = function($section) {
 	var model = this.extractModel($section);
 	// Add all replies to the thread's reply collection
 	model.replies = replies;
-	var threadModel = new posts.ThreadModel(model);
+	var threadModel = new posts.models.Thread(model);
 	new posts.Section({
 		model: threadModel,
 		el: $section[0]
