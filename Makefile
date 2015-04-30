@@ -10,7 +10,7 @@ FORCE:
 .PHONY: all clean
 
 bootstrap:
-	./upkeep/bootstrap.sh
+	./scripts/bootstrap.sh
 
 upgrade: clean
 	rm -rf -- ./node_modules

@@ -9,26 +9,33 @@ module.exports = {
 		mid: 'www/mid',
 		vint: 'www/vint',
 		dead: 'graveyard',
-		tmp: 'imager/tmp',
+		tmp: 'imager/tmp'
 	},
-// If using an external web server, set this to the served address of the www
-// directory. Trailing slash required
+/*
+ If using an external web server, set this to the served address of the www
+ directory. Trailing slash required
+ */
 	MEDIA_URL: '../',
-// If using Cloudflare with global SSL forwarding, you might encounter problems
-// with IQDB and Saucenao image search failing the SSL handshake. You can set a
-// custom query string here to be appended to the thumbnail URL for these
-// services and set a page rule on Cloudflare to disable HTTPS in URLs with it
-// present. Example: '?ssl=off'
+/*
+ If using Cloudflare with global SSL forwarding, you might encounter problems
+ with IQDB and Saucenao image search failing the SSL handshake. You can set a
+ custom query string here to be appended to the thumbnail URL for these
+ services and set a page rule on Cloudflare to disable HTTPS in URLs with it
+ present. Example: '?ssl=off'
+ */
 	NO_SSL_QUERY_STRING: null,
 // Set to separate upload address, if needed. Otherwise null
 	UPLOAD_URL: null,
 
-// this should be the same as location.origin
-// in your browser's javascript console
+/*
+ This should be the same as location.origin in your browser's javascript console
+ */
 	MAIN_SERVER_ORIGIN: 'http://localhost:8000',
 
-// Image duplicate detection threshold. Integer [0 - 256]. Higher is more
-// agressive
+/*
+ Image duplicate detection threshold. Integer [0 - 256]. Higher is more
+ agressive
+ */
 	DUPLICATE_THRESHOLD: 26,
 /*
  * Thumbnail configuration for OP and regular thumbnails. Changing these will
@@ -56,9 +63,11 @@ module.exports = {
 // Enable PDF upload
 	PDF: false,
 
-// this indicates which spoiler images may be selected by posters.
-// each number or ID corresponds to a set of images in ./www/spoil
-// (named spoilX.png, spoilerX.png and spoilersX.png)
+/*
+ this indicates which spoiler images may be selected by posters.
+ each number or ID corresponds to a set of images in ./www/spoil
+ (named spoilX.png, spoilerX.png and spoilersX.png)
+ */
 	SPOILER_IMAGES: [1, 2, 3],
 
 /*
@@ -67,7 +76,7 @@ module.exports = {
  */
 	BANNERS: null,
 
-	IMAGE_HATS: false,
+	IMAGE_HATS: false
 
 // uncomment DAEMON if you will run `node imager/daemon.js` separately.
 // if so, either

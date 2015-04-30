@@ -32,19 +32,18 @@ exports.lang = window.lang;
 });
 
 /*
-These configs really should not be randomly toggled frequently. No need to put
-them in state.js, as they should not be hot-loaded. Anything that needs to be,
-can be moved to hot.js. Should prevent some bugs, but also reduce flexibility,
-for frequent togglers. Hmm.
+ These configs really should not be randomly toggled frequently. No need to put
+ them in state.js, as they should not be hot-loaded. Anything that needs to be,
+ can be moved to hot.js. Should prevent some bugs, but also reduce flexibility,
+ for frequent togglers. Hmm.
  */
 exports.config = window.config;
-exports.imagerConfig = window.imagerConfig;
-exports.reportConfig = window.reportConfig;
 
 exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
 // Store them here, to avoid requiring modules in the wrong order
-exports.send = function() {};
+exports.send = function() {
+};
 exports.serverTimeOffset = 0;
 exports.dispatcher = {};
 exports.postForm = null;

@@ -2,8 +2,7 @@
  * leaving just the 'vint' thumbnail.
  */
 
-var imgConfig = require('../imager/config'),
-    crypto = require('crypto'),
+var crypto = require('crypto'),
     db = require('../db'),
     etc = require('../util/etc'),
     fs = require('fs'),
@@ -23,7 +22,7 @@ R.recycle_post = function (post, cb) {
 	if (!post.image || !post.image.src || post.hideimg)
 		return cb(null);
 	var r = this.y.connect();
-	var image = post.image
+	var image = post.image;
 	var src = imager.media_path('src', image.src);
 	var toDelete = [];
 	if (image.thumb) {

@@ -1,9 +1,8 @@
 var caps = require('./caps'),
-	config = require('./../report/config'),
+	config = require('../config'),
 	common = require('../common'),
 	db = require('../db'),
 	lang = require('../lang'),
-	mainConfig = require('../config'),
 	msgcheck = require('./msgcheck'),
 	okyaku = require('./okyaku'),
 	recaptcha = require('recaptcha'),
@@ -39,7 +38,7 @@ function report(reporter_ident, op, num, cb) {
 			return;
 		}
 
-		var name = (post.name || lang[mainConfig.DEFAULT_LANG].common.anon);
+		var name = (post.name || lang[config.DEFAULT_LANG].common.anon);
 		if (name.length > 23)
 			name = name.slice(0, 20) + '...';
 		if (post.trip)
@@ -111,7 +110,7 @@ function image_preview(info) {
 
 	var mediaURL = config.MAIL_MEDIA_URL;
 	if (!mediaURL)
-		mediaURL = require('../imager/config').MEDIA_URL;
+		mediaURL = config.MEDIA_URL;
 	var src;
 	if (info.mid)
 		src = mediaURL + '/mid/' + info.mid;
@@ -125,7 +124,7 @@ function image_preview(info) {
 }
 
 function maybe_mnemonic(ip) {
-	if (ip && mainConfig.IP_MNEMONIC) {
+	if (ip && config.IP_MNEMONIC) {
 		var authcommon = require('../admin/common');
 		ip = authcommon.ip_mnemonic(ip);
 	}

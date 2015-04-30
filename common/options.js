@@ -18,7 +18,7 @@ else {
 	options = require('../client/options');
 	state = require('../client/state');
 
-	mediaURL = imports.main.imagerConfig.MEDIA_URL;
+	mediaURL = imports.main.config.MEDIA_URL;
 	notMobile = !imports.main.isMobile;
 }
 

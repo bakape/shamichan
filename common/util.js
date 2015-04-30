@@ -259,7 +259,7 @@ exports.readable_dice = function(bit, d) {
 };
 
 exports.pick_spoiler = function(metaIndex) {
-	var imgs = imports.imagerConfig.SPOILER_IMAGES;
+	var imgs = imports.config.SPOILER_IMAGES;
 	var n = imgs.length;
 	var i;
 	if (metaIndex < 0)

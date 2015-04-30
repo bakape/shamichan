@@ -4,11 +4,9 @@ var _ = require('underscore'),
 	crypto = require('crypto'),
 	fs = require('fs'),
 	hooks = require('../util/hooks'),
-	imager = require('../imager/config'),
 	lang = require('../lang'),
 	options = require('../common/options'),
 	path = require('path'),
-	report = require('../report/config'),
 	vm = require('vm');
 
 _.templateSettings = {
@@ -35,7 +33,7 @@ exports.clients = {};
 exports.clientsByIP = {};
 
 function reload_hot_config(cb) {
-	fs.readFile('hot.js', 'UTF-8', function (err, js) {
+	fs.readFile('./config/hot.js', 'UTF-8', function (err, js) {
 		if (err)
 			cb(err);
 		var hot = {};
@@ -73,8 +71,6 @@ function reload_hot_config(cb) {
 			if (err)
 				return cb(err);
 			HOT.CLIENT_CONFIG = clientConfig;
-			HOT.CLIENT_IMAGER = clientImager;
-			HOT.CLIENT_REPORT = clientReport;
 			HOT.CLIENT_HOT = JSON.stringify(clientHot);
 			// Hash the hot configuration
 			exports.clientConfigHash = HOT.CLIENT_CONFIG_HASH = crypto
@@ -102,9 +98,7 @@ var clientConfig = JSON.stringify(_.pick(config,
 	'BOARDS',
 	'LANGS',
 	'DEFAULT_LANG',
-	'READ_ONLY_BOARDS'
-));
-var clientImager = JSON.stringify(_.pick(imager,
+	'READ_ONLY_BOARDS',
 	'WEBM',
 	'UPLOAD_URL',
 	'MEDIA_URL',
@@ -113,9 +107,9 @@ var clientImager = JSON.stringify(_.pick(imager,
 	'SPOILER_IMAGES',
 	'IMAGE_HATS',
 	'ASSETS_DIR',
-	'BANNERS'
+	'BANNERS',
+	'RECAPTCHA_PUBLIC_KEY'
 ));
-var clientReport = JSON.stringify(_.pick(report, 'RECAPTCHA_PUBLIC_KEY'));
 
 function reloadModClient(cb) {
 	getRevision('mod', function(err, js) {
@@ -207,7 +201,7 @@ function read_templates(cb) {
 
 function expand_templates(res) {
 	var templateVars = _.clone(HOT);
-	_.extend(templateVars, imager, config, make_navigation_html());
+	_.extend(templateVars, config, make_navigation_html());
 
 	templateVars.SCHEDULE = build_schedule(templateVars.SCHEDULE);
 	templateVars.FAQ = build_FAQ(templateVars.FAQ);

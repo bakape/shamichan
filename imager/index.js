@@ -1,5 +1,5 @@
 var async = require('async'),
-    config = require('./config'),
+    config = require('../config'),
     child_process = require('child_process'),
     db = require('./db'),
     etc = require('../util/etc'),

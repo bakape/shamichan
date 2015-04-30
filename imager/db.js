@@ -1,5 +1,5 @@
 var compare = require('./compare.node').hashCompareCpp,
-	 config = require('./config'),
+	 config = require('../config'),
     events = require('events'),
     fs = require('fs'),
     Muggle = require('../util/etc').Muggle,

@@ -1,4 +1,4 @@
-var config = {
+module.exports = {
 	LISTEN_PORT: 8000,
 // Host address to listen on. Use null for localhost
 	LISTEN_HOST: null,
@@ -6,17 +6,21 @@ var config = {
 	DEBUG: true,
 // API webserver listening port
 	API_PORT: 8002,
-// URL on which the API is hosted. This does not change anything serverside,
-// but simply points the client to where nginx or similar is proxying the API to
+/*
+ URL on which the API is hosted. This does not change anything serverside,
+ but simply points the client to where nginx or similar is proxying the API to
+ */
 	API_URL: '../api/',
 // Secure tripcode encryption salt
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
 	SOCKET_PATH: '/hana',
 // Honour X-Forwarded-For HTTP headers for client IP determination
 	TRUST_X_FORWARDED_FOR: true,
-// Use internal HTTP server to serve these resources.It is recommended to serve
-// the www directory with a dedicated webserver, like nginx, and set MEDIAURL
-// in imager/config.js to the served directory's address.
+/*
+ Use internal HTTP server to serve these resources.It is recommended to serve
+ the www directory with a dedicated webserver, like nginx, and set MEDIAURL
+ in imager/config.js to the served directory's address.
+ */
 	SERVE_STATIC_FILES: true,
 	SERVE_IMAGES: true,
 // Not preferred; use nginx (or other)'s gzipping
@@ -30,7 +34,7 @@ var config = {
 	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
 	DEFAULT_BOARD: 'moe',
 	READ_ONLY_BOARDS: ['archive', 'graveyard'],
-	// Add links to the navigator menu to custom URLs
+// Add links to the navigator menu to custom URLs
 	PSUEDO_BOARDS: [
 		['g', 'https://google.com']
 	],
@@ -52,18 +56,22 @@ var config = {
 	THREAD_EXPIRY: {
 		moe: 3600 * 24 * 7,
 		gar: 3600 * 24 * 7,
-		meta: 3600 * 24 * 7,
+		meta: 3600 * 24 * 7
 	},
 // Archive expired threads
 	ARCHIVE: false,
-// Permanently delete threads instead of archiving them. Existing archives will
-// not be removed.
-// Note: upkeep/clean.js is not needed with this option enabled
+/*
+ Permanently delete threads instead of archiving them. Existing archives will
+ not be removed.
+ Note: scripts/clean.js is not needed with this option enabled
+ */
 	VOLATILE: false,
 
-// Doushio uses Mozilla's Persona system for moderator authentication.
-// Set login emails here. Loging in can be done by either going to the /login/
-//  board or typing "misaki" into the email field.
+/*
+ Doushio uses Mozilla's Persona system for moderator authentication.
+ Set login emails here. Loging in can be done by either going to the /login/
+ board or typing "misaki" into the email field.
+ */
 	ADMIN_PERSONAS: ['lalc@doushio.com'],
 	MODERATOR_PERSONAS: ['mod@doushio.com'],
 // URL to pass to Mozilla's servers.
@@ -78,6 +86,11 @@ var config = {
 // r/a/dio integration (https://r-a-d.io)
 	RADIO: false,
 // Missle Launcher
-	PYU: false,
+	PYU: false
 };
-module.exports = config;
+
+// Source the other config files
+require('underscore').extend(module.exports,
+	require('./imager'),
+	require('./report')
+);

@@ -94,7 +94,7 @@ function pad2(n) {
 
 if (require.main == module) {
 	s3 = new AWS.S3().client;
-	s3.config.loadFromPath('upkeep/credentials.json');
+	s3.config.loadFromPath('scripts/credentials.json');
 	r = db.redis_client();
 
 	dump_rdb(function (err) {

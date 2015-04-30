@@ -7,10 +7,10 @@ module.exports = {
 		service: 'Gmail',
 		auth: {
 			user: "reports@doushio.com",
-			pass: "",
-		},
+			pass: ""
+		}
 	},
 
 	RECAPTCHA_PUBLIC_KEY: '',
-	RECAPTCHA_PRIVATE_KEY: '',
+	RECAPTCHA_PRIVATE_KEY: ''
 };

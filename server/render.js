@@ -2,7 +2,6 @@ var caps = require('./caps'),
 	common = require('../common/index'),
 	config = require('../config'),
 	db = require('../db'),
-	imager = require('../imager/config'),
 	lang = require('../lang/'),
 	STATE = require('./state'),
 	web = require('./web');
@@ -162,7 +161,7 @@ function threadsBottom(oneeSama) {
 }
 
 function make_link_rels(board, bits) {
-	var path = imager.MEDIA_URL + 'css/',
+	var path = config.MEDIA_URL + 'css/',
 		// Object of CSS versions
 		css = STATE.hot.css;
 
@@ -199,10 +198,10 @@ exports.write_board_head = function (out, board, nav, language) {
 };
 
 function imageBanner() {
-	var b = imager.BANNERS;
+	var b = config.BANNERS;
 	if (!b)
 		return '';
-	return `<img id="imgBanner" src="${imager.MEDIA_URL}banners/`
+	return `<img id="imgBanner" src="${config.MEDIA_URL}banners/`
 		+ b[Math.floor(Math.random() * b.length)] + '"><br>';
 }
 

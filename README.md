@@ -5,7 +5,6 @@ MIT licensed.
 board. Crashes are not uncommon as new features are added and patched. For more stable revisions, please [download the latest release](https://github.com/bakape/meguca/releases).**
 
 ##Setup
-
 * Install dependencies listed below
 * Sign up for reCAPTCHA
 * Run `npm install` to install npm deps and compile C++ addons
@@ -21,7 +20,6 @@ board. Crashes are not uncommon as new features are added and patched. For more 
 will automatically sync both ways. [More info](https://www.vagrantup.com/)
 
 ##Production
-
 * Have your webserver serve www/ (or wherever you've moved src, thumb, etc.)
 * Run `node server/server.js` for just the server
 * config.DAEMON support is broken for now
@@ -36,7 +34,6 @@ loaded into a running server with `node server/kill.js`
 `make upgrade` to recompile all dependancies
 
 ##Dependencies
-
 * ImageMagick
 * gcc, g++, make
 * libpng with development headers
@@ -44,7 +41,6 @@ loaded into a running server with `node server/kill.js`
 * redis
 
 ###Optional dependencies for various features
-
 * ffmpeg 2.2+ for WebM support
   * with libmp3lame for MP3
 * pngquant  2.3.0+ for PNG thumbnails
@@ -56,7 +52,6 @@ loaded into a running server with `node server/kill.js`
 process; useful in debug mode also)
 
 ## Documentation
-
 * [docs/api.md](https://github.com/bakape/meguca/blob/master/docs/api.md) - JSON API documentation
 * [docs/doushio.initscript.example](https://github.com/bakape/meguca/blob/master/docs/doushio.initscript.example) - example init script
 * [docs/filemap.md](https://github.com/bakape/meguca/blob/master/docs/file_map.md.md) - project file map
@@ -64,10 +59,9 @@ process; useful in debug mode also)
 file
 
 ##Standalone upkeep scripts
-
-* upkeep/backup.js - uploads rdb to S3
-* upkeep/backup.sh - MEGA backup script
-* upkeep/clean.js - deletes archived images
-* upkeep/purge_bans.sh - Removes all bans
-* upkeep/purge_mod_sessions.sh - Closes all active moderator sessions
-* upkeep/radio.js - icecast2 server integration
+* scripts/backup.js - uploads rdb to S3
+* scripts/backup.sh - MEGA backup script
+* scripts/clean.js - deletes archived images
+* scripts/purge_bans.sh - Removes all bans
+* scripts/purge_mod_sessions.sh - Closes all active moderator sessions
+* scripts/radio.js - icecast2 server integration

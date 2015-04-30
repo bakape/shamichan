@@ -89,7 +89,7 @@ postSM.act('draft + alloc -> alloc', function(msg) {
 });
 
 // Render image upload status messages
-main.dispatcher[common.IMAGE_STATUS] = function (msg) {
+main.dispatcher[common.IMAGE_STATUS] = function(msg) {
 	if (postForm)
 		postForm.dispatch(msg[0]);
 };
@@ -317,7 +317,7 @@ var ComposerView = Backbone.View.extend({
 	renderSpoilerPane: function(model, sp) {
 		this.$toggle.css('background-image', 'url("'
 			+ (sp ? spoilerPaneUrl(sp)
-				: main.imagerConfig.MEDIA_URL + 'css/ui/pane.png')
+				: main.config.MEDIA_URL + 'css/ui/pane.png')
 			+ '")');
 	},
 
@@ -333,7 +333,7 @@ var ComposerView = Backbone.View.extend({
 			type: 'file',
 			id: 'image',
 			name: 'image',
-			accept: main.imagerConfig.WEBM ? 'imager/*;.webm' : 'image/*',
+			accept: main.config.WEBM ? 'imager/*;.webm' : 'image/*',
 			change: $.proxy(this, 'onImageChosen')
 		});
 		this.$toggle = $('<input/>', {
@@ -358,7 +358,7 @@ var ComposerView = Backbone.View.extend({
 	},
 
 	// Cancel file upload
-	cancel: function () {
+	cancel: function() {
 		if (this.model.get('uploading')) {
 			this.$iframe.remove();
 			this.$iframe = $('<iframe></iframe>', {
@@ -373,7 +373,7 @@ var ComposerView = Backbone.View.extend({
 			this.finish();
 	},
 
-	onImageChosen: function () {
+	onImageChosen: function() {
 		if (this.model.get('uploading') || this.model.get('uploaded'))
 			return;
 		if (!this.$imageInput.val()) {
@@ -408,12 +408,12 @@ var ComposerView = Backbone.View.extend({
 					error = 'Unknown upload error.';
 				postForm.uploadError(error);
 			}
-			catch (e) {
+			catch(e) {
 				/*
 				 likely cross-origin restriction 
 				 wait before erroring in case the message shows up
 				 */
-				setTimeout(function () {
+				setTimeout(function() {
 					postForm.uploadFallbackMessage();
 				}, 500);
 			}
@@ -421,7 +421,7 @@ var ComposerView = Backbone.View.extend({
 		this.notifyUploading();
 	},
 
-	prepareUpload: function () {
+	prepareUpload: function() {
 		this.model.set('uploadStatus', uploadingMessage);
 		this.$input.focus();
 		const attrs = this.model.attributes;
@@ -432,18 +432,18 @@ var ComposerView = Backbone.View.extend({
 	 this is just a fallback message for when we can't tell, if there was an
 	 error due to cross-origin restrictions
 	 */
-	uploadFallbackMessage: function () {
+	uploadFallbackMessage: function() {
 		var a = this.model.attributes,
 			stat = a.uploadStatus;
 		if (!a.cancelled && a.uploading && (!stat || stat == uploadingMessage))
 			this.model.set('uploadStatus', 'Unknown result.');
 	},
 
-	notifyUploading: function () {
+	notifyUploading: function() {
 		this.model.set({uploading: true, cancelled: false});
 		this.$input.focus();
 	},
-	
+
 	resizeInput: function(val) {
 		if (typeof val !== 'string')
 			val = this.$input.val();
@@ -632,7 +632,7 @@ var ComposerView = Backbone.View.extend({
 
 		// TODO: Scrolling and locking to bottom
 
-		switch (event.which) {
+		switch(event.which) {
 			case 13:
 				event.preventDefault();
 			// fall-through
@@ -673,7 +673,7 @@ var ComposerView = Backbone.View.extend({
 	},
 
 	// Send any unstaged words
-	flushPending: function () {
+	flushPending: function() {
 		if (this.pending) {
 			main.send(this.pending);
 			this.pending = '';
@@ -694,7 +694,7 @@ var ComposerView = Backbone.View.extend({
 		this.model.set({spoiler: pick.index, nextSpoiler: pick.next});
 	},
 
-	onAllocation: function (msg) {
+	onAllocation: function(msg) {
 		const num = msg.num;
 		state.ownPosts[num] = num;
 		this.model.set({num: num});
@@ -709,7 +709,7 @@ var ComposerView = Backbone.View.extend({
 		/*
 		 TODO: Hide threads that are over THREADS_PER_PAGE. Also would need to be
 		 removed from syncs client and server-side. Hmm.
-		  */
+		 */
 
 		this.$el.attr('id', num);
 
@@ -731,7 +731,7 @@ var ComposerView = Backbone.View.extend({
 		 Ensures you are nagged at by the browser, when navigating away from an
 		 unfinished allocated post.
 		 */
-		window.onbeforeunload = function () {
+		window.onbeforeunload = function() {
 			return "You have an unfinished post.";
 		};
 	},
@@ -761,11 +761,11 @@ var ComposerView = Backbone.View.extend({
 
 		this.resizeInput();
 	},
-	
+
 	// Handle image upload status
 	dispatch: function(msg) {
 		const a = msg.arg;
-		switch (msg.t) {
+		switch(msg.t) {
 			case 'alloc':
 				this.onImageAllocation(a);
 				break;
@@ -778,7 +778,7 @@ var ComposerView = Backbone.View.extend({
 		}
 	},
 
-	onImageAllocation: function (msg) {
+	onImageAllocation: function(msg) {
 		const attrs = this.model.attributes;
 		if (attrs.cancelled)
 			return;
@@ -791,7 +791,7 @@ var ComposerView = Backbone.View.extend({
 		}
 	},
 
-	uploadError: function (msg) {
+	uploadError: function(msg) {
 		if (this.model.get('cancelled'))
 			return;
 		this.model.set({uploadStatus: msg, uploading: false});
@@ -799,13 +799,13 @@ var ComposerView = Backbone.View.extend({
 			this.$uploadForm.find('input[name=alloc]').remove();
 	},
 
-	uploadStatus: function (msg) {
+	uploadStatus: function(msg) {
 		if (this.model.get('cancelled'))
 			return;
 		this.model.set('uploadStatus', msg);
 	},
 
-	addReference: function (num, sel) {
+	addReference: function(num, sel) {
 		// If a >>link exists, put this one on the next line
 		var val = this.$input.val();
 		if (/^>>\d+$/.test(val)) {
@@ -849,22 +849,22 @@ var ComposerView = Backbone.View.extend({
 });
 
 function spoilerPaneUrl(sp) {
-	return main.imagerConfig.MEDIA_URL + 'spoil/spoil' + sp + '.png';
+	return main.config.MEDIA_URL + 'spoil/spoil' + sp + '.png';
 }
 
 // Preload the spoiler panes for smoother display
 function preloadPanes() {
-	main.imagerConfig.SPOILER_IMAGES.forEach(function(spoiler) {
+	main.config.SPOILER_IMAGES.forEach(function(spoiler) {
 		new Image().src = spoilerPaneUrl(spoiler);
 	});
 }
 
 function imageUploadURL() {
-	return (main.imagerConfig.UPLOAD_URL || '../upload/')
+	return (main.config.UPLOAD_URL || '../upload/')
 		+ '?id=' + state.page.get('connID');
 }
 
-window.addEventListener('message', function (event) {
+window.addEventListener('message', function(event) {
 	const msg = event.data;
 	if (msg !== 'OK' && postForm)
 		postForm.uploadError(msg);

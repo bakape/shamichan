@@ -61,14 +61,10 @@ gulp.task('client', function() {
 			]
 		}))
 		// Exclude these requires on the client
-		.exclude('../../config')
 		.exclude('../config')
-		.exclude('../hot')
 		.exclude('../lang/')
-		.exclude('../server/state')
-		.exclude('../imager/config')
-		.exclude('./hot');
-	
+		.exclude('../server/state');
+
 	return b.bundle()
 		// Transform into vinyl stream
 		.pipe(source('client.js'))

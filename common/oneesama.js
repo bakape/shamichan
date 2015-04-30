@@ -228,18 +228,18 @@ OS.spoiler_info = function(ind, toppu) {
 	var large = toppu;
 	var hd = toppu || this.thumbStyle != 'small';
 	return {
-		thumb: encodeURI(imports.imagerConfig.MEDIA_URL + 'spoil/spoiler' + (hd
+		thumb: encodeURI(imports.config.MEDIA_URL + 'spoil/spoiler' + (hd
 				? ''
 				: 's')
 			+ ind + '.png'),
-		dims: large ? imports.imagerConfig.THUMB_DIMENSIONS
-			: imports.imagerConfig.PINKY_DIMENSIONS
+		dims: large ? imports.config.THUMB_DIMENSIONS
+			: imports.config.PINKY_DIMENSIONS
 	};
 };
 
 OS.image_paths = function() {
 	if (!this._imgPaths) {
-		var mediaURL = imports.imagerConfig.MEDIA_URL;
+		var mediaURL = imports.config.MEDIA_URL;
 		this._imgPaths = {
 			src: mediaURL + 'src/',
 			thumb: mediaURL + 'thumb/',
@@ -359,7 +359,7 @@ OS.gazou_img = function(info, toppu, href) {
 		img += ' width="' + tw + '" height="' + th + '">';
 	else
 		img += '>';
-	if (imports.imagerConfig.IMAGE_HATS)
+	if (imports.config.IMAGE_HATS)
 		img = '<span class="hat"></span>' + img;
 	// Override src with href, if specified
 	img = util.new_tab_link(href || src, util.safe(img));

@@ -33,8 +33,7 @@ if (config.RADIO)
 	radio = require('radio');
 
 try {
-	var reportConfig = require('../report/config');
-	if (reportConfig.RECAPTCHA_PUBLIC_KEY)
+	if (config.RECAPTCHA_PUBLIC_KEY)
 		require('./report');
 } catch (e) {}
 require('./time');

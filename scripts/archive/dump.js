@@ -199,7 +199,7 @@ function load_state(cb) {
 if (require.main === module) (function () {
 	var op = parseInt(process.argv[2], 10), board = process.argv[3];
 	if (!op) {
-		console.error('Usage: node upkeep/dump.js <thread>');
+		console.error('Usage: node scripts/dump.js <thread>');
 		process.exit(-1);
 	}
 

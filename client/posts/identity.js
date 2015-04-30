@@ -1,5 +1,5 @@
 /*
-Name, email, tripcode and staff title persistence and postform propagation
+ Name, email, tripcode and staff title persistence and postform propagation
  */
 
 var $ = require('jquery'),
@@ -16,7 +16,8 @@ function load() {
 		if (id.email)
 			main.$email.val(id.email);
 	}
-	catch(e) {}
+	catch(e) {
+	}
 }
 
 var save = _.debounce(function() {
@@ -27,7 +28,7 @@ var save = _.debounce(function() {
 		if (email == 'misaki') {
 			$email.val('');
 			$('<scriptt/>', {
-				src: main.imagerConfig.MEDIA_URL + 'js/login.js?v=2'
+				src: main.config.MEDIA_URL + 'js/login.js?v=2'
 			}).appendTo('head');
 			email = false;
 		}

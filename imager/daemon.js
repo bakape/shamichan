@@ -1,7 +1,6 @@
 var async = require('async'),
 	common = require('../common/index'),
-	config = require('./config'),
-	configMain = require('../config'),
+	config = require('../config'),
 	crypto = require('crypto'),
 	child_process = require('child_process'),
 	etc = require('../util/etc'),
@@ -108,9 +107,9 @@ IU.handle_request = function (req, resp) {
 
 	// Set response language
 	// Check if client language is set and exixts on the server
-	this.lang = lang[configMain.LANGS[
+	this.lang = lang[config.LANGS[
 			web.parse_cookie(req.headers.cookie[lang])
-		] || configMain.DEFAULT_LANG];
+		] || config.DEFAULT_LANG];
 
 	this.client_id = parseInt(query.id, 10);
 	if (!this.client_id || this.client_id < 1) {
