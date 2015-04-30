@@ -1,15 +1,14 @@
-var common = require('../common/index'),
-	hook =require('../hooks').hook,
-	push = require('../server/okyaku').push,
-	OK = require('../server/okyaku'),
+var common = require('../common'),
+	hook =require('../util/hooks').hook,
+	OK = require('okyaku'),
 	request = require('request');
 
-var	json,
+var json,
 	songMap = [
 		[/Girls,? Be Ambitious/i, 'Joe'],
 		[/Super Special/i, 'Super Special'],
 		[/Turning Japanese/i, '\u540D\u7121\u3057'],
-		[/Make a Man Out of You|Be a Man/i, 'Cute Little Girl'],
+		[/Make a Man Out of You|Be a Man/i, 'Cute Little Girl']
 	];
 
 exports.name = null;
@@ -25,11 +24,11 @@ function parse(main) {
 	if (newJSON != json) {
 		json = newJSON;
 		// Push new radio info to clients
-		push([0, common.RADIO, json]);
+		OK.push([0, common.RADIO, json]);
 	}
 
 	// Test song name against regex
-	var name = null;
+	var name;
 	for (var i of songMap) {
 		if (!i[0].test(data.np))
 			continue;
@@ -40,7 +39,7 @@ function parse(main) {
 
 	// Build song queue
 	var queue = '';
-	for (var i = 0; i < main.queue.length; i++) {
+	for (i = 0; i < main.queue.length; i++) {
 		if (i > 0)
 			queue += ' | ';
 		queue += main.queue[i].meta;
@@ -60,12 +59,15 @@ hook('clientSynced', function(info, cb) {
 OK.dispatcher[common.RADIO] = function(msg, client) {
 	client.send([0, common.RADIO, json]);
 	return true;
-}
+};
 
 function fetch() {
 	// Query r/a/dio API
-	request.get({url: 'https://r-a-d.io/api', json: true,},
-		function (err, resp, json){
+	request.get({
+			url: 'https://r-a-d.io/api',
+			json: true
+		},
+		function (err, resp, json) {
 			if (err || resp.statusCode != 200 || !json || !json.main) {
 				exports.name = exports.queue = null;
 				return again();
@@ -74,7 +76,7 @@ function fetch() {
 			again();
 		}
 	);
-};
+}
 
 function again() {
 	setTimeout(fetch, 10000);

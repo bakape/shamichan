@@ -4,12 +4,12 @@
 
 var _ = require('underscore'),
     async = require('async'),
-    caps = require('../server/caps'),
-    db = require('../db'),
-    etc = require('../etc'),
+    caps = require('../../server/caps'),
+    db = require('../../db'),
+    etc = require('../../util/etc'),
     fs = require('fs'),
     joinPath = require('path').join,
-    render = require('../server/render'),
+    render = require('../../server/render'),
     util = require('util');
 
 var DUMP_DIR = 'www/archive';

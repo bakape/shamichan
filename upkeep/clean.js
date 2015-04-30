@@ -5,11 +5,11 @@
 var imgConfig = require('../imager/config'),
     crypto = require('crypto'),
     db = require('../db'),
-    etc = require('../etc'),
+    etc = require('../util/etc'),
     fs = require('fs'),
     path = require('path'),
     imager = require('../imager'),
-    tail = require('../tail'),
+    tail = require('../util/tail'),
     winston = require('winston');
 
 function Recycler() {

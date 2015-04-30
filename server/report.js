@@ -1,13 +1,13 @@
-var caps = require('../server/caps'),
-    config = require('./config'),
-    common = require('../common/index'),
-    db = require('../db'),
-	lang = require('../lang/'),
-    mainConfig = require('../config'),
-    msgcheck = require('../server/msgcheck'),
-    okyaku = require('../server/okyaku'),
-    recaptcha = require('recaptcha'),
-    winston = require('winston');
+var caps = require('./caps'),
+	config = require('./../report/config'),
+	common = require('../common'),
+	db = require('../db'),
+	lang = require('../lang'),
+	mainConfig = require('../config'),
+	msgcheck = require('./msgcheck'),
+	okyaku = require('./okyaku'),
+	recaptcha = require('recaptcha'),
+	winston = require('winston');
 
 var SMTP = require('nodemailer').createTransport('SMTP', config.SMTP);
 
@@ -15,7 +15,7 @@ const ERRORS = {
 	'invalid-site-private-key': "Sorry, the server isn't set up with reCAPTCHA properly.",
 	'invalid-request-cookie': "Something went wrong with our reCAPTCHA token. Please try again.",
 	'incorrect-captcha-sol': "Incorrect.",
-	'captcha-timeout': "Sorry, you took too long. Please try again.",
+	'captcha-timeout': "Sorry, you took too long. Please try again."
 };
 
 var safe = common.safe;
@@ -85,7 +85,7 @@ function send_report(reporter, board, op, num, body, html, cb) {
 		to: config.MAIL_TO.join(', '),
 		subject: noun + ' #' + num + ' reported by ' + reporter,
 		text: body,
-		html: common.flatten(html).join(''),
+		html: common.flatten(html).join('')
 	};
 	SMTP.sendMail(opts, function (err, resp) {
 		if (err)
@@ -144,7 +144,7 @@ okyaku.dispatcher[common.REPORT_POST] = function (msg, client) {
 	var data = {
 		remoteip: client.ident.ip,
 		challenge: msg[1],
-		response: msg[2].trim(),
+		response: msg[2].trim()
 	};
 	if (!data.challenge || !data.response)
 		return reply_error("Pretty please?");

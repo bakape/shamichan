@@ -1,11 +1,11 @@
 var common = require('../common/index'),
 	config = require('../config'),
 	db = require('../db'),
-    hooks = require('../hooks');
+    hooks = require('../util/hooks');
 
 var radio;
 if (config.RADIO)
-	radio = require('../radio/server');
+	radio = require('radio');
 
 var rollLimit = 5;
 var pyu_counter;

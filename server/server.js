@@ -11,14 +11,14 @@ var _ = require('underscore'),
     config = require('../config'),
     db = require('../db'),
     fs = require('fs'),
-    hooks = require('../hooks'),
+    hooks = require('../util/hooks'),
     imager = require('../imager'),
-    Muggle = require('../etc').Muggle,
+    Muggle = require('../util/etc').Muggle,
     okyaku = require('./okyaku'),
     persona = require('./persona'),
     render = require('./render'),
     STATE = require('./state'),
-    tripcode = require('./../tripcode/tripcode'),
+    tripcode = require('./tripcode/tripcode'),
     urlParse = require('url').parse,
     web = require('./web'),
     winston = require('winston');
@@ -27,17 +27,17 @@ require('../admin');
 if (!imager.is_standalone())
 	require('../imager/daemon'); // preload and confirm it works
 if (config.CURFEW_BOARDS)
-	require('../curfew/server');
+	require('./curfew');
 var radio;
 if (config.RADIO)
-	radio = require('../radio/server');
+	radio = require('radio');
 
 try {
 	var reportConfig = require('../report/config');
 	if (reportConfig.RECAPTCHA_PUBLIC_KEY)
-		require('../report/server');
+		require('./report');
 } catch (e) {}
-require('../time/server');
+require('./time');
 
 var RES = STATE.resources;
 

@@ -1,12 +1,12 @@
 var _ = require('underscore'),
-    caps = require('../server/caps'),
+    caps = require('./caps'),
     config = require('../config'),
     db = require('../db'),
-    hooks = require('../hooks'),
-    web = require('../server/web'),
+    hooks = require('../util/hooks'),
+    web = require('./web'),
     winston = require('winston');
 
-var RES = require('../server/state').resources;
+var RES = require('./state').resources;
 
 hooks.hook_sync('temporalAccessCheck', function (info) {
 	if (under_curfew(info.ident, info.board))
@@ -79,7 +79,7 @@ function curfew_starting_time(board) {
 		if (candidates[i] > now)
 			return candidates[i];
 	return null;
-};
+}
 
 function compare_dates(a, b) {
 	return a.getTime() - b.getTime();

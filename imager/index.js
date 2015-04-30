@@ -2,9 +2,9 @@ var async = require('async'),
     config = require('./config'),
     child_process = require('child_process'),
     db = require('./db'),
-    etc = require('../etc'),
+    etc = require('../util/etc'),
     fs = require('fs'),
-    hooks = require('../hooks'),
+    hooks = require('../util/hooks'),
     path = require('path'),
     winston = require('winston');
 

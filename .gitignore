@@ -18,8 +18,8 @@ node_modules/
 imager/tmp
 state
 imager/build
-tripcode/.build
-tripcode/build
+server/tripcode/.build
+server/tripcode/build
 upkeep/credentials.json
 www/css/*.css
 www/illya.mp4

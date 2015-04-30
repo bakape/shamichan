@@ -1,5 +1,5 @@
-var common = require('../common/index');
-var hooks = require('../hooks');
+var common = require('../common');
+var hooks = require('../util/hooks');
 
 function parse_timezone(tz) {
 	if (!tz && tz != 0)

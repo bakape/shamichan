@@ -12,15 +12,15 @@ exports.SERVER_DEPS = [
 	'etc.js',
 	'hooks.js',
 	'tail.js',
-	'curfew/server.js',
+	'curfew/curfew.js',
 	'imager/config.js',
 	'imager/daemon.js',
 	'imager/db.js',
 	'imager/index.js',
 	'imager/jobs.js',
-	'radio/server.js',
+	'radio/radio.js',
 	'report/config.js',
-	'report/server.js',
+	'report/report.js',
 	'server/amusement.js',
 	'server/api.js',
 	'server/archive.js',
@@ -34,7 +34,7 @@ exports.SERVER_DEPS = [
 	'server/server.js',
 	'server/state.js',
 	'server/web.js',
-	'time/server.js',
+	'time/time.js',
 	'tripcode/tripcode.cc'
 ];
 

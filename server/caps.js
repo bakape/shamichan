@@ -4,7 +4,7 @@ var async = require('async'),
     common = require('../common/index'),
     config = require('../config'),
     db = require('../db'),
-    hooks = require('../hooks');
+    hooks = require('../util/hooks');
 
 var RANGES = require('./state').dbCache.ranges;
 
