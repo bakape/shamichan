@@ -374,14 +374,11 @@ OS.readable_time = function(time) {
 	else
 	// XXX: would be nice not to construct new Dates all the time
 		offset = new Date().getTimezoneOffset() * -60 * 1000;
+	var d = new Date(time + offset);
 
-	return this.readableDate(new Date(time + offset));
-};
-
-OS.readableDate = function(d) {
-	return util.pad(d.getUTCDate()) + ' ' + this.lang.year[d.getUTCMonth()] + ' '
-		+ d.getUTCFullYear() + '(' + this.lang.week[d.getUTCDay()] + ')'
-		+ util.pad(d.getUTCHours()) + ':' + util.pad(d.getUTCMinutes());
+	return `${util.pad(d.getUTCDate())} ${this.lang.year[d.getUTCMonth()]} `
+		+ `${d.getUTCFullYear()}(${this.lang.week[d.getUTCDay()]})`
+		+ `${util.pad(d.getUTCHours())}:${util.pad(d.getUTCMinutes())}`;
 };
 
 // Readable elapsed time since post
