@@ -233,10 +233,10 @@ function expand_templates(res) {
 		templateVars.options_panel = buildOptions(lang[ln].opts);
 
 		// Inject language pack
-		templateVars.lang = {};
+		templateVars.lang = lang[ln].common;
 		for (var key in lang[ln].common) {
-			// Coerce to string, because you can not JSON.stringify() functions
-			templateVars.lang[key] = lang[ln].common[key].toString();
+			if (key instanceof Function)
+				templateVars.lang[key] = lang[ln].common[key].toString();
 		}
 		templateVars.lang = JSON.stringify(templateVars.lang);
 
