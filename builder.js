@@ -42,7 +42,7 @@ watch(deps.mod, function() {
 });
 watch(deps.state, reload_state);
 
-const serverExclude = new RegExp('\\.pid$|hot|admin\\/client.js$|\\.js$|'
+const serverExclude = new RegExp('\\.pid$|hot.js$|admin\\/client.js$|'
 	+ config.MEDIA_DIRS.tmp.replace('/', '\\/'));
 watch(deps.server, function(file) {
 	/*
