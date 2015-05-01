@@ -155,7 +155,7 @@ var opts = [
 	/* R/A/DIO NOW PLAYING BANNER */
 	{
 		id: 'nowPlaying',
-		load: notMobile && index.RADIO,
+		load: notMobile && imports.config.RADIO,
 		type: 'checkbox',
 		tab: 3,
 		default: true,
