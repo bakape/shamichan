@@ -209,6 +209,7 @@ var Hidamari = exports.Hidamari = {
 };
 
 var massExpander = exports.massExpander = new Backbone.Model({
+	id: 'massExpander',
 	expand: false
 });
 

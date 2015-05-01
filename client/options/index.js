@@ -16,6 +16,7 @@ catch(e) {
 }
 if (!options)
 	options = {};
+options.id = 'options';
 options = module.exports = new Backbone.Model(options);
 
 // Persists entire model to localStorage on change

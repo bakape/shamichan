@@ -6,6 +6,8 @@ var Backbone = require('backbone'),
 	state = require('../state');
 
 exports.Post = Backbone.Model.extend({
+	idAttribute: 'num',
+
 	initialize: function() {
 		state.posts.add(this);
 	},
@@ -14,12 +16,13 @@ exports.Post = Backbone.Model.extend({
 		this.stopListening();
 		// Remove from post collection
 		state.posts.trigger('destroy', this);
-	},
-
-	idAttribute: 'num'
+	}
 });
 
 exports.Thread = Backbone.Model.extend({
+	idAttribute: 'num',
+	replies: [],
+
 	initialize: function(args) {
 		if (args.replies) {
 			this.replies = args.replies;
@@ -41,8 +44,5 @@ exports.Thread = Backbone.Model.extend({
 			if (model)
 				model.destroy();
 		});
-	},
-
-	idAttribute: 'num',
-	replies: []
+	}
 });

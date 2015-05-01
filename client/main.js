@@ -39,6 +39,10 @@ exports.lang = window.lang;
  */
 exports.config = window.config;
 
+// Export Backbone instance for easier debugging
+if (exports.config.DEBUG)
+	window.Backbone = Backbone;
+
 exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
 // Store them here, to avoid requiring modules in the wrong order
