@@ -41,12 +41,15 @@ watch(deps.mod, function() {
 	build(['mod'], reload_state);
 });
 watch(deps.state, reload_state);
+
+const serverExclude = new RegExp('\\.pid$|hot|admin\\/client.js$|\\.js$|'
+	+ config.MEDIA_DIRS.tmp.replace('/', '\\/'));
 watch(deps.server, function(file) {
 	/*
 	 PID file is generated each start and `hot.js` should only triigger a
 	 reaload.
 	 */
-	if (!/\.pid$|hot\.js$/.test(file))
+	if (!serverExclude.test(file))
 		start_server();
 });
 
