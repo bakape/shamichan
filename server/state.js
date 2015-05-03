@@ -32,60 +32,7 @@ exports.clientConfigHash = '';
 exports.clients = {};
 exports.clientsByIP = {};
 
-function reload_hot_config(cb) {
-	fs.readFile('./config/hot.js', 'UTF-8', function (err, js) {
-		if (err)
-			cb(err);
-		var hot = {};
-		try {
-			vm.runInNewContext(js, hot);
-		}
-		catch (e) {
-			return cb(e);
-		}
-		if (!hot || !hot.hot)
-			return cb('Bad hot config.');
-
-		// Overwrite the original object just in case
-		Object.keys(HOT).forEach(function (k) {
-			delete HOT[k];
-		});
-		_.extend(HOT, hot.hot);
-
-		// Pass some of the config variables to the client
-		var clientHot = _.pick(HOT,
-			'ILLYA_DANCE',
-			'EIGHT_BALL',
-			'THREADS_PER_PAGE',
-			'ABBREVIATED_REPLIES',
-			'SUBJECT_MAX_LENGTH',
-			'EXCLUDE_REGEXP',
-			'ADMIN_ALIAS',
-			'MOD_ALIAS',
-			'SAGE_ENABLED',
-			'THREAD_LAST_N',
-			'BOARD_CSS'
-		);
-
-		reloadCSS(clientHot, function(err) {
-			if (err)
-				return cb(err);
-			HOT.CLIENT_CONFIG = clientConfig;
-			HOT.CLIENT_HOT = JSON.stringify(clientHot);
-			// Hash the hot configuration
-			exports.clientConfigHash = HOT.CLIENT_CONFIG_HASH = crypto
-				.createHash('MD5')
-				.update(JSON.stringify(clientHot))
-				.digest('hex');
-
-			read_exits('exits.txt', function() {
-				hooks.trigger('reloadHot', HOT, cb);
-			});
-		});
-	});
-}
-
-var clientConfig = JSON.stringify(_.pick(config,
+var clientConfig = exports.clientConfig = _.pick(config,
 	'IP_MNEMONIC',
 	'USE_WEBSOCKETS',
 	'SOCKET_PATH',
@@ -109,7 +56,60 @@ var clientConfig = JSON.stringify(_.pick(config,
 	'ASSETS_DIR',
 	'BANNERS',
 	'RECAPTCHA_PUBLIC_KEY'
-));
+);
+
+function reload_hot_config(cb) {
+	fs.readFile('./config/hot.js', 'UTF-8', function (err, js) {
+		if (err)
+			cb(err);
+		var hot = {};
+		try {
+			vm.runInNewContext(js, hot);
+		}
+		catch (e) {
+			return cb(e);
+		}
+		if (!hot || !hot.hot)
+			return cb('Bad hot config.');
+
+		// Overwrite the original object just in case
+		Object.keys(HOT).forEach(function (k) {
+			delete HOT[k];
+		});
+		_.extend(HOT, hot.hot);
+
+		// Pass some of the config variables to the client
+		var clientHot = exports.clientHotConfig = _.pick(HOT,
+			'ILLYA_DANCE',
+			'EIGHT_BALL',
+			'THREADS_PER_PAGE',
+			'ABBREVIATED_REPLIES',
+			'SUBJECT_MAX_LENGTH',
+			'EXCLUDE_REGEXP',
+			'ADMIN_ALIAS',
+			'MOD_ALIAS',
+			'SAGE_ENABLED',
+			'THREAD_LAST_N',
+			'BOARD_CSS'
+		);
+
+		reloadCSS(clientHot, function(err) {
+			if (err)
+				return cb(err);
+			HOT.CLIENT_CONFIG = JSON.stringify(clientConfig);
+			HOT.CLIENT_HOT = JSON.stringify(clientHot);
+			// Hash the hot configuration
+			exports.clientConfigHash = HOT.CLIENT_CONFIG_HASH = crypto
+				.createHash('MD5')
+				.update(JSON.stringify(clientHot))
+				.digest('hex');
+
+			read_exits('exits.txt', function() {
+				hooks.trigger('reloadHot', HOT, cb);
+			});
+		});
+	});
+}
 
 function reloadModClient(cb) {
 	getRevision('mod', function(err, js) {

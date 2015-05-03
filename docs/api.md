@@ -1,5 +1,4 @@
-Currently the read-only JSON API is hosted on a separate webserver on its own port (8002 by default), thus it is recommended to reverse proxy it as shown in the sample nginx configuration file.
-The API currently supports 4 modes of query.
+Currently the read-only JSON API is hosted on a separate webserver on its own port (8002 by default), thus it is recommended to reverse proxy it as shown in the sample nginx configuration file. The API currently supports 5 modes of query.
 
 ####Format
 |  Query  |              URL             |             Returns             |
@@ -8,6 +7,9 @@ The API currently supports 4 modes of query.
 |  thread | /api/thread/${thread number} |      array of post objects      |
 |  board  |   /api/board/${board name}   | array of arrays of post objects |
 | catalog |  /api/catalog/${board name}  |      array of post objects      |
+| config  |          /api/config         |client-side configuration object*|
+
+\* Formated as `{config, hot}`. For an explanation of each exposed variable see ./config
 
 ####Values
 |   Key   |                                                       Value                                                      | Optional | Exclusive |                   Example                  |
@@ -34,3 +36,4 @@ The API currently supports 4 modes of query.
 |  links  |        object containing "${post number}: ${thread number}" key-value pairs the current post is linking to       |    yes   |     no    |            {"18":"17","27":"26"}           |
 
 \* Will not be defined, when reading older posts created prior to 068b99941d7d60a0524d8252b814fd0053a0da1d (v0.10.0)
+

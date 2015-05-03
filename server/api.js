@@ -16,7 +16,7 @@ var r = global.redis;
 // On a different port for now. Will migrate everything to express some day
 app.listen(config.API_PORT);
 
-app.get(/api\/(post|thread)\/([0-9]+)\/?/, function(req, res){
+app.get(/api\/(post|thread)\/([0-9]+)\/?/, function(req, res) {
 	res.set(JSONHeaders);
 	var par = req.params,
 		isOP = db.TAGS[par[1]] !== undefined,
@@ -29,10 +29,12 @@ app.get(/api\/(post|thread)\/([0-9]+)\/?/, function(req, res){
 		if (err)
 			return res.send(err);
 		// Posts not found for some reason
-		if (!posts ||posts.length === 0)
+		if (!posts || posts.length === 0)
 			return res.sendStatus(404);
-		// Threads and posts come as an array inside and array, for interoperability with
-		// catalog and board requests
+		/*
+		 Threads and posts come as an array inside and array, for interoperability
+		 with catalog and board requests
+		 */
 		res.json(posts[0]);
 	}
 
@@ -44,9 +46,9 @@ app.get(/api\/(post|thread)\/([0-9]+)\/?/, function(req, res){
 		res.sendStatus(404);
 });
 
-app.get(/\/api\/(catalog|board)\/([a-z0-9]+)\/?/, function(req, res){
+app.get(/\/api\/(catalog|board)\/([a-z0-9]+)\/?/, function(req, res) {
 	res.set(JSONHeaders);
-	var par = req.params;;
+	var par = req.params;
 
 	if (invalid(req, par[1]))
 		return res.sendStatus(404);
@@ -74,51 +76,59 @@ app.get(/\/api\/(catalog|board)\/([a-z0-9]+)\/?/, function(req, res){
 	});
 });
 
+// Expose client-side configuration
+app.get(/\/api\/config/, function(req, res) {
+	res.set(JSONHeaders);
+	res.json({
+		config: state.clientConfig,
+		hot: state.clientHotConfig
+	});
+});
+
 // Check board existanace and access rights
-function invalid(req, board){
+function invalid(req, board) {
 	var forward = req.headers['x-forwarded-for'],
-		ip = config.TRUST_X_FORWARDED_FOR && forward ? forward : req.connection.remoteAddress;
-	if (!caps.can_access_board({ip: ip}, board))
-		return true;
-	return false;
-};
-
-function getPosts(nums, isOP, cb) {
-		var posts = [],
-			m = r.multi(),
-			keyHeader = isOP ? 'thread:' : 'post:',
-			key, links;
-
-		// Read all of the posts
-		for (var num of nums) {
-			key = keyHeader + num;
-			// Posts the current post is linking to
-			links = key + ':links';
-			m.hgetall(key);
-			m.hgetall(links);
-		}
-		m.exec(function(err, data){
-			if (err)
-				return cb(err);
-			var post, links;
-			for (var i = 0; i < data.length; i += 2) {
-				post = data[i];
-				links = data[i + 1];
-				if (!post)
-					continue;
-				if (links)
-					post.links = links;
-				pruneData(post);
-				posts.push(post);
-			}
-			// No posts retrieved
-			if (posts.length === 0)
-				return cb(null, null);
-			cb(null, posts);
-		});
+		ip = config.TRUST_X_FORWARDED_FOR && forward ? forward
+			: req.connection.remoteAddress;
+	return !caps.can_access_board({ip: ip}, board);
 }
 
-function pruneData(data){
+function getPosts(nums, isOP, cb) {
+	var posts = [],
+		m = r.multi(),
+		keyHeader = isOP ? 'thread:' : 'post:',
+		key, links;
+
+	// Read all of the posts
+	for (var num of nums) {
+		key = keyHeader + num;
+		// Posts the current post is linking to
+		links = key + ':links';
+		m.hgetall(key);
+		m.hgetall(links);
+	}
+	m.exec(function(err, data) {
+		if (err)
+			return cb(err);
+		var post, links;
+		for (var i = 0; i < data.length; i += 2) {
+			post = data[i];
+			links = data[i + 1];
+			if (!post)
+				continue;
+			if (links)
+				post.links = links;
+			pruneData(post);
+			posts.push(post);
+		}
+		// No posts retrieved
+		if (posts.length === 0)
+			return cb(null, null);
+		cb(null, posts);
+	});
+}
+
+function pruneData(data) {
 	// Privacy
 	delete data.ip;
 	// Useless on the client
@@ -138,7 +148,7 @@ function getThreads(nums, replyLimit, cb) {
 		m.lrange(key + ':dels', 0, -1);
 		m.lrange(key + ':posts', 0, -1);
 	}
-	m.exec(function(err, data){
+	m.exec(function(err, data) {
 		if (err)
 			return cb(err);
 		var op, links, dels, replies, allReplies = [];
@@ -153,7 +163,7 @@ function getThreads(nums, replyLimit, cb) {
 			if (links)
 				op.links = links;
 			if (dels.length > 0)
-				// Substract dels from replies
+			// Substract dels from replies
 				replies = _.difference(replies, dels);
 			op.replies = replies.length;
 			// Only show the last n replies
@@ -167,7 +177,7 @@ function getThreads(nums, replyLimit, cb) {
 		if (allReplies.length === 0)
 			return cb(null, threads);
 
-		getPosts(allReplies, false, function(err, replies){
+		getPosts(allReplies, false, function(err, replies) {
 			if (err)
 				return cb(err);
 			if (!replies)
