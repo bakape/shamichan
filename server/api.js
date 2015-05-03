@@ -6,7 +6,7 @@ var _ = require('underscore'),
 	state = require('./state');
 
 var app = express();
-var JSONHeaders = {
+const JSONHeaders = {
 	'Access-Control-Allow-Origin': '*',
 	'Content-Type': 'application/json; charset=UTF-8',
 	'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
@@ -16,14 +16,18 @@ var r = global.redis;
 // On a different port for now. Will migrate everything to express some day
 app.listen(config.API_PORT);
 
-app.get(/api\/(post|thread)\/([0-9]+)\/?/, function(req, res) {
+app.get(/api\/(post|thread)\/([0-9,]+)\/?/, function(req, res) {
 	res.set(JSONHeaders);
-	var par = req.params,
-		isOP = db.TAGS[par[1]] !== undefined,
-		board = config.BOARDS[(isOP ? db.TAGS[par[1]] : db.TAGS[db.OPs[par[1]]])];
+	const nums = req.params[1].split(',');
 
-	if (invalid(req, board))
-		return res.sendStatus(404);
+	// If don't have access to even one board, return 404
+	for (var num of nums) {
+		if (invalid(req, config.BOARDS[
+				isOP(num) ? db.TAGS[num] : db.TAGS[db.OPs[num]]
+			])
+		)
+			return res.sendStatus(404);
+	}
 
 	function respond(err, posts) {
 		if (err)
@@ -31,19 +35,13 @@ app.get(/api\/(post|thread)\/([0-9]+)\/?/, function(req, res) {
 		// Posts not found for some reason
 		if (!posts || posts.length === 0)
 			return res.sendStatus(404);
-		/*
-		 Threads and posts come as an array inside and array, for interoperability
-		 with catalog and board requests
-		 */
-		res.json(posts[0]);
+		res.json(posts);
 	}
 
-	if (par[0] == 'post')
-		getPosts([par[1]], isOP, respond);
-	else if (isOP)
-		getThreads([par[1]], Infinity, respond);
+	if (req.params[0] == 'post')
+		getPosts(nums, respond);
 	else
-		res.sendStatus(404);
+		getThreads(nums, Infinity, respond);
 });
 
 app.get(/\/api\/(catalog|board)\/([a-z0-9]+)\/?/, function(req, res) {
@@ -93,15 +91,18 @@ function invalid(req, board) {
 	return !caps.can_access_board({ip: ip}, board);
 }
 
-function getPosts(nums, isOP, cb) {
+function isOP(num) {
+	return db.TAGS[num] !== undefined;
+}
+
+function getPosts(nums, cb) {
 	var posts = [],
 		m = r.multi(),
-		keyHeader = isOP ? 'thread:' : 'post:',
 		key, links;
 
 	// Read all of the posts
 	for (var num of nums) {
-		key = keyHeader + num;
+		key = (isOP(num) ? 'thread:' : 'post:') + num;
 		// Posts the current post is linking to
 		links = key + ':links';
 		m.hgetall(key);
@@ -140,6 +141,9 @@ function pruneData(data) {
 function getThreads(nums, replyLimit, cb) {
 	var threads = [], m = r.multi(), key;
 	for (var num of nums) {
+		// Return 404, if even one of the threads is not an OP
+		if (!isOP(num))
+			return cb(null, null);
 		key = 'thread:' + num;
 		m.hgetall(key);
 		m.hgetall(key + ':links');
@@ -177,7 +181,7 @@ function getThreads(nums, replyLimit, cb) {
 		if (allReplies.length === 0)
 			return cb(null, threads);
 
-		getPosts(allReplies, false, function(err, replies) {
+		getPosts(allReplies, function(err, replies) {
 			if (err)
 				return cb(err);
 			if (!replies)
