@@ -50,14 +50,24 @@ gulp.task('client', function() {
 			'backbone'
 		]
 	})
-		// Transpile to ES5
+		/*
+		Trasnpile to ES5. We use already implemented native functionality, where
+		possible. These are mainly to prevent the minifier from throwing errors
+		and some syntactic sugar, that is not yet implemented. Nobody cares about
+		your ancient retarded browser.
+		 */
 		.transform(babelify.configure({
-			blacklist: [
-				'es6.constants',
-				'flow',
-				'react',
-				'reactCompat',
-				'regenerator'
+			whitelist: [
+				'es6.forOf',
+				'es6.arrowFunctions',
+				'es6.parameters.default',
+				'es6.parameters.rest',
+				'es6.spread',
+				'es6.properties.computed',
+				'es6.properties.shorthand',
+				'es6.spec.templateLiterals',
+				'es6.templateLiterals',
+				'strict'
 			]
 		}))
 		// Exclude these requires on the client
