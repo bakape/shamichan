@@ -21,15 +21,8 @@ exports.Post = Backbone.Model.extend({
 
 exports.Thread = Backbone.Model.extend({
 	idAttribute: 'num',
-	replies: [],
 
-	initialize: function(args) {
-		if (args.replies) {
-			this.replies = args.replies;
-			// Lighten up the model
-			this.unset('replies', {silent: true});
-		}
-
+	initialize: function() {
 		state.posts.add(this);
 		state.threads.add(this.get('num'));
 	},
@@ -39,7 +32,7 @@ exports.Thread = Backbone.Model.extend({
 		state.posts.trigger('destroy', this);
 
 		// Propagate model destruction to reply collection
-		this.replies.forEach(function(num) {
+		this.get('replies').forEach(function(num) {
 			var model = state.posts.get(num);
 			if (model)
 				model.destroy();

@@ -30,9 +30,8 @@ Extract.prototype.extractThread = function($section) {
 	var model = this.extractModel($section);
 	// Add all replies to the thread's reply collection
 	model.replies = replies;
-	var threadModel = new posts.models.Thread(model);
 	new posts.Section({
-		model: threadModel,
+		model: new posts.models.Thread(model),
 		el: $section[0]
 	});
 	/*
