@@ -184,10 +184,8 @@ var ComposerView = Backbone.View.extend({
 				$sec = $sec.closest('section');
 			if ($sec.is('section'))
 				this.callback(this.post_ref(num, extractNum($sec)));
-			else {
-				this.callback(common.safe('<a class="nope">&gt;&gt;'
-					+ num + '</a>'));
-			}
+			else
+				this.callback(common.safe(`<a class="nope">&gt;&gt;${num}</a>`));
 		});
 		// Initialise the renderer instance
 		this.imouto.callback = client.inject;
@@ -203,9 +201,10 @@ var ComposerView = Backbone.View.extend({
 
 	// Initial render
 	render: function(args) {
-		this.setElement((this.model.get('op') ? $('<article/>') : args.$sec)[0]);
+		const op = this.model.get('op');
+		this.setElement((op ? $('<article/>') : args.$sec)[0]);
 		// A defined op means the post is a reply, not a new thread
-		const op = !!this.model.get('op');
+		this.isThread = !op;
 
 		this.$buffer = $('<p/>');
 		this.$lineBuffer = $('<p/>');
@@ -240,7 +239,7 @@ var ComposerView = Backbone.View.extend({
 
 		this.$blockquote.append(this.$buffer, this.$lineBuffer, this.$input);
 		this.$el.append(this.$meta, this.$blockquote);
-		if (!op) {
+		if (this.isThread) {
 			this.$el.append('<label for="subject">Subject: </label>',
 				this.$subject);
 			this.$blockquote.hide();
@@ -251,21 +250,19 @@ var ComposerView = Backbone.View.extend({
 		main.oneeSama.trigger('draft', this.$el);
 		this.renderIdentity();
 		args.$dest.hide();
-		if (op)
-			this.$el.insertBefore(args.$dest);
-		else
-			this.$el.insertAfter(args.$dest);
 
-		if (op) {
-			this.resizeInput();
-			this.$input.focus();
-		}
-		else {
+		if (this.isThread) {
+			this.$el.insertAfter(args.$dest);
 			this.$el.after('<hr>');
 			this.$subject.focus();
 		}
-		main.$threads.find('aside').hide();
+		else {
+			this.$el.insertBefore(args.$dest);
+			this.resizeInput();
+			this.$input.focus();
+		}
 
+		main.$threads.find('aside').hide();
 		preloadPanes();
 	},
 
@@ -671,8 +668,8 @@ var ComposerView = Backbone.View.extend({
 			});
 			main.send([common.FINISH_POST]);
 			this.preserve = true;
-			// Append reply box to thread
-			this.$el.append(main.oneeSama.replyBox());
+			if (this.isThread)
+				this.$el.append(main.oneeSama.replyBox());
 		}
 		postSM.feed('done');
 	},
@@ -707,8 +704,7 @@ var ComposerView = Backbone.View.extend({
 		var header = $(common.flatten(main.oneeSama.atama(msg)).join(''));
 		this.$meta.replaceWith(header);
 		this.$meta = header;
-		const op = this.model.get('op');
-		if (op)
+		if (!this.isThread)
 			this.$el.addClass('editing');
 
 		/*
@@ -725,7 +721,7 @@ var ComposerView = Backbone.View.extend({
 			this.$uploadForm.append(this.$submit);
 		else
 			this.$blockquote.after(this.$submit);
-		if (!op) {
+		if (this.isThread) {
 			this.$subject.siblings('label').andSelf().remove();
 			this.$blockquote.show();
 			this.resizeInput();
@@ -835,7 +831,7 @@ var ComposerView = Backbone.View.extend({
 
 	remove: function() {
 		if (!this.preserve) {
-			if (!this.model.get('op'))
+			if (this.isThread)
 				this.$el.next('hr').remove();
 			this.$el.remove();
 		}
