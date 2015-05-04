@@ -26,7 +26,7 @@ Vagrant.configure(2) do |config|
 		echo "Installing npm modules..."
 		su vagrant -
 			cd /vagrant
-			npm install --no-bin-links --unsafe-perm
+			npm install --unsafe-perm
 		exit
 	SHELL
 	# Server
