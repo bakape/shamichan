@@ -522,9 +522,9 @@ OS.monomono = function(data, cls) {
 };
 
 OS.replyBox = function() {
-	return '<aside class="act"><a>' + this.lang.reply + '</a></aside>';
+	return `<aside class="act"><a>${this.lang.reply}</a></aside>`;
 };
 
 OS.newThreadBox = function() {
-	return '<aside class="act"><a>' + this.lang.newThread + '</a></aside>';
+	return `<aside class="act"><a>${this.lang.newThread}</a></aside>`;
 };

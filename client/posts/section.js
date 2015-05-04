@@ -15,7 +15,7 @@ var Section = module.exports = Backbone.View.extend({
 
 	initialize: function () {
 		// On the live page only
-		if (this.$el.is(':empty') && state.page.get('page') === -1)
+		if (this.$el.is(':empty') && state.page.get('live'))
 			this.render();
 		this.listenTo(this.model, {
 			'change:locked': this.renderLocked,
@@ -31,7 +31,11 @@ var Section = module.exports = Backbone.View.extend({
 		main.oneeSama.links = this.model.get('links');
 		this.setElement(main.oneeSama.monomono(this.model.attributes).join(''));
 		this.$el.insertAfter(main.$threads.children('aside:first'));
-		this.$el.after('<hr>');
+		// Insert reply box into the new thread
+		var $reply = $(main.oneeSama.replyBox());
+		if (state.ownPosts.hasOwnProperty(this.model.get('num')) || main.postForm)
+			$reply.hide();
+		this.$el.after($reply, '<hr>');
 		return this;
 	},
 
