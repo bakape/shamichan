@@ -665,9 +665,14 @@ var ComposerView = Backbone.View.extend({
 			this.imouto.fragment(this.$lineBuffer.text());
 			this.$buffer.replaceWith(this.$buffer.contents());
 			this.$lineBuffer.remove();
-			this.$blockquote.css({'margin-left': '', 'padding-left': ''});
+			this.$blockquote.css({
+				'margin-left': '',
+				'padding-left': ''
+			});
 			main.send([common.FINISH_POST]);
 			this.preserve = true;
+			// Append reply box to thread
+			this.$el.append(main.oneeSama.replyBox());
 		}
 		postSM.feed('done');
 	},
