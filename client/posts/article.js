@@ -114,7 +114,7 @@ function unloadTopPost(){
 	) {
 		return;
 	}
-	var	thread = state.getThread(threadNum);
+	var thread = state.getThread(threadNum);
 	if (thread.replies.length <= parseInt(m[1], 10) + 5)
 		return;
 	state.posts.get(thread.replies.shift()).destroy();

@@ -46,17 +46,6 @@ var PostCollection = Backbone.Collection.extend({
 });
 // All posts currently displayed
 var posts = exports.posts = new PostCollection();
-/*
-* All threads currently displayed. Threads are also posts.
-* This seperation is needed, not to search through all posts, to find a thread.
-*/
-var threads = exports.threads = new Set();
-
-exports.getThread = function(num) {
-	if (!threads.has(num))
-		return null;
-	return posts.get(num);
-};
 
 // Tracks the synchronisation counter of each thread
 exports.syncs = {};

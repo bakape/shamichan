@@ -181,19 +181,19 @@ dispatcher[common.DELETE_THREAD] = function(msg, op) {
 			return;
 	}
 
-	var model = state.getThread(op);
+	var model = state.posts.get(op);
 	if (model)
 		model.destroy();
 };
 
 dispatcher[common.LOCK_THREAD] = function(msg, op) {
-	var model = state.getThread(op);
+	var model = state.posts.get(op);
 	if (model)
 		model.set('locked', true);
 };
 
 dispatcher[common.UNLOCK_THREAD] = function(msg, op) {
-	var model = state.getThread(op);
+	var model = state.posts.get(op);
 	if (model)
 		model.set('locked', false);
 };

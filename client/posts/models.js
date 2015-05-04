@@ -19,14 +19,7 @@ exports.Post = Backbone.Model.extend({
 	}
 });
 
-exports.Thread = Backbone.Model.extend({
-	idAttribute: 'num',
-
-	initialize: function() {
-		state.posts.add(this);
-		state.threads.add(this.get('num'));
-	},
-
+exports.Thread = exports.Post.extend({
 	destroy: function() {
 		this.stopListening();
 		state.posts.trigger('destroy', this);

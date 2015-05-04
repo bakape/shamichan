@@ -48,7 +48,6 @@ function readingSteiner(url, event, needPush) {
 		 * don't fire anymore...
 		 */
 		main.$threads.empty();
-		state.threads.clear();
 		state.posts.models.forEach(function(model) {
 			model.destroy();
 		});
