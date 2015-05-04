@@ -288,8 +288,7 @@ OS.gazou = function(info, toppu) {
 
 	// We need da data for da client to walk da podium
 	return [
-		util.safe('<figure data-img="'), (imports.isNode ? escapeJSON(info) : ''),
-		util.safe('"><figcaption>'),
+		util.safe('<figure><figcaption>'),
 		caption, util.safe(' <i>('),
 		info.audio ? ("\u266B" + ', ') : '', // musical note
 		info.length ? (info.length + ', ') : '',
@@ -301,10 +300,6 @@ OS.gazou = function(info, toppu) {
 		util.safe('</figure>\n\t')
 	];
 };
-
-function escapeJSON(obj) {
-	return encodeURIComponent(JSON.stringify(obj));
-}
 
 function chibi(imgnm, src) {
 	var name = '', ext = '';
@@ -490,12 +485,9 @@ OS.monogatari = function(data, toppu) {
 	this.dice = data.dice;
 	var body = this.karada(data.body);
 	tale.body = [
-		util.safe(
-			'<blockquote' +
-			(imports.isNode ? ' data-body="' + escapeJSON(data.body) + '"'
-				: '') + '>'),
-		body, util.safe('</blockquote>'
-		)
+		util.safe('<blockquote>'),
+		body,
+		util.safe('</blockquote>')
 	];
 	if (data.image && !data.hideimg)
 		tale.image = this.gazou(data.image, toppu);
@@ -522,10 +514,8 @@ OS.mono = function(data) {
 OS.monomono = function(data, cls) {
 	if (data.locked)
 		cls = cls ? cls + ' locked' : 'locked';
-	var o = util.safe('<section id="' + data.num +
-			(cls ? '" class="' + cls : '') +
-			'" data-sync="' + (data.hctr || 0) +
-			(data.full ? '' : '" data-imgs="' + data.imgctr) + '">'),
+	var o = util.safe(`<section id="${data.num}"`
+			+ (cls ? ` class="${cls}"` : '') + '>'),
 		c = util.safe('</section>\n'),
 		gen = this.monogatari(data, true);
 	return util.flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);

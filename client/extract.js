@@ -9,6 +9,7 @@ var $ = require('jquery'),
 
 var Extract = module.exports = function() {
 	this.mine = state.mine.read_all();
+	this.json = JSON.parse(main.$threads.children('#postData').text());
 	var self = this;
 	main.$threads.children('section').each(function() {
 		self.extractThread($(this));
@@ -16,20 +17,15 @@ var Extract = module.exports = function() {
 };
 
 Extract.prototype.extractThread = function($section) {
-	var replies = [],
-		self = this;
+	var self = this;
 	$section.children('article').each(function() {
-		var model = self.extractModel($(this));
 		new posts.Article({
-			model: new posts.models.Post(model),
+			model: new posts.models.Post(self.extractModel(this)),
 			el: this
 		});
-		replies.push(model.num);
 	});
 	// Extract the model of the OP
-	var model = this.extractModel($section);
-	// Add all replies to the thread's reply collection
-	model.replies = replies;
+	var model = this.extractModel($section[0]);
 	new posts.Section({
 		model: new posts.models.Thread(model),
 		el: $section[0]
@@ -38,31 +34,13 @@ Extract.prototype.extractThread = function($section) {
 	 * Read the sync ID of the thread. Used later for syncronising with the
 	 * server.
 	 */
-	state.syncs[$section.attr('id')] = parseInt($section.data('sync'), 10);
+	state.syncs[model.num] = parseInt(model.hctr || 0, 10);
 };
 
-Extract.prototype.extractModel = function($el) {
-	var info = {num: parseInt($el.attr('id'), 10)};
-	var $header = $el.children('header'),
-		$b = $header.find('b');
-	if ($b.length)
-		info.name = $b.text();
-	var $code = $header.find('code');
-	if ($code.length)
-		info.trip = $code.text();
-	var $time = $header.find('time');
-	if ($time.length)
-		info.time = new Date($time.attr('datetime')).getTime();
-
-	var $fig = $el.children('figure');
-	if ($fig.length)
-		info.image = catchJSON($fig.data('img'));
-	info.body = catchJSON($el.children('blockquote').data('body'));
+Extract.prototype.extractModel = function(el) {
+	var info = this.json[el.getAttribute('id')];
+	// Did I make this post?
 	if (this.mine[info.num])
 		info.mine = true;
 	return info;
 };
-
-function catchJSON(string) {
-	return JSON.parse(decodeURIComponent(string));
-}

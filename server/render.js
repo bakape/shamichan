@@ -1,4 +1,5 @@
-var caps = require('./caps'),
+var Backbone = require('backbone'),
+	caps = require('./caps'),
 	common = require('../common/index'),
 	config = require('../config'),
 	db = require('../db'),
@@ -16,12 +17,6 @@ function tamashii(num) {
 	else
 		this.callback('>>' + num);
 }
-
-/*
- * XXX: This entire module is a mess of redundancy and repitition.
- * Everything but write_thread_html should be moved to OneeSama or the static
- * templates. Some things can be offloaded to the client.
- */
 
 exports.write_thread_html = function (reader, req, out, cookies, opts) {
 	var oneeSama = new common.OneeSama(tamashii);
@@ -57,11 +52,17 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 		});
 	}
 
+	/*
+	 Build backbone model skeletons server-side, so there is less work to be done
+	 on the client.
+	 NOTE: We could use soemthing like rendr.js in the future.
+	 */
+	var posts = {};
 	// Top and bottom borders of the <threads> tag
-	// Chache pagination, as not to render twice
-	var notReadOnly = !config.READ_ONLY
-			&& config.READ_ONLY_BOARDS.indexOf(opts.board) < 1,
-		pag;
+	// Cache pagination, as not to render twice
+	const notReadOnly = !config.READ_ONLY
+			&& config.READ_ONLY_BOARDS.indexOf(opts.board) < 1;
+	var pag;
 	reader.once('top', function(nav) {
 		// Navigation info is used to build pagination. None on thread pages
 		if (!nav)
@@ -75,6 +76,11 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 			out.write(oneeSama.newThreadBox());
 	});
 	reader.once('bottom', function() {
+		// Serialze post collection and add as inlined JSON
+		out.write('<script id="postData" type="application/json">'
+			+ JSON.stringify(posts)
+			+ '</script>'
+		);
 		out.write(pag || threadsBottom(oneeSama));
 	});
 
@@ -84,6 +90,10 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 		if (op_post.num in hidden)
 			return;
 		op_post.omit = omit;
+		op_post.image_omit = image_omit || 0;
+		op_post.replies = [];
+		posts[op_post.num] = op_post;
+
 		var full = oneeSama.full = !!opts.fullPosts;
 		oneeSama.op = opts.fullLinks ? false : op_post.num;
 		var first = oneeSama.monomono(op_post, full && 'full');
@@ -115,6 +125,9 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 			write_see_all_link(post.num);
 			write_see_all_link = null;
 		}
+		posts[post.num] = post;
+		// Add to parent threads replies
+		posts[post.op].replies.push(post.num);
 		out.write(oneeSama.mono(post));
 	});
 };
