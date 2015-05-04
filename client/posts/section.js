@@ -31,12 +31,12 @@ var Section = module.exports = Backbone.View.extend({
 		main.oneeSama.links = this.model.get('links');
 		this.setElement(main.oneeSama.monomono(this.model.attributes).join(''));
 		this.$el.insertAfter(main.$threads.children('hr:first'));
-		this.$el.after('<hr class="sectionHr"/>');
+		this.$el.after('<hr>');
 		return this;
 	},
 
 	renderHide: function (model, hide) {
-		this.$el.next('hr.sectionHr').andSelf().toggle(!hide);
+		this.$el.next('hr').andSelf().toggle(!hide);
 	},
 
 	renderLocked: function (model, locked) {
@@ -44,7 +44,7 @@ var Section = module.exports = Backbone.View.extend({
 	},
 
 	remove: function () {
-		this.$el.next('hr.sectionHr').andSelf().remove();
+		this.$el.next('hr').andSelf().remove();
 		this.stopListening();
 		return this;
 	},

@@ -71,7 +71,7 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 			pag = pagination(nav, oneeSama);
 			out.write(pag);
 		}
-		out.write('<hr class="sectionHr">\n');
+		out.write('<hr>\n');
 		if (nav && notReadOnly)
 			out.write(oneeSama.newThreadBox());
 	});
@@ -114,7 +114,7 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 		reader.once('endthread', function() {
 			if (notReadOnly)
 				out.write(oneeSama.replyBox());
-			out.write('</section><hr class="sectionHr">\n');
+			out.write('</section><hr>\n');
 		});
 	});
 

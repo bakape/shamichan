@@ -261,7 +261,7 @@ var ComposerView = Backbone.View.extend({
 			this.$input.focus();
 		}
 		else {
-			this.$el.after('<hr class="sectionHr"/>');
+			this.$el.after('<hr>');
 			this.$subject.focus();
 		}
 		main.$threads.find('aside').hide();
@@ -831,7 +831,7 @@ var ComposerView = Backbone.View.extend({
 	remove: function() {
 		if (!this.preserve) {
 			if (!this.model.get('op'))
-				this.$el.next('hr.sectionHr').remove();
+				this.$el.next('hr').remove();
 			this.$el.remove();
 		}
 		this.$sizer.remove();
