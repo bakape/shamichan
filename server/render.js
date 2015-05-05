@@ -59,8 +59,8 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 	var posts = {};
 	// Top and bottom borders of the <threads> tag
 	// Cache pagination, as not to render twice
-	const notReadOnly = !config.READ_ONLY
-			&& config.READ_ONLY_BOARDS.indexOf(opts.board) < 1;
+	const readOnly = config.READ_ONLY
+			|| config.READ_ONLY_BOARDS.indexOf(opts.board) >= 0;
 	var pag;
 	reader.once('top', function(nav) {
 		// Navigation info is used to build pagination. None on thread pages
@@ -71,7 +71,8 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 			out.write(pag);
 		}
 		out.write('<hr>\n');
-		if (nav && notReadOnly)
+		// Only render on 'live' board pages
+		if (nav && !readOnly && !/\/page\d+/.test(req.url))
 			out.write(oneeSama.newThreadBox());
 	});
 	reader.once('bottom', function() {
@@ -99,7 +100,7 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 		out.write(first.join(''));
 
 		reader.once('endthread', function() {
-			if (notReadOnly)
+			if (!readOnly)
 				out.write(oneeSama.replyBox());
 			out.write('</section><hr>\n');
 		});
