@@ -332,3 +332,21 @@ exports.parse_name = function(name) {
 exports.random_id = function() {
 	return Math.floor(Math.random() * 1e16) + 1;
 };
+
+/*
+ Template string tag function for HTML. Strips indentation and trailing newlines
+ */
+var html = exports.html = function(literals) {
+	var result = '',
+		i = 0;
+	while (i < literals.length) {
+		result += literals[i++]
+			// Strip all newlines and tabs. They should not be used in html anyway.
+			.replace(/[\t\n]+|/g, '')
+			// Concatenate spaces
+			.replace(/ {2,}/g, ' ');
+		if (i < arguments.length)
+			result += arguments[i];
+	}
+	return result;
+};

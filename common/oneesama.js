@@ -417,7 +417,7 @@ OS.post_ref = function(num, op, desc_html) {
 OS.post_nav = function(post) {
 	const n = post.num;
 	var o = post.op;
-	return util.safe(
+	return util.safe(util.html
 		`<nav>
 			<a href="${this.post_url(n, o)}" class="history">No.</a>
 			<a href="${this.post_url(n, o)}" class="quote">${n}</a>

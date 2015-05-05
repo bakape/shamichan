@@ -161,10 +161,10 @@ var opts = [
 		default: true,
 		exec: function(toggle) {
 			if (toggle)
-				banner.view.clearRadio();
-			// Query the server for current stream info
-			else
+				// Query the server for current stream info
 				imports.main.send([index.RADIO]);
+			else
+				banner.view.clearRadio();
 		}
 	}
 ];
