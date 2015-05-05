@@ -1,12 +1,20 @@
 /*
  * Common methods to both OP and regular posts
  */
-var imager = require('./imager'),
+var $ = require('jquery'),
+	imager = require('./imager'),
 	main = require('../main'),
 	options = require('../options'),
+	posting = require('./posting'),
 	time = require('../time');
 
 module.exports = {
+	events: {
+		'click >figure>figcaption>.imageSrc': 'revealThumbnail',
+		'click >figure>a': 'imageClicked',
+		'click >header>nav>a.quote': 'quotePost'
+	},
+
 	initCommon: function(){
 		this.listenTo(this.model, {
 			'change:hide': this.renderHide,
@@ -61,6 +69,31 @@ module.exports = {
 		// No need to change, if no name
 		else if (name)
 			$el.text(name);
+	},
+
+	quotePost: function(e) {
+		e.preventDefault();
+
+		// TODO: Set highlighted post
+
+		/*
+		 Make sure the selection both starts and ends in the quoted post's
+		 blockquote
+		 */
+		var sel,
+			$post = this.$el,
+			gsel = getSelection();
+		const num = this.model.get('num');
+
+		function isInside(p) {
+			var $el = $(gsel[p] && gsel[p].parentElement);
+			return $el.closest('blockquote').length
+				&& $el.closest('article, section').is($post);
+		}
+
+		if (isInside('baseNode') && isInside('focusNode'))
+			sel = gsel.toString();
+		posting.openPostBox(num);
+		main.postForm.addReference(num, sel);
 	}
 };
-

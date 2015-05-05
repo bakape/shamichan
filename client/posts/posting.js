@@ -870,6 +870,12 @@ function imageUploadURL() {
 		+ '?id=' + state.page.get('connID');
 }
 
+var openPostBox = exports.openPostBox = function(num) {
+	var $a = main.$threads.find('#' + num);
+	postSM.feed('new',
+		$a.is('section') ? $a.children('aside') : $a.siblings('aside'));
+};
+
 window.addEventListener('message', function(event) {
 	const msg = event.data;
 	if (msg !== 'OK' && postForm)

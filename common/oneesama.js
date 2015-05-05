@@ -396,9 +396,9 @@ OS.relative_time = function(then, now) {
 	return ago(Math.floor(months / 12), this.lang.unit_year);
 };
 
-OS.post_url = function(num, op, quote) {
+OS.post_url = function(num, op) {
 	op = op || num;
-	return (this.op == op ? '' : op) + (quote ? '#q' : '#') + num;
+	return `${this.op == op ? '' : op}#${num}`;
 };
 
 OS.post_ref = function(num, op, desc_html) {
@@ -409,23 +409,31 @@ OS.post_ref = function(num, op, desc_html) {
 		ref += ' \u2192';
 	else if (num == op && this.op == op)
 		ref += ' (OP)';
-	return util.safe('<a href="' + this.post_url(num, op, false) + '"'
-		+ ' class="history">' + ref + '</a>');
+	return util.safe(
+		`<a href="${this.post_url(num, op)}" class="history">${ref}</a>`
+	);
 };
 
 OS.post_nav = function(post) {
-	var n = post.num, o = post.op;
-	return util.safe('<nav><a href="' + this.post_url(n, o, false) +
-		'">No.</a><a href="' + this.post_url(n, o, true) +
-		'">' + n + '</a></nav>');
+	const n = post.num;
+	var o = post.op;
+	return util.safe(
+		`<nav>
+			<a href="${this.post_url(n, o)}" class="history">No.</a>
+			<a href="${this.post_url(n, o)}" class="quote">${n}</a>
+		</nav>`
+	);
 };
 
 OS.expansion_links_html = function(num) {
-	return ' &nbsp; ' + util.action_link_html(num, this.lang.expand, null,
-			'history')
+	return ' &nbsp; '
+		+ util.action_link_html(num, this.lang.expand, null, 'history')
 		+ ' '
-		+ util.action_link_html(num + '?last=' + this.lastN,
-			this.lang.last + '&nbsp;' + this.lastN, null, 'history');
+		+ util.action_link_html(`${num}?last=${this.lastN}`,
+			`${this.lang.last}&nbsp;${this.lastN}`,
+			null,
+			'history'
+		);
 };
 
 OS.atama = function(data) {
@@ -444,7 +452,7 @@ OS.atama = function(data) {
 			header.push(' ');
 	}
 	if (data.trip)
-		header.push(util.safe('<code>' + data.trip + '</code>'));
+		header.push(util.safe(`<code>'${data.trip}</code>`));
 	if (auth)
 		header.push(' ## ' + (auth == 'Admin' ? imports.hotConfig.ADMIN_ALIAS
 				: imports.hotConfig.MOD_ALIAS));
@@ -456,12 +464,17 @@ OS.atama = function(data) {
 		header.push(util.safe('</a>'));
 	}
 	// Format according to client's relative post timestamp setting
-	var title = this.rTime ? this.readable_time(data.time) : '';
-	var text = this.rTime ? this.relative_time(data.time, new Date().getTime())
-		: this.readable_time(data.time);
-	header.push(util.safe(' <time datetime="' + datetime(data.time) + '"' +
-			'title="' + title + '"' +
-			'>' + text + '</time> '),
+	var title, text;
+	if (this.rTime) {
+		title = this.readable_time(data.time);
+		text = this.relative_time(data.time, new Date().getTime());
+	}
+	else {
+		title = '';
+		text = this.readable_time(data.time)
+	}
+	header.push(util.safe(` <time datetime="${datetime(data.time)}" `
+			+ `title="${title}">${text}'</time> `),
 		this.post_nav(data));
 	if (!this.full && !data.op) {
 		var ex = this.expansion_links_html(data.num);

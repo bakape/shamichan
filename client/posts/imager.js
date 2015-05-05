@@ -9,11 +9,6 @@ var $ = require('jquery'),
 	options = require('../options');
 
 var Hidamari = exports.Hidamari = {
-	events: {
-		'click >figure>figcaption>.imageSrc': 'revealThumbnail',
-		'click >figure>a': 'imageClicked'
-	},
-
 	renderImage: function (model, image) {
 		var $fig = this.$el.children('figure');
 		// Remove image on mod deletion
