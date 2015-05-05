@@ -31,7 +31,7 @@ module.exports = {
 			'change:anonymise': this.toggleAnonymisation
 		});
 		this.listenTo(imager.massExpander, {
-			'change:expand': this.toggleImageExpansion,
+			'change:expand': this.toggleImageExpansion
 		});
 	},
 

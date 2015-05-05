@@ -208,14 +208,22 @@ var Hidamari = exports.Hidamari = {
 	}
 };
 
-var massExpander = exports.massExpander = new Backbone.Model({
+// Expand all images
+var ExpanderModel = Backbone.Model.extend({
 	id: 'massExpander',
-	expand: false
+
+	toggle: function() {
+		const expand = !this.get('expand');
+		this.set('expand', expand);
+		main.$threads
+			.find('#expandImages')
+			.text(`${expand ? 'Contract' : 'Expand'} Images`);
+	}
 });
 
-$('#expandImages').click(function(e){
+var massExpander = exports.massExpander = new ExpanderModel();
+
+main.$threads.on('click', '#expandImages', function(e){
 	e.preventDefault();
-	const expand = massExpander.get('expand');
-	$(e.target).text((expand ? 'Expand' : 'Contract')+' Images');
-	massExpander.set('expand', !expand);
+	massExpander.toggle();
 });

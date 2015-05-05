@@ -335,18 +335,18 @@ opts.push(illyaDance,
 		id: 'new',
 		default: 78
 	}, {
-	id: 'togglespoiler',
-	default: 73
-}, {
-	id: 'textSpoiler',
-	default: 68
-}, {
-	id: 'done',
-	default: 83
-}, {
-	id: 'expandAll',
-	default: 69
-}
+		id: 'togglespoiler',
+		default: 73
+	}, {
+		id: 'textSpoiler',
+		default: 68
+	}, {
+		id: 'done',
+		default: 83
+	}, {
+		id: 'expandAll',
+		default: 69
+	}
 ].forEach(function(short) {
 		short.type = 'shortcut';
 		short.tab = 4;

@@ -122,11 +122,9 @@ function handle_shortcut(event) {
 			}
 			break;
 		case opts.done:
-			if (postForm) {
-				if (!postForm.submit.attr('disabled')) {
+			if (postForm && !postForm.$submit.attr('disabled')) {
 					postForm.finish();
 					used = true;
-				}
 			}
 			break;
 		// Insert text spoiler
@@ -141,7 +139,7 @@ function handle_shortcut(event) {
 			}
 			break;
 		case opts.expandAll:
-			imager.massExpander.set('expand', !massExpander.get('expand'));
+			imager.massExpander.toggle();
 			used = true;
 			break;
 	}
@@ -692,8 +690,11 @@ var ComposerView = Backbone.View.extend({
 			this.model.set({spoiler: 0});
 			return;
 		}
-		const pick = pick_spoiler(attrs.nextSpoiler);
-		this.model.set({spoiler: pick.index, nextSpoiler: pick.next});
+		const pick = common.pick_spoiler(attrs.nextSpoiler);
+		this.model.set({
+			spoiler: pick.index,
+			nextSpoiler: pick.next
+		});
 	},
 
 	onAllocation: function(msg) {

@@ -19,23 +19,29 @@ if (!options)
 options.id = 'options';
 options = module.exports = new Backbone.Model(options);
 
-// Persists entire model to localStorage on change
-options.on('change', function() {
-	try {
-		localStorage.options = JSON.stringify(options);
-	}
-	catch(e) {}
-});
-
 // Require these after the options backbone model has been created
-var	background = require('../background'),
+var background = require('../background'),
 	banner = require('../banner'),
 	main = require('../main'),
 	optionsCommon = require('../../common/options'),
 	state = require('../state');
 
-var optionsCollection = new Backbone.Collection();
-const tabs = ['General', 'Style', 'ImageSearch', 'Fun', 'Shortcuts'];
+var OptionsCollection = Backbone.Collection.extend({
+	id: 'optionsCollection',
+
+	persist: function() {
+		var opts = {};
+		this.models.forEach(function(model) {
+			const val = model.getValue();
+			if (val === model.get('default'))
+				return;
+			opts[model.get('storedId')] = val;
+		});
+		localStorage.options = JSON.stringify(opts);
+	}
+});
+
+var optionsCollection = new OptionsCollection();
 
 // Controller template for each individual option
 var OptionModel = Backbone.Model.extend({
@@ -56,29 +62,35 @@ var OptionModel = Backbone.Model.extend({
 			id = 'board.' + state.page.get('board') + '.' + id;
 		this.set('storedId', id);
 
+		const val = this.getValue();
+		options.set(id, val);
 		if (obj.exec !== undefined) {
 			var opts = {};
 			opts['change:' + id] = this.execListen;
 			this.listenTo(options, opts);
 			// Execute with current value
 			if (obj.execOnStart !== false)
-				obj.exec(this.getValue());
+				obj.exec(val);
 		}
 		optionsCollection.add(this);
 	},
+
 	// Set the option, taking into acount board specifics
 	setStored: function(val) {
 		options.set(this.get('storedId'), val);
 	},
+
 	// Return default, if unset
 	getValue: function() {
 		const val = options.get(this.get('storedId'));
 		return val === undefined ? this.get('default') : val;
 	},
+
 	validate: function(val) {
 		const valid = this.get('validation');
 		return valid ? valid(val) : true;
 	},
+
 	// Exec wrapper for listening events
 	execListen: function(model, val) {
 		this.get('exec')(val);
@@ -139,12 +151,14 @@ var OptionsView = Backbone.View.extend({
 			// 'image' type simply falls through, as those don't need to be set
 		}, this);
 	},
+
 	events: {
 		'click .option_tab_sel>li>a': 'switchTab',
 		'change': 'applyChange',
 		'click #export': 'export',
 		'click #import': 'import'
 	},
+
 	switchTab: function(event) {
 		event.preventDefault();
 		var $a = $(event.target);
@@ -157,6 +171,7 @@ var OptionsView = Backbone.View.extend({
 		$li.removeClass('tab_sel');
 		$li.filter('.' + $a.data('content')).addClass('tab_sel');
 	},
+
 	// Propagate options panel changes to the models and localStorage
 	applyChange: function(event) {
 		var $target = $(event.target),
@@ -176,23 +191,28 @@ var OptionsView = Backbone.View.extend({
 			// FIXME
 			return; //background.genCustom(target.result);
 		else if (type == 'shortcut')
-			val = $target.val().charCodeAt(0);
+			val = $target.val().toUpperCase().charCodeAt(0);
 		else
 			val = $target.val();
 
 		if (!model.validate(val))
 			return $target.val('');
 		model.setStored(val);
+		optionsCollection.persist();
 	},
+
 	// Dump options to file
 	export: function() {
 		var a = document.createElement('a');
 		a.setAttribute('href', window.URL
-			.createObjectURL(new Blob([JSON.stringify(localStorage)],
-				{type: 'octet/stream'})));
+			.createObjectURL(new Blob([JSON.stringify(localStorage)], {
+				type: 'octet/stream'
+			}))
+		);
 		a.setAttribute('download', 'meguca-config.json');
 		a.click();
 	},
+
 	// Import options from file
 	import: function(event) {
 		// Proxy to hidden file input
