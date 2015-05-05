@@ -54,12 +54,13 @@ module.exports = {
 
 	// Self-delusion tripfag filter
 	toggleAnonymisation: function(model, toggle) {
-		var $el = this.$el.find('>header>b'),
-			name = this.model.get('name');
+		var $el = this.$el.find('>header>b');
+		const name = this.model.get('name');
 		if (toggle)
-			$el.text(common.ANON);
+			$el.text(main.lang.anon);
 		// No need to change, if no name
 		else if (name)
 			$el.text(name);
 	}
 };
+
