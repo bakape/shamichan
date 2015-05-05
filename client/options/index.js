@@ -65,9 +65,7 @@ var OptionModel = Backbone.Model.extend({
 		const val = this.getValue();
 		options.set(id, val);
 		if (obj.exec !== undefined) {
-			var opts = {};
-			opts['change:' + id] = this.execListen;
-			this.listenTo(options, opts);
+			this.listenTo(options, 'change:' + id, this.execListen);
 			// Execute with current value
 			if (obj.execOnStart !== false)
 				obj.exec(val);
