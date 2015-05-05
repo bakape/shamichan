@@ -30,7 +30,7 @@ if (config.CURFEW_BOARDS)
 	require('./curfew');
 var radio;
 if (config.RADIO)
-	radio = require('radio');
+	radio = require('./radio');
 
 try {
 	if (config.RECAPTCHA_PUBLIC_KEY)
