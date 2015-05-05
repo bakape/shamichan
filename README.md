@@ -8,7 +8,7 @@ board. Crashes are not uncommon as new features are added and patched. For more 
 * Install dependencies listed below
 * Sign up for reCAPTCHA
 * Run `npm install` to install npm deps and compile C++ addons
-* Configure config.js, hot.js, imager/config.js and report/config.js
+* Configure the files in `./config/`
 * Run `node builder.js` to run an auto-reloading development server
 
 ##Automatic cross-platform development setup:
