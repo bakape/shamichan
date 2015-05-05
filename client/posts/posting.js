@@ -67,6 +67,10 @@ postSM.act('ready + new -> draft', function($aside) {
 	else
 		$sec = $('<section/>');
 
+	// Shift OP's replies on board pages
+	if (op)
+		state.posts.get(op).trigger('shiftReplies', true);
+
 	main.postModel = new ComposerModel({op: op});
 	main.postForm = postForm = new ComposerView({
 		model: main.postModel,

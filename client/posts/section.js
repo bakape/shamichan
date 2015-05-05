@@ -62,11 +62,13 @@ var Section = module.exports = Backbone.View.extend({
 	 Remove the top reply on board pages, if over limit, when a new reply is
 	 added
 	 */
-	shiftReplies: function() {
+	shiftReplies: function(postForm) {
 		if (state.page.get('thread'))
 			return;
-		var replies = this.model.get('replies');
-		const lim = state.hotConfig.get('ABBREVIATED_REPLIES');
+		var replies = this.model.get('replies'),
+			lim = state.hotConfig.get('ABBREVIATED_REPLIES');
+		if (postForm)
+			lim--;
 		var post;
 		for (var i = replies.length; i > lim; i--) {
 			post = state.posts.get(replies.shift());
