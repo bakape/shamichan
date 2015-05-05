@@ -1,6 +1,6 @@
 var common = require('../common'),
 	hook =require('../util/hooks').hook,
-	OK = require('okyaku'),
+	OK = require('./okyaku'),
 	request = require('request');
 
 var json,

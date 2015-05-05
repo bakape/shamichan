@@ -5,7 +5,7 @@ var common = require('../common/index'),
 
 var radio;
 if (config.RADIO)
-	radio = require('radio');
+	radio = require('./radio');
 
 var rollLimit = 5;
 var pyu_counter;
