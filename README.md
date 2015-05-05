@@ -8,7 +8,7 @@ board. Crashes are not uncommon as new features are added and patched. For more 
 * Install dependencies listed below
 * Sign up for reCAPTCHA
 * Run `npm install` to install npm deps and compile C++ addons
-* Configure the files in `./config/`
+* Configure the files in `config/`
 * Run `node builder.js` to run an auto-reloading development server
 
 ##Automatic cross-platform development setup:
@@ -23,7 +23,7 @@ will automatically sync both ways. [More info](https://www.vagrantup.com/)
 * Have your webserver serve www/ (or wherever you've moved src, thumb, etc.)
 * Run `node server/server.js` for just the server
 * config.DAEMON support is broken for now
-* You can update hot.js on-the-fly with `node server/kill.js`
+* You can update `config/hot.js` on-the-fly with `node server/kill.js`
 * To remove compiled server dependancies run `make clean`
 * Similarly `make client_clean` removes compiled client files
 
