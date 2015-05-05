@@ -152,6 +152,13 @@ var inject = exports.inject = function(frag) {
 };
 
 // Make the text spoilers toggle revealing on click
+main.$doc.on('click', 'del', function (event) {
+	if (!event.spoilt) {
+		event.spoilt = true;
+		$(event.target).toggleClass('reveal');
+	}
+});
+// For mobile
 var touchable_spoiler_tag = exports.touchable_spoiler_tag = function(del) {
 	del.html = '<del onclick="void(0)">';
 };
