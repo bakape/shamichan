@@ -393,12 +393,10 @@ function identify(stream, cb) {
 			const m = out.toString().trim().match(/ (\d+)x(\d+)/);
 			if (!m)
 				return cb('dims_fail');
-			else {
-				return cb(null, {
-					width: parseInt(m[1], 10),
-					height: parseInt(m[2], 10)
-				});
-			}
+			return cb(null, {
+				width: parseInt(m[1], 10),
+				height: parseInt(m[2], 10)
+			});
 		}
 	);
 }
