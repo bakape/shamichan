@@ -212,7 +212,7 @@ exports.parse_dice = function(frag) {
 	}
 };
 
-exports.serverTime = function() {
+var serverTime = exports.serverTime = function() {
 	var d = new Date().getTime();
 	// On the server or time difference not compared yet
 	if (imports.isNode || !imports.main.serverTimeOffset)
