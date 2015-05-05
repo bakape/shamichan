@@ -15,11 +15,16 @@ var Section = module.exports = Backbone.View.extend({
 
 	initialize: function () {
 		// On the live page only
-		if (this.$el.is(':empty') && state.page.get('live'))
+		if (this.$el.is(':empty'))
 			this.render();
+		else
+			this.renderOmit(null, this.model.get('omit'));
+
 		this.listenTo(this.model, {
 			'change:locked': this.renderLocked,
-			destroy: this.remove
+			remove: this.remove,
+			shiftReplies: this.shiftReplies,
+			'change:omit': this.renderOmit
 		});
 		this.listenToOnce(this.model, {
 			'add': this.renderRelativeTime
@@ -40,7 +45,7 @@ var Section = module.exports = Backbone.View.extend({
 	},
 
 	renderHide: function (model, hide) {
-		this.$el.next('hr').andSelf().toggle(!hide);
+		this.$el.next('hr').andBack().toggle(!hide);
 	},
 
 	renderLocked: function (model, locked) {
@@ -48,7 +53,7 @@ var Section = module.exports = Backbone.View.extend({
 	},
 
 	remove: function () {
-		this.$el.next('hr').andSelf().remove();
+		this.$el.next('hr').addBack().remove();
 		this.stopListening();
 		return this;
 	},
@@ -58,7 +63,41 @@ var Section = module.exports = Backbone.View.extend({
 	 added
 	 */
 	shiftReplies: function() {
+		if (state.page.get('thread'))
+			return;
+		var replies = this.model.get('replies');
+		const lim = state.hotConfig.get('ABBREVIATED_REPLIES');
+		var post;
+		for (var i = replies.length; i > lim; i--) {
+			post = state.posts.get(replies.shift());
+			if (!post)
+				continue;
+			/*
+			 Nothing tracks changes on image_omit, but we want omit changes to
+			 properly trigger change events.
+			  */
+			if (post.get('image'))
+				this.model.attributes.image_omit++;
+			this.model.set('omit', this.model.get('omit') + 1 );
+			post.remove();
+		}
+	},
 
+	// Posts and images omited indicator
+	renderOmit: function(model, omit) {
+		if (omit === 0)
+			return;
+		if (!this.$omit) {
+			this.$omit = $('<span class="omit"/>')
+				.insertAfter(this.$el.children('blockquote'));
+		}
+		const page = state.page.attributes;
+		var html = main.oneeSama.lang.abbrev_msg(omit,
+			this.model.get('image_omit'),
+			// [See All] link URL
+			page.thread && page.href.split('?')[0]
+		);
+		this.$omit.html(html);
 	}
 });
 

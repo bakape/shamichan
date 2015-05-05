@@ -44,8 +44,6 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		state.mine.write(msg.num, state.mine.now());
 	}
 
-	// TODO: Shift the parrent sections replies on board pages
-
 	// TODO: Bump thread to top, if not saging
 
 	new posts[isThread ? 'Section' : 'Article']({
@@ -54,6 +52,14 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		id: msg.num,
 		el: el
 	});
+
+	if (isThread)
+		return;
+	var parent = state.posts.get(msg.op);
+	if (!parent)
+		return;
+	parent.get('replies').push(msg.num);
+	parent.trigger('shiftReplies');
 };
 
 // Move thread to the archive board
@@ -163,7 +169,7 @@ dispatcher[common.DELETE_POSTS] = function(msg) {
 	msg.forEach(function(num) {
 		var model = state.posts.get(num);
 		if (model)
-			model.destroy();
+			model.remove();
 
 		// TODO: Free up post focus, if any
 	});
@@ -183,7 +189,7 @@ dispatcher[common.DELETE_THREAD] = function(msg, op) {
 
 	var model = state.posts.get(op);
 	if (model)
-		model.destroy();
+		model.remove();
 };
 
 dispatcher[common.LOCK_THREAD] = function(msg, op) {

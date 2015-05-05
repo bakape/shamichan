@@ -28,8 +28,8 @@ var Article = module.exports = Backbone.View.extend({
 			'change:backlinks': this.renderBacklinks,
 			'change:editing': this.renderEditing,
 			'change:image': this.renderImage,
-			removeSelf: this.bumplessRemove,
-			destroy: this.remove
+			//removeSelf: this.bumplessRemove,
+			remove: this.remove
 		});
 		this.initCommon();
 		/* TEMP: Disabled for now
@@ -51,8 +51,8 @@ var Article = module.exports = Backbone.View.extend({
 		main.oneeSama.links = this.model.get('links');
 		this.setElement(main.oneeSama.mono(this.model.attributes));
 		// Insert into section
-		$('#' + this.model.get('op'))
-			.children('blockquote,.omit,form,article[id]:last')
+		main.$threads.children('#' + this.model.get('op'))
+			.children('blockquote, .omit, form, article[id]:last')
 			.last()
 			.after(this.$el);
 		return this;
@@ -68,8 +68,7 @@ var Article = module.exports = Backbone.View.extend({
 			return this;
 		}
 		if (!$list.length)
-			$list = $('<small/>', {text: 'Replies:'}).appendTo(
-					this.$el);
+			$list = $('<small/>', {text: 'Replies:'}).appendTo(this.$el);
 		// TODO: Sync up DOM gracefully instead of clobbering
 		$list.find('a').remove();
 		backlinks.forEach(function (num) {
@@ -98,7 +97,7 @@ var Article = module.exports = Backbone.View.extend({
 			$(window).scrollTop(pos - this.$el.outerHeight() - 2);
 		Posts.remove(this.model);
 		this.remove();
-	},
+	}
 });
 
 // Extend with common mixins
@@ -117,7 +116,7 @@ function unloadTopPost(){
 	var thread = state.getThread(threadNum);
 	if (thread.replies.length <= parseInt(m[1], 10) + 5)
 		return;
-	state.posts.get(thread.replies.shift()).destroy();
+	state.posts.get(thread.replies.shift()).remove();
 	var $omit = $('.omit');
 	if (!$omit.length){
 		$omit = $('\t<span/>', {'class': 'omit'}).text(main.lang.abbrev_msg(1));

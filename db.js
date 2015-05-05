@@ -2,19 +2,18 @@ var _ = require('underscore'),
     async = require('async'),
     cache = require('./server/state').dbCache,
     caps = require('./server/caps'),
-    common = require('./common/index'),
+    common = require('./common'),
     config = require('./config'),
     events = require('events'),
     fs = require('fs'),
     hooks = require('./util/hooks'),
     hot = require('./server/state').hot,
+// set up hooks
     imager = require('./imager'),
     Muggle = require('./util/etc').Muggle,
     tail = require('./util/tail'),
     util = require('util'),
     winston = require('winston');
-
-var imager = require('./imager'); /* set up hooks */
 
 var OPs = exports.OPs = cache.OPs;
 var TAGS = exports.TAGS = cache.opTags;
@@ -1490,8 +1489,7 @@ Reader.prototype.get_thread = function (tag, num, opts) {
 				return self.emit('error', err);
 			if (deadNums)
 				nums = merge_posts(nums, deadNums, abbrev);
-			var omit = Math.max(total - abbrev, 0);
-			self.emit('thread', opPost, omit);
+			self.emit('thread', opPost, Math.max(total - abbrev, 0));
 			self._get_each_reply(tag, 0, nums, opts);
 		});
 	});

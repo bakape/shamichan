@@ -49,7 +49,7 @@ function readingSteiner(url, event, needPush) {
 		 */
 		main.$threads.empty();
 		state.posts.models.forEach(function(model) {
-			model.destroy();
+			model.remove();
 		});
 		// Prevent old threads from syncing
 		state.syncs = {};

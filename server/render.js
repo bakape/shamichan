@@ -1,5 +1,4 @@
-var Backbone = require('backbone'),
-	caps = require('./caps'),
+var caps = require('./caps'),
 	common = require('../common/index'),
 	config = require('../config'),
 	db = require('../db'),
@@ -84,32 +83,20 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 		out.write(pag || threadsBottom(oneeSama));
 	});
 
-	var write_see_all_link;
-
-	reader.on('thread', function (op_post, omit, image_omit) {
+	reader.on('thread', function (op_post, omit) {
 		if (op_post.num in hidden)
 			return;
-		op_post.omit = omit;
-		op_post.image_omit = image_omit || 0;
+		op_post.omit = omit || 0;
+		// Currently only calculated client-side
+		op_post.image_omit = 0;
 		op_post.replies = [];
 		posts[op_post.num] = op_post;
 
-		var full = oneeSama.full = !!opts.fullPosts;
+		const full = oneeSama.full = !!opts.fullPosts;
 		oneeSama.op = opts.fullLinks ? false : op_post.num;
 		var first = oneeSama.monomono(op_post, full && 'full');
 		first.pop();
 		out.write(first.join(''));
-
-		write_see_all_link = omit && function (first_reply_num) {
-			var o = oneeSama.lang.abbrev_msg(omit, image_omit);
-			if (opts.loadAllPostsLink) {
-				var url = '' + op_post.num;
-				if (first_reply_num)
-					url += '#' + first_reply_num;
-				o += ' '+common.action_link_html(url, oneeSama.lang.see_all);
-			}
-			out.write('\t<span class="omit">'+o+'</span>\n');
-		};
 
 		reader.once('endthread', function() {
 			if (notReadOnly)
@@ -121,10 +108,6 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 	reader.on('post', function (post) {
 		if (post.num in hidden || post.op in hidden)
 			return;
-		if (write_see_all_link) {
-			write_see_all_link(post.num);
-			write_see_all_link = null;
-		}
 		posts[post.num] = post;
 		// Add to parent threads replies
 		posts[post.op].replies.push(post.num);

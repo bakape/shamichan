@@ -48,11 +48,17 @@ const lang = {
 		return lang.pluralize(time, unit) + ' atrás';
 	},
 	// 47 respuestas y 21 imágenes omitidas
-	abbrev_msg:  function(omit, img_omit) {
-		return lang.pluralize(omit, 'respuesta')
-			+ (img_omit ? ' y ' + lang.pluralize(img_omit, 'imagen') : '')
-			+ ' omitida.';
-	},
+	abbrev_msg:  function(omit, img_omit, url) {
+		var html = lang.pluralize(omit, 'respuesta');
+		if (img_omit)
+			html += ` y ${lang.pluralize(img_omit, 'imagen')}`;
+		html += ' omitida';
+		if (url) {
+			html += ` <span class="act"><a href="${url}" class="history">`
+				+ `${lang.see_all}</a></span>`;
+		}
+		return html;
+	}
 };
 
 module.exports = lang;
