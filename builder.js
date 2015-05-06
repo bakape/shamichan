@@ -31,11 +31,13 @@ var reload_state = _.debounce(function() {
 		server.kill('SIGHUP');
 }, 2000);
 
-for (var task of ['client', 'css', 'mod']) {
+['client', 'css', 'mod'].forEach(function(task) {
 	watch(deps[task], _.debounce(function() {
 		build([task], reload_state);
 	}), 5000);
-}
+});
+
+
 watch(deps.state, reload_state);
 
 const serverExclude = new RegExp('\\.pid$|hot.js$|admin\\/client.js$|'
