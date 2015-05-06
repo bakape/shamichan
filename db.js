@@ -1814,10 +1814,3 @@ function hmget_obj(r, key, keys, cb) {
 		cb(null, result);
 	});
 }
-
-// Remove expired duplicate image hashes
-function cleanUpDups(){
-	global.redis.zremrangebyscore('imageDups', 0, Date.now());
-}
-
-setInterval(cleanUpDups, 60000);
