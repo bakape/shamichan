@@ -31,15 +31,11 @@ var reload_state = _.debounce(function() {
 		server.kill('SIGHUP');
 }, 2000);
 
-watch(deps.client, function() {
-	build(['client'], reload_state);
-});
-watch(deps.css, function() {
-	build(['css'], reload_state);
-});
-watch(deps.mod, function() {
-	build(['mod'], reload_state);
-});
+for (var task of ['client', 'css', 'mod']) {
+	watch(deps[task], _.debounce(function() {
+		build([task], reload_state);
+	}), 5000);
+}
 watch(deps.state, reload_state);
 
 const serverExclude = new RegExp('\\.pid$|hot.js$|admin\\/client.js$|'
