@@ -132,7 +132,7 @@ function enable_multi_selecting() {
 }
 
 function select_post($post) {
-	$post.find('.select-handle:first').addClass('selected');
+	$post.find('.select-handle').first().addClass('selected');
 }
 
 function make_selection_handle() {
@@ -376,7 +376,7 @@ var Addresses = Backbone.Collection.extend({
 window.addrs = new Addresses;
 
 function hook_up_address(model, $post) {
-	var $a = $post.find('a.mod.addr:first');
+	var $a = $post.find('a.mod.addr').first();
 	if (!$a.length)
 		return;
 	var ip = $a.prop('title') || $a.text();

@@ -156,7 +156,7 @@ function handle_shortcut(event) {
 
 // Gets the top <hr> of <threads>
 function $ceiling() {
-	return main.$threads.children('hr:first');
+	return main.$threads.children('hr').first();
 }
 
 var ComposerView = Backbone.View.extend({
@@ -287,7 +287,7 @@ var ComposerView = Backbone.View.extend({
 		var email = main.$email.val().trim();
 		if (common.is_noko(email))
 			email = '';
-		var $tag = this.$meta.children('a:first');
+		var $tag = this.$meta.children('a').first();
 		if (email) {
 			$tag.attr({
 				href: 'mailto:' + email,

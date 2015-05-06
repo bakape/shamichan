@@ -45,7 +45,7 @@ module.exports = {
 
 	renderRelativeTime: function(){
 		if (main.oneeSama.rTime){
-			var $time = this.$el.find('time:first');
+			var $time = this.$el.find('time').first();
 			const t = time.date_from_time_el($time[0]).getTime();
 			var timer = setInterval(function(){
 				$time.html(main.oneeSama.relative_time(t, new Date().getTime()));
