@@ -37,14 +37,11 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		if (main.postForm && main.postForm.el)
 			el = main.postForm.el;
 	}
-
 	// Add to my post set
 	if (myNonce) {
 		msg.mine = true;
 		state.mine.write(msg.num, state.mine.now());
 	}
-
-	// TODO: Bump thread to top, if not saging
 
 	new posts[isThread ? 'Section' : 'Article']({
 		// Create model
@@ -60,6 +57,9 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		return;
 	parent.get('replies').push(msg.num);
 	parent.trigger('shiftReplies');
+	// Bump thread to page top
+	if (!common.is_sage(msg.email) && state.page.get('live'))
+		parent.trigger('bump');
 };
 
 // Move thread to the archive board

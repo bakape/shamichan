@@ -24,7 +24,8 @@ var Section = module.exports = Backbone.View.extend({
 			'change:locked': this.renderLocked,
 			remove: this.remove,
 			shiftReplies: this.shiftReplies,
-			'change:omit': this.renderOmit
+			'change:omit': this.renderOmit,
+			bump: this.bumpThread
 		});
 		this.listenToOnce(this.model, {
 			'add': this.renderRelativeTime
@@ -35,13 +36,17 @@ var Section = module.exports = Backbone.View.extend({
 	render: function() {
 		main.oneeSama.links = this.model.get('links');
 		this.setElement(main.oneeSama.monomono(this.model.attributes).join(''));
-		this.$el.insertAfter(main.$threads.children('aside:first'));
+		this.insertToTop();
 		// Insert reply box into the new thread
 		var $reply = $(main.oneeSama.replyBox());
 		if (state.ownPosts.hasOwnProperty(this.model.get('num')) || main.postForm)
 			$reply.hide();
 		this.$el.after($reply, '<hr>');
 		return this;
+	},
+
+	insertToTop: function() {
+		this.$el.insertAfter(main.$threads.children('aside').first());
 	},
 
 	renderHide: function (model, hide) {
@@ -100,6 +105,15 @@ var Section = module.exports = Backbone.View.extend({
 			page.thread && page.href.split('?')[0]
 		);
 		this.$omit.html(html);
+	},
+
+	// Move thread to the top of the page
+	bumpThread: function() {
+		// Have a postform open in this section
+		if (main.postModel && main.postModel.get('op') == this.model.get('num'))
+			return;
+		this.$el.detach();
+		this.insertToTop();
 	}
 });
 

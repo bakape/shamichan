@@ -459,9 +459,12 @@ OS.atama = function(data) {
 	this.trigger('headerName', {header: header, data: data});
 	header.push(util.safe('</b>'));
 	if (data.email) {
-		header.unshift(util.safe('<a class="email" href="mailto:'
-			+ encodeURI(data.email) + '" target="_blank">'));
-		header.push(util.safe('</a>'));
+		header.unshift(util.safe(util.html
+			`<a class="email"
+				href="mailto:${encodeURI(data.email)}"
+				target="_blank">
+			</a>`
+		));
 	}
 	// Format according to client's relative post timestamp setting
 	var title, text;
@@ -471,10 +474,13 @@ OS.atama = function(data) {
 	}
 	else {
 		title = '';
-		text = this.readable_time(data.time)
+		text = this.readable_time(data.time);
 	}
-	header.push(util.safe(` <time datetime="${datetime(data.time)}" `
-			+ `title="${title}">${text}'</time> `),
+	header.push(util.safe(util.html
+			` <time datetime="${datetime(data.time)}" title="${title}">
+				${text}
+			</time> `
+		),
 		this.post_nav(data));
 	if (!this.full && !data.op) {
 		var ex = this.expansion_links_html(data.num);

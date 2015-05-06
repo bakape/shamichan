@@ -144,8 +144,10 @@ exports.is_noko = function(email) {
 };
 
 exports.is_sage = function(email) {
-	return imports.hotConfig.SAGE_ENABLED && email &&
-		email.indexOf('@') == -1 && /sage/i.test(email);
+	return imports.hotConfig.SAGE_ENABLED
+		&& email
+		&& email.indexOf('@') == -1
+		&& /sage/i.test(email);
 };
 
 // TODO: Move to admin.js, when I get to it
