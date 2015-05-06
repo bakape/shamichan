@@ -12,28 +12,9 @@
 		var config = {{CLIENT_CONFIG}},
 			hotConfig = {{CLIENT_HOT}},
 			configHash = '{{CLIENT_CONFIG_HASH}}',
-			// Language definitions
 			lang = {{lang}};
-		// Set the theme. This needs to be done as fast as possible, therefore
-		// is inline.
-		(function () {
-			var BOARD;
-			BOARD = location.pathname.match(/^\/(.+?)\//)[1];
-			var options;
-			try {
-				options = JSON.parse(localStorage.options);
-			}
-			catch (e) { }
-			if (!options)
-				options = {};
-
-			var link = document.getElementById('theme'),
-				m = link.href.match(/^(.*\/)[^\/]+?\.css$/),
-				theme = options['board.'+BOARD+'.theme'];
-			if (m && theme)
-				link.href = m[1] + hotConfig.css[theme + '.css'];
-		})();
 	</script>
+	<script src="{{MEDIA_URL}}js/setup.js?v=7"></script>
 </head>
 <fieldset id="identity" class="bmodal">
 <label for="name" class="ident">{{name}}</label> <input id="name" name="name"><br>
