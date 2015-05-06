@@ -2,14 +2,24 @@
 General post backbone models
  */
 
-var Backbone = require('backbone'),
+var _ = require('underscore'),
+	Backbone = require('backbone'),
 	state = require('../state');
 
 exports.Post = Backbone.Model.extend({
 	idAttribute: 'num',
 
 	initialize: function() {
+		this.initCommon();
+	},
+
+	// Initialisation logic common to both replies and threads
+	initCommon: function() {
 		state.posts.add(this);
+		const links = this.get('links');
+		if (links)
+			this.forwardLinks(null, links);
+		this.listenTo(this, 'change:links', this.forwardLinks);
 	},
 
 	remove: function() {
@@ -18,6 +28,21 @@ exports.Post = Backbone.Model.extend({
 		this.trigger('remove');
 		// Remove from post collection
 		state.posts.remove(this);
+	},
+
+	// Pass this post's links to the central model
+	forwardLinks: function(model, links) {
+		var old, newLinks;
+		const num = this.get('num'),
+			op = this.get('op') || num;
+		for (var key in links) {
+			if (!links.hasOwnProperty(key))
+				continue;
+			old = state.linkerCore.get(key);
+			newLinks = old ? _.clone(old) : {};
+			newLinks[num] = op;
+			state.linkerCore.set(key, newLinks);
+		}
 	}
 });
 
@@ -31,7 +56,7 @@ exports.Thread = exports.Post.extend({
 		}
 		else
 			this.getImageOmit();
-		state.posts.add(this);
+		this.initCommon();
 	},
 
 	remove: function() {

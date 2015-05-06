@@ -41,11 +41,12 @@ exports.hotConfig = new Backbone.Model(window.hotConfig);
 // Hash of all the config variables
 exports.configHash = window.configHash;
 
-var PostCollection = Backbone.Collection.extend({
-	idAttribute: 'num'
-});
 // All posts currently displayed
-var posts = exports.posts = new PostCollection();
+var posts = exports.posts = new Backbone.Collection();
+// Contains inter-post linking relations
+exports.linkerCore = new Backbone.Model({
+	id: 'linkerCore'
+});
 
 // Tracks the synchronisation counter of each thread
 exports.syncs = {};

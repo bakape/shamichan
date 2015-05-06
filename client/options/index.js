@@ -27,8 +27,6 @@ var background = require('../background'),
 	state = require('../state');
 
 var OptionsCollection = Backbone.Collection.extend({
-	id: 'optionsCollection',
-
 	persist: function() {
 		var opts = {};
 		this.models.forEach(function(model) {

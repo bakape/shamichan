@@ -57,11 +57,11 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 	 NOTE: We could use soemthing like rendr.js in the future.
 	 */
 	var posts = {};
-	// Top and bottom borders of the <threads> tag
-	// Cache pagination, as not to render twice
 	const readOnly = config.READ_ONLY
 			|| config.READ_ONLY_BOARDS.indexOf(opts.board) >= 0;
+	// Cache pagination, as not to render twice
 	var pag;
+	// Top and bottom borders of the <threads> tag
 	reader.once('top', function(nav) {
 		// Navigation info is used to build pagination. None on thread pages
 		if (!nav)
@@ -77,9 +77,10 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 	});
 	reader.once('bottom', function() {
 		// Serialze post collection and add as inlined JSON
-		out.write('<script id="postData" type="application/json">'
-			+ JSON.stringify(posts)
-			+ '</script>'
+		out.write(common.html
+			`<script id="postData" type="application/json">
+				${JSON.stringify(posts)}
+			</script>`
 		);
 		out.write(pag || threadsBottom(oneeSama));
 	});
