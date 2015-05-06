@@ -336,19 +336,43 @@ exports.random_id = function() {
 };
 
 /*
- Template string tag function for HTML. Strips indentation and trailing newlines
+ Template string tag function for HTML. Strips indentation and trailing
+ newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
  */
-var html = exports.html = function(literals) {
-	var result = '',
-		i = 0;
-	while (i < literals.length) {
-		result += literals[i++]
-			// Strip all newlines and tabs. They should not be used in html anyway.
-			.replace(/[\t\n]+|/g, '')
-			// Concatenate spaces
-			.replace(/ {2,}/g, ' ');
-		if (i < arguments.length)
-			result += arguments[i];
-	}
-	return result;
+var html = exports.html = function(callSite) {
+	/*
+	 Slicing the arguments object is deoptimising, so we construct a new array
+	 instead.
+	 */
+	var args = [];
+	for (var i = 1; i < arguments.length; i++)
+		args.push(arguments[i]);
+
+	if (typeof callSite === 'string')
+		return formatHTML(callSite);
+	if (typeof callSite === 'function')
+		return formatHTML(callSite(args));
+
+	var output = callSite
+		.slice(0, args.length + 1)
+		.map(function(text, i) {
+			/*
+			 Simplifies conditionals. If the placeholder returns `false`, it is
+			 omitted.
+			 */
+			return ((i === 0 || args[i - 1] === false) ? '' : args[i - 1]) + text;
+		})
+		.join('');
+
+	return formatHTML(output);
 };
+
+function formatHTML(str) {
+	var size = -1;
+	return str.replace(/\n(\s+)/g, function(m, m1) {
+		if (size < 0)
+			size = m1.replace(/\t/g, '    ').length;
+
+		return m1.slice(Math.min(m1.length, size));
+	});
+}
