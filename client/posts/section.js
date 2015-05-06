@@ -109,9 +109,6 @@ var Section = module.exports = Backbone.View.extend({
 
 	// Move thread to the top of the page
 	bumpThread: function() {
-		// Have a postform open in this section
-		if (main.postModel && main.postModel.get('op') == this.model.get('num'))
-			return;
 		this.$el.detach();
 		this.insertToTop();
 	}

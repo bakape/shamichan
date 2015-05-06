@@ -58,7 +58,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	parent.get('replies').push(msg.num);
 	parent.trigger('shiftReplies');
 	// Bump thread to page top
-	if (!common.is_sage(msg.email) && state.page.get('live'))
+	if (!common.is_sage(msg.email) && bump)
 		parent.trigger('bump');
 };
 
@@ -91,8 +91,6 @@ dispatcher[common.UPDATE_POST] = function(msg) {
 		msgState = [msg[2] || 0, msg[3] || 0];
 	var extra = msg[5],
 		model = state.posts.get(num);
-
-	// TODO: Add backlinks
 
 	if (model) {
 		model.set({

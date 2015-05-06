@@ -361,41 +361,6 @@ OS.gazou_img = function(info, toppu, href) {
 	return {html: img, src: src};
 };
 
-OS.readable_time = function(time) {
-	var h = this.tz_offset;
-	var offset;
-	if (h || h == 0)
-		offset = h * 60 * 60 * 1000;
-	else
-	// XXX: would be nice not to construct new Dates all the time
-		offset = new Date().getTimezoneOffset() * -60 * 1000;
-	var d = new Date(time + offset);
-
-	return `${util.pad(d.getUTCDate())} ${this.lang.year[d.getUTCMonth()]} `
-		+ `${d.getUTCFullYear()}(${this.lang.week[d.getUTCDay()]})`
-		+ `${util.pad(d.getUTCHours())}:${util.pad(d.getUTCMinutes())}`;
-};
-
-// Readable elapsed time since post
-OS.relative_time = function(then, now) {
-	var min = Math.floor((now - then) / (60 * 1000)),
-		ago = this.lang.ago;
-	if (min < 1)
-		return this.lang.just_now;
-	if (min < 60)
-		return ago(min, this.lang.unit_minute);
-	var hours = Math.floor(min / 60);
-	if (hours < 24)
-		return ago(hours, this.lang.unit_hour);
-	var days = Math.floor(hours / 24);
-	if (days < 30)
-		return ago(days, this.lang.unit_day);
-	var months = Math.floor(days / 30);
-	if (months < 12)
-		return ago(months, this.lang.unit_month);
-	return ago(Math.floor(months / 12), this.lang.unit_year);
-};
-
 OS.post_url = function(num, op) {
 	op = op || num;
 	return `${this.op == op ? '' : op}#${num}`;
@@ -466,22 +431,7 @@ OS.atama = function(data) {
 			</a>`
 		));
 	}
-	// Format according to client's relative post timestamp setting
-	var title, text;
-	if (this.rTime) {
-		title = this.readable_time(data.time);
-		text = this.relative_time(data.time, new Date().getTime());
-	}
-	else {
-		title = '';
-		text = this.readable_time(data.time);
-	}
-	header.push(util.safe(util.html
-			` <time datetime="${datetime(data.time)}" title="${title}">
-				${text}
-			</time> `
-		),
-		this.post_nav(data));
+	header.push(' ', util.safe(this.time(data.time)), ' ', this.post_nav(data));
 	if (!this.full && !data.op) {
 		var ex = this.expansion_links_html(data.num);
 		header.push(util.safe(ex));
@@ -492,12 +442,62 @@ OS.atama = function(data) {
 	return header;
 };
 
+OS.time = function(time) {
+	// Format according to client's relative post timestamp setting
+	var title, text;
+	if (this.rTime) {
+		title = this.readable_time(time);
+		text = this.relative_time(time, Date.now());
+	}
+	else {
+		title = '';
+		text = this.readable_time(time);
+	}
+	return util.html
+		`<time datetime="${datetime(time)}" title="${title}">
+			${text}
+		</time>`;
+};
+
 function datetime(time) {
 	var d = new Date(time);
 	return (d.getUTCFullYear() + '-' + util.pad(d.getUTCMonth() + 1) + '-'
 	+ util.pad(d.getUTCDate()) + 'T' + util.pad(d.getUTCHours()) + ':'
 	+ util.pad(d.getUTCMinutes()) + ':' + util.pad(d.getUTCSeconds()) + 'Z');
 }
+
+OS.readable_time = function(time) {
+	var h = this.tz_offset;
+	var offset;
+	if (h || h == 0)
+		offset = h * 60 * 60 * 1000;
+	else
+	// XXX: would be nice not to construct new Dates all the time
+		offset = new Date().getTimezoneOffset() * -60 * 1000;
+	var d = new Date(time + offset);
+
+	return util.html
+		`${util.pad(d.getUTCDate())} ${this.lang.year[d.getUTCMonth()]}
+		 ${d.getUTCFullYear()}(${this.lang.week[d.getUTCDay()]})
+		${util.pad(d.getUTCHours())}:${util.pad(d.getUTCMinutes())}`;
+};
+
+// Readable elapsed time since post
+OS.relative_time = function(then, now) {
+	var time = Math.floor((now - then) / (60 * 1000));
+	if (time < 1)
+		return this.lang.just_now;
+
+	const divide = [60, 24, 30, 12],
+		unit = ['minute', 'hour', 'day', 'month'];
+	for (var i = 0; i < divide.length; i++) {
+		if (time < divide[i])
+			return this.lang.ago(time, this.lang['unit_' + unit[i]]);
+		time = Math.floor(time / divide[i]);
+	}
+
+	return this.lang.ago(time, this.lang.unit_year);
+};
 
 OS.monogatari = function(data, toppu) {
 	var tale = {header: this.atama(data)};

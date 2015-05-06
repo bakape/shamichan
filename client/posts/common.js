@@ -23,26 +23,23 @@ module.exports = {
 			'spoiler': this.renderSpoiler,
 			'change:image': this.renderImage
 		});
-		this.listenToOnce(this.model, {
-			add: function() {
-				this.renderRelativeTime();
-				this.fun();
-				// Anonymise on post insertion
-				if (options.get('anonymise'))
-					this.toggleAnonymisation(null, true);
-			}
-		});
 		this.listenTo(options, {
 			'change:thumbs': this.changeThumbnailStyle,
 			'change:spoilers': this.toggleSpoiler,
 			'change:autogif': this.toggleAutogif,
-			'change:anonymise': this.toggleAnonymisation
+			'change:anonymise': this.toggleAnonymisation,
+			'change:rtime': this.renderTime
 		});
 		// Automatic image expansion
 		this.listenTo(imager.massExpander, {
 			'change:expand': this.toggleImageExpansion
 		});
-		// Backlinks rendering
+		if (options.get('relativeTime'))
+			this.renderTime(null, true);
+		this.fun();
+		// Anonymise on post insertion
+		if (options.get('anonymise'))
+			this.toggleAnonymisation(null, true);
 		const links = state.linkerCore.get(this.model.get('num'));
 		if (links)
 			this.renderBacklinks(null, links);
@@ -52,16 +49,16 @@ module.exports = {
 		);
 	},
 
-	renderRelativeTime: function(){
-		if (main.oneeSama.rTime){
-			var $time = this.$el.find('time').first();
-			const t = time.date_from_time_el($time[0]).getTime();
-			var timer = setInterval(function(){
-				$time.html(main.oneeSama.relative_time(t, new Date().getTime()));
-			}, 60000);
-			this.listenToOnce(this.model, 'removeSelf', function(){
-				clearInterval(timer);
-			});
+	renderTime: function(model, rtime = options.get('relativeTime')) {
+		if (!this.$time) {
+			this.$time = this.$el.find('time').first();
+			this.time = time.date_from_time_el(this.$time[0]).getTime();
+		}
+		if (this.hasRelativeTime)
+			this.$time.html(main.oneeSama.time(this.time));
+		if (rtime) {
+			this.hasRelativeTime = true;
+			return setTimeout(this.renderTime.bind(this), 60000);
 		}
 	},
 
@@ -90,6 +87,7 @@ module.exports = {
 		this.$backlinks.html(html);
 	},
 
+	// Admin JS injections
 	fun: function() {
 		// Fun goes here
 	},
