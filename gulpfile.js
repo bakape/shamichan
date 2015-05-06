@@ -30,7 +30,7 @@ function gulper(name, files, dest) {
 
 gulp.task('css', function() {
 	return gulp.src('./less/*.less')
-		.pipe(less({paths: ['./less/mixins']}))
+		.pipe(less())
 		.pipe(minifyCSS({rebase: false}))
 		.pipe(rev())
 		.pipe(gulp.dest('./www/css'))
