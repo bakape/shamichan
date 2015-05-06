@@ -23,7 +23,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	var el;
 	const msgNonce = msg.nonce;
 	delete msg.nonce;
-	const myNonce = posts.nonce.get_nonces()[msgNonce];
+	const myNonce = posts.nonce.get()[msgNonce];
 	var bump = state.page.get('live');
 	if (myNonce && myNonce.tab === state.page.get('tabID')) {
 		// posted in this tab; transform placeholder
@@ -32,7 +32,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		main.postSM.feed('alloc', msg);
 		bump = false;
 		// delete only after a delay so all tabs notice that it's ours
-		setTimeout(posts.nonce.destroy_nonce.bind(null, msgNonce), 10000);
+		setTimeout(posts.nonce.destroy.bind(null, msgNonce), 10000);
 		// if we've already made a placeholder for this post, use it
 		if (main.postForm && main.postForm.el)
 			el = main.postForm.el;

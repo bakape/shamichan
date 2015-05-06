@@ -610,7 +610,7 @@ var ComposerView = Backbone.View.extend({
 
 	// Construct the message for post allocation in the database
 	allocationMessage: function(text, image) {
-		var msg = {nonce: nonce.create_nonce()};
+		var msg = {nonce: nonce.create()};
 
 		function opt(key, val) {
 			if (val)

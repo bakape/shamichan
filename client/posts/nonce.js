@@ -7,7 +7,7 @@ var common = require('../../common'),
 
 exports.nonces = {};
 
-var get_nonces = exports.get_nonces = function() {
+var get = exports.get = function() {
 	var nonces;
 	if (window.localStorage) {
 		try {
@@ -32,8 +32,8 @@ function today_id() {
 	return Math.floor(new Date().getTime() / (1000*60*60*24));
 }
 
-exports.create_nonce = function() {
-	const nonces = get_nonces(),
+exports.create = function() {
+	const nonces = get(),
 		nonce = common.random_id();
 	nonces[nonce] = {
 		tab: state.page.get('tabID'),
@@ -47,7 +47,7 @@ function expire_nonces() {
 	if (!window.localStorage)
 		return;
 	// we need a lock on postNonces really
-	var nonces = get_nonces();
+	var nonces = get();
 
 	// people messing with their system clock will mess with expiry, doh
 	var changed = false;
@@ -64,8 +64,8 @@ function expire_nonces() {
 }
 setTimeout(expire_nonces, Math.floor(Math.random()*5000));
 
-exports.destroy_nonce = function(nonce) {
-	var nonces = get_nonces();
+exports.destroy = function(nonce) {
+	var nonces = get();
 	if (!nonces[nonce])
 		return;
 	delete nonces[nonce];
