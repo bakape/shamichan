@@ -94,6 +94,8 @@ var Hidamari = exports.Hidamari = {
 	imageClicked: function(e){
 		if (options.get('inlinefit') == 'none' || e.which != 1)
 			return;
+		// Remove image hover preview, if any
+		options.trigger('imageClicked');
 		e.preventDefault();
 		this.toggleImageExpansion();
 	},
