@@ -10,6 +10,7 @@ var $ = require('jquery'),
 	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
+	inject = require('./common').inject,
 	main = require('../main'),
 	nonce = require('./nonce'),
 	options = require('../options'),
@@ -159,6 +160,29 @@ function $ceiling() {
 	return main.$threads.children('hr').first();
 }
 
+// TODO: Unify self-updates with OneeSama; this is redundant
+main.oneeSama.hook('insertOwnPost', function (info) {
+	if (!main.postForm || !info.links)
+		return;
+	postForm.$buffer.find('.nope').each(function() {
+		var $a = $(this);
+		const text = $a.text(),
+			m = text.match(/^>>(\d+)/);
+		if (!m)
+			return;
+		const num = m[1],
+			op = info.links[num];
+		if (!op)
+			return;
+		var $ref = $(flatten([main.postForm.imouto.post_ref(num, op, false)])
+			.join(''));
+		$a.attr('href', $ref.attr('href')).removeAttr('class');
+		const refText = $ref.text();
+		if (refText != text)
+			$a.text(refText);
+	});
+});
+
 var ComposerView = Backbone.View.extend({
 	events: {
 		'input #trans': 'onInput',
@@ -190,12 +214,12 @@ var ComposerView = Backbone.View.extend({
 				this.callback(common.safe(`<a class="nope">&gt;&gt;${num}</a>`));
 		});
 		// Initialise the renderer instance
-		this.imouto.callback = client.inject;
+		this.imouto.callback = inject;
 		this.imouto.op = state.page.get('thread');
 		this.imouto.state = [common.S_BOL, 0];
 		// TODO: Convert current OneeSama.state array to more flexible object
 		this.imouto.state2 = {spoiler: 0};
-		this.imouto.buffer = this.$buffer;
+		this.imouto.$buffer = this.$buffer;
 		this.imouto.eLinkify = main.oneeSama.eLinkify;
 		this.imouto.hook('spoilerTag', client.touchable_spoiler_tag);
 		main.oneeSama.trigger('imouto', this.imouto);
@@ -870,7 +894,7 @@ function imageUploadURL() {
 		+ '?id=' + state.page.get('connID');
 }
 
-var openPostBox = exports.openPostBox = function(num) {
+main.openPostBox = function(num) {
 	var $a = main.$threads.find('#' + num);
 	postSM.feed('new',
 		$a.is('section') ? $a.children('aside') : $a.siblings('aside'));

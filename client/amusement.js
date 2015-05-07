@@ -22,7 +22,10 @@ main.oneeSama.hook('imouto', function (imouto) {
 		this.strong = false;
 		this.callback(common.safe('</strong>'));
 	};
-	imouto.allRolls = {sent: 0, seen: 0};
+	imouto.allRolls = {
+		sent: 0,
+		seen: 0
+	};
 });
 
 // Handle dice in the postForm

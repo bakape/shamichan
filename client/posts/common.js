@@ -6,7 +6,6 @@ var $ = require('jquery'),
 	imager = require('./imager'),
 	main = require('../main'),
 	options = require('../options'),
-	posting = require('./posting'),
 	state = require('../state'),
 	time = require('../time');
 
@@ -18,17 +17,19 @@ module.exports = {
 	},
 
 	initCommon: function(){
+		this.$blockquote = this.$el.children('blockquote');
 		this.listenTo(this.model, {
 			'change:hide': this.renderHide,
 			'spoiler': this.renderSpoiler,
-			'change:image': this.renderImage
+			'change:image': this.renderImage,
+			updateBody: this.updateBody
 		});
 		this.listenTo(options, {
 			'change:thumbs': this.changeThumbnailStyle,
 			'change:spoilers': this.toggleSpoiler,
 			'change:autogif': this.toggleAutogif,
 			'change:anonymise': this.toggleAnonymisation,
-			'change:rtime': this.renderTime
+			'change:relativeTime': this.renderTime
 		});
 		// Automatic image expansion
 		this.listenTo(imager.massExpander, {
@@ -47,6 +48,43 @@ module.exports = {
 			'change:' + this.model.get('num'),
 			this.renderBacklinks
 		);
+	},
+
+	updateBody: function(update) {
+		main.oneeSama.dice = update.dice;
+		main.oneeSama.links = update.links;
+		main.oneeSama.callback = this.inject;
+		main.oneeSama.$buffer = this.$blockquote;
+		main.oneeSama.state = update.state;
+		main.oneeSama.fragment(update.frag);
+	},
+
+	// Inject various tags into the blockqoute
+	inject: function(frag) {
+		var $dest = this.$buffer;
+		for (var i = 0; i < this.state[1]; i++)
+			$dest = $dest.children('del').last();
+		if (this.state[0] == common.S_QUOTE)
+			$dest = $dest.children('em').last();
+		if (this.strong)
+			$dest = $dest.children('strong').last();
+		var out = null;
+		if (frag.safe) {
+			var m = frag.safe.match(/^<(\w+)>$/);
+			if (m)
+				out = document.createElement(m[1]);
+			else if (/^<\/\w+>$/.test(frag.safe))
+				out = '';
+		}
+		if (out === null) {
+			if (Array.isArray(frag))
+				out = $(common.flatten(frag).join(''));
+			else
+				out = common.escape_fragment(frag);
+		}
+		if (out)
+			$dest.append(out);
+		return out;
 	},
 
 	renderTime: function(model, rtime = options.get('relativeTime')) {
@@ -125,7 +163,8 @@ module.exports = {
 
 		if (isInside('baseNode') && isInside('focusNode'))
 			sel = gsel.toString();
-		posting.openPostBox(num);
+		main.openPostBox(num);
 		main.postForm.addReference(num, sel);
 	}
 };
+
