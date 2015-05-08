@@ -2,6 +2,7 @@
  * Houses both the actual options controler and the options panel renderring
  * logic
  */
+'use strict';
 
 var _ = require('underscore'),
 	$ = require('jquery'),
@@ -29,7 +30,7 @@ var background = require('../background'),
 var OptionsCollection = Backbone.Collection.extend({
 	persist: function() {
 		var opts = {};
-		this.models.forEach(function(model) {
+		this.forEach(function(model) {
 			const val = model.getValue();
 			if (val === model.get('default'))
 				return;
@@ -94,8 +95,11 @@ var OptionModel = Backbone.Model.extend({
 });
 
 // Create and option model for each object in the array
+for (let i = 0, lim = optionsCommon.length; i < lim; i++) {
+	new OptionModel(optionsCommon[i]);
+}
 optionsCommon.forEach(function(opt) {
-	new OptionModel(opt);
+
 });
 
 // Highlight options button, if no options are set
@@ -230,7 +234,7 @@ var OptionsView = Backbone.View.extend({
 				if (!json)
 					return;
 				localStorage.clear();
-				for (var key in json) {
+				for (let key in json) {
 					localStorage[key] = json[key];
 				}
 				alert('Import successfull. The page will now reload.');

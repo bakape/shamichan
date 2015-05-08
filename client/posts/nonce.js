@@ -1,6 +1,7 @@
 /*
 Cryptographic nonces for websocket transactions
  */
+'use strict';
 
 var common = require('../../common'),
 	state = require('../state');

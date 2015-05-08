@@ -74,9 +74,9 @@ var Section = module.exports = Backbone.View.extend({
 			lim = state.hotConfig.get('ABBREVIATED_REPLIES');
 		if (postForm)
 			lim--;
-		var post;
-		for (var i = replies.length; i > lim; i--) {
-			post = state.posts.get(replies.shift());
+		let image_omit = this.model.attributes.image_omit;
+		for (let i = replies.length; i > lim; i--) {
+			let post = state.posts.get(replies.shift());
 			if (!post)
 				continue;
 			/*
@@ -84,7 +84,7 @@ var Section = module.exports = Backbone.View.extend({
 			 properly trigger change events.
 			  */
 			if (post.get('image'))
-				this.model.attributes.image_omit++;
+				image_omit++;
 			this.model.set('omit', this.model.get('omit') + 1 );
 			post.remove();
 		}

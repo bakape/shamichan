@@ -1,3 +1,8 @@
+/*
+ Websocket handler module
+ */
+'use strict';
+
 var _ = require('underscore'),
 	async = require('async'),
 	caps = require('./caps'),
@@ -156,9 +161,12 @@ OK.finish_post = function (callback) {
 };
 
 exports.scan_client_caps = function () {
-	for (var ip in STATE.clientsByIP) {
-		var ident = caps.lookup_ident(ip);
-		STATE.clientsByIP[ip].forEach(function (okyaku) {
+	let clients = STATE.clientsByIP;
+	for (let i = 0, l = clients.length; i < l; i++) {
+		let ip = clients[i],
+			ident = caps.lookup_ident(ip);
+		for (let o = 0, l = clients[ip].length; o < l; o++) {
+			let okyaku = clients[ip][i];
 			if (!okyaku.id || !okyaku.board)
 				return;
 			if (ident.timeout) {
@@ -171,7 +179,7 @@ exports.scan_client_caps = function () {
 				}
 				catch (e) { /* bleh */ }
 			}
-		});
+		}
 	}
 };
 

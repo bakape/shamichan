@@ -1,3 +1,9 @@
+/*
+ R/a/dio API handler
+ */
+
+'use strict';
+
 var common = require('../common'),
 	hook =require('../util/hooks').hook,
 	OK = require('./okyaku'),
@@ -14,13 +20,13 @@ var json,
 exports.name = null;
 
 function parse(main) {
-	var data = {
+	let data = {
 		np: main.np || '',
 		listeners: main.listeners,
 		dj: main.dj && main.dj.djname
 	};
 	// Stringify new object, so it can be compared to the old one
-	var newJSON = JSON.stringify(data);
+	let newJSON = JSON.stringify(data);
 	if (newJSON != json) {
 		json = newJSON;
 		// Push new radio info to clients
@@ -28,21 +34,22 @@ function parse(main) {
 	}
 
 	// Test song name against regex
-	var name;
-	for (var i of songMap) {
-		if (!i[0].test(data.np))
+	let name;
+	for (let i = 0, l = songMap.length; i < l; i++) {
+		let song = songMap[i];
+		if (!song[0].test(data.np))
 			continue;
 		// Assign name replacement
-		name = i[1];
+		name = song[1];
 		break;
 	}
 
 	// Build song queue
 	var queue = '';
-	for (i = 0; i < main.queue.length; i++) {
+	for (let i = 0, l = main.queue.length; i < l; i++) {
 		if (i > 0)
-			queue += ' | ';
-		queue += main.queue[i].meta;
+			queue += ' / ';
+		queue +=  main.queue[i].meta;
 	}
 
 	exports.name = name;

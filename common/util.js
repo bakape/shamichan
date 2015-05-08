@@ -22,14 +22,14 @@ var FSM = exports.FSM = function(start) {
 };
 
 FSM.prototype.clone = function() {
-	var second = new FSM(this.state);
+	let second = new FSM(this.state);
 	second.spec = this.spec;
 	return second;
 };
 
 // Handlers on arriving to a new state
 FSM.prototype.on = function(key, f) {
-	var ons = this.spec.ons[key];
+	let ons = this.spec.ons[key];
 	if (ons)
 		ons.push(f);
 	else
@@ -39,7 +39,7 @@ FSM.prototype.on = function(key, f) {
 
 // Sanity checks before attempting a transition
 FSM.prototype.preflight = function(key, f) {
-	var pres = this.spec.preflights[key];
+	let pres = this.spec.preflights[key];
 	if (pres)
 		pres.push(f);
 	else
@@ -48,26 +48,26 @@ FSM.prototype.preflight = function(key, f) {
 
 // Specify transitions and an optional handler function
 FSM.prototype.act = function(trans_spec, on_func) {
-	var halves = trans_spec.split('->');
+	const halves = trans_spec.split('->');
 	if (halves.length != 2)
 		throw new Error("Bad FSM spec: " + trans_spec);
-	var parts = halves[0].split(',');
-	var dest = halves[1].match(/^\s*(\w+)\s*$/)[1];
-	var tok;
-	for (var i = parts.length - 1; i >= 0; i--) {
-		var part = parts[i];
-		var m = part.match(/^\s*(\*|\w+)\s*(?:\+\s*(\w+)\s*)?$/);
+	const parts = halves[0].split(',');
+	let dest = halves[1].match(/^\s*(\w+)\s*$/)[1],
+		tok;
+	for (let i = parts.length - 1; i >= 0; i--) {
+		let part = parts[i];
+		const m = part.match(/^\s*(\*|\w+)\s*(?:\+\s*(\w+)\s*)?$/);
 		if (!m)
 			throw new Error("Bad FSM spec portion: " + part);
 		if (m[2])
 			tok = m[2];
 		if (!tok)
 			throw new Error("Tokenless FSM action: " + part);
-		var src = m[1];
+		const src = m[1];
 		if (src == '*')
 			this.spec.wilds[tok] = dest;
 		else {
-			var acts = this.spec.acts[src];
+			let acts = this.spec.acts[src];
 			if (!acts)
 				this.spec.acts[src] = acts = {};
 			acts[tok] = dest;
@@ -79,25 +79,25 @@ FSM.prototype.act = function(trans_spec, on_func) {
 };
 
 FSM.prototype.feed = function(ev, param) {
-	var spec = this.spec;
-	var from = this.state, acts = spec.acts[from];
-	var to = (acts && acts[ev]) || spec.wilds[ev];
+	const spec = this.spec;
+	let from = this.state, acts = spec.acts[from];
+	const to = (acts && acts[ev]) || spec.wilds[ev];
 	if (to && from != to) {
-		var ps = spec.preflights[to];
-		for (var i = 0; ps && i < ps.length; i++) {
+		let ps = spec.preflights[to];
+		for (let i = 0; ps && i < ps.length; i++) {
 			if (!ps[i].call(this, param))
 				return false;
 		}
 		this.state = to;
-		var fs = spec.ons[to];
-		for (i = 0; fs && i < fs.length; i++)
+		let fs = spec.ons[to];
+		for (let i = 0; fs && i < fs.length; i++)
 			fs[i].call(this, param);
 	}
 	return true;
 };
 
 FSM.prototype.feeder = function(ev) {
-	var self = this;
+	let self = this;
 	return function(param) {
 		self.feed(ev, param);
 	};
@@ -344,8 +344,8 @@ var html = exports.html = function(callSite) {
 	 Slicing the arguments object is deoptimising, so we construct a new array
 	 instead.
 	 */
-	var args = [];
-	for (var i = 1; i < arguments.length; i++)
+	let args = [];
+	for (let i = 1; i < arguments.length; i++)
 		args.push(arguments[i]);
 
 	if (typeof callSite === 'string')
@@ -353,7 +353,7 @@ var html = exports.html = function(callSite) {
 	if (typeof callSite === 'function')
 		return formatHTML(callSite(args));
 
-	var output = callSite
+	let output = callSite
 		.slice(0, args.length + 1)
 		.map(function(text, i) {
 			/*
@@ -368,7 +368,7 @@ var html = exports.html = function(callSite) {
 };
 
 function formatHTML(str) {
-	var size = -1;
+	let size = -1;
 	return str.replace(/\n(\s+)/g, function(m, m1) {
 		if (size < 0)
 			size = m1.replace(/\t/g, '    ').length;

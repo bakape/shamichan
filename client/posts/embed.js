@@ -1,6 +1,7 @@
 /*
 Youtube, soundcloud and pastebin link embeding
  */
+'use strict';
 
 // TODO: DRY this shit
 

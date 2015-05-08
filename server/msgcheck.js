@@ -1,3 +1,7 @@
+/*
+ Verify websocket messages confirm to a predefined type schema
+ */
+'use strict';
 
 function check(schema, msg) {
 	/* Primitives */
@@ -14,9 +18,11 @@ function check(schema, msg) {
 	if (schema instanceof Array) {
 		if (!(msg instanceof Array) || msg.length != schema.length)
 			return false;
-		for (var i = 0; i < schema.length; i++)
+		for (let i = 0, l = schema.length; i < l; i++) {
 			if (!check(schema[i], msg[i]))
 				return false;
+		}
+
 		return true;
 	}
 	else if (schema === 'id...') {
@@ -32,7 +38,7 @@ function check(schema, msg) {
 		if (typeof msg != 'object' || msg instanceof Array)
 			return false;
 		for (var k in schema) {
-			var spec = schema[k];
+			let spec = schema[k];
 			/* optional key */
 			if (typeof spec == 'string' && /^opt /.test(spec)) {
 				if (!(k in msg))

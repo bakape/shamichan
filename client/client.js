@@ -1,6 +1,7 @@
 /*
  * Handles the brunt of the post-related websocket calls
  */
+'use strict';
 
 var $ = require('jquery'),
 	common = require('../common'),
@@ -141,13 +142,13 @@ dispatcher[common.FINISH_POST] = function(msg) {
 };
 
 dispatcher[common.DELETE_POSTS] = function(msg) {
-	msg.forEach(function(num) {
-		var model = state.posts.get(num);
+	for (let i = 0, lim = msg.length; i < lim; i++) {
+		let model = state.posts.get(msg[i]);
 		if (model)
 			model.remove();
 
 		// TODO: Free up post focus, if any
-	});
+	}
 };
 
 dispatcher[common.DELETE_THREAD] = function(msg, op) {
@@ -180,19 +181,19 @@ dispatcher[common.UNLOCK_THREAD] = function(msg, op) {
 };
 
 dispatcher[common.DELETE_IMAGES] = function(msg) {
-	msg.forEach(function(num) {
-		var model = state.posts.get(num);
+	for (let i = 0, lim = msg.length; i < lim; i++) {
+		let model = state.posts.get(msg[i]);
 		if (model)
 			model.unset('image');
-	});
+	}
 };
 
 dispatcher[common.SPOILER_IMAGES] = function(msg) {
-	msg.forEach(function(info) {
-		var model = state.posts.get(info[0]);
+	for (let i = 0, lim = msg.length; i < lim; i++) {
+		var model = state.posts.get(msg[i][0]);
 		if (model)
-			model.trigger('spoiler',info[1]);
-	});
+			model.trigger('spoiler',msg[i][1]);
+	}
 };
 
 dispatcher[common.SYNCHRONIZE] = main.connSM.feeder('sync');

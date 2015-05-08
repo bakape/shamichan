@@ -1,3 +1,8 @@
+/*
+ Main webserver module
+ */
+'use strict';
+
 var _ = require('underscore'),
     caps = require('./caps'),
     config = require('../config'),
@@ -39,28 +44,29 @@ var server = require('http').createServer(function (req, resp) {
 exports.server = server;
 
 function handle_request(req, resp) {
-	var method = req.method.toLowerCase();
-	var parsed = url_parse(req.url, true);
+	const method = req.method.toLowerCase(),
+		parsed = url_parse(req.url, true);
 	req.url = parsed.pathname;
 	req.query = parsed.query;
 	req.cookies = parse_cookie(req.headers.cookie);
 
-	var numRoutes = routes.length;
-	for (var i = 0; i < numRoutes; i++) {
-		var route = routes[i];
+	for (let i = 0, l = routes.length; i < l; i++) {
+		let route = routes[i];
 		if (method != route.method)
 			continue;
-		var m = req.url.match(route.pattern);
+		const m = req.url.match(route.pattern);
 		if (m) {
 			route.handler(req, resp, m);
 			return;
 		}
 	}
 
-	if (method == 'get' || method == 'head')
-		for (var i = 0; i < resources.length; i++)
+	if (method == 'get' || method == 'head') {
+		for (let i = 0, l = resources.length; i < l; i++) {
 			if (handle_resource(req, resp, resources[i]))
 				return;
+		}
+	}
 
 	if (config.SERVE_IMAGES) {
 		if (require('../imager').serve_image(req, resp))
@@ -242,7 +248,7 @@ function auth_checker(handler, is_post, req, resp, params) {
 		check_it();
 
 	function check_it() {
-		cookie = persona.extract_login_cookie(req.cookies);
+		const cookie = persona.extract_login_cookie(req.cookies);
 		if (!cookie)
 			return forbidden(resp, 'No cookie.');
 		persona.check_cookie(cookie, ack);
@@ -278,12 +284,12 @@ exports.route_post_auth = function (pattern, handler) {
 
 var vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
-	'X-Frame-Options': 'sameorigin',
+	'X-Frame-Options': 'sameorigin'
 };
 var noCacheHeaders = {'Content-Type': 'text/html; charset=UTF-8',
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
 		'Cache-Control': 'no-cache, no-store',
-		'X-Frame-Options': 'sameorigin',
+		'X-Frame-Options': 'sameorigin'
 };
 var preamble = '<!doctype html><meta charset=utf-8>';
 
@@ -302,7 +308,7 @@ hooks.hook('reloadResources', function (res, cb) {
 function render_404(resp) {
 	resp.writeHead(404, noCacheHeaders);
 	resp.end(exports.notFoundHtml);
-};
+}
 exports.render_404 = render_404;
 
 function render_500(resp) {
@@ -336,7 +342,7 @@ function timeout(resp) {
 
 function redirect(resp, uri, code) {
 	var headers = {Location: uri};
-	for (var k in vanillaHeaders)
+	for (let k in vanillaHeaders)
 		headers[k] = vanillaHeaders[k];
 	resp.writeHead(code || 303, headers);
 	resp.end(preamble + '<title>Redirect</title>'
@@ -361,20 +367,20 @@ exports.dump_server_error = function (resp, err) {
 	resp.end('</pre>');
 };
 
-function parse_cookie(header) {
-	var chunks = {};
-	(header || '').split(';').forEach(function (part) {
-		var bits = part.match(/^([^=]*)=(.*)$/);
-		if (bits)
-			try {
-				chunks[bits[1].trim()] = decodeURIComponent(
-						bits[2].trim());
-			}
-			catch (e) {}
-	});
+var parse_cookie = exports.parse_cookie = function(header) {
+	let chunks = {};
+	const split = (header || '').split(';');
+	for (let i = 0, l = split.length; i < l; i++) {
+		let bits = split[i].match(/^([^=]*)=(.*)$/);
+		if (!bits)
+			continue;
+		try {
+			chunks[bits[1].trim()] = decodeURIComponent(bits[2].trim());
+		}
+		catch (e) {}
+	}
 	return chunks;
-}
-exports.parse_cookie = parse_cookie;
+};
 
 function Debuff(stream) {
 	Stream.call(this);

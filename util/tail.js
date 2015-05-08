@@ -1,4 +1,5 @@
 // avoids stack overflow for long lists
+// TEMP: Remove when tail call optimisation hits io.js
 exports.forEach = function (array, func, callback) {
 	step(0);
 	function step(i) {

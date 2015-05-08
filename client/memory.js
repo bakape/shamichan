@@ -1,6 +1,7 @@
 /*
  * Self-expiring localStorage key controller
  */
+'use strict';
 
 var $ = require('jquery'),
 	_ = require('underscore');
@@ -31,10 +32,11 @@ Kioku.prototype.purge_all = function () {
 Kioku.prototype.purge_expired = function () {
 	if (!this.expiry)
 		return;
-	var o = this.read_all();
-	var now = this.now(), expired = [];
-	for (var k in o) {
-		var time = o[k];
+	const o = this.read_all(),
+		now = this.now();
+	let expired = [];
+	for (let k in o) {
+		const time = o[k];
 		// TEMP cleanup
 		if (time === true) {
 			expired.push(k);
@@ -44,9 +46,9 @@ Kioku.prototype.purge_expired = function () {
 			expired.push(k);
 	}
 	if (expired.length) {
-		expired.forEach(function (k) {
-			delete o[k];
-		});
+		for (let i = 0, lim = expired.length; i < lim; i++) {
+			delete o[expired[i]];
+		}
 		this.write_all(o);
 	}
 };

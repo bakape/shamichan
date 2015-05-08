@@ -1,3 +1,5 @@
+'use strict';
+
 var _ = require('underscore'),
 	async = require('async'),
 	config = require('../config'),
@@ -73,9 +75,9 @@ function reload_hot_config(cb) {
 			return cb('Bad hot config.');
 
 		// Overwrite the original object just in case
-		Object.keys(HOT).forEach(function (k) {
-			delete HOT[k];
-		});
+		for (let key in HOT) {
+			delete HOT[key];
+		}
 		_.extend(HOT, hot.hot);
 
 		// Pass some of the config variables to the client
@@ -201,7 +203,8 @@ function read_templates(cb) {
 
 function expand_templates(res) {
 	var templateVars = _.clone(HOT);
-	_.extend(templateVars, config, make_navigation_html());
+	_.extend(templateVars, config);
+	templateVars.NAVTOP = make_navigation_html();
 
 	templateVars.SCHEDULE = build_schedule(templateVars.SCHEDULE);
 	templateVars.FAQ = build_FAQ(templateVars.FAQ);
@@ -225,8 +228,9 @@ function expand_templates(res) {
 	};
 
 	// Build index templates for each language
-	config.LANGS.forEach(function(ln) {
-		var html, hash;
+	const langs = config.LANGS;
+	for (let i = 0, l = langs.length; i < l; i++) {
+		let ln = langs[i];
 		// Inject the localised variables
 		_.extend(templateVars, lang[ln].tmpl);
 		// Build localised options panel
@@ -240,124 +244,153 @@ function expand_templates(res) {
 		});
 		templateVars.lang = JSON.stringify(templateVars.lang);
 
-		html = tmpl(res.index);
+		let html = tmpl(res.index);
 		ex['indexTmpl-' + ln] = html.tmpl;
-		hash = crypto.createHash('md5').update(html.src);
-		ex['indexHash-' + ln] = hash.digest('hex').slice(0, 8)
-	});
+		ex['indexHash-' + ln] = crypto
+			.createHash('md5')
+			.update(html.src)
+			.digest('hex')
+			.slice(0, 8)
+	}
 	return ex;
 }
 
 function build_schedule(schedule){
-	var filler = ['drink & fap', 'fap & drink', 'tea & keiki'];
-	var table = ['<table>'];
-	for (var day in schedule){
-		var plans = schedule[day].plans;
-		var time = schedule[day].time;
+	const filler = ['drink & fap', 'fap & drink', 'tea & keiki'];
+	let table = '<table>';
+	for (let i = 0, l = schedule.length; i < l; i += 3) {
+		let day = schedule[i],
+			plans = schedule[i + 1],
+			time = schedule[i + 2];
 		// Fill empty slots
-		if (plans == '')
+		if (!plans)
 			plans = filler[Math.floor(Math.random() * filler.length)];
-		if (time == '')
+		if (!time)
 			time = 'all day';
-		table.push('<tr><td><b>[', day + ']&nbsp;&nbsp;', '</b></td><td>',
-				plans + '&nbsp;&nbsp;', '</td><td>', time, '</td></tr>');
+		table += `<tr><td><b>${day}&nbsp;&nbsp;</b></td>`
+			+ `<td>${plans}&nbsp;&nbsp;</td>`
+			+ `<td>${time}</td></tr>`;
 	}
-	table.push('</table>');
-	return table.join('');
+	table += '</table>';
+	return table;
 }
 
-function build_FAQ(faq){
-	if (faq.length > 0){
-		var list = ['<ul>'];
-		faq.forEach(function(entry){
-			list.push('<li>' + entry + '</li>');
-		});
-		list.push('<ul>');
-		return list.join('');
+function build_FAQ(faq) {
+	if (faq.length <= 0)
+		return;
+	let list = '<ul>';
+	for (let i = 0, l = faq.length; i < l; i++) {
+		list += `<li>${faq[i]}</li>`;
 	}
+	list += '</ul>';
+	return list;
 }
 
 // Hardcore pornography
 function buildOptions(lang) {
-	var html = '<div class="bmodal" id="options-panel">'
+
+	/*
+	 XXX: Can't require common/util here, because circular dependancy. Hmm, maybe
+	 move these render functions somewhere else? FAQ and schefule should end up
+	 in common eventually.
+	 */
+	let html = '<div class="bmodal" id="options-panel">'
 		+ '<ul class="option_tab_sel">';
-	lang.tabs.forEach(function(tab, index) {
-		html += `<li><a data-content="tab-${index}"`;
+	const tabs = lang.tabs;
+	// Render tab butts
+	for (let i = 0, l = tabs.length; i < l; i++) {
+		html += `<li><a data-content="tab-${i}"`;
 		// Highlight the first tabButt by default
-		if (index === 0)
+		if (i === 0)
 			html += ' class="tab_sel"';
-		html += `>${tab}</a></li>`;
-	});
+		html += `>${tabs[i]}</a></li>`;
+	}
 	html += '</ul><ul class="option_tab_cont">';
-	lang.tabs.forEach(function(tab, index) {
-		var opts = _.filter(options, function(opt) {
+	for (let i = 0, l = tabs.length; i < l; i++) {
+		let tab = tabs[i];
+		let opts = _.filter(options, function(opt) {
 			/*
 			 * Pick the options for this specific tab. Don't know why we have
 			 * undefineds inside the array, but we do.
 			 */
-			if (!opt || opt.tab != index)
+			if (!opt || opt.tab != i)
 				return false;
 			// Option should not be loaded, because of server-side configs
 			return !(opt.load !== undefined && !opt.load);
 		});
-		html += `<li class="tab-${index}`;
+		html += `<li class="tab-${i}`;
 		// Show the first tab by default
-		if (index == 0)
+		if (i === 0)
 			html += ' tab_sel';
 		html += '">';
 		// Render the actual options
-		opts.forEach(function(opt) {
-			const isShortcut = opt.type == 'shortcut',
-				isList = opt.type instanceof Array,
-				isCheckbox = opt.type == 'checkbox' || opt.type === undefined,
-				isNumber = opt.type == 'number',
-				isImage = opt.type == 'image';
-			if (isShortcut)
-				html += 'Alt+';
-			if (!isList) {
-				html += '<input';
-				if (isCheckbox || isImage)
-					html += ` type="${(isCheckbox ? 'checkbox' : 'file')}"`;
-				if (isNumber)
-					html += ' style="width: 4em;" maxlength="4"';
-				else if (isShortcut)
-					html += ' maxlength="1"';
-			}
-			else
-				html += '<select';
-			// Custom localisation functions
-			var title, label;
-			if (opt.lang) {
-				title = lang[opt.lang][1](opt.id);
-				label = lang[opt.lang][0](opt.id);
-			}
-			else {
-				title = lang[opt.id][1];
-				label = lang[opt.id][0];
-			}
-			html += ` id="${opt.id}" title="${title}">`;
-
-			if (isList) {
-				opt.type.forEach(function(item) {
-					html += `<option value="${item}">${lang[item] || item}</option>`;
-				});
-				html += '</select>';
-			}
-			html += `<label for="${opt.id}" title="${title}">${label}</label><br>`;
-		});
-		// Append Export and Import links to first tab
-		if (index == 0) {
-			html += '<br>';
-			['export', 'import'].forEach(function(id) {
-				html += `<a id="${id}" title="${lang[id][1]}">${lang[id][0]}</a> `;
-			});
-			// Hidden file input for uploading the JSON
-			html += '<input type="file" style="display: none;" id="importSettings"'
-				+ ' name="Import Settings"></input>';
+		for (let i = 0, l = opts.length; i < l; i++) {
+			html += renderOption(opts[i], lang);
 		}
+		// Append Export and Import links to first tab
+		if (i === 0)
+			html += renderExportImport(lang);
 		html += '</li>';
-	});
+	}
 	html += '</ul></div>';
+	return html;
+}
+
+function renderOption(opt, lang) {
+	let html = '';
+	const isShortcut = opt.type == 'shortcut',
+		isList = opt.type instanceof Array,
+		isCheckbox = opt.type == 'checkbox' || opt.type === undefined,
+		isNumber = opt.type == 'number',
+		isImage = opt.type == 'image';
+	if (isShortcut)
+		html += 'Alt+';
+	if (!isList) {
+		html += '<input';
+		if (isCheckbox || isImage)
+			html += ` type="${(isCheckbox ? 'checkbox' : 'file')}"`;
+		if (isNumber)
+			html += ' style="width: 4em;" maxlength="4"';
+		else if (isShortcut)
+			html += ' maxlength="1"';
+	}
+	else
+		html += '<select';
+	// Custom localisation functions
+	let title, label;
+	if (opt.lang) {
+		title = lang[opt.lang][1](opt.id);
+		label = lang[opt.lang][0](opt.id);
+	}
+	else {
+		title = lang[opt.id][1];
+		label = lang[opt.id][0];
+	}
+	html += ` id="${opt.id}" title="${title}">`;
+
+	if (isList) {
+		const items = opt.type;
+		for (let i = 0, l = items.length; i < l; i++) {
+			let item = items[i];
+			html += `<option value="${item}">${lang[item] || item}</option>`;
+		}
+		html += '</select>';
+	}
+	html += `<label for="${opt.id}" title="${title}">${label}</label><br>`;
+	return html;
+}
+
+function renderExportImport(lang) {
+	let html = '<br>';
+	const links = ['export', 'import'];
+	for (let i = 0, l = links.length; i < l; i++) {
+		let id = links[i],
+			ln = lang[id];
+		html += `<a id="${id}" title="${ln[1]}">${ln[0]}</a> `;
+	}
+	// Hidden file input for uploading the JSON
+	html += '<input type="file" style="display: none;" id="importSettings"'
+		+ ' name="Import Settings"></input>';
 	return html;
 }
 
@@ -375,34 +408,39 @@ function make_navigation_html() {
 		return '';
 	var bits = '<b id="navTop">[';
 	// Actual boards
-	config.BOARDS.forEach(function (board, i) {
+	const BOARDS = config.BOARDS,
+		PB = config.PSUEDO_BOARDS;
+	for (let i = 0, l = BOARDS.length; i < l; i++) {
+		let board = BOARDS[i];
 		if (board == config.STAFF_BOARD)
 			return;
 		if (i > 0)
 			bits += ' / ';
 		bits += `<a href="../${board}/" class="history">${board}</a>`;
-	});
+	}
 	// Add custom URLs to board navigation
-	config.PSUEDO_BOARDS.forEach(function(item) {
+	for (let i = 0, l = PB.length; i < l; i++) {
+		let item = PB[i];
 		bits += ` / <a href="${item[1]}">${item[0]}</a>`;
-	});
+	}
 	bits += ']</b>';
-	return {NAVTOP: bits};
+	return bits;
 }
 
 function read_exits(file, cb) {
 	fs.readFile(file, 'UTF-8', function (err, lines) {
 		if (err)
 			return cb(err);
-		var dest = HOT.BANS;
-		lines.split(/\n/g).forEach(function (line) {
-			var m = line.match(/^(?:^#\d)*(\d+\.\d+\.\d+\.\d+)/);
+		let dest = HOT.BANS;
+		const split = lines.split(/\n/g);
+		for (let i = 0, l = split.length; i < l; i++) {
+			const m = split[i].match(/^(?:^#\d)*(\d+\.\d+\.\d+\.\d+)/);
 			if (!m)
 				return;
-			var exit = m[1];
+			const exit = m[1];
 			if (dest.indexOf(exit) < 0)
 				dest.push(exit);
-		});
+		}
 		cb(null);
 	});
 }

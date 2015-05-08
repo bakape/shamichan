@@ -58,7 +58,7 @@ gulp.task('client', function() {
 		 */
 		.transform(babelify.configure({
 			whitelist: [
-				'es6.forOf',
+				'es6.blockScoping',
 				'es6.arrowFunctions',
 				'es6.parameters.default',
 				'es6.parameters.rest',

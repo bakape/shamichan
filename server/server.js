@@ -1,3 +1,8 @@
+/*
+ Core server module and entry point
+ */
+'use strict';
+
 var opts = require('./opts');
 if (require.main == module) opts.parse_args();
 opts.load_defaults();
@@ -89,7 +94,7 @@ function linkToDatabase(board, syncs, live, client) {
 		client.db.kikanai().disconnect();
 
 	var dead_threads = [], count = 0, op;
-	for (var k in syncs) {
+	for (let k in syncs) {
 		k = parseInt(k, 10);
 		if (db.OPs[k] != k || !db.OP_has_tag(board, k)) {
 			delete syncs[k];
@@ -123,18 +128,18 @@ function linkToDatabase(board, syncs, live, client) {
 			return client.kotowaru(Muggle("Couldn't sync to board."));
 		else if (errs) {
 			dead_threads.push.apply(dead_threads, errs);
-			errs.forEach(function (thread) {
-				delete client.watching[thread];
-			});
+			for (let i = 0, l = errs.length; i < l; i++) {
+				delete client.watching[errs[i]];
+			}
 		}
 		client.db.fetch_backlogs(client.watching, got_backlogs);
 	}
 	function got_backlogs(errs, logs) {
 		if (errs) {
 			dead_threads.push.apply(dead_threads, errs);
-			errs.forEach(function (thread) {
-				delete client.watching[thread];
-			});
+			for (let i = 0, l = errs.length; i < l; i++) {
+				delete client.watching[errs[i]];
+			}
 		}
 
 		var sync = '0,' + common.SYNCHRONIZE;
@@ -203,7 +208,7 @@ function write_gzip_head(req, resp, headers) {
 	}
 	resp.writeHead(200, _.extend({}, headers, {
 		'Content-Encoding': 'gzip',
-		Vary: 'Accept-Encoding',
+		Vary: 'Accept-Encoding'
 	}));
 
 	var gz = require('zlib').createGzip();
@@ -262,7 +267,7 @@ else {
 		resp.write(RES.loginTmpl[0]);
 		resp.write(JSON.stringify({
 			loggedInUser: req.ident.email,
-			x_csrf: req.ident.csrf,
+			x_csrf: req.ident.csrf
 		}));
 		resp.end(RES.loginTmpl[1]);
 	});
@@ -296,7 +301,7 @@ function (req, resp) {
 	write_mod_js(resp, {
 		auth: req.ident.auth,
 		csrf: req.ident.csrf,
-		email: req.ident.email,
+		email: req.ident.email
 	});
 });
 
@@ -310,7 +315,7 @@ function (req, resp) {
 	write_mod_js(resp, {
 		auth: req.ident.auth,
 		csrf: req.ident.csrf,
-		email: req.ident.email,
+		email: req.ident.email
 	});
 });
 
@@ -419,7 +424,7 @@ web.resource(/^\/(\w+)\/page(\d+)$/, function (req, params, cb) {
 
 		cb(null, 'ok', {
 			board: board, page: page, yaku: yaku,
-			threadCount: threadCount,
+			threadCount: threadCount
 		});
 	});
 },
@@ -542,10 +547,12 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			var thumb = req.cookies.thumb;
 			if (thumb && common.thumbStyles.indexOf(thumb) >= 0)
 				etag += '-' + thumb;
-			['spoil', 'agif', 'rtime', 'linkify', 'lang'].forEach(function(tag) {
+			const etags = ['spoil', 'agif', 'rtime', 'linkify', 'lang'];
+			for (let i = 0, l = etags.length; i < l; i++) {
+				let tag = etags[i];
 				if (chunks[tag])
 					etag += '-' + tag + '-' + chunks[tag];
-			});
+			}
 			if (lastN)
 				etag += '-last' + lastN;
 			if (preThread.locked)
@@ -573,7 +580,7 @@ web.resource(/^\/(\w+)\/(\d+)$/, function (req, params, cb) {
 			board: board, op: op,
 			subject: preThread.subject,
 			yaku: yaku, reader: reader,
-			abbrev: opts.abbrev,
+			abbrev: opts.abbrev
 		});
 	});
 },
@@ -599,7 +606,7 @@ function (req, resp) {
 	else {
 		render.write_thread_title(resp, board, op, {
 			subject: this.subject,
-			abbrev: this.abbrev,
+			abbrev: this.abbrev
 		});
 	}
 	render.write_thread_html(this.reader, req, resp, cookies, {
@@ -694,7 +701,7 @@ function valid_links(frag, state, ident, callback) {
 		if (op && caps.can_access_thread(ident, op))
 			links[num] = db.OPs[num];
 	});
-	onee.callback = function (frag) {};
+	onee.callback = function () {};
 	onee.state = state;
 	onee.fragment(frag);
 	callback(null, _.isEmpty(links) ? null : links);
@@ -708,7 +715,7 @@ var insertSpec = [{
 	name: 'opt string',
 	email: 'opt string',
 	auth: 'opt string',
-	subject: 'opt string',
+	subject: 'opt string'
 }];
 
 dispatcher[common.INSERT_POST] = function (msg, client) {
@@ -837,8 +844,7 @@ function allocate_post(msg, client, callback) {
 		client.post = post;
 		post.num = num;
 		var supplements = {
-			links: valid_links.bind(null, body, post.state,
-					client.ident),
+			links: valid_links.bind(null, body, post.state, client.ident)
 		};
 		if (image_alloc)
 			supplements.image = imager.obtain_image_alloc.bind(
@@ -898,8 +904,8 @@ function update_post(frag, client) {
 			if (!post.links)
 				post.links = {};
 			var new_links = {};
-			for (var k in links) {
-				var link = links[k];
+			for (let k in links) {
+				let link = links[k];
 				if (post.links[k] != link) {
 					post.links[k] = link;
 					new_links[k] = link;
@@ -945,11 +951,13 @@ dispatcher[common.DELETE_POSTS] = caps.mod_handler(function (nums, client) {
 	if (!inactive_board_check(client))
 		return client.kotowaru(Muggle("Couldn't delete."));
 	/* Omit to-be-deleted posts that are inside to-be-deleted threads */
-	var ops = {}, OPs = db.OPs;
-	nums.forEach(function (num) {
+	let ops = {},
+		OPs = db.OPs;
+	for (let i = 0, l = nums.length; i < l; i++) {
+		let num = nums[i];
 		if (num == OPs[num])
 			ops[num] = 1;
-	});
+	}
 	nums = nums.filter(function (num) {
 		var op = OPs[num];
 		return op == num || !(OPs[num] in ops);
@@ -1067,21 +1075,19 @@ dispatcher[common.NOTIFICATION] = function(msg, client){
 };
 
 // Regex replacement filter
-function hot_filter(frag){
-	var filter = STATE.hot.FILTER;
+function hot_filter(frag) {
+	let filter = STATE.hot.FILTER;
 	if (!filter)
 		return frag;
-	for (i =0; i < filter.length; i++){
-		var f = filter[i];
-		var m = frag.match(f.p);
+	for (let i =0, len = filter.length; i < len; i++) {
+		let f = filter[i];
+		const m = frag.match(f.p);
 		if (m){
 			// Case sensitivity
 			if (m[0].length > 2){
-				var first = m[0].charAt(0);
-				var second = m[0].charAt(1);
-				if (/[A-Z]/.test(second))
+				if (/[A-Z]/.test(m[0].charAt(1)))
 					f.r = f.r.toUpperCase();
-				else if (/[A-Z]/.test(first))
+				else if (/[A-Z]/.test(m[0].charAt(0)))
 					f.r = f.r.charAt(0).toUpperCase()+f.r.slice(1);
 			}
 			return frag.replace(f.p, f.r);
@@ -1137,7 +1143,7 @@ function start_server() {
 		prefix: config.SOCKET_PATH,
 		jsessionid: false,
 		log: sockjs_log,
-		websocket: config.USE_WEBSOCKETS,
+		websocket: config.USE_WEBSOCKETS
 	};
 	var sockJs = require('sockjs').createServer(sockOpts);
 	web.server.on('upgrade', function (req, resp) {
@@ -1222,7 +1228,7 @@ if (require.main == module) {
 		imager.make_media_dirs,
 		setup_imager_relay,
 		STATE.reload_hot_resources,
-		db.track_OPs,
+		db.track_OPs
 	], function (err) {
 		if (err)
 			throw err;

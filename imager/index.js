@@ -1,3 +1,5 @@
+'use strict';
+
 var async = require('async'),
     config = require('../config'),
     child_process = require('child_process'),
@@ -31,7 +33,7 @@ exports.send_dead_image = function (kind, filename, resp) {
 	stream.once('open', function () {
 		var h = {
 			'Cache-Control': 'no-cache, no-store',
-			'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
+			'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT'
 		};
 		try {
 			h['Content-Type'] = require('mime').lookup(filename);
@@ -44,13 +46,14 @@ exports.send_dead_image = function (kind, filename, resp) {
 hooks.hook_sync('extractPost', function (post) {
 	if (!is_image(post))
 		return;
-	var image = {};
-	image_attrs.forEach(function (key) {
+	let image = {};
+	for (let i = 0, l = image_attrs.length; i < l; i++) {
+		let key = image_attrs[i];
 		if (key in post) {
 			image[key] = post[key];
 			delete post[key];
 		}
-	});
+	}
 	if (image.dims.split)
 		image.dims = image.dims.split(',').map(parse_number);
 	image.size = parse_number(image.size);
@@ -63,25 +66,24 @@ function parse_number(n) {
 }
 
 hooks.hook_sync('inlinePost', function (info) {
-	var post = info.dest, image = info.src.image;
+	let post = info.dest;
+	const image = info.src.image;
 	if (!image)
 		return;
-	image_attrs.forEach(function (key) {
+	for (let i = 0, l = image_attrs.length; i < l; i++) {
+		let key = image_attrs[i];
 		if (key in image)
 			post[key] = image[key];
-	});
+	}
 });
 
 function publish(alloc, cb) {
-	var mvs = [];
-	for (var kind in alloc.tmps) {
-		var src = media_path('tmp', alloc.tmps[kind]);
-
-		var destDir = kind;
-		var destKey = kind;
-		var dest = media_path(destDir, alloc.image[destKey]);
-
-		mvs.push(etc.cpx.bind(etc, src, dest));
+	let mvs = [];
+	for (let kind in alloc.tmps) {
+		mvs.push(etc.cpx.bind(etc,
+			media_path('tmp', alloc.tmps[kind]),
+			media_path(kind, alloc.image[kind])
+		));
 	}
 	async.parallel(mvs, cb);
 }
@@ -89,12 +91,11 @@ function publish(alloc, cb) {
 function validate_alloc(alloc) {
 	if (!alloc || !alloc.image || !alloc.tmps)
 		return;
-	for (var dir in alloc.tmps) {
-		var fnm = alloc.tmps[dir];
+	for (let dir in alloc.tmps) {
+		const fnm = alloc.tmps[dir];
 		if (!/^[\w_]+$/.test(fnm)) {
-			winston.warn("Suspicious filename: "
-					+ JSON.stringify(fnm));
-			return;
+			winston.warn("Suspicious filename: " + JSON.stringify(fnm));
+			return false;
 		}
 	}
 	return true;

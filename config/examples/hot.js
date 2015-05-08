@@ -47,15 +47,15 @@ this.hot = {
  */
 	BANNERINFO: '',
 // Planned event schedule to display in the banner's Schedule list
-	SCHEDULE: {
-		Mon: {plans: '', time: ''},
-		Tue: {plans: '', time: ''},
-		Wed: {plans: '', time: ''},
-		Thu: {plans: '', time: ''},
-		Fri: {plans: '', time: ''},
-		Sat: {plans: '', time: ''},
-		Sun: {plans: '', time: ''}
-	},
+	SCHEDULE: [
+		'Mon', null, null,
+		'Tue', null, null,
+		'Wed', null, null,
+		'Thu', null, null,
+		'Fri', null, null,
+		'Sat', null, null,
+		'Sun', null, null
+	],
 // Entries for the banner's FAQ list
 	FAQ: [
 		'Upload size limit is 100 MB',

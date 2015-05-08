@@ -1,6 +1,7 @@
 /*
 General post backbone models
  */
+'use strict';
 
 var _ = require('underscore'),
 	Backbone = require('backbone'),
@@ -35,9 +36,7 @@ exports.Post = Backbone.Model.extend({
 		var old, newLinks;
 		const num = this.get('num'),
 			op = this.get('op') || num;
-		for (var key in links) {
-			if (!links.hasOwnProperty(key))
-				continue;
+		for (let key in links) {
 			old = state.linkerCore.get(key);
 			newLinks = old ? _.clone(old) : {};
 			newLinks[num] = op;
@@ -65,11 +64,12 @@ exports.Thread = exports.Post.extend({
 		state.posts.remove(this);
 
 		// Propagate model removal to all replies
-		this.get('replies').forEach(function(num) {
-			var model = state.posts.get(num);
+		const replies = this.get('replies');
+		for (let i = 0, lim = replies.length; i < lim; i++) {
+			let model = state.posts.get(replies[i]);
 			if (model)
 				model.remove();
-		});
+		}
 	},
 
 	/*
@@ -77,10 +77,11 @@ exports.Thread = exports.Post.extend({
 	 image omit count during the server-side render.
 	 */
 	getImageOmit: function() {
-		var model,
-			image_omit = this.get('imgctr') -1;
-		for (var num of this.get('replies')) {
-			model = state.posts.get(num);
+		let image_omit = this.get('imgctr') -1;
+		const replies = this.get('replies');
+
+		for (let i = 0, lim = replies.length; i < lim; i++) {
+			let model = state.posts.get(replies[i]);
 			if (!model)
 				continue;
 			if (model.get('image'))

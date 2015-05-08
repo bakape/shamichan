@@ -1,6 +1,7 @@
 /*
  * Dice rolls and fun JS injections
  */
+'use strict';
 
 var $ = require('jquery'),
 	common = require('../common/index'),
@@ -32,18 +33,18 @@ main.oneeSama.hook('imouto', function (imouto) {
 main.oneeSama.hook('insertOwnPost', function (extra) {
 	if (!main.postForm || !main.postForm.imouto || !extra || !extra.dice)
 		return;
-	var rolls = main.postForm.imouto.allRolls;
-	extra.dice.forEach(function(dice) {
-		var n = rolls.seen++,
-			info = rolls[n];
+	let rolls = main.postForm.imouto.allRolls;
+	for (let i = 0, lim = extra.dice.length; i < lim; i++) {
+		const n = rolls.seen++;
+		let info = rolls[n];
 		if (!info)
 			info = rolls[n] = {};
-		info.dice = dice;
-		if (info.$tag){
+		info.dice = extra.dice[i];
+		if (info.$tag) {
 			const r = common.readable_dice(info.bit, info.dice);
 			info.$tag.html(r.safe ? r.safe : r);
 		}
-	});
+	}
 });
 
 // Execute server-sent JS in fun threads

@@ -1,6 +1,7 @@
 /*
  * Evertything related to writing and commiting posts
  */
+'use strict';
 
 var $ = require('jquery'),
 	_ = require('underscore'),
@@ -578,9 +579,8 @@ var ComposerView = Backbone.View.extend({
 		if (!params || params.indexOf('t=') < 0)
 			return false;
 		params = params.split('&');
-		var pair;
-		for (var i = 0; i < params.length; i++) {
-			pair = '#' + params[i];
+		for (let i = 0, len = params.length; i < len; i++) {
+			let pair = '#' + params[i];
 			if (embed.youtube_time_re.test(pair))
 				return pair;
 		}
@@ -593,7 +593,7 @@ var ComposerView = Backbone.View.extend({
 		if (text.indexOf('\n') >= 0) {
 			lines = text.split('\n');
 			this.line_count += lines.length - 1;
-			var breach = this.line_count - common.MAX_POST_LINES + 1;
+			const breach = this.line_count - common.MAX_POST_LINES + 1;
 			if (breach > 0) {
 				for (var i = 0; i < breach; i++)
 					lines.pop();
@@ -609,7 +609,7 @@ var ComposerView = Backbone.View.extend({
 		this.char_count += text.length;
 
 		// Either get an allocation or send the committed text
-		var attrs = this.model.attributes;
+		const attrs = this.model.attributes;
 		if (!attrs.num && !attrs.sentAllocRequest) {
 			main.send([common.INSERT_POST, this.allocationMessage(text, null)]);
 			this.model.set({sentAllocRequest: true});
@@ -623,7 +623,7 @@ var ComposerView = Backbone.View.extend({
 		if (lines) {
 			lines[0] = this.$lineBuffer.text() + lines[0];
 			this.$lineBuffer.text(lines.pop());
-			for (var o = 0; o < lines.length; o++)
+			for (let o = 0, len = lines.length; o < len; o++)
 				this.imouto.fragment(lines[o] + '\n');
 		}
 		else {
@@ -847,9 +847,8 @@ var ComposerView = Backbone.View.extend({
 		if (sel) {
 			sel = sel.split('\n');
 			// Prepend > to each line
-			for (var i = 0; i < sel.length; i++) {
+			for (let i = 0, len = sel.length; i < len; i++)
 				sel[i] = '>' + sel[i];
-			}
 			num += '\n' + sel.join('\n') + '\n';
 		}
 		this.$input.val(val + '>>' + num);

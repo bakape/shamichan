@@ -330,27 +330,18 @@ opts.push(illyaDance,
 );
 
 /* SHORTCUT KEYS */
-[
-	{
-		id: 'new',
-		default: 78
-	}, {
-		id: 'togglespoiler',
-		default: 73
-	}, {
-		id: 'textSpoiler',
-		default: 68
-	}, {
-		id: 'done',
-		default: 83
-	}, {
-		id: 'expandAll',
-		default: 69
-	}
-].forEach(function(short) {
-		short.type = 'shortcut';
-		short.tab = 4;
-		opts.push(short);
-	});
+const shorts = [
+	{id: 'new',					default: 78},
+	{id: 'togglespoiler',	default: 73},
+	{id: 'textSpoiler',		default: 68},
+	{id: 'done',				default: 83},
+	{id: 'expandAll',			default: 69}
+];
+for (let i = 0, lim = shorts.length; i < lim; i++) {
+	let short = shorts[i];
+	short.type = 'shortcut';
+	short.tab = 4;
+	opts.push(short);
+}
 
 module.exports = opts;

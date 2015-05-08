@@ -1,28 +1,34 @@
+/*
+ Dice rolls, coin flips, 8balls, syncwatch, banners, JS injections, missle
+ launchers - amusement.
+ */
+'use strict';
+
 var common = require('../common/index'),
 	config = require('../config'),
 	db = require('../db'),
-    hooks = require('../util/hooks');
+	hooks = require('../util/hooks');
 
 var radio;
 if (config.RADIO)
 	radio = require('./radio');
 
-var rollLimit = 5;
+const rollLimit = 5;
 var pyu_counter;
 var r = global.redis;
 
 exports.roll_dice = function (frag, post, extra) {
-	var ms = frag.split(common.dice_re);
-	var dice = [];
-	for (var i = 1; i < ms.length && dice.length < rollLimit; i += 2) {
-		var info = common.parse_dice(ms[i]);
+	const ms = frag.split(common.dice_re);
+	let dice = [];
+	for (let i = 1; i < ms.length && dice.length < rollLimit; i += 2) {
+		let info = common.parse_dice(ms[i]);
 		if (!info)
 			continue;
-		var f = info.faces;
-		var rolls = [];
+		const f = info.faces;
+		let rolls = [];
 		// Pyu counter
 		if (info.pyu){
-			if (info.pyu == 'increment'){
+			if (info.pyu == 'increment') {
 				pyu_counter++;
 				r.incr('pCounter');
 			}
@@ -42,7 +48,7 @@ exports.roll_dice = function (frag, post, extra) {
 			});
 		else {
 			rolls.push(f);
-			for (var j = 0; j < info.n; j++)
+			for (let j = 0; j < info.n; j++)
 				rolls.push(Math.floor(Math.random() * f) + 1);
 		}
 		if (info.bias)
@@ -55,7 +61,7 @@ exports.roll_dice = function (frag, post, extra) {
 		// I don't want to spill into a separate redis list.
 		// Overwriting the whole log every time is quadratic though.
 		// Enforcing a roll limit to deter that and for sanity
-		var exist = post.dice ? post.dice.length : 0;
+		let exist = post.dice ? post.dice.length : 0;
 		if (dice.length + exist > rollLimit)
 			dice = dice.slice(0, Math.max(0, rollLimit - exist));
 		if (dice.length) {

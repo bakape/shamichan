@@ -1,3 +1,8 @@
+/*
+ Renders the server-side portion of the HTML
+ */
+'use strict';
+
 var caps = require('./caps'),
 	common = require('../common/index'),
 	config = require('../config'),
@@ -121,17 +126,19 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 function pagination(info, oneeSama) {
 	const live = oneeSama.lang.live,
 		cur = info.cur_page;
-	var bits = '<nav class="pagination act">';
+	let bits = '<nav class="pagination act">';
 	if (cur >= 0)
 		bits += `<a href="." class="history">${live}</a>`;
 	else
 		bits += `<strong>${live}</strong>`;
-	var start = 0, end = info.pages, step = 1;
+	let start = 0,
+		end = info.pages,
+		step = 1;
 	if (info.ascending) {
 		start = end - 1;
 		end = step = -1;
 	}
-	for (var i = start; i != end; i += step) {
+	for (let i = start; i != end; i += step) {
 		if (i != cur)
 			bits += `<a href="page${i}" class="history">${i}</a>`;
 		else

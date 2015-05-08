@@ -1,3 +1,9 @@
+/*
+ Read-only JSON API
+ */
+
+'use strict';
+
 var _ = require('underscore'),
 	caps = require('./caps'),
 	config = require('../config'),
@@ -21,10 +27,10 @@ app.get(/api\/(post|thread)\/([0-9,]+)\/?/, function(req, res) {
 	const nums = req.params[1].split(',');
 
 	// If don't have access to even one board, return 404
-	for (var num of nums) {
-		if (invalid(req, config.BOARDS[
-				isOP(num) ? db.TAGS[num] : db.TAGS[db.OPs[num]]
-			])
+	for (let i = 0, l = nums.length; i < l; i++) {
+		let num = nums[i];
+		if (invalid(req, config.BOARDS[isOP(num)
+			? db.TAGS[num] : db.TAGS[db.OPs[num]]])
 		)
 			return res.sendStatus(404);
 	}
@@ -46,13 +52,13 @@ app.get(/api\/(post|thread)\/([0-9,]+)\/?/, function(req, res) {
 
 app.get(/\/api\/(catalog|board)\/([a-z0-9]+)\/?/, function(req, res) {
 	res.set(JSONHeaders);
-	var par = req.params;
+	const par = req.params;
 
 	if (invalid(req, par[1]))
 		return res.sendStatus(404);
 
 	// Limit of replies to read
-	var limit = par[0] == 'board' ? state.hot.THREADS_PER_PAGE : 0;
+	let limit = par[0] == 'board' ? state.hot.THREADS_PER_PAGE : 0;
 
 	// Read threads in reverse order from redis
 	r.zrange(`tag:${db.tag_key(par[1])}:threads`, 0, -1, function(err, nums) {
@@ -85,7 +91,7 @@ app.get(/\/api\/config/, function(req, res) {
 
 // Check board existanace and access rights
 function invalid(req, board) {
-	var forward = req.headers['x-forwarded-for'],
+	let forward = req.headers['x-forwarded-for'],
 		ip = config.TRUST_X_FORWARDED_FOR && forward ? forward
 			: req.connection.remoteAddress;
 	return !caps.can_access_board({ip: ip}, board);
@@ -97,24 +103,21 @@ function isOP(num) {
 
 function getPosts(nums, cb) {
 	var posts = [],
-		m = r.multi(),
-		key, links;
-
+		m = r.multi();
 	// Read all of the posts
-	for (var num of nums) {
-		key = (isOP(num) ? 'thread:' : 'post:') + num;
+	for (let i = 0, l = nums.length; i < l; i++) {
+		let num = nums[i];
+		const key = (isOP(num) ? 'thread:' : 'post:') + num;
 		// Posts the current post is linking to
-		links = key + ':links';
 		m.hgetall(key);
-		m.hgetall(links);
+		m.hgetall(key + ':links');
 	}
 	m.exec(function(err, data) {
 		if (err)
 			return cb(err);
-		var post, links;
-		for (var i = 0; i < data.length; i += 2) {
-			post = data[i];
-			links = data[i + 1];
+		for (let i = 0, l = data.length; i < l; i += 2) {
+			let post = data[i];
+			const links = data[i + 1];
 			if (!post)
 				continue;
 			if (links)
@@ -139,12 +142,14 @@ function pruneData(data) {
 }
 
 function getThreads(nums, replyLimit, cb) {
-	var threads = [], m = r.multi(), key;
-	for (var num of nums) {
+	let threads = [],
+		m = r.multi();
+	for (let i = 0, l = nums.length; i < l; i++) {
+		let num = nums[i];
 		// Return 404, if even one of the threads is not an OP
 		if (!isOP(num))
 			return cb(null, null);
-		key = 'thread:' + num;
+		const key = 'thread:' + num;
 		m.hgetall(key);
 		m.hgetall(key + ':links');
 		// Deleted posts are still present in the replies list
@@ -156,11 +161,11 @@ function getThreads(nums, replyLimit, cb) {
 		if (err)
 			return cb(err);
 		var op, links, dels, replies, allReplies = [];
-		for (var i = 0; i < data.length; i += 4) {
-			op = data[i];
-			links = data[i + 1];
-			dels = data[i + 2];
-			replies = data[i + 3];
+		for (let i = 0, l = data.length; i < l; i += 4) {
+			let op = data[i];
+			const links = data[i + 1];
+			const dels = data[i + 2];
+			let replies = data[i + 3];
 			if (!op)
 				continue;
 			pruneData(op);
@@ -187,9 +192,10 @@ function getThreads(nums, replyLimit, cb) {
 			if (!replies)
 				return cb(null, threads);
 			// Ditribute replies among threads
-			for (var i = 0; i < threads.length; i++) {
-				for (var o = 0; o < threads[i][0].replies; o++) {
-					threads[i].push(replies.shift());
+			for (let i = 0, l = threads.length; i < l; i++) {
+				let thread = threads[i];
+				for (let o = 0, l = thread[0].length; o < l; o++) {
+					thread.push(replies.shift());
 				}
 			}
 			cb(null, threads);

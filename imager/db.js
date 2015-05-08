@@ -1,3 +1,5 @@
+'use strict';
+
 var common = require('../common'),
 	compare = require('./compare.node').hashCompareCpp,
 	config = require('../config'),

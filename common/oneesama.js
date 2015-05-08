@@ -69,9 +69,8 @@ OS.red_string = function(ref) {
 	}
 
 	// Linkify >>>/board/ URLs
-	var board;
-	for (var i = 0; i < imports.config.BOARDS.length; i++) {
-		board = imports.config.BOARDS[i];
+	for (let i = 0, len = imports.config.BOARDS.length; i < len; i++) {
+		let board = imports.config.BOARDS[i];
 		if (!new RegExp('^>\\/' + board + '\\/').test(ref))
 			continue;
 		dest = '../' + board;
@@ -89,12 +88,12 @@ OS.red_string = function(ref) {
 OS.break_heart = function(frag) {
 	if (frag.safe)
 		return this.callback(frag);
-	var bits = frag.split(break_re);
-	for (var i = 0; i < bits.length; i++) {
+	let bits = frag.split(break_re);
+	for (let i = 0, len = bits.length; i < len; i++) {
 		/* anchor refs */
-		var morsels = bits[i].split(ref_re);
-		for (var j = 0; j < morsels.length; j++) {
-			var m = morsels[j];
+		const morsels = bits[i].split(ref_re);
+		for (let j = 0, len = morsels.length; j < len; j++) {
+			const m = morsels[j];
 			if (j % 2)
 				this.red_string(m);
 			else if (i % 2) {
@@ -108,7 +107,7 @@ OS.break_heart = function(frag) {
 };
 
 OS.iku = function(token, to) {
-	var state = this.state;
+	let state = this.state;
 	if (state[0] == index.S_QUOTE && to != index.S_QUOTE)
 		this.callback(util.safe('</em>'));
 	switch(to) {
@@ -125,7 +124,7 @@ OS.iku = function(token, to) {
 				this.callback(util.safe('</del>'));
 			}
 			else {
-				var del = {html: '<del>'};
+				const del = {html: '<del>'};
 				this.trigger('spoilerTag', del);
 				this.callback(util.safe(del.html));
 				state[1]++;
@@ -139,27 +138,27 @@ OS.iku = function(token, to) {
 };
 
 OS.fragment = function(frag) {
-	var chunks = frag.split(/(\[\/?spoiler])/i);
-	var state = this.state;
-	for (var i = 0; i < chunks.length; i++) {
-		var chunk = chunks[i], q = (state[0] === index.S_QUOTE);
+	const chunks = frag.split(/(\[\/?spoiler])/i);
+	let state = this.state;
+	const	q = state[0] === index.S_QUOTE;
+	for (let i = 0, len = chunks.length; i < len; i++) {
+		let chunk = chunks[i];
 		if (i % 2) {
-			var to = index.S_SPOIL;
+			let to = index.S_SPOIL;
 			if (chunk[1] == '/' && state[1] < 1)
 				to = q ? index.S_QUOTE : index.S_NORMAL;
 			this.iku(chunk, to);
 			continue;
 		}
-		var lines = chunk.split(/(\n)/);
-		for (var l = 0; l < lines.length; l++) {
-			var line = lines[l];
+		const lines = chunk.split(/(\n)/);
+		for (let l = 0, len = lines.length; l < len; l++) {
+			const line = lines[l];
 			if (l % 2)
 				this.iku(util.safe('<br>'), index.S_BOL);
 			else if (state[0] === index.S_BOL && line[0] == '>')
 				this.iku(line, index.S_QUOTE);
 			else if (line)
-				this.iku(line, q ? index.S_QUOTE
-					: index.S_NORMAL);
+				this.iku(line, q ? index.S_QUOTE : index.S_NORMAL);
 		}
 	}
 };
@@ -174,7 +173,7 @@ OS.karada = function(body) {
 	this.callback = null;
 	if (this.state[0] == index.S_QUOTE)
 		output.push(util.safe('</em>'));
-	for (var i = 0; i < this.state[1]; i++)
+	for (let i = 0; i < this.state[1]; i++)
 		output.push(util.safe('</del>'));
 	return output;
 };
@@ -185,20 +184,17 @@ OS.geimu = function(text) {
 		return;
 	}
 
-	var bits = text.split(util.dice_re);
-	for (var i = 0; i < bits.length; i++) {
-		var bit = bits[i];
-		if (!(i % 2) || !util.parse_dice(bit)) {
+	const bits = text.split(util.dice_re);
+	for (let i = 0, len = bits.length; i < len; i++) {
+		const bit = bits[i];
+		if (!(i % 2) || !util.parse_dice(bit))
 			this.eLinkify ? this.linkify(bit) : this.callback(bit);
-		}
-		else if (this.queueRoll) {
+		else if (this.queueRoll)
 			this.queueRoll(bit);
-		}
-		else if (!this.dice[0]) {
+		else if (!this.dice[0])
 			this.eLinkify ? this.linkify(bit) : this.callback(bit);
-		}
 		else {
-			var d = this.dice.shift();
+			let d = this.dice.shift();
 			this.callback(util.safe('<strong>'));
 			this.strong = true; // for client DOM insertion
 			this.callback(util.readable_dice(bit, d));
@@ -210,14 +206,14 @@ OS.geimu = function(text) {
 
 OS.linkify = function(text) {
 
-	var bits = text.split(/(https?:\/\/[^\s"<>]*[^\s"<>'.,!?:;])/);
-	for (var i = 0; i < bits.length; i++) {
+	let bits = text.split(/(https?:\/\/[^\s"<>]*[^\s"<>'.,!?:;])/);
+	for (let i = 0, len = bits.length; i < len; i++) {
 		if (i % 2) {
-			var e = util.escape_html(bits[i]);
+			const e = util.escape_html(bits[i]);
 			// open in new tab, and disavow target
-			this.callback(util.safe('<a href="' + e +
-				'" rel="nofollow" target="_blank">' +
-				e + '</a>'));
+			this.callback(util.safe(
+				`<a href="${e}" rel="nofollow" target="_blank">${e}</a>`
+			));
 		}
 		else
 			this.callback(bits[i]);
@@ -484,13 +480,13 @@ OS.readable_time = function(time) {
 
 // Readable elapsed time since post
 OS.relative_time = function(then, now) {
-	var time = Math.floor((now - then) / (60 * 1000));
+	let time = Math.floor((now - then) / 60000);
 	if (time < 1)
 		return this.lang.just_now;
 
 	const divide = [60, 24, 30, 12],
 		unit = ['minute', 'hour', 'day', 'month'];
-	for (var i = 0; i < divide.length; i++) {
+	for (let i = 0, len = divide.length; i < len; i++) {
 		if (time < divide[i])
 			return this.lang.ago(time, this.lang['unit_' + unit[i]]);
 		time = Math.floor(time / divide[i]);

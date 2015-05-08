@@ -1,6 +1,8 @@
 /*
  * Websocket controller and connection notifier
  */
+'use strict';
+
 var $ = require('jquery'),
 	_ = require('underscore'),
 	common = require('../common/index'),
@@ -28,7 +30,9 @@ main.send = function (msg) {
 function on_message(e) {
 	if (main.config.DEBUG)
 		console.log('>', e.data);
-	JSON.parse(e.data).forEach(function(msg) {
+	let data = JSON.parse(e.data);
+	for (let i = 0, lim = data.length; i < lim; i++) {
+		let msg = data[i];
 		// TEMP: Log yet unsupported websocket calls
 		if (!main.dispatcher[msg[1]])
 			return console.error('Unsuported websocket call: ', msg);
@@ -37,7 +41,7 @@ function on_message(e) {
 		if (common.is_pubsub(type) && op in state.syncs)
 			state.syncs[op]++;
 		main.dispatcher[type](msg, op);
-	});
+	}
 }
 
 function sync_status(msg) {

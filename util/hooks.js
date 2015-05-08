@@ -1,6 +1,8 @@
-var async = require('async');
+'use strict';
 
-var HOOKS = {}, SYNC_HOOKS = {};
+var async = require('async');
+var HOOKS = {},
+	SYNC_HOOKS = {};
 
 exports.hook = function (key, func) {
 	var hs = HOOKS[key];
@@ -31,8 +33,8 @@ exports.hook_sync = function (key, func) {
 };
 
 exports.trigger_sync = function (key, arg) {
-	var hs = SYNC_HOOKS[key] || [];
-	hs.forEach(function (func) {
-		func(arg);
-	});
+	let hs = SYNC_HOOKS[key] || [];
+	for (let i = 0, l = hs.length; i < l; i++) {
+		hs[i](arg);
+	}
 };

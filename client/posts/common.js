@@ -1,6 +1,8 @@
 /*
  * Common methods to both OP and regular posts
  */
+'use strict';
+
 var $ = require('jquery'),
 	common = require('../../common'),
 	imager = require('./imager'),

@@ -1,6 +1,7 @@
 /*
  * Non-OP posts
  */
+'use strict';
 
 var $ = require('jquery'),
 	_ = require('underscore'),
@@ -55,26 +56,6 @@ var Article = module.exports = Backbone.View.extend({
 			.children('blockquote, .omit, form, article[id]:last')
 			.last()
 			.after(this.$el);
-		return this;
-	},
-
-	renderBacklinks: function () {
-		if (options.get('backlinks'))
-			return this; /* ought to disconnect handler? */
-		var backlinks = this.model.get('backlinks');
-		var $list = this.$el.find('small');
-		if (!backlinks || !backlinks.length) {
-			$list.remove();
-			return this;
-		}
-		if (!$list.length)
-			$list = $('<small/>', {text: 'Replies:'}).appendTo(this.$el);
-		// TODO: Sync up DOM gracefully instead of clobbering
-		$list.find('a').remove();
-		backlinks.forEach(function (num) {
-			var $a = $('<a/>', {href: '#'+num, text: '>>'+num});
-			$list.append(' ', $a);
-		});
 		return this;
 	},
 
