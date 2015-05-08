@@ -119,7 +119,7 @@ module.exports = {
 			if (!links.hasOwnProperty(key))
 				continue;
 			diff = links[key] != (op);
-			html += common.html
+			html += common.parseHTML
 				` <a class="history" href="${diff && links[key]}#${key}">
 					&gt;&gt;${key}${diff && ' →'}
 				</a>`;

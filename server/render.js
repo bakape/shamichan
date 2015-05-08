@@ -82,7 +82,7 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 	});
 	reader.once('bottom', function() {
 		// Serialze post collection and add as inlined JSON
-		out.write(common.html
+		out.write(common.parseHTML
 			`<script id="postData" type="application/json">
 				${JSON.stringify(posts)}
 			</script>`

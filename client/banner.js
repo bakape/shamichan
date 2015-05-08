@@ -83,7 +83,7 @@ var BannerView = Backbone.View.extend({
 	// r/a/dio stream info rendering
 	renderRadio: function(data) {
 		data = JSON.parse(data);
-		this.$center.html(common.html
+		this.$center.html(common.parseHTML
 			`<a href="http://r-a-d.io/" target="_blank">
 				[${data.listeners}] ${data.dj}
 			</a>

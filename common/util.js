@@ -339,7 +339,7 @@ exports.random_id = function() {
  Template string tag function for HTML. Strips indentation and trailing
  newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
  */
-var html = exports.html = function(callSite) {
+var parseHTML = exports.parseHTML = function(callSite) {
 	/*
 	 Slicing the arguments object is deoptimising, so we construct a new array
 	 instead.
