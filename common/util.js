@@ -123,12 +123,12 @@ var escape_fragment = exports.escape_fragment = function(frag) {
 };
 
 var flatten = exports.flatten = function(frags) {
-	var out = [];
-	for (var i = 0; i < frags.length; i++) {
-		var frag = frags[i];
+	let out = [];
+	for (let i = 0, l = frags.length; i < l; i++) {
+		let frag = frags[i];
 		if (Array.isArray(frag))
 			out = out.concat(flatten(frag));
-		else
+		else if (frag || frag === 0)
 			out.push(escape_fragment(frag));
 	}
 	return out;
@@ -362,7 +362,7 @@ var html = exports.html = function(callSite) {
 			 omitted.
 			 */
 			const arg = args[i - 1];
-			return ((i === 0 || arg === false) ? '' : arg) + text;
+			return ((i === 0 || (!arg && arg !== 0)) ? '' : arg) + text;
 		})
 		.join('');
 
