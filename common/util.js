@@ -344,9 +344,9 @@ var html = exports.html = function(callSite) {
 	 Slicing the arguments object is deoptimising, so we construct a new array
 	 instead.
 	 */
-	let args = [];
+	let args = new Array(arguments.length);
 	for (let i = 1; i < arguments.length; i++)
-		args.push(arguments[i]);
+		args[i] = arguments[i];
 
 	if (typeof callSite === 'string')
 		return formatHTML(callSite);
