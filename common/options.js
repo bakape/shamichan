@@ -176,6 +176,7 @@ var opts = [
 		// Use a custom internatiolisation function
 		lang: 'imageSearch',
 		tab: 2,
+		default: search === 'google',
 		exec: function(toggle) {
 			var $style = $('#' + search + 'Toggle');
 			if (!$style.length) {
