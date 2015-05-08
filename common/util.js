@@ -344,9 +344,10 @@ var html = exports.html = function(callSite) {
 	 Slicing the arguments object is deoptimising, so we construct a new array
 	 instead.
 	 */
-	let args = new Array(arguments.length);
-	for (let i = 1; i < arguments.length; i++)
-		args[i] = arguments[i];
+	const len = arguments.length;
+	let args = new Array(len - 1);
+	for (let i = 1; i < len; i++)
+		args[i - 1] = arguments[i];
 
 	if (typeof callSite === 'string')
 		return formatHTML(callSite);
@@ -354,13 +355,14 @@ var html = exports.html = function(callSite) {
 		return formatHTML(callSite(args));
 
 	let output = callSite
-		.slice(0, args.length + 1)
+		.slice(0, len)
 		.map(function(text, i) {
 			/*
 			 Simplifies conditionals. If the placeholder returns `false`, it is
 			 omitted.
 			 */
-			return ((i === 0 || args[i - 1] === false) ? '' : args[i - 1]) + text;
+			const arg = args[i - 1];
+			return ((i === 0 || arg === false) ? '' : arg) + text;
 		})
 		.join('');
 
