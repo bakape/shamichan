@@ -22,7 +22,7 @@ function tamashii(num) {
 		this.callback('>>' + num);
 }
 
-exports.write_thread_html = function (reader, req, out, cookies, opts) {
+function write_thread_html (reader, req, out, cookies, opts) {
 	var oneeSama = new common.OneeSama(tamashii);
 	oneeSama.tz_offset = req.tz_offset;
 
@@ -120,7 +120,8 @@ exports.write_thread_html = function (reader, req, out, cookies, opts) {
 		posts[post.op].replies.push(post.num);
 		out.write(oneeSama.mono(post));
 	});
-};
+}
+exports.write_thread_html = write_thread_html;
 
 // [live 0 1 2 3] [Catalog]
 function pagination(info, oneeSama) {
@@ -183,7 +184,7 @@ function make_link_rels(board, bits) {
 	}).join('');
 }
 
-exports.write_board_head = function (out, board, nav, language) {
+function write_board_head (out, board, nav, language) {
 	var indexTmpl = RES['indexTmpl-' + language];
 	var title = STATE.hot.TITLES[board] || escape(board);
 	var metaDesc = "Real-time imageboard";
@@ -200,7 +201,8 @@ exports.write_board_head = function (out, board, nav, language) {
 	out.write(imageBanner());
 	out.write(title);
 	out.write(indexTmpl[i++]);
-};
+}
+exports.write_board_head = write_board_head;
 
 function imageBanner() {
 	var b = config.BANNERS;
@@ -210,12 +212,13 @@ function imageBanner() {
 		+ b[Math.floor(Math.random() * b.length)] + '"><br>';
 }
 
-exports.write_board_title = function(out, board){
+function write_board_title(out, board){
 	var title = STATE.hot.TITLES[board] || escape(board);
 	out.write(`<h1>${imageBanner()}${title}</h1>`);
-};
+}
+exports.write_board_title = write_board_title;
 
-exports.write_thread_head = function (out, board, op, opts) {
+function write_thread_head (out, board, op, opts) {
 	const indexTmpl = RES['indexTmpl-' + opts.lang];
 	var title = '/'+escape(board)+'/';
 	if (opts.subject)
@@ -236,16 +239,18 @@ exports.write_thread_head = function (out, board, op, opts) {
 	out.write(imageBanner());
 	out.write(title);
 	out.write(indexTmpl[i++]);
-};
+}
+exports.write_thread_head = write_thread_head;
 
-exports.write_thread_title = function(out, board, op, opts){
+function write_thread_title(out, board, op, opts){
 	var title = '/'+escape(board)+'/';
 	if (opts.subject)
 		title += ' - ' + escape(opts.subject) + ' (#' + op + ')';
 	else
 		title += ' - #' + op;
 	out.write(`<h1>${imageBanner()}${title}</h1>`);
-};
+}
+exports.write_thread_title = write_thread_title;
 
 function make_board_meta(board, info) {
 	var bits = [];
@@ -261,7 +266,7 @@ function make_thread_meta(board, num, abbrev) {
 	return make_link_rels(board, bits);
 }
 
-exports.write_page_end = function (out, ident, language) {
+function write_page_end (out, ident, language) {
 	const tmpl = 'indexTmpl-' + language;
 	out.write(RES[tmpl][RES[tmpl].length - 1]);
 	if (ident) {
@@ -270,4 +275,5 @@ exports.write_page_end = function (out, ident, language) {
 		else if (caps.can_moderate(ident))
 			out.write('<script src="../mod.js"></script>\n');
 	}
-};
+}
+exports.write_page_end = write_page_end;

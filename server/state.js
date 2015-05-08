@@ -394,14 +394,15 @@ function renderExportImport(lang) {
 	return html;
 }
 
-exports.reload_hot_resources = function (cb) {
+function reload_hot_resources (cb) {
 	async.series([
 		reload_hot_config,
 		reloadModClient,
 		reloadClient,
 		reload_resources
 	], cb);
-};
+}
+exports.reload_hot_resources = reload_hot_resources;
 
 function make_navigation_html() {
 	if (!HOT.INTER_BOARD_NAVIGATION)

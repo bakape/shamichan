@@ -160,7 +160,7 @@ OK.finish_post = function (callback) {
 	});
 };
 
-exports.scan_client_caps = function () {
+function scan_client_caps () {
 	let clients = STATE.clientsByIP;
 	for (let i = 0, l = clients.length; i < l; i++) {
 		let ip = clients[i],
@@ -181,14 +181,16 @@ exports.scan_client_caps = function () {
 			}
 		}
 	}
-};
+}
+exports.scan_client_caps = scan_client_caps;
 
 // Push message to all clients
-exports.push = function(msg){
+function push(msg){
 	async.each(_.values(STATE.clients), function(client){
 		try {
 			client.send(msg);
 		}
 		catch(e){/* Client died, but we don't care */}
 	});
-};
+}
+exports.push = push;

@@ -6,12 +6,13 @@
 
 var imports = require('./imports');
 
-exports.is_pubsub = function(t) {
+function is_pubsub(t) {
 	return t > 0 && t < 30;
-};
+}
+exports.is_pubsub = is_pubsub;
 
 // Finite State Machine
-var FSM = exports.FSM = function(start) {
+function FSM(start) {
 	this.state = start;
 	this.spec = {
 		acts: {},
@@ -19,7 +20,8 @@ var FSM = exports.FSM = function(start) {
 		wilds: {},
 		preflights: {}
 	};
-};
+}
+exports.FSM = FSM;
 
 FSM.prototype.clone = function() {
 	let second = new FSM(this.state);
@@ -103,14 +105,22 @@ FSM.prototype.feeder = function(ev) {
 	};
 };
 
-const entities = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'};
-var escape_html = exports.escape_html = function(html) {
+
+function escape_html(html) {
+	const entities = {
+		'&': '&amp;',
+		'<': '&lt;',
+		'>': '&gt;',
+		'"': '&quot;'
+	};
 	return html.replace(/[&<>"]/g, function(c) {
 		return entities[c];
 	});
-};
+}
+exports.escape_html = escape_html;
 
-var escape_fragment = exports.escape_fragment = function(frag) {
+
+function escape_fragment(frag) {
 	var t = typeof (frag);
 	if (t == 'object' && frag && typeof (frag.safe) == 'string')
 		return frag.safe;
@@ -120,9 +130,11 @@ var escape_fragment = exports.escape_fragment = function(frag) {
 		return frag.toString();
 	else
 		return '???';
-};
+}
+exports.escape_fragment = escape_fragment;
 
-var flatten = exports.flatten = function(frags) {
+
+function flatten(frags) {
 	let out = [];
 	for (let i = 0, l = frags.length; i < l; i++) {
 		let frag = frags[i];
@@ -132,23 +144,28 @@ var flatten = exports.flatten = function(frags) {
 			out.push(escape_fragment(frag));
 	}
 	return out;
-};
+}
+exports.flatten = flatten;
 
 // Wraps safe strings, which will not be escaped on cocatenation
-var safe = exports.safe = function(frag) {
+
+function safe(frag) {
 	return {safe: frag};
-};
+}
+exports.safe = safe;
 
-exports.is_noko = function(email) {
+function is_noko(email) {
 	return email && email.indexOf('@') == -1 && /noko/i.test(email);
-};
+}
+exports.is_noko = is_noko;
 
-exports.is_sage = function(email) {
+function is_sage(email) {
 	return imports.hotConfig.SAGE_ENABLED
 		&& email
 		&& email.indexOf('@') == -1
 		&& /sage/i.test(email);
-};
+}
+exports.is_sage = is_sage;
 
 // TODO: Move to admin.js, when I get to it
 function override(obj, orig, upgrade) {
@@ -171,7 +188,7 @@ dice_re += ')';
 dice_re = new RegExp(dice_re, 'i');
 exports.dice_re = dice_re;
 
-exports.parse_dice = function(frag) {
+function parse_dice(frag) {
 	if (frag == '#flip')
 		return {n: 1, faces: 2};
 	if (frag == '#8ball')
@@ -212,17 +229,19 @@ exports.parse_dice = function(frag) {
 		var end = ((hour * 60 + min) * 60 + sec) * 1000 + time;
 		return {hour: hour, min: min, sec: sec, start: time, end: end};
 	}
-};
+}
+exports.parse_dice = parse_dice;
 
-var serverTime = exports.serverTime = function() {
+function serverTime() {
 	var d = new Date().getTime();
 	// On the server or time difference not compared yet
 	if (imports.isNode || !imports.main.serverTimeOffset)
 		return d;
 	return d + imports.main.serverTimeOffset;
-};
+}
+exports.serverTime = serverTime;
 
-exports.readable_dice = function(bit, d) {
+function readable_dice(bit, d) {
 	if (bit == '#flip')
 		return '#flip (' + (d[1] == 2) + ')';
 	if (bit == '#8ball')
@@ -258,9 +277,10 @@ exports.readable_dice = function(bit, d) {
 	for (var j = 0; j < n; j++)
 		sum += r[j];
 	return bit + (eq ? ' = ' : '') + sum + ')';
-};
+}
+exports.readable_dice = readable_dice;
 
-exports.pick_spoiler = function(metaIndex) {
+function pick_spoiler(metaIndex) {
 	var imgs = imports.config.SPOILER_IMAGES;
 	var n = imgs.length;
 	var i;
@@ -269,22 +289,23 @@ exports.pick_spoiler = function(metaIndex) {
 	else
 		i = metaIndex % n;
 	return {index: imgs[i], next: (i + 1) % n};
-};
+}
+exports.pick_spoiler = pick_spoiler;
 
-exports.new_tab_link
-	= function(srcEncoded, inside, cls, brackets) {
-	if (brackets)
-		inside = '[' + inside + '] ';
+function new_tab_link(srcEncoded, inside, cls) {
 	return [
-		safe('<a href="' + srcEncoded + '" target="_blank"' +
-			(cls ? ' class="' + cls + '"' : '') +
-			' rel="nofollow">'), inside, safe('</a>')
+		safe(parseHTML
+			`<a href="${srcEncoded}" target="_blank" rel="nofollow" class="${cls}">`
+		),
+		inside,
+		safe('</a>')
 	];
-};
+}
+exports.new_tab_link = new_tab_link;
 
 exports.thumbStyles = ['small', 'sharp', 'hide'];
 
-exports.readable_filesize = function(size) {
+function readable_filesize(size) {
 	/* Dealt with it. */
 	if (size < 1024)
 		return size + ' B';
@@ -292,26 +313,29 @@ exports.readable_filesize = function(size) {
 		return Math.round(size / 1024) + ' KB';
 	size = Math.round(size / 104857.6).toString();
 	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
-};
+}
+exports.readable_filesize = readable_filesize;
 
-exports.pad = function(n) {
+function pad(n) {
 	return (n < 10 ? '0' : '') + n;
-};
+}
+exports.pad = pad;
 
 // Various UI-related links wrapped in []
-exports.action_link_html
-	= function(href, name, id, cls) {
+function action_link_html(href, name, id, cls) {
 	return '<span class="act"><a href="' + href + '"'
 		+ (id ? ' id="' + id + '"' : '')
 		+ (cls ? ' class="' + cls + '"' : '')
 		+ '>' + name + '</a></span>';
-};
+}
+exports.action_link_html = action_link_html;
 
-exports.reasonable_last_n = function(n) {
+function reasonable_last_n(n) {
 	return Number.isInteger(n) && n >= 5 && n <= 500;
-};
+}
+exports.reasonable_last_n = reasonable_last_n;
 
-exports.parse_name = function(name) {
+function parse_name(name) {
 	var tripcode = '', secure = '';
 	var hash = name.indexOf('#');
 	if (hash >= 0) {
@@ -329,17 +353,20 @@ exports.parse_name = function(name) {
 		name.substr(0, 100), tripcode.substr(0, 128),
 		secure.substr(0, 128)
 	];
-};
+}
+exports.parse_name = parse_name;
 
-exports.random_id = function() {
+function random_id() {
 	return Math.floor(Math.random() * 1e16) + 1;
-};
+}
+exports.random_id = random_id;
 
 /*
  Template string tag function for HTML. Strips indentation and trailing
  newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
  */
-var parseHTML = exports.parseHTML = function(callSite) {
+
+function parseHTML(callSite) {
 	/*
 	 Slicing the arguments object is deoptimising, so we construct a new array
 	 instead.
@@ -367,7 +394,8 @@ var parseHTML = exports.parseHTML = function(callSite) {
 		.join('');
 
 	return formatHTML(output);
-};
+}
+exports.parseHTML = parseHTML;
 
 function formatHTML(str) {
 	let size = -1;

@@ -7,7 +7,7 @@ var $ = require('jquery'),
 	memory = require('./memory');
 
 // Read page state by parsing a URL
-var read = exports.read = function(url) {
+function read(url) {
 	const href = url.split('#')[0],
 		// Display last N posts setting on thread pages
 		lastN = href.match(/[\?&]last=(\d+)/);
@@ -27,7 +27,8 @@ var read = exports.read = function(url) {
 		 */
 		live: page === -1 && thread === 0
 	};
-};
+}
+exports.read = read;
 
 // Initial page state
 var init = read(location.href);

@@ -39,7 +39,7 @@ Muggle.prototype.deepest_reason = function () {
 	return this;
 };
 
-exports.move = function (src, dest, callback) {
+function move (src, dest, callback) {
 	child_process.execFile('/bin/mv', ['--', src, dest],
 				function (err, stdout, stderr) {
 		if (err)
@@ -48,9 +48,10 @@ exports.move = function (src, dest, callback) {
 		else
 			callback(null);
 	});
-};
+}
+exports.move = move;
 
-exports.movex = function (src, dest, callback) {
+function movex (src, dest, callback) {
 	child_process.execFile('/bin/mv', ['-n', '--', src, dest],
 				function (err, stdout, stderr) {
 		if (err)
@@ -59,9 +60,10 @@ exports.movex = function (src, dest, callback) {
 		else
 			callback(null);
 	});
-};
+}
+exports.movex = movex;
 
-exports.cpx = function (src, dest, callback) {
+function cpx (src, dest, callback) {
 	child_process.execFile('/bin/cp', ['-n', '--', src, dest],
 				function (err, stdout, stderr) {
 		if (err)
@@ -70,19 +72,22 @@ exports.cpx = function (src, dest, callback) {
 		else
 			callback(null);
 	});
-};
+}
+exports.cpx = cpx;
 
-exports.checked_mkdir = function (dir, cb) {
+function checked_mkdir (dir, cb) {
 	fs.mkdir(dir, function (err) {
 		cb(err && err.code == 'EEXIST' ? null : err);
 	});
-};
+}
+exports.checked_mkdir = checked_mkdir;
 
 // Get binary absolute path
-exports.which = function(name, callback) {
+function which(name, callback) {
 	child_process.exec('which ' + name, function (err, stdout, stderr) {
 		if (err)
 			throw err;
 		callback(stdout.trim());
 	});
-};
+}
+exports.which = which;

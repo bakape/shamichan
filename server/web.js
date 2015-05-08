@@ -161,12 +161,13 @@ function resource_second_handler(req, resp, resource, err, act, arg) {
 		throw new Error("Unknown resource handler: " + act);
 }
 
-exports.route_get = function (pattern, handler) {
+function route_get (pattern, handler) {
 	routes.push({method: 'get', pattern: pattern,
 			handler: auth_passthrough.bind(null, handler)});
-};
+}
+exports.route_get = route_get;
 
-exports.resource = function (pattern, head, get, tear_down) {
+function resource (pattern, head, get, tear_down) {
 	if (head === true)
 		head = function (req, cb) { cb(null, 'ok'); };
 	var res = {pattern: pattern, head: head, authPassthrough: true};
@@ -176,9 +177,10 @@ exports.resource = function (pattern, head, get, tear_down) {
 	if (tear_down)
 		res.tear_down = tear_down;
 	resources.push(res);
-};
+}
+exports.resource = resource;
 
-exports.resource_auth = function (pattern, head, get, finished) {
+function resource_auth (pattern, head, get, finished) {
 	if (head === true)
 		head = function (req, cb) { cb(null, 'ok'); };
 	var res = {pattern: pattern, head: head, authPassthrough: false};
@@ -188,7 +190,8 @@ exports.resource_auth = function (pattern, head, get, finished) {
 	if (finished)
 		res.finished = finished;
 	resources.push(res);
-};
+}
+exports.resource_auth = resource_auth;
 
 function parse_forwarded_for(ff) {
 	if (!ff)
@@ -218,10 +221,11 @@ function auth_passthrough(handler, req, resp, params) {
 	});
 }
 
-exports.route_get_auth = function (pattern, handler) {
+function route_get_auth (pattern, handler) {
 	routes.push({method: 'get', pattern: pattern,
 			handler: auth_checker.bind(null, handler, false)});
-};
+}
+exports.route_get_auth = route_get_auth;
 
 function auth_checker(handler, is_post, req, resp, params) {
 	if (is_post) {
@@ -269,18 +273,20 @@ function forbidden(resp, err) {
 	resp.end(preamble + escape(err));
 }
 
-exports.route_post = function (pattern, handler) {
+function route_post (pattern, handler) {
 	// auth_passthrough conflicts with formidable
 	// (by the time the cookie check comes back, formidable can't
 	// catch the form data)
 	// We don't need the auth here anyway currently thanks to client_id
 	routes.push({method: 'post', pattern: pattern, handler: handler});
-};
+}
+exports.route_post = route_post;
 
-exports.route_post_auth = function (pattern, handler) {
+function route_post_auth (pattern, handler) {
 	routes.push({method: 'post', pattern: pattern,
 			handler: auth_checker.bind(null, handler, true)});
-};
+}
+exports.route_post_auth = route_post_auth;
 
 var vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
@@ -360,14 +366,15 @@ function redirect_js(resp, uri) {
 }
 exports.redirect_js = redirect_js;
 
-exports.dump_server_error = function (resp, err) {
+function dump_server_error (resp, err) {
 	resp.writeHead(500, noCacheHeaders);
 	resp.write(preamble + '<title>Server error</title>\n<pre>');
 	resp.write(escape(util.inspect(err)));
 	resp.end('</pre>');
-};
+}
+exports.dump_server_error = dump_server_error;
 
-var parse_cookie = exports.parse_cookie = function(header) {
+function parse_cookie(header) {
 	let chunks = {};
 	const split = (header || '').split(';');
 	for (let i = 0, l = split.length; i < l; i++) {
@@ -380,7 +387,8 @@ var parse_cookie = exports.parse_cookie = function(header) {
 		catch (e) {}
 	}
 	return chunks;
-};
+}
+exports.parse_cookie = parse_cookie;
 
 function Debuff(stream) {
 	Stream.call(this);

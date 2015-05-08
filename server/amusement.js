@@ -17,7 +17,7 @@ const rollLimit = 5;
 var pyu_counter;
 var r = global.redis;
 
-exports.roll_dice = function (frag, post, extra) {
+function roll_dice (frag, post, extra) {
 	const ms = frag.split(common.dice_re);
 	let dice = [];
 	for (let i = 1; i < ms.length && dice.length < rollLimit; i += 2) {
@@ -70,7 +70,8 @@ exports.roll_dice = function (frag, post, extra) {
 			post.dice = dice;
 		}
 	}
-};
+}
+exports.roll_dice = roll_dice;
 
 function inline_dice(post, dice) {
 	if (dice && dice.length) {

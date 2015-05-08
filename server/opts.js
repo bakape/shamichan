@@ -13,7 +13,7 @@ function usage() {
 	process.exit(1);
 }
 
-exports.parse_args = function () {
+function parse_args () {
 	var argv = minimist(process.argv.slice(2));
 
 	if ('h' in argv || 'help' in argv)
@@ -25,9 +25,11 @@ exports.parse_args = function () {
 		config.LISTEN_HOST = argv.host;
 	if (argv.pid)
 		config.PID_FILE = argv.pid;
-};
+}
+exports.parse_args = parse_args;
 
-exports.load_defaults = function () {
+function load_defaults () {
 	if (!config.PID_FILE)
 		config.PID_FILE = path.join(__dirname, '.server.pid');
-};
+}
+exports.load_defaults = load_defaults;

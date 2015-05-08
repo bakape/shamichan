@@ -4,7 +4,8 @@ var $ = require('jquery'),
 	main = require('./main'),
 	options = require('./options');
 
-var date_from_time_el = exports.date_from_time_el = function(el) {
+
+function date_from_time_el(el) {
 	if (!el)
 		return new Date();
 	const dTime = el.getAttribute('datetime');
@@ -14,7 +15,8 @@ var date_from_time_el = exports.date_from_time_el = function(el) {
 	return new Date(
 		dTime.replace(/-/g, '/').replace('T', ' ').replace('Z', ' GMT')
 	);
-};
+}
+exports.date_from_time_el = date_from_time_el;
 
 const is_skewed = (function(){
 	var el = document.querySelector('time');

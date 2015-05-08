@@ -210,7 +210,7 @@ function removeOPTag(op) {
 	delete TAGS[op];
 }
 
-var OP_has_tag = exports.OP_has_tag = function(tag, op) {
+function OP_has_tag(tag, op) {
 	var index = config.BOARDS.indexOf(tag);
 	if (index < 0)
 		return false;
@@ -221,9 +221,10 @@ var OP_has_tag = exports.OP_has_tag = function(tag, op) {
 		return index == tags;
 	else
 		return tags.indexOf(index) >= 0;
-};
+}
+exports.OP_has_tag = OP_has_tag;
 
-exports.first_tag_of = function (op) {
+function first_tag_of (op) {
 	var tags = TAGS[op];
 	if (tags === undefined)
 		return false;
@@ -231,7 +232,8 @@ exports.first_tag_of = function (op) {
 		return config.BOARDS[tags];
 	else
 		return config.BOARDS[tags[0]];
-};
+}
+exports.first_tag_of = first_tag_of;
 
 function tags_of(op) {
 	var tags = TAGS[op];
@@ -244,7 +246,8 @@ function tags_of(op) {
 }
 exports.tags_of = tags_of;
 
-exports.track_OPs = function (callback) {
+
+function track_OPs (callback) {
 	var k = redis_client();
 	k.subscribe('cache');
 	k.once('subscribe', function () {
@@ -252,7 +255,8 @@ exports.track_OPs = function (callback) {
 	});
 	k.on('message', update_cache);
 	/* k persists for the purpose of cache updates */
-};
+}
+exports.track_OPs = track_OPs;
 
 function update_cache(chan, msg) {
 	msg = JSON.parse(msg);
@@ -286,13 +290,14 @@ function update_cache(chan, msg) {
 	}
 }
 
-exports.on_pub = function (name, handler) {
+function on_pub (name, handler) {
 	// TODO: share redis connection
 	var k = redis_client();
 	k.subscribe(name);
 	k.on('message', handler);
 	/* k persists */
-};
+}
+exports.on_pub = on_pub;
 
 function load_OPs(callback) {
 	var r = global.redis;
@@ -373,9 +378,11 @@ exports.expiry_queue_key = expiry_queue_key;
 
 /* SOCIETY */
 
-exports.is_board = function (board) {
+
+function is_board (board) {
 	return config.BOARDS.indexOf(board) >= 0;
-};
+}
+exports.is_board = is_board;
 
 exports.UPKEEP_IDENT = {auth: 'Upkeep', ip: '127.0.0.1'};
 
@@ -1794,9 +1801,11 @@ function subject_val(op, subject) {
 	return subject && (op + ':' + subject);
 }
 
-var tag_key = exports.tag_key =  function(tag) {
+
+function tag_key(tag) {
 	return tag.length + ':' + tag;
-};
+}
+exports.tag_key = tag_key;
 
 function parse_tags(input) {
 	if (!input) {

@@ -21,7 +21,7 @@ function can_access_board(ident, board) {
 }
 exports.can_access_board = can_access_board;
 
-exports.can_access_thread = function (ident, op) {
+function can_access_thread (ident, op) {
 	var tags = db.tags_of(op);
 	if (!tags)
 		return false;
@@ -29,7 +29,8 @@ exports.can_access_thread = function (ident, op) {
 		if (can_access_board(ident, tags[i]))
 			return tags[i];
 	return false;
-};
+}
+exports.can_access_thread = can_access_thread;
 
 function temporal_access_check(ident, board) {
 	var info = {ident: ident, board: board, access: true};
@@ -38,13 +39,14 @@ function temporal_access_check(ident, board) {
 }
 exports.temporal_access_check = temporal_access_check;
 
-exports.can_ever_access_board = function (ident, board) {
+function can_ever_access_board (ident, board) {
 	if (can_access_board(ident, board))
 		return true;
 	if (!temporal_access_check(ident, board))
 		return true;
 	return false;
-};
+}
+exports.can_ever_access_board = can_ever_access_board;
 
 function can_moderate(ident) {
 	return (ident.auth === 'Admin' || ident.auth === 'Moderator');
@@ -62,7 +64,7 @@ function dead_media_paths(paths) {
 	paths.mid = '../dead/mid/';
 }
 
-exports.augment_oneesama = function (oneeSama, opts) {
+function augment_oneesama (oneeSama, opts) {
 	var ident = opts.ident;
 	oneeSama.ident = ident;
 	if (can_moderate(ident))
@@ -71,9 +73,10 @@ exports.augment_oneesama = function (oneeSama, opts) {
 		oneeSama.hook('headerName', authcommon.denote_hidden);
 	if (can_administrate(ident) && opts.board == 'graveyard')
 		oneeSama.hook('mediaPaths', dead_media_paths);
-};
+}
+exports.augment_oneesama = augment_oneesama;
 
-exports.mod_handler = function (func) {
+function mod_handler (func) {
 	return function (nums, client) {
 		if (!can_moderate(client.ident))
 			return false;
@@ -89,7 +92,8 @@ exports.mod_handler = function (func) {
 			setTimeout(func.bind(null, nums, client), delay*1000);
 		return true;
 	};
-};
+}
+exports.mod_handler = mod_handler;
 
 function parse_ip(ip) {
 	var m = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)(?:\/(\d+))?$/);
@@ -174,7 +178,7 @@ function parse_suspensions(suspensions) {
 	return parsed;
 }
 
-exports.lookup_ident = function (ip) {
+function lookup_ident (ip) {
 	var ident = {ip: ip};
 	var num = parse_ip(ip).num;
 	var ban = range_lookup(RANGES.bans, num);
@@ -199,6 +203,7 @@ exports.lookup_ident = function (ip) {
 		ident.slow = slow;
 
 	return ident;
-};
+}
+exports.lookup_ident = lookup_ident;
 
 

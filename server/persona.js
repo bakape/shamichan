@@ -9,7 +9,7 @@ function connect() {
 	return global.redis;
 }
 
-exports.login = function (req, resp) {
+function login (req, resp) {
 	try {
 		var form = new formidable.IncomingForm();
 		form.maxFieldsSize = 50 * 1024;
@@ -20,7 +20,8 @@ exports.login = function (req, resp) {
 		winston.error('formidable threw ' + e);
 		respond_error(resp, "Bad request.");
 	}
-};
+}
+exports.login = login;
 
 function verify_persona(resp, err, fields) {
 	if (err) {
@@ -79,7 +80,7 @@ function verify_auth(resp, packet) {
 	exports.set_cookie(resp, packet);
 }
 
-exports.set_cookie = function (resp, info) {
+function set_cookie (resp, info) {
 	var pass = random_str();
 	info.csrf = random_str();
 
@@ -92,7 +93,8 @@ exports.set_cookie = function (resp, info) {
 			return;//oauth_error(resp, err);
 		respond_ok(resp, make_cookie('a', pass, info.expires));
 	});
-};
+}
+exports.set_cookie = set_cookie;
 
 function extract_login_cookie(chunks) {
 	if (!chunks || !chunks.a)
@@ -101,7 +103,7 @@ function extract_login_cookie(chunks) {
 }
 exports.extract_login_cookie = extract_login_cookie;
 
-exports.check_cookie = function (cookie, callback) {
+function check_cookie (cookie, callback) {
 	var r = connect();
 	r.hgetall('session:' + cookie, function (err, session) {
 		if (err)
@@ -110,9 +112,10 @@ exports.check_cookie = function (cookie, callback) {
 			return callback('Not logged in.');
 		callback(null, session);
 	});
-};
+}
+exports.check_cookie = check_cookie;
 
-exports.logout = function (req, resp) {
+function logout (req, resp) {
 	var r = connect();
 	var cookie = extract_login_cookie(req.cookies);
 	if (!cookie)
@@ -123,7 +126,8 @@ exports.logout = function (req, resp) {
 		r.del('session:' + req.cookies.a);
 		respond_ok(resp, 'a=; expires=Thu, 01 Jan 1970 00:00:00 GMT');
 	});
-};
+}
+exports.logout = logout;
 
 function respond_error(resp, message) {
 	resp.writeHead(200, {'Content-Type': 'application/json'});

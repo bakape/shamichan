@@ -5,10 +5,12 @@
 var $ = require('jquery');
 
 // Account for banner height, when scrolling to an anchor
-exports.aboveBanner = function (){
+
+function aboveBanner (){
 	if (!/^#\d+$/.test(location.hash))
 		return;
 	$(window).scrollTop($(location.hash).offset().top - $('#banner').height());
-};
+}
+exports.aboveBanner = aboveBanner;
 
 window.onload = exports.aboveBanner;

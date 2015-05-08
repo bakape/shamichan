@@ -8,7 +8,8 @@ var common = require('../../common'),
 
 exports.nonces = {};
 
-var get = exports.get = function() {
+
+function get() {
 	var nonces;
 	if (window.localStorage) {
 		try {
@@ -20,7 +21,8 @@ var get = exports.get = function() {
 		nonces = exports.nonces;
 	}
 	return nonces || {};
-};
+}
+exports.get = get;
 
 function save_nonces(nonces) {
 	if (window.localStorage)
@@ -33,7 +35,8 @@ function today_id() {
 	return Math.floor(new Date().getTime() / (1000*60*60*24));
 }
 
-exports.create = function() {
+
+function create() {
 	const nonces = get(),
 		nonce = common.random_id();
 	nonces[nonce] = {
@@ -42,7 +45,8 @@ exports.create = function() {
 	};
 	save_nonces(nonces);
 	return nonce;
-};
+}
+exports.create = create;
 
 function expire_nonces() {
 	if (!window.localStorage)
@@ -65,10 +69,12 @@ function expire_nonces() {
 }
 setTimeout(expire_nonces, Math.floor(Math.random()*5000));
 
-exports.destroy = function(nonce) {
+
+function destroy(nonce) {
 	var nonces = get();
 	if (!nonces[nonce])
 		return;
 	delete nonces[nonce];
 	save_nonces(nonces);
-};
+}
+exports.destroy = destroy;

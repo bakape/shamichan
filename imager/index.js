@@ -17,7 +17,7 @@ var image_attrs = ('src thumb ext dims size MD5 SHA1 hash imgnm spoiler vint'
 		+ ' apng mid audio length').split(' ');
 exports.image_attrs = image_attrs;
 
-exports.send_dead_image = function (kind, filename, resp) {
+function send_dead_image (kind, filename, resp) {
 	filename = dead_path(kind, filename);
 	var stream = fs.createReadStream(filename);
 	stream.once('error', function (err) {
@@ -41,7 +41,8 @@ exports.send_dead_image = function (kind, filename, resp) {
 		resp.writeHead(200, h);
 		stream.pipe(resp);
 	});
-};
+}
+exports.send_dead_image = send_dead_image;
 
 hooks.hook_sync('extractPost', function (post) {
 	if (!is_image(post))
@@ -144,7 +145,7 @@ function make_dir(base, key, cb) {
 }
 exports._make_media_dir = make_dir;
 
-exports.make_media_dirs = function (cb) {
+function make_media_dirs (cb) {
 	var keys = ['src', 'thumb', 'vint', 'dead'];
 	if (!is_standalone())
 		keys.push('tmp');
@@ -159,9 +160,10 @@ exports.make_media_dirs = function (cb) {
 			keys.push('mid');
 		async.forEach(keys, make_dir.bind(null, dead), cb);
 	});
-};
+}
+exports.make_media_dirs = make_media_dirs;
 
-exports.serve_image = function (req, resp) {
+function serve_image (req, resp) {
 	var m = /^\/(src|thumb|mid|vint)(\/\d+\.\w+)$/.exec(req.url);
 	if (!m)
 		return false;
@@ -170,15 +172,17 @@ exports.serve_image = function (req, resp) {
 		return false;
 	require('send')(req, m[2], {root: root}).pipe(resp);
 	return true;
-};
+}
+exports.serve_image = serve_image;
 
-exports.squish_MD5 = function (hash) {
+function squish_MD5 (hash) {
 	if (typeof hash == 'string')
 		hash = new Buffer(hash, 'hex');
 	return hash.toString('base64').replace(/\//g, '_').replace(/=*$/, '');
-};
+}
+exports.squish_MD5 = squish_MD5;
 
-exports.obtain_image_alloc = function (id, cb) {
+function obtain_image_alloc (id, cb) {
 	var onegai = new db.Onegai;
 	onegai.obtain_image_alloc(id, function (err, alloc) {
 		onegai.disconnect();
@@ -190,9 +194,10 @@ exports.obtain_image_alloc = function (id, cb) {
 		else
 			cb("Invalid image alloc");
 	});
-};
+}
+exports.obtain_image_alloc = obtain_image_alloc;
 
-exports.commit_image_alloc = function (alloc, cb) {
+function commit_image_alloc (alloc, cb) {
 	publish(alloc, function (err) {
 		if (err)
 			return cb(err);
@@ -203,6 +208,7 @@ exports.commit_image_alloc = function (alloc, cb) {
 			cb(err);
 		});
 	});
-};
+}
+exports.commit_image_alloc = commit_image_alloc;
 
 var is_standalone = exports.is_standalone = db.is_standalone;
