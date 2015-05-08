@@ -413,7 +413,7 @@ function make_navigation_html() {
 	for (let i = 0, l = BOARDS.length; i < l; i++) {
 		let board = BOARDS[i];
 		if (board == config.STAFF_BOARD)
-			return;
+			continue;
 		if (i > 0)
 			bits += ' / ';
 		bits += `<a href="../${board}/" class="history">${board}</a>`;
