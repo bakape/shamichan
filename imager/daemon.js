@@ -88,7 +88,7 @@ IU.respond = function (code, msg) {
 		return;
 	this.resp.writeHead(code, {
 		'Content-Type': 'text/html; charset=UTF-8',
-		'Access-Control-Allow-Origin': config.MAIN_SERVER_ORIGIN,
+		'Access-Control-Allow-Origin': config.MAIN_SERVER_ORIGIN
 	});
 	this.resp.end('<!doctype html><title>Upload result</title>\n'
 		+ 'This is a legitimate imager response.\n'
@@ -245,13 +245,13 @@ StillJob.prototype.perform_job = function () {
 					msg = "video_unknown";
 					winston.warn("Unknown ffmpeg output: " + first);
 				}
-				fs.unlink(dest, function (err) {
+				fs.unlink(dest, function () {
 					self.finish_job(msg);
 				});
 				return;
 			}
 			if (!is_webm  && !isMP3) {
-				fs.unlink(dest, function (err) {
+				fs.unlink(dest, function () {
 					self.finish_job('video_format');
 				});
 				return;
@@ -271,7 +271,8 @@ StillJob.prototype.perform_job = function () {
 			self.finish_job(null, {
 				still_path: dest,
 				// Could have false positives due to chapter titles. Bah.
-				has_audio: (is_webm && /audio:\s*(?:vorbis|opus)/i.test(stderr)) || isMP3,
+				has_audio: (is_webm && /audio:\s*(?:vorbis|opus)/i.test(stderr))
+					|| isMP3,
 				length: length,
 				mp3: isMP3
 			});
@@ -505,7 +506,7 @@ IU.deduped = function () {
 	var self = this,
 		stream = fs.createReadStream(image.path);
 	stream.once('error', function(err) {
-		self.failure(Muggle(this.lang.resizing, err));
+		self.failure(Muggle(self.lang.resizing, err));
 	});
 	self.status(this.lang.thumbnailing);
 	self.fill_in_specs(specs, 'thumb');
@@ -549,7 +550,7 @@ function sha1Hash(stream, cb){
 	stream.once('end', function() {
 		cb(null, sha1sum.digest('hex'));
 	});
-};
+}
 
 IU.resize_image = function(o, stream, cb) {
 	var args = build_args(o);
@@ -747,7 +748,7 @@ IU.record_image = function (tmps) {
 	let self = this;
 	this.db.record_image_alloc(image_id, alloc, function (err) {
 		if (err)
-			return this.failure("Image storage failure.");
+			return self.failure("Image storage failure.");
 		self.client_call('alloc', image_id);
 		self.db.disconnect();
 		self.respond(202, 'OK');
@@ -770,7 +771,7 @@ function run_daemon() {
 		fs.chmodSync(cd.LISTEN_PORT, '777'); // TEMP
 	}
 
-	index._make_media_dir(null, 'tmp', function (err) {});
+	index._make_media_dir(null, 'tmp', function () {});
 
 	winston.info('Imager daemon listening on '
 			+ (cd.LISTEN_HOST || '')
