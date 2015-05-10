@@ -176,6 +176,7 @@ function parent_model($el) {
 		'console',
 		'tea',
 		'higan',
+                'ocean',
 		'rave',
 		'tavern',
 		'glass',

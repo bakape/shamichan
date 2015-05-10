@@ -1,0 +1,106 @@
+@import "./mixins/common";
+@link: #B5C8FF;
+@bold: lightblue;
+@postBG: rgba(28,29,34,0.78);
+@border: 1px solid #262626;
+@admin: #15CFFA;
+@mod: #5f5faf;
+
+.themed, body, pre {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+a.referenced {
+    text-decoration: none;
+    border-bottom: 1px dashed currentColor;
+}
+.bfloat>svg {
+    fill: #64C0E8;
+}
+.bmodal hr {
+    border-top: 1px solid #99225c;
+}
+#banner {
+    background: rgba(46, 46, 46, .7);
+    border-bottom: 1px solid #262626;
+}
+blockquote a {
+    color: #8A8FF7;
+}
+.email b:hover, a:hover {
+    color: #af005f;
+}
+.pagination,.preview, article, aside {
+    background-color: @postBG;
+    border-right: @border;
+    border-bottom: @border;
+}
+article.highlight {
+    background-color: rgba(44, 44, 51, .95);
+    border-color: #21212c;
+}
+.editing {
+    background-color: rgba(44, 57, 71, 0.88)!important;
+    border-color: #2c2121!important
+}
+body {
+    color: #389EB6;
+    background-color: #1e1e1e;
+    background-image: url(oceanKoi.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-attachment: fixed;
+    background-position: right bottom;
+    font-size: 10pt;
+}
+.embed, .popup-menu li:hover {
+    background-color: #e4e4e4;
+}
+.themed, pre {
+    color: #8a8a8a;
+    font-size: 10pt;
+}
+h1, h2 {
+    color: #731a19;
+}
+em {
+    color: #12BD7C;
+}
+h1 {
+    font-family: "MS Pã‚´ã‚·ãƒƒã‚¯", "MS PGothic", Mona, "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
+    font-size: 30px;
+    text-shadow: #590030 1px 1px 0;
+    letter-spacing: 1px;
+}
+h2 {
+    font-family: Tahoma;
+}
+h3 {
+    color: #ab2b16;
+}
+header nav a {
+    color: lightblue;
+}
+hr {
+    border-top: 1px solid #2e2e2e;
+}
+.email, .email b {
+    color: #99225c;
+}
+.bmodal, .modal, .popup-menu {
+    background-color: #262626;
+    border-right: 1px solid #212121;
+    border-bottom: 1px solid #212121;
+}
+.omit {
+    color: #626262;
+}
+#lock, .scroll-lock header {
+    background-image: url(ui/invlock.svg);
+    background-size: 1em 1em;
+}
+.option_tab_sel a.tab_sel {
+    color: #8B3FB1;
+}
+.themed {
+    color: #8a8a8a;
+}

@@ -272,6 +272,7 @@ opts.push(illyaDance,
 			'console',
 			'tea',
 			'higan',
+			'ocean',
 			'rave',
 			'tavern',
 			'glass'
