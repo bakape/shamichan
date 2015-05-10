@@ -26,21 +26,13 @@ function build(args, cb) {
 	cp.on('exit', cb);
 }
 
+var buildAll = _.debounce(build.bind(null, ['client', 'css', 'mod']));
 var reload_state = _.debounce(function() {
 	if (server)
 		server.kill('SIGHUP');
 }, 2000);
 
-['client', 'css', 'mod'].forEach(function(task) {
-	watch(deps[task], _.debounce(function() {
-		build([task], reload_state);
-	}), 5000);
-});
-
-
-watch(deps.state, reload_state);
-
-const serverExclude = new RegExp('\\.pid$|hot.js$|admin\\/client.js$|'
+const serverExclude = new RegExp(String.raw`\.pid$|hot.js$|admin\/client.js$|`
 	+ config.MEDIA_DIRS.tmp.replace('/', '\\/'));
 watch(deps.server, function(file) {
 	/*
@@ -50,6 +42,19 @@ watch(deps.server, function(file) {
 	if (!serverExclude.test(file))
 		start_server();
 });
+watch('common', function() {
+	start_server();
+	buildAll(reload_state);
+});
+watch('gulpfile.js', function() {
+	buildAll(reload_state);
+});
+['client', 'css', 'mod'].forEach(function(task) {
+	watch(deps[task], _.debounce(function() {
+		build([task], reload_state);
+	}), 5000);
+});
+watch(deps.state, reload_state);
 
 // Initial start
-build(['client', 'css', 'mod'], start_server);
+buildAll(start_server);
