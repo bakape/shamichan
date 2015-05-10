@@ -13,7 +13,13 @@ module.exports = {
 	API_URL: '../api/',
 // Secure tripcode encryption salt
 	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
+// Relative path to serve websocket connections
 	SOCKET_PATH: '/hana',
+/*
+ Absolute URL for client connections. Defaults to SOCKET_PATH. Only set this, if
+ you are serving websockets from a different root address.
+ */
+	SOCKET_URL: null,
 // Honour X-Forwarded-For HTTP headers for client IP determination
 	TRUST_X_FORWARDED_FOR: true,
 /*

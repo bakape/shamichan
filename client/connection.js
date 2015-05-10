@@ -10,6 +10,7 @@ var $ = require('jquery'),
 	state = require('./state');
 
 var connSM = main.connSM, socket, attempts, attemptTimer;
+const config = main.config;
 
 main.send = function (msg) {
 	// need deferral or reporting on these lost messages...
@@ -22,13 +23,13 @@ main.send = function (msg) {
 	}
 
 	msg = JSON.stringify(msg);
-	if (main.config.DEBUG)
+	if (config.DEBUG)
 		console.log('<', msg);
 	socket.send(msg);
 };
 
 function on_message(e) {
-	if (main.config.DEBUG)
+	if (config.DEBUG)
 		console.log('>', e.data);
 	let data = JSON.parse(e.data);
 	for (let i = 0, lim = data.length; i < lim; i++) {
@@ -67,7 +68,7 @@ function connect() {
 	socket.onopen = connSM.feeder('open');
 	socket.onclose = connSM.feeder('close');
 	socket.onmessage = on_message;
-	if (main.config.DEBUG)
+	if (config.DEBUG)
 		window.socket = socket;
 }
 
@@ -84,7 +85,7 @@ function new_socket() {
 	];
 	if (config.USE_WEBSOCKETS)
 		protocols.unshift('websocket');
-	return new SockJS(main.config.SOCKET_PATH, null, {
+	return new SockJS(config.SOCKET_URL || config.SOCKET_PATH, null, {
 		protocols_whitelist: protocols
 	});
 }
@@ -125,7 +126,7 @@ connSM.act('* + close -> dropped', function (e) {
 		socket.onclose = null;
 		socket.onmessage = null;
 	}
-	if (main.config.DEBUG)
+	if (config.DEBUG)
 		console.error('E:', e);
 	if (attemptTimer) {
 		clearTimeout(attemptTimer);
@@ -159,7 +160,7 @@ connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 	socket.onmessage = null;
 	socket.close();
 	socket = null;
-	if (main.config.DEBUG)
+	if (config.DEBUG)
 		window.socket = null;
 });
 
