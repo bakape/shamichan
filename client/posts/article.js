@@ -6,7 +6,6 @@
 var $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone'),
-	hover = require('../hover'),
 	imager = require('./imager'),
 	main = require('../main'),
 	options = require('../options'),
