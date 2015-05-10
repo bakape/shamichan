@@ -7,6 +7,9 @@ var opts = require('./opts');
 if (require.main == module) opts.parse_args();
 opts.load_defaults();
 
+// Initialize server state
+var STATE = require('./state');
+
 var _ = require('underscore'),
     amusement = require('./amusement'),
     async = require('async'),
@@ -22,7 +25,6 @@ var _ = require('underscore'),
     okyaku = require('./okyaku'),
     persona = require('./persona'),
     render = require('./render'),
-    STATE = require('./state'),
     tripcode = require('./tripcode/tripcode'),
     urlParse = require('url').parse,
     web = require('./web'),

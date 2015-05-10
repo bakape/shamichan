@@ -24,7 +24,6 @@ options = module.exports = new Backbone.Model(options);
 var background = require('../background'),
 	banner = require('../banner'),
 	main = require('../main'),
-	optionsCommon = require('../../common/options'),
 	state = require('../state');
 
 var OptionsCollection = Backbone.Collection.extend({
@@ -95,12 +94,10 @@ var OptionModel = Backbone.Model.extend({
 });
 
 // Create and option model for each object in the array
-for (let i = 0, lim = optionsCommon.length; i < lim; i++) {
-	new OptionModel(optionsCommon[i]);
+const optCommon = require('../../common/options');
+for (let i = 0, lim = optCommon.length; i < lim; i++) {
+	new OptionModel(optCommon[i]);
 }
-optionsCommon.forEach(function(opt) {
-
-});
 
 // Highlight options button, if no options are set
 (function() {

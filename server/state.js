@@ -1,7 +1,11 @@
 'use strict';
 
+// Some hot configs need to be be available when common/ is required
+var HOT = exports.hot = require('../config/hot').hot;
+
 var _ = require('underscore'),
 	async = require('async'),
+	common = require('../common'),
 	config = require('../config'),
 	crypto = require('crypto'),
 	fs = require('fs'),
@@ -27,7 +31,6 @@ exports.dbCache = {
 	ranges: {}
 };
 
-var HOT = exports.hot = {};
 var RES = exports.resources = {};
 exports.clientHotConfig = {};
 exports.clientConfigHash = '';
@@ -267,9 +270,14 @@ function build_schedule(schedule){
 			plans = filler[Math.floor(Math.random() * filler.length)];
 		if (!time)
 			time = 'all day';
-		table += `<tr><td><b>${day}&nbsp;&nbsp;</b></td>`
-			+ `<td>${plans}&nbsp;&nbsp;</td>`
-			+ `<td>${time}</td></tr>`;
+		table += common.parseHTML
+			`<tr>
+				<td>
+					<b>${day}&nbsp;&nbsp;</b>
+				</td>
+				<td>${plans}&nbsp;&nbsp;</td>
+				<td>${time}</td>
+			</tr>`;
 	}
 	table += '</table>';
 	return table;
@@ -294,8 +302,9 @@ function buildOptions(lang) {
 	 move these render functions somewhere else? FAQ and schefule should end up
 	 in common eventually.
 	 */
-	let html = '<div class="bmodal" id="options-panel">'
-		+ '<ul class="option_tab_sel">';
+	let html = common.parseHTML
+		`<div class="bmodal" id="options-panel">
+			<ul class="option_tab_sel">`;
 	const tabs = lang.tabs;
 	// Render tab butts
 	for (let i = 0, l = tabs.length; i < l; i++) {
@@ -389,8 +398,13 @@ function renderExportImport(lang) {
 		html += `<a id="${id}" title="${ln[1]}">${ln[0]}</a> `;
 	}
 	// Hidden file input for uploading the JSON
-	html += '<input type="file" style="display: none;" id="importSettings"'
-		+ ' name="Import Settings"></input>';
+	html += common.parseHTML
+		`<input type="file"
+			style="display: none;"
+			id="importSettings"
+			name="Import Settings"
+		>
+		</input>`;
 	return html;
 }
 

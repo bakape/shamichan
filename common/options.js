@@ -8,7 +8,7 @@
 var imports = require('./imports'),
 	index = require('./index'),
 	util = require('./util'),
-	$, banner, notMobile, options, state, mediaURL;
+	$, banner, notMobile, options, state;
 if (imports.isNode)
 // TEMP: Will build separate templates and bundles for mobile eventually
 	notMobile = true;
@@ -18,9 +18,12 @@ else {
 	options = require('../client/options');
 	state = require('../client/state');
 
-	mediaURL = imports.main.config.MEDIA_URL;
 	notMobile = !imports.main.isMobile;
 }
+
+const config = imports.config;
+let hotConfig = imports.hotConfig,
+	main = imports.main;
 
 /*
  * Full schema of the options model
@@ -45,9 +48,9 @@ var opts = [
 	/* LANGUAGE SELECTION */
 	{
 		id: 'lang',
-		type: imports.config.LANGS,
+		type: config.LANGS,
 		tab: 0,
-		default: imports.config.DEFAULT_LANG,
+		default: config.DEFAULT_LANG,
 		// True by default
 		execOnStart: false,
 		// Exec is not used on the server
@@ -74,7 +77,7 @@ var opts = [
 		default: 'small',
 		exec: function(type) {
 			$.cookie('thumb', type);
-			imports.main.oneeSama.thumbStyle = type;
+			main.oneeSama.thumbStyle = type;
 		}
 	},
 	/* IMAGE HOVER EXPANSION */
@@ -95,7 +98,7 @@ var opts = [
 		tab: 1,
 		exec: function(autogif) {
 			$.cookie('agif', autogif, {path: '/'});
-			imports.main.oneeSama.autoGif = autogif;
+			main.oneeSama.autoGif = autogif;
 		}
 	},
 	/* SPOILER TOGGLE */
@@ -107,7 +110,7 @@ var opts = [
 		default: true,
 		exec: function(spoilertoggle) {
 			$.cookie('spoil', spoilertoggle, {path: '/'});
-			imports.main.oneeSama.spoilToggle = spoilertoggle;
+			main.oneeSama.spoilToggle = spoilertoggle;
 		}
 	},
 	/* BACKLINKS */
@@ -148,21 +151,21 @@ var opts = [
 		id: 'relativeTime',
 		tab: 0,
 		exec: function(toggle) {
-			imports.main.oneeSama.rTime = toggle;
+			main.oneeSama.rTime = toggle;
 			$.cookie('rTime', toggle, {path: '/'});
 		}
 	},
 	/* R/A/DIO NOW PLAYING BANNER */
 	{
 		id: 'nowPlaying',
-		load: notMobile && imports.config.RADIO,
+		load: notMobile && config.RADIO,
 		type: 'checkbox',
 		tab: 3,
 		default: true,
 		exec: function(toggle) {
 			if (toggle)
 				// Query the server for current stream info
-				imports.main.send([index.RADIO]);
+				main.send([index.RADIO]);
 			else
 				banner.view.clearRadio();
 		}
@@ -195,15 +198,14 @@ var illyaDance = {
 	 The getters ensure there isn't any funny business with dependancy order on
 	 the server;
 	 */
-	get load() {
-		return notMobile && imports.hotConfig.ILLYA_DANCE;
-	},
+	load: notMobile && hotConfig.ILLYA_DANCE,
 	boardSpecific: true,
 	tab: 3,
 	exec: function(illyatoggle) {
 		var muted = ' ';
 		if (options.get('illyaMuteToggle'))
 			muted = 'muted';
+		const mediaURL = config.MEADIA_URL;
 		var dancer = '<video autoplay ' + muted + ' loop id="bgvid" >' +
 			'<source src="' + mediaURL + 'illya.webm" type="video/webm">' +
 			'<source src="' + mediaURL + 'illya.mp4" type="video/mp4">' +
@@ -218,9 +220,7 @@ var illyaDance = {
 opts.push(illyaDance,
 	{
 		id: 'illyaMuteToggle',
-		get load() {
-			return notMobile && imports.hotConfig.ILLYA_DANCE;
-		},
+		load: notMobile && hotConfig.ILLYA_DANCE,
 		boardSpecific: true,
 		tab: 3,
 		exec: function() {
@@ -236,7 +236,8 @@ opts.push(illyaDance,
 		boardSpecific: true,
 		tab: 3,
 		exec: function(toggle) {
-			var style = '<style id="horizontal">article,aside{display:inline-block;}</style>';
+			var style = '<style id="horizontal">article,aside'
+				+ '{display:inline-block;}</style>';
 			if (toggle)
 				$('head').append(style);
 			else
@@ -277,15 +278,18 @@ opts.push(illyaDance,
 		],
 		tab: 1,
 		get default() {
-			return hotConfig.BOARD_CSS[state.page.get('board')];
+			return hotConfig.BOARD_CSS[state.page.get('board')]
 		},
 		exec: function(theme) {
 			if (theme) {
-				$('#theme').attr('href', mediaURL + 'css/'
+				$('#theme').attr('href', config.MEDIA_URL + 'css/'
 					+ hotConfig.css[theme + '.css']);
 			}
-			// FIXME: temp stub
-			// Call the background controller to generate, remove and/or append the glass
+			/*
+			 FIXME: temp stub
+			 Call the background controller to generate, remove and/or append the
+			 glass
+			 */
 			//background.glass(theme);
 		}
 	},
@@ -309,11 +313,9 @@ opts.push(illyaDance,
 		type: 'number',
 		tab: 0,
 		validation: util.reasonable_last_n,
-		get default() {
-			return imports.hotConfig.THREAD_LAST_N;
-		},
+		default: hotConfig.THREAD_LAST_N,
 		exec: function(n) {
-			imports.main.oneeSama.lastN = n;
+			main.oneeSama.lastN = n;
 			$.cookie('lastn', n, {path: '/'});
 		}
 	},
