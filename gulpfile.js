@@ -30,9 +30,11 @@ function gulper(name, files, dest) {
 
 gulp.task('css', function() {
 	return gulp.src('./less/*.less')
+		.pipe(sourcemaps.init())
 		.pipe(less())
 		.pipe(minifyCSS({rebase: false}))
 		.pipe(rev())
+		.pipe(sourcemaps.write('./maps/'))
 		.pipe(gulp.dest('./www/css'))
 		.pipe(rev.manifest('css.json'))
 		.pipe(gulp.dest('./state'));

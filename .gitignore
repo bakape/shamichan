@@ -16,6 +16,7 @@ state
 build
 scripts/credentials.json
 www/css/*.css
+www/css/maps
 www/illya.mp4
 www/illya.webm
 www/archive

@@ -21,4 +21,5 @@ clean:
 	$(MAKE) -C server/tripcode -w clean
 
 client_clean:
-	rm -rf -- state www/js/client*.js* www/js/vendor-*.js www/js/alpha*.js* www/css/*.css
+	rm -rf -- state www/js/client*.js* www/js/vendor-*.js www/js/alpha*.js*\
+		www/css/*.css www/css/maps

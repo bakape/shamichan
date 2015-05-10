@@ -24,6 +24,7 @@ exports.state = [
 
 // TEMP: Still used for building
 exports.mod = [
+	'gulpfile.js',
 	'admin/index.js',
 	'admin/client.js'
 ];
@@ -34,4 +35,7 @@ exports.client = [
 	'client'
 ];
 
-exports.css = ['less'];
+exports.css = [
+	'gulpfile.js',
+	'less'
+];
