@@ -26,7 +26,7 @@ function build(args, cb) {
 	cp.on('exit', cb);
 }
 
-var buildAll = _.debounce(build.bind(null, ['client', 'css', 'mod']));
+var buildAll = _.debounce(build.bind(null, ['client', 'vendor', 'css', 'mod']));
 var reload_state = _.debounce(function() {
 	if (server)
 		server.kill('SIGHUP');

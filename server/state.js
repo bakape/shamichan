@@ -132,8 +132,9 @@ function reloadModClient(cb) {
 	});
 }
 
-function reloadClient(cb) {
-	var stream = fs.createReadStream('./www/js/client.js'),
+// Read JS bundles and generate MD5 hashes
+function hashBundle(name, cb) {
+	let stream = fs.createReadStream(`./www/js/${name}.js`),
 		hash = crypto.createHash('md5');
 	stream.once('error', function(err) {
 		cb(err);
@@ -142,7 +143,7 @@ function reloadClient(cb) {
 		hash.update(data);
 	});
 	stream.once('end', function() {
-		HOT.CLIENT_HASH = hash.digest('hex').slice(0, 8);
+		HOT[`${name}_hash`] = hash.digest('hex').slice(0, 8);
 		cb(null);
 	});
 }
@@ -296,12 +297,6 @@ function build_FAQ(faq) {
 
 // Hardcore pornography
 function buildOptions(lang) {
-
-	/*
-	 XXX: Can't require common/util here, because circular dependancy. Hmm, maybe
-	 move these render functions somewhere else? FAQ and schefule should end up
-	 in common eventually.
-	 */
 	let html = common.parseHTML
 		`<div class="bmodal" id="options-panel">
 			<ul class="option_tab_sel">`;
@@ -412,7 +407,8 @@ function reload_hot_resources (cb) {
 	async.series([
 		reload_hot_config,
 		reloadModClient,
-		reloadClient,
+		hashBundle.bind(null, 'client'),
+		hashBundle.bind(null, 'vendor'),
 		reload_resources
 	], cb);
 }

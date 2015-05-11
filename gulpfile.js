@@ -40,23 +40,38 @@ gulp.task('css', function() {
 		.pipe(gulp.dest('./state'));
 });
 
-gulp.task('client', function() {
-	var b = browserify(require.resolve('./client/main.js'), {
+function build(name, b) {
+	gulp.task(name, function() {
+		return b.bundle()
+			// Transform into vinyl stream
+			.pipe(source(name + '.js'))
+			.pipe(buffer())
+			.pipe(sourcemaps.init({loadMaps: true}))
+			.pipe(gulpif(!debug, uglify()))
+			.on('error', gutil.log)
+			.pipe(sourcemaps.write('./'))
+			.pipe(gulp.dest('./www/js'));
+	});
+}
+
+build('client', browserify(require.resolve('./client/main.js'),
+	{
 		entry: true,
 		// Needed for sourcemaps
 		debug: true,
-		// Make available outside the bundle with require(). Needed for mod.js.
-		require: [
+		bundleExternal: false,
+		external: [
 			'jquery',
+			'jquery.cookie',
 			'underscore',
 			'backbone'
 		]
 	})
 		/*
-		Trasnpile to ES5. We use already implemented native functionality, where
-		possible. These are mainly to prevent the minifier from throwing errors
-		and some syntactic sugar, that is not yet implemented. Nobody cares about
-		your ancient retarded browser.
+		 Trasnpile to ES5. We use already implemented native functionality, where
+		 possible. These are mainly to prevent the minifier from throwing errors
+		 and some syntactic sugar, that is not yet implemented. Nobody cares about
+		 your ancient retarded browser.
 		 */
 		.transform(babelify.configure({
 			whitelist: [
@@ -75,18 +90,19 @@ gulp.task('client', function() {
 		// Exclude these requires on the client
 		.exclude('../config')
 		.exclude('../lang/')
-		.exclude('../server/state');
+		.exclude('../server/state')
+);
 
-	return b.bundle()
-		// Transform into vinyl stream
-		.pipe(source('client.js'))
-		.pipe(buffer())
-		.pipe(sourcemaps.init({loadMaps: true}))
-		.pipe(gulpif(!debug, uglify()))
-		.on('error', gutil.log)
-		.pipe(sourcemaps.write('./'))
-		.pipe(gulp.dest('./www/js'));
-});
+build('vendor', browserify({
+	// Make available outside the bundle with require()
+	require: [
+		'jquery',
+		'jquery.cookie',
+		'underscore',
+		'backbone'
+	],
+	debug: true
+}));
 
 (function() {
 	gulper('mod', deps.mod, './state');
