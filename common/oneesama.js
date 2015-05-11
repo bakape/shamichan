@@ -263,27 +263,32 @@ const searchBase = (function() {
 		{
 			class: 'google',
 			url: 'https://www.google.com/searchbyimage?image_url=',
+			type: 'thumb',
 			symbol: 'G'
 		},
 		{
 			class: 'iqdb',
 			url: 'http://iqdb.org/?url=',
+			type: 'thumb',
 			noSSL: true,
 			symbol: 'Iq'
 		},
 		{
 			class: 'saucenao',
 			url: 'http://saucenao.com/search.php?db=999&url=',
+			type: 'thumb',
 			noSSL: true,
 			symbol: 'Sn'
 		},
 		{
 			class: 'foolz',
+			type: 'MD5',
 			url: 'http://archive.moe/_/search/image/',
 			symbol: 'Fz'
 		},
 		{
 			class: 'exhentai',
+			type: 'SHA1',
 			url: 'http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=',
 			symbol: 'Ex'
 		}
