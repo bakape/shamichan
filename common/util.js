@@ -391,7 +391,11 @@ function parseHTML(callSite) {
 			const arg = args[i - 1];
 			return ((i === 0 || (!arg && arg !== 0)) ? '' : arg) + text;
 		})
-		.join('');
+		.join('')
+		// Convert trailing tilde to space
+		.replace(/~$/gm, ' ')
+		// Remove empty lines
+		.replace(/^\s*\n/gm, '');
 
 	return formatHTML(output);
 }

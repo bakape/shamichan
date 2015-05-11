@@ -158,9 +158,9 @@ OS.fragment = function(frag) {
 			continue;
 		}
 		const lines = chunk.split(/(\n)/);
-		for (let l = 0, len = lines.length; l < len; l++) {
-			const line = lines[l];
-			if (l % 2)
+		for (let o = 0, len = lines.length; o < len; o++) {
+			const line = lines[o];
+			if (o % 2)
 				this.iku(safe('<br>'), index.S_BOL);
 			else if (state[0] === index.S_BOL && line[0] == '>')
 				this.iku(line, index.S_QUOTE);
@@ -227,141 +227,199 @@ OS.linkify = function(text) {
 	}
 };
 
-OS.spoiler_info = function(ind, toppu) {
-	var large = toppu;
-	var hd = toppu || this.thumbStyle != 'small';
-	return {
-		thumb: encodeURI(config.MEDIA_URL + 'spoil/spoiler' + (hd
-				? ''
-				: 's')
-			+ ind + '.png'),
-		dims: large ? config.THUMB_DIMENSIONS
-			: config.PINKY_DIMENSIONS
-	};
+// Central image rendering method
+OS.gazou = function(data) {
+	return [
+		safe('<figure>'),
+		this.figcaption(data),
+		this.thumbStyle !== 'hide' && safe(this.thumbnail(data)),
+		safe('</figure>')
+	];
 };
 
-OS.image_paths = function() {
+// Render image header
+OS.figcaption = function(data) {
+	let html = parseHTML
+		`<figcaption>
+			${this.thumbStyle === 'hide'
+				&& `<a class="imageToggle">[${this.lang.show}]</a>`}
+			${this.imageSearch(data)}
+			<i>
+				(${data.audio && '\u266B, '}
+				${data.length && (data.length + ', ')}
+				${util.readable_filesize(data.size)},
+				${data.dims[0]}x${data.dims[1]}
+				${data.apng && ', APNG'})~`;
+	// No user-input data. No need to escape.
+	html = [safe(html)];
+	html.push(this.imageLink(data), safe('</i></figcaption>'));
+
+	return html;
+};
+
+// Generate the static part of image search links
+const searchBase = (function() {
+	const models = [
+		{
+			class: 'google',
+			url: 'https://www.google.com/searchbyimage?image_url=',
+			symbol: 'G'
+		},
+		{
+			class: 'iqdb',
+			url: 'http://iqdb.org/?url=',
+			noSSL: true,
+			symbol: 'Iq'
+		},
+		{
+			class: 'saucenao',
+			url: 'http://saucenao.com/search.php?db=999&url=',
+			noSSL: true,
+			symbol: 'Sn'
+		},
+		{
+			class: 'foolz',
+			url: 'http://archive.moe/_/search/image/',
+			symbol: 'Fz'
+		},
+		{
+			class: 'exhentai',
+			url: 'http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=',
+			symbol: 'Ex'
+		}
+	];
+
+	const mediaURL = config.MEDIA_URL;
+	let base = [];
+	for (let i = 0, l = models.length; i < l; i++) {
+		let model = models[i];
+		base[i] = [
+			parseHTML
+				`<a target="_blank"
+		 			rel="nofollow"
+		 			class="imageSearch ${model.class}"
+		 			href="${model.url}${mediaURL}`,
+			model.type,
+			parseHTML
+				`${model.ssl && '?ssl=off'}"
+				>
+				${model.symbol}
+				</a>`
+		];
+	}
+	return base;
+})();
+
+OS.imageSearch = function(data) {
+	let html = '';
+	const base = searchBase;
+	for (let i = 0, l = base.length; i < l; i++) {
+		let parts = base[i];
+		html += parts[0]
+			+ encodeURI(data[parts[1]] || data.thumb)
+			+ parts[2];
+		// Only render google for PDFs and MP3s
+		if (i === 0 && ['.pdf', '.mp3'].indexOf(data.ext) > -1)
+			break;
+	}
+
+	return html;
+};
+
+OS.imageLink = function(data) {
+	let name = '',
+		imgnm = data.imgnm;
+	const vint = !!data.vint,
+		m = imgnm.match(/^(.*)\.\w{3,4}$/);
+	if (m)
+		name = m[1];
+	let html = [safe('<a')];
+	if (vint)
+		html.push(safe(' class="disabled'));
+	else {
+		html.push(
+			safe(parseHTML
+				` href="${this.imagePaths().src}${data.src}"
+				rel="nofollow"
+				download="`
+			),
+			imgnm
+		);
+	}
+	if (name.length >= 38) {
+		html.push(safe('" title="'), imgnm);
+		imgnm = [name.slice(0, 30), safe('(&hellip;)'), data.ext];
+	}
+	html.push(safe('">'), imgnm, safe('</a>'));
+
+	return html;
+};
+
+OS.imagePaths = function() {
 	if (!this._imgPaths) {
-		var mediaURL = config.MEDIA_URL;
+		const mediaURL = config.MEDIA_URL;
 		this._imgPaths = {
 			src: mediaURL + 'src/',
 			thumb: mediaURL + 'thumb/',
 			mid: mediaURL + 'mid/',
-			vint: mediaURL + 'vint/'
+			vint: mediaURL + 'vint/',
+			spoil: mediaURL + 'spoil/spoiler'
 		};
 		this.trigger('mediaPaths', this._imgPaths);
 	}
 	return this._imgPaths;
 };
 
-OS.gazou = function(info, toppu) {
-	var src, caption;
-	// TODO: Unify archive and normal thread caption logic
-	var google, iqdb;
-	if (info.vint) {
-		src = encodeURI('../outbound/hash/' + info.MD5);
-		google = encodeURI('../outbound/g/' + info.vint);
-		iqdb = encodeURI('../outbound/iqdb/' + info.vint);
-		caption = [
-			this.lang.search + ' ', new_tab_link(google, '[Google]'), ' ',
-			new_tab_link(iqdb, '[iqdb]'), ' ',
-			new_tab_link(src, '[foolz]')
-		];
+OS.thumbnail = function(data) {
+	const paths = this.imagePaths(),
+		dims = data.dims;
+	let src, thumb,
+		width = dims[0],
+		height = dims[1],
+		thumbWidth = dims[2],
+		thumbHeight = dims[3];
+	if (!data.vint)
+		src = paths.src + (data.src);
+
+	// Spoilered and spoilers enabled
+	if (data.spoiler && this.spoilToggle) {
+		let sp = this.spoilerInfo(data);
+		thumb = sp.thumb;
+		thumbWidth = sp.dims[0];
+		thumbHeight = sp.dims[1];
 	}
-	else {
-		google = encodeURI('../outbound/g/' + info.thumb);
-		iqdb = encodeURI('../outbound/iqdb/' + info.thumb);
-		var saucenao = encodeURI('../outbound/sn/' + info.thumb);
-		var foolz = encodeURI('../outbound/hash/' + info.MD5);
-		var exhentai = encodeURI('../outbound/exh/' + info.SHA1);
-		src = encodeURI(this.image_paths().src + info.src);
-		caption = [
-			new_tab_link(src, (this.thumbStyle == 'hide') ? '[Show]'
-				: info.src, 'imageSrc'), ' ',
-			new_tab_link(google, 'G', 'imageSearch google', true),
-			new_tab_link(iqdb, 'Iq', 'imageSearch iqdb', true),
-			new_tab_link(saucenao, 'Sn', 'imageSearch saucenao', true),
-			new_tab_link(foolz, 'Fz', 'imageSearch foolz', true),
-			new_tab_link(exhentai, 'Ex', 'imageSearch exhentai', true)
-		];
+	// Archive board
+	else if (data.vint) {
+		src = `http://archive.moe/_/search/image/${data.MD5}`;
+		thumb = paths.vint + data.vint
+	}
+	// Animated GIF thumbnails
+	else if (data.ext === '.gif' && this.autoGif)
+		thumb = src;
+	else if (this.thumbStyle === 'sharp' && data.mid)
+		thumb = paths.mid + data.mid;
+	else if (data.thumb)
+		thumb = paths.thumb + data.thumb;
+
+	// Source image smaller than thumbnail
+	if (!thumbWidth) {
+		thumbWidth = width;
+		thumbHeight = height;
 	}
 
-	var img = this.gazou_img(info, toppu);
-	var dims = info.dims[0] + 'x' + info.dims[1];
-
-	// We need da data for da client to walk da podium
-	return [
-		safe('<figure><figcaption>'),
-		caption, safe(' <i>('),
-		info.audio ? ("\u266B" + ', ') : '', // musical note
-		info.length ? (info.length + ', ') : '',
-		util.readable_filesize(info.size), ', ',
-		dims, (info.apng ? ', APNG' : ''),
-		this.full ? [', ', chibi(info.imgnm, img.src)] : '',
-		safe(')</i></figcaption>'),
-		this.thumbStyle == 'hide' ? '' : img.html,
-		safe('</figure>\n\t')
-	];
+	return parseHTML
+		`${config.IMAGE_HATS && '<span class="hat"></span>'}
+		<a target="blank" rel="nofollow" href=${src}">
+			<img src="${thumb}" width="${thumbWidth} height=${thumbHeight}">
+		</a>`
 };
 
-function chibi(imgnm, src) {
-	var name = '', ext = '';
-	var m = imgnm.match(/^(.*)(\.\w{3,4})$/);
-	if (m) {
-		name = m[1];
-		ext = m[2];
-	}
-	var bits = [safe('<a href="'), src, safe('" download="'), imgnm];
-	if (name.length >= 38) {
-		bits.push(safe('" title="'), imgnm);
-		imgnm = [name.slice(0, 30), safe('(&hellip;)'), ext];
-	}
-	bits.push(safe('" rel="nofollow">'), imgnm, safe('</a>'));
-	return bits;
-}
-
-OS.gazou_img = function(info, toppu, href) {
-	var src, thumb;
-	var imgPaths = this.image_paths();
-	var m = info.src ? /.gif$/.test(info.src) : false;
-	if (!info.vint)
-		src = thumb = encodeURI(imgPaths.src + info.src);
-
-	var d = info.dims;
-	var w = d[0], h = d[1], tw = d[2], th = d[3];
-	if (info.spoiler && this.spoilToggle) {
-		var sp = this.spoiler_info(info.spoiler, toppu);
-		thumb = sp.thumb;
-		tw = sp.dims[0];
-		th = sp.dims[1];
-	}
-	else if (info.vint) {
-		tw = tw || w;
-		th = th || h;
-		src = encodeURI('../outbound/hash/' + info.MD5);
-		thumb = imgPaths.vint + info.vint;
-	}
-	else if (m && this.autoGif)
-		thumb = src;
-	else if (this.thumbStyle == 'sharp' && info.mid)
-		thumb = encodeURI(imgPaths.mid + info.mid);
-	else if (info.thumb)
-		thumb = encodeURI(imgPaths.thumb + info.thumb);
-	else {
-		tw = w;
-		th = h;
-	}
-
-	var img = '<img src="' + thumb + '"';
-	if (tw && th)
-		img += ' width="' + tw + '" height="' + th + '">';
-	else
-		img += '>';
-	if (config.IMAGE_HATS)
-		img = '<span class="hat"></span>' + img;
-	// Override src with href, if specified
-	img = new_tab_link(href || src, safe(img));
-	return {html: img, src: src};
+OS.spoilerInfo = function(data) {
+	let highDef = data.large || this.thumbStyle !== 'small';
+	return {
+		thumb: parseHTML`${this.imagePaths().spoil}${highDef && 's'}`,
+		dims: data.large ? config.THUMB_DIMENSIONS : config.PINKY_DIMENSIONS
+	};
 };
 
 OS.post_url = function(num, op) {
@@ -481,7 +539,7 @@ OS.readable_time = function(time) {
 
 	return parseHTML
 		`${pad(d.getUTCDate())} ${this.lang.year[d.getUTCMonth()]}
-		 ${d.getUTCFullYear()}(${this.lang.week[d.getUTCDay()]})
+		${d.getUTCFullYear()}(${this.lang.week[d.getUTCDay()]})
 		${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 };
 
@@ -502,7 +560,7 @@ OS.relative_time = function(then, now) {
 	return this.lang.ago(time, this.lang.unit_year);
 };
 
-OS.monogatari = function(data, toppu) {
+OS.monogatari = function(data) {
 	var tale = {header: this.atama(data)};
 	this.dice = data.dice;
 	var body = this.karada(data.body);
@@ -511,8 +569,12 @@ OS.monogatari = function(data, toppu) {
 		body,
 		safe('</blockquote>')
 	];
-	if (data.image && !data.hideimg)
-		tale.image = this.gazou(data.image, toppu);
+	if (data.image && !data.hideimg) {
+		// Larger thumbnails for thread images
+		data.large = !data.op;
+		tale.image = this.gazou(data.image);
+	}
+
 	return tale;
 };
 
@@ -529,7 +591,8 @@ OS.mono = function(data) {
 			(info.style ? ' style="' + info.style + '"' : '') +
 			'>'),
 		c = safe('</article>\n'),
-		gen = this.monogatari(data, false);
+		gen = this.monogatari(data);
+
 	return flatten([o, gen.header, gen.image || '', gen.body, c]).join('');
 };
 
@@ -539,7 +602,7 @@ OS.monomono = function(data, cls) {
 	var o = safe(`<section id="${data.num}"`
 			+ (cls ? ` class="${cls}"` : '') + '>'),
 		c = safe('</section>\n'),
-		gen = this.monogatari(data, true);
+		gen = this.monogatari(data);
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
 };
 
