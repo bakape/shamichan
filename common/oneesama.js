@@ -321,7 +321,7 @@ OS.imageSearch = function(data) {
 	for (let i = 0, l = base.length; i < l; i++) {
 		let parts = base[i];
 		html += parts[0]
-			+ encodeURI(data[parts[1]] || data.thumb)
+			+ encodeURI(data[parts[1]] || data.thumb || data.src)
 			+ parts[2];
 		// Only render google for PDFs and MP3s
 		if (i === 0 && ['.pdf', '.mp3'].indexOf(data.ext) > -1)
