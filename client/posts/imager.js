@@ -2,152 +2,137 @@
  * Thumbnail and image renderring
  */
 
-var $ = require('jquery'),
+'use strict';
+
+let $ = require('jquery'),
 	Backbone = require('backbone'),
 	common = require('../../common'),
 	main = require('../main'),
 	options = require('../options');
 
-var Hidamari = exports.Hidamari = {
-	renderImage: function (model, image) {
-		var $fig = this.$el.children('figure');
+let Hidamari = exports.Hidamari = {
+	/*
+	 Render entire <figure>. Rerenderring completely each time is considerable
+	 overhed, but the alternative is very convoluted logic. I don't really want
+	 to attach a FSM to each view, just for image renderring.
+	 */
+	renderImage: function(arg, image) {
+		/*
+		 All kinds of listeners call this method, so we need to ensure we
+		 always get the appropriate image object.
+		 */
+		const reveal = arg === true;
+		if (!image || !image.src)
+			image = this.model.get('image');
+		this.$el.children('figure').remove();
 		// Remove image on mod deletion
 		if (!image)
-			$fig.remove();
-		// Insert figure. Only used for Article and ComposerView
-		else if (!$fig.length) {
-			$(common.flatten(main.oneeSama.gazou(image, false)).join(''))
-				.insertAfter(this.$el.children('header'));
-			this.autoExpandImage();
-		}
-	},
-
-	renderSpoiler: function(spoiler){
-		this.model.get('image').spoiler = spoiler;
-		this.renderThumbnail();
-	},
-
-	changeThumbnailStyle: function(model, type){
-		if (!this.model.has('image'))
 			return;
-		// Shitty hack
-		// TODO: remove all, when options model is rewritten
-		main.oneeSama.thumbStyle = type;
-		this.renderThumbnail(type == 'hide');
+		const html = common.flatten(main.oneeSama.gazou(image, reveal))
+			.join('');
+		let $header = this.$el.children('header');
+		if (this.model.get('op'))
+			// A post
+			$header.after(html);
+		else
+			// A thread
+			$header.before(html);
+
+		this.model.set({
+			// Only used in hidden thumbnail mode
+			thumbnailRevealed: reveal || options.get('thumbs') === 'hidden',
+			imageExpanded: false
+		});
 	},
 
-	// Rerenders the entire thumbnail, which can pretty expensive in batch,
-	// but good enough for now
-	renderThumbnail: function(hide, contract){
-		var $fig = this.$el.children('figure'),
-			$a = $fig.children('a'),
-			$img = $a.children('img, video');
-		if (hide === undefined)
-			hide = options.get('thumbs') == 'hide';
-		if (hide){
-			$fig.find('.imageSrc').text('[Show]');
-			this.model.set({imageExpanded: false, thumbnailRevealed: false});
-			return $img.remove();
-		}
-		// Don't replace expanded images, unless contracting
-		if (this.model.get('imageExpanded') && !contract)
+	autoExpandImage: function() {
+		const img = this.model.get('image');
+		if (!img
+			|| !massExpander.get('expand')
+			// Don't auto expand webm/PDF/MP3
+			|| ['.webm', '.pdf', '.mp3'].indexOf(img.ext) > -1
+		)
 			return;
-		var img = this.model.get('image');
-		$fig.find('.imageSrc').text(img.src);
-		$img = $(
-			common.flatten(
-				main.oneeSama.gazou_img(img, this.$el.is('section')
-			).html).join('')
-		);
-		$a.remove();
-		$img.appendTo($fig);
-		this.model.set({imageExpanded: false, thumbnailRevealed: !hide});
+		this.toggleImageExpansion(true, img);
 	},
 
-	toggleSpoiler: function(model, toggle){
-		if (!this.model.has('image') || options.get('thumbs') == 'hide')
+	renderSpoiler: function(spoiler) {
+		let img = this.model.get('image');
+		img.spoiler = spoiler;
+		this.renderImage(img);
+	},
+
+	toggleSpoiler: function() {
+		const img = this.model.get('image');
+		if (!img || !img.spoiler)
 			return;
-		main.oneeSama.spoilToggle = toggle;
-		this.renderThumbnail();
+		this.renderImage(img);
 	},
 
 	// Toggle animated GIF thumbnails
-	toggleAutogif: function(model, toggle){
+	toggleAutogif: function() {
 		const img = this.model.get('image');
-		if (!img || img.ext !== '.gif' || options.get('thumbs') == 'hide')
+		if (!img || img.ext !== '.gif')
 			return;
-		main.oneeSama.autoGif = toggle;
-		this.renderThumbnail();
+		this.renderImage(img);
 	},
 
-	// Reveal hidden thumbnail by clicking [Show]
-	revealThumbnail: function(e){
-		if (options.get('thumbs') != 'hide')
-			return;
+	// Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
+	toggleThumbnailVisibility: function(e) {
 		e.preventDefault();
-		var revealed = this.model.get('thumbnailRevealed');
-		this.renderThumbnail(revealed);
-		this.$el.children('figure').find('.imageSrc')
-			.text(revealed ? '[Show]' : '[Hide]');
+		this.renderImage(!this.model.get('thumbnailRevealed'));
 	},
 
 	imageClicked: function(e){
-		if (options.get('inlinefit') == 'none' || e.which != 1)
+		if (options.get('inlinefit') == 'none' || e.which !== 1)
 			return;
 		// Remove image hover preview, if any
 		options.trigger('imageClicked');
 		e.preventDefault();
-		this.toggleImageExpansion();
+		this.toggleImageExpansion(!this.model.get('imageExpanded'));
 	},
 
-	autoExpandImage: function(){
-		var expand = massExpander.get('expand');
-		if (expand)
-			this.toggleImageExpansion(null, expand);
-	},
-
-	toggleImageExpansion: function(model, expand){
-		var img = this.model.get('image');
+	toggleImageExpansion: function(expand, img = this.model.get('image')) {
 		const fit = options.get('inlinefit');
-		if (!img || fit == 'none')
+		if (!img || fit === 'none')
 			return;
-		// Don't autoexpand webm/PDF/MP3 with Expand All enabled
-		if (expand !== undefined
-			&& (img.ext == '.webm'
-			|| img.ext == '.pdf'
-			|| img.ext == '.mp3'))
-				return;
-		if  (expand != false)
-			expand = expand || this.model.get('imageExpanded') != true;
 		if (expand)
 			this.fitImage(img, fit);
 		else
-			this.renderThumbnail(options.get('thumbs') == 'hide', true);
+			this.renderImage(null, img);
 	},
 
 	fitImage: function(img, fit){
 		// Open PDF in a new tab on click
-		if (img.ext == '.pdf')
+		if (img.ext === '.pdf')
 			return window.open(mediaURL + 'src/' + img.src, '_blank');
-		// Audio controls are always the same height and do not need to be fitted
-		if (img.ext == '.mp3')
-			return this.renderAudio();
-		var newWidth, newHeight,
+		// Audio controls are always the same height and do not need to be
+		// fitted
+		if (img.ext === '.mp3')
+			return this.renderAudio(img);
+		let newWidth, newHeight,
 			width = newWidth = img.dims[0],
 			height = newHeight = img.dims[1];
-		if (fit == 'full')
-			return this.expandImage(width, height, img.ext);
-		const both = fit == 'both',
-			widthFlag = both || fit == 'width',
-			heightFlag = both || fit == 'height',
+		if (fit === 'full') {
+			return this.expandImage(img, {
+				width,
+				height
+			});
+		}
+		const both = fit === 'both',
+			widthFlag = both || fit === 'width',
+			heightFlag = both || fit === 'height',
 			aspect = width / height,
 			isArticle = !!this.model.get('op');
-		var fullWidth, fullHeight;
+		let fullWidth, fullHeight;
 		if (widthFlag){
-			var maxWidth = $(window).width() -
-				// We have to go wider
-				this.$el.closest('section')[0].getBoundingClientRect().left
-					* (isArticle ? 1 : 2);
+
+			let maxWidth = $(window).width()
+				// We need to go wider
+				- this.$el
+					.closest('section')[0]
+					.getBoundingClientRect()
+					.left * (isArticle ? 1 : 2);
 			if (isArticle)
 				maxWidth -= this.$el.outerWidth() - this.$el.width() + 5;
 			if (newWidth > maxWidth){
@@ -157,7 +142,7 @@ var Hidamari = exports.Hidamari = {
 			}
 		}
 		if (heightFlag){
-			var maxHeight = $(window).height() - $('#banner').outerHeight();
+			let maxHeight = $(window).height() - $('#banner').outerHeight();
 			if (newHeight > maxHeight){
 				newHeight = maxHeight;
 				newWidth = newHeight * aspect;
@@ -168,46 +153,60 @@ var Hidamari = exports.Hidamari = {
 			width = newWidth;
 			height = newHeight;
 		}
-		this.expandImage(width, height, img.ext, fullWidth && !fullHeight);
+		this.expandImage(img, {
+			width,
+			height,
+			fullWidth: fullWidth && !fullHeight
+		});
 	},
 
-	expandImage: function(width, height, ext, fullWidth){
-		var $fig = this.$el.children('figure'),
-			tag;
-		if (ext == '.webm')
-			tag = 'video';
-		else
-			tag = 'img';
-		$fig.find('img, video').replaceWith($('<'+ tag +'/>', {
-			src: $fig.find('.imageSrc').attr('href'),
-			width: width,
-			height: height,
-			autoplay: true,
-			loop: true,
-			// Even wider
-			'class': 'expanded'+ (fullWidth ? ' fullWidth' : '')
-		}));
+	expandImage: function(img, opts) {
+		const tag = (img.ext === '.webm') ? 'video' : 'img';
+		this.$el
+			.children('figure')
+			.children('a')
+			.html(common.parseHTML
+				`<${tag}~
+					src="${main.oneeSama.imagePaths().src + img.src}"
+					width="${opts.width}"
+					height="${opts.height}"
+					autoplay="true"
+					loop="true"
+					class="expanded${opts.fullWidth && ' fullWidth'}"
+				>`
+			);
 		this.model.set('imageExpanded', true);
 	},
 
-	renderAudio: function() {
-		var $a = this.$el.children('figure').children('a');
-		$('<audio/>', {
-			src: $a.attr('href'),
-			width: 300,
-			height: '3em',
-			autoplay: true,
-			loop: true,
-			controls: true
-		})
-			.appendTo($a);
+	renderAudio: function(img) {
+		this.$el
+			.children('figure')
+			.children('a')
+			.append(common.parseHTML
+				`<audio
+					src="${main.oneeSama.imagePaths().src + img.src}"
+					width="300"
+					height="3em"
+					autoplay="true"
+					loop="true"
+					controls="true"
+				>
+				</audio>`
+			);
 		this.model.set('imageExpanded', true);
 	}
 };
 
 // Expand all images
-var ExpanderModel = Backbone.Model.extend({
+let ExpanderModel = Backbone.Model.extend({
 	id: 'massExpander',
+
+	initialize: function() {
+		main.$threads.on('click', '#expandImages', function(e) {
+			e.preventDefault();
+			this.toggle();
+		}.bind(this));
+	},
 
 	toggle: function() {
 		const expand = !this.get('expand');
@@ -218,9 +217,4 @@ var ExpanderModel = Backbone.Model.extend({
 	}
 });
 
-var massExpander = exports.massExpander = new ExpanderModel();
-
-main.$threads.on('click', '#expandImages', function(e){
-	e.preventDefault();
-	massExpander.toggle();
-});
+let massExpander = exports.massExpander = new ExpanderModel();

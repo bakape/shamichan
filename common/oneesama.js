@@ -228,21 +228,24 @@ OS.linkify = function(text) {
 };
 
 // Central image rendering method
-OS.gazou = function(data) {
+OS.gazou = function(data, reveal) {
 	return [
 		safe('<figure>'),
-		this.figcaption(data),
-		this.thumbStyle !== 'hide' && safe(this.thumbnail(data)),
+		this.figcaption(data, reveal),
+		(this.thumbStyle !== 'hide' || reveal) && safe(this.thumbnail(data)),
 		safe('</figure>')
 	];
 };
 
 // Render image header
-OS.figcaption = function(data) {
+OS.figcaption = function(data, reveal) {
 	let html = parseHTML
 		`<figcaption>
 			${this.thumbStyle === 'hide'
-				&& `<a class="imageToggle">[${this.lang.show}]</a>`}
+				&& `<a class="imageToggle">
+					[${this.lang[reveal ? 'hide' : 'show']}]
+				</a>`
+			}
 			${this.imageSearch(data)}
 			<i>
 				(${data.audio && '\u266B, '}
@@ -395,6 +398,7 @@ OS.thumbnail = function(data) {
 	}
 	// Archive board
 	else if (data.vint) {
+
 		src = `http://archive.moe/_/search/image/${data.MD5}`;
 		thumb = paths.vint + data.vint
 	}

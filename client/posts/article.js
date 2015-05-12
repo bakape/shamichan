@@ -26,9 +26,7 @@ var Article = module.exports = Backbone.View.extend({
 		if (this.$el.is(':empty'))
 			this.render();
 		this.listenTo(this.model, {
-			'change:backlinks': this.renderBacklinks,
 			'change:editing': this.renderEditing,
-			'change:image': this.renderImage,
 			//removeSelf: this.bumplessRemove,
 			remove: this.remove
 		});
@@ -56,6 +54,7 @@ var Article = module.exports = Backbone.View.extend({
 			.children('blockquote, .omit, form, article[id]:last')
 			.last()
 			.after(this.$el);
+		this.autoExpandImage();
 		return this;
 	},
 

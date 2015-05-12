@@ -34,7 +34,6 @@ else {
  * - execOnStart: Boolean. Should the function be executed on model population?
  *	Defaults to true.
  * - load: Condition to display and execute the option. Defaults to true(always)
- * - boardSpecific: Different option setting for each board.
  * - validation: Function that validates the users input. Returns a boolean.
  *
  * Tooltips and lables are defined per language in `lang/`.
@@ -67,7 +66,6 @@ var opts = [
 	/* THUMBNAIL OPTIONS */
 	{
 		id: 'thumbs',
-		boardSpecific: true,
 		// Hardcoded to avoid circular dependancy on the server
 		type: ['small', 'sharp', 'hide'],
 		tab: 1,
@@ -101,7 +99,6 @@ var opts = [
 	/* SPOILER TOGGLE */
 	{
 		id: 'spoilers',
-		boardSpecific: true,
 		type: 'checkbox',
 		tab: 1,
 		default: true,
@@ -170,23 +167,29 @@ var opts = [
 ];
 
 /* IMAGE SEARCH LINK TOGGLE */
-['google', 'iqdb', 'saucenao', 'foolz', 'exhentai'].forEach(function(search) {
-	opts.push({
-		id: search,
-		// Use a custom internatiolisation function
-		lang: 'imageSearch',
-		tab: 2,
-		exec: function(toggle) {
-			var $style = $('#' + search + 'Toggle');
-			if (!$style.length) {
-				$style = $('<style/>', {id: search + 'Toggle'})
-					.html('.' + search + '{display:none;}')
-					.appendTo('head');
+{
+	const engines = ['google', 'iqdb', 'saucenao', 'foolz', 'exhentai'];
+	for (let i = 0, l = engines.length; i < l; i++) {
+		const engine = engines[i];
+		opts.push({
+			id: engine,
+			// Use a custom internatiolisation function
+			lang: 'imageSearch',
+			tab: 2,
+			type: 'checkbox',
+			default: engine === 'google',
+			exec: function(toggle) {
+				var $style = $('#' + engine + 'Toggle');
+				if (!$style.length) {
+					$style = $('<style/>', {id: engine + 'Toggle'})
+						.html('.' + engine + '{display:none;}')
+						.appendTo('head');
+				}
+				$style.prop('disabled', toggle);
 			}
-			$style.prop('disabled', toggle);
-		}
-	});
-});
+		});
+	}
+}
 
 /* ILLYA DANCE */
 var illyaDance = {
@@ -198,7 +201,6 @@ var illyaDance = {
 	get load() {
 		return notMobile && imports.hotConfig.ILLYA_DANCE;
 	},
-	boardSpecific: true,
 	tab: 3,
 	exec: function(illyatoggle) {
 		var muted = ' ';
@@ -221,7 +223,6 @@ opts.push(illyaDance,
 		get load() {
 			return notMobile && imports.hotConfig.ILLYA_DANCE;
 		},
-		boardSpecific: true,
 		tab: 3,
 		exec: function() {
 			if (options.get('illyaBGToggle')) {
@@ -233,7 +234,6 @@ opts.push(illyaDance,
 	/* HORIZONTAL POSTING */
 	{
 		id: 'horizontalPosting',
-		boardSpecific: true,
 		tab: 3,
 		exec: function(toggle) {
 			var style = '<style id="horizontal">article,aside{display:inline-block;}</style>';
@@ -260,7 +260,6 @@ opts.push(illyaDance,
 	/* THEMES */
 	{
 		id: 'theme',
-		boardSpecific: true,
 		// Arrays will turn into selection boxes
 		type: [
 			'moe',
@@ -285,8 +284,8 @@ opts.push(illyaDance,
 					+ hotConfig.css[theme + '.css']);
 			}
 			// FIXME: temp stub
-			// Call the background controller to generate, remove and/or append the glass
-			//background.glass(theme);
+			// Call the background controller to generate, remove and/or append
+			// the glass background.glass(theme);
 		}
 	},
 	/* CUSTOM USER-SET BACKGROUND */

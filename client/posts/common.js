@@ -13,7 +13,7 @@ var $ = require('jquery'),
 
 module.exports = {
 	events: {
-		'click >figure>figcaption>.imageSrc': 'revealThumbnail',
+		'click >figure>figcaption>.imageToggle': 'toggleThumbnailVisibility',
 		'click >figure>a': 'imageClicked',
 		'click >header>nav>a.quote': 'quotePost'
 	},
@@ -27,16 +27,18 @@ module.exports = {
 			updateBody: this.updateBody
 		});
 		this.listenTo(options, {
-			'change:thumbs': this.changeThumbnailStyle,
+			'change:thumbs': this.renderImage,
 			'change:spoilers': this.toggleSpoiler,
 			'change:autogif': this.toggleAutogif,
 			'change:anonymise': this.toggleAnonymisation,
 			'change:relativeTime': this.renderTime
 		});
 		// Automatic image expansion
-		this.listenTo(imager.massExpander, {
-			'change:expand': this.toggleImageExpansion
-		});
+		this.listenTo(imager.massExpander, 'change:expand',
+			function(model, expand) {
+				this.toggleImageExpansion(expand);
+			}
+		);
 		if (options.get('relativeTime'))
 			this.renderTime(null, true);
 		this.fun();
