@@ -398,7 +398,6 @@ OS.thumbnail = function(data) {
 	}
 	// Archive board
 	else if (data.vint) {
-
 		src = `http://archive.moe/_/search/image/${data.MD5}`;
 		thumb = paths.vint + data.vint
 	}
@@ -410,11 +409,13 @@ OS.thumbnail = function(data) {
 	else if (data.thumb)
 		thumb = paths.thumb + data.thumb;
 
-	// Source image smaller than thumbnail
+	// Source image smaller than thumbnail, archive and other fallbacks
 	if (!thumbWidth) {
 		thumbWidth = width;
 		thumbHeight = height;
 	}
+	if (!thumb)
+		thumb = src;
 
 	return parseHTML
 		`${config.IMAGE_HATS && '<span class="hat"></span>'}
