@@ -414,7 +414,7 @@ OS.thumbnail = function(data) {
 
 	return parseHTML
 		`${config.IMAGE_HATS && '<span class="hat"></span>'}
-		<a target="blank" rel="nofollow" href=${src}">
+		<a target="blank" rel="nofollow" href="${src}">
 			<img src="${thumb}" width="${thumbWidth} height=${thumbHeight}">
 		</a>`
 };
@@ -576,7 +576,7 @@ OS.monogatari = function(data) {
 	];
 	if (data.image && !data.hideimg) {
 		// Larger thumbnails for thread images
-		data.large = !data.op;
+		data.image.large = !data.op;
 		tale.image = this.gazou(data.image);
 	}
 
