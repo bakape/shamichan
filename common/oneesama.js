@@ -427,7 +427,8 @@ OS.thumbnail = function(data) {
 OS.spoilerInfo = function(data) {
 	let highDef = data.large || this.thumbStyle !== 'small';
 	return {
-		thumb: parseHTML`${this.imagePaths().spoil}${highDef && 's'}`,
+		thumb: parseHTML
+			`${this.imagePaths().spoil}${highDef && 's'}${data.spoiler}.png`,
 		dims: data.large ? config.THUMB_DIMENSIONS : config.PINKY_DIMENSIONS
 	};
 };

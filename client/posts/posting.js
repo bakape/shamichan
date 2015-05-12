@@ -824,7 +824,10 @@ var ComposerView = Backbone.View.extend({
 	uploadError: function(msg) {
 		if (this.model.get('cancelled'))
 			return;
-		this.model.set({uploadStatus: msg, uploading: false});
+		this.model.set({
+			uploadStatus: msg,
+			uploading: false
+		});
 		if (this.$uploadForm)
 			this.$uploadForm.find('input[name=alloc]').remove();
 	},
