@@ -13,17 +13,20 @@ module.exports = {
 	},
 /*
  If using an external web server, set this to the served address of the www
- directory. Trailing slash required
+ directory. Trailing slash required.
+
+ If using Cloudflare and serving images through HTTPS, take note that Cloudflare
+ only supports a limited range of cyphers. IQDB and saucenao at the moment of
+ writing fail the SSL handshake, when attempting to download the thumbnail from
+ the server. As a workaround the image seach URLs for these will be appended the
+ '?ssl=off' query string. You must manually set a page rule with Cloudflare to
+ not use SSL for URLs with this string. Also, enable chaching of query string
+ resources.
+
+ In fact, it is heavily advised to have query string caching with Cloudflare
+ enabled in all situations.
  */
 	MEDIA_URL: '../',
-/*
- If using Cloudflare with global SSL forwarding, you might encounter problems
- with IQDB and Saucenao image search failing the SSL handshake. You can set a
- custom query string here to be appended to the thumbnail URL for these
- services and set a page rule on Cloudflare to disable HTTPS in URLs with it
- present. Example: '?ssl=off'
- */
-	NO_SSL_QUERY_STRING: null,
 // Set to separate upload address, if needed. Otherwise null
 	UPLOAD_URL: null,
 

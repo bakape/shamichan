@@ -26,7 +26,6 @@ var Article = module.exports = Backbone.View.extend({
 			this.render();
 		this.listenTo(this.model, {
 			'change:editing': this.renderEditing,
-			'change:image': this.renderImage,
 			remove: this.remove
 		});
 		this.initCommon();
@@ -41,6 +40,7 @@ var Article = module.exports = Backbone.View.extend({
 			.children('blockquote, .omit, form, article[id]:last')
 			.last()
 			.after(this.$el);
+		this.autoExpandImage();
 		return this;
 	},
 

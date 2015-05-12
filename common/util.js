@@ -367,6 +367,12 @@ exports.random_id = random_id;
  */
 
 function parseHTML(callSite) {
+	// if argumennts.length === 1
+	if (typeof callSite === 'string')
+		return formatHTML(callSite);
+	if (typeof callSite === 'function')
+		return formatHTML(callSite(args));
+
 	/*
 	 Slicing the arguments object is deoptimising, so we construct a new array
 	 instead.
@@ -375,11 +381,6 @@ function parseHTML(callSite) {
 	let args = new Array(len - 1);
 	for (let i = 1; i < len; i++)
 		args[i - 1] = arguments[i];
-
-	if (typeof callSite === 'string')
-		return formatHTML(callSite);
-	if (typeof callSite === 'function')
-		return formatHTML(callSite(args));
 
 	let output = callSite
 		.slice(0, len)
@@ -391,7 +392,11 @@ function parseHTML(callSite) {
 			const arg = args[i - 1];
 			return ((i === 0 || (!arg && arg !== 0)) ? '' : arg) + text;
 		})
-		.join('');
+		.join('')
+		// Convert trailing tilde to space
+		.replace(/~$/gm, ' ')
+		// Remove empty lines
+		.replace(/^\s*\n/gm, '');
 
 	return formatHTML(output);
 }

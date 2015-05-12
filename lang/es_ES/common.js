@@ -6,6 +6,7 @@ const lang = {
 	anon: 'Anónimo',
 	search: 'Buscar',
 	show: 'Mostrar',
+	hide: 'Hide',
 	expand: 'Ampliar',
 	last: 'Últimos',
 	see_all: 'Mostrar todos',

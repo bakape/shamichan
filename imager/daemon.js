@@ -489,41 +489,44 @@ IU.fill_in_specs = function (specs, kind) {
 IU.deduped = function () {
 	if (this.failed)
 		return;
-	var image = this.image,
-		specs = get_thumb_specs(image, this.pinky, 1);
+	let image = this.image,
+		specs = get_thumb_specs(image, this.pinky, 1),
+		noThumbs;
 	const w = image.dims[0],
 		h = image.dims[1];
 
 	/* Determine whether we really need a thumbnail */
 	if (image.size < 30*1024
-			&& ['.jpg', '.png'].indexOf(image.ext) >= 0
-			&& !image.apng && !image.video
-			&& w <= specs.dims[0] && h <= specs.dims[1]
-		) {
-			return this.got_nails();
-	}
+		&& ['.jpg', '.png'].indexOf(image.ext) >= 0
+		&& !image.apng && !image.video
+		&& w <= specs.dims[0] && h <= specs.dims[1]
+	)
+		noThumbs = true;
 
-	var self = this,
+	let self = this,
 		stream = fs.createReadStream(image.path);
 	stream.once('error', function(err) {
 		self.failure(Muggle(self.lang.resizing, err));
 	});
-	self.status(this.lang.thumbnailing);
-	self.fill_in_specs(specs, 'thumb');
-	image.dims = [w, h].concat(specs.dims);
-	var pipes = {
-		// Default 125x125 thumbnail
-		thumb: function(cb) {
-			self.resize_image(specs, stream, cb);
-		},
+
+	let pipes = {
 		sha1: sha1Hash.bind(null, stream)
 	};
-	if (config.EXTRA_MID_THUMBNAILS) {
-		// Extra 250x250 thumbnail
-		pipes.mid = function(cb) {
-			var specs = get_thumb_specs(image, self.pinky, 2);
-			self.fill_in_specs(specs, 'mid');
+	image.dims = [w, h].concat(specs.dims);
+	if (!noThumbs) {
+		self.status(this.lang.thumbnailing);
+		self.fill_in_specs(specs, 'thumb');
+		// Default 125x125 thumbnail
+		pipes.thumb = function(cb) {
 			self.resize_image(specs, stream, cb);
+		};
+		if (config.EXTRA_MID_THUMBNAILS) {
+			// Extra 250x250 thumbnail
+			pipes.mid = function(cb) {
+				var specs = get_thumb_specs(image, self.pinky, 2);
+				self.fill_in_specs(specs, 'mid');
+				self.resize_image(specs, stream, cb);
+			}
 		}
 	}
 

@@ -6,6 +6,7 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	common = require('../common'),
 	Extract = require('./extract'),
+	imager = require('./posts/imager'),
 	main = require('./main'),
 	scroll = require('./scroll'),
 	state = require('./state');
@@ -54,8 +55,8 @@ function readingSteiner(url, event, needPush) {
 		// Prevent old threads from syncing
 		state.syncs = {};
 		// Set new page state
-		// TODO: Reload board-specific options on change
 		state.page.set(nextState);
+		imager.massExpander.unset('expand');
 		// Apply new DOM and load models
 		main.$threads.html(data);
 		new Extract();

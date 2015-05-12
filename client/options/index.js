@@ -33,7 +33,7 @@ var OptionsCollection = Backbone.Collection.extend({
 			const val = model.getValue();
 			if (val === model.get('default'))
 				return;
-			opts[model.get('storedId')] = val;
+			opts[model.get('id')] = val;
 		});
 		localStorage.options = JSON.stringify(opts);
 	}
@@ -43,42 +43,38 @@ var optionsCollection = new OptionsCollection();
 
 // Controller template for each individual option
 var OptionModel = Backbone.Model.extend({
-	initialize: function(obj) {
+	initialize: function(opts) {
 		// Condition for loading option. Optional.
-		if (obj.load !== undefined && !obj.load)
+		if (opts.load !== undefined && !opts.load)
 			return;
-		this.set(obj);
+
 		// No type = checkbox + default false
-		if (!obj.type)
-			this.set({type: 'checkbox', default: false});
-		/*
-		 * Some options differ per board. Store the id that will be used in the
-		 * options model for searching purposes.
-		 */
-		var id = obj.id;
-		if (obj.boardSpecific)
-			id = 'board.' + state.page.get('board') + '.' + id;
-		this.set('storedId', id);
+		if (!opts.type) {
+			this.set({
+				type: 'checkbox',
+				default: false
+			});
+		}
 
 		const val = this.getValue();
-		options.set(id, val);
-		if (obj.exec !== undefined) {
-			this.listenTo(options, 'change:' + id, this.execListen);
+		this.setValue(val);
+		if (opts.exec !== undefined) {
+			this.listenTo(options, 'change:' + opts.id, this.execListen);
 			// Execute with current value
-			if (obj.execOnStart !== false)
-				obj.exec(val);
+			if (opts.execOnStart !== false)
+				opts.exec(val);
 		}
 		optionsCollection.add(this);
 	},
 
 	// Set the option, taking into acount board specifics
-	setStored: function(val) {
-		options.set(this.get('storedId'), val);
+	setValue: function(val) {
+		options.set(this.get('id'), val);
 	},
 
 	// Return default, if unset
 	getValue: function() {
-		const val = options.get(this.get('storedId'));
+		const val = options.get(this.get('id'));
 		return val === undefined ? this.get('default') : val;
 	},
 
@@ -172,9 +168,7 @@ var OptionsView = Backbone.View.extend({
 	// Propagate options panel changes to the models and localStorage
 	applyChange: function(event) {
 		var $target = $(event.target),
-			model = optionsCollection.findWhere({
-				id: $target.attr('id')
-			}),
+			model = optionsCollection.get($target.attr('id')),
 			val;
 		if (!model)
 			return;
@@ -194,7 +188,7 @@ var OptionsView = Backbone.View.extend({
 
 		if (!model.validate(val))
 			return $target.val('');
-		model.setStored(val);
+		model.setValue(val);
 		optionsCollection.persist();
 	},
 
@@ -246,5 +240,3 @@ var optionsView;
 _.defer(function() {
 	optionsView = new OptionsView();
 });
-
-// TODO: BoardSpecific option unloading code for inter-board push state navigation

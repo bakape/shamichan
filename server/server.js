@@ -655,39 +655,6 @@ web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
 		cb(null, 'redirect', '../' + params[2]);
 });
 
-web.resource(/^\/outbound\/(g|iqdb|sn)\/(\d+\.(?:jpg|png))$/,
-			function (req, params, cb) {
-	var thumb = imager.config.MEDIA_URL + 'thumb/' + params[2];
-
-	// attempt to make protocol more absolute
-	var u = urlParse(thumb, false, true);
-	if (!u.protocol) {
-		u.protocol = 'http:';
-		thumb = u.format();
-	}
-
-	// Pass unencrypted URL to IQDB and SauceNao to avoid problems with Cloudflare's SSL
-	if ((params[1] == 'iqdb' || params[1] == 'sn') && imager.config.NO_SSL_QUERY_STRING)
-		thumb = thumb.replace(/https:\/\//, 'http://') + imager.config.NO_SSL_QUERY_STRING;
-	var service;
-	if (params[1] == 'iqdb')
-		service = 'http://iqdb.org/?url=';
-	else if (params[1] == 'g')
-		service = 'https://www.google.com/searchbyimage?image_url=';
-	else
-		service = 'http://saucenao.com/search.php?db=999&url=';
-
-	var dest = service + encodeURIComponent(thumb);
-	cb(null, 303.1, dest);
-});
-
-web.resource(/^\/outbound\/(hash|exh)\/([\w+\/]{22}|[\w+\/]{40})$/, function (req, params, cb) {
-	var url = params[1] == 'hash' ? 'http://archive.moe/_/search/image/' :
-		'http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=';
-	var dest = url + escape(params[2]);
-	cb(null, 303.1, dest);
-});
-
 web.route_get_auth(/^\/dead\/(src|thumb|mid)\/(\w+\.\w{3})$/,
 			function (req, resp, params) {
 	if (!caps.can_administrate(req.ident))
