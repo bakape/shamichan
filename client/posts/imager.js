@@ -105,7 +105,9 @@ let Hidamari = exports.Hidamari = {
 	fitImage: function(img, fit){
 		// Open PDF in a new tab on click
 		if (img.ext === '.pdf')
-			return window.open(mediaURL + 'src/' + img.src, '_blank');
+			return window.open(main.oneeSama.imagePaths().src + img.src,
+				'_blank'
+			);
 		// Audio controls are always the same height and do not need to be
 		// fitted
 		if (img.ext === '.mp3')
