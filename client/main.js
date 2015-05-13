@@ -92,3 +92,4 @@ require('./client');
 
 // Load auxilary modules
 require('./history');
+require('./hover');
