@@ -12,8 +12,9 @@ var $ = require('jquery'),
 // Centralised mousemove target tracking
 var mousemove = exports.mousemove = new Backbone.Model({
 	id: 'mousemove',
-	/*Logging only the target isn't a option because change:target doesn't seem to fire in some cases where the target
-	 is too similar for example changing between two post links (>>XXX) directly*/
+	/*Logging only the target isn't a option because change:target doesn't seem
+	to fire in some cases where the target is too similar for example changing
+	between two post links (>>XXX) directly*/
 	event: null
 });
 
@@ -59,8 +60,7 @@ var PostPreview = article.extend({
 	render: function () {
 		main.oneeSama.links = this.model.get('links');
 		this.setElement(main.oneeSama.mono(this.model.attributes));
-		this.$el.addClass('preview');
-		this.$el.append(this.$backlinks);
+		this.$el.addClass('preview').append(this.$backlinks);
 		this.trigger("update",this.$el);
 		return this;
 	}
@@ -76,7 +76,9 @@ var HoverPostView = Backbone.View.extend({
 		if ($target.is('a.history')){
 			var m = event.target.text.match(/^>>(\d+)/);
 			if (m) {
-				var post = state.posts.get(m[1]);
+				let post = state.posts.get(m[1]);
+				if (!post)
+					return;
 				this.previewView = new PostPreview({model: post});
 				this.targetPos = $target.position();
 
@@ -101,32 +103,33 @@ var HoverPostView = Backbone.View.extend({
 		}
 	},
 	render: function($el) {
-		$el.css(position_preview(this.targetPos,$el));
+		$el.css(this.position($el));
 		$el.appendTo(this.$el.empty());
+	},
+
+	position: function($el) {
+		$el.hide();
+		$(document.body).append($el);
+		var w = $el.width();
+		var h = $el.height();
+		$el.detach().show();
+
+		var $w = $(window);
+		var l = this.targetPos.left -$w.scrollLeft();
+		var t = this.targetPos.top -$w.scrollTop()-h-17;
+
+		//If it get cut at the top, put it below the link
+		if(t<0)
+			t+=h+34;
+
+		//if it gets cut to the right push it to the left.
+		var overflowR = l+w-$w.innerWidth();
+		if(overflowR>-30)
+			l = Math.max(0,l-overflowR-30);
+
+		return {left: l,top: t};
 	}
 });
-function position_preview(targetPos,$el){
-	$el.hide();
-	$(document.body).append($el);
-	var w = $el.width();
-	var h = $el.height();
-	$el.detach().show();
-
-	var $w = $(window);
-	var l = targetPos.left -$w.scrollLeft();
-	var t = targetPos.top -$w.scrollTop()-h-17;
-
-	//If it get cut at the top, put it below the link
-	if(t<0)
-		t+=h+34;
-
-	//if it gets cut to the right push it to the left.
-	var overflowR = l+w-$w.innerWidth();
-	if(overflowR>-30)
-		l = Math.max(0,l-overflowR-30);
-
-	return {left: l,top: t};
-}
 
 if (!main.isMobile) {
 	var ltarget;
