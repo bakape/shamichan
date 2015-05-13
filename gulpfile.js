@@ -67,25 +67,11 @@ build('client', browserify(require.resolve('./client/main.js'),
 			'backbone'
 		]
 	})
-		/*
-		 Trasnpile to ES5. We use already implemented native functionality, where
-		 possible. These are mainly to prevent the minifier from throwing errors
-		 and some syntactic sugar, that is not yet implemented. Nobody cares about
-		 your ancient retarded browser.
-		 */
+		// Trasnpile to ES5. Use mostly default, because minifier support is
+		// still shit.
 		.transform(babelify.configure({
-			whitelist: [
-				'es6.blockScoping',
-				'es6.arrowFunctions',
-				'es6.parameters.default',
-				'es6.parameters.rest',
-				'es6.spread',
-				'es6.properties.computed',
-				'es6.properties.shorthand',
-				'es6.spec.templateLiterals',
-				'es6.templateLiterals',
-				'strict'
-			]
+			// Specify ES5 as the target
+			stage: 5
 		}))
 		// Exclude these requires on the client
 		.exclude('../config')
