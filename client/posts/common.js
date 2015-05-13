@@ -52,6 +52,7 @@ module.exports = {
 			'change:' + this.model.get('num'),
 			this.renderBacklinks
 		);
+		return this;
 	},
 
 	updateBody: function(update) {

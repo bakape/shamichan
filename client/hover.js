@@ -51,18 +51,16 @@ var ImageHoverView = Backbone.View.extend({
 var PostPreview = article.extend({
 	initialize: function () {
 		this.listenTo(this.model, {
-			'change:body': this.render,
-			'change:editing': this.render,
-			'change:image': this.render
+			'change:body': this.update,
+			'change:image': this.update,
+			'change:editing': this.renderEditing
 		});
-		this.initCommon();
+		this.render().$el.addClass('preview');
+		this.initCommon().update();
 	},
-	render: function () {
-		main.oneeSama.links = this.model.get('links');
-		this.setElement(main.oneeSama.mono(this.model.attributes));
-		this.$el.addClass('preview').append(this.$backlinks);
-		this.trigger("update",this.$el);
-		return this;
+
+	update: function() {
+		postHover.render(this.$el);
 	}
 });
 var HoverPostView = Backbone.View.extend({
@@ -72,26 +70,18 @@ var HoverPostView = Backbone.View.extend({
 		this.listenTo(this.model,'change:event', this.check);
 	},
 	check: function(model, event) {
-		var $target = $(event.target);
-		if ($target.is('a.history')){
-			var m = event.target.text.match(/^>>(\d+)/);
-			if (m) {
-				let post = state.posts.get(m[1]);
-				if (!post)
-					return;
-				this.previewView = new PostPreview({model: post});
-				this.targetPos = $target.position();
-
-				//If the post changes we update the preview
-				this.listenTo(this.previewView, 'update', this.render);
-				this.previewView.render();
-
-				var modelref = this;
-				$target.one('mouseleave click',function(){
-					modelref.remove();
-				});
-			}
-		}
+		let $target = $(event.target);
+		if (!$target.is('a.history'))
+			return;
+		const m = event.target.text.match(/^>>(\d+)/);
+		if (!m)
+			return;
+		let post = state.posts.get(m[1]);
+		if (!post)
+			return;
+		this.targetPos = $target.position();
+		this.previewView = new PostPreview({model: post});
+		$target.one('mouseleave click', () => this.remove());
 	},
 	remove: function() {
 		if (this.previewView) {
@@ -144,7 +134,7 @@ if (!main.isMobile) {
 		model: mousemove,
 		el: $hover
 	});
-	new HoverPostView({
+	var postHover = new HoverPostView({
 		model: mousemove,
 		el: $hover
 	});
