@@ -348,7 +348,8 @@ OS.imageLink = function(data) {
 	else {
 		html.push(
 			safe(parseHTML
-				` href="${this.imagePaths().src}${data.src}"
+				` href="${config.SECONDARY_MEDIA_URL || config.MEDIA_URL}src/${
+					data.src}"
 				rel="nofollow"
 				download="`
 			),
