@@ -9,7 +9,10 @@ var $ = require('jquery');
 function aboveBanner (){
 	if (!/^#\d+$/.test(location.hash))
 		return;
-	$(window).scrollTop($(location.hash).offset().top - $('#banner').height());
+	let $anchor = $(location.hash);
+	if (!$anchor.length)
+		return;
+	$(window).scrollTop($anchor.offset().top - $('#banner').height());
 }
 exports.aboveBanner = aboveBanner;
 
