@@ -297,7 +297,6 @@ const searchBase = (function() {
 		}
 	];
 
-	const mediaURL = config.MEDIA_URL;
 	let base = [];
 	for (let i = 0, l = models.length; i < l; i++) {
 		let model = models[i];
