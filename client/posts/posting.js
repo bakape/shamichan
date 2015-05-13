@@ -175,8 +175,10 @@ main.oneeSama.hook('insertOwnPost', function (info) {
 			op = info.links[num];
 		if (!op)
 			return;
-		var $ref = $(flatten([main.postForm.imouto.post_ref(num, op, false)])
-			.join(''));
+		var $ref = $(common.flatten(
+				main.postForm.imouto.post_ref(num, op, false)
+			).join('')
+		);
 		$a.attr('href', $ref.attr('href')).removeAttr('class');
 		const refText = $ref.text();
 		if (refText != text)
