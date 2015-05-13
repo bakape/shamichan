@@ -858,7 +858,7 @@ Y.purge_thread = function(op, callback){
 					to_delete.push(imp('mid', res[i].mid));
 			}
 			for (let i = 0, l = to_delete.length; i < l; i++) {
-				fs.unlink(el, function(err){
+				fs.unlink(to_delete[i], function(err){
 					if (err)
 						winston.error(err);
 				});
