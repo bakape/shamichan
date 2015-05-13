@@ -2,7 +2,8 @@ Real-time imageboard.
 MIT licensed.
 
 **NOTE: The git master branch contains the development version of the
-board. Crashes are not uncommon as new features are added and patched. For more stable revisions, please [download the latest release](https://github.com/bakape/meguca/releases).**
+board. Crashes are not uncommon as new features are added and patched. For more 
+stable revisions, please [download the latest release](https://github.com/bakape/meguca/releases).**
 
 ##Setup
 * Install dependencies listed below
@@ -20,7 +21,9 @@ board. Crashes are not uncommon as new features are added and patched. For more 
 will automatically sync both ways. [More info](https://www.vagrantup.com/)
 
 ##Production
-* Have your webserver serve www/ (or wherever you've moved src, thumb, etc.)
+* Have your webserver serve `www/`
+  * Some features will not work without a dedicated webserver. It is highly 
+  recommended not to use the the default inbuilt webserver in production.
 * Run `node server/server.js` for just the server
 * config.DAEMON support is broken for now
 * You can update `config/hot.js` on-the-fly with `node server/kill.js`
@@ -52,11 +55,9 @@ loaded into a running server with `node server/kill.js`
 process; useful in debug mode also)
 
 ## Documentation
-* [docs/api.md](https://github.com/bakape/meguca/blob/master/docs/api.md) - JSON API documentation
-* [docs/doushio.initscript.example](https://github.com/bakape/meguca/blob/master/docs/doushio.initscript.example) - example init script
-* [docs/filemap.md](https://github.com/bakape/meguca/blob/master/docs/file_map.md.md) - project file map
-* [docs/nginx.config.example](https://github.com/bakape/meguca/blob/master/docs/nginx.conf.example) - example ngingx reverse proxy configuration
-file
+* [JSON API documentation: docs/api.md](https://github.com/bakape/meguca/blob/master/docs/api.md)
+* [init script example: docs/doushio.initscript.example](https://github.com/bakape/meguca/blob/master/docs/doushio.initscript.example)
+* [ngingx configuration example: docs/nginx.config.example](https://github.com/bakape/meguca/blob/master/docs/nginx.conf.example)
 
 ##Standalone upkeep scripts
 * scripts/backup.js - uploads rdb to S3

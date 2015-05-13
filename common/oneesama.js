@@ -306,7 +306,7 @@ const searchBase = (function() {
 				`<a target="_blank"
 		 			rel="nofollow"
 		 			class="imageSearch ${model.class}"
-		 			href="${model.url}${mediaURL}`,
+		 			href="${model.url}`,
 			model.type,
 			parseHTML
 				`${model.ssl && '?ssl=off'}"
@@ -320,11 +320,13 @@ const searchBase = (function() {
 
 OS.imageSearch = function(data) {
 	let html = '';
-	const base = searchBase;
+	const base = searchBase,
+		type = data.thumb ? 'thumb' : 'src',
+		imageURl =  this.imagePaths()[type] + data[type];
 	for (let i = 0, l = base.length; i < l; i++) {
 		let parts = base[i];
 		html += parts[0]
-			+ encodeURI(data[parts[1]] || data.thumb || data.src)
+			+ encodeURI(parts[1] !== 'thumb' ?  data[parts[1]] : imageURl)
 			+ parts[2];
 		// Only render google for PDFs and MP3s
 		if (i === 0 && ['.pdf', '.mp3'].indexOf(data.ext) > -1)
