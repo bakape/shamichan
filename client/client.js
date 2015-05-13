@@ -94,6 +94,7 @@ dispatcher[common.UPDATE_POST] = function(msg) {
 		model = state.posts.get(num);
 
 	if (model) {
+		model.addLinks(links);
 		model.set({
 			body: model.get('body') + msg[1],
 			state: msgState
