@@ -31,7 +31,10 @@ module.exports = {
 	SERVE_IMAGES: true,
 // Not preferred; use nginx (or other)'s gzipping
 	GZIP: true,
-// Force usage of websocket protocol
+/*
+ Enable usage of the websocket protocol (otherwise only emulation). Disabling
+ this increases connection speed, if behind restrictive proxies.
+ */
 	USE_WEBSOCKETS: true,
 
 	REDIS_PORT: 6379,
