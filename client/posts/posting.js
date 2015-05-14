@@ -8,6 +8,7 @@ var $ = require('jquery'),
 	Backbone = require('backbone'),
 	client = require('../client'),
 	common = require('../../common'),
+//        drop = require('./drop'), SOON
 	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
@@ -15,13 +16,12 @@ var $ = require('jquery'),
 	main = require('../main'),
 	nonce = require('./nonce'),
 	options = require('../options'),
+        scroll = require('../scroll'),
 	state = require('../state');
 
 var connSM = main.connSM,
 	postSM = main.postSM;
-
 const uploadingMessage = 'Uploading...';
-
 var postForm = main.postForm,
 // Minimal size of the input buffer
 	inputMinSize = 300;
@@ -100,9 +100,9 @@ main.dispatcher[common.IMAGE_STATUS] = function(msg) {
 		postForm.dispatch(msg[0]);
 };
 
-main.$doc.on('click', 'aside a', function() {
+main.$doc.on('click', 'aside a', _.wrap(function () {
 	postSM.feed('new', $(this).parent());
-});
+}, scroll.followLock));
 
 main.$doc.on('keydown', handle_shortcut);
 
@@ -117,7 +117,9 @@ function handle_shortcut(event) {
 			var $aside = state.page.get('thread') ? main.$threads.find('aside')
 				: $ceiling().next();
 			if ($aside.is('aside') && $aside.length === 1) {
-				postSM.feed('new', $aside);
+				scroll.followLock(function() {
+                                    postSM.feed('new', $aside);
+                                });
 				used = true;
 			}
 			break;
@@ -129,7 +131,7 @@ function handle_shortcut(event) {
 			break;
 		case opts.done:
 			if (postForm && !postForm.$submit.attr('disabled')) {
-					postForm.finish();
+					postForm.finish_wrapped();
 					used = true;
 			}
 			break;
@@ -190,7 +192,7 @@ var ComposerView = Backbone.View.extend({
 	events: {
 		'input #trans': 'onInput',
 		'keydown #trans': 'onKeyDown',
-		'click #done': 'finish',
+		'click #done': 'finish_wrapped',
 		'click #toggle': 'onToggle'
 	},
 
@@ -396,7 +398,7 @@ var ComposerView = Backbone.View.extend({
 			this.model.set({cancelled: true});
 		}
 		else
-			this.finish();
+			this.finish_wrapped();
 	},
 
 	onImageChosen: function() {
@@ -910,3 +912,9 @@ window.addEventListener('message', function(event) {
 	if (msg !== 'OK' && postForm)
 		postForm.uploadError(msg);
 }, false);
+
+//Adds a followLock check for finishing posts 
+(function () {
+	var CV = ComposerView.prototype;
+	CV.finish_wrapped = _.wrap(CV.finish, scroll.followLock);
+})();
