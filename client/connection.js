@@ -7,7 +7,8 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	common = require('../common/index'),
 	main = require('./main'),
-	state = require('./state');
+	state = require('./state'),
+        scroll = require('./scroll');
 
 var connSM = main.connSM, socket, attempts, attemptTimer;
 const config = main.config;
@@ -32,17 +33,19 @@ function on_message(e) {
 	if (config.DEBUG)
 		console.log('>', e.data);
 	let data = JSON.parse(e.data);
-	for (let i = 0, lim = data.length; i < lim; i++) {
-		let msg = data[i];
-		// TEMP: Log yet unsupported websocket calls
-		if (!main.dispatcher[msg[1]])
-			return console.error('Unsuported websocket call: ', msg);
-		const op = msg.shift(),
-			type = msg.shift();
-		if (common.is_pubsub(type) && op in state.syncs)
-			state.syncs[op]++;
-		main.dispatcher[type](msg, op);
-	}
+        scroll.followLock(function(){
+            for (let i = 0, lim = data.length; i < lim; i++) {
+                    let msg = data[i];
+                    // TEMP: Log yet unsupported websocket calls
+                    if (!main.dispatcher[msg[1]])
+                            return console.error('Unsuported websocket call: ', msg);
+                    const op = msg.shift(),
+                            type = msg.shift();
+                    if (common.is_pubsub(type) && op in state.syncs)
+                            state.syncs[op]++;
+                    main.dispatcher[type](msg, op);
+            }
+        });
 }
 
 function sync_status(msg) {
