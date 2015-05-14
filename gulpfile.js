@@ -70,8 +70,23 @@ build('client', browserify(require.resolve('./client/main.js'),
 		// Trasnpile to ES5. Use mostly default, because minifier support is
 		// still shit.
 		.transform(babelify.configure({
-			// Specify ES5 as the target
-			stage: 5
+			// MUH PERFORMINCE
+			blacklist: [
+				'es3.memberExpressionLiterals',
+				'es3.propertyLiterals',
+				'es5.properties.mutators',
+				'es6.constants',
+				'flow',
+				'react',
+				'jscript',
+				'react',
+				'reactCompat',
+				'regenerator',
+				'runtime'
+			],
+			optional: [
+				'es6.spec.blockScoping'
+			]
 		}))
 		// Exclude these requires on the client
 		.exclude('../config')
