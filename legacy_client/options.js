@@ -541,7 +541,7 @@ function parent_model($el) {
 						'.editing{\
 							background:\
 								linear-gradient(rgba(145, 145, 145, 0.5), rgba(145, 145, 145, 0.5)),' +
-								'url(' + blurred + ') center fixed no-repeat !important; background-size: cover;}'
+								'url(' + blurred + ') center fixed no-repeat; background-size: cover;}'
 					);
 		} else
 			$('#blurred').remove();
