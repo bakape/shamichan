@@ -2,29 +2,23 @@
  * Houses both the actual options controler and the options panel renderring
  * logic
  */
-'use strict';
 
 var _ = require('underscore'),
 	$ = require('jquery'),
-	Backbone = require('backbone');
+	Backbone = require('backbone'),
+	main = require('../main'),
+	state = main.state;
 
 // Try to get options from local storage
 var options;
 try {
 	options = JSON.parse(localStorage.options);
 }
-catch(e) {
-}
+catch(e) {}
 if (!options)
 	options = {};
 options.id = 'options';
 options = module.exports = new Backbone.Model(options);
-
-// Require these after the options backbone model has been created
-var background = require('../background'),
-	banner = require('../banner'),
-	main = require('../main'),
-	state = require('../state');
 
 var OptionsCollection = Backbone.Collection.extend({
 	persist: function() {
@@ -180,7 +174,7 @@ var OptionsView = Backbone.View.extend({
 		// Not recorded; extracted directly by the background handler
 		else if (type == 'image')
 			// FIXME
-			return; //background.genCustom(target.result);
+			return; //main.request('genTransparent', val);
 		else if (type == 'shortcut')
 			val = $target.val().toUpperCase().charCodeAt(0);
 		else

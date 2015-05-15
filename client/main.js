@@ -20,15 +20,20 @@ var $ = require('jquery'),
 require('jquery.cookie');
 // Bind jQuery to backbone
 Backbone.$ = $;
+// Bind Backbone.Radio
+var radio = require('backbone.radio');
+
+// Central aplication object and message bus
+let main = module.exports = radio.channel('main')
 
 /*
  * Since the language pack contains functions and we can not simply use those
  * with underscore templates, had to stringify those. Now we convert them back
  * to functions.
  */
-exports.lang = window.lang;
+main.lang = window.lang;
 ['pluralize', 'capitalize', 'ago', 'abbrev_msg'].forEach(function(func) {
-	eval('exports.lang[func] = ' + window.lang[func]);
+	eval('main.lang[func] = ' + main.lang[func]);
 });
 
 /*
@@ -37,38 +42,38 @@ exports.lang = window.lang;
  can be moved to hot.js. Should prevent some bugs, but also reduce flexibility,
  for frequent togglers. Hmm.
  */
-exports.config = window.config;
+main.config = window.config;
 
-// Export Backbone instance for easier debugging
-if (exports.config.DEBUG)
+
+if (main.config.DEBUG) {
+	// Export Backbone instance for easier debugging
 	window.Backbone = Backbone;
+	// Log all channel traffic
+	radio.DEBUG = true;
+	radio.tuneIn('main');
+}
 
-exports.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
+
+main.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
 // Store them here, to avoid requiring modules in the wrong order
-exports.send = function() {};
-exports.serverTimeOffset = 0;
-exports.dispatcher = {};
-exports.postForm = null;
-exports.postModel = null;
-exports.openPostBox = function() {};
+main.send = function() {};
+main.serverTimeOffset = 0;
+main.dispatcher = {};
+main.postForm = null;
+main.postModel = null;
+main.openPostBox = function() {};
 // Read-only boards gets expanded later
-exports.readOnly = ['archive'];
+main.readOnly = ['archive'];
 
-var state = require('./state'),
-	common = require('../common');
-exports.connSM = new common.FSM('load');
-exports.postSM = new common.FSM('none');
-state.page.set('tabID', common.random_id());
-
-// Cached jQuery objects
-exports.$doc = $(document);
-exports.$threads = $('threads');
-exports.$name = $('input[name=name]');
-exports.$email = $('input[name=email]');
-
+/*
+ Core modules. The other will be more or less decoupled, but these are the
+ monolithic foundation.
+ */
+let state = main.state = require('./state');
+let	common = main.common = require('../common');
 // Initialise main rendering object
-var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {
+var oneeSama = main.oneeSama = new common.OneeSama(function(num) {
 	// Core post link handler
 	var frag;
 	if (this.links && num in this.links) {
@@ -82,10 +87,26 @@ var oneeSama = exports.oneeSama = new common.OneeSama(function(num) {
 	this.callback(frag);
 });
 oneeSama.full = oneeSama.op = state.page.get('thread');
+main.options = require('./options');
+
+main.connSM = new common.FSM('load');
+main.postSM = new common.FSM('none');
+state.page.set('tabID', common.random_id());
+
+// Cached jQuery objects
+main.$doc = $(document);
+main.$threads = $('threads');
+main.$name = $('input[name=name]');
+main.$email = $('input[name=email]');
+
+
 
 // The require chain also loads some core dependancies
 var Extract = require('./extract');
 new Extract();
+
+main.banner = require('./banner');
+main.background = require('./options/background');
 
 // Start the client
 require('./client');

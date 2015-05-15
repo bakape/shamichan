@@ -4,9 +4,9 @@
 
 var $ = require('jquery'),
 	Backbone = require('backbone'),
-	common = require('../common/index'),
 	main = require('./main'),
-	options = require('./options');
+	common = main.common,
+	options = main.options;
 
 // Notification messages bellow the banner
 var NotificationView = exports.notification = Backbone.View.extend({
@@ -43,6 +43,8 @@ var BannerView = Backbone.View.extend({
 	initialize: function() {
 		this.$center = this.$el.children('#banner_center');
 		this.$info = this.$el.children('#banner_info');
+		// Publish a listener to the message bus
+		main.comply('clearRadioBanner', this.clearRadio, this);
 	},
 
 	events: {

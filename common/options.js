@@ -8,22 +8,21 @@
 var imports = require('./imports'),
 	index = require('./index'),
 	util = require('./util'),
-	$, banner, notMobile, options, state;
+	main = imports.main,
+	$, notMobile, options, state;
 if (imports.isNode)
 // TEMP: Will build separate templates and bundles for mobile eventually
 	notMobile = true;
 else {
 	$ = require('jquery');
-	banner = require('../client/banner');
 	options = require('../client/options');
-	state = require('../client/state');
+	state = main.state;
 
 	notMobile = !imports.main.isMobile;
 }
 
 const config = imports.config;
-let hotConfig = imports.hotConfig,
-	main = imports.main;
+let hotConfig = imports.hotConfig;
 
 /*
  * Full schema of the options model
@@ -164,7 +163,7 @@ var opts = [
 				// Query the server for current stream info
 				main.send([index.RADIO]);
 			else
-				banner.view.clearRadio();
+				main.command('clearRadioBanner');
 		}
 	}
 ];

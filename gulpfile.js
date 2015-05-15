@@ -64,7 +64,8 @@ build('client', browserify(require.resolve('./client/main.js'),
 			'jquery',
 			'jquery.cookie',
 			'underscore',
-			'backbone'
+			'backbone',
+			'backbone.radio'
 		]
 	})
 		// Trasnpile to ES5. Use mostly default, because minifier support is
@@ -100,7 +101,8 @@ build('vendor', browserify({
 		'jquery',
 		'jquery.cookie',
 		'underscore',
-		'backbone'
+		'backbone',
+		'backbone.radio'
 	],
 	debug: true
 }));
