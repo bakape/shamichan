@@ -3,6 +3,7 @@
  */
 
 var $ = require('jquery'),
+    Backbone = require('backbone'),
     main = require('./main'),
     PAGE_BOTTOM = -1,
     nestLevel = 0,
@@ -30,7 +31,6 @@ function set_lock_target(num, manually) {
 	if (num == lockTarget)
 		return;
 	lockTarget = num;
-        console.log('locktarget set to: '+lockTarget);
 	var bottom = lockTarget == PAGE_BOTTOM;
 	if ($lockTarget)
 		$lockTarget.removeClass('scroll-lock');
