@@ -24,7 +24,21 @@ Backbone.$ = $;
 var radio = require('backbone.radio');
 
 // Central aplication object and message bus
-let main = module.exports = radio.channel('main')
+let main = module.exports = radio.channel('main');
+
+/*
+ Ofload expensive and not that neccessary loops to after the main client is
+ started.
+ */
+main._deferred = [];
+main.defer = function(func) {
+	this._deferred.push(func);
+};
+main.start = function() {
+	let def = this._deferred;
+	for (let i = 0, l = def.length; i < l; i++)
+		def[i]();
+};
 
 /*
  * Since the language pack contains functions and we can not simply use those
@@ -44,7 +58,6 @@ main.lang = window.lang;
  */
 main.config = window.config;
 
-
 if (main.config.DEBUG) {
 	// Export Backbone instance for easier debugging
 	window.Backbone = Backbone;
@@ -52,7 +65,6 @@ if (main.config.DEBUG) {
 	radio.DEBUG = true;
 	radio.tuneIn('main');
 }
-
 
 main.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
@@ -99,7 +111,7 @@ main.$threads = $('threads');
 main.$name = $('input[name=name]');
 main.$email = $('input[name=email]');
 
-
+main.time = require('./time');
 
 // The require chain also loads some core dependancies
 var Extract = require('./extract');
@@ -114,3 +126,5 @@ require('./client');
 // Load auxilary modules
 require('./history');
 require('./hover');
+
+main.start();

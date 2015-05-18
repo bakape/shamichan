@@ -8,8 +8,7 @@ var $ = require('jquery'),
 	imager = require('./imager'),
 	main = require('../main'),
 	options = require('../options'),
-	state = require('../state'),
-	time = require('../time');
+	state = require('../state');
 
 module.exports = {
 	events: {
@@ -95,7 +94,7 @@ module.exports = {
 	renderTime: function(model, rtime = options.get('relativeTime')) {
 		if (!this.$time) {
 			this.$time = this.$el.find('time').first();
-			this.time = time.date_from_time_el(this.$time[0]).getTime();
+			this.time = main.request('dateFromEl', this.$time[0]).getTime();
 		}
 		if (this.hasRelativeTime)
 			this.$time.html(main.oneeSama.time(this.time));

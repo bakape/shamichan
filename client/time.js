@@ -1,9 +1,8 @@
 var $ = require('jquery'),
 	Backbone = require('backbone'),
-	common = require('../common/index'),
+	common = require('../common'),
 	main = require('./main'),
 	options = require('./options');
-
 
 function date_from_time_el(el) {
 	if (!el)
@@ -16,7 +15,7 @@ function date_from_time_el(el) {
 		dTime.replace(/-/g, '/').replace('T', ' ').replace('Z', ' GMT')
 	);
 }
-exports.date_from_time_el = date_from_time_el;
+main.reply('dateFromEl', date_from_time_el);
 
 const is_skewed = (function(){
 	var el = document.querySelector('time');
@@ -48,38 +47,6 @@ main.dispatcher[common.GET_TIME] = function(msg){
 		return;
 	serverTimeOffset = msg[0] - new Date().getTime();
 };
-
-// Append UTC clock to the top of the schedule
-(function() {
-	var seconds;
-	var $el = $('<span/>', {
-		title: 'Click to show seconds',
-		id: 'UTCClock',
-		html: '<b></b><hr>'
-	})
-		.prependTo('#schedule')
-		// Append seconds and render clock every second, if clicked
-		.one('click', function() {
-			seconds = true;
-			this.removeAttribute('title');
-			render();
-		});
-	$el = $el.find('b');
-
-	function render() {
-		if (!serverTimeOffset)
-			return setTimeout(render, 1000);
-		var d = new Date(common.serverTime()),
-			html = main.oneeSama.readable_time(d);
-		if (seconds)
-			html += ':' + common.pad(d.getUTCSeconds());
-		html += ' UTC';
-		$el.html(html);
-		setTimeout(render, seconds ? 1000 : 60000);
-	}
-
-	render();
-})();
 
 /* syncwatch */
 
@@ -120,12 +87,43 @@ function timer_from_el($el) {
 	})();
 }
 
-(function mouikkai(){
-	setTimeout(function(){
-		main.$threads.find('syncwatch').not('.timerTicking').each(function(){
+function mouikkai() {
+	setTimeout(function() {
+		main.$threads.find('syncwatch').not('.timerTicking').each(function() {
 			timer_from_el($(this));
 		});
 		mouikkai();
 	}, 1000);
-})();
+}
 
+main.defer(mouikkai, function() {
+	// Append UTC clock to the top of the schedule
+	var seconds;
+	var $el = $(common.parseHTML
+		`<span id="UTCClock" title="Click to show seconds">
+			<b></b><hr>
+		</span>`
+	)
+		.prependTo('#schedule')
+		// Append seconds and render clock every second, if clicked
+		.one('click', function() {
+			seconds = true;
+			this.removeAttribute('title');
+			render();
+		});
+	$el = $el.find('b');
+
+	function render() {
+		if (!serverTimeOffset)
+			return setTimeout(render, 1000);
+		var d = new Date(common.serverTime()),
+			html = main.oneeSama.readable_time(d);
+		if (seconds)
+			html += ':' + common.pad(d.getUTCSeconds());
+		html += ' UTC';
+		$el.html(html);
+		setTimeout(render, seconds ? 1000 : 60000);
+	}
+
+	render();
+});
