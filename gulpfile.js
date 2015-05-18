@@ -76,7 +76,11 @@ build('client', browserify(require.resolve('./client/main.js'),
 				'es3.memberExpressionLiterals',
 				'es3.propertyLiterals',
 				'es5.properties.mutators',
-				'es6.constants',
+				/*
+				 TEMP: Accomodate legacy Firefox builds, such as TOR Browser,
+				 Palemoon and IceWeasel. Will remove at a later date.
+				 */
+				//'es6.constants',
 				'flow',
 				'react',
 				'jscript',
