@@ -14,10 +14,8 @@ var $ = require('jquery'),
 	inject = require('./common').inject,
 	main = require('../main'),
 	options = require('../options'),
-        scroll = require('../scroll'),
-	state = require('../state'),
-            thread = state.page.get('thread');
-    
+	state = require('../state');
+
 var connSM = main.connSM,
 	postSM = main.postSM;
 const uploadingMessage = 'Uploading...';
@@ -99,9 +97,11 @@ main.dispatcher[common.IMAGE_STATUS] = function(msg) {
 		postForm.dispatch(msg[0]);
 };
 
-main.$doc.on('click', 'aside a', _.wrap(function () {
-	postSM.feed('new', $(this).parent());
-}, scroll.followLock));
+main.$doc.on('click', 'aside a', function() {
+	main.command('scroll:followLock', () =>
+		postSM.feed('new', $(this).parent())
+	);
+});
 
 main.$doc.on('keydown', handle_shortcut);
 
@@ -116,9 +116,9 @@ function handle_shortcut(event) {
 			var $aside = state.page.get('thread') ? main.$threads.find('aside')
 				: $ceiling().next();
 			if ($aside.is('aside') && $aside.length === 1) {
-				scroll.followLock(function() {
-                                    postSM.feed('new', $aside);
-                                });
+				main.command('scroll:followLock', function() {
+					postSM.feed('new', $aside);
+				});
 				used = true;
 			}
 			break;
@@ -703,6 +703,11 @@ var ComposerView = Backbone.View.extend({
 		postSM.feed('done');
 	},
 
+	// Adds a followLock check for finishing posts
+	finish_wrapped: function() {
+		main.command('scroll:followLock', () => this.finish());
+	},
+
 	// Send any unstaged words
 	flushPending: function() {
 		if (this.pending) {
@@ -903,7 +908,8 @@ function imageUploadURL() {
 main.openPostBox = function(num) {
 	var $a = main.$threads.find('#' + num);
 	postSM.feed('new',
-		$a.is('section') ? $a.children('aside') : $a.siblings('aside'));
+		$a.is('section') ? $a.children('aside') : $a.siblings('aside')
+	);
 };
 
 window.addEventListener('message', function(event) {
@@ -912,40 +918,35 @@ window.addEventListener('message', function(event) {
 		postForm.uploadError(msg);
 }, false);
 
-//Adds a followLock check for finishing posts 
-(function () {
-	var CV = ComposerView.prototype;
-	CV.finish_wrapped = _.wrap(CV.finish, scroll.followLock);
-})();
-
 //Drag and Drop Functionality
 function dragonDrop(e) {
     e.stopPropagation();
     e.preventDefault();
     var files = e.dataTransfer.files;
     if (!files.length)
-            return;
+		return;
     if (!postForm) {
-            scroll.followLock(function () {
-                    if (thread)
-                            main.openPostBox(thread);
-                    else {
-                            var $s = $(e.target).closest('section');
-                            if (!$s.length)
-                                    return;
-                            main.openPostBox($s.attr('id'));
-                    }
-            });
+		main.command('scroll:followLock', function() {
+			const thread = state.page.get('thread');
+			if (thread)
+				main.openPostBox(thread);
+			else {
+				let $s = $(e.target).closest('section');
+				if (!$s.length)
+					return;
+				main.openPostBox($s.attr('id'));
+			}
+		});
     }
     else {
-            var attrs = postForm.model.attributes;
-            if (attrs.uploading || attrs.uploaded)
-                    return;
+		let attrs = postForm.model.attributes;
+		if (attrs.uploading || attrs.uploaded)
+			return;
     }
 
     if (files.length > 1) {
-            postForm.uploadError('Too many files.');
-            return;
+		postForm.uploadError('Too many files.');
+		return;
     }
     
     // Drag and drop does not supply a fakepath to file, so we have to use
@@ -954,7 +955,7 @@ function dragonDrop(e) {
     var fd = new FormData();
     fd.append('image', files[0]);
     for (var k in extra)
-            fd.append(k, extra[k]);
+		fd.append(k, extra[k]);
     // Can't seem to jQuery this shit
     var xhr = new XMLHttpRequest();
     xhr.open('POST', imageUploadURL());
@@ -966,28 +967,28 @@ function dragonDrop(e) {
 }
 
 function upload_shita() {
-        if (this.readyState != 4 || this.status == 202)
-                return;
-        var err = this.responseText;
-        // Everything just fine. Don't need to report.
-        if (/legitimate imager response/.test(err))
-                return;
-        postForm.uploadError(err);
+	if (this.readyState != 4 || this.status == 202)
+		return;
+	var err = this.responseText;
+	// Everything just fine. Don't need to report.
+	if (/legitimate imager response/.test(err))
+		return;
+	postForm.uploadError(err);
 }
 
 function stop_drag(e) {
-        e.stopPropagation();
-        e.preventDefault();
+	e.stopPropagation();
+	e.preventDefault();
 }
 
 function setupUploadDrop(e) {
-        function go(nm, f) { e.addEventListener(nm, f, false); }
-        go('dragenter', stop_drag);
-        go('dragexit', stop_drag);
-        go('dragover', stop_drag);
-        go('drop', dragonDrop);
+	function go(nm, f) { e.addEventListener(nm, f, false); }
+	go('dragenter', stop_drag);
+	go('dragexit', stop_drag);
+	go('dragover', stop_drag);
+	go('drop', dragonDrop);
 }
 
 $(function () {
-        setupUploadDrop(document.body);
+	setupUploadDrop(document.body);
 });

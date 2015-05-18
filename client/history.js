@@ -8,7 +8,6 @@ var $ = require('jquery'),
 	Extract = require('./extract'),
 	imager = require('./posts/imager'),
 	main = require('./main'),
-	scroll = require('./scroll'),
 	state = require('./state');
 
 // Click handler for post/thread/board links
@@ -83,5 +82,5 @@ function readingSteiner(url, event, needPush) {
 // For back and forward history events
 window.onpopstate = function(event) {
 	readingSteiner(event.target.location.href);
-	scroll.aboveBanner();
+	main.command('scroll:aboveBanner');
 };

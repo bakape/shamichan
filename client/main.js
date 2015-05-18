@@ -111,6 +111,7 @@ main.$name = $('input[name=name]');
 main.$email = $('input[name=email]');
 
 main.time = require('./time');
+main.scroll = require('./scroll');
 
 // The require chain also loads some core dependancies
 var Extract = require('./extract');

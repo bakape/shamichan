@@ -5,23 +5,22 @@
 var $ = require('jquery'),
     Backbone = require('backbone'),
     main = require('./main'),
-    PAGE_BOTTOM = -1,
-    nestLevel = 0,
-    state = require('./state'),
-    thread = state.page.get('thread');
-    
-var lockTarget, lockKeyHeight;
-var $lockTarget, $lockIndicator;
-var lockedManually;
-    
+    page = require('./state').page;
+
+const PAGE_BOTTOM = -1;
+
+let nestLevel = 0,
+	lockTarget, lockKeyHeight, $lockTarget, $lockIndicator, lockedManually;
+
 // Checks if we're at the bottom of page at the moment    
 var at_bottom = function() {
 	return window.scrollY + window.innerHeight >= main.$doc.height() - 5;
 };
-if (window.scrollMaxY !== undefined)
+if (window.scrollMaxY !== undefined) {
 	at_bottom = function () {
 		return window.scrollMaxY <= window.scrollY;
 	};
+}
 
 // Sets the scroll lock position (to a post or to bottom of window)
 function set_lock_target(num, manually) {
@@ -48,7 +47,7 @@ function set_lock_target(num, manually) {
 		else if (num) {
 			$ind.empty().append($('<a/>', {
 				text: '>>' + num,
-				href: '#' + num,
+				href: '#' + num
 			}));
 		}
 	}
@@ -98,11 +97,11 @@ function followLock(func) {
 
 	return ret;
 }
-exports.followLock = followLock;
+main.comply('scroll:followLock', followLock);
 
 (function () {
-        /* Uncomment when certain of menuHandler things being functional
-         * Locks to post
+	/* Uncomment when certain of menuHandler things being functional
+	 * Locks to post
 	menuHandlers.Focus = function (model) {
 		var num = model && model.id;
 		set_lock_target(num, true);
@@ -111,17 +110,17 @@ exports.followLock = followLock;
 	menuHandlers.Unfocus = function () {
 		set_lock_target(null);
 	};
-        */
-       
+	*/
+
 	//Check if user scrolled to the bottom every time they scroll
-        function scroll_shita() {
+	function scroll_shita() {
 		if (!lockTarget || (lockTarget == PAGE_BOTTOM))
 			set_lock_target(null);
 	}
 
-	if (thread) {
+	if (page.get('thread')) {
 		$lockIndicator = $('<span id=lock>Locked to bottom</span>', {
-			css: {visibility: 'hidden'},
+			css: {visibility: 'hidden'}
 		}).appendTo('body');
 		main.$doc.scroll(scroll_shita);
 		scroll_shita();
@@ -129,14 +128,12 @@ exports.followLock = followLock;
 })();
 
 // If a post is a locked target and becomes hidden, unlock from post.
-
 Backbone.on('hide', function (model) {
 	if (model && model.id == lockTarget)
 		set_lock_target(null);
 });
 
 // Account for banner height, when scrolling to an anchor
-
 function aboveBanner (){
 	if (!/^#\d+$/.test(location.hash))
 		return;
@@ -145,6 +142,6 @@ function aboveBanner (){
 		return;
 	$(window).scrollTop($anchor.offset().top - $('#banner').height());
 }
-exports.aboveBanner = aboveBanner;
+main.comply('scroll:aboveBanner', aboveBanner);
 
-window.onload = exports.aboveBanner;
+window.onload = aboveBanner;
