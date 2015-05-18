@@ -234,7 +234,7 @@ exports.parse_dice = parse_dice;
 
 function serverTime() {
 	const d = Date.now();
-	return imports.isNode ? d : d + main.request('serverTimeOffset');
+	return imports.isNode ? d : d + imports.main.request('serverTimeOffset');
 }
 exports.serverTime = serverTime;
 
