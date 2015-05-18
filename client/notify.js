@@ -1,10 +1,19 @@
+var Backbone = require('backbone'),
+    memory = require('./memory'),
+    $ = require('jquery'),
+    main = require('./main'),
+        connSM = main.connSM,
+    imager = require('../config/imager'),
+        mediaURL = imager.MEDIA_URL;
+
+
 (function () {
 	// Should be part of a greater thread model
 	var Unread = new Backbone.Model({unreadCount: 0});
 
 	// Remember replies that don't need a new desktop notification for 3 days
 	// Own post are remember for 2 days, so lets keep 1 day as a buffer
-	var Replies = new Kioku('replies', 3);
+	var Replies = new memory('replies', 3);
 	var readReplies = Replies.read_all();
 	Replies.purge_expired_soon();
 
@@ -16,18 +25,18 @@
 		// Unread post count will reset
 		Unread.set({hidden: hidden, unreadCount: 0, reply: !hidden});
 		// Prevent scrolling with new posts, if page isn't visible
-		autoUnlock(hidden);
+	//	autoUnlock(hidden); // scroll.js function make this work later
 	}, false);
+        
 
+        function dropped() {
+		Unread.set('alert', true);
+	}
 	connSM.on('synced', function () {
 		Unread.set('alert', false);
 	});
-
-	function dropped() {
-		Unread.set('alert', true);
-	}
-	connSM.on('dropped', dropped);
-	connSM.on('desynced', dropped);
+	connSM.on('dropped', dropped());
+	connSM.on('desynced', dropped());
 
 	Backbone.on('repliedToMe', function (post) {
 		var num = post.get('num');
@@ -62,9 +71,13 @@
 				});
 		}
 	});
-	Backbone.on('afterInsert', function (model) {
-		if (model && model.get('mine'))
-			return; // It's ours, don't notify unread
+	Backbone.on('afterInsert', function () {
+        //Future: Add this functionality back in if desired.
+        //Requires model as a parameter in this function
+        //trigger is located in client.js inside dispatcher[common.INSERT_POST] 
+        		
+//		if (model && model.get('mine'))
+//			return; // It's ours, don't notify unread
 		if (document.hidden)
 			Unread.set('unreadCount', Unread.get('unreadCount') + 1);
 	});

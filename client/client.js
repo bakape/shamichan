@@ -4,8 +4,10 @@
 'use strict';
 
 var $ = require('jquery'),
+        Backbone = require('backbone'),
 	common = require('../common'),
 	main = require('./main'),
+        notify = require('./notify'),
 	posts = require('./posts'),
 	state = require('./state');
 
@@ -50,7 +52,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		id: msg.num,
 		el: el
 	});
-
+        Backbone.trigger('afterInsert', $(el));
 	if (isThread)
 		return;
 	var parent = state.posts.get(msg.op);
