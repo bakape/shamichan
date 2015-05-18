@@ -1,13 +1,12 @@
 /*
 Cryptographic nonces for websocket transactions
  */
-'use strict';
 
-var common = require('../../common'),
-	state = require('../state');
+var main = require('../main'),
+	common = main.common,
+	state = main.state;
 
-exports.nonces = {};
-
+let nonceCache = {};
 
 function get() {
 	var nonces;
@@ -17,24 +16,22 @@ function get() {
 		}
 		catch (e) {}
 	}
-	else {
-		nonces = exports.nonces;
-	}
+	else
+		nonces = nonceCache;
 	return nonces || {};
 }
-exports.get = get;
+main.reply('nonce:get', get);
 
 function save_nonces(nonces) {
 	if (window.localStorage)
 		localStorage.postNonces = JSON.stringify(nonces);
 	else
-		exports.nonces = nonces;
+		nonceCache = nonces;
 }
 
 function today_id() {
 	return Math.floor(new Date().getTime() / (1000*60*60*24));
 }
-
 
 function create() {
 	const nonces = get(),
@@ -46,18 +43,19 @@ function create() {
 	save_nonces(nonces);
 	return nonce;
 }
-exports.create = create;
+main.reply('nonce:create', create);
 
-function expire_nonces() {
+// Expire old nonces
+setTimeout(function() {
 	if (!window.localStorage)
 		return;
 	// we need a lock on postNonces really
-	var nonces = get();
+	let nonces = get();
 
 	// people messing with their system clock will mess with expiry, doh
-	var changed = false;
+	let changed;
 	const yesterday = today_id() - 1;
-	for (var nonce in nonces) {
+	for (let nonce in nonces) {
 		if (nonces[nonce].day >= yesterday)
 			continue;
 		delete nonces[nonce];
@@ -66,15 +64,16 @@ function expire_nonces() {
 
 	if (changed)
 		save_nonces(nonces);
-}
-setTimeout(expire_nonces, Math.floor(Math.random()*5000));
-
+}, Math.floor(Math.random()*5000));
 
 function destroy(nonce) {
-	var nonces = get();
-	if (!nonces[nonce])
-		return;
-	delete nonces[nonce];
-	save_nonces(nonces);
+	// delete only after a delay so all tabs notice that it's ours
+	setTimeout(function() {
+		let nonces = get();
+		if (!nonces[nonce])
+			return;
+		delete nonces[nonce];
+		save_nonces(nonces);
+	}, 10000);
 }
-exports.destroy = destroy;
+main.comply('nonce:destroy', destroy);

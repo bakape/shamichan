@@ -13,7 +13,6 @@ var $ = require('jquery'),
 	imager = require('./imager'),
 	inject = require('./common').inject,
 	main = require('../main'),
-	nonce = require('./nonce'),
 	options = require('../options'),
         scroll = require('../scroll'),
 	state = require('../state'),
@@ -638,7 +637,7 @@ var ComposerView = Backbone.View.extend({
 
 	// Construct the message for post allocation in the database
 	allocationMessage: function(text, image) {
-		var msg = {nonce: nonce.create()};
+		var msg = {nonce: main.request('nonce:create')};
 
 		function opt(key, val) {
 			if (val)
