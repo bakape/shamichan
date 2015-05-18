@@ -117,7 +117,6 @@ for (let i = 0, lim = optCommon.length; i < lim; i++) {
 // View of the options panel
 var OptionsView = Backbone.View.extend({
 	initialize: function() {
-		this.setElement(document.getElementById('options-panel'));
 		// Set the options in the panel to their appropriate values
 		optionsCollection.each(function(model) {
 			var $el = this.$el.find('#' + model.get('id'));
@@ -229,8 +228,8 @@ var OptionsView = Backbone.View.extend({
 	}
 });
 
-var optionsView;
-// Render it after the current stack clears,for a bit more responsiveness
-_.defer(function() {
-	optionsView = new OptionsView();
+main.defer(function() {
+	new OptionsView({
+		el: document.getElementById('options-panel')
+	});
 });
