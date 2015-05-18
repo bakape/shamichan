@@ -321,7 +321,8 @@ OS.imageSearch = function(data) {
 	let html = '';
 	const base = searchBase,
 		type = data.thumb ? 'thumb' : 'src',
-		imageURl =  this.imagePaths()[type] + data[type];
+		imageURl =  this.imagePaths()[type].replace(/^https/, 'http')
+			+ data[type];
 	for (let i = 0, l = base.length; i < l; i++) {
 		let parts = base[i];
 		html += parts[0]
