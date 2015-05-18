@@ -233,11 +233,8 @@ function parse_dice(frag) {
 exports.parse_dice = parse_dice;
 
 function serverTime() {
-	var d = new Date().getTime();
-	// On the server or time difference not compared yet
-	if (imports.isNode || !imports.main.serverTimeOffset)
-		return d;
-	return d + imports.main.serverTimeOffset;
+	const d = Date.now();
+	return imports.isNode ? d : d + main.request('serverTimeOffset');
 }
 exports.serverTime = serverTime;
 

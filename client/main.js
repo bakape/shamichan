@@ -70,7 +70,6 @@ main.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
 // Store them here, to avoid requiring modules in the wrong order
 main.send = function() {};
-main.serverTimeOffset = 0;
 main.dispatcher = {};
 main.postForm = null;
 main.postModel = null;

@@ -41,15 +41,15 @@ if (is_skewed) {
 
 // Get a more accurate server-client time offset, for interclient syncing
 // Does not account for latency, but good enough for our purposes
-var serverTimeOffset = main.serverTimeOffset;
+var serverTimeOffset = 0;
 main.dispatcher[common.GET_TIME] = function(msg){
 	if (!msg[0])
 		return;
 	serverTimeOffset = msg[0] - new Date().getTime();
 };
+main.reply('serverTimeOffset', serverTimeOffset);
 
 /* syncwatch */
-
 function timer_from_el($el) {
 	if (!serverTimeOffset)
 		return;
