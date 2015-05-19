@@ -45,13 +45,18 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		msg.mine = true;
 		state.mine.write(msg.num, state.mine.now());
 	}
-
-	new posts[isThread ? 'Section' : 'Article']({
+        
+	var newPost = new posts[isThread ? 'Section' : 'Article']({
 		// Create model
 		model: new posts.models[isThread ? 'Thread' : 'Post'](msg),
 		id: msg.num,
 		el: el
 	});
+        var links = main.oneeSama.links = msg.links;
+	delete msg.links;
+        if(newPost.model){
+            newPost.model.addLinks(links);
+        }
         Backbone.trigger('afterInsert', $(el));
 	if (isThread)
 		return;
