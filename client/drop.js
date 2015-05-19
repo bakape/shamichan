@@ -19,10 +19,8 @@ function dragonDrop(e) {
 			if (thread)
 				return main.command('openPostBox', thread);
 			let $s = $(e.target).closest('section');
-			if (!$s.length)
-				return;
-			main.command('openPostBox', $s.attr('id'));
-			postForm = main.request('postForm');
+			if ($s.length)
+				main.command('openPostBox', $s.attr('id'));
 		});
 	}
 	else {
@@ -31,6 +29,8 @@ function dragonDrop(e) {
 			return;
 	}
 
+	if (!postForm)
+		postForm = main.request('postForm');
 	if (files.length > 1) {
 		postForm.uploadError('Too many files.');
 		return;
