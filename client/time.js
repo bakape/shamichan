@@ -96,34 +96,35 @@ function mouikkai() {
 	}, 1000);
 }
 
-main.defer(mouikkai, function() {
-	// Append UTC clock to the top of the schedule
-	var seconds;
-	var $el = $(common.parseHTML
-		`<span id="UTCClock" title="Click to show seconds">
-			<b></b><hr>
-		</span>`
-	)
-		.prependTo('#schedule')
-		// Append seconds and render clock every second, if clicked
-		.one('click', function() {
-			seconds = true;
-			this.removeAttribute('title');
-			render();
-		});
-	$el = $el.find('b');
+main.defer(mouikkai)
+	.defer(function() {
+		// Append UTC clock to the top of the schedule
+		var seconds;
+		var $el = $(common.parseHTML
+			`<span id="UTCClock" title="Click to show seconds">
+				<b></b><hr>
+			</span>`
+		)
+			.prependTo('#schedule')
+			// Append seconds and render clock every second, if clicked
+			.one('click', function() {
+				seconds = true;
+				this.removeAttribute('title');
+				render();
+			});
+		$el = $el.find('b');
 
-	function render() {
-		if (!serverTimeOffset)
-			return setTimeout(render, 1000);
-		var d = new Date(common.serverTime()),
-			html = main.oneeSama.readable_time(d);
-		if (seconds)
-			html += ':' + common.pad(d.getUTCSeconds());
-		html += ' UTC';
-		$el.html(html);
-		setTimeout(render, seconds ? 1000 : 60000);
-	}
+		function render() {
+			if (!serverTimeOffset)
+				return setTimeout(render, 1000);
+			var d = new Date(common.serverTime()),
+				html = main.oneeSama.readable_time(d);
+			if (seconds)
+				html += ':' + common.pad(d.getUTCSeconds());
+			html += ' UTC';
+			$el.html(html);
+			setTimeout(render, seconds ? 1000 : 60000);
+		}
 
-	render();
-});
+		render();
+	});

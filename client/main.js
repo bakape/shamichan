@@ -32,7 +32,8 @@ let main = module.exports = radio.channel('main');
  */
 main._deferred = [];
 main.defer = function(func) {
-	this._deferred.push(func);
+	main._deferred.push(func);
+	return main;
 };
 main.start = function() {
 	let def = this._deferred;
