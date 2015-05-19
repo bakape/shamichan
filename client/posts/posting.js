@@ -904,6 +904,7 @@ function imageUploadURL() {
 	return (main.config.UPLOAD_URL || '../upload/')
 		+ '?id=' + state.page.get('connID');
 }
+main.reply('imageUploadURL', imageUploadURL);
 
 main.openPostBox = function(num) {
 	var $a = main.$threads.find('#' + num);
@@ -917,78 +918,3 @@ window.addEventListener('message', function(event) {
 	if (msg !== 'OK' && postForm)
 		postForm.uploadError(msg);
 }, false);
-
-//Drag and Drop Functionality
-function dragonDrop(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    var files = e.dataTransfer.files;
-    if (!files.length)
-		return;
-    if (!postForm) {
-		main.command('scroll:followLock', function() {
-			const thread = state.page.get('thread');
-			if (thread)
-				main.openPostBox(thread);
-			else {
-				let $s = $(e.target).closest('section');
-				if (!$s.length)
-					return;
-				main.openPostBox($s.attr('id'));
-			}
-		});
-    }
-    else {
-		let attrs = postForm.model.attributes;
-		if (attrs.uploading || attrs.uploaded)
-			return;
-    }
-
-    if (files.length > 1) {
-		postForm.uploadError('Too many files.');
-		return;
-    }
-    
-    // Drag and drop does not supply a fakepath to file, so we have to use
-    // a separate upload form from the postForm one. Meh.
-    var extra = postForm.prepareUpload();
-    var fd = new FormData();
-    fd.append('image', files[0]);
-    for (var k in extra)
-		fd.append(k, extra[k]);
-    // Can't seem to jQuery this shit
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', imageUploadURL());
-    xhr.setRequestHeader('Accept', 'application/json');
-    xhr.onreadystatechange = upload_shita;
-    xhr.send(fd);
-
-    postForm.notifyUploading();
-}
-
-function upload_shita() {
-	if (this.readyState != 4 || this.status == 202)
-		return;
-	var err = this.responseText;
-	// Everything just fine. Don't need to report.
-	if (/legitimate imager response/.test(err))
-		return;
-	postForm.uploadError(err);
-}
-
-function stop_drag(e) {
-	e.stopPropagation();
-	e.preventDefault();
-}
-
-function setupUploadDrop(e) {
-	function go(nm, f) { e.addEventListener(nm, f, false); }
-	go('dragenter', stop_drag);
-	go('dragexit', stop_drag);
-	go('dragover', stop_drag);
-	go('drop', dragonDrop);
-}
-
-$(function () {
-	setupUploadDrop(document.body);
-});

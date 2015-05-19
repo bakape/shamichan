@@ -121,10 +121,11 @@ main.banner = require('./banner');
 main.background = require('./options/background');
 
 // Start the client
-require('./client');
+main.client = require('./client');
 
 // Load auxilary modules
-require('./history');
-require('./hover');
+main.history = require('./history');
+main.hover = require('./hover');
+main.drop = require('./drop');
 
 main.start();
