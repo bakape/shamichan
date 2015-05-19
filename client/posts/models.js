@@ -5,8 +5,8 @@ General post backbone models
 
 var _ = require('underscore'),
 	Backbone = require('backbone'),
-	state = require('../state'),
-        notify = require('../notify');
+	main = require('../main'),
+	state = main.state;
 
 exports.Post = Backbone.Model.extend({
 	idAttribute: 'num',
@@ -31,36 +31,30 @@ exports.Post = Backbone.Model.extend({
 		// Remove from post collection
 		state.posts.remove(this);
 	},
-        notifyReply: function(links){
-            var replyToMe = false,
-                key = _.keys(links),
-                check = state.posts.get(key);               
-                if (check.get('mine')){
-                    replyToMe = true;
-                }         
-            if(replyToMe)
-                Backbone.trigger('repliedToMe', check);
-        },
+
 	addLinks: function(links){
 		if(!links)
 			return;
-                this.notifyReply(links);
-		var old = this.get('links');              
+		var old = this.get('links');
 		if(!old)
 			return this.set({links: links});
 		_.extend(old,links);
 		this.set({links:old});
-		//If we get here we changed something for sure, but as we are using the same ref backbone will ignore it
-		//so we have to force the event to trigger.
-		this.trigger('change:links',this,old); 
+		// If we get here we changed something for sure, but as we are using the
+		// same ref backbone will ignore it so we have to force the event to
+		// trigger.
+		this.trigger('change:links', this, old);
 	},
-        
+
 	// Pass this post's links to the central model
 	forwardLinks: function(model, links) {
 		var old, newLinks;
 		const num = this.get('num'),
 			op = this.get('op') || num;
+		const mine = state.mine.read_all();
 		for (let key in links) {
+			if (mine[key])
+				main.command('repliedToMe', this);
 			old = state.linkerCore.get(key);
 			newLinks = old ? _.clone(old) : {};
 			newLinks[num] = op;

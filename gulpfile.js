@@ -60,6 +60,7 @@ build('client', browserify(require.resolve('./client/main.js'),
 		// Needed for sourcemaps
 		debug: true,
 		bundleExternal: false,
+		require: ['./client/main.js'],
 		external: [
 			'jquery',
 			'jquery.cookie',

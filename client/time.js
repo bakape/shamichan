@@ -71,7 +71,7 @@ function timer_from_el($el) {
 		if (start > now) {
 			var countdown = Math.round((start - now) / 1000);
 			if(countdown == 10 || countdown == 5)
-				Backbone.trigger('syncCountdown', countdown);
+				main.command('time:syncwatch', countdown);
 			$el.text('Countdown: ' + countdown);
 			return setTimeout(moumouikkai, 1000);
 		}

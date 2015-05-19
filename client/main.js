@@ -97,18 +97,19 @@ var oneeSama = main.oneeSama = new common.OneeSama(function(num) {
 oneeSama.full = oneeSama.op = state.page.get('thread');
 main.options = require('./options');
 
-main.connSM = new common.FSM('load');
-main.postSM = new common.FSM('none');
-state.page.set('tabID', common.random_id());
-
 // Cached jQuery objects
 main.$doc = $(document);
 main.$threads = $('threads');
 main.$name = $('input[name=name]');
 main.$email = $('input[name=email]');
 
+main.connSM = new common.FSM('load');
+main.postSM = new common.FSM('none');
+state.page.set('tabID', common.random_id());
+
 main.time = require('./time');
 main.scroll = require('./scroll');
+main.notify = require('./notify');
 
 // The require chain also loads some core dependancies
 var Extract = require('./extract');

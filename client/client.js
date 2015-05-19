@@ -4,10 +4,8 @@
 'use strict';
 
 var $ = require('jquery'),
-        Backbone = require('backbone'),
 	common = require('../common'),
 	main = require('./main'),
-        notify = require('./notify'),
 	posts = require('./posts'),
 	state = require('./state');
 
@@ -46,19 +44,16 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		msg.mine = true;
 		state.mine.write(msg.num, state.mine.now());
 	}
-        
-	var newPost = new posts[isThread ? 'Section' : 'Article']({
-		// Create model
-		model: new posts.models[isThread ? 'Thread' : 'Post'](msg),
+
+	// Create model
+	let model = new posts.models[isThread ? 'Thread' : 'Post'](msg);
+	new posts[isThread ? 'Section' : 'Article']({
+		model: model,
 		id: msg.num,
 		el: el
 	});
-        var links = main.oneeSama.links = msg.links;
-	delete msg.links;
-        if(newPost.model){
-            newPost.model.addLinks(links);
-        }
-        Backbone.trigger('afterInsert', $(el));
+	main.command('post:inserted', model);
+
 	if (isThread)
 		return;
 	var parent = state.posts.get(msg.op);

@@ -5,7 +5,7 @@
 var $ = require('jquery'),
     Backbone = require('backbone'),
     main = require('./main'),
-    page = require('./state').page;
+    state = main.state;
 
 const PAGE_BOTTOM = -1;
 
@@ -115,7 +115,7 @@ menuHandlers.Unfocus = function () {
 
 //Check if user scrolled to the bottom every time they scroll
 function scroll_shita() {
-	if (page.get('thread') && (!lockTarget || lockTarget == PAGE_BOTTOM))
+	if (state.page.get('thread') && (!lockTarget || lockTarget == PAGE_BOTTOM))
 		set_lock_target(null);
 }
 
@@ -128,7 +128,7 @@ find_lock();
 scroll_shita();
 main.$doc.scroll(scroll_shita);
 // Reapply lock visibility on page change
-page.on('change', function() {
+state.page.on('change', function() {
 	find_lock();
 	scroll_shita();
 });
@@ -149,5 +149,4 @@ function aboveBanner (){
 	$(window).scrollTop($anchor.offset().top - $('#banner').height());
 }
 main.comply('scroll:aboveBanner', aboveBanner);
-
 window.onload = aboveBanner;
