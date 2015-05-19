@@ -17,11 +17,11 @@ function dragonDrop(e) {
 		main.command('scroll:followLock', function() {
 			const thread = state.page.get('thread');
 			if (thread)
-				return main.openPostBox(thread);
+				return main.command('openPostBox', thread);
 			let $s = $(e.target).closest('section');
 			if (!$s.length)
 				return;
-			main.openPostBox($s.attr('id'));
+			main.command('openPostBox', $s.attr('id'));
 			postForm = main.request('postForm');
 		});
 	}

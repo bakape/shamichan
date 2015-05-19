@@ -21,7 +21,7 @@ let connSM = main.connSM,
 	postForm, postModel;
 /*
  The variable gets overwritten, so a simple refference will not do. Calling a
- fucntion to retrieve the var each time solves the problem. 
+ fucntion to retrieve the var each time solves the problem.
  */
 main.reply('postForm', () => postForm);
 main.reply('postModel', () => postModel);
@@ -908,12 +908,10 @@ function imageUploadURL() {
 }
 main.reply('imageUploadURL', imageUploadURL);
 
-main.openPostBox = function(num) {
-	var $a = main.$threads.find('#' + num);
-	postSM.feed('new',
-		$a.is('section') ? $a.children('aside') : $a.siblings('aside')
-	);
-};
+main.comply('openPostBox', function(num) {
+	let $a = main.$threads.find('#' + num);
+	postSM.feed('new', $a[$a.is('section') ? 'children' : 'siblings']('aside'));
+});
 
 window.addEventListener('message', function(event) {
 	const msg = event.data;

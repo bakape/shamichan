@@ -167,8 +167,7 @@ module.exports = {
 
 		if (isInside('baseNode') && isInside('focusNode'))
 			sel = gsel.toString();
-		main.openPostBox(num);
+		main.command('openPostBox', num);
 		main.request('postForm').addReference(num, sel);
 	}
 };
-
