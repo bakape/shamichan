@@ -41,7 +41,9 @@ function set_lock_target(num, manually) {
 	var $ind = $lockIndicator;
 	if ($ind) {
 		var visible = bottom || manually;
-		$ind.css({visibility: visible ? 'visible' : 'hidden'});
+		$ind.css({
+			visibility: visible ? 'visible' : 'hidden'
+		});
 		if (bottom)
 			$ind.text('Locked to bottom');
 		else if (num) {
@@ -99,33 +101,37 @@ function followLock(func) {
 }
 main.comply('scroll:followLock', followLock);
 
-(function () {
-	/* Uncomment when certain of menuHandler things being functional
-	 * Locks to post
-	menuHandlers.Focus = function (model) {
-		var num = model && model.id;
-		set_lock_target(num, true);
-	};
-        //Unlocks from post or bottom
-	menuHandlers.Unfocus = function () {
+/* Uncomment when certain of menuHandler things being functional
+ * Locks to post
+menuHandlers.Focus = function (model) {
+	var num = model && model.id;
+	set_lock_target(num, true);
+};
+	//Unlocks from post or bottom
+menuHandlers.Unfocus = function () {
+	set_lock_target(null);
+};
+*/
+
+//Check if user scrolled to the bottom every time they scroll
+function scroll_shita() {
+	if (page.get('thread') && (!lockTarget || lockTarget == PAGE_BOTTOM))
 		set_lock_target(null);
-	};
-	*/
+}
 
-	//Check if user scrolled to the bottom every time they scroll
-	function scroll_shita() {
-		if (!lockTarget || (lockTarget == PAGE_BOTTOM))
-			set_lock_target(null);
-	}
+function find_lock() {
+	let $ind = main.$threads.children('#lock');
+	$lockIndicator = $ind.length ? $ind : null;
+}
 
-	if (page.get('thread')) {
-		$lockIndicator = $('<span id=lock>Locked to bottom</span>', {
-			css: {visibility: 'hidden'}
-		}).appendTo('body');
-		main.$doc.scroll(scroll_shita);
-		scroll_shita();
-	}
-})();
+find_lock();
+scroll_shita();
+main.$doc.scroll(scroll_shita);
+// Reapply lock visibility on page change
+page.on('change', function() {
+	find_lock();
+	scroll_shita();
+});
 
 // If a post is a locked target and becomes hidden, unlock from post.
 Backbone.on('hide', function (model) {

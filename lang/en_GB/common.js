@@ -18,6 +18,7 @@ const lang = {
 	top: 'Top',
 	reply: 'Reply',
 	newThread: 'New thread',
+	locked_to_bottom: 'Locked to bottom',
 
 	// Time-related
 	week: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],

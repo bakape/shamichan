@@ -163,7 +163,11 @@ function threadsTop(oneeSama) {
 function threadsBottom(oneeSama) {
 	return common.action_link_html('.',	oneeSama.lang.return, 'bottom', 'history')
 		+ '&nbsp;'
-		+ common.action_link_html('#', oneeSama.lang.top);
+		+ common.action_link_html('#', oneeSama.lang.top)
+		+ common.parseHTML
+			`<span id="lock" style="visibility: hidden;">
+				${oneeSama.lang.locked_to_bottom}
+			</span>`;
 }
 
 function make_link_rels(board, bits) {

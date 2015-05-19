@@ -53,11 +53,11 @@ function readingSteiner(url, event, needPush) {
 		});
 		// Prevent old threads from syncing
 		state.syncs = {};
+		// Apply new DOM and load models
+		main.$threads.html(data);
 		// Set new page state
 		state.page.set(nextState);
 		imager.massExpander.unset('expand');
-		// Apply new DOM and load models
-		main.$threads.html(data);
 		new Extract();
 		// Swap the database controller server-side
 		main.send([

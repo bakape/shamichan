@@ -18,6 +18,7 @@ const lang = {
 	top: 'Topo',
 	reply: 'Reply',
 	newThread: 'New thread',
+	locked_to_bottom: 'Locked to bottom',
 
 	// Time-related
 	week: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],
