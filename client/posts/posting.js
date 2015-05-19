@@ -616,11 +616,14 @@ var ComposerView = Backbone.View.extend({
 		// Either get an allocation or send the committed text
 		const attrs = this.model.attributes;
 		if (!attrs.num && !attrs.sentAllocRequest) {
-			main.send([common.INSERT_POST, this.allocationMessage(text, null)]);
+			main.command('send', [
+				common.INSERT_POST,
+				this.allocationMessage(text, null)
+			]);
 			this.model.set({sentAllocRequest: true});
 		}
 		else if (attrs.num)
-			main.send(text);
+			main.command('send', text);
 		else
 			this.pending += text;
 
@@ -697,7 +700,7 @@ var ComposerView = Backbone.View.extend({
 				'margin-left': '',
 				'padding-left': ''
 			});
-			main.send([common.FINISH_POST]);
+			main.command('send', [common.FINISH_POST]);
 			this.preserve = true;
 			if (this.isThread)
 				this.$el.append(main.oneeSama.replyBox());
@@ -713,7 +716,7 @@ var ComposerView = Backbone.View.extend({
 	// Send any unstaged words
 	flushPending: function() {
 		if (this.pending) {
-			main.send(this.pending);
+			main.command('send', this.pending);
 			this.pending = '';
 		}
 	},
@@ -823,11 +826,14 @@ var ComposerView = Backbone.View.extend({
 		if (attrs.cancelled)
 			return;
 		if (!attrs.num && !attrs.sentAllocRequest) {
-			main.send([common.INSERT_POST, this.allocationMessage(null, msg)]);
+			main.command('send', [
+				common.INSERT_POST,
+				this.allocationMessage(null, msg)
+			]);
 			this.model.set({sentAllocRequest: true});
 		}
 		else {
-			main.send([common.INSERT_IMAGE, msg]);
+			main.command('send', [common.INSERT_IMAGE, msg]);
 		}
 	},
 

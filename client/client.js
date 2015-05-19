@@ -220,7 +220,7 @@ dispatcher[common.ONLINE_COUNT] = function(msg){
 dispatcher[common.HOT_INJECTION] = function(msg){
 	// Request new varibles, if hashes don't match
 	if (msg[0] == false && msg[1] != state.configHash)
-		main.send([common.HOT_INJECTION, true]);
+		main.command('send', [common.HOT_INJECTION, true]);
 	// Update variables and hash
 	else if (msg[0] == true) {
 		state.configHash = msg[1];

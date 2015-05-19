@@ -69,7 +69,6 @@ if (main.config.DEBUG) {
 main.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 	.test(navigator.userAgent);
 // Store them here, to avoid requiring modules in the wrong order
-main.send = function() {};
 main.dispatcher = {};
 // Read-only boards gets expanded later
 main.readOnly = ['archive'];

@@ -59,7 +59,7 @@ function readingSteiner(url, event, needPush) {
 		main.command('massExpander:unset');
 		new Extract();
 		// Swap the database controller server-side
-		main.send([
+		main.command('send', [
 			common.RESYNC,
 			state.page.get('board'),
 			state.syncs,
