@@ -6,7 +6,6 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	common = require('../common'),
 	Extract = require('./extract'),
-	imager = require('./posts/imager'),
 	main = require('./main'),
 	state = require('./state');
 
@@ -57,7 +56,7 @@ function readingSteiner(url, event, needPush) {
 		main.$threads.html(data);
 		// Set new page state
 		state.page.set(nextState);
-		imager.massExpander.unset('expand');
+		main.command('massExpander:unset');
 		new Extract();
 		// Swap the database controller server-side
 		main.send([

@@ -4,11 +4,12 @@
 'use strict';
 
 var $ = require('jquery'),
-	common = require('../../common'),
-	imager = require('./imager'),
+	_ = require('underscore'),
 	main = require('../main'),
-	options = require('../options'),
-	state = require('../state');
+	imager = require('./imager'),
+	common = main.common,
+	options = main.options,
+	state = main.state;
 
 module.exports = {
 	events: {
@@ -171,3 +172,5 @@ module.exports = {
 		main.request('postForm').addReference(num, sel);
 	}
 };
+
+_.extend(module.exports, imager.Hidamari);

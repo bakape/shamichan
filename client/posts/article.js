@@ -6,7 +6,6 @@
 var $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone'),
-	imager = require('./imager'),
 	main = require('../main'),
 	options = require('../options'),
 	postCommon = require('./common'),
@@ -58,4 +57,4 @@ var Article = module.exports = Backbone.View.extend({
 });
 
 // Extend with common mixins
-_.extend(Article.prototype, imager.Hidamari, postCommon);
+_.extend(Article.prototype, postCommon);
