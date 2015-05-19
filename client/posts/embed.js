@@ -92,9 +92,11 @@ main.$threads.on('click', '.watch', function(e) {
 					start += parseInt(t[3], 10);
 			}
 		}
-		$target
-			.css('width', video_dims().width)
-			.append('<br>', make_video(url, null, start));
+		main.command('scroll:follow', () =>
+			$target
+				.css('width', video_dims().width)
+				.append('<br>', make_video(url, null, start))
+		);
 	}
 	return false;
 });
@@ -111,7 +113,7 @@ main.$threads.on('mouseenter', '.watch', function (event) {
 	if (!node)
 		return;
 	const orig = node.textContent;
-	node.textContent = orig + '...';
+	main.command('scroll:follow', () => node.textContent = orig + '...');
 	var m = $target.attr('href').match(youtube_url_re);
 	if (!m){
 		m = $target.attr('href').match(youtube_short_re);
@@ -121,12 +123,12 @@ main.$threads.on('mouseenter', '.watch', function (event) {
 			url: '//gdata.youtube.com/feeds/api/videos/' + m[1],
 			data: {v: '2', alt: 'jsonc'},
 			dataType: 'json',
-			success: function (data) {
-				gotInfo.bind(null, data);
-			},
-			error: function () {
-				node.textContent = orig + '???';
-			}
+			success: (data) =>
+				main.command('scroll:follow', () => gotInfo.bind(null, data)),
+			error: () =>
+				main.command('scroll:follow', () =>
+					node.textContent = orig + '???'
+				)
 		});
 	}
 
@@ -134,12 +136,12 @@ main.$threads.on('mouseenter', '.watch', function (event) {
 		url: '//gdata.youtube.com/feeds/api/videos/' + m[2],
 		data: {v: '2', alt: 'jsonc'},
 		dataType: 'json',
-		success: function (data) {
-			gotInfo.bind(null, data);
-		},
-		error: function () {
-			node.textContent = orig + '???';
-		}
+		success: (data) =>
+			main.command('scroll:follow', () => gotInfo.bind(null, data)),
+		error: () =>
+			main.command('scroll:follow', () =>
+				node.textContent = orig + '???'
+			)
 	});
 	// Creates the Titles upon hover
 	// NOTE: Condense gotInfos into single function
@@ -210,7 +212,9 @@ main.$threads.on('click', '.soundcloud', function (e) {
 		return;
 	const width = Math.round($(window).innerWidth() * 0.75);
 	$obj = make_soundcloud(m[1], {width: width, height: 81});
-	$target.css('width', width).append('<br>', $obj);
+	main.command('scroll:follow', () =>
+		$target.css('width', width).append('<br>', $obj)
+	);
 	return false;
 });
 
@@ -227,7 +231,7 @@ main.$threads.on('mouseenter', '.soundcloud', function (event) {
 	if (!node)
 		return;
 	var orig = node.textContent;
-	node.textContent = orig + '...';
+	main.command('scroll:follow', () => node.textContent = orig + '...');
 	var m = $target.attr('href').match(soundcloud_url_re);
 	if (!m)
 		return;
@@ -236,12 +240,12 @@ main.$threads.on('mouseenter', '.soundcloud', function (event) {
 		url: '//soundcloud.com/oembed',
 		data: {format: 'json', url: 'http://soundcloud.com/' + m[1]},
 		dataType: 'json',
-		success: function (data) {
-			gotInfo.bind(null, data);
-		},
-		error: function () {
-				node.textContent = orig + '???';
-		}
+		success: (data) =>
+			main.command('scroll:follow', () => gotInfo.bind(null, data)),
+		error: () =>
+			main.command('scroll:follow', () =>
+					node.textContent = orig + '???'
+			)
 	});
 
 	function gotInfo(data) {
@@ -280,18 +284,19 @@ $(document).on('click', '.pastebin', function(event){
 	var $window = $(window),
 		width = Math.round($window.innerWidth() * 0.65),
 		height = Math.round($window.innerHeight() * 0.65);
-
-	$target
-		.css({
-			width: width,
-			height: height
-		})
-		.append('<br>', $('<iframe></iframe>', {
-			type: 'text/html',
-			src: 'https://pastebin.com/embed_iframe.php?i='+ m[1],
-			frameborder: '0',
-			width: width,
-			height: height
-		}));
+	main.command('scroll:follow', () =>
+		$target
+			.css({
+				width: width,
+				height: height
+			})
+			.append('<br>', $('<iframe></iframe>', {
+				type: 'text/html',
+				src: 'https://pastebin.com/embed_iframe.php?i='+ m[1],
+				frameborder: '0',
+				width: width,
+				height: height
+			}))
+	);
 	return false;
 });

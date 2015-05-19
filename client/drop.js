@@ -14,7 +14,7 @@ function dragonDrop(e) {
 		return;
 	var postForm = main.request('postForm');
 	if (!postForm) {
-		main.command('scroll:followLock', function() {
+		main.command('scroll:follow', function() {
 			const thread = state.page.get('thread');
 			if (thread)
 				return main.command('openPostBox', thread);

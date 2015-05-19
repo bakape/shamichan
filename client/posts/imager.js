@@ -75,7 +75,9 @@ let Hidamari = exports.Hidamari = {
 	// Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
 	toggleThumbnailVisibility: function(e) {
 		e.preventDefault();
-		this.renderImage(!this.model.get('thumbnailRevealed'));
+		main.command('scroll:follow', ()=>
+			this.renderImage(!this.model.get('thumbnailRevealed'))
+		);
 	},
 
 	imageClicked: function(e){
@@ -84,7 +86,9 @@ let Hidamari = exports.Hidamari = {
 		// Remove image hover preview, if any
 		options.trigger('imageClicked');
 		e.preventDefault();
-		this.toggleImageExpansion(!this.model.get('imageExpanded'));
+		main.command('scroll:follow', ()=>
+			this.toggleImageExpansion(!this.model.get('imageExpanded'))
+		);
 	},
 
 	toggleImageExpansion: function(expand, img = this.model.get('image')) {

@@ -168,8 +168,10 @@ module.exports = {
 
 		if (isInside('baseNode') && isInside('focusNode'))
 			sel = gsel.toString();
-		main.command('openPostBox', num);
-		main.request('postForm').addReference(num, sel);
+		main.command('scroll:follow', function() {
+			main.command('openPostBox', num);
+			main.request('postForm').addReference(num, sel);
+		});
 	}
 };
 

@@ -103,7 +103,7 @@ main.dispatcher[common.IMAGE_STATUS] = function(msg) {
 };
 
 main.$doc.on('click', 'aside a', function() {
-	main.command('scroll:followLock', () =>
+	main.command('scroll:follow', () =>
 		postSM.feed('new', $(this).parent())
 	);
 });
@@ -121,7 +121,7 @@ function handle_shortcut(event) {
 			var $aside = state.page.get('thread') ? main.$threads.find('aside')
 				: $ceiling().next();
 			if ($aside.is('aside') && $aside.length === 1) {
-				main.command('scroll:followLock', function() {
+				main.command('scroll:follow', function() {
 					postSM.feed('new', $aside);
 				});
 				used = true;
@@ -334,13 +334,15 @@ var ComposerView = Backbone.View.extend({
 			allocWait = attrs.sentAllocRequest && !attrs.num,
 			d = attrs.uploading || allocWait;
 		// Beware of undefined!
-		this.$submit.prop('disabled', !!d);
-		if (attrs.uploaded)
-			this.$submit.css({'margin-left': '0'});
-		this.$cancel.prop('disabled', !!allocWait);
-		this.$cancel.toggle(!!(!attrs.num || attrs.uploading));
-		this.$imageInput.prop('disabled', !!attrs.uploading);
-		this.$uploadStatus.html(attrs.uploadStatus);
+		main.command('scroll:follow', () => {
+			this.$submit.prop('disabled', !!d);
+			if (attrs.uploaded)
+				this.$submit.css({'margin-left': '0'});
+			this.$cancel.prop('disabled', !!allocWait);
+			this.$cancel.toggle(!!(!attrs.num || attrs.uploading));
+			this.$imageInput.prop('disabled', !!attrs.uploading);
+			this.$uploadStatus.html(attrs.uploadStatus);
+		});
 	},
 
 	renderSpoilerPane: function(model, sp) {
@@ -710,7 +712,7 @@ var ComposerView = Backbone.View.extend({
 
 	// Adds a followLock check for finishing posts
 	finish_wrapped: function() {
-		main.command('scroll:followLock', () => this.finish());
+		main.command('scroll:follow', () => this.finish());
 	},
 
 	// Send any unstaged words

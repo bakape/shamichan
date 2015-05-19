@@ -99,7 +99,7 @@ function followLock(func) {
 
 	return ret;
 }
-main.comply('scroll:followLock', followLock);
+main.comply('scroll:follow', followLock);
 
 /* Uncomment when certain of menuHandler things being functional
  * Locks to post

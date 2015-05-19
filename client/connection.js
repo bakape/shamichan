@@ -35,7 +35,7 @@ function send(msg) {
 function on_message(e) {
 	if (config.DEBUG)
 		console.log('>', e.data);
-	main.command('scroll:followLock', function() {
+	main.command('scroll:follow', function() {
 		let data = JSON.parse(e.data);
 		for (let i = 0, lim = data.length; i < lim; i++) {
 			let msg = data[i];
