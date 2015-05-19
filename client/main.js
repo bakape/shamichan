@@ -71,8 +71,6 @@ main.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 // Store them here, to avoid requiring modules in the wrong order
 main.send = function() {};
 main.dispatcher = {};
-main.postForm = null;
-main.postModel = null;
 main.openPostBox = function() {};
 // Read-only boards gets expanded later
 main.readOnly = ['archive'];
@@ -117,6 +115,7 @@ main.scroll = require('./scroll');
 var Extract = require('./extract');
 new Extract();
 
+main.posts = require('./posts');
 main.banner = require('./banner');
 main.background = require('./options/background');
 

@@ -35,8 +35,9 @@ dispatcher[common.INSERT_POST] = function(msg) {
 
 		main.command('nonce:destroy', nonce);
 		// if we've already made a placeholder for this post, use it
-		if (main.postForm && main.postForm.el)
-			el = main.postForm.el;
+		let postForm = main.request('postForm');
+		if (postForm && postForm.el)
+			el = postForm.el;
 	}
 	// Add to my post set
 	if (myNonce) {
@@ -75,12 +76,13 @@ dispatcher[common.MOVE_THREAD] = function(msg) {
 };
 
 dispatcher[common.INSERT_IMAGE] = function(msg) {
-	var model = state.posts.get(msg[0]);
+	let model = state.posts.get(msg[0]);
 	// Did I just upload this?
-	if (main.postModel && main.postModel.get('num') == msg[0]) {
+	let postModel = main.request('postModel');
+	if (postModel && postModel.get('num') == msg[0]) {
 		if (model)
 			model.set('image', msg[1], {silent: true});
-		main.postForm.insertUploaded(msg[1]);
+		main.request('postForm').insertUploaded(msg[1]);
 	}
 	else if (model)
 		model.set('image', msg[1]);
@@ -158,9 +160,10 @@ dispatcher[common.DELETE_THREAD] = function(msg, op) {
 	delete state.syncs[op];
 	delete state.ownPosts[op];
 
-	if (main.postModel) {
-		const num = main.postModel.get('num');
-		if ((main.postModel.get('op') || num) === op)
+	let postModel = main.request('postModel');
+	if (postModel) {
+		const num = postModel.get('num');
+		if ((postModel.get('op') || num) === op)
 			main.postSM.feed('done');
 		if (num === op)
 			return;

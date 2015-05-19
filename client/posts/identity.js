@@ -2,11 +2,10 @@
  Name, email, tripcode and staff title persistence and postform propagation
  */
 
-var $ = require('jquery'),
+let $ = require('jquery'),
 	_ = require('underscore'),
-	common = require('../../common'),
 	main = require('../main'),
-	posting = require('./posting');
+	common = main.common;
 
 function load() {
 	try {
@@ -51,8 +50,9 @@ var save = _.debounce(function() {
 
 // Sync persistance and postForm with input changes
 function propagate() {
-	if (posting.postForm)
-		posting.postForm.renderIdentity();
+	let postForm = main.request('postForm');
+	if (postForm)
+		postForm.renderIdentity();
 	save();
 }
 

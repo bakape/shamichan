@@ -31,9 +31,10 @@ main.oneeSama.hook('imouto', function (imouto) {
 
 // Handle dice in the postForm
 main.oneeSama.hook('insertOwnPost', function (extra) {
-	if (!main.postForm || !main.postForm.imouto || !extra || !extra.dice)
+	let postForm = main.request('postForm');
+	if (!postForm || !postForm.imouto || !extra || !extra.dice)
 		return;
-	let rolls = main.postForm.imouto.allRolls;
+	let rolls = postForm.imouto.allRolls;
 	for (let i = 0, lim = extra.dice.length; i < lim; i++) {
 		const n = rolls.seen++;
 		let info = rolls[n];

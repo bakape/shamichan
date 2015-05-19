@@ -7,22 +7,29 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone'),
 	client = require('../client'),
-	common = require('../../common'),
 	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
 	inject = require('./common').inject,
 	main = require('../main'),
-	options = require('../options'),
-	state = require('../state');
+	common = main.common,
+	options = main.options,
+	state = main.state;
 
-var connSM = main.connSM,
-	postSM = main.postSM;
+let connSM = main.connSM,
+	postSM = main.postSM,
+	postForm, postModel;
+/*
+ The variable gets overwritten, so a simple refference will not do. Calling a
+ fucntion to retrieve the var each time solves the problem. 
+ */
+main.reply('postForm', () => postForm);
+main.reply('postModel', () => postModel);
+
 const uploadingMessage = 'Uploading...';
-var postForm = main.postForm,
-// Minimal size of the input buffer
-	inputMinSize = 300;
 
+// Minimal size of the input buffer
+let	inputMinSize = 300;
 // For mobile
 if (window.screen && screen.width <= 320)
 	inputMinSize = 50;
@@ -51,8 +58,7 @@ postSM.act('none + sync, draft, alloc + done -> ready', function() {
 
 	if (postForm) {
 		postForm.remove();
-		main.postForm = postForm = null;
-		main.postModel = null;
+		postForm = postModel = null;
 	}
 	main.$threads.find('aside').show();
 });
@@ -70,9 +76,8 @@ postSM.act('ready + new -> draft', function($aside) {
 	if (op)
 		state.posts.get(op).trigger('shiftReplies', true);
 
-	main.postModel = new ComposerModel({op: op});
-	main.postForm = postForm = new ComposerView({
-		model: main.postModel,
+	postForm = new ComposerView({
+		model: postModel = new ComposerModel({op: op}),
 		$dest: $aside,
 		$sec: $sec
 	});
@@ -164,7 +169,7 @@ function $ceiling() {
 
 // TODO: Unify self-updates with OneeSama; this is redundant
 main.oneeSama.hook('insertOwnPost', function (info) {
-	if (!main.postForm || !info.links)
+	if (!postForm || !info.links)
 		return;
 	postForm.$buffer.find('.nope').each(function() {
 		var $a = $(this);
@@ -176,10 +181,7 @@ main.oneeSama.hook('insertOwnPost', function (info) {
 			op = info.links[num];
 		if (!op)
 			return;
-		var $ref = $(common.flatten(
-				main.postForm.imouto.post_ref(num, op, false)
-			).join('')
-		);
+		let $ref = $(common.join(postForm.imouto.post_ref(num, op, false)));
 		$a.attr('href', $ref.attr('href')).removeAttr('class');
 		const refText = $ref.text();
 		if (refText != text)
