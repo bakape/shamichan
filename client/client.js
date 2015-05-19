@@ -133,13 +133,6 @@ main.$doc.on('click', 'del', function (event) {
 	}
 });
 
-// For mobile
-function touchable_spoiler_tag(del) {
-	del.html = '<del onclick="void(0)">';
-}
-exports.touchable_spoiler_tag = touchable_spoiler_tag
-main.oneeSama.hook('spoilerTag', touchable_spoiler_tag);
-
 dispatcher[common.FINISH_POST] = function(msg) {
 	const num = msg[0];
 	delete state.ownPosts[num];

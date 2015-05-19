@@ -6,8 +6,8 @@
 var $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone'),
-	client = require('../client'),
 	embed = require('./embed'),
+	etc = require('../etc'),
 	ident = require('./identity'),
 	imager = require('./imager'),
 	inject = require('./common').inject,
@@ -227,7 +227,7 @@ var ComposerView = Backbone.View.extend({
 		this.imouto.state2 = {spoiler: 0};
 		this.imouto.$buffer = this.$buffer;
 		this.imouto.eLinkify = main.oneeSama.eLinkify;
-		this.imouto.hook('spoilerTag', client.touchable_spoiler_tag);
+		this.imouto.hook('spoilerTag', etc.touchable_spoiler_tag);
 		main.oneeSama.trigger('imouto', this.imouto);
 	},
 

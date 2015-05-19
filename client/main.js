@@ -107,6 +107,7 @@ main.connSM = new common.FSM('load');
 main.postSM = new common.FSM('none');
 state.page.set('tabID', common.random_id());
 
+main.etc = require('./etc');
 main.time = require('./time');
 main.scroll = require('./scroll');
 main.notify = require('./notify');
