@@ -113,7 +113,8 @@ module.exports = {
 				.insertAfter(this.$el.children('blockquote'))
 		}
 		let html = 'Replies:';
-		const thread = state.page.get('thread');
+		const thread = state.page.get('thread'),
+			notBoard = thread !== 0;
 		for (var key in links) {
 			if (!links.hasOwnProperty(key))
 				continue;
@@ -121,7 +122,7 @@ module.exports = {
 			const diff = links[key] !== thread;
 			html += common.parseHTML
 				` <a class="history" href="${diff && links[key]}#${key}">
-					&gt;&gt;${key}${diff && ' →'}
+					&gt;&gt;${key}${diff && notBoard && ' →'}
 				</a>`;
 		}
 		main.command('scroll:follow', () => this.$backlinks.html(html));
