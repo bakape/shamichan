@@ -72,7 +72,7 @@ function readingSteiner(url, event, needPush) {
 			if (!location.hash)
 				window.scrollTo(0, 0);
 			else
-				scroll.aboveBanner();
+				main.command('scroll:aboveBanner');
 		}
 		$loading.hide();
 	});
