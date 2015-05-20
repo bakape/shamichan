@@ -107,7 +107,7 @@ module.exports = {
 	renderBacklinks: function(model, links) {
 		// No more backlinks, because posts deleted or something
 		if (!links && this.$backlinks)
-			return this.$backlinks.remove();
+			return main.command('scroll:follow', () => this.$backlinks.remove());
 		if (!this.$backlinks) {
 			this.$backlinks = $('<small/>')
 				.insertAfter(this.$el.children('blockquote'))
@@ -124,7 +124,7 @@ module.exports = {
 					&gt;&gt;${key}${diff && ' →'}
 				</a>`;
 		}
-		this.$backlinks.html(html);
+		main.command('scroll:follow', () => this.$backlinks.html(html));
 	},
 
 	// Admin JS injections
