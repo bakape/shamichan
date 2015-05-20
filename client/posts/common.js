@@ -1,7 +1,6 @@
 /*
  * Common methods to both OP and regular posts
  */
-'use strict';
 
 var $ = require('jquery'),
 	_ = require('underscore'),
@@ -113,15 +112,13 @@ module.exports = {
 			this.$backlinks = $('<small/>')
 				.insertAfter(this.$el.children('blockquote'))
 		}
-		var html = 'Replies:',
-			// Link points to different thread
-			diff;
-		const num = this.model.get('num'),
-			op = this.model.get('op') || num;
+		let html = 'Replies:';
+		const thread = state.page.get('thread');
 		for (var key in links) {
 			if (!links.hasOwnProperty(key))
 				continue;
-			diff = links[key] != (op);
+			// points to a different thread from the current
+			const diff = links[key] !== thread;
 			html += common.parseHTML
 				` <a class="history" href="${diff && links[key]}#${key}">
 					&gt;&gt;${key}${diff && ' →'}
