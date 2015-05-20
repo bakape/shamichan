@@ -181,8 +181,8 @@ main.oneeSama.hook('insertOwnPost', function (info) {
 			op = info.links[num];
 		if (!op)
 			return;
-		let $ref = $(common.join(postForm.imouto.post_ref(num, op, false)));
-		$a.attr('href', $ref.attr('href')).removeAttr('class');
+		let $ref = $(common.join([postForm.imouto.post_ref(num, op, false)]));
+		$a.attr('href', $ref.attr('href')).attr('class', 'history');
 		const refText = $ref.text();
 		if (refText != text)
 			$a.text(refText);
@@ -210,7 +210,7 @@ var ComposerView = Backbone.View.extend({
 		this.char_count = 0;
 
 		// The form's own dedicated renderer instance
-		this.imouto = new common.OneeSama(function(num) {
+		let imouto = this.imouto = new common.OneeSama(function(num) {
 			var $sec = $('#' + num);
 			if (!$sec.is('section'))
 				$sec = $sec.closest('section');
@@ -220,15 +220,15 @@ var ComposerView = Backbone.View.extend({
 				this.callback(common.safe(`<a class="nope">&gt;&gt;${num}</a>`));
 		});
 		// Initialise the renderer instance
-		this.imouto.callback = inject;
-		this.imouto.op = state.page.get('thread');
-		this.imouto.state = [common.S_BOL, 0];
+		imouto.callback = inject;
+		imouto.op = state.page.get('thread');
+		imouto.state = [common.S_BOL, 0];
 		// TODO: Convert current OneeSama.state array to more flexible object
-		this.imouto.state2 = {spoiler: 0};
-		this.imouto.$buffer = this.$buffer;
-		this.imouto.eLinkify = main.oneeSama.eLinkify;
-		this.imouto.hook('spoilerTag', etc.touchable_spoiler_tag);
-		main.oneeSama.trigger('imouto', this.imouto);
+		imouto.state2 = {spoiler: 0};
+		imouto.$buffer = this.$buffer;
+		imouto.eLinkify = main.oneeSama.eLinkify;
+		imouto.hook('spoilerTag', etc.touchable_spoiler_tag);
+		main.oneeSama.trigger('imouto', imouto);
 	},
 
 	// Initial render
