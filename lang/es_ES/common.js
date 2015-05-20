@@ -53,11 +53,11 @@ const lang = {
 	abbrev_msg:  function(omit, img_omit, url) {
 		var html = lang.pluralize(omit, 'respuesta');
 		if (img_omit)
-			html += ` y ${lang.pluralize(img_omit, 'imagen')}`;
+			html += ' y ' + lang.pluralize(img_omit, 'imagen');
 		html += ' omitida';
 		if (url) {
-			html += ` <span class="act"><a href="${url}" class="history">`
-				+ `${lang.see_all}</a></span>`;
+			html += ' <span class="act"><a href="' + url + '" class="history">'
+				+ lang.see_all + '</a></span>';
 		}
 		return html;
 	}
