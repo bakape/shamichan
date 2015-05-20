@@ -40,7 +40,7 @@ loaded into a running server with `node server/kill.js`
 * ImageMagick
 * gcc, g++, make
 * libpng with development headers
-* [io.js](https://iojs.org) (Latest tested version is 1.7.1)
+* [io.js](https://iojs.org) (Latest tested version is 2.0.2)
 * redis
 
 ###Optional dependencies for various features
