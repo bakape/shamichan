@@ -81,14 +81,13 @@ main.readOnly = ['archive'];
 let state = main.state = require('./state');
 let	common = main.common = require('../common');
 // Initialise main rendering object
-var oneeSama = main.oneeSama = new common.OneeSama(function(num) {
+let oneeSama = main.oneeSama = new common.OneeSama(function(num) {
 	// Core post link handler
-	var frag;
+	let frag;
 	if (this.links && num in this.links) {
-		var op = this.links[num],
-			model = state.posts.get(num),
-			desc = model && model.get('mine') && '(You)';
-		frag = this.post_ref(num, op, desc);
+		let model = state.posts.get(num);
+		const desc = model && model.get('mine') && '(You)';
+		frag = this.post_ref(num, this.links[num], desc);
 	}
 	else
 		frag = '>>' + num;
