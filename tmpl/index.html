@@ -1,12 +1,13 @@
 <!doctype html>
 <head>
 	<meta charset="utf-8">
-	<title>$TITLE</title>
+	<title id="title"></title>
+	<link type="image/x-icon" rel="shortcut icon" id="favicon">
 	<link rel="manifest" href="{{MEDIA_URL}}mobile/manifest.json">
-	<script></script>
-	<meta name="description" content="$METADESC">
+	<meta name="description" content="Real-time imageboard">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
-	$META
+	<link rel="stylesheet" href="{{MEDIA_URL}}css/{{base_css}}">
+	<link rel="stylesheet" id="theme">
 	<script>
 		// Bootsrap configuration
 		var config = {{CLIENT_CONFIG}},
@@ -14,7 +15,7 @@
 			configHash = '{{CLIENT_CONFIG_HASH}}',
 			lang = {{lang}};
 	</script>
-	<script src="{{MEDIA_URL}}js/setup.js?v=9"></script>
+	<script src="{{MEDIA_URL}}js/setup.js?v=10"></script>
 </head>
 <fieldset id="identity" class="bmodal">
 <label for="name" class="ident">{{name}}</label> <input id="name" name="name"><br>
@@ -64,10 +65,7 @@
 <div id="schedule" class="bmodal">{{SCHEDULE}}</div>
 {{options_panel}}
 <threads>
-	$NAV
-	<h1>$TITLE</h1>
 	$THREADS
-	$NAV
 </threads>
 <script src="{{MEDIA_URL}}js/sockjs-0.3.4.min.js"></script>
 <script src="{{MEDIA_URL}}js/vendor.js?v={{vendor_hash}}"></script>

@@ -172,9 +172,8 @@ function reloadCSS(hot, cb) {
 	getRevision('css', function(err, files) {
 		if (err)
 			return cb(err);
-		// Only the curfew template is statically assigned a CSS file. The rest
-		// are inserted per request in server/render.js
 		HOT.CURFEW_CSS = files['curfew.css'];
+		HOT.base_css = files['base.css'];
 		// Export to these modules and client
 		HOT.css = hot.css = files;
 		cb(null);
@@ -270,7 +269,7 @@ function build_schedule(schedule){
 			time = schedule[i + 2];
 		// Fill empty slots
 		if (!plans)
-			plans = filler[Math.floor(Math.random() * filler.length)];
+			plans = common.random(filler);
 		if (!time)
 			time = 'all day';
 		table += common.parseHTML

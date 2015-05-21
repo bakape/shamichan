@@ -1,4 +1,16 @@
-'use strict';
+// Set the theme
+(function () {
+	var options;
+	try {
+		options = JSON.parse(localStorage.options);
+	}
+	catch (e) {}
+	var theme = (options && options.theme)
+		? options.theme
+		: hotConfig.BOARD_CSS[location.href.match(/\/([a-zA-Z0-9]+?)\//)[1]];
+	document.getElementById('theme').href = config.MEDIA_URL + 'css/'
+		+ hotConfig.css[theme + '.css'];
+})();
 
 // Check for browser compatibility by trying to detect some ES6 features
 (function() {
@@ -16,21 +28,4 @@
 		);
 	}
 	localStorage.setItem('browserChecked', true);
-})();
-
-// Set the theme, if setting exists
-(function () {
-	var options;
-	try {
-		options = JSON.parse(localStorage.options);
-	}
-	catch (e) { }
-	if (!options)
-		options = {};
-
-	var link = document.getElementById('theme'),
-		m = link.href.match(/^(.*\/)[^\/]+?\.css$/),
-		theme = options.theme;
-	if (m && theme)
-		link.href = m[1] + hotConfig.css[theme + '.css'];
 })();

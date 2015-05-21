@@ -42,9 +42,7 @@ exports.temporal_access_check = temporal_access_check;
 function can_ever_access_board (ident, board) {
 	if (can_access_board(ident, board))
 		return true;
-	if (!temporal_access_check(ident, board))
-		return true;
-	return false;
+	return !temporal_access_check(ident, board);
 }
 exports.can_ever_access_board = can_ever_access_board;
 
