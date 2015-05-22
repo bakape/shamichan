@@ -60,13 +60,14 @@ build('client', browserify(require.resolve('./client/main.js'),
 		// Needed for sourcemaps
 		debug: true,
 		bundleExternal: false,
-		require: ['./client/main.js'],
+		require: ['./client/main'],
 		external: [
 			'jquery',
 			'jquery.cookie',
 			'underscore',
 			'backbone',
-			'backbone.radio'
+			'backbone.radio',
+			'./lib/stack-blur'
 		]
 	})
 		// Trasnpile to ES5. Use mostly default, because minifier support is
@@ -107,7 +108,8 @@ build('vendor', browserify({
 		'jquery.cookie',
 		'underscore',
 		'backbone',
-		'backbone.radio'
+		'backbone.radio',
+		'./lib/stack-blur'
 	],
 	debug: true
 }));
