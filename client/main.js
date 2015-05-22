@@ -93,7 +93,7 @@ let oneeSama = main.oneeSama = new common.OneeSama(function(num) {
 		frag = '>>' + num;
 	this.callback(frag);
 });
-oneeSama.full = oneeSama.op = state.page.get('thread');
+oneeSama.op = state.page.get('thread');
 main.options = require('./options');
 
 // Cached jQuery objects

@@ -220,13 +220,15 @@ var ComposerView = Backbone.View.extend({
 				this.callback(common.safe(`<a class="nope">&gt;&gt;${num}</a>`));
 		});
 		// Initialise the renderer instance
-		imouto.callback = inject;
-		imouto.op = state.page.get('thread');
-		imouto.state = [common.S_BOL, 0];
-		// TODO: Convert current OneeSama.state array to more flexible object
-		imouto.state2 = {spoiler: 0};
-		imouto.$buffer = this.$buffer;
-		imouto.eLinkify = main.oneeSama.eLinkify;
+		_.extend(imouto, {
+			callback: inject,
+			op: state.page.get('thread'),
+			state: [common.S_BOL, 0],
+			// TODO: Convert current OneeSama.state array to more flexible object
+			state2: {spoiler: 0},
+			$buffer: this.$buffer,
+			eLinkify: main.oneeSama.eLinkify
+		});
 		imouto.hook('spoilerTag', etc.touchable_spoiler_tag);
 		main.oneeSama.trigger('imouto', imouto);
 	},

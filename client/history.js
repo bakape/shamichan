@@ -57,7 +57,7 @@ function readingSteiner(url, event, needPush) {
 		// Set new page state
 		state.page.set(nextState);
 		// Reconfigure rendering singleton
-		main.oneeSama.full = main.oneeSama.op = nextState.thread;
+		main.oneeSama.op = nextState.thread;
 		main.command('massExpander:unset');
 		new Extract();
 		// Swap the database controller server-side

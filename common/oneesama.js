@@ -508,8 +508,7 @@ OS.atama = function(data) {
 	}
 	header.push(' ', safe(this.time(data.time)), ' ', this.post_nav(data));
 	if (!this.full && !data.op) {
-		var ex = this.expansion_links_html(data.num);
-		header.push(safe(ex));
+		header.push(safe(this.expansion_links_html(data.num)));
 	}
 	this.trigger('headerFinish', {header: header, data: data});
 	header.unshift(safe('<header>'));
