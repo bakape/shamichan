@@ -7,15 +7,16 @@ Vagrant.configure(2) do |config|
 			libpng12-dev\
 			imagemagick\
 			software-properties-common\
+			pngquant\
 		|| exit
 
 		add-apt-repository ppa:mc3man/trusty-media -y || exit
 		apt-get update || exit
 		apt-get install ffmpeg -y || exit
 
-		# Install precompiled binaries
-		echo "Extracting binaries..."
-		tar xfpJ /vagrant/vagrant-binaries.tar.xz -C /usr/local/
+		echo "Installing io.js..."
+		wget -q https://iojs.org/dist/v2.0.2/iojs-v2.0.2-linux-x86.tar.xz | \
+			tar xfpJ -C /usr/local --strip=1 || exit
 
 		# Deal with debian bullshit
 		ln -sf /usr/local/bin/node /usr/bin/
