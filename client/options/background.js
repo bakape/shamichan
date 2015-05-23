@@ -6,7 +6,7 @@ let Backbone = require('backbone'),
 	main = require('../main'),
 	common = main.common,
 	options = main.options,
-	state = options.state;
+	state = main.state;
 
 let BackgroundView = Backbone.View.extend({
 	model: new Backbone.Model({
