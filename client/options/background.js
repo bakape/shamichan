@@ -5,7 +5,8 @@
 let Backbone = require('backbone'),
 	main = require('../main'),
 	common = main.common,
-	options = main.options;
+	options = main.options,
+	state = options.state;
 
 let BackgroundView = Backbone.View.extend({
 	model: new Backbone.Model({
@@ -14,9 +15,12 @@ let BackgroundView = Backbone.View.extend({
 
 	initialize: function() {
 		main.comply('background:store', this.store.bind(this));
-		if (options.get('userBG'))
-			this.render(null, true);
-		this.listenTo(options, 'change:userBG', this.render);
+		this.render();
+		this.listenTo(options, {
+			'change:userBG': this.render,
+			'change:illyaBGToggle': this.render,
+			'change:illyaMuteToggle': this.render
+		});
 	},
 
 	// Store image as dataURL in localStorage
@@ -37,25 +41,38 @@ let BackgroundView = Backbone.View.extend({
 				localStorage.background = canvas.toDataURL('image/jpeg', 0.95);
 				// Apply new background
 				if (options.get('userBG'))
-					self.render(null, true);
+					self.render();
 			};
 			img.src = event.target.result;
 		};
 	},
 
-	render: function(model, toggle) {
+	render: function() {
 		this.$el.empty().css('background', 'none');
-		if (!toggle)
-			return;
+		if (options.get('illyaBGToggle') && state.hotConfig.get('ILLYA_DANCE'))
+			this.renderIllya();
+		else if (options.get('userBG'))
+			this.renderBackground();
+	},
+
+	renderBackground: function() {
 		const bg = localStorage.background;
 		if (!bg)
 			return;
 		this.$el
 			// Need to set in separate call, because CSS
-			.css('background',
-				`url(${bg}) no-repeat fixed center`
-			)
+			.css('background', `url(${bg}) no-repeat fixed center`)
 			.css('background-size', 'cover');
+	},
+
+	renderIllya: function() {
+		const urlBase = main.config.MEDIA_URL + 'illya.';
+		this.$el.html(common.parseHTML
+			`<video autoplay ${options.get('illyaMuteToggle') && 'muted'}>
+				<source src="${urlBase + 'webm'}" type="video/webm">
+				<source src="${urlBase + 'mp4'}" type="video/mp4">
+			</video>`
+		)
 	}
 });
 

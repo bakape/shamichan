@@ -193,43 +193,21 @@ var opts = [
 	}
 }
 
-/* ILLYA DANCE */
-var illyaDance = {
-	id: 'illyaBGToggle',
-	/*
-	 The getters ensure there isn't any funny business with dependancy order on
-	 the server;
-	 */
-	load: notMobile && hotConfig.ILLYA_DANCE,
-	tab: 3,
-	exec: function(illyatoggle) {
-		/*var muted = ' ';
-		// TODO: We should not require options here. Need to rethink this.
-		if (options.get('illyaMuteToggle'))
-			muted = 'muted';
-		const mediaURL = config.MEDIA_URL;
-		var dancer = '<video autoplay ' + muted + ' loop id="bgvid" >' +
-			'<source src="' + mediaURL + 'illya.webm" type="video/webm">' +
-			'<source src="' + mediaURL + 'illya.mp4" type="video/mp4">' +
-			'</video>';
-		if (illyatoggle)
-			$("body").append(dancer);
-		else
-			$("#bgvid").remove();*/
-	}
-};
-
-opts.push(illyaDance,
+opts.push(
+	/* ILLYA DANCE */
+	{
+		id: 'illyaBGToggle',
+		/*
+		 The getters ensure there isn't any funny business with dependancy order
+		 on the server;
+		 */
+		load: notMobile && hotConfig.ILLYA_DANCE,
+		tab: 3
+	},
 	{
 		id: 'illyaMuteToggle',
 		load: notMobile && hotConfig.ILLYA_DANCE,
-		tab: 3,
-		exec: function() {
-			/*if (options.get('illyaBGToggle')) {
-				illyaDance.exec(false);
-				illyaDance.exec(true);
-			}*/
-		}
+		tab: 3
 	},
 	/* HORIZONTAL POSTING */
 	{
