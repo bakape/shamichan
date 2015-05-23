@@ -35,10 +35,11 @@ let BackgroundView = Backbone.View.extend({
 					.getContext('2d')
 					.drawImage(img, 0, 0, img.width, img.height);
 				localStorage.background = canvas.toDataURL('image/jpeg', 0.95);
+				// Apply new background
+				if (options.get('userBG'))
+					self.render(null, true);
 			};
 			img.src = event.target.result;
-			if (options.get('userBG'))
-				self.render(null, true);
 		};
 	},
 
@@ -46,10 +47,13 @@ let BackgroundView = Backbone.View.extend({
 		this.$el.empty().css('background', 'none');
 		if (!toggle)
 			return;
+		const bg = localStorage.background;
+		if (!bg)
+			return;
 		this.$el
 			// Need to set in separate call, because CSS
 			.css('background',
-				`url(${localStorage.background}) no-repeat fixed center`
+				`url(${bg}) no-repeat fixed center`
 			)
 			.css('background-size', 'cover');
 	}
