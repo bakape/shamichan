@@ -203,7 +203,7 @@ var illyaDance = {
 	load: notMobile && hotConfig.ILLYA_DANCE,
 	tab: 3,
 	exec: function(illyatoggle) {
-		var muted = ' ';
+		/*var muted = ' ';
 		// TODO: We should not require options here. Need to rethink this.
 		if (options.get('illyaMuteToggle'))
 			muted = 'muted';
@@ -215,7 +215,7 @@ var illyaDance = {
 		if (illyatoggle)
 			$("body").append(dancer);
 		else
-			$("#bgvid").remove();
+			$("#bgvid").remove();*/
 	}
 };
 
@@ -225,10 +225,10 @@ opts.push(illyaDance,
 		load: notMobile && hotConfig.ILLYA_DANCE,
 		tab: 3,
 		exec: function() {
-			if (options.get('illyaBGToggle')) {
+			/*if (options.get('illyaBGToggle')) {
 				illyaDance.exec(false);
 				illyaDance.exec(true);
-			}
+			}*/
 		}
 	},
 	/* HORIZONTAL POSTING */
