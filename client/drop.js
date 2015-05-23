@@ -76,5 +76,5 @@ function setupUploadDrop(e) {
 }
 
 $(function () {
-	setupUploadDrop(document.body);
+	setupUploadDrop(main.$threads[0]);
 });

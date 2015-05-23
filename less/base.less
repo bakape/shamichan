@@ -371,15 +371,21 @@ span.control .popup-menu {
 }
 #user_bg {
 	position: fixed;
-	top: -100%;
+	top: 0;
 	left: 0;
-	right: 0;
-	bottom: -100%;
 	width: 100%;
-	height: auto;
+	height: 100%;
 	z-index: -100;
 	overflow: hidden;
-	margin: auto;
+	img, video {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		margin-right: -50%;
+		transform: translate(-50%, -50%);
+		min-height: 100%;
+		min-width: 100%;
+	}
 }
 .email {
 	text-decoration: underline !important;

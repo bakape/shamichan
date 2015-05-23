@@ -117,12 +117,12 @@ new Extract();
 
 main.posts = require('./posts');
 main.banner = require('./banner');
-main.background = require('./options/background');
 
 // Start the client
 main.client = require('./client');
 
 // Load auxilary modules
+main.background = require('./options/background');
 main.history = require('./history');
 main.hover = require('./hover');
 main.drop = require('./drop');
