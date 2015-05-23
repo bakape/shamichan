@@ -68,7 +68,7 @@ let BackgroundView = Backbone.View.extend({
 	renderIllya: function() {
 		const urlBase = main.config.MEDIA_URL + 'illya.';
 		this.$el.html(common.parseHTML
-			`<video autoplay ${options.get('illyaMuteToggle') && 'muted'}>
+			`<video autoplay loop ${options.get('illyaMuteToggle') && 'muted'}>
 				<source src="${urlBase + 'webm'}" type="video/webm">
 				<source src="${urlBase + 'mp4'}" type="video/mp4">
 			</video>`
