@@ -43,10 +43,15 @@ let BackgroundView = Backbone.View.extend({
 	},
 
 	render: function(model, toggle) {
-		this.$el.empty();
+		this.$el.empty().css('background', 'none');
 		if (!toggle)
 			return;
-		this.$el.html(`<img src="${localStorage.background}">`);
+		this.$el
+			// Need to set in separate call, because CSS
+			.css('background',
+				`url(${localStorage.background}) no-repeat fixed center`
+			)
+			.css('background-size', 'cover');
 	}
 });
 
