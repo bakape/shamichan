@@ -7,7 +7,7 @@ let $ = require('jquery'),
 
 (function(){
 	// User refused the first time
-	if (!isMobile || localStorage.homescreenRefused)
+	if (!main.isMobile || localStorage.homescreenRefused)
 		return;
 	// Only comatible with Android Chrome for now
 	const n = navigator.userAgent,
