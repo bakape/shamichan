@@ -83,12 +83,6 @@ var OptionModel = Backbone.Model.extend({
 	}
 });
 
-// Create and option model for each object in the array
-const optCommon = require('../../common/options');
-for (let i = 0, lim = optCommon.length; i < lim; i++) {
-	new OptionModel(optCommon[i]);
-}
-
 // Highlight options button, if no options are set
 (function() {
 	if (localStorage.getItem('options'))
@@ -172,8 +166,7 @@ var OptionsView = Backbone.View.extend({
 			val = parseInt($target.val());
 		// Not recorded; extracted directly by the background handler
 		else if (type == 'image')
-			// FIXME
-			return; //main.request('genTransparent', val);
+			return main.command('background:store', event.target);
 		else if (type == 'shortcut')
 			val = $target.val().toUpperCase().charCodeAt(0);
 		else
@@ -229,6 +222,12 @@ var OptionsView = Backbone.View.extend({
 });
 
 main.defer(function() {
+	// Create and option model for each object in the array
+	const optCommon = require('../../common/options');
+	for (let i = 0, lim = optCommon.length; i < lim; i++) {
+		new OptionModel(optCommon[i]);
+	}
+
 	new OptionsView({
 		el: document.getElementById('options-panel')
 	});

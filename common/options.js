@@ -9,13 +9,12 @@ var imports = require('./imports'),
 	index = require('./index'),
 	util = require('./util'),
 	main = imports.main,
-	$, notMobile, options, state;
+	$, notMobile, state;
 if (imports.isNode)
 // TEMP: Will build separate templates and bundles for mobile eventually
 	notMobile = true;
 else {
 	$ = require('jquery');
-	options = require('../client/options');
 	state = main.state;
 
 	notMobile = !imports.main.isMobile;
@@ -125,6 +124,7 @@ var opts = [
 		tab: 0,
 		exec: function(toggle) {
 			$.cookie('linkify', toggle, {path: '/'});
+			main.oneeSama.eLinkify = toggle;
 		}
 	},
 	/* DESKTOP NOTIFICATIONS */
@@ -193,42 +193,21 @@ var opts = [
 	}
 }
 
-/* ILLYA DANCE */
-var illyaDance = {
-	id: 'illyaBGToggle',
-	/*
-	 The getters ensure there isn't any funny business with dependancy order on
-	 the server;
-	 */
-	load: notMobile && hotConfig.ILLYA_DANCE,
-	tab: 3,
-	exec: function(illyatoggle) {
-		var muted = ' ';
-		if (options.get('illyaMuteToggle'))
-			muted = 'muted';
-		const mediaURL = config.MEDIA_URL;
-		var dancer = '<video autoplay ' + muted + ' loop id="bgvid" >' +
-			'<source src="' + mediaURL + 'illya.webm" type="video/webm">' +
-			'<source src="' + mediaURL + 'illya.mp4" type="video/mp4">' +
-			'</video>';
-		if (illyatoggle)
-			$("body").append(dancer);
-		else
-			$("#bgvid").remove();
-	}
-};
-
-opts.push(illyaDance,
+opts.push(
+	/* ILLYA DANCE */
+	{
+		id: 'illyaBGToggle',
+		/*
+		 The getters ensure there isn't any funny business with dependancy order
+		 on the server;
+		 */
+		load: notMobile && hotConfig.ILLYA_DANCE,
+		tab: 3
+	},
 	{
 		id: 'illyaMuteToggle',
 		load: notMobile && hotConfig.ILLYA_DANCE,
-		tab: 3,
-		exec: function() {
-			if (options.get('illyaBGToggle')) {
-				illyaDance.exec(false);
-				illyaDance.exec(true);
-			}
-		}
+		tab: 3
 	},
 	/* HORIZONTAL POSTING */
 	{
@@ -284,12 +263,6 @@ opts.push(illyaDance,
 				$('#theme').attr('href', config.MEDIA_URL + 'css/'
 					+ hotConfig.css[theme + '.css']);
 			}
-			/*
-			 FIXME: temp stub
-			 Call the background controller to generate, remove and/or append the
-			 glass
-			 */
-			//background.glass(theme);
 		}
 	},
 	/* CUSTOM USER-SET BACKGROUND */
@@ -302,9 +275,11 @@ opts.push(illyaDance,
 		id: 'userBGimage',
 		load: notMobile,
 		type: 'image',
-		tab: 1
-		// FIXME
-		//exec: background.set
+		tab: 1,
+		execOnStart: false,
+		exec: function(upload) {
+			main.command('background:store', upload);
+		}
 	},
 	/* LAST N CONFIG */
 	{
