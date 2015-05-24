@@ -67,9 +67,12 @@ build('client', browserify(require.resolve('./client/main.js'),
 			'underscore',
 			'backbone',
 			'backbone.radio',
-			'./lib/stack-blur'
+			'stack-blur'
 		]
 	})
+		// Make available outside the bundle with require() under a
+		// shorthand name
+		.require('./client/main', {expose: 'main'})
 		// Trasnpile to ES5. Use mostly default, because minifier support is
 		// still shit.
 		.transform(babelify.configure({
@@ -101,18 +104,22 @@ build('client', browserify(require.resolve('./client/main.js'),
 		.exclude('../server/state')
 );
 
-build('vendor', browserify({
-	// Make available outside the bundle with require()
-	require: [
-		'jquery',
-		'jquery.cookie',
-		'underscore',
-		'backbone',
-		'backbone.radio',
-		'./lib/stack-blur'
-	],
-	debug: true
-}));
+build('vendor', browserify(
+	{
+		require: [
+			'jquery',
+			'jquery.cookie',
+			'underscore',
+			'backbone',
+			'backbone.radio'
+		],
+		expose: {
+			'./lib/stack-blur': 'stack-blur'
+		},
+		debug: true
+	})
+		.require('./lib/stack-blur', {expose: 'stack-blur'})
+);
 
 (function() {
 	gulper('mod', deps.mod, './state');

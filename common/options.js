@@ -263,12 +263,6 @@ opts.push(
 				$('#theme').attr('href', config.MEDIA_URL + 'css/'
 					+ hotConfig.css[theme + '.css']);
 			}
-			/*
-			 FIXME: temp stub
-			 Call the background controller to generate, remove and/or append the
-			 glass
-			 */
-			//background.glass(theme);
 		}
 	},
 	/* CUSTOM USER-SET BACKGROUND */
