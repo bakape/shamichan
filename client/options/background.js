@@ -83,13 +83,12 @@ let BackgroundView = Backbone.View.extend({
 		const theme = options.get('theme');
 		if (theme !== 'glass' && theme !== 'ocean')
 			return;
-		let blurred = localStorage.blurred,
-			html;
-		if (theme === 'glass')
-			html = this.blurredGlass(blurred);
-		else
-			html = this.blurredOcean(blurred);
-		this.$css.html(html);
+		const blurred = localStorage.blurred;
+		if (!blurred)
+			return;
+		this.$css.html(theme === 'glass' ? this.blurredGlass(blurred)
+			: this.blurredOcean(blurred)
+		);
 	},
 
 	blurredGlass: function(blurred) {
