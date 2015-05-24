@@ -31,6 +31,8 @@ let BackgroundView = Backbone.View.extend({
 
 	// Store image as dataURL in localStorage
 	store: function(target) {
+		// This could take a while, so loading animation
+		main.command('loading:show');
 		let reader = new FileReader();
 		reader.readAsDataURL(target.files[0]);
 		reader.onload = event => {
@@ -49,6 +51,8 @@ let BackgroundView = Backbone.View.extend({
 				// posts, modals, etc.
 				blur.canvas(canvas, 0, 0, img.width, img.height, 10);
 				localStorage.blurred = canvas.toDataURL('image/jpeg', 0.95);
+
+				main.command('loading:hide');
 
 				// Apply new background
 				if (options.get('userBG'))
