@@ -20,7 +20,7 @@ let BackgroundView = Backbone.View.extend({
 		this.$css = $('#backgroundCSS');
 		this.render();
 
-		main.comply('background:store', this.store.bind(this));
+		main.comply('background:store', this.store, this);
 		this.listenTo(options, {
 			'change:userBG': this.render,
 			'change:illyaBGToggle': this.render,
