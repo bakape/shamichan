@@ -19,14 +19,19 @@ var NotificationView = exports.notification = Backbone.View.extend({
 	},
 
 	render: function(msg) {
-		var $banner = $('#banner');
 		$('.notification').remove();
-		this.$el = $('<span/>', {
-			class: 'notification modal'
-		})
-			.html(`<b class="admin">${msg}</b>`)
-			.css('top', $banner.outerHeight() + 5 + 'px')
+		let $banner = banner.$el;
+		let $el = $(common.parseHTML
+			`<span class="notification modal"
+				style="top: ${$banner.outerHeight() + 5 + 'px'};"
+			>
+				<b class="admin">
+					${msg}
+				</b>
+			</span>`
+		)
 			.insertAfter($banner);
+		this.setElement($el[0]);
 		return this;
 	}
 });
@@ -34,6 +39,8 @@ var NotificationView = exports.notification = Backbone.View.extend({
 main.dispatcher[common.NOTIFICATION] = function(msg) {
 	new NotificationView(msg[0]);
 };
+
+main.comply('notification', msg => new NotificationView(msg));
 
 main.dispatcher[common.UPDATE_BANNER] = function(msg) {
 	banner.renderInfo(msg[0]);

@@ -126,5 +126,6 @@ main.background = require('./options/background');
 main.history = require('./history');
 main.hover = require('./hover');
 main.drop = require('./drop');
+main.mobile = require('./mobile');
 
 main.start();
