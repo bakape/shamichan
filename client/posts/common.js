@@ -6,6 +6,7 @@ var $ = require('jquery'),
 	_ = require('underscore'),
 	main = require('../main'),
 	imager = require('./imager'),
+	Menu = require('./menu'),
 	common = main.common,
 	options = main.options,
 	state = main.state;
@@ -14,7 +15,8 @@ module.exports = {
 	events: {
 		'click >figure>figcaption>.imageToggle': 'toggleThumbnailVisibility',
 		'click >figure>a': 'imageClicked',
-		'click >header>nav>a.quote': 'quotePost'
+		'click >header>nav>a.quote': 'quotePost',
+		'click >header>.control': 'renderMenu'
 	},
 
 	initCommon: function(){
@@ -126,6 +128,13 @@ module.exports = {
 				</a>`;
 		}
 		main.command('scroll:follow', () => this.$backlinks.html(html));
+	},
+
+	renderMenu: function(e) {
+		new Menu({
+			parent: e.target,
+			model: this.model
+		});
 	},
 
 	// Admin JS injections

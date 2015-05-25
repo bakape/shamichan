@@ -7,6 +7,8 @@ const lang = {
 	search: 'Pesquisa',
 	show: 'Exibir',
 	hide: 'Hide',
+	report: 'Report',
+	focus: 'Focus',
 	expand: 'Expandir',
 	last: 'Últimos',
 	see_all: 'Ver todos',

@@ -511,7 +511,7 @@ OS.atama = function(data) {
 		header.push(safe(this.expansion_links_html(data.num)));
 	}
 	this.trigger('headerFinish', {header: header, data: data});
-	header.unshift(safe('<header>'));
+	header.unshift(safe('<header><span class=control></span>'));
 	header.push(safe('</header>\n\t'));
 	return header;
 };
