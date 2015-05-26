@@ -117,6 +117,7 @@ new Extract();
 
 main.posts = require('./posts');
 main.banner = require('./banner');
+main.report = require('./report');
 
 // Start the client
 main.client = require('./client');
