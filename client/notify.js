@@ -10,8 +10,20 @@ let $ = require('jquery'),
 	options = main.options;
 
 const mediaURL = main.config.MEDIA_URL;
-// Needs to be available with no connectivity
-const discoFavicon = 'data:image/vnd.microsoft.icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABMLAAATCwAAAAAAAAAAAAD///8A////AP///wD///8AWUc/AP///wD///8ALikr/y4pKwAuKSv/LikrAFpHOQBWQjUA////AP///wD///8A////AP///wD///8A////AP///wD///8AUFNYAC4pK/8uKSsALikr/y4pKwDT6P0AYlGIAP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wCmm6X/ppul/6abpf+vuuVO////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wDT6P3/ppul/6abpf+mm6X/0+j9/////wD///8A////AP///wD///8A////AP///wD///8A////AP///wBQU1j/LCgu//n5+f/5+fn/+fn5/ywoLv9QU1j/////AP///wD///8A////AP///wD///8A////AP///wBQU1j/UFNY//n5+f9qUGD/+fn5/2pQYP/5+fn/UFNY/1BTWP////8A////AP///wD///8A////AP///wD///8AUFNY/1BTWP+nmaX/alBg/2pQYP9qUGD/p5ml/1BTWP9QU1j/////AP///wD///8A////AP///wD///8A////AFBTWP9QU1j/UFNY/x4UIP/T6P3/HhQg/1BTWP9QU1j/UFNY/////wD///8A////AP///wD///8A////AP///wBQU1j/UFNY/9Po/f/T6P3/0+j9/9Po/f/T6P3/UFNY/1BTWP////8A////AP///wD///8A////AP///wD///8AUFNY/9Po/f/T6P3/0+j9/9Po/f/T6P3/0+j9/9Po/f9QU1j/////AP///wD///8A////AP///wD///8A////AFBTWP/T6P3/vJCX/9Po/f/T6P3/0+j9/7yQl//T6P3/UFNY/////wD///8A////AP///wD///8A////AP///wBQU1j/UFNY/3xMUv/T6P3/UFNY/9Po/f98TFL/UFNY/1BTWP////8A////AP///wD///8A////AP///wD///8AUFNY/ycoMv9QU1j/UFNY/1BTWP9QU1j/UFNY/ycoMv9QU1j/////AP///wD///8A////AP///wD///8A////AFBTWP9QU1j/Jygy/ycoMv8nKDL/Jygy/ycoMv9QU1j/UFNY/////wD///8A////AP///wD///8A////AP///wCupYMAUFNY/1BTWP9QU1j/UFNY/1BTWP9QU1j/UFNY/1BTWAD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A/r8AAP6/AAD+HwAA/B8AAPgPAADwBwAA8AcAAPAHAADwBwAA8AcAAPAHAADwBwAA8AcAAPAHAAD4DwAA//8AAA==';
+
+// Needs to be available with no connectivity, so we download and cache it
+let discoFavicon = '';
+{
+	// jQuery does not support XHR2 binary data type request
+	let xhr = new XMLHttpRequest();
+	xhr.open('GET', mediaURL + 'css/ui/disconnected.ico');
+	xhr.responseType = 'blob';
+	xhr.onload = function() {
+		if (this.status === 200)
+			discoFavicon = window.URL.createObjectURL(this.response);
+	};
+	xhr.send();
+}
 
 let NotifyModel = Backbone.Model.extend({
 	initialize: function () {
