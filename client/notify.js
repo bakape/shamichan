@@ -79,14 +79,14 @@ let notify = new NotifyModel({
 
 // Remember replies that don't need a new desktop notification for 3 days
 // Own post are remember for 2 days, so lets keep 1 day as a buffer
-let Replies = new memory('replies', 3),
-	readReplies = Replies.read_all();
-Replies.purge_expired_soon();
+let replies = new memory('replies', 3);
 
 main.comply('repliedToMe', function (post) {
 	const num = post.get('num');
-	// Already read reply
-	if (readReplies[num])
+	// Already displayed a notification for the reply. Needs to be read
+	// freshly from local storage each time, not to trigger multiple times,
+	// if the same post is displayed in multiple tabs.
+	if (replies.read_all()[num])
 		return;
 	if (options.get('notification')) {
 		const body = post.get('body'),
@@ -107,8 +107,8 @@ main.comply('repliedToMe', function (post) {
 	}
 
 	notify.set({reply: true});
-	// Record as already read
-	Replies.write(num, Replies.now());
+	// Record as already notified/read to local storage
+	replies.write(num, replies.now());
 });
 
 main.comply('time:syncwatch', function(time){
