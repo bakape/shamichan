@@ -82,28 +82,24 @@ let notify = new NotifyModel({
 let replies = new memory('replies', 3);
 
 main.comply('repliedToMe', function (post) {
-	const num = post.get('num');
+	post = post.attributes;
+	const num = post.num;
 	// Already displayed a notification for the reply. Needs to be read
 	// freshly from local storage each time, not to trigger multiple times,
 	// if the same post is displayed in multiple tabs.
 	if (replies.read_all()[num])
 		return;
-	if (options.get('notification')) {
-		const body = post.get('body'),
-			image = post.get('image');
-		if ((body || image) && document.hidden && !main.isMobile) {
-			new Notification('You have been quoted', {
-				// if the post doesn't have a image we use a bigger favicon
-				icon: encodeURI(mediaURL
-					+ (image ? 'thumb/' + image.thumb : 'css/ui/favbig.png')
-				),
-				body: body
-			})
-				.onclick = function() {
-					window.focus();
-					location.hash = '#' + num;
-				};
-		}
+	if (options.get('notification') && document.hidden && !main.isMobile) {
+		new Notification('You have been quoted', {
+			// if the post doesn't have a image we use a bigger favicon
+			icon: post.image ? main.oneeSama.thumbPath(data)
+				: mediaURL + 'css/ui/favbig.png',
+			body: post.body
+		})
+			.onclick = function() {
+				window.focus();
+				location.hash = '#' + num;
+			};
 	}
 
 	notify.set({reply: true});
@@ -114,7 +110,7 @@ main.comply('repliedToMe', function (post) {
 main.comply('time:syncwatch', function(time){
 	if (!options.get('notification') || !document.hidden)
 		return;
-	new Notification('Syncwatch Starting',{
+	new Notification('Syncwatch Starting', {
 		body: 'syncwatch starting in : ' + time + ' seconds'
 	})
 		.onclick = () => window.focus();

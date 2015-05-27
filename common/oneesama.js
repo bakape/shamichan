@@ -320,9 +320,9 @@ const searchBase = (function() {
 OS.imageSearch = function(data) {
 	let html = '';
 	const base = searchBase,
-		type = data.thumb ? 'thumb' : 'src',
-		imageURl =  this.imagePaths()[type].replace(/^https/, 'http')
-			+ data[type];
+		// Only use HTTP for thumbnail image search, because IQDB and
+		// Saucenao can't into certain SSL cyphers
+		imageURl = this.thumbPath(data).replace(/^https/, 'http');
 	for (let i = 0, l = base.length; i < l; i++) {
 		let parts = base[i];
 		html += parts[0]
@@ -334,6 +334,17 @@ OS.imageSearch = function(data) {
 	}
 
 	return html;
+};
+
+// Get thumbnail path, even if no thumbnail generated
+OS.thumbPath = function(data, mid) {
+	let type = 'thumb';
+	if (mid && data.mid)
+		type = 'mid';
+	else if (!data.thumb)
+		type = 'src';
+
+	return this.imagePaths()[type] + data[type];
 };
 
 OS.imageLink = function(data) {
@@ -407,18 +418,14 @@ OS.thumbnail = function(data) {
 	// Animated GIF thumbnails
 	else if (data.ext === '.gif' && this.autoGif)
 		thumb = src;
-	else if (this.thumbStyle === 'sharp' && data.mid)
-		thumb = paths.mid + data.mid;
-	else if (data.thumb)
-		thumb = paths.thumb + data.thumb;
+	else
+		thumb = this.thumbPath(data, this.thumbStyle === 'sharp');
 
 	// Source image smaller than thumbnail, archive and other fallbacks
 	if (!thumbWidth) {
 		thumbWidth = width;
 		thumbHeight = height;
 	}
-	if (!thumb)
-		thumb = src;
 
 	return parseHTML
 		`${config.IMAGE_HATS && '<span class="hat"></span>'}
