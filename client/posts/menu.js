@@ -2,7 +2,8 @@
  Post action header menu
  */
 
-let _ = require('underscore'),
+let $ = require('jquery'),
+	_ = require('underscore'),
 	Backbone = require('backbone'),
 	main = require('../main'),
 	common = main.common,
@@ -32,6 +33,14 @@ let MenuView = module.exports = Backbone.View.extend({
 		html += '</ul>';
 		this.setElement(html);
 		this.$el.appendTo(parent);
+
+		// Remove view, if clicked outside
+		setTimeout(() => {
+			main.$doc.one('click', e => {
+				if (!$(e.target).closest('ul').is(this.$el))
+					this.remove();
+			})
+		}, 300);
 	},
 
 	// Forward post model to appropriate handler
