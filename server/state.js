@@ -172,7 +172,6 @@ function reloadCSS(hot, cb) {
 	getRevision('css', function(err, files) {
 		if (err)
 			return cb(err);
-		HOT.CURFEW_CSS = files['curfew.css'];
 		HOT.base_css = files['base.css'];
 		// Export to these modules and client
 		HOT.css = hot.css = files;
@@ -199,7 +198,6 @@ function read_templates(cb) {
 	async.parallel({
 		index: read('tmpl', 'index.html'),
 		login: read('tmpl', 'login.html'),
-		curfew: read('tmpl', 'curfew.html'),
 		suspension: read('tmpl', 'suspension.html'),
 		notFound: read('www', '404.html'),
 		serverError: read('www', '50x.html')
@@ -225,7 +223,6 @@ function expand_templates(res) {
 	}
 
 	var ex = {
-		curfewTmpl: tmpl(res.curfew).tmpl,
 		suspensionTmpl: tmpl(res.suspension).tmpl,
 		loginTmpl: tmpl(res.login).tmpl,
 		notFoundHtml: res.notFound,

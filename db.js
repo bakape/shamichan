@@ -1142,7 +1142,10 @@ Y.check_throttle = function (ip, callback) {
 };
 
 function note_hash(m, hash, num) {
-	m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000), num + ':' + hash);
+	m.zadd('imageDups',
+		Date.now() + (config.DEBUG ? 30000 : 3600000),
+		num + ':' + hash
+	);
 }
 
 Y.add_image = function (post, alloc, ip, callback) {
@@ -1432,21 +1435,20 @@ class Reader extends events.EventEmitter {
 			opts.showDead = true;
 		const key = (graveyard ? 'dead:' : 'thread:') + num;
 		let self = this;
-		r.hgetall(key, function (err, pre_post) {
+		r.hgetall(key, function(err, pre_post) {
 			if (err)
 				return self.emit('error', err);
 			if (_.isEmpty(pre_post)) {
 				if (!opts.redirect)
 					return self.emit('nomatch');
-				r.hget('post:' + num, 'op',
-					function (err, op) {
-						if (err)
-							self.emit('error', err);
-						else if (!op)
-							self.emit('nomatch');
-						else
-							self.emit('redirect', op);
-					});
+				r.hget('post:' + num, 'op', function(err, op) {
+					if (err)
+						self.emit('error', err);
+					else if (!op)
+						self.emit('nomatch');
+					else
+						self.emit('redirect', op);
+				});
 				return;
 			}
 			let exists = true;
@@ -1616,8 +1618,8 @@ class Reader extends events.EventEmitter {
 	with_body(r, key, post, callback) {
 		if (post.body !== undefined)
 			callback(null, post);
-		else
-			r.get(key + ':body', function (err, body) {
+		else {
+			r.get(key + ':body', function(err, body) {
 				if (err)
 					return callback(err);
 				if (body !== null) {
@@ -1626,86 +1628,17 @@ class Reader extends events.EventEmitter {
 					return callback(null, post);
 				}
 				// Race condition between finishing posts
-				r.hget(key, 'body', function (err, body) {
+				r.hget(key, 'body', function(err, body) {
 					if (err)
 						return callback(err);
 					post.body = body;
 					callback(null, post);
 				});
 			});
+		}
 	}
 }
 exports.Reader = Reader;
-
-/* AUTHORITY */
-
-function Filter(tag) {
-	events.EventEmitter.call(this);
-	this.tag = tag;
-}
-
-util.inherits(Filter, events.EventEmitter);
-exports.Filter = Filter;
-var F = Filter.prototype;
-
-F.connect = function () {
-	if (!this.r) {
-		this.r = global.redis;
-	}
-	return this.r;
-};
-
-F.get_all = function (limit) {
-	var self = this;
-	var r = this.connect();
-	r.zrange('tag:' + tag_key(this.tag) + ':threads', 0, -1, go);
-	function go(err, threads) {
-		if (err)
-			return self.failure(err);
-		async.forEach(threads, do_thread, self.check_done.bind(self));
-	}
-	function do_thread(op, cb) {
-		var key = 'thread:' + op;
-		r.llen(key + ':posts', function (err, len) {
-			if (err)
-				cb(err);
-			len = parseInt(len);
-			if (len > limit)
-				return cb(null);
-			var thumbKeys = ['thumb', 'src'];
-			r.hmget(key, thumbKeys, function (err, rs) {
-				if (err)
-					cb(err);
-				var thumb = rs[0] || rs[1] || rs[2];
-				self.emit('thread', {num: op, thumb: thumb});
-				cb(null);
-			});
-		});
-	}
-};
-
-F.check_done = function (err) {
-	if (err)
-		this.failure(err);
-	else
-		this.success();
-};
-
-F.success = function () {
-	this.emit('end');
-	this.cleanup();
-};
-
-F.failure = function (err) {
-	this.emit('error', err);
-	this.cleanup();
-};
-
-F.cleanup = function () {
-	this.removeAllListeners('error');
-	this.removeAllListeners('thread');
-	this.removeAllListeners('end');
-};
 
 /* AMUSEMENT */
 
@@ -1751,20 +1684,6 @@ Y.set_banner = function (message, cb) {
 	});
 };
 
-Y.teardown = function (board, cb) {
-	var m = this.connect().multi();
-	var filter = new Filter(board);
-	var self = this;
-	filter.get_all(NaN); // no length limit
-	filter.on('thread', function (thread) {
-		self._log(m, thread.num, common.TEARDOWN, []);
-	});
-	filter.on('error', cb);
-	filter.on('end', function () {
-		m.exec(cb);
-	});
-};
-
 Y.get_current_body = function (num, cb) {
 	var key = (OPs[num] == num ? 'thread:' : 'post:') + num;
 	var m = this.connect().multi();
@@ -1801,7 +1720,6 @@ function extract(post) {
 function subject_val(op, subject) {
 	return subject && (op + ':' + subject);
 }
-
 
 function tag_key(tag) {
 	return tag.length + ':' + tag;

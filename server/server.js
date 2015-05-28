@@ -33,8 +33,6 @@ var _ = require('underscore'),
 require('../admin');
 if (!imager.is_standalone())
 	require('../imager/daemon'); // preload and confirm it works
-if (config.CURFEW_BOARDS)
-	require('./curfew');
 var radio;
 if (config.RADIO)
 	radio = require('./radio');
@@ -357,10 +355,6 @@ web.resource(/^\/(\w+)\/$/,
 			ident: req.ident,
 			resp: resp
 		};
-		// Check if board curfewed
-		hooks.trigger_sync('boardDiversion', info);
-		if (info.diverted)
-			return;
 
 		let yaku = new db.Yakusoku(board, req.ident);
 		yaku.get_tag(-1);
