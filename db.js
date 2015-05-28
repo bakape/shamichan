@@ -814,7 +814,8 @@ Y.remove_thread = function (op, callback) {
 	}], callback);
 };
 
-// Purges all the thread's keys from the database and delete's all images contained
+// Purges all the thread's keys from the database and delete's all images
+// contained
 Y.purge_thread = function(op, callback){
 	var r = this.connect();
 	var key = 'thread:' + op;
@@ -1418,210 +1419,223 @@ Y._get_each_thread = function (reader, ix, nums) {
 
 /* LURKERS */
 
-function Reader(yakusoku) {
-	events.EventEmitter.call(this);
-	this.y = yakusoku;
-}
-
-util.inherits(Reader, events.EventEmitter);
-exports.Reader = Reader;
-
-Reader.prototype.get_thread = function (tag, num, opts) {
-	var r = this.y.connect();
-	const graveyard = tag == 'graveyard';
-	if (graveyard)
-		opts.showDead = true;
-	const key = (graveyard ? 'dead:' : 'thread:') + num;
-	var self = this;
-	r.hgetall(key, function (err, pre_post) {
-		if (err)
-			return self.emit('error', err);
-		if (_.isEmpty(pre_post)) {
-			if (!opts.redirect)
-				return self.emit('nomatch');
-			r.hget('post:' + num, 'op',
-						function (err, op) {
-				if (err)
-					self.emit('error', err);
-				else if (!op)
-					self.emit('nomatch');
+class Reader extends events.EventEmitter {
+	constructor(yakusoku) {
+		// Call the EventEmitter's constructor
+		super();
+		this.y = yakusoku;
+	}
+	get_thread(tag, num, opts) {
+		let r = this.y.connect();
+		const graveyard = tag === 'graveyard';
+		if (graveyard)
+			opts.showDead = true;
+		const key = (graveyard ? 'dead:' : 'thread:') + num;
+		let self = this;
+		r.hgetall(key, function (err, pre_post) {
+			if (err)
+				return self.emit('error', err);
+			if (_.isEmpty(pre_post)) {
+				if (!opts.redirect)
+					return self.emit('nomatch');
+				r.hget('post:' + num, 'op',
+					function (err, op) {
+						if (err)
+							self.emit('error', err);
+						else if (!op)
+							self.emit('nomatch');
+						else
+							self.emit('redirect', op);
+					});
+				return;
+			}
+			let exists = true;
+			if (pre_post.hide && !opts.showDead)
+				exists = false;
+			const tags = parse_tags(pre_post.tags);
+			if (!graveyard && tags.indexOf(tag) < 0) {
+				/* XXX: Should redirect directly to correct thread */
+				if (opts.redirect)
+					return self.emit('redirect', num, tags[0]);
 				else
-					self.emit('redirect', op);
-			});
-			return;
-		}
-		var exists = true;
-		if (pre_post.hide && !opts.showDead)
-			exists = false;
-		const tags = parse_tags(pre_post.tags);
-		if (!graveyard && tags.indexOf(tag) < 0) {
-			/* XXX: Should redirect directly to correct thread */
-			if (opts.redirect)
-				return self.emit('redirect', num, tags[0]);
-			else
-				exists = false;
-		}
-		if (!exists) {
-			self.emit('nomatch');
-			return;
-		}
-		self.emit('begin', pre_post);
-		/*
-		 A bit useless now, but might as well keep it for some backwards
-		 comatibility with older database entries.
-		 */
-		pre_post.num = num;
-		pre_post.time = parseInt(pre_post.time, 10);
-
-		var nums, deadNums, opPost;
-		var abbrev = opts.abbrev || 0, total = 0;
-		async.waterfall(
-			[
-				function (next) {
-					with_body(r, key, pre_post, next);
-				},
-				function (fullPost, next) {
-					opPost = fullPost;
-					var m = r.multi();
-					const postsKey = key + ':posts';
-
-					// order is important!
-					m.lrange(postsKey, -abbrev, -1);
-					m.hgetall(key + ':links');
-					if (abbrev)
-						m.llen(postsKey);
-					if (opts.showDead) {
-						var deadKey = key + ':dels';
-						m.lrange(deadKey, -abbrev, -1);
-						if (abbrev)
-							m.llen(deadKey);
-					}
-					m.exec(next);
-				},
-				function (rs, next) {
-					// get results in the same order as before
-					nums = rs.shift();
-					const links = rs.shift();
-					if (links)
-						opPost.links = links;
-					if (abbrev)
-						total += parseInt(rs.shift(), 10);
-					if (opts.showDead) {
-						deadNums = rs.shift();
-						if (abbrev)
-							total += parseInt(rs.shift(), 10);
-					}
-
-					extract(opPost);
-					next(null);
-				}
-			],
-			function (err) {
-				if (err)
-					return self.emit('error', err);
-				if (deadNums)
-					nums = merge_posts(nums, deadNums, abbrev);
-				self.emit('thread', opPost, Math.max(total - abbrev, 0));
-				self._get_each_reply(tag, 0, nums, opts);
+					exists = false;
 			}
-		);
-	});
-};
-
-function merge_posts(nums, deadNums, abbrev) {
-	var i = nums.length - 1, pi = deadNums.length - 1;
-	if (pi < 0)
-		return nums;
-	var merged = [];
-	while (!abbrev || merged.length < abbrev) {
-		if (i >= 0 && pi >= 0) {
-			var num = nums[i], pNum = deadNums[pi];
-			if (parseInt(num, 10) > parseInt(pNum, 10)) {
-				merged.unshift(num);
-				i--;
+			if (!exists) {
+				self.emit('nomatch');
+				return;
 			}
-			else {
-				merged.unshift(pNum);
-				pi--;
-			}
-		}
-		else if (i >= 0)
-			merged.unshift(nums[i--]);
-		else if (pi >= 0)
-			merged.unshift(deadNums[pi--]);
-		else
-			break;
-	}
-	return merged;
-}
-
-Reader.prototype._get_each_reply = function (tag, ix, nums, opts) {
-	if (!nums || ix >= nums.length) {
-		this.emit('endthread');
-		this.emit('end');
-		return;
-	}
-	var num = parseInt(nums[ix], 10);
-	var self = this;
-	this.get_post('post', num, opts, function (err, post) {
-		if (err)
-			return self.emit('error', err);
-		if (post)
-			self.emit('post', post);
-		self._get_each_reply(tag, ix + 1, nums, opts);
-	});
-};
-
-Reader.prototype.get_post = function (kind, num, opts, cb) {
-	var r = this.y.connect();
-	const key = kind + ':' + num;
-	async.waterfall([
-		function (next) {
-			var m = r.multi();
-			m.hgetall(key);
-			m.hgetall(key + ':links');
-			m.exec(next);
-		},
-		function (data, next) {
-			var pre_post = data[0];
-			const links = data[1];
-			if (links)
-				pre_post.links = links;
-			var exists = !(_.isEmpty(pre_post));
-			if (exists && pre_post.hide && !opts.showDead)
-				exists = false;
-			if (!exists)
-				return next(null, null);
-
+			self.emit('begin', pre_post);
+			/*
+			 A bit useless now, but might as well keep it for some backwards
+			 comatibility with older database entries.
+			 */
 			pre_post.num = num;
 			pre_post.time = parseInt(pre_post.time, 10);
-			if (kind == 'post')
-				pre_post.op = parseInt(pre_post.op, 10);
-			else {
-				/*
-				 TODO: filter by ident eligibility and attach
-				 Currently used only for reporting
-				 */
-				//var tags = parse_tags(pre_post.tags);
-			}
-			with_body(r, key, pre_post, next);
-		},
-		function (post, next) {
-			if (post)
-				extract(post);
-			next(null, post);
-		}
-	],	cb);
-};
 
-function get_all_replies(r, op, cb) {
-	var key = 'thread:' + op;
-	r.lrange(key + ':posts', 0, -1, function(err, nums) {
-		if (err)
-			return cb(err);
-		return cb(null, nums);
-	});
+			let nums, deadNums, opPost,
+				abbrev = opts.abbrev || 0,
+				total = 0;
+			async.waterfall(
+				[
+					function (next) {
+						self.with_body(r, key, pre_post, next);
+					},
+					function (fullPost, next) {
+						opPost = fullPost;
+						let m = r.multi();
+						const postsKey = key + ':posts';
+
+						// order is important!
+						m.lrange(postsKey, -abbrev, -1);
+						m.hgetall(key + ':links');
+						if (abbrev)
+							m.llen(postsKey);
+						if (opts.showDead) {
+							var deadKey = key + ':dels';
+							m.lrange(deadKey, -abbrev, -1);
+							if (abbrev)
+								m.llen(deadKey);
+						}
+						m.exec(next);
+					},
+					function (rs, next) {
+						// get results in the same order as before
+						nums = rs.shift();
+						const links = rs.shift();
+						if (links)
+							opPost.links = links;
+						if (abbrev)
+							total += parseInt(rs.shift(), 10);
+						if (opts.showDead) {
+							deadNums = rs.shift();
+							if (abbrev)
+								total += parseInt(rs.shift(), 10);
+						}
+
+						extract(opPost);
+						next(null);
+					}
+				],
+				function (err) {
+					if (err)
+						return self.emit('error', err);
+					if (deadNums)
+						nums = self.merge_posts(nums, deadNums, abbrev);
+					self.emit('thread', opPost, Math.max(total - abbrev, 0));
+					self._get_each_reply(tag, 0, nums, opts);
+				}
+			);
+		});
+	}
+	merge_posts(nums, deadNums, abbrev) {
+		let i = nums.length - 1,
+			pi = deadNums.length - 1;
+		if (pi < 0)
+			return nums;
+		let merged = [];
+		while (!abbrev || merged.length < abbrev) {
+			if (i >= 0 && pi >= 0) {
+				const num = nums[i],
+					pNum = deadNums[pi];
+				if (parseInt(num, 10) > parseInt(pNum, 10)) {
+					merged.unshift(num);
+					i--;
+				}
+				else {
+					merged.unshift(pNum);
+					pi--;
+				}
+			}
+			else if (i >= 0)
+				merged.unshift(nums[i--]);
+			else if (pi >= 0)
+				merged.unshift(deadNums[pi--]);
+			else
+				break;
+		}
+		return merged;
+	}
+	_get_each_reply(tag, ix, nums, opts) {
+		if (!nums || ix >= nums.length) {
+			this.emit('endthread');
+			this.emit('end');
+			return;
+		}
+		const num = parseInt(nums[ix], 10);
+		let self = this;
+		this.get_post('post', num, opts, function (err, post) {
+			if (err)
+				return self.emit('error', err);
+			if (post)
+				self.emit('post', post);
+			self._get_each_reply(tag, ix + 1, nums, opts);
+		});
+	}
+	get_post(kind, num, opts, cb) {
+		let r = this.y.connect(),
+			self = this;
+		const key = kind + ':' + num;
+		async.waterfall([
+			function (next) {
+				let m = r.multi();
+				m.hgetall(key);
+				m.hgetall(key + ':links');
+				m.exec(next);
+			},
+			function (data, next) {
+				let pre_post = data[0];
+				const links = data[1];
+				if (links)
+					pre_post.links = links;
+				let exists = !(_.isEmpty(pre_post));
+				if (exists && pre_post.hide && !opts.showDead)
+					exists = false;
+				if (!exists)
+					return next(null, null);
+
+				pre_post.num = num;
+				pre_post.time = parseInt(pre_post.time, 10);
+				if (kind === 'post')
+					pre_post.op = parseInt(pre_post.op, 10);
+				else {
+					/*
+					 TODO: filter by ident eligibility and attach
+					 Currently used only for reporting
+					 */
+					//var tags = parse_tags(pre_post.tags);
+				}
+				self.with_body(r, key, pre_post, next);
+			},
+			function (post, next) {
+				if (post)
+					extract(post);
+				next(null, post);
+			}
+		],	cb);
+	}
+	with_body(r, key, post, callback) {
+		if (post.body !== undefined)
+			callback(null, post);
+		else
+			r.get(key + ':body', function (err, body) {
+				if (err)
+					return callback(err);
+				if (body !== null) {
+					post.body = body;
+					post.editing = true;
+					return callback(null, post);
+				}
+				// Race condition between finishing posts
+				r.hget(key, 'body', function (err, body) {
+					if (err)
+						return callback(err);
+					post.body = body;
+					callback(null, post);
+				});
+			});
+	}
 }
+exports.Reader = Reader;
 
 /* AUTHORITY */
 
@@ -1771,30 +1785,17 @@ Y.get_current_body = function (num, cb) {
 
 /* HELPERS */
 
-function extract(post) {
-	hooks.trigger_sync('extractPost', post);
+function get_all_replies(r, op, cb) {
+	var key = 'thread:' + op;
+	r.lrange(key + ':posts', 0, -1, function(err, nums) {
+		if (err)
+			return cb(err);
+		return cb(null, nums);
+	});
 }
 
-function with_body(r, key, post, callback) {
-	if (post.body !== undefined)
-		callback(null, post);
-	else
-		r.get(key + ':body', function (err, body) {
-			if (err)
-				return callback(err);
-			if (body !== null) {
-				post.body = body;
-				post.editing = true;
-				return callback(null, post);
-			}
-			// Race condition between finishing posts
-			r.hget(key, 'body', function (err, body) {
-				if (err)
-					return callback(err);
-				post.body = body;
-				callback(null, post);
-			});
-		});
+function extract(post) {
+	hooks.trigger_sync('extractPost', post);
 }
 
 function subject_val(op, subject) {
