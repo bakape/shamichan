@@ -112,8 +112,8 @@ var OptionModel = Backbone.Model.extend({
 var OptionsView = Backbone.View.extend({
 	initialize: function() {
 		// Set the options in the panel to their appropriate values
-		optionsCollection.each(function(model) {
-			var $el = this.$el.find('#' + model.get('id'));
+		optionsCollection.each(model => {
+			let $el = this.$el.find('#' + model.get('id'));
 			/*
 			 * No corresponding element in panel. Can be caused by config
 			 * mismatches.
@@ -129,14 +129,17 @@ var OptionsView = Backbone.View.extend({
 			else if (type == 'shortcut')
 				$el.val(String.fromCharCode(val).toUpperCase());
 			// 'image' type simply falls through, as those don't need to be set
-		}, this);
+		});
+		this.$hidden = this.$el.find('#hidden');
+		main.comply('hide:render', this.renderHidden, this);
 	},
 
 	events: {
 		'click .option_tab_sel>li>a': 'switchTab',
 		'change': 'applyChange',
 		'click #export': 'export',
-		'click #import': 'import'
+		'click #import': 'import',
+		'click #hidden': 'clearHidden'
 	},
 
 	switchTab: function(event) {
@@ -218,6 +221,17 @@ var OptionsView = Backbone.View.extend({
 				location.reload();
 			};
 		});
+	},
+
+	// Hiden posts counter and reset link
+	renderHidden: function(count) {
+		let $el = this.$hidden;
+		$el.text($el.text().replace(/\d+$/, count));
+	},
+
+	clearHidden: function() {
+		main.command('hide:clear');
+		this.renderHidden(0);
 	}
 });
 

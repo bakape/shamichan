@@ -81,6 +81,10 @@ var lang = {
 			'Importar',
 			'Importar opciones desde archivo'
 		],
+		hidden: [
+			'Hidden: 0',
+			'Clear hidden posts'
+		],
 		lang: [
 			'Idioma',
 			'Cambia a diferentes idiomas'

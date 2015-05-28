@@ -22,7 +22,6 @@ module.exports = {
 	initCommon: function(){
 		this.$blockquote = this.$el.children('blockquote');
 		this.listenTo(this.model, {
-			'change:hide': this.renderHide,
 			'spoiler': this.renderSpoiler,
 			'change:image': this.renderImage,
 			updateBody: this.updateBody

@@ -106,6 +106,7 @@ main.connSM = new common.FSM('load');
 main.postSM = new common.FSM('none');
 state.page.set('tabID', common.random_id());
 
+main.memory = require('./memory');
 main.etc = require('./etc');
 main.time = require('./time');
 main.scroll = require('./scroll');
@@ -128,5 +129,6 @@ main.history = require('./history');
 main.hover = require('./hover');
 main.drop = require('./drop');
 main.mobile = require('./mobile');
+main.hide = require('./hide');
 
 main.start();

@@ -332,9 +332,9 @@ function buildOptions(lang) {
 		for (let i = 0, l = opts.length; i < l; i++) {
 			html += renderOption(opts[i], lang);
 		}
-		// Append Export and Import links to first tab
+		// Append hidden post reset, Export and Import links to first tab
 		if (i === 0)
-			html += renderExportImport(lang);
+			html += renderExtras(lang);
 		html += '</li>';
 	}
 	html += '</ul></div>';
@@ -385,11 +385,13 @@ function renderOption(opt, lang) {
 	return html;
 }
 
-function renderExportImport(lang) {
-	let html = '<br>';
-	const links = ['export', 'import'];
+function renderExtras(lang) {
+	let html = common.parseHTML
+		`<br>
+		`
+	const links = ['export', 'import', 'hidden'];
 	for (let i = 0, l = links.length; i < l; i++) {
-		let id = links[i],
+		const id = links[i],
 			ln = lang[id];
 		html += `<a id="${id}" title="${ln[1]}">${ln[0]}</a> `;
 	}

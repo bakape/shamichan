@@ -78,6 +78,10 @@ bad_client: "ID de client ruim.",
 			'Importar',
 			'Importar opções de arquivo'
 		],
+		hidden: [
+			'Hidden: 0',
+			'Clear hidden posts'
+		],
 		lang: [
 			'Linguagem',
 			'Mudar a linguagem da interface'

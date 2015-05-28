@@ -38,7 +38,7 @@ var lang = {
 		hashing: 'Hashing error.',
 		resizing: "Resizing error.",
 		pngquant: "Pngquant thumbnailing error.",
-		unknown: 'Unknown image processing error.',
+		unknown: 'Unknown image processing error.'
 	},
 
 	//Various template strings
@@ -51,7 +51,7 @@ var lang = {
 		schedule: 'Schedule',
 		feedback: 'Feedback',
 		changelog: 'Changelog',
-		onlineCounter: 'Online Counter',
+		onlineCounter: 'Online Counter'
 	},
 
 	/*
@@ -81,6 +81,10 @@ var lang = {
 			'Import',
 			'Import options from file'
 		],
+		hidden: [
+			'Hidden: 0',
+			'Clear hidden posts'
+		],
 		lang: [
 			'Language',
 			'Change interface language'
@@ -94,7 +98,7 @@ var lang = {
 			'Set thumbnail type: '
 				+ 'Small: 125x125, small file size; '
 				+ 'Sharp: 125x125, more detailed; '
-				+ 'Hide: hide all images;',
+				+ 'Hide: hide all images;'
 		],
 		imageHover: [
 			'Image Hover Expansion',
@@ -183,7 +187,7 @@ var lang = {
 			'Dynamic Post Unloading',
 			'Improves thread responsiveness by unloading posts from the top of'
 				+ ' the thread, so that post count stays within the Last # value.'
-				+ ' Only applies to Last # enabled threads',
+				+ ' Only applies to Last # enabled threads'
 		],
 		alwaysLock: [
 			'Always Lock to Bottom',

@@ -49,10 +49,6 @@ var Article = module.exports = Backbone.View.extend({
 		this.$el.toggleClass('editing', !!editing);
 		if (!editing)
 			this.$el.children('blockquote')[0].normalize();
-	},
-
-	renderHide: function (model, hide) {
-		this.$el.toggle(!hide);
 	}
 });
 

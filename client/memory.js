@@ -68,11 +68,17 @@ Kioku.prototype.read_all = function () {
 	return _.isObject(o) ? o : {};
 };
 
+Kioku.prototype.size = function() {
+	return _.size(this.read_all());
+};
+
 Kioku.prototype.write = function (k, v) {
 	// XXX race, would need lock if highly contended
 	var o = this.read_all();
 	o[k] = v;
 	this.write_all(o);
+	// Return number of keys
+	return _.size(o);
 };
 
 Kioku.prototype.write_all = function (o) {
