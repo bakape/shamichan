@@ -62,8 +62,6 @@ server {
 
 	# Handles image uploads.
 	location /upload/ {
-		# If you use imager/config DAEMON, add an upstream for the
-		# imager daemon, and point this at it.
 		proxy_pass http://node/upload/;
 
 		# For forwarding IPs:

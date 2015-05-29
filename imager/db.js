@@ -3,6 +3,7 @@
 var common = require('../common'),
 	compare = require('./compare.node').hashCompareCpp,
 	config = require('../config'),
+	db = require('../db'),
 	events = require('events'),
 	fs = require('fs'),
 	Muggle = require('../util/etc').Muggle,
@@ -10,24 +11,13 @@ var common = require('../common'),
 	util = require('util'),
 	winston = require('winston');
 
-const IMG_EXPIRY = 60,
-	STANDALONE = !!config.DAEMON;
+const IMG_EXPIRY = 60;
 
 function redis_client() {
-	if (STANDALONE) {
-		return require('redis').createClient(config.DAEMON.REDIS_PORT);
-	}
-	else {
-		return require('../db').redis_client();
-	}
+	return db.redis_client();
 }
 
 function connect() {
-	if (STANDALONE) {
-		if (!global.imagerRedis)
-			global.imagerRedis = redis_client();
-		return global.imagerRedis;
-	}
 	return global.redis;
 }
 
@@ -39,8 +29,7 @@ util.inherits(Onegai, events.EventEmitter);
 exports.Onegai = Onegai;
 var O = Onegai.prototype;
 
-O.disconnect = function() {
-};
+O.disconnect = function() {};
 
 O.track_temporary = function(path, cb) {
 	var m = connect();
@@ -161,11 +150,6 @@ O.obtain_image_alloc = function(id, callback) {
 		callback(null, alloc);
 	});
 };
-
-function is_standalone() {
-	return STANDALONE;
-}
-exports.is_standalone = is_standalone;
 
 O.commit_image_alloc = function(alloc, cb) {
 	// We should already hold the lock at this point.

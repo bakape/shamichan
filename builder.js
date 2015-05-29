@@ -4,9 +4,6 @@ var _ = require('underscore'),
 	child_process = require('child_process'),
 	watch = require('node-watch');
 
-if (config.DAEMON)
-	throw "Can't run dev server in daemon mode.";
-
 var server;
 var start_server = _.debounce(function() {
 	if (server)

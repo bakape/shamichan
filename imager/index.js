@@ -147,8 +147,6 @@ exports._make_media_dir = make_dir;
 
 function make_media_dirs (cb) {
 	var keys = ['src', 'thumb', 'vint', 'dead'];
-	if (!is_standalone())
-		keys.push('tmp');
 	if (config.EXTRA_MID_THUMBNAILS)
 		keys.push('mid');
 	async.forEach(keys, make_dir.bind(null, null), function (err) {
@@ -198,5 +196,3 @@ function commit_image_alloc (alloc, cb) {
 	});
 }
 exports.commit_image_alloc = commit_image_alloc;
-
-var is_standalone = exports.is_standalone = db.is_standalone;

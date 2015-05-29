@@ -31,8 +31,7 @@ var _ = require('underscore'),
     winston = require('winston');
 
 require('../admin');
-if (!imager.is_standalone())
-	require('../imager/daemon'); // preload and confirm it works
+require('../imager/daemon'); // preload and confirm it works
 var radio;
 if (config.RADIO)
 	radio = require('./radio');
@@ -614,17 +613,7 @@ function start_server() {
 	process.on('SIGHUP', hot_reloader);
 	db.on_pub('reloadHot', hot_reloader);
 
-	if (config.DAEMON) {
-		var cfg = config.DAEMON;
-		var daemon = require('daemon');
-		var pid = daemon.start(process.stdout.fd, process.stderr.fd);
-		var lock = config.PID_FILE;
-		daemon.lock(lock);
-		winston.remove(winston.transports.Console);
-		return;
-	}
-
-	process.nextTick(non_daemon_pid_setup);
+	process.nextTick(pid_setup);
 
 	winston.info('Listening on '
 			+ (config.LISTEN_HOST || '')
@@ -646,7 +635,7 @@ function hot_reloader() {
 	});
 }
 
-function non_daemon_pid_setup() {
+function pid_setup() {
 	var pidFile = config.PID_FILE;
 	fs.writeFile(pidFile, process.pid+'\n', function (err) {
 		if (err)
@@ -688,11 +677,8 @@ if (require.main == module) {
 			var writes = [];
 			if (!config.READ_ONLY) {
 				writes.push(yaku.finish_all.bind(yaku));
-				if (!imager.is_standalone()) {
-					onegai = new imager.Onegai;
-					writes.push(onegai.delete_temporaries.bind(
-							onegai));
-				}
+				onegai = new imager.Onegai;
+				writes.push(onegai.delete_temporaries.bind(onegai));
 			}
 			async.series(writes, function (err) {
 				if (err)
