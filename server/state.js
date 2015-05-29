@@ -197,8 +197,6 @@ function read_templates(cb) {
 
 	async.parallel({
 		index: read('tmpl', 'index.html'),
-		login: read('tmpl', 'login.html'),
-		suspension: read('tmpl', 'suspension.html'),
 		notFound: read('www', '404.html'),
 		serverError: read('www', '50x.html')
 	}, cb);
@@ -223,8 +221,6 @@ function expand_templates(res) {
 	}
 
 	var ex = {
-		suspensionTmpl: tmpl(res.suspension).tmpl,
-		loginTmpl: tmpl(res.login).tmpl,
 		notFoundHtml: res.notFound,
 		serverErrorHtml: res.serverError
 	};

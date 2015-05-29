@@ -8,8 +8,7 @@ var caps = require('./caps'),
 	config = require('../config'),
 	db = require('../db'),
 	lang = require('../lang/'),
-	STATE = require('./state'),
-	web = require('./web');
+	STATE = require('./state');
 
 let RES = STATE.resources,
 	escape = common.escape_html;
@@ -40,7 +39,7 @@ class Render {
 		let req = this.req;
 		// Entire page, not just the contents of threads
 		this.full = req.query.minimal !== 'true';
-		const cookies = this.cookies = web.parse_cookie(req.headers.cookie);
+		const cookies = req.cookies;
 		this.lang = config.LANGS.indexOf(cookies.lang) > -1 ? cookies.lang
 			: config.DEFAULT_LANG;
 	}
@@ -56,7 +55,7 @@ class Render {
 			else
 				this.callback('>>' + num);
 		});
-		let cookies = this.cookies;
+		const cookies = this.req.cookies;
 		oneeSama.tz_offset = this.req.tz_offset;
 		caps.augment_oneesama(oneeSama, this.opts);
 
@@ -82,7 +81,7 @@ class Render {
 	// Read hidden posts from cookie
 	getHidden() {
 		let hidden = new Set();
-		const hide = this.cookies.hide;
+		const hide = this.req.cookies.hide;
 		if (hide && !caps.can_moderate(this.req.ident)) {
 			const toHide = hide.slice(0, 200).split(',');
 			for (let i = 0, l = toHide.length; i < l; i++) {

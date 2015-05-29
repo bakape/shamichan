@@ -2,27 +2,9 @@
  Read-only JSON API
  */
 
-'use strict';
+let r = global.redis;
 
-var _ = require('underscore'),
-	caps = require('./caps'),
-	config = require('../config'),
-	db = require('../db'),
-	express = require('express'),
-	state = require('./state');
-
-var app = express();
-const JSONHeaders = {
-	'Access-Control-Allow-Origin': '*',
-	'Content-Type': 'application/json; charset=UTF-8',
-	'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
-	'Cache-Control': 'no-cache, no-store'
-};
-var r = global.redis;
-// On a different port for now. Will migrate everything to express some day
-app.listen(config.API_PORT);
-
-app.get(/api\/(post|thread)\/([0-9,]+)\/?/, function(req, res) {
+app.get(/^api\/(post|thread)\/([0-9,]+)$/, function(req, res) {
 	res.set(JSONHeaders);
 	const nums = req.params[1].split(',');
 
@@ -30,7 +12,7 @@ app.get(/api\/(post|thread)\/([0-9,]+)\/?/, function(req, res) {
 	for (let i = 0, l = nums.length; i < l; i++) {
 		let num = nums[i];
 		if (invalid(req, config.BOARDS[isOP(num)
-			? db.TAGS[num] : db.TAGS[db.OPs[num]]])
+				? db.TAGS[num] : db.TAGS[db.OPs[num]]])
 		)
 			return res.sendStatus(404);
 	}
@@ -50,7 +32,7 @@ app.get(/api\/(post|thread)\/([0-9,]+)\/?/, function(req, res) {
 		getThreads(nums, Infinity, respond);
 });
 
-app.get(/\/api\/(catalog|board)\/([a-z0-9]+)\/?/, function(req, res) {
+app.get(/^\/api\/(catalog|board)\/([a-z0-9]+)$/, function(req, res) {
 	res.set(JSONHeaders);
 	const par = req.params;
 
@@ -81,7 +63,7 @@ app.get(/\/api\/(catalog|board)\/([a-z0-9]+)\/?/, function(req, res) {
 });
 
 // Expose client-side configuration
-app.get(/\/api\/config/, function(req, res) {
+app.get(/^\/api\/config$/, function(req, res) {
 	res.set(JSONHeaders);
 	res.json({
 		config: state.clientConfig,
@@ -160,7 +142,7 @@ function getThreads(nums, replyLimit, cb) {
 	m.exec(function(err, data) {
 		if (err)
 			return cb(err);
-		var op, links, dels, replies, allReplies = [];
+		var allReplies = [];
 		for (let i = 0, l = data.length; i < l; i += 4) {
 			let op = data[i];
 			const links = data[i + 1];

@@ -4,21 +4,20 @@
 'use strict';
 
 var _ = require('underscore'),
-    caps = require('./caps'),
-    config = require('../config'),
+    caps = require('./../caps'),
+    config = require('../../config/index'),
     formidable = require('formidable'),
-    hooks = require('../util/hooks'),
-    persona = require('./persona'),
+    hooks = require('../../util/hooks'),
+    persona = require('./../persona'),
     Stream = require('stream'),
     url_parse = require('url').parse,
-    util = require('util'),
     winston = require('winston');
 
 var send;
 if (config.SERVE_STATIC_FILES)
 	send = require('send');
 
-var escape = require('../common/index').escape_html;
+var escape = require('../../common/index').escape_html;
 var routes = [];
 var resources = [];
 
@@ -69,7 +68,7 @@ function handle_request(req, resp) {
 	}
 
 	if (config.SERVE_IMAGES) {
-		if (require('../imager').serve_image(req, resp))
+		if (require('../../imager/index').serve_image(req, resp))
 			return;
 	}
 

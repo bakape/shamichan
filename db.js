@@ -1617,25 +1617,24 @@ class Reader extends events.EventEmitter {
 	}
 	with_body(r, key, post, callback) {
 		if (post.body !== undefined)
-			callback(null, post);
-		else {
-			r.get(key + ':body', function(err, body) {
+			return callback(null, post);
+
+		r.get(key + ':body', function(err, body) {
+			if (err)
+				return callback(err);
+			if (body !== null) {
+				post.body = body;
+				post.editing = true;
+				return callback(null, post);
+			}
+			// Race condition between finishing posts
+			r.hget(key, 'body', function(err, body) {
 				if (err)
 					return callback(err);
-				if (body !== null) {
-					post.body = body;
-					post.editing = true;
-					return callback(null, post);
-				}
-				// Race condition between finishing posts
-				r.hget(key, 'body', function(err, body) {
-					if (err)
-						return callback(err);
-					post.body = body;
-					callback(null, post);
-				});
+				post.body = body;
+				callback(null, post);
 			});
-		}
+		});
 	}
 }
 exports.Reader = Reader;

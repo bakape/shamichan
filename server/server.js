@@ -17,6 +17,7 @@ var _ = require('underscore'),
     check = require('./msgcheck').check,
     common = require('../common/index'),
     config = require('../config'),
+	cookie = require('cookie'),
     db = require('../db'),
     fs = require('fs'),
     hooks = require('../util/hooks'),
@@ -27,7 +28,6 @@ var _ = require('underscore'),
     Render = require('./render'),
     tripcode = require('./tripcode/tripcode'),
     urlParse = require('url').parse,
-    web = require('./web'),
     winston = require('winston');
 
 require('../admin');
@@ -58,10 +58,9 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 		if (!synchronize(msg, client))
 			client.kotowaru(Muggle("Bad protocol"));
 	}
-	var chunks = web.parse_cookie(msg.pop());
-	var cookie = persona.extract_login_cookie(chunks);
-	if (cookie) {
-		persona.check_cookie(cookie, checked);
+	const personaCookie = persona.extract_login_cookie(cookie.parse(msg.pop()));
+	if (personaCookie) {
+		persona.check_cookie(personaCookie, checked);
 		return true;
 	}
 	else
@@ -193,424 +192,6 @@ function image_status(client_id, status) {
 	}
 }
 
-function page_nav(thread_count, cur_page, ascending) {
-	var page_count = Math.ceil(thread_count / STATE.hot.THREADS_PER_PAGE);
-	page_count = Math.max(page_count, 1);
-	return {pages: page_count, threads: thread_count,
-		cur_page: cur_page, ascending: ascending};
-}
-
-function write_gzip_head(req, resp, headers) {
-	var encoding = config.GZIP && req.headers['accept-encoding'];
-	if (req.ident.slow || !encoding || encoding.indexOf('gzip') < 0) {
-		resp.writeHead(200, headers);
-		return resp;
-	}
-	resp.writeHead(200, _.extend({}, headers, {
-		'Content-Encoding': 'gzip',
-		Vary: 'Accept-Encoding'
-	}));
-
-	var gz = require('zlib').createGzip();
-	gz.pipe(resp);
-	return gz;
-}
-
-function redirect_thread(cb, num, op, tag) {
-	if (!tag)
-		cb(null, 'redirect', op + '#' + num);
-	else
-		/* Use a JS redirect to preserve the hash */
-		cb(null, 'redirect_js', '../' + tag + '/' + op + '#' + num);
-}
-
-// unless imager.config.DAEMON, we deal with image uploads in-process.
-if (!imager.is_standalone()) {
-	web.route_post(/^\/upload\/$/, require('../imager/daemon').new_upload);
-}
-
-web.resource(/^\/$/, function (req, cb) {
-	cb(null, 'redirect', config.DEFAULT_BOARD + '/');
-});
-
-web.route_post(/^\/login$/, persona.login);
-web.route_post_auth(/^\/logout$/, persona.logout);
-if (config.DEBUG) {
-	/* Shortcuts for convenience */
-	winston.warn("Running in (insecure) debug mode.");
-	winston.warn("Do not use on the public internet.");
-	web.route_get(/^\/login$/, function (req, resp) {
-		persona.set_cookie(resp, {auth: 'Admin'});
-	});
-	web.route_get(/^\/mod$/, function (req, resp) {
-		persona.set_cookie(resp, {auth: 'Moderator'});
-	});
-	web.route_get(/^\/logout$/, persona.logout);
-}
-else {
-	/* Production login/out endpoint */
-	web.resource(/^\/login$/, true, function (req, resp) {
-		resp.writeHead(200, web.noCacheHeaders);
-		resp.write(RES.loginTmpl[0]);
-		resp.write('{}');
-		resp.end(RES.loginTmpl[1]);
-	});
-
-	web.resource(/^\/logout$/, function (req, cb) {
-		if (req.ident.auth)
-			cb(null, 'ok');
-		else
-			cb(null, 'redirect', config.DEFAULT_BOARD+'/');
-	},
-	function (req, resp) {
-		resp.writeHead(200, web.noCacheHeaders);
-		resp.write(RES.loginTmpl[0]);
-		resp.write(JSON.stringify({
-			loggedInUser: req.ident.email,
-			x_csrf: req.ident.csrf
-		}));
-		resp.end(RES.loginTmpl[1]);
-	});
-}
-web.resource(/^\/(login|logout)\/$/, function (req, params, cb) {
-	cb(null, 'redirect', '../' + params[1]);
-});
-
-function write_mod_js(resp, ident) {
-	if (!RES.modJs) {
-		resp.writeHead(500);
-		resp.end('Mod js not built?!');
-		return;
-	}
-
-	var noCacheJs = _.clone(web.noCacheHeaders);
-	noCacheJs['Content-Type'] = 'text/javascript; charset=UTF-8';
-	resp.writeHead(200, noCacheJs);
-	resp.write('(function (IDENT) {');
-	resp.write(RES.modJs);
-	resp.end('})(' + JSON.stringify(ident) + ');');
-}
-
-web.resource_auth(/^\/admin\.js$/, function (req, cb) {
-	if (!caps.can_administrate(req.ident))
-		cb(404);
-	else
-		cb(null, 'ok');
-},
-function (req, resp) {
-	write_mod_js(resp, {
-		auth: req.ident.auth,
-		csrf: req.ident.csrf,
-		email: req.ident.email
-	});
-});
-
-web.resource_auth(/^\/mod\.js$/, function (req, cb) {
-	if (!caps.can_moderate(req.ident))
-		cb(404);
-	else
-		cb(null, 'ok');
-},
-function (req, resp) {
-	write_mod_js(resp, {
-		auth: req.ident.auth,
-		csrf: req.ident.csrf,
-		email: req.ident.email
-	});
-});
-
-web.resource(/^\/(\w+)$/, function (req, params, cb) {
-	var board = params[1];
-	/* If arbitrary boards were allowed, need to escape this: */
-	var dest = board + '/';
-	if (req.ident.suspension)
-		return cb(null, 'redirect', dest); /* TEMP */
-	if (!caps.can_ever_access_board(req.ident, board))
-		return cb(404);
-	cb(null, 'redirect', dest);
-});
-
-web.resource(/^\/(\w+)\/$/,
-	function (req, params, cb) {
-		const board = params[1];
-		if (req.ident.suspension)
-			return cb(null, 'ok'); /* TEMP */
-		if (!caps.can_ever_access_board(req.ident, board))
-			return cb(404);
-
-		// we don't do board etags yet
-		let info = {etag: 'dummy', req: req};
-		hooks.trigger_sync('buildETag', info);
-
-		cb(null, 'ok', {board: board});
-	},
-	function (req, resp) {
-		/* TEMP */
-		if (req.ident.suspension)
-			return render_suspension(req, resp);
-
-		const board = this.board;
-		let info = {
-			b00oard: board,
-			ident: req.ident,
-			resp: resp
-		};
-
-		let yaku = new db.Yakusoku(board, req.ident);
-		yaku.get_tag(-1);
-		resp = write_gzip_head(req, resp, web.noCacheHeaders);
-		new Render(yaku, req, resp, {
-			fullLinks: true,
-			board: board,
-			isThread: false
-		});
-		yaku.once('begin', function (thread_count) {
-			yaku.emit('top', page_nav(thread_count, -1, board == 'archive'));
-		});
-		yaku.once('end', function () {
-			yaku.emit('bottom');
-			resp.end();
-			yaku.disconnect();
-		});
-		yaku.once('error', function (err) {
-			winston.error('index:' + err);
-			resp.end();
-			yaku.disconnect();
-		});
-	}
-);
-
-web.resource(/^\/(\w+)\/page(\d+)$/,
-	function (req, params, cb) {
-		const board = params[1];
-		if (!caps.temporal_access_check(req.ident, board))
-			return cb(null, 302, '..');
-		if (req.ident.suspension)
-			return cb(null, 'ok'); /* TEMP */
-		if (!caps.can_access_board(req.ident, board))
-			return cb(404);
-		const page = parseInt(params[2], 10);
-		if (page > 0 && params[2][0] == '0') /* leading zeroes? */
-			return cb(null, 'redirect', 'page' + page);
-
-		let yaku = new db.Yakusoku(board, req.ident);
-		yaku.get_tag(page);
-		yaku.once('nomatch', function () {
-			cb(null, 302, '.');
-			yaku.disconnect();
-		});
-		yaku.once('begin', function (threadCount) {
-			// we don't do board etags yet
-			let info = {etag: 'dummy', req: req};
-			hooks.trigger_sync('buildETag', info);
-
-			cb(null, 'ok', {
-				board: board, page: page, yaku: yaku,
-				threadCount: threadCount
-			});
-		});
-	},
-	function (req, resp) {
-		/* TEMP */
-		if (req.ident.suspension)
-			return render_suspension(req, resp);
-
-		const board = this.board;
-		const nav = page_nav(this.threadCount, this.page, board == 'archive');
-		resp = write_gzip_head(req, resp, web.noCacheHeaders);
-		new Render(this.yaku, req, resp, {
-			fullLinks: true,
-			board: board,
-			isThread: false
-		});
-		this.yaku.emit('top', nav);
-		let self = this;
-		this.yaku.once('end', function () {
-			self.yaku.emit('bottom');
-			resp.end();
-			self.finished();
-		});
-		this.yaku.once('error', function (err) {
-			winston.error('page' + self.page + ': ' + err);
-			resp.end();
-			self.finished();
-		});
-	},
-	function () {
-		this.yaku.disconnect();
-	}
-);
-
-web.resource(/^\/(\w+)\/page(\d+)\/$/, function (req, params, cb) {
-	if (!caps.temporal_access_check(req.ident, params[1]))
-		cb(null, 302, '..');
-	else
-		cb(null, 'redirect', '../page' + params[2]);
-});
-
-web.resource(/^\/(\w+)\/(\d+)$/,
-	function (req, params, cb) {
-		const board = params[1];
-		if (!caps.temporal_access_check(req.ident, board))
-			return cb(null, 302, '.');
-		if (req.ident.suspension)
-			return cb(null, 'ok'); /* TEMP */
-		if (!caps.can_access_board(req.ident, board))
-			return cb(404);
-		const num = parseInt(params[2], 10);
-		if (!num)
-			return cb(404);
-		else if (params[2][0] == '0')
-			return cb(null, 'redirect', '' + num);
-
-		let op;
-		if (board === 'graveyard') {
-			op = num;
-		}
-		else {
-			op = db.OPs[num];
-			if (!op)
-				return cb(404);
-			if (!db.OP_has_tag(board, op)) {
-				let tag = db.first_tag_of(op);
-				if (tag) {
-					if (!caps.can_access_board(req.ident, tag))
-						return cb(404);
-					return redirect_thread(cb, num, op, tag);
-				}
-				else {
-					winston.warn("Orphaned post " + num +
-						"with tagless OP " + op);
-					return cb(404);
-				}
-			}
-			if (op != num)
-				return redirect_thread(cb, num, op);
-		}
-		if (!caps.can_access_thread(req.ident, op))
-			return cb(404);
-
-		let yaku = new db.Yakusoku(board, req.ident),
-			reader = new db.Reader(yaku),
-			opts = {redirect: true};
-
-		const lastN = detect_last_n(req.query);
-		if (lastN)
-			opts.abbrev = lastN + STATE.hot.ABBREVIATED_REPLIES;
-
-		if (caps.can_administrate(req.ident) && 'reported' in req.query)
-			opts.showDead = true;
-		reader.get_thread(board, num, opts);
-		reader.once('nomatch', function() {
-			cb(404);
-			yaku.disconnect();
-		});
-		reader.once('redirect', function(op) {
-			redirect_thread(cb, num, op);
-			yaku.disconnect();
-		});
-		reader.once('begin', function(preThread) {
-			let headers;
-			if (!config.DEBUG && preThread.hctr) {
-				// XXX: Always uses the hash of the default language in the etag
-				let etag = `W/${preThread.hctr}-`
-					+ RES['indexHash-' + config.DEFAULT_LANG];
-				const chunks = web.parse_cookie(req.headers.cookie),
-					thumb = req.cookies.thumb;
-				if (thumb && common.thumbStyles.indexOf(thumb) >= 0)
-					etag += '-' + thumb;
-				const etags = ['spoil', 'agif', 'rtime', 'linkify', 'lang'];
-				for (let i = 0, l = etags.length; i < l; i++) {
-					let tag = etags[i];
-					if (chunks[tag])
-						etag += `-${tag}-${chunks[tag]}`;
-				}
-				if (lastN)
-					etag += '-last' + lastN;
-				if (preThread.locked)
-					etag += '-locked';
-				if (req.ident.auth)
-					etag += '-auth';
-
-				let info = {etag: etag, req: req};
-				hooks.trigger_sync('buildETag', info);
-				etag = info.etag;
-
-				if (req.headers['if-none-match'] === etag) {
-					yaku.disconnect();
-					return cb(null, 304);
-				}
-				headers = _.clone(web.vanillaHeaders);
-				headers.ETag = etag;
-				headers['Cache-Control'] = 'private, max-age=0, must-revalidate';
-			}
-			else
-				headers = web.noCacheHeaders;
-
-			cb(null, 'ok', {
-				headers: headers,
-				board: board, op: op,
-				subject: preThread.subject,
-				yaku: yaku, reader: reader,
-				abbrev: opts.abbrev
-			});
-		});
-	},
-	function (req, resp) {
-		/* TEMP */
-		if (req.ident.suspension)
-			return render_suspension(req, resp);
-
-		resp = write_gzip_head(req, resp, this.headers);
-		new Render(this.reader, req, resp, {
-			fullPosts: true,
-			board: this.board,
-			op: this.op,
-			subject: this.subject,
-			isThread: true
-		});
-		this.reader.emit('top');
-		var self = this;
-		this.reader.once('end', function () {
-			self.reader.emit('bottom');
-			resp.end();
-			self.finished();
-		});
-		function on_err(err) {
-			winston.error('thread '+num+':', err);
-			resp.end();
-			self.finished();
-		}
-		this.reader.once('error', on_err);
-		this.yaku.once('error', on_err);
-	},
-	function() {
-		this.yaku.disconnect();
-	}
-);
-
-function detect_last_n(query) {
-	if (!!query.last){
-		var n = parseInt(query.last);
-		if (common.reasonable_last_n(n))
-			return n;
-	}
-	return 0;
-}
-
-web.resource(/^\/(\w+)\/(\d+)\/$/, function (req, params, cb) {
-	if (!caps.temporal_access_check(req.ident, params[1]))
-		cb(null, 302, '..');
-	else
-		cb(null, 'redirect', '../' + params[2]);
-});
-
-web.route_get_auth(/^\/dead\/(src|thumb|mid)\/(\w+\.\w{3})$/,
-			function (req, resp, params) {
-	if (!caps.can_administrate(req.ident))
-		return web.render_404(resp);
-	imager.send_dead_image(params[1], params[2], resp);
-});
 
 /* Must be prepared to receive callback instantly */
 function valid_links(frag, state, ident, callback) {
@@ -1015,31 +596,6 @@ function hot_filter(frag) {
 	return frag;
 }
 
-function render_suspension(req, resp) {
-setTimeout(function () {
-	var ban = req.ident.suspension, tmpl = RES.suspensionTmpl;
-	resp.writeHead(200, web.noCacheHeaders);
-	resp.write(tmpl[0]);
-	resp.write(escape(ban.why || ''));
-	resp.write(tmpl[1]);
-	resp.write(escape(ban.until || ''));
-	resp.write(tmpl[2]);
-	resp.write(escape(STATE.hot.EMAIL || '<missing>'));
-	resp.end(tmpl[3]);
-}, 2000);
-}
-
-function get_sockjs_script_sync() {
-	var src = fs.readFileSync('tmpl/index.html', 'UTF-8');
-	return src.match(/sockjs-[\d.]+(?:\.min)?\.js/)[0];
-}
-
-function sockjs_log(sev, message) {
-	if (sev == 'info')
-		winston.verbose(message);
-	else if (sev == 'error')
-		winston.error(message);
-}
 if (config.DEBUG) {
 	winston.remove(winston.transports.Console);
 	winston.add(winston.transports.Console, {level: 'verbose'});
@@ -1050,39 +606,10 @@ function start_server() {
 	if (is_unix_socket) {
 		try { fs.unlinkSync(config.LISTEN_PORT); } catch (e) {}
 	}
-	web.server.listen(config.LISTEN_PORT, config.LISTEN_HOST);
-	if (is_unix_socket) {
+	// Start web server
+	require('./web');
+	if (is_unix_socket)
 		fs.chmodSync(config.LISTEN_PORT, '777'); // TEMP
-	}
-
-
-	var sockjsPath = 'js/' + get_sockjs_script_sync();
-	var sockOpts = {
-		sockjs_url: imager.config.MEDIA_URL + sockjsPath,
-		prefix: config.SOCKET_PATH,
-		jsessionid: false,
-		log: sockjs_log,
-		websocket: config.USE_WEBSOCKETS
-	};
-	var sockJs = require('sockjs').createServer(sockOpts);
-	web.server.on('upgrade', function (req, resp) {
-		resp.end();
-	});
-	sockJs.installHandlers(web.server);
-
-	sockJs.on('connection', function (socket) {
-		var ip = socket.remoteAddress;
-		if (config.TRUST_X_FORWARDED_FOR) {
-			var ff = web.parse_forwarded_for(
-					socket.headers['x-forwarded-for']);
-			if (ff)
-				ip = ff;
-		}
-
-		var client = new okyaku.Okyaku(socket, ip);
-		socket.on('data', client.on_message.bind(client));
-		socket.on('close', client.on_close.bind(client));
-	});
 
 	process.on('SIGHUP', hot_reloader);
 	db.on_pub('reloadHot', hot_reloader);
@@ -1143,37 +670,38 @@ if (require.main == module) {
 		throw new Error("Refusing to run as root.");
 	if (!tripcode.setSalt(config.SECURE_SALT))
 		throw "Bad SECURE_SALT";
-	async.series([
-		imager.make_media_dirs,
-		setup_imager_relay,
-		STATE.reload_hot_resources,
-		db.track_OPs
-	], function (err) {
-		if (err)
-			throw err;
-		// Start JSON API express server
-		require('./api');
-		// Start thread archiver
-		if (config.ARCHIVE)
-			require('./archive');
-		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
-		var onegai;
-		var writes = [];
-		if (!config.READ_ONLY) {
-			writes.push(yaku.finish_all.bind(yaku));
-			if (!imager.is_standalone()) {
-				onegai = new imager.Onegai;
-				writes.push(onegai.delete_temporaries.bind(
-						onegai));
-			}
-		}
-		async.series(writes, function (err) {
+	async.series(
+		[
+			imager.make_media_dirs,
+			setup_imager_relay,
+			STATE.reload_hot_resources,
+			db.track_OPs
+		],
+		function (err) {
 			if (err)
-				throw err;
-			yaku.disconnect();
-			if (onegai)
-				onegai.disconnect();
-			process.nextTick(start_server);
-		});
-	});
+				throw err;4
+			// Start thread archiver
+			if (config.ARCHIVE)
+				require('./archive');
+			var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
+			var onegai;
+			var writes = [];
+			if (!config.READ_ONLY) {
+				writes.push(yaku.finish_all.bind(yaku));
+				if (!imager.is_standalone()) {
+					onegai = new imager.Onegai;
+					writes.push(onegai.delete_temporaries.bind(
+							onegai));
+				}
+			}
+			async.series(writes, function (err) {
+				if (err)
+					throw err;
+				yaku.disconnect();
+				if (onegai)
+					onegai.disconnect();
+				process.nextTick(start_server);
+			});
+		}
+	);
 }

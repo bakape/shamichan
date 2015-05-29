@@ -3,6 +3,7 @@
 var async = require('async'),
 	common = require('../common/index'),
 	config = require('../config'),
+	cookie = require('cookie'),
 	crypto = require('crypto'),
 	child_process = require('child_process'),
 	etc = require('../util/etc'),
@@ -17,7 +18,6 @@ var async = require('async'),
 	path = require('path'),
 	urlParse = require('url').parse,
 	util = require('util'),
-	web = require('../server/web'),
 	winston = require('winston');
 
 var IMAGE_EXTS = ['.png', '.jpg', '.gif'];
@@ -107,11 +107,13 @@ IU.handle_request = function (req, resp) {
 	this.resp = resp;
 	const query = req.query || urlParse(req.url, true).query;
 
-	// Set response language
-	// Check if client language is set and exixts on the server
-	this.lang = lang[config.LANGS[
-			web.parse_cookie(req.headers.cookie[lang])
-		] || config.DEFAULT_LANG];
+	// Set response language. Checks if client language is set and exixts on
+	// the server.
+	let ln = config.DEFAULT_LANG;
+	const cookieLanguage = cookie.parse(req.headers.cookie).lang;
+	if (cookieLanguage && cookieLanguage in config.LANGS)
+		ln = cookieLanguage;
+	this.lang = lang[ln];
 
 	this.client_id = parseInt(query.id, 10);
 	if (!this.client_id || this.client_id < 1) {
