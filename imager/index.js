@@ -163,18 +163,6 @@ function make_media_dirs (cb) {
 }
 exports.make_media_dirs = make_media_dirs;
 
-function serve_image (req, resp) {
-	var m = /^\/(src|thumb|mid|vint)(\/\d+\.\w+)$/.exec(req.url);
-	if (!m)
-		return false;
-	var root = config.MEDIA_DIRS[m[1]];
-	if (!root)
-		return false;
-	require('send')(req, m[2], {root: root}).pipe(resp);
-	return true;
-}
-exports.serve_image = serve_image;
-
 function squish_MD5 (hash) {
 	if (typeof hash == 'string')
 		hash = new Buffer(hash, 'hex');

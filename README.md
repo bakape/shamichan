@@ -51,8 +51,6 @@ loaded into a running server with `node server/kill.js`
 ###Optional npm dependancies
 * ~~daemon~~ (broken currently)
 * node-expat for icecast now-playing banners
-* send (if you want to serve static files directly from the node.js
-process; useful in debug mode also)
 
 ## Documentation
 * [JSON API documentation: docs/api.md](https://github.com/bakape/meguca/blob/master/docs/api.md)

@@ -57,7 +57,6 @@
   "optionalDependencies": {
     "hiredis": "^0.2.0",
     "node-expat": "^2.3.4",
-    "nodemailer": "^0.5.2",
-    "send": "^0.11.0"
+    "nodemailer": "^0.5.2"
   }
 }
