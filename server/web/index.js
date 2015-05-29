@@ -22,7 +22,8 @@ let _ = require('underscore'),
 let app = express(),
 	server = http.createServer(app);
 websocket.start(server);
-app.enable('strict routing');
+// XXX: We need a way to build reliable eTags for board pages
+app.enable('strict routing').disable('etag');
 server.listen(config.LISTEN_PORT);
 
 // Image uploads
