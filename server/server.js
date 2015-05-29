@@ -679,7 +679,7 @@ if (require.main == module) {
 		],
 		function (err) {
 			if (err)
-				throw err;4
+				throw err;
 			// Start thread archiver
 			if (config.ARCHIVE)
 				require('./archive');

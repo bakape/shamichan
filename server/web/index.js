@@ -76,33 +76,39 @@ app.get(/^\/(\w+)$/, function(req, res) {
 });
 
 // /board/ pages
-app.get(/^\/(\w+)\/$/, function(req, res) {
-	res.set(noCacheHeaders);
-	const board = req.params[0];
-	if (!caps.can_access_board(req.ident, board))
-		return res.sendStatus(404);
+app.get(/^\/(\w+)\/$/,
+	function(req, res, next) {
+		res.set(noCacheHeaders);
+		const board = req.params[0];
+		if (!caps.can_access_board(req.ident, board))
+			return res.sendStatus(404);
 
-	let yaku = new db.Yakusoku(board, req.ident);
-	yaku.get_tag(-1);
-	new Render(yaku, req, res, {
-		fullLinks: true,
-		board,
-		isThread: false
-	});
-	yaku.once('begin', function (thread_count) {
-		yaku.emit('top', page_nav(thread_count, -1, board === 'archive'));
-	});
-	yaku.once('end', function() {
-		yaku.emit('bottom');
-		res.end();
-		yaku.disconnect();
-	});
-	yaku.once('error', function(err) {
-		winston.error('index:' + err);
-		res.end();
-		yaku.disconnect();
-	});
-});
+		let yaku = res.yaku = new db.Yakusoku(board, req.ident);
+		yaku.get_tag(-1);
+		new Render(yaku, req, res, {
+			fullLinks: true,
+			board,
+			isThread: false
+		});
+		yaku.once('begin', function (thread_count) {
+			yaku.emit('top', page_nav(thread_count, -1, board === 'archive'));
+		});
+		yaku.once('end', function() {
+			yaku.emit('bottom');
+			next();
+		});
+		yaku.once('error', function(err) {
+			winston.error('index:' + err);
+			next();
+		});
+	},
+	finish
+);
+
+function finish(req, res) {
+	res.yaku.disconnect();
+	res.end();
+}
 
 // /board/page* pages
 app.get(/^\/(\w+)\/page(\d+)$/,
@@ -120,20 +126,20 @@ app.get(/^\/(\w+)\/page(\d+)$/,
 			yaku.disconnect();
 		});
 		yaku.once('begin', function(threadCount) {
+			res.yaku = yaku;
 			res.opts = {
 				board,
 				page,
-				yaku,
 				threadCount
 			};
 			next();
 		});
 	}, 
 	function(req, res, next) {
-		let opts = res.opts;
-		const board = opts.board,
+		const opts = res.opts,
+			board = opts.board,
 			page = opts.page;
-		let yaku = opts.yaku;
+		let yaku = res.yaku;
 		
 		new Render(yaku, req, res, {
 			fullLinks: true,
@@ -154,11 +160,6 @@ app.get(/^\/(\w+)\/page(\d+)$/,
 	},
 	finish
 );
-
-function finish(req, res) {
-	res.opts.yaku.disconnect();
-	res.end();
-}
 
 // Thread pages
 app.get(/^\/(\w+)\/(\d+)/,
@@ -254,20 +255,20 @@ app.get(/^\/(\w+)\/(\d+)/,
 			else
 				res.set(noCacheHeaders);
 
+			res.yaku = yaku;
+			res.reader = reader;
 			res.opts = {
 				board,
 				op,
 				subject: preThread.subject,
-				yaku,
-				reader,
 				abbrev: opts.abbrev
 			};
 			next();
 		});
 	},
 	function(req, res, next) {
-		let opts = res.opts,
-			reader = opts.reader;
+		const opts = res.opts;
+		let reader = res.reader;
 		new Render(reader, req, res, {
 			fullPosts: true,
 			board: opts.board,
@@ -281,7 +282,7 @@ app.get(/^\/(\w+)\/(\d+)/,
 			next();
 		});
 		reader.once('error', on_err);
-		opts.yaku.once('error', on_err);
+		res.yaku.once('error', on_err);
 
 		function on_err(err) {
 			winston.error(`thread ${num}:`, err);
