@@ -92,30 +92,44 @@ let BackgroundView = Backbone.View.extend({
 	},
 
 	blurredGlass: function(blurred) {
-		const normal = 'rgba(40, 42, 46, 0.5)',
-			editing = 'rgba(145, 145, 145, 0.5)';
-		return common.parseHTML
-			`article, aside, .pagination, .popup-menu, .modal, .bmodal,
-				.preview, #banner
-			{
-				background:
-					linear-gradient(${normal}, ${normal}),
-					url(${blurred}) center fixed no-repeat;
-				background-size: cover;
-			}
-			.editing {
-				background:
-					linear-gradient(${editing}, ${editing}),
-					url(${blurred}) center fixed no-repeat;
-				background-size: cover;
-			}`
+            const normal = 'rgba(40, 42, 46, 0.5)',
+                    editing = 'rgba(145, 145, 145, 0.5)';
+            return common.parseHTML
+                `article, aside, .pagination, .popup-menu, .modal, .bmodal,
+                        .preview, #banner
+                {
+                    background:
+                        linear-gradient(${normal}, ${normal}),
+                        url(${blurred}) center fixed no-repeat;
+                    background-size: cover;
+                }
+                .editing {
+                    background:
+                        linear-gradient(${editing}, ${editing}),
+                        url(${blurred}) center fixed no-repeat;
+                    background-size: cover;
+                }`
 	},
 
 	blurredOcean: function(blurred) {
+            const normal = 'rgba(28, 29, 34, 0.781)',
+	 	  editing = 'rgba(44, 57, 71, 0.88)';
 
-		/* HERE */
-
-		return '';
+            return common.parseHTML
+                `article, aside, .pagination, .popup-menu, .modal, .bmodal,
+                        .preview, #banner
+                {
+                    background:
+                        linear-gradient(${normal}, ${normal}),
+                        url(${blurred}) center fixed no-repeat;
+                    background-size: cover;
+                }
+                .editing {
+                    background:
+                        linear-gradient(${editing}, ${editing}),
+                        url(${blurred}) center fixed no-repeat;
+                    background-size: cover;
+                }`;
 	},
 
 	renderIllya: function() {
