@@ -114,7 +114,7 @@ class Render {
 		resp.write('<hr>\n');
 
 		// Only render on 'live' board pages
-		if (opts.live)
+		if (opts.live && !this.readOnly)
 			resp.write(this.oneeSama.newThreadBox());
 		if (opts.catalog)
 			resp.write('<div id="catalog">');
