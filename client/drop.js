@@ -3,6 +3,7 @@
  */
 
 var $ = require('jquery'),
+	etc = require('./etc'),
 	main = require('./main'),
 	state = main.state;
 
@@ -45,7 +46,7 @@ function dragonDrop(e) {
 		fd.append(k, extra[k]);
 	// Can't seem to jQuery this shit
 	let xhr = new XMLHttpRequest();
-	xhr.open('POST', main.request('imageUploadURL'));
+	xhr.open('POST', etc.uploadURL());
 	xhr.setRequestHeader('Accept', 'application/json');
 	xhr.onreadystatechange = upload_shita;
 	xhr.send(fd);

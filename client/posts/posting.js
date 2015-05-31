@@ -420,7 +420,7 @@ var ComposerView = Backbone.View.extend({
 				.val(extra[k])
 				.appendTo(this.$uploadForm);
 		}
-		this.$uploadForm.prop('action', imageUploadURL());
+		this.$uploadForm.prop('action', etc.uploadURL());
 		this.$uploadForm.submit();
 		this.$iframe.load(function() {
 			if (!postForm)
@@ -911,12 +911,6 @@ function preloadPanes() {
 		new Image().src = spoilerPaneUrl(spoiler);
 	});
 }
-
-function imageUploadURL() {
-	return (main.config.UPLOAD_URL || '../upload/')
-		+ '?id=' + state.page.get('connID');
-}
-main.reply('imageUploadURL', imageUploadURL);
 
 main.comply('openPostBox', function(num) {
 	let $a = main.$threads.find('#' + num);
