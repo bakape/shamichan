@@ -132,9 +132,9 @@ state.page.on('change', function() {
 	scroll_shita();
 });
 
-// If a post is a locked target and becomes hidden, unlock from post.
-Backbone.on('hide', function (model) {
-	if (model && model.id == lockTarget)
+// If a post is a locked target and is removed, unlock from post
+state.posts.on('remove', function(model) {
+	if (model.get('num') == lockTarget)
 		set_lock_target(null);
 });
 
