@@ -523,12 +523,15 @@ var optPostFields = 'name trip email auth subject'.split(' ');
 Y.insert_post = function (msg, body, extra, callback) {
 	if (config.READ_ONLY)
 		return callback(Muggle("Can't post right now."));
-	var r = this.connect();
+	let r = this.connect();
 	if (!this.tag)
 		return callback(Muggle("Can't retrieve board for posting."));
-	var ip = extra.ip, board = extra.board, num = msg.num, op = msg.op;
+	const ip = extra.ip,
+		board = extra.board,
+		num = msg.num;
+	let op = msg.op;
 	if (!num)
-		return callback(Muggle("No post num."));
+		return callback(Muggle("No post number."));
 	else if (!ip)
 		return callback(Muggle("No IP."));
 	else if (op) {
@@ -538,7 +541,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 		}
 	}
 
-	var view = {
+	let view = {
 		time: msg.time,
 		num: num,
 		board: board,
@@ -550,7 +553,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 		if (msg[field])
 			view[field] = msg[field];
 	}
-	var tagKey = 'tag:' + tag_key(this.tag);
+	const tagKey = 'tag:' + tag_key(this.tag);
 	if (op)
 		view.op = op;
 	else {
@@ -566,9 +569,9 @@ Y.insert_post = function (msg, body, extra, callback) {
 		delete msg.image.pinky;
 	}
 
-	var key = (op ? 'post:' : 'thread:') + num;
-	var bump = !op || !common.is_sage(view.email);
-	var m = r.multi();
+	const key = (op ? 'post:' : 'thread:') + num,
+		bump = !op || !common.is_sage(view.email);
+	let m = r.multi();
 	m.incr(tagKey + ':postctr'); // must be first
 	if (op)
 		m.hget('thread:' + op, 'subject'); // must be second
@@ -589,7 +592,10 @@ Y.insert_post = function (msg, body, extra, callback) {
 	if (msg.links)
 		m.hmset(key + ':links', msg.links);
 
-	var etc = {augments: {}, cacheUpdate: {}};
+	let etc = {
+		augments: {},
+		cacheUpdate: {}
+	};
 	if (op) {
 		etc.cacheUpdate.num = num;
 		var pre = 'thread:' + op;
@@ -600,14 +606,13 @@ Y.insert_post = function (msg, body, extra, callback) {
 		// set conditional hide?
 		op = num;
 		if (!view.immortal) {
-			var score = expiry_queue_score(msg.time, board);
-			var entry = num + ':' + tag_key(this.tag);
+			const score = expiry_queue_score(msg.time, board),
+				entry = `${num}:${tag_key(this.tag)}`;
 			m.zadd(expiry_queue_key(), score, entry);
 		}
 		/* Rate-limit new threads */
 		if (ip != '127.0.0.1')
-			m.setex('ip:'+ip+':throttle:thread',
-					config.THREAD_THROTTLE, op);
+			m.setex('ip:'+ip+':throttle:thread', config.THREAD_THROTTLE, op);
 	}
 
 	/* Denormalize for backlog */
@@ -618,45 +623,49 @@ Y.insert_post = function (msg, body, extra, callback) {
 	extract(view);
 	delete view.ip;
 
-	var self = this;
-	async.waterfall([
-	function (next) {
-		if (!msg.image)
-			return next(null);
+	let self = this;
+	async.waterfall(
+		[
+			function (next) {
+				if (!msg.image)
+					return next(null);
+				imager.commit_image_alloc(extra.image_alloc, next);
+			},
+			function (next) {
+				if (ip) {
+					const n = post_volume(view, body);
+					if (n > 0)
+						update_throughput(m, ip, view.time, n);
+					etc.augments.auth = {ip: ip};
+				}
 
-		imager.commit_image_alloc(extra.image_alloc, next);
-	},
-	function (next) {
-		if (ip) {
-			var n = post_volume(view, body);
-			if (n > 0)
-				update_throughput(m, ip, view.time, n);
-			etc.augments.auth = {ip: ip};
+				self._log(m, op, common.INSERT_POST, [num, view], etc);
+
+				m.exec(next);
+			},
+			function (results, next) {
+				if (!bump)
+					return next();
+				const postctr = results[0];
+				const subject = subject_val(
+					op,
+					op == num ? view.subject : results[1]
+				);
+				let m = r.multi();
+				m.zadd(tagKey + ':threads', postctr, op);
+				if (subject)
+					m.zadd(tagKey + ':subjects', postctr, subject);
+				m.exec(next);
+			}
+		],
+		function (err) {
+			if (err) {
+				delete OPs[num];
+				return callback(err);
+			}
+			callback(null);
 		}
-
-		self._log(m, op, common.INSERT_POST, [num, view], etc);
-
-		m.exec(next);
-	},
-	function (results, next) {
-		if (!bump)
-			return next();
-		var postctr = results[0];
-		var subject = subject_val(op,
-				op==num ? view.subject : results[1]);
-		var m = r.multi();
-		m.zadd(tagKey + ':threads', postctr, op);
-		if (subject)
-			m.zadd(tagKey + ':subjects', postctr, subject);
-		m.exec(next);
-	}],
-	function (err) {
-		if (err) {
-			delete OPs[num];
-			return callback(err);
-		}
-		callback(null);
-	});
+	);
 };
 
 Y.remove_post = function (from_thread, num, callback) {
@@ -1016,8 +1025,7 @@ Y.remove_image = function (threads, num, callback) {
 					threads[op].push(num);
 				else
 					threads[op] = [num];
-				r.hincrby('thread:' + op, 'imgctr', -1,
-						callback);
+				r.hincrby('thread:' + op, 'imgctr', -1, callback);
 			});
 		});
 	});

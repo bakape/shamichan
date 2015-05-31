@@ -2,6 +2,8 @@
  * Server-only mapping of configurable language options
  */
 var lang = {
+	catalog_omit: 'Replies/Images',
+
 	// Imager responses
 	im : {
 		bad_client: "Bad client ID.",

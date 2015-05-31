@@ -34,11 +34,11 @@ class Render {
 		yaku.once('bottom', this.onBottom.bind(this));
 
 		yaku.on('thread', this.onThread.bind(this));
-		// XXX: There should be more finetuned logic for reading catalog
-		// pages in Reader, but this is good enough for now. Need to come
-		// back to this, when we finally get to clean up the database code.
-		yaku.on('endthread', this.onThreadEnd.bind(this));
-		yaku.on('post', this.onPost.bind(this));
+		// These are useless on catalog pages, as the events never fire
+		if (!opts.catalog) {
+			yaku.on('endthread', this.onThreadEnd.bind(this));
+			yaku.on('post', this.onPost.bind(this));
+		}
 	}
 	// Read query strings and cookies
 	parseRequest() {
@@ -170,11 +170,13 @@ class Render {
 			safe(oneeSama.thumbnail(image, data.num)),
 			safe(parseHTML
 				`<br>
+				<small title="${lang[this.lang].catalog_omit}">
+					${data.replyctr}/${data.imgctr - 1}~
+				</small>
 				<small>
-					R: ${data.replyctr}~
 					${oneeSama.expansion_links_html(data.num)}
-					<br>
-				</small>`
+				</small>
+				<br>`
 			)
 		);
 		if (data.subject)

@@ -2,6 +2,8 @@
  * Mapeo de opciones de idiomas configurables solamente para servidor
  */
 var lang = {
+	catalog_omit: 'Replies/Images',
+
 	// Respuestas de imager
 	im : {
 		bad_client: "ID de cliente mala.",
