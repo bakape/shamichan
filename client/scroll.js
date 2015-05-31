@@ -87,6 +87,9 @@ function followLock(func) {
 //  Quality quality control at its finest s(' ^)b
 	}
 
+        //If we aren't in a thread, don't lock to bottom
+        if (!state.page.get('thread'))
+            return;
 	if (locked == PAGE_BOTTOM) {
 		var height = main.$doc.height();
 		if (height > lockHeight - 10)
