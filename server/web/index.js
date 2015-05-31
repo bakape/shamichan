@@ -21,21 +21,17 @@ let _ = require('underscore'),
 
 let app = express(),
 	server = http.createServer(app);
+
+// NOTE: Order is important as it dtermines handler priority
+
+// SockJS needs to override Express, so we bind it first
 websocket.start(server);
+
 // XXX: We need a way to build reliable eTags for board pages
 app.enable('strict routing').disable('etag');
 server.listen(config.LISTEN_PORT);
 
-// Image uploads
-app.post('/upload/', imager.new_upload);
-
-if (config.GZIP)
-	app.use(compress());
-if (config.SERVE_STATIC_FILES)
-	app.use(express.static('www'));
-app.use(cookieParser());
-
-// Authentication
+// Pass the client IP through authentication checks
 app.use(function(req, res, next) {
 	let ip = req.connection.remoteAddress;
 	if (config.TRUST_X_FORWARDED_FOR)
@@ -48,10 +44,19 @@ app.use(function(req, res, next) {
 		return;
 	}
 	req.ident = caps.lookup_ident(ip);
+	// TODO: A prettier ban page would be nice, once we have actual ban comments
 	if (req.ident.ban)
 		return res.sendStatus(500);
 	next();
 });
+
+app.post('/upload/', imager.new_upload);
+
+if (config.GZIP)
+	app.use(compress());
+if (config.SERVE_STATIC_FILES)
+	app.use(express.static('www'));
+app.use(cookieParser());
 
 const vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
@@ -71,25 +76,33 @@ app.get('/', function(req, res) {
 	res.redirect(`/${config.DEFAULT_BOARD}/`)
 });
 
-// Redirect /board to /board/
+// Redirect `/board` to `/board/` The client parses the URL to determine
+// what page it is on. So we need the trailing slash for easier board
+// determination.
 app.get(/^\/(\w+)$/, function(req, res) {
 	res.redirect(`/${req.params[0]}/`);
 });
 
-// /board/ pages
-app.get(/^\/(\w+)\/$/,
+// /board/ and /board/catalog pages
+app.get(/^\/(\w+)\/(catalog)?$/,
 	function(req, res, next) {
+		// Board pages are very dynamic. Caching those could produce
+		// detrimental results. Unless we find a good ETaging sollution,
+		// that is.
 		res.set(noCacheHeaders);
 		const board = req.params[0];
 		if (!caps.can_access_board(req.ident, board))
 			return res.sendStatus(404);
 
 		let yaku = res.yaku = new db.Yakusoku(board, req.ident);
-		yaku.get_tag(-1);
+		const catalog = !!req.params[1];
+		yaku.get_tag(catalog ? -2 : -1);
 		new Render(yaku, req, res, {
 			fullLinks: true,
 			board,
-			isThread: false
+			isThread: false,
+			live: true,
+			catalog: catalog
 		});
 		yaku.once('begin', function (thread_count) {
 			yaku.emit('top', page_nav(thread_count, -1, board === 'archive'));
@@ -111,7 +124,6 @@ function finish(req, res) {
 	res.end();
 }
 
-// /board/page* pages
 app.get(/^\/(\w+)\/page(\d+)$/,
 	function(req, res, next) {
 		res.set(noCacheHeaders);
@@ -122,10 +134,14 @@ app.get(/^\/(\w+)\/page(\d+)$/,
 		const page = parseInt(req.params[1], 10);
 		let yaku = new db.Yakusoku(board, req.ident);
 		yaku.get_tag(page);
+
+		// The page might be gone, becaue a thread was deleted
 		yaku.once('nomatch', function() {
 			res.status(302).redirect('.');
 			yaku.disconnect();
 		});
+		// More stepwise than /board pages, because there are now race
+		// conditions to consider
 		yaku.once('begin', function(threadCount) {
 			res.yaku = yaku;
 			res.opts = {
@@ -175,6 +191,8 @@ app.get(/^\/(\w+)\/(\d+)/,
 		let op;
 		if (board === 'graveyard')
 			op = num;
+		// We need to validate that the requested post number, is in fact a
+		// thread and not a reply
 		else {
 			op = db.OPs[num];
 			if (!op)
@@ -194,6 +212,7 @@ app.get(/^\/(\w+)\/(\d+)/,
 			if (op != num)
 				return redirect_thread(res, num, op);
 		}
+
 		if (!caps.can_access_thread(req.ident, op))
 			return res.sendStatus(404);
 
@@ -217,6 +236,8 @@ app.get(/^\/(\w+)\/(\d+)/,
 			yaku.disconnect();
 		});
 		reader.once('begin', function(preThread) {
+			// Build an eTag in accordance to the thread height and cookie
+			// parameters, as those effect the HTML
 			if (!config.DEBUG && preThread.hctr) {
 				// XXX: Always uses the hash of the default language in the etag
 				let etag = `W/${preThread.hctr}-`
@@ -242,6 +263,7 @@ app.get(/^\/(\w+)\/(\d+)/,
 					etag: etag,
 					req: req
 				};
+				// Addtional etag hooks. Mostly from `time.js`.
 				hooks.trigger_sync('buildETag', info);
 
 				if (req.headers['if-none-match'] === info.etag) {
@@ -293,7 +315,7 @@ app.get(/^\/(\w+)\/(\d+)/,
 	finish
 );
 
-// Pack page navigation data in an object
+// Pack page navigation data in an object for easier passing downstream
 function page_nav(thread_count, cur_page, ascending) {
 	const page_count = Math.max(
 		Math.ceil(thread_count / state.hot.THREADS_PER_PAGE)
@@ -306,7 +328,7 @@ function page_nav(thread_count, cur_page, ascending) {
 	};
 }
 
-// Redirects '/board/num', when num is reply number, not thread
+// Redirects '/board/num', when num point to a reply, not a thread
 function redirect_thread(res, num, op, tag) {
 	if (!tag)
 		res.redirect(301, `./${op}#${num}`);

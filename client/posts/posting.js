@@ -50,7 +50,7 @@ postSM.act('* + desync -> none', function() {
 		postForm.$input.val('');
 		postForm.finish();
 	}
-	main.$threads.find('aside').hide();
+	main.$threads.find('aside.posting').hide();
 });
 
 postSM.act('none + sync, draft, alloc + done -> ready', function() {
@@ -60,7 +60,7 @@ postSM.act('none + sync, draft, alloc + done -> ready', function() {
 		postForm.remove();
 		postForm = postModel = null;
 	}
-	main.$threads.find('aside').show();
+	main.$threads.find('aside.posting').show();
 });
 
 // Make new postform
@@ -102,7 +102,7 @@ main.dispatcher[common.IMAGE_STATUS] = function(msg) {
 		postForm.dispatch(msg[0]);
 };
 
-main.$doc.on('click', 'aside a', function() {
+main.$doc.on('click', 'aside.posting a', function() {
 	main.command('scroll:follow', () =>
 		postSM.feed('new', $(this).parent())
 	);
@@ -118,8 +118,8 @@ function handle_shortcut(event) {
 		opts = options.attributes;
 	switch(event.which) {
 		case opts.new:
-			var $aside = state.page.get('thread') ? main.$threads.find('aside')
-				: $ceiling().next();
+			var $aside = state.page.get('thread')
+				? main.$threads.find('aside.posting') : $ceiling().next();
 			if ($aside.is('aside') && $aside.length === 1) {
 				main.command('scroll:follow', function() {
 					postSM.feed('new', $aside);
@@ -296,7 +296,7 @@ var ComposerView = Backbone.View.extend({
 			this.$input.focus();
 		}
 
-		main.$threads.find('aside').hide();
+		main.$threads.find('aside.posting').hide();
 		preloadPanes();
 	},
 
@@ -920,7 +920,10 @@ main.reply('imageUploadURL', imageUploadURL);
 
 main.comply('openPostBox', function(num) {
 	let $a = main.$threads.find('#' + num);
-	postSM.feed('new', $a[$a.is('section') ? 'children' : 'siblings']('aside'));
+	postSM.feed(
+		'new',
+		$a[$a.is('section') ? 'children' : 'siblings']('aside.posting')
+	);
 });
 
 window.addEventListener('message', function(event) {

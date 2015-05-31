@@ -9,17 +9,21 @@ var $ = require('jquery'),
 
 class Extract {
 	constructor() {
-		this.mine = state.mine.read_all();
 		// Read serialised model data
 		const json = JSON.parse(main.$threads.children('#postData').text());
-		this.posts = json.posts;
 		main.command('notify:title', json.title);
+
+		// We don't need models on catalog pages
+		if (state.page.get('catalog'))
+			return;
+
+		this.mine = state.mine.read_all();
+		this.posts = json.posts;
 		let self = this;
 		main.$threads.children('section').each(function() {
 			self.extractThread($(this));
 		});
 	}
-
 	extractThread($section) {
 		let self = this;
 		$section.children('article').each(function() {
@@ -40,7 +44,6 @@ class Extract {
 		 */
 		state.syncs[model.num] = parseInt(model.hctr || 0, 10);
 	}
-
 	extractModel(el) {
 		let info = this.posts[el.getAttribute('id')];
 		// Did I make this post?

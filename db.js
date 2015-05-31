@@ -1367,16 +1367,28 @@ Y.get_post_op = function (num, callback) {
 	});
 };
 
-Y.get_tag = function (page) {
-	var r = this.connect();
-	var self = this;
-	var key = 'tag:' + tag_key(this.tag) + ':threads';
-	var reverseOrder = this.tag == 'archive';
+Y.get_tag = function(page) {
+	let r = this.connect(),
+		self = this;
+	const key = 'tag:' + tag_key(this.tag) + ':threads',
+		reverseOrder = this.tag === 'archive';
+
+	// -1 is for live pages and -2 is for catalog
+	const catalog = page === -2;
 	if (page < 0 && !reverseOrder)
 		page = 0;
-	var start = page * hot.THREADS_PER_PAGE;
-	var end = start + hot.THREADS_PER_PAGE - 1;
-	var m = r.multi();
+	let start, end;
+	if (catalog) {
+		// Read all threads
+		start = 0;
+		end = -1;
+	}
+	else {
+		start = page * hot.THREADS_PER_PAGE;
+		end = start + hot.THREADS_PER_PAGE - 1;
+	}
+
+	let m = r.multi();
 	if (reverseOrder)
 		m.zrange(key, start, end);
 	else
@@ -1385,38 +1397,41 @@ Y.get_tag = function (page) {
 	m.exec(function (err, res) {
 		if (err)
 			return self.emit('error', err);
-		var nums = res[0];
+		let nums = res[0];
 		if (page > 0 && !nums.length)
 			return self.emit('nomatch');
 		if (reverseOrder)
 			nums.reverse();
 		self.emit('begin', res[1]);
-		var reader = new Reader(self);
+		let reader = new Reader(self);
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));
 		reader.on('post', self.emit.bind(self, 'post'));
 		reader.on('endthread', self.emit.bind(self, 'endthread'));
-		self._get_each_thread(reader, 0, nums);
+		self._get_each_thread(reader, 0, nums, catalog);
 	});
 };
 
-Y._get_each_thread = function (reader, ix, nums) {
+Y._get_each_thread = function(reader, ix, nums, catalog) {
 	if (!nums || ix >= nums.length) {
 		this.emit('end');
 		reader.removeAllListeners('endthread');
 		reader.removeAllListeners('end');
 		return;
 	}
+
 	var self = this;
-	var next_please = function () {
+	function next_please () {
 		reader.removeListener('end', next_please);
 		reader.removeListener('nomatch', next_please);
-		self._get_each_thread(reader, ix+1, nums);
-	};
+		self._get_each_thread(reader, ix+1, nums, catalog);
+	}
+
 	reader.on('end', next_please);
 	reader.on('nomatch', next_please);
 	reader.get_thread(this.tag, nums[ix], {
-			abbrev: hot.ABBREVIATED_REPLIES || 5
+		catalog,
+		abbrev: hot.ABBREVIATED_REPLIES || 5
 	});
 };
 
@@ -1475,8 +1490,8 @@ class Reader extends events.EventEmitter {
 			pre_post.time = parseInt(pre_post.time, 10);
 
 			let nums, deadNums, opPost,
-				abbrev = opts.abbrev || 0,
 				total = 0;
+			const abbrev = opts.abbrev || 0;
 			async.waterfall(
 				[
 					function (next) {
@@ -1489,6 +1504,10 @@ class Reader extends events.EventEmitter {
 
 						// order is important!
 						m.lrange(postsKey, -abbrev, -1);
+						// The length of the above array is limited by the
+						// amount of posts we are retrieving. A total number
+						// of posts is quite useful.
+						m.llen(postsKey);
 						m.hgetall(key + ':links');
 						if (abbrev)
 							m.llen(postsKey);
@@ -1503,6 +1522,10 @@ class Reader extends events.EventEmitter {
 					function (rs, next) {
 						// get results in the same order as before
 						nums = rs.shift();
+						// NOTE: these are only the displayed replies, not
+						// all of them
+						opPost.replies = nums || [];
+						opPost.replyctr = parseInt(rs.shift(), 10) || 0;
 						const links = rs.shift();
 						if (links)
 							opPost.links = links;
@@ -1521,9 +1544,15 @@ class Reader extends events.EventEmitter {
 				function (err) {
 					if (err)
 						return self.emit('error', err);
+					self.emit('thread', opPost, Math.max(total - abbrev, 0));
+					if (opts.catalog) {
+						self.emit('endThread');
+						self.emit('end');
+						return;
+					}
+
 					if (deadNums)
 						nums = self.merge_posts(nums, deadNums, abbrev);
-					self.emit('thread', opPost, Math.max(total - abbrev, 0));
 					self._get_each_reply(tag, 0, nums, opts);
 				}
 			);

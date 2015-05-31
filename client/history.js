@@ -69,9 +69,9 @@ function readingSteiner(url, event, needPush) {
 		// Swap the database controller server-side
 		main.command('send', [
 			common.RESYNC,
-			state.page.get('board'),
+			nextState.board,
 			state.syncs,
-			state.page.get('live')
+			nextState.live
 		]);
 
 		if (needPush){
