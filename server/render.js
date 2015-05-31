@@ -11,6 +11,7 @@ var caps = require('./caps'),
 	STATE = require('./state');
 
 let RES = STATE.resources,
+	actionLink = common.action_link_html,
 	escape = common.escape_html,
 	parseHTML = common.parseHTML;
 
@@ -245,14 +246,11 @@ class Render {
 		this.pag = pag;
 	}
 	threadTop() {
+		let lang = this.oneeSama.lang;
 		this.resp.write(
-			common.action_link_html('#bottom', this.oneeSama.lang.bottom)
-			+ '&nbsp;'
-			+ common.action_link_html(
-				'',
-				this.oneeSama.lang.expand_images,
-				'expandImages'
-			)
+			actionLink('#bottom', lang.bottom)
+				+ '&nbsp;'
+				+ actionLink('', lang.expand_images, 'expandImages')
 		);
 	}
 	// [live 0 1 2 3] [Catalog]
@@ -288,15 +286,11 @@ class Render {
 		this.pag = bits;
 	}
 	threadBottom() {
-		let oneeSama = this.oneeSama;
-		return common.action_link_html('.', oneeSama.lang.return, 'bottom',
-				'history')
+		let lang = this.oneeSama.lang;
+		return actionLink('.', lang.return, 'bottom', 'history')
 			+ '&nbsp;'
-			+ common.action_link_html('#', oneeSama.lang.top)
-			+ parseHTML
-				`<span id="lock" style="visibility: hidden;">
-					${oneeSama.lang.locked_to_bottom}
-				</span>`;
+			+ actionLink('#', lang.top)
+			+ `<span id="lock">${lang.locked_to_bottom}</span>`;
 	}
 	// <script> tags
 	pageEnd() {
