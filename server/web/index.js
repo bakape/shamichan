@@ -12,6 +12,7 @@ let _ = require('underscore'),
 	config = require('../../config'),
 	db = require('../../db'),
 	express = require('express'),
+	hooks = require('../../util/hooks'),
 	http = require('http'),
 	imager = require('../../imager/daemon'),
 	Render = require('../render'),
@@ -20,7 +21,8 @@ let _ = require('underscore'),
 	websocket = require('./websocket');
 
 let app = express(),
-	server = http.createServer(app);
+	server = http.createServer(app),
+	RES = state.resources;
 
 // NOTE: Order is important as it dtermines handler priority
 
