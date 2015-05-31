@@ -29,7 +29,7 @@ module.exports = {
  */
 	SERVE_STATIC_FILES: true,
 	SERVE_IMAGES: true,
-// Not preferred; use nginx (or other)'s gzipping
+// Not preferred; use nginx (or other's) gzipping
 	GZIP: true,
 /*
  Enable usage of the websocket protocol (otherwise only emulation). Disabling

@@ -523,12 +523,15 @@ var optPostFields = 'name trip email auth subject'.split(' ');
 Y.insert_post = function (msg, body, extra, callback) {
 	if (config.READ_ONLY)
 		return callback(Muggle("Can't post right now."));
-	var r = this.connect();
+	let r = this.connect();
 	if (!this.tag)
 		return callback(Muggle("Can't retrieve board for posting."));
-	var ip = extra.ip, board = extra.board, num = msg.num, op = msg.op;
+	const ip = extra.ip,
+		board = extra.board,
+		num = msg.num;
+	let op = msg.op;
 	if (!num)
-		return callback(Muggle("No post num."));
+		return callback(Muggle("No post number."));
 	else if (!ip)
 		return callback(Muggle("No IP."));
 	else if (op) {
@@ -538,7 +541,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 		}
 	}
 
-	var view = {
+	let view = {
 		time: msg.time,
 		num: num,
 		board: board,
@@ -550,7 +553,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 		if (msg[field])
 			view[field] = msg[field];
 	}
-	var tagKey = 'tag:' + tag_key(this.tag);
+	const tagKey = 'tag:' + tag_key(this.tag);
 	if (op)
 		view.op = op;
 	else {
@@ -566,9 +569,9 @@ Y.insert_post = function (msg, body, extra, callback) {
 		delete msg.image.pinky;
 	}
 
-	var key = (op ? 'post:' : 'thread:') + num;
-	var bump = !op || !common.is_sage(view.email);
-	var m = r.multi();
+	const key = (op ? 'post:' : 'thread:') + num,
+		bump = !op || !common.is_sage(view.email);
+	let m = r.multi();
 	m.incr(tagKey + ':postctr'); // must be first
 	if (op)
 		m.hget('thread:' + op, 'subject'); // must be second
@@ -589,7 +592,10 @@ Y.insert_post = function (msg, body, extra, callback) {
 	if (msg.links)
 		m.hmset(key + ':links', msg.links);
 
-	var etc = {augments: {}, cacheUpdate: {}};
+	let etc = {
+		augments: {},
+		cacheUpdate: {}
+	};
 	if (op) {
 		etc.cacheUpdate.num = num;
 		var pre = 'thread:' + op;
@@ -600,14 +606,13 @@ Y.insert_post = function (msg, body, extra, callback) {
 		// set conditional hide?
 		op = num;
 		if (!view.immortal) {
-			var score = expiry_queue_score(msg.time, board);
-			var entry = num + ':' + tag_key(this.tag);
+			const score = expiry_queue_score(msg.time, board),
+				entry = `${num}:${tag_key(this.tag)}`;
 			m.zadd(expiry_queue_key(), score, entry);
 		}
 		/* Rate-limit new threads */
 		if (ip != '127.0.0.1')
-			m.setex('ip:'+ip+':throttle:thread',
-					config.THREAD_THROTTLE, op);
+			m.setex('ip:'+ip+':throttle:thread', config.THREAD_THROTTLE, op);
 	}
 
 	/* Denormalize for backlog */
@@ -618,45 +623,49 @@ Y.insert_post = function (msg, body, extra, callback) {
 	extract(view);
 	delete view.ip;
 
-	var self = this;
-	async.waterfall([
-	function (next) {
-		if (!msg.image)
-			return next(null);
+	let self = this;
+	async.waterfall(
+		[
+			function (next) {
+				if (!msg.image)
+					return next(null);
+				imager.commit_image_alloc(extra.image_alloc, next);
+			},
+			function (next) {
+				if (ip) {
+					const n = post_volume(view, body);
+					if (n > 0)
+						update_throughput(m, ip, view.time, n);
+					etc.augments.auth = {ip: ip};
+				}
 
-		imager.commit_image_alloc(extra.image_alloc, next);
-	},
-	function (next) {
-		if (ip) {
-			var n = post_volume(view, body);
-			if (n > 0)
-				update_throughput(m, ip, view.time, n);
-			etc.augments.auth = {ip: ip};
+				self._log(m, op, common.INSERT_POST, [num, view], etc);
+
+				m.exec(next);
+			},
+			function (results, next) {
+				if (!bump)
+					return next();
+				const postctr = results[0];
+				const subject = subject_val(
+					op,
+					op == num ? view.subject : results[1]
+				);
+				let m = r.multi();
+				m.zadd(tagKey + ':threads', postctr, op);
+				if (subject)
+					m.zadd(tagKey + ':subjects', postctr, subject);
+				m.exec(next);
+			}
+		],
+		function (err) {
+			if (err) {
+				delete OPs[num];
+				return callback(err);
+			}
+			callback(null);
 		}
-
-		self._log(m, op, common.INSERT_POST, [num, view], etc);
-
-		m.exec(next);
-	},
-	function (results, next) {
-		if (!bump)
-			return next();
-		var postctr = results[0];
-		var subject = subject_val(op,
-				op==num ? view.subject : results[1]);
-		var m = r.multi();
-		m.zadd(tagKey + ':threads', postctr, op);
-		if (subject)
-			m.zadd(tagKey + ':subjects', postctr, subject);
-		m.exec(next);
-	}],
-	function (err) {
-		if (err) {
-			delete OPs[num];
-			return callback(err);
-		}
-		callback(null);
-	});
+	);
 };
 
 Y.remove_post = function (from_thread, num, callback) {
@@ -814,7 +823,8 @@ Y.remove_thread = function (op, callback) {
 	}], callback);
 };
 
-// Purges all the thread's keys from the database and delete's all images contained
+// Purges all the thread's keys from the database and delete's all images
+// contained
 Y.purge_thread = function(op, callback){
 	var r = this.connect();
 	var key = 'thread:' + op;
@@ -1015,8 +1025,7 @@ Y.remove_image = function (threads, num, callback) {
 					threads[op].push(num);
 				else
 					threads[op] = [num];
-				r.hincrby('thread:' + op, 'imgctr', -1,
-						callback);
+				r.hincrby('thread:' + op, 'imgctr', -1, callback);
 			});
 		});
 	});
@@ -1141,7 +1150,10 @@ Y.check_throttle = function (ip, callback) {
 };
 
 function note_hash(m, hash, num) {
-	m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000), num + ':' + hash);
+	m.zadd('imageDups',
+		Date.now() + (config.DEBUG ? 30000 : 3600000),
+		num + ':' + hash
+	);
 }
 
 Y.add_image = function (post, alloc, ip, callback) {
@@ -1363,16 +1375,28 @@ Y.get_post_op = function (num, callback) {
 	});
 };
 
-Y.get_tag = function (page) {
-	var r = this.connect();
-	var self = this;
-	var key = 'tag:' + tag_key(this.tag) + ':threads';
-	var reverseOrder = this.tag == 'archive';
+Y.get_tag = function(page) {
+	let r = this.connect(),
+		self = this;
+	const key = 'tag:' + tag_key(this.tag) + ':threads',
+		reverseOrder = this.tag === 'archive';
+
+	// -1 is for live pages and -2 is for catalog
+	const catalog = page === -2;
 	if (page < 0 && !reverseOrder)
 		page = 0;
-	var start = page * hot.THREADS_PER_PAGE;
-	var end = start + hot.THREADS_PER_PAGE - 1;
-	var m = r.multi();
+	let start, end;
+	if (catalog) {
+		// Read all threads
+		start = 0;
+		end = -1;
+	}
+	else {
+		start = page * hot.THREADS_PER_PAGE;
+		end = start + hot.THREADS_PER_PAGE - 1;
+	}
+
+	let m = r.multi();
 	if (reverseOrder)
 		m.zrange(key, start, end);
 	else
@@ -1381,317 +1405,276 @@ Y.get_tag = function (page) {
 	m.exec(function (err, res) {
 		if (err)
 			return self.emit('error', err);
-		var nums = res[0];
+		let nums = res[0];
 		if (page > 0 && !nums.length)
 			return self.emit('nomatch');
 		if (reverseOrder)
 			nums.reverse();
 		self.emit('begin', res[1]);
-		var reader = new Reader(self);
+		let reader = new Reader(self);
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));
 		reader.on('post', self.emit.bind(self, 'post'));
 		reader.on('endthread', self.emit.bind(self, 'endthread'));
-		self._get_each_thread(reader, 0, nums);
+		self._get_each_thread(reader, 0, nums, catalog);
 	});
 };
 
-Y._get_each_thread = function (reader, ix, nums) {
+Y._get_each_thread = function(reader, ix, nums, catalog) {
 	if (!nums || ix >= nums.length) {
 		this.emit('end');
 		reader.removeAllListeners('endthread');
 		reader.removeAllListeners('end');
 		return;
 	}
+
 	var self = this;
-	var next_please = function () {
+	function next_please () {
 		reader.removeListener('end', next_please);
 		reader.removeListener('nomatch', next_please);
-		self._get_each_thread(reader, ix+1, nums);
-	};
+		self._get_each_thread(reader, ix+1, nums, catalog);
+	}
+
 	reader.on('end', next_please);
 	reader.on('nomatch', next_please);
 	reader.get_thread(this.tag, nums[ix], {
-			abbrev: hot.ABBREVIATED_REPLIES || 5
+		catalog,
+		abbrev: hot.ABBREVIATED_REPLIES || 5
 	});
 };
 
 /* LURKERS */
 
-function Reader(yakusoku) {
-	events.EventEmitter.call(this);
-	this.y = yakusoku;
-}
-
-util.inherits(Reader, events.EventEmitter);
-exports.Reader = Reader;
-
-Reader.prototype.get_thread = function (tag, num, opts) {
-	var r = this.y.connect();
-	const graveyard = tag == 'graveyard';
-	if (graveyard)
-		opts.showDead = true;
-	const key = (graveyard ? 'dead:' : 'thread:') + num;
-	var self = this;
-	r.hgetall(key, function (err, pre_post) {
-		if (err)
-			return self.emit('error', err);
-		if (_.isEmpty(pre_post)) {
-			if (!opts.redirect)
-				return self.emit('nomatch');
-			r.hget('post:' + num, 'op',
-						function (err, op) {
-				if (err)
-					self.emit('error', err);
-				else if (!op)
-					self.emit('nomatch');
+class Reader extends events.EventEmitter {
+	constructor(yakusoku) {
+		// Call the EventEmitter's constructor
+		super();
+		this.y = yakusoku;
+	}
+	get_thread(tag, num, opts) {
+		let r = this.y.connect();
+		const graveyard = tag === 'graveyard';
+		if (graveyard)
+			opts.showDead = true;
+		const key = (graveyard ? 'dead:' : 'thread:') + num;
+		let self = this;
+		r.hgetall(key, function(err, pre_post) {
+			if (err)
+				return self.emit('error', err);
+			if (_.isEmpty(pre_post)) {
+				if (!opts.redirect)
+					return self.emit('nomatch');
+				r.hget('post:' + num, 'op', function(err, op) {
+					if (err)
+						self.emit('error', err);
+					else if (!op)
+						self.emit('nomatch');
+					else
+						self.emit('redirect', op);
+				});
+				return;
+			}
+			let exists = true;
+			if (pre_post.hide && !opts.showDead)
+				exists = false;
+			const tags = parse_tags(pre_post.tags);
+			if (!graveyard && tags.indexOf(tag) < 0) {
+				/* XXX: Should redirect directly to correct thread */
+				if (opts.redirect)
+					return self.emit('redirect', num, tags[0]);
 				else
-					self.emit('redirect', op);
-			});
-			return;
-		}
-		var exists = true;
-		if (pre_post.hide && !opts.showDead)
-			exists = false;
-		const tags = parse_tags(pre_post.tags);
-		if (!graveyard && tags.indexOf(tag) < 0) {
-			/* XXX: Should redirect directly to correct thread */
-			if (opts.redirect)
-				return self.emit('redirect', num, tags[0]);
-			else
-				exists = false;
-		}
-		if (!exists) {
-			self.emit('nomatch');
-			return;
-		}
-		self.emit('begin', pre_post);
-		/*
-		 A bit useless now, but might as well keep it for some backwards
-		 comatibility with older database entries.
-		 */
-		pre_post.num = num;
-		pre_post.time = parseInt(pre_post.time, 10);
-
-		var nums, deadNums, opPost;
-		var abbrev = opts.abbrev || 0, total = 0;
-		async.waterfall(
-			[
-				function (next) {
-					with_body(r, key, pre_post, next);
-				},
-				function (fullPost, next) {
-					opPost = fullPost;
-					var m = r.multi();
-					const postsKey = key + ':posts';
-
-					// order is important!
-					m.lrange(postsKey, -abbrev, -1);
-					m.hgetall(key + ':links');
-					if (abbrev)
-						m.llen(postsKey);
-					if (opts.showDead) {
-						var deadKey = key + ':dels';
-						m.lrange(deadKey, -abbrev, -1);
-						if (abbrev)
-							m.llen(deadKey);
-					}
-					m.exec(next);
-				},
-				function (rs, next) {
-					// get results in the same order as before
-					nums = rs.shift();
-					const links = rs.shift();
-					if (links)
-						opPost.links = links;
-					if (abbrev)
-						total += parseInt(rs.shift(), 10);
-					if (opts.showDead) {
-						deadNums = rs.shift();
-						if (abbrev)
-							total += parseInt(rs.shift(), 10);
-					}
-
-					extract(opPost);
-					next(null);
-				}
-			],
-			function (err) {
-				if (err)
-					return self.emit('error', err);
-				if (deadNums)
-					nums = merge_posts(nums, deadNums, abbrev);
-				self.emit('thread', opPost, Math.max(total - abbrev, 0));
-				self._get_each_reply(tag, 0, nums, opts);
+					exists = false;
 			}
-		);
-	});
-};
-
-function merge_posts(nums, deadNums, abbrev) {
-	var i = nums.length - 1, pi = deadNums.length - 1;
-	if (pi < 0)
-		return nums;
-	var merged = [];
-	while (!abbrev || merged.length < abbrev) {
-		if (i >= 0 && pi >= 0) {
-			var num = nums[i], pNum = deadNums[pi];
-			if (parseInt(num, 10) > parseInt(pNum, 10)) {
-				merged.unshift(num);
-				i--;
+			if (!exists) {
+				self.emit('nomatch');
+				return;
 			}
-			else {
-				merged.unshift(pNum);
-				pi--;
-			}
-		}
-		else if (i >= 0)
-			merged.unshift(nums[i--]);
-		else if (pi >= 0)
-			merged.unshift(deadNums[pi--]);
-		else
-			break;
-	}
-	return merged;
-}
-
-Reader.prototype._get_each_reply = function (tag, ix, nums, opts) {
-	if (!nums || ix >= nums.length) {
-		this.emit('endthread');
-		this.emit('end');
-		return;
-	}
-	var num = parseInt(nums[ix], 10);
-	var self = this;
-	this.get_post('post', num, opts, function (err, post) {
-		if (err)
-			return self.emit('error', err);
-		if (post)
-			self.emit('post', post);
-		self._get_each_reply(tag, ix + 1, nums, opts);
-	});
-};
-
-Reader.prototype.get_post = function (kind, num, opts, cb) {
-	var r = this.y.connect();
-	const key = kind + ':' + num;
-	async.waterfall([
-		function (next) {
-			var m = r.multi();
-			m.hgetall(key);
-			m.hgetall(key + ':links');
-			m.exec(next);
-		},
-		function (data, next) {
-			var pre_post = data[0];
-			const links = data[1];
-			if (links)
-				pre_post.links = links;
-			var exists = !(_.isEmpty(pre_post));
-			if (exists && pre_post.hide && !opts.showDead)
-				exists = false;
-			if (!exists)
-				return next(null, null);
-
+			self.emit('begin', pre_post);
+			/*
+			 A bit useless now, but might as well keep it for some backwards
+			 comatibility with older database entries.
+			 */
 			pre_post.num = num;
 			pre_post.time = parseInt(pre_post.time, 10);
-			if (kind == 'post')
-				pre_post.op = parseInt(pre_post.op, 10);
-			else {
-				/*
-				 TODO: filter by ident eligibility and attach
-				 Currently used only for reporting
-				 */
-				//var tags = parse_tags(pre_post.tags);
+
+			let nums, deadNums, opPost,
+				total = 0;
+			const abbrev = opts.abbrev || 0;
+			async.waterfall(
+				[
+					function (next) {
+						self.with_body(r, key, pre_post, next);
+					},
+					function (fullPost, next) {
+						opPost = fullPost;
+						let m = r.multi();
+						const postsKey = key + ':posts';
+
+						// order is important!
+						m.lrange(postsKey, -abbrev, -1);
+						// The length of the above array is limited by the
+						// amount of posts we are retrieving. A total number
+						// of posts is quite useful.
+						m.llen(postsKey);
+						m.hgetall(key + ':links');
+						if (abbrev)
+							m.llen(postsKey);
+						if (opts.showDead) {
+							var deadKey = key + ':dels';
+							m.lrange(deadKey, -abbrev, -1);
+							if (abbrev)
+								m.llen(deadKey);
+						}
+						m.exec(next);
+					},
+					function (rs, next) {
+						// get results in the same order as before
+						nums = rs.shift();
+						// NOTE: these are only the displayed replies, not
+						// all of them
+						opPost.replies = nums || [];
+						opPost.replyctr = parseInt(rs.shift(), 10) || 0;
+						const links = rs.shift();
+						if (links)
+							opPost.links = links;
+						if (abbrev)
+							total += parseInt(rs.shift(), 10);
+						if (opts.showDead) {
+							deadNums = rs.shift();
+							if (abbrev)
+								total += parseInt(rs.shift(), 10);
+						}
+
+						extract(opPost);
+						next(null);
+					}
+				],
+				function (err) {
+					if (err)
+						return self.emit('error', err);
+					self.emit('thread', opPost, Math.max(total - abbrev, 0));
+					if (opts.catalog) {
+						self.emit('endThread');
+						self.emit('end');
+						return;
+					}
+
+					if (deadNums)
+						nums = self.merge_posts(nums, deadNums, abbrev);
+					self._get_each_reply(tag, 0, nums, opts);
+				}
+			);
+		});
+	}
+	merge_posts(nums, deadNums, abbrev) {
+		let i = nums.length - 1,
+			pi = deadNums.length - 1;
+		if (pi < 0)
+			return nums;
+		let merged = [];
+		while (!abbrev || merged.length < abbrev) {
+			if (i >= 0 && pi >= 0) {
+				const num = nums[i],
+					pNum = deadNums[pi];
+				if (parseInt(num, 10) > parseInt(pNum, 10)) {
+					merged.unshift(num);
+					i--;
+				}
+				else {
+					merged.unshift(pNum);
+					pi--;
+				}
 			}
-			with_body(r, key, pre_post, next);
-		},
-		function (post, next) {
-			if (post)
-				extract(post);
-			next(null, post);
+			else if (i >= 0)
+				merged.unshift(nums[i--]);
+			else if (pi >= 0)
+				merged.unshift(deadNums[pi--]);
+			else
+				break;
 		}
-	],	cb);
-};
-
-function get_all_replies(r, op, cb) {
-	var key = 'thread:' + op;
-	r.lrange(key + ':posts', 0, -1, function(err, nums) {
-		if (err)
-			return cb(err);
-		return cb(null, nums);
-	});
-}
-
-/* AUTHORITY */
-
-function Filter(tag) {
-	events.EventEmitter.call(this);
-	this.tag = tag;
-}
-
-util.inherits(Filter, events.EventEmitter);
-exports.Filter = Filter;
-var F = Filter.prototype;
-
-F.connect = function () {
-	if (!this.r) {
-		this.r = global.redis;
+		return merged;
 	}
-	return this.r;
-};
-
-F.get_all = function (limit) {
-	var self = this;
-	var r = this.connect();
-	r.zrange('tag:' + tag_key(this.tag) + ':threads', 0, -1, go);
-	function go(err, threads) {
-		if (err)
-			return self.failure(err);
-		async.forEach(threads, do_thread, self.check_done.bind(self));
-	}
-	function do_thread(op, cb) {
-		var key = 'thread:' + op;
-		r.llen(key + ':posts', function (err, len) {
+	_get_each_reply(tag, ix, nums, opts) {
+		if (!nums || ix >= nums.length) {
+			this.emit('endthread');
+			this.emit('end');
+			return;
+		}
+		const num = parseInt(nums[ix], 10);
+		let self = this;
+		this.get_post('post', num, opts, function (err, post) {
 			if (err)
-				cb(err);
-			len = parseInt(len);
-			if (len > limit)
-				return cb(null);
-			var thumbKeys = ['thumb', 'src'];
-			r.hmget(key, thumbKeys, function (err, rs) {
+				return self.emit('error', err);
+			if (post)
+				self.emit('post', post);
+			self._get_each_reply(tag, ix + 1, nums, opts);
+		});
+	}
+	get_post(kind, num, opts, cb) {
+		let r = this.y.connect(),
+			self = this;
+		const key = kind + ':' + num;
+		async.waterfall([
+			function (next) {
+				let m = r.multi();
+				m.hgetall(key);
+				m.hgetall(key + ':links');
+				m.exec(next);
+			},
+			function (data, next) {
+				let pre_post = data[0];
+				const links = data[1];
+				if (links)
+					pre_post.links = links;
+				let exists = !(_.isEmpty(pre_post));
+				if (exists && pre_post.hide && !opts.showDead)
+					exists = false;
+				if (!exists)
+					return next(null, null);
+
+				pre_post.num = num;
+				pre_post.time = parseInt(pre_post.time, 10);
+				if (kind === 'post')
+					pre_post.op = parseInt(pre_post.op, 10);
+				else {
+					/*
+					 TODO: filter by ident eligibility and attach
+					 Currently used only for reporting
+					 */
+					//var tags = parse_tags(pre_post.tags);
+				}
+				self.with_body(r, key, pre_post, next);
+			},
+			function (post, next) {
+				if (post)
+					extract(post);
+				next(null, post);
+			}
+		],	cb);
+	}
+	with_body(r, key, post, callback) {
+		if (post.body !== undefined)
+			return callback(null, post);
+
+		r.get(key + ':body', function(err, body) {
+			if (err)
+				return callback(err);
+			if (body !== null) {
+				post.body = body;
+				post.editing = true;
+				return callback(null, post);
+			}
+			// Race condition between finishing posts
+			r.hget(key, 'body', function(err, body) {
 				if (err)
-					cb(err);
-				var thumb = rs[0] || rs[1] || rs[2];
-				self.emit('thread', {num: op, thumb: thumb});
-				cb(null);
+					return callback(err);
+				post.body = body;
+				callback(null, post);
 			});
 		});
 	}
-};
-
-F.check_done = function (err) {
-	if (err)
-		this.failure(err);
-	else
-		this.success();
-};
-
-F.success = function () {
-	this.emit('end');
-	this.cleanup();
-};
-
-F.failure = function (err) {
-	this.emit('error', err);
-	this.cleanup();
-};
-
-F.cleanup = function () {
-	this.removeAllListeners('error');
-	this.removeAllListeners('thread');
-	this.removeAllListeners('end');
-};
+}
+exports.Reader = Reader;
 
 /* AMUSEMENT */
 
@@ -1737,20 +1720,6 @@ Y.set_banner = function (message, cb) {
 	});
 };
 
-Y.teardown = function (board, cb) {
-	var m = this.connect().multi();
-	var filter = new Filter(board);
-	var self = this;
-	filter.get_all(NaN); // no length limit
-	filter.on('thread', function (thread) {
-		self._log(m, thread.num, common.TEARDOWN, []);
-	});
-	filter.on('error', cb);
-	filter.on('end', function () {
-		m.exec(cb);
-	});
-};
-
 Y.get_current_body = function (num, cb) {
 	var key = (OPs[num] == num ? 'thread:' : 'post:') + num;
 	var m = this.connect().multi();
@@ -1771,36 +1740,22 @@ Y.get_current_body = function (num, cb) {
 
 /* HELPERS */
 
-function extract(post) {
-	hooks.trigger_sync('extractPost', post);
+function get_all_replies(r, op, cb) {
+	var key = 'thread:' + op;
+	r.lrange(key + ':posts', 0, -1, function(err, nums) {
+		if (err)
+			return cb(err);
+		return cb(null, nums);
+	});
 }
 
-function with_body(r, key, post, callback) {
-	if (post.body !== undefined)
-		callback(null, post);
-	else
-		r.get(key + ':body', function (err, body) {
-			if (err)
-				return callback(err);
-			if (body !== null) {
-				post.body = body;
-				post.editing = true;
-				return callback(null, post);
-			}
-			// Race condition between finishing posts
-			r.hget(key, 'body', function (err, body) {
-				if (err)
-					return callback(err);
-				post.body = body;
-				callback(null, post);
-			});
-		});
+function extract(post) {
+	hooks.trigger_sync('extractPost', post);
 }
 
 function subject_val(op, subject) {
 	return subject && (op + ':' + subject);
 }
-
 
 function tag_key(tag) {
 	return tag.length + ':' + tag;

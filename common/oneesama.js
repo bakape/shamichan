@@ -10,6 +10,7 @@ var imports = require('./imports'),
 
 const config = imports.config,
 	flatten = util.flatten,
+	join = util.join,
 	new_tab_link = util.new_tab_link,
 	pad = util.pad,
 	parseHTML = util.parseHTML,
@@ -392,7 +393,7 @@ OS.imagePaths = function() {
 	return this._imgPaths;
 };
 
-OS.thumbnail = function(data) {
+OS.thumbnail = function(data, href) {
 	const paths = this.imagePaths(),
 		dims = data.dims;
 	let src, thumb,
@@ -427,10 +428,16 @@ OS.thumbnail = function(data) {
 		thumbHeight = height;
 	}
 
+	// Thumbnails on catalog pages do not need hover previews. Adding the
+	// `expanded` class excludes them from the hover handler.
 	return parseHTML
 		`${config.IMAGE_HATS && '<span class="hat"></span>'}
-		<a target="blank" rel="nofollow" href="${src}">
-			<img src="${thumb}" width="${thumbWidth} height=${thumbHeight}">
+		<a target="blank" rel="nofollow" href="${href || src}">
+			<img src="${thumb}"
+				width="${thumbWidth}
+				height=${thumbHeight}"
+				${href && 'class="expanded"'}
+			>
 		</a>`
 };
 
@@ -613,7 +620,7 @@ OS.mono = function(data) {
 		c = safe('</article>\n'),
 		gen = this.monogatari(data);
 
-	return flatten([o, gen.header, gen.image || '', gen.body, c]).join('');
+	return join([o, gen.header, gen.image || '', gen.body, c]);
 };
 
 OS.monomono = function(data, cls) {
@@ -626,10 +633,22 @@ OS.monomono = function(data, cls) {
 	return flatten([o, gen.image || '', gen.header, gen.body, '\n', c]);
 };
 
+OS.asideLink = function(inner, href, cls, innerCls) {
+	return parseHTML
+		`<aside class="act ${cls}">
+			<a~
+				${href && `href="${href}"`}
+				${innerCls && ` class="${innerCls}"`}
+			>
+				${this.lang[inner] || inner}
+			</a>
+		</aside>`
+};
+
 OS.replyBox = function() {
-	return `<aside class="act"><a>${this.lang.reply}</a></aside>`;
+	return this.asideLink('reply', null, 'posting');
 };
 
 OS.newThreadBox = function() {
-	return `<aside class="act"><a>${this.lang.newThread}</a></aside>`;
+	return this.asideLink('newThread', null, 'posting');
 };

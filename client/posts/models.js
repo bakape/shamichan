@@ -10,11 +10,9 @@ var _ = require('underscore'),
 
 exports.Post = Backbone.Model.extend({
 	idAttribute: 'num',
-
 	initialize: function() {
 		this.initCommon();
 	},
-
 	// Initialisation logic common to both replies and threads
 	initCommon: function() {
 		state.posts.add(this);
@@ -23,7 +21,6 @@ exports.Post = Backbone.Model.extend({
 			this.forwardLinks(null, links);
 		this.listenTo(this, 'change:links', this.forwardLinks);
 	},
-
 	remove: function() {
 		this.stopListening();
 		// Remove view
@@ -31,7 +28,6 @@ exports.Post = Backbone.Model.extend({
 		// Remove from post collection
 		state.posts.remove(this);
 	},
-
 	addLinks: function(links){
 		if(!links)
 			return;
@@ -45,7 +41,6 @@ exports.Post = Backbone.Model.extend({
 		// trigger.
 		this.trigger('change:links', this, old);
 	},
-
 	// Pass this post's links to the central model
 	forwardLinks: function(model, links) {
 		var old, newLinks;
@@ -64,18 +59,17 @@ exports.Post = Backbone.Model.extend({
 });
 
 exports.Thread = exports.Post.extend({
+	defaults: {
+		replies: [],
+		omit: 0,
+		image_omit: 0
+	},
 	initialize: function() {
-		if (!this.get('omit')) {
-			this.set({
-				omit: 0,
-				image_omit: 0
-			});
-		}
-		else
+		// Omitted images can only be calculated, if there are omitted posts
+		if (this.get('omit'))
 			this.getImageOmit();
 		this.initCommon();
 	},
-
 	remove: function() {
 		this.stopListening();
 		this.trigger('remove');
@@ -89,7 +83,6 @@ exports.Thread = exports.Post.extend({
 				model.remove();
 		}
 	},
-
 	/*
 	 With the current renderring and storage implementations we can not get the
 	 image omit count during the server-side render.

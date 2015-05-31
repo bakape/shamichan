@@ -3,6 +3,7 @@
 var async = require('async'),
 	common = require('../common/index'),
 	config = require('../config'),
+	cookie = require('cookie'),
 	crypto = require('crypto'),
 	child_process = require('child_process'),
 	etc = require('../util/etc'),
@@ -17,17 +18,11 @@ var async = require('async'),
 	path = require('path'),
 	urlParse = require('url').parse,
 	util = require('util'),
-	web = require('../server/web'),
 	winston = require('winston');
 
 var IMAGE_EXTS = ['.png', '.jpg', '.gif'];
-if (config.WEBM) {
+if (config.WEBM)
 	IMAGE_EXTS.push('.webm');
-	// Daemon currently broken
-	/*if (!config.DAEMON) {
-		console.warn("Please enable imager.config.DAEMON security.");
-	}*/
-}
 if (config.MP3)
 	IMAGE_EXTS.push('.mp3');
 if (config.SVG)
@@ -107,11 +102,13 @@ IU.handle_request = function (req, resp) {
 	this.resp = resp;
 	const query = req.query || urlParse(req.url, true).query;
 
-	// Set response language
-	// Check if client language is set and exixts on the server
-	this.lang = lang[config.LANGS[
-			web.parse_cookie(req.headers.cookie[lang])
-		] || config.DEFAULT_LANG];
+	// Set response language. Checks if client language is set and exixts on
+	// the server.
+	let ln = config.DEFAULT_LANG;
+	const cookieLanguage = cookie.parse(req.headers.cookie).lang;
+	if (cookieLanguage && cookieLanguage in config.LANGS)
+		ln = cookieLanguage;
+	this.lang = lang[ln];
 
 	this.client_id = parseInt(query.id, 10);
 	if (!this.client_id || this.client_id < 1) {
@@ -755,42 +752,5 @@ IU.record_image = function (tmps) {
 		self.client_call('alloc', image_id);
 		self.db.disconnect();
 		self.respond(202, 'OK');
-
-		if (index.is_standalone())
-			winston.info(`upload: ${view.src} ${Math.ceil(view.size / 1000)}kb`);
 	});
 };
-
-function run_daemon() {
-	var cd = config.DAEMON;
-	var is_unix_socket = (typeof cd.LISTEN_PORT == 'string');
-	if (is_unix_socket) {
-		try { fs.unlinkSync(cd.LISTEN_PORT); } catch (e) {}
-	}
-
-	var server = require('http').createServer(new_upload);
-	server.listen(cd.LISTEN_PORT);
-	if (is_unix_socket) {
-		fs.chmodSync(cd.LISTEN_PORT, '777'); // TEMP
-	}
-
-	index._make_media_dir(null, 'tmp', function () {});
-
-	winston.info('Imager daemon listening on '
-			+ (cd.LISTEN_HOST || '')
-			+ (is_unix_socket ? '' : ':')
-			+ (cd.LISTEN_PORT + '.'));
-}
-
-if (require.main == module) (function () {
-	if (!index.is_standalone())
-		throw new Error("Please enable DAEMON in imager/config.js");
-
-	var onegai = new imagerDb.Onegai;
-	onegai.delete_temporaries(function (err) {
-		onegai.disconnect();
-		if (err)
-			throw err;
-		process.nextTick(run_daemon);
-	});
-})();

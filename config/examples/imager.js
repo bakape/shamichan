@@ -89,19 +89,4 @@ module.exports = {
 	BANNERS: null,
 
 	IMAGE_HATS: false
-
-// uncomment DAEMON if you will run `node imager/daemon.js` separately.
-// if so, either
-// 1) customize UPLOAD_URL above appropriately, or
-// 2) configure your reverse proxy so that requests for /upload/
-//    are forwarded to LISTEN_PORT.
-	/*
-	DAEMON: {
-		LISTEN_PORT: 9000,
-
-// this doesn't have to (and shouldn't) be the same redis db
-// as is used by the main doushio server.
-		REDIS_PORT: 6379,
-	},
-	*/
 };

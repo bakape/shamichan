@@ -8,19 +8,21 @@ var $ = require('jquery'),
 
 // Read page state by parsing a URL
 function read(url) {
-	const href = url.split('#')[0],
-		// Display last N posts setting on thread pages
-		lastN = href.match(/[\?&]last=(\d+)/);
-	var thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
+	const href = url.split('#')[0];
+	// Display last N posts setting on thread pages
+	let lastN = href.match(/[\?&]last=(\d+)/),
+		thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
 		page = href.match(/\/page(\d+)$/);
+	lastN = lastN ? parseInt(lastN[1], 10) : 0;
 	thread = thread ? parseInt(thread[1], 10) : 0;
 	page = page ? parseInt(page[1], 10) : -1;
 	return {
 		href,
-		board: href.match(/\/([a-zA-Z0-9]+?)\//)[1],
 		thread,
 		page,
-		lastN: lastN ? parseInt(lastN[1], 10) : 0,
+		lastN,
+		board: href.match(/\/([a-zA-Z0-9]+?)\//)[1],
+		catalog: /\/catalog/.test(href),
 		/*
 		 * Indicates if on the 'live' board page, which needs extra server-side
 		 * logic.

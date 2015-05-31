@@ -15,8 +15,6 @@ function can_access_board(ident, board) {
 		return false;
 	if (ident.ban || ident.suspension)
 		return false;
-	if (!temporal_access_check(ident, board))
-		return false;
 	return db.is_board(board);
 }
 exports.can_access_board = can_access_board;
@@ -31,20 +29,6 @@ function can_access_thread (ident, op) {
 	return false;
 }
 exports.can_access_thread = can_access_thread;
-
-function temporal_access_check(ident, board) {
-	var info = {ident: ident, board: board, access: true};
-	hooks.trigger_sync('temporalAccessCheck', info);
-	return info.access;
-}
-exports.temporal_access_check = temporal_access_check;
-
-function can_ever_access_board (ident, board) {
-	if (can_access_board(ident, board))
-		return true;
-	return !temporal_access_check(ident, board);
-}
-exports.can_ever_access_board = can_ever_access_board;
 
 function can_moderate(ident) {
 	return (ident.auth === 'Admin' || ident.auth === 'Moderator');
@@ -190,15 +174,6 @@ function lookup_ident (ip) {
 		ident.timeout = true;
 		return ident;
 	}
-	var suspension = range_lookup(RANGES.suspensions, num);
-	if (suspension) {
-		ident.suspension = suspension;
-		return ident;
-	}
-
-	var slow = range_lookup(RANGES.slows, num);
-	if (slow)
-		ident.slow = slow;
 
 	return ident;
 }

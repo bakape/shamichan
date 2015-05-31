@@ -13,7 +13,7 @@ var async = require('async'),
 exports.Onegai = db.Onegai;
 exports.config = config;
 
-var image_attrs = ('src thumb ext dims size MD5 SHA1 hash imgnm spoiler vint'
+const image_attrs = ('src thumb ext dims size MD5 SHA1 hash imgnm spoiler vint'
 		+ ' apng mid audio length').split(' ');
 exports.image_attrs = image_attrs;
 
@@ -44,9 +44,11 @@ function send_dead_image (kind, filename, resp) {
 }
 exports.send_dead_image = send_dead_image;
 
-hooks.hook_sync('extractPost', function (post) {
+hooks.hook_sync('extractPost', function(post) {
 	if (!is_image(post))
 		return;
+	// Restructures the flat hash from redis to have image attributes in an
+	// embeded hash. Better structure.
 	let image = {};
 	for (let i = 0, l = image_attrs.length; i < l; i++) {
 		let key = image_attrs[i];
@@ -58,6 +60,8 @@ hooks.hook_sync('extractPost', function (post) {
 	if (image.dims.split)
 		image.dims = image.dims.split(',').map(parse_number);
 	image.size = parse_number(image.size);
+	// Hashes are only used for image duplicate detection and are useless
+	// client-side
 	delete image.hash;
 	post.image = image;
 });
@@ -147,8 +151,6 @@ exports._make_media_dir = make_dir;
 
 function make_media_dirs (cb) {
 	var keys = ['src', 'thumb', 'vint', 'dead'];
-	if (!is_standalone())
-		keys.push('tmp');
 	if (config.EXTRA_MID_THUMBNAILS)
 		keys.push('mid');
 	async.forEach(keys, make_dir.bind(null, null), function (err) {
@@ -162,18 +164,6 @@ function make_media_dirs (cb) {
 	});
 }
 exports.make_media_dirs = make_media_dirs;
-
-function serve_image (req, resp) {
-	var m = /^\/(src|thumb|mid|vint)(\/\d+\.\w+)$/.exec(req.url);
-	if (!m)
-		return false;
-	var root = config.MEDIA_DIRS[m[1]];
-	if (!root)
-		return false;
-	require('send')(req, m[2], {root: root}).pipe(resp);
-	return true;
-}
-exports.serve_image = serve_image;
 
 function squish_MD5 (hash) {
 	if (typeof hash == 'string')
@@ -210,5 +200,3 @@ function commit_image_alloc (alloc, cb) {
 	});
 }
 exports.commit_image_alloc = commit_image_alloc;
-
-var is_standalone = exports.is_standalone = db.is_standalone;
