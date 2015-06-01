@@ -6,9 +6,9 @@ const lang = {
 	anon: 'Anônimo',
 	search: 'Pesquisa',
 	show: 'Exibir',
-	hide: 'Hide',
-	report: 'Report',
-	focus: 'Focus',
+	hide: 'Esconder',
+	report: 'Reportar',
+	focus: 'Focar',
 	expand: 'Expandir',
 	last: 'Últimos',
 	see_all: 'Ver todos',
@@ -18,9 +18,9 @@ const lang = {
 	catalog: 'Catálogo',
 	return: 'Retornar',
 	top: 'Topo',
-	reply: 'Reply',
-	newThread: 'New thread',
-	locked_to_bottom: 'Locked to bottom',
+	reply: 'Postar',
+	newThread: 'Novo tópico',
+	locked_to_bottom: 'Travado ao rodapé',
 
 	// Time-related
 	week: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],
@@ -53,7 +53,7 @@ const lang = {
 	},
 	// 47 respostas and 21 images omited
 	abbrev_msg:  function(omit, img_omit, url) {
-		var html = lang.pluralize(omit, 'postagens');
+		var html = lang.pluralize(omit, 'postagen');
 		if (img_omit)
 			html += ' e ' + lang.pluralize(img_omit, 'imagen');
 		html += ' omitidas';
