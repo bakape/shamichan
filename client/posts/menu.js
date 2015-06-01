@@ -12,7 +12,6 @@ let $ = require('jquery'),
 let MenuView = module.exports = Backbone.View.extend({
 	// Maping of menu items to their handler message bus commands
 	actions: {
-		focus: 'scroll:focus',
 		report: 'report',
 		hide: 'hide'
 	},
