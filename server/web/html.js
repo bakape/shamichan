@@ -22,10 +22,12 @@ const vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
 	'X-Frame-Options': 'sameorigin'
 };
-const noCacheHeaders = _.extend(vanillaHeaders, {
+const noCacheHeaders = {
+	'Content-Type': 'text/html; charset=UTF-8',
+	'X-Frame-Options': 'sameorigin',
 	'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
 	'Cache-Control': 'no-cache, no-store'
-});
+};
 
 router.get('/', function(req, res) {
 	res.redirect(`/${config.DEFAULT_BOARD}/`)
@@ -42,45 +44,51 @@ router.get(/^\/(\w+)$/, function(req, res) {
 router.get(/^\/(\w+)\/(catalog)?$/,
 	util.boardAccess,
 	function(req, res, next) {
-		// Board pages are very dynamic. Caching those could produce
-		// detrimental results. Unless we find a good ETaging sollution,
-		// that is.
-		res.set(noCacheHeaders);
 		const board = req.board;
 		let yaku = res.yaku = new db.Yakusoku(board, req.ident);
 		const catalog = !!req.params[1];
 		yaku.get_tag(catalog ? -2 : -1);
+		// More efficient to confirm we actually need to retrieve and render
+		// the page before fully creating the DB -> Render -> response pipeline.
+		yaku.once('begin', function (thread_count, post_count) {
+			if (!buildEtag(req, res, post_count))
+				return yaku.disconnect();
+			res.opts = {
+				board,
+				catalog,
+				thread_count,
+				post_count
+			};
+			next();
+		});
+	},
+	function(req, res, next) {
+		const opts = res.opts,
+			board = opts.board;
+		let yaku = res.yaku;
 		new Render(yaku, req, res, {
 			fullLinks: true,
 			board,
 			isThread: false,
 			live: true,
-			catalog: catalog
+			catalog: opts.catalog
 		});
-		yaku.once('begin', function (thread_count) {
-			yaku.emit('top', page_nav(thread_count, -1, board === 'archive'));
+		yaku.emit('top', page_nav(opts.thread_count, -1, board === 'archive'));
+		yaku.once('error', function(err) {
+			winston.error('index:' + err);
+			next();
 		});
 		yaku.once('end', function() {
 			yaku.emit('bottom');
-			next();
-		});
-		yaku.once('error', function(err) {
-			winston.error('index:' + err);
 			next();
 		});
 	},
 	finish
 );
 
-function finish(req, res) {
-	res.yaku.disconnect();
-	res.end();
-}
-
 router.get(/^\/(\w+)\/page(\d+)$/,
 	util.boardAccess,
 	function(req, res, next) {
-		res.set(noCacheHeaders);
 		const board = req.board,
 			page = parseInt(req.params[1], 10);
 		let yaku = new db.Yakusoku(board, req.ident);
@@ -91,9 +99,9 @@ router.get(/^\/(\w+)\/page(\d+)$/,
 			res.status(302).redirect('.');
 			yaku.disconnect();
 		});
-		// More stepwise than /board pages, because there are now race
-		// conditions to consider
-		yaku.once('begin', function(threadCount) {
+		yaku.once('begin', function(threadCount, postCount) {
+			if (!buildEtag(req, res, postCount))
+				return yaku.disconnect();
 			res.yaku = yaku;
 			res.opts = {
 				board,
@@ -186,47 +194,13 @@ router.get(/^\/(\w+)\/(\d+)/,
 			yaku.disconnect();
 		});
 		reader.once('begin', function(preThread) {
-			// Build an eTag in accordance to the thread height and cookie
-			// parameters, as those effect the HTML
-			if (!config.DEBUG && preThread.hctr) {
-				// XXX: Always uses the hash of the default language in the etag
-				let etag = `W/${preThread.hctr}-`
-					+ RES['indexHash-' + config.DEFAULT_LANG];
-				const chunks = req.cookies,
-					thumb = chunks.thumb;
-				if (thumb && common.thumbStyles.indexOf(thumb) >= 0)
-					etag += '-' + thumb;
-				const etags = ['spoil', 'agif', 'rtime', 'linkify', 'lang'];
-				for (let i = 0, l = etags.length; i < l; i++) {
-					const tag = etags[i];
-					if (chunks[tag])
-						etag += `-${tag}-${chunks[tag]}`;
-				}
-				if (lastN)
-					etag += '-last' + lastN;
-				if (preThread.locked)
-					etag += '-locked';
-				if (req.ident.auth)
-					etag += '-auth';
-
-				let info = {
-					etag: etag,
-					req: req
-				};
-				// Addtional etag hooks. Mostly from `time.js`.
-				hooks.trigger_sync('buildETag', info);
-
-				if (req.headers['if-none-match'] === info.etag) {
-					yaku.disconnect();
-					return res.sendStatus(304);
-				}
-				res.set(_.extend(vanillaHeaders ,{
-					ETag: info.etag,
-					'Cache-Control': 'private, max-age=0, must-revalidate'
-				}));
-			}
-			else
-				res.set(noCacheHeaders);
+			let extra = '';
+			if (lastN)
+				extra += '-last' + lastN;
+			if (preThread.locked)
+				extra += '-locked';
+			if (!buildEtag(req, res, preThread.hctr, extra))
+				return yaku.disconnect();
 
 			res.yaku = yaku;
 			res.reader = reader;
@@ -264,6 +238,65 @@ router.get(/^\/(\w+)\/(\d+)/,
 	},
 	finish
 );
+
+// Build an eTag in accordance to the board/thread progress counter and
+// cookie parameters, as those effect the HTML
+function buildEtag(req, res, ctr, extra) {
+	let etag = parseCookies(req, ctr);
+	if (config.DEBUG) {
+		res.set(noCacheHeaders);
+		return true;
+	}
+	if (extra)
+		etag += extra;
+	const auth = !!req.ident.auth;
+	if (auth)
+		etag += '-auth';
+
+	// Addtional etag hooks. Mostly from `time.js`.
+	let info = {
+		etag: etag,
+		req: req
+	};
+	hooks.trigger_sync('buildETag', info);
+	etag = info.etag;
+
+	// etags match. No need to rerender.
+	if (req.headers['If-None-Match'] === etag) {
+		res.sendStatus(304);
+		return false;
+	}
+
+	res.set(_.extend(_.clone(vanillaHeaders), {
+		ETag: etag,
+		// Don't cache HTML with IPs for public use
+		'Cache-Control': `max-age=604800 ${auth ? 'private' : 'public'}`
+	}));
+	return true;
+}
+
+function parseCookies(req, ctr) {
+	const cookies = req.cookies,
+		thumb = cookies.thumb,
+		styles = common.thumbStyles,
+		lang = req.lang = config.LANGS.indexOf(cookies.lang) > -1
+			? cookies.lang : config.DEFAULT_LANG;
+	let etag = `W/${ctr}-${RES['indexHash-' + lang]}-${lang}`;
+	etag += '-' + (styles.indexOf(thumb) >= 0 && thumb || styles[0]);
+	const etags = ['spoil', 'agif', 'rtime', 'linkify'];
+	for (let i = 0, l = etags.length; i < l; i++) {
+		const tag = etags[i];
+		if (tag in cookies)
+			etag += `-${tag}:${cookies[tag]}`;
+	}
+
+	return etag;
+}
+
+function finish(req, res) {
+	res.yaku.disconnect();
+	res.end();
+}
 
 // Pack page navigation data in an object for easier passing downstream
 function page_nav(thread_count, cur_page, ascending) {

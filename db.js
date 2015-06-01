@@ -1378,7 +1378,8 @@ Y.get_post_op = function (num, callback) {
 Y.get_tag = function(page) {
 	let r = this.connect(),
 		self = this;
-	const key = 'tag:' + tag_key(this.tag) + ':threads',
+	const keyBase = 'tag:' + tag_key(this.tag),
+		key = keyBase + ':threads',
 		reverseOrder = this.tag === 'archive';
 
 	// -1 is for live pages and -2 is for catalog
@@ -1402,6 +1403,8 @@ Y.get_tag = function(page) {
 	else
 		m.zrevrange(key, start, end);
 	m.zcard(key);
+	// Used for building board eTags
+	m.get(keyBase + ':postctr');
 	m.exec(function (err, res) {
 		if (err)
 			return self.emit('error', err);
@@ -1410,7 +1413,7 @@ Y.get_tag = function(page) {
 			return self.emit('nomatch');
 		if (reverseOrder)
 			nums.reverse();
-		self.emit('begin', res[1]);
+		self.emit('begin', res[1] || 0, res[2] || 0);
 		let reader = new Reader();
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));

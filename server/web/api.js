@@ -12,9 +12,13 @@ let caps = require('../caps'),
 	util = require('./util'),
 	winston = require('winston');
 
-let router = module.exports = express.Router();
+let app = module.exports = express();
 
-router.use(function(req, res, next) {
+// Use a subapp instead of a router, so we can have separate settings. The JSON
+// responses aren't piped, like the HTML, so we can use the inbuilt hashing
+// eTagger here
+app.enable('strict routing');
+app.use(function(req, res, next) {
 	res.set({
 		'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
 		'Cache-Control': 'no-cache, no-store',
@@ -24,7 +28,7 @@ router.use(function(req, res, next) {
 	next();
 });
 
-router.get(/^\/post\/(\d+)$/, function(req, res) {
+app.get(/^\/post\/(\d+)$/, function(req, res) {
 	new db.Reader().singlePost(req.params[0], req.ident, function(post) {
 		if (!post)
 			return res.sendStatus(404);
@@ -32,7 +36,7 @@ router.get(/^\/post\/(\d+)$/, function(req, res) {
 	});
 });
 
-router.get(/^\/thread\/(\d+)$/, function(req, res) {
+app.get(/^\/thread\/(\d+)$/, function(req, res) {
 	const num = req.params[0],
 		info = db.postInfo(num);
 	if (!info.isOP || !caps.can_access_board(req.ident, info.board))
@@ -61,7 +65,7 @@ router.get(/^\/thread\/(\d+)$/, function(req, res) {
 });
 
 // Array of a board's threads in order
-router.get(/^\/board\/(\w+)$/, util.boardAccess, function(req, res) {
+app.get(/^\/board\/(\w+)$/, util.boardAccess, function(req, res) {
 	const key = `tag:${db.tag_key(req.board)}:threads`;
 	global.redis.zrevrange(key, 0, -1, function(err, threads) {
 		if (err)
@@ -70,7 +74,7 @@ router.get(/^\/board\/(\w+)$/, util.boardAccess, function(req, res) {
 	})
 });
 
-router.get('/config', function(req, res) {
+app.get('/config', function(req, res) {
 	res.json({
 		config: state.clientConfig,
 		hot: state.clientHotConfig

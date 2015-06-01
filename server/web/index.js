@@ -19,11 +19,10 @@ let api = require('./api'),
 let app = express(),
 	server = http.createServer(app);
 
-// NOTE: Order is important as it determines handler priority
-
-// XXX: We need a way to build reliable eTags for board pages
 app.enable('strict routing').disable('etag');
 server.listen(config.LISTEN_PORT);
+
+// NOTE: Order is important as it determines handler priority
 
 // Pass the client IP through authentication checks
 app.use(function(req, res, next) {
@@ -45,12 +44,15 @@ app.use(function(req, res, next) {
 });
 
 websocket.start(server);
-app.post('/upload/', imager.new_upload);
-app.use('/api/', api);
-
 if (config.GZIP)
 	app.use(compress());
-if (config.SERVE_STATIC_FILES)
-	app.use(express.static('www'));
+app.post('/upload/', imager.new_upload);
+app.use('/api/', api);
+if (config.SERVE_STATIC_FILES) {
+	app.use(express.static('www', {
+		maxAge: '7 days',
+		etag: false
+	}));
+}
 app.use(cookieParser());
 app.use(html);

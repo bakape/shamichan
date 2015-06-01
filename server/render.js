@@ -41,14 +41,11 @@ class Render {
 			yaku.on('post', this.onPost.bind(this));
 		}
 	}
-	// Read query strings and cookies
 	parseRequest() {
 		let req = this.req;
 		// Entire page, not just the contents of threads
 		this.full = req.query.minimal !== 'true';
-		const cookies = req.cookies;
-		this.lang = config.LANGS.indexOf(cookies.lang) > -1 ? cookies.lang
-			: config.DEFAULT_LANG;
+		this.lang = req.lang;
 	}
 	// Configure rendering singleton
 	initOneeSama() {
