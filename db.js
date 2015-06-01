@@ -1411,7 +1411,7 @@ Y.get_tag = function(page) {
 		if (reverseOrder)
 			nums.reverse();
 		self.emit('begin', res[1]);
-		let reader = new Reader(self);
+		let reader = new Reader();
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));
 		reader.on('post', self.emit.bind(self, 'post'));
@@ -1449,10 +1449,10 @@ class Reader extends events.EventEmitter {
 	constructor(yakusoku) {
 		// Call the EventEmitter's constructor
 		super();
-		this.y = yakusoku;
+		this.r = global.redis;
 	}
 	get_thread(tag, num, opts) {
-		let r = this.y.connect();
+		let r = this.r;
 		const graveyard = tag === 'graveyard';
 		if (graveyard)
 			opts.showDead = true;
@@ -1552,13 +1552,10 @@ class Reader extends events.EventEmitter {
 				function (err) {
 					if (err)
 						return self.emit('error', err);
-					self.emit('thread', opPost, Math.max(total - abbrev, 0));
-					if (opts.catalog) {
-						self.emit('endThread');
-						self.emit('end');
-						return;
-					}
-
+					opPost.omit = Math.max(total - abbrev, 0);
+					self.emit('thread', opPost);
+					if (opts.catalog)
+						return self.emit('end');
 					if (deadNums)
 						nums = self.merge_posts(nums, deadNums, abbrev);
 					self._get_each_reply(tag, 0, nums, opts);
@@ -1611,7 +1608,7 @@ class Reader extends events.EventEmitter {
 		});
 	}
 	get_post(kind, num, opts, cb) {
-		let r = this.y.connect(),
+		let r = this.r,
 			self = this;
 		const key = kind + ':' + num;
 		async.waterfall([
@@ -1673,8 +1670,30 @@ class Reader extends events.EventEmitter {
 			});
 		});
 	}
+	// Wrapper for retrieving individual posts separatly from threads
+	singlePost(num, ident, cb) {
+		const info = postInfo(num),
+			key = info.isOP ? 'thread' : 'post';
+		if (!caps.can_access_board(ident, info.board))
+			return cb(null);
+		this.get_post(key, num, {}, function(err, post) {
+			if (err || !post)
+				return cb(null);
+			cb(post);
+		})
+	}
 }
 exports.Reader = Reader;
+
+// Retrive post info from cache
+function postInfo(num) {
+	const isOP = num in TAGS;
+	return {
+		isOP,
+		board: config.BOARDS[isOP ? TAGS[num] : TAGS[OPs[num]]]
+	};
+}
+exports.postInfo = postInfo;
 
 /* AMUSEMENT */
 

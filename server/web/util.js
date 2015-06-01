@@ -4,6 +4,8 @@
 
 'use strict';
 
+let caps = require('../caps');
+
 function parse_forwarded_for(ff) {
 	if (!ff)
 		return null;
@@ -17,3 +19,11 @@ function parse_forwarded_for(ff) {
 	return last;
 }
 exports.parse_forwarded_for = parse_forwarded_for;
+
+function boardAccess(req, res, next) {
+	const board = req.board = req.params[0];
+	if (!caps.can_access_board(req.ident, board))
+		return res.sendStatus(404);
+	next();
+}
+exports.boardAccess = boardAccess;

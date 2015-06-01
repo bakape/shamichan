@@ -5,6 +5,7 @@
 'use strict';
 
 let _ = require('underscore'),
+	api = require('./api'),
 	caps = require('../caps'),
 	cookieParser = require('cookie-parser'),
 	common = require('../../common'),
@@ -24,10 +25,7 @@ let app = express(),
 	server = http.createServer(app),
 	RES = state.resources;
 
-// NOTE: Order is important as it dtermines handler priority
-
-// SockJS needs to override Express, so we bind it first
-websocket.start(server);
+// NOTE: Order is important as it determines handler priority
 
 // XXX: We need a way to build reliable eTags for board pages
 app.enable('strict routing').disable('etag');
@@ -52,7 +50,9 @@ app.use(function(req, res, next) {
 	next();
 });
 
+websocket.start(server);
 app.post('/upload/', imager.new_upload);
+app.use('/api/', api);
 
 if (config.GZIP)
 	app.use(compress());
@@ -64,14 +64,9 @@ const vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
 	'X-Frame-Options': 'sameorigin'
 };
-const noCache = {
+const noCacheHeaders = _.extend(vanillaHeaders, {
 	'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
 	'Cache-Control': 'no-cache, no-store'
-};
-const noCacheHeaders = _.extend(vanillaHeaders, noCache);
-const JSONHeaders = _.extend(noCache, {
-	'Access-Control-Allow-Origin': '*',
-	'Content-Type': 'application/json; charset=UTF-8'
 });
 
 app.get('/', function(req, res) {
@@ -219,7 +214,7 @@ app.get(/^\/(\w+)\/(\d+)/,
 			return res.sendStatus(404);
 
 		let yaku = new db.Yakusoku(board, req.ident),
-			reader = new db.Reader(yaku),
+			reader = new db.Reader(),
 			opts = {redirect: true};
 
 		const lastN = detect_last_n(req.query);
