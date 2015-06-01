@@ -29,11 +29,14 @@ function set_lock_target(num) {
 	if (num == lockTarget)
 		return;
 	lockTarget = num;
-	const bottom = lockTarget == PAGE_BOTTOM;
 
-	if ($lockIndicator.length)
-		$lockIndicator.css('visibility', bottom ? 'visible' : 'hidden');
+	if ($lockIndicator.length) {
+		$lockIndicator.css('visibility',
+			(lockTarget == PAGE_BOTTOM) ? 'visible' : 'hidden'
+		);
+	}
 }
+main.comply('scroll:focus', num => set_lock_target(num));
 
 /* 
  * Logic for locking position to bottom of thread
@@ -82,7 +85,7 @@ main.comply('scroll:follow', followLock);
 
 //Check if user scrolled to the bottom every time they scroll
 function scroll_shita() {
-	if (state.page.get('thread') && (!lockTarget || lockTarget == PAGE_BOTTOM))
+	if (state.page.get('thread'))
 		set_lock_target(null);
 }
 

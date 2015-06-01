@@ -49,8 +49,13 @@ let NotifyModel = Backbone.Model.extend({
 				unreadCount: 0,
 				reply: !hidden
 			});
-			// TODO: Prevent scrolling with new posts, if page isn't visible
-			//autoUnlock(hidden);
+			// Prevent scrolling with new posts, if page isn't visible
+			if (!options.get('alwaysLock')) {
+				main.command(
+					'scroll:focus',
+					hidden && main.$threads.find('article').last().attr('id')
+				);
+			}
 		}, false);
 
 		let dropped = () => this.set('alert', true);
