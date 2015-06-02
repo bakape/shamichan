@@ -58,7 +58,6 @@ loaded into a running server with `node server/kill.js`
 ##Standalone upkeep scripts
 * scripts/backup.js - uploads rdb to S3
 * scripts/backup.sh - MEGA backup script
-* scripts/clean.js - deletes archived images
 * scripts/purge_bans.sh - Removes all bans
 * scripts/purge_mod_sessions.sh - Closes all active moderator sessions
 * scripts/radio.js - icecast2 server integration

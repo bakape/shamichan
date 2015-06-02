@@ -243,7 +243,7 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 function inactive_board_check(client) {
 	if (caps.can_administrate(client.ident))
 		return true;
-	return ['graveyard', 'archive'].indexOf(client.board) == -1;
+	return config.READ_ONLY_BOARDS.indexOf(client.board) === -1;
 }
 
 function allocate_post(msg, client, callback) {
@@ -669,9 +669,11 @@ if (require.main == module) {
 		function (err) {
 			if (err)
 				throw err;
+			/*
 			// Start thread archiver
 			if (config.ARCHIVE)
 				require('./archive');
+			*/
 			var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
 			var onegai;
 			var writes = [];

@@ -351,24 +351,18 @@ OS.thumbPath = function(data, mid) {
 OS.imageLink = function(data) {
 	let name = '',
 		imgnm = data.imgnm;
-	const vint = !!data.vint,
-		m = imgnm.match(/^(.*)\.\w{3,4}$/);
+	const m = imgnm.match(/^(.*)\.\w{3,4}$/),
+		mediaURL = config.SECONDARY_MEDIA_URL || config.MEDIA_URL;
 	if (m)
 		name = m[1];
-	let html = [safe('<a')];
-	if (vint)
-		html.push(safe(' class="disabled'));
-	else {
-		html.push(
-			safe(parseHTML
-				` href="${config.SECONDARY_MEDIA_URL || config.MEDIA_URL}src/${
-					data.src}"
+	let html = [
+		safe(parseHTML
+			`<a href="${mediaURL}src/${data.src}"
 				rel="nofollow"
 				download="`
-			),
-			imgnm
-		);
-	}
+		),
+		imgnm
+	];
 	if (name.length >= 38) {
 		html.push(safe('" title="'), imgnm);
 		imgnm = [name.slice(0, 30), safe('(&hellip;)'), data.ext];
@@ -385,7 +379,6 @@ OS.imagePaths = function() {
 			src: mediaURL + 'src/',
 			thumb: mediaURL + 'thumb/',
 			mid: mediaURL + 'mid/',
-			vint: mediaURL + 'vint/',
 			spoil: mediaURL + 'spoil/spoiler'
 		};
 		this.trigger('mediaPaths', this._imgPaths);
@@ -396,13 +389,12 @@ OS.imagePaths = function() {
 OS.thumbnail = function(data, href) {
 	const paths = this.imagePaths(),
 		dims = data.dims;
-	let src, thumb,
+	let src = paths.src + (data.src),
+		thumb,
 		width = dims[0],
 		height = dims[1],
 		thumbWidth = dims[2],
 		thumbHeight = dims[3];
-	if (!data.vint)
-		src = paths.src + (data.src);
 
 	// Spoilered and spoilers enabled
 	if (data.spoiler && this.spoilToggle) {
@@ -411,18 +403,13 @@ OS.thumbnail = function(data, href) {
 		thumbWidth = sp.dims[0];
 		thumbHeight = sp.dims[1];
 	}
-	// Archive board
-	else if (data.vint) {
-		src = `http://archive.moe/_/search/image/${data.MD5}`;
-		thumb = paths.vint + data.vint
-	}
 	// Animated GIF thumbnails
 	else if (data.ext === '.gif' && this.autoGif)
 		thumb = src;
 	else
 		thumb = this.thumbPath(data, this.thumbStyle === 'sharp');
 
-	// Source image smaller than thumbnail, archive and other fallbacks
+	// Source image smaller than thumbnail and other fallbacks
 	if (!thumbWidth) {
 		thumbWidth = width;
 		thumbHeight = height;

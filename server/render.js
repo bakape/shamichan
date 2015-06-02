@@ -260,10 +260,6 @@ class Render {
 		let start = 0,
 			end = nav.pages,
 			step = 1;
-		if (nav.ascending) {
-			start = end - 1;
-			end = step = -1;
-		}
 		for (let i = start; i != end; i += step) {
 			if (i != cur)
 				bits += `<a href="page${i}" class="history">${i}</a>`;

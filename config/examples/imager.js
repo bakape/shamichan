@@ -7,7 +7,6 @@ module.exports = {
 		src: 'www/src',
 		thumb: 'www/thumb',
 		mid: 'www/mid',
-		vint: 'www/vint',
 		dead: 'graveyard',
 		tmp: 'imager/tmp'
 	},

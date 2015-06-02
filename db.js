@@ -272,9 +272,6 @@ function update_cache(chan, msg) {
 			OPs[op] = op;
 		}
 	}
-	else if (kind == common.MOVE_THREAD) {
-		set_OP_tag(tag, op);
-	}
 	else if (kind == common.DELETE_POSTS) {
 		const nums = msg.nums;
 		for (let i = 0, l = msg.num.length; i < l; i++) {
@@ -316,11 +313,8 @@ function load_OPs(callback) {
 			async.forEach(threads, function (op, cb) {
 				op = parseInt(op, 10);
 				var ps = [scan_thread.bind(null,tagIndex,op)];
-				if (!config.READ_ONLY && config.THREAD_EXPIRY
-							&& tag != 'archive') {
-					ps.push(refresh_expiry.bind(null,
-							tag, op));
-				}
+				if (!config.READ_ONLY && config.THREAD_EXPIRY)
+					ps.push(refresh_expiry.bind(null, tag, op));
 				async.parallel(ps, cb);
 			}, cb);
 		});
@@ -900,83 +894,6 @@ Y.purge_thread = function(op, callback){
 	]);
 };
 
-Y.archive_thread = function (op, callback) {
-	var r = this.connect();
-	var key = 'thread:' + op, archiveKey = 'tag:' + tag_key('archive');
-	var self = this;
-	async.waterfall([
-	function (next) {
-		var m = r.multi();
-		m.exists(key);
-		m.hget(key, 'immortal');
-		m.zscore('tag:' + tag_key('graveyard') + ':threads', op);
-		m.exec(next);
-	},
-	function (rs, next) {
-		if (!rs[0])
-			return callback(Muggle(key + ' does not exist.'));
-		if (parseInt(rs[1], 10))
-			return callback(Muggle(key + ' is immortal.'));
-		if (rs[2])
-			return callback(Muggle(key + ' is already deleted.'));
-		var m = r.multi();
-		// order counts
-		m.hgetall(key);
-		m.hgetall(key + ':links');
-		m.llen(key + ':posts');
-		m.lrange(key + ':dels', 0, -1);
-		m.exec(next);
-	},
-	function (rs, next) {
-		var view = rs[0], links = rs[1], replyCount = rs[2], dels = rs[3];
-		var subject = subject_val(op, view.subject);
-		var tags = view.tags;
-		var m = r.multi();
-		// move to archive tag only
-		m.hset(key, 'origTags', tags);
-		m.hset(key, 'tags', tag_key('archive'));
-		tags = parse_tags(tags);
-		for (let i = 0, lim = tags.length; i < lim; i++) {
-			const tagKey = 'tag:' + tag_key(tags[i]);
-			m.zrem(tagKey + ':threads', op);
-			if (subject)
-				m.zrem(tagKey + ':subjects', subject);
-		}
-		m.zadd(archiveKey + ':threads', op, op);
-		self._log(m, op, common.DELETE_THREAD, [], {tags: tags});
-
-		// shallow thread insertion message in archive
-		if (!_.isEmpty(links))
-			view.links = links;
-		extract(view);
-		delete view.ip;
-		view.replyctr = replyCount;
-		view.hctr = 0;
-		var etc = {tags: ['archive'], cacheUpdate: {}};
-		self._log(m, op, common.MOVE_THREAD, [view], etc);
-
-		// clear history; note new history could be added
-		// for deletion in the archive
-		// (a bit silly right after adding a new entry)
-		m.hdel(key, 'hctr');
-		m.del(key + ':history');
-
-		// delete hidden posts
-		for (let i = 0, l = dels.length; i < l; i++) {
-			let num = dels[i];
-			m.del('post:' + num);
-			m.del('post:' + num + ':links');
-		}
-		m.del(key + ':dels');
-
-		m.exec(next);
-	},
-	function (results, done) {
-		set_OP_tag(config.BOARDS.indexOf('archive'), op);
-		done();
-	}], callback);
-};
-
 /* BOILERPLATE CITY */
 
 Y.remove_images = function (nums, callback) {
@@ -1379,12 +1296,11 @@ Y.get_tag = function(page) {
 	let r = this.connect(),
 		self = this;
 	const keyBase = 'tag:' + tag_key(this.tag),
-		key = keyBase + ':threads',
-		reverseOrder = this.tag === 'archive';
+		key = keyBase + ':threads';
 
 	// -1 is for live pages and -2 is for catalog
 	const catalog = page === -2;
-	if (page < 0 && !reverseOrder)
+	if (page < 0)
 		page = 0;
 	let start, end;
 	if (catalog) {
@@ -1398,10 +1314,7 @@ Y.get_tag = function(page) {
 	}
 
 	let m = r.multi();
-	if (reverseOrder)
-		m.zrange(key, start, end);
-	else
-		m.zrevrange(key, start, end);
+	m.zrevrange(key, start, end);
 	m.zcard(key);
 	// Used for building board eTags
 	m.get(keyBase + ':postctr');
@@ -1411,8 +1324,6 @@ Y.get_tag = function(page) {
 		let nums = res[0];
 		if (page > 0 && !nums.length)
 			return self.emit('nomatch');
-		if (reverseOrder)
-			nums.reverse();
 		self.emit('begin', res[1] || 0, res[2] || 0);
 		let reader = new Reader(self.ident);
 		reader.on('error', self.emit.bind(self, 'error'));

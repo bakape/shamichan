@@ -33,9 +33,9 @@ module.exports = {
 	REDIS_PORT: 6379,
 	READ_ONLY: false,
 
-	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
+	BOARDS: ['moe', 'gar', 'meta', 'staff'],
 	DEFAULT_BOARD: 'moe',
-	READ_ONLY_BOARDS: ['archive', 'graveyard'],
+	READ_ONLY_BOARDS: ['graveyard'],
 // Add links to the navigator menu to custom URLs
 	PSUEDO_BOARDS: [
 		['g', 'https://google.com']
@@ -60,12 +60,9 @@ module.exports = {
 		gar: 3600 * 24 * 7,
 		meta: 3600 * 24 * 7
 	},
-// Archive expired threads
-	ARCHIVE: false,
 /*
  Permanently delete threads instead of archiving them. Existing archives will
  not be removed.
- Note: scripts/clean.js is not needed with this option enabled
  */
 	VOLATILE: false,
 

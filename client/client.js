@@ -66,17 +66,6 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		parent.trigger('bump');
 };
 
-// Move thread to the archive board
-dispatcher[common.MOVE_THREAD] = function(msg) {
-	msg = msg[0];
-	var model = new posts.ThreadModel(msg);
-	main.oneeSama.links = msg.links;
-	new posts.Section({
-		model: model,
-		id: msg.num
-	});
-};
-
 dispatcher[common.INSERT_IMAGE] = function(msg) {
 	let model = state.posts.get(msg[0]);
 	// Did I just upload this?
