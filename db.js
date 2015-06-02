@@ -1551,15 +1551,16 @@ class Reader extends events.EventEmitter {
 						}
 
 						extract(opPost);
+						opPost.omit = Math.max(total - abbrev, 0);
+						if (!self.showIPs)
+							delete opPost.ip;
+						opPost.hctr = parseInt(opPost.hctr, 10);
 						next(null);
 					}
 				],
 				function (err) {
 					if (err)
 						return self.emit('error', err);
-					opPost.omit = Math.max(total - abbrev, 0);
-					if (!self.showIPs)
-						delete opPost.ip;
 					self.emit('thread', opPost);
 					if (opts.catalog)
 						return self.emit('end');
