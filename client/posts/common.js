@@ -18,7 +18,6 @@ module.exports = {
 		'click >header>nav>a.quote': 'quotePost',
 		'click >header>.control': 'renderMenu'
 	},
-
 	initCommon: function(){
 		this.$blockquote = this.$el.children('blockquote');
 		this.listenTo(this.model, {
@@ -54,7 +53,6 @@ module.exports = {
 		);
 		return this;
 	},
-
 	updateBody: function(update) {
 		main.oneeSama.dice = update.dice;
 		main.oneeSama.links = update.links;
@@ -63,7 +61,6 @@ module.exports = {
 		main.oneeSama.state = update.state;
 		main.oneeSama.fragment(update.frag);
 	},
-
 	// Inject various tags into the blockqoute
 	inject: function(frag) {
 		var $dest = this.$buffer;
@@ -91,20 +88,22 @@ module.exports = {
 			$dest.append(out);
 		return out;
 	},
-
 	renderTime: function(model, rtime = options.get('relativeTime')) {
-		if (!this.$time) {
-			this.$time = this.$el.find('time').first();
-			this.time = main.request('dateFromEl', this.$time[0]).getTime();
-		}
-		if (this.hasRelativeTime)
-			this.$time.html(main.oneeSama.time(this.time));
-		if (rtime) {
-			this.hasRelativeTime = true;
-			return setTimeout(this.renderTime.bind(this), 60000);
-		}
+		// TEMP: Remove after extraction is properly defered
+		main.oneeSama.rTime = rtime;
+		let el = this.el.getElementsByTagName('time')[0];
+		if (!this.timeStamp)
+			this.timeStamp = main.request('dateFromEl', el).getTime();
+		// Create new time element from string
+		let newEl = new DOMParser()
+			.parseFromString(main.oneeSama.time(this.timeStamp), 'text/xml')
+			.firstChild;
+		el.parentNode.replaceChild(newEl, el);
+		if (this.timer)
+			clearTimeout(this.timer);
+		if (rtime)
+			this.timer = setTimeout(this.renderTime.bind(this), 60000);
 	},
-
 	renderBacklinks: function(model, links) {
 		// No more backlinks, because posts deleted or something
 		if (!links && this.$backlinks)
@@ -128,19 +127,16 @@ module.exports = {
 		}
 		main.command('scroll:follow', () => this.$backlinks.html(html));
 	},
-
 	renderMenu: function(e) {
 		new Menu({
 			parent: e.target,
 			model: this.model
 		});
 	},
-
 	// Admin JS injections
 	fun: function() {
 		// Fun goes here
 	},
-
 	// Self-delusion tripfag filter
 	toggleAnonymisation: function(model, toggle) {
 		var $el = this.$el.find('>header>b');
@@ -151,7 +147,6 @@ module.exports = {
 		else if (name)
 			$el.text(name);
 	},
-
 	quotePost: function(e) {
 		e.preventDefault();
 
