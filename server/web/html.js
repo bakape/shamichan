@@ -272,7 +272,9 @@ function buildEtag(req, res, ctr, extra) {
 	res.set(_.extend(_.clone(vanillaHeaders), {
 		ETag: etag,
 		// Don't cache HTML with IPs for public use
-		'Cache-Control': `max-age=604800 ${auth ? 'private' : 'public'}`
+		'Cache-Control': `max-age=0, must-revalidate, ${
+			auth ? 'private' : 'public'
+		}`
 	}));
 	return true;
 }
