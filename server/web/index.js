@@ -48,11 +48,7 @@ if (config.GZIP)
 	app.use(compress());
 app.post('/upload/', imager.new_upload);
 app.use('/api/', api);
-if (config.SERVE_STATIC_FILES) {
-	app.use(express.static('www', {
-		maxAge: '7 days',
-		etag: false
-	}));
-}
+if (config.SERVE_STATIC_FILES)
+	app.use(express.static('www'));
 app.use(cookieParser());
 app.use(html);
