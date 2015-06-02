@@ -122,7 +122,7 @@ function dump_thread(op, board, ident, outputs, cb) {
 		return cb(404);
 
 	var yaku = new db.Yakusoku(board, ident);
-	var reader = new db.Reader(yaku);
+	var reader = new db.Reader(ident);
 	reader.get_thread(board, op, {});
 	reader.once('nomatch', function () {
 		cb(404);

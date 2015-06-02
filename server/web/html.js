@@ -1,0 +1,331 @@
+/*
+ Server the HTML part of pages
+ */
+
+'use strict';
+
+let _ = require('underscore'),
+	caps = require('../caps'),
+	common = require('../../common'),
+	config = require('../../config'),
+	db = require('../../db'),
+	express = require('express'),
+	hooks = require('../../util/hooks'),
+	Render = require('../render'),
+	state = require('../state'),
+	util = require('./util');
+
+let router = module.exports = express.Router(),
+	RES = state.resources;
+
+const vanillaHeaders = {
+	'Content-Type': 'text/html; charset=UTF-8',
+	'X-Frame-Options': 'sameorigin'
+};
+const noCacheHeaders = {
+	'Content-Type': 'text/html; charset=UTF-8',
+	'X-Frame-Options': 'sameorigin',
+	'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
+	'Cache-Control': 'no-cache, no-store'
+};
+
+router.get('/', function(req, res) {
+	res.redirect(`/${config.DEFAULT_BOARD}/`)
+});
+
+// Redirect `/board` to `/board/` The client parses the URL to determine
+// what page it is on. So we need the trailing slash for easier board
+// determination.
+router.get(/^\/(\w+)$/, function(req, res) {
+	res.redirect(`/${req.params[0]}/`);
+});
+
+// /board/ and /board/catalog pages
+router.get(/^\/(\w+)\/(catalog)?$/,
+	util.boardAccess,
+	function(req, res, next) {
+		const board = req.board;
+		let yaku = res.yaku = new db.Yakusoku(board, req.ident);
+		const catalog = !!req.params[1];
+		yaku.get_tag(catalog ? -2 : -1);
+		yaku.once('begin', function (thread_count, post_count) {
+			// More efficient to confirm we actually need to retrieve and render
+			// the page before fully creating the Reader() -> Render() ->
+			// response pipeline
+			if (!buildEtag(req, res, post_count))
+				return yaku.disconnect();
+			res.opts = {
+				board,
+				catalog,
+				thread_count,
+				post_count
+			};
+			next();
+		});
+	},
+	function(req, res, next) {
+		const opts = res.opts,
+			board = opts.board;
+		let yaku = res.yaku;
+		new Render(yaku, req, res, {
+			fullLinks: true,
+			board,
+			isThread: false,
+			live: true,
+			catalog: opts.catalog
+		});
+		yaku.emit('top', page_nav(opts.thread_count, -1, board === 'archive'));
+		yaku.once('error', function(err) {
+			winston.error('index:' + err);
+			next();
+		});
+		yaku.once('end', function() {
+			yaku.emit('bottom');
+			next();
+		});
+	},
+	finish
+);
+
+router.get(/^\/(\w+)\/page(\d+)$/,
+	util.boardAccess,
+	function(req, res, next) {
+		const board = req.board,
+			page = parseInt(req.params[1], 10);
+		let yaku = new db.Yakusoku(board, req.ident);
+		yaku.get_tag(page);
+
+		// The page might be gone, becaue a thread was deleted
+		yaku.once('nomatch', function() {
+			res.status(302).redirect('.');
+			yaku.disconnect();
+		});
+		yaku.once('begin', function(threadCount, postCount) {
+			if (!buildEtag(req, res, postCount))
+				return yaku.disconnect();
+			res.yaku = yaku;
+			res.opts = {
+				board,
+				page,
+				threadCount
+			};
+			next();
+		});
+	},
+	function(req, res, next) {
+		const opts = res.opts,
+			board = opts.board,
+			page = opts.page;
+		let yaku = res.yaku;
+
+		new Render(yaku, req, res, {
+			fullLinks: true,
+			board,
+			isThread: false
+		});
+		yaku.emit('top',
+			page_nav(opts.threadCount, page, board === 'archive')
+		);
+		yaku.once('end', function() {
+			yaku.emit('bottom');
+			next();
+		});
+		yaku.once('error', function(err) {
+			winston.error(`page${page}: ${err}`);
+			next();
+		});
+	},
+	finish
+);
+
+// Thread pages
+router.get(/^\/(\w+)\/(\d+)/,
+	util.boardAccess,
+	function(req, res, next) {
+		const board = req.board,
+			num = parseInt(req.params[1], 10),
+			ident = req.ident;
+		if (!num)
+			return res.sendStatus(404);
+
+		let op;
+		if (board === 'graveyard')
+			op = num;
+		// We need to validate that the requested post number, is in fact a
+		// thread and not a reply
+		else {
+			op = db.OPs[num];
+			if (!op)
+				return res.sendStatus(404);
+			if (!db.OP_has_tag(board, op)) {
+				let tag = db.first_tag_of(op);
+				if (tag) {
+					if (!caps.can_access_board(ident, tag))
+						return res.sendStatus(404);
+					return redirect_thread(res, num, op, tag);
+				}
+				else {
+					winston.warn(`Orphaned post ${num} with tagless OP ${op}`);
+					return res.sendStatus(404);
+				}
+			}
+			if (op != num)
+				return redirect_thread(res, num, op);
+		}
+
+		if (!caps.can_access_thread(ident, op))
+			return res.sendStatus(404);
+
+		let yaku = new db.Yakusoku(board, ident),
+			reader = new db.Reader(ident),
+			opts = {redirect: true};
+
+		const lastN = detect_last_n(req.query);
+		if (lastN)
+			opts.abbrev = lastN + state.hot.ABBREVIATED_REPLIES;
+
+		if (caps.can_administrate(ident) && 'reported' in req.query)
+			opts.showDead = true;
+		reader.get_thread(board, num, opts);
+		reader.once('nomatch', function() {
+			res.sendStatus(404);
+			yaku.disconnect();
+		});
+		reader.once('redirect', function(op) {
+			redirect_thread(res, num, op);
+			yaku.disconnect();
+		});
+		reader.once('begin', function(preThread) {
+			let extra = '';
+			if (lastN)
+				extra += '-last' + lastN;
+			if (preThread.locked)
+				extra += '-locked';
+			if (!buildEtag(req, res, preThread.hctr, extra))
+				return yaku.disconnect();
+
+			res.yaku = yaku;
+			res.reader = reader;
+			res.opts = {
+				board,
+				op,
+				subject: preThread.subject,
+				abbrev: opts.abbrev
+			};
+			next();
+		});
+	},
+	function(req, res, next) {
+		const opts = res.opts;
+		let reader = res.reader;
+		new Render(reader, req, res, {
+			fullPosts: true,
+			board: opts.board,
+			op: opts.op,
+			subject: opts.subject,
+			isThread: true
+		});
+		reader.emit('top');
+		reader.once('end', function() {
+			reader.emit('bottom');
+			next();
+		});
+		reader.once('error', on_err);
+		res.yaku.once('error', on_err);
+
+		function on_err(err) {
+			winston.error(`thread ${num}:`, err);
+			next();
+		}
+	},
+	finish
+);
+
+// Build an eTag in accordance to the board/thread progress counter and
+// cookie parameters, as those effect the HTML
+function buildEtag(req, res, ctr, extra) {
+	let etag = parseCookies(req, ctr);
+	if (config.DEBUG) {
+		res.set(noCacheHeaders);
+		return true;
+	}
+	if (extra)
+		etag += extra;
+	const auth = !!req.ident.auth;
+	if (auth)
+		etag += '-auth';
+
+	// Addtional etag hooks. Mostly from `time.js`.
+	let info = {
+		etag: etag,
+		req: req
+	};
+	hooks.trigger_sync('buildETag', info);
+	etag = info.etag;
+
+	// etags match. No need to rerender.
+	if (req.headers['If-None-Match'] === etag) {
+		res.sendStatus(304);
+		return false;
+	}
+
+	res.set(_.extend(_.clone(vanillaHeaders), {
+		ETag: etag,
+		// Don't cache HTML with IPs for public use
+		'Cache-Control': `max-age=604800 ${auth ? 'private' : 'public'}`
+	}));
+	return true;
+}
+
+function parseCookies(req, ctr) {
+	const cookies = req.cookies,
+		thumb = cookies.thumb,
+		styles = common.thumbStyles,
+		lang = req.lang = config.LANGS.indexOf(cookies.lang) > -1
+			? cookies.lang : config.DEFAULT_LANG;
+	let etag = `W/${ctr}-${RES['indexHash-' + lang]}-${lang}`;
+	etag += '-' + (styles.indexOf(thumb) >= 0 && thumb || styles[0]);
+	const etags = ['spoil', 'agif', 'rtime', 'linkify'];
+	for (let i = 0, l = etags.length; i < l; i++) {
+		const tag = etags[i];
+		if (tag in cookies)
+			etag += `-${tag}:${cookies[tag]}`;
+	}
+
+	return etag;
+}
+
+function finish(req, res) {
+	res.yaku.disconnect();
+	res.end();
+}
+
+// Pack page navigation data in an object for easier passing downstream
+function page_nav(thread_count, cur_page, ascending) {
+	const page_count = Math.max(
+		Math.ceil(thread_count / state.hot.THREADS_PER_PAGE)
+	);
+	return {
+		pages: page_count,
+		threads: thread_count,
+		cur_page: cur_page,
+		ascending: ascending
+	};
+}
+
+// Redirects '/board/num', when num point to a reply, not a thread
+function redirect_thread(res, num, op, tag) {
+	if (!tag)
+		res.redirect(301, `./${op}#${num}`);
+	else
+		res.redirect(301, `../${tag}/${op}#${num}`);
+}
+
+function detect_last_n(query) {
+	if (query.last) {
+		const n = parseInt(query.last);
+		if (common.reasonable_last_n(n))
+			return n;
+	}
+	return 0;
+}

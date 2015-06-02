@@ -1378,7 +1378,8 @@ Y.get_post_op = function (num, callback) {
 Y.get_tag = function(page) {
 	let r = this.connect(),
 		self = this;
-	const key = 'tag:' + tag_key(this.tag) + ':threads',
+	const keyBase = 'tag:' + tag_key(this.tag),
+		key = keyBase + ':threads',
 		reverseOrder = this.tag === 'archive';
 
 	// -1 is for live pages and -2 is for catalog
@@ -1402,6 +1403,8 @@ Y.get_tag = function(page) {
 	else
 		m.zrevrange(key, start, end);
 	m.zcard(key);
+	// Used for building board eTags
+	m.get(keyBase + ':postctr');
 	m.exec(function (err, res) {
 		if (err)
 			return self.emit('error', err);
@@ -1410,8 +1413,8 @@ Y.get_tag = function(page) {
 			return self.emit('nomatch');
 		if (reverseOrder)
 			nums.reverse();
-		self.emit('begin', res[1]);
-		let reader = new Reader(self);
+		self.emit('begin', res[1] || 0, res[2] || 0);
+		let reader = new Reader(this.ident);
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));
 		reader.on('post', self.emit.bind(self, 'post'));
@@ -1446,13 +1449,15 @@ Y._get_each_thread = function(reader, ix, nums, catalog) {
 /* LURKERS */
 
 class Reader extends events.EventEmitter {
-	constructor(yakusoku) {
+	constructor(ident) {
 		// Call the EventEmitter's constructor
 		super();
-		this.y = yakusoku;
+		if (caps.can_moderate(ident))
+			this.showIPs = true;
+		this.r = global.redis;
 	}
 	get_thread(tag, num, opts) {
-		let r = this.y.connect();
+		let r = this.r;
 		const graveyard = tag === 'graveyard';
 		if (graveyard)
 			opts.showDead = true;
@@ -1552,13 +1557,12 @@ class Reader extends events.EventEmitter {
 				function (err) {
 					if (err)
 						return self.emit('error', err);
-					self.emit('thread', opPost, Math.max(total - abbrev, 0));
-					if (opts.catalog) {
-						self.emit('endThread');
-						self.emit('end');
-						return;
-					}
-
+					opPost.omit = Math.max(total - abbrev, 0);
+					if (!self.showIPs)
+						delete opPost.ip;
+					self.emit('thread', opPost);
+					if (opts.catalog)
+						return self.emit('end');
 					if (deadNums)
 						nums = self.merge_posts(nums, deadNums, abbrev);
 					self._get_each_reply(tag, 0, nums, opts);
@@ -1611,7 +1615,7 @@ class Reader extends events.EventEmitter {
 		});
 	}
 	get_post(kind, num, opts, cb) {
-		let r = this.y.connect(),
+		let r = this.r,
 			self = this;
 		const key = kind + ':' + num;
 		async.waterfall([
@@ -1648,6 +1652,8 @@ class Reader extends events.EventEmitter {
 			function (post, next) {
 				if (post)
 					extract(post);
+				if (!self.showIPs)
+					delete post.ip;
 				next(null, post);
 			}
 		],	cb);
@@ -1673,8 +1679,30 @@ class Reader extends events.EventEmitter {
 			});
 		});
 	}
+	// Wrapper for retrieving individual posts separatly from threads
+	singlePost(num, ident, cb) {
+		const info = postInfo(num),
+			key = info.isOP ? 'thread' : 'post';
+		if (!caps.can_access_board(ident, info.board))
+			return cb(null);
+		this.get_post(key, num, {}, function(err, post) {
+			if (err || !post)
+				return cb(null);
+			cb(post);
+		})
+	}
 }
 exports.Reader = Reader;
+
+// Retrive post info from cache
+function postInfo(num) {
+	const isOP = num in TAGS;
+	return {
+		isOP,
+		board: config.BOARDS[isOP ? TAGS[num] : TAGS[OPs[num]]]
+	};
+}
+exports.postInfo = postInfo;
 
 /* AMUSEMENT */
 

@@ -41,14 +41,11 @@ class Render {
 			yaku.on('post', this.onPost.bind(this));
 		}
 	}
-	// Read query strings and cookies
 	parseRequest() {
 		let req = this.req;
 		// Entire page, not just the contents of threads
 		this.full = req.query.minimal !== 'true';
-		const cookies = req.cookies;
-		this.lang = config.LANGS.indexOf(cookies.lang) > -1 ? cookies.lang
-			: config.DEFAULT_LANG;
+		this.lang = req.lang;
 	}
 	// Configure rendering singleton
 	initOneeSama() {
@@ -143,12 +140,9 @@ class Render {
 		if (this.full)
 			this.pageEnd();
 	}
-	onThread(post, omit) {
+	onThread(post) {
 		if (this.hidden.has(post.num))
 			return;
-		post.omit = omit || 0;
-		// Currently only calculated client-side
-		post.image_omit = 0;
 
 		// Regular threads and catalog have very different structure, se we
 		// split them into methods
