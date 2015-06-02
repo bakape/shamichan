@@ -2,19 +2,42 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##vNext
+##1.0.0-alpha - 2015-06-02
 ###Added
 - UTC Clock to the schedule
 - Options export and import to/from file
 - Option to anonymise all posters
+- Selectable language packs
+- Image banners
+- Live updates in post hover previews
+- Support for hosting static assets on a subdomain
+- Ocean theme
+- Full ETag support
 
 ###Fixed
 - Delay before r/a/dio banner appearing, when enabled
+- Opus web parsing
+- Random images generating small thumbnails
+- Vagrant provisioning on OSX
 
 ###Changed
+- Client rewritten mostly form scratch
 - Meguca client compilation, install and upgrade procedures. See
 README.md
 - Seperated client-related cleaning into `make client_clean`
+- Pastebin embed height to 0.65 of viewport
+- Client to single page application
+- Faster builder.js client recompilation on change
+- Upgraded dependancies, including minimal io.js version
+- Google image search enabled by default
+- Post menu only disappears on click either inside or outside the menu
+- Render catalog server-side
+- JSON API spec
+
+###Removed
+- Post focusing menu option
+- Board curfews
+- Imager deamon stub
 
 ##0.11.3 - 2015-03-31
 ###Fixed
