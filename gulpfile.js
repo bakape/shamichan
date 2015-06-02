@@ -47,7 +47,9 @@ function build(name, b) {
 			.pipe(source(name + '.js'))
 			.pipe(buffer())
 			.pipe(sourcemaps.init({loadMaps: true}))
-			.pipe(gulpif(!debug, uglify()))
+			// TEMP: Don't minify the client, until we get minification
+			// support for ES6
+			.pipe(gulpif(!debug && name !== 'client', uglify()))
 			.on('error', gutil.log)
 			.pipe(sourcemaps.write('./'))
 			.pipe(gulp.dest('./www/js'));
@@ -73,19 +75,19 @@ build('client', browserify(require.resolve('./client/main.js'),
 		// Make available outside the bundle with require() under a
 		// shorthand name
 		.require('./client/main', {expose: 'main'})
-		// Trasnpile to ES5. Use mostly default, because minifier support is
-		// still shit.
+		// Transpile ES6 functionality that is not yet supported by the latest
+		// stable Chrome and FF to ES5. Ancient and hipster browsers can
+		// suck my dick.
 		.transform(babelify.configure({
 			// MUH PERFORMINCE
 			blacklist: [
 				'es3.memberExpressionLiterals',
 				'es3.propertyLiterals',
 				'es5.properties.mutators',
-				/*
-				 TEMP: Accomodate legacy Firefox builds, such as TOR Browser,
-				 Palemoon and IceWeasel. Will remove at a later date.
-				 */
-				//'es6.constants',
+				'es6.constants',
+				'es6.forOf',
+				'es6.spec.templateLiterals',
+				'es6.templateLiterals',
 				'flow',
 				'react',
 				'jscript',
@@ -93,9 +95,6 @@ build('client', browserify(require.resolve('./client/main.js'),
 				'reactCompat',
 				'regenerator',
 				'runtime'
-			],
-			optional: [
-				'es6.spec.blockScoping'
 			]
 		}))
 		// Exclude these requires on the client
