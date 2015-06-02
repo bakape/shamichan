@@ -351,13 +351,12 @@ OS.thumbPath = function(data, mid) {
 OS.imageLink = function(data) {
 	let name = '',
 		imgnm = data.imgnm;
-	const m = imgnm.match(/^(.*)\.\w{3,4}$/),
-		mediaURL = config.SECONDARY_MEDIA_URL || config.MEDIA_URL;
+	const m = imgnm.match(/^(.*)\.\w{3,4}$/);
 	if (m)
 		name = m[1];
 	let html = [
 		safe(parseHTML
-			`<a href="${mediaURL}src/${data.src}"
+			`<a href="${config.SECONDARY_MEDIA_URL}src/${data.src}"
 				rel="nofollow"
 				download="`
 		),
