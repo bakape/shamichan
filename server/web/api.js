@@ -29,11 +29,12 @@ app.use(function(req, res, next) {
 });
 
 app.get(/^\/post\/(\d+)$/, function(req, res) {
-	new db.Reader().singlePost(req.params[0], req.ident, function(post) {
-		if (!post)
-			return res.sendStatus(404);
-		res.json(post);
-	});
+	new db.Reader(req.ident)
+		.singlePost(req.params[0], req.ident, function(post) {
+			if (!post)
+				return res.sendStatus(404);
+			res.json(post);
+		});
 });
 
 app.get(/^\/thread\/(\d+)$/, function(req, res) {
@@ -41,7 +42,7 @@ app.get(/^\/thread\/(\d+)$/, function(req, res) {
 		info = db.postInfo(num);
 	if (!info.isOP || !caps.can_access_board(req.ident, info.board))
 		return res.sendStatus(404);
-	let reader = new db.Reader(),
+	let reader = new db.Reader(req.ident),
 		thread = [];
 	reader.get_thread(info.board, num, {
 		abbrev: req.query.last

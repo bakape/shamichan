@@ -140,12 +140,9 @@ class Render {
 		if (this.full)
 			this.pageEnd();
 	}
-	onThread(post, omit) {
+	onThread(post) {
 		if (this.hidden.has(post.num))
 			return;
-		post.omit = omit || 0;
-		// Currently only calculated client-side
-		post.image_omit = 0;
 
 		// Regular threads and catalog have very different structure, se we
 		// split them into methods

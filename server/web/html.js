@@ -48,9 +48,10 @@ router.get(/^\/(\w+)\/(catalog)?$/,
 		let yaku = res.yaku = new db.Yakusoku(board, req.ident);
 		const catalog = !!req.params[1];
 		yaku.get_tag(catalog ? -2 : -1);
-		// More efficient to confirm we actually need to retrieve and render
-		// the page before fully creating the DB -> Render -> response pipeline.
 		yaku.once('begin', function (thread_count, post_count) {
+			// More efficient to confirm we actually need to retrieve and render
+			// the page before fully creating the Reader() -> Render() ->
+			// response pipeline
 			if (!buildEtag(req, res, post_count))
 				return yaku.disconnect();
 			res.opts = {
@@ -142,7 +143,8 @@ router.get(/^\/(\w+)\/(\d+)/,
 	util.boardAccess,
 	function(req, res, next) {
 		const board = req.board,
-			num = parseInt(req.params[1], 10);
+			num = parseInt(req.params[1], 10),
+			ident = req.ident;
 		if (!num)
 			return res.sendStatus(404);
 
@@ -158,7 +160,7 @@ router.get(/^\/(\w+)\/(\d+)/,
 			if (!db.OP_has_tag(board, op)) {
 				let tag = db.first_tag_of(op);
 				if (tag) {
-					if (!caps.can_access_board(req.ident, tag))
+					if (!caps.can_access_board(ident, tag))
 						return res.sendStatus(404);
 					return redirect_thread(res, num, op, tag);
 				}
@@ -171,18 +173,18 @@ router.get(/^\/(\w+)\/(\d+)/,
 				return redirect_thread(res, num, op);
 		}
 
-		if (!caps.can_access_thread(req.ident, op))
+		if (!caps.can_access_thread(ident, op))
 			return res.sendStatus(404);
 
-		let yaku = new db.Yakusoku(board, req.ident),
-			reader = new db.Reader(),
+		let yaku = new db.Yakusoku(board, ident),
+			reader = new db.Reader(ident),
 			opts = {redirect: true};
 
 		const lastN = detect_last_n(req.query);
 		if (lastN)
 			opts.abbrev = lastN + state.hot.ABBREVIATED_REPLIES;
 
-		if (caps.can_administrate(req.ident) && 'reported' in req.query)
+		if (caps.can_administrate(ident) && 'reported' in req.query)
 			opts.showDead = true;
 		reader.get_thread(board, num, opts);
 		reader.once('nomatch', function() {

@@ -1414,7 +1414,7 @@ Y.get_tag = function(page) {
 		if (reverseOrder)
 			nums.reverse();
 		self.emit('begin', res[1] || 0, res[2] || 0);
-		let reader = new Reader();
+		let reader = new Reader(this.ident);
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));
 		reader.on('post', self.emit.bind(self, 'post'));
@@ -1449,9 +1449,11 @@ Y._get_each_thread = function(reader, ix, nums, catalog) {
 /* LURKERS */
 
 class Reader extends events.EventEmitter {
-	constructor(yakusoku) {
+	constructor(ident) {
 		// Call the EventEmitter's constructor
 		super();
+		if (caps.can_moderate(ident))
+			this.showIPs = true;
 		this.r = global.redis;
 	}
 	get_thread(tag, num, opts) {
@@ -1556,6 +1558,8 @@ class Reader extends events.EventEmitter {
 					if (err)
 						return self.emit('error', err);
 					opPost.omit = Math.max(total - abbrev, 0);
+					if (!self.showIPs)
+						delete opPost.ip;
 					self.emit('thread', opPost);
 					if (opts.catalog)
 						return self.emit('end');
@@ -1648,6 +1652,8 @@ class Reader extends events.EventEmitter {
 			function (post, next) {
 				if (post)
 					extract(post);
+				if (!self.showIPs)
+					delete post.ip;
 				next(null, post);
 			}
 		],	cb);
