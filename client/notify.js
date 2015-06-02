@@ -16,7 +16,7 @@ let discoFavicon = '';
 {
 	// jQuery does not support XHR2 binary data type request
 	let xhr = new XMLHttpRequest();
-	xhr.open('GET', mediaURL + 'css/ui/disconnected.ico');
+	xhr.open('GET', config.SECONDARY_MEDIA_URL + 'css/ui/disconnected.ico');
 	xhr.responseType = 'blob';
 	xhr.onload = function() {
 		if (this.status === 200)
