@@ -93,7 +93,7 @@ module.exports = {
 		main.oneeSama.rTime = rtime;
 		let el = this.el.getElementsByTagName('time')[0];
 		if (!this.timeStamp)
-			this.timeStamp = main.request('dateFromEl', el).getTime();
+			this.timeStamp = main.request('time:fromEl', el).getTime();
 		// Create new time element from string
 		let newEl = new DOMParser()
 			.parseFromString(main.oneeSama.time(this.timeStamp), 'text/xml')

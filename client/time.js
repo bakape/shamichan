@@ -11,11 +11,13 @@ function date_from_time_el(el) {
 	// Don't crash the function, if scanning an unsynced post in progress
 	if (!dTime)
 		return new Date();
-	return new Date(
-		dTime.replace(/-/g, '/').replace('T', ' ').replace('Z', ' GMT')
+	return new Date(dTime
+		.replace(/-/g, '/')
+		.replace('T', ' ')
+		.replace('Z', ' GMT')
 	);
 }
-main.reply('dateFromEl', date_from_time_el);
+main.reply('time:fromEl', date_from_time_el);
 
 const is_skewed = (function(){
 	var el = document.querySelector('time');
@@ -47,7 +49,7 @@ main.dispatcher[common.GET_TIME] = function(msg){
 		return;
 	serverTimeOffset = msg[0] - new Date().getTime();
 };
-main.reply('serverTimeOffset', serverTimeOffset);
+main.reply('time:offset', serverTimeOffset);
 
 /* syncwatch */
 function timer_from_el($el) {
