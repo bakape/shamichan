@@ -1414,7 +1414,7 @@ Y.get_tag = function(page) {
 		if (reverseOrder)
 			nums.reverse();
 		self.emit('begin', res[1] || 0, res[2] || 0);
-		let reader = new Reader(this.ident);
+		let reader = new Reader(self.ident);
 		reader.on('error', self.emit.bind(self, 'error'));
 		reader.on('thread', self.emit.bind(self, 'thread'));
 		reader.on('post', self.emit.bind(self, 'post'));
