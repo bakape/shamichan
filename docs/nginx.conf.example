@@ -1,5 +1,4 @@
 # Requires nginx >=1.4.
-# Based on bakape and bakaonto's example configurations.
 
 upstream node {
 	# Endpoint of the doushio node.js server
@@ -7,11 +6,6 @@ upstream node {
 
 	# Or if using a unix domain socket:
 	#server unix:/path/to/unix/domain/socket;
-}
-
-upstream api {
-	#Endpoint of the API server
-	server 127.0.0.1:8002;
 }
 
 access_log /var/log/nginx/doushio.log;
@@ -40,25 +34,20 @@ server {
 	location = /MadokaRunes.ttf {}
 	location = /50x.ico {}
 	location = /50x.html {}
-
-	# Gzip compression
-	gzip on;
-	gzip_proxied any;
-	gzip_comp_level 1;
-	gzip_types text/plain text/css application/json application/javascript application/x-javascript text/javascript;
+	location /mobile {}
 
 	# Handles static assets (images, JS, CSS, etc.)
-	# Requires "SERVE_STATIC_FILES: false" in ./config.js
-	# Set imager/config MEDIA_URL to '/ass/'.
-	# The trailing "/" is important.
+	# Set "SERVE_STATIC_FILES: false" and  `MEDIA_URL` to the full path of
+	# `/ass/` in `./config`. The trailing "/" is important.
 	location /ass/ {
 		alias /path/to/doushio/www/;
 	}
 
-	# Mobile assets
-	location /mobile/ {
-		alias /path/to/doushio/www/mobile/;
-	}
+	# Gzip compression
+	gzip on;
+	gzip_proxied any;
+	gzip_comp_level 6;
+	gzip_types text/plain text/css application/json application/javascript application/x-javascript text/javascript;
 
 	# Handles image uploads.
 	location /upload/ {
@@ -78,23 +67,13 @@ server {
 		#proxy_buffering off;
 	}
 
-	# Handles the JSON API
-	location /api/ {
-		proxy_pass http://api/api/;
+	# For HTML
+	location / {
+		proxy_pass http://node;
 		proxy_buffering off;
 
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 		# CloudFlare
-		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
-	}
-
-	# For HTML
-	location / {
-		proxy_pass      http://node;
-		proxy_buffering off;
-
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		 # CloudFlare
 		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
 
 		# Custom error page. Changing to 503 to not trip Cloudflare
@@ -103,7 +82,7 @@ server {
 
 	# For websocket connections. Change to match config.SOCKET_PATH
 	location /hana/ {
-		proxy_pass      http://node/hana/;
+		proxy_pass http://node/hana/;
 		proxy_buffering off;
 
 		# WebSockets support.
