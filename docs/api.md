@@ -29,7 +29,7 @@ The read-only JSON API currently supports 4 modes of query.
 | email | poster email | yes | no | `"sage"` |
 | ip | poster IP; need to have a moderator session cookie | yes | no | `"::1"`|
 | body | post body | no | no | `">implying this is an example"` |
-| image | [image object](#Image_object) | yes  | no | [image object](#image-object) |
+| image | [image object](#image-object) | yes  | no | [image object](#image-object) |
 | links | object of `${post number}: ${thread number}`<br>key-value pairs the current post is linking to | yes | no | {"18":"17","27":"26"} |
 
 ###Image object
