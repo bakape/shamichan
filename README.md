@@ -13,7 +13,7 @@ stable revisions, please [download the latest release](https://github.com/bakape
 * Run `node builder.js` to run an auto-reloading development server
 
 ##Automatic cross-platform development setup:
-* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and
+* Install [git](https://git-scm.com/), [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and
 [Vagrant](http://www.vagrantup.com/downloads.html)
 * Open a shell in meguca's root directory and run `vagrant up`
 * Grab a coffee
