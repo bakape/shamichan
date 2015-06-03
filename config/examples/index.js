@@ -54,17 +54,14 @@ module.exports = {
 	NEW_POST_WORTH: 50,
 	IMAGE_WORTH: 50,
 
-// Per board thread expiry time. Set in seconds.
-	THREAD_EXPIRY: {
-		moe: 3600 * 24 * 7,
-		gar: 3600 * 24 * 7,
-		meta: 3600 * 24 * 7
+// Number of pages per board
+	PAGES: {
+		moe: 5,
+		gar: 5,
+		meta: 5
 	},
-/*
- Permanently delete threads instead of archiving them. Existing archives will
- not be removed.
- */
-	VOLATILE: false,
+// Delete threads and their images, when they exceed the board's page limit
+	PRUNE: false,
 
 /*
  Doushio uses Mozilla's Persona system for moderator authentication.

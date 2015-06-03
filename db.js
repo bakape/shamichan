@@ -10,7 +10,7 @@ var _ = require('underscore'),
     fs = require('fs'),
     hooks = require('./util/hooks'),
     hot = require('./server/state').hot,
-// set up hooks
+	// set up hooks
     imager = require('./imager'),
     Muggle = require('./util/etc').Muggle,
     tail = require('./util/tail'),
@@ -313,8 +313,6 @@ function load_OPs(callback) {
 			async.forEach(threads, function (op, cb) {
 				op = parseInt(op, 10);
 				var ps = [scan_thread.bind(null,tagIndex,op)];
-				if (!config.READ_ONLY && config.THREAD_EXPIRY)
-					ps.push(refresh_expiry.bind(null, tag, op));
 				async.parallel(ps, cb);
 			}, cb);
 		});
@@ -333,42 +331,7 @@ function load_OPs(callback) {
 			cb(null);
 		});
 	}
-
-	var expiryKey = expiry_queue_key();
-	function refresh_expiry(tag, op, cb) {
-		if (tag == config.STAFF_BOARD)
-			return cb(null);
-		var entry = op + ':' + tag_key(tag);
-		var queries = ['time', 'immortal'];
-		hmget_obj(r, 'thread:'+op, queries, function (err, thread) {
-			if (err)
-				return cb(err);
-			if (!thread.time) {
-				winston.warn('Thread '+op+" doesn't exist.");
-				var m = r.multi();
-				m.zrem(threadsKey, op);
-				m.zrem(expiryKey, entry);
-				m.exec(cb);
-				return;
-			}
-			if (thread.immortal)
-				return r.zrem(expiryKey, entry, cb);
-			var score = expiry_queue_score(thread.time, tag);
-			r.zadd(expiryKey, score, entry, cb);
-		});
-	}
 }
-
-function expiry_queue_score(time, board) {
-	// Use default of 7 days, if not configured
-	var expiry = config.THREAD_EXPIRY[board] || 3600 * 24 * 7;
-	return Math.floor(parseInt(time, 10)/1000 + expiry);
-}
-
-function expiry_queue_key() {
-	return 'expiry:all';
-}
-exports.expiry_queue_key = expiry_queue_key;
 
 /* SOCIETY */
 
@@ -599,11 +562,6 @@ Y.insert_post = function (msg, body, extra, callback) {
 		// TODO: Add to alternate thread list?
 		// set conditional hide?
 		op = num;
-		if (!view.immortal) {
-			const score = expiry_queue_score(msg.time, board),
-				entry = `${num}:${tag_key(this.tag)}`;
-			m.zadd(expiry_queue_key(), score, entry);
-		}
 		/* Rate-limit new threads */
 		if (ip != '127.0.0.1')
 			m.setex('ip:'+ip+':throttle:thread', config.THREAD_THROTTLE, op);
@@ -781,10 +739,8 @@ Y.remove_thread = function (op, callback) {
 		var subject = subject_val(op, post.subject);
 		/* Rename thread keys, move to graveyard */
 		var m = r.multi();
-		var expiryKey = expiry_queue_key();
 		tags.forEach(function (tag) {
 			var tagKey = tag_key(tag);
-			m.zrem(expiryKey, op + ':' + tagKey);
 			m.zrem('tag:' + tagKey + ':threads', op);
 			if (subject)
 				m.zrem('tag:' + tagKey + ':subjects', subject);
@@ -817,81 +773,137 @@ Y.remove_thread = function (op, callback) {
 	}], callback);
 };
 
-// Purges all the thread's keys from the database and delete's all images
-// contained
-Y.purge_thread = function(op, callback){
-	var r = this.connect();
-	var key = 'thread:' + op;
+// Purges all the thread's keys from the database and delete's all
+// images contained
+Y.purge_thread = function(op, board, callback) {
+	let r = this.connect();
+	const key = 'thread:' + op;
+	let keysToDel = [],
+		filesToDel = [];
 	async.waterfall([
 		// Confirm thread can be deleted
-		function(next){
-			var m = r.multi();
+		function(next) {
+			let m = r.multi();
 			m.exists(key);
 			m.hget(key, 'immortal');
 			m.exec(next);
 		},
-		function(res, next){
-			if (!res[0])
-				return callback(Muggle(key + ' does not exist.'));
+		function(res, next) {
+			// Likely to happen, if interrupted mid-purge
+			if (!res[0]) {
+				r.zrem(`tag:${tag_key(board)}:threads`, op);
+				return next(key + ' does not exist.');
+			}
 			if (parseInt(res[1], 10))
-				return callback(Muggle(key + ' is immortal.'));
-			// Get post list
+				return next(key + ' is immortal.');
+			// Get reply list
 			r.lrange(key + ':posts', 0, -1, next);
 		},
-		// Read all thread's hashes
-		function(res, next){
-			var m = r.multi();
-			m.hgetall(key);
-			if (res) {
-				for (let i = 0, l = res.length; i < l; i++)
-					m.hgetall('post:' + res[i]);
+		// Read all post hashes
+		function(posts, next) {
+			let m = r.multi();
+			for (let i = 0, l = posts.length; i < l; i++) {
+				posts[i] = 'post:' + posts[i];
 			}
-			m.exec(next);
+			// Parse OP key like all other hashes. `res` will always be an
+			// array, even if empty.
+			posts.unshift(key);
+			for (let i = 0, l = posts.length; i < l; i++) {
+				const key = posts[i];
+				m.hgetall(key);
+				m.exists(key + ':links');
+			}
+			// Abit more complicated, because we need to pass two arguments
+			// to the next function, to map the arrays
+			m.exec(function(err, res) {
+				if (err)
+					return next(err);
+				next(null, res, posts);
+			})
 		},
-		function(res, next){
-			// Delete images
-			var to_delete = [];
-			var imp = imager.media_path;
-			var m = r.multi();
-			for (let i = 0, len = res.length; i < len; i++) {
-				if (res[i].src)
-					to_delete.push(imp('src', res[i].src));
-				if (res[i].thumb)
-					to_delete.push(imp('thumb', res[i].thumb));
-				if (res[i].mid)
-					to_delete.push(imp('mid', res[i].mid));
-			}
-			for (let i = 0, l = to_delete.length; i < l; i++) {
-				fs.unlink(to_delete[i], function(err){
-					if (err)
-						winston.error(err);
-				});
-			}
-			m.lrange(key + ':posts', 0, -1);
-			m.zrem('tag:' + res[0].tags + ':threads', op);
-			m.exec(next);
-		},
-		function(res, done){
-			// Delete post keys
-			var m = r.multi();
-			if (res[0]) {
-				for (let i = 0, lim = res[0].length; i < lim; i++) {
-					m.del('post:' + res[0][i]);
-					m.del('post:' + res[0][i] + ':links');
+		// Populate key and file to delete arrays
+		function(res, posts, next) {
+			const imageTypes = ['src', 'thumb', 'mid'];
+			let path = imager.media_path;
+			for (let i = 0, l = res.length; i < l; i += 2) {
+				const hash = res[i],
+					key = posts.shift();
+				if (!hash)
+					continue;
+				// Add links
+				keysToDel.push(key);
+				// `key:links` exists
+				if (res[i + 1])
+					keysToDel.push(key + ':links');
+				// Add images to delete list
+				for (let o = 0, len = imageTypes.length; o < len; o++) {
+					const type = imageTypes[o],
+						image = hash[type];
+					if (!image)
+						continue;
+					filesToDel.push(path(type, image));
 				}
 			}
-			// Delete thread keys
-			m.del(key);
-			m.del(key + ':links');
-			m.del(key + ':dels');
-			m.del(key + ':history');
-			m.del(key + ':posts');
-			m.del(key + ':body');
-			m.exec(done);
-			removeOPTag(op);
+			next();
 		},
-		callback
-	]);
+		// Check for OP-only keys
+		function(next) {
+			const suffixes = ['dels', 'history', 'posts', 'body'];
+			let OPKeys = [],
+				m = r.multi();
+			for (let i = 0, l = suffixes.length; i < l; i++) {
+				OPKeys.push(`${key}:${suffixes[i]}`);
+			}
+			for (let i = 0, l = OPKeys.length; i < l; i++) {
+				m.exists(OPKeys[i]);
+			}
+			m.exec(function(err, res) {
+				if (err)
+					return next(err);
+				next(null, res, OPKeys);
+			})
+		},
+		function(res, OPKeys, next) {
+			let keys = keysToDel;
+			for (let i = 0, l = res.length; i < l; i++) {
+				if (res[i])
+					keys.push(OPKeys[i]);
+			}
+
+			// Delete all keys
+			let m = r.multi();
+			for (let i = 0, l = keys.length; i < l; i++) {
+				m.del(keys[i]);
+			}
+			m.exec(next);
+		},
+		function(res, next) {
+			// Delete all images
+			async.each(filesToDel,
+				function(file, cb) {
+					fs.unlink(file, function(err) {
+						if (err)
+							return cb(err);
+						cb();
+					});
+				},
+				function(err) {
+					if (err)
+						return next(err);
+					next();
+				}
+			);
+		},
+		function(next) {
+			// Delete thread entry from the set
+			r.zrem(`tag:${tag_key(board)}:threads`, op, next);
+		},
+		function(res, next) {
+			// Clear thread number from caches
+			removeOPTag(op);
+			next();
+		}
+	], callback);
 };
 
 /* BOILERPLATE CITY */
@@ -1057,6 +1069,9 @@ Y.check_thread_locked = function (op, callback) {
 };
 
 Y.check_throttle = function (ip, callback) {
+	// So we can spam new threads in debug mode
+	if (config.DEBUG)
+		return callback(null);
 	var key = 'ip:' + ip + ':throttle:thread';
 	this.connect().exists(key, function (err, exists) {
 		if (err)
