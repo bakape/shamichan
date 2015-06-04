@@ -43,10 +43,12 @@ function readingSteiner(url, event, needPush) {
 	 * that are not several thousand posts large.
 	 */
 	$loading.show();
-	$.get(address, function(data) {
-		if (!data)
-			return alert('Fetch failed: ' + url);
-
+	$.get(address, function(data, status, xhr) {
+		// In case the thread is dead, moderatator cookie expired or some
+		// other shananigans
+		if (xhr.status !== 200)
+			location.replace(this.url.split('?')[0]);
+		
 		/*
 		 * Emptying the whole element should be faster than removing each post
 		 * individually through models and listeners. Not that the `remove()`s
