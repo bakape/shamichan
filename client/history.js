@@ -77,10 +77,10 @@ function readingSteiner(url, event, needPush) {
 		if (needPush){
 			history.pushState(null, null, url);
 			// Scroll to top on new pages with no hashes
-			if (!location.hash)
-				window.scrollTo(0, 0);
-			else
+			if (location.hash)
 				main.command('scroll:aboveBanner');
+			else
+				window.scrollTo(0, 0);
 		}
 		$loading.hide();
 	});
