@@ -190,7 +190,9 @@ class Render {
 		first.pop();
 		this.resp.write(first.join(''));
 	}
-	onThreadEnd() {
+	onThreadEnd(num) {
+		if (this.hidden.has(num))
+			return;
 		let resp = this.resp;
 		if (!this.readOnly)
 			resp.write(this.oneeSama.replyBox());

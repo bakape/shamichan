@@ -1383,7 +1383,7 @@ class Reader extends events.EventEmitter {
 		const graveyard = tag === 'graveyard';
 		if (graveyard)
 			opts.showDead = true;
-		const key = (graveyard ? 'dead:' : 'thread:') + num;
+		const key = (graveyard ? 'dead:' : 'thread:') + num; 
 		let self = this;
 		r.hgetall(key, function(err, pre_post) {
 			if (err)
@@ -1473,6 +1473,9 @@ class Reader extends events.EventEmitter {
 						if (!self.showIPs)
 							delete opPost.ip;
 						opPost.hctr = parseInt(opPost.hctr, 10);
+						// So we can pass a thread number on `endthread`
+						// emission
+						opts.op = opPost.num;
 						next(null);
 					}
 				],
@@ -1519,7 +1522,7 @@ class Reader extends events.EventEmitter {
 	}
 	_get_each_reply(tag, ix, nums, opts) {
 		if (!nums || ix >= nums.length) {
-			this.emit('endthread');
+			this.emit('endthread', opts.op);
 			this.emit('end');
 			return;
 		}
@@ -1697,6 +1700,7 @@ function get_all_replies(r, op, cb) {
 }
 
 function extract(post) {
+	post.num = parseInt(post.num, 10);
 	hooks.trigger_sync('extractPost', post);
 }
 
