@@ -184,8 +184,7 @@ let Hidamari = exports.Hidamari = {
 			.children('figure')
 			.children('a')
 			.append(common.parseHTML
-				`<audio
-					src="${main.oneeSama.imagePaths().src + img.src}"
+				`<audio src="${main.oneeSama.imagePaths().src + img.src}"
 					width="300"
 					height="3em"
 					autoplay="true"
