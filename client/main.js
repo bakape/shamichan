@@ -72,7 +72,7 @@ main.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
 // Store them here, to avoid requiring modules in the wrong order
 main.dispatcher = {};
 // Read-only boards gets expanded later
-main.readOnly = ['archive'];
+main.readOnly = [];
 
 /*
  Core modules. The other will be more or less decoupled, but these are the

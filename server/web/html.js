@@ -74,7 +74,7 @@ router.get(/^\/(\w+)\/(catalog)?$/,
 			live: true,
 			catalog: opts.catalog
 		});
-		yaku.emit('top', page_nav(opts.thread_count, -1, board === 'archive'));
+		yaku.emit('top', page_nav(opts.thread_count, -1));
 		yaku.once('error', function(err) {
 			winston.error('index:' + err);
 			next();
@@ -124,7 +124,7 @@ router.get(/^\/(\w+)\/page(\d+)$/,
 			isThread: false
 		});
 		yaku.emit('top',
-			page_nav(opts.threadCount, page, board === 'archive')
+			page_nav(opts.threadCount, page)
 		);
 		yaku.once('end', function() {
 			yaku.emit('bottom');
@@ -303,15 +303,11 @@ function finish(req, res) {
 }
 
 // Pack page navigation data in an object for easier passing downstream
-function page_nav(thread_count, cur_page, ascending) {
-	const page_count = Math.max(
-		Math.ceil(thread_count / state.hot.THREADS_PER_PAGE)
-	);
+function page_nav(threads, cur_page) {
 	return {
-		pages: page_count,
-		threads: thread_count,
-		cur_page: cur_page,
-		ascending: ascending
+		pages: Math.max(Math.ceil(threads / state.hot.THREADS_PER_PAGE)),
+		threads,
+		cur_page
 	};
 }
 

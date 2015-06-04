@@ -9,7 +9,6 @@ this.hot = {
 		moe: "/moe/ - Sweets",
 		gar: "/gar/ - Hard Work &amp; Guts",
 		meta: "/meta/ - The Abyss",
-		archive: "/archive/",
 		graveyard: "/graveyard/",
 		staff: "/staff/"
 	},
@@ -18,7 +17,6 @@ this.hot = {
 		moe: 'moe',
 		gar: 'gar',
 		meta: 'mawaru',
-		archive: 'archive',
 		graveyard: 'mawaru',
 		staff: 'moe'
 	},

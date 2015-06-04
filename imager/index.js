@@ -13,7 +13,7 @@ var async = require('async'),
 exports.Onegai = db.Onegai;
 exports.config = config;
 
-const image_attrs = ('src thumb ext dims size MD5 SHA1 hash imgnm spoiler vint'
+const image_attrs = ('src thumb ext dims size MD5 SHA1 hash imgnm spoiler'
 		+ ' apng mid audio length').split(' ');
 exports.image_attrs = image_attrs;
 
@@ -131,7 +131,7 @@ hooks.hook("buryImage", function (info, callback) {
 });
 
 function is_image(image) {
-	return image && (image.src || image.vint);
+	return image && image.src;
 }
 
 function media_path(dir, filename) {
@@ -150,7 +150,7 @@ function make_dir(base, key, cb) {
 exports._make_media_dir = make_dir;
 
 function make_media_dirs (cb) {
-	var keys = ['src', 'thumb', 'vint', 'dead'];
+	var keys = ['src', 'thumb', 'dead'];
 	if (config.EXTRA_MID_THUMBNAILS)
 		keys.push('mid');
 	async.forEach(keys, make_dir.bind(null, null), function (err) {

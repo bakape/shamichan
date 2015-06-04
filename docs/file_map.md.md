@@ -3,9 +3,6 @@
 	* __common.js__		Functions common to all admin modules
 	* __index.js__		Server-side communication and database handler
 	* __panel.js__		Renders the administrator panel
-* __archive/__
-	* __daemon.js__		Archiver/thread deletion daemon
-	* __dump.js__		Static archiver. Currently not ready for use
 * __client/__
 	* __amusement.js__	Hooks into the server for hash commands etc.
 	* __client.js__		Main client module. Handles parsing server communication
@@ -78,7 +75,6 @@
 * __upkeep/__
 	* __backup.js__				Amazon S3 backup script
 	* __backup.sh__				MEGA backup script
-	* __clean.js__				Deletes archived thread images
 	* __poll.xsl__				Icecast configuration file
 	* __purge_bans.sh__			Removes all bans
 	* __purge_mod_sessions.sh__	Closes all active moderator sessions

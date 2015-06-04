@@ -33,9 +33,9 @@ module.exports = {
 	REDIS_PORT: 6379,
 	READ_ONLY: false,
 
-	BOARDS: ['moe', 'gar', 'meta', 'archive', 'staff'],
+	BOARDS: ['moe', 'gar', 'meta', 'staff'],
 	DEFAULT_BOARD: 'moe',
-	READ_ONLY_BOARDS: ['archive', 'graveyard'],
+	READ_ONLY_BOARDS: ['graveyard'],
 // Add links to the navigator menu to custom URLs
 	PSUEDO_BOARDS: [
 		['g', 'https://google.com']
@@ -54,20 +54,21 @@ module.exports = {
 	NEW_POST_WORTH: 50,
 	IMAGE_WORTH: 50,
 
-// Per board thread expiry time. Set in seconds.
-	THREAD_EXPIRY: {
-		moe: 3600 * 24 * 7,
-		gar: 3600 * 24 * 7,
-		meta: 3600 * 24 * 7
+// Number of pages per board
+	PAGES: {
+		moe: 5,
+		gar: 5,
+		meta: 5
 	},
-// Archive expired threads
-	ARCHIVE: false,
-/*
- Permanently delete threads instead of archiving them. Existing archives will
- not be removed.
- Note: scripts/clean.js is not needed with this option enabled
- */
-	VOLATILE: false,
+// Number of posts per thread, after which the thread stops bumping to the
+// top of the board
+	BUMP_LIMIT: {
+		moe: 1000,
+		gar: 1000,
+		meta: 1000
+	},
+// Delete threads and their images, when they exceed the board's page limit
+	PRUNE: false,
 
 /*
  Doushio uses Mozilla's Persona system for moderator authentication.

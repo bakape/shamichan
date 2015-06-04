@@ -3,20 +3,25 @@
  */
 'use strict';
 
-var opts = require('./opts');
-if (require.main == module) opts.parse_args();
+let config = require('../config');
+// Longer stack traces
+if (config.DEBUG)
+	Error.stackTraceLimit = 100;
+
+let opts = require('./opts');
+if (require.main == module)
+	opts.parse_args();
 opts.load_defaults();
 
 // Initialize server state
-var STATE = require('./state');
+let STATE = require('./state');
 
-var _ = require('underscore'),
+let _ = require('underscore'),
     amusement = require('./amusement'),
     async = require('async'),
     caps = require('./caps'),
     check = require('./msgcheck').check,
     common = require('../common/index'),
-    config = require('../config'),
 	cookie = require('cookie'),
     db = require('../db'),
     fs = require('fs'),
@@ -243,7 +248,7 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 function inactive_board_check(client) {
 	if (caps.can_administrate(client.ident))
 		return true;
-	return ['graveyard', 'archive'].indexOf(client.board) == -1;
+	return config.READ_ONLY_BOARDS.indexOf(client.board) === -1;
 }
 
 function allocate_post(msg, client, callback) {
@@ -607,6 +612,9 @@ function start_server() {
 	}
 	// Start web server
 	require('./web');
+	// Start thread deletion module
+	if (config.PRUNE)
+		require('./prune');
 	if (is_unix_socket)
 		fs.chmodSync(config.LISTEN_PORT, '777'); // TEMP
 
@@ -669,9 +677,6 @@ if (require.main == module) {
 		function (err) {
 			if (err)
 				throw err;
-			// Start thread archiver
-			if (config.ARCHIVE)
-				require('./archive');
 			var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
 			var onegai;
 			var writes = [];

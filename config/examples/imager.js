@@ -1,4 +1,4 @@
-module.exports = {
+var config = module.exports = {
 	IMAGE_FILESIZE_MAX: 1024 * 1024 * 3,
 	IMAGE_WIDTH_MAX: 6000,
 	IMAGE_HEIGHT_MAX: 6000,
@@ -7,7 +7,6 @@ module.exports = {
 		src: 'www/src',
 		thumb: 'www/thumb',
 		mid: 'www/mid',
-		vint: 'www/vint',
 		dead: 'graveyard',
 		tmp: 'imager/tmp'
 	},
@@ -90,3 +89,7 @@ module.exports = {
 
 	IMAGE_HATS: false
 };
+
+// Default to primary URL
+if (!config.SECONDARY_MEDIA_URL)
+	config.SECONDARY_MEDIA_URL = config.MEDIA_URL;

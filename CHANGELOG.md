@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##vNext
+###Changed
+- Switched to 4chan-like thread expiry model with page limits and autosaging
+
 ##1.0.0-alpha - 2015-06-02
 ###Added
 - UTC Clock to the schedule
