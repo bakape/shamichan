@@ -42,7 +42,7 @@ function yandere() {
 				over = _.rest(threads, pages[board] * perPage);
 			if (!over.length)
 				continue;
-			for (let o = z0, len = over.length; o < len; o++) {
+			for (let o = 0, len = over.length; o < len; o++) {
 				toPrune[over[o]] = board;
 			}
 		}

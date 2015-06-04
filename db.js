@@ -483,19 +483,20 @@ Y.insert_post = function (msg, body, extra, callback) {
 	let r = this.connect();
 	if (!this.tag)
 		return callback(Muggle("Can't retrieve board for posting."));
+	let op = msg.op;
 	const ip = extra.ip,
 		board = extra.board,
-		num = msg.num;
-	let op = msg.op;
+		num = msg.num,
+		isThead = !op;
+	if (!op)
+		op = num;
 	if (!num)
 		return callback(Muggle("No post number."));
 	else if (!ip)
 		return callback(Muggle("No IP."));
-	else if (op) {
-		if (OPs[op] != op || !OP_has_tag(board, op)) {
-			delete OPs[num];
-			return callback(Muggle('Thread does not exist.'));
-		}
+	else if (!isThead && (OPs[op] != op || !OP_has_tag(board, op))) {
+		delete OPs[num];
+		return callback(Muggle('Thread does not exist.'));
 	}
 
 	let view = {
@@ -511,37 +512,36 @@ Y.insert_post = function (msg, body, extra, callback) {
 			view[field] = msg[field];
 	}
 	const tagKey = 'tag:' + tag_key(this.tag);
-	if (op)
-		view.op = op;
-	else {
+	if (isThead) {
 		view.tags = tag_key(board);
 		if (board == config.STAFF_BOARD)
 			view.immortal = 1;
 	}
+	else
+		view.op = op;
 
 	if (extra.image_alloc) {
 		msg.image = extra.image_alloc.image;
-		if (!op == msg.image.pinky)
+		if (isThead == msg.image.pinky)
 			return callback(Muggle("Image is the wrong size."));
 		delete msg.image.pinky;
 	}
 
-	const key = (op ? 'post:' : 'thread:') + num,
-		bump = !op || !common.is_sage(view.email);
+	const key = (isThead ? 'thread:' : 'post:') + num;
 	let m = r.multi();
 	m.incr(tagKey + ':postctr'); // must be first
-	if (op)
-		m.hget('thread:' + op, 'subject'); // must be second
-	if (bump)
-		m.incr(tagKey + ':bumpctr');
+	m.llen(`thread:${op}:posts`);
 	m.sadd('liveposts', key);
 
-	hooks.trigger_sync('inlinePost', {src: msg, dest: view});
+	hooks.trigger_sync('inlinePost', {
+		src: msg,
+		dest: view
+	});
 	if (msg.image) {
-		if (op)
-			m.hincrby('thread:' + op, 'imgctr', 1);
-		else
+		if (isThead)
 			view.imgctr = 1;
+		else
+			m.hincrby('thread:' + op, 'imgctr', 1);
 		note_hash(m, msg.image.hash, msg.num);
 	}
 	m.hmset(key, view);
@@ -553,18 +553,16 @@ Y.insert_post = function (msg, body, extra, callback) {
 		augments: {},
 		cacheUpdate: {}
 	};
-	if (op) {
-		etc.cacheUpdate.num = num;
-		var pre = 'thread:' + op;
-		m.rpush(pre + ':posts', num);
-	}
-	else {
+	if (isThead) {
 		// TODO: Add to alternate thread list?
-		// set conditional hide?
-		op = num;
+
 		/* Rate-limit new threads */
 		if (ip != '127.0.0.1')
 			m.setex('ip:'+ip+':throttle:thread', config.THREAD_THROTTLE, op);
+	}
+	else {
+		etc.cacheUpdate.num = num;
+		m.rpush(`thread:${op}:posts`, num);
 	}
 
 	/* Denormalize for backlog */
@@ -592,21 +590,22 @@ Y.insert_post = function (msg, body, extra, callback) {
 				}
 
 				self._log(m, op, common.INSERT_POST, [num, view], etc);
-
 				m.exec(next);
 			},
-			function (results, next) {
-				if (!bump)
+			function(res, next) {
+				// Determine, if we need to bump the thread to the top of
+				// the board
+				if (!isThead 
+					&& (common.is_sage(view.email) 
+						|| res[1] >= config.BUMP_LIMIT[board]
+					)
+				)
 					return next();
-				const postctr = results[0];
-				const subject = subject_val(
-					op,
-					op == num ? view.subject : results[1]
-				);
+
+				const postctr = res[0];
 				let m = r.multi();
+				m.incr(tagKey + ':bumpctr', next);
 				m.zadd(tagKey + ':threads', postctr, op);
-				if (subject)
-					m.zadd(tagKey + ':subjects', postctr, subject);
 				m.exec(next);
 			}
 		],
@@ -736,14 +735,11 @@ Y.remove_thread = function (op, callback) {
 	function (rs, next) {
 		var deadCtr = rs[0], post = rs[1];
 		var tags = parse_tags(post.tags);
-		var subject = subject_val(op, post.subject);
 		/* Rename thread keys, move to graveyard */
 		var m = r.multi();
 		tags.forEach(function (tag) {
 			var tagKey = tag_key(tag);
 			m.zrem('tag:' + tagKey + ':threads', op);
-			if (subject)
-				m.zrem('tag:' + tagKey + ':subjects', subject);
 		});
 		m.zadd(graveyardKey + ':threads', deadCtr, op);
 		etc.tags = tags;
@@ -1706,10 +1702,6 @@ function get_all_replies(r, op, cb) {
 
 function extract(post) {
 	hooks.trigger_sync('extractPost', post);
-}
-
-function subject_val(op, subject) {
-	return subject && (op + ':' + subject);
 }
 
 function tag_key(tag) {

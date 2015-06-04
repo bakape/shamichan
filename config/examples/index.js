@@ -60,6 +60,13 @@ module.exports = {
 		gar: 5,
 		meta: 5
 	},
+// Number of posts per thread, after which the thread stops bumping to the
+// top of the board
+	BUMP_LIMIT: {
+		moe: 1000,
+		gar: 1000,
+		meta: 1000
+	},
 // Delete threads and their images, when they exceed the board's page limit
 	PRUNE: false,
 
