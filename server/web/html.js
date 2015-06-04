@@ -97,7 +97,7 @@ router.get(/^\/(\w+)\/page(\d+)$/,
 
 		// The page might be gone, becaue a thread was deleted
 		yaku.once('nomatch', function() {
-			res.status(302).redirect('.');
+			res.redirect('.');
 			yaku.disconnect();
 		});
 		yaku.once('begin', function(threadCount, postCount) {
@@ -162,7 +162,7 @@ router.get(/^\/(\w+)\/(\d+)/,
 				if (tag) {
 					if (!caps.can_access_board(ident, tag))
 						return res.sendStatus(404);
-					return redirect_thread(res, num, op, tag);
+					return redirect_thread(res, num, op, tag, req.url);
 				}
 				else {
 					winston.warn(`Orphaned post ${num} with tagless OP ${op}`);
@@ -312,11 +312,17 @@ function page_nav(threads, cur_page) {
 }
 
 // Redirects '/board/num', when num point to a reply, not a thread
-function redirect_thread(res, num, op, tag) {
-	if (!tag)
-		res.redirect(301, `./${op}#${num}`);
-	else
-		res.redirect(301, `../${tag}/${op}#${num}`);
+function redirect_thread(res, num, op, tag, url) {
+	let path = tag ? `../${tag}/${op}` : `./${op}`;
+
+	// Reapply query strings, so we don't screw up the History API by
+	// retrieving a full page
+	const query = url && url.split('?')[1];
+	if (query)
+		path += '?' + query;
+	path += '#' + num;
+	
+	res.redirect(path);
 }
 
 function detect_last_n(query) {
