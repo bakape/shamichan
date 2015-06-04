@@ -1417,11 +1417,7 @@ class Reader extends events.EventEmitter {
 				return;
 			}
 			self.emit('begin', pre_post);
-			/*
-			 A bit useless now, but might as well keep it for some backwards
-			 comatibility with older database entries.
-			 */
-			pre_post.num = num;
+
 			pre_post.time = parseInt(pre_post.time, 10);
 
 			let nums, deadNums, opPost,
