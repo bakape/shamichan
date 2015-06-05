@@ -25,10 +25,8 @@ Vagrant.configure(2) do |config|
 		echo 'cd /vagrant' >> /etc/profile
 		
 		echo "Installing npm modules..."
-		su vagrant -
-			cd /vagrant
-			npm install --unsafe-perm
-		exit
+		cd /vagrant
+		su vagrant -c "make upgrade"
 	SHELL
 	# Server
 	config.vm.network :forwarded_port, host: 8000, guest: 8000
