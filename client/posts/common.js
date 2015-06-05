@@ -142,13 +142,15 @@ module.exports = {
 	},
 	// Self-delusion tripfag filter
 	toggleAnonymisation: function(model, toggle) {
-		var $el = this.$el.find('>header>b');
+		let el = this.el
+			.getElementsByTagName('header')[0]
+			.getElementsByTagName('b')[0];
 		const name = this.model.get('name');
 		if (toggle)
-			$el.text(main.lang.anon);
+			el.innerHTML = main.lang.anon;
 		// No need to change, if no name
 		else if (name)
-			$el.text(name);
+			el.innerHTML = name;
 	},
 	quotePost: function(e) {
 		e.preventDefault();
