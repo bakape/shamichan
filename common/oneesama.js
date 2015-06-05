@@ -580,7 +580,7 @@ OS.monogatari = function(data) {
 	tale.body = [
 		safe('<blockquote>'),
 		body,
-		safe('</blockquote>')
+		safe('</blockquote><small></small>')
 	];
 	if (data.image && !data.hideimg) {
 		// Larger thumbnails for thread images

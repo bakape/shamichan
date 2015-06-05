@@ -110,18 +110,17 @@ module.exports = {
 	},
 	renderBacklinks: function(model, links) {
 		// No more backlinks, because posts deleted or something
-		if (!links && this.$backlinks)
-			return main.command('scroll:follow', () => this.$backlinks.remove());
-		if (!this.$backlinks) {
-			this.$backlinks = $('<small/>')
-				.insertAfter(this.$el.children('blockquote'))
+		if (!links && this.backlinks) {
+			main.command('scroll:follow', () => this.backlinks.remove());
+			this.backlinks = null;
+			return;
 		}
+		if (!this.backlinks)
+			this.backlinks = this.el.getElementsByTagName('small')[0];
 		let html = 'Replies:';
 		const thread = state.page.get('thread'),
 			notBoard = thread !== 0;
 		for (var key in links) {
-			if (!links.hasOwnProperty(key))
-				continue;
 			// points to a different thread from the current
 			const diff = links[key] !== thread;
 			html += common.parseHTML
@@ -129,7 +128,7 @@ module.exports = {
 					&gt;&gt;${key}${diff && notBoard && ' →'}
 				</a>`;
 		}
-		main.command('scroll:follow', () => this.$backlinks.html(html));
+		main.command('scroll:follow', () => this.backlinks.innerHTML = html);
 	},
 	renderMenu: function(e) {
 		new Menu({
