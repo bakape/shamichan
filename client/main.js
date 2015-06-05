@@ -25,6 +25,8 @@ var radio = require('backbone.radio');
 
 // Central aplication object and message bus
 let main = module.exports = radio.channel('main');
+// Bind dependancies to main object for pretier destructuring requires
+_.extend(main, {$, _, Backbone});
 
 /*
  Ofload expensive and not that neccessary loops to after the main client is

@@ -2,14 +2,10 @@
  * Common methods to both OP and regular posts
  */
 
-var $ = require('jquery'),
-	_ = require('underscore'),
-	main = require('../main'),
+let main = require('../main'),
 	imager = require('./imager'),
 	Menu = require('./menu'),
-	common = main.common,
-	options = main.options,
-	state = main.state;
+	{$, _, common, options, state} = main;
 
 module.exports = {
 	events: {
@@ -18,7 +14,7 @@ module.exports = {
 		'click >header>nav>a.quote': 'quotePost',
 		'click >header>.control': 'renderMenu'
 	},
-	initCommon: function(){
+	initCommon: function() {
 		this.$blockquote = this.$el.children('blockquote');
 		this
 			.listenTo(this.model, {
@@ -98,11 +94,7 @@ module.exports = {
 		let el = this.el.getElementsByTagName('time')[0];
 		if (!this.timeStamp)
 			this.timeStamp = main.request('time:fromEl', el).getTime();
-		// Create new time element from string
-		let newEl = new DOMParser()
-			.parseFromString(main.oneeSama.time(this.timeStamp), 'text/xml')
-			.firstChild;
-		el.parentNode.replaceChild(newEl, el);
+		el.outerHTML = main.oneeSama.time(this.timeStamp);
 		if (this.timer)
 			clearTimeout(this.timer);
 		if (rtime)

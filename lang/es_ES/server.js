@@ -3,6 +3,7 @@
  */
 var lang = {
 	catalog_omit: 'Replies/Images',
+	show_seconds: 'Click to show seconds',
 
 	// Respuestas de imager
 	im : {

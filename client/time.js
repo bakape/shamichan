@@ -1,8 +1,5 @@
-var $ = require('jquery'),
-	Backbone = require('backbone'),
-	common = require('../common'),
-	main = require('./main'),
-	options = require('./options');
+let main = require('./main'),
+	{$, Backbone, common, oneeSama, options} = main;
 
 function date_from_time_el(el) {
 	if (!el)
@@ -24,12 +21,12 @@ const is_skewed = (function(){
 	if (!el)
 		return false;
 	var d = date_from_time_el(el);
-	return main.oneeSama.readable_time(d.getTime()) != el.innerHTML;
+	return oneeSama.readable_time(d.getTime()) != el.innerHTML;
 })();
 
 if (is_skewed) {
 	// Rerender all post times
-	if (!main.oneeSama.rTime)
+	if (!oneeSama.rTime)
 		options.trigger('change:relativeTime', null, false);
 
 	setTimeout(function () {
@@ -101,30 +98,25 @@ function mouikkai() {
 main.defer(mouikkai)
 	.defer(function() {
 		// Append UTC clock to the top of the schedule
-		var seconds;
-		var $el = $(common.parseHTML
-			`<span id="UTCClock" title="Click to show seconds">
-				<b></b><hr>
-			</span>`
-		)
-			.prependTo('#schedule')
-			// Append seconds and render clock every second, if clicked
-			.one('click', function() {
-				seconds = true;
-				this.removeAttribute('title');
-				render();
-			});
-		$el = $el.find('b');
+		let seconds;
+		let el = document
+			.getElementById('UTCClock')
+			.getElementsByTagName('b')[0];
+		el.addEventListener('click', function() {
+			seconds = true;
+			this.removeAttribute('title');
+			render();
+		});
 
 		function render() {
 			if (!serverTimeOffset)
 				return setTimeout(render, 1000);
-			var d = new Date(common.serverTime()),
-				html = main.oneeSama.readable_time(d);
+			let d = new Date(common.serverTime()),
+				html = oneeSama.readable_time(d);
 			if (seconds)
 				html += ':' + common.pad(d.getUTCSeconds());
 			html += ' UTC';
-			$el.html(html);
+			el.innerHTML = html;
 			setTimeout(render, seconds ? 1000 : 60000);
 		}
 

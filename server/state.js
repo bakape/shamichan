@@ -205,8 +205,6 @@ function expand_templates(res) {
 	var templateVars = _.clone(HOT);
 	_.extend(templateVars, config);
 	templateVars.NAVTOP = make_navigation_html();
-
-	templateVars.SCHEDULE = build_schedule(templateVars.SCHEDULE);
 	templateVars.FAQ = build_FAQ(templateVars.FAQ);
 	// Format info banner
 	if (templateVars.BANNERINFO)
@@ -225,16 +223,21 @@ function expand_templates(res) {
 	};
 
 	// Build index templates for each language
-	const langs = config.LANGS;
+	const langs = config.LANGS,
+		scheduleData = templateVars.SCHEDULE;
 	for (let i = 0, l = langs.length; i < l; i++) {
-		let ln = langs[i];
+		let ln = langs[i],
+			chosenLanguage = lang[ln];
 		// Inject the localised variables
 		_.extend(templateVars, lang[ln].tmpl);
+		templateVars.schedule_modal = build_schedule(scheduleData,
+			chosenLanguage.show_seconds
+		);
 		// Build localised options panel
-		templateVars.options_panel = buildOptions(lang[ln].opts);
+		templateVars.options_panel = buildOptions(chosenLanguage.opts);
 
 		// Inject language pack
-		templateVars.lang = _.clone(lang[ln].common);
+		templateVars.lang = _.clone(chosenLanguage.common);
 		_.chain(templateVars.lang).functions().each(function(key) {
 			// Functions can not be converted to JSON, so we stringify them
 			templateVars.lang[key] = templateVars.lang[key].toString();
@@ -252,9 +255,14 @@ function expand_templates(res) {
 	return ex;
 }
 
-function build_schedule(schedule){
+function build_schedule(schedule, showSeconds){
 	const filler = ['drink & fap', 'fap & drink', 'tea & keiki'];
-	let table = '<table>';
+	let table = common.parseHTML
+		`<table>
+			<span id="UTCClock" title="${showSeconds}">
+				<b></b>
+				<hr>
+			</span>`;
 	for (let i = 0, l = schedule.length; i < l; i += 3) {
 		let day = schedule[i],
 			plans = schedule[i + 1],
@@ -378,9 +386,7 @@ function renderOption(opt, lang) {
 }
 
 function renderExtras(lang) {
-	let html = common.parseHTML
-		`<br>
-		`
+	let html = '<br>';
 	const links = ['export', 'import', 'hidden'];
 	for (let i = 0, l = links.length; i < l; i++) {
 		const id = links[i],
