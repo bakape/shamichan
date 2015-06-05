@@ -54,10 +54,8 @@ function readingSteiner(url, event, needPush) {
 		 * individually through models and listeners. Not that the `remove()`s
 		 * don't fire anymore...
 		 */
-		main.$threads.empty();
-		state.posts.models.forEach(function(model) {
-			model.remove();
-		});
+		main.$threads[0].innerHTML = '';
+		main.trigger('state:clear');
 		// Prevent old threads from syncing
 		state.syncs = {};
 		// Apply new DOM and load models

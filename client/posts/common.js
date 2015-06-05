@@ -20,24 +20,32 @@ module.exports = {
 	},
 	initCommon: function(){
 		this.$blockquote = this.$el.children('blockquote');
-		this.listenTo(this.model, {
-			'spoiler': this.renderSpoiler,
-			'change:image': this.renderImage,
-			updateBody: this.updateBody
-		});
-		this.listenTo(options, {
-			'change:thumbs': this.renderImage,
-			'change:spoilers': this.toggleSpoiler,
-			'change:autogif': this.toggleAutogif,
-			'change:anonymise': this.toggleAnonymisation,
-			'change:relativeTime': this.renderTime
-		});
-		// Automatic image expansion
-		this.listenTo(imager.massExpander, 'change:expand',
-			function(model, expand) {
-				this.toggleImageExpansion(expand);
-			}
-		);
+		this
+			.listenTo(this.model, {
+				'spoiler': this.renderSpoiler,
+				'change:image': this.renderImage,
+				updateBody: this.updateBody
+			})
+			.listenTo(options, {
+				'change:thumbs': this.renderImage,
+				'change:spoilers': this.toggleSpoiler,
+				'change:autogif': this.toggleAutogif,
+				'change:anonymise': this.toggleAnonymisation,
+				'change:relativeTime': this.renderTime
+			})
+			// Automatic image expansion
+			.listenTo(imager.massExpander, 'change:expand',
+				function(model, expand) {
+					this.toggleImageExpansion(expand);
+				}
+			)
+			// The <threads> tag has already been emptied, not need to perform
+			// element removal with the default `.remove()` method
+			.listenTo(main, 'state:clear', this.stopListening)
+			.listenTo(state.linkerCore,
+				'change:' + this.model.get('num'),
+				this.renderBacklinks
+			);
 		if (options.get('relativeTime'))
 			this.renderTime(null, true);
 		this.fun();
@@ -47,10 +55,6 @@ module.exports = {
 		const links = state.linkerCore.get(this.model.get('num'));
 		if (links)
 			this.renderBacklinks(null, links);
-		this.listenTo(state.linkerCore,
-			'change:' + this.model.get('num'),
-			this.renderBacklinks
-		);
 		return this;
 	},
 	updateBody: function(update) {
