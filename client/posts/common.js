@@ -111,7 +111,7 @@ module.exports = {
 	renderBacklinks: function(model, links) {
 		// No more backlinks, because posts deleted or something
 		if (!links && this.backlinks) {
-			main.command('scroll:follow', () => this.backlinks.remove());
+			main.command('scroll:follow', () => this.backlinks.innerHTML = '');
 			this.backlinks = null;
 			return;
 		}
