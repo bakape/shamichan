@@ -517,7 +517,7 @@ var ComposerView = Backbone.View.extend({
 				break;
 			// Substitute
 			time = this.findTimeArg(m[2]) || '';
-			video = '>>>/watch?v=' + m[1] + t;
+			video = '>>>/watch?v=' + m[1] + time;
 			val = embedRewrite(m, video);
 		}
 
