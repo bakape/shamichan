@@ -592,8 +592,8 @@ Y.insert_post = function (msg, body, extra, callback) {
 				r.llen(`thread:${op}:posts`, function(err, res) {
 					if (err)
 						return next(err);
-					bump = common.is_sage(view.email)
-						|| res[1] >= config.BUMP_LIMIT[board];
+					bump = !common.is_sage(view.email)
+						&& res < config.BUMP_LIMIT[board];
 					next();
 				});
 			},
@@ -605,7 +605,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 					etc.augments.auth = {ip: ip};
 				}
 				if (bump)
-					m.incr(tagKey + ':bumpctr', next);
+					m.incr(tagKey + ':bumpctr');
 				self._log(m, op, common.INSERT_POST, [view, bump], etc);
 				m.exec(next);
 			},
