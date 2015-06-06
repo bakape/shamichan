@@ -99,14 +99,16 @@ main.defer(mouikkai)
 	.defer(function() {
 		// Append UTC clock to the top of the schedule
 		let seconds;
-		let el = document
-			.getElementById('UTCClock')
-			.getElementsByTagName('b')[0];
-		el.addEventListener('click', function() {
+		let el = document.getElementById('UTCClock');
+		el.addEventListener('click', handler);
+
+		function handler() {
 			seconds = true;
 			this.removeAttribute('title');
+			this.style.cursor = 'default';
+			this.removeEventListener('click', handler);
 			render();
-		});
+		}
 
 		function render() {
 			if (!serverTimeOffset)

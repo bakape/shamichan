@@ -259,8 +259,8 @@ function build_schedule(schedule, showSeconds){
 	const filler = ['drink & fap', 'fap & drink', 'tea & keiki'];
 	let table = common.parseHTML
 		`<table>
-			<span id="UTCClock" title="${showSeconds}">
-				<b></b>
+			<span>
+				<b id="UTCClock" title="${showSeconds}"></b>
 				<hr>
 			</span>`;
 	for (let i = 0, l = schedule.length; i < l; i += 3) {
