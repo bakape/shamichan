@@ -23,8 +23,7 @@ var Article = module.exports = Backbone.View.extend({
 		if (!this.el.innerHTML)
 			this.render().insertIntoDOM();
 		this.listenTo(this.model, {
-			'change:editing': this.renderEditing,
-			remove: this.remove
+			'change:editing': this.renderEditing
 		});
 		this.initCommon();
 	},

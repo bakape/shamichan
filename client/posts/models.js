@@ -29,7 +29,7 @@ exports.Post = Backbone.Model.extend({
 	remove: function() {
 		this.stopListening();
 		// Remove view
-		this.trigger('remove');
+		this.dispatch('remove');
 		// Remove from post collection
 		state.posts.remove(this);
 	},

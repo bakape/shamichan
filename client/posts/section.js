@@ -21,7 +21,6 @@ var Section = module.exports = Backbone.View.extend({
 
 		this.listenTo(this.model, {
 			'change:locked': this.renderLocked,
-			remove: this.remove,
 			bump: this.bumpThread
 		});
 		this.initCommon();
