@@ -20,8 +20,7 @@ var Section = module.exports = Backbone.View.extend({
 			this.renderOmit();
 
 		this.listenTo(this.model, {
-			'change:locked': this.renderLocked,
-			bump: this.bumpThread
+			'change:locked': this.renderLocked
 		});
 		this.initCommon();
 	},

@@ -62,7 +62,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	parent.dispatch('shiftReplies');
 	// Bump thread to page top
 	if (bump)
-		parent.trigger('bump');
+		parent.dispatch('bumpThread');
 };
 
 dispatcher[common.INSERT_IMAGE] = function(msg) {
