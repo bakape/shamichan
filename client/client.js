@@ -13,8 +13,8 @@ var $ = require('jquery'),
 var dispatcher = main.dispatcher;
 
 dispatcher[common.INSERT_POST] = function(msg) {
-	// TODO: msg[0] is legacy. Could use a fix after we shift in the new client
-	msg = msg[1];
+	let bump = msg[1] && state.page.get('live');
+	msg = msg[0];
 	const isThread = !msg.op;
 	if (isThread)
 		state.syncs[msg.num] = 1;
@@ -25,7 +25,6 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	const nonce = msg.nonce;
 	delete msg.nonce;
 	const myNonce = main.request('nonce:get')[nonce];
-	var bump = state.page.get('live');
 	if (myNonce && myNonce.tab === state.page.get('tabID')) {
 		// posted in this tab; transform placeholder
 		state.ownPosts[msg.num] = true;
@@ -56,13 +55,13 @@ dispatcher[common.INSERT_POST] = function(msg) {
 
 	if (isThread)
 		return;
-	var parent = state.posts.get(msg.op);
+	let parent = state.posts.get(msg.op);
 	if (!parent)
 		return;
 	parent.get('replies').push(msg.num);
 	parent.trigger('shiftReplies');
 	// Bump thread to page top
-	if (!common.is_sage(msg.email) && bump)
+	if (bump)
 		parent.trigger('bump');
 };
 

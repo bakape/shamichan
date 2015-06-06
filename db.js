@@ -530,7 +530,6 @@ Y.insert_post = function (msg, body, extra, callback) {
 	const key = (isThead ? 'thread:' : 'post:') + num;
 	let m = r.multi();
 	m.incr(tagKey + ':postctr'); // must be first
-	m.llen(`thread:${op}:posts`);
 	m.sadd('liveposts', key);
 
 	hooks.trigger_sync('inlinePost', {
@@ -573,7 +572,8 @@ Y.insert_post = function (msg, body, extra, callback) {
 	extract(view);
 	delete view.ip;
 
-	let self = this;
+	let self = this,
+		bump;
 	async.waterfall(
 		[
 			function (next) {
@@ -581,32 +581,38 @@ Y.insert_post = function (msg, body, extra, callback) {
 					return next(null);
 				imager.commit_image_alloc(extra.image_alloc, next);
 			},
-			function (next) {
+			// Determine, if we need to bump the thread to the top of
+			// the board
+			function(next) {
+				if (isThead) {
+					bump = true;
+					return next();
+				}
+
+				r.llen(`thread:${op}:posts`, function(err, res) {
+					if (err)
+						return next(err);
+					bump = common.is_sage(view.email)
+						|| res[1] >= config.BUMP_LIMIT[board];
+					next();
+				});
+			},
+			function(next) {
 				if (ip) {
 					const n = post_volume(view, body);
 					if (n > 0)
 						update_throughput(m, ip, view.time, n);
 					etc.augments.auth = {ip: ip};
 				}
-
-				self._log(m, op, common.INSERT_POST, [num, view], etc);
+				if (bump)
+					m.incr(tagKey + ':bumpctr', next);
+				self._log(m, op, common.INSERT_POST, [view, bump], etc);
 				m.exec(next);
 			},
 			function(res, next) {
-				// Determine, if we need to bump the thread to the top of
-				// the board
-				if (!isThead 
-					&& (common.is_sage(view.email) 
-						|| res[1] >= config.BUMP_LIMIT[board]
-					)
-				)
+				if (!bump)
 					return next();
-
-				const postctr = res[0];
-				let m = r.multi();
-				m.incr(tagKey + ':bumpctr', next);
-				m.zadd(tagKey + ':threads', postctr, op);
-				m.exec(next);
+				r.zadd(tagKey + ':threads', res[0], op, next);
 			}
 		],
 		function (err) {
