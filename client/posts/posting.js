@@ -272,7 +272,7 @@ var ComposerView = Backbone.View.extend({
 		// TODO: Shift the parrent sections replies on board pages
 
 		this.$blockquote.append(this.$buffer, this.$lineBuffer, this.$input);
-		this.$el.append(this.$meta, this.$blockquote);
+		this.$el.append(this.$meta, this.$blockquote, '<small/>');
 		if (this.isThread) {
 			this.$el.append('<label for="subject">Subject: </label>',
 				this.$subject);
