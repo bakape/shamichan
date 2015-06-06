@@ -18,6 +18,7 @@ module.exports = {
 		this.$blockquote = this.$el.children('blockquote');
 		this
 			.listenTo(this.model, {
+				'dispatch': this.redirect,
 				'spoiler': this.renderSpoiler,
 				'change:image': this.renderImage,
 				updateBody: this.updateBody
@@ -35,9 +36,6 @@ module.exports = {
 					this.toggleImageExpansion(expand);
 				}
 			)
-			// The <threads> tag has already been emptied, not need to perform
-			// element removal with the default `.remove()` method
-			.listenTo(main, 'state:clear', this.stopListening)
 			.listenTo(state.linkerCore,
 				'change:' + this.model.get('num'),
 				this.renderBacklinks
@@ -52,6 +50,12 @@ module.exports = {
 		if (links)
 			this.renderBacklinks(null, links);
 		return this;
+	},
+	// Proxy to the appropriate method
+	redirect: function(command, args) {
+		if (typeof args === 'undefined')
+			return this[command]();
+		this[command](args);
 	},
 	updateBody: function(update) {
 		main.oneeSama.dice = update.dice;

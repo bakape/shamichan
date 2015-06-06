@@ -21,6 +21,11 @@ exports.Post = Backbone.Model.extend({
 			this.forwardLinks(null, links);
 		this.listenTo(this, 'change:links', this.forwardLinks);
 	},
+	// Proxy commands to the view. Using a central channel helps us reduce
+	// listener count overhead.
+	dispatch: function(command, args) {
+		this.trigger('dispatch', command, args);
+	},
 	remove: function() {
 		this.stopListening();
 		// Remove view

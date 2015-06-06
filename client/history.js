@@ -48,23 +48,14 @@ function readingSteiner(url, event, needPush) {
 		// other shananigans
 		if (xhr.status !== 200)
 			location.replace(this.url.split('?')[0]);
-		
-		/*
-		 * Emptying the whole element should be faster than removing each post
-		 * individually through models and listeners. Not that the `remove()`s
-		 * don't fire anymore...
-		 */
-		main.$threads[0].innerHTML = '';
+
 		main.trigger('state:clear');
-		// Prevent old threads from syncing
-		state.syncs = {};
 		// Apply new DOM and load models
 		main.$threads.html(data);
 		// Set new page state
 		state.page.set(nextState);
 		// Reconfigure rendering singleton
 		main.oneeSama.op = nextState.thread;
-		main.command('massExpander:unset');
 		new Extract();
 		// Swap the database controller server-side
 		main.command('send', [

@@ -80,6 +80,7 @@ main.readOnly = [];
  Core modules. The other will be more or less decoupled, but these are the
  monolithic foundation.
  */
+main.memory = require('./memory');
 let state = main.state = require('./state');
 let	common = main.common = require('../common');
 // Initialise main rendering object
@@ -108,7 +109,6 @@ main.connSM = new common.FSM('load');
 main.postSM = new common.FSM('none');
 state.page.set('tabID', common.random_id());
 
-main.memory = require('./memory');
 main.etc = require('./etc');
 main.time = require('./time');
 main.scroll = require('./scroll');
