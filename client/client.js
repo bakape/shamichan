@@ -127,8 +127,11 @@ dispatcher[common.FINISH_POST] = function(msg) {
 	const num = msg[0];
 	delete state.ownPosts[num];
 	var model = state.posts.get(num);
-	if (model)
+	if (model) {
+		// No change event listener to avoid extra overhead
+		model.set('editing', false);
 		model.dispatch('renderEditing', false);
+	}
 };
 
 dispatcher[common.DELETE_POSTS] = function(msg) {
