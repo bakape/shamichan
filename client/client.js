@@ -160,15 +160,15 @@ dispatcher[common.DELETE_THREAD] = function(msg, op) {
 };
 
 dispatcher[common.LOCK_THREAD] = function(msg, op) {
-	var model = state.posts.get(op);
+	let model = state.posts.get(op);
 	if (model)
-		model.set('locked', true);
+		model.toggleLocked(true);
 };
 
 dispatcher[common.UNLOCK_THREAD] = function(msg, op) {
-	var model = state.posts.get(op);
+	let model = state.posts.get(op);
 	if (model)
-		model.set('locked', false);
+		model.toggleLocked(false);
 };
 
 dispatcher[common.DELETE_IMAGES] = function(msg) {

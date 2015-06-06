@@ -120,5 +120,8 @@ exports.Thread = exports.Post.extend({
 				image_omit--;
 		}
 		this.set('image_omit', image_omit);
+	},
+	toggleLocked: function(val) {
+		this.dispatch('renderLocked', val);
 	}
 });

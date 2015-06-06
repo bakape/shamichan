@@ -18,10 +18,6 @@ var Section = module.exports = Backbone.View.extend({
 			this.render();
 		else
 			this.renderOmit();
-
-		this.listenTo(this.model, {
-			'change:locked': this.renderLocked
-		});
 		this.initCommon();
 	},
 	render: function() {
