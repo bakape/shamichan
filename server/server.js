@@ -663,6 +663,10 @@ function pid_setup() {
 }
 
 if (require.main == module) {
+	if (config.DEBUG) {
+		winston.warn("Running in (insecure) debug mode.");
+		winston.warn("Do not use on the public internet.");
+	}
 	if (!process.getuid())
 		throw new Error("Refusing to run as root.");
 	if (!tripcode.setSalt(config.SECURE_SALT))
