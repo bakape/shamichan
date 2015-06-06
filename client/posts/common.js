@@ -19,14 +19,9 @@ module.exports = {
 		this
 			.listenTo(this.model, {
 				'dispatch': this.redirect,
-				'spoiler': this.renderSpoiler,
-				'change:image': this.renderImage,
 				updateBody: this.updateBody
 			})
 			.listenTo(options, {
-				'change:thumbs': this.renderImage,
-				'change:spoilers': this.toggleSpoiler,
-				'change:autogif': this.toggleAutogif,
 				'change:anonymise': this.toggleAnonymisation,
 				'change:relativeTime': this.renderTime
 			})

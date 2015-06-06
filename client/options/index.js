@@ -235,13 +235,13 @@ var OptionsView = Backbone.View.extend({
 	}
 });
 
-main.defer(function() {
-	// Create and option model for each object in the array
-	const optCommon = require('../../common/options');
-	for (let i = 0, lim = optCommon.length; i < lim; i++) {
-		new OptionModel(optCommon[i]);
-	}
+// Create and option model for each object in the array
+const optCommon = require('../../common/options');
+for (let i = 0, lim = optCommon.length; i < lim; i++) {
+	new OptionModel(optCommon[i]);
+}
 
+main.defer(function() {
 	new OptionsView({
 		el: document.getElementById('options-panel')
 	});

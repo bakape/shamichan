@@ -66,16 +66,18 @@ dispatcher[common.INSERT_POST] = function(msg) {
 };
 
 dispatcher[common.INSERT_IMAGE] = function(msg) {
-	let model = state.posts.get(msg[0]);
+	const num = msg[0];
+	let model = state.posts.get(num);
 	// Did I just upload this?
-	let postModel = main.request('postModel');
-	if (postModel && postModel.get('num') == msg[0]) {
-		if (model)
-			model.set('image', msg[1], {silent: true});
-		main.request('postForm').insertUploaded(msg[1]);
-	}
-	else if (model)
-		model.set('image', msg[1]);
+	let postModel = main.request('postModel'),
+		img = msg[1];
+	const toPostForm = postModel && postModel.get('num') == num;
+	if (toPostForm)
+		main.request('postForm').insertUploaded(img);
+	// If the image gets inseted into the postForm, we don't need the
+	// generic model to fire a separate image render
+	if (model)
+		model.setImage(img, toPostForm);
 };
 
 dispatcher[common.UPDATE_POST] = function(msg) {
@@ -173,15 +175,17 @@ dispatcher[common.DELETE_IMAGES] = function(msg) {
 	for (let i = 0, lim = msg.length; i < lim; i++) {
 		let model = state.posts.get(msg[i]);
 		if (model)
-			model.unset('image');
+			model.removeImage();
 	}
 };
 
 dispatcher[common.SPOILER_IMAGES] = function(msg) {
 	for (let i = 0, lim = msg.length; i < lim; i++) {
-		var model = state.posts.get(msg[i][0]);
-		if (model)
-			model.trigger('spoiler',msg[i][1]);
+		const spoiler = msg[i];
+		let model = state.posts.get(spoiler[0]);
+		if (!model)
+			continue;
+		model.setSpoiler(spoiler[1]);
 	}
 };
 

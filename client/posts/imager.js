@@ -39,7 +39,6 @@ let Hidamari = exports.Hidamari = {
 			imageExpanded: false
 		});
 	},
-
 	autoExpandImage: function() {
 		const img = this.model.get('image');
 		if (!img
@@ -50,28 +49,6 @@ let Hidamari = exports.Hidamari = {
 			return;
 		this.toggleImageExpansion(true, img);
 	},
-
-	renderSpoiler: function(spoiler) {
-		let img = this.model.get('image');
-		img.spoiler = spoiler;
-		this.renderImage(img);
-	},
-
-	toggleSpoiler: function() {
-		const img = this.model.get('image');
-		if (!img || !img.spoiler)
-			return;
-		this.renderImage(img);
-	},
-
-	// Toggle animated GIF thumbnails
-	toggleAutogif: function() {
-		const img = this.model.get('image');
-		if (!img || img.ext !== '.gif')
-			return;
-		this.renderImage(img);
-	},
-
 	// Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
 	toggleThumbnailVisibility: function(e) {
 		e.preventDefault();
@@ -79,7 +56,6 @@ let Hidamari = exports.Hidamari = {
 			this.renderImage(!this.model.get('thumbnailRevealed'))
 		);
 	},
-
 	imageClicked: function(e){
 		if (options.get('inlinefit') == 'none' || e.which !== 1)
 			return;
@@ -90,7 +66,6 @@ let Hidamari = exports.Hidamari = {
 			this.toggleImageExpansion(!this.model.get('imageExpanded'))
 		);
 	},
-
 	toggleImageExpansion: function(expand, img = this.model.get('image')) {
 		const fit = options.get('inlinefit');
 		if (!img || fit === 'none')
@@ -100,7 +75,6 @@ let Hidamari = exports.Hidamari = {
 		else
 			this.renderImage(null, img);
 	},
-
 	fitImage: function(img, fit){
 		// Open PDF in a new tab on click
 		if (img.ext === '.pdf')
@@ -160,7 +134,6 @@ let Hidamari = exports.Hidamari = {
 			fullWidth: fullWidth && !fullHeight
 		});
 	},
-
 	expandImage: function(img, opts) {
 		const tag = (img.ext === '.webm') ? 'video' : 'img';
 		this.$el
@@ -178,7 +151,6 @@ let Hidamari = exports.Hidamari = {
 			);
 		this.model.set('imageExpanded', true);
 	},
-
 	renderAudio: function(img) {
 		this.$el
 			.children('figure')
@@ -200,14 +172,12 @@ let Hidamari = exports.Hidamari = {
 // Expand all images
 let ExpanderModel = Backbone.Model.extend({
 	id: 'massExpander',
-
 	initialize: function() {
 		main.$threads.on('click', '#expandImages', (e) => {
 			e.preventDefault();
 			this.toggle();
 		});
 	},
-
 	toggle: function() {
 		const expand = !this.get('expand');
 		this.set('expand', expand);

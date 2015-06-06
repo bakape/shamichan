@@ -24,9 +24,6 @@ var Section = module.exports = Backbone.View.extend({
 			remove: this.remove,
 			bump: this.bumpThread
 		});
-		this.listenToOnce(this.model, {
-			'add': this.renderRelativeTime
-		});
 		this.initCommon();
 	},
 	render: function() {

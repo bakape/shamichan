@@ -21,7 +21,7 @@ exports.Post = Backbone.Model.extend({
 			this.forwardLinks(null, links);
 		this.listenTo(this, 'change:links', this.forwardLinks);
 	},
-	// Proxy commands to the view. Using a central channel helps us reduce
+	// Proxy commands to the view(s). Using a central channel helps us reduce
 	// listener count overhead.
 	dispatch: function(command, args) {
 		this.trigger('dispatch', command, args);
@@ -32,6 +32,22 @@ exports.Post = Backbone.Model.extend({
 		this.trigger('remove');
 		// Remove from post collection
 		state.posts.remove(this);
+	},
+	// Calling a method is always less overhead than binding a dedicated
+	// listener for each post's image
+	setImage: function(image, silent) {
+		this.set('image', image);
+		if (!silent)
+			this.dispatch('renderImage', image);
+	},
+	setSpoiler: function(spoiler) {
+		let image = this.get('image');
+		image.spoiler = spoiler;
+		this.dispatch('renderImage', image);
+	},
+	removeImage: function() {
+		this.unset('image');
+		this.dispatch('renderImage', null);
 	},
 	addLinks: function(links){
 		if(!links)
