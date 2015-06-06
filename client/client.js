@@ -59,7 +59,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	if (!parent)
 		return;
 	parent.get('replies').push(msg.num);
-	parent.trigger('shiftReplies');
+	parent.dispatch('shiftReplies');
 	// Bump thread to page top
 	if (bump)
 		parent.trigger('bump');

@@ -17,13 +17,11 @@ var Section = module.exports = Backbone.View.extend({
 		if (!this.el.innerHTML)
 			this.render();
 		else
-			this.renderOmit(null, this.model.get('omit'));
+			this.renderOmit();
 
 		this.listenTo(this.model, {
 			'change:locked': this.renderLocked,
 			remove: this.remove,
-			shiftReplies: this.shiftReplies,
-			'change:omit': this.renderOmit,
 			bump: this.bumpThread
 		});
 		this.listenToOnce(this.model, {
@@ -62,27 +60,34 @@ var Section = module.exports = Backbone.View.extend({
 	shiftReplies: function(postForm) {
 		if (state.page.get('thread'))
 			return;
-		var replies = this.model.get('replies'),
-			lim = state.hotConfig.get('ABBREVIATED_REPLIES');
+		let attrs = this.model.attributes,
+			lim = state.hotConfig.get('ABBREVIATED_REPLIES'),
+			replies = attrs.replies,
+			changed;
 		if (postForm)
 			lim--;
-		let image_omit = this.model.attributes.image_omit;
-		for (let i = replies.length; i > lim; i--) {
+		// Need a static length, because the original array get's modified
+		const len = replies.slice().length;
+		for (let i = len; i > lim; i--) {
 			let post = state.posts.get(replies.shift());
 			if (!post)
 				continue;
-			/*
-			 Nothing tracks changes on image_omit, but we want omit changes to
-			 properly trigger change events.
-			  */
 			if (post.get('image'))
-				image_omit++;
-			this.model.set('omit', this.model.get('omit') + 1 );
+				attrs.image_omit++;
+			attrs.omit++;
+			changed = true;
 			post.remove();
 		}
+		if (changed)
+			this.renderOmit(attrs.omit, attrs.image_omit)
 	},
 	// Posts and images omited indicator
-	renderOmit: function(model, omit) {
+	renderOmit: function(omit, image_omit) {
+		if (typeof omit === 'undefined') {
+			const attrs = this.model.attributes;
+			omit = attrs.omit;
+			image_omit = attrs.image_omit;
+		}
 		if (omit === 0)
 			return;
 		if (!this.$omit) {
