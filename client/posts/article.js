@@ -3,13 +3,9 @@
  */
 'use strict';
 
-var $ = require('jquery'),
-	_ = require('underscore'),
-	Backbone = require('backbone'),
-	main = require('../main'),
-	options = require('../options'),
+let main = require('../main'),
 	postCommon = require('./common'),
-	state = require('../state');
+	{$, _, Backbone, options, state} = main;
 
 var Article = module.exports = Backbone.View.extend({
 	tagName: 'article',
@@ -22,9 +18,6 @@ var Article = module.exports = Backbone.View.extend({
 		 */
 		if (!this.el.innerHTML)
 			this.render().insertIntoDOM();
-		this.listenTo(this.model, {
-			'change:editing': this.renderEditing
-		});
 		this.initCommon();
 	},
 	render: function() {

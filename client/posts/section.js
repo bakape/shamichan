@@ -2,13 +2,9 @@
  * OP and thread related logic
  */
 
-var $ = require('jquery'),
-	_ = require('underscore'),
-	Backbone = require('backbone'),
-	main = require('../main'),
-	oneeSama = main.oneeSama,
+let main = require('../main'),
 	postCommon = require('./common'),
-	state = require('../state');
+	{$, _, Backbone, oneeSama, state} = main;
 
 var Section = module.exports = Backbone.View.extend({
 	tagName: 'section',
@@ -97,6 +93,10 @@ var Section = module.exports = Backbone.View.extend({
 	bumpThread: function() {
 		this.$el.detach();
 		this.insertToTop();
+	},
+	// TEMP: Stub until we unify the DOM structure of OPs and replies
+	renderEditing: function() {
+
 	}
 });
 
