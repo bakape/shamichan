@@ -109,7 +109,7 @@ dispatcher[common.UPDATE_POST] = function(msg) {
 
 	if (!model)
 		return;
-	model.trigger('updateBody', {
+	model.dispatch('updateBody', {
 		dice: extra && extra.dice,
 		links: links || {},
 		state: msgState,

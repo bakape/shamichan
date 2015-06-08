@@ -17,13 +17,8 @@ module.exports = {
 	initCommon: function() {
 		this.$blockquote = this.$el.children('blockquote');
 		this
-			.listenTo(this.model, {
-				'dispatch': this.redirect,
-				updateBody: this.updateBody
-			})
-			.listenTo(options, {
-				'change:relativeTime': this.renderTime
-			})
+			.listenTo(this.model, 'dispatch', this.redirect)
+			.listenTo(options, 'change:relativeTime', this.renderTime)
 			.listenTo(state.linkerCore,
 				'change:' + this.model.get('num'),
 				this.renderBacklinks
