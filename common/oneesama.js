@@ -486,7 +486,7 @@ OS.atama = function(data) {
 	let html = parseHTML
 		`<header>
 			<span class=control></span>
-			${data.subject && `<h3>「${ecape(data.subject)}」</h3>`}
+			${data.subject && `<h3>「${escape(data.subject)}」</h3>`}
 			${this.name(data)}~
 			${this.time(data.time)}~
 			${this.post_nav(data)}
