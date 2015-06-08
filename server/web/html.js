@@ -285,6 +285,9 @@ function parseCookies(req, ctr) {
 		styles = common.thumbStyles,
 		lang = req.lang = config.LANGS.indexOf(cookies.lang) > -1
 			? cookies.lang : config.DEFAULT_LANG;
+
+	// Round counter to lowest 10 updates for better caching
+	ctr = Math.floor(ctr / 10) * 10;
 	let etag = `W/${ctr}-${RES['indexHash-' + lang]}-${lang}`;
 	etag += '-' + (styles.indexOf(thumb) >= 0 && thumb || styles[0]);
 	const etags = ['spoil', 'agif', 'rtime', 'linkify'];
