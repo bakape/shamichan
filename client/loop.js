@@ -10,7 +10,8 @@ let main = require('./main'),
 options.on({
 	'change:thumbs': reRenderImages,
 	'change:spoilers': toggleSpoilers,
-	'change:autogif': toggleAutoGIF
+	'change:autogif': toggleAutoGIF,
+	'change:anonymise': toggleAnonymisation
 });
 
 function reRenderImages() {
@@ -44,3 +45,21 @@ function toggleAutoGIF() {
 			model.dispatch('renderImage', image);
 	}
 }
+
+function toggleAnonymisation(source, toggle) {
+	let models = state.posts.models;
+	for (let i = 0, l = models.length; i < l; i++) {
+		let model = models[i];
+		const {name, trip} = model.attributes;
+		if (name || trip) {
+			if (toggle)
+				model.dispatch('anonymise');
+			else
+				model.dispatch('renderName');
+		}
+	}
+}
+main.comply('loop:anonymise', function() {
+	if (options.get('anonymise'))
+		toggleAnonymisation(null, true);
+});

@@ -9,6 +9,7 @@ var imports = require('./imports'),
 	util = require('./util');
 
 const config = imports.config,
+	escape = util.escape_html,
 	flatten = util.flatten,
 	join = util.join,
 	new_tab_link = util.new_tab_link,
@@ -455,70 +456,102 @@ OS.post_ref = function(num, op, desc_html) {
 };
 
 OS.post_nav = function(post) {
-	const n = post.num;
-	var o = post.op;
-	return safe(parseHTML
+	const num = post.num,
+		op = post.op;
+	return parseHTML
 		`<nav>
-			<a href="${this.post_url(n, o)}" class="history">No.</a>
-			<a href="${this.post_url(n, o)}" class="quote">${n}</a>
-		</nav>`
-	);
+			<a href="${this.post_url(num, op)}" class="history">
+				No.
+			</a>
+			<a href="${this.post_url(num, op)}" class="quote">
+				${num}
+			</a>
+		</nav>`;
 };
 
 OS.expansion_links_html = function(num) {
-	return ' &nbsp; '
-		+ util.action_link_html(num, this.lang.expand, null, 'history')
-		+ ' '
-		+ util.action_link_html(`${num}?last=${this.lastN}`,
-			`${this.lang.last}&nbsp;${this.lastN}`,
-			null,
-			'history'
-		);
+	return parseHTML
+		`<span class="act expansionLinks">
+			<a href="${num}" class="history">
+				${this.lang.expand}
+			</a>
+			] [
+			<a href="${num}?last=${this.lastN}" class="history">
+				${this.lang.last} ${this.lastN}
+			</a>
+		</span>`;
 };
 
 OS.atama = function(data) {
-	var auth = data.auth;
-	var header = auth ? [
-		safe('<b class="'),
-		auth.toLowerCase(),
-		safe('">')
-	]
-		: [safe('<b>')];
-	if (data.subject)
-		header.unshift(safe('<h3>「'), data.subject, safe('」</h3> '));
-	if (data.name || !data.trip) {
-		header.push(data.name || this.lang.anon);
-		if (data.trip)
-			header.push(' ');
-	}
-	if (data.trip)
-		header.push(safe(`<code>'${data.trip}</code>`));
-	if (auth)
-		header.push(' ## ' + (auth == 'Admin' ? imports.hotConfig.ADMIN_ALIAS
-				: imports.hotConfig.MOD_ALIAS));
-	this.trigger('headerName', {header: header, data: data});
-	header.push(safe('</b>'));
-	if (data.email) {
-		header.unshift(safe(parseHTML
+	let html = parseHTML
+		`<header>
+			<span class=control></span>
+			${data.subject && `<h3>「${ecape(data.subject)}」</h3>`}
+			${this.name(data)}~
+			${this.time(data.time)}~
+			${this.post_nav(data)}
+			${!this.full && !data.op && this.expansion_links_html(data.num)}
+		</header>\n\t`
+
+	// TODO: Revisit, when we get to moderation.
+	/*
+	this.trigger('headerFinish', {
+		header,
+		data
+	});
+	*/
+	return [safe(html)];
+};
+
+OS.name = function(data) {
+	let html = '';
+	const auth = data.auth,
+		email = data.email;
+	html += parseHTML`<b class="name${auth && ` ${auth.toLowerCase()}`}">`;
+	if (email) {
+		html += parseHTML
 			`<a class="email"
-				href="mailto:${encodeURI(data.email)}"
-				target="_blank">
-			</a>`
-		));
+				href="mailto:${encodeURI(email)}"
+				target="_blank"
+			>`
 	}
-	header.push(' ', safe(this.time(data.time)), ' ', this.post_nav(data));
-	if (!this.full && !data.op) {
-		header.push(safe(this.expansion_links_html(data.num)));
+	html += this.resolveName(data);
+	if (email)
+		html += '</a>';
+	html += '</b>'
+	return html;
+	// TODO: Refactor, when moderation implemented
+	/*this.trigger('headerName', {
+		header: html,
+		data
+	});*/
+};
+
+OS.resolveName = function(data) {
+	let html = '';
+	const trip = data.trip,
+		name = data.name,
+		auth = data.auth;
+	if (name || !trip) {
+		if (name)
+			html += escape(data.name);
+		else
+			html += this.lang.anon;
+		if(trip)
+			html += ' ';
 	}
-	this.trigger('headerFinish', {header: header, data: data});
-	header.unshift(safe('<header><span class=control></span>'));
-	header.push(safe('</header>\n\t'));
-	return header;
+	if (trip)
+		html += `<code>'${escape(trip)}</code>`;
+	if (auth) {
+		const hot = imports.hotConfig;
+		html += ` ## ${auth === 'Admin' ? hot.ADMIN_ALIAS : hot.MOD_ALIAS}`;
+	}
+	return html;
 };
 
 OS.time = function(time) {
 	// Format according to client's relative post timestamp setting
-	var title, text;
+	let title, text;
 	if (this.rTime) {
 		title = this.readable_time(time);
 		text = this.relative_time(time, Date.now());
@@ -528,17 +561,18 @@ OS.time = function(time) {
 		text = this.readable_time(time);
 	}
 	return parseHTML
-		`<time datetime="${datetime(time)}" title="${title}">
+		`<time datetime="${this.datetime(time)}" title="${title}">
 			${text}
 		</time>`;
 };
 
-function datetime(time) {
-	var d = new Date(time);
+// For dealing with timezone diferences
+OS.datetime = function(time) {
+	let d = new Date(time);
 	return (d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-'
 	+ pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':'
 	+ pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
-}
+};
 
 OS.readable_time = function(time) {
 	var h = this.tz_offset;

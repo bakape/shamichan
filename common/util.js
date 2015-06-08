@@ -390,12 +390,12 @@ function parseHTML(callSite) {
 	for (let i = 1; i < len; i++)
 		args[i - 1] = arguments[i];
 
-	let output = callSite
+	const output = callSite
 		.slice(0, len)
 		.map(function(text, i) {
 			/*
-			 Simplifies conditionals. If the placeholder returns `false`, it is
-			 omitted.
+			 Simplifies conditionals. If the placeholder returns a non-zero
+			  falsy value, it is ommitted.
 			 */
 			const arg = args[i - 1];
 			return ((i === 0 || (!arg && arg !== 0)) ? '' : arg) + text;

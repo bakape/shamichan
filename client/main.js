@@ -98,7 +98,7 @@ let oneeSama = main.oneeSama = new common.OneeSama(function(num) {
 });
 oneeSama.op = state.page.get('thread');
 main.options = require('./options');
-main.loops = require('./loops');
+main.loops = require('./loop');
 
 // Cached jQuery objects
 main.$doc = $(document);

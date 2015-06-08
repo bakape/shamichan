@@ -5,7 +5,7 @@
 let main = require('../main'),
 	imager = require('./imager'),
 	Menu = require('./menu'),
-	{$, _, common, options, state} = main;
+	{$, _, common, lang, oneeSama, options, state} = main;
 
 module.exports = {
 	events: {
@@ -22,7 +22,6 @@ module.exports = {
 				updateBody: this.updateBody
 			})
 			.listenTo(options, {
-				'change:anonymise': this.toggleAnonymisation,
 				'change:relativeTime': this.renderTime
 			})
 			// Automatic image expansion
@@ -38,12 +37,15 @@ module.exports = {
 		if (options.get('relativeTime'))
 			this.renderTime(null, true);
 		this.fun();
-		// Anonymise on post insertion
-		if (options.get('anonymise'))
-			this.toggleAnonymisation(null, true);
 		const links = state.linkerCore.get(this.model.get('num'));
 		if (links)
 			this.renderBacklinks(null, links);
+		return this;
+	},
+	// Extra initialisation logic for posts renderred client-side
+	clientInit: function() {
+		if (options.get('anonymise'))
+			this.anonymise();
 		return this;
 	},
 	// Proxy to the appropriate method
@@ -53,12 +55,12 @@ module.exports = {
 		this[command](args);
 	},
 	updateBody: function(update) {
-		main.oneeSama.dice = update.dice;
-		main.oneeSama.links = update.links;
-		main.oneeSama.callback = this.inject;
-		main.oneeSama.$buffer = this.$blockquote;
-		main.oneeSama.state = update.state;
-		main.oneeSama.fragment(update.frag);
+		oneeSama.dice = update.dice;
+		oneeSama.links = update.links;
+		oneeSama.callback = this.inject;
+		oneeSama.$buffer = this.$blockquote;
+		oneeSama.state = update.state;
+		oneeSama.fragment(update.frag);
 	},
 	// Inject various tags into the blockqoute
 	inject: function(frag) {
@@ -89,11 +91,11 @@ module.exports = {
 	},
 	renderTime: function(model, rtime = options.get('relativeTime')) {
 		// TEMP: Remove after extraction is properly defered
-		main.oneeSama.rTime = rtime;
+		oneeSama.rTime = rtime;
 		let el = this.el.getElementsByTagName('time')[0];
 		if (!this.timeStamp)
 			this.timeStamp = main.request('time:fromEl', el).getTime();
-		el.outerHTML = main.oneeSama.time(this.timeStamp);
+		el.outerHTML = oneeSama.time(this.timeStamp);
 		if (this.timer)
 			clearTimeout(this.timer);
 		if (rtime)
@@ -132,16 +134,16 @@ module.exports = {
 		// Fun goes here
 	},
 	// Self-delusion tripfag filter
-	toggleAnonymisation: function(model, toggle) {
-		let el = this.el
-			.getElementsByTagName('header')[0]
-			.getElementsByTagName('b')[0];
-		const name = this.model.get('name');
-		if (toggle)
-			el.innerHTML = main.lang.anon;
-		// No need to change, if no name
-		else if (name)
-			el.innerHTML = name;
+	anonymise: function() {
+		this.el
+			.getElementsByClassName('name')[0]
+			.innerHTML = `<b class="name">${lang.anon}<b>`;
+	},
+	// Restore regular name
+	renderName: function() {
+		this.el
+			.getElementsByClassName('name')[0]
+			.outerHTML = oneeSama.name(this.model.attributes);
 	},
 	quotePost: function(e) {
 		e.preventDefault();

@@ -21,6 +21,7 @@ class Extract {
 		this.posts = json.posts;
 		this.extractReplies(el);
 		this.extractThreads(el);
+		main.command('loop:anonymise');
 	}
 	extractReplies(el) {
 		let articles = el.getElementsByTagName('article'),

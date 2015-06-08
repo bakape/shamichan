@@ -50,7 +50,9 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		model: model,
 		id: msg.num,
 		el: el
-	});
+	})
+		.clientInit();
+
 	main.command('post:inserted', model);
 
 	if (isThread)
@@ -139,8 +141,6 @@ dispatcher[common.DELETE_POSTS] = function(msg) {
 		let model = state.posts.get(msg[i]);
 		if (model)
 			model.remove();
-
-		// TODO: Free up post focus, if any
 	}
 };
 
