@@ -24,12 +24,6 @@ module.exports = {
 			.listenTo(options, {
 				'change:relativeTime': this.renderTime
 			})
-			// Automatic image expansion
-			.listenTo(imager.massExpander, 'change:expand',
-				function(model, expand) {
-					this.toggleImageExpansion(expand);
-				}
-			)
 			.listenTo(state.linkerCore,
 				'change:' + this.model.get('num'),
 				this.renderBacklinks
@@ -49,10 +43,8 @@ module.exports = {
 		return this;
 	},
 	// Proxy to the appropriate method
-	redirect: function(command, args) {
-		if (typeof args === 'undefined')
-			return this[command]();
-		this[command](args);
+	redirect: function(command, ...args) {
+		this[command](...args);
 	},
 	updateBody: function(update) {
 		oneeSama.dice = update.dice;

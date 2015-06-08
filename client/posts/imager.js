@@ -2,13 +2,8 @@
  * Thumbnail and image renderring
  */
 
-'use strict';
-
-let $ = require('jquery'),
-	Backbone = require('backbone'),
-	main = require('../main'),
-	common = main.common,
-	options = main.options;
+let main = require('../main'),
+	{$, Backbone, common, options, state} = main;
 
 let Hidamari = exports.Hidamari = {
 	/*
@@ -180,10 +175,27 @@ let ExpanderModel = Backbone.Model.extend({
 	},
 	toggle: function() {
 		const expand = !this.get('expand');
-		this.set('expand', expand);
+		this.set('expand', expand).massToggle(expand);
 		main.$threads
 			.find('#expandImages')
 			.text(`${expand ? 'Contract' : 'Expand'} Images`);
+	},
+	// More efficent than individual listeners
+	massToggle: function(expand) {
+		const fit = options.get('inlinefit');
+		if (fit === 'none')
+			return;
+		let models = state.posts.models;
+		for (let i = 0, l = models.length; i < l; i++) {
+			let model = models[i],
+				img = model.get('image');
+			if (!img)
+				continue;
+			if (expand)
+				model.dispatch('fitImage', img, fit);
+			else
+				model.dispatch('renderImage', null, img);
+		}
 	}
 });
 
