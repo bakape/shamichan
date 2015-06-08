@@ -99,7 +99,7 @@ main.defer(mouikkai)
 	.defer(function() {
 		// Append UTC clock to the top of the schedule
 		let seconds;
-		let el = document.getElementById('UTCClock');
+		let el = document.getElementById('UTCClock').firstChild;
 		el.addEventListener('click', handler);
 
 		function handler() {
