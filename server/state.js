@@ -60,7 +60,6 @@ var clientConfig = exports.clientConfig = _.pick(config,
 	'SPOILER_IMAGES',
 	'IMAGE_HATS',
 	'ASSETS_DIR',
-	'BANNERS',
 	'RECAPTCHA_PUBLIC_KEY'
 );
 
@@ -182,10 +181,8 @@ function reload_resources(cb) {
 	read_templates(function (err, tmpls) {
 		if (err)
 			return cb(err);
-
 		_.extend(RES, expand_templates(tmpls));
-
-		hooks.trigger('reloadResources', RES, cb);
+		cb();
 	});
 }
 

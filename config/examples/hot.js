@@ -20,6 +20,11 @@ this.hot = {
 		graveyard: 'mawaru',
 		staff: 'moe'
 	},
+/*
+ * File names of the images to use as banners inside the ./www/banners
+ * Example: ['banner01.png', 'banner02.gif', 'banner03.jpg'] or null
+ */
+	BANNERS: null,
 
 	THREADS_PER_PAGE: 10,
 // Replies to display under each thread on the board's root page

@@ -81,12 +81,6 @@ var config = module.exports = {
  */
 	SPOILER_IMAGES: [1, 2, 3],
 
-/*
- * File names of the images to use as banners inside the ./www/banners
- * Example: ['banner01.png', 'banner02.gif', 'banner03.jpg'] or null
- */
-	BANNERS: null,
-
 	IMAGE_HATS: false
 };
 

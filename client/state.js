@@ -72,7 +72,5 @@ main.on('state:clear', function() {
 });
 
 // Contains inter-post linking relations
-exports.linkerCore = new Backbone.Model({
-	id: 'linkerCore'
-});
+exports.linkerCore = new Backbone.Model();
 

@@ -20,8 +20,6 @@ class Render {
 		this.resp =resp;
 		this.req = req;
 		this.parseRequest();
-		// Templates are generated one per language and cached
-		this.tmpl = RES['indexTmpl-' + this.lang];
 		this.readOnly = config.READ_ONLY
 			|| config.READ_ONLY_BOARDS.indexOf(opts.board) >= 0;
 		opts.ident = req.ident;
@@ -102,7 +100,7 @@ class Render {
 
 		// <head> and other prerendered static HTML
 		if (this.full)
-			resp.write(this.tmpl[0]);
+			resp.write(this.templateTop());
 		if (opts.catalog)
 			this.boardTitle().catalogTop();
 		else if (opts.isThread)
@@ -116,6 +114,11 @@ class Render {
 			resp.write(this.oneeSama.newThreadBox());
 		if (opts.catalog)
 			resp.write('<div id="catalog">');
+	}
+	templateTop() {
+		// Templates are generated one per language and cached
+		const tmpl = this.tmpl = RES['indexTmpl-' + this.lang];
+		return tmpl[0] + this.imageBanner() + tmpl[1];
 	}
 	onBottom() {
 		let resp = this.resp;
@@ -214,26 +217,22 @@ class Render {
 			title += `${escape(subject)} (#${op})`;
 		else
 			title += `#${op}`;
-		this.resp.write(`<h1>${this.imageBanner()}${title}</h1>`);
+		this.resp.write(`<h1>${title}</h1>`);
 		this.title = title;
 		return this;
 	}
 	boardTitle() {
 		const board = this.opts.board,
 			title = STATE.hot.TITLES[board] || escape(board);
-		this.resp.write(`<h1>${this.imageBanner()}${title}</h1>`);
+		this.resp.write(`<h1>${title}</h1>`);
 		this.title = title;
 		return this;
 	}
 	imageBanner() {
-		const banners = config.BANNERS;
+		const banners = STATE.hot.BANNERS;
 		if (!banners)
 			return '';
-		return parseHTML
-			`<img id="imgBanner"
-				src="${config.MEDIA_URL}banners/${common.random(banners)}"
-			>
-			<br>`;
+		return `<img src="${config.MEDIA_URL}banners/${common.random(banners)}">`;
 	}
 	catalogTop() {
 		const pag = this.oneeSama.asideLink('return', '.', 'compact', 'history');
@@ -287,7 +286,7 @@ class Render {
 	// <script> tags
 	pageEnd() {
 		let resp = this.resp;
-		resp.write(this.tmpl[1]);
+		resp.write(this.tmpl[2]);
 		const ident = this.req.ident;
 		if (ident) {
 			if (caps.can_administrate(ident))
