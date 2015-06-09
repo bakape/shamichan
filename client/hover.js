@@ -117,21 +117,21 @@ let HoverPostView = Backbone.View.extend({
 	}
 });
 
+let ltarget, postHover;
 if (!main.isMobile) {
 	main.defer(function() {
-		var ltarget;
 		main.$doc.on('mousemove', function(e) {
 			if(e.target!=ltarget) {
 				mousemove.set('event', e);
 				ltarget= e.target;
 			}
 		});
-		var hover = document.getElementById('hover_overlay');
+		let hover = document.getElementById('hover_overlay');
 		new ImageHoverView({
 			model: mousemove,
 			el: hover
 		});
-		var postHover = new HoverPostView({
+		postHover = new HoverPostView({
 			model: mousemove,
 			el: hover
 		});
