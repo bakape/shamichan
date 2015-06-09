@@ -234,9 +234,17 @@ function parse_dice(frag) {
 }
 exports.parse_dice = parse_dice;
 
+let cachedOffset;
 function serverTime() {
 	const d = Date.now();
-	return imports.isNode ? d : d + imports.main.request('time:offset');
+	if (imports.isNode)
+		return d;
+
+	// The offset is intialised as 0, so there is something to return, until
+	// we get a propper number from the server.
+	if (!cachedOffset)
+		cachedOffset = imports.main.request('time:offset');
+	return d + cachedOffset;
 }
 exports.serverTime = serverTime;
 

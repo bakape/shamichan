@@ -1,5 +1,5 @@
 let main = require('./main'),
-	{$, Backbone, common, oneeSama, options} = main;
+	{$, Backbone, common, oneeSama, options, state} = main;
 
 function date_from_time_el(el) {
 	if (!el)
@@ -16,28 +16,6 @@ function date_from_time_el(el) {
 }
 main.reply('time:fromEl', date_from_time_el);
 
-const is_skewed = (function(){
-	var el = document.querySelector('time');
-	if (!el)
-		return false;
-	var d = date_from_time_el(el);
-	return oneeSama.readable_time(d.getTime()) != el.innerHTML;
-})();
-
-if (is_skewed) {
-	// Rerender all post times
-	if (!oneeSama.rTime)
-		options.trigger('change:relativeTime', null, false);
-
-	setTimeout(function () {
-		// next request, have the server render the right times
-		$.cookie('timezone', -new Date().getTimezoneOffset() / 60, {
-			expires: 90,
-			path: '/'
-		});
-	}, 3000);
-}
-
 // Get a more accurate server-client time offset, for interclient syncing
 // Does not account for latency, but good enough for our purposes
 var serverTimeOffset = 0;
@@ -47,6 +25,43 @@ main.dispatcher[common.GET_TIME] = function(msg){
 	serverTimeOffset = msg[0] - new Date().getTime();
 };
 main.reply('time:offset', serverTimeOffset);
+
+let renderTimer;
+function batcTimeRender(model, rtime = options.get('relativeTime')) {
+	let models = state.posts.models;
+	for (let i = 0, l = models.length; i < l; i++) {
+		models[i].dispatch('renderTime')
+	}
+	if (renderTimer)
+		clearTimeout(renderTimer);
+	if (rtime)
+		renderTimer = setTimeout(batcTimeRender, 60000)
+}
+main.comply('time:render', batcTimeRender);
+options.on('change:relativeTime', batcTimeRender);
+
+const is_skewed = (function(){
+	var el = document.querySelector('time');
+	if (!el)
+		return false;
+	var d = date_from_time_el(el);
+	return oneeSama.readable_time(d.getTime()) != el.innerHTML;
+})();
+
+if (is_skewed) {
+	// Rerender all post times. If relative time is enabled, the timestamps
+	// will be rerender anyway in a minute, so no need for this.
+	if (!oneeSama.rTime)
+		batcTimeRender();
+
+	setTimeout(function () {
+		// next request, have the server render the right times
+		$.cookie('timezone', -new Date().getTimezoneOffset() / 60, {
+			expires: 90,
+			path: '/'
+		});
+	}, 3000);
+}
 
 /* syncwatch */
 function timer_from_el($el) {

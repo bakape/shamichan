@@ -18,13 +18,10 @@ module.exports = {
 		this.$blockquote = this.$el.children('blockquote');
 		this
 			.listenTo(this.model, 'dispatch', this.redirect)
-			.listenTo(options, 'change:relativeTime', this.renderTime)
 			.listenTo(state.linkerCore,
 				'change:' + this.model.get('num'),
 				this.renderBacklinks
 			);
-		if (options.get('relativeTime'))
-			this.renderTime(null, true);
 		this.fun();
 		const links = state.linkerCore.get(this.model.get('num'));
 		if (links)
@@ -76,17 +73,11 @@ module.exports = {
 			$dest.append(out);
 		return out;
 	},
-	renderTime: function(model, rtime = options.get('relativeTime')) {
-		// TEMP: Remove after extraction is properly defered
-		oneeSama.rTime = rtime;
+	renderTime: function() {
 		let el = this.el.getElementsByTagName('time')[0];
 		if (!this.timeStamp)
 			this.timeStamp = main.request('time:fromEl', el).getTime();
 		el.outerHTML = oneeSama.time(this.timeStamp);
-		if (this.timer)
-			clearTimeout(this.timer);
-		if (rtime)
-			this.timer = setTimeout(this.renderTime.bind(this), 60000);
 	},
 	renderBacklinks: function(model, links) {
 		// No more backlinks, because posts deleted or something

@@ -68,19 +68,19 @@ if (main.config.DEBUG) {
 	radio.DEBUG = true;
 	radio.tuneIn('main');
 }
-
-main.isMobile = /Android|iP(?:hone|ad|od)|Windows Phone/
-	.test(navigator.userAgent);
-// Store them here, to avoid requiring modules in the wrong order
-main.dispatcher = {};
-// Read-only boards gets expanded later
-main.readOnly = [];
+_.extend(main, {
+	isMobile: /Android|iP(?:hone|ad|od)|Windows Phone/.test(navigator.userAgent),
+	// Store them here, to avoid requiring modules in the wrong order
+	dispatcher: {},
+	// Read-only boards gets expanded later
+	readOnly: [],
+	memory: require('./memory')
+});
 
 /*
  Core modules. The other will be more or less decoupled, but these are the
  monolithic foundation.
  */
-main.memory = require('./memory');
 let state = main.state = require('./state');
 let	common = main.common = require('../common');
 // Initialise main rendering object
@@ -98,28 +98,32 @@ let oneeSama = main.oneeSama = new common.OneeSama(function(num) {
 });
 oneeSama.op = state.page.get('thread');
 main.options = require('./options');
-main.loops = require('./loop');
 
-// Cached jQuery objects
-main.$doc = $(document);
-main.$threads = $('threads');
-main.$name = $('input[name=name]');
-main.$email = $('input[name=email]');
+_.extend(main, {
+	// Cached jQuery objects
+	$doc: $(document),
+	$threads: $('threads'),
+	$name: $('input[name=name]'),
+	$email: $('input[name=email]'),
 
-main.connSM = new common.FSM('load');
-main.postSM = new common.FSM('none');
+	connSM: new common.FSM('load'),
+	postSM: new common.FSM('none'),
+
+	loop: require('./loop')
+});
+
 state.page.set('tabID', common.random_id());
 
 main.etc = require('./etc');
 main.time = require('./time');
 main.scroll = require('./scroll');
 main.notify = require('./notify');
+main.posts = require('./posts');
 
 // The require chain also loads some core dependancies
 var Extract = require('./extract');
 new Extract();
 
-main.posts = require('./posts');
 main.banner = require('./banner');
 main.report = require('./report');
 

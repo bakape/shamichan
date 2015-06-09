@@ -2,9 +2,8 @@
  * Extact model data from the thread tree HTML and populate models and views
  */
 
-var main = require('./main'),
-	state = require('./state'),
-	posts = require('./posts');
+let main = require('./main'),
+	{options, state, posts} = main;
 
 class Extract {
 	constructor() {
@@ -21,7 +20,11 @@ class Extract {
 		this.posts = json.posts;
 		this.extractReplies(el);
 		this.extractThreads(el);
+
+		// Apply various client-only DOM modifications
 		main.command('loop:anonymise');
+		if (options.get('relativeTime'))
+			main.command('time:render');
 	}
 	extractReplies(el) {
 		let articles = el.getElementsByTagName('article'),

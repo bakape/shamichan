@@ -552,17 +552,14 @@ OS.resolveName = function(data) {
 OS.time = function(time) {
 	// Format according to client's relative post timestamp setting
 	let title, text;
+	const readable = this.readable_time(time);
 	if (this.rTime) {
-		title = this.readable_time(time);
+		title = readable;
 		text = this.relative_time(time, Date.now());
-	}
-	else {
-		title = '';
-		text = this.readable_time(time);
 	}
 	return parseHTML
 		`<time datetime="${this.datetime(time)}" title="${title}">
-			${text}
+			${text || readable}
 		</time>`;
 };
 
