@@ -163,7 +163,7 @@ var opts = [
 				// Query the server for current stream info
 				main.command('send', [index.RADIO]);
 			else
-				main.command('clearRadioBanner');
+				main.command('banner:radio:clear');
 		}
 	}
 ];

@@ -2,15 +2,12 @@
  * Hover previews
  */
 
-var $ = require('jquery'),
-	Backbone = require('backbone'),
-	main = require('./main'),
-	options = require('./options'),
-	article = require('./posts').Article,
-	state = require('./state');
+let main = require('./main'),
+	{Article} = main.posts,
+	{$, Backbone, options, state} = main;
 
 // Centralised mousemove target tracking
-var mousemove = exports.mousemove = new Backbone.Model({
+let mousemove = new Backbone.Model({
 	id: 'mousemove',
 	/*Logging only the target isn't a option because change:target doesn't seem
 	to fire in some cases where the target is too similar for example changing
@@ -18,15 +15,14 @@ var mousemove = exports.mousemove = new Backbone.Model({
 	event: null
 });
 
-var ImageHoverView = Backbone.View.extend({
-	initialize: function() {
+let ImageHoverView = Backbone.View.extend({
+	initialize() {
 		this.listenTo(this.model,'change:event', this.check);
 		this.listenTo(options, 'imageClicked', function() {
 			this.$el.empty();
 		});
 	},
-
-	check: function(model, event) {
+	check(model, event) {
 		// Disabled in options
 		if (!options.get('imageHover'))
 			return;
@@ -48,8 +44,9 @@ var ImageHoverView = Backbone.View.extend({
 		}).appendTo(this.$el.empty());
 	}
 });
-var PostPreview = article.extend({
-	initialize: function () {
+
+let PostPreview = Article.extend({
+	initialize() {
 		this.listenTo(this.model, {
 			'change:body': this.update,
 			'change:image': this.update,
@@ -58,18 +55,18 @@ var PostPreview = article.extend({
 		this.render().$el.addClass('preview');
 		this.initCommon().update();
 	},
-
-	update: function() {
+	update() {
 		postHover.render(this.$el);
 	}
 });
-var HoverPostView = Backbone.View.extend({
+
+let HoverPostView = Backbone.View.extend({
 	previewView: null,
 	targetPos:null,
-	initialize: function() {
+	initialize() {
 		this.listenTo(this.model,'change:event', this.check);
 	},
-	check: function(model, event) {
+	check(model, event) {
 		let $target = $(event.target);
 		if (!$target.is('a.history'))
 			return;
@@ -83,7 +80,7 @@ var HoverPostView = Backbone.View.extend({
 		this.previewView = new PostPreview({model: post});
 		$target.one('mouseleave click', () => this.remove());
 	},
-	remove: function() {
+	remove() {
 		if (this.previewView) {
 			this.targetPos = null;
 			this.previewView.remove();
@@ -92,12 +89,11 @@ var HoverPostView = Backbone.View.extend({
 			this.previewView = null;
 		}
 	},
-	render: function($el) {
+	render($el) {
 		$el.css(this.position($el));
 		$el.appendTo(this.$el.empty());
 	},
-
-	position: function($el) {
+	position($el) {
 		$el.hide();
 		$(document.body).append($el);
 		var w = $el.width();
@@ -122,20 +118,22 @@ var HoverPostView = Backbone.View.extend({
 });
 
 if (!main.isMobile) {
-	var ltarget;
-	main.$doc.on('mousemove', function(e) {
-		if(e.target!=ltarget) {
-			mousemove.set('event', e);
-			ltarget= e.target;
-		}
-	});
-	var $hover =document.getElementById('hover_overlay');
-	new ImageHoverView({
-		model: mousemove,
-		el: $hover
-	});
-	var postHover = new HoverPostView({
-		model: mousemove,
-		el: $hover
+	main.defer(function() {
+		var ltarget;
+		main.$doc.on('mousemove', function(e) {
+			if(e.target!=ltarget) {
+				mousemove.set('event', e);
+				ltarget= e.target;
+			}
+		});
+		var hover = document.getElementById('hover_overlay');
+		new ImageHoverView({
+			model: mousemove,
+			el: hover
+		});
+		var postHover = new HoverPostView({
+			model: mousemove,
+			el: hover
+		});
 	});
 }

@@ -1,16 +1,9 @@
 /*
  * Handles the brunt of the post-related websocket calls
  */
-'use strict';
 
-var $ = require('jquery'),
-	common = require('../common'),
-	main = require('./main'),
-	posts = require('./posts'),
-	state = require('./state');
-
-// The actual object of handler functions for websocket calls
-var dispatcher = main.dispatcher;
+let main = require('./main'),
+	{$, common, dispatcher, posts, state} = main;
 
 dispatcher[common.INSERT_POST] = function(msg) {
 	let bump = msg[1] && state.page.get('live');
@@ -61,6 +54,8 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	if (!parent)
 		return;
 	parent.get('replies').push(msg.num);
+	if (state.page.get('thread'))
+		return;
 	parent.dispatch('shiftReplies');
 	// Bump thread to page top
 	if (bump)
@@ -116,14 +111,6 @@ dispatcher[common.UPDATE_POST] = function(msg) {
 		frag: msg[1]
 	});
 };
-
-// Make the text spoilers toggle revealing on click
-main.$doc.on('click', 'del', function (event) {
-	if (!event.spoilt) {
-		event.spoilt = true;
-		$(event.target).toggleClass('reveal');
-	}
-});
 
 dispatcher[common.FINISH_POST] = function(msg) {
 	const num = msg[0];
@@ -211,6 +198,14 @@ dispatcher[common.HOT_INJECTION] = function(msg){
 	}
 };
 
+// Make the text spoilers toggle revealing on click
+main.$doc.on('click', 'del', function (event) {
+	if (!event.spoilt) {
+		event.spoilt = true;
+		$(event.target).toggleClass('reveal');
+	}
+});
+
 /*
  * TODO: These are used only for the Admin panel. Would be nice, if we could
  * set those in admin/client.js. Would need to export main.js outside the bundle
@@ -219,9 +214,3 @@ dispatcher[common.HOT_INJECTION] = function(msg){
 dispatcher[common.MODEL_SET] = function (msg, op) {};
 dispatcher[common.COLLECTION_RESET] = function (msg, op) {};
 dispatcher[common.COLLECTION_ADD] = function (msg, op) {};
-
-// Include other additional modules
-require('./amusement');
-
-// Connect to the server
-require('./connection');

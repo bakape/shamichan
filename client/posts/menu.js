@@ -1,13 +1,9 @@
 /*
- Post action header menu
+ Post action header dropdown menu
  */
 
-let $ = require('jquery'),
-	_ = require('underscore'),
-	Backbone = require('backbone'),
-	main = require('../main'),
-	common = main.common,
-	lang = main.lang;
+let main = require('../main'),
+	{$, _, Backbone, common, lang} = main;
 
 let MenuView = module.exports = Backbone.View.extend({
 	// Maping of menu items to their handler message bus commands
@@ -15,16 +11,13 @@ let MenuView = module.exports = Backbone.View.extend({
 		report: 'report',
 		hide: 'hide'
 	},
-
 	events: {
 		click: 'handleClick'
 	},
-
-	initialize: function(args) {
+	initialize(args) {
 		this.render(args.parent);
 	},
-
-	render: function(parent) {
+	render(parent) {
 		let html = '<ul class="popup-menu">';
 		for (let action in this.actions) {
 			html += `<li data-type="${action}">${lang[action]}</li>`
@@ -41,9 +34,8 @@ let MenuView = module.exports = Backbone.View.extend({
 			})
 		}, 300);
 	},
-
 	// Forward post model to appropriate handler
-	handleClick: function(e) {
+	handleClick(e) {
 		e.stopPropagation();
 		main.command(this.actions[e.target.getAttribute('data-type')],
 			this.model

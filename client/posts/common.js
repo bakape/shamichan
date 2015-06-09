@@ -14,7 +14,7 @@ module.exports = {
 		'click >header>nav>a.quote': 'quotePost',
 		'click >header>.control': 'renderMenu'
 	},
-	initCommon: function() {
+	initCommon() {
 		this.$blockquote = this.$el.children('blockquote');
 		this
 			.listenTo(this.model, 'dispatch', this.redirect)
@@ -29,16 +29,16 @@ module.exports = {
 		return this;
 	},
 	// Extra initialisation logic for posts renderred client-side
-	clientInit: function() {
+	clientInit() {
 		if (options.get('anonymise'))
 			this.anonymise();
 		return this;
 	},
 	// Proxy to the appropriate method
-	redirect: function(command, ...args) {
+	redirect(command, ...args) {
 		this[command](...args);
 	},
-	updateBody: function(update) {
+	updateBody(update) {
 		oneeSama.dice = update.dice;
 		oneeSama.links = update.links;
 		oneeSama.callback = this.inject;
@@ -47,7 +47,7 @@ module.exports = {
 		oneeSama.fragment(update.frag);
 	},
 	// Inject various tags into the blockqoute
-	inject: function(frag) {
+	inject(frag) {
 		var $dest = this.$buffer;
 		for (var i = 0; i < this.state[1]; i++)
 			$dest = $dest.children('del').last();
@@ -73,13 +73,13 @@ module.exports = {
 			$dest.append(out);
 		return out;
 	},
-	renderTime: function() {
+	renderTime() {
 		let el = this.el.getElementsByTagName('time')[0];
 		if (!this.timeStamp)
 			this.timeStamp = main.request('time:fromEl', el).getTime();
 		el.outerHTML = oneeSama.time(this.timeStamp);
 	},
-	renderBacklinks: function(model, links) {
+	renderBacklinks(model, links) {
 		// No more backlinks, because posts deleted or something
 		if (!links && this.backlinks) {
 			main.command('scroll:follow', () => this.backlinks.innerHTML = '');
@@ -101,29 +101,29 @@ module.exports = {
 		}
 		main.command('scroll:follow', () => this.backlinks.innerHTML = html);
 	},
-	renderMenu: function(e) {
+	renderMenu(e) {
 		new Menu({
 			parent: e.target,
 			model: this.model
 		});
 	},
 	// Admin JS injections
-	fun: function() {
+	fun() {
 		// Fun goes here
 	},
 	// Self-delusion tripfag filter
-	anonymise: function() {
+	anonymise() {
 		this.el
 			.getElementsByClassName('name')[0]
 			.innerHTML = `<b class="name">${lang.anon}<b>`;
 	},
 	// Restore regular name
-	renderName: function() {
+	renderName() {
 		this.el
 			.getElementsByClassName('name')[0]
 			.outerHTML = oneeSama.name(this.model.attributes);
 	},
-	quotePost: function(e) {
+	quotePost(e) {
 		e.preventDefault();
 
 		// TODO: Set highlighted post

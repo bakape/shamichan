@@ -1,7 +1,6 @@
 /*
  * Self-expiring localStorage key controller
  */
-'use strict';
 
 var $ = require('jquery'),
 	_ = require('underscore');

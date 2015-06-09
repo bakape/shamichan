@@ -2,11 +2,8 @@
  Report posts you don't like
  */
 
-let $ = require('jquery'),
-	_ = require('underscore'),
-	Backbone = require('backbone'),
-	main = require('./main'),
-	common = main.common;
+let main = require('./main'),
+	{$, _, Backbone, common} = main;
 
 // TODO: Rewrite this and move to API v2
 
@@ -20,8 +17,7 @@ let Report = Backbone.Model.extend({
 		status: 'setup',
 		hideAfter: true
 	},
-
-	request_new: function() {
+	request_new() {
 		Recaptcha.create(pubKey, 'captcha', {
 			theme: 'clean',
 			callback: () => this.set('status', 'ready')
@@ -35,8 +31,7 @@ let Report = Backbone.Model.extend({
 			this.request_new();
 		}, captchaTimeout));
 	},
-
-	did_report: function() {
+	did_report() {
 		delete reports[this.id];
 		if (this.get('timeout')) {
 			clearTimeout(this.get('timeout'));
@@ -54,14 +49,12 @@ var ReportPanel = Backbone.View.extend({
 	id: 'report-panel',
 	tagName: 'form',
 	className: 'modal',
-
 	events: {
 		submit: 'submit',
 		'click .close': 'remove',
 		'click .hideAfter': 'hide_after_changed'
 	},
-
-	initialize: function() {
+	initialize() {
 		this.$captcha = $('<div id="captcha"/>');
 		this.$message = $('<div class="message"/>');
 		this.$submit = $('<input>', {
@@ -100,14 +93,12 @@ var ReportPanel = Backbone.View.extend({
 			destroy: this.remove
 		});
 	},
-
-	render: function() {
+	render() {
 		this.error_changed();
 		this.status_changed();
 		return this;
 	},
-
-	submit: function() {
+	submit() {
 		if (this.model.get('status') != 'ready')
 			return false;
 		main.command('send', [
@@ -119,12 +110,10 @@ var ReportPanel = Backbone.View.extend({
 		this.model.set('status', 'reporting');
 		return false;
 	},
-
-	error_changed: function() {
+	error_changed() {
 		this.$message.text(this.model.get('error'));
 	},
-
-	status_changed: function() {
+	status_changed() {
 		const status = this.model.get('status');
 		this.$submit
 			.prop('disabled', status != 'ready')
@@ -157,16 +146,13 @@ var ReportPanel = Backbone.View.extend({
 		else if (status == 'error')
 			this.model.request_new();
 	},
-
-	hide_after_changed: function(e) {
+	hide_after_changed(e) {
 		this.model.set('hideAfter', e.target.checked);
 	},
-
-	focus: function() {
+	focus() {
 		Recaptcha.focus_response_field();
 	},
-
-	remove: function() {
+	remove() {
 		Backbone.View.prototype.remove.call(this);
 		if (panel === this) {
 			panel = null;

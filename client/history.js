@@ -2,12 +2,8 @@
  * Inter board/page/thread navigation with HTML5 history
  */
 
-var $ = require('jquery'),
-	_ = require('underscore'),
-	common = require('../common'),
-	Extract = require('./extract'),
-	main = require('./main'),
-	state = require('./state');
+let main = require('./main'),
+	{$, _, common, Extract, state} = main;
 
 // Click handler for post/thread/board links
 main.$doc.on ('click', 'a.history', function(event) {

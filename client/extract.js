@@ -64,3 +64,6 @@ class Extract {
 	}
 }
 module.exports = Extract;
+
+// Initial extraction. No need to defer, as we actually want it to hit ASAP.
+new Extract();

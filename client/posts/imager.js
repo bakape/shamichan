@@ -11,7 +11,7 @@ let Hidamari = exports.Hidamari = {
 	 overhed, but the alternative is very convoluted logic. I don't really want
 	 to attach a FSM to each view, just for image renderring.
 	 */
-	renderImage: function(arg, image) {
+	renderImage(arg, image) {
 		/*
 		 All kinds of listeners call this method, so we need to ensure we
 		 always get the appropriate image object.
@@ -34,7 +34,7 @@ let Hidamari = exports.Hidamari = {
 			imageExpanded: false
 		});
 	},
-	autoExpandImage: function() {
+	autoExpandImage() {
 		const img = this.model.get('image');
 		if (!img
 			|| !massExpander.get('expand')
@@ -45,13 +45,13 @@ let Hidamari = exports.Hidamari = {
 		this.toggleImageExpansion(true, img);
 	},
 	// Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
-	toggleThumbnailVisibility: function(e) {
+	toggleThumbnailVisibility(e) {
 		e.preventDefault();
 		main.command('scroll:follow', ()=>
 			this.renderImage(!this.model.get('thumbnailRevealed'))
 		);
 	},
-	imageClicked: function(e){
+	imageClicked(e){
 		if (options.get('inlinefit') == 'none' || e.which !== 1)
 			return;
 		// Remove image hover preview, if any
@@ -61,7 +61,7 @@ let Hidamari = exports.Hidamari = {
 			this.toggleImageExpansion(!this.model.get('imageExpanded'))
 		);
 	},
-	toggleImageExpansion: function(expand, img = this.model.get('image')) {
+	toggleImageExpansion(expand, img = this.model.get('image')) {
 		const fit = options.get('inlinefit');
 		if (!img || fit === 'none')
 			return;
@@ -70,7 +70,7 @@ let Hidamari = exports.Hidamari = {
 		else
 			this.renderImage(null, img);
 	},
-	fitImage: function(img, fit){
+	fitImage(img, fit){
 		// Open PDF in a new tab on click
 		if (img.ext === '.pdf')
 			return window.open(main.oneeSama.imagePaths().src + img.src,
@@ -129,7 +129,7 @@ let Hidamari = exports.Hidamari = {
 			fullWidth: fullWidth && !fullHeight
 		});
 	},
-	expandImage: function(img, opts) {
+	expandImage(img, opts) {
 		const tag = (img.ext === '.webm') ? 'video' : 'img';
 		this.$el
 			.children('figure')
@@ -146,7 +146,7 @@ let Hidamari = exports.Hidamari = {
 			);
 		this.model.set('imageExpanded', true);
 	},
-	renderAudio: function(img) {
+	renderAudio(img) {
 		this.$el
 			.children('figure')
 			.children('a')
@@ -167,13 +167,13 @@ let Hidamari = exports.Hidamari = {
 // Expand all images
 let ExpanderModel = Backbone.Model.extend({
 	id: 'massExpander',
-	initialize: function() {
+	initialize() {
 		main.$threads.on('click', '#expandImages', (e) => {
 			e.preventDefault();
 			this.toggle();
 		});
 	},
-	toggle: function() {
+	toggle() {
 		const expand = !this.get('expand');
 		this.set('expand', expand).massToggle(expand);
 		main.$threads
@@ -181,7 +181,7 @@ let ExpanderModel = Backbone.Model.extend({
 			.text(`${expand ? 'Contract' : 'Expand'} Images`);
 	},
 	// More efficent than individual listeners
-	massToggle: function(expand) {
+	massToggle(expand) {
 		const fit = options.get('inlinefit');
 		if (fit === 'none')
 			return;

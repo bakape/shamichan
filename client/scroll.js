@@ -2,10 +2,8 @@
  * Various page scrolling logic
  */
 
-let $ = require('jquery'),
-    Backbone = require('backbone'),
-    main = require('./main'),
-    state = main.state;
+let main = require('./main'),
+	{$, Backbone, state} = main;
 
 const PAGE_BOTTOM = -1;
 

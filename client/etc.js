@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	state = main.state;
+	{state} = main;
 
 // For mobile
 function touchable_spoiler_tag(del) {

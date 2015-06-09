@@ -1,3 +1,7 @@
+/*
+Timezone corrections, batch timestamp updates, syncwatch, etc.
+ */
+
 let main = require('./main'),
 	{$, Backbone, common, oneeSama, options, state} = main;
 

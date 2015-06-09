@@ -2,27 +2,24 @@
  Name, email, tripcode and staff title persistence and postform propagation
  */
 
-let $ = require('jquery'),
-	_ = require('underscore'),
-	main = require('../main'),
-	common = main.common;
+let main = require('../main'),
+	{$, $email, $name, _, common} = main;
 
 function load() {
 	try {
 		const id = JSON.parse(localStorage.ident);
 		if (id.name)
-			main.$name.val(id.name);
+			$name.val(id.name);
 		if (id.email)
-			main.$email.val(id.email);
+			$email.val(id.email);
 	}
-	catch(e) {
-	}
+	catch(e) {}
 }
 
-var save = _.debounce(function() {
+let save = _.debounce(function() {
 	try {
-		const name = main.$name.val();
-		var email = main.$email.val();
+		const name = $name.val();
+		var email = $email.val();
 		// Staff login method
 		if (email == 'misaki') {
 			$email.val('');
@@ -44,8 +41,7 @@ var save = _.debounce(function() {
 		else
 			localStorage.removeItem('ident');
 	}
-	catch(e) {
-	}
+	catch(e) {}
 }, 1000);
 
 // Sync persistance and postForm with input changes
@@ -56,8 +52,8 @@ function propagate() {
 	save();
 }
 
-_.defer(function() {
+main.defer(function() {
 	load();
-	main.$name.on('input', propagate);
-	main.$email.on('input', propagate);
+	$name.on('input', propagate);
+	$email.on('input', propagate);
 });

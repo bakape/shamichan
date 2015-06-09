@@ -1,9 +1,15 @@
 /*
-Exports the necessary objects outside of the posts module
+Exports submodules from the posts module
  */
 
-exports.Article = require('./article');
-exports.Section = require('./section');
-exports.models = require('./models');
-exports.nonce = require('./nonce');
-exports.posting = require('./posting');
+module.exports = {
+	imager: require('./imager'),
+	Menu: require('./menu'),
+	common: require('./common'),
+	Article: require('./article'),
+	Section: require('./section'),
+	models: require('./models'),
+	nonce: require('./nonce'),
+	embed: require('./embed'),
+	posting: require('./posting')
+};

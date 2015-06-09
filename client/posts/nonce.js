@@ -2,9 +2,8 @@
 Cryptographic nonces for websocket transactions
  */
 
-var main = require('../main'),
-	common = main.common,
-	state = main.state;
+let main = require('../main'),
+	{common, state} = main;
 
 let nonceCache = {};
 

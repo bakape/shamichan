@@ -1,24 +1,15 @@
 /*
  * Evertything related to writing and commiting posts
  */
-'use strict';
 
-var $ = require('jquery'),
-	_ = require('underscore'),
-	Backbone = require('backbone'),
+let main = require('../main'),
 	embed = require('./embed'),
-	etc = require('../etc'),
 	ident = require('./identity'),
 	imager = require('./imager'),
 	inject = require('./common').inject,
-	main = require('../main'),
-	common = main.common,
-	options = main.options,
-	state = main.state;
+	{$, _, Backbone, common, config, connSM, etc, options, postSM, state} = main;
 
-let connSM = main.connSM,
-	postSM = main.postSM,
-	postForm, postModel;
+let postForm, postModel;
 /*
  The variable gets overwritten, so a simple refference will not do. Calling a
  fucntion to retrieve the var each time solves the problem.
@@ -73,7 +64,7 @@ postSM.act('ready + new -> draft', function($aside) {
 		$sec = $('<section/>');
 
 	// Shift OP's replies on board pages
-	if (op)
+	if (op && !state.page.get('thread'))
 		state.posts.get(op).dispatch('shiftReplies', true);
 
 	postForm = new ComposerView({
@@ -196,8 +187,7 @@ var ComposerView = Backbone.View.extend({
 		'click #done': 'finish_wrapped',
 		'click #toggle': 'onToggle'
 	},
-
-	initialize: function(args) {
+	initialize(args) {
 		this.listenTo(this.model, {
 			'change': this.renderButtons,
 			'change:spoiler': this.renderSpoilerPane
@@ -224,7 +214,8 @@ var ComposerView = Backbone.View.extend({
 			callback: inject,
 			op: state.page.get('thread'),
 			state: [common.S_BOL, 0],
-			// TODO: Convert current OneeSama.state array to more flexible object
+			// TODO: Convert current OneeSama.state array to more flexible
+			// object
 			state2: {spoiler: 0},
 			$buffer: this.$buffer,
 			eLinkify: main.oneeSama.eLinkify
@@ -232,9 +223,8 @@ var ComposerView = Backbone.View.extend({
 		imouto.hook('spoilerTag', etc.touchable_spoiler_tag);
 		main.oneeSama.trigger('imouto', imouto);
 	},
-
 	// Initial render
-	render: function(args) {
+	render(args) {
 		const op = this.model.get('op');
 		this.setElement((op ? $('<article/>') : args.$sec)[0]);
 		// A defined op means the post is a reply, not a new thread
@@ -297,11 +287,20 @@ var ComposerView = Backbone.View.extend({
 		}
 
 		main.$threads.find('aside.posting').hide();
-		preloadPanes();
+		this.preloadPanes();
 	},
-
+	// Preload the spoiler panes for smoother display
+	preloadPanes() {
+		const spoilers = config.SPOILER_IMAGES;
+		for (let i = 0, l = spoilers.length; i < l; i++) {
+			new Image().src = this.spoilerPaneURL(spoilers[i]);
+		}
+	},
+	spoilerPaneURL(sp) {
+		return `${config.MEDIA_URL}spoil/spoil${sp}.png`;
+	},
 	// Render the name, email, and admin title, if any
-	renderIdentity: function() {
+	renderIdentity() {
 		// Model has already been alocated and has a proper identity rendered
 		if (this.model.get('num'))
 			return;
@@ -330,8 +329,7 @@ var ComposerView = Backbone.View.extend({
 		else
 			$tag.removeAttr('href').removeAttr('target').attr('class', 'nope');
 	},
-
-	renderButtons: function() {
+	renderButtons() {
 		const attrs = this.model.attributes,
 			allocWait = attrs.sentAllocRequest && !attrs.num,
 			d = attrs.uploading || allocWait;
@@ -346,15 +344,12 @@ var ComposerView = Backbone.View.extend({
 			this.$uploadStatus.html(attrs.uploadStatus);
 		});
 	},
-
-	renderSpoilerPane: function(model, sp) {
-		this.$toggle.css('background-image', 'url("'
-			+ (sp ? spoilerPaneUrl(sp)
-				: main.config.MEDIA_URL + 'css/ui/pane.png')
-			+ '")');
+	renderSpoilerPane(model, sp) {
+		const background = sp ? this.spoilerPaneURL(sp)
+			: config.MEDIA_URL + 'css/ui/pane.png';
+		this.$toggle.css('background-image', `url("${background}")`);
 	},
-
-	renderUploadForm: function() {
+	renderUploadForm() {
 		var $form = $('<form method="post" enctype="multipart/form-data" '
 			+ 'target="upload"></form>');
 		this.$cancel = $('<input/>', {
@@ -366,7 +361,7 @@ var ComposerView = Backbone.View.extend({
 			type: 'file',
 			id: 'image',
 			name: 'image',
-			accept: main.config.WEBM ? 'imager/*;.webm' : 'image/*',
+			accept: config.WEBM ? 'imager/*;.webm' : 'image/*',
 			change: $.proxy(this, 'onImageChosen')
 		});
 		this.$toggle = $('<input/>', {
@@ -389,9 +384,8 @@ var ComposerView = Backbone.View.extend({
 		});
 		return $form;
 	},
-
 	// Cancel file upload
-	cancel: function() {
+	cancel() {
 		if (this.model.get('uploading')) {
 			this.$iframe.remove();
 			this.$iframe = $('<iframe></iframe>', {
@@ -405,8 +399,7 @@ var ComposerView = Backbone.View.extend({
 		else
 			this.finish_wrapped();
 	},
-
-	onImageChosen: function() {
+	onImageChosen() {
 		if (this.model.get('uploading') || this.model.get('uploaded'))
 			return;
 		if (!this.$imageInput.val()) {
@@ -431,7 +424,7 @@ var ComposerView = Backbone.View.extend({
 			try {
 				var error = $(doc.document || doc).text();
 				/*
-				 if it's a real response, it'll postMessage to us, so we don't have 
+				 if it's a real response, it'll postMessage to us, so we don't have
 				 to do anything.
 				 */
 				if (/legitimate imager response/.test(error))
@@ -443,7 +436,7 @@ var ComposerView = Backbone.View.extend({
 			}
 			catch(e) {
 				/*
-				 likely cross-origin restriction 
+				 likely cross-origin restriction
 				 wait before erroring in case the message shows up
 				 */
 				setTimeout(function() {
@@ -453,31 +446,27 @@ var ComposerView = Backbone.View.extend({
 		});
 		this.notifyUploading();
 	},
-
-	prepareUpload: function() {
+	prepareUpload() {
 		this.model.set('uploadStatus', uploadingMessage);
 		this.$input.focus();
 		const attrs = this.model.attributes;
 		return {spoiler: attrs.spoiler, op: attrs.op || 0};
 	},
-
 	/*
 	 this is just a fallback message for when we can't tell, if there was an
 	 error due to cross-origin restrictions
 	 */
-	uploadFallbackMessage: function() {
+	uploadFallbackMessage() {
 		var a = this.model.attributes,
 			stat = a.uploadStatus;
 		if (!a.cancelled && a.uploading && (!stat || stat == uploadingMessage))
 			this.model.set('uploadStatus', 'Unknown result.');
 	},
-
-	notifyUploading: function() {
+	notifyUploading() {
 		this.model.set({uploading: true, cancelled: false});
 		this.$input.focus();
 	},
-
-	resizeInput: function(val) {
+	resizeInput(val) {
 		if (typeof val !== 'string')
 			val = this.$input.val();
 		this.$sizer.text(val);
@@ -486,8 +475,7 @@ var ComposerView = Backbone.View.extend({
 			- this.$input.offset().left - this.$el.offset().left);
 		this.$input.css('width', size + 'px');
 	},
-
-	onInput: function(val) {
+	onInput(val) {
 		if (val === undefined || val instanceof $.Event)
 			val = this.$input.val();
 		var start = this.$input[0].selectionStart,
@@ -583,8 +571,7 @@ var ComposerView = Backbone.View.extend({
 		this.$input.attr('maxlength', common.MAX_POST_CHARS - this.char_count);
 		this.resizeInput(val);
 	},
-
-	findTimeArg: function(params) {
+	findTimeArg(params) {
 		if (!params || params.indexOf('t=') < 0)
 			return false;
 		params = params.split('&');
@@ -595,9 +582,8 @@ var ComposerView = Backbone.View.extend({
 		}
 		return false;
 	},
-
 	// Commit any staged words to the server
-	commit: function(text) {
+	commit(text) {
 		var lines;
 		if (text.indexOf('\n') >= 0) {
 			lines = text.split('\n');
@@ -643,9 +629,8 @@ var ComposerView = Backbone.View.extend({
 			this.$lineBuffer[0].normalize();
 		}
 	},
-
 	// Construct the message for post allocation in the database
-	allocationMessage: function(text, image) {
+	allocationMessage(text, image) {
 		var msg = {nonce: main.request('nonce:create')};
 
 		function opt(key, val) {
@@ -662,8 +647,7 @@ var ComposerView = Backbone.View.extend({
 
 		return msg;
 	},
-
-	onKeyDown: function(event) {
+	onKeyDown(event) {
 
 		// TODO: Scrolling and locking to bottom
 
@@ -684,8 +668,7 @@ var ComposerView = Backbone.View.extend({
 				handle_shortcut.bind(this)(event);
 		}
 	},
-
-	finish: function() {
+	finish() {
 		if (this.model.get('num')) {
 			this.flushPending();
 			this.commit(this.$input.val());
@@ -711,21 +694,18 @@ var ComposerView = Backbone.View.extend({
 		}
 		postSM.feed('done');
 	},
-
 	// Adds a followLock check for finishing posts
-	finish_wrapped: function() {
+	finish_wrapped() {
 		main.command('scroll:follow', () => this.finish());
 	},
-
 	// Send any unstaged words
-	flushPending: function() {
+	flushPending() {
 		if (this.pending) {
 			main.command('send', this.pending);
 			this.pending = '';
 		}
 	},
-
-	onToggle: function(event) {
+	onToggle(event) {
 		const attrs = this.model.attributes;
 		if (attrs.uploading || attrs.uploaded)
 			return;
@@ -741,8 +721,7 @@ var ComposerView = Backbone.View.extend({
 			nextSpoiler: pick.next
 		});
 	},
-
-	onAllocation: function(msg) {
+	onAllocation(msg) {
 		const num = msg.num;
 		state.ownPosts[num] = num;
 		this.model.set({num: num});
@@ -782,9 +761,8 @@ var ComposerView = Backbone.View.extend({
 			return "You have an unfinished post.";
 		};
 	},
-
 	// Insert an image that has been uploaded and processed by the server
-	insertUploaded: function(info) {
+	insertUploaded(info) {
 		this.renderImage(null, info);
 		this.$imageInput
 			.siblings('strong')
@@ -808,9 +786,8 @@ var ComposerView = Backbone.View.extend({
 
 		this.resizeInput();
 	},
-
 	// Handle image upload status
-	dispatch: function(msg) {
+	dispatch(msg) {
 		const a = msg.arg;
 		switch(msg.t) {
 			case 'alloc':
@@ -824,8 +801,7 @@ var ComposerView = Backbone.View.extend({
 				break;
 		}
 	},
-
-	onImageAllocation: function(msg) {
+	onImageAllocation(msg) {
 		const attrs = this.model.attributes;
 		if (attrs.cancelled)
 			return;
@@ -840,8 +816,7 @@ var ComposerView = Backbone.View.extend({
 			main.command('send', [common.INSERT_IMAGE, msg]);
 		}
 	},
-
-	uploadError: function(msg) {
+	uploadError(msg) {
 		if (this.model.get('cancelled'))
 			return;
 		this.model.set({
@@ -851,14 +826,12 @@ var ComposerView = Backbone.View.extend({
 		if (this.$uploadForm)
 			this.$uploadForm.find('input[name=alloc]').remove();
 	},
-
-	uploadStatus: function(msg) {
+	uploadStatus(msg) {
 		if (this.model.get('cancelled'))
 			return;
 		this.model.set('uploadStatus', msg);
 	},
-
-	addReference: function(num, sel) {
+	addReference(num, sel) {
 		// If a >>link exists, put this one on the next line
 		var val = this.$input.val();
 		if (/^>>\d+$/.test(val)) {
@@ -879,8 +852,7 @@ var ComposerView = Backbone.View.extend({
 		this.onInput();
 		this.$input.focus();
 	},
-
-	remove: function() {
+	remove() {
 		if (!this.preserve) {
 			if (this.isThread)
 				this.$el.next('hr').remove();
@@ -894,23 +866,11 @@ var ComposerView = Backbone.View.extend({
 		this.stopListening();
 		window.onbeforeunload = null;
 	},
-
 	// Extend with imager.js methods
 	renderImage: imager.Hidamari.renderImage,
 	// Overrides automatic image expansion, if any
-	autoExpandImage: function() {}
+	autoExpandImage() {}
 });
-
-function spoilerPaneUrl(sp) {
-	return main.config.MEDIA_URL + 'spoil/spoil' + sp + '.png';
-}
-
-// Preload the spoiler panes for smoother display
-function preloadPanes() {
-	main.config.SPOILER_IMAGES.forEach(function(spoiler) {
-		new Image().src = spoilerPaneUrl(spoiler);
-	});
-}
 
 main.comply('openPostBox', function(num) {
 	let $a = main.$threads.find('#' + num);

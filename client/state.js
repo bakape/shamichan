@@ -32,13 +32,10 @@ function read(url) {
 exports.read = read;
 
 // Initial page state
-var init = read(location.href);
-init.id = 'page';
-var page = exports.page = new Backbone.Model(init);
+var page = exports.page = new Backbone.Model(read(location.href));
 
 // Hot-reloadable configuration
 // TODO: We need actual listeners to this model for hot reloads.
-window.hotConfig.id = 'hotConfig';
 exports.hotConfig = new Backbone.Model(window.hotConfig);
 // Hash of all the config variables
 exports.configHash = window.configHash;

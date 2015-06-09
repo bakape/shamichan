@@ -1,15 +1,12 @@
 /*
  * Dice rolls and fun JS injections
  */
-'use strict';
 
-var $ = require('jquery'),
-	common = require('../common/index'),
-	main = require('./main'),
-	state = require('./state');
+let main = require('./main'),
+	{$, common, state, oneeSama} = main;
 
 // Render dice rolls and other hash commands
-main.oneeSama.hook('imouto', function (imouto) {
+oneeSama.hook('imouto', function (imouto) {
 	imouto.dice = true;
 	imouto.queueRoll = function(bit) {
 		var n = this.allRolls.sent++;
@@ -30,7 +27,7 @@ main.oneeSama.hook('imouto', function (imouto) {
 });
 
 // Handle dice in the postForm
-main.oneeSama.hook('insertOwnPost', function (extra) {
+oneeSama.hook('insertOwnPost', function (extra) {
 	let postForm = main.request('postForm');
 	if (!postForm || !postForm.imouto || !extra || !extra.dice)
 		return;

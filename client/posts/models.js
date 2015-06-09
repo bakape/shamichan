@@ -1,20 +1,17 @@
 /*
 General post backbone models
  */
-'use strict';
 
-var _ = require('underscore'),
-	Backbone = require('backbone'),
-	main = require('../main'),
-	state = main.state;
+let main = require('../main'),
+	{_, Backbone, state} = main;
 
 exports.Post = Backbone.Model.extend({
 	idAttribute: 'num',
-	initialize: function() {
+	initialize() {
 		this.initCommon();
 	},
 	// Initialisation logic common to both replies and threads
-	initCommon: function() {
+	initCommon() {
 		state.posts.add(this);
 		const links = this.get('links');
 		if (links)
@@ -23,10 +20,10 @@ exports.Post = Backbone.Model.extend({
 	},
 	// Proxy commands to the view(s). Using a central channel helps us reduce
 	// listener count overhead.
-	dispatch: function(command, args) {
+	dispatch(command, args) {
 		this.trigger('dispatch', command, args);
 	},
-	remove: function() {
+	remove() {
 		this.stopListening();
 		// Remove view
 		this.dispatch('remove');
@@ -35,21 +32,21 @@ exports.Post = Backbone.Model.extend({
 	},
 	// Calling a method is always less overhead than binding a dedicated
 	// listener for each post's image
-	setImage: function(image, silent) {
+	setImage(image, silent) {
 		this.set('image', image);
 		if (!silent)
 			this.dispatch('renderImage', image);
 	},
-	setSpoiler: function(spoiler) {
+	setSpoiler(spoiler) {
 		let image = this.get('image');
 		image.spoiler = spoiler;
 		this.dispatch('renderImage', image);
 	},
-	removeImage: function() {
+	removeImage() {
 		this.unset('image');
 		this.dispatch('renderImage', null);
 	},
-	addLinks: function(links){
+	addLinks(links){
 		if(!links)
 			return;
 		var old = this.get('links');
@@ -63,7 +60,7 @@ exports.Post = Backbone.Model.extend({
 		this.trigger('change:links', this, old);
 	},
 	// Pass this post's links to the central model
-	forwardLinks: function(model, links) {
+	forwardLinks(model, links) {
 		var old, newLinks;
 		const num = this.get('num'),
 			op = this.get('op') || num;
@@ -85,13 +82,13 @@ exports.Thread = exports.Post.extend({
 		omit: 0,
 		image_omit: 0
 	},
-	initialize: function() {
+	initialize() {
 		// Omitted images can only be calculated, if there are omitted posts
 		if (this.get('omit'))
 			this.getImageOmit();
 		this.initCommon();
 	},
-	remove: function() {
+	remove() {
 		this.stopListening();
 		this.trigger('remove');
 		state.posts.remove(this);
@@ -108,7 +105,7 @@ exports.Thread = exports.Post.extend({
 	 With the current renderring and storage implementations we can not get the
 	 image omit count during the server-side render.
 	 */
-	getImageOmit: function() {
+	getImageOmit() {
 		let image_omit = this.get('imgctr') -1;
 		const replies = this.get('replies');
 
@@ -121,7 +118,7 @@ exports.Thread = exports.Post.extend({
 		}
 		this.set('image_omit', image_omit);
 	},
-	toggleLocked: function(val) {
+	toggleLocked(val) {
 		this.dispatch('renderLocked', val);
 	}
 });

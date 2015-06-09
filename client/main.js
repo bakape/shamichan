@@ -2,46 +2,59 @@
  * Loads the depandancies in order and aggregates exports from various modules
  */
 
-/*
- The entire bundle uses strict mode through the strictify browserify plugin
- */
-"use strict";
+// NOTE: The entire bundle uses strict mode through the Babel transpiler
 
 /*
  * Because we are going to attach listeners to these all over the place, have
  * to load soome core modules in specific order. Also avoids nasty circular
  * dependaancy, by placing some of the exports here and not in child modules.
  */
-var $ = require('jquery'),
+let $ = require('jquery'),
 	_ = require('underscore'),
-	Backbone = require('backbone');
+	Backbone = require('backbone'),
+	radio = require('backbone.radio');
 
 // Register jquery plugins
 require('jquery.cookie');
 // Bind jQuery to backbone
 Backbone.$ = $;
-// Bind Backbone.Radio
-var radio = require('backbone.radio');
 
 // Central aplication object and message bus
 let main = module.exports = radio.channel('main');
-// Bind dependancies to main object for pretier destructuring requires
-_.extend(main, {$, _, Backbone});
+_.extend(main, {
+	// Bind dependancies to main object for pretier destructuring requires
+	$, _, Backbone,
 
-/*
- Ofload expensive and not that neccessary loops to after the main client is
- started.
- */
-main._deferred = [];
-main.defer = function(func) {
-	main._deferred.push(func);
-	return main;
-};
-main.start = function() {
-	let def = this._deferred;
-	for (let i = 0, l = def.length; i < l; i++)
-		def[i]();
-};
+	/*
+	 Ofload expensive and not that neccessary initialisation logic till
+	 after the core modules are started
+	 */
+	_deferred: [],
+	defer(func) {
+		main._deferred.push(func);
+		return main;
+	},
+	execDeffered() {
+		let def = this._deferred;
+		for (let i = 0, l = def.length; i < l; i++)
+			def[i]();
+	},
+
+	/*
+	 These configs really should not be randomly toggled frequently. No need
+	 to put them in state.js, as they should not be hot-loaded. Anything
+	 that needs to be, can be moved to hot.js. Should prevent some bugs, but
+	 also reduce flexibility, for frequent togglers. Hmm.
+	 */
+	config: window.config,
+	isMobile: /Android|iP(?:hone|ad|od)|Windows Phone/.test(navigator.userAgent),
+	// Websocket call handler map. Store them here, to avoid requiring
+	// modules in the wrong order.
+	dispatcher: {},
+	// Read-only boards get expanded later
+	readOnly: [],
+	memory: require('./memory')
+});
 
 /*
  * Since the language pack contains functions and we can not simply use those
@@ -53,14 +66,6 @@ main.lang = window.lang;
 	eval('main.lang[func] = ' + main.lang[func]);
 });
 
-/*
- These configs really should not be randomly toggled frequently. No need to put
- them in state.js, as they should not be hot-loaded. Anything that needs to be,
- can be moved to hot.js. Should prevent some bugs, but also reduce flexibility,
- for frequent togglers. Hmm.
- */
-main.config = window.config;
-
 if (main.config.DEBUG) {
 	// Export Backbone instance for easier debugging
 	window.Backbone = Backbone;
@@ -68,14 +73,6 @@ if (main.config.DEBUG) {
 	radio.DEBUG = true;
 	radio.tuneIn('main');
 }
-_.extend(main, {
-	isMobile: /Android|iP(?:hone|ad|od)|Windows Phone/.test(navigator.userAgent),
-	// Store them here, to avoid requiring modules in the wrong order
-	dispatcher: {},
-	// Read-only boards gets expanded later
-	readOnly: [],
-	memory: require('./memory')
-});
 
 /*
  Core modules. The other will be more or less decoupled, but these are the
@@ -98,6 +95,7 @@ let oneeSama = main.oneeSama = new common.OneeSama(function(num) {
 });
 oneeSama.op = state.page.get('thread');
 main.options = require('./options');
+state.page.set('tabID', common.random_id());
 
 _.extend(main, {
 	// Cached jQuery objects
@@ -107,35 +105,38 @@ _.extend(main, {
 	$email: $('input[name=email]'),
 
 	connSM: new common.FSM('load'),
-	postSM: new common.FSM('none'),
-
-	loop: require('./loop')
+	postSM: new common.FSM('none')
 });
 
-state.page.set('tabID', common.random_id());
+_.extend(main, {
+	// 2nd tier dependacy modules. These are needed before the websocket
+	// connection is opened, because they populate the dispatcher handler
+	// object.
+	loop: require('./loop'),
+	etc: require('./etc'),
+	time: require('./time'),
+	scroll: require('./scroll'),
+	notify: require('./notify'),
+	banner: require('./banner'),
+	report: require('./report'),
+	amusement: require('./amusement')
+});
 
-main.etc = require('./etc');
-main.time = require('./time');
-main.scroll = require('./scroll');
-main.notify = require('./notify');
+// Load post models and views
 main.posts = require('./posts');
-
-// The require chain also loads some core dependancies
-var Extract = require('./extract');
-new Extract();
-
-main.banner = require('./banner');
-main.report = require('./report');
-
+main.Extract = require('./extract');
 // Start the client
 main.client = require('./client');
+main.conection = require('./connection');
 
-// Load auxilary modules
-main.background = require('./options/background');
-main.history = require('./history');
-main.hover = require('./hover');
-main.drop = require('./drop');
-main.mobile = require('./mobile');
-main.hide = require('./hide');
+// Load independant auxilary modules
+_.extend(main, {
+	background: require('./background'),
+	history: require('./history'),
+	hover: require('./hover'),
+	drop: require('./drop'),
+	mobile: require('./mobile'),
+	hide: require('./hide')
+});
 
-main.start();
+main.execDeffered();

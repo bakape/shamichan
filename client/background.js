@@ -2,21 +2,23 @@
  * Background controller. Wallpapers, proper fitting and video backgrounds
  */
 
-let $ = require('jquery'),
-	Backbone = require('backbone'),
-	// External, so relative to the root of the project
-	blur = require('stack-blur'),
-	main = require('../main'),
-	common = main.common,
-	options = main.options,
-	state = main.state;
+let blur = require('stack-blur'),
+	main = require('./main'),
+	{$, Backbone, common, options, state} = main;
+
+const colourMap = {
+	glass: {
+		normal: 'rgba(40, 42, 46, 0.5)',
+		editing: 'rgba(145, 145, 145, 0.5)'
+	},
+	ocean: {
+		normal: 'rgba(28, 29, 34, 0.781)',
+		editing: 'rgba(44, 57, 71, 0.88)'
+	}
+};
 
 let BackgroundView = Backbone.View.extend({
-	model: new Backbone.Model({
-		id: 'background'
-	}),
-
-	initialize: function() {
+	initialize() {
 		this.$css = $('#backgroundCSS');
 		this.render();
 
@@ -28,9 +30,8 @@ let BackgroundView = Backbone.View.extend({
 			'change:theme': this.render
 		});
 	},
-
 	// Store image as dataURL in localStorage
-	store: function(target) {
+	store(target) {
 		// This could take a while, so loading animation
 		main.command('loading:show');
 		let reader = new FileReader();
@@ -61,8 +62,7 @@ let BackgroundView = Backbone.View.extend({
 			img.src = event.target.result;
 		};
 	},
-
-	render: function() {
+	render() {
 		this.$el.empty().css('background', 'none');
 		this.$css.empty();
 		if (options.get('illyaBGToggle') && state.hotConfig.get('ILLYA_DANCE'))
@@ -70,8 +70,7 @@ let BackgroundView = Backbone.View.extend({
 		else if (options.get('userBG'))
 			this.renderBackground();
 	},
-
-	renderBackground: function() {
+	renderBackground() {
 		const bg = localStorage.background;
 		if (!bg)
 			return;
@@ -86,35 +85,10 @@ let BackgroundView = Backbone.View.extend({
 		const blurred = localStorage.blurred;
 		if (!blurred)
 			return;
-		this.$css.html(theme === 'glass' ? this.blurredGlass(blurred)
-			: this.blurredOcean(blurred)
-		);
+		this.$css.html(this.renderGlass(theme, blurred));
 	},
-
-	blurredGlass: function(blurred) {
-		const normal = 'rgba(40, 42, 46, 0.5)',
-			editing = 'rgba(145, 145, 145, 0.5)';
-		return common.parseHTML
-			`article, aside, .pagination, .popup-menu, .modal, .bmodal,
-				.preview, #banner
-			{
-				background:
-					linear-gradient(${normal}, ${normal}),
-					url(${blurred}) center fixed no-repeat;
-				background-size: cover;
-			}
-			.editing {
-				background:
-					linear-gradient(${editing}, ${editing}),
-					url(${blurred}) center fixed no-repeat;
-				background-size: cover;
-			}`
-	},
-
-	blurredOcean: function(blurred) {
-        	const normal = 'rgba(28, 29, 34, 0.781)',
-                      editing = 'rgba(44, 57, 71, 0.88)';
-
+	renderGlass(theme, blurred) {
+		const {normal, editing} = colourMap[theme];
 		return common.parseHTML
 			`article, aside, .pagination, .popup-menu, .modal, .bmodal,
 				.preview, #banner
@@ -131,15 +105,14 @@ let BackgroundView = Backbone.View.extend({
 				background-size: cover;
 			}`;
 	},
-
-	renderIllya: function() {
+	renderIllya() {
 		const urlBase = main.config.MEDIA_URL + 'illya.';
 		this.$el.html(common.parseHTML
 			`<video autoplay loop ${options.get('illyaMuteToggle') && 'muted'}>
 				<source src="${urlBase + 'webm'}" type="video/webm">
 				<source src="${urlBase + 'mp4'}" type="video/mp4">
 			</video>`
-		)
+		);
 	}
 });
 

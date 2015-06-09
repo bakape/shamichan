@@ -3,11 +3,8 @@
  * logic
  */
 
-var _ = require('underscore'),
-	$ = require('jquery'),
-	Backbone = require('backbone'),
-	main = require('../main'),
-	state = main.state;
+let main = require('./main'),
+	{$, _, Backbone, state} = main;
 
 // Try to get options from local storage
 var options;
@@ -17,11 +14,10 @@ try {
 catch(e) {}
 if (!options)
 	options = {};
-options.id = 'options';
 options = module.exports = new Backbone.Model(options);
 
 var OptionsCollection = Backbone.Collection.extend({
-	persist: function() {
+	persist() {
 		var opts = {};
 		this.forEach(function(model) {
 			const val = model.getValue();
@@ -37,7 +33,7 @@ var optionsCollection = new OptionsCollection();
 
 // Controller template for each individual option
 var OptionModel = Backbone.Model.extend({
-	initialize: function(opts) {
+	initialize(opts) {
 		// Condition for loading option. Optional.
 		if (opts.load !== undefined && !opts.load)
 			return;
@@ -60,25 +56,21 @@ var OptionModel = Backbone.Model.extend({
 		}
 		optionsCollection.add(this);
 	},
-
 	// Set the option, taking into acount board specifics
-	setValue: function(val) {
+	setValue(val) {
 		options.set(this.get('id'), val);
 	},
-
 	// Return default, if unset
-	getValue: function() {
+	getValue() {
 		const val = options.get(this.get('id'));
 		return val === undefined ? this.get('default') : val;
 	},
-
-	validate: function(val) {
+	validate(val) {
 		const valid = this.get('validation');
 		return valid ? valid(val) : true;
 	},
-
 	// Exec wrapper for listening events
-	execListen: function(model, val) {
+	execListen(model, val) {
 		this.get('exec')(val);
 	}
 });
@@ -110,7 +102,7 @@ var OptionModel = Backbone.Model.extend({
 
 // View of the options panel
 var OptionsView = Backbone.View.extend({
-	initialize: function() {
+	initialize() {
 		// Set the options in the panel to their appropriate values
 		optionsCollection.each(model => {
 			let $el = this.$el.find('#' + model.get('id'));
@@ -133,7 +125,6 @@ var OptionsView = Backbone.View.extend({
 		this.$hidden = this.$el.find('#hidden');
 		main.comply('hide:render', this.renderHidden, this);
 	},
-
 	events: {
 		'click .option_tab_sel>li>a': 'switchTab',
 		'change': 'applyChange',
@@ -141,8 +132,7 @@ var OptionsView = Backbone.View.extend({
 		'click #import': 'import',
 		'click #hidden': 'clearHidden'
 	},
-
-	switchTab: function(event) {
+	switchTab(event) {
 		event.preventDefault();
 		var $a = $(event.target);
 		// Unhighight all tabs
@@ -154,9 +144,8 @@ var OptionsView = Backbone.View.extend({
 		$li.removeClass('tab_sel');
 		$li.filter('.' + $a.data('content')).addClass('tab_sel');
 	},
-
 	// Propagate options panel changes to the models and localStorage
-	applyChange: function(event) {
+	applyChange(event) {
 		var $target = $(event.target),
 			model = optionsCollection.get($target.attr('id')),
 			val;
@@ -180,9 +169,8 @@ var OptionsView = Backbone.View.extend({
 		model.setValue(val);
 		optionsCollection.persist();
 	},
-
 	// Dump options to file
-	export: function() {
+	export() {
 		var a = document.createElement('a');
 		a.setAttribute('href', window.URL
 			.createObjectURL(new Blob([JSON.stringify(localStorage)], {
@@ -192,9 +180,8 @@ var OptionsView = Backbone.View.extend({
 		a.setAttribute('download', 'meguca-config.json');
 		a.click();
 	},
-
 	// Import options from file
-	import: function(event) {
+	import(event) {
 		// Proxy to hidden file input
 		event.preventDefault();
 		var $input = this.$el.find('#importSettings');
@@ -222,21 +209,19 @@ var OptionsView = Backbone.View.extend({
 			};
 		});
 	},
-
 	// Hiden posts counter and reset link
-	renderHidden: function(count) {
+	renderHidden(count) {
 		let $el = this.$hidden;
 		$el.text($el.text().replace(/\d+$/, count));
 	},
-
-	clearHidden: function() {
+	clearHidden() {
 		main.command('hide:clear');
 		this.renderHidden(0);
 	}
 });
 
 // Create and option model for each object in the array
-const optCommon = require('../../common/options');
+const optCommon = require('../common/options');
 for (let i = 0, lim = optCommon.length; i < lim; i++) {
 	new OptionModel(optCommon[i]);
 }

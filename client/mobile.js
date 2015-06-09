@@ -2,10 +2,10 @@
  * Various mobile-only code
  */
 
-let $ = require('jquery'),
-	main = require('./main');
+let main = require('./main'),
+	{$} = main;
 
-(function(){
+main.defer(function() {
 	// User refused the first time
 	if (!main.isMobile || localStorage.homescreenRefused)
 		return;
@@ -31,4 +31,4 @@ let $ = require('jquery'),
 			localStorage.homescreenRefused = true;
 		})
 		.appendTo('#banner_center');
-})();
+});

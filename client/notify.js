@@ -2,12 +2,8 @@
  Unread post etc. notifications
  */
 
-let $ = require('jquery'),
-	Backbone = require('backbone'),
-	main = require('./main'),
-	memory = require('./memory'),
-	state = main.state,
-	options = main.options;
+let main = require('./main'),
+	{$, Backbone, memory, state, options} = main;
 
 const mediaURL = main.config.MEDIA_URL;
 
@@ -26,7 +22,7 @@ let discoFavicon = '';
 }
 
 let NotifyModel = Backbone.Model.extend({
-	initialize: function () {
+	initialize() {
 		this.$favicon = $('#favicon');
 		this.check(this);
 
@@ -64,7 +60,7 @@ let NotifyModel = Backbone.Model.extend({
 		main.connSM.on('synced', () => notify.set('alert', false));
 	},
 
-	check: function (model) {
+	check(model) {
 		const {hidden, unreadCount, reply, alert} = model.attributes;
 		let icon = mediaURL + 'favicon.ico';
 		if (alert)
@@ -83,7 +79,7 @@ let NotifyModel = Backbone.Model.extend({
 		this.render(icon, prefix);
 	},
 
-	render: function(icon, prefix) {
+	render(icon, prefix) {
 		document.title = prefix + this.get('title');
 		this.$favicon.attr('href', icon);
 	}

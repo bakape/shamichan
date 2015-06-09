@@ -8,7 +8,7 @@ let main = require('../main'),
 
 var Section = module.exports = Backbone.View.extend({
 	tagName: 'section',
-	initialize: function() {
+	initialize() {
 		// On the live page only
 		if (!this.el.innerHTML)
 			this.render();
@@ -16,7 +16,7 @@ var Section = module.exports = Backbone.View.extend({
 			this.renderOmit();
 		this.initCommon();
 	},
-	render: function() {
+	render() {
 		let attrs = this.model.attributes;
 		oneeSama.links = attrs.links;
 		this.setElement(oneeSama.monomono(attrs).join('')).insertToTop();
@@ -29,13 +29,13 @@ var Section = module.exports = Backbone.View.extend({
 		this.$el.after($reply, '<hr>');
 		return this;
 	},
-	insertToTop: function() {
+	insertToTop() {
 		this.$el.insertAfter(main.$threads.children('aside').first());
 	},
-	renderLocked: function (model, locked) {
+	renderLocked(model, locked) {
 		this.$el.toggleClass('locked', !!locked);
 	},
-	remove: function() {
+	remove() {
 		this.$el.next('hr').addBack().remove();
 		this.stopListening();
 		return this;
@@ -44,9 +44,7 @@ var Section = module.exports = Backbone.View.extend({
 	 Remove the top reply on board pages, if over limit, when a new reply is
 	 added
 	 */
-	shiftReplies: function(postForm) {
-		if (state.page.get('thread'))
-			return;
+	shiftReplies(postForm) {
 		let attrs = this.model.attributes,
 			lim = state.hotConfig.get('ABBREVIATED_REPLIES'),
 			replies = attrs.replies,
@@ -69,7 +67,7 @@ var Section = module.exports = Backbone.View.extend({
 			this.renderOmit(attrs.omit, attrs.image_omit)
 	},
 	// Posts and images omited indicator
-	renderOmit: function(omit, image_omit) {
+	renderOmit(omit, image_omit) {
 		if (typeof omit === 'undefined') {
 			const attrs = this.model.attributes;
 			omit = attrs.omit;
@@ -90,12 +88,12 @@ var Section = module.exports = Backbone.View.extend({
 		this.$omit.html(html);
 	},
 	// Move thread to the top of the page
-	bumpThread: function() {
+	bumpThread() {
 		this.$el.detach();
 		this.insertToTop();
 	},
 	// TEMP: Stub until we unify the DOM structure of OPs and replies
-	renderEditing: function() {
+	renderEditing() {
 
 	}
 });

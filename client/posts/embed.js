@@ -1,12 +1,11 @@
 /*
 Youtube, soundcloud and pastebin link embeding
  */
-'use strict';
 
 // TODO: DRY this shit
 
-var $ = require('jquery'),
-	main = require('../main');
+let main = require('../main'),
+	{$} = main;
 
 // >80 char rule
 const youtube_url_re = exports.youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.|m.)?youtube\.com\/watch\/?\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/,
