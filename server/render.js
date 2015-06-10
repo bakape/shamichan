@@ -168,10 +168,10 @@ class Render {
 			safe(oneeSama.thumbnail(image, data.num)),
 			safe(parseHTML
 				`<br>
-				<small title="${lang[this.lang].catalog_omit}">
-					${data.replyctr}/${data.imgctr - 1}~
-				</small>
 				<small>
+					<span title="${lang[this.lang].catalog_omit}">
+						${data.replyctr}/${data.imgctr - 1}~
+					</span>
 					${oneeSama.expansion_links_html(data.num)}
 				</small>
 				<br>`
