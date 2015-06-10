@@ -82,7 +82,7 @@ module.exports = {
 	renderBacklinks(model, links) {
 		// No more backlinks, because posts deleted or something
 		if (!links && this.backlinks) {
-			main.command('scroll:follow', () => this.backlinks.innerHTML = '');
+			main.follow(() => this.backlinks.innerHTML = '');
 			this.backlinks = null;
 			return;
 		}
@@ -99,7 +99,7 @@ module.exports = {
 					&gt;&gt;${key}${diff && notBoard && ' →'}
 				</a>`;
 		}
-		main.command('scroll:follow', () => this.backlinks.innerHTML = html);
+		main.follow(() => this.backlinks.innerHTML = html);
 	},
 	renderMenu(e) {
 		new Menu({
@@ -145,7 +145,7 @@ module.exports = {
 
 		if (isInside('baseNode') && isInside('focusNode'))
 			sel = gsel.toString();
-		main.command('scroll:follow', function() {
+		main.follow(function() {
 			main.command('openPostBox', num);
 			main.request('postForm').addReference(num, sel);
 		});

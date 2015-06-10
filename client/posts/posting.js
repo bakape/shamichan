@@ -94,9 +94,7 @@ main.dispatcher[common.IMAGE_STATUS] = function(msg) {
 };
 
 main.$doc.on('click', 'aside.posting a', function() {
-	main.command('scroll:follow', () =>
-		postSM.feed('new', $(this).parent())
-	);
+	main.follow(() => postSM.feed('new', $(this).parent()));
 });
 
 main.$doc.on('keydown', handle_shortcut);
@@ -112,9 +110,7 @@ function handle_shortcut(event) {
 			var $aside = state.page.get('thread')
 				? main.$threads.find('aside.posting') : $ceiling().next();
 			if ($aside.is('aside') && $aside.length === 1) {
-				main.command('scroll:follow', function() {
-					postSM.feed('new', $aside);
-				});
+				main.follow(() => postSM.feed('new', $aside));
 				used = true;
 			}
 			break;
@@ -334,7 +330,7 @@ var ComposerView = Backbone.View.extend({
 			allocWait = attrs.sentAllocRequest && !attrs.num,
 			d = attrs.uploading || allocWait;
 		// Beware of undefined!
-		main.command('scroll:follow', () => {
+		main.follow(() => {
 			this.$submit.prop('disabled', !!d);
 			if (attrs.uploaded)
 				this.$submit.css({'margin-left': '0'});
@@ -696,7 +692,7 @@ var ComposerView = Backbone.View.extend({
 	},
 	// Adds a followLock check for finishing posts
 	finish_wrapped() {
-		main.command('scroll:follow', () => this.finish());
+		main.follow(() => this.finish());
 	},
 	// Send any unstaged words
 	flushPending() {

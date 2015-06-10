@@ -80,6 +80,8 @@ function followLock(func) {
 	return ret;
 }
 main.comply('scroll:follow', followLock);
+// Shorthand; we use this a lot
+main.follow = main.command.bind(main, 'scroll:follow');
 
 //Check if user scrolled to the bottom every time they scroll
 function scroll_shita() {

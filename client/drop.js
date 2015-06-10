@@ -13,7 +13,7 @@ function dragonDrop(e) {
 		return;
 	var postForm = main.request('postForm');
 	if (!postForm) {
-		main.command('scroll:follow', function() {
+		main.follow(function() {
 			const thread = state.page.get('thread');
 			if (thread)
 				return main.command('openPostBox', thread);

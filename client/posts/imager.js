@@ -47,7 +47,7 @@ let Hidamari = exports.Hidamari = {
 	// Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
 	toggleThumbnailVisibility(e) {
 		e.preventDefault();
-		main.command('scroll:follow', ()=>
+		main.follow(() =>
 			this.renderImage(!this.model.get('thumbnailRevealed'))
 		);
 	},
@@ -57,7 +57,7 @@ let Hidamari = exports.Hidamari = {
 		// Remove image hover preview, if any
 		options.trigger('imageClicked');
 		e.preventDefault();
-		main.command('scroll:follow', ()=>
+		main.follow(() =>
 			this.toggleImageExpansion(!this.model.get('imageExpanded'))
 		);
 	},
