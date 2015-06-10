@@ -1,3 +1,5 @@
+'use strict';
+
 var babelify = require('babelify'),
 	browserify = require('browserify'),
 	buffer = require('vinyl-buffer'),
@@ -27,6 +29,7 @@ function gulper(name, files, dest) {
 			.pipe(gulp.dest('./state'));
 	});
 }
+gulper('mod', deps.mod, './state');
 
 gulp.task('css', function() {
 	return gulp.src('./less/*.less')
@@ -49,20 +52,19 @@ function build(name, b) {
 			.pipe(sourcemaps.init({loadMaps: true}))
 			// TEMP: Don't minify the client, until we get minification
 			// support for ES6
-			.pipe(gulpif(!debug && name !== 'client', uglify()))
+			.pipe(gulpif(!debug && name === 'vendor', uglify()))
 			.on('error', gutil.log)
 			.pipe(sourcemaps.write('./'))
 			.pipe(gulp.dest('./www/js'));
 	});
 }
 
-build('client', browserify(require.resolve('./client/main.js'),
-	{
-		entry: true,
+{
+	let b = browserify({
+		entries: './client/main',
 		// Needed for sourcemaps
 		debug: true,
 		bundleExternal: false,
-		require: ['./client/main'],
 		external: [
 			'jquery',
 			'jquery.cookie',
@@ -100,11 +102,13 @@ build('client', browserify(require.resolve('./client/main.js'),
 		// Exclude these requires on the client
 		.exclude('../config')
 		.exclude('../lang/')
-		.exclude('../server/state')
-);
+		.exclude('../server/state');
 
-build('vendor', browserify(
-	{
+	build('client', b);
+}
+
+{
+	let b = browserify({
 		require: [
 			'jquery',
 			'jquery.cookie',
@@ -112,14 +116,12 @@ build('vendor', browserify(
 			'backbone',
 			'backbone.radio'
 		],
-		expose: {
-			'./lib/stack-blur': 'stack-blur'
-		},
 		debug: true
 	})
-		.require('./lib/stack-blur', {expose: 'stack-blur'})
-);
+		.require('./lib/stack-blur', {expose: 'stack-blur'});
 
-(function() {
-	gulper('mod', deps.mod, './state');
-})();
+	build('vendor', b);
+}
+
+
+
