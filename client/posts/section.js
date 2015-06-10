@@ -26,11 +26,13 @@ var Section = module.exports = Backbone.View.extend({
 			|| !!main.request('postForm')
 		)
 			$reply.hide();
-		this.$el.after($reply, '<hr>');
+		this.$el.after($reply);
 		return this;
 	},
 	insertToTop() {
-		this.$el.insertAfter(main.$threads.children('aside').first());
+		this.$el
+			.insertAfter(main.$threads.children('aside').first())
+			.after('<hr>');
 	},
 	renderLocked(model, locked) {
 		this.$el.toggleClass('locked', !!locked);
@@ -89,6 +91,7 @@ var Section = module.exports = Backbone.View.extend({
 	},
 	// Move thread to the top of the page
 	bumpThread() {
+		this.$el.next('hr').remove();
 		this.$el.detach();
 		this.insertToTop();
 	},
