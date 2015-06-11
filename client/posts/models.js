@@ -20,8 +20,8 @@ exports.Post = Backbone.Model.extend({
 	},
 	// Proxy commands to the view(s). Using a central channel helps us reduce
 	// listener count overhead.
-	dispatch(command, args) {
-		this.trigger('dispatch', command, args);
+	dispatch(command, ...args) {
+		this.trigger('dispatch', command, ...args);
 	},
 	remove() {
 		this.stopListening();
