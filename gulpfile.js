@@ -4,7 +4,7 @@ var babelify = require('babelify'),
 	browserify = require('browserify'),
 	buffer = require('vinyl-buffer'),
 	concat = require('gulp-concat'),
-	debug = require('./config').DEBUG,
+	config = require('./config'),
 	deps = require('./deps'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
@@ -16,6 +16,8 @@ var babelify = require('babelify'),
 	source = require('vinyl-source-stream'),
 	sourcemaps = require('gulp-sourcemaps'),
 	uglify = require('gulp-uglify');
+
+const debug = config.DEBUG;
 
 function gulper(name, files, dest) {
 	gulp.task(name, function() {
@@ -43,20 +45,24 @@ gulp.task('css', function() {
 		.pipe(gulp.dest('./state'));
 });
 
-function build(name, b) {
+function build(name, b, dest) {
 	gulp.task(name, function() {
-		return b.bundle()
-			// Transform into vinyl stream
-			.pipe(source(name + '.js'))
-			.pipe(buffer())
-			.pipe(sourcemaps.init({loadMaps: true}))
-			// TEMP: Don't minify the client, until we get minification
-			// support for ES6
-			.pipe(gulpif(!debug && name === 'vendor', uglify()))
-			.on('error', gutil.log)
-			.pipe(sourcemaps.write('./'))
-			.pipe(gulp.dest('./www/js'));
+		return bundler(name, b, dest);
 	});
+}
+
+function bundler(name, b, dest) {
+	return b.bundle()
+		// Transform into vinyl stream
+		.pipe(source(name + '.js'))
+		.pipe(buffer())
+		.pipe(sourcemaps.init({loadMaps: true}))
+		// TEMP: Don't minify the client, until we get minification
+		// support for ES6
+		.pipe(gulpif(!debug && name === 'vendor', uglify()))
+		.on('error', gutil.log)
+		.pipe(sourcemaps.write('./'))
+		.pipe(gulp.dest(dest));
 }
 
 {
@@ -71,7 +77,8 @@ function build(name, b) {
 			'underscore',
 			'backbone',
 			'backbone.radio',
-			'stack-blur'
+			'stack-blur',
+			'lang'
 		]
 	})
 		// Make available outside the bundle with require() under a
@@ -104,7 +111,7 @@ function build(name, b) {
 		.exclude('../lang/')
 		.exclude('../server/state');
 
-	build('client', b);
+	build('client', b, './www/js');
 }
 
 {
@@ -120,8 +127,17 @@ function build(name, b) {
 	})
 		.require('./lib/stack-blur', {expose: 'stack-blur'});
 
-	build('vendor', b);
+	build('vendor', b, './www/js');
 }
 
-
+gulp.task('lang', function() {
+	// Language bundles
+	const langs = config.LANGS;
+	for (let i = 0, l = langs.length; i < l; i++) {
+		const lang = langs[i];
+		let b = browserify({debug: true})
+			.require(`./lang/${lang}/common`, {expose: 'lang'});
+		bundler(lang, b, './www/js/lang');
+	}
+});
 

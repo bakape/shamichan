@@ -53,17 +53,8 @@ _.extend(main, {
 	dispatcher: {},
 	// Read-only boards get expanded later
 	readOnly: [],
-	memory: require('./memory')
-});
-
-/*
- * Since the language pack contains functions and we can not simply use those
- * with underscore templates, had to stringify those. Now we convert them back
- * to functions.
- */
-main.lang = window.lang;
-['pluralize', 'capitalize', 'ago', 'abbrev_msg'].forEach(function(func) {
-	eval('main.lang[func] = ' + main.lang[func]);
+	memory: require('./memory'),
+	lang: require('lang')
 });
 
 if (main.config.DEBUG) {

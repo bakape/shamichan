@@ -13,7 +13,7 @@
 		var config = {{CLIENT_CONFIG}},
 			hotConfig = {{CLIENT_HOT}},
 			configHash = '{{CLIENT_CONFIG_HASH}}',
-			lang = {{lang}};
+			clientHash = '{{client_hash}}';
 	</script>
 	<script src="{{MEDIA_URL}}js/setup.js?v=10"></script>
 	<script src="https://www.google.com/recaptcha/api/js/recaptcha_ajax.js" async defer></script>
@@ -74,4 +74,5 @@
 </threads>
 <script src="{{MEDIA_URL}}js/sockjs-0.3.4.min.js"></script>
 <script src="{{MEDIA_URL}}js/vendor.js?v={{vendor_hash}}"></script>
+<script src="{{MEDIA_URL}}js/lang/{{lang}}.js?v={{client_hash}}"></script>
 <script src="{{MEDIA_URL}}js/client.js?v={{client_hash}}"></script>

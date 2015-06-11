@@ -10,7 +10,6 @@ module.exports = {
 		'admin',
 		'config',
 		'imager',
-		'lang',
 		'server',
 		'util',
 		'db.js'

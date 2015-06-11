@@ -1,3 +1,7 @@
+/*
+Self-reloading and rebuilding development server
+ */
+
 var _ = require('underscore'),
 	config = require('./config'),
 	deps = require('./deps'),
@@ -23,11 +27,21 @@ function build(args, cb) {
 	cp.on('exit', cb);
 }
 
-var buildAll = _.debounce(build.bind(null, ['client', 'vendor', 'css', 'mod']));
+var buildAll = build.bind(null, [
+	'client',
+	'vendor',
+	'css',
+	'mod',
+	'lang'
+]);
 var reload_state = _.debounce(function() {
 	if (server)
 		server.kill('SIGHUP');
 }, 2000);
+var fullRestart = _.debounce(function() {
+	start_server();
+	buildAll(start_server);
+}, 5000);
 
 const serverExclude = new RegExp(String.raw`\.pid$|hot.js$|admin\/client.js$|`
 	+ config.MEDIA_DIRS.tmp.replace('/', '\\/'));
@@ -39,10 +53,8 @@ watch(deps.server, function(file) {
 	if (!serverExclude.test(file))
 		start_server();
 });
-watch('common', function() {
-	start_server();
-	buildAll(reload_state);
-});
+watch('common', fullRestart);
+watch('lang', fullRestart);
 watch('gulpfile.js', function() {
 	buildAll(reload_state);
 });
