@@ -9,7 +9,7 @@
 		? options.theme
 		: hotConfig.BOARD_CSS[location.href.match(/\/([a-zA-Z0-9]+?)\//)[1]];
 	document.getElementById('theme').href = config.MEDIA_URL + 'css/'
-		+ hotConfig.css[theme + '.css'];
+		+ theme + '.css?v=' + cssHash;
 })();
 
 // Check for browser compatibility by trying to detect some ES6 features

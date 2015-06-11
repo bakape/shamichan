@@ -38,10 +38,8 @@ gulp.task('css', function() {
 		.pipe(sourcemaps.init())
 		.pipe(less())
 		.pipe(minifyCSS({rebase: false}))
-		.pipe(rev())
 		.pipe(sourcemaps.write('./maps/'))
 		.pipe(gulp.dest('./www/css'))
-		.pipe(rev.manifest('css.json'))
 		.pipe(gulp.dest('./state'));
 });
 

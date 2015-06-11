@@ -98,17 +98,13 @@ function reload_hot_config(cb) {
 			'BOARD_CSS'
 		);
 
-		reloadCSS(clientHot, function(err) {
-			if (err)
-				return cb(err);
-			HOT.CLIENT_CONFIG = JSON.stringify(clientConfig);
-			HOT.CLIENT_HOT = JSON.stringify(clientHot);
-			// Hash the hot configuration
-			exports.clientConfigHash = HOT.CLIENT_CONFIG_HASH 
-				= hashString(JSON.stringify(clientHot));
+		HOT.CLIENT_CONFIG = JSON.stringify(clientConfig);
+		HOT.CLIENT_HOT = JSON.stringify(clientHot);
+		// Hash the hot configuration
+		exports.clientConfigHash = HOT.CLIENT_CONFIG_HASH
+			= hashString(JSON.stringify(clientHot));
 
-			hooks.trigger('reloadHot', HOT, cb);
-		});
+		hooks.trigger('reloadHot', HOT, cb);
 	});
 }
 
@@ -203,17 +199,6 @@ function getRevision(name, cb) {
 		if (!files)
 			return cb('Bad state/' + name + '.json');
 		cb(null, files);
-	});
-}
-
-function reloadCSS(hot, cb) {
-	getRevision('css', function(err, files) {
-		if (err)
-			return cb(err);
-		HOT.base_css = files['base.css'];
-		// Export to these modules and client
-		HOT.css = hot.css = files;
-		cb(null);
 	});
 }
 
@@ -465,8 +450,7 @@ function reload_hot_resources (cb) {
 		reload_hot_config,
 		reloadModClient,
 		hashVendor,
-		// TEMP: Until we rework CSS versioning
-		//hashCSS,
+		hashCSS,
 		hashClient,
 		reload_resources
 	], cb);

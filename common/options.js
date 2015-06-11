@@ -259,10 +259,11 @@ opts.push(
 			return hotConfig.BOARD_CSS[state.page.get('board')]
 		},
 		exec: function(theme) {
-			if (theme) {
-				$('#theme').attr('href', config.MEDIA_URL + 'css/'
-					+ hotConfig.css[theme + '.css']);
-			}
+			if (!theme)
+				return;
+			$('#theme').attr('href',
+				`${config.MEDIA_URL}css/${theme}.css?v=${cssHash}`
+			);
 		}
 	},
 	/* CUSTOM USER-SET BACKGROUND */

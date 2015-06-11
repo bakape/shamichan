@@ -5,7 +5,7 @@
 	<link rel="manifest" href="{{MEDIA_URL}}mobile/manifest.json">
 	<meta name="description" content="Real-time imageboard">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
-	<link rel="stylesheet" href="{{MEDIA_URL}}css/{{base_css}}">
+	<link rel="stylesheet" href="{{MEDIA_URL}}css/base.css?v={{css_hash}}">
 	<link rel="stylesheet" id="theme">
 	<style id="backgroundCSS"></style>
 	<script>
@@ -13,10 +13,10 @@
 		var config = {{CLIENT_CONFIG}},
 			hotConfig = {{CLIENT_HOT}},
 			configHash = '{{CLIENT_CONFIG_HASH}}',
-			clientHash = '{{client_hash}}';
+			clientHash = '{{client_hash}}',
+			cssHash = '{{css_hash}}';
 	</script>
-	<script src="{{MEDIA_URL}}js/setup.js?v=10"></script>
-	<script src="https://www.google.com/recaptcha/api/js/recaptcha_ajax.js" async defer></script>
+	<script src="{{MEDIA_URL}}js/setup.js?v=11"></script>
 </head>
 <fieldset id="identity" class="bmodal">
 <label for="name" class="ident">{{name}}</label> <input id="name" name="name"><br>
@@ -76,3 +76,4 @@
 <script src="{{MEDIA_URL}}js/vendor.js?v={{vendor_hash}}"></script>
 <script src="{{MEDIA_URL}}js/lang/{{lang}}.js?v={{client_hash}}"></script>
 <script src="{{MEDIA_URL}}js/client.js?v={{client_hash}}"></script>
+<script src="https://www.google.com/recaptcha/api/js/recaptcha_ajax.js" async defer></script>
