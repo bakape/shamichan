@@ -150,7 +150,7 @@ function make_dir(base, key, cb) {
 exports._make_media_dir = make_dir;
 
 function make_media_dirs (cb) {
-	var keys = ['src', 'thumb', 'dead'];
+	var keys = ['src', 'thumb', 'dead', 'tmp'];
 	if (config.EXTRA_MID_THUMBNAILS)
 		keys.push('mid');
 	async.forEach(keys, make_dir.bind(null, null), function (err) {
