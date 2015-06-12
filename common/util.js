@@ -299,17 +299,6 @@ function pick_spoiler(metaIndex) {
 }
 exports.pick_spoiler = pick_spoiler;
 
-function new_tab_link(srcEncoded, inside, cls) {
-	return [
-		safe(parseHTML
-			`<a href="${srcEncoded}" target="_blank" rel="nofollow" class="${cls}">`
-		),
-		inside,
-		safe('</a>')
-	];
-}
-exports.new_tab_link = new_tab_link;
-
 exports.thumbStyles = ['small', 'sharp', 'hide'];
 
 function readable_filesize(size) {

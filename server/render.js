@@ -47,32 +47,31 @@ class Render {
 	}
 	// Configure rendering singleton
 	initOneeSama() {
-		const ident = this.req.ident;
-		let oneeSama = new common.OneeSama(function(num) {
+		const ident = this.req.ident,
+			cookies = this.req.cookies;
+		let oneeSama = new common.OneeSama({
+			tz_offset: this.req.tz_offset,
+			spoilToggle: cookies.spoil === 'true',
+			autoGif: cookies.agif === 'true',
+			rTime: cookies.rTime === 'true',
+			eLinkify: cookies.linkify === 'true',
+			lang: lang[this.lang].common,
 
 			// Post link handler
-			const op = db.OPs[num];
-			if (op && caps.can_access_thread(ident, op))
-				this.callback(this.post_ref(num, op));
-			else
-				this.callback('>>' + num);
+			tamashii(num) {
+				const op = db.OPs[num];
+				if (op && caps.can_access_thread(ident, op))
+					this.callback(this.postRef(num, op));
+				else
+					this.callback('>>' + num);
+			}
 		});
-		const cookies = this.req.cookies;
-		oneeSama.tz_offset = this.req.tz_offset;
+
 		// Add mnemonics for authenticated staff
 		caps.augment_oneesama(oneeSama, this.opts);
 
-		if (cookies.spoil === 'true')
-			oneeSama.spoilToggle = true;
-		if (cookies.agif === 'true')
-			oneeSama.autoGif = true;
-		if (cookies.rTime === 'true')
-			oneeSama.rTime = true;
-		if (cookies.linkify === 'true')
-			oneeSama.eLinkify = true;
 		if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 			oneeSama.thumbStyle = cookies.thumb;
-		oneeSama.lang = lang[this.lang].common;
 		let lastN = cookies.lastn && parseInt(cookies.lastn, 10);
 		if (!lastN || !common.reasonable_last_n(lastN))
 			lastN = STATE.hot.THREAD_LAST_N;
@@ -172,14 +171,14 @@ class Render {
 					<span title="${lang[this.lang].catalog_omit}">
 						${data.replyctr}/${data.imgctr - 1}~
 					</span>
-					${oneeSama.expansion_links_html(data.num)}
+					${oneeSama.expansionLinks(data.num)}
 				</small>
 				<br>`
 			)
 		);
 		if (data.subject)
 			html.push(safe('<h3>「'), data.subject, safe('」</h3>'));
-		html.push(oneeSama.karada(data.body), safe('</article>'));
+		html.push(oneeSama.body(data.body), safe('</article>'));
 		this.resp.write(common.join(html));
 	}
 	writeThread(post) {
@@ -189,7 +188,7 @@ class Render {
 		const opts = this.opts,
 			full = oneeSama.full = !!opts.fullPosts;
 		oneeSama.op = opts.fullLinks ? false : post.num;
-		let first = oneeSama.monomono(post, full && 'full');
+		let first = oneeSama.section(post, full && 'full');
 		first.pop();
 		this.resp.write(first.join(''));
 	}
@@ -207,7 +206,7 @@ class Render {
 			return;
 		let posts = this.posts;
 		posts[post.num] = post;
-		this.resp.write(this.oneeSama.mono(post));
+		this.resp.write(this.oneeSama.article(post));
 	}
 	threadTitle() {
 		let title = `/${escape(this.opts.board)}/ - `;

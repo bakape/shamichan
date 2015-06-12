@@ -72,19 +72,22 @@ if (main.config.DEBUG) {
 let state = main.state = require('./state');
 let	common = main.common = require('../common');
 // Initialise main rendering object
-let oneeSama = main.oneeSama = new common.OneeSama(function(num) {
+let oneeSama = main.oneeSama = new common.OneeSama({
+	op: state.page.get('thread'),
+	lang: main.lang,
 	// Core post link handler
-	let frag;
-	if (this.links && num in this.links) {
-		let model = state.posts.get(num);
-		const desc = model && model.get('mine') && '(You)';
-		frag = this.post_ref(num, this.links[num], desc);
+	tamashii(num) {
+		let frag;
+		if (this.links && num in this.links) {
+			let model = state.posts.get(num);
+			const desc = model && model.get('mine') && '(You)';
+			frag = this.postRef(num, this.links[num], desc);
+		}
+		else
+			frag = '>>' + num;
+		this.callback(frag);
 	}
-	else
-		frag = '>>' + num;
-	this.callback(frag);
 });
-oneeSama.op = state.page.get('thread');
 main.options = require('./options');
 state.page.set('tabID', common.random_id());
 

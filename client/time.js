@@ -49,7 +49,7 @@ const is_skewed = (function(){
 	if (!el)
 		return false;
 	var d = date_from_time_el(el);
-	return oneeSama.readable_time(d.getTime()) != el.innerHTML;
+	return oneeSama.readableTime(d.getTime()) != el.innerHTML;
 })();
 
 if (is_skewed) {
@@ -133,7 +133,7 @@ main.defer(mouikkai)
 			if (!serverTimeOffset)
 				return setTimeout(render, 1000);
 			let d = new Date(common.serverTime()),
-				html = oneeSama.readable_time(d);
+				html = oneeSama.readableTime(d);
 			if (seconds)
 				html += ':' + common.pad(d.getUTCSeconds());
 			html += ' UTC';

@@ -8,15 +8,13 @@
 // Runing on the server
 exports.isNode = typeof navigator === 'undefined';
 
-var main;
+let main;
 if (exports.isNode) {
 	exports.config = require('../config');
 	exports.hotConfig = require('../server/state').hot;
-	exports.lang = require('../lang/');
 }
 else {
 	exports.main = main = require('../client/main');
 	exports.config = main.config;
 	exports.hotConfig = require('../client/state').hotConfig.attributes;
-	exports.lang = main.lang;
 }

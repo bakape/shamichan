@@ -199,14 +199,16 @@ function image_status(client_id, status) {
 
 /* Must be prepared to receive callback instantly */
 function valid_links(frag, state, ident, callback) {
-	var links = {};
-	var onee = new common.OneeSama(function (num) {
-		var op = db.OPs[num];
-		if (op && caps.can_access_thread(ident, op))
-			links[num] = db.OPs[num];
+	let links = {};
+	let onee = new common.OneeSama({
+		state,
+		callback() {},
+		tamashii(num) {
+			const op = db.OPs[num];
+			if (op && caps.can_access_thread(ident, op))
+				links[num] = db.OPs[num];
+		}
 	});
-	onee.callback = function () {};
-	onee.state = state;
 	onee.fragment(frag);
 	callback(null, _.isEmpty(links) ? null : links);
 }

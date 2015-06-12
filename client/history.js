@@ -12,7 +12,6 @@ main.$doc.on ('click', 'a.history', function(event) {
 
 // Loading status GIF
 let $loading = $('#loadingImage');
-
 main.comply('loading:show', () => $loading.show());
 main.comply('loading:hide', () => $loading.hide());
 

@@ -1,5 +1,5 @@
 /*
- * Non-OP posts
+ * Reply posts
  */
 
 let main = require('../main'),
@@ -22,7 +22,7 @@ var Article = module.exports = Backbone.View.extend({
 	render() {
 		// Pass this model's links to oneeSama for renderring
 		main.oneeSama.links = this.model.get('links');
-		this.setElement(main.oneeSama.mono(this.model.attributes));
+		this.setElement(main.oneeSama.article(this.model.attributes));
 		return this;
 	},
 	insertIntoDOM() {

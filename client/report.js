@@ -72,7 +72,7 @@ var ReportPanel = Backbone.View.extend({
 
 		this.$el.append(
 			'Reporting post ',
-			main.oneeSama.post_ref(num).safe,
+			main.oneeSama.postRef(num).safe,
 			'<a class="close" href="#">x</a>',
 			this.$message,
 			this.$captcha,

@@ -168,7 +168,7 @@ main.oneeSama.hook('insertOwnPost', function (info) {
 			op = info.links[num];
 		if (!op)
 			return;
-		let $ref = $(common.join([postForm.imouto.post_ref(num, op, false)]));
+		let $ref = $(common.join([postForm.imouto.postRef(num, op, false)]));
 		$a.attr('href', $ref.attr('href')).attr('class', 'history');
 		const refText = $ref.text();
 		if (refText != text)
@@ -195,18 +195,8 @@ var ComposerView = Backbone.View.extend({
 		this.line_count = 1;
 		this.char_count = 0;
 
-		// The form's own dedicated renderer instance
-		let imouto = this.imouto = new common.OneeSama(function(num) {
-			var $sec = $('#' + num);
-			if (!$sec.is('section'))
-				$sec = $sec.closest('section');
-			if ($sec.is('section'))
-				this.callback(this.post_ref(num, extractNum($sec)));
-			else
-				this.callback(common.safe(`<a class="nope">&gt;&gt;${num}</a>`));
-		});
-		// Initialise the renderer instance
-		_.extend(imouto, {
+		// Initialize the form's private rendering singleton instance
+		let imouto = this.imouto = new common.OneeSama({
 			callback: inject,
 			op: state.page.get('thread'),
 			state: [common.S_BOL, 0],
@@ -214,7 +204,19 @@ var ComposerView = Backbone.View.extend({
 			// object
 			state2: {spoiler: 0},
 			$buffer: this.$buffer,
-			eLinkify: main.oneeSama.eLinkify
+			eLinkify: main.oneeSama.eLinkify,
+			tamashii(num) {
+				var $sec = $('#' + num);
+				if (!$sec.is('section'))
+					$sec = $sec.closest('section');
+				if ($sec.is('section'))
+					this.callback(this.postRef(num, extractNum($sec)));
+				else {
+					this.callback(
+						common.safe(`<a class="nope">&gt;&gt;${num}</a>`)
+					);
+				}
+			}
 		});
 		imouto.hook('spoilerTag', etc.touchable_spoiler_tag);
 		main.oneeSama.trigger('imouto', imouto);
@@ -722,7 +724,7 @@ var ComposerView = Backbone.View.extend({
 		state.ownPosts[num] = num;
 		this.model.set({num: num});
 		this.flushPending();
-		var header = $(common.flatten(main.oneeSama.atama(msg)).join(''));
+		var header = $(main.oneeSama.header(msg));
 		this.$meta.replaceWith(header);
 		this.$meta = header;
 		if (!this.isThread)

@@ -26,7 +26,7 @@ let Hidamari = exports.Hidamari = {
 		this.$el
 			.children('header')
 			[this.model.get('op') ? 'after' : 'before'](
-				common.join(main.oneeSama.gazou(image, reveal))
+				main.oneeSama.image(image, reveal)
 			);
 		this.model.set({
 			// Only used in hidden thumbnail mode
