@@ -41,7 +41,7 @@ postSM.act('* + desync -> none', function() {
 		postForm.$input.val('');
 		postForm.finish();
 	}
-	main.$threads.find('aside.posting').hide();
+	main.follow(() => main.$threads.find('aside.posting').hide())
 });
 
 postSM.act('none + sync, draft, alloc + done -> ready', function() {
@@ -51,7 +51,7 @@ postSM.act('none + sync, draft, alloc + done -> ready', function() {
 		postForm.remove();
 		postForm = postModel = null;
 	}
-	main.$threads.find('aside.posting').show();
+	main.follow(() => main.$threads.find('aside.posting').show());
 });
 
 // Make new postform
