@@ -122,8 +122,8 @@ function handle_shortcut(event) {
 			break;
 		case opts.done:
 			if (postForm && !postForm.$submit.attr('disabled')) {
-					postForm.finish_wrapped();
-					used = true;
+				postForm.finish();
+				used = true;
 			}
 			break;
 		// Insert text spoiler
@@ -180,7 +180,7 @@ var ComposerView = Backbone.View.extend({
 	events: {
 		'input #trans': 'onInput',
 		'keydown #trans': 'onKeyDown',
-		'click #done': 'finish_wrapped',
+		'click #done': 'finish',
 		'click #toggle': 'onToggle'
 	},
 	initialize(args) {
@@ -250,14 +250,13 @@ var ComposerView = Backbone.View.extend({
 			width: '80%'
 		});
 		this.$blockquote = $('<blockquote/>');
+
 		/*
 		 Allows keeping the input buffer sized as if the text was monospace,
 		 without actually displaying monospace font. Keeps the input buffer from
 		 shifting around needlessly.
 		 */
 		this.$sizer = $('<pre/>').appendTo('body');
-
-		// TODO: Shift the parrent sections replies on board pages
 
 		this.$blockquote.append(this.$buffer, this.$lineBuffer, this.$input);
 		this.$el.append(this.$meta, this.$blockquote, '<small/>');
@@ -395,7 +394,7 @@ var ComposerView = Backbone.View.extend({
 			this.model.set({cancelled: true});
 		}
 		else
-			this.finish_wrapped();
+			this.finish();
 	},
 	onImageChosen() {
 		if (this.model.get('uploading') || this.model.get('uploaded'))
@@ -646,55 +645,52 @@ var ComposerView = Backbone.View.extend({
 		return msg;
 	},
 	onKeyDown(event) {
-
-		// TODO: Scrolling and locking to bottom
-
-		switch(event.which) {
-			case 13:
-				event.preventDefault();
-			// fall-through
-			case 32:
-				// predict result
-				var input = this.$input[0];
-				var val = this.$input.val();
-				val = val.slice(0, input.selectionStart)
-					+ (event.which == 13 ? '\n' : ' ')
-					+ val.slice(input.selectionEnd);
-				this.onInput(val);
-				break;
-			default:
-				handle_shortcut.bind(this)(event);
-		}
+		main.follow(() => {
+			switch(event.which) {
+				case 13:
+					event.preventDefault();
+				// fall-through
+				case 32:
+					// predict result
+					var input = this.$input[0];
+					var val = this.$input.val();
+					val = val.slice(0, input.selectionStart)
+						+ (event.which == 13 ? '\n' : ' ')
+						+ val.slice(input.selectionEnd);
+					this.onInput(val);
+					break;
+				default:
+					handle_shortcut.bind(this)(event);
+			}
+		});
 	},
 	finish() {
-		if (this.model.get('num')) {
-			this.flushPending();
-			this.commit(this.$input.val());
-			this.$input.remove();
-			this.$submit.remove();
-			if (this.$uploadForm)
-				this.$uploadForm.remove();
-			if (this.$iframe) {
-				this.$iframe.remove();
-				this.$iframe = null;
+		main.follow(() => {
+			if (this.model.get('num')) {
+				this.flushPending();
+				this.commit(this.$input.val());
+				this.$input.remove();
+				this.$submit.remove();
+				if (this.$uploadForm)
+					this.$uploadForm.remove();
+				if (this.$iframe) {
+					this.$iframe.remove();
+					this.$iframe = null;
+				}
+				this.imouto.fragment(this.$lineBuffer.text());
+				this.$buffer.replaceWith(this.$buffer.contents());
+				this.$lineBuffer.remove();
+				this.$blockquote.css({
+					'margin-left': '', 'padding-left': ''
+				}
+				);
+				main.command('send', [common.FINISH_POST]);
+				this.preserve = true;
+				if (this.isThread)
+					this.$el.append(main.oneeSama.replyBox());
 			}
-			this.imouto.fragment(this.$lineBuffer.text());
-			this.$buffer.replaceWith(this.$buffer.contents());
-			this.$lineBuffer.remove();
-			this.$blockquote.css({
-				'margin-left': '',
-				'padding-left': ''
-			});
-			main.command('send', [common.FINISH_POST]);
-			this.preserve = true;
-			if (this.isThread)
-				this.$el.append(main.oneeSama.replyBox());
-		}
-		postSM.feed('done');
-	},
-	// Adds a followLock check for finishing posts
-	finish_wrapped() {
-		main.follow(() => this.finish());
+			postSM.feed('done');
+		});
 	},
 	// Send any unstaged words
 	flushPending() {
