@@ -242,6 +242,17 @@ class OneeSama {
 			+ `(${this.lang.week[d.getDay()]})`
 			+`${pad(d.getHours())}:${pad(d.getMinutes())}`;
 	}
+	readableUTCTime(d, seconds) {
+		let html = pad(d.getUTCDate()) + ' '
+			+ this.lang.year[d.getUTCMonth()] + ' '
+			+ d.getUTCFullYear()
+			+ `(${this.lang.week[d.getUTCDay()]})`
+			+`${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+		if (seconds)
+			html += `:${pad(d.getUTCSeconds())}`;
+		html += ' UTC';
+		return html;
+	}
 	// Readable elapsed time since post
 	relativeTime(then, now) {
 		let time = Math.floor((now - then) / 60000);

@@ -95,12 +95,8 @@ main.defer(batcTimeRender)
 		function render() {
 			if (!serverTimeOffset)
 				return setTimeout(render, 1000);
-			let d = new Date(common.serverTime()),
-				html = oneeSama.readableTime(d.getTime());
-			if (seconds)
-				html += ':' + common.pad(d.getUTCSeconds());
-			html += ' UTC';
-			el.innerHTML = html;
+			el.innerHTML = oneeSama
+				.readableUTCTime(new Date(common.serverTime()), seconds);
 			setTimeout(render, seconds ? 1000 : 60000);
 		}
 
