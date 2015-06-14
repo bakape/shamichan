@@ -37,7 +37,7 @@ _.extend(main, {
 	execDeffered() {
 		let def = this._deferred;
 		for (let i = 0, l = def.length; i < l; i++)
-			def[i]();
+			_.defer(def[i]);
 	},
 
 	/*
