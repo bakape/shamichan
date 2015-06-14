@@ -63,7 +63,7 @@ var Section = module.exports = Backbone.View.extend({
 				attrs.image_omit++;
 			attrs.omit++;
 			changed = true;
-			post.remove();
+			main.follow(() => post.remove());
 		}
 		if (changed)
 			this.renderOmit(attrs.omit, attrs.image_omit)
