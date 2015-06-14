@@ -28,8 +28,7 @@ let save = _.debounce(function() {
 			}).appendTo('head');
 			email = false;
 		}
-		else if (common.is_sage(email) && !common.is_noko(email))
-			email = false;
+
 		var id = {};
 		if (name || email) {
 			if (name)
