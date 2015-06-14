@@ -14,9 +14,10 @@
 			hotConfig = {{CLIENT_HOT}},
 			configHash = '{{CLIENT_CONFIG_HASH}}',
 			clientHash = '{{client_hash}}',
-			cssHash = '{{css_hash}}';
+			cssHash = '{{css_hash}}',
+			lang = '{{lang}}';
 	</script>
-	<script src="{{MEDIA_URL}}js/setup.js?v=11"></script>
+	<script src="{{MEDIA_URL}}js/setup.js?v=12"></script>
 </head>
 <fieldset id="identity" class="bmodal">
 <label for="name" class="ident">{{name}}</label> <input id="name" name="name"><br>
@@ -74,6 +75,5 @@
 </threads>
 <script src="{{MEDIA_URL}}js/sockjs-0.3.4.min.js"></script>
 <script src="{{MEDIA_URL}}js/vendor.js?v={{vendor_hash}}"></script>
-<script src="{{MEDIA_URL}}js/lang/{{lang}}.js?v={{client_hash}}"></script>
-<script src="{{MEDIA_URL}}js/client.js?v={{client_hash}}"></script>
+<script src="{{MEDIA_URL}}js/loader.js?v={{client_hash}}"></script>
 <script src="https://www.google.com/recaptcha/api/js/recaptcha_ajax.js" async defer></script>

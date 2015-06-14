@@ -3,7 +3,7 @@ all: bootstrap client
 	$(MAKE) -C server/tripcode
 
 client: FORCE
-	./node_modules/gulp/bin/gulp.js -- client vendor mod css lang
+	./node_modules/gulp/bin/gulp.js -- client vendor mod css lang legacy
 
 FORCE:
 

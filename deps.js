@@ -26,6 +26,9 @@ module.exports = {
 	client: [
 		'client'
 	],
+	get legacy() {
+		return this.client;
+	},
 	css: [
 		'less'
 	]

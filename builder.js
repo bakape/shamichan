@@ -32,7 +32,8 @@ var buildAll = build.bind(null, [
 	'vendor',
 	'css',
 	'mod',
-	'lang'
+	'lang',
+	'legacy'
 ]);
 var reload_state = _.debounce(function() {
 	if (server)

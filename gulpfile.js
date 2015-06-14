@@ -50,21 +50,21 @@ function build(name, b, dest) {
 }
 
 function bundler(name, b, dest) {
+	// TEMP: Don't minify the client, until we get minification support for ES6
+	const canMinify = !debug && (name !== 'client');
 	return b.bundle()
 		// Transform into vinyl stream
 		.pipe(source(name + '.js'))
 		.pipe(buffer())
 		.pipe(sourcemaps.init({loadMaps: true}))
-		// TEMP: Don't minify the client, until we get minification
-		// support for ES6
-		.pipe(gulpif(!debug && name === 'vendor', uglify()))
+		.pipe(gulpif(canMinify, uglify()))
 		.on('error', gutil.log)
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest(dest));
 }
 
-{
-	let b = browserify({
+function buildClient() {
+	return browserify({
 		entries: './client/main',
 		// Needed for sourcemaps
 		debug: true,
@@ -79,9 +79,18 @@ function bundler(name, b, dest) {
 			'lang'
 		]
 	})
+		// Exclude these requires on the client
+		.exclude('../config')
+		.exclude('../lang/')
+		.exclude('../server/state')
 		// Make available outside the bundle with require() under a
 		// shorthand name
-		.require('./client/main', {expose: 'main'})
+		.require('./client/main', {expose: 'main'});
+}
+
+// Main client bundler
+{
+	let b = buildClient()
 		// Transpile ES6 functionality that is not yet supported by the latest
 		// stable Chrome and FF to ES5. Ancient and hipster browsers can
 		// suck my dick.
@@ -103,15 +112,23 @@ function bundler(name, b, dest) {
 				'regenerator',
 				'runtime'
 			]
-		}))
-		// Exclude these requires on the client
-		.exclude('../config')
-		.exclude('../lang/')
-		.exclude('../server/state');
+		}));
 
 	build('client', b, './www/js');
 }
 
+// Less performant client for older browser compatibility
+{
+	let b = buildClient().transform(babelify.configure({
+		optional: [
+			'es6.spec.blockScoping'
+		]
+	}));
+
+	build('legacy', b, './www/js');
+}
+
+// Libraries
 {
 	let b = browserify({
 		require: [
@@ -119,7 +136,8 @@ function bundler(name, b, dest) {
 			'jquery.cookie',
 			'underscore',
 			'backbone',
-			'backbone.radio'
+			'backbone.radio',
+			'scriptjs'
 		],
 		debug: true
 	})
