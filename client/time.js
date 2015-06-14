@@ -133,7 +133,7 @@ main.defer(mouikkai)
 			if (!serverTimeOffset)
 				return setTimeout(render, 1000);
 			let d = new Date(common.serverTime()),
-				html = oneeSama.readableTime(d);
+				html = oneeSama.readableTime(d.getTime());
 			if (seconds)
 				html += ':' + common.pad(d.getUTCSeconds());
 			html += ' UTC';
