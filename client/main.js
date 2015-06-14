@@ -105,12 +105,11 @@ _.extend(main, {
 	postSM: new common.FSM('none')
 });
 
+// 2nd tier dependacy modules. These are needed before the websocket
+// connection is opened, because they populate the dispatcher handler object.
+main.etc = require('./etc');
 _.extend(main, {
-	// 2nd tier dependacy modules. These are needed before the websocket
-	// connection is opened, because they populate the dispatcher handler
-	// object.
 	loop: require('./loop'),
-	etc: require('./etc'),
 	time: require('./time'),
 	scroll: require('./scroll'),
 	notify: require('./notify'),

@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{state} = main;
+	{_, state} = main;
 
 // For mobile
 function touchable_spoiler_tag(del) {
@@ -17,3 +17,12 @@ function imageUploadURL() {
 		+ state.page.get('connID');
 }
 exports.uploadURL = imageUploadURL;
+
+// Keep the UI from locking as the loop iterates
+function defferLoop(items, func, i) {
+	i || (i = 0);
+	func(items[i]);
+	if (++i < items.length)
+		_.defer(defferLoop, items, func, i);
+}
+exports.defferLoop = defferLoop;
