@@ -2,9 +2,8 @@
  * Background controller. Wallpapers, proper fitting and video backgrounds
  */
 
-let blur = require('stack-blur'),
-	main = require('./main'),
-	{$, Backbone, common, options, state} = main;
+let main = require('./main'),
+	{$, Backbone, common, options, stackBlur, state} = main;
 
 const colourMap = {
 	glass: {
@@ -50,7 +49,7 @@ let BackgroundView = Backbone.View.extend({
 
 				// Generate a blurred version of the background to use for
 				// posts, modals, etc.
-				blur.canvas(canvas, 0, 0, img.width, img.height, 10);
+				stackBlur.canvas(canvas, 0, 0, img.width, img.height, 10);
 				localStorage.blurred = canvas.toDataURL('image/jpeg', 0.95);
 
 				main.command('loading:hide');

@@ -24,6 +24,7 @@ let main = module.exports = radio.channel('main');
 _.extend(main, {
 	// Bind dependancies to main object for pretier destructuring requires
 	$, _, Backbone,
+	stackBlur: require('stack-blur'),
 
 	/*
 	 Ofload expensive and not that neccessary initialisation logic till
@@ -35,9 +36,11 @@ _.extend(main, {
 		return main;
 	},
 	execDeffered() {
-		let def = this._deferred;
-		for (let i = 0, l = def.length; i < l; i++)
-			_.defer(def[i]);
+		_.defer(() => {
+			let def = this._deferred;
+			for (let i = 0, l = def.length; i < l; i++)
+				_.defer(def[i]);
+		});
 	},
 
 	/*

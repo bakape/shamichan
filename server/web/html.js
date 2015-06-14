@@ -281,15 +281,17 @@ function buildEtag(req, res, ctr, extra) {
 
 function parseCookies(req, ctr) {
 	const cookies = req.cookies,
-		thumb = cookies.thumb,
-		styles = common.thumbStyles,
 		lang = req.lang = config.LANGS.indexOf(cookies.lang) > -1
 			? cookies.lang : config.DEFAULT_LANG;
 
 	// Round counter to lowest 10 updates for better caching
 	ctr = Math.floor(ctr / 10) * 10;
 	let etag = `W/${ctr}-${RES['indexHash-' + lang]}-${lang}`;
-	etag += '-' + (styles.indexOf(thumb) >= 0 && thumb || styles[0]);
+	// Since we use image lazy loading, only the `hide` thumbnail style
+	// matters, as that has considerebaly different figcaption HTLM. Less
+	// reflows is good.
+	if (cookies.thumb === 'hide')
+		etag += '-hide';
 	const etags = ['spoil', 'agif', 'rtime', 'linkify'];
 	for (let i = 0, l = etags.length; i < l; i++) {
 		const tag = etags[i];

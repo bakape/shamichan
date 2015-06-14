@@ -3,7 +3,7 @@
  */
 
 let main = require('../main'),
-	{$, Backbone, common, options, state} = main;
+	{$, Backbone, common, etc, options, state} = main;
 
 let Hidamari = exports.Hidamari = {
 	/*
@@ -201,3 +201,16 @@ let ExpanderModel = Backbone.Model.extend({
 
 let massExpander = exports.massExpander = new ExpanderModel();
 main.comply('massExpander:unset', () => massExpander.unset());
+
+// Lazy load images with less UI locking
+function loadImages() {
+	if (options.get('thumbs') === 'hide')
+		return;
+	etc.defferLoop(state.posts.models, function(model) {
+		let image = model.get('image');
+		if (!image)
+			return;
+		model.dispatch('renderImage');
+	})
+}
+main.comply('imager:lazyLoad', loadImages);

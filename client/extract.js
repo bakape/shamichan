@@ -26,6 +26,7 @@ class Extract {
 			if (options.get('anonymise'))
 				main.command('loop:anonymise');
 			main.command('time:render');
+			main.command('imager:lazyLoad');
 		})
 	}
 	extractReplies(el) {
