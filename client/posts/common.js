@@ -75,9 +75,7 @@ module.exports = {
 	},
 	renderTime() {
 		let el = this.el.getElementsByTagName('time')[0];
-		if (!this.timeStamp)
-			this.timeStamp = main.request('time:fromEl', el).getTime();
-		el.outerHTML = oneeSama.time(this.timeStamp);
+		el.outerHTML = oneeSama.time(this.model.get('time'));
 	},
 	renderBacklinks(model, links) {
 		// No more backlinks, because posts deleted or something

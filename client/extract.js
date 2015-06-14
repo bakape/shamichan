@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{options, state, posts} = main;
+	{_, options, state, posts} = main;
 
 class Extract {
 	constructor() {
@@ -22,9 +22,11 @@ class Extract {
 		this.extractThreads(el);
 
 		// Apply various client-only DOM modifications
-		main.command('loop:anonymise');
-		if (options.get('relativeTime'))
+		_.defer(function() {
+			if (options.get('anonymise'))
+				main.command('loop:anonymise');
 			main.command('time:render');
+		})
 	}
 	extractReplies(el) {
 		let articles = el.getElementsByTagName('article'),

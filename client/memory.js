@@ -20,7 +20,7 @@ Kioku.prototype.bake_cookie = function (o) {
 };
 
 Kioku.prototype.now = function () {
-	return Math.floor(new Date().getTime() / 1000);
+	return Math.floor(Date.now() / 1000);
 };
 
 Kioku.prototype.purge_all = function () {

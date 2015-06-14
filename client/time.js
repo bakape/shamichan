@@ -5,28 +5,13 @@ Timezone corrections, batch timestamp updates, syncwatch, etc.
 let main = require('./main'),
 	{$, Backbone, common, oneeSama, options, state} = main;
 
-function date_from_time_el(el) {
-	if (!el)
-		return new Date();
-	const dTime = el.getAttribute('datetime');
-	// Don't crash the function, if scanning an unsynced post in progress
-	if (!dTime)
-		return new Date();
-	return new Date(dTime
-		.replace(/-/g, '/')
-		.replace('T', ' ')
-		.replace('Z', ' GMT')
-	);
-}
-main.reply('time:fromEl', date_from_time_el);
-
 // Get a more accurate server-client time offset, for interclient syncing
 // Does not account for latency, but good enough for our purposes
 var serverTimeOffset = 0;
 main.dispatcher[common.GET_TIME] = function(msg){
 	if (!msg[0])
 		return;
-	serverTimeOffset = msg[0] - new Date().getTime();
+	serverTimeOffset = msg[0] - Date.now();
 };
 main.reply('time:offset', serverTimeOffset);
 
@@ -43,29 +28,6 @@ function batcTimeRender(model, rtime = options.get('relativeTime')) {
 }
 main.comply('time:render', batcTimeRender);
 options.on('change:relativeTime', batcTimeRender);
-
-const is_skewed = (function(){
-	var el = document.querySelector('time');
-	if (!el)
-		return false;
-	var d = date_from_time_el(el);
-	return oneeSama.readableTime(d.getTime()) != el.innerHTML;
-})();
-
-if (is_skewed) {
-	// Rerender all post times. If relative time is enabled, the timestamps
-	// will be rerender anyway in a minute, so no need for this.
-	if (!oneeSama.rTime)
-		batcTimeRender();
-
-	setTimeout(function () {
-		// next request, have the server render the right times
-		$.cookie('timezone', -new Date().getTimezoneOffset() / 60, {
-			expires: 90,
-			path: '/'
-		});
-	}, 3000);
-}
 
 /* syncwatch */
 function timer_from_el($el) {
@@ -114,7 +76,8 @@ function mouikkai() {
 	}, 1000);
 }
 
-main.defer(mouikkai)
+main.defer(batcTimeRender)
+	.defer(mouikkai)
 	.defer(function() {
 		// Append UTC clock to the top of the schedule
 		let seconds;

@@ -230,24 +230,17 @@ class OneeSama {
 			text = this.relativeTime(time, Date.now());
 		}
 		return parseHTML
-			`<time datetime="${this.datetime(time)}" title="${title}">
+			`<time title="${title}">
 				${text || readable}
 			</time>`;
 	}
 	readableTime(time) {
-		var h = this.tz_offset;
-		var offset;
-		if (h || h == 0)
-			offset = h * 60 * 60 * 1000;
-		else
-		// XXX: would be nice not to construct new Dates all the time
-			offset = new Date().getTimezoneOffset() * -60 * 1000;
-		var d = new Date(time + offset);
-
-		return parseHTML
-			`${pad(d.getUTCDate())} ${this.lang.year[d.getUTCMonth()]}
-			${d.getUTCFullYear()}(${this.lang.week[d.getUTCDay()]})
-			${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+		let d = new Date(time);
+		return pad(d.getDate()) + ' '
+			+ this.lang.year[d.getMonth()] + ' '
+			+ d.getFullYear()
+			+ `(${this.lang.week[d.getDay()]})`
+			+`${pad(d.getHours())}:${pad(d.getMinutes())}`;
 	}
 	// Readable elapsed time since post
 	relativeTime(then, now) {
@@ -264,13 +257,6 @@ class OneeSama {
 		}
 
 		return this.lang.ago(time, this.lang.unit_year);
-	}
-	// For dealing with timezone diferences
-	datetime(time) {
-		let d = new Date(time);
-		return (d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-'
-			+ pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':'
-			+ pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z');
 	}
 	postNavigation(post) {
 		const num = post.num,

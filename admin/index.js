@@ -24,7 +24,7 @@ function ban(m, mod, ip, key, type, sentence) {
 		if (type != 'timeout')
 			return false;
 			
-		var till = (sentence == 'perma') ? sentence : new Date().getTime() + sentence;
+		var till = (sentence == 'perma') ? sentence : Date.now() + sentence;
 		m.sadd('hot:' + type + 's', key);
 		m.hmset('ip:' + key, 'ban', type, 'sentence', till);
 	}
@@ -90,7 +90,7 @@ var lift_expired_bans;
 			// Read and check, if ban has expired
 			var m = r.multi();
 			var must_reload;
-			var now = new Date().getTime();
+			var now = Date.now();
 			var ADDRS = authcommon.modCache.addresses;
 			for (i = 0; i < banned.length; i++){
 				if (!res[i].sentence || res[i].sentence == 'perma')

@@ -148,7 +148,6 @@ var opts = [
 		tab: 0,
 		exec: function(toggle) {
 			main.oneeSama.rTime = toggle;
-			$.cookie('rTime', toggle, {path: '/'});
 		}
 	},
 	/* R/A/DIO NOW PLAYING BANNER */

@@ -50,10 +50,8 @@ class Render {
 		const ident = this.req.ident,
 			cookies = this.req.cookies;
 		let oneeSama = new common.OneeSama({
-			tz_offset: this.req.tz_offset,
 			spoilToggle: cookies.spoil === 'true',
 			autoGif: cookies.agif === 'true',
-			rTime: cookies.rTime === 'true',
 			eLinkify: cookies.linkify === 'true',
 			lang: lang[this.lang].common,
 
