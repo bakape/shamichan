@@ -19,7 +19,7 @@ function load() {
 let save = _.debounce(function() {
 	try {
 		const name = $name.val();
-		var email = $email.val();
+		let email = $email.val();
 		// Staff login method
 		if (email == 'misaki') {
 			$email.val('');
@@ -29,8 +29,8 @@ let save = _.debounce(function() {
 			email = false;
 		}
 
-		var id = {};
 		if (name || email) {
+			let id = {};
 			if (name)
 				id.name = name;
 			if (email)
