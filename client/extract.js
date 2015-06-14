@@ -18,8 +18,8 @@ class Extract {
 
 		this.mine = state.mine.read_all();
 		this.posts = json.posts;
-		this.extractReplies(el);
 		this.extractThreads(el);
+		this.extractReplies(el);
 
 		// Apply various client-only DOM modifications
 		_.defer(function() {
