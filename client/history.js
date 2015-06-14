@@ -7,6 +7,8 @@ let main = require('./main'),
 
 // Click handler for post/thread/board links
 main.$doc.on ('click', 'a.history', function(event) {
+	if (event.ctrlKey)
+		return;
 	readingSteiner(this.href, event, true);
 });
 
