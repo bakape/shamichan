@@ -473,10 +473,12 @@ class OneeSama {
 	}
 	// Central image rendering method
 	image(data, reveal) {
+		const showThumb = this.thumbStyle !== 'hide' || reveal;
 		return parseHTML
 			`<figure>
 				${this.figcaption(data, reveal)}
-				${(this.thumbStyle !== 'hide' || reveal) && this.thumbnail(data)}
+				${showThumb && config.IMAGE_HATS && '<span class="hat"></span>'}
+				${showThumb && this.thumbnail(data)}
 			</figure>`;
 	}
 	// Image header
@@ -598,8 +600,7 @@ class OneeSama {
 		// Thumbnails on catalog pages do not need hover previews. Adding the
 		// `expanded` class excludes them from the hover handler.
 		return parseHTML
-			`${config.IMAGE_HATS && '<span class="hat"></span>'}
-			<a target="blank" rel="nofollow" href="${href || src}">
+			`<a target="blank" rel="nofollow" href="${href || src}">
 				<img src="${thumb}"
 					width="${thumbWidth}"
 					height="${thumbHeight}"

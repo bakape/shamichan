@@ -3,7 +3,7 @@
  */
 
 let main = require('../main'),
-	{$, Backbone, common, etc, options, state} = main;
+	{$, Backbone, common, etc, oneeSama, options, state} = main;
 
 let Hidamari = exports.Hidamari = {
 	/*
@@ -26,7 +26,7 @@ let Hidamari = exports.Hidamari = {
 		this.$el
 			.children('header')
 			[this.model.get('op') ? 'after' : 'before'](
-				main.oneeSama.image(image, reveal)
+				oneeSama.image(image, reveal)
 			);
 		this.model.set({
 			// Only used in hidden thumbnail mode
@@ -73,7 +73,7 @@ let Hidamari = exports.Hidamari = {
 	fitImage(img, fit){
 		// Open PDF in a new tab on click
 		if (img.ext === '.pdf')
-			return window.open(main.oneeSama.imagePaths().src + img.src,
+			return window.open(oneeSama.imagePaths().src + img.src,
 				'_blank'
 			);
 		// Audio controls are always the same height and do not need to be
@@ -136,7 +136,7 @@ let Hidamari = exports.Hidamari = {
 			.children('a')
 			.html(common.parseHTML
 				`<${tag}~
-					src="${main.oneeSama.imagePaths().src + img.src}"
+					src="${oneeSama.imagePaths().src + img.src}"
 					width="${opts.width}"
 					height="${opts.height}"
 					autoplay="true"
@@ -151,7 +151,7 @@ let Hidamari = exports.Hidamari = {
 			.children('figure')
 			.children('a')
 			.append(common.parseHTML
-				`<audio src="${main.oneeSama.imagePaths().src + img.src}"
+				`<audio src="${oneeSama.imagePaths().src + img.src}"
 					width="300"
 					height="3em"
 					autoplay="true"
@@ -161,6 +161,13 @@ let Hidamari = exports.Hidamari = {
 				</audio>`
 			);
 		this.model.set('imageExpanded', true);
+	},
+	// Minimal image thumbnail swap for lazy loading
+	loadImage(image) {
+		let el = this.el
+			.getElementsByTagName('figure')[0]
+			.getElementsByTagName('img')[0];
+		el.outerHTML = oneeSama.thumbnail(image);
 	}
 };
 
@@ -207,10 +214,10 @@ function loadImages() {
 	if (options.get('thumbs') === 'hide')
 		return;
 	etc.defferLoop(state.posts.models, function(model) {
-		let image = model.get('image');
+		const image = model.get('image');
 		if (!image)
 			return;
-		model.dispatch('renderImage');
+		model.dispatch('loadImage', image);
 	})
 }
 main.comply('imager:lazyLoad', loadImages);
