@@ -19,10 +19,14 @@ function imageUploadURL() {
 exports.uploadURL = imageUploadURL;
 
 // Keep the UI from locking as the loop iterates
-function defferLoop(items, func, i) {
-	i || (i = 0);
-	func(items[i]);
-	if (++i < items.length)
-		_.defer(defferLoop, items, func, i);
+function deferLoop(items, stack, func) {
+	if (stack > items.length)
+		stack = items.length;
+	// Copy array to remove refference
+	items = items.slice();
+	for (let i = 0; i < stack; i++)
+		func(items.pop());
+	if (items.length)
+		_.defer(deferLoop, items, stack, func);
 }
-exports.defferLoop = defferLoop;
+exports.deferLoop = deferLoop;

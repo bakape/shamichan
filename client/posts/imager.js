@@ -213,7 +213,7 @@ main.comply('massExpander:unset', () => massExpander.unset());
 function loadImages() {
 	if (options.get('thumbs') === 'hide')
 		return;
-	etc.defferLoop(state.posts.models, function(model) {
+	etc.deferLoop(state.posts.models, 10, function(model) {
 		const image = model.get('image');
 		if (!image)
 			return;

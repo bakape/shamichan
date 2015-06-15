@@ -17,7 +17,7 @@ options.on({
 });
 
 function reRenderImages() {
-	etc.defferLoop(models, function(model) {
+	etc.defferLoop(models, 1, function(model) {
 		let image = model.get('image');
 		if (image)
 			model.dispatch('renderImage', image)
@@ -26,7 +26,7 @@ function reRenderImages() {
 main.comply('loop:images', () => reRenderImages());
 
 function toggleSpoilers() {
-	etc.defferLoop(models, function(model) {
+	etc.deferLoop(models, 1, function(model) {
 		let image = model.get('image');
 		if (image && image.spoiler)
 			model.dispatch('renderImage', image);
@@ -35,7 +35,7 @@ function toggleSpoilers() {
 
 // Toggle animated GIF thumbnails
 function toggleAutoGIF() {
-	etc.defferLoop(models, function(model) {
+	etc.deferLoop(models, 1, function(model) {
 		let image = model.get('image');
 		if (image && image.ext === '.gif')
 			model.dispatch('renderImage', image);
@@ -44,7 +44,7 @@ function toggleAutoGIF() {
 
 function toggleAnonymisation(source, toggle) {
 	const command = toggle ? 'anonymise' : 'renderName';
-	etc.defferLoop(models, function(model) {
+	etc.deferLoop(models, 1, function(model) {
 		const {name, trip} = model.attributes;
 		if (name || trip)
 			model.dispatch(command);
