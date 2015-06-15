@@ -150,7 +150,7 @@ function hashVendor(cb) {
 
 // Hashes all client bundles into a central hash
 function hashClient(cb) {
-	let bundles = ['./www/js/client.js'];
+	let bundles = ['./www/js/client.js', './www/js/loader.js'];
 	const langs = config.LANGS;
 	for (let i = 0, l = langs.length; i < l; i++) {
 		bundles.push(`./www/js/lang/${langs[i]}.js`);
