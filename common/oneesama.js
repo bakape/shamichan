@@ -594,7 +594,7 @@ class OneeSama {
 
 		// Still resolve the size, but swap the image with a blank PNG for
 		// lazy loading
-		if (imports.isNode)
+		if (imports.isNode && !this.catalog)
 			thumb = paths.blank;
 
 		// Thumbnails on catalog pages do not need hover previews. Adding the

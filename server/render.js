@@ -54,6 +54,7 @@ class Render {
 			autoGif: cookies.agif === 'true',
 			eLinkify: cookies.linkify === 'true',
 			lang: lang[this.lang].common,
+			catalog: this.opts.catalog,
 
 			// Post link handler
 			tamashii(num) {
