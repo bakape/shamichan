@@ -3,7 +3,7 @@
  */
 
 let main = require('../main'),
-	{$, _, Backbone, common, lang} = main;
+	{$, _, Backbone, common, etc, lang, state} = main;
 
 let MenuView = module.exports = Backbone.View.extend({
 	// Maping of menu items to their handler message bus commands
@@ -47,3 +47,13 @@ let MenuView = module.exports = Backbone.View.extend({
 main.comply('menu:extend', action =>
 	_.extend(MenuView.prototype.actions, action)
 );
+
+main.$threads.on('click', '.control', function(e) {
+	let model = etc.getModel(e.target);
+	if (!model)
+		return;
+	new MenuView({
+		parent: e.target,
+		model
+	});
+});

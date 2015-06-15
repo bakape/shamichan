@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{_, state} = main;
+	{$, _, state} = main;
 
 // For mobile
 function touchable_spoiler_tag(del) {
@@ -30,3 +30,11 @@ function deferLoop(items, stack, func) {
 		_.defer(deferLoop, items, stack, func);
 }
 exports.deferLoop = deferLoop;
+
+function getModel(el) {
+	const id = $(el).closest('article, section').attr('id');
+	if (!id)
+		return null;
+	return state.posts.get(id);
+}
+exports.getModel = getModel;

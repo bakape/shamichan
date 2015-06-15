@@ -226,10 +226,7 @@ main.comply('imager:lazyLoad', loadImages);
 main.$threads.on('click', 'img, video', function(e) {
 	if (options.get('inlinefit') == 'none' || e.which !== 1)
 		return;
-	const id = $(e.target).closest('article, section').attr('id');
-	if (!id)
-		return;
-	let model = state.posts.get(id);
+	let model = etc.getModel(e.target);
 	if (!model)
 		return;
 	e.preventDefault();

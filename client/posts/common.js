@@ -4,14 +4,12 @@
 
 let main = require('../main'),
 	imager = require('./imager'),
-	Menu = require('./menu'),
 	{$, _, common, lang, oneeSama, options, state} = main;
 
 module.exports = {
 	events: {
 		'click >figure>figcaption>.imageToggle': 'toggleThumbnailVisibility',
-		'click >header>nav>a.quote': 'quotePost',
-		'click >header>.control': 'renderMenu'
+		'click >header>nav>a.quote': 'quotePost'
 	},
 	initCommon() {
 		this.$blockquote = this.$el.children('blockquote');
@@ -97,12 +95,6 @@ module.exports = {
 				</a>`;
 		}
 		main.follow(() => this.backlinks.innerHTML = html);
-	},
-	renderMenu(e) {
-		new Menu({
-			parent: e.target,
-			model: this.model
-		});
 	},
 	// Admin JS injections
 	fun() {
