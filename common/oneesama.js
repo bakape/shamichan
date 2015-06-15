@@ -598,9 +598,14 @@ class OneeSama {
 			thumb = paths.blank;
 
 		// Thumbnails on catalog pages do not need hover previews. Adding the
-		// `expanded` class excludes them from the hover handler.
+		// `expanded` class excludes them from the hover handler. The
+		// history class ensures they are handled by the History API.
 		return parseHTML
-			`<a target="blank" rel="nofollow" href="${href || src}">
+			`<a target="_blank"
+				 rel="nofollow"
+				 href="${href || src}"
+				 ${href && 'class="history"'}
+		    >
 				<img src="${thumb}"
 					width="${thumbWidth}"
 					height="${thumbHeight}"
