@@ -584,7 +584,7 @@ class OneeSama {
 		else if (data.ext === '.gif' && this.autoGif)
 			thumb = src;
 		else
-			thumb = this.thumbPath(data, this.thumbStyle === 'sharp');
+			thumb = this.thumbPath(data, this.thumbStyle !== 'small');
 
 		// Source image smaller than thumbnail and other fallbacks
 		if (!thumbWidth) {

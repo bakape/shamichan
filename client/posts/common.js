@@ -7,9 +7,6 @@ let main = require('../main'),
 	{$, _, common, lang, oneeSama, options, state} = main;
 
 module.exports = {
-	events: {
-		'click >figure>figcaption>.imageToggle': 'toggleThumbnailVisibility'
-	},
 	initCommon() {
 		this.$blockquote = this.$el.children('blockquote');
 		this

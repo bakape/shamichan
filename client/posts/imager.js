@@ -3,7 +3,7 @@
  */
 
 let main = require('../main'),
-	{$, Backbone, common, etc, oneeSama, options, state} = main;
+	{$, $threads, Backbone, common, etc, oneeSama, options, state} = main;
 
 let Hidamari = exports.Hidamari = {
 	/*
@@ -51,13 +51,6 @@ let Hidamari = exports.Hidamari = {
 		)
 			return;
 		this.toggleImageExpansion(true, img);
-	},
-	// Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
-	toggleThumbnailVisibility(e) {
-		e.preventDefault();
-		main.follow(() =>
-			this.renderImage(!this.model.get('thumbnailRevealed'))
-		);
 	},
 	toggleImageExpansion(expand, img, manual) {
 		const fit = options.get('inlinefit');
@@ -174,7 +167,7 @@ let Hidamari = exports.Hidamari = {
 let ExpanderModel = Backbone.Model.extend({
 	id: 'massExpander',
 	initialize() {
-		main.$threads.on('click', '#expandImages', (e) => {
+		$threads.on('click', '#expandImages', (e) => {
 			e.preventDefault();
 			this.toggle();
 		});
@@ -182,7 +175,7 @@ let ExpanderModel = Backbone.Model.extend({
 	toggle() {
 		const expand = !this.get('expand');
 		this.set('expand', expand).massToggle(expand);
-		main.$threads
+		$threads
 			.find('#expandImages')
 			.text(`${expand ? 'Contract' : 'Expand'} Images`);
 	},
@@ -223,7 +216,7 @@ main.comply('imager:lazyLoad', loadImages);
 
 // Proxy image clicks to views. More performant than dedicated listeners for
 // each view.
-main.$threads.on('click', 'img, video', function(e) {
+$threads.on('click', 'img, video', function(e) {
 	if (options.get('inlinefit') == 'none' || e.which !== 1)
 		return;
 	let model = etc.getModel(e.target);
@@ -239,5 +232,16 @@ main.$threads.on('click', 'img, video', function(e) {
 			model.get('image'),
 			true
 		)
+	);
+});
+
+// Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
+$threads.on('click', '.imageToggle', function(e) {
+	e.preventDefault();
+	let model = etc.getModel(e.target);
+	if (!model)
+		return;
+	main.follow(() =>
+		model.dispatch('renderImage', !model.get('thumbnailRevealed'))
 	);
 });

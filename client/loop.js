@@ -17,7 +17,7 @@ options.on({
 });
 
 function reRenderImages() {
-	etc.defferLoop(models, 1, function(model) {
+	etc.deferLoop(models, 1, function(model) {
 		let image = model.get('image');
 		if (image)
 			model.dispatch('renderImage', image)
