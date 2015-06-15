@@ -71,7 +71,7 @@ function buildClient() {
 		bundleExternal: false,
 		external: [
 			'jquery',
-			'jquery.cookie',
+			'js-cookie',
 			'underscore',
 			'backbone',
 			'backbone.radio',
@@ -133,7 +133,7 @@ function buildClient() {
 	let b = browserify({
 		require: [
 			'jquery',
-			'jquery.cookie',
+			'js-cookie',
 			'underscore',
 			'backbone',
 			'backbone.radio',

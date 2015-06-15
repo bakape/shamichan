@@ -81,13 +81,11 @@ class Render {
 	// Read hidden posts from cookie
 	getHidden() {
 		let hidden = new Set();
-		const hide = this.req.cookies.hide;
-		if (hide && !caps.can_moderate(this.req.ident)) {
-			const toHide = hide.slice(0, 200).split(',');
-			for (let i = 0, l = toHide.length; i < l; i++) {
-				const num = parseInt(toHide[i], 10);
-				if (num)
-					hidden.add(num);
+		const cookie = this.req.cookies.hide;
+		if (cookie) {
+			let split = cookie.split('/');
+			for (let i = 0, l = split.length; i < l; i++) {
+				hidden.add(parseInt(split[i], 10));
 			}
 		}
 		this.hidden = hidden;

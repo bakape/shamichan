@@ -64,7 +64,7 @@ exports.Post = Backbone.Model.extend({
 		var old, newLinks;
 		const num = this.get('num'),
 			op = this.get('op') || num;
-		const mine = state.mine.read_all();
+		const mine = state.mine.readAll();
 		for (let key in links) {
 			if (mine[key])
 				main.command('repliedToMe', this);

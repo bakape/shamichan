@@ -14,8 +14,8 @@ module.exports = {
 			.listenTo(state.linkerCore,
 				'change:' + this.model.get('num'),
 				this.renderBacklinks
-			);
-		this.fun();
+			)
+			.fun();
 		const links = state.linkerCore.get(this.model.get('num'));
 		if (links)
 			this.renderBacklinks(null, links);

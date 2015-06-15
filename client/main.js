@@ -14,8 +14,6 @@ let $ = require('jquery'),
 	Backbone = require('backbone'),
 	radio = require('backbone.radio');
 
-// Register jquery plugins
-require('jquery.cookie');
 // Bind jQuery to backbone
 Backbone.$ = $;
 
@@ -24,6 +22,7 @@ let main = module.exports = radio.channel('main');
 _.extend(main, {
 	// Bind dependancies to main object for pretier destructuring requires
 	$, _, Backbone,
+	Cookie: require('js-cookie'),
 	stackBlur: require('stack-blur'),
 
 	/*
@@ -56,7 +55,6 @@ _.extend(main, {
 	dispatcher: {},
 	// Read-only boards get expanded later
 	readOnly: [],
-	memory: require('./memory'),
 	lang: require('lang')
 });
 
@@ -75,6 +73,7 @@ if (main.config.DEBUG) {
  Core modules. The other will be more or less decoupled, but these are the
  monolithic foundation.
  */
+main.Memory = require('./memory');
 let state = main.state = require('./state');
 let	common = main.common = require('../common');
 // Initialise main rendering object
@@ -85,8 +84,7 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 	tamashii(num) {
 		let frag;
 		if (this.links && num in this.links) {
-			let model = state.posts.get(num);
-			const desc = model && model.get('mine') && '(You)';
+			const desc = num in state.mine.readAll() && '(You)';
 			frag = this.postRef(num, this.links[num], desc);
 		}
 		else

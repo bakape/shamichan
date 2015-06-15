@@ -620,7 +620,7 @@ class OneeSama {
 		let ref = '&gt;&gt;' + num;
 		if (desc_html)
 			ref += ' ' + desc_html;
-		else if (this.op && this.op != op)
+		if (this.op && this.op != op)
 			ref += ' \u2192';
 		else if (num == op && this.op == op)
 			ref += ' (OP)';
