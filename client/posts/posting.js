@@ -866,16 +866,45 @@ var ComposerView = Backbone.View.extend({
 	autoExpandImage() {}
 });
 
-main.comply('openPostBox', function(num) {
+function openPostBox(num) {
 	let $a = main.$threads.find('#' + num);
 	postSM.feed(
 		'new',
 		$a[$a.is('section') ? 'children' : 'siblings']('aside.posting')
 	);
-});
+}
+main.comply('openPostBox', openPostBox);
 
 window.addEventListener('message', function(event) {
 	const msg = event.data;
 	if (msg !== 'OK' && postForm)
 		postForm.uploadError(msg);
 }, false);
+
+main.$threads.on('click', 'a.quote', function(e) {
+	e.preventDefault();
+
+	// TODO: Set highlighted post
+
+	/*
+	 Make sure the selection both starts and ends in the quoted post's
+	 blockquote
+	 */
+	let $post = $(e.target).closest('article, section'),
+		gsel = getSelection();
+	const num = $post.attr('id');
+
+	function isInside(p) {
+		var $el = $(gsel[p] && gsel[p].parentElement);
+		return $el.closest('blockquote').length
+			&& $el.closest('article, section').is($post);
+	}
+
+	let sel;
+	if (isInside('baseNode') && isInside('focusNode'))
+		sel = gsel.toString();
+	main.follow(function() {
+		openPostBox(num);
+		postForm.addReference(num, sel);
+	});
+});
