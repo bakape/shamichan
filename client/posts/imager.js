@@ -51,12 +51,7 @@ let Hidamari = exports.Hidamari = {
 			this.renderImage(!this.model.get('thumbnailRevealed'))
 		);
 	},
-	imageClicked(e){
-		if (options.get('inlinefit') == 'none' || e.which !== 1)
-			return;
-		// Remove image hover preview, if any
-		options.trigger('imageClicked');
-		e.preventDefault();
+	imageClicked() {
 		main.follow(() =>
 			this.toggleImageExpansion(!this.model.get('imageExpanded'))
 		);
@@ -221,3 +216,20 @@ function loadImages() {
 	})
 }
 main.comply('imager:lazyLoad', loadImages);
+
+// Proxy image clicks to views. More performant than dedicated listeners for
+// each view.
+main.$threads.on('click', 'img, video', function(e) {
+	if (options.get('inlinefit') == 'none' || e.which !== 1)
+		return;
+	const id = $(e.target).closest('article, section').attr('id');
+	if (!id)
+		return;
+	let model = state.posts.get(id);
+	if (!model)
+		return;
+	e.preventDefault();
+	// Remove image hover preview, if any
+	main.command('imager:clicked');
+	model.dispatch('imageClicked');
+});

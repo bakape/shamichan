@@ -10,7 +10,6 @@ let main = require('../main'),
 module.exports = {
 	events: {
 		'click >figure>figcaption>.imageToggle': 'toggleThumbnailVisibility',
-		'click >figure>a': 'imageClicked',
 		'click >header>nav>a.quote': 'quotePost',
 		'click >header>.control': 'renderMenu'
 	},
