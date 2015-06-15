@@ -21,6 +21,7 @@ const lang = {
 	reply: 'Postar',
 	newThread: 'Novo tópico',
 	locked_to_bottom: 'Travado ao rodapé',
+	you: '(You)',
 
 	// Time-related
 	week: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],

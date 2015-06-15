@@ -84,7 +84,7 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 	tamashii(num) {
 		let frag;
 		if (this.links && num in this.links) {
-			const desc = num in state.mine.readAll() && '(You)';
+			const desc = num in state.mine.readAll() && this.lang.you;
 			frag = this.postRef(num, this.links[num], desc);
 		}
 		else
