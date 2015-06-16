@@ -28,6 +28,7 @@ let _ = require('underscore'),
     hooks = require('../util/hooks'),
     imager = require('../imager'),
     Muggle = require('../util/etc').Muggle,
+	net = require('net'),
     okyaku = require('./okyaku'),
     persona = require('./persona'),
     Render = require('./render'),
@@ -610,7 +611,10 @@ if (config.DEBUG) {
 function start_server() {
 	var is_unix_socket = (typeof config.LISTEN_PORT == 'string');
 	if (is_unix_socket) {
-		try { fs.unlinkSync(config.LISTEN_PORT); } catch (e) {}
+		try {
+			fs.unlinkSync(config.LISTEN_PORT);
+		}
+		catch (e) {}
 	}
 	// Start web server
 	require('./web');
@@ -623,12 +627,12 @@ function start_server() {
 	process.on('SIGHUP', hot_reloader);
 	db.on_pub('reloadHot', hot_reloader);
 
-	process.nextTick(pid_setup);
+	process.nextTick(processFileSetup);
 
 	winston.info('Listening on '
-			+ (config.LISTEN_HOST || '')
-			+ (is_unix_socket ? '' : ':')
-			+ (config.LISTEN_PORT + '.'));
+		+ (config.LISTEN_HOST || '')
+		+ (is_unix_socket ? '' : ':')
+		+ (config.LISTEN_PORT + '.'));
 }
 
 function hot_reloader() {
@@ -645,21 +649,39 @@ function hot_reloader() {
 	});
 }
 
-function pid_setup() {
-	var pidFile = config.PID_FILE;
+function processFileSetup() {
+	const pidFile = config.PID_FILE;
 	fs.writeFile(pidFile, process.pid+'\n', function (err) {
 		if (err)
 			return winston.warn("Couldn't write pid: " + err);
-		process.once('SIGINT', delete_pid);
-		process.once('SIGTERM', delete_pid);
+		process.once('SIGINT', deleteFiles);
+		process.once('SIGTERM', deleteFiles);
 		winston.info('PID ' + process.pid + ' written in ' + pidFile);
 	});
 
-	function delete_pid() {
+	// Accept messages through unix socket and push to all clients
+	const socketPath = './server/.socket';
+	// Remove old socket, if any
+	try {
+		fs.unlinkSync(socketPath);
+	}
+	catch (e) {}
+	let socket = net.createServer(function(client) {
+		client.on('data', function(data) {
+			try {
+				okyaku.push(JSON.parse(data));
+			}
+			catch (e) {}
+		});
+	});
+	socket.listen(socketPath);
+
+	function deleteFiles() {
 		try {
 			fs.unlinkSync(pidFile);
+			fs.unlinkSync(socketPath)
 		}
-		catch (e) { }
+		catch (e) {}
 		process.exit(1);
 	}
 }

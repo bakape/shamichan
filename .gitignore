@@ -6,6 +6,7 @@
 .lock*
 .DS_Store
 .project
+.socket
 .vagrant
 config/*.js
 graveyard

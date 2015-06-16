@@ -44,8 +44,10 @@ var fullRestart = _.debounce(function() {
 	buildAll(start_server);
 }, 5000);
 
-const serverExclude = new RegExp(String.raw`\.pid$|hot.js$|admin\/client.js$|`
-	+ config.MEDIA_DIRS.tmp.replace('/', '\\/'));
+const serverExclude = new RegExp(
+	String.raw`\.pid$|\.socket|hot.js$|admin\/client.js$|`
+		+ config.MEDIA_DIRS.tmp.replace('/', '\\/')
+);
 watch(deps.server, function(file) {
 	/*
 	 PID file is generated each start and `hot.js` should only triigger a
