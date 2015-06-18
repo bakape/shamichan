@@ -42,7 +42,7 @@ class Memory {
 	}
 	writeAll(object) {
 		if (_.isEmpty(object))
-			return this.purge_all();
+			return this.purgeAll();
 		localStorage.setItem(this.key, JSON.stringify(object));
 		this.bakeCookie(object)
 	}

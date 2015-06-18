@@ -548,7 +548,7 @@ Y.insert_post = function (msg, body, extra, callback) {
 
 	if (msg.links) {
 		m.hmset(key + ':links', msg.links);
-		addBacklinks(m, num, op, msg.links);
+		this.addBacklinks(m, num, op, msg.links);
 	}
 
 	let etc = {
@@ -628,14 +628,17 @@ Y.insert_post = function (msg, body, extra, callback) {
 	);
 };
 
-function addBacklinks(m, num, op, links) {
-	for (let key in links) {
+Y.addBacklinks = function(m, num, op, links) {
+	for (let targetNum in links) {
 		// Check if post exists through cache
-		if (!(key in OPs))
+		if (!(targetNum in OPs))
 			continue;
-		m.hset(`post:${key}:backlinks`, num, op);
+		const key = (targetNum in TAGS ? 'thread' : 'post')
+			+ `:${targetNum}:backlinks`;
+		m.hset(key, num, op);
+		this._log(m, links[targetNum], common.BACKLINK, [targetNum, num, op]);
 	}
-}
+};
 
 Y.remove_post = function (from_thread, num, callback) {
 	num = parseInt(num);
@@ -1184,7 +1187,7 @@ Y.append_post = function (post, tail, old_state, extra, cb) {
 		var msg = [num, tail];
 		var links = extra.links || {};
 		if (extra.links)
-			addBacklinks(m, num, op, links);
+			self.addBacklinks(m, num, op, links);
 
 		var a = old_state[0], b = old_state[1];
 		// message tail is [... a, b, links, attachment]
@@ -1462,7 +1465,7 @@ class Reader extends events.EventEmitter {
 			async.waterfall(
 				[
 					function (next) {
-						self.with_body(r, key, pre_post, next);
+						self.with_body(key, pre_post, next);
 					},
 					function (fullPost, next) {
 						opPost = fullPost;
@@ -1476,6 +1479,7 @@ class Reader extends events.EventEmitter {
 						// of posts is quite useful.
 						m.llen(postsKey);
 						m.hgetall(key + ':links');
+						m.hgetall(key + ':backlinks');
 						if (abbrev)
 							m.llen(postsKey);
 						if (opts.showDead) {
@@ -1496,6 +1500,9 @@ class Reader extends events.EventEmitter {
 						const links = rs.shift();
 						if (links)
 							opPost.links = links;
+						const backlinks = rs.shift();
+						if (backlinks)
+							opPost.backlinks = backlinks;
 						if (abbrev)
 							total += parseInt(rs.shift(), 10);
 						if (opts.showDead) {
@@ -1581,13 +1588,17 @@ class Reader extends events.EventEmitter {
 				let m = r.multi();
 				m.hgetall(key);
 				m.hgetall(key + ':links');
+				m.hgetall(key + ':backlinks');
 				m.exec(next);
 			},
 			function (data, next) {
 				let pre_post = data[0];
-				const links = data[1];
+				const links = data[1],
+					backlinks = data[2];
 				if (links)
 					pre_post.links = links;
+				if (backlinks)
+					pre_post.backlinks = backlinks;
 				let exists = !(_.isEmpty(pre_post));
 				if (exists && pre_post.hide && !opts.showDead)
 					exists = false;
@@ -1605,7 +1616,7 @@ class Reader extends events.EventEmitter {
 					 */
 					//var tags = parse_tags(pre_post.tags);
 				}
-				self.with_body(r, key, pre_post, next);
+				self.with_body(key, pre_post, next);
 			},
 			function (post, next) {
 				if (post)
@@ -1616,10 +1627,11 @@ class Reader extends events.EventEmitter {
 			}
 		],	cb);
 	}
-	with_body(r, key, post, callback) {
+	with_body(key, post, callback) {
 		if (post.body !== undefined)
 			return callback(null, post);
 
+		let r = this.r;
 		r.get(key + ':body', function(err, body) {
 			if (err)
 				return callback(err);
@@ -1652,7 +1664,7 @@ class Reader extends events.EventEmitter {
 }
 exports.Reader = Reader;
 
-// Retrive post info from cache
+// Retrieve post info from cache
 function postInfo(num) {
 	const isOP = num in TAGS;
 	return {

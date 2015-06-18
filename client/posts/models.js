@@ -8,15 +8,7 @@ let main = require('../main'),
 exports.Post = Backbone.Model.extend({
 	idAttribute: 'num',
 	initialize() {
-		this.initCommon();
-	},
-	// Initialisation logic common to both replies and threads
-	initCommon() {
 		state.posts.add(this);
-		const links = this.get('links');
-		if (links)
-			this.forwardLinks(null, links);
-		this.listenTo(this, 'change:links', this.forwardLinks);
 	},
 	// Proxy commands to the view(s). Using a central channel helps us reduce
 	// listener count overhead.
@@ -46,33 +38,11 @@ exports.Post = Backbone.Model.extend({
 		this.unset('image');
 		this.dispatch('renderImage', null);
 	},
-	addLinks(links){
-		if(!links)
-			return;
-		var old = this.get('links');
-		if(!old)
-			return this.set({links: links});
-		_.extend(old,links);
-		this.set({links:old});
-		// If we get here we changed something for sure, but as we are using the
-		// same ref backbone will ignore it so we have to force the event to
-		// trigger.
-		this.trigger('change:links', this, old);
-	},
-	// Pass this post's links to the central model
-	forwardLinks(model, links) {
-		var old, newLinks;
-		const num = this.get('num'),
-			op = this.get('op') || num;
-		const mine = state.mine.readAll();
-		for (let key in links) {
-			if (mine[key])
-				main.command('repliedToMe', this);
-			old = state.linkerCore.get(key);
-			newLinks = old ? _.clone(old) : {};
-			newLinks[num] = op;
-			state.linkerCore.set(key, newLinks);
-		}
+	addBacklink(num, op){
+		let backlinks = this.get('backlinks') || {};
+		backlinks[num] = op;
+		this.set({backlinks})
+			.dispatch('renderBacklinks', backlinks);
 	}
 });
 
@@ -86,7 +56,7 @@ exports.Thread = exports.Post.extend({
 		// Omitted images can only be calculated, if there are omitted posts
 		if (this.get('omit'))
 			this.getImageOmit();
-		this.initCommon();
+		state.posts.add(this);
 	},
 	remove() {
 		this.stopListening();

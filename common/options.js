@@ -109,16 +109,6 @@ var opts = [
 			main.oneeSama.spoilToggle = spoilertoggle;
 		}
 	},
-	/* BACKLINKS */
-	{
-		id: 'backlinks',
-		type: 'checkbox',
-		tab: 0,
-		default: true,
-		// TODO: Implement backlinks in ./posts/index.js
-		exec: function() {
-		}
-	},
 	/* LINKIFY TEXT URLS */
 	{
 		id: 'linkify',

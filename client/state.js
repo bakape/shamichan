@@ -67,7 +67,3 @@ main.on('state:clear', function() {
 	exports.syncs = {};
 	main.command('massExpander:unset');
 });
-
-// Contains inter-post linking relations
-exports.linkerCore = new Backbone.Model();
-
