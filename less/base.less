@@ -159,11 +159,12 @@ h3 {
 	pointer-events: none;
 	display: flex;
 	z-index: 300;
-	& > img, & > video {
+	& > video, & > img {
 		max-height: 100%;
 		max-width: 100%;
 		margin: auto auto;
 		display: block;
+		object-fit: contain;
 	}
 }
 #loadingImage {
