@@ -90,7 +90,7 @@ exports.Thread = exports.Post.extend({
 	},
 	remove() {
 		this.stopListening();
-		this.trigger('remove');
+		this.dispatch('remove');
 		state.posts.remove(this);
 
 		// Propagate model removal to all replies
