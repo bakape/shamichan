@@ -207,7 +207,7 @@ function loadImages() {
 		return;
 	// Reversed shallow copy, so the images on top load first
 	let models = state.posts.models.slice().reverse();
-	etc.deferLoop(models, 10, function(model) {
+	etc.deferLoop(models, 100, function(model) {
 		const image = model.get('image');
 		if (!image)
 			return;
