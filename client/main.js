@@ -60,6 +60,8 @@ _.extend(main, {
 	lang: require('lang')
 });
 
+// Always log warnings
+radio.DEBUG = true;
 // You can invoke the client-side debug mode with the `debug=true` query string
 if (/[&\?]debug=true/.test(location.href))
 	main.config.DEBUG = true;
@@ -67,7 +69,6 @@ if (main.config.DEBUG) {
 	// Export Backbone instance for easier debugging
 	window.Backbone = Backbone;
 	// Log all channel traffic
-	radio.DEBUG = true;
 	radio.tuneIn('main');
 }
 
