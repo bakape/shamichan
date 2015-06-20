@@ -38,7 +38,7 @@ exports.Post = Backbone.Model.extend({
 		this.unset('image');
 		this.dispatch('renderImage', null);
 	},
-	addBacklink(num, op){
+	addBacklink(num, op) {
 		let backlinks = this.get('backlinks') || {};
 		backlinks[num] = op;
 		this.set({backlinks})

@@ -205,12 +205,15 @@ var ComposerView = Backbone.View.extend({
 			state2: {spoiler: 0},
 			$buffer: this.$buffer,
 			eLinkify: main.oneeSama.eLinkify,
+			lang: main.lang,
 			tamashii(num) {
 				var $sec = $('#' + num);
 				if (!$sec.is('section'))
 					$sec = $sec.closest('section');
-				if ($sec.is('section'))
-					this.callback(this.postRef(num, extractNum($sec)));
+				if ($sec.is('section')) {
+					const desc = num in state.mine.readAll() && this.lang.you;
+					this.callback(this.postRef(num, extractNum($sec), desc));
+				}
 				else {
 					this.callback(
 						common.safe(`<a class="nope">&gt;&gt;${num}</a>`)
