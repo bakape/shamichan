@@ -145,7 +145,7 @@ class OneeSama {
 		tale.body = [
 			safe('<blockquote>'),
 			body,
-			safe(`</blockquote><small>${this.backlinks(data.backlinks)}</small>`)
+			safe('</blockquote>')
 		];
 		let image = data.image;
 		if (image && !data.hideimg) {
@@ -167,6 +167,7 @@ class OneeSama {
 				${this.time(data.time)}~
 				${this.postNavigation(data)}
 				${!this.full && !data.op && this.expansionLinks(data.num)}
+				<span class="backlinks">${this.backlinks(data.backlinks)}</span>
 			</header>`;
 
 		// TODO: Revisit, when we get to moderation.
@@ -214,7 +215,7 @@ class OneeSama {
 				html += ' ';
 		}
 		if (trip)
-			html += `<code>'${escape(trip)}</code>`;
+			html += `<code>${escape(trip)}</code>`;
 		if (auth) {
 			const hot = imports.hotConfig;
 			html += ` ## ${auth === 'Admin' ? hot.ADMIN_ALIAS : hot.MOD_ALIAS}`;

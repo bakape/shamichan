@@ -45,19 +45,9 @@ article {
 		background-size: 35px 70px;
 		pointer-events: none;
 	}
-	small {
-		padding-top: 0.5em;
-	}
 }
-small {
-	clear: left;
-	display: block;
-	&:empty {
-		display: none;
-	}
-	section > & {
-		padding-bottom: 0.5em;
-	}
+small:empty {
+	display: none;
 }
 a.disabled {
   pointer-events: none;
@@ -189,8 +179,8 @@ header {
 	.preview & {
 		background-image: none;
 	}
-	.expansionLinks {
-		margin-left: 1em;
+	span {
+		margin-left: 0.5em;
 	}
 }
 hr {
