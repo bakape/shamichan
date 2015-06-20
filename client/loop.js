@@ -7,8 +7,6 @@
 let main = require('./main'),
 	{etc, options, state} = main;
 
-let models = state.posts.models;
-
 options.on({
 	'change:thumbs': reRenderImages,
 	'change:spoilers': toggleSpoilers,
@@ -17,8 +15,7 @@ options.on({
 });
 
 function reRenderImages() {
-	// Shallow copy array to remove refference
-	etc.deferLoop(models.slice(), 1, function(model) {
+	loop(function(model) {
 		let image = model.get('image');
 		if (image)
 			model.dispatch('renderImage', image)
@@ -26,8 +23,13 @@ function reRenderImages() {
 }
 main.comply('loop:images', () => reRenderImages());
 
+function loop(func) {
+	// Shallow copy array to remove refference
+	etc.deferLoop(state.posts.models.slice(), 1, func);
+}
+
 function toggleSpoilers() {
-	etc.deferLoop(models.slice(), 1, function(model) {
+	loop(function(model) {
 		let image = model.get('image');
 		if (image && image.spoiler)
 			model.dispatch('renderImage', image);
@@ -36,7 +38,7 @@ function toggleSpoilers() {
 
 // Toggle animated GIF thumbnails
 function toggleAutoGIF() {
-	etc.deferLoop(models.slice(), 1, function(model) {
+	loop(function(model) {
 		let image = model.get('image');
 		if (image && image.ext === '.gif')
 			model.dispatch('renderImage', image);
@@ -45,7 +47,7 @@ function toggleAutoGIF() {
 
 function toggleAnonymisation(source, toggle) {
 	const command = toggle ? 'anonymise' : 'renderName';
-	etc.deferLoop(models.slice(), 1, function(model) {
+	loop(function(model) {
 		const {name, trip} = model.attributes;
 		if (name || trip)
 			model.dispatch(command);
