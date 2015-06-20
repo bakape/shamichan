@@ -1,6 +1,6 @@
 'use strict';
 
-var _ = require('underscore'),
+let _ = require('underscore'),
     async = require('async'),
     cache = require('./server/state').dbCache,
     caps = require('./server/caps'),
@@ -17,175 +17,160 @@ var _ = require('underscore'),
     util = require('util'),
     winston = require('winston');
 
-var OPs = exports.OPs = cache.OPs;
-var TAGS = exports.TAGS = cache.opTags;
-var SUBS = exports.SUBS = cache.threadSubs;
+let OPs = exports.OPs = cache.OPs,
+	TAGS = exports.TAGS = cache.opTags,
+	SUBS = exports.SUBS = cache.threadSubs;
 
 function redis_client() {
 	return require('redis').createClient(config.REDIS_PORT || undefined);
 }
 exports.redis_client = redis_client;
-
 global.redis = redis_client();
 
 /* REAL-TIME UPDATES */
 
-function Subscription(targetInfo) {
-	events.EventEmitter.call(this);
-	this.setMaxListeners(0);
+class Subscription extends events.EventEmitter {
+	constructor(targetInfo) {
+		super();
+		this.setMaxListeners(0);
 
-	this.fullKey = targetInfo.key;
-	this.target = targetInfo.target;
-	this.channel = targetInfo.channel;
-	SUBS[this.fullKey] = this;
+		this.fullKey = targetInfo.key;
+		this.target = targetInfo.target;
+		this.channel = targetInfo.channel;
+		SUBS[this.fullKey] = this;
 
-	this.pending_subscriptions = [];
-	this.subscription_callbacks = [];
+		this.pending_subscriptions = [];
+		this.subscription_callbacks = [];
 
-	this.k = redis_client();
-	this.k.on('error', this.on_sub_error.bind(this));
-	this.k.on('subscribe', this.on_one_sub.bind(this));
-	this.k.subscribe(this.target);
-	this.subscriptions = [this.target];
-	this.pending_subscriptions.push(this.target);
-	if (this.target != this.fullKey) {
-		this.k.subscribe(this.fullKey);
-		this.pending_subscriptions.push(this.fullKey);
+		this.k = redis_client();
+		this.k.on('error', this.on_sub_error.bind(this));
+		this.k.on('subscribe', this.on_one_sub.bind(this));
+		this.k.subscribe(this.target);
+		this.subscriptions = [this.target];
+		this.pending_subscriptions.push(this.target);
+		if (this.target != this.fullKey) {
+			this.k.subscribe(this.fullKey);
+			this.pending_subscriptions.push(this.fullKey);
+		}
 	}
-}
-
-util.inherits(Subscription, events.EventEmitter);
-var S = Subscription.prototype;
-
-Subscription.full_key = function (target, ident) {
-	var channel;
-	if (caps.can_moderate(ident))
-		channel = 'auth';
-	var key = channel ? channel + ':' + target : target;
-	return {key: key, channel: channel, target: target};
-};
-
-Subscription.get = function (target, ident) {
-	var full = Subscription.full_key(target, ident);
-	var sub = SUBS[full.key];
-	if (!sub)
-		sub = new Subscription(full);
-	return sub;
-};
-
-S.when_ready = function (cb) {
-	if (this.subscription_callbacks)
-		this.subscription_callbacks.push(cb);
-	else
-		cb(null);
-};
-
-S.on_one_sub = function (name) {
-	var i = this.pending_subscriptions.indexOf(name);
-	if (i < 0)
-		throw "Obtained unasked-for subscription " + name + "?!";
-	this.pending_subscriptions.splice(i, 1);
-	if (this.pending_subscriptions.length == 0)
-		this.on_all_subs();
-};
-
-S.on_all_subs = function () {
-	let k = this.k;
-	k.removeAllListeners('subscribe');
-	k.on('message', this.on_message.bind(this));
-	k.removeAllListeners('error');
-	k.on('error', this.sink_sub.bind(this));
-	for (let i = 0, subCs = this.subscription_callbacks, l = subCs.length;
-		  i < l; i++) {
-		subCs[i](null);
+	on_one_sub(name) {
+		const i = this.pending_subscriptions.indexOf(name);
+		if (i < 0)
+			throw "Obtained unasked-for subscription " + name + "?!";
+		this.pending_subscriptions.splice(i, 1);
+		if (this.pending_subscriptions.length == 0)
+			this.on_all_subs();
 	}
-	delete this.pending_subscriptions;
-	delete this.subscription_callbacks;
-};
-
-function parse_pub_message(msg) {
-	var m = msg.match(/^(\d+)\|/);
-	var prefixLen = m[0].length;
-	var bodyLen = parseInt(m[1], 10);
-	var info = {body: msg.substr(prefixLen, bodyLen)};
-	var suffixPos = prefixLen + bodyLen;
-	if (msg.length > suffixPos)
-		info.suffixPos = suffixPos;
-	return info;
-}
-
-S.on_message = function (chan, msg) {
-	/* Do we need to clarify whether this came from target or fullKey? */
-	var parsed = parse_pub_message(msg), extra;
-	if (this.channel && parsed.suffixPos) {
-		var suffix = JSON.parse(msg.slice(parsed.suffixPos));
-		extra = suffix[this.channel];
+	on_all_subs() {
+		let k = this.k;
+		k.removeAllListeners('subscribe');
+		k.on('message', this.on_message.bind(this));
+		k.removeAllListeners('error');
+		k.on('error', this.sink_sub.bind(this));
+		this.subscription_callbacks.forEach(function(sub) {
+			sub(null);
+		});
+		delete this.pending_subscriptions;
+		delete this.subscription_callbacks;
 	}
-	msg = parsed.body;
-	var m = msg.match(/^(\d+),(\d+)/);
-	var op = parseInt(m[1], 10);
-	var kind = parseInt(m[2], 10);
-
-	if (extra) {
-		var modified = inject_extra(kind, msg, extra);
-		// currently this won't modify op or kind,
-		// but will have to watch out for that if that changes
-		if (modified)
-			msg = modified;
+	sink_sub(err) {
+		if (config.DEBUG)
+			throw err;
+		this.emit('error', this.target, err);
+		this.commit_sudoku();
 	}
-	this.emit('update', op, kind, '[[' + msg + ']]');
-};
+	commit_sudoku() {
+		let k = this.k;
+		k.removeAllListeners('error');
+		k.removeAllListeners('message');
+		k.removeAllListeners('subscribe');
+		k.quit();
+		if (SUBS[this.fullKey] === this)
+			delete SUBS[this.fullKey];
+		this.removeAllListeners('update');
+		this.removeAllListeners('error');
+	}
+	on_sub_error(err) {
+		winston.error("Subscription error:", (err.stack || err));
+		this.commit_sudoku();
+		this.subscription_callbacks.forEach(function(sub) {
+			sub(err);
+		});
+		this.subscription_callbacks = null;
+	}
+	on_message(chan, msg) {
+		/* Do we need to clarify whether this came from target or fullKey? */
+		const parsed = this.parse_pub_message(msg);
+		let extra;
+		if (this.channel && parsed.suffixPos) {
+			const suffix = JSON.parse(msg.slice(parsed.suffixPos));
+			extra = suffix[this.channel];
+		}
+		msg = parsed.body;
+		const m = msg.match(/^(\d+),(\d+)/),
+			op = parseInt(m[1], 10),
+			kind = parseInt(m[2], 10);
 
-function inject_extra(kind, msg, extra) {
-	// Just one kind of insertion right now
-	if (kind == common.INSERT_POST && extra.ip) {
-		var m = msg.match(/^(\d+,\d+,\d+,)(.+)$/);
-		var post = JSON.parse(m[2]);
+		if (extra) {
+			const modified = this.inject_extra(kind, msg, extra);
+			// currently this won't modify op or kind,
+			// but will have to watch out for that if that changes
+			if (modified)
+				msg = modified;
+		}
+		this.emit('update', op, kind, '[[' + msg + ']]');
+	}
+	parse_pub_message(msg) {
+		const m = msg.match(/^(\d+)\|/),
+			prefixLen = m[0].length,
+			bodyLen = parseInt(m[1], 10),
+			suffixPos = prefixLen + bodyLen;
+		let info = {body: msg.substr(prefixLen, bodyLen)};
+		if (msg.length > suffixPos)
+			info.suffixPos = suffixPos;
+		return info;
+	}
+	inject_extra(kind, msg, extra) {
+		// Just one kind of insertion right now
+		if (kind !== common.INSERT_POST || extra.ip)
+			return null;
+		const m = msg.match(/^(\d+,\d+,\d+,)(.+)$/);
+		let post = JSON.parse(m[2]);
 		post.ip = extra.ip;
 		return m[1] + JSON.stringify(post);
 	}
-}
-
-S.on_sub_error = function (err) {
-	winston.error("Subscription error:", (err.stack || err));
-	this.commit_sudoku();
-	for (let i = 0, subCs = this.subscription_callbacks, l = subCs.length;
-		  i < l; i++) {
-		subCs[i](err);
+	has_no_listeners() {
+		/* Possibly idle out after a while */
+		let self = this;
+		if (this.idleOutTimer)
+			clearTimeout(this.idleOutTimer);
+		this.idleOutTimer = setTimeout(function() {
+			self.idleOutTimer = null;
+			if (self.listeners('update').length == 0)
+				self.commit_sudoku();
+		}, 30000);
 	}
-	this.subscription_callbacks = null;
-};
-
-S.sink_sub = function (err) {
-	if (config.DEBUG)
-		throw err;
-	this.emit('error', this.target, err);
-	this.commit_sudoku();
-};
-
-S.commit_sudoku = function () {
-	var k = this.k;
-	k.removeAllListeners('error');
-	k.removeAllListeners('message');
-	k.removeAllListeners('subscribe');
-	k.quit();
-	if (SUBS[this.fullKey] === this)
-		delete SUBS[this.fullKey];
-	this.removeAllListeners('update');
-	this.removeAllListeners('error');
-};
-
-S.has_no_listeners = function () {
-	/* Possibly idle out after a while */
-	var self = this;
-	if (this.idleOutTimer)
-		clearTimeout(this.idleOutTimer);
-	this.idleOutTimer = setTimeout(function () {
-		self.idleOutTimer = null;
-		if (self.listeners('update').length == 0)
-			self.commit_sudoku();
-	}, 30 * 1000);
-};
+	static get(target, ident) {
+		const full = Subscription.full_key(target, ident);
+		let sub = SUBS[full.key];
+		if (!sub)
+			sub = new Subscription(full);
+		return sub;
+	}
+	static full_key(target, ident) {
+		let channel;
+		if (caps.can_moderate(ident))
+			channel = 'auth';
+		const key = channel ? `${channel}:${target}` : target;
+		return {key, channel, target};
+	}
+	when_ready(cb) {
+		if (this.subscription_callbacks)
+			this.subscription_callbacks.push(cb);
+		else
+			cb(null);
+	}
+}
 
 /* OP CACHE */
 
