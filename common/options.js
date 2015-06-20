@@ -94,7 +94,7 @@ var opts = [
 		load: notMobile,
 		tab: 1,
 		exec: function(autogif) {
-			Cookie.set('agif', autogif, {path: '/'});
+			Cookie.set('agif', autogif);
 			main.oneeSama.autoGif = autogif;
 		}
 	},
@@ -105,7 +105,7 @@ var opts = [
 		tab: 1,
 		default: true,
 		exec: function(spoilertoggle) {
-			Cookie.set('spoil', spoilertoggle, {path: '/'});
+			Cookie.set('spoil', spoilertoggle);
 			main.oneeSama.spoilToggle = spoilertoggle;
 		}
 	},
@@ -114,7 +114,7 @@ var opts = [
 		id: 'linkify',
 		tab: 0,
 		exec: function(toggle) {
-			Cookie.set('linkify', toggle, {path: '/'});
+			Cookie.set('linkify', toggle);
 			main.oneeSama.eLinkify = toggle;
 		}
 	},
@@ -281,7 +281,7 @@ opts.push(
 		default: hotConfig.THREAD_LAST_N,
 		exec: function(n) {
 			main.oneeSama.lastN = n;
-			Cookie.set('lastn', n, {path: '/'});
+			Cookie.set('lastn', n);
 		}
 	},
 	/* KEEP THREAD LENGTH WITHIN LASTN */
