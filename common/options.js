@@ -9,12 +9,13 @@ var imports = require('./imports'),
 	index = require('./index'),
 	util = require('./util'),
 	main = imports.main,
-	$, notMobile, state;
+	$, Cookie, notMobile, state;
 if (imports.isNode)
 // TEMP: Will build separate templates and bundles for mobile eventually
 	notMobile = true;
 else {
 	$ = require('jquery');
+	Cookie = require('js-cookie');
 	state = main.state;
 
 	notMobile = !imports.main.isMobile;
@@ -52,7 +53,7 @@ var opts = [
 		execOnStart: false,
 		// Exec is not used on the server
 		exec: function(type) {
-			$.cookie('lang', type);
+			Cookie.set('lang', type);
 			alert('Language settings applied. The page will now reload.');
 			location.reload();
 		}
@@ -72,7 +73,7 @@ var opts = [
 		tab: 1,
 		default: 'small',
 		exec: function(type) {
-			$.cookie('thumb', type);
+			Cookie.set('thumb', type);
 			main.oneeSama.thumbStyle = type;
 		}
 	},
@@ -93,7 +94,7 @@ var opts = [
 		load: notMobile,
 		tab: 1,
 		exec: function(autogif) {
-			$.cookie('agif', autogif, {path: '/'});
+			Cookie.set('agif', autogif);
 			main.oneeSama.autoGif = autogif;
 		}
 	},
@@ -104,18 +105,8 @@ var opts = [
 		tab: 1,
 		default: true,
 		exec: function(spoilertoggle) {
-			$.cookie('spoil', spoilertoggle, {path: '/'});
+			Cookie.set('spoil', spoilertoggle);
 			main.oneeSama.spoilToggle = spoilertoggle;
-		}
-	},
-	/* BACKLINKS */
-	{
-		id: 'backlinks',
-		type: 'checkbox',
-		tab: 0,
-		default: true,
-		// TODO: Implement backlinks in ./posts/index.js
-		exec: function() {
 		}
 	},
 	/* LINKIFY TEXT URLS */
@@ -123,7 +114,7 @@ var opts = [
 		id: 'linkify',
 		tab: 0,
 		exec: function(toggle) {
-			$.cookie('linkify', toggle, {path: '/'});
+			Cookie.set('linkify', toggle);
 			main.oneeSama.eLinkify = toggle;
 		}
 	},
@@ -293,7 +284,7 @@ opts.push(
 		default: hotConfig.THREAD_LAST_N,
 		exec: function(n) {
 			main.oneeSama.lastN = n;
-			$.cookie('lastn', n, {path: '/'});
+			Cookie.set('lastn', n);
 		}
 	},
 	/* KEEP THREAD LENGTH WITHIN LASTN */

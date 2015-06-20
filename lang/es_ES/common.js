@@ -21,6 +21,7 @@ const lang = {
 	reply: 'Reply',
 	newThread: 'New thread',
 	locked_to_bottom: 'Locked to bottom',
+	you: '(You)',
 
 	// Time-related
 	week: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],

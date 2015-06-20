@@ -26,7 +26,8 @@ class Render {
 		this.opts = opts;
 		// Stores serialized post models for later stringification
 		this.posts = {};
-		this.initOneeSama().getHidden();
+		this.initOneeSama();
+		this.hidden = this.parseIntCookie('hide');
 
 		// Top and bottom borders of the page
 		yaku.once('top', this.onTop.bind(this));
@@ -48,7 +49,8 @@ class Render {
 	// Configure rendering singleton
 	initOneeSama() {
 		const ident = this.req.ident,
-			cookies = this.req.cookies;
+			cookies = this.req.cookies,
+			mine = this.parseIntCookie('mine');
 		let oneeSama = new common.OneeSama({
 			spoilToggle: cookies.spoil === 'true',
 			autoGif: cookies.agif === 'true',
@@ -59,8 +61,10 @@ class Render {
 			// Post link handler
 			tamashii(num) {
 				const op = db.OPs[num];
-				if (op && caps.can_access_thread(ident, op))
-					this.callback(this.postRef(num, op));
+				if (op && caps.can_access_thread(ident, op)) {
+					const desc = mine.has(num) && this.lang.you;
+					this.callback(this.postRef(num, op, desc));
+				}
 				else
 					this.callback('>>' + num);
 			}
@@ -78,19 +82,17 @@ class Render {
 		this.oneeSama = oneeSama;
 		return this;
 	}
-	// Read hidden posts from cookie
-	getHidden() {
-		let hidden = new Set();
-		const hide = this.req.cookies.hide;
-		if (hide && !caps.can_moderate(this.req.ident)) {
-			const toHide = hide.slice(0, 200).split(',');
-			for (let i = 0, l = toHide.length; i < l; i++) {
-				const num = parseInt(toHide[i], 10);
-				if (num)
-					hidden.add(num);
+	// Parse list string from cookie into a set of integers
+	parseIntCookie(name) {
+		let ints = new Set();
+		const cookie = this.req.cookies[name];
+		if (cookie) {
+			let split = cookie.split('/');
+			for (let i = 0, l = split.length; i < l; i++) {
+				ints.add(parseInt(split[i], 10));
 			}
 		}
-		this.hidden = hidden;
+		return ints;
 	}
 	onTop(nav) {
 		let resp = this.resp;

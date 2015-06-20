@@ -9,16 +9,8 @@ let main = require('../main'),
 module.exports = {
 	initCommon() {
 		this.$blockquote = this.$el.children('blockquote');
-		this
-			.listenTo(this.model, 'dispatch', this.redirect)
-			.listenTo(state.linkerCore,
-				'change:' + this.model.get('num'),
-				this.renderBacklinks
-			);
-		this.fun();
-		const links = state.linkerCore.get(this.model.get('num'));
-		if (links)
-			this.renderBacklinks(null, links);
+		this.listenTo(this.model, 'dispatch', this.redirect)
+			.fun();
 		return this;
 	},
 	// Extra initialisation logic for posts renderred client-side
@@ -70,27 +62,9 @@ module.exports = {
 		let el = this.el.getElementsByTagName('time')[0];
 		el.outerHTML = oneeSama.time(this.model.get('time'));
 	},
-	renderBacklinks(model, links) {
-		// No more backlinks, because posts deleted or something
-		if (!links && this.backlinks) {
-			main.follow(() => this.backlinks.innerHTML = '');
-			this.backlinks = null;
-			return;
-		}
-		if (!this.backlinks)
-			this.backlinks = this.el.getElementsByTagName('small')[0];
-		let html = 'Replies:';
-		const thread = state.page.get('thread'),
-			notBoard = thread !== 0;
-		for (var key in links) {
-			// points to a different thread from the current
-			const diff = links[key] !== thread;
-			html += common.parseHTML
-				` <a class="history" href="${diff && links[key]}#${key}">
-					&gt;&gt;${key}${diff && notBoard && ' →'}
-				</a>`;
-		}
-		main.follow(() => this.backlinks.innerHTML = html);
+	renderBacklinks(links) {
+		let el = this.el.getElementsByTagName('small')[0];
+		main.follow(() => el.innerHTML = oneeSama.backlinks(links));
 	},
 	// Admin JS injections
 	fun() {

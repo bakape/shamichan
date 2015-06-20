@@ -545,8 +545,11 @@ Y.insert_post = function (msg, body, extra, callback) {
 	}
 	m.hmset(key, view);
 	m.set(key + ':body', body);
-	if (msg.links)
+
+	if (msg.links) {
 		m.hmset(key + ':links', msg.links);
+		this.addBacklinks(m, num, op, msg.links);
+	}
 
 	let etc = {
 		augments: {},
@@ -623,6 +626,18 @@ Y.insert_post = function (msg, body, extra, callback) {
 			callback(null);
 		}
 	);
+};
+
+Y.addBacklinks = function(m, num, op, links) {
+	for (let targetNum in links) {
+		// Check if post exists through cache
+		if (!(targetNum in OPs))
+			continue;
+		const key = (targetNum in TAGS ? 'thread' : 'post')
+			+ `:${targetNum}:backlinks`;
+		m.hset(key, num, op);
+		this._log(m, links[targetNum], common.BACKLINK, [targetNum, num, op]);
+	}
 };
 
 Y.remove_post = function (from_thread, num, callback) {
@@ -781,7 +796,8 @@ Y.purge_thread = function(op, board, callback) {
 	let r = this.connect();
 	const key = 'thread:' + op;
 	let keysToDel = [],
-		filesToDel = [];
+		filesToDel = [],
+		nums = [];
 	async.waterfall([
 		// Confirm thread can be deleted
 		function(next) {
@@ -805,6 +821,8 @@ Y.purge_thread = function(op, board, callback) {
 		function(posts, next) {
 			let m = r.multi();
 			for (let i = 0, l = posts.length; i < l; i++) {
+				// Queue for removal from post cache
+				nums.push(posts[i]);
 				posts[i] = 'post:' + posts[i];
 			}
 			// Parse OP key like all other hashes. `res` will always be an
@@ -814,8 +832,12 @@ Y.purge_thread = function(op, board, callback) {
 				const key = posts[i];
 				m.hgetall(key);
 				m.exists(key + ':links');
+				m.exists(key + ':backlinks');
+				// It should only still exists because of server shutdown
+				// mid-post, but those do happen
+				m.exists(key + ':body');
 			}
-			// Abit more complicated, because we need to pass two arguments
+			// A bit more complicated, because we need to pass two arguments
 			// to the next function, to map the arrays
 			m.exec(function(err, res) {
 				if (err)
@@ -827,7 +849,7 @@ Y.purge_thread = function(op, board, callback) {
 		function(res, posts, next) {
 			const imageTypes = ['src', 'thumb', 'mid'];
 			let path = imager.media_path;
-			for (let i = 0, l = res.length; i < l; i += 2) {
+			for (let i = 0, l = res.length; i < l; i += 5) {
 				const hash = res[i],
 					key = posts.shift();
 				if (!hash)
@@ -837,6 +859,10 @@ Y.purge_thread = function(op, board, callback) {
 				// `key:links` exists
 				if (res[i + 1])
 					keysToDel.push(key + ':links');
+				if (res[i + 2])
+					keysToDel.push(key + ':backlinks');
+				if (res[i + 3])
+					keysToDel.push(key + ':body');
 				// Add images to delete list
 				for (let o = 0, len = imageTypes.length; o < len; o++) {
 					const type = imageTypes[o],
@@ -850,7 +876,7 @@ Y.purge_thread = function(op, board, callback) {
 		},
 		// Check for OP-only keys
 		function(next) {
-			const suffixes = ['dels', 'history', 'posts', 'body'];
+			const suffixes = ['dels', 'history', 'posts'];
 			let OPKeys = [],
 				m = r.multi();
 			for (let i = 0, l = suffixes.length; i < l; i++) {
@@ -901,7 +927,10 @@ Y.purge_thread = function(op, board, callback) {
 			r.zrem(`tag:${tag_key(board)}:threads`, op, next);
 		},
 		function(res, next) {
-			// Clear thread number from caches
+			// Clear thread and post numbers from caches
+			for (let i = 0, l = nums.length; i < l; i++) {
+				delete OPs[nums];
+			}
 			removeOPTag(op);
 			next();
 		}
@@ -1153,8 +1182,12 @@ Y.append_post = function (post, tail, old_state, extra, cb) {
 			return cb(err);
 		for (let h in attached.writeKeys)
 			m.hset(key, h, attached.writeKeys[h]);
-		var msg = [post.num, tail];
+		const num = post.num,
+			op = post.op || num;
+		var msg = [num, tail];
 		var links = extra.links || {};
+		if (extra.links)
+			self.addBacklinks(m, num, op, links);
 
 		var a = old_state[0], b = old_state[1];
 		// message tail is [... a, b, links, attachment]
@@ -1169,7 +1202,7 @@ Y.append_post = function (post, tail, old_state, extra, cb) {
 		else if (a)
 			msg.push(a);
 
-		self._log(m, post.op || post.num, common.UPDATE_POST, msg);
+		self._log(m, op, common.UPDATE_POST, msg);
 		m.exec(cb);
 	});
 };
@@ -1432,7 +1465,7 @@ class Reader extends events.EventEmitter {
 			async.waterfall(
 				[
 					function (next) {
-						self.with_body(r, key, pre_post, next);
+						self.with_body(key, pre_post, next);
 					},
 					function (fullPost, next) {
 						opPost = fullPost;
@@ -1446,6 +1479,7 @@ class Reader extends events.EventEmitter {
 						// of posts is quite useful.
 						m.llen(postsKey);
 						m.hgetall(key + ':links');
+						m.hgetall(key + ':backlinks');
 						if (abbrev)
 							m.llen(postsKey);
 						if (opts.showDead) {
@@ -1466,6 +1500,9 @@ class Reader extends events.EventEmitter {
 						const links = rs.shift();
 						if (links)
 							opPost.links = links;
+						const backlinks = rs.shift();
+						if (backlinks)
+							opPost.backlinks = backlinks;
 						if (abbrev)
 							total += parseInt(rs.shift(), 10);
 						if (opts.showDead) {
@@ -1551,13 +1588,17 @@ class Reader extends events.EventEmitter {
 				let m = r.multi();
 				m.hgetall(key);
 				m.hgetall(key + ':links');
+				m.hgetall(key + ':backlinks');
 				m.exec(next);
 			},
 			function (data, next) {
 				let pre_post = data[0];
-				const links = data[1];
+				const links = data[1],
+					backlinks = data[2];
 				if (links)
 					pre_post.links = links;
+				if (backlinks)
+					pre_post.backlinks = backlinks;
 				let exists = !(_.isEmpty(pre_post));
 				if (exists && pre_post.hide && !opts.showDead)
 					exists = false;
@@ -1575,7 +1616,7 @@ class Reader extends events.EventEmitter {
 					 */
 					//var tags = parse_tags(pre_post.tags);
 				}
-				self.with_body(r, key, pre_post, next);
+				self.with_body(key, pre_post, next);
 			},
 			function (post, next) {
 				if (post)
@@ -1586,10 +1627,11 @@ class Reader extends events.EventEmitter {
 			}
 		],	cb);
 	}
-	with_body(r, key, post, callback) {
+	with_body(key, post, callback) {
 		if (post.body !== undefined)
 			return callback(null, post);
 
+		let r = this.r;
 		r.get(key + ':body', function(err, body) {
 			if (err)
 				return callback(err);
@@ -1622,7 +1664,7 @@ class Reader extends events.EventEmitter {
 }
 exports.Reader = Reader;
 
-// Retrive post info from cache
+// Retrieve post info from cache
 function postInfo(num) {
 	const isOP = num in TAGS;
 	return {

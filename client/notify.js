@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{$, Backbone, memory, state, options} = main;
+	{$, Backbone, state, options} = main;
 
 const mediaURL = main.config.MEDIA_URL;
 
@@ -59,7 +59,6 @@ let NotifyModel = Backbone.Model.extend({
 		main.connSM.on('desynced', dropped);
 		main.connSM.on('synced', () => notify.set('alert', false));
 	},
-
 	check(model) {
 		const {hidden, unreadCount, reply, alert} = model.attributes;
 		let icon = mediaURL + 'favicon.ico';
@@ -78,7 +77,6 @@ let NotifyModel = Backbone.Model.extend({
 		}
 		this.render(icon, prefix);
 	},
-
 	render(icon, prefix) {
 		document.title = prefix + this.get('title');
 		this.$favicon.attr('href', icon);
@@ -92,7 +90,7 @@ let notify = new NotifyModel({
 
 // Remember replies that don't need a new desktop notification for 3 days
 // Own post are remember for 2 days, so lets keep 1 day as a buffer
-let replies = new memory('replies', 3);
+let replies = new main.Memory('replies', 3);
 
 main.comply('repliedToMe', function (post) {
 	post = post.attributes;
@@ -100,7 +98,7 @@ main.comply('repliedToMe', function (post) {
 	// Already displayed a notification for the reply. Needs to be read
 	// freshly from local storage each time, not to trigger multiple times,
 	// if the same post is displayed in multiple tabs.
-	if (replies.read_all()[num])
+	if (num in replies.readAll())
 		return;
 	if (options.get('notification') && document.hidden && !main.isMobile) {
 		new Notification('You have been quoted', {
@@ -117,7 +115,7 @@ main.comply('repliedToMe', function (post) {
 
 	notify.set({reply: true});
 	// Record as already notified/read to local storage
-	replies.write(num, replies.now());
+	replies.write(num);
 });
 
 main.comply('time:syncwatch', function(time){

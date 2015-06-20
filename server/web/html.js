@@ -20,7 +20,8 @@ let router = module.exports = express.Router(),
 
 const vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
-	'X-Frame-Options': 'sameorigin'
+	'X-Frame-Options': 'sameorigin',
+	'Cache-Control': `max-age=0, must-revalidate, private`
 };
 const noCacheHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
@@ -251,17 +252,8 @@ function buildEtag(req, res, ctr, extra) {
 	}
 	if (extra)
 		etag += extra;
-	const auth = !!req.ident.auth;
-	if (auth)
+	if (!!req.ident.auth)
 		etag += '-auth';
-
-	// Addtional etag hooks. Mostly from `time.js`.
-	let info = {
-		etag: etag,
-		req: req
-	};
-	hooks.trigger_sync('buildETag', info);
-	etag = info.etag;
 
 	// etags match. No need to rerender.
 	if (req.headers['If-None-Match'] === etag) {
@@ -269,13 +261,10 @@ function buildEtag(req, res, ctr, extra) {
 		return false;
 	}
 
-	res.set(_.extend(_.clone(vanillaHeaders), {
-		ETag: etag,
-		// Don't cache HTML with IPs for public use
-		'Cache-Control': `max-age=0, must-revalidate, ${
-			auth ? 'private' : 'public'
-		}`
-	}));
+	let headers = _.clone(vanillaHeaders);
+	headers.ETag = etag;
+	res.set(headers);
+
 	return true;
 }
 
@@ -287,6 +276,7 @@ function parseCookies(req, ctr) {
 	// Round counter to lowest 10 updates for better caching
 	ctr = Math.floor(ctr / 10) * 10;
 	let etag = `W/${ctr}-${RES['indexHash-' + lang]}-${lang}`;
+
 	// Since we use image lazy loading, only the `hide` thumbnail style
 	// matters, as that has considerebaly different figcaption HTLM. Less
 	// reflows is good.

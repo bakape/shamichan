@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{$, Backbone, memory} = main;
+	{Backbone} = main;
 
 // Read page state by parsing a URL
 function read(url) {
@@ -45,10 +45,7 @@ exports.syncs = {};
 // Posts I made in this tab
 exports.ownPosts = {};
 // remember which posts are mine for two days
-exports.mine = new memory('mine', 2);
-// no cookie though
-exports.mine.bake_cookie = function () { return false; };
-$.cookie('mine', null); // TEMP
+let mine = exports.mine = new main.Memory('mine', 2, true);
 
 // All posts currently displayed
 let posts = exports.posts = new Backbone.Collection();
@@ -70,7 +67,3 @@ main.on('state:clear', function() {
 	exports.syncs = {};
 	main.command('massExpander:unset');
 });
-
-// Contains inter-post linking relations
-exports.linkerCore = new Backbone.Model();
-

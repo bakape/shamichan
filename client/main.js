@@ -12,10 +12,9 @@
 let $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone'),
+	Cookie = require('js-cookie'),
 	radio = require('backbone.radio');
 
-// Register jquery plugins
-require('jquery.cookie');
 // Bind jQuery to backbone
 Backbone.$ = $;
 
@@ -23,7 +22,7 @@ Backbone.$ = $;
 let main = module.exports = radio.channel('main');
 _.extend(main, {
 	// Bind dependancies to main object for pretier destructuring requires
-	$, _, Backbone,
+	$, _, Backbone, Cookie,
 	stackBlur: require('stack-blur'),
 
 	/*
@@ -56,9 +55,18 @@ _.extend(main, {
 	dispatcher: {},
 	// Read-only boards get expanded later
 	readOnly: [],
-	memory: require('./memory'),
 	lang: require('lang')
 });
+
+// Clear cookies, if versions mismatch. Get regenerated each client start
+// anyway.
+// XXX: Does not clear cookies for all paths
+if (localStorage.cookieVersion !== 1) {
+	for (let cookie in Cookie.get()) {
+		Cookie.remove(cookie);
+	}
+	localStorage.cookieVersion = 1;
+}
 
 // Always log warnings
 radio.DEBUG = true;
@@ -76,6 +84,7 @@ if (main.config.DEBUG) {
  Core modules. The other will be more or less decoupled, but these are the
  monolithic foundation.
  */
+main.Memory = require('./memory');
 let state = main.state = require('./state');
 let	common = main.common = require('../common');
 // Initialise main rendering object
@@ -86,8 +95,7 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 	tamashii(num) {
 		let frag;
 		if (this.links && num in this.links) {
-			let model = state.posts.get(num);
-			const desc = model && model.get('mine') && '(You)';
+			const desc = num in state.mine.readAll() && this.lang.you;
 			frag = this.postRef(num, this.links[num], desc);
 		}
 		else

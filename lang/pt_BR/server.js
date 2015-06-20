@@ -116,10 +116,6 @@ var lang = {
 			'Imagens em spoiler',
 			"Não colocar spoilers em imagens"
 		],
-		backlinks: [
-			'Backlinks',
-			'Links para as respostas do post atual'
-		],
 		linkify: [
 			'Links clicáveis',
 			'Converte todas as URLs em texto para links clicáveis no post. ATENÇÃO: Potencial'

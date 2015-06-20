@@ -119,10 +119,6 @@ var lang = {
 			'Image Spoilers',
 			"Don't spoiler images"
 		],
-		backlinks: [
-			'Backlinks',
-			'Links to replies of current post'
-		],
 		linkify: [
 			'Linkify text URLs',
 			'Convert in-post text URLs to clickable links. WARNING: Potential'

@@ -85,7 +85,6 @@ dispatcher[common.UPDATE_POST] = function(msg) {
 		model = state.posts.get(num);
 
 	if (model) {
-		model.addLinks(links);
 		model.set({
 			body: model.get('body') + msg[1],
 			state: msgState
@@ -177,6 +176,12 @@ dispatcher[common.SPOILER_IMAGES] = function(msg) {
 			continue;
 		model.setSpoiler(spoiler[1]);
 	}
+};
+
+dispatcher[common.BACKLINK] = function(msg) {
+	let model = state.posts.get(msg[0]);
+	if (model)
+		model.addBacklink(msg[1], msg[2]);
 };
 
 dispatcher[common.SYNCHRONIZE] = main.connSM.feeder('sync');

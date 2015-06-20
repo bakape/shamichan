@@ -145,7 +145,7 @@ class OneeSama {
 		tale.body = [
 			safe('<blockquote>'),
 			body,
-			safe('</blockquote><small></small>')
+			safe(`</blockquote><small>${this.backlinks(data.backlinks)}</small>`)
 		];
 		let image = data.image;
 		if (image && !data.hideimg) {
@@ -471,6 +471,17 @@ class OneeSama {
 				this.callback(bits[i]);
 		}
 	}
+	backlinks(links) {
+		if (!links)
+			return '';
+		let html = '';
+		for (let num in links) {
+			if (html)
+				html += ' ';
+			html += this.postRef(num, links[num]).safe;
+		}
+		return html;
+	}
 	// Central image rendering method
 	image(data, reveal) {
 		const showThumb = this.thumbStyle !== 'hide' || reveal;
@@ -625,8 +636,8 @@ class OneeSama {
 		let ref = '&gt;&gt;' + num;
 		if (desc_html)
 			ref += ' ' + desc_html;
-		else if (this.op && this.op != op)
-			ref += ' \u2192';
+		if (this.op && this.op != op)
+			ref += ' \u27a1';
 		else if (num == op && this.op == op)
 			ref += ' (OP)';
 		return safe(

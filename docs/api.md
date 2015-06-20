@@ -30,7 +30,8 @@ The read-only JSON API currently supports 4 modes of query.
 | ip | poster IP; need to have a moderator session cookie | yes | no | `"::1"`|
 | body | post body | no | no | `">implying this is an example"` |
 | image | [image object](#image-object) | yes  | no | [image object](#image-object) |
-| links | object of `${post number}: ${thread number}`<br>key-value pairs the current post is linking to | yes | no | {"18":"17","27":"26"} |
+| links | object of `${post number}: ${thread number}`<br>key-value pairs the current post is linking to | yes | no | `{"18":"17","27":"26"}` |
+| backlinks | object of `${post number}: ${thread number}`<br>key-value pairs the current post is linked by | yes | no | `{"4":"1","5":"1"}` |
 
 ###Image object
 | Key | Value | Optional | Example |

@@ -16,7 +16,7 @@ class Extract {
 		if (state.page.get('catalog'))
 			return;
 
-		this.mine = state.mine.read_all();
+		this.mine = state.mine.readAll();
 		this.posts = json.posts;
 		this.extractThreads(el);
 		this.extractReplies(el);
