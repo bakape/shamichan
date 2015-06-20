@@ -12,6 +12,7 @@
 let $ = require('jquery'),
 	_ = require('underscore'),
 	Backbone = require('backbone'),
+	Cookie = require('js-cookie'),
 	radio = require('backbone.radio');
 
 // Bind jQuery to backbone
@@ -21,8 +22,7 @@ Backbone.$ = $;
 let main = module.exports = radio.channel('main');
 _.extend(main, {
 	// Bind dependancies to main object for pretier destructuring requires
-	$, _, Backbone,
-	Cookie: require('js-cookie'),
+	$, _, Backbone, Cookie,
 	stackBlur: require('stack-blur'),
 
 	/*
@@ -57,6 +57,16 @@ _.extend(main, {
 	readOnly: [],
 	lang: require('lang')
 });
+
+// Clear cookies, if versions mismatch. Get regenerated each client start
+// anyway.
+// XXX: Does not clear cookies for all paths
+if (localStorage.cookieVersion !== 1) {
+	for (let cookie in Cookie.get()) {
+		Cookie.remove(cookie);
+	}
+	localStorage.cookieVersion = 1;
+}
 
 // You can invoke the client-side debug mode with the `debug=true` query string
 if (/[&\?]debug=true/.test(location.href))
