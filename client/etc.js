@@ -22,8 +22,6 @@ exports.uploadURL = imageUploadURL;
 function deferLoop(items, stack, func) {
 	if (stack > items.length)
 		stack = items.length;
-	// Copy array to remove refference
-	items = items.slice();
 	for (let i = 0; i < stack; i++)
 		func(items.pop());
 	if (items.length)

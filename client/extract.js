@@ -22,12 +22,10 @@ class Extract {
 		this.extractReplies(el);
 
 		// Apply various client-only DOM modifications
-		_.defer(function() {
-			if (options.get('anonymise'))
-				main.command('loop:anonymise');
-			main.command('time:render');
-			main.command('imager:lazyLoad');
-		})
+		main.command('imager:lazyLoad');
+		if (options.get('anonymise'))
+			main.command('loop:anonymise');
+		main.command('time:render');
 	}
 	extractReplies(el) {
 		let articles = el.getElementsByTagName('article'),
