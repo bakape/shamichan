@@ -2,8 +2,11 @@ Real-time imageboard.
 MIT licensed.
 
 **NOTE: The git master branch contains the development version of the
-board. Crashes are not uncommon as new features are added and patched. For more 
-stable revisions, please [download the latest release](https://github.com/bakape/meguca/releases).**
+board. Crashes are not uncommon as new features are added and patched. 
+The database structure and transport API are in active development. Don't 
+use the master branch in production, unless you are comfortable with flushing
+redis and reconfiguring several times a month. For more stable revisions, 
+please [download the latest release](https://github.com/bakape/meguca/releases).**
 
 ##Setup
 * Install dependencies listed below
