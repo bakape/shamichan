@@ -76,7 +76,7 @@ exports.roll_dice = roll_dice;
 function inline_dice(post, dice) {
 	if (dice && dice.length) {
 		dice = JSON.stringify(dice);
-		post.dice = dice.substring(1, dice.length - 1);
+		post.dice = dice.slice(1, -1);
 	}
 }
 

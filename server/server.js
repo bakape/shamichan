@@ -125,8 +125,12 @@ function linkToDatabase(board, syncs, live, client) {
 	client.board = board;
 	client.db = new db.Yakusoku(board, client.ident);
 	// Race between subscribe and backlog fetch; client must de-dup
-	client.db.kiku(client.watching, client.on_update.bind(client),
-			client.on_thread_sink.bind(client), listening);
+	client.db.kiku(
+		client.watching,
+		client.on_update.bind(client),
+		client.on_thread_sink.bind(client),
+		listening
+	);
 	function listening(errs) {
 		if (errs && errs.length >= count)
 			return client.kotowaru(Muggle("Couldn't sync to board."));
@@ -454,49 +458,6 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	return true;
 };
 
-dispatcher[common.DELETE_POSTS] = caps.mod_handler(function (nums, client) {
-	if (!inactive_board_check(client))
-		return client.kotowaru(Muggle("Couldn't delete."));
-	/* Omit to-be-deleted posts that are inside to-be-deleted threads */
-	let ops = {},
-		OPs = db.OPs;
-	for (let i = 0, l = nums.length; i < l; i++) {
-		let num = nums[i];
-		if (num == OPs[num])
-			ops[num] = 1;
-	}
-	nums = nums.filter(function (num) {
-		var op = OPs[num];
-		return op == num || !(OPs[num] in ops);
-	});
-
-	client.db.remove_posts(nums, function (err, dels) {
-		if (err)
-			client.kotowaru(Muggle("Couldn't delete.", err));
-	});
-});
-
-dispatcher[common.LOCK_THREAD] = caps.mod_handler(function (nums, client) {
-	if (!inactive_board_check(client))
-		return client.kotowaru(Muggle("Couldn't (un)lock thread."));
-	nums = nums.filter(function (op) { return db.OPs[op] == op; });
-	async.forEach(nums, client.db.toggle_thread_lock.bind(client.db),
-				function (err) {
-		if (err)
-			client.kotowaru(Muggle(
-					"Couldn't (un)lock thread.", err));
-	});
-});
-
-dispatcher[common.DELETE_IMAGES] = caps.mod_handler(function (nums, client) {
-	if (!inactive_board_check(client))
-		return client.kotowaru(Muggle("Couldn't delete images."));
-	client.db.remove_images(nums, function (err, dels) {
-		if (err)
-			client.kotowaru(Muggle("Couldn't delete images.",err));
-	});
-});
-
 dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 	if (!check(['string'], msg))
 		return false;
@@ -518,28 +479,6 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 	return true;
 };
 
-dispatcher[common.SPOILER_IMAGES] = caps.mod_handler(function (nums, client) {
-	if (!inactive_board_check(client))
-		return client.kotowaru(Muggle("Couldn't spoiler images."));
-	client.db.force_image_spoilers(nums, function (err) {
-		if (err)
-			client.kotowaru(Muggle("Couldn't spoiler images.",
-					err));
-	});
-});
-
-dispatcher[common.EXECUTE_JS] = function (msg, client) {
-	if (!caps.can_administrate(client.ident))
-		return false;
-	if (!check(['id'], msg))
-		return false;
-	var op = msg[0];
-	client.db.set_fun_thread(op, function (err) {
-		if (err)
-			client.kotowaru(err);
-	});
-	return true;
-};
 
 // Online count
 hooks.hook('clientSynced', function(info, cb){
@@ -571,15 +510,7 @@ hooks.hook('clientSynced', function(info, cb){
 	cb(null);
 });
 
-// Non-persistent global live admin notifications
-dispatcher[common.NOTIFICATION] = function(msg, client){
-	if (!caps.can_administrate(client.ident))
-		return false;
-	if (!check(['string'], msg))
-		return false;
-	okyaku.push([0, common.NOTIFICATION, common.escape_html(msg[0])]);
-	return true;
-};
+
 
 // Regex replacement filter
 function hot_filter(frag) {
