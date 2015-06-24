@@ -141,7 +141,6 @@ let Hidamari = exports.Hidamari = {
 	renderAudio(img) {
 		this.$el
 			.children('figure')
-			.children('a')
 			.append(common.parseHTML
 				`<audio src="${oneeSama.imagePaths().src + img.src}"
 					width="300"
