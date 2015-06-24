@@ -7,7 +7,6 @@
 .DS_Store
 .project
 .socket
-.vagrant
 config/*.js
 graveyard
 doushio.error.log
