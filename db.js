@@ -441,11 +441,8 @@ class Yakusoku extends events.EventEmitter {
 				view[field] = msg[field];
 		}
 		const tagKey = 'tag:' + tag_key(this.tag);
-		if (isThead) {
+		if (isThead)
 			view.tags = tag_key(board);
-			if (board == config.STAFF_BOARD)
-				view.immortal = 1;
-		}
 		else
 			view.op = op;
 
@@ -893,19 +890,14 @@ class Yakusoku extends events.EventEmitter {
 		async.waterfall([
 			// Confirm thread can be deleted
 			function(next) {
-				let m = r.multi();
-				m.exists(key);
-				m.hget(key, 'immortal');
-				m.exec(next);
+				r.exists(key, next);
 			},
 			function(res, next) {
 				// Likely to happen, if interrupted mid-purge
-				if (!res[0]) {
+				if (!res) {
 					r.zrem(`tag:${tag_key(board)}:threads`, op);
-					return next(key + ' does not exist.');
+					return callback();
 				}
-				if (parseInt(res[1], 10))
-					return next(key + ' is immortal.');
 				// Get reply list
 				r.lrange(key + ':posts', 0, -1, next);
 			},
