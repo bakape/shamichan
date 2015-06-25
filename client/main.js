@@ -94,9 +94,10 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 	// Core post link handler
 	tamashii(num) {
 		let frag;
-		if (this.links && num in this.links) {
+		const op = state.links[num];
+		if (op) {
 			const desc = num in state.mine.readAll() && this.lang.you;
-			frag = this.postRef(num, this.links[num], desc);
+			frag = this.postRef(num, op, desc);
 		}
 		else
 			frag = '>>' + num;

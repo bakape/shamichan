@@ -51,6 +51,7 @@ class Render {
 		const ident = this.req.ident,
 			cookies = this.req.cookies,
 			mine = this.parseIntCookie('mine');
+		let links = this.links = {};
 		let oneeSama = new common.OneeSama({
 			spoilToggle: cookies.spoil === 'true',
 			autoGif: cookies.agif === 'true',
@@ -64,6 +65,8 @@ class Render {
 				if (op && caps.can_access_thread(ident, op)) {
 					const desc = mine.has(num) && this.lang.you;
 					this.callback(this.postRef(num, op, desc));
+					// Pass verified post links to the client
+					links[num] = op;
 				}
 				else
 					this.callback('>>' + num);
@@ -136,7 +139,8 @@ class Render {
 			`<script id="postData" type="application/json">
 				${JSON.stringify({
 					posts: this.posts,
-					title: this.title
+					title: this.title,
+					links: this.links
 				})}
 			</script>`
 		);

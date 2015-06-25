@@ -1,9 +1,9 @@
-1/*
+/*
  * Central model keeping the state of the page
  */
 
 let main = require('./main'),
-	{Backbone} = main;
+	{_, Backbone} = main;
 
 // Read page state by parsing a URL
 function read(url) {
@@ -67,3 +67,12 @@ main.on('state:clear', function() {
 	exports.syncs = {};
 	main.command('massExpander:unset');
 });
+
+// Post links verified server-side
+let links = exports.links = {};
+
+function addLinks(addition) {
+	if (addition)
+		_.extend(links, addition);
+}
+exports.addLinks = addLinks;

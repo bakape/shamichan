@@ -36,6 +36,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		msg.mine = true;
 		state.mine.write(msg.num, state.mine.now());
 	}
+	state.addLinks(msg.links);
 
 	// Create model
 	let model = new posts.models[isThread ? 'Thread' : 'Post'](msg);
@@ -84,6 +85,7 @@ dispatcher[common.UPDATE_POST] = function(msg) {
 	var extra = msg[5],
 		model = state.posts.get(num);
 
+	state.addLinks(links);
 	if (model) {
 		model.set({
 			body: model.get('body') + msg[1],

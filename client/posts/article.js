@@ -20,8 +20,6 @@ var Article = module.exports = Backbone.View.extend({
 		this.initCommon();
 	},
 	render() {
-		// Pass this model's links to oneeSama for renderring
-		main.oneeSama.links = this.model.get('links');
 		this.setElement(main.oneeSama.article(this.model.attributes));
 		return this;
 	},

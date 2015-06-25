@@ -18,6 +18,7 @@ class Extract {
 
 		this.mine = state.mine.readAll();
 		this.posts = json.posts;
+		state.addLinks(json.links);
 		this.extractThreads(el);
 		this.extractReplies(el);
 
