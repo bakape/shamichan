@@ -61,7 +61,7 @@ _.extend(main, {
 // Clear cookies, if versions mismatch. Get regenerated each client start
 // anyway.
 // XXX: Does not clear cookies for all paths
-if (localStorage.cookieVersion !== 1) {
+if (localStorage.cookieVersion !== '1') {
 	for (let cookie in Cookie.get()) {
 		Cookie.remove(cookie);
 	}
