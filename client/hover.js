@@ -44,7 +44,8 @@ let ImageHoverView = Backbone.View.extend({
 });
 
 let PostPreview = Article.extend({
-	initialize() {
+	initialize(args) {
+		this.parentNum = args.parentNum;
 		this.listenTo(this.model, {
 			'change:body': this.update,
 			'change:image': this.update,
@@ -54,7 +55,9 @@ let PostPreview = Article.extend({
 		this.initCommon().update();
 	},
 	update() {
-		postHover.render(this.$el);
+		if (!this.num)
+			this.num = this.$el.closest('article, section').attr('id');
+		postHover.render(this.$el, this.parentNum);
 	}
 });
 
@@ -68,28 +71,38 @@ let HoverPostView = Backbone.View.extend({
 		let $target = $(event.target);
 		if (!$target.is('a.history'))
 			return;
-		const m = event.target.text.match(/^>>(\d+)/);
+		const m = $target.text().match(/^>>(\d+)/);
 		if (!m)
 			return;
 		let post = state.posts.get(m[1]);
 		if (!post)
 			return;
 		this.targetPos = $target.position();
-		this.previewView = new PostPreview({model: post});
+		this.previewView = new PostPreview({
+			model: post,
+			parentNum: $target.closest('article, section').attr('id')
+		});
 		$target.one('mouseleave click', () => this.remove());
 	},
 	remove() {
-		if (this.previewView) {
-			this.targetPos = null;
-			this.previewView.remove();
-			this.stopListening(this.previewView);
-			this.$el.children().remove('.preview');
-			this.previewView = null;
-		}
+		if (!this.previewView)
+			return;
+		this.targetPos = null;
+		this.previewView.remove();
+		this.stopListening(this.previewView);
+		this.$el.children().remove('.preview');
+		this.previewView = null;
 	},
-	render($el) {
-		$el.css(this.position($el));
-		$el.appendTo(this.$el.empty());
+	render($el, num) {
+		// Striped underline links from the parent post
+		$el.find('a.history')
+			.filter(function () {
+				return this.text.includes('>>' + num);
+			})
+			.each(function () {
+				$(this).addClass('referenced');
+			});
+		$el.css(this.position($el)).appendTo(this.$el.empty());
 	},
 	position($el) {
 		$el.hide();
