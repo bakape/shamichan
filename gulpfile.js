@@ -76,7 +76,8 @@ function buildClient() {
 			'backbone',
 			'backbone.radio',
 			'stack-blur',
-			'lang'
+			'lang',
+			'core-js'
 		]
 	})
 		// Exclude these requires on the client
@@ -141,7 +142,8 @@ function buildClient() {
 		],
 		debug: true
 	})
-		.require('./lib/stack-blur', {expose: 'stack-blur'});
+		.require('./lib/stack-blur', {expose: 'stack-blur'})
+		.require('core-js/es6', {expose: 'core-js'});
 
 	build('vendor', b, './www/js');
 }

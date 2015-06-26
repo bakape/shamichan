@@ -17,6 +17,8 @@ let $ = require('jquery'),
 
 // Bind jQuery to backbone
 Backbone.$ = $;
+// Load standard library ES6 polyfills
+require('core-js');
 
 // Central aplication object and message bus
 let main = module.exports = radio.channel('main');
