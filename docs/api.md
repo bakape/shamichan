@@ -14,13 +14,13 @@ The read-only JSON API currently supports 4 modes of query.
 ####Post object
 | Key | Value | Optional | Exclusive | Example |
 |:-------:|:----------------------------------------------------------------------------------------------------------------:|:--------:|:---------:|:------------------------------------------:|
-| time | Unix timestamp in ms in the server's timezone | no | no | `"1423578435043"` |
+| time | Unix timestamp in ms in the server's timezone | no | no | `1423578435043` |
 | num | post number | no | no | `19` |
 | op | thread OP post number | no | reply | `18` |
 | board | post board | no | no | `"a"` |
 | replies | array of post numbers in post order | no | OP | `["2", "3", "4"]` |
 | replyctr | number of replies | no | OP | `10`|
-| hctr | thread history counter; increments on each tread update | no | OP | `"190"` |
+| hctr | thread history counter; increments on each tread update | no | OP | `190` |
 | omit | number of replies omittes with `last=n` | no | OP | `0` |
 |image_omit | number of images omitted | no | OP | `12` |
 | subject | thread subject | yes | OP | `"New Heights of Sodomy"` |
