@@ -80,7 +80,6 @@ module.exports = {
 	LOGIN_KEYWORD: 'misaki',
 // URL and domain of the website
 	PERSONA_AUDIENCE: 'http://localhost:8000',
-	LOGIN_COOKIE_DOMAIN: '',
 	LOGIN_SESSION_TIME: 60*60*24*14,
 // Translate IP's into more human-readable mnemonics
 	IP_MNEMONIC: true,
