@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('underscore'),
+	amusement = require('./server/amusement'),
     async = require('async'),
     cache = require('./server/state').dbCache,
     caps = require('./server/caps'),
@@ -10,7 +11,6 @@ let _ = require('underscore'),
     fs = require('fs'),
     hooks = require('./util/hooks'),
     hot = require('./server/state').hot,
-	// set up hooks
     imager = require('./imager'),
     Muggle = require('./util/etc').Muggle,
     tail = require('./util/tail'),
@@ -434,7 +434,9 @@ class Yakusoku extends events.EventEmitter {
 			ip: ip,
 			state: msg.state.join()
 		};
-		const optPostFields = ['name', 'trip', 'email', 'auth', 'subject'];
+		const optPostFields = [
+			'name', 'trip', 'email', 'auth', 'subject', 'dice'
+		];
 		for (let i = 0, l = optPostFields.length; i < l; i++) {
 			const field = optPostFields[i];
 			if (msg[field])
@@ -462,6 +464,7 @@ class Yakusoku extends events.EventEmitter {
 			src: msg,
 			dest: view
 		});
+
 		if (msg.image) {
 			if (isThead)
 				view.imgctr = 1;
@@ -472,9 +475,16 @@ class Yakusoku extends events.EventEmitter {
 		m.hmset(key, view);
 		m.set(key + ':body', body);
 
-		if (msg.links) {
-			m.hmset(key + ':links', msg.links);
-			this.addBacklinks(m, num, op, msg.links);
+		const dice = msg.dice;
+		if (dice) {
+			this.writeDice(m, dice, key);
+			view.dice = dice;
+		}
+		const links = msg.links;
+		if (links) {
+			m.hmset(key + ':links', links);
+			view.links = links;
+			this.addBacklinks(m, num, op, links);
 		}
 
 		let etc = {
@@ -496,9 +506,7 @@ class Yakusoku extends events.EventEmitter {
 		/* Denormalize for backlog */
 		view.nonce = msg.nonce;
 		view.body = body;
-		if (msg.links)
-			view.links = msg.links;
-		extract(view);
+		extract(view, true);
 		delete view.ip;
 
 		let self = this,
@@ -558,6 +566,13 @@ class Yakusoku extends events.EventEmitter {
 			Date.now() + (config.DEBUG ? 30000 : 3600000),
 			num + ':' + hash
 		);
+	}
+	writeDice(m, dice, key) {
+		let stringified = [];
+		for (let i = 0, l = dice.length; i < l; i++) {
+			stringified[i] = JSON.stringify(dice[i]);
+		}
+		m.lpush(key + ':dice', stringified);
 	}
 	addBacklinks(m, num, op, links) {
 		for (let targetNum in links) {
@@ -677,43 +692,25 @@ class Yakusoku extends events.EventEmitter {
 		if (!_.isEmpty(extra.new_links))
 			m.hmset(key + ':links', extra.new_links);
 
-		// possibly attach data for dice rolls etc. to the update
-		let attached = {
-			post,
-			extra,
-			writeKeys: {},
-			attach: {}
+		const num = post.num,
+			op = post.op || num;
+		// TODO: Make less dirty, when post state is refactored
+		let _extra = {
+			state: [old_state[0] || 0, old_state[1] || 0]
 		};
-		let self = this;
-		hooks.trigger("attachToPost", attached, function (err, attached) {
-			if (err)
-				return cb(err);
-			for (let h in attached.writeKeys)
-				m.hset(key, h, attached.writeKeys[h]);
-			const num = post.num,
-				op = post.op || num;
-			let msg = [num, tail];
-			const links = extra.links || {};
-			if (extra.links)
-				self.addBacklinks(m, num, op, links);
+		const links = extra.links;
+		if (links) {
+			_extra.links = links;
+			this.addBacklinks(m, num, op, links);
+		}
+		const dice = extra.dice;
+		if (dice) {
+			_extra.dice = dice;
+			this.writeDice(m, dice, key);
+		}
 
-			const a = old_state[0],
-				b = old_state[1];
-			// message tail is [... a, b, links, attachment]
-			// default values [... 0, 0, {}, {}] don't need to be sent
-			// to minimize log output
-			if (!_.isEmpty(attached.attach))
-				msg.push(a, b, links, attached.attach);
-			else if (!_.isEmpty(links))
-				msg.push(a, b, links);
-			else if (b)
-				msg.push(a, b);
-			else if (a)
-				msg.push(a);
-
-			self._log(m, op, common.UPDATE_POST, msg);
-			m.exec(cb);
-		});
+		this._log(m, op, common.UPDATE_POST, [num, tail, _extra]);
+		m.exec(cb);
 	}
 	finish_post(post, callback) {
 		let m = this.connect().multi();
@@ -920,6 +917,7 @@ class Yakusoku extends events.EventEmitter {
 					// It should only still exists because of server shutdown
 					// mid-post, but those do happen
 					m.exists(key + ':body');
+					m.exists(key + ':dice');
 				}
 				// A bit more complicated, because we need to pass two arguments
 				// to the next function, to map the arrays
@@ -931,22 +929,22 @@ class Yakusoku extends events.EventEmitter {
 			},
 			// Populate key and file to delete arrays
 			function(res, posts, next) {
-				const imageTypes = ['src', 'thumb', 'mid'];
+				const imageTypes = ['src', 'thumb', 'mid'],
+					optional = [':links', ':backlinks', ':body', ':dice'];
 				let path = imager.media_path;
-				for (let i = 0, l = res.length; i < l; i += 5) {
+				for (let i = 0, l = res.length; i < l; i += 6) {
 					const hash = res[i],
-						key = posts.shift();
+						key = posts[i / 6];
 					if (!hash)
 						continue;
-					// Add links
+
 					keysToDel.push(key);
-					// `key:links` exists
-					if (res[i + 1])
-						keysToDel.push(key + ':links');
-					if (res[i + 2])
-						keysToDel.push(key + ':backlinks');
-					if (res[i + 3])
-						keysToDel.push(key + ':body');
+					for (let o = 0; o < optional.length; o++) {
+						if (!res[i + o])
+							continue;
+						keysToDel.push(key + optional[o]);
+					}
+
 					// Add images to delete list
 					for (let o = 0, len = imageTypes.length; o < len; o++) {
 						const type = imageTypes[o],
@@ -1117,8 +1115,7 @@ class Reader extends events.EventEmitter {
 						// amount of posts we are retrieving. A total number
 						// of posts is quite useful.
 						m.llen(postsKey);
-						m.hgetall(key + ':links');
-						m.hgetall(key + ':backlinks');
+						self.getExtras(m, key);
 						if (abbrev)
 							m.llen(postsKey);
 						if (opts.showDead) {
@@ -1136,12 +1133,7 @@ class Reader extends events.EventEmitter {
 						// all of them
 						opPost.replies = nums || [];
 						opPost.replyctr = parseInt(rs.shift(), 10) || 0;
-						const links = rs.shift();
-						if (links)
-							opPost.links = links;
-						const backlinks = rs.shift();
-						if (backlinks)
-							opPost.backlinks = backlinks;
+						self.parseExtras(rs, opPost);
 						if (abbrev)
 							total += parseInt(rs.shift(), 10);
 						if (opts.showDead) {
@@ -1173,6 +1165,18 @@ class Reader extends events.EventEmitter {
 				}
 			);
 		});
+	}
+	getExtras(m, key) {
+		m.hgetall(key + ':links');
+		m.hgetall(key + ':backlinks');
+		m.lrange(key + ':dice', 0, -1);
+	}
+	parseExtras(res, post) {
+		for (let key of ['links', 'backlinks', 'dice']) {
+			const prop = res.shift();
+			if (prop)
+				post[key] = prop;
+		}
 	}
 	merge_posts(nums, deadNums, abbrev) {
 		let i = nums.length - 1,
@@ -1226,18 +1230,12 @@ class Reader extends events.EventEmitter {
 			function (next) {
 				let m = r.multi();
 				m.hgetall(key);
-				m.hgetall(key + ':links');
-				m.hgetall(key + ':backlinks');
+				self.getExtras(m, key);
 				m.exec(next);
 			},
 			function (data, next) {
-				let pre_post = data[0];
-				const links = data[1],
-					backlinks = data[2];
-				if (links)
-					pre_post.links = links;
-				if (backlinks)
-					pre_post.backlinks = backlinks;
+				let pre_post = data.shift();
+				self.parseExtras(data, pre_post);
 				let exists = !(_.isEmpty(pre_post));
 				if (exists && pre_post.hide && !opts.showDead)
 					exists = false;
@@ -1329,9 +1327,11 @@ function get_all_replies(r, op, cb) {
 	});
 }
 
-function extract(post) {
+function extract(post, dontParseDice) {
 	post.num = parseInt(post.num, 10);
-	hooks.trigger_sync('extractPost', post);
+	imager.nestImageProps(post);
+	if (!dontParseDice)
+		amusement.parseDice(post);
 }
 
 function tag_key(tag) {

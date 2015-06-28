@@ -7,11 +7,8 @@ let main = require('../main'),
 	{$, _, common, lang, oneeSama, options, state} = main;
 
 module.exports = {
-	initCommon() {
-		this.$blockquote = this.$el.children('blockquote');
-		this.listenTo(this.model, 'dispatch', this.redirect)
-			.fun();
-		return this;
+	initialize() {
+		this.listenTo(this.model, 'dispatch', this.redirect);
 	},
 	// Extra initialisation logic for posts renderred client-side
 	clientInit() {
@@ -24,11 +21,12 @@ module.exports = {
 		this[command](...args);
 	},
 	updateBody(update) {
+		if (!this.$blockquote)
+			this.$blockquote = this.$el.children('blockquote');
 		oneeSama.dice = update.dice;
-		oneeSama.links = update.links;
+		oneeSama.state = update.state;
 		oneeSama.callback = this.inject;
 		oneeSama.$buffer = this.$blockquote;
-		oneeSama.state = update.state;
 		oneeSama.fragment(update.frag);
 	},
 	// Inject various tags into the blockqoute

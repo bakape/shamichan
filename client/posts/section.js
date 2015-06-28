@@ -8,29 +8,21 @@ let main = require('../main'),
 
 var Section = module.exports = Backbone.View.extend({
 	tagName: 'section',
-	initialize() {
-		// On the live page only
-		if (!this.el.innerHTML)
-			this.render();
-		else
-			this.renderOmit();
-		this.initCommon();
-	},
 	render() {
 		let attrs = this.model.attributes;
-		this.setElement(oneeSama.section(attrs).join('')).insertToTop();
+		this.setElement(oneeSama.section(attrs).join('')).insertIntoDOM();
 		// Insert reply box into the new thread
 		let $reply = $(oneeSama.replyBox());
 		if (state.ownPosts.hasOwnProperty(attrs.num)
 			|| !!main.request('postForm')
 		)
 			$reply.hide();
-		this.$el.after($reply);
+		this.$el.append($reply)
+			.next('hr').remove();
 		return this;
 	},
-	insertToTop() {
-		this.$el
-			.insertAfter(main.$threads.children('aside').first())
+	insertIntoDOM() {
+		this.$el.insertAfter(main.$threads.children('aside').first())
 			.after('<hr>');
 	},
 	renderLocked(model, locked) {
@@ -92,7 +84,7 @@ var Section = module.exports = Backbone.View.extend({
 	bumpThread() {
 		this.$el.next('hr').remove();
 		this.$el.detach();
-		this.insertToTop();
+		this.insertIntoDOM();
 	},
 	// TEMP: Stub until we unify the DOM structure of OPs and replies
 	renderEditing() {

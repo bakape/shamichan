@@ -191,48 +191,60 @@ dice_re = new RegExp(dice_re, 'i');
 exports.dice_re = dice_re;
 
 function parse_dice(frag) {
-	if (frag == '#flip')
-		return {n: 1, faces: 2};
-	if (frag == '#8ball')
-		return {n: 1, faces: imports.hotConfig.EIGHT_BALL.length};
-	// Increment counter
-	if (frag == '#pyu')
-		return {pyu: 'increment'};
-	// Print current count
-	if (frag == '#pcount')
-		return {pyu: 'print'};
-	if (frag == '#q')
-		return {q: true};
-	var m = frag.match(/^#(\d*)d(\d+)([+-]\d+)?$/i);
-	// Regular dice
-	if (m) {
-		var n = parseInt(m[1], 10) || 1, faces = parseInt(m[2], 10);
-		if (n < 1 || n > 10 || faces < 2 || faces > 100)
-			return false;
-		var info = {n: n, faces: faces};
-		if (m[3])
-			info.bias = parseInt(m[3], 10);
-		return info;
-	}
-	// First capture group may or may not be present
-	var sw = frag.match(/^#sw(\d+:)?(\d+):(\d+)([+-]\d+)?$/i);
-	if (sw) {
-		var hour = parseInt(sw[1], 10) || 0,
-			min = parseInt(sw[2], 10),
-			sec = parseInt(sw[3], 10);
-		var time = serverTime();
-		// Offset the start. If the start is in the future,
-		// a countdown will be displayed
-		if (sw[4]) {
-			var symbol = sw[4].slice(0, 1);
-			var offset = sw[4].slice(1) * 1000;
-			time = symbol == '+' ? time + offset : time - offset;
-		}
-		var end = ((hour * 60 + min) * 60 + sec) * 1000 + time;
-		return {hour: hour, min: min, sec: sec, start: time, end: end};
+	switch (frag) {
+		case '#flip':
+			return {n: 1, faces: 2};
+		case '#8ball':
+			return {n: 1, faces: imports.hotConfig.EIGHT_BALL.length};
+		case '#pyu':
+			return {type: 'pyu', increment: true};
+		case '#pcount':
+			return {type: 'pyu'};
+		case '#q':
+			return {type: 'radioQueue'};
+		default:
+			return parseRegularDice(frag) || parseSyncwatch(frag);
 	}
 }
 exports.parse_dice = parse_dice;
+
+function parseRegularDice(frag) {
+	const m = frag.match(/^#(\d*)d(\d+)([+-]\d+)?$/i);
+	if (!m)
+		return false;
+	const n = parseInt(m[1], 10) || 1,
+		faces = parseInt(m[2], 10);
+	if (n < 1 || n > 10 || faces < 2 || faces > 100)
+		return false;
+	let info = {
+		n: n,
+		faces: faces
+	};
+	if (m[3])
+		info.bias = parseInt(m[3], 10);
+	return info;
+}
+
+function parseSyncwatch(frag) {
+	// First capture group may or may not be present
+	const sw = frag.match(/^#sw(\d+:)?(\d+):(\d+)([+-]\d+)?$/i);
+	if (!sw)
+		return false;
+	const hour = parseInt(sw[1], 10) || 0,
+		min = parseInt(sw[2], 10),
+		sec = parseInt(sw[3], 10);
+	let start = serverTime();
+	// Offset the start. If the start is in the future, a countdown will be
+	// displayed.
+	if (sw[4]) {
+		const symbol = sw[4].slice(0, 1),
+			offset = sw[4].slice(1) * 1000;
+		start = symbol == '+' ? start + offset : start - offset;
+	}
+	const end = ((hour * 60 + min) * 60 + sec) * 1000 + start;
+
+	return {hour, min, sec, start, end, type: 'syncwatch'};
+}
 
 let cachedOffset;
 function serverTime() {
@@ -248,44 +260,59 @@ function serverTime() {
 }
 exports.serverTime = serverTime;
 
-function readable_dice(bit, d) {
-	if (bit == '#flip')
-		return '#flip (' + (d[1] == 2) + ')';
-	if (bit == '#8ball')
-		return '#8ball (' + imports.hotConfig.EIGHT_BALL[d[1] - 1] + ')';
-	if (bit == '#pyu')
-		return '#pyu(' + d + ')';
-	if (bit == '#pcount')
-		return '#pcount(' + d + ')';
-	if (bit == '#q')
-		return '#q (' + d[0] + ')';
-	if (/^#sw/.test(bit)) {
-		return safe('<syncwatch class="embed" start=' + d[0].start +
-			" end=" + d[0].end +
-			" hour=" + d[0].hour +
-			" min=" + d[0].min +
-			" sec=" + d[0].sec +
-			' >syncwatch</syncwatch>');
+function readable_dice(bit, dice) {
+	let inner;
+	switch (bit) {
+		case '#flip':
+			inner = (dice[2] == 2).toString();
+			break;
+		case '#8ball':
+			inner = imports.hotConfig.EIGHT_BALL[dice[2] - 1];
+			break;
+		case '#pyu':
+		case '#pcount':
+		case '#q':
+			inner = dice[0];
+			break;
 	}
-	var n = d.length, b = 0;
-	if (d[n - 1] && typeof d[n - 1] == 'object') {
-		b = d[n - 1].bias;
-		n--;
-	}
-	var r = d.slice(1, n);
-	n = r.length;
-	bit += ' (';
-	var eq = n > 1 || b;
-	if (eq)
-		bit += r.join(', ');
-	if (b)
-		bit += (b < 0 ? ' - ' + (-b) : ' + ' + b);
-	var sum = b;
-	for (var j = 0; j < n; j++)
-		sum += r[j];
-	return bit + (eq ? ' = ' : '') + sum + ')';
+	if (inner !== undefined)
+		return `${bit} (${inner})`;
+	if (/^#sw/.test(bit))
+		return readableSyncwatch(dice[0]);
+	return readableRegularDice(bit, dice);
 }
 exports.readable_dice = readable_dice;
+
+function readableSyncwatch(dice) {
+	return safe(parseHTML
+		`<syncwatch class="embed"
+			start="${dice.start}"
+			end="${dice.end}"
+			hour="${dice.hour}"
+			min="${dice.min}"
+			sec="${dice.sec}"
+		>
+			syncwatch
+		</syncwatch>`);
+}
+
+function readableRegularDice(bit, dice) {
+	const bias = dice[1],
+		rolls = dice.slice(2),
+		n = rolls.length;
+	bit += ' (';
+	const eq = n > 1 || bias;
+	if (eq)
+		bit += rolls.join(', ');
+	if (bias)
+		bit += (bias < 0 ? ' - ' + (-bias) : ' + ' + bias);
+	let sum = bias;
+	for (var j = 0; j < n; j++) {
+		sum += rolls[j];
+	}
+
+	return bit + (eq ? ' = ' : '') + sum + ')';
+}
 
 function pick_spoiler(metaIndex) {
 	var imgs = imports.config.SPOILER_IMAGES;

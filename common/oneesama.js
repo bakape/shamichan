@@ -437,6 +437,9 @@ class OneeSama {
 		if (!this.dice)
 			return this.eLinkify ? this.linkify(text) : this.callback(text);
 
+		// Shallow copy, so we can update multiple views at a time. Mainly
+		// for live post previews
+		let dice = this.dice.slice && this.dice.slice();
 		const bits = text.split(util.dice_re);
 		for (let i = 0, len = bits.length; i < len; i++) {
 			const bit = bits[i];
@@ -444,10 +447,10 @@ class OneeSama {
 				this.eLinkify ? this.linkify(bit) : this.callback(bit);
 			else if (this.queueRoll)
 				this.queueRoll(bit);
-			else if (!this.dice[0])
+			else if (!dice[0])
 				this.eLinkify ? this.linkify(bit) : this.callback(bit);
 			else {
-				let d = this.dice.shift();
+				let d = dice.shift();
 				this.callback(safe('<strong>'));
 				this.strong = true; // for client DOM insertion
 				this.callback(util.readable_dice(bit, d));

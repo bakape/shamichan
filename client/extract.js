@@ -51,7 +51,8 @@ class Extract {
 			new Section({
 				model: new Thread(model),
 				el: section
-			});
+			})
+				 .renderOmit();
 			// Read the sync ID of the thread. Used later for syncronising
 			// with the server.
 			syncs[model.num] = model.hctr;

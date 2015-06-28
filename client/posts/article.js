@@ -8,17 +8,6 @@ let main = require('../main'),
 
 var Article = module.exports = Backbone.View.extend({
 	tagName: 'article',
-	initialize() {
-		/*
-		 * XXX: A bit ineficient, because first an empty element is renderred
-		 * and then a proper one.
-		 *
-		 * An element is not empty only on postForms and extraction
-		 */
-		if (!this.el.innerHTML)
-			this.render().insertIntoDOM();
-		this.initCommon();
-	},
 	render() {
 		this.setElement(main.oneeSama.article(this.model.attributes));
 		return this;

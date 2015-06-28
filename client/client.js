@@ -8,19 +8,20 @@ let main = require('./main'),
 dispatcher[common.INSERT_POST] = function(msg) {
 	let bump = msg[1] && state.page.get('live');
 	msg = msg[0];
-	const isThread = !msg.op;
+	const isThread = !msg.op,
+		{num} = msg;
 	if (isThread)
-		state.syncs[msg.num] = 1;
+		state.syncs[num] = 1;
 	msg.editing = true;
 
 	// Did I create this post?
-	var el;
+	let el;
 	const nonce = msg.nonce;
 	delete msg.nonce;
 	const myNonce = main.request('nonce:get')[nonce];
 	if (myNonce && myNonce.tab === state.page.get('tabID')) {
 		// posted in this tab; transform placeholder
-		state.ownPosts[msg.num] = true;
+		state.ownPosts[num] = true;
 		main.oneeSama.trigger('insertOwnPost', msg);
 		main.postSM.feed('alloc', msg);
 		bump = false;
@@ -31,21 +32,25 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		if (postForm && postForm.el)
 			el = postForm.el;
 	}
-	// Add to my post set
+	
+	// Add to my post set. Separate `if`, so posts form other tabs also
+	// register.
 	if (myNonce) {
 		msg.mine = true;
-		state.mine.write(msg.num, state.mine.now());
+		state.mine.write(num);
 	}
 	state.addLinks(msg.links);
 
 	// Create model
 	let model = new posts.models[isThread ? 'Thread' : 'Post'](msg);
-	new posts[isThread ? 'Section' : 'Article']({
-		model: model,
-		id: msg.num,
-		el: el
-	})
-		.clientInit();
+	let view = new posts[isThread ? 'Section' : 'Article']({
+		model,
+		id: num,
+		el
+	});
+	if (!el)
+		view.render().insertIntoDOM();
+	view.clientInit();
 
 	main.command('post:inserted', model);
 
@@ -54,7 +59,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	let parent = state.posts.get(msg.op);
 	if (!parent)
 		return;
-	parent.get('replies').push(msg.num);
+	parent.get('replies').push(num);
 	if (state.page.get('thread'))
 		return;
 	parent.dispatch('shiftReplies');
@@ -80,37 +85,25 @@ dispatcher[common.INSERT_IMAGE] = function(msg) {
 
 dispatcher[common.UPDATE_POST] = function(msg) {
 	const num = msg[0],
-		links = msg[4],
-		msgState = [msg[2] || 0, msg[3] || 0];
-	var extra = msg[5],
-		model = state.posts.get(num);
-
-	state.addLinks(links);
-	if (model) {
-		model.set({
-			body: model.get('body') + msg[1],
-			state: msgState
-		});
-	}
-
-	// Am I updating my own post?
-	if (num in state.ownPosts) {
-		if (extra)
-			extra.links = links;
-		else
-			extra = {links: links};
-		main.oneeSama.trigger('insertOwnPost', extra);
-		return;
-	}
-
+		frag = msg[1],
+		extra = msg[2];
+	let model = state.posts.get(num);
 	if (!model)
 		return;
-	model.dispatch('updateBody', {
-		dice: extra && extra.dice,
-		links: links || {},
-		state: msgState,
-		frag: msg[1]
-	});
+
+	state.addLinks(extra.links);
+	model.update(frag, extra);
+
+	// Am I updating my own post?
+	if (num in state.ownPosts)
+		main.oneeSama.trigger('insertOwnPost', extra);
+	else {
+		model.dispatch('updateBody', {
+			dice: extra.dice,
+			state: extra.state,
+			frag
+		});
+	}
 };
 
 dispatcher[common.FINISH_POST] = function(msg) {

@@ -13,7 +13,8 @@ let _ = require('underscore'),
 	hooks = require('../../util/hooks'),
 	Render = require('../render'),
 	state = require('../state'),
-	util = require('./util');
+	util = require('./util'),
+	winston = require('winston');
 
 let router = module.exports = express.Router(),
 	RES = state.resources;

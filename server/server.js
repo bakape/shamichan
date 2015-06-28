@@ -324,8 +324,7 @@ function allocate_post(msg, client, callback) {
 	post.state = [common.S_BOL, 0];
 
 	if ('auth' in msg) {
-		if (!msg.auth || !client.ident
-				|| msg.auth !== client.ident.auth)
+		if (!msg.auth || !client.ident || msg.auth !== client.ident.auth)
 			return callback(Muggle('Bad auth.'));
 		post.auth = msg.auth;
 	}
@@ -349,9 +348,7 @@ function allocate_post(msg, client, callback) {
 		if (client.post)
 			return callback(Muggle('Already have a post.'));
 
-		if (body.length)
-			amusement.roll_dice(body, post, extra);
-
+		amusement.roll_dice(body, post);
 		client.post = post;
 		post.num = num;
 		var supplements = {
@@ -402,8 +399,8 @@ function update_post(frag, client) {
 	var combined = post.length + frag.length;
 	if (combined > limit)
 		frag = frag.substr(0, combined - limit);
-	var extra = {ip: client.ident.ip};
-	amusement.roll_dice(frag, post, extra);
+	let extra = {ip: client.ident.ip};
+	amusement.roll_dice(frag, extra);
 	post.body += frag;
 	/* imporant: broadcast prior state */
 	var old_state = post.state.slice();

@@ -46,13 +46,9 @@ let ImageHoverView = Backbone.View.extend({
 let PostPreview = Article.extend({
 	initialize(args) {
 		this.parentNum = args.parentNum;
-		this.listenTo(this.model, {
-			'change:body': this.update,
-			'change:image': this.update,
-			'change:editing': this.renderEditing
-		});
-		this.render().$el.addClass('preview');
-		this.initCommon().update();
+		this.listenTo(this.model, 'dispatch', this.redirect)
+			.render().$el.addClass('preview');
+		this.update();
 	},
 	update() {
 		if (!this.num)
