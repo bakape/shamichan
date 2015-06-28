@@ -133,7 +133,8 @@ function hashClient(cb) {
 	let bundles = [
 		'./www/js/client.js',
 		'./www/js/loader.js',
-		'./www/js/login.js'
+		'./www/js/login.js',
+		'./www/js/setup.js'
 	];
 	const langs = config.LANGS;
 	for (let i = 0, l = langs.length; i < l; i++) {
