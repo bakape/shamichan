@@ -1,3 +1,7 @@
+/*
+Populates and stores the core state of the server, including generated tempates
+*/
+
 'use strict';
 
 // Some hot configs need to be be available when common/ is required
@@ -38,29 +42,12 @@ exports.clients = {};
 exports.clientsByIP = {};
 
 const clientConfig = exports.clientConfig = _.pick(config,
-	'IP_MNEMONIC',
-	'USE_WEBSOCKETS',
-	'SOCKET_PATH',
-	'SOCKET_URL',
-	'DEBUG',
-	'READ_ONLY',
-	'IP_TAGGING',
-	'RADIO',
-	'PYU',
-	'BOARDS',
-	'LANGS',
-	'DEFAULT_LANG',
-	'READ_ONLY_BOARDS',
-	'WEBM',
-	'UPLOAD_URL',
-	'MEDIA_URL',
-	'SECONDARY_MEDIA_URL',
-	'THUMB_DIMENSIONS',
-	'PINKY_DIMENSIONS',
-	'SPOILER_IMAGES',
-	'IMAGE_HATS',
-	'ASSETS_DIR',
-	'RECAPTCHA_PUBLIC_KEY'
+	'IP_MNEMONIC', 'USE_WEBSOCKETS', 'SOCKET_PATH', 'SOCKET_URL', 'DEBUG',
+	'READ_ONLY', 'IP_TAGGING', 'RADIO', 'PYU', 'BOARDS', 'LANGS',
+	'DEFAULT_LANG', 'READ_ONLY_BOARDS', 'WEBM', 'UPLOAD_URL', 'MEDIA_URL',
+	'SECONDARY_MEDIA_URL', 'THUMB_DIMENSIONS', 'PINKY_DIMENSIONS',
+	'SPOILER_IMAGES', 'IMAGE_HATS', 'ASSETS_DIR', 'RECAPTCHA_PUBLIC_KEY',
+	'LOGIN_KEYWORD'
 );
 
 function reload_hot_config(cb) {
@@ -84,17 +71,10 @@ function reload_hot_config(cb) {
 		_.extend(HOT, hot.hot);
 
 		// Pass some of the config variables to the client
-		var clientHot = exports.clientHotConfig = _.pick(HOT,
-			'ILLYA_DANCE',
-			'EIGHT_BALL',
-			'THREADS_PER_PAGE',
-			'ABBREVIATED_REPLIES',
-			'SUBJECT_MAX_LENGTH',
-			'EXCLUDE_REGEXP',
-			'ADMIN_ALIAS',
-			'MOD_ALIAS',
-			'SAGE_ENABLED',
-			'THREAD_LAST_N',
+		let clientHot = exports.clientHotConfig = _.pick(HOT,
+			'ILLYA_DANCE', 'EIGHT_BALL', 'THREADS_PER_PAGE',
+			'ABBREVIATED_REPLIES', 'SUBJECT_MAX_LENGTH', 'EXCLUDE_REGEXP',
+			'ADMIN_ALIAS', 'MOD_ALIAS', 'SAGE_ENABLED', 'THREAD_LAST_N',
 			'BOARD_CSS'
 		);
 
@@ -150,7 +130,11 @@ function hashVendor(cb) {
 
 // Hashes all client bundles into a central hash
 function hashClient(cb) {
-	let bundles = ['./www/js/client.js', './www/js/loader.js'];
+	let bundles = [
+		'./www/js/client.js',
+		'./www/js/loader.js',
+		'./www/js/login.js'
+	];
 	const langs = config.LANGS;
 	for (let i = 0, l = langs.length; i < l; i++) {
 		bundles.push(`./www/js/lang/${langs[i]}.js`);

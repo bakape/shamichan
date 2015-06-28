@@ -3,7 +3,7 @@
  */
 
 let main = require('../main'),
-	{$, $email, $name, _, common} = main;
+	{$, $script, $email, $name, _, common} = main;
 
 function load() {
 	try {
@@ -21,11 +21,9 @@ let save = _.debounce(function() {
 		const name = $name.val();
 		let email = $email.val();
 		// Staff login method
-		if (email == 'misaki') {
+		if (email === config.LOGIN_KEYWORD) {
 			$email.val('');
-			$('<scriptt/>', {
-				src: main.config.MEDIA_URL + 'js/login.js?v=2'
-			}).appendTo('head');
+			$script(config.MEDIA_URL + 'js/login.js?v=' + main.clientHash);
 			email = false;
 		}
 

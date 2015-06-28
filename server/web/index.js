@@ -4,7 +4,8 @@
 
 'use strict';
 
-let api = require('./api'),
+let _ = require('underscore'),
+	api = require('./api'),
 	caps = require('../caps'),
 	cookieParser = require('cookie-parser'),
 	compress = require('compression'),
@@ -13,6 +14,7 @@ let api = require('./api'),
 	html = require('./html'),
 	http = require('http'),
 	imager = require('../../imager/daemon'),
+	persona = require('../persona'),
 	util = require('./util'),
 	websocket = require('./websocket');
 
@@ -23,6 +25,8 @@ app.enable('strict routing').disable('etag');
 server.listen(config.LISTEN_PORT);
 
 // NOTE: Order is important as it determines handler priority
+
+app.use(cookieParser());
 
 // Pass the client IP through authentication checks
 app.use(function(req, res, next) {
@@ -40,15 +44,27 @@ app.use(function(req, res, next) {
 	// TODO: A prettier ban page would be nice, once we have actual ban comments
 	if (req.ident.ban)
 		return res.sendStatus(500);
-	next();
+
+	// Staff authentication
+	const loginCookie = persona.extract_login_cookie(req.cookies);
+	if (loginCookie) {
+		persona.check_cookie(loginCookie, function (err, ident) {
+			if (!err)
+				_.extend(req.ident, ident);
+			next();
+		})
+	}
+	else
+		next();
 });
 
 websocket.start(server);
 if (config.GZIP)
 	app.use(compress());
+app.post('/login', persona.login);
+app.post('/logout', persona.logout);
 app.post('/upload/', imager.new_upload);
 app.use('/api/', api);
 if (config.SERVE_STATIC_FILES)
 	app.use(express.static('www'));
-app.use(cookieParser());
 app.use(html);

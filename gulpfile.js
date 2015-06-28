@@ -77,7 +77,8 @@ function buildClient() {
 			'backbone.radio',
 			'stack-blur',
 			'lang',
-			'core-js'
+			'core-js',
+			'scriptjs'
 		]
 	})
 		// Exclude these requires on the client

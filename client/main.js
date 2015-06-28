@@ -25,6 +25,7 @@ let main = module.exports = radio.channel('main');
 _.extend(main, {
 	// Bind dependancies to main object for pretier destructuring requires
 	$, _, Backbone, Cookie,
+	$script: require('scriptjs'),
 	stackBlur: require('stack-blur'),
 
 	/*
@@ -51,6 +52,7 @@ _.extend(main, {
 	 also reduce flexibility, for frequent togglers. Hmm.
 	 */
 	config: window.config,
+	clientHash: window.clientHash,
 	isMobile: /Android|iP(?:hone|ad|od)|Windows Phone/.test(navigator.userAgent),
 	// Websocket call handler map. Store them here, to avoid requiring
 	// modules in the wrong order.

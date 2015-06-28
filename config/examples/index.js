@@ -72,14 +72,15 @@ module.exports = {
 
 /*
  Doushio uses Mozilla's Persona system for moderator authentication.
- Set login emails here. Loging in can be done by either going to the /login/
- board or typing "misaki" into the email field.
+ Set login emails here.
  */
 	ADMIN_PERSONAS: ['lalc@doushio.com'],
 	MODERATOR_PERSONAS: ['mod@doushio.com'],
-// URL to pass to Mozilla's servers.
-	PERSONA_AUDIENCE: 'http://example.com:80',
-	LOGIN_COOKIE_DOMAIN: 'example.com',
+// You can log in/out by typing the following keyword in the email field
+	LOGIN_KEYWORD: 'misaki',
+// URL and domain of the website
+	PERSONA_AUDIENCE: 'http://localhost:8000',
+	LOGIN_COOKIE_DOMAIN: '',
 	LOGIN_SESSION_TIME: 60*60*24*14,
 // Translate IP's into more human-readable mnemonics
 	IP_MNEMONIC: true,

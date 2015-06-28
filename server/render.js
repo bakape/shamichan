@@ -74,7 +74,7 @@ class Render {
 		});
 
 		// Add mnemonics for authenticated staff
-		caps.augment_oneesama(oneeSama, this.opts);
+		caps.augment_oneesama(oneeSama, this.opts.board, ident);
 
 		if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 			oneeSama.thumbStyle = cookies.thumb;

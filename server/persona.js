@@ -77,7 +77,7 @@ function verify_auth(resp, packet) {
 		packet.auth = 'Moderator';
 	else
 		delete packet.auth;
-	exports.set_cookie(resp, packet);
+	set_cookie(resp, packet);
 }
 
 function set_cookie (resp, info) {
@@ -135,12 +135,11 @@ function respond_error(resp, message) {
 }
 
 function respond_ok(resp, cookie) {
-	var headers = {
+	resp.set({
 		'Content-Type': 'application/json',
 		'Set-Cookie': cookie
-	};
-	resp.writeHead(200, headers);
-	resp.end(JSON.stringify({status: 'okay'}));
+	});
+	resp.json({status: 'okay'});
 }
 
 function make_expiry() {
