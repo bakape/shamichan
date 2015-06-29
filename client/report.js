@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{$, _, Backbone, common} = main;
+	{$, $script, _, Backbone, common} = main;
 
 // TODO: Rewrite this and move to API v2
 
@@ -163,31 +163,34 @@ var ReportPanel = Backbone.View.extend({
 });
 
 main.comply('report', function(post) {
-	const num = post.get('num');
-	let model = reports[num];
-	if (!model) {
-		reports[num] = model = new Report({
-			id: num,
-			post: post
-		});
-	}
-	if (panel) {
-		if (panel.model === model) {
-			panel.focus();
-			return;
+	const url = 'https://www.google.com/recaptcha/api/js/recaptcha_ajax.js';
+	$script(url, function () {
+		const num = post.get('num');
+		let model = reports[num];
+		if (!model) {
+			reports[num] = model = new Report({
+				id: num,
+				post: post
+			});
 		}
-		panel.remove();
-	}
-	panel = new ReportPanel({model: model});
-	panel.render().$el.appendTo('body');
-	if (window.Recaptcha)
-		model.request_new();
-	else {
-		model.set({
-			status: 'error',
-			error: "Couldn't load reCATPCHA."
-		});
-	}
+		if (panel) {
+			if (panel.model === model) {
+				panel.focus();
+				return;
+			}
+			panel.remove();
+		}
+		panel = new ReportPanel({model: model});
+		panel.render().$el.appendTo('body');
+		if (window.Recaptcha)
+			model.request_new();
+		else {
+			model.set({
+				status: 'error',
+				error: "Couldn't load reCATPCHA."
+			});
+		}
+	});
 });
 
 main.dispatcher[common.REPORT_POST] = function(msg) {
