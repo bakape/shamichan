@@ -4,7 +4,7 @@
 
 let main = require('./main'),
 	{Article} = main.posts,
-	{$, Backbone, options, state} = main;
+	{$, Backbone, etc, options, state} = main;
 
 // Centralised mousemove target tracking
 let mousemove = new Backbone.Model({
@@ -52,7 +52,7 @@ let PostPreview = Article.extend({
 	},
 	update() {
 		if (!this.num)
-			this.num = this.$el.closest('article, section').attr('id');
+			this.num = etc.getID(this.el);
 		postHover.render(this.$el, this.parentNum);
 	}
 });
@@ -76,7 +76,7 @@ let HoverPostView = Backbone.View.extend({
 		this.targetPos = $target.position();
 		this.previewView = new PostPreview({
 			model: post,
-			parentNum: $target.closest('article, section').attr('id')
+			parentNum: etc.getID(event.target)
 		});
 		$target.one('mouseleave click', () => this.remove());
 	},

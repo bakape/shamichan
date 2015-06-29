@@ -14,10 +14,26 @@
 .mod.hidden {
 	color: red;
 }
-.mod#toolbox {
-	margin: 0.5em 0.5em 0.5em 1.0em;
+#toolbox {
+	position: fixed;
+	margin: 0.5em;
+	right: 0;
+	bottom: 0;
+	padding: 0.5em;
+	max-height: 80%;
+	max-width: 80%;
+	font-weight: bold;
+	span {
+		display: none;
+	}
+	a:before {
+		content: ' [';
+	}
+	a:after {
+		content: '] ';
+	}
 }
-.mod#panel {
+#panel {
 	bottom: 30px;
 	padding: 1em;
 	position: fixed;

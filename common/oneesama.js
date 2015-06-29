@@ -161,6 +161,7 @@ class OneeSama {
 	header(data) {
 		return parseHTML
 			`<header>
+				<input type="checkbox" class="postCheckbox">
 				<span class=control></span>
 				${data.subject && `<h3>「${escape(data.subject)}」</h3>`}
 				${this.name(data)}~

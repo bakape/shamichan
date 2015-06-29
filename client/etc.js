@@ -29,8 +29,13 @@ function deferLoop(items, stack, func) {
 }
 exports.deferLoop = deferLoop;
 
+function getID(el) {
+	return $(el).closest('article, section').attr('id');
+}
+exports.getID = getID;
+
 function getModel(el) {
-	const id = $(el).closest('article, section').attr('id');
+	const id = getID(el);
 	if (!id)
 		return null;
 	return state.posts.get(id);
