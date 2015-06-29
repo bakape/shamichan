@@ -18,9 +18,9 @@ class Extract {
 
 		this.mine = state.mine.readAll();
 		this.posts = json.posts;
-		state.addLinks(json.links);
 		this.extractThreads(el);
 		this.extractReplies(el);
+		state.addLinks(json.links);
 
 		// Apply various client-only DOM modifications
 		main.command('imager:lazyLoad');

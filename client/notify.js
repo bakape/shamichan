@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{$, Backbone, state, options} = main;
+	{$, Backbone, connSM, state, options} = main;
 
 const mediaURL = main.config.MEDIA_URL;
 
@@ -47,17 +47,16 @@ let NotifyModel = Backbone.Model.extend({
 			});
 			// Prevent scrolling with new posts, if page isn't visible
 			if (!options.get('alwaysLock')) {
-				main.command(
-					'scroll:focus',
+				main.follow(() =>
 					hidden && main.$threads.find('article').last().attr('id')
 				);
 			}
 		}, false);
 
 		let dropped = () => this.set('alert', true);
-		main.connSM.on('dropped', dropped);
-		main.connSM.on('desynced', dropped);
-		main.connSM.on('synced', () => notify.set('alert', false));
+		connSM.on('dropped', dropped);
+		connSM.on('desynced', dropped);
+		connSM.on('synced', () => notify.set('alert', false));
 	},
 	check(model) {
 		const {hidden, unreadCount, reply, alert} = model.attributes;
@@ -92,9 +91,11 @@ let notify = new NotifyModel({
 // Own post are remember for 2 days, so lets keep 1 day as a buffer
 let replies = new main.Memory('replies', 3);
 
-main.comply('repliedToMe', function (post) {
-	post = post.attributes;
-	const num = post.num;
+main.comply('repliedToMe', function (num) {
+	let post = state.posts.get(num);
+	if (!post)
+		return;
+
 	// Already displayed a notification for the reply. Needs to be read
 	// freshly from local storage each time, not to trigger multiple times,
 	// if the same post is displayed in multiple tabs.
@@ -103,9 +104,9 @@ main.comply('repliedToMe', function (post) {
 	if (options.get('notification') && document.hidden && !main.isMobile) {
 		new Notification('You have been quoted', {
 			// if the post doesn't have a image we use a bigger favicon
-			icon: post.image ? main.oneeSama.thumbPath(data)
+			icon: post.get('image') ? main.oneeSama.thumbPath(data)
 				: mediaURL + 'css/ui/favbig.png',
-			body: post.body
+			body: post.get('body')
 		})
 			.onclick = function() {
 				window.focus();

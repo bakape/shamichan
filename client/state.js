@@ -72,7 +72,13 @@ main.on('state:clear', function() {
 let links = exports.links = {};
 
 function addLinks(addition) {
-	if (addition)
-		_.extend(links, addition);
+	if (!addition)
+		return;
+	const myPosts = mine.readAll();
+	for (let num in addition) {
+		if (num in myPosts)
+			main.command('repliedToMe', num);
+	}
+	_.extend(links, addition);
 }
 exports.addLinks = addLinks;
