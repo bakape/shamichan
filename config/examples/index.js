@@ -4,8 +4,8 @@ module.exports = {
 	LISTEN_HOST: null,
 // Debuging mode. Do not use in production
 	DEBUG: true,
-// Secure tripcode encryption salt
-	SECURE_SALT: "LALALALALALALALA", /* [A-Za-z0-9./]{16} */
+// Secure encryption salt. First 16 chars used for tripcode, mnemonics uses all 40
+	SECURE_SALT: "LALALALALALALALALALALALALALALALALALALALA", /* [A-Za-z0-9./]{40} */
 // Relative path to serve websocket connections
 	SOCKET_PATH: '/hana',
 /*
