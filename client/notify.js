@@ -95,6 +95,7 @@ main.comply('repliedToMe', function (num) {
 	let post = state.posts.get(num);
 	if (!post)
 		return;
+	post = post.attributes;
 
 	// Already displayed a notification for the reply. Needs to be read
 	// freshly from local storage each time, not to trigger multiple times,
@@ -102,16 +103,16 @@ main.comply('repliedToMe', function (num) {
 	if (num in replies.readAll())
 		return;
 	if (options.get('notification') && document.hidden && !main.isMobile) {
-		new Notification('You have been quoted', {
+		let n = new Notification('You have been quoted', {
 			// if the post doesn't have a image we use a bigger favicon
-			icon: post.get('image') ? main.oneeSama.thumbPath(data)
+			icon: post.image ? main.oneeSama.thumbPath(post.image)
 				: mediaURL + 'css/ui/favbig.png',
-			body: post.get('body')
-		})
-			.onclick = function() {
-				window.focus();
-				location.hash = '#' + num;
-			};
+			body: post.body
+		});
+		n.onclick = function() {
+			window.focus();
+			location.hash = '#' + num;
+		};
 	}
 
 	notify.set({reply: true});

@@ -16,11 +16,22 @@ class Extract {
 		if (state.page.get('catalog'))
 			return;
 
-		this.mine = state.mine.readAll();
-		this.posts = json.posts;
+		const mine = this.mine = state.mine.readAll(),
+			posts = this.posts = json.posts;
 		this.extractThreads(el);
 		this.extractReplies(el);
+
 		state.addLinks(json.links);
+		// Forward posts that replied to my post
+		for (let post in posts) {
+			const links = posts[post].links;
+			if (!links)
+				continue;
+			for (let num in links) {
+				if (num in mine)
+					main.command('repliedToMe', posts[post].num);
+			}
+		}
 
 		// Apply various client-only DOM modifications
 		main.command('imager:lazyLoad');
