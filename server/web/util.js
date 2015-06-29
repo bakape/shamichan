@@ -27,3 +27,10 @@ function boardAccess(req, res, next) {
 	next();
 }
 exports.boardAccess = boardAccess;
+
+exports.noCacheHeaders = {
+	'Content-Type': 'text/html; charset=UTF-8',
+	'X-Frame-Options': 'sameorigin',
+	'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
+	'Cache-Control': 'no-cache, no-store'
+};

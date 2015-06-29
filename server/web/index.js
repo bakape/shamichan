@@ -5,6 +5,7 @@
 'use strict';
 
 let _ = require('underscore'),
+	admin = require('./admin'),
 	api = require('./api'),
 	caps = require('../caps'),
 	cookieParser = require('cookie-parser'),
@@ -61,10 +62,11 @@ app.use(function(req, res, next) {
 websocket.start(server);
 if (config.GZIP)
 	app.use(compress());
-app.post('/login', persona.login);
-app.post('/logout', persona.logout);
-app.post('/upload/', imager.new_upload);
-app.use('/api/', api);
+app.post('/login', persona.login)
+	.post('/logout', persona.logout)
+	.post('/upload/', imager.new_upload)
+	.use(admin)
+	.use('/api/', api);
 if (config.SERVE_STATIC_FILES)
 	app.use(express.static('www'));
 app.use(html);

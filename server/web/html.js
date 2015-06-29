@@ -24,12 +24,6 @@ const vanillaHeaders = {
 	'X-Frame-Options': 'sameorigin',
 	'Cache-Control': `max-age=0, must-revalidate, private`
 };
-const noCacheHeaders = {
-	'Content-Type': 'text/html; charset=UTF-8',
-	'X-Frame-Options': 'sameorigin',
-	'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
-	'Cache-Control': 'no-cache, no-store'
-};
 
 router.get('/', function(req, res) {
 	res.redirect(`/${config.DEFAULT_BOARD}/`)
@@ -248,7 +242,7 @@ router.get(/^\/(\w+)\/(\d+)/,
 function buildEtag(req, res, ctr, extra) {
 	let etag = parseCookies(req, ctr);
 	if (config.DEBUG) {
-		res.set(noCacheHeaders);
+		res.set(util.noCacheHeaders);
 		return true;
 	}
 	if (extra)

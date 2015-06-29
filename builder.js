@@ -45,7 +45,7 @@ var fullRestart = _.debounce(function() {
 }, 5000);
 
 const serverExclude = new RegExp(
-	String.raw`\.pid$|\.socket|hot.js$|admin\/client.js$|`
+	String.raw`\.pid$|\.socket|hot.js$|`
 		+ config.MEDIA_DIRS.tmp.replace('/', '\\/')
 );
 watch(deps.server, function(file) {
@@ -59,11 +59,11 @@ watch(deps.server, function(file) {
 watch('common', fullRestart);
 watch('lang', fullRestart);
 watch('gulpfile.js', function() {
-	buildAll(reload_state);
+	buildAll(start_server);
 });
 ['client', 'css', 'mod'].forEach(function(task) {
 	watch(deps[task], _.debounce(function() {
-		build([task], reload_state);
+		build([task], start_server);
 	}), 5000);
 });
 watch(deps.state, reload_state);

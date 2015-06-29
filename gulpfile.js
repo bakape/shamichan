@@ -1,47 +1,19 @@
 'use strict';
 
-var babelify = require('babelify'),
+let babelify = require('babelify'),
 	browserify = require('browserify'),
 	buffer = require('vinyl-buffer'),
-	concat = require('gulp-concat'),
 	config = require('./config'),
-	deps = require('./deps'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
 	gutil = require('gulp-util'),
 	less = require('gulp-less'),
 	minifyCSS = require('gulp-minify-css'),
-	rename = require('gulp-rename'),
-	rev = require('gulp-rev'),
 	source = require('vinyl-source-stream'),
 	sourcemaps = require('gulp-sourcemaps'),
 	uglify = require('gulp-uglify');
 
 const debug = config.DEBUG;
-
-function gulper(name, files, dest) {
-	gulp.task(name, function() {
-		return gulp.src(files)
-			.pipe(concat(name))
-			.pipe(gulpif(!debug, uglify()))
-			.pipe(rev())
-			.pipe(rename({suffix: '.' + (debug ? 'debug' : 'min') + '.js'}))
-			.pipe(gulp.dest(dest))
-			.pipe(rev.manifest(name + '.json'))
-			.pipe(gulp.dest('./state'));
-	});
-}
-gulper('mod', deps.mod, './state');
-
-gulp.task('css', function() {
-	return gulp.src('./less/*.less')
-		.pipe(sourcemaps.init())
-		.pipe(less())
-		.pipe(minifyCSS({rebase: false}))
-		.pipe(sourcemaps.write('./maps/'))
-		.pipe(gulp.dest('./www/css'))
-		.pipe(gulp.dest('./state'));
-});
 
 function build(name, b, dest) {
 	gulp.task(name, function() {
@@ -51,7 +23,7 @@ function build(name, b, dest) {
 
 function bundler(name, b, dest) {
 	// TEMP: Don't minify the client, until we get minification support for ES6
-	const canMinify = !debug && (name !== 'client');
+	const canMinify = !debug && name !== 'client';
 	return b.bundle()
 		// Transform into vinyl stream
 		.pipe(source(name + '.js'))
@@ -122,9 +94,7 @@ function buildClient() {
 // Less performant client for older browser compatibility
 {
 	let b = buildClient().transform(babelify.configure({
-		optional: [
-			'es6.spec.blockScoping'
-		]
+		optional: ['es6.spec.blockScoping']
 	}));
 
 	build('legacy', b, './www/js');
@@ -149,8 +119,8 @@ function buildClient() {
 	build('vendor', b, './www/js');
 }
 
+// Language bundles
 gulp.task('lang', function() {
-	// Language bundles
 	const langs = config.LANGS;
 	for (let i = 0, l = langs.length; i < l; i++) {
 		const lang = langs[i];
@@ -160,3 +130,26 @@ gulp.task('lang', function() {
 	}
 });
 
+// Moderation
+{
+	let b = browserify({
+		debug: true,
+		bundleExternal: false,
+		external: ['main']
+	})
+		.require('./admin/client', {expose: 'mod'})
+		.transform(babelify.configure({
+			optional: ['es6.spec.blockScoping']
+		}));
+
+	build('mod', b, './state/');
+}
+
+gulp.task('css', function() {
+	return gulp.src('./less/*.less')
+		.pipe(sourcemaps.init())
+		.pipe(less())
+		.pipe(minifyCSS({rebase: false}))
+		.pipe(sourcemaps.write('./maps/'))
+		.pipe(gulp.dest('./www/css'));
+});

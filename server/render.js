@@ -1,9 +1,11 @@
 /*
  Renders the server-side portion of the HTML
  */
+
 'use strict';
 
-var caps = require('./caps'),
+let _ = require('underscore'),
+	caps = require('./caps'),
 	common = require('../common/index'),
 	config = require('../config'),
 	db = require('../db'),
@@ -291,13 +293,15 @@ class Render {
 	pageEnd() {
 		let resp = this.resp;
 		resp.write(this.tmpl[2]);
+
+		// Make script loader load moderation bundle
 		const ident = this.req.ident;
-		if (ident) {
-			if (caps.can_administrate(ident))
-				resp.write('<script src="../admin.js"></script>\n');
-			else if (caps.can_moderate(ident))
-				resp.write('<script src="../mod.js"></script>\n');
+		if (ident && caps.can_moderate(ident)) {
+			const keys =  JSON.stringify(_.pick(ident, 'auth', 'csrf', 'email'));
+			resp.write(`var IDENT = ${keys};`);
 		}
+
+		resp.write(this.tmpl[3]);
 	}
 }
 module.exports = Render;

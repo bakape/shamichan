@@ -2,16 +2,16 @@
 Selects and loads the client files
  */
 
-(function() {
+(function () {
 	// Check for browser compatibility by trying to detect some ES6 features
 	var legacy;
 	if (typeof Set !== 'function'
-		|| 	typeof WeakSet !== 'function'
+		|| typeof WeakSet !== 'function'
 		|| typeof Number.isNaN !== 'function'
 		|| !checkConst()
 		|| !checkTemplateStrings()
 	)
-		// Load client with full ES5 complience
+		// Load client with full ES5 compliance
 		legacy = true;
 
 	var $script = require('scriptjs'),
@@ -20,7 +20,13 @@ Selects and loads the client files
 
 	$script(base + 'lang/' + lang + end, function() {
 		var client = legacy ? 'legacy' : 'client';
-		$script(base + client + end);
+		$script(base + client + end, function () {
+			if (typeof IDENT !== 'undefined') {
+				$script('../mod.js', function () {
+					require('mod');
+				});
+			}
+		});
 	});
 
 	function checkConst() {

@@ -7,7 +7,6 @@ but who cares. Writing in each file individually is a pain.
  */
 module.exports = {
 	server: [
-		'admin',
 		'config',
 		'imager',
 		'server',
@@ -18,10 +17,8 @@ module.exports = {
 		'tmpl',
 		'config/hot.js'
 	],
-	// TEMP: Still used for building
 	mod: [
-		'admin/index.js',
-		'admin/client.js'
+		'admin'
 	],
 	client: [
 		'client'
