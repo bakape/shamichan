@@ -223,7 +223,7 @@ opts.push(
 			if (r)
 				$('<style/>', {
 					id: 'reply-at-right',
-					text: 'aside { margin: -26px 0 2px auto; }'
+					text: 'section > aside { margin: -26px 0 2px auto; }'
 				}).appendTo('head');
 			else
 				$('#reply-at-right').remove();
