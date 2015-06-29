@@ -59,11 +59,11 @@ watch(deps.server, function(file) {
 watch('common', fullRestart);
 watch('lang', fullRestart);
 watch('gulpfile.js', function() {
-	buildAll(start_server);
+	buildAll(reload_state);
 });
 ['client', 'css', 'mod'].forEach(function(task) {
 	watch(deps[task], _.debounce(function() {
-		build([task], start_server);
+		build([task], reload_state);
 	}), 5000);
 });
 watch(deps.state, reload_state);
