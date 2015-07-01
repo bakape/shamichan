@@ -102,11 +102,18 @@ bool mnemonizer::isIpv4(std::string ip){
 }
 
 bool mnemonizer::isIpv6(std::string ip){
-    if(*ip.rbegin()==':')
+    std::string::reverse_iterator lastC=ip.rbegin();
+    if(ip.length()<2 ||(lastC[0]==':' && lastC[1]!=':')) //ends with ::
         return false;
+
+    bool gap = false;
+    std::string::iterator firstC = ip.begin();
+    if(firstC[0]==':' && firstC[1]==':'){ //starts with ::
+        gap=true;
+        ip.erase(0,2);
+    }
     std::stringstream ipStream(ip);
     std::string part;
-    bool gap = false;
     int count =0;
 
     char *end;
