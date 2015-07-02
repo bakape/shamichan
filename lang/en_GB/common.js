@@ -22,6 +22,7 @@ const lang = {
 	newThread: 'New thread',
 	locked_to_bottom: 'Locked to bottom',
 	you: '(You)',
+	done: 'Done',
 
 	// Time-related
 	week: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],

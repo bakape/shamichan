@@ -82,8 +82,8 @@ var lang = {
 			'Importar opções de arquivo'
 		],
 		hidden: [
-			'Hidden: 0',
-			'Clear hidden posts'
+			'Escondidos: 0',
+			'Limpa os posts escondidos'
 		],
 		lang: [
 			'Linguagem',
