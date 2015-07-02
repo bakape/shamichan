@@ -21,6 +21,7 @@
  *      NULL if the ip was invalid or there was some incorrect parameter, and an error message will be printed
  */
 #include "mnemonizer.h"
+#include <iostream>
 #include <sstream> //String stream
 #include <cstdlib> //strtol
 #include <cmath> //floor
@@ -54,13 +55,12 @@ NAN_METHOD(mnemonizer::New){
   if(args.IsConstructCall()){
     mnemonizer* obj;
     if(!args[0]->IsString()){
-        printf("mnemonizer: Warning, invalid Salt, no salt will we used (non secure)\n");
+        std::cerr<<"mnemonizer: Warning, invalid Salt, no salt will we used (non secure)"<<std::endl;
         obj= new mnemonizer(std::string(""));
     }else{
         String::Utf8Value saltUTF(args[0]);
         obj = new mnemonizer(std::string(*saltUTF));
     }
-
     obj->Wrap(args.This());
     NanReturnValue(args.This());
   }else {
@@ -74,7 +74,7 @@ mnemonizer::mnemonizer(std::string salt)
 {
 
     if(salt.length()<SALTLENGTH)
-        printf("mnemonizer: Warning, salt should be larger, at least %d characters\n",SALTLENGTH);
+        std::cerr<<"mnemonizer: Warning, salt should be larger, at least "<<SALTLENGTH<<" characters"<<std::endl;
     this->salt=salt;
 }
 
@@ -137,8 +137,8 @@ std::string mnemonizer::hashToMem(unsigned char* hash){
     std::string result;
     result.reserve(10);
     for(int i=0;i<4;i++){
-        std::string part = ucharToHex(hash+(i*5),10);
-        unsigned int val = strtoul(part.c_str(),NULL,16);
+        std::string part = ucharToHex(hash+(i*5),8);
+        unsigned long int val = strtoul(part.c_str(),NULL,16);
         result.append(
                     MNEMONICSTARTS[(int)floor((val%256)/16)]+
                     MNEMONICENDS[val%16]
@@ -164,7 +164,7 @@ NAN_METHOD(mnemonizer::Apply_mnemonic){
     mnemonizer* obj = ObjectWrap::Unwrap<mnemonizer>(args.Holder());
 
     if(!args[0]->IsString())
-        printf("mnemonizer: Wrong argument passed to Apply_mnemonic(Should be an String)\n");
+        std::cerr<<"mnemonizer: Wrong argument passed to Apply_mnemonic(Should be an String)"<<std::endl;
 
     String::Utf8Value ipUTF(args[0]);
     std::string ip= std::string(*ipUTF);
@@ -174,5 +174,6 @@ NAN_METHOD(mnemonizer::Apply_mnemonic){
         SHA1((unsigned char*)ip.c_str(),ip.length(),out);
         NanReturnValue(NanNew<String>(obj->hashToMem(out)));
     }
+    std::cerr<<"mnemonizer: Ip not valid: "<<ip<<std::endl;
     NanReturnValue(NanNull());
 }
