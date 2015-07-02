@@ -244,7 +244,7 @@ var ComposerView = Backbone.View.extend({
 		this.$submit = $('<input/>', {
 			id: 'done',
 			type: 'button',
-			value: 'Done'
+			value: main.lang.done
 		});
 		this.$subject = $('<input/>', {
 			id: 'subject',
