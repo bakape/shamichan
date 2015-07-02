@@ -17,7 +17,7 @@ static NAN_METHOD(setup_callback) {
 	if (args.Length() != 1)
 		NanReturnValue(NanFalse());
 	NanUtf8String saltVal(args[0]);
-	if (saltVal.length() != 16)
+	if (saltVal.length() < 16)
 		NanReturnValue(NanFalse());
 	char *salt = *saltVal;
 	if (!salt)
