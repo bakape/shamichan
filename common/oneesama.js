@@ -169,14 +169,6 @@ class OneeSama {
 				${this.postNavigation(data)}
 				${!this.full && !data.op && this.expansionLinks(data.num)}
 			</header>`;
-
-		// TODO: Revisit, when we get to moderation.
-		/*
-		 this.trigger('headerFinish', {
-		 header,
-		 data
-		 });
-		 */
 	}
 	name(data) {
 		let html = '';
@@ -194,12 +186,9 @@ class OneeSama {
 		if (email)
 			html += '</a>';
 		html += '</b>';
+		if (data.mnemonic)
+			html += ` <a class="mod addr">${data.mnemonic}</a>`;
 		return html;
-		// TODO: Refactor, when moderation implemented
-		/*this.trigger('headerName', {
-		 header: html,
-		 data
-		 });*/
 	}
 	resolveName(data) {
 		let html = '';
