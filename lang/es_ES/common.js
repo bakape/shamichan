@@ -22,7 +22,7 @@ const lang = {
 	newThread: 'New thread',
 	locked_to_bottom: 'Locked to bottom',
 	you: '(You)',
-  done: 'Hecho',
+	done: 'Hecho',
 
 	// Time-related
 	week: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
