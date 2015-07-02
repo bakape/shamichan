@@ -1,7 +1,15 @@
-var authcommon = require('./common'),
+/*
+Core  server-side administration module
+ */
+
+'use strict';
+
+let authcommon = require('./common'),
     caps = require('../server/caps'),
     common= require('../common/index'),
+	config = require('../config'),
     okyaku = require('../server/okyaku'),
+	mnemonics = require('./mnemonic/mnemonics'),
     STATE = require('../server/state');
 
 require('./panel');
@@ -9,6 +17,18 @@ require('./panel');
 function connect() {
 	return global.redis;
 }
+
+let mnemonizer = new mnemonics.mnemonizer(config.SECURE_SALT);
+
+function genMnemonic(post) {
+	const ip = post.ip;
+	if (!ip || !config.IP_MNEMONIC)
+		return;
+	const mnemonic = mnemonizer.Apply_mnemonic(ip);
+	if (mnemonic)
+		post.mnemonic = mnemonic;
+}
+exports.genMnemonic = genMnemonic;
 
 function ban(m, mod, ip, key, type, sentence) {
 	if (type == 'unban') {

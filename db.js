@@ -1,7 +1,10 @@
+/*
+Main redis controller module
+ */
+
 'use strict';
 
 let _ = require('underscore'),
-	amusement = require('./server/amusement'),
     async = require('async'),
     cache = require('./server/state').dbCache,
     caps = require('./server/caps'),
@@ -30,6 +33,10 @@ exports.UPKEEP_IDENT = {
 	auth: 'Upkeep',
 	ip: '127.0.0.1'
 };
+
+// Depend on global redis client
+let admin = require('./admin'),
+	amusement = require('./server/amusement');
 
 /* REAL-TIME UPDATES */
 
@@ -329,6 +336,7 @@ class Yakusoku extends events.EventEmitter {
 		this.id = ++(cache.YAKUMAN);
 		this.tag = board;
 		this.ident = ident;
+		this.canModerate = caps.can_moderate(ident);
 		this.subs = [];
 	}
 	connect() {
@@ -506,8 +514,7 @@ class Yakusoku extends events.EventEmitter {
 		/* Denormalize for backlog */
 		view.nonce = msg.nonce;
 		view.body = body;
-		extract(view, true);
-		delete view.ip;
+		extract(view, this.canModerate, true);
 
 		let self = this,
 			bump;
@@ -1050,8 +1057,7 @@ class Reader extends events.EventEmitter {
 	constructor(ident) {
 		// Call the EventEmitter's constructor
 		super();
-		if (caps.can_moderate(ident))
-			this.showIPs = true;
+		this.canModerate = caps.can_moderate(ident);
 		this.r = global.redis;
 	}
 	get_thread(tag, num, opts) {
@@ -1142,10 +1148,8 @@ class Reader extends events.EventEmitter {
 								total += parseInt(rs.shift(), 10);
 						}
 
-						extract(opPost);
+						extract(opPost, self.canModerate);
 						opPost.omit = Math.max(total - abbrev, 0);
-						if (!self.showIPs)
-							delete opPost.ip;
 						opPost.hctr = parseInt(opPost.hctr, 10);
 						// So we can pass a thread number on `endthread`
 						// emission
@@ -1257,9 +1261,7 @@ class Reader extends events.EventEmitter {
 			},
 			function (post, next) {
 				if (post)
-					extract(post);
-				if (!self.showIPs)
-					delete post.ip;
+					extract(post, self.canModerate);
 				next(null, post);
 			}
 		],	cb);
@@ -1327,7 +1329,10 @@ function get_all_replies(r, op, cb) {
 	});
 }
 
-function extract(post, dontParseDice) {
+function extract(post, canModerate, dontParseDice) {
+	if (canModerate)
+		admin.genMnemonic(post);
+	delete post.ip;
 	post.num = parseInt(post.num, 10);
 	imager.nestImageProps(post);
 	if (!dontParseDice)

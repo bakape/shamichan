@@ -1,5 +1,5 @@
 /*
- Core server module and entry point
+Core server module and application entry point
  */
 'use strict';
 
@@ -8,13 +8,16 @@ let config = require('../config');
 if (config.DEBUG)
 	Error.stackTraceLimit = 100;
 
+// Read command line arguments. Modifies ../configure, so loaded right after it.
 let opts = require('./opts');
 if (require.main == module)
 	opts.parse_args();
 opts.load_defaults();
 
-// Initialize server state
-let STATE = require('./state');
+// Several modules depend on the state module and a redis connection. Load
+// those first.
+let STATE = require('./state'),
+	db = require('../db');
 
 let _ = require('underscore'),
     amusement = require('./amusement'),
@@ -23,7 +26,6 @@ let _ = require('underscore'),
     check = require('./msgcheck').check,
     common = require('../common/index'),
 	cookie = require('cookie'),
-    db = require('../db'),
     fs = require('fs'),
     hooks = require('../util/hooks'),
     imager = require('../imager'),

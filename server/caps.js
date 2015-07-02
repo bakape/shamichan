@@ -48,8 +48,6 @@ function dead_media_paths(paths) {
 
 function augment_oneesama (oneeSama, board, ident) {
 	oneeSama.ident = ident;
-	if (can_moderate(ident))
-		oneeSama.hook('headerName', authcommon.append_mnemonic);
 	if (can_administrate(ident))
 		oneeSama.hook('headerName', authcommon.denote_hidden);
 	if (can_administrate(ident) && board == 'graveyard')

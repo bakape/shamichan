@@ -1,7 +1,8 @@
+'use strict';
+
 // Define vars both on server and client
 var _, common, config, DEF,
-	isNode = typeof navigator === 'undefined',
-	mnemonics=require('./mnemonic/mnemonics.node');
+	isNode = typeof navigator === 'undefined';
 
 if (isNode) {
 	_ = require('underscore');
@@ -26,27 +27,6 @@ var suspensionKeys = ['boxes', 'bans', 'slows', 'suspensions', 'timeouts'];
 
 var delayNames = ['now', 'soon', 'later'];
 var delayDurations = {now: 0, soon: 60, later: 20*60};
-var mnemonizer = new mnemonics.mnemonizer(config.SECURE_SALT);
-
-function append_mnemonic(info) {
-	var header = info.header, ip = info.data.ip;
-	if (!ip)
-		return;
-	var mnemonic = config.IP_MNEMONIC && mnemonizer.Apply_mnemonic(ip);
-	var key = ip_key(ip);
-
-	// Terrible hack.
-	if (mnemonic && modCache.addresses) {
-		var addr = modCache.addresses[key];
-		if (addr && addr.name && config.IP_TAGGING)
-			mnemonic += ' "' + addr.name + '"';
-	}
-
-	var s = common.safe;
-	var title = mnemonic ? [s(' title="'), ip, s('"')] : '';
-	header.push(s(' <a class="mod addr"'), title, s('>'),
-			mnemonic || ip, s('</a>'));
-}
 
 function denote_hidden(info) {
 	if (info.data.hide)
@@ -70,7 +50,7 @@ function is_IPv4_ip(ip) {
 
 var is_valid_ip = function (ip) {
 	return typeof ip == 'string' && /^[\da-fA-F.:]{3,45}$/.test(ip);
-}
+};
 
 function explode_IPv6_ip(ip) {
 	if (typeof ip != 'string')
@@ -83,13 +63,13 @@ function explode_IPv6_ip(ip) {
 		if (gap < 0 || gap != groups.lastIndexOf(''))
 			return null;
 		var zeroes = [gap, 1];
-		for (var i = groups.length; i < 9; i++)
+		for (let i = groups.length; i < 9; i++)
 			zeroes.push('0');
 		groups.splice.apply(groups, zeroes);
 	}
 
 	// check hex components
-	for (var i = 0; i < groups.length; i++) {
+	for (let i = 0; i < groups.length; i++) {
 		var n = parseInt(groups[i], 16);
 		if (_.isNaN(n) || n > 0xffff)
 			return null;
@@ -111,13 +91,7 @@ function ip_key(ip) {
 
 if (typeof IDENT != 'undefined') {
 	/* client */
-	window.ip_mnemonic = mnemonizer.Apply_mnemonic;
-	oneeSama.hook('headerName', append_mnemonic);
 	oneeSama.hook('headerName', denote_hidden);
-}
-else if (isNode) {
-	exports.ip_mnemonic = mnemonizer.Apply_mnemonic;
-	exports.append_mnemonic = append_mnemonic;
 }
 
 if (isNode){
