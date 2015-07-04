@@ -144,10 +144,11 @@ class Subscription extends events.EventEmitter {
 		// Just one kind of insertion right now
 		if (kind !== common.INSERT_POST || extra.ip)
 			return null;
-		const m = msg.match(/^(\d+,\d+,\d+,)(.+)$/);
-		let post = JSON.parse(m[2]);
-		post.ip = extra.ip;
-		return m[1] + JSON.stringify(post);
+
+		// XXX: Why the fuck don't you just stringify arrays?
+		let parsed = JSON.parse(`[${msg}]`);
+		parsed[2].mnemonic = extra.mnemonic;
+		return JSON.stringify(parsed).slice(1, -1);
 	}
 	has_no_listeners() {
 		/* Possibly idle out after a while */
@@ -336,7 +337,6 @@ class Yakusoku extends events.EventEmitter {
 		this.id = ++(cache.YAKUMAN);
 		this.tag = board;
 		this.ident = ident;
-		this.canModerate = caps.can_moderate(ident);
 		this.subs = [];
 	}
 	connect() {
@@ -514,7 +514,6 @@ class Yakusoku extends events.EventEmitter {
 		/* Denormalize for backlog */
 		view.nonce = msg.nonce;
 		view.body = body;
-		extract(view, this.canModerate, true);
 
 		let self = this,
 			bump;
@@ -546,8 +545,20 @@ class Yakusoku extends events.EventEmitter {
 						const n = self.post_volume(view, body);
 						if (n > 0)
 							self.update_throughput(m, ip, view.time, n);
-						etc.augments.auth = {ip: ip};
+
+						// Only the client-private Reader() instances need
+						// to embed mnemonics in-post. Doing that here would
+						// publish it to everyone. Instead live mnemonic
+						// updates are pushed through the 'auth' channel to
+						// authenticated staff only.
+						const mnemonic = admin.genMnemonic(ip);
+						if (mnemonic)
+							etc.augments.auth = {mnemonic};
 					}
+
+					// Don't parse dice, because they aren't stringified on
+					// live publishes
+					extract(view, true);
 					if (bump)
 						m.incr(tagKey + ':bumpctr');
 					self._log(m, op, common.INSERT_POST, [view, bump], etc);
@@ -1148,7 +1159,8 @@ class Reader extends events.EventEmitter {
 								total += parseInt(rs.shift(), 10);
 						}
 
-						extract(opPost, self.canModerate);
+						self.injectMnemonic(opPost);
+						extract(opPost);
 						opPost.omit = Math.max(total - abbrev, 0);
 						opPost.hctr = parseInt(opPost.hctr, 10);
 						// So we can pass a thread number on `endthread`
@@ -1181,6 +1193,13 @@ class Reader extends events.EventEmitter {
 			if (prop)
 				post[key] = prop;
 		}
+	}
+	injectMnemonic(post) {
+		if (!this.canModerate)
+			return;
+		const mnemonic = admin.genMnemonic(post.ip);
+		if (mnemonic)
+			post.mnemonic = mnemonic;
 	}
 	merge_posts(nums, deadNums, abbrev) {
 		let i = nums.length - 1,
@@ -1260,8 +1279,10 @@ class Reader extends events.EventEmitter {
 				self.with_body(key, pre_post, next);
 			},
 			function (post, next) {
-				if (post)
-					extract(post, self.canModerate);
+				if (post) {
+					self.injectMnemonic(post);
+					extract(post);
+				}
 				next(null, post);
 			}
 		],	cb);
@@ -1329,9 +1350,7 @@ function get_all_replies(r, op, cb) {
 	});
 }
 
-function extract(post, canModerate, dontParseDice) {
-	if (canModerate)
-		admin.genMnemonic(post);
+function extract(post, dontParseDice) {
 	delete post.ip;
 	post.num = parseInt(post.num, 10);
 	imager.nestImageProps(post);
