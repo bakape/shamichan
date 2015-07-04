@@ -41,14 +41,32 @@ exports.clientConfigHash = '';
 exports.clients = {};
 exports.clientsByIP = {};
 
-const clientConfig = exports.clientConfig = _.pick(config,
-	'IP_MNEMONIC', 'USE_WEBSOCKETS', 'SOCKET_PATH', 'SOCKET_URL', 'DEBUG',
-	'READ_ONLY', 'IP_TAGGING', 'RADIO', 'PYU', 'BOARDS', 'LANGS',
-	'DEFAULT_LANG', 'READ_ONLY_BOARDS', 'WEBM', 'UPLOAD_URL', 'MEDIA_URL',
-	'SECONDARY_MEDIA_URL', 'THUMB_DIMENSIONS', 'PINKY_DIMENSIONS',
-	'SPOILER_IMAGES', 'IMAGE_HATS', 'ASSETS_DIR', 'RECAPTCHA_PUBLIC_KEY',
-	'LOGIN_KEYWORD'
-);
+const clientConfig = exports.clientConfig =
+	_.pick(config,
+		'USE_WEBSOCKETS',
+		'SOCKET_PATH',
+		'SOCKET_URL',
+		'DEBUG',
+		'READ_ONLY',
+		'IP_TAGGING',
+		'RADIO',
+		'PYU',
+		'BOARDS',
+		'LANGS',
+		'DEFAULT_LANG',
+		'READ_ONLY_BOARDS',
+		'WEBM',
+		'UPLOAD_URL',
+		'MEDIA_URL',
+		'SECONDARY_MEDIA_URL',
+		'THUMB_DIMENSIONS',
+		'PINKY_DIMENSIONS',
+		'SPOILER_IMAGES',
+		'IMAGE_HATS',
+		'ASSETS_DIR',
+		'RECAPTCHA_PUBLIC_KEY',
+		'LOGIN_KEYWORD'
+	);
 
 function reload_hot_config(cb) {
 	fs.readFile('./config/hot.js', 'UTF-8', function (err, js) {

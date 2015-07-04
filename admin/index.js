@@ -21,9 +21,7 @@ function connect() {
 let mnemonizer = new mnemonics.mnemonizer(config.SECURE_SALT);
 
 function genMnemonic(ip) {
-	if (!ip || !config.IP_MNEMONIC)
-		return null;
-	return mnemonizer.Apply_mnemonic(ip);
+	return ip && mnemonizer.Apply_mnemonic(ip);
 }
 exports.genMnemonic = genMnemonic;
 

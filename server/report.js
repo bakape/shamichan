@@ -1,4 +1,5 @@
-var caps = require('./caps'),
+var admin = require('../admin'),
+	caps = require('./caps'),
 	config = require('../config'),
 	common = require('../common'),
 	db = require('../db'),
@@ -25,7 +26,7 @@ function report(reporter_ident, op, num, cb) {
 	if (!board)
 		return cb("Post does not exist.");
 
-	var reporter = maybe_mnemonic(reporter_ident.ip) || '???';
+	var reporter = admin.genMnemonic(ip) || '???';
 
 	var yaku = new db.Yakusoku(board, {auth: 'Moderator'});
 	var reader = new db.Reader({auth: 'Moderator'});
@@ -44,7 +45,7 @@ function report(reporter_ident, op, num, cb) {
 		if (post.trip)
 			name += ' # ' + post.trip;
 		if (post.ip)
-			name += ' # ' + maybe_mnemonic(post.ip);
+			name += ' # ' + admin.genMnemonic(post.ip);
 		var body = 'Offender: ' + name;
 		var html = ['Offender: ', safe('<b>'), name, safe('</b>')];
 
@@ -121,14 +122,6 @@ function image_preview(info) {
 
 	var title = common.readable_filesize(info.size);
 	return {src: src, width: tw, height: th, title: title};
-}
-
-function maybe_mnemonic(ip) {
-	if (ip && config.IP_MNEMONIC) {
-		var authcommon = require('../admin/common');
-		ip = authcommon.ip_mnemonic(ip);
-	}
-	return ip;
 }
 
 okyaku.dispatcher[common.REPORT_POST] = function (msg, client) {
