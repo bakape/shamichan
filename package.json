@@ -29,6 +29,7 @@
     "core-js": "^0.9.18",
     "express": "^4.11.2",
     "formidable": "^1.0.16",
+    "fs-extra": "^0.21.0",
     "gulp": "^3.8.11",
     "gulp-if": "^1.2.5",
     "gulp-less": "^3.0.1",

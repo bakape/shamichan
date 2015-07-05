@@ -11,7 +11,7 @@ FORCE:
 .PHONY: all clean
 
 bootstrap:
-	./scripts/bootstrap.sh
+	node ./scripts/bootstrap
 
 upgrade: clean
 	rm -rf -- ./node_modules
