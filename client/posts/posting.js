@@ -691,8 +691,23 @@ var ComposerView = Backbone.View.extend({
 				this.preserve = true;
 				if (this.isThread)
 					this.$el.append(main.oneeSama.replyBox());
+
+				let missing = this.imouto.allRolls.sent - this.imouto.allRolls.seen;
+				//if missing>0 we have to wait until insertOwnPosts "sees" the dice
+				if (missing > 0) {
+					let checkAgain;
+					(checkAgain= (n) => {
+						setTimeout(()=> {
+							if (this.imouto.allRolls.seen == this.imouto.allRolls.sent || n ==0)
+								postSM.feed('done');
+							else
+								checkAgain(n - 1);
+						}, 100);
+					})(5); //retry 5 times
+				}else
+					postSM.feed('done');
 			}
-			postSM.feed('done');
+
 		});
 	},
 	// Send any unstaged words
