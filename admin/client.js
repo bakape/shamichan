@@ -30,9 +30,9 @@ let ToolboxView = Backbone.View.extend({
 			8: ['Del Img', 'deleteImages'],
 			9: ['Del Post', 'deletePosts'],
 			11: ['Lock', 'lockThread'],
-			mnemonics: ['Mnemonics', 'toggleMnemonics'],
+			mnemonics: ['Mnemonics', 'toggleMnemonics']
 		};
-		if (ident.auth == 'Admin') {
+		if (ident.auth === 'Admin') {
 			order.push('notification', 'fun', 'panel');
 			_.extend(specs, {
 				notification: ['Notification', 'sendNotification'],
@@ -44,7 +44,7 @@ let ToolboxView = Backbone.View.extend({
 		let controls = '<span>';
 		for (let kind of order) {
 			controls += common.parseHTML
-				`<a class="modButton data-kind="${kind}">
+				`<a class="modButton" data-kind="${kind}">
 					${specs[kind][0]}
 				</a>`;
 		}
@@ -61,6 +61,17 @@ let ToolboxView = Backbone.View.extend({
 		this.$toggle = $(`<a id="toolboxToggle">${lang.show}</a>`);
 		this.$el.prepend(this.$controls, this.$toggle)
 			.appendTo('body');
+
+		// Sets mnemonic visability
+		this.$mnemonicStyle = $(common.parseHTML
+			`<style>
+				header > .mod.addr {
+					display: none;
+				}
+			</style>`
+		)
+			.appendTo('head')
+			.prop('disabled', localStorage.noMnemonics !== 'true');
 		return this;
 	},
 	events: {
@@ -74,10 +85,8 @@ let ToolboxView = Backbone.View.extend({
 		this.$checkboxToggle.prop('disabled', !hidden);
 		this.model.set('shown', hidden);
 	},
-	buttonHandler(e) {
-		const kind = event.target.getAttribute('data-kind');
-		console.log(this.getSelected());
-		//this[this.specs[kind]](this.getSelected());
+	buttonHandler(event) {
+		this[this.specs[event.target.getAttribute('data-kind')][1]]();
 	},
 	getSelected() {
 		let checked = [];
@@ -90,6 +99,11 @@ let ToolboxView = Backbone.View.extend({
 		}
 		// Postform will not have an ID, so we remove falsy values
 		return _.compact(checked);
+	},
+	toggleMnemonics() {
+		const hide = localStorage.noMnemonics === 'true';
+		this.$mnemonicStyle.prop('disabled', hide);
+		localStorage.noMnemonics = !hide;
 	}
 });
 
