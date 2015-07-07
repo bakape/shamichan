@@ -57,57 +57,57 @@ function ban(m, mod, ip, key, type, sentence) {
 	return true;
 }
 
-okyaku.dispatcher[authcommon.BAN] = function (msg, client) {
+let dispatcher = okyaku.dispatcher;
+
+dispatcher[authcommon.BAN] = function (msg, client) {
 	if (!caps.can_moderate(client.ident))
 		return false;
-	var ip = msg[0];
-	var type = msg[1];
-	var sentence = msg[2];
+	const ip = msg[0],
+		type = msg[1],
+		sentence = msg[2];
 	if (!authcommon.is_valid_ip(ip))
 		return false;
-	var key = authcommon.ip_key(ip);
+	const key = authcommon.ip_key(ip);
 
-	var m = connect().multi();
+	let m = connect().multi();
 	if (!ban(m, client, ip, key, type, sentence))
 		return false;
 
 	m.exec(function (err) {
 		if (err)
 			return client.kotowaru(err);
-		var wasBanned = type != 'unban';
+		const wasBanned = type !== 'unban';
 
 		/* XXX not DRY */
-		var ADDRS = authcommon.modCache.addresses;
+		let ADDRS = authcommon.modCache.addresses;
 		if (ADDRS[key])
 			ADDRS[key].ban = wasBanned;
 
-		var a = {ban: wasBanned};
-		client.send([0, common.MODEL_SET, ['addrs', key], a]);
+		client.send([0, common.MODEL_SET, ['addrs', key], {ban: wasBanned}]);
 	});
 	return true;
 };
 
-var lift_expired_bans;
-(function lift_expired_bans(){
-	var r = global.redis;
-	var again = setTimeout(lift_expired_bans, 60000);
+function lift_expired_bans() {
+	let r = global.redis;
+
 	// Get banned IP hashes
-	r.smembers('hot:timeouts', function(err, banned){
+	r.smembers('hot:timeouts', function (err, banned) {
 		if (err || !banned)
-			return again;
+			return;
 		if (banned.length == 0)
-			return again;
-		var m = r.multi();
-		for (i = 0; i < banned.length; i++){
-			m.hgetall('ip:' + banned[i]);
+			return;
+		let m = r.multi();
+		for (let ip of banned) {
+			m.hgetall('ip:' + ip);
 		}
-		m.exec(function(err, res){
+		m.exec(function (err, res) {
 			// Read and check, if ban has expired
-			var m = r.multi();
-			var must_reload;
-			var now = Date.now();
-			var ADDRS = authcommon.modCache.addresses;
-			for (i = 0; i < banned.length; i++){
+			let m = r.multi(),
+				must_reload,
+				ADDRS = authcommon.modCache.addresses;
+			const now = Date.now();
+			for (i = 0; i < banned.length; i++) {
 				if (!res[i].sentence || res[i].sentence == 'perma')
 					continue;
 				if (res[i].sentence < now){
@@ -118,11 +118,13 @@ var lift_expired_bans;
 						ADDRS[banned[i]].ban = false;
 				}
 			}
-			if (must_reload){
+			if (must_reload) {
 				m.publish('reloadHot', 'caps');
 				m.exec();
 			}
-			return again;
 		});
 	});
-})();
+}
+
+setInterval(lift_expired_bans, 60000);
+lift_expired_bans();
