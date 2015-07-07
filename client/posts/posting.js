@@ -706,8 +706,8 @@ var ComposerView = Backbone.View.extend({
 					})(5); //retry 5 times
 				}else
 					postSM.feed('done');
-			}
-
+			}else
+				postSM.feed('done');
 		});
 	},
 	// Send any unstaged words
