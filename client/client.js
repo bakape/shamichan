@@ -177,13 +177,11 @@ dispatcher[common.DELETE_IMAGES] = function(msg) {
 	}
 };
 
-dispatcher[common.SPOILER_IMAGES] = function(msg) {
-	for (let i = 0, lim = msg.length; i < lim; i++) {
-		const spoiler = msg[i];
-		let model = state.posts.get(spoiler[0]);
-		if (!model)
-			continue;
-		model.setSpoiler(spoiler[1]);
+dispatcher[common.SPOILER_IMAGES] = function (msg) {
+	for (let i = 0; i < msg.length; i += 2) {
+		let model = state.posts.get(msg[i]);
+		if (model)
+			model.setSpoiler(msg[i + 1]);
 	}
 };
 

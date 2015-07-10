@@ -3,7 +3,7 @@ Client-side administration logic
  */
 
 let	main = require('main'),
-	{$, _, Backbone, common, config, etc, lang} = main;
+	{$, $threads, _, Backbone, common, config, etc, lang} = main;
 
 const ident = window.IDENT;
 
@@ -24,8 +24,9 @@ let ToolboxView = Backbone.View.extend({
 		this.render();
 	},
 	render() {
-		let order = [7, 8, 9, 11, 'mnemonics'];
+		let order = ['clear', 7, 8, 9, 11, 'mnemonics'];
 		let specs = this.specs = {
+			clear: ['Clear', 'clearSelection'],
 			7: ['Spoiler', 'spoilerImages'],
 			8: ['Del Img', 'deleteImages'],
 			9: ['Del Post', 'deletePosts'],
@@ -90,20 +91,30 @@ let ToolboxView = Backbone.View.extend({
 	},
 	getSelected() {
 		let checked = [];
-		const els = main.$threads[0].getElementsByClassName('postCheckbox');
-		for (let i = 0; i < els.length; i++) {
-			let el = els[i];
-			if (!el.checked)
-				continue;
-			checked.push(etc.getID(el));
-		}
+		this.loopCheckboxes(function (el) {
+			if (el.checked)
+				checked.push(etc.getID(el));
+		});
+
 		// Postform will not have an ID, so we remove falsy values
 		return _.compact(checked);
+	},
+	clearSelection() {
+		this.loopCheckboxes(el => el.checked = false);
+	},
+	loopCheckboxes(func) {
+		const els = $threads[0].getElementsByClassName('postCheckbox');
+		for (let i = 0; i < els.length; i++) {
+			func(els[i]);
+		}
 	},
 	toggleMnemonics() {
 		const hide = localStorage.noMnemonics === 'true';
 		this.$mnemonicStyle.prop('disabled', hide);
 		localStorage.noMnemonics = !hide;
+	},
+	spoilerImages() {
+		main.command('send', [common.SPOILER_IMAGES, ...this.getSelected()]);
 	}
 });
 

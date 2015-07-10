@@ -5,10 +5,12 @@
 
 function check(schema, msg) {
 	/* Primitives */
-	if (schema === 'id' || schema === 'nat')
-		return typeof msg == 'number' && (msg || msg === 0) &&
-				msg >= (schema == 'id' ? 1 : 0) &&
-				Math.round(msg) === msg;
+	if (schema === 'id' || schema === 'nat') {
+		return typeof msg == 'number'
+			&& (msg || msg === 0)
+			&& 	msg >= (schema == 'id' ? 1 : 0)
+			&& Math.round(msg) === msg;
+	}
 	else if (schema === 'string')
 		return typeof msg == 'string';
 	else if (schema === 'boolean')

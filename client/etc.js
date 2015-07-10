@@ -30,7 +30,7 @@ function deferLoop(items, stack, func) {
 exports.deferLoop = deferLoop;
 
 function getID(el) {
-	return $(el).closest('article, section').attr('id');
+	return parseInt($(el).closest('article, section').attr('id'), 10);
 }
 exports.getID = getID;
 

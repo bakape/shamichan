@@ -6,11 +6,11 @@ Core  server-side administration module
 
 let authcommon = require('./common'),
     caps = require('../server/caps'),
-    common= require('../common/index'),
+    common = require('../common'),
 	config = require('../config'),
     okyaku = require('../server/okyaku'),
 	mnemonics = require('./mnemonic/mnemonics'),
-    STATE = require('../server/state');
+	Muggle = require('../util/etc').Muggle;
 
 require('./panel');
 
@@ -125,6 +125,13 @@ function lift_expired_bans() {
 		});
 	});
 }
-
 setInterval(lift_expired_bans, 60000);
 lift_expired_bans();
+
+dispatcher[common.SPOILER_IMAGES] = caps.modHandler(function (nums, client) {
+	client.db.modHandler('spoilerImages', nums, function (err) {
+		if (err)
+			client.kotowaru(Muggle("Couldn't spoiler images.", err));
+	});
+	return true;
+});

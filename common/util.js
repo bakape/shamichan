@@ -315,14 +315,17 @@ function readableRegularDice(bit, dice) {
 }
 
 function pick_spoiler(metaIndex) {
-	var imgs = imports.config.SPOILER_IMAGES;
-	var n = imgs.length;
-	var i;
+	const imgs = imports.config.SPOILER_IMAGES,
+		n = imgs.length;
+	let i;
 	if (metaIndex < 0)
 		i = Math.floor(Math.random() * n);
 	else
 		i = metaIndex % n;
-	return {index: imgs[i], next: (i + 1) % n};
+	return {
+		index: imgs[i],
+		next: (i + 1) % n
+	};
 }
 exports.pick_spoiler = pick_spoiler;
 

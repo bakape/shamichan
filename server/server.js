@@ -257,9 +257,8 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 };
 
 function inactive_board_check(client) {
-	if (caps.can_administrate(client.ident))
-		return true;
-	return config.READ_ONLY_BOARDS.indexOf(client.board) === -1;
+	return caps.can_moderate(client.ident)
+		|| config.READ_ONLY_BOARDS.indexOf(client.board) === -1;
 }
 
 function allocate_post(msg, client, callback) {
@@ -483,12 +482,20 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 
 // Online count
 hooks.hook('clientSynced', function(info, cb){
-	info.client.send([0, common.ONLINE_COUNT, Object.keys(STATE.clientsByIP).length]);
+	info.client.send([
+		0,
+		common.ONLINE_COUNT,
+		Object.keys(STATE.clientsByIP).length
+	]);
 	cb(null);
 });
 
 STATE.emitter.on('change:clientsByIP', function(){
-	okyaku.push([0, common.ONLINE_COUNT, Object.keys(STATE.clientsByIP).length]);
+	okyaku.push([
+		0,
+		common.ONLINE_COUNT,
+		Object.keys(STATE.clientsByIP).length
+	]);
 });
 
 // Update hot client variables on client request
@@ -510,8 +517,6 @@ hooks.hook('clientSynced', function(info, cb){
 	info.client.send([0, common.HOT_INJECTION, false, STATE.clientConfigHash]);
 	cb(null);
 });
-
-
 
 // Regex replacement filter
 function hot_filter(frag) {

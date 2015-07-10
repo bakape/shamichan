@@ -50,8 +50,7 @@ dispatcher[common.SPOILER_IMAGES] = caps.mod_handler(function (nums, client) {
 		return client.kotowaru(Muggle("Couldn't spoiler images."));
 	client.db.force_image_spoilers(nums, function (err) {
 		if (err)
-			client.kotowaru(Muggle("Couldn't spoiler images.",
-				err));
+			client.kotowaru(Muggle("Couldn't spoiler images.", err));
 	});
 });
 

@@ -1059,6 +1059,45 @@ class Yakusoku extends events.EventEmitter {
 			m.exec(cb);
 		});
 	}
+	modHandler(method, nums, cb) {
+		// Group posts by thread for live publishes to the clients
+		let threads = {};
+		for (let num of nums) {
+			const op = OPs[num];
+			if (!(op in threads))
+				threads[op] = [];
+			threads[op].push(num);
+		}
+		async.forEachOf(threads, this[method].bind(this), cb);
+	}
+	spoilerImages(nums, op, cb) {
+		let r = this.connect(),
+			m = r.multi(),
+			keys = [];
+		for (let num of nums) {
+			const key = `${op == num ? 'thread' : 'post'}:${num}`;
+			keys.push(key);
+			m.hmget(key, 'src', 'spoiler');
+		}
+		let self = this;
+		m.exec(function (err, data) {
+			if (err)
+				return cb(err);
+			let m = r.multi(),
+				updates = [];
+			for (let i = 0; i < data.length; i++) {
+				// No image or already spoilt
+				if (!data[i][0] || data[i][1])
+					continue;
+				const spoiler = common.pick_spoiler(-1).index;
+				m.hset(keys[i], 'spoiler', spoiler);
+				updates.push(nums[i], spoiler);
+			}
+			if (updates.length)
+				self._log(m, op, common.SPOILER_IMAGES, updates);
+			m.exec(cb);
+		})
+	}
 }
 exports.Yakusoku = Yakusoku;
 
