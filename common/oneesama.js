@@ -204,7 +204,7 @@ class OneeSama {
 				html += ' ';
 		}
 		if (trip)
-			html += `<code>'${escape(trip)}</code>`;
+			html += `<code>${escape(trip)}</code>`;
 		if (auth) {
 			const hot = imports.hotConfig;
 			html += ` ## ${auth === 'Admin' ? hot.ADMIN_ALIAS : hot.MOD_ALIAS}`;
