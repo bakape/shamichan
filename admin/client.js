@@ -24,29 +24,23 @@ let ToolboxView = Backbone.View.extend({
 		this.render();
 	},
 	render() {
-		let order = ['clear', 7, 8, 9, 11, 'mnemonics'];
-		let specs = this.specs = {
-			clear: ['Clear', 'clearSelection'],
-			7: ['Spoiler', 'spoilerImages'],
-			8: ['Del Img', 'deleteImages'],
-			9: ['Del Post', 'deletePosts'],
-			11: ['Lock', 'lockThread'],
-			mnemonics: ['Mnemonics', 'toggleMnemonics']
-		};
-		if (ident.auth === 'Admin') {
-			order.push('notification', 'fun', 'panel');
-			_.extend(specs, {
-				notification: ['Notification', 'sendNotification'],
-				fun: ['Fun', 'dispatchFun'],
-				panel: ['Panel', 'renderPanel']
-			});
-		}
+		let specs = this.specs = [
+			'clearSelection',
+			'spoilerImages',
+			'deleteImages',
+			'deletePosts',
+			'lockThread',
+			'toggleMnemonics'
+		];
+		if (ident.auth === 'Admin')
+			specs.push('sendNotification', 'dispatchFun', 'renderPanel');
 
 		let controls = '<span>';
-		for (let kind of order) {
+		for (let i = 0; i < specs.length; i++) {
+			const ln = lang.mod[specs[i]];
 			controls += common.parseHTML
-				`<a class="modButton" data-kind="${kind}">
-					${specs[kind][0]}
+				`<a class="modButton" data-kind="${i}" title="${ln[1]}">
+					${ln[0]}
 				</a>`;
 		}
 		controls += '</span>';
@@ -87,7 +81,7 @@ let ToolboxView = Backbone.View.extend({
 		this.model.set('shown', hidden);
 	},
 	buttonHandler(event) {
-		this[this.specs[event.target.getAttribute('data-kind')][1]]();
+		this[this.specs[event.target.getAttribute('data-kind')]]();
 	},
 	getSelected() {
 		let checked = [];
