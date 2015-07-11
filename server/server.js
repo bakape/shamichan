@@ -8,9 +8,6 @@ let config = require('../config');
 if (config.DEBUG)
 	Error.stackTraceLimit = 100;
 
-// Load core-js ES6 polyfill for not yet supported features
-require('core-js/es6');
-
 // Read command line arguments. Modifies ../configure, so loaded right after it.
 let opts = require('./opts');
 if (require.main == module)
