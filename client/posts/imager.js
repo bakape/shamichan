@@ -120,16 +120,21 @@ let Hidamari = exports.Hidamari = {
 		});
 	},
 	expandImage(img, opts) {
+		const isVideo = img.ext === '.webm';
 		this.$el
 			.children('figure')
 			.children('a')
 			.html(common.parseHTML
-				`<${img.ext === '.webm' ? 'video' : 'img'}~
+				`<${isVideo ? 'video' : 'img'}~
 					src="${oneeSama.imagePaths().src + img.src}"
 					width="${opts.width}"
 					height="${opts.height}"
-					autoplay="true"
-					loop="true"
+					${isVideo && 'autoplay loop '}
+					${
+						// Android Chrome disables autoplay because retarded
+						// users. Show controls, so you can manually tap Play
+						isVideo && main.isMobile && 'controls '
+					}
 					class="expanded${opts.fullWidth && ' fullWidth'}"
 				>`
 			);
@@ -145,9 +150,7 @@ let Hidamari = exports.Hidamari = {
 				`<audio src="${oneeSama.imagePaths().src + img.src}"
 					width="300"
 					height="3em"
-					autoplay="true"
-					loop="true"
-					controls="true"
+					autoplay loop controls
 				>
 				</audio>`
 			);
