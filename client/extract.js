@@ -34,7 +34,6 @@ class Extract {
 		}
 
 		// Apply various client-only DOM modifications
-		main.command('imager:lazyLoad');
 		if (options.get('anonymise'))
 			main.command('loop:anonymise');
 		main.command('time:render');

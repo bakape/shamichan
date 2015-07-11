@@ -542,8 +542,7 @@ class OneeSama {
 				src: mediaURL + 'src/',
 				thumb: mediaURL + 'thumb/',
 				mid: mediaURL + 'mid/',
-				spoil: mediaURL + 'spoil/spoiler',
-				blank: mediaURL + 'css/ui/blank.png'
+				spoil: mediaURL + 'spoil/spoiler'
 			};
 		}
 		return this._imgPaths;
@@ -595,11 +594,6 @@ class OneeSama {
 			thumbWidth = width;
 			thumbHeight = height;
 		}
-
-		// Still resolve the size, but swap the image with a blank PNG for
-		// lazy loading
-		if (imports.isNode && !this.catalog)
-			thumb = paths.blank;
 
 		// Thumbnails on catalog pages do not need hover previews. Adding the
 		// `expanded` class excludes them from the hover handler. The

@@ -155,13 +155,6 @@ let Hidamari = exports.Hidamari = {
 				</audio>`
 			);
 		this.model.set('imageExpanded', true);
-	},
-	// Minimal image thumbnail swap for lazy loading
-	loadImage(image) {
-		let el = this.el
-			.getElementsByTagName('figure')[0]
-			.getElementsByTagName('img')[0];
-		el.outerHTML = oneeSama.thumbnail(image);
 	}
 };
 
@@ -202,21 +195,6 @@ let ExpanderModel = Backbone.Model.extend({
 
 let massExpander = exports.massExpander = new ExpanderModel();
 main.comply('massExpander:unset', () => massExpander.unset());
-
-// Lazy load images with less UI locking
-function loadImages() {
-	if (options.get('thumbs') === 'hide')
-		return;
-	// Reversed shallow copy, so the images on top load first
-	let models = state.posts.models.slice().reverse();
-	etc.deferLoop(models, 100, function(model) {
-		const image = model.get('image');
-		if (!image)
-			return;
-		model.dispatch('loadImage', image);
-	})
-}
-main.comply('imager:lazyLoad', loadImages);
 
 // Proxy image clicks to views. More performant than dedicated listeners for
 // each view.
