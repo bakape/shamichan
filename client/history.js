@@ -27,8 +27,8 @@ function readingSteiner(url, event, needPush) {
 		event.preventDefault();
 
 	// Deal with hashes and query strings
-	var split = url.split('#'),
-		address = split[0] + (/\?/.test(split[0]) ? '&' : '?') + 'minimal=true';
+	const split = url.split('#');
+	let address = split[0] + (/\?/.test(split[0]) ? '&' : '?') + 'minimal=true';
 	if (split.length !== 1)
 		address += '#' + split[1];
 
@@ -40,15 +40,17 @@ function readingSteiner(url, event, needPush) {
 	 * that are not several thousand posts large.
 	 */
 	$loading.show();
-	$.get(address, function(data, status, xhr) {
+	let xhr = new XMLHttpRequest();
+	xhr.open('GET', address);
+	xhr.onload = function () {
 		// In case the thread is dead, moderatator cookie expired or some
 		// other shananigans
-		if (xhr.status !== 200)
-			location.replace(this.url.split('?')[0]);
+		if (this.status !== 200)
+			return location.replace(this.url.split('?')[0]);
 
 		main.trigger('state:clear');
 		// Apply new DOM and load models
-		main.$threads.html(data);
+		main.$threads[0].innerHTML = this.response;
 		// Set new page state
 		state.page.set(nextState);
 		// Reconfigure rendering singleton
@@ -62,7 +64,7 @@ function readingSteiner(url, event, needPush) {
 			nextState.live
 		]);
 
-		if (needPush){
+		if (needPush) {
 			history.pushState(null, null, url);
 			// Scroll to top on new pages with no hashes
 			if (location.hash)
@@ -71,7 +73,8 @@ function readingSteiner(url, event, needPush) {
 				window.scrollTo(0, 0);
 		}
 		$loading.hide();
-	});
+	};
+	xhr.send();
 }
 
 // For back and forward history events
