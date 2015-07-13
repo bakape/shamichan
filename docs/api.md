@@ -27,9 +27,10 @@ The read-only JSON API currently supports 4 modes of query.
 | name | poster name | yes | no | `"namefag"` |
 | trip | poster tripcode | yes | no | `"!tripfag"` |
 | email | poster email | yes | no | `"sage"` |
-| ip | poster IP; need to have a moderator session cookie | yes | no | `"::1"`|
+| mnemonic | poster IP in human readble format<br> need to have a moderator session cookie | yes | no | `"daadunu"`|
 | body | post body | no | no | `">implying this is an example"` |
 | image | [image object](#image-object) | yes  | no | [image object](#image-object) |
+| dice | array of hash command result arrays | yes | no | `[[20, 0, 3], [2, 0, 2]]` |
 | links | object of `${post number}: ${thread number}`<br>key-value pairs the current post is linking to | yes | no | `{"18":"17","27":"26"}` |
 | backlinks | object of `${post number}: ${thread number}`<br>key-value pairs the current post is linked by | yes | no | `{"4":"1","5":"1"}` |
 
