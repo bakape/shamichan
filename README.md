@@ -17,8 +17,7 @@ reconfiguring several times a month. For more stable revisions, please
 
 ##Production
 * Have your webserver serve `www/`
-  * Some features will not work without a dedicated webserver. It is highly
-  recommended not to use the the default inbuilt webserver in production.
+  * It is highly recommended to use a dedicated webserver for serving static files and as a reverse proxy. Even if you choose to use the default inbuilt webserver, you still need to set `MEDIA_URL` in `config/imager` for image search links to work.
 * Run `node server/server.js` to start the server
 * You can update `config/hot.js` on-the-fly with `node server/kill.js`
 * To remove compiled server dependancies run `make clean`
