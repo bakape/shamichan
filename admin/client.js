@@ -46,9 +46,13 @@ let ToolboxView = Backbone.View.extend({
 		controls += '</span>';
 		this.$controls = $(controls);
 
-		this.$checkboxToggle = $('<style/>', {
-			html: '.postCheckbox {display: inline-block;}'
-		})
+		this.$checkboxToggle = $(common.parseHTML
+			`<style>
+				.postCheckbox {
+					display: inline-block;
+				}
+			</style>`
+		)
 			.appendTo('head')
 			// Disabled only works if the emelemnt is in the DOM
 			.prop('disabled', true);
