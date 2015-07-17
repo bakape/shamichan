@@ -38,11 +38,9 @@ _.extend(main, {
 		return main;
 	},
 	execDeffered() {
-		_.defer(() => {
-			let def = this._deferred;
-			for (let i = 0, l = def.length; i < l; i++)
-				_.defer(def[i]);
-		});
+		for (let func of this._deferred) {
+			func();
+		}
 	},
 
 	/*
@@ -153,3 +151,4 @@ _.extend(main, {
 });
 
 main.execDeffered();
+main.command('loading:hide');
