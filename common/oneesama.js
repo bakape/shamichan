@@ -492,11 +492,13 @@ class OneeSama {
 				${this.thumbStyle === 'hide' && this.hiddenToggle(reveal)}
 				${this.imageSearch(data)}
 				<i>
-					(${data.audio && '\u266B, '}
-					${data.length && (data.length + ', ')}
-					${util.readable_filesize(data.size)},
-					${data.dims[0]}x${data.dims[1]}
-					${data.apng && ', APNG'})~
+					(${util.commaList([
+						data.audio && '\u266B',
+						data.length,
+						util.readable_filesize(data.size),
+						`${data.dims[0]}x${data.dims[1]}`,
+						data.apng && 'APNG'
+					])})~
 					${this.imageLink(data)}
 				</i>
 			</figcaption>`;

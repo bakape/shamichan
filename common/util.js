@@ -446,3 +446,19 @@ function formatHTML(str) {
 		return m1.slice(Math.min(m1.length, size));
 	});
 }
+
+// Makes a ', ' seperated list out of on array of strings
+function commaList(items) {
+	let html = '';
+	for (let item of items) {
+		// Falsy value. Skip item.
+		if (!item && item !== 0)
+			continue;
+		if (html)
+			html += ', ';
+		html += item;
+	}
+
+	return html;
+}
+exports.commaList = commaList;
