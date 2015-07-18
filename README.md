@@ -1,11 +1,11 @@
 Real-time imageboard.
 MIT licensed.
+Supported platforms: Linux, OS X (win64 pending)
 
 **NOTE: The git master branch contains the development version of the board.
 Crashes are not uncommon as new features are added and patched. The database 
 structure and transport API are in active development. Don't use the master 
-branch in production, unless you are comfortable with flushing redis and 
-reconfiguring several times a month. For more stable revisions, please 
+branch in production. For more stable revisions, please 
 [download the latest release](https://github.com/bakape/meguca/releases).**
 
 ##Setup
@@ -17,7 +17,10 @@ reconfiguring several times a month. For more stable revisions, please
 
 ##Production
 * Have your webserver serve `www/`
-  * It is highly recommended to use a dedicated webserver for serving static files and as a reverse proxy. Even if you choose to use the default inbuilt webserver, you still need to set `MEDIA_URL` in `config/imager` for image search links to work.
+  * It is highly recommended to use a dedicated webserver for serving static
+  files and as a reverse proxy. Even if you choose to use the default inbuilt
+  webserver, you still need to set `MEDIA_URL` in `config/imager` for image
+  search links to work.
 * Run `node server/server.js` to start the server
 * You can update `config/hot.js` on-the-fly with `node server/kill.js`
 * To remove compiled server dependancies run `make clean`
@@ -30,19 +33,16 @@ reconfiguring several times a month. For more stable revisions, please
 recompile all dependancies
 
 ##Dependencies
-* ImageMagick
-* gcc, g++, make
+* [node-gyp dependancies](https://github.com/TooTallNate/node-gyp/#installation)
+* imagemagick
 * libpng with development headers
 * [io.js](https://iojs.org) >=2.0.0
 * redis
 
-###Optional dependencies for various features
+###Optional dependencies
 * ffmpeg 2.2+ for WebM support
   * with libmp3lame for MP3
 * pngquant  2.3.0+ for PNG thumbnails
-
-###Optional npm dependancies
-* node-expat for icecast now-playing banners
 
 ## Documentation
 * [JSON API: docs/api.md](https://github.com/bakape/meguca/blob/master/docs/api.md)
