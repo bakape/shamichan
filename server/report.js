@@ -26,7 +26,7 @@ function report(reporter_ident, op, num, cb) {
 	if (!board)
 		return cb("Post does not exist.");
 
-	var reporter = admin.genMnemonic(ip) || '???';
+	var reporter = admin.genMnemonic(reporter_ident.ip) || '???';
 
 	var yaku = new db.Yakusoku(board, {auth: 'Moderator'});
 	var reader = new db.Reader({auth: 'Moderator'});
