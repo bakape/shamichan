@@ -23,6 +23,7 @@ var lang = {
 	locked_to_bottom: 'Locked to bottom',
 	you: '(You)',
 	done: 'Hecho',
+	imgDeleted: 'Image Deleted',
 
 	// Time-related
 	week: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],

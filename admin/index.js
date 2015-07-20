@@ -6,6 +6,7 @@ Core  server-side administration module
 
 let authcommon = require('./common'),
     caps = require('../server/caps'),
+	check = require('../server/msgcheck'),
     common = require('../common'),
 	config = require('../config'),
     okyaku = require('../server/okyaku'),
@@ -128,10 +129,21 @@ function lift_expired_bans() {
 setInterval(lift_expired_bans, 60000);
 lift_expired_bans();
 
-dispatcher[common.SPOILER_IMAGES] = caps.modHandler(function (nums, client) {
-	client.db.modHandler('spoilerImages', nums, function (err) {
-		if (err)
-			client.kotowaru(Muggle("Couldn't spoiler images.", err));
-	});
-	return true;
-});
+function modHandler(method, errMsg) {
+	return function (nums, client) {
+		return caps.can_moderate(client.ident)
+			&& check('id...', nums)
+			&& client.db.modHandler(method, nums, function (err) {
+				if (err)
+					client.kotowaru(Muggle(errMsg, err));
+			});
+	};
+}
+
+dispatcher[common.SPOILER_IMAGES] = modHandler('spoilerImages',
+	'Couldn\'t spoiler images.'
+);
+
+dispatcher[common.DELETE_IMAGES] = modHandler('deleteImages',
+	'Couldn\'t delete images.'
+);

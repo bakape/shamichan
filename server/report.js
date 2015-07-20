@@ -125,7 +125,7 @@ function image_preview(info) {
 }
 
 okyaku.dispatcher[common.REPORT_POST] = function (msg, client) {
-	if (!msgcheck.check(['id', 'string', 'string'], msg))
+	if (!msgcheck(['id', 'string', 'string'], msg))
 		return false;
 
 	var num = msg[0];

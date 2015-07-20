@@ -111,8 +111,14 @@ let ToolboxView = Backbone.View.extend({
 		this.$mnemonicStyle.prop('disabled', hide);
 		localStorage.noMnemonics = !hide;
 	},
+	send(type) {
+		main.command('send', [common[type], ...this.getSelected()]);
+	},
 	spoilerImages() {
-		main.command('send', [common.SPOILER_IMAGES, ...this.getSelected()]);
+		this.send('SPOILER_IMAGES');
+	},
+	deleteImages() {
+		this.send('DELETE_IMAGES');
 	}
 });
 

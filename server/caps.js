@@ -5,7 +5,6 @@ Manages client read/write permissions
 
 var async = require('async'),
     authcommon = require('../admin/common'),
-    check = require('./msgcheck').check,
     common = require('../common/index'),
     config = require('../config'),
     db = require('../db'),
@@ -59,15 +58,6 @@ function augment_oneesama (oneeSama, board, ident) {
 		oneeSama.hook('mediaPaths', dead_media_paths);
 }
 exports.augment_oneesama = augment_oneesama;
-
-function modHandler(func) {
-	return function (nums, client) {
-		return can_moderate(client.ident)
-			&& check('id...', nums)
-			&& func(nums, client);
-	};
-}
-exports.modHandler = modHandler;
 
 function parse_ip(ip) {
 	var m = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)(?:\/(\d+))?$/);

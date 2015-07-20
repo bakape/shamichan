@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{$, common, dispatcher, posts, state} = main;
+	{$, _, common, dispatcher, posts, state} = main;
 
 dispatcher[common.INSERT_POST] = function(msg) {
 	let bump = msg[1] && state.page.get('live');
@@ -80,135 +80,118 @@ function checkRepliedToMe(links, sourceNum) {
 	}
 }
 
-dispatcher[common.INSERT_IMAGE] = function(msg) {
-	const num = msg[0];
+// Find model and pass it to function, if it exists
+function modelHandler(num, func) {
 	let model = state.posts.get(num);
-	// Did I just upload this?
-	let postModel = main.request('postModel'),
-		img = msg[1];
-	const toPostForm = postModel && postModel.get('num') == num;
-	if (toPostForm)
-		main.request('postForm').insertUploaded(img);
-	// If the image gets inseted into the postForm, we don't need the
-	// generic model to fire a separate image render
 	if (model)
-		model.setImage(img, toPostForm);
-};
+		func(model);
+}
 
-dispatcher[common.UPDATE_POST] = function(msg) {
-	const num = msg[0],
-		frag = msg[1],
-		extra = msg[2];
-	let model = state.posts.get(num);
-	if (!model)
-		return;
+let $online = $('#onlineCount');
 
-	const links = extra.links;
-	state.addLinks(links);
-	model.update(frag, extra);
-	checkRepliedToMe(links, num);
+_.extend(dispatcher, {
+	[common.INSERT_IMAGE](msg) {
+		const num = msg[0];
 
-	// Am I updating my own post?
-	if (num in state.ownPosts)
-		main.oneeSama.trigger('insertOwnPost', extra);
-	else {
-		model.dispatch('updateBody', {
-			dice: extra.dice,
-			state: extra.state,
-			frag
+		// Did I just upload this?
+		let postModel = main.request('postModel'),
+			img = msg[1];
+		const toPostForm = postModel && postModel.get('num') == num;
+		if (toPostForm)
+			main.request('postForm').insertUploaded(img);
+
+		// If the image gets inseted into the postForm, we don't need the
+		// generic model to fire a separate image render
+		modelHandler(num, model => model.setImage(img, toPostForm));
+	},
+	[common.UPDATE_POST](msg) {
+		const num = msg[0],
+			frag = msg[1],
+			extra = msg[2];
+		modelHandler(num, function (model) {
+			const links = extra.links;
+			state.addLinks(links);
+			model.update(frag, extra);
+			checkRepliedToMe(links, num);
+
+			// Am I updating my own post?
+			if (num in state.ownPosts)
+				main.oneeSama.trigger('insertOwnPost', extra);
+			else {
+				model.dispatch('updateBody', {
+					dice: extra.dice,
+					state: extra.state,
+					frag
+				});
+			}
 		});
+	},
+	[common.FINISH_POST](msg) {
+		const num = msg[0];
+		delete state.ownPosts[num];
+		modelHandler(num, function (model) {
+			// No change event listener to avoid extra overhead
+			model.set('editing', false);
+			model.dispatch('renderEditing', false);
+		});
+	},
+	[common.DELETE_POSTS](msg) {
+		for (let num of msg) {
+			modelHandler(num, model => model.remove());
+		}
+	},
+	[common.DELETE_THREAD](msg, op) {
+		delete state.syncs[op];
+		delete state.ownPosts[op];
+
+		let postModel = main.request('postModel');
+		if (postModel) {
+			const num = postModel.get('num');
+			if ((postModel.get('op') || num) === op)
+				main.postSM.feed('done');
+			if (num === op)
+				return;
+		}
+
+		modelHandler(op, model => model.remove());
+	},
+	[common.LOCK_THREAD](msg, op) {
+		modelHandler(op, model => model.toggleLocked(true));
+	},
+	[common.UNLOCK_THREAD](msg, op) {
+		modelHandler(op, model => model.toggleLocked(false));
+	},
+	[common.DELETE_IMAGES](msg) {
+		for (let num of msg) {
+			modelHandler(num, model => model.removeImage());
+		}
+	},
+	[common.SPOILER_IMAGES](msg) {
+		for (let i = 0; i < msg.length; i += 2) {
+			modelHandler(msg[i], model => model.setSpoiler(msg[i + 1]));
+		}
+	},
+	[common.BACKLINK](msg) {
+		modelHandler(msg[0], model => model.addBacklink(msg[1], msg[2]));
+	},
+	[common.ONLINE_COUNT](msg) {
+		$online.text('['+msg[0]+']');
+	},
+	// Sync settings with server
+	[common.HOT_INJECTION](msg) {
+		// Request new varibles, if hashes don't match
+		if (msg[0] == false && msg[1] != state.configHash)
+			main.command('send', [common.HOT_INJECTION, true]);
+		// Update variables and hash
+		else if (msg[0] == true) {
+			state.configHash = msg[1];
+			state.hotConfig.set(msg[2]);
+		}
 	}
-};
-
-dispatcher[common.FINISH_POST] = function(msg) {
-	const num = msg[0];
-	delete state.ownPosts[num];
-	var model = state.posts.get(num);
-	if (model) {
-		// No change event listener to avoid extra overhead
-		model.set('editing', false);
-		model.dispatch('renderEditing', false);
-	}
-};
-
-dispatcher[common.DELETE_POSTS] = function(msg) {
-	for (let i = 0, lim = msg.length; i < lim; i++) {
-		let model = state.posts.get(msg[i]);
-		if (model)
-			model.remove();
-	}
-};
-
-dispatcher[common.DELETE_THREAD] = function(msg, op) {
-	delete state.syncs[op];
-	delete state.ownPosts[op];
-
-	let postModel = main.request('postModel');
-	if (postModel) {
-		const num = postModel.get('num');
-		if ((postModel.get('op') || num) === op)
-			main.postSM.feed('done');
-		if (num === op)
-			return;
-	}
-
-	var model = state.posts.get(op);
-	if (model)
-		model.remove();
-};
-
-dispatcher[common.LOCK_THREAD] = function(msg, op) {
-	let model = state.posts.get(op);
-	if (model)
-		model.toggleLocked(true);
-};
-
-dispatcher[common.UNLOCK_THREAD] = function(msg, op) {
-	let model = state.posts.get(op);
-	if (model)
-		model.toggleLocked(false);
-};
-
-dispatcher[common.DELETE_IMAGES] = function(msg) {
-	for (let i = 0, lim = msg.length; i < lim; i++) {
-		let model = state.posts.get(msg[i]);
-		if (model)
-			model.removeImage();
-	}
-};
-
-dispatcher[common.SPOILER_IMAGES] = function (msg) {
-	for (let i = 0; i < msg.length; i += 2) {
-		let model = state.posts.get(msg[i]);
-		if (model)
-			model.setSpoiler(msg[i + 1]);
-	}
-};
-
-dispatcher[common.BACKLINK] = function(msg) {
-	let model = state.posts.get(msg[0]);
-	if (model)
-		model.addBacklink(msg[1], msg[2]);
-};
+});
 
 dispatcher[common.SYNCHRONIZE] = main.connSM.feeder('sync');
 dispatcher[common.INVALID] = main.connSM.feeder('invalid');
-
-dispatcher[common.ONLINE_COUNT] = function(msg){
-	$('#onlineCount').text('['+msg[0]+']');
-};
-
-// Sync settings to server
-dispatcher[common.HOT_INJECTION] = function(msg){
-	// Request new varibles, if hashes don't match
-	if (msg[0] == false && msg[1] != state.configHash)
-		main.command('send', [common.HOT_INJECTION, true]);
-	// Update variables and hash
-	else if (msg[0] == true) {
-		state.configHash = msg[1];
-		state.hotConfig.set(msg[2]);
-	}
-};
 
 // Make the text spoilers toggle revealing on click
 main.$doc.on('click', 'del', function (event) {

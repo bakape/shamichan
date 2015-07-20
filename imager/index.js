@@ -14,35 +14,8 @@ exports.Onegai = db.Onegai;
 exports.config = config;
 
 const image_attrs = ('src thumb ext dims size MD5 SHA1 hash imgnm spoiler'
-		+ ' apng mid audio length').split(' ');
+	+ ' apng mid audio length imgDeleted').split(' ');
 exports.image_attrs = image_attrs;
-
-function send_dead_image (kind, filename, resp) {
-	filename = dead_path(kind, filename);
-	var stream = fs.createReadStream(filename);
-	stream.once('error', function (err) {
-		if (err.code == 'ENOENT') {
-			resp.writeHead(404);
-			resp.end('Image not found');
-		}
-		else {
-			winston.error(err);
-			resp.end();
-		}
-	});
-	stream.once('open', function () {
-		var h = {
-			'Cache-Control': 'no-cache, no-store',
-			'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT'
-		};
-		try {
-			h['Content-Type'] = require('mime').lookup(filename);
-		} catch (e) {}
-		resp.writeHead(200, h);
-		stream.pipe(resp);
-	});
-}
-exports.send_dead_image = send_dead_image;
 
 function nestImageProps(post) {
 	if (!is_image(post))
@@ -67,6 +40,15 @@ function nestImageProps(post) {
 	post.image = image;
 }
 exports.nestImageProps = nestImageProps;
+
+function deleteImageProps(post) {
+	if (!is_image(post))
+		return;
+	for (let key of image_attrs) {
+		delete post[key];
+	}
+}
+exports.deleteImageProps = deleteImageProps;
 
 function parse_number(n) {
 	return parseInt(n, 10);

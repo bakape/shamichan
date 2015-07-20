@@ -23,6 +23,7 @@ var lang = {
 	locked_to_bottom: 'Locked to bottom',
 	you: '(You)',
 	done: 'Done',
+	imgDeleted: 'Image Deleted',
 
 	// Time-related
 	week: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
@@ -69,7 +70,7 @@ var lang = {
 	ago: function(time, unit) {
 		return lang.pluralize(time, unit) + ' ago';
 	},
-	// 47 replies and 21 images omited
+	// 47 replies and 21 images omitted
 	abbrev_msg:  function(omit, img_omit, url) {
 		var html = lang.pluralize(omit, 'reply');
 		if (img_omit)

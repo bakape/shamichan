@@ -493,6 +493,8 @@ class OneeSama {
 				${this.imageSearch(data)}
 				<i>
 					(${util.commaList([
+						data.imgDeleted
+							&&`<b class="mod">${this.lang.imgDeleted}</b>`,
 						data.audio && '\u266B',
 						data.length,
 						util.readable_filesize(data.size),

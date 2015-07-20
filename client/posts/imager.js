@@ -25,11 +25,9 @@ let Hidamari = exports.Hidamari = {
 		// Remove image on mod deletion
 		if (!image)
 			return;
-		$el
-			.children('header')
-			[model.get('op') ? 'after' : 'before'](
-				oneeSama.image(image, reveal)
-			);
+		$el.children('header')[model.get('op') ? 'after' : 'before'](
+			oneeSama.image(image, reveal)
+		);
 
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
@@ -47,7 +45,7 @@ let Hidamari = exports.Hidamari = {
 		if (!img
 			|| !massExpander.get('expand')
 			// Don't auto expand webm/PDF/MP3
-			|| ['.webm', '.pdf', '.mp3'].indexOf(img.ext) > -1
+			|| ['.webm', '.pdf', '.mp3'].includes(img.ext)
 		)
 			return;
 		this.toggleImageExpansion(true, img);

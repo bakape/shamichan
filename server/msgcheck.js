@@ -69,5 +69,4 @@ function check(schema, msg) {
 
 	throw new Error("Unknown schema: " + schema);
 }
-
-exports.check = check;
+module.exports = check;
