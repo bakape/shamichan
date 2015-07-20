@@ -5,7 +5,9 @@ Client-side administration logic
 let	main = require('main'),
 	{$, $threads, _, Backbone, common, config, etc, lang} = main;
 
-const ident = window.IDENT;
+// Only used to affect some client rendering practises. Anything actually
+// needing security has stricter authorisation checks.
+const ident = main.ident = window.IDENT;
 
 // Pass login status to ./www/js/login.js
 window.loggedInUser = ident.email;
