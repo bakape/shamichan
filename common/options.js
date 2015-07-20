@@ -246,7 +246,7 @@ opts.push(
 		],
 		tab: 1,
 		get default() {
-			return hotConfig.BOARD_CSS[state.page.get('board')]
+			return hotConfig.DEFAULT_CSS;
 		},
 		exec: function(theme) {
 			if (!theme)

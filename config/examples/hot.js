@@ -12,14 +12,8 @@ this.hot = {
 		graveyard: "/graveyard/",
 		staff: "/staff/"
 	},
-// Default theme to use on each board
-	BOARD_CSS: {
-		moe: 'moe',
-		gar: 'gar',
-		meta: 'mawaru',
-		graveyard: 'mawaru',
-		staff: 'moe'
-	},
+// Default theme to use
+	DEFAULT_CSS: 'moe',
 /*
  * File names of the images to use as banners inside the ./www/banners
  * Example: ['banner01.png', 'banner02.gif', 'banner03.jpg'] or null
