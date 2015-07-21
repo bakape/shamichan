@@ -44,15 +44,17 @@ let BannerView = Backbone.View.extend({
 	// r/a/dio stream info rendering
 	renderRadio(data) {
 		data = JSON.parse(data);
+		const attrs = {
+			title: 'Click to google song',
+			href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
+			target: '_blank'
+		};
 		this.$center.html(common.parseHTML
-				`<a href="http://r-a-d.io/" target="_blank">
+			`<a href="http://r-a-d.io/" target="_blank">
 				[${data.listeners}] ${data.dj}
 			</a>
 			&nbsp;&nbsp;
-			<a title="Click to google song"
-				href="https://google.com/search?q=${encodeURIComponent(data.np)}"
-				target="_blank"
-			>
+			<a ${attrs}>
 				<b>${data.np}</b>
 			</a>`
 		);
@@ -77,10 +79,12 @@ let NotificationView = exports.notification = Backbone.View.extend({
 	render(msg) {
 		$('.notification').remove();
 		let $banner = banner.$el;
+		const attrs = {
+			class: 'notification modal',
+			style: `top: ${$banner.outerHeight() + 5 + 'px'};`
+		};
 		let $el = $(common.parseHTML
-			`<span class="notification modal"
-				style="top: ${$banner.outerHeight() + 5 + 'px'};"
-			>
+			`<span ${attrs}>
 				<b class="admin">
 					${msg}
 				</b>

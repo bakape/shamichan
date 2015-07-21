@@ -176,7 +176,7 @@ class Render {
 				`<br>
 				<small>
 					<span title="${lang[this.lang].catalog_omit}">
-						${data.replyctr}/${data.imgctr - 1}~
+						${data.replyctr}/${data.imgctr - 1}
 					</span>
 					${oneeSama.expansionLinks(data.num)}
 				</small>

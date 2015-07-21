@@ -163,12 +163,12 @@ let InputBoxView = Backbone.View.extend({
 	render(args) {
 		let html = '<form>';
 		for (let id of args.fields) {
-			html += parseHTML
-				`<input type="text"
-					data-id="${id}"
-					size="${sizeMap[id]}"
-					placeholder="${lang.mod.placeholders[id]}"
-				>`;
+			html += parseHTML `<input ${{
+				type: 'text',
+				'data-id': id,
+				size: sizeMap[id],
+				placeholder: lang.mod.placeholders[id]
+			}}>`;
 		}
 		html += parseHTML
 			`<input type="submit" value="${lang.send}">

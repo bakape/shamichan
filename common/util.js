@@ -284,14 +284,9 @@ function readable_dice(bit, dice) {
 exports.readable_dice = readable_dice;
 
 function readableSyncwatch(dice) {
+	dice.class = 'embed';
 	return safe(parseHTML
-		`<syncwatch class="embed"
-			start="${dice.start}"
-			end="${dice.end}"
-			hour="${dice.hour}"
-			min="${dice.min}"
-			sec="${dice.sec}"
-		>
+		`<syncwatch ${dice}>
 			syncwatch
 		</syncwatch>`);
 }
@@ -413,25 +408,30 @@ function parseHTML(callSite) {
 	 instead.
 	 */
 	const len = arguments.length;
-	let args = new Array(len - 1);
-	for (let i = 1; i < len; i++)
+	let args = [];
+	for (let i = 1; i < len; i++) {
 		args[i - 1] = arguments[i];
+	}
 
 	const output = callSite
 		.slice(0, len)
-		.map(function(text, i) {
+		.map(function (text, i) {
+			const arg = args[i - 1];
+			let result;
 			/*
 			 Simplifies conditionals. If the placeholder returns a non-zero
-			  falsy value, it is ommitted.
+			 falsy value, it is ommitted.
 			 */
-			const arg = args[i - 1];
-			return ((i === 0 || (!arg && arg !== 0)) ? '' : arg) + text;
+			if (i === 0 || (!arg && arg !== 0))
+				result = '';
+			else if (arg instanceof Object)
+				result = elementAttributes(arg);
+			else
+				result = arg;
+
+			return result + text;
 		})
-		.join('')
-		// Convert trailing tilde to space
-		.replace(/~$/gm, ' ')
-		// Remove empty lines
-		.replace(/^\s*\n/gm, '');
+		.join('');
 
 	return formatHTML(output);
 }
@@ -439,12 +439,25 @@ exports.parseHTML = parseHTML;
 
 function formatHTML(str) {
 	let size = -1;
-	return str.replace(/\n(\s+)/g, function(m, m1) {
-		if (size < 0)
-			size = m1.replace(/\t/g, '    ').length;
+	return str
+		.replace(/\n(\s+)/g, function(m, m1) {
+			if (size < 0)
+				size = m1.replace(/\t/g, '    ').length;
+			return m1.slice(Math.min(m1.length, size));
+		})
+		// Remove empty lines
+		.replace(/^\s*\n/gm, '');
+}
 
-		return m1.slice(Math.min(m1.length, size));
-	});
+// Generate an HTML element attribute list
+function elementAttributes(attrs) {
+	let html = '';
+	for (let key in attrs) {
+		html += ' ';
+		const val = attrs[key];
+		html += val === true ? key : `${key}="${val}"`;
+	}
+	return html;
 }
 
 // Makes a ', ' seperated list out of on array of strings
@@ -458,7 +471,6 @@ function commaList(items) {
 			html += ', ';
 		html += item;
 	}
-
 	return html;
 }
 exports.commaList = commaList;

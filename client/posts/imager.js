@@ -3,7 +3,7 @@
  */
 
 let main = require('../main'),
-	{$, $threads, Backbone, common, etc, oneeSama, options, state} = main;
+	{$, $threads, _, Backbone, common, etc, oneeSama, options, state} = main;
 
 let Hidamari = exports.Hidamari = {
 	/*
@@ -119,23 +119,29 @@ let Hidamari = exports.Hidamari = {
 	},
 	expandImage(img, opts) {
 		const isVideo = img.ext === '.webm';
+		let attrs = {
+			src: oneeSama.imagePaths().src + img.src,
+			width: opts.width,
+			height: opts.height
+		};
+		let cls = 'expanded';
+		if (opts.fullWidth)
+			cls += ' fullWidth';
+		attrs.class = cls;
+
+		if (isVideo) {
+			attrs.autoplay = attrs.loop = true;
+
+			// Android Chrome disables autoplay because retarded
+			// users. Show controls, so you can manually tap Play
+			if (main.isMobile)
+				attrs.controls = true;
+		}
+		
 		this.$el
 			.children('figure')
 			.children('a')
-			.html(common.parseHTML
-				`<${isVideo ? 'video' : 'img'}~
-					src="${oneeSama.imagePaths().src + img.src}"
-					width="${opts.width}"
-					height="${opts.height}"
-					${isVideo && 'autoplay loop '}
-					${
-						// Android Chrome disables autoplay because retarded
-						// users. Show controls, so you can manually tap Play
-						isVideo && main.isMobile && 'controls '
-					}
-					class="expanded${opts.fullWidth && ' fullWidth'}"
-				>`
-			);
+			.html(common.parseHTML`<${isVideo ? 'video' : 'img'} ${attrs}>`);
 		this.model.set({
 			imageExpanded: true,
 			tallImage: opts.height > window.innerHeight
