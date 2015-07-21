@@ -494,7 +494,7 @@ class OneeSama {
 				<i>
 					(${util.commaList([
 						data.imgDeleted
-							&&`<b class="mod">${this.lang.imgDeleted}</b>`,
+							&&`<b class="mod">${this.lang.mod.imgDeleted}</b>`,
 						data.audio && '\u266B',
 						data.length,
 						util.readable_filesize(data.size),

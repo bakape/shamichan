@@ -147,3 +147,12 @@ dispatcher[common.SPOILER_IMAGES] = modHandler('spoilerImages',
 dispatcher[common.DELETE_IMAGES] = modHandler('deleteImages',
 	'Couldn\'t delete images.'
 );
+
+// Non-persistent global live admin notifications
+dispatcher[common.NOTIFICATION] = function (msg, client) {
+	msg = msg[0];
+	if (!caps.can_administrate(client.ident) || !check('string', msg))
+		return false;
+	okyaku.push([0, common.NOTIFICATION, common.escape_html(msg)]);
+	return true;
+};

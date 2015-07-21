@@ -23,7 +23,7 @@ var lang = {
 	locked_to_bottom: 'Locked to bottom',
 	you: '(You)',
 	done: 'Hecho',
-	imgDeleted: 'Image Deleted',
+	send: 'Send',
 
 	// Time-related
 	week: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
@@ -49,7 +49,11 @@ var lang = {
 			'Send notifaction message to all clients'
 		],
 		dispatchFun: ['Fun', 'Execute arbitrary JavaScript on all clients'],
-		renderPanel: ['Panel', 'Toggle administrator panel display']
+		renderPanel: ['Panel', 'Toggle administrator panel display'],
+		imgDeleted: 'Image Deleted',
+		placeholders: {
+			msg: 'Message'
+		}
 	},
 
 	// Format functions

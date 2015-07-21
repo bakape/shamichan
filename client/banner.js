@@ -91,7 +91,6 @@ let NotificationView = exports.notification = Backbone.View.extend({
 		return this;
 	}
 });
-
 main.comply('notification', msg => new NotificationView(msg));
 
 dispatcher[common.NOTIFICATION] = msg => new NotificationView(msg[0]);
