@@ -18,8 +18,8 @@ class Extract {
 
 		const mine = this.mine = state.mine.readAll(),
 			posts = this.posts = json.posts;
-		this.extractThreads(el);
 		this.extractReplies(el);
+		this.extractThreads(el);
 
 		state.addLinks(json.links);
 		// Forward posts that replied to my post
