@@ -107,12 +107,12 @@ figcaption {
 }
 .imageSearch {
 	font-weight: bold;
-  &:before {
-	 content: " ";
-  }
-  &:after {
-	 content: " ";
-  }
+	&:before {
+		content: " ";
+	}
+	&:after {
+		content: " ";
+	}
 }
 figure {
 	display: inline;
@@ -178,12 +178,12 @@ header {
 	margin-left: -14px;
 	padding-left: 14px;
 	position: relative;
+	& > *:before {
+		content: ' ';
+	}
 	code {
 		font-family: inherit;
 		font-weight: normal;
-	}
-	nav:before {
-		content: ' ';
 	}
 	.preview & {
 		background-image: none;
