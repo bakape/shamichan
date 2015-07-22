@@ -72,7 +72,6 @@ a.disabled {
 	font-style: normal;
 	margin: -2px;
 	padding: 2px;
-	text-decoration: none;
 	color: black;
 }
 .soundcloud, .watch {
@@ -82,7 +81,6 @@ del {
 	&, em {
 		background-color: black;
 		color: black;
-		text-decoration: none;
 	}
 	&:hover, &.reveal {
 		&, em {
@@ -102,11 +100,13 @@ figcaption {
 	text-decoration: none;
 	i {
 		font-style: normal;
+		a:before {
+			content: ' ';
+		}
 	}
 }
 .imageSearch {
 	font-weight: bold;
-	text-decoration: none;
   &:before {
 	 content: " ";
   }
@@ -182,8 +182,8 @@ header {
 		font-family: inherit;
 		font-weight: normal;
 	}
-	nav a {
-		text-decoration: none;
+	nav:before {
+		content: ' ';
 	}
 	.preview & {
 		background-image: none;
@@ -267,10 +267,6 @@ span.control .popup-menu {
 	margin-left: -8px;
 	margin-right: -8px;
 	top: 0;
-	z-index: 100;
-	a {
-		text-decoration: none;
-	}
 }
 // For the Install Webapp message
 #banner_center {
@@ -338,7 +334,6 @@ span.control .popup-menu {
 	a {
 		display: inline-block;
 		padding: 7px;
-		text-decoration: none;
 		border-bottom: 1px solid;
 	}
 }
@@ -524,7 +519,6 @@ figure {
 		float: right;
 		font-weight: bold;
 		padding-left: 1em;
-		text-decoration: none;
 	}
 }
 #options-panel .tab-4 input {
