@@ -13,7 +13,7 @@ branch in production. For more stable revisions, please
 * Sign up for reCAPTCHA
 * Run `npm install` to install npm deps and compile C++ addons
 * Configure the files in `config/`
-* Run `node builder.js` to satrt an auto-reloading development server
+* Run `node builder.js` to start an auto-reloading development server
 
 ##Production
 * Have your webserver serve `www/`

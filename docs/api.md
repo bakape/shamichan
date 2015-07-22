@@ -30,21 +30,21 @@ The read-only JSON API currently supports 4 modes of query.
 | mnemonic | poster IP in human readble format | no | mods | `"daadunu"`|
 | body | post body | no | no | `">implying this is an example"` |
 | image | [image object](#image-object) | yes  | no | [image object](#image-object) |
-| imgDeleted | boolean | yes | mods | `true` |
 | dice | array of hash command result arrays | yes | no | `[[20, 0, 3], [2, 0, 2]]` |
 | links | object of `${post number}: ${thread number}`<br>key-value pairs the current post is linking to | yes | no | `{"18":"17","27":"26"}` |
 | backlinks | object of `${post number}: ${thread number}`<br>key-value pairs the current post is linked by | yes | no | `{"4":"1","5":"1"}` |
 
 ###Image object
-| Key | Value | Optional | Example |
-|:---:|:-----:|:--------:|:-------:|
-| src | image file name as hosted on the server | no | `"1423578439604.webm"` |
-| thumb | image thumbnail name | yes | `"1423578439604.jpg"` |
-| mid | high quality thumbnail name; presence depends on server configuration | yes | `"1423578439604.jpg"` |
-| ext | image extension | no | `".webm"` |
-| dims | image and thumbnail dimension array<br>`[${image width}, ${image height}, ${thumbnail width}, ${thumbnail height}]` | yes | `[640, 900, 89, 125]` |
-| size | image file size in bytes | no | `105805` |
-| MD5 | image MD5 hash | no | `"teVHnYA9Va1SRs2gPRIQ0A"` |
-| SHA1 | image SHA1 hash | no | `"56df871ad268bb8b794bc61677bf3849e80db8f8"` |
-| imgnm | original image name | no | `"illya dance.webm"` |
-
+| Key | Value | Optional | Exclusive | Example |
+|:---:|:-----:|:--------:|:-------:|:--------:|
+| src | image file name as hosted on the server | no | no| `"1423578439604
+.webm"` |
+| thumb | image thumbnail name | yes | no | `"1423578439604.jpg"` |
+| mid | high quality thumbnail name; presence depends on server configuration | yes | no | `"1423578439604.jpg"` |
+| ext | image extension | no | no | `".webm"` |
+| dims | image and thumbnail dimension array<br>`[${image width}, ${image height}, ${thumbnail width}, ${thumbnail height}]` | yes | no | `[640, 900, 89, 125]` |
+| size | image file size in bytes | no | no | `105805` |
+| MD5 | image MD5 hash | no | no | `"teVHnYA9Va1SRs2gPRIQ0A"` |
+| SHA1 | image SHA1 hash | no | no | `"56df871ad268bb8b794bc61677bf3849e80db8f8"` |
+| imgnm | original image name | no | no | `"illya dance.webm"` |
+| imgDeleted | boolean | yes | mods | `true` |
