@@ -26,6 +26,7 @@ _.extend(main, {
 	// Bind dependancies to main object for pretier destructuring requires
 	$, _, Backbone, Cookie,
 	$script: require('scriptjs'),
+	SockJS: require('sockjs-client'),
 	stackBlur: require('stack-blur'),
 
 	/*

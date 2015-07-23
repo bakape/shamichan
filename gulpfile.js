@@ -109,7 +109,8 @@ function buildClient() {
 			'underscore',
 			'backbone',
 			'backbone.radio',
-			'scriptjs'
+			'scriptjs',
+			'sockjs-client'
 		],
 		debug: true
 	})

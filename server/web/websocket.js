@@ -10,12 +10,7 @@ let config = require('../../config'),
 	util = require('./util'),
 	winston = require('winston');
 
-const sockjsPath = 'js/' + fs
-	.readFileSync('tmpl/index.html', 'UTF-8')
-	.match(/sockjs-[\d.]+(?:\.min)?\.js/)[0];
-
-var sockJs = require('sockjs').createServer({
-	sockjs_url: config.MEDIA_URL + sockjsPath,
+let sockJs = require('sockjs').createServer({
 	prefix: config.SOCKET_PATH,
 	jsessionid: false,
 	log: sockjs_log,
