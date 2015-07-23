@@ -170,7 +170,7 @@ class Subscription extends events.EventEmitter {
 	}
 	static full_key(target, ident) {
 		let channel;
-		if (caps.can_moderate(ident))
+		if (caps.checkAuth('janitor', ident))
 			channel = 'auth';
 		const key = channel ? `${channel}:${target}` : target;
 		return {key, channel, target};
@@ -1134,7 +1134,7 @@ class Reader extends events.EventEmitter {
 	constructor(ident) {
 		// Call the EventEmitter's constructor
 		super();
-		this.canModerate = caps.can_moderate(ident);
+		this.canModerate = caps.checkAuth('janitor', ident);
 		this.r = global.redis;
 	}
 	get_thread(tag, num, opts) {

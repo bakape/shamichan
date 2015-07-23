@@ -70,19 +70,17 @@ function verify_auth(resp, packet) {
 	delete packet.audience;
 	if (packet.expires && packet.expires < Date.now())
 		return respond_error(resp, 'Login attempt expired.');
-	var email = packet.email;
-	var admin = config.ADMIN_PERSONAS.indexOf(email) >= 0;
-	var mod = config.MODERATOR_PERSONAS.indexOf(email) >= 0;
-	if (!(admin || mod)) {
+
+	const email = packet.email;
+	const auth = _.find(['admin', 'moderator', 'janitor'], function (type) {
+		return ~config.staff[type].indexOf(email);
+	});
+	if (!auth) {
 		winston.error("Login attempt by " + email);
 		return respond_error(resp, 'Wrong Persona.');
 	}
-	if (admin)
-		packet.auth = 'Admin';
-	else if (mod)
-		packet.auth = 'Moderator';
-	else
-		delete packet.auth;
+
+	packet.auth = auth;
 	set_cookie(resp, packet);
 }
 

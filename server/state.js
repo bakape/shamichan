@@ -74,8 +74,7 @@ function reload_hot_config(cb) {
 		let clientHot = exports.clientHotConfig = _.pick(HOT,
 			'ILLYA_DANCE', 'EIGHT_BALL', 'THREADS_PER_PAGE',
 			'ABBREVIATED_REPLIES', 'SUBJECT_MAX_LENGTH', 'EXCLUDE_REGEXP',
-			'ADMIN_ALIAS', 'MOD_ALIAS', 'SAGE_ENABLED', 'THREAD_LAST_N',
-			'DEFAULT_CSS'
+			'staff_aliases', 'SAGE_ENABLED', 'THREAD_LAST_N', 'DEFAULT_CSS'
 		);
 
 		HOT.CLIENT_CONFIG = JSON.stringify(clientConfig);

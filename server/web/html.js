@@ -180,7 +180,7 @@ router.get(/^\/(\w+)\/(\d+)/,
 		if (lastN)
 			opts.abbrev = lastN + state.hot.ABBREVIATED_REPLIES;
 
-		if (caps.can_administrate(ident) && 'reported' in req.query)
+		if (caps.checkAuth('admin', ident) && 'reported' in req.query)
 			opts.showDead = true;
 		reader.get_thread(board, num, opts);
 		reader.once('nomatch', function() {

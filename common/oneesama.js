@@ -197,7 +197,7 @@ class OneeSama {
 			auth = data.auth;
 		if (name || !trip) {
 			if (name)
-				html += escape(data.name);
+				html += escape(name);
 			else
 				html += this.lang.anon;
 			if(trip)
@@ -205,10 +205,8 @@ class OneeSama {
 		}
 		if (trip)
 			html += `<code>${escape(trip)}</code>`;
-		if (auth) {
-			const hot = imports.hotConfig;
-			html += ` ## ${auth === 'Admin' ? hot.ADMIN_ALIAS : hot.MOD_ALIAS}`;
-		}
+		if (auth)
+			html += ` ## ${imports.hotConfig[auth]}`;
 		return html;
 	}
 	time(time) {

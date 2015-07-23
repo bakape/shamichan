@@ -45,7 +45,7 @@ let ToolboxView = Backbone.View.extend({
 			'lockThread',
 			'toggleMnemonics'
 		];
-		if (ident.auth === 'Admin')
+		if (ident.auth === 'admin')
 			specs.push('sendNotification', 'dispatchFun', 'renderPanel');
 
 		let controls = '<span>';

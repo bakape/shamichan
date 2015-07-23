@@ -257,7 +257,7 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 };
 
 function inactive_board_check(client) {
-	return caps.can_moderate(client.ident)
+	return caps.checkAuth('janitor', client.ident)
 		|| config.READ_ONLY_BOARDS.indexOf(client.board) === -1;
 }
 

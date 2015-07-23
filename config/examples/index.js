@@ -73,11 +73,14 @@ module.exports = {
 	PRUNE: false,
 
 /*
- Doushio uses Mozilla's Persona system for moderator authentication.
+ Doushio uses Mozilla's Persona system for staff authentication.
  Set login emails here.
  */
-	ADMIN_PERSONAS: ['lalc@doushio.com'],
-	MODERATOR_PERSONAS: ['mod@doushio.com'],
+	staff: {
+		admin: ['lalc@doushio.com'],
+		moderator: ['mod@doushio.com'],
+		janitor: ['janitor@doushio.com']
+	},
 // You can log in/out by typing the following keyword in the email field
 	LOGIN_KEYWORD: 'misaki',
 // URL and domain of the website

@@ -13,8 +13,6 @@ let authcommon = require('./common'),
 	mnemonics = require('./mnemonic/mnemonics'),
 	Muggle = require('../util/etc').Muggle;
 
-require('./panel');
-
 function connect() {
 	return global.redis;
 }
@@ -61,7 +59,7 @@ function ban(m, mod, ip, key, type, sentence) {
 let dispatcher = okyaku.dispatcher;
 
 dispatcher[authcommon.BAN] = function (msg, client) {
-	if (!caps.can_moderate(client.ident))
+	if (!caps.checkAuth('moderator', client.ident))
 		return false;
 	const ip = msg[0],
 		type = msg[1],
@@ -131,7 +129,7 @@ lift_expired_bans();
 
 function modHandler(method, errMsg) {
 	return function (nums, client) {
-		return caps.can_moderate(client.ident)
+		return caps.checkAuth('janitor', client.ident)
 			&& check('id...', nums)
 			&& client.db.modHandler(method, nums, function (err) {
 				if (err)
@@ -151,7 +149,7 @@ dispatcher[common.DELETE_IMAGES] = modHandler('deleteImages',
 // Non-persistent global live admin notifications
 dispatcher[common.NOTIFICATION] = function (msg, client) {
 	msg = msg[0];
-	if (!caps.can_administrate(client.ident) || !check('string', msg))
+	if (!caps.checkAuth('admin', client.ident) || !check('string', msg))
 		return false;
 	okyaku.push([0, common.NOTIFICATION, common.escape_html(msg)]);
 	return true;
