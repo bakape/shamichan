@@ -279,9 +279,7 @@ function build_FAQ(faq) {
 }
 
 function make_navigation_html() {
-	if (!HOT.INTER_BOARD_NAVIGATION)
-		return '';
-	var bits = '<b id="navTop">[';
+	let bits = '<b id="navTop">[';
 	// Actual boards
 	const BOARDS = config.BOARDS,
 		PB = config.PSUEDO_BOARDS;

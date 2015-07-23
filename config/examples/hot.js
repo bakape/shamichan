@@ -37,7 +37,6 @@ this.hot = {
 		moderator: 'Moderator',
 		janitor: 'Janitor'
 	},
-	INTER_BOARD_NAVIGATION: true,
 	SPECIAL_TRIPCODES: {
 		kyubey: "／人◕ ‿‿ ◕人＼"
 	},
