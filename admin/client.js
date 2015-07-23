@@ -1,6 +1,7 @@
 /*
 Client-side administration logic
  */
+'use strict';
 
 let	main = require('main'),
 	{$, $threads, _, Backbone, common, config, etc, lang} = main,
@@ -18,6 +19,15 @@ $('<link/>', {
 	rel: 'stylesheet',
 	href: `${config.MEDIA_URL}css/mod.css?v=${cssHash}`
 }).appendTo('head');
+
+{
+	// Add staff board to board navigation
+	const staff = config.STAFF_BOARD;
+	$('#navTop')
+		.children('a')
+		.last()
+		.after(` / <a href="../${staff}/" class="history">${staff}</a>`);
+}
 
 let ToolboxView = Backbone.View.extend({
 	tagName: 'div',
