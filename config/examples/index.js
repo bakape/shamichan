@@ -74,12 +74,12 @@ module.exports = {
 
 /*
  Doushio uses Mozilla's Persona system for staff authentication.
- Set login emails here.
+ Set login emails aliases, which will be used for logging, here.
  */
 	staff: {
-		admin: ['lalc@doushio.com'],
-		moderator: ['mod@doushio.com'],
-		janitor: ['janitor@doushio.com']
+		admin: {'lalc@doushio.com': 'lalc'},
+		moderator: {'mod@doushio.com': 'mod'},
+		janitor: {'janitor@doushio.com': 'janny'}
 	},
 // You can log in/out by typing the following keyword in the email field
 	LOGIN_KEYWORD: 'misaki',

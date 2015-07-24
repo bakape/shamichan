@@ -73,7 +73,7 @@ function verify_auth(resp, packet) {
 
 	const email = packet.email;
 	const auth = _.find(['admin', 'moderator', 'janitor'], function (type) {
-		return ~config.staff[type].indexOf(email);
+		return email in config.staff[type];
 	});
 	if (!auth) {
 		winston.error("Login attempt by " + email);
