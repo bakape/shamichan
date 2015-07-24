@@ -123,7 +123,7 @@ var OptionsView = Backbone.View.extend({
 			// 'image' type simply falls through, as those don't need to be set
 		});
 		this.$hidden = this.$el.find('#hidden');
-		main.comply('hide:render', this.renderHidden, this);
+		main.reply('hide:render', this.renderHidden, this);
 	},
 	events: {
 		'click .option_tab_sel>li>a': 'switchTab',
@@ -158,7 +158,7 @@ var OptionsView = Backbone.View.extend({
 			val = parseInt($target.val());
 		// Not recorded; extracted directly by the background handler
 		else if (type == 'image')
-			return main.command('background:store', event.target);
+			return main.request('background:store', event.target);
 		else if (type == 'shortcut')
 			val = $target.val().toUpperCase().charCodeAt(0);
 		else
@@ -214,7 +214,7 @@ var OptionsView = Backbone.View.extend({
 		$el.text($el.text().replace(/\d+$/, count));
 	},
 	clearHidden() {
-		main.command('hide:clear');
+		main.request('hide:clear');
 		this.renderHidden(0);
 	}
 });

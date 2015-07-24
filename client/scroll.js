@@ -34,7 +34,7 @@ function set_lock_target(num) {
 		);
 	}
 }
-main.comply('scroll:focus', num => set_lock_target(num));
+main.reply('scroll:focus', num => set_lock_target(num));
 
 /* 
  * Logic for locking position to bottom of thread
@@ -79,9 +79,9 @@ function followLock(func) {
 
 	return ret;
 }
-main.comply('scroll:follow', followLock);
+main.reply('scroll:follow', followLock);
 // Shorthand; we use this a lot
-main.follow = main.command.bind(main, 'scroll:follow');
+main.follow = main.request.bind(main, 'scroll:follow');
 
 //Check if user scrolled to the bottom every time they scroll
 function scroll_shita() {
@@ -117,5 +117,5 @@ function aboveBanner (){
 		return;
 	$(window).scrollTop($anchor.offset().top - $('#banner').height());
 }
-main.comply('scroll:aboveBanner', aboveBanner);
+main.reply('scroll:aboveBanner', aboveBanner);
 window.onload = aboveBanner;

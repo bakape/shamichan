@@ -606,14 +606,14 @@ var ComposerView = Backbone.View.extend({
 		// Either get an allocation or send the committed text
 		const attrs = this.model.attributes;
 		if (!attrs.num && !attrs.sentAllocRequest) {
-			main.command('send', [
+			main.request('send', [
 				common.INSERT_POST,
 				this.allocationMessage(text, null)
 			]);
 			this.model.set({sentAllocRequest: true});
 		}
 		else if (attrs.num)
-			main.command('send', text);
+			main.request('send', text);
 		else
 			this.pending += text;
 
@@ -687,7 +687,7 @@ var ComposerView = Backbone.View.extend({
 					'margin-left': '', 'padding-left': ''
 				}
 				);
-				main.command('send', [common.FINISH_POST]);
+				main.request('send', [common.FINISH_POST]);
 				this.preserve = true;
 				if (this.isThread)
 					this.$el.append(main.oneeSama.replyBox());
@@ -713,7 +713,7 @@ var ComposerView = Backbone.View.extend({
 	// Send any unstaged words
 	flushPending() {
 		if (this.pending) {
-			main.command('send', this.pending);
+			main.request('send', this.pending);
 			this.pending = '';
 		}
 	},
@@ -818,14 +818,14 @@ var ComposerView = Backbone.View.extend({
 		if (attrs.cancelled)
 			return;
 		if (!attrs.num && !attrs.sentAllocRequest) {
-			main.command('send', [
+			main.request('send', [
 				common.INSERT_POST,
 				this.allocationMessage(null, msg)
 			]);
 			this.model.set({sentAllocRequest: true});
 		}
 		else {
-			main.command('send', [common.INSERT_IMAGE, msg]);
+			main.request('send', [common.INSERT_IMAGE, msg]);
 		}
 	},
 	uploadError(msg) {
@@ -891,7 +891,7 @@ function openPostBox(num) {
 		$a[$a.is('section') ? 'children' : 'siblings']('aside.posting')
 	);
 }
-main.comply('openPostBox', openPostBox);
+main.reply('openPostBox', openPostBox);
 
 window.addEventListener('message', function(event) {
 	const msg = event.data;

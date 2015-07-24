@@ -125,7 +125,7 @@ let ToolboxView = Backbone.View.extend({
 		localStorage.noMnemonics = !hide;
 	},
 	send(type) {
-		main.command('send', [common[type], ...this.getSelected()]);
+		main.request('send', [common[type], ...this.getSelected()]);
 	},
 	spoilerImages() {
 		this.send('SPOILER_IMAGES');
@@ -146,7 +146,7 @@ let ToolboxView = Backbone.View.extend({
 			fields: ['msg'],
 			handler(msg) {
 				self.notificationBox = null;
-				main.command('send', [common.NOTIFICATION, msg[0]]);
+				main.request('send', [common.NOTIFICATION, msg[0]]);
 			}
 		});
 	}

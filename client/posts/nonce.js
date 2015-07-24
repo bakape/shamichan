@@ -75,4 +75,4 @@ function destroy(nonce) {
 		save_nonces(nonces);
 	}, 10000);
 }
-main.comply('nonce:destroy', destroy);
+main.reply('nonce:destroy', destroy);

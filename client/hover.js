@@ -18,7 +18,7 @@ let mousemove = new Backbone.Model({
 let ImageHoverView = Backbone.View.extend({
 	initialize() {
 		this.listenTo(this.model,'change:event', this.check);
-		main.comply('imager:clicked', () => this.$el.empty());
+		main.reply('imager:clicked', () => this.$el.empty());
 	},
 	check(model, event) {
 		// Disabled in options

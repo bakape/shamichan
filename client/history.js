@@ -14,8 +14,8 @@ main.$doc.on ('click', 'a.history', function(event) {
 
 // Loading status GIF
 let $loading = $('#loadingImage');
-main.comply('loading:show', () => $loading.show());
-main.comply('loading:hide', () => $loading.hide());
+main.reply('loading:show', () => $loading.show());
+main.reply('loading:hide', () => $loading.hide());
 
 // Navigate to the URL
 function readingSteiner(url, event, needPush) {
@@ -57,7 +57,7 @@ function readingSteiner(url, event, needPush) {
 		main.oneeSama.op = nextState.thread;
 		new Extract();
 		// Swap the database controller server-side
-		main.command('send', [
+		main.request('send', [
 			common.RESYNC,
 			nextState.board,
 			state.syncs,
@@ -68,7 +68,7 @@ function readingSteiner(url, event, needPush) {
 			history.pushState(null, null, url);
 			// Scroll to top on new pages with no hashes
 			if (location.hash)
-				main.command('scroll:aboveBanner');
+				main.request('scroll:aboveBanner');
 			else
 				window.scrollTo(0, 0);
 		}
@@ -80,5 +80,5 @@ function readingSteiner(url, event, needPush) {
 // For back and forward history events
 window.onpopstate = function(event) {
 	readingSteiner(event.target.location.href);
-	main.command('scroll:aboveBanner');
+	main.request('scroll:aboveBanner');
 };

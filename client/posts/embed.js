@@ -275,7 +275,7 @@ $(document).on('click', '.pastebin', function(event){
 	var $window = $(window),
 		width = Math.round($window.innerWidth() * 0.65),
 		height = Math.round($window.innerHeight() * 0.65);
-	main.command('scroll:follow', () =>
+	main.request('scroll:follow', () =>
 		$target
 			.css({
 				width: width,

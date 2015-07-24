@@ -16,10 +16,10 @@ function dragonDrop(e) {
 		main.follow(function() {
 			const thread = state.page.get('thread');
 			if (thread)
-				return main.command('openPostBox', thread);
+				return main.request('openPostBox', thread);
 			let $s = $(e.target).closest('section');
 			if ($s.length)
-				main.command('openPostBox', $s.attr('id'));
+				main.request('openPostBox', $s.attr('id'));
 		});
 	}
 	else {

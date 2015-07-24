@@ -21,7 +21,7 @@ let BackgroundView = Backbone.View.extend({
 		this.$css = $('#backgroundCSS');
 		this.render();
 
-		main.comply('background:store', this.store, this);
+		main.reply('background:store', this.store, this);
 		this.listenTo(options, {
 			'change:userBG': this.render,
 			'change:illyaBGToggle': this.render,
@@ -32,7 +32,7 @@ let BackgroundView = Backbone.View.extend({
 	// Store image as dataURL in localStorage
 	store(target) {
 		// This could take a while, so loading animation
-		main.command('loading:show');
+		main.request('loading:show');
 		let reader = new FileReader();
 		reader.readAsDataURL(target.files[0]);
 		reader.onload = event => {
@@ -52,7 +52,7 @@ let BackgroundView = Backbone.View.extend({
 				stackBlur.canvas(canvas, 0, 0, img.width, img.height, 10);
 				localStorage.blurred = canvas.toDataURL('image/jpeg', 0.95);
 
-				main.command('loading:hide');
+				main.request('loading:hide');
 
 				// Apply new background
 				if (options.get('userBG'))

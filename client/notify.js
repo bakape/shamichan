@@ -27,14 +27,14 @@ let NotifyModel = Backbone.Model.extend({
 		this.check(this);
 
 		this.listenTo(this, 'change', this.check);
-		main.comply('post:inserted', model => {
+		main.reply('post:inserted', model => {
 			// It's ours, don't notify unread
 			if (model.get('mine'))
 				return;
 			if (document.hidden)
 				this.set('unreadCount', this.get('unreadCount') + 1);
 		});
-		main.comply('notify:title', title => this.set('title', title));
+		main.reply('notify:title', title => this.set('title', title));
 
 		// Pass visibility changes to notify model
 		document.addEventListener('visibilitychange', e => {
@@ -91,7 +91,7 @@ let notify = new NotifyModel({
 // Own post are remember for 2 days, so lets keep 1 day as a buffer
 let replies = new main.Memory('replies', 3);
 
-main.comply('repliedToMe', function (num) {
+main.reply('repliedToMe', function (num) {
 	let post = state.posts.get(num);
 	if (!post)
 		return;
@@ -120,7 +120,7 @@ main.comply('repliedToMe', function (num) {
 	replies.write(num);
 });
 
-main.comply('time:syncwatch', function(time){
+main.reply('time:syncwatch', function(time){
 	if (!options.get('notification') || !document.hidden)
 		return;
 	new Notification('Syncwatch Starting', {

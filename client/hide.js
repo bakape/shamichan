@@ -8,7 +8,7 @@ let main = require('./main');
 // eclipsing the Sun
 let hidden = new main.Memory('hide', 7, true);
 
-main.comply('hide', function(model) {
+main.reply('hide', function(model) {
 	// Hiding your own posts would open up the gates for a ton of bugs. Fuck
 	// that.
 	if (model.get('mine'))
@@ -16,10 +16,10 @@ main.comply('hide', function(model) {
 	const count = hidden.write(model.get('num'));
 	model.remove();
 	// Forward number to options menu
-	main.command('hide:render', count);
+	main.request('hide:render', count);
 });
 
-main.comply('hide:clear', hidden.purgeAll);
+main.reply('hide:clear', hidden.purgeAll);
 
 // Initial render
-main.defer(() => main.command('hide:render', hidden.size()));
+main.defer(() => main.request('hide:render', hidden.size()));

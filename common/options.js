@@ -151,9 +151,9 @@ var opts = [
 		exec: function(toggle) {
 			if (toggle)
 				// Query the server for current stream info
-				main.command('send', [index.RADIO]);
+				main.request('send', [index.RADIO]);
 			else
-				main.command('banner:radio:clear');
+				main.request('banner:radio:clear');
 		}
 	}
 ];
@@ -269,7 +269,7 @@ opts.push(
 		tab: 1,
 		execOnStart: false,
 		exec: function(upload) {
-			main.command('background:store', upload);
+			main.request('background:store', upload);
 		}
 	},
 	/* LAST N CONFIG */

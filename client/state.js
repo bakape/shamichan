@@ -73,7 +73,7 @@ main.on('state:clear', function() {
 	posts.reset();
 	// Prevent old threads from syncing
 	exports.syncs = {};
-	main.command('massExpander:unset');
+	main.request('massExpander:unset');
 });
 
 // Post links verified server-side

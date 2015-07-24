@@ -26,7 +26,7 @@ function batcTimeRender(model, rtime = options.get('relativeTime')) {
 	if (rtime)
 		renderTimer = setTimeout(batcTimeRender, 60000)
 }
-main.comply('time:render', batcTimeRender);
+main.reply('time:render', batcTimeRender);
 options.on('change:relativeTime', batcTimeRender);
 
 /* syncwatch */
@@ -51,7 +51,7 @@ function timer_from_el($el) {
 		if (start > now) {
 			var countdown = Math.round((start - now) / 1000);
 			if(countdown == 10 || countdown == 5)
-				main.command('time:syncwatch', countdown);
+				main.request('time:syncwatch', countdown);
 			$el.text('Countdown: ' + countdown);
 			return setTimeout(moumouikkai, 1000);
 		}

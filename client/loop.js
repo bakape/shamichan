@@ -21,7 +21,7 @@ function reRenderImages() {
 			model.dispatch('renderImage', image)
 	});
 }
-main.comply('loop:images', () => reRenderImages());
+main.reply('loop:images', () => reRenderImages());
 
 function loop(func) {
 	// Shallow copy array to remove refference
@@ -53,7 +53,7 @@ function toggleAnonymisation(source, toggle) {
 			model.dispatch(command);
 	});
 }
-main.comply('loop:anonymise', function() {
+main.reply('loop:anonymise', function() {
 	if (options.get('anonymise'))
 		toggleAnonymisation(null, true);
 });

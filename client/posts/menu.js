@@ -37,14 +37,14 @@ let MenuView = module.exports = Backbone.View.extend({
 	// Forward post model to appropriate handler
 	handleClick(e) {
 		e.stopPropagation();
-		main.command(this.actions[e.target.getAttribute('data-type')],
+		main.request(this.actions[e.target.getAttribute('data-type')],
 			this.model
 		);
 		this.remove();
 	}
 });
 
-main.comply('menu:extend', action =>
+main.reply('menu:extend', action =>
 	_.extend(MenuView.prototype.actions, action)
 );
 

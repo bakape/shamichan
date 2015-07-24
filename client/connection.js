@@ -22,7 +22,7 @@ function send(msg) {
 		console.log('<', msg);
 	socket.send(msg);
 }
-main.comply('send', send);
+main.reply('send', send);
 
 function on_message(e) {
 	if (config.DEBUG)

@@ -11,7 +11,7 @@ class Extract {
 
 		// Read serialised model data
 		let json = JSON.parse(document.getElementById('postData').innerHTML);
-		main.command('notify:title', json.title);
+		main.request('notify:title', json.title);
 
 		// We don't need models on catalog pages
 		if (state.page.get('catalog'))
@@ -30,14 +30,14 @@ class Extract {
 				continue;
 			for (let num in links) {
 				if (num in mine)
-					main.command('repliedToMe', posts[post].num);
+					main.request('repliedToMe', posts[post].num);
 			}
 		}
 
 		// Apply various client-only DOM modifications
 		if (options.get('anonymise'))
-			main.command('loop:anonymise');
-		main.command('time:render');
+			main.request('loop:anonymise');
+		main.request('time:render');
 	}
 	extractReplies(el) {
 		let articles = el.getElementsByTagName('article');

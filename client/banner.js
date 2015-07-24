@@ -17,7 +17,7 @@ let BannerView = Backbone.View.extend({
 		this.$center = this.$el.children('#banner_center');
 		this.$info = this.$el.children('#banner_info');
 		// Publish a listener to the message bus
-		main.comply('banner:radio:clear', this.clearRadio, this);
+		main.reply('banner:radio:clear', this.clearRadio, this);
 	},
 	events: {
 		'click .bfloat': 'revealBmodal'
@@ -95,7 +95,7 @@ let NotificationView = exports.notification = Backbone.View.extend({
 		return this;
 	}
 });
-main.comply('notification', msg => new NotificationView(msg));
+main.reply('notification', msg => new NotificationView(msg));
 
 dispatcher[common.NOTIFICATION] = msg => new NotificationView(msg[0]);
 dispatcher[common.UPDATE_BANNER] = msg => banner.renderInfo(msg[0]);

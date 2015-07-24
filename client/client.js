@@ -26,7 +26,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 		main.postSM.feed('alloc', msg);
 		bump = false;
 
-		main.command('nonce:destroy', nonce);
+		main.request('nonce:destroy', nonce);
 		// if we've already made a placeholder for this post, use it
 		let postForm = main.request('postForm');
 		if (postForm && postForm.el)
@@ -53,7 +53,7 @@ dispatcher[common.INSERT_POST] = function(msg) {
 	view.clientInit();
 
 	checkRepliedToMe(msg.links, num);
-	main.command('post:inserted', model);
+	main.request('post:inserted', model);
 
 	if (isThread)
 		return;
@@ -76,7 +76,7 @@ function checkRepliedToMe(links, sourceNum) {
 	const mine = state.mine.readAll();
 	for (let num in links) {
 		if (num in mine)
-			main.command('repliedToMe', sourceNum);
+			main.request('repliedToMe', sourceNum);
 	}
 }
 
@@ -181,7 +181,7 @@ _.extend(dispatcher, {
 	[common.HOT_INJECTION](msg) {
 		// Request new varibles, if hashes don't match
 		if (msg[0] == false && msg[1] != state.configHash)
-			main.command('send', [common.HOT_INJECTION, true]);
+			main.request('send', [common.HOT_INJECTION, true]);
 		// Update variables and hash
 		else if (msg[0] == true) {
 			state.configHash = msg[1];

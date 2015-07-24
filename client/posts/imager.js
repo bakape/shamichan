@@ -198,7 +198,7 @@ let ExpanderModel = Backbone.Model.extend({
 });
 
 let massExpander = exports.massExpander = new ExpanderModel();
-main.comply('massExpander:unset', () => massExpander.unset());
+main.reply('massExpander:unset', () => massExpander.unset());
 
 // Proxy image clicks to views. More performant than dedicated listeners for
 // each view.
@@ -210,7 +210,7 @@ $threads.on('click', 'img, video', function(e) {
 		return;
 	e.preventDefault();
 	// Remove image hover preview, if any
-	main.command('imager:clicked');
+	main.request('imager:clicked');
 	main.follow(() =>
 		model.dispatch(
 			'toggleImageExpansion',

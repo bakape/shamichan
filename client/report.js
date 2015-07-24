@@ -101,7 +101,7 @@ var ReportPanel = Backbone.View.extend({
 	submit() {
 		if (this.model.get('status') != 'ready')
 			return false;
-		main.command('send', [
+		main.request('send', [
 			common.REPORT_POST,
 			parseInt(this.model.get('post').get('num'), 10),
 			Recaptcha.get_challenge(),
@@ -162,7 +162,7 @@ var ReportPanel = Backbone.View.extend({
 	}
 });
 
-main.comply('report', function(post) {
+main.reply('report', function(post) {
 	const url = 'https://www.google.com/recaptcha/api/js/recaptcha_ajax.js';
 	$script(url, function () {
 		const num = post.get('num');

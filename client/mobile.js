@@ -26,7 +26,7 @@ main.defer(function() {
 
 	$('<a class="mobile">Install Webapp (BETA)</a>')
 		.click(function(e){
-			main.command('notification', msg);
+			main.request('notification', msg);
 			e.target.remove();
 			localStorage.homescreenRefused = true;
 		})

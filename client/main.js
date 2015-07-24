@@ -151,4 +151,4 @@ _.extend(main, {
 });
 
 main.execDeffered();
-main.command('loading:hide');
+main.request('loading:hide');
