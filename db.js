@@ -170,7 +170,7 @@ class Subscription extends events.EventEmitter {
 	}
 	static full_key(target, ident) {
 		let channel;
-		if (caps.can_moderate(ident))
+		if (caps.checkAuth('janitor', ident))
 			channel = 'auth';
 		const key = channel ? `${channel}:${target}` : target;
 		return {key, channel, target};
@@ -1069,13 +1069,14 @@ class Yakusoku extends events.EventEmitter {
 			threads[op].push(num);
 		}
 		async.forEachOf(threads, this[method].bind(this), cb);
+		return true;
 	}
 	spoilerImages(nums, op, cb) {
 		let r = this.connect(),
 			m = r.multi(),
 			keys = [];
 		for (let num of nums) {
-			const key = `${op == num ? 'thread' : 'post'}:${num}`;
+			const key = postKey(num, op);
 			keys.push(key);
 			m.hmget(key, 'src', 'spoiler');
 		}
@@ -1096,7 +1097,33 @@ class Yakusoku extends events.EventEmitter {
 			if (updates.length)
 				self._log(m, op, common.SPOILER_IMAGES, updates);
 			m.exec(cb);
-		})
+		});
+	}
+	deleteImages(nums, op, cb) {
+		let r = this.connect(),
+			m = r.multi(),
+			keys = [],
+			self = this;
+		for (let num of nums) {
+			const key = postKey(num, op);
+			keys.push(key);
+			m.hmget(key, 'src', 'imgDeleted');
+		}
+		m.exec(function (err, data) {
+			if (err)
+				return cb(err);
+			let updates = [];
+			for (let i = 0; i < data.length; i++) {
+				// No image or already hidden
+				if (!data[i][0] || data[i][1])
+					continue;
+				m.hset(keys[i], 'imgDeleted', true);
+				updates.push(nums[i]);
+			}
+			if (updates.length)
+				self._log(m, op, common.DELETE_IMAGES, updates);
+			m.exec(cb);
+		});
 	}
 }
 exports.Yakusoku = Yakusoku;
@@ -1107,7 +1134,7 @@ class Reader extends events.EventEmitter {
 	constructor(ident) {
 		// Call the EventEmitter's constructor
 		super();
-		this.canModerate = caps.can_moderate(ident);
+		this.canModerate = caps.checkAuth('janitor', ident);
 		this.r = global.redis;
 	}
 	get_thread(tag, num, opts) {
@@ -1320,6 +1347,10 @@ class Reader extends events.EventEmitter {
 			function (post, next) {
 				if (post) {
 					self.injectMnemonic(post);
+
+					// Image is deleted and client not authenticated
+					if (post.imgDeleted && !self.canModerate)
+						imager.deleteImageProps(post);
 					extract(post);
 				}
 				next(null, post);
@@ -1395,6 +1426,10 @@ function extract(post, dontParseDice) {
 	imager.nestImageProps(post);
 	if (!dontParseDice)
 		amusement.parseDice(post);
+}
+
+function postKey(num, op) {
+	return `${op == num ? 'thread' : 'post'}:${num}`;
 }
 
 function tag_key(tag) {

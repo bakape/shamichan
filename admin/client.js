@@ -1,11 +1,15 @@
 /*
 Client-side administration logic
  */
+'use strict';
 
 let	main = require('main'),
-	{$, $threads, _, Backbone, common, config, etc, lang} = main;
+	{$, $threads, _, Backbone, common, config, etc, lang} = main,
+	{parseHTML} = common;
 
-const ident = window.IDENT;
+// Only used to affect some client rendering practises. Anything actually
+// needing security has stricter authorisation checks.
+const ident = main.ident = window.IDENT;
 
 // Pass login status to ./www/js/login.js
 window.loggedInUser = ident.email;
@@ -15,6 +19,15 @@ $('<link/>', {
 	rel: 'stylesheet',
 	href: `${config.MEDIA_URL}css/mod.css?v=${cssHash}`
 }).appendTo('head');
+
+{
+	// Add staff board to board navigation
+	const staff = config.STAFF_BOARD;
+	$('#navTop')
+		.children('a')
+		.last()
+		.after(` / <a href="../${staff}/" class="history">${staff}</a>`);
+}
 
 let ToolboxView = Backbone.View.extend({
 	tagName: 'div',
@@ -32,13 +45,13 @@ let ToolboxView = Backbone.View.extend({
 			'lockThread',
 			'toggleMnemonics'
 		];
-		if (ident.auth === 'Admin')
+		if (ident.auth === 'admin')
 			specs.push('sendNotification', 'dispatchFun', 'renderPanel');
 
 		let controls = '<span>';
 		for (let i = 0; i < specs.length; i++) {
 			const ln = lang.mod[specs[i]];
-			controls += common.parseHTML
+			controls += parseHTML
 				`<a class="modButton" data-kind="${i}" title="${ln[1]}">
 					${ln[0]}
 				</a>`;
@@ -46,7 +59,7 @@ let ToolboxView = Backbone.View.extend({
 		controls += '</span>';
 		this.$controls = $(controls);
 
-		this.$checkboxToggle = $(common.parseHTML
+		this.$checkboxToggle = $(parseHTML
 			`<style>
 				.postCheckbox {
 					display: inline-block;
@@ -62,7 +75,7 @@ let ToolboxView = Backbone.View.extend({
 			.appendTo('body');
 
 		// Sets mnemonic visability
-		this.$mnemonicStyle = $(common.parseHTML
+		this.$mnemonicStyle = $(parseHTML
 			`<style>
 				header > .mod.addr {
 					display: none;
@@ -85,7 +98,7 @@ let ToolboxView = Backbone.View.extend({
 		this.model.set('shown', hidden);
 	},
 	buttonHandler(event) {
-		this[this.specs[event.target.getAttribute('data-kind')]]();
+		this[this.specs[event.target.getAttribute('data-kind')]](event);
 	},
 	getSelected() {
 		let checked = [];
@@ -111,11 +124,77 @@ let ToolboxView = Backbone.View.extend({
 		this.$mnemonicStyle.prop('disabled', hide);
 		localStorage.noMnemonics = !hide;
 	},
+	send(type) {
+		main.command('send', [common[type], ...this.getSelected()]);
+	},
 	spoilerImages() {
-		main.command('send', [common.SPOILER_IMAGES, ...this.getSelected()]);
+		this.send('SPOILER_IMAGES');
+	},
+	deleteImages() {
+		this.send('DELETE_IMAGES');
+	},
+	// Push a notification message to all clients
+	sendNotification() {
+		let box = this.notificationBox;
+		if (box) {
+			this.notificationBox = null;
+			return box.remove();
+		}
+
+		let self = this;
+		this.notificationBox = new InputBoxView({
+			fields: ['msg'],
+			handler(msg) {
+				self.notificationBox = null;
+				main.command('send', [common.NOTIFICATION, msg[0]]);
+			}
+		});
 	}
 });
 
 let toolbox = new ToolboxView({
 	model: new Backbone.Model()
+});
+
+// Input box character sizes
+const sizeMap = {
+	msg: 20
+};
+
+let InputBoxView = Backbone.View.extend({
+	className: 'mod inputBox',
+	events: {
+		submit: 'submit'
+	},
+	initialize(args) {
+		this.handler = args.handler;
+		this.render(args);
+	},
+	render(args) {
+		let html = '<form>';
+		for (let id of args.fields) {
+			html += parseHTML `<input ${{
+				type: 'text',
+				'data-id': id,
+				size: sizeMap[id],
+				placeholder: lang.mod.placeholders[id]
+			}}>`;
+		}
+		html += parseHTML
+			`<input type="submit" value="${lang.send}">
+			</form>`;
+		this.$el
+			.html(html)
+			.prependTo(toolbox.$el)
+			.find('input').first().focus();
+	},
+	submit(event) {
+		event.preventDefault();
+		let values = [];
+		$(event.target).children('input[type=text]').each(function () {
+			values.push(this.value);
+		});
+		this.handler(values);
+		this.remove();
+	}
 });

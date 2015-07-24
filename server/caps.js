@@ -5,7 +5,6 @@ Manages client read/write permissions
 
 var async = require('async'),
     authcommon = require('../admin/common'),
-    check = require('./msgcheck').check,
     common = require('../common/index'),
     config = require('../config'),
     db = require('../db'),
@@ -14,9 +13,9 @@ var async = require('async'),
 var RANGES = require('./state').dbCache.ranges;
 
 function can_access_board(ident, board) {
-	if (board == 'graveyard' && can_administrate(ident))
+	if (board == 'graveyard' && checkAuth('admin', ident))
 		return true;
-	if (board == config.STAFF_BOARD && !can_moderate(ident))
+	if (board == config.STAFF_BOARD && !checkAuth('moderator', ident))
 		return false;
 	if (ident.ban || ident.suspension)
 		return false;
@@ -35,39 +34,18 @@ function can_access_thread (ident, op) {
 }
 exports.can_access_thread = can_access_thread;
 
-function can_moderate(ident) {
-	return (ident.auth === 'Admin' || ident.auth === 'Moderator');
+// Acertains client has the proper authorisation level or higher
+function checkAuth(type, ident) {
+	const levels = ['janitor', 'moderator', 'admin'];
+	return levels.indexOf(type) <= levels.indexOf(ident.auth);
 }
-exports.can_moderate = can_moderate;
-
-function can_administrate(ident) {
-	return ident.auth === 'Admin';
-}
-exports.can_administrate = can_administrate;
+exports.checkAuth = checkAuth;
 
 function dead_media_paths(paths) {
 	paths.src = '../dead/src/';
 	paths.thumb = '../dead/thumb/';
 	paths.mid = '../dead/mid/';
 }
-
-function augment_oneesama (oneeSama, board, ident) {
-	oneeSama.ident = ident;
-	if (can_administrate(ident))
-		oneeSama.hook('headerName', authcommon.denote_hidden);
-	if (can_administrate(ident) && board == 'graveyard')
-		oneeSama.hook('mediaPaths', dead_media_paths);
-}
-exports.augment_oneesama = augment_oneesama;
-
-function modHandler(func) {
-	return function (nums, client) {
-		return can_moderate(client.ident)
-			&& check('id...', nums)
-			&& func(nums, client);
-	};
-}
-exports.modHandler = modHandler;
 
 function parse_ip(ip) {
 	var m = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)(?:\/(\d+))?$/);

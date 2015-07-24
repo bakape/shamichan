@@ -6,13 +6,12 @@ Core  server-side administration module
 
 let authcommon = require('./common'),
     caps = require('../server/caps'),
+	check = require('../server/msgcheck'),
     common = require('../common'),
 	config = require('../config'),
     okyaku = require('../server/okyaku'),
 	mnemonics = require('./mnemonic/mnemonics'),
 	Muggle = require('../util/etc').Muggle;
-
-require('./panel');
 
 function connect() {
 	return global.redis;
@@ -60,7 +59,7 @@ function ban(m, mod, ip, key, type, sentence) {
 let dispatcher = okyaku.dispatcher;
 
 dispatcher[authcommon.BAN] = function (msg, client) {
-	if (!caps.can_moderate(client.ident))
+	if (!caps.checkAuth('moderator', client.ident))
 		return false;
 	const ip = msg[0],
 		type = msg[1],
@@ -128,10 +127,30 @@ function lift_expired_bans() {
 setInterval(lift_expired_bans, 60000);
 lift_expired_bans();
 
-dispatcher[common.SPOILER_IMAGES] = caps.modHandler(function (nums, client) {
-	client.db.modHandler('spoilerImages', nums, function (err) {
-		if (err)
-			client.kotowaru(Muggle("Couldn't spoiler images.", err));
-	});
+function modHandler(method, errMsg) {
+	return function (nums, client) {
+		return caps.checkAuth('janitor', client.ident)
+			&& check('id...', nums)
+			&& client.db.modHandler(method, nums, function (err) {
+				if (err)
+					client.kotowaru(Muggle(errMsg, err));
+			});
+	};
+}
+
+dispatcher[common.SPOILER_IMAGES] = modHandler('spoilerImages',
+	'Couldn\'t spoiler images.'
+);
+
+dispatcher[common.DELETE_IMAGES] = modHandler('deleteImages',
+	'Couldn\'t delete images.'
+);
+
+// Non-persistent global live admin notifications
+dispatcher[common.NOTIFICATION] = function (msg, client) {
+	msg = msg[0];
+	if (!caps.checkAuth('admin', client.ident) || !check('string', msg))
+		return false;
+	okyaku.push([0, common.NOTIFICATION, common.escape_html(msg)]);
 	return true;
-});
+};

@@ -75,9 +75,6 @@ class Render {
 			}
 		});
 
-		// Add mnemonics for authenticated staff
-		caps.augment_oneesama(oneeSama, this.opts.board, ident);
-
 		if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
 			oneeSama.thumbStyle = cookies.thumb;
 		let lastN = cookies.lastn && parseInt(cookies.lastn, 10);
@@ -176,7 +173,7 @@ class Render {
 				`<br>
 				<small>
 					<span title="${lang[this.lang].catalog_omit}">
-						${data.replyctr}/${data.imgctr - 1}~
+						${data.replyctr}/${data.imgctr - 1}
 					</span>
 					${oneeSama.expansionLinks(data.num)}
 				</small>
@@ -296,7 +293,7 @@ class Render {
 
 		// Make script loader load moderation bundle
 		const ident = this.req.ident;
-		if (ident && caps.can_moderate(ident)) {
+		if (caps.checkAuth('janitor', ident)) {
 			const keys =  JSON.stringify(_.pick(ident, 'auth', 'csrf', 'email'));
 			resp.write(`var IDENT = ${keys};`);
 		}

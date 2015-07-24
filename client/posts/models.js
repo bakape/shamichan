@@ -50,8 +50,13 @@ exports.Post = Backbone.Model.extend({
 		this.dispatch('renderImage', image);
 	},
 	removeImage() {
-		this.unset('image');
-		this.dispatch('renderImage', null);
+		// Moderators won't have the image removed, but rerendered with
+		// indication, that it has been deleted.
+		if (main.ident)
+			this.get('image').imgDeleted = true;
+		else
+			this.unset('image');
+		this.dispatch('renderImage');
 	},
 	addBacklink(num, op) {
 		let backlinks = this.get('backlinks') || {};

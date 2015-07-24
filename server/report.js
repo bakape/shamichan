@@ -28,8 +28,8 @@ function report(reporter_ident, op, num, cb) {
 
 	var reporter = admin.genMnemonic(reporter_ident.ip) || '???';
 
-	var yaku = new db.Yakusoku(board, {auth: 'Moderator'});
-	var reader = new db.Reader({auth: 'Moderator'});
+	var yaku = new db.Yakusoku(board, {auth: 'moderator'});
+	var reader = new db.Reader({auth: 'moderator'});
 	var kind = op == num ? 'thread' : 'post';
 	reader.get_post(kind, num, {}, function (err, post) {
 		if (err || !post) {
@@ -125,7 +125,7 @@ function image_preview(info) {
 }
 
 okyaku.dispatcher[common.REPORT_POST] = function (msg, client) {
-	if (!msgcheck.check(['id', 'string', 'string'], msg))
+	if (!msgcheck(['id', 'string', 'string'], msg))
 		return false;
 
 	var num = msg[0];

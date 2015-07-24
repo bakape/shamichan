@@ -12,14 +12,8 @@ this.hot = {
 		graveyard: "/graveyard/",
 		staff: "/staff/"
 	},
-// Default theme to use on each board
-	BOARD_CSS: {
-		moe: 'moe',
-		gar: 'gar',
-		meta: 'mawaru',
-		graveyard: 'mawaru',
-		staff: 'moe'
-	},
+// Default theme to use
+	DEFAULT_CSS: 'moe',
 /*
  * File names of the images to use as banners inside the ./www/banners
  * Example: ['banner01.png', 'banner02.gif', 'banner03.jpg'] or null
@@ -38,14 +32,16 @@ this.hot = {
 	EXCLUDE_REGEXP: /[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g,
 	SAGE_ENABLED: true,
 // Titles for staff that will be displayed in their posts' headers
-	ADMIN_ALIAS: 'Admin',
-	MOD_ALIAS: 'Moderator',
-	INTER_BOARD_NAVIGATION: true,
+	staff_aliases: {
+		admin: 'Admin',
+		moderator: 'Moderator',
+		janitor: 'Janitor'
+	},
 	SPECIAL_TRIPCODES: {
 		kyubey: "／人◕ ‿‿ ◕人＼"
 	},
 /*
- Information to display in the top banner. Accepts HTML.Is overriden by
+ Information to display in the top banner. Accepts HTML. Is overriden by
  Y.set_banner()
  */
 	BANNERINFO: '',

@@ -41,32 +41,14 @@ exports.clientConfigHash = '';
 exports.clients = {};
 exports.clientsByIP = {};
 
-const clientConfig = exports.clientConfig =
-	_.pick(config,
-		'USE_WEBSOCKETS',
-		'SOCKET_PATH',
-		'SOCKET_URL',
-		'DEBUG',
-		'READ_ONLY',
-		'IP_TAGGING',
-		'RADIO',
-		'PYU',
-		'BOARDS',
-		'LANGS',
-		'DEFAULT_LANG',
-		'READ_ONLY_BOARDS',
-		'WEBM',
-		'UPLOAD_URL',
-		'MEDIA_URL',
-		'SECONDARY_MEDIA_URL',
-		'THUMB_DIMENSIONS',
-		'PINKY_DIMENSIONS',
-		'SPOILER_IMAGES',
-		'IMAGE_HATS',
-		'ASSETS_DIR',
-		'RECAPTCHA_PUBLIC_KEY',
-		'LOGIN_KEYWORD'
-	);
+const clientConfig = exports.clientConfig = _.pick(config,
+	'USE_WEBSOCKETS', 'SOCKET_PATH', 'SOCKET_URL', 'DEBUG', 'READ_ONLY',
+	'IP_TAGGING', 'RADIO', 'PYU', 'BOARDS', 'LANGS', 'DEFAULT_LANG',
+	'READ_ONLY_BOARDS', 'WEBM', 'UPLOAD_URL', 'MEDIA_URL',
+	'SECONDARY_MEDIA_URL', 'THUMB_DIMENSIONS', 'PINKY_DIMENSIONS',
+	'SPOILER_IMAGES', 'IMAGE_HATS', 'ASSETS_DIR', 'RECAPTCHA_PUBLIC_KEY',
+	'LOGIN_KEYWORD', 'STAFF_BOARD'
+);
 
 function reload_hot_config(cb) {
 	fs.readFile('./config/hot.js', 'UTF-8', function (err, js) {
@@ -92,8 +74,7 @@ function reload_hot_config(cb) {
 		let clientHot = exports.clientHotConfig = _.pick(HOT,
 			'ILLYA_DANCE', 'EIGHT_BALL', 'THREADS_PER_PAGE',
 			'ABBREVIATED_REPLIES', 'SUBJECT_MAX_LENGTH', 'EXCLUDE_REGEXP',
-			'ADMIN_ALIAS', 'MOD_ALIAS', 'SAGE_ENABLED', 'THREAD_LAST_N',
-			'BOARD_CSS'
+			'staff_aliases', 'SAGE_ENABLED', 'THREAD_LAST_N', 'DEFAULT_CSS'
 		);
 
 		HOT.CLIENT_CONFIG = JSON.stringify(clientConfig);
@@ -298,9 +279,7 @@ function build_FAQ(faq) {
 }
 
 function make_navigation_html() {
-	if (!HOT.INTER_BOARD_NAVIGATION)
-		return '';
-	var bits = '<b id="navTop">[';
+	let bits = '<b id="navTop">[';
 	// Actual boards
 	const BOARDS = config.BOARDS,
 		PB = config.PSUEDO_BOARDS;

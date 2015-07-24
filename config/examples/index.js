@@ -58,24 +58,29 @@ module.exports = {
 	PAGES: {
 		moe: 5,
 		gar: 5,
-		meta: 5
+		meta: 5,
+		staff: 5
 	},
 // Number of posts per thread, after which the thread stops bumping to the
 // top of the board
 	BUMP_LIMIT: {
 		moe: 1000,
 		gar: 1000,
-		meta: 1000
+		meta: 1000,
+		staff: 1000
 	},
 // Delete threads and their images, when they exceed the board's page limit
 	PRUNE: false,
 
 /*
- Doushio uses Mozilla's Persona system for moderator authentication.
+ Doushio uses Mozilla's Persona system for staff authentication.
  Set login emails here.
  */
-	ADMIN_PERSONAS: ['lalc@doushio.com'],
-	MODERATOR_PERSONAS: ['mod@doushio.com'],
+	staff: {
+		admin: ['lalc@doushio.com'],
+		moderator: ['mod@doushio.com'],
+		janitor: ['janitor@doushio.com']
+	},
 // You can log in/out by typing the following keyword in the email field
 	LOGIN_KEYWORD: 'misaki',
 // URL and domain of the website

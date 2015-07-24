@@ -164,8 +164,8 @@ class OneeSama {
 				<input type="checkbox" class="postCheckbox">
 				<span class=control></span>
 				${data.subject && `<h3>「${escape(data.subject)}」</h3>`}
-				${this.name(data)}~
-				${this.time(data.time)}~
+				${this.name(data)}
+				${this.time(data.time)}
 				${this.postNavigation(data)}
 				${!this.full && !data.op && this.expansionLinks(data.num)}
 			</header>`;
@@ -197,7 +197,7 @@ class OneeSama {
 			auth = data.auth;
 		if (name || !trip) {
 			if (name)
-				html += escape(data.name);
+				html += escape(name);
 			else
 				html += this.lang.anon;
 			if(trip)
@@ -205,10 +205,8 @@ class OneeSama {
 		}
 		if (trip)
 			html += `<code>${escape(trip)}</code>`;
-		if (auth) {
-			const hot = imports.hotConfig;
-			html += ` ## ${auth === 'Admin' ? hot.ADMIN_ALIAS : hot.MOD_ALIAS}`;
-		}
+		if (auth)
+			html += ` ## ${imports.hotConfig[auth]}`;
 		return html;
 	}
 	time(time) {
@@ -487,19 +485,21 @@ class OneeSama {
 	}
 	// Image header
 	figcaption(data, reveal) {
+		const list = util.commaList([
+			data.imgDeleted &&`<b class="mod">${this.lang.mod.imgDeleted}</b>`,
+			data.audio && '\u266B',
+			data.length,
+			util.readable_filesize(data.size),
+			`${data.dims[0]}x${data.dims[1]}`,
+			data.apng && 'APNG'
+		]);
 		return parseHTML
 			`<figcaption>
 				${this.thumbStyle === 'hide' && this.hiddenToggle(reveal)}
 				${this.imageSearch(data)}
 				<i>
-					(${util.commaList([
-						data.audio && '\u266B',
-						data.length,
-						util.readable_filesize(data.size),
-						`${data.dims[0]}x${data.dims[1]}`,
-						data.apng && 'APNG'
-					])})~
-					${this.imageLink(data)}
+					(${list})
+					 ${this.imageLink(data)}
 				</i>
 			</figcaption>`;
 	}
@@ -597,20 +597,28 @@ class OneeSama {
 			thumbHeight = height;
 		}
 
-		// Thumbnails on catalog pages do not need hover previews. Adding the
-		// `expanded` class excludes them from the hover handler. The
-		// history class ensures they are handled by the History API.
+		let linkAttrs = {
+			target: '_blank',
+			rel: 'nofollow',
+			href: href || src
+		};
+		let imgAttrs = {
+			src: thumb,
+			width: thumbWidth,
+			height: thumbHeight
+		};
+
+		// Catalog pages
+		if (href) {
+			// Handle the thumbnails with the HTML5 History controller
+			linkAttrs.class = 'history';
+			// No image hover previews
+			imgAttrs.class = 'expanded';
+		}
+
 		return parseHTML
-			`<a target="_blank"
-				 rel="nofollow"
-				 href="${href || src}"
-				 ${href && 'class="history"'}
-		    >
-				<img src="${thumb}"
-					width="${thumbWidth}"
-					height="${thumbHeight}"
-					${href && 'class="expanded"'}
-				>
+			`<a ${linkAttrs}>
+				<img ${imgAttrs}>
 			</a>`
 	}
 	spoilerInfo(data) {
@@ -636,8 +644,7 @@ class OneeSama {
 	asideLink(inner, href, cls, innerCls) {
 		return parseHTML
 			`<aside class="act ${cls}">
-				<a~
-					${href && `href="${href}"`}
+				<a ${href && `href="${href}"`}
 					${innerCls && ` class="${innerCls}"`}
 				>
 					${this.lang[inner] || inner}
