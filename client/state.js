@@ -32,7 +32,7 @@ function read(url) {
 exports.read = read;
 
 // Initial page state
-var page = exports.page = new Backbone.Model(read(location.href));
+let page = exports.page = new Backbone.Model(read(location.href));
 
 // Hot-reloadable configuration
 // TODO: We need actual listeners to this model for hot reloads.
@@ -48,7 +48,15 @@ exports.ownPosts = {};
 let mine = exports.mine = new main.Memory('mine', 2, true);
 
 // All posts currently displayed
-let posts = exports.posts = new Backbone.Collection();
+let PostCollection = Backbone.Collection.extend({
+	// Needed, because we use different model classes in the same
+	// collection. Apperently Backbone >=1.2.0 no longer picks those up
+	// automatically.
+	modelId(attrs) {
+		return attrs.num;
+	}
+});
+let posts = exports.posts = new PostCollection();
 main.on('state:clear', function() {
 	/*
 	 * Emptying the whole element should be faster than removing each post
