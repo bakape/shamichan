@@ -306,7 +306,7 @@ var ComposerView = Backbone.View.extend({
 			return;
 		const parsed = common.parse_name(main.$name.val(), main.$email.val()),
 			haveTrip = !!(parsed[1] || parsed[2]);
-		var $b = this.$meta.find('b');
+		let $b = this.$meta.find('b');
 		if (parsed[0])
 			$b.text(parsed[0] + ' ');
 		else
@@ -315,10 +315,8 @@ var ComposerView = Backbone.View.extend({
 			$b.append(' <code>!?</code>');
 		// Insert staff title
 		main.oneeSama.trigger('fillMyName', $b);
-		var email = main.$email.val().trim();
-		if (common.is_noko(email))
-			email = '';
-		var $tag = this.$meta.children('a').first();
+		const email = main.$email.val().trim();
+		let $tag = this.$meta.children('a').first();
 		if (email) {
 			$tag.attr({
 				href: 'mailto:' + email,

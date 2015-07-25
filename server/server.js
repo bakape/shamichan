@@ -93,7 +93,7 @@ function linkToDatabase(board, syncs, live, client) {
 	if (client.db)
 		client.db.kikanai().disconnect();
 
-	var dead_threads = [], count = 0, op;
+	let dead_threads = [], count = 0, op;
 	for (let k in syncs) {
 		k = parseInt(k, 10);
 		if (db.OPs[k] != k || !db.OP_has_tag(board, k)) {
@@ -109,7 +109,7 @@ function linkToDatabase(board, syncs, live, client) {
 	client.watching = syncs;
 	if (live) {
 		/* XXX: This will break if a thread disappears during sync
-		 *      (won't be reported)
+		 * (won't be reported)
 		 * Or if any of the threads they see on the first page
 		 * don't show up in the 'live' pub for whatever reason.
 		 * Really we should get them synced first and *then* switch
@@ -127,42 +127,49 @@ function linkToDatabase(board, syncs, live, client) {
 		client.on_thread_sink.bind(client),
 		listening
 	);
+
 	function listening(errs) {
 		if (errs && errs.length >= count)
 			return client.kotowaru(Muggle("Couldn't sync to board."));
 		else if (errs) {
 			dead_threads.push.apply(dead_threads, errs);
-			for (let i = 0, l = errs.length; i < l; i++) {
-				delete client.watching[errs[i]];
+			for (let err of errs) {
+				delete client.watching[err];
 			}
 		}
 		client.db.fetch_backlogs(client.watching, got_backlogs);
 	}
+
 	function got_backlogs(errs, logs) {
 		if (errs) {
 			dead_threads.push.apply(dead_threads, errs);
-			for (let i = 0, l = errs.length; i < l; i++) {
-				delete client.watching[errs[i]];
+			for (let err of errs) {
+				delete client.watching[err];
 			}
 		}
 
-		var sync = '0,' + common.SYNCHRONIZE;
+		let sync = '0,' + common.SYNCHRONIZE;
 		if (dead_threads.length)
 			sync += ',' + JSON.stringify(dead_threads);
 		logs.push(sync);
 		client.socket.write('[[' + logs.join('],[') + ']]');
 		client.synced = true;
 
-		var info = {client: client, live: live};
+		let info = {
+			client: client,
+			live: live
+		};
 		if (!live && count == 1)
 			info.op = op;
 		else
 			info.board = board;
+		
 		hooks.trigger('clientSynced', info, function (err) {
 			if (err)
 				winston.error(err);
 		});
 	}
+
 	return true;
 }
 
@@ -311,11 +318,8 @@ function allocate_post(msg, client, callback) {
 				post.trip = trip;
 		}
 	}
-	if (msg.email) {
+	if (msg.email)
 		post.email = msg.email.trim().substr(0, 320);
-		if (common.is_noko(post.email))
-			delete post.email;
-	}
 	post.state = [common.S_BOL, 0];
 
 	if ('auth' in msg) {
