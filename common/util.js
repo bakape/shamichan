@@ -159,8 +159,7 @@ exports.safe = safe;
 function is_sage(email) {
 	return imports.hotConfig.SAGE_ENABLED
 		&& email
-		&& email.indexOf('@') == -1
-		&& /sage/i.test(email);
+		&& email.trim() === 'sage';
 }
 exports.is_sage = is_sage;
 
