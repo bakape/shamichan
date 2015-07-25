@@ -462,11 +462,11 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 		if (!client.post || client.post.image)
 			return;
 		client.db.add_image(client.post, alloc, client.ident.ip,
-					function (err) {
-			if (err)
-				client.kotowaru(Muggle(
-					"Image insertion problem.", err));
-		});
+			function (err) {
+				if (err)
+					client.kotowaru(Muggle("Image insertion problem.", err));
+			}
+		);
 	});
 	return true;
 };
