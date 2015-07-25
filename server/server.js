@@ -47,29 +47,21 @@ if (config.RADIO)
 try {
 	if (config.RECAPTCHA_PUBLIC_KEY)
 		require('./report');
-} catch (e) {}
+}
+catch (e) {}
 require('./time');
 
-var RES = STATE.resources;
-
-var dispatcher = okyaku.dispatcher;
-
-/* I always use encodeURI anyway */
-var escape = common.escape_html;
-var safe = common.safe;
+let dispatcher = okyaku.dispatcher;
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
-
-	function checked(err, ident) {
-		if (!err)
-			_.extend(client.ident, ident);
-		if (!synchronize(msg, client))
-			client.kotowaru(Muggle("Bad protocol"));
-	}
-
 	const personaCookie = persona.extract_login_cookie(cookie.parse(msg.pop()));
 	if (personaCookie) {
-		persona.check_cookie(personaCookie, checked);
+		persona.check_cookie(personaCookie, function (err, ident) {
+			if (!err)
+				_.extend(client.ident, ident);
+			if (!synchronize(msg, client))
+				client.kotowaru(Muggle("Bad protocol"));
+		});
 		return true;
 	}
 	else
