@@ -28,6 +28,7 @@ The read-only JSON API currently supports 4 modes of query.
 | trip | poster tripcode | yes | no | `"!tripfag"` |
 | email | poster email | yes | no | `"sage"` |
 | mnemonic | poster IP in human readble format | no | mods | `"daadunu"`|
+| auth | staff title; one of admin, moderator or janitor | yes | no | `"admin"` |
 | body | post body | no | no | `">implying this is an example"` |
 | image | [image object](#image-object) | yes  | no | [image object](#image-object) |
 | dice | array of hash command result arrays | yes | no | `[[20, 0, 3], [2, 0, 2]]` |
@@ -37,8 +38,7 @@ The read-only JSON API currently supports 4 modes of query.
 ###Image object
 | Key | Value | Optional | Exclusive | Example |
 |:---:|:-----:|:--------:|:-------:|:--------:|
-| src | image file name as hosted on the server | no | no| `"1423578439604
-.webm"` |
+| src | image file name as hosted on the server | no | no| `"1423578439604.webm"` |
 | thumb | image thumbnail name | yes | no | `"1423578439604.jpg"` |
 | mid | high quality thumbnail name; presence depends on server configuration | yes | no | `"1423578439604.jpg"` |
 | ext | image extension | no | no | `".webm"` |
