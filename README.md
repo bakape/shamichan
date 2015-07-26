@@ -55,3 +55,4 @@ recompile all dependancies
 * scripts/purge_bans.sh - Removes all bans
 * scripts/purge_mod_sessions.sh - Closes all active moderator sessions
 * scripts/radio.js - icecast2 server integration
+* scripts/send.js - global websocket push messages
