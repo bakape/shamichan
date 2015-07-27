@@ -366,9 +366,10 @@ span.control .popup-menu {
 }
 .notification {
 	position: fixed;
-	display: table;
 	text-align: center;
-	white-space: pre-line;
+	&.modal {
+		overflow: auto;
+	}
 	font-size: 120%;
 	right: 0;
 	left: 0;
