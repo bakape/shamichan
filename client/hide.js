@@ -19,7 +19,7 @@ main.reply('hide', function(model) {
 	main.request('hide:render', count);
 });
 
-main.reply('hide:clear', hidden.purgeAll);
+main.reply('hide:clear', () => hidden.purgeAll());
 
 // Initial render
 main.defer(() => main.request('hide:render', hidden.size()));
