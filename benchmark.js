@@ -3,26 +3,16 @@ Basic synchronous and asynchronous benchmarks for individual functional units
  */
 'use strict';
 
-// Usage examples
-let number = 0;
-benchmark('Addition', 1000, function () {
-	number++;
-});
-
-let redis = require('redis').createClient();
-asyncBenchmark('Redis ping', 1000, function (cb) {
-	redis.ping(cb);
-});
-
-function benchmark(name, iterations, func) {
+function sync(name, iterations, func) {
 	console.time(name);
 	for (let i = 0; i < iterations; i++) {
 		func();
 	}
 	console.timeEnd(name);
 }
+exports.sync = sync;
 
-function asyncBenchmark(name, iterations, func, next) {
+function async(name, iterations, func, next) {
 	console.time(name);
 	let i = 0;
 	loop();
@@ -41,3 +31,4 @@ function asyncBenchmark(name, iterations, func, next) {
 			process.exit();
 	}
 }
+exports.async = async;
