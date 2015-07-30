@@ -41,6 +41,8 @@ module.exports = {
 		['g', 'https://google.com']
 	],
 	STAFF_BOARD: 'staff',
+// Boards with disabled moderation
+	containment_boards: ['meta'],
 
 // Language settings. You can easily map more. See ./lang/
 	LANGS: ['en_GB', 'pt_BR', 'es_ES'],

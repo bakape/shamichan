@@ -336,6 +336,10 @@ class Yakusoku extends events.EventEmitter {
 		super();
 		this.id = ++(cache.YAKUMAN);
 		this.tag = board;
+
+		//Should moderation be allowed on this board?
+		this.isContainmentBoard
+			= config.containment_boards.indexOf(this.tag) > -1;
 		this.ident = ident;
 		this.subs = [];
 	}
@@ -1060,6 +1064,8 @@ class Yakusoku extends events.EventEmitter {
 		});
 	}
 	modHandler(method, nums, cb) {
+		if (this.isContainmentBoard)
+			return false;
 		// Group posts by thread for live publishes to the clients
 		let threads = {};
 		for (let num of nums) {
