@@ -2,8 +2,6 @@
  Various utility functions used all over the place
  */
 
-'use strict';
-
 var imports = require('./imports');
 
 function is_pubsub(t) {

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "async": "^1.2.0",
+    "babel": "^5.8.20",
     "babelify": "^6.0.2",
     "backbone": "^1.2.1",
     "backbone.radio": "^1.0.0",

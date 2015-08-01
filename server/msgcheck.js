@@ -1,7 +1,6 @@
 /*
  Verify websocket messages confirm to a predefined type schema
  */
-'use strict';
 
 function check(schema, msg) {
 	/* Primitives */

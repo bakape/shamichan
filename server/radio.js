@@ -2,8 +2,6 @@
  R/a/dio API handler
  */
 
-'use strict';
-
 var common = require('../common'),
 	hook =require('../util/hooks').hook,
 	OK = require('./okyaku'),

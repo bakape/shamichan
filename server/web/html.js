@@ -2,8 +2,6 @@
  Server the HTML part of pages
  */
 
-'use strict';
-
 let _ = require('underscore'),
 	caps = require('../caps'),
 	common = require('../../common'),

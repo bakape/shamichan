@@ -2,8 +2,6 @@
 Main redis controller module
  */
 
-'use strict';
-
 let _ = require('underscore'),
     async = require('async'),
     cache = require('./server/state').dbCache,

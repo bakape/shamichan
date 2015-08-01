@@ -1,5 +1,3 @@
-'use strict';
-
 // Define vars both on server and client
 var _, common, config, DEF,
 	isNode = typeof navigator === 'undefined';

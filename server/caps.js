@@ -1,7 +1,6 @@
 /*
 Manages client read/write permissions
  */
-'use strict';
 
 var async = require('async'),
     authcommon = require('../admin/common'),

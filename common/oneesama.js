@@ -2,8 +2,6 @@
  Rendering singleton both server and client-side
  */
 
-'use strict';
-
 let _ = require('underscore'),
 	imports = require('./imports'),
 	index = require('./index'),

@@ -1,7 +1,6 @@
 /*
  Websocket handler module
  */
-'use strict';
 
 var _ = require('underscore'),
 	async = require('async'),

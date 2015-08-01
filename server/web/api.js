@@ -2,8 +2,6 @@
  Read-only JSON API
  */
 
-'use strict';
-
 let caps = require('../caps'),
 	config = require('../../config'),
 	db = require('../../db'),

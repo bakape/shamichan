@@ -2,8 +2,6 @@
  Initialises the SockJS server
  */
 
-'use strict';
-
 let config = require('../../config'),
 	fs = require('fs'),
 	okyaku = require('../okyaku'),

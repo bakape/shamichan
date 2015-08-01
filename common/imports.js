@@ -3,8 +3,6 @@
  what is needed
  */
 
-'use strict';
-
 // Runing on the server
 exports.isNode = typeof navigator === 'undefined';
 

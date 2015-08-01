@@ -1,5 +1,3 @@
-'use strict';
-
 var async = require('async'),
     config = require('../config'),
     child_process = require('child_process'),

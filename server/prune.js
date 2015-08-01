@@ -2,8 +2,6 @@
  Deletes threads that go past the last page of the board
  */
 
-'use strict';
-
 let _ = require('underscore'),
 	async = require('async'),
 	config = require('../config'),

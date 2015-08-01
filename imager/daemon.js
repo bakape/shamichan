@@ -1,5 +1,3 @@
-'use strict';
-
 var async = require('async'),
 	common = require('../common/index'),
 	config = require('../config'),

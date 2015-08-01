@@ -2,8 +2,6 @@
 Populates and stores the core state of the server, including generated tempates
 */
 
-'use strict';
-
 // Some hot configs need to be be available when common/ is required
 var HOT = exports.hot = require('../config/hot').hot;
 

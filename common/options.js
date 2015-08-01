@@ -3,8 +3,6 @@
  * server to render the actual options panel.
  */
 
-'use strict';
-
 var imports = require('./imports'),
 	index = require('./index'),
 	util = require('./util'),

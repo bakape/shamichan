@@ -2,8 +2,6 @@
  Renders the server-side portion of the HTML
  */
 
-'use strict';
-
 let _ = require('underscore'),
 	caps = require('./caps'),
 	common = require('../common/index'),

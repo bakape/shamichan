@@ -2,8 +2,6 @@
 Core  server-side administration module
  */
 
-'use strict';
-
 let authcommon = require('./common'),
     caps = require('../server/caps'),
 	check = require('../server/msgcheck'),

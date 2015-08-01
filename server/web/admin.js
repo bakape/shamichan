@@ -2,8 +2,6 @@
 Serve moderation script
  */
 
-'use strict';
-
 let _ = require('underscore'),
 	caps = require('../caps'),
 	express = require('express'),

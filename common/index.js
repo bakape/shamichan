@@ -3,8 +3,6 @@
  Keep that in mind, when making modifications
  */
 
-'use strict';
-
 // Websocket message codes and some other defines
 const DEF = {
 	INVALID: 0,

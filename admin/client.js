@@ -1,7 +1,6 @@
 /*
 Client-side administration logic
  */
-'use strict';
 
 let	main = require('main'),
 	{$, $threads, _, Backbone, common, config, etc, lang} = main,

@@ -2,8 +2,6 @@
 Staff authentication
  */
 
-'use strict';
-
 var _ = require('underscore'),
     config = require('../config'),
     crypto = require('crypto'),

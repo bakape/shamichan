@@ -2,7 +2,6 @@
  Dice rolls, coin flips, 8balls, syncwatch, banners, JS injections, missle
  launchers - amusement.
  */
-'use strict';
 
 let common = require('../common/index'),
 	config = require('../config'),

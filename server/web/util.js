@@ -2,8 +2,6 @@
  Various utility functions
  */
 
-'use strict';
-
 let caps = require('../caps');
 
 function parse_forwarded_for(ff) {

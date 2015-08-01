@@ -2,8 +2,6 @@
  Webserver
  */
 
-'use strict';
-
 let _ = require('underscore'),
 	admin = require('./admin'),
 	api = require('./api'),

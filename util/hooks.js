@@ -1,5 +1,3 @@
-'use strict';
-
 var async = require('async');
 var HOOKS = {},
 	SYNC_HOOKS = {};

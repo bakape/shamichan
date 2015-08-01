@@ -3,7 +3,6 @@
  * No extra code modification is required thanks to this. Just paste in your
  * language pack and add it to the LANGS array in ./config.js
  */
-'use strict';
 
 var config = require('../config');
 

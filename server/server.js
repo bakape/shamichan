@@ -1,7 +1,24 @@
 /*
 Core server module and application entry point
  */
+
+// Only explicity set here for now. All other modules down the require chain
+// use the babel.js strict transformer.
 'use strict';
+
+// ES6 transpiler require hook. We only enable some not yet implemented
+// transformers and rely on natives for others.
+require('babel/register')({
+	// Babel has trouble with hot.js, so we ignore the config module
+	ignore: /node_modules|config/,
+	whitelist: [
+		'es6.arrowFunctions',
+		'es6.destructuring',
+		'es6.parameters',
+		'es6.spread',
+		'strict'
+	]
+});
 
 let config = require('../config');
 // Longer stack traces
