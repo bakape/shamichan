@@ -79,6 +79,10 @@ module.exports = {
 		this.el
 			.getElementsByClassName('name')[0]
 			.outerHTML = oneeSama.name(this.model.attributes);
+	},
+	renderModerationInfo(info) {
+		this.$el.children('.modLog').remove();
+		this.$el.children('blockquote').before(oneeSama.modInfo(info));
 	}
 };
 

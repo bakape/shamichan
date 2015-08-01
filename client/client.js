@@ -162,14 +162,10 @@ _.extend(dispatcher, {
 		modelHandler(op, model => model.toggleLocked(false));
 	},
 	[common.DELETE_IMAGES](msg) {
-		for (let num of msg) {
-			modelHandler(num, model => model.removeImage());
-		}
+		modelHandler(msg[0], model => model.removeImage(msg[1]));
 	},
 	[common.SPOILER_IMAGES](msg) {
-		for (let i = 0; i < msg.length; i += 2) {
-			modelHandler(msg[i], model => model.setSpoiler(msg[i + 1]));
-		}
+		modelHandler(msg[0], model => model.setSpoiler(msg[1], msg[2]));
 	},
 	[common.BACKLINK](msg) {
 		modelHandler(msg[0], model => model.addBacklink(msg[1], msg[2]));

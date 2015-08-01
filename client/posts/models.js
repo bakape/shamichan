@@ -44,25 +44,37 @@ exports.Post = Backbone.Model.extend({
 		if (!silent)
 			this.dispatch('renderImage', image);
 	},
-	setSpoiler(spoiler) {
+	setSpoiler(spoiler, info) {
 		let image = this.get('image');
 		image.spoiler = spoiler;
 		this.dispatch('renderImage', image);
+		if (info)
+			this.moderationInfo(info);
 	},
-	removeImage() {
-		// Moderators won't have the image removed, but rerendered with
-		// indication, that it has been deleted.
-		if (main.ident)
-			this.get('image').imgDeleted = true;
-		else
-			this.unset('image');
-		this.dispatch('renderImage');
+	removeImage(info) {
+		// Staff won't have the image removed, but rerendered with
+		// indication, that it has been deleted and extra information
+		if (info)
+			this.moderationInfo(info);
+		else {
+			this.unset('image')
+				.dispatch('renderImage');
+		}
 	},
 	addBacklink(num, op) {
 		let backlinks = this.get('backlinks') || {};
 		backlinks[num] = op;
 		this.set({backlinks})
 			.dispatch('renderBacklinks', backlinks);
+	},
+	// Add info about the moderation action taken. This is only used on
+	// authenticated staff clients, but for sanity, lets keep it here in
+	// common model methods.
+	moderationInfo(info) {
+		let mod = this.get('mod') || [];
+		mod.push(info);
+		this.set('mod', mod)
+			.dispatch('renderModerationInfo', mod);
 	}
 });
 

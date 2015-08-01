@@ -50,9 +50,17 @@ var lang = {
 		],
 		dispatchFun: ['Fun', 'Execute arbitrary JavaScript on all clients'],
 		renderPanel: ['Panel', 'Toggle administrator panel display'],
-		imgDeleted: 'Image Deleted',
 		placeholders: {
 			msg: 'Message'
+		},
+
+		// Correspond to websocket calls in common/index.js
+		7: 'Image spoilered',
+		8: 'Image deleted',
+
+		// Formatting function for moderation messages
+		formatLog: function (kind, ident) {
+			return lang.mod[kind] + ' by ' + ident;
 		}
 	},
 

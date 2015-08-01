@@ -50,7 +50,7 @@ function report(reporter_ident, op, num, cb) {
 		var html = ['Offender: ', safe('<b>'), name, safe('</b>')];
 
 		var img;
-		if (post.image && !post.hideimg)
+		if (post.image)
 			img = image_preview(post.image);
 		if (img) {
 			body += '\nThumbnail: ' + img.src;

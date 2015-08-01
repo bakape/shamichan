@@ -1468,8 +1468,12 @@ function get_all_replies(r, op, cb) {
 	});
 }
 
+// Format post hash for passing to renderer and clients
 function extract(post, dontParseDice) {
+	// Only used internally and should not be exported to clients
 	delete post.ip;
+	delete post.imgDeleted;
+
 	post.num = parseInt(post.num, 10);
 	imager.nestImageProps(post);
 	if (!dontParseDice)
