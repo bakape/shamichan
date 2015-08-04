@@ -290,15 +290,11 @@ class OneeSama {
 	}
 	// Append moderation information. Only exposed to authenticated staff.
 	modInfo(info) {
-		let html = '';
+		let html = '<b class="modLog">';
 		for (let action of info) {
-			html += parseHTML
-				`<b class="modLog">
-					${this.lang.mod.formatLog(action.kind, action.ident)}
-				</b>
-				<br>`;
+			html += `${this.lang.mod.formatLog(action.kind, action.ident)}<br>`;
 		}
-		html += '<br>';
+		html += '<br></b>';
 		return html;
 	}
 	// Render full blockqoute contents
