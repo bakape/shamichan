@@ -74,7 +74,7 @@ let ToolboxView = Backbone.View.extend({
 		this.$el.prepend(this.$controls, this.$toggle)
 			.appendTo('body');
 
-		// Sets mnemonic visability
+		// Sets mnemonic visbility
 		this.$mnemonicStyle = $(parseHTML
 			`<style>
 				header > .mod.addr {

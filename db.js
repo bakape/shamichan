@@ -1162,7 +1162,7 @@ class Yakusoku extends events.EventEmitter {
 						op,
 						kind: common.DELETE_IMAGES,
 						num,
-						msg: num
+						msg: [num]
 					});
 				}
 				m.exec(next);
