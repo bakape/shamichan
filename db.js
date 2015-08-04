@@ -1079,30 +1079,26 @@ class Yakusoku extends events.EventEmitter {
 		return true;
 	}
 	logModeration(m, opts) {
-		const time = Date.now(),
-			ident = this.ident;
-		let info = {
+		const time = Date.now();
+		const info = {
 			time,
 			num: opts.num,
-			ident: ident.email,
+			// Abstract the email as to not reveal it to all staff
+			ident: config.staff[this.ident.auth][this.ident.email],
 			kind: opts.kind
 		};
-		m.lpush(opts.key + ':mod', JSON.stringify(info));
-
-		// Abstract the email as to not reveal it to all staff
-		info.ident = config.staff[ident.auth][ident.email];
 
 		const stringified = JSON.stringify(info);
+		m.lpush(opts.key + ':mod', stringified);
 		m.publish('mod', stringified);
 		m.zadd('modLog', time, stringified);
 		m.incr('modLogCtr');
 
-		const etc = {
+		this._log(m, opts.op, opts.kind, opts.msg, {
 			augments: {
 				auth: info
 			}
-		};
-		this._log(m, opts.op, opts.kind, opts.msg, etc);
+		});
 	}
 	readPostProperties(nums, op, props, cb) {
 		let m = this.connect().multi(),
@@ -1213,7 +1209,7 @@ class Reader extends events.EventEmitter {
 				exists = false;
 			const tags = parse_tags(pre_post.tags);
 			if (!graveyard && tags.indexOf(tag) < 0) {
-				/* XXX: Should redirect directly to correct thread */
+				// XXX: Should redirect directly to correct thread
 				if (opts.redirect)
 					return self.emit('redirect', num, tags[0]);
 				else
@@ -1300,6 +1296,8 @@ class Reader extends events.EventEmitter {
 		m.hgetall(key + ':links');
 		m.hgetall(key + ':backlinks');
 		m.lrange(key + ':dice', 0, -1);
+		if (this.canModerate)
+			m.lrange(key + ':mod', 0, -1);
 	}
 	parseExtras(res, post) {
 		for (let key of ['links', 'backlinks', 'dice']) {
@@ -1307,6 +1305,17 @@ class Reader extends events.EventEmitter {
 			if (prop)
 				post[key] = prop;
 		}
+		if (this.canModerate)
+			this.parseModerationInfo(res.shift(), post);
+	}
+	parseModerationInfo(info, post) {
+		if (!info.length)
+			return;
+		let results = [];
+		for (let i = 0; i < info.length; i++) {
+			results[i] = JSON.parse(info[i]);
+		}
+		post.mod = results;
 	}
 	injectMnemonic(post) {
 		if (!this.canModerate)
