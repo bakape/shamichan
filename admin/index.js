@@ -60,8 +60,6 @@ dispatcher[common.MOD_LOG] = function (msg, client) {
 	redis.zrange('modLog', 0, -1, function (err, log) {
 		if (err)
 			return winston.error('Moderation log fetch error:', err);
-		if (!log.length)
-			return;
 		client.send([0, common.MOD_LOG, db.destrigifyList(log)]);
 	});
 	return true;

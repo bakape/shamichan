@@ -223,6 +223,10 @@ let ModLogView = Backbone.View.extend({
 		main.request('send', [common.MOD_LOG]);
 	},
 	render(info) {
+		if (!info.length) {
+			return this.el.innerHTML = "God's in his Heaven. All's right"
+				+ " with the world.";
+		}
 		let html = '<table>';
 		for (let act of info) {
 			html += '<tr>';
