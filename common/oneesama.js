@@ -290,9 +290,9 @@ class OneeSama {
 	}
 	// Append moderation information. Only exposed to authenticated staff.
 	modInfo(info) {
-		let html = '<b class="modLog">';
+		let html = '<b class="modLog admin">';
 		for (let action of info) {
-			html += `${this.lang.mod.formatLog(action.kind, action.ident)}<br>`;
+			html += `${this.lang.mod.formatLog(action)}<br>`;
 		}
 		html += '<br></b>';
 		return html;

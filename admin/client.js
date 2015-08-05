@@ -4,7 +4,8 @@ Client-side administration logic
 'use strict';
 
 let	main = require('main'),
-	{$, $threads, _, Backbone, common, config, etc, lang} = main,
+	{$, $threads, _, Backbone, common, config, dispatcher, etc, lang,
+		oneeSama} = main,
 	{parseHTML} = common;
 
 // Only used to affect some client rendering practises. Anything actually
@@ -29,10 +30,12 @@ $('<link/>', {
 		.after(` / <a href="../${staff}/" class="history">${staff}</a>`);
 }
 
+// Container for the overlay
+let $overlay = $('<div id="modOverlay"></div>').appendTo('body');
+
 let ToolboxView = Backbone.View.extend({
-	tagName: 'div',
 	id: 'toolbox',
-	className: 'mod modal',
+	className: 'mod modal panel',
 	initialize() {
 		this.render();
 	},
@@ -43,7 +46,8 @@ let ToolboxView = Backbone.View.extend({
 			'deleteImages',
 			'deletePosts',
 			'lockThread',
-			'toggleMnemonics'
+			'toggleMnemonics',
+			'modLog'
 		];
 		if (ident.auth === 'admin')
 			specs.push('sendNotification', 'dispatchFun', 'renderPanel');
@@ -72,7 +76,7 @@ let ToolboxView = Backbone.View.extend({
 
 		this.$toggle = $(`<a id="toolboxToggle">${lang.show}</a>`);
 		this.$el.prepend(this.$controls, this.$toggle)
-			.appendTo('body');
+			.appendTo($overlay);
 
 		// Sets mnemonic visbility
 		this.$mnemonicStyle = $(parseHTML
@@ -149,6 +153,14 @@ let ToolboxView = Backbone.View.extend({
 				main.request('send', [common.NOTIFICATION, msg[0]]);
 			}
 		});
+	},
+	modLog() {
+		if (!this.logPanel)
+			this.logPanel = new ModLogView();
+		else {
+			this.logPanel.kill();
+			this.logPanel = null;
+		}
 	}
 });
 
@@ -195,6 +207,44 @@ let InputBoxView = Backbone.View.extend({
 			values.push(this.value);
 		});
 		this.handler(values);
+		this.remove();
+	}
+});
+
+// Scrollable message log
+let ModLogView = Backbone.View.extend({
+	className: 'modal mod panel',
+	initialize() {
+		this.$el.appendTo($overlay);
+
+		// Register websocket handler
+		dispatcher[common.MOD_LOG] = msg => this.render(msg[0]);
+		// Request moderation log
+		main.request('send', [common.MOD_LOG]);
+	},
+	render(info) {
+		let html = '<table>';
+		for (let act of info) {
+			html += '<tr>';
+			const cells = [
+				oneeSama.postRef(act.num, act.op).safe,
+				lang.mod.formatLog(act),
+				oneeSama.time(act.time)
+			];
+			for (let cell of cells) {
+				html += `<td>${cell}</td>`;
+			}
+			html += '</tr>';
+		}
+		html += '</table>';
+		this.el.innerHTML = html;
+
+		// Scroll to the end of the log
+		this.el.scrollTop = this.el.scrollHeight;
+		return this;
+	},
+	kill() {
+		delete dispatcher[common.MOD_LOG];
 		this.remove();
 	}
 });

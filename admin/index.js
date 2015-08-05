@@ -53,67 +53,16 @@ dispatcher[common.NOTIFICATION] = function (msg, client) {
 	return true;
 };
 
-// Proxies redis publications to a set of websocket clients
-class RedisDispatcher extends events.EventEmitter {
-	constructor(channel, type, key, counterKey) {
-		super();
-		this.setMaxListeners(0);
-		this.clients = new Set();
-		this.key = key;
-		this.type = type;
+dispatcher[common.MOD_LOG] = function (msg, client) {
+	if (!caps.checkAuth('janitor', client.ident))
+		return false;
 
-		let self = this;
-		// Read message height counter from redis
-		global.redis.get(counterKey, function (err, counter) {
-			if (err)
-				self.onError(err);
-			self.counter = counter || 0;
-		});
-
-		let redis = db.redis_client();
-		redis.on('error', this.onError);
-		redis.on('message', this.onMessage.bind(this));
-		redis.subscribe(channel);
-	}
-	onError(err) {
-		winston.err('Mod subscription error:', err);
-	}
-	onMessage(chan, msg) {
-		this.counter++;
-		msg = JSON.parse(msg);
-		for (let client of this.clients) {
-			this.send(msg, client);
-		}
-	}
-	send(msg, client) {
-		client.send([0, this.type, msg])
-	}
-	sync(counter, client) {
-		if (!caps.checkAuth('janitor', client))
-			return false;
-
-		// Fetch backlog
-		const delta = this.counter - counter;
-		if (delta > 0) {
-			let self = this;
-			redis.zrange(this.key, -delta, -1, function (err, backlog) {
-				if (err)
-					return self.onError(err);
-				self.send(backlog, client);
-			});
-		}
-
-		this.addClient(client);
-		return true;
-	}
-	addClient(client) {
-		let clients = this.clients;
-		clients.add(client);
-		client.once('close', function () {
-			clients.delete(client);
-		});
-	}
-}
-
-let modLog = new RedisDispatcher('mod', common.MOD_LOG, 'modLog', 'modLogCtr');
-dispatcher[common.MOD_LOG] = modLog.sync;
+	redis.zrange('modLog', 0, -1, function (err, log) {
+		if (err)
+			return winston.error('Moderation log fetch error:', err);
+		if (!log.length)
+			return;
+		client.send([0, common.MOD_LOG, db.destrigifyList(log)]);
+	});
+	return true;
+};

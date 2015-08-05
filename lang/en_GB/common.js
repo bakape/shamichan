@@ -50,6 +50,7 @@ var lang = {
 		],
 		dispatchFun: ['Fun', 'Execute arbitrary JavaScript on all clients'],
 		renderPanel: ['Panel', 'Toggle administrator panel display'],
+		modLog: ['Log', 'Show moderation log'],
 		placeholders: {
 			msg: 'Message'
 		},
@@ -59,8 +60,8 @@ var lang = {
 		8: 'Image deleted',
 
 		// Formatting function for moderation messages
-		formatLog: function (kind, ident) {
-			return lang.mod[kind] + ' by ' + ident;
+		formatLog: function (act) {
+			return lang.mod[act.kind] + ' by ' + act.ident;
 		}
 	},
 

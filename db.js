@@ -1083,6 +1083,7 @@ class Yakusoku extends events.EventEmitter {
 		const info = {
 			time,
 			num: opts.num,
+			op: opts.op,
 			// Abstract the email as to not reveal it to all staff
 			ident: config.staff[this.ident.auth][this.ident.email],
 			kind: opts.kind
@@ -1090,9 +1091,7 @@ class Yakusoku extends events.EventEmitter {
 
 		const stringified = JSON.stringify(info);
 		m.lpush(opts.key + ':mod', stringified);
-		m.publish('mod', stringified);
 		m.zadd('modLog', time, stringified);
-		m.incr('modLogCtr');
 
 		this._log(m, opts.op, opts.kind, opts.msg, {
 			augments: {
@@ -1311,11 +1310,7 @@ class Reader extends events.EventEmitter {
 	parseModerationInfo(info, post) {
 		if (!info.length)
 			return;
-		let results = [];
-		for (let i = 0; i < info.length; i++) {
-			results[i] = JSON.parse(info[i]);
-		}
-		post.mod = results;
+		post.mod = destringifyList(info);
 	}
 	injectMnemonic(post) {
 		if (!this.canModerate)
@@ -1492,6 +1487,15 @@ function extract(post, dontParseDice) {
 function postKey(num, op) {
 	return `${op == num ? 'thread' : 'post'}:${num}`;
 }
+
+function destringifyList(list) {
+	let parsed = [];
+	for (let i = 0; i < list.length; i++) {
+		parsed[i] = JSON.parse(list[i]);
+	}
+	return parsed;
+}
+exports.destrigifyList = destringifyList;
 
 function tag_key(tag) {
 	return tag.length + ':' + tag;
