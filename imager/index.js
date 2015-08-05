@@ -12,7 +12,7 @@ exports.Onegai = db.Onegai;
 exports.config = config;
 
 const image_attrs = ('src thumb ext dims size MD5 SHA1 hash imgnm spoiler'
-	+ ' apng mid audio length imgDeleted').split(' ');
+	+ ' apng mid audio length').split(' ');
 exports.image_attrs = image_attrs;
 
 function nestImageProps(post) {

@@ -266,8 +266,6 @@ function parseCookies(req, ctr) {
 		lang = req.lang = ~config.LANGS.indexOf(cookies.lang)
 			? cookies.lang : config.DEFAULT_LANG;
 
-	// Round counter to lowest 10 updates for better caching
-	ctr = Math.floor(ctr / 10) * 10;
 	let etag = `W/${ctr}-${RES['indexHash-' + lang]}-${lang}`;
 
 	// Attach thumbnail mode to etag

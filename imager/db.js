@@ -121,7 +121,10 @@ O.check_duplicate = function(image, callback) {
 
 // Remove expired duplicate image hashes
 function cleanUpDups() {
-	connect().zremrangebyscore('imageDups', 0, Date.now());
+	connect().zremrangebyscore('imageDups', 0, Date.now(), function (err) {
+		if (err)
+			winston.error('Error cleaning up expired image duplicates:', err);
+	});
 }
 setInterval(cleanUpDups, 60000);
 

@@ -56,12 +56,15 @@ watch(deps.server, function(file) {
 	if (!serverExclude.test(file))
 		start_server();
 });
+watch('admin', function () {
+	build(['mod'], start_server);
+});
 watch('common', fullRestart);
 watch('lang', fullRestart);
 watch('gulpfile.js', function() {
 	buildAll(reload_state);
 });
-['client', 'css', 'mod'].forEach(function(task) {
+['client', 'css'].forEach(function(task) {
 	watch(deps[task], _.debounce(function() {
 		build([task], reload_state);
 	}), 5000);

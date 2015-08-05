@@ -29,16 +29,17 @@ function on_message(e) {
 		console.log('>', e.data);
 	main.follow(function() {
 		let data = JSON.parse(e.data);
-		for (let i = 0, lim = data.length; i < lim; i++) {
-			let msg = data[i];
-			// TEMP: Log yet unsupported websocket calls
-			if (!main.dispatcher[msg[1]])
-				return console.error('Unsuported websocket call: ', msg);
+		for (let msg of data) {
 			const op = msg.shift(),
 				type = msg.shift();
+
+			// Some handlers are optional and/or dynamic. Ignore them silently.
+			const handler = main.dispatcher[type];
+			if (!handler)
+				return;
 			if (common.is_pubsub(type) && op in state.syncs)
 				state.syncs[op]++;
-			main.dispatcher[type](msg, op);
+			handler(msg, op);
 		}
 	});
 }

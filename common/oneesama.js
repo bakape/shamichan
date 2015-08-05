@@ -145,8 +145,10 @@ class OneeSama {
 			body,
 			safe(`</blockquote><small>${this.backlinks(data.backlinks)}</small>`)
 		];
+		if (data.mod)
+			body.unshift(safe(this.modInfo(data.mod)));
 		let image = data.image;
-		if (image && !data.hideimg) {
+		if (image) {
 			// Larger thumbnails for thread images
 			image.large = !data.op;
 			tale.image = this.image(image);
@@ -283,6 +285,15 @@ class OneeSama {
 					${this.lang.last} ${this.lastN}
 				</a>
 			</span>`;
+	}
+	// Append moderation information. Only exposed to authenticated staff.
+	modInfo(info) {
+		let html = '<b class="modLog admin">';
+		for (let action of info) {
+			html += `${this.lang.mod.formatLog(action)}<br>`;
+		}
+		html += '<br></b>';
+		return html;
 	}
 	// Render full blockqoute contents
 	body(body) {
@@ -484,7 +495,6 @@ class OneeSama {
 	// Image header
 	figcaption(data, reveal) {
 		const list = util.commaList([
-			data.imgDeleted &&`<b class="mod">${this.lang.mod.imgDeleted}</b>`,
 			data.audio && '\u266B',
 			data.length,
 			util.readable_filesize(data.size),

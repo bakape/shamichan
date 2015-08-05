@@ -139,13 +139,20 @@ class Subscription extends events.EventEmitter {
 		return info;
 	}
 	inject_extra(kind, msg, extra) {
-		// Just one kind of insertion right now
-		if (kind !== common.INSERT_POST || extra.ip)
-			return null;
-
 		// XXX: Why the fuck don't you just stringify arrays?
 		let parsed = JSON.parse(`[${msg}]`);
-		parsed[2].mnemonic = extra.mnemonic;
+		switch (kind) {
+			case common.INSERT_POST:
+				parsed[2].mnemonic = extra.mnemonic;
+				break;
+			// Add moderation information to staff
+			case common.SPOILER_IMAGES:
+			case common.DELETE_IMAGES:
+				parsed.push(extra);
+				break;
+			default:
+				return null;
+		}
 		return JSON.stringify(parsed).slice(1, -1);
 	}
 	has_no_listeners() {
@@ -646,11 +653,11 @@ class Yakusoku extends events.EventEmitter {
 			msg += JSON.stringify(opts.augments);
 		m.publish(key, msg);
 		const tags = opts.tags || (this.tag ? [this.tag] : []);
-		for (let i = 0, l = tags.length; i < l; i++) {
-			m.publish('tag:' + tags[i], msg);
+		for (let tag of tags) {
+			m.publish('tag:' + tag, msg);
 		}
 		if (opts.cacheUpdate) {
-			var info = {kind: kind, tag: tags[0], op: op};
+			let info = {kind, op, tag: tags[0]};
 			_.extend(info, opts.cacheUpdate);
 			m.publish('cache', JSON.stringify(info));
 		}
@@ -1075,59 +1082,95 @@ class Yakusoku extends events.EventEmitter {
 		async.forEachOf(threads, this[method].bind(this), cb);
 		return true;
 	}
-	spoilerImages(nums, op, cb) {
-		let r = this.connect(),
-			m = r.multi(),
+	logModeration(m, opts) {
+		const time = Date.now();
+		const info = {
+			time,
+			num: opts.num,
+			op: opts.op,
+			// Abstract the email as to not reveal it to all staff
+			ident: config.staff[this.ident.auth][this.ident.email],
+			kind: opts.kind
+		};
+
+		const stringified = JSON.stringify(info);
+		m.lpush(opts.key + ':mod', stringified);
+		m.zadd('modLog', time, stringified);
+
+		this._log(m, opts.op, opts.kind, opts.msg, {
+			augments: {
+				auth: info
+			}
+		});
+	}
+	readPostProperties(nums, op, props, cb) {
+		let m = this.connect().multi(),
 			keys = [];
 		for (let num of nums) {
 			const key = postKey(num, op);
 			keys.push(key);
-			m.hmget(key, 'src', 'spoiler');
+			let command = props.slice();
+			command.unshift(key);
+			m.hmget(command);
 		}
-		let self = this;
 		m.exec(function (err, data) {
 			if (err)
 				return cb(err);
-			let m = r.multi(),
-				updates = [];
-			for (let i = 0; i < data.length; i++) {
-				// No image or already spoilt
-				if (!data[i][0] || data[i][1])
-					continue;
-				const spoiler = common.pick_spoiler(-1).index;
-				m.hset(keys[i], 'spoiler', spoiler);
-				updates.push(nums[i], spoiler);
-			}
-			if (updates.length)
-				self._log(m, op, common.SPOILER_IMAGES, updates);
-			m.exec(cb);
+			cb(null, data, keys);
 		});
 	}
-	deleteImages(nums, op, cb) {
-		let r = this.connect(),
-			m = r.multi(),
-			keys = [],
-			self = this;
-		for (let num of nums) {
-			const key = postKey(num, op);
-			keys.push(key);
-			m.hmget(key, 'src', 'imgDeleted');
-		}
-		m.exec(function (err, data) {
-			if (err)
-				return cb(err);
-			let updates = [];
-			for (let i = 0; i < data.length; i++) {
-				// No image or already hidden
-				if (!data[i][0] || data[i][1])
-					continue;
-				m.hset(keys[i], 'imgDeleted', true);
-				updates.push(nums[i]);
+	spoilerImages(nums, op, cb) {
+		let self = this;
+		async.waterfall([
+			function (next) {
+				self.readPostProperties(nums, op, ['src', 'spoiler'], next);
+			},
+			function (data, keys, next) {
+				let m = self.connect().multi();
+				for (let i = 0; i < data.length; i++) {
+					// No image or already spoilt
+					if (!data[i][0] || data[i][1])
+						continue;
+					const spoiler = common.pick_spoiler(-1).index;
+					m.hset(keys[i], 'spoiler', spoiler);
+					const num = nums[i];
+					self.logModeration(m, {
+						key: keys[i],
+						op,
+						kind: common.SPOILER_IMAGES,
+						num,
+						msg: [num, spoiler]
+					});
+				}
+				m.exec(next);
 			}
-			if (updates.length)
-				self._log(m, op, common.DELETE_IMAGES, updates);
-			m.exec(cb);
-		});
+		], cb);
+	}
+	deleteImages(nums, op, cb) {
+		let self = this;
+		async.waterfall([
+			function (next) {
+				self.readPostProperties(nums, op, ['src', 'imgDeleted'], next);
+			},
+			function (data, keys, next) {
+				let m = self.connect().multi();
+				for (let i = 0; i < data.length; i++) {
+					// No image or already hidden
+					if (!data[i][0] || data[i][1])
+						continue;
+					m.hset(keys[i], 'imgDeleted', true);
+					const num = nums[i];
+					self.logModeration(m, {
+						key: keys[i],
+						op,
+						kind: common.DELETE_IMAGES,
+						num,
+						msg: [num]
+					});
+				}
+				m.exec(next);
+			}
+		], cb);
 	}
 }
 exports.Yakusoku = Yakusoku;
@@ -1169,7 +1212,7 @@ class Reader extends events.EventEmitter {
 				exists = false;
 			const tags = parse_tags(pre_post.tags);
 			if (!graveyard && tags.indexOf(tag) < 0) {
-				/* XXX: Should redirect directly to correct thread */
+				// XXX: Should redirect directly to correct thread
 				if (opts.redirect)
 					return self.emit('redirect', num, tags[0]);
 				else
@@ -1256,6 +1299,8 @@ class Reader extends events.EventEmitter {
 		m.hgetall(key + ':links');
 		m.hgetall(key + ':backlinks');
 		m.lrange(key + ':dice', 0, -1);
+		if (this.canModerate)
+			m.lrange(key + ':mod', 0, -1);
 	}
 	parseExtras(res, post) {
 		for (let key of ['links', 'backlinks', 'dice']) {
@@ -1263,6 +1308,13 @@ class Reader extends events.EventEmitter {
 			if (prop)
 				post[key] = prop;
 		}
+		if (this.canModerate)
+			this.parseModerationInfo(res.shift(), post);
+	}
+	parseModerationInfo(info, post) {
+		if (!info.length)
+			return;
+		post.mod = destringifyList(info);
 	}
 	injectMnemonic(post) {
 		if (!this.canModerate)
@@ -1424,8 +1476,12 @@ function get_all_replies(r, op, cb) {
 	});
 }
 
+// Format post hash for passing to renderer and clients
 function extract(post, dontParseDice) {
+	// Only used internally and should not be exported to clients
 	delete post.ip;
+	delete post.imgDeleted;
+
 	post.num = parseInt(post.num, 10);
 	imager.nestImageProps(post);
 	if (!dontParseDice)
@@ -1435,6 +1491,15 @@ function extract(post, dontParseDice) {
 function postKey(num, op) {
 	return `${op == num ? 'thread' : 'post'}:${num}`;
 }
+
+function destringifyList(list) {
+	let parsed = [];
+	for (let i = 0; i < list.length; i++) {
+		parsed[i] = JSON.parse(list[i]);
+	}
+	return parsed;
+}
+exports.destrigifyList = destringifyList;
 
 function tag_key(tag) {
 	return tag.length + ':' + tag;

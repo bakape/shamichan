@@ -17,9 +17,6 @@ module.exports = {
 		'tmpl',
 		'config/hot.js'
 	],
-	mod: [
-		'admin'
-	],
 	client: [
 		'client'
 	],

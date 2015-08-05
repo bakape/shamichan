@@ -47,4 +47,3 @@ The read-only JSON API currently supports 4 modes of query.
 | MD5 | image MD5 hash | no | no | `"teVHnYA9Va1SRs2gPRIQ0A"` |
 | SHA1 | image SHA1 hash | no | no | `"56df871ad268bb8b794bc61677bf3849e80db8f8"` |
 | imgnm | original image name | no | no | `"illya dance.webm"` |
-| imgDeleted | boolean | yes | mods | `true` |
