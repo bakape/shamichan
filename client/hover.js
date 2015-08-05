@@ -58,8 +58,6 @@ let PostPreview = Article.extend({
 });
 
 let HoverPostView = Backbone.View.extend({
-	previewView: null,
-	targetPos:null,
 	initialize() {
 		this.listenTo(this.model,'change:event', this.check);
 	},
