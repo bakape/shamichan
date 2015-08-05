@@ -66,3 +66,14 @@ dispatcher[common.MOD_LOG] = function (msg, client) {
 	});
 	return true;
 };
+
+// Clean up moderation log entries older than one week
+function cleanLog() {
+	redis.zremrangebyscore('imageDups', 0, Date.now() + 1000*60*60*24*7,
+		function (err) {
+			if (err)
+				winston.error('Error cleaning up moderation log:', err);
+		}
+	);
+}
+setInterval(cleanLog, 60000);
