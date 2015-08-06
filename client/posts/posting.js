@@ -34,6 +34,9 @@ connSM.on('synced', postSM.feeder('sync'));
 connSM.on('dropped', postSM.feeder('desync'));
 connSM.on('desynced', postSM.feeder('desync'));
 
+// Allow remotely altering posting FSM state
+main.reply('postSM:feed', state => postSM.feed(state));
+
 postSM.act('* + desync -> none', function() {
 	// TODO: Desync logic
 	if (postForm) {
@@ -691,7 +694,8 @@ var ComposerView = Backbone.View.extend({
 					this.$el.append(main.oneeSama.replyBox());
 
 				let missing = this.imouto.allRolls.sent - this.imouto.allRolls.seen;
-				//if missing>0 we have to wait until insertOwnPosts "sees" the dice
+				//if missing>0 we have to wait until insertOwnPosts "sees" the
+				// dice
 				if (missing > 0) {
 					let checkAgain;
 					(checkAgain= (n) => {

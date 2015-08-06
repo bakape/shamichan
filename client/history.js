@@ -48,6 +48,7 @@ function readingSteiner(url, event) {
 		if (this.status !== 200)
 			return location.replace(this.url.split('?')[0]);
 
+		main.request('postSM:feed', 'done');
 		main.trigger('state:clear');
 		// Apply new DOM and load models
 		main.$threads[0].innerHTML = this.response;
