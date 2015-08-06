@@ -9,7 +9,7 @@ let main = require('./main'),
 main.$doc.on ('click', 'a.history', function(event) {
 	if (event.ctrlKey)
 		return;
-	readingSteiner(this.href, event, true);
+	readingSteiner(this.href, event);
 });
 
 // Loading status GIF
@@ -18,7 +18,7 @@ main.reply('loading:show', () => $loading.show());
 main.reply('loading:hide', () => $loading.hide());
 
 // Navigate to the URL
-function readingSteiner(url, event, needPush) {
+function readingSteiner(url, event) {
 	const nextState = state.read(url);
 	// Does the link point to the same page as this one?
 	if (_.isMatch(state.page.attributes, nextState))
@@ -64,7 +64,7 @@ function readingSteiner(url, event, needPush) {
 			nextState.live
 		]);
 
-		if (needPush) {
+		if (event) {
 			history.pushState(null, null, url);
 			// Scroll to top on new pages with no hashes
 			if (location.hash)
