@@ -907,7 +907,9 @@ class Yakusoku extends events.EventEmitter {
 	// contained
 	purge_thread(op, board, callback) {
 		let r = this.connect();
-		const key = 'thread:' + op;
+		const key = 'thread:' + op,
+			// Key suffixes that might or might not exist
+			optional = ['links', 'backlinks', 'body', 'dice', 'mod'];
 		let keysToDel = [],
 			filesToDel = [],
 			nums = [];
@@ -928,7 +930,7 @@ class Yakusoku extends events.EventEmitter {
 			// Read all post hashes
 			function(posts, next) {
 				let m = r.multi();
-				for (let i = 0, l = posts.length; i < l; i++) {
+				for (let i = 0; i < posts.lengt; i++) {
 					// Queue for removal from post cache
 					nums.push(posts[i]);
 					posts[i] = 'post:' + posts[i];
@@ -936,15 +938,12 @@ class Yakusoku extends events.EventEmitter {
 				// Parse OP key like all other hashes. `res` will always be an
 				// array, even if empty.
 				posts.unshift(key);
-				for (let i = 0, l = posts.length; i < l; i++) {
+				for (let i = 0; i < posts.length; i++) {
 					const key = posts[i];
 					m.hgetall(key);
-					m.exists(key + ':links');
-					m.exists(key + ':backlinks');
-					// It should only still exists because of server shutdown
-					// mid-post, but those do happen
-					m.exists(key + ':body');
-					m.exists(key + ':dice');
+					for (let suffix of optional) {
+						m.exists(`${key}:${suffix}`);
+					}
 				}
 				// A bit more complicated, because we need to pass two arguments
 				// to the next function, to map the arrays
@@ -956,10 +955,8 @@ class Yakusoku extends events.EventEmitter {
 			},
 			// Populate key and file to delete arrays
 			function(res, posts, next) {
-				const imageTypes = ['src', 'thumb', 'mid'],
-					optional = [':links', ':backlinks', ':body', ':dice'];
-				let path = imager.media_path;
-				for (let i = 0, l = res.length; i < l; i += 6) {
+				const imageTypes = ['src', 'thumb', 'mid'];
+				for (let i = 0; i < res.length; i += 6) {
 					const hash = res[i],
 						key = posts[i / 6];
 					if (!hash)
@@ -967,18 +964,15 @@ class Yakusoku extends events.EventEmitter {
 
 					keysToDel.push(key);
 					for (let o = 0; o < optional.length; o++) {
-						if (!res[i + o])
-							continue;
-						keysToDel.push(key + optional[o]);
+						if (res[i + o])
+							keysToDel.push(`${key}:${optional[o]}`);
 					}
 
 					// Add images to delete list
-					for (let o = 0, len = imageTypes.length; o < len; o++) {
-						const type = imageTypes[o],
-							image = hash[type];
-						if (!image)
-							continue;
-						filesToDel.push(path(type, image));
+					for (let type of imageTypes) {
+						const image = hash[type];
+						if (image)
+							filesToDel.push(imager.media_path(type, image));
 					}
 				}
 				next();
