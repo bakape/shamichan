@@ -6,11 +6,17 @@ Core server module and application entry point
 // use the babel.js strict transformer.
 'use strict';
 
+let config = require('../config');
+// Longer stack traces
+if (config.DEBUG)
+	Error.stackTraceLimit = 100;
+
 // ES6 transpiler require hook. We only enable some not yet implemented
 // transformers and rely on natives for others.
 require('babel/register')({
 	// Babel has trouble with hot.js, so we ignore the config module
 	ignore: /node_modules|config/,
+	sourceMaps: config.DEBUG && 'inline',
 	whitelist: [
 		'es6.arrowFunctions',
 		'es6.destructuring',
@@ -19,11 +25,6 @@ require('babel/register')({
 		'strict'
 	]
 });
-
-let config = require('../config');
-// Longer stack traces
-if (config.DEBUG)
-	Error.stackTraceLimit = 100;
 
 // Read command line arguments. Modifies ../configure, so loaded right after it.
 let opts = require('./opts');
