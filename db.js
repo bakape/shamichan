@@ -1314,7 +1314,8 @@ class Reader extends events.EventEmitter {
 	parseModerationInfo(info, post) {
 		if (!info.length)
 			return;
-		post.mod = destringifyList(info);
+		// Reverse array, so the log is orderred chronologically
+		post.mod = destringifyList(info.reverse());
 	}
 	injectMnemonic(post) {
 		if (!this.canModerate)
