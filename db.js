@@ -1302,6 +1302,10 @@ class Reader extends events.EventEmitter {
 			if (prop)
 				post[key] = prop;
 		}
+
+		// Preserve chronological dice order
+		if (post.dice)
+			post.dice.reverse();
 		if (this.canModerate)
 			this.parseModerationInfo(res.shift(), post);
 	}

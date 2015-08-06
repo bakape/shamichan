@@ -138,7 +138,9 @@ class OneeSama {
 	// Render common post components
 	monogatari(data) {
 		let tale = {header: this.header(data)};
-		this.dice = data.dice;
+
+		// Shallow copy, as to not modify Backbone model values
+		this.dice = data.dice && data.dice.slice();
 		var body = this.body(data.body);
 		tale.body = [
 			safe('<blockquote>'),
@@ -434,20 +436,17 @@ class OneeSama {
 		if (!this.dice)
 			return this.eLinkify ? this.linkify(text) : this.callback(text);
 
-		// Shallow copy, so we can update multiple views at a time. Mainly
-		// for live post previews
-		let dice = this.dice.slice && this.dice.slice();
 		const bits = text.split(util.dice_re);
-		for (let i = 0, len = bits.length; i < len; i++) {
+		for (let i = 0; i < bits.length; i++) {
 			const bit = bits[i];
 			if (!(i % 2) || !util.parse_dice(bit))
 				this.eLinkify ? this.linkify(bit) : this.callback(bit);
 			else if (this.queueRoll)
 				this.queueRoll(bit);
-			else if (!dice[0])
+			else if (!this.dice[0])
 				this.eLinkify ? this.linkify(bit) : this.callback(bit);
 			else {
-				let d = dice.shift();
+				let d = this.dice.shift();
 				this.callback(safe('<strong>'));
 				this.strong = true; // for client DOM insertion
 				this.callback(util.readable_dice(bit, d));
