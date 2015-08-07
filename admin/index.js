@@ -65,7 +65,7 @@ dispatcher[common.MOD_LOG] = function (msg, client) {
 
 // Clean up moderation log entries older than one week
 function cleanLog() {
-	redis.zremrangebyscore('modLog', 0, Date.now() + 1000*60*60*24*7,
+	redis.zremrangebyscore('modLog', 0, Date.now() - 1000*60*60*24*7,
 		function (err) {
 			if (err)
 				winston.error('Error cleaning up moderation log:', err);
