@@ -12,7 +12,6 @@ let _ = require('underscore'),
     fs = require('fs'),
     hooks = require('./util/hooks'),
     hot = require('./server/state').hot,
-    imager = require('./imager'),
     Muggle = require('./util/etc').Muggle,
     tail = require('./util/tail'),
     winston = require('winston');
@@ -25,16 +24,18 @@ function redis_client() {
 	return require('redis').createClient(config.REDIS_PORT || undefined);
 }
 exports.redis_client = redis_client;
-global.redis = redis_client();
+let redis = global.redis = redis_client();
+redis.on('error', err => winston.error('Redis error:', err));
+
+// Depend on global redis client
+let admin = require('./admin'),
+	amusement = require('./server/amusement'),
+	imager = require('./imager');
 
 exports.UPKEEP_IDENT = {
 	auth: 'Upkeep',
 	ip: '127.0.0.1'
 };
-
-// Depend on global redis client
-let admin = require('./admin'),
-	amusement = require('./server/amusement');
 
 /* REAL-TIME UPDATES */
 

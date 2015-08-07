@@ -668,8 +668,6 @@ if (require.main == module) {
 				if (err)
 					throw err;
 				yaku.disconnect();
-				if (onegai)
-					onegai.disconnect();
 				process.nextTick(start_server);
 			});
 		}

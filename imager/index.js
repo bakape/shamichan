@@ -157,7 +157,6 @@ exports.squish_MD5 = squish_MD5;
 function obtain_image_alloc (id, cb) {
 	var onegai = new db.Onegai;
 	onegai.obtain_image_alloc(id, function (err, alloc) {
-		onegai.disconnect();
 		if (err)
 			return cb(err);
 
@@ -176,7 +175,6 @@ function commit_image_alloc (alloc, cb) {
 
 		var o = new db.Onegai;
 		o.commit_image_alloc(alloc, function (err) {
-			o.disconnect();
 			cb(err);
 		});
 	});

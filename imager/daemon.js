@@ -728,7 +728,6 @@ IU.failure = function (err) {
 				winston.warn("Tracking failure: " + err);
 		});
 	}
-	this.db.disconnect();
 };
 
 IU.record_image = function (tmps) {
@@ -748,7 +747,6 @@ IU.record_image = function (tmps) {
 		if (err)
 			return self.failure("Image storage failure.");
 		self.client_call('alloc', image_id);
-		self.db.disconnect();
 		self.respond(202, 'OK');
 	});
 };
