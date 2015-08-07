@@ -83,7 +83,7 @@ class Onegai extends events.EventEmitter {
 				let isDup = compare(config.DUPLICATE_THRESHOLD, image, hashes);
 				if (isDup) {
 					isDup = Muggle(common.parseHTML
-						`Duplicate of
+						`Duplicate of 
 						<a href="./${isDup}" class="history" target="_blank">
 							>>${isDup}
 						</a>`
