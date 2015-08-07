@@ -63,12 +63,19 @@ _.extend(main, {
 
 // Clear cookies, if versions mismatch. Get regenerated each client start
 // anyway.
-// XXX: Does not clear cookies for all paths
-if (localStorage.cookieVersion !== '1') {
+const cookieVersion = 2;
+if (localStorage.cookieVersion != cookieVersion) {
 	for (let cookie in Cookie.get()) {
-		Cookie.remove(cookie);
+
+		// Clear legacy cookies that were set for each board separatly.
+		// Otherwise, they would override the new ones.
+		let paths = config.BOARDS.slice();
+		paths.push('');
+		for (let path of paths) {
+			Cookie.remove(cookie, {path});
+		}
 	}
-	localStorage.cookieVersion = 1;
+	localStorage.cookieVersion = cookieVersion;
 }
 
 // You can invoke the client-side debug mode with the `debug=true` query string
