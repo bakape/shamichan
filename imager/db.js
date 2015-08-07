@@ -97,23 +97,23 @@ O.delete_temporaries = function(callback) {
 };
 
 O.check_duplicate = function(image, callback) {
-	connect().zrangebyscore('imageDups',
-		Date.now(),
-		'+inf',
+	connect().zrangebyscore('imageDups', Date.now(), '+inf',
 		function(err, hashes) {
 			if (err)
 				return callback(err);
 			if (!hashes)
 				return callback(false);
+
 			// Compare image hashes with C++ addon
-			var isDup = compare(config.DUPLICATE_THRESHOLD, image, hashes);
-			if (isDup)
+			let isDup = compare(config.DUPLICATE_THRESHOLD, image, hashes);
+			if (isDup) {
 				isDup = Muggle(common.parseHTML
 					`Duplicate of
 					<a href="./${isDup}" class="history" target="_blank">
 						>>${isDup}
 					</a>`
 				);
+			}
 			callback(isDup);
 		}
 	);
