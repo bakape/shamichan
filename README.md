@@ -21,7 +21,7 @@ branch in production. For more stable revisions, please
   files and as a reverse proxy. Even if you choose to use the default inbuilt
   webserver, you still need to set `MEDIA_URL` in `config/imager` for image
   search links to work.
-* Run `node server/server.js` to start the server
+* Run `npm start` to start the server
 * You can update `config/hot.js` on-the-fly with `node server/kill.js`
 * To remove compiled server dependancies run `make clean`
 * Similarly `make client_clean` removes compiled client files

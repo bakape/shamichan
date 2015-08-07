@@ -15,7 +15,7 @@
   },
   "scripts": {
     "postinstall": "make all",
-    "start": "node server/server.js"
+    "start": "node index"
   },
   "dependencies": {
     "async": "^1.2.0",

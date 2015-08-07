@@ -24,7 +24,7 @@ do_start()
 {
     su -l $USER -c "echo [`date -u +%Y-%m-%dT%T.%3NZ`] Starting >> $LOG
 		cd $DOUSHIO_DIR
-		$NODE server/server.js 1>/dev/null 2>>$LOG &"
+		npm start 1>/dev/null 2>>$LOG &"
 }
 
 do_stop()

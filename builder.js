@@ -12,7 +12,7 @@ var server;
 var start_server = _.debounce(function() {
 	if (server)
 		server.kill('SIGTERM');
-	server = child_process.spawn('node', ['server/server.js']);
+	server = child_process.spawn('npm', ['start']);
 	server.stdout.pipe(process.stdout);
 	server.stderr.pipe(process.stderr);
 }, 2000);

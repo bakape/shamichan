@@ -2,36 +2,6 @@
 Core server module and application entry point
  */
 
-// Only explicity set here for now. All other modules down the require chain
-// use the babel.js strict transformer.
-'use strict';
-
-let config = require('../config');
-// Longer stack traces
-if (config.DEBUG)
-	Error.stackTraceLimit = 100;
-
-// ES6 transpiler require hook. We only enable some not yet implemented
-// transformers and rely on natives for others.
-require('babel/register')({
-	// Babel has trouble with hot.js, so we ignore the config module
-	ignore: /node_modules|config/,
-	sourceMaps: config.DEBUG && 'inline',
-	whitelist: [
-		'es6.arrowFunctions',
-		'es6.destructuring',
-		'es6.parameters',
-		'es6.spread',
-		'strict'
-	]
-});
-
-// Read command line arguments. Modifies ../configure, so loaded right after it.
-let opts = require('./opts');
-if (require.main == module)
-	opts.parse_args();
-opts.load_defaults();
-
 // Several modules depend on the state module and a redis connection. Load
 // those first.
 let STATE = require('./state'),
@@ -43,6 +13,7 @@ let _ = require('underscore'),
     caps = require('./caps'),
     check = require('./msgcheck'),
     common = require('../common/index'),
+	config = require('../config'),
 	cookie = require('cookie'),
     fs = require('fs'),
     hooks = require('../util/hooks'),
@@ -554,11 +525,6 @@ function hot_filter(frag) {
 	return frag;
 }
 
-if (config.DEBUG) {
-	winston.remove(winston.transports.Console);
-	winston.add(winston.transports.Console, {level: 'verbose'});
-}
-
 function start_server() {
 	var is_unix_socket = (typeof config.LISTEN_PORT == 'string');
 	if (is_unix_socket) {
@@ -637,39 +603,31 @@ function processFileSetup() {
 	}
 }
 
-if (require.main == module) {
-	if (config.DEBUG) {
-		winston.warn("Running in (insecure) debug mode.");
-		winston.warn("Do not use on the public internet.");
-	}
-	if (!process.getuid())
-		throw new Error("Refusing to run as root.");
-	if (!tripcode.setSalt(config.SECURE_SALT))
-		throw "Bad SECURE_SALT";
-	async.series(
-		[
-			imager.make_media_dirs,
-			setup_imager_relay,
-			STATE.reload_hot_resources,
-			db.track_OPs
-		],
-		function (err) {
+if (!tripcode.setSalt(config.SECURE_SALT))
+	throw "Bad SECURE_SALT";
+async.series(
+	[
+		imager.make_media_dirs,
+		setup_imager_relay,
+		STATE.reload_hot_resources,
+		db.track_OPs
+	],
+	function (err) {
+		if (err)
+			throw err;
+		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
+		var onegai;
+		var writes = [];
+		if (!config.READ_ONLY) {
+			writes.push(yaku.finish_all.bind(yaku));
+			onegai = new imager.Onegai;
+			writes.push(onegai.delete_temporaries.bind(onegai));
+		}
+		async.series(writes, function (err) {
 			if (err)
 				throw err;
-			var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
-			var onegai;
-			var writes = [];
-			if (!config.READ_ONLY) {
-				writes.push(yaku.finish_all.bind(yaku));
-				onegai = new imager.Onegai;
-				writes.push(onegai.delete_temporaries.bind(onegai));
-			}
-			async.series(writes, function (err) {
-				if (err)
-					throw err;
-				yaku.disconnect();
-				process.nextTick(start_server);
-			});
-		}
-	);
-}
+			yaku.disconnect();
+			process.nextTick(start_server);
+		});
+	}
+);
