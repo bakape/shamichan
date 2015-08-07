@@ -84,38 +84,40 @@ unsigned int countDiff(const std::vector<BYTE>& a, const std::vector<BYTE>& b)
 }
 NAN_METHOD(hashCompareCpp)
 {
-  NanScope();
-  if(args.Length()<3){
-    NanThrowTypeError("Wrong number of arguments");
-    NanReturnValue(NanNew<Number>(-1));
+  if(info.Length()<3){
+    Nan::ThrowTypeError("Wrong number of arguments");
+    info.GetReturnValue().Set(-1);
+    return;
   }
-  if(!args[0]->IsNumber() || !args[1]->IsString() || !args[2]->IsArray()){
-    NanThrowTypeError("Wrong arguments");
-    NanReturnValue(NanNew<Number>(-1));
+  if(!info[0]->IsNumber() || !info[1]->IsString() || !info[2]->IsArray()){
+    Nan::ThrowTypeError("Wrong arguments");
+    info.GetReturnValue().Set(-1);
+    return;
   }
 
-  unsigned int threshold = args[0]->Uint32Value();
+  unsigned int threshold = info[0]->Uint32Value();
 
 
-  std::vector<BYTE> posted = base64Decode(*NanUtf8String(args[1]));
+  std::vector<BYTE> posted = base64Decode(*Nan::Utf8String(info[1]));
 
-  Handle<Array> toTest = Handle<Array>::Cast(args[2]);
+  Handle<Array> toTest = Handle<Array>::Cast(info[2]);
   for(unsigned int i=0; i<toTest->Length();i++) {	//Compare posted with other hashes
-
     String::Utf8Value param1(toTest->Get(i)->ToString()); //change from node string to c++ string
     std::string numHash = std::string(*param1);
 
     unsigned int numPos = numHash.find_first_of(':');
     std::vector<BYTE> tested = base64Decode(numHash.substr(numPos+1,numHash.length()));
-
-		if(countDiff(posted,tested)<threshold)
-      NanReturnValue(NanNew<Number>(atoi(numHash.substr(0,numPos).c_str())));
-	}
-  NanReturnValue(NanNew<Number>(0));
+    if(countDiff(posted,tested)<threshold){
+	    info.GetReturnValue().Set(atoi(numHash.substr(0,numPos).c_str()));
+	    return;
+    }
+  }
+  info.GetReturnValue().Set(0);
 }
 
-void Init(Handle<Object> exports) {
-  exports->Set(NanNew<String>("hashCompareCpp"),
-    NanNew<FunctionTemplate>(hashCompareCpp)->GetFunction());
+NAN_MODULE_INIT(Init){
+  Nan::Set(target, 
+	   Nan::New<String>("hashCompareCpp").ToLocalChecked(),
+	   Nan::New<FunctionTemplate>(hashCompareCpp)->GetFunction());
 }
 NODE_MODULE(compare,Init)

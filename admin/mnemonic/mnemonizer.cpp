@@ -36,43 +36,40 @@ const char* const HEXS = "0123456789ABCDEF";
 const int SALTLENGTH = 40; //feel free to change this if you know a better length
 
 
-void mnemonizer::Init(Handle<Object> exports) {
-  NanScope();
-
-  Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(New);
-  tpl->SetClassName(NanNew("mnemonizer"));
+NAN_MODULE_INIT(mnemonizer::Init){
+  Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
+  tpl->SetClassName(Nan::New<String>("mnemonizer").ToLocalChecked());
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl,"Apply_mnemonic",Apply_mnemonic);
+  Nan::SetPrototypeMethod(tpl,"Apply_mnemonic",Apply_mnemonic);
 
-  NanAssignPersistent(constructor,tpl->GetFunction());
-  exports->Set(NanNew("mnemonizer"),tpl->GetFunction());
+  constructor.Reset(tpl->GetFunction());
+  Nan::Set(target,
+	   Nan::New<String>("mnemonizer").ToLocalChecked(),
+	   tpl->GetFunction());
 }
 
 NAN_METHOD(mnemonizer::New){
-  NanScope();
-
-  if(args.IsConstructCall()){
+  if(info.IsConstructCall()){
     mnemonizer* obj;
-    if(!args[0]->IsString()){
+    if(!info[0]->IsString()){
         std::cerr<<"mnemonizer: Warning, invalid Salt, no salt will we used (non secure)"<<std::endl;
         obj= new mnemonizer(std::string(""));
     }else{
-        String::Utf8Value saltUTF(args[0]);
+        String::Utf8Value saltUTF(info[0]);
         obj = new mnemonizer(std::string(*saltUTF));
     }
-    obj->Wrap(args.This());
-    NanReturnValue(args.This());
+    obj->Wrap(info.This());
+    info.GetReturnValue().Set(info.This());
   }else {
-    Local<Function> cons = NanNew<Function>(constructor);
-    NanReturnValue(cons->NewInstance());
+    Local<Function> cons = Nan::New<Function>(constructor);
+    info.GetReturnValue().Set(cons->NewInstance());
   }
 }
 
-Persistent<Function> mnemonizer::constructor;
+Nan::Persistent<Function> mnemonizer::constructor;
 mnemonizer::mnemonizer(std::string salt)
 {
-
     if(salt.length()<SALTLENGTH)
         std::cerr<<"mnemonizer: Warning, salt should be larger, at least "<<SALTLENGTH<<" characters"<<std::endl;
     this->salt=salt;
@@ -160,20 +157,22 @@ std::string mnemonizer::ucharToHex(unsigned char* hashpart,int length_hex){
 }
 
 NAN_METHOD(mnemonizer::Apply_mnemonic){
-    NanScope();
-    mnemonizer* obj = ObjectWrap::Unwrap<mnemonizer>(args.Holder());
+    mnemonizer* obj = ObjectWrap::Unwrap<mnemonizer>(info.Holder());
 
-    if(!args[0]->IsString())
+    if(!info[0]->IsString()){
         std::cerr<<"mnemonizer: Wrong argument passed to Apply_mnemonic(Should be an String)"<<std::endl;
+	info.GetReturnValue().SetNull();
+	return;
+    }
 
-    String::Utf8Value ipUTF(args[0]);
-    std::string ip= std::string(*ipUTF);
+    std::string ip=*Nan::Utf8String(info[0]->ToString());
     if(obj->isIpv4(ip) || obj->isIpv6(ip)){
         unsigned char out[SHA_DIGEST_LENGTH];
         ip.append(obj->salt);
         SHA1((unsigned char*)ip.c_str(),ip.length(),out);
-        NanReturnValue(NanNew<String>(obj->hashToMem(out)));
+        info.GetReturnValue().Set(Nan::New<String>(obj->hashToMem(out)).ToLocalChecked());
+	return;
     }
     std::cerr<<"mnemonizer: Ip not valid: "<<ip<<std::endl;
-    NanReturnValue(NanNull());
+    info.GetReturnValue().SetNull();
 }

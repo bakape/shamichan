@@ -3,17 +3,17 @@
 
 #include <nan.h>
 #include <string>
-class apngDetector : public node::ObjectWrap
+class apngDetector : public Nan::ObjectWrap
 {
 public:
-  static void Init(v8::Handle<v8::Object> exports);
+  static NAN_MODULE_INIT(Init);
 private:
   apngDetector();
   ~apngDetector();
 
   static NAN_METHOD(New);
   static NAN_METHOD(Detect);
-  static v8::Persistent<v8::Function> constructor;
+  static Nan::Persistent<v8::Function> constructor;
 
   int checkChunk(const unsigned char* buffer,uint& offset);
   int cOffset;

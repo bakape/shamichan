@@ -4,16 +4,16 @@
 #include <vector>
 #include <nan.h>
 
-class mnemonizer: public node::ObjectWrap
+class mnemonizer: public Nan::ObjectWrap
 {
 public:
-  static void Init(v8::Handle<v8::Object> exports);
+    static NAN_MODULE_INIT(Init);
 private:
     std::string salt;
 
     static NAN_METHOD(New);
     static NAN_METHOD(Apply_mnemonic);
-    static v8::Persistent<v8::Function> constructor;
+    static Nan::Persistent<v8::Function> constructor;
 
     mnemonizer(std::string salt);
     ~mnemonizer();
