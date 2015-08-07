@@ -20,6 +20,14 @@ if (config.DEBUG) {
 	winston.warn("Running in (insecure) debug mode.");
 	winston.warn("Do not use on the public internet.");
 }
+// For production
+else {
+	winston.add(winston.transports.File, {
+		level: 'error',
+		filename: 'error.log',
+		handleExceptions: true
+	});
+}
 
 // ES6 transpiler require hook. We only enable some not yet implemented
 // feature transformers and rely on natives for others.
