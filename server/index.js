@@ -14,7 +14,7 @@ let config = require('../config'),
 
 // More verbose logging
 if (config.DEBUG) {
-	Error.stackTraceLimit = 100;
+	require('longjohn');
 	winston.remove(winston.transports.Console);
 	winston.add(winston.transports.Console, {level: 'verbose'});
 	winston.warn("Running in (insecure) debug mode.");
@@ -22,6 +22,7 @@ if (config.DEBUG) {
 }
 // For production
 else {
+	winston.remove(winston.transports.Console);
 	winston.add(winston.transports.File, {
 		level: 'error',
 		filename: 'error.log',
