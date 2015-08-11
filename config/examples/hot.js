@@ -9,7 +9,6 @@ this.hot = {
 		moe: "/moe/ - Sweets",
 		gar: "/gar/ - Hard Work &amp; Guts",
 		meta: "/meta/ - The Abyss",
-		graveyard: "/graveyard/",
 		staff: "/staff/"
 	},
 // Default theme to use

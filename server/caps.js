@@ -12,8 +12,6 @@ var async = require('async'),
 var RANGES = require('./state').dbCache.ranges;
 
 function can_access_board(ident, board) {
-	if (board == 'graveyard' && checkAuth('admin', ident))
-		return true;
 	if (board == config.STAFF_BOARD && !checkAuth('janitor', ident))
 		return false;
 	if (ident.ban || ident.suspension)

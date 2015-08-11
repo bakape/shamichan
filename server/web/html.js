@@ -142,30 +142,25 @@ router.get(/^\/(\w+)\/(\d+)/,
 		if (!num)
 			return res.sendStatus(404);
 
-		let op;
-		if (board === 'graveyard')
-			op = num;
 		// We need to validate that the requested post number, is in fact a
 		// thread and not a reply
-		else {
-			op = db.OPs[num];
-			if (!op)
-				return res.sendStatus(404);
-			if (!db.OP_has_tag(board, op)) {
-				let tag = db.first_tag_of(op);
-				if (tag) {
-					if (!caps.can_access_board(ident, tag))
-						return res.sendStatus(404);
-					return redirect_thread(res, num, op, tag, req.url);
-				}
-				else {
-					winston.warn(`Orphaned post ${num} with tagless OP ${op}`);
+		const op = db.OPs[num];
+		if (!op)
+			return res.sendStatus(404);
+		if (!db.OP_has_tag(board, op)) {
+			let tag = db.first_tag_of(op);
+			if (tag) {
+				if (!caps.can_access_board(ident, tag))
 					return res.sendStatus(404);
-				}
+				return redirect_thread(res, num, op, tag, req.url);
 			}
-			if (op != num)
-				return redirect_thread(res, num, op);
+			else {
+				winston.warn(`Orphaned post ${num} with tagless OP ${op}`);
+				return res.sendStatus(404);
+			}
 		}
+		if (op != num)
+			return redirect_thread(res, num, op);
 
 		if (!caps.can_access_thread(ident, op))
 			return res.sendStatus(404);

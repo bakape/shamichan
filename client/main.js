@@ -56,8 +56,6 @@ _.extend(main, {
 	// Websocket call handler map. Store them here, to avoid requiring
 	// modules in the wrong order.
 	dispatcher: {},
-	// Read-only boards get expanded later
-	readOnly: [],
 	lang: require('lang')
 });
 

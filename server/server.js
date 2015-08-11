@@ -244,16 +244,9 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 	return true;
 };
 
-function inactive_board_check(client) {
-	return caps.checkAuth('janitor', client.ident)
-		|| config.READ_ONLY_BOARDS.indexOf(client.board) === -1;
-}
-
 function allocate_post(msg, client, callback) {
 	if (client.post)
 		return callback(Muggle("Already have a post."));
-	if (!inactive_board_check(client))
-		return callback(Muggle("Can't post here."));
 	var post = {time: Date.now(), nonce: msg.nonce};
 	var body = '';
 	var ip = client.ident.ip;

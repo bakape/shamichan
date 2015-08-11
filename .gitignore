@@ -8,7 +8,6 @@
 .project
 .socket
 config/*.js
-graveyard
 error.log
 node_modules/
 imager/tmp

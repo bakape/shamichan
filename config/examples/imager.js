@@ -7,7 +7,6 @@ var config = module.exports = {
 		src: 'www/src',
 		thumb: 'www/thumb',
 		mid: 'www/mid',
-		dead: 'graveyard',
 		tmp: 'imager/tmp'
 	},
 /*

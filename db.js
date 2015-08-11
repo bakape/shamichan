@@ -910,8 +910,9 @@ class Yakusoku extends events.EventEmitter {
 		let r = this.connect();
 		const key = 'thread:' + op,
 			// Key suffixes that might or might not exist
-			optional = ['links', 'backlinks', 'body', 'dice', 'mod'];
-		let keysToDel = [],
+			optional = ['links', 'backlinks', 'body', 'dice', 'mod'],
+			OPKeys = [],
+			keysToDel = [],
 			filesToDel = [],
 			nums = [];
 		async.waterfall([
@@ -979,23 +980,17 @@ class Yakusoku extends events.EventEmitter {
 				next();
 			},
 			// Check for OP-only keys
-			function(next) {
-				const suffixes = ['dels', 'history', 'posts'];
-				let OPKeys = [],
-					m = r.multi();
-				for (let i = 0, l = suffixes.length; i < l; i++) {
-					OPKeys.push(`${key}:${suffixes[i]}`);
+			function (next) {
+				const m = r.multi();
+				for (let suffix of ['history', 'posts']) {
+					OPKeys.push(`${key}:${suffix}`);
 				}
-				for (let i = 0, l = OPKeys.length; i < l; i++) {
-					m.exists(OPKeys[i]);
+				for (let key of OPKeys) {
+					m.exists(key);
 				}
-				m.exec(function(err, res) {
-					if (err)
-						return next(err);
-					next(null, res, OPKeys);
-				})
+				m.exec(next);
 			},
-			function(res, OPKeys, next) {
+			function(res, next) {
 				let keys = keysToDel;
 				for (let i = 0, l = res.length; i < l; i++) {
 					if (res[i])
@@ -1012,19 +1007,8 @@ class Yakusoku extends events.EventEmitter {
 			function(res, next) {
 				// Delete all images
 				async.each(filesToDel,
-					function(file, cb) {
-						fs.unlink(file, function(err) {
-							if (err)
-								return cb(err);
-							cb();
-						});
-					},
-					function(err) {
-						if (err)
-							return next(err);
-						next();
-					}
-				);
+					(file, cb) => fs.unlink(file, err => cb(err)),
+					err => next(err));
 			},
 			function(next) {
 				// Delete thread entry from the set
@@ -1181,10 +1165,7 @@ class Reader extends events.EventEmitter {
 	}
 	get_thread(tag, num, opts) {
 		let r = this.r;
-		const graveyard = tag === 'graveyard';
-		if (graveyard)
-			opts.showDead = true;
-		const key = (graveyard ? 'dead:' : 'thread:') + num;
+		const key = 'thread:' + num;
 		let self = this;
 		r.hgetall(key, function(err, pre_post) {
 			if (err)
@@ -1203,10 +1184,8 @@ class Reader extends events.EventEmitter {
 				return;
 			}
 			let exists = true;
-			if (pre_post.hide && !opts.showDead)
-				exists = false;
 			const tags = parse_tags(pre_post.tags);
-			if (!graveyard && tags.indexOf(tag) < 0) {
+			if (tags.indexOf(tag) < 0) {
 				// XXX: Should redirect directly to correct thread
 				if (opts.redirect)
 					return self.emit('redirect', num, tags[0]);
@@ -1243,12 +1222,6 @@ class Reader extends events.EventEmitter {
 						self.getExtras(m, key);
 						if (abbrev)
 							m.llen(postsKey);
-						if (opts.showDead) {
-							var deadKey = key + ':dels';
-							m.lrange(deadKey, -abbrev, -1);
-							if (abbrev)
-								m.llen(deadKey);
-						}
 						m.exec(next);
 					},
 					function (rs, next) {
@@ -1261,11 +1234,6 @@ class Reader extends events.EventEmitter {
 						self.parseExtras(rs, opPost);
 						if (abbrev)
 							total += parseInt(rs.shift(), 10);
-						if (opts.showDead) {
-							deadNums = rs.shift();
-							if (abbrev)
-								total += parseInt(rs.shift(), 10);
-						}
 
 						self.injectMnemonic(opPost);
 						extract(opPost);
@@ -1381,10 +1349,7 @@ class Reader extends events.EventEmitter {
 			function (data, next) {
 				let pre_post = data.shift();
 				self.parseExtras(data, pre_post);
-				let exists = !(_.isEmpty(pre_post));
-				if (exists && pre_post.hide && !opts.showDead)
-					exists = false;
-				if (!exists)
+				if (!_.isEmpty(pre_post))
 					return next(null, null);
 
 				pre_post.num = num;

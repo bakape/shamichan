@@ -20,8 +20,6 @@ class Render {
 		this.resp =resp;
 		this.req = req;
 		this.parseRequest();
-		this.readOnly = config.READ_ONLY
-			|| config.READ_ONLY_BOARDS.indexOf(opts.board) >= 0;
 		opts.ident = req.ident;
 		this.opts = opts;
 		// Stores serialized post models for later stringification
@@ -110,7 +108,7 @@ class Render {
 		resp.write('<hr>\n');
 
 		// Only render on 'live' board pages
-		if (opts.live && !this.readOnly)
+		if (opts.live && !config.READ_ONLY)
 			resp.write(this.oneeSama.newThreadBox());
 		if (opts.catalog)
 			resp.write('<div id="catalog">');
@@ -198,7 +196,7 @@ class Render {
 		if (this.hidden.has(num))
 			return;
 		let resp = this.resp;
-		if (!this.readOnly)
+		if (!config.READ_ONLY)
 			resp.write(this.oneeSama.replyBox());
 		resp.write('</section><hr>\n');
 	}

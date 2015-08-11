@@ -35,7 +35,6 @@ module.exports = {
 
 	BOARDS: ['moe', 'gar', 'meta', 'staff'],
 	DEFAULT_BOARD: 'moe',
-	READ_ONLY_BOARDS: ['graveyard'],
 // Add links to the navigator menu to custom URLs
 	PSUEDO_BOARDS: [
 		['g', 'https://google.com']
