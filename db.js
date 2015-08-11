@@ -1349,7 +1349,7 @@ class Reader extends events.EventEmitter {
 			function (data, next) {
 				let pre_post = data.shift();
 				self.parseExtras(data, pre_post);
-				if (!_.isEmpty(pre_post))
+				if (_.isEmpty(pre_post))
 					return next(null, null);
 
 				pre_post.num = num;
