@@ -136,24 +136,7 @@ _.extend(dispatcher, {
 		});
 	},
 	[common.DELETE_POSTS](msg) {
-		for (let num of msg) {
-			modelHandler(num, model => model.remove());
-		}
-	},
-	[common.DELETE_THREAD](msg, op) {
-		delete state.syncs[op];
-		delete state.ownPosts[op];
-
-		let postModel = main.request('postModel');
-		if (postModel) {
-			const num = postModel.get('num');
-			if ((postModel.get('op') || num) === op)
-				main.postSM.feed('done');
-			if (num === op)
-				return;
-		}
-
-		modelHandler(op, model => model.remove());
+		modelHandler(msg[0], model => model.deletePost(msg[1]));
 	},
 	[common.LOCK_THREAD](msg, op) {
 		modelHandler(op, model => model.toggleLocked(true));

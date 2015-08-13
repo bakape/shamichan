@@ -160,6 +160,9 @@ let ToolboxView = Backbone.View.extend({
 			this.logPanel.kill();
 			this.logPanel = null;
 		}
+	},
+	deletePosts() {
+		this.send('DELETE_POSTS');
 	}
 });
 

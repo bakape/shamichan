@@ -145,6 +145,7 @@ class Subscription extends events.EventEmitter {
 			// Add moderation information to staff
 			case common.SPOILER_IMAGES:
 			case common.DELETE_IMAGES:
+			case common.DELETE_POSTS:
 				parsed.push(extra);
 				break;
 			default:
@@ -328,6 +329,43 @@ function load_OPs(callback) {
 
 /* SOCIETY */
 
+// Options for various moderation actions. No prototype properties in ES6,
+// so keep them here.
+const moderationSpecs = {
+	[common.SPOILER_IMAGES]: {
+		props: ['src', 'spoler'],
+		check(res) {
+			// No image or already spoilt
+			return !res[0] || res[1];
+		},
+		persist(m, key, msg) {
+			const spoiler = common.pick_spoiler(-1).index;
+			m.hset(key, 'spoiler', spoiler);
+			msg.push(spoiler);
+		}
+	},
+	[common.DELETE_IMAGES]: {
+		props: ['src', 'imgDeleted'],
+		check(res) {
+			// No image or already hidden
+			return !res[0] || res[1];
+		},
+		persist(m, key) {
+			m.hset(key, 'imgDeleted', true);
+		}
+	},
+	[common.DELETE_POSTS]: {
+		props: ['deleted'],
+		check(res) {
+			return res[0];
+		},
+		persist(m, key) {
+			m.hset(key, 'deleted', true);
+		}
+	}
+};
+
+// Main database controller class
 class Yakusoku extends events.EventEmitter {
 	constructor(board, ident) {
 		super();
@@ -411,9 +449,9 @@ class Yakusoku extends events.EventEmitter {
 			return callback(Muggle("Can't post right now."));
 		if (!this.tag)
 			return callback(Muggle("Can't retrieve board for posting."));
-		const op = msg.op || num,
+		const {num} = msg,
+			op = msg.op || num,
 			{ip, board} = extra,
-			{num} = msg,
 			isThead = !msg.op;
 		if (!num)
 			return callback(Muggle("No post number."));
@@ -998,7 +1036,7 @@ class Yakusoku extends events.EventEmitter {
 			m.exec(cb);
 		});
 	}
-	modHandler(method, nums, cb) {
+	modHandler(kind, nums, cb) {
 		if (this.isContainmentBoard)
 			return false;
 		
@@ -1010,8 +1048,47 @@ class Yakusoku extends events.EventEmitter {
 				threads[op] = [];
 			threads[op].push(num);
 		}
-		async.forEachOf(threads, this[method].bind(this), cb);
+		async.forEachOf(threads, (nums, op, cb) =>
+			this.handleModeration(nums, op, kind, cb), 
+		cb);
 		return true;
+	}
+	handleModeration(nums, op, kind, cb) {
+		const opts = moderationSpecs[kind],
+			{props, check, persist} = opts,
+			keys = [];
+		async.waterfall([
+			// Read required post properties from redis
+			next => {
+				const m = redis.multi();
+				for (let num of nums) {
+					const key = postKey(num, op);
+					keys.push(key);
+					const command = props.slice();
+					command.unshift(key);
+					m.hmget(command);
+				}
+				m.exec(next);
+			},
+			(res, next) => {
+				const m = redis.multi();
+				for (let i = 0; i < res.length; i++) {
+					// Check if post is eligible for moderation action
+					if (check(res[i]))
+						continue;
+					
+					// Persist to redis
+					const key = keys[i],
+						num = nums[i],
+						msg = [num];
+					persist(m, key, msg);
+					
+					// Live publish
+					this.logModeration(m, {key, op, kind, num, msg});
+				}
+				m.exec(next);
+			}
+		], cb);
 	}
 	logModeration(m, opts) {
 		const time = Date.now();
@@ -1033,67 +1110,6 @@ class Yakusoku extends events.EventEmitter {
 				auth: info
 			}
 		});
-	}
-	readPostProperties(nums, op, props, cb) {
-		const m = redis.multi(),
-			keys = [];
-		for (let num of nums) {
-			const key = postKey(num, op);
-			keys.push(key);
-			let command = props.slice();
-			command.unshift(key);
-			m.hmget(command);
-		}
-		m.exec((err, data) => cb(err, data, keys));
-	}
-	spoilerImages(nums, op, cb) {
-		async.waterfall([
-			next =>
-				this.readPostProperties(nums, op, ['src', 'spoiler'], next),
-			(data, keys, next) => {
-				const m = redis.multi();
-				for (let i = 0; i < data.length; i++) {
-					// No image or already spoilt
-					if (!data[i][0] || data[i][1])
-						continue;
-					const spoiler = common.pick_spoiler(-1).index;
-					m.hset(keys[i], 'spoiler', spoiler);
-					const num = nums[i];
-					this.logModeration(m, {
-						key: keys[i],
-						op,
-						kind: common.SPOILER_IMAGES,
-						num,
-						msg: [num, spoiler]
-					});
-				}
-				m.exec(next);
-			}
-		], cb);
-	}
-	deleteImages(nums, op, cb) {
-		async.waterfall([
-			next =>
-				this.readPostProperties(nums, op, ['src', 'imgDeleted'], next),
-			(data, keys, next) => {
-				const m = redis.multi();
-				for (let i = 0; i < data.length; i++) {
-					// No image or already hidden
-					if (!data[i][0] || data[i][1])
-						continue;
-					m.hset(keys[i], 'imgDeleted', true);
-					const num = nums[i];
-					this.logModeration(m, {
-						key: keys[i],
-						op,
-						kind: common.DELETE_IMAGES,
-						num,
-						msg: [num]
-					});
-				}
-				m.exec(next);
-			}
-		], cb);
 	}
 }
 exports.Yakusoku = Yakusoku;
@@ -1130,16 +1146,12 @@ class Reader extends events.EventEmitter {
 				// XXX: Should redirect directly to correct thread
 				if (opts.redirect)
 					return this.emit('redirect', num, tags[0]);
-				else
-					exists = false;
+				exists = false;
 			}
-			if (!exists) {
-				this.emit('nomatch');
-				return;
-			}
+			if (!exists || !this.formatPost(pre_post))
+				return this.emit('nomatch');
+			
 			this.emit('begin', pre_post);
-
-			pre_post.time = parseInt(pre_post.time, 10);
 
 			let nums, opPost,
 				total = 0;
@@ -1174,15 +1186,14 @@ class Reader extends events.EventEmitter {
 						this.parseExtras(rs, opPost);
 						if (abbrev)
 							total += parseInt(rs.shift(), 10);
-
-						this.injectMnemonic(opPost);
-						extract(opPost);
+						
 						opPost.omit = Math.max(total - abbrev, 0);
 						opPost.hctr = parseInt(opPost.hctr, 10);
+						
 						// So we can pass a thread number on `endthread`
 						// emission
 						opts.op = opPost.num;
-						next(null);
+						next();
 					}
 				],
 				err => {
@@ -1222,6 +1233,17 @@ class Reader extends events.EventEmitter {
 		// Reverse array, so the log is orderred chronologically
 		post.mod = destringifyList(info.reverse());
 	}
+	formatPost(post) {
+		if (!this.canModerate) {
+			if (post.deleted)
+				return false;
+			if (post.imgDeleted)
+				imager.deleteImageProps(post);
+		}
+		this.injectMnemonic(post);
+		extract(post);
+		return true;
+	}
 	injectMnemonic(post) {
 		if (!this.canModerate)
 			return;
@@ -1260,7 +1282,6 @@ class Reader extends events.EventEmitter {
 					return next();
 
 				pre_post.num = num;
-				pre_post.time = parseInt(pre_post.time, 10);
 				if (kind === 'post')
 					pre_post.op = parseInt(pre_post.op, 10);
 				else {
@@ -1274,12 +1295,8 @@ class Reader extends events.EventEmitter {
 			},
 			(post, next) => {
 				if (post) {
-					this.injectMnemonic(post);
-
-					// Image is deleted and client not authenticated
-					if (post.imgDeleted && !this.canModerate)
-						imager.deleteImageProps(post);
-					extract(post);
+					if (!this.formatPost(post))
+						post = null;
 				}
 				next(null, post);
 			}
@@ -1351,10 +1368,13 @@ function get_all_replies(op, cb) {
 // Format post hash for passing to renderer and clients
 function extract(post, dontParseDice) {
 	// Only used internally and should not be exported to clients
-	delete post.ip;
-	delete post.imgDeleted;
+	for (let key of ['ip', 'deleted', 'imgDeleted']) {
+		delete post[key];
+	}
 
-	post.num = parseInt(post.num, 10);
+	for (let key of ['num', 'time']) {
+		post[key] = parseInt(post[key], 10);
+	}
 	imager.nestImageProps(post);
 	if (!dontParseDice)
 		amusement.parseDice(post);

@@ -53,7 +53,7 @@ var lang = {
 		schedule: 'Programação',
 		feedback: 'Contato',
 		changelog: 'Lista de mudanças',
-		onlineCounter: 'Contador Online',
+		onlineCounter: 'Contador Online'
 	},
 	/*
 	 * Opções do client. Essas opções são renderizadas ao gerar templates,

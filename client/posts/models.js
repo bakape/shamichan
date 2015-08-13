@@ -35,8 +35,7 @@ exports.Post = Backbone.Model.extend({
 		if (dice)
 			updates.dice = (this.get('dice') || []).concat(dice);
 		this.set(updates);
-	}
-	,
+	},
 	// Calling a method is always less overhead than binding a dedicated
 	// listener for each post's image
 	setImage(image, silent) {
@@ -48,18 +47,16 @@ exports.Post = Backbone.Model.extend({
 		let image = this.get('image');
 		image.spoiler = spoiler;
 		this.dispatch('renderImage', image);
-		if (info)
-			this.moderationInfo(info);
+		this.moderationInfo(info);
 	},
 	removeImage(info) {
 		// Staff won't have the image removed, but rerendered with
 		// indication, that it has been deleted and extra information
-		if (info)
-			this.moderationInfo(info);
-		else {
-			this.unset('image')
-				.dispatch('renderImage');
-		}
+		this.moderationInfo(info) 
+			|| this.unset('image').dispatch('renderImage');
+	},
+	deletePost(info) {
+		this.moderationInfo(info) || this.remove();
 	},
 	addBacklink(num, op) {
 		let backlinks = this.get('backlinks') || {};
@@ -70,11 +67,14 @@ exports.Post = Backbone.Model.extend({
 	// Add info about the moderation action taken. This is only used on
 	// authenticated staff clients, but for sanity, lets keep it here in
 	// common model methods.
-	moderationInfo(info) {
-		let mod = this.get('mod') || [];
+	moderationInfo(info) { 
+		if (!info)
+			return false;
+		const mod = this.get('mod') || [];
 		mod.push(info);
 		this.set('mod', mod)
 			.dispatch('renderModerationInfo', mod);
+		return true;
 	}
 });
 

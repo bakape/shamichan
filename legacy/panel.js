@@ -1,5 +1,5 @@
 var _ = require('underscore'),
-    authcommon = require('./common'),
+    authcommon = require('./admin/common'),
     caps = require('../server/caps'),
     common = require('../common/index'),
 	config = require('../config'),

@@ -23,24 +23,25 @@ exports.genMnemonic = genMnemonic;
 let dispatcher = okyaku.dispatcher,
 	redis = global.redis;
 
-function modHandler(method, errMsg) {
+function modHandler(kind, auth, errMsg) {
 	return function (nums, client) {
-		return caps.checkAuth('janitor', client.ident)
+		return caps.checkAuth(auth, client.ident)
 			&& check('id...', nums)
-			&& client.db.modHandler(method, nums, function (err) {
+			&& client.db.modHandler(kind, nums, function (err) {
 				if (err)
 					client.kotowaru(Muggle(errMsg, err));
 			});
 	};
 }
 
-dispatcher[common.SPOILER_IMAGES] = modHandler('spoilerImages',
-	'Couldn\'t spoiler images.'
-);
+dispatcher[common.SPOILER_IMAGES] = modHandler(common.SPOILER_IMAGES, 'janitor',
+	'Couldn\'t spoiler images:');
 
-dispatcher[common.DELETE_IMAGES] = modHandler('deleteImages',
-	'Couldn\'t delete images.'
-);
+dispatcher[common.DELETE_IMAGES] = modHandler(common.DELETE_IMAGES, 'janitor',
+	'Couldn\'t delete images:');
+
+dispatcher[common.DELETE_POSTS] = modHandler(common.DELETE_POSTS, 'moderator',
+	'Couldn\'t delete posts:');
 
 // Non-persistent global live admin notifications
 dispatcher[common.NOTIFICATION] = function (msg, client) {
