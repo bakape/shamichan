@@ -36,6 +36,10 @@ require('babel/register')({
 	// Babel has trouble with hot.js, so we ignore the config module
 	ignore: /node_modules|config/,
 	sourceMaps: config.DEBUG && 'inline',
+	
+	// Stack traces should at least have the exact line numbers displayed
+	// correctly
+	retainLines: true,
 	whitelist: [
 		'es6.arrowFunctions',
 		'es6.destructuring',
