@@ -9,53 +9,44 @@ let _ = require('underscore'),
 	state = require('./state'),
     winston = require('winston');
 
-let yaku;
-function connect() {
-	if (!yaku)
-		yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
-	return yaku.connect();
-}
+const yaku = new db.Yakusoku(null, db.UPKEEP_IDENT),
+	redis = global.redis;
 
 function yandere() {
-	let m = connect().multi();
-	const boards = config.BOARDS;
-	for (let i = 0, l = boards.length; i < l; i++) {
-		const key = `tag:${db.tag_key(boards[i])}:threads`;
-		m.zrevrange(key, 0, -1);
+	const m = redis.multi();
+	for (let board of config.BOARDS) {
+		m.zrevrange(`tag:${db.tag_key(board)}:threads`, 0, -1);
 	}
-	m.exec(function(err, res) {
+	m.exec(function (err, res) {
 		if (err)
 			winston.error(err);
-		let toPrune = {};
-		const pages = config.PAGES,
-			perPage = state.hot.THREADS_PER_PAGE;
-		for (let i = 0, l = res.length; i < l; i++) {
-			let threads = res[i];
+		const toPrune = {};
+		for (let i = 0; i < res.length; i++) {
+			const threads = res[i];
+			
 			// Board has no threads
 			if (!threads.length)
 				continue;
 
-			const board = boards[i],
+			const board = config.BOARDS[i],
 				// Threads that are over the last page
-				over = _.rest(threads, pages[board] * perPage);
+				over = _.rest(threads, 
+					config.PAGES[board] * state.hot.THREADS_PER_PAGE);
 			if (!over.length)
 				continue;
-			for (let o = 0, len = over.length; o < len; o++) {
-				toPrune[over[o]] = board;
+			for (let thread of over) {
+				toPrune[thread] = board;
 			}
 		}
 		if (_.isEmpty(toPrune))
 			return;
 		// Done sequentially for performance reasons
-		async.forEachOfSeries(toPrune, function(board, thread, cb) {
-			yaku.purge_thread(thread, board, function(err) {
-				if (err) {
-					return winston.error('Thread purging error: '
-						+ err.toString()
-					);
-				}
-				winston.info('Purged thread: ' + thread);
-				cb();
+		async.forEachOfSeries(toPrune, function(board, thread) {
+			yaku.purge_thread(thread, board, function (err) {
+				if (err)
+					winston.error('Thread purging error:', err);
+				else
+					winston.info('Purged thread: ' + thread);
 			});
 		});
 	})

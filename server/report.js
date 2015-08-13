@@ -28,7 +28,6 @@ function report(reporter_ident, op, num, cb) {
 
 	var reporter = admin.genMnemonic(reporter_ident.ip) || '???';
 
-	var yaku = new db.Yakusoku(board, {auth: 'moderator'});
 	var reader = new db.Reader({auth: 'moderator'});
 	var kind = op == num ? 'thread' : 'post';
 	reader.get_post(kind, num, {}, function (err, post) {
