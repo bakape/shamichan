@@ -40,7 +40,7 @@ dispatcher[common.SPOILER_IMAGES] = modHandler(common.SPOILER_IMAGES, 'janitor',
 dispatcher[common.DELETE_IMAGES] = modHandler(common.DELETE_IMAGES, 'janitor',
 	'Couldn\'t delete images:');
 
-dispatcher[common.DELETE_POSTS] = modHandler(common.DELETE_POSTS, 'moderator',
+dispatcher[common.DELETE_POSTS] = modHandler(common.DELETE_POSTS, 'janitor',
 	'Couldn\'t delete posts:');
 
 // Non-persistent global live admin notifications
