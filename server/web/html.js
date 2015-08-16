@@ -172,9 +172,7 @@ router.get(/^\/(\w+)\/(\d+)/,
 		const lastN = detect_last_n(req.query);
 		if (lastN)
 			opts.abbrev = lastN + state.hot.ABBREVIATED_REPLIES;
-
-		if (caps.checkAuth('admin', ident) && 'reported' in req.query)
-			opts.showDead = true;
+		
 		reader.get_thread(board, num, opts);
 		reader.once('nomatch', function() {
 			res.sendStatus(404);

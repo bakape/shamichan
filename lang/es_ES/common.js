@@ -42,7 +42,7 @@ var lang = {
 		spoilerImages: ['Spoiler', 'Spoiler selected post images'],
 		deleteImages: ['Del Img', 'Delete selected post images'],
 		deletePosts: ['Del Post', 'Delete selected posts'],
-		lockThread: ['Lock', 'Lock selected threads'],
+		lockThreads: ['Lock', 'Lock/unlock selected threads'],
 		toggleMnemonics: ['Mnemonics', 'Toggle mnemonic display'],
 		sendNotification: [
 			'Notification',
@@ -54,11 +54,13 @@ var lang = {
 		placeholders: {
 			msg: 'Message'
 		},
-		
+
 		// Correspond to websocket calls in common/index.js
 		7: 'Image spoilered',
 		8: 'Image deleted',
 		9: 'Post deleted',
+		10: 'Thread locked',
+		11: 'Thread unlocked',
 
 		// Formatting function for moderation messages
 		formatLog: function (act) {

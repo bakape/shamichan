@@ -120,7 +120,9 @@ exports.Thread = exports.Post.extend({
 		}
 		this.set('image_omit', image_omit);
 	},
-	toggleLocked(val) {
+	toggleLocked(val, info) {
+		this.moderationInfo(info);
+		this.set('locked', val);
 		this.dispatch('renderLocked', val);
 	}
 });

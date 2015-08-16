@@ -2,8 +2,7 @@
 Core  server-side administration module
  */
 
-let caps = require('../server/caps'),
-	check = require('../server/msgcheck'),
+const check = require('../server/msgcheck'),
     common = require('../common'),
 	config = require('../config'),
 	db = require('../db'),
@@ -23,9 +22,11 @@ exports.genMnemonic = genMnemonic;
 let dispatcher = okyaku.dispatcher,
 	redis = global.redis;
 
-function modHandler(kind, auth, errMsg) {
-	return function (nums, client) {
-		return caps.checkAuth(auth, client.ident)
+function modHandler(kind, auth) {
+	const errMsg = kind.replace('_', ' ').toLowerCase();
+	kind = common[kind];
+	dispatcher[kind] = function (nums, client) {
+		return common.checkAuth(auth, client.ident)
 			&& check('id...', nums)
 			&& client.db.modHandler(kind, nums, function (err) {
 				if (err)
@@ -34,26 +35,23 @@ function modHandler(kind, auth, errMsg) {
 	};
 }
 
-dispatcher[common.SPOILER_IMAGES] = modHandler(common.SPOILER_IMAGES, 'janitor',
-	'Couldn\'t spoiler images:');
-
-dispatcher[common.DELETE_IMAGES] = modHandler(common.DELETE_IMAGES, 'janitor',
-	'Couldn\'t delete images:');
-
-dispatcher[common.DELETE_POSTS] = modHandler(common.DELETE_POSTS, 'janitor',
-	'Couldn\'t delete posts:');
+modHandler('SPOILER_IMAGES', 'janitor');
+modHandler('DELETE_IMAGES', 'janitor');
+modHandler('DELETE_POSTS', 'janitor');
+modHandler('LOCK_THREAD', 'moderator');
+modHandler('UNLOCK_THREAD', 'moderator');
 
 // Non-persistent global live admin notifications
 dispatcher[common.NOTIFICATION] = function (msg, client) {
 	msg = msg[0];
-	if (!caps.checkAuth('admin', client.ident) || !check('string', msg))
+	if (!common.checkAuth('admin', client.ident) || !check('string', msg))
 		return false;
 	okyaku.push([0, common.NOTIFICATION, common.escape_html(msg)]);
 	return true;
 };
 
 dispatcher[common.MOD_LOG] = function (msg, client) {
-	if (!caps.checkAuth('janitor', client.ident))
+	if (!common.checkAuth('janitor', client.ident))
 		return false;
 
 	redis.zrange('modLog', 0, -1, function (err, log) {

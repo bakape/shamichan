@@ -2,9 +2,9 @@
 Client-side administration logic
  */
 
-let	main = require('main'),
+const main = require('main'),
 	{$, $threads, _, Backbone, common, config, dispatcher, etc, lang,
-		oneeSama} = main,
+		oneeSama, state} = main,
 	{parseHTML} = common;
 
 // Only used to affect some client rendering practises. Anything actually
@@ -39,18 +39,22 @@ let ToolboxView = Backbone.View.extend({
 		this.render();
 	},
 	render() {
-		let specs = this.specs = [
+		const specs = this.specs = [
 			'clearSelection',
 			'spoilerImages',
 			'deleteImages',
 			'deletePosts',
-			'lockThread',
 			'toggleMnemonics',
 			'modLog'
 		];
-		if (ident.auth === 'admin')
-			specs.push('sendNotification', 'dispatchFun', 'renderPanel');
-
+		if (common.checkAuth('moderator', ident)) {
+			specs.push('lockThreads');
+			if (common.checkAuth('admin', ident)) {
+				specs.push('sendNotification', 'dispatchFun'
+					/* Disabled for now , 'renderPanel'*/);
+			}
+		}
+		
 		let controls = '<span>';
 		for (let i = 0; i < specs.length; i++) {
 			const ln = lang.mod[specs[i]];
@@ -104,7 +108,7 @@ let ToolboxView = Backbone.View.extend({
 		this[this.specs[event.target.getAttribute('data-kind')]](event);
 	},
 	getSelected() {
-		let checked = [];
+		const checked = [];
 		this.loopCheckboxes(function (el) {
 			if (el.checked)
 				checked.push(etc.getID(el));
@@ -163,6 +167,18 @@ let ToolboxView = Backbone.View.extend({
 	},
 	deletePosts() {
 		this.send('DELETE_POSTS');
+	},
+	lockThreads() {
+		for (let num of this.getSelected()) {
+			const model = state.posts.get(num);
+			// Model exists and is an OP
+			if (!model || model.get('op'))
+				continue;
+			main.request('send', [
+				common[!model.get('locked') ? 'LOCK_THREAD' : 'UNLOCK_THREAD'],
+				num
+			]);
+		}
 	}
 });
 

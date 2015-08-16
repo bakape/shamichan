@@ -146,6 +146,8 @@ class Subscription extends events.EventEmitter {
 			case common.SPOILER_IMAGES:
 			case common.DELETE_IMAGES:
 			case common.DELETE_POSTS:
+			case common.LOCK_THREAD:
+			case common.UNLOCK_THREAD:
 				parsed.push(extra);
 				break;
 			default:
@@ -169,7 +171,7 @@ class Subscription extends events.EventEmitter {
 	}
 	static full_key(target, ident) {
 		let channel;
-		if (caps.checkAuth('janitor', ident))
+		if (common.checkAuth('janitor', ident))
 			channel = 'auth';
 		const key = channel ? `${channel}:${target}` : target;
 		return {key, channel, target};
@@ -329,42 +331,6 @@ function load_OPs(callback) {
 
 /* SOCIETY */
 
-// Options for various moderation actions. No prototype properties in ES6,
-// so keep them here.
-const moderationSpecs = {
-	[common.SPOILER_IMAGES]: {
-		props: ['src', 'spoler'],
-		check(res) {
-			// No image or already spoilt
-			return !res[0] || res[1];
-		},
-		persist(m, key, msg) {
-			const spoiler = common.pick_spoiler(-1).index;
-			m.hset(key, 'spoiler', spoiler);
-			msg.push(spoiler);
-		}
-	},
-	[common.DELETE_IMAGES]: {
-		props: ['src', 'imgDeleted'],
-		check(res) {
-			// No image or already hidden
-			return !res[0] || res[1];
-		},
-		persist(m, key) {
-			m.hset(key, 'imgDeleted', true);
-		}
-	},
-	[common.DELETE_POSTS]: {
-		props: ['deleted'],
-		check(res) {
-			return res[0];
-		},
-		persist(m, key) {
-			m.hset(key, 'deleted', true);
-		}
-	}
-};
-
 // Main database controller class
 class Yakusoku extends events.EventEmitter {
 	constructor(board, ident) {
@@ -373,8 +339,7 @@ class Yakusoku extends events.EventEmitter {
 		this.tag = board;
 
 		//Should moderation be allowed on this board?
-		this.isContainmentBoard
-			= config.containment_boards.indexOf(this.tag) > -1;
+		this.isContainmentBoard	= config.containment_boards.indexOf(board) > -1;
 		this.ident = ident;
 		this.subs = [];
 	}
@@ -1054,7 +1019,7 @@ class Yakusoku extends events.EventEmitter {
 		return true;
 	}
 	handleModeration(nums, op, kind, cb) {
-		const opts = moderationSpecs[kind],
+		const opts = this.moderationSpecs[kind],
 			{props, check, persist} = opts,
 			keys = [];
 		async.waterfall([
@@ -1112,6 +1077,62 @@ class Yakusoku extends events.EventEmitter {
 		});
 	}
 }
+
+// Options for various moderation actions. No class properties in ES6, so
+// keep them here.
+Yakusoku.prototype.moderationSpecs = {
+	[common.SPOILER_IMAGES]: {
+		props: ['src', 'spoler'],
+		check(res) {
+			// No image or already spoilt
+			console.log(res);
+			return !res[0] || !!res[1];
+		},
+		persist(m, key, msg) {
+			const spoiler = common.pick_spoiler(-1).index;
+			m.hset(key, 'spoiler', spoiler);
+			msg.push(spoiler);
+		}
+	},
+	[common.DELETE_IMAGES]: {
+		props: ['src', 'imgDeleted'],
+		check(res) {
+			// No image or already hidden
+			return !res[0] || !!res[1];
+		},
+		persist(m, key) {
+			m.hset(key, 'imgDeleted', 1);
+		}
+	},
+	[common.DELETE_POSTS]: {
+		props: ['deleted'],
+		check(res) {
+			return !!res[0];
+		},
+		persist(m, key) {
+			m.hset(key, 'deleted', 1);
+		}
+	},
+	[common.LOCK_THREAD]: {
+		props: ['locked'],
+		check(res) {
+			return !!res[0];
+		},
+		persist(m, key) {
+			m.hset(key, 'locked', 1);
+		}
+	},
+	[common.UNLOCK_THREAD]: {
+		props: ['locked'],
+		check(res) {
+			return !res[0];
+		},
+		persist(m, key) {
+			m.hdel(key, 'locked');
+		}
+	}
+};
+
 exports.Yakusoku = Yakusoku;
 
 /* LURKERS */
@@ -1120,7 +1141,7 @@ class Reader extends events.EventEmitter {
 	constructor(ident) {
 		// Call the EventEmitter's constructor
 		super();
-		this.canModerate = caps.checkAuth('janitor', ident);
+		this.canModerate = common.checkAuth('janitor', ident);
 	}
 	get_thread(tag, num, opts) {
 		const key = 'thread:' + num;

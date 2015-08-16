@@ -3,7 +3,7 @@ Serve moderation script
  */
 
 let _ = require('underscore'),
-	caps = require('../caps'),
+	common = require('../../common'),
 	express = require('express'),
 	resources = require('../state').resources,
 	util = require('./util');
@@ -16,7 +16,7 @@ headers['Content-Type'] = 'text/javascript; charset=UTF-8';
 router.get('/mod.js', function (req, res) {
 	// Admin/Moderator privelege is injected on page render and verified
 	// serverside. Thus, we can serve the same bundle for both admins and mods.
-	if (!caps.checkAuth('janitor', req.ident))
+	if (!common.checkAuth('janitor', req.ident))
 		return res.sendStatus(404);
 
 	const modJS = resources.modJs;

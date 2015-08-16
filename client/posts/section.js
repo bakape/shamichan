@@ -25,8 +25,8 @@ var Section = module.exports = Backbone.View.extend({
 		this.$el.insertAfter(main.$threads.children('aside').first())
 			.after('<hr>');
 	},
-	renderLocked(model, locked) {
-		this.$el.toggleClass('locked', !!locked);
+	renderLocked(locked) {
+		this.$el.toggleClass('locked', locked);
 	},
 	remove() {
 		this.$el.next('hr').addBack().remove();

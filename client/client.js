@@ -138,11 +138,11 @@ _.extend(dispatcher, {
 	[common.DELETE_POSTS](msg) {
 		modelHandler(msg[0], model => model.deletePost(msg[1]));
 	},
-	[common.LOCK_THREAD](msg, op) {
-		modelHandler(op, model => model.toggleLocked(true));
+	[common.LOCK_THREAD](msg) {
+		modelHandler(msg[0], model => model.toggleLocked(true, msg[1]));
 	},
-	[common.UNLOCK_THREAD](msg, op) {
-		modelHandler(op, model => model.toggleLocked(false));
+	[common.UNLOCK_THREAD](msg) {
+		modelHandler(msg[0], model => model.toggleLocked(false, msg[1]));
 	},
 	[common.DELETE_IMAGES](msg) {
 		modelHandler(msg[0], model => model.removeImage(msg[1]));
@@ -179,12 +179,3 @@ main.$doc.on('click', 'del', function (event) {
 		$(event.target).toggleClass('reveal');
 	}
 });
-
-/*
- * TODO: These are used only for the Admin panel. Would be nice, if we could
- * set those in admin/client.js. Would need to export main.js outside the bundle
- * then.
- */
-dispatcher[common.MODEL_SET] = function (msg, op) {};
-dispatcher[common.COLLECTION_RESET] = function (msg, op) {};
-dispatcher[common.COLLECTION_ADD] = function (msg, op) {};

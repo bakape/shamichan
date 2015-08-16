@@ -289,7 +289,7 @@ class Render {
 
 		// Make script loader load moderation bundle
 		const ident = this.req.ident;
-		if (caps.checkAuth('janitor', ident)) {
+		if (common.checkAuth('janitor', ident)) {
 			const keys =  JSON.stringify(_.pick(ident, 'auth', 'csrf', 'email'));
 			resp.write(`var IDENT = ${keys};`);
 		}

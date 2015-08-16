@@ -11,7 +11,7 @@ var async = require('async'),
 var RANGES = require('./state').dbCache.ranges;
 
 function can_access_board(ident, board) {
-	if (board == config.STAFF_BOARD && !checkAuth('janitor', ident))
+	if (board == config.STAFF_BOARD && !common.checkAuth('janitor', ident))
 		return false;
 	if (ident.ban || ident.suspension)
 		return false;
@@ -29,13 +29,6 @@ function can_access_thread (ident, op) {
 	return false;
 }
 exports.can_access_thread = can_access_thread;
-
-// Acertains client has the proper authorisation level or higher
-function checkAuth(type, ident) {
-	const levels = ['janitor', 'moderator', 'admin'];
-	return levels.indexOf(type) <= levels.indexOf(ident.auth);
-}
-exports.checkAuth = checkAuth;
 
 function dead_media_paths(paths) {
 	paths.src = '../dead/src/';

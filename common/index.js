@@ -14,8 +14,8 @@ const DEF = {
 	SPOILER_IMAGES: 7,
 	DELETE_IMAGES: 8,
 	DELETE_POSTS: 9,
-	LOCK_THREAD: 11,
-	UNLOCK_THREAD: 12,
+	LOCK_THREAD: 10,
+	UNLOCK_THREAD: 11,
 	REPORT_POST: 13,
 
 	// Miscellaneous
@@ -31,14 +31,10 @@ const DEF = {
 	RADIO: 40,
 	RESYNC: 41,
 
-	// Moderation
-	MODEL_SET: 50,
+	// Non-pub/sub Moderation
 	MOD_LOG: 51,
-	COLLECTION_RESET: 55,
-	COLLECTION_ADD: 56,
-	SUBSCRIBE: 60,
-	UNSUBSCRIBE: 61,
 
+	// Various constants
 	INPUT_ROOM: 20,
 	MAX_POST_LINES: 30,
 	MAX_POST_CHARS: 2000,
