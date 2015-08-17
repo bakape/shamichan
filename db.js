@@ -979,14 +979,6 @@ class Yakusoku extends events.EventEmitter {
 			}
 		], callback);
 	}
-	get_fun(op, callback) {
-		if (cache.funThread && op == cache.funThread) {
-			/* Don't cache, for extra fun */
-			fs.readFile('client/fun.js', 'UTF-8', callback);
-		}
-		else
-			callback(null);
-	}
 	get_banner(cb) {
 		redis.get('banner:info', cb);
 	}

@@ -50,8 +50,8 @@ let ToolboxView = Backbone.View.extend({
 		if (common.checkAuth('moderator', ident)) {
 			specs.push('lockThreads');
 			if (common.checkAuth('admin', ident)) {
-				specs.push('sendNotification', 'dispatchFun'
-					/* Disabled for now , 'renderPanel'*/);
+				specs.push('sendNotification'
+					/* Useless for now , 'renderPanel'*/);
 			}
 		}
 		

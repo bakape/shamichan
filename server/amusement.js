@@ -81,22 +81,6 @@ function parseDice(post) {
 }
 exports.parseDice = parseDice;
 
-hooks.hook('clientSynced', function (info, cb) {
-	let op = info.op,
-		client = info.client;
-	if (op) {
-		client.db.get_fun(op, function (err, js) {
-			if (err)
-				return cb(err);
-			if (js)
-				client.send([op, common.EXECUTE_JS, js]);
-			cb(null);
-		});
-	}
-	else
-		cb(null);
-});
-
 // Information banner
 hooks.hook('clientSynced', function (info, cb) {
 	let client = info.client;

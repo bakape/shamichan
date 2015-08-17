@@ -48,7 +48,6 @@ var lang = {
 			'Notification',
 			'Send notifaction message to all clients'
 		],
-		dispatchFun: ['Fun', 'Execute arbitrary JavaScript on all clients'],
 		renderPanel: ['Panel', 'Toggle administrator panel display'],
 		modLog: ['Log', 'Show moderation log'],
 		placeholders: {
