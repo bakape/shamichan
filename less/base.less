@@ -258,7 +258,20 @@ span.control .popup-menu {
 }
 .postCheckbox {
 	display: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	background: url('ui/box2x.png');
+	width: 0.9em;
+	height: 0.9em;
+	background-size: 100% 100%;
 	margin: 0;
+	&:checked {
+		background: url('ui/sel2x.png'), url('ui/box2x.png');
+		background-size: 100% 100%;
+	}
+	&:focus {
+		outline: 0;
+	}
 }
 #banner{
 	display: inline-block;
@@ -494,9 +507,6 @@ figure {
 	border-radius: 4px;
 	-moz-border-radius: 4px;
 	-webkit-border-radius: 4px;
-}
-.selected {
-	background: url('ui/sel.png') no-repeat center center;
 }
 .themed {
 	background-color: transparent;
