@@ -1082,10 +1082,9 @@ class Yakusoku extends events.EventEmitter {
 // keep them here.
 Yakusoku.prototype.moderationSpecs = {
 	[common.SPOILER_IMAGES]: {
-		props: ['src', 'spoler'],
+		props: ['src', 'spoiler'],
 		check(res) {
 			// No image or already spoilt
-			console.log(res);
 			return !res[0] || !!res[1];
 		},
 		persist(m, key, msg) {
