@@ -76,6 +76,8 @@ function buildClient() {
 				'es5.properties.mutators',
 				'es6.constants',
 				'es6.forOf',
+				'es6.properties.computed',
+				'es6.properties.shorthand',
 				'es6.spec.templateLiterals',
 				'es6.templateLiterals',
 				'flow',

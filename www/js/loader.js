@@ -18,6 +18,10 @@ Selects and loads the client files
 		'"use strict"; const foo = 123; return foo === 123;',
 		// Block scoping
 		'"use strict";  const bar = 123; {const bar = 456;} return bar===123;',
+		// Computed object properties
+		"var x='y';return ({ [x]: 1 }).y === 1;",
+		// Shorthand object properties
+		"var a=7,b=8,c={a,b};return c.a===7 && c.b===8;",
 		// Template strings
 		'var a = "ba"; return `foo bar${a + "z"}` === "foo barbaz";',
 		// for...of
