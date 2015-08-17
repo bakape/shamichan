@@ -41,12 +41,13 @@ function yandere() {
 		if (_.isEmpty(toPrune))
 			return;
 		// Done sequentially for performance reasons
-		async.forEachOfSeries(toPrune, function(board, thread) {
+		async.forEachOfSeries(toPrune, function(board, thread, cb) {
 			yaku.purge_thread(thread, board, function (err) {
 				if (err)
 					winston.error('Thread purging error:', err);
 				else
 					winston.info('Purged thread: ' + thread);
+				cb();
 			});
 		});
 	})
