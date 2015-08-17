@@ -16,11 +16,8 @@ main.dispatcher[common.GET_TIME] = function(msg){
 main.reply('time:offset', serverTimeOffset);
 
 let renderTimer;
-function batcTimeRender(model, rtime = options.get('relativeTime')) {
-	let models = state.posts.models;
-	for (let i = 0, l = models.length; i < l; i++) {
-		models[i].dispatch('renderTime')
-	}
+function batcTimeRender(source, rtime = options.get('relativeTime')) {
+	state.posts.each(model => model.dispatch('renderTime'));
 	if (renderTimer)
 		clearTimeout(renderTimer);
 	if (rtime)

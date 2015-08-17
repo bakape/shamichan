@@ -18,17 +18,6 @@ function imageUploadURL() {
 }
 exports.uploadURL = imageUploadURL;
 
-// Keep the UI from locking as the loop iterates
-function deferLoop(items, stack, func) {
-	if (stack > items.length)
-		stack = items.length;
-	for (let i = 0; i < stack; i++)
-		func(items.pop());
-	if (items.length)
-		_.defer(deferLoop, items, stack, func);
-}
-exports.deferLoop = deferLoop;
-
 function getID(el) {
 	return parseInt($(el).closest('article, section').attr('id'), 10);
 }

@@ -4,8 +4,9 @@
  batch.
  */
 
-let main = require('./main'),
-	{etc, options, state} = main;
+const main = require('./main'),
+	{etc, options} = main,
+	{posts} = main.state;
 
 options.on({
 	'change:thumbs': reRenderImages,
@@ -15,22 +16,17 @@ options.on({
 });
 
 function reRenderImages() {
-	loop(function(model) {
-		let image = model.get('image');
+	posts.each(function(model) {
+		const image = model.get('image');
 		if (image)
 			model.dispatch('renderImage', image)
 	});
 }
-main.reply('loop:images', () => reRenderImages());
-
-function loop(func) {
-	// Shallow copy array to remove refference
-	etc.deferLoop(state.posts.models.slice(), 1, func);
-}
+main.reply('loop:images', reRenderImages);
 
 function toggleSpoilers() {
-	loop(function(model) {
-		let image = model.get('image');
+	posts.each(function(model) {
+		const image = model.get('image');
 		if (image && image.spoiler)
 			model.dispatch('renderImage', image);
 	});
@@ -38,8 +34,8 @@ function toggleSpoilers() {
 
 // Toggle animated GIF thumbnails
 function toggleAutoGIF() {
-	loop(function(model) {
-		let image = model.get('image');
+	posts.each(function(model) {
+		const image = model.get('image');
 		if (image && image.ext === '.gif')
 			model.dispatch('renderImage', image);
 	});
@@ -47,7 +43,7 @@ function toggleAutoGIF() {
 
 function toggleAnonymisation(source, toggle) {
 	const command = toggle ? 'anonymise' : 'renderName';
-	loop(function(model) {
+	posts.each(function(model) {
 		const {name, trip} = model.attributes;
 		if (name || trip)
 			model.dispatch(command);
