@@ -36,7 +36,7 @@ function check(schema, msg) {
 
 	/* Hashes */
 	if (typeof schema == 'object') {
-		if (typeof msg != 'object' || msg instanceof Array)
+		if (typeof msg != 'object' || msg === null || msg instanceof Array)
 			return false;
 		for (var k in schema) {
 			let spec = schema[k];
