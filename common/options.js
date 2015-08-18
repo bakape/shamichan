@@ -149,7 +149,7 @@ var opts = [
 		exec: function(toggle) {
 			if (toggle)
 				// Query the server for current stream info
-				main.request('send', [index.RADIO]);
+				main.send([index.RADIO]);
 			else
 				main.request('banner:radio:clear');
 		}

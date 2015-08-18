@@ -58,7 +58,7 @@ function readingSteiner(url, event) {
 		main.oneeSama.op = nextState.thread;
 		new Extract();
 		// Swap the database controller server-side
-		main.request('send', [
+		main.send([
 			common.RESYNC,
 			nextState.board,
 			state.syncs,

@@ -87,6 +87,9 @@ if (main.config.DEBUG) {
 	radio.tuneIn('main');
 }
 
+// Shorthand
+main.send = main.request.bind(main, 'send');
+
 /*
  Core modules. The other will be more or less decoupled, but these are the
  monolithic foundation.

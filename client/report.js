@@ -101,7 +101,7 @@ var ReportPanel = Backbone.View.extend({
 	submit() {
 		if (this.model.get('status') != 'ready')
 			return false;
-		main.request('send', [
+		main.send([
 			common.REPORT_POST,
 			parseInt(this.model.get('post').get('num'), 10),
 			Recaptcha.get_challenge(),

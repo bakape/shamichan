@@ -160,7 +160,7 @@ _.extend(dispatcher, {
 	[common.HOT_INJECTION](msg) {
 		// Request new varibles, if hashes don't match
 		if (msg[0] == false && msg[1] != state.configHash)
-			main.request('send', [common.HOT_INJECTION, true]);
+			main.send([common.HOT_INJECTION, true]);
 		// Update variables and hash
 		else if (msg[0] == true) {
 			state.configHash = msg[1];

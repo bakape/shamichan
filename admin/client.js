@@ -132,7 +132,7 @@ let ToolboxView = Backbone.View.extend({
 		localStorage.noMnemonics = !hide;
 	},
 	send(type) {
-		main.request('send', [common[type], ...this.getSelected()]);
+		main.send([common[type], ...this.getSelected()]);
 	},
 	spoilerImages() {
 		this.send('SPOILER_IMAGES');
@@ -153,7 +153,7 @@ let ToolboxView = Backbone.View.extend({
 			fields: ['msg'],
 			handler(msg) {
 				self.notificationBox = null;
-				main.request('send', [common.NOTIFICATION, msg[0]]);
+				main.send([common.NOTIFICATION, msg[0]]);
 			}
 		});
 	},
@@ -174,7 +174,7 @@ let ToolboxView = Backbone.View.extend({
 			// Model exists and is an OP
 			if (!model || model.get('op'))
 				continue;
-			main.request('send', [
+			main.send([
 				common[!model.get('locked') ? 'LOCK_THREAD' : 'UNLOCK_THREAD'],
 				num
 			]);
@@ -238,7 +238,7 @@ let ModLogView = Backbone.View.extend({
 		// Register websocket handler
 		dispatcher[common.MOD_LOG] = msg => this.render(msg[0]);
 		// Request moderation log
-		main.request('send', [common.MOD_LOG]);
+		main.send([common.MOD_LOG]);
 	},
 	render(info) {
 		if (!info.length) {
