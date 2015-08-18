@@ -14,8 +14,9 @@ let postForm, postModel;
  The variable gets overwritten, so a simple refference will not do. Calling a
  fucntion to retrieve the var each time solves the problem.
  */
-main.reply('postForm', () => postForm);
-main.reply('postModel', () => postModel);
+main.reply('postForm', () => postForm)
+	.reply('postModel', () => postModel)
+	.reply('postForm:indentity', () => postForm && postForm.renderIdentity());
 
 const uploadingMessage = 'Uploading...';
 
@@ -316,6 +317,7 @@ var ComposerView = Backbone.View.extend({
 			$b.text(haveTrip ? '' : main.lang.anon);
 		if (haveTrip)
 			$b.append(' <code>!?</code>');
+		
 		// Insert staff title
 		main.oneeSama.trigger('fillMyName', $b);
 		const email = main.$email.val().trim();
@@ -885,6 +887,7 @@ var ComposerView = Backbone.View.extend({
 	// Overrides automatic image expansion, if any
 	autoExpandImage() {}
 });
+exports.ComposerView = ComposerView;
 
 function openPostBox(num) {
 	let $a = main.$threads.find('#' + num);

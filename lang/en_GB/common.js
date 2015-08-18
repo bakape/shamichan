@@ -38,6 +38,7 @@ var lang = {
 
 	// Moderation language map
 	mod: {
+		title: ['Title', 'Display staff title on new posts'],
 		clearSelection: ['Clear', 'Clear selected posts'],
 		spoilerImages: ['Spoiler', 'Spoiler selected post images'],
 		deleteImages: ['Del Img', 'Delete selected post images'],

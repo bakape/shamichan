@@ -270,3 +270,35 @@ let ModLogView = Backbone.View.extend({
 		this.remove();
 	}
 });
+
+// Display title on post
+main.$name.after(parseHTML
+	`<label title="${lang.mod.title[1]}" class="mod">
+		<input type="checkbox" id="authName">
+		 ${lang.mod.title[0]}
+	 </label>`);
+const $authName = $('#authName');
+
+oneeSama.hook('fillMyName', function ($el) {
+	const checked = $authName[0].checked;
+	$el.toggleClass(ident.auth === 'admin' ? 'admin' : 'moderator', checked);
+	if (checked)
+		$el.append(' ## ' + state.hotConfig.get('staff_aliases')[ident.auth]);
+});
+$authName.change(() => main.request('postForm:indentity'));
+
+// Extend default allocation request
+override(main.posts.posting.ComposerView.prototype, 'allocationMessage',
+	function (orig, ...args) {
+		const msg = orig.call(this, ...args);
+		if ($authName[0].checked)
+			msg.auth = ident.auth;
+		return msg;
+	});
+
+function override(parent, method, upgrade) {
+	const orig = parent[method];
+	parent[method] = function (...args) {
+		return upgrade.call(this, orig, ...args);
+	}
+}

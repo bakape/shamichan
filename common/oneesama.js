@@ -172,16 +172,17 @@ class OneeSama {
 			</header>`;
 	}
 	name(data) {
-		let html = '';
-		const auth = data.auth,
-			email = data.email;
-		html += parseHTML`<b class="name${auth && ` ${auth.toLowerCase()}`}">`;
+		let html = '<b class="name';
+		const {auth, email} = data;
+		if (auth)
+			html += ` ${auth === 'admin' ? 'admin' : 'moderator'}`;
+		html += '">';
 		if (email) {
-			html += parseHTML
-				`<a class="email"
-					href="mailto:${encodeURI(email)}"
-					target="_blank"
-				>`
+			html += parseHTML `<a ${{
+				class: 'email',
+				href: 'mailto:' + encodeURI(email),
+				target: 'blank'
+			}}>`;
 		}
 		html += this.resolveName(data);
 		if (email)
@@ -193,9 +194,7 @@ class OneeSama {
 	}
 	resolveName(data) {
 		let html = '';
-		const trip = data.trip,
-			name = data.name,
-			auth = data.auth;
+		const {trip, name, auth} = data;
 		if (name || !trip) {
 			if (name)
 				html += escape(name);
@@ -207,7 +206,7 @@ class OneeSama {
 		if (trip)
 			html += `<code>${escape(trip)}</code>`;
 		if (auth)
-			html += ` ## ${imports.hotConfig[auth]}`;
+			html += ` ## ${imports.hotConfig.staff_aliases[auth]}`;
 		return html;
 	}
 	time(time) {

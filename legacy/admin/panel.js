@@ -1,10 +1,10 @@
 var _ = require('underscore'),
-    authcommon = require('./admin/common'),
-    caps = require('../server/caps'),
-    common = require('../common/index'),
-	config = require('../config'),
-    okyaku = require('../server/okyaku'),
-    STATE = require('../server/state');
+    authcommon = require('./common'),
+    caps = require('../../server/caps'),
+    common = require('../../common/index'),
+	config = require('../../config/index'),
+    okyaku = require('../../server/okyaku'),
+    STATE = require('../../server/state');
 
 var ADDRS = STATE.dbCache.addresses;
 authcommon.modCache.addresses = ADDRS;
