@@ -30,7 +30,7 @@ function report(reporter_ident, op, num, cb) {
 
 	var reader = new db.Reader({auth: 'moderator'});
 	var kind = op == num ? 'thread' : 'post';
-	reader.get_post(kind, num, {}, function (err, post) {
+	reader.get_post(kind, num, function (err, post) {
 		if (err || !post) {
 			if (err)
 				console.error(err);
