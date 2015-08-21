@@ -52,7 +52,6 @@ var lang = {
 		faq: 'FAQ',
 		schedule: 'Programação',
 		feedback: 'Contato',
-		changelog: 'Lista de mudanças',
 		onlineCounter: 'Contador Online'
 	},
 	/*

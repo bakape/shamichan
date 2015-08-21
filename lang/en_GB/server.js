@@ -53,7 +53,6 @@ var lang = {
 		faq: 'FAQ',
 		schedule: 'Schedule',
 		feedback: 'Feedback',
-		changelog: 'Changelog',
 		onlineCounter: 'Online Counter'
 	},
 

@@ -53,7 +53,6 @@ var lang = {
 		faq: 'FAQ',
 		schedule: 'Programación',
 		feedback: 'Contacto',
-		changelog: 'Historial de cambios',
 		onlineCounter: 'Contador online',
 	},
 
