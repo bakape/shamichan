@@ -198,7 +198,7 @@ if (require.main === module) {
 		update_banner(info, function (err) {
 			if (err)
 				winston.error(err);
-			process.exit(err ? -1 : 0);
+			process.exit(err ? 1 : 0);
 		});
 	}
 	else if (args[2] == '--r-a-d-io') {

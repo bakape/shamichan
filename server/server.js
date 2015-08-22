@@ -593,7 +593,7 @@ function processFileSetup() {
 			fs.unlinkSync(socketPath)
 		}
 		catch (e) {}
-		process.exit(1);
+		process.exit();
 	}
 }
 

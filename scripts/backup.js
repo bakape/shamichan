@@ -103,7 +103,7 @@ if (require.main == module) {
 		upload('dump.rdb', RDB_PATH, function (err) {
 			if (err)
 				throw err;
-			process.exit(0);
+			process.exit();
 		});
 	});
 }
