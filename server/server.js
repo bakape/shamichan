@@ -21,6 +21,7 @@ let _ = require('underscore'),
     Muggle = require('../util/etc').Muggle,
 	net = require('net'),
     okyaku = require('./okyaku'),
+	path = require('path'),
     persona = require('./persona'),
     Render = require('./render'),
     tripcode = require('./tripcode/tripcode'),
@@ -570,13 +571,13 @@ function processFileSetup() {
 	});
 
 	// Accept messages through unix socket and push to all clients
-	const socketPath = './server/.socket';
+	const socketPath = path.join('server', '.socket-' + process.pid);
 	// Remove old socket, if any
 	try {
 		fs.unlinkSync(socketPath);
 	}
 	catch (e) {}
-	let socket = net.createServer(function(client) {
+	const socket = net.createServer(function(client) {
 		client.on('data', function(data) {
 			try {
 				okyaku.push(JSON.parse(data));

@@ -6,7 +6,7 @@
 .lock*
 .DS_Store
 .project
-.socket
+.socket*
 config/*.js
 error.log
 node_modules/

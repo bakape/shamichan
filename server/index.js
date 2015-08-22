@@ -9,8 +9,12 @@ Server entry point
 if (!process.getuid())
 	throw new Error("Refusing to run as root.");
 
-let config = require('../config'),
+const config = require('../config'),
+	opts = require('./opts'),
 	winston = require('winston');
+
+// Read command line arguments. Modifies ../config, so loaded right after it.
+opts.parse_args();
 
 // More verbose logging
 if (config.DEBUG) {
@@ -49,12 +53,6 @@ require('babel/register')({
 		'strict'
 	]
 });
-
-// Read command line arguments. Modifies ../configure, so loaded right after it.
-let opts = require('./opts');
-if (require.main == module)
-	opts.parse_args();
-opts.load_defaults();
 
 // Require the actual server
 require('./server');
