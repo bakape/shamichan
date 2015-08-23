@@ -15,7 +15,7 @@ const yaku = new db.Yakusoku(null, db.UPKEEP_IDENT),
 function yandere() {
 	const m = redis.multi();
 	for (let board of config.BOARDS) {
-		m.zrevrange(`tag:${db.tag_key(board)}:threads`, 0, -1);
+		m.zrevrange(`board:${board}:threads`, 0, -1);
 	}
 	m.exec(function (err, res) {
 		if (err)
@@ -32,8 +32,6 @@ function yandere() {
 				// Threads that are over the last page
 				over = _.rest(threads, 
 					config.PAGES[board] * state.hot.THREADS_PER_PAGE);
-			if (!over.length)
-				continue;
 			for (let thread of over) {
 				toPrune[thread] = board;
 			}

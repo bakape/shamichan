@@ -19,14 +19,9 @@ function can_access_board(ident, board) {
 }
 exports.can_access_board = can_access_board;
 
-function can_access_thread (ident, op) {
-	var tags = db.tags_of(op);
-	if (!tags)
-		return false;
-	for (var i = 0; i < tags.length; i++)
-		if (can_access_board(ident, tags[i]))
-			return tags[i];
-	return false;
+function can_access_thread(ident, op) {
+	const board = db.boards[op];
+	return board && can_access_board(ident, board);
 }
 exports.can_access_thread = can_access_thread;
 

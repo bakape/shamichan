@@ -42,7 +42,7 @@ app.get(/^\/thread\/(\d+)$/, function(req, res) {
 		return res.sendStatus(404);
 	let reader = new db.Reader(req.ident),
 		thread = [];
-	reader.get_thread(info.board, num, {
+	reader.get_thread(num, {
 		abbrev: req.query.last
 	});
 	reader.once('nomatch', function() {
@@ -65,7 +65,7 @@ app.get(/^\/thread\/(\d+)$/, function(req, res) {
 
 // Array of a board's threads in order
 app.get(/^\/board\/(\w+)$/, util.boardAccess, function(req, res) {
-	const key = `tag:${db.tag_key(req.board)}:threads`;
+	const key = `board:${req.board}:threads`;
 	global.redis.zrevrange(key, 0, -1, function(err, threads) {
 		if (err)
 			return res.sendStatus(404);

@@ -16,8 +16,11 @@ const _ = require('underscore'),
     tail = require('./util/tail'),
     winston = require('winston');
 
-let OPs = exports.OPs = cache.OPs,
-	TAGS = exports.TAGS = cache.opTags,
+//Caches. Maps post numbers to threads.
+const OPs = exports.OPs = cache.OPs,
+	// Maps thread numbers to boards
+	BOARDS = exports.boards = cache.boards,
+	// Contains all public redis subscriptions for sharing
 	SUBS = exports.SUBS = cache.threadSubs;
 
 function redis_client() {
@@ -186,148 +189,108 @@ class Subscription extends events.EventEmitter {
 
 /* OP CACHE */
 
-function add_OP_tag(tagIndex, op) {
-	var tags = TAGS[op];
-	if (tags === undefined)
-		TAGS[op] = tagIndex;
-	else if (typeof tags == 'number') {
-		if (tagIndex != tags)
-			TAGS[op] = [tags, tagIndex];
-	}
-	else if (tags.indexOf(tagIndex) < 0)
-		tags.push(tagIndex);
+function boardHasOP(board, op) {
+	return BOARDS[op] === board;
 }
-
-function set_OP_tag(tagIndex, op) {
-	TAGS[op] = tagIndex;
-}
-
-function removeOPTag(op) {
-	delete OPs[op];
-	delete TAGS[op];
-}
-
-function OP_has_tag(tag, op) {
-	var index = config.BOARDS.indexOf(tag);
-	if (index < 0)
-		return false;
-	var tags = TAGS[op];
-	if (tags === undefined)
-		return false;
-	if (typeof tags == 'number')
-		return index == tags;
-	else
-		return tags.indexOf(index) >= 0;
-}
-exports.OP_has_tag = OP_has_tag;
-
-function first_tag_of (op) {
-	var tags = TAGS[op];
-	if (tags === undefined)
-		return false;
-	else if (typeof tags == 'number')
-		return config.BOARDS[tags];
-	else
-		return config.BOARDS[tags[0]];
-}
-exports.first_tag_of = first_tag_of;
-
-function tags_of(op) {
-	var tags = TAGS[op];
-	if (tags === undefined)
-		return false;
-	else if (typeof tags == 'number')
-		return [config.BOARDS[tags]];
-	else
-		return tags.map(function (i) { return config.BOARDS[i]; });
-}
-exports.tags_of = tags_of;
-
+exports.boardHasOP = boardHasOP;
 
 function track_OPs (callback) {
-	var k = redis_client();
-	k.subscribe('cache');
-	k.once('subscribe', function () {
-		load_OPs(callback);
-	});
-	k.on('message', update_cache);
-	/* k persists for the purpose of cache updates */
+	const redis = redis_client();
+	redis.subscribe('cache');
+	redis.once('subscribe', () => load_OPs(callback));
+	redis.on('message', update_cache);
+	// connection persists for the purpose of cache updates
 }
 exports.track_OPs = track_OPs;
 
+// Build caches on server start
+function load_OPs(callback) {
+	const boards = config.BOARDS,
+		threadList = [];
+	async.waterfall([
+		next => {
+			const m = redis.multi();
+			for (let board of boards) {
+				m.zrange(`board:${board}:threads`, 0, -1);
+			}
+			m.exec(next);
+		},
+		(allThreads, next) => {
+			// Gather posts from all boards and their threads
+			const m = redis.multi();
+			for (let i = 0; i < boards.length; i++) {
+				for (let thread of allThreads[i]) {
+					const num = parseInt(thread, 10);
+					cacheBoard(boards[i], num);
+					
+					// For consitency, an OP will have it's own post
+					// number in the cache
+					cacheOP(num, num);
+					threadList.push(num);
+					m.lrange(`thread:${thread}:posts`, 0, -1);
+				}
+			}
+			m.exec(next);
+		},
+		(threads, next) => {
+			for (let i = 0; i < threads.length; i++) {
+				for (let post of threads[i]) {
+					cacheOP(post, threadList[i]);
+				}
+			}
+			next();
+		}
+	], callback);
+}
+
+function cacheBoard(board, op) {
+	BOARDS[op] = board;
+}
+
+function cacheOP(num, op) {
+	OPs[num] = op;
+}
+
+function uncacheThread(num) {
+	delete BOARDS[num];
+	
+	// And all of the thread's posts. This includes the OP.
+	for (let post in OPs) {
+		if (OPs[post] == num)
+			delete OPs[post];
+	}
+}
+
+// To have as little inconsitent state between the database and server(s)
+// very little is chached into memory - only thread to board and post to
+// thread parenthood. This function is called through redis pub/sun to ensure
+// cache consitency between possible  multiple slave servers, once
+// clustering is implemnted. 
 function update_cache(chan, msg) {
 	msg = JSON.parse(msg);
-	var op = msg.op,
-		kind = msg.kind,
-		tag = config.BOARDS.indexOf(msg.tag);
-
-	if (kind == common.INSERT_POST) {
-		if (msg.num)
-			OPs[msg.num] = op;
-		else {
-			add_OP_tag(tag, op);
-			OPs[op] = op;
-		}
-	}
-	else if (kind == common.DELETE_POSTS) {
-		const nums = msg.nums;
-		for (let i = 0, l = msg.num.length; i < l; i++) {
-			delete OPs[nums[i]];
-		}
-	}
-	else if (kind == common.DELETE_THREAD) {
-		const nums = msg.nums;
-		for (let i = 0, l = nums.length; i < l; i++) {
-			delete OPs[nums[i]];
-		}
-		delete TAGS[op];
+	let [kind, num, parent] = msg;
+	switch (kind) {
+		// Insert thread
+		case 0:
+			cacheBoard(parent, num);
+			parent = num;
+		// Insert reply
+		case 1:
+			cacheOP(num, parent);
+			break;
+		// Thread purged from database
+		case 2:
+			uncacheThread(num);
+			break;
 	}
 }
 
 function on_pub (name, handler) {
-	// TODO: share redis connection
-	var k = redis_client();
-	k.subscribe(name);
-	k.on('message', handler);
-	/* k persists */
+	const redis = redis_client();
+	redis.subscribe(name);
+	redis.on('message', handler);
 }
 exports.on_pub = on_pub;
-
-function load_OPs(callback) {
-	var boards = config.BOARDS;
-	// Want consistent ordering in the TAGS entries for multi-tag threads
-	// (so do them in series)
-	tail.forEach(boards, scan_board, callback);
-
-	var threadsKey;
-	function scan_board(tag, cb) {
-		var tagIndex = boards.indexOf(tag);
-		threadsKey = 'tag:' + tag_key(tag) + ':threads';
-		redis.zrange(threadsKey, 0, -1, function (err, threads) {
-			if (err)
-				return cb(err);
-			async.forEach(threads, function (op, cb) {
-				op = parseInt(op, 10);
-				var ps = [scan_thread.bind(null,tagIndex,op)];
-				async.parallel(ps, cb);
-			}, cb);
-		});
-	}
-
-	function scan_thread(tagIndex, op, cb) {
-		op = parseInt(op, 10);
-		add_OP_tag(tagIndex, op);
-		OPs[op] = op;
-		get_all_replies(op, function (err, posts) {
-			if (err)
-				return cb(err);
-			for (let i = 0, l = posts.length; i < l; i++) {
-				OPs[parseInt(posts[i], 10)] = op;
-			}
-			cb(null);
-		});
-	}
-}
 
 /* SOCIETY */
 
@@ -336,7 +299,7 @@ class Yakusoku extends events.EventEmitter {
 	constructor(board, ident) {
 		super();
 		this.id = ++(cache.YAKUMAN);
-		this.tag = board;
+		this.board = board;
 
 		//Should moderation be allowed on this board?
 		this.isContainmentBoard	= config.containment_boards.indexOf(board) > -1;
@@ -359,7 +322,7 @@ class Yakusoku extends events.EventEmitter {
 		}, callback);
 	}
 	target_key(id) {
-		return id === 'live' ? 'tag:' + this.tag : 'thread:' + id;
+		return id === 'live' ? 'board:' + this.board : 'thread:' + id;
 	}
 	kikanai() {
 		for (let i = 0; i < this.subs.length; i++) {
@@ -412,7 +375,7 @@ class Yakusoku extends events.EventEmitter {
 	insert_post(msg, body, extra, callback) {
 		if (config.READ_ONLY)
 			return callback(Muggle("Can't post right now."));
-		if (!this.tag)
+		if (!this.board)
 			return callback(Muggle("Can't retrieve board for posting."));
 		const {num} = msg,
 			op = msg.op || num,
@@ -422,8 +385,8 @@ class Yakusoku extends events.EventEmitter {
 			return callback(Muggle("No post number."));
 		else if (!ip)
 			return callback(Muggle("No IP."));
-		else if (!isThead && (OPs[op] != op || !OP_has_tag(board, op))) {
-			delete OPs[num];
+		else if (!isThead && (OPs[op] != op || !boardHasOP(board, op))) {
+			uncacheThread(op);
 			return callback(Muggle('Thread does not exist.'));
 		}
 
@@ -440,10 +403,8 @@ class Yakusoku extends events.EventEmitter {
 			if (msg[field])
 				view[field] = msg[field];
 		}
-		const tagKey = 'tag:' + tag_key(this.tag);
-		if (isThead)
-			view.tags = tag_key(board);
-		else
+		const boardKey = 'board:' + this.board;
+		if (!isThead)
 			view.op = op;
 
 		if (extra.image_alloc) {
@@ -455,7 +416,7 @@ class Yakusoku extends events.EventEmitter {
 
 		const key = (isThead ? 'thread:' : 'post:') + num,
 			m = redis.multi();
-		m.incr(tagKey + ':postctr'); // must be first
+		m.incr(boardKey + ':postctr'); // must be first
 		m.sadd('liveposts', key);
 
 		hooks.trigger_sync('inlinePost', {
@@ -485,17 +446,15 @@ class Yakusoku extends events.EventEmitter {
 			this.addBacklinks(m, num, op, links);
 		}
 
-		const etc = {
-			augments: {},
-			cacheUpdate: {}
-		};
+		const etc = {augments: {}};
 		if (isThead) {
+			etc.cacheUpdate = [0, num, board];
 			/* Rate-limit new threads */
-			if (ip != '127.0.0.1')
+			if (~['127.0.0.1', '::1'].indexOf(ip))
 				m.setex(`ip:${ip}:throttle:thread`, config.THREAD_THROTTLE, op);
 		}
 		else {
-			etc.cacheUpdate.num = num;
+			etc.cacheUpdate = [1, num, op];
 			m.rpush(`thread:${op}:posts`, num);
 		}
 
@@ -547,14 +506,14 @@ class Yakusoku extends events.EventEmitter {
 					// live publishes
 					extract(view, true);
 					if (bump)
-						m.incr(tagKey + ':bumpctr');
+						m.incr(boardKey + ':bumpctr');
 					this._log(m, op, common.INSERT_POST, [view, bump], etc);
 					m.exec(next);
 				},
 				function(res, next) {
 					if (!bump)
 						return next();
-					redis.zadd(tagKey + ':threads', res[0], op, next);
+					redis.zadd(boardKey + ':threads', res[0], op, next);
 				}
 			],
 			function (err) {
@@ -582,7 +541,7 @@ class Yakusoku extends events.EventEmitter {
 			// Check if post exists through cache
 			if (!(targetNum in OPs))
 				continue;
-			const key = (targetNum in TAGS ? 'thread' : 'post')
+			const key = (targetNum in BOARDS ? 'thread' : 'post')
 				+ `:${targetNum}:backlinks`;
 			m.hset(key, num, op);
 			this._log(m, links[targetNum], common.BACKLINK, 
@@ -607,13 +566,10 @@ class Yakusoku extends events.EventEmitter {
 		m.expire(shortKey, 10 * 60);
 		m.expire(longKey, 2 * 24 * 3600);
 	}
-	_log(m, op, kind, msg, opts) {
-		if (!opts)
-			opts = {};
+	_log(m, op, kind, msg, opts = {}) {
 		msg = JSON.stringify(msg).slice(1, -1);
 		msg = msg.length ? (kind + ',' + msg) : ('' + kind);
-		if (config.DEBUG)
-			winston.info("Log: " + msg);
+		winston.verbose("Log: " + msg);
 		if (!op)
 			throw new Error('No OP.');
 		const key = 'thread:' + op;
@@ -630,15 +586,9 @@ class Yakusoku extends events.EventEmitter {
 		if (!_.isEmpty(opts.augments))
 			msg += JSON.stringify(opts.augments);
 		m.publish(key, msg);
-		const tags = opts.tags || (this.tag ? [this.tag] : []);
-		for (let tag of tags) {
-			m.publish('tag:' + tag, msg);
-		}
-		if (opts.cacheUpdate) {
-			const info = {kind, op, tag: tags[0]};
-			_.extend(info, opts.cacheUpdate);
-			m.publish('cache', JSON.stringify(info));
-		}
+		m.publish('board:' + this.board, msg);
+		if (opts.cacheUpdate)
+			m.publish('cache', JSON.stringify(opts.cacheUpdate));
 	}
 	add_image(post, alloc, ip, callback) {
 		const {num, op} = post;
@@ -806,7 +756,7 @@ class Yakusoku extends events.EventEmitter {
 		});
 	}
 	get_tag(page) {
-		const keyBase = 'tag:' + tag_key(this.tag),
+		const keyBase = 'board:' + this.board,
 			key = keyBase + ':threads',
 			// -1 is for live pages and -2 is for catalog
 			catalog = page === -2;
@@ -863,7 +813,7 @@ class Yakusoku extends events.EventEmitter {
 
 		reader.on('end', next_please);
 		reader.on('nomatch', next_please);
-		reader.get_thread(this.tag, nums[ix], {
+		reader.get_thread(nums[ix], {
 			catalog,
 			abbrev: hot.ABBREVIATED_REPLIES || 5
 		});
@@ -883,7 +833,7 @@ class Yakusoku extends events.EventEmitter {
 			(res, next) => {
 				// Likely to happen, if interrupted mid-purge
 				if (!res) {
-					redis.zrem(`tag:${tag_key(board)}:threads`, op);
+					redis.zrem(`board:${board}:threads`, op);
 					return callback();
 				}
 				
@@ -968,14 +918,12 @@ class Yakusoku extends events.EventEmitter {
 					(file, cb) => 
 						fs.unlink(file, err => cb(err)),
 					err => next(err)),
-			next => redis.zrem(`tag:${tag_key(board)}:threads`, op, next),
-			(res, next) => {
-				// Clear thread and post numbers from caches
-				for (let num of nums) {
-					delete OPs[num];
-				}
-				removeOPTag(op);
-				next();
+			next => {
+				const m = redis.multi();
+				m.zrem(`board:${board}:threads`, op, next);
+				// Clear thread and post numbers from caches on all slaves
+				m.publish('cache', JSON.stringify([2, +op]));
+				m.exec(next);
 			}
 		], callback);
 	}
@@ -1134,33 +1082,12 @@ class Reader extends events.EventEmitter {
 		super();
 		this.canModerate = common.checkAuth('janitor', ident);
 	}
-	get_thread(tag, num, opts) {
+	get_thread(num, opts) {
 		const key = 'thread:' + num;
 		redis.hgetall(key, (err, pre_post) => {
 			if (err)
 				return this.emit('error', err);
-			if (_.isEmpty(pre_post)) {
-				if (!opts.redirect)
-					return this.emit('nomatch');
-				redis.hget('post:' + num, 'op', (err, op) => {
-					if (err)
-						this.emit('error', err);
-					else if (!op)
-						this.emit('nomatch');
-					else
-						this.emit('redirect', op);
-				});
-				return;
-			}
-			let exists = true;
-			const tags = parse_tags(pre_post.tags);
-			if (tags.indexOf(tag) < 0) {
-				// XXX: Should redirect directly to correct thread
-				if (opts.redirect)
-					return this.emit('redirect', num, tags[0]);
-				exists = false;
-			}
-			if (!exists || !this.formatPost(pre_post))
+			if (!pre_post || !this.formatPost(pre_post))
 				return this.emit('nomatch');
 			
 			this.emit('begin', pre_post);
@@ -1214,7 +1141,7 @@ class Reader extends events.EventEmitter {
 					this.emit('thread', opPost);
 					if (opts.catalog)
 						return this.emit('end');
-					this._get_each_reply(tag, 0, nums, opts);
+					this._get_each_reply(0, nums, opts);
 				}
 			);
 		});
@@ -1252,18 +1179,17 @@ class Reader extends events.EventEmitter {
 			if (post.imgDeleted)
 				imager.deleteImageProps(post);
 		}
-		this.injectMnemonic(post);
+		else
+			this.injectMnemonic(post);
 		extract(post);
 		return true;
 	}
 	injectMnemonic(post) {
-		if (!this.canModerate)
-			return;
 		const mnemonic = admin.genMnemonic(post.ip);
 		if (mnemonic)
 			post.mnemonic = mnemonic;
 	}
-	_get_each_reply(tag, ix, nums, opts) {
+	_get_each_reply(ix, nums, opts) {
 		if (!nums || ix >= nums.length) {
 			this.emit('endthread', opts.op);
 			this.emit('end');
@@ -1275,7 +1201,7 @@ class Reader extends events.EventEmitter {
 				return this.emit('error', err);
 			if (post)
 				this.emit('post', post);
-			this._get_each_reply(tag, ix + 1, nums, opts);
+			this._get_each_reply(ix + 1, nums, opts);
 		});
 	}
 	get_post(kind, num, cb) {
@@ -1296,13 +1222,6 @@ class Reader extends events.EventEmitter {
 				pre_post.num = num;
 				if (kind === 'post')
 					pre_post.op = parseInt(pre_post.op, 10);
-				else {
-					/*
-					 TODO: filter by ident eligibility and attach
-					 Currently used only for reporting
-					 */
-					//var tags = parse_tags(pre_post.tags);
-				}
 				this.with_body(key, pre_post, next);
 			},
 			(post, next) => {
@@ -1353,10 +1272,10 @@ exports.Reader = Reader;
 
 // Retrieve post info from cache
 function postInfo(num) {
-	const isOP = num in TAGS;
+	const isOP = num in BOARDS;
 	return {
 		isOP,
-		board: config.BOARDS[isOP ? TAGS[num] : TAGS[OPs[num]]]
+		board: config.BOARDS[isOP ? BOARDS[num] : BOARDS[OPs[num]]]
 	};
 }
 exports.postInfo = postInfo;
@@ -1367,15 +1286,6 @@ function is_board (board) {
 	return config.BOARDS.indexOf(board) >= 0;
 }
 exports.is_board = is_board;
-
-function get_all_replies(op, cb) {
-	var key = 'thread:' + op;
-	redis.lrange(key + ':posts', 0, -1, function(err, nums) {
-		if (err)
-			return cb(err);
-		return cb(null, nums);
-	});
-}
 
 // Format post hash for passing to renderer and clients
 function extract(post, dontParseDice) {
@@ -1404,32 +1314,6 @@ function destringifyList(list) {
 	return parsed;
 }
 exports.destrigifyList = destringifyList;
-
-function tag_key(tag) {
-	return tag.length + ':' + tag;
-}
-exports.tag_key = tag_key;
-
-function parse_tags(input) {
-	if (!input) {
-		winston.warn('Blank tag!');
-		return [];
-	}
-	var tags = [];
-	while (input.length) {
-		var m = input.match(/^(\d+):/);
-		if (!m)
-			break;
-		var len = parseInt(m[1], 10);
-		var pre = m[1].length + 1;
-		if (input.length < pre + len)
-			break;
-		tags.push(input.substr(pre, len));
-		input = input.slice(pre + len);
-	}
-	return tags;
-}
-exports.parse_tags = parse_tags;
 
 function forEachInObject(obj, f, callback) {
 	var total = 0, complete = 0, done = false, errors = [];

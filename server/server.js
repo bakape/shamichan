@@ -85,7 +85,7 @@ function linkToDatabase(board, syncs, live, client) {
 	let dead_threads = [], count = 0, op;
 	for (let k in syncs) {
 		k = parseInt(k, 10);
-		if (db.OPs[k] != k || !db.OP_has_tag(board, k)) {
+		if (db.OPs[k] != k || !db.boardHasOP(board, k)) {
 			delete syncs[k];
 			dead_threads.push(k);
 		}
@@ -268,7 +268,7 @@ function allocate_post(msg, client, callback) {
 	if (msg.op) {
 		if (db.OPs[msg.op] != msg.op)
 			return callback(Muggle('Thread does not exist.'));
-		if (!db.OP_has_tag(extra.board, msg.op))
+		if (!db.boardHasOP(extra.board, msg.op))
 			return callback(Muggle('Thread does not exist.'));
 		post.op = msg.op;
 	}
