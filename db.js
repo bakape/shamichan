@@ -30,6 +30,31 @@ exports.redis_client = redis_client;
 const redis = global.redis = redis_client();
 redis.on('error', err => winston.error('Redis error:', err));
 
+// Validate database spec version
+{
+	const dbVersion = '1', 
+		m = redis.multi();
+	m.get('postctr');
+	m.get('dbVersion');
+	m.exec((err, res) => {
+		if (err)
+			throw err;
+		
+		// If post counter does not exist, we assume the database does not
+		// have any posts
+		if (!res[0]) {
+			redis.set('dbVersion', dbVersion, err => {
+				if (err)
+					throw err;
+			});
+		}
+		else if (res[1] !== dbVersion) {
+			throw new Error(`Incompatable database version: ${res[1] || 0}: `
+				+ 'See docs/migration.md')
+		}
+	})
+}
+
 // Depend on global redis client
 const admin = require('./admin'),
 	amusement = require('./server/amusement'),
