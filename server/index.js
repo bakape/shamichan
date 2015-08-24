@@ -18,7 +18,6 @@ opts.parse_args();
 
 // More verbose logging
 if (config.DEBUG) {
-	require('longjohn');
 	winston.remove(winston.transports.Console);
 	winston.add(winston.transports.Console, {level: 'verbose'});
 	winston.warn("Running in (insecure) debug mode.");

@@ -141,45 +141,30 @@ router.get(/^\/(\w+)\/(\d+)/,
 			ident = req.ident;
 		if (!num)
 			return res.sendStatus(404);
-
-		// We need to validate that the requested post number, is in fact a
-		// thread and not a reply
-		const op = db.OPs[num];
-		if (!op)
+		
+		// Validate the post number points to a thread. If not, validate it
+		// points to a reply and redirect.
+		if (!db.boards[num]) {
+			const actualOP = db.OPs[num];
+			if (actualOP)
+				return redirect_thread(res, num, actualOP, board, req.url);
 			return res.sendStatus(404);
-		if (!db.OP_has_tag(board, op)) {
-			let tag = db.first_tag_of(op);
-			if (tag) {
-				if (!caps.can_access_board(ident, tag))
-					return res.sendStatus(404);
-				return redirect_thread(res, num, op, tag, req.url);
-			}
-			else {
-				winston.warn(`Orphaned post ${num} with tagless OP ${op}`);
-				return res.sendStatus(404);
-			}
 		}
-		if (op != num)
-			return redirect_thread(res, num, op);
 
-		if (!caps.can_access_thread(ident, op))
+		if (!caps.can_access_thread(ident, num))
 			return res.sendStatus(404);
 
 		let yaku = new db.Yakusoku(board, ident),
 			reader = new db.Reader(ident),
-			opts = {redirect: true};
+			opts = {};
 
 		const lastN = detect_last_n(req.query);
 		if (lastN)
 			opts.abbrev = lastN + state.hot.ABBREVIATED_REPLIES;
 		
-		reader.get_thread(board, num, opts);
+		reader.get_thread(num, opts);
 		reader.once('nomatch', function() {
 			res.sendStatus(404);
-			yaku.disconnect();
-		});
-		reader.once('redirect', function(op) {
-			redirect_thread(res, num, op);
 			yaku.disconnect();
 		});
 		reader.once('begin', function(preThread) {
@@ -195,7 +180,7 @@ router.get(/^\/(\w+)\/(\d+)/,
 			res.reader = reader;
 			res.opts = {
 				board,
-				op,
+				op: num,
 				subject: preThread.subject,
 				abbrev: opts.abbrev
 			};
@@ -290,8 +275,8 @@ function page_nav(threads, cur_page) {
 }
 
 // Redirects '/board/num', when num point to a reply, not a thread
-function redirect_thread(res, num, op, tag, url) {
-	let path = tag ? `../${tag}/${op}` : `./${op}`;
+function redirect_thread(res, num, op, board, url) {
+	let path = board ? `../${board}/${op}` : `./${op}`;
 
 	// Reapply query strings, so we don't screw up the History API by
 	// retrieving a full page

@@ -25,10 +25,9 @@ exports.emitter = new (require('events').EventEmitter);
 
 exports.dbCache = {
 	OPs: {},
-	opTags: {},
+	boards: {},
 	threadSubs: {},
 	YAKUMAN: 0,
-	funThread: 0,
 	addresses: {},
 	ranges: {}
 };
