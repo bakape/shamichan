@@ -2,9 +2,76 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##vNext
+##1.0.0-beta - 2015-08-24
+###Added
+- Debug mode forcing client-side with `debug=true` query string
+- Compatability bundle for older, hipster and outright retarded browsers
+- Scroll to post after contracting images taller than the viewport
+- `scripts/send` for pushing arbitrary messages to all client from the 
+server's shell
+- Underline parent post links in hover preview
+- Box shadow to upper layer elements
+- Loading indicator on inital page load
+- Staff board to board navigation
+- Janitor staff class
+- Link hover colour to glass theme
+- Basic benchmark script
+- Option to disable moderation on specific boards
+- Moderation taken indicators for staff
+- Moderation log for staff
+- Internal production error logging
+- io.js v3 support
+- `--debug` flag for forcing debug mode
+- Database migration script from v0 or vanilla doushio
+
 ###Changed
+- Metric ton of performance improvments
 - Switched to 4chan-like thread expiry model with page limits and autosaging
+- Persist `sage` in the email field
+- Clicking on catalog images no longer opens new tab
+- Criptographically secure mnemonics
+- Always render inter-board navigation
+- Updated JSON API post spec
+- Restyle moderation selection checkbox
+
+###Fixed
+- Disconnect favicon 404, if served from subdomain
+- Navigating with inter-board post links
+- Thread hiding
+- Memory leak, if repetedly clicking on UTC clock
+- Following a locked page bottom on post text input
+- Ctrl clicking post links
+- DOM bumping on reply shift on board pages
+- (You) disapearing on page refresh
+- Option exporting on Firefox
+- Image hower previews not respecting aspect ration on Firefox
+- Opening new tab when clicking audio controls in Firefox
+- Dangling apostrophe in tripcode
+- WebM expansion on Chrome for Android
+- Image omit count calculation
+- Overflow of admin notifications
+- Purging hidden post list
+- Builder.js rebuild and restart on ./admin changes
+- Inability to post after navigating post links with an open postform
+- Outline around [Return] after clicking [Bottom]
+- Deliberate server crashing, by sending certain websocket messages
+- Incorrect process exit codes on termination
+
+###Removed
+- Archive board
+- Vagrant support
+- Board-specific default themes
+- Noko email field option
+- Outdated file map
+- Graveyard board
+- Fun threads
+- Changelog banner icon
+
+##Breaking
+- Dice storage in old threads
+- Backlink generation in old threads
+- Changed server entry point. Use `npm start` to start the server.
+- Removed thread tagging. See `docs/migration.md`.
 
 ##1.0.0-alpha - 2015-06-02
 ###Added
