@@ -24,6 +24,7 @@ master branch in production. For more stable revisions, please [download the
 * You can update `config/hot.js` on-the-fly with `node server/kill.js`
 * To remove compiled server dependancies run `make clean`
 * Similarly `make client_clean` removes compiled client files
+* All errors are logged to `./error.log`
 
 ##Updating
 * To recompile client JS & CSS run `make client`. The new files can be loaded
