@@ -44,11 +44,10 @@ let ToolboxView = Backbone.View.extend({
 			'spoilerImages',
 			'deleteImages',
 			'deletePosts',
-			'toggleMnemonics',
 			'modLog'
 		];
 		if (common.checkAuth('moderator', ident)) {
-			specs.push('lockThreads');
+			specs.push('toggleMnemonics', 'lockThreads');
 			if (common.checkAuth('admin', ident)) {
 				specs.push('sendNotification'
 					/* Useless for now , 'renderPanel'*/);
