@@ -538,6 +538,10 @@ function start_server() {
 	process.on('SIGHUP', hot_reloader);
 	db.on_pub('reloadHot', hot_reloader);
 
+	// Read global push messages from `scripts/send.js` and dispatch to all
+	// clients
+	db.on_pub('push', (chan, msg) => okyaku.push(JSON.parse(msg)));
+
 	process.nextTick(processFileSetup);
 
 	winston.info('Listening on '
@@ -564,33 +568,15 @@ function processFileSetup() {
 	const pidFile = config.PID_FILE;
 	fs.writeFile(pidFile, process.pid+'\n', function (err) {
 		if (err)
-			return winston.warn("Couldn't write pid: " + err);
+			return winston.warn("Couldn't write pid: ", err);
 		process.once('SIGINT', deleteFiles);
 		process.once('SIGTERM', deleteFiles);
-		winston.info('PID ' + process.pid + ' written in ' + pidFile);
+		winston.info(`PID ${process.pid} written in ${pidFile}`);
 	});
-
-	// Accept messages through unix socket and push to all clients
-	const socketPath = path.join('server', '.socket-' + process.pid);
-	// Remove old socket, if any
-	try {
-		fs.unlinkSync(socketPath);
-	}
-	catch (e) {}
-	const socket = net.createServer(function(client) {
-		client.on('data', function(data) {
-			try {
-				okyaku.push(JSON.parse(data));
-			}
-			catch (e) {}
-		});
-	});
-	socket.listen(socketPath);
 
 	function deleteFiles() {
 		try {
 			fs.unlinkSync(pidFile);
-			fs.unlinkSync(socketPath)
 		}
 		catch (e) {}
 		process.exit();
