@@ -4,7 +4,6 @@ var config = require('../config'),
     path = require('path');
 
 opts.parse_args();
-opts.load_defaults();
 var lock = config.PID_FILE;
 
 require('fs').readFile(lock, function (err, pid) {
