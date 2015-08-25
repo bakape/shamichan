@@ -199,7 +199,9 @@ class Subscription extends events.EventEmitter {
 	}
 	static full_key(target, ident) {
 		let channel;
-		if (common.checkAuth('janitor', ident))
+		if (common.checkAuth('moderator', ident))
+			channel = 'mod';
+		else if (common.checkAuth('janitor', ident))
 			channel = 'auth';
 		const key = channel ? `${channel}:${target}` : target;
 		return {key, channel, target};
@@ -520,11 +522,11 @@ class Yakusoku extends events.EventEmitter {
 						// Only the client-private Reader() instances need
 						// to embed mnemonics in-post. Doing that here would
 						// publish it to everyone. Instead live mnemonic
-						// updates are pushed through the 'auth' channel to
-						// authenticated staff only.
+						// updates are pushed through the 'mod' channel to
+						// authenticated moderatots and up only.
 						const mnemonic = admin.genMnemonic(ip);
 						if (mnemonic)
-							etc.augments.auth = {mnemonic};
+							etc.augments.mod = {mnemonic};
 					}
 
 					// Don't parse dice, because they aren't stringified on
@@ -1037,7 +1039,9 @@ class Yakusoku extends events.EventEmitter {
 
 		this._log(m, opts.op, opts.kind, opts.msg, {
 			augments: {
-				auth: info
+				// Duplicating channels for now. Will add some differences later
+				auth: info,
+				mod: info
 			}
 		});
 	}
@@ -1105,7 +1109,10 @@ class Reader extends events.EventEmitter {
 	constructor(ident) {
 		// Call the EventEmitter's constructor
 		super();
-		this.canModerate = common.checkAuth('janitor', ident);
+		if (common.checkAuth('janitor', ident)) {
+			this.hasAuth = true;
+			this.canModerate = common.checkAuth('moderator', ident);
+		}
 	}
 	get_thread(num, opts) {
 		const key = 'thread:' + num;
@@ -1175,7 +1182,7 @@ class Reader extends events.EventEmitter {
 		m.hgetall(key + ':links');
 		m.hgetall(key + ':backlinks');
 		m.lrange(key + ':dice', 0, -1);
-		if (this.canModerate)
+		if (this.hasAuth)
 			m.lrange(key + ':mod', 0, -1);
 	}
 	parseExtras(res, post) {
@@ -1188,31 +1195,27 @@ class Reader extends events.EventEmitter {
 		// Preserve chronological dice order
 		if (post.dice)
 			post.dice.reverse();
-		if (this.canModerate)
-			this.parseModerationInfo(res.shift(), post);
-	}
-	parseModerationInfo(info, post) {
-		if (!info.length)
-			return;
-		// Reverse array, so the log is orderred chronologically
-		post.mod = destringifyList(info.reverse());
+		if (this.hasAuth) {
+			// Reverse array, so the log is orderred chronologically
+			const info = destringifyList(res.shift().reverse());
+			if (info)
+				post.mod = info;
+		}
 	}
 	formatPost(post) {
-		if (!this.canModerate) {
+		if (!this.hasAuth) {
 			if (post.deleted)
 				return false;
 			if (post.imgDeleted)
 				imager.deleteImageProps(post);
 		}
-		else
-			this.injectMnemonic(post);
+		if (this.canModerate) {
+			const mnemonic = admin.genMnemonic(post.ip);
+			if (mnemonic)
+				post.mnemonic = mnemonic;
+		}
 		extract(post);
 		return true;
-	}
-	injectMnemonic(post) {
-		const mnemonic = admin.genMnemonic(post.ip);
-		if (mnemonic)
-			post.mnemonic = mnemonic;
 	}
 	_get_each_reply(ix, nums, opts) {
 		if (!nums || ix >= nums.length) {
