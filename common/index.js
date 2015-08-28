@@ -16,6 +16,7 @@ const DEF = {
 	DELETE_POSTS: 9,
 	LOCK_THREAD: 10,
 	UNLOCK_THREAD: 11,
+	BAN: 12,
 	REPORT_POST: 13,
 
 	// Miscellaneous

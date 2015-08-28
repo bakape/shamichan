@@ -7,6 +7,8 @@ const main = require('main'),
 		oneeSama, state} = main,
 	{parseHTML} = common;
 
+//XXX: This module in general is not very DRY. Need to refactor later.
+
 // Only used to affect some client rendering practises. Anything actually
 // needing security has stricter authorisation checks.
 const ident = main.ident = window.IDENT;
@@ -30,9 +32,11 @@ $('<link/>', {
 }
 
 // Container for the overlay
-let $overlay = $('<div id="modOverlay"></div>').appendTo('body');
+const $overlay = $('<div id="modOverlay"></div>').appendTo('body'),
+	// Additional toolbox children currently open
+	openBoxes = {};
 
-let ToolboxView = Backbone.View.extend({
+const ToolboxView = Backbone.View.extend({
 	id: 'toolbox',
 	className: 'mod modal panel',
 	initialize() {
@@ -47,7 +51,7 @@ let ToolboxView = Backbone.View.extend({
 			'modLog'
 		];
 		if (common.checkAuth('moderator', ident)) {
-			specs.push('toggleMnemonics', 'lockThreads');
+			specs.push('toggleMnemonics', 'lockThreads', 'ban');
 			if (common.checkAuth('admin', ident)) {
 				specs.push('sendNotification'
 					/* Useless for now , 'renderPanel'*/);
@@ -106,24 +110,8 @@ let ToolboxView = Backbone.View.extend({
 	buttonHandler(event) {
 		this[this.specs[event.target.getAttribute('data-kind')]](event);
 	},
-	getSelected() {
-		const checked = [];
-		this.loopCheckboxes(function (el) {
-			if (el.checked)
-				checked.push(etc.getID(el));
-		});
-
-		// Postform will not have an ID, so we remove falsy values
-		return _.compact(checked);
-	},
 	clearSelection() {
-		this.loopCheckboxes(el => el.checked = false);
-	},
-	loopCheckboxes(func) {
-		const els = $threads[0].getElementsByClassName('postCheckbox');
-		for (let i = 0; i < els.length; i++) {
-			func(els[i]);
-		}
+		loopCheckboxes(el => el.checked = false);
 	},
 	toggleMnemonics() {
 		const hide = localStorage.noMnemonics === 'true';
@@ -131,7 +119,7 @@ let ToolboxView = Backbone.View.extend({
 		localStorage.noMnemonics = !hide;
 	},
 	send(type) {
-		main.send([common[type], ...this.getSelected()]);
+		main.send([common[type], ...getSelected()]);
 	},
 	spoilerImages() {
 		this.send('SPOILER_IMAGES');
@@ -141,34 +129,22 @@ let ToolboxView = Backbone.View.extend({
 	},
 	// Push a notification message to all clients
 	sendNotification() {
-		let box = this.notificationBox;
-		if (box) {
-			this.notificationBox = null;
-			return box.remove();
-		}
-
-		let self = this;
-		this.notificationBox = new InputBoxView({
-			fields: ['msg'],
-			handler(msg) {
-				self.notificationBox = null;
-				main.send([common.NOTIFICATION, msg[0]]);
-			}
-		});
+		if (openBoxes.notification)
+			openBoxes.notification.kill();
+		else 
+			new NotificationInputView();
 	},
 	modLog() {
-		if (!this.logPanel)
-			this.logPanel = new ModLogView();
-		else {
-			this.logPanel.kill();
-			this.logPanel = null;
-		}
+		if (openBoxes.modLog)
+			openBoxes.modLog.kill();
+		else
+			new ModLogView();
 	},
 	deletePosts() {
 		this.send('DELETE_POSTS');
 	},
 	lockThreads() {
-		for (let num of this.getSelected()) {
+		for (let num of getSelected()) {
 			const model = state.posts.get(num);
 			// Model exists and is an OP
 			if (!model || model.get('op'))
@@ -178,39 +154,49 @@ let ToolboxView = Backbone.View.extend({
 				num
 			]);
 		}
+	},
+	ban() {
+		if (openBoxes.ban)
+			openBoxes.ban.kill();
+		else
+			new BanInputView();
 	}
 });
 
-let toolbox = new ToolboxView({
+const toolbox = new ToolboxView({
 	model: new Backbone.Model()
 });
 
-// Input box character sizes
-const sizeMap = {
-	msg: 20
-};
+// Gather salected post checkboxes
+function getSelected() {
+	const checked = [];
+	loopCheckboxes(el => el.checked && checked.push(etc.getID(el)));
 
-let InputBoxView = Backbone.View.extend({
+	// Postforms will not have an ID, so we remove falsy values
+	return _.compact(checked);
+}
+
+function loopCheckboxes(func) {
+	const els = $threads[0].getElementsByClassName('postCheckbox');
+	for (let i = 0; i < els.length; i++) {
+		func(els[i]);
+	}
+}
+
+const InputBoxView = Backbone.View.extend({
 	className: 'mod inputBox',
 	events: {
 		submit: 'submit'
 	},
-	initialize(args) {
-		this.handler = args.handler;
-		this.render(args);
+	initialize() {
+		openBoxes[this.type] = this;
+		this.render();
 	},
-	render(args) {
-		let html = '<form>';
-		for (let id of args.fields) {
-			html += parseHTML `<input ${{
-				type: 'text',
-				'data-id': id,
-				size: sizeMap[id],
-				placeholder: lang.mod.placeholders[id]
-			}}>`;
-		}
-		html += parseHTML
-			`<input type="submit" value="${lang.send}">
+	render() {
+		const html = parseHTML 
+			`<form> 
+				${this.renderInput()}
+				<input type="submit" value="${lang.send}">
 			</form>`;
 		this.$el
 			.html(html)
@@ -219,20 +205,74 @@ let InputBoxView = Backbone.View.extend({
 	},
 	submit(event) {
 		event.preventDefault();
-		let values = [];
-		$(event.target).children('input[type=text]').each(function () {
+		const values = [];
+		$(event.target).find('input[type!=submit]').each(function () {
 			values.push(this.value);
 		});
 		this.handler(values);
+		this.kill();
+	},
+	kill() {
+		delete openBoxes[this.type];
 		this.remove();
 	}
 });
 
+const NotificationInputView = InputBoxView.extend({
+	type: 'notification',
+	renderInput() {
+		return parseHTML `<input ${{
+			type: 'text',
+			size: 25,
+			placeholder: lang.mod.placeholders.msg
+		}}>`;
+	},
+	handler(msg) {
+		main.send([common.NOTIFICATION, msg[0]]);
+	}
+});
+
+const BanInputView = InputBoxView.extend({
+	type: 'ban',
+	renderInput() {
+		let html = '';
+		for (let field of ['days', 'hours', 'minutes']) {
+			html += parseHTML `<input ${{
+				type: 'number',
+				placeholder: lang.mod.placeholders[field]
+			}}>`
+		}
+		html += parseHTML `<input ${{
+			type: 'text',
+			size: 25,
+			placeholder: lang.mod.placeholders.reason
+		}}>`;
+		const [label, title] = lang.mod.displayBan;
+		html += parseHTML
+			`<label ${{title}}>
+				<input type="checkbox">
+				${label}
+			</label>`;
+		return html;
+	},
+	handler(info) {
+		// Coerce time units and checkbox value to inegers
+		for (let i = 0; i < 3; i++) {
+			info[i] = +info[i];
+		}
+		info[4] = +(info[4] === 'on');
+		for (let num of getSelected()) {
+			main.send([common.BAN, num, ...info]);
+		}
+	}
+});
+
 // Scrollable message log
-let ModLogView = Backbone.View.extend({
+const ModLogView = Backbone.View.extend({
 	className: 'modal mod panel',
 	initialize() {
 		this.$el.appendTo($overlay);
+		openBoxes.modLog = this;
 
 		// Register websocket handler
 		dispatcher[common.MOD_LOG] = msg => this.render(msg[0]);
@@ -266,6 +306,7 @@ let ModLogView = Backbone.View.extend({
 	},
 	kill() {
 		delete dispatcher[common.MOD_LOG];
+		delete openBoxes.modLog;
 		this.remove();
 	}
 });

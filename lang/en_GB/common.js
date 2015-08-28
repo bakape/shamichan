@@ -49,10 +49,20 @@ var lang = {
 			'Notification',
 			'Send notifaction message to all clients'
 		],
+		ban: ['Ban', 'Ban poster(s) for the selected post(s)'],
 		renderPanel: ['Panel', 'Toggle administrator panel display'],
 		modLog: ['Log', 'Show moderation log'],
+		displayBan: [
+			'Display', 
+			'Append a public \'USER WAS BANNED FOR THIS POST\' message'
+		],
+		banMessage: 'USER WAS BANNED FOR THIS POST',
 		placeholders: {
-			msg: 'Message'
+			msg: 'Message',
+			days: 'd',
+			hours: 'h',
+			minutes: 'min',
+			reason: 'Reason'
 		},
 
 		// Correspond to websocket calls in common/index.js
