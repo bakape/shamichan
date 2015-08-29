@@ -3,10 +3,13 @@
  launchers - amusement.
  */
 
-let common = require('../common/index'),
+const common = require('../common/index'),
 	config = require('../config'),
 	db = require('../db'),
-	hooks = require('../util/hooks');
+	fs = require('fs'),
+	hooks = require('../util/hooks'),
+	hot  = require('./state').hot,
+	push = require('./okyaku').push;
 
 let radio;
 if (config.RADIO)
@@ -83,12 +86,40 @@ exports.parseDice = parseDice;
 
 // Information banner
 hooks.hook('clientSynced', function (info, cb) {
-	let client = info.client;
+	const {client} = info;
 	client.db.get_banner(function (err, msg) {
 		if (err)
 			return cb(err);
 		if (msg)
 			client.send([0, common.UPDATE_BANNER, msg]);
-		cb(null);
+		cb();
 	});
 });
+
+// Inject JS on client synchronisation
+hooks.hook('clientSynced', (info, cb) => {
+	readJS(js => {
+		if (!js)
+			return cb();
+		info.client.send([0, common.EXECUTE_JS, js]);
+		cb();
+	});
+});
+
+function readJS(cb) {
+	if (!hot.inject_js)
+		return cb();
+	fs.readFile(hot.inject_js, {encoding: 'utf8'}, (err, js) => {
+		if (err) {
+			winston.error('Failed ro read JS injection:', err);
+			return cb();
+		}
+		cb(js);
+	});
+}
+
+// Push injection to all clients on hot reload
+function pushJS() {
+	readJS(js => js && push([0, common.EXECUTE_JS, js]));
+}
+exports.pushJS = pushJS;

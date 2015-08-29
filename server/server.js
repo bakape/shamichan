@@ -558,6 +558,7 @@ function hot_reloader() {
 			return;
 		}
 		okyaku.scan_client_caps();
+		amusement.pushJS();
 		// Push new hot variable hash to all clients
 		okyaku.push([0, common.HOT_INJECTION, false, STATE.clientConfigHash]);
 		winston.info('Reloaded initial state.');
