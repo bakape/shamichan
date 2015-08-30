@@ -12,6 +12,7 @@ const _ = require('underscore'),
     fs = require('fs'),
     hooks = require('./util/hooks'),
     hot = require('./server/state').hot,
+	okyaku = require('./server/okyaku'),
     Muggle = require('./util/etc').Muggle,
     tail = require('./util/tail'),
     winston = require('winston');
@@ -165,21 +166,23 @@ class Subscription extends events.EventEmitter {
 	}
 	inject_extra(kind, msg, extra) {
 		// XXX: Why the fuck don't you just stringify arrays?
-		let parsed = JSON.parse(`[${msg}]`);
+		const parsed = JSON.parse(`[${msg}]`);
 		switch (kind) {
 			case common.INSERT_POST:
 				parsed[2].mnemonic = extra.mnemonic;
 				break;
-			// Add moderation information to staff
+
+			// Add moderation information for staff
 			case common.SPOILER_IMAGES:
 			case common.DELETE_IMAGES:
 			case common.DELETE_POSTS:
 			case common.LOCK_THREAD:
 			case common.UNLOCK_THREAD:
+			case common.BAN:
 				parsed.push(extra);
 				break;
 			default:
-				return null;
+				return;
 		}
 		return JSON.stringify(parsed).slice(1, -1);
 	}
@@ -301,13 +304,17 @@ function update_cache(chan, msg) {
 		case 0:
 			cacheBoard(parent, num);
 			parent = num;
-		// Insert reply
+		// Insert post
 		case 1:
 			cacheOP(num, parent);
 			break;
 		// Thread purged from database
 		case 2:
 			uncacheThread(num);
+			break;
+		// Reaload ban list and reverify all connected clients
+		case 3:
+			admin.loadBans(okyaku.scan_client_caps);
 			break;
 	}
 }
@@ -1044,6 +1051,49 @@ class Yakusoku extends events.EventEmitter {
 				mod: info
 			}
 		});
+	}
+	// Bans are somewhat more complicated and do not fit into the common
+	// modHandler() pathway. Plenty of duplication here, because of that.
+	ban(msg, cb) {
+		const [num, days, hours, minutes, reason, display] = msg,
+			now = Date.now(),
+			till = ((days * 24 + hours) * 60 + minutes) * 60 * 1000 + now,
+			op = OPs[num],
+			key = `${op === num ? 'thread' : 'post'}:${num}`;
+		async.waterfall([
+			next => redis.hget(key, 'ip', next),
+			(ip, next) => {
+				const info = {
+					num, op, till,
+					time: now,
+					ident: config.staff[this.ident.auth][this.ident.email],
+					kind: common.BAN
+				};
+
+				// Publically display a ban to all users, if display option
+				// set. Otherwise only published to staff and others get a
+				// useless 0, for compatability with the current pub/sub
+				// pathway.
+				const m = redis.multi();
+				this._log(m, op, common.BAN, [display ? num : 0], {
+					augments: {
+						auth: info,
+						mod: info
+					},
+					cacheUpdate: [3]
+				});
+
+				m.lpush(key + ':mod', JSON.stringify(info));
+
+				// Mnemonic needed only for logging
+				info.mnemonic = admin.genMnemonic(ip);
+				m.zadd('modLog', now, JSON.stringify(info));
+				m.zadd('bans', till, ip);
+				if (display)
+					m.hset(key, 'banned', 1);
+				m.exec(next);
+			}
+		], cb);
 	}
 }
 

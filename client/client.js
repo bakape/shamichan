@@ -150,6 +150,20 @@ _.extend(dispatcher, {
 	[common.SPOILER_IMAGES](msg) {
 		modelHandler(msg[0], model => model.setSpoiler(msg[1], msg[2]));
 	},
+	[common.BAN](msg) {
+		// Only a 0 is passed to unauthenticated clients, if the ban was not
+		// set to be displayed publicly. Otherwise a post number. A side
+		// effect of complying to the existing pub/sub spec. Authenticated
+		// staff receive either a post number or 0 and detailed ban information.
+		let [num, info] = msg;
+		if (!num) {
+			if (!info)
+				return;
+			info = JSON.parse(info);
+			num = info.num;
+		}
+		modelHandler(num, model => model.setBan(num, info));
+	},
 	[common.BACKLINK](msg) {
 		modelHandler(msg[0], model => model.addBacklink(msg[1], msg[2]));
 	},

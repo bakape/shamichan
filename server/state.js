@@ -27,7 +27,8 @@ exports.dbCache = {
 	OPs: {},
 	boards: {},
 	threadSubs: {},
-	YAKUMAN: 0
+	YAKUMAN: 0,
+	bans: []
 };
 
 var RES = exports.resources = {};

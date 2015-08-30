@@ -548,11 +548,8 @@ function start_server() {
 
 function hot_reloader() {
 	STATE.reload_hot_resources(function (err) {
-		if (err) {
-			winston.error("Error trying to reload:");
-			winston.error(err);
-			return;
-		}
+		if (err)
+			return winston.error('Error trying to reload:', err);
 		okyaku.scan_client_caps();
 		// Push new hot variable hash to all clients
 		okyaku.push([0, common.HOT_INJECTION, false, STATE.clientConfigHash]);

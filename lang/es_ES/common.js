@@ -71,10 +71,14 @@ var lang = {
 		9: 'Post deleted',
 		10: 'Thread locked',
 		11: 'Thread unlocked',
+		12: 'User banned',
 
 		// Formatting function for moderation messages
 		formatLog: function (act) {
-			return lang.mod[act.kind] + ' by ' + act.ident;
+			var msg = lang.mod[act.kind] + ' by ' + act.ident;
+			if (act.reason)
+				msg += ' for ' + act.reason;
+			return msg;
 		}
 	},
 

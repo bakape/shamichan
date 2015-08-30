@@ -58,6 +58,13 @@ exports.Post = Backbone.Model.extend({
 	deletePost(info) {
 		this.moderationInfo(info) || this.remove();
 	},
+	setBan(display, info) {
+		// Displaying the 'USER WAS BANNED FOR THIS POST' message and
+		// renderring the moderation info are independant actions
+		if (display)
+			this.set('ban', true).dispatch('renderBan');
+		this.moderationInfo(info);
+	},
 	addBacklink(num, op) {
 		let backlinks = this.get('backlinks') || {};
 		backlinks[num] = op;
