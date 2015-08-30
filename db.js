@@ -1064,7 +1064,7 @@ class Yakusoku extends events.EventEmitter {
 			next => redis.hget(key, 'ip', next),
 			(ip, next) => {
 				const info = {
-					num, op, till,
+					num, op, till, reason,
 					time: now,
 					ident: config.staff[this.ident.auth][this.ident.email],
 					kind: common.BAN
