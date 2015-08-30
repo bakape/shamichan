@@ -7,6 +7,7 @@ but who cares. Writing in each file individually is a pain.
  */
 module.exports = {
 	server: [
+		'admin',
 		'config',
 		'imager',
 		'server',
@@ -19,6 +20,9 @@ module.exports = {
 	],
 	client: [
 		'client'
+	],
+	mod: [
+		'client/mod'
 	],
 	get legacy() {
 		return this.client;
