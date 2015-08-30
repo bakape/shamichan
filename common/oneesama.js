@@ -186,7 +186,7 @@ class OneeSama {
 			html += '</a>';
 		html += '</b>';
 		if (data.mnemonic)
-			html += ` <a class="mod addr">${data.mnemonic}</a>`;
+			html += ` <b class="mod addr">${data.mnemonic}</b>`;
 		return html;
 	}
 	resolveName(data) {
