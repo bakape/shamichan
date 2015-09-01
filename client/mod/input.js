@@ -31,7 +31,7 @@ const InputBoxView = Backbone.View.extend({
 		event.preventDefault();
 		const values = [];
 		$(event.target).find('input[type!=submit]').each(function () {
-			values.push(this.value);
+			values.push(this.type === 'checkbox' ? this.checked : this.value);
 		});
 		this.handler(values);
 		this.kill();
@@ -81,11 +81,11 @@ const BanInputView = InputBoxView.extend({
 		return html;
 	},
 	handler(info) {
-		// Coerce time units and checkbox value to inegers
+		// Coerce time units and checkbox value to integers
 		for (let i = 0; i < 3; i++) {
 			info[i] = +info[i];
 		}
-		info[4] = +(info[4] === 'on');
+		info[4] = +info[4];
 		for (let num of util.getSelected()) {
 			main.send([common.BAN, num, ...info]);
 		}

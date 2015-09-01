@@ -61,7 +61,7 @@ dispatcher[common.MOD_LOG] = function (msg, client) {
 
 dispatcher[common.BAN] = function (msg, client) {
 	if (!common.checkAuth('moderator', client.ident)
-		|| !check(['id', 'id', 'id', 'id', 'string', 'id'], msg)
+		|| !check(['id', 'nat', 'nat', 'nat', 'string', 'nat'], msg)
 	)
 		return false;
 	client.db.ban(msg, err =>
