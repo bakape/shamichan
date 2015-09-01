@@ -57,7 +57,7 @@ redis.on('error', err => winston.error('Redis error:', err));
 }
 
 // Depend on global redis client
-const admin = require('./admin'),
+const admin = require('./server/admin'),
 	amusement = require('./server/amusement'),
 	imager = require('./imager');
 

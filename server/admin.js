@@ -1,16 +1,15 @@
 /*
-Core  server-side administration module
+Server-side administration/moderaion module
  */
 
-const cache = require('../server/state').dbCache,
-	check = require('../server/msgcheck'),
+const cache = require('./state').dbCache,
+	check = require('./msgcheck'),
     common = require('../common'),
 	config = require('../config'),
 	db = require('../db'),
-	events = require('events'),
 	mnemonics = require('./mnemonic/mnemonics'),
 	Muggle = require('../util/etc').Muggle,
-	okyaku = require('../server/okyaku'),
+	okyaku = require('./okyaku'),
 	winston = require('winston');
 
 const mnemonizer = new mnemonics.mnemonizer(config.SECURE_SALT);

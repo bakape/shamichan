@@ -4,10 +4,10 @@ Core server module and application entry point
 
 // Several modules depend on the state module and a redis connection. Load
 // those first.
-let STATE = require('./state'),
+const STATE = require('./state'),
 	db = require('../db');
 
-let _ = require('underscore'),
+const _ = require('underscore'),
     amusement = require('./amusement'),
     async = require('async'),
     caps = require('./caps'),
@@ -28,7 +28,6 @@ let _ = require('underscore'),
     urlParse = require('url').parse,
     winston = require('winston');
 
-require('../admin');
 require('../imager/daemon'); // preload and confirm it works
 var radio;
 if (config.RADIO)
