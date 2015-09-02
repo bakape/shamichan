@@ -34,7 +34,6 @@ const InputBoxView = Backbone.View.extend({
 			values.push(this.type === 'checkbox' ? this.checked : this.value);
 		});
 		this.handler(values);
-		this.kill();
 	},
 	kill() {
 		delete modals[this.type];
@@ -53,6 +52,7 @@ const NotificationInputView = InputBoxView.extend({
 	},
 	handler(msg) {
 		main.send([common.NOTIFICATION, msg[0]]);
+		this.kill();
 	}
 });
 exports.notification = NotificationInputView;
@@ -81,6 +81,10 @@ const BanInputView = InputBoxView.extend({
 		return html;
 	},
 	handler(info) {
+		// Ensure reason field is filled
+		if (!info[3])
+			return this.renderReasonPrompt();
+		
 		// Coerce time units and checkbox value to integers
 		for (let i = 0; i < 3; i++) {
 			info[i] = +info[i];
@@ -89,6 +93,16 @@ const BanInputView = InputBoxView.extend({
 		for (let num of util.getSelected()) {
 			main.send([common.BAN, num, ...info]);
 		}
+		this.kill();
+	},
+	renderReasonPrompt() {
+		this.$el.find('.reasonPrompt').remove();
+		this.$el
+			.append(parseHTML
+				`<b class="reasonPrompt admin">
+					${lang.mod.needReason}
+				</b>`)
+			.find('input[type=text]').focus();
 	}
 });
 exports.ban = BanInputView;

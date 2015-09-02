@@ -65,6 +65,7 @@ var lang = {
 			minutes: 'min',
 			reason: 'Reason'
 		},
+		needReason: 'Must specify reason',
 
 		// Correspond to websocket calls in common/index.js
 		7: 'Image spoilered',
