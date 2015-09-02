@@ -1088,9 +1088,36 @@ class Yakusoku extends events.EventEmitter {
 				// Mnemonic needed only for logging
 				info.mnemonic = admin.genMnemonic(ip);
 				m.zadd('modLog', now, JSON.stringify(info));
+
+				// XXX: The ban duration in the sorted set will that of the
+				// most recently applied ban to this IP.
 				m.zadd('bans', till, ip);
 				if (display)
 					m.hset(key, 'banned', 1);
+				m.exec(next);
+			}
+		], cb);
+	}
+	// We don't pass the banned IPs to clients, so now we have to fetch all
+	// the banned IPs, generate a mnemonic for each and remove the
+	// corresponding one, if any.
+	unban(mnemonic, cb) {
+		async.waterfall([
+			next => redis.zrange('bans', 0, -1, next),
+			(bans, next) => {
+				let match;
+				for (let ip of bans) {
+					if (admin.genMnemonic(ip) === mnemonic) {
+						match = ip;
+						break;
+					}
+				}
+
+				if (!match)
+					return cb();
+				const m = redis.multi();
+				m.zrem('bans', match);
+				m.publish('chache', '[3]');
 				m.exec(next);
 			}
 		], cb);

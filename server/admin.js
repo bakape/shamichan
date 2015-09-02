@@ -59,6 +59,23 @@ dispatcher[common.MOD_LOG] = function (msg, client) {
 	return true;
 };
 
+dispatcher[common.ADMIN_PANEL] = function (msg, client) {
+	if (!common.checkAuth('admin', client.ident))
+		return false;
+
+	const response = [];
+	for (let ip in cache.bans) {
+		const mnemonic = genMnemonic(ip);
+		/*if (!mnemonic) {
+			winston.error('Could not parse IP: ' + ip);
+			continue;
+		}*/
+		response.push([mnemonic, cache.bans[ip]]);
+	}
+	client.send([0, common.ADMIN_PANEL, response]);
+	return true;
+};
+
 dispatcher[common.BAN] = function (msg, client) {
 	if (!common.checkAuth('moderator', client.ident)
 		|| !check(['id', 'nat', 'nat', 'nat', 'string', 'nat'], msg)
@@ -66,6 +83,16 @@ dispatcher[common.BAN] = function (msg, client) {
 		return false;
 	client.db.ban(msg, err =>
 		err && client.kotowaru(Muggle('Couldn\'t ban:', err)));
+	return true;
+};
+
+dispatcher[common.UNBAN] = function (msg, client) {
+	if (!common.checkAuth('admin', client.ident)
+		|| check('string', msg[0])
+	)
+		return false;
+	client.db.unban(msg[0], err =>
+		err && client.kotowaru(Muggle('Couldn\'t unban:', err)));
 	return true;
 };
 
@@ -83,12 +110,17 @@ setInterval(cleanUP, 60000);
 
 // Load the bans from redis
 function loadBans(cb) {
-	redis.zrangebyscore('bans', Date.now(), '+inf', (err, bans) => {
-		if (err)
-			return winston.error('Error retieving ban list:', err);
-		cache.bans = bans;
-		cb && cb();
-	});
+	redis.zrangebyscore('bans', Date.now(), '+inf', 'WITHSCORES',
+		(err, res) => {
+			if (err)
+				return winston.error('Error retieving ban list:', err);
+			const bans = {};
+			for (let i = 0; i < res.length; i += 2) {
+				bans[res[i]] = res[i + 1];
+			}
+			cache.bans = bans;
+			cb && cb();
+		});
 }
 exports.loadBans = loadBans;
 loadBans();

@@ -186,7 +186,7 @@ class OneeSama {
 			html += '</a>';
 		html += '</b>';
 		if (data.mnemonic)
-			html += ` <b class="mod addr">${data.mnemonic}</b>`;
+			html += ' ' + this.mnemonic(data.mnemonic);
 		return html;
 	}
 	resolveName(data) {
@@ -253,6 +253,9 @@ class OneeSama {
 		}
 
 		return this.lang.ago(time, this.lang.unit_year);
+	}
+	mnemonic(mnem) {
+		return `<b class="mod addr">${mnem}</b>`;
 	}
 	postNavigation(post) {
 		const num = post.num,

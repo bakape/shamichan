@@ -4,13 +4,15 @@ View containing controls of moderation actions
 
 const main = require('main'),
 	input = require('./input'),
+	panels = require('./panels'),
 	util = require('./util'),
 	{$, _, Backbobe, common, lang, modals} = main,
 	{parseHTML} = common;
 
 const childViews = {
 	ban: input.ban,
-	log: require('./log'),
+	log: require('./panels').log,
+	adminPanel: panels.adminPanel,
 	notification: input.notification
 };
 
@@ -30,10 +32,8 @@ const ToolboxView = Backbone.View.extend({
 		];
 		if (common.checkAuth('moderator', main.ident)) {
 			specs.push('toggleMnemonics', 'lockThreads', 'ban');
-			if (common.checkAuth('admin', main.ident)) {
-				specs.push('sendNotification'
-					/* Useless for now , 'renderPanel'*/);
-			}
+			if (common.checkAuth('admin', main.ident))
+				specs.push('sendNotification', 'renderPanel');
 		}
 
 		let controls = '<span>';
@@ -120,6 +120,9 @@ const ToolboxView = Backbone.View.extend({
 	},
 	ban() {
 		this.toggleChild('ban');
+	},
+	renderPanel() {
+		this.toggleChild('adminPanel');
 	},
 	deletePosts() {
 		this.send('DELETE_POSTS');

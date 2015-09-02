@@ -24,7 +24,7 @@ exports.can_access_thread = can_access_thread;
 
 function lookup_ident (ip) {
 	const ident = {ip};
-	if (state.dbCache.bans.indexOf(ip) > -1)
+	if (ip in state.dbCache.bans)
 		ident.ban = true;
 	return ident;
 }

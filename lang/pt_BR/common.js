@@ -57,6 +57,7 @@ var lang = {
 			'Append a public \'USER WAS BANNED FOR THIS POST\' message'
 		],
 		banMessage: 'USER WAS BANNED FOR THIS POST',
+		unban: 'Unban',
 		placeholders: {
 			msg: 'Message',
 			days: 'd',
@@ -72,6 +73,7 @@ var lang = {
 		10: 'Thread locked',
 		11: 'Thread unlocked',
 		12: 'User banned',
+		53: 'User unbanned',
 
 		// Formatting function for moderation messages
 		formatLog: function (act) {
