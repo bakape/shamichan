@@ -1380,7 +1380,7 @@ function postInfo(num) {
 	const isOP = num in BOARDS;
 	return {
 		isOP,
-		board: config.BOARDS[isOP ? BOARDS[num] : BOARDS[OPs[num]]]
+		board: isOP ? BOARDS[num] : BOARDS[OPs[num]]
 	};
 }
 exports.postInfo = postInfo;

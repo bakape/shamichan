@@ -185,11 +185,11 @@ exports.scan_client_caps = scan_client_caps;
 
 // Push message to all clients
 function push(msg){
-	async.each(_.values(STATE.clients), function(client){
+	for (let client of _.values(STATE.clients)) {
 		try {
 			client.send(msg);
 		}
 		catch(e){/* Client died, but we don't care */}
-	});
+	}
 }
 exports.push = push;

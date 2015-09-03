@@ -47,8 +47,9 @@ let Hidamari = exports.Hidamari = {
 			// Don't auto expand webm/PDF/MP3
 			|| ['.webm', '.pdf', '.mp3'].includes(img.ext)
 		)
-			return;
+			return this;
 		this.toggleImageExpansion(true, img);
+		return this;
 	},
 	toggleImageExpansion(expand, img, manual) {
 		const fit = options.get('inlinefit');

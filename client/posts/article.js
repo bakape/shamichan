@@ -17,7 +17,7 @@ var Article = module.exports = Backbone.View.extend({
 			.children('blockquote, .omit, form, article[id]:last')
 			.last()
 			.after(this.$el);
-		this.autoExpandImage();
+		this.autoExpandImage().fun();
 	},
 	renderEditing(model, editing) {
 		this.$el.toggleClass('editing', !!editing);

@@ -76,6 +76,8 @@ this.hot = {
 		'Source code repository: <a href="https://github.com/bakape/doushio"'
 			+ ' target="_blank">github.com/bakape/meguca</a>'
 	],
+// Extra JS script to load on all clients. Set to a file path or null.
+	inject_js: null,
 /*
  Word replacament filter. {p: /foo/, r: 'bar'} Pattern must not contain spaces
  or newlines

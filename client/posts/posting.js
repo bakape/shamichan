@@ -878,7 +878,9 @@ var ComposerView = Backbone.View.extend({
 	// Extend with imager.js methods
 	renderImage: imager.Hidamari.renderImage,
 	// Overrides automatic image expansion, if any
-	autoExpandImage() {}
+	autoExpandImage() {
+		return this;
+	}
 });
 exports.ComposerView = ComposerView;
 

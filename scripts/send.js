@@ -4,25 +4,20 @@
 
 'use strict';
 
-let argv = require('minimist')(process.argv.slice(2)),
-	net = require('net'),
-	path = require('path');
+const argv = require('minimist')(process.argv.slice(2)),
+	port = require('../config').REDIS_PORT,
+	redis = require('redis').createClient(port);
 
-function parseArgs() {
-	if ('h' in argv || 'help' in argv)
-		return usage();
-	if (!argv._.length)
-		return usage();
-	let socket = net.createConnection('./server/.socket');
-	socket.once('connect', function() {
-		const msg = JSON.stringify(argv._);
-		if (socket.write(msg))
-			console.log('Sent: ', msg);
-		else
-			console.error('Error: Failed to send: ', msg);
-		process.exit(1);
-	})
-}
+if ('h' in argv || 'help' in argv || !argv._.length)
+	usage();
+
+const msg = JSON.stringify(argv._);
+redis.publish('push', msg, function (err) {
+	if (err)
+		return console.error('Error: Failed to send: ', msg);
+	console.log('Sent: ', msg);
+	process.exit();
+});
 
 function usage() {
 	process.stderr.write(
@@ -30,9 +25,8 @@ function usage() {
 Usage: node scripts/send.js <msg>
   -h --help Displays this message
   <msg> contents of the array to be sent in complience with the websocket API
-    Example: 0 39 'notification test'
+    Example: node scripts/send 0 39 'notification test'
 `
 	);
+	process.exit(1);
 }
-
-parseArgs();

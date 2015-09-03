@@ -112,7 +112,8 @@ bool mnemonizer::isIpv6(std::string ip){
     std::stringstream ipStream(ip);
     std::string part;
     int count =0;
-
+    bool canIpv4=true;
+    
     char *end;
     while(std::getline(ipStream,part,':')){
         if(part.empty()){
@@ -123,6 +124,16 @@ bool mnemonizer::isIpv6(std::string ip){
         int val = strtol(part.c_str(),&end,16);
         if(*end!= '\0' || val>0xFFFF)
             return false;
+	
+	//Check for special case (::ffff:{Ipv4}) example ::ffff:192.168.1.100
+	if(canIpv4){
+		if(val==0xFFFF &&(gap || count==5)){
+			if(isIpv4(ipStream.str().substr(ipStream.tellg())))
+				return true;
+		}
+		if(val!=0 ||count==5)
+			canIpv4=false;
+	}
         count++;
     }
     if(!gap && count!=8)
