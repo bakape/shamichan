@@ -6,7 +6,7 @@ const main = require('main'),
 	input = require('./input'),
 	panels = require('./panels'),
 	util = require('./util'),
-	{$, _, Backbobe, common, lang, modals} = main,
+	{$, _, Backbone, common, lang, modals} = main,
 	{parseHTML} = common;
 
 const childViews = {
