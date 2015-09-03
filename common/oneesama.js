@@ -2,18 +2,13 @@
  Rendering singleton both server and client-side
  */
 
-let _ = require('underscore'),
+const _ = require('underscore'),
 	imports = require('./imports'),
 	index = require('./index'),
-	util = require('./util');
-
-const config = imports.config,
-	escape = util.escape_html,
-	flatten = util.flatten,
-	join = util.join,
-	pad = util.pad,
-	parseHTML = util.parseHTML,
-	safe = util.safe;
+	util = require('./util'),
+	{config} = imports,
+	{flatten, join, pad, parseHTML, safe} = util,
+	escape = util.escape_html;
 
 const break_re = new RegExp("(\\S{" + index.WORD_LENGTH_LIMIT + "})");
 
@@ -148,6 +143,8 @@ class OneeSama {
 		];
 		if (data.mod)
 			tale.body.unshift(safe(this.modInfo(data.mod)));
+		if (data.banned)
+			tale.body.push(safe(this.banned()));
 		const {image} = data;
 		if (image) {
 			// Larger thumbnails for thread images
@@ -189,7 +186,7 @@ class OneeSama {
 			html += '</a>';
 		html += '</b>';
 		if (data.mnemonic)
-			html += ` <a class="mod addr">${data.mnemonic}</a>`;
+			html += ' ' + this.mnemonic(data.mnemonic);
 		return html;
 	}
 	resolveName(data) {
@@ -257,6 +254,9 @@ class OneeSama {
 
 		return this.lang.ago(time, this.lang.unit_year);
 	}
+	mnemonic(mnem) {
+		return `<b class="mod addr">${mnem}</b>`;
+	}
 	postNavigation(post) {
 		const num = post.num,
 			op = post.op;
@@ -294,6 +294,9 @@ class OneeSama {
 		}
 		html += '</b>';
 		return html;
+	}
+	banned() {
+		return `<b class="admin banMessage">${this.lang.mod.banMessage}</b>`;
 	}
 	// Render full blockqoute contents
 	body(body) {

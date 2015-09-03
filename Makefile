@@ -1,7 +1,7 @@
 all: bootstrap client
 	$(MAKE) -C imager
 	$(MAKE) -C server/tripcode
-	$(MAKE) -C admin/mnemonic
+	$(MAKE) -C server/mnemonic
 
 client: FORCE
 	./node_modules/gulp/bin/gulp.js -- client vendor mod css lang legacy
@@ -20,7 +20,7 @@ upgrade: clean
 clean:
 	$(MAKE) -C imager -w clean
 	$(MAKE) -C server/tripcode -w clean
-	$(MAKE) -C admin/mnemonic -w clean
+	$(MAKE) -C server/mnemonic -w clean
 
 client_clean:
 	rm -rf -- state www/js/{client,vendor,legacy}.js* www/css/{*.css,maps}\

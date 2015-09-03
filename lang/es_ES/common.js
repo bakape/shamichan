@@ -60,10 +60,22 @@ var lang = {
 			'Send notifaction message to all clients'
 		],
 		renderPanel: ['Panel', 'Toggle administrator panel display'],
+		ban: ['Ban', 'Ban poster(s) for the selected post(s)'],
 		modLog: ['Log', 'Show moderation log'],
+		displayBan: [
+			'Display',
+			'Append a public \'USER WAS BANNED FOR THIS POST\' message'
+		],
+		banMessage: 'USER WAS BANNED FOR THIS POST',
+		unban: 'Unban',
 		placeholders: {
-			msg: 'Message'
+			msg: 'Message',
+			days: 'd',
+			hours: 'h',
+			minutes: 'min',
+			reason: 'Reason'
 		},
+		needReason: 'Must specify reason',
 
 		// Correspond to websocket calls in common/index.js
 		7: 'Image spoilered',
@@ -71,10 +83,15 @@ var lang = {
 		9: 'Post deleted',
 		10: 'Thread locked',
 		11: 'Thread unlocked',
+		12: 'User banned',
+		53: 'User unbanned',
 
 		// Formatting function for moderation messages
 		formatLog: function (act) {
-			return lang.mod[act.kind] + ' by ' + act.ident;
+			var msg = lang.mod[act.kind] + ' by ' + act.ident;
+			if (act.reason)
+				msg += ' for ' + act.reason;
+			return msg;
 		}
 	},
 

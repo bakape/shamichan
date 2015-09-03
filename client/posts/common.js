@@ -83,6 +83,10 @@ module.exports = {
 	renderModerationInfo(info) {
 		this.$el.children('.modLog').remove();
 		this.$el.children('blockquote').before(oneeSama.modInfo(info));
+	},
+	renderBan() {
+		this.$el.children('.banMessage').remove();
+		this.$el.children('blockquote').after(oneeSama.banned())
 	}
 };
 

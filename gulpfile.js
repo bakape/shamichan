@@ -1,6 +1,6 @@
 'use strict';
 
-let babelify = require('babelify'),
+const babelify = require('babelify'),
 	browserify = require('browserify'),
 	buffer = require('vinyl-buffer'),
 	config = require('./config'),
@@ -64,7 +64,7 @@ function buildClient() {
 
 // Main client bundler
 {
-	let b = buildClient()
+	const b = buildClient()
 		// Transpile ES6 functionality that is not yet supported by the latest
 		// stable Chrome and FF to ES5. Ancient and hipster browsers can
 		// suck my dick.
@@ -95,7 +95,7 @@ function buildClient() {
 
 // Less performant client for older browser compatibility
 {
-	let b = buildClient().transform(babelify.configure({
+	const b = buildClient().transform(babelify.configure({
 		optional: ['es6.spec.blockScoping']
 	}));
 
@@ -104,7 +104,7 @@ function buildClient() {
 
 // Libraries
 {
-	let b = browserify({
+	const b = browserify({
 		require: [
 			'jquery',
 			'js-cookie',
@@ -124,10 +124,8 @@ function buildClient() {
 
 // Language bundles
 gulp.task('lang', function() {
-	const langs = config.LANGS;
-	for (let i = 0, l = langs.length; i < l; i++) {
-		const lang = langs[i];
-		let b = browserify({debug: true})
+	for (let lang of config.LANGS) {
+		const b = browserify({debug: true})
 			.require(`./lang/${lang}/common`, {expose: 'lang'});
 		bundler(lang, b, './www/js/lang');
 	}
@@ -135,12 +133,12 @@ gulp.task('lang', function() {
 
 // Moderation
 {
-	let b = browserify({
+	const b = browserify({
 		debug: true,
 		bundleExternal: false,
 		external: ['main']
 	})
-		.require('./admin/client', {expose: 'mod'})
+		.require('./client/mod', {expose: 'mod'})
 		.transform(babelify.configure({
 			optional: ['es6.spec.blockScoping']
 		}));

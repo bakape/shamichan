@@ -11,11 +11,14 @@ const DEF = {
 	UPDATE_POST: 3,
 	FINISH_POST: 4,
 	INSERT_IMAGE: 6,
+
+	// Pub/sub moderation
 	SPOILER_IMAGES: 7,
 	DELETE_IMAGES: 8,
 	DELETE_POSTS: 9,
 	LOCK_THREAD: 10,
 	UNLOCK_THREAD: 11,
+	BAN: 12,
 	REPORT_POST: 13,
 
 	// Miscellaneous
@@ -33,6 +36,8 @@ const DEF = {
 
 	// Non-pub/sub Moderation
 	MOD_LOG: 51,
+	ADMIN_PANEL: 52,
+	UNBAN: 53,
 
 	// Various constants
 	INPUT_ROOM: 20,

@@ -1,15 +1,16 @@
 /*
 Self-reloading and rebuilding development server
  */
+'use strict';
 
-var _ = require('underscore'),
+const _ = require('underscore'),
 	config = require('./config'),
 	deps = require('./deps'),
 	child_process = require('child_process'),
 	watch = require('node-watch');
 
-var server;
-var start_server = _.debounce(function() {
+let server;
+const start_server = _.debounce(function() {
 	if (server)
 		server.kill('SIGTERM');
 	server = child_process.spawn('node', ['index']);
@@ -27,7 +28,7 @@ function build(args, cb) {
 	cp.on('exit', cb);
 }
 
-var buildAll = build.bind(null, [
+const buildAll = build.bind(null, [
 	'client',
 	'vendor',
 	'css',
@@ -35,11 +36,11 @@ var buildAll = build.bind(null, [
 	'lang',
 	'legacy'
 ]);
-var reload_state = _.debounce(function() {
+const reload_state = _.debounce(function() {
 	if (server)
 		server.kill('SIGHUP');
 }, 2000);
-var fullRestart = _.debounce(function() {
+const fullRestart = _.debounce(function() {
 	start_server();
 	buildAll(start_server);
 }, 5000);
@@ -48,6 +49,7 @@ const serverExclude = new RegExp(
 	String.raw`\.pid$|\.socket|hot.js$|`
 		+ config.MEDIA_DIRS.tmp.replace('/', '\\/')
 );
+watch(deps.state, reload_state);
 watch(deps.server, function(file) {
 	/*
 	 PID file is generated each start and `hot.js` should only triigger a
@@ -56,20 +58,16 @@ watch(deps.server, function(file) {
 	if (!serverExclude.test(file))
 		start_server();
 });
-watch('admin', function () {
-	build(['mod'], start_server);
-});
 watch('common', fullRestart);
 watch('lang', fullRestart);
 watch('gulpfile.js', function() {
 	buildAll(reload_state);
 });
-['client', 'css'].forEach(function(task) {
+['mod', 'client', 'css'].forEach(function(task) {
 	watch(deps[task], _.debounce(function() {
 		build([task], reload_state);
 	}), 5000);
 });
-watch(deps.state, reload_state);
 
 // Initial start
 buildAll(start_server);

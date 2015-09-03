@@ -4,7 +4,8 @@ Manages client read/write permissions
 
 const common = require('../common/index'),
     config = require('../config'),
-    db = require('../db');
+    db = require('../db'),
+	state = require('./state');
 
 function can_access_board(ident, board) {
 	if (board == config.STAFF_BOARD && !common.checkAuth('janitor', ident))
@@ -22,7 +23,10 @@ function can_access_thread(ident, op) {
 exports.can_access_thread = can_access_thread;
 
 function lookup_ident (ip) {
-	return {ip};
+	const ident = {ip};
+	if (ip in state.dbCache.bans)
+		ident.ban = true;
+	return ident;
 }
 exports.lookup_ident = lookup_ident;
 

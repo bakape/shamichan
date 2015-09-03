@@ -29,8 +29,8 @@ var config = module.exports = {
  If serving static assets from a different subdomain, the links in figcaption
  will not download the image with the original file name. This is due to Cross
  Origin Secutity Policy. As a workaround, you can define a secondary static
- resource URL, that will be only used for downloading messages from these links.
- That way you can still have the benifits of serving statics from a separate
+ resource URL, that will be only used for downloading images from these links.
+ That way you can still have the benefits of serving statics from a separate
  domain and named image downloads. If left as null, defaults to MEDIA_URL.
  */
 	SECONDARY_MEDIA_URL: null,

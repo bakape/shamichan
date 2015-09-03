@@ -60,10 +60,22 @@ var lang = {
 			'Envia uma mensagem de notificação para todos os clientes'
 		],
 		renderPanel: ['Painel', 'Ativa a exibição do painel de administração'],
+		ban: ['Ban', 'Ban poster(s) for the selected post(s)'],
 		modLog: ['Reg', 'Mostra o registro de moderação'],
+		displayBan: [
+			'Display',
+			'Append a public \'USER WAS BANNED FOR THIS POST\' message'
+		],
+		banMessage: 'USER WAS BANNED FOR THIS POST',
+		unban: 'Unban',
 		placeholders: {
-			msg: 'Mensagem'
+			msg: 'Mensagem',
+			days: 'd',
+			hours: 'h',
+			minutes: 'min',
+			reason: 'Reason'
 		},
+		needReason: 'Must specify reason',
 
 		// Correspond to websocket calls in common/index.js
 		7: 'Spoiler adicionado à imagem',
@@ -71,10 +83,15 @@ var lang = {
 		9: 'Postagem deletada',
 		10: 'Tópico trancado',
 		11: 'Tópico destrancado',
+		12: 'User banned',
+		53: 'User unbanned',
 
 		// Formatting function for moderation messages
 		formatLog: function (act) {
-			return lang.mod[act.kind] + ' por ' + act.ident;
+			var msg = lang.mod[act.kind] + ' por ' + act.ident;
+			if (act.reason)
+				msg += ' for ' + act.reason;
+			return msg;
 		}
 	},
 
