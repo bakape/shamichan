@@ -88,7 +88,7 @@ dispatcher[common.BAN] = function (msg, client) {
 
 dispatcher[common.UNBAN] = function (msg, client) {
 	if (!common.checkAuth('admin', client.ident)
-		|| check('string', msg[0])
+		|| !check('string', msg[0])
 	)
 		return false;
 	client.db.unban(msg[0], err =>

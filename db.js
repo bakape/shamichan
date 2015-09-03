@@ -1117,7 +1117,7 @@ class Yakusoku extends events.EventEmitter {
 					return cb();
 				const m = redis.multi();
 				m.zrem('bans', match);
-				m.publish('chache', '[3]');
+				m.publish('cache', '[3]');
 				m.exec(next);
 			}
 		], cb);

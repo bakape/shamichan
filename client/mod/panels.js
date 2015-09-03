@@ -67,7 +67,7 @@ const AdminPanelView = PanelView.extend({
 	},
 	unban(event) {
 		const el = event.target;
-		main.send([common.UNBAN, el.getAttribute('data-mnemonic')]);
+		main.send([common.UNBAN, el.getAttribute('data-id')]);
 		el.parentElement.parentElement.remove();
 
 		// Check if any bans left
