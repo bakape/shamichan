@@ -40,22 +40,17 @@ OK.send = function (msg) {
 
 OK.on_update = function (op, kind, msg) {
 	// Special cases for operations that overwrite a client's state
-	if (this.post && kind == common.DELETE_POSTS) {
-		var nums = JSON.parse(msg)[0].slice(2);
-		if (nums.indexOf(this.post.num) >= 0)
-			this.post = null;
-	}
-	else if (this.post && kind == common.DELETE_THREAD) {
-		if (this.post.num == op || this.post.op == op)
+	const {post} = this;
+	if (post && kind == common.DELETE_POSTS) {
+		const num = JSON.parse(msg)[0].slice(2)[0];
+		if (num === post.num || num === post.op)
 			this.post = null;
 	}
 
-	if (this.blackhole && HOLED_UPDATES.indexOf(kind) >= 0)
+	if (this.blackhole && kind === common.DELETE_POSTS)
 		return;
 	this.socket.write(msg);
 };
-
-const HOLED_UPDATES = [common.DELETE_POSTS, common.DELETE_THREAD];
 
 OK.on_thread_sink = function (thread, err) {
 	/* TODO */
@@ -160,18 +155,16 @@ OK.finish_post = function (callback) {
 };
 
 function scan_client_caps () {
-	let clients = STATE.clientsByIP;
-	for (let i = 0, l = clients.length; i < l; i++) {
-		let ip = clients[i],
-			ident = caps.lookup_ident(ip);
-		for (let o = 0, l = clients[ip].length; o < l; o++) {
-			let okyaku = clients[ip][i];
+	const clients = STATE.clientsByIP;
+	for (let ip in clients) {
+		const ident = caps.lookup_ident(ip);
+		for (let okyaku of clients[ip]) {
 			if (!okyaku.id || !okyaku.board)
 				return;
-			if (ident.timeout) {
-				okyaku.blackhole = true;
-				return;
-			}
+
+			// Ignore any client's residual messages
+			if (ident.ban)
+				return okyaku.blackhole = true;
 			if (!caps.can_access_board(ident, okyaku.board)) {
 				try {
 					okyaku.socket.close();
