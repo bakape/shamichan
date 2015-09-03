@@ -44,9 +44,9 @@ function on_message(e) {
 	});
 }
 
-let $sync = $('#sync');
+const sync = document.getElementById('sync');
 function sync_status(msg) {
-	$sync.text(msg);
+	sync.textContent = msg;
 }
 
 connSM.act('load + start -> conn', function () {
