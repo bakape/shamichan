@@ -1035,8 +1035,7 @@ class Yakusoku extends events.EventEmitter {
 			time,
 			num: opts.num,
 			op: opts.op,
-			// Abstract the email as to not reveal it to all staff
-			ident: config.staff[this.ident.auth][this.ident.email],
+			ident: this.hideEmail(),
 			kind: opts.kind
 		};
 
@@ -1052,6 +1051,10 @@ class Yakusoku extends events.EventEmitter {
 			}
 		});
 	}
+	// Abstract the email as to not reveal it to all staff
+	hideEmail() {
+		return config.staff[this.ident.auth][this.ident.email];
+	}
 	// Bans are somewhat more complicated and do not fit into the common
 	// modHandler() pathway. Plenty of duplication here, because of that.
 	ban(msg, cb) {
@@ -1066,7 +1069,7 @@ class Yakusoku extends events.EventEmitter {
 				const info = {
 					num, op, till, reason,
 					time: now,
-					ident: config.staff[this.ident.auth][this.ident.email],
+					ident: this.hideEmail(),
 					kind: common.BAN
 				};
 
@@ -1118,6 +1121,14 @@ class Yakusoku extends events.EventEmitter {
 				const m = redis.multi();
 				m.zrem('bans', match);
 				m.publish('cache', '[3]');
+
+				const time = Date.now();
+				m.zadd('modLog', time, JSON.stringify({
+					time,
+					ident: this.hideEmail(),
+					kind: common.UNBAN
+				}));
+
 				m.exec(next);
 			}
 		], cb);

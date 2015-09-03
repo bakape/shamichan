@@ -39,7 +39,8 @@ const ModLogView = PanelView.extend({
 	kind: common.MOD_LOG,
 	renderContents(info) {
 		return table(info, act => [
-			oneeSama.postRef(act.num, act.op).safe,
+			// Unbans do not have a target post
+			act.num ? oneeSama.postRef(act.num, act.op).safe : '',
 			lang.mod.formatLog(act),
 			oneeSama.time(act.time)
 		]);
