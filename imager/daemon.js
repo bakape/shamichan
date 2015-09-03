@@ -1,3 +1,7 @@
+/*
+ Image and video upload processing
+*/
+
 const async = require('async'),
 	common = require('../common/index'),
 	config = require('../config'),
@@ -12,7 +16,7 @@ const async = require('async'),
 	formidable = require('formidable'),
 	fs = require('fs'),
 	jobs = require('./jobs'),
-	lang = require('../lang/'),
+	lang = require('../lang'),
 	path = require('path'),
 	urlParse = require('url').parse,
 	util = require('util'),
@@ -72,11 +76,8 @@ class ImageUpload {
 
 		// Set response language. Checks if client language is set and exixts on
 		// the server.
-		let ln = config.DEFAULT_LANG;
-		const cookieLanguage = cookie.parse(req.headers.cookie).lang;
-		if (cookieLanguage && cookieLanguage in config.LANGS)
-			ln = cookieLanguage;
-		this.lang = lang[ln];
+		this.lang = lang[etc.resolveConfig(config.LANGS,
+			cookie.parse(req.headers.cookie).lang, config.DEFAULT_LANG)].im;
 
 		this.client_id = parseInt(query.id, 10);
 		if (!this.client_id || this.client_id < 1) {

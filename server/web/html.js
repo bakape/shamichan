@@ -2,11 +2,12 @@
  Server the HTML part of pages
  */
 
-let _ = require('underscore'),
+const _ = require('underscore'),
 	caps = require('../caps'),
 	common = require('../../common'),
 	config = require('../../config'),
 	db = require('../../db'),
+	etc = require('../../util/etc'),
 	express = require('express'),
 	hooks = require('../../util/hooks'),
 	Render = require('../render'),
@@ -14,9 +15,8 @@ let _ = require('underscore'),
 	util = require('./util'),
 	winston = require('winston');
 
-let router = module.exports = express.Router(),
+const router = module.exports = express.Router(),
 	RES = state.resources;
-
 const vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
 	'X-Frame-Options': 'sameorigin',
@@ -240,16 +240,17 @@ function buildEtag(req, res, ctr, extra) {
 }
 
 function parseCookies(req, ctr) {
-	const cookies = req.cookies,
-		lang = req.lang = ~config.LANGS.indexOf(cookies.lang)
-			? cookies.lang : config.DEFAULT_LANG;
+	const {cookies} = req,
+		lang = req.lang =  etc.resolveConfig(config.LANGS, cookies.lang,
+			config.DEFAULT_LANG);
 
 	let etag = `W/${ctr}-${RES['indexHash-' + lang]}-${lang}`;
 
 	// Attach thumbnail mode to etag
-	const thumb = cookies.thumb,
-		styles = common.thumbStyles;
-	etag += '-' + (~styles.indexOf(thumb) ? thumb : styles[0]);
+	const styles = common.thumbStyles,
+		style = etc.resolveConfig(styles, cookies.thumb, styles[0]);
+	req.thumbStyle = style;
+	etag += '-' + style;
 
 	const etags = ['spoil', 'agif', 'rtime', 'linkify'];
 	for (let tag of etags) {

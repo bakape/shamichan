@@ -1,4 +1,9 @@
-var child_process = require('child_process'),
+/*
+Various utility functions
+ */
+
+const config = require('../config'),
+	child_process = require('child_process'),
     fs = require('fs'),
     util = require('util');
 
@@ -91,3 +96,12 @@ function which(name, callback) {
 	});
 }
 exports.which = which;
+
+// Veryfies a client's setting is compatible with the server's. Otherwise
+// returns default.
+function resolveConfig(server, client, def) {
+	if (~server.indexOf(client))
+		return client;
+	return def;
+}
+exports.resolveConfig = resolveConfig;

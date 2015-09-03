@@ -2,18 +2,19 @@
  Renders the server-side portion of the HTML
  */
 
-let _ = require('underscore'),
+const _ = require('underscore'),
 	caps = require('./caps'),
 	common = require('../common/index'),
 	config = require('../config'),
 	db = require('../db'),
+	etc = require('../util/etc'),
 	lang = require('../lang/'),
 	STATE = require('./state');
 
-let RES = STATE.resources,
+const RES = STATE.resources,
 	actionLink = common.action_link_html,
 	escape = common.escape_html,
-	parseHTML = common.parseHTML;
+	{parseHTML} = common;
 
 class Render {
 	constructor(yaku, req, resp, opts) {
@@ -48,14 +49,15 @@ class Render {
 	initOneeSama() {
 		const ident = this.req.ident,
 			cookies = this.req.cookies,
-			mine = this.parseIntCookie('mine');
-		let links = this.links = {};
-		let oneeSama = new common.OneeSama({
+			mine = this.parseIntCookie('mine'),
+			links = this.links = {};
+		const oneeSama = new common.OneeSama({
 			spoilToggle: cookies.spoil === 'true',
 			autoGif: cookies.agif === 'true',
 			eLinkify: cookies.linkify === 'true',
 			lang: lang[this.lang].common,
 			catalog: this.opts.catalog,
+			thumbStyle: this.req.thumbStyle,
 
 			// Post link handler
 			tamashii(num) {
@@ -71,8 +73,6 @@ class Render {
 			}
 		});
 
-		if (common.thumbStyles.indexOf(cookies.thumb) >= 0)
-			oneeSama.thumbStyle = cookies.thumb;
 		let lastN = cookies.lastn && parseInt(cookies.lastn, 10);
 		if (!lastN || !common.reasonable_last_n(lastN))
 			lastN = STATE.hot.THREAD_LAST_N;
