@@ -205,14 +205,17 @@ function expand_templates(res) {
 }
 
 function indexTemplate(ln, vars, template, ex) {
-	let languagePack = lang[ln];
+	const languagePack = lang[ln];
 	vars = _.clone(vars);
 	vars.lang = ln;
+
 	// Inject the localised strings
 	_.extend(vars, languagePack.tmpl, languagePack.common);
+	vars.notSynced = languagePack.common.sync.notSynced;
 	vars.schedule_modal = build_schedule(vars.SCHEDULE,
 		languagePack.show_seconds
 	);
+
 	// Build localised options panel
 	vars.options_panel = buildOptions(languagePack.opts);
 

@@ -36,6 +36,16 @@ var lang = {
 	unit_month: 'mês',
 	unit_year: 'ano',
 
+	// Websocket syncronisation status
+	sync: {
+		notSynced: 'Not synched',
+		connecting: 'Connecting',
+		syncing: 'Syncing',
+		synced: 'Synced',
+		dropped: 'Dropped',
+		reconnecting: 'Reconnecting'
+	},
+
 	// Moderation language map
 	mod: {
 		title: ['Title', 'Display staff title on new posts'],

@@ -2,8 +2,9 @@
  * Websocket controller and connection notifier
  */
 
-let main = require('./main'),
-	{$, _, common, config, connSM, state, SockJS} = main;
+const main = require('./main'),
+	{$, _, common, config, connSM, state, SockJS} = main,
+	lang = main.lang.sync;
 
 let socket, attempts, attemptTimer;
 
@@ -50,7 +51,7 @@ function sync_status(msg) {
 }
 
 connSM.act('load + start -> conn', function () {
-	sync_status('Connecting');
+	sync_status(lang.connecting);
 	attempts = 0;
 	connect();
 });
@@ -91,7 +92,7 @@ function new_socket() {
 }
 
 connSM.act('conn, reconn + open -> syncing', function () {
-	sync_status('Syncing');
+	sync_status(lang.syncing);
 	const connID = common.random_id();
 	var page = state.page;
 	page.set('connID', connID);
@@ -106,7 +107,7 @@ connSM.act('conn, reconn + open -> syncing', function () {
 });
 
 connSM.act('syncing + sync -> synced', function () {
-	sync_status('Synced');
+	sync_status(lang.synced);
 	attemptTimer = setTimeout(function () {
 		attemptTimer = 0;
 		reset_attempts();
@@ -132,7 +133,7 @@ connSM.act('* + close -> dropped', function (e) {
 		clearTimeout(attemptTimer);
 		attemptTimer = 0;
 	}
-	sync_status('Dropped');
+	sync_status(lang.dropped);
 	attempts++;
 	var n = Math.min(Math.floor(attempts/2), 12),
 		wait = 500 * Math.pow(1.5, n);
@@ -145,7 +146,7 @@ connSM.act('dropped + retry -> reconn', function () {
 	/* Don't show this immediately so we don't thrash on network loss */
 	setTimeout(function () {
 		if (connSM.state == 'reconn')
-			sync_status('Reconnecting');
+			sync_status(lang.reconnecting);
 	}, 100);
 });
 
