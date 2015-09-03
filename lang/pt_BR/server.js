@@ -2,8 +2,8 @@
  * Mapeamento de opções configuráveis de linguagem para o servidor somente
  */
 var lang = {
-	catalog_omit: 'Replies/Images',
-	show_seconds: 'Click to show seconds',
+	catalog_omit: 'Respostas/Imagens',
+	show_seconds: 'Clique para mostrar os segundos',
 
 	// Respostas do imager
 	im : {
@@ -65,7 +65,7 @@ var lang = {
 		sharp: 'sharp', // there's no good translation to this in Portuguese
 		hide: 'esconder',
 		// Modos de ajustar as imagens
-		none: 'none',
+		none: 'nenhum',
 		full: 'tamanho completo',
 		width: 'ajustar à largura',
 		height: 'ajustar à altura',
@@ -152,7 +152,7 @@ var lang = {
 			'Loli dançando no fundo'
 		],
 		illyaMuteToggle: [
-			'Mute Illya',
+			'Mutar a Illya',
 			'Loli dançando sem som'
 		],
 		horizontalPosting: [
