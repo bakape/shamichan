@@ -706,24 +706,9 @@ class Yakusoku extends events.EventEmitter {
 	}
 	finish_off(m, key, body) {
 		m.hset(key, 'body', body);
-		m.del(key.replace('dead', 'thread') + ':body');
+		m.del(key + ':body');
 		m.hdel(key, 'state');
 		m.srem('liveposts', key);
-	}
-	finish_quietly(key, callback) {
-		async.waterfall([
-			next => redis.hexists(key, 'body', next),
-			(exists, next) => {
-				if (exists)
-					return callback();
-				redis.get(key.replace('dead', 'thread') + ':body', next);
-			},
-			(body, next) => {
-				const m = redis.multi();
-				this.finish_off(m, key, body);
-				m.exec(next);
-			}
-		], callback);
 	}
 	finish_all(callback) {
 		redis.smembers('liveposts', (err, keys) => {
