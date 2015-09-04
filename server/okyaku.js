@@ -152,17 +152,17 @@ function scan_client_caps() {
 	const clients = STATE.clientsByIP;
 	for (let ip in clients) {
 		const ident = caps.lookup_ident(ip);
+		if (!ident.ban)
+			continue;
 
 		// The length of the array changes, so make a shallow copy
 		for (let okyaku of clients[ip].slice()) {
-			okyaku.ident = ident;
-			if (ident.ban) {
-				try {
-					okyaku.socket.close();
-				}
-				catch (e) {
-					// Already closed. Whatever.
-				}
+			okyaku.ident.ban = true;
+			try {
+				okyaku.socket.close();
+			}
+			catch (e) {
+				// Already closed. Whatever.
 			}
 		}
 	}
