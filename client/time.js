@@ -27,49 +27,53 @@ main.reply('time:render', batcTimeRender);
 options.on('change:relativeTime', batcTimeRender);
 
 /* syncwatch */
-function timer_from_el($el) {
+function timer_from_el(el) {
 	if (!serverTimeOffset)
 		return;
-	$el.addClass('timerTicking');
-	const start= $el.attr('start'),
-		end = $el.attr('end'),
-		maxh = common.pad($el.attr('hour')),
-		maxm = common.pad($el.attr('min')),
-		maxs = common.pad($el.attr('sec'));
+	el.classList.add('timerTicking');
+	const start = el.getAttribute('start'),
+		end = el.getAttribute('end'),
+		maxh = common.pad(el.getAttribute('hour')),
+		maxm = common.pad(el.getAttribute('min')),
+		maxs = common.pad(el.getAttribute('sec'));
 
 	(function moumouikkai(){
 		// Prevent memory leak
-		if (!$el.length)
+		if (!document.body.contains(el))
 			return;
 		const now = common.serverTime();
 		if (now > end)
-			return $el.text('Finished');
+			return el.textContent = 'Finished';
+
 		// If the start time is in the future
 		if (start > now) {
-			var countdown = Math.round((start - now) / 1000);
+			const countdown = Math.round((start - now) / 1000);
 			if(countdown == 10 || countdown == 5)
 				main.request('time:syncwatch', countdown);
-			$el.text('Countdown: ' + countdown);
+			el.textContent = 'Countdown: ' + countdown;
 			return setTimeout(moumouikkai, 1000);
 		}
-		var diff = now - start,
-			hour = Math.floor(diff / 1000 /60 / 60);
+
+		let diff = now - start;
+		const hour = Math.floor(diff / 1000 /60 / 60);
 		diff -= hour * 1000 * 60 * 60;
-		var min = Math.floor( diff / 1000 / 60);
+		const min = Math.floor( diff / 1000 / 60);
 		diff -= min * 1000 * 60;
-		var sec = Math.floor(diff / 1000);
-		$el.text("Now at: " + common.pad(hour) + ":" + common.pad(min) + ":"
-			+ common.pad(sec) + " / " + maxh + ":" + maxm + ":" + maxs);
+		const sec = Math.floor(diff / 1000);
+		el.textContent = "Now at: " + common.pad(hour) + ":" + common.pad(min)
+			+ ":" + common.pad(sec) + " / " + maxh + ":" + maxm + ":" + maxs;
 		return setTimeout(moumouikkai, 1000);
 	})();
 }
 
 function mouikkai() {
-	setTimeout(function() {
-		main.$threads.find('syncwatch').not('.timerTicking').each(function() {
-			timer_from_el($(this));
-		});
-		mouikkai();
+	setInterval(function() {
+		const els = document.getElementsByTagName('syncwatch');
+		for (let i = 0; i < els.length; i++) {
+			if (els[i].classList.contains('.timerTicking'))
+				continue;
+			timer_from_el(els[i]);
+		}
 	}, 1000);
 }
 
