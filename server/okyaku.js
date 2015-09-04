@@ -46,9 +46,6 @@ OK.on_update = function (op, kind, msg) {
 		if (num === post.num || num === post.op)
 			this.post = null;
 	}
-
-	if (this.blackhole && kind === common.DELETE_POSTS)
-		return;
 	this.socket.write(msg);
 };
 
@@ -57,9 +54,9 @@ OK.on_thread_sink = function (thread, err) {
 	winston.error(thread + ' sank: ' + err);
 };
 
-const WORMHOLES = [common.SYNCHRONIZE, common.FINISH_POST];
-
 OK.on_message = function (data) {
+	if (this.ident.ban)
+		return;
 	var msg;
 	try { msg = JSON.parse(data); }
 	catch (e) {}
@@ -72,13 +69,10 @@ OK.on_message = function (data) {
 	}
 	if (!this.synced && type != common.SYNCHRONIZE)
 		type = common.INVALID;
-	if (this.blackhole && WORMHOLES.indexOf(type) < 0)
-		return;
 	var func = dispatcher[type];
 	if (!func || !func(msg, this)) {
 		this.kotowaru(Muggle("Bad protocol",
-			new Error("Invalid message: " + JSON.stringify(data)))
-		);
+			new Error("Invalid message: " + JSON.stringify(data))));
 	}
 };
 
@@ -154,22 +148,21 @@ OK.finish_post = function (callback) {
 	});
 };
 
-function scan_client_caps () {
+function scan_client_caps() {
 	const clients = STATE.clientsByIP;
 	for (let ip in clients) {
 		const ident = caps.lookup_ident(ip);
-		for (let okyaku of clients[ip]) {
-			if (!okyaku.id || !okyaku.board)
-				return;
 
-			// Ignore any client's residual messages
-			if (ident.ban)
-				return okyaku.blackhole = true;
-			if (!caps.can_access_board(ident, okyaku.board)) {
+		// The length of the array changes, so make a shallow copy
+		for (let okyaku of clients[ip].slice()) {
+			okyaku.ident = ident;
+			if (ident.ban) {
 				try {
 					okyaku.socket.close();
 				}
-				catch (e) { /* bleh */ }
+				catch (e) {
+					// Already closed. Whatever.
+				}
 			}
 		}
 	}
@@ -182,7 +175,9 @@ function push(msg){
 		try {
 			client.send(msg);
 		}
-		catch(e){/* Client died, but we don't care */}
+		catch(e){
+			// Client died, but we don't care
+		}
 	}
 }
 exports.push = push;
