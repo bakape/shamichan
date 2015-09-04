@@ -96,7 +96,7 @@ dispatcher[common.UNBAN] = function (msg, client) {
 	return true;
 };
 
-function cleanUP() {
+function cleanUp() {
 	const m = redis.multi(),
 		now = Date.now();
 	// Clean up moderation log entries older than one week
@@ -106,7 +106,8 @@ function cleanUP() {
 	m.exec(err =>
 		err && winston.error('Error cleaning up moderation keys:', err));
 }
-setInterval(cleanUP, 60000);
+setInterval(cleanUp, 60000);
+cleanUp();
 
 // Load the bans from redis
 function loadBans(cb) {
