@@ -1,5 +1,5 @@
 /*
- Server the HTML part of pages
+ Serve the HTML part of pages
  */
 
 const _ = require('underscore'),
@@ -10,7 +10,7 @@ const _ = require('underscore'),
 	etc = require('../../util/etc'),
 	express = require('express'),
 	hooks = require('../../util/hooks'),
-	Render = require('../render'),
+	render = require('../render'),
 	state = require('../state'),
 	util = require('./util'),
 	winston = require('winston');
@@ -38,35 +38,28 @@ router.get(/^\/(\w+)$/, function(req, res) {
 router.get(/^\/(\w+)\/(catalog)?$/,
 	util.boardAccess,
 	function(req, res, next) {
-		const board = req.board;
-		let yaku = res.yaku = new db.Yakusoku(board, req.ident);
-		const catalog = !!req.params[1];
+		const yaku = res.yaku = new db.Yakusoku(req.board, req.ident),
+			catalog = !!req.params[1];
 		yaku.get_tag(catalog ? -2 : -1);
 		yaku.once('begin', function (thread_count, post_count) {
 			// More efficient to confirm we actually need to retrieve and render
-			// the page before fully creating the Reader() -> Render() ->
+			// the page before fully creating the Reader() -> ../render ->
 			// response pipeline
 			if (!buildEtag(req, res, post_count))
 				return yaku.disconnect();
 			res.opts = {
-				board,
 				catalog,
-				thread_count,
-				post_count
+				thread_count
 			};
 			next();
 		});
 	},
 	function(req, res, next) {
-		const opts = res.opts,
-			board = opts.board;
-		let yaku = res.yaku;
-		new Render(yaku, req, res, {
+		const {opts, yaku} = res;
+		new render[opts.catalog ? 'Catalog' : 'Board'](yaku, req, res, {
 			fullLinks: true,
-			board,
-			isThread: false,
-			live: true,
-			catalog: opts.catalog
+			board: req.board,
+			live: true
 		});
 		yaku.emit('top', page_nav(opts.thread_count, -1));
 		yaku.once('error', function(err) {
@@ -84,7 +77,7 @@ router.get(/^\/(\w+)\/(catalog)?$/,
 router.get(/^\/(\w+)\/page(\d+)$/,
 	util.boardAccess,
 	function(req, res, next) {
-		const board = req.board,
+		const {board} = req,
 			page = parseInt(req.params[1], 10);
 		let yaku = new db.Yakusoku(board, req.ident);
 		yaku.get_tag(page);
@@ -99,7 +92,6 @@ router.get(/^\/(\w+)\/page(\d+)$/,
 				return yaku.disconnect();
 			res.yaku = yaku;
 			res.opts = {
-				board,
 				page,
 				threadCount
 			};
@@ -107,19 +99,13 @@ router.get(/^\/(\w+)\/page(\d+)$/,
 		});
 	},
 	function(req, res, next) {
-		const opts = res.opts,
-			board = opts.board,
-			page = opts.page;
-		let yaku = res.yaku;
-
-		new Render(yaku, req, res, {
+		const {opts, yaku} = res,
+			{page, threadCount} = opts;
+		new render.Board(yaku, req, res, {
 			fullLinks: true,
-			board,
-			isThread: false
+			board: req.board
 		});
-		yaku.emit('top',
-			page_nav(opts.threadCount, page)
-		);
+		yaku.emit('top', page_nav(threadCount, page));
 		yaku.once('end', function() {
 			yaku.emit('bottom');
 			next();
@@ -136,9 +122,9 @@ router.get(/^\/(\w+)\/page(\d+)$/,
 router.get(/^\/(\w+)\/(\d+)/,
 	util.boardAccess,
 	function(req, res, next) {
-		const board = req.board,
+		const {board} = req,
 			num = parseInt(req.params[1], 10),
-			ident = req.ident;
+			{ident} = req;
 		if (!num)
 			return res.sendStatus(404);
 		
@@ -154,7 +140,7 @@ router.get(/^\/(\w+)\/(\d+)/,
 		if (!caps.can_access_thread(ident, num))
 			return res.sendStatus(404);
 
-		let yaku = new db.Yakusoku(board, ident),
+		const yaku = new db.Yakusoku(board, ident),
 			reader = new db.Reader(ident),
 			opts = {};
 
@@ -188,14 +174,12 @@ router.get(/^\/(\w+)\/(\d+)/,
 		});
 	},
 	function(req, res, next) {
-		const opts = res.opts;
-		let reader = res.reader;
-		new Render(reader, req, res, {
+		const {opts, reader, yaku} = res;
+		new render.Thread(reader, req, res, {
 			fullPosts: true,
 			board: opts.board,
 			op: opts.op,
-			subject: opts.subject,
-			isThread: true
+			subject: opts.subject
 		});
 		reader.emit('top');
 		reader.once('end', function() {
@@ -203,7 +187,7 @@ router.get(/^\/(\w+)\/(\d+)/,
 			next();
 		});
 		reader.once('error', on_err);
-		res.yaku.once('error', on_err);
+		yaku.once('error', on_err);
 
 		function on_err(err) {
 			winston.error(`thread ${num}:`, err);
