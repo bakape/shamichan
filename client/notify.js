@@ -120,11 +120,11 @@ main.reply('repliedToMe', function (num) {
 	replies.write(num);
 });
 
-main.reply('time:syncwatch', function(time){
+main.reply('time:syncwatch', function () {
 	if (!options.get('notification') || !document.hidden)
 		return;
 	new Notification('Syncwatch Starting', {
-		body: 'syncwatch starting in : ' + time + ' seconds'
+		body: 'syncwatch starting in 10 seconds'
 	})
 		.onclick = () => window.focus();
 });

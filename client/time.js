@@ -13,7 +13,7 @@ main.dispatcher[common.GET_TIME] = function(msg){
 		return;
 	serverTimeOffset = msg[0] - Date.now();
 };
-main.reply('time:offset', serverTimeOffset);
+main.reply('time:offset', () => serverTimeOffset);
 
 let renderTimer;
 function batcTimeRender(source, rtime = options.get('relativeTime')) {
@@ -37,7 +37,7 @@ function timer_from_el(el) {
 		maxm = common.pad(el.getAttribute('min')),
 		maxs = common.pad(el.getAttribute('sec'));
 
-	(function moumouikkai(){
+	(function moumouikkai() {
 		// Prevent memory leak
 		if (!document.body.contains(el))
 			return;
@@ -48,8 +48,8 @@ function timer_from_el(el) {
 		// If the start time is in the future
 		if (start > now) {
 			const countdown = Math.round((start - now) / 1000);
-			if(countdown == 10 || countdown == 5)
-				main.request('time:syncwatch', countdown);
+			if(countdown === 10)
+				main.request('time:syncwatch');
 			el.textContent = 'Countdown: ' + countdown;
 			return setTimeout(moumouikkai, 1000);
 		}
@@ -70,7 +70,7 @@ function mouikkai() {
 	setInterval(function() {
 		const els = document.getElementsByTagName('syncwatch');
 		for (let i = 0; i < els.length; i++) {
-			if (els[i].classList.contains('.timerTicking'))
+			if (els[i].classList.contains('timerTicking'))
 				continue;
 			timer_from_el(els[i]);
 		}
