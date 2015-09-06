@@ -201,6 +201,8 @@ router.get(/^\/(\w+)\/(\d+)/,
 // cookie parameters, as those effect the HTML
 function buildEtag(req, res, ctr, extra) {
 	let etag = parseCookies(req, ctr);
+	if (detectMobile(req))
+		etag += '-mobile';
 	if (config.DEBUG) {
 		res.set(util.noCacheHeaders);
 		return true;
@@ -216,11 +218,27 @@ function buildEtag(req, res, ctr, extra) {
 		return false;
 	}
 
-	let headers = _.clone(vanillaHeaders);
+	const headers = _.clone(vanillaHeaders);
 	headers.ETag = etag;
 	res.set(headers);
 
 	return true;
+}
+
+// From http://detectmobilebrowsers.com/ @2015-09-17
+const mobilePattern = new RegExp(String.raw`(android|bb\d+|meego).+mobile
+	|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile
+	|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront
+	|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp
+	|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce
+	|xda|xiino|ip(?:hone|ad|od)`.replace(/[\n\t]/gm, ''), 'i');
+
+function detectMobile(req) {
+	const isMobile = mobilePattern.test(req.header('user-agent'));
+	if (isMobile)
+		req.isMobile = true;
+	console.log(isMobile);
+	return isMobile;
 }
 
 function parseCookies(req, ctr) {
