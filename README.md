@@ -46,7 +46,8 @@ recompile all dependancies
 * pngquant  2.3.0+ for PNG thumbnails
 
 ## Documentation
-* docs/api.md - JSON API
+* docs/api.md - JSON API spec
+* docs/dev_guide.md - Brief description on project operation for developers
 * docs/migration_*.js - Major semvser migration instructions
 * docs/doushio.initscript.example - Init script example
 * docs/nginx.config.example - ngingx configuration example
