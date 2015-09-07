@@ -103,8 +103,11 @@ function cleanUp() {
 	m.zremrangebyscore('modLog', 0, now - 1000*60*60*24*7);
 	// Same for expired bans
 	m.zremrangebyscore('bans', 0, now);
-	m.exec(err =>
-		err && winston.error('Error cleaning up moderation keys:', err));
+	m.exec(err => {
+		if (err)
+			winston.error('Error cleaning up moderation keys:', err);
+		loadBans();
+	});
 }
 setInterval(cleanUp, 60000);
 cleanUp();
@@ -124,4 +127,3 @@ function loadBans(cb) {
 		});
 }
 exports.loadBans = loadBans;
-loadBans();
