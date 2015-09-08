@@ -32,3 +32,5 @@ main.defer(function() {
 		})
 		.appendTo('#banner_center');
 });
+
+main.oneeSama.hook('spoilerTag', main.etc.touchable_spoiler_tag);

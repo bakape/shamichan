@@ -315,7 +315,7 @@ function buildOptions(lang) {
 	html += '</ul><ul class="option_tab_cont">';
 	for (let i = 0, l = tabs.length; i < l; i++) {
 		let tab = tabs[i];
-		let opts = _.filter(options, function(opt) {
+		let opts = _.filter(options(false), function(opt) {
 			/*
 			 * Pick the options for this specific tab. Don't know why we have
 			 * undefineds inside the array, but we do.

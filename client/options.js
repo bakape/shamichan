@@ -39,12 +39,8 @@ var OptionModel = Backbone.Model.extend({
 			return;
 
 		// No type = checkbox + default false
-		if (!opts.type) {
-			this.set({
-				type: 'checkbox',
-				default: false
-			});
-		}
+		if (!opts.type)
+			this.set('type', 'checkbox');
 
 		const val = this.getValue();
 		this.setValue(val);
@@ -220,9 +216,8 @@ var OptionsView = Backbone.View.extend({
 });
 
 // Create and option model for each object in the array
-const optCommon = require('../common/options');
-for (let i = 0, lim = optCommon.length; i < lim; i++) {
-	new OptionModel(optCommon[i]);
+for (let spec of require('../common/options')(main.isMobile)) {
+	new OptionModel(spec);
 }
 
 main.defer(function() {
