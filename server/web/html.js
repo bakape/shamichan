@@ -237,7 +237,6 @@ function detectMobile(req) {
 	const isMobile = mobilePattern.test(req.header('user-agent'));
 	if (isMobile)
 		req.isMobile = true;
-	console.log(isMobile);
 	return isMobile;
 }
 
