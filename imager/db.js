@@ -1,6 +1,6 @@
-let async = require('async'),
+const async = require('async'),
 	common = require('../common'),
-	compare = require('./compare.node').hashCompareCpp,
+	compare = require('bindings')('compare').hashCompareCpp,
 	config = require('../config'),
 	db = require('../db'),
 	events = require('events'),

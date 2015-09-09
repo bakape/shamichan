@@ -24,7 +24,7 @@ const _ = require('underscore'),
 	path = require('path'),
     persona = require('./persona'),
     Render = require('./render'),
-    tripcode = require('./tripcode/tripcode'),
+    tripcode = require('bindings')('tripcode'),
     urlParse = require('url').parse,
     winston = require('winston');
 

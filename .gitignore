@@ -1,6 +1,4 @@
-*.node
 *.pid
-.build
 .directory
 .idea
 .lock*
