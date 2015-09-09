@@ -226,6 +226,7 @@ function indexTemplates(ln, vars, res, opts) {
 	for (let type of ['index', 'mobile']) {
 		// Build localised options panel
 		vars.options_panel = buildOptions(languagePack.opts, opts[type]);
+		vars.isMobile = type === 'mobile';
 
 		const template = _.template(res[type])(vars);
 

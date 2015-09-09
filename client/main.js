@@ -52,7 +52,7 @@ _.extend(main, {
 	 */
 	config: window.config,
 	clientHash: window.clientHash,
-	isMobile: /Android|iP(?:hone|ad|od)|Windows Phone/.test(navigator.userAgent),
+	isMobile: window.isMobile,
 	// Websocket call handler map. Store them here, to avoid requiring
 	// modules in the wrong order.
 	dispatcher: {},
