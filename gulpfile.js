@@ -74,6 +74,7 @@ function buildClient() {
 				'es3.memberExpressionLiterals',
 				'es3.propertyLiterals',
 				'es5.properties.mutators',
+				'es6.arrowFunctions',
 				'es6.constants',
 				'es6.forOf',
 				'es6.properties.computed',

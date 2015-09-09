@@ -14,6 +14,8 @@ Selects and loads the client files
 	}
 
 	var tests = [
+		// Arrow functions
+		'return (()=>5)()===5;',
 		// Constants
 		'"use strict"; const foo = 123; return foo === 123;',
 		// Block scoping
