@@ -92,9 +92,14 @@ class RenderBase {
 		this.resp.write(html);
 	}
 	templateTop() {
-		// Templates are generated one per language and cached
-		const tmpl = this.tmpl = RES['indexTmpl-' + this.lang];
-		return tmpl[0] + this.imageBanner() + tmpl[1];
+		// Templates are generated two per language and cached
+		const {isMobile} = this.req,
+			tmpl = this.tmpl
+				= RES[`${isMobile ? 'mobile' : 'index'}Tmpl-${this.lang}`];
+		let html = tmpl[0];
+		if (!isMobile)
+			html += this.imageBanner();
+		return html + tmpl[1];
 	}
 	imageBanner() {
 		const banners = STATE.hot.BANNERS;

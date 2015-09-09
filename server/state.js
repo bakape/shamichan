@@ -3,9 +3,9 @@ Populates and stores the core state of the server, including generated tempates
 */
 
 // Some hot configs need to be be available when common/ is required
-var HOT = exports.hot = require('../config/hot').hot;
+const HOT = exports.hot = require('../config/hot').hot;
 
-var _ = require('underscore'),
+const _ = require('underscore'),
 	async = require('async'),
 	common = require('../common'),
 	config = require('../config'),
@@ -31,7 +31,7 @@ exports.dbCache = {
 	bans: []
 };
 
-var RES = exports.resources = {};
+const RES = exports.resources = {};
 exports.clientHotConfig = {};
 exports.clientConfigHash = '';
 exports.clients = {};
@@ -174,6 +174,7 @@ function reload_resources(cb) {
 function read_templates(cb) {
 	async.parallel({
 		index: readFile('tmpl', 'index.html'),
+		mobile: readFile('tmpl', 'mobile.html'),
 		notFound: readFile('www', '404.html'),
 		serverError: readFile('www', '50x.html')
 	}, cb);
@@ -192,20 +193,25 @@ function expand_templates(res) {
 	if (templateVars.BANNERINFO)
 		templateVars.BANNERINFO = `&nbsp;&nbsp;[${templateVars.BANNERINFO}]`;
 
-	let ex = {
+	const expanded = {
 		notFoundHtml: res.notFound,
 		serverErrorHtml: res.serverError
 	};
 
-	// Build index templates for each language
-	const langs = config.LANGS;
-	for (let i = 0, l = langs.length; i < l; i++) {
-		indexTemplate(langs[i], templateVars, res.index, ex);
+	// Prebuild a desktop and mobile set of options
+	const opts = {
+		index: options(false),
+		mobile: options(true)
+	};
+
+	// Build index and mobile templates for each language
+	for (let lang of config.LANGS) {
+		_.extend(expanded, indexTemplates(lang, templateVars, res, opts));
 	}
-	return ex;
+	return expanded;
 }
 
-function indexTemplate(ln, vars, template, ex) {
+function indexTemplates(ln, vars, res, opts) {
 	const languagePack = lang[ln];
 	vars = _.clone(vars);
 	vars.lang = ln;
@@ -214,25 +220,21 @@ function indexTemplate(ln, vars, template, ex) {
 	_.extend(vars, languagePack.tmpl, languagePack.common);
 	vars.notSynced = languagePack.common.sync.notSynced;
 	vars.schedule_modal = build_schedule(vars.SCHEDULE,
-		languagePack.show_seconds
-	);
+		languagePack.show_seconds);
 
-	// Build localised options panel
-	vars.options_panel = buildOptions(languagePack.opts);
+	const expanded = {};
+	for (let type of ['index', 'mobile']) {
+		// Build localised options panel
+		vars.options_panel = buildOptions(languagePack.opts, opts[type]);
 
-	const html = injectVars(template, vars);
-	ex['indexTmpl-' + ln] = html.tmpl;
-	ex['indexHash-' + ln] = hashString(html.src).slice(0, 8);
-}
+		const template = _.template(res[type])(vars);
 
-function injectVars(template, vars) {
-	let expanded = _.template(template)(vars);
-	return {
-		// Split on points, that will be dinamically inserted into by
-		// ../render
-		tmpl: expanded.split(/\$[A-Z]+/),
-		src: expanded
-	};
+		// Split on points, that will be dinamically inserted into by ./render
+		expanded[`${type}Tmpl-${ln}`] = template.split(/\$[A-Z]+/);
+		expanded[`${type}Hash-${ln}`] = hashString(template).slice(0, 8);
+	}
+
+	return expanded;
 }
 
 function build_schedule(schedule, showSeconds){
@@ -299,41 +301,44 @@ function make_navigation_html() {
 }
 
 // Hardcore pornography
-function buildOptions(lang) {
+function buildOptions(lang, options) {
 	let html = common.parseHTML
 		`<div class="bmodal" id="options-panel">
 			<ul class="option_tab_sel">`;
-	const tabs = lang.tabs;
+	const tabs = lang.tabs,
+		opts = [];
+
 	// Render tab butts
-	for (let i = 0, l = tabs.length; i < l; i++) {
+	for (let i = 0; i < tabs.length; i++) {
+		// Pick the options for this specific tab, according to current
+		// template and server configuration
+		opts[i] = _.filter(options, opt =>
+			opt.tab === i && (opt.load === undefined  || opt.load));
+		if (!opts[i].length)
+			continue;
 		html += `<li><a data-content="tab-${i}"`;
+
 		// Highlight the first tabButt by default
 		if (i === 0)
 			html += ' class="tab_sel"';
 		html += `>${tabs[i]}</a></li>`;
 	}
 	html += '</ul><ul class="option_tab_cont">';
-	for (let i = 0, l = tabs.length; i < l; i++) {
-		let tab = tabs[i];
-		let opts = _.filter(options(false), function(opt) {
-			/*
-			 * Pick the options for this specific tab. Don't know why we have
-			 * undefineds inside the array, but we do.
-			 */
-			if (!opt || opt.tab != i)
-				return false;
-			// Option should not be loaded, because of server-side configs
-			return !(opt.load !== undefined && !opt.load);
-		});
+	for (let i = 0; i < tabs.length; i++) {
+		if (!opts[i].length)
+			continue;
 		html += `<li class="tab-${i}`;
+
 		// Show the first tab by default
 		if (i === 0)
 			html += ' tab_sel';
 		html += '">';
+
 		// Render the actual options
-		for (let i = 0, l = opts.length; i < l; i++) {
-			html += renderOption(opts[i], lang);
+		for (let opt of opts[i]) {
+			html += renderOption(opt, lang);
 		}
+
 		// Append hidden post reset, Export and Import links to first tab
 		if (i === 0)
 			html += renderExtras(lang);
@@ -345,24 +350,25 @@ function buildOptions(lang) {
 
 function renderOption(opt, lang) {
 	let html = '';
-	const isShortcut = opt.type == 'shortcut',
+	const isShortcut = opt.type === 'shortcut',
 		isList = opt.type instanceof Array,
-		isCheckbox = opt.type == 'checkbox' || opt.type === undefined,
-		isNumber = opt.type == 'number',
-		isImage = opt.type == 'image';
+		isCheckbox = opt.type === 'checkbox' || opt.type === undefined,
+		isNumber = opt.type === 'number',
+		isImage = opt.type === 'image';
 	if (isShortcut)
 		html += 'Alt+';
 	if (!isList) {
 		html += '<input';
 		if (isCheckbox || isImage)
 			html += ` type="${(isCheckbox ? 'checkbox' : 'file')}"`;
-		if (isNumber)
+		else if (isNumber)
 			html += ' style="width: 4em;" maxlength="4"';
 		else if (isShortcut)
 			html += ' maxlength="1"';
 	}
 	else
 		html += '<select';
+
 	// Custom localisation functions
 	let title, label;
 	if (opt.lang) {
@@ -376,9 +382,7 @@ function renderOption(opt, lang) {
 	html += ` id="${opt.id}" title="${title}">`;
 
 	if (isList) {
-		const items = opt.type;
-		for (let i = 0, l = items.length; i < l; i++) {
-			let item = items[i];
+		for (let item of opt.type) {
 			html += `<option value="${item}">${lang[item] || item}</option>`;
 		}
 		html += '</select>';

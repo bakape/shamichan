@@ -257,6 +257,7 @@ module.exports = function(isMobile) {
 	for (let short of shorts) {
 		short.type = 'shortcut';
 		short.tab = 4;
+		short.load = notMobile;
 		opts.push(short);
 	}
 
