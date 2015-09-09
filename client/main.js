@@ -52,7 +52,7 @@ _.extend(main, {
 	 */
 	config: window.config,
 	clientHash: window.clientHash,
-	isMobile: /Android|iP(?:hone|ad|od)|Windows Phone/.test(navigator.userAgent),
+	isMobile: window.isMobile,
 	// Websocket call handler map. Store them here, to avoid requiring
 	// modules in the wrong order.
 	dispatcher: {},
@@ -96,6 +96,7 @@ main.send = main.request.bind(main, 'send');
  */
 main.Memory = require('./memory');
 let state = main.state = require('./state');
+main.etc = require('./etc');
 let	common = main.common = require('../common');
 // Initialise main rendering object
 let oneeSama = main.oneeSama = new common.OneeSama({
@@ -130,7 +131,6 @@ _.extend(main, {
 
 // 2nd tier dependacy modules. These are needed before the websocket
 // connection is opened, because they populate the dispatcher handler object.
-main.etc = require('./etc');
 _.extend(main, {
 	loop: require('./loop'),
 	time: require('./time'),

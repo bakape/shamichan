@@ -41,7 +41,6 @@ const reload_state = _.debounce(function() {
 		server.kill('SIGHUP');
 }, 2000);
 const fullRestart = _.debounce(function() {
-	start_server();
 	buildAll(start_server);
 }, 5000);
 
