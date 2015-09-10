@@ -130,7 +130,7 @@ var lang = {
 		],
 		relativeTime: [
 			'Estampas de tempo relativas',
-			'Estampas de tempo relativas. Ex.: "1 hora atrás". Requer que a página seja atualizada.'
+			'Estampas de tempo relativas. Ex.: \'1 hora atrás\''
 		],
 		nowPlaying: [
 			'Tocando agora',

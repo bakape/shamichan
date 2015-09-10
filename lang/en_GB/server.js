@@ -133,7 +133,7 @@ var lang = {
 		],
 		relativeTime: [
 			'Relative Timestamps',
-			'Relative post timestamps. Ex.: "1 hour ago." Requires page refresh'
+			'Relative post timestamps. Ex.: \'1 hour ago\''
 		],
 		nowPlaying: [
 			'Now Playing Banner',
