@@ -291,17 +291,6 @@ var ComposerView = Backbone.View.extend({
 		}
 
 		main.$threads.find('aside.posting').hide();
-		this.preloadPanes();
-	},
-	// Preload the spoiler panes for smoother display
-	preloadPanes() {
-		const spoilers = config.SPOILER_IMAGES;
-		for (let i = 0, l = spoilers.length; i < l; i++) {
-			new Image().src = this.spoilerPaneURL(spoilers[i]);
-		}
-	},
-	spoilerPaneURL(sp) {
-		return `${config.MEDIA_URL}spoil/spoil${sp}.png`;
 	},
 	// Render the name, email, and admin title, if any
 	renderIdentity() {
@@ -348,7 +337,7 @@ var ComposerView = Backbone.View.extend({
 		});
 	},
 	renderSpoilerPane(model, sp) {
-		const background = sp ? this.spoilerPaneURL(sp)
+		const background = sp ? `${config.MEDIA_URL}spoil/spoil${sp}.png`
 			: config.MEDIA_URL + 'css/ui/pane.png';
 		this.$toggle.css('background-image', `url("${background}")`);
 	},
