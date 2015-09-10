@@ -40,6 +40,7 @@ server {
 	# Set "SERVE_STATIC_FILES: false" and  `MEDIA_URL` to the full path of
 	# `/ass/` in `./config`. The trailing "/" is important.
 	location /ass/ {
+		add_header Cache-Control "public, max-age=30240000";
 		alias /path/to/doushio/www/;
 	}
 

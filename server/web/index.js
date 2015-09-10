@@ -65,6 +65,11 @@ app.post('/login', persona.login)
 	.post('/upload/', imager.new_upload)
 	.use(admin)
 	.use('/api/', api);
-if (config.SERVE_STATIC_FILES)
-	app.use(express.static('www'));
+if (config.SERVE_STATIC_FILES) {
+	app.use(express.static('www', {
+		etag: false,
+		maxAge: '350 days'
+	}));
+}
+
 app.use(html);
