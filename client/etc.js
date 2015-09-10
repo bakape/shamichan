@@ -32,6 +32,8 @@ exports.getModel = getModel;
 
 // Parse HTML string to node collection
 function parseDOM(string) {
-	return new DOMParser().parseFromString(string, 'text/html').children;
+	const el = document.createElement('div');
+	el.innerHTML = string;
+	return el.childNodes;
 }
 exports.parseDOM = parseDOM;

@@ -268,7 +268,7 @@ module.exports = function(isMobile) {
 function toggleHeadStyle(id, css) {
 	return function (toggle) {
 		if (!document.getElementById(id)) {
-			const el = etc.parseDOM(`<style id="${id}">${css}</style>"`)[0];
+			const el = etc.parseDOM(`<style id="${id}">${css}</style>`)[0];
 			document.head.appendChild(el);
 		}
 
