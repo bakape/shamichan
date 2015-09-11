@@ -24,6 +24,8 @@ var lang = {
 	you: '(You)',
 	done: 'Hecho',
 	send: 'Send',
+	locked: 'locked',
+	thread_locked: 'This thread is locked.',
 
 	// Time-related
 	week: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],

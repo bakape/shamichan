@@ -55,8 +55,7 @@ _.extend(main, {
 	isMobile: window.isMobile,
 	// Websocket call handler map. Store them here, to avoid requiring
 	// modules in the wrong order.
-	dispatcher: {},
-	lang: require('lang')
+	dispatcher: {}
 });
 
 // Clear cookies, if versions mismatch. Get regenerated each client start
@@ -95,13 +94,14 @@ main.send = main.request.bind(main, 'send');
  monolithic foundation.
  */
 main.Memory = require('./memory');
-let state = main.state = require('./state');
-main.etc = require('./etc');
-let	common = main.common = require('../common');
+const lang = main.lang = require('lang'),
+	state = main.state = require('./state'),
+	etc = main.etc = require('./etc'),
+	common = main.common = require('../common');
 // Initialise main rendering object
 let oneeSama = main.oneeSama = new common.OneeSama({
 	op: state.page.get('thread'),
-	lang: main.lang,
+	lang,
 	// Core post link handler
 	tamashii(num) {
 		let frag;
@@ -117,6 +117,17 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 });
 main.options = require('./options');
 state.page.set('tabID', common.random_id());
+
+// Load language-specific CSS
+document.head.appendChild(etc.parseDOM(common.parseHTML
+	`<style>
+		.locked:after {
+			content: "${lang.thread_locked}";
+		}
+		.locked > header nav:after {
+			content: " (${lang.locked})";
+		}
+	</style>`)[0]);
 
 _.extend(main, {
 	// Cached jQuery objects
