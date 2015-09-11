@@ -44,7 +44,7 @@ module.exports = function(isMobile) {
 			// Exec is not used on the server
 			exec(type) {
 				Cookie.set('lang', type);
-				alert('Language settings applied. The page will now reload.');
+				alert(main.lang.langApplied);
 				location.reload();
 			}
 		},

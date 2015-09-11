@@ -26,6 +26,7 @@ var lang = {
 	send: 'Send',
 	locked: 'locked',
 	thread_locked: 'This thread is locked.',
+	langApplied: 'Language settings applied. The page will now reload.',
 
 	// Time-related
 	week: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
