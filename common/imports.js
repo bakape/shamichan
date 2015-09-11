@@ -6,13 +6,12 @@
 // Runing on the server
 exports.isNode = typeof navigator === 'undefined';
 
-let main;
 if (exports.isNode) {
 	exports.config = require('../config');
 	exports.hotConfig = require('../server/state').hot;
 }
 else {
-	exports.main = main = require('../client/main');
+	const main = exports.main = require('main');
 	exports.config = main.config;
-	exports.hotConfig = require('../client/state').hotConfig.attributes;
+	exports.hotConfig = main.state.hotConfig.attributes;
 }
