@@ -2,21 +2,18 @@ Brief step by step guide to core meguca operations. Intended as a basic
 overview for porential devs.
 
 ## Building with `npm install`
+- `node-gyp` compiles native C++ addons in `src/`
 - npm downloads and installs project dependancies
-- `make all` is called
-	- `scripts/bootstarp.js` checks for comfiguration files in `./config/` 
-	and copies over the examples in `config/examples`, if none
-	- gulp builds client files (see `gulpfile.js`)
-		- CSS themes: `less/` -> `www/css/`
-		- Language packs: `lang/` -> `www/js/lang/`
-		- Moderation client module: `client/mod/` -> `state/mod.js`
-		- Dependancies: `.node_modules/` & `lib/` -> `www/js/vendor.js`
-		- Standard client for up-to-date browsers: `client/` -> 
-		`www/js/client.js`
-		- Legacy client for old/shitty/hipster browsers: `client/` -> 
-		`www/js/legacy/client.js`
-	- `node-gyp` compiles native C++ addons in `imager/`and 
-	`server/{tripcode, mnemonic}`
+- `scripts/bootstarp.js` checks for comfiguration files in `./config/` and 
+copies over the examples in `config/examples`, if none
+- gulp builds client files (see `gulpfile.js`)
+	- CSS themes: `less/` -> `www/css/`
+	- Language packs: `lang/` -> `www/js/lang/`
+	- Moderation client module: `client/mod/` -> `state/mod.js`
+	- Dependancies: `.node_modules/` & `lib/` -> `www/js/vendor.js`
+	- Standard client for up-to-date browsers: `client/` -> `www/js/client.js`
+	- Legacy client for old/shitty/hipster browsers: `client/` -> 
+	`www/js/legacy/client.js`
 
 ## Server starting with `npm start`
 - npm calls `node index.js`
