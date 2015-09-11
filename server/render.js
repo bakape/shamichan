@@ -93,13 +93,25 @@ class RenderBase {
 	}
 	templateTop() {
 		// Templates are generated two per language and cached
-		const {isMobile} = this.req,
+		const {isMobile, isRetarded} = this.req,
 			tmpl = this.tmpl
 				= RES[`${isMobile ? 'mobile' : 'index'}Tmpl-${this.lang}`];
 		let html = tmpl[0];
+
+		// Notify the user, he/she/it should consider a brain transplant
+		if (isRetarded) {
+			html += '<div class="retardedBrowser">'
+				+ lang[this.lang].worksBestWith + ' ';
+			for (let browser of ['chrome', 'firefox', 'opera']) {
+				html += `<img src="${config.MEDIA_URL}css/ui/${browser}.png">`
+			}
+			html += '</div>';
+		}
+
+		html += '<h1>';
 		if (!isMobile)
 			html += this.imageBanner();
-		return html + tmpl[1];
+		return html + '</h1>' + tmpl[1];
 	}
 	imageBanner() {
 		const banners = STATE.hot.BANNERS;

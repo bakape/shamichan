@@ -4,6 +4,7 @@
 var lang = {
 	catalog_omit: 'Replies/Images',
 	show_seconds: 'Click to show seconds',
+	worksBestWith: 'works best with',
 
 	// Imager responses
 	im : {
