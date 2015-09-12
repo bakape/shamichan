@@ -21,7 +21,7 @@ master branch in production. For more stable revisions, please [download the
   webserver, you still need to set `MEDIA_URL` in `config/imager` for image
   search links to work.
 * Run `npm start` to start the server
-* You can update `config/hot.js` on-the-fly with `node server/kill.js`3z
+* You can update `config/hot.js` and client files without restarting the server with `node server/kill.js`
 * All errors are logged to `./error.log`
 
 ##Updating
