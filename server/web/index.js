@@ -66,10 +66,12 @@ app.post('/login', persona.login)
 	.use(admin)
 	.use('/api/', api);
 if (config.SERVE_STATIC_FILES) {
-	app.use(express.static('www', {
-		etag: false,
-		maxAge: '350 days'
-	}));
+	const opts = {};
+	if (!config.DEBUG) {
+		opts.etag = false;
+		opts.maxAge = '350 days';
+	}
+	app.use(express.static('www', opts));
 }
 
 app.use(html);
