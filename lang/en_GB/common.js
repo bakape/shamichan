@@ -112,9 +112,14 @@ var lang = {
 	capitalize: function(word) {
 		return word[0].toUpperCase() + word.slice(1);
 	},
-	// 56 minutes ago
-	ago: function(time, unit) {
-		return lang.pluralize(time, unit) + ' ago';
+	// 56 minutes ago / in 56 minutes
+	ago: function(time, unit, isFuture) {
+		var res = lang.pluralize(time, unit);
+		if (isFuture)
+			res = 'in ' + res;
+		else
+			res += ' ago';
+		return res;
 	},
 	// 47 replies and 21 images omitted
 	abbrev_msg:  function(omit, img_omit, url) {

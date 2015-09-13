@@ -123,7 +123,7 @@ function loadBans(cb) {
 				return winston.error('Error retieving ban list:', err);
 			const bans = {};
 			for (let i = 0; i < res.length; i += 2) {
-				bans[res[i]] = res[i + 1];
+				bans[res[i]] = parseInt(res[i + 1], 10);
 			}
 			cache.bans = bans;
 			cb && cb();

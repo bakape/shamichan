@@ -240,15 +240,24 @@ class OneeSama {
 	}
 	// Readable elapsed time since post
 	relativeTime(then, now) {
-		let time = Math.floor((now - then) / 60000);
-		if (time < 1)
-			return this.lang.just_now;
+		let time = Math.floor((now - then) / 60000),
+			isFuture;
+		if (time < 1) {
+			// Assume to be client clock imprecission
+			if (time > -1)
+				return this.lang.just_now;
+			else {
+				isFuture = true;
+				time = -time;
+			}
+		}
 
 		const divide = [60, 24, 30, 12],
 			unit = ['minute', 'hour', 'day', 'month'];
-		for (let i = 0, len = divide.length; i < len; i++) {
+		for (let i = 0; i < divide.length; i++) {
 			if (time < divide[i])
-				return this.lang.ago(time, this.lang['unit_' + unit[i]]);
+				return this.lang.ago(time, this.lang['unit_' + unit[i]],
+					isFuture);
 			time = Math.floor(time / divide[i]);
 		}
 

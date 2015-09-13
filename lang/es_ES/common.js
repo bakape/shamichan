@@ -113,8 +113,13 @@ var lang = {
 		return word[0].toUpperCase() + word.slice(1);
 	},
 	// 56 minutos atrás
-	ago: function(time, unit) {
-		return lang.pluralize(time, unit) + ' atrás';
+	ago: function(time, unit, isFuture) {
+		var res = lang.pluralize(time, unit);
+		if (isFuture)
+			res = 'in ' + res;
+		else
+			res += ' atrás';
+		return res;
 	},
 	// 47 respuestas y 21 imágenes omitidas
 	abbrev_msg:  function(omit, img_omit, url) {
