@@ -8,10 +8,7 @@ let _ = require('underscore'),
 	resources = require('../state').resources,
 	util = require('./util');
 
-let router = module.exports = express.Router();
-
-let headers = _.clone(util.noCacheHeaders);
-headers['Content-Type'] = 'text/javascript; charset=UTF-8';
+const router = module.exports = express.Router();
 
 router.get('/mod.js', function (req, res) {
 	// Admin/Moderator privelege is injected on page render and verified
@@ -24,7 +21,7 @@ router.get('/mod.js', function (req, res) {
 		return res.sendStatus(500);
 
 	// Not hosted as a file to prevent unauthorised access
-	res.set(headers);
+	res.set(util.noCacheHeaders);
 	res.send(modJS);
 });
 

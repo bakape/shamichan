@@ -71,6 +71,8 @@ if (config.SERVE_STATIC_FILES) {
 		opts.etag = false;
 		opts.maxAge = '350 days';
 	}
+	else
+		opts.setHeaders = res => res.set(util.noCacheHeaders);
 	app.use(express.static('www', opts));
 }
 
