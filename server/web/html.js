@@ -247,8 +247,7 @@ function parseCookies(req, ctr) {
 	req.thumbStyle = style;
 	etag += '-' + style;
 
-	const etags = ['spoil', 'agif', 'rtime', 'linkify'];
-	for (let tag of etags) {
+	for (let tag of ['spoil', 'agif', 'linkify']) {
 		if (tag in cookies)
 			etag += `-${tag}:${cookies[tag]}`;
 	}
