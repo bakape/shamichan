@@ -15,7 +15,12 @@ const cache = require('./state').dbCache,
 const mnemonizer = new mnemonics.mnemonizer(config.SECURE_SALT);
 
 function genMnemonic(ip) {
-	return ip && mnemonizer.Apply_mnemonic(ip);
+	if (!ip)
+		return;
+	const mnemonic = mnemonizer.Apply_mnemonic(ip);
+	if (!mnemonic)
+		winston.error('Could not parse IP: ' + ip);
+	return mnemonic;
 }
 exports.genMnemonic = genMnemonic;
 
@@ -66,10 +71,8 @@ dispatcher[common.ADMIN_PANEL] = function (msg, client) {
 	const response = [];
 	for (let ip in cache.bans) {
 		const mnemonic = genMnemonic(ip);
-		/*if (!mnemonic) {
-			winston.error('Could not parse IP: ' + ip);
+		if (!mnemonic)
 			continue;
-		}*/
 		response.push([mnemonic, cache.bans[ip]]);
 	}
 	client.send([0, common.ADMIN_PANEL, response]);
