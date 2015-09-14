@@ -27,6 +27,24 @@ var lang = {
 	locked: 'locked',
 	thread_locked: 'This thread is locked.',
 	langApplied: 'Language settings applied. The page will now reload.',
+	googleSong: 'Click to google song',
+	quoted: 'You have been quoted',
+	syncwatchStarting: 'Syncwatch starting in 10 seconds',
+	finished: 'Finished',
+	expander: ['Expand Images', 'Contract Images'],
+	uploading: 'Uploading...',
+	subject: 'Subject',
+	cancel: 'Cancel',
+	unknownUpload: 'Unknown upload error',
+	unknownResult: 'Unknown result',
+
+	reports: {
+		post: 'Reporting post',
+		reporting: 'Reporting...',
+		submitted: 'Report submitted!',
+		setup: 'Obtaining reCAPTCHA...',
+		loadError: 'Couldn\'t load reCATPCHA'
+	},
 
 	// Time-related
 	week: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],

@@ -45,7 +45,7 @@ let BannerView = Backbone.View.extend({
 	renderRadio(data) {
 		data = JSON.parse(data);
 		const attrs = {
-			title: 'Click to google song',
+			title: main.lang.googleSong,
 			href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
 			target: '_blank'
 		};

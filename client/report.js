@@ -2,15 +2,16 @@
  Report posts you don't like
  */
 
-let main = require('./main'),
-	{$, $script, _, Backbone, common} = main;
+const main = require('./main'),
+	{$, $script, _, Backbone, common, lang} = main;
 
 // TODO: Rewrite this and move to API v2
 
 const pubKey = main.config.RECAPTCHA_PUBLIC_KEY,
-	captchaTimeout = 5 * 60 * 1000;
-let reports = {},
-	panel;
+	captchaTimeout = 5 * 60 * 1000,
+	repLang = lang.reports,
+	reports = {};
+let panel;
 
 let Report = Backbone.Model.extend({
 	defaults: {
@@ -71,7 +72,7 @@ var ReportPanel = Backbone.View.extend({
 		const num = this.model.get('post').get('num');
 
 		this.$el.append(
-			'Reporting post ',
+			repLang.post + ' ',
 			main.oneeSama.postRef(num).safe,
 			'<a class="close" href="#">x</a>',
 			this.$message,
@@ -118,7 +119,7 @@ var ReportPanel = Backbone.View.extend({
 		this.$submit
 			.prop('disabled', status != 'ready')
 			.toggle(status !== 'done')
-			.val(status === 'reporting' ? 'Reporting...' : 'Report');
+			.val(status === 'reporting' ? repLang.reporting : lang.report);
 		this.$captcha.toggle(
 			_.contains(['ready', 'reporting', 'error'], status)
 		);
@@ -127,13 +128,12 @@ var ReportPanel = Backbone.View.extend({
 
 		let msg;
 		if (status === 'done')
-			msg = 'Report submitted!';
+			msg = repLang.submitted;
 		else if (status == 'setup')
-			msg = 'Obtaining reCAPTCHA...';
-		else if (status == 'error')
-			msg = 'E';
-		else if (status == 'ready' && this.model.get('error'))
-			msg = 'E';
+			msg = repLang.setup;
+		else if (status == 'error'
+			|| (status == 'ready' && this.model.get('error')))
+				msg = 'E';
 
 		this.$message.text(msg === 'E' ? this.model.get('error') : msg);
 		this.$message.toggle(!!msg).toggleClass('error', msg == 'E');
@@ -187,14 +187,14 @@ main.reply('report', function(post) {
 		else {
 			model.set({
 				status: 'error',
-				error: "Couldn't load reCATPCHA."
+				error: repLang.loadError
 			});
 		}
 	});
 });
 
 main.dispatcher[common.REPORT_POST] = function(msg) {
-	let report = reports[msg[0]];
+	const report = reports[msg[0]];
 	if (report)
 		report.set(msg[1] || {status: 'done'});
 };

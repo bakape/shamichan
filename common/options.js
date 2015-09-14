@@ -229,7 +229,7 @@ module.exports = function(isMobile) {
 			tab: 0,
 			validation: util.reasonable_last_n,
 			default: hotConfig.THREAD_LAST_N,
-			exec: function(n) {
+			exec(n) {
 				oneeSama.lastN = n;
 				Cookie.set('lastn', n);
 			}
@@ -272,7 +272,7 @@ function toggleHeadStyle(id, css) {
 			document.head.appendChild(el);
 		}
 
-		// Th disabled propert only exists on elements in the DOM, so we do
+		// The disabled property only exists on elements in the DOM, so we do
 		// another query
 		document.getElementById(id).disabled = !toggle;
 	}

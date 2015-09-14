@@ -2,12 +2,13 @@
  * Evertything related to writing and commiting posts
  */
 
-let main = require('../main'),
+const main = require('../main'),
 	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
 	inject = require('./common').inject,
-	{$, _, Backbone, common, config, connSM, etc, options, postSM, state} = main;
+	{$, _, Backbone, common, config, connSM, etc, lang, options, postSM, state}
+		= main;
 
 let postForm, postModel;
 /*
@@ -17,8 +18,6 @@ let postForm, postModel;
 main.reply('postForm', () => postForm)
 	.reply('postModel', () => postModel)
 	.reply('postForm:indentity', () => postForm && postForm.renderIdentity());
-
-const uploadingMessage = 'Uploading...';
 
 // Minimal size of the input buffer
 let	inputMinSize = 300;
@@ -72,7 +71,7 @@ postSM.act('ready + new -> draft', function($aside) {
 		state.posts.get(op).dispatch('shiftReplies', true);
 
 	postForm = new ComposerView({
-		model: postModel = new ComposerModel({op: op}),
+		model: postModel = new ComposerModel({op}),
 		$dest: $aside,
 		$sec: $sec
 	});
@@ -268,7 +267,7 @@ var ComposerView = Backbone.View.extend({
 		this.$blockquote.append(this.$buffer, this.$lineBuffer, this.$input);
 		this.$el.append(this.$meta, this.$blockquote, '<small/>');
 		if (this.isThread) {
-			this.$el.append('<label for="subject">Subject: </label>',
+			this.$el.append(`<label for="subject">${lang.subject}: </label>`,
 				this.$subject);
 			this.$blockquote.hide();
 		}
@@ -346,7 +345,7 @@ var ComposerView = Backbone.View.extend({
 			+ 'target="upload"></form>');
 		this.$cancel = $('<input/>', {
 			type: 'button',
-			value: 'Cancel',
+			value: lang.cancel,
 			click: $.proxy(this, 'cancel')
 		});
 		this.$imageInput = $('<input/>', {
@@ -423,7 +422,7 @@ var ComposerView = Backbone.View.extend({
 					return;
 				// sanity check for weird browser responses
 				if (error.length < 5 || error.length > 100)
-					error = 'Unknown upload error.';
+					error = lang.unknownUpload;
 				postForm.uploadError(error);
 			}
 			catch(e) {
@@ -439,7 +438,7 @@ var ComposerView = Backbone.View.extend({
 		this.notifyUploading();
 	},
 	prepareUpload() {
-		this.model.set('uploadStatus', uploadingMessage);
+		this.model.set('uploadStatus', lang.uploading);
 		this.$input.focus();
 		const attrs = this.model.attributes;
 		return {spoiler: attrs.spoiler, op: attrs.op || 0};
@@ -451,8 +450,8 @@ var ComposerView = Backbone.View.extend({
 	uploadFallbackMessage() {
 		var a = this.model.attributes,
 			stat = a.uploadStatus;
-		if (!a.cancelled && a.uploading && (!stat || stat == uploadingMessage))
-			this.model.set('uploadStatus', 'Unknown result.');
+		if (!a.cancelled && a.uploading && (!stat || stat == lang.uploading))
+			this.model.set('uploadStatus', lang.unknownResult);
 	},
 	notifyUploading() {
 		this.model.set({uploading: true, cancelled: false});

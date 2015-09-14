@@ -22,7 +22,6 @@ function reRenderImages() {
 			model.dispatch('renderImage', image)
 	});
 }
-main.reply('loop:images', reRenderImages);
 
 function toggleSpoilers() {
 	posts.each(function(model) {

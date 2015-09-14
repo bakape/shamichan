@@ -7,13 +7,11 @@ let main = require('./main'),
 	{$, Backbone, etc, options, state} = main;
 
 // Centralised mousemove target tracking
-let mousemove = new Backbone.Model({
-	id: 'mousemove',
-	/*Logging only the target isn't a option because change:target doesn't seem
-	to fire in some cases where the target is too similar for example changing
-	between two post links (>>XXX) directly*/
-	event: null
-});
+/*Logging only the target isn't a option because change:target doesn't seem
+ to fire in some cases where the target is too similar for example changing
+ between two post links (>>XXX) directly
+ */
+const mousemove = new Backbone.Model();
 
 let ImageHoverView = Backbone.View.extend({
 	initialize() {

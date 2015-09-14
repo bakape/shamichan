@@ -43,7 +43,7 @@ function timer_from_el(el) {
 			return;
 		const now = common.serverTime();
 		if (now > end)
-			return el.textContent = 'Finished';
+			return el.textContent = main.lang.finished;
 
 		// If the start time is in the future
 		if (start > now) {
@@ -60,8 +60,8 @@ function timer_from_el(el) {
 		const min = Math.floor( diff / 1000 / 60);
 		diff -= min * 1000 * 60;
 		const sec = Math.floor(diff / 1000);
-		el.textContent = "Now at: " + common.pad(hour) + ":" + common.pad(min)
-			+ ":" + common.pad(sec) + " / " + maxh + ":" + maxm + ":" + maxs;
+		el.textContent = common.pad(hour) + ":" + common.pad(min) + ":"
+			+ common.pad(sec) + " / " + maxh + ":" + maxm + ":" + maxs;
 		return setTimeout(moumouikkai, 1000);
 	})();
 }

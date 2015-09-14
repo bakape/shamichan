@@ -16,7 +16,7 @@ const youtube_url_re = exports.youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:ww
 function make_video(id, params, start) {
 	if (!params)
 		params = {allowFullScreen: 'true'};
-	params.allowScriptAccess = 'alwaus';
+	params.allowScriptAccess = 'always';
 	var query = {
 		autohide: 1,
 		fs: 1,
