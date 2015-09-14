@@ -12,16 +12,14 @@ const _ = require('underscore'),
 
 const break_re = new RegExp("(\\S{" + index.WORD_LENGTH_LIMIT + "})");
 
-// Internal referal links and embeds
-const ref_re = (function() {
-	let ref_re = '>>(\\d+'
-		+ '|>\\/watch\\?v=[\\w-]{11}(?:#t=[\\dhms]{1,9})?'
-		+ '|>\\/soundcloud\\/[\\w-]{1,40}\\/[\\w-]{1,80}'
-		+ '|>\\/pastebin\\/\\w+';
+// `>>>/${link}/` referal links and embeds
+const ref_re = (function () {
+	let ref_re = String.raw`>>(\d+|>\/watch\?v=[\w-]{11}(?:#t=[\dhms]{1,9})?
+		|>\/soundcloud\/[\w-]{1,40}\/[\w-]{1,80}|>\/pastebin\/\w+`
+			.replace(/[\n\t]+/gm, '');
 
-	const boards = config.BOARDS;
-	for (let i = 0; i < boards.length; i++) {
-		ref_re += `|>\\/${boards[i]}\\/(?:\\d+)?`;
+	for (let board in config.link_targets) {
+		ref_re += String.raw`|>\/${board}\/(?:\w+\/?)?`;
 	}
 
 	ref_re += ')';
@@ -416,30 +414,30 @@ class OneeSama {
 			linkClass = 'embed pastebin';
 		}
 
-		// Linkify >>>/board/ URLs
-		const boards = config.BOARDS;
-		for (let i = 0, len = boards.length; i < len; i++) {
-			let board = boards[i];
-			if (!new RegExp('^>\\/' + board + '\\/').test(ref))
+		// Linkify other `>>>/${link}/` URLs
+		for (let link in config.link_targets) {
+			const m = ref.match(new RegExp(String.raw`^>\/(${link})\/(\w+\/?)?`));
+			if (!m)
 				continue;
-			dest = '../' + board;
-			linkClass = 'history';
+			dest = config.link_targets[link];
+			if (m[2])
+				dest += m[2];
 			break;
 		}
 
-		if (!dest) {
-			this.tamashii(parseInt(ref, 10));
-			return;
-		}
+		if (!dest)
+			return this.tamashii(parseInt(ref, 10));
+
+		const attrs = {
+			href: encodeURI(dest),
+			target: '_blank',
+			rel: 'nofollow',
+			class: linkClass
+		};
 		this.callback(safe(parseHTML
-			`<a href="${encodeURI(dest)}"
-				target="_blank"
-				rel="nofollow"
-				class="${linkClass}"
-			>
+			`<a ${attrs}>
 				>>${escape(ref)}
-			</a>`
-		));
+			</a>`));
 	}
 	// Render hash commands
 	parseHashes(text) {

@@ -16,6 +16,20 @@ const config = require('../config'),
 // Read command line arguments. Modifies ../config, so loaded right after it.
 opts.parse_args();
 
+// Some config defaults for backwards compatibility.
+// TODO: Centralised config defaulting in a later version
+if (!config.link_boards)
+	config.link_boards = [];
+
+// Build an object of all possible board-like link targets
+const targets = config.link_targets = {};
+for (let board of config.BOARDS) {
+	targets[board] = `../${board}/`;
+}
+for (let board of config.PSUEDO_BOARDS.concat(config.link_boards)) {
+	targets[board[0]] = board[1];
+}
+
 // More verbose logging
 if (config.DEBUG) {
 	winston.remove(winston.transports.Console);

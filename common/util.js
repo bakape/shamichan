@@ -437,7 +437,10 @@ function elementAttributes(attrs) {
 	for (let key in attrs) {
 		html += ' ';
 		const val = attrs[key];
-		html += val === true ? key : `${key}="${val}"`;
+		if (val === true)
+			html += key;
+		else if (val || val === 0)
+			html += `${key}="${val}"`;
 	}
 	return html;
 }
