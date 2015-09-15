@@ -24,26 +24,26 @@ var lang = {
 	you: '(You)',
 	done: 'Feito',
 	send: 'Enviar',
-	locked: 'locked',
-	thread_locked: 'This thread is locked.',
-	langApplied: 'Language settings applied. The page will now reload.',
+	locked: 'trancado',
+	thread_locked: 'Este tópico está trancado.',
+	langApplied: 'Configurações de linguagem foram mudadas. Esta página recarregará agora.',
 	googleSong: 'Click to google song',
-	quoted: 'You have been quoted',
-	syncwatchStarting: 'Syncwatch starting in 10 seconds',
-	finished: 'Finished',
-	expander: ['Expand Images', 'Contract Images'],
-	uploading: 'Uploading...',
-	subject: 'Subject',
-	cancel: 'Cancel',
-	unknownUpload: 'Unknown upload error',
-	unknownResult: 'Unknown result',
+	quoted: 'Você foi quotado',
+	syncwatchStarting: 'Syncwatch começará em 10 segundos',
+	finished: 'Terminado.',
+	expander: ['Expandir imagens', 'Contrair imagens'],
+	uploading: 'Enviando...',
+	subject: 'Assunto',
+	cancel: 'Cancelar',
+	unknownUpload: 'Erro de upload desconhecido',
+	unknownResult: 'Resultado desconhecido',
 
 	reports: {
-		post: 'Reporting post',
-		reporting: 'Reporting...',
-		submitted: 'Report submitted!',
-		setup: 'Obtaining reCAPTCHA...',
-		loadError: 'Couldn\'t load reCATPCHA'
+		post: 'Reportando post',
+		reporting: 'Reportando...',
+		submitted: 'Denúncia enviada!',
+		setup: 'Obtendo reCAPTCHA...',
+		loadError: 'Não foi possível carregar o reCATPCHA'
 	},
 
 	// Time-related
@@ -81,22 +81,22 @@ var lang = {
 			'Envia uma mensagem de notificação para todos os clientes'
 		],
 		renderPanel: ['Painel', 'Ativa a exibição do painel de administração'],
-		ban: ['Ban', 'Ban poster(s) for the selected post(s)'],
+		ban: ['Ban', 'Ban o(s) usuário(s) pelos posts selecionados'],
 		modLog: ['Reg', 'Mostra o registro de moderação'],
 		displayBan: [
-			'Display',
-			'Append a public \'USER WAS BANNED FOR THIS POST\' message'
+			'Exibir',
+			'Adiciona uma mensagem \'O USUÁRIO FOI BANIDO POR ESTA POSTAGEM\' publicamente'
 		],
-		banMessage: 'USER WAS BANNED FOR THIS POST',
-		unban: 'Unban',
+		banMessage: 'O USUÁRIO FOI BANIDO POR ESTA POSTAGEM',
+		unban: 'Desbanir',
 		placeholders: {
 			msg: 'Mensagem',
 			days: 'd',
 			hours: 'h',
 			minutes: 'min',
-			reason: 'Reason'
+			reason: 'Razão'
 		},
-		needReason: 'Must specify reason',
+		needReason: 'É necessário especificar uma razão',
 
 		// Correspond to websocket calls in common/index.js
 		7: 'Spoiler adicionado à imagem',
@@ -104,14 +104,14 @@ var lang = {
 		9: 'Postagem deletada',
 		10: 'Tópico trancado',
 		11: 'Tópico destrancado',
-		12: 'User banned',
-		53: 'User unbanned',
+		12: 'Usuário banido',
+		53: 'Usuário desbanido',
 
 		// Formatting function for moderation messages
 		formatLog: function (act) {
 			var msg = lang.mod[act.kind] + ' por ' + act.ident;
 			if (act.reason)
-				msg += ' for ' + act.reason;
+				msg += ' pela razão de ' + act.reason;
 			return msg;
 		}
 	},
