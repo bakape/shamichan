@@ -27,7 +27,7 @@ var lang = {
 	locked: 'trancado',
 	thread_locked: 'Este tópico está trancado.',
 	langApplied: 'Configurações de linguagem foram mudadas. Esta página recarregará agora.',
-	googleSong: 'Click to google song',
+	googleSong: 'Clique para pesquisar (google) a música',
 	quoted: 'Você foi quotado',
 	syncwatchStarting: 'Syncwatch começará em 10 segundos',
 	finished: 'Terminado.',
