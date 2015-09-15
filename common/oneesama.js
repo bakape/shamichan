@@ -259,7 +259,7 @@ class OneeSama {
 			time = Math.floor(time / divide[i]);
 		}
 
-		return this.lang.ago(time, this.lang.unit_year);
+		return this.lang.ago(time, this.lang.unit_year, isFuture);
 	}
 	mnemonic(mnem) {
 		return `<b class="mod addr">${mnem}</b>`;
