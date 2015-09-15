@@ -21,7 +21,7 @@ var lang = {
 	reply: 'Postar',
 	newThread: 'Novo tópico',
 	locked_to_bottom: 'Travado ao rodapé',
-	you: '(You)',
+	you: '(Tu)',
 	done: 'Feito',
 	send: 'Enviar',
 	locked: 'trancado',
@@ -134,7 +134,7 @@ var lang = {
 	ago: function(time, unit, isFuture) {
 		var res = lang.pluralize(time, unit);
 		if (isFuture)
-			res = 'in ' + res;
+			res = 'em ' + res;
 		else
 			res += ' atrás';
 		return res;
