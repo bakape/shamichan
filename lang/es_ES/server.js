@@ -1,10 +1,10 @@
 /*
- * Mapeo de opciones de idiomas configurables solamente para servidor
+ * Mapa de opciones de idiomas configurables solamente para servidor
  */
 var lang = {
-	catalog_omit: 'Replies/Images',
-	show_seconds: 'Click to show seconds',
-	worksBestWith: 'works best with',
+	catalog_omit: 'Respuestas/Imagenes',
+	show_seconds: 'Click para mostrar segundos',
+	worksBestWith: 'funciona mejor con',
 
 	// Respuestas de imager
 	im : {
@@ -21,7 +21,7 @@ var lang = {
 		verifying: 'Verificando...',
 		missing: "Archivo desaparecido.",
 		video_invalid: "Archivo de vídeo invalido.",
-		ffmpeg_too_old: "ffmpeg del servidor es demasiado viejo.",
+		ffmpeg_too_old: "ffmpeg del servidor esta demasiado anticuado.",
 		mp3_no_cover: 'MP3 no tiene portada.',
 		video_unknown: "Error de lectura de vídeo desconocido.",
 		video_format: 'Formato de archivo corrupto.',
@@ -42,7 +42,7 @@ var lang = {
 		hashing: 'Error de hashing.',
 		resizing: "Error al redimensionar.",
 		pngquant: "Error de minituarización de Pngquant.",
-		unknown: 'Error de procesación de imagen desconocido.',
+		unknown: 'Error de procesación de imagen desconocido.'
 	},
 
 	//Varias strings de template
@@ -54,7 +54,7 @@ var lang = {
 		faq: 'FAQ',
 		schedule: 'Programación',
 		feedback: 'Contacto',
-		onlineCounter: 'Contador online',
+		onlineCounter: 'Contador online'
 	},
 
 	/*
@@ -75,7 +75,7 @@ var lang = {
 		both: 'ajustar a ambas',
 
 		// Nombres para las pestañas del panel de opciones
-		tabs: ['General', 'Estilo', 'Búsqueda', 'Divertido', 'Atajos'],
+		tabs: ['General', 'Estilo', 'Búsqueda', 'Entretenimiento', 'Atajos'],
 		export: [
 			'Exportar',
 			'Exportar opciones a archivo'
@@ -85,8 +85,8 @@ var lang = {
 			'Importar opciones desde archivo'
 		],
 		hidden: [
-			'Hidden: 0',
-			'Clear hidden posts'
+			'Escondido: 0',
+			'Limpiar posts escondidos'
 		],
 		lang: [
 			'Idioma',
@@ -101,7 +101,7 @@ var lang = {
 			'Establecer tamaño de thumbnail: '
 				+ 'Pequeño: 125x125, tamaño de imagen pequeño; '
 				+ 'Agudo: 125x125, mas detallado; '
-				+ 'Esconder: Esconde todas las imágenes;',
+				+ 'Esconder: Esconde todas las imágenes;'
 		],
 		imageHover: [
 			'Expansion de imagen al pasar el ratón',
@@ -141,7 +141,7 @@ var lang = {
 			'La canción reproduciéndose ahora en r/a/dio y otra información sobre el stream en'
 				+ ' el banner de encima.'
 		],
-		// Custom localisation functions
+		// Funciones de localizacion personalizadas
 		imageSearch: [
 			function(site) {
 				return lang.common.capitalize(site)  + ' Búsqueda de imágenes';

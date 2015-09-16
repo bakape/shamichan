@@ -1,14 +1,14 @@
 /*
- * Shared by the server and client
+ * Compartido por el cliente y servidor
  */
 
 var lang = {
 	anon: 'Anónimo',
 	search: 'Buscar',
 	show: 'Mostrar',
-	hide: 'Hide',
-	report: 'Report',
-	focus: 'Focus',
+	hide: 'Esconder',
+	report: 'Reportar',
+	focus: 'Centrar',
 	expand: 'Ampliar',
 	last: 'Últimos',
 	see_all: 'Mostrar todos',
@@ -18,35 +18,35 @@ var lang = {
 	catalog: 'Catálogo',
 	return: 'Regresar',
 	top: 'Arriba',
-	reply: 'Reply',
-	newThread: 'New thread',
-	locked_to_bottom: 'Locked to bottom',
-	you: '(You)',
+	reply: 'Respuesta',
+	newThread: 'Nuevo Hilo',
+	locked_to_bottom: 'Pegado al fondo',
+	you: '(Tu)',
 	done: 'Hecho',
-	send: 'Send',
-	locked: 'locked',
-	thread_locked: 'This thread is locked.',
-	langApplied: 'Language settings applied. The page will now reload.',
-	googleSong: 'Click to google song',
-	quoted: 'You have been quoted',
-	syncwatchStarting: 'Syncwatch starting in 10 seconds',
-	finished: 'Finished',
-	expander: ['Expand Images', 'Contract Images'],
-	uploading: 'Uploading...',
-	subject: 'Subject',
-	cancel: 'Cancel',
-	unknownUpload: 'Unknown upload error',
-	unknownResult: 'Unknown result',
+	send: 'Enviar',
+	locked: 'Cerrado',
+	thread_locked: 'Este hilo esta cerrado.',
+	langApplied: 'Opciones de idioma applicadas. La pagina sera recargada ahora.',
+	googleSong: 'Clock para googlear la cancion',
+	quoted: 'Has sido citado',
+	syncwatchStarting: 'Syncwatch empezando end 10 segundos',
+	finished: 'Terminado',
+	expander: ['Expandir imagenes', 'Contraer imagenes'],
+	uploading: 'Subiendo...',
+	subject: 'Sujeto',
+	cancel: 'Cancelar',
+	unknownUpload: 'Error de subida desconocido',
+	unknownResult: 'Resultado desconocido',
 
 	reports: {
-		post: 'Reporting post',
-		reporting: 'Reporting...',
-		submitted: 'Report submitted!',
-		setup: 'Obtaining reCAPTCHA...',
-		loadError: 'Couldn\'t load reCATPCHA'
+		post: 'Reportando post',
+		reporting: 'Reportando...',
+		submitted: 'Report enviado!',
+		setup: 'Obteniendo reCAPTCHA...',
+		loadError: 'No se pudo cargar reCATPCHA'
 	},
 
-	// Time-related
+	// Relacionado con el tiempo
 	week: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
 	year: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep',
 		'Oct', 'Nov', 'Dic'],
@@ -57,68 +57,68 @@ var lang = {
 	unit_month: 'mes',
 	unit_year: 'año',
 
-	// Websocket syncronisation status
+	// Estado de sincronizacion de websockets
 	sync: {
-		notSynced: 'Not synched',
-		connecting: 'Connecting',
-		syncing: 'Syncing',
-		synced: 'Synced',
-		dropped: 'Dropped',
-		reconnecting: 'Reconnecting'
+		notSynced: 'No sincronizado',
+		connecting: 'Conectando',
+		syncing: 'Sincronizando',
+		synced: 'Sincronizado',
+		dropped: 'Caido',
+		reconnecting: 'Reconectando'
 	},
 
-	// Moderation language map
+	// Mapa de lenguage de moderación
 	mod: {
-		title: ['Title', 'Display staff title on new posts'],
-		clearSelection: ['Clear', 'Clear selected posts'],
-		spoilerImages: ['Spoiler', 'Spoiler selected post images'],
-		deleteImages: ['Del Img', 'Delete selected post images'],
-		deletePosts: ['Del Post', 'Delete selected posts'],
-		lockThreads: ['Lock', 'Lock/unlock selected threads'],
-		toggleMnemonics: ['Mnemonics', 'Toggle mnemonic display'],
+		title: ['Title', 'Mostrar tituloe de staff en mis posts nuevos'],
+		clearSelection: ['Limpiar', 'Limpiar posts seleccionados'],
+		spoilerImages: ['Spoiler', 'Esconde posts seleccionados'],
+		deleteImages: ['Del Img', 'Eliminar images de los posts seleccionados'],
+		deletePosts: ['Del Post', 'Elimina posts seleccionados'],
+		lockThreads: ['Cerrar', 'Cierra/Abre los hilos seleccionados'],
+		toggleMnemonics: ['Mnemónico', 'Habilita la muestra de mnemónicos'],
 		sendNotification: [
-			'Notification',
-			'Send notifaction message to all clients'
+			'Notificación',
+			'Enviar mensaje de notificación a todos los clientes'
 		],
-		renderPanel: ['Panel', 'Toggle administrator panel display'],
-		ban: ['Ban', 'Ban poster(s) for the selected post(s)'],
-		modLog: ['Log', 'Show moderation log'],
+		renderPanel: ['Panel', 'Habilita la muestra de el panel de administrador'],
+		ban: ['Expulsar', 'Expulsar poster(s) por el numero seleccionado de post(s)'],
+		modLog: ['Log', 'Mostrar el log de moderación'],
 		displayBan: [
-			'Display',
-			'Append a public \'USER WAS BANNED FOR THIS POST\' message'
+			'Exponer',
+			'Añadir un mensaje \'USUARIO A SIDO EXPULSADO POR ESTE POST\' publico'
 		],
-		banMessage: 'USER WAS BANNED FOR THIS POST',
-		unban: 'Unban',
+		banMessage: 'USUARIO A SIDO EXPULSADO POR ESTE POST',
+		unban: 'Levantar expulsion',
 		placeholders: {
-			msg: 'Message',
+			msg: 'Mensaje',
 			days: 'd',
 			hours: 'h',
 			minutes: 'min',
-			reason: 'Reason'
+			reason: 'Motivo'
 		},
-		needReason: 'Must specify reason',
+		needReason: 'Debe especificar razon',
 
-		// Correspond to websocket calls in common/index.js
-		7: 'Image spoilered',
-		8: 'Image deleted',
-		9: 'Post deleted',
-		10: 'Thread locked',
-		11: 'Thread unlocked',
-		12: 'User banned',
-		53: 'User unbanned',
+		// Corresponde a llamadas de websocket en common/index.js
+		7: 'Imagen Spoileada',
+		8: 'Imagen eliminada',
+		9: 'Post eliminado',
+		10: 'Hilo cerrado',
+		11: 'Hilo abierto',
+		12: 'Usuario expulsado',
+		53: 'Expulsion levantada',
 
-		// Formatting function for moderation messages
+		// Formato de función para mensajes de moderación
 		formatLog: function (act) {
-			var msg = lang.mod[act.kind] + ' by ' + act.ident;
+			var msg = lang.mod[act.kind] + ' por ' + act.ident;
 			if (act.reason)
-				msg += ' for ' + act.reason;
+				msg += ' por ' + act.reason;
 			return msg;
 		}
 	},
 
-	// Format functions
+	// Funciones de formato
 	pluralize: function(n, noun) {
-		// For words ending with 'y' and not a vovel before that
+		// Para palabras que acaban 'y' y no hay una vocal antes.
 		if (n != 1
 			&& noun.slice(-1) == 'n'
 			&& ['a', 'i', 'o', 'u'].indexOf(noun.slice(-2, -1)
@@ -134,7 +134,7 @@ var lang = {
 	ago: function(time, unit, isFuture) {
 		var res = lang.pluralize(time, unit);
 		if (isFuture)
-			res = 'in ' + res;
+			res = 'en ' + res;
 		else
 			res += ' atrás';
 		return res;
