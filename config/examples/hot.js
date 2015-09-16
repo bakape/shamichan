@@ -30,6 +30,8 @@ this.hot = {
 	SUBJECT_MAX_LENGTH: 50,
 	EXCLUDE_REGEXP: /[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g,
 	SAGE_ENABLED: true,
+// Disable names and  for new posts
+	forced_anon: false,
 // Titles for staff that will be displayed in their posts' headers
 	staff_aliases: {
 		admin: 'Admin',
