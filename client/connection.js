@@ -185,19 +185,17 @@ function window_focused() {
 	connSM.feed('retry');
 }
 
-$(function () {
-	_.defer(connSM.feeder('start'));
-	// Check for connectivity each time tab visibility changes to visible
-	// A bit of an overhead, but should prevent unregistered disconnects,
-	// especially on mobile
-	document.addEventListener("visibilitychange", function (e) {
-		if (e.target.hidden)
-			return;
-		setTimeout(window_focused, 20);
-	});
-	window.addEventListener('online', function () {
-		reset_attempts();
-		connSM.feed('retry');
-	});
-	window.addEventListener('offline', connSM.feeder('close'));
+connSM.feed('start');
+// Check for connectivity each time tab visibility changes to visible
+// A bit of an overhead, but should prevent unregistered disconnects,
+// especially on mobile
+document.addEventListener('visibilitychange', e => {
+	if (e.target.hidden)
+		return;
+	setTimeout(window_focused, 20);
 });
+window.addEventListener('online', () => {
+	reset_attempts();
+	connSM.feed('retry');
+});
+window.addEventListener('offline', connSM.feeder('close'));
