@@ -235,10 +235,12 @@ module.exports = function(isMobile) {
 			}
 		},
 		/* KEEP THREAD LENGTH WITHIN LASTN */
+		/*
+		 Disabled, until dependancy features are implemnted (see issue #280)
 		{
 			id: 'postUnloading',
 			tab: 0
-		},
+		},*/
 		/* LOCK TO BOTTOM EVEN WHEN DOCUMENT HIDDEN*/
 		{
 			id: 'alwaysLock',
