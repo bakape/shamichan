@@ -32,7 +32,7 @@ master branch in production. For more stable revisions, please [download the
 ##Dependencies
 * [node-gyp dependancies](https://github.com/TooTallNate/node-gyp/#installation)
 * imagemagick
-* [io.js](https://iojs.org) >=2.0.0
+* node.js >=2.0.0
 * redis
 
 ###Optional dependencies
