@@ -120,24 +120,13 @@ router.get(/^\/(\w+)\/page(\d+)$/,
 );
 
 // Thread pages
-router.get(/^\/(\w+)\/(\d+)/,
+router.get(/^\/(\w+)\/(\d+)$/,
 	util.boardAccess,
 	function(req, res, next) {
-		const {board} = req,
-			num = parseInt(req.params[1], 10),
-			{ident} = req;
-		if (!num)
-			return res.sendStatus(404);
-		
-		// Validate the post number points to a thread. If not, validate it
-		// points to a reply and redirect.
-		if (!db.boards[num]) {
-			const actualOP = db.OPs[num];
-			if (actualOP)
-				return redirect_thread(res, num, actualOP, board, req.url);
-			return res.sendStatus(404);
-		}
-
+		const {board, ident} = req,
+			num = parseInt(req.params[1], 10);
+		if (!db.validateOP(num, board))
+			return redirectNum(req, res, num) || res.sendStatus(404);
 		if (!caps.can_access_thread(ident, num))
 			return res.sendStatus(404);
 
@@ -269,18 +258,22 @@ function page_nav(threads, cur_page) {
 	};
 }
 
-// Redirects '/board/num', when num point to a reply, not a thread
-function redirect_thread(res, num, op, board, url) {
-	let path = board ? `../${board}/${op}` : `./${op}`;
+// Check if the post exists in another thread/board and redirect, if it does
+function redirectNum(req, res, num) {
+	const op = db.OPs[num],
+		board = db.boards[op];
+	if (!(board && op))
+		return false;
+	let url = `../${board}/${op}`;
 
 	// Reapply query strings, so we don't screw up the History API by
 	// retrieving a full page
-	const query = url && url.split('?')[1];
+	const query = req.url.split('?')[1];
 	if (query)
-		path += '?' + query;
-	path += '#' + num;
-	
-	res.redirect(path);
+		url += '?' + query;
+	url += '#' + num;
+	res.redirect(url);
+	return true;
 }
 
 function detect_last_n(query) {

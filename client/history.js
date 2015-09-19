@@ -19,7 +19,7 @@ main.reply('loading:hide', () => $loading.hide());
 
 // Navigate to the URL
 function readingSteiner(url, event) {
-	const nextState = state.read(url);
+	let nextState = state.read(url);
 	// Does the link point to the same page as this one?
 	if (_.isMatch(state.page.attributes, nextState))
 		return;
@@ -34,39 +34,40 @@ function readingSteiner(url, event) {
 
 	/*
 	 * Fetch new DOM from the server
-	 *
-	 * Decided to go with a non-caching approach and instead relly on etags and
-	 * CDN for HTML-only caching. This solution is already very fast on threads
-	 * that are not several thousand posts large.
+	 * Decided to go withthout dedicated caching and use etags for browser
+	 * cache verification.
 	 */
 	$loading.show();
-	let xhr = new XMLHttpRequest();
+	const xhr = new XMLHttpRequest();
 	xhr.open('GET', address);
 	xhr.onload = function () {
 		// In case the thread is dead, moderatator cookie expired or some
-		// other shananigans
+		// other shenanigans
 		if (this.status !== 200)
-			return location.replace(this.url.split('?')[0]);
+			return alert(this.status);
 
+		// Was redirected to different thread/board
+		if (baseURL(url) !== baseURL(this.responseURL))
+			nextState = state.read(this.responseURL);
 		main.request('postSM:feed', 'done');
 		main.trigger('state:clear');
+
 		// Apply new DOM and load models
 		main.$threads[0].innerHTML = this.response;
+
 		// Set new page state
 		state.page.set(nextState);
+
 		// Reconfigure rendering singleton
 		main.oneeSama.op = nextState.thread;
 		new Extract();
-		// Swap the database controller server-side
-		main.send([
-			common.RESYNC,
-			nextState.board,
-			state.syncs,
-			nextState.live
-		]);
 
+		// Swap the database controller server-side
+		main.send([common.RESYNC, nextState.board, state.syncs,
+			nextState.live]);
 		if (event) {
-			history.pushState(null, null, url);
+			history.pushState(null, null, nextState.href);
+
 			// Scroll to top on new pages with no hashes
 			if (location.hash)
 				main.request('scroll:aboveBanner');
@@ -76,6 +77,10 @@ function readingSteiner(url, event) {
 		$loading.hide();
 	};
 	xhr.send();
+}
+
+function baseURL(url) {
+	return url.split(/[\?#]/)[0];
 }
 
 // For back and forward history events

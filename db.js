@@ -219,10 +219,11 @@ class Subscription extends events.EventEmitter {
 
 /* OP CACHE */
 
-function boardHasOP(board, op) {
-	return BOARDS[op] === board;
+// Validate the post number points to a thread on the specific board
+function validateOP(op, board) {
+	return OPs[op] == op && BOARDS[op] === board;
 }
-exports.boardHasOP = boardHasOP;
+exports.validateOP = validateOP;
 
 function track_OPs (callback) {
 	const redis = redis_client();
@@ -419,7 +420,7 @@ class Yakusoku extends events.EventEmitter {
 			return callback(Muggle("No post number."));
 		else if (!ip)
 			return callback(Muggle("No IP."));
-		else if (!isThead && (OPs[op] != op || !boardHasOP(board, op))) {
+		else if (!isThead && !validateOP(op, board)) {
 			uncacheThread(op);
 			return callback(Muggle('Thread does not exist.'));
 		}
