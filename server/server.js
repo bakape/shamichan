@@ -279,18 +279,17 @@ function allocate_post(msg, client, callback) {
 			post.subject = subject;
 	}
 
-	if (!STATE.hot.forced_anon) {
-		// Replace names, when a song plays on r/a/dio
-		if (radio && radio.name)
-			post.name = radio.name;
+	// Replace names, when a song plays on r/a/dio
+	if (radio && radio.name)
+		post.name = radio.name;
+	else if (!STATE.hot.forced_anon) {
 		/* TODO: Check against client.watching? */
-		else if (msg.name) {
+		if (msg.name) {
 			const parsed = common.parse_name(msg.name);
 			post.name = parsed[0];
 			const spec = STATE.hot.SPECIAL_TRIPCODES;
-			if (spec && parsed[1] && parsed[1] in spec) {
+			if (spec && parsed[1] && parsed[1] in spec)
 				post.trip = spec[parsed[1]];
-			}
 			else if (parsed[1] || parsed[2]) {
 				const trip = tripcode.hash(parsed[1], parsed[2]);
 				if (trip)
