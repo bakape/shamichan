@@ -69,7 +69,7 @@ let HoverPostView = Backbone.View.extend({
 		let post = state.posts.get(m[1]);
 		if (!post)
 			return;
-		this.targetPos = $target.position();
+		this.targetPos = $target.offset();
 		this.previewView = new PostPreview({
 			model: post,
 			parentNum: etc.getID(event.target)
