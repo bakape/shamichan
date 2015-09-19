@@ -34,7 +34,7 @@ function set_lock_target(num) {
 		);
 	}
 }
-main.reply('scroll:focus', num => set_lock_target(num));
+main.reply('scroll:focus', set_lock_target);
 
 /* 
  * Logic for locking position to bottom of thread

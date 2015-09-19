@@ -47,9 +47,8 @@ let NotifyModel = Backbone.Model.extend({
 			});
 			// Prevent scrolling with new posts, if page isn't visible
 			if (!options.get('alwaysLock')) {
-				main.follow(() =>
-					hidden && main.$threads.find('article').last().attr('id')
-				);
+				main.request('scroll:focus',
+					hidden && main.$threads.find('article').last().attr('id'));
 			}
 		}, false);
 
