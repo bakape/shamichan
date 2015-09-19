@@ -189,6 +189,7 @@ function expand_templates(res) {
 	_.extend(templateVars, config);
 	templateVars.NAVTOP = make_navigation_html();
 	templateVars.FAQ = build_FAQ(templateVars.FAQ);
+
 	// Format info banner
 	if (templateVars.BANNERINFO)
 		templateVars.BANNERINFO = `&nbsp;&nbsp;[${templateVars.BANNERINFO}]`;

@@ -16,7 +16,9 @@
 			clientHash = '{{client_hash}}',
 			cssHash = '{{css_hash}}',
 			lang = '{{lang}}',
-			isMobile = {{isMobile}};
+			isMobile = {{isMobile}},
+			// Timestamp of server-side render
+			renderTime = $RENDERTIME;
 	</script>
 	<script src="{{MEDIA_URL}}js/setup.js?v={{client_hash}}"></script>
 	<noscript>
@@ -68,10 +70,14 @@
 <div id="schedule" class="bmodal">{{schedule_modal}}</div>
 {{options_panel}}
 <div id="headerTopMargin"></div>
-$IMAGEBANNER
+<h1>
+	$IMAGEBANNER
+</h1>
 <threads>
 	$THREADS
 </threads>
 <script src="{{MEDIA_URL}}js/vendor.js?v={{vendor_hash}}"></script>
-<script>$DEPS</script>
+<script>
+	$DEPS
+</script>
 <script src="{{MEDIA_URL}}js/loader.js?v={{client_hash}}"></script>
