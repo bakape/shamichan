@@ -7,7 +7,8 @@ let main = require('./main'),
 
 // Read page state by parsing a URL
 function read(url) {
-	const href = url.split('#')[0];
+	// Strip minimal mode, so we save a proper URL into History
+	const href = url.split('#')[0].replace(/[\?&]minimal=true/, '');
 	// Display last N posts setting on thread pages
 	let lastN = href.match(/[\?&]last=(\d+)/),
 		thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
