@@ -28,21 +28,22 @@ main.reply('send', send);
 function on_message(e) {
 	if (config.DEBUG)
 		console.log('>', e.data);
-	main.follow(function() {
-		let data = JSON.parse(e.data);
-		for (let msg of data) {
-			const op = msg.shift(),
-				type = msg.shift();
 
-			// Some handlers are optional and/or dynamic. Ignore them silently.
-			const handler = main.dispatcher[type];
-			if (!handler)
-				return;
-			if (common.is_pubsub(type) && op in state.syncs)
-				state.syncs[op]++;
-			handler(msg, op);
-		}
-	});
+	const msg = JSON.parse(e.data)[0],
+		op = msg.shift(),
+		type = msg.shift(),
+		isPubSub = common.is_pubsub(type);
+
+	if (isPubSub && connSM.state === 'locked')
+		return;
+
+	// Some handlers are optional and/or dynamic. Ignore them silently.
+	const handler = main.dispatcher[type];
+	if (!handler)
+		return;
+	if (isPubSub && op in state.syncs)
+		state.syncs[op]++;
+	main.follow(() => handler(msg, op));
 }
 
 const sync = document.getElementById('sync');
@@ -121,6 +122,12 @@ function reset_attempts() {
 	}
 	attempts = 0;
 }
+
+// Prevent pub/sub mesages from being handled
+connSM.act('synced, syncing + lock -> locked');
+connSM.act('locked + unlock -> synced');
+main.reply('connection:lock', () => send([common.DESYNC]), connSM.feed('lock'));
+main.reply('connection:unlock', msg => send(msg), connSM.feed('unlock'));
 
 connSM.act('* + close -> dropped', function (e) {
 	if (socket) {

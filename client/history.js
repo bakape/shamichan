@@ -23,6 +23,11 @@ function readingSteiner(url, event) {
 	// Does the link point to the same page as this one?
 	if (_.isMatch(state.page.attributes, nextState))
 		return;
+
+	// Disconnect server-side Yakusoku in preparation for navigating away.
+	// This helps avoid duplicate messages mid-navigation.
+	main.request('connection:lock');
+
 	if (event)
 		event.preventDefault();
 
@@ -60,11 +65,15 @@ function readingSteiner(url, event) {
 
 		// Reconfigure rendering singleton
 		main.oneeSama.op = nextState.thread;
-		new Extract();
+		new Extract(nextState.catalog);
 
-		// Swap the database controller server-side
-		main.send([common.RESYNC, nextState.board, state.syncs,
-			nextState.live]);
+		// Swap the database controller server-side. Catalog does not use a
+		// Yakusoku(), so not needed.
+		if (!nextState.catalog) {
+			main.request('connection:unlock', [common.RESYNC, nextState.board,
+				state.syncs, nextState.live]);
+		}
+
 		if (event) {
 			history.pushState(null, null, nextState.href);
 

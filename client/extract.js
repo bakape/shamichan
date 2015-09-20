@@ -2,19 +2,19 @@
  * Extact model data from the thread tree HTML and populate models and views
  */
 
-let main = require('./main'),
+const main = require('./main'),
 	{_, options, state, posts} = main;
 
 class Extract {
-	constructor() {
-		let el = main.$threads[0];
+	constructor(catalog) {
+		const el = main.$threads[0];
 
 		// Read serialised model data
-		let json = JSON.parse(document.getElementById('postData').innerHTML);
+		const json = JSON.parse(document.getElementById('postData').innerHTML);
 		main.request('notify:title', json.title);
 
 		// We don't need models on catalog pages
-		if (state.page.get('catalog'))
+		if (catalog)
 			return;
 
 		const mine = this.mine = state.mine.readAll(),
@@ -75,4 +75,4 @@ class Extract {
 module.exports = Extract;
 
 // Initial extraction. No need to defer, as we actually want it to hit ASAP.
-new Extract();
+new Extract(state.page.get('catalog'));

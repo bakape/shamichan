@@ -169,11 +169,7 @@ class Catalog extends RenderBase {
 		// Cache so it can be resused at <threads> bottom
 		const pag = this.pag
 			= this.oneeSama.asideLink('return', '.', 'compact', 'history');
-		let html = this.boardTitle() + pag + '<hr>\n';
-		if (!config.READ_ONLY)
-			html += this.oneeSama.newThreadBox();
-		html += '<div id="catalog">';
-		return html;
+		return this.boardTitle() + pag + '<hr>\n<div id="catalog">';
 	}
 	onBottom() {
 		this.resp.write('</div><hr>\n' + this.pag + this.threadsBottom());
@@ -203,8 +199,7 @@ class Catalog extends RenderBase {
 					</span>
 					${oneeSama.expansionLinks(post.num)}
 				</small>
-				<br>`
-			)
+				<br>`)
 		);
 		if (post.subject)
 			html.push(safe('<h3>「'), post.subject, safe('」</h3>'));

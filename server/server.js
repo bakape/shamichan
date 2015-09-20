@@ -169,6 +169,13 @@ dispatcher[common.RESYNC] = function(msg, client) {
 	return linkToDatabase(msg[0], msg[1], msg[2], client);
 };
 
+// Stop listening on redis channels in preparation for RESYNC
+dispatcher[common.DESYNC] = function (msg, client) {
+	if (client.db)
+		client.db.kikanai().disconnect();
+	return true;
+};
+
 function setup_imager_relay(cb) {
 	var onegai = new imager.Onegai;
 	onegai.relay_client_messages();

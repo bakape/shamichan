@@ -7,8 +7,10 @@ let main = require('./main'),
 
 // Read page state by parsing a URL
 function read(url) {
+
 	// Strip minimal mode, so we save a proper URL into History
 	const href = url.split('#')[0].replace(/[\?&]minimal=true/, '');
+
 	// Display last N posts setting on thread pages
 	let lastN = href.match(/[\?&]last=(\d+)/),
 		thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
@@ -23,10 +25,9 @@ function read(url) {
 		lastN,
 		board: href.match(/\/([a-zA-Z0-9]+?)\//)[1],
 		catalog: /\/catalog/.test(href),
-		/*
-		 * Indicates if on the 'live' board page, which needs extra server-side
-		 * logic.
-		 */
+
+		// Indicates if on the 'live' board page, which needs extra server-side
+		// logic.
 		live: page === -1 && thread === 0
 	};
 }

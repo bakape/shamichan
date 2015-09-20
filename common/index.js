@@ -26,6 +26,8 @@ const DEF = {
 	IMAGE_STATUS: 31,
 	SYNCHRONIZE: 32,
 	EXECUTE_JS: 33,
+	// Unsubscribe from server-side redis listeners
+	DESYNC: 34,
 	UPDATE_BANNER: 35,
 	GET_TIME: 36,
 	ONLINE_COUNT: 37,
