@@ -2,16 +2,24 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##1.0.0-beta - 2015-08-24
+##1.0.0 - 2015-09-20
 ###Added
+- UTC Clock to the schedule
+- Options export and import to/from file
+- Option to anonymise all posters
+- Selectable language packs
+- Image banners
+- Live updates in post hover previews
+- Support for hosting static assets on a subdomain
+- Ocean theme
+- Full ETag support
 - Debug mode forcing client-side with `debug=true` query string
 - Compatability bundle for older, hipster and outright retarded browsers
 - Scroll to post after contracting images taller than the viewport
 - `scripts/send` for pushing arbitrary messages to all client from the 
 server's shell
-- Underline parent post links in hover preview
 - Box shadow to upper layer elements
-- Loading indicator on inital page load
+- Loading indicator
 - Staff board to board navigation
 - Janitor staff class
 - Link hover colour to glass theme
@@ -20,11 +28,32 @@ server's shell
 - Moderation taken indicators for staff
 - Moderation log for staff
 - Internal production error logging
-- io.js v3 support
+- node.js v3 support
 - `--debug` flag for forcing debug mode
 - Database migration script from v0 or vanilla doushio
+- Reason field for bans
+- <noscript> header
+- Panel listing active
+- Full client-facing localisation
+- Operational dev guide
+- Separate mobile HTML templates
+- Uncommited text colour to glass theme
+- Supported browser indicator
+- Configurable custom `>>>/${link}/` targets
+- Optional global server-side anonymisation
 
 ###Changed
+- Client rewritten mostly form scratch
+- Meguca client compilation, install and upgrade procedures. See
+README.md
+- Pastebin embed height to 0.65 of viewport
+- Client to single page application
+- Faster builder.js client recompilation on change
+- Upgraded dependancies, including minimal node.js version
+- Google image search enabled by default
+- Post menu only disappears on click either inside or outside the menu
+- Render catalog server-side
+- JSON API spec
 - Metric ton of performance improvments
 - Switched to 4chan-like thread expiry model with page limits and autosaging
 - Persist `sage` in the email field
@@ -33,8 +62,16 @@ server's shell
 - Always render inter-board navigation
 - Updated JSON API post spec
 - Restyle moderation selection checkbox
+- Hide mnemonics from janitors
+- Persistent JS script injections
+- Don't preload all spoiler panes on postform render
+- More efficient static asset caching
 
 ###Fixed
+- Delay before r/a/dio banner appearing, when enabled
+- Opus WebM parsing
+- Random images generating small thumbnails
+- Vagrant provisioning on OSX
 - Disconnect favicon 404, if served from subdomain
 - Navigating with inter-board post links
 - Thread hiding
@@ -48,11 +85,8 @@ server's shell
 - Opening new tab when clicking audio controls in Firefox
 - Dangling apostrophe in tripcode
 - WebM expansion on Chrome for Android
-- Image omit count calculation
 - Overflow of admin notifications
 - Purging hidden post list
-- Builder.js rebuild and restart on ./admin changes
-- Inability to post after navigating post links with an open postform
 - Outline around [Return] after clicking [Bottom]
 - Deliberate server crashing, by sending certain websocket messages
 - Incorrect process exit codes on termination
@@ -66,49 +100,16 @@ server's shell
 - Graveyard board
 - Fun threads
 - Changelog banner icon
+- Post focusing menu option
+- Board curfews
+- Imager deamon stub
+- Dynamic post unloading (temporarily, until reimplementation)
 
 ##Breaking
 - Dice storage in old threads
 - Backlink generation in old threads
 - Changed server entry point. Use `npm start` to start the server.
 - Removed thread tagging. See `docs/migration.md`.
-
-##1.0.0-alpha - 2015-06-02
-###Added
-- UTC Clock to the schedule
-- Options export and import to/from file
-- Option to anonymise all posters
-- Selectable language packs
-- Image banners
-- Live updates in post hover previews
-- Support for hosting static assets on a subdomain
-- Ocean theme
-- Full ETag support
-
-###Fixed
-- Delay before r/a/dio banner appearing, when enabled
-- Opus web parsing
-- Random images generating small thumbnails
-- Vagrant provisioning on OSX
-
-###Changed
-- Client rewritten mostly form scratch
-- Meguca client compilation, install and upgrade procedures. See
-README.md
-- Seperated client-related cleaning into `make client_clean`
-- Pastebin embed height to 0.65 of viewport
-- Client to single page application
-- Faster builder.js client recompilation on change
-- Upgraded dependancies, including minimal io.js version
-- Google image search enabled by default
-- Post menu only disappears on click either inside or outside the menu
-- Render catalog server-side
-- JSON API spec
-
-###Removed
-- Post focusing menu option
-- Board curfews
-- Imager deamon stub
 
 ##0.11.3 - 2015-03-31
 ###Fixed
