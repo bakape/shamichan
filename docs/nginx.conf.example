@@ -32,8 +32,8 @@ server {
 	location = /favicon.ico {}
 	location = /bg.jpg {}
 	location = /MadokaRunes.ttf {}
-	location = /50x.ico {}
-	location = /50x.html {}
+	location = /503.ico {}
+	location = /503.html {}
 	location /mobile {}
 
 	# Handles static assets (images, JS, CSS, etc.)
@@ -78,7 +78,7 @@ server {
 		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
 
 		# Custom error page. Changing to 503 to not trip Cloudflare
-		error_page 500 502 503 504 =503 /50x.html;
+		error_page 500 502 503 504 =503 /503.html;
 	}
 
 	# For websocket connections. Change to match config.SOCKET_PATH

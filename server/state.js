@@ -174,9 +174,7 @@ function reload_resources(cb) {
 function read_templates(cb) {
 	async.parallel({
 		index: readFile('tmpl', 'index.html'),
-		mobile: readFile('tmpl', 'mobile.html'),
-		notFound: readFile('www', '404.html'),
-		serverError: readFile('www', '50x.html')
+		mobile: readFile('tmpl', 'mobile.html')
 	}, cb);
 }
 
@@ -194,11 +192,6 @@ function expand_templates(res) {
 	if (templateVars.BANNERINFO)
 		templateVars.BANNERINFO = `&nbsp;&nbsp;[${templateVars.BANNERINFO}]`;
 
-	const expanded = {
-		notFoundHtml: res.notFound,
-		serverErrorHtml: res.serverError
-	};
-
 	// Prebuild a desktop and mobile set of options
 	const opts = {
 		index: options(false),
@@ -206,6 +199,7 @@ function expand_templates(res) {
 	};
 
 	// Build index and mobile templates for each language
+	const expanded = {};
 	for (let lang of config.LANGS) {
 		_.extend(expanded, indexTemplates(lang, templateVars, res, opts));
 	}

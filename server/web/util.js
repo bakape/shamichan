@@ -2,7 +2,9 @@
  Various utility functions
  */
 
-let caps = require('../caps');
+const caps = require('../caps'),
+	path = require('path'),
+	{resources} = require('../state');
 
 function parse_forwarded_for(ff) {
 	if (!ff)
@@ -21,7 +23,7 @@ exports.parse_forwarded_for = parse_forwarded_for;
 function boardAccess(req, res, next) {
 	const board = req.board = req.params[0];
 	if (!caps.can_access_board(req.ident, board))
-		return res.sendStatus(404);
+		return send404(res);
 	next();
 }
 exports.boardAccess = boardAccess;
@@ -31,3 +33,8 @@ exports.noCacheHeaders = {
 	'Expires': 'Thu, 01 Jan 1970 00:00:00 GMT',
 	'Cache-Control': 'no-cache, no-store'
 };
+
+function send404(res) {
+	res.status(404).sendFile(path.resolve('www/404.html'));
+}
+exports.send404 = send404;

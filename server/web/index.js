@@ -2,7 +2,7 @@
  Webserver
  */
 
-let _ = require('underscore'),
+const _ = require('underscore'),
 	admin = require('./admin'),
 	api = require('./api'),
 	caps = require('../caps'),
@@ -17,7 +17,7 @@ let _ = require('underscore'),
 	util = require('./util'),
 	websocket = require('./websocket');
 
-let app = express(),
+const app = express(),
 	server = http.createServer(app);
 
 app.enable('strict routing').disable('etag');
@@ -42,7 +42,7 @@ app.use(function(req, res, next) {
 	req.ident = caps.lookup_ident(ip);
 	// TODO: A prettier ban page would be nice, once we have actual ban comments
 	if (req.ident.ban)
-		return res.sendStatus(500);
+		return util.send404(res);
 
 	// Staff authentication
 	const loginCookie = persona.extract_login_cookie(req.cookies);
@@ -77,3 +77,6 @@ if (config.SERVE_STATIC_FILES) {
 }
 
 app.use(html);
+
+// No match on other routers
+app.use((req, res) => util.send404(res));

@@ -126,9 +126,9 @@ router.get(/^\/(\w+)\/(\d+)$/,
 		const {board, ident} = req,
 			num = parseInt(req.params[1], 10);
 		if (!db.validateOP(num, board))
-			return redirectNum(req, res, num) || res.sendStatus(404);
+			return redirectNum(req, res, num) || util.send404(res);
 		if (!caps.can_access_thread(ident, num))
-			return res.sendStatus(404);
+			return util.send404(res);
 
 		const yaku = new db.Yakusoku(board, ident),
 			reader = new db.Reader(ident),
@@ -140,7 +140,7 @@ router.get(/^\/(\w+)\/(\d+)$/,
 		
 		reader.get_thread(num, opts);
 		reader.once('nomatch', function() {
-			res.sendStatus(404);
+			util.send404(res);
 			yaku.disconnect();
 		});
 		reader.once('begin', function(preThread) {
