@@ -1,3 +1,6 @@
+/*
+Builds client JS and CSS
+ */
 'use strict';
 
 const babelify = require('babelify'),
@@ -50,7 +53,8 @@ function buildClient() {
 			'stack-blur',
 			'lang',
 			'core-js',
-			'scriptjs'
+			'scriptjs',
+			'dom4'
 		]
 	})
 		// Exclude these requires on the client
@@ -113,7 +117,8 @@ function buildClient() {
 			'backbone',
 			'backbone.radio',
 			'scriptjs',
-			'sockjs-client'
+			'sockjs-client',
+			'dom4'
 		],
 		debug: true
 	})
