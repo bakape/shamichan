@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{$, Backbone, common, options, stackBlur, state} = main;
+	{Backbone, common, options, stackBlur, state} = main;
 
 const colourMap = {
 	glass: {
@@ -18,7 +18,7 @@ const colourMap = {
 
 let BackgroundView = Backbone.View.extend({
 	initialize() {
-		this.$css = $('#backgroundCSS');
+		this.css = document.getElementById('backgroundCSS');
 		this.render();
 
 		main.reply('background:store', this.store, this);
@@ -62,8 +62,10 @@ let BackgroundView = Backbone.View.extend({
 		};
 	},
 	render() {
-		this.$el.empty().css('background', 'none');
-		this.$css.empty();
+		const {el} = this;
+		el.innerHTML = '';
+		el.style.background = 'none';
+		this.css.innerHTML = '';
 		if (options.get('illyaBGToggle') && state.hotConfig.get('ILLYA_DANCE'))
 			this.renderIllya();
 		else if (options.get('userBG'))
@@ -73,10 +75,10 @@ let BackgroundView = Backbone.View.extend({
 		const bg = localStorage.background;
 		if (!bg)
 			return;
-		this.$el
-			// Need to set in separate call, because CSS
-			.css('background', `url(${bg}) no-repeat fixed center`)
-			.css('background-size', 'cover');
+		const {el} = this;
+		el.style.background = `url(${bg}) no-repeat fixed center`;
+		el.style.backgroundSize = 'cover';
+
 		// Add blurred background image to elements, if theme is glass or ocean
 		const theme = options.get('theme');
 		if (theme !== 'glass' && theme !== 'ocean')
@@ -84,7 +86,7 @@ let BackgroundView = Backbone.View.extend({
 		const blurred = localStorage.blurred;
 		if (!blurred)
 			return;
-		this.$css.html(this.renderGlass(theme, blurred));
+		this.css.innerHTML = this.renderGlass(theme, blurred);
 	},
 	renderGlass(theme, blurred) {
 		const {normal, editing} = colourMap[theme];
@@ -106,12 +108,11 @@ let BackgroundView = Backbone.View.extend({
 	},
 	renderIllya() {
 		const urlBase = main.config.MEDIA_URL + 'illya.';
-		this.$el.html(common.parseHTML
+		this.el.innerHTML = common.parseHTML
 			`<video autoplay loop ${options.get('illyaMuteToggle') && 'muted'}>
 				<source src="${urlBase + 'webm'}" type="video/webm">
 				<source src="${urlBase + 'mp4'}" type="video/mp4">
-			</video>`
-		);
+			</video>`;
 	}
 });
 
