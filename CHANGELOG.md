@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.1.0 - 2015-09-22
+###Added
+- 40x and 50x page rendering on requests
+- DOM level 4 polyfill
+
+###Changed
+- Modal design in console theme
+
+###Fixed
+- Missing top <hr> on thread pages
+- Missing icons in "Works best with" message
+
 ##1.0.0 - 2015-09-20
 ###Added
 - UTC Clock to the schedule
