@@ -3,7 +3,7 @@
  */
 
 const main = require('./main'),
-	{$, _, common, config, connSM, state, SockJS} = main,
+	{_, common, config, connSM, state, SockJS} = main,
 	lang = main.lang.sync;
 
 let socket, attempts, attemptTimer;
@@ -75,16 +75,9 @@ function connect() {
 }
 
 function new_socket() {
-	let transports = [
-		'xdr-streaming',
-		'xhr-streaming',
-		'iframe-eventsource',
-		'iframe-htmlfile',
-		'xdr-polling',
-		'xhr-polling',
-		'iframe-xhr-polling',
-		'jsonp-polling'
-	];
+	const transports = ['xdr-streaming', 'xhr-streaming', 'iframe-eventsource',
+		'iframe-htmlfile', 'xdr-polling', 'xhr-polling', 'iframe-xhr-polling',
+		'jsonp-polling'];
 	if (config.USE_WEBSOCKETS)
 		transports.unshift('websocket');
 	return new SockJS(config.SOCKET_URL || config.SOCKET_PATH, null, {
@@ -92,19 +85,13 @@ function new_socket() {
 	});
 }
 
-connSM.act('conn, reconn + open -> syncing', function () {
+connSM.act('conn, reconn + open -> syncing', () => {
 	sync_status(lang.syncing);
-	const connID = common.random_id();
-	var page = state.page;
+	const connID = common.random_id(),
+		{page} = state;
 	page.set('connID', connID);
-	send([
-		common.SYNCHRONIZE,
-		connID,
-		page.get('board'),
-		state.syncs,
-		page.get('live'),
-		document.cookie
-	]);
+	send([common.SYNCHRONIZE, connID, page.get('board'), state.syncs,
+		page.get('live'), document.cookie]);
 });
 
 connSM.act('syncing + sync -> synced', function () {
@@ -129,22 +116,21 @@ connSM.act('locked + unlock -> synced');
 main.reply('connection:lock', () => send([common.DESYNC]), connSM.feed('lock'));
 main.reply('connection:unlock', msg => send(msg), connSM.feed('unlock'));
 
-connSM.act('* + close -> dropped', function (e) {
+connSM.act('* + close -> dropped',  error => {
 	if (socket) {
 		socket.onclose = null;
 		socket.onmessage = null;
 	}
 	if (config.DEBUG)
-		console.error('E:', e);
+		console.error('E:', error);
 	if (attemptTimer) {
 		clearTimeout(attemptTimer);
 		attemptTimer = 0;
 	}
 	sync_status(lang.dropped);
-	attempts++;
-	var n = Math.min(Math.floor(attempts/2), 12),
-		wait = 500 * Math.pow(1.5, n);
-	// wait maxes out at ~1min
+
+	// Wait maxes out at ~1min
+	const wait = 500 * Math.pow(1.5, Math.min(Math.floor(++attempts / 2), 12));
 	setTimeout(connSM.feeder('retry'), wait);
 });
 
@@ -157,7 +143,7 @@ connSM.act('dropped + retry -> reconn', function () {
 	}, 100);
 });
 
-connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
+connSM.act('* + invalid, desynced + close -> desynced', msg => {
 	msg = (msg && msg[0]) ? 'Out of sync: ' + msg[0] : 'Out of sync';
 	sync_status(msg);
 	if (attemptTimer) {
@@ -173,36 +159,38 @@ connSM.act('* + invalid, desynced + close -> desynced', function (msg) {
 });
 
 function window_focused() {
-	var s = connSM.state;
-	if (s == 'desynced')
-		return;
-	// might have just been suspended;
-	// try to get our SM up to date if possible
-	if (s == 'synced' || s == 'syncing' || s == 'conn') {
-		var rs = socket.readyState;
-		if (rs != SockJS.OPEN && rs != SockJS.CONNECTING) {
-			connSM.feed('close');
+	switch (connSM.state) {
+		case 'desynced':
 			return;
-		}
-		else if (navigator.onLine === false) {
-			connSM.feed('close');
-			return;
-		}
+		// might have just been suspended;
+		// try to get our FSM up to date if possible
+		case 'synced':
+		case 'syncing':
+		case 'conn':
+			const rs = socket.readyState;
+			if (rs != SockJS.OPEN && rs != SockJS.CONNECTING) {
+				connSM.feed('close');
+				return;
+			}
+			else if (navigator.onLine === false) {
+				connSM.feed('close');
+				return;
+			}
+			break;
 	}
 	connSM.feed('retry');
 }
 
+// Connect to server
 connSM.feed('start');
+
 // Check for connectivity each time tab visibility changes to visible
 // A bit of an overhead, but should prevent unregistered disconnects,
-// especially on mobile
+// especially on mobile.
 document.addEventListener('visibilitychange', e => {
 	if (e.target.hidden)
 		return;
 	setTimeout(window_focused, 20);
 });
-window.addEventListener('online', () => {
-	reset_attempts();
-	connSM.feed('retry');
-});
+window.addEventListener('online', () => reset_attempts(), connSM.feed('retry'));
 window.addEventListener('offline', connSM.feeder('close'));
