@@ -30,9 +30,9 @@ master branch in production. For more stable revisions, please [download the
 * See `docs/` for upgrading between semver major releases
 
 ##Dependencies
+* node.js >=2.0.0
 * [node-gyp dependancies](https://github.com/TooTallNate/node-gyp/#installation)
 * imagemagick
-* node.js >=2.0.0
 * redis
 
 ###Optional dependencies
