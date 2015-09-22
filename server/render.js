@@ -308,7 +308,8 @@ class Thread extends Board {
 		const {lang} = this.oneeSama;
 		html += actionLink('#bottom', lang.bottom)
 			+ '&nbsp;'
-			+ actionLink('', lang.expand_images, 'expandImages');
+			+ actionLink('', lang.expand_images, 'expandImages')
+			+ '<hr>\n';
 
 		return html;
 	}
