@@ -2,8 +2,8 @@
  * Handles all things banner and notifications
  */
 
-let main = require('./main'),
-	{$, Backbone, common, dispatcher, options} = main;
+const main = require('./main'),
+	{Backbone, common, dispatcher, etc, options} = main;
 
 const modalMap = {
 	'options': 'options-panel',
@@ -12,10 +12,10 @@ const modalMap = {
 	'banner_schedule': 'schedule'
 };
 
-let BannerView = Backbone.View.extend({
+const BannerView = Backbone.View.extend({
 	initialize() {
-		this.$center = this.$el.children('#banner_center');
-		this.$info = this.$el.children('#banner_info');
+		this.center = document.getElementById('banner_center');
+		this.info = document.getElementById('banner_info');
 		// Publish a listener to the message bus
 		main.reply('banner:radio:clear', this.clearRadio, this);
 	},
@@ -23,23 +23,28 @@ let BannerView = Backbone.View.extend({
 		'click .bfloat': 'revealBmodal'
 	},
 	renderInfo(msg) {
-		this.$info.html(msg);
+		this.info.innerHTML = msg;
 	},
 	// Toggle the display of the modal windows under the banner
 	revealBmodal(event) {
-		let $target = $(event.target).closest('.bfloat');
-		const bmodal = modalMap[$target.attr('id')];
+		const bmodal = modalMap[event.target.closest('.bfloat')
+			.getAttribute('id')];
 		if (!bmodal)
 			return;
-		let $el = $('#' + bmodal);
-		const isShown = $el.is(':visible');
-		$('.bmodal').hide();
+		const el = document.getElementById(bmodal),
+			isShown = el && getComputedStyle(el).display !== 'none';
+		for (let el of document.queryAll('.bmodal')) {
+			el.style.display = 'none'
+		}
+
 		// We hid the currently displayed window. All is well
 		if (isShown)
 			return;
+
 		// Place 5 pixels bellow banner
-		$el.css('top', $('#banner').outerHeight() + 5 + 'px');
-		$el.show();
+		el.style.top = document.getElementById('banner').offsetHeight + 5
+			+ 'px';
+		el.style.display = 'block';
 	},
 	// r/a/dio stream info rendering
 	renderRadio(data) {
@@ -49,27 +54,26 @@ let BannerView = Backbone.View.extend({
 			href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
 			target: '_blank'
 		};
-		this.$center.html(common.parseHTML
+		this.center.innerHTML = common.parseHTML
 			`<a href="http://r-a-d.io/" target="_blank">
 				[${data.listeners}] ${data.dj}
 			</a>
 			&nbsp;&nbsp;
 			<a ${attrs}>
 				<b>${data.np}</b>
-			</a>`
-		);
+			</a>`;
 	},
 	clearRadio() {
-		this.$center.empty();
+		this.center.innerHTML = '';
 	}
 });
 
-let banner = exports.view = new BannerView({
+const banner = exports.view = new BannerView({
 	el: document.getElementById('banner')
 });
 
 // Notification messages bellow the banner
-let NotificationView = exports.notification = Backbone.View.extend({
+const NotificationView = exports.notification = Backbone.View.extend({
 	initialize(msg) {
 		this.render(msg);
 	},
@@ -77,21 +81,21 @@ let NotificationView = exports.notification = Backbone.View.extend({
 		'click': 'remove'
 	},
 	render(msg) {
-		$('.notification').remove();
-		let $banner = banner.$el;
+		for (let el of document.queryAll('.notification')) {
+			el.remove();
+		}
 		const attrs = {
 			class: 'notification modal',
-			style: `top: ${$banner.outerHeight() + 5 + 'px'};`
+			style: `top: ${banner.el.offsetHeight + 5}px;`
 		};
-		let $el = $(common.parseHTML
+		const el = etc.parseDOM(common.parseHTML
 			`<span ${attrs}>
 				<b class="admin">
 					${msg}
 				</b>
-			</span>`
-		)
-			.insertAfter($banner);
-		this.setElement($el[0]);
+			</span>`)[0];
+		banner.el.after(el);
+		this.setElement(el);
 		return this;
 	}
 });
@@ -99,8 +103,6 @@ main.reply('notification', msg => new NotificationView(msg));
 
 dispatcher[common.NOTIFICATION] = msg => new NotificationView(msg[0]);
 dispatcher[common.UPDATE_BANNER] = msg => banner.renderInfo(msg[0]);
-dispatcher[common.RADIO] = function(msg) {
-	// R/a/dio banner is disabled on mobile
-	if (options.get('nowPlaying') && !main.isMobile)
-		banner.renderRadio(msg[0]);
-};
+// R/a/dio banner is disabled on mobile
+dispatcher[common.RADIO] = msg =>
+	options.get('nowPlaying') && !main.isMobile && banner.renderRadio(msg[0]);
