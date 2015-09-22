@@ -2,24 +2,24 @@
  File drag and drop uploads
  */
 
-let main = require('./main'),
-	{$, etc, state} = main;
+const main = require('./main'),
+	{etc, state} = main;
 
 function dragonDrop(e) {
 	e.stopPropagation();
 	e.preventDefault();
-	let files = e.dataTransfer.files;
+	const {files} = e.dataTransfer;
 	if (!files.length)
 		return;
-	var postForm = main.request('postForm');
+	let postForm = main.request('postForm');
 	if (!postForm) {
-		main.follow(function() {
+		main.follow(() => {
 			const thread = state.page.get('thread');
 			if (thread)
 				return main.request('openPostBox', thread);
-			let $s = $(e.target).closest('section');
-			if ($s.length)
-				main.request('openPostBox', $s.attr('id'));
+			const section = e.target.closest('section');
+			if (section)
+				main.request('openPostBox', section.getAttribute('id'));
 		});
 	}
 	else {
@@ -37,17 +37,18 @@ function dragonDrop(e) {
 
 	// Drag and drop does not supply a fakepath to file, so we have to use
 	// a separate upload form from the postForm one. Meh.
-	const extra = postForm.prepareUpload();
-	let fd = new FormData();
-	fd.append('image', files[0]);
-	for (var k in extra)
-		fd.append(k, extra[k]);
-	// Can't seem to jQuery this shit
-	let xhr = new XMLHttpRequest();
+	const extra = postForm.prepareUpload(),
+		data = new FormData();
+	data.append('image', files[0]);
+	for (let key in extra) {
+		data.append(key, extra[key]);
+	}
+	
+	const xhr = new XMLHttpRequest();
 	xhr.open('POST', etc.uploadURL());
 	xhr.setRequestHeader('Accept', 'application/json');
 	xhr.onreadystatechange = upload_shita;
-	xhr.send(fd);
+	xhr.send(data);
 
 	postForm.notifyUploading();
 }
@@ -56,6 +57,7 @@ function upload_shita() {
 	if (this.readyState != 4 || this.status == 202)
 		return;
 	const err = this.responseText;
+	
 	// Everything just fine. Don't need to report.
 	if (!/legitimate imager response/.test(err))
 		main.request('postForm').uploadError(err);
@@ -66,12 +68,15 @@ function stop_drag(e) {
 	e.preventDefault();
 }
 
-function setupUploadDrop(e) {
-	function go(nm, f) { e.addEventListener(nm, f, false); }
+function setupUploadDrop(el) {
 	go('dragenter', stop_drag);
 	go('dragexit', stop_drag);
 	go('dragover', stop_drag);
 	go('drop', dragonDrop);
+
+	function go(name, func) {
+		el.addEventListener(name, func, false);
+	}
 }
 
 if (!main.isMobile)
