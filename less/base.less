@@ -4,6 +4,10 @@ a {
 	&.nope, &.nope:hover {
 		color: inherit;
 	}
+	&.disabled {
+		pointer-events: none;
+		color: inherit;
+	}
 }
 article, aside {
 	display: table;
@@ -22,7 +26,7 @@ aside {
 		z-index: 15;
 	}
 }
-a, aside, .bfloat {
+a, aside, .bfloat, .soundcloud, .watch {
 	cursor: pointer;
 }
 #sync, #onlineCount {
@@ -59,10 +63,6 @@ small {
 		padding-bottom: 0.5em;
 	}
 }
-a.disabled {
-  pointer-events: none;
-  color: inherit;
-}
 .embed {
 	background-color: rgba(255, 255, 255, 0.5);
 	border-radius: 4px;
@@ -73,9 +73,6 @@ a.disabled {
 	margin: -2px;
 	padding: 2px;
 	color: black;
-}
-.soundcloud, .watch {
-	cursor: pointer;
 }
 del {
 	text-decoration: none;
