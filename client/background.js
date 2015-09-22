@@ -2,23 +2,22 @@
  * Background controller. Wallpapers, proper fitting and video backgrounds
  */
 
-let main = require('./main'),
+const main = require('./main'),
 	{Backbone, common, options, stackBlur, state} = main;
 
-const colourMap = {
-	glass: {
-		normal: 'rgba(40, 42, 46, 0.5)',
-		editing: 'rgba(145, 145, 145, 0.5)'
+const BackgroundView = Backbone.View.extend({
+	colourMap: {
+		glass: {
+			normal: 'rgba(40, 42, 46, 0.5)',
+			editing: 'rgba(145, 145, 145, 0.5)'
+		},
+		ocean: {
+			normal: 'rgba(28, 29, 34, 0.781)',
+			editing: 'rgba(44, 57, 71, 0.88)'
+		}
 	},
-	ocean: {
-		normal: 'rgba(28, 29, 34, 0.781)',
-		editing: 'rgba(44, 57, 71, 0.88)'
-	}
-};
-
-let BackgroundView = Backbone.View.extend({
 	initialize() {
-		this.css = document.getElementById('backgroundCSS');
+		this.css = document.query('#backgroundCSS');
 		this.render();
 
 		main.reply('background:store', this.store, this);
@@ -89,7 +88,7 @@ let BackgroundView = Backbone.View.extend({
 		this.css.innerHTML = this.renderGlass(theme, blurred);
 	},
 	renderGlass(theme, blurred) {
-		const {normal, editing} = colourMap[theme];
+		const {normal, editing} = this.colourMap[theme];
 		return common.parseHTML
 			`article, aside, .pagination, .popup-menu, .modal, .bmodal,
 				.preview, #banner
@@ -116,8 +115,4 @@ let BackgroundView = Backbone.View.extend({
 	}
 });
 
-main.defer(function() {
-	module.exports = new BackgroundView({
-		el: document.getElementById('user_bg')
-	});
-});
+main.defer(() => module.exports = new BackgroundView({el: '#user_bg'}));
