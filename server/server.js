@@ -485,19 +485,14 @@ STATE.emitter.on('change:clientsByIP', function(){
 dispatcher[common.HOT_INJECTION] = function(msg, client){
 	if (!check(['boolean'], msg) || msg[0] !== true)
 		return false;
-	client.send([
-		0,
-		common.HOT_INJECTION,
-		true,
-		STATE.clientConfigHash,
-		STATE.clientHotConfig
-	]);
+	client.send([0, common.HOT_INJECTION, 1, STATE.clientConfigHash,
+		STATE.clientHotConfig]);
 	return true;
 };
 
 // Send current hot hash to client on sync
 hooks.hook('clientSynced', function(info, cb){
-	info.client.send([0, common.HOT_INJECTION, false, STATE.clientConfigHash]);
+	info.client.send([0, common.HOT_INJECTION, 0, STATE.clientConfigHash]);
 	cb(null);
 });
 

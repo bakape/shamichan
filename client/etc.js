@@ -37,3 +37,12 @@ function parseDOM(string) {
 	return el.childNodes;
 }
 exports.parseDOM = parseDOM;
+
+// Add an event listener that filters targets according to a CSS selector
+function listener(el, type, selector, handler) {
+	el.addEventListener(type, function (event) {
+		if (event.target.matches(selector))
+			handler.call(this, event);
+	});
+}
+exports.listener = listener;
