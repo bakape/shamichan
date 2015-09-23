@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.1.1 - 2015-09-23
+###Fixed
+- Post menu background artefact
+- Missing post menu button on console theme
+- Reaload looping, when behind CDN
+
 ##1.1.0 - 2015-09-22
 ###Added
 - 40x and 50x page rendering on requests
