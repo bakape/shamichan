@@ -48,7 +48,7 @@
 			success: function (res) {
 				if (res && res.status == 'okay') {
 					inform('Success!', 'blue');
-					window.location.reload();
+					window.location.reload(true);
 				}
 				else
 					inform(res.message||'Unknown error.', 'dark');
@@ -73,7 +73,7 @@
 			success: function (res) {
 				if (res && res.status == 'okay') {
 					inform('Logged out.', 'orange');
-					window.location.reload();
+					window.location.reload(true);
 				}
 				else
 					inform(res.message||'Unknown error.', 'dark');

@@ -45,7 +45,7 @@ module.exports = function(isMobile) {
 			exec(type) {
 				Cookie.set('lang', type);
 				alert(main.lang.langApplied);
-				location.reload();
+				location.reload(true);
 			}
 		},
 		/* INLINE EXPANSION */

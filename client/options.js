@@ -200,7 +200,7 @@ var OptionsView = Backbone.View.extend({
 					localStorage[key] = json[key];
 				}
 				alert('Import successfull. The page will now reload.');
-				location.reload();
+				location.reload(true);
 			};
 		});
 	},
