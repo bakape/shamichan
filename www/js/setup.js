@@ -1,8 +1,4 @@
 (function() {
-	// Prevent from loading stale pages on browser state resume
-	if (Date.now() - renderTime >= 3600000)
-		return location.reload(true);
-
 	var options;
 	try {
 		options = JSON.parse(localStorage.options);
