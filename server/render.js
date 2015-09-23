@@ -169,7 +169,7 @@ class Catalog extends RenderBase {
 		// Cache so it can be resused at <threads> bottom
 		const pag = this.pag
 			= this.oneeSama.asideLink('return', '.', 'compact', 'history');
-		return this.boardTitle() + pag + '<hr>\n<div id="catalog">';
+		return this.boardTitle() + pag + '<hr><div id="catalog">';
 	}
 	onBottom() {
 		this.resp.write('</div><hr>\n' + this.pag + this.threadsBottom());
@@ -265,9 +265,9 @@ class Board extends RenderBase {
 		const {oneeSama, opts} = this,
 			full = oneeSama.full = !!opts.fullPosts;
 		oneeSama.op = opts.fullLinks ? false : post.num;
-		let first = oneeSama.section(post, full && 'full');
-		first.pop();
-		this.resp.write(first.join(''));
+		this.resp.write(oneeSama
+			.section(post, full && 'full')
+			.replace('</section>', ''));
 	}
 	onThreadEnd(num) {
 		if (this.hidden.has(num))
@@ -275,7 +275,7 @@ class Board extends RenderBase {
 		let html = '';
 		if (!config.READ_ONLY)
 			html += this.oneeSama.replyBox();
-		html += '</section><hr>\n';
+		html += '</section><hr>';
 		this.resp.write(html);
 	}
 	onPost(post) {
@@ -309,7 +309,7 @@ class Thread extends Board {
 		html += actionLink('#bottom', lang.bottom)
 			+ '&nbsp;'
 			+ actionLink('', lang.expand_images, 'expandImages')
-			+ '<hr>\n';
+			+ '<hr>';
 
 		return html;
 	}

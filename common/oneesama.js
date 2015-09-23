@@ -107,64 +107,64 @@ class OneeSama {
 		cls = cls || '';
 		if (data.locked)
 			cls = cls ? cls + ' locked' : 'locked';
-		const gen = this.monogatari(data);
-		return flatten([
-			safe(`\n<section id="${data.num}" class="${cls}">`),
-			safe(gen.image),
-			safe(gen.header),
-			gen.body,
-			safe('</section>\n')
-		]);
+		return parseHTML
+			`<section id="${data.num}" class="${cls}">
+				${this.monogatari(data, false)}
+			</section>`;
 	}
 	// Render reply
 	article(data) {
-		const gen = this.monogatari(data),
-			cls = data.editing ? 'editing' : '';
-		return join([
-			safe(`\n\t<article id="${data.num}" class="${cls}">`),
-			safe(gen.header),
-			safe(gen.image),
-			gen.body,
-			safe('</article>')
-		]);
+		return parseHTML
+			`<article id="${data.num}" class="${data.editing ? 'editing' : ''}">
+				${this.monogatari(data, true)}
+			</article>`;
 	}
 	// Render common post components
-	monogatari(data) {
-		const tale = {header: this.header(data)};
-
-		// Shallow copy, as to not modify Backbone model values
-		this.dice = data.dice && data.dice.slice();
-		tale.body = [
-			safe('<blockquote>'),
-			this.body(data.body),
-			safe(`</blockquote><small>${this.backlinks(data.backlinks)}</small>`)
-		];
-		if (data.mod)
-			tale.body.unshift(safe(this.modInfo(data.mod)));
-		if (data.banned)
-			tale.body.push(safe(this.banned()));
+	monogatari(data, headerFirst) {
+		let html = '';
 		const {image} = data;
 		if (image) {
 			// Larger thumbnails for thread images
 			image.large = !data.op;
-			tale.image = this.image(image);
+			html += this.image(image);
 		}
-		else
-			tale.image = '';
 
-		return tale;
+		const header = this.header(data);
+		if (headerFirst)
+			html = header + html;
+		else
+			html += header;
+
+		const {mod, dice, body, backlinks, banned} = data;
+
+		// Shallow copy, as to not modify Backbone model values
+		this.dice = dice && dice.slice();
+		html += parseHTML
+			`<div class="container">
+				${mod && this.modInfo(mod)}
+				<blockquote>
+					${mod && this.modInfo(mod)}
+					${join(this.body(body))}
+				</blockquote>
+				<small>
+					${this.backlinks(backlinks)}
+				</small>
+				${banned && this.banned()}
+			</div>`;
+
+		return html;
 	}
 	header(data) {
 		return parseHTML
 			`<header>
 				<input type="checkbox" class="postCheckbox">
-				<span class=control></span>
 				${data.subject && `<h3>「${escape(data.subject)}」</h3>`}
 				${this.name(data)}
 				${this.time(data.time)}
 				${this.postNavigation(data)}
 				${!this.full && !data.op && this.expansionLinks(data.num)}
-			</header>`;
+			</header>
+			<span class="oi control" data-glyph="chevron-bottom"></span>`;
 	}
 	name(data) {
 		let html = '<b class="name';

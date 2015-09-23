@@ -10,7 +10,7 @@ var Section = module.exports = Backbone.View.extend({
 	tagName: 'section',
 	render() {
 		let attrs = this.model.attributes;
-		this.setElement(oneeSama.section(attrs).join('')).insertIntoDOM();
+		this.setElement(oneeSama.section(attrs)).insertIntoDOM();
 		// Insert reply box into the new thread
 		let $reply = $(oneeSama.replyBox());
 		if (state.ownPosts.hasOwnProperty(attrs.num)
