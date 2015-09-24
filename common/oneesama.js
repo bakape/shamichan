@@ -512,10 +512,10 @@ class OneeSama {
 			`<figcaption>
 				${this.thumbStyle === 'hide' && this.hiddenToggle(reveal)}
 				${this.imageSearch(data)}
-				<i>
+				<span>
 					(${list})
-					 ${this.imageLink(data)}
-				</i>
+				</span>
+				${this.imageLink(data)}
 			</figcaption>`;
 	}
 	hiddenToggle(reveal) {

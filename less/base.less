@@ -107,22 +107,13 @@ figcaption {
 	display: block;
 	margin: 2px 0;
 	text-decoration: none;
-	i {
-		font-style: normal;
-		a:before {
-			content: ' ';
-		}
+	*:before {
+		content: ' ';
 	}
 }
 .imageSearch {
 	font-weight: bold;
 	display: none;
-	&:before {
-		content: " ";
-	}
-	&:after {
-		content: " ";
-	}
 }
 figure {
 	display: inline;
