@@ -62,7 +62,7 @@ postSM.act('ready + new -> draft', function($aside) {
 	var op = null;
 	var $sec = $aside.closest('section');
 	if ($sec.length)
-		op = extractNum($sec);
+		op = etc.getNum($sec[0]);
 	else
 		$sec = $('<section/>');
 
@@ -76,11 +76,6 @@ postSM.act('ready + new -> draft', function($aside) {
 		$sec: $sec
 	});
 });
-
-// Extract post number
-function extractNum($post) {
-	return parseInt($post.attr('id'), 10);
-}
 
 postSM.preflight('draft', function(aside) {
 	return aside.is('aside');
@@ -210,12 +205,12 @@ var ComposerView = Backbone.View.extend({
 			eLinkify: main.oneeSama.eLinkify,
 			lang: main.lang,
 			tamashii(num) {
-				var $sec = $('#' + num);
+				var $sec = $('#p' + num);
 				if (!$sec.is('section'))
 					$sec = $sec.closest('section');
 				if ($sec.is('section')) {
 					const desc = num in state.mine.readAll() && this.lang.you;
-					this.callback(this.postRef(num, extractNum($sec), desc));
+					this.callback(this.postRef(num, etc.getNum($sec[0]), desc));
 				}
 				else {
 					this.callback(
@@ -567,7 +562,7 @@ var ComposerView = Backbone.View.extend({
 			return false;
 		params = params.split('&');
 		for (let i = 0, len = params.length; i < len; i++) {
-			let pair = '#' + params[i];
+			let pair = '#p' + params[i];
 			if (embed.youtube_time_re.test(pair))
 				return pair;
 		}
@@ -738,7 +733,7 @@ var ComposerView = Backbone.View.extend({
 		 removed from syncs client and server-side. Hmm.
 		 */
 
-		this.$el.attr('id', num);
+		this.$el.attr('id', 'p' + num);
 
 		if (msg.image)
 			this.insertUploaded(msg.image);
@@ -873,7 +868,7 @@ var ComposerView = Backbone.View.extend({
 exports.ComposerView = ComposerView;
 
 function openPostBox(num) {
-	let $a = main.$threads.find('#' + num);
+	let $a = main.$threads.find('#p' + num);
 	postSM.feed(
 		'new',
 		$a[$a.is('section') ? 'children' : 'siblings']('aside.posting')
@@ -898,7 +893,7 @@ main.$threads.on('click', 'a.quote', function(e) {
 	 */
 	let $post = $(e.target).closest('article, section'),
 		gsel = getSelection();
-	const num = $post.attr('id');
+	const num = etc.getNum($post[0]);
 
 	function isInside(p) {
 		var $el = $(gsel[p] && gsel[p].parentElement);

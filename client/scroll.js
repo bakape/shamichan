@@ -110,7 +110,7 @@ state.posts.on('remove', function(model) {
 
 // Account for banner height, when scrolling to an anchor
 function aboveBanner (){
-	if (!/^#\d+$/.test(location.hash))
+	if (!/^#p\d+$/.test(location.hash))
 		return;
 	let $anchor = $(location.hash);
 	if (!$anchor.length)

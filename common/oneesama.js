@@ -110,7 +110,7 @@ class OneeSama {
 		if (data.editing)
 			cls += ' editing';
 		return parseHTML
-			`<section id="${data.num}" class="${cls}">
+			`<section id="p${data.num}" class="${cls}">
 				<div class="background">
 					${this.monogatari(data)}
 				</div>
@@ -119,7 +119,7 @@ class OneeSama {
 	// Render reply
 	article(data) {
 		return parseHTML
-			`<article id="${data.num}" class="${data.editing ? 'editing' : ''}">
+			`<article id="p${data.num}" class="${data.editing && 'editing'}">
 				${this.monogatari(data)}
 			</article>`;
 	}

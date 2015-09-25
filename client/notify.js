@@ -3,7 +3,7 @@
  */
 
 let main = require('./main'),
-	{$, Backbone, connSM, state, options} = main;
+	{$, _, Backbone, connSM, etc, state, options} = main;
 
 const mediaURL = main.config.MEDIA_URL;
 
@@ -47,8 +47,8 @@ let NotifyModel = Backbone.Model.extend({
 			});
 			// Prevent scrolling with new posts, if page isn't visible
 			if (!options.get('alwaysLock')) {
-				main.request('scroll:focus',
-					hidden && main.$threads.find('article').last().attr('id'));
+				main.request('scroll:focus', hidden && etc.getNum(_.last(main
+					.$threads[0].queryAll('article'))));
 			}
 		}, false);
 
@@ -110,7 +110,7 @@ main.reply('repliedToMe', function (num) {
 		});
 		n.onclick = function() {
 			window.focus();
-			location.hash = '#' + num;
+			location.hash = '#p' + num;
 		};
 	}
 

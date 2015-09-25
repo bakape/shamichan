@@ -4,7 +4,7 @@
 
 let main = require('../main'),
 	postCommon = require('./common'),
-	{$, _, Backbone, options, state} = main;
+	{_, Backbone, options, state} = main;
 
 var Article = module.exports = Backbone.View.extend({
 	tagName: 'article',
@@ -13,7 +13,7 @@ var Article = module.exports = Backbone.View.extend({
 		return this;
 	},
 	insertIntoDOM() {
-		main.$threads.children('#' + this.model.get('op'))
+		main.$threads.children('#p' + this.model.get('op'))
 			.children('blockquote, .omit, form, article[id]:last')
 			.last()
 			.after(this.$el);
