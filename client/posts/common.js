@@ -87,6 +87,15 @@ module.exports = {
 	renderBan() {
 		this.$el.children('.banMessage').remove();
 		this.$el.children('blockquote').after(oneeSama.banned())
+	},
+	renderEditing(editing) {
+		const {el} = this;
+		if (editing)
+			el.classList.add('editing');
+		else {
+			el.classList.remove('editing');
+			el.query('blockquote').normalize();
+		}
 	}
 };
 

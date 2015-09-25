@@ -106,7 +106,9 @@ class OneeSama {
 	section(data, cls) {
 		cls = cls || '';
 		if (data.locked)
-			cls = cls ? cls + ' locked' : 'locked';
+			cls += ' locked';
+		if (data.editing)
+			cls += ' editing';
 		return parseHTML
 			`<section id="${data.num}" class="${cls}">
 				<div class="background">

@@ -86,10 +86,6 @@ var Section = module.exports = Backbone.View.extend({
 		this.$el.next('hr').remove();
 		this.$el.detach();
 		this.insertIntoDOM();
-	},
-	// TEMP: Stub until we unify the DOM structure of OPs and replies
-	renderEditing() {
-
 	}
 });
 

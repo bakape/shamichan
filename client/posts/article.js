@@ -18,11 +18,6 @@ var Article = module.exports = Backbone.View.extend({
 			.last()
 			.after(this.$el);
 		this.autoExpandImage().fun();
-	},
-	renderEditing(model, editing) {
-		this.$el.toggleClass('editing', !!editing);
-		if (!editing)
-			this.$el.children('blockquote')[0].normalize();
 	}
 });
 
