@@ -46,9 +46,6 @@ blockquote {
 }
 article {
 	margin: 2px;
-	figure img {
-		margin-bottom: 0;
-	}
 	header {
 		padding-left: 14px;
 	}
@@ -122,7 +119,7 @@ figure {
 		border: 0;
 		clear: both;
 		float: left;
-		margin: 3px 20px 20px 0;
+		margin: 3px 20px 0 0;
 		vertical-align: top;
 	}
 }
@@ -196,9 +193,6 @@ header {
 		font-family: inherit;
 		font-weight: normal;
 	}
-	.preview & {
-		background-image: none;
-	}
 	.expansionLinks {
 		margin-left: 1em;
 	}
@@ -218,10 +212,9 @@ label.ident {
 section {
 	display: block;
 	margin: 0 1em 1em 1em;
-	& >  figure > a {
-		float: left;
-		position: relative;
-		z-index: 5;
+	.background {
+		padding: 10px;
+		margin: 2px;
 	}
 }
 section nav, section p, .preview nav {
@@ -477,6 +470,9 @@ figure {
 	padding: 4px 10px;
 	position: absolute;
 	z-index: 30;
+	.control {
+		display: none;
+	}
 }
 .themed {
 	background-color: transparent;
@@ -599,17 +595,14 @@ pre, .themed {
 	font-weight: normal;
 	font-style: normal;
 }
-
 .oi[data-glyph].oi-text-replace {
 	font-size: 0;
 	line-height: 0;
 }
-
 .oi[data-glyph].oi-text-replace:before {
 	width: 1em;
 	text-align: center;
 }
-
 .oi[data-glyph] {
 	&:before {
 		position: relative;
@@ -624,13 +617,11 @@ pre, .themed {
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
 	}
-
 	&:empty:before {
 		width: 1em;
 		text-align: center;
 		box-sizing: content-box;
 	}
-
 	&.oi-align-left:before {
 		text-align: left;
 	}
@@ -640,19 +631,16 @@ pre, .themed {
 	&.oi-align-center:before {
 		text-align: center;
 	}
-
 	&.oi-flip-horizontal:before {
 		-webkit-transform: scale(-1, 1);
 		-ms-transform: scale(-1, 1);
 		transform: scale(-1, 1);
 	}
-
 	&.oi-flip-vertical:before {
 		-webkit-transform: scale(1, -1);
 		-ms-transform: scale(-1, 1);
 		transform: scale(1, -1);
 	}
-
 	&.oi-flip-horizontal-vertical:before {
 		-webkit-transform: scale(-1, -1);
 		-ms-transform: scale(-1, 1);

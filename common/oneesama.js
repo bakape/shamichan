@@ -109,38 +109,32 @@ class OneeSama {
 			cls = cls ? cls + ' locked' : 'locked';
 		return parseHTML
 			`<section id="${data.num}" class="${cls}">
-				${this.monogatari(data, false)}
+				<div class="background">
+					${this.monogatari(data)}
+				</div>
 			</section>`;
 	}
 	// Render reply
 	article(data) {
 		return parseHTML
 			`<article id="${data.num}" class="${data.editing ? 'editing' : ''}">
-				${this.monogatari(data, true)}
+				${this.monogatari(data)}
 			</article>`;
 	}
 	// Render common post components
-	monogatari(data, headerFirst) {
-		let html = '';
-		const {image} = data;
-		if (image) {
-			// Larger thumbnails for thread images
-			image.large = !data.op;
-			html += this.image(image);
-		}
+	monogatari(data) {
+		const {image, mod, dice, body, backlinks, banned} = data;
 
-		const header = this.header(data);
-		if (headerFirst)
-			html = header + html;
-		else
-			html += header;
-
-		const {mod, dice, body, backlinks, banned} = data;
+		// Larger thumbnails for thread images
+		if (image && !data.op)
+			image.large = true;
 
 		// Shallow copy, as to not modify Backbone model values
 		this.dice = dice && dice.slice();
-		html += parseHTML
-			`<div class="container">
+		return parseHTML
+			`${this.header(data)}
+			${image && this.image(image)}
+			<div class="container">
 				${mod && this.modInfo(mod)}
 				<blockquote>
 					${mod && this.modInfo(mod)}
@@ -151,8 +145,6 @@ class OneeSama {
 				</small>
 				${banned && this.banned()}
 			</div>`;
-
-		return html;
 	}
 	header(data) {
 		return parseHTML
