@@ -85,10 +85,7 @@ const Hidamari = exports.Hidamari = {
 			aspect = width / height;
 		let fullWidth, fullHeight;
 		if (widthFlag) {
-			// Calculate maximum horizontal dimension an image can be
-			// expanded to
-			const maxWidth = window.innerWidth
-				- this.el.query('figure img').getBoundingClientRect().left * 2;
+			const maxWidth = this.imageMaxWidth();
 			if (newWidth > maxWidth) {
 				newWidth = maxWidth;
 				newHeight = newWidth / aspect;
@@ -109,6 +106,21 @@ const Hidamari = exports.Hidamari = {
 			height = newHeight;
 		}
 		this.expandImage(img, width, height, fullHeight && !fullWidth);
+	},
+	// Calculate maximum horizontal dimension an image can be expanded to
+	imageMaxWidth() {
+		const {el} = this,
+			container = this.model.get('op') ? el : el.query('.background'),
+			{marginLeft, paddingLeft} = getComputedStyle(container),
+			reducts = [
+				marginLeft, paddingLeft,
+				el.closest('section').getBoundingClientRect().left
+			];
+		let maxWidth = window.innerWidth;
+		for (let red of reducts) {
+			maxWidth -= parseInt(red) * 2;
+		}
+		return maxWidth;
 	},
 	expandImage(img, width, height, noMargin) {
 		const isVideo = img.ext === '.webm';
