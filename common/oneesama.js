@@ -140,7 +140,6 @@ class OneeSama {
 			<div class="container">
 				${mod && this.modInfo(mod)}
 				<blockquote>
-					${mod && this.modInfo(mod)}
 					${join(this.body(body))}
 				</blockquote>
 				<small>
