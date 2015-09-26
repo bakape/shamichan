@@ -164,7 +164,6 @@ const Hidamari = exports.Hidamari = {
 
 // Expand all images
 const ExpanderModel = Backbone.Model.extend({
-	id: 'massExpander',
 	initialize() {
 		$threads.on('click', '#expandImages', e => {
 			e.preventDefault();

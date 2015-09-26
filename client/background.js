@@ -103,6 +103,10 @@ const BackgroundView = Backbone.View.extend({
 					linear-gradient(${editing}, ${editing}),
 					url(${blurred}) center fixed no-repeat;
 				background-size: cover;
+			}
+			.background {
+				padding: 10px;
+				margin: 2px;
 			}`;
 	},
 	renderIllya() {
