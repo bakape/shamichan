@@ -99,7 +99,7 @@ class RenderBase {
 
 		// Store time of render to prevent loading old sessions on browser
 		// resume.
-		let html = this.templatePart() + Date.now() + this.templatePart();
+		let html = this.templatePart();
 
 		// Notify the user, he/she/it should consider a brain transplant
 		if (isRetarded) {
@@ -110,6 +110,7 @@ class RenderBase {
 			}
 			html += '</div>';
 		}
+		html += this.templatePart();
 
 		if (!isMobile)
 			html += this.imageBanner() + this.templatePart();

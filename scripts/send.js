@@ -5,11 +5,13 @@
 'use strict';
 
 const argv = require('minimist')(process.argv.slice(2)),
-	port = require('../config').REDIS_PORT,
-	redis = require('redis').createClient(port);
+	config = require('../config'),
+	redis = require('redis').createClient(config.REDIS_PORT);
 
 if ('h' in argv || 'help' in argv || !argv._.length)
 	usage();
+
+redis.select(config.redis_database || 0);
 
 const msg = JSON.stringify(argv._);
 redis.publish('push', msg, function (err) {

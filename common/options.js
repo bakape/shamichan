@@ -203,7 +203,7 @@ module.exports = function(isMobile) {
 				if (!theme)
 					return;
 				document.getElementById('theme').setAttribute('href',
-					`${config.MEDIA_URL}css/${theme}.css?v=${cssHash}`);
+					`${config.MEDIA_URL}css/${theme}.css?v=${main.cssHash}`);
 			}
 		},
 		/* CUSTOM USER-SET BACKGROUND */

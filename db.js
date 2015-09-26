@@ -14,6 +14,7 @@ const _ = require('underscore'),
     hot = require('./server/state').hot,
 	okyaku = require('./server/okyaku'),
     Muggle = require('./util/etc').Muggle,
+	nodeRedis = require('redis'),
     tail = require('./util/tail'),
     winston = require('winston');
 
@@ -25,7 +26,9 @@ const OPs = exports.OPs = cache.OPs,
 	SUBS = exports.SUBS = cache.threadSubs;
 
 function redis_client() {
-	return require('redis').createClient(config.REDIS_PORT || undefined);
+	const client = nodeRedis.createClient(config.REDIS_PORT);
+	client.select(config.redis_database || 0);
+	return client;
 }
 exports.redis_client = redis_client;
 const redis = global.redis = redis_client();

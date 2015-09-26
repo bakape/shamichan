@@ -7,7 +7,6 @@ let main = require('./main'),
 
 // Read page state by parsing a URL
 function read(url) {
-
 	// Strip minimal mode, so we save a proper URL into History
 	const href = url.split('#')[0].replace(/[\?&]minimal=true/, '');
 
@@ -38,9 +37,9 @@ let page = exports.page = new Backbone.Model(read(location.href));
 
 // Hot-reloadable configuration
 // TODO: We need actual listeners to this model for hot reloads.
-exports.hotConfig = new Backbone.Model(window.hotConfig);
+exports.hotConfig = new Backbone.Model(imports.hotConfig);
 // Hash of all the config variables
-exports.configHash = window.configHash;
+exports.configHash = imports.configHash;
 
 // Tracks the synchronisation counter of each thread
 exports.syncs = {};

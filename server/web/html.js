@@ -9,7 +9,6 @@ const _ = require('underscore'),
 	db = require('../../db'),
 	etc = require('../../util/etc'),
 	express = require('express'),
-	hooks = require('../../util/hooks'),
 	render = require('../render'),
 	state = require('../state'),
 	util = require('./util'),
@@ -21,7 +20,9 @@ const router = module.exports = express.Router(),
 const vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
 	'X-Frame-Options': 'sameorigin',
-	'Cache-Control': `max-age=0, must-revalidate, private`
+	'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate, private',
+	'Pragma': 'no-cache',
+	'Expires': 'Fri, 01 Jan 1990 00:00:00 GMT'
 };
 
 router.get('/', function(req, res) {

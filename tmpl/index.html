@@ -7,18 +7,7 @@
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
 	<link rel="stylesheet" href="{{MEDIA_URL}}css/base.css?v={{css_hash}}">
 	<link rel="stylesheet" id="theme">
-	<script>
-		// Bootsrap configuration
-		var config = {{CLIENT_CONFIG}},
-			hotConfig = {{CLIENT_HOT}},
-			configHash = '{{CLIENT_CONFIG_HASH}}',
-			clientHash = '{{client_hash}}',
-			cssHash = '{{css_hash}}',
-			lang = '{{lang}}',
-			isMobile = {{isMobile}},
-			// Timestamp of server-side render
-			renderTime = $RENDERTIME;
-	</script>
+	<script>var imports = {{client_imports}};</script>
 	<script src="{{MEDIA_URL}}js/setup.js?v={{client_hash}}"></script>
 	<noscript>
 		<h1 id="noscriptHeader">
@@ -68,6 +57,7 @@
 <div id="schedule" class="bmodal">{{schedule_modal}}</div>
 {{options_panel}}
 <div id="headerTopMargin"></div>
+$RETARDBANNER
 <h1>
 	$IMAGEBANNER
 </h1>

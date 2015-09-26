@@ -39,9 +39,9 @@ Selects and loads the client files
 	}
 
 	var $script = require('scriptjs'),
-		base = config.MEDIA_URL + 'js/',
-		end = '.js?v=' + clientHash;
-	$script(base + 'lang/' + lang + end, function() {
+		base = imports.config.MEDIA_URL + 'js/',
+		end = '.js?v=' + imports.clientHash;
+	$script(base + 'lang/' + imports.lang + end, function() {
 		var client = legacy ? 'legacy' : 'client';
 		$script(base + client + end, function () {
 			if (typeof IDENT !== 'undefined') {

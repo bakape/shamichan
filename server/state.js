@@ -66,17 +66,14 @@ function reload_hot_config(cb) {
 		_.extend(HOT, hot.hot);
 
 		// Pass some of the config variables to the client
-		let clientHot = exports.clientHotConfig = _.pick(HOT,
+		exports.clientHotConfig = _.pick(HOT,
 			'ILLYA_DANCE', 'EIGHT_BALL', 'THREADS_PER_PAGE',
 			'ABBREVIATED_REPLIES', 'SUBJECT_MAX_LENGTH', 'EXCLUDE_REGEXP',
-			'staff_aliases', 'SAGE_ENABLED', 'THREAD_LAST_N', 'DEFAULT_CSS'
-		);
+			'staff_aliases', 'SAGE_ENABLED', 'THREAD_LAST_N', 'DEFAULT_CSS');
 
-		HOT.CLIENT_CONFIG = JSON.stringify(clientConfig);
-		HOT.CLIENT_HOT = JSON.stringify(clientHot);
 		// Hash the hot configuration
-		exports.clientConfigHash = HOT.CLIENT_CONFIG_HASH
-			= hashString(JSON.stringify(clientHot));
+		exports.clientConfigHash
+			= hashString(JSON.stringify(exports.clientHotConfig));
 
 		hooks.trigger('reloadHot', HOT, cb);
 	});
@@ -113,7 +110,7 @@ function hashFile(file, cb) {
 }
 
 function hashVendor(cb) {
-	hashFile('./www/js/vendor.js', function(err, hash) {
+	hashFile(path.join('www', 'js', 'vendor.js'), (err, hash) => {
 		if (err)
 			return cb(err);
 		HOT.vendor_hash = hash;
@@ -123,15 +120,12 @@ function hashVendor(cb) {
 
 // Hashes all client bundles into a central hash
 function hashClient(cb) {
-	let bundles = [
-		'./www/js/client.js',
-		'./www/js/loader.js',
-		'./www/js/login.js',
-		'./www/js/setup.js'
-	];
-	const langs = config.LANGS;
-	for (let i = 0, l = langs.length; i < l; i++) {
-		bundles.push(`./www/js/lang/${langs[i]}.js`);
+	const bundles = [];
+	for (let script of ['client', 'loader', 'login', 'setup']) {
+		bundles.push(path.join('www', 'js', script + '.js'));
+	}
+	for (let lang of config.LANGS) {
+		bundles.push(path.join('www', 'js', 'lang', lang + '.js'));
 	}
 	hashFiles('client_hash', bundles, cb);
 }
@@ -197,11 +191,20 @@ function expand_templates(res) {
 		index: options(false),
 		mobile: options(true)
 	};
+	// Variables to be inlined as JS into the template
+	templateVars.imports = {
+		config: exports.clientConfig,
+		hotConfig: exports.clientHotConfig,
+		configHash: exports.clientConfigHash,
+		clientHash: HOT.client_hash,
+		cssHash: HOT.css_hash
+	};
 
 	// Build index and mobile templates for each language
 	const expanded = {};
 	for (let lang of config.LANGS) {
-		_.extend(expanded, indexTemplates(lang, templateVars, res, opts));
+		_.extend(expanded,
+			indexTemplates(lang, templateVars, res, opts));
 	}
 	return expanded;
 }
@@ -209,7 +212,7 @@ function expand_templates(res) {
 function indexTemplates(ln, vars, res, opts) {
 	const languagePack = lang[ln];
 	vars = _.clone(vars);
-	vars.lang = ln;
+	vars.imports.lang = ln;
 
 	// Inject the localised strings
 	_.extend(vars, languagePack.tmpl, languagePack.common);
@@ -221,7 +224,8 @@ function indexTemplates(ln, vars, res, opts) {
 	for (let type of ['index', 'mobile']) {
 		// Build localised options panel
 		vars.options_panel = buildOptions(languagePack.opts, opts[type]);
-		vars.isMobile = type === 'mobile';
+		vars.imports.isMobile = type === 'mobile';
+		vars.client_imports = JSON.stringify(vars.imports);
 
 		const template = _.template(res[type])(vars);
 
