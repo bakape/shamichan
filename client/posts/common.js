@@ -77,8 +77,8 @@ module.exports = {
 	},
 	renderModerationInfo(info) {
 		const el = this.getContainer();
-		el.query('.modlog').remove();
-		el.query('blockquote').before(etc.paseDOM(oneeSama.modInfo(info)));
+		el.query('.modLog').remove();
+		el.query('blockquote').before(etc.parseDOM(oneeSama.modInfo(info)));
 	},
 	getContainer() {
 		return this.el.query('.container');
