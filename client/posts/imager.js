@@ -26,7 +26,7 @@ const Hidamari = exports.Hidamari = {
 		if (!image)
 			return;
 		el.query('blockquote')
-			.before(etc.parseDOM(oneeSama.image(image, reveal))[0]);
+			.before(etc.parseDOM(oneeSama.image(image, reveal)));
 
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport

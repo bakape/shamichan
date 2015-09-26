@@ -113,6 +113,7 @@ class OneeSama {
 			`<section id="p${data.num}" class="${cls}">
 				<div class="background">
 					${this.monogatari(data)}
+					<span class="omit"></span>
 				</div>
 			</section>`;
 	}

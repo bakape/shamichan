@@ -39,7 +39,10 @@ exports.getModel = getModel;
 function parseDOM(string) {
 	const el = document.createElement('div');
 	el.innerHTML = string;
-	return el.childNodes;
+	const children = el.childNodes;
+	if (children.length === 1)
+		return children[0];
+	return children;
 }
 exports.parseDOM = parseDOM;
 

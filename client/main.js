@@ -129,7 +129,7 @@ document.head.appendChild(etc.parseDOM(common.parseHTML
 		.locked > header nav:after {
 			content: " (${lang.locked})";
 		}
-	</style>`)[0]);
+	</style>`));
 
 _.extend(main, {
 	// Cached jQuery objects

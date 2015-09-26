@@ -270,8 +270,8 @@ module.exports = function(isMobile) {
 function toggleHeadStyle(id, css) {
 	return function (toggle) {
 		if (!document.getElementById(id)) {
-			const el = etc.parseDOM(`<style id="${id}">${css}</style>`)[0];
-			document.head.appendChild(el);
+			document.head.appendChild(etc
+				.parseDOM(`<style id="${id}">${css}</style>`));
 		}
 
 		// The disabled property only exists on elements in the DOM, so we do
