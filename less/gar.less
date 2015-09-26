@@ -14,14 +14,16 @@ article, aside, .pagination {
 	border-right: @border;
 	border-bottom: @border;
 }
-article.highlight {
-	background-color: #ffb8d5;
-	border-color: #ef93c5;
-}
-.editing {
-	background: #b7bbb6 url('chevrons.png');
-	border-color: gray;
-	background-attachment: fixed;
+article {
+	&.highlight {
+		background-color: #ffb8d5;
+		border-color: #ef93c5;
+	}
+	&.editing {
+		background: #b7bbb6 url('chevrons.png');
+		border-color: gray;
+		background-attachment: fixed;
+	}
 }
 body {
 	background: #eee url('scales.png');
