@@ -2,9 +2,9 @@
  * Common methods to both OP and regular posts
  */
 
-let main = require('../main'),
+const main = require('../main'),
 	imager = require('./imager'),
-	{$, _, common, lang, oneeSama, options, state} = main;
+	{$, _, common, etc, lang, oneeSama, options, state} = main;
 
 module.exports = {
 	initialize() {
@@ -22,7 +22,7 @@ module.exports = {
 	},
 	updateBody(update) {
 		if (!this.$blockquote)
-			this.$blockquote = this.$el.children('blockquote');
+			this.$blockquote = this.$el.find('blockquote').first();
 		oneeSama.dice = update.dice;
 		oneeSama.state = update.state;
 		oneeSama.callback = this.inject;
@@ -57,12 +57,11 @@ module.exports = {
 		return out;
 	},
 	renderTime() {
-		let el = this.el.getElementsByTagName('time')[0];
-		el.outerHTML = oneeSama.time(this.model.get('time'));
+		this.el.query('time').outerHTML = oneeSama.time(this.model.get('time'));
 	},
 	renderBacklinks(links) {
-		let el = this.el.getElementsByTagName('small')[0];
-		main.follow(() => el.innerHTML = oneeSama.backlinks(links));
+		main.follow(() =>
+			this.el.query('small').innerHTML = oneeSama.backlinks(links));
 	},
 	// Admin JS injections
 	fun() {
@@ -70,23 +69,24 @@ module.exports = {
 	},
 	// Self-delusion tripfag filter
 	anonymise() {
-		this.el
-			.getElementsByClassName('name')[0]
-			.innerHTML = `<b class="name">${lang.anon}<b>`;
+		this.el.query('.name').innerHTML = `<b class="name">${lang.anon}<b>`;
 	},
 	// Restore regular name
 	renderName() {
-		this.el
-			.getElementsByClassName('name')[0]
-			.outerHTML = oneeSama.name(this.model.attributes);
+		this.el.query('name').outerHTML = oneeSama.name(this.model.attributes);
 	},
 	renderModerationInfo(info) {
-		this.$el.children('.modLog').remove();
-		this.$el.children('blockquote').before(oneeSama.modInfo(info));
+		const el = this.getContainer();
+		el.query('.modlog').remove();
+		el.query('blockquote').before(etc.paseDOM(oneeSama.modInfo(info)));
+	},
+	getContainer() {
+		return this.el.query('.container');
 	},
 	renderBan() {
-		this.$el.children('.banMessage').remove();
-		this.$el.children('blockquote').after(oneeSama.banned())
+		const el = this.getContainer();
+		el.query('.banMessage').remove();
+		el.query('blockquote').after(etc.parseDOM(oneeSama.banned()));
 	},
 	renderEditing(editing) {
 		const {el} = this;
