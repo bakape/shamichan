@@ -2,7 +2,7 @@
  Client-side helper functions
  */
 
-let main = require('./main'),
+const main = require('./main'),
 	{$, _, state} = main;
 
 // For mobile
@@ -54,3 +54,11 @@ function listener(el, type, selector, handler) {
 	});
 }
 exports.listener = listener;
+
+function once(el, type, handler) {
+	el.addEventListener(type, function (event) {
+		handler.call(this, event);
+		el.removeEventListener(type, handler);
+	});
+}
+exports.once = once;
