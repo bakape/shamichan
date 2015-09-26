@@ -31,6 +31,7 @@ module.exports = {
 	USE_WEBSOCKETS: true,
 
 	REDIS_PORT: 6379,
+	redis_database: 0,
 	READ_ONLY: false,
 
 	BOARDS: ['moe', 'gar', 'meta', 'staff'],
