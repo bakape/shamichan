@@ -46,19 +46,13 @@ _.extend(main, {
 		}
 	},
 
-	/*
-	 These configs really should not be randomly toggled frequently. No need
-	 to put them in state.js, as they should not be hot-loaded. Anything
-	 that needs to be, can be moved to hot.js. Should prevent some bugs, but
-	 also reduce flexibility, for frequent togglers. Hmm.
-	 */
-	config: window.config,
-	clientHash: window.clientHash,
-	isMobile: window.isMobile,
 	// Websocket call handler map. Store them here, to avoid requiring
 	// modules in the wrong order.
 	dispatcher: {}
 });
+
+// Import configuration variables from the template HTML
+_.extend(main, _.pick(imports, 'config', 'clientHash', 'cssHash', 'isMobile'));
 
 // Clear cookies, if versions mismatch. Get regenerated each client start
 // anyway.

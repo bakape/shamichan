@@ -8,16 +8,7 @@
 	<link rel="stylesheet" href="{{MEDIA_URL}}css/base.css?v={{css_hash}}">
 	<link rel="stylesheet" id="theme">
 	<style id="backgroundCSS"></style>
-	<script>
-		// Bootsrap configuration
-		var config = {{CLIENT_CONFIG}},
-			hotConfig = {{CLIENT_HOT}},
-			configHash = '{{CLIENT_CONFIG_HASH}}',
-			clientHash = '{{client_hash}}',
-			cssHash = '{{css_hash}}',
-			lang = '{{lang}}',
-			isMobile = {{isMobile}};
-	</script>
+	<script>var imports = {{client_imports}};</script>
 	<script src="{{MEDIA_URL}}js/setup.js?v={{client_hash}}"></script>
 	<noscript>
 		<h1 id="noscriptHeader">

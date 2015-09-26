@@ -26,7 +26,7 @@ require('./toolbox');
 
 $('<link/>', {
 	rel: 'stylesheet',
-	href: `${config.MEDIA_URL}css/mod.css?v=${cssHash}`
+	href: `${config.MEDIA_URL}css/mod.css?v=${main.cssHash}`
 }).appendTo('head');
 
 // Add staff board to board navigation
