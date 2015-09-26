@@ -18,12 +18,12 @@ function imageUploadURL() {
 exports.uploadURL = imageUploadURL;
 
 function getNum(el) {
-	return parseInt(el.getAttribute('id').slice(1), 10);
+	return el && parseInt(el.getAttribute('id').slice(1), 10);
 }
 exports.getNum = getNum;
 
 function getID(el) {
-	return getNum(el.closest('article, section'));
+	return el && getNum(el.closest('article, section'));
 }
 exports.getID = getID;
 
