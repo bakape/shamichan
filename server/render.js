@@ -14,7 +14,7 @@ const _ = require('underscore'),
 const RES = STATE.resources,
 	actionLink = common.action_link_html,
 	escape = common.escape_html,
-	{parseHTML, safe} = common;
+	{parseHTML, safe, join} = common;
 
 class RenderBase {
 	constructor(yaku, req, resp, opts) {
@@ -178,33 +178,27 @@ class Catalog extends RenderBase {
 		// Client has hidden the thread
 		if (this.hidden.has(post.num))
 			return;
-
-		// Contains user-inputted data, so need to differentiate between
-		// safe strings and ones needing escaping
-		const html = [safe('<article>')],
-			{oneeSama} = this;
+		const {oneeSama} = this;
 
 		// Downscale thumbnail
-		const {image} = post;
+		const {image, num, subject, body, replyctr, imgctr} = post;
 		image.dims[2] /= 1.66;
 		image.dims[3] /= 1.66;
 
-		html.push(
-			safe(oneeSama.thumbnail(image, post.num)),
-			safe(parseHTML
-				`<br>
+		this.resp.write(parseHTML
+			`<article id="#p${num}">
+				${oneeSama.thumbnail(image, num)}
+				<br>
 				<small>
 					<span title="${lang[this.lang].catalog_omit}">
-						${post.replyctr}/${post.imgctr - 1}
+						${replyctr}/${imgctr - 1}
 					</span>
-					${oneeSama.expansionLinks(post.num)}
+					${oneeSama.expansionLinks(num)}
 				</small>
-				<br>`)
-		);
-		if (post.subject)
-			html.push(safe('<h3>「'), post.subject, safe('」</h3>'));
-		html.push(oneeSama.body(post.body), safe('</article>'));
-		this.resp.write(common.join(html));
+				<br>
+				${subject && `<h3>「${_.escape(subject)}」</h3>`}
+				${join(oneeSama.body(body))}
+			</article>`);
 	}
 }
 exports.Catalog = Catalog;
