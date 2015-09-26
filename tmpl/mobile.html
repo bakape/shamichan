@@ -16,9 +16,7 @@
 			clientHash = '{{client_hash}}',
 			cssHash = '{{css_hash}}',
 			lang = '{{lang}}',
-			isMobile = {{isMobile}},
-			// Timestamp of server-side render
-			renderTime = $RENDERTIME;
+			isMobile = {{isMobile}};
 	</script>
 	<script src="{{MEDIA_URL}}js/setup.js?v={{client_hash}}"></script>
 	<noscript>
@@ -70,6 +68,7 @@
 <div id="schedule" class="bmodal">{{schedule_modal}}</div>
 {{options_panel}}
 <div id="headerTopMargin"></div>
+$RETARDBANNER
 <threads>
 	$THREADS
 </threads>
