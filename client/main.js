@@ -62,7 +62,7 @@ if (localStorage.cookieVersion != cookieVersion) {
 
 		// Clear legacy cookies that were set for each board separatly.
 		// Otherwise, they would override the new ones.
-		let paths = config.BOARDS.slice();
+		const paths = main.config.BOARDS.slice();
 		paths.push('');
 		for (let path of paths) {
 			Cookie.remove(cookie, {path});
