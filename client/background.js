@@ -92,15 +92,13 @@ const BackgroundView = Backbone.View.extend({
 	renderGlass(theme, blurred) {
 		const {normal, editing} = this.colourMap[theme];
 		return common.parseHTML
-			`article, aside, .pagination, .popup-menu, .modal, .bmodal, #banner,
-				.background
-			{
+			`.glass {
 				background:
 					linear-gradient(${normal}, ${normal}),
 					url(${blurred}) center fixed no-repeat;
 				background-size: cover;
 			}
-			article.editing, .editing .background {
+			glass.editing, .editing .background {
 				background:
 					linear-gradient(${editing}, ${editing}),
 					url(${blurred}) center fixed no-repeat;

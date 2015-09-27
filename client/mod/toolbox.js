@@ -18,7 +18,7 @@ const childViews = {
 
 const ToolboxView = Backbone.View.extend({
 	id: 'toolbox',
-	className: 'mod modal panel',
+	className: 'mod modal panel glass',
 	initialize() {
 		this.render();
 	},

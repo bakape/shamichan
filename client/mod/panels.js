@@ -6,7 +6,7 @@ const main = require('main'),
 	{Backbone, common, dispatcher, oneeSama, lang, modals} = main;
 
 const PanelView = Backbone.View.extend({
-	className: 'modal mod panel',
+	className: 'modal mod panel glass',
 	initialize() {
 		this.$el.appendTo(main.$overlay);
 		modals[this.type] = this;

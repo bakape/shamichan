@@ -187,7 +187,7 @@ class Catalog extends RenderBase {
 		image.dims[3] /= 1.66;
 
 		this.resp.write(parseHTML
-			`<article id="#p${num}">
+			`<article id="#p${num}" class="glass">
 				${oneeSama.thumbnail(image, num)}
 				<br>
 				<small>
@@ -224,7 +224,7 @@ class Board extends RenderBase {
 		const {oneeSama} = this,
 			{live} = oneeSama.lang,
 			cur = nav.cur_page;
-		let bits = '<nav class="pagination act">';
+		let bits = '<nav class="pagination glass act">';
 		if (cur >= 0)
 			bits += `<a href="." class="history">${live}</a>`;
 		else

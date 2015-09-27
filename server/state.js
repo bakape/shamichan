@@ -303,7 +303,7 @@ function make_navigation_html() {
 // Hardcore pornography
 function buildOptions(lang, options) {
 	let html = common.parseHTML
-		`<div class="bmodal" id="options-panel">
+		`<div class="bmodal glass" id="options-panel">
 			<ul class="option_tab_sel">`;
 	const tabs = lang.tabs,
 		opts = [];

@@ -15,13 +15,13 @@
 		</h1>
 	</noscript>
 </head>
-<fieldset id="identity" class="bmodal">
+<fieldset id="identity" class="bmodal glass">
 	<label for="name" class="ident">{{name}}</label> <input id="name" name="name"><br>
 	<label for="email" class="ident">{{email}}</label> <input id="email" name="email"><br>
 </fieldset>
 <div id="hover_overlay"></div>
 <image src="{{MEDIA_URL}}css/ui/loading.gif" id="loadingImage" width="224" height="128">
-<span id="banner">
+<span id="banner" class="glass">
     {{NAVTOP}}
 	<b id="banner_center"></b>
 	<a id="options" class="bfloat" title="{{options}}">
@@ -53,8 +53,8 @@
 	<b id="onlineCount" class="bfloat" title="{{onlineCounter}}">[0]</b>
 	<b id="sync" class="bfloat">{{notSynced}}</b>
 </span>
-<div id="FAQ" class="bmodal">{{FAQ}}</div>
-<div id="schedule" class="bmodal">{{schedule_modal}}</div>
+<div id="FAQ" class="bmodal glass">{{FAQ}}</div>
+<div id="schedule" class="bmodal glass">{{schedule_modal}}</div>
 {{options_panel}}
 <div id="headerTopMargin"></div>
 $RETARDBANNER

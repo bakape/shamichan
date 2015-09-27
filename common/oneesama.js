@@ -103,15 +103,14 @@ class OneeSama {
 			hs[i].call(this, param);
 	}
 	// Render OP
-	section(data, cls) {
-		cls = cls || '';
+	section(data, cls = '') {
 		if (data.locked)
 			cls += ' locked';
 		if (data.editing)
 			cls += ' editing';
 		return parseHTML
 			`<section id="p${data.num}" class="${cls}">
-				<div class="background">
+				<div class="background glass">
 					${this.monogatari(data)}
 					<span class="omit"></span>
 				</div>
@@ -119,8 +118,11 @@ class OneeSama {
 	}
 	// Render reply
 	article(data) {
+		let cls = 'glass';
+		if (data.editing)
+			cls += ' editing';
 		return parseHTML
-			`<article id="p${data.num}" class="${data.editing && 'editing'}">
+			`<article id="p${data.num}" class="${cls}">
 				${this.monogatari(data)}
 			</article>`;
 	}
@@ -652,7 +654,7 @@ class OneeSama {
 	}
 	asideLink(inner, href, cls, innerCls) {
 		return parseHTML
-			`<aside class="act ${cls}">
+			`<aside class="act glass ${cls}">
 				<a ${href && `href="${href}"`}
 					${innerCls && ` class="${innerCls}"`}
 				>

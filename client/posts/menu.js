@@ -6,7 +6,7 @@ const main = require('../main'),
 	{$, _, Backbone, common, etc, lang, state} = main;
 
 const MenuView = module.exports = Backbone.View.extend({
-	className: 'popup-menu',
+	className: 'popup-menu glass',
 	tagName: 'ul',
 	// Post menu items
 	actions: ['report', 'hide'],
