@@ -62,3 +62,16 @@ function once(el, type, handler) {
 	});
 }
 exports.once = once;
+
+// Width of element padding and margin
+function outerWidth(el) {
+	const style =  getComputedStyle(el);
+	let width = 0;
+	for (let prop of ['marginLeft', 'marginRight', 'paddingLeft',
+		'paddingRight']
+	) {
+		width += parseInt(style[prop]);
+	}
+	return width;
+}
+exports.outerWidth = outerWidth;

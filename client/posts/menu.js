@@ -23,8 +23,15 @@ const MenuView = module.exports = Backbone.View.extend({
 		for (let action of this.actions) {
 			html += `<li data-type="${action}">${lang[action]}</li>`
 		}
-		this.el.innerHTML = html;
-		this.parent.append(this.el);
+		const {el, parent} = this;
+		el.innerHTML = html;
+		parent.append(el);
+
+		// Calculate position. Can't use CSS translate, because it shifts
+		// the background.
+		el.style.left = el.getBoundingClientRect().left
+			- (etc.outerWidth(el) + el.offsetWidth) * 0.6
+			+ 'px';
 	},
 	// Forward post model to appropriate handler
 	handleClick(e) {

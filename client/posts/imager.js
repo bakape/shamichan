@@ -109,18 +109,10 @@ const Hidamari = exports.Hidamari = {
 	},
 	// Calculate maximum horizontal dimension an image can be expanded to
 	imageMaxWidth() {
-		const {el} = this,
-			container = this.model.get('op') ? el : el.query('.background'),
-			{marginLeft, paddingLeft} = getComputedStyle(container),
-			reducts = [
-				marginLeft, paddingLeft,
-				el.closest('section').getBoundingClientRect().left
-			];
-		let maxWidth = window.innerWidth;
-		for (let red of reducts) {
-			maxWidth -= parseInt(red) * 2;
-		}
-		return maxWidth;
+		const {el, model} = this;
+		return window.innerWidth
+			- parseInt(el.closest('section').getBoundingClientRect().left) * 2
+			- etc.outerWidth(model.get('op') ? el : el.query('.background'));
 	},
 	expandImage(img, width, height, noMargin) {
 		const isVideo = img.ext === '.webm';
