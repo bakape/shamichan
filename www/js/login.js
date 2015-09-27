@@ -85,18 +85,20 @@
 		});
 	}
 
-	$script('https://login.persona.org/include.js?v=' + clientHash, function () {
-		setup_button();
-		navigator.id.watch({
-			loggedInUser: window.loggedInUser || null,
-			onlogin: on_login,
-			onlogout: on_logout
+	$script('https://login.persona.org/include.js?v=' + imports.clientHash,
+		function () {
+			setup_button();
+			navigator.id.watch({
+				loggedInUser: window.loggedInUser || null,
+				onlogin: on_login,
+				onlogout: on_logout
+			});
 		});
-	});
 
 	$('<link/>', {
 		rel: 'stylesheet',
-		href: config.MEDIA_URL + 'css/persona-buttons.css?v=' + clientHash
+		href: imports.config.MEDIA_URL + 'css/persona-buttons.css?v='
+			+ imports.clientHash
 	})
 		.appendTo('head');
 })();
