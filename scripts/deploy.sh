@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Automatic deploymnent script for a fresh Ubuntu trusty (and possibly up) VPS
 
-apt-get update || exit 1
+apt-get update
 apt-get install -y build-essential git redis-server imagemagick\
-	software-properties-common pngquant || exit 1
-add-apt-repository ppa:mc3man/trusty-media -y || exit 1
-wget -q -O - https://deb.nodesource.com/setup_0.12 | bash - || exit 1
-apt-get update || exit 1
-apt-get dist-upgrade -y || exit 1
-apt-get install ffmpeg nodejs -y || exit 1
+	software-properties-common pngquant
+add-apt-repository ppa:mc3man/trusty-media -y
+wget -q -O - https://deb.nodesource.com/setup_0.12 | bash -
+apt-get update
+apt-get dist-upgrade -y
+apt-get install ffmpeg nodejs -y
 
 useradd -d /home/meguca -s /bin/bash -m -U meguca
 
