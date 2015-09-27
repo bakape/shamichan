@@ -3,7 +3,7 @@
  */
 
 const main = require('./main'),
-	{$, Backbone, config, connSM, etc, state, options} = main;
+	{$, _, Backbone, config, connSM, etc, state, options} = main;
 
 const mediaURL = main.config.MEDIA_URL;
 
