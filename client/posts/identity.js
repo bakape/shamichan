@@ -3,7 +3,7 @@
  */
 
 let main = require('../main'),
-	{$, $script, $email, $name, _, common} = main;
+	{$, $script, $email, $name, _, common, config} = main;
 
 function load() {
 	try {
