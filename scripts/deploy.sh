@@ -5,9 +5,9 @@ apt-get update  < /dev/null
 apt-get install -y build-essential git redis-server imagemagick\
 	software-properties-common pngquant < /dev/null
 # ffmpeg PPA
-add-apt-repository ppa:mc3man/trusty-media -y < /dev/null
+add-apt-repository ppa:mc3man/trusty-media -y
 # Node.js setup script
-wget -q -O - https://deb.nodesource.com/setup_4.x | bash - < /dev/null
+wget -q -O - https://deb.nodesource.com/setup_4.x | bash -
 apt-get dist-upgrade -y  < /dev/null
 apt-get install ffmpeg nodejs -y  < /dev/null
 
