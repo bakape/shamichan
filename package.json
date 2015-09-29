@@ -17,7 +17,7 @@
     "url": "https://github.com/bakape/meguca/issues"
   },
   "scripts": {
-    "start": "node index > /dev/null &",
+    "start": "node index &",
     "stop": "kill `cat server/.server.pid`",
     "postinstall": "node scripts/bootstrap.js && node_modules/.bin/gulp client vendor mod css lang legacy"
   },
