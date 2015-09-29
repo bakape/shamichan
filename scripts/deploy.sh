@@ -16,7 +16,7 @@ iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8000
 
 useradd -d /home/meguca -s /bin/bash -m -U meguca
 # Download and build meguca
-su meguca << 'EOF'
+su - meguca << 'EOF'
 	cd ~
 	git clone https://github.com/bakape/meguca.git server
 	cd server
