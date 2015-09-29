@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Automatic deploymnent script for a fresh Ubuntu trusty (and possibly up) VPS
 
-apt-get update
+apt-get update  < /dev/null
 apt-get install -y build-essential git redis-server imagemagick\
-	software-properties-common pngquant
+	software-properties-common pngquant < /dev/null
 # ffmpeg PPA
-add-apt-repository ppa:mc3man/trusty-media -y
+add-apt-repository ppa:mc3man/trusty-media -y < /dev/null
 # Node.js setup script
-wget -q -O - https://deb.nodesource.com/setup_4.x | bash -
-apt-get dist-upgrade -y
-apt-get install ffmpeg nodejs -y
+wget -q -O - https://deb.nodesource.com/setup_4.x | bash - < /dev/null
+apt-get dist-upgrade -y  < /dev/null
+apt-get install ffmpeg nodejs -y  < /dev/null
 
 # Port redirection
 iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8000
