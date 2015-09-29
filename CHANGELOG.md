@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.2.0 - 2015-09-30
+###Added
+- Ability to select redis database to use
+- Automatic setup script for Ubuntu Trusty
+
+###Removed
+- HTML caching
+
 ##1.1.1 - 2015-09-23
 ###Fixed
 - Post menu background artefact
