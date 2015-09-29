@@ -14,14 +14,21 @@ master branch in production. For more stable revisions, please [download the
 * Configure the files in `config/`
 * Run `node builder.js` to start an auto-reloading development server
 
+##Automatic deployment
+Users less familiar with Linux and sysadmin procedures can paste the 
+following line into the root shell to automatically setup a default 
+installation on an fresh Ubuntu >=14.04 LTS VPS.
+`wget -q -O - https://raw.githubusercontent.com/bakape/meguca/master/scripts/deploy.sh | bash -`
+
 ##Production
 * Have your webserver serve `www/`
   * It is highly recommended to use a dedicated webserver for serving static
   files and as a reverse proxy. Even if you choose to use the default inbuilt
   webserver, you still need to set `MEDIA_URL` in `config/imager` for image
   search links to work.
-* Run `npm start` to start the server
-* You can update `config/hot.js` and client files without restarting the server with `node server/kill.js`
+* Run `npm start/stop/restart` to start/stop/restart the server
+* You can update `config/hot.js` and client files without restarting the server 
+with `node server/kill.js`
 * All errors are logged to `./error.log`
 
 ##Updating
