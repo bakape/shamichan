@@ -20,7 +20,9 @@ const Hidamari = exports.Hidamari = {
 			{model, el} = this;
 		if (!image || !image.src)
 			image = model.get('image');
-		el.query('figure').remove();
+		const figure = el.query('figure');
+		if (figure)
+			figure.remove();
 
 		// Remove image on mod deletion
 		if (!image)

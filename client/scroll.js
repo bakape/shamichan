@@ -57,12 +57,8 @@ function followLock(func) {
 			locked = false;
 	}
 
-	let ret;
-	try {
+	const ret = func.call(this);
 		nestLevel++;
-		ret = func.call(this);
-	}
-	catch (e) {}
 
     //If we aren't in a thread, don't lock to bottom
     if (!state.page.get('thread'))

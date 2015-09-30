@@ -25,9 +25,7 @@ let	inputMinSize = 300;
 if (window.screen && screen.width <= 320)
 	inputMinSize = 50;
 
-var ComposerModel = Backbone.Model.extend({
-	idAttribute: 'num'
-});
+const ComposerModel = Backbone.Model.extend({idAttribute: 'num'});
 
 // Synchronyse postform state with websocket connectivity
 connSM.on('synced', postSM.feeder('sync'));
@@ -37,34 +35,38 @@ connSM.on('desynced', postSM.feeder('desync'));
 // Allow remotely altering posting FSM state
 main.reply('postSM:feed', state => postSM.feed(state));
 
-postSM.act('* + desync -> none', function() {
+postSM.act('* + desync -> none', () => {
 	// TODO: Desync logic
 	if (postForm) {
-		postForm.$el.removeClass('editing');
+		postForm.el.classList.remove('editing');
 		postForm.$input.val('');
 		postForm.finish();
 	}
 	main.follow(() => main.$threads.find('aside.posting').hide())
 });
 
-postSM.act('none + sync, draft, alloc + done -> ready', function() {
+postSM.act('none + sync, draft, alloc + done -> ready', () => {
 	// TODO: Add unfinished post checking
 
 	if (postForm) {
 		postForm.remove();
 		postForm = postModel = null;
 	}
-	main.follow(() => main.$threads.find('aside.posting').show());
+	main.follow(() => {
+		for (let el of main.$threads[0].queryAll('aside.posting')) {
+			el.style.display = '';
+		}
+	});
 });
 
 // Make new postform
-postSM.act('ready + new -> draft', function($aside) {
-	var op = null;
-	var $sec = $aside.closest('section');
-	if ($sec.length)
-		op = etc.getNum($sec[0]);
+postSM.act('ready + new -> draft', aside => {
+	let op,
+		section = aside.closest('section');
+	if (section)
+		op = etc.getNum(section);
 	else
-		$sec = $('<section/>');
+		section = document.createElement('section');
 
 	// Shift OP's replies on board pages
 	if (op && !state.page.get('thread'))
@@ -72,18 +74,14 @@ postSM.act('ready + new -> draft', function($aside) {
 
 	postForm = new ComposerView({
 		model: postModel = new ComposerModel({op}),
-		$dest: $aside,
-		$sec: $sec
+		destination: aside,
+		section
 	});
 });
 
-postSM.preflight('draft', function(aside) {
-	return aside.is('aside');
-});
+postSM.preflight('draft', aside => aside.matches('aside'));
 
-postSM.act('draft + alloc -> alloc', function(msg) {
-	postForm.onAllocation(msg);
-});
+postSM.act('draft + alloc -> alloc', msg => postForm.onAllocation(msg));
 
 // Render image upload status messages
 main.dispatcher[common.IMAGE_STATUS] = function(msg) {
@@ -92,7 +90,7 @@ main.dispatcher[common.IMAGE_STATUS] = function(msg) {
 };
 
 main.$doc.on('click', 'aside.posting a', function() {
-	main.follow(() => postSM.feed('new', $(this).parent()));
+	main.follow(() => postSM.feed('new', this.parentNode));
 });
 
 main.$doc.on('keydown', handle_shortcut);
@@ -105,10 +103,11 @@ function handle_shortcut(event) {
 		opts = options.attributes;
 	switch(event.which) {
 		case opts.new:
-			var $aside = state.page.get('thread')
-				? main.$threads.find('aside.posting') : $ceiling().next();
-			if ($aside.is('aside') && $aside.length === 1) {
-				main.follow(() => postSM.feed('new', $aside));
+			let aside = state.page.get('thread')
+				? document.query('aside.posting')
+				: main.$threads[0].query('hr').nextElementSibling;
+			if (aside) {
+				main.follow(() => postSM.feed('new', aside));
 				used = true;
 			}
 			break;
@@ -145,11 +144,6 @@ function handle_shortcut(event) {
 		event.stopImmediatePropagation();
 		event.preventDefault();
 	}
-}
-
-// Gets the top <hr> of <threads>
-function $ceiling() {
-	return main.$threads.children('hr').first();
 }
 
 // TODO: Unify self-updates with OneeSama; this is redundant
@@ -223,9 +217,9 @@ var ComposerView = Backbone.View.extend({
 		main.oneeSama.trigger('imouto', imouto);
 	},
 	// Initial render
-	render(args) {
+	render({destination, section}) {
 		const op = this.model.get('op');
-		this.setElement((op ? $('<article/>') : args.$sec)[0]);
+		this.setElement((op ? document.createElement('article') : section));
 		// A defined op means the post is a reply, not a new thread
 		this.isThread = !op;
 
@@ -268,18 +262,20 @@ var ComposerView = Backbone.View.extend({
 		}
 		this.$uploadForm = this.renderUploadForm();
 		this.$el.append(this.$uploadForm);
+
 		// Add a menu to the postform
 		main.oneeSama.trigger('draft', this.$el);
 		this.renderIdentity();
-		args.$dest.hide();
 
+		// Insert into the DOM
+		destination.style.display = 'none';
 		if (this.isThread) {
-			this.$el.insertAfter(args.$dest);
-			this.$el.after('<hr>');
+			destination.after(this.el);
+			this.el.after(document.createElement('hr'));
 			this.$subject.focus();
 		}
 		else {
-			this.$el.insertBefore(args.$dest);
+			destination.before(this.el);
 			this.resizeInput();
 			this.$input.focus();
 		}
@@ -868,11 +864,7 @@ var ComposerView = Backbone.View.extend({
 exports.ComposerView = ComposerView;
 
 function openPostBox(num) {
-	let $a = main.$threads.find('#p' + num);
-	postSM.feed(
-		'new',
-		$a[$a.is('section') ? 'children' : 'siblings']('aside.posting')
-	);
+	postSM.feed('new', document.query(`#p${num} aside.posting`));
 }
 main.reply('openPostBox', openPostBox);
 

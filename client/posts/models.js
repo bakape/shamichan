@@ -16,9 +16,8 @@ exports.Post = Backbone.Model.extend({
 		this.trigger('dispatch', command, ...args);
 	},
 	remove() {
-		this.stopListening();
 		// Remove view
-		this.dispatch('remove');
+		this.stopListening().dispatch('remove');
 		// Remove from post collection
 		state.posts.remove(this);
 	},
@@ -98,8 +97,7 @@ exports.Thread = exports.Post.extend({
 		state.posts.add(this);
 	},
 	remove() {
-		this.stopListening();
-		this.dispatch('remove');
+		this.stopListening().dispatch('remove');
 		state.posts.remove(this);
 
 		// Propagate model removal to all replies
@@ -129,7 +127,6 @@ exports.Thread = exports.Post.extend({
 	},
 	toggleLocked(val, info) {
 		this.moderationInfo(info);
-		this.set('locked', val);
-		this.dispatch('renderLocked', val);
+		this.set('locked', val).dispatch('renderLocked', val);
 	}
 });
