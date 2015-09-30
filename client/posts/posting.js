@@ -55,8 +55,7 @@ postSM.act('none + sync, draft, alloc + done -> ready', () => {
 	main.follow(() => {
 		for (let el of main.$threads[0].queryAll('aside.posting')) {
 			el.style.display = '';
-		}
-	});
+		}});
 });
 
 // Make new postform
@@ -84,12 +83,10 @@ postSM.preflight('draft', aside => aside.matches('aside'));
 postSM.act('draft + alloc -> alloc', msg => postForm.onAllocation(msg));
 
 // Render image upload status messages
-main.dispatcher[common.IMAGE_STATUS] = function(msg) {
-	if (postForm)
-		postForm.dispatch(msg[0]);
-};
+main.dispatcher[common.IMAGE_STATUS] = msg =>
+	postForm && postForm.dispatch(msg[0]);
 
-main.$doc.on('click', 'aside.posting a', function() {
+main.$doc.on('click', 'aside.posting a', function () {
 	main.follow(() => postSM.feed('new', this.parentNode));
 });
 
@@ -99,28 +96,25 @@ function handle_shortcut(event) {
 	if (!event.altKey)
 		return;
 
-	var used = false,
-		opts = options.attributes;
+	const opts = options.attributes;
 	switch(event.which) {
 		case opts.new:
-			let aside = state.page.get('thread')
-				? document.query('aside.posting')
-				: main.$threads[0].query('hr').nextElementSibling;
+			const aside = document.query('aside.posting');
 			if (aside) {
 				main.follow(() => postSM.feed('new', aside));
-				used = true;
+				prevent();
 			}
 			break;
 		case opts.togglespoiler:
 			if (postForm) {
 				postForm.onToggle(event);
-				used = true;
+				prevent();
 			}
 			break;
 		case opts.done:
 			if (postForm && !postForm.$submit.attr('disabled')) {
 				postForm.finish();
-				used = true;
+				prevent();
 			}
 			break;
 		// Insert text spoiler
@@ -131,16 +125,16 @@ function handle_shortcut(event) {
 				var sp = (postState ? '[/' : ' [') + 'spoiler]';
 				this.imouto.state2.spoiler = !postState;
 				this.$input.val(this.$input.val() + sp);
-				used = true;
+				prevent();
 			}
 			break;
 		case opts.expandAll:
 			imager.massExpander.toggle();
-			used = true;
+			prevent();
 			break;
 	}
 
-	if (used) {
+	function prevent() {
 		event.stopImmediatePropagation();
 		event.preventDefault();
 	}
@@ -168,7 +162,7 @@ main.oneeSama.hook('insertOwnPost', function (info) {
 	});
 });
 
-var ComposerView = Backbone.View.extend({
+const ComposerView = Backbone.View.extend({
 	events: {
 		'input #trans': 'onInput',
 		'keydown #trans': 'onKeyDown',
@@ -192,6 +186,7 @@ var ComposerView = Backbone.View.extend({
 			callback: inject,
 			op: state.page.get('thread'),
 			state: [common.S_BOL, 0],
+
 			// TODO: Convert current OneeSama.state array to more flexible
 			// object
 			state2: {spoiler: 0},
@@ -199,17 +194,15 @@ var ComposerView = Backbone.View.extend({
 			eLinkify: main.oneeSama.eLinkify,
 			lang: main.lang,
 			tamashii(num) {
-				var $sec = $('#p' + num);
-				if (!$sec.is('section'))
-					$sec = $sec.closest('section');
-				if ($sec.is('section')) {
+				let section = document.query('#p' + num);
+				section = section && section.closest('section');
+				if (section) {
 					const desc = num in state.mine.readAll() && this.lang.you;
-					this.callback(this.postRef(num, etc.getNum($sec[0]), desc));
+					this.callback(this.postRef(num, etc.getNum(section), desc));
 				}
 				else {
-					this.callback(
-						common.safe(`<a class="nope">&gt;&gt;${num}</a>`)
-					);
+					this.callback(common
+						.safe(`<a class="nope">&gt;&gt;${num}</a>`));
 				}
 			}
 		});
@@ -220,6 +213,7 @@ var ComposerView = Backbone.View.extend({
 	render({destination, section}) {
 		const op = this.model.get('op');
 		this.setElement((op ? document.createElement('article') : section));
+
 		// A defined op means the post is a reply, not a new thread
 		this.isThread = !op;
 

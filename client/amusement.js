@@ -2,17 +2,17 @@
  * Dice rolls and fun JS injections
  */
 
-let main = require('./main'),
+const main = require('./main'),
 	{$, common, state, oneeSama} = main;
 
 // Render dice rolls and other hash commands
 oneeSama.hook('imouto', function (imouto) {
 	imouto.dice = true;
-	imouto.queueRoll = function(bit) {
-		var n = this.allRolls.sent++;
-		var info = this.allRolls[n];
+	imouto.queueRoll = function (bit) {
+		const number = this.allRolls.sent++;
+		let info = this.allRolls[number];
 		if (!info)
-			info = this.allRolls[n] = {};
+			info = this.allRolls[number] = {};
 		info.bit = bit;
 		info.$tag = $(this.callback(common.safe('<strong>')));
 		this.strong = true;
@@ -20,10 +20,7 @@ oneeSama.hook('imouto', function (imouto) {
 		this.strong = false;
 		this.callback(common.safe('</strong>'));
 	};
-	imouto.allRolls = {
-		sent: 0,
-		seen: 0
-	};
+	imouto.allRolls = {sent: 0, seen: 0};
 });
 
 // Handle dice in the postForm
