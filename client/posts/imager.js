@@ -212,14 +212,8 @@ $threads.on('click', 'img, video', function(e) {
 	e.preventDefault();
 	// Remove image hover preview, if any
 	main.request('imager:clicked');
-	main.follow(() =>
-		model.dispatch(
-			'toggleImageExpansion',
-			!model.get('imageExpanded'),
-			model.get('image'),
-			true
-		)
-	);
+	model.dispatch('toggleImageExpansion', !model.get('imageExpanded'),
+		model.get('image'), true);
 });
 
 // Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
