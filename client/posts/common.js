@@ -62,7 +62,7 @@ module.exports = {
 	},
 	renderBacklinks(links) {
 		let el = this.el.getElementsByTagName('small')[0];
-		main.follow(() => el.innerHTML = oneeSama.backlinks(links));
+		el.innerHTML = oneeSama.backlinks(links);
 	},
 	// Admin JS injections
 	fun() {
