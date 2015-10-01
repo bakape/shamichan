@@ -223,6 +223,5 @@ $threads.on('click', '.imageToggle', function(e) {
 	if (!model)
 		return;
 	main.follow(() =>
-		model.dispatch('renderImage', !model.get('thumbnailRevealed'))
-	);
+		model.dispatch('renderImage', !model.get('thumbnailRevealed')));
 });
