@@ -15,10 +15,12 @@ function dragonDrop(e) {
 	if (!postForm) {
 		const thread = state.page.get('thread');
 		if (thread)
-			return main.request('openPostBox', thread);
-		const section = e.target.closest('section');
-		if (section)
-			main.request('openPostBox', section.getAttribute('id'));
+			main.request('openPostBox', thread);
+		else {
+			const section = e.target.closest('section');
+			if (section)
+				main.request('openPostBox', section.getAttribute('id'));
+		}
 	}
 	else {
 		const attrs = postForm.model.attributes;
