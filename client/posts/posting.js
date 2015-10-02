@@ -113,7 +113,7 @@ function handle_shortcut(event) {
 			var $aside = state.page.get('thread')
 				? main.$threads.find('aside.posting') : $ceiling().next();
 			if ($aside.is('aside') && $aside.length === 1) {
-				() => postSM.feed('new', $aside);
+				postSM.feed('new', $aside);
 				used = true;
 			}
 			break;
