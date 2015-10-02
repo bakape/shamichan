@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.2.2 - 2015-10-02
+##Changed
+- Refactored page scrollinh on change compensation
+- Default image hower preview and relative timestamp settings
+
+##1.2.1 - 2015-09-30
+###Fixed
+- Staff logging in
+
 ##1.2.0 - 2015-09-30
 ###Added
 - Ability to select redis database to use

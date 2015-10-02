@@ -5,7 +5,7 @@
  */
 
 const main = require('./main'),
-	{etc, options} = main,
+	{etc, follow, options} = main,
 	{posts} = main.state;
 
 options.on({
@@ -16,39 +16,34 @@ options.on({
 });
 
 function reRenderImages() {
-	posts.each(function(model) {
-		const image = model.get('image');
-		if (image)
-			model.dispatch('renderImage', image)
-	});
+	follow(() => getImages((image, model) =>
+		image && model.dispatch('renderImage', image)));
+}
+
+function getImages(func) {
+	posts.each(model => func(model.get('image'), model));
 }
 
 function toggleSpoilers() {
-	posts.each(function(model) {
-		const image = model.get('image');
-		if (image && image.spoiler)
-			model.dispatch('renderImage', image);
-	});
+	follow(() => getImages((image, model) =>
+		image && image.spoiler && model.dispatch('renderImage', image)));
 }
 
 // Toggle animated GIF thumbnails
 function toggleAutoGIF() {
-	posts.each(function(model) {
-		const image = model.get('image');
-		if (image && image.ext === '.gif')
-			model.dispatch('renderImage', image);
-	});
+	follow(() => getImages((image, model) =>
+		image && image.ext === '.gif' && model.dispatch('renderImage', image)));
 }
 
 function toggleAnonymisation(source, toggle) {
-	const command = toggle ? 'anonymise' : 'renderName';
-	posts.each(function(model) {
-		const {name, trip} = model.attributes;
-		if (name || trip)
-			model.dispatch(command);
+	follow(() => {
+		const command = toggle ? 'anonymise' : 'renderName';
+		posts.each(function(model) {
+			const {name, trip} = model.attributes;
+			if (name || trip)
+				model.dispatch(command);
+		});
 	});
 }
-main.reply('loop:anonymise', function() {
-	if (options.get('anonymise'))
-		toggleAnonymisation(null, true);
-});
+main.reply('loop:anonymise', () =>
+	options.get('anonymise') && toggleAnonymisation(null, true));

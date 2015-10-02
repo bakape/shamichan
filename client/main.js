@@ -112,6 +112,7 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 	}
 });
 main.options = require('./options');
+main.scroll = require('./scroll');
 state.page.set('tabID', common.random_id());
 
 // Load language-specific CSS
@@ -141,7 +142,6 @@ _.extend(main, {
 _.extend(main, {
 	loop: require('./loop'),
 	time: require('./time'),
-	scroll: require('./scroll'),
 	notify: require('./notify'),
 	banner: require('./banner'),
 	report: require('./report'),

@@ -60,8 +60,7 @@ module.exports = {
 		this.el.query('time').outerHTML = oneeSama.time(this.model.get('time'));
 	},
 	renderBacklinks(links) {
-		main.follow(() =>
-			this.el.query('small').innerHTML = oneeSama.backlinks(links));
+		this.el.query('small').innerHTML = oneeSama.backlinks(links);
 	},
 	// Admin JS injections
 	fun() {

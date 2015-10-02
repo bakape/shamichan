@@ -205,14 +205,8 @@ $threads.on('click', 'img, video', function(e) {
 
 	// Remove image hover preview, if any
 	main.request('imager:clicked');
-	main.follow(() =>
-		model.dispatch(
-			'toggleImageExpansion',
-			!model.get('imageExpanded'),
-			model.get('image'),
-			true
-		)
-	);
+	model.dispatch('toggleImageExpansion', !model.get('imageExpanded'),
+		model.get('image'), true);
 });
 
 // Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
@@ -222,6 +216,5 @@ $threads.on('click', '.imageToggle', function(e) {
 	if (!model)
 		return;
 	main.follow(() =>
-		model.dispatch('renderImage', !model.get('thumbnailRevealed'))
-	);
+		model.dispatch('renderImage', !model.get('thumbnailRevealed')));
 });

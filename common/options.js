@@ -70,6 +70,7 @@ module.exports = function(isMobile) {
 		/* IMAGE HOVER EXPANSION */
 		{
 			id: 'imageHover',
+			default: true,
 			load: notMobile,
 			tab: 0
 		},
@@ -126,6 +127,7 @@ module.exports = function(isMobile) {
 		{
 			id: 'relativeTime',
 			tab: 0,
+			default: true,
 			exec(toggle) {
 				oneeSama.rTime = toggle;
 			}

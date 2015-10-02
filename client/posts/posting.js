@@ -42,7 +42,7 @@ postSM.act('* + desync -> none', () => {
 		postForm.$input.val('');
 		postForm.finish();
 	}
-	main.follow(() => main.$threads.find('aside.posting').hide())
+	main.$threads.find('aside.posting').hide();
 });
 
 postSM.act('none + sync, draft, alloc + done -> ready', () => {
@@ -52,10 +52,9 @@ postSM.act('none + sync, draft, alloc + done -> ready', () => {
 		postForm.remove();
 		postForm = postModel = null;
 	}
-	main.follow(() => {
-		for (let el of main.$threads[0].queryAll('aside.posting')) {
-			el.style.display = '';
-		}});
+	for (let el of main.$threads[0].queryAll('aside.posting')) {
+		el.style.display = '';
+	}
 });
 
 // Make new postform
@@ -87,7 +86,7 @@ main.dispatcher[common.IMAGE_STATUS] = msg =>
 	postForm && postForm.dispatch(msg[0]);
 
 main.$doc.on('click', 'aside.posting a', function () {
-	main.follow(() => postSM.feed('new', this.parentNode));
+	postSM.feed('new', this.parentNode);
 });
 
 main.$doc.on('keydown', handle_shortcut);
@@ -101,7 +100,7 @@ function handle_shortcut(event) {
 		case opts.new:
 			const aside = document.query('aside.posting');
 			if (aside) {
-				main.follow(() => postSM.feed('new', aside));
+				postSM.feed('new', aside);
 				prevent();
 			}
 			break;
@@ -310,15 +309,13 @@ const ComposerView = Backbone.View.extend({
 			allocWait = attrs.sentAllocRequest && !attrs.num,
 			d = attrs.uploading || allocWait;
 		// Beware of undefined!
-		main.follow(() => {
-			this.$submit.prop('disabled', !!d);
-			if (attrs.uploaded)
-				this.$submit.css({'margin-left': '0'});
-			this.$cancel.prop('disabled', !!allocWait);
-			this.$cancel.toggle(!!(!attrs.num || attrs.uploading));
-			this.$imageInput.prop('disabled', !!attrs.uploading);
-			this.$uploadStatus.html(attrs.uploadStatus);
-		});
+		this.$submit.prop('disabled', !!d);
+		if (attrs.uploaded)
+			this.$submit.css({'margin-left': '0'});
+		this.$cancel.prop('disabled', !!allocWait);
+		this.$cancel.toggle(!!(!attrs.num || attrs.uploading));
+		this.$imageInput.prop('disabled', !!attrs.uploading);
+		this.$uploadStatus.html(attrs.uploadStatus);
 	},
 	renderSpoilerPane(model, sp) {
 		const background = sp ? `${config.MEDIA_URL}spoil/spoil${sp}.png`
@@ -641,48 +638,47 @@ const ComposerView = Backbone.View.extend({
 		});
 	},
 	finish() {
-		main.follow(() => {
-			if (this.model.get('num')) {
-				this.flushPending();
-				this.commit(this.$input.val());
-				this.$input.remove();
-				this.$submit.remove();
-				if (this.$uploadForm)
-					this.$uploadForm.remove();
-				if (this.$iframe) {
-					this.$iframe.remove();
-					this.$iframe = null;
-				}
-				this.imouto.fragment(this.$lineBuffer.text());
-				this.$buffer.replaceWith(this.$buffer.contents());
-				this.$lineBuffer.remove();
-				this.$blockquote.css({
-					'margin-left': '', 'padding-left': ''
-				}
-				);
-				main.send([common.FINISH_POST]);
-				this.preserve = true;
-				if (this.isThread)
-					this.$el.append(main.oneeSama.replyBox());
+		if (this.model.get('num')) {
+			this.flushPending();
+			this.commit(this.$input.val());
+			this.$input.remove();
+			this.$submit.remove();
+			if (this.$uploadForm)
+				this.$uploadForm.remove();
+			if (this.$iframe) {
+				this.$iframe.remove();
+				this.$iframe = null;
+			}
+			this.imouto.fragment(this.$lineBuffer.text());
+			this.$buffer.replaceWith(this.$buffer.contents());
+			this.$lineBuffer.remove();
+			this.$blockquote.css({
+				'margin-left': '', 'padding-left': ''
+			}
+			);
+			main.send([common.FINISH_POST]);
+			this.preserve = true;
+			if (this.isThread)
+				this.$el.append(main.oneeSama.replyBox());
 
-				let missing = this.imouto.allRolls.sent - this.imouto.allRolls.seen;
-				//if missing>0 we have to wait until insertOwnPosts "sees" the
-				// dice
-				if (missing > 0) {
-					let checkAgain;
-					(checkAgain= (n) => {
-						setTimeout(()=> {
-							if (this.imouto.allRolls.seen == this.imouto.allRolls.sent || n ==0)
-								postSM.feed('done');
-							else
-								checkAgain(n - 1);
-						}, 100);
-					})(5); //retry 5 times
-				}else
-					postSM.feed('done');
-			}else
+			let missing = this.imouto.allRolls.sent - this.imouto.allRolls.seen;
+			//if missing>0 we have to wait until insertOwnPosts "sees" the
+			// dice
+			if (missing > 0) {
+				let checkAgain;
+				(checkAgain= (n) => {
+					setTimeout(()=> {
+						if (this.imouto.allRolls.seen == this.imouto.allRolls.sent || n ==0)
+							postSM.feed('done');
+						else
+							checkAgain(n - 1);
+					}, 100);
+				})(5); //retry 5 times
+			}
+			else
 				postSM.feed('done');
-		});
+		}else
+			postSM.feed('done');
 	},
 	// Send any unstaged words
 	flushPending() {
@@ -890,8 +886,6 @@ main.$threads.on('click', 'a.quote', function(e) {
 	let sel;
 	if (isInside('baseNode') && isInside('focusNode'))
 		sel = gsel.toString();
-	main.follow(function() {
-		openPostBox(num);
-		postForm.addReference(num, sel);
-	});
+	openPostBox(num);
+	postForm.addReference(num, sel);
 });
