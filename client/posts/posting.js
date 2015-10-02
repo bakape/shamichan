@@ -97,7 +97,7 @@ main.dispatcher[common.IMAGE_STATUS] = function(msg) {
 };
 
 main.$doc.on('click', 'aside.posting a', function() {
-	main.follow(() => postSM.feed('new', $(this).parent()));
+	postSM.feed('new', $(this).parent());
 });
 
 main.$doc.on('keydown', handle_shortcut);
@@ -113,7 +113,7 @@ function handle_shortcut(event) {
 			var $aside = state.page.get('thread')
 				? main.$threads.find('aside.posting') : $ceiling().next();
 			if ($aside.is('aside') && $aside.length === 1) {
-				main.follow(() => postSM.feed('new', $aside));
+				() => postSM.feed('new', $aside);
 				used = true;
 			}
 			break;
@@ -905,8 +905,6 @@ main.$threads.on('click', 'a.quote', function(e) {
 	let sel;
 	if (isInside('baseNode') && isInside('focusNode'))
 		sel = gsel.toString();
-	main.follow(() => {
-		openPostBox(num);
-		postForm.addReference(num, sel);
-	});
+	openPostBox(num);
+	postForm.addReference(num, sel);
 });
