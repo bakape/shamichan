@@ -28,24 +28,66 @@ checkBottom();
 document.addEventListener('scroll', checkBottom);
 
 /*
- Logic for locking position to the bottom of a thread or keeping the
-  viewport scroll position unchanged.
+ Lock position to the bottom of a thread or keep the viewport from bumping
+ on out of sight DOM mutation.
  */
+// Cache previous reference element to minimize DOM lookup
+let referenceEl;
+
 function followDOM(func) {
-	const previous = body.scrollHeight,
-		ret = func.call(this),
-		delta = body.scrollHeight - previous;
-	if (delta) {
-		if (!atBottom)
+	const previous = referenceDistance(),
+		ret = func();
+
+	// Prevent scrolling with new posts, if page isn't visible
+	if (atBottom && (!document.hidden || options.get('alwaysLock')))
+		window.scrollTo(0,  body.scrollHeight);
+	else {
+		// Element was removed or something
+		if (!elExists(referenceEl))
+			return ret;
+
+		// Only compensate, if the height increased ~above the viewport
+		const delta = topDistance(referenceEl, true) - previous;
+		if (delta)
 			window.scrollBy(0, delta);
-		// Prevent scrolling with new posts, if page isn't visible
-		else if (!document.hidden || options.get('alwaysLock'))
-			window.scrollTo(0,  body.scrollHeight);
 	}
 	return ret;
 }
-// Shorthand; we use this a lot
 main.follow = followDOM;
+
+// Check if element reference exists and is in the DOM
+function elExists(el) {
+	return el && document.contains(el);
+}
+
+// Return element position dimentions against the viewport, if the element
+// is withing the viewport
+function topDistance(el, skipCheck) {
+	const {top} = el.getBoundingClientRect();
+	if (skipCheck || (top >= 0 && top < window.innerHeight))
+		return top;
+	return null;
+}
+
+function referenceDistance() {
+	if (elExists(referenceEl)) {
+		const bounds = topDistance(referenceEl);
+		if (bounds !== null)
+			return bounds;
+	}
+
+	// Find new reference element (first inside viewport). Account for empty
+	// threads and boards with no artciles or sections.
+	for (let selector of ['article', 'section', 'threads']) {
+		for (let el of main.$threads[0].queryAll(selector)) {
+			const bounds = topDistance(el);
+			if (bounds !== null) {
+				referenceEl = el;
+				return bounds;
+			}
+		}
+	}
+}
 
 // Account for banner height, when scrolling to an anchor
 function aboveBanner (){
