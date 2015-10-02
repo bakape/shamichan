@@ -905,5 +905,8 @@ main.$threads.on('click', 'a.quote', function(e) {
 	let sel;
 	if (isInside('baseNode') && isInside('focusNode'))
 		sel = gsel.toString();
-	main.follow(() => openPostBox(num), postForm.addReference(num, sel));
+	main.follow(() => {
+		openPostBox(num);
+		postForm.addReference(num, sel);
+	});
 });
