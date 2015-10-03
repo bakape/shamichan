@@ -19,7 +19,7 @@ this.hot = {
 		staff: "/staff/"
 	},
 // Default theme to use
-	DEFAULT_CSS: 'Console',
+	DEFAULT_CSS: 'console',
 /*
  * File names of the images to use as banners inside the ./www/banners
  * Example: ['banner01.png', 'banner02.gif', 'banner03.jpg'] or null
