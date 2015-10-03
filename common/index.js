@@ -7,11 +7,11 @@
 const DEF = {
 	// Pub/Sub
 	INVALID: 0,
+	BACKLINK: 1,
 	INSERT_POST: 2,
 	UPDATE_POST: 3,
 	FINISH_POST: 4,
 	INSERT_IMAGE: 6,
-	BACKLINK: 7,
 
 	// Pub/sub moderation
 	SPOILER_IMAGES: 7,
