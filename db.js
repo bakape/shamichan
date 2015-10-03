@@ -378,7 +378,7 @@ class Yakusoku extends events.EventEmitter {
 	reserve_post(op, ip, callback) {
 		if (config.READ_ONLY)
 			return callback(Muggle("Can't post right now."));
-		if (ip === '127.0.0.1')
+		if (ip === '127.0.0.1' || ip === '::1')
 			return this.reserve(op, callback);
 
 		const key = `ip:${ip}:throttle:`,
@@ -418,21 +418,19 @@ class Yakusoku extends events.EventEmitter {
 		const {num} = msg,
 			op = msg.op || num,
 			{ip, board} = extra,
-			isThead = !msg.op;
+			isThread = !msg.op;
 		if (!num)
 			return callback(Muggle("No post number."));
 		else if (!ip)
 			return callback(Muggle("No IP."));
-		else if (!isThead && !validateOP(op, board)) {
+		else if (!isThread && !validateOP(op, board)) {
 			uncacheThread(op);
 			return callback(Muggle('Thread does not exist.'));
 		}
 
-		const view = {
+		const view = { 
+			ip, num, board,
 			time: msg.time,
-			num,
-			board,
-			ip,
 			state: msg.state.join()
 		};
 		const optPostFields = ['name', 'trip', 'email', 'auth', 'subject', 
@@ -442,17 +440,17 @@ class Yakusoku extends events.EventEmitter {
 				view[field] = msg[field];
 		}
 		const boardKey = 'board:' + this.board;
-		if (!isThead)
+		if (!isThread)
 			view.op = op;
 
 		if (extra.image_alloc) {
 			msg.image = extra.image_alloc.image;
-			if (isThead == msg.image.pinky)
+			if (isThread == msg.image.pinky)
 				return callback(Muggle("Image is the wrong size."));
 			delete msg.image.pinky;
 		}
 
-		const key = (isThead ? 'thread:' : 'post:') + num,
+		const key = (isThread ? 'thread:' : 'post:') + num,
 			m = redis.multi();
 		m.incr(boardKey + ':postctr'); // must be first
 		m.sadd('liveposts', key);
@@ -463,7 +461,7 @@ class Yakusoku extends events.EventEmitter {
 		});
 
 		if (msg.image) {
-			if (isThead)
+			if (isThread)
 				view.imgctr = 1;
 			else
 				m.hincrby('thread:' + op, 'imgctr', 1);
@@ -477,7 +475,7 @@ class Yakusoku extends events.EventEmitter {
 			this.writeDice(m, dice, key);
 			view.dice = dice;
 		}
-		const links = msg.links;
+		const {links} = msg;
 		if (links) {
 			m.hmset(key + ':links', links);
 			view.links = links;
@@ -485,7 +483,7 @@ class Yakusoku extends events.EventEmitter {
 		}
 
 		const etc = {augments: {}};
-		if (isThead) {
+		if (isThread) {
 			etc.cacheUpdate = [0, num, board];
 			/* Rate-limit new threads */
 			if (~['127.0.0.1', '::1'].indexOf(ip))
@@ -496,27 +494,27 @@ class Yakusoku extends events.EventEmitter {
 			m.rpush(`thread:${op}:posts`, num);
 		}
 
-		/* Denormalize for backlog */
+		// Denormalize for backlog
 		view.nonce = msg.nonce;
 		view.body = body;
 
 		let bump;
 		async.waterfall(
 			[
-				function (next) {
+				next => {
 					if (!msg.image)
 						return next();
 					imager.commit_image_alloc(extra.image_alloc, next);
 				},
 				// Determine, if we need to bump the thread to the top of
 				// the board
-				function(next) {
-					if (isThead) {
+				next => {
+					if (isThread) {
 						bump = true;
 						return next();
 					}
 
-					redis.llen(`thread:${op}:posts`, function(err, res) {
+					redis.llen(`thread:${op}:posts`, (err, res) => {
 						if (err)
 							return next(err);
 						bump = !common.is_sage(view.email)
@@ -548,17 +546,18 @@ class Yakusoku extends events.EventEmitter {
 					this._log(m, op, common.INSERT_POST, [view, bump], etc);
 					m.exec(next);
 				},
-				function(res, next) {
+				(res, next) => {
 					if (!bump)
 						return next();
 					redis.zadd(boardKey + ':threads', res[0], op, next);
 				}
 			],
-			function (err) {
+			err => {
 				if (err) {
 					delete OPs[num];
 					return callback(err);
 				}
+				msg.body = body;
 				callback();
 			}
 		);
@@ -762,20 +761,20 @@ class Yakusoku extends events.EventEmitter {
 		);
 	}
 	check_thread_locked(op, callback) {
-		redis.hexists('thread:' + op, 'locked', function(err, lock) {
+		redis.hexists('thread:' + op, 'locked', (err, lock) => {
 			if (err)
 				return callback(err);
-			callback(lock ? Muggle('Thread is locked.') : null);
+			callback(lock && Muggle('Thread is locked.'));
 		});
 	}
 	check_throttle(ip, callback) {
 		// So we can spam new threads in debug mode
 		if (config.DEBUG)
-			return callback(null);
-		redis.exists(`ip:${ip}:throttle:thread`, function(err, exists) {
+			return callback();
+		redis.exists(`ip:${ip}:throttle:thread`, (err, exists) => {
 			if (err)
 				return callback(err);
-			callback(exists ? Muggle('Too soon.') : null);
+			callback(exists && Muggle('Too soon.'));
 		});
 	}
 	get_tag(page) {

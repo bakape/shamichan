@@ -203,8 +203,8 @@ function image_status(client_id, status) {
 
 /* Must be prepared to receive callback instantly */
 function valid_links(frag, state, ident, callback) {
-	let links = {};
-	let onee = new common.OneeSama({
+	const links = {};
+	const onee = new common.OneeSama({
 		state,
 		callback() {},
 		tamashii(num) {
@@ -217,7 +217,7 @@ function valid_links(frag, state, ident, callback) {
 	callback(null, _.isEmpty(links) ? null : links);
 }
 
-var insertSpec = [{
+const insertSpec = [{
 	frag: 'opt string',
 	image: 'opt string',
 	nonce: 'id',
@@ -228,19 +228,20 @@ var insertSpec = [{
 	subject: 'opt string'
 }];
 
-dispatcher[common.INSERT_POST] = function (msg, client) {
+dispatcher[common.INSERT_POST] = (msg, client) => {
 	if (!check(insertSpec, msg))
 		return false;
 	msg = msg[0];
+	const {frag} = msg;
 	if (client.post)
-		return update_post(msg.frag, client);
-	if (!caps.can_access_board(client.ident, client.board))
+		return update_post(frag, client);
+
+	if (!caps.can_access_board(client.ident, client.board)
+		|| (frag && /^\s*$/g.test(frag))
+		|| (!frag && !msg.image)
+	)
 		return false;
-	var frag = msg.frag;
-	if (frag && /^\s*$/g.test(frag))
-		return false;
-	if (!frag && !msg.image)
-		return false;
+
 	if (config.DEBUG)
 		debug_command(client, frag);
 
@@ -252,11 +253,14 @@ dispatcher[common.INSERT_POST] = function (msg, client) {
 function allocate_post(msg, client, callback) {
 	if (client.post)
 		return callback(Muggle("Already have a post."));
-	var post = {time: Date.now(), nonce: msg.nonce};
-	var body = '';
-	var ip = client.ident.ip;
-	var extra = {ip: ip, board: client.board};
-	var image_alloc;
+	const post = {
+		time: Date.now(),
+		nonce: msg.nonce
+	};
+	let body = '',
+		image_alloc;
+	const {ip} = client.ident,
+		extra = {ip, board: client.board};
 	if (msg.image) {
 		if (!/^\d+$/.test(msg.image))
 			return callback(Muggle('Expired image token.'));
@@ -278,10 +282,11 @@ function allocate_post(msg, client, callback) {
 	else {
 		if (!image_alloc)
 			return callback(Muggle('Image missing.'));
-		var subject = (msg.subject || '').trim();
-		subject = subject.replace(STATE.hot.EXCLUDE_REGEXP, '');
-		subject = subject.replace(/[「」]/g, '');
-		subject = subject.slice(0, STATE.hot.SUBJECT_MAX_LENGTH);
+		const subject = (msg.subject || '')
+			.trim()
+			.replace(STATE.hot.EXCLUDE_REGEXP, '')
+			.replace(/[「」]/g, '')
+			.slice(0, STATE.hot.SUBJECT_MAX_LENGTH);
 		if (subject)
 			post.subject = subject;
 	}
@@ -315,58 +320,49 @@ function allocate_post(msg, client, callback) {
 		post.auth = msg.auth;
 	}
 
-	if (post.op)
-		client.db.check_thread_locked(post.op, checked);
-	else
-		client.db.check_throttle(ip, checked);
+	async.waterfall(
+		[
+			next => {
+				if (post.op)
+					client.db.check_thread_locked(post.op, next);
+				else
+					client.db.check_throttle(ip, next);
+			},
+			next =>
+				client.db.reserve_post(post.op, ip, next),
+			(num, next) => {
+				if (!client.synced)
+					return next(Muggle('Dropped; post aborted.'));
+				if (client.post)
+					return next(Muggle('Already have a post.'));
 
-	function checked(err) {
-		if (err)
-			return callback(err);
-		client.db.reserve_post(post.op, ip, got_reservation);
-	}
-
-	function got_reservation(err, num) {
-		if (err)
-			return callback(err);
-		if (!client.synced)
-			return callback(Muggle('Dropped; post aborted.'));
-		if (client.post)
-			return callback(Muggle('Already have a post.'));
-
-		amusement.roll_dice(body, post);
-		client.post = post;
-		post.num = num;
-		var supplements = {
-			links: valid_links.bind(null, body, post.state, client.ident)
-		};
-		if (image_alloc)
-			supplements.image = imager.obtain_image_alloc.bind(
-					null, image_alloc);
-		async.parallel(supplements, got_supplements);
-	}
-	function got_supplements(err, rs) {
-		if (err) {
-			if (client.post === post)
+				amusement.roll_dice(body, post);
+				client.post = post;
+				post.num = num;
+				const supplements = {links: valid_links.bind(null, body,
+					post.state, client.ident)};
+				if (image_alloc) {
+					supplements.image = imager.obtain_image_alloc
+						.bind(null, image_alloc);
+				}
+				async.parallel(supplements, next);
+			},
+			(rs, next) => {
+				if (!client.synced)
+					return next(Muggle('Dropped; post aborted.'));
+				post.links = rs.links;
+				if (rs.image)
+					extra.image_alloc = rs.image;
+				client.db.insert_post(post, body, extra, next);
+			}
+		],
+		err => {
+			if (err && client.post === post)
 				client.post = null;
-			return callback(Muggle("Attachment error.", err));
+			callback(err);
 		}
-		if (!client.synced)
-			return callback(Muggle('Dropped; post aborted.'));
-		post.links = rs.links;
-		if (rs.image)
-			extra.image_alloc = rs.image;
-		client.db.insert_post(post, body, extra, inserted);
-	}
-	function inserted(err) {
-		if (err) {
-			if (client.post === post)
-				client.post = null;
-			return callback(Muggle("Couldn't allocate post.",err));
-		}
-		post.body = body;
-		callback(null);
-	}
+	);
+
 	return true;
 }
 
