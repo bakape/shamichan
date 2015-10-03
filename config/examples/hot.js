@@ -4,15 +4,22 @@ This file can be hot-loaded into a running server with `node server/kill.js`.
 
 this.hot = {
 // User feedback email
-	EMAIL: "lalc@doushio.com",
+	EMAIL: "thwinj@gmail.com",
 	TITLES: {
-		moe: "/moe/ - Sweets",
-		gar: "/gar/ - Hard Work &amp; Guts",
-		meta: "/meta/ - The Abyss",
+		epic: "/Epic/ - Epic Poetry",
+		psy: "/Psy/ - Psychedelics",
+		sci: "/Sci/ Science & Star Stuff"
+		edu: "/Edu/ Learn Something"
+		zine: "/Zine/ Share and make Zines"
+		Hip-Hop:"/Hip-Hop/ - Graf, Rap"
+		skate: "/skate/ "
+		cam: "/Camera/ - Photography, Film"
+		STEEZ: "/STEEZ/ - Style"
+		not: "/Not/ - ",
 		staff: "/staff/"
 	},
 // Default theme to use
-	DEFAULT_CSS: 'moe',
+	DEFAULT_CSS: 'Console',
 /*
  * File names of the images to use as banners inside the ./www/banners
  * Example: ['banner01.png', 'banner02.gif', 'banner03.jpg'] or null
@@ -81,7 +88,7 @@ this.hot = {
 // Extra JS script to load on all clients. Set to a file path or null.
 	inject_js: null,
 /*
- Word replacament filter. {p: /foo/, r: 'bar'} Pattern must not contain spaces
+ Word replacament filter. {p: '/foo/'', r: 'bar'} Pattern must not contain spaces
  or newlines
  */
 	FILTER: [],
@@ -90,18 +97,11 @@ this.hot = {
  in post, followed by enter.
  */
 	EIGHT_BALL: [
-		"Yes",
-		"No",
-		"Maybe",
-		"It can't be helped",
-		"Hell yeah, motherfucker",
-		'Ara ara~',
-		"That is my fetish",
-		"Anta baka?"
+		
+		"Hell yeah",
 	],
 /*
- Local http://loli.dance/ implementation. Videos not included in git tree.
- Place illya.webm and illya.mp4 into the www directory, if you want this.
+ Local
  */
-	ILLYA_DANCE: false
+
 };
