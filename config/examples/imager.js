@@ -59,19 +59,19 @@ var config = module.exports = {
 // Additional inbetween thumbnail quality setting. Served as "sharp"
 	EXTRA_MID_THUMBNAILS: true,
 // PNG thumbnails for PNG images. This enables thumbnail transparency.
-	PNG_THUMBS: false,
+	PNG_THUMBS: true,
 // pngquant quality setting. Consult the manpages for more details
 	PNG_THUMB_QUALITY: '0-10',
 // Allow WebM video upload
-	WEBM: false,
+	WEBM: true,
 // Allow upload of WebM video with sound
-	WEBM_AUDIO: false,
+	WEBM_AUDIO: true,
 // MP3 upload
-	MP3: false,
+	MP3: true,
 // Enable SVG upload
 	SVG: false,
 // Enable PDF upload
-	PDF: false,
+	PDF: true,
 
 /*
  this indicates which spoiler images may be selected by posters.

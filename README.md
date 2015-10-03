@@ -18,7 +18,7 @@ master branch in production. For more stable revisions, please [download the
 Users less familiar with Linux and sysadmin procedures can paste the 
 following line into the root shell to automatically setup a default 
 installation on an fresh Ubuntu >=14.04 LTS VPS.
-`wget -q -O - https://raw.githubusercontent.com/bakape/meguca/master/scripts/deploy.sh | bash -`
+`wget -q -O - https://raw.githubusercontent.com/NIXOYE/meguca/master/scripts/deploy.sh | bash -`
 
 ##Production
 * Have your webserver serve `www/`

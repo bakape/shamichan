@@ -76,6 +76,7 @@ module.exports = function(isMobile) {
 		},
 		{
 			id: 'webmHover',
+			default: true,
 			load: notMobile,
 			tab: 0
 		},
@@ -111,6 +112,7 @@ module.exports = function(isMobile) {
 		/* DESKTOP NOTIFICATIONS */
 		{
 			id: 'notification',
+			default: true,
 			load: notMobile,
 			tab: 0,
 			exec(notifToggle) {
@@ -120,7 +122,7 @@ module.exports = function(isMobile) {
 		},
 		/* ANONIMISE ALL POSTER NAMES */
 		{
-			id: 'anonymise',
+			id: 'Not Jesus',
 			tab: 0
 		},
 		/* RELATIVE POST TIMESTAMPS */

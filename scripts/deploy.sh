@@ -18,7 +18,7 @@ useradd -d /home/meguca -s /bin/bash -m -U meguca
 # Download and build meguca
 su - meguca << 'EOF'
 	cd ~
-	git clone https://github.com/bakape/meguca.git server
+	git clone https://github.com/NIXOYE/meguca.git server
 	cd server
 	# Checkout latest stable version
 	git checkout `git tag | tail -n 1`

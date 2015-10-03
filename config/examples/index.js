@@ -34,20 +34,20 @@ module.exports = {
 	redis_database: 0,
 	READ_ONLY: false,
 
-	BOARDS: ['moe', 'gar', 'meta', 'staff'],
-	DEFAULT_BOARD: 'moe',
+	BOARDS: ['epic', 'sci', 'psy', 'edu', 'zine', 'skate', 'STEEZ', 'Hip-Hop', 'cam', 'not', 'staff'],
+	DEFAULT_BOARD: 'not',
 // Add links to the navigator menu to custom URLs. Also enables linking
 // these in posts with `>>>/${board}/`.
 	PSUEDO_BOARDS: [
-		['g', 'https://google.com']
+		[	'NotJesus.Org', 'http://notjesus.org']
 	],
 // Only enable in-post links, without adding to the board navigation bar
 	link_boards: [
-		['4chan', 'http://www.4chan.org/']
+		['lainchan.org', 'https://www.lainchan.org/']
 	],
 	STAFF_BOARD: 'staff',
 // Boards with disabled moderation
-	containment_boards: ['meta'],
+	containment_boards: [],
 
 // Language settings. You can easily map more. See ./lang/
 	LANGS: ['en_GB', 'pt_BR', 'es_ES'],
@@ -63,41 +63,55 @@ module.exports = {
 
 // Number of pages per board
 	PAGES: {
-		moe: 5,
-		gar: 5,
-		meta: 5,
+		epic: 7,
+		psy: 7,
+		sci: 7,
+		edu: 7,
+		zine: 7,
+		skate: 7,
+		STEEZ: 7,
+		Hip-Hop: 7,
+		Cam: 7,
+		Not: 7,
 		staff: 5
 	},
 // Number of posts per thread, after which the thread stops bumping to the
 // top of the board
 	BUMP_LIMIT: {
-		moe: 1000,
-		gar: 1000,
-		meta: 1000,
+		epic: 1000,
+		psy: 1000,
+		sci: 1000,
+		edu: 1000,
+		zine: 1000,
+		skate: 1000,
+		STEEZ: 1000,
+		Hip-Hop: 1000,
+		Cam: 1000,
+		Not: 1000,
 		staff: 1000
 	},
 // Delete threads and their images, when they exceed the board's page limit
-	PRUNE: false,
+	PRUNE: true,
 
 /*
  Doushio uses Mozilla's Persona system for staff authentication.
  Set login emails aliases, which will be used for logging, here.
  */
 	staff: {
-		admin: {'lalc@doushio.com': 'lalc'},
-		moderator: {'mod@doushio.com': 'mod'},
-		janitor: {'janitor@doushio.com': 'janny'}
+		admin: {'thwinj@gmail.com': 'lalc'},
+		moderator: {'hex_offender@openmailbox.org': 'mod'},
+		janitor: {'junk0@openmailbox.org': 'janny'}
 	},
 // You can log in/out by typing the following keyword in the email field
-	LOGIN_KEYWORD: 'misaki',
+	LOGIN_KEYWORD: 'notjesus',
 // URL and domain of the website
-	PERSONA_AUDIENCE: 'http://localhost:8000',
+	PERSONA_AUDIENCE: 'http://notjesus.xyz:8000',
 	LOGIN_SESSION_TIME: 60*60*24*14,
 
 // r/a/dio integration (https://r-a-d.io)
 	RADIO: false,
 // Missle Launcher
-	PYU: false
+	PYU: true
 };
 
 // Source the other config files
