@@ -46,11 +46,9 @@ oneeSama.hook('insertOwnPost', function (extra) {
 });
 
 // Execute server-sent JS in fun threads
-main.dispatcher[common.EXECUTE_JS] = function (msg, op) {
-	if (state.page.get('thread') != op)
-		return;
+main.dispatcher[common.EXECUTE_JS] = ([js]) => {
 	try {
-		eval(msg[0]);
+		eval(js);
 	}
 	catch (e) {
 		console.error(e);
