@@ -5,7 +5,7 @@ Youtube, soundcloud and pastebin link embeding
 // TODO: DRY this shit
 
 let main = require('../main'),
-	{$} = main;
+	{$, etc} = main;
 
 // >80 char rule
 const youtube_url_re = exports.youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.|m.)?youtube\.com\/watch\/?\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/,
@@ -182,70 +182,59 @@ function make_embed(uri, params, dims) {
 
 const soundcloud_url_re = exports.soundcloud_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.)?soundcloud\.com\/([\w-]{1,40}\/[\w-]{1,80})\/?/;
 
-function make_soundcloud(path, dims) {
-	var uri = 'https://player.soundcloud.com/player.swf?'
-		+ $.param({url: 'http://soundcloud.com/' + path});
-	return make_embed(uri, {movie: uri}, dims);
+function fetchSoundcloud(target, width, cb) {
+	const url = 'https://soundcloud.com/oembed?url='
+		+ encodeURIComponent(target.getAttribute('href'))
+		+ `&maxwidth=${width}&maxheight=166&auto_play=true&format=json`
+		+ '&show_comments=false';
+	const xhr = new XMLHttpRequest();
+	xhr.open('GET', url);
+	xhr.responseType = 'json';
+	xhr.onload = function () {
+		if (this.status !== 200)
+			return cb(this.status);
+		cb(null, this.response);
+	};
+	xhr.send();
 }
 
 main.$threads.on('click', '.soundcloud', function (e) {
 	if (e.which > 1 || e.ctrlKey || e.altKey || e.shiftKey || e.metaKey)
 		return;
-	var $target = $(e.target);
-
-	var $obj = $target.find('object');
-	if ($obj.length) {
-		$obj.siblings('br').andSelf().remove();
-		$target.css('width', 'auto');
-		return false;
-	}
-	var m = $target.attr('href').match(soundcloud_url_re);
-	if (!m)
-		// Shouldn't happen, but degrade to normal click action
+	const {target} = e,
+		iframe = target.query('iframe');
+	e.preventDefault();
+	if (iframe) {
+		iframe.previousElementSibling.remove();
+		iframe.remove();
 		return;
-	const width = Math.round($(window).innerWidth() * 0.75);
-	$obj = make_soundcloud(m[1], {width: width, height: 81});
-	$target.css('width', width).append('<br>', $obj);
-	return false;
+	}
+
+	const width = Math.round(window.innerWidth * 0.75);
+	fetchSoundcloud(target, width, (err, json) => {
+		if (err)
+			return alert(err);
+		target.append(document.createElement('br'));
+		target.append(etc.parseDOM(json.html)[0]);
+		target.style.width = width + 'px';
+	});
 });
 
-// lol copy pasta
-main.$threads.on('mouseenter', '.soundcloud', function (event) {
-	var $target = $(event.target);
-	if ($target.data('requestedTitle'))
-		return;
-	$target.data('requestedTitle', true);
-	// Edit textNode in place so that we don't mess with the embed
-	var node = $target.contents().filter(function () {
-		return this.nodeType === 3;
-	})[0];
-	if (!node)
-		return;
-	var orig = node.textContent;
-	node.textContent = orig + '...';
-	var m = $target.attr('href').match(soundcloud_url_re);
-	if (!m)
-		return;
+main.$threads.on('mouseenter', '.soundcloud:not(.fetched)', function (event) {
+	const {target} = event,
+		node = target.firstChild,
+		text = node.textContent;
+	node.textContent = text + ' ...';
 
-	$.ajax({
-		url: '//soundcloud.com/oembed',
-		data: {format: 'json', url: 'http://soundcloud.com/' + m[1]},
-		dataType: 'json',
-		success: gotInfo,
-		error() {
-			node.textContent = orig + '???';
-		}
+	// We should not be doing 2 separate fetches on mouseover and click, but
+	// what if the user manages to click without mouseenter somehow?
+	fetchSoundcloud(target, 1000, (err, json) => {
+		if (err)
+			return node.textContent = `${text}: Error: ${err}`;
+		node.textContent = `${text}: ${json.title}`;
+		target.style.color = 'black';
+		target.classList.add('fetched');
 	});
-
-	function gotInfo(data) {
-		var title = data && data.title;
-		if (title) {
-			node.textContent = orig + ': ' + title;
-			$target.css({color: 'black'});
-		}
-		else
-			node.textContent = orig + ' (gone?)';
-	}
 });
 
 // PASTEBIN
