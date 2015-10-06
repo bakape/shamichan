@@ -4,16 +4,17 @@ Main redis controller module
 
 const _ = require('underscore'),
     async = require('async'),
-    cache = require('./server/state').dbCache,
     caps = require('./server/caps'),
     common = require('./common'),
     config = require('./config'),
     events = require('events'),
     fs = require('fs'),
     hooks = require('./util/hooks'),
-    hot = require('./server/state').hot,
+	Muggle = require('./util/etc').Muggle,
 	okyaku = require('./server/okyaku'),
-    Muggle = require('./util/etc').Muggle,
+	state = require('./server/state'),
+	{hot} = state,
+	cache = state.dbCache,
 	nodeRedis = require('redis'),
     tail = require('./util/tail'),
     winston = require('winston');
@@ -430,8 +431,7 @@ class Yakusoku extends events.EventEmitter {
 
 		const view = { 
 			ip, num, board,
-			time: msg.time,
-			state: msg.state.join()
+			time: msg.time
 		};
 		const optPostFields = ['name', 'trip', 'email', 'auth', 'subject', 
 			'dice'];
@@ -661,41 +661,25 @@ class Yakusoku extends events.EventEmitter {
 			}
 		], callback);
 	}
-	append_post(post, tail, old_state, extra, cb) {
+	append_post(post, tail, {links, dice}, cb) {
 		const m = redis.multi(),
 			key = (post.op ? 'post:' : 'thread:') + post.num;
 		
-		/* Don't need to check .exists() thanks to client state */
+		// Don't need to check .exists() thanks to client state
 		m.append(key + ':body', tail);
 
-		/* XXX: fragile */
-		if (old_state[0] != post.state[0] || old_state[1] != post.state[1])
-			m.hset(key, 'state', post.state.join());
-		if (extra.ip) {
-			const now = Date.now();
-			this.update_throughput(m, extra.ip, now, 
-				this.post_volume(null, tail));
-		}
-		if (!_.isEmpty(extra.new_links))
-			m.hmset(key + ':links', extra.new_links);
-
+		this.update_throughput(m, this.ident.ip, Date.now(),
+			this.post_volume(null, tail));
 		const {num} = post,
-			op = post.op || num,
-		
-		// TODO: Make less dirty, when post state is refactored
-			_extra = {state: [old_state[0] || 0, old_state[1] || 0]};
-		const {links} = extra;
+			op = post.op || num;
 		if (links) {
-			_extra.links = links;
+			m.hmset(key + ':links', links);
 			this.addBacklinks(m, num, op, links);
 		}
-		const {dice} = extra;
-		if (dice) {
-			_extra.dice = dice;
+		if (dice)
 			this.writeDice(m, dice, key);
-		}
 
-		this._log(m, op, common.UPDATE_POST, [num, tail, _extra]);
+		this._log(m, op, common.UPDATE_POST, [num, tail, extra]);
 		m.exec(cb);
 	}
 	finish_post(post, callback) {
@@ -710,7 +694,6 @@ class Yakusoku extends events.EventEmitter {
 	finish_off(m, key, body) {
 		m.hset(key, 'body', body);
 		m.del(key + ':body');
-		m.hdel(key, 'state');
 		m.srem('liveposts', key);
 	}
 	finish_all(callback) {

@@ -24,17 +24,17 @@ oneeSama.hook('imouto', function (imouto) {
 });
 
 // Handle dice in the postForm
-oneeSama.hook('insertOwnPost', function (extra) {
+oneeSama.hook('insertOwnPost', ({dice}) => {
 	let postForm = main.request('postForm');
-	if (!postForm || !postForm.imouto || !extra || !extra.dice)
+	if (!postForm || !postForm.imouto || !dice)
 		return;
 	let rolls = postForm.imouto.allRolls;
-	for (let i = 0, lim = extra.dice.length; i < lim; i++) {
+	for (let i = 0, lim = dice.length; i < lim; i++) {
 		const n = rolls.seen++;
 		let info = rolls[n];
 		if (!info)
 			info = rolls[n] = {};
-		info.dice = extra.dice[i];
+		info.dice = dice[i];
 		if (info.$tag) {
 			const r = common.readable_dice(info.bit, info.dice);
 			info.$tag.html(r.safe ? r.safe : r);

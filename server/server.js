@@ -200,12 +200,9 @@ function image_status(client_id, status) {
 	}
 }
 
-
-/* Must be prepared to receive callback instantly */
-function valid_links(frag, state, ident, callback) {
+function valid_links(frag, ident) {
 	const links = {};
 	const onee = new common.OneeSama({
-		state,
 		callback() {},
 		tamashii(num) {
 			const op = db.OPs[num];
@@ -214,7 +211,7 @@ function valid_links(frag, state, ident, callback) {
 		}
 	});
 	onee.fragment(frag);
-	callback(null, _.isEmpty(links) ? null : links);
+	return _.isEmpty(links) ? null : links;
 }
 
 const insertSpec = [{
@@ -312,8 +309,6 @@ function allocate_post(msg, client, callback) {
 			post.email = msg.email.trim().substr(0, 320);
 	}
 
-	post.state = [common.S_BOL, 0];
-
 	if ('auth' in msg) {
 		if (!msg.auth || !client.ident || msg.auth !== client.ident.auth)
 			return callback(Muggle('Bad auth.'));
@@ -339,20 +334,16 @@ function allocate_post(msg, client, callback) {
 				amusement.roll_dice(body, post);
 				client.post = post;
 				post.num = num;
-				const supplements = {links: valid_links.bind(null, body,
-					post.state, client.ident)};
-				if (image_alloc) {
-					supplements.image = imager.obtain_image_alloc
-						.bind(null, image_alloc);
-				}
-				async.parallel(supplements, next);
+				post.links = valid_links(body, client.ident);
+				if (image_alloc)
+					return imager.obtain_image_alloc(image_alloc, next);
+				next();
 			},
-			(rs, next) => {
+			(image, next) => {
 				if (!client.synced)
 					return next(Muggle('Dropped; post aborted.'));
-				post.links = rs.links;
-				if (rs.image)
-					extra.image_alloc = rs.image;
+				if (image)
+					extra.image_alloc = image;
 				client.db.insert_post(post, body, extra, next);
 			}
 		],
@@ -367,51 +358,27 @@ function allocate_post(msg, client, callback) {
 }
 
 function update_post(frag, client) {
-	if (typeof frag != 'string')
+	if (typeof frag !== 'string')
 		return false;
 	if (config.DEBUG)
 		debug_command(client, frag);
 	frag = hot_filter(frag.replace(STATE.hot.EXCLUDE_REGEXP, ''));
-	var post = client.post;
+	const {post} = client;
 	if (!post)
 		return false;
-	var limit = common.MAX_POST_CHARS;
-	if (frag.length > limit || post.length >= limit)
+	const limit = common.MAX_POST_CHARS;
+	if (frag.length > limit || post.body.length >= limit)
 		return false;
-	var combined = post.length + frag.length;
+	const combined = post.body.length + frag.length;
 	if (combined > limit)
 		frag = frag.substr(0, combined - limit);
-	let extra = {ip: client.ident.ip};
+	const extra = {
+		links: valid_links(frag, client.ident)
+	};
 	amusement.roll_dice(frag, extra);
 	post.body += frag;
-	/* imporant: broadcast prior state */
-	var old_state = post.state.slice();
-
-	valid_links(frag, post.state, client.ident, function (err, links) {
-		if (err)
-			links = null; /* oh well */
-		if (links) {
-			if (!post.links)
-				post.links = {};
-			var new_links = {};
-			for (let k in links) {
-				let link = links[k];
-				if (post.links[k] != link) {
-					post.links[k] = link;
-					new_links[k] = link;
-				}
-			}
-			extra.links = links;
-			extra.new_links = new_links;
-		}
-
-		client.db.append_post(post, frag, old_state, extra,
-					function (err) {
-			if (err)
-				client.kotowaru(Muggle("Couldn't add text.",
-						err));
-		});
-	});
+	client.db.append_post(post, frag, extra, err =>
+		err && client.kotowaru(Muggle("Couldn't add text.", err)));
 	return true;
 }
 dispatcher[common.UPDATE_POST] = update_post;

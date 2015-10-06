@@ -140,17 +140,17 @@ function handle_shortcut(event) {
 }
 
 // TODO: Unify self-updates with OneeSama; this is redundant
-main.oneeSama.hook('insertOwnPost', function (info) {
-	if (!postForm || !info.links)
+main.oneeSama.hook('insertOwnPost', ({links}) => {
+	if (!postForm || !links)
 		return;
-	postForm.$buffer.find('.nope').each(function() {
+	postForm.$buffer.find('.nope').each(function () {
 		var $a = $(this);
 		const text = $a.text(),
 			m = text.match(/^>>(\d+)/);
 		if (!m)
 			return;
 		const num = m[1],
-			op = info.links[num];
+			op = links[num];
 		if (!op)
 			return;
 		let $ref = $(common.join([postForm.imouto.postRef(num, op, false)]));

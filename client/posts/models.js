@@ -21,15 +21,11 @@ exports.Post = Backbone.Model.extend({
 		// Remove from post collection
 		state.posts.remove(this);
 	},
-	update(frag, extra) {
-		let updates = {
-			body: this.get('body') + frag,
-			state: extra.state
+	update(frag, links, dice) {
+		const updates = {
+			body: this.get('body') + frag
 		};
-		const {links, dice} = extra;
 		if (links)
-			// No listeners, so can be silent. We don't even use it at the
-			// moment, but let's keep it arround for model consistency for now.
 			_.extend(this.get('links'), links);
 		if (dice)
 			updates.dice = (this.get('dice') || []).concat(dice);

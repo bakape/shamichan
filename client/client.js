@@ -82,24 +82,17 @@ _.extend(dispatcher, {
 		// generic model to fire a separate image render
 		modelHandler(num, model => model.setImage(img, toPostForm));
 	},
-	[common.UPDATE_POST](msg) {
-		const [num, frag, extra] = msg;
+	[common.UPDATE_POST]([num, frag, extra = {}]) {
 		modelHandler(num, model => {
-			const {links} = extra;
-			state.addLinks(links);
+			state.addLinks(extra.links);
 			model.update(frag, extra);
-			checkRepliedToMe(links, num);
+			checkRepliedToMe(extra.links, num);
 
 			// Am I updating my own post?
 			if (num in state.ownPosts)
 				main.oneeSama.trigger('insertOwnPost', extra);
-			else {
-				model.dispatch('updateBody', {
-					dice: extra.dice,
-					state: extra.state,
-					frag
-				});
-			}
+			else
+				model.dispatch('updateBody', frag, extra.dice);
 		});
 	},
 	[common.FINISH_POST](msg) {

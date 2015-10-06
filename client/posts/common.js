@@ -20,14 +20,13 @@ module.exports = {
 	redirect(command, ...args) {
 		this[command](...args);
 	},
-	updateBody(update) {
+	updateBody(frag, dice) {
 		if (!this.$blockquote)
 			this.$blockquote = this.$el.find('blockquote').first();
-		oneeSama.dice = update.dice;
-		oneeSama.state = update.state;
+		oneeSama.dice = dice;
 		oneeSama.callback = this.inject;
 		oneeSama.$buffer = this.$blockquote;
-		oneeSama.fragment(update.frag);
+		oneeSama.fragment(frag);
 	},
 	// Inject various tags into the blockqoute
 	inject(frag) {
