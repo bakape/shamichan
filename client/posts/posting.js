@@ -273,6 +273,7 @@ const ComposerView = Backbone.View.extend({
 		}
 
 		main.$threads.find('aside.posting').hide();
+		this.fun();
 	},
 	// Render the name, email, and admin title, if any
 	renderIdentity() {
@@ -848,6 +849,9 @@ const ComposerView = Backbone.View.extend({
 	// Overrides automatic image expansion, if any
 	autoExpandImage() {
 		return this;
+	},
+	fun() {
+		
 	}
 });
 exports.ComposerView = ComposerView;

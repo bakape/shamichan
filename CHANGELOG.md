@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.2.5 - 2015-10-04
+###Fixed
+- Post reporting
+
 ##1.2.4 2015-10-03
 ###Fixed
 - Moderation spoiler live update

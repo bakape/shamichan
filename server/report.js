@@ -1,4 +1,4 @@
-var admin = require('../admin'),
+var admin = require('./admin'),
 	caps = require('./caps'),
 	config = require('../config'),
 	common = require('../common'),
@@ -12,8 +12,10 @@ var admin = require('../admin'),
 var SMTP = require('nodemailer').createTransport('SMTP', config.SMTP);
 
 const ERRORS = {
-	'invalid-site-private-key': "Sorry, the server isn't set up with reCAPTCHA properly.",
-	'invalid-request-cookie': "Something went wrong with our reCAPTCHA token. Please try again.",
+	'invalid-site-private-key': "Sorry, the server isn't set up with"
+		+ " reCAPTCHA properly.",
+	'invalid-request-cookie': "Something went wrong with our reCAPTCHA"
+		+ " token. Please try again.",
 	'incorrect-captcha-sol': "Incorrect.",
 	'captcha-timeout': "Sorry, you took too long. Please try again."
 };
