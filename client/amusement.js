@@ -14,11 +14,11 @@ oneeSama.hook('imouto', function (imouto) {
 		if (!info)
 			info = this.allRolls[number] = {};
 		info.bit = bit;
-		info.$tag = $(this.callback(common.safe('<strong>')));
+		info.$tag = $(this.callback('<strong>'));
 		this.strong = true;
 		this.callback(info.dice ? common.readable_dice(bit, info.dice) : bit);
 		this.strong = false;
-		this.callback(common.safe('</strong>'));
+		this.callback('</strong>');
 	};
 	imouto.allRolls = {sent: 0, seen: 0};
 });
@@ -37,7 +37,7 @@ oneeSama.hook('insertOwnPost', ({dice}) => {
 		info.dice = dice[i];
 		if (info.$tag) {
 			const r = common.readable_dice(info.bit, info.dice);
-			info.$tag.html(r.safe ? r.safe : r);
+			info.$tag.html(r);
 		}
 	}
 });

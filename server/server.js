@@ -210,6 +210,8 @@ function valid_links(frag, ident) {
 				links[num] = db.OPs[num];
 		}
 	});
+	// TEMP: Dummy model
+	onee.setModel({});
 	onee.fragment(frag);
 	return _.isEmpty(links) ? null : links;
 }

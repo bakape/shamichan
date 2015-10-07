@@ -7,8 +7,7 @@ const _ = require('underscore'),
 	index = require('./index'),
 	util = require('./util'),
 	{config} = imports,
-	{flatten, join, pad, parseHTML, safe} = util,
-	escape = util.escape_html;
+	{pad, parseHTML} = util;
 
 const break_re = new RegExp("(\\S{" + index.WORD_LENGTH_LIMIT + "})");
 
@@ -104,6 +103,7 @@ class OneeSama {
 	}
 	// Render OP
 	section(data, cls = '') {
+		this.setModel(data);
 		if (data.locked)
 			cls += ' locked';
 		if (data.editing)
@@ -118,6 +118,7 @@ class OneeSama {
 	}
 	// Render reply
 	article(data) {
+		this.setModel(data);
 		let cls = 'glass';
 		if (data.editing)
 			cls += ' editing';
@@ -126,23 +127,29 @@ class OneeSama {
 				${this.monogatari(data)}
 			</article>`;
 	}
+	// Set the current model of the posts we are parsing
+	setModel(model) {
+		this.model = model;
+
+		// Initial post state [new_line, no_qoute, no_spoiler, no_dice]
+		if (!model.state)
+			model.state = [0, 0, 0, 0];
+	}
 	// Render common post components
 	monogatari(data) {
-		const {image, mod, dice, body, backlinks, banned} = data;
+		const {image, mod, body, backlinks, banned} = data;
 
 		// Larger thumbnails for thread images
 		if (image && !data.op)
 			image.large = true;
 
-		// Shallow copy, as to not modify Backbone model values
-		this.dice = dice && dice.slice();
 		return parseHTML
 			`${this.header(data)}
 			${image && this.image(image)}
 			<div class="container">
 				${mod && this.modInfo(mod)}
 				<blockquote>
-					${join(this.body(body))}
+					${this.body(body)}
 				</blockquote>
 				<small>
 					${this.backlinks(backlinks)}
@@ -154,7 +161,7 @@ class OneeSama {
 		return parseHTML
 			`<header>
 				<input type="checkbox" class="postCheckbox">
-				${data.subject && `<h3>「${escape(data.subject)}」</h3>`}
+				${data.subject && `<h3>「${_.escape(data.subject)}」</h3>`}
 				${this.name(data)}
 				${this.time(data.time)}
 				${this.postNavigation(data)}
@@ -188,14 +195,14 @@ class OneeSama {
 		const {trip, name, auth} = data;
 		if (name || !trip) {
 			if (name)
-				html += escape(name);
+				html += _.escape(name);
 			else
 				html += this.lang.anon;
 			if(trip)
 				html += ' ';
 		}
 		if (trip)
-			html += `<code>${escape(trip)}</code>`;
+			html += `<code>${_.escape(trip)}</code>`;
 		if (auth)
 			html += ` ## ${imports.hotConfig.staff_aliases[auth]}`;
 		return html;
@@ -303,95 +310,56 @@ class OneeSama {
 	}
 	// Render full blockqoute contents
 	body(body) {
-		let output = [];
-		this.state = [index.S_BOL, 0];
-		this.callback = function(frag) {
-			output.push(frag);
-		};
+		let output = '';
+		this.callback = frag => output += frag;
 		this.fragment(body);
 		this.callback = null;
-		if (this.state[0] == index.S_QUOTE)
-			output.push(safe('</em>'));
-		for (let i = 0; i < this.state[1]; i++)
-			output.push(safe('</del>'));
+		if (this.model.state[1])
+			output += '</em>';
+		if (this.model.state[2])
+			output += '</del>';
 		return output;
 	}
 	// Parse commited blockqoute fragment
 	fragment(frag) {
-		const chunks = frag.split(/(\[\/?spoiler])/i);
-		let state = this.state;
-		const q = state[0] === index.S_QUOTE;
-		for (let i = 0, len = chunks.length; i < len; i++) {
-			let chunk = chunks[i];
-			if (i % 2) {
-				let to = index.S_SPOIL;
-				if (chunk[1] == '/' && state[1] < 1)
-					to = q ? index.S_QUOTE : index.S_NORMAL;
-				this.resolveState(chunk, to);
-				continue;
-			}
-			const lines = chunk.split(/(\n)/);
-			for (let o = 0, l = lines.length; o < l; o++) {
-				const line = lines[o];
-				if (o % 2)
-					this.resolveState(safe('<br>'), index.S_BOL);
-				else if (state[0] === index.S_BOL && line[0] == '>')
-					this.resolveState(line, index.S_QUOTE);
-				else if (line)
-					this.resolveState(line, q ? index.S_QUOTE : index.S_NORMAL);
-			}
-		}
-	}
-	// Determine spoiler and quote state
-	resolveState(token, to) {
-		let state = this.state;
-		if (state[0] == index.S_QUOTE && to != index.S_QUOTE)
-			this.callback(safe('</em>'));
-		switch(to) {
-			case index.S_QUOTE:
-				if (state[0] != index.S_QUOTE) {
-					this.callback(safe('<em>'));
-					state[0] = index.S_QUOTE;
-				}
-				this.breakHeart(token);
-				break;
-			case index.S_SPOIL:
-				if (token[1] == '/') {
-					state[1]--;
-					this.callback(safe('</del>'));
-				}
-				else {
-					const del = {html: '<del>'};
-					this.trigger('spoilerTag', del);
-					this.callback(safe(del.html));
+		const lines = frag.split('\n'),
+			{state} = this.model;
+		for (let i = 0; i < lines.length; i++) {
+			// Start a new line
+			if (i) {
+				// Close qoute
+				if (state[1] % 2) {
+					this.callback('</em>');
 					state[1]++;
 				}
-				break;
-			default:
-				this.breakHeart(token);
-				break;
-		}
-		state[0] = to;
-	}
-	// Split remaning fragment and pass bits to the respective handlers
-	breakHeart(frag) {
-		if (frag.safe)
-			return this.callback(frag);
-		let bits = frag.split(break_re);
-		for (let i = 0, len = bits.length; i < len; i++) {
-			// anchor refs
-			const morsels = bits[i].split(ref_re);
-			for (let j = 0, l = morsels.length; j < l; j++) {
-				const m = morsels[j];
-				if (j % 2)
-					this.redString(m);
-				else if (i % 2) {
-					this.parseHashes(m);
-					this.callback(safe('<wbr>'));
-				}
-				else
-					this.parseHashes(m);
+
+				this.callback('<br>');
+				state[0] = 0;
 			}
+
+			// Quote or line starts with link/embed
+			let line = lines[i];
+			if (!state[0] && line.startsWith('>')) {
+				this.callback('<em>');
+				state[1]++;
+			}
+			state[0] = 1;
+			line.split(' ').forEach(word => this.parseWord(word));
+		}
+	}
+	parseWord(word) {
+		const split = word.split(/(\[\/?spoiler])/i);
+		for (let i = 0; i < split.length; i++) {
+			// Insert spoiler tags
+			if (i % 2)
+				this.callback(`<${this.model.state[2]++ % 2 ? '/' : ''}del>`);
+			let bit = split[i];
+			const ref = bit.match(ref_re);
+			if (ref) {
+				this.redString(ref[1]);
+				bit = bit.replace(ref_re, '');
+			}
+			this.parseHashes(bit);
 		}
 	}
 	// Resolve internal and external URL references
@@ -412,7 +380,8 @@ class OneeSama {
 
 		// Linkify other `>>>/${link}/` URLs
 		for (let link in config.link_targets) {
-			const m = ref.match(new RegExp(String.raw`^>\/(${link})\/(\w+\/?)?`));
+			const m = ref.match(new RegExp(String
+				.raw`^>\/(${link})\/(\w+\/?)?`));
 			if (!m)
 				continue;
 			dest = config.link_targets[link];
@@ -430,48 +399,50 @@ class OneeSama {
 			rel: 'nofollow',
 			class: linkClass
 		};
-		this.callback(safe(parseHTML
+		this.callback(parseHTML
 			`<a ${attrs}>
-				>>${escape(ref)}
-			</a>`));
+				>>${_.escape(ref)}
+			</a>`);
 	}
 	// Render hash commands
 	parseHashes(text) {
-		if (!this.dice)
-			return this.eLinkify ? this.linkify(text) : this.callback(text);
+		if (!this.model.dice)
+			return this.linkify(text);
 
 		const bits = text.split(util.dice_re);
 		for (let i = 0; i < bits.length; i++) {
 			const bit = bits[i];
 			if (!(i % 2) || !util.parse_dice(bit))
-				this.eLinkify ? this.linkify(bit) : this.callback(bit);
+				this.linkify(bit);
 			else if (this.queueRoll)
 				this.queueRoll(bit);
-			else if (!this.dice[0])
-				this.eLinkify ? this.linkify(bit) : this.callback(bit);
 			else {
-				let d = this.dice.shift();
-				this.callback(safe('<strong>'));
+				let dice = this.model.dice[this.model.state[3]++];
+				this.callback('<strong>');
 				this.strong = true; // for client DOM insertion
-				this.callback(util.readable_dice(bit, d));
+				this.callback(util.readable_dice(bit, dice));
 				this.strong = false;
-				this.callback(safe('</strong>'));
+				this.callback('</strong>');
 			}
 		}
 	}
 	// Render external URLs as links
 	linkify(text) {
-		let bits = text.split(/(https?:\/\/[^\s"<>]*[^\s"<>'.,!?:;])/);
+		// Disabled in client options
+		if (!this.eLinkify)
+			return this.callback(_.escape(text));
+
+		const bits = text.split(/(https?:\/\/[^\s"<>]*[^\s"<>'.,!?:;])/);
 		for (let i = 0, len = bits.length; i < len; i++) {
+			const escaped = _.escape(bits[i]);
 			if (i % 2) {
-				const e = escape(bits[i]);
-				// open in new tab, and disalow target
-				this.callback(safe(
-					`<a href="${e}" rel="nofollow" target="_blank">${e}</a>`
-				));
+				this.callback(parseHTML
+					`<a href="${escaped}" rel="nofollow" target="_blank">
+						${escaped}
+					</a>`);
 			}
 			else
-				this.callback(bits[i]);
+				this.callback(escaped);
 		}
 	}
 	backlinks(links) {
@@ -481,7 +452,7 @@ class OneeSama {
 		for (let num in links) {
 			if (html)
 				html += ' ';
-			html += this.postRef(num, links[num]).safe;
+			html += this.postRef(num, links[num]);
 		}
 		return html;
 	}
@@ -566,10 +537,12 @@ class OneeSama {
 		const m = imgnm.match(/^(.*)\.\w{3,4}$/);
 		if (m)
 			name = m[1];
-		const fullName = escape(imgnm),
+		const fullName = _.escape(imgnm),
 			tooLong = name.length >= 38;
 		if (tooLong)
-			imgnm = `${escape(name.slice(0, 30))}(&hellip;)${escape(data.ext)}`;
+			imgnm = _.escape(name.slice(0, 30))
+				+ '(&hellip;)'
+				+ _.escape(data.ext);
 		return parseHTML
 			`<a href="${config.SECONDARY_MEDIA_URL}src/${data.src}"
 				rel="nofollow"
@@ -648,9 +621,7 @@ class OneeSama {
 			ref += ' \u27a1';
 		else if (num == op && this.op == op)
 			ref += ' (OP)';
-		return safe(
-			`<a href="${this.postURL(num, op)}" class="history">${ref}</a>`
-		);
+		return `<a href="${this.postURL(num, op)}" class="history">${ref}</a>`;
 	}
 	asideLink(inner, href, cls, innerCls) {
 		return parseHTML

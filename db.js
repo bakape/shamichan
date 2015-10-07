@@ -445,7 +445,7 @@ class Yakusoku extends events.EventEmitter {
 
 		if (extra.image_alloc) {
 			msg.image = extra.image_alloc.image;
-			if (isThread == msg.image.pinky)
+			if (isThread && msg.image.pinky)
 				return callback(Muggle("Image is the wrong size."));
 			delete msg.image.pinky;
 		}
@@ -661,7 +661,7 @@ class Yakusoku extends events.EventEmitter {
 			}
 		], callback);
 	}
-	append_post(post, tail, {links, dice}, cb) {
+	append_post(post, tail, extra, cb) {
 		const m = redis.multi(),
 			key = (post.op ? 'post:' : 'thread:') + post.num;
 		
@@ -671,7 +671,8 @@ class Yakusoku extends events.EventEmitter {
 		this.update_throughput(m, this.ident.ip, Date.now(),
 			this.post_volume(null, tail));
 		const {num} = post,
-			op = post.op || num;
+			op = post.op || num,
+			{links, dice} = extra;
 		if (links) {
 			m.hmset(key + ':links', links);
 			this.addBacklinks(m, num, op, links);

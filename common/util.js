@@ -2,7 +2,8 @@
  Various utility functions used all over the place
  */
 
-var imports = require('./imports');
+const _ = require('underscore'),
+	imports = require('./imports');
 
 function is_pubsub(t) {
 	return t > 0 && t < 30;
@@ -258,7 +259,7 @@ function readable_dice(bit, dice) {
 			break;
 	}
 	if (inner !== undefined)
-		return `${bit} (${inner})`;
+		return _.escape(`${bit} (${inner})`);
 	if (/^#sw/.test(bit))
 		return readableSyncwatch(dice[0]);
 	return readableRegularDice(bit, dice);
@@ -267,10 +268,10 @@ exports.readable_dice = readable_dice;
 
 function readableSyncwatch(dice) {
 	dice.class = 'embed';
-	return safe(parseHTML
+	return parseHTML
 		`<syncwatch ${dice}>
 			syncwatch
-		</syncwatch>`);
+		</syncwatch>`;
 }
 
 function readableRegularDice(bit, dice) {
@@ -288,7 +289,7 @@ function readableRegularDice(bit, dice) {
 		sum += rolls[j];
 	}
 
-	return bit + (eq ? ' = ' : '') + sum + ')';
+	return _.escape(bit + (eq ? ' = ' : '') + sum + ')');
 }
 
 function pick_spoiler(metaIndex) {

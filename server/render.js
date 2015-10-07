@@ -14,7 +14,7 @@ const _ = require('underscore'),
 const RES = STATE.resources,
 	actionLink = common.action_link_html,
 	escape = common.escape_html,
-	{parseHTML, safe, join} = common;
+	{parseHTML} = common;
 
 class RenderBase {
 	constructor(yaku, req, resp, opts) {
@@ -165,6 +165,7 @@ class Catalog extends RenderBase {
 	constructor(yaku, req, resp, opts) {
 		super(yaku, req, resp, opts);
 		this.oneeSama.catalog = true;
+		// TEMP: Dymmy model
 	}
 	renderTop() {
 		// Cache so it can be resused at <threads> bottom
@@ -180,6 +181,7 @@ class Catalog extends RenderBase {
 		if (this.hidden.has(post.num))
 			return;
 		const {oneeSama} = this;
+		oneeSama.setModel(post);
 
 		// Downscale thumbnail
 		const {image, num, subject, body, replyctr, imgctr} = post;
@@ -198,7 +200,7 @@ class Catalog extends RenderBase {
 				</small>
 				<br>
 				${subject && `<h3>「${_.escape(subject)}」</h3>`}
-				${join(oneeSama.body(body))}
+				${oneeSama.body(body)}
 			</article>`);
 	}
 }

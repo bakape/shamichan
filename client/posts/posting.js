@@ -200,8 +200,7 @@ const ComposerView = Backbone.View.extend({
 					this.callback(this.postRef(num, etc.getNum(section), desc));
 				}
 				else {
-					this.callback(common
-						.safe(`<a class="nope">&gt;&gt;${num}</a>`));
+					this.callback(`<a class="nope">&gt;&gt;${num}</a>`);
 				}
 			}
 		});
