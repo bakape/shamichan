@@ -215,7 +215,7 @@ main.$threads.on('click', '.soundcloud', function (e) {
 		if (err)
 			return alert(err);
 		target.append(document.createElement('br'));
-		target.append(etc.parseDOM(json.html)[0]);
+		target.append(etc.parseDOM(json.html));
 		target.style.width = width + 'px';
 	});
 });
