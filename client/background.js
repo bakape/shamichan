@@ -98,7 +98,7 @@ const BackgroundView = Backbone.View.extend({
 					url(${blurred}) center fixed no-repeat;
 				background-size: cover;
 			}
-			glass.editing, .editing .background {
+			.glass.editing, .editing .background {
 				background:
 					linear-gradient(${editing}, ${editing}),
 					url(${blurred}) center fixed no-repeat;
