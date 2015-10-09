@@ -203,7 +203,6 @@ function image_status(client_id, status) {
 function valid_links(frag, ident) {
 	const links = {};
 	const onee = new common.OneeSama({
-		callback() {},
 		tamashii(num) {
 			const op = db.OPs[num];
 			if (op && caps.can_access_thread(ident, op))
@@ -211,8 +210,7 @@ function valid_links(frag, ident) {
 		}
 	});
 	// TEMP: Dummy model
-	onee.setModel({});
-	onee.fragment(frag);
+	onee.setModel({}).fragment(frag);
 	return _.isEmpty(links) ? null : links;
 }
 

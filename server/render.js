@@ -54,12 +54,12 @@ class RenderBase {
 				const op = db.OPs[num];
 				if (op && caps.can_access_thread(ident, op)) {
 					const desc = mine.has(num) && this.lang.you;
-					this.callback(this.postRef(num, op, desc));
+					return this.postRef(num, op, desc);
 					// Pass verified post links to the client
 					links[num] = op;
 				}
 				else
-					this.callback('>>' + num);
+					return '>>' + num;
 			}
 		});
 

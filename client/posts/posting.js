@@ -197,11 +197,10 @@ const ComposerView = Backbone.View.extend({
 				section = section && section.closest('section');
 				if (section) {
 					const desc = num in state.mine.readAll() && this.lang.you;
-					this.callback(this.postRef(num, etc.getNum(section), desc));
+					return this.postRef(num, etc.getNum(section), desc);
 				}
-				else {
-					this.callback(`<a class="nope">&gt;&gt;${num}</a>`);
-				}
+				else
+					return `<a class="nope">&gt;&gt;${num}</a>`;
 			}
 		});
 		imouto.hook('spoilerTag', etc.touchable_spoiler_tag);
@@ -876,19 +875,20 @@ main.$threads.on('click', 'a.quote', function(e) {
 	 Make sure the selection both starts and ends in the quoted post's
 	 blockquote
 	 */
-	let $post = $(e.target).closest('article, section'),
-		gsel = getSelection();
-	const num = etc.getNum($post[0]);
+	const post = e.target.closest('article, section'),
+		gsel = getSelection(),
+		num = etc.getNum(post);
 
-	function isInside(p) {
-		var $el = $(gsel[p] && gsel[p].parentElement);
-		return $el.closest('blockquote').length
-			&& $el.closest('article, section').is($post);
+	function isInside(prop) {
+		const el = gsel[prop] && gsel[prop].parentElement;
+		return  el
+			&& el.closest('blockquote')
+			&& el.closest('article, section') === post;
 	}
 
 	let sel;
 	if (isInside('baseNode') && isInside('focusNode'))
 		sel = gsel.toString();
-	openPostBox(num);
+	openPostBox(etc.getNum(post.closest('section')));
 	postForm.addReference(num, sel);
 });

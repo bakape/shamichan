@@ -36,13 +36,13 @@ function getModel(el) {
 exports.getModel = getModel;
 
 // Parse HTML string to node collection
-function parseDOM(string) {
+function parseDOM(string, forceArray) {
 	const el = document.createElement('div');
 	el.innerHTML = string;
 	const children = el.childNodes;
-	if (children.length === 1)
+	if (!forceArray && children.length === 1)
 		return children[0];
-	return children;
+	return Array.from(children);
 }
 exports.parseDOM = parseDOM;
 

@@ -20,40 +20,15 @@ module.exports = {
 	redirect(command, ...args) {
 		this[command](...args);
 	},
-	updateBody(frag, dice) {
-		if (!this.$blockquote)
-			this.$blockquote = this.$el.find('blockquote').first();
-		oneeSama.dice = dice;
-		oneeSama.callback = this.inject;
-		oneeSama.$buffer = this.$blockquote;
-		oneeSama.fragment(frag);
-	},
-	// Inject various tags into the blockqoute
-	inject(frag) {
-		var $dest = this.$buffer;
-		for (var i = 0; i < this.state[1]; i++)
-			$dest = $dest.children('del').last();
-		if (this.state[0] == common.S_QUOTE)
-			$dest = $dest.children('em').last();
-		if (this.strong)
-			$dest = $dest.children('strong').last();
-		var out = null;
-		if (frag.safe) {
-			var m = frag.safe.match(/^<(\w+)>$/);
-			if (m)
-				out = document.createElement(m[1]);
-			else if (/^<\/\w+>$/.test(frag.safe))
-				out = '';
-		}
-		if (out === null) {
-			if (Array.isArray(frag))
-				out = $(common.flatten(frag).join(''));
-			else
-				out = common.escape_fragment(frag);
-		}
-		if (out)
-			$dest.append(out);
-		return out;
+	// Update the post's text body
+	updateBody(frag) {
+		if (!this.blockquote)
+			this.blockquote = this.el.query('blockquote');
+
+		// This will rerender the HTML content on each update. Might be
+		// some overhead involved, but simplifies live updates greatly.
+		const model = this.model.attributes;
+		this.blockquote.innerHTML = oneeSama.setModel(model).body(model.body);
 	},
 	renderTime() {
 		this.el.query('time').outerHTML = oneeSama.time(this.model.get('time'));
@@ -71,7 +46,7 @@ module.exports = {
 	},
 	// Restore regular name
 	renderName() {
-		this.el.query('name').outerHTML = oneeSama.name(this.model.attributes);
+		this.el.query('.name').outerHTML = oneeSama.name(this.model.attributes);
 	},
 	renderModerationInfo(info) {
 		const el = this.getContainer();

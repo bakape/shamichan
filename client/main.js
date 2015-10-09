@@ -108,7 +108,7 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 		}
 		else
 			frag = '>>' + num;
-		this.callback(frag);
+		return frag;
 	}
 });
 main.options = require('./options');

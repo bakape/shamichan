@@ -132,8 +132,8 @@ class OneeSama {
 		this.model = model;
 
 		// Initial post state [new_line, no_qoute, no_spoiler, no_dice]
-		if (!model.state)
-			model.state = [0, 0, 0, 0];
+		this.state = [0, 0, 0, 0];
+		return this;
 	}
 	// Render common post components
 	monogatari(data) {
@@ -310,57 +310,66 @@ class OneeSama {
 	}
 	// Render full blockqoute contents
 	body(body) {
-		let output = '';
-		this.callback = frag => output += frag;
-		this.fragment(body);
-		this.callback = null;
-		if (this.model.state[1])
-			output += '</em>';
-		if (this.model.state[2])
-			output += '</del>';
-		return output;
+		let html = this.fragment(body);
+		if (this.state[1])
+			html += '</em>';
+		if (this.state[2])
+			html += '</del>';
+		return html;
 	}
 	// Parse commited blockqoute fragment
 	fragment(frag) {
 		const lines = frag.split('\n'),
-			{state} = this.model;
+			{state} = this;
+		let html = '';
 		for (let i = 0; i < lines.length; i++) {
 			// Start a new line
-			if (i) {
+			if (state[0] && i % 2) {
 				// Close qoute
 				if (state[1] % 2) {
-					this.callback('</em>');
+					html += '</em>';
 					state[1]++;
 				}
-
-				this.callback('<br>');
+				html += '<br>';
 				state[0] = 0;
 			}
 
 			// Quote or line starts with link/embed
 			let line = lines[i];
 			if (!state[0] && line.startsWith('>')) {
-				this.callback('<em>');
+				html += '<em>';
 				state[1]++;
 			}
-			state[0] = 1;
-			line.split(' ').forEach(word => this.parseWord(word));
+
+			// Bodies may be empty
+			if (frag) {
+				line.split(' ').forEach(word => html += this.parseWord(word));
+				state[0] = 1;
+			}
 		}
+		return html;
 	}
 	parseWord(word) {
-		const split = word.split(/(\[\/?spoiler])/i);
+		const split = word.split(/\[\/?spoiler]/i);
+		let html = '';
 		for (let i = 0; i < split.length; i++) {
 			// Insert spoiler tags
-			if (i % 2)
-				this.callback(`<${this.model.state[2]++ % 2 ? '/' : ''}del>`);
+			if (i % 2) {
+				html += `<${this.state[2] % 2 ? '/' : ''}del>`;
+
+				// Callback  needs to be executed with the curent state for
+				// live client-side appends
+				this.state[2]++;
+			}
 			let bit = split[i];
 			const ref = bit.match(ref_re);
 			if (ref) {
-				this.redString(ref[1]);
+				html += this.redString(ref[1]);
 				bit = bit.replace(ref_re, '');
 			}
-			this.parseHashes(bit);
+			html += this.parseHashes(bit);
 		}
+		return html;
 	}
 	// Resolve internal and external URL references
 	redString(ref) {
@@ -399,51 +408,58 @@ class OneeSama {
 			rel: 'nofollow',
 			class: linkClass
 		};
-		this.callback(parseHTML
+		return parseHTML
 			`<a ${attrs}>
 				>>${_.escape(ref)}
-			</a>`);
+			</a>`;
 	}
 	// Render hash commands
 	parseHashes(text) {
 		if (!this.model.dice)
 			return this.linkify(text);
 
+		let html = '';
 		const bits = text.split(util.dice_re);
 		for (let i = 0; i < bits.length; i++) {
 			const bit = bits[i];
 			if (!(i % 2) || !util.parse_dice(bit))
-				this.linkify(bit);
+				html += this.linkify(bit);
 			else if (this.queueRoll)
 				this.queueRoll(bit);
 			else {
-				let dice = this.model.dice[this.model.state[3]++];
-				this.callback('<strong>');
-				this.strong = true; // for client DOM insertion
-				this.callback(util.readable_dice(bit, dice));
-				this.strong = false;
-				this.callback('</strong>');
+				if (this.state[0])
+					html += ' ';
+				const dice = this.model.dice[this.state[3]++];
+				html += `<strong>${util.readable_dice(bit, dice)}</strong>`;
 			}
 		}
+		return html;
 	}
 	// Render external URLs as links
 	linkify(text) {
 		// Disabled in client options
 		if (!this.eLinkify)
-			return this.callback(_.escape(text));
+			return this.padWord(_.escape(text));
 
+		let html = '';
 		const bits = text.split(/(https?:\/\/[^\s"<>]*[^\s"<>'.,!?:;])/);
 		for (let i = 0, len = bits.length; i < len; i++) {
-			const escaped = _.escape(bits[i]);
+			let escaped = _.escape(bits[i]);
 			if (i % 2) {
-				this.callback(parseHTML
+				html += parseHTML
 					`<a href="${escaped}" rel="nofollow" target="_blank">
-						${escaped}
-					</a>`);
+						${this.padWord(escaped)}
+					</a>`;
 			}
-			else
-				this.callback(escaped);
+			else if (escaped)
+				html += this.padWord(escaped);
 		}
+		return html;
+	}
+	padWord(word) {
+		if (this.state[0])
+			word = ' ' + word;
+		return word;
 	}
 	backlinks(links) {
 		if (!links)
@@ -543,12 +559,16 @@ class OneeSama {
 			imgnm = _.escape(name.slice(0, 30))
 				+ '(&hellip;)'
 				+ _.escape(data.ext);
+		const attrs = {
+			href: `${config.SECONDARY_MEDIA_URL}src/${data.src}`,
+			rel: 'nofollow',
+			download: fullName
+		};
+		if (tooLong)
+			attrs.title = fullName;
+
 		return parseHTML
-			`<a href="${config.SECONDARY_MEDIA_URL}src/${data.src}"
-				rel="nofollow"
-				download="${fullName}"
-				${tooLong && `title="${fullName}"`}
-			>
+			`<a ${attrs}>
 				${imgnm}
 			</a>`;
 	}

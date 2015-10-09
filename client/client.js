@@ -92,7 +92,7 @@ _.extend(dispatcher, {
 			if (num in state.ownPosts)
 				main.oneeSama.trigger('insertOwnPost', extra);
 			else
-				model.dispatch('updateBody', frag, extra.dice);
+				model.dispatch('updateBody', frag);
 		});
 	},
 	[common.FINISH_POST](msg) {
