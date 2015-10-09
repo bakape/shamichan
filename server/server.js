@@ -339,7 +339,7 @@ function allocate_post(msg, client, callback) {
 				post.links = valid_links(body, client.ident);
 				if (image_alloc)
 					return imager.obtain_image_alloc(image_alloc, next);
-				next();
+				next(null, null);
 			},
 			(image, next) => {
 				if (!client.synced)
