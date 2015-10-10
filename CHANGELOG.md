@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.2.6 - 2015-10-10
+##Fixed
+- Deploy script iptables persistence after reboot
+- Soundcloud embedding under HTTPS
+
+##Changed
+- JS injections now execute on all thread's and board's sections, articles 
+and post forms
+
 ##1.2.5 - 2015-10-04
 ###Fixed
 - Post reporting

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Automatic deploymnent script for a fresh Ubuntu trusty (and possibly up) VPS
 
+export DEBIAN_FRONTEND=noninteractive;
 apt-get update  < /dev/null
 apt-get install -y build-essential git redis-server imagemagick\
-	software-properties-common pngquant < /dev/null
+	iptables-persistent	software-properties-common pngquant < /dev/null
 # ffmpeg PPA
 add-apt-repository ppa:mc3man/trusty-media -y
 # Node.js setup script
@@ -12,7 +13,8 @@ apt-get dist-upgrade -y  < /dev/null
 apt-get install ffmpeg nodejs -y  < /dev/null
 
 # Port redirection
-iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8000
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8000;
+iptables-save > /etc/iptables/rules.v4
 
 useradd -d /home/meguca -s /bin/bash -m -U meguca
 # Download and build meguca
