@@ -2,11 +2,11 @@
  * Evertything related to writing and commiting posts
  */
 
-const main = require('../main'),
+const Article = require('./article'),
+	main = require('../main'),
 	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
-	inject = require('./common').inject,
 	{$, _, Backbone, common, config, connSM, etc, lang, options, postSM, state}
 		= main;
 
@@ -159,6 +159,190 @@ main.oneeSama.hook('insertOwnPost', ({links}) => {
 		if (refText != text)
 			$a.text(refText);
 	});
+});
+
+const ArticleComposer = Article.extend({
+	events: {
+		'click #cancel': 'cancel',
+		'change #imageInput': 'onImageChosen',
+		'input #trans': 'onInput',
+		'keydown #trans': 'onKeyDown',
+		'click #done': 'finish',
+		'click #toggle': 'onToggle'
+	},
+	initialize(args) {
+		// super() call
+		Article.prototype.initialize.call(this);
+		this.listenTo(this.model, {
+			'change': this.renderButtons,
+			'change:spoiler': this.renderSpoilerPane
+		});
+		this.render(args).insertIntoDOM(args);
+		this.model.set({
+			spoiler: 0,
+			nextSpoiler: -1
+		});
+
+		this.pending = '';
+		this.line_count = 1;
+		this.char_count = 0;
+
+		// Initialize the form's private rendering singleton instance
+		const imouto = this.imouto = new common.OneeSama({
+			callback: inject,
+			op: state.page.get('thread'),
+			blockqoute: this.blockqoute,
+			eLinkify: main.oneeSama.eLinkify,
+			lang: main.lang,
+			tamashii(num) {
+				let section = document.query('#p' + num);
+				section = section && section.closest('section');
+				if (section) {
+					const desc = num in state.mine.readAll() && lang.you;
+					return this.postRef(num, etc.getNum(section), desc);
+				}
+				else
+					return `<a class="nope">&gt;&gt;${num}</a>`;
+			}
+		});
+		imouto.setModel(this.model);
+	},
+	// Initial render
+	render() {
+		// Define attributes separatly for readbility
+		const attrs = {
+			input: {
+				name: 'body',
+				id: 'input',
+				rows: 1,
+				class: 'themed exclude',
+				autocomplete: main.isMobile
+			},
+			form: {
+				method: 'post',
+				enctype: 'multipart/form-data',
+				target: 'upload',
+				id: 'uploadForm'
+			},
+			cancel: {
+				type: 'buttom',
+				value: lang.cancel,
+				id: 'cancel'
+			},
+			imageInput: {
+				type:'file',
+				id: 'imageInput',
+				name: 'image',
+				accept: 'image/*;.webm;.pdf;.mp3'
+			},
+			toggle: {
+				type: 'button',
+				id: 'toggle'
+			}
+		};
+
+		this.el.innerHTML = parseHTML
+			`<header>
+				<a class="name nope" target="_blank">
+					<b></b>
+				</a>
+			</header>
+			<span class="oi control" data-glyph="chevron-bottom"></span>
+			<div class="container">
+				<blockquote>
+					<p id="buffer" class="exclude"></p>
+					<p id="lineBuffer" class="exclude"></p>
+					<textarea ${attrs.input}></textarea>
+				</blockquote>
+				<form ${attrs.form}>
+					<input ${attrs.cancel}>
+					<input ${attrs.imageInput}>
+					<input ${attrs.toggle}>
+					<strong id="uploadStatus"></strong>
+				</form>
+				<small></small>
+			</div>`;
+
+		// Cache elements to avoid lookup
+		const els = ['buffer', 'lineBuffer', 'input', 'uploadForm', 'cancel',
+			'imageInput', 'toggle', 'uploadStatus', 'hiddenUpload', 'sizer'];
+		for (let el of els) {
+			this[el] = document.query('#' + el);
+		}
+		this.renderIdentity();
+		return this;
+	},
+	// Name, emaail and tripcode field
+	renderIdentity() {
+		// Model has already been alocated and has a proper identity rendered
+		if (this.model.get('num'))
+			return;
+		const parsed = common.parse_name(main.$name.val(), main.$email.val()),
+			haveTrip = !!(parsed[1] || parsed[2]);
+		const el = this.el.query('.name'),
+			name = el.query('a');
+		if (parsed[0])
+			name.textContent = parsed[0] + ' ';
+		else
+			name.tetxContent = haveTrip ? '' : lang.anon;
+		if (haveTrip)
+			etc.parseDOM(' <code>!?</code>').forEach(el => name.after(el));
+
+		// Insert staff title
+		main.oneeSama.trigger('fillMyName', name);
+		const email = main.$email.val().trim();
+		if (email) {
+			el.setAttribute('href', 'mailto:' + email);
+			el.classList.remove('nope');
+			el.classList.add('email');
+		}
+		else {
+			el.removeAttribute('href');
+			el.classList.add('nope');
+			el.classList.remove('email');
+		}
+	},
+	insertIntoDOM({destination}) {
+		destination.before(this.el);
+		this.resizeInput();
+		main.$threads.queryAll('aside.postsing').forEach(el =>
+			el.style.display = 'none');
+		this.fun();
+	},
+	/*
+	 Allows keeping the input buffer sized as if the text was monospace,
+	 without actually displaying monospace font. Keeps the input buffer from
+	 shifting around needlessly.
+	 */
+	resizeInput(val) {
+		const {sizer, input} = this;
+		if (typeof val !== 'string')
+			val = input.value;
+		sizer.textContent = val;
+		let size = sizer.width + common.INPUT_ROOM;
+		size = Math.max(size, inputMinSize
+			- input.getBoundingClientRect().left
+			- this.el.getBoundingClientRect().left);
+		this.input.style.width = size + 'px';
+	},
+	renderButtons() {
+		const {num, uploading, uploaded, uploadStatus, sentAllocRequest}
+			= this.model.attributes;
+		const allocWait = sentAllocRequest && !num;
+		this.submit.disabled = !!(uploading || allocWait);
+		if (uploaded)
+			this.submit.style.marginLeft = 0;
+		this.cancel.disabled = !!allocWait;
+		this.cancel.style.display = (!num || uploading) ? '' : 'none';
+		this.imageInput.disabled = !!uploading;
+		this.uploadStatus.innerHTML = uploadStatus;
+	},
+	renderSpoilerPane(model, spoiler) {
+		const background = spoiler
+			? `${config.MEDIA_URL}spoil/spoil${spoiler}.png`
+			: config.MEDIA_URL + 'css/ui/pane.png';
+		this.toggle.style.backgroundImage = `url("${background}")`;
+	}
 });
 
 const ComposerView = Backbone.View.extend({

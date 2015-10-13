@@ -4,9 +4,11 @@
 
 const main = require('../main'),
 	imager = require('./imager'),
-	{$, _, common, etc, lang, oneeSama, options, state} = main;
+	{_, Backbone, common, etc, lang, oneeSama, options, state} = main;
 
-module.exports = {
+module.exports = imager.Hidamari.extend({
+	className: 'glass',
+	// One-way communication channel to the model
 	initialize() {
 		this.listenTo(this.model, 'dispatch', this.redirect);
 	},
@@ -70,6 +72,4 @@ module.exports = {
 			el.query('blockquote').normalize();
 		}
 	}
-};
-
-_.extend(module.exports, imager.Hidamari);
+});

@@ -7,7 +7,6 @@ const main = require('./main'),
 
 // Render dice rolls and other hash commands
 oneeSama.hook('imouto', function (imouto) {
-	imouto.dice = true;
 	imouto.queueRoll = function (bit) {
 		const number = this.allRolls.sent++;
 		let info = this.allRolls[number];

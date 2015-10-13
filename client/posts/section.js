@@ -3,10 +3,10 @@
  */
 
 const main = require('../main'),
-	postCommon = require('./common'),
+	PostCommon = require('./common'),
 	{$, _, Backbone, etc, oneeSama, state} = main;
 
-const Section = module.exports = Backbone.View.extend({
+module.exports = PostCommon.extend({
 	tagName: 'section',
 	render() {
 		const attrs = this.model.attributes;
@@ -80,6 +80,3 @@ const Section = module.exports = Backbone.View.extend({
 		this.insertIntoDOM();
 	}
 });
-
-// Extend with common mixins
-_.extend(Section.prototype, postCommon);

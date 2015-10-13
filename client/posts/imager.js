@@ -5,7 +5,7 @@
 const main = require('../main'),
 	{$threads, _, Backbone, common, etc, oneeSama, options, state} = main;
 
-const Hidamari = exports.Hidamari = {
+exports.Hidamari = Backbone.View.extend({
 	/*
 	 Render entire <figure>. Rerenderring completely each time is considerable
 	 overhed, but the alternative is very convoluted logic. I don't really want
@@ -154,7 +154,7 @@ const Hidamari = exports.Hidamari = {
 			</audio>`));
 		this.model.set('imageExpanded', true);
 	}
-};
+});
 
 // Expand all images
 const ExpanderModel = Backbone.Model.extend({
