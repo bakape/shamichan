@@ -52,6 +52,7 @@
     "recaptcha": "^1.2.0",
     "redis": "^0.12.1",
     "request": "^2.53.0",
+    "rethinkdb": "^2.1.1",
     "scriptjs": "^2.5.7",
     "sockjs": "^0.3.15",
     "sockjs-client": "^1.0.2",

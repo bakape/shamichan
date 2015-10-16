@@ -31,7 +31,11 @@ module.exports = {
 	USE_WEBSOCKETS: true,
 
 	REDIS_PORT: 6379,
+	redis_host: undefined,
 	redis_database: 0,
+	rethinkdb_port: 28015,
+	rethink_host: undefined,
+	rethinkdb_database: 'meguca',
 	READ_ONLY: false,
 
 	BOARDS: ['moe', 'gar', 'meta', 'staff'],
