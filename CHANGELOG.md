@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.2.7 - 2015-10-11
+##Fixed
+- "Workst best with" appearing on Chromium browsers
+- Skewed clocks resulting in post showing in the future
+
 ##1.2.6 - 2015-10-10
 ##Fixed
 - Deploy script iptables persistence after reboot

@@ -245,7 +245,7 @@ class OneeSama {
 			isFuture;
 		if (time < 1) {
 			// Assume to be client clock imprecission
-			if (time > -1)
+			if (time > -5)
 				return this.lang.just_now;
 			else {
 				isFuture = true;

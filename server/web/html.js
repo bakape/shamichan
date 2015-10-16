@@ -199,7 +199,9 @@ function buildEtag(req, res, ctr, extra) {
 		req.isMobile = true;
 		etag += '-mobile';
 	}
-	if (['Chrome', 'Firefox', 'Opera'].indexOf(parsed.browser.name) < 0 )
+	if (['Chrome', 'Firefox', 'Opera', 'Chromium']
+		.indexOf(parsed.browser.name) < 0
+	)
 		req.isRetarded = true;
 
 	if (config.DEBUG) {
