@@ -8,6 +8,7 @@ const async = require('async'),
 	rethink = global.rethink = require('rethinkdb');
 
 const dbVersion = 2;
+let rcon;
 
 // Buffers commands, so no need for callback
 function redisClient() {
@@ -21,8 +22,6 @@ function redisClient() {
 exports.redisClient = redisClient;
 const redis = global.redis = redisClient();
 redis.on('error', err => winston.error('Redis error:', err));
-
-let rcon;
 
 // Establish rethinkDB connection and intialize the database
 function init(cb) {
