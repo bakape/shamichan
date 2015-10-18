@@ -27,7 +27,6 @@ exports.dbCache = {
 	OPs: {},
 	boards: {},
 	threadSubs: {},
-	YAKUMAN: 0,
 	bans: []
 };
 

@@ -5,7 +5,7 @@ Core database initiation and connection
 const async = require('async'),
 	config = require('../config'),
 	redisDB = require('redis'),
-	rethink = global.rethink = require('rethinkdb');
+	r = require('rethinkdb');
 
 const dbVersion = 2;
 let rcon;
@@ -27,7 +27,7 @@ redis.on('error', err => winston.error('Redis error:', err));
 function init(cb) {
 	async.waterfall([
 		next =>
-			rethink.connect({
+			r.connect({
 				host: config.rethink_host,
 				port: config.rethinkdb_port
 			}, next),
@@ -35,10 +35,10 @@ function init(cb) {
 			rcon = global.rcon = conn;
 
 			// Check if database exists
-			rethink.dbList().contains('meguca').do(exists =>
-				rethink.branch(exists,
+			r.dbList().contains('meguca').do(exists =>
+				r.branch(exists,
 					{dbs_created: 0},
-					rethink.dbCreate('meguca'))
+					r.dbCreate('meguca'))
 			).run(rcon, next);
 		},
 		(res, next) => {
@@ -46,7 +46,7 @@ function init(cb) {
 			createTables(['main'], next);
 		},
 		(res, next) =>
-			rethink.table('main').get('info').run(rcon, next),
+			r.table('main').get('info').run(rcon, next),
 		// Intialize main table or check version
 		(info, next) => {
 			if (info) {
@@ -54,10 +54,10 @@ function init(cb) {
 				next(null, null);
 			}
 			else {
-				rethink.table('main').insert([
+				r.table('main').insert([
 					{id: 'info', dbVersion},
 					{id: 'post_ctr'},
-					{id: 'threads'}
+					{id: 'cache'}
 				]).run(rcon, next);
 			}
 		},
@@ -70,15 +70,16 @@ function init(cb) {
 			next();
 		},
 		initBoards
-	], cb);
+		// Pass connection to callback
+	], err => cb(err, rcon));
 }
 exports.init = init;
 
 // Create tables, if they don't exist
 function createTables(tables, cb) {
-	rethink.expr(tables)
-		.difference(rethink.tableList())
-		.forEach(name => rethink.tableCreate(name))
+	r.expr(tables)
+		.difference(r.tableList())
+		.forEach(name => r.tableCreate(name))
 		.run(rcon, cb);
 }
 

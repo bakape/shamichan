@@ -28,10 +28,9 @@ class Subscription extends EventEmitter {
 		delete Subscription.keys[this.key];
 	}
 	static get(board, thread, client) {
-		const key = `${board}:${thread}`;
-
 		// If an instance listening to this redis channel already exists, we
 		// can just use that, instead of creating a new one.
+		const key = `${board}:${thread}`;
 		(Subscription.keys[key] || new Subscription(key)).listen(client);
 	}
 	listen(client) {
