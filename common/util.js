@@ -273,21 +273,17 @@ function readableSyncwatch(dice) {
 		</syncwatch>`);
 }
 
-function readableRegularDice(bit, dice) {
-	const bias = dice[1],
-		rolls = dice.slice(2),
-		n = rolls.length;
+function readableRegularDice(bit, [max, bias, ...rolls]) {
 	bit += ' (';
-	const eq = n > 1 || bias;
+	const eq = rolls.length > 1 || bias;
 	if (eq)
 		bit += rolls.join(', ');
 	if (bias)
 		bit += (bias < 0 ? ' - ' + (-bias) : ' + ' + bias);
 	let sum = bias;
-	for (var j = 0; j < n; j++) {
-		sum += rolls[j];
+	for (let roll of rolls) {
+		sum += roll;
 	}
-
 	return bit + (eq ? ' = ' : '') + sum + ')';
 }
 
