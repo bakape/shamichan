@@ -285,7 +285,9 @@ function make_navigation_html() {
 		PB = config.PSUEDO_BOARDS;
 	for (let i = 0, l = BOARDS.length; i < l; i++) {
 		let board = BOARDS[i];
-		if (board == config.STAFF_BOARD)
+		if (board == config.STAFF_BOARD
+			|| (HOT.hidden_boards && HOT.hidden_boards.indexOf(board) > -1)
+		)
 			continue;
 		if (i > 0)
 			bits += ' / ';

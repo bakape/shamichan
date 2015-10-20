@@ -32,6 +32,8 @@ this.hot = {
 	SAGE_ENABLED: true,
 // Disable names and  for new posts
 	forced_anon: false,
+// Boards that won't be displayed in the banner board navigation
+	hidden_boards: [],
 // Titles for staff that will be displayed in their posts' headers
 	staff_aliases: {
 		admin: 'Admin',
