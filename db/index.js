@@ -62,9 +62,12 @@ function init(cb) {
 		(res, next) =>
 			redis.get('dbVersion', next),
 		(version, next) => {
-			if (version)
+			if (version) {
 				verifyVersion(parseInt(version), 'Redis');
-			next();
+				next(null, null);
+			}
+			else
+				redis.set('dbVersion', dbVersion, next);
 		}
 		// Pass connection to callback
 	], err => cb(err, rcon));
