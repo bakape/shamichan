@@ -36,17 +36,17 @@ function init(cb) {
 
 			// Check if database exists
 			r.dbList().contains('meguca').do(exists =>
-				r.branch(exists,
-					{dbs_created: 0},
-					r.dbCreate('meguca'))
+				r.branch(exists, {}, r.dbCreate('meguca'))
 			).run(rcon, next);
 		},
 		(res, next) => {
 			rcon.use('meguca');
-			createTables(['main'], next);
+
+			// Create all tables at once
+			createTables(['_main'].concat(config.BOARDS), next);
 		},
 		(res, next) =>
-			r.table('main').get('info').run(rcon, next),
+			r.table('_main').get('info').run(rcon, next),
 		// Intialize main table or check version
 		(info, next) => {
 			if (info) {
@@ -54,11 +54,8 @@ function init(cb) {
 				next(null, null);
 			}
 			else {
-				r.table('main').insert([
-					{id: 'info', dbVersion},
-					{id: 'post_ctr'},
-					{id: 'cache'}
-				]).run(rcon, next);
+				r.table('_main').insert({id: 'info', dbVersion})
+					.run(rcon, next);
 			}
 		},
 		// Check redis version
@@ -68,8 +65,7 @@ function init(cb) {
 			if (version)
 				verifyVersion(parseInt(version), 'Redis');
 			next();
-		},
-		initBoards
+		}
 		// Pass connection to callback
 	], err => cb(err, rcon));
 }
@@ -85,11 +81,7 @@ function createTables(tables, cb) {
 
 function verifyVersion(version, dbms) {
 	if (version !== dbVersion) {
-		throw new Error(`Incompatible ${dbms} database version: ${version} ;`
+		throw new Error(`Incompatible ${dbms} database version: ${version}; `
 			+ 'See docs/migration.md');
 	}
-}
-
-function initBoards(cb) {
-	createTables(config.BOARDS.map((board => '_' + board)), err => cb(err))
 }
