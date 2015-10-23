@@ -2,10 +2,8 @@
 Core server module and application entry point
  */
 
-// Several modules depend on the state module and a redis connection. Load
-// those first.
-const STATE = require('./state'),
-	db = require('../db');
+// Several modules depend on the state module, so load it first
+const STATE = require('./state');
 
 const _ = require('underscore'),
     amusement = require('./amusement'),
@@ -15,6 +13,7 @@ const _ = require('underscore'),
     common = require('../common/index'),
 	config = require('../config'),
 	cookie = require('cookie'),
+	db = require('../db'),
     fs = require('fs'),
     hooks = require('../util/hooks'),
     imager = require('../imager'),
@@ -24,14 +23,10 @@ const _ = require('underscore'),
 	path = require('path'),
     persona = require('./persona'),
     Render = require('./render'),
-    tripcode = require('bindings')('tripcode'),
     urlParse = require('url').parse,
     winston = require('winston');
 
 require('../imager/daemon'); // preload and confirm it works
-var radio;
-if (config.RADIO)
-	radio = require('./radio');
 
 try {
 	if (config.RECAPTCHA_PUBLIC_KEY)
@@ -214,154 +209,38 @@ function valid_links(frag, ident) {
 	return _.isEmpty(links) ? null : links;
 }
 
-const insertSpec = [{
-	frag: 'opt string',
-	image: 'opt string',
-	nonce: 'id',
-	op: 'opt id',
-	name: 'opt string',
-	email: 'opt string',
-	auth: 'opt string',
-	subject: 'opt string'
-}];
-
 dispatcher[common.INSERT_POST] = (msg, client) => {
+	const insertSpec = [{
+		frag: 'opt string',
+		image: 'opt string',
+		nonce: 'id',
+		op: 'opt id',
+		name: 'opt string',
+		email: 'opt string',
+		auth: 'opt string',
+		subject: 'opt string'
+	}]
 	if (!check(insertSpec, msg))
-		return false;
-	msg = msg[0];
-	const {frag} = msg;
+		return false
+	msg = msg[0]
+	const {frag} = msg
 	if (client.post)
-		return update_post(frag, client);
+		return update_post(frag, client)
 
 	if (!caps.can_access_board(client.ident, client.board)
 		|| (frag && /^\s*$/g.test(frag))
 		|| (!frag && !msg.image)
 	)
-		return false;
+		return false
 
-	if (config.DEBUG)
-		debug_command(client, frag);
-
-	allocate_post(msg, client, err =>
-		err && client.kotowaru(Muggle("Allocation failure.", err)));
-	return true;
-};
-
-function allocate_post(msg, client, callback) {
-	if (client.post)
-		return callback(Muggle("Already have a post."));
-	const post = {
-		time: Date.now(),
-		nonce: msg.nonce
-	};
-	let body = '',
-		image_alloc;
-	const {ip} = client.ident,
-		extra = {ip, board: client.board};
-	if (msg.image) {
-		if (!/^\d+$/.test(msg.image))
-			return callback(Muggle('Expired image token.'));
-		image_alloc = msg.image;
-	}
-	if (msg.frag) {
-		if (/^\s*$/g.test(msg.frag))
-			return callback(Muggle('Bad post body.'));
-		if (msg.frag.length > common.MAX_POST_CHARS)
-			return callback(Muggle('Post is too long.'));
-		body = hot_filter(msg.frag.replace(STATE.hot.EXCLUDE_REGEXP, ''));
-	}
-
-	if (msg.op) {
-		if (!db.validateOP(msg.op, extra.board))
-			return callback(Muggle('Thread does not exist.'));
-		post.op = msg.op;
-	}
-	else {
-		if (!image_alloc)
-			return callback(Muggle('Image missing.'));
-		const subject = (msg.subject || '')
-			.trim()
-			.replace(STATE.hot.EXCLUDE_REGEXP, '')
-			.replace(/[「」]/g, '')
-			.slice(0, STATE.hot.SUBJECT_MAX_LENGTH);
-		if (subject)
-			post.subject = subject;
-	}
-
-	// Replace names, when a song plays on r/a/dio
-	if (radio && radio.name)
-		post.name = radio.name;
-	else if (!STATE.hot.forced_anon) {
-		/* TODO: Check against client.watching? */
-		if (msg.name) {
-			const parsed = common.parse_name(msg.name);
-			post.name = parsed[0];
-			const spec = STATE.hot.SPECIAL_TRIPCODES;
-			if (spec && parsed[1] && parsed[1] in spec)
-				post.trip = spec[parsed[1]];
-			else if (parsed[1] || parsed[2]) {
-				const trip = tripcode.hash(parsed[1], parsed[2]);
-				if (trip)
-					post.trip = trip;
-			}
-		}
-		if (msg.email)
-			post.email = msg.email.trim().substr(0, 320);
-	}
-
-	if ('auth' in msg) {
-		if (!msg.auth || !client.ident || msg.auth !== client.ident.auth)
-			return callback(Muggle('Bad auth.'));
-		post.auth = msg.auth;
-	}
-
-	async.waterfall(
-		[
-			next => {
-				if (post.op)
-					client.db.check_thread_locked(post.op, next);
-				else
-					client.db.check_throttle(ip, next);
-			},
-			next =>
-				client.db.reserve_post(post.op, ip, next),
-			(num, next) => {
-				if (!client.synced)
-					return next(Muggle('Dropped; post aborted.'));
-				if (client.post)
-					return next(Muggle('Already have a post.'));
-
-				amusement.roll_dice(body, post);
-				client.post = post;
-				post.num = num;
-				post.links = valid_links(body, client.ident);
-				if (image_alloc)
-					return imager.obtain_image_alloc(image_alloc, next);
-				next(null, null);
-			},
-			(image, next) => {
-				if (!client.synced)
-					return next(Muggle('Dropped; post aborted.'));
-				if (image)
-					extra.image_alloc = image;
-				client.db.insert_post(post, body, extra, next);
-			}
-		],
-		err => {
-			if (err && client.post === post)
-				client.post = null;
-			callback(err);
-		}
-	);
-
-	return true;
+	client.db.insertPost(msg, err =>
+		err && client.kotowaru(Muggle('Allocation failure', err)))
+	return true
 }
 
 function update_post(frag, client) {
 	if (typeof frag !== 'string')
 		return false;
-	if (config.DEBUG)
-		debug_command(client, frag);
 	frag = hot_filter(frag.replace(STATE.hot.EXCLUDE_REGEXP, ''));
 	const {post} = client;
 	if (!post)
@@ -382,15 +261,6 @@ function update_post(frag, client) {
 	return true;
 }
 dispatcher[common.UPDATE_POST] = update_post;
-
-function debug_command(client, frag) {
-	if (!frag)
-		return;
-	if (/\bfail\b/.test(frag))
-		client.kotowaru(Muggle("Failure requested."));
-	else if (/\bclose\b/.test(frag))
-		client.socket.close();
-}
 
 dispatcher[common.FINISH_POST] = function (msg, client) {
 	if (!check([], msg))

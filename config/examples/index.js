@@ -59,11 +59,6 @@ module.exports = {
 
 // Thread creation cooldown for the same IP in seconds
 	THREAD_THROTTLE: 60,
-// Posting speed throttling settings
-	SHORT_TERM_LIMIT: 2000,
-	LONG_TERM_LIMIT: 2000*20*12,
-	NEW_POST_WORTH: 50,
-	IMAGE_WORTH: 50,
 
 // Number of pages per board
 	PAGES: {

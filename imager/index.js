@@ -1,4 +1,4 @@
-var async = require('async'),
+const async = require('async'),
     config = require('../config'),
     child_process = require('child_process'),
     db = require('./db'),
@@ -118,28 +118,26 @@ function squish_MD5 (hash) {
 exports.squish_MD5 = squish_MD5;
 
 function obtain_image_alloc (id, cb) {
-	var onegai = new db.Onegai;
-	onegai.obtain_image_alloc(id, function (err, alloc) {
+	if (!id)
+		return cb(null, null)
+	const onegai = new db.Onegai
+	onegai.obtain_image_alloc(id, (err, alloc) => {
 		if (err)
-			return cb(err);
+			return cb(err)
 
 		if (validate_alloc(alloc))
-			cb(null, alloc);
+			cb(null, alloc)
 		else
-			cb("Invalid image alloc");
-	});
+			cb("Invalid image alloc")
+	})
 }
 exports.obtain_image_alloc = obtain_image_alloc;
 
 function commit_image_alloc (alloc, cb) {
-	publish(alloc, function (err) {
+	publish(alloc, err => {
 		if (err)
-			return cb(err);
-
-		var o = new db.Onegai;
-		o.commit_image_alloc(alloc, function (err) {
-			cb(err);
-		});
-	});
+			return cb(err)
+		new db.Onegai.commit_image_alloc(alloc, cb)
+	})
 }
 exports.commit_image_alloc = commit_image_alloc;

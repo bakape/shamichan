@@ -31,12 +31,12 @@ function roll_dice(frag, post) {
 	if (!frag.length)
 		return;
 	const ms = frag.split(common.dice_re);
-	let dice = [];
+	const dice = [];
 	for (let i = 1; i < ms.length && dice.length < rollLimit; i += 2) {
-		let info = common.parse_dice(ms[i]);
+		const info = common.parse_dice(ms[i]);
 		if (!info)
 			continue;
-		let rolls = [];
+		const rolls = [];
 		switch (info.type) {
 			case 'pyu':
 				if (info.increment) {
@@ -58,8 +58,9 @@ function roll_dice(frag, post) {
 				var f = info.faces;
 				rolls.push(f);
 				rolls.push(info.bias || 0);
-				for (let j = 0; j < info.n; j++)
+				for (let j = 0; j < info.n; j++) {
 					rolls.push(Math.floor(Math.random() * f) + 1);
+				}
 		}
 		dice.push(rolls);
 	}

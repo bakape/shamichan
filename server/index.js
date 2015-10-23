@@ -71,5 +71,9 @@ require('babel/register')({
 	whitelist: tranformers
 });
 
-// Require the actual server
-require('./server');
+// Extablish DB connection and start the actual server
+require('../db').init(function (err) {
+	if (err)
+		throw err;
+	require('server');
+});

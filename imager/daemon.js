@@ -138,7 +138,6 @@ class ImageUpload {
 		}
 
 		this.image.MD5 = index.squish_MD5(this.image.hash);
-		this.image.hash = null;
 
 		this.db.track_temporary(this.image.path, err => {
 			if (err)
