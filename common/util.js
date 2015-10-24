@@ -104,25 +104,12 @@ FSM.prototype.feeder = function(ev) {
 	};
 };
 
-function escape_html(html) {
-	const entities = {
-		'&': '&amp;',
-		'<': '&lt;',
-		'>': '&gt;',
-		'"': '&quot;'
-	};
-	return html.replace(/[&<>"]/g, function(c) {
-		return entities[c];
-	});
-}
-exports.escape_html = escape_html;
-
 function escape_fragment(frag) {
 	var t = typeof (frag);
 	if (t == 'object' && frag && typeof (frag.safe) == 'string')
 		return frag.safe;
 	else if (t == 'string')
-		return escape_html(frag);
+		return _.escape(frag);
 	else if (t == 'number')
 		return frag.toString();
 	else
@@ -352,10 +339,10 @@ function parse_name(name) {
 		name = name.substr(0, hash);
 		hash = tripcode.indexOf('#');
 		if (hash >= 0) {
-			secure = escape_html(tripcode.substr(hash + 1));
+			secure = _.escape(tripcode.substr(hash + 1));
 			tripcode = tripcode.substr(0, hash);
 		}
-		tripcode = escape_html(tripcode);
+		tripcode = _.escape(tripcode);
 	}
 	name = name.trim().replace(imports.hotConfig.EXCLUDE_REGEXP, '');
 	return [

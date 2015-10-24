@@ -13,7 +13,6 @@ const _ = require('underscore'),
 
 const RES = STATE.resources,
 	actionLink = common.action_link_html,
-	escape = common.escape_html,
 	{parseHTML} = common;
 
 class RenderBase {
@@ -128,7 +127,7 @@ class RenderBase {
 	}
 	boardTitle() {
 		const {board} = this.opts,
-			title = STATE.hot.TITLES[board] || escape(board);
+			title = STATE.hot.TITLES[board] || _.escape(board);
 		this.title = title;
 		return `<h1>${title}</h1>`;
 	}
@@ -293,9 +292,9 @@ class Thread extends Board {
 
 		// Thread title
 		const {board, subject, op} = this.opts;
-		let title = `/${escape(board)}/ - `;
+		let title = `/${_.escape(board)}/ - `;
 		if (subject)
-			title += `${escape(subject)} (#${op})`;
+			title += `${_.escape(subject)} (#${op})`;
 		else
 			title += `#${op}`;
 		html += `<h1>${title}</h1>`;

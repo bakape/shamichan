@@ -48,7 +48,7 @@ dispatcher[common.NOTIFICATION] = function (msg, client) {
 	msg = msg[0];
 	if (!common.checkAuth('admin', client.ident) || !check('string', msg))
 		return false;
-	okyaku.push([0, common.NOTIFICATION, common.escape_html(msg)]);
+	okyaku.push([0, common.NOTIFICATION, _.escape(msg)]);
 	return true;
 };
 
