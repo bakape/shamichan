@@ -365,10 +365,17 @@ function parse_name(name) {
 }
 exports.parse_name = parse_name;
 
-function random_id() {
-	return Math.floor(Math.random() * 1e16) + 1;
+function randomID(len) {
+	let id = ''
+	for (let i = 0; i < len; i++) {
+		let char = (Math.random() * 36).toString(36)[0]
+		if (Math.random() < 0.5)
+			char = char.toUpperCase()
+		id += char
+	}
+	return id
 }
-exports.random_id = random_id;
+exports.randomID = randomID
 
 function random(array) {
 	return array[Math.floor(Math.random() * array.length)];

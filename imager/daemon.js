@@ -556,7 +556,7 @@ class ImageUpload {
 				view[attr] = this.image[attr]
 		}
 		view.pinky = this.pinky;
-		const image_id = common.random_id().toFixed(),
+		const image_id = common.randomID(32),
 			alloc = {image: view, tmps};
 		this.db.record_image_alloc(image_id, alloc, err => {
 			if (err)

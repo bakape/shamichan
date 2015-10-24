@@ -213,7 +213,7 @@ dispatcher[common.INSERT_POST] = (msg, client) => {
 	const insertSpec = [{
 		frag: 'opt string',
 		image: 'opt string',
-		nonce: 'id',
+		nonce: 'string',
 		op: 'opt id',
 		name: 'opt string',
 		email: 'opt string',

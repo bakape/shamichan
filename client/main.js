@@ -113,7 +113,7 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 });
 main.options = require('./options');
 main.scroll = require('./scroll');
-state.page.set('tabID', common.random_id());
+state.page.set('tabID', common.randomID(32));
 
 // Load language-specific CSS
 document.head.appendChild(etc.parseDOM(common.parseHTML
