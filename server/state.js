@@ -267,14 +267,14 @@ function build_schedule(schedule, showSeconds){
 }
 
 function build_FAQ(faq) {
-	if (faq.length <= 0)
-		return;
-	let list = '<ul>';
-	for (let i = 0, l = faq.length; i < l; i++) {
-		list += `<li>${faq[i]}</li>`;
+	if (!faq.length)
+		return ''
+	let list = '<ul>'
+	for (let line of faq) {
+		list += `<li>${line}</li>`
 	}
-	list += '</ul>';
-	return list;
+	list += '</ul>'
+	return list
 }
 
 function make_navigation_html() {

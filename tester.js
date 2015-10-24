@@ -29,4 +29,7 @@ require('babel/register')({
 
 const db = require('./db');
 
-db.init(err => err && console.log(err));
+db.init(err => {
+	if (err)
+		throw err
+});

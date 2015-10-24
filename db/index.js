@@ -34,16 +34,13 @@ function init(cb) {
 		(conn, next) => {
 			rcon = global.rcon = conn
 
-			// Check if database exists
-			r.dbList().contains('meguca').do(exists =>
-				r.branch(exists, {}, r.dbCreate('meguca'))
-			).run(rcon, next)
+			// Check if database exists and create if none
+			r.branch(r.dbList().contains('meguca'), {}, r.dbCreate('meguca'))
+				.run(rcon, next)
 		},
 		(res, next) => {
 			rcon.use('meguca')
-
-			// Create all tables at once
-			createTables(['_main'].concat(config.BOARDS), next)
+			createTable('_main', next)
 		},
 		(res, next) =>
 			r.table('_main').get('info').run(rcon, next),
@@ -51,10 +48,9 @@ function init(cb) {
 		(info, next) => {
 			if (info) {
 				verifyVersion(info.dbVersion, 'RethinkDB')
-				next(null, null)
+				return next(null, null)
 			}
-			else
-				r.table('_main').insert({id: 'info', dbVersion}).run(rcon, next)
+			r.table('_main').insert({id: 'info', dbVersion}).run(rcon, next)
 		},
 		// Check redis version
 		(res, next) =>
@@ -62,22 +58,39 @@ function init(cb) {
 		(version, next) => {
 			if (version) {
 				verifyVersion(parseInt(version), 'Redis')
-				next(null, null)
+				return next(null, null)
 			}
-			else
-				redis.set('dbVersion', dbVersion, next)
-		}
+			redis.set('dbVersion', dbVersion, next)
+		},
+		(res, next) =>
+			async.forEach(config.BOARDS, initBoard, next)
 		// Pass connection to callback
 	], err => cb(err, rcon))
 }
 exports.init = init
 
-// Create tables, if they don't exist
-function createTables(tables, cb) {
-	r.expr(tables)
-		.difference(r.tableList())
-		.forEach(name => r.tableCreate(name))
+// Create table, if it does not exist
+function createTable(table, cb) {
+	r.branch(r.tableList().contains(table), null, r.tableCreate(table))
 		.run(rcon, cb)
+}
+
+function initBoard(board, cb) {
+	async.waterfall([
+		next =>
+			createTable(board, next),
+		(created, next) => {
+			if (!created)
+				return next()
+			// For faster searches, map-reduce and reordering
+			async.forEach(['op', 'bumpTime', 'time'],
+				createIndex.bind(null, board), next)
+		}
+	],cb)
+}
+
+function createIndex(board, index, cb) {
+	r.table(board).indexCreate(index).run(rcon, cb)
 }
 
 function verifyVersion(version, dbms) {
