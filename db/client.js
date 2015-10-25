@@ -205,6 +205,7 @@ class ClientController {
 		onee.setModel({}).fragment(frag)
 		return links
 	}
+	// Confirm linked posts exists and retrieve their parent board and thread
 	validateLinks(nums, cb) {
 		if (!nums.length)
 			return cb(null, null)
@@ -212,15 +213,17 @@ class ClientController {
 			next => {
 				const m = redis.multi()
 				for (let num of nums) {
-					m.hget(`threads:num`)
+					cache.getParenthood(m, num)
 				}
 				m.exec(next)
 			},
-			(threads, next) => {
+			(res, next) => {
 				const links = {}
-				for (let i = 0; i < threads.length; i++) {
-					if (threads[i])
-						links[nums[i]] = threads[i]
+				for (let i = 0; i < res.length; i += 2) {
+					const board = res[i],
+						thread = res[i + 1]
+					if (board && thread)
+						links[nums[i /2]] = [board, parseInt(thread)]
 				}
 				next(null, _.isEmpty(links) ? null : links)
 			}

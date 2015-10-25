@@ -37,7 +37,7 @@ function validateOP(num, board, cb) {
 	async.waterfall([
 		next => {
 			const m = redis.multi()
-			hashCall(m, 'hget', num)
+			getParenthood(m, num)
 			m.exec(next)
 		},
 		(res, next) =>
@@ -45,3 +45,8 @@ function validateOP(num, board, cb) {
 	], cb)
 }
 exports.validateOP = validateOP
+
+function getParenthood(m, num) {
+	hashCall(m, 'hget', num)
+}
+exports.getParenthood = getParenthood
