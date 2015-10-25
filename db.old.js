@@ -540,7 +540,7 @@ class Yakusoku extends events.EventEmitter {
 
 					// Don't parse dice, because they aren't stringified on
 					// live publishes
-					extract(view, true);
+					extract(view);
 					if (bump)
 						m.incr(boardKey + ':bumpctr');
 					this._log(m, op, common.INSERT_POST, [view, bump], etc);
@@ -1246,21 +1246,22 @@ class Reader extends events.EventEmitter {
 			m.lrange(key + ':mod', 0, -1);
 	}
 	parseExtras(res, post) {
-		for (let key of ['links', 'backlinks', 'dice']) {
+		for (let key of ['links', 'backlinks']) {
 			const prop = res.shift();
 			if (prop)
 				post[key] = prop;
 		}
+		this.parseStringList(res, 'dice', post);
+		if (this.hasAuth)
+			this.parseStringList(res, 'mod', post);
+	}
+	parseStringList(res, prop, post) {
+		const list = res.shift();
+		if (!list.length)
+			return;
 
-		// Preserve chronological dice order
-		if (post.dice)
-			post.dice.reverse();
-		if (this.hasAuth) {
-			// Reverse array, so the log is orderred chronologically
-			const info = destringifyList(res.shift().reverse());
-			if (info)
-				post.mod = info;
-		}
+		// Reverse to preserve chronological order
+		post[prop] = destringifyList(list.reverse())
 	}
 	formatPost(post) {
 		if (!this.hasAuth) {
@@ -1376,7 +1377,7 @@ function is_board (board) {
 exports.is_board = is_board;
 
 // Format post hash for passing to renderer and clients
-function extract(post, dontParseDice) {
+function extract(post) {
 	// Only used internally and should not be exported to clients
 	for (let key of ['ip', 'deleted', 'imgDeleted']) {
 		delete post[key];
@@ -1386,8 +1387,6 @@ function extract(post, dontParseDice) {
 		post[key] = parseInt(post[key], 10);
 	}
 	imager.nestImageProps(post);
-	if (!dontParseDice)
-		amusement.parseDice(post);
 }
 
 function postKey(num, op) {
@@ -1395,7 +1394,7 @@ function postKey(num, op) {
 }
 
 function destringifyList(list) {
-	let parsed = [];
+	const parsed = [];
 	for (let i = 0; i < list.length; i++) {
 		parsed[i] = JSON.parse(list[i]);
 	}
