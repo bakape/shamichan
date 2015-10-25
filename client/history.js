@@ -48,8 +48,10 @@ function readingSteiner(url, event) {
 	xhr.onload = function () {
 		// In case the thread is dead, moderatator cookie expired or some
 		// other shenanigans
-		if (this.status !== 200)
-			return alert(this.status);
+		if (this.status !== 200) {
+			$loading.hide()
+			return alert(this.status)
+		}
 
 		// Was redirected to different thread/board
 		if (baseURL(url) !== baseURL(this.responseURL))
