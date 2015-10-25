@@ -34,23 +34,25 @@ function init(cb) {
 		(conn, next) => {
 			rcon = global.rcon = conn
 
-			// Check if database exists and create if none
-			r.branch(r.dbList().contains('meguca'), {}, r.dbCreate('meguca'))
-				.run(rcon, next)
+			// Check if database exists
+			r.dbList().contains('meguca').run(rcon, next)
+		},
+		(exists, next) => {
+			if (exists)
+				return next(null, null)
+			initDB(next)
 		},
 		(res, next) => {
 			rcon.use('meguca')
-			createTable('_main', next)
+			r.table('main').get('info').run(rcon, next)
 		},
-		(res, next) =>
-			r.table('_main').get('info').run(rcon, next),
 		// Intialize main table or check version
 		(info, next) => {
 			if (info) {
 				verifyVersion(info.dbVersion, 'RethinkDB')
 				return next(null, null)
 			}
-			r.table('_main').insert({id: 'info', dbVersion}).run(rcon, next)
+			r.table('main').insert({id: 'info', dbVersion}).run(rcon, next)
 		},
 		// Check redis version
 		(res, next) =>
@@ -61,36 +63,34 @@ function init(cb) {
 				return next(null, null)
 			}
 			redis.set('dbVersion', dbVersion, next)
-		},
-		(res, next) =>
-			async.forEach(config.BOARDS, initBoard, next)
+		}
 		// Pass connection to callback
 	], err => cb(err, rcon))
 }
 exports.init = init
 
-// Create table, if it does not exist
-function createTable(table, cb) {
-	r.branch(r.tableList().contains(table), null, r.tableCreate(table))
-		.run(rcon, cb)
-}
-
-function initBoard(board, cb) {
+function initDB(cb) {
 	async.waterfall([
 		next =>
-			createTable(board, next),
-		(created, next) => {
-			if (!created)
-				return next()
-			// For faster searches, map-reduce and reordering
-			async.forEach(['op', 'bumpTime', 'time'],
-				createIndex.bind(null, board), next)
+			r.dbCreate('meguca').run(rcon, next),
+		(res, next) => {
+			rcon.use('meguca')
+			r.expr(['main', 'threads', 'replies'])
+				.forEach(name => r.tableCreate(name))
+				.run(rcon, next)
+		},
+		// Create secondary indexes for faster queries
+		(res, next) => {
+			const indexes = [
+				['replies', 'op'],
+				['threads', 'board'],
+				['threads', 'time'],
+				['threads', 'bumpTime']
+			]
+			async.forEach(indexes, ([table, index], cb) =>
+				r.table(table).indexCreate(index).run(rcon, cb), next)
 		}
-	],cb)
-}
-
-function createIndex(board, index, cb) {
-	r.table(board).indexCreate(index).run(rcon, cb)
+	], cb)
 }
 
 function verifyVersion(version, dbms) {

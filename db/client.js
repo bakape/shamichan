@@ -38,10 +38,9 @@ class ClientController {
 			nonce: msg.nonce
 		}
 		if (isThread) {
-			post.replies = []
 			post.bumpTime = now
 
-			// Stores all uoadtes that happened to the thread, so we can
+			// Stores all updates that happened to the thread, so we can
 			// pass them to the client, if they are behind
 			post.history = []
 		}
@@ -64,15 +63,14 @@ class ClientController {
 				}
 				post.body = body
 
-				if (!isThread)
-					cache.validateOP(op, this.board, next)
-				else
-					next(null, null)
+				if (isThread)
+					return next(null, null)
+				cache.validateOP(op, this.board, next)
 			},
 			(valid, next) => {
 				if (!isThread) {
 					if (valid === false)
-						next(Muggle('Thread does not exist'))
+						return next(Muggle('Thread does not exist'))
 					post.op = op
 				}
 				else {
@@ -118,13 +116,13 @@ class ClientController {
 					post.auth = msg.auth
 				}
 
-				if (!isThread)
-					this.checkThreadLocked(op, next)
-				else
+				if (isThread)
 					this.checkThrottle(next)
+				else
+					this.checkThreadLocked(op, next)
 			},
 			next =>
-				r.table('_main').get('info')
+				r.table('main').get('info')
 					.update({post_ctr: r.row('post_ctr').default(0).add(1)},
 						{returnChanges: true})
 					('changes')('new_val')('post_ctr')(0)
@@ -153,23 +151,16 @@ class ClientController {
 						return next(Muggle('Image is the wrong size'))
 					delete post.image.pinky;
 					this.imageDuplicateHash(m, msg.image.hash, id)
-					imager.commit_image_alloc(image, next)
+					return imager.commit_image_alloc(image, next)
 				}
-				else
-					next()
+				next()
 			},
-			next => {
+			next =>
+				this['write' + (isThread ? 'Thread' : 'reply')](post, next),
+			(res, next) => {
 				// Set of currently open posts
 				m.sadd('liveposts', id)
-				if (isThread) {
-					// Prevent thread spam
-					m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, op)
-					this.writeThread(post, next)
-				}
-				else
-					this.writeReply(post, next)
-			},
-			(res, next) => {
+
 				// Threads have their own post number as the OP
 				const channel = op || id
 				cache.cache(m, id, channel, this.board)
@@ -190,8 +181,7 @@ class ClientController {
 		})
 	}
 	checkThreadLocked(op, cb) {
-		r.table(this.board).get(op)
-			('locked').default(false)
+		r.table('threads').get(op)('locked').default(false)
 			.run(rcon, (err, lock) =>
 				cb(err || lock && Muggle('Thread is locked')))
 	}
@@ -217,7 +207,7 @@ class ClientController {
 	}
 	validateLinks(nums, cb) {
 		if (!nums.length)
-			return next(null, null)
+			return cb(null, null)
 		async.waterfall([
 			next => {
 				const m = redis.multi()
@@ -241,7 +231,30 @@ class ClientController {
 			`${num}:${hash}`)
 	}
 	writeThread(post, cb) {
-		r.table(this.board).insert(post).run(rcon, cb)
+		// Prevent thread spam
+		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, op)
+		r.table('threads').insert(post).run(rcon, cb)
+	}
+	writeReply(post, cb) {
+		async.waterfall([
+			next =>
+				r.table('replies').insert(post).run(rcon, next),
+			// Bump the thread up to the top of the board
+			(res, next) => {
+				if (common.is_sage(post.email))
+					return next()
+				r.branch(
+					// Verify not over bump limit
+					r.table('replies')
+						.getAll(post.op, {index: 'op'})
+						.count()
+						.lt(config.BUMP_LIMIT[this.board]),
+					r.table('threads').get(post.op)
+						.update({bumpTime: Date.now()}),
+					null
+				).run(rcon, next)
+			}
+		], cb)
 	}
 	publish(m, chan, msg, augments) {
 		msg = [msg]
