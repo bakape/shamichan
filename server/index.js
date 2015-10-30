@@ -49,13 +49,17 @@ else {
 
 
 // Detect major version and add extra transformers as needed
-const tranformers = ['es6.destructuring', 'es6.parameters', 'es6.spread',
-	'strict'];
-const version = process.version[1];
-if (version < 4) {
-	tranformers.push('es6.arrowFunctions');
-	if (version < 3)
-		tranformers.push('es6.properties.computed');
+const tranformers = ['es6.destructuring', 'es6.parameters', 'strict'],
+	version = +process.version[1]
+const features = {
+	5: 'es6.spread',
+	4: 'es6.arrowFunctions',
+	3: 'es6.properties.computed'
+}
+for (let i = version; i >= 3; i--) {
+	if (version === i)
+		break;
+	tranformers.push(features[i])
 }
 
 // ES6 transpiler require hook. We only enable some not yet implemented
