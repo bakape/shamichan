@@ -35,7 +35,7 @@ function getModel(el) {
 }
 exports.getModel = getModel;
 
-// Parse HTML string to node collection
+// Parse HTML string to node array/element
 function parseDOM(string, forceArray) {
 	const el = document.createElement('div');
 	el.innerHTML = string;

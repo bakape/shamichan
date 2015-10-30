@@ -44,7 +44,7 @@ function init(cb) {
 		},
 		(res, next) => {
 			rcon.use('meguca')
-			r.table('main').get('info').run(rcon, next)
+			r.table('_main').get('info').run(rcon, next)
 		},
 		// Intialize main table or check version
 		(info, next) => {
@@ -52,7 +52,7 @@ function init(cb) {
 				verifyVersion(info.dbVersion, 'RethinkDB')
 				return next(null, null)
 			}
-			r.table('main').insert({id: 'info', dbVersion}).run(rcon, next)
+			r.table('_main').insert({id: 'info', dbVersion}).run(rcon, next)
 		},
 		// Check redis version
 		(res, next) =>
@@ -63,7 +63,9 @@ function init(cb) {
 				return next(null, null)
 			}
 			redis.set('dbVersion', dbVersion, next)
-		}
+		},
+		(res, next) =>
+			async.forEach(config.BOARDS, initBoard, next)
 		// Pass connection to callback
 	], err => cb(err, rcon))
 }
@@ -75,21 +77,26 @@ function initDB(cb) {
 			r.dbCreate('meguca').run(rcon, next),
 		(res, next) => {
 			rcon.use('meguca')
-			r.expr(['main', 'threads', 'replies'])
-				.forEach(name => r.tableCreate(name))
-				.run(rcon, next)
+			r.tableCreate('_main').run(rcon, next)
+		}
+	], cb)
+}
+
+function initBoard(board, cb) {
+	async.waterfall([
+		next =>
+			r.tableList().contains(board).run(rcon, next),
+		(exists, next) => {
+			if (exists)
+				return cb()
+			r.tableCreate(board).run(rcon, next)
 		},
 		// Create secondary indexes for faster queries
-		(res, next) => {
-			const indexes = [
-				['replies', 'op'],
-				['threads', 'board'],
-				['threads', 'time'],
-				['threads', 'bumpTime']
-			]
-			async.forEach(indexes, ([table, index], cb) =>
-				r.table(table).indexCreate(index).run(rcon, cb), next)
-		}
+		(res, next) =>
+			async.forEach(['op', 'board', 'time', 'bumptime'],
+				(index, cb) =>
+					r.table(board).indexCreate(index).run(rcon, cb),
+				next)
 	], cb)
 }
 

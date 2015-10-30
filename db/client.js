@@ -122,7 +122,7 @@ class ClientController {
 					this.checkThreadLocked(op, next)
 			},
 			next =>
-				r.table('main').get('info')
+				r.table('_main').get('info')
 					.update({post_ctr: r.row('post_ctr').default(0).add(1)},
 						{returnChanges: true})
 					('changes')('new_val')('post_ctr')(0)
@@ -181,7 +181,7 @@ class ClientController {
 		})
 	}
 	checkThreadLocked(op, cb) {
-		r.table('threads').get(op)('locked').default(false)
+		r.table(this.board).get(op)('locked').default(false)
 			.run(rcon, (err, lock) =>
 				cb(err || lock && Muggle('Thread is locked')))
 	}
@@ -236,23 +236,23 @@ class ClientController {
 	writeThread(post, cb) {
 		// Prevent thread spam
 		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, op)
-		r.table('threads').insert(post).run(rcon, cb)
+		r.table(this.board).insert(post).run(rcon, cb)
 	}
 	writeReply(post, cb) {
 		async.waterfall([
 			next =>
-				r.table('replies').insert(post).run(rcon, next),
+				r.table(this.board).insert(post).run(rcon, next),
 			// Bump the thread up to the top of the board
 			(res, next) => {
 				if (common.is_sage(post.email))
 					return next()
 				r.branch(
 					// Verify not over bump limit
-					r.table('replies')
+					r.table(this.board)
 						.getAll(post.op, {index: 'op'})
 						.count()
 						.lt(config.BUMP_LIMIT[this.board]),
-					r.table('threads').get(post.op)
+					r.table(this.board).get(post.op)
 						.update({bumpTime: Date.now()}),
 					null
 				).run(rcon, next)
