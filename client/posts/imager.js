@@ -45,7 +45,7 @@ const Hidamari = exports.Hidamari = {
 		if (!img
 			|| !massExpander.get('expand')
 			// Don't auto expand webm/PDF/MP3
-			|| ['.webm', '.pdf', '.mp3'].includes(img.ext)
+			|| ['.webm', '.pdf', '.mp3'].indexOf(img.ext) > -1
 		)
 			return this;
 		this.toggleImageExpansion(true, img);
