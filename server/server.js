@@ -82,12 +82,11 @@ function linkToDatabase(board, syncs, live, client) {
 	if (client.db)
 		client.db.kikanai().disconnect();
 
-	let dead_threads = [], count = 0, op;
+	let count = 0, op;
 	for (let k in syncs) {
 		k = parseInt(k, 10);
 		if (!db.validateOP(k, board)) {
 			delete syncs[k];
-			dead_threads.push(k);
 		}
 		op = k;
 		if (++count > STATE.hot.THREADS_PER_PAGE) {
@@ -121,7 +120,6 @@ function linkToDatabase(board, syncs, live, client) {
 		if (errs && errs.length >= count)
 			return client.kotowaru(Muggle("Couldn't sync to board."));
 		else if (errs) {
-			dead_threads.push.apply(dead_threads, errs);
 			for (let err of errs) {
 				delete client.watching[err];
 			}
@@ -131,17 +129,14 @@ function linkToDatabase(board, syncs, live, client) {
 
 	function got_backlogs(errs, logs) {
 		if (errs) {
-			dead_threads.push.apply(dead_threads, errs);
 			for (let err of errs) {
 				delete client.watching[err];
 			}
 		}
-
-		let sync = '0,' + common.SYNCHRONIZE;
-		if (dead_threads.length)
-			sync += ',' + JSON.stringify(dead_threads);
-		logs.push(sync);
-		client.socket.write('[[' + logs.join('],[') + ']]');
+		for (let log of logs) {
+			client.socket.write(`[[${log}]]`)
+		}
+		client.send([0, common.SYNCHRONIZE])
 		client.synced = true;
 
 		let info = {
