@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.3.1 - 2015-10-31
+##Fixed
+- New post multiplication in Expand All image mode
+- Crashes related to database dice spec migration
+- Connection getting stuck on "Syncing"
+
+##Changed
+- Hide loading indicator on fetch failure
+
+##Added
+- Babel.js transformer check for node.js version >=5
+- Switch from archive.moe image search to desustorage.org
+
 ##1.3.0 - 2015-10-20
 ###Fixed
 - Crash on parsing dice server-side in some cases
