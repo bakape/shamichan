@@ -149,7 +149,7 @@ module.exports = function(isMobile) {
 	];
 
 	/* IMAGE SEARCH LINK TOGGLE */
-	for (let engine of ['google', 'iqdb', 'saucenao', 'foolz', 'exhentai']) {
+	for (let engine of ['google', 'iqdb', 'saucenao', 'desustorage', 'exhentai']) {
 		opts.push({
 			id: engine,
 			// Use a custom internatiolisation function
