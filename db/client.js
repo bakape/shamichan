@@ -164,15 +164,14 @@ class ClientController {
 				// Threads have their own post number as the OP
 				const channel = op || id
 				cache.cache(m, id, channel, this.board)
+				const msg = [[common.INSERT_POST, post]]
 
 				// For priveledged authenticated clients only
-				let augments
 				const mnemonic = admin.genMnemonic(ip)
 				if (mnemonic)
-					augments = {mod: mnemonic}
+					msg.push({mod: mnemonic})
 				formatPost(post)
-				this.publish(m, channel, [common.INSERT_POST, post], augments)
-				m.exec(next)
+				this.publish(m, channel, msg, next)
 			}
 		], err => {
 			if (err && client.post === post)
@@ -259,11 +258,20 @@ class ClientController {
 			}
 		], cb)
 	}
-	publish(m, chan, msg, augments) {
-		msg = [msg]
-		if (augments)
-			msg.push(augments)
-		m.publish(chan, JSON.stringify(msg))
+	// Store message inside the replication log and publish to connected
+	// clients through redis
+	publish(m, op, msg, cb) {
+		msg = JSON.stringify(msg)
+		async.waterfall([
+			next =>
+				r.table(this.board).get(op).update({
+					history: r.row('history').append(msg)
+				}).run(rcon, next),
+			(res, next) => {
+				m.publish(op, msg)
+				m.exec(next)
+			}
+		], cb)
 	}
 }
 
