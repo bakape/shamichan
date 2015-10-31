@@ -1413,7 +1413,16 @@ function postKey(num, op) {
 function destringifyList(list) {
 	const parsed = [];
 	for (let i = 0; i < list.length; i++) {
-		parsed[i] = JSON.parse(list[i]);
+		// Stop gap fix until database migration
+		try {
+			parsed[i] = JSON.parse(list[i]);
+		}
+		catch (err) {
+			winston.err('Failed to destringify list: '
+				+ list.toString() + ' : '
+				+ err.toString())
+			return []
+		}
 	}
 	return parsed;
 }
