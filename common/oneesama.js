@@ -49,10 +49,10 @@ const searchBase = (function() {
 			symbol: 'Sn'
 		},
 		{
-			class: 'foolz',
+			class: 'desustorage',
 			type: 'MD5',
-			url: 'http://archive.moe/_/search/image/',
-			symbol: 'Fz'
+			url: 'https://desustorage.org/_/search/image/',
+			symbol: 'Ds'
 		},
 		{
 			class: 'exhentai',

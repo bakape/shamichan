@@ -141,7 +141,7 @@ var lang = {
 		// Custom localisation functions
 		imageSearch: [
 			function(site) {
-			return lang.common.capitalize(site) + ' Pesquisa de Imagens';
+				return lang.common.capitalize(site) + ' Pesquisa de Imagens';
 			},
 			function(site) {
 			return `Mostrar
