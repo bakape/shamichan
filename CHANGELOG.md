@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.3.2 - 2015-11-06
+##Fixed
+- Crash on failing to read moderation array
+
 ##1.3.1 - 2015-10-31
 ##Fixed
 - New post multiplication in Expand All image mode
