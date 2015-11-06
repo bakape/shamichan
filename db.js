@@ -1418,9 +1418,8 @@ function destringifyList(list) {
 			parsed[i] = JSON.parse(list[i]);
 		}
 		catch (err) {
-			winston.err('Failed to destringify list: '
-				+ list.toString() + ' : '
-				+ err.toString())
+			winston.error(`Failed to destringify list: ${list.toString()}:`,
+				err)
 			return []
 		}
 	}
