@@ -568,11 +568,7 @@ class Yakusoku extends events.EventEmitter {
 			`${num}:${hash}`);
 	}
 	writeDice(m, dice, key) {
-		const stringified = [];
-		for (let i = 0; i < dice.length; i++) {
-			stringified[i] = JSON.stringify(dice[i]);
-		}
-		m.lpush(key + ':dice', stringified);
+		dice.forEach(die => m.lpush(key + ':dice', JSON.stringify(die)))
 	}
 	addBacklinks(m, num, op, links) {
 		for (let targetNum in links) {
