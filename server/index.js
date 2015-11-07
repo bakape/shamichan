@@ -49,12 +49,15 @@ else {
 
 
 // Detect major version and add extra transformers as needed
-const tranformers = ['es6.destructuring', 'es6.parameters', 'strict'],
-	version = +process.version[1]
+const tranformers = [
+	'transform-es2015-destructuring', 'transform-es2015-parameters',
+	'transform-strict-mode'
+]
+const version = +process.version.match(/^v(\d+)\./)[1]
 const features = {
-	5: 'es6.spread',
-	4: 'es6.arrowFunctions',
-	3: 'es6.properties.computed'
+	5: 'transform-es2015-spread',
+	4: 'transform-es2015-arrow-functions',
+	3: 'transform-es2015-computed-properties'
 }
 for (let i = version; i >= 3; i--) {
 	if (version === i)
@@ -64,7 +67,7 @@ for (let i = version; i >= 3; i--) {
 
 // ES6 transpiler require hook. We only enable some not yet implemented
 // feature transformers and rely on natives for others.
-require('babel/register')({
+require('babel-core/register')({
 	// Babel has trouble with hot.js, so we ignore the config module
 	ignore: /node_modules|config/,
 	sourceMaps: config.DEBUG && 'inline',
@@ -72,7 +75,7 @@ require('babel/register')({
 	// Stack traces should at least have the exact line numbers displayed
 	// correctly
 	retainLines: true,
-	whitelist: tranformers
+	plugins: tranformers
 });
 
 // Require the actual server
