@@ -8,82 +8,82 @@ const common = require('../common/index'),
 	db = require('../db'),
 	fs = require('fs'),
 	hooks = require('../util/hooks'),
-	hot  = require('./state').hot,
-	push = require('./okyaku').push;
+	state  = require('./state'),
+	push = require('./okyaku').push,
+	radio = config.RADIO && require('./radio')
 
-let radio;
+// Construct hash command regex pattern
+let dice_re = '(#flip|#8ball|#sw(?:\\d{1,2}:)?\\d{1,2}:\\d{1,2}(?:[+-]\\d+)?' +
+	'|#\\d{0,2}d\\d{1,4}(?:[+-]\\d{1,4})?'
 if (config.RADIO)
-	radio = require('./radio');
+	dice_re += '|#q'
+dice_re += ')'
+dice_re = new RegExp(dice_re, 'i')
 
-const rollLimit = 5;
-let r = global.redis;
-
-// Load counter from redis on server boot
-let pyu_counter = 0;
-r.get('pCounter', function(err, res){
-	if (err)
-		throw err;
-	if (res)
-		pyu_counter = parseInt(res, 10);
-});
-
-function roll_dice(frag, post) {
+// Insert #hash commands as tuples into the text body array
+function roll_dice(frag, parsed) {
 	if (!frag.length)
-		return;
-	const ms = frag.split(common.dice_re);
-	const dice = [];
-	for (let i = 1; i < ms.length && dice.length < rollLimit; i += 2) {
-		const info = common.parse_dice(ms[i]);
-		if (!info)
-			continue;
-		const rolls = [];
-		switch (info.type) {
-			case 'pyu':
-				if (info.increment) {
-					pyu_counter++;
-					r.incr('pCounter');
-				}
-				rolls.push(pyu_counter);
-				break;
-			case 'radioQueue':
-				if (radio)
-					rolls.push(radio.queue);
-				break;
-			case 'syncwatch':
-				rolls.push(info);
-				break;
-			default:
-				// At the momement of writing V8 does not support ES6
-				// blockscoped declarations in switch statements, thus `var`
-				var f = info.faces;
-				rolls.push(f);
-				rolls.push(info.bias || 0);
-				for (let j = 0; j < info.n; j++) {
-					rolls.push(Math.floor(Math.random() * f) + 1);
-				}
-		}
-		dice.push(rolls);
+		return false
+	let info
+	const types = common.tupleTypes
+	switch (frag) {
+		case '#flip':
+			info = [types.flip, Math.random() > 0.5]
+			break
+		case '#8ball':
+			info = [types.dice, roll(state.hot.EIGHT_BALL.length)]
+			break
+		case '#q':
+			info = radio && [types.radioQueue, radio.queue]
+			break
+		default:
+			info = parseRegularDice(frag) || parseSyncwatch(frag)
 	}
-
-	if (dice.length)
-		post.dice = dice;
+	return info && parsed.push(info)
 }
-exports.roll_dice = roll_dice;
+exports.roll_dice = roll_dice
 
-function parseDice(post) {
-	let dice = post.dice;
-	if (!dice)
-		return;
-	try {
-		for (let i = 0, l = dice.length; i < l; i++) {
-			dice[i] = JSON.parse(dice[i]);
-		}
-	}
-	catch (e) {
-		delete post.dice;
-	}
+function roll(faces) {
+	return Math.floor(Math.random() * faces)
 }
-exports.parseDice = parseDice;
+
+function parseRegularDice(frag) {
+	const m = frag.match(/^#(\d*)d(\d+)([+-]\d+)?$/i)
+	if (!m)
+		return false
+	const n = parseInt(m[1], 10) || 1,
+		faces = parseInt(m[2], 10),
+		bias = parseInt(m[3] || 10) || 0
+	if (n < 1 || n > 10 || faces < 2 || faces > 100)
+		return false
+	const die = [common.tupleTypes.dice, n, faces, bias]
+	for (let i = 0; i < n; i++) {
+		info.push(roll(faces) + 1)
+	}
+	return die
+}
+
+function parseSyncwatch(frag) {
+	// First capture group may or may not be present
+	const sw = frag.match(/^#sw(\d+:)?(\d+):(\d+)([+-]\d+)?$/i)
+	if (!sw)
+		return false
+	const hour = parseInt(sw[1], 10) || 0,
+		min = parseInt(sw[2], 10),
+		sec = parseInt(sw[3], 10)
+	let start = common.serverTime()
+
+	// Offset the start. If the start is in the future, a countdown will be
+	// displayed.
+	if (sw[4]) {
+		const symbol = sw[4].slice(0, 1),
+			offset = sw[4].slice(1) * 1000
+		start = symbol == '+' ? start + offset : start - offset
+	}
+	const end = ((hour * 60 + min) * 60 + sec) * 1000 + start
+
+	return [common.tupleTypes.syncwatch, sec, min, hour, start, end]
+}
 
 // Information banner
 hooks.hook('clientSynced', function (info, cb) {
@@ -108,14 +108,15 @@ hooks.hook('clientSynced', (info, cb) => {
 });
 
 function readJS(cb) {
-	if (!hot.inject_js)
-		return cb();
-	fs.readFile(hot.inject_js, {encoding: 'utf8'}, (err, js) => {
+	const {inject_js} = state.hot
+	if (!inject_js)
+		return cb()
+	fs.readFile(inject_js, {encoding: 'utf8'}, (err, js) => {
 		if (err) {
-			winston.error('Failed ro read JS injection:', err);
-			return cb();
+			winston.error('Failed ro read JS injection:', err)
+			return cb()
 		}
-		cb(js);
+		cb(js)
 	});
 }
 
@@ -124,3 +125,25 @@ function pushJS() {
 	readJS(js => js && push([0, common.EXECUTE_JS, js]));
 }
 exports.pushJS = pushJS;
+
+// Regex replacement filter
+function hot_filter(frag) {
+	let filter = state.hot.FILTER
+	if (!filter)
+		return frag
+	for (let f of filter) {
+		const m = frag.match(f.p)
+		if (m) {
+			// Case sensitivity
+			if (m[0].length > 2) {
+				if (/[A-Z]/.test(m[0].charAt(1)))
+					f.r = f.r.toUpperCase()
+				else if (/[A-Z]/.test(m[0].charAt(0)))
+					f.r = f.r.charAt(0).toUpperCase() + f.r.slice(1)
+			}
+			return frag.replace(f.p, f.r)
+		}
+	}
+	return frag
+}
+exports.hot_filter = hot_filter

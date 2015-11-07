@@ -7,7 +7,6 @@
 const DEF = {
 	// Pub/Sub
 	INVALID: 0,
-	BACKLINK: 1,
 	INSERT_POST: 2,
 	UPDATE_POST: 3,
 	FINISH_POST: 4,
@@ -46,6 +45,17 @@ const DEF = {
 	MAX_POST_LINES: 30,
 	MAX_POST_CHARS: 2000,
 	WORD_LENGTH_LIMIT: 300,
+
+	// Map of in-body post array tuple type tokens
+	tupleTypes: {
+		link: 0,
+		flip: 1,
+		dice: 2,
+		syncwatch: 3,
+		pyu: 4,
+		pcount: 5,
+		radioQueue: 6
+	},
 
 	S_NORMAL: 0,
 	S_BOL: 1,

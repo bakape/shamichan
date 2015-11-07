@@ -52,7 +52,11 @@ function init(cb) {
 				verifyVersion(info.dbVersion, 'RethinkDB')
 				return next(null, null)
 			}
-			r.table('_main').insert({id: 'info', dbVersion}).run(rcon, next)
+			r.table('_main').insert({
+				id: 'info',
+				dbVersion,
+				post_ctr: 0
+			}).run(rcon, next)
 		},
 		// Check redis version
 		(res, next) =>
@@ -93,7 +97,7 @@ function initBoard(board, cb) {
 		},
 		// Create secondary indexes for faster queries
 		(res, next) =>
-			async.forEach(['op', 'board', 'time', 'bumptime'],
+			async.forEach(['op', 'time', 'bumptime'],
 				(index, cb) =>
 					r.table(board).indexCreate(index).run(rcon, cb),
 				next)

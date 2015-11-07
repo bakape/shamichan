@@ -44,6 +44,7 @@ class ClientController {
 			// pass them to the client, if they are behind
 			post.history = []
 		}
+		let links
 		async.waterfall([
 			next => {
 				if (image) {
@@ -58,7 +59,7 @@ class ClientController {
 						return next(Muggle('Bad post body'))
 					if (frag.length > common.MAX_POST_CHARS)
 						return next(Muggle('Post is too long'))
-					body = hot_filter(frag
+					body = amusement.hot_filter(frag
 						.replace(state.hot.EXCLUDE_REGEXP, ''))
 				}
 				post.body = body
@@ -123,7 +124,7 @@ class ClientController {
 			},
 			next =>
 				r.table('_main').get('info')
-					.update({post_ctr: r.row('post_ctr').default(0).add(1)},
+					.update({post_ctr: r.row('post_ctr').add(1)},
 						{returnChanges: true})
 					('changes')('new_val')('post_ctr')(0)
 					.run(rcon, next),
@@ -136,12 +137,11 @@ class ClientController {
 				amusement.roll_dice(body, post)
 				client.post = post
 				post.id = id
-				const links = extractLinks(post.body)
-				this.validateLinks(links, next)
+				this.parseFragment(post.body, next)
 			},
-			(links, next) => {
-				if (links)
-					post.links = links
+			(body, confirmedLinks, next) => {
+				post.body = body
+				links = confirmedLinks
 				imager.obtain_image_alloc(image, next)
 			},
 			(image, next) => {
@@ -171,8 +171,10 @@ class ClientController {
 				if (mnemonic)
 					msg.push({mod: mnemonic})
 				formatPost(post)
-				this.publish(m, channel, msg, next)
-			}
+				this.publish(m, channel, this.board, msg, next)
+			},
+			(res, next) =>
+				this.backlinks(post, links, next)
 		], err => {
 			if (err && client.post === post)
 				client.post = null
@@ -192,41 +194,51 @@ class ClientController {
 		redis.exists(`ip:${this.ident.ip}:throttle`, (err, exists) =>
 			cb(err || exists && Muggle('Too soon')))
 	}
-	// Parse post fragment and return an array of posts linked
-	extractLinks(frag) {
+	// Split text into words and replace post links and hash commands with
+	// tuples
+	parseFragment(frag, cb) {
+		const m = frag.match(/>>\d+/g)
+		frag = frag.split(' ')
+		if (!m)
+			return cb(null, frag)
 		const links = []
-		const onee = new common.OneeSama({
-			tamashii(num) {
-				links.push(num)
-			}
-		})
-		// TEMP: Dummy model
-		onee.setModel({}).fragment(frag)
-		return links
-	}
-	// Confirm linked posts exists and retrieve their parent board and thread
-	validateLinks(nums, cb) {
-		if (!nums.length)
-			return cb(null, null)
+		m.forEach(link => links.push(link.slice(2)))
 		async.waterfall([
 			next => {
 				const m = redis.multi()
-				for (let num of nums) {
-					cache.getParenthood(m, num)
-				}
+				links.forEach(num => cache.getParenthood(m, num))
 				m.exec(next)
 			},
 			(res, next) => {
-				const links = {}
+				const confirmed = {}
 				for (let i = 0; i < res.length; i += 2) {
 					const board = res[i],
 						thread = res[i + 1]
 					if (board && thread)
-						links[nums[i /2]] = [board, parseInt(thread)]
+						confirmed[links[i / 2]] = [board, parseInt(thread)]
 				}
-				next(null, _.isEmpty(links) ? null : links)
+				const parsed = []
+				frag.forEach(word => injectLink(word, parsed, confirmed)
+					|| amusement.roll_dice(word, parsed)
+					|| parsed.push(word))
+				next(null, parsed, confirmed)
 			}
 		], cb)
+	}
+	// Insert links to other posts as tuples into the text body array
+	injectLink(word, parsed, confirmed) {
+		const m = word.match(/^(>{2,})(\d+)$/)
+		if (!m)
+			return false
+		const link = confirmed[m[2]]
+		if (!link)
+			return false
+
+		// Separate leadind />+/ for qoutes
+		if (m[1].length > 2)
+			parsed.push(m[1].slice(2))
+		parsed.push([common.tupleTypes.link, ...link])
+		return true
 	}
 	imageDuplicateHash(m, hash, num) {
 		m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000),
@@ -260,40 +272,64 @@ class ClientController {
 	}
 	// Store message inside the replication log and publish to connected
 	// clients through redis
-	publish(m, op, msg, cb) {
+	publish(m, op, board, msg, cb) {
 		msg = JSON.stringify(msg)
 		async.waterfall([
+			// Ensure thread exists, because the client in some cases
+			// publishes to external threads
 			next =>
-				r.table(this.board).get(op).update({
+				getOP().eq(null).not().run(rcon, next),
+			(exists, next) => {
+				if (!exists)
+					return cb(null, null)
+				getOP().update({
 					history: r.row('history').append(msg)
-				}).run(rcon, next),
+				}).run(rcon, next)
+			},
 			(res, next) => {
 				m.publish(op, msg)
 				m.exec(next)
 			}
 		], cb)
-	}
-}
 
-// Regex replacement filter
-function hot_filter(frag) {
-	let filter = state.hot.FILTER
-	if (!filter)
-		return frag
-	for (let f of filter) {
-		const m = frag.match(f.p)
-		if (m) {
-			// Case sensitivity
-			if (m[0].length > 2) {
-				if (/[A-Z]/.test(m[0].charAt(1)))
-					f.r = f.r.toUpperCase()
-				else if (/[A-Z]/.test(m[0].charAt(0)))
-					f.r = f.r.charAt(0).toUpperCase() + f.r.slice(1)
-			}
-			return frag.replace(f.p, f.r)
+		function getOP() {
+			return r.table(board).get(op)
 		}
 	}
-	return frag
+	// Write locations of posts linking to this post
+	backlinks(post, links, cb) {
+		async.forEachOf(links, ([board, op], num, cb) => {
+			// Coerce to integer
+			num = +num
+			const update = {
+				backlinks: {
+					[post.id]: [this.board, post.op]
+				}
+			}
+			async.waterfall([
+					next =>
+					r.table(board).get(num).eq(null).not().run(rcon, next),
+				(exists, next) => {
+					if (!exists)
+						return cb(null, null)
+
+					// Write backlink to target post
+					r.table(board).get(num).update(update).run(rcon, next)
+				},
+				// Publish live update
+				(res, next) =>
+					this.publish(redis.multi(), op, board,
+						[[common.UPDATE_POST, update]], next)
+			], cb)
+		}, cb)
+	}
+	appendPost(frag, cb) {
+		const update = {}
+		amusement.roll_dice(frag, update)
+		async.waterfall([
+
+		], cb)
+	}
 }
 
 // Remove properties the client should not be seeing

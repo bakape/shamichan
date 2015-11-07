@@ -235,25 +235,25 @@ dispatcher[common.INSERT_POST] = (msg, client) => {
 
 function update_post(frag, client) {
 	if (typeof frag !== 'string')
-		return false;
-	frag = hot_filter(frag.replace(STATE.hot.EXCLUDE_REGEXP, ''));
-	const {post} = client;
+		return false
+	frag = amusement.hot_filter(frag.replace(STATE.hot.EXCLUDE_REGEXP, ''))
+	const {post} = client
 	if (!post)
-		return false;
-	const limit = common.MAX_POST_CHARS;
+		return false
+	const limit = common.MAX_POST_CHARS
 	if (frag.length > limit || post.body.length >= limit)
-		return false;
-	const combined = post.body.length + frag.length;
+		return false
+	const combined = post.body.length + frag.length
 	if (combined > limit)
-		frag = frag.substr(0, combined - limit);
+		frag = frag.substr(0, combined - limit)
 	const extra = {
 		links: valid_links(frag, client.ident)
-	};
-	amusement.roll_dice(frag, extra);
-	post.body += frag;
-	client.db.append_post(post, frag, extra, err =>
-		err && client.kotowaru(Muggle("Couldn't add text.", err)));
-	return true;
+	}
+	amusement.roll_dice(frag, extra)
+	post.body += frag
+	client.db.appendPost(frag, err =>
+		err && client.kotowaru(Muggle("Couldn't add text.", err)))
+	return true
 }
 dispatcher[common.UPDATE_POST] = update_post;
 
@@ -323,28 +323,6 @@ hooks.hook('clientSynced', function(info, cb){
 	info.client.send([0, common.HOT_INJECTION, 0, STATE.clientConfigHash]);
 	cb(null);
 });
-
-// Regex replacement filter
-function hot_filter(frag) {
-	let filter = STATE.hot.FILTER;
-	if (!filter)
-		return frag;
-	for (let i =0, len = filter.length; i < len; i++) {
-		let f = filter[i];
-		const m = frag.match(f.p);
-		if (m){
-			// Case sensitivity
-			if (m[0].length > 2){
-				if (/[A-Z]/.test(m[0].charAt(1)))
-					f.r = f.r.toUpperCase();
-				else if (/[A-Z]/.test(m[0].charAt(0)))
-					f.r = f.r.charAt(0).toUpperCase()+f.r.slice(1);
-			}
-			return frag.replace(f.p, f.r);
-		}
-	}
-	return frag;
-}
 
 function start_server() {
 	var is_unix_socket = (typeof config.LISTEN_PORT == 'string');
