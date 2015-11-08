@@ -12,12 +12,17 @@ options.on({
 	'change:thumbs': reRenderImages,
 	'change:spoilers': toggleSpoilers,
 	'change:autogif': toggleAutoGIF,
-	'change:anonymise': toggleAnonymisation
+	'change:anonymise': toggleAnonymisation,
+	'change:workModeTOG': reRenderImages
 });
-
 function reRenderImages() {
-	follow(() => getImages((image, model) =>
-		image && model.dispatch('renderImage', image)));
+	if(main.state.page.get('catalog')){
+		//quick render, because we don't have models in the catalog
+		const show = (options.get("thumbs")!=='hide' && !options.get('workModeTOG'))? '':'none';
+		document.queryAll(".expanded").forEach(el => el.style.display=show);
+	}else
+		follow(() => getImages((image, model) =>
+			image && model.dispatch('renderImage', image)));
 }
 
 function getImages(func) {

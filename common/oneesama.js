@@ -622,13 +622,14 @@ class OneeSama {
 			width: thumbWidth,
 			height: thumbHeight
 		};
-
 		// Catalog pages
 		if (href) {
 			// Handle the thumbnails with the HTML5 History controller
 			linkAttrs.class = 'history';
 			// No image hover previews
 			imgAttrs.class = 'expanded';
+			if(this.thumbStyle == 'hide')
+				imgAttrs.style= 'display: none';
 		}
 
 		return parseHTML
