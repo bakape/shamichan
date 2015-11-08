@@ -5,7 +5,8 @@
   "keywords": [
     "realtime",
     "imageboard",
-    "redis"
+    "redis",
+    "rethinkDB"
   ],
   "homepage": "https://github.com/bakape/meguca",
   "license": "MIT",
@@ -24,6 +25,7 @@
   "dependencies": {
     "async": "^1.2.0",
     "babel-core": "^6.1.2",
+    "babel-plugin-transform-async-to-generator": "^6.0.14",
     "babel-plugin-transform-es2015-block-scoping": "^6.0.18",
     "babel-plugin-transform-es2015-classes": "^6.1.2",
     "babel-plugin-transform-es2015-destructuring": "^6.0.18",
@@ -37,6 +39,7 @@
     "backbone": "^1.2.1",
     "backbone.radio": "^1.0.0",
     "bindings": "^1.2.1",
+    "bluebird": "^3.0.5",
     "browserify": "^12.0.1",
     "compression": "^1.4.4",
     "cookie": "^0.2.3",
