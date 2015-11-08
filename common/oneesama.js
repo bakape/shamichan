@@ -491,7 +491,7 @@ class OneeSama {
 	}
 	// Central image rendering method
 	image(data, reveal) {
-		const showThumb = this.thumbStyle !== 'hide' || reveal;
+		const showThumb = (this.thumbStyle !== 'hide' || reveal) && !this.workModeTOG;
 		return parseHTML
 			`<figure>
 				${this.figcaption(data, reveal)}
@@ -510,7 +510,7 @@ class OneeSama {
 		]);
 		return parseHTML
 			`<figcaption>
-				${this.thumbStyle === 'hide' && this.hiddenToggle(reveal)}
+				${this.thumbStyle === 'hide' && !this.workModeTOG && this.hiddenToggle(reveal)}
 				${this.imageSearch(data)}
 				<i>
 					(${list})
@@ -622,13 +622,14 @@ class OneeSama {
 			width: thumbWidth,
 			height: thumbHeight
 		};
-
 		// Catalog pages
 		if (href) {
 			// Handle the thumbnails with the HTML5 History controller
 			linkAttrs.class = 'history';
 			// No image hover previews
 			imgAttrs.class = 'expanded';
+			if(this.workModeTOG || this.thumbStyle == 'hide')
+				imgAttrs.style= 'display: none';
 		}
 
 		return parseHTML

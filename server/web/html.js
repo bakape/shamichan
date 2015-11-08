@@ -240,7 +240,8 @@ function parseCookies(req, ctr) {
 	const styles = common.thumbStyles,
 		style = etc.resolveConfig(styles, cookies.thumb, styles[0]);
 	req.thumbStyle = style;
-	etag += '-' + style;
+	req.workModeTOG = cookies.workModeTOG === 'true';
+	etag += '-' + style + '-' + req.workModeTOG;
 
 	for (let tag of ['spoil', 'agif', 'linkify']) {
 		if (tag in cookies)

@@ -9,7 +9,7 @@ const imports = require('./imports'),
 	{parseHTML} = util,
 	{config, hotConfig, main} = imports;
 if (!imports.isNode)
-	var {Cookie, etc, oneeSama, state} = main;
+	var {Cookie, etc, oneeSama, state, options} = main;
 
 /*
  * Full schema of the option interface
@@ -24,6 +24,7 @@ if (!imports.isNode)
  *	Defaults to true.
  * - load: Condition to display and execute the option. Defaults to true(always)
  * - validation: Function that validates the users input. Returns a boolean.
+ * - hidden: If true this option won't be shown to the user. Defaults to false
  *
  * Tooltips and lables are defined per language in `lang/`.
  * All arguments except for `id` and `tab` are optional.
@@ -247,6 +248,28 @@ module.exports = function(isMobile) {
 		{
 			id: 'alwaysLock',
 			tab: 0
+		},
+		/* WORK MODE: HIDE EMBARASSING THINGS */
+		{
+			id: 'workModeTOG',
+			load: notMobile,
+			tab: 1,
+			hidden: notMobile,
+			exec(val) {
+				oneeSama.workModeTOG=val;
+				Cookie.set('workModeTOG',val);
+				//We need to clear this cookie on refreshes
+				window.addEventListener('beforeunload', function () {
+					Cookie.set("workModeTOG",false);
+				});
+				const banner = document.querySelector("h1 > img");
+				if(banner!=null)
+					banner.style.display =  val? 'none':'';
+				if(main.options!=null || val){
+					document.getElementById('theme').setAttribute('href',
+						`${config.MEDIA_URL}css/${val? hotConfig.DEFAULT_CSS: main.options.get("theme")}.css?v=${main.cssHash}`);
+				}
+			}
 		}
 	);
 
@@ -256,7 +279,8 @@ module.exports = function(isMobile) {
 		{id: 'togglespoiler', default: 73},
 		{id: 'textSpoiler', default: 68},
 		{id: 'done', default: 83},
-		{id: 'expandAll', default: 69}
+		{id: 'expandAll', default: 69},
+		{id: 'workMode', default: 66}
 	];
 	for (let short of shorts) {
 		short.type = 'shortcut';

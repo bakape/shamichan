@@ -25,7 +25,8 @@ const BackgroundView = Backbone.View.extend({
 			'change:userBG': this.render,
 			'change:illyaBGToggle': this.render,
 			'change:illyaMuteToggle': this.render,
-			'change:theme': this.render
+			'change:theme': this.render,
+			'change:workModeTOG': this.render
 		});
 	},
 	// Store image as dataURL in localStorage
@@ -67,7 +68,7 @@ const BackgroundView = Backbone.View.extend({
 		this.css.innerHTML = '';
 		if (options.get('illyaBGToggle') && state.hotConfig.get('ILLYA_DANCE'))
 			this.renderIllya();
-		else if (options.get('userBG'))
+		else if (options.get('userBG') && !options.get('workModeTOG'))
 			this.renderBackground();
 	},
 	renderBackground() {
@@ -79,7 +80,7 @@ const BackgroundView = Backbone.View.extend({
 		el.style.backgroundSize = 'cover';
 
 		// Add blurred background image to elements, if theme is glass or ocean
-		const theme = options.get('theme');
+		const theme = options.get('workModeTOG')? state.hotConfig.get('DEFAULT_CSS'):options.get('theme');
 		if (theme !== 'glass' && theme !== 'ocean')
 			return;
 		const blurred = localStorage.blurred;

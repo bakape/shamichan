@@ -35,7 +35,7 @@ const Hidamari = exports.Hidamari = {
 			$(window).scrollTop($el.offset().top - $('#banner').height());
 		model.set({
 			// Only used in hidden thumbnail mode
-			thumbnailRevealed: reveal || options.get('thumbs') === 'hidden',
+			thumbnailRevealed: (reveal || options.get('thumbs') === 'hidden') && !options.get('workModeTOG'),
 			imageExpanded: false,
 			tallImage: false
 		});

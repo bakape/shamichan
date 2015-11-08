@@ -144,6 +144,10 @@ function handle_shortcut(event) {
 			imager.massExpander.toggle();
 			used = true;
 			break;
+		case opts.workMode:
+			main.options.set("workModeTOG",!main.options.get("workModeTOG"));
+			used = true;
+			break;
 	}
 
 	if (used) {

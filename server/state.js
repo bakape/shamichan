@@ -315,11 +315,10 @@ function buildOptions(lang, options) {
 		// Pick the options for this specific tab, according to current
 		// template and server configuration
 		opts[i] = _.filter(options, opt =>
-			opt.tab === i && (opt.load === undefined  || opt.load));
+			opt.tab === i && (opt.load === undefined  || opt.load) && !opt.hidden);
 		if (!opts[i].length)
 			continue;
 		html += `<li><a data-content="tab-${i}"`;
-
 		// Highlight the first tabButt by default
 		if (i === 0)
 			html += ' class="tab_sel"';
