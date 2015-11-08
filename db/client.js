@@ -5,7 +5,6 @@
 const _ = require('underscore'),
 	admin = require('../server/admin'),
 	amusement = require('../server/amusement'),
-	async = require('async'),
 	cache = require('./cache'),
 	common = require('../common'),
 	config = require('../config'),
@@ -23,9 +22,9 @@ class ClientController {
 		this.board = client.board
 		this.ident = client.ident
 	}
-	insertPost(msg, cb) {
+	async insertPost(msg) {
 		if (config.READ_ONLY)
-			return cb(Muggle('Can\'t post right now'))
+			throw Muggle('Can\'t post right now')
 		const {ip} = this.ident,
 			{client} = this,
 			now = Date.now(),
@@ -37,193 +36,154 @@ class ClientController {
 			time: now,
 			nonce: msg.nonce
 		}
-		if (isThread) {
-			post.bumpTime = now
+		if (image && !/^\d+$/.test(image))
+			throw Muggle('Expired image token')
 
-			// Stores all updates that happened to the thread, so we can
-			// pass them to the client, if they are behind
-			post.history = []
+		if (isThread)
+			await this.prepareThread(msg, post)
+		else
+			await this.prepareReply(op, post)
+
+
+		if (!client.synced)
+			throw Muggle('Dropped; post aborted')
+		if (client.post)
+			throw Muggle('Already have a post')
+		post.id = await r.table('_main').get('info')
+			.update({post_ctr: r.row('post_ctr').add(1)},
+				{returnChanges: true})
+			('changes')('new_val')('post_ctr')(0)
+			.run(rcon)
+		client.post = post
+		amusement.roll_dice(body, post)
+		this.parsePost(msg, post)
+		const [parsedBody, links] = await this.parseFragment(post.body)
+		post.body = parsedBody
+		if (image) {
+			const alloc = await imager.obtain_image_alloc(image)
+			post.image = alloc.image
+			if (isThread && post.image.pinky)
+				throw Muggle('Image is the wrong size')
+			delete post.image.pinky;
+			this.imageDuplicateHash(m, msg.image.hash, id)
+			await imager.commit_image_alloc(image)
 		}
-		let links
-		async.waterfall([
-			next => {
-				if (image) {
-					if (!/^\d+$/.test(image))
-						return next(Muggle('Expired image token'))
-				}
 
-				let body = ''
-				const {frag} = msg
-				if (frag) {
-					if (/^\s*$/g.test(frag))
-						return next(Muggle('Bad post body'))
-					if (frag.length > common.MAX_POST_CHARS)
-						return next(Muggle('Post is too long'))
-					body = amusement.hot_filter(frag
-						.replace(state.hot.EXCLUDE_REGEXP, ''))
-				}
-				post.body = body
-
-				if (isThread)
-					return next(null, null)
-				cache.validateOP(op, this.board, next)
-			},
-			(valid, next) => {
-				if (!isThread) {
-					if (valid === false)
-						return next(Muggle('Thread does not exist'))
-					post.op = op
-				}
-				else {
-					if (!image)
-						return next(Muggle('Image missing'))
-					if (msg.subject) {
-						const subject = msg.subject
-							.trim()
-							.replace(state.hot.EXCLUDE_REGEXP, '')
-							.replace(/[「」]/g, '')
-							.slice(0, STATE.hot.SUBJECT_MAX_LENGTH)
-						if (subject)
-							post.subject = subject
-					}
-				}
-
-				// Replace names, when a song plays on r/a/dio
-				if (radio && radio.name)
-					post.name = radio.name
-				else if (!state.hot.forced_anon) {
-					if (msg.name) {
-						const parsed = common.parse_name(msg.name)
-						post.name = parsed[0]
-						const spec = state.hot.SPECIAL_TRIPCODES
-						if (spec && parsed[1] && parsed[1] in spec)
-							post.trip = spec[parsed[1]]
-						else if (parsed[1] || parsed[2]) {
-							const trip = tripcode.hash(parsed[1], parsed[2])
-							if (trip)
-								post.trip = trip
-						}
-					}
-					if (msg.email)
-						post.email = msg.email.trim().substr(0, 320)
-				}
-
-				if ('auth' in msg) {
-					if (!msg.auth
-						|| !client.ident
-						|| msg.auth !== client.ident.auth
-					)
-						return next(Muggle('Bad auth'))
-					post.auth = msg.auth
-				}
-
-				if (isThread)
-					this.checkThrottle(next)
-				else
-					this.checkThreadLocked(op, next)
-			},
-			next =>
-				r.table('_main').get('info')
-					.update({post_ctr: r.row('post_ctr').add(1)},
-						{returnChanges: true})
-					('changes')('new_val')('post_ctr')(0)
-					.run(rcon, next),
-			(id, next) => {
-				if (!client.synced)
-					return next(Muggle('Dropped; post aborted'))
-				if (client.post)
-					return next(Muggle('Already have a post'))
-
-				amusement.roll_dice(body, post)
-				client.post = post
-				post.id = id
-				this.parseFragment(post.body, next)
-			},
-			(body, confirmedLinks, next) => {
-				post.body = body
-				links = confirmedLinks
-				imager.obtain_image_alloc(image, next)
-			},
-			(image, next) => {
-				if (image) {
-					post.image = image.image
-					if (isThread && post.image.pinky)
-						return next(Muggle('Image is the wrong size'))
-					delete post.image.pinky;
-					this.imageDuplicateHash(m, msg.image.hash, id)
-					return imager.commit_image_alloc(image, next)
-				}
-				next()
-			},
-			next =>
-				this['write' + (isThread ? 'Thread' : 'reply')](post, next),
-			(res, next) => {
-				// Set of currently open posts
-				m.sadd('liveposts', id)
-
-				// Threads have their own post number as the OP
-				const channel = op || id
-				cache.cache(m, id, channel, this.board)
-				const msg = [[common.INSERT_POST, post]]
-
-				// For priveledged authenticated clients only
-				const mnemonic = admin.genMnemonic(ip)
-				if (mnemonic)
-					msg.push({mod: mnemonic})
-				formatPost(post)
-				this.publish(m, channel, this.board, msg, next)
-			},
-			(res, next) =>
-				this.backlinks(post, links, next)
-		], err => {
-			if (err && client.post === post)
-				client.post = null
-			cb(err)
-		})
+		if (isThread)
+			await this.writeThread(post, m)
+		else
+			await this.writeReply(post)
+		await this.puglishPost(m, post)
+		await this.backlinks(post, links)
 	}
-	checkThreadLocked(op, cb) {
-		r.table(this.board).get(op)('locked').default(false)
-			.run(rcon, (err, lock) =>
-				cb(err || lock && Muggle('Thread is locked')))
+	async prepareReply(op, post) {
+		if (await cache.validateOP(op, this.board) === false)
+			throw Muggle('Thread does not exist')
+		await this.checkThrottle()
+		post.op = op
+	}
+	async prepareThread(msg, post) {
+		if (!msg.image)
+			throw Muggle('Image missing')
+		await this.checkThreadLocked(op)
+		if (msg.subject) {
+			const subject = msg.subject
+				.trim()
+				.replace(state.hot.EXCLUDE_REGEXP, '')
+				.replace(/[「」]/g, '')
+				.slice(0, STATE.hot.SUBJECT_MAX_LENGTH)
+			if (subject)
+				post.subject = subject
+		}
+		post.bumpTime = now
+
+		// Stores all updates that happened to the thread, so we can
+		// pass them to the client, if they are behind
+		post.history = []
+	}
+	async checkThreadLocked(op) {
+		if (await r.table(this.board)
+			.get(op)('locked').default(false)
+			.run(rcon)
+		)
+			throw Muggle('Thread is locked')
 	}
 	// Check if IP has not created a thread recently to prevent spam
-	checkThrottle(cb) {
+	async checkThrottle() {
 		// So we can spam new threads in debug mode
 		if (config.DEBUG)
-			return cb()
-		redis.exists(`ip:${this.ident.ip}:throttle`, (err, exists) =>
-			cb(err || exists && Muggle('Too soon')))
+			return
+		if (await redis.existsAsync(`ip:${this.ident.ip}:throttle`))
+			throw Muggle('Too soon')
+	}
+	parsePost(msg, post) {
+		if ('auth' in msg) {
+			if (!msg.auth
+				|| !client.ident
+				|| msg.auth !== client.ident.auth
+			)
+				throw Muggle('Bad auth')
+			post.auth = msg.auth
+		}
+
+		let body = ''
+		const {frag} = msg
+		if (frag) {
+			if (/^\s*$/g.test(frag))
+				throw Muggle('Bad post body')
+			if (frag.length > common.MAX_POST_CHARS)
+				throw Muggle('Post is too long')
+			body = amusement.hot_filter(frag
+				.replace(state.hot.EXCLUDE_REGEXP, ''))
+		}
+		post.body = body
+
+		// Replace names, when a song plays on r/a/dio
+		if (radio && radio.name)
+			post.name = radio.name
+		else if (!state.hot.forced_anon) {
+			if (msg.name) {
+				const parsed = common.parse_name(msg.name)
+				post.name = parsed[0]
+				const spec = state.hot.SPECIAL_TRIPCODES
+				if (spec && parsed[1] && parsed[1] in spec)
+					post.trip = spec[parsed[1]]
+				else if (parsed[1] || parsed[2]) {
+					const trip = tripcode.hash(parsed[1], parsed[2])
+					if (trip)
+						post.trip = trip
+				}
+			}
+			if (msg.email)
+				post.email = msg.email.trim().substr(0, 320)
+		}
 	}
 	// Split text into words and replace post links and hash commands with
 	// tuples
-	parseFragment(frag, cb) {
+	async parseFragment(frag) {
 		const m = frag.match(/>>\d+/g)
 		frag = frag.split(' ')
 		if (!m)
-			return cb(null, frag)
-		const links = []
+			return [frag, {}]
+
+		// Validate links and determine their parent board and thread
+		const links = [],
+			m = redis.multi()
 		m.forEach(link => links.push(link.slice(2)))
-		async.waterfall([
-			next => {
-				const m = redis.multi()
-				links.forEach(num => cache.getParenthood(m, num))
-				m.exec(next)
-			},
-			(res, next) => {
-				const confirmed = {}
-				for (let i = 0; i < res.length; i += 2) {
-					const board = res[i],
-						thread = res[i + 1]
-					if (board && thread)
-						confirmed[links[i / 2]] = [board, parseInt(thread)]
-				}
-				const parsed = []
-				frag.forEach(word => injectLink(word, parsed, confirmed)
-					|| amusement.roll_dice(word, parsed)
-					|| parsed.push(word))
-				next(null, parsed, confirmed)
-			}
-		], cb)
+		links.forEach(num => cache.getParenthood(m, num))
+		const res = await m.execAsync(),
+			confirmed = {}
+		for (let i = 0; i < res.length; i += 2) {
+			const board = res[i],
+				thread = res[i + 1]
+			if (board && thread)
+				confirmed[links[i / 2]] = [board, parseInt(thread)]
+		}
+		const parsed = []
+		frag.forEach(word => this.injectLink(word, parsed, confirmed)
+			|| amusement.roll_dice(word, parsed)
+			|| parsed.push(word))
+		return [parsed, confirmed]
 	}
 	// Insert links to other posts as tuples into the text body array
 	injectLink(word, parsed, confirmed) {
@@ -244,61 +204,67 @@ class ClientController {
 		m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000),
 			`${num}:${hash}`)
 	}
-	writeThread(post, cb) {
+	async writeThread(post, m) {
 		// Prevent thread spam
 		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, op)
-		r.table(this.board).insert(post).run(rcon, cb)
+		await r.table(this.board).insert(post).run(rcon)
 	}
-	writeReply(post, cb) {
-		async.waterfall([
-			next =>
-				r.table(this.board).insert(post).run(rcon, next),
-			// Bump the thread up to the top of the board
-			(res, next) => {
-				if (common.is_sage(post.email))
-					return next()
-				r.branch(
-					// Verify not over bump limit
-					r.table(this.board)
-						.getAll(post.op, {index: 'op'})
-						.count()
-						.lt(config.BUMP_LIMIT[this.board]),
-					r.table(this.board).get(post.op)
-						.update({bumpTime: Date.now()}),
-					null
-				).run(rcon, next)
-			}
-		], cb)
+	async writeReply(post) {
+		await r.table(this.board).insert(post).run(rcon)
+
+		// Bump the thread up to the top of the board
+		if (common.is_sage(post.email))
+			return
+		await r.branch(
+			// Verify not over bump limit
+			r.table(this.board)
+				.getAll(post.op, {index: 'op'})
+				.count()
+				.lt(config.BUMP_LIMIT[this.board]),
+			r.table(this.board).get(post.op)
+				.update({bumpTime: Date.now()}),
+			null
+		).run(rcon)
+	}
+	async puglishPost(m, post) {
+		// Set of currently open posts
+		m.sadd('liveposts', id)
+
+		// Threads have their own id as the op property
+		const channel = post.op || post.id
+		cache.cache(m, post.id, channel, this.board)
+		const msg = [[common.INSERT_POST, post]]
+
+		// For priveledged authenticated clients only
+		const mnemonic = admin.genMnemonic(post.ip)
+		if (mnemonic)
+			msg.push({mod: mnemonic})
+		formatPost(post)
+		await this.publish(m, channel, this.board, msg)
 	}
 	// Store message inside the replication log and publish to connected
 	// clients through redis
-	publish(m, op, board, msg, cb) {
+	async publish(m, op, board, msg) {
+		// Ensure thread exists, because the client in some cases publishes
+		// to external threads
+		if (await getOP().eq(null).not().run(rcon))
+			return
 		msg = JSON.stringify(msg)
-		async.waterfall([
-			// Ensure thread exists, because the client in some cases
-			// publishes to external threads
-			next =>
-				getOP().eq(null).not().run(rcon, next),
-			(exists, next) => {
-				if (!exists)
-					return cb(null, null)
-				getOP().update({
-					history: r.row('history').append(msg)
-				}).run(rcon, next)
-			},
-			(res, next) => {
-				m.publish(op, msg)
-				m.exec(next)
-			}
-		], cb)
+		await getOP().update({
+			history: r.row('history').append(msg)
+		}).run(rcon)
+		m.publish(op, msg)
+		await m.execAsync()
 
 		function getOP() {
 			return r.table(board).get(op)
 		}
 	}
-	// Write locations of posts linking to this post
-	backlinks(post, links, cb) {
-		async.forEachOf(links, ([board, op], num, cb) => {
+	// Write this posts location data to the post we are linking
+	async backlinks(post, links) {
+		for (let num in links) {
+			const [board, op] = links[num]
+
 			// Coerce to integer
 			num = +num
 			const update = {
@@ -306,22 +272,14 @@ class ClientController {
 					[post.id]: [this.board, post.op]
 				}
 			}
-			async.waterfall([
-					next =>
-					r.table(board).get(num).eq(null).not().run(rcon, next),
-				(exists, next) => {
-					if (!exists)
-						return cb(null, null)
 
-					// Write backlink to target post
-					r.table(board).get(num).update(update).run(rcon, next)
-				},
-				// Publish live update
-				(res, next) =>
-					this.publish(redis.multi(), op, board,
-						[[common.UPDATE_POST, update]], next)
-			], cb)
-		}, cb)
+			// Ensure target post exists
+			if (await r.table(board).get(num).eq(null).run(rcon))
+				continue
+			await r.table(board).get(num).update(update).run(rcon)
+			await this.publish(redis.multi(), op, board,
+				[[common.UPDATE_POST, update]])
+		}
 	}
 	appendPost(frag, cb) {
 		const update = {}

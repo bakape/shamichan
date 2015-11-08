@@ -3,8 +3,7 @@ Cache of thread and board post parenthood. Kept in redis, for quick
  validations.
  */
 
-const async = require('async'),
-	{redis} = global
+const {redis} = global
 
 // Store a post's board and thread parenthood
 function cache(m, num, op, board) {
@@ -33,16 +32,11 @@ function hashCall(m, method, num) {
 	}
 }
 
-function validateOP(num, board, cb) {
-	async.waterfall([
-		next => {
-			const m = redis.multi()
-			getParenthood(m, num)
-			m.exec(next)
-		},
-		(res, next) =>
-			next(null, res[0] === board && res[1] === num)
-	], cb)
+async function validateOP(num, board) {
+	const m = redis.multi()
+	getParenthood(m, num)
+	const res = await m.execAsync()
+	return res[0] === board && res[1] === num
 }
 exports.validateOP = validateOP
 

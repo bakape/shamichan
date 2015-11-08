@@ -2,10 +2,13 @@
 Various utility functions
  */
 
-const config = require('../config'),
+const bluebird = require('bluebird'),
+	config = require('../config'),
 	child_process = require('child_process'),
-    fs = require('fs'),
+    fs = require('fs-extra'),
     util = require('util');
+
+bluebird.promisifyAll(fs)
 
 /* Non-wizard-friendly error message */
 function Muggle(message, reason) {
@@ -79,6 +82,12 @@ function cpx (src, dest, callback) {
 	});
 }
 exports.cpx = cpx;
+
+async function copyAsync(src, dest) {
+	await fs.copyAsync(src, dest, {clobber: false}).catch(err =>
+		{throw Muggle('Couldn\'t copy file into place.', err)})
+}
+exports.copyAsync = copyAsync
 
 function checked_mkdir (dir, cb) {
 	fs.mkdir(dir, function (err) {

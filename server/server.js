@@ -22,8 +22,6 @@ const _ = require('underscore'),
     okyaku = require('./okyaku'),
 	path = require('path'),
     persona = require('./persona'),
-    Render = require('./render'),
-    urlParse = require('url').parse,
     winston = require('winston');
 
 require('../imager/daemon'); // preload and confirm it works
@@ -228,8 +226,8 @@ dispatcher[common.INSERT_POST] = (msg, client) => {
 	)
 		return false
 
-	client.db.insertPost(msg, err =>
-		err && client.kotowaru(Muggle('Allocation failure', err)))
+	client.db.insertPost(msg).catch(err =>
+		client.kotowaru(Muggle('Allocation failure', err)))
 	return true
 }
 

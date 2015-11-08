@@ -117,9 +117,7 @@ function squish_MD5 (hash) {
 }
 exports.squish_MD5 = squish_MD5;
 
-function obtain_image_alloc (id, cb) {
-	if (!id)
-		return cb(null, null)
+async function obtain_image_alloc (id) {
 	const onegai = new db.Onegai
 	onegai.obtain_image_alloc(id, (err, alloc) => {
 		if (err)
@@ -133,11 +131,11 @@ function obtain_image_alloc (id, cb) {
 }
 exports.obtain_image_alloc = obtain_image_alloc;
 
-function commit_image_alloc (alloc, cb) {
-	publish(alloc, err => {
-		if (err)
-			return cb(err)
-		new db.Onegai.commit_image_alloc(alloc, cb)
-	})
+async function commit_image_alloc (alloc) {
+	for (let kind in alloc.tmps) {
+		await etc.copyAsync(media_path('tmp', alloc.tmps[kind]),
+			media_path(kind, alloc.image[kind]))
+	}
+	await new db.Onegai.commit_image_alloc(alloc)
 }
 exports.commit_image_alloc = commit_image_alloc;

@@ -96,31 +96,28 @@ class Onegai extends events.EventEmitter {
 	record_image_alloc(id, alloc, callback) {
 		redis.setex('image:' + id, IMG_EXPIRY, JSON.stringify(alloc), callback);
 	}
-	obtain_image_alloc(id, callback) {
-		let m = redis.multi();
-		const key = 'image:' + id;
-		m.get(key);
+	async obtain_image_alloc(id) {
+		const m = redis.multi(),
+			key = 'image:' + id
+		m.get(key)
 		m.setnx('lock:' + key, '1');
 		m.expire('lock:' + key, IMG_EXPIRY);
-		m.exec(function(err, rs) {
-			if (err)
-				return callback(err);
-			if (rs[1] != 1)
-				return callback(Muggle("Image in use."));
-			if (!rs[0])
-				return callback(Muggle("Image lost."));
-			let alloc = JSON.parse(rs[0]);
-			alloc.id = id;
-			callback(null, alloc);
-		});
+		let [alloc, status] = await m.execAsync()
+		if (status !== '1')
+			throw Muggle('Image in use')
+		if (!alloc)
+			throw Muggle('Image lost')
+		alloc = JSON.parse(res[0])
+		alloc.id = id
+		return alloc
 	}
-	commit_image_alloc(alloc, cb) {
+	async commit_image_alloc(alloc) {
 		// We should already hold the lock at this point.
-		const key = 'image:' + alloc.id;
-		let m = redis.multi();
-		m.del(key);
-		m.del('lock:' + key);
-		m.exec(cb);
+		const key = 'image:' + alloc.id,
+			m = redis.multi()
+		m.del(key)
+		m.del('lock:' + key)
+		await m.execAsync()
 	}
 	client_message(client_id, msg) {
 		redis.publish('client:' + client_id, JSON.stringify(msg));
