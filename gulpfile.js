@@ -45,16 +45,8 @@ function buildClient() {
 		debug: true,
 		bundleExternal: false,
 		external: [
-			'jquery',
-			'js-cookie',
-			'underscore',
-			'backbone',
-			'backbone.radio',
-			'stack-blur',
-			'lang',
-			'core-js',
-			'scriptjs',
-			'dom4'
+			'jquery', 'js-cookie', 'underscore', 'backbone', 'backbone.radio',
+			'stack-blur', 'lang', 'core-js', 'scriptjs', 'dom4'
 		]
 	})
 		// Exclude these requires on the client
@@ -70,55 +62,38 @@ function buildClient() {
 {
 	const b = buildClient()
 		// Transpile ES6 functionality that is not yet supported by the latest
-		// stable Chrome and FF to ES5. Ancient and hipster browsers can
-		// suck my dick.
-		.transform(babelify.configure({
-			// MUH PERFORMINCE
-			blacklist: [
-				'es3.memberExpressionLiterals',
-				'es3.propertyLiterals',
-				'es5.properties.mutators',
-				'es6.arrowFunctions',
-				'es6.constants',
-				'es6.forOf',
-				'es6.properties.computed',
-				'es6.properties.shorthand',
-				'es6.spec.templateLiterals',
-				'es6.templateLiterals',
-				'flow',
-				'react',
-				'jscript',
-				'react',
-				'reactCompat',
-				'regenerator',
-				'runtime'
+		// stable Chrome and FF to ES5
+		.transform(babelify, {
+			plugins: [
+				'babel-plugin-transform-es2015-classes',
+				'transform-es2015-block-scoping',
+				'transform-es2015-classes',
+				'transform-es2015-destructuring',
+				'transform-es2015-object-super',
+				'transform-es2015-parameters',
+				'transform-es2015-sticky-regex',
+				'transform-es2015-unicode-regex',
+				'transform-strict-mode'
 			]
-		}));
-
+		})
 	build('client', b, './www/js');
 }
 
 // Less performant client for older browser compatibility
 {
-	const b = buildClient().transform(babelify.configure({
-		optional: ['es6.spec.blockScoping']
-	}));
-
-	build('legacy', b, './www/js');
+	const b = buildClient().transform(babelify, {
+		presets: ['es2015'],
+		plugins: ['transform-strict-mode']
+	})
+	build('legacy', b, './www/js')
 }
 
 // Libraries
 {
 	const b = browserify({
 		require: [
-			'jquery',
-			'js-cookie',
-			'underscore',
-			'backbone',
-			'backbone.radio',
-			'scriptjs',
-			'sockjs-client',
-			'dom4'
+			'jquery', 'js-cookie', 'underscore', 'backbone', 'backbone.radio',
+			'scriptjs', 'sockjs-client', 'dom4'
 		],
 		debug: true
 	})
@@ -145,9 +120,10 @@ gulp.task('lang', function() {
 		external: ['main']
 	})
 		.require('./client/mod', {expose: 'mod'})
-		.transform(babelify.configure({
-			optional: ['es6.spec.blockScoping']
-		}));
+		.transform(babelify, {
+			presets: ['es2015'],
+			plugins: ['transform-strict-mode']
+		})
 
 	build('mod', b, './state/');
 }
