@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.4.0 - 2015-11-08
+###Add
+- Optional site frontpage to serve on '/'
+
+###Changed
+- Upgrade breaking dependencies
+
 ##1.3.3 - 2015-11-06
 ###Fix
 - Writing of multiple dice in one fragment
