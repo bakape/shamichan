@@ -59,7 +59,7 @@
     "nan": "^2.0.0",
     "node-watch": "^0.3.4",
     "recaptcha": "^1.2.0",
-    "redis": "^0.12.1",
+    "redis": "^2.3.0",
     "request": "^2.53.0",
     "scriptjs": "^2.5.7",
     "sockjs": "^0.3.15",
