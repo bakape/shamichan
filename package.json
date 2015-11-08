@@ -47,7 +47,7 @@
     "formidable": "^1.0.16",
     "fs-extra": "^0.26.2",
     "gulp": "^3.8.11",
-    "gulp-if": "^1.2.5",
+    "gulp-if": "^2.0.0",
     "gulp-less": "^3.0.1",
     "gulp-minify-css": "^1.2.0",
     "gulp-sourcemaps": "^1.5.1",
