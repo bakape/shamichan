@@ -9,6 +9,7 @@ const _ = require('underscore'),
 	db = require('../../db'),
 	etc = require('../../util/etc'),
 	express = require('express'),
+	path = require('path'),
 	render = require('../render'),
 	state = require('../state'),
 	util = require('./util'),
@@ -26,8 +27,10 @@ const vanillaHeaders = {
 };
 
 router.get('/', function(req, res) {
-	res.redirect(`/${config.DEFAULT_BOARD}/`)
-});
+	if (state.hot.frontpage)
+		return res.sendFile(path.resolve(state.hot.frontpage))
+	res.redirect(301, `/${config.DEFAULT_BOARD}/`)
+})
 
 // Redirect `/board` to `/board/` The client parses the URL to determine
 // what page it is on. So we need the trailing slash for easier board

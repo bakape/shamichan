@@ -19,6 +19,11 @@ this.hot = {
  */
 	BANNERS: null,
 
+// Instead of redirecting to the default board serve a frontpage to the
+// user, when navigating to '/'.Must be path pointing to a regular HTML
+// document or null. Example: 'www/frontpage.html'
+	frontpage: null,
+
 	THREADS_PER_PAGE: 10,
 // Replies to display under each thread on the board's root page
 	ABBREVIATED_REPLIES: 5,
