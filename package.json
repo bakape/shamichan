@@ -70,7 +70,7 @@
     "velocity-animate": "^1.2.2",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
-    "winston": "^1.0.1"
+    "winston": "^2.1.0"
   },
   "optionalDependencies": {
     "hiredis": "^0.4.0",
