@@ -491,7 +491,7 @@ class OneeSama {
 	}
 	// Central image rendering method
 	image(data, reveal) {
-		const showThumb = (this.thumbStyle !== 'hide' || reveal) && !this.workModeTOG;
+		const showThumb = this.thumbStyle !== 'hide' || reveal;
 		return parseHTML
 			`<figure>
 				${this.figcaption(data, reveal)}
@@ -510,7 +510,7 @@ class OneeSama {
 		]);
 		return parseHTML
 			`<figcaption>
-				${this.thumbStyle === 'hide' && !this.workModeTOG && this.hiddenToggle(reveal)}
+				${this.thumbStyle === 'hide' && this.hiddenToggle(reveal)}
 				${this.imageSearch(data)}
 				<i>
 					(${list})
@@ -628,7 +628,7 @@ class OneeSama {
 			linkAttrs.class = 'history';
 			// No image hover previews
 			imgAttrs.class = 'expanded';
-			if(this.workModeTOG || this.thumbStyle == 'hide')
+			if(this.thumbStyle == 'hide')
 				imgAttrs.style= 'display: none';
 		}
 

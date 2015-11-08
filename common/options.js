@@ -254,9 +254,8 @@ module.exports = function(isMobile) {
 			id: 'workModeTOG',
 			load: notMobile,
 			tab: 1,
-			hidden: notMobile,
+			hidden: true,
 			exec(val) {
-				oneeSama.workModeTOG=val;
 				Cookie.set('workModeTOG',val);
 				//We need to clear this cookie on refreshes
 				window.addEventListener('beforeunload', function () {
@@ -268,7 +267,9 @@ module.exports = function(isMobile) {
 				if(main.options!=null || val){
 					document.getElementById('theme').setAttribute('href',
 						`${config.MEDIA_URL}css/${val? hotConfig.DEFAULT_CSS: main.options.get("theme")}.css?v=${main.cssHash}`);
+					oneeSama.thumbStyle = val? 'hide': main.options.get('thumbs');
 				}
+
 			}
 		}
 	);
