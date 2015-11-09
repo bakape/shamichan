@@ -5,7 +5,7 @@
  */
 
 const main = require('./main'),
-	{etc, follow, options} = main,
+	{etc, follow, options, oneeSama} = main,
 	{posts} = main.state;
 
 options.on({
@@ -13,12 +13,12 @@ options.on({
 	'change:spoilers': toggleSpoilers,
 	'change:autogif': toggleAutoGIF,
 	'change:anonymise': toggleAnonymisation,
-	'change:workModeTOG': reRenderImages
+	'workModeTOG': reRenderImages
 });
 function reRenderImages() {
 	if(main.state.page.get('catalog')){
 		//quick render, because we don't have models in the catalog
-		const show = (options.get("thumbs")!=='hide' && !options.get('workModeTOG'))? '':'none';
+		const show = (options.get("thumbs")!=='hide' && !main.oneeSama.workMode)? '':'none';
 		document.queryAll(".expanded").forEach(el => el.style.display=show);
 	}else
 		follow(() => getImages((image, model) =>

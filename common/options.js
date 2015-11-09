@@ -9,7 +9,7 @@ const imports = require('./imports'),
 	{parseHTML} = util,
 	{config, hotConfig, main} = imports;
 if (!imports.isNode)
-	var {Cookie, etc, oneeSama, state, options} = main;
+	var {Cookie, etc, oneeSama, state} = main;
 
 /*
  * Full schema of the option interface
@@ -248,29 +248,6 @@ module.exports = function(isMobile) {
 		{
 			id: 'alwaysLock',
 			tab: 0
-		},
-		/* WORK MODE: HIDE EMBARASSING THINGS */
-		{
-			id: 'workModeTOG',
-			load: notMobile,
-			tab: 1,
-			hidden: true,
-			exec(val) {
-				Cookie.set('workModeTOG',val);
-				//We need to clear this cookie on refreshes
-				window.addEventListener('beforeunload', function () {
-					Cookie.set("workModeTOG",false);
-				});
-				const banner = document.querySelector("h1 > img");
-				if(banner!=null)
-					banner.style.display =  val? 'none':'';
-				if(main.options!=null || val){
-					document.getElementById('theme').setAttribute('href',
-						`${config.MEDIA_URL}css/${val? hotConfig.DEFAULT_CSS: main.options.get("theme")}.css?v=${main.cssHash}`);
-					oneeSama.thumbStyle = val? 'hide': main.options.get('thumbs');
-				}
-
-			}
 		}
 	);
 

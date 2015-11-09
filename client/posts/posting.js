@@ -7,7 +7,7 @@ const main = require('../main'),
 	ident = require('./identity'),
 	imager = require('./imager'),
 	inject = require('./common').inject,
-	{$, _, Backbone, common, config, connSM, etc, lang, options, postSM, state}
+	{$, _, Backbone, common, config, connSM, etc, lang, options, postSM, state, oneeSama, Cookie}
 		= main;
 
 let postForm, postModel;
@@ -145,7 +145,18 @@ function handle_shortcut(event) {
 			used = true;
 			break;
 		case opts.workMode:
-			main.options.set("workModeTOG",!main.options.get("workModeTOG"));
+			const val = main.oneeSama.workMode = !main.oneeSama.workMode;
+			Cookie.set('workModeTOG',val);
+			const banner = document.querySelector("h1 > img");
+			if(banner!=null)
+				banner.style.display =  val? 'none':'';
+			document.getElementById('theme').setAttribute('href',
+				`${config.MEDIA_URL}css/${val? state.hotConfig.get('DEFAULT_CSS'): main.options.get("theme")}.css?v=${main.cssHash}`);
+			oneeSama.thumbStyle = val? 'hide': main.options.get('thumbs');
+			main.options.trigger("workModeTOG");
+			window.addEventListener('beforeunload', function () {
+				Cookie.set("workModeTOG",false);
+			});
 			used = true;
 			break;
 	}
