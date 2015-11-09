@@ -10,7 +10,7 @@ const _ = require('underscore'),
 	config = require('../config'),
 	imager = require('../imager'),
 	Muggle = require('../util/etc').Muggle,
-	r = global.rethink,
+	r = require('rethinkdb'),
 	radio = config.RADIO && require('../server/radio'),
 	{rcon, redis} = global,
 	state = require('../server/state'),
@@ -25,16 +25,14 @@ class ClientController {
 	async insertPost(msg) {
 		if (config.READ_ONLY)
 			throw Muggle('Can\'t post right now')
-		const {ip} = this.ident,
-			{client} = this,
-			now = Date.now(),
+		const {client} = this,
 			{op, image} = msg,
-			isThread = !msg.op,
-			m = redis.multi()
+			isThread = !msg.op
 		const post = {
-			ip,
-			time: now,
-			nonce: msg.nonce
+			ip: this.ident.ip,
+			time: Date.now(),
+			nonce: msg.nonce,
+			board: this.board
 		}
 		if (image && !/^\d+$/.test(image))
 			throw Muggle('Expired image token')
@@ -49,16 +47,17 @@ class ClientController {
 			throw Muggle('Dropped; post aborted')
 		if (client.post)
 			throw Muggle('Already have a post')
-		post.id = await r.table('_main').get('info')
+		post.id = await r.table('main').get('info')
 			.update({post_ctr: r.row('post_ctr').add(1)},
 				{returnChanges: true})
 			('changes')('new_val')('post_ctr')(0)
 			.run(rcon)
 		client.post = post
 		amusement.roll_dice(body, post)
-		this.parsePost(msg, post)
-		const [parsedBody, links] = await this.parseFragment(post.body)
+		const [parsedBody, links] = await this.parsePost(msg, post)
 		post.body = parsedBody
+
+		const m = redis.multi()
 		if (image) {
 			const alloc = await imager.obtain_image_alloc(image)
 			post.image = alloc.image
@@ -95,17 +94,14 @@ class ClientController {
 			if (subject)
 				post.subject = subject
 		}
-		post.bumpTime = now
+		post.bumpTime = Date.now()
 
 		// Stores all updates that happened to the thread, so we can
 		// pass them to the client, if they are behind
 		post.history = []
 	}
 	async checkThreadLocked(op) {
-		if (await r.table(this.board)
-			.get(op)('locked').default(false)
-			.run(rcon)
-		)
+		if (await getPost(op)('locked').default(false).run(rcon))
 			throw Muggle('Thread is locked')
 	}
 	// Check if IP has not created a thread recently to prevent spam
@@ -116,7 +112,7 @@ class ClientController {
 		if (await redis.existsAsync(`ip:${this.ident.ip}:throttle`))
 			throw Muggle('Too soon')
 	}
-	parsePost(msg, post) {
+	async parsePost(msg, post) {
 		if ('auth' in msg) {
 			if (!msg.auth
 				|| !client.ident
@@ -136,7 +132,6 @@ class ClientController {
 			body = amusement.hot_filter(frag
 				.replace(state.hot.EXCLUDE_REGEXP, ''))
 		}
-		post.body = body
 
 		// Replace names, when a song plays on r/a/dio
 		if (radio && radio.name)
@@ -157,6 +152,8 @@ class ClientController {
 			if (msg.email)
 				post.email = msg.email.trim().substr(0, 320)
 		}
+
+		return await this.parseFragment(body)
 	}
 	// Split text into words and replace post links and hash commands with
 	// tuples
@@ -179,6 +176,9 @@ class ClientController {
 			if (board && thread)
 				confirmed[links[i / 2]] = [board, parseInt(thread)]
 		}
+
+		// Insert post links and hash commonds as tumples into the text body
+		// array
 		const parsed = []
 		frag.forEach(word => this.injectLink(word, parsed, confirmed)
 			|| amusement.roll_dice(word, parsed)
@@ -207,22 +207,24 @@ class ClientController {
 	async writeThread(post, m) {
 		// Prevent thread spam
 		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, op)
-		await r.table(this.board).insert(post).run(rcon)
+		await this.writePost(post)
+	}
+	async writePost(post) {
+		await r.table('posts').insert(post).run(rcon)
 	}
 	async writeReply(post) {
-		await r.table(this.board).insert(post).run(rcon)
+		await this.writePost(post)
 
 		// Bump the thread up to the top of the board
 		if (common.is_sage(post.email))
 			return
 		await r.branch(
 			// Verify not over bump limit
-			r.table(this.board)
+			r.table('posts')
 				.getAll(post.op, {index: 'op'})
 				.count()
 				.lt(config.BUMP_LIMIT[this.board]),
-			r.table(this.board).get(post.op)
-				.update({bumpTime: Date.now()}),
+			getPost(post.op).update({bumpTime: Date.now()}),
 			null
 		).run(rcon)
 	}
@@ -247,18 +249,14 @@ class ClientController {
 	async publish(m, op, board, msg) {
 		// Ensure thread exists, because the client in some cases publishes
 		// to external threads
-		if (await getOP().eq(null).not().run(rcon))
+		if (await getPost(op).eq(null).not().run(rcon))
 			return
 		msg = JSON.stringify(msg)
-		await getOP().update({
+		await getPost(op).update({
 			history: r.row('history').append(msg)
 		}).run(rcon)
 		m.publish(op, msg)
 		await m.execAsync()
-
-		function getOP() {
-			return r.table(board).get(op)
-		}
 	}
 	// Write this posts location data to the post we are linking
 	async backlinks(post, links) {
@@ -274,9 +272,9 @@ class ClientController {
 			}
 
 			// Ensure target post exists
-			if (await r.table(board).get(num).eq(null).run(rcon))
+			if (await getPost(num).eq(null).run(rcon))
 				continue
-			await r.table(board).get(num).update(update).run(rcon)
+			await getPost(num).update(update).run(rcon)
 			await this.publish(redis.multi(), op, board,
 				[[common.UPDATE_POST, update]])
 		}
@@ -296,4 +294,8 @@ function formatPost(post) {
 	for (let key of ['ip', 'deleted', 'imgDeleted']) {
 		delete post[key];
 	}
+}
+
+function getPost(num) {
+	return r.table('posts').get(num)
 }

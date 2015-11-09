@@ -36,40 +36,31 @@ async function init() {
 	const isCreated = await r.dbList().contains('meguca').run(rcon)
 	if (!isCreated)
 		await initDB()
-	rcon.use('meguca')
-	const info = await r.table('_main').get('info').run(rcon)
-	if (info)
-		verifyVersion(info.dbVersion, 'RethinkDB')
 	else {
-		await r.table('_main').insert({
-			id: 'info',
-			dbVersion,
-			post_ctr: 0
-		}).run(rcon)
+		rcon.use('meguca')
+		const info = await r.table('main').get('info').run(rcon)
+		verifyVersion(info.dbVersion, 'RethinkDB')
 	}
 	const redisVersion = await redis.getAsync('dbVersion')
 	if (redisVersion)
 		verifyVersion(parseInt(redisVersion), 'Redis')
 	else
 		await redis.setAsync('dbVersion', dbVersion)
-	for (let board of config.BOARDS) {
-		await initBoard(board)
-	}
 }
 exports.init = init
 
 async function initDB() {
 	await r.dbCreate('meguca').run(rcon)
 	rcon.use('meguca')
-	await r.tableCreate('_main').run(rcon)
-}
-
-async function initBoard(board) {
-	if (await r.tableList().contains(board).run(rcon))
-		return
-	await r.tableCreate(board).run(rcon)
-	for (let index of ['op', 'time', 'bumptime']) {
-		await r.table(board).indexCreate(index).run(rcon)
+	await r.tableCreate('main').run(rcon)
+	await r.table('main').insert({
+		id: 'info',
+		dbVersion,
+		post_ctr: 0
+	}).run(rcon)
+	await r.tableCreate('posts').run(rcon)
+	for (let index of ['op', 'time', 'bumptime', 'board']) {
+		await r.table('posts').indexCreate(index).run(rcon)
 	}
 }
 
