@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.5.1 - 2015-11-10
+##Fix
+- "hide" image thumbnail mode
+
 ##1.5.0 - 2015-11-08
 ###Add
 - Work mode aka Boss key
