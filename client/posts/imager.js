@@ -40,7 +40,7 @@ exports.Hidamari = Backbone.View.extend({
 
 		model.set({
 			// Only used in hidden thumbnail mode
-			thumbnailRevealed: reveal || options.get('thumbs') === 'hidden',
+			thumbnailRevealed: reveal,
 			imageExpanded: false,
 			tallImage: false
 		});

@@ -47,6 +47,7 @@ class RenderBase {
 			eLinkify: cookies.linkify === 'true',
 			lang: lang[this.lang].common,
 			thumbStyle: this.req.thumbStyle,
+			workMode: false,
 
 			// Post link handler
 			tamashii(num) {

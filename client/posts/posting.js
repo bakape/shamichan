@@ -7,8 +7,8 @@ const Article = require('./article'),
 	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
-	{$, _, Backbone, common, config, connSM, etc, lang, options, postSM, state}
-		= main;
+	{$, _, Backbone, Cookie, common, config, connSM, etc, lang, oneeSama,
+		options, postSM, state} = main;
 
 let postForm, postModel;
 /*
@@ -130,6 +130,21 @@ function handle_shortcut(event) {
 		case opts.expandAll:
 			imager.massExpander.toggle();
 			prevent();
+			break;
+		case opts.workMode:
+			const val = main.oneeSama.workMode = !main.oneeSama.workMode;
+			Cookie.set('workModeTOG', val);
+			const banner = document.querySelector("h1 > img");
+			if(banner!=null)
+				banner.style.display =  val? 'none':'';
+			document.getElementById('theme').setAttribute('href',
+					`${config.MEDIA_URL}css/${val? state.hotConfig.get('DEFAULT_CSS'): main.options.get("theme")}.css?v=${main.cssHash}`);
+			oneeSama.thumbStyle = val? 'hide': main.options.get('thumbs');
+			main.options.trigger("workModeTOG");
+			window.addEventListener('beforeunload', function () {
+				Cookie.set("workModeTOG",false);
+			});
+			prevent()
 			break;
 	}
 

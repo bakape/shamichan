@@ -24,6 +24,7 @@ if (!imports.isNode)
  *	Defaults to true.
  * - load: Condition to display and execute the option. Defaults to true(always)
  * - validation: Function that validates the users input. Returns a boolean.
+ * - hidden: If true this option won't be shown to the user. Defaults to false
  *
  * Tooltips and lables are defined per language in `lang/`.
  * All arguments except for `id` and `tab` are optional.
@@ -256,7 +257,8 @@ module.exports = function(isMobile) {
 		{id: 'togglespoiler', default: 73},
 		{id: 'textSpoiler', default: 68},
 		{id: 'done', default: 83},
-		{id: 'expandAll', default: 69}
+		{id: 'expandAll', default: 69},
+		{id: 'workMode', default: 66}
 	];
 	for (let short of shorts) {
 		short.type = 'shortcut';

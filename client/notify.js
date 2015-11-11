@@ -96,7 +96,7 @@ main.reply('repliedToMe', function (num) {
 	if (options.get('notification') && document.hidden && !main.isMobile) {
 		let n = new Notification(main.lang.quoted, {
 			// if the post doesn't have a image we use a bigger favicon
-			icon: post.image ? main.oneeSama.thumbPath(post.image)
+			icon: (post.image && options.get('thumbs')!=='hide' && !main.oneeSama.workMode) ? main.oneeSama.thumbPath(post.image)
 				: mediaURL + 'css/ui/favbig.png',
 			body: post.body
 		});

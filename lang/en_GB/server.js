@@ -213,6 +213,14 @@ var lang = {
 			'Expand All Images',
 			'Expand all images. Webm, PDF and MP3 and your own post'
 				+ ' aren\'t affected. New post images are also expanded.'
+		],
+		workMode: [
+			'Work mode',
+			'Hides images, defaults theme and disables user background'
+		],
+		workModeTOG: [
+			'Work mode',
+			'Hides images, defaults theme and disables user background'
 		]
 	}
 };

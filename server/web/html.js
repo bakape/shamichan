@@ -239,7 +239,7 @@ function parseCookies(req, ctr) {
 	// Attach thumbnail mode to etag
 	const styles = common.thumbStyles,
 		style = etc.resolveConfig(styles, cookies.thumb, styles[0]);
-	req.thumbStyle = style;
+	req.thumbStyle = (cookies.workModeTOG === 'true')? styles[2]:style;
 	etag += '-' + style;
 
 	for (let tag of ['spoil', 'agif', 'linkify']) {

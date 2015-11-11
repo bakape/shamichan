@@ -3,7 +3,7 @@
  */
 
 const main = require('./main'),
-	{Backbone, common, etc, options, stackBlur, state} = main;
+	{Backbone, common, etc, oneeSama, options, stackBlur, state} = main;
 
 const BackgroundView = Backbone.View.extend({
 	tagName: 'style',
@@ -27,7 +27,8 @@ const BackgroundView = Backbone.View.extend({
 			'change:userBG': this.render,
 			'change:illyaBGToggle': this.render,
 			'change:illyaMuteToggle': this.render,
-			'change:theme': this.render
+			'change:theme': this.render,
+			'workModeTOG': this.render
 		});
 	},
 	// Store image as dataURL in localStorage
@@ -67,7 +68,7 @@ const BackgroundView = Backbone.View.extend({
 		el.innerHTML = '';
 		if (options.get('illyaBGToggle') && state.hotConfig.get('ILLYA_DANCE'))
 			this.renderIllya();
-		else if (options.get('userBG'))
+		else if (options.get('userBG') && !main.oneeSama.workMode)
 			this.renderBackground();
 	},
 	renderBackground() {
@@ -81,7 +82,8 @@ const BackgroundView = Backbone.View.extend({
 			}`;
 
 		// Add blurred background image to elements, if theme is glass or ocean
-		const theme = options.get('theme');
+		const theme = main.oneeSama.workMode
+			? state.hotConfig.get('DEFAULT_CSS') : options.get('theme')
 		if (theme === 'glass' || theme === 'ocean') {
 			const {blurred} = localStorage;
 			if (blurred)
