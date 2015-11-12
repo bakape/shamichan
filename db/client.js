@@ -54,8 +54,9 @@ class ClientController {
 			.run(rcon)
 		client.post = post
 		amusement.roll_dice(body, post)
-		const [parsedBody, links] = await this.parsePost(msg, post)
+		const [parsedBody, links] = await this.parsePost(msg)
 		post.body = parsedBody
+		post.length = postLength(parsedBody)
 
 		const m = redis.multi()
 		if (image) {
@@ -69,11 +70,11 @@ class ClientController {
 		}
 
 		if (isThread)
-			await this.writeThread(post, m)
+			await this.writeThread(m)
 		else
-			await this.writeReply(post)
-		await this.puglishPost(m, post)
-		await this.backlinks(post, links)
+			await this.writeReply()
+		await this.puglishPost(m)
+		await this.backlinks(links)
 	}
 	async prepareReply(op, post) {
 		if (await cache.validateOP(op, this.board) === false)
@@ -112,7 +113,8 @@ class ClientController {
 		if (await redis.existsAsync(`ip:${this.ident.ip}:throttle`))
 			throw Muggle('Too soon')
 	}
-	async parsePost(msg, post) {
+	async parsePost(msg) {
+		const {post} = this.client
 		if ('auth' in msg) {
 			if (!msg.auth
 				|| !client.ident
@@ -204,15 +206,16 @@ class ClientController {
 		m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000),
 			`${num}:${hash}`)
 	}
-	async writeThread(post, m) {
+	async writeThread(m) {
 		// Prevent thread spam
 		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, op)
-		await this.writePost(post)
+		await this.writePost(this.client.post)
 	}
 	async writePost(post) {
 		await r.table('posts').insert(post).run(rcon)
 	}
-	async writeReply(post) {
+	async writeReply() {
+		const {post} = this.client
 		await this.writePost(post)
 
 		// Bump the thread up to the top of the board
@@ -228,12 +231,13 @@ class ClientController {
 			null
 		).run(rcon)
 	}
-	async puglishPost(m, post) {
+	async puglishPost(m) {
 		// Set of currently open posts
 		m.sadd('liveposts', id)
 
 		// Threads have their own id as the op property
-		const channel = post.op || post.id
+		const {post} = this.client,
+			channel = threadNumber(post)
 		cache.cache(m, post.id, channel, this.board)
 		const msg = [[common.INSERT_POST, post]]
 
@@ -259,7 +263,8 @@ class ClientController {
 		await m.execAsync()
 	}
 	// Write this posts location data to the post we are linking
-	async backlinks(post, links) {
+	async backlinks(links) {
+		const {post} = this.client
 		for (let num in links) {
 			const [board, op] = links[num]
 
@@ -279,12 +284,19 @@ class ClientController {
 				[[common.UPDATE_POST, update]])
 		}
 	}
-	appendPost(frag, cb) {
-		const update = {}
-		amusement.roll_dice(frag, update)
-		async.waterfall([
+	async appendPost(frag) {
+		const [body, links] = await this.parseFragment(frag),
+			{post} = this.client
+		await getPost(post.id).update({
+			body: r.row('body').concat(body)
+		}).run(rcon)
 
-		], cb)
+		// Persist to memory as well
+		post.body = post.body.concat(body)
+		post.length += postLength(body)
+		await this.publish(redis.multi(), threadNumber(post), this.board,
+			[[common.UPDATE_POST, post.id, {body}]])
+		await this.backlinks(links)
 	}
 }
 
@@ -298,4 +310,23 @@ function formatPost(post) {
 
 function getPost(num) {
 	return r.table('posts').get(num)
+}
+
+// Needed because OP's do not have an 'op' property
+function threadNumber(post) {
+	return post.op || post.id
+}
+
+// Get length of post text body array + strings inside it
+function postLength(body) {
+	let length = body.length
+	for (let frag of body) {
+		if (typeof frag !== 'string')
+			continue
+
+		// String length can be zero due to filters
+		const wordLength = frag.length - 1
+		if (frag.length > 0)
+			length += wordLength
+	}
 }

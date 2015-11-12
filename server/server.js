@@ -188,20 +188,6 @@ function image_status(client_id, status) {
 	}
 }
 
-function valid_links(frag, ident) {
-	const links = {};
-	const onee = new common.OneeSama({
-		tamashii(num) {
-			const op = db.OPs[num];
-			if (op && caps.can_access_thread(ident, op))
-				links[num] = db.OPs[num];
-		}
-	});
-	// TEMP: Dummy model
-	onee.setModel({}).fragment(frag);
-	return _.isEmpty(links) ? null : links;
-}
-
 dispatcher[common.INSERT_POST] = (msg, client) => {
 	const insertSpec = [{
 		frag: 'opt string',
@@ -239,18 +225,13 @@ function update_post(frag, client) {
 	if (!post)
 		return false
 	const limit = common.MAX_POST_CHARS
-	if (frag.length > limit || post.body.length >= limit)
+	if (frag.length > limit || post.length  >= limit)
 		return false
-	const combined = post.body.length + frag.length
+	const combined = post.length + frag.length
 	if (combined > limit)
 		frag = frag.substr(0, combined - limit)
-	const extra = {
-		links: valid_links(frag, client.ident)
-	}
-	amusement.roll_dice(frag, extra)
-	post.body += frag
-	client.db.appendPost(frag, err =>
-		err && client.kotowaru(Muggle("Couldn't add text.", err)))
+	client.db.appendPost(frag).catch(err =>
+		client.kotowaru(Muggle("Couldn't add text.", err)))
 	return true
 }
 dispatcher[common.UPDATE_POST] = update_post;
