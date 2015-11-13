@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.6.0 - 2015-11-13
+###Fix
+- Page not loading on outdated Chrome versions
+
+###Add
+- Restore Vagrant support
+
 ##1.5.1 - 2015-11-10
 ##Fix
 - "hide" image thumbnail mode
