@@ -165,7 +165,7 @@ dispatcher[common.DESYNC] = function (msg, client) {
 };
 
 function setup_imager_relay(cb) {
-	var onegai = new imager.Onegai;
+	var onegai = new imager.ClientController;
 	onegai.relay_client_messages();
 	onegai.once('relaying', function () {
 		onegai.on('message', image_status);
@@ -250,24 +250,26 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 
 dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 	if (!check(['string'], msg))
-		return false;
-	var alloc = msg[0];
+		return false
 	if (!client.post || client.post.image)
-		return false;
+		return false
+	client.db.insertImage(msg[0]).catch(err =>
+		client.kotowaru(Muggle('Image insertion error:', err)))
+
 	imager.obtain_image_alloc(alloc, function (err, alloc) {
 		if (err)
-			return client.kotowaru(Muggle("Image lost.", err));
+			return client.kotowaru(Muggle("Image lost.", err))
 		if (!client.post || client.post.image)
-			return;
+			return
 		client.db.add_image(client.post, alloc, client.ident.ip,
 			function (err) {
 				if (err)
-					client.kotowaru(Muggle("Image insertion problem.", err));
+					client.kotowaru(Muggle("Image insertion problem.", err))
 			}
-		);
-	});
-	return true;
-};
+		)
+	})
+	return true
+}
 
 
 // Online count
@@ -382,7 +384,7 @@ async.series(
 		var writes = [];
 		if (!config.READ_ONLY) {
 			writes.push(yaku.finish_all.bind(yaku));
-			onegai = new imager.Onegai;
+			onegai = new imager.ClientController;
 			writes.push(onegai.delete_temporaries.bind(onegai));
 		}
 		async.series(writes, function (err) {

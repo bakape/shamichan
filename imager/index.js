@@ -8,7 +8,7 @@ const async = require('async'),
     path = require('path'),
     winston = require('winston');
 
-exports.Onegai = db.Onegai;
+exports.ClientController = db.ClientController;
 exports.config = config;
 
 const image_attrs = ('src thumb ext dims size MD5 SHA1 hash imgnm spoiler'
@@ -64,30 +64,6 @@ hooks.hook_sync('inlinePost', function (info) {
 	}
 });
 
-function publish(alloc, cb) {
-	let mvs = [];
-	for (let kind in alloc.tmps) {
-		mvs.push(etc.cpx.bind(etc,
-			media_path('tmp', alloc.tmps[kind]),
-			media_path(kind, alloc.image[kind])
-		));
-	}
-	async.parallel(mvs, cb);
-}
-
-function validate_alloc(alloc) {
-	if (!alloc || !alloc.image || !alloc.tmps)
-		return;
-	for (let dir in alloc.tmps) {
-		const fnm = alloc.tmps[dir];
-		if (!/^[\w_]+$/.test(fnm)) {
-			winston.warn("Suspicious filename: " + JSON.stringify(fnm));
-			return false;
-		}
-	}
-	return true;
-}
-
 function is_image(image) {
 	return image && image.src;
 }
@@ -116,26 +92,3 @@ function squish_MD5 (hash) {
 	return hash.toString('base64').replace(/\//g, '_').replace(/=*$/, '');
 }
 exports.squish_MD5 = squish_MD5;
-
-async function obtain_image_alloc (id) {
-	const onegai = new db.Onegai
-	onegai.obtain_image_alloc(id, (err, alloc) => {
-		if (err)
-			return cb(err)
-
-		if (validate_alloc(alloc))
-			cb(null, alloc)
-		else
-			cb("Invalid image alloc")
-	})
-}
-exports.obtain_image_alloc = obtain_image_alloc;
-
-async function commit_image_alloc (alloc) {
-	for (let kind in alloc.tmps) {
-		await etc.copyAsync(media_path('tmp', alloc.tmps[kind]),
-			media_path(kind, alloc.image[kind]))
-	}
-	await new db.Onegai.commit_image_alloc(alloc)
-}
-exports.commit_image_alloc = commit_image_alloc;

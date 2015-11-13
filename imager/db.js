@@ -12,7 +12,7 @@ const async = require('async'),
 const IMG_EXPIRY = 60;
 let redis = global.redis;
 
-class Onegai extends events.EventEmitter {
+class ClientController extends events.EventEmitter {
 	constructor() {
 		super();
 	}
@@ -96,29 +96,6 @@ class Onegai extends events.EventEmitter {
 	record_image_alloc(id, alloc, callback) {
 		redis.setex('image:' + id, IMG_EXPIRY, JSON.stringify(alloc), callback);
 	}
-	async obtain_image_alloc(id) {
-		const m = redis.multi(),
-			key = 'image:' + id
-		m.get(key)
-		m.setnx('lock:' + key, '1');
-		m.expire('lock:' + key, IMG_EXPIRY);
-		let [alloc, status] = await m.execAsync()
-		if (status !== '1')
-			throw Muggle('Image in use')
-		if (!alloc)
-			throw Muggle('Image lost')
-		alloc = JSON.parse(res[0])
-		alloc.id = id
-		return alloc
-	}
-	async commit_image_alloc(alloc) {
-		// We should already hold the lock at this point.
-		const key = 'image:' + alloc.id,
-			m = redis.multi()
-		m.del(key)
-		m.del('lock:' + key)
-		await m.execAsync()
-	}
 	client_message(client_id, msg) {
 		redis.publish('client:' + client_id, JSON.stringify(msg));
 	}
@@ -134,7 +111,7 @@ class Onegai extends events.EventEmitter {
 		});
 	}
 }
-exports.Onegai = Onegai;
+exports.ClientController = ClientController;
 
 // Remove expired duplicate image hashes
 function cleanUpDups() {

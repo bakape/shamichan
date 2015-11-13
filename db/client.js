@@ -60,13 +60,13 @@ class ClientController {
 
 		const m = redis.multi()
 		if (image) {
-			const alloc = await imager.obtain_image_alloc(image)
+			const alloc = await obtainImageAlloc(image)
 			post.image = alloc.image
 			if (isThread && post.image.pinky)
 				throw Muggle('Image is the wrong size')
 			delete post.image.pinky;
 			this.imageDuplicateHash(m, msg.image.hash, id)
-			await imager.commit_image_alloc(image)
+			await commitImageAlloc(image)
 		}
 
 		if (isThread)
@@ -246,11 +246,11 @@ class ClientController {
 		if (mnemonic)
 			msg.push({mod: mnemonic})
 		formatPost(post)
-		await this.publish(m, channel, this.board, msg)
+		await this.publish(m, channel, msg)
 	}
 	// Store message inside the replication log and publish to connected
 	// clients through redis
-	async publish(m, op, board, msg) {
+	async publish(m, op, msg) {
 		// Ensure thread exists, because the client in some cases publishes
 		// to external threads
 		if (await getPost(op).eq(null).not().run(rcon))
@@ -280,7 +280,7 @@ class ClientController {
 			if (await getPost(num).eq(null).run(rcon))
 				continue
 			await getPost(num).update(update).run(rcon)
-			await this.publish(redis.multi(), op, board,
+			await this.publish(redis.multi(), op,
 				[[common.UPDATE_POST, update]])
 		}
 	}
@@ -294,7 +294,7 @@ class ClientController {
 		// Persist to memory as well
 		post.body = post.body.concat(body)
 		post.length += postLength(body)
-		await this.publish(redis.multi(), threadNumber(post), this.board,
+		await this.publish(redis.multi(), threadNumber(post),
 			[[common.UPDATE_POST, post.id, {body}]])
 		await this.backlinks(links)
 	}
@@ -302,7 +302,6 @@ class ClientController {
 
 // Remove properties the client should not be seeing
 function formatPost(post) {
-	// Only used internally and should not be exposed to clients
 	for (let key of ['ip', 'deleted', 'imgDeleted']) {
 		delete post[key];
 	}
@@ -329,4 +328,44 @@ function postLength(body) {
 		if (frag.length > 0)
 			length += wordLength
 	}
+}
+
+
+async function obtainImageAlloc(id) {
+	const m = redis.multi(),
+		key = 'image:' + id
+	m.get(key)
+	m.setnx('lock:' + key, '1');
+	m.expire('lock:' + key, 60);
+	let [alloc, status] = await m.execAsync()
+	if (status !== '1')
+		throw Muggle('Image in use')
+	if (!alloc)
+		throw Muggle('Image lost')
+	alloc = JSON.parse(res[0])
+	alloc.id = id
+
+	// Validate allocation request
+	if (!alloc || !alloc.image || !alloc.tmps)
+		throw Muggle('Invalid image alloc')
+	for (let dir in alloc.tmps) {
+		const fnm = alloc.tmps[dir]
+		if (!/^[\w_]+$/.test(fnm))
+			throw Muggle('Suspicious filename: ' + JSON.stringify(fnm))
+	}
+	return alloc
+}
+
+async function commitImageAlloc(alloc) {
+	for (let kind in alloc.tmps) {
+		await etc.copyAsync(imager.media_path('tmp', alloc.tmps[kind]),
+			imager.media_path(kind, alloc.image[kind]))
+	}
+
+	// We should already hold the lock at this point.
+	const key = 'image:' + alloc.id,
+		m = redis.multi()
+	m.del(key)
+	m.del('lock:' + key)
+	await m.execAsync()
 }

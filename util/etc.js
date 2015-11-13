@@ -85,7 +85,7 @@ exports.cpx = cpx;
 
 async function copyAsync(src, dest) {
 	await fs.copyAsync(src, dest, {clobber: false}).catch(err =>
-		{throw Muggle('Couldn\'t copy file into place.', err)})
+		{throw Muggle('Couldn\'t copy file into place:', err)})
 }
 exports.copyAsync = copyAsync
 

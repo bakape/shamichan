@@ -36,7 +36,7 @@ exports.new_upload = new_upload;
 
 class ImageUpload {
 	constructor(client_id) {
-		this.db = new imagerDb.Onegai;
+		this.db = new imagerDb.ClientController;
 		this.client_id = client_id;
 	}
 	status(msg) {
