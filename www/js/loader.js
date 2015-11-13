@@ -27,7 +27,9 @@ Selects and loads the client files
 		// Template strings
 		'var a = "ba"; return `foo bar${a + "z"}` === "foo barbaz";',
 		// for...of
-		'var arr = [5]; for (var item of arr) return item === 5;'
+		'var arr = [5]; for (var item of arr) return item === 5;',
+		// Spread operator
+		'return Math.max(...[1, 2, 3]) === 3'
 	];
 	var legacy;
 	for (var i = 0; i < tests.length; i++) {

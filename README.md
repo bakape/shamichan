@@ -1,6 +1,6 @@
 Real-time imageboard.
 MIT licensed.
-Supported platforms: Linux, OS X (win64 pending)
+Supported platforms: Linux, OS X
 
 **NOTE: The git master branch contains the development version of the board.
 Crashes are not uncommon as new features are added and patched. Don't use the
@@ -8,11 +8,19 @@ master branch in production. For more stable revisions, please [download the
  latest release](https://github.com/bakape/meguca/releases).**
 
 ##Setup
-* Install dependencies listed below
+* Install [dependencies](#dependencies) listed below
 * Sign up for reCAPTCHA
 * Run `npm install` to install npm deps and compile C++ addons
 * Configure the files in `config/`
 * Run `node builder.js` to start an auto-reloading development server
+
+##Cross-platform development with Vagrant
+* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and 
+[Vagrant](http://www.vagrantup.com/downloads.html)
+* Open a shell in meguca's root directory and run `vagrant up`
+* Grab a coffee
+* Run `vagrant ssh` and `node builder`, once logged in. Your changes will 
+automatically sync both ways. [More info](https://www.vagrantup.com/)
 
 ##Automatic deployment
 Users less familiar with Linux and sysadmin procedures can paste the 

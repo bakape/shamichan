@@ -4,6 +4,7 @@
 .lock*
 .DS_Store
 .project
+.vagrant
 config/*.js
 error.log
 node_modules/
