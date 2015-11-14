@@ -51,7 +51,8 @@ else {
 // Detect major version and add extra transformers as needed
 const tranformers = [
 	'transform-es2015-destructuring', 'transform-es2015-parameters',
-	'transform-strict-mode', 'transform-async-to-generator'
+	'transform-strict-mode', 'transform-async-to-generator',
+	'transform-es2015-modules-commonjs'
 ]
 const version = +process.version.match(/^v(\d+)\./)[1]
 const features = {

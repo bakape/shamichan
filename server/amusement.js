@@ -9,7 +9,7 @@ const common = require('../common/index'),
 	fs = require('fs'),
 	hooks = require('../util/hooks'),
 	state  = require('./state'),
-	push = require('./okyaku').push,
+	push = require('./websockets').push,
 	radio = config.RADIO && require('./radio')
 
 // Construct hash command regex pattern

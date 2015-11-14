@@ -18,7 +18,7 @@ const _ = require('underscore'),
     imager = require('../imager'),
     Muggle = require('../util/etc').Muggle,
 	net = require('net'),
-    okyaku = require('./okyaku'),
+    websockets = require('./websockets'),
 	path = require('path'),
     persona = require('./persona'),
 	validate = require('./validate_message'),
@@ -33,7 +33,7 @@ try {
 catch (e) {}
 require('./time');
 
-let dispatcher = okyaku.dispatcher;
+let dispatcher = websockets.dispatcher;
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	const personaCookie = persona.extract_login_cookie(cookie.parse(msg.pop()));
@@ -42,7 +42,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 			if (!err)
 				_.extend(client.ident, ident);
 			if (!synchronize(msg, client))
-				client.kotowaru(Muggle("Bad protocol"));
+				client.disconnect(Muggle("Bad protocol"));
 		});
 		return true;
 	}
@@ -111,7 +111,7 @@ function linkToDatabase(board, syncs, live, client) {
 
 	function listening(errs) {
 		if (errs && errs.length >= count)
-			return client.kotowaru(Muggle("Couldn't sync to board."));
+			return client.disconnect(Muggle("Couldn't sync to board."));
 		else if (errs) {
 			for (let err of errs) {
 				delete client.watching[err];
@@ -212,7 +212,7 @@ dispatcher[common.INSERT_POST] = ([msg], client) => {
 		return false
 
 	client.db.insertPost(msg).catch(err =>
-		client.kotowaru(Muggle('Allocation failure', err)))
+		client.disconnect(Muggle('Allocation failure', err)))
 	return true
 }
 
@@ -230,7 +230,7 @@ function update_post(frag, client) {
 	if (combined > limit)
 		frag = frag.substr(0, combined - limit)
 	client.db.appendPost(frag).catch(err =>
-		client.kotowaru(Muggle("Couldn't add text.", err)))
+		client.disconnect(Muggle("Couldn't add text.", err)))
 	return true
 }
 dispatcher[common.UPDATE_POST] = update_post;
@@ -242,7 +242,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 		return true; /* whatever */
 	client.finish_post(function (err) {
 		if (err)
-			client.kotowaru(Muggle("Couldn't finish post.", err));
+			client.disconnect(Muggle("Couldn't finish post.", err));
 	});
 	return true;
 };
@@ -253,41 +253,22 @@ dispatcher[common.INSERT_IMAGE] = function (msg, client) {
 	if (!client.post || client.post.image)
 		return false
 	client.db.insertImage(msg[0]).catch(err =>
-		client.kotowaru(Muggle('Image insertion error:', err)))
+		client.disconnect(Muggle('Image insertion error:', err)))
 
 	imager.obtain_image_alloc(alloc, function (err, alloc) {
 		if (err)
-			return client.kotowaru(Muggle("Image lost.", err))
+			return client.disconnect(Muggle("Image lost.", err))
 		if (!client.post || client.post.image)
 			return
 		client.db.add_image(client.post, alloc, client.ident.ip,
 			function (err) {
 				if (err)
-					client.kotowaru(Muggle("Image insertion problem.", err))
+					client.disconnect(Muggle("Image insertion problem.", err))
 			}
 		)
 	})
 	return true
 }
-
-
-// Online count
-hooks.hook('clientSynced', function(info, cb){
-	info.client.send([
-		0,
-		common.ONLINE_COUNT,
-		Object.keys(STATE.clientsByIP).length
-	]);
-	cb(null);
-});
-
-STATE.emitter.on('change:clientsByIP', function(){
-	okyaku.push([
-		0,
-		common.ONLINE_COUNT,
-		Object.keys(STATE.clientsByIP).length
-	]);
-});
 
 // Update hot client variables on client request
 dispatcher[common.HOT_INJECTION] = function(msg, client){
@@ -325,7 +306,7 @@ function start_server() {
 
 	// Read global push messages from `scripts/send.js` and dispatch to all
 	// clients
-	db.on_pub('push', (chan, msg) => okyaku.push(JSON.parse(msg)));
+	db.on_pub('push', (chan, msg) => websockets.push(JSON.parse(msg)));
 
 	process.nextTick(processFileSetup);
 
@@ -339,10 +320,10 @@ function hot_reloader() {
 	STATE.reload_hot_resources(function (err) {
 		if (err)
 			return winston.error('Error trying to reload:', err);
-		okyaku.scan_client_caps();
+		websockets.scan_client_caps();
 		amusement.pushJS();
 		// Push new hot variable hash to all clients
-		okyaku.push([0, common.HOT_INJECTION, false, STATE.clientConfigHash]);
+		websockets.push([0, common.HOT_INJECTION, false, STATE.clientConfigHash]);
 		winston.info('Reloaded initial state.');
 	});
 }

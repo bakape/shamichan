@@ -9,7 +9,7 @@ const cache = require('./state').dbCache,
 	db = require('../db'),
 	mnemonics = require('bindings')('mnemonics'),
 	Muggle = require('../util/etc').Muggle,
-	okyaku = require('./okyaku'),
+	websockets = require('./websockets'),
 	winston = require('winston');
 
 const mnemonizer = new mnemonics.mnemonizer(config.SECURE_SALT);
@@ -24,7 +24,7 @@ function genMnemonic(ip) {
 }
 exports.genMnemonic = genMnemonic;
 
-const dispatcher = okyaku.dispatcher,
+const dispatcher = websockets.dispatcher,
 	redis = global.redis;
 
 function modHandler(kind, auth) {
@@ -34,7 +34,7 @@ function modHandler(kind, auth) {
 		common.checkAuth(auth, client.ident)
 			&& check('id...', nums)
 			&& client.db.modHandler(kind, nums, err =>
-				err && client.kotowaru(Muggle(errMsg, err)));
+				err && client.disconnect(Muggle(errMsg, err)));
 }
 
 modHandler('SPOILER_IMAGES', 'janitor');
@@ -48,7 +48,7 @@ dispatcher[common.NOTIFICATION] = function (msg, client) {
 	msg = msg[0];
 	if (!common.checkAuth('admin', client.ident) || !check('string', msg))
 		return false;
-	okyaku.push([0, common.NOTIFICATION, _.escape(msg)]);
+	websockets.push([0, common.NOTIFICATION, _.escape(msg)]);
 	return true;
 };
 
@@ -85,7 +85,7 @@ dispatcher[common.BAN] = function (msg, client) {
 	)
 		return false;
 	client.db.ban(msg, err =>
-		err && client.kotowaru(Muggle('Couldn\'t ban:', err)));
+		err && client.disconnect(Muggle('Couldn\'t ban:', err)));
 	return true;
 };
 
@@ -95,7 +95,7 @@ dispatcher[common.UNBAN] = function (msg, client) {
 	)
 		return false;
 	client.db.unban(msg[0], err =>
-		err && client.kotowaru(Muggle('Couldn\'t unban:', err)));
+		err && client.disconnect(Muggle('Couldn\'t unban:', err)));
 	return true;
 };
 

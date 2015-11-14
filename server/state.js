@@ -15,13 +15,23 @@ const _ = require('underscore'),
 	lang = require('../lang'),
 	options = require('../common/options'),
 	path = require('path'),
-	vm = require('vm');
+	vm = require('vm'),
+	websockets = require('./websockets')
 
 _.templateSettings = {
 	interpolate: /\{\{(.+?)}}/g
 };
 
-exports.emitter = new (require('events').EventEmitter);
+const emitter = exports.emitter = new (require('events').EventEmitter)
+
+emitter.on('change:clients', () => {
+	const IPs = new Set()
+	for (let client of clients) {
+		IPs.add(client.ident.ip)
+	}
+	exports.IPCount = IPs.size
+	websockets.push(IPs.size)
+})
 
 exports.dbCache = {
 	OPs: {},
@@ -33,8 +43,33 @@ exports.dbCache = {
 const RES = exports.resources = {};
 exports.clientHotConfig = {};
 exports.clientConfigHash = '';
-exports.clients = {};
-exports.clientsByIP = {};
+const clients = exports.clients = new Set()
+
+/**
+ * Counts number of unique connected IPs and triigers change event, if needed
+ */
+export function countIPs() {
+	const old = exports.IPcount,
+		IPs = new Set()
+	clients.forEach(client => IPs.add(client.ident.ip))
+	if (IPs.size !== old) {
+		exports.IPCount = IPs.size
+		emitter.emit('change:clientCount', IPs.size)
+	}
+}
+
+/**
+ * Counts the number of connected IPs
+ * @returns {int}
+ */
+function IPCount() {
+	const IPs = new Set()
+	for (let client of clients) {
+		IPs.add(client.ident.ip)
+	}
+	return IPs.size
+}
+exports.IPcount = IPCount
 
 const clientConfig = exports.clientConfig = _.pick(config,
 	'USE_WEBSOCKETS', 'SOCKET_PATH', 'SOCKET_URL', 'DEBUG', 'READ_ONLY',

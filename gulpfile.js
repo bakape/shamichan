@@ -73,7 +73,8 @@ function buildClient() {
 				'transform-es2015-parameters',
 				'transform-es2015-sticky-regex',
 				'transform-es2015-unicode-regex',
-				'transform-strict-mode'
+				'transform-strict-mode',
+				'transform-es2015-modules-commonjs'
 			]
 		})
 	build('client', b, './www/js');

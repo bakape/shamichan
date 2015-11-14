@@ -5,7 +5,7 @@ var admin = require('./admin'),
 	db = require('../db'),
 	lang = require('../lang'),
 	msgcheck = require('./validate_message'),
-	okyaku = require('./okyaku'),
+	websockets = require('./websockets'),
 	recaptcha = require('recaptcha'),
 	winston = require('winston');
 
@@ -125,7 +125,7 @@ function image_preview(info) {
 	return {src: src, width: tw, height: th, title: title};
 }
 
-okyaku.dispatcher[common.REPORT_POST] = function (msg, client) {
+websockets.dispatcher[common.REPORT_POST] = function (msg, client) {
 	if (!msgcheck(['id', 'string', 'string'], msg))
 		return false;
 

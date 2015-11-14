@@ -4,7 +4,7 @@
 
 var common = require('../common'),
 	hook =require('../util/hooks').hook,
-	OK = require('./okyaku'),
+	websockets = require('./websockets'),
 	request = require('request');
 
 var json,
@@ -28,7 +28,7 @@ function parse(main) {
 	if (newJSON != json) {
 		json = newJSON;
 		// Push new radio info to clients
-		OK.push([0, common.RADIO, json]);
+		websockets.push([0, common.RADIO, json]);
 	}
 
 	// Test song name against regex
@@ -61,7 +61,7 @@ hook('clientSynced', function(info, cb) {
 });
 
 // Send data to client on request
-OK.dispatcher[common.RADIO] = function(msg, client) {
+websockets.dispatcher[common.RADIO] = function(msg, client) {
 	client.send([0, common.RADIO, json]);
 	return true;
 };
