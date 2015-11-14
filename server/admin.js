@@ -3,7 +3,7 @@ Server-side administration/moderaion module
  */
 
 const cache = require('./state').dbCache,
-	check = require('./msgcheck'),
+	check = require('./validate_message'),
     common = require('../common'),
 	config = require('../config'),
 	db = require('../db'),

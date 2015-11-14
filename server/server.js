@@ -9,7 +9,6 @@ const _ = require('underscore'),
     amusement = require('./amusement'),
     async = require('async'),
     caps = require('./caps'),
-    check = require('./msgcheck'),
     common = require('../common/index'),
 	config = require('../config'),
 	cookie = require('cookie'),
@@ -22,6 +21,7 @@ const _ = require('underscore'),
     okyaku = require('./okyaku'),
 	path = require('path'),
     persona = require('./persona'),
+	validate = require('./validate_message'),
     winston = require('winston');
 
 require('../imager/daemon'); // preload and confirm it works
@@ -51,7 +51,7 @@ dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 };
 
 function synchronize(msg, client) {
-	if (!check(['id', 'string', 'id=>nat', 'boolean'], msg))
+	if (!validate(['id', 'string', 'id=>nat', 'boolean'], msg))
 		return false;
 	const id = msg[0];
 	if (id in STATE.clients) {
@@ -152,7 +152,7 @@ function linkToDatabase(board, syncs, live, client) {
 
 // Switch the serverside syncs, when client switches them with HTML5 History
 dispatcher[common.RESYNC] = function(msg, client) {
-	if (!check(['string', 'id=>nat', 'boolean'], msg))
+	if (!validate(['string', 'id=>nat', 'boolean'], msg))
 		return false;
 	return linkToDatabase(msg[0], msg[1], msg[2], client);
 };
@@ -174,7 +174,7 @@ function setup_imager_relay(cb) {
 }
 
 function image_status(client_id, status) {
-	if (!check('id', client_id))
+	if (!validate('id', client_id))
 		return;
 	var client = STATE.clients[client_id];
 	if (client) {
@@ -188,8 +188,8 @@ function image_status(client_id, status) {
 	}
 }
 
-dispatcher[common.INSERT_POST] = (msg, client) => {
-	const insertSpec = [{
+dispatcher[common.INSERT_POST] = ([msg], client) => {
+	const insertSpec = {
 		frag: 'opt string',
 		image: 'opt string',
 		nonce: 'string',
@@ -198,10 +198,9 @@ dispatcher[common.INSERT_POST] = (msg, client) => {
 		email: 'opt string',
 		auth: 'opt string',
 		subject: 'opt string'
-	}]
-	if (!check(insertSpec, msg))
+	}
+	if (!validate.object(insertSpec, msg))
 		return false
-	msg = msg[0]
 	const {frag} = msg
 	if (client.post)
 		return update_post(frag, client)
@@ -237,7 +236,7 @@ function update_post(frag, client) {
 dispatcher[common.UPDATE_POST] = update_post;
 
 dispatcher[common.FINISH_POST] = function (msg, client) {
-	if (!check([], msg))
+	if (!validate([], msg))
 		return false;
 	if (!client.post)
 		return true; /* whatever */
@@ -249,7 +248,7 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 };
 
 dispatcher[common.INSERT_IMAGE] = function (msg, client) {
-	if (!check(['string'], msg))
+	if (!validate(['string'], msg))
 		return false
 	if (!client.post || client.post.image)
 		return false
@@ -292,7 +291,7 @@ STATE.emitter.on('change:clientsByIP', function(){
 
 // Update hot client variables on client request
 dispatcher[common.HOT_INJECTION] = function(msg, client){
-	if (!check(['boolean'], msg) || msg[0] !== true)
+	if (!validate(['boolean'], msg) || msg[0] !== true)
 		return false;
 	client.send([0, common.HOT_INJECTION, 1, STATE.clientConfigHash,
 		STATE.clientHotConfig]);
