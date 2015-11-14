@@ -202,6 +202,7 @@ class ClientController {
 		parsed.push([common.tupleTypes.link, ...link])
 		return true
 	}
+	// Write hash of image to later check for duplicates against
 	imageDuplicateHash(m, hash, num) {
 		m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000),
 			`${num}:${hash}`)
@@ -209,14 +210,14 @@ class ClientController {
 	async writeThread(m) {
 		// Prevent thread spam
 		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, op)
-		await this.writePost(this.client.post)
+		await this.writePost()
 	}
-	async writePost(post) {
-		await r.table('posts').insert(post).run(rcon)
+	async writePost() {
+		await r.table('posts').insert(this.client.post).run(rcon)
 	}
 	async writeReply() {
 		const {post} = this.client
-		await this.writePost(post)
+		await this.writePost()
 
 		// Bump the thread up to the top of the board
 		if (common.is_sage(post.email))
@@ -231,6 +232,7 @@ class ClientController {
 			null
 		).run(rcon)
 	}
+	// Publish newly created post to live clients
 	async puglishPost(m) {
 		// Set of currently open posts
 		m.sadd('liveposts', id)
@@ -262,7 +264,7 @@ class ClientController {
 		m.publish(op, msg)
 		await m.execAsync()
 	}
-	// Write this posts location data to the post we are linking
+	// Write this post's location data to the post we are linking
 	async backlinks(links) {
 		const {post} = this.client
 		for (let num in links) {
@@ -284,6 +286,7 @@ class ClientController {
 				[[common.UPDATE_POST, update]])
 		}
 	}
+	// Append to the text body of a post
 	async appendPost(frag) {
 		const [body, links] = await this.parseFragment(frag),
 			{post} = this.client
@@ -307,6 +310,7 @@ function formatPost(post) {
 	}
 }
 
+// Shorthand
 function getPost(num) {
 	return r.table('posts').get(num)
 }
@@ -330,7 +334,7 @@ function postLength(body) {
 	}
 }
 
-
+// Read image allocation data from token id
 async function obtainImageAlloc(id) {
 	const m = redis.multi(),
 		key = 'image:' + id
@@ -356,6 +360,7 @@ async function obtainImageAlloc(id) {
 	return alloc
 }
 
+// Copy image files from temporary folders to permanent served ones
 async function commitImageAlloc(alloc) {
 	for (let kind in alloc.tmps) {
 		await etc.copyAsync(imager.media_path('tmp', alloc.tmps[kind]),
