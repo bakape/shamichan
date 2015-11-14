@@ -70,7 +70,7 @@ class Subscription extends EventEmitter {
 	}
 
 	/**
-	 * Kill Subsction() after delay, if there are no listeners
+	 * Kill Subscription() after delay, if there are no listeners
 	 */
 	checkCount() {
 		if (this.countListeners())
@@ -82,7 +82,7 @@ class Subscription extends EventEmitter {
 	}
 
 	/**
-	 * Summ the listeners counts on all subchannlls
+	 * Summ the listeners counts on all subchannels
 	 * @returns {int}
 	 */
 	countListeners() {

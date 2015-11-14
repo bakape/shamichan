@@ -130,7 +130,6 @@ class ClientController {
 
 	/**
 	 * Check if IP has not created a thread recently to prevent spam
-	 * @returns {Promise}
 	 */
 	async checkThrottle() {
 		// So we can spam new threads in debug mode
