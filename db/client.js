@@ -1,9 +1,4 @@
-/*
- Database comtroller for each connected client
- */
-
-const _ = require('underscore'),
-	admin = require('../server/admin'),
+const admin = require('../server/admin'),
 	amusement = require('../server/amusement'),
 	cache = require('./cache'),
 	common = require('../common'),
@@ -16,12 +11,22 @@ const _ = require('underscore'),
 	state = require('../server/state'),
 	tripcode = require('bindings')('tripcode')
 
+/** Performs approprite database I/O in response to client websocket messages */
 class ClientController {
+	/**
+	 * Create a database controller
+	 * @param {Client} client
+	 */
 	constructor(client) {
 		this.client = client
 		this.board = client.board
 		this.ident = client.ident
 	}
+
+	/**
+	 * Insert post into the database
+	 * @param {Array} msg
+	 */
 	async insertPost(msg) {
 		if (config.READ_ONLY)
 			throw Muggle('Can\'t post right now')
@@ -76,12 +81,24 @@ class ClientController {
 		await this.puglishPost(m)
 		await this.backlinks(links)
 	}
+
+	/**
+	 * Perform reply-specific validations
+	 * @param {int} op
+	 * @param {Object} post
+	 */
 	async prepareReply(op, post) {
 		if (await cache.validateOP(op, this.board) === false)
 			throw Muggle('Thread does not exist')
 		await this.checkThrottle()
 		post.op = op
 	}
+
+	/**
+	 * Perform thread-specific validations and parsing
+	 * @param {Object} msg
+	 * @param {Object} post
+	 */
 	async prepareThread(msg, post) {
 		if (!msg.image)
 			throw Muggle('Image missing')
@@ -101,11 +118,20 @@ class ClientController {
 		// pass them to the client, if they are behind
 		post.history = []
 	}
+
+	/**
+	 * Ensure a thread is not locked
+	 * @param {int} op
+	 */
 	async checkThreadLocked(op) {
 		if (await getPost(op)('locked').default(false).run(rcon))
 			throw Muggle('Thread is locked')
 	}
-	// Check if IP has not created a thread recently to prevent spam
+
+	/**
+	 * Check if IP has not created a thread recently to prevent spam
+	 * @returns {Promise}
+	 */
 	async checkThrottle() {
 		// So we can spam new threads in debug mode
 		if (config.DEBUG)
@@ -113,6 +139,12 @@ class ClientController {
 		if (await redis.existsAsync(`ip:${this.ident.ip}:throttle`))
 			throw Muggle('Too soon')
 	}
+
+	/**
+	 * Parse message contents into post object and validate
+	 * @param msg
+	 * @returns {[Array,Object]}
+	 */
 	async parsePost(msg) {
 		const {post} = this.client
 		if ('auth' in msg) {
@@ -157,8 +189,12 @@ class ClientController {
 
 		return await this.parseFragment(body)
 	}
-	// Split text into words and replace post links and hash commands with
-	// tuples
+
+	/**
+	 * Parse text body message fragment string
+	 * @param {string} frag
+	 * @returns {[Array,Object]}
+	 */
 	async parseFragment(frag) {
 		const m = frag.match(/>>\d+/g)
 		frag = frag.split(' ')
@@ -187,7 +223,14 @@ class ClientController {
 			|| parsed.push(word))
 		return [parsed, confirmed]
 	}
-	// Insert links to other posts as tuples into the text body array
+
+	/**
+	 * Insert links to other posts as tuples into the text body array
+	 * @param {string} word - Word to parse
+	 * @param {Array} parsed - Array to fill with parse results
+	 * @param {Object} confirmed - Object of confirmed links to posts
+	 * @returns {boolean} - Link matched
+	 */
 	injectLink(word, parsed, confirmed) {
 		const m = word.match(/^(>{2,})(\d+)$/)
 		if (!m)
@@ -202,19 +245,39 @@ class ClientController {
 		parsed.push([common.tupleTypes.link, ...link])
 		return true
 	}
-	// Write hash of image to later check for duplicates against
+
+	/**
+	 * Write the hash of an image to databse to later check for duplicates
+	 * against
+	 * @param {redis.multi} m
+	 * @param {string} hash
+	 * @param {int} num
+	 */
 	imageDuplicateHash(m, hash, num) {
 		m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000),
 			`${num}:${hash}`)
 	}
+
+	/**
+	 * Write thread to database
+	 * @param {redis.multi} m
+	 */
 	async writeThread(m) {
 		// Prevent thread spam
 		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, op)
 		await this.writePost()
 	}
+
+	/**
+	 * Write post to database
+	 */
 	async writePost() {
 		await r.table('posts').insert(this.client.post).run(rcon)
 	}
+
+	/**
+	 * Write reply to database and bump parent thread, if needed
+	 */
 	async writeReply() {
 		const {post} = this.client
 		await this.writePost()
@@ -232,7 +295,11 @@ class ClientController {
 			null
 		).run(rcon)
 	}
-	// Publish newly created post to live clients
+
+	/**
+	 * Publish newly created post to live clients
+	 * @param {redis.multi} m
+	 */
 	async puglishPost(m) {
 		// Set of currently open posts
 		m.sadd('liveposts', id)
@@ -250,8 +317,14 @@ class ClientController {
 		formatPost(post)
 		await this.publish(m, channel, msg)
 	}
-	// Store message inside the replication log and publish to connected
-	// clients through redis
+
+	/**
+	 *  Store message inside the replication log and publish to connected
+	 *  clients through redis
+	 * @param {redis.multi} m
+	 * @param {int} op
+	 * @param {[[]]} msg
+	 */
 	async publish(m, op, msg) {
 		// Ensure thread exists, because the client in some cases publishes
 		// to external threads
@@ -264,7 +337,11 @@ class ClientController {
 		m.publish(op, msg)
 		await m.execAsync()
 	}
-	// Write this post's location data to the post we are linking
+
+	/**
+	 * Write this post's location data to the post we are linking
+	 * @param {Object} links
+	 */
 	async backlinks(links) {
 		const {post} = this.client
 		for (let num in links) {
@@ -286,7 +363,12 @@ class ClientController {
 				[[common.UPDATE_POST, update]])
 		}
 	}
-	// Append to the text body of a post
+
+	/**
+	 * Append to the text body of a post
+	 * @param {string} frag
+	 * @returns {Promise}
+	 */
 	async appendPost(frag) {
 		const [body, links] = await this.parseFragment(frag),
 			{post} = this.client
@@ -303,24 +385,39 @@ class ClientController {
 	}
 }
 
-// Remove properties the client should not be seeing
+/**
+ * Remove properties the client should not be seeing
+ * @param {Object} post
+ */
 function formatPost(post) {
 	for (let key of ['ip', 'deleted', 'imgDeleted']) {
 		delete post[key];
 	}
 }
 
-// Shorthand
+/**
+ * Shorthand for post retrieval
+ * @param num
+ * @returns {*}
+ */
 function getPost(num) {
 	return r.table('posts').get(num)
 }
 
-// Needed because OP's do not have an 'op' property
+/**
+ * Detect a posts parent thread. Needed because OP's do not have an 'op'
+ * property.
+ * @param {Object} post
+ * @returns {int}
+ */
 function threadNumber(post) {
 	return post.op || post.id
 }
 
-// Get length of post text body array + strings inside it
+/**
+ * Get length of post text body array + strings inside it
+ * @param {Array} body
+ */
 function postLength(body) {
 	let length = body.length
 	for (let frag of body) {
@@ -334,7 +431,11 @@ function postLength(body) {
 	}
 }
 
-// Read image allocation data from token id
+/**
+ * Read image allocation data with supplied id from database
+ * @param {string} id
+ * @returns {Object}
+ */
 async function obtainImageAlloc(id) {
 	const m = redis.multi(),
 		key = 'image:' + id
@@ -360,7 +461,10 @@ async function obtainImageAlloc(id) {
 	return alloc
 }
 
-// Copy image files from temporary folders to permanent served ones
+/**
+ * Copy image files from temporary folders to permanent served ones
+ * @param {Object} alloc
+ */
 async function commitImageAlloc(alloc) {
 	for (let kind in alloc.tmps) {
 		await etc.copyAsync(imager.media_path('tmp', alloc.tmps[kind]),

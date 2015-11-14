@@ -14,7 +14,10 @@ bluebird.promisifyAll(redisDB.Multi.prototype)
 const dbVersion = 2
 let rcon
 
-// Buffers commands, so no need for callback
+/**
+ * Creates redis client. Buffers commands, so no need for callback.
+ * @returns {redis}
+ */
 function redisClient() {
 	const client = redisDB.createClient({
 		host: config.redis_host,
@@ -27,7 +30,9 @@ exports.redisClient = redisClient
 const redis = global.redis = redisClient()
 redis.on('error', err => winston.error('Redis error:', err))
 
-// Establish rethinkDB connection and intialize the database
+/**
+ * Establish rethinkDB connection and intialize the database, if needed.
+ */
 async function init() {
 	rcon = global.rcon = await r.connect({
 		host: config.rethink_host,
@@ -49,6 +54,9 @@ async function init() {
 }
 exports.init = init
 
+/**
+ * Create needed tables and initial documents
+ */
 async function initDB() {
 	await r.dbCreate('meguca').run(rcon)
 	rcon.use('meguca')
@@ -64,6 +72,11 @@ async function initDB() {
 	}
 }
 
+/**
+ * Verify the version of the database is compatible or throw error
+ * @param {int} version
+ * @param {string} dbms - Name of DBMS
+ */
 function verifyVersion(version, dbms) {
 	if (version !== dbVersion) {
 		throw new Error(`Incompatible ${dbms} database version: ${version} `
