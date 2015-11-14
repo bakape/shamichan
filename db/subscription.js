@@ -1,16 +1,22 @@
-/*
-Subsctiption handler
- */
-
 const common = require('../common'),
 	index = require('./index'),
 	{EventEmitter} = require('events'),
 	winston = require('winston')
 
+/**
+ * Listens to redis channels and parses and dispatches messages to client by access right
+ */
 class Subscription extends EventEmitter {
+	/**
+	 * Construct new Redis listener/parser
+	 * @param {int} key
+	 */
 	constructor(key) {
 		super()
 		this.setMaxListeners(0)
+
+		// Redis will swicth into dedicated subscription mode on
+		// .subscribe(), so we need a separate client for each subscription
 		const redis = index.redisClient()
 		redis.on('error', err => this.onError(err))
 		redis.on('message', msg => this.onMessage(msg))
@@ -18,20 +24,38 @@ class Subscription extends EventEmitter {
 		this.redis = redis
 		this.key = key
 	}
+
+	/**
+	 * Log error and kill listener
+	 * @param {Error} err
+	 */
 	onError(err) {
 		winston.error('Subscription error: ', err)
 		this.commitSudoku()
 	}
-	// Remove all references to allow instance garbage collection
+
+	/**
+	 * Remove all references to allow instance garbage collection
+	 */
 	commitSudoku() {
 		this.removeAllListeners().redis.unsubscribe()
 		delete Subscription.keys[this.key]
 	}
+
+	/**
+	 * Subscribe to an existing Subscription() object for this channel or
+	 * create a new one, if none
+	 * @param {int} thread
+	 * @param {Client} client
+	 */
 	static get(thread, client) {
-		// If an instance listening to this redis channel already exists, we
-		// can just use that, instead of creating a new one.
 		(Subscription.keys[thread] || new Subscription(thread)).listen(client)
 	}
+
+	/**
+	 * Listen to messages on the appriate priveledge channel
+	 * @param {Client} client
+	 */
 	listen(client) {
 		let priv = 'normal'
 		if (common.checkAuth('moderator', client.ident))
@@ -44,6 +68,10 @@ class Subscription extends EventEmitter {
 		client.once('close', () =>
 			this.removeListener(priv, handler).checkCount())
 	}
+
+	/**
+	 * Kill Subsction() after delay, if there are no listeners
+	 */
 	checkCount() {
 		if (this.countListeners())
 			return
@@ -52,6 +80,11 @@ class Subscription extends EventEmitter {
 		this.idleOutTimer = setTimeout(() =>
 			!this.countListeners() && this.commitSudoku(), 30000)
 	}
+
+	/**
+	 * Summ the listeners counts on all subchannlls
+	 * @returns {int}
+	 */
 	countListeners() {
 		let count = 0
 		for (let priv of ['normal', 'janny', 'mod']) {
@@ -59,6 +92,12 @@ class Subscription extends EventEmitter {
 		}
 		return count
 	}
+
+	/**
+	 * Parse Redis subscription message and emit appropriate message to all
+	 * access levels
+	 * @param {string} unparsed
+	 */
 	onMessage(unparsed) {
 		const [msg, extra] = JSON.parse(unparsed)
 		this.emit('normal', msg)
