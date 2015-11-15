@@ -66,12 +66,12 @@ class ClientController {
 		const m = redis.multi()
 		if (image) {
 			const alloc = await obtainImageAlloc(image)
-			post.image = alloc.image
-			if (isThread && post.image.pinky)
+			image = post.image = alloc.image
+			if (isThread && image.pinky)
 				throw Muggle('Image is the wrong size')
-			delete post.image.pinky;
-			this.imageDuplicateHash(m, msg.image.hash, id)
-			await commitImageAlloc(image)
+			delete image.pinky;
+			this.imageDuplicateHash(m, image.hash, id)
+			await commitImageAlloc(alloc)
 		}
 
 		if (isThread)
@@ -271,7 +271,12 @@ class ClientController {
 	 * Write post to database
 	 */
 	async writePost() {
-		await r.table('posts').insert(this.client.post).run(rcon)
+		const {post} = this.client
+
+		// Useless client-side
+		if (post.image)
+			delete post.image.hash
+		await r.table('posts').insert(post).run(rcon)
 	}
 
 	/**
@@ -327,7 +332,7 @@ class ClientController {
 	async publish(m, op, msg) {
 		// Ensure thread exists, because the client in some cases publishes
 		// to external threads
-		if (await getPost(op).eq(null).not().run(rcon))
+		if (await postsExists(op))
 			return
 		msg = JSON.stringify(msg)
 		await getPost(op).update({
@@ -382,6 +387,32 @@ class ClientController {
 			[[common.UPDATE_POST, post.id, {body}]])
 		await this.backlinks(links)
 	}
+
+	/**
+	 * Insert image into an existing post
+	 * @param {string} id
+	 */
+	async insertImage(id) {
+		const alloc = await obtainImageAlloc(id),
+			{post} = client
+		if (!post.op)
+			throw Muggle('Can\'t add another image to an OP')
+		const {image} = alloc
+		if (!image.pinky)
+			throw Muggle('Image is wrong size')
+		delete image.pinky
+		if (!(await postsExists(post.id)))
+			throw Muggle('Post does not exist')
+
+		await commitImageAlloc(alloc)
+		const m = redis.multi()
+		this.imageDuplicateHash(m, image.hash, post.id)
+		await getPost(post.id).update({image}).run(rcon)
+
+		// Useless client-side
+		delete image.hash
+		await this.publish(m, post.op, [[common.UPDATE_POST, {image}]])
+	}
 }
 
 /**
@@ -401,6 +432,14 @@ function formatPost(post) {
  */
 function getPost(num) {
 	return r.table('posts').get(num)
+}
+
+/**
+ * Check if post exists in the database
+ * @param {int} id
+ */
+async function postsExists(id) {
+    await getPost(num).eq(null).not().run(rcon)
 }
 
 /**

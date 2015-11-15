@@ -140,7 +140,7 @@ function linkToDatabase(board, syncs, live, client) {
 			info.op = op;
 		else
 			info.board = board;
-		
+
 		hooks.trigger('clientSynced', info, function (err) {
 			if (err)
 				winston.error(err);
@@ -247,26 +247,11 @@ dispatcher[common.FINISH_POST] = function (msg, client) {
 	return true;
 };
 
-dispatcher[common.INSERT_IMAGE] = function (msg, client) {
-	if (!validate(['string'], msg))
+dispatcher[common.INSERT_IMAGE] = function ([msg], client) {
+	if (typeof msg !== 'string' || !client.post || client.post.image)
 		return false
-	if (!client.post || client.post.image)
-		return false
-	client.db.insertImage(msg[0]).catch(err =>
+	client.db.insertImage(msg).catch(err =>
 		client.disconnect(Muggle('Image insertion error:', err)))
-
-	imager.obtain_image_alloc(alloc, function (err, alloc) {
-		if (err)
-			return client.disconnect(Muggle("Image lost.", err))
-		if (!client.post || client.post.image)
-			return
-		client.db.add_image(client.post, alloc, client.ident.ip,
-			function (err) {
-				if (err)
-					client.disconnect(Muggle("Image insertion problem.", err))
-			}
-		)
-	})
 	return true
 }
 
