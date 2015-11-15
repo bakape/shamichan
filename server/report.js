@@ -23,9 +23,8 @@ const ERRORS = {
 var safe = common.safe;
 
 function report(reporter_ident, op, num, cb) {
-
-	var board = caps.can_access_thread(reporter_ident, op);
-	if (!board)
+	var board = db.boards[op]
+	if (!caps.can_access_thread(reporter_ident, op))
 		return cb("Post does not exist.");
 
 	var reporter = admin.genMnemonic(reporter_ident.ip) || '???';
@@ -175,4 +174,3 @@ okyaku.dispatcher[common.REPORT_POST] = function (msg, client) {
 		return true;
 	}
 };
-
