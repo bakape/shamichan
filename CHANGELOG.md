@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.6.1 - 2015-11-15
+###Fix
+- Post links in report emails
+
 ##1.6.0 - 2015-11-13
 ###Fix
 - Page not loading on outdated Chrome versions
@@ -63,7 +67,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 - Soundcloud embedding under HTTPS
 
 ##Changed
-- JS injections now execute on all thread's and board's sections, articles 
+- JS injections now execute on all thread's and board's sections, articles
 and post forms
 
 ##1.2.5 - 2015-10-04
@@ -127,7 +131,7 @@ and post forms
 - Debug mode forcing client-side with `debug=true` query string
 - Compatability bundle for older, hipster and outright retarded browsers
 - Scroll to post after contracting images taller than the viewport
-- `scripts/send` for pushing arbitrary messages to all client from the 
+- `scripts/send` for pushing arbitrary messages to all client from the
 server's shell
 - Box shadow to upper layer elements
 - Loading indicator
