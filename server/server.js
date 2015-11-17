@@ -235,17 +235,13 @@ function update_post(frag, client) {
 }
 dispatcher[common.UPDATE_POST] = update_post;
 
-dispatcher[common.FINISH_POST] = function (msg, client) {
-	if (!validate([], msg))
-		return false;
-	if (!client.post)
-		return true; /* whatever */
-	client.finish_post(function (err) {
-		if (err)
-			client.disconnect(Muggle("Couldn't finish post.", err));
-	});
+dispatcher[common.FINISH_POST] = ([msg], client) => {
+    if (typeof msg !== 'string')
+        return false
+    client.db.finishPost().catch(err =>
+        client.disconnect(Muggle("Couldn't finish post", err)))
 	return true;
-};
+}
 
 dispatcher[common.INSERT_IMAGE] = function ([msg], client) {
 	if (typeof msg !== 'string' || !client.post || client.post.image)

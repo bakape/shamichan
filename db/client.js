@@ -12,7 +12,7 @@ const admin = require('../server/admin'),
 	tripcode = require('bindings')('tripcode')
 
 /** Performs approprite database I/O in response to client websocket messages */
-class ClientController {
+export default class ClientController {
 	/**
 	 * Create a database controller
 	 * @param {Client} client
@@ -37,7 +37,8 @@ class ClientController {
 			ip: this.ident.ip,
 			time: Date.now(),
 			nonce: msg.nonce,
-			board: this.board
+			board: this.board,
+			editing: true
 		}
 		if (image && !/^\d+$/.test(image))
 			throw Muggle('Expired image token')
@@ -305,12 +306,12 @@ class ClientController {
 	 * @param {redis.multi} m
 	 */
 	async puglishPost(m) {
-		// Set of currently open posts
-		m.sadd('liveposts', id)
-
-		// Threads have their own id as the op property
 		const {post} = this.client,
+			// Threads have their own id as the op property
 			channel = threadNumber(post)
+
+		// Set of currently open posts
+		m.sadd('liveposts', post.id)
 		cache.cache(m, post.id, channel, this.board)
 		const msg = [[common.INSERT_POST, post]]
 
@@ -363,8 +364,7 @@ class ClientController {
 			if (await getPost(num).eq(null).run(rcon))
 				continue
 			await getPost(num).update(update).run(rcon)
-			await this.publish(redis.multi(), op,
-				[[common.UPDATE_POST, update]])
+			await this.publish(redis.multi(), op, updateMessage(num, update))
 		}
 	}
 
@@ -384,7 +384,7 @@ class ClientController {
 		post.body = post.body.concat(body)
 		post.length += postLength(body)
 		await this.publish(redis.multi(), threadNumber(post),
-			[[common.UPDATE_POST, post.id, {body}]])
+			updateMessage(post.id, {body}))
 		await this.backlinks(links)
 	}
 
@@ -411,7 +411,23 @@ class ClientController {
 
 		// Useless client-side
 		delete image.hash
-		await this.publish(m, post.op, [[common.UPDATE_POST, {image}]])
+		await this.publish(m, threadNumber(post.id),
+			updateMessage(post.id, {image})
+	}
+
+	/**
+	 * Finish the current open post
+	 */
+	async finishPost() {
+		const {id} = this.client.post,
+			update = {editing: false}
+		await getPost(id).update(update).run(rcon)
+		delete this.client.post
+		const m = redis.multi()
+		
+		// Remove from open post set
+		m.srem('liveposts', id)
+		await this.publish(m, threadNumber(id), updateMessage(id, update))
 	}
 }
 
@@ -453,6 +469,16 @@ function threadNumber(post) {
 }
 
 /**
+ * Shorthand for creating an upadte message
+ * @param {int} id
+ * @param {Object} update
+ * @returns {[[]]}
+ */
+ function updateMessage(id, update) {
+    return [[common.UPDATE_POST, id, update]]
+ }
+
+/**
  * Get length of post text body array + strings inside it
  * @param {Array} body
  */
@@ -492,9 +518,9 @@ async function obtainImageAlloc(id) {
 	if (!alloc || !alloc.image || !alloc.tmps)
 		throw Muggle('Invalid image alloc')
 	for (let dir in alloc.tmps) {
-		const fnm = alloc.tmps[dir]
-		if (!/^[\w_]+$/.test(fnm))
-			throw Muggle('Suspicious filename: ' + JSON.stringify(fnm))
+		const fileName = alloc.tmps[dir]
+		if (!/^[\w_]+$/.test(fileName))
+			throw Muggle('Suspicious filename: ' + JSON.stringify(fileName))
 	}
 	return alloc
 }

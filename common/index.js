@@ -7,10 +7,8 @@
 const DEF = {
 	// Pub/Sub
 	INVALID: 0,
-	INSERT_POST: 2,
-	UPDATE_POST: 3,
-	FINISH_POST: 4,
-	INSERT_IMAGE: 6,
+	INSERT_POST: 1,
+	UPDATE_POST: 2,
 
 	// Pub/sub moderation
 	SPOILER_IMAGES: 7,

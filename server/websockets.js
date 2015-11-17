@@ -28,7 +28,6 @@ export class Client extends events.EventEmitter {
 		super()
 		this.socket = socket
 		this.ident = caps.lookup_ident(ip)
-		this.watching = {}
 		state.clients.add(this)
 		state.countIPs()
 	}
