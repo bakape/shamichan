@@ -96,7 +96,7 @@ export class Client extends events.EventEmitter {
 			error = error.deepest_reason()
 		}
 		winston.error(`Error by ${JSON.stringify(this.ident)}: ${error || msg}`)
-		this.send([0, common.INVALID, msg])
+		this.send([common.INVALID, msg])
 		this.synced = false
 	}
 }

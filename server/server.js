@@ -233,14 +233,14 @@ function update_post(frag, client) {
 		client.disconnect(Muggle("Couldn't add text.", err)))
 	return true
 }
-dispatcher[common.UPDATE_POST] = update_post;
+dispatcher[common.UPDATE_POST] = update_post
 
 dispatcher[common.FINISH_POST] = ([msg], client) => {
     if (typeof msg !== 'string')
         return false
     client.db.finishPost().catch(err =>
         client.disconnect(Muggle("Couldn't finish post", err)))
-	return true;
+	return true
 }
 
 dispatcher[common.INSERT_IMAGE] = function ([msg], client) {
