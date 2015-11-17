@@ -9,7 +9,8 @@ const admin = require('../server/admin'),
 	radio = config.RADIO && require('../server/radio'),
 	{rcon, redis} = global,
 	state = require('../server/state'),
-	tripcode = require('bindings')('tripcode')
+	tripcode = require('bindings')('tripcode'),
+	util = require('../util')
 
 /** Performs approprite database I/O in response to client websocket messages */
 export default class ClientController {
@@ -71,7 +72,7 @@ export default class ClientController {
 			if (isThread && image.pinky)
 				throw Muggle('Image is the wrong size')
 			delete image.pinky;
-			this.imageDuplicateHash(m, image.hash, id)
+			this.imageDuplicateHash(m, image, id)
 			await commitImageAlloc(alloc)
 		}
 
@@ -125,7 +126,7 @@ export default class ClientController {
 	 * @param {int} op
 	 */
 	async checkThreadLocked(op) {
-		if (await getPost(op)('locked').default(false).run(rcon))
+		if (await util.getPost(op)('locked').default(false).run(rcon))
 			throw Muggle('Thread is locked')
 	}
 
@@ -250,12 +251,15 @@ export default class ClientController {
 	 * Write the hash of an image to databse to later check for duplicates
 	 * against
 	 * @param {redis.multi} m
-	 * @param {string} hash
+	 * @param {Object} image
 	 * @param {int} num
 	 */
-	imageDuplicateHash(m, hash, num) {
-		m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000),
-			`${num}:${hash}`)
+	imageDuplicateHash(m, image, num) {
+		const till = Date.now() + (config.DEBUG ? 30000 : 3600000)
+		m.zadd('imageDups', till, `${num}:${image.hash}`)
+
+		// Useless after image hash has been written
+		delete image.hash
 	}
 
 	/**
@@ -272,12 +276,7 @@ export default class ClientController {
 	 * Write post to database
 	 */
 	async writePost() {
-		const {post} = this.client
-
-		// Useless client-side
-		if (post.image)
-			delete post.image.hash
-		await r.table('posts').insert(post).run(rcon)
+		await r.table('posts').insert(this.client.post).run(rcon)
 	}
 
 	/**
@@ -296,7 +295,7 @@ export default class ClientController {
 				.getAll(post.op, {index: 'op'})
 				.count()
 				.lt(config.BUMP_LIMIT[this.board]),
-			getPost(post.op).update({bumpTime: Date.now()}),
+			util.getPost(post.op).update({bumpTime: Date.now()}),
 			null
 		).run(rcon)
 	}
@@ -319,7 +318,7 @@ export default class ClientController {
 		const mnemonic = admin.genMnemonic(post.ip)
 		if (mnemonic)
 			msg.push({mod: mnemonic})
-		formatPost(post)
+		util.formatPost(post)
 		await this.publish(m, channel, msg)
 	}
 
@@ -336,7 +335,7 @@ export default class ClientController {
 		if (await postsExists(op))
 			return
 		msg = JSON.stringify(msg)
-		await getPost(op).update({
+		await util.getPost(op).update({
 			history: r.row('history').append(msg)
 		}).run(rcon)
 		m.publish(op, msg)
@@ -361,9 +360,9 @@ export default class ClientController {
 			}
 
 			// Ensure target post exists
-			if (await getPost(num).eq(null).run(rcon))
+			if (await util.getPost(num).eq(null).run(rcon))
 				continue
-			await getPost(num).update(update).run(rcon)
+			await util.getPost(num).update(update).run(rcon)
 			await this.publish(redis.multi(), op, updateMessage(num, update))
 		}
 	}
@@ -376,7 +375,7 @@ export default class ClientController {
 	async appendPost(frag) {
 		const [body, links] = await this.parseFragment(frag),
 			{post} = this.client
-		await getPost(post.id).update({
+		await util.getPost(post.id).update({
 			body: r.row('body').concat(body)
 		}).run(rcon)
 
@@ -406,11 +405,8 @@ export default class ClientController {
 
 		await commitImageAlloc(alloc)
 		const m = redis.multi()
-		this.imageDuplicateHash(m, image.hash, post.id)
-		await getPost(post.id).update({image}).run(rcon)
-
-		// Useless client-side
-		delete image.hash
+		this.imageDuplicateHash(m, image, post.id)
+		await util.getPost(post.id).update({image}).run(rcon)
 		await this.publish(m, threadNumber(post.id),
 			updateMessage(post.id, {image})
 	}
@@ -421,33 +417,17 @@ export default class ClientController {
 	async finishPost() {
 		const {id} = this.client.post,
 			update = {editing: false}
-		await getPost(id).update(update).run(rcon)
+
+		// Remove 'editing' key
+		await util.getPost(id).replace(r.row.without('editing')).run(rcon)
 		delete this.client.post
 		const m = redis.multi()
-		
+
 		// Remove from open post set
 		m.srem('liveposts', id)
-		await this.publish(m, threadNumber(id), updateMessage(id, update))
+		await this.publish(m, threadNumber(id),
+			updateMessage(id, {editing: false}))
 	}
-}
-
-/**
- * Remove properties the client should not be seeing
- * @param {Object} post
- */
-function formatPost(post) {
-	for (let key of ['ip', 'deleted', 'imgDeleted']) {
-		delete post[key];
-	}
-}
-
-/**
- * Shorthand for post retrieval
- * @param num
- * @returns {*}
- */
-function getPost(num) {
-	return r.table('posts').get(num)
 }
 
 /**
@@ -455,7 +435,7 @@ function getPost(num) {
  * @param {int} id
  */
 async function postsExists(id) {
-    await getPost(num).eq(null).not().run(rcon)
+    await util.getPost(num).eq(null).not().run(rcon)
 }
 
 /**
