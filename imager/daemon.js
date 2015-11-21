@@ -99,7 +99,7 @@ class ImageUpload {
 			else if (!part.filename && ['spoiler', 'op'].indexOf(part.name) >= 0)
 				form.handlePart(part);
 		};
-		form.once('error', err => 
+		form.once('error', err =>
 			this.failure(Muggle(this.lang.req_problem, err)));
 		form.once('aborted', err =>
 			this.failure(Muggle(this.lang.aborted, err)));
@@ -241,7 +241,7 @@ class ImageUpload {
 	// Pass file to imagemagick's identify
 	identify(stream, cb) {
 		const child = child_process.spawn(identifyBin, [
-			'-', '-format', '%Wx%H'
+			'-[0]', '-format', '%Wx%H'
 		]);
 		this.undine(stream, child, function(err, out) {
 			if (err) {
@@ -267,7 +267,7 @@ class ImageUpload {
 	// In-memory image duplicate detection ala findimagedupes.pl.
 	perceptual_hash(stream, cb) {
 		const child = child_process.spawn(convertBin, [
-			'-',
+			'-[0]',
 			'-background', 'white', '-mosaic', '+matte',
 			'-sample', '160x160!',
 			'-type', 'grayscale',
@@ -346,7 +346,7 @@ class ImageUpload {
 		if (image.size < 30*1024
 			&& ['.jpg', '.png'].indexOf(image.ext) >= 0
 			&& !image.apng && !image.video
-			&& w <= specs.dims[0] 
+			&& w <= specs.dims[0]
 			&& h <= specs.dims[1]
 		)
 			noThumbs = true;
@@ -360,7 +360,7 @@ class ImageUpload {
 		if (!noThumbs) {
 			this.status(this.lang.thumbnailing);
 			this.fill_in_specs(specs, 'thumb');
-			
+
 			// Default 125x125 thumbnail
 			pipes.thumb = cb => this.resize_image(specs, stream, cb);
 
@@ -382,7 +382,7 @@ class ImageUpload {
 		});
 	}
 	/*
-	 * Currently only used for exhentai image search, but might as well do it 
+	 * Currently only used for exhentai image search, but might as well do it
 	 * for everything for consistency.
 	 */
 	sha1Hash(stream, cb){
@@ -398,7 +398,7 @@ class ImageUpload {
 			r = Math.max(w / bound[0], h / bound[1], 1),
 			dims = [Math.round(w/r) * scale, Math.round(h/r) * scale];
 		var specs = {bound, dims, format: 'jpg'};
-		
+
 		// Note: WebMs pretend to be PNGs at this step,
 		//       but those don't need transparent backgrounds.
 		//       (well... WebMs *can* have alpha channels...)
@@ -459,7 +459,7 @@ class ImageUpload {
 		// avoid OOM killer
 		const args = ['-limit', 'memory', '32', '-limit', 'map', '64'],
 			{dims} = o;
-		
+
 		// resample from twice the thumbnail size
 		// (avoid sampling from the entirety of enormous 6000x6000 images etc)
 		const samp = dims[0]*2 + 'x' + dims[1]*2;
@@ -482,7 +482,7 @@ class ImageUpload {
 
 		// Store image filename without imagemagick prefix
 		o.fnm = o.dest;
-		
+
 		/*
 		 * PNG files will also be piped into pngquant, if PNG_THUMBS is enabled.
 		 * Otherwise will write straight to disk.
@@ -498,9 +498,9 @@ class ImageUpload {
 		]);
 		const stderr = [];
 		out.pipe(child.stdin);
-		
+
 		/*
-		 * pngquant can only pipe to sdtdout, when piped in through stdin. 
+		 * pngquant can only pipe to sdtdout, when piped in through stdin.
 		 * Retarded, I know. So we need to pipe it back to node's writestream.
 		 */
 		child.stdout.pipe(fs.createWriteStream(dest));
@@ -512,7 +512,7 @@ class ImageUpload {
 				winston.warn(err);
 				return cb(Muggle(this.lang.pngquant, err));
 			}
-			
+
 			// PNG thumbnails generated
 			this.image.png_thumbs = true;
 			this.db.track_temporary(dest, cb);

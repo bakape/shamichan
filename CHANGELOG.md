@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.6.2 - 2015-11-21
+###Fix
+- PDF thumbnailing timeout
+
 ##1.6.1 - 2015-11-15
 ###Fix
 - Post links in report emails
