@@ -7,8 +7,9 @@
 const DEF = {
 	// Pub/Sub
 	INVALID: 0,
-	INSERT_POST: 1,
-	UPDATE_POST: 2,
+	INSERT_THREAD: 1,
+	INSERT_POST: 2,
+	UPDATE_POST: 3,
 
 	// Pub/sub moderation
 	SPOILER_IMAGES: 7,
@@ -32,6 +33,7 @@ const DEF = {
 	NOTIFICATION: 39,
 	RADIO: 40,
 	RESYNC: 41,
+	REDIRECT: 42,
 
 	// Non-pub/sub Moderation
 	MOD_LOG: 51,

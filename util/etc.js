@@ -2,13 +2,13 @@
 Various utility functions
  */
 
-const bluebird = require('bluebird'),
-	config = require('../config'),
+const config = require('../config'),
 	child_process = require('child_process'),
     fs = require('fs-extra'),
+	Promise = require('bluebird'),
     util = require('util');
 
-bluebird.promisifyAll(fs)
+Promise.promisifyAll(fs)
 
 /* Non-wizard-friendly error message */
 function Muggle(message, reason) {
@@ -71,23 +71,15 @@ function movex (src, dest, callback) {
 }
 exports.movex = movex;
 
-function cpx (src, dest, callback) {
-	child_process.execFile('/bin/cp', ['-n', '--', src, dest],
-				function (err, stdout, stderr) {
-		if (err)
-			callback(Muggle("Couldn't copy file into place.",
-					stderr || err));
-		else
-			callback(null);
-	});
+/**
+ * Returns a promise to copy a file
+ * @param {string} src
+ * @param {string} dest
+ * @returns {Promise}
+ */
+export function copyPromise(src, dest) {
+	return fs.copyAsync(src, dest, {clobber: false})
 }
-exports.cpx = cpx;
-
-async function copyAsync(src, dest) {
-	await fs.copyAsync(src, dest, {clobber: false}).catch(err =>
-		{throw Muggle('Couldn\'t copy file into place:', err)})
-}
-exports.copyAsync = copyAsync
 
 function checked_mkdir (dir, cb) {
 	fs.mkdir(dir, function (err) {

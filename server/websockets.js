@@ -3,7 +3,6 @@
  */
 
 const _ = require('underscore'),
-	async = require('async'),
 	caps = require('./caps'),
     common = require('../common/index'),
     events = require('events'),
@@ -74,7 +73,7 @@ export class Client extends events.EventEmitter {
 	}
 
 	/**
-	 * Close client socket and all other listeners
+	 * Close all client listers on socket close
 	 */
 	onClose() {
 		const {ip} = this.ident

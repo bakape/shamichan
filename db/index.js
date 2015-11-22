@@ -2,14 +2,15 @@
 Core database initiation and connection
  */
 
-const bluebird = require('bluebird'),
-	config = require('../config'),
+const config = require('../config'),
+	Promise = require('bluebird'),
 	redisDB = require('redis'),
-	r = require('rethinkdb')
+	r = require('rethinkdb'),
+	util = require('./util')
 
 // Convert callback style to promise style for use with ES7 async functions
-bluebird.promisifyAll(redisDB.RedisClient.prototype)
-bluebird.promisifyAll(redisDB.Multi.prototype)
+Promise.promisifyAll(redisDB.RedisClient.prototype)
+Promise.promisifyAll(redisDB.Multi.prototype)
 
 const dbVersion = 2
 let rcon
@@ -18,7 +19,7 @@ let rcon
  * Creates redis client. Buffers commands, so no need for callback.
  * @returns {redis}
  */
-function redisClient() {
+export function redisClient() {
 	const client = redisDB.createClient({
 		host: config.redis_host,
 		port: config.REDIS_PORT
@@ -26,14 +27,13 @@ function redisClient() {
 	client.select(config.redis_database || 0)
 	return client
 }
-exports.redisClient = redisClient
 const redis = global.redis = redisClient()
 redis.on('error', err => winston.error('Redis error:', err))
 
 /**
  * Establish rethinkDB connection and intialize the database, if needed.
  */
-async function init() {
+export async function init() {
 	rcon = global.rcon = await r.connect({
 		host: config.rethink_host,
 		port: config.rethinkdb_port
@@ -52,7 +52,6 @@ async function init() {
 	else
 		await redis.setAsync('dbVersion', dbVersion)
 }
-exports.init = init
 
 /**
  * Create needed tables and initial documents
@@ -64,12 +63,15 @@ async function initDB() {
 	await r.table('main').insert({
 		id: 'info',
 		dbVersion,
-		post_ctr: 0
+		postCtr: 0
 	}).run(rcon)
-	await r.tableCreate('posts').run(rcon)
-	for (let index of ['op', 'time', 'bumptime', 'board']) {
-		await r.table('posts').indexCreate(index).run(rcon)
+	await r.tableCreate('threads').run(rcon)
+	for (let index of ['time', 'bumptime', 'board']) {
+		await r.table('threads').indexCreate(index).run(rcon)
 	}
+
+	// Index by reply count
+	await r.table('threads').indexCreate('replyCount', util.countReplies)
 }
 
 /**

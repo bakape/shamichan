@@ -1,110 +1,74 @@
-const admin = require('../server/admin'),
+const _ = require('underscore'),
+	admin = require('../server/admin'),
 	amusement = require('../server/amusement'),
 	cache = require('./cache'),
 	common = require('../common'),
 	config = require('../config'),
 	imager = require('../imager'),
 	Muggle = require('../util/etc').Muggle,
+	Promise = require('bluebird'),
 	r = require('rethinkdb'),
 	radio = config.RADIO && require('../server/radio'),
 	{rcon, redis} = global,
 	state = require('../server/state'),
 	tripcode = require('bindings')('tripcode'),
-	util = require('../util')
+	util = require('./util')
 
-/** Performs approprite database I/O in response to client websocket messages */
+/**
+ * Performs approprite database I/O in response to client websocket messages
+ */
 export default class ClientController {
 	/**
-	 * Create a database controller
+	 * Create a client database controller
 	 * @param {Client} client
 	 */
 	constructor(client) {
 		this.client = client
 		this.board = client.board
 		this.ident = client.ident
+		this.op = client.op
 	}
 
 	/**
-	 * Insert post into the database
-	 * @param {Array} msg
+	 * Insert thread into DB
+	 * @param {Object} msg
 	 */
-	async insertPost(msg) {
-		if (config.READ_ONLY)
-			throw Muggle('Can\'t post right now')
+	async insertThread(msg) {
+		// Check if IP has not created a thread recently to prevent spam
+		if (!config.DEBUG
+			&& await redis.existsAsync(`ip:${this.ident.ip}:throttle`)
+		)
+			throw Muggle('Too soon')
 		const {client} = this,
-			{op, image} = msg,
-			isThread = !msg.op
-		const post = {
-			ip: this.ident.ip,
-			time: Date.now(),
+			now = Date.now(),
+			{ip} = this.ident
+
+		// A thread is just a container for posts with metadata attached. The OP
+		// is actually stored as a post in the thread with the same ID as the
+		// thread.
+		const thread = {
+			ip,
+			time: now,
 			nonce: msg.nonce,
+			bumpTime: now,
 			board: this.board,
+			posts: {},
+
+			// Stores all updates that happened to the thread, so we can
+			// pass them to the client, if they are behind
+			post.history: []
+		}
+		const post = {
+			ip,
+			time: now,
+			nonce: msg.nonce,
 			editing: true
 		}
-		if (image && !/^\d+$/.test(image))
-			throw Muggle('Expired image token')
+		const id = await this.assignPostID(post)
+		thread.id = post.op = id
+		thread.posts[id] = post
 
-		if (isThread)
-			await this.prepareThread(msg, post)
-		else
-			await this.prepareReply(op, post)
-
-
-		if (!client.synced)
-			throw Muggle('Dropped; post aborted')
-		if (client.post)
-			throw Muggle('Already have a post')
-		post.id = await r.table('main').get('info')
-			.update({post_ctr: r.row('post_ctr').add(1)},
-				{returnChanges: true})
-			('changes')('new_val')('post_ctr')(0)
-			.run(rcon)
-		client.post = post
-		amusement.roll_dice(body, post)
-		const [parsedBody, links] = await this.parsePost(msg)
-		post.body = parsedBody
-		post.length = postLength(parsedBody)
-
-		const m = redis.multi()
-		if (image) {
-			const alloc = await obtainImageAlloc(image)
-			image = post.image = alloc.image
-			if (isThread && image.pinky)
-				throw Muggle('Image is the wrong size')
-			delete image.pinky;
-			this.imageDuplicateHash(m, image, id)
-			await commitImageAlloc(alloc)
-		}
-
-		if (isThread)
-			await this.writeThread(m)
-		else
-			await this.writeReply()
-		await this.puglishPost(m)
-		await this.backlinks(links)
-	}
-
-	/**
-	 * Perform reply-specific validations
-	 * @param {int} op
-	 * @param {Object} post
-	 */
-	async prepareReply(op, post) {
-		if (await cache.validateOP(op, this.board) === false)
-			throw Muggle('Thread does not exist')
-		await this.checkThrottle()
-		post.op = op
-	}
-
-	/**
-	 * Perform thread-specific validations and parsing
-	 * @param {Object} msg
-	 * @param {Object} post
-	 */
-	async prepareThread(msg, post) {
-		if (!msg.image)
-			throw Muggle('Image missing')
-		await this.checkThreadLocked(op)
+		this.parseName(msg)
 		if (msg.subject) {
 			const subject = msg.subject
 				.trim()
@@ -114,39 +78,48 @@ export default class ClientController {
 			if (subject)
 				post.subject = subject
 		}
-		post.bumpTime = Date.now()
+		client.postLength = 0
+		const m = redis.multi()
+		post.image = await this.allocateImage(msg.image, m, true)
+		await r.table('threads').insert(thread).run(rcon)
 
-		// Stores all updates that happened to the thread, so we can
-		// pass them to the client, if they are behind
-		post.history = []
+		// Prevent thread spam
+		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, post.id)
+		cache.add(m, post.id, post.id, this.board)
+		await m.execAsync()
+
+		// Redirect the client to the new thread
+		client.send([common.REDIRECT, this.board, post.id, true])
 	}
 
 	/**
-	 * Ensure a thread is not locked
-	 * @param {int} op
+	 * Incerement post counter in the DB and assign to the new post
+	 * @param {Object} post
+	 * @returns {int} - Post ID
 	 */
-	async checkThreadLocked(op) {
-		if (await util.getPost(op)('locked').default(false).run(rcon))
-			throw Muggle('Thread is locked')
+	async assignPostID(post) {
+		this.checkSynced()
+		this.client.post = post
+		return post.id = await r.table('main').get('info')
+			.update({post_ctr: r.row('post_ctr').add(1)},
+				{returnChanges: true})
+			('changes')('new_val')('post_ctr')(0)
+			.run(rcon)
 	}
 
 	/**
-	 * Check if IP has not created a thread recently to prevent spam
+	 * Ensure client did not disconnect midway
 	 */
-	async checkThrottle() {
-		// So we can spam new threads in debug mode
-		if (config.DEBUG)
-			return
-		if (await redis.existsAsync(`ip:${this.ident.ip}:throttle`))
-			throw Muggle('Too soon')
+	checkSynced() {
+		if (!this.client.synced)
+			throw Muggle('Dropped; post aborted')
 	}
 
 	/**
-	 * Parse message contents into post object and validate
-	 * @param msg
-	 * @returns {[Array,Object]}
+	 * Parse post name, tipcode, email and titles and assign to post object
+	 * @param {Object} msg
 	 */
-	async parsePost(msg) {
+	parseName(msg) {
 		const {post} = this.client
 		if ('auth' in msg) {
 			if (!msg.auth
@@ -155,17 +128,6 @@ export default class ClientController {
 			)
 				throw Muggle('Bad auth')
 			post.auth = msg.auth
-		}
-
-		let body = ''
-		const {frag} = msg
-		if (frag) {
-			if (/^\s*$/g.test(frag))
-				throw Muggle('Bad post body')
-			if (frag.length > common.MAX_POST_CHARS)
-				throw Muggle('Post is too long')
-			body = amusement.hot_filter(frag
-				.replace(state.hot.EXCLUDE_REGEXP, ''))
 		}
 
 		// Replace names, when a song plays on r/a/dio
@@ -187,14 +149,188 @@ export default class ClientController {
 			if (msg.email)
 				post.email = msg.email.trim().substr(0, 320)
 		}
+	}
 
-		return await this.parseFragment(body)
+	/**
+	 * Allocate a processed image and its thumbnails to be served with a post
+	 * @param {int} id
+	 * @param {redis.multi} m
+	 * @param {boolean} isThread
+	 * @returns {Object} - Image object
+	 */
+	async allocateImage(id, m, isThread) {
+		const alloc = await obtainImageAlloc(id),
+			{image} = alloc
+		if (isThread && image.pinky)
+			throw Muggle('Image is the wrong size')
+		delete image.pinky
+
+		/*
+		 Write the perceptual hash of an image to a specialised sorted set to
+		 later check for duplicates against
+		*/
+		const till = Date.now() + (config.DEBUG ? 30000 : 3600000)
+		m.zadd('imageDups', till, `${num}:${image.hash}`)
+
+		// Useless after image hash has been written
+		delete image.hash
+		await commitImageAlloc(alloc)
+		return image
+	}
+
+	/**
+	 * Read image allocation data with supplied id from database
+	 * @param {string} id
+	 * @returns {Object}
+	 */
+	async obtainImageAlloc(id) {
+		const m = redis.multi(),
+			key = 'image:' + id
+		m.get(key)
+		m.setnx('lock:' + key, '1');
+		m.expire('lock:' + key, 60);
+		let [alloc, status] = await m.execAsync()
+		if (status !== '1')
+			throw Muggle('Image in use')
+		if (!alloc)
+			throw Muggle('Image lost')
+		alloc = JSON.parse(res[0])
+		alloc.id = id
+
+		// Validate allocation request
+		if (!alloc || !alloc.image || !alloc.tmps)
+			throw Muggle('Invalid image alloc')
+		for (let dir in alloc.tmps) {
+			const fileName = alloc.tmps[dir]
+			if (!/^[\w_]+$/.test(fileName))
+				throw Muggle(`Suspicious filename: ${JSON.stringify(fileName)}` +
+		}
+		return alloc
+	}
+
+	/**
+	 * Copy image files from temporary folders to permanent served ones
+	 * @param {Object} alloc
+	 */
+	async commitImageAlloc(alloc) {
+		const tasks = []
+		for (let kind in alloc.tmps) {
+			tasks.push(etc.copyAsync(imager.media_path('tmp', alloc.tmps[kind]),
+				imager.media_path(kind, alloc.image[kind])))
+		}
+		await Promise.all(tasks).catch(err =>
+			throw Muggle('Couldn\'t copy file into place:', err))
+
+		// We should already hold the lock at this point.
+		const key = 'image:' + alloc.id,
+			m = redis.multi()
+		m.del(key)
+		m.del('lock:' + key)
+		await m.execAsync()
+	}
+
+	/**
+	 * Insert post into the database
+	 * @param {Array} msg
+	 */
+	async insertPost(msg) {
+		const {op} = this.client
+		const post = {
+			ip: this.ident.ip,
+			op,
+			time: Date.now(),
+			nonce: msg.nonce,
+			editing: true
+		}
+		if (!(await cache.validateOP(op, this.board)))
+			throw Muggle('Thread does not exist')
+		await this.checkThreadLocked()
+		await this.assignPostID(post)
+		this.parseName(msg)
+		const links = await this.parseBody(msg),
+			m = redis.multi()
+		post.image = await this.allocateImage(msg.image, m, false)
+
+		// Message for live publishing and storage in replication log
+		let publishMsg = [[common.INSERT_POST, util.formatPost(_.clone(post))]]
+
+		// For priveledged authenticated clients only
+		const mnemonic = admin.genMnemonic(post.ip)
+		if (mnemonic)
+			msg.push({mod: mnemonic})
+		publishMsg = JSON.stringify(publishMsg)
+
+		// Write to database
+		await util.getThread(this.op).update({
+			history: r.row('history').append(publishMsg),
+			replies: {
+				[post.id]: post
+			}
+		}).run(rcon)
+
+		cache.add(m, post.id, this.op, this.board)
+		await this.publish(m, this.op, publishMsg)
+		await this.bumpThread()
+		await this.backlinks(links)
+	}
+
+	/**
+	 * Ensure thread is not locked
+	 */
+	async checkThreadLocked() {
+		if (await util.getThread(this.op)
+			('locked')
+			.default(false)
+			.run(rcon)
+		)
+			throw Muggle('Thread is locked')
+	}
+
+	/**
+	 * Bump the thread up to the top of the board, if needed
+	 */
+	async bumpThread() {
+		if (common.is_sage(this.client.post.email))
+			return
+		await uti.getThread(this.op).do(thread =>
+			r.branch(
+				// Verify not over bump limit
+				util.countReplies(thread).lt(config.BUMP_LIMIT[this.board]),
+				thread.update({bumpTime: Date.now()}),
+				null
+			)
+		).run(rcon)
+	}
+
+	/**
+	 * Parse message text body into post object
+	 * @param {Object} msg
+	 * @returns {Object} - Confirmed post links inside text
+	 */
+	async parseBody(msg) {
+		const {post} = this.client,
+			{frag} = msg
+		let body = ''
+		if (frag) {
+			if (/^\s*$/g.test(frag))
+				throw Muggle('Bad post body')
+			if (frag.length > common.MAX_POST_CHARS)
+				throw Muggle('Post is too long')
+			body = amusement.hot_filter(frag
+				.replace(state.hot.EXCLUDE_REGEXP, ''))
+		}
+
+		const [parsed, links] = await this.parseFragment(body)
+		post.body = parsed
+		this.client.postLength = postLength(parsed)
+		return links
 	}
 
 	/**
 	 * Parse text body message fragment string
 	 * @param {string} frag
-	 * @returns {[Array,Object]}
+	 * @returns {[Array,Object]} - Parsed post body array and confirmed post
+	 * 	links it contains
 	 */
 	async parseFragment(frag) {
 		const m = frag.match(/>>\d+/g)
@@ -204,10 +340,10 @@ export default class ClientController {
 
 		// Validate links and determine their parent board and thread
 		const links = [],
-			m = redis.multi()
+			multi = redis.multi()
 		m.forEach(link => links.push(link.slice(2)))
-		links.forEach(num => cache.getParenthood(m, num))
-		const res = await m.execAsync(),
+		links.forEach(num => cache.getParenthood(multi, num))
+		const res = await multi.execAsync(),
 			confirmed = {}
 		for (let i = 0; i < res.length; i += 2) {
 			const board = res[i],
@@ -216,13 +352,13 @@ export default class ClientController {
 				confirmed[links[i / 2]] = [board, parseInt(thread)]
 		}
 
-		// Insert post links and hash commonds as tumples into the text body
+		// Insert post links and hash commands as tumples into the text body
 		// array
 		const parsed = []
 		frag.forEach(word => this.injectLink(word, parsed, confirmed)
 			|| amusement.roll_dice(word, parsed)
 			|| parsed.push(word))
-		return [parsed, confirmed]
+		return [parsed, confimed]
 	}
 
 	/**
@@ -248,96 +384,13 @@ export default class ClientController {
 	}
 
 	/**
-	 * Write the hash of an image to databse to later check for duplicates
-	 * against
-	 * @param {redis.multi} m
-	 * @param {Object} image
-	 * @param {int} num
-	 */
-	imageDuplicateHash(m, image, num) {
-		const till = Date.now() + (config.DEBUG ? 30000 : 3600000)
-		m.zadd('imageDups', till, `${num}:${image.hash}`)
-
-		// Useless after image hash has been written
-		delete image.hash
-	}
-
-	/**
-	 * Write thread to database
-	 * @param {redis.multi} m
-	 */
-	async writeThread(m) {
-		// Prevent thread spam
-		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, op)
-		await this.writePost()
-	}
-
-	/**
-	 * Write post to database
-	 */
-	async writePost() {
-		await r.table('posts').insert(this.client.post).run(rcon)
-	}
-
-	/**
-	 * Write reply to database and bump parent thread, if needed
-	 */
-	async writeReply() {
-		const {post} = this.client
-		await this.writePost()
-
-		// Bump the thread up to the top of the board
-		if (common.is_sage(post.email))
-			return
-		await r.branch(
-			// Verify not over bump limit
-			r.table('posts')
-				.getAll(post.op, {index: 'op'})
-				.count()
-				.lt(config.BUMP_LIMIT[this.board]),
-			util.getPost(post.op).update({bumpTime: Date.now()}),
-			null
-		).run(rcon)
-	}
-
-	/**
-	 * Publish newly created post to live clients
-	 * @param {redis.multi} m
-	 */
-	async puglishPost(m) {
-		const {post} = this.client,
-			// Threads have their own id as the op property
-			channel = threadNumber(post)
-
-		// Set of currently open posts
-		m.sadd('liveposts', post.id)
-		cache.cache(m, post.id, channel, this.board)
-		const msg = [[common.INSERT_POST, post]]
-
-		// For priveledged authenticated clients only
-		const mnemonic = admin.genMnemonic(post.ip)
-		if (mnemonic)
-			msg.push({mod: mnemonic})
-		util.formatPost(post)
-		await this.publish(m, channel, msg)
-	}
-
-	/**
-	 *  Store message inside the replication log and publish to connected
-	 *  clients through redis
-	 * @param {redis.multi} m
+	 * Publish message to connected clients through redis and perform all other
+	 * queued redis operations
+	 * @param {redis.multi} m1
 	 * @param {int} op
-	 * @param {[[]]} msg
+	 * @param {string} msg
 	 */
 	async publish(m, op, msg) {
-		// Ensure thread exists, because the client in some cases publishes
-		// to external threads
-		if (await postsExists(op))
-			return
-		msg = JSON.stringify(msg)
-		await util.getPost(op).update({
-			history: r.row('history').append(msg)
-		}).run(rcon)
 		m.publish(op, msg)
 		await m.execAsync()
 	}
@@ -347,43 +400,60 @@ export default class ClientController {
 	 * @param {Object} links
 	 */
 	async backlinks(links) {
-		const {post} = this.client
+		const {id} = this.client.post
 		for (let num in links) {
 			const [board, op] = links[num]
 
 			// Coerce to integer
 			num = +num
-			const update = {
-				backlinks: {
-					[post.id]: [this.board, post.op]
-				}
-			}
+			const op = await cache.parentThread(num)
 
-			// Ensure target post exists
-			if (await util.getPost(num).eq(null).run(rcon))
+			// Fail silently, because it does not effect the source post
+			if (!op)
 				continue
-			await util.getPost(num).update(update).run(rcon)
-			await this.publish(redis.multi(), op, updateMessage(num, update))
+			await this.updatePost(num, op, {
+				backlinks: {
+					[id]: [this.board, this.op]
+				}
+			})
 		}
+	}
+
+	/**
+	 * Update post hash in rethinkDB, append to replication log and publish to
+	 * live clients
+	 * @param {int} id - Post ID
+	 * @param {int} op - Post thread
+	 * @param {Object} update - Update toinject into post
+	 * @param {sting} [live=updateMessage(id,update)] - Optional separate update
+	 * for live publishes in cases when the update includes rethinkDB
+	 * expressions
+	 */
+	async updatePost(id, op, update, live = updateMessage(id, update)) {
+		live = JSON.stringify(live)
+		await util.getThread(op).update({
+			history: r.row('history').append(live),
+			posts: {
+				[id]: update
+			}
+		}).run(rcon)
+		await redis.publishAsync(op, live)
 	}
 
 	/**
 	 * Append to the text body of a post
 	 * @param {string} frag
-	 * @returns {Promise}
 	 */
 	async appendPost(frag) {
 		const [body, links] = await this.parseFragment(frag),
 			{post} = this.client
-		await util.getPost(post.id).update({
-			body: r.row('body').concat(body)
-		}).run(rcon)
+		await this.updatePost(post.id, this.op,
+			{body: r.row('body').concat(body)},
+			{body})
 
 		// Persist to memory as well
 		post.body = post.body.concat(body)
 		post.length += postLength(body)
-		await this.publish(redis.multi(), threadNumber(post),
-			updateMessage(post.id, {body}))
 		await this.backlinks(links)
 	}
 
@@ -392,64 +462,29 @@ export default class ClientController {
 	 * @param {string} id
 	 */
 	async insertImage(id) {
-		const alloc = await obtainImageAlloc(id),
-			{post} = client
-		if (!post.op)
-			throw Muggle('Can\'t add another image to an OP')
-		const {image} = alloc
-		if (!image.pinky)
-			throw Muggle('Image is wrong size')
-		delete image.pinky
-		if (!(await postsExists(post.id)))
-			throw Muggle('Post does not exist')
-
-		await commitImageAlloc(alloc)
-		const m = redis.multi()
-		this.imageDuplicateHash(m, image, post.id)
-		await util.getPost(post.id).update({image}).run(rcon)
-		await this.publish(m, threadNumber(post.id),
-			updateMessage(post.id, {image})
+		const {post} = this.client,
+			m = redis.multi(),
+			image = post.image
+				= await this.allocateImage(id, redis.multi(), false)
+		await m.execAsync()
+		await this.updatePost(post.id, this.op, {image})
 	}
 
 	/**
 	 * Finish the current open post
 	 */
 	async finishPost() {
-		const {id} = this.client.post,
-			update = {editing: false}
-
-		// Remove 'editing' key
-		await util.getPost(id).replace(r.row.without('editing')).run(rcon)
+		const {id} = this.client.post
+		await this.updatePost(id, this.op, {editing: false})
 		delete this.client.post
-		const m = redis.multi()
 
 		// Remove from open post set
-		m.srem('liveposts', id)
-		await this.publish(m, threadNumber(id),
-			updateMessage(id, {editing: false}))
+		await redis.sremAsync('liveposts', id)
 	}
 }
 
 /**
- * Check if post exists in the database
- * @param {int} id
- */
-async function postsExists(id) {
-    await util.getPost(num).eq(null).not().run(rcon)
-}
-
-/**
- * Detect a posts parent thread. Needed because OP's do not have an 'op'
- * property.
- * @param {Object} post
- * @returns {int}
- */
-function threadNumber(post) {
-	return post.op || post.id
-}
-
-/**
- * Shorthand for creating an upadte message
+ * Shorthand for creating an update message
  * @param {int} id
  * @param {Object} update
  * @returns {[[]]}
@@ -473,52 +508,4 @@ function postLength(body) {
 		if (frag.length > 0)
 			length += wordLength
 	}
-}
-
-/**
- * Read image allocation data with supplied id from database
- * @param {string} id
- * @returns {Object}
- */
-async function obtainImageAlloc(id) {
-	const m = redis.multi(),
-		key = 'image:' + id
-	m.get(key)
-	m.setnx('lock:' + key, '1');
-	m.expire('lock:' + key, 60);
-	let [alloc, status] = await m.execAsync()
-	if (status !== '1')
-		throw Muggle('Image in use')
-	if (!alloc)
-		throw Muggle('Image lost')
-	alloc = JSON.parse(res[0])
-	alloc.id = id
-
-	// Validate allocation request
-	if (!alloc || !alloc.image || !alloc.tmps)
-		throw Muggle('Invalid image alloc')
-	for (let dir in alloc.tmps) {
-		const fileName = alloc.tmps[dir]
-		if (!/^[\w_]+$/.test(fileName))
-			throw Muggle('Suspicious filename: ' + JSON.stringify(fileName))
-	}
-	return alloc
-}
-
-/**
- * Copy image files from temporary folders to permanent served ones
- * @param {Object} alloc
- */
-async function commitImageAlloc(alloc) {
-	for (let kind in alloc.tmps) {
-		await etc.copyAsync(imager.media_path('tmp', alloc.tmps[kind]),
-			imager.media_path(kind, alloc.image[kind]))
-	}
-
-	// We should already hold the lock at this point.
-	const key = 'image:' + alloc.id,
-		m = redis.multi()
-	m.del(key)
-	m.del('lock:' + key)
-	await m.execAsync()
 }
