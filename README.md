@@ -1,11 +1,7 @@
-Real-time imageboard.
-MIT licensed.
-Supported platforms: Linux, OS X
+[![Dependency Status](https://david-dm.org/ipfs/js-ipfs-api.svg?style=flat-square)](https://david-dm.org/bakape/meguca.svg)
 
 **NOTE: The git master branch contains the development version of the board.
-Crashes are not uncommon as new features are added and patched. Don't use the
-master branch in production. For more stable revisions, please [download the
- latest release](https://github.com/bakape/meguca/releases).**
+For more stable revisions please [download the latest release](https://github.com/bakape/meguca/releases/latest).**
 
 ##Setup
 * Install [dependencies](#dependencies) listed below
@@ -41,7 +37,7 @@ with `node server/kill.js`
 
 ##Updating
 * To recompile the project rerun `npm install`
-* After upgrading an io.js version also run `npm rebuild`
+* After upgrading an node.js version also run `npm rebuild`
 * See `docs/` for upgrading between semver major releases
 
 ##Dependencies
