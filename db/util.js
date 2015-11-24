@@ -19,7 +19,7 @@ export function getThread(id) {
  * @returns {Object} - Same post object for convience
  */
 export function formatPost(post) {
-	for (let key of ['ip', 'deleted', 'imgDeleted']) {
+	for (let key of ['ip', 'deleted', 'imgDeleted', 'nonce']) {
 		delete post[key]
 	}
     return post

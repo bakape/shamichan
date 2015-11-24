@@ -1,4 +1,5 @@
-const admin = require('../server/admin'),
+const _ = require('underscore'),
+	admin = require('../server/admin'),
 	common = require('../common'),
 	util = require('./util')
 
@@ -26,8 +27,30 @@ export default class Reader {
 	 * @param {Object} opts - Extra options
 	 * @returns {(Object|null)} - Retrieved post or null
 	 */
-	async getThread(id, opts) {
+	async getThread(id, opts = {}) {
+		if (!(await util.parentThread(id)))
+			return null
+		const thread = await util.getThread(id)
+			.merge({
+				historyCtr: r.row('history').count(),
+				replyCtr: util.countReplies(r.row)
+				imageCtr: r.row('posts')
+					.coerceTo('array')
+					.filter(doc => doc(1).hasFields('image'))
+					.count()
+			})
+			.without('history')
+			.run(rcon)
 
+		// Verify thread OP access rights
+		if (!formatPost(_.clone(thread.posts[thread.id])))
+			return null
+		util.formatPost(thread)
+		for (let id in thread.posts) {
+			if (this.parsePost(thread[id]))
+				delete thread[id]
+		}
+		return thread
 	}
 
 	/**
@@ -36,7 +59,10 @@ export default class Reader {
 	 * @returns {(Object|null)} - Retrieved post or null
 	 */
 	async getPost(id) {
-		return this.parsePost(await util.getPost(id).run(rcon))
+		const op = await util.parentThread(id)
+		if (!op)
+			return null
+		return this.parsePost(await util.getThread(op)('posts')('id').run(rcon))
 	}
 
 	/**
@@ -53,13 +79,13 @@ export default class Reader {
 				return null
 			if (post.imgDeleted)
 				delete post.image
+			delete post.mod
 		}
 		if (this.canModerate) {
 			const mnemonic = admin.genMnemonic(post.ip)
 			if (mnemonic)
 				post.mnemnic = mnemonic
 		}
-		util.formatPost(post)
-		return post
+		return util.formatPost(post)
 	}
 }
