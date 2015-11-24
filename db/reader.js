@@ -1,5 +1,4 @@
-const _ = require('underscore'),
-	admin = require('../server/admin'),
+const admin = require('../server/admin'),
 	common = require('../common'),
 	util = require('./util')
 
@@ -28,29 +27,54 @@ export default class Reader {
 	 * @returns {(Object|null)} - Retrieved post or null
 	 */
 	async getThread(id, opts = {}) {
+		// Verify thread exists
 		if (!(await util.parentThread(id)))
 			return null
-		const thread = await util.getThread(id)
-			.merge({
+		let thread = this.threadQuery(util.getThread(id))
+
+		// Only show the last N post
+		if (opts.abbrev) {
+			thread = thread..merge({
+				posts: r.row('posts')
+					.coerceTo('array')
+					.slice(-opts.abbrev + 1)
+					.coerceTo('object')
+			})
+		}
+		thread = await thread.run(rcon)
+
+		// Verify thread access rights
+		if (!this.parsePost(thread.op))
+			return null
+		util.formatPost(thread)
+
+		// Delete duplicate OP post object, if any
+		delete thread.posts[thread.id]
+		for (let id in thread.posts) {
+			if (!this.parsePost(thread[id]))
+				delete thread[id]
+		}
+		return thread
+	}
+
+	/**
+	 * Common part of a all thread queries
+	 * @param {Object} thread
+	 * @returns {Object}
+	 */
+	threadQuery(thread) {
+		return thread.merge({
 				historyCtr: r.row('history').count(),
 				replyCtr: util.countReplies(r.row)
 				imageCtr: r.row('posts')
 					.coerceTo('array')
 					.filter(doc => doc(1).hasFields('image'))
 					.count()
+
+				// Ensure we always get the OP
+				op: r.row('posts')(r.row('id'))
 			})
 			.without('history')
-			.run(rcon)
-
-		// Verify thread OP access rights
-		if (!formatPost(_.clone(thread.posts[thread.id])))
-			return null
-		util.formatPost(thread)
-		for (let id in thread.posts) {
-			if (this.parsePost(thread[id]))
-				delete thread[id]
-		}
-		return thread
 	}
 
 	/**
@@ -62,7 +86,9 @@ export default class Reader {
 		const op = await util.parentThread(id)
 		if (!op)
 			return null
-		return this.parsePost(await util.getThread(op)('posts')('id').run(rcon))
+		return this.parsePost(await util.getThread(op)
+			('threads')(id)
+			.run(rcon))
 	}
 
 	/**
@@ -87,5 +113,30 @@ export default class Reader {
 				post.mnemnic = mnemonic
 		}
 		return util.formatPost(post)
+	}
+
+	/**
+	 * Retrieve all treads on the board with their OPs
+	 * @param {string} board - Target board
+	 * @param {string} orderBy - Index to order the threads by
+	 * @returns {Array} - Array of threads
+	 */
+	async getBoard(board, orderBy) {
+	    const threads = await r.table('threads')
+			.getAll(board, {index: 'board'})
+			.orderBy({index: orderBy})
+			.forEach(thread =>
+				this.threadQuery(thread)
+				.without('posts'))
+			.run(rcon)
+		for (let i; i < threads.length; i++) {
+			const thread = threads[i]
+			if (!this.parsePost(thread.op)) {
+				threads.splice(i, 1)
+				continue
+			}
+			util.formatPost(thread)
+		}
+		return threads
 	}
 }
