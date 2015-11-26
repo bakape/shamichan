@@ -60,11 +60,17 @@ async function initDB() {
 	await r.dbCreate('meguca').run(rcon)
 	rcon.use('meguca')
 	await r.tableCreate('main').run(rcon)
-	await r.table('main').insert({
-		id: 'info',
-		dbVersion,
-		postCtr: 0
-	}).run(rcon)
+	await r.table('main').insert([
+		{
+			id: 'info',
+			dbVersion,
+			postCtr: 0
+		},
+		// History counters of booards. Used for building e-tags.
+		{
+			id: 'boardCtrs'
+		}
+	]).run(rcon)
 	await r.tableCreate('threads').run(rcon)
 	for (let index of ['time', 'bumptime', 'board']) {
 		await r.table('threads').indexCreate(index).run(rcon)

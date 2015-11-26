@@ -81,7 +81,8 @@ export default class ClientController {
 		client.postLength = 0
 		const m = redis.multi()
 		post.image = await this.allocateImage(msg.image, m, true)
-		await r.table('threads').insert(thread).run(rcon)
+		await Promise.join(r.table('threads').insert(thread).run(rcon),
+			this.boardCounter(this.board))
 
 		// Prevent thread spam
 		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, post.id)
@@ -203,7 +204,7 @@ export default class ClientController {
 		for (let dir in alloc.tmps) {
 			const fileName = alloc.tmps[dir]
 			if (!/^[\w_]+$/.test(fileName))
-				throw Muggle(`Suspicious filename: ${JSON.stringify(fileName)}` +
+				throw Muggle(`Suspicious filename: ${JSON.stringify(fileName)}`
 		}
 		return alloc
 	}
@@ -227,6 +228,17 @@ export default class ClientController {
 		m.del(key)
 		m.del('lock:' + key)
 		await m.execAsync()
+	}
+
+	/**
+	 * Increment the history counter of the board, which is used to generate
+	 * e-tags
+	 * @param {string} board
+	 */
+	async boardCounter(board) {
+	    await r.('main').get('boardCtrs').update({
+			[board]: r.row(board).default(0).add(1)
+		}).run(rcon)
 	}
 
 	/**
@@ -261,17 +273,22 @@ export default class ClientController {
 		publishMsg = JSON.stringify(publishMsg)
 
 		// Write to database
-		await util.getThread(this.op).update({
-			history: r.row('history').append(publishMsg),
-			replies: {
-				[post.id]: post
-			}
-		}).run(rcon)
+		await Promise.join(
+			util.getThread(this.op).update({
+				history: r.row('history').append(publishMsg),
+				replies: {
+					[post.id]: post
+				}
+			}).run(rcon),
+			this.boardCounter(this.board)
+		)
 
 		cache.add(m, post.id, this.op, this.board)
-		await this.publish(m, this.op, publishMsg)
-		await this.bumpThread()
-		await this.backlinks(links)
+		await Promise.join(
+			this.publish(m, this.op, publishMsg),
+			this.bumpThread(),
+			this.backlinks(links)
+		)
 	}
 
 	/**
@@ -401,7 +418,9 @@ export default class ClientController {
 	 */
 	async backlinks(links) {
 		const {id} = this.client.post
-		for (let num in links) {
+
+		// Run all operations in parallel
+		await Promise.all(Object.keys(links).map(async num => {
 			const [board, op] = links[num]
 
 			// Coerce to integer
@@ -411,12 +430,15 @@ export default class ClientController {
 			// Fail silently, because it does not effect the source post
 			if (!op)
 				continue
-			await this.updatePost(num, op, {
-				backlinks: {
-					[id]: [this.board, this.op]
-				}
-			})
-		}
+			await Promise.join(
+				this.updatePost(num, op, {
+					backlinks: {
+						[id]: [this.board, this.op]
+					}
+				}),
+				this.boardCounter(board)
+			)
+		}))
 	}
 
 	/**
@@ -431,12 +453,15 @@ export default class ClientController {
 	 */
 	async updatePost(id, op, update, live = updateMessage(id, update)) {
 		live = JSON.stringify(live)
-		await util.getThread(op).update({
-			history: r.row('history').append(live),
-			posts: {
-				[id]: update
-			}
-		}).run(rcon)
+		await Promise.join(
+			util.getThread(op).update({
+				history: r.row('history').append(live),
+				posts: {
+					[id]: update
+				}
+			}).run(rcon),
+			this.boardCounter(this.board)
+		)
 		await redis.publishAsync(op, live)
 	}
 
@@ -475,11 +500,10 @@ export default class ClientController {
 	 */
 	async finishPost() {
 		const {id} = this.client.post
-		await this.updatePost(id, this.op, {editing: false})
 		delete this.client.post
-
-		// Remove from open post set
-		await redis.sremAsync('liveposts', id)
+		await Promise.join(this.updatePost(id, this.op, {editing: false}),
+			// Remove from open post set
+			redis.sremAsync('liveposts', id))
 	}
 }
 
