@@ -33,14 +33,7 @@ emitter.on('change:clients', () => {
 	websockets.push(IPs.size)
 })
 
-exports.dbCache = {
-	OPs: {},
-	boards: {},
-	threadSubs: {},
-	bans: []
-};
-
-const RES = exports.resources = {};
+export const resources = {}
 exports.clientHotConfig = {};
 exports.clientConfigHash = '';
 const clients = exports.clients = new Set()
@@ -74,8 +67,8 @@ exports.IPcount = IPCount
 const clientConfig = exports.clientConfig = _.pick(config,
 	'USE_WEBSOCKETS', 'SOCKET_PATH', 'SOCKET_URL', 'DEBUG', 'READ_ONLY',
 	'IP_TAGGING', 'RADIO', 'PYU', 'BOARDS', 'LANGS', 'DEFAULT_LANG',
-	'WEBM', 'UPLOAD_URL', 'MEDIA_URL', 'SECONDARY_MEDIA_URL', 
-	'THUMB_DIMENSIONS', 'PINKY_DIMENSIONS', 'SPOILER_IMAGES', 'IMAGE_HATS', 
+	'WEBM', 'UPLOAD_URL', 'MEDIA_URL', 'SECONDARY_MEDIA_URL',
+	'THUMB_DIMENSIONS', 'PINKY_DIMENSIONS', 'SPOILER_IMAGES', 'IMAGE_HATS',
 	'ASSETS_DIR', 'RECAPTCHA_PUBLIC_KEY', 'LOGIN_KEYWORD', 'STAFF_BOARD',
 	'link_targets');
 
@@ -126,7 +119,7 @@ function reloadModClient(cb) {
 		function (err, files) {
 			if (err)
 				return cb(err);
-			_.extend(RES, files);
+			_.extend(resources, files);
 			cb();
 		}
 	);
@@ -194,7 +187,7 @@ function reload_resources(cb) {
 	read_templates(function (err, tmpls) {
 		if (err)
 			return cb(err);
-		_.extend(RES, expand_templates(tmpls));
+		_.extend(resources, expand_templates(tmpls));
 		cb();
 	});
 }

@@ -116,14 +116,13 @@ export default class Reader {
 	}
 
 	/**
-	 * Retrieve all treads on the board with their OPs
-	 * @param {string} board - Target board
+	 * Retrieve all threads on the board with their OPs
 	 * @param {string} orderBy - Index to order the threads by
 	 * @returns {Array} - Array of threads
 	 */
-	async getBoard(board, orderBy) {
+	async getBoard(orderBy) {
 	    const threads = await r.table('threads')
-			.getAll(board, {index: 'board'})
+			.getAll(this.board, {index: 'board'})
 			.orderBy({index: orderBy})
 			.forEach(thread =>
 				this.threadQuery(thread)

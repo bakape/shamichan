@@ -15,68 +15,64 @@ const _ = require('underscore'),
 	imager = require('../../imager/daemon'),
 	persona = require('../persona'),
 	util = require('./util'),
-	websocket = require('./websocket');
+	websocket = require('./websocket')
 
 const app = express(),
-	server = http.createServer(app);
+	server = http.createServer(app)
 
-app.enable('strict routing').disable('etag');
-server.listen(config.LISTEN_PORT);
+app.enable('strict routing').disable('etag')
+server.listen(config.LISTEN_PORT)
 
 // NOTE: Order is important as it determines handler priority
 
-app.use(cookieParser());
+app.use(cookieParser())
 
 // Pass the client IP through authentication checks
-app.use(function(req, res, next) {
-	let ip = req.connection.remoteAddress;
+app.use((req, res, next) => {
+	let ip = req.connection.remoteAddress
 	if (config.TRUST_X_FORWARDED_FOR)
-		ip = util.parse_forwarded_for(req.headers['x-forwarded-for']) || ip;
+		ip = util.parse_forwarded_for(req.headers['x-forwarded-for']) || ip
 	if (!ip) {
-		res.set({'Content-Type': 'text/plain'});
-		res.status(500).send(
-			"Your IP could not be determined. This server is misconfigured."
-		);
-		return;
+		res.set({'Content-Type': 'text/plain'})
+		return res.status(500).send("Your IP could not be determined. "
+			+ "This server is misconfigured.")
 	}
-	req.ident = caps.lookup_ident(ip);
-	// TODO: A prettier ban page would be nice, once we have actual ban comments
+	req.ident = caps.lookUpIdent(ip)
+
+	// TODO: A prettier ban page would be nice
 	if (req.ident.ban)
-		return util.send404(res);
+		return util.send404(res)
 
 	// Staff authentication
-	const loginCookie = persona.extract_login_cookie(req.cookies);
+	const loginCookie = persona.extract_login_cookie(req.cookies)
 	if (loginCookie) {
-		persona.check_cookie(loginCookie, function (err, ident) {
+		persona.check_cookie(loginCookie, (err, ident) => {
 			if (!err)
-				_.extend(req.ident, ident);
-			next();
+				_.extend(req.ident, ident)
+			next()
 		})
 	}
 	else
-		next();
-});
+		next()
+})
 
-websocket.start(server);
+websocket.start(server)
 if (config.GZIP)
-	app.use(compress());
-app.post('/login', persona.login)
-	.post('/logout', persona.logout)
-	.post('/upload/', imager.new_upload)
+	app.use(compress())
+app.post('/upload/', imager.new_upload)
 	.use(admin)
-	.use('/api/', api);
+	.use('/api/', api)
+	.use(html)
 if (config.SERVE_STATIC_FILES) {
-	const opts = {};
+	const opts = {}
 	if (!config.DEBUG) {
-		opts.etag = false;
-		opts.maxAge = '350 days';
+		opts.etag = false
+		opts.maxAge = '350 days'
 	}
 	else
-		opts.setHeaders = res => res.set(util.noCacheHeaders);
-	app.use(express.static('www', opts));
+		opts.setHeaders = res => res.set(util.noCacheHeaders)
+	app.use(express.static('www', opts))
 }
 
-app.use(html);
-
 // No match on other routers
-app.use((req, res) => util.send404(res));
+app.use((req, res) => util.send404(res))

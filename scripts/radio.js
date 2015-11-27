@@ -95,7 +95,7 @@ function extract_thread(url) {
 	if (!m)
 		return;
 	var board = m[1];
-	if (!db.is_board(board) || !caps.can_access_board(RADIO_IDENT, board))
+	if (!caps.can_access_board(RADIO_IDENT, board))
 		return;
 	var op = parseInt(m[2], 10);
 	if (!op)

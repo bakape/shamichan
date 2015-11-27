@@ -98,11 +98,16 @@ function which(name, callback) {
 }
 exports.which = which;
 
-// Veryfies a client's setting is compatible with the server's. Otherwise
-// returns default.
-function resolveConfig(server, client, def) {
+/**
+ * Veryfies a client's setting is compatible with the server's. Otherwise
+ * returns default.
+ * @param {Array} server - Possible available settings
+ * @param {string|Number} client - Client setting
+ * @param {string|Number} def - Default setting
+ * @returns {string|Number}
+ */
+export function resolveConfig(server, client, def) {
 	if (~server.indexOf(client))
-		return client;
-	return def;
+		return client
+	return def
 }
-exports.resolveConfig = resolveConfig;

@@ -7,8 +7,13 @@
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
 	<link rel="stylesheet" href="{{MEDIA_URL}}css/base.css?v={{css_hash}}">
 	<link rel="stylesheet" id="theme">
-	<script>var imports = {{client_imports}};</script>
+	<script>
+		var imports = {{client_imports}}
+	</script>
 	<script src="{{MEDIA_URL}}js/setup.js?v={{client_hash}}"></script>
+	<script id="postData" type="application/json">
+		$POSTJSON
+	</script>
 	<noscript>
 		<h1 id="noscriptHeader">
 			>disabling JavaScript
@@ -16,8 +21,16 @@
 	</noscript>
 </head>
 <fieldset id="identity" class="bmodal glass">
-	<label for="name" class="ident">{{name}}</label> <input id="name" name="name"><br>
-	<label for="email" class="ident">{{email}}</label> <input id="email" name="email"><br>
+	<label for="name" class="ident">
+		{{name}}
+	</label>
+	<input id="name" name="name">
+	<br>
+	<label for="email" class="ident">
+		{{email}}
+	</label>
+	<input id="email" name="email">
+	<br>
 </fieldset>
 <div id="hover_overlay"></div>
 <image src="{{MEDIA_URL}}css/ui/loading.gif" id="loadingImage" width="224" height="128">
@@ -61,9 +74,7 @@ $RETARDBANNER
 <h1>
 	$IMAGEBANNER
 </h1>
-<threads>
-	$THREADS
-</threads>
+<threads></threads>
 <iframe name="upload" id="hiddenUpload"></iframe>
 <pre id="sizer"></pre>
 <script src="{{MEDIA_URL}}js/vendor.js?v={{vendor_hash}}"></script>

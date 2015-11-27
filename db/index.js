@@ -66,13 +66,13 @@ async function initDB() {
 			dbVersion,
 			postCtr: 0
 		},
-		// History counters of booards. Used for building e-tags.
+		// History counters of boards. Used for building etags.
 		{
 			id: 'boardCtrs'
 		}
 	]).run(rcon)
 	await r.tableCreate('threads').run(rcon)
-	for (let index of ['time', 'bumptime', 'board']) {
+	for (let index of ['time', 'bumpTime', 'board']) {
 		await r.table('threads').indexCreate(index).run(rcon)
 	}
 
