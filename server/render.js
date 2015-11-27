@@ -1,10 +1,7 @@
 const _ = require('underscore'),
-	caps = require('./caps'),
-	common = require('../common/index'),
+	common = require('../common'),
 	config = require('../config'),
-	db = require('../db'),
-	etc = require('../util/etc'),
-	languagePacks = require('../lang/'),
+	languagePacks = require('../lang'),
 	state = require('./state');
 
 /**
@@ -65,6 +62,6 @@ function imageBanner() {
  * @returns {string}
  */
 function loginCredentials(ident) {
-	const keys = JSON.stringify(_.pick(ident, 'auth', 'csrf', 'email'));
+	const keys = JSON.stringify(_.pick(ident, 'auth', 'csrf', 'email'))
 	return `var IDENT = ${keys}`
 }

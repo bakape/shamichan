@@ -24,8 +24,7 @@ const RES = state.resources
 const vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
 	'X-Frame-Options': 'sameorigin',
-	'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate, private',
-	'Pragma': 'no-cache',
+	'Cache-Control': 'max-age=0, must-revalidate',
 	'Expires': 'Fri, 01 Jan 1990 00:00:00 GMT'
 }
 
@@ -39,15 +38,19 @@ router.get('/', (req, res) => {
 // Redirect `/board` to `/board/` The client parses the URL to determine
 // what page it is on. So we need the trailing slash for easier board
 // determination and consistency.
-router.get(/^\/(\w+)$/, (req, res) => res.redirect(`/${req.params[0]}/`))
+router.get(/^\/(\w+)$/, (req, res) =>
+	res.redirect(`/${req.params[0]}/`))
 
-// Respond to board page requests
-router.get(/^\/(\w+)\//$/, (req, res) => {
-	const [board] = req.board = req.params
+// Respond to board and thread page requests
+router.get(/^\/(\w+)\/()/$/, (req, res) => {
+	const [board, thread] = req.board = req.params
 	if (!caps.canAccessBoard(req.ident, board))
 		return util.send404(res)
-	renderBoard(req, resp).catch(err => {
-		winston.error("Board rendering error:", err)
+	const handler = thread
+		? renderThread(req, resp, parseInt(thread))
+		: renderBoard(req, resp)
+	handler.catch(err => {
+		winston.error("Rendering error:", err)
 		res.status(500).send(err)
 	})
 })
@@ -56,12 +59,14 @@ router.get(/^\/(\w+)\//$/, (req, res) => {
  * Render board HTML
  * @param {http.ClientRequest} req
  * @param {http.ServerResponse} res
- * @param {string} board
  */
 async function renderBoard(req, res) {
 	const {board} = req
-	const counter = await r.table('main').get('boardCtrs')
-		(board).default(0).run(rcon)
+	const counter = await r.table('main')
+		.get('boardCtrs')
+		(board)
+		.default(0)
+		.run(rcon)
 	if (!validateEtag(req, res, counter))
 		return
 	const json = await new Reader(board, req.ident)
@@ -69,73 +74,31 @@ async function renderBoard(req, res) {
 	res.send(render(req, json))
 }
 
-// Thread pages
-router.get(/^\/(\w+)\/(\d+)$/,
-	util.boardAccess,
-	function(req, res, next) {
-		const {board, ident} = req,
-			num = parseInt(req.params[1], 10);
-		if (!db.validateOP(num, board))
-			return redirectNum(req, res, num) || util.send404(res);
-		if (!caps.can_access_thread(ident, num))
-			return util.send404(res);
+/**
+ * Render thread HTML
+ * @param {http.ClientRequest} req
+ * @param {http.ServerResponse} res
+ * @param {int}	thread
+ */
+async function renderThread(req, res, thread) {
+	const {board} = req
+	if (!(await cache.validateOP(thread, board)))
+		return util.send404(res)
+	const counter = await r.table('threads')
+		.get(thread)
+		('history')
+		.count()
 
-		const yaku = new db.Yakusoku(board, ident),
-			reader = new db.Reader(ident),
-			opts = {};
+	// Append last N posts to display setting, if valid
+	const lastN = detectLastN(req.query)
+	if (lastN)
+		extra = `-last${lastN}`
+	if (!validateEtag(req, res, counter, extra))
+		return
+	const json = await new Reader(board, req.ident).getThread(thread, lastN)
+	res.send(render(req, json))
+}
 
-		const lastN = detect_last_n(req.query);
-		if (lastN)
-			opts.abbrev = lastN + state.hot.ABBREVIATED_REPLIES;
-
-		reader.get_thread(num, opts);
-		reader.once('nomatch', function() {
-			util.send404(res);
-			yaku.disconnect();
-		});
-		reader.once('begin', function(preThread) {
-			let extra = '';
-			if (lastN)
-				extra += '-last' + lastN;
-			if (preThread.locked)
-				extra += '-locked';
-			if (!buildEtag(req, res, preThread.hctr, extra))
-				return yaku.disconnect();
-
-			res.yaku = yaku;
-			res.reader = reader;
-			res.opts = {
-				board,
-				op: num,
-				subject: preThread.subject,
-				abbrev: opts.abbrev
-			};
-			next();
-		});
-	},
-	function(req, res, next) {
-		const {opts, reader, yaku} = res;
-		new render.Thread(reader, req, res, {
-			fullPosts: true,
-			board: opts.board,
-			op: opts.op,
-			subject: opts.subject
-		});
-		reader.emit('top');
-		reader.once('end', function() {
-			reader.emit('bottom');
-			next();
-		});
-		reader.once('error', on_err);
-		yaku.once('error', on_err);
-
-		function on_err(err) {
-			winston.error(`thread ${num}:`, err);
-			next();
-		}
-	},
-	finish
-);
 
 /**
  * Build an etag and check if it mathces the one provided by the client. If yes,
@@ -145,21 +108,29 @@ router.get(/^\/(\w+)\/(\d+)$/,
  * @param {int} ctr - Progress counter of board/thread
  * @returns {boolean}
  */
-function validateEtag(req, res, ctr) {
+function validateEtag(req, res, ctr, extra) {
 	const etag = parseCookies(req, ctr) + parseUserAgent(req)
 	if (config.DEBUG) {
 		res.set(util.noCacheHeaders)
 		return true
 	}
+	const {auth} = req.ident
+	if (auth)
+		etag += `-${auth}`
+	if (extra)
+		etag += extra
 
 	// Etags match. No need to rerender.
 	if (req.headers['If-None-Match'] === etag) {
 		res.sendStatus(304)
 		return false
 	}
-
 	const headers = _.clone(vanillaHeaders)
 	headers.ETag = etag
+
+	// Don't distribute confidential caches to other clients
+	if (auth)
+		heders['Cache-Control'] += ', private'
 	res.set(headers)
 	return true
 }
@@ -198,11 +169,16 @@ function parseUserAgent(req) {
 	return etag
 }
 
-function detect_last_n(query) {
+/**
+ * Validate the client's last N posts to display setting
+ * @param {Object} query
+ * @returns {int}
+ */
+function detectLastN(query) {
 	if (query.last) {
-		const n = parseInt(query.last, 10);
+		const n = parseInt(query.last, 10)
 		if (common.reasonable_last_n(n))
-			return n;
+			return n
 	}
-	return 0;
+	return 0
 }

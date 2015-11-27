@@ -23,21 +23,21 @@ export default class Reader {
 	/**
 	 * Retrieve thread JSON from the database
 	 * @param {int} id - Thread id
-	 * @param {Object} opts - Extra options
+	 * @param {int} opts - Last N posts to fetch. 0 fetches all.
 	 * @returns {(Object|null)} - Retrieved post or null
 	 */
-	async getThread(id, opts = {}) {
+	async getThread(id, lastN) {
 		// Verify thread exists
 		if (!(await util.parentThread(id)))
 			return null
 		let thread = this.threadQuery(util.getThread(id))
 
 		// Only show the last N post
-		if (opts.abbrev) {
+		if (lastN) {
 			thread = thread..merge({
 				posts: r.row('posts')
 					.coerceTo('array')
-					.slice(-opts.abbrev + 1)
+					.slice(-lastN + 1)
 					.coerceTo('object')
 			})
 		}
