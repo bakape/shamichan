@@ -130,10 +130,10 @@ class Reader {
 				self.threadQuery(thread)
 				.without('posts'))
 			.run(rcon)
-		for (let i; i < threads.length; i++) {
-			const thread = threads[i]
+		for (let num in threads) {
+		    const thread = threads[num]
 			if (!this.parsePost(thread.op)) {
-				threads.splice(i, 1)
+				delete threads[num]
 				continue
 			}
 			util.formatPost(thread)
