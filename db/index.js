@@ -39,11 +39,13 @@ export async function init() {
 		host: config.rethink_host,
 		port: config.rethinkdb_port
 	})
-	const isCreated = await r.dbList().contains('meguca').run(rcon)
+	const isCreated = await r.dbList()
+		.contains(config.rethinkdb_database)
+		.run(rcon)
 	if (!isCreated)
 		await initDB()
 	else {
-		rcon.use('meguca')
+		rcon.use(config.rethinkdb_database)
 		const info = await r.table('main').get('info').run(rcon)
 		verifyVersion(info.dbVersion, 'RethinkDB')
 	}
@@ -58,8 +60,8 @@ export async function init() {
  * Create needed tables and initial documents
  */
 async function initDB() {
-	await r.dbCreate('meguca').run(rcon)
-	rcon.use('meguca')
+	await r.dbCreate(config.rethinkdb_database).run(rcon)
+	rcon.use(config.rethinkdb_database)
 	await r.tableCreate('main').run(rcon)
 	await r.table('main').insert([
 		{
