@@ -43,6 +43,7 @@ this.hot = {
 	staff_aliases: {
 		admin: 'Admin',
 		moderator: 'Moderator',
+		dj: 'DJ',
 		janitor: 'Janitor'
 	},
 	SPECIAL_TRIPCODES: {

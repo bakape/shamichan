@@ -70,9 +70,8 @@ function verify_auth(resp, packet) {
 		return respond_error(resp, 'Login attempt expired.');
 
 	const email = packet.email;
-	const auth = _.find(['admin', 'moderator', 'janitor'], function (type) {
-		return email in config.staff[type];
-	});
+	const auth = _.find(['admin', 'moderator', 'dj', 'janitor'], type =>
+		config.staff[type] && email in config.staff[type])
 	if (!auth) {
 		winston.error("Login attempt by " + email);
 		return respond_error(resp, 'Wrong Persona.');

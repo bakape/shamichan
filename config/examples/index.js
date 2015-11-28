@@ -86,6 +86,7 @@ module.exports = {
 	staff: {
 		admin: {'lalc@doushio.com': 'lalc'},
 		moderator: {'mod@doushio.com': 'mod'},
+		dj: {'dj@doushio.com': 'dj'},
 		janitor: {'janitor@doushio.com': 'janny'}
 	},
 // You can log in/out by typing the following keyword in the email field

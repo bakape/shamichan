@@ -36,14 +36,14 @@ redis.on('error', err => winston.error('Redis error:', err));
 
 // Validate database spec version
 {
-	const dbVersion = '1', 
+	const dbVersion = '1',
 		m = redis.multi();
 	m.get('postctr');
 	m.get('dbVersion');
 	m.exec((err, res) => {
 		if (err)
 			throw err;
-		
+
 		// If post counter does not exist, we assume the database does not
 		// have any posts
 		if (!res[0]) {
@@ -205,7 +205,7 @@ class Subscription extends events.EventEmitter {
 	}
 	static full_key(target, ident) {
 		let channel;
-		if (common.checkAuth('moderator', ident))
+		if (common.checkAuth('dj', ident))
 			channel = 'mod';
 		else if (common.checkAuth('janitor', ident))
 			channel = 'auth';
@@ -256,7 +256,7 @@ function load_OPs(callback) {
 				for (let thread of allThreads[i]) {
 					const num = parseInt(thread, 10);
 					cacheBoard(boards[i], num);
-					
+
 					// For consitency, an OP will have it's own post
 					// number in the cache
 					cacheOP(num, num);
@@ -287,7 +287,7 @@ function cacheOP(num, op) {
 
 function uncacheThread(num) {
 	delete BOARDS[num];
-	
+
 	// And all of the thread's posts. This includes the OP.
 	for (let post in OPs) {
 		if (OPs[post] == num)
@@ -299,7 +299,7 @@ function uncacheThread(num) {
 // very little is chached into memory - only thread to board and post to
 // thread parenthood. This function is called through redis pub/sun to ensure
 // cache consitency between possible  multiple slave servers, once
-// clustering is implemnted. 
+// clustering is implemnted.
 function update_cache(chan, msg) {
 	msg = JSON.parse(msg);
 	let [kind, num, parent] = msg;
@@ -435,7 +435,7 @@ class Yakusoku extends events.EventEmitter {
 			ip,
 			state: msg.state.join()
 		};
-		const optPostFields = ['name', 'trip', 'email', 'auth', 'subject', 
+		const optPostFields = ['name', 'trip', 'email', 'auth', 'subject',
 			'dice'];
 		for (let field of optPostFields) {
 			if (msg[field])
@@ -564,7 +564,7 @@ class Yakusoku extends events.EventEmitter {
 		);
 	}
 	imageDuplicateHash(m, hash, num) {
-		m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000), 
+		m.zadd('imageDups', Date.now() + (config.DEBUG ? 30000 : 3600000),
 			`${num}:${hash}`);
 	}
 	writeDice(m, dice, key) {
@@ -578,7 +578,7 @@ class Yakusoku extends events.EventEmitter {
 			const key = (targetNum in BOARDS ? 'thread' : 'post')
 				+ `:${targetNum}:backlinks`;
 			m.hset(key, num, op);
-			this._log(m, links[targetNum], common.BACKLINK, 
+			this._log(m, links[targetNum], common.BACKLINK,
 				[targetNum, num, op]);
 		}
 	}
@@ -652,7 +652,7 @@ class Yakusoku extends events.EventEmitter {
 				this._log(m, op, common.INSERT_IMAGE, [num, image]);
 
 				const now = Date.now();
-				this.update_throughput(m, ip, now, 
+				this.update_throughput(m, ip, now,
 					this.post_volume({image: true}));
 				m.exec(next);
 			}
@@ -661,7 +661,7 @@ class Yakusoku extends events.EventEmitter {
 	append_post(post, tail, old_state, extra, cb) {
 		const m = redis.multi(),
 			key = (post.op ? 'post:' : 'thread:') + post.num;
-		
+
 		/* Don't need to check .exists() thanks to client state */
 		m.append(key + ':body', tail);
 
@@ -670,7 +670,7 @@ class Yakusoku extends events.EventEmitter {
 			m.hset(key, 'state', post.state.join());
 		if (extra.ip) {
 			const now = Date.now();
-			this.update_throughput(m, extra.ip, now, 
+			this.update_throughput(m, extra.ip, now,
 				this.post_volume(null, tail));
 		}
 		if (!_.isEmpty(extra.new_links))
@@ -678,7 +678,7 @@ class Yakusoku extends events.EventEmitter {
 
 		const {num} = post,
 			op = post.op || num,
-		
+
 		// TODO: Make less dirty, when post state is refactored
 			_extra = {state: [old_state[0] || 0, old_state[1] || 0]};
 		const {links} = extra;
@@ -698,7 +698,7 @@ class Yakusoku extends events.EventEmitter {
 	finish_post(post, callback) {
 		const m = redis.multi(),
 			key = (post.op ? 'post:' : 'thread:') + post.num;
-		
+
 		/* Don't need to check .exists() thanks to client state */
 		this.finish_off(m, key, post.body);
 		this._log(m, post.op || post.num, common.FINISH_POST, [post.num]);
@@ -795,7 +795,7 @@ class Yakusoku extends events.EventEmitter {
 		const m = redis.multi();
 		m.zrevrange(key, start, end);
 		m.zcard(key);
-		
+
 		// Used for building board eTags
 		m.get(keyBase + ':postctr');
 		m.exec((err, res) => {
@@ -806,7 +806,7 @@ class Yakusoku extends events.EventEmitter {
 				return this.emit('nomatch');
 			this.emit('begin', res[1] || 0, res[2] || 0);
 			const reader = new Reader(this.ident);
-			
+
 			// Proxy Reader events to Yakusoku
 			reader.on('error', this.emit.bind(this, 'error'));
 			reader.on('thread', this.emit.bind(this, 'thread'));
@@ -822,7 +822,7 @@ class Yakusoku extends events.EventEmitter {
 			reader.removeAllListeners('end');
 			return;
 		}
-		
+
 		const self = this;
 		function next_please() {
 			reader.removeListener('end', next_please);
@@ -855,7 +855,7 @@ class Yakusoku extends events.EventEmitter {
 					redis.zrem(`board:${board}:threads`, op);
 					return callback();
 				}
-				
+
 				// Get reply list
 				redis.lrange(key + ':posts', 0, -1, next);
 			},
@@ -867,7 +867,7 @@ class Yakusoku extends events.EventEmitter {
 					nums.push(posts[i]);
 					posts[i] = 'post:' + posts[i];
 				}
-				
+
 				// Parse OP key like all other hashes. `res` will always be an
 				// array, even if empty.
 				posts.unshift(key);
@@ -877,7 +877,7 @@ class Yakusoku extends events.EventEmitter {
 						m.exists(`${key}:${suffix}`);
 					}
 				}
-				
+
 				// A bit more complicated, because we need to pass two arguments
 				// to the next function, to map the arrays
 				m.exec((err, res) => next(err, res, posts));
@@ -934,7 +934,7 @@ class Yakusoku extends events.EventEmitter {
 			(res, next) =>
 				// Delete all images
 				async.each(filesToDel,
-					(file, cb) => 
+					(file, cb) =>
 						fs.unlink(file, err => cb(err)),
 					err => next(err)),
 			next => {
@@ -953,7 +953,7 @@ class Yakusoku extends events.EventEmitter {
 		redis.set('banner:info', message, err => {
 			if (err)
 				return cb(err);
-			
+
 			// Dispatch new banner
 			const m = redis.multi();
 			this._log(m, 0, common.UPDATE_BANNER, [message]);
@@ -963,7 +963,7 @@ class Yakusoku extends events.EventEmitter {
 	modHandler(kind, nums, cb) {
 		if (this.isContainmentBoard)
 			return false;
-		
+
 		// Group posts by thread for live publishes to the clients
 		const threads = {};
 		for (let num of nums) {
@@ -973,7 +973,7 @@ class Yakusoku extends events.EventEmitter {
 			threads[op].push(num);
 		}
 		async.forEachOf(threads, (nums, op, cb) =>
-			this.handleModeration(nums, op, kind, cb), 
+			this.handleModeration(nums, op, kind, cb),
 		cb);
 		return true;
 	}
@@ -1000,13 +1000,13 @@ class Yakusoku extends events.EventEmitter {
 					// Check if post is eligible for moderation action
 					if (check(res[i]))
 						continue;
-					
+
 					// Persist to redis
 					const key = keys[i],
 						num = nums[i],
 						msg = [num];
 					persist(m, key, msg);
-					
+
 					// Live publish
 					this.logModeration(m, {key, op, kind, num, msg});
 				}
@@ -1183,8 +1183,8 @@ class Reader extends events.EventEmitter {
 		// Call the EventEmitter's constructor
 		super();
 		if (common.checkAuth('janitor', ident)) {
-			this.hasAuth = true;
-			this.canModerate = common.checkAuth('moderator', ident);
+			this.canSeeModeration = true;
+			this.canSeeMnemonics = common.checkAuth('dj', ident);
 		}
 	}
 	get_thread(num, opts) {
@@ -1194,7 +1194,7 @@ class Reader extends events.EventEmitter {
 				return this.emit('error', err);
 			if (!pre_post || !this.formatPost(pre_post))
 				return this.emit('nomatch');
-			
+
 			this.emit('begin', pre_post);
 
 			let nums, opPost,
@@ -1210,7 +1210,7 @@ class Reader extends events.EventEmitter {
 
 						// order is important!
 						m.lrange(postsKey, -abbrev, -1);
-						
+
 						// The length of the above array is limited by the
 						// amount of posts we are retrieving. A total number
 						// of posts is quite useful.
@@ -1230,10 +1230,10 @@ class Reader extends events.EventEmitter {
 						this.parseExtras(rs, opPost);
 						if (abbrev)
 							total += parseInt(rs.shift(), 10);
-						
+
 						opPost.omit = Math.max(total - abbrev, 0);
 						opPost.hctr = parseInt(opPost.hctr, 10);
-						
+
 						// So we can pass a thread number on `endthread`
 						// emission
 						opts.op = opPost.num;
@@ -1255,7 +1255,7 @@ class Reader extends events.EventEmitter {
 		m.hgetall(key + ':links');
 		m.hgetall(key + ':backlinks');
 		m.lrange(key + ':dice', 0, -1);
-		if (this.hasAuth)
+		if (this.canSeeModeration)
 			m.lrange(key + ':mod', 0, -1);
 	}
 	parseExtras(res, post) {
@@ -1265,7 +1265,7 @@ class Reader extends events.EventEmitter {
 				post[key] = prop;
 		}
 		this.parseStringList(res, 'dice', post);
-		if (this.hasAuth)
+		if (this.canSeeModeration)
 			this.parseStringList(res, 'mod', post);
 	}
 	parseStringList(res, prop, post) {
@@ -1277,13 +1277,13 @@ class Reader extends events.EventEmitter {
 		post[prop] = destringifyList(list.reverse())
 	}
 	formatPost(post) {
-		if (!this.hasAuth) {
+		if (!this.canSeeModeration) {
 			if (post.deleted)
 				return false;
 			if (post.imgDeleted)
 				imager.deleteImageProps(post);
 		}
-		if (this.canModerate) {
+		if (this.canSeeMnemonics) {
 			const mnemonic = admin.genMnemonic(post.ip);
 			if (mnemonic)
 				post.mnemonic = mnemonic;
@@ -1338,7 +1338,7 @@ class Reader extends events.EventEmitter {
 	with_body(key, post, callback) {
 		if (post.body !== undefined)
 			return callback(null, post);
-		
+
 		redis.get(key + ':body', function(err, body) {
 			if (err)
 				return callback(err);
@@ -1347,7 +1347,7 @@ class Reader extends events.EventEmitter {
 				post.editing = true;
 				return callback(null, post);
 			}
-			
+
 			// Race condition between finishing posts
 			redis.hget(key, 'body', function(err, body) {
 				if (err)

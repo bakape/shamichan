@@ -30,10 +30,17 @@ const ToolboxView = Backbone.View.extend({
 			'deletePosts',
 			'modLog'
 		];
-		if (common.checkAuth('moderator', main.ident)) {
-			specs.push('toggleMnemonics', 'lockThreads', 'ban');
-			if (common.checkAuth('admin', main.ident))
-				specs.push('sendNotification', 'renderPanel');
+
+		// Add aditional panel buttons by priveledge level
+		const accessLevels = [
+			['dj', ['toggleMnemonics']],
+			['moderator', ['lockThreads', 'ban']],
+			['admin', ['sendNotification', 'renderPanel']]
+		]
+		for (let level of accessLevels) {
+			if (!common.checkAuth(level[0], main.ident))
+				break
+			level[1].forEach(right => specs.push(right))
 		}
 
 		let controls = '<span>';

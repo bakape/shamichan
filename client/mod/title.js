@@ -19,8 +19,10 @@ const $authName = main.$('#authName');
 main.oneeSama.hook('fillMyName', $el => {
 	const checked = $authName[0].checked;
 	$el.toggleClass(auth === 'admin' ? 'admin' : 'moderator', checked);
-	if (checked)
-		$el.append(' ## ' + main.state.hotConfig.get('staff_aliases')[auth]);
+	if (checked) {
+		$el.append(' ## ' + main.state.hotConfig
+			.get('staff_aliases')[auth] || auth);
+	}
 });
 $authName.change(() => main.request('postForm:indentity'));
 
