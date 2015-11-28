@@ -26,7 +26,7 @@ export class Client extends events.EventEmitter {
 	constructor(socket, ip) {
 		super()
 		this.socket = socket
-		this.ident = caps.lookup_ident(ip)
+		this.ident = caps.lookUpIdent(ip)
 		state.clients.add(this)
 		state.countIPs()
 	}
@@ -105,7 +105,7 @@ export class Client extends events.EventEmitter {
  */
 function scan_client_caps() {
 	for (let client of state.clients) {
-		if (!caps.lookup_ident(client.ident.ip).ban)
+		if (!caps.lookUpIdent(client.ident.ip).ban)
 			continue
 		client.ident.ban = true
 		client.disconnect(Muggle('Banned'))
