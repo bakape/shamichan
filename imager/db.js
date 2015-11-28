@@ -12,7 +12,7 @@ const async = require('async'),
 const IMG_EXPIRY = 60;
 let redis = global.redis;
 
-class ClientController extends events.EventEmitter {
+export class ClientController extends events.EventEmitter {
 	constructor() {
 		super();
 	}
@@ -50,27 +50,6 @@ class ClientController extends events.EventEmitter {
 				cb(null, false); // wasn't found
 		});
 	}
-	// catch any dangling images on server startup
-	delete_temporaries(callback) {
-		redis.smembers('temps', function(err, temps) {
-			if (err)
-				return callback(err);
-			async.each(temps,
-				function (temp, cb) {
-					fs.unlink(temp, function(err) {
-						if (err)
-							winston.warn('temp: ' + err);
-						else
-							winston.info('del temp ' + temp);
-						cb();
-					});
-				},
-				function() {
-					redis.del('temps', callback);
-				}
-			);
-		});
-	}
 	check_duplicate(image, callback) {
 		redis.zrangebyscore('imageDups', Date.now(), '+inf',
 			function(err, hashes) {
@@ -83,7 +62,7 @@ class ClientController extends events.EventEmitter {
 				let isDup = compare(config.DUPLICATE_THRESHOLD, image, hashes);
 				if (isDup) {
 					isDup = Muggle(common.parseHTML
-						`Duplicate of 
+						`Duplicate of
 						<a href="./${isDup}" class="history" target="_blank">
 							>>${isDup}
 						</a>`
@@ -99,19 +78,7 @@ class ClientController extends events.EventEmitter {
 	client_message(client_id, msg) {
 		redis.publish('client:' + client_id, JSON.stringify(msg));
 	}
-	relay_client_messages() {
-		let redis = db.redis_client();
-		redis.psubscribe('client:*');
-		redis.once('psubscribe', () => {
-			this.emit('relaying');
-			redis.on('pmessage', (pat, chan, message) => {
-				const id = parseInt(chan.match(/^client:(\d+)$/)[1], 10);
-				this.emit('message', id, JSON.parse(message));
-			});
-		});
-	}
 }
-exports.ClientController = ClientController;
 
 // Remove expired duplicate image hashes
 function cleanUpDups() {

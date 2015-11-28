@@ -12,7 +12,7 @@ module.exports = {
 		'imager',
 		'server',
 		'util',
-		'db.js'
+		'db'
 	],
 	state: [
 		'tmpl',

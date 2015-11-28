@@ -3,9 +3,6 @@
 upstream node {
 	# Endpoint of the doushio node.js server
 	server 127.0.0.1:8000;
-
-	# Or if using a unix domain socket:
-	#server unix:/path/to/unix/domain/socket;
 }
 
 access_log /var/log/nginx/doushio.log;

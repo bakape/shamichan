@@ -3,10 +3,11 @@ const async = require('async'),
     child_process = require('child_process'),
     db = require('./db'),
     etc = require('../util/etc'),
-    fs = require('fs'),
+    fs = require('fs-extra'),
     hooks = require('../util/hooks'),
     path = require('path'),
-    winston = require('winston');
+    Promise = require('bluebird'),
+    winston = require('winston')
 
 exports.ClientController = db.ClientController;
 exports.config = config;
@@ -72,19 +73,6 @@ function media_path(dir, filename) {
 	return path.join(config.MEDIA_DIRS[dir], filename);
 }
 exports.media_path = media_path;
-
-function make_media_dirs (cb) {
-	const keys = ['src', 'thumb', 'tmp'];
-	if (config.EXTRA_MID_THUMBNAILS)
-		keys.push('mid');
-	async.forEach(keys, 
-		(key, cb) =>
-			fs.mkdir(config.MEDIA_DIRS[key], err =>
-				cb(err && err.code == 'EEXIST' ? null : err)),
-		err => cb(err)
-	);
-}
-exports.make_media_dirs = make_media_dirs;
 
 function squish_MD5 (hash) {
 	if (typeof hash == 'string')

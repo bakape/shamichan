@@ -15,14 +15,17 @@ const _ = require('underscore'),
 	lang = require('../lang'),
 	options = require('../common/options'),
 	path = require('path'),
-	vm = require('vm'),
-	websockets = require('./websockets')
+	vm = require('vm')
 
 _.templateSettings = {
 	interpolate: /\{\{(.+?)}}/g
 };
 
-const emitter = exports.emitter = new (require('events').EventEmitter)
+export const emitter = new (require('events').EventEmitter)
+
+// Depends on emitter
+// TODO: Refactor state module and solve this
+const websockets = require('./websockets')
 
 emitter.on('change:clients', () => {
 	const IPs = new Set()
@@ -37,6 +40,7 @@ export const resources = {}
 exports.clientHotConfig = {};
 exports.clientConfigHash = '';
 const clients = exports.clients = new Set()
+export const dbCache = {}
 
 /**
  * Counts number of unique connected IPs and triigers change event, if needed

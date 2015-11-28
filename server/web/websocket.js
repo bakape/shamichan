@@ -31,14 +31,7 @@ function sockjs_log(sev, message) {
  * Create Client() for each websocket connection
  */
 sockJs.on('connection', socket => {
-	// Resolve IPs behind proxies
-	let ip = socket.remoteAddress
-	if (config.TRUST_X_FORWARDED_FOR) {
-		const ff = util.parse_forwarded_for(socket.headers['x-forwarded-for'])
-		if (ff)
-			ip = ff
-	}
-	const client = new Client(socket, ip)
+	const client = new Client(socket, socket.ip)
 	socket.on('data', data => client.onMessage(data))
 	socket.on('close', () => client.onClose())
 });

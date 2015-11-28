@@ -25,10 +25,11 @@ export function redisClient() {
 		port: config.REDIS_PORT
 	})
 	client.select(config.redis_database || 0)
+	client.on('error', err =>
+		winston.error('Redis error:', err))
 	return client
 }
 const redis = global.redis = redisClient()
-redis.on('error', err => winston.error('Redis error:', err))
 
 /**
  * Establish rethinkDB connection and intialize the database, if needed.
@@ -72,12 +73,7 @@ async function initDB() {
 		}
 	]).run(rcon)
 	await r.tableCreate('threads').run(rcon)
-	for (let index of ['time', 'bumpTime', 'board']) {
-		await r.table('threads').indexCreate(index).run(rcon)
-	}
-
-	// Index by reply count
-	await r.table('threads').indexCreate('replyCount', util.countReplies)
+	await r.table('threads').indexCreate('board').run(rcon)
 }
 
 /**
@@ -90,4 +86,15 @@ function verifyVersion(version, dbms) {
 		throw new Error(`Incompatible ${dbms} database version: ${version} `
 			+ 'See docs/migration.md')
 	}
+}
+
+/**
+ * Assign a handler to a redis subscription channel
+ * @param {string} name
+ * @param {Function} handler
+ */
+export function onPublish (name, handler) {
+	const redis = redisClient()
+	redis.subscribe(name)
+	redis.on('message', handler)
 }

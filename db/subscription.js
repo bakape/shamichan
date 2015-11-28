@@ -7,7 +7,7 @@ const common = require('../common'),
  * Listens to redis channels and parses and dispatches messages to client by
  * access right
  */
-export default class Subscription extends EventEmitter {
+class Subscription extends EventEmitter {
 	/**
 	 * Construct new Redis listener/parser
 	 * @param {int} key
@@ -110,6 +110,7 @@ export default class Subscription extends EventEmitter {
 		}
 	}
 }
+module.exports = Subscription
 
 // Can't define static properties with ES6 classes. ES7 when?
 Subscription.keys = {}

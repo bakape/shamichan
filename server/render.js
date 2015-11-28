@@ -10,15 +10,16 @@ const _ = require('underscore'),
  * @param {Object|null} json
  * @returns {string}
  */
-export default function (req, json) {
+module.exports = function (req, json) {
 	const {isMobile, isRetarded, ident} = req,
-		template = RES[`${isMobile ? 'mobile' : 'index'}Tmpl-${req.lang}`],
-		lang = languagePacks[req.lang]
+		template = state.resources[
+			`${isMobile ? 'mobile' : 'index'}Tmpl-${req.lang}`
+		]
 	let html = template[0]
 		+ JSON.stringify(json)
 		+ template[1]
 	if (isRetarded)
-		html += retardBanner(lang)
+		html += retardBanner(req.lang)
 	html += template[2]
 	if (!isMobile)
 		html += imageBanner()

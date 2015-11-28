@@ -19,8 +19,9 @@ const _ = require('underscore'),
 	uaParser = require('ua-parser-js'),
 	winston = require('winston')
 
-export default const router = express.Router()
-const RES = state.resources
+// Babel.j does not seem to like `export default const`
+const router = module.exports = express.Router(),
+	RES = state.resources
 const vanillaHeaders = {
 	'Content-Type': 'text/html; charset=UTF-8',
 	'X-Frame-Options': 'sameorigin',
@@ -42,13 +43,15 @@ router.get(/^\/(\w+)$/, (req, res) =>
 	res.redirect(`/${req.params[0]}/`))
 
 // Respond to board and thread page requests
-router.get(/^\/(\w+)\/()/$/, (req, res) => {
-	const [board, thread] = req.board = req.params
+router.get(/^\/(\w+)\/(\w+)?$/, (req, res) => {
+	// Request.params is  not an array,for some retarded reason
+	const board = req.params[0],
+		thread = req.params[1]
 	if (!caps.canAccessBoard(req.ident, board))
 		return util.send404(res)
 	const handler = thread
-		? renderThread(req, resp, parseInt(thread))
-		: renderBoard(req, resp)
+		? renderThread(req, res, board, parseInt(thread))
+		: renderBoard(req, res, board)
 	handler.catch(err => {
 		winston.error("Rendering error:", err)
 		res.status(500).send(err)
@@ -59,9 +62,9 @@ router.get(/^\/(\w+)\/()/$/, (req, res) => {
  * Render board HTML
  * @param {http.ClientRequest} req
  * @param {http.ServerResponse} res
+ * @param {string} board
  */
-async function renderBoard(req, res) {
-	const {board} = req
+async function renderBoard(req, res, board) {
 	const counter = await r.table('main')
 		.get('boardCtrs')
 		(board)
@@ -69,8 +72,7 @@ async function renderBoard(req, res) {
 		.run(rcon)
 	if (!validateEtag(req, res, counter))
 		return
-	const json = await new Reader(board, req.ident)
-		.getBoard(util.resolveSortingOrder(req.query))
+	const json = await new Reader(board, req.ident).getBoard()
 	res.send(render(req, json))
 }
 
@@ -78,10 +80,10 @@ async function renderBoard(req, res) {
  * Render thread HTML
  * @param {http.ClientRequest} req
  * @param {http.ServerResponse} res
+ * @param {string} board
  * @param {int}	thread
  */
-async function renderThread(req, res, thread) {
-	const {board} = req
+async function renderThread(req, res, board, thread) {
 	if (!(await cache.validateOP(thread, board)))
 		return util.send404(res)
 	const counter = await r.table('threads')
@@ -109,7 +111,7 @@ async function renderThread(req, res, thread) {
  * @returns {boolean}
  */
 function validateEtag(req, res, ctr, extra) {
-	const etag = parseCookies(req, ctr) + parseUserAgent(req)
+	const etag = buildEtag(req, ctr) + parseUserAgent(req)
 	if (config.DEBUG) {
 		res.set(util.noCacheHeaders)
 		return true

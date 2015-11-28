@@ -1,5 +1,5 @@
 /*
- Verify websocket messages confirm to a predefined type schema
+ Verify websocket messages conform to the defined type schema
  */
 
 /**
@@ -8,7 +8,7 @@
  * @param {*} msg
  * @returns {boolean}
  */
-function object(schema, msg) {
+export function object(schema, msg) {
 	if (typeof msg !== 'object' || msg === null || msg instanceof Array)
 		return false
 	for (let key in schema) {
@@ -29,7 +29,6 @@ function object(schema, msg) {
 	}
 	return true
 }
-exports.object = object
 
 /**
  * Validate a value is of the specified type
@@ -37,7 +36,7 @@ exports.object = object
  * @param {*} val
  * @returns {boolean}
  */
-function value(spec, val) {
+export function value(spec, val) {
 	switch (spec) {
 		case 'id':
 			return typeof val === 'number' && Number.isInteger(val) && val >= 1
@@ -46,7 +45,6 @@ function value(spec, val) {
 			return typeof val === spec
 	}
 }
-exports.value = value
 
 /**
  * Validates a fixed length array againsta schema
@@ -54,7 +52,7 @@ exports.value = value
  * @param {*} msg
  * @returns {boolean}
  */
-function array(schema, msg) {
+export function array(schema, msg) {
 	if (!(msg instanceof Array) || msg.length !== schema.length)
 		return false
 	for (let i = 0; i < schema.length; i++) {
@@ -63,7 +61,6 @@ function array(schema, msg) {
 	}
 	return true
 }
-exports.array = array
 
 /**
  * Validate a dynamic length array only contains members of specific type
@@ -71,7 +68,7 @@ exports.array = array
  * @param {*} msg
  * @returns {boolean}
  */
-function dynamicArray(spec, msg) {
+export function dynamicArray(spec, msg) {
 	if (!(msg instanceof Array))
 		return false
 	for (let item of msg) {
@@ -80,4 +77,3 @@ function dynamicArray(spec, msg) {
 	}
 	return true
 }
-exports.dynamicArray = dynamicArray

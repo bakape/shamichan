@@ -3,37 +3,34 @@ Core server module and application entry point
  */
 
 // Several modules depend on the state module, so load it first
-const STATE = require('./state');
+const STATE = require('./state')
 
 const _ = require('underscore'),
     amusement = require('./amusement'),
-    async = require('async'),
     caps = require('./caps'),
     common = require('../common/index'),
 	config = require('../config'),
 	cookie = require('cookie'),
 	db = require('../db'),
-    fs = require('fs'),
+    fs = require('fs-extra'),
     hooks = require('../util/hooks'),
-    imager = require('../imager'),
+    imager = require('./imager'),
     Muggle = require('../util/etc').Muggle,
-	net = require('net'),
-    websockets = require('./websockets'),
-	path = require('path'),
     persona = require('./persona'),
+    Promise = require('bluebird'),
+    tripcode = require('bindings')('tripcode'),
 	validate = require('./validate_message'),
-    winston = require('winston');
+    websockets = require('./websockets'),
+    winston = require('winston')
 
-require('../imager/daemon'); // preload and confirm it works
+// Preload and confirm it works
+require('../imager/daemon')
 
-try {
-	if (config.RECAPTCHA_PUBLIC_KEY)
-		require('./report');
-}
-catch (e) {}
+if (config.RECAPTCHA_PUBLIC_KEY)
+	require('./report')
 require('./time');
 
-let dispatcher = websockets.dispatcher;
+const dispatcher = websockets.dispatcher;
 
 dispatcher[common.SYNCHRONIZE] = function (msg, client) {
 	const personaCookie = persona.extract_login_cookie(cookie.parse(msg.pop()));
@@ -164,30 +161,6 @@ dispatcher[common.DESYNC] = function (msg, client) {
 	return true;
 };
 
-function setup_imager_relay(cb) {
-	var onegai = new imager.ClientController;
-	onegai.relay_client_messages();
-	onegai.once('relaying', function () {
-		onegai.on('message', image_status);
-		cb(null);
-	});
-}
-
-function image_status(client_id, status) {
-	if (!validate('id', client_id))
-		return;
-	var client = STATE.clients[client_id];
-	if (client) {
-		try {
-			client.send([0, common.IMAGE_STATUS, status]);
-		}
-		catch (e) {
-			// Swallow EINTR
-			// anta baka?
-		}
-	}
-}
-
 dispatcher[common.INSERT_THREAD] = ([msg], client) => {
     const spec = {
         image: 'string',
@@ -285,93 +258,69 @@ hooks.hook('clientSynced', function(info, cb){
 	cb(null);
 });
 
-function start_server() {
-	var is_unix_socket = (typeof config.LISTEN_PORT == 'string');
-	if (is_unix_socket) {
-		try {
-			fs.unlinkSync(config.LISTEN_PORT);
-		}
-		catch (e) {}
-	}
-	// Start web server
-	require('./web');
-	// Start thread deletion module
-	if (config.PRUNE)
-		require('./prune');
-	if (is_unix_socket)
-		fs.chmodSync(config.LISTEN_PORT, '777'); // TEMP
+if (!tripcode.setSalt(config.SECURE_SALT))
+	throw 'Bad SECURE_SALT'
+async function startServer() {
+    await imager()
+    await Promise.fromCallback(STATE.reload_hot_resources)
+    process.nextTick(() => {
+        // Start web server
+        require('./web')
+        // Start thread deletion module
+        /*
+        TODO: Port pruning module
+        if (config.PRUNE)
+            require('./prune')
+        */
+        process.on('SIGHUP', hotReloader)
+        db.onPublish('reloadHot', hotReloader)
 
-	process.on('SIGHUP', hot_reloader);
-	db.on_pub('reloadHot', hot_reloader);
-
-	// Read global push messages from `scripts/send.js` and dispatch to all
-	// clients
-	db.on_pub('push', (chan, msg) => websockets.push(JSON.parse(msg)));
-
-	process.nextTick(processFileSetup);
-
-	winston.info('Listening on '
-		+ (config.LISTEN_HOST || '')
-		+ (is_unix_socket ? '' : ':')
-		+ (config.LISTEN_PORT + '.'));
+        // Read global push messages from `scripts/send.js` and dispatch to all
+        // clients
+        db.onPublish('push', (chan, msg) =>
+            websockets.push(JSON.parse(msg)))
+        process.nextTick(pidFileSetup)
+        winston.info('Listening on '
+            + (config.LISTEN_HOST || '')
+            + (config.LISTEN_PORT + '.'))
+    })
 }
 
-function hot_reloader() {
-	STATE.reload_hot_resources(function (err) {
+/**
+ * Reload all hot-reloadable (no server restart required) resources, like
+ * certain confgs, client files, templates, CSS, etc.
+ */
+function hotReloader() {
+	STATE.reload_hot_resources(err => {
 		if (err)
-			return winston.error('Error trying to reload:', err);
-		websockets.scan_client_caps();
-		amusement.pushJS();
+			return winston.error('Error trying to reload:', err)
+		websockets.scan_client_caps()
+		amusement.pushJS()
 		// Push new hot variable hash to all clients
-		websockets.push([0, common.HOT_INJECTION, false, STATE.clientConfigHash]);
-		winston.info('Reloaded initial state.');
-	});
+		websockets.push([0, common.HOT_INJECTION, false,
+            STATE.clientConfigHash])
+		winston.info('Reloaded initial state')
+	})
 }
 
-function processFileSetup() {
-	const pidFile = config.PID_FILE;
-	fs.writeFile(pidFile, process.pid+'\n', function (err) {
-		if (err)
-			return winston.warn("Couldn't write pid: ", err);
-		process.once('SIGINT', deleteFiles);
-		process.once('SIGTERM', deleteFiles);
-		winston.info(`PID ${process.pid} written in ${pidFile}`);
-	});
+/**
+ * Write PID to file and delete on process exit
+ */
+async function pidFileSetup() {
+	const pidFile = config.PID_FILE
+    await fs.writeFileAsync(pidFile, process.pid + '\n').catch(err =>
+        winston.warn("Couldn't write pid: ", err))
+    process.once('SIGINT', deleteFiles)
+    process.once('SIGTERM', deleteFiles)
+    winston.info(`PID ${process.pid} written to ${pidFile}`)
 
 	function deleteFiles() {
 		try {
-			fs.unlinkSync(pidFile);
+			fs.unlinkSync(pidFile)
 		}
 		catch (e) {}
-		process.exit();
+		process.exit()
 	}
 }
 
-if (!tripcode.setSalt(config.SECURE_SALT))
-	throw "Bad SECURE_SALT";
-async.series(
-	[
-		imager.make_media_dirs,
-		setup_imager_relay,
-		STATE.reload_hot_resources,
-		db.track_OPs
-	],
-	function (err) {
-		if (err)
-			throw err;
-		var yaku = new db.Yakusoku(null, db.UPKEEP_IDENT);
-		var onegai;
-		var writes = [];
-		if (!config.READ_ONLY) {
-			writes.push(yaku.finish_all.bind(yaku));
-			onegai = new imager.ClientController;
-			writes.push(onegai.delete_temporaries.bind(onegai));
-		}
-		async.series(writes, function (err) {
-			if (err)
-				throw err;
-			yaku.disconnect();
-			process.nextTick(start_server);
-		});
-	}
-);
+startServer().catch(err => {throw err})

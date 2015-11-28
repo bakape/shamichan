@@ -1,11 +1,13 @@
 const admin = require('../server/admin'),
 	common = require('../common'),
+	r = require('rethinkdb'),
+	{rcon} = global,
 	util = require('./util')
 
 /**
  * Reads thread and post data from the database
  */
-export default class Reader {
+class Reader {
 	/**
 	 * Constructs new database reader
 	 * @param {string} board
@@ -34,8 +36,8 @@ export default class Reader {
 
 		// Only show the last N post
 		if (lastN) {
-			thread = thread..merge({
-				posts: r.row('posts')
+			thread = thread.merge({
+				posts: thread('posts')
 					.coerceTo('array')
 					.slice(-lastN + 1)
 					.coerceTo('object')
@@ -64,15 +66,15 @@ export default class Reader {
 	 */
 	threadQuery(thread) {
 		return thread.merge({
-				historyCtr: r.row('history').count(),
-				replyCtr: util.countReplies(r.row)
-				imageCtr: r.row('posts')
+				historyCtr: thread('history').count(),
+				replyCtr: util.countReplies(thread),
+				imageCtr: thread('posts')
 					.coerceTo('array')
 					.filter(doc => doc(1).hasFields('image'))
-					.count()
+					.count(),
 
 				// Ensure we always get the OP
-				op: r.row('posts')(r.row('id'))
+				op: thread('posts')(thread('id'))
 			})
 			.without('history')
 	}
@@ -117,15 +119,15 @@ export default class Reader {
 
 	/**
 	 * Retrieve all threads on the board with their OPs
-	 * @param {string} orderBy - Index to order the threads by
 	 * @returns {Array} - Array of threads
 	 */
-	async getBoard(orderBy) {
+	async getBoard() {
+		// Current limitation of Babel.js in async functions
+		let self = this
 	    const threads = await r.table('threads')
 			.getAll(this.board, {index: 'board'})
-			.orderBy({index: orderBy})
 			.forEach(thread =>
-				this.threadQuery(thread)
+				self.threadQuery(thread)
 				.without('posts'))
 			.run(rcon)
 		for (let i; i < threads.length; i++) {
@@ -139,3 +141,4 @@ export default class Reader {
 		return threads
 	}
 }
+module.exports = Reader

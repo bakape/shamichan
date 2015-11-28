@@ -17,7 +17,7 @@ const _ = require('underscore'),
 /**
  * Performs approprite database I/O in response to client websocket messages
  */
-export default class ClientController {
+class ClientController {
 	/**
 	 * Create a client database controller
 	 * @param {Client} client
@@ -506,6 +506,7 @@ export default class ClientController {
 			redis.sremAsync('liveposts', id))
 	}
 }
+module.exports = ClientController
 
 /**
  * Shorthand for creating an update message

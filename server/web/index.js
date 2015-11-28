@@ -20,7 +20,9 @@ const _ = require('underscore'),
 const app = express(),
 	server = http.createServer(app)
 
-app.enable('strict routing').disable('etag')
+app.enable('strict routing')
+	.disable('etag')
+	.set('trust proxy', config.TRUST_X_FORWARDED_FOR)
 server.listen(config.LISTEN_PORT)
 
 // NOTE: Order is important as it determines handler priority
@@ -29,9 +31,7 @@ app.use(cookieParser())
 
 // Pass the client IP through authentication checks
 app.use((req, res, next) => {
-	let ip = req.connection.remoteAddress
-	if (config.TRUST_X_FORWARDED_FOR)
-		ip = util.parse_forwarded_for(req.headers['x-forwarded-for']) || ip
+	const {ip} = req
 	if (!ip) {
 		res.set({'Content-Type': 'text/plain'})
 		return res.status(500).send("Your IP could not be determined. "
