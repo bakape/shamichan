@@ -46,7 +46,7 @@ async function setupImageRelay() {
     // Send image status update to client, if any
     redis.on('pmessage', (pattern, chan, status) => {
         const clientID = parseInt(chan.match(/^client:(\d+)$/)[1], 10)
-        if (!id || !validate.value('id', clientID))
+        if (!clientID || !validate.value('id', clientID))
             return
     	const client = state.clients[clientID]
     	if (client) {
