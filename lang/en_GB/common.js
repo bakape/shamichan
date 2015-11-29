@@ -37,6 +37,7 @@ var lang = {
 	cancel: 'Cancel',
 	unknownUpload: 'Unknown upload error',
 	unknownResult: 'Unknown result',
+	rescan: 'Rescan',
 
 	reports: {
 		post: 'Reporting post',
@@ -83,8 +84,9 @@ var lang = {
 		ban: ['Ban', 'Ban poster(s) for the selected post(s)'],
 		renderPanel: ['Panel', 'Toggle administrator panel display'],
 		modLog: ['Log', 'Show moderation log'],
+		djPanel: ['DJ', 'DJ tool panel'],
 		displayBan: [
-			'Display', 
+			'Display',
 			'Append a public \'USER WAS BANNED FOR THIS POST\' message'
 		],
 		unban: 'Unban',

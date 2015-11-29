@@ -37,6 +37,7 @@ var lang = {
 	cancel: 'Cancelar',
 	unknownUpload: 'Erro de upload desconhecido',
 	unknownResult: 'Resultado desconhecido',
+	rescan: 'Rescan',
 
 	reports: {
 		post: 'Reportando post',
@@ -83,6 +84,7 @@ var lang = {
 		renderPanel: ['Painel', 'Ativa a exibição do painel de administração'],
 		ban: ['Ban', 'Ban o(s) usuário(s) pelos posts selecionados'],
 		modLog: ['Reg', 'Mostra o registro de moderação'],
+		djPanel: ['DJ', 'DJ tool panel'],
 		displayBan: [
 			'Exibir',
 			'Adiciona uma mensagem \'O USUÁRIO FOI BANIDO POR ESTA POSTAGEM\' publicamente'

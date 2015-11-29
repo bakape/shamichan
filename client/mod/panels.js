@@ -3,7 +3,8 @@ Moderation log modal view
  */
 
 const main = require('main'),
-	{Backbone, common, dispatcher, oneeSama, lang, modals} = main;
+	{_, Backbone, common, dispatcher, etc, oneeSama, lang, modals, Memory,
+		state} = main
 
 const PanelView = Backbone.View.extend({
 	className: 'modal mod panel',
@@ -22,6 +23,7 @@ const PanelView = Backbone.View.extend({
 				+ " with the world.";
 		}
 		this.el.innerHTML = this.renderContents(info);
+		this.postRender && this.postRender()
 
 		// Scroll to the end of the log
 		this.el.scrollTop = this.el.scrollHeight;
@@ -78,6 +80,10 @@ const AdminPanelView = PanelView.extend({
 });
 exports.adminPanel = AdminPanelView;
 
+/**
+ * Construct a table from an array of items and a consumer funtion that returns
+ * an array of column contents.
+ */
 function table(rows, func) {
 	let html = '<table>';
 	for (let row of rows) {
@@ -90,3 +96,72 @@ function table(rows, func) {
 	html += '</table>';
 	return html;
 }
+
+const RequestPanelView = PanelView.extend({
+	type: 'djPanel',
+	events: {
+		'click .close': 'removeRequest',
+		'click #rescan': 'scan'
+	},
+
+	/**
+	 * Override parent method, because we don't query the server
+	 */
+	initialize() {
+		main.$overlay[0].append(this.el)
+		modals[this.type] = this;
+		this.removed = new Memory('request', 2)
+	    this.scan()
+	},
+
+	/**
+	 * Scan thread for `/r/ song` strings, we have not removed yet
+	 */
+	scan() {
+	    const removed = this.removed.readAll(),
+			requests = []
+		for (let {attributes} of state.posts.models) {
+			// Post's request(s) already processed
+			if (attributes.num in removed)
+				continue
+		    const m = attributes.body.match(/\/r\/[^\n]+$/gm)
+			if (!m)
+			    continue
+			for (let request of m) {
+			    request = request.replace('/r/', '').trim()
+				requests.push([attributes.num, attributes.mnemonic, request])
+			}
+		}
+		return this.render(_.sortBy(requests, 1))
+	},
+
+	/**
+	 * Render the inner table
+	 */
+	renderContents(requests) {
+		return table(requests, request => [
+			oneeSama.postRef(request[0], oneeSama.op).safe,
+			oneeSama.mnemonic(request[1]),
+			request[2],
+			`<a class="close" data-id="${request[0]}">X</a>`
+		])
+	},
+
+	/**
+	 * Extra rendering operations to perform that deviate from parent class
+	 */
+	postRender() {
+	    this.el.append(etc.parseDOM(`<a id="rescan">${lang.rescan}</a>`)[0])
+	},
+
+	/**
+	 * Remove a request from the list and persist removal to localStorage
+	 */
+	removeRequest(event) {
+		event.preventDefault()
+		const el = event.target
+		this.removed.write(el.getAttribute('data-id'))
+		el.closest('tr').remove()
+	}
+})
+exports.djPanel = RequestPanelView
