@@ -16,9 +16,9 @@ www/css/*.css
 www/css/maps
 www/illya.mp4
 www/illya.webm
-www/js/client.js*
-www/js/vendor.js*
-www/js/legacy.js*
+www/js/es5
+www/js/es6
+www/js/vendor
 www/js/lang
 www/src
 www/thumb

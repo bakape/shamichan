@@ -15,16 +15,16 @@ master branch in production. For more stable revisions, please [download the
 * Run `node builder.js` to start an auto-reloading development server
 
 ##Cross-platform development with Vagrant
-* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and 
+* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and
 [Vagrant](http://www.vagrantup.com/downloads.html)
 * Open a shell in meguca's root directory and run `vagrant up`
 * Grab a coffee
-* Run `vagrant ssh` and `node builder`, once logged in. Your changes will 
+* Run `vagrant ssh` and `node builder`, once logged in. Your changes will
 automatically sync both ways. [More info](https://www.vagrantup.com/)
 
 ##Automatic deployment
-Users less familiar with Linux and sysadmin procedures can paste the 
-following line into the root shell to automatically setup a default 
+Users less familiar with Linux and sysadmin procedures can paste the
+following line into the root shell to automatically setup a default
 installation on an fresh Ubuntu >=14.04 LTS VPS.
 `wget -q -O - https://raw.githubusercontent.com/bakape/meguca/master/scripts/deploy.sh | bash -`
 
@@ -35,7 +35,7 @@ installation on an fresh Ubuntu >=14.04 LTS VPS.
   webserver, you still need to set `MEDIA_URL` in `config/imager` for image
   search links to work.
 * Run `npm start/stop/restart` to start/stop/restart the server
-* You can update `config/hot.js` and client files without restarting the server 
+* You can update `config/hot.js` and client files without restarting the server
 with `node server/kill.js`
 * All errors are logged to `./error.log`
 
@@ -45,7 +45,7 @@ with `node server/kill.js`
 * See `docs/` for upgrading between semver major releases
 
 ##Dependencies
-* node.js >=2.0.0
+* node.js >=4.0.0
 * [node-gyp dependancies](https://github.com/TooTallNate/node-gyp/#installation)
 * imagemagick
 * redis

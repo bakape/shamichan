@@ -82,7 +82,7 @@
     "nodemailer": "^0.5.2"
   },
   "engines": {
-    "node": ">= 2.0.0"
+    "node": ">= 4.0.0"
   },
   "os": [
     "mac",
