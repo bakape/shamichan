@@ -13,7 +13,8 @@ const childViews = {
 	ban: input.ban,
 	log: require('./panels').log,
 	adminPanel: panels.adminPanel,
-	notification: input.notification
+	notification: input.notification,
+	djPanel: panels.djPanel
 };
 
 const ToolboxView = Backbone.View.extend({
@@ -23,17 +24,26 @@ const ToolboxView = Backbone.View.extend({
 		this.render();
 	},
 	render() {
-		const specs = this.specs = [
+		let specs = this.specs = [
 			'clearSelection',
 			'spoilerImages',
 			'deleteImages',
 			'deletePosts',
 			'modLog'
 		];
-		if (common.checkAuth('moderator', main.ident)) {
-			specs.push('toggleMnemonics', 'lockThreads', 'ban');
-			if (common.checkAuth('admin', main.ident))
-				specs.push('sendNotification', 'renderPanel');
+
+		// Add aditional panel buttons by priveledge level
+		if (main.ident.auth === 'dj')
+			specs = this.specs = ['djPanel']
+		const accessLevels = [
+			['dj', ['toggleMnemonics']],
+			['moderator', ['lockThreads', 'ban']],
+			['admin', ['sendNotification', 'renderPanel']]
+		]
+		for (let level of accessLevels) {
+			if (!common.checkAuth(level[0], main.ident))
+				break
+			level[1].forEach(right => specs.push(right))
 		}
 
 		let controls = '<span>';
@@ -117,6 +127,9 @@ const ToolboxView = Backbone.View.extend({
 	},
 	modLog() {
 		this.toggleChild('log');
+	},
+	djPanel() {
+	    this.toggleChild('djPanel')
 	},
 	ban() {
 		this.toggleChild('ban');

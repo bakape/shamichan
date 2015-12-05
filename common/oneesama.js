@@ -204,7 +204,7 @@ class OneeSama {
 		if (trip)
 			html += `<code>${_.escape(trip)}</code>`;
 		if (auth)
-			html += ` ## ${imports.hotConfig.staff_aliases[auth]}`;
+			html += ` ## ${imports.hotConfig.staff_aliases[auth] || auth}`;
 		return html;
 	}
 	time(time) {

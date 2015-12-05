@@ -37,6 +37,7 @@ var lang = {
 	cancel: 'Cancelar',
 	unknownUpload: 'Error de subida desconocido',
 	unknownResult: 'Resultado desconocido',
+	rescan: 'Rescan',
 
 	reports: {
 		post: 'Reportando post',
@@ -83,6 +84,7 @@ var lang = {
 		renderPanel: ['Panel', 'Habilita la muestra de el panel de administrador'],
 		ban: ['Expulsar', 'Expulsar poster(s) por el numero seleccionado de post(s)'],
 		modLog: ['Log', 'Mostrar el log de moderación'],
+		djPanel: ['DJ', 'DJ tool panel'],
 		displayBan: [
 			'Exponer',
 			'Añadir un mensaje \'USUARIO A SIDO EXPULSADO POR ESTE POST\' publico'
