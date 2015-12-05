@@ -284,7 +284,7 @@ function allocate_post(msg, client, callback) {
 	// Replace names, when a song plays on r/a/dio
 	if (radio && radio.name)
 		post.name = radio.name;
-	else if (common.checkAuth('dj', client.ident) || !STATE.hot.forced_anon) {
+	else if (client.ident.auth === 'dj' || !STATE.hot.forced_anon) {
 		/* TODO: Check against client.watching? */
 		if (msg.name) {
 			const parsed = common.parse_name(msg.name);
