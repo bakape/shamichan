@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.7.0 - 2015-12-05
+* Remove
+  - Drop shadow from image hover previews
+* Add
+  - DJ staff class with ability to scan for song requests
+
 ##1.6.2 - 2015-11-21
 * Fix
   - PDF thumbnailing timeout
