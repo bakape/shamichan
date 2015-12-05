@@ -153,7 +153,7 @@ class RenderBase {
 
 		// Make script loader load moderation bundle
 		const {ident} = this.req;
-		if (common.checkAuth('janitor', ident)) {
+		if (common.checkAuth('dj', ident)) {
 			const keys =  JSON.stringify(_.pick(ident, 'auth', 'csrf', 'email'));
 			html += `var IDENT = ${keys};`;
 		}

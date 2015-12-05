@@ -1181,11 +1181,10 @@ exports.Yakusoku = Yakusoku;
 class Reader extends events.EventEmitter {
 	constructor(ident) {
 		// Call the EventEmitter's constructor
-		super();
-		if (common.checkAuth('janitor', ident)) {
-			this.canSeeModeration = true;
-			this.canSeeMnemonics = common.checkAuth('dj', ident);
-		}
+		super()
+        this.canSeeMnemonics = ident.auth === 'dj'
+            || common.checkAuth('moderator', ident)
+        this.canSeeModeration = common.checkAuth('janitor', ident)
 	}
 	get_thread(num, opts) {
 		const key = 'thread:' + num;

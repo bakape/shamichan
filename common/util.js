@@ -458,7 +458,7 @@ exports.commaList = commaList;
 
 // Acertains client has the proper authorisation level or higher
 function checkAuth(type, ident) {
-	const levels = ['janitor', 'dj', 'moderator', 'admin'];
+	const levels = ['dj', 'janitor', 'moderator', 'admin'];
 	return levels.indexOf(type) <= levels.indexOf(ident.auth);
 }
 exports.checkAuth = checkAuth;

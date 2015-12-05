@@ -24,7 +24,7 @@ const ToolboxView = Backbone.View.extend({
 		this.render();
 	},
 	render() {
-		const specs = this.specs = [
+		let specs = this.specs = [
 			'clearSelection',
 			'spoilerImages',
 			'deleteImages',
@@ -34,7 +34,7 @@ const ToolboxView = Backbone.View.extend({
 
 		// Add aditional panel buttons by priveledge level
 		if (main.ident.auth === 'dj')
-			specs.push('djPanel')
+			specs = this.specs = ['djPanel']
 		const accessLevels = [
 			['dj', ['toggleMnemonics']],
 			['moderator', ['lockThreads', 'ban']],

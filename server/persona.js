@@ -69,8 +69,8 @@ function verify_auth(resp, packet) {
 	if (packet.expires && packet.expires < Date.now())
 		return respond_error(resp, 'Login attempt expired.');
 
-	const email = packet.email;
-	const auth = _.find(['admin', 'moderator', 'dj', 'janitor'], type =>
+	const {email} = packet
+	const auth = _.find(['admin', 'moderator', 'janitor', 'dj'], type =>
 		config.staff[type] && email in config.staff[type])
 	if (!auth) {
 		winston.error("Login attempt by " + email);
