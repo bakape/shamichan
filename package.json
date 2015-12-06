@@ -20,7 +20,7 @@
   "scripts": {
     "start": "node index &",
     "stop": "kill `cat server/.server.pid`",
-    "postinstall": "node scripts/bootstrap.js && node_modules/.bin/gulp client vendor mod css lang legacy"
+    "postinstall": "scripts/bootstrap.sh && gulp"
   },
   "dependencies": {
     "async": "^1.2.0",
