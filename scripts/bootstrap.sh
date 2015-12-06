@@ -4,3 +4,5 @@
 if [[ ! -a config/config.json ]]; then
     cp config/defaults.json config/config.json
 fi
+
+go build -o meguca main.go
