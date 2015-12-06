@@ -1,16 +1,13 @@
-const async = require('async'),
-	common = require('../common'),
-	compare = require('bindings')('compare').hashCompareCpp,
+const compare = require('bindings')('compare').hashCompareCpp,
 	config = require('../config'),
-	db = require('../db'),
+	common = require('../common'),
 	events = require('events'),
 	fs = require('fs'),
 	Muggle = require('../util/etc').Muggle,
-	tail = require('../util/tail'),
-	winston = require('winston');
+	winston = require('winston')
 
-const IMG_EXPIRY = 60;
-let redis = global.redis;
+const IMG_EXPIRY = 60,
+	{redis} = global
 
 export class ClientController extends events.EventEmitter {
 	constructor() {
@@ -61,11 +58,11 @@ export class ClientController extends events.EventEmitter {
 				// Compare image hashes with C++ addon
 				let isDup = compare(config.DUPLICATE_THRESHOLD, image, hashes);
 				if (isDup) {
-					isDup = Muggle(common.parseHTML
-						`Duplicate of
-						<a href="./${isDup}" class="history" target="_blank">
-							>>${isDup}
-						</a>`
+					isDup = Muggle(
+						'Duplicate of '
+						+`<a href="./${isDup}" class="history" target="_blank">`
+							+`>>${isDup}`
+						+`</a>`
 					);
 				}
 				callback(isDup);

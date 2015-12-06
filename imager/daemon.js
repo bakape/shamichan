@@ -3,14 +3,14 @@
 */
 
 const async = require('async'),
-	common = require('../common/index'),
+	common = require('../common'),
 	config = require('../config'),
 	cookie = require('cookie'),
 	crypto = require('crypto'),
 	child_process = require('child_process'),
 	etc = require('../util/etc'),
 	{Muggle} = etc,
-	imagerDb = require('./db'),
+	db = require('./db'),
 	index = require('./'),
 	findapng = require('bindings')('findapng'),
 	formidable = require('formidable'),
@@ -36,7 +36,7 @@ exports.new_upload = new_upload;
 
 class ImageUpload {
 	constructor(client_id) {
-		this.db = new imagerDb.ClientController;
+		this.db = new db.ClientController;
 		this.client_id = client_id;
 	}
 	status(msg) {
