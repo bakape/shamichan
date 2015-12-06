@@ -96,15 +96,14 @@
             "thumbDims": [250, 250],
             "highQuality": true,
             "png": false,
-            "pngQuality": "0-10",
-
+            "pngQuality": "0-10"
         },
         "formats": {
             "webm": false,
             "webmAudio": false,
             "mp3": false,
             "svg": false,
-            "pdf": false,
+            "pdf": false
         },
         "duplicateThreshold": 26,
         "spoilers": [1, 2, 3],
@@ -128,9 +127,9 @@
         "<hr>",
         "Hash commands:",
         "#d100 #2d100 #2d100+10 - Roll dice",
-        "#flip - Coinflip"
-        "#8ball - An 8ball"
-        "#q - Print r/a/dio song queue"
+        "#flip - Coinflip",
+        "#8ball - An 8ball",
+        "#q - Print r/a/dio song queue",
         "#sw24:15 #sw2:24:15 #sw24:15+30 #sw24:15-30 - Syncronised duration timer",
         "<hr>",
         "Source code repository: <a href=\"https://github.com/bakape/doushio\" target=\"_blank\">github.com/bakape/meguca</a>"
@@ -156,7 +155,7 @@
         "maxSubjectLength": 50,
         "excludeRegex": "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
         "sageEnabled": true,
-        "forcedAnon": true,
+        "forcedAnon": true
     },
     "recaptcha": {
         "public": "",

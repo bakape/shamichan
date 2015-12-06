@@ -6,7 +6,7 @@ Builds client JS and CSS
 const babelify = require('babelify'),
 	browserify = require('browserify'),
 	buffer = require('vinyl-buffer'),
-	config = require('./config'),
+	config = require('./config/config.json'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
 	gutil = require('gulp-util'),
@@ -18,7 +18,7 @@ const babelify = require('babelify'),
 	uglify = require('gulp-uglify')
 
 // Shorthand for compiling everything with no task arguments
-const tasks = ['vendor', 'css'].concat(config.LANGS)
+const tasks = ['vendor', 'css'].concat(config.lang.enabled)
 ; ['main', 'mod'].forEach(name =>
 	tasks.push(name + '.es5', name + '.es6'))
 gulp.task('default', tasks)
@@ -55,7 +55,7 @@ createTask('vendor', 'www/js/vendor', true, browserify({
 		.require('core-js/es6', {expose: 'core-js'}))
 
 // Language bundles
-config.LANGS.forEach(lang =>
+config.lang.enabled.forEach(lang =>
 	createTask(lang, 'www/js/lang', true, browserify({debug: true})
 		.require(`./lang/${lang}/common`, {expose: 'lang'})))
 
@@ -104,7 +104,7 @@ function bundle(name, dest, es5, b) {
 
 		// UglifyJS does not yest fully support ES6, so best not minify to be
 		// on the safe side
-		.pipe(gulpif(es5 && !config.DEBUG, uglify()))
+		.pipe(gulpif(es5 && !config.hard.debug, uglify()))
 		.on('error', gutil.log)
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest(dest))
