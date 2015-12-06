@@ -12,28 +12,8 @@ var config = module.exports = {
 /*
  If using an external web server, set this to the served address of the www
  directory. Trailing slash required.
-
- If using Cloudflare and serving images through HTTPS, take note that Cloudflare
- only supports a limited range of cyphers. IQDB and saucenao at the moment of
- writing fail the SSL handshake, when attempting to download the thumbnail from
- the server. As a workaround the image seach URLs for these will be appended the
- '?ssl=off' query string. You must manually set a page rule with Cloudflare to
- not use SSL for URLs with this string. Also, enable chaching of query string
- resources.
-
- In fact, it is heavily advised to have query string caching with Cloudflare
- enabled in all situations.
  */
 	MEDIA_URL: '../',
-/*
- If serving static assets from a different subdomain, the links in figcaption
- will not download the image with the original file name. This is due to Cross
- Origin Secutity Policy. As a workaround, you can define a secondary static
- resource URL, that will be only used for downloading images from these links.
- That way you can still have the benefits of serving statics from a separate
- domain and named image downloads. If left as null, defaults to MEDIA_URL.
- */
-	SECONDARY_MEDIA_URL: null,
 // Set to separate upload address, if needed. Otherwise null
 	UPLOAD_URL: null,
 
@@ -82,7 +62,3 @@ var config = module.exports = {
 
 	IMAGE_HATS: false
 };
-
-// Default to primary URL
-if (!config.SECONDARY_MEDIA_URL)
-	config.SECONDARY_MEDIA_URL = config.MEDIA_URL;

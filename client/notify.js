@@ -10,7 +10,7 @@ const mediaURL = config.MEDIA_URL;
 // Needs to be available with no connectivity, so we download and cache it
 let discoFavicon = '',
 	xhr = new XMLHttpRequest();
-xhr.open('GET', config.SECONDARY_MEDIA_URL + 'css/ui/disconnected.ico');
+xhr.open('GET', mediaURL + 'css/ui/disconnected.ico');
 xhr.responseType = 'blob';
 xhr.onload = function() {
 	if (this.status === 200)
