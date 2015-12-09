@@ -165,7 +165,7 @@
     "pyu": false,
     "illyaDance": false,
     "feedbackEmail": "lalc@email.com",
-    "defaultaultCSS": "moe",
+    "defaultCSS": "moe",
     "frontpage": "",
     "infoBanner": "",
     "injectJSPath": ""
