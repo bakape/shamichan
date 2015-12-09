@@ -10,13 +10,7 @@ import (
 
 // Struct maps server-side JSON languagepacks to Go types
 type Struct struct {
-	ShowSeconds, WorksBestWith string
-	Imager, Tmpl               map[string]string
-	Opts                       struct {
-		Tabs   []string
-		Modes  map[string]string
-		Labels map[string][2]string
-	}
+	Imager map[string]string
 }
 
 // Map contains a map of all languages to their languagepacks

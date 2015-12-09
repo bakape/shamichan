@@ -4,6 +4,8 @@
 package config
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"github.com/go-errors/errors"
 	"io/ioutil"
@@ -131,6 +133,9 @@ var Config Server
 // ClientConfig exports public settings client can access
 var ClientConfig Client
 
+// ConfigHash is the truncated MD5 hash of the JSON configuration file
+var ConfigHash string
+
 // Load reads and parses JSON config files
 func Load() error {
 	file, err := ioutil.ReadFile("./config/defaults.json")
@@ -143,5 +148,6 @@ func Load() error {
 	if err := json.Unmarshal(file, &ClientConfig); err != nil {
 		return errors.Wrap(err, 0)
 	}
+	ConfigHash = hex.EncodeToString(md5.New().Sum(file))[:16]
 	return nil
 }

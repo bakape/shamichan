@@ -3,29 +3,33 @@
 package tmpl
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/go-errors/errors"
 	"hash"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"meguca/config"
-	"meguca/lang"
 	"os"
 	"strings"
 )
 
-type templateStore struct {
-	parts []string
-	hash  string
+// Template stores the static part of HTML templates and the corresponding
+// truncated MD5 hash of said template
+type Template struct {
+	Parts []string
+	Hash  string
 }
 
-type templateMap map[string]map[string]templateStore
+// TemplateMap stores all available templates
+type TemplateMap map[string]Template
 
 // Resources exports temolates and their hashes by language
-var Resources templateMap
+var Resources TemplateMap
 
 // Compile reads template HTML from disk, injext dynamic variables, hashes and
 // exports them
@@ -48,37 +52,60 @@ func Compile() error {
 // ClientHash is the combined, shortened MD5 hash of all client files
 var ClientHash string
 
+type templateVars struct {
+	Config                                       template.JS
+	Navigation, ClientHash, ConfigHash, MediaURL string
+	IsMobile                                     bool
+}
+
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
-func indexTemplate(tmpl string) error {
-	vars := map[string]string{}
+func indexTemplate(raw string) error {
+	vars := templateVars{
+		ConfigHash: config.ConfigHash,
+		MediaURL:   config.Config.Hard.HTTP.Media,
+	}
 	js, err := json.Marshal(config.ClientConfig)
 	if err != nil {
 		return errors.Wrap(err, 1)
 	}
-	vars["config"] = string(js)
-	vars["navigation"] = boardNavigation()
+	vars.Config = template.JS(js)
+	vars.Navigation = boardNavigation()
 	hash, err1 := hashClientFiles()
 	if err1 != nil {
 		return err1
 	}
-	vars["hash"] = hash
+	vars.ClientHash = hash
 	ClientHash = hash
 
-	fields := []string{"name", "email", "options", "indentity", "faq",
-		"schedule", "feedback", "onlineCounter", "Not synced"}
-	for _, ln := range config.Config.Lang.Enabled {
-		vars["lang"] = ln
+	tmpl, err2 := template.New("index").Parse(raw)
+	if err2 != nil {
+		return errors.Wrap(err2, 0)
+	}
+	Resources = TemplateMap{}
 
-		// Copy all translated template strings
-		for _, field := range fields {
-			vars[field] = lang.Langs[ln].Tmpl[field]
+	// Rigt now the desktop and mobile templates are almost identical. This will
+	// change, when we get a dedicated mobile GUI.
+	for _, kind := range []string{"desktop", "mobile"} {
+		vars.IsMobile = kind == "mobile"
+		buffer := bytes.Buffer{}
+		err := tmpl.Execute(&buffer, vars)
+		if err != nil {
+			return errors.Wrap(err, 0)
+		}
+		Resources[kind] = Template{
+			strings.Split(buffer.String(), "$$$"),
+			hex.EncodeToString(md5.New().Sum(buffer.Bytes()))[:16],
 		}
 	}
 	return nil
 }
 
+// hashClientFiles reads all client files and produces a truncated MD5 hash.
+// Used for versioning in query strings for transparent client version
+// transition.
 func hashClientFiles() (string, error) {
+	// Gather all files
 	files := []string{}
 	args := [][2]string{
 		{"./www/css", ".css"},
@@ -96,6 +123,7 @@ func hashClientFiles() (string, error) {
 		files = append(files, contents...)
 	}
 
+	// Read all files into the hashing function
 	hasher := md5.New()
 	for _, file := range files {
 		if err := hashFile(file, hasher); err != nil {
