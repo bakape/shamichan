@@ -94,15 +94,18 @@ func indexTemplate(raw string) error {
 		if err != nil {
 			return errors.Wrap(err, 0)
 		}
-		minified, err1 := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
+		flush := buffer.Bytes()
+		minified, err1 := htmlmin.Minify(flush, &htmlmin.Options{
 			MinifyScripts: true,
 		})
 		if err1 != nil {
 			return errors.Wrap(err, 0)
 		}
+		hasher := md5.New()
+		hasher.Write(flush)
 		Resources[kind] = Template{
 			strings.Split(string(minified), "$$$"),
-			hex.EncodeToString(md5.New().Sum(buffer.Bytes()))[:16],
+			hex.EncodeToString(hasher.Sum(nil))[:16],
 		}
 	}
 	return nil
