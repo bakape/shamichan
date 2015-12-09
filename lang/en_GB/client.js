@@ -1,7 +1,6 @@
-/*
- * Shared by the server and client
+/**
+ * Clien-side language pack
  */
-
 var lang = {
 	anon: 'Anonymous',
 	search: 'Search',
@@ -38,6 +37,7 @@ var lang = {
 	unknownUpload: 'Unknown upload error',
 	unknownResult: 'Unknown result',
 	rescan: 'Rescan',
+	"catalog_omit": "Replies/Images",
 
 	reports: {
 		post: 'Reporting post',

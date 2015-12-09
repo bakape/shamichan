@@ -57,7 +57,7 @@ createTask('vendor', 'www/js/vendor', true, browserify({
 // Language bundles
 config.lang.enabled.forEach(lang =>
 	createTask(lang, 'www/js/lang', true, browserify({debug: true})
-		.require(`./lang/${lang}/common`, {expose: 'lang'})))
+		.require(`./lang/${lang}/client`, {expose: 'lang'})))
 
 // Moderation bundles
 clientBundles('mod', browserify({

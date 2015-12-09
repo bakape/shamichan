@@ -1,6 +1,6 @@
 {
     "hard": {
-        "http": {
+        "HTTP": {
             "port": 8000,
             "host": "",
             "media": "../",
@@ -44,7 +44,7 @@
                 "title": "/staff/ - Moderator Circlejerk"
             }
         },
-        "def": "a",
+        "default": "a",
         "staff": "staff",
         "psuedo": [
             ["g", "https://google.com"]
@@ -55,8 +55,8 @@
         "prune": false
     },
     "lang": {
-        "enabled": ["en_GB", "pt_BR", "es_ES"],
-        "def": "en_GB"
+        "enabled": ["en_GB"],
+        "default": "en_GB"
     },
     "staff": {
         "enabled": {
@@ -165,7 +165,7 @@
     "pyu": false,
     "illyaDance": false,
     "feedbackEmail": "lalc@email.com",
-    "defaultCSS": "moe",
+    "defaultaultCSS": "moe",
     "frontpage": "",
     "infoBanner": "",
     "injectJSPath": ""

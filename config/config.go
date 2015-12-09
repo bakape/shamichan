@@ -1,3 +1,6 @@
+// Package config parses JSON configuration files and exports the Config struct
+// for server-side use and the ClientConfig struct, for JSON stringification and
+// passing to the client
 package config
 
 import (
@@ -5,88 +8,137 @@ import (
 	"io/ioutil"
 )
 
-type config struct {
+// Server maps configuration file JSON to Go types
+type Server struct {
 	// Configuration that can not be hot-reloaded without restarting the server
-	hard struct {
-		http struct {
-			port                                                     int
-			host, media, upload, socket, origin                      string
-			serveStatic, serveImages, trustProxies, gzip, websockets bool
+	Hard struct {
+		HTTP struct {
+			Port                                                     int
+			Host, Media, Upload, Socket, Origin                      string
+			ServeStatic, ServeImages, TrustProxies, Gzip, Websockets bool
 		}
-		redis struct {
-			port, db int
-			host     string
+		Redis struct {
+			Port, DB int
+			Host     string
 		}
-		rethinkdb struct {
-			port     int
-			host, db string
+		Rethinkdb struct {
+			Port     int
+			Host, DB string
 		}
-		dirs struct {
-			src, thumb, mid, tmp string
+		Dirs struct {
+			Src, Thumb, Mid, Tmp string
 		}
-		debug bool
+		Debug bool
 	}
-	boards struct {
-		enabled map[string]struct {
-			maxThreads, maxBump int
-			title               string
+	Boards struct {
+		Enabled map[string]struct {
+			MaxThreads, MaxBump int
+			Title               string
 		}
-		def, staff   string
-		psuedo, link [2]string
-		prune        bool
+		Default, Staff string
+		Psuedo, Links  [][2]string
+		Prune          bool
 	}
-	lang struct {
-		enabled []string
-		def     string
+	Lang struct {
+		Enabled []string
+		Def     string
 	}
-	staff struct {
-		enabled     map[string]map[string]string
-		aliases     map[string]string
-		keyword     string
-		sessionTime int
+	Staff struct {
+		Enabled     map[string]map[string]string
+		Aliases     map[string]string
+		Keyword     string
+		SessionTime int
 	}
-	images struct {
-		max struct {
-			size, width, height, pixels int
+	Images struct {
+		Max struct {
+			Size, Width, Height, Pixels int
 		}
-		thumb struct {
-			quality              int
-			smallDims, thumbDims [2]int
-			highQuality, png     bool
-			pngQuality           string
+		Thumb struct {
+			Quality              int
+			SmallDims, ThumbDims [2]int
+			HighQuality, PNG     bool
+			PNGQuality           string
 		}
-		formats struct {
-			webm, webmAudio, mp3, svg, pdf bool
+		Formats struct {
+			Webm, WebmAudio, MP3, SVG, PDF bool
 		}
-		duplicateThreshold int
-		spoilers           []int
-		hats               bool
+		DuplicateThreshold int
+		Spoilers           []int
+		Hats               bool
 	}
-	posts struct {
-		salt, excludeRegex                              string
-		threadCreationCooldown, lastN, maxSubjectLength int
-		readOnly, sageEnabled, forcedAnon               bool
+	Posts struct {
+		Salt, ExcludeRegex                              string
+		ThreadCreationCooldown, LastN, MaxSubjectLength int
+		ReadOnly, SageEnabled, ForcedAnon               bool
 	}
-	recaptcha struct {
-		public, private string
+	Recaptcha struct {
+		Public, Private string
 	}
-	banners, FAQ, eightball                                        []string
-	schedule                                                       [][3]string
-	radio, pyu, illyaDance                                         bool
-	feedbackEmail, defaultCSS, frontpage, infoBanner, injectJSPath string
+	Banners, FAQ, Eightball                                        []string
+	Schedule                                                       [][3]string
+	Radio, Pyu, IllyaDance                                         bool
+	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
+}
+
+// Client is same as Server, but only exposes public configs for clientts
+type Client struct {
+	Hard struct {
+		HTTP struct {
+			Media      string `json:"media"`
+			Upload     string `json:"upload"`
+			Socket     string `json:"socket"`
+			Websockets bool   `json:"websockets"`
+		} `json:"HTTP"`
+		Debug bool `json:"debug"`
+	} `json:"hard"`
+	Boards struct {
+		Enabled map[string]struct {
+			Title string `json:"title"`
+		} `json:"enabled"`
+		Default string      `json:"def"`
+		Psuedo  [][2]string `json:"psuedo"`
+		Links   [][2]string `json:"links"`
+	} `json:"boards"`
+	Lang struct {
+		Enabled []string `json:"enabled"`
+		Def     string   `json:"def"`
+	} `json:"lang"`
+	Staff struct {
+		Aliases map[string]string `json:"aliases"`
+		Keyword string            `json:"keyword"`
+	} `json:"staff"`
+	Images struct {
+		Spoilers []int `json:"spoilers"`
+		Hats     bool  `json:"hats"`
+	} `json:"images"`
+	Banners       []string    `json:"banners"`
+	FAQ           []string    `json:"FAQ"`
+	Eightball     []string    `json:"eightball"`
+	Schedule      [][3]string `json:"schedule"`
+	Radio         bool        `json:"radio"`
+	IllyaDance    bool        `json:"illiyaDance"`
+	FeedbackEmail string      `json:"feedbackEmail"`
+	DefaultCSS    string      `json:"defaultCSS"`
+	InfoBanner    string      `json:"infoBanner"`
 }
 
 // Config contains currently loaded configuration
-var Config config
+var Config Server
+
+// ClientConfig exports public settings client can access
+var ClientConfig Client
 
 // Load reads and parses JSON config files
-func Load() error {
-	file, err := ioutil.ReadFile("./config/defaults.json")
-	if err != nil {
-		return err
+func Load() (err error) {
+	var file []byte
+	if file, err = ioutil.ReadFile("./config/defaults.json"); err != nil {
+		return
 	}
-	var conf config
-	json.Unmarshal(file, &conf)
-	Config = conf
-	return nil
+	if err = json.Unmarshal(file, &Config); err != nil {
+		return
+	}
+	if err = json.Unmarshal(file, &ClientConfig); err != nil {
+		return
+	}
+	return
 }
