@@ -84,28 +84,8 @@ func indexTemplate(raw string) error {
 		return errors.Wrap(err2, 0)
 	}
 	Resources = TemplateMap{}
-
-	// Rigt now the desktop and mobile templates are almost identical. This will
-	// change, when we get a dedicated mobile GUI.
-	for _, kind := range []string{"desktop", "mobile"} {
-		vars.IsMobile = kind == "mobile"
-		buffer := bytes.Buffer{}
-		err := tmpl.Execute(&buffer, vars)
-		if err != nil {
-			return errors.Wrap(err, 0)
-		}
-		minified, err1 := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
-			MinifyScripts: true,
-		})
-		if err1 != nil {
-			return errors.Wrap(err, 0)
-		}
-		hasher := md5.New()
-		hasher.Write(minified)
-		Resources[kind] = Template{
-			strings.Split(string(minified), "$$$"),
-			hex.EncodeToString(hasher.Sum(nil))[:16],
-		}
+	if err := buildTemplate(tmpl, vars); err != nil {
+		return err
 	}
 	return nil
 }
@@ -207,4 +187,31 @@ func boardNavigation() (html string) {
 	}
 	html += `]</b>`
 	return
+}
+
+// buildTemplate constructs the HTML template array, minifies and hashes it
+func buildTemplate(tmpl *template.Template, vars templateVars) error {
+	// Rigt now the desktop and mobile templates are almost identical. This will
+	// change, when we get a dedicated mobile GUI.
+	for _, kind := range []string{"desktop", "mobile"} {
+		vars.IsMobile = kind == "mobile"
+		buffer := bytes.Buffer{}
+		err := tmpl.Execute(&buffer, vars)
+		if err != nil {
+			return errors.Wrap(err, 0)
+		}
+		minified, err1 := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
+			MinifyScripts: true,
+		})
+		if err1 != nil {
+			return errors.Wrap(err, 0)
+		}
+		hasher := md5.New()
+		hasher.Write(minified)
+		Resources[kind] = Template{
+			strings.Split(string(minified), "$$$"),
+			hex.EncodeToString(hasher.Sum(nil))[:16],
+		}
+	}
+	return nil
 }
