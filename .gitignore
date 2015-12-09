@@ -21,6 +21,9 @@ www/js/es5
 www/js/es6
 www/js/vendor
 www/js/lang
+www/js/loader*
+www/js/login*
+www/js/setup*
 www/src
 www/thumb
 www/mid

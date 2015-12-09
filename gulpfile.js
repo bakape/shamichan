@@ -17,8 +17,10 @@ const babelify = require('babelify'),
 	sourcemaps = require('gulp-sourcemaps'),
 	uglify = require('gulp-uglify')
 
+const debug = config.hard.debug
+
 // Shorthand for compiling everything with no task arguments
-const tasks = ['vendor', 'css'].concat(config.lang.enabled)
+const tasks = ['vendor', 'css', 'scripts'].concat(config.lang.enabled)
 ; ['main', 'mod'].forEach(name =>
 	tasks.push(name + '.es5', name + '.es6'))
 gulp.task('default', tasks)
@@ -59,6 +61,15 @@ config.lang.enabled.forEach(lang =>
 	createTask(lang, 'www/js/lang', true, browserify({debug: true})
 		.require(`./lang/${lang}/client`, {expose: 'lang'})))
 
+// Various little scripts
+gulp.task('scripts', () =>
+	gulp.src('./client/scripts/*.js')
+		.pipe(sourcemaps.init())
+		.pipe(gulpif(!debug, uglify()))
+		.on('error', gutil.log)
+		.pipe(sourcemaps.write('./'))
+		.pipe(gulp.dest('./www/js')))
+
 // Moderation bundles
 clientBundles('mod', browserify({
 		debug: true,
@@ -70,9 +81,10 @@ clientBundles('mod', browserify({
 // Compile Less to CSS
 gulp.task('css', () =>
 	gulp.src('./less/*.less')
+		.on('error', gutil.log)
 		.pipe(sourcemaps.init())
 		.pipe(less())
-		.pipe(minifyCSS({rebase: false}))
+		.pipe(gulpif(!debug, minifyCSS({rebase: false})))
 		.pipe(sourcemaps.write('./maps/'))
 		.pipe(gulp.dest('./www/css')))
 
@@ -100,12 +112,12 @@ function bundle(name, dest, es5, b) {
 		// Transform into vinyl stream for Browserify compatibility with gulp
 		.pipe(source(name.replace(/\.es\d/, '') + '.js'))
 		.pipe(buffer())
+		.on('error', gutil.log)
 		.pipe(sourcemaps.init({loadMaps: true}))
 
 		// UglifyJS does not yest fully support ES6, so best not minify to be
 		// on the safe side
-		.pipe(gulpif(es5 && !config.hard.debug, uglify()))
-		.on('error', gutil.log)
+		.pipe(gulpif(es5 && !debug, uglify()))
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest(dest))
 }
@@ -132,9 +144,6 @@ function compileES6(b) {
 			'transform-es2015-classes',
 			'transform-es2015-destructuring',
 			'transform-es2015-object-super',
-			'transform-es2015-parameters',
-			'transform-es2015-sticky-regex',
-			'transform-es2015-unicode-regex',
 			'transform-strict-mode',
 			'transform-es2015-modules-commonjs'
 		]
