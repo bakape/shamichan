@@ -3,6 +3,7 @@ package lang
 
 import (
 	"encoding/json"
+	"github.com/go-errors/errors"
 	"io/ioutil"
 	"meguca/config"
 )
@@ -25,19 +26,18 @@ type Map map[string]Struct
 var Langs Map
 
 // Load reads and exports server-side language packs from JSON
-func Load() (err error) {
+func Load() error {
 	Langs = Map{}
 	for _, lang := range config.Config.Lang.Enabled {
-		var file []byte
-		file, err = ioutil.ReadFile("./lang/" + lang + "/server.json")
+		file, err := ioutil.ReadFile("./lang/" + lang + "/server.json")
 		if err != nil {
-			return
+			return errors.Wrap(err, 0)
 		}
 		parsed := Struct{}
-		if err = json.Unmarshal(file, &parsed); err != nil {
-			return
+		if err := json.Unmarshal(file, &parsed); err != nil {
+			return errors.Wrap(err, 0)
 		}
 		Langs[lang] = parsed
 	}
-	return
+	return nil
 }

@@ -9,12 +9,8 @@ import (
 )
 
 func main() {
-	if err := config.Load(); err != nil {
-		log.Fatalf("Error loading config files: %#v\n", err)
-	}
-	if err := lang.Load(); err != nil {
-		log.Fatalf("Error loading language packs: %#v\n", err)
-	}
+	logError(config.Load, "Error loading config files")
+	logError(lang.Load, "Error loading language packs")
 	logError(tmpl.Compile, "Error compiling templates")
 }
 

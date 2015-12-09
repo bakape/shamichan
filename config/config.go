@@ -5,6 +5,7 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/go-errors/errors"
 	"io/ioutil"
 )
 
@@ -131,16 +132,16 @@ var Config Server
 var ClientConfig Client
 
 // Load reads and parses JSON config files
-func Load() (err error) {
-	var file []byte
-	if file, err = ioutil.ReadFile("./config/defaults.json"); err != nil {
-		return
+func Load() error {
+	file, err := ioutil.ReadFile("./config/defaults.json")
+	if err != nil {
+		return errors.Wrap(err, 0)
 	}
-	if err = json.Unmarshal(file, &Config); err != nil {
-		return
+	if err := json.Unmarshal(file, &Config); err != nil {
+		return errors.Wrap(err, 0)
 	}
-	if err = json.Unmarshal(file, &ClientConfig); err != nil {
-		return
+	if err := json.Unmarshal(file, &ClientConfig); err != nil {
+		return errors.Wrap(err, 0)
 	}
-	return
+	return nil
 }
