@@ -60,7 +60,7 @@ var lang = {
 
 	// Websocket syncronisation status
 	sync: {
-		notSynced: 'Not synched',
+		notSynced: 'Not synced',
 		connecting: 'Connecting',
 		syncing: 'Syncing',
 		synced: 'Synced',

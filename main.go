@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/go-errors/errors"
 	"log"
 	"meguca/config"
 	"meguca/lang"
@@ -14,7 +15,11 @@ func main() {
 	if err := lang.Load(); err != nil {
 		log.Fatalf("Error loading language packs: %#v\n", err)
 	}
-	if err := tmpl.Compile(); err != nil {
-		log.Fatalf("Error compiling templates: %#v\n", err)
+	logError(tmpl.Compile, "Error compiling templates")
+}
+
+func logError(routine func() error, msg string) {
+	if err := routine(); err != nil {
+		log.Fatalf(msg+":\n%v", err.(*errors.Error).ErrorStack())
 	}
 }

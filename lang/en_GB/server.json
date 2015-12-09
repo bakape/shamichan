@@ -46,7 +46,8 @@
 		"faq": "FAQ",
 		"schedule": "Schedule",
 		"feedback": "Feedback",
-		"onlineCounter": "Online Counter"
+		"onlineCounter": "Online Counter",
+		"notSynced": "Not synced"
 	},
 	"opts": {
 		"tabs": ["General", "Style", "ImageSearch", "Fun", "Shortcuts"],

@@ -31,7 +31,8 @@ type Server struct {
 		Debug bool
 	}
 	Boards struct {
-		Enabled map[string]struct {
+		Enabled []string
+		Boards  map[string]struct {
 			MaxThreads, MaxBump int
 			Title               string
 		}
@@ -92,9 +93,10 @@ type Client struct {
 		Debug bool `json:"debug"`
 	} `json:"hard"`
 	Boards struct {
-		Enabled map[string]struct {
+		Enabled []string `json:"enabled"`
+		Boards  map[string]struct {
 			Title string `json:"title"`
-		} `json:"enabled"`
+		} `json:"boards"`
 		Default string      `json:"def"`
 		Psuedo  [][2]string `json:"psuedo"`
 		Links   [][2]string `json:"links"`

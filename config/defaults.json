@@ -32,7 +32,8 @@
         "debug": true
     },
     "boards": {
-        "enabled": {
+        "enabled": ["a", "staff"],
+        "boards": {
             "a": {
                 "maxThreads": 100,
                 "maxBump": 500,
