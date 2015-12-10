@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##1.7.1 - 2015-12-10
+* Fix
+  - r/a/dio banner not updating after prolonged operation
+* Remove
+  - Dedicated saucenao.com SLL bypass
+* Change
+  - Only DJs allowed to wear names with forced anon on
+
 ##1.7.0 - 2015-12-05
 * Remove
   - Drop shadow from image hover previews
