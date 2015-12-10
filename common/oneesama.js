@@ -38,14 +38,12 @@ const searchBase = (function() {
 			class: 'iqdb',
 			url: 'http://iqdb.org/?url=',
 			type: 'thumb',
-			noSSL: true,
 			symbol: 'Iq'
 		},
 		{
 			class: 'saucenao',
 			url: 'http://saucenao.com/search.php?db=999&url=',
 			type: 'thumb',
-			noSSL: true,
 			symbol: 'Sn'
 		},
 		{
@@ -67,16 +65,12 @@ const searchBase = (function() {
 		let model = models[i];
 		base[i] = [
 			parseHTML
-				`<a target="_blank"
-		 			rel="nofollow"
-		 			class="imageSearch ${model.class}"
-		 			href="${model.url}`,
+			`<a target="_blank"
+					rel="nofollow"
+					class="imageSearch ${model.class}"
+					href="${model.url}`,
 			model.type,
-			parseHTML
-				`${model.ssl && '?ssl=off'}"
-				>
-				${model.symbol}
-				</a>`
+			`">${model.symbol}</a>`
 		];
 	}
 	return base;
@@ -515,7 +509,7 @@ class OneeSama {
 			base = [base[0]];
 		// Only use HTTP for thumbnail image search, because IQDB and
 		// Saucenao can't into certain SSL cyphers
-		const imageURl = this.thumbPath(data).replace(/^https/, 'http');
+		const imageURl = this.thumbPath(data)
 		for (let i = 0, l = base.length; i < l; i++) {
 			let parts = base[i];
 			html += parts[0]
@@ -568,7 +562,15 @@ class OneeSama {
 			attrs.title = fullName;
 
 		return parseHTML
+<<<<<<< HEAD
 			`<a ${attrs}>
+=======
+			`<a href="${config.MEDIA_URL}src/${data.src}"
+				rel="nofollow"
+				download="${fullName}"
+				${tooLong && `title="${fullName}"`}
+			>
+>>>>>>> origin/master
 				${imgnm}
 			</a>`;
 	}

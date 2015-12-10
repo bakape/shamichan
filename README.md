@@ -1,8 +1,5 @@
 [![Dependency Status](https://david-dm.org/ipfs/js-ipfs-api.svg?style=flat-square)](https://david-dm.org/bakape/meguca.svg)
 
-**NOTE: The git master branch contains the development version of the board.
-For more stable revisions please [download the latest release](https://github.com/bakape/meguca/releases/latest).**
-
 ##Setup
 * Install [dependencies](#dependencies) listed below
 * Sign up for reCAPTCHA
