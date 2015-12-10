@@ -73,18 +73,11 @@ function fetch() {
 			json: true
 		},
 		function (err, resp, json) {
-			if (err || resp.statusCode != 200 || !json || !json.main) {
-				exports.name = exports.queue = null;
-				return again();
-			}
+			if (err || resp.statusCode != 200 || !json || !json.main)
+				return exports.name = exports.queue = null;
 			parse(json.main);
-			again();
 		}
 	);
 }
-
-function again() {
-	setTimeout(fetch, 10000);
-}
-
-fetch();
+fetch()
+setInterval(fetch, 10000)
