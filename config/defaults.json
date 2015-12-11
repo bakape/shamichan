@@ -14,13 +14,11 @@
             "websockets": true
         },
         "redis": {
-            "port": 6379,
-            "host": "",
+            "addr": "localhost:6379",
             "db": 0
         },
         "rethinkdb": {
-            "port": 28015,
-            "host": "",
+            "addr": "localhost:28015",
             "db": "meguca"
         },
         "dirs": {

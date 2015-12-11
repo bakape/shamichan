@@ -21,12 +21,11 @@ type Server struct {
 			ServeStatic, ServeImages, TrustProxies, Gzip, Websockets bool
 		}
 		Redis struct {
-			Port, DB int
-			Host     string
+			Addr string
+			Db   int64
 		}
 		Rethinkdb struct {
-			Port     int
-			Host, DB string
+			Addr, Db string
 		}
 		Dirs struct {
 			Src, Thumb, Mid, Tmp string
