@@ -7,8 +7,8 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/go-errors/errors"
 	"io/ioutil"
+	"meguca/util"
 )
 
 // Server maps configuration file JSON to Go types
@@ -135,18 +135,13 @@ var ClientConfig Client
 // ConfigHash is the truncated MD5 hash of the JSON configuration file
 var ConfigHash string
 
+var throw = util.Throw
+
 // Load reads and parses JSON config files
-func Load() error {
+func Load() {
 	file, err := ioutil.ReadFile("./config/defaults.json")
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-	if err := json.Unmarshal(file, &Config); err != nil {
-		return errors.Wrap(err, 0)
-	}
-	if err := json.Unmarshal(file, &ClientConfig); err != nil {
-		return errors.Wrap(err, 0)
-	}
+	throw(err)
+	throw(json.Unmarshal(file, &Config))
+	throw(json.Unmarshal(file, &ClientConfig))
 	ConfigHash = hex.EncodeToString(md5.New().Sum(file))[:16]
-	return nil
 }

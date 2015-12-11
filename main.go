@@ -1,8 +1,6 @@
 package main
 
 import (
-	"github.com/go-errors/errors"
-	"log"
 	"meguca/config"
 	"meguca/db"
 	"meguca/lang"
@@ -10,14 +8,8 @@ import (
 )
 
 func main() {
-	logError(config.Load, "Error loading config files")
-	logError(lang.Load, "Error loading language packs")
-	logError(tmpl.Compile, "Error compiling templates")
+	config.Load()
+	lang.Load()
+	tmpl.Compile()
 	db.Load()
-}
-
-func logError(routine func() error, msg string) {
-	if err := routine(); err != nil {
-		log.Fatalf(msg+":\n%v", err.(*errors.Error).ErrorStack())
-	}
 }

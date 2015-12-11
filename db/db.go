@@ -6,10 +6,13 @@ import (
 	r "github.com/dancannon/gorethink"
 	"gopkg.in/redis.v3"
 	"meguca/config"
+	"meguca/util"
 	"strconv"
 )
 
 const dbVersion = 2
+
+var throw = util.Throw
 
 var db string
 
@@ -47,7 +50,7 @@ func loadRethinkDB() {
 	Session, err = r.Connect(r.ConnectOpts{
 		Address: config.Config.Hard.Rethinkdb.Addr,
 	})
-	Throw(err)
+	throw(err)
 
 	// Shorthand
 	db = config.Config.Hard.Rethinkdb.Db
@@ -67,13 +70,13 @@ func loadRedis() {
 	Redis = RedisClient()
 	if redisVersion, err := Redis.Get("dbVersion").Result(); err == redis.Nil {
 		// Fresh database. Write version number.
-		Throw(Redis.Set("dbVersion", dbVersion, 0).Err())
+		throw(Redis.Set("dbVersion", dbVersion, 0).Err())
 	} else {
-		Throw(err)
+		throw(err)
 
 		// Verify Redis database version
 		conv, err1 := strconv.ParseInt(redisVersion, 10, 64)
-		Throw(err1)
+		throw(err1)
 		verifyVersion(int(conv), "Redis")
 	}
 }
@@ -103,17 +106,10 @@ func verifyVersion(version int, dbms string) {
 	}
 }
 
-// Throw panics, if there is an error. Rob Pike must never know.
-func Throw(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 // Get is a shorthand for executing RethinkDB queries and panicing on error.
 func Get(query r.Term) *r.Cursor {
 	cursor, err := query.Run(Session)
-	Throw(err)
+	throw(err)
 	return cursor
 }
 
@@ -121,6 +117,6 @@ func Get(query r.Term) *r.Cursor {
 // returned status is unneeded and we want the goroutine to crash on error.
 func Run(query r.Term) {
 	cursor, err := query.Run(Session)
-	Throw(err)
+	throw(err)
 	cursor.Close()
 }

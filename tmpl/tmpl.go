@@ -9,15 +9,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dchest/htmlmin"
-	"github.com/go-errors/errors"
 	"hash"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"meguca/config"
+	"meguca/util"
 	"os"
 	"strings"
 )
+
+var throw = util.Throw
 
 // Template stores the static part of HTML templates and the corresponding
 // truncated MD5 hash of said template
@@ -34,20 +36,15 @@ var Resources TemplateMap
 
 // Compile reads template HTML from disk, injext dynamic variables, hashes and
 // exports them
-func Compile() error {
+func Compile() {
 	// Only one for now, but there will be more later
 	raw := map[string]string{}
 	for _, name := range []string{"index"} {
 		file, err := ioutil.ReadFile("./tmpl/html/" + name + ".html")
-		if err != nil {
-			return errors.Wrap(err, 1)
-		}
+		throw(err)
 		raw[name] = string(file)
 	}
-	if err := indexTemplate(raw["index"]); err != nil {
-		return err
-	}
-	return nil
+	indexTemplate(raw["index"])
 }
 
 // ClientHash is the combined, shortened MD5 hash of all client files
@@ -61,39 +58,29 @@ type templateVars struct {
 
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
-func indexTemplate(raw string) error {
+func indexTemplate(raw string) {
 	vars := templateVars{
 		ConfigHash: config.ConfigHash,
 		MediaURL:   config.Config.Hard.HTTP.Media,
 	}
 	js, err := json.Marshal(config.ClientConfig)
-	if err != nil {
-		return errors.Wrap(err, 1)
-	}
+	throw(err)
 	vars.Config = template.JS(js)
 	vars.Navigation = boardNavigation()
-	hash, err1 := hashClientFiles()
-	if err1 != nil {
-		return err1
-	}
+	hash := hashClientFiles()
 	vars.ClientHash = hash
 	ClientHash = hash
 
-	tmpl, err2 := template.New("index").Parse(raw)
-	if err2 != nil {
-		return errors.Wrap(err2, 0)
-	}
+	tmpl, err1 := template.New("index").Parse(raw)
+	throw(err1)
 	Resources = TemplateMap{}
-	if err := buildTemplate(tmpl, vars); err != nil {
-		return err
-	}
-	return nil
+	buildTemplate(tmpl, vars)
 }
 
 // hashClientFiles reads all client files and produces a truncated MD5 hash.
 // Used for versioning in query strings for transparent client version
 // transition.
-func hashClientFiles() (string, error) {
+func hashClientFiles() string {
 	// Gather all files
 	files := []string{}
 	args := [][2]string{
@@ -105,63 +92,44 @@ func hashClientFiles() (string, error) {
 		{"./www/js/lang", ".js"},
 	}
 	for _, pair := range args {
-		contents, err := scanDir(pair[0], pair[1])
-		if err != nil {
-			return "", errors.Wrap(err, 0)
-		}
-		files = append(files, contents...)
+		files = append(files, scanDir(pair[0], pair[1])...)
 	}
 
 	// Read all files into the hashing function
 	hasher := md5.New()
 	for _, file := range files {
-		if err := hashFile(file, hasher); err != nil {
-			return "", err
-		}
+		hashFile(file, hasher)
 	}
-	return hex.EncodeToString(hasher.Sum(nil))[:16], nil
+	return hex.EncodeToString(hasher.Sum(nil))[:16]
 }
 
 // scanDir returns files from a folder, that end with the provided extension
-func scanDir(path string, suffix string) ([]string, error) {
-	files, err := ls(path)
-	if err != nil {
-		return nil, err
-	}
-	filtered := []string{}
-	for _, file := range files {
+func scanDir(path string, suffix string) (filtered []string) {
+	for _, file := range ls(path) {
 		if strings.HasSuffix(file, suffix) {
 			filtered = append(filtered, path+"/"+file)
 		}
 	}
-	return filtered, nil
+	return
 }
 
 // ls returns the contents of a directory
-func ls(path string) ([]string, error) {
+func ls(path string) []string {
 	dir, err := os.Open(path)
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
+	throw(err)
 	defer dir.Close()
 	files, err1 := dir.Readdirnames(0)
-	if err1 != nil {
-		return nil, errors.Wrap(err1, 0)
-	}
-	return files, nil
+	throw(err1)
+	return files
 }
 
 // hashFile reads a file from disk and pipes it into the hashing reader
-func hashFile(path string, hasher hash.Hash) error {
+func hashFile(path string, hasher hash.Hash) {
 	file, err := os.Open(path)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
+	throw(err)
 	defer file.Close()
-	if _, err := io.Copy(hasher, file); err != nil {
-		return errors.Wrap(err, 0)
-	}
-	return nil
+	_, err1 := io.Copy(hasher, file)
+	throw(err1)
 }
 
 // boardNavigation renders interboard navigation we put in the top banner
@@ -190,22 +158,17 @@ func boardNavigation() (html string) {
 }
 
 // buildTemplate constructs the HTML template array, minifies and hashes it
-func buildTemplate(tmpl *template.Template, vars templateVars) error {
+func buildTemplate(tmpl *template.Template, vars templateVars) {
 	// Rigt now the desktop and mobile templates are almost identical. This will
 	// change, when we get a dedicated mobile GUI.
 	for _, kind := range []string{"desktop", "mobile"} {
 		vars.IsMobile = kind == "mobile"
 		buffer := bytes.Buffer{}
-		err := tmpl.Execute(&buffer, vars)
-		if err != nil {
-			return errors.Wrap(err, 0)
-		}
-		minified, err1 := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
+		throw(tmpl.Execute(&buffer, vars))
+		minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
 			MinifyScripts: true,
 		})
-		if err1 != nil {
-			return errors.Wrap(err, 0)
-		}
+		throw(err)
 		hasher := md5.New()
 		hasher.Write(minified)
 		Resources[kind] = Template{
@@ -213,5 +176,4 @@ func buildTemplate(tmpl *template.Template, vars templateVars) error {
 			hex.EncodeToString(hasher.Sum(nil))[:16],
 		}
 	}
-	return nil
 }
