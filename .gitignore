@@ -9,7 +9,6 @@ config/config.json
 error.log
 node_modules/
 imager/tmp
-state
 build
 meguca
 scripts/credentials.json
