@@ -562,15 +562,7 @@ class OneeSama {
 			attrs.title = fullName;
 
 		return parseHTML
-<<<<<<< HEAD
 			`<a ${attrs}>
-=======
-			`<a href="${config.MEDIA_URL}src/${data.src}"
-				rel="nofollow"
-				download="${fullName}"
-				${tooLong && `title="${fullName}"`}
-			>
->>>>>>> origin/master
 				${imgnm}
 			</a>`;
 	}
