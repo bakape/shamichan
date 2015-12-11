@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"meguca/config"
-	"meguca/util"
+	. "meguca/util"
 )
 
 // Struct maps server-side JSON languagepacks to Go types
@@ -24,9 +24,9 @@ func Load() {
 	Langs = Map{}
 	for _, lang := range config.Config.Lang.Enabled {
 		file, err := ioutil.ReadFile("./lang/" + lang + "/server.json")
-		util.Throw(err)
+		Throw(err)
 		parsed := Struct{}
-		util.Throw(json.Unmarshal(file, &parsed))
+		Throw(json.Unmarshal(file, &parsed))
 		Langs[lang] = parsed
 	}
 }

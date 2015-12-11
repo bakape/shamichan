@@ -8,7 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
-	"meguca/util"
+	. "meguca/util"
 )
 
 // Server maps configuration file JSON to Go types
@@ -135,13 +135,11 @@ var ClientConfig Client
 // ConfigHash is the truncated MD5 hash of the JSON configuration file
 var ConfigHash string
 
-var throw = util.Throw
-
 // Load reads and parses JSON config files
 func Load() {
 	file, err := ioutil.ReadFile("./config/defaults.json")
-	throw(err)
-	throw(json.Unmarshal(file, &Config))
-	throw(json.Unmarshal(file, &ClientConfig))
+	Throw(err)
+	Throw(json.Unmarshal(file, &Config))
+	Throw(json.Unmarshal(file, &ClientConfig))
 	ConfigHash = hex.EncodeToString(md5.New().Sum(file))[:16]
 }

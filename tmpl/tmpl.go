@@ -14,12 +14,10 @@ import (
 	"io"
 	"io/ioutil"
 	"meguca/config"
-	"meguca/util"
+	. "meguca/util"
 	"os"
 	"strings"
 )
-
-var throw = util.Throw
 
 // Template stores the static part of HTML templates and the corresponding
 // truncated MD5 hash of said template
@@ -41,7 +39,7 @@ func Compile() {
 	raw := map[string]string{}
 	for _, name := range []string{"index"} {
 		file, err := ioutil.ReadFile("./tmpl/html/" + name + ".html")
-		throw(err)
+		Throw(err)
 		raw[name] = string(file)
 	}
 	indexTemplate(raw["index"])
@@ -64,7 +62,7 @@ func indexTemplate(raw string) {
 		MediaURL:   config.Config.Hard.HTTP.Media,
 	}
 	js, err := json.Marshal(config.ClientConfig)
-	throw(err)
+	Throw(err)
 	vars.Config = template.JS(js)
 	vars.Navigation = boardNavigation()
 	hash := hashClientFiles()
@@ -72,7 +70,7 @@ func indexTemplate(raw string) {
 	ClientHash = hash
 
 	tmpl, err1 := template.New("index").Parse(raw)
-	throw(err1)
+	Throw(err1)
 	Resources = TemplateMap{}
 	buildTemplate(tmpl, vars)
 }
@@ -116,20 +114,20 @@ func scanDir(path string, suffix string) (filtered []string) {
 // ls returns the contents of a directory
 func ls(path string) []string {
 	dir, err := os.Open(path)
-	throw(err)
+	Throw(err)
 	defer dir.Close()
 	files, err1 := dir.Readdirnames(0)
-	throw(err1)
+	Throw(err1)
 	return files
 }
 
 // hashFile reads a file from disk and pipes it into the hashing reader
 func hashFile(path string, hasher hash.Hash) {
 	file, err := os.Open(path)
-	throw(err)
+	Throw(err)
 	defer file.Close()
 	_, err1 := io.Copy(hasher, file)
-	throw(err1)
+	Throw(err1)
 }
 
 // boardNavigation renders interboard navigation we put in the top banner
@@ -164,11 +162,11 @@ func buildTemplate(tmpl *template.Template, vars templateVars) {
 	for _, kind := range []string{"desktop", "mobile"} {
 		vars.IsMobile = kind == "mobile"
 		buffer := bytes.Buffer{}
-		throw(tmpl.Execute(&buffer, vars))
+		Throw(tmpl.Execute(&buffer, vars))
 		minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
 			MinifyScripts: true,
 		})
-		throw(err)
+		Throw(err)
 		hasher := md5.New()
 		hasher.Write(minified)
 		Resources[kind] = Template{
