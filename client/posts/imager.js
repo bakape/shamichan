@@ -130,15 +130,9 @@ const Hidamari = exports.Hidamari = {
 			cls += ' fullWidth';
 		attrs.class = cls;
 
-		if (isVideo) {
-			attrs.autoplay = attrs.loop = true;
+		if (isVideo)
+			attrs.autoplay = attrs.loop = attrs.controls = true
 
-			// Android Chrome disables autoplay because retarded
-			// users. Show controls, so you can manually tap Play
-			if (main.isMobile)
-				attrs.controls = true;
-		}
-		
 		this.$el
 			.children('figure')
 			.children('a')
