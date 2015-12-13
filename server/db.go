@@ -1,5 +1,6 @@
-// Package db initialises and loads Redis and RethinkDB
-package db
+// Initialises and loads Redis and RethinkDB
+
+package server
 
 import (
 	"fmt"

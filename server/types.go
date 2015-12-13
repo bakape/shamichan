@@ -1,6 +1,31 @@
-// Common database types in a single place. Purely for organisation purposes.
+// Common used types in a single place. Purely for organisation purposes.
 
-package db
+package server
+
+// Thread stores the metadata and posts of a single thread
+type Thread struct {
+	ID       int             `json:"id",gorethink:"id"`
+	IP       string          `json:"ip",gorethink:"ip"`
+	Board    string          `json:"board",gorethink:"board"`
+	Time     int             `json:"time",gorethink:"time"`
+	BumpTime int             `json:"bumpTime",gorethink:"bumpTime"`
+	Nonce    string          `json:"nonce",gorethink:"nonce"`
+	Posts    map[string]Post `json:"posts",gorethink:"posts"`
+	History  []Message       `json:"history",gorethink:"history"`
+}
+
+// Message is the universal transport container of all live updates through
+// websockets
+type Message struct {
+	Type string `json:"type",gorethink:"type"`
+
+	// If present, determines a priviledged access level, the client has to
+	// have, to recieve this message
+	Priv string `json:"priv,omitempty",gorethink:"priv,omitempty"`
+
+	// The actual contents of the message. Very variadic, thus interface{}.
+	Msg interface{} `json:"msg,omitempty",gorethink:"msg,omitempty"`
+}
 
 // Post is a generic post. Either OP or reply.
 type Post struct {
@@ -63,6 +88,7 @@ type Link map[string]int
 
 // Ident is used to verify a client's access and write permissions
 type Ident struct {
+	// Indicates priveledged access rights for staff.
 	Auth string
 	Ban  bool
 	IP   string

@@ -56,7 +56,7 @@ class ClientController {
 
 			// Stores all updates that happened to the thread, so we can
 			// pass them to the client, if they are behind
-			post.history: []
+			history: []
 		}
 		const post = {
 			ip,
