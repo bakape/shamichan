@@ -128,14 +128,8 @@ exports.Hidamari = Backbone.View.extend({
 			cls += ' noMargin';
 		attrs.class = cls;
 
-		if (isVideo) {
-			attrs.autoplay = attrs.loop = true;
-
-			// Android Chrome disables autoplay because retarded
-			// users. Show controls, so you can manually tap Play
-			if (main.isMobile)
-				attrs.controls = true;
-		}
+		if (isVideo)
+			attrs.autoplay = attrs.loop = attrs.controls = true
 
 		this.el.query('figure').lastChild.innerHTML = common.parseHTML
 			`<${isVideo ? 'video' : 'img'} ${attrs}>`;
