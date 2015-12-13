@@ -30,16 +30,15 @@ var Redis *redis.Client
 // Session exports the RethinkDB connection session
 var Session *r.Session
 
-// Info stores the central gloabal information and stats
+// Info stores the central global meta information and stats
 type Info struct {
 	ID        string `gorethink:"id"`
 	DBVersion int    `gorethink:"dbVersion"`
-	PostCtr   int    `gorethink:"postCtr"`
 }
 
-// Load establishes connections to RethinkDB and Redis and bootstraps both
+// LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
-func Load() {
+func LoadDB() {
 	loadRethinkDB()
 	loadRedis()
 }
@@ -80,22 +79,37 @@ func loadRedis() {
 	}
 }
 
-// BoardCounters stores history counters of boards. Used for building etags.
-type BoardCounters struct {
-	ID     string         `gorethink:"id"`
-	Boards map[string]int `gorethink:"boards"`
+// Cache contains various board- and post-related statistics
+type Cache struct {
+	ID string `gorethink:"id"`
+
+	// Is incremented on each new post. Ensures post number uniqueness
+	PostCounter int `gorethink:"postCounter"`
+
+	// History aka progress counters of boards, that get incremented on any
+	// update
+	HistoryCounters intMap `gorethink:"historyCounters"`
+
+	// Maps post numbers to their parent threads
+	OPs intMap
+
+	// Maps post numbers to their parent boards
+	Boards stringMap `gorethink:"boards"`
 }
 
+type stringMap map[string]string
+type intMap map[string]int
+
 func initRethinkDB() {
-	Run(r.DBCreate(db))
+	Exec(r.DBCreate(db))
 	Session.Use(db)
-	Run(r.TableCreate("main"))
-	Run(r.Table("main").Insert([2]interface{}{
-		Info{"info", dbVersion, 0},
-		BoardCounters{"boardCtrs", map[string]int{}},
+	Exec(r.TableCreate("main"))
+	Exec(r.Table("main").Insert([2]interface{}{
+		Info{"info", dbVersion},
+		Cache{"cache", 0, intMap{}, intMap{}, stringMap{}},
 	}))
-	Run(r.TableCreate("threads"))
-	Run(r.Table("threads").IndexCreate("board"))
+	Exec(r.TableCreate("threads"))
+	Exec(r.Table("threads").IndexCreate("board"))
 }
 
 func verifyVersion(version int, dbms string) {
@@ -112,10 +126,8 @@ func Get(query r.Term) *r.Cursor {
 	return cursor
 }
 
-// Run executes a RethinkDB query and panics on error. To be used, when the
+// Exec executes a RethinkDB query and panics on error. To be used, when the
 // returned status is unneeded and we want the goroutine to crash on error.
-func Run(query r.Term) {
-	cursor, err := query.Run(Session)
-	Throw(err)
-	cursor.Close()
+func Exec(query r.Term) {
+	Throw(query.Exec(Session))
 }

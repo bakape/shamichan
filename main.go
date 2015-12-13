@@ -11,5 +11,5 @@ func main() {
 	config.Load()
 	lang.Load()
 	tmpl.Compile()
-	server.Load()
+	server.LoadDB()
 }
