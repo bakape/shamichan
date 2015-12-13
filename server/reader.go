@@ -22,7 +22,7 @@ func NewReader(board string, ident Ident) *Reader {
 // CheckAuth checks if the suplied Ident has enough or greater access right
 // than requiered
 func CheckAuth(auth string, ident Ident) bool {
-	return authRank(auth) > authRank(ident.Auth)
+	return authRank(auth) <= authRank(ident.Auth)
 }
 
 // authRank determines the rank of the suplied authority class in the access

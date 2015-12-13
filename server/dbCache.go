@@ -48,6 +48,7 @@ func parentThread(id int) (op int) {
 	return
 }
 
+// parentBoard determines the parent board of the post
 func parentBoard(id int) (board string) {
 	query := r.Table("main").Get("cache").
 		Field("OPs").
