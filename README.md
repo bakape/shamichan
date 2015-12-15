@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master)][![Dependency Status](https://david-dm.org/ipfs/js-ipfs-api.svg?style=flat-square)](https://david-dm.org/bakape/meguca.svg)
+![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=version2) ![Dependency Status](https://david-dm.org/ipfs/js-ipfs-api.svg)](https://david-dm.org/bakape/meguca.svg)
 
 ##Setup
 * Install [dependencies](#dependencies) listed below

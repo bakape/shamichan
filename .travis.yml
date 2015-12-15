@@ -1,5 +1,7 @@
-language: node_js
+language: go
+go: tip
 node_js: node
+before_script: npm install
 env: CXX=g++-4.8
 addons:
   apt:
