@@ -1,7 +1,9 @@
 language: go
 go: tip
-node_js: node
-before_script: npm install
+before_install:
+    - nvm install node
+    - nvm use node
+    - npm install
 env: CXX=g++-4.8
 addons:
   apt:
