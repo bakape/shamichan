@@ -1,18 +1,20 @@
-// Package config parses JSON configuration files and exports the Config struct
-// for server-side use and the ClientConfig struct, for JSON stringification and
-// passing to the client
-package config
+/*
+ Parses JSON configuration files and exports the config struct for server-side
+ use and the clientConfig struct, for JSON stringification and passing to the
+ client
+*/
+
+package main
 
 import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
-	. "meguca/util"
 )
 
-// Config contains currently loaded configuration
-var Config struct {
+// config contains currently loaded configuration
+var config struct {
 	// Configuration that can not be hot-reloaded without restarting the server
 	Hard struct {
 		HTTP struct {
@@ -50,7 +52,7 @@ var Config struct {
 		Enabled     map[string]map[string]string
 		Aliases     map[string]string
 		Keyword     string
-		SessionTime int
+		rSessionTime int
 	}
 	Images struct {
 		Max struct {
@@ -83,8 +85,8 @@ var Config struct {
 	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
 }
 
-// ClientConfig exports public settings client can access
-var ClientConfig struct {
+// clientConfig exports public settings client can access
+var clientConfig struct {
 	Hard struct {
 		HTTP struct {
 			Media      string `json:"media"`
@@ -126,14 +128,14 @@ var ClientConfig struct {
 	InfoBanner    string      `json:"infoBanner"`
 }
 
-// ConfigHash is the truncated MD5 hash of the JSON configuration file
-var ConfigHash string
+// configHash is the truncated MD5 hash of the JSON configuration file
+var configHash string
 
-// Load reads and parses JSON config files
-func Load() {
+// loadConfig reads and parses JSON config files
+func loadConfig() {
 	file, err := ioutil.ReadFile("./config/defaults.json")
-	Throw(err)
-	Throw(json.Unmarshal(file, &Config))
-	Throw(json.Unmarshal(file, &ClientConfig))
-	ConfigHash = hex.EncodeToString(md5.New().Sum(file))[:16]
+	throw(err)
+	throw(json.Unmarshal(file, &config))
+	throw(json.Unmarshal(file, &clientConfig))
+	configHash = hex.EncodeToString(md5.New().Sum(file))[:16]
 }

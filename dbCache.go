@@ -1,6 +1,8 @@
-// Functions that operate on the post thread and board parenthood cache
+/*
+ Functions that operate on the post thread and board parenthood cache
+*/
 
-package server
+package main
 
 import (
 	r "github.com/dancannon/gorethink"
@@ -13,7 +15,7 @@ type updateMap map[string]r.Term
 // counters
 func cacheAdd(id int, op int, board string) {
 	num := strconv.Itoa(id)
-	Exec(r.Table("main").Get("cache").Update(parenthoodCache{
+	rExec(r.Table("main").Get("cache").Update(ParenthoodCache{
 		intMap{num: op},
 		stringMap{num: board},
 	}))
@@ -22,7 +24,7 @@ func cacheAdd(id int, op int, board string) {
 // cacheRemove removes a post from the parenthood cache
 func cacheRemove(id int) {
 	num := strconv.Itoa(id)
-	Exec(r.Table("main").Get("cache").Replace(r.Row.Without(updateMap{
+	rExec(r.Table("main").Get("cache").Replace(r.Row.Without(updateMap{
 		"OPs":    removeField(num),
 		"boards": removeField(num),
 	})))
@@ -37,7 +39,7 @@ func parentThread(id int) (op int) {
 	query := r.Table("main").Get("cache").
 		Field("boards").
 		Field(strconv.Itoa(id))
-	Get(query).One(&op)
+	rGet(query).One(&op)
 	return
 }
 
@@ -46,7 +48,7 @@ func parentBoard(id int) (board string) {
 	query := r.Table("main").Get("cache").
 		Field("OPs").
 		Field(strconv.Itoa(id))
-	Get(query).One(&board)
+	rGet(query).One(&board)
 	return
 }
 

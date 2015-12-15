@@ -1,6 +1,8 @@
-// Common used types in a single place. Purely for organisation purposes.
+/*
+ Commonly used types in a single place. Purely for organisation purposes.
+*/
 
-package server
+package main
 
 // Thread stores the metadata and posts of a single thread
 type Thread struct {

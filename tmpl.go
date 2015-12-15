@@ -1,6 +1,9 @@
-// Package tmpl compiles HTML templates to be used for rendering pages during
-// dynamic content insertion
-package tmpl
+/*
+ Compiles HTML templates to be used for rendering pages during dynamic content
+ insertion
+*/
+
+package main
 
 import (
 	"bytes"
@@ -13,8 +16,6 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
-	"meguca/config"
-	. "meguca/util"
 	"os"
 	"strings"
 )
@@ -29,24 +30,24 @@ type templateStore struct {
 // templateMap stores all available templates
 type templateMap map[string]templateStore
 
-// Resources exports temolates and their hashes by language
-var Resources templateMap
+// resources exports temolates and their hashes by language
+var resources templateMap
 
-// Compile reads template HTML from disk, injext dynamic variables, hashes and
-// exports them
-func Compile() {
+// compileTemplates reads template HTML from disk, injects dynamic variables,
+// hashes and stores them
+func compileTemplates() {
 	// Only one for now, but there will be more later
 	raw := map[string]string{}
 	for _, name := range []string{"index"} {
-		file, err := ioutil.ReadFile("./tmpl/html/" + name + ".html")
-		Throw(err)
+		file, err := ioutil.ReadFile("./tmpl/" + name + ".html")
+		throw(err)
 		raw[name] = string(file)
 	}
 	indextemplateStore(raw["index"])
 }
 
-// ClientHash is the combined, shortened MD5 hash of all client files
-var ClientHash string
+// clientFileHash is the combined, shortened MD5 hash of all client files
+var clientFileHash string
 
 type templateVars struct {
 	Config                                       template.JS
@@ -58,20 +59,20 @@ type templateVars struct {
 // imageboard
 func indextemplateStore(raw string) {
 	vars := templateVars{
-		ConfigHash: config.ConfigHash,
-		MediaURL:   config.Config.Hard.HTTP.Media,
+		ConfigHash: configHash,
+		MediaURL:   config.Hard.HTTP.Media,
 	}
-	js, err := json.Marshal(config.ClientConfig)
-	Throw(err)
+	js, err := json.Marshal(clientConfig)
+	throw(err)
 	vars.Config = template.JS(js)
 	vars.Navigation = boardNavigation()
 	hash := hashClientFiles()
 	vars.ClientHash = hash
-	ClientHash = hash
+	clientFileHash = hash
 
 	tmpl, err1 := template.New("index").Parse(raw)
-	Throw(err1)
-	Resources = templateMap{}
+	throw(err1)
+	resources = templateMap{}
 	buildtemplateStore(tmpl, vars)
 }
 
@@ -114,20 +115,20 @@ func scanDir(path string, suffix string) (filtered []string) {
 // ls returns the contents of a directory
 func ls(path string) []string {
 	dir, err := os.Open(path)
-	Throw(err)
+	throw(err)
 	defer dir.Close()
 	files, err1 := dir.Readdirnames(0)
-	Throw(err1)
+	throw(err1)
 	return files
 }
 
 // hashFile reads a file from disk and pipes it into the hashing reader
 func hashFile(path string, hasher hash.Hash) {
 	file, err := os.Open(path)
-	Throw(err)
+	throw(err)
 	defer file.Close()
 	_, err1 := io.Copy(hasher, file)
-	Throw(err1)
+	throw(err1)
 }
 
 // boardNavigation renders interboard navigation we put in the top banner
@@ -135,9 +136,9 @@ func boardNavigation() (html string) {
 	html = `<b id="navTop">[`
 
 	// Actual boards
-	boards := config.Config.Boards.Enabled
+	boards := config.Boards.Enabled
 	for i, board := range boards {
-		if board == config.Config.Boards.Staff {
+		if board == config.Boards.Staff {
 			continue
 		}
 		if i > 0 {
@@ -148,7 +149,7 @@ func boardNavigation() (html string) {
 	}
 
 	// Add custom URLs to board navigation
-	for _, link := range config.Config.Boards.Psuedo {
+	for _, link := range config.Boards.Psuedo {
 		html += fmt.Sprintf(` / <a href="%v">%v</a>`, link[1], link[0])
 	}
 	html += `]</b>`
@@ -162,14 +163,14 @@ func buildtemplateStore(tmpl *template.Template, vars templateVars) {
 	for _, kind := range []string{"desktop", "mobile"} {
 		vars.IsMobile = kind == "mobile"
 		buffer := bytes.Buffer{}
-		Throw(tmpl.Execute(&buffer, vars))
+		throw(tmpl.Execute(&buffer, vars))
 		minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
 			MinifyScripts: true,
 		})
-		Throw(err)
+		throw(err)
 		hasher := md5.New()
 		hasher.Write(minified)
-		Resources[kind] = templateStore{
+		resources[kind] = templateStore{
 			strings.Split(string(minified), "$$$"),
 			hex.EncodeToString(hasher.Sum(nil))[:16],
 		}
