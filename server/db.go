@@ -11,9 +11,10 @@ import (
 	"strconv"
 )
 
-const dbVersion = 2
-
+// Shorthand
 var db string
+
+const dbVersion = 2
 
 // RedisClient creates a new redis client
 func RedisClient() *redis.Client {
@@ -30,12 +31,6 @@ var Redis *redis.Client
 // Session exports the RethinkDB connection session
 var Session *r.Session
 
-// Info stores the central global meta information and stats
-type Info struct {
-	ID        string `gorethink:"id"`
-	DBVersion int    `gorethink:"dbVersion"`
-}
-
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
 func LoadDB() {
@@ -50,17 +45,16 @@ func loadRethinkDB() {
 	})
 	Throw(err)
 
-	// Shorthand
 	db = config.Config.Hard.Rethinkdb.Db
-	var res bool
-	Get(r.DBList().Contains(db)).One(&res)
-	if !res {
+	var isCreated bool
+	Get(r.DBList().Contains(db)).One(&isCreated)
+	if !isCreated {
 		initRethinkDB()
 	} else {
 		Session.Use(db)
-		var res Info
-		Get(r.Table("main").Get("info")).One(&res)
-		verifyVersion(res.DBVersion, "RethinkDB")
+		var version int
+		Get(r.Table("main").Get("info").Field("dbVersion")).One(&version)
+		verifyVersion(version, "RethinkDB")
 	}
 }
 
@@ -79,34 +73,46 @@ func loadRedis() {
 	}
 }
 
-// Cache contains various board- and post-related statistics
-type Cache struct {
+// Generic RethinkDB document
+type document struct {
 	ID string `gorethink:"id"`
-
-	// Is incremented on each new post. Ensures post number uniqueness
-	PostCounter int `gorethink:"postCounter"`
-
-	// History aka progress counters of boards, that get incremented on any
-	// update
-	HistoryCounters intMap `gorethink:"historyCounters"`
-
-	// Maps post numbers to their parent threads
-	OPs intMap
-
-	// Maps post numbers to their parent boards
-	Boards stringMap `gorethink:"boards"`
 }
 
 type stringMap map[string]string
 type intMap map[string]int
 
+// Maps posts to their parent boards and threads
+type parenthoodCache struct {
+	OPs    intMap
+	Boards stringMap `gorethink:"boards"`
+}
+
 func initRethinkDB() {
 	Exec(r.DBCreate(db))
 	Session.Use(db)
 	Exec(r.TableCreate("main"))
-	Exec(r.Table("main").Insert([2]interface{}{
-		Info{"info", dbVersion},
-		Cache{"cache", 0, intMap{}, intMap{}, stringMap{}},
+	Exec(r.Table("main").Insert([3]interface{}{
+		struct {
+			document
+			DBVersion int `gorethink:"dbVersion"`
+
+			// Is incremented on each new post. Ensures post number uniqueness
+			PostCounter int `gorethink:"postCounter"`
+		}{
+			document{"info"}, dbVersion, 0,
+		},
+
+		// Contains various board- and post-related statistics
+		struct {
+			document
+			parenthoodCache
+		}{
+			document{"cache"}, parenthoodCache{intMap{}, stringMap{}},
+		},
+
+		// History aka progress counters of boards, that get incremented on
+		// any update
+		document{"histCounts"},
 	}))
 	Exec(r.TableCreate("threads"))
 	Exec(r.Table("threads").IndexCreate("board"))

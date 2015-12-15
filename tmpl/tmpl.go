@@ -19,18 +19,18 @@ import (
 	"strings"
 )
 
-// Template stores the static part of HTML templates and the corresponding
+// templateStore stores the static part of HTML templates and the corresponding
 // truncated MD5 hash of said template
-type Template struct {
+type templateStore struct {
 	Parts []string
 	Hash  string
 }
 
-// TemplateMap stores all available templates
-type TemplateMap map[string]Template
+// templateMap stores all available templates
+type templateMap map[string]templateStore
 
 // Resources exports temolates and their hashes by language
-var Resources TemplateMap
+var Resources templateMap
 
 // Compile reads template HTML from disk, injext dynamic variables, hashes and
 // exports them
@@ -42,7 +42,7 @@ func Compile() {
 		Throw(err)
 		raw[name] = string(file)
 	}
-	indexTemplate(raw["index"])
+	indextemplateStore(raw["index"])
 }
 
 // ClientHash is the combined, shortened MD5 hash of all client files
@@ -54,9 +54,9 @@ type templateVars struct {
 	IsMobile                                     bool
 }
 
-// indexTemplate compiles the HTML template for thread and board pages of the
+// indextemplateStore compiles the HTML template for thread and board pages of the
 // imageboard
-func indexTemplate(raw string) {
+func indextemplateStore(raw string) {
 	vars := templateVars{
 		ConfigHash: config.ConfigHash,
 		MediaURL:   config.Config.Hard.HTTP.Media,
@@ -71,8 +71,8 @@ func indexTemplate(raw string) {
 
 	tmpl, err1 := template.New("index").Parse(raw)
 	Throw(err1)
-	Resources = TemplateMap{}
-	buildTemplate(tmpl, vars)
+	Resources = templateMap{}
+	buildtemplateStore(tmpl, vars)
 }
 
 // hashClientFiles reads all client files and produces a truncated MD5 hash.
@@ -155,8 +155,8 @@ func boardNavigation() (html string) {
 	return
 }
 
-// buildTemplate constructs the HTML template array, minifies and hashes it
-func buildTemplate(tmpl *template.Template, vars templateVars) {
+// buildtemplateStore constructs the HTML template array, minifies and hashes it
+func buildtemplateStore(tmpl *template.Template, vars templateVars) {
 	// Rigt now the desktop and mobile templates are almost identical. This will
 	// change, when we get a dedicated mobile GUI.
 	for _, kind := range []string{"desktop", "mobile"} {
@@ -169,7 +169,7 @@ func buildTemplate(tmpl *template.Template, vars templateVars) {
 		Throw(err)
 		hasher := md5.New()
 		hasher.Write(minified)
-		Resources[kind] = Template{
+		Resources[kind] = templateStore{
 			strings.Split(string(minified), "$$$"),
 			hex.EncodeToString(hasher.Sum(nil))[:16],
 		}

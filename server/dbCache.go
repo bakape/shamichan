@@ -7,20 +7,13 @@ import (
 	"strconv"
 )
 
-type cacheUpdate struct {
-	HistoryCounters updateMap `gorethink:"historyCounters"`
-	OPs             intMap
-	Boards          stringMap `gorethink:"boards"`
-}
-
 type updateMap map[string]r.Term
 
 // cacheAdd adds a post to the parenthood cache and increments board history
 // counters
 func cacheAdd(id int, op int, board string) {
 	num := strconv.Itoa(id)
-	Exec(r.Table("main").Get("cache").Update(cacheUpdate{
-		updateMap{board: r.Row.Field(board).Default(0).Add(1)},
+	Exec(r.Table("main").Get("cache").Update(parenthoodCache{
 		intMap{num: op},
 		stringMap{num: board},
 	}))

@@ -11,8 +11,8 @@ import (
 	. "meguca/util"
 )
 
-// Server maps configuration file JSON to Go types
-type Server struct {
+// Config contains currently loaded configuration
+var Config struct {
 	// Configuration that can not be hot-reloaded without restarting the server
 	Hard struct {
 		HTTP struct {
@@ -83,8 +83,8 @@ type Server struct {
 	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
 }
 
-// Client is same as Server, but only exposes public configs for clientts
-type Client struct {
+// ClientConfig exports public settings client can access
+var ClientConfig struct {
 	Hard struct {
 		HTTP struct {
 			Media      string `json:"media"`
@@ -125,12 +125,6 @@ type Client struct {
 	DefaultCSS    string      `json:"defaultCSS"`
 	InfoBanner    string      `json:"infoBanner"`
 }
-
-// Config contains currently loaded configuration
-var Config Server
-
-// ClientConfig exports public settings client can access
-var ClientConfig Client
 
 // ConfigHash is the truncated MD5 hash of the JSON configuration file
 var ConfigHash string

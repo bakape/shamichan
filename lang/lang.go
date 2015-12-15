@@ -8,24 +8,21 @@ import (
 	. "meguca/util"
 )
 
-// Struct maps server-side JSON languagepacks to Go types
-type Struct struct {
+type languagePack struct {
 	Imager map[string]string
 }
+type packMap map[string]languagePack
 
-// Map contains a map of all languages to their languagepacks
-type Map map[string]Struct
-
-// Langs contains languagepack structd for each language
-var Langs Map
+// Langs contains languagepack structs for each language
+var Langs packMap
 
 // Load reads and exports server-side language packs from JSON
 func Load() {
-	Langs = Map{}
+	Langs = packMap{}
 	for _, lang := range config.Config.Lang.Enabled {
 		file, err := ioutil.ReadFile("./lang/" + lang + "/server.json")
 		Throw(err)
-		parsed := Struct{}
+		var parsed languagePack
 		Throw(json.Unmarshal(file, &parsed))
 		Langs[lang] = parsed
 	}
