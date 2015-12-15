@@ -1,0 +1,4 @@
+language: go
+go: tip
+node_js: node
+before_script: npm install
