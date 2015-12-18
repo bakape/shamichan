@@ -7,8 +7,7 @@ package main
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
-	"gopkg.in/redis.v3"
-	"strconv"
+	"github.com/garyburd/redigo/redis"
 )
 
 // Shorthand
@@ -17,16 +16,15 @@ var db string
 const dbVersion = 2
 
 // newRedisClient creates a new redis client
-func newRedisClient() *redis.Client {
-	var conf = config.Hard.Redis
-	return redis.NewClient(&redis.Options{
-		Addr: conf.Addr,
-		DB:   conf.Db,
-	})
+func newRedisClient() redis.Conn {
+	conf := config.Hard.Redis
+	conn, err := redis.Dial("tcp", conf.Addr, redis.DialDatabase(conf.Db))
+	throw(err)
+	return conn
 }
 
 // redis stores exports the main redis client
-var redisClient *redis.Client
+var redisConn redis.Conn
 
 // rSession exports the RethinkDB connection session
 var rSession *r.Session
@@ -59,18 +57,15 @@ func loadRethinkDB() {
 }
 
 func loadRedis() {
-	redisClient = newRedisClient()
-	redisVersion, err := redisClient.Get("dbVersion").Result()
-	if err == redis.Nil {
+	redisConn = newRedisClient()
+	version, err := redis.Int(redisConn.Do("get", "dbVersion"))
+	if err == redis.ErrNil {
 		// Fresh database. Write version number.
-		throw(redisClient.Set("dbVersion", dbVersion, 0).Err())
+		_, err1 := redisConn.Do("set", "dbVersion", dbVersion)
+		throw(err1)
 	} else {
 		throw(err)
-
-		// Verify Redis database version
-		conv, err1 := strconv.ParseInt(redisVersion, 10, 64)
-		throw(err1)
-		verifyVersion(int(conv), "Redis")
+		verifyVersion(version, "Redis")
 	}
 }
 

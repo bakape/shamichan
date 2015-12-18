@@ -24,7 +24,7 @@ var config struct {
 		}
 		Redis struct {
 			Addr string
-			Db   int64
+			Db   int
 		}
 		Rethinkdb struct {
 			Addr, Db string
