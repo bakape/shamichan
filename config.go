@@ -49,10 +49,10 @@ var config struct {
 		Def     string
 	}
 	Staff struct {
-		Enabled      map[string]map[string]string
-		Aliases      map[string]string
-		Keyword      string
-		rSessionTime int
+		Enabled     map[string]map[string]string
+		Aliases     map[string]string
+		Keyword     string
+		SessionTime int
 	}
 	Images struct {
 		Max struct {
