@@ -43,7 +43,11 @@ func compileTemplates() {
 		throw(err)
 		raw[name] = string(file)
 	}
-	indextemplateStore(raw["index"])
+	newResources := templateMap{}
+	index, mobile := indexTemplate(raw["index"])
+	newResources["index"] = index
+	newResources["mobile"] = mobile
+	resources = newResources
 }
 
 // clientFileHash is the combined, shortened MD5 hash of all client files
@@ -55,9 +59,9 @@ type templateVars struct {
 	IsMobile                                     bool
 }
 
-// indextemplateStore compiles the HTML template for thread and board pages of the
+// indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
-func indextemplateStore(raw string) {
+func indexTemplate(raw string) (templateStore, templateStore) {
 	vars := templateVars{
 		ConfigHash: configHash,
 		MediaURL:   config.Hard.HTTP.Media,
@@ -72,8 +76,11 @@ func indextemplateStore(raw string) {
 
 	tmpl, err1 := template.New("index").Parse(raw)
 	throw(err1)
-	resources = templateMap{}
-	buildtemplateStore(tmpl, vars)
+
+	// Rigt now the desktop and mobile templates are almost identical. This will
+	// change, when we get a dedicated mobile GUI.
+	return buildIndexTemplate(tmpl, vars, false),
+		buildIndexTemplate(tmpl, vars, true)
 }
 
 // hashClientFiles reads all client files and produces a truncated MD5 hash.
@@ -156,23 +163,19 @@ func boardNavigation() (html string) {
 	return
 }
 
-// buildtemplateStore constructs the HTML template array, minifies and hashes it
-func buildtemplateStore(tmpl *template.Template, vars templateVars) {
-	// Rigt now the desktop and mobile templates are almost identical. This will
-	// change, when we get a dedicated mobile GUI.
-	for _, kind := range []string{"desktop", "mobile"} {
-		vars.IsMobile = kind == "mobile"
-		buffer := bytes.Buffer{}
-		throw(tmpl.Execute(&buffer, vars))
-		minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
-			MinifyScripts: true,
-		})
-		throw(err)
-		hasher := md5.New()
-		hasher.Write(minified)
-		resources[kind] = templateStore{
-			strings.Split(string(minified), "$$$"),
-			hex.EncodeToString(hasher.Sum(nil))[:16],
-		}
+// buildIndexTemplate constructs the HTML template array, minifies and hashes it
+func buildIndexTemplate(tmpl *template.Template, vars templateVars, isMobile bool) templateStore {
+	vars.IsMobile = isMobile
+	buffer := bytes.Buffer{}
+	throw(tmpl.Execute(&buffer, vars))
+	minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
+		MinifyScripts: true,
+	})
+	throw(err)
+	hasher := md5.New()
+	hasher.Write(minified)
+	return templateStore{
+		strings.Split(string(minified), "$$$"),
+		hex.EncodeToString(hasher.Sum(nil))[:16],
 	}
 }
