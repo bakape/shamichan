@@ -84,9 +84,11 @@ type Roll struct {
 // corresponding Link tuples
 type LinkMap map[string]Link
 
-// Link is a one key-value pair map of the target post's parent board and parent
-// thread
-type Link map[string]int
+// Link stores the target post's parent board and parent thread
+type Link struct {
+	Board string `json:"board",gorethink:"board"`
+	ID    int    `json:"id",gorethink:"id"`
+}
 
 // Ident is used to verify a client's access and write permissions
 type Ident struct {
