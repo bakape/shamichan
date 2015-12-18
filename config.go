@@ -49,9 +49,9 @@ var config struct {
 		Def     string
 	}
 	Staff struct {
-		Enabled     map[string]map[string]string
-		Aliases     map[string]string
-		Keyword     string
+		Enabled      map[string]map[string]string
+		Aliases      map[string]string
+		Keyword      string
 		rSessionTime int
 	}
 	Images struct {
@@ -133,7 +133,7 @@ var configHash string
 
 // loadConfig reads and parses JSON config files
 func loadConfig() {
-	file, err := ioutil.ReadFile("./config/defaults.json")
+	file, err := ioutil.ReadFile("./config/config.json")
 	throw(err)
 	throw(json.Unmarshal(file, &config))
 	throw(json.Unmarshal(file, &clientConfig))
