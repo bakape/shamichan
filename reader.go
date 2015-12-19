@@ -15,12 +15,10 @@ type Reader struct {
 // Newreader constructs a new Reader struct
 func Newreader(board string, ident Ident) *Reader {
 	return &Reader{
-		board,
-		ident,
-
-		// DJs  can see mnemonics, but not commited moderation
-		ident.Auth == "dj" || checkAuth("moderator", ident),
-		checkAuth("janitor", ident),
+		board:            board,
+		ident:            ident,
+		canSeeMnemonics:  ident.Auth == "dj" || checkAuth("moderator", ident),
+		canSeeModeration: checkAuth("janitor", ident),
 	}
 }
 
