@@ -25,7 +25,7 @@ func checkAuth(auth string, ident Ident) bool {
 // authRank determines the rank of the suplied authority class in the access
 // level hierarchy
 func authRank(auth string) int {
-	for i, level := range [4]string{"dj", "janitor", "moderator", "admin"} {
+	for i, level := range [...]string{"dj", "janitor", "moderator", "admin"} {
 		if auth == level {
 			return i
 		}
@@ -53,5 +53,5 @@ func getThread(id int) r.Term {
 
 // shorthand for constructing post queries
 func getPost(id, op int) r.Term {
-    return getThread(op).Field("posts").Field(strconv.Itoa(id))
+	return getThread(op).Field("posts").Field(strconv.Itoa(id))
 }
