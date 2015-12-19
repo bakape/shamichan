@@ -4,6 +4,10 @@
 
 package main
 
+import (
+	r "github.com/dancannon/gorethink"
+)
+
 // throw panics, if there is an error. Rob Pike must never know.
 func throw(err error) {
 	if err != nil {
@@ -26,4 +30,22 @@ func authRank(auth string) int {
 		}
 	}
 	return -1
+}
+
+// rGet is a shorthand for executing RethinkDB queries and panicing on error.
+func rGet(query r.Term) *r.Cursor {
+	cursor, err := query.Run(rSession)
+	throw(err)
+	return cursor
+}
+
+// rExec executes a RethinkDB query and panics on error. To be used, when the
+// returned status is unneeded and we want the goroutine to crash on error.
+func rExec(query r.Term) {
+	throw(query.Exec(rSession))
+}
+
+// getThread is a shorthand for constructing thread queries
+func getThread(id int) r.Term {
+	return r.Table("threads").Get(id)
 }

@@ -1,0 +1,86 @@
+// Dummy table data for debugging. Simply insert/update into the appropriate
+// table through the web UI
+
+// Threads table
+[
+  {
+    "board":"a",
+    "bumpTime":54545,
+    "history":[
+      {
+        "msg":{
+          "bar":"Install Gentoo"
+        },
+        "type":"foo"
+      }
+    ],
+    "historyCtr":0,
+    "id":1,
+    "imageCtr":0,
+    "ip":"::1",
+    "nonce":"11513",
+    "posts":{
+      "1":{
+        "auth":"moderator",
+        "backlinks":{
+          "2":{
+            "board":"a",
+            "op":1
+          }
+        },
+        "body":"",
+        "dice":[
+          {
+            "bool":true,
+            "type":"flip"
+          }
+        ],
+        "editing":false,
+        "email":"tripfag@email.com",
+        "id":1,
+        "image":{
+          "MD5":"adss5d4as5dd4as5",
+          "SHA1":"a4d5sd45sd4a5d4as5d",
+          "dims":[
+            500,
+            500,
+            250,
+            250
+          ],
+          "ext":".jpg",
+          "imgnm":"image test",
+          "mid":"foo.jpg",
+          "size":464655,
+          "spoiler":1,
+          "src":"foo.jpg",
+          "thumb":"foo.jpg"
+        },
+        "ip":"::1",
+        "links":{
+          "2":{
+            "board":"a",
+            "op":1
+          }
+        },
+        "name":"namefag",
+        "nonce":"551154ds51fs3f1ds",
+        "op":1,
+        "time":4545451,
+        "trip":"!tripfag"
+      }
+    },
+    "replyCtr":0,
+    "time":521522
+  }
+]
+
+// main.cache document update
+{
+  "OPs":{
+    "1":1
+  },
+  "boards":{
+    "1":"a"
+  },
+  "id":"cache"
+}
