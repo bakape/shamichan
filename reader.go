@@ -82,3 +82,16 @@ func (rd *Reader) parsePost(post *Post) bool {
 	}
 	return true
 }
+
+// GetPost reads a single post from the database
+func (rd *Reader) GetPost(id int) (post Post) {
+	op := parentThread(id)
+
+	// Post does not exist
+	if op == 0 {
+		return
+	}
+	rGet(getPost(id, op)).One(&post)
+	rd.parsePost(&post)
+	return
+}

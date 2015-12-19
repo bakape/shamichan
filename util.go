@@ -6,6 +6,7 @@ package main
 
 import (
 	r "github.com/dancannon/gorethink"
+	"strconv"
 )
 
 // throw panics, if there is an error. Rob Pike must never know.
@@ -45,7 +46,12 @@ func rExec(query r.Term) {
 	throw(query.Exec(rSession))
 }
 
-// getThread is a shorthand for constructing thread queries
+// shorthand for constructing thread queries
 func getThread(id int) r.Term {
 	return r.Table("threads").Get(id)
+}
+
+// shorthand for constructing post queries
+func getPost(id, op int) r.Term {
+    return getThread(op).Field("posts").Field(strconv.Itoa(id))
 }

@@ -38,7 +38,8 @@ func removeField(num string) r.Term {
 func parentThread(id int) (op int) {
 	query := r.Table("main").Get("cache").
 		Field("OPs").
-		Field(strconv.Itoa(id))
+		Field(strconv.Itoa(id)).
+		Default(0)
 	rGet(query).One(&op)
 	return
 }
@@ -47,7 +48,8 @@ func parentThread(id int) (op int) {
 func parentBoard(id int) (board string) {
 	query := r.Table("main").Get("cache").
 		Field("boards").
-		Field(strconv.Itoa(id))
+		Field(strconv.Itoa(id)).
+		Default("")
 	rGet(query).One(&board)
 	return
 }
