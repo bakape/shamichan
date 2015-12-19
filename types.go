@@ -4,6 +4,12 @@
 
 package main
 
+// Board stores board metadata and the OPs of all threads
+type Board struct {
+	Ctr     int      `json:"ctr",gorethink:"ctr"`
+	Threads []Thread `json:"threads",gorethink:"threads"`
+}
+
 // Thread stores the metadata and posts of a single thread
 type Thread struct {
 	ID       int             `json:"id",gorethink:"id"`
@@ -16,12 +22,10 @@ type Thread struct {
 	History  []Message       `json:"-",gorethink:"history"`
 
 	// Not stored in the database, but retrieved witm map-reduce
-	HistoryCtr int `json:"historyCtr",gorethink:"historyCtr"`
-	ReplyCtr   int `json:"replyCtr",gorethink:"replyCtr"`
-	ImageCtr   int `json:"imageCtr",gorethink:"imageCtr"`
-
-	// Only for internal use during parsing
-	OP Post `json:"-",gorethink:"op,omitempty"`
+	HistCtr  int  `json:"histCtr",gorethink:"histCtr"`
+	ReplyCtr int  `json:"replyCtr",gorethink:"replyCtr"`
+	ImageCtr int  `json:"imageCtr",gorethink:"imageCtr"`
+	OP       Post `json:"op",gorethink:"op,omitempty"`
 }
 
 // Message is the universal transport container of all live updates through

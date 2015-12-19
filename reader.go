@@ -2,6 +2,7 @@ package main
 
 import (
 	r "github.com/dancannon/gorethink"
+	"strconv"
 )
 
 // Reader reads on formats thread and post structs
@@ -46,6 +47,9 @@ func (rd *Reader) GetThread(id, lastN int) (thread Thread) {
 	if !rd.parsePost(&thread.OP) {
 		return Thread{}
 	}
+
+	// Remove duplicate OP entry, if any
+	delete(thread.Posts, strconv.Itoa(thread.ID))
 
 	for id, post := range thread.Posts {
 		if !rd.parsePost(&post) {
@@ -93,5 +97,30 @@ func (rd *Reader) GetPost(id int) (post Post) {
 	}
 	rGet(getPost(id, op)).One(&post)
 	rd.parsePost(&post)
+	return
+}
+
+// GetBoard retrives all OPs of a single board
+func (rd *Reader) GetBoard() (board Board) {
+	rGet(r.Table("threads").
+		GetAllByIndex("board", "a").
+		ForEach(rd.threadQuery).
+		Without("posts"),
+	).
+		All(&board.Threads)
+	rGet(r.Table("main").
+		Get("histCounts").
+		Field(rd.board).
+		Default(0),
+	).
+		One(&board.Ctr)
+
+	filtered := []Thread{}
+	for _, thread := range board.Threads {
+		if rd.parsePost(&thread.OP) {
+			filtered = append(filtered, thread)
+		}
+	}
+	board.Threads = filtered
 	return
 }
