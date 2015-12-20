@@ -14,4 +14,5 @@ func main() {
 	loadLanguagePacks()
 	compileTemplates()
 	loadDB()
+	startServer()
 }

@@ -1,8 +1,7 @@
 {
     "hard": {
         "HTTP": {
-            "port": 8000,
-            "host": "",
+            "addr": ":8000",
             "media": "../",
             "upload": "/upload",
             "socket": "/hana",

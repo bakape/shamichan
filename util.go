@@ -46,3 +46,12 @@ func getThread(id int) r.Term {
 func getPost(id, op int) r.Term {
 	return getThread(op).Field("posts").Field(strconv.Itoa(id))
 }
+
+// Determine access rights of an IP
+func lookUpIdent(ip string) Ident {
+	ident := Ident{IP: ip}
+
+	// TODO: BANS
+
+	return ident
+}

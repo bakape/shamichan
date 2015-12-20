@@ -18,8 +18,7 @@ var config struct {
 	// Configuration that can not be hot-reloaded without restarting the server
 	Hard struct {
 		HTTP struct {
-			Port                                                     int
-			Host, Media, Upload, Socket, Origin                      string
+			Addr, Media, Upload, Socket, Origin                      string
 			ServeStatic, ServeImages, TrustProxies, Gzip, Websockets bool
 		}
 		Redis struct {
