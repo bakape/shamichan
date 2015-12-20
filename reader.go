@@ -17,8 +17,8 @@ func Newreader(board string, ident Ident) *Reader {
 	return &Reader{
 		board:            board,
 		ident:            ident,
-		canSeeMnemonics:  ident.Auth == "dj" || checkAuth("moderator", ident),
-		canSeeModeration: checkAuth("janitor", ident),
+		canSeeMnemonics:  checkAuth("seeMnemonics", ident),
+		canSeeModeration: checkAuth("seeModeration", ident),
 	}
 }
 

@@ -16,21 +16,12 @@ func throw(err error) {
 	}
 }
 
-// checkAuth checks if the suplied Ident has enough or greater access right
-// than requiered
-func checkAuth(auth string, ident Ident) bool {
-	return authRank(auth) <= authRank(ident.Auth)
-}
-
-// authRank determines the rank of the suplied authority class in the access
-// level hierarchy
-func authRank(auth string) int {
-	for i, level := range [...]string{"dj", "janitor", "moderator", "admin"} {
-		if auth == level {
-			return i
-		}
+// checkAuth checks if the suplied Ident is priveledged to perform an action
+func checkAuth(action string, ident Ident) bool {
+	if class, ok := config.Staff.Classes[ident.Auth]; ok {
+		return class.Rights[action]
 	}
-	return -1
+	return false
 }
 
 // rGet is a shorthand for executing RethinkDB queries and panicing on error.

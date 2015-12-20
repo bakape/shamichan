@@ -58,28 +58,65 @@
         "default": "en_GB"
     },
     "staff": {
-        "enabled": {
+        "classes": {
             "admin": {
-                "lalc@email.com": "lalc"
+                "alias": "Admin",
+                "rights": {
+                    "seeMnemonics": true,
+                    "seeModeration": true,
+                    "spoiler": true,
+                    "deleteImages": true,
+                    "deletePosts": true,
+                    "lockThread": true,
+                    "ban": true,
+                    "sendNotifications": true,
+                    "adminPanel": true,
+                    "dj": false
+                },
+                "members": {
+                    "lalc@email.com": "lalc"
+                }
             },
             "moderator": {
-                "mod1@email.com": "mod1",
-                "mod2@email.com": "mod2"
+                "alias": "Moderator",
+                "rights": {
+                    "seeMnemonics": true,
+                    "seeModeration": true,
+                    "spoiler": true,
+                    "deleteImages": true,
+                    "deletePosts": true,
+                    "lockThread": true,
+                    "ban": true
+                },
+                "members": {
+                    "mod1@email.com": "mod1",
+                    "mod2@email.com": "mod2"
+                }
             },
             "janitor": {
-                "janitor@email.com": "janny1"
+                "alias": "Janitor",
+                "rights": {
+                    "seeModeration": true,
+                    "spoiler": true,
+                    "deleteImages": true,
+                    "deletePosts": true
+                },
+                "members": {
+                    "janitor@email.com": "janny1"
+                }
             },
             "dj": {
-                "dj@email.com": "dj1"
+                "alias": "DJ",
+                "rights": {
+                    "seeMnemonics": true,
+                    "dj": true
+                },
+                "members": {
+                    "dj@email.com": "dj1"
+                }
             }
         },
-        "aliases":  {
-            "admin": "Admin",
-            "moderator": "Moderator",
-            "janitor": "Janitor",
-            "dj": "DJ"
-        },
-        "keyword": "misaki",
+        "keyword": "login",
         "sessionTime": 1209600
     },
     "images": {

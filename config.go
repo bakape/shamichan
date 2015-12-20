@@ -49,8 +49,7 @@ var config struct {
 		Def     string
 	}
 	Staff struct {
-		Enabled     map[string]map[string]string
-		Aliases     map[string]string
+		Classes     map[string]staffClass
 		Keyword     string
 		SessionTime int
 	}
@@ -85,6 +84,13 @@ var config struct {
 	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
 }
 
+// staffClass defines and configures a class of board staff personel
+type staffClass struct {
+	Alias   string            `json:"alias"`
+	Members map[string]string `json:"-"`
+	Rights  map[string]bool   `json:"rights"`
+}
+
 // clientConfig exports public settings client can access
 var clientConfig struct {
 	Hard struct {
@@ -110,8 +116,8 @@ var clientConfig struct {
 		Def     string   `json:"def"`
 	} `json:"lang"`
 	Staff struct {
-		Aliases map[string]string `json:"aliases"`
-		Keyword string            `json:"keyword"`
+		Classes map[string]staffClass `json:"classes"`
+		Keyword string                `json:"keyword"`
 	} `json:"staff"`
 	Images struct {
 		Spoilers []int `json:"spoilers"`
