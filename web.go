@@ -6,9 +6,12 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	r "github.com/dancannon/gorethink"
 	"github.com/gorilla/context"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/mssola/user_agent"
 	"log"
 	"net/http"
 )
@@ -23,6 +26,7 @@ func startServer() {
 
 	// Serve static assets
 	if config.Hard.HTTP.ServeStatic {
+		// TODO: Apply headers, depending on debug mode
 		router.PathPrefix("/").Handler(http.FileServer(http.Dir("./www")))
 	}
 
@@ -67,18 +71,27 @@ func addTrailingSlash(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, "/"+mux.Vars(req)["board"]+"/", 301)
 }
 
+// handles `/board/` page requests
 func boardPage(res http.ResponseWriter, req *http.Request) {
 	board := mux.Vars(req)["board"]
 	ident, ok := context.Get(req, "ident").(Ident)
 	if !ok {
 		throw(errors.New("Failed Ident type assertion"))
+		res.WriteHeader(500)
 	}
 	if !canAccessBoard(board, ident) {
 		send404(res)
 	}
+	var counter int
+	rGet(r.Table("main").Get("histCounts").
+		Field("board").
+		Default(0),
+	).
+		One(counter)
 
-	// TEMP
-	send404(res)
+	if validateEtag(res, req, counter, ident) {
+		res.Write([]byte("Hello, meguca!"))
+	}
 }
 
 func notFoundHandler(res http.ResponseWriter, req *http.Request) {
@@ -86,6 +99,93 @@ func notFoundHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func send404(res http.ResponseWriter) {
-	res.WriteHeader(http.StatusNotFound)
+	res.WriteHeader(404)
 	copyFile("www/404.html", res)
+}
+
+// Build an etag and check if it mathces the one provided by the client. If yes,
+// send 304 and return false, otherwise set headers and return true.
+func validateEtag(res http.ResponseWriter,
+	req *http.Request,
+	counter int,
+	ident Ident,
+) bool {
+	etag := buildEtag(req, counter)
+	if config.Hard.Debug {
+		setHeaders(res, noCacheHeaders)
+		return true
+	}
+	hasAuth := ident.Auth != ""
+	if hasAuth {
+		etag += "-" + ident.Auth
+	}
+
+	// Etags match. No need to rerender.
+	if ifNoneMatch, ok := req.Header["If-None-Match"]; ok {
+		for _, clientEtag := range ifNoneMatch {
+			if clientEtag == etag {
+				res.WriteHeader(304)
+				return false
+			}
+		}
+	}
+
+	setHeaders(res, vanillaHeaders)
+	res.Header().Set("ETag", etag)
+	if hasAuth {
+		res.Header().Add("Cache-Control", ", private")
+	}
+	return true
+}
+
+// Build the main part of the etag
+func buildEtag(req *http.Request, counter int) string {
+	ua := user_agent.New(req.UserAgent())
+	isMobile := ua.Mobile()
+	context.Set(req, "isMobile", isMobile)
+
+	browser, _ := ua.Browser()
+	isRetarded := true
+	supported := [...]string{"Chrome", "Chromium", "Opera", "Firefox"}
+	for _, supportedBrowser := range supported {
+		if browser == supportedBrowser {
+			isRetarded = false
+			break
+		}
+	}
+	context.Set(req, "isRetarded", isRetarded)
+
+	var hash string
+	if !isMobile {
+		hash = resources["index"].Hash
+	} else {
+		hash = resources["mobile"].Hash
+	}
+
+	etag := fmt.Sprintf(`W/%v-%v`, counter, hash)
+	if isMobile {
+		etag += "-mobile"
+	}
+	if isRetarded {
+		etag += "-retarded"
+	}
+	return etag
+}
+
+var noCacheHeaders = stringMap{
+	"X-Frame-Options": "sameorigin",
+	"Expires":         "Thu, 01 Jan 1970 00:00:00 GMT",
+	"Cache-Control":   "no-cache, no-store",
+}
+var vanillaHeaders = stringMap{
+	"Content-Type":    "text/html; charset=UTF-8",
+	"X-Frame-Options": "sameorigin",
+	"Cache-Control":   "max-age=0, must-revalidate",
+	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
+}
+
+func setHeaders(res http.ResponseWriter, headers stringMap) {
+	for key, val := range headers {
+		res.Header().Set(key, val)
+	}
 }

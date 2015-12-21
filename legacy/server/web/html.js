@@ -132,7 +132,7 @@ function validateEtag(req, res, ctr, extra) {
 
 	// Don't distribute confidential caches to other clients
 	if (auth)
-		heders['Cache-Control'] += ', private'
+		headers['Cache-Control'] += ', private'
 	res.set(headers)
 	return true
 }

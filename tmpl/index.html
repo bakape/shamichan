@@ -13,7 +13,9 @@
 		var config = {{.Config}},
 			ClientHash = '{{.ClientHash}}',
 			configHash = '{{.ConfigHash}}',
-			isMobile = {{.IsMobile}}
+			isMobile = {{.IsMobile}},
+			// Pass to the client, that his browser is shit
+			isRetarded = $$$
 	</script>
 	<script src="{{.MediaURL}}js/setup.js?v={{.ClientHash}}"></script>
 	<!-- Post model JSON. Injected during page render !-->
@@ -83,10 +85,7 @@
 <div class="bmodal glass" id="options-panel"></div>
 <!-- Used for adding space bellow the top banner, because the <h1> bellow is not always non-empty !-->
 <div id="headerTopMargin"></div>
-<h1>
-	<!-- Image banner !-->
-	$$$
-</h1>
+<h1></h1>
 <!-- Contains posts and threads !-->
 <threads></threads>
 <!-- For image uploads !-->
