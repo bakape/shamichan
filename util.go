@@ -55,3 +55,12 @@ func lookUpIdent(ip string) Ident {
 
 	return ident
 }
+
+// Confirm client has rights to access board
+func canAccessBoard(board string, ident Ident) bool {
+	if board == config.Boards.Staff && !checkAuth("accessStaffBoard", ident) {
+		return false
+	}
+	_, ok := config.Boards.Boards[board]
+	return !ident.Banned && ok
+}

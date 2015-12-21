@@ -5,6 +5,7 @@
 package main
 
 import (
+	"errors"
 	"github.com/gorilla/context"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -16,7 +17,14 @@ func startServer() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", redirectToDefault)
 	router.HandleFunc(`/{board:\w+}`, addTrailingSlash)
-	//sub := router.Path(`/{board:\w+}/`).Subrouter()
+	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
+	sub := router.Path(`/{board:\w+}/`).Subrouter()
+	sub.HandleFunc("/", boardPage)
+
+	// Serve static assets
+	if config.Hard.HTTP.ServeStatic {
+		router.PathPrefix("/").Handler(http.FileServer(http.Dir("./www")))
+	}
 
 	// Infer IP from header, if configured to
 	var handler http.Handler
@@ -59,6 +67,25 @@ func addTrailingSlash(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, "/"+mux.Vars(req)["board"]+"/", 301)
 }
 
-func boardPage(res http.ResponseWriter, req http.Request) {
+func boardPage(res http.ResponseWriter, req *http.Request) {
+	board := mux.Vars(req)["board"]
+	ident, ok := context.Get(req, "ident").(Ident)
+	if !ok {
+		throw(errors.New("Failed Ident type assertion"))
+	}
+	if !canAccessBoard(board, ident) {
+		send404(res)
+	}
 
+	// TEMP
+	send404(res)
+}
+
+func notFoundHandler(res http.ResponseWriter, req *http.Request) {
+	send404(res)
+}
+
+func send404(res http.ResponseWriter) {
+	res.WriteHeader(http.StatusNotFound)
+	copyFile("www/404.html", res)
 }

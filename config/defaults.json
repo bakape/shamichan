@@ -7,7 +7,6 @@
             "socket": "/hana",
             "origin": "http://localhost:8000",
             "serveStatic": true,
-            "serveImages": true,
             "trustProxies": true,
             "gzip": true,
             "websockets": true
@@ -63,6 +62,7 @@
                 "rights": {
                     "seeMnemonics": true,
                     "seeModeration": true,
+                    "accessStaffBoard": true,
                     "spoiler": true,
                     "deleteImages": true,
                     "deletePosts": true,
@@ -81,6 +81,7 @@
                 "rights": {
                     "seeMnemonics": true,
                     "seeModeration": true,
+                    "accessStaffBoard": true,
                     "spoiler": true,
                     "deleteImages": true,
                     "deletePosts": true,
@@ -96,6 +97,7 @@
                 "alias": "Janitor",
                 "rights": {
                     "seeModeration": true,
+                    "accessStaffBoard": true,
                     "spoiler": true,
                     "deleteImages": true,
                     "deletePosts": true

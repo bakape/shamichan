@@ -19,7 +19,7 @@ var config struct {
 	Hard struct {
 		HTTP struct {
 			Addr, Media, Upload, Socket, Origin                      string
-			ServeStatic, ServeImages, TrustProxies, Gzip, Websockets bool
+			ServeStatic, TrustProxies, Gzip, Websockets bool
 		}
 		Redis struct {
 			Addr string

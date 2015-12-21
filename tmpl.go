@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dchest/htmlmin"
-	"hash"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -104,7 +103,7 @@ func hashClientFiles() string {
 	// Read all files into the hashing function
 	hasher := md5.New()
 	for _, file := range files {
-		hashFile(file, hasher)
+		copyFile(file, hasher)
 	}
 	return hex.EncodeToString(hasher.Sum(nil))[:16]
 }
@@ -129,12 +128,12 @@ func ls(path string) []string {
 	return files
 }
 
-// hashFile reads a file from disk and pipes it into the hashing reader
-func hashFile(path string, hasher hash.Hash) {
+// copyFile reads a file from disk and copies it into the writer
+func copyFile(path string, writer io.Writer) {
 	file, err := os.Open(path)
 	throw(err)
 	defer file.Close()
-	_, err1 := io.Copy(hasher, file)
+	_, err1 := io.Copy(writer, file)
 	throw(err1)
 }
 
