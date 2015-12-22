@@ -5,6 +5,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/mssola/user_agent"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
@@ -25,6 +27,7 @@ func startServer() {
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 	sub := router.Path(`/{board:\w+}/`).Subrouter()
 	sub.HandleFunc("/", boardPage)
+	//sub.HandleFunc(`/{thread:\d+}`, threadPage)
 
 	// Serve static assets
 	if config.Hard.HTTP.ServeStatic {
@@ -75,39 +78,143 @@ func addTrailingSlash(res http.ResponseWriter, req *http.Request) {
 
 // handles `/board/` page requests
 func boardPage(res http.ResponseWriter, req *http.Request) {
+	in := indexPage{res: res, req: req}
 	board := mux.Vars(req)["board"]
-	ident, ok := context.Get(req, "ident").(Ident)
-	if !ok {
-		throw(errors.New("Failed Ident type assertion"))
-		res.WriteHeader(500)
+
+	// Progress counter used for building etags
+	in.getCounter = func() (counter int) {
+		rGet(r.Table("main").
+			Get("histCounts").
+			Field("board").
+			Default(0),
+		).
+			One(counter)
+		return
 	}
-	if !canAccessBoard(board, ident) {
+
+	// Post model JSON data
+	in.getPostData = func() []byte {
+		data := Newreader(board, in.ident).GetBoard()
+		encoded, err := json.Marshal(data)
+		throw(err)
+		return encoded
+	}
+
+	in.process(board)
+}
+
+/*
+// Handles `/board/thread` requests
+func threadPage(res http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	ident := extractIdent(res, req)
+	if !canAccessBoard(vars["board"], ident) {
 		send404(res)
 	}
+	id, err := strconv.Atoi(vars["thread"])
+	throw(err)
 	var counter int
-	rGet(r.Table("main").Get("histCounts").
-		Field("board").
-		Default(0),
-	).
-		One(counter)
-	needRender, isMobile, isRetarded := validateEtag(res, req, counter, ident)
+	rGet(getThread(id).Field("histCtr")).One(&counter)
+	needRender, isMobile := validateEtag(res, req, counter, detectLastN(req),
+		ident)
 	if needRender {
-		raw := Newreader(board, ident).GetBoard()
-		postData, err := json.Marshal(raw)
-		throw(err)
-		var template [][]byte
-		if !isMobile {
-			template = resources["index"].Parts
-		} else {
-			template = resources["mobile"].Parts
-		}
-		res.Write(template[0])
-		res.Write([]byte(strconv.FormatBool(isRetarded)))
-		res.Write(template[1])
-		res.Write(postData)
-		res.Write(loginCredentials(ident))
-		res.Write(template[2])
+		thread := Newreader(board string, ident Ident)
 	}
+}
+*/
+
+// Stores common variables anf methods for both board and thread pages
+type indexPage struct {
+	res         http.ResponseWriter
+	req         *http.Request
+	getCounter  func() int
+	getPostData func() []byte
+	lastN       int
+	isMobile    bool
+	template    templateStore
+	ident       Ident
+}
+
+// Shared logic for handling both board and thread pages
+func (in *indexPage) process(board string) {
+	in.ident = extractIdent(in.res, in.req)
+	if !canAccessBoard(board, in.ident) {
+		send404(in.res)
+		return
+	}
+	in.isMobile = user_agent.New(in.req.UserAgent()).Mobile()
+
+	// Choose template to use
+	if !in.isMobile {
+		in.template = resources["index"]
+	} else {
+		in.template = resources["mobile"]
+	}
+	if in.validateEtag() {
+		// Concatenate the page together and write to client
+		parts := in.template.Parts
+		html := new(bytes.Buffer)
+		html.Write(parts[0])
+		html.Write(in.getPostData())
+		html.Write(parts[1])
+		html.Write(loginCredentials(in.ident))
+		html.Write(parts[2])
+		in.res.Write(html.Bytes())
+	}
+}
+
+// Build an etag and check if it mathces the one provided by the client. If yes,
+// send 304 and return false, otherwise set headers and return true.
+func (in *indexPage) validateEtag() bool {
+	etag := in.buildEtag()
+	if config.Hard.Debug {
+		setHeaders(in.res, noCacheHeaders)
+		return true
+	}
+	hasAuth := in.ident.Auth != ""
+	if hasAuth {
+		etag += "-" + in.ident.Auth
+	}
+	if in.lastN != 0 {
+		etag += fmt.Sprintf("-last%v", in.lastN)
+	}
+
+	// Etags match. No need to rerender.
+	if ifNoneMatch, ok := in.req.Header["If-None-Match"]; ok {
+		for _, clientEtag := range ifNoneMatch {
+			if clientEtag == etag {
+				in.res.WriteHeader(304)
+				return false
+			}
+		}
+	}
+
+	setHeaders(in.res, vanillaHeaders)
+	in.res.Header().Set("ETag", etag)
+	if hasAuth {
+		in.res.Header().Add("Cache-Control", ", private")
+	}
+	return true
+}
+
+// Build the main part of the etag
+func (in *indexPage) buildEtag() string {
+	etag := fmt.Sprintf(`W/%v-%v`, in.getCounter(), in.template.Hash)
+	if in.isMobile {
+		etag += "-mobile"
+	}
+	return etag
+}
+
+// Read client Identity struct, which was attached to the requests further
+// upstream
+func extractIdent(res http.ResponseWriter, req *http.Request) Ident {
+	ident, ok := context.Get(req, "ident").(Ident)
+	if !ok {
+		res.WriteHeader(500)
+		throw(errors.New("Failed Ident type assertion"))
+	}
+	return ident
 }
 
 func notFoundHandler(res http.ResponseWriter, req *http.Request) {
@@ -117,80 +224,6 @@ func notFoundHandler(res http.ResponseWriter, req *http.Request) {
 func send404(res http.ResponseWriter) {
 	res.WriteHeader(404)
 	copyFile("www/404.html", res)
-}
-
-// Build an etag and check if it mathces the one provided by the client. If yes,
-// send 304 and return false, otherwise set headers and return true.
-func validateEtag(res http.ResponseWriter,
-	req *http.Request,
-	counter int,
-	ident Ident,
-) (needRender, isMobile, isRetarded bool) {
-	var etag string
-	etag, isMobile, isRetarded = buildEtag(req, counter)
-	needRender = true
-	if config.Hard.Debug {
-		setHeaders(res, noCacheHeaders)
-		return
-	}
-	hasAuth := ident.Auth != ""
-	if hasAuth {
-		etag += "-" + ident.Auth
-	}
-
-	// Etags match. No need to rerender.
-	if ifNoneMatch, ok := req.Header["If-None-Match"]; ok {
-		for _, clientEtag := range ifNoneMatch {
-			if clientEtag == etag {
-				res.WriteHeader(304)
-				needRender = false
-				return
-			}
-		}
-	}
-
-	setHeaders(res, vanillaHeaders)
-	res.Header().Set("ETag", etag)
-	if hasAuth {
-		res.Header().Add("Cache-Control", ", private")
-	}
-	return
-}
-
-// Build the main part of the etag
-func buildEtag(req *http.Request, counter int) (etag string,
-	isMobile, isRetarded bool,
-) {
-	ua := user_agent.New(req.UserAgent())
-	isMobile = ua.Mobile()
-	context.Set(req, "isMobile", isMobile)
-
-	browser, _ := ua.Browser()
-	isRetarded = true
-	supported := [...]string{"Chrome", "Chromium", "Opera", "Firefox"}
-	for _, supportedBrowser := range supported {
-		if browser == supportedBrowser {
-			isRetarded = false
-			break
-		}
-	}
-	context.Set(req, "isRetarded", isRetarded)
-
-	var hash string
-	if !isMobile {
-		hash = resources["index"].Hash
-	} else {
-		hash = resources["mobile"].Hash
-	}
-
-	etag = fmt.Sprintf(`W/%v-%v`, counter, hash)
-	if isMobile {
-		etag += "-mobile"
-	}
-	if isRetarded {
-		etag += "-retarded"
-	}
-	return
 }
 
 var noCacheHeaders = stringMap{
@@ -217,4 +250,19 @@ func loginCredentials(ident Ident) []byte {
 	// TODO: Inject the variables for our new login system
 
 	return []byte{}
+}
+
+// Validate the client's last N posts to display setting
+func detectLastN(req *http.Request) int {
+	parsed, err := url.ParseRequestURI(req.RequestURI)
+	throw(err)
+	lastNSlice, ok := parsed.Query()["lastN"]
+	if ok && len(lastNSlice) > 0 {
+		lastN, err := strconv.Atoi(lastNSlice[0])
+		throw(err)
+		if lastN >= 5 && lastN <= 500 {
+			return lastN
+		}
+	}
+	return 0
 }

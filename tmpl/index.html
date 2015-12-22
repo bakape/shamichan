@@ -13,14 +13,12 @@
 		var config = {{.Config}},
 			clientHash = '{{.ClientHash}}',
 			configHash = '{{.ConfigHash}}',
-			isMobile = {{.IsMobile}},
-			// Pass to the client, that his browser is shit
-			isRetarded = $$$
+			isMobile = {{.IsMobile}}
 	</script>
 	<script src="{{.MediaURL}}js/setup.js?v={{.ClientHash}}"></script>
 	<!-- Post model JSON. Injected during page render !-->
 	<script id="postData" type="application/json">
-		$$$
+		<$$$>
 	</script>
 	<noscript>
 		<h1 id="noscriptHeader">
@@ -96,7 +94,7 @@
 <script src="{{.MediaURL}}js/vendor.js?v={{.ClientHash}}"></script>
 <!-- Stores staff login credentials !-->
 <script>
-	$$$
+	<$$$>
 </script>
 <!-- Dynamic module loader. Chooses and downloads the bundles to run. !-->
 <script src="{{.MediaURL}}js/loader.js?v={{.ClientHash}}"></script>

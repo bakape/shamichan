@@ -175,7 +175,7 @@ func buildIndexTemplate(tmpl *template.Template, vars templateVars, isMobile boo
 	hasher := md5.New()
 	hasher.Write(minified)
 	return templateStore{
-		bytes.Split(minified, []byte("$$$")),
+		bytes.Split(minified, []byte("<$$$>")),
 		hex.EncodeToString(hasher.Sum(nil))[:16],
 	}
 }
