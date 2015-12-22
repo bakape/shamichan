@@ -22,7 +22,7 @@ import (
 // templateStore stores the static part of HTML templates and the corresponding
 // truncated MD5 hash of said template
 type templateStore struct {
-	Parts []string
+	Parts [][]byte
 	Hash  string
 }
 
@@ -174,7 +174,7 @@ func buildIndexTemplate(tmpl *template.Template, vars templateVars, isMobile boo
 	hasher := md5.New()
 	hasher.Write(minified)
 	return templateStore{
-		strings.Split(string(minified), "$$$"),
+		bytes.Split(minified, []byte("$$$")),
 		hex.EncodeToString(hasher.Sum(nil))[:16],
 	}
 }
