@@ -11,7 +11,7 @@
 	<!-- Configuration injection see ./tmpl/tmpl.go !-->
 	<script>
 		var config = {{.Config}},
-			ClientHash = '{{.ClientHash}}',
+			clientHash = '{{.ClientHash}}',
 			configHash = '{{.ConfigHash}}',
 			isMobile = {{.IsMobile}},
 			// Pass to the client, that his browser is shit
@@ -44,7 +44,7 @@
 <!-- Top banner !-->
 <span id="banner" class="glass">
 	<!--- Interboard navigation !-->
-    $$$
+    {{.Navigation}}
 	<!-- For r/a/dio stream status and such !-->
 	<b id="banner_center"></b>
 	<!-- For various annoucments and such. See ./config/config.json.infoBanner !-->

@@ -5,6 +5,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	r "github.com/dancannon/gorethink"
@@ -14,6 +15,7 @@ import (
 	"github.com/mssola/user_agent"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func startServer() {
@@ -88,9 +90,23 @@ func boardPage(res http.ResponseWriter, req *http.Request) {
 		Default(0),
 	).
 		One(counter)
-
-	if validateEtag(res, req, counter, ident) {
-		res.Write([]byte("Hello, meguca!"))
+	needRender, isMobile, isRetarded := validateEtag(res, req, counter, ident)
+	if needRender {
+		raw := Newreader(board, ident).GetBoard()
+		postData, err := json.Marshal(raw)
+		throw(err)
+		var template [][]byte
+		if !isMobile {
+			template = resources["index"].Parts
+		} else {
+			template = resources["mobile"].Parts
+		}
+		res.Write(template[0])
+		res.Write([]byte(strconv.FormatBool(isRetarded)))
+		res.Write(template[1])
+		res.Write(postData)
+		res.Write(loginCredentials(ident))
+		res.Write(template[2])
 	}
 }
 
@@ -109,11 +125,13 @@ func validateEtag(res http.ResponseWriter,
 	req *http.Request,
 	counter int,
 	ident Ident,
-) bool {
-	etag := buildEtag(req, counter)
+) (needRender, isMobile, isRetarded bool) {
+	var etag string
+	etag, isMobile, isRetarded = buildEtag(req, counter)
+	needRender = true
 	if config.Hard.Debug {
 		setHeaders(res, noCacheHeaders)
-		return true
+		return
 	}
 	hasAuth := ident.Auth != ""
 	if hasAuth {
@@ -125,7 +143,8 @@ func validateEtag(res http.ResponseWriter,
 		for _, clientEtag := range ifNoneMatch {
 			if clientEtag == etag {
 				res.WriteHeader(304)
-				return false
+				needRender = false
+				return
 			}
 		}
 	}
@@ -135,17 +154,19 @@ func validateEtag(res http.ResponseWriter,
 	if hasAuth {
 		res.Header().Add("Cache-Control", ", private")
 	}
-	return true
+	return
 }
 
 // Build the main part of the etag
-func buildEtag(req *http.Request, counter int) string {
+func buildEtag(req *http.Request, counter int) (etag string,
+	isMobile, isRetarded bool,
+) {
 	ua := user_agent.New(req.UserAgent())
-	isMobile := ua.Mobile()
+	isMobile = ua.Mobile()
 	context.Set(req, "isMobile", isMobile)
 
 	browser, _ := ua.Browser()
-	isRetarded := true
+	isRetarded = true
 	supported := [...]string{"Chrome", "Chromium", "Opera", "Firefox"}
 	for _, supportedBrowser := range supported {
 		if browser == supportedBrowser {
@@ -162,14 +183,14 @@ func buildEtag(req *http.Request, counter int) string {
 		hash = resources["mobile"].Hash
 	}
 
-	etag := fmt.Sprintf(`W/%v-%v`, counter, hash)
+	etag = fmt.Sprintf(`W/%v-%v`, counter, hash)
 	if isMobile {
 		etag += "-mobile"
 	}
 	if isRetarded {
 		etag += "-retarded"
 	}
-	return etag
+	return
 }
 
 var noCacheHeaders = stringMap{
@@ -188,4 +209,12 @@ func setHeaders(res http.ResponseWriter, headers stringMap) {
 	for key, val := range headers {
 		res.Header().Set(key, val)
 	}
+}
+
+// Inject staff login credentials, if any. These will be used to download the
+// moderation JS client bundle.
+func loginCredentials(ident Ident) []byte {
+	// TODO: Inject the variables for our new login system
+
+	return []byte{}
 }

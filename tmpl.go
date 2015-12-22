@@ -53,9 +53,10 @@ func compileTemplates() {
 var clientFileHash string
 
 type templateVars struct {
-	Config                                       template.JS
-	Navigation, ClientHash, ConfigHash, MediaURL string
-	IsMobile                                     bool
+	Config                           template.JS
+	Navigation                       template.HTML
+	ClientHash, ConfigHash, MediaURL string
+	IsMobile                         bool
 }
 
 // indexTemplate compiles the HTML template for thread and board pages of the
@@ -138,8 +139,8 @@ func copyFile(path string, writer io.Writer) {
 }
 
 // boardNavigation renders interboard navigation we put in the top banner
-func boardNavigation() (html string) {
-	html = `<b id="navTop">[`
+func boardNavigation() template.HTML {
+	html := `<b id="navTop">[`
 
 	// Actual boards
 	boards := config.Boards.Enabled
@@ -159,7 +160,7 @@ func boardNavigation() (html string) {
 		html += fmt.Sprintf(` / <a href="%v">%v</a>`, link[1], link[0])
 	}
 	html += `]</b>`
-	return
+	return template.HTML(html)
 }
 
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it
