@@ -25,9 +25,8 @@ func startServer() {
 	router.HandleFunc("/", redirectToDefault)
 	router.HandleFunc(`/{board:\w+}`, addTrailingSlash)
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
-	sub := router.Path(`/{board:\w+}/`).Subrouter()
-	sub.HandleFunc("/", boardPage)
-	//sub.HandleFunc(`/{thread:\d+}`, threadPage)
+	router.HandleFunc(`/{board:\w+}/`, boardPage)
+	router.HandleFunc(`/{board:\w+}/{thread:\d+}`, threadPage)
 
 	// Serve static assets
 	if config.Hard.HTTP.ServeStatic {
@@ -81,6 +80,10 @@ func boardPage(res http.ResponseWriter, req *http.Request) {
 	in := indexPage{res: res, req: req}
 	board := mux.Vars(req)["board"]
 
+	in.validate = func() bool {
+		return canAccessBoard(board, in.ident)
+	}
+
 	// Progress counter used for building etags
 	in.getCounter = func() (counter int) {
 		rGet(r.Table("main").
@@ -94,7 +97,7 @@ func boardPage(res http.ResponseWriter, req *http.Request) {
 
 	// Post model JSON data
 	in.getPostData = func() []byte {
-		data := Newreader(board, in.ident).GetBoard()
+		data := NewReader(board, in.ident).GetBoard()
 		encoded, err := json.Marshal(data)
 		throw(err)
 		return encoded
@@ -103,30 +106,39 @@ func boardPage(res http.ResponseWriter, req *http.Request) {
 	in.process(board)
 }
 
-/*
 // Handles `/board/thread` requests
 func threadPage(res http.ResponseWriter, req *http.Request) {
+	in := indexPage{res: res, req: req}
 	vars := mux.Vars(req)
-	ident := extractIdent(res, req)
-	if !canAccessBoard(vars["board"], ident) {
-		send404(res)
-	}
+	board := vars["board"]
 	id, err := strconv.Atoi(vars["thread"])
 	throw(err)
-	var counter int
-	rGet(getThread(id).Field("histCtr")).One(&counter)
-	needRender, isMobile := validateEtag(res, req, counter, detectLastN(req),
-		ident)
-	if needRender {
-		thread := Newreader(board string, ident Ident)
+	in.lastN = detectLastN(req)
+
+	in.validate = func() bool {
+		return canAccessThread(id, board, in.ident)
 	}
+
+	in.getCounter = func() (counter int) {
+		rGet(getThread(id).Field("histCtr")).One(&counter)
+		return
+	}
+
+	in.getPostData = func() []byte {
+		data := NewReader(board, in.ident).GetThread(id, in.lastN)
+		encoded, err := json.Marshal(data)
+		throw(err)
+		return encoded
+	}
+
+	in.process(board)
 }
-*/
 
 // Stores common variables anf methods for both board and thread pages
 type indexPage struct {
 	res         http.ResponseWriter
 	req         *http.Request
+	validate    func() bool
 	getCounter  func() int
 	getPostData func() []byte
 	lastN       int
@@ -138,7 +150,7 @@ type indexPage struct {
 // Shared logic for handling both board and thread pages
 func (in *indexPage) process(board string) {
 	in.ident = extractIdent(in.res, in.req)
-	if !canAccessBoard(board, in.ident) {
+	if !in.validate() {
 		send404(in.res)
 		return
 	}

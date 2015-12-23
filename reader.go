@@ -12,8 +12,8 @@ type Reader struct {
 	canSeeMnemonics, canSeeModeration bool
 }
 
-// Newreader constructs a new Reader struct
-func Newreader(board string, ident Ident) *Reader {
+// NewReader constructs a new Reader struct
+func NewReader(board string, ident Ident) *Reader {
 	return &Reader{
 		board:            board,
 		ident:            ident,

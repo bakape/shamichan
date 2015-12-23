@@ -64,3 +64,8 @@ func canAccessBoard(board string, ident Ident) bool {
 	_, ok := config.Boards.Boards[board]
 	return !ident.Banned && ok
 }
+
+// Confirm thread exists and client has rights to access it's board
+func canAccessThread(id int, board string, ident Ident) bool {
+	return canAccessBoard(board, ident) && validateOP(id, board)
+}

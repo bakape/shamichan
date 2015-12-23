@@ -14,7 +14,7 @@
         "type":"foo"
       }
     ],
-    "historyCtr":0,
+    "histCtr":0,
     "id":1,
     "imageCtr":0,
     "ip":"::1",
