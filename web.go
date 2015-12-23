@@ -22,11 +22,18 @@ import (
 
 func startServer() {
 	router := mux.NewRouter()
+	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 	router.HandleFunc("/", redirectToDefault)
 	router.HandleFunc(`/{board:\w+}`, addTrailingSlash)
-	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
-	router.HandleFunc(`/{board:\w+}/`, boardPage)
-	router.HandleFunc(`/{board:\w+}/{thread:\d+}`, threadPage)
+
+	index := router.PathPrefix(`/{board:\w+}/`).Subrouter()
+	index.HandleFunc("/", wrapHandler(false, boardPage))
+	index.HandleFunc(`/{thread:\d+}`, wrapHandler(false, threadPage))
+
+	api := router.PathPrefix("/api").Subrouter()
+	posts := api.PathPrefix(`/{board:\w+}/`).Subrouter()
+	posts.HandleFunc("/", wrapHandler(true, boardPage))
+	posts.HandleFunc(`/{thread:\d+}`, wrapHandler(true, threadPage))
 
 	// Serve static assets
 	if config.Hard.HTTP.ServeStatic {
@@ -75,16 +82,25 @@ func addTrailingSlash(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, "/"+mux.Vars(req)["board"]+"/", 301)
 }
 
+type handlerFunction func(http.ResponseWriter, *http.Request)
+type handlerWrapper func(bool, http.ResponseWriter, *http.Request)
+
+// wrapHandler returns a function with the first bool argument already assigned
+func wrapHandler(json bool, handler handlerWrapper) handlerFunction {
+	return func(res http.ResponseWriter, req *http.Request) {
+		handler(json, res, req)
+	}
+}
+
 // handles `/board/` page requests
-func boardPage(res http.ResponseWriter, req *http.Request) {
-	in := indexPage{res: res, req: req}
+func boardPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
+	in := indexPage{res: res, req: req, json: jsonOnly}
 	board := mux.Vars(req)["board"]
 
 	in.validate = func() bool {
 		return canAccessBoard(board, in.ident)
 	}
 
-	// Progress counter used for building etags
 	in.getCounter = func() (counter int) {
 		rGet(r.Table("main").
 			Get("histCounts").
@@ -95,7 +111,6 @@ func boardPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Post model JSON data
 	in.getPostData = func() []byte {
 		data := NewReader(board, in.ident).GetBoard()
 		encoded, err := json.Marshal(data)
@@ -107,8 +122,8 @@ func boardPage(res http.ResponseWriter, req *http.Request) {
 }
 
 // Handles `/board/thread` requests
-func threadPage(res http.ResponseWriter, req *http.Request) {
-	in := indexPage{res: res, req: req}
+func threadPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
+	in := indexPage{res: res, req: req, json: jsonOnly}
 	vars := mux.Vars(req)
 	board := vars["board"]
 	id, err := strconv.Atoi(vars["thread"])
@@ -139,9 +154,10 @@ type indexPage struct {
 	res         http.ResponseWriter
 	req         *http.Request
 	validate    func() bool
-	getCounter  func() int
-	getPostData func() []byte
+	getCounter  func() int    // Progress counter used for building etags
+	getPostData func() []byte // Post model JSON data
 	lastN       int
+	json        bool // Serve HTML from template or just JSON
 	isMobile    bool
 	template    templateStore
 	ident       Ident
@@ -157,12 +173,20 @@ func (in *indexPage) process(board string) {
 	in.isMobile = user_agent.New(in.req.UserAgent()).Mobile()
 
 	// Choose template to use
-	if !in.isMobile {
-		in.template = resources["index"]
-	} else {
-		in.template = resources["mobile"]
+	if !in.json {
+		if !in.isMobile {
+			in.template = resources["index"]
+		} else {
+			in.template = resources["mobile"]
+		}
 	}
 	if in.validateEtag() {
+		postData := in.getPostData()
+		if in.json { //Only the JSON
+			in.res.Write(postData)
+			return
+		}
+
 		// Concatenate the page together and write to client
 		parts := in.template.Parts
 		html := new(bytes.Buffer)
@@ -211,9 +235,12 @@ func (in *indexPage) validateEtag() bool {
 
 // Build the main part of the etag
 func (in *indexPage) buildEtag() string {
-	etag := fmt.Sprintf(`W/%v-%v`, in.getCounter(), in.template.Hash)
-	if in.isMobile {
-		etag += "-mobile"
+	etag := "W/" + strconv.Itoa(in.getCounter())
+	if !in.json {
+		etag += "-" + in.template.Hash
+		if in.isMobile {
+			etag += "-mobile"
+		}
 	}
 	return etag
 }
