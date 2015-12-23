@@ -23,15 +23,16 @@ import (
 func startServer() {
 	router := mux.NewRouter()
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
+	router.StrictSlash(true)
 	router.HandleFunc("/", redirectToDefault)
-	router.HandleFunc(`/{board:\w+}`, addTrailingSlash)
 
-	index := router.PathPrefix(`/{board:\w+}/`).Subrouter()
+	index := router.PathPrefix(`/{board:\w+}`).Subrouter()
 	index.HandleFunc("/", wrapHandler(false, boardPage))
 	index.HandleFunc(`/{thread:\d+}`, wrapHandler(false, threadPage))
 
 	api := router.PathPrefix("/api").Subrouter()
-	posts := api.PathPrefix(`/{board:\w+}/`).Subrouter()
+	api.HandleFunc("/config", serveConfigs)
+	posts := api.PathPrefix(`/{board:\w+}`).Subrouter()
 	posts.HandleFunc("/", wrapHandler(true, boardPage))
 	posts.HandleFunc(`/{thread:\d+}`, wrapHandler(true, threadPage))
 
@@ -73,13 +74,6 @@ func redirectToDefault(res http.ResponseWriter, req *http.Request) {
 	} else {
 		http.Redirect(res, req, "/"+config.Boards.Default+"/", 302)
 	}
-}
-
-// Redirects `/board` to `/board/`. The client parses the URL to determine what
-// page it is on. So we need the trailing slash for easier board determination
-// and consistency.
-func addTrailingSlash(res http.ResponseWriter, req *http.Request) {
-	http.Redirect(res, req, "/"+mux.Vars(req)["board"]+"/", 301)
 }
 
 type handlerFunction func(http.ResponseWriter, *http.Request)
@@ -304,4 +298,11 @@ func detectLastN(req *http.Request) int {
 		}
 	}
 	return 0
+}
+
+// Serve public configuration information as JSON
+func serveConfigs(res http.ResponseWriter, req *http.Request) {
+	data, err := json.Marshal(clientConfig)
+	throw(err)
+	res.Write(data)
 }
