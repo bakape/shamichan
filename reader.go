@@ -101,7 +101,7 @@ func (rd *Reader) GetPost(id int) (post Post) {
 // GetBoard retrives all OPs of a single board
 func (rd *Reader) GetBoard() (board Board) {
 	rGet(r.Table("threads").
-		GetAllByIndex("board", "a").
+		GetAllByIndex("board", rd.board).
 		ForEach(rd.threadQuery).
 		Without("posts"),
 	).
