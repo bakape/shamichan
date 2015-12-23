@@ -46,8 +46,8 @@ func (rd *Reader) GetThread(id, lastN int) (thread Thread) {
 		return Thread{}
 	}
 
-	// Remove duplicate OP entry, if any
-	delete(thread.Posts, strconv.Itoa(thread.ID))
+	// Place the retrieved OP into the Posts map and override duplicate, if any
+	thread.Posts[strconv.Itoa(thread.ID)] = thread.OP
 
 	for id, post := range thread.Posts {
 		if !rd.parsePost(&post) {
@@ -70,6 +70,9 @@ func (rd *Reader) threadQuery(thread r.Term) r.Term {
 // parsePost formats the Post struct according to the access level of the
 // current client
 func (rd *Reader) parsePost(post *Post) bool {
+	if post.ID == 0 {
+		return false
+	}
 	if !rd.canSeeModeration {
 		if post.Deleted {
 			return false
@@ -116,6 +119,10 @@ func (rd *Reader) GetBoard() (board Board) {
 	filtered := []Thread{}
 	for _, thread := range board.Threads {
 		if rd.parsePost(&thread.OP) {
+			// Mimics structure of regular threads, for uniformity
+			thread.Posts = map[string]Post{
+				strconv.Itoa(thread.ID): thread.OP,
+			}
 			filtered = append(filtered, thread)
 		}
 	}
