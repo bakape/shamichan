@@ -56,6 +56,11 @@ func startServer() {
 	}
 	handler = getIdent(handler)
 
+	// Return status 500 on goroutine panic
+	handler = handlers.RecoveryHandler(handlers.
+		PrintRecoveryStack(true),
+	)(handler)
+
 	log.Println("Listening on " + config.Hard.HTTP.Addr)
 	http.ListenAndServe(config.Hard.HTTP.Addr, handler)
 }
