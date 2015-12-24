@@ -26,15 +26,20 @@ func startServer() {
 	router.StrictSlash(true)
 	router.HandleFunc("/", redirectToDefault)
 
-	index := router.PathPrefix(`/{board:\w+}`).Subrouter()
+	const board = `/{board:\w+}`
+	const thread = `/{thread:\d+}`
+
+	index := router.PathPrefix(board).Subrouter()
 	index.HandleFunc("/", wrapHandler(false, boardPage))
-	index.HandleFunc(`/{thread:\d+}`, wrapHandler(false, threadPage))
+	index.HandleFunc(thread, wrapHandler(false, threadPage))
 
 	api := router.PathPrefix("/api").Subrouter()
+	api.NotFoundHandler = http.NotFoundHandler() // Default 404 handler for JSON
 	api.HandleFunc("/config", serveConfigs)
-	posts := api.PathPrefix(`/{board:\w+}`).Subrouter()
+	api.HandleFunc(`/post/{post:\d+}`, servePost)
+	posts := api.PathPrefix(board).Subrouter()
 	posts.HandleFunc("/", wrapHandler(true, boardPage))
-	posts.HandleFunc(`/{thread:\d+}`, wrapHandler(true, threadPage))
+	posts.HandleFunc(thread, wrapHandler(true, threadPage))
 
 	// Serve static assets
 	if config.Hard.HTTP.ServeStatic {
@@ -125,7 +130,7 @@ func threadPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 	in.lastN = detectLastN(req)
 
 	in.validate = func() bool {
-		return canAccessThread(id, board, in.ident)
+		return validateOP(id, board) && canAccessThread(id, board, in.ident)
 	}
 
 	in.getCounter = func() (counter int) {
@@ -161,7 +166,10 @@ type indexPage struct {
 func (in *indexPage) process(board string) {
 	in.ident = extractIdent(in.res, in.req)
 	if !in.validate() {
-		send404(in.res)
+		in.res.WriteHeader(404)
+		if !in.json {
+			custom404(in.res)
+		}
 		return
 	}
 	in.isMobile = user_agent.New(in.req.UserAgent()).Mobile()
@@ -181,7 +189,7 @@ func (in *indexPage) process(board string) {
 			return
 		}
 
-		// Concatenate the page together and write to client
+		// Concatenate post JSON with template and write to client
 		parts := in.template.Parts
 		html := new(bytes.Buffer)
 		html.Write(parts[0])
@@ -251,11 +259,11 @@ func extractIdent(res http.ResponseWriter, req *http.Request) Ident {
 }
 
 func notFoundHandler(res http.ResponseWriter, req *http.Request) {
-	send404(res)
+	res.WriteHeader(404)
+	custom404(res)
 }
 
-func send404(res http.ResponseWriter) {
-	res.WriteHeader(404)
+func custom404(res http.ResponseWriter) {
 	copyFile("www/404.html", res)
 }
 
@@ -303,6 +311,22 @@ func detectLastN(req *http.Request) int {
 // Serve public configuration information as JSON
 func serveConfigs(res http.ResponseWriter, req *http.Request) {
 	data, err := json.Marshal(clientConfig)
+	throw(err)
+	res.Write(data)
+}
+
+// Serve a single post as JSON
+func servePost(res http.ResponseWriter, req *http.Request) {
+	id, err := strconv.Atoi(mux.Vars(req)["post"])
+	throw(err)
+	board := parentBoard(id)
+	thread := parentThread(id)
+	ident := extractIdent(res, req)
+	if board == "" || thread == 0 || !canAccessThread(thread, board, ident) {
+		res.WriteHeader(404)
+		return
+	}
+	data, err := json.Marshal(NewReader(board, ident).GetPost(id))
 	throw(err)
 	res.Write(data)
 }

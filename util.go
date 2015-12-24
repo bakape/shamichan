@@ -67,5 +67,13 @@ func canAccessBoard(board string, ident Ident) bool {
 
 // Confirm thread exists and client has rights to access it's board
 func canAccessThread(id int, board string, ident Ident) bool {
-	return canAccessBoard(board, ident) && validateOP(id, board)
+	if !canAccessBoard(board, ident) {
+		return false
+	}
+	var deleted bool
+	rGet(getThread(id).Field("deleted").Default(false)).One(&deleted)
+	if deleted && !checkAuth("seeModeration", ident) {
+		return false
+	}
+	return true
 }

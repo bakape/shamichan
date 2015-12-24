@@ -44,6 +44,7 @@ type Post struct {
 	ID         int            `json:"id,omitempty",gorethink:"id"`
 	IP         string         `json:"-",gorethink:"ip"`
 	OP         int            `json:"op,omitempty",gorethink:"op"`
+	Board      string         `json:"board,omitempty",gorethink:"board"`
 	Time       int            `json:"time,omitempty",gorethink:"time"`
 	Nonce      string         `json:"-",gorethink:"nonce"`
 	Editing    bool           `json:"editing,omitempty",gorethink:"editing,omitempty"`
