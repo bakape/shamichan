@@ -1,4 +1,4 @@
-*.pid
+.pid
 .directory
 .idea
 .lock*
