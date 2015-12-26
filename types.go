@@ -20,9 +20,9 @@ type Thread struct {
 	Nonce    string          `json:"-",gorethink:"nonce"`
 	Posts    map[string]Post `json:"posts,omitempty",gorethink:"posts"`
 	History  []Message       `json:"-",gorethink:"history"`
-	HistCtr  int             `json:"histCtr,omitempty",gorethink:"histCtr"`
-	ReplyCtr int             `json:"replyCtr,omitempty",gorethink:"replyCtr"`
-	ImageCtr int             `json:"imageCtr,omitempty",gorethink:"imageCtr"`
+	HistCtr  int             `json:"histCtr",gorethink:"histCtr"`
+	ReplyCtr int             `json:"replyCtr",gorethink:"replyCtr"`
+	ImageCtr int             `json:"imageCtr",gorethink:"imageCtr"`
 	OP       Post            `json:"-",gorethink:"op"` // For internal use
 }
 
