@@ -18,7 +18,7 @@ var config struct {
 	// Configuration that can not be hot-reloaded without restarting the server
 	Hard struct {
 		HTTP struct {
-			Addr, Media, Upload, Socket, Origin                      string
+			Addr, Media, Upload, Socket, Origin         string
 			ServeStatic, TrustProxies, Gzip, Websockets bool
 		}
 		Redis struct {
@@ -103,13 +103,13 @@ var clientConfig struct {
 		Boards  map[string]struct {
 			Title string `json:"title"`
 		} `json:"boards"`
-		Default string      `json:"def"`
+		Default string      `json:"default"`
 		Psuedo  [][2]string `json:"psuedo"`
 		Links   [][2]string `json:"links"`
 	} `json:"boards"`
 	Lang struct {
 		Enabled []string `json:"enabled"`
-		Def     string   `json:"def"`
+		Default string   `json:"default"`
 	} `json:"lang"`
 	Staff struct {
 		Classes map[string]struct {
