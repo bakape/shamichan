@@ -7,8 +7,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/dchest/htmlmin"
@@ -74,8 +72,8 @@ func indexTemplate(raw string) (templateStore, templateStore) {
 	vars.ClientHash = hash
 	clientFileHash = hash
 
-	tmpl, err1 := template.New("index").Parse(raw)
-	throw(err1)
+	tmpl, err := template.New("index").Parse(raw)
+	throw(err)
 
 	// Rigt now the desktop and mobile templates are almost identical. This will
 	// change, when we get a dedicated mobile GUI.
@@ -101,12 +99,12 @@ func hashClientFiles() string {
 		files = append(files, scanDir(pair[0], pair[1])...)
 	}
 
-	// Read all files into the hashing function
-	hasher := md5.New()
+	// Read all files into a buffer and hash it
+	buf := new(bytes.Buffer)
 	for _, file := range files {
-		copyFile(file, hasher)
+		copyFile(file, buf)
 	}
-	return hex.EncodeToString(hasher.Sum(nil))[:16]
+	return hashBuffer(buf.Bytes())
 }
 
 // scanDir returns files from a folder, that end with the provided extension
@@ -124,8 +122,8 @@ func ls(path string) []string {
 	dir, err := os.Open(path)
 	throw(err)
 	defer dir.Close()
-	files, err1 := dir.Readdirnames(0)
-	throw(err1)
+	files, err := dir.Readdirnames(0)
+	throw(err)
 	return files
 }
 
@@ -134,8 +132,8 @@ func copyFile(path string, writer io.Writer) {
 	file, err := os.Open(path)
 	throw(err)
 	defer file.Close()
-	_, err1 := io.Copy(writer, file)
-	throw(err1)
+	_, err = io.Copy(writer, file)
+	throw(err)
 }
 
 // boardNavigation renders interboard navigation we put in the top banner
@@ -172,10 +170,8 @@ func buildIndexTemplate(tmpl *template.Template, vars templateVars, isMobile boo
 		MinifyScripts: true,
 	})
 	throw(err)
-	hasher := md5.New()
-	hasher.Write(minified)
 	return templateStore{
 		bytes.Split(minified, []byte("<$$$>")),
-		hex.EncodeToString(hasher.Sum(nil))[:16],
+		hashBuffer(minified),
 	}
 }

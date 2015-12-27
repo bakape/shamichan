@@ -54,11 +54,12 @@ func startServer() {
 	} else {
 		handler = router
 	}
+
 	handler = getIdent(handler)
 
 	// Return status 500 on goroutine panic
-	handler = handlers.RecoveryHandler(handlers.
-		PrintRecoveryStack(true),
+	handler = handlers.RecoveryHandler(
+		handlers.PrintRecoveryStack(true),
 	)(handler)
 
 	log.Println("Listening on " + config.Hard.HTTP.Addr)
@@ -96,7 +97,7 @@ func wrapHandler(json bool, handler handlerWrapper) handlerFunction {
 	}
 }
 
-// handles `/board/` page requests
+// Handles `/board/` page requests
 func boardPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 	in := indexPage{res: res, req: req, json: jsonOnly}
 	board := mux.Vars(req)["board"]
@@ -210,10 +211,6 @@ func (in *indexPage) process(board string) {
 // send 304 and return false, otherwise set headers and return true.
 func (in *indexPage) validateEtag() bool {
 	etag := in.buildEtag()
-	if config.Hard.Debug {
-		setHeaders(in.res, noCacheHeaders)
-		return true
-	}
 	hasAuth := in.ident.Auth != ""
 	if hasAuth {
 		etag += "-" + in.ident.Auth
@@ -222,18 +219,12 @@ func (in *indexPage) validateEtag() bool {
 		etag += fmt.Sprintf("-last%v", in.lastN)
 	}
 
-	// Etags match. No need to rerender.
-	if ifNoneMatch, ok := in.req.Header["If-None-Match"]; ok {
-		for _, clientEtag := range ifNoneMatch {
-			if clientEtag == etag {
-				in.res.WriteHeader(304)
-				return false
-			}
-		}
+	// If etags match, no need to rerender
+	if checkClientEtags(in.res, in.req, etag) {
+		return false
 	}
 
-	setHeaders(in.res, vanillaHeaders)
-	in.res.Header().Set("ETag", etag)
+	setHeaders(in.res, etag, in.json)
 	if hasAuth {
 		in.res.Header().Add("Cache-Control", ", private")
 	}
@@ -252,6 +243,26 @@ func (in *indexPage) buildEtag() string {
 	return etag
 }
 
+/*
+ Check is any of the etags the client provides in the "If-None-Match" header
+ match the generated etag. If yes, write 304 and return true.
+*/
+func checkClientEtags(
+	res http.ResponseWriter,
+	req *http.Request,
+	etag string,
+) bool {
+	if ifNoneMatch, ok := req.Header["If-None-Match"]; ok {
+		for _, clientEtag := range ifNoneMatch {
+			if clientEtag == etag {
+				res.WriteHeader(304)
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // Read client Identity struct, which was attached to the requests further
 // upstream
 func extractIdent(res http.ResponseWriter, req *http.Request) Ident {
@@ -263,31 +274,38 @@ func extractIdent(res http.ResponseWriter, req *http.Request) Ident {
 	return ident
 }
 
+// Cutom error page for requests that don't match a router
 func notFoundHandler(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(404)
 	custom404(res)
 }
 
+// Serve the custom error page
 func custom404(res http.ResponseWriter) {
 	copyFile("www/404.html", res)
 }
 
-var noCacheHeaders = stringMap{
-	"X-Frame-Options": "sameorigin",
-	"Expires":         "Thu, 01 Jan 1970 00:00:00 GMT",
-	"Cache-Control":   "no-cache, no-store",
-}
-var vanillaHeaders = stringMap{
-	"Content-Type":    "text/html; charset=UTF-8",
-	"X-Frame-Options": "sameorigin",
-	"Cache-Control":   "max-age=0, must-revalidate",
-	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
-}
-
-func setHeaders(res http.ResponseWriter, headers stringMap) {
-	for key, val := range headers {
-		res.Header().Set(key, val)
+// Set HTTP headers to the response object
+func setHeaders(res http.ResponseWriter, etag string, json bool) {
+	var vanillaHeaders = stringMap{
+		"X-Frame-Options": "sameorigin",
+		"Cache-Control":   "max-age=0, must-revalidate",
+		"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
 	}
+	head := res.Header()
+	for key, val := range vanillaHeaders {
+		head.Set(key, val)
+	}
+
+	head.Set("ETag", etag)
+
+	var contentType string
+	if json {
+		contentType = "application/json"
+	} else {
+		contentType = "text/html"
+	}
+	head.Set("Content-Type", contentType+"; charset=UTF-8")
 }
 
 // Inject staff login credentials, if any. These will be used to download the
@@ -315,8 +333,13 @@ func detectLastN(req *http.Request) int {
 
 // Serve public configuration information as JSON
 func serveConfigs(res http.ResponseWriter, req *http.Request) {
+	etag := "W/" + configHash
+	if checkClientEtags(res, req, etag) {
+		return
+	}
 	data, err := json.Marshal(clientConfig)
 	throw(err)
+	setHeaders(res, etag, true)
 	res.Write(data)
 }
 
@@ -333,5 +356,10 @@ func servePost(res http.ResponseWriter, req *http.Request) {
 	}
 	data, err := json.Marshal(NewReader(board, ident).GetPost(id))
 	throw(err)
+	etag := "W/" + hashBuffer(data)
+	if checkClientEtags(res, req, etag) {
+		return
+	}
+	setHeaders(res, etag, true)
 	res.Write(data)
 }

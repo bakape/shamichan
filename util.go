@@ -5,6 +5,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	r "github.com/dancannon/gorethink"
 	"strconv"
 )
@@ -76,4 +78,11 @@ func canAccessThread(id int, board string, ident Ident) bool {
 		return false
 	}
 	return true
+}
+
+// Compute a truncated MD5 hash from a buffer
+func hashBuffer(buf []byte) string {
+	hasher := md5.New()
+	hasher.Write(buf)
+	return hex.EncodeToString(hasher.Sum(nil))[16:]
 }
