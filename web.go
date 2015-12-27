@@ -306,7 +306,7 @@ func detectLastN(req *http.Request) int {
 	if ok && len(lastNSlice) > 0 {
 		lastN, err := strconv.Atoi(lastNSlice[0])
 		throw(err)
-		if lastN >= 5 && lastN <= 500 {
+		if lastN <= 500 {
 			return lastN
 		}
 	}
