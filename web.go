@@ -153,7 +153,7 @@ func threadPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 	in.process(board)
 }
 
-// Stores common variables anf methods for both board and thread pages
+// Stores common variables and methods for both board and thread pages
 type indexPage struct {
 	res         http.ResponseWriter
 	req         *http.Request
@@ -206,7 +206,7 @@ func (in *indexPage) process(board string) {
 	}
 }
 
-// Build an etag and check if it mathces the one provided by the client. If yes,
+// Build an etag and check if it matches the one provided by the client. If yes,
 // send 304 and return false, otherwise set headers and return true.
 func (in *indexPage) validateEtag() bool {
 	etag := in.buildEtag()
@@ -273,7 +273,7 @@ func extractIdent(res http.ResponseWriter, req *http.Request) Ident {
 	return ident
 }
 
-// Cutom error page for requests that don't match a router
+// Custom error page for requests that don't match a router
 func notFoundHandler(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(404)
 	custom404(res)
@@ -286,7 +286,7 @@ func custom404(res http.ResponseWriter) {
 
 // Set HTTP headers to the response object
 func setHeaders(res http.ResponseWriter, etag string, json bool) {
-	var vanillaHeaders = stringMap{
+	vanillaHeaders := stringMap{
 		"X-Frame-Options": "sameorigin",
 		"Cache-Control":   "max-age=0, must-revalidate",
 		"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
