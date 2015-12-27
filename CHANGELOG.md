@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##vNext
+##v1.7.2 - 2015-12-27
 * Fix
 	- Server crashing on no thumbnail catalog OP renders
 	- Image hat z-index
