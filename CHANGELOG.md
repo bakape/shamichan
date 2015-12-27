@@ -7,13 +7,14 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Server crashing on no thumbnail catalog OP renders
 	- Image hat z-index
 * Add
-	- Video controrls to all WebM
+	- Video controls to all WebM
+    - Release publishing helper script
 
 ##v1.7.1 - 2015-12-10
 * Fix
 	- r/a/dio banner not updating after prolonged operation
 * Remove
-	- Dedicated saucenao.com SLL bypass
+	- Dedicated saucenao.com SSL bypass
 * Change
 	- Only DJs allowed to wear names with forced anon on
 
