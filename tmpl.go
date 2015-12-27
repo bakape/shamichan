@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/dchest/htmlmin"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -124,15 +123,6 @@ func ls(path string) []string {
 	return files
 }
 
-// copyFile reads a file from disk and copies it into the writer
-func copyFile(path string, writer io.Writer) {
-	file, err := os.Open(path)
-	throw(err)
-	defer file.Close()
-	_, err = io.Copy(writer, file)
-	throw(err)
-}
-
 // boardNavigation renders interboard navigation we put in the top banner
 func boardNavigation() template.HTML {
 	html := `<b id="navTop">[`
@@ -159,10 +149,14 @@ func boardNavigation() template.HTML {
 }
 
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it
-func buildIndexTemplate(tmpl *template.Template, vars templateVars, isMobile bool) templateStore {
+func buildIndexTemplate(
+	tmpl *template.Template,
+	vars templateVars,
+	isMobile bool,
+) templateStore {
 	vars.IsMobile = isMobile
-	buffer := bytes.Buffer{}
-	throw(tmpl.Execute(&buffer, vars))
+	buffer := new(bytes.Buffer)
+	throw(tmpl.Execute(buffer, vars))
 	minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
 		MinifyScripts: true,
 	})

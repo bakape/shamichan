@@ -8,6 +8,7 @@ package main
 
 import (
 	"io/ioutil"
+	"os"
 )
 
 // config contains currently loaded configuration
@@ -135,8 +136,20 @@ var configHash string
 
 // loadConfig reads and parses JSON config files
 func loadConfig() {
-	file, err := ioutil.ReadFile("./config/config.json")
-	throw(err)
+	const path = "./config/config.json"
+	file, err := ioutil.ReadFile(path)
+
+	// If config file does not exist, read and copy defaults file
+	if err != nil {
+		if os.IsNotExist(err) {
+			file, err = ioutil.ReadFile("./config/defaults.json")
+			throw(err)
+			throw(ioutil.WriteFile(path, file, 0600))
+		} else {
+			panic(err)
+		}
+	}
+
 	unmarshalJSON(file, &config)
 	unmarshalJSON(file, &clientConfig)
 	configHash = hashBuffer(file)

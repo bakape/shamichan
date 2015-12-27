@@ -20,7 +20,7 @@
   "scripts": {
     "start": "node index &",
     "stop": "kill `cat server/.server.pid`",
-    "postinstall": "scripts/bootstrap.sh && gulp"
+    "postinstall": "gulp"
   },
   "dependencies": {
     "async": "^1.2.0",

@@ -9,6 +9,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	r "github.com/dancannon/gorethink"
+	"io"
+	"os"
 	"strconv"
 )
 
@@ -98,4 +100,13 @@ func marshalJSON(input interface{}) []byte {
 // Shorthand for unmarshalling JSON
 func unmarshalJSON(data []byte, store interface{}) {
 	throw(json.Unmarshal(data, store))
+}
+
+// copyFile reads a file from disk and copies it into the writer
+func copyFile(path string, writer io.Writer) {
+	file, err := os.Open(path)
+	throw(err)
+	defer file.Close()
+	_, err = io.Copy(writer, file)
+	throw(err)
 }
