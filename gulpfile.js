@@ -11,7 +11,7 @@ const babelify = require('babelify'),
 	gulpif = require('gulp-if'),
 	gutil = require('gulp-util'),
 	less = require('gulp-less'),
-	minifyCSS = require('gulp-minify-css'),
+	nano = require('gulp-cssnano'),
 	source = require('vinyl-source-stream'),
 	sourcemaps = require('gulp-sourcemaps'),
 	uglify = require('gulp-uglify');
@@ -132,7 +132,7 @@ gulp.task('css', function() {
 	return gulp.src('./less/*.less')
 		.pipe(sourcemaps.init())
 		.pipe(less())
-		.pipe(minifyCSS({rebase: false}))
+		.pipe(nano())
 		.pipe(sourcemaps.write('./maps/'))
 		.pipe(gulp.dest('./www/css'));
 });
