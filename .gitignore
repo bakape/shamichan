@@ -2,16 +2,12 @@
 .directory
 .idea
 .lock*
-.DS_Store
 .project
 .vagrant
 config/config.json
 error.log
 node_modules/
-imager/tmp
-build
 meguca
-scripts/credentials.json
 www/css/*.css
 www/css/maps
 www/illya.mp4
