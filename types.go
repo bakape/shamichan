@@ -12,18 +12,19 @@ type Board struct {
 
 // Thread stores the metadata and posts of a single thread
 type Thread struct {
-	ID       int             `json:"id,omitempty",gorethink:"id"`
-	IP       string          `json:"-",gorethink:"ip"`
-	Board    string          `json:"board,omitempty",gorethink:"board"`
-	Time     int             `json:"time,omitempty",gorethink:"time"`
-	BumpTime int             `json:"bumpTime,omitempty",gorethink:"bumpTime"`
-	Nonce    string          `json:"-",gorethink:"nonce"`
-	Posts    map[string]Post `json:"posts,omitempty",gorethink:"posts"`
-	History  []Message       `json:"-",gorethink:"history"`
-	HistCtr  int             `json:"histCtr",gorethink:"histCtr"`
-	ReplyCtr int             `json:"replyCtr",gorethink:"replyCtr"`
-	ImageCtr int             `json:"imageCtr",gorethink:"imageCtr"`
-	OP       Post            `json:"-",gorethink:"op"` // For internal use
+	ID        int             `json:"id",gorethink:"id"`
+	IP        string          `json:"-",gorethink:"ip"`
+	Board     string          `json:"board",gorethink:"board"`
+	Time      int             `json:"time",gorethink:"time"`
+	BumpTime  int             `json:"bumpTime",gorethink:"bumpTime"`
+	ReplyTime int             `json:"replyTime",gorethink:"replyTime"`
+	Nonce     string          `json:"-",gorethink:"nonce"`
+	Posts     map[string]Post `json:"posts,omitempty",gorethink:"posts"`
+	History   []Message       `json:"-",gorethink:"history"`
+	HistCtr   int             `json:"histCtr",gorethink:"histCtr"`
+	ReplyCtr  int             `json:"replyCtr",gorethink:"replyCtr"`
+	ImageCtr  int             `json:"imageCtr",gorethink:"imageCtr"`
+	OP        Post            `json:"-",gorethink:"op"` // For internal use
 }
 
 // Message is the universal transport container of all live updates through
@@ -41,14 +42,14 @@ type Message struct {
 
 // Post is a generic post. Either OP or reply.
 type Post struct {
-	ID         int            `json:"id,omitempty",gorethink:"id"`
+	ID         int            `json:"id",gorethink:"id"`
 	IP         string         `json:"-",gorethink:"ip"`
-	OP         int            `json:"op,omitempty",gorethink:"op"`
-	Board      string         `json:"board,omitempty",gorethink:"board"`
-	Time       int            `json:"time,omitempty",gorethink:"time"`
+	OP         int            `json:"op",gorethink:"op"`
+	Board      string         `json:"board",gorethink:"board"`
+	Time       int            `json:"time",gorethink:"time"`
 	Nonce      string         `json:"-",gorethink:"nonce"`
-	Editing    bool           `json:"editing,omitempty",gorethink:"editing,omitempty"`
-	Body       string         `json:"body,omitempty",gorethink:"body"`
+	Editing    bool           `json:"editing",gorethink:"editing"`
+	Body       string         `json:"body",gorethink:"body"`
 	Deleted    bool           `json:"-",gorethink:"deleted"`
 	ImgDeleted bool           `json:"-",gorethink:"imgDeleted"`
 	Image      Image          `json:"image,omitempty",gorethink:"image,omitempty"`
@@ -64,15 +65,15 @@ type Post struct {
 
 // Image contains a post's image and thumbanail data
 type Image struct {
-	Src     string `json:"src,omitempty",gorethink:"src"`
+	Src     string `json:"src",gorethink:"src"`
 	Thumb   string `json:"thumb,omitempty",gorethink:"thumb,omitempty"`
 	Mid     string `json:"mid,omitempty",gorethink:"mid,omitempty"`
-	Dims    []int  `json:"dims,omitempty",gorethink:"dims"`
-	Ext     string `json:"ext,omitempty",gorethink:"ext"`
-	Size    int    `json:"size,omitempty",gorethink:"size"`
-	MD5     string `json:",omitempty"`
-	SHA1    string `json:",omitempty"`
-	Imgnm   string `json:"imgnm,omitempty",gorethink:"imgnm,omitempty"`
+	Dims    []int  `json:"dims",gorethink:"dims"`
+	Ext     string `json:"ext",gorethink:"ext"`
+	Size    int    `json:"size",gorethink:"size"`
+	MD5     string
+	SHA1    string
+	Imgnm   string `json:"imgnm",gorethink:"imgnm"`
 	Spoiler int    `json:"spoiler,omitempty",gorethink:"spoiler,omitempty"`
 	APNG    bool   `json:"apng,omitempty",gorethink:"apng,omitempty"`
 	Audio   bool   `json:"audio,omitempty",gorethink:"audio,omitempty"`
