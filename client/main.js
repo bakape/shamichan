@@ -93,7 +93,7 @@ main.Memory = require('./memory');
 const lang = main.lang = require('lang'),
 	state = main.state = require('./state'),
 	etc = main.etc = require('./etc'),
-	common = main.common = require('../common');
+	common = main.common = require('./common');
 // Initialise main rendering object
 let oneeSama = main.oneeSama = new common.OneeSama({
 	op: state.page.get('thread'),

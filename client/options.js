@@ -216,7 +216,7 @@ var OptionsView = Backbone.View.extend({
 });
 
 // Create and option model for each object in the array
-for (let spec of require('../common/options')(main.isMobile)) {
+for (let spec of require('./common/options')(main.isMobile)) {
 	new OptionModel(spec);
 }
 
