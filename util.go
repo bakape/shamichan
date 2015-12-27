@@ -7,6 +7,7 @@ package main
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	r "github.com/dancannon/gorethink"
 	"strconv"
 )
@@ -85,4 +86,16 @@ func hashBuffer(buf []byte) string {
 	hasher := md5.New()
 	hasher.Write(buf)
 	return hex.EncodeToString(hasher.Sum(nil))[16:]
+}
+
+// Shorthand for marshaling JSON and handling the error
+func marshalJSON(input interface{}) []byte {
+	data, err := json.Marshal(input)
+	throw(err)
+	return data
+}
+
+// Shorthand for unmarshalling JSON
+func unmarshalJSON(data []byte, store interface{}) {
+	throw(json.Unmarshal(data, store))
 }

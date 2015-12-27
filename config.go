@@ -7,9 +7,6 @@
 package main
 
 import (
-	"crypto/md5"
-	"encoding/hex"
-	"encoding/json"
 	"io/ioutil"
 )
 
@@ -87,7 +84,7 @@ var config struct {
 	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
 }
 
-// clientConfig exports public settings client can access
+// clientConfig exports public settings all clients can access
 var clientConfig struct {
 	Hard struct {
 		HTTP struct {
@@ -140,7 +137,7 @@ var configHash string
 func loadConfig() {
 	file, err := ioutil.ReadFile("./config/config.json")
 	throw(err)
-	throw(json.Unmarshal(file, &config))
-	throw(json.Unmarshal(file, &clientConfig))
-	configHash = hex.EncodeToString(md5.New().Sum(file))[:16]
+	unmarshalJSON(file, &config)
+	unmarshalJSON(file, &clientConfig)
+	configHash = hashBuffer(file)
 }

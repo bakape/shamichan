@@ -6,7 +6,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	r "github.com/dancannon/gorethink"
@@ -116,10 +115,7 @@ func boardPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 	}
 
 	in.getPostData = func() []byte {
-		data := NewReader(board, in.ident).GetBoard()
-		encoded, err := json.Marshal(data)
-		throw(err)
-		return encoded
+		return marshalJSON(NewReader(board, in.ident).GetBoard())
 	}
 
 	in.process(board)
@@ -144,10 +140,7 @@ func threadPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 	}
 
 	in.getPostData = func() []byte {
-		data := NewReader(board, in.ident).GetThread(id, in.lastN)
-		encoded, err := json.Marshal(data)
-		throw(err)
-		return encoded
+		return marshalJSON(NewReader(board, in.ident).GetThread(id, in.lastN))
 	}
 
 	in.process(board)
@@ -336,10 +329,8 @@ func serveConfigs(res http.ResponseWriter, req *http.Request) {
 	if checkClientEtags(res, req, etag) {
 		return
 	}
-	data, err := json.Marshal(clientConfig)
-	throw(err)
 	setHeaders(res, etag, true)
-	res.Write(data)
+	res.Write(marshalJSON(clientConfig))
 }
 
 // Serve a single post as JSON
@@ -353,8 +344,7 @@ func servePost(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(404)
 		return
 	}
-	data, err := json.Marshal(NewReader(board, ident).GetPost(id))
-	throw(err)
+	data := marshalJSON(NewReader(board, ident).GetPost(id))
 	etag := "W/" + hashBuffer(data)
 	if checkClientEtags(res, req, etag) {
 		return

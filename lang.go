@@ -5,7 +5,6 @@
 package main
 
 import (
-	"encoding/json"
 	"io/ioutil"
 )
 
@@ -25,7 +24,7 @@ func loadLanguagePacks() {
 		file, err := ioutil.ReadFile("./lang/" + lang + "/server.json")
 		throw(err)
 		var parsed LanguagePack
-		throw(json.Unmarshal(file, &parsed))
+		unmarshalJSON(file, &parsed)
 		langs[lang] = parsed
 	}
 }

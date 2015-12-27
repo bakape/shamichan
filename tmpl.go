@@ -7,7 +7,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/dchest/htmlmin"
 	"html/template"
@@ -64,9 +63,7 @@ func indexTemplate(raw string) (templateStore, templateStore) {
 		ConfigHash: configHash,
 		MediaURL:   config.Hard.HTTP.Media,
 	}
-	js, err := json.Marshal(clientConfig)
-	throw(err)
-	vars.Config = template.JS(js)
+	vars.Config = template.JS(marshalJSON(clientConfig))
 	vars.Navigation = boardNavigation()
 	hash := hashClientFiles()
 	vars.ClientHash = hash
