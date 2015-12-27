@@ -12,7 +12,6 @@ const babelify = require('babelify'),
 	gutil = require('gulp-util'),
 	less = require('gulp-less'),
 	minifyCSS = require('gulp-minify-css'),
-	Promise = require('bluebird'),
 	source = require('vinyl-source-stream'),
 	sourcemaps = require('gulp-sourcemaps'),
 	uglify = require('gulp-uglify')
