@@ -43,7 +43,6 @@ func startServer() {
 
 	// Serve static assets
 	if config.Hard.HTTP.ServeStatic {
-		// TODO: Apply headers, depending on debug mode
 		router.PathPrefix("/").Handler(http.FileServer(http.Dir("./www")))
 	}
 
