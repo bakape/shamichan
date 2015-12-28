@@ -3,12 +3,7 @@
  * server to render the actual options panel.
  */
 
-const index = require('./index'),
-	util = require('./util'),
-	{parseHTML} = util,
-	{config, hotConfig, main} = imports;
-if (!imports.isNode)
-	var {Cookie, etc, oneeSama, state} = main;
+import {Cookie, util, state, config} from 'main'
 
 /*
  * Full schema of the option interface
@@ -273,7 +268,7 @@ module.exports = function(isMobile) {
 function toggleHeadStyle(id, css) {
 	return function (toggle) {
 		if (!document.getElementById(id)) {
-			document.head.appendChild(etc
+			document.head.appendChild(util
 				.parseDOM(`<style id="${id}">${css}</style>`));
 		}
 

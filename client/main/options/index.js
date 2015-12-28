@@ -3,8 +3,8 @@
  * logic
  */
 
-let main = require('./main'),
-	{$, _, Backbone, state} = main;
+import {_, Backbone, state} from 'main'
+import opts from './opts'
 
 // Try to get options from local storage
 var options;
@@ -216,7 +216,7 @@ var OptionsView = Backbone.View.extend({
 });
 
 // Create and option model for each object in the array
-for (let spec of require('./common/options')(main.isMobile)) {
+for (let spec of opts) {
 	new OptionModel(spec);
 }
 

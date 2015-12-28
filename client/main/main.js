@@ -14,6 +14,8 @@ const _ = require('underscore'),
 	Cookie = require('js-cookie'),
 	radio = require('backbone.radio')
 
+import FSM from './fsm'
+
 // Load standard library ES6 polyfills
 require('core-js')
 // Load DOM level 4 polyfill
@@ -24,9 +26,10 @@ Backbone.View = Backbone.NativeView
 
 // Central aplication object and message bus
 let main = module.exports = radio.channel('main')
+
 _.extend(main, {
 	// Bind dependancies to main object for pretier destructuring requires
-	_, Backbone, Cookie,
+	_, Backbone, Cookie, FSM,
 	$script: require('scriptjs'),
 	SockJS: require('sockjs-client'),
 
@@ -88,7 +91,7 @@ main.send = main.request.bind(main, 'send') // Shorthand
 main.Memory = require('./memory')
 const lang = main.lang = require('lang'),
 	state = main.state = require('./state'),
-	etc = main.etc = require('./etc'),
+	util = require('./util'),
 	common = main.common = require('./common')
 
 /*
@@ -115,7 +118,7 @@ main.scroll = require('./scroll')
 state.page.set('tabID', common.randomID(32))
 
 // Load language-specific CSS
-document.head.appendChild(etc.parseDOM(common.parseHTML
+document.head.appendChild(util.parseDOM(common.parseHTML
 	`<style>
 		.locked:after {
 			content: "${lang.thread_locked}";
@@ -131,8 +134,8 @@ _.extend(main, {
 	$name: document.query('input[name=name]'),
 	$email: document.query('input[name=email]'),
 
-	connSM: new common.FSM('load'),
-	postSM: new common.FSM('none')
+	connSM: new FSM('load'),
+	postSM: new FSM('none')
 });
 
 // 2nd tier dependacy modules. These are needed before the websocket

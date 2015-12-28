@@ -1,5 +1,5 @@
 /*
-Timezone corrections, batch timestamp updates, syncwatch, etc.
+Timezone corrections, batch timestamp updates, syncwatch, util.
  */
 
 let main = require('./main'),

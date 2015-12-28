@@ -3,7 +3,7 @@
  */
 
 const main = require('../main'),
-	{$, _, Backbone, common, etc, lang, state} = main;
+	{$, _, Backbone, common, util, lang, state} = main;
 
 const MenuView = module.exports = Backbone.View.extend({
 	className: 'popup-menu glass',
@@ -30,7 +30,7 @@ const MenuView = module.exports = Backbone.View.extend({
 		// Calculate position. Can't use CSS translate, because it shifts
 		// the background.
 		el.style.left = el.getBoundingClientRect().left
-			- (etc.outerWidth(el) + el.offsetWidth) * 0.6
+			- (util.outerWidth(el) + el.offsetWidth) * 0.6
 			+ 'px';
 	},
 	// Forward post model to appropriate handler
@@ -56,7 +56,7 @@ main.$threads.on('click', '.control', event => {
 	if (target._popup_menu)
 		return target._popup_menu.remove();
 
-	const model = etc.getModel(target);
+	const model = util.getModel(target);
 	if (model)
 		new MenuView({parent: target, model});
 });

@@ -7,7 +7,7 @@ const Article = require('./article'),
 	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
-	{$, _, Backbone, Cookie, common, config, connSM, etc, lang, oneeSama,
+	{$, _, Backbone, Cookie, common, config, connSM, util, lang, oneeSama,
 		options, postSM, state} = main;
 
 let postForm, postModel;
@@ -62,7 +62,7 @@ postSM.act('ready + new -> draft', aside => {
 	let op,
 		section = aside.closest('section');
 	if (section)
-		op = etc.getNum(section);
+		op = util.getNum(section);
 	else
 		section = document.createElement('section');
 
@@ -214,7 +214,7 @@ const ArticleComposer = Article.extend({
 				section = section && section.closest('section');
 				if (section) {
 					const desc = num in state.mine.readAll() && lang.you;
-					return this.postRef(num, etc.getNum(section), desc);
+					return this.postRef(num, util.getNum(section), desc);
 				}
 				else
 					return `<a class="nope">&gt;&gt;${num}</a>`;
@@ -301,7 +301,7 @@ const ArticleComposer = Article.extend({
 		else
 			name.tetxContent = haveTrip ? '' : lang.anon;
 		if (haveTrip)
-			etc.parseDOM(' <code>!?</code>').forEach(el => name.after(el));
+			util.parseDOM(' <code>!?</code>').forEach(el => name.after(el));
 
 		// Insert staff title
 		main.oneeSama.trigger('fillMyName', name);
@@ -396,13 +396,13 @@ const ComposerView = Backbone.View.extend({
 				section = section && section.closest('section');
 				if (section) {
 					const desc = num in state.mine.readAll() && this.lang.you;
-					return this.postRef(num, etc.getNum(section), desc);
+					return this.postRef(num, util.getNum(section), desc);
 				}
 				else
 					return `<a class="nope">&gt;&gt;${num}</a>`;
 			}
 		});
-		imouto.hook('spoilerTag', etc.touchable_spoiler_tag);
+		imouto.hook('spoilerTag', util.touchable_spoiler_tag);
 		main.oneeSama.trigger('imouto', imouto);
 	},
 	// Initial render
@@ -584,7 +584,7 @@ const ComposerView = Backbone.View.extend({
 				.val(extra[k])
 				.appendTo(this.$uploadForm);
 		}
-		this.$uploadForm.prop('action', etc.uploadURL());
+		this.$uploadForm.prop('action', util.uploadURL());
 		this.$uploadForm.submit();
 		this.$iframe.load(function() {
 			if (!postForm)
@@ -1076,7 +1076,7 @@ main.$threads.on('click', 'a.quote', function(e) {
 	 */
 	const post = e.target.closest('article, section'),
 		gsel = getSelection(),
-		num = etc.getNum(post);
+		num = util.getNum(post);
 
 	function isInside(prop) {
 		const el = gsel[prop] && gsel[prop].parentElement;
@@ -1088,6 +1088,6 @@ main.$threads.on('click', 'a.quote', function(e) {
 	let sel;
 	if (isInside('baseNode') && isInside('focusNode'))
 		sel = gsel.toString();
-	openPostBox(etc.getNum(post.closest('section')));
+	openPostBox(util.getNum(post.closest('section')));
 	postForm.addReference(num, sel);
 });

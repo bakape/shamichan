@@ -3,7 +3,7 @@
  */
 
 const main = require('./main'),
-	{_, common, dispatcher, etc, posts, state} = main;
+	{_, common, dispatcher, util, posts, state} = main;
 
 const online = document.query('#onlineCount');
 
@@ -176,7 +176,7 @@ function modelHandler(num, func) {
 }
 
 // Make the text spoilers toggle revealing on click
-etc.listener(document, 'click', 'del', function (event) {
+util.listener(document, 'click', 'del', function (event) {
 	if (event.spoilt)
 		return;
 	event.spoilt = true;

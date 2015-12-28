@@ -3,7 +3,7 @@
  */
 
 const main = require('../main'),
-	{$threads, _, Backbone, common, etc, oneeSama, options, state} = main;
+	{$threads, _, Backbone, common, util, oneeSama, options, state} = main;
 
 exports.Hidamari = Backbone.View.extend({
 	/*
@@ -28,7 +28,7 @@ exports.Hidamari = Backbone.View.extend({
 		if (!image)
 			return;
 		el.query('blockquote')
-			.before(etc.parseDOM(oneeSama.image(image, reveal)));
+			.before(util.parseDOM(oneeSama.image(image, reveal)));
 
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
@@ -114,7 +114,7 @@ exports.Hidamari = Backbone.View.extend({
 		const {el, model} = this;
 		return window.innerWidth
 			- parseInt(el.closest('section').getBoundingClientRect().left) * 2
-			- etc.outerWidth(model.get('op') ? el : el.query('.background'));
+			- util.outerWidth(model.get('op') ? el : el.query('.background'));
 	},
 	expandImage(img, width, height, noMargin) {
 		const isVideo = img.ext === '.webm';
@@ -139,7 +139,7 @@ exports.Hidamari = Backbone.View.extend({
 		});
 	},
 	renderAudio(img) {
-		this.el.query('figure').append(etc.parseDOM(common.parseHTML
+		this.el.query('figure').append(util.parseDOM(common.parseHTML
 			`<audio src="${oneeSama.imagePaths().src + img.src}"
 				width="300"
 				height="3em"
@@ -192,7 +192,7 @@ main.reply('massExpander:unset', () => massExpander.unset());
 $threads.on('click', 'img, video', function(e) {
 	if (options.get('inlinefit') == 'none' || e.which !== 1)
 		return;
-	let model = etc.getModel(e.target);
+	let model = util.getModel(e.target);
 	if (!model)
 		return;
 	e.preventDefault();
@@ -206,7 +206,7 @@ $threads.on('click', 'img, video', function(e) {
 // Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
 $threads.on('click', '.imageToggle', function(e) {
 	e.preventDefault();
-	let model = etc.getModel(e.target);
+	let model = util.getModel(e.target);
 	if (!model)
 		return;
 	main.follow(() =>

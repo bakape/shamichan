@@ -4,7 +4,7 @@
 
 const main = require('../main'),
 	PostCommon = require('./common'),
-	{$, _, Backbone, etc, oneeSama, state} = main;
+	{$, _, Backbone, util, oneeSama, state} = main;
 
 module.exports = PostCommon.extend({
 	tagName: 'section',
@@ -13,7 +13,7 @@ module.exports = PostCommon.extend({
 		this.setElement(oneeSama.section(attrs)).insertIntoDOM();
 
 		// Insert reply box into the new thread
-		const reply = etc.parseDOM(oneeSama.replyBox());
+		const reply = util.parseDOM(oneeSama.replyBox());
 		if (attrs.num in state.ownPosts || !!main.request('postForm'))
 			reply.style.display = 'none';
 		this.el.append(reply);

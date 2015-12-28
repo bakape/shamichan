@@ -4,7 +4,7 @@
 
 const main = require('../main'),
 	imager = require('./imager'),
-	{_, Backbone, common, etc, lang, oneeSama, options, state} = main;
+	{_, Backbone, common, util, lang, oneeSama, options, state} = main;
 
 module.exports = imager.Hidamari.extend({
 	className: 'glass',
@@ -53,7 +53,7 @@ module.exports = imager.Hidamari.extend({
 	renderModerationInfo(info) {
 		const el = this.getContainer();
 		el.query('.modLog').remove();
-		el.query('blockquote').before(etc.parseDOM(oneeSama.modInfo(info)));
+		el.query('blockquote').before(util.parseDOM(oneeSama.modInfo(info)));
 	},
 	getContainer() {
 		return this.el.query('.container');
@@ -61,7 +61,7 @@ module.exports = imager.Hidamari.extend({
 	renderBan() {
 		const el = this.getContainer();
 		el.query('.banMessage').remove();
-		el.query('blockquote').after(etc.parseDOM(oneeSama.banned()));
+		el.query('blockquote').after(util.parseDOM(oneeSama.banned()));
 	},
 	renderEditing(editing) {
 		const {el} = this;
