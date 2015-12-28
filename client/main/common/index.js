@@ -64,6 +64,6 @@ const DEF = {
 };
 
 // Export everything in one big object
-module.exports = exports = require('./util');
-require('underscore').extend(exports, DEF);
-exports.OneeSama = require('./oneesama');
+module.exports = exports = require('./util')
+require('underscore').extend(exports, DEF)
+exports.OneeSama = require('./oneesama')

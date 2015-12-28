@@ -28,34 +28,31 @@ const langs = fs.readdirSync('./lang'),
 const tasks = ['vendor', 'css', 'scripts'].concat(langs)
 ; ['main', 'mod'].forEach(name =>
 	tasks.push(name + '.es5', name + '.es6'))
-gulp.task('default', tasks, () =>
-	!watch && process.exit(0))
+gulp.task('default', tasks)
 
 // Main client bundles
 clientBundles('main',
+	// Make available outside the bundle with require() under a
+	// shorthand name
+	['./client/main/main', {expose: 'main'}],
 	browserifyOpts({
-		entries: './client/main',
+		entries: './client/main/main',
 		bundleExternal: false,
 		external: [
-			'jquery', 'js-cookie', 'underscore', 'backbone', 'backbone.radio',
-			'stack-blur', 'lang', 'core-js', 'scriptjs', 'dom4'
+			'js-cookie', 'underscore', 'backbone', 'backbone.radio',
+			'stack-blur', 'lang', 'core-js', 'scriptjs', 'dom4',
+			"backbone.nativeview", "main"
 		]
-	})
-		// Exclude these requires on the client
-		.exclude('../config')
-		.exclude('../lang/')
-		.exclude('../server/state')
-		// Make available outside the bundle with require() under a
-		// shorthand name
-		.require('./client/main', {expose: 'main'}))
+	}))
 
 // Libraries
 createTask('vendor', 'www/js/vendor', true, browserifyOpts({
 		require: [
-			'jquery', 'js-cookie', 'underscore', 'backbone', 'backbone.radio',
-			'scriptjs', 'sockjs-client', 'dom4'
+			'js-cookie', 'underscore', 'backbone', 'backbone.radio',
+			'scriptjs', 'sockjs-client', 'dom4', 'backbone.nativeview'
 		]
 	})
+		.exclude('jquery')
 		.require('./lib/stack-blur', {expose: 'stack-blur'})
 		.require('core-js/es6', {expose: 'core-js'}))
 
@@ -74,11 +71,10 @@ gulp.task('scripts', () =>
 		.pipe(gulp.dest('./www/js')))
 
 // Moderation bundles
-clientBundles('mod', browserifyOpts({
+clientBundles('mod', ['./client/mod', {expose: 'mod'}], browserifyOpts({
 		bundleExternal: false,
 		external: ['main']
-	})
-		.require('./client/mod', {expose: 'mod'}))
+	}))
 
 // Compile Less to CSS
 gulp.task('css', () =>
@@ -94,11 +90,13 @@ gulp.task('css', () =>
  * Merge custom browserify options with common ones
  */
 function browserifyOpts(opts) {
-    const base = {
-		debug: true, // Needed for sourcemaps
-		cache: {},
-	    packageCache: {},
-	    plugin: [watchify]
+    const base = {debug: true} // Needed for sourcemaps
+	if (watch) {
+		_.extend(base, {
+			cache: {},
+			packageCache: {},
+			plugin: [watchify]
+		})
 	}
 	return browserify(_.extend(base, opts))
 }
@@ -106,9 +104,16 @@ function browserifyOpts(opts) {
 /**
  * Build a client JS bundle
  */
-function clientBundles(name, b) {
-	createTask(name + '.es5', 'www/js/es5', true, compileES5(b))
-	createTask(name + '.es6', 'www/js/es6', false, compileES6(b))
+function clientBundles(name, requires, b) {
+	const versions = {
+		es5: compileES5(b),
+		es6: compileES6(b)
+	}
+	for (let key in versions) {
+	    versions[key] = versions[key].require(...requires)
+	}
+	createTask(name + '.es5', 'www/js/es5', true, versions.es5)
+	createTask(name + '.es6', 'www/js/es6', false, versions.es6)
 }
 
 /**
@@ -118,11 +123,11 @@ function createTask(name, dest, es5, b) {
     gulp.task(name, () => {
 		if (watch)
 			b.on("update", run.bind(null, true))
-		run()
+		return run()
 
 		function run(rebuild) {
 		    recompileLog(rebuild, true, name)
-		    bundle(name, dest, es5, rebuild, b)
+		    return bundle(name, dest, es5, rebuild, b)
 		}
 	})
 }
@@ -132,10 +137,14 @@ function createTask(name, dest, es5, b) {
  */
 function bundle(name, dest, es5, rebuild, b) {
 	return b.bundle()
+		// Browserify error logging
+		.on('error', function (err) {
+			console.error(err.stack)
+			this.emit('end')
+	    })
 		// Transform into vinyl stream for Browserify compatibility with gulp
 		.pipe(source(name.replace(/\.es\d/, '') + '.js'))
 		.pipe(buffer())
-		.on('error', gutil.log)
 		.on('end', () =>
 			recompileLog(rebuild, false, name))
 		.pipe(sourcemaps.init({loadMaps: true}))
@@ -161,7 +170,9 @@ function recompileLog(print, starting, name) {
 function compileES5(b) {
     return b.transform(babelify, {
 		presets: ['es2015'],
-		plugins: ['transform-strict-mode']
+		plugins: ['transform-strict-mode'],
+		compact: true,
+		comments: false
 	})
 }
 
@@ -173,12 +184,13 @@ function compileES6(b) {
     return b.transform(babelify, {
 		plugins: [
 			'babel-plugin-transform-es2015-classes',
-			'transform-es2015-block-scoping',
 			'transform-es2015-classes',
 			'transform-es2015-destructuring',
 			'transform-es2015-object-super',
 			'transform-strict-mode',
 			'transform-es2015-modules-commonjs'
-		]
+		],
+		compact: true,
+		comments: false
 	})
 }

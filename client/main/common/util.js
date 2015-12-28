@@ -2,13 +2,11 @@
  Various utility functions used all over the place
  */
 
-const _ = require('underscore'),
-	imports = require('./imports');
+import {_} from 'main'
 
-function is_pubsub(t) {
+export function is_pubsub(t) {
 	return t > 0 && t < 30;
 }
-exports.is_pubsub = is_pubsub;
 
 // Finite State Machine
 function FSM(start) {

@@ -3,8 +3,7 @@
  * server to render the actual options panel.
  */
 
-const imports = require('./imports'),
-	index = require('./index'),
+const index = require('./index'),
 	util = require('./util'),
 	{parseHTML} = util,
 	{config, hotConfig, main} = imports;

@@ -3,7 +3,6 @@
  */
 
 const _ = require('underscore'),
-	imports = require('./imports'),
 	index = require('./index'),
 	util = require('./util'),
 	{config} = imports,
