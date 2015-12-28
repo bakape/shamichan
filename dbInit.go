@@ -7,7 +7,6 @@ package main
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
-	"github.com/garyburd/redigo/redis"
 )
 
 // Shorthand
@@ -15,28 +14,12 @@ var db string
 
 const dbVersion = 2
 
-// newRedisClient creates a new redis client
-func newRedisClient() redis.Conn {
-	conf := config.Hard.Redis
-	conn, err := redis.Dial("tcp", conf.Addr, redis.DialDatabase(conf.Db))
-	throw(err)
-	return conn
-}
-
-// redis stores exports the main redis client
-var redisConn redis.Conn
-
 // rSession exports the RethinkDB connection session
 var rSession *r.Session
 
 // loadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
 func loadDB() {
-	loadRethinkDB()
-	loadRedis()
-}
-
-func loadRethinkDB() {
 	var err error
 	rSession, err = r.Connect(r.ConnectOpts{
 		Address: config.Hard.Rethinkdb.Addr,
@@ -52,20 +35,10 @@ func loadRethinkDB() {
 		rSession.Use(db)
 		var version int
 		rGet(r.Table("main").Get("info").Field("dbVersion")).One(&version)
-		verifyVersion(version, "RethinkDB")
-	}
-}
-
-func loadRedis() {
-	redisConn = newRedisClient()
-	version, err := redis.Int(redisConn.Do("get", "dbVersion"))
-	if err == redis.ErrNil {
-		// Fresh database. Write version number.
-		_, err1 := redisConn.Do("set", "dbVersion", dbVersion)
-		throw(err1)
-	} else {
-		throw(err)
-		verifyVersion(version, "Redis")
+		if version != dbVersion {
+			panic(fmt.Sprintf("Incompatible RethinkDB database version: %d."+
+				"See docs/migration.md", version))
+		}
 	}
 }
 
@@ -112,11 +85,4 @@ func initRethinkDB() {
 	}))
 	rExec(r.TableCreate("threads"))
 	rExec(r.Table("threads").IndexCreate("board"))
-}
-
-func verifyVersion(version int, dbms string) {
-	if version != dbVersion {
-		panic(fmt.Sprintf("Incompatible %v database version: %d."+
-			"See docs/migration.md", dbms, version))
-	}
 }
