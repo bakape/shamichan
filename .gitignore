@@ -12,13 +12,7 @@ www/css/*.css
 www/css/maps
 www/illya.mp4
 www/illya.webm
-www/js/es5
-www/js/es6
-www/js/vendor
-www/js/lang
-www/js/loader*
-www/js/login*
-www/js/setup*
+www/js
 www/src
 www/thumb
 www/mid

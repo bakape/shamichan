@@ -1,14 +1,15 @@
 (function() {
-	var options;
+	var options
 	try {
-		options = JSON.parse(localStorage.options);
+		options = JSON.parse(localStorage.options)
 	}
 	catch (e) {}
 
 	// Set the theme
-	var mediaURL = imports.config.MEDIA_URL;
-	var theme = (options && options.theme) ? options.theme
-		: imports.hotConfig.DEFAULT_CSS;
+	var mediaURL = config.hard.HTTP.media
+	var theme = (options && options.theme) ? options.theme : config.defaultCSS
 	document.getElementById('theme').href = mediaURL + 'css/' + theme
-		+ '.css?v=' + imports.cssHash;
-})();
+		+ '.css?v=' + clientHash
+
+	window.lang = (options && options.lang) || config.lang.default 
+})()
