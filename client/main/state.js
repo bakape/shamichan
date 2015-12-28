@@ -2,8 +2,8 @@
  * Central model keeping the state of the page
  */
 
-const main = require('./main'),
-	{_, Backbone} = main
+import {_, Backbone} from 'main'
+main.state = module.exports
 
 // Read page state by parsing a URL
 export function read(href) {

@@ -7,14 +7,14 @@ import {_, Backbone, state} from 'main'
 import opts from './opts'
 
 // Try to get options from local storage
-var options;
+let options
 try {
-	options = JSON.parse(localStorage.options);
+	options = JSON.parse(localStorage.options)
 }
 catch(e) {}
 if (!options)
 	options = {};
-options = module.exports = new Backbone.Model(options);
+export default options = new Backbone.Model(options)
 
 var OptionsCollection = Backbone.Collection.extend({
 	persist() {
@@ -99,6 +99,10 @@ var OptionModel = Backbone.Model.extend({
 // View of the options panel
 var OptionsView = Backbone.View.extend({
 	initialize() {
+		// Render the options panel
+		this.setElement(util.parseEl(require('./render')()))
+		document.body.append(this.el)
+
 		// Set the options in the panel to their appropriate values
 		optionsCollection.each(model => {
 			let $el = this.$el.find('#' + model.get('id'));
@@ -221,7 +225,5 @@ for (let spec of opts) {
 }
 
 main.defer(function() {
-	new OptionsView({
-		el: document.getElementById('options-panel')
-	});
+	new OptionsView()
 });
