@@ -3,7 +3,6 @@
  */
 
 import {_, config, state} from 'main'
-main.util = module.exports
 
 /**
  * Make spoiler tags toggleable on mobile

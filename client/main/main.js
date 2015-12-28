@@ -90,9 +90,8 @@ main.send = main.request.bind(main, 'send') // Shorthand
  */
 main.Memory = require('./memory')
 const lang = main.lang = require('lang'),
-	state = require('./state'),
-	util = require('./util'),
-	common = main.common = require('./common')
+	state = main.state = require('./state'),
+	util = main.util = require('./util')
 
 /*
 // Initialise main rendering object

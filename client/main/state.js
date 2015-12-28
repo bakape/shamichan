@@ -3,7 +3,6 @@
  */
 
 import {_, Backbone} from 'main'
-main.state = module.exports
 
 // Read page state by parsing a URL
 export function read(href) {
