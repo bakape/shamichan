@@ -8,11 +8,8 @@ config/config.json
 error.log
 node_modules/
 meguca
-www/css/*.css
-www/css/maps
 www/illya.mp4
 www/illya.webm
-www/js
 www/src
 www/thumb
 www/mid
