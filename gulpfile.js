@@ -3,10 +3,12 @@ Builds client JS and CSS
  */
 'use strict'
 
-const babelify = require('babelify'),
+const _ = require('underscore'),
+	babelify = require('babelify'),
 	browserify = require('browserify'),
 	buffer = require('vinyl-buffer'),
-	config = require('./config/config.json'),
+	chalk = require('chalk'),
+	fs = require('fs'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
 	gutil = require('gulp-util'),
@@ -14,22 +16,25 @@ const babelify = require('babelify'),
 	nano = require('gulp-cssnano'),
 	source = require('vinyl-source-stream'),
 	sourcemaps = require('gulp-sourcemaps'),
+	watchify = require('watchify'),
 	uglify = require('gulp-uglify')
 
-const debug = config.hard.debug
+const langs = fs.readdirSync('./lang'),
+	// Keep script alive and rebuild on file changes
+	// Triggered with the --watch flag
+	watch = gutil.env.watch
 
 // Shorthand for compiling everything with no task arguments
-const tasks = ['vendor', 'css', 'scripts'].concat(config.lang.enabled)
+const tasks = ['vendor', 'css', 'scripts'].concat(langs)
 ; ['main', 'mod'].forEach(name =>
 	tasks.push(name + '.es5', name + '.es6'))
-gulp.task('default', tasks)
+gulp.task('default', tasks, () =>
+	!watch && process.exit(0))
 
 // Main client bundles
 clientBundles('main',
-	browserify({
+	browserifyOpts({
 		entries: './client/main',
-		// Needed for sourcemaps
-		debug: true,
 		bundleExternal: false,
 		external: [
 			'jquery', 'js-cookie', 'underscore', 'backbone', 'backbone.radio',
@@ -45,33 +50,31 @@ clientBundles('main',
 		.require('./client/main', {expose: 'main'}))
 
 // Libraries
-createTask('vendor', 'www/js/vendor', true, browserify({
+createTask('vendor', 'www/js/vendor', true, browserifyOpts({
 		require: [
 			'jquery', 'js-cookie', 'underscore', 'backbone', 'backbone.radio',
 			'scriptjs', 'sockjs-client', 'dom4'
-		],
-		debug: true
+		]
 	})
 		.require('./lib/stack-blur', {expose: 'stack-blur'})
 		.require('core-js/es6', {expose: 'core-js'}))
 
 // Language bundles
-config.lang.enabled.forEach(lang =>
-	createTask(lang, 'www/js/lang', true, browserify({debug: true})
+langs.forEach(lang =>
+	createTask(lang, 'www/js/lang', true, browserifyOpts({})
 		.require(`./lang/${lang}/client`, {expose: 'lang'})))
 
 // Various little scripts
 gulp.task('scripts', () =>
 	gulp.src('./client/scripts/*.js')
-		.pipe(sourcemaps.init())
-		.pipe(gulpif(!debug, uglify()))
 		.on('error', gutil.log)
+		.pipe(sourcemaps.init())
+		.pipe(uglify())
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest('./www/js')))
 
 // Moderation bundles
-clientBundles('mod', browserify({
-		debug: true,
+clientBundles('mod', browserifyOpts({
 		bundleExternal: false,
 		external: ['main']
 	})
@@ -88,6 +91,19 @@ gulp.task('css', () =>
 		.pipe(gulp.dest('./www/css')))
 
 /**
+ * Merge custom browserify options with common ones
+ */
+function browserifyOpts(opts) {
+    const base = {
+		debug: true, // Needed for sourcemaps
+		cache: {},
+	    packageCache: {},
+	    plugin: [watchify]
+	}
+	return browserify(_.extend(base, opts))
+}
+
+/**
  * Build a client JS bundle
  */
 function clientBundles(name, b) {
@@ -99,26 +115,44 @@ function clientBundles(name, b) {
  * Create a gulp task for compiling JS
  */
 function createTask(name, dest, es5, b) {
-    gulp.task(name, () =>
-		bundle(name, dest, es5, b))
+    gulp.task(name, () => {
+		if (watch)
+			b.on("update", run.bind(null, true))
+		run()
+
+		function run(rebuild) {
+		    recompileLog(rebuild, true, name)
+		    bundle(name, dest, es5, rebuild, b)
+		}
+	})
 }
 
 /**
  * Create a single bundle, process and write it to disk
  */
-function bundle(name, dest, es5, b) {
+function bundle(name, dest, es5, rebuild, b) {
 	return b.bundle()
 		// Transform into vinyl stream for Browserify compatibility with gulp
 		.pipe(source(name.replace(/\.es\d/, '') + '.js'))
 		.pipe(buffer())
 		.on('error', gutil.log)
+		.on('end', () =>
+			recompileLog(rebuild, false, name))
 		.pipe(sourcemaps.init({loadMaps: true}))
 
 		// UglifyJS does not yest fully support ES6, so best not minify to be
 		// on the safe side
-		.pipe(gulpif(es5 && !debug, uglify()))
+		.pipe(gulpif(es5, uglify()))
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest(dest))
+}
+
+/**
+ * Prints a message on recompilation from watched file updates
+ */
+function recompileLog(print, starting, name) {
+	if (print)
+	    gutil.log((starting ? "Recompiling " : "Finished "), chalk.cyan(name))
 }
 
 /**
