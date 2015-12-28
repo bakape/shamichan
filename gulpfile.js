@@ -70,6 +70,11 @@ gulp.task('scripts', () =>
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest('./www/js')))
 
+// Recompile on source update
+if (watch) {
+	gulp.watch('./client/scripts/*.js', ['scripts'])
+}
+
 // Moderation bundles
 clientBundles('mod', ['./client/mod', {expose: 'mod'}], browserifyOpts({
 		bundleExternal: false,
@@ -85,6 +90,10 @@ gulp.task('css', () =>
 		.pipe(nano())
 		.pipe(sourcemaps.write('./maps/'))
 		.pipe(gulp.dest('./www/css')))
+
+if (watch) {
+	gulp.watch('./less/*.less', ['css'])
+}
 
 /**
  * Merge custom browserify options with common ones
