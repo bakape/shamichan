@@ -3,7 +3,7 @@
  * logic
  */
 
-import {_, Backbone, state} from 'main'
+import {_, Backbone, state, defer} from 'main'
 import opts from './opts'
 
 // Try to get options from local storage
@@ -12,89 +12,150 @@ try {
 	options = JSON.parse(localStorage.options)
 }
 catch(e) {}
-if (!options)
-	options = {};
+if (!options) {
+	options = {}
+}
 export default options = new Backbone.Model(options)
 
-var OptionsCollection = Backbone.Collection.extend({
-	persist() {
-		var opts = {};
-		this.forEach(function(model) {
-			const val = model.getValue();
-			if (val === model.get('default'))
-				return;
-			opts[model.get('id')] = val;
-		});
-		localStorage.options = JSON.stringify(opts);
-	}
-});
+const optionModels = {}
 
-var optionsCollection = new OptionsCollection();
-
-// Controller template for each individual option
-var OptionModel = Backbone.Model.extend({
-	initialize(opts) {
+/**
+ * Coontroler for each individual option
+ */
+class OptionModel {
+	/**
+	 * Create new option model from template model
+	 * @param {Object} model
+	 */
+    constructor(model) {
 		// Condition for loading option. Optional.
-		if (opts.load !== undefined && !opts.load)
-			return;
+		if (model.load !== undefined && !model.load) {
+			return
+		}
+		_.extend(this, model)
 
 		// No type = checkbox + default false
-		if (!opts.type)
-			this.set('type', 'checkbox');
-
-		const val = this.getValue();
-		this.setValue(val);
-		if (opts.exec !== undefined) {
-			this.listenTo(options, 'change:' + opts.id, this.execListen);
-			// Execute with current value
-			if (opts.execOnStart !== false)
-				opts.exec(val);
+		if (!this.type) {
+		    this.type = 'checkbox'
 		}
-		optionsCollection.add(this);
-	},
-	// Set the option, taking into acount board specifics
-	setValue(val) {
-		options.set(this.get('id'), val);
-	},
-	// Return default, if unset
-	getValue() {
-		const val = options.get(this.get('id'));
-		return val === undefined ? this.get('default') : val;
-	},
+
+		// Store option value in central stotage options Backbone model
+		const val = options.attributes[this.id] = this.get()
+		options.on('change:' + this.id, (options, val) =>
+			this.onchange(val))
+		if (this.execOnStart !== false) {
+		    this.execute(this.val)
+		}
+		optionModels[this.id] = this
+    }
+
+	/**
+	 * Read value from localStorage
+	 * @returns {string}
+	 */
+	read() {
+	    return localStorage.getItem(this.id)
+	}
+
+	/**
+	 * Retrieve option value from storage and parse result. If none, return
+	 * default.
+	 * @returns {string|bool|int}
+	 */
+	get() {
+		const stored = this.read()
+	    if (!stored) {
+	        return this.default
+	    } else {
+			if (stored === 'false') {
+		        return false
+		    }
+			if (stored === "true") {
+		        return true
+		    }
+			const num = parseInt(stored, 10)
+			if (num || num === 0) {
+			    return num
+			}
+			return this.default
+		}
+	}
+
+	/**
+	 * Handler to be executed on field change in central options storage model
+	 * @param {*} val
+	 */
+	onChange(val) {
+	    this.execute(val)
+		this.set(val)
+	}
+
+	/**
+	 * Execute handler function, if any
+	 * @param {*} val
+	 */
+	execute(val) {
+	    if (this.exec) {
+	        this.exec(val)
+	    }
+	}
+
+	/**
+	 * Write value to localStorage, if needed
+	 * @param {*} val
+	 */
+	set(val) {
+	    if (this.validate(val) && val !== this.default || this.read()) {
+	        localStorage.setItem(this.id,val)
+	    }
+	}
+
+	/**
+	 * Perform value validation, if any. Othervise return true.
+	 * @param {*} val
+	 * @returns {bool}
+	 */
 	validate(val) {
-		const valid = this.get('validation');
-		return valid ? valid(val) : true;
-	},
-	// Exec wrapper for listening events
-	execListen(model, val) {
-		this.get('exec')(val);
+	    if (this.validation) {
+	        return this.validation(val)
+	    }
+		return true
 	}
-});
+}
 
-// Highlight options button, if no options are set
+// Highlight options button by fading out and in, if no options are set
 (function() {
-	if (localStorage.getItem('options'))
-		return;
-	var $el = $('#options');
-	$el.addClass('noOptions');
-
-	function fadeout() {
-		$el.filter('.noOptions').fadeOut(fadein);
+	if (localStorage.getItem('options')) {
+		return
 	}
+	const el = document.query('#options')
 
-	function fadein() {
-		$el.fadeIn();
-		// Stop animation, if options pannel is opened
-		if ($el.filter('.noOptions').length)
-			fadeout();
+	function fadeOutAndIn(el) {
+		el.style.opacity = 1
+		let out = true,
+			clicked
+		tick()
+
+		function tick() {
+			// Stop
+			if (clicked) {
+			    el.style.opacity = 1
+				return
+			}
+
+	    	el.style.opacity = +el.style.opacity + (out ? -0.01 : 0.01)
+			const now = +el.style.opacity
+
+			// Reverse direction
+			if ((out && now <= 0) || (!out && now >= 1)) {
+			    out = !out
+			}
+			requestAnimationFrame(tick)
+		}
+
+		el.addEventListener("click", () => clicked = true)
 	}
-
-	fadeout();
-
-	$el.click(function() {
-		$el.removeClass('noOptions');
-	});
-})();
+})()
 
 // View of the options panel
 var OptionsView = Backbone.View.extend({
@@ -221,9 +282,8 @@ var OptionsView = Backbone.View.extend({
 
 // Create and option model for each object in the array
 for (let spec of opts) {
-	new OptionModel(spec);
+	new OptionModel(spec)
 }
 
-main.defer(function() {
-	new OptionsView()
-});
+let optionsPanel
+defer(() => optionsPanel = new OptionsView())

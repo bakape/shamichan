@@ -24,14 +24,15 @@ require('dom4')
 require('backbone.nativeview')
 Backbone.View = Backbone.NativeView
 
-// Central aplication object and message bus
-let main = module.exports = radio.channel('main')
-
-_.extend(main, {
+// Central aplication object
+const main = module.exports = {
 	// Bind dependancies to main object for pretier destructuring requires
 	_, Backbone, Cookie, FSM,
 	$script: require('scriptjs'),
 	SockJS: require('sockjs-client'),
+
+	// Message and event bus
+	events: radio.channel('main'),
 
 	/*
 	 Ofload expensive and not that neccessary initialisation logic till
@@ -51,7 +52,7 @@ _.extend(main, {
 	// Websocket call handler map. Store them here, to avoid requiring
 	// modules in the wrong order.
 	dispatcher: {}
-})
+}
 
 // Import configuration variables from the template HTML
 _.extend(main, {config, configHash, clientHash, isMobile})
@@ -82,7 +83,7 @@ if (main.config.hard.debug) {
 	radio.tuneIn('main') // Log all channel traffic
 }
 
-main.send = main.request.bind(main, 'send') // Shorthand
+main.send = main.events.request.bind(main.events, 'send') // Shorthand
 
 /*
  Core modules. The other will be more or less decoupled, but these are the

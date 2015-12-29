@@ -26,7 +26,7 @@ import {Cookie, util, state, config, isMobile, lang} from 'main'
 
 const notMobile = !isMobile
 
-export default opts = [
+const opts = [
 	// LANGUAGE SELECTION
 	{
 		id: 'lang',
@@ -205,7 +205,7 @@ opts.push(
 		type: 'number',
 		tab: 0,
 		validation: util.resonableLastN,
-		default: config.posts.lastN
+		default: 100
 	},
 	// KEEP THREAD LENGTH WITHIN LASTN
 	/*
@@ -253,3 +253,5 @@ function toggleHeadStyle(id, css) {
 		document.getElementById(id).disabled = !toggle;
 	}
 }
+
+export default opts

@@ -72,9 +72,9 @@ var config struct {
 		Hats               bool
 	}
 	Posts struct {
-		Salt, ExcludeRegex                              string
-		ThreadCreationCooldown, LastN, MaxSubjectLength int
-		ReadOnly, SageEnabled, ForcedAnon               bool
+		Salt, ExcludeRegex                       string
+		ThreadCreationCooldown, MaxSubjectLength int
+		ReadOnly, SageEnabled, ForcedAnon        bool
 	}
 	Recaptcha struct {
 		Public, Private string

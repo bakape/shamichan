@@ -188,7 +188,6 @@
         "salt": "LALALALALALALALALALALALALALALALALALALALA",
         "readOnly": false,
         "threadCreationCooldown": 60,
-        "lastN": 100,
         "maxSubjectLength": 50,
         "excludeRegex": "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
         "sageEnabled": true,

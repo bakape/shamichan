@@ -1,6 +1,7 @@
-import {_, isMobile, options} from 'main'
+import {_, isMobile, lang as ln} from 'main'
+import {opts as options} from "./opts"
 
-const lang = main.lang.opts
+const lang = ln.opts
 
 /**
  * Render the options panel

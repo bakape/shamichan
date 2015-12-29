@@ -2,7 +2,7 @@
  * Central model keeping the state of the page
  */
 
-import {_, Backbone} from 'main'
+import {_, Backbone, Memory, events} from 'main'
 
 // Read page state by parsing a URL
 export function read(href) {
@@ -33,12 +33,12 @@ export let syncs = {}
 export const ownPosts = {}
 
 // remember which posts are mine for two days
-export const mine = new main.Memory('mine', 2, true)
+export const mine = new Memory('mine', 2, true)
 
 // All posts currently displayed
 export const posts = new Backbone.Collection()
 
-main.on('state:clear', () => {
+events.on('state:clear', () => {
 	/*
 	 * Emptying the whole element should be faster than removing each post
 	 * individually through models and listeners
