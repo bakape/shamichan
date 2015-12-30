@@ -1,5 +1,5 @@
 /*
- * Loads the depandancies in order and aggregates exports from various modules
+ * Loads the dependancies in order and aggregates exports from various modules
  */
 
 // NOTE: The entire bundle uses strict mode through the Babel transpiler
@@ -66,7 +66,7 @@ if (localStorage.cookieVersion != cookieVersion) {
 		// Clear legacy cookies that were set for each board separatly.
 		// Otherwise, they would override the new ones.
 		const paths = main.config.boards.enabled.slice()
-		paths.push('')
+		paths.push('', '/')
 		for (let path of paths) {
 			Cookie.remove(cookie, {path})
 		}
@@ -123,9 +123,8 @@ main.scroll = require('./scroll')
 main.follow = main.scroll.followDOM // Shorthand
 state.page.set('tabID', util.randomID(32))
 
-/*
 // Load language-specific CSS
-document.head.appendChild(util.parseDOM(common.parseHTML
+document.head.appendChild(util.parseEl(util.parseHTML
 	`<style>
 		.locked:after {
 			content: "${lang.thread_locked}";
@@ -133,8 +132,7 @@ document.head.appendChild(util.parseDOM(common.parseHTML
 		.locked > header nav:after {
 			content: " (${lang.locked})";
 		}
-	</style>`));
-*/
+	</style>`))
 
 _.extend(main, {
 	// Cached DOM elements

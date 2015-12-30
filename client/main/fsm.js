@@ -1,4 +1,4 @@
-3/**
+/**
  * Finite State Machine
  */
 export default class FSM {
