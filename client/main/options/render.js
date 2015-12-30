@@ -1,5 +1,5 @@
-import {_, isMobile, lang as ln} from 'main'
-import {opts as options} from "./opts"
+import {_, isMobile, lang as ln, parseEl, parseHTML} from 'main'
+import {default as options} from "./opts"
 
 const lang = ln.opts
 
@@ -36,18 +36,18 @@ export default function render() {
 
     html += '</ul><ul class="option_tab_cont">'
     for (let i = 0; i < opts.length; i++) {
-        html += renderTab(opt, i)
+        html += renderTab(opts[i], i)
     }
     html += '</ul></div>'
 
-    return html
+    return parseEl(html)
 }
 
 /**
  * Render tab contents
  */
-function renderTab(opt, i) {
-    if (!opts[i].length) {
+function renderTab(opts, i) {
+    if (!opts.length) {
         return ''
     }
     let html = ""
@@ -60,7 +60,7 @@ function renderTab(opt, i) {
     html += '">'
 
     // Render the actual options
-    for (let opt of opts[i]) {
+    for (let opt of opts) {
         html += renderOption(opt)
     }
 
@@ -97,12 +97,15 @@ function renderOption(opt) {
         html += '<select'
     }
 
-	const [label,title] = lang[opt.id]
+	const [label,title] = lang.labels[opt.id]
 	html += ` id="${opt.id}" title="${title}">`
 
 	if (isList) {
 		for (let item of opt.type) {
-			html += `<option value="${item}">${lang[item] || item}</option>`
+			html += parseHTML
+                `<option value="${item}">
+                    ${lang.modes[item] || item}
+                </option>`
 		}
 		html += '</select>'
 	}
@@ -118,7 +121,7 @@ function renderExtras() {
 	let html = '<br>'
 	const links = ['export', 'import', 'hidden']
     for (let id of links) {
-        const [label, title] = lang[id]
+        const [label, title] = lang.labels[id]
         html += `<a id="${id}" title="${ln[1]}">${ln[0]}</a> `
     }
 
@@ -128,7 +131,7 @@ function renderExtras() {
         id: 'importSettings',
         name: "Import Settings"
     }
-	html += common.parseHTML`<input ${attrs}>`
+	html += parseHTML`<input ${attrs}>`
 
     return html
 }

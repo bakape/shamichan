@@ -3,8 +3,9 @@
  * logic
  */
 
-import {_, Backbone, state, defer} from 'main'
+import {_, Backbone, state, defer, events, util} from 'main'
 import opts from './opts'
+import render from './render'
 
 // Try to get options from local storage
 let options
@@ -105,7 +106,7 @@ class OptionModel {
 	 * @param {*} val
 	 */
 	set(val) {
-	    if (this.validate(val) && val !== this.default || this.read()) {
+	    if (val !== this.default || this.read()) {
 	        localStorage.setItem(this.id,val)
 	    }
 	}
@@ -129,63 +130,41 @@ class OptionModel {
 		return
 	}
 	const el = document.query('#options')
+	el.style.opacity = 1
+	let out = true,
+		clicked
+	el.addEventListener("click", () => clicked = true)
+	tick()
 
-	function fadeOutAndIn(el) {
-		el.style.opacity = 1
-		let out = true,
-			clicked
-		tick()
-
-		function tick() {
-			// Stop
-			if (clicked) {
-			    el.style.opacity = 1
-				return
-			}
-
-	    	el.style.opacity = +el.style.opacity + (out ? -0.01 : 0.01)
-			const now = +el.style.opacity
-
-			// Reverse direction
-			if ((out && now <= 0) || (!out && now >= 1)) {
-			    out = !out
-			}
-			requestAnimationFrame(tick)
+	function tick() {
+		// Stop
+		if (clicked) {
+		    el.style.opacity = 1
+			return
 		}
 
-		el.addEventListener("click", () => clicked = true)
+    	el.style.opacity = +el.style.opacity + (out ? -0.02 : 0.02)
+		const now = +el.style.opacity
+
+		// Reverse direction
+		if ((out && now <= 0) || (!out && now >= 1)) {
+		    out = !out
+		}
+		requestAnimationFrame(tick)
 	}
 })()
 
 // View of the options panel
-var OptionsView = Backbone.View.extend({
+const OptionsView = Backbone.View.extend({
 	initialize() {
 		// Render the options panel
-		this.setElement(util.parseEl(require('./render')()))
+		this.setElement(render())
 		document.body.append(this.el)
-
-		// Set the options in the panel to their appropriate values
-		optionsCollection.each(model => {
-			let $el = this.$el.find('#' + model.get('id'));
-			/*
-			 * No corresponding element in panel. Can be caused by config
-			 * mismatches.
-			 */
-			if (!$el.length)
-				return;
-			const type = model.get('type'),
-				val = model.getValue();
-			if (type == 'checkbox')
-				$el.prop('checked', val);
-			else if (type == 'number' || type instanceof Array)
-				$el.val(val);
-			else if (type == 'shortcut')
-				$el.val(String.fromCharCode(val).toUpperCase());
-			// 'image' type simply falls through, as those don't need to be set
-		});
-		this.$hidden = this.$el.find('#hidden');
-		main.reply('hide:render', this.renderHidden, this);
+		this.assignValues()
+		this.hidden = this.el.query('#hidden')
+		events.reply('hide:render', this.renderHidden, this)
 	},
+
 	events: {
 		'click .option_tab_sel>li>a': 'switchTab',
 		'change': 'applyChange',
@@ -193,90 +172,143 @@ var OptionsView = Backbone.View.extend({
 		'click #import': 'import',
 		'click #hidden': 'clearHidden'
 	},
-	switchTab(event) {
-		event.preventDefault();
-		var $a = $(event.target);
-		// Unhighight all tabs
-		this.$el.children('.option_tab_sel').find('a').removeClass('tab_sel');
-		// Hightlight the new one
-		$a.addClass('tab_sel');
-		// Switch tabs
-		var $li = this.$el.children('.option_tab_cont').children('li');
-		$li.removeClass('tab_sel');
-		$li.filter('.' + $a.data('content')).addClass('tab_sel');
-	},
-	// Propagate options panel changes to the models and localStorage
-	applyChange(event) {
-		var $target = $(event.target),
-			model = optionsCollection.get($target.attr('id')),
-			val;
-		if (!model)
-			return;
-		const type = model.get('type');
-		if (type == 'checkbox')
-			val = $target.prop('checked');
-		else if (type == 'number')
-			val = parseInt($target.val());
-		// Not recorded; extracted directly by the background handler
-		else if (type == 'image')
-			return main.request('background:store', event.target);
-		else if (type == 'shortcut')
-			val = $target.val().toUpperCase().charCodeAt(0);
-		else
-			val = $target.val();
 
-		if (!model.validate(val))
-			return $target.val('');
-		model.setValue(val);
-		optionsCollection.persist();
+	/**
+	 * Assign loaded option settings to the respective elements in the options
+	 * panel
+	 */
+	assignValues() {
+		for (let id in optionModels) {
+			const model = optionModels[id],
+				el = this.el.query('#' + id)
+			const {type} = model,
+				val = model.get()
+			if (type === 'checkbox') {
+			    el.checked = val
+			} else if (type === 'number' || type instanceof Array) {
+			    el.value = val
+			} else if (type === 'shortcut') {
+			    el.value = String.fromCharCode(val).toUpperCase()
+			}
+
+			// 'image' type simply falls through, as those don't need to be set
+		}
 	},
-	// Dump options to file
+
+	/**
+	 * Switch to a tab, when clicking the tab butt
+	 * @param {Event} event
+	 */
+	switchTab(event) {
+		event.preventDefault()
+		const el = event.target
+
+		// Deselect previous tab
+		for (let child of el.children) {
+		    child.query('.tab_sel').classList.remove('tab_sel')
+		}
+
+		// Select the new one
+		el.classList.add('tab_sel')
+		_.filter(this.el.lastChild.children, li =>
+			li.classList.has(el.getAttribute('data-content'))
+		)
+			.classList.add('tab_sel')
+	},
+
+	/**
+	 * Propagate options panel changes through
+	 * options -> optionModels -> localStorage
+	 * @param {Event} event
+	 */
+	applyChange(event) {
+		const el = event.target,
+			model = optionModels[el.getAttribute('id')]
+		let val
+		switch (model.type) {
+			case 'checkbox':
+				val = el.checked
+				break
+			case 'number':
+				val = parseInt(el.value)
+				break
+			case 'image':
+				// Not recorded. Extracted directly by the background handler.
+				return events.request('background:store', event.target)
+			case 'shortcut':
+				val = el.value.toUpperCase().charCodeAt(0)
+				break
+			default:
+				val = el.value
+		}
+
+		if (!model.validate(val)) {
+			el.value = ''
+		} else {
+			options.set(id, val)
+		}
+	},
+
+	/**
+	 * Dump options to JSON file and upload to user
+	 */
 	export() {
-		var a = document.getElementById('export')
+		const a = document.getElementById('export')
 		a.setAttribute('href', window.URL
 			.createObjectURL(new Blob([JSON.stringify(localStorage)], {
 				type: 'octet/stream'
 			}))
-		);
-		a.setAttribute('download', 'meguca-config.json');
+		)
+		a.setAttribute('download', 'meguca-config.json')
 	},
-	// Import options from file
+
+	/**
+	 * Import options from uploaded JSON file
+	 * @param {Event} event
+	 */
 	import(event) {
 		// Proxy to hidden file input
-		event.preventDefault();
-		var $input = this.$el.find('#importSettings');
-		$input.click();
-		$input.one('change', function() {
-			var reader = new FileReader();
-			reader.readAsText($input[0].files[0]);
-			reader.onload = function(e) {
-				var json;
+		event.preventDefault()
+		const el = document.query('#importSettings')
+		el.click()
+		util.once(el, 'change', () => {
+			var reader = new FileReader()
+			reader.readAsText(input.files[0])
+			reader.onload = event => {
 				// In case of curruption
+				let json
 				try {
-					json = JSON.parse(e.target.result);
+					json = JSON.parse(event.target.result)
 				}
-				catch(e) {
-					alert('Import failed. File corrupt');
+				catch(err) {
+					alert('Import failed. File corrupt')
+					return
 				}
-				if (!json)
-					return;
-				localStorage.clear();
+				localStorage.clear()
 				for (let key in json) {
-					localStorage[key] = json[key];
+					localStorage[key] = json[key]
 				}
-				alert('Import successfull. The page will now reload.');
-				location.reload(true);
+				alert('Import successfull. The page will now reload.')
+				location.reload()
 			};
-		});
+		})
 	},
-	// Hiden posts counter and reset link
+
+	/**
+	 * Render Hiden posts counter
+	 * @param {int} count
+	 */
 	renderHidden(count) {
-		let $el = this.$hidden;
-		$el.text($el.text().replace(/\d+$/, count));
+		const el = this.hidden
+		el.textContent = el.textContent.replace(/\d+$/, count)
 	},
+
+	/**
+	 * Clear displayed hidden post counter
+	 */
 	clearHidden() {
-		main.request('hide:clear');
-		this.renderHidden(0);
+		main.request('hide:clear')
+		this.renderHidden(0)
 	}
 });
 
@@ -285,5 +317,6 @@ for (let spec of opts) {
 	new OptionModel(spec)
 }
 
+// Expensive comutation and not emediatly needed. Put off till later.
 let optionsPanel
 defer(() => optionsPanel = new OptionsView())

@@ -109,11 +109,15 @@ var lang = {
 			],
 			inlinefit: [
 				"Expansion",
-				"Expand images inside the parent post and resize according to setting"
+				"Expand images inside the parent post and resize according to "
+					+ "setting"
 			],
 			thumbs: [
 				"Thumbnails",
-				"Set thumbnail style:\nSmall: 125x125, small file size;\nSharp: 125x125, more detailed;\nHide: hide all images;"
+				"Set thumbnail style:"
+					+ "\nSmall: 125x125, small file size;"
+					+ "\nSharp: 125x125, more detailed;"
+					+ "\nHide: hide all images;"
 			],
 			imageHover: [
 				"Image Hover Expansion",
@@ -121,7 +125,8 @@ var lang = {
 			],
 			webmHover: [
 				"WebM Hover Expansion",
-				"Display WebM previews on hover. Requires Image Hover Expansion enabled."
+				"Display WebM previews on hover"
+					+ "Requires Image Hover Expansion enabled."
 			],
 			autogif: [
 				"Animated GIF Thumbnails",
@@ -133,11 +138,12 @@ var lang = {
 			],
 			linkify: [
 				"Linkify text URLs",
-				"Convert in-post text URLs to clickable links. WARNING: Potential security hazard (XSS). Requires page refresh."
+				"Convert in-post text URLs to clickable links"
 			],
 			notification: [
 				"Desktop Notifications",
-				"Get desktop notifications when quoted or a syncwatch is about to start"
+				"Get desktop notifications when quoted or a syncwatch is about"
+					+ " to start"
 			],
 			anonymise: [
 				"Anonymise",
@@ -149,7 +155,8 @@ var lang = {
 			],
 			nowPlaying: [
 				"Now Playing Banner",
-				"Currently playing song on r/a/dio and other stream information in the top banner."
+				"Currently playing song on r/a/dio and other stream information"
+					+ "in the top banner."
 			],
 			illyaBGToggle: [
 				"Illya Dance",
@@ -181,11 +188,14 @@ var lang = {
 			],
 			lastn: [
 				"[Last #]",
-				"Number of posts to display with the \"Last N\" thread expansion link"
+				"Number of posts to display with the \"Last N\" thread "
+					+ "expansion link"
 			],
 			postUnloading: [
 				"Dynamic Post Unloading",
-				"Improves thread responsiveness by unloading posts from the top of the thread, so that post count stays within the Last # value. Only applies to Last # enabled threads"
+				"Improves thread responsiveness by unloading posts from the top"
+					+ "of the thread, so that post count stays within the "
+					+ "Last # value. Only applies to Last # enabled threads"
 			],
 			alwaysLock: [
 				"Always Lock to Bottom",
@@ -209,7 +219,8 @@ var lang = {
 			],
 			expandAll: [
 				"Expand All Images",
-				"Expand all images. Webm, PDF and MP3 and your own post aren't affected. New post images are also expanded."
+				"Expand all images. Webm, PDF and MP3 and your own post aren't"
+					+ "affected. New post images are also expanded."
 			],
 			workMode: [
 				"Work mode",
@@ -218,7 +229,12 @@ var lang = {
 			workModeTOG: [
 				"Work mode",
 				"Hides images, defaults theme and disables user background"
-			]
+			],
+			google: ["Google", "Google image search"],
+			iqdb: ["IQDB", 'iqdb.org image search'],
+			saucenao: ["SauceNao", "saucenao.com imagesearch"],
+			desustorage: ['DesuStorage', 'desustorage.org imagesearch'],
+			exhentai: ["Exhentai", "exhentai.org image search"]
 		}
 	},
 
@@ -309,4 +325,4 @@ var lang = {
 	}
 };
 
-module.exports = lang;
+module.exports = lang

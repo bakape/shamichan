@@ -192,10 +192,7 @@ function compileES5(b) {
 function compileES6(b) {
     return b.transform(babelify, {
 		plugins: [
-			'babel-plugin-transform-es2015-classes',
-			'transform-es2015-classes',
 			'transform-es2015-destructuring',
-			'transform-es2015-object-super',
 			'transform-strict-mode',
 			'transform-es2015-modules-commonjs'
 		],

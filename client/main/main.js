@@ -83,8 +83,6 @@ if (main.config.hard.debug) {
 	radio.tuneIn('main') // Log all channel traffic
 }
 
-main.send = main.events.request.bind(main.events, 'send') // Shorthand
-
 /*
  Core modules. The other will be more or less decoupled, but these are the
  monolithic foundation.
@@ -93,6 +91,12 @@ main.Memory = require('./memory')
 const lang = main.lang = require('lang'),
 	state = main.state = require('./state'),
 	util = main.util = require('./util')
+
+// Shorthands
+main.send = main.events.request.bind(main.events, 'send')
+for (let fn of ['parseHTML', 'parseEl', 'parseEls']) {
+    main[fn] = util[fn]
+}
 
 /*
 // Initialise main rendering object
@@ -113,7 +117,10 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 	}
 });
 */
+
 main.options = require('./options')
+
+/*
 main.scroll = require('./scroll')
 state.page.set('tabID', common.randomID(32))
 
@@ -158,6 +165,7 @@ _.extend(main, {
 	history: require('./history'),
 	hide: require('./hide')
 })
+*/
 
 main.execDefered()
-main.request('loading:hide')
+main.events.request('loading:hide')

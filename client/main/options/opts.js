@@ -118,22 +118,7 @@ const opts = [
 				main.request('banner:radio:clear');
 			}
 		}
-	}
-];
-
-// IMAGE SEARCH LINK TOGGLE
-for (let engine of ['google', 'iqdb', 'saucenao', 'desustorage', 'exhentai']) {
-	opts.push({
-		id: engine,
-		// Use a custom internatiolisation function
-		lang: 'imageSearch',
-		tab: 2,
-		default: engine === 'google',
-		exec: toggleHeadStyle(engine + 'Toggle', `.${engine}{display:initial;}`)
-	})
-}
-
-opts.push(
+	},
 	// ILLYA DANCE
 	{
 		id: 'illyaBGToggle',
@@ -174,7 +159,7 @@ opts.push(
 		default: config.defaultCSS,
 		exec(theme) {
 			if (!theme) {
-			    return
+				return
 			}
 			document.getElementById('theme')
 				.setAttribute(
@@ -219,7 +204,19 @@ opts.push(
 		id: 'alwaysLock',
 		tab: 0
 	}
-);
+]
+
+// IMAGE SEARCH LINK TOGGLE
+for (let engine of ['google', 'iqdb', 'saucenao', 'desustorage', 'exhentai']) {
+	opts.push({
+		id: engine,
+		// Use a custom internatiolisation function
+		lang: 'imageSearch',
+		tab: 2,
+		default: engine === 'google',
+		exec: toggleHeadStyle(engine + 'Toggle', `.${engine}{display:initial;}`)
+	})
+}
 
 // SHORTCUT KEYS
 const shorts = [
