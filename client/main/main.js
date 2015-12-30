@@ -119,11 +119,11 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 */
 
 main.options = require('./options')
+main.scroll = require('./scroll')
+main.follow = main.scroll.followDOM // Shorthand
+state.page.set('tabID', util.randomID(32))
 
 /*
-main.scroll = require('./scroll')
-state.page.set('tabID', common.randomID(32))
-
 // Load language-specific CSS
 document.head.appendChild(util.parseDOM(common.parseHTML
 	`<style>
@@ -134,17 +134,20 @@ document.head.appendChild(util.parseDOM(common.parseHTML
 			content: " (${lang.locked})";
 		}
 	</style>`));
+*/
 
 _.extend(main, {
 	// Cached DOM elements
 	$threads: document.query('threads'),
-	$name: document.query('input[name=name]'),
-	$email: document.query('input[name=email]'),
+	$name: document.query('#name'),
+	$email: document.query('#email'),
+	$banner: document.query('#banner'),
 
 	connSM: new FSM('load'),
 	postSM: new FSM('none')
-});
+})
 
+/*
 // 2nd tier dependacy modules. These are needed before the websocket
 // connection is opened, because they populate the dispatcher handler object.
 _.extend(main, {
