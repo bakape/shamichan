@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-type updateMap map[string]r.Term
+type termMap map[string]r.Term
 
 // cacheAdd adds a post to the parenthood cache and increments board history
 // counters
@@ -24,7 +24,7 @@ func cacheAdd(id int, op int, board string) {
 // cacheRemove removes a post from the parenthood cache
 func cacheRemove(id int) {
 	num := strconv.Itoa(id)
-	rExec(r.Table("main").Get("cache").Replace(r.Row.Without(updateMap{
+	rExec(r.Table("main").Get("cache").Replace(r.Row.Without(termMap{
 		"OPs":    removeField(num),
 		"boards": removeField(num),
 	})))

@@ -52,6 +52,27 @@ func getPost(id, op int) r.Term {
 	return getThread(op).Field("posts").Field(strconv.Itoa(id))
 }
 
+// Retrieve the current post counter number
+func postCounter() int {
+	return getCounter(r.Table("main").Get("info").Field("postCtr"))
+}
+
+// Retrieve the history or "progress" counter of a board
+func boardCounter(board string) int {
+    return getCounter(r.Table("main").Get("info").Field("postCtr"))
+}
+
+// Retrieve the history or "progress" counter of a thread
+func threadCounter(id int) int {
+    return getCounter(getThread(id).Field("histCtr"))
+}
+
+// Helper function for retrieving an integer from the database
+func getCounter(query r.Term) (counter int) {
+    rGet(query).One(&counter)
+	return counter
+}
+
 // Determine access rights of an IP
 func lookUpIdent(ip string) Ident {
 	ident := Ident{IP: ip}
@@ -67,6 +88,9 @@ func canAccessBoard(board string, ident Ident) bool {
 		return false
 	}
 	_, ok := config.Boards.Boards[board]
+	if !ok && board == "all" {
+		ok = true
+	}
 	return !ident.Banned && ok
 }
 
@@ -76,7 +100,12 @@ func canAccessThread(id int, board string, ident Ident) bool {
 		return false
 	}
 	var deleted bool
-	rGet(getThread(id).Field("deleted").Default(false)).One(&deleted)
+	rGet(getThread(id).
+		Field("posts").
+		Field(id).
+		Default(false),
+	).
+		One(&deleted)
 	if deleted && !checkAuth("seeModeration", ident) {
 		return false
 	}

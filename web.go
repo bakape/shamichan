@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	r "github.com/dancannon/gorethink"
 	"github.com/gorilla/context"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -28,14 +27,18 @@ func startServer() {
 	const board = `/{board:\w+}`
 	const thread = `/{thread:\d+}`
 
+	// HTML
+	router.HandleFunc("/all/", wrapHandler(false, allBoards))
 	index := router.PathPrefix(board).Subrouter()
 	index.HandleFunc("/", wrapHandler(false, boardPage))
 	index.HandleFunc(thread, wrapHandler(false, threadPage))
 
+	// JSON API
 	api := router.PathPrefix("/api").Subrouter()
 	api.NotFoundHandler = http.NotFoundHandler() // Default 404 handler for JSON
 	api.HandleFunc("/config", serveConfigs)
 	api.HandleFunc(`/post/{post:\d+}`, servePost)
+	api.HandleFunc("/all/", wrapHandler(true, allBoards))
 	posts := api.PathPrefix(board).Subrouter()
 	posts.HandleFunc("/", wrapHandler(true, boardPage))
 	posts.HandleFunc(thread, wrapHandler(true, threadPage))
@@ -104,14 +107,8 @@ func boardPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 		return canAccessBoard(board, in.ident)
 	}
 
-	in.getCounter = func() (counter int) {
-		rGet(r.Table("main").
-			Get("histCounts").
-			Field("board").
-			Default(0),
-		).
-			One(counter)
-		return
+	in.getCounter = func() int {
+		return boardCounter(board)
 	}
 
 	in.getPostData = func() []byte {
@@ -134,9 +131,8 @@ func threadPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 		return validateOP(id, board) && canAccessThread(id, board, in.ident)
 	}
 
-	in.getCounter = func() (counter int) {
-		rGet(getThread(id).Field("histCtr")).One(&counter)
-		return
+	in.getCounter = func() int {
+		return threadCounter(id)
 	}
 
 	in.getPostData = func() []byte {
@@ -144,6 +140,23 @@ func threadPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 	}
 
 	in.process(board)
+}
+
+// Handles the "all" meta-board, that contains threads from all boards
+func allBoards(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
+	in := indexPage{res: res, req: req, json: jsonOnly}
+
+	in.validate = func() bool {
+		return !in.ident.Banned
+	}
+
+	in.getCounter = postCounter
+
+	in.getPostData = func() []byte {
+		return marshalJSON(NewReader("all", in.ident).GetAllBoard())
+	}
+
+	in.process("all")
 }
 
 // Stores common variables and methods for both board and thread pages

@@ -66,7 +66,7 @@ func initRethinkDB() {
 			DBVersion int `gorethink:"dbVersion"`
 
 			// Is incremented on each new post. Ensures post number uniqueness
-			PostCounter int `gorethink:"postCounter"`
+			PostCtr int `gorethink:"postCtr"`
 		}{
 			Document{"info"}, dbVersion, 0,
 		},

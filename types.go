@@ -6,8 +6,8 @@ package main
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {
-	Ctr     int      `json:"ctr",gorethink:"ctr"`
-	Threads []Thread `json:"threads",gorethink:"threads"`
+	Ctr     int       `json:"ctr",gorethink:"ctr"`
+	Threads []*Thread `json:"threads",gorethink:"threads"`
 }
 
 // Thread stores the metadata and posts of a single thread

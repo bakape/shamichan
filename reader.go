@@ -32,7 +32,7 @@ func (rd *Reader) GetThread(id, lastN int) (thread Thread) {
 
 	// Only show the last N post
 	if lastN != 0 {
-		res = res.Merge(updateMap{
+		res = res.Merge(termMap{
 			"posts": res.Field("posts").
 				CoerceTo("array").
 				Slice(-lastN + 1).
@@ -59,7 +59,7 @@ func (rd *Reader) GetThread(id, lastN int) (thread Thread) {
 
 // threadQuery constructs the common part of a all thread queries
 func (rd *Reader) threadQuery(thread r.Term) r.Term {
-	return thread.Merge(updateMap{
+	return thread.Merge(termMap{
 		// Ensure we always get the OP
 		"op": thread.Field("posts").
 			Field(thread.Field("id").CoerceTo("string")),
@@ -107,15 +107,34 @@ func (rd *Reader) GetBoard() (board Board) {
 		Without("posts"),
 	).
 		All(&board.Threads)
-	rGet(r.Table("main").
-		Get("histCounts").
-		Field(rd.board).
-		Default(0),
-	).
-		One(&board.Ctr)
+	board.Ctr = boardCounter(rd.board)
+	board.Threads = rd.filterThreads(board.Threads)
+	return
+}
 
-	filtered := []Thread{}
-	for _, thread := range board.Threads {
+// GetAllBoard retrieves all threads the client has access to for the "/all/"
+// meta-board
+func (rd *Reader) GetAllBoard() (board Board) {
+	query := r.Table("threads")
+
+	// Exclude staff board, if no access
+	if !canAccessBoard(config.Boards.Staff, rd.ident) {
+		query = query.Filter(func(thread r.Term) r.Term {
+			return thread.Field("board").Eq(config.Boards.Staff).Not()
+		})
+	}
+
+	rGet(query.ForEach(rd.threadQuery).Without("posts")).All(&board.Threads)
+	board.Ctr = postCounter()
+	board.Threads = rd.filterThreads(board.Threads)
+	return
+}
+
+// Filter a slice of thread pointers by parsing and formating their OPs and
+// discarding those, that the client can't access.
+func (rd *Reader) filterThreads(threads []*Thread) []*Thread {
+	filtered := make([]*Thread, 0, len(threads))
+	for _, thread := range threads {
 		if rd.parsePost(&thread.OP) {
 			// Mimics structure of regular threads, for uniformity
 			thread.Posts = map[string]Post{
@@ -124,6 +143,5 @@ func (rd *Reader) GetBoard() (board Board) {
 			filtered = append(filtered, thread)
 		}
 	}
-	board.Threads = filtered
-	return
+	return filtered
 }

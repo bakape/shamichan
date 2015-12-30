@@ -35,6 +35,9 @@
                 "maxBump": 500,
                 "title": "/a/ - Animu & Mango"
             },
+            "all": {
+                "title": "/all/ - Aggregator Metaboard"
+            },
             "staff": {
                 "maxThreads": 20,
                 "maxBump": 2000,

@@ -127,25 +127,29 @@ func ls(path string) []string {
 func boardNavigation() template.HTML {
 	html := `<b id="navTop">[`
 
-	// Actual boards
-	boards := config.Boards.Enabled
-	for i, board := range boards {
+	// Actual boards and "/all/" metaboard
+	for i, board := range append(config.Boards.Enabled, "all") {
 		if board == config.Boards.Staff {
 			continue
 		}
-		if i > 0 {
-			html += ` / `
-		}
-		html += fmt.Sprintf(`<a href="../%v/" class="history">%v</a>`, board,
-			board)
+		html += boardLink(i > 0, board, "../"+board+"/")
 	}
 
 	// Add custom URLs to board navigation
 	for _, link := range config.Boards.Psuedo {
-		html += fmt.Sprintf(` / <a href="%v">%v</a>`, link[1], link[0])
+		html += boardLink(true, link[0], link[1])
 	}
 	html += `]</b>`
 	return template.HTML(html)
+}
+
+// Builds a a board link, for the interboard navigation bar
+func boardLink(notFirst bool, name, url string) string {
+	link := fmt.Sprintf(`<a href="%v">%v</a>`, url, name)
+	if notFirst {
+		link = " / " + link
+	}
+	return link
 }
 
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it
