@@ -60,9 +60,7 @@ Selects and loads the client files
 	    $script(mediaURL + "js/vendor/" + file + ".js?v=" + clientHash, cb)
 	}
 
-	var base = mediaURL + 'js/',
-		end = '.js?v=' + clientHash
-	$script(base + 'lang/' + lang + end, function () {
+	$script(mediaURL + 'js/lang/' + lang + '.js?v=' + clientHash, function () {
 		loadModule("main")
 	})
 })()

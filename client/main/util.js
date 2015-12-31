@@ -286,37 +286,42 @@ export function randomID(len) {
  * @returns {string}
  */
 export function parseHTML(callSite) {
-	// if argumennts.length === 1
-	if (typeof callSite === 'string')
+	// if arguments.length === 1
+	if (typeof callSite === 'string') {
 		return formatHTML(callSite);
-	if (typeof callSite === 'function')
-		return formatHTML(callSite(args))
+	}
 
 	/*
 	 Slicing the arguments object is deoptimising, so we construct a new array
 	 instead.
 	 */
-	const len = arguments.length;
-	let args = [];
+	const len = arguments.length
+	const args = []
 	for (let i = 1; i < len; i++) {
 		args[i - 1] = arguments[i]
+	}
+
+	if (typeof callSite === 'function') {
+		return formatHTML(callSite(args))
 	}
 
 	const output = callSite
 		.slice(0, len)
 		.map((text, i) => {
 			const arg = args[i - 1]
-			let result;
+			let result
+
 			/*
 			 Simplifies conditionals. If the placeholder returns a non-zero
 			 falsy value, it is ommitted.
 			 */
-			if (i === 0 || (!arg && arg !== 0))
+			if (i === 0 || (!arg && arg !== 0)) {
 				result = ''
-			else if (arg instanceof Object)
+			} else if (arg instanceof Object) {
 				result = elementAttributes(arg)
-			else
+			} else {
 				result = arg
+			}
 
 			return result + text
 		})
@@ -326,25 +331,17 @@ export function parseHTML(callSite) {
 }
 
 /**
- * Strip leading indentation from HTML string
+ * Strip indentation and remove empty lines from HTML string
  */
 function formatHTML(str) {
-	let size = -1;
-	return str
-		.replace(/\n(\s+)/g, (m, m1) => {
-			if (size < 0)
-				size = m1.replace(/\t/g, '    ').length
-			return m1.slice(Math.min(m1.length, size))
-		})
-		// Remove empty lines
-		.replace(/^\s*\n/gm, '')
+	return str.replace(/\s*\n\s*/g, '')
 }
 
 /**
  * Generate an HTML element attribute list
  */
 function elementAttributes(attrs) {
-	let html = '';
+	let html = ''
 	for (let key in attrs) {
 		html += ' '
 		const val = attrs[key]
