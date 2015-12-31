@@ -292,7 +292,7 @@ func custom404(res http.ResponseWriter) {
 
 // Set HTTP headers to the response object
 func setHeaders(res http.ResponseWriter, etag string, json bool) {
-	vanillaHeaders := stringMap{
+	vanillaHeaders := map[string]string{
 		"X-Frame-Options": "sameorigin",
 		"Cache-Control":   "max-age=0, must-revalidate",
 		"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",

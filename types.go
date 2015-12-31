@@ -13,18 +13,21 @@ type Board struct {
 // Thread stores the metadata and posts of a single thread
 type Thread struct {
 	ID        int             `json:"id",gorethink:"id"`
-	IP        string          `json:"-",gorethink:"ip"`
-	Board     string          `json:"board",gorethink:"board"`
 	Time      int             `json:"time",gorethink:"time"`
 	BumpTime  int             `json:"bumpTime",gorethink:"bumpTime"`
 	ReplyTime int             `json:"replyTime",gorethink:"replyTime"`
+	HistCtr   uint16          `json:"histCtr",gorethink:"histCtr"`
+	ReplyCtr  uint16          `json:"replyCtr",gorethink:"replyCtr"`
+	ImageCtr  uint16          `json:"imageCtr",gorethink:"imageCtr"`
+	Locked    bool            `json:"locked,omitempty",gorethink:"locked,omitempty"`
+	Archived  bool            `json:"archived,omitempty",gorethink:"archived,omitempty"`
+	Sticky    bool            `json:"sticky,omitempty",gorethink:"sticky,omitempty"`
+	OP        Post            `json:"-",gorethink:"op"` // For internal use
 	Nonce     string          `json:"-",gorethink:"nonce"`
+	Board     string          `json:"board",gorethink:"board"`
+	IP        string          `json:"-",gorethink:"ip"`
 	Posts     map[string]Post `json:"posts,omitempty",gorethink:"posts"`
 	History   []Message       `json:"-",gorethink:"history"`
-	HistCtr   int             `json:"histCtr",gorethink:"histCtr"`
-	ReplyCtr  int             `json:"replyCtr",gorethink:"replyCtr"`
-	ImageCtr  int             `json:"imageCtr",gorethink:"imageCtr"`
-	OP        Post            `json:"-",gorethink:"op"` // For internal use
 }
 
 // Message is the universal transport container of all live updates through
@@ -42,42 +45,42 @@ type Message struct {
 
 // Post is a generic post. Either OP or reply.
 type Post struct {
-	ID         int            `json:"id",gorethink:"id"`
-	IP         string         `json:"-",gorethink:"ip"`
-	OP         int            `json:"op",gorethink:"op"`
-	Board      string         `json:"board",gorethink:"board"`
-	Time       int            `json:"time",gorethink:"time"`
-	Nonce      string         `json:"-",gorethink:"nonce"`
 	Editing    bool           `json:"editing",gorethink:"editing"`
-	Body       string         `json:"body",gorethink:"body"`
 	Deleted    bool           `json:"-",gorethink:"deleted"`
 	ImgDeleted bool           `json:"-",gorethink:"imgDeleted"`
-	Image      Image          `json:"image,omitempty",gorethink:"image,omitempty"`
+	OP         int            `json:"op",gorethink:"op"`
+	ID         int            `json:"id",gorethink:"id"`
+	Time       int            `json:"time",gorethink:"time"`
+	IP         string         `json:"-",gorethink:"ip"`
+	Board      string         `json:"board",gorethink:"board"`
+	Nonce      string         `json:"-",gorethink:"nonce"`
+	Body       string         `json:"body",gorethink:"body"`
 	Name       string         `json:"name,omitempty",gorethink:"name,omitempty"`
 	Trip       string         `json:"trip,omitempty",gorethink:"trip,omitempty"`
-	Email      string         `json:"email,omitempty",gorethink:"email,omitempty"`
 	Auth       string         `json:"auth,omitempty",gorethink:"auth,omitempty"`
-	Dice       Dice           `json:"dice,omitempty",gorethink:"dice,omitempty"`
-	Links      LinkMap        `json:"links,omitempty",gorethink:"links,omitempty"`
+	Email      string         `json:"email,omitempty",gorethink:"email,omitempty"`
+	Image      *Image         `json:"image,omitempty",gorethink:"image,omitempty"`
 	Backlinks  LinkMap        `json:"backlinks,omitempty",gorethink:"backlinks,omitempty"`
+	Links      LinkMap        `json:"links,omitempty",gorethink:"links,omitempty"`
+	Dice       Dice           `json:"dice,omitempty",gorethink:"dice,omitempty"`
 	Mod        ModerationList `json:"mod,omitempty",gorethink:"mod,omitempty"`
 }
 
 // Image contains a post's image and thumbanail data
 type Image struct {
-	Src     string `json:"src",gorethink:"src"`
-	Thumb   string `json:"thumb,omitempty",gorethink:"thumb,omitempty"`
-	Mid     string `json:"mid,omitempty",gorethink:"mid,omitempty"`
-	Dims    []int  `json:"dims",gorethink:"dims"`
-	Ext     string `json:"ext",gorethink:"ext"`
-	Size    int    `json:"size",gorethink:"size"`
+	APNG    bool     `json:"apng,omitempty",gorethink:"apng,omitempty"`
+	Audio   bool     `json:"audio,omitempty",gorethink:"audio,omitempty"`
+	Spoiler int16    `json:"spoiler,omitempty",gorethink:"spoiler,omitempty"`
+	Length  [3]int8  `json:"lenght,omitempty",gorethink:"lenght,omitempty"`
+	Dims    [2]int32 `json:"dims",gorethink:"dims"`
+	Size    int      `json:"size",gorethink:"size"`
+	Mid     string   `json:"mid,omitempty",gorethink:"mid,omitempty"`
+	Thumb   string   `json:"thumb,omitempty",gorethink:"thumb,omitempty"`
+	Src     string   `json:"src",gorethink:"src"`
+	Ext     string   `json:"ext",gorethink:"ext"`
 	MD5     string
 	SHA1    string
 	Imgnm   string `json:"imgnm",gorethink:"imgnm"`
-	Spoiler int    `json:"spoiler,omitempty",gorethink:"spoiler,omitempty"`
-	APNG    bool   `json:"apng,omitempty",gorethink:"apng,omitempty"`
-	Audio   bool   `json:"audio,omitempty",gorethink:"audio,omitempty"`
-	Length  string `json:"lenght,omitempty",gorethink:"lenght,omitempty"`
 }
 
 // Dice stores # command information of the post in exectution order
@@ -86,11 +89,11 @@ type Dice []Roll
 // Roll represents a single hash command. It always contains the Type field,
 // which determines, which of the other fields are present.
 type Roll struct {
-	Type   string `json:"type",gorethink:"type"`
-	Bool   bool   `json:"bool,omitempty",gorethink:"bool,omitempty"`
-	Int    int    `json:"int,omitempty",gorethink:"int,omitempty"`
-	Ints   []int  `json:"ints,omitempty",gorethink:"ints,omitempty"`
-	String string `json:"string,omitempty",gorethink:"string,omitempty"`
+	Type   string  `json:"type",gorethink:"type"`
+	Bool   bool    `json:"bool,omitempty",gorethink:"bool,omitempty"`
+	Int    int     `json:"int,omitempty",gorethink:"int,omitempty"`
+	Ints   []uint8 `json:"ints,omitempty",gorethink:"ints,omitempty"`
+	String string  `json:"string,omitempty",gorethink:"string,omitempty"`
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to
@@ -107,8 +110,8 @@ type Link struct {
 type Ident struct {
 	// Indicates priveledged access rights for staff.
 	Auth   string
-	Banned bool
 	IP     string
+	Banned bool
 }
 
 // ModerationList contains modration acts commited on this post.

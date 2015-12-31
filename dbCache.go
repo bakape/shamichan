@@ -16,8 +16,8 @@ type termMap map[string]r.Term
 func cacheAdd(id int, op int, board string) {
 	num := strconv.Itoa(id)
 	rExec(r.Table("main").Get("cache").Update(ParenthoodCache{
-		intMap{num: op},
-		stringMap{num: board},
+		map[string]int{num: op},
+		map[string]string{num: board},
 	}))
 }
 

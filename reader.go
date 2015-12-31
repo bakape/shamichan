@@ -23,10 +23,10 @@ func NewReader(board string, ident Ident) *Reader {
 }
 
 // GetThread retrieves thread JSON from the database
-func (rd *Reader) GetThread(id, lastN int) (thread Thread) {
+func (rd *Reader) GetThread(id, lastN int) *Thread {
 	// Verify thread exists
 	if !validateOP(id, rd.board) {
-		return
+		return new(Thread)
 	}
 	res := rd.threadQuery(getThread(id))
 
@@ -39,11 +39,12 @@ func (rd *Reader) GetThread(id, lastN int) (thread Thread) {
 				CoerceTo("object"),
 		})
 	}
-	rGet(res).One(&thread)
+	thread := new(Thread)
+	rGet(res).One(thread)
 
 	// Verify thread access rights
 	if !rd.parsePost(&thread.OP) {
-		return Thread{}
+		return new(Thread)
 	}
 
 	// Place the retrieved OP into the Posts map and override duplicate, if any
@@ -54,7 +55,7 @@ func (rd *Reader) GetThread(id, lastN int) (thread Thread) {
 			delete(thread.Posts, id)
 		}
 	}
-	return
+	return thread
 }
 
 // threadQuery constructs the common part of a all thread queries
@@ -78,7 +79,7 @@ func (rd *Reader) parsePost(post *Post) bool {
 			return false
 		}
 		if post.ImgDeleted {
-			post.Image = Image{}
+			post.Image = &Image{}
 		}
 		post.Mod = ModerationList{}
 	}
@@ -89,18 +90,20 @@ func (rd *Reader) parsePost(post *Post) bool {
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id int) (post Post) {
+func (rd *Reader) GetPost(id int) *Post {
 	op := parentThread(id)
+	post := new(Post)
 	if op == 0 { // Post does not exist
-		return
+		return post
 	}
-	rGet(getPost(id, op)).One(&post)
-	rd.parsePost(&post)
-	return
+	rGet(getPost(id, op)).One(post)
+	rd.parsePost(post)
+	return post
 }
 
 // GetBoard retrives all OPs of a single board
-func (rd *Reader) GetBoard() (board Board) {
+func (rd *Reader) GetBoard() *Board {
+	board := new(Board)
 	rGet(r.Table("threads").
 		GetAllByIndex("board", rd.board).
 		ForEach(rd.threadQuery).
@@ -109,12 +112,12 @@ func (rd *Reader) GetBoard() (board Board) {
 		All(&board.Threads)
 	board.Ctr = boardCounter(rd.board)
 	board.Threads = rd.filterThreads(board.Threads)
-	return
+	return board
 }
 
 // GetAllBoard retrieves all threads the client has access to for the "/all/"
 // meta-board
-func (rd *Reader) GetAllBoard() (board Board) {
+func (rd *Reader) GetAllBoard() *Board {
 	query := r.Table("threads")
 
 	// Exclude staff board, if no access
@@ -124,10 +127,11 @@ func (rd *Reader) GetAllBoard() (board Board) {
 		})
 	}
 
+	board := new(Board)
 	rGet(query.ForEach(rd.threadQuery).Without("posts")).All(&board.Threads)
 	board.Ctr = postCounter()
 	board.Threads = rd.filterThreads(board.Threads)
-	return
+	return board
 }
 
 // Filter a slice of thread pointers by parsing and formating their OPs and

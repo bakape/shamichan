@@ -47,13 +47,10 @@ type Document struct {
 	ID string `gorethink:"id"`
 }
 
-type stringMap map[string]string
-type intMap map[string]int
-
 // ParenthoodCache maps posts to their parent boards and threads
 type ParenthoodCache struct {
-	OPs    intMap
-	Boards stringMap `gorethink:"boards"`
+	OPs    map[string]int
+	Boards map[string]string `gorethink:"boards"`
 }
 
 func initRethinkDB() {
@@ -76,7 +73,8 @@ func initRethinkDB() {
 			Document
 			ParenthoodCache
 		}{
-			Document{"cache"}, ParenthoodCache{intMap{}, stringMap{}},
+			Document{"cache"},
+			ParenthoodCache{map[string]int{}, map[string]string{}},
 		},
 
 		// History aka progress counters of boards, that get incremented on
