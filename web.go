@@ -48,18 +48,16 @@ func startServer() {
 		router.PathPrefix("/").Handler(http.FileServer(http.Dir("./www")))
 	}
 
-	// Infer IP from header, if configured to
-	var handler http.Handler
-	if config.Hard.HTTP.TrustProxies {
+	var handler http.Handler = router
+
+	if config.Hard.HTTP.TrustProxies { // Infer IP from header, if configured to
 		handler = handlers.ProxyHeaders(router)
-	} else {
-		handler = router
 	}
-
+	if config.Hard.HTTP.Gzip {
+		handler = handlers.CompressHandler(handler)
+	}
 	handler = getIdent(handler)
-
-	// Return status 500 on goroutine panic
-	handler = handlers.RecoveryHandler(
+	handler = handlers.RecoveryHandler( // Return status 500 on goroutine panic
 		handlers.PrintRecoveryStack(true),
 	)(handler)
 
