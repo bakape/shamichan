@@ -16,10 +16,10 @@ Selects and loads the client files
 	var tests = [
 		// Arrow functions
 		'return (()=>5)()===5;',
-		// Constants
-		'"use strict"; const foo = 123; return foo === 123;',
-		// Block scoping
+		// Block scopped const
 		'"use strict";  const bar = 123; {const bar = 456;} return bar===123;',
+		// Block-scoped let
+		'"use strict"; let bar = 123;{ let bar = 456; }return bar === 123;',
 		// Computed object properties
 		"var x='y';return ({ [x]: 1 }).y === 1;",
 		// Shorthand object properties
@@ -29,7 +29,14 @@ Selects and loads the client files
 		// for...of
 		'var arr = [5]; for (var item of arr) return item === 5;',
 		// Spread operator
-		'return Math.max(...[1, 2, 3]) === 3'
+		'return Math.max(...[1, 2, 3]) === 3',
+		// Class statement
+		'"use strict"; class C {}; return typeof C === "function"',
+		// Super call
+		'"use strict"; var passed = false;'
+			+ 'class B {constructor(a) {  passed = (a === "barbaz")}};'
+			+ 'class C extends B {constructor(a) {super("bar" + a)}};'
+			+ 'new C("baz"); return passed;'
 	]
 	var legacy
 	for (var i = 0; i < tests.length; i++) {

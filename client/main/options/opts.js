@@ -247,7 +247,7 @@ function toggleHeadStyle(id, css) {
 
 		// The disabled property only exists on elements in the DOM, so we do
 		// another query
-		document.getElementById(id).disabled = !toggle;
+		document.getElementById(id).disabled = !toggle
 	}
 }
 
