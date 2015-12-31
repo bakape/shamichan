@@ -2,7 +2,6 @@ package main
 
 import (
 	r "github.com/dancannon/gorethink"
-	"strconv"
 )
 
 // Reader reads on formats thread and post structs
@@ -23,7 +22,7 @@ func NewReader(board string, ident Ident) *Reader {
 }
 
 // GetThread retrieves thread JSON from the database
-func (rd *Reader) GetThread(id, lastN int) *Thread {
+func (rd *Reader) GetThread(id uint64, lastN int) *Thread {
 	// Verify thread exists
 	if !validateOP(id, rd.board) {
 		return new(Thread)
@@ -48,7 +47,7 @@ func (rd *Reader) GetThread(id, lastN int) *Thread {
 	}
 
 	// Place the retrieved OP into the Posts map and override duplicate, if any
-	thread.Posts[strconv.Itoa(thread.ID)] = thread.OP
+	thread.Posts[idToString(id)] = thread.OP
 
 	for id, post := range thread.Posts {
 		if !rd.parsePost(&post) {
@@ -90,7 +89,7 @@ func (rd *Reader) parsePost(post *Post) bool {
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id int) *Post {
+func (rd *Reader) GetPost(id uint64) *Post {
 	op := parentThread(id)
 	post := new(Post)
 	if op == 0 { // Post does not exist
@@ -142,7 +141,7 @@ func (rd *Reader) filterThreads(threads []*Thread) []*Thread {
 		if rd.parsePost(&thread.OP) {
 			// Mimics structure of regular threads, for uniformity
 			thread.Posts = map[string]Post{
-				strconv.Itoa(thread.ID): thread.OP,
+				idToString(thread.ID): thread.OP,
 			}
 			filtered = append(filtered, thread)
 		}

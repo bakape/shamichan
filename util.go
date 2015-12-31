@@ -43,33 +43,33 @@ func rExec(query r.Term) {
 }
 
 // shorthand for constructing thread queries
-func getThread(id int) r.Term {
+func getThread(id uint64) r.Term {
 	return r.Table("threads").Get(id)
 }
 
 // shorthand for constructing post queries
-func getPost(id, op int) r.Term {
-	return getThread(op).Field("posts").Field(strconv.Itoa(id))
+func getPost(id, op uint64) r.Term {
+	return getThread(op).Field("posts").Field(idToString(id))
 }
 
 // Retrieve the current post counter number
-func postCounter() int {
+func postCounter() uint64 {
 	return getCounter(r.Table("main").Get("info").Field("postCtr"))
 }
 
 // Retrieve the history or "progress" counter of a board
-func boardCounter(board string) int {
-    return getCounter(r.Table("main").Get("info").Field("postCtr"))
+func boardCounter(board string) uint64 {
+	return getCounter(r.Table("main").Get("info").Field("postCtr"))
 }
 
 // Retrieve the history or "progress" counter of a thread
-func threadCounter(id int) int {
-    return getCounter(getThread(id).Field("histCtr"))
+func threadCounter(id uint64) uint64 {
+	return getCounter(getThread(id).Field("histCtr"))
 }
 
 // Helper function for retrieving an integer from the database
-func getCounter(query r.Term) (counter int) {
-    rGet(query).One(&counter)
+func getCounter(query r.Term) (counter uint64) {
+	rGet(query).One(&counter)
 	return counter
 }
 
@@ -95,14 +95,14 @@ func canAccessBoard(board string, ident Ident) bool {
 }
 
 // Confirm thread exists and client has rights to access it's board
-func canAccessThread(id int, board string, ident Ident) bool {
+func canAccessThread(id uint64, board string, ident Ident) bool {
 	if !canAccessBoard(board, ident) {
 		return false
 	}
 	var deleted bool
 	rGet(getThread(id).
 		Field("posts").
-		Field(id).
+		Field(idToString(id)).
 		Default(false),
 	).
 		One(&deleted)
@@ -138,4 +138,9 @@ func copyFile(path string, writer io.Writer) {
 	defer file.Close()
 	_, err = io.Copy(writer, file)
 	throw(err)
+}
+
+// Shorthand for converting a post ID to a string for JSON keys
+func idToString(id uint64) string {
+	return strconv.FormatUint(id, 10)
 }

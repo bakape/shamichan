@@ -107,7 +107,7 @@ func boardPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 		return canAccessBoard(board, in.ident)
 	}
 
-	in.getCounter = func() int {
+	in.getCounter = func() uint64 {
 		return boardCounter(board)
 	}
 
@@ -123,7 +123,7 @@ func threadPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 	in := indexPage{res: res, req: req, json: jsonOnly}
 	vars := mux.Vars(req)
 	board := vars["board"]
-	id, err := strconv.Atoi(vars["thread"])
+	id, err := strconv.ParseUint(vars["thread"], 10, 64)
 	throw(err)
 	in.lastN = detectLastN(req)
 
@@ -131,7 +131,7 @@ func threadPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
 		return validateOP(id, board) && canAccessThread(id, board, in.ident)
 	}
 
-	in.getCounter = func() int {
+	in.getCounter = func() uint64 {
 		return threadCounter(id)
 	}
 
@@ -164,7 +164,7 @@ type indexPage struct {
 	res         http.ResponseWriter
 	req         *http.Request
 	validate    func() bool
-	getCounter  func() int    // Progress counter used for building etags
+	getCounter  func() uint64 // Progress counter used for building etags
 	getPostData func() []byte // Post model JSON data
 	lastN       int
 	json        bool // Serve HTML from template or just JSON
@@ -238,7 +238,7 @@ func (in *indexPage) validateEtag() bool {
 
 // Build the main part of the etag
 func (in *indexPage) buildEtag() string {
-	etag := "W/" + strconv.Itoa(in.getCounter())
+	etag := "W/" + idToString(in.getCounter())
 	if !in.json {
 		etag += "-" + in.template.Hash
 		if in.isMobile {
@@ -348,7 +348,7 @@ func serveConfigs(res http.ResponseWriter, req *http.Request) {
 
 // Serve a single post as JSON
 func servePost(res http.ResponseWriter, req *http.Request) {
-	id, err := strconv.Atoi(mux.Vars(req)["post"])
+	id, err := strconv.ParseUint(mux.Vars(req)["post"], 10, 64)
 	throw(err)
 	board := parentBoard(id)
 	thread := parentThread(id)

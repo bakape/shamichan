@@ -6,26 +6,26 @@ package main
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {
-	Ctr     int       `json:"ctr",gorethink:"ctr"`
+	Ctr     uint64    `json:"ctr",gorethink:"ctr"`
 	Threads []*Thread `json:"threads",gorethink:"threads"`
 }
 
 // Thread stores the metadata and posts of a single thread
 type Thread struct {
-	ID        int             `json:"id",gorethink:"id"`
-	Time      int             `json:"time",gorethink:"time"`
-	BumpTime  int             `json:"bumpTime",gorethink:"bumpTime"`
-	ReplyTime int             `json:"replyTime",gorethink:"replyTime"`
-	HistCtr   uint16          `json:"histCtr",gorethink:"histCtr"`
+	ID        uint64          `json:"id",gorethink:"id"`
+	Time      int64           `json:"time",gorethink:"time"`
+	BumpTime  int64           `json:"bumpTime",gorethink:"bumpTime"`
+	ReplyTime int64           `json:"replyTime",gorethink:"replyTime"`
+	HistCtr   uint64          `json:"histCtr",gorethink:"histCtr"`
 	ReplyCtr  uint16          `json:"replyCtr",gorethink:"replyCtr"`
 	ImageCtr  uint16          `json:"imageCtr",gorethink:"imageCtr"`
 	Locked    bool            `json:"locked,omitempty",gorethink:"locked,omitempty"`
 	Archived  bool            `json:"archived,omitempty",gorethink:"archived,omitempty"`
 	Sticky    bool            `json:"sticky,omitempty",gorethink:"sticky,omitempty"`
-	OP        Post            `json:"-",gorethink:"op"` // For internal use
 	Nonce     string          `json:"-",gorethink:"nonce"`
 	Board     string          `json:"board",gorethink:"board"`
 	IP        string          `json:"-",gorethink:"ip"`
+	OP        Post            `json:"-",gorethink:"op"` // For internal use
 	Posts     map[string]Post `json:"posts,omitempty",gorethink:"posts"`
 	History   []Message       `json:"-",gorethink:"history"`
 }
@@ -48,9 +48,9 @@ type Post struct {
 	Editing    bool           `json:"editing",gorethink:"editing"`
 	Deleted    bool           `json:"-",gorethink:"deleted"`
 	ImgDeleted bool           `json:"-",gorethink:"imgDeleted"`
-	OP         int            `json:"op",gorethink:"op"`
-	ID         int            `json:"id",gorethink:"id"`
-	Time       int            `json:"time",gorethink:"time"`
+	OP         uint64         `json:"op",gorethink:"op"`
+	ID         uint64         `json:"id",gorethink:"id"`
+	Time       int64          `json:"time",gorethink:"time"`
 	IP         string         `json:"-",gorethink:"ip"`
 	Board      string         `json:"board",gorethink:"board"`
 	Nonce      string         `json:"-",gorethink:"nonce"`
@@ -68,16 +68,16 @@ type Post struct {
 
 // Image contains a post's image and thumbanail data
 type Image struct {
-	APNG    bool     `json:"apng,omitempty",gorethink:"apng,omitempty"`
-	Audio   bool     `json:"audio,omitempty",gorethink:"audio,omitempty"`
-	Spoiler int16    `json:"spoiler,omitempty",gorethink:"spoiler,omitempty"`
-	Length  [3]int8  `json:"lenght,omitempty",gorethink:"lenght,omitempty"`
-	Dims    [2]int32 `json:"dims",gorethink:"dims"`
-	Size    int      `json:"size",gorethink:"size"`
-	Mid     string   `json:"mid,omitempty",gorethink:"mid,omitempty"`
-	Thumb   string   `json:"thumb,omitempty",gorethink:"thumb,omitempty"`
-	Src     string   `json:"src",gorethink:"src"`
-	Ext     string   `json:"ext",gorethink:"ext"`
+	APNG    bool      `json:"apng,omitempty",gorethink:"apng,omitempty"`
+	Audio   bool      `json:"audio,omitempty",gorethink:"audio,omitempty"`
+	Spoiler uint16    `json:"spoiler,omitempty",gorethink:"spoiler,omitempty"`
+	Length  [3]uint8  `json:"lenght,omitempty",gorethink:"lenght,omitempty"`
+	Dims    [2]uint32 `json:"dims",gorethink:"dims"`
+	Size    uint      `json:"size",gorethink:"size"`
+	Mid     string    `json:"mid,omitempty",gorethink:"mid,omitempty"`
+	Thumb   string    `json:"thumb,omitempty",gorethink:"thumb,omitempty"`
+	Src     string    `json:"src",gorethink:"src"`
+	Ext     string    `json:"ext",gorethink:"ext"`
 	MD5     string
 	SHA1    string
 	Imgnm   string `json:"imgnm",gorethink:"imgnm"`
