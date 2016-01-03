@@ -164,7 +164,7 @@ h3 {
 		top: 2px;
 	}
 }
-#hiddenUpload {
+#hiddenUpload, #importSettings {
 	display: none;
 }
 #hover_overlay {
@@ -300,18 +300,6 @@ span.control .popup-menu {
 #navTop {
 	float: left;
 	margin-left: 8px;
-}
-.bmodal {
-	display: none;
-	text-align: left;
-	z-index: 200;
-	padding: 1em;
-	margin-right: 0.2em;
-	position: fixed;
-	right: 0;
-	overflow: auto;
-	max-height: 80%;
-	max-width: 80%;
 }
 #catalog {
 	margin: 0 0.85em;
@@ -451,10 +439,19 @@ figure {
 	line-height: 200%;
 }
 .modal {
-	overflow: hidden;
+	display: none;
+	text-align: left;
+	position: fixed;
+	max-height: 80%;
+	max-width: 80%;
+	overflow: auto;
 	padding: 1em;
 	white-space: nowrap;
-	z-index: 20;
+	z-index: 200;
+}
+.bmodal {
+	margin-right: 0.2em;
+	right: 0;
 }
 .modal, .bmodal, .preview, .popup-menu, #banner {
 	-webkit-box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);

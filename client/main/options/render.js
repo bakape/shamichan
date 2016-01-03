@@ -6,7 +6,7 @@ const lang = ln.opts
 /**
  * Render the options panel
  */
-export default function render() {
+export default function () {
     let html = '<ul class="option_tab_sel">'
     const {tabs} = lang,
         opts = []
@@ -121,7 +121,7 @@ function renderExtras() {
 	const links = ['export', 'import', 'hidden']
     for (let id of links) {
         const [label, title] = lang.labels[id]
-        html += `<a id="${id}" title="${ln[1]}">${ln[0]}</a> `
+        html += `<a id="${id}" title="${title}">${label}</a> `
     }
 
     // Hidden file input for uploading the JSON
