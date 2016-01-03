@@ -7,16 +7,10 @@ import {_, Backbone, state, defer, events, util, ModalView} from 'main'
 import opts from './opts'
 import render from './render'
 
-// Try to get options from local storage
-let options
-try {
-	options = JSON.parse(localStorage.options)
-}
-catch(e) {}
-if (!options) {
-	options = {}
-}
-export default options = new Backbone.Model(options)
+// Delete legacy options localStorage entry, if any
+localStorage.removeItem("options")
+const options = new Backbone.Model()
+export default options
 
 const optionModels = {}
 
@@ -126,14 +120,17 @@ class OptionModel {
 
 // Highlight options button by fading out and in, if no options are set
 (function() {
-	if (localStorage.getItem('options')) {
+	if (localStorage.optionsSeen) {
 		return
 	}
 	const el = document.query('#options')
 	el.style.opacity = 1
 	let out = true,
 		clicked
-	el.addEventListener("click", () => clicked = true)
+	el.addEventListener("click", () => {
+		clicked = true
+		localStorage.optionsSeen = 1
+	})
 	tick()
 
 	function tick() {

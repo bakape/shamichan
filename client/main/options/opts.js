@@ -159,6 +159,7 @@ const opts = [
 		],
 		tab: 1,
 		default: config.defaultCSS,
+		execOnStart: false,
 		exec(theme) {
 			if (!theme) {
 				return

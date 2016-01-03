@@ -1,15 +1,8 @@
 (function() {
-	var options
-	try {
-		options = JSON.parse(localStorage.options)
-	}
-	catch (e) {}
-
 	// Set the theme
-	var mediaURL = config.hard.HTTP.media
-	var theme = (options && options.theme) ? options.theme : config.defaultCSS
-	document.getElementById('theme').href = mediaURL + 'css/' + theme
-		+ '.css?v=' + clientHash
+	var theme = localStorage.theme || config.defaultCSS
+	document.getElementById('theme').href = config.hard.HTTP.media + 'css/'
+		+ theme + '.css?v=' + clientHash
 
-	window.lang = (options && options.lang) || config.lang.default 
+	window.lang = localStorage.lang || config.lang.default
 })()

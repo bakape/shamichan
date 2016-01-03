@@ -120,7 +120,7 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 */
 
 main.ModalView = require('./modal').default
-main.options = require('./options')
+main.options = require('./options').default
 main.scroll = require('./scroll')
 main.follow = main.scroll.followDOM // Shorthand
 state.page.set('tabID', util.randomID(32))
