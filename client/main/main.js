@@ -94,7 +94,7 @@ const lang = main.lang = require('lang'),
 
 // Shorthands
 main.send = main.events.request.bind(main.events, 'send')
-for (let fn of ['parseHTML', 'parseEl', 'parseEls']) {
+for (let fn of ['parseHTML', 'parseEl', 'parseEls', 'pad']) {
     main[fn] = util[fn]
 }
 config.mediaURL = config.hard.HTTP.media

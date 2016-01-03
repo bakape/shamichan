@@ -2,7 +2,8 @@
  Client-side helper functions
  */
 
-import {_, config, state} from 'main'
+import {config, state} from 'main'
+import {escape} from 'underscore'
 
 /**
  * Make spoiler tags toggleable on mobile
@@ -162,7 +163,7 @@ export function readable_dice(bit, dice) {
 			break;
 	}
 	if (inner !== undefined)
-		return _.escape(`${bit} (${inner})`);
+		return escape(`${bit} (${inner})`);
 	if (/^#sw/.test(bit))
 		return readableSyncwatch(dice[0]);
 	return readableRegularDice(bit, dice);
@@ -250,10 +251,10 @@ export function parse_name(name) {
 		name = name.substr(0, hash);
 		hash = tripcode.indexOf('#');
 		if (hash >= 0) {
-			secure = _.escape(tripcode.substr(hash + 1));
+			secure = escape(tripcode.substr(hash + 1));
 			tripcode = tripcode.substr(0, hash);
 		}
-		tripcode = _.escape(tripcode);
+		tripcode = escape(tripcode);
 	}
 	name = name.trim().replace(imports.hotConfig.EXCLUDE_REGEXP, '');
 	return [
@@ -307,24 +308,8 @@ export function parseHTML(callSite) {
 
 	const output = callSite
 		.slice(0, len)
-		.map((text, i) => {
-			const arg = args[i - 1]
-			let result
-
-			/*
-			 Simplifies conditionals. If the placeholder returns a non-zero
-			 falsy value, it is ommitted.
-			 */
-			if (i === 0 || (!arg && arg !== 0)) {
-				result = ''
-			} else if (arg instanceof Object) {
-				result = elementAttributes(arg)
-			} else {
-				result = arg
-			}
-
-			return result + text
-		})
+		.map((text, i) =>
+			args[i - 1] + text)
 		.join('')
 
 	return formatHTML(output)
@@ -339,8 +324,10 @@ function formatHTML(str) {
 
 /**
  * Generate an HTML element attribute list
+ * @param {Object} attrs
+ * @returns {string}
  */
-function elementAttributes(attrs) {
+export function parseAtributes(attrs) {
 	let html = ''
 	for (let key in attrs) {
 		html += ' '

@@ -59,10 +59,10 @@ var config struct {
 			Size, Width, Height, Pixels int
 		}
 		Thumb struct {
-			Quality              int
-			SmallDims, ThumbDims [2]int
-			HighQuality, PNG     bool
-			PNGQuality           string
+			Quality            int
+			ThumbDims, MidDims [2]int
+			HighQuality, PNG   bool
+			PNGQuality         string
 		}
 		Formats struct {
 			Webm, WebmAudio, MP3, SVG, PDF bool
@@ -117,6 +117,10 @@ var clientConfig struct {
 		Keyword string `json:"keyword"`
 	} `json:"staff"`
 	Images struct {
+		thumb struct {
+			thumbDims [2]int `json:"thumbDims"`
+			MidDims   [2]int `json:"midDims"`
+		}
 		Spoilers []int `json:"spoilers"`
 		Hats     bool  `json:"hats"`
 	} `json:"images"`

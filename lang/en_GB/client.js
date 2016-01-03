@@ -58,15 +58,19 @@ var lang = {
 	},
 
 	// Time-related
-	week: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-	year: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-		'Oct', 'Nov', 'Dec'],
-	just_now: 'just now',
-	unit_minute: 'minute',
-	unit_hour: 'hour',
-	unit_day: 'day',
-	unit_month: 'month',
-	unit_year: 'year',
+	time: {
+		week: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+		year: [
+			'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+			'Oct', 'Nov', 'Dec'
+		],
+		just_now: 'just now',
+		minute: 'minute',
+		hour: 'hour',
+		day: 'day',
+		month: 'month',
+		year: 'year'
+	}
 
 	// Websocket syncronisation status
 	sync: {
