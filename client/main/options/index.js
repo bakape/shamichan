@@ -3,7 +3,7 @@
  * logic
  */
 
-import {_, Backbone, state, defer, events, util} from 'main'
+import {_, Backbone, state, defer, events, util, ModalView} from 'main'
 import opts from './opts'
 import render from './render'
 
@@ -107,7 +107,7 @@ class OptionModel {
 	 */
 	set(val) {
 	    if (val !== this.default || this.read()) {
-	        localStorage.setItem(this.id,val)
+	        localStorage.setItem(this.id, val)
 	    }
 	}
 
@@ -155,15 +155,8 @@ class OptionModel {
 })()
 
 // View of the options panel
-const OptionsView = Backbone.View.extend({
-	initialize() {
-		// Render the options panel
-		this.setElement(render())
-		document.body.append(this.el)
-		this.assignValues()
-		this.hidden = this.el.query('#hidden')
-		events.reply('hide:render', this.renderHidden, this)
-	},
+const OptionsView = ModalView.extend({
+	id: 'options-panel',
 
 	events: {
 		'click .option_tab_sel>li>a': 'switchTab',
@@ -171,6 +164,16 @@ const OptionsView = Backbone.View.extend({
 		'click #export': 'export',
 		'click #import': 'import',
 		'click #hidden': 'clearHidden'
+	},
+
+	/**
+	 * Render the options panel. Only called once on page load.
+	 */
+	render() {
+	    this.el.innerHTML = render()
+		this.assignValues()
+		this.hidden = this.el.query('#hidden')
+		events.reply('hide:render', this.renderHidden, this)
 	},
 
 	/**
@@ -204,14 +207,13 @@ const OptionsView = Backbone.View.extend({
 		const el = event.target
 
 		// Deselect previous tab
-		for (let child of el.children) {
-		    child.query('.tab_sel').classList.remove('tab_sel')
-		}
+		_.each(this.el.children, el =>
+			el.query('.tab_sel').classList.remove('tab_sel'))
 
 		// Select the new one
 		el.classList.add('tab_sel')
-		_.filter(this.el.lastChild.children, li =>
-			li.classList.has(el.getAttribute('data-content'))
+		_.find(this.el.lastChild.children, li =>
+			li.classList.contains(el.getAttribute('data-content'))
 		)
 			.classList.add('tab_sel')
 	},
@@ -223,7 +225,8 @@ const OptionsView = Backbone.View.extend({
 	 */
 	applyChange(event) {
 		const el = event.target,
-			model = optionModels[el.getAttribute('id')]
+			id = el.getAttribute('id'),
+			model = optionModels[id]
 		let val
 		switch (model.type) {
 			case 'checkbox':
@@ -310,7 +313,7 @@ const OptionsView = Backbone.View.extend({
 		main.request('hide:clear')
 		this.renderHidden(0)
 	}
-});
+})
 
 // Create and option model for each object in the array
 for (let spec of opts) {
@@ -318,5 +321,4 @@ for (let spec of opts) {
 }
 
 // Expensive comutation and not emediatly needed. Put off till later.
-let optionsPanel
-defer(() => optionsPanel = new OptionsView())
+defer(() => new OptionsView())

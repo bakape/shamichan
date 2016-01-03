@@ -118,6 +118,7 @@ let oneeSama = main.oneeSama = new common.OneeSama({
 });
 */
 
+main.ModalView = require('./modal').default
 main.options = require('./options')
 main.scroll = require('./scroll')
 main.follow = main.scroll.followDOM // Shorthand

@@ -1,4 +1,4 @@
-import {_, isMobile, lang as ln, parseEl, parseHTML} from 'main'
+import {_, isMobile, lang as ln, parseHTML} from 'main'
 import {default as options} from "./opts"
 
 const lang = ln.opts
@@ -7,8 +7,7 @@ const lang = ln.opts
  * Render the options panel
  */
 export default function render() {
-    let html = `<div class="bmodal glass" id="options-panel">`
-        + `<ul class="option_tab_sel">`
+    let html = '<ul class="option_tab_sel">'
     const {tabs} = lang,
         opts = []
 
@@ -38,9 +37,9 @@ export default function render() {
     for (let i = 0; i < opts.length; i++) {
         html += renderTab(opts[i], i)
     }
-    html += '</ul></div>'
+    html += '</ul>'
 
-    return parseEl(html)
+    return html
 }
 
 /**
