@@ -43,9 +43,9 @@ class OptionModel {
 		// Store option value in central stotage options Backbone model
 		const val = options.attributes[this.id] = this.get()
 		options.on('change:' + this.id, (options, val) =>
-			this.onchange(val))
+			this.onChange(val))
 		if (this.execOnStart !== false) {
-		    this.execute(this.val)
+		    this.execute(val)
 		}
 		optionModels[this.id] = this
     }

@@ -3,7 +3,9 @@
  * server to render the actual options panel.
  */
 
-import {Cookie, util, state, config, isMobile, lang} from 'main'
+import {
+	Cookie, util, state, config, isMobile, lang, send, events,cssHash
+} from 'main'
 
 /*
  * Full schema of the option interface
@@ -113,9 +115,9 @@ const opts = [
 		exec(toggle) {
 			if (toggle) {
 				// Query the server for current stream info
-				main.send({type: 'radio'})
+				send({type: 'radio'})
 			} else {
-				main.request('banner:radio:clear');
+				events.request('banner:radio:clear');
 			}
 		}
 	},
@@ -164,7 +166,7 @@ const opts = [
 			document.getElementById('theme')
 				.setAttribute(
 					'href',
-					`${config.MEDIA_URL}css/${theme}.css?v=${main.cssHash}`
+					`${config.mediaURL}css/${theme}.css?v=${cssHash}`
 				)
 		}
 	},
@@ -181,7 +183,7 @@ const opts = [
 		tab: 1,
 		execOnStart: false,
 		exec(upload) {
-			main.request('background:store', upload)
+			events.request('background:store', upload)
 		}
 	},
 	// LAST N CONFIG

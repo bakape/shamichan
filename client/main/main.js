@@ -97,6 +97,7 @@ main.send = main.events.request.bind(main.events, 'send')
 for (let fn of ['parseHTML', 'parseEl', 'parseEls']) {
     main[fn] = util[fn]
 }
+config.mediaURL = config.hard.HTTP.media
 
 /*
 // Initialise main rendering object
