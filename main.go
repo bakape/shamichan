@@ -4,7 +4,7 @@
 
 package main
 
-import "./server"
+import "gopkg.in/bakape/meguca.v2/server"
 
 func main() {
 	server.Start()
