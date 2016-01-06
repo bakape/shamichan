@@ -1,4 +1,4 @@
-![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=version2) ![Dependency Status](https://david-dm.org/bakape/meguca.svg)
+[![GoDoc](https://godoc.org/gopkg.in/bakape/meguca.v2?status.svg)](https://godoc.org/gopkg.in/bakape/meguca.v2) [![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=v2)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
 
 ##Setup
 * Install [dependencies](#dependencies) listed below
