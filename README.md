@@ -1,7 +1,6 @@
 [![GoDoc](https://godoc.org/gopkg.in/bakape/meguca.v2?status.svg)](https://godoc.org/gopkg.in/bakape/meguca.v2) [![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
 
 ##Setup
-* `go get -u gopkg.in/bakape/meguca.v2`
 * Install [dependencies](#dependencies) listed below
 * Sign up for reCAPTCHA
 * Run `npm install` to install npm deps and compile C++ addons
