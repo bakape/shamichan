@@ -1,5 +1,10 @@
 [![GoDoc](https://godoc.org/gopkg.in/bakape/meguca.v2?status.svg)](https://godoc.org/gopkg.in/bakape/meguca.v2) [![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=v2)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
 
+`go get -u gopkg.in/bakape/meguca.v2`
+
+
+// TODO: Rewrite everything below for v2
+
 ##Setup
 * Install [dependencies](#dependencies) listed below
 * Sign up for reCAPTCHA
