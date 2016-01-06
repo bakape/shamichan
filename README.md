@@ -1,4 +1,4 @@
-[![GoDoc](https://godoc.org/gopkg.in/bakape/meguca.v2?status.svg)](https://godoc.org/gopkg.in/bakape/meguca.v2) ![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master) ![Dependency Status](https://david-dm.org/bakape/meguca.svg)
+[![GoDoc](https://godoc.org/gopkg.in/bakape/meguca.v2?status.svg)](https://godoc.org/gopkg.in/bakape/meguca.v2) [![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
 
 ##Setup
 * `go get -u gopkg.in/bakape/meguca.v2`
