@@ -70,7 +70,7 @@ var lang = {
 		day: 'day',
 		month: 'month',
 		year: 'year'
-	}
+	},
 
 	// Websocket syncronisation status
 	sync: {
@@ -316,7 +316,7 @@ var lang = {
 		return res;
 	},
 	// 47 replies and 21 images omitted
-	abbrev_msg:  function(omit, img_omit, url) {
+	abbrev_msg: function(omit, img_omit, url) {
 		var html = lang.pluralize(omit, 'reply');
 		if (img_omit)
 			html += ' and ' + lang.pluralize(img_omit, 'image');
@@ -327,6 +327,6 @@ var lang = {
 		}
 		return html;
 	}
-};
+}
 
-module.exports = lang
+export default lang

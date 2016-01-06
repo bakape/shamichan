@@ -1,0 +1,2 @@
+"use strict";System.register([],function(e){var r,t;return{setters:[],execute:function(){r=require("./main"),t=new r.Memory("hide",7,!0),r.reply("hide",function(e){if(!e.get("mine")){var n=t.write(e.get("num"));e.remove(),r.request("hide:render",n)}}),r.reply("hide:clear",function(){return t.purgeAll()}),r.defer(function(){return r.request("hide:render",t.size())})}}});
+//# sourceMappingURL=maps/hide.js.map

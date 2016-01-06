@@ -1,0 +1,2 @@
+"use strict";System.register([],function(e){var r,s,i,o,t;return{setters:[],execute:function(){r=require("main"),s=r.$,i=r.config,o=r.ident=window.IDENT,window.loggedInUser=o.email,window.x_csrf=o.csrf,r.$overlay=s('<div id="modOverlay"></div>').appendTo("body"),r.modals={},require("./title"),require("./toolbox"),s("<link/>",{rel:"stylesheet",href:i.MEDIA_URL+"css/mod.css?v="+r.cssHash}).appendTo("head"),t=i.STAFF_BOARD,s("#navTop").children("a").last().after(' / <a href="../'+t+'/" class="history">'+t+"</a>")}}});
+//# sourceMappingURL=../maps/mod/index.js.map

@@ -1,0 +1,5 @@
+'use strict';System.register([],function(_export){return {setters:[],execute:function(){const main=require('main');const etc=main.etc;const lang=main.lang;const state=main.state;const auth=main.ident.auth;main.$name.after(main.common.parseHTML`<label title="${ lang.mod.title[1] }" class="mod">
+		<input type="checkbox" id="authName">
+		 ${ lang.mod.title[0] }
+	 </label>`);const $authName=main.$('#authName');main.oneeSama.hook('fillMyName',el => {const checked=$authName[0].checked;if(checked){el.classList.add(auth==='admin'?'admin':'moderator');el.append(document.createTextNode(' ## '+state.hotConfig.get('staff_aliases')[auth]));}});$authName.change(() => main.request('postForm:indentity'));override(main.posts.posting.ComposerView.prototype,'allocationMessage',function(orig,...args){const msg=orig.call(this,...args);if($authName[0].checked)msg.auth=auth;return msg;});function override(parent,method,upgrade){const orig=parent[method];parent[method]=function(...args){return upgrade.call(this,orig,...args);};}}};});
+//# sourceMappingURL=../maps/mod/title.js.map

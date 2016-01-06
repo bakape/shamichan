@@ -1,0 +1,2 @@
+"use strict";System.register([],function(e){var t,r,n,i;return{setters:[],execute:function(){t=require("../main"),r=require("./common"),n=t._,i=t.Backbone,module.exports=r.extend({tagName:"article",render:function(){return this.setElement(t.oneeSama.article(this.model.attributes)),this},insertIntoDOM:function(){n.last(document.query("#p"+this.model.get("op")).queryAll("article")).after(this.el),this.autoExpandImage().fun()}})}}});
+//# sourceMappingURL=../maps/posts/article.js.map
