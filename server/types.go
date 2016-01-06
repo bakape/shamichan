@@ -2,7 +2,7 @@
  Commonly used types in a single place. Purely for organisation purposes.
 */
 
-package main
+package server
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {

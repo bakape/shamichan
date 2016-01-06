@@ -4,7 +4,7 @@
  client
 */
 
-package main
+package server
 
 import (
 	"io/ioutil"

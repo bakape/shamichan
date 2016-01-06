@@ -2,7 +2,7 @@
  Webserver
 */
 
-package main
+package server
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ import (
 	"strconv"
 )
 
-func startServer() {
+func startWebServer() {
 	router := mux.NewRouter()
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 	router.StrictSlash(true)

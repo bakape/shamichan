@@ -2,7 +2,7 @@
  Initialises and loads Redis and RethinkDB
 */
 
-package main
+package server
 
 import (
 	"fmt"

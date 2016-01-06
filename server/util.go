@@ -2,7 +2,7 @@
  Contains various general helper functions
 */
 
-package main
+package server
 
 import (
 	"crypto/md5"

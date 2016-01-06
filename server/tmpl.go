@@ -3,7 +3,7 @@
  insertion
 */
 
-package main
+package server
 
 import (
 	"bytes"

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	r "github.com/dancannon/gorethink"

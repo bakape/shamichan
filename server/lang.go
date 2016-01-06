@@ -2,7 +2,7 @@
  Parses JSON language packs and exports them
 */
 
-package main
+package server
 
 import (
 	"io/ioutil"

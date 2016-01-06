@@ -2,7 +2,7 @@
  Functions that operate on the post thread and board parenthood cache
 */
 
-package main
+package server
 
 import (
 	r "github.com/dancannon/gorethink"
