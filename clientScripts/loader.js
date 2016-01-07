@@ -47,22 +47,29 @@ Selects and loads the client files
 		}
 	}
 
-	// TODO: Load core-js/es6, if above tests fail
+	// Load all client modules as precompiled System.register format modules
+	var meta = {}
+	meta['es5/*'] = meta['es6/*'] = {format: 'register'}
 
-	var mediaURL = config.hard.HTTP.media,
-		$script = require('scriptjs')
-
-	window.loadModule = function (file, cb) {
-		var url = mediaURL + 'js/es' + (legacy ? "5" : "6") + "/" + file
-			+ ".js?v=" + clientHash
-		$script(url, cb)
-	}
-
-	window.loadDep = function (file, cb) {
-	    $script(mediaURL + "js/vendor/" + file + ".js?v=" + clientHash, cb)
-	}
-
-	$script(mediaURL + 'js/lang/' + lang + '.js?v=' + clientHash, function () {
-		loadModule("main")
+	System.config({
+		baseURL: config.hard.HTTP.media + 'js',
+		defaultJSExtensions: true,
+		// Alias the appropriate language pack to "lang"
+		map: {
+			lang:'lang/' + (localStorage.lang || config.lang.default)
+		},
+		meta: meta
 	})
+
+	// Load core-js polyfill, if above tests fail
+	if (legacy) {
+	    System.import('vendor/corejs').then(loadMain)
+	} else {
+	    loadMain()
+	}
+
+	// Application entry point
+	function loadMain() {
+	    System.import((legacy ? 'es5' : 'es6') + '/main')
+	}
 })()

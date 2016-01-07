@@ -82,6 +82,9 @@ func indexTemplate(raw string) (templateStore, templateStore) {
 // transition.
 func hashClientFiles() string {
 	// Gather all files
+
+	// TODO: Rework this for ES6 modules
+
 	files := []string{}
 	args := [][2]string{
 		{"./www/css", ".css"},

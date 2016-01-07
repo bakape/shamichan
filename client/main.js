@@ -10,8 +10,7 @@
  * dependancy, by placing some of the exports here and not in child modules.
  */
 
-// DOM level 4 polyfill
-import * as dom4 from '../vendor/dom4'
+import * as dom4 from '../vendor/dom4' // DOM level 4 polyfill
 import * as Cookie from '../vendor/js-cookie'
 import {parseEl, parseHTML} from './util'
 
@@ -140,4 +139,4 @@ extend(main, {
 */
 
 execDeferred()
-events.request('loading:hide')
+//events.request('loading:hide')

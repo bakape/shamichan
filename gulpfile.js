@@ -124,7 +124,6 @@ function babelConfig(version) {
         return _.extend(base, {
 			presets: ['es2015'],
 			plugins: [
-				'transform-strict-mode',
 				'transform-es2015-modules-systemjs'
 			]
 		})
@@ -132,7 +131,6 @@ function babelConfig(version) {
 	return _.extend(base, {
 		plugins: [
 			'transform-es2015-destructuring',
-			'transform-strict-mode',
 			'transform-es2015-modules-systemjs'
 		]
 	})

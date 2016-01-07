@@ -2,8 +2,8 @@
  * Self-expiring localStorage key controller
  */
 
-import {isObject, isEmpty, size} from 'underscore'
-import * as Cookie from 'js-cookie'
+import {isObject, isEmpty, size} from '../vendor/underscore'
+import * as Cookie from '../vendor/js-cookie'
 
 export default class Memory {
 	constructor(key, expiry, needCookie) {

@@ -2,8 +2,9 @@
  Client-side helper functions
  */
 
-import {config, state} from 'main'
-import {escape} from 'underscore'
+import {config} from './main'
+import {page, posts} from './state'
+import {escape} from '../vendor/underscore'
 
 /**
  * Make spoiler tags toggleable on mobile
@@ -19,7 +20,7 @@ export function touchable_spoiler_tag(del) {
  */
 export function imageUploadURL() {
 	return (config.hard.HTTP.upload || '../upload/') + '?id='
-		+ state.page.get('connID')
+		+ page.get('connID')
 }
 
 /**
@@ -53,9 +54,10 @@ export function getID(el) {
  */
 export function getModel(el) {
 	const id = getID(el)
-	if (!id)
+	if (!id) {
 		return null
-	return state.posts.get(id)
+	}
+	return posts.get(id)
 }
 
 /**
@@ -132,7 +134,6 @@ export function isSage(email) {
 	return email && email.trim() === 'sage'
 }
 
-
 // TODO: Refactor server time syncronisation
 let cachedOffset;
 export function serverTime() {
@@ -177,7 +178,8 @@ function readableSyncwatch(dice) {
 		</syncwatch>`;
 }
 
-function readableRegularDice(bit, [max, bias, ...rolls]) {
+function readableRegularDice(bit, dice) {
+	const [max, bias, ...rolls] = dice
 	bit += ' (';
 	const eq = rolls.length > 1 || bias;
 	if (eq)

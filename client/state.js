@@ -2,15 +2,10 @@
  * Central model keeping the state of the page
  */
 
-import {extend} from 'underscore'
-import * as Backbone from 'backbone'
+import {extend} from '../vendor/underscore'
 import Memory from './memory'
-import {$threads} from 'main'
+import {$threads} from './main'
 import {randomID} from './util'
-import * as radio from 'backbone.radio'
-
-// Message and event bus
-export const events = radio.channel('main')
 
 // Read page state by parsing a URL
 export function read(href) {
@@ -27,9 +22,11 @@ export function read(href) {
 	return state
 }
 
+/*
 // Initial page state
 export let page = new Backbone.Model(read(location.href))
 page.set('tabID', randomID(32))
+*/
 
 // Hot-reloadable configuration
 
@@ -41,11 +38,13 @@ export let syncs = {}
 // Posts I made in this tab
 export const ownPosts = {}
 
-// remember which posts are mine for two days
+// Remember which posts are mine for two days
 export const mine = new Memory('mine', 2, true)
 
+/*
 // All posts currently displayed
 export const posts = new Backbone.Collection()
+*/
 
 /**
  * Clear the current post state and HTML
@@ -76,8 +75,4 @@ export function addLinks(addition) {
 	if (addition) {
 		extend(links, addition);
 	}
-}
-
-export function init() {
-
 }

@@ -15,7 +15,7 @@
 			configHash = '{{.ConfigHash}}',
 			isMobile = {{.IsMobile}}
 	</script>
-	<script src="{{.MediaURL}}js/setup.js?v={{.ClientHash}}"></script>
+	<script src="{{.MediaURL}}js/scripts/setup.js"></script>
 	<!-- Post model JSON. Injected during page render !-->
 	<script id="postData" type="application/json">
 		<$$$>
@@ -94,5 +94,5 @@
 	<$$$>
 </script>
 <!-- Dynamic module loader!-->
-<script src="{{.MediaURL}}js/vendor/system.js?v={{.ClientHash}}"></script>
-<script src="{{.MediaURL}}js/loader.js?v={{.ClientHash}}"></script>
+<script src="{{.MediaURL}}js/vendor/system.js"></script>
+<script src="{{.MediaURL}}js/scripts/loader.js"></script>

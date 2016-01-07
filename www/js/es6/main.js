@@ -5,5 +5,5 @@
 		.locked > header nav:after {
 			content: " (${ lang.locked })";
 		}
-	</style>`));execDeferred();events.request('loading:hide');}};});
+	</style>`));execDeferred();}};});
 //# sourceMappingURL=maps/main.js.map
