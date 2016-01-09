@@ -131,6 +131,7 @@ function babelConfig(version) {
 	return _.extend(base, {
 		plugins: [
 			'transform-es2015-destructuring',
+			'transform-es2015-parameters',
 			'transform-es2015-modules-systemjs'
 		]
 	})
