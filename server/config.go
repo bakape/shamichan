@@ -118,7 +118,7 @@ var clientConfig struct {
 	} `json:"staff"`
 	Images struct {
 		thumb struct {
-			thumbDims [2]int `json:"thumbDims"`
+			ThumbDims [2]int `json:"thumbDims"`
 			MidDims   [2]int `json:"midDims"`
 		}
 		Spoilers []int `json:"spoilers"`
