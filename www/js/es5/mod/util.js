@@ -1,2 +1,2 @@
-"use strict";System.register([],function(e){function t(){var e=[];return r(function(t){return t.checked&&e.push(n.etc.getID(t))}),n._.compact(e)}function r(e){for(var t=n.$threads[0].getElementsByClassName("postCheckbox"),r=0;r<t.length;r++)e(t[r])}var n;return{setters:[],execute:function(){n=require("main"),exports.getSelected=t,exports.loopCheckboxes=r}}});
+"use strict";System.register([],function(e,t){function r(){var e=[];return n(function(t){return t.checked&&e.push(c.etc.getID(t))}),c._.compact(e)}function n(e){for(var t=c.$threads[0].getElementsByClassName("postCheckbox"),r=0;r<t.length;r++)e(t[r])}var c;return{setters:[],execute:function(){c=require("main"),exports.getSelected=r,exports.loopCheckboxes=n}}});
 //# sourceMappingURL=../maps/mod/util.js.map

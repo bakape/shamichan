@@ -1,61 +1,23 @@
 /*
- * Loads the dependancies in order and aggregates exports from various modules
- */
-
-// NOTE: The entire bundle uses strict mode through the Babel transpiler
-
-/*
- * Because we are going to attach listeners to these all over the place, have
- * to load soome core modules in specific order. Also avoids nasty circular
- * dependancy, by placing some of the exports here and not in child modules.
+ * Client entry point.
+ * NOTE: All modules use strict mode through the Babel transpiler
  */
 
 import * as dom4 from '../vendor/dom4' // DOM level 4 polyfill
 import * as Cookie from '../vendor/js-cookie'
 import {parseEl, parseHTML} from './util'
+import {defer, execDeferred} from './defer'
 
-/*
- Ofload expensive and not that neccessary initialisation logic till
- after the core modules are started
- */
-const deferred = []
+// TEMP: Will later get imported by the post modules
+import * as state from './state'
 
-/**
- * Add a function to be executed, once the module finishes loading
- * @param {function} func
- */
-export function defer(func) {
-    deferred.push(func)
-}
+import {init as initOptions} from './options/models'
+import OptionsPanel from './options/view'
 
-/**
- * Execute all stored deferred functions
- */
-export function execDeferred() {
-	while (deferred.length > 0) {
-		deferred.shift()()
-	}
-}
+initOptions()
 
-// Configuration object, passed from the server
-export const config = window.config
-config.mediaURL = config.hard.HTTP.media // Shorthand
-
-// Hash of the the configuration object
-export const configHash = window.configHash
-
-// Combined hash of the current client-side files. Used for transparent
-// versioning.
-export const clientHash = window.clientHash
-
-// Indicates, if in mobile mode. Determined server-side.
-export const isMobile = window.isMobile
-
-// Cached DOM elements
-export const $threads = document.query('threads')
-export const $name = document.query('#name')
-export const $email = document.query('#email')
-export const $banner = document.query('#banner')
+//Renders the options panel, after more important computation has been done
+defer(() => new OptionsPanel())
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 3
@@ -76,13 +38,6 @@ if (localStorage.cookieVersion != cookieVersion) {
 if (/[&\?]debug=true/.test(location.href)) {
 	config.hard.debug = true
 }
-/*
-if (config.hard.debug) {
-	radio.DEBUG = true
-	window.Backbone = Backbone // Export Backbone instance for easier debugging
-	radio.tuneIn('main') // Log all channel traffic
-}
-*/
 
 // Load language-specific CSS
 document.head.appendChild(parseEl(parseHTML

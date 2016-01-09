@@ -3,7 +3,6 @@
  */
 
 import {config} from './main'
-import {page, posts} from './state'
 import {escape} from '../vendor/underscore'
 
 /**
@@ -12,15 +11,6 @@ import {escape} from '../vendor/underscore'
  */
 export function touchable_spoiler_tag(del) {
 	del.html = '<del onclick="void(0)">'
-}
-
-/**
- * Return image upload URL
- * @returns {string}
- */
-export function imageUploadURL() {
-	return (config.hard.HTTP.upload || '../upload/') + '?id='
-		+ page.get('connID')
 }
 
 /**
@@ -45,19 +35,6 @@ export function getID(el) {
     	return 0
 	}
 	return getNum(el.closest('article, section'))
-}
-
-/**
- * Retrieve model of closest parent post
- * @param {Element} el
- * @returns {(Backbone.Model|null)}
- */
-export function getModel(el) {
-	const id = getID(el)
-	if (!id) {
-		return null
-	}
-	return posts.get(id)
 }
 
 /**
@@ -92,8 +69,9 @@ export function parseEl(string) {
  */
 export function listener(el, type, selector, handler) {
 	el.addEventListener(type, function (event) {
-		if (event.target.matches(selector))
+		if (event.target.matches(selector)) {
 			handler.call(this, event)
+		}
 	})
 }
 

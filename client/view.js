@@ -1,5 +1,5 @@
 import Model from './model'
-import {extend} from '../vender/underscore'
+import {extend} from '../vendor/underscore'
 
 /**
  * Generic view class, that all over view classes extend
@@ -16,30 +16,89 @@ export default class View {
         if (!this.model) {
             this.model = new Model()
         }
-        model.attach(this)
+        this.model.attach(this)
 
         // Create element, if none
         if (!this.el) {
             const el = this.el = document.createElement(this.tag || 'div')
 
             // Set element attributes, if any
-            if (this.attrs) {
-                for (let key in this.attrs) {
-                    el.setAttribute(key, this.attrs[key])
+            for (let key of ['id', 'class']) {
+                if (key in this) {
+                    el.setAttribute(key, this[key])
                 }
-                delete this.attrs
             }
         }
-
-        // Defined in each child class individually
-        this.render()
     }
 
     /**
-     * Remove element and unreference view and/or model for garbage collection
+     * Remove the element from the DOM and detach from its model, allowing the
+     * View instance to be garbage collected.
      */
     remove() {
-        this.model.detach(this)
         this.el.remove()
+        this.model.detach(this)
+        delete this.model
+    }
+
+    /**
+     * Add selector-specific event listeners to the view
+     * @param {string} type - DOM event type
+     * @param {string} selector - Selector to match the event.target against
+     * @param {string} method - Class method for handling the event
+     */
+    on(type, selector, method) {
+        this.el.addEventListener(type, event => {
+            if (event.target.matches(selector)) {
+                this[method](event)
+            }
+        })
+    }
+
+    /**
+     * Shorthand for adding multiple click event listeners as an object.
+     * We use those the most, so nice to have.
+     * @param {Object} events - Map of selectors to handlers
+     */
+    onClick(events) {
+        for (let selector in events) {
+            this.on('click', selector, events[selector])
+        }
+    }
+
+    /**
+     * Add event listener to view's element, whithout filtering by selector
+     * @param {string} type - DOM event type
+     * @param {string} method - Class method for handling the event
+     */
+    onAll(type, method) {
+        this.el.addEventListener(type, event => this[method](event))
+    }
+
+    /**
+     * Add selector-specific event listener, that will execute only once
+     * @param {string} type - DOM event type
+     * @param {string} selector - Selector to match the event.target against
+     * @param {string} method - Class method for handling the event
+     */
+    once(type, selector, method) {
+        this.el.addEventListener(type, event => {
+            if (event.target.matches(selector)) {
+                this[method](event)
+                this.el.removeEventListener(type, this[method])
+            }
+        })
+    }
+
+    /**
+     * Add event listener, that will execute only once
+     * @param {string} type - DOM event type
+     * @param {string} method - Class method for handling the event
+     */
+    onceAll(type, method) {
+        this.el.addEventListener(type, event => {
+            this[method](event)
+            this.el.removeEventListener(type, this[method])
+        })
     }
 }

@@ -1,4 +1,9 @@
-const optionModels = {}
+import {extend} from '../../vendor/underscore'
+import options from '../options'
+import opts from './opts'
+
+// All loaded option models
+export const optionModels = {}
 
 /**
  * Coontroler for each individual option
@@ -21,8 +26,8 @@ class OptionModel {
 		}
 
 		// Store option value in central stotage options Backbone model
-		const val = options.attributes[this.id] = this.get()
-		options.on('change:' + this.id, (options, val) =>
+		const val = options.attrs[this.id] = this.get()
+		options.onChange(this.id, val =>
 			this.onChange(val))
 		if (this.execOnStart !== false) {
 		    this.execute(val)
@@ -102,4 +107,11 @@ class OptionModel {
 	    }
 		return true
 	}
+}
+
+// Create an option model for each object in the array
+export function init() {
+    for (let spec of opts) {
+    	new OptionModel(spec)
+    }
 }

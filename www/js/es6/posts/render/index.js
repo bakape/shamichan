@@ -1,4 +1,4 @@
-'use strict';System.register(['../util','../header'],function(_export){var parseHTML,renderHeader;function renderPost(data){const image=data.image;const mod=data.mod;const body=data.body;const backlinks=data.backlinks;const banned=data.banned;return parseHTML`${ renderHeader(data) }
+'use strict';System.register(['../util','../header'],function(_export,_context){var parseHTML,renderHeader;function renderPost(data){const image=data.image;const mod=data.mod;const body=data.body;const backlinks=data.backlinks;const banned=data.banned;return parseHTML`${ renderHeader(data) }
         ${ renderImage(image) }
         <div class="container">
             ${ renderModInfo(mod) }
@@ -9,7 +9,7 @@
                 ${ backlinks?renderBacklinks(backlinks):'' }
             </small>
             ${ banned?renderBanned():'' }
-        </div>`;}return {setters:[function(_util){parseHTML=_util.parseHTML;},function(_header){renderHeader=_header.renderHeader;}],execute:function(){function renderSection(data,cls=''){if(data.locked){cls+=' locked';}if(data.editing){cls+=' editing';}data.image.large=true;return parseHTML`<section id="p${ data.num }" class="${ cls }">
+        </div>`;}return {setters:[function(_util){parseHTML=_util.parseHTML;},function(_header){renderHeader=_header.renderHeader;}],execute:function(){function renderSection(data){let cls=arguments.length<=1||arguments[1]===undefined?'':arguments[1];if(data.locked){cls+=' locked';}if(data.editing){cls+=' editing';}data.image.large=true;return parseHTML`<section id="p${ data.num }" class="${ cls }">
             <div class="background glass">
                 ${ renderPost(data) }
                 <span class="omit"></span>

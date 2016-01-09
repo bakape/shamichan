@@ -49,6 +49,11 @@ var lang = {
 	feedback: "Feedback",
 	onlineCounter: "Online Counter",
 
+	importConfigs: {
+		done:'Import successfull. The page will now reload.',
+		corrupt: 'Import failed. File corrupt'
+	},
+
 	reports: {
 		post: 'Reporting post',
 		reporting: 'Reporting...',

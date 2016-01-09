@@ -1,14 +1,9 @@
-/*
- * This file is used by both the client to populate the Backbone models and the
- * server to render the actual options panel.
- */
-
-import * as Cookie from 'js-cookie'
+import * as Cookie from '../../vendor/js-cookie'
 import {thumbStyles, resonableLastN, parseEl} from '../util'
-import {config, isMobile, events, cssHash} from 'main'
+import {config, isMobile, clientHash} from '../state'
 import {langApplied} from 'lang'
 
-// TODO: Send functuion
+// TODO: Send function
 
 /*
  * Full schema of the option interface
@@ -120,7 +115,9 @@ const opts = [
 				// Query the server for current stream info
 				send({type: 'radio'})
 			} else {
-				events.request('banner:radio:clear');
+
+				// TODO: System.import().then()
+				//events.request('banner:radio:clear');
 			}
 		}
 	},
@@ -170,7 +167,7 @@ const opts = [
 			document.getElementById('theme')
 				.setAttribute(
 					'href',
-					`${config.mediaURL}css/${theme}.css?v=${cssHash}`
+					`${config.mediaURL}css/${theme}.css?v=${clientHash}`
 				)
 		}
 	},
@@ -187,7 +184,8 @@ const opts = [
 		tab: 1,
 		execOnStart: false,
 		exec(upload) {
-			events.request('background:store', upload)
+			// TODO: System.import().then()
+			//events.request('background:store', upload)
 		}
 	},
 	// LAST N CONFIG
@@ -244,7 +242,7 @@ for (let short of shorts) {
  * Create a function to append and toggle a style element in <head>
  */
 function toggleHeadStyle(id, css) {
-	return function (toggle) {
+	return toggle => {
 		if (!document.getElementById(id)) {
 			document.head.appendChild(
 				parseEl(`<style id="${id}">${css}</style>`)
@@ -257,4 +255,7 @@ function toggleHeadStyle(id, css) {
 	}
 }
 
+/**
+ * Exports the generated option model templates
+ */
 export default opts

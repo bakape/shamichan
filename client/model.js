@@ -11,6 +11,7 @@ export default class Model {
     constructor(attrs = {}) {
         this.attrs = attrs
         this.views = []
+        this.changeHooks = {}
     }
 
     /**
@@ -30,6 +31,7 @@ export default class Model {
      */
     set(key, val) {
         this.attrs[key] = val
+        this.execChangeHooks(key)
     }
 
     /**
@@ -39,6 +41,9 @@ export default class Model {
      */
     setAttrs(attrs) {
         extend(this.attrs, attrs)
+        for (let key in attrs) {
+            this.execChangeHooks(key)
+        }
     }
 
     /**
@@ -53,6 +58,7 @@ export default class Model {
         } else {
             this.attrs[key] = [val]
         }
+        this.execChangeHooks(key)
     }
 
     /**
@@ -67,6 +73,7 @@ export default class Model {
         } else {
             this.attrs[key] = object
         }
+        this.execChangeHooks(key)
     }
 
     /**
@@ -97,6 +104,34 @@ export default class Model {
         }
         for (let view of this.views) {
             view.remove()
+        }
+    }
+
+    /**
+     * Add a function to be executed, when .set(), .setAttrs(), .append() or
+     * .extend() modify a key's value.
+     * @param {string} key
+     * @param {function} func
+     */
+    onChange(key, func) {
+        if (this.changeHooks[key]) {
+            this.changeHooks[key].push(func)
+        } else {
+            this.changeHooks[key] = [func]
+        }
+    }
+
+    /**
+     * Execute handlers hooked into key change, if any
+     * @param {string} key
+     */
+    execChangeHooks(key) {
+        if (!this.changeHooks[key]) {
+            return
+        }
+        const val = this.get(key)
+        for (let func of this.changeHooks[key]) {
+            func(val)
         }
     }
 }

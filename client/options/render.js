@@ -1,10 +1,12 @@
-import {_, isMobile, lang as ln, parseHTML} from 'main'
-import {default as options} from "./opts"
+import {filter} from '../../vendor/underscore'
+import {parseHTML} from '../util'
+import options from "./opts"
+import ln from 'lang'
 
 const lang = ln.opts
 
 /**
- * Render the options panel
+ * Render the inner HTML of the options panel
  */
 export default function () {
     let html = '<ul class="option_tab_sel">'
@@ -15,7 +17,7 @@ export default function () {
     for (let i = 0; i < tabs.length; i++) {
         // Pick the options for this specific tab, according to current
         // template and server configuration
-        opts[i] = _.filter(options, opt =>
+        opts[i] = filter(options, opt =>
             opt.tab === i
                 && (opt.load === undefined  || opt.load)
                 && !opt.hidden)
@@ -23,14 +25,21 @@ export default function () {
         if (!opts[i].length) {
             continue
         }
-        html += `<li><a data-content="tab-${i}"`
+        const attrs = {
+            'data-content': `tab-${i}`,
+            class: 'tab_link'
+        }
 
         // Highlight the first tabButt by default
         if (i === 0) {
-            html += ' class="tab_sel"'
+            attrs.class += ' tab_sel'
         }
-
-        html += `>${tabs[i]}</a></li>`;
+        html += parseHTML
+            `<li>
+                <a ${attrs}>
+                    tabs[i]
+                </a>
+            </li>`
     }
 
     html += '</ul><ul class="option_tab_cont">'
