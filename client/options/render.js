@@ -117,7 +117,11 @@ function renderOption(opt) {
 		}
 		html += '</select>'
 	}
-	html += `<label for="${opt.id}" title="${title}">${label}</label><br>`
+	html += parseHTML
+        `<label for="${opt.id}" title="${title}">
+            ${label}
+        </label>
+        <br>`
 
 	return html
 }
@@ -130,7 +134,10 @@ function renderExtras() {
 	const links = ['export', 'import', 'hidden']
     for (let id of links) {
         const [label, title] = lang.labels[id]
-        html += `<a id="${id}" title="${title}">${label}</a> `
+        html += parseHTML
+            `<a id="${id}" title="${title}">
+                ${label}
+            </a> `
     }
 
     // Hidden file input for uploading the JSON
