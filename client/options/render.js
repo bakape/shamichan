@@ -37,7 +37,7 @@ export default function () {
         html += parseHTML
             `<li>
                 <a ${attrs}>
-                    tabs[i]
+                    ${tabs[i]}
                 </a>
             </li>`
     }
