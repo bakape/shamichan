@@ -7,6 +7,7 @@ import * as dom4 from '../vendor/dom4' // DOM level 4 polyfill
 import * as Cookie from '../vendor/js-cookie'
 import {parseEl, parseHTML} from './util'
 import {defer, execDeferred} from './defer'
+import lang from 'lang'
 
 // TEMP: Will later get imported by the post modules
 import * as state from './state'
