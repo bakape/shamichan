@@ -266,31 +266,19 @@ export function randomID(len) {
  * @param {*}
  * @returns {string}
  */
-export function parseHTML(callSite) {
+export function parseHTML(callSite, ...args) {
 	// if arguments.length === 1
 	if (typeof callSite === 'string') {
-		return formatHTML(callSite);
+		return formatHTML(callSite)
 	}
-
-	/*
-	 Slicing the arguments object is deoptimising, so we construct a new array
-	 instead.
-	 */
-	const len = arguments.length
-	const args = []
-	for (let i = 1; i < len; i++) {
-		args[i - 1] = arguments[i]
-	}
-
 	if (typeof callSite === 'function') {
-		return formatHTML(callSite(args))
+		return (...args) => formatHTML(callSite(...args))
 	}
 
-	const output = callSite
-		.slice(0, len)
-		.map((text, i) =>
-			args[i - 1] + text)
-		.join('')
+	let output = callSite[0]
+	for (let i = 1; i <= args.length; i++) {
+	    output += args[i - 1] + callSite[i]
+	}
 
 	return formatHTML(output)
 }
