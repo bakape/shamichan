@@ -61,7 +61,7 @@ func printUsage() {
     stop    - stop a running daemonised meguca server
     restart - combination of stop + start
     init    - create intial files and folders and exit
-    debug   - force debug mode
+    debug   - debug mode
     help    - print this help text
 `)
 	os.Exit(1)

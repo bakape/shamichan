@@ -1,16 +1,34 @@
 [![GoDoc](https://godoc.org/gopkg.in/bakape/meguca.v2?status.svg)](https://godoc.org/gopkg.in/bakape/meguca.v2) [![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=v2)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
 
-`go get -u gopkg.in/bakape/meguca.v2`
-
-
-// TODO: Rewrite everything below for v2
-
 ##Setup
 * Install [dependencies](#dependencies) listed below
-* Sign up for reCAPTCHA
-* Run `npm install` to install npm deps and compile C++ addons
-* Configure the files in `config/`
-* Run `node builder.js` to start an auto-reloading development server
+* `go get -u gopkg.in/bakape/meguca.v2`
+* `meguca.v2 init`
+* Configure the server, installed in the standard location of your Go workspace
+(configuration WebUI soon™)
+* See `meguca.v2 help` for usage guide
+
+##Dependencies
+* [Go](https://golang.org/doc/install)
+* [RethinkDB](https://rethinkdb.com/docs/install/)
+    * RethinkDB does not enable a configuration file by default. If you don't
+    want to configure anything, just copy `/etc/rethinkdb/default.conf.sample`
+    into `/etc/rethinkdb/instances.d`
+
+##Updating
+* `go get -u gopkg.in/bakape/meguca.v2`
+* `meguca.v2 restart`
+* See `docs/` for upgrading between semver major releases
+
+##Development
+* Install [Node.js](https://nodejs.org/en/) >=4.0.0
+* `npm install` to install build dependencies
+* `npm run-script build` to build the client
+* `npm run-script watch` to watch for file changes and automatically
+incrementally rebuild the client
+* Use `meguca.v2 debug` to run the server
+
+// TODO: Rewrite everything below for v2
 
 ##Cross-platform development with Vagrant
 * Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and
@@ -36,22 +54,6 @@ installation on an fresh Ubuntu >=14.04 LTS VPS.
 * You can update `config/hot.js` and client files without restarting the server
 with `node server/kill.js`
 * All errors are logged to `./error.log`
-
-##Updating
-* To recompile the project rerun `npm install`
-* After upgrading an node.js version also run `npm rebuild`
-* See `docs/` for upgrading between semver major releases
-
-##Dependencies
-* node.js >=4.0.0
-* [node-gyp dependancies](https://github.com/TooTallNate/node-gyp/#installation)
-* imagemagick
-* redis
-
-###Optional dependencies
-* ffmpeg 2.2+ with libvpx, libvorbis and libopus for WebM support
-  * with libmp3lame for MP3
-* pngquant  2.3.0+ for PNG thumbnails
 
 ## Documentation
 * docs/api.md - JSON API spec
