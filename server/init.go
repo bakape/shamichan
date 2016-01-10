@@ -13,6 +13,7 @@ import (
 
 // Start parses command line arguments and initializes the server.
 func Start() {
+	chdirToSource()
 	loadConfig()
 
 	// Parse command line arguments
@@ -24,7 +25,7 @@ func Start() {
 	case "init":
 		os.Exit(0)
 	case "debug":
-		config.Hard.Debug = true
+		config.Debug = true
 	case "start":
 	case "stop":
 		killDaemon()
@@ -35,21 +36,33 @@ func Start() {
 		printUsage()
 	}
 
-	if !config.Hard.Debug {
+	if !config.Debug {
 		daemonise()
 	} else {
 		startServer()
 	}
 }
 
+// Changes the working directory to meguca's source directory, so we can
+// properly read configs, serve web resources, etc., while still being able to
+// run from meguca from any directory
+// TODO: CL flags to override this
+func chdirToSource() {
+	if gopath := os.Getenv("GOPATH"); gopath != "" {
+		workDir := gopath + "/src/gopkg.in/bakape/meguca.v2"
+		throw(os.Chdir(workDir))
+		daemonContext.WorkDir = workDir
+	}
+}
+
 func printUsage() {
-	fmt.Print(`usage: ./meguca [ start | stop | debug | help ]
-	start   - start the meguca server
-	stop    - stop a running daemonised meguca server
-	restart - combination of stop + start
-	init    - create intial files and folders and exit
-	debug   - force debug mode
-	help    - print this help text
+	fmt.Print(`usage: meguca.v2 [ start | stop | debug | help ]
+    start   - start the meguca server
+    stop    - stop a running daemonised meguca server
+    restart - combination of stop + start
+    init    - create intial files and folders and exit
+    debug   - force debug mode
+    help    - print this help text
 `)
 	os.Exit(1)
 }

@@ -29,7 +29,6 @@ var config struct {
 		Dirs struct {
 			Src, Thumb, Mid, Tmp string
 		}
-		Debug bool
 	}
 	Boards struct {
 		Enabled []string
@@ -79,6 +78,7 @@ var config struct {
 	Recaptcha struct {
 		Public, Private string
 	}
+	Debug                                                          bool
 	Banners, FAQ, Eightball                                        []string
 	Schedule                                                       [][3]string
 	Radio, Pyu, IllyaDance                                         bool
@@ -94,7 +94,6 @@ var clientConfig struct {
 			Socket     string `json:"socket"`
 			Websockets bool   `json:"websockets"`
 		} `json:"HTTP"`
-		Debug bool `json:"debug"`
 	} `json:"hard"`
 	Boards struct {
 		Enabled []string `json:"enabled"`
@@ -124,6 +123,7 @@ var clientConfig struct {
 		Spoilers []int `json:"spoilers"`
 		Hats     bool  `json:"hats"`
 	} `json:"images"`
+	Debug         bool        `json:"debug"`
 	Banners       []string    `json:"banners"`
 	FAQ           []string    `json:"FAQ"`
 	Eightball     []string    `json:"eightball"`

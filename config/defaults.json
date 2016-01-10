@@ -24,8 +24,7 @@
             "thumb": "www/thumb",
             "mid": "www/mid",
             "tmp": "imager/tmp"
-        },
-        "debug": true
+        }
     },
     "boards": {
         "enabled": ["a", "staff"],

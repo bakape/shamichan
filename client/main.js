@@ -37,7 +37,7 @@ if (localStorage.cookieVersion != cookieVersion) {
 
 // You can invoke the client-side debug mode with the `debug=true` query string
 if (/[&\?]debug=true/.test(location.href)) {
-	config.hard.debug = true
+	config.debug = true
 }
 
 // Load language-specific CSS
