@@ -7,18 +7,12 @@ import (
 	"github.com/sevlyar/go-daemon"
 	"log"
 	"os"
-	"os/user"
 	"syscall"
 	"time"
 )
 
 // Start parses command line arguments and initializes the server.
 func Start() {
-	current, err := user.Current()
-	throw(err)
-	if current.Uid == "0" {
-		panic("Refusing to  run as root")
-	}
 	loadConfig()
 
 	// Parse command line arguments
