@@ -3,7 +3,8 @@ import options from '../options'
 import opts from './opts'
 
 // All loaded option models
-export const optionModels = {}
+const optionModels = {}
+export default optionModels
 
 /**
  * Coontroler for each individual option
@@ -110,8 +111,6 @@ class OptionModel {
 }
 
 // Create an option model for each object in the array
-export function init() {
-    for (let spec of opts) {
-    	new OptionModel(spec)
-    }
+for (let spec of opts) {
+	new OptionModel(spec)
 }

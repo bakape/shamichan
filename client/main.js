@@ -12,10 +12,7 @@ import lang from 'lang'
 // TEMP: Will later get imported by the post modules
 import * as state from './state'
 
-import {init as initOptions} from './options/models'
 import OptionsPanel from './options/view'
-
-initOptions()
 
 //Renders the options panel, after more important computation has been done
 defer(() => new OptionsPanel())

@@ -1,10 +1,9 @@
 import {BannerModal} from '../modal'
 import renderContents from './render'
-import {optionModels} from './models'
+import optionModels from './models'
 import {each, find} from '../../vendor/underscore'
 import options from '../options'
 import {importConfigs} from 'lang'
-import {defer} from '../defer'
 
 /**
  * View of the options panel
