@@ -59,7 +59,7 @@ export const $email = document.query('#email')
 export const $banner = document.query('#banner')
 
 // Remember which posts are mine for two days
-export const mine = new Memory('mine', 2, true)
+export const mine = new Memory('mine', 2)
 
 // All posts currently displayed
 export const posts = new Collection()

@@ -2,8 +2,11 @@
  * Posts rendering module
  */
 
-import {parseHTML} from '../util'
-import {renderHeader} from '../header'
+import {parseHTML} from '../../util'
+import {renderHeader} from './header'
+import {renderImage} from './image'
+import {renderBanned, renderBacklinks} from './etc'
+import {renderBody} from './body'
 
 /**
  * Render the OP
@@ -52,12 +55,12 @@ function renderPost(data) {
         `${renderHeader(data)}
         ${renderImage(image)}
         <div class="container">
-            ${renderModInfo(mod)}
+            ${mod ? renderModInfo(mod) : ''}
             <blockquote>
                 ${renderBody(body)}
             </blockquote>
             <small>
-                ${backlinks ? renderBacklinks(backlinks) : ''}
+                ${renderBacklinks(backlinks)}
             </small>
             ${banned ? renderBanned(): ''}
         </div>`

@@ -62,7 +62,6 @@ type Post struct {
 	Image      *Image         `json:"image,omitempty",gorethink:"image,omitempty"`
 	Backlinks  LinkMap        `json:"backlinks,omitempty",gorethink:"backlinks,omitempty"`
 	Links      LinkMap        `json:"links,omitempty",gorethink:"links,omitempty"`
-	Dice       Dice           `json:"dice,omitempty",gorethink:"dice,omitempty"`
 	Mod        ModerationList `json:"mod,omitempty",gorethink:"mod,omitempty"`
 }
 
@@ -81,19 +80,6 @@ type Image struct {
 	MD5     string
 	SHA1    string
 	Imgnm   string `json:"imgnm",gorethink:"imgnm"`
-}
-
-// Dice stores # command information of the post in exectution order
-type Dice []Roll
-
-// Roll represents a single hash command. It always contains the Type field,
-// which determines, which of the other fields are present.
-type Roll struct {
-	Type   string  `json:"type",gorethink:"type"`
-	Bool   bool    `json:"bool,omitempty",gorethink:"bool,omitempty"`
-	Int    int     `json:"int,omitempty",gorethink:"int,omitempty"`
-	Ints   []uint8 `json:"ints,omitempty",gorethink:"ints,omitempty"`
-	String string  `json:"string,omitempty",gorethink:"string,omitempty"`
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to

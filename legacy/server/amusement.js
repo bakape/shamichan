@@ -12,13 +12,7 @@ const common = require('../common/index'),
 	push = require('./websockets').push,
 	radio = config.RADIO && require('./radio')
 
-// Construct hash command regex pattern
-let dice_re = '(#flip|#8ball|#sw(?:\\d{1,2}:)?\\d{1,2}:\\d{1,2}(?:[+-]\\d+)?' +
-	'|#\\d{0,2}d\\d{1,4}(?:[+-]\\d{1,4})?'
-if (config.RADIO)
-	dice_re += '|#q'
-dice_re += ')'
-dice_re = new RegExp(dice_re, 'i')
+
 
 // Insert #hash commands as tuples into the text body array
 function roll_dice(frag, parsed) {

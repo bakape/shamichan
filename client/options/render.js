@@ -1,5 +1,5 @@
 import {filter} from '../../vendor/underscore'
-import {parseHTML, parseAtributes} from '../util'
+import {parseHTML, parseAttributes} from '../util'
 import options from "./opts"
 import ln from 'lang'
 
@@ -36,7 +36,7 @@ export default function () {
         }
         html += parseHTML
             `<li>
-                <a ${parseAtributes(attrs)}>
+                <a ${parseAttributes(attrs)}>
                     ${tabs[i]}
                 </a>
             </li>`
@@ -146,7 +146,7 @@ function renderExtras() {
         id: 'importSettings',
         name: "Import Settings"
     }
-	html += `<input ${parseAtributes(attrs)}>`
+	html += `<input ${parseAttributes(attrs)}>`
 
     return html
 }

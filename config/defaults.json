@@ -18,12 +18,6 @@
         "rethinkdb": {
             "addr": "localhost:28015",
             "db": "meguca"
-        },
-        "dirs": {
-            "src": "www/src",
-            "thumb": "www/thumb",
-            "mid": "www/mid",
-            "tmp": "imager/tmp"
         }
     },
     "boards": {

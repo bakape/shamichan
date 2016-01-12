@@ -187,16 +187,6 @@ export function pick_spoiler(metaIndex) {
 
 export const thumbStyles = ['small', 'sharp', 'hide']
 
-export function readable_filesize(size) {
-	/* Dealt with it. */
-	if (size < 1024)
-		return size + ' B';
-	if (size < 1048576)
-		return Math.round(size / 1024) + ' KB';
-	size = Math.round(size / 104857.6).toString();
-	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB';
-}
-
 export function pad(n) {
 	return (n < 10 ? '0' : '') + n;
 }
@@ -295,7 +285,7 @@ function formatHTML(str) {
  * @param {Object} attrs
  * @returns {string}
  */
-export function parseAtributes(attrs) {
+export function parseAttributes(attrs) {
 	let html = ''
 	for (let key in attrs) {
 		html += ' '
@@ -316,11 +306,9 @@ export function parseAtributes(attrs) {
 export function commaList(items) {
 	let html = ''
 	for (let item of items) {
-		// Falsy value. Skip item.
-		if (!item && item !== 0)
-			continue
-		if (html)
+		if (html) {
 			html += ', '
+		}
 		html += item
 	}
 	return html

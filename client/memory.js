@@ -1,5 +1,4 @@
 import {isObject, isEmpty, size} from '../vendor/underscore'
-import * as Cookie from '../vendor/js-cookie'
 
 // All instances of the Memory class
 const memories = {}
@@ -78,17 +77,17 @@ export default class Memory {
 	}
 
 	/**
-	 * Return, if the given jey exists in the set
+	 * Return, if the given key exists in the set
 	 * @param {string} key
 	 * @returns {bool}
 	 */
 	has(key) {
-	    return !!this.chached[key]
+	    return !!this.cached[key]
 	}
 
 	/**
 	 * Replace the existing set, if any, with the suplied one
-	 * @param {Object} object
+	 * @param {Object} set
 	 */
 	writeAll(set) {
 		if (isEmpty(set)) {
@@ -122,12 +121,12 @@ export default class Memory {
 	 * Delete expired entries from set and write to localStorage
 	 */
 	purgeExpired() {
-		this.chached = this.read(),
-			now = this.now(),
+		this.cached = this.read()
+		const now = this.now(),
 			limit = 86400 * this.expiry,
 			expired = []
-		for (let key in this.chached) {
-			if (now > this.chached[key] + limit) {
+		for (let key in this.cached) {
+			if (now > this.cached[key] + limit) {
 				expired.push(key)
 			}
 		}
@@ -135,8 +134,8 @@ export default class Memory {
 			return
 		}
 		for (let key of expired) {
-		    delete this.chached[key]
+		    delete this.cached[key]
 		}
-		this.writeAll(this.chached)
+		this.writeAll(this.cached)
 	}
 }

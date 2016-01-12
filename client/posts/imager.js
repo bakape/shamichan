@@ -2,8 +2,21 @@
  * Thumbnail and image renderring
  */
 
-const main = require('../main'),
-	{$threads, _, Backbone, common, util, oneeSama, options, state} = main;
+import View from '../view'
+import {$threads} from '../state'
+
+/**
+ * Thumbnail and image renderring logic
+ */
+class Imager extends View {
+    /**
+     * Construct a new post image handler
+     * @param {Object} args
+     */
+    constructor(args) {
+        super(args)
+    }
+}
 
 exports.Hidamari = Backbone.View.extend({
 	/*

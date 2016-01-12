@@ -1,5 +1,8 @@
-import {escape} from 'underscore'
-import {parseHTML, pad} from '../util'
+import {escape} from '../../../vendor/underscore'
+import {parseHTML, parseAttributes, pad} from '../../util'
+import lang from 'lang'
+import {config} from '../../state'
+import options from '../../options'
 
 /**
  * Render the header with various post information
@@ -7,7 +10,8 @@ import {parseHTML, pad} from '../util'
  * @returns {string}
  */
 export function renderHeader(data) {
-    const {num, op, subject} = data
+    const {num, op, subject} = data,
+        postURL = renderPostURL(num)
     return parseHTML
         `<header>
             <input type="checkbox" class="postCheckbox">
@@ -15,10 +19,10 @@ export function renderHeader(data) {
             ${renderName(data)}
             ${renderTime(data.time)}
             <nav>
-                <a href="${this.postURL(num, op)}" class="history">
+                <a href="${postURL}" class="history">
                     No.
                 </a>
-                <a href="${this.postURL(num, op)}" class="quote">
+                <a href="${postURL}" class="quote">
                     ${num}
                 </a>
             </nav>
@@ -44,7 +48,7 @@ export function renderName(data) {
             href: 'mailto:' + encodeURI(email),
             target: 'blank'
         }
-        html += parseHTML `<a ${attrs}>`
+        html += `<a ${parseAttributes(attrs)}>`
     }
     html += resolveName(data)
     if (email) {
@@ -78,8 +82,14 @@ function resolveName(data) {
     if (trip) {
         html += `<code>${escape(trip)}</code>`
     }
-    if (auth) {
-        html += ` ## ${imports.hotConfig.staff_aliases[auth] || auth}`
+    if (auth) { // Render staff title
+        let alias
+        if (auth in config.staff.classes) {
+            alias = config.staff.classes[auth].alias
+        } else {
+            alias = auth
+        }
+        html += ` ## ${alias}`
     }
     return html
 }
@@ -120,9 +130,9 @@ export function renderTime(time) {
 function readableTime(time) {
 	let d = new Date(time)
 	return pad(d.getDate()) + ' '
-		+ lang.year[d.getMonth()] + ' '
+		+ lang.time.year[d.getMonth()] + ' '
 		+ d.getFullYear()
-		+ `(${lang.week[d.getDay()]})`
+		+ `(${lang.time.week[d.getDay()]})`
 		+`${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
@@ -134,10 +144,10 @@ function readableTime(time) {
  */
 function relativeTime(then, now) {
     let time = Math.floor((now - then) / 60000),
-        isFuture
+        isFuture = false
     if (time < 1) {
         if (time > -5) { // Assume to be client clock imprecission
-            return this.lang.just_now
+            return lang.time.just_now
         }
         else {
             isFuture = true
@@ -155,4 +165,13 @@ function relativeTime(then, now) {
     }
 
     return lang.ago(time, lang.time.year, isFuture)
+}
+
+/**
+ * Render an anchor that points to the target post number
+ * @param {int} num
+ * @returns {string}
+ */
+export function renderPostURL(num) {
+    return `#p${num}`
 }

@@ -21,6 +21,7 @@ var lang = {
 	newThread: 'New thread',
 	locked_to_bottom: 'Locked to bottom',
 	you: '(You)',
+	OP: '(OP)',
 	done: 'Done',
 	send: 'Send',
 	locked: 'locked',

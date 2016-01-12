@@ -26,9 +26,6 @@ var config struct {
 		Rethinkdb struct {
 			Addr, Db string
 		}
-		Dirs struct {
-			Src, Thumb, Mid, Tmp string
-		}
 	}
 	Boards struct {
 		Enabled []string

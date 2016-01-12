@@ -1,9 +1,12 @@
 /**
- * Image thumbnail rendering
+ * Image thumbnail HTML rendering
  */
 
-import {config, lang} from 'main'
-import * as _ from 'underscore'
+import lang from 'lang'
+import {config} from '../../state'
+import {escape} from 'underscore'
+import options from '../../options'
+import {parseHTML, commaList} from '../../util'
 
 /**
  * Render a thumbnail of an image, according to configuration settings
@@ -30,11 +33,11 @@ export function renderImage(data, reveal) {
  */
 export function renderFigcaption(data, reveal) {
     const list = commaList([
-        data.audio && '\u266B',
+        data.audio ? '\u266B' : '',
         data.length,
-        util.readable_filesize(data.size),
+        readableFilesize(data.size),
         `${data.dims[0]}x${data.dims[1]}`,
-        data.apng && 'APNG'
+        data.apng ? 'APNG' : ''
     ])
     return parseHTML
         `<figcaption>
@@ -45,6 +48,22 @@ export function renderFigcaption(data, reveal) {
             </span>
             ${imageLink(data)}
         </figcaption>`
+}
+
+/**
+ * Renders a human readable file size string
+ * @param {int} size - File size in bytes
+ * @returns {string}
+ */
+function readableFilesize(size) {
+	if (size < 1024) {
+		return size + ' B'
+	}
+	if (size < 1048576) {
+        return Math.round(size / 1024) + ' KB'
+    }
+	size = Math.round(size / 104857.6).toString()
+	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB'
 }
 
 /**
@@ -122,7 +141,7 @@ const searchTemplates = (function() {
             }
             attrs.href = url+ (type === 'thumb' ? thumbPath(data) : data[type])
             return parseHTML
-                `<a ${attrs}>
+                `<a ${parseAttributes(attrs)}>
                     ${symbol}
                 </a>`
         }
@@ -137,8 +156,7 @@ const searchTemplates = (function() {
  * @returns {string}
  */
 function imageSearch(data) {
-	let html = '',
-        templates = searchTemplates
+	let html = ''
 
 	// Only render google for PDFs and MP3s
 	if (['.pdf', '.mp3'].indexOf(data.ext) > -1) {
@@ -171,17 +189,17 @@ function thumbPath(data, mid) {
  */
 function imageLink(data) {
     let name = '',
-        imgnm = data.imgnm
+        {imgnm} = imgnm
     const m = imgnm.match(/^(.*)\.\w{3,4}$/);
     if (m) {
         name = m[1]
     }
-    const fullName = _.escape(imgnm),
+    const fullName = escape(imgnm),
         tooLong = name.length >= 38
     if (tooLong) {
-        imgnm = _.escape(name.slice(0, 30))
+        imgnm = escape(name.slice(0, 30))
             + '(&hellip;)'
-            + _.escape(data.ext)
+            + escape(data.ext)
     }
     const attrs = {
         href: `${config.SECONDARY_MEDIA_URL}src/${data.src}`,
@@ -192,7 +210,7 @@ function imageLink(data) {
         attrs.title = fullName
     }
     return parseHTML
-        `<a ${attrs}>
+        `<a ${parseAttributes(attrs)}>
             ${imgnm}
         </a>`
 }
@@ -230,7 +248,7 @@ export function renderThumbnail(data, href) {
         // Animated GIF thumbnails
         thumb = src
     } else {
-        thumb = this.thumbPath(data, options.get('thumbs') !== 'small')
+        thumb = thumbPath(data, options.get('thumbs') !== 'small')
     }
 
     const linkAttrs = {
@@ -257,8 +275,8 @@ export function renderThumbnail(data, href) {
     }
 
     return parseHTML
-        `<a ${linkAttrs}>
-            <img ${imgAttrs}>
+        `<a ${parseAttributes(linkAttrs)}>
+            <img ${parseAttributes(imgAttrs)}>
         </a>`
 }
 
