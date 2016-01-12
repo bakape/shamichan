@@ -9,12 +9,12 @@ export const hooks = {}
  * @param {function} func
  */
 export function hook(name, func) {
-    const hook = hooks[name]
-    if (!hook) {
-        hooks[name] = [func]
-    } else {
-        hook.push(func)
-    }
+	const hook = hooks[name]
+	if (!hook) {
+		hooks[name] = [func]
+	} else {
+		hook.push(func)
+	}
 }
 
 /**
@@ -23,11 +23,11 @@ export function hook(name, func) {
  * @param {*} param
  */
 export function trigger(name, param) {
-    const hook = hooks[name]
-    if (!hook) {
-        return
-    }
-    for (let func of hook) {
-        func(param)
-    }
+	const hook = hooks[name]
+	if (!hook) {
+		return
+	}
+	for (let func of hook) {
+		func(param)
+	}
 }

@@ -9,21 +9,21 @@ import lang from 'lang'
  * @returns {string}
  */
 export function renderPostLink(num, board, op) {
-    let text = '>>'
-    if (board !== page.get('board')) { // Cross-board
-        text += `>/${board}/`
-    }
-    text += num
-    if (mine.get(num)) { // Post, I made
-        text += ' ' + lang.you
-    }
-    const thread = page.get('thread')
-    if (op !== thread) { // Cross-thread
-        text += ' \u27a1'
-    } else if (num == thread) { // OP post of this thread
-        text += ' ' + lang.OP
-    }
-    return postAnchor(`../${board}/${op}#${num}`, text)
+	let text = '>>'
+	if (board !== page.get('board')) { // Cross-board
+		text += `>/${board}/`
+	}
+	text += num
+	if (mine.get(num)) { // Post, I made
+		text += ' ' + lang.you
+	}
+	const thread = page.get('thread')
+	if (op !== thread) { // Cross-thread
+		text += ' \u27a1'
+	} else if (num == thread) { // OP post of this thread
+		text += ' ' + lang.OP
+	}
+	return postAnchor(`../${board}/${op}#${num}`, text)
 }
 
 /**
@@ -33,10 +33,10 @@ export function renderPostLink(num, board, op) {
  * @returns {string}
  */
 function postAnchor(href, text) {
-    return parseHTML
-        `<a class="history" href="${href}">
-            ${text}
-        </a>`
+	return parseHTML
+		`<a class="history" href="${href}">
+			${text}
+		</a>`
 }
 
 /**
@@ -44,7 +44,7 @@ function postAnchor(href, text) {
  * @returns {string}
  */
 export function renerBanned() {
-    return `<b class="admin banMessage">${lang.mod.banMessage}</b>`
+	return `<b class="admin banMessage">${lang.mod.banMessage}</b>`
 }
 
 /**
@@ -67,15 +67,15 @@ export function renderModInfo(info) {
  * @returns {string}
  */
 export function renderBacklinks(links) {
-    if (!links) {
-        return ''
-    }
-    let html = ''
-    for (let {board, op} in links) {
-        if (html) {
-            html += ' '
-        }
-        html += renderPostLink(links[num], board, op)
-    }
-    return html
+	if (!links) {
+		return ''
+	}
+	let html = ''
+	for (let {board, op} in links) {
+		if (html) {
+			html += ' '
+		}
+		html += renderPostLink(links[num], board, op)
+	}
+	return html
 }

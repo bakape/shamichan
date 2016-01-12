@@ -98,7 +98,7 @@ function buildClient(version) {
  * @param {function} task
  */
 function createTask(name, path, task) {
-    tasks.push(name)
+	tasks.push(name)
 	gulp.task(name, () =>
 		task(gulp.src(path)
 			.on('error', gutil.log)
@@ -106,7 +106,7 @@ function createTask(name, path, task) {
 
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {
-	    gulp.watch(path, [name])
+		gulp.watch(path, [name])
 	}
 }
 
@@ -120,8 +120,8 @@ function babelConfig(version) {
 		compact: true,
 		comments: false
 	}
-    if (version === 'es5') {
-        return _.extend(base, {
+	if (version === 'es5') {
+		return _.extend(base, {
 			presets: ['es2015'],
 			plugins: [
 				'transform-es2015-modules-systemjs'
@@ -158,7 +158,7 @@ function compileVendor(name, path) {
  */
 function copyVendor(paths) {
 	for (let path of paths) {
-	    fs.copySync(
+		fs.copySync(
 			path,
 			'./www/js/vendor/' + _.last(path.split('/')),
 			{clobber: true}

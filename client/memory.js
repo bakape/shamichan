@@ -82,7 +82,7 @@ export default class Memory {
 	 * @returns {bool}
 	 */
 	has(key) {
-	    return !!this.cached[key]
+		return !!this.cached[key]
 	}
 
 	/**
@@ -134,7 +134,7 @@ export default class Memory {
 			return
 		}
 		for (let key of expired) {
-		    delete this.cached[key]
+			delete this.cached[key]
 		}
 		this.writeAll(this.cached)
 	}

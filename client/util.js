@@ -20,7 +20,7 @@ export function touchable_spoiler_tag(del) {
  */
 export function getNum(el) {
 	if (!el) {
-	    return 0
+		return 0
 	}
 	return parseInt(el.getAttribute('id').slice(1), 10)
 }
@@ -32,7 +32,7 @@ export function getNum(el) {
  */
 export function getID(el) {
 	if (!el) {
-    	return 0
+		return 0
 	}
 	return getNum(el.closest('article, section'))
 }
@@ -267,7 +267,7 @@ export function parseHTML(callSite, ...args) {
 
 	let output = callSite[0]
 	for (let i = 1; i <= args.length; i++) {
-	    output += args[i - 1] + callSite[i]
+		output += args[i - 1] + callSite[i]
 	}
 
 	return formatHTML(output)
@@ -322,5 +322,5 @@ export function commaList(items) {
  */
 export function checkAuth(action) {
 	const cls = config.staff.classes[main.ident && main.ident.auth]
-    return cls && !!cls.rights[action]
+	return cls && !!cls.rights[action]
 }

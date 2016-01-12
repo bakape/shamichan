@@ -18,7 +18,7 @@ export function read(href) {
 	}
 	for (let key of ['thread', 'lastN']) {
 		const val = state[key]
-	    state[key] = val ? parseInt(val[1]) : 0
+		state[key] = val ? parseInt(val[1]) : 0
 	}
 	return state
 }

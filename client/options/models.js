@@ -14,7 +14,7 @@ class OptionModel {
 	 * Create new option model from template model
 	 * @param {Object} model
 	 */
-    constructor(model) {
+	constructor(model) {
 		// Condition for loading option. Optional.
 		if (model.load !== undefined && !model.load) {
 			return
@@ -23,7 +23,7 @@ class OptionModel {
 
 		// No type = checkbox + default false
 		if (!this.type) {
-		    this.type = 'checkbox'
+			this.type = 'checkbox'
 		}
 
 		// Store option value in central stotage options Backbone model
@@ -31,17 +31,17 @@ class OptionModel {
 		options.onChange(this.id, val =>
 			this.onChange(val))
 		if (this.execOnStart !== false) {
-		    this.execute(val)
+			this.execute(val)
 		}
 		optionModels[this.id] = this
-    }
+	}
 
 	/**
 	 * Read value from localStorage
 	 * @returns {string}
 	 */
 	read() {
-	    return localStorage.getItem(this.id)
+		return localStorage.getItem(this.id)
 	}
 
 	/**
@@ -51,18 +51,18 @@ class OptionModel {
 	 */
 	get() {
 		const stored = this.read()
-	    if (!stored) {
-	        return this.default
-	    } else {
+		if (!stored) {
+			return this.default
+		} else {
 			if (stored === 'false') {
-		        return false
-		    }
+				return false
+			}
 			if (stored === "true") {
-		        return true
-		    }
+				return true
+			}
 			const num = parseInt(stored, 10)
 			if (num || num === 0) {
-			    return num
+				return num
 			}
 			return this.default
 		}
@@ -73,7 +73,7 @@ class OptionModel {
 	 * @param {*} val
 	 */
 	onChange(val) {
-	    this.execute(val)
+		this.execute(val)
 		this.set(val)
 	}
 
@@ -82,9 +82,9 @@ class OptionModel {
 	 * @param {*} val
 	 */
 	execute(val) {
-	    if (this.exec) {
-	        this.exec(val)
-	    }
+		if (this.exec) {
+			this.exec(val)
+		}
 	}
 
 	/**
@@ -92,9 +92,9 @@ class OptionModel {
 	 * @param {*} val
 	 */
 	set(val) {
-	    if (val !== this.default || this.read()) {
-	        localStorage.setItem(this.id, val)
-	    }
+		if (val !== this.default || this.read()) {
+			localStorage.setItem(this.id, val)
+		}
 	}
 
 	/**
@@ -103,9 +103,9 @@ class OptionModel {
 	 * @returns {bool}
 	 */
 	validate(val) {
-	    if (this.validation) {
-	        return this.validation(val)
-	    }
+		if (this.validation) {
+			return this.validation(val)
+		}
 		return true
 	}
 }

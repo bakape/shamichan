@@ -15,21 +15,21 @@ import {renderBody} from './body'
  * @returns {string}
  */
 export function renderSection(data, cls = '') {
-    if (data.locked) {
-        cls += ' locked'
-    }
-    if (data.editing) {
-        cls += ' editing'
-    }
-    data.image.large = true // Larger thumbnails
+	if (data.locked) {
+		cls += ' locked'
+	}
+	if (data.editing) {
+		cls += ' editing'
+	}
+	data.image.large = true // Larger thumbnails
 
-    return parseHTML
-        `<section id="p${data.num}" class="${cls}">
-            <div class="background glass">
-                ${renderPost(data)}
-                <span class="omit"></span>
-            </div>
-        </section>`
+	return parseHTML
+		`<section id="p${data.num}" class="${cls}">
+			<div class="background glass">
+				${renderPost(data)}
+				<span class="omit"></span>
+			</div>
+		</section>`
 }
 
 /**
@@ -38,30 +38,30 @@ export function renderSection(data, cls = '') {
  * @returns {string}
  */
 export function renderArticle(data) {
-    let cls = 'glass'
-    if (data.editing) {
-        cls += ' editing'
-    }
-    return parseHTML
-        `<article id="p${data.num}" class="${cls}">
-            ${renderPost(data)}
-        </article>`
+	let cls = 'glass'
+	if (data.editing) {
+		cls += ' editing'
+	}
+	return parseHTML
+		`<article id="p${data.num}" class="${cls}">
+			${renderPost(data)}
+		</article>`
 }
 
 function renderPost(data) {
-    const {image, mod, body, backlinks, banned} = data
+	const {image, mod, body, backlinks, banned} = data
 
-    return parseHTML
-        `${renderHeader(data)}
-        ${renderImage(image)}
-        <div class="container">
-            ${mod ? renderModInfo(mod) : ''}
-            <blockquote>
-                ${renderBody(body)}
-            </blockquote>
-            <small>
-                ${renderBacklinks(backlinks)}
-            </small>
-            ${banned ? renderBanned(): ''}
-        </div>`
+	return parseHTML
+		`${renderHeader(data)}
+		${renderImage(image)}
+		<div class="container">
+			${mod ? renderModInfo(mod) : ''}
+			<blockquote>
+				${renderBody(body)}
+			</blockquote>
+			<small>
+				${renderBacklinks(backlinks)}
+			</small>
+			${banned ? renderBanned(): ''}
+		</div>`
 }

@@ -11,14 +11,14 @@ const deferred = []
   * @param {function} func
   */
 export function defer(func) {
-    deferred.push(func)
+	deferred.push(func)
 }
 
  /**
   * Execute all stored deferred functions
   */
 export function execDeferred() {
-    while (deferred.length > 0) {
-    	deferred.shift()()
-    }
+	while (deferred.length > 0) {
+		deferred.shift()()
+	}
 }

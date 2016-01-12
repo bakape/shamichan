@@ -63,13 +63,13 @@ Selects and loads the client files
 
 	// Load core-js polyfill, if above tests fail
 	if (legacy) {
-	    System.import('vendor/corejs').then(loadMain)
+		System.import('vendor/corejs').then(loadMain)
 	} else {
-	    loadMain()
+		loadMain()
 	}
 
 	// Application entry point
 	function loadMain() {
-	    System.import((legacy ? 'es5' : 'es6') + '/main')
+		System.import((legacy ? 'es5' : 'es6') + '/main')
 	}
 })()

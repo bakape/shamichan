@@ -9,75 +9,75 @@ const lang = ln.opts
  * Render the inner HTML of the options panel
  */
 export default function () {
-    let html = '<ul class="option_tab_sel">'
-    const {tabs} = lang,
-        opts = []
+	let html = '<ul class="option_tab_sel">'
+	const {tabs} = lang,
+		opts = []
 
-    // Render tab butts
-    for (let i = 0; i < tabs.length; i++) {
-        // Pick the options for this specific tab, according to current
-        // template and server configuration
-        opts[i] = filter(options, opt =>
-            opt.tab === i
-                && (opt.load === undefined  || opt.load)
-                && !opt.hidden)
+	// Render tab butts
+	for (let i = 0; i < tabs.length; i++) {
+		// Pick the options for this specific tab, according to current
+		// template and server configuration
+		opts[i] = filter(options, opt =>
+			opt.tab === i
+				&& (opt.load === undefined  || opt.load)
+				&& !opt.hidden)
 
-        if (!opts[i].length) {
-            continue
-        }
-        const attrs = {
-            'data-content': `tab-${i}`,
-            class: 'tab_link'
-        }
+		if (!opts[i].length) {
+			continue
+		}
+		const attrs = {
+			'data-content': `tab-${i}`,
+			class: 'tab_link'
+		}
 
-        // Highlight the first tabButt by default
-        if (i === 0) {
-            attrs.class += ' tab_sel'
-        }
-        html += parseHTML
-            `<li>
-                <a ${parseAttributes(attrs)}>
-                    ${tabs[i]}
-                </a>
-            </li>`
-    }
+		// Highlight the first tabButt by default
+		if (i === 0) {
+			attrs.class += ' tab_sel'
+		}
+		html += parseHTML
+			`<li>
+				<a ${parseAttributes(attrs)}>
+					${tabs[i]}
+				</a>
+			</li>`
+	}
 
-    html += '</ul><ul class="option_tab_cont">'
-    for (let i = 0; i < opts.length; i++) {
-        html += renderTab(opts[i], i)
-    }
-    html += '</ul>'
+	html += '</ul><ul class="option_tab_cont">'
+	for (let i = 0; i < opts.length; i++) {
+		html += renderTab(opts[i], i)
+	}
+	html += '</ul>'
 
-    return html
+	return html
 }
 
 /**
  * Render tab contents
  */
 function renderTab(opts, i) {
-    if (!opts.length) {
-        return ''
-    }
-    let html = ""
-    html += `<li class="tab-${i}`
+	if (!opts.length) {
+		return ''
+	}
+	let html = ""
+	html += `<li class="tab-${i}`
 
-    // Show the first tab by default
-    if (i === 0) {
-        html += ' tab_sel'
-    }
-    html += '">'
+	// Show the first tab by default
+	if (i === 0) {
+		html += ' tab_sel'
+	}
+	html += '">'
 
-    // Render the actual options
-    for (let opt of opts) {
-        html += renderOption(opt)
-    }
+	// Render the actual options
+	for (let opt of opts) {
+		html += renderOption(opt)
+	}
 
-    if (i === 0) {
-        html += renderExtras()
-    }
-    html += '</li>'
+	if (i === 0) {
+		html += renderExtras()
+	}
+	html += '</li>'
 
-    return html
+	return html
 }
 
 /**
@@ -91,8 +91,8 @@ function renderOption(opt) {
 		isNumber = opt.type === 'number',
 		isImage = opt.type === 'image'
 	if (isShortcut) {
-        html += 'Alt+'
-    }
+		html += 'Alt+'
+	}
 	if (!isList) {
 		html += '<input'
 		if (isCheckbox || isImage)
@@ -102,8 +102,8 @@ function renderOption(opt) {
 		else if (isShortcut)
 			html += ' maxlength="1"'
 	} else {
-        html += '<select'
-    }
+		html += '<select'
+	}
 
 	const [label,title] = lang.labels[opt.id]
 	html += ` id="${opt.id}" title="${title}">`
@@ -111,17 +111,17 @@ function renderOption(opt) {
 	if (isList) {
 		for (let item of opt.type) {
 			html += parseHTML
-                `<option value="${item}">
-                    ${lang.modes[item] || item}
-                </option>`
+				`<option value="${item}">
+					${lang.modes[item] || item}
+				</option>`
 		}
 		html += '</select>'
 	}
 	html += parseHTML
-        `<label for="${opt.id}" title="${title}">
-            ${label}
-        </label>
-        <br>`
+		`<label for="${opt.id}" title="${title}">
+			${label}
+		</label>
+		<br>`
 
 	return html
 }
@@ -132,21 +132,21 @@ function renderOption(opt) {
 function renderExtras() {
 	let html = '<br>'
 	const links = ['export', 'import', 'hidden']
-    for (let id of links) {
-        const [label, title] = lang.labels[id]
-        html += parseHTML
-            `<a id="${id}" title="${title}">
-                ${label}
-            </a> `
-    }
+	for (let id of links) {
+		const [label, title] = lang.labels[id]
+		html += parseHTML
+			`<a id="${id}" title="${title}">
+				${label}
+			</a> `
+	}
 
-    // Hidden file input for uploading the JSON
-    const attrs = {
-        type: 'file',
-        id: 'importSettings',
-        name: "Import Settings"
-    }
+	// Hidden file input for uploading the JSON
+	const attrs = {
+		type: 'file',
+		id: 'importSettings',
+		name: "Import Settings"
+	}
 	html += `<input ${parseAttributes(attrs)}>`
 
-    return html
+	return html
 }
