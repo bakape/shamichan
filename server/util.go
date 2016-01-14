@@ -101,12 +101,7 @@ func canAccessThread(id uint64, board string, ident Ident) bool {
 		return false
 	}
 	var deleted bool
-	rGet(getThread(id).
-		Field("posts").
-		Field(idToString(id)).
-		Default(false),
-	).
-		One(&deleted)
+	rGet(getThread(id).Field("deleted").Default(false)).One(&deleted)
 	if deleted && !checkAuth("seeModeration", ident) {
 		return false
 	}
