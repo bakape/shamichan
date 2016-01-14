@@ -39,7 +39,7 @@ var config struct {
 	}
 	Lang struct {
 		Enabled []string
-		Def     string
+		Default string
 	}
 	Staff struct {
 		Classes map[string]struct {
@@ -52,20 +52,19 @@ var config struct {
 	}
 	Images struct {
 		Max struct {
-			Size, Width, Height, Pixels int
+			Size, Width, Height, Pixels int64
 		}
 		Thumb struct {
+			HighQuality, PNG   bool
 			Quality            int
 			ThumbDims, MidDims [2]int
-			HighQuality, PNG   bool
 			PNGQuality         string
 		}
-		Formats struct {
-			Webm, WebmAudio, MP3, SVG, PDF bool
-		}
-		DuplicateThreshold int
-		Spoilers           []int
+		WebmAudio          bool
 		Hats               bool
+		DuplicateThreshold uint8
+		Spoilers           []uint16
+		Formats            map[string]bool
 	}
 	Posts struct {
 		Salt, ExcludeRegex                       string

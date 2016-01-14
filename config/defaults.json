@@ -132,12 +132,15 @@
             "pngQuality": "0-10"
         },
         "formats": {
-            "webm": false,
-            "webmAudio": false,
-            "mp3": false,
-            "svg": false,
-            "pdf": false
+			"png": true,
+			"jpg": true,
+			"gif": true,
+            "webm": true,
+            "mp3": true,
+            "svg": true,
+            "pdf": true
         },
+		"webmAudio": true,
         "duplicateThreshold": 26,
         "spoilers": [1, 2, 3],
         "hats": false

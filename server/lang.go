@@ -12,7 +12,7 @@ import (
 type LanguagePack struct {
 	Imager map[string]string
 }
-type packMap map[string]LanguagePack
+type packMap map[string]*LanguagePack
 
 // langs contains languagepack structs for each language
 var langs packMap
@@ -23,8 +23,8 @@ func loadLanguagePacks() {
 	for _, lang := range config.Lang.Enabled {
 		file, err := ioutil.ReadFile("./lang/" + lang + "/server.json")
 		throw(err)
-		var parsed LanguagePack
-		unmarshalJSON(file, &parsed)
+		var parsed *LanguagePack
+		unmarshalJSON(file, parsed)
 		langs[lang] = parsed
 	}
 }

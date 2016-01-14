@@ -49,6 +49,7 @@ var lang = {
 	schedule: "Schedule",
 	feedback: "Feedback",
 	onlineCounter: "Online Counter",
+	received: "% received...",
 
 	importConfigs: {
 		done:'Import successfull. The page will now reload.',

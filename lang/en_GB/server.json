@@ -3,8 +3,6 @@
 		"bad_client": "Bad client ID.",
 		"too_large": "File is too large.",
 		"req_problem": "Upload request problem.",
-		"aborted": "Upload was aborted.",
-		"received": "% received...",
 		"invalid": "Invalid upload.",
 		"no_image": "No image.",
 		"bad_spoiler": "Bad spoiler.",

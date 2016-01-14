@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	r "github.com/dancannon/gorethink"
 	"io"
+	"net/http"
 	"os"
 	"strconv"
 )
@@ -143,4 +144,23 @@ func copyFile(path string, writer io.Writer) {
 // Shorthand for converting a post ID to a string for JSON keys
 func idToString(id uint64) string {
 	return strconv.FormatUint(id, 10)
+}
+
+// chooseLang selects the language to use in responses to the client, by
+// checking the language setting of the request's cookies and verifying it
+// against the available selection on the server. Defaults to the server's
+// default language.
+func chooseLang(req *http.Request) string {
+	cookie, err := req.Cookie("lang")
+	if err == http.ErrNoCookie {
+		return config.Lang.Default
+	} else if err != nil {
+		panic(err)
+	}
+	for _, lang := range config.Lang.Enabled {
+		if cookie.Value == lang {
+			return lang
+		}
+	}
+	return config.Lang.Default
 }
