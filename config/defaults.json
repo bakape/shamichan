@@ -2,13 +2,8 @@
     "hard": {
         "HTTP": {
             "addr": ":8000",
-            "media": "../",
-            "upload": "/upload",
-            "socket": "/hana",
             "origin": "http://localhost:8000",
-            "serveStatic": true,
             "trustProxies": true,
-            "gzip": true,
             "websockets": true
         },
         "redis": {

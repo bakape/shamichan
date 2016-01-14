@@ -12,9 +12,12 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/mssola/user_agent"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
 	"strconv"
 )
 
@@ -43,21 +46,21 @@ func startWebServer() {
 	posts.HandleFunc("/", wrapHandler(true, boardPage))
 	posts.HandleFunc(thread, wrapHandler(true, threadPage))
 
-	// Serve static assets
-	if config.Hard.HTTP.ServeStatic {
-		router.PathPrefix("/").Handler(http.FileServer(http.Dir("./www")))
-	}
+	// Static assets
+	assets := router.PathPrefix("/ass").Subrouter()
+	assets.PathPrefix("/img").Handler(http.StripPrefix("/ass/", imageServer{}))
+	assets.PathPrefix("/").
+		Handler(http.StripPrefix("/ass/", http.FileServer(http.Dir("./www"))))
 
+	// Wrap router with extra handlers
 	var handler http.Handler = router
-
 	if config.Hard.HTTP.TrustProxies { // Infer IP from header, if configured to
 		handler = handlers.ProxyHeaders(router)
 	}
-	if config.Hard.HTTP.Gzip {
-		handler = handlers.CompressHandler(handler)
-	}
-	handler = getIdent(handler)
-	handler = handlers.RecoveryHandler( // Return status 500 on goroutine panic
+	handler = handlers.CompressHandler(handler) //GZIP
+	handler = getIdent(handler)                 // CLient identity
+	handler = handlers.RecoveryHandler(
+		// Return status 500 on goroutine panic and log stack
 		handlers.PrintRecoveryStack(true),
 	)(handler)
 
@@ -362,4 +365,34 @@ func servePost(res http.ResponseWriter, req *http.Request) {
 	}
 	setHeaders(res, etag, true)
 	res.Write(data)
+}
+
+type imageServer struct{}
+
+// More performant handler for serving image assets. These are immutable
+// (except deletion), so we can also set seperate caching policies for them.
+func (is imageServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	file, err := os.Open("./www/" + path.Clean(req.URL.Path))
+	if err != nil {
+		if os.IsNotExist(err) {
+			res.WriteHeader(404)
+			return
+		}
+		panic(err)
+	}
+	defer file.Close()
+	headers := res.Header()
+
+	// Fake etag, to stop agressive browser cache busting
+	if checkClientEtags(res, req, "0") {
+		return
+	}
+	headers.Set("ETag", "0")
+
+	// max-age set to 350 days. Some caches and browsers ignore max-age, if it
+	// is a year or greater, so keep it a little bellow.
+	headers.Set("Cache-Control", "max-age=30240000")
+	headers.Set("X-Frame-Options", "sameorigin")
+	_, err = io.Copy(res, file)
+	throw(err)
 }

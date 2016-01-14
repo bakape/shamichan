@@ -57,8 +57,8 @@ func (iu *ImageUpload) process() {
 	if err != nil {
 		iu.writeError(400, "invalid", err)
 	}
-	iu.detectFileType(file)
 	defer file.Close()
+	iu.detectFileType(file)
 }
 
 func (iu *ImageUpload) parseForm() {
@@ -84,7 +84,7 @@ type uploadError struct {
 	inner error
 }
 
-func (e *uploadError) Error() string {
+func (e uploadError) Error() string {
 	return fmt.Sprintf("Upload error by IP %v : %v", e.ip, e.inner.Error())
 }
 

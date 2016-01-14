@@ -1,6 +1,6 @@
 import * as Cookie from '../../vendor/js-cookie'
 import {thumbStyles, resonableLastN, parseEl} from '../util'
-import {config, isMobile, clientHash} from '../state'
+import {config, isMobile} from '../state'
 import {langApplied} from 'lang'
 
 // TODO: Send function
@@ -167,7 +167,7 @@ const opts = [
 			document.getElementById('theme')
 				.setAttribute(
 					'href',
-					`${config.mediaURL}css/${theme}.css?v=${clientHash}`
+					`/ass/css/${theme}.css`
 				)
 		}
 	},

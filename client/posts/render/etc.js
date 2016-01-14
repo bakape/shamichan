@@ -23,7 +23,7 @@ export function renderPostLink(num, board, op) {
 	} else if (num == thread) { // OP post of this thread
 		text += ' ' + lang.OP
 	}
-	return postAnchor(`../${board}/${op}#${num}`, text)
+	return postAnchor(`/${board}/${op}#${num}`, text)
 }
 
 /**

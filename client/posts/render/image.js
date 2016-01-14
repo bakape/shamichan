@@ -85,10 +85,10 @@ function hiddenToggle(reveal) {
  * Base URLs of image addresses
  */
 const imagePaths = {
-	src: config.mediaURL + 'src/',
-	thumb: config.mediaURL + 'thumb/',
-	mid: config.mediaURL + 'mid/',
-	spoil: config.mediaURL + 'spoil/spoiler'
+	src: '/ass/img/src/',
+	thumb: '/ass/img/thumb/',
+	mid: '/ass/img/mid/',
+	spoil: '/ass/spoil/spoiler'
 }
 
 /**

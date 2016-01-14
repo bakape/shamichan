@@ -15,6 +15,7 @@ import (
 func Start() {
 	chdirToSource()
 	loadConfig()
+	createDirs()
 
 	// Parse command line arguments
 	if len(os.Args) < 2 {
@@ -119,5 +120,12 @@ func killDaemon() {
 			}
 			time.Sleep(100 * time.Millisecond)
 		}
+	}
+}
+
+// Create all needed directories for server operation
+func createDirs() {
+	for _, dir := range [...]string{"src", "thumb", "mid"} {
+		throw(os.MkdirAll("./www/img/"+dir, 0750))
 	}
 }

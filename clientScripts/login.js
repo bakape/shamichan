@@ -85,7 +85,7 @@
 		});
 	}
 
-	$script('https://login.persona.org/include.js?v=' + imports.clientHash,
+	$script('https://login.persona.org/include.js',
 		function () {
 			setup_button();
 			navigator.id.watch({
@@ -97,8 +97,7 @@
 
 	$('<link/>', {
 		rel: 'stylesheet',
-		href: imports.config.MEDIA_URL + 'css/persona-buttons.css?v='
-			+ imports.clientHash
+		href: '/ass/css/persona-buttons.css'
 	})
 		.appendTo('head');
 })();

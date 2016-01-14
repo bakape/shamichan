@@ -52,7 +52,7 @@ Selects and loads the client files
 	meta['es5/*'] = meta['es6/*'] = {format: 'register'}
 
 	System.config({
-		baseURL: config.hard.HTTP.media + 'js',
+		baseURL: '/ass/js',
 		defaultJSExtensions: true,
 		// Alias the appropriate language pack to "lang"
 		map: {

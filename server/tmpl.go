@@ -11,8 +11,6 @@ import (
 	"github.com/dchest/htmlmin"
 	"html/template"
 	"io/ioutil"
-	"os"
-	"strings"
 )
 
 // templateStore stores the static part of HTML templates and the corresponding
@@ -49,25 +47,18 @@ func compileTemplates() {
 var clientFileHash string
 
 type templateVars struct {
-	Config                           template.JS
-	Navigation                       template.HTML
-	ClientHash, ConfigHash, MediaURL string
-	IsMobile                         bool
+	Config               template.JS
+	Navigation           template.HTML
+	ConfigHash, MediaURL string
+	IsMobile             bool
 }
 
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
 func indexTemplate(raw string) (templateStore, templateStore) {
-	vars := templateVars{
-		ConfigHash: configHash,
-		MediaURL:   config.Hard.HTTP.Media,
-	}
+	vars := templateVars{ConfigHash: configHash}
 	vars.Config = template.JS(marshalJSON(clientConfig))
 	vars.Navigation = boardNavigation()
-	hash := hashClientFiles()
-	vars.ClientHash = hash
-	clientFileHash = hash
-
 	tmpl, err := template.New("index").Parse(raw)
 	throw(err)
 
@@ -75,55 +66,6 @@ func indexTemplate(raw string) (templateStore, templateStore) {
 	// change, when we get a dedicated mobile GUI.
 	return buildIndexTemplate(tmpl, vars, false),
 		buildIndexTemplate(tmpl, vars, true)
-}
-
-// hashClientFiles reads all client files and produces a truncated MD5 hash.
-// Used for versioning in query strings for transparent client version
-// transition.
-func hashClientFiles() string {
-	// Gather all files
-
-	// TODO: Rework this for ES6 modules
-
-	files := []string{}
-	args := [][2]string{
-		{"./www/css", ".css"},
-		{"./www/js", ".js"},
-		{"./www/js/vendor", ".js"},
-		{"./www/js/es5", ".js"},
-		{"./www/js/es6", ".js"},
-		{"./www/js/lang", ".js"},
-	}
-	for _, pair := range args {
-		files = append(files, scanDir(pair[0], pair[1])...)
-	}
-
-	// Read all files into a buffer and hash it
-	buf := new(bytes.Buffer)
-	for _, file := range files {
-		copyFile(file, buf)
-	}
-	return hashBuffer(buf.Bytes())
-}
-
-// scanDir returns files from a folder, that end with the provided extension
-func scanDir(path string, suffix string) (filtered []string) {
-	for _, file := range ls(path) {
-		if strings.HasSuffix(file, suffix) {
-			filtered = append(filtered, path+"/"+file)
-		}
-	}
-	return
-}
-
-// ls returns the contents of a directory
-func ls(path string) []string {
-	dir, err := os.Open(path)
-	throw(err)
-	defer dir.Close()
-	files, err := dir.Readdirnames(0)
-	throw(err)
-	return files
 }
 
 // boardNavigation renders interboard navigation we put in the top banner

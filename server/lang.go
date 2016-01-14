@@ -23,7 +23,7 @@ func loadLanguagePacks() {
 	for _, lang := range config.Lang.Enabled {
 		file, err := ioutil.ReadFile("./lang/" + lang + "/server.json")
 		throw(err)
-		var parsed *LanguagePack
+		parsed := new(LanguagePack)
 		unmarshalJSON(file, parsed)
 		langs[lang] = parsed
 	}

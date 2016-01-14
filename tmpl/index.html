@@ -1,21 +1,20 @@
 <!doctype html>
 <head>
 	<meta charset="utf-8">
-	<link type="image/x-icon" rel="shortcut icon" id="favicon" href="{{.MediaURL}}favicon.ico">
-	<link rel="manifest" href="{{.MediaURL}}mobile/manifest.json">
+	<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/ass/favicon.ico">
+	<link rel="manifest" href="/ass/mobile/manifest.json">
 	<meta name="description" content="Real-time imageboard">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
 	<!-- Main and theme-specific stylesheets !-->
-	<link rel="stylesheet" href="{{.MediaURL}}css/base.css?v={{.ClientHash}}">
+	<link rel="stylesheet" href="/ass/css/base.css">
 	<link rel="stylesheet" id="theme">
 	<!-- Configuration injection see ./tmpl/tmpl.go !-->
 	<script>
 		var config = {{.Config}},
-			clientHash = '{{.ClientHash}}',
 			configHash = '{{.ConfigHash}}',
 			isMobile = {{.IsMobile}}
 	</script>
-	<script src="{{.MediaURL}}js/scripts/setup.js"></script>
+	<script src="/ass/js/scripts/setup.js"></script>
 	<!-- Post model JSON. Injected during page render !-->
 	<script id="postData" type="application/json">
 		<$$$>
@@ -38,7 +37,7 @@
 <!-- For post and image hover previews !-->
 <div id="hover_overlay"></div>
 <!-- Loading indicator image !-->
-<image src="{{.MediaURL}}css/ui/loading.gif" id="loadingImage" width="224" height="128">
+<image src="/ass/css/ui/loading.gif" id="loadingImage" width="224" height="128">
 <!-- Top banner !-->
 <span id="banner" class="glass">
 	<!--- Interboard navigation !-->
@@ -94,5 +93,5 @@
 	<$$$>
 </script>
 <!-- Dynamic module loader!-->
-<script src="{{.MediaURL}}js/vendor/system.js"></script>
-<script src="{{.MediaURL}}js/scripts/loader.js"></script>
+<script src="/ass/js/vendor/system.js"></script>
+<script src="/ass/js/scripts/loader.js"></script>

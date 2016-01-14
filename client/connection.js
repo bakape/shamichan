@@ -13,15 +13,6 @@ const main = require('./main'),
 
 let socket, attempts, attemptTimer;
 
-/**
- * Return image upload URL
- * @returns {string}
- */
-export function imageUploadURL() {
-	return (config.hard.HTTP.upload || '../upload/') + '?id='
-		+ page.get('connID')
-}
-
 function send(msg) {
 	// need deferral or reporting on these lost messages...
 	if (connSM.state != 'synced' && connSM.state != 'syncing')

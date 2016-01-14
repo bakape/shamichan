@@ -40,14 +40,9 @@ export const ownPosts = {}
 
 // Configuration object, passed from the server
 export const config = window.config
-config.mediaURL = config.hard.HTTP.media // Shorthand
 
 // Hash of the the configuration object
 export const configHash = window.configHash
-
-// Combined hash of the current client-side files. Used for transparent
-// versioning.
-export const clientHash = window.clientHash
 
 // Indicates, if in mobile mode. Determined server-side.
 export const isMobile = window.isMobile

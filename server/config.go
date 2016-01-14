@@ -16,8 +16,8 @@ var config struct {
 	// Configuration that can not be hot-reloaded without restarting the server
 	Hard struct {
 		HTTP struct {
-			Addr, Media, Upload, Socket, Origin         string
-			ServeStatic, TrustProxies, Gzip, Websockets bool
+			Addr, Origin             string
+			TrustProxies, Websockets bool
 		}
 		Redis struct {
 			Addr string
@@ -85,10 +85,7 @@ var config struct {
 var clientConfig struct {
 	Hard struct {
 		HTTP struct {
-			Media      string `json:"media"`
-			Upload     string `json:"upload"`
-			Socket     string `json:"socket"`
-			Websockets bool   `json:"websockets"`
+			Websockets bool `json:"websockets"`
 		} `json:"HTTP"`
 	} `json:"hard"`
 	Boards struct {
