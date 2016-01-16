@@ -52,7 +52,7 @@ func startWebServer() {
 	handler = handlers.CompressHandler(handler) //GZIP
 
 	log.Println("Listening on " + config.Hard.HTTP.Addr)
-	http.ListenAndServe(config.Hard.HTTP.Addr, handler)
+	log.Fatal(http.ListenAndServe(config.Hard.HTTP.Addr, handler))
 }
 
 // Redirects to frontpage, if set, or the default board
