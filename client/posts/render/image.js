@@ -85,9 +85,9 @@ function hiddenToggle(reveal) {
  * Base URLs of image addresses
  */
 const imagePaths = {
-	src: '/ass/img/src/',
-	thumb: '/ass/img/thumb/',
-	mid: '/ass/img/mid/',
+	src: '/img/src/',
+	thumb: '/img/thumb/',
+	mid: '/img/mid/',
 	spoil: '/ass/spoil/spoiler'
 }
 

@@ -5,79 +5,54 @@
 package server
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"github.com/gorilla/context"
 	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 	"github.com/mssola/user_agent"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"path"
+	"runtime"
 	"strconv"
 )
 
 func startWebServer() {
-	router := mux.NewRouter()
-	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
-	router.StrictSlash(true)
-	router.HandleFunc("/", redirectToDefault)
+	router := httprouter.New()
+	router.NotFound = http.HandlerFunc(notFound)
+	router.PanicHandler = panicHandler
 
-	const board = `/{board:\w+}`
-	const thread = `/{thread:\d+}`
+	// Board and board JSON API pages
+	router.HandlerFunc("GET", "/", redirectToDefault)
+	router.HandlerFunc("GET", "/all/", allBoards(false))
+	router.HandlerFunc("GET", "/api/all/", allBoards(true))
+	for _, board := range config.Boards.Enabled {
+		router.HandlerFunc("GET", "/"+board+"/", boardPage(false, board))
+		router.HandlerFunc("GET", "/api/"+board+"/", boardPage(true, board))
 
-	// HTML
-	router.HandleFunc("/all/", wrapHandler(false, allBoards))
-	index := router.PathPrefix(board).Subrouter()
-	index.HandleFunc("/", wrapHandler(false, boardPage))
-	index.HandleFunc(thread, wrapHandler(false, threadPage))
+		// Thread pages
+		router.GET("/"+board+"/:thread", threadPage(false, board))
+		router.GET("/api/"+board+"/:thread", threadPage(true, board))
+	}
 
-	// JSON API
-	api := router.PathPrefix("/api").Subrouter()
-	api.NotFoundHandler = http.NotFoundHandler() // Default 404 handler for JSON
-	api.HandleFunc("/config", serveConfigs)
-	api.HandleFunc(`/post/{post:\d+}`, servePost)
-	api.HandleFunc("/all/", wrapHandler(true, allBoards))
-	posts := api.PathPrefix(board).Subrouter()
-	posts.HandleFunc("/", wrapHandler(true, boardPage))
-	posts.HandleFunc(thread, wrapHandler(true, threadPage))
+	// Other JSON API handlers
+	router.HandlerFunc("GET", "/api/config", serveConfigs)
+	router.GET("/api/post/:post", servePost)
 
 	// Static assets
-	assets := router.PathPrefix("/ass").Subrouter()
-	assets.PathPrefix("/img").Handler(http.StripPrefix("/ass/", imageServer{}))
-	assets.PathPrefix("/").
-		Handler(http.StripPrefix("/ass/", http.FileServer(http.Dir("./www"))))
+	router.ServeFiles("/ass/*filepath", http.Dir("./www"))
+	router.GET("/img/*filepath", serveImages)
 
 	// Wrap router with extra handlers
-	var handler http.Handler = router
+	handler := http.Handler(router)
 	if config.Hard.HTTP.TrustProxies { // Infer IP from header, if configured to
 		handler = handlers.ProxyHeaders(router)
 	}
 	handler = handlers.CompressHandler(handler) //GZIP
-	handler = getIdent(handler)                 // CLient identity
-	handler = handlers.RecoveryHandler(
-		// Return status 500 on goroutine panic and log stack
-		handlers.PrintRecoveryStack(true),
-	)(handler)
 
 	log.Println("Listening on " + config.Hard.HTTP.Addr)
 	http.ListenAndServe(config.Hard.HTTP.Addr, handler)
-}
-
-// Attach client access rights to request
-func getIdent(handler http.Handler) http.Handler {
-	fn := func(res http.ResponseWriter, req *http.Request) {
-		context.Set(req, "ident", lookUpIdent(req.RemoteAddr))
-
-		// Call the next handler in the chain
-		handler.ServeHTTP(res, req)
-	}
-
-	return http.HandlerFunc(fn)
 }
 
 // Redirects to frontpage, if set, or the default board
@@ -89,98 +64,105 @@ func redirectToDefault(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-type handlerFunction func(http.ResponseWriter, *http.Request)
-type handlerWrapper func(bool, http.ResponseWriter, *http.Request)
-
-// wrapHandler returns a function with the first bool argument already assigned
-func wrapHandler(json bool, handler handlerWrapper) handlerFunction {
+// boardPage constructs a handler for `/board/` pages for serving either HTML
+// or JSON
+func boardPage(jsonOnly bool, board string) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		handler(json, res, req)
+		in := indexPage{res: res, req: req, json: jsonOnly}
+
+		in.validate = func() bool {
+			return canAccessBoard(board, in.ident)
+		}
+
+		in.getCounter = func() uint64 {
+			return boardCounter(board)
+		}
+
+		in.getPostData = func() []byte {
+			return marshalJSON(NewReader(board, in.ident).GetBoard())
+		}
+
+		in.process(board)
 	}
 }
 
-// Handles `/board/` page requests
-func boardPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
-	in := indexPage{res: res, req: req, json: jsonOnly}
-	board := mux.Vars(req)["board"]
+// Same as above for `/board/thread` pages
+func threadPage(jsonOnly bool, board string) httprouter.Handle {
+	return func(
+		res http.ResponseWriter,
+		req *http.Request,
+		ps httprouter.Params,
+	) {
+		id, err := strconv.ParseUint(ps[0].Value, 10, 64)
+		if err != nil {
+			if jsonOnly {
+				text404(res)
+			} else {
+				notFound(res, req)
+			}
+			return
+		}
+		in := indexPage{res: res, req: req, json: jsonOnly}
+		in.lastN = detectLastN(req)
 
-	in.validate = func() bool {
-		return canAccessBoard(board, in.ident)
+		in.validate = func() bool {
+			return validateOP(id, board) && canAccessThread(id, board, in.ident)
+		}
+
+		in.getCounter = func() uint64 {
+			return threadCounter(id)
+		}
+
+		in.getPostData = func() []byte {
+			return marshalJSON(NewReader(board, in.ident).GetThread(id, in.lastN))
+		}
+
+		in.process(board)
 	}
-
-	in.getCounter = func() uint64 {
-		return boardCounter(board)
-	}
-
-	in.getPostData = func() []byte {
-		return marshalJSON(NewReader(board, in.ident).GetBoard())
-	}
-
-	in.process(board)
 }
 
-// Handles `/board/thread` requests
-func threadPage(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
-	in := indexPage{res: res, req: req, json: jsonOnly}
-	vars := mux.Vars(req)
-	board := vars["board"]
-	id, err := strconv.ParseUint(vars["thread"], 10, 64)
-	throw(err)
-	in.lastN = detectLastN(req)
+// Same as above for the "/all/" meta-board, that contains threads from all
+// boards
+func allBoards(jsonOnly bool) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		in := indexPage{res: res, req: req, json: jsonOnly}
 
-	in.validate = func() bool {
-		return validateOP(id, board) && canAccessThread(id, board, in.ident)
+		in.validate = func() bool {
+			return !in.ident.Banned
+		}
+
+		in.getCounter = postCounter
+
+		in.getPostData = func() []byte {
+			return marshalJSON(NewReader("all", in.ident).GetAllBoard())
+		}
+
+		in.process("all")
 	}
-
-	in.getCounter = func() uint64 {
-		return threadCounter(id)
-	}
-
-	in.getPostData = func() []byte {
-		return marshalJSON(NewReader(board, in.ident).GetThread(id, in.lastN))
-	}
-
-	in.process(board)
-}
-
-// Handles the "all" meta-board, that contains threads from all boards
-func allBoards(jsonOnly bool, res http.ResponseWriter, req *http.Request) {
-	in := indexPage{res: res, req: req, json: jsonOnly}
-
-	in.validate = func() bool {
-		return !in.ident.Banned
-	}
-
-	in.getCounter = postCounter
-
-	in.getPostData = func() []byte {
-		return marshalJSON(NewReader("all", in.ident).GetAllBoard())
-	}
-
-	in.process("all")
 }
 
 // Stores common variables and methods for both board and thread pages
 type indexPage struct {
+	json        bool // Serve only JSON, not HTML
+	isMobile    bool
+	ident       Ident
+	lastN       int
 	res         http.ResponseWriter
 	req         *http.Request
+	template    templateStore
 	validate    func() bool
 	getCounter  func() uint64 // Progress counter used for building etags
 	getPostData func() []byte // Post model JSON data
-	lastN       int
-	json        bool // Serve HTML from template or just JSON
-	isMobile    bool
-	template    templateStore
-	ident       Ident
 }
 
 // Shared logic for handling both board and thread pages
 func (in *indexPage) process(board string) {
-	in.ident = extractIdent(in.res, in.req)
+	in.ident = getIdent(in.req)
 	if !in.validate() {
-		in.res.WriteHeader(404)
-		if !in.json {
-			custom404(in.res)
+		if in.json {
+			text404(in.res)
+		} else {
+			notFound(in.res, in.req)
 		}
 		return
 	}
@@ -197,20 +179,24 @@ func (in *indexPage) process(board string) {
 	if in.validateEtag() {
 		postData := in.getPostData()
 		if in.json { //Only the JSON
-			in.res.Write(postData)
+			_, err := in.res.Write(postData)
+			throw(err)
 			return
 		}
 
 		// Concatenate post JSON with template and write to client
 		parts := in.template.Parts
-		html := new(bytes.Buffer)
-		html.Write(parts[0])
-		html.Write(in.getPostData())
-		html.Write(parts[1])
-		html.Write(loginCredentials(in.ident))
-		html.Write(parts[2])
-		in.res.Write(html.Bytes())
+		_, err := in.res.Write(concatBuffers(
+			parts[0], in.getPostData(), parts[1], loginCredentials(in.ident),
+			parts[2],
+		))
+		throw(err)
 	}
+}
+
+// Parse client IP and return client access rights
+func getIdent(req *http.Request) Ident {
+	return lookUpIdent(req.RemoteAddr)
 }
 
 // Build an etag and check if it matches the one provided by the client. If yes,
@@ -269,26 +255,34 @@ func checkClientEtags(
 	return false
 }
 
-// Read client Identity struct, which was attached to the requests further
-// upstream
-func extractIdent(res http.ResponseWriter, req *http.Request) Ident {
-	ident, ok := context.Get(req, "ident").(Ident)
-	if !ok {
-		res.WriteHeader(500)
-		throw(errors.New("Failed Ident type assertion"))
-	}
-	return ident
-}
-
 // Custom error page for requests that don't match a router
-func notFoundHandler(res http.ResponseWriter, req *http.Request) {
+func notFound(res http.ResponseWriter, req *http.Request) {
+	setErrorHeaders(res)
 	res.WriteHeader(404)
-	custom404(res)
+	copyFile("www/404.html", res)
 }
 
-// Serve the custom error page
-func custom404(res http.ResponseWriter) {
-	copyFile("www/404.html", res)
+// Text-only 404 response
+func text404(res http.ResponseWriter) {
+	http.Error(res, "404 Not found", 404)
+}
+
+// Set HTTP headers for returning custom error pages
+func setErrorHeaders(res http.ResponseWriter) {
+	res.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	res.Header().Set("X-Content-Type-Options", "nosniff")
+}
+
+// Serve server error page and log stack trace on error
+func panicHandler(res http.ResponseWriter, req *http.Request, err interface{}) {
+	setErrorHeaders(res)
+	res.WriteHeader(500)
+	copyFile("./www/50x.html", res)
+
+	const size = 64 << 10
+	buf := make([]byte, size)
+	buf = buf[:runtime.Stack(buf, false)]
+	log.Printf("panic serving %v: %v\n%s", req.RemoteAddr, err, buf)
 }
 
 // Set HTTP headers to the response object
@@ -344,18 +338,26 @@ func serveConfigs(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	setHeaders(res, etag, true)
-	res.Write(marshalJSON(clientConfig))
+	_, err := res.Write(marshalJSON(clientConfig))
+	throw(err)
 }
 
 // Serve a single post as JSON
-func servePost(res http.ResponseWriter, req *http.Request) {
-	id, err := strconv.ParseUint(mux.Vars(req)["post"], 10, 64)
-	throw(err)
+func servePost(
+	res http.ResponseWriter,
+	req *http.Request,
+	ps httprouter.Params,
+) {
+	id, err := strconv.ParseUint(ps[0].Value, 10, 64)
+	if err != nil {
+		text404(res)
+		return
+	}
 	board := parentBoard(id)
 	thread := parentThread(id)
-	ident := extractIdent(res, req)
+	ident := getIdent(req)
 	if board == "" || thread == 0 || !canAccessThread(thread, board, ident) {
-		res.WriteHeader(404)
+		text404(res)
 		return
 	}
 	data := marshalJSON(NewReader(board, ident).GetPost(id))
@@ -364,18 +366,21 @@ func servePost(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	setHeaders(res, etag, true)
-	res.Write(data)
+	_, err = res.Write(data)
+	throw(err)
 }
-
-type imageServer struct{}
 
 // More performant handler for serving image assets. These are immutable
 // (except deletion), so we can also set seperate caching policies for them.
-func (is imageServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	file, err := os.Open("./www/" + path.Clean(req.URL.Path))
+func serveImages(
+	res http.ResponseWriter,
+	req *http.Request,
+	ps httprouter.Params,
+) {
+	file, err := os.Open("./img/" + httprouter.CleanPath(ps[0].Value))
 	if err != nil {
 		if os.IsNotExist(err) {
-			res.WriteHeader(404)
+			text404(res)
 			return
 		}
 		panic(err)

@@ -126,6 +126,6 @@ func killDaemon() {
 // Create all needed directories for server operation
 func createDirs() {
 	for _, dir := range [...]string{"src", "thumb", "mid"} {
-		throw(os.MkdirAll("./www/img/"+dir, 0750))
+		throw(os.MkdirAll("./img/"+dir, 0750))
 	}
 }

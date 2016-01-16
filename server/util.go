@@ -5,6 +5,7 @@
 package server
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
@@ -20,6 +21,17 @@ func throw(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// concatBuffers concatenates []byte slices into one []byte slice
+func concatBuffers(bufs ...[]byte) []byte {
+	out := new(bytes.Buffer)
+	for _, buf := range bufs {
+		if _, err := out.Write(buf); err != nil {
+			panic(err)
+		}
+	}
+	return out.Bytes()
 }
 
 // checkAuth checks if the suplied Ident is priveledged to perform an action

@@ -95,9 +95,9 @@ type Link struct {
 // Ident is used to verify a client's access and write permissions
 type Ident struct {
 	// Indicates priveledged access rights for staff.
+	Banned bool
 	Auth   string
 	IP     string
-	Banned bool
 }
 
 // ModerationList contains modration acts commited on this post.
