@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"runtime"
 	"strconv"
 )
 
@@ -43,6 +42,9 @@ func startWebServer() {
 	// Static assets
 	router.ServeFiles("/ass/*filepath", http.Dir("./www"))
 	router.GET("/img/*filepath", serveImages)
+
+	// Image upload
+	router.HandlerFunc("POST", "/upload", NewImageUpload)
 
 	// Wrap router with extra handlers
 	handler := http.Handler(router)
@@ -278,11 +280,7 @@ func panicHandler(res http.ResponseWriter, req *http.Request, err interface{}) {
 	setErrorHeaders(res)
 	res.WriteHeader(500)
 	copyFile("./www/50x.html", res)
-
-	const size = 64 << 10
-	buf := make([]byte, size)
-	buf = buf[:runtime.Stack(buf, false)]
-	log.Printf("panic serving %v: %v\n%s", req.RemoteAddr, err, buf)
+	logError(req, err)
 }
 
 // Set HTTP headers to the response object

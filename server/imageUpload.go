@@ -47,15 +47,12 @@ func (iu *ImageUpload) process() {
 		iu.req.Body,
 		config.Images.Max.Size,
 	)
-	if iu.req.Method != "POST" {
-		iu.res.WriteHeader(405)
-		return
-	}
 	iu.parseForm()
 
 	file, _, err := iu.req.FormFile("image")
 	if err != nil {
-		iu.writeError(400, "invalid", err)
+		iu.Error(400, "invalid", err)
+		return
 	}
 	defer file.Close()
 	iu.detectFileType(file)
@@ -63,43 +60,37 @@ func (iu *ImageUpload) process() {
 
 func (iu *ImageUpload) parseForm() {
 	if err := iu.req.ParseMultipartForm(1073741824); err != nil { // 10 MB
-		iu.writeError(500, "req_problem", err)
+		iu.Error(500, "req_problem", err)
+		return
 	}
 	if iu.clientID = iu.req.FormValue("id"); iu.clientID == "" {
-		iu.writeError(400, "bad_client", errors.New("Bad client ID"))
+		iu.Error(400, "bad_client", errors.New("Bad client ID"))
+		return
 	}
 
 	// Read the spoiler the client had chosen for the image, if any
 	if spoiler := iu.req.FormValue("spoiler"); spoiler != "" {
 		spoilerID, err := strconv.ParseUint(spoiler, 10, 16)
 		if err != nil {
-			iu.writeError(400, "invalid", err)
+			iu.Error(400, "invalid", err)
+			return
 		}
 		iu.spoiler = uint16(spoilerID)
 	}
 }
 
-type uploadError struct {
-	ip    string
-	inner error
-}
-
-func (e uploadError) Error() string {
-	return fmt.Sprintf("Upload error by IP %v : %v", e.ip, e.inner.Error())
-}
-
-// Writes the apropriate error status code and error message to the client.
-// Also panics, which terminates to goroutine and is logged server-side.
-func (iu *ImageUpload) writeError(status int, code string, err error) {
-	iu.res.WriteHeader(status)
-	iu.res.Write([]byte(iu.lang[code]))
-	panic(uploadError{iu.req.RemoteAddr, err})
+// Writes the apropriate error status code and error message to the client
+// and logs server-side.
+func (iu *ImageUpload) Error(status int, code string, err error) {
+	http.Error(iu.res, iu.lang[code], status)
+	logError(iu.req, err)
 }
 
 func (iu *ImageUpload) detectFileType(file multipart.File) {
 	first512 := make([]byte, 512)
 	if _, err := file.Read(first512); err != nil {
-		iu.writeError(400, "req_problem", err)
+		iu.Error(400, "req_problem", err)
+		return
 	}
 	mimeType := http.DetectContentType(first512)
 	ext, ok := mimeTypes[mimeType]

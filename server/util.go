@@ -11,8 +11,10 @@ import (
 	"encoding/json"
 	r "github.com/dancannon/gorethink"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 )
 
@@ -170,4 +172,12 @@ func chooseLang(req *http.Request) string {
 		}
 	}
 	return config.Lang.Default
+}
+
+// Log an error with its stack trace
+func logError(req *http.Request, err interface{}) {
+	const size = 64 << 10
+	buf := make([]byte, size)
+	buf = buf[:runtime.Stack(buf, false)]
+	log.Printf("panic serving %v: %v\n%s", req.RemoteAddr, err, buf)
 }
