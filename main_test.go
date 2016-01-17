@@ -16,13 +16,7 @@ type Main struct{}
 var _ = Suite(&Main{})
 
 func (m *Main) TestServerStart(c *C) {
-	var paniced bool
 	os.Args = []string{os.Args[0], "init"}
-	defer func() {
-		if recover() != nil {
-			paniced = true
-		}
-		c.Assert(paniced, Equals, false)
-	}()
+	defer c.Assert(recover(), IsNil)
 	main()
 }

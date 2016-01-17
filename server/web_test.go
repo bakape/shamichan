@@ -2,12 +2,14 @@ package server
 
 import (
 	"errors"
+	"github.com/julienschmidt/httprouter"
 	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
+
 	"testing"
 )
 
@@ -162,4 +164,47 @@ func customRequest(c *C, url string) *http.Request {
 	req, err := http.NewRequest("GET", url, nil)
 	c.Assert(err, IsNil)
 	return req
+}
+
+func (w *WebServer) TestImageServer(c *C) {
+	const (
+		truncated         = "/src/tis life.gif"
+		path              = "./img" + truncated
+		notFoundTruncated = "src/nobody here.gif"
+		notFound          = "./img" + notFoundTruncated
+	)
+
+	// Succesful first serve
+	req := customRequest(c, path)
+	rec := httptest.NewRecorder()
+	params := httprouter.Params{
+		httprouter.Param{
+			Key:   "filepath",
+			Value: truncated,
+		},
+	}
+	serveImages(rec, req, params)
+	buf, err := ioutil.ReadFile(path)
+	c.Assert(err, IsNil)
+	c.Assert(rec.Body.String(), Equals, string(buf))
+	headers := map[string]string{
+		"Cache-Control":   "max-age=30240000",
+		"X-Frame-Options": "sameorigin",
+		"ETag":            "0",
+	}
+	assertHeaders(c, rec, headers)
+
+	// Fake etag validation
+	req = customRequest(c, path)
+	rec = httptest.NewRecorder()
+	req.Header.Set("If-None-Match", "0")
+	serveImages(rec, req, params)
+	c.Assert(rec.Code, Equals, 304)
+
+	// Non-existing file
+	req = customRequest(c, notFound)
+	rec = httptest.NewRecorder()
+	params[0].Value = notFoundTruncated
+	serveImages(rec, req, params)
+	c.Assert(rec.Code, Equals, 404)
 }

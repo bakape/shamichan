@@ -362,18 +362,15 @@ func serveImages(
 	req *http.Request,
 	ps httprouter.Params,
 ) {
-	file, err := os.Open("./img/" + httprouter.CleanPath(ps[0].Value))
-	if err != nil {
-		if os.IsNotExist(err) {
-			text404(res)
-			return
-		}
-		panic(err)
-	}
+	file, err := os.Open("./img" + httprouter.CleanPath(ps[0].Value))
 	defer file.Close()
+	if err != nil {
+		text404(res)
+		return
+	}
 	headers := res.Header()
 
-	// Fake etag, to stop agressive browser cache busting
+	// Fake etag to stop agressive browser cache busting
 	if checkClientEtags(res, req, "0") {
 		return
 	}
