@@ -73,3 +73,20 @@ func (w *WebServer) TestEtagComparison(c *C) {
 	rec := httptest.NewRecorder()
 	c.Assert(checkClientEtags(rec, req, etag), Equals, true)
 }
+
+func (w *WebServer) TestNotFoundHandler(c *C) {
+	rec := w.runHandler(c, notFound)
+	c.Assert(
+		rec.Body.String(),
+		Equals,
+		"<!doctype html><html>404</html>\n",
+	)
+	c.Assert(rec.Code, Equals, 404)
+	headers := map[string]string{
+		"Content-Type":           "text/html; charset=UTF-8",
+		"X-Content-Type-Options": "nosniff",
+	}
+	for key, val := range headers {
+		c.Assert(rec.Header().Get(key), Equals, val)
+	}
+}
