@@ -1,42 +1,75 @@
 package server
 
 import (
+	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func TestFrontpageRedirect(t *testing.T) {
+// Hook up gocheck into the "go test" runner.
+func Test(t *testing.T) { TestingT(t) }
+
+type WebServer struct{}
+
+var _ = Suite(&WebServer{})
+
+func (w *WebServer) TestFrontpageRedirect(c *C) {
 	config = serverConfigs{}
 	config.Frontpage = "./test/frontpage.html"
 	server := httptest.NewServer(http.HandlerFunc(redirectToDefault))
 	defer server.Close()
 	res, err := http.Get(server.URL)
-	fatal(t, err)
+	c.Assert(err, IsNil)
 	frontpage, err := ioutil.ReadAll(res.Body)
-	fatal(t, err)
-	fatal(t, res.Body.Close())
-	html := string(frontpage)
-	if html != "<!doctype html><html></html>\n" {
-		t.Fatal(html)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(res.Body.Close(), IsNil)
+	c.Assert(string(frontpage), Equals, "<!doctype html><html></html>\n")
 }
 
-func fatal(t *testing.T, err error) {
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestDefaultBoardRedirect(t *testing.T) {
+func (w *WebServer) TestDefaultBoardRedirect(c *C) {
 	config = serverConfigs{}
 	config.Boards.Default = "a"
+	rec := w.runHandler(c, redirectToDefault)
+	c.Assert(rec.Code, Equals, 302)
+	c.Assert(rec.Header().Get("Location"), Equals, "/a/")
+}
+
+func (w *WebServer) runHandler(
+	c *C,
+	h http.HandlerFunc,
+) *httptest.ResponseRecorder {
 	req, err := http.NewRequest("GET", "/", nil)
-	fatal(t, err)
-	w := httptest.NewRecorder()
-	redirectToDefault(w, req)
-	if w.Code != 302 && string(w.Header().Get("Location")[0]) != "/a/" {
-		t.Fatalf("%#v\n", w)
-	}
+	c.Assert(err, IsNil)
+	rec := httptest.NewRecorder()
+	h(rec, req)
+	return rec
+}
+
+func (w *WebServer) TestConfigServing(c *C) {
+	configHash = "foo"
+	clientConfig = clientConfigs{}
+	etag := "W/" + configHash
+	rec := w.runHandler(c, serveConfigs)
+	c.Assert(rec.Code, Equals, 200)
+	c.Assert(rec.Body.String(), Equals, string(marshalJSON(clientConfig)))
+	c.Assert(rec.Header().Get("ETag"), Equals, etag)
+
+	// And with etag
+	rec = httptest.NewRecorder()
+	req, err := http.NewRequest("GET", "/", nil)
+	c.Assert(err, IsNil)
+	req.Header.Set("If-None-Match", etag)
+	serveConfigs(rec, req)
+	c.Assert(rec.Code, Equals, 304)
+}
+
+func (w *WebServer) TestEtagComparison(c *C) {
+	req, err := http.NewRequest("GET", "/", nil)
+	c.Assert(err, IsNil)
+	const etag = "foo"
+	req.Header.Set("If-None-Match", etag)
+	rec := httptest.NewRecorder()
+	c.Assert(checkClientEtags(rec, req, etag), Equals, true)
 }
