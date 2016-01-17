@@ -11,8 +11,8 @@ import (
 	"os"
 )
 
-// config contains currently loaded configuration
-var config struct {
+// Global configuration store
+type serverConfigs struct {
 	// Configuration that can not be hot-reloaded without restarting the server
 	Hard struct {
 		HTTP struct {
@@ -81,8 +81,11 @@ var config struct {
 	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
 }
 
-// clientConfig exports public settings all clients can access
-var clientConfig struct {
+// config contains currently loaded configuration
+var config serverConfigs
+
+// Subset of serverConfigs, that is visible to all clients
+type clientConfigs struct {
 	Hard struct {
 		HTTP struct {
 			Websockets bool `json:"websockets"`
@@ -127,6 +130,9 @@ var clientConfig struct {
 	DefaultCSS    string      `json:"defaultCSS"`
 	InfoBanner    string      `json:"infoBanner"`
 }
+
+// clientConfig exports public settings all clients can access
+var clientConfig clientConfigs
 
 // configHash is the truncated MD5 hash of the JSON configuration file
 var configHash string

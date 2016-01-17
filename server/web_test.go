@@ -8,6 +8,7 @@ import (
 )
 
 func TestFrontpageRedirect(t *testing.T) {
+	config = serverConfigs{}
 	config.Frontpage = "./test/frontpage.html"
 	server := httptest.NewServer(http.HandlerFunc(redirectToDefault))
 	defer server.Close()
@@ -29,7 +30,7 @@ func fatal(t *testing.T, err error) {
 }
 
 func TestDefaultBoardRedirect(t *testing.T) {
-	config.Frontpage = ""
+	config = serverConfigs{}
 	config.Boards.Default = "a"
 	req, err := http.NewRequest("GET", "/", nil)
 	fatal(t, err)
