@@ -49,26 +49,6 @@ document.head.appendChild(parseEl(parseHTML
 	</style>`))
 
 /*
-// Initialise main rendering object
-let oneeSama = main.oneeSama = new common.OneeSama({
-	op: state.page.get('thread'),
-	lang,
-	// Core post link handler
-	tamashii(num) {
-		let frag;
-		const op = state.links[num];
-		if (op) {
-			const desc = num in state.mine.readAll() && this.lang.you;
-			frag = this.postRef(num, op, desc);
-		}
-		else
-			frag = '>>' + num;
-		return frag;
-	}
-});
-*/
-
-/*
 // 2nd tier dependacy modules. These are needed before the websocket
 // connection is opened, because they populate the dispatcher handler object.
 extend(main, {
