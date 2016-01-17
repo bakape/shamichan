@@ -1,10 +1,13 @@
 package server
 
 import (
+	"errors"
 	. "gopkg.in/check.v1"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
@@ -31,43 +34,43 @@ func (w *WebServer) TestFrontpageRedirect(c *C) {
 func (w *WebServer) TestDefaultBoardRedirect(c *C) {
 	config = serverConfigs{}
 	config.Boards.Default = "a"
-	rec := w.runHandler(c, redirectToDefault)
+	rec := runHandler(c, redirectToDefault)
 	c.Assert(rec.Code, Equals, 302)
 	c.Assert(rec.Header().Get("Location"), Equals, "/a/")
 }
 
-func (w *WebServer) runHandler(
-	c *C,
-	h http.HandlerFunc,
-) *httptest.ResponseRecorder {
-	req, err := http.NewRequest("GET", "/", nil)
-	c.Assert(err, IsNil)
+func runHandler(c *C, h http.HandlerFunc) *httptest.ResponseRecorder {
+	req := newRequest(c)
 	rec := httptest.NewRecorder()
 	h(rec, req)
 	return rec
+}
+
+func newRequest(c *C) *http.Request {
+	req, err := http.NewRequest("GET", "/", nil)
+	c.Assert(err, IsNil)
+	return req
 }
 
 func (w *WebServer) TestConfigServing(c *C) {
 	configHash = "foo"
 	clientConfig = clientConfigs{}
 	etag := "W/" + configHash
-	rec := w.runHandler(c, serveConfigs)
+	rec := runHandler(c, serveConfigs)
 	c.Assert(rec.Code, Equals, 200)
 	c.Assert(rec.Body.String(), Equals, string(marshalJSON(clientConfig)))
 	c.Assert(rec.Header().Get("ETag"), Equals, etag)
 
 	// And with etag
 	rec = httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/", nil)
-	c.Assert(err, IsNil)
+	req := newRequest(c)
 	req.Header.Set("If-None-Match", etag)
 	serveConfigs(rec, req)
 	c.Assert(rec.Code, Equals, 304)
 }
 
 func (w *WebServer) TestEtagComparison(c *C) {
-	req, err := http.NewRequest("GET", "/", nil)
-	c.Assert(err, IsNil)
+	req := newRequest(c)
 	const etag = "foo"
 	req.Header.Set("If-None-Match", etag)
 	rec := httptest.NewRecorder()
@@ -75,7 +78,7 @@ func (w *WebServer) TestEtagComparison(c *C) {
 }
 
 func (w *WebServer) TestNotFoundHandler(c *C) {
-	rec := w.runHandler(c, notFound)
+	rec := runHandler(c, notFound)
 	c.Assert(
 		rec.Body.String(),
 		Equals,
@@ -86,7 +89,77 @@ func (w *WebServer) TestNotFoundHandler(c *C) {
 		"Content-Type":           "text/html; charset=UTF-8",
 		"X-Content-Type-Options": "nosniff",
 	}
-	for key, val := range headers {
+	assertHeaders(c, rec, headers)
+}
+
+func assertHeaders(c *C, rec *httptest.ResponseRecorder, h map[string]string) {
+	for key, val := range h {
 		c.Assert(rec.Header().Get(key), Equals, val)
 	}
+}
+
+func (w *WebServer) TestText404(c *C) {
+	rec := runHandler(c, func(res http.ResponseWriter, _ *http.Request) {
+		text404(res)
+	})
+	c.Assert(rec.Code, Equals, 404)
+	c.Assert(rec.Body.String(), Equals, "404 Not found\n")
+}
+
+func (w *WebServer) TestPanicHandler(c *C) {
+	err := errors.New("foo")
+
+	// Prevent printing stack trace to terminal
+	log.SetOutput(ioutil.Discard)
+	rec := runHandler(c, func(res http.ResponseWriter, req *http.Request) {
+		panicHandler(res, req, err)
+	})
+	log.SetOutput(os.Stdout)
+	c.Assert(rec.Code, Equals, 500)
+	c.Assert(rec.Body.String(), Equals, "<!doctype html><html>50x</html>\n")
+}
+
+func (w *WebServer) TestSetHeaders(c *C) {
+	// HTML
+	rec := httptest.NewRecorder()
+	const etag = "foo"
+	headers := map[string]string{
+		"X-Frame-Options": "sameorigin",
+		"Cache-Control":   "max-age=0, must-revalidate",
+		"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
+		"ETag":            etag,
+		"Content-Type":    "text/html; charset=UTF-8",
+	}
+	setHeaders(rec, etag, false)
+	assertHeaders(c, rec, headers)
+
+	// JSON
+	headers["Content-Type"] = "application/json; charset=UTF-8"
+	rec = httptest.NewRecorder()
+	setHeaders(rec, etag, true)
+	assertHeaders(c, rec, headers)
+}
+
+func (w *WebServer) TestLoginCredentials(c *C) {
+	c.Assert(loginCredentials(Ident{}), DeepEquals, []byte{})
+}
+
+func (w *WebServer) TestDetctLastN(c *C) {
+	// No lastN query string
+	req := customRequest(c, "/a/1")
+	c.Assert(detectLastN(req), Equals, 0)
+
+	// ?lastN value within bounds
+	req = customRequest(c, "/a/1?lastN=100")
+	c.Assert(detectLastN(req), Equals, 100)
+
+	// ?lastN value beyond max
+	req = customRequest(c, "/a/1?lastN=1000")
+	c.Assert(detectLastN(req), Equals, 0)
+}
+
+func customRequest(c *C, url string) *http.Request {
+	req, err := http.NewRequest("GET", url, nil)
+	c.Assert(err, IsNil)
+	return req
 }

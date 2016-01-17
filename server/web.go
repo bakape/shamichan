@@ -12,7 +12,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strconv"
 )
@@ -246,13 +245,9 @@ func checkClientEtags(
 	req *http.Request,
 	etag string,
 ) bool {
-	if ifNoneMatch, ok := req.Header["If-None-Match"]; ok {
-		for _, clientEtag := range ifNoneMatch {
-			if clientEtag == etag {
-				res.WriteHeader(304)
-				return true
-			}
-		}
+	if val := req.Header.Get("If-None-Match"); val != "" {
+		res.WriteHeader(304)
+		return true
 	}
 	return false
 }
@@ -316,13 +311,10 @@ func loginCredentials(ident Ident) []byte {
 
 // Validate the client's last N posts to display setting
 func detectLastN(req *http.Request) int {
-	parsed, err := url.ParseRequestURI(req.RequestURI)
-	throw(err)
-	lastNSlice, ok := parsed.Query()["lastN"]
-	if ok && len(lastNSlice) > 0 {
-		lastN, err := strconv.Atoi(lastNSlice[0])
-		throw(err)
-		if lastN <= 500 {
+	query := req.URL.Query().Get("lastN")
+	if query != "" {
+		lastN, err := strconv.Atoi(query)
+		if err == nil && lastN <= 500 {
 			return lastN
 		}
 	}
