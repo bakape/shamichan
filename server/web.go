@@ -158,7 +158,7 @@ type indexPage struct {
 
 // Shared logic for handling both board and thread pages
 func (in *indexPage) process(board string) {
-	in.ident = getIdent(in.req)
+	in.ident = lookUpIdent(in.req.RemoteAddr)
 	if !in.validate() {
 		if in.json {
 			text404(in.res)
@@ -193,11 +193,6 @@ func (in *indexPage) process(board string) {
 		))
 		throw(err)
 	}
-}
-
-// Parse client IP and return client access rights
-func getIdent(req *http.Request) Ident {
-	return lookUpIdent(req.RemoteAddr)
 }
 
 // Build an etag and check if it matches the one provided by the client. If yes,
@@ -345,7 +340,7 @@ func servePost(
 	}
 	board := parentBoard(id)
 	thread := parentThread(id)
-	ident := getIdent(req)
+	ident := lookUpIdent(req.RemoteAddr)
 	if board == "" || thread == 0 || !canAccessThread(thread, board, ident) {
 		text404(res)
 		return
