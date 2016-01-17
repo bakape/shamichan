@@ -47,13 +47,13 @@ func startWebServer() {
 
 	// Wrap router with extra handlers
 	handler := http.Handler(router)
-	if config.Hard.HTTP.TrustProxies { // Infer IP from header, if configured to
+	if config.HTTP.TrustProxies { // Infer IP from header, if configured to
 		handler = handlers.ProxyHeaders(router)
 	}
 	handler = handlers.CompressHandler(handler) //GZIP
 
-	log.Println("Listening on " + config.Hard.HTTP.Addr)
-	log.Fatal(http.ListenAndServe(config.Hard.HTTP.Addr, handler))
+	log.Println("Listening on " + config.HTTP.Addr)
+	log.Fatal(http.ListenAndServe(config.HTTP.Addr, handler))
 }
 
 // Redirects to frontpage, if set, or the default board

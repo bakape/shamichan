@@ -14,18 +14,12 @@ import (
 // Global configuration store
 type serverConfigs struct {
 	// Configuration that can not be hot-reloaded without restarting the server
-	Hard struct {
-		HTTP struct {
-			Addr, Origin             string
-			TrustProxies, Websockets bool
-		}
-		Redis struct {
-			Addr string
-			Db   int
-		}
-		Rethinkdb struct {
-			Addr, Db string
-		}
+	HTTP struct {
+		Addr, Origin             string
+		TrustProxies, Websockets bool
+	}
+	Rethinkdb struct {
+		Addr, Db string
 	}
 	Boards struct {
 		Enabled []string
@@ -86,11 +80,9 @@ var config serverConfigs
 
 // Subset of serverConfigs, that is visible to all clients
 type clientConfigs struct {
-	Hard struct {
-		HTTP struct {
-			Websockets bool `json:"websockets"`
-		} `json:"HTTP"`
-	} `json:"hard"`
+	HTTP struct {
+		Websockets bool `json:"websockets"`
+	} `json:"HTTP"`
 	Boards struct {
 		Enabled []string `json:"enabled"`
 		Boards  map[string]struct {

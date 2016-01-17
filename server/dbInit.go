@@ -22,11 +22,11 @@ var rSession *r.Session
 func loadDB() {
 	var err error
 	rSession, err = r.Connect(r.ConnectOpts{
-		Address: config.Hard.Rethinkdb.Addr,
+		Address: config.Rethinkdb.Addr,
 	})
 	throw(err)
 
-	db = config.Hard.Rethinkdb.Db
+	db = config.Rethinkdb.Db
 	var isCreated bool
 	rGet(r.DBList().Contains(db)).One(&isCreated)
 	if !isCreated {
