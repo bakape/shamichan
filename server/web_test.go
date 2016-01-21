@@ -207,3 +207,43 @@ func (w *WebServer) TestImageServer(c *C) {
 	serveImages(rec, req, params)
 	c.Assert(rec.Code, Equals, 404)
 }
+
+func (w *WebServer) TestCompareEtag(c *C) {
+	// Etag comparison
+	rec := httptest.NewRecorder()
+	req := newRequest(c)
+	const etag = "foo"
+	req.Header.Set("If-None-Match", etag)
+	ident := lookUpIdent(req.RemoteAddr)
+	c.Assert(compareEtag(rec, req, ident, etag, false), Equals, false)
+
+	// HTML or JSON and no authentication
+	rec = httptest.NewRecorder()
+	req = newRequest(c)
+	headers := map[string]string{
+		"ETag":          etag,
+		"Content-Type":  "text/html; charset=UTF-8",
+		"Cache-Control": "max-age=0, must-revalidate",
+	}
+	compareEtag(rec, req, ident, etag, false)
+	assertHeaders(c, rec, headers)
+
+	// Authentication
+	ident.Auth = "admin"
+	rec = httptest.NewRecorder()
+	req = newRequest(c)
+	headers["Cache-Control"] += "; private"
+	headers["ETag"] = etag + "-admin"
+	compareEtag(rec, req, ident, etag, false)
+	assertHeaders(c, rec, headers)
+}
+
+func (w *WebServer) TestEtagStart(c *C) {
+	c.Assert(etagStart(1), Equals, "W/1")
+}
+
+func (w *WebServer) TestHTMLEtag(c *C) {
+	const hash = "foo"
+	c.Assert(htmlEtag(hash, false), Equals, "-foo")
+	c.Assert(htmlEtag(hash, true), Equals, "-foo-mobile")
+}

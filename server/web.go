@@ -248,7 +248,8 @@ func compareEtag(
 	}
 	setHeaders(res, etag, json)
 	if hasAuth { //Don't expose restricted data publicly through caches
-		res.Header().Add("Cache-Control", "; private")
+		head := res.Header()
+		head.Set("Cache-Control", head.Get("Cache-Control")+"; private")
 	}
 	return true
 }
