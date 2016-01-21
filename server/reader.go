@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/Soreil/mnemonics"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -11,7 +12,7 @@ type Reader struct {
 	canSeeMnemonics, canSeeModeration bool
 }
 
-// NewReader constructs a new Reader struct
+// NewReader constructs a new Reader instance
 func NewReader(board string, ident Ident) *Reader {
 	return &Reader{
 		board:            board,
@@ -21,58 +22,80 @@ func NewReader(board string, ident Ident) *Reader {
 	}
 }
 
-// GetThread retrieves thread JSON from the database
-func (rd *Reader) GetThread(id uint64, lastN int) *Thread {
-	// Verify thread exists
-	if !validateOP(id, rd.board) {
-		return new(Thread)
-	}
-	res := rd.threadQuery(getThread(id))
-
-	// Only show the last N post
-	if lastN != 0 {
-		res = res.Merge(termMap{
-			"posts": res.Field("posts").
-				CoerceTo("array").
-				Slice(-lastN + 1).
-				CoerceTo("object"),
-		})
-	}
-	thread := new(Thread)
-	rGet(res).One(thread)
-
-	// Verify thread access rights
-	if !rd.parsePost(&thread.OP) {
-		return new(Thread)
-	}
-
-	// Place the retrieved OP into the Posts map and override duplicate, if any
-	thread.Posts[idToString(id)] = thread.OP
-
-	for id, post := range thread.Posts {
-		if !rd.parsePost(&post) {
-			delete(thread.Posts, id)
-		}
-	}
-	return thread
+// Used to query equal joins of thread + OP from the DB
+type joinedThread struct {
+	Left  Thread `gorethink:"left"`
+	Right Post   `gorethink:"right"`
 }
 
-// threadQuery constructs the common part of a all thread queries
-func (rd *Reader) threadQuery(thread r.Term) r.Term {
-	return thread.Merge(termMap{
-		// Ensure we always get the OP
-		"op": thread.Field("posts").
-			Field(thread.Field("id").CoerceTo("string")),
-	}).
-		Without("history")
+// GetThread retrieves thread JSON from the database
+func (rd *Reader) GetThread(id uint64, lastN int) *ThreadContainer {
+	// Verify thread exists. In case of HTTP requests, we kind of do 2
+	// validations, but it's better to keep reader uniformity
+	if !validateOP(id, rd.board) || !canAccessThread(id, rd.board, rd.ident) {
+		return new(ThreadContainer)
+	}
+
+	// Keep same format as multiple thread queries
+	var thread joinedThread
+	db().Do(r.Object(map[string]r.Term{
+		"left":  getThreadMeta(getThread(id)),
+		"right": getPost(id),
+	})).
+		One(&thread)
+
+	// Get all other posts
+	var posts []*Post
+	query := r.Table("posts").
+		GetAllByIndex("op", id).
+		Filter(r.Row.Field("id").Eq(id).Not()) // Exclude OP
+	if lastN != 0 { // Only fetch last N number of replies
+		query = query.Slice(-lastN + 1)
+	}
+	db().Do(query).All(&posts)
+
+	// Parse posts, remove those that the client can not access and allocate the
+	// rest to a map
+	filtered := make(map[string]*Post, len(posts))
+	for _, post := range posts {
+		if rd.parsePost(post) {
+			filtered[idToString(post.ID)] = post
+		}
+	}
+
+	// Guranteed to have access rights, if thread is accessable
+	rd.parsePost(&thread.Right)
+
+	// Compose into the client-side thread type
+	return &ThreadContainer{
+		Thread: thread.Left,
+		Post:   thread.Right,
+		Posts:  filtered,
+	}
+}
+
+// Merges thread counters into the Left field of joinedThread
+func getThreadMeta(thread r.Term) r.Term {
+	id := thread.Field("id")
+	return thread.Merge(map[string]map[string]r.Term{
+		"left": map[string]r.Term{
+			// Count number of posts
+			"postCtr": r.Table("posts").
+				GetAllByIndex("op", id).
+				Count(),
+
+			// Image count
+			"imageCtr": r.Table("posts").
+				GetAllByIndex("op", id).
+				HasFields("image").
+				Count(),
+		},
+	})
 }
 
 // parsePost formats the Post struct according to the access level of the
 // current client
 func (rd *Reader) parsePost(post *Post) bool {
-	if post.ID == 0 {
-		return false
-	}
 	if !rd.canSeeModeration {
 		if post.Deleted {
 			return false
@@ -83,68 +106,66 @@ func (rd *Reader) parsePost(post *Post) bool {
 		post.Mod = ModerationList{}
 	}
 	if rd.canSeeMnemonics {
-		// Mnemonic generation call
+		mnem, err := mnemonic.Mnemonic(post.IP)
+		throw(err)
+		post.Mnemonic = mnem
 	}
 	return true
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id uint64) *Post {
-	op := parentThread(id)
-	post := new(Post)
-	if op == 0 { // Post does not exist
-		return post
-	}
-	rGet(getPost(id, op)).One(post)
+func (rd *Reader) GetPost(id uint64) (post *Post) {
+	db().Do(getPost(id)).One(post)
 	rd.parsePost(post)
 	return post
 }
 
 // GetBoard retrives all OPs of a single board
-func (rd *Reader) GetBoard() *Board {
-	board := new(Board)
-	rGet(r.Table("threads").
-		GetAllByIndex("board", rd.board).
-		ForEach(rd.threadQuery).
-		Without("posts"),
+func (rd *Reader) GetBoard() (board *Board) {
+	var threads []*joinedThread
+	db().Do(
+		r.Table("threads").
+			GetAllByIndex("board", rd.board).
+			EqJoin("id", r.Table("posts")).
+			ForEach(getThreadMeta),
 	).
-		All(&board.Threads)
+		All(&threads)
 	board.Ctr = boardCounter(rd.board)
-	board.Threads = rd.filterThreads(board.Threads)
-	return board
+	board.Threads = rd.parseThreads(threads)
+	return
 }
 
 // GetAllBoard retrieves all threads the client has access to for the "/all/"
 // meta-board
-func (rd *Reader) GetAllBoard() *Board {
-	query := r.Table("threads")
+func (rd *Reader) GetAllBoard() (board *Board) {
+	query := r.Table("threads").
+		EqJoin("id", r.Table("posts")).
+		ForEach(getThreadMeta)
 
 	// Exclude staff board, if no access
 	if !canAccessBoard(config.Boards.Staff, rd.ident) {
-		query = query.Filter(func(thread r.Term) r.Term {
-			return thread.Field("board").Eq(config.Boards.Staff).Not()
-		})
+		query = query.Filter(r.Row.Field("board").Eq(config.Boards.Staff).Not())
 	}
 
-	board := new(Board)
-	rGet(query.ForEach(rd.threadQuery).Without("posts")).All(&board.Threads)
+	var threads []*joinedThread
+	db().Do(query).All(&threads)
 	board.Ctr = postCounter()
-	board.Threads = rd.filterThreads(board.Threads)
-	return board
+	board.Threads = rd.parseThreads(threads)
+	return
 }
 
-// Filter a slice of thread pointers by parsing and formating their OPs and
-// discarding those, that the client can't access.
-func (rd *Reader) filterThreads(threads []*Thread) []*Thread {
-	filtered := make([]*Thread, 0, len(threads))
+// Parse and format thread query results and discarding those, that the client
+// can't access
+func (rd *Reader) parseThreads(threads []*joinedThread) []*ThreadContainer {
+	filtered := make([]*ThreadContainer, 0, len(threads))
 	for _, thread := range threads {
-		if rd.parsePost(&thread.OP) {
-			// Mimics structure of regular threads, for uniformity
-			thread.Posts = map[string]Post{
-				idToString(thread.ID): thread.OP,
-			}
-			filtered = append(filtered, thread)
+		if thread.Left.Deleted && !rd.canSeeModeration {
+			continue
 		}
+		filtered = append(filtered, &ThreadContainer{
+			Thread: thread.Left,
+			Post:   thread.Right,
+		})
 	}
 	return filtered
 }

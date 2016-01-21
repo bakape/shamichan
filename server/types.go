@@ -6,28 +6,31 @@ package server
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {
-	Ctr     uint64    `json:"ctr",gorethink:"ctr"`
-	Threads []*Thread `json:"threads",gorethink:"threads"`
+	Ctr     uint64             `json:"ctr"`
+	Threads []*ThreadContainer `json:"threads"`
 }
 
-// Thread stores the metadata and posts of a single thread
+// ThreadContainer is a transport/export wrapper that stores both the thread
+// metada, its opening post data and its contained posts. The composite type
+// itself is not stored in the database.
+type ThreadContainer struct {
+	Thread
+	Post
+	Posts   map[string]*Post `json:"posts",gorethink:"-"`
+	Updates []Message        `json:"updates",gorethink:"-"`
+}
+
+// Thread stores thread metadata
 type Thread struct {
-	ID        uint64          `json:"id",gorethink:"id"`
-	Time      int64           `json:"time",gorethink:"time"`
-	BumpTime  int64           `json:"bumpTime",gorethink:"bumpTime"`
-	ReplyTime int64           `json:"replyTime",gorethink:"replyTime"`
-	HistCtr   uint64          `json:"histCtr",gorethink:"histCtr"`
-	ReplyCtr  uint16          `json:"replyCtr",gorethink:"replyCtr"`
-	ImageCtr  uint16          `json:"imageCtr",gorethink:"imageCtr"`
-	Locked    bool            `json:"locked,omitempty",gorethink:"locked,omitempty"`
-	Archived  bool            `json:"archived,omitempty",gorethink:"archived,omitempty"`
-	Sticky    bool            `json:"sticky,omitempty",gorethink:"sticky,omitempty"`
-	Nonce     string          `json:"-",gorethink:"nonce"`
-	Board     string          `json:"board",gorethink:"board"`
-	IP        string          `json:"-",gorethink:"ip"`
-	OP        Post            `json:"-",gorethink:"op"` // For internal use
-	Posts     map[string]Post `json:"posts,omitempty",gorethink:"posts"`
-	History   []Message       `json:"-",gorethink:"history"`
+	Locked    bool   `json:"locked,omitempty",gorethink:"locked,omitempty"`
+	Archived  bool   `json:"archived,omitempty",gorethink:"archived,omitempty"`
+	Sticky    bool   `json:"sticky,omitempty",gorethink:"sticky,omitempty"`
+	Deleted   bool   `json:"deleted,omitempty",gorethink:"deleted,omitempty"`
+	PostCtr   uint16 `json:"postCtr",gorethink:"postCtr"`
+	ImageCtr  uint16 `json:"imageCtr",gorethink:"imageCtr"`
+	BumpTime  int64  `json:"bumpTime",gorethink:"bumpTime"`
+	ReplyTime int64  `json:"replyTime",gorethink:"replyTime"`
+	Board     string `json:"board",gorethink:"board"`
 }
 
 // Message is the universal transport container of all live updates through
@@ -52,6 +55,7 @@ type Post struct {
 	ID         uint64         `json:"id",gorethink:"id"`
 	Time       int64          `json:"time",gorethink:"time"`
 	IP         string         `json:"-",gorethink:"ip"`
+	Mnemonic   string         `json:"mnemonic,omitempty",gorethink:"omitempty"`
 	Board      string         `json:"board",gorethink:"board"`
 	Nonce      string         `json:"-",gorethink:"nonce"`
 	Body       string         `json:"body",gorethink:"body"`

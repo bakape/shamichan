@@ -5,11 +5,9 @@
 package server
 
 import (
-	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
-	r "github.com/dancannon/gorethink"
 	"io"
 	"log"
 	"net/http"
@@ -18,22 +16,25 @@ import (
 	"strconv"
 )
 
+// Wrapper type for compund errors errors
+type wrapError struct {
+	text  string
+	inner error
+}
+
+func (e wrapError) Error() string {
+	text := e.text
+	if e.inner != nil {
+		text += ": " + e.inner.Error()
+	}
+	return text
+}
+
 // throw panics, if there is an error. Rob Pike must never know.
 func throw(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-// concatBuffers concatenates []byte slices into one []byte slice
-func concatBuffers(bufs ...[]byte) []byte {
-	out := new(bytes.Buffer)
-	for _, buf := range bufs {
-		if _, err := out.Write(buf); err != nil {
-			panic(err)
-		}
-	}
-	return out.Bytes()
 }
 
 // checkAuth checks if the suplied Ident is priveledged to perform an action
@@ -42,50 +43,6 @@ func checkAuth(action string, ident Ident) bool {
 		return class.Rights[action]
 	}
 	return false
-}
-
-// rGet is a shorthand for executing RethinkDB queries and panicing on error.
-func rGet(query r.Term) *r.Cursor {
-	cursor, err := query.Run(rSession)
-	throw(err)
-	return cursor
-}
-
-// rExec executes a RethinkDB query and panics on error. To be used, when the
-// returned status is unneeded and we want the goroutine to crash on error.
-func rExec(query r.Term) {
-	throw(query.Exec(rSession))
-}
-
-// shorthand for constructing thread queries
-func getThread(id uint64) r.Term {
-	return r.Table("threads").Get(id)
-}
-
-// shorthand for constructing post queries
-func getPost(id, op uint64) r.Term {
-	return getThread(op).Field("posts").Field(idToString(id))
-}
-
-// Retrieve the current post counter number
-func postCounter() uint64 {
-	return getCounter(r.Table("main").Get("info").Field("postCtr"))
-}
-
-// Retrieve the history or "progress" counter of a board
-func boardCounter(board string) uint64 {
-	return getCounter(r.Table("main").Get("info").Field("postCtr"))
-}
-
-// Retrieve the history or "progress" counter of a thread
-func threadCounter(id uint64) uint64 {
-	return getCounter(getThread(id).Field("histCtr"))
-}
-
-// Helper function for retrieving an integer from the database
-func getCounter(query r.Term) (counter uint64) {
-	rGet(query).One(&counter)
-	return counter
 }
 
 // Determine access rights of an IP
@@ -115,7 +72,7 @@ func canAccessThread(id uint64, board string, ident Ident) bool {
 		return false
 	}
 	var deleted bool
-	rGet(getThread(id).Field("deleted").Default(false)).One(&deleted)
+	db().Do(getThread(id).Field("deleted").Default(false)).One(&deleted)
 	if deleted && !checkAuth("seeModeration", ident) {
 		return false
 	}

@@ -5,7 +5,7 @@
 package server
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/gorilla/handlers"
 	"github.com/julienschmidt/httprouter"
 	"github.com/mssola/user_agent"
@@ -18,20 +18,20 @@ import (
 
 func startWebServer() {
 	router := httprouter.New()
-	router.NotFound = http.HandlerFunc(notFound)
+	router.NotFound = http.HandlerFunc(notFoundHandler)
 	router.PanicHandler = panicHandler
 
 	// Board and board JSON API pages
 	router.HandlerFunc("GET", "/", redirectToDefault)
-	router.HandlerFunc("GET", "/all/", allBoards(false))
-	router.HandlerFunc("GET", "/api/all/", allBoards(true))
+	router.HandlerFunc("GET", "/all/", allBoardHTML)
+	router.HandlerFunc("GET", "/api/all/", allBoardJSON)
 	for _, board := range config.Boards.Enabled {
-		router.HandlerFunc("GET", "/"+board+"/", boardPage(false, board))
-		router.HandlerFunc("GET", "/api/"+board+"/", boardPage(true, board))
+		router.HandlerFunc("GET", "/"+board+"/", boardHTML(board))
+		router.HandlerFunc("GET", "/api/"+board+"/", boardJSON(board))
 
 		// Thread pages
-		router.GET("/"+board+"/:thread", threadPage(false, board))
-		router.GET("/api/"+board+"/:thread", threadPage(true, board))
+		router.GET("/"+board+"/:thread", threadHTML(board))
+		router.GET("/api/"+board+"/:thread", threadJSON(board))
 	}
 
 	// Other JSON API handlers
@@ -65,168 +65,204 @@ func redirectToDefault(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// boardPage constructs a handler for `/board/` pages for serving either HTML
-// or JSON
-func boardPage(jsonOnly bool, board string) http.HandlerFunc {
+// Serves `/:board/` pages
+func boardHTML(board string) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		in := indexPage{res: res, req: req, json: jsonOnly}
-
-		in.validate = func() bool {
-			return canAccessBoard(board, in.ident)
+		ident := lookUpIdent(req.RemoteAddr)
+		if !canAccessBoard(board, ident) {
+			notFound(res)
+			return
 		}
-
-		in.getCounter = func() uint64 {
-			return boardCounter(board)
+		isMobile := detectMobile(req)
+		template := chooseTemplate(isMobile)
+		etag := etagStart(boardCounter(board)) +
+			htmlEtag(template.Hash, isMobile)
+		if !compareEtag(res, req, ident, etag, false) {
+			return
 		}
-
-		in.getPostData = func() []byte {
-			return marshalJSON(NewReader(board, in.ident).GetBoard())
-		}
-
-		in.process(board)
+		writeTemplate(res, template, ident, readBoardJSON(board, ident))
 	}
 }
 
-// Same as above for `/board/thread` pages
-func threadPage(jsonOnly bool, board string) httprouter.Handle {
+// Serves `/api/:board/` page JSON
+func boardJSON(board string) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		ident := lookUpIdent(req.RemoteAddr)
+		if !canAccessBoard(board, ident) {
+			text404(res)
+			return
+		}
+		if compareEtag(res, req, ident, etagStart(boardCounter(board)), true) {
+			return
+		}
+		_, err := res.Write(readBoardJSON(board, ident))
+		throw(err)
+	}
+}
+
+// Reads and formats board JSON from the DB
+func readBoardJSON(board string, ident Ident) []byte {
+	return marshalJSON(NewReader(board, ident).GetBoard())
+}
+
+// Serves `/:board/:thread` page HTML
+func threadHTML(board string) httprouter.Handle {
 	return func(
 		res http.ResponseWriter,
 		req *http.Request,
 		ps httprouter.Params,
 	) {
 		id, err := strconv.ParseUint(ps[0].Value, 10, 64)
-		if err != nil {
-			if jsonOnly {
-				text404(res)
-			} else {
-				notFound(res, req)
-			}
+		ident := lookUpIdent(req.RequestURI)
+		if !validateThreadRequest(err, board, id, ident) {
+			notFound(res)
 			return
 		}
-		in := indexPage{res: res, req: req, json: jsonOnly}
-		in.lastN = detectLastN(req)
-
-		in.validate = func() bool {
-			return validateOP(id, board) && canAccessThread(id, board, in.ident)
+		lastN := detectLastN(req)
+		isMobile := detectMobile(req)
+		template := chooseTemplate(isMobile)
+		etag := etagStart(threadCounter(id)) + htmlEtag(template.Hash, isMobile)
+		if lastN != 0 {
+			etag += "-last" + strconv.Itoa(lastN)
 		}
-
-		in.getCounter = func() uint64 {
-			return threadCounter(id)
-		}
-
-		in.getPostData = func() []byte {
-			return marshalJSON(NewReader(board, in.ident).GetThread(id, in.lastN))
-		}
-
-		in.process(board)
-	}
-}
-
-// Same as above for the "/all/" meta-board, that contains threads from all
-// boards
-func allBoards(jsonOnly bool) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		in := indexPage{res: res, req: req, json: jsonOnly}
-
-		in.validate = func() bool {
-			return !in.ident.Banned
-		}
-
-		in.getCounter = postCounter
-
-		in.getPostData = func() []byte {
-			return marshalJSON(NewReader("all", in.ident).GetAllBoard())
-		}
-
-		in.process("all")
-	}
-}
-
-// Stores common variables and methods for both board and thread pages
-type indexPage struct {
-	json        bool // Serve only JSON, not HTML
-	isMobile    bool
-	ident       Ident
-	lastN       int
-	res         http.ResponseWriter
-	req         *http.Request
-	template    templateStore
-	validate    func() bool
-	getCounter  func() uint64 // Progress counter used for building etags
-	getPostData func() []byte // Post model JSON data
-}
-
-// Shared logic for handling both board and thread pages
-func (in *indexPage) process(board string) {
-	in.ident = lookUpIdent(in.req.RemoteAddr)
-	if !in.validate() {
-		if in.json {
-			text404(in.res)
-		} else {
-			notFound(in.res, in.req)
-		}
-		return
-	}
-	in.isMobile = user_agent.New(in.req.UserAgent()).Mobile()
-
-	// Choose template to use
-	if !in.json {
-		if !in.isMobile {
-			in.template = resources["index"]
-		} else {
-			in.template = resources["mobile"]
-		}
-	}
-	if in.validateEtag() {
-		postData := in.getPostData()
-		if in.json { //Only the JSON
-			_, err := in.res.Write(postData)
-			throw(err)
+		if !compareEtag(res, req, ident, etag, false) {
 			return
 		}
+		writeTemplate(
+			res,
+			template,
+			ident,
+			readThreadJSON(board, id, ident, lastN),
+		)
+	}
+}
 
-		// Concatenate post JSON with template and write to client
-		parts := in.template.Parts
-		_, err := in.res.Write(concatBuffers(
-			parts[0], in.getPostData(), parts[1], loginCredentials(in.ident),
-			parts[2],
-		))
+// Serves `/api/:board/:thread` page JSON
+func threadJSON(board string) httprouter.Handle {
+	return func(
+		res http.ResponseWriter,
+		req *http.Request,
+		ps httprouter.Params,
+	) {
+		id, err := strconv.ParseUint(ps[0].Value, 10, 64)
+		ident := lookUpIdent(req.RequestURI)
+		if !validateThreadRequest(err, board, id, ident) {
+			text404(res)
+			return
+		}
+		lastN := detectLastN(req)
+		etag := etagStart(threadCounter(id))
+		if lastN != 0 {
+			etag += "-last" + strconv.Itoa(lastN)
+		}
+		if !compareEtag(res, req, ident, etag, true) {
+			return
+		}
+		_, err = res.Write(readThreadJSON(board, id, ident, lastN))
 		throw(err)
 	}
 }
 
-// Build an etag and check if it matches the one provided by the client. If yes,
-// send 304 and return false, otherwise set headers and return true.
-func (in *indexPage) validateEtag() bool {
-	etag := in.buildEtag()
-	hasAuth := in.ident.Auth != ""
-	if hasAuth {
-		etag += "-" + in.ident.Auth
-	}
-	if in.lastN != 0 {
-		etag += fmt.Sprintf("-last%v", in.lastN)
-	}
+// Reads and formats thread JSON from the DB
+func readThreadJSON(board string, id uint64, ident Ident, lastN int) []byte {
+	return marshalJSON(NewReader(board, ident).GetThread(id, lastN))
+}
 
-	// If etags match, no need to rerender
-	if checkClientEtags(in.res, in.req, etag) {
+// Cofirm thread request is proper, thread exists and client had right of access
+func validateThreadRequest(
+	err error,
+	board string,
+	id uint64,
+	ident Ident,
+) bool {
+	return err == nil &&
+		validateOP(id, board) &&
+		canAccessThread(id, board, ident)
+}
+
+// Serves HTML for the "/all/" meta-board, that contains threads from all boards
+func allBoardHTML(res http.ResponseWriter, req *http.Request) {
+	ident := lookUpIdent(req.RequestURI)
+	if ident.Banned {
+		notFound(res)
+		return
+	}
+	isMobile := detectMobile(req)
+	template := chooseTemplate(isMobile)
+	etag := etagStart(postCounter()) + htmlEtag(template.Hash, isMobile)
+	if !compareEtag(res, req, ident, etag, false) {
+		return
+	}
+	writeTemplate(res, template, ident, readAllBoardJSON(ident))
+}
+
+// Serves JSON for the "/all/" meta-board, that contains threads from all boards
+func allBoardJSON(res http.ResponseWriter, req *http.Request) {
+	ident := lookUpIdent(req.RequestURI)
+	if ident.Banned {
+		text404(res)
+		return
+	}
+	if !compareEtag(res, req, ident, etagStart(postCounter()), true) {
+		return
+	}
+	_, err := res.Write(readAllBoardJSON(ident))
+	throw(err)
+}
+
+// Reads and formats the `/all/` meta-board JSON form the DB
+func readAllBoardJSON(ident Ident) []byte {
+	return marshalJSON(NewReader("all", ident).GetAllBoard())
+}
+
+// Detects mobile user agents, so we can serve the apropriate template and
+// client files
+func detectMobile(req *http.Request) bool {
+	return user_agent.New(req.UserAgent()).Mobile()
+}
+
+// Return a mobile or desktop template accordingly
+func chooseTemplate(isMobile bool) templateStore {
+	if isMobile {
+		return resources["mobile"]
+	}
+	return resources["index"]
+}
+
+// Build an etag for HTML pages and check if it matches the one provided by the
+// client. If yes, send 304 and return false, otherwise set headers and return
+// true.
+func compareEtag(
+	res http.ResponseWriter,
+	req *http.Request,
+	ident Ident,
+	etag string,
+	json bool,
+) bool {
+	hasAuth := ident.Auth != ""
+	if hasAuth {
+		etag += "-" + ident.Auth
+	}
+	if checkClientEtag(res, req, etag) { // If etags match, no need to rerender
 		return false
 	}
-
-	setHeaders(in.res, etag, in.json)
-	if hasAuth {
-		in.res.Header().Add("Cache-Control", ", private")
+	setHeaders(res, etag, json)
+	if hasAuth { //Don't expose restricted data publicly through caches
+		res.Header().Add("Cache-Control", "; private")
 	}
 	return true
 }
 
 // Build the main part of the etag
-func (in *indexPage) buildEtag() string {
-	etag := "W/" + idToString(in.getCounter())
-	if !in.json {
-		etag += "-" + in.template.Hash
-		if in.isMobile {
-			etag += "-mobile"
-		}
+func etagStart(counter uint64) string {
+	return "W/" + idToString(counter)
+}
+
+// Extra part of the etag only used for HTML pages
+func htmlEtag(hash string, isMobile bool) string {
+	etag := "-" + hash
+	if isMobile {
+		etag += "-mobile"
 	}
 	return etag
 }
@@ -235,7 +271,7 @@ func (in *indexPage) buildEtag() string {
  Check is any of the etags the client provides in the "If-None-Match" header
  match the generated etag. If yes, write 304 and return true.
 */
-func checkClientEtags(
+func checkClientEtag(
 	res http.ResponseWriter,
 	req *http.Request,
 	etag string,
@@ -247,11 +283,36 @@ func checkClientEtags(
 	return false
 }
 
-// Custom error page for requests that don't match a router
-func notFound(res http.ResponseWriter, req *http.Request) {
+// Concatenate post JSON with HTML template and write to client
+func writeTemplate(
+	res http.ResponseWriter,
+	tmpl templateStore,
+	ident Ident,
+	data []byte,
+) {
+	parts := [][]byte{
+		tmpl.Parts[0], data, tmpl.Parts[1],
+		loginCredentials(ident), tmpl.Parts[2],
+	}
+	out := new(bytes.Buffer)
+	for _, buf := range parts {
+		_, err := out.Write(buf)
+		throw(err)
+	}
+	_, err := res.Write(out.Bytes())
+	throw(err)
+}
+
+// Serve custom error page
+func notFound(res http.ResponseWriter) {
 	setErrorHeaders(res)
 	res.WriteHeader(404)
 	copyFile("www/404.html", res)
+}
+
+// Addapter for using notFound as a route handler
+func notFoundHandler(res http.ResponseWriter, _ *http.Request) {
+	notFound(res)
 }
 
 // Text-only 404 response
@@ -319,7 +380,7 @@ func detectLastN(req *http.Request) int {
 // Serve public configuration information as JSON
 func serveConfigs(res http.ResponseWriter, req *http.Request) {
 	etag := "W/" + configHash
-	if checkClientEtags(res, req, etag) {
+	if checkClientEtag(res, req, etag) {
 		return
 	}
 	setHeaders(res, etag, true)
@@ -347,7 +408,7 @@ func servePost(
 	}
 	data := marshalJSON(NewReader(board, ident).GetPost(id))
 	etag := "W/" + hashBuffer(data)
-	if checkClientEtags(res, req, etag) {
+	if checkClientEtag(res, req, etag) {
 		return
 	}
 	setHeaders(res, etag, true)
@@ -371,7 +432,7 @@ func serveImages(
 	headers := res.Header()
 
 	// Fake etag to stop agressive browser cache busting
-	if checkClientEtags(res, req, "0") {
+	if checkClientEtag(res, req, "0") {
 		return
 	}
 	headers.Set("ETag", "0")

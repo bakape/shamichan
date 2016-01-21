@@ -7,6 +7,7 @@
 package server
 
 import (
+	"github.com/Soreil/mnemonics"
 	"io/ioutil"
 	"os"
 )
@@ -148,4 +149,5 @@ func loadConfig() {
 	unmarshalJSON(file, &config)
 	unmarshalJSON(file, &clientConfig)
 	configHash = hashBuffer(file)
+	throw(mnemonic.SetSalt(config.Posts.Salt))
 }

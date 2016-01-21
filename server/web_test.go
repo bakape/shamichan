@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-
 	"testing"
 )
 
@@ -76,11 +75,12 @@ func (w *WebServer) TestEtagComparison(c *C) {
 	const etag = "foo"
 	req.Header.Set("If-None-Match", etag)
 	rec := httptest.NewRecorder()
-	c.Assert(checkClientEtags(rec, req, etag), Equals, true)
+	c.Assert(checkClientEtag(rec, req, etag), Equals, true)
 }
 
-func (w *WebServer) TestNotFoundHandler(c *C) {
-	rec := runHandler(c, notFound)
+func (w *WebServer) TestNotFound(c *C) {
+	rec := httptest.NewRecorder()
+	notFound(rec)
 	c.Assert(
 		rec.Body.String(),
 		Equals,

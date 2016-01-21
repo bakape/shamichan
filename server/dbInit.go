@@ -9,9 +9,6 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-// Shorthand
-var db string
-
 const dbVersion = 2
 
 // rSession exports the RethinkDB connection session
@@ -26,19 +23,30 @@ func loadDB() {
 	})
 	throw(err)
 
-	db = config.Rethinkdb.Db
+	// Assign the database helper function. Tests will implement and assign
+	// their own
+	db = func() Database {
+		return DatabaseHelper{}
+	}
+
 	var isCreated bool
-	rGet(r.DBList().Contains(db)).One(&isCreated)
+	db().Do(r.DBList().Contains(config.Rethinkdb.Db)).One(&isCreated)
 	if !isCreated {
 		initRethinkDB()
 	} else {
-		rSession.Use(db)
-		var version int
-		rGet(r.Table("main").Get("info").Field("dbVersion")).One(&version)
-		if version != dbVersion {
-			panic(fmt.Sprintf("Incompatible RethinkDB database version: %d."+
-				"See docs/migration.md", version))
-		}
+		verifyDBVersion()
+	}
+}
+
+// Confirm database verion is compatible, if not refuse to start, so we don't
+// mess up the DB irreversably.
+func verifyDBVersion() {
+	rSession.Use(config.Rethinkdb.Db)
+	var version int
+	db().Do(r.Table("main").Get("info").Field("dbVersion")).One(&version)
+	if version != dbVersion {
+		panic(fmt.Sprintf("Incompatible RethinkDB database version: %d."+
+			"See docs/migration.md", version))
 	}
 }
 
@@ -47,17 +55,14 @@ type Document struct {
 	ID string `gorethink:"id"`
 }
 
-// ParenthoodCache maps posts to their parent boards and threads
-type ParenthoodCache struct {
-	OPs    map[string]uint64
-	Boards map[string]string `gorethink:"boards"`
-}
-
 func initRethinkDB() {
-	rExec(r.DBCreate(db))
-	rSession.Use(db)
-	rExec(r.TableCreate("main"))
-	rExec(r.Table("main").Insert([3]interface{}{
+	db().Do(r.DBCreate(config.Rethinkdb.Db)).Exec()
+	rSession.Use(config.Rethinkdb.Db)
+	tables := [...]string{"main", "threads", "posts", "images", "updates"}
+	for _, table := range tables {
+		db().Do(r.TableCreate(table)).Exec()
+	}
+	db().Do(r.Table("main").Insert([...]interface{}{
 		struct {
 			Document
 			DBVersion int `gorethink:"dbVersion"`
@@ -68,19 +73,16 @@ func initRethinkDB() {
 			Document{"info"}, dbVersion, 0,
 		},
 
-		// Contains various board- and post-related statistics
-		struct {
-			Document
-			ParenthoodCache
-		}{
-			Document{"cache"},
-			ParenthoodCache{map[string]uint64{}, map[string]string{}},
-		},
-
 		// History aka progress counters of boards, that get incremented on
-		// any update
+		// post creation
 		Document{"histCounts"},
-	}))
-	rExec(r.TableCreate("threads"))
-	rExec(r.Table("threads").IndexCreate("board"))
+	})).Exec()
+
+	// Create secondary indeces
+	db().Do(r.Table("threads").IndexCreate("board")).Exec()
+	for _, key := range [...]string{"op", "board"} {
+		for _, table := range [...]string{"posts", "updates"} {
+			db().Do(r.Table(table).IndexCreate(key)).Exec()
+		}
+	}
 }
