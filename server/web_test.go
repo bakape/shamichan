@@ -78,9 +78,8 @@ func (w *WebServer) TestEtagComparison(c *C) {
 	c.Assert(checkClientEtag(rec, req, etag), Equals, true)
 }
 
-func (w *WebServer) TestNotFound(c *C) {
-	rec := httptest.NewRecorder()
-	notFound(rec)
+func (w *WebServer) TestNotFoundHandler(c *C) {
+	rec := runHandler(c, notFoundHandler)
 	c.Assert(
 		rec.Body.String(),
 		Equals,
