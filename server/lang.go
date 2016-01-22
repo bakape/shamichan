@@ -8,11 +8,14 @@ import (
 	"io/ioutil"
 )
 
+// Used for test path overriding
+var langRoot = "./lang"
+
 // LanguagePack contains the server-side string mappings of a single language
 type LanguagePack struct {
 	Imager map[string]string
 }
-type packMap map[string]*LanguagePack
+type packMap map[string]LanguagePack
 
 // langs contains languagepack structs for each language
 var langs packMap
@@ -21,10 +24,10 @@ var langs packMap
 func loadLanguagePacks() {
 	langs = packMap{}
 	for _, lang := range config.Lang.Enabled {
-		file, err := ioutil.ReadFile("./lang/" + lang + "/server.json")
+		file, err := ioutil.ReadFile(langRoot + "/" + lang + "/server.json")
 		throw(err)
-		parsed := new(LanguagePack)
-		unmarshalJSON(file, parsed)
+		var parsed LanguagePack
+		unmarshalJSON(file, &parsed)
 		langs[lang] = parsed
 	}
 }
