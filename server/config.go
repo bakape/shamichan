@@ -37,11 +37,7 @@ type serverConfigs struct {
 		Default string
 	}
 	Staff struct {
-		Classes map[string]struct {
-			Alias   string
-			Members map[string]string
-			Rights  map[string]bool
-		}
+		Classes     map[string]staffClass
 		Keyword     string
 		SessionTime int
 	}
@@ -74,6 +70,13 @@ type serverConfigs struct {
 	Schedule                                                       [][3]string
 	Radio, Pyu, IllyaDance                                         bool
 	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
+}
+
+// Contains properties of a single staff personel type
+type staffClass struct {
+	Alias   string
+	Members map[string]string
+	Rights  map[string]bool
 }
 
 // config contains currently loaded configuration

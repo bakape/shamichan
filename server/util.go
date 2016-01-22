@@ -59,11 +59,17 @@ func canAccessBoard(board string, ident Ident) bool {
 	if board == config.Boards.Staff && !checkAuth("accessStaffBoard", ident) {
 		return false
 	}
-	_, ok := config.Boards.Boards[board]
-	if !ok && board == "all" {
-		ok = true
+	var isBoard bool
+	if board == "all" {
+		isBoard = true
+	} else {
+		for _, b := range config.Boards.Enabled {
+			if board == b {
+				isBoard = true
+			}
+		}
 	}
-	return !ident.Banned && ok
+	return isBoard && !ident.Banned
 }
 
 // Confirm thread exists and client has rights to access it's board
@@ -82,8 +88,9 @@ func canAccessThread(id uint64, board string, ident Ident) bool {
 // Compute a truncated MD5 hash from a buffer
 func hashBuffer(buf []byte) string {
 	hasher := md5.New()
-	hasher.Write(buf)
-	return hex.EncodeToString(hasher.Sum(nil))[16:]
+	_, err := hasher.Write(buf)
+	throw(err)
+	return hex.EncodeToString(hasher.Sum(nil))[:16]
 }
 
 // Shorthand for marshaling JSON and handling the error
@@ -118,10 +125,8 @@ func idToString(id uint64) string {
 // default language.
 func chooseLang(req *http.Request) string {
 	cookie, err := req.Cookie("lang")
-	if err == http.ErrNoCookie {
+	if err == http.ErrNoCookie { // Only possible error
 		return config.Lang.Default
-	} else if err != nil {
-		panic(err)
 	}
 	for _, lang := range config.Lang.Enabled {
 		if cookie.Value == lang {
