@@ -214,7 +214,7 @@ func (w *WebServer) TestCompareEtag(c *C) {
 	req := newRequest(c)
 	const etag = "foo"
 	req.Header.Set("If-None-Match", etag)
-	ident := lookUpIdent(req.RemoteAddr)
+	ident := Ident{}
 	c.Assert(compareEtag(rec, req, ident, etag, false), Equals, false)
 
 	// HTML or JSON and no authentication
@@ -246,4 +246,51 @@ func (w *WebServer) TestHTMLEtag(c *C) {
 	const hash = "foo"
 	c.Assert(htmlEtag(hash, false), Equals, "-foo")
 	c.Assert(htmlEtag(hash, true), Equals, "-foo-mobile")
+}
+
+func (w *WebServer) TestWriteTemplate(c *C) {
+	tmpl := templateStore{
+		Parts: [][]byte{
+			[]byte{1},
+			[]byte{2},
+			[]byte{3},
+		},
+	}
+	rec := httptest.NewRecorder()
+	writeTemplate(rec, tmpl, Ident{}, []byte{4})
+	c.Assert(rec.Body.Bytes(), DeepEquals, []byte{1, 4, 2, 3})
+}
+
+func (w *WebServer) TestDetectMobile(c *C) {
+	req := newRequest(c)
+	req.Header.Set(
+		"User-Agent",
+		"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko)"+
+			" Chrome/41.0.2228.0 Safari/537.36",
+	)
+	c.Assert(detectMobile(req), Equals, false)
+
+	req = newRequest(c)
+	req.Header.Set(
+		"User-Agent",
+		"Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C)"+
+			" AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166"+
+			" Mobile Safari/535.19",
+	)
+	c.Assert(detectMobile(req), Equals, true)
+}
+
+func (w *WebServer) TestChooseTemplate(c *C) {
+	index := templateStore{
+		Hash: "foo",
+	}
+	mobile := templateStore{
+		Hash: "bar",
+	}
+	resources = map[string]templateStore{
+		"index":  index,
+		"mobile": mobile,
+	}
+	c.Assert(chooseTemplate(false), DeepEquals, index)
+	c.Assert(chooseTemplate(true), DeepEquals, mobile)
 }
