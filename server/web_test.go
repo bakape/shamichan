@@ -147,7 +147,7 @@ func (w *WebServer) TestLoginCredentials(c *C) {
 	c.Assert(loginCredentials(Ident{}), DeepEquals, []byte{})
 }
 
-func (w *WebServer) TestDetctLastN(c *C) {
+func (w *WebServer) TestDetectLastN(c *C) {
 	// No lastN query string
 	req := customRequest(c, "/a/1")
 	c.Assert(detectLastN(req), Equals, 0)
