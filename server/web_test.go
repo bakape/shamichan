@@ -79,6 +79,7 @@ func (w *WebServer) TestEtagComparison(c *C) {
 }
 
 func (w *WebServer) TestNotFoundHandler(c *C) {
+	webRoot = "./test"
 	rec := runHandler(c, notFoundHandler)
 	c.Assert(
 		rec.Body.String(),
@@ -108,6 +109,7 @@ func (w *WebServer) TestText404(c *C) {
 }
 
 func (w *WebServer) TestPanicHandler(c *C) {
+	webRoot = "./test"
 	err := errors.New("foo")
 
 	// Prevent printing stack trace to terminal
@@ -168,10 +170,11 @@ func customRequest(c *C, url string) *http.Request {
 func (w *WebServer) TestImageServer(c *C) {
 	const (
 		truncated         = "/src/tis life.gif"
-		path              = "./img" + truncated
 		notFoundTruncated = "src/nobody here.gif"
-		notFound          = "./img" + notFoundTruncated
 	)
+	imageWebRoot = "./test"
+	path := imageWebRoot + truncated
+	notFound := imageWebRoot + notFoundTruncated
 
 	// Succesful first serve
 	req := customRequest(c, path)

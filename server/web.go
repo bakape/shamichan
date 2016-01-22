@@ -16,6 +16,12 @@ import (
 	"strconv"
 )
 
+// Used for overriding during tests
+var (
+	webRoot      = "./www"
+	imageWebRoot = "./img"
+)
+
 func startWebServer() {
 	router := httprouter.New()
 	router.NotFound = http.HandlerFunc(notFoundHandler)
@@ -308,7 +314,7 @@ func writeTemplate(
 func notFound(res http.ResponseWriter) {
 	setErrorHeaders(res)
 	res.WriteHeader(404)
-	copyFile("www/404.html", res)
+	copyFile(webRoot+"/404.html", res)
 }
 
 // Addapter for using notFound as a route handler
@@ -331,7 +337,7 @@ func setErrorHeaders(res http.ResponseWriter) {
 func panicHandler(res http.ResponseWriter, req *http.Request, err interface{}) {
 	setErrorHeaders(res)
 	res.WriteHeader(500)
-	copyFile("./www/50x.html", res)
+	copyFile(webRoot+"/50x.html", res)
 	logError(req, err)
 }
 
@@ -424,7 +430,7 @@ func serveImages(
 	req *http.Request,
 	ps httprouter.Params,
 ) {
-	file, err := os.Open("./img" + httprouter.CleanPath(ps[0].Value))
+	file, err := os.Open(imageWebRoot + httprouter.CleanPath(ps[0].Value))
 	defer file.Close()
 	if err != nil {
 		text404(res)
