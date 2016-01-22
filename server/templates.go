@@ -10,8 +10,10 @@ import (
 	"fmt"
 	"github.com/dchest/htmlmin"
 	"html/template"
-	"io/ioutil"
 )
+
+// Overriden in tests
+var templateRoot = "./tmpl"
 
 // templateStore stores the static part of HTML templates and the corresponding
 // truncated MD5 hash of said template
@@ -24,42 +26,34 @@ type templateStore struct {
 type templateMap map[string]templateStore
 
 // resources exports temolates and their hashes by language
-var resources templateMap
+var resources = templateMap{}
 
 // compileTemplates reads template HTML from disk, injects dynamic variables,
 // hashes and stores them
 func compileTemplates() {
 	// Only one for now, but there will be more later
-	raw := map[string]string{}
-	for _, name := range []string{"index"} {
-		file, err := ioutil.ReadFile("./tmpl/" + name + ".html")
-		throw(err)
-		raw[name] = string(file)
-	}
-	newResources := templateMap{}
-	index, mobile := indexTemplate(raw["index"])
-	newResources["index"] = index
-	newResources["mobile"] = mobile
-	resources = newResources
+	index, mobile := indexTemplate()
+	resources["index"] = index
+	resources["mobile"] = mobile
 }
 
 // clientFileHash is the combined, shortened MD5 hash of all client files
 var clientFileHash string
 
 type templateVars struct {
-	Config               template.JS
-	Navigation           template.HTML
-	ConfigHash, MediaURL string
-	IsMobile             bool
+	Config     template.JS
+	Navigation template.HTML
+	ConfigHash string
+	IsMobile   bool
 }
 
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
-func indexTemplate(raw string) (templateStore, templateStore) {
+func indexTemplate() (templateStore, templateStore) {
 	vars := templateVars{ConfigHash: configHash}
 	vars.Config = template.JS(marshalJSON(clientConfig))
 	vars.Navigation = boardNavigation()
-	tmpl, err := template.New("index").Parse(raw)
+	tmpl, err := template.ParseFiles(templateRoot + "/index.html")
 	throw(err)
 
 	// Rigt now the desktop and mobile templates are almost identical. This will
@@ -111,7 +105,7 @@ func buildIndexTemplate(
 	})
 	throw(err)
 	return templateStore{
-		bytes.Split(minified, []byte("<$$$>")),
+		bytes.Split(minified, []byte("$$$")),
 		hashBuffer(minified),
 	}
 }
