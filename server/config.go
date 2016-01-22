@@ -12,6 +12,9 @@ import (
 	"os"
 )
 
+// Overridable path for tests
+var configRoot = "./config"
+
 // Global configuration store
 type serverConfigs struct {
 	// Configuration that can not be hot-reloaded without restarting the server
@@ -135,13 +138,13 @@ var configHash string
 
 // loadConfig reads and parses JSON config files
 func loadConfig() {
-	const path = "./config/config.json"
+	path := configRoot + "/config.json"
 	file, err := ioutil.ReadFile(path)
 
 	// If config file does not exist, read and copy defaults file
 	if err != nil {
 		if os.IsNotExist(err) {
-			file, err = ioutil.ReadFile("./config/defaults.json")
+			file, err = ioutil.ReadFile(configRoot + "/defaults.json")
 			throw(err)
 			throw(ioutil.WriteFile(path, file, 0600))
 		} else {
