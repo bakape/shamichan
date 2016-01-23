@@ -91,10 +91,7 @@ func (d *DB) TestValidateOP(c *C) {
 	setMockDatabase(m, c)
 	c.Assert(validateOP(1, "a"), Equals, true)
 
-	m = mockDatabase{
-		`r.Table("posts").Get(1).Field("board")`: "c",
-		`r.Table("posts").Get(1).Field("op")`:    uint64(1),
-	}
+	m[`r.Table("posts").Get(1).Field("board")`] = "c"
 	setMockDatabase(m, c)
 	c.Assert(validateOP(1, "a"), Equals, false)
 

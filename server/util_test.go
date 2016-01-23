@@ -67,14 +67,7 @@ func (u *Util) TestLookupIdent(c *C) {
 }
 
 func (u *Util) TestCanAccessBoard(c *C) {
-	config.Boards.Enabled = []string{"a", "staff"}
-	config.Boards.Staff = "staff"
-	config.Staff.Classes = make(map[string]staffClass, 1)
-	config.Staff.Classes["admin"] = staffClass{
-		Rights: map[string]bool{
-			"accessStaffBoard": true,
-		},
-	}
+	setupBoardAccess()
 	ident := Ident{}
 
 	// Board exists
@@ -94,6 +87,19 @@ func (u *Util) TestCanAccessBoard(c *C) {
 	// Banned
 	ident = Ident{Banned: true}
 	c.Assert(canAccessBoard("a", ident), Equals, false)
+}
+
+func setupBoardAccess() {
+	config = serverConfigs{}
+	config.Boards.Enabled = []string{"a", "staff"}
+	config.Boards.Staff = "staff"
+	config.Staff.Classes = make(map[string]staffClass, 1)
+	config.Staff.Classes["admin"] = staffClass{
+		Rights: map[string]bool{
+			"accessStaffBoard": true,
+			"seeModeration":    true,
+		},
+	}
 }
 
 func (u *Util) TestHashBuffer(c *C) {
@@ -171,4 +177,30 @@ func (u *Util) TestLogError(c *C) {
 		Matches,
 		`\d+/\d+/\d+ \d+:\d+:\d+ panic serving ::1: foo`,
 	)
+}
+
+func (u *Util) TestCanAccessThread(c *C) {
+	m := mockDatabase{
+		`r.Table("threads").Get(1).Field("deleted").Default(false)`: false,
+	}
+	setMockDatabase(m, c)
+	setupBoardAccess()
+	ident := Ident{}
+
+	// Not deleted
+	c.Assert(canAccessThread(1, "a", ident), Equals, true)
+
+	// Deleted
+	m = mockDatabase{
+		`r.Table("threads").Get(1).Field("deleted").Default(false)`: true,
+	}
+	setMockDatabase(m, c)
+	c.Assert(canAccessThread(1, "a", ident), Equals, false)
+
+	// Deleted, but has access rights
+	ident.Auth = "admin"
+	c.Assert(canAccessThread(1, "a", ident), Equals, true)
+
+	// Can't access board
+	c.Assert(canAccessThread(1, "c", ident), Equals, false)
 }
