@@ -38,7 +38,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) *ThreadContainer {
 
 	// Keep same format as multiple thread queries
 	var thread joinedThread
-	db().Do(r.Object(map[string]r.Term{
+	db()(r.Object(map[string]r.Term{
 		"left":  getThreadMeta(getThread(id)),
 		"right": getPost(id),
 	})).
@@ -52,7 +52,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) *ThreadContainer {
 	if lastN != 0 { // Only fetch last N number of replies
 		query = query.Slice(-lastN + 1)
 	}
-	db().Do(query).All(&posts)
+	db()(query).All(&posts)
 
 	// Parse posts, remove those that the client can not access and allocate the
 	// rest to a map
@@ -82,13 +82,15 @@ func getThreadMeta(thread r.Term) r.Term {
 			// Count number of posts
 			"postCtr": r.Table("posts").
 				GetAllByIndex("op", id).
-				Count(),
+				Count().
+				Sub(1),
 
 			// Image count
 			"imageCtr": r.Table("posts").
 				GetAllByIndex("op", id).
 				HasFields("image").
-				Count(),
+				Count().
+				Sub(1),
 		},
 	})
 }
@@ -115,7 +117,7 @@ func (rd *Reader) parsePost(post *Post) bool {
 
 // GetPost reads a single post from the database
 func (rd *Reader) GetPost(id uint64) (post *Post) {
-	db().Do(getPost(id)).One(post)
+	db()(getPost(id)).One(post)
 	rd.parsePost(post)
 	return post
 }
@@ -123,7 +125,7 @@ func (rd *Reader) GetPost(id uint64) (post *Post) {
 // GetBoard retrives all OPs of a single board
 func (rd *Reader) GetBoard() (board *Board) {
 	var threads []*joinedThread
-	db().Do(
+	db()(
 		r.Table("threads").
 			GetAllByIndex("board", rd.board).
 			EqJoin("id", r.Table("posts")).
@@ -148,7 +150,7 @@ func (rd *Reader) GetAllBoard() (board *Board) {
 	}
 
 	var threads []*joinedThread
-	db().Do(query).All(&threads)
+	db()(query).All(&threads)
 	board.Ctr = postCounter()
 	board.Threads = rd.parseThreads(threads)
 	return

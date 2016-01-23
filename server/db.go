@@ -8,12 +8,11 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-var db func() Database
+var db func() func(r.Term) Database
 
 // Database eases writing test by providing an interface for mock-databases to
 // implement
 type Database interface {
-	Do(r.Term) Database
 	Exec()
 	One(interface{})
 	All(interface{})
@@ -22,12 +21,6 @@ type Database interface {
 // DatabaseHelper simplifies managing queries, by providing extra utility
 type DatabaseHelper struct {
 	query r.Term
-}
-
-// Do is a chainable method for defining the gorethink query to run
-func (d DatabaseHelper) Do(query r.Term) Database {
-	d.query = query
-	return d
 }
 
 // Exec excutes the inner query and only returns an error, if any
@@ -52,13 +45,13 @@ func (d DatabaseHelper) All(res interface{}) {
 
 // parentThread determines the parent thread of a post
 func parentThread(id uint64) (op uint64) {
-	db().Do(getPost(id).Field("op")).One(&op)
+	db()(getPost(id).Field("op")).One(&op)
 	return
 }
 
 // parentBoard determines the parent board of the post
 func parentBoard(id uint64) (board string) {
-	db().Do(getPost(id).Field("board")).One(&board)
+	db()(getPost(id).Field("board")).One(&board)
 	return
 }
 
@@ -79,20 +72,19 @@ func getPost(id uint64) r.Term {
 
 // Retrieve the current post counter number
 func postCounter() (counter uint64) {
-	db().Do(r.Table("main").Get("info").Field("postCtr")).One(&counter)
+	db()(r.Table("main").Get("info").Field("postCtr")).One(&counter)
 	return
 }
 
 // Retrieve the history or "progress" counter of a board
 func boardCounter(board string) (counter uint64) {
-	db().
-		Do(r.Table("main").Get("info").Field("postCtr").Default(0)).
+	db()(r.Table("main").Get("histCounts").Field(board).Default(0)).
 		One(&counter)
 	return
 }
 
 // Retrieve the history or "progress" counter of a thread
 func threadCounter(id uint64) (counter uint64) {
-	db().Do(r.Table("posts").GetAllByIndex("op", id).Count()).One(&counter)
+	db()(r.Table("posts").GetAllByIndex("op", id).Count().Sub(1)).One(&counter)
 	return
 }

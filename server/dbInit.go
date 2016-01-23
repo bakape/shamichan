@@ -25,12 +25,14 @@ func loadDB() {
 
 	// Assign the database helper function. Tests will implement and assign
 	// their own
-	db = func() Database {
-		return DatabaseHelper{}
+	db = func() func(r.Term) Database {
+		return func(query r.Term) Database {
+			return DatabaseHelper{query}
+		}
 	}
 
 	var isCreated bool
-	db().Do(r.DBList().Contains(config.Rethinkdb.Db)).One(&isCreated)
+	db()(r.DBList().Contains(config.Rethinkdb.Db)).One(&isCreated)
 	if !isCreated {
 		initRethinkDB()
 	} else {
@@ -43,7 +45,7 @@ func loadDB() {
 func verifyDBVersion() {
 	rSession.Use(config.Rethinkdb.Db)
 	var version int
-	db().Do(r.Table("main").Get("info").Field("dbVersion")).One(&version)
+	db()(r.Table("main").Get("info").Field("dbVersion")).One(&version)
 	if version != dbVersion {
 		panic(fmt.Sprintf("Incompatible RethinkDB database version: %d."+
 			"See docs/migration.md", version))
@@ -56,13 +58,13 @@ type Document struct {
 }
 
 func initRethinkDB() {
-	db().Do(r.DBCreate(config.Rethinkdb.Db)).Exec()
+	db()(r.DBCreate(config.Rethinkdb.Db)).Exec()
 	rSession.Use(config.Rethinkdb.Db)
 	tables := [...]string{"main", "threads", "posts", "images", "updates"}
 	for _, table := range tables {
-		db().Do(r.TableCreate(table)).Exec()
+		db()(r.TableCreate(table)).Exec()
 	}
-	db().Do(r.Table("main").Insert([...]interface{}{
+	db()(r.Table("main").Insert([...]interface{}{
 		struct {
 			Document
 			DBVersion int `gorethink:"dbVersion"`
@@ -79,10 +81,10 @@ func initRethinkDB() {
 	})).Exec()
 
 	// Create secondary indeces
-	db().Do(r.Table("threads").IndexCreate("board")).Exec()
+	db()(r.Table("threads").IndexCreate("board")).Exec()
 	for _, key := range [...]string{"op", "board"} {
 		for _, table := range [...]string{"posts", "updates"} {
-			db().Do(r.Table(table).IndexCreate(key)).Exec()
+			db()(r.Table(table).IndexCreate(key)).Exec()
 		}
 	}
 }

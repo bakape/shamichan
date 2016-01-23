@@ -78,7 +78,7 @@ func canAccessThread(id uint64, board string, ident Ident) bool {
 		return false
 	}
 	var deleted bool
-	db().Do(getThread(id).Field("deleted").Default(false)).One(&deleted)
+	db()(getThread(id).Field("deleted").Default(false)).One(&deleted)
 	if deleted && !checkAuth("seeModeration", ident) {
 		return false
 	}
