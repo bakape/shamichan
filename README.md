@@ -13,7 +13,8 @@
 * [RethinkDB](https://rethinkdb.com/docs/install/)
     * RethinkDB does not enable a configuration file by default. If you don't
     want to configure anything, just copy `/etc/rethinkdb/default.conf.sample`
-    into `/etc/rethinkdb/instances.d`
+	into `/etc/rethinkdb/instances.d/instance1.conf`. You might also set it to
+	autostart on boot. See the [official guide](http://www.rethinkdb.com/docs/start-on-startup/).
 
 ##Updating
 * `go get -u gopkg.in/bakape/meguca.v2`
