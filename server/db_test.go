@@ -133,3 +133,39 @@ func (d *DB) TestThreadCounter(c *C) {
 	setMockDatabase(m, c)
 	c.Assert(threadCounter(1), Equals, res)
 }
+
+// Test production Database implementation. This part requires a rethinkDB
+// connection.
+func (d *DB) TestDatabaseHelper(c *C) {
+	const (
+		db    = "DBHTest"
+		table = "test"
+		id    = "testDoc"
+	)
+	var err error
+	rSession, err = r.Connect(r.ConnectOpts{
+		Address: "localhost:28015",
+	})
+	c.Assert(err, IsNil)
+	c.Assert(r.DBCreate(db).Exec(rSession), IsNil)
+	rSession.Use(db)
+	c.Assert(r.TableCreate(table).Exec(rSession), IsNil)
+
+	standard := Document{id}
+	helper := DatabaseHelper{r.Table(table).Insert(standard)}
+	helper.Exec()
+
+	var doc Document
+	helper = DatabaseHelper{r.Table(table).Get(id)}
+	helper.One(&doc)
+	c.Assert(doc, DeepEquals, standard)
+
+	var docs []Document
+	helper = DatabaseHelper{r.Table(table)}
+	helper.All(&docs)
+	c.Assert(docs, DeepEquals, []Document{standard})
+
+	// Clean up
+	c.Assert(r.DBDrop(db).Exec(rSession), IsNil)
+	c.Assert(rSession.Close(), IsNil)
+}
