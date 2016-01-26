@@ -8,16 +8,6 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-var db func() func(r.Term) Database
-
-// Database eases writing test by providing an interface for mock-databases to
-// implement
-type Database interface {
-	Exec()
-	One(interface{})
-	All(interface{})
-}
-
 // DatabaseHelper simplifies managing queries, by providing extra utility
 type DatabaseHelper struct {
 	query r.Term

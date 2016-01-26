@@ -9,17 +9,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"testing"
 )
-
-// Hook up gocheck into the "go test" runner.
-func Test(t *testing.T) { TestingT(t) }
 
 type WebServer struct{}
 
 var _ = Suite(&WebServer{})
 
-func (w *WebServer) TestFrontpageRedirect(c *C) {
+func (*WebServer) TestFrontpageRedirect(c *C) {
 	config = serverConfigs{}
 	config.Frontpage = "./test/frontpage.html"
 	server := httptest.NewServer(http.HandlerFunc(redirectToDefault))
@@ -32,7 +28,7 @@ func (w *WebServer) TestFrontpageRedirect(c *C) {
 	c.Assert(string(frontpage), Equals, "<!doctype html><html></html>\n")
 }
 
-func (w *WebServer) TestDefaultBoardRedirect(c *C) {
+func (*WebServer) TestDefaultBoardRedirect(c *C) {
 	config = serverConfigs{}
 	config.Boards.Default = "a"
 	rec := runHandler(c, redirectToDefault)
@@ -53,7 +49,7 @@ func newRequest(c *C) *http.Request {
 	return req
 }
 
-func (w *WebServer) TestConfigServing(c *C) {
+func (*WebServer) TestConfigServing(c *C) {
 	configHash = "foo"
 	clientConfig = clientConfigs{}
 	etag := "W/" + configHash
@@ -70,7 +66,7 @@ func (w *WebServer) TestConfigServing(c *C) {
 	c.Assert(rec.Code, Equals, 304)
 }
 
-func (w *WebServer) TestEtagComparison(c *C) {
+func (*WebServer) TestEtagComparison(c *C) {
 	req := newRequest(c)
 	const etag = "foo"
 	req.Header.Set("If-None-Match", etag)
@@ -78,7 +74,7 @@ func (w *WebServer) TestEtagComparison(c *C) {
 	c.Assert(checkClientEtag(rec, req, etag), Equals, true)
 }
 
-func (w *WebServer) TestNotFoundHandler(c *C) {
+func (*WebServer) TestNotFoundHandler(c *C) {
 	webRoot = "./test"
 	rec := runHandler(c, notFoundHandler)
 	c.Assert(
@@ -100,7 +96,7 @@ func assertHeaders(c *C, rec *httptest.ResponseRecorder, h map[string]string) {
 	}
 }
 
-func (w *WebServer) TestText404(c *C) {
+func (*WebServer) TestText404(c *C) {
 	rec := runHandler(c, func(res http.ResponseWriter, _ *http.Request) {
 		text404(res)
 	})
@@ -108,7 +104,7 @@ func (w *WebServer) TestText404(c *C) {
 	c.Assert(rec.Body.String(), Equals, "404 Not found\n")
 }
 
-func (w *WebServer) TestPanicHandler(c *C) {
+func (*WebServer) TestPanicHandler(c *C) {
 	webRoot = "./test"
 	err := errors.New("foo")
 
@@ -122,7 +118,7 @@ func (w *WebServer) TestPanicHandler(c *C) {
 	c.Assert(rec.Body.String(), Equals, "<!doctype html><html>50x</html>\n")
 }
 
-func (w *WebServer) TestSetHeaders(c *C) {
+func (*WebServer) TestSetHeaders(c *C) {
 	// HTML
 	rec := httptest.NewRecorder()
 	const etag = "foo"
@@ -143,11 +139,11 @@ func (w *WebServer) TestSetHeaders(c *C) {
 	assertHeaders(c, rec, headers)
 }
 
-func (w *WebServer) TestLoginCredentials(c *C) {
+func (*WebServer) TestLoginCredentials(c *C) {
 	c.Assert(loginCredentials(Ident{}), DeepEquals, []byte{})
 }
 
-func (w *WebServer) TestDetectLastN(c *C) {
+func (*WebServer) TestDetectLastN(c *C) {
 	// No lastN query string
 	req := customRequest(c, "/a/1")
 	c.Assert(detectLastN(req), Equals, 0)
@@ -167,7 +163,7 @@ func customRequest(c *C, url string) *http.Request {
 	return req
 }
 
-func (w *WebServer) TestImageServer(c *C) {
+func (*WebServer) TestImageServer(c *C) {
 	const (
 		truncated         = "/src/tis life.gif"
 		notFoundTruncated = "src/nobody here.gif"
@@ -211,7 +207,7 @@ func (w *WebServer) TestImageServer(c *C) {
 	c.Assert(rec.Code, Equals, 404)
 }
 
-func (w *WebServer) TestCompareEtag(c *C) {
+func (*WebServer) TestCompareEtag(c *C) {
 	// Etag comparison
 	rec := httptest.NewRecorder()
 	req := newRequest(c)
@@ -241,17 +237,17 @@ func (w *WebServer) TestCompareEtag(c *C) {
 	assertHeaders(c, rec, headers)
 }
 
-func (w *WebServer) TestEtagStart(c *C) {
+func (*WebServer) TestEtagStart(c *C) {
 	c.Assert(etagStart(1), Equals, "W/1")
 }
 
-func (w *WebServer) TestHTMLEtag(c *C) {
+func (*WebServer) TestHTMLEtag(c *C) {
 	const hash = "foo"
 	c.Assert(htmlEtag(hash, false), Equals, "-foo")
 	c.Assert(htmlEtag(hash, true), Equals, "-foo-mobile")
 }
 
-func (w *WebServer) TestWriteTemplate(c *C) {
+func (*WebServer) TestWriteTemplate(c *C) {
 	tmpl := templateStore{
 		Parts: [][]byte{
 			[]byte{1},
@@ -264,7 +260,7 @@ func (w *WebServer) TestWriteTemplate(c *C) {
 	c.Assert(rec.Body.Bytes(), DeepEquals, []byte{1, 4, 2, 3})
 }
 
-func (w *WebServer) TestDetectMobile(c *C) {
+func (*WebServer) TestDetectMobile(c *C) {
 	req := newRequest(c)
 	req.Header.Set(
 		"User-Agent",
@@ -283,7 +279,7 @@ func (w *WebServer) TestDetectMobile(c *C) {
 	c.Assert(detectMobile(req), Equals, true)
 }
 
-func (w *WebServer) TestChooseTemplate(c *C) {
+func (*WebServer) TestChooseTemplate(c *C) {
 	index := templateStore{
 		Hash: "foo",
 	}

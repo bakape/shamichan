@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"errors"
+	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 	"log"
 	"net/http"
@@ -14,18 +15,18 @@ type Util struct{}
 
 var _ = Suite(&Util{})
 
-func (u *Util) TestWrapError(c *C) {
+func (*Util) TestWrapError(c *C) {
 	err := errors.New("foo")
 	wrapped := wrapError{"bar", err}
 	c.Assert(wrapped.Error(), Equals, "bar: foo")
 }
 
-func (u *Util) TestThrowNoError(c *C) {
+func (*Util) TestThrowNoError(c *C) {
 	defer c.Assert(recover(), IsNil)
 	throw(nil)
 }
 
-func (u *Util) TestThrowWithError(c *C) {
+func (*Util) TestThrowWithError(c *C) {
 	err := errors.New("foo")
 	defer func() {
 		c.Assert(recover(), DeepEquals, err)
@@ -33,7 +34,7 @@ func (u *Util) TestThrowWithError(c *C) {
 	throw(err)
 }
 
-func (u *Util) TestCheckAuth(c *C) {
+func (*Util) TestCheckAuth(c *C) {
 	config = serverConfigs{}
 	config.Staff.Classes = make(map[string]staffClass, 1)
 	config.Staff.Classes["admin"] = staffClass{
@@ -60,13 +61,13 @@ func (u *Util) TestCheckAuth(c *C) {
 	c.Assert(checkAuth("canFoo", ident), Equals, false)
 }
 
-func (u *Util) TestLookupIdent(c *C) {
+func (*Util) TestLookupIdent(c *C) {
 	const ip = "::1"
 	ident := Ident{IP: ip}
 	c.Assert(lookUpIdent(ip), DeepEquals, ident)
 }
 
-func (u *Util) TestCanAccessBoard(c *C) {
+func (*Util) TestCanAccessBoard(c *C) {
 	setupBoardAccess()
 	ident := Ident{}
 
@@ -102,7 +103,7 @@ func setupBoardAccess() {
 	}
 }
 
-func (u *Util) TestHashBuffer(c *C) {
+func (*Util) TestHashBuffer(c *C) {
 	c.Assert(hashBuffer([]byte{1, 2, 3}), Equals, "5289df737df57326")
 }
 
@@ -111,12 +112,12 @@ type jsonSample struct {
 	B string `json:"b"`
 }
 
-func (u *Util) TestMarshalJSON(c *C) {
+func (*Util) TestMarshalJSON(c *C) {
 	s := jsonSample{1, "b"}
 	c.Assert(string(marshalJSON(s)), Equals, `{"a":1,"b":"b"}`)
 }
 
-func (u *Util) TestUnmarshalJSON(c *C) {
+func (*Util) TestUnmarshalJSON(c *C) {
 	const json = `{"a":1,"b":"b"}`
 	var store jsonSample
 	result := jsonSample{1, "b"}
@@ -124,17 +125,17 @@ func (u *Util) TestUnmarshalJSON(c *C) {
 	c.Assert(store, DeepEquals, result)
 }
 
-func (u *Util) TestCopyFile(c *C) {
+func (*Util) TestCopyFile(c *C) {
 	buf := new(bytes.Buffer)
 	copyFile("./test/frontpage.html", buf)
 	c.Assert(buf.String(), Equals, "<!doctype html><html></html>\n")
 }
 
-func (u *Util) TestIDToString(c *C) {
+func (*Util) TestIDToString(c *C) {
 	c.Assert(idToString(1), Equals, "1")
 }
 
-func (u *Util) TestChooseLang(c *C) {
+func (*Util) TestChooseLang(c *C) {
 	const (
 		def     = "lv_LV"
 		enabled = "en_GB"
@@ -164,7 +165,7 @@ func (u *Util) TestChooseLang(c *C) {
 	c.Assert(chooseLang(req), Equals, enabled)
 }
 
-func (u *Util) TestLogError(c *C) {
+func (*Util) TestLogError(c *C) {
 	req := newRequest(c)
 	err := errors.New("foo")
 	req.RemoteAddr = "::1"
@@ -179,11 +180,8 @@ func (u *Util) TestLogError(c *C) {
 	)
 }
 
-func (u *Util) TestCanAccessThread(c *C) {
-	m := mockDatabase{
-		`r.Table("threads").Get(1).Field("deleted").Default(false)`: false,
-	}
-	setMockDatabase(m, c)
+func (*DB) TestCanAccessThread(c *C) {
+	db()(r.Table("threads").Insert(map[string]int{"id": 1})).Exec()
 	setupBoardAccess()
 	ident := Ident{}
 
@@ -191,10 +189,9 @@ func (u *Util) TestCanAccessThread(c *C) {
 	c.Assert(canAccessThread(1, "a", ident), Equals, true)
 
 	// Deleted
-	m = mockDatabase{
-		`r.Table("threads").Get(1).Field("deleted").Default(false)`: true,
-	}
-	setMockDatabase(m, c)
+	db()(r.Table("threads").Get(1).Update(map[string]bool{
+		"deleted": true,
+	})).Exec()
 	c.Assert(canAccessThread(1, "a", ident), Equals, false)
 
 	// Deleted, but has access rights
