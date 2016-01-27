@@ -29,23 +29,19 @@ type joinedThread struct {
 }
 
 // GetThread retrieves thread JSON from the database
-func (rd *Reader) GetThread(id uint64, lastN int) *ThreadContainer {
+func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 	// Verify thread exists. In case of HTTP requests, we kind of do 2
 	// validations, but it's better to keep reader uniformity
 	if !validateOP(id, rd.board) || !canAccessThread(id, rd.board, rd.ident) {
-		return new(ThreadContainer)
+		return ThreadContainer{}
+	}
+	thread := getJoinedThread(id)
+	if thread.Left.ID == 0 || thread.Right.ID == 0 {
+		return ThreadContainer{}
 	}
 
-	// Keep same format as multiple thread queries
-	var thread joinedThread
-	db()(r.Object(map[string]r.Term{
-		"left":  getThreadMeta(getThread(id)),
-		"right": getPost(id),
-	})).
-		One(&thread)
-
 	// Get all other posts
-	var posts []*Post
+	var posts []Post
 	query := r.Table("posts").
 		GetAllByIndex("op", id).
 		Filter(r.Row.Field("id").Eq(id).Not()) // Exclude OP
@@ -56,22 +52,31 @@ func (rd *Reader) GetThread(id uint64, lastN int) *ThreadContainer {
 
 	// Parse posts, remove those that the client can not access and allocate the
 	// rest to a map
-	filtered := make(map[string]*Post, len(posts))
+	filtered := make(map[string]Post, len(posts))
 	for _, post := range posts {
-		if rd.parsePost(post) {
-			filtered[idToString(post.ID)] = post
+		parsed := rd.parsePost(post)
+		if parsed.ID != 0 {
+			filtered[idToString(parsed.ID)] = parsed
 		}
 	}
 
-	// Guranteed to have access rights, if thread is accessable
-	rd.parsePost(&thread.Right)
-
 	// Compose into the client-side thread type
-	return &ThreadContainer{
+	return ThreadContainer{
+		// Guranteed to have access rights, if thread is accessable
+		Post:   rd.parsePost(thread.Right),
 		Thread: thread.Left,
-		Post:   thread.Right,
 		Posts:  filtered,
 	}
+}
+
+// Retrieve the thread metadata along with the OP post in the same format as
+// multiple thread joins, for interoperability
+func getJoinedThread(id uint64) (thread joinedThread) {
+	db()(r.Object(map[string]r.Term{
+		"left":  getThreadMeta(getThread(id)),
+		"right": getPost(id),
+	})).One(&thread)
+	return
 }
 
 // Merges thread counters into the Left field of joinedThread
@@ -97,13 +102,13 @@ func getThreadMeta(thread r.Term) r.Term {
 
 // parsePost formats the Post struct according to the access level of the
 // current client
-func (rd *Reader) parsePost(post *Post) bool {
+func (rd *Reader) parsePost(post Post) Post {
 	if !rd.canSeeModeration {
 		if post.Deleted {
-			return false // Tell calling function to delete the post
+			return Post{}
 		}
 		if post.ImgDeleted {
-			post.Image = nil
+			post.Image = Image{}
 			post.ImgDeleted = false
 		}
 		post.Mod = ModerationList(nil)
@@ -114,22 +119,26 @@ func (rd *Reader) parsePost(post *Post) bool {
 		post.Mnemonic = mnem
 	}
 	post.IP = "" // Never pass IPs client-side
-	return true
+	return post
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id uint64) *Post {
+func (rd *Reader) GetPost(id uint64) Post {
 	var post Post
 	db()(getPost(id)).One(&post)
-	if post.ID == 0 || !rd.parsePost(&post) {
-		return nil
+	if post.ID == 0 {
+		return Post{}
 	}
-	return &post
+	post = rd.parsePost(post)
+	if post.ID == 0 {
+		return Post{}
+	}
+	return post
 }
 
 // GetBoard retrives all OPs of a single board
-func (rd *Reader) GetBoard() (board *Board) {
-	var threads []*joinedThread
+func (rd *Reader) GetBoard() (board Board) {
+	var threads []joinedThread
 	db()(
 		r.Table("threads").
 			GetAllByIndex("board", rd.board).
@@ -144,7 +153,7 @@ func (rd *Reader) GetBoard() (board *Board) {
 
 // GetAllBoard retrieves all threads the client has access to for the "/all/"
 // meta-board
-func (rd *Reader) GetAllBoard() (board *Board) {
+func (rd *Reader) GetAllBoard() (board Board) {
 	query := r.Table("threads").
 		EqJoin("id", r.Table("posts")).
 		ForEach(getThreadMeta)
@@ -154,7 +163,7 @@ func (rd *Reader) GetAllBoard() (board *Board) {
 		query = query.Filter(r.Row.Field("board").Eq(config.Boards.Staff).Not())
 	}
 
-	var threads []*joinedThread
+	var threads []joinedThread
 	db()(query).All(&threads)
 	board.Ctr = postCounter()
 	board.Threads = rd.parseThreads(threads)
@@ -163,13 +172,13 @@ func (rd *Reader) GetAllBoard() (board *Board) {
 
 // Parse and format thread query results and discarding those, that the client
 // can't access
-func (rd *Reader) parseThreads(threads []*joinedThread) []*ThreadContainer {
-	filtered := make([]*ThreadContainer, 0, len(threads))
+func (rd *Reader) parseThreads(threads []joinedThread) []ThreadContainer {
+	filtered := make([]ThreadContainer, 0, len(threads))
 	for _, thread := range threads {
 		if thread.Left.Deleted && !rd.canSeeModeration {
 			continue
 		}
-		filtered = append(filtered, &ThreadContainer{
+		filtered = append(filtered, ThreadContainer{
 			Thread: thread.Left,
 			Post:   thread.Right,
 		})

@@ -6,8 +6,8 @@ package server
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {
-	Ctr     uint64             `json:"ctr"`
-	Threads []*ThreadContainer `json:"threads"`
+	Ctr     uint64            `json:"ctr"`
+	Threads []ThreadContainer `json:"threads"`
 }
 
 // ThreadContainer is a transport/export wrapper that stores both the thread
@@ -16,8 +16,8 @@ type Board struct {
 type ThreadContainer struct {
 	Thread
 	Post
-	Posts   map[string]*Post `json:"posts" gorethink:"-"`
-	Updates []Message        `json:"updates" gorethink:"-"`
+	Posts   map[string]Post `json:"posts" gorethink:"-"`
+	Updates []Message       `json:"updates" gorethink:"-"`
 }
 
 // Thread stores thread metadata
@@ -28,6 +28,7 @@ type Thread struct {
 	Deleted   bool   `json:"deleted,omitempty" gorethink:"deleted,omitempty"`
 	PostCtr   uint16 `json:"postCtr" gorethink:"postCtr"`
 	ImageCtr  uint16 `json:"imageCtr" gorethink:"imageCtr"`
+	ID        uint64 `json:"id" gorethink:"id"`
 	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
 	Board     string `json:"board" gorethink:"board"`
@@ -51,6 +52,7 @@ type Post struct {
 	Editing    bool           `json:"editing" gorethink:"editing"`
 	Deleted    bool           `json:"-" gorethink:"deleted,omitempty"`
 	ImgDeleted bool           `json:"-" gorethink:"imgDeleted,omitempty"`
+	Image      Image          `json:"image,omitempty" gorethink:"image,omitempty"`
 	OP         uint64         `json:"op" gorethink:"op"`
 	ID         uint64         `json:"id" gorethink:"id"`
 	Time       int64          `json:"time" gorethink:"time"`
@@ -63,7 +65,6 @@ type Post struct {
 	Trip       string         `json:"trip,omitempty" gorethink:"trip,omitempty"`
 	Auth       string         `json:"auth,omitempty" gorethink:"auth,omitempty"`
 	Email      string         `json:"email,omitempty" gorethink:"email,omitempty"`
-	Image      *Image         `json:"image,omitempty" gorethink:"image,omitempty"`
 	Backlinks  LinkMap        `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
 	Links      LinkMap        `json:"links,omitempty" gorethink:"links,omitempty"`
 	Mod        ModerationList `json:"mod,omitempty" gorethink:"mod,omitempty"`
@@ -73,9 +74,9 @@ type Post struct {
 type Image struct {
 	APNG    bool      `json:"apng,omitempty" gorethink:"apng,omitempty"`
 	Audio   bool      `json:"audio,omitempty" gorethink:"audio,omitempty"`
-	Spoiler uint16    `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
+	Spoiler uint8     `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
 	Length  [3]uint8  `json:"lenght,omitempty" gorethink:"lenght,omitempty"`
-	Dims    [2]uint32 `json:"dims" gorethink:"dims"`
+	Dims    [2]uint16 `json:"dims" gorethink:"dims"`
 	Size    uint      `json:"size" gorethink:"size"`
 	Mid     string    `json:"mid,omitempty" gorethink:"mid,omitempty"`
 	Thumb   string    `json:"thumb,omitempty" gorethink:"thumb,omitempty"`

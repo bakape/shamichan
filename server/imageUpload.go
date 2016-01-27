@@ -45,7 +45,7 @@ func passError(
 	log.Printf("Upload error: %s : %s", req.RemoteAddr, text)
 }
 
-func parseUploadForm(req *http.Request) (id string, spoiler uint16, err error) {
+func parseUploadForm(req *http.Request) (id string, spoiler uint8, err error) {
 	err = req.ParseMultipartForm(1073741824) // 10 MB
 	if err != nil {
 		return
@@ -60,7 +60,7 @@ func parseUploadForm(req *http.Request) (id string, spoiler uint16, err error) {
 	if unparsed := req.FormValue("spoiler"); unparsed != "" {
 		var unconverted int
 		unconverted, err = strconv.Atoi(unparsed)
-		spoiler = uint16(unconverted)
+		spoiler = uint8(unconverted)
 		if err != nil || !isValidSpoiler(spoiler) {
 			err = errors.New("Invalid spoiler ID")
 		}
@@ -68,7 +68,7 @@ func parseUploadForm(req *http.Request) (id string, spoiler uint16, err error) {
 	return
 }
 
-func isValidSpoiler(id uint16) bool {
+func isValidSpoiler(id uint8) bool {
 	for _, valid := range config.Images.Spoilers {
 		if id == valid {
 			return true

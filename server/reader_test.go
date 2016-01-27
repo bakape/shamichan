@@ -27,7 +27,7 @@ func (*DB) TestParsePost(c *C) {
 	// Regular post
 	setupBoardAccess()
 	r := NewReader("a", Ident{})
-	img := &Image{Src: "foo"}
+	img := Image{Src: "foo"}
 	mod := ModerationList{"a", "b"}
 	init := Post{
 		Body:  "foo",
@@ -40,19 +40,17 @@ func (*DB) TestParsePost(c *C) {
 		Image: img,
 	}
 	p := init
-	c.Assert(r.parsePost(&p), Equals, true)
-	c.Assert(p, DeepEquals, standard)
+	c.Assert(r.parsePost(p), DeepEquals, standard)
 
 	// Image deleted
 	p = init
 	p.ImgDeleted = true
-	c.Assert(r.parsePost(&p), Equals, true)
-	c.Assert(p, DeepEquals, Post{Body: "foo"})
+	c.Assert(r.parsePost(p), DeepEquals, Post{Body: "foo"})
 
 	// Post deleted
 	p = init
 	p.Deleted = true
-	c.Assert(r.parsePost(&p), Equals, false)
+	c.Assert(r.parsePost(p), DeepEquals, Post{})
 
 	// Can see moderation
 	r = NewReader("a", Ident{Auth: "janitor"})
@@ -66,15 +64,13 @@ func (*DB) TestParsePost(c *C) {
 		Deleted:    true,
 		Mod:        mod,
 	}
-	c.Assert(r.parsePost(&p), Equals, true)
-	c.Assert(p, DeepEquals, standard)
+	c.Assert(r.parsePost(p), DeepEquals, standard)
 
 	// Can see mnemonics
 	r = NewReader("a", Ident{Auth: "admin"})
 	standard.Mnemonic = localhostMnemonic
 	p = init
-	c.Assert(r.parsePost(&p), Equals, true)
-	c.Assert(p, DeepEquals, standard)
+	c.Assert(r.parsePost(p), DeepEquals, standard)
 }
 
 func (*DB) TestGetPost(c *C) {
@@ -87,12 +83,13 @@ func (*DB) TestGetPost(c *C) {
 	db()(r.Table("posts").Insert(p)).Exec()
 	setupBoardAccess()
 	r := NewReader("a", Ident{})
+	empty := Post{}
 
 	// Does not exist
-	c.Assert(r.GetPost(3), IsNil)
+	c.Assert(r.GetPost(3), DeepEquals, empty)
 
 	// Can not access
-	c.Assert(r.GetPost(2), IsNil)
+	c.Assert(r.GetPost(2), DeepEquals, empty)
 
 	// Valid read
 	standard := Post{
@@ -102,5 +99,15 @@ func (*DB) TestGetPost(c *C) {
 		Mnemonic: localhostMnemonic,
 	}
 	res := NewReader("a", Ident{Auth: "admin"}).GetPost(2)
-	c.Assert(res, DeepEquals, &standard)
+	c.Assert(res, DeepEquals, standard)
 }
+
+// func (*DB) TestGetThreadMeta(c *C) {
+// 	db()(r.Table("posts").Insert(Post{
+// 		ID: 1,
+// 		OP: 1,
+// 		Image: &Image{
+// 			Src: "Foo",
+// 		},
+// 	})).Exec()
+// }

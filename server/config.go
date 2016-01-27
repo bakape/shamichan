@@ -57,7 +57,7 @@ type serverConfigs struct {
 		WebmAudio          bool
 		Hats               bool
 		DuplicateThreshold uint8
-		Spoilers           []uint16
+		Spoilers           []uint8
 		Formats            map[string]bool
 	}
 	Posts struct {

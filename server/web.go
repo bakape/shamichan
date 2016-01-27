@@ -413,7 +413,12 @@ func servePost(
 		text404(res)
 		return
 	}
-	data := marshalJSON(NewReader(board, ident).GetPost(id))
+	post := NewReader(board, ident).GetPost(id)
+	if post.ID == 0 { // No post in the database or no access
+		text404(res)
+		return
+	}
+	data := marshalJSON(post)
 	etag := "W/" + hashBuffer(data)
 	if checkClientEtag(res, req, etag) {
 		return
