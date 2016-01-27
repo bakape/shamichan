@@ -100,18 +100,20 @@ func getThreadMeta(thread r.Term) r.Term {
 func (rd *Reader) parsePost(post *Post) bool {
 	if !rd.canSeeModeration {
 		if post.Deleted {
-			return false
+			return false // Tell calling function to delete the post
 		}
 		if post.ImgDeleted {
-			post.Image = &Image{}
+			post.Image = nil
+			post.ImgDeleted = false
 		}
-		post.Mod = ModerationList{}
+		post.Mod = ModerationList(nil)
 	}
 	if rd.canSeeMnemonics {
 		mnem, err := mnemonic.Mnemonic(post.IP)
 		throw(err)
 		post.Mnemonic = mnem
 	}
+	post.IP = "" // Never pass IPs client-side
 	return true
 }
 

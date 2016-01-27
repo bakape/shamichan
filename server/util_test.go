@@ -99,6 +99,13 @@ func setupBoardAccess() {
 		Rights: map[string]bool{
 			"accessStaffBoard": true,
 			"seeModeration":    true,
+			"seeMnemonics":     true,
+		},
+	}
+	config.Staff.Classes["janitor"] = staffClass{
+		Rights: map[string]bool{
+			"accessStaffBoard": true,
+			"seeModeration":    true,
 		},
 	}
 }
