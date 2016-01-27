@@ -118,10 +118,13 @@ func (rd *Reader) parsePost(post *Post) bool {
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id uint64) (post *Post) {
-	db()(getPost(id)).One(post)
-	rd.parsePost(post)
-	return post
+func (rd *Reader) GetPost(id uint64) *Post {
+	var post Post
+	db()(getPost(id)).One(&post)
+	if post.ID == 0 || !rd.parsePost(&post) {
+		return nil
+	}
+	return &post
 }
 
 // GetBoard retrives all OPs of a single board

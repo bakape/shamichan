@@ -1,9 +1,13 @@
 package server
 
 import (
-	// r "github.com/dancannon/gorethink"
-	"github.com/Soreil/mnemonics"
+	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
+)
+
+const (
+	testSalt          = "r088PUX0qpUjhUyZby6e4pQcDh3zzUQUpeLOy7Hb"
+	localhostMnemonic = "tyalitara"
 )
 
 func (*DB) TestNewReader(c *C) {
@@ -67,10 +71,36 @@ func (*DB) TestParsePost(c *C) {
 
 	// Can see mnemonics
 	r = NewReader("a", Ident{Auth: "admin"})
-	err := mnemonic.SetSalt("r088PUX0qpUjhUyZby6e4pQcDh3zzUQUpeLOy7Hb")
-	c.Assert(err, IsNil)
-	standard.Mnemonic = "tyalitara"
+	standard.Mnemonic = localhostMnemonic
 	p = init
 	c.Assert(r.parsePost(&p), Equals, true)
 	c.Assert(p, DeepEquals, standard)
+}
+
+func (*DB) TestGetPost(c *C) {
+	p := Post{
+		ID:      2,
+		OP:      1,
+		Deleted: true,
+		IP:      "::1",
+	}
+	db()(r.Table("posts").Insert(p)).Exec()
+	setupBoardAccess()
+	r := NewReader("a", Ident{})
+
+	// Does not exist
+	c.Assert(r.GetPost(3), IsNil)
+
+	// Can not access
+	c.Assert(r.GetPost(2), IsNil)
+
+	// Valid read
+	standard := Post{
+		ID:       2,
+		OP:       1,
+		Deleted:  true,
+		Mnemonic: localhostMnemonic,
+	}
+	res := NewReader("a", Ident{Auth: "admin"}).GetPost(2)
+	c.Assert(res, DeepEquals, &standard)
 }
