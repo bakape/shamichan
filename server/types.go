@@ -49,42 +49,42 @@ type Message struct {
 
 // Post is a generic post. Either OP or reply.
 type Post struct {
-	Editing    bool           `json:"editing" gorethink:"editing"`
-	Deleted    bool           `json:"-" gorethink:"deleted,omitempty"`
-	ImgDeleted bool           `json:"-" gorethink:"imgDeleted,omitempty"`
-	Image      Image          `json:"image,omitempty" gorethink:"image,omitempty"`
-	OP         uint64         `json:"op" gorethink:"op"`
-	ID         uint64         `json:"id" gorethink:"id"`
-	Time       int64          `json:"time" gorethink:"time"`
-	IP         string         `json:"-" gorethink:"ip"`
-	Mnemonic   string         `json:"mnemonic,omitempty" gorethink:"-"`
-	Board      string         `json:"board" gorethink:"board"`
-	Nonce      string         `json:"-" gorethink:"nonce"`
-	Body       string         `json:"body" gorethink:"body"`
-	Name       string         `json:"name,omitempty" gorethink:"name,omitempty"`
-	Trip       string         `json:"trip,omitempty" gorethink:"trip,omitempty"`
-	Auth       string         `json:"auth,omitempty" gorethink:"auth,omitempty"`
-	Email      string         `json:"email,omitempty" gorethink:"email,omitempty"`
-	Backlinks  LinkMap        `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
-	Links      LinkMap        `json:"links,omitempty" gorethink:"links,omitempty"`
-	Mod        ModerationList `json:"mod,omitempty" gorethink:"mod,omitempty"`
+	Editing    bool `json:"editing" gorethink:"editing"`
+	Deleted    bool `json:"-" gorethink:"deleted,omitempty"`
+	ImgDeleted bool `json:"-" gorethink:"imgDeleted,omitempty"`
+	Image
+	OP        uint64         `json:"op" gorethink:"op"`
+	ID        uint64         `json:"id" gorethink:"id"`
+	Time      int64          `json:"time" gorethink:"time"`
+	IP        string         `json:"-" gorethink:"ip"`
+	Mnemonic  string         `json:"mnemonic,omitempty" gorethink:"-"`
+	Board     string         `json:"board" gorethink:"board"`
+	Nonce     string         `json:"-" gorethink:"nonce"`
+	Body      string         `json:"body" gorethink:"body"`
+	Name      string         `json:"name,omitempty" gorethink:"name,omitempty"`
+	Trip      string         `json:"trip,omitempty" gorethink:"trip,omitempty"`
+	Auth      string         `json:"auth,omitempty" gorethink:"auth,omitempty"`
+	Email     string         `json:"email,omitempty" gorethink:"email,omitempty"`
+	Backlinks LinkMap        `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
+	Links     LinkMap        `json:"links,omitempty" gorethink:"links,omitempty"`
+	Mod       ModerationList `json:"mod,omitempty" gorethink:"mod,omitempty"`
 }
 
-// Image contains a post's image and thumbanail data
+// Image contains a post's image and thumbnail data
 type Image struct {
 	APNG    bool      `json:"apng,omitempty" gorethink:"apng,omitempty"`
 	Audio   bool      `json:"audio,omitempty" gorethink:"audio,omitempty"`
 	Spoiler uint8     `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
 	Length  [3]uint8  `json:"lenght,omitempty" gorethink:"lenght,omitempty"`
-	Dims    [2]uint16 `json:"dims" gorethink:"dims"`
-	Size    uint      `json:"size" gorethink:"size"`
+	Dims    [2]uint16 `json:"dims,omitempty" gorethink:"dims,omitempty"`
+	Size    uint      `json:"size,omitempty" gorethink:"size,omitempty"`
 	Mid     string    `json:"mid,omitempty" gorethink:"mid,omitempty"`
 	Thumb   string    `json:"thumb,omitempty" gorethink:"thumb,omitempty"`
-	Src     string    `json:"src" gorethink:"src"`
-	Ext     string    `json:"ext" gorethink:"ext"`
-	MD5     string
-	SHA1    string
-	Imgnm   string `json:"imgnm" gorethink:"imgnm"`
+	Src     string    `json:"src,omitempty" gorethink:"src,omitempty"`
+	Ext     string    `json:"ext,omitempty" gorethink:"ext,omitempty"`
+	MD5     string    `json:",omitempty",gorethink:",omitempty"`
+	SHA1    string    `json:",omitempty",gorethink:",omitempty"`
+	Imgnm   string    `json:"imgnm,omitempty" gorethink:"imgnm,omitempty"`
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to

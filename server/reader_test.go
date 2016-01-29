@@ -102,12 +102,45 @@ func (*DB) TestGetPost(c *C) {
 	c.Assert(res, DeepEquals, standard)
 }
 
-// func (*DB) TestGetThreadMeta(c *C) {
-// 	db()(r.Table("posts").Insert(Post{
-// 		ID: 1,
-// 		OP: 1,
-// 		Image: &Image{
-// 			Src: "Foo",
-// 		},
-// 	})).Exec()
-// }
+func (*DB) TestGetJoinedThread(c *C) {
+	op := Post{
+		ID: 1,
+		OP: 1,
+		Image: Image{
+			Src: "Foo",
+		},
+	}
+
+	// Only OP
+	db()(r.Table("threads").Insert(Thread{ID: 1})).Exec()
+	db()(r.Table("posts").Insert(op)).Exec()
+	standard := joinedThread{
+		Left: Thread{
+			ID:       1,
+			PostCtr:  0,
+			ImageCtr: 0,
+		},
+		Right: op,
+	}
+	c.Assert(getJoinedThread(1), DeepEquals, standard)
+
+	// 1 reply, no image
+	db()(r.Table("posts").Insert(Post{
+		ID: 2,
+		OP: 1,
+	})).Exec()
+
+
+	standard.Left.PostCtr++ 
+	c.Assert(getJoinedThread(1), DeepEquals, standard)
+
+	// 2 replies, 1 image
+	db()(r.Table("posts").Insert(Post{
+		ID:    3,
+		OP:    1,
+		Image: Image{Src: "foo"},
+	})).Exec()
+	standard.Left.PostCtr++
+	standard.Left.ImageCtr++
+	c.Assert(getJoinedThread(1), DeepEquals, standard)
+}

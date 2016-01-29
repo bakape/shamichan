@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/Soreil/mnemonics"
 	r "github.com/dancannon/gorethink"
 )
@@ -72,16 +73,19 @@ func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 // Retrieve the thread metadata along with the OP post in the same format as
 // multiple thread joins, for interoperability
 func getJoinedThread(id uint64) (thread joinedThread) {
-	db()(r.Object(map[string]r.Term{
-		"left":  getThreadMeta(getThread(id)),
+	query := r.Expr(map[string]r.Term{
+		"left":  getThread(id),
 		"right": getPost(id),
-	})).One(&thread)
+	})
+	query = getThreadMeta(query)
+	fmt.Println(query.String())
+	db()(query).One(&thread)
 	return
 }
 
 // Merges thread counters into the Left field of joinedThread
 func getThreadMeta(thread r.Term) r.Term {
-	id := thread.Field("id")
+	id := thread.Field("left").Field("id")
 	return thread.Merge(map[string]map[string]r.Term{
 		"left": map[string]r.Term{
 			// Count number of posts
@@ -93,7 +97,7 @@ func getThreadMeta(thread r.Term) r.Term {
 			// Image count
 			"imageCtr": r.Table("posts").
 				GetAllByIndex("op", id).
-				HasFields("image").
+				HasFields("src").
 				Count().
 				Sub(1),
 		},

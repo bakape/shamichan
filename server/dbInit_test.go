@@ -128,7 +128,7 @@ func (*DBInit) TestLoadDB(c *C) {
 	db()(r.Table("main").Get("histCounts")).One(&histCounts)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
 
-	c.Assert(rSession.Close(), IsNil)
+	c.Assert(rSession.Close(), IsNil) 
 	loadDB()
 }
 
