@@ -180,4 +180,7 @@ func (*DB) TestCanAccessThread(c *C) {
 		"deleted": true,
 	})).Exec()
 	c.Assert(canAccessThread(1, "a", ident), Equals, false)
+
+	// Invalid board
+	c.Assert(canAccessThread(1, "c", ident), Equals, false)
 }

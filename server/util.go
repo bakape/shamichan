@@ -56,9 +56,6 @@ func lookUpIdent(ip string) Ident {
 
 // Confirm client has rights to access board
 func canAccessBoard(board string, ident Ident) bool {
-	if board == config.Boards.Staff && !checkAuth("accessStaffBoard", ident) {
-		return false
-	}
 	var isBoard bool
 	if board == "all" {
 		isBoard = true
@@ -80,10 +77,7 @@ func canAccessThread(id uint64, board string, ident Ident) bool {
 	}
 	var deleted bool
 	db()(getThread(id).Field("deleted").Default(false)).One(&deleted)
-	if deleted && !checkAuth("seeModeration", ident) {
-		return false
-	}
-	return true
+	return !deleted
 }
 
 // Compute a truncated MD5 hash from a buffer
