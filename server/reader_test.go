@@ -103,24 +103,21 @@ func (*DB) TestGetPost(c *C) {
 }
 
 func (*DB) TestGetJoinedThread(c *C) {
-	op := Post{
-		ID: 1,
-		OP: 1,
-		Image: Image{
-			Src: "Foo",
-		},
-	}
-
 	// Only OP
 	db()(r.Table("threads").Insert(Thread{ID: 1})).Exec()
-	db()(r.Table("posts").Insert(op)).Exec()
+	db()(r.Table("posts").Insert(Post{
+		ID:    1,
+		OP:    1,
+		Image: Image{Src: "Foo"},
+	})).Exec()
 	standard := joinedThread{
 		Left: Thread{
-			ID:       1,
-			PostCtr:  0,
-			ImageCtr: 0,
+			ID: 1,
 		},
-		Right: op,
+		Right: Post{
+			ID:    1,
+			Image: Image{Src: "Foo"},
+		},
 	}
 	c.Assert(getJoinedThread(1), DeepEquals, standard)
 
@@ -130,8 +127,7 @@ func (*DB) TestGetJoinedThread(c *C) {
 		OP: 1,
 	})).Exec()
 
-
-	standard.Left.PostCtr++ 
+	standard.Left.PostCtr++
 	c.Assert(getJoinedThread(1), DeepEquals, standard)
 
 	// 2 replies, 1 image
@@ -143,4 +139,208 @@ func (*DB) TestGetJoinedThread(c *C) {
 	standard.Left.PostCtr++
 	standard.Left.ImageCtr++
 	c.Assert(getJoinedThread(1), DeepEquals, standard)
+}
+
+func (*DB) TestParseThreads(c *C) {
+	threads := []joinedThread{
+		{
+			Left: Thread{
+				ID: 1,
+			},
+			Right: Post{
+				ID: 1,
+			},
+		},
+		{
+			Left: Thread{
+				ID:      2,
+				Deleted: true,
+			},
+			Right: Post{
+				ID: 2,
+			},
+		},
+	}
+	setupBoardAccess()
+
+	// Can't see deleted threads
+	standard := []ThreadContainer{
+		{
+			Thread: Thread{ID: 1},
+			Post:   Post{ID: 1},
+		},
+	}
+	r := NewReader("a", Ident{})
+	c.Assert(r.parseThreads(threads), DeepEquals, standard)
+
+	// Can see deleted threads
+	r = NewReader("a", Ident{Auth: "admin"})
+	standard = append(standard, ThreadContainer{
+		Thread: Thread{
+			Deleted: true,
+			ID:      2,
+		},
+		Post: Post{
+			ID: 2,
+		},
+	})
+	c.Assert(r.parseThreads(threads), DeepEquals, standard)
+}
+
+var genericImage = Image{Src: "foo"}
+
+func (*DB) TestGetBoard(c *C) {
+	setupPosts()
+	setupBoardAccess()
+	standard := Board{
+		Ctr: 7,
+		Threads: []ThreadContainer{
+			{
+				Thread: Thread{
+					ID:    3,
+					Board: "a",
+				},
+				Post: Post{
+					ID:    3,
+					Board: "a",
+					Image: genericImage,
+				},
+			},
+			{
+				Thread: Thread{
+					ID:      1,
+					PostCtr: 1,
+					Board:   "a",
+				},
+				Post: Post{
+					ID:    1,
+					Board: "a",
+					Image: genericImage,
+				},
+			},
+		},
+	}
+	c.Assert(NewReader("a", Ident{}).GetBoard(), DeepEquals, standard)
+}
+
+// Create a multipurpose set of threads and posts for tests
+func setupPosts() {
+	db()(r.Table("threads").Insert([]Thread{
+		{ID: 1, Board: "a"},
+		{ID: 3, Board: "a"},
+		{ID: 4, Board: "c"},
+		{ID: 5, Board: "staff"},
+	})).Exec()
+	db()(r.Table("posts").Insert([]Post{
+		{
+			ID:    1,
+			OP:    1,
+			Board: "a",
+			Image: genericImage,
+		},
+		{
+			ID:    2,
+			OP:    1,
+			Board: "a",
+		},
+		{
+			ID:    3,
+			OP:    3,
+			Board: "a",
+			Image: genericImage,
+		},
+		{
+			ID:    4,
+			OP:    4,
+			Board: "c",
+			Image: genericImage,
+		},
+		{
+			ID:    5,
+			OP:    5,
+			Board: "staff",
+			Image: genericImage,
+		},
+	})).Exec()
+	db()(r.Table("main").Insert(map[string]interface{}{
+		"id": "histCounts",
+		"a":  7,
+	})).Exec()
+	db()(r.Table("main").Insert(map[string]interface{}{
+		"id":      "info",
+		"postCtr": 8,
+	})).Exec()
+}
+
+func (*DB) TestGetAllBoard(c *C) {
+	setupPosts()
+	setupBoardAccess()
+
+	// Can't access staff board
+	standard := Board{
+		Ctr: 8,
+		Threads: []ThreadContainer{
+			{
+				Thread: Thread{
+					ID:    4,
+					Board: "c",
+				},
+				Post: Post{
+					ID:    4,
+					Board: "c",
+					Image: genericImage,
+				},
+			},
+			{
+				Thread: Thread{
+					ID:    3,
+					Board: "a",
+				},
+				Post: Post{
+					ID:    3,
+					Board: "a",
+					Image: genericImage,
+				},
+			},
+			{
+				Thread: Thread{
+					ID:      1,
+					PostCtr: 1,
+					Board:   "a",
+				},
+				Post: Post{
+					ID:    1,
+					Board: "a",
+					Image: genericImage,
+				},
+			},
+		},
+	}
+	c.Assert(NewReader("a", Ident{}).GetAllBoard(), DeepEquals, standard)
+
+	// Can access staff board
+	standard.Threads = append(
+		standard.Threads[:1],
+		append(
+			[]ThreadContainer{
+				{
+					Thread: Thread{
+						ID:    5,
+						Board: "staff",
+					},
+					Post: Post{
+						ID:    5,
+						Board: "staff",
+						Image: genericImage,
+					},
+				},
+			},
+			standard.Threads[1:]...,
+		)...,
+	)
+	c.Assert(
+		NewReader("a", Ident{Auth: "admin"}).GetAllBoard(),
+		DeepEquals,
+		standard,
+	)
 }

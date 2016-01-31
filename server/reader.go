@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/Soreil/mnemonics"
 	r "github.com/dancannon/gorethink"
 )
@@ -73,21 +72,21 @@ func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 // Retrieve the thread metadata along with the OP post in the same format as
 // multiple thread joins, for interoperability
 func getJoinedThread(id uint64) (thread joinedThread) {
-	query := r.Expr(map[string]r.Term{
+	db()(r.
+		Expr(map[string]r.Term{
 		"left":  getThread(id),
-		"right": getPost(id),
-	})
-	query = getThreadMeta(query)
-	fmt.Println(query.String())
-	db()(query).One(&thread)
+		"right": getPost(id).Without("op"),
+	}).
+		Merge(getThreadMeta()),
+	).One(&thread)
 	return
 }
 
 // Merges thread counters into the Left field of joinedThread
-func getThreadMeta(thread r.Term) r.Term {
-	id := thread.Field("left").Field("id")
-	return thread.Merge(map[string]map[string]r.Term{
-		"left": map[string]r.Term{
+func getThreadMeta() map[string]map[string]r.Term {
+	id := r.Row.Field("left").Field("id")
+	return map[string]map[string]r.Term{
+		"left": {
 			// Count number of posts
 			"postCtr": r.Table("posts").
 				GetAllByIndex("op", id).
@@ -101,7 +100,7 @@ func getThreadMeta(thread r.Term) r.Term {
 				Count().
 				Sub(1),
 		},
-	})
+	}
 }
 
 // parsePost formats the Post struct according to the access level of the
@@ -143,13 +142,13 @@ func (rd *Reader) GetPost(id uint64) Post {
 // GetBoard retrives all OPs of a single board
 func (rd *Reader) GetBoard() (board Board) {
 	var threads []joinedThread
-	db()(
-		r.Table("threads").
-			GetAllByIndex("board", rd.board).
-			EqJoin("id", r.Table("posts")).
-			ForEach(getThreadMeta),
-	).
-		All(&threads)
+	db()(r.
+		Table("threads").
+		GetAllByIndex("board", rd.board).
+		EqJoin("id", r.Table("posts")).
+		Merge(getThreadMeta()).
+		Without(map[string]string{"right": "op"}),
+	).All(&threads)
 	board.Ctr = boardCounter(rd.board)
 	board.Threads = rd.parseThreads(threads)
 	return
@@ -158,14 +157,17 @@ func (rd *Reader) GetBoard() (board Board) {
 // GetAllBoard retrieves all threads the client has access to for the "/all/"
 // meta-board
 func (rd *Reader) GetAllBoard() (board Board) {
-	query := r.Table("threads").
-		EqJoin("id", r.Table("posts")).
-		ForEach(getThreadMeta)
+	query := r.Table("threads")
 
 	// Exclude staff board, if no access
 	if !canAccessBoard(config.Boards.Staff, rd.ident) {
 		query = query.Filter(r.Row.Field("board").Eq(config.Boards.Staff).Not())
 	}
+
+	query = query.
+		EqJoin("id", r.Table("posts")).
+		Merge(getThreadMeta()).
+		Without(map[string]string{"right": "op"})
 
 	var threads []joinedThread
 	db()(query).All(&threads)
@@ -174,8 +176,8 @@ func (rd *Reader) GetAllBoard() (board Board) {
 	return
 }
 
-// Parse and format thread query results and discarding those, that the client
-// can't access
+// Parse and format board query results and discarding those threads, that the
+// client can't access
 func (rd *Reader) parseThreads(threads []joinedThread) []ThreadContainer {
 	filtered := make([]ThreadContainer, 0, len(threads))
 	for _, thread := range threads {

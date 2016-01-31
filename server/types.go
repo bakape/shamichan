@@ -53,7 +53,7 @@ type Post struct {
 	Deleted    bool `json:"-" gorethink:"deleted,omitempty"`
 	ImgDeleted bool `json:"-" gorethink:"imgDeleted,omitempty"`
 	Image
-	OP        uint64         `json:"op" gorethink:"op"`
+	OP        uint64         `json:"op,omitempty" gorethink:"op"`
 	ID        uint64         `json:"id" gorethink:"id"`
 	Time      int64          `json:"time" gorethink:"time"`
 	IP        string         `json:"-" gorethink:"ip"`
