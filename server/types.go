@@ -53,21 +53,19 @@ type Post struct {
 	Deleted    bool `json:"-" gorethink:"deleted,omitempty"`
 	ImgDeleted bool `json:"-" gorethink:"imgDeleted,omitempty"`
 	Image
-	OP        uint64         `json:"op,omitempty" gorethink:"op"`
-	ID        uint64         `json:"id" gorethink:"id"`
-	Time      int64          `json:"time" gorethink:"time"`
-	IP        string         `json:"-" gorethink:"ip"`
-	Mnemonic  string         `json:"mnemonic,omitempty" gorethink:"-"`
-	Board     string         `json:"board" gorethink:"board"`
-	Nonce     string         `json:"-" gorethink:"nonce"`
-	Body      string         `json:"body" gorethink:"body"`
-	Name      string         `json:"name,omitempty" gorethink:"name,omitempty"`
-	Trip      string         `json:"trip,omitempty" gorethink:"trip,omitempty"`
-	Auth      string         `json:"auth,omitempty" gorethink:"auth,omitempty"`
-	Email     string         `json:"email,omitempty" gorethink:"email,omitempty"`
-	Backlinks LinkMap        `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
-	Links     LinkMap        `json:"links,omitempty" gorethink:"links,omitempty"`
-	Mod       ModerationList `json:"mod,omitempty" gorethink:"mod,omitempty"`
+	OP        uint64  `json:"op,omitempty" gorethink:"op"`
+	ID        uint64  `json:"id" gorethink:"id"`
+	Time      int64   `json:"time" gorethink:"time"`
+	IP        string  `json:"-" gorethink:"ip"`
+	Board     string  `json:"board" gorethink:"board"`
+	Nonce     string  `json:"-" gorethink:"nonce"`
+	Body      string  `json:"body" gorethink:"body"`
+	Name      string  `json:"name,omitempty" gorethink:"name,omitempty"`
+	Trip      string  `json:"trip,omitempty" gorethink:"trip,omitempty"`
+	Auth      string  `json:"auth,omitempty" gorethink:"auth,omitempty"`
+	Email     string  `json:"email,omitempty" gorethink:"email,omitempty"`
+	Backlinks LinkMap `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
+	Links     LinkMap `json:"links,omitempty" gorethink:"links,omitempty"`
 }
 
 // Image contains a post's image and thumbnail data
@@ -104,7 +102,3 @@ type Ident struct {
 	Auth   string
 	IP     string
 }
-
-// ModerationList contains modration acts commited on this post.
-// TEMP
-type ModerationList []interface{}

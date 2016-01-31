@@ -80,11 +80,6 @@ func (*Util) TestCanAccessBoard(c *C) {
 	// /all/ board
 	c.Assert(canAccessBoard("all", ident), Equals, true)
 
-	// Staff board
-	c.Assert(canAccessBoard("staff", ident), Equals, false)
-	ident.Auth = "admin"
-	c.Assert(canAccessBoard("staff", ident), Equals, true)
-
 	// Banned
 	ident = Ident{Banned: true}
 	c.Assert(canAccessBoard("a", ident), Equals, false)
@@ -92,22 +87,7 @@ func (*Util) TestCanAccessBoard(c *C) {
 
 func setupBoardAccess() {
 	config = serverConfigs{}
-	config.Boards.Enabled = []string{"a", "staff"}
-	config.Boards.Staff = "staff"
-	config.Staff.Classes = make(map[string]staffClass, 1)
-	config.Staff.Classes["admin"] = staffClass{
-		Rights: map[string]bool{
-			"accessStaffBoard": true,
-			"seeModeration":    true,
-			"seeMnemonics":     true,
-		},
-	}
-	config.Staff.Classes["janitor"] = staffClass{
-		Rights: map[string]bool{
-			"accessStaffBoard": true,
-			"seeModeration":    true,
-		},
-	}
+	config.Boards.Enabled = []string{"a"}
 }
 
 func (*Util) TestHashBuffer(c *C) {
@@ -200,11 +180,4 @@ func (*DB) TestCanAccessThread(c *C) {
 		"deleted": true,
 	})).Exec()
 	c.Assert(canAccessThread(1, "a", ident), Equals, false)
-
-	// Deleted, but has access rights
-	ident.Auth = "admin"
-	c.Assert(canAccessThread(1, "a", ident), Equals, true)
-
-	// Can't access board
-	c.Assert(canAccessThread(1, "c", ident), Equals, false)
 }

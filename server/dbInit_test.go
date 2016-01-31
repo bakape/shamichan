@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"testing"
 	"time"
-	"github.com/Soreil/mnemonics"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -33,8 +32,6 @@ func (d *DB) SetUpSuite(c *C) {
 	rSession.Use(d.dbName)
 	createTables()
 	createIndeces()
-	err := mnemonic.SetSalt(testSalt)
-	c.Assert(err, IsNil)
 }
 
 // Returns a unique datatabase name. Needed so multiple concurent `go test`
@@ -128,7 +125,7 @@ func (*DBInit) TestLoadDB(c *C) {
 	db()(r.Table("main").Get("histCounts")).One(&histCounts)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
 
-	c.Assert(rSession.Close(), IsNil) 
+	c.Assert(rSession.Close(), IsNil)
 	loadDB()
 }
 

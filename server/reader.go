@@ -1,24 +1,20 @@
 package server
 
 import (
-	"github.com/Soreil/mnemonics"
 	r "github.com/dancannon/gorethink"
 )
 
 // Reader reads on formats thread and post structs
 type Reader struct {
-	board                             string
-	ident                             Ident
-	canSeeMnemonics, canSeeModeration bool
+	board string
+	ident Ident
 }
 
 // NewReader constructs a new Reader instance
 func NewReader(board string, ident Ident) *Reader {
 	return &Reader{
-		board:            board,
-		ident:            ident,
-		canSeeMnemonics:  checkAuth("seeMnemonics", ident),
-		canSeeModeration: checkAuth("seeModeration", ident),
+		board: board,
+		ident: ident,
 	}
 }
 
@@ -30,11 +26,6 @@ type joinedThread struct {
 
 // GetThread retrieves thread JSON from the database
 func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
-	// Verify thread exists. In case of HTTP requests, we kind of do 2
-	// validations, but it's better to keep reader uniformity
-	if !validateOP(id, rd.board) || !canAccessThread(id, rd.board, rd.ident) {
-		return ThreadContainer{}
-	}
 	thread := getJoinedThread(id)
 	if thread.Left.ID == 0 || thread.Right.ID == 0 {
 		return ThreadContainer{}
@@ -106,20 +97,12 @@ func getThreadMeta() map[string]map[string]r.Term {
 // parsePost formats the Post struct according to the access level of the
 // current client
 func (rd *Reader) parsePost(post Post) Post {
-	if !rd.canSeeModeration {
-		if post.Deleted {
-			return Post{}
-		}
-		if post.ImgDeleted {
-			post.Image = Image{}
-			post.ImgDeleted = false
-		}
-		post.Mod = ModerationList(nil)
+	if post.Deleted {
+		return Post{}
 	}
-	if rd.canSeeMnemonics {
-		mnem, err := mnemonic.Mnemonic(post.IP)
-		throw(err)
-		post.Mnemonic = mnem
+	if post.ImgDeleted {
+		post.Image = Image{}
+		post.ImgDeleted = false
 	}
 	post.IP = "" // Never pass IPs client-side
 	return post
@@ -139,7 +122,7 @@ func (rd *Reader) GetPost(id uint64) Post {
 	return post
 }
 
-// GetBoard retrives all OPs of a single board
+// GetBoard retrieves all OPs of a single board
 func (rd *Reader) GetBoard() (board Board) {
 	var threads []joinedThread
 	db()(r.
@@ -157,31 +140,23 @@ func (rd *Reader) GetBoard() (board Board) {
 // GetAllBoard retrieves all threads the client has access to for the "/all/"
 // meta-board
 func (rd *Reader) GetAllBoard() (board Board) {
-	query := r.Table("threads")
-
-	// Exclude staff board, if no access
-	if !canAccessBoard(config.Boards.Staff, rd.ident) {
-		query = query.Filter(r.Row.Field("board").Eq(config.Boards.Staff).Not())
-	}
-
-	query = query.
+	var threads []joinedThread
+	db()(r.Table("threads").
 		EqJoin("id", r.Table("posts")).
 		Merge(getThreadMeta()).
-		Without(map[string]string{"right": "op"})
-
-	var threads []joinedThread
-	db()(query).All(&threads)
+		Without(map[string]string{"right": "op"}),
+	).All(&threads)
 	board.Ctr = postCounter()
 	board.Threads = rd.parseThreads(threads)
 	return
 }
 
-// Parse and format board query results and discarding those threads, that the
+// Parse and format board query results and discard those threads, that the
 // client can't access
 func (rd *Reader) parseThreads(threads []joinedThread) []ThreadContainer {
 	filtered := make([]ThreadContainer, 0, len(threads))
 	for _, thread := range threads {
-		if thread.Left.Deleted && !rd.canSeeModeration {
+		if thread.Left.Deleted {
 			continue
 		}
 		filtered = append(filtered, ThreadContainer{
