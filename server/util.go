@@ -66,6 +66,7 @@ func canAccessBoard(board string, ident Ident) bool {
 		for _, b := range config.Boards.Enabled {
 			if board == b {
 				isBoard = true
+				break
 			}
 		}
 	}
