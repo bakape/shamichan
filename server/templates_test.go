@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	. "gopkg.in/check.v1"
 	"html/template"
 )
