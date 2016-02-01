@@ -35,19 +35,21 @@ func (d DatabaseHelper) All(res interface{}) {
 
 // parentThread determines the parent thread of a post
 func parentThread(id uint64) (op uint64) {
-	db()(getPost(id).Field("op")).One(&op)
+	db()(getPost(id).Field("op").Default(0)).One(&op)
 	return
 }
 
 // parentBoard determines the parent board of the post
 func parentBoard(id uint64) (board string) {
-	db()(getPost(id).Field("board")).One(&board)
+	db()(getPost(id).Field("board").Default("")).One(&board)
 	return
 }
 
 // ValidateOP confirms the specified thread exists on specific board
 func validateOP(id uint64, board string) bool {
-	return parentBoard(id) == board && parentThread(id) == id
+	var b string
+	db()(getThread(id).Field("board").Default("")).One(&b)
+	return b == board
 }
 
 // shorthand for constructing thread queries

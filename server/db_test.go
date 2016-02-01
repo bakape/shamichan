@@ -11,6 +11,9 @@ func (*DB) TestParentThread(c *C) {
 		"op": 1,
 	})).Exec()
 	c.Assert(parentThread(2), Equals, uint64(1))
+
+	// Post does not exist
+	c.Assert(parentThread(15), Equals, uint64(0))
 }
 
 func (*DB) TestParentBoard(c *C) {
@@ -19,24 +22,20 @@ func (*DB) TestParentBoard(c *C) {
 		"board": "a",
 	})).Exec()
 	c.Assert(parentBoard(1), Equals, "a")
+
+	// Post does not exist
+	c.Assert(parentBoard(15), Equals, "")
 }
 
 func (*DB) TestValidateOP(c *C) {
-	db()(r.Table("posts").Insert(map[string]interface{}{
+	db()(r.Table("threads").Insert(map[string]interface{}{
 		"id":    1,
-		"op":    1,
 		"board": "a",
 	})).Exec()
 	c.Assert(validateOP(1, "a"), Equals, true)
 
-	db()(r.Table("posts").Get(1).Update(map[string]int{"op": 2})).Exec()
-	c.Assert(validateOP(1, "a"), Equals, false)
-
-	db()(r.Table("posts").Get(1).Update(map[string]interface{}{
-		"board": "a",
-		"op":    2,
-	})).Exec()
-	c.Assert(validateOP(1, "a"), Equals, false)
+	// Thread does not exist
+	c.Assert(validateOP(15, "a"), Equals, false)
 }
 
 func (*DB) TestGetThread(c *C) {
