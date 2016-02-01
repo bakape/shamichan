@@ -15,11 +15,11 @@ import (
 // Overriden in tests
 var templateRoot = "./tmpl"
 
-// templateStore stores the static part of HTML templates and the corresponding
+// templateStore stores the compiled HTML template and the corresponding
 // truncated MD5 hash of said template
 type templateStore struct {
-	Parts [][]byte
-	Hash  string
+	HTML []byte
+	Hash string
 }
 
 // templateMap stores all available templates
@@ -105,7 +105,7 @@ func buildIndexTemplate(
 	})
 	throw(err)
 	return templateStore{
-		bytes.Split(minified, []byte("$$$")),
+		minified,
 		hashBuffer(minified),
 	}
 }

@@ -139,10 +139,6 @@ func (*WebServer) TestSetHeaders(c *C) {
 	assertHeaders(c, rec, headers)
 }
 
-func (*WebServer) TestLoginCredentials(c *C) {
-	c.Assert(loginCredentials(Ident{}), DeepEquals, []byte{})
-}
-
 func (*WebServer) TestDetectLastN(c *C) {
 	// No lastN query string
 	req := customRequest(c, "/a/1")
@@ -213,10 +209,8 @@ func (*WebServer) TestCompareEtag(c *C) {
 	req := newRequest(c)
 	const etag = "foo"
 	req.Header.Set("If-None-Match", etag)
-	ident := Ident{}
-	c.Assert(compareEtag(rec, req, ident, etag, false), Equals, false)
+	c.Assert(compareEtag(rec, req, etag, false), Equals, false)
 
-	// HTML or JSON and no authentication
 	rec = httptest.NewRecorder()
 	req = newRequest(c)
 	headers := map[string]string{
@@ -224,16 +218,7 @@ func (*WebServer) TestCompareEtag(c *C) {
 		"Content-Type":  "text/html; charset=UTF-8",
 		"Cache-Control": "max-age=0, must-revalidate",
 	}
-	compareEtag(rec, req, ident, etag, false)
-	assertHeaders(c, rec, headers)
-
-	// Authentication
-	ident.Auth = "admin"
-	rec = httptest.NewRecorder()
-	req = newRequest(c)
-	headers["Cache-Control"] += "; private"
-	headers["ETag"] = etag + "-admin"
-	compareEtag(rec, req, ident, etag, false)
+	compareEtag(rec, req, etag, false)
 	assertHeaders(c, rec, headers)
 }
 
@@ -241,55 +226,21 @@ func (*WebServer) TestEtagStart(c *C) {
 	c.Assert(etagStart(1), Equals, "W/1")
 }
 
-func (*WebServer) TestHTMLEtag(c *C) {
-	const hash = "foo"
-	c.Assert(htmlEtag(hash, false), Equals, "-foo")
-	c.Assert(htmlEtag(hash, true), Equals, "-foo-mobile")
-}
-
-func (*WebServer) TestWriteTemplate(c *C) {
-	tmpl := templateStore{
-		Parts: [][]byte{
-			[]byte{1},
-			[]byte{2},
-			[]byte{3},
-		},
-	}
-	rec := httptest.NewRecorder()
-	writeTemplate(rec, tmpl, Ident{}, []byte{4})
-	c.Assert(rec.Body.Bytes(), DeepEquals, []byte{1, 4, 2, 3})
-}
-
-func (*WebServer) TestDetectMobile(c *C) {
-	req := newRequest(c)
-	req.Header.Set(
-		"User-Agent",
-		"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko)"+
-			" Chrome/41.0.2228.0 Safari/537.36",
-	)
-	c.Assert(detectMobile(req), Equals, false)
-
-	req = newRequest(c)
-	req.Header.Set(
-		"User-Agent",
-		"Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C)"+
-			" AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166"+
-			" Mobile Safari/535.19",
-	)
-	c.Assert(detectMobile(req), Equals, true)
-}
-
-func (*WebServer) TestChooseTemplate(c *C) {
-	index := templateStore{
-		Hash: "foo",
-	}
-	mobile := templateStore{
-		Hash: "bar",
-	}
-	resources = map[string]templateStore{
-		"index":  index,
-		"mobile": mobile,
-	}
-	c.Assert(chooseTemplate(false), DeepEquals, index)
-	c.Assert(chooseTemplate(true), DeepEquals, mobile)
-}
+// func (*WebServer) TestDetectMobile(c *C) {
+// 	req := newRequest(c)
+// 	req.Header.Set(
+// 		"User-Agent",
+// 		"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko)"+
+// 			" Chrome/41.0.2228.0 Safari/537.36",
+// 	)
+// 	c.Assert(detectMobile(req), Equals, false)
+//
+// 	req = newRequest(c)
+// 	req.Header.Set(
+// 		"User-Agent",
+// 		"Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C)"+
+// 			" AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166"+
+// 			" Mobile Safari/535.19",
+// 	)
+// 	c.Assert(detectMobile(req), Equals, true)
+// }

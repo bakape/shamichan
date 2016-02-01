@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	. "gopkg.in/check.v1"
 	"html/template"
 )
@@ -37,17 +38,13 @@ func (t *Templates) TestBuildIndexTemplate(c *C) {
 	tmpl, err := template.New("index").Parse(
 		`<script>{{.Config}}</script>` +
 			`<b>{{.ConfigHash}}</b>` +
-			"$$$" +
 			`{{.Navigation}}` +
 			`<script>{{.IsMobile}}</script>`,
 	)
 	c.Assert(err, IsNil)
 	standard := templateStore{
-		Parts: [][]byte{
-			[]byte("<script>c()</script><b>a</b>"),
-			[]byte("<hr><script>false</script>"),
-		},
-		Hash: "564c315ab404bcd1",
+		HTML: []byte("<script>c()</script><b>a</b><hr><script>false</script>"),
+		Hash: "d99e2949415f7ec0",
 	}
 	res := buildIndexTemplate(tmpl, vars, false)
 	c.Assert(res, DeepEquals, standard)
@@ -59,9 +56,7 @@ func (t *Templates) TestCompileTemplates(c *C) {
 	clientConfig = clientConfigs{}
 	config.Boards.Enabled = []string{"a"}
 	standard := templateStore{
-		Parts: [][]byte{
-			[]byte("<a></a>\n"),
-		},
+		HTML: []byte("<a></a>\n"),
 		Hash: "eb51aca26e55050a",
 	}
 	defer func() {

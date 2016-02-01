@@ -5,7 +5,6 @@
 package server
 
 import (
-	"bytes"
 	"github.com/gorilla/handlers"
 	"github.com/julienschmidt/httprouter"
 	"github.com/mssola/user_agent"
@@ -29,10 +28,10 @@ func startWebServer() {
 
 	// Board and board JSON API pages
 	router.HandlerFunc("GET", "/", redirectToDefault)
-	router.HandlerFunc("GET", "/all/", allBoardHTML)
+	router.HandlerFunc("GET", "/all/", serveIndexTemplate)
 	router.HandlerFunc("GET", "/api/all/", allBoardJSON)
 	for _, board := range config.Boards.Enabled {
-		router.HandlerFunc("GET", "/"+board+"/", boardHTML(board))
+		router.HandlerFunc("GET", "/"+board+"/", serveIndexTemplate)
 		router.HandlerFunc("GET", "/api/"+board+"/", boardJSON(board))
 
 		// Thread pages
@@ -71,23 +70,23 @@ func redirectToDefault(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// Serves `/:board/` pages
-func boardHTML(board string) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		ident := lookUpIdent(req.RemoteAddr)
-		if !canAccessBoard(board, ident) {
-			notFound(res)
-			return
-		}
-		isMobile := detectMobile(req)
-		template := chooseTemplate(isMobile)
-		etag := etagStart(boardCounter(board)) +
-			htmlEtag(template.Hash, isMobile)
-		if !compareEtag(res, req, ident, etag, false) {
-			return
-		}
-		writeTemplate(res, template, ident, readBoardJSON(board, ident))
+func serveIndexTemplate(res http.ResponseWriter, req *http.Request) {
+	isMobile := user_agent.New(req.UserAgent()).Mobile()
+	var template templateStore
+	if isMobile {
+		template = resources["mobile"]
+	} else {
+		template = resources["index"]
 	}
+	etag := template.Hash
+	if isMobile {
+		etag += "-mobile"
+	}
+	if !compareEtag(res, req, etag, false) {
+		return
+	}
+	_, err := res.Write(template.HTML)
+	throw(err)
 }
 
 // Serves `/api/:board/` page JSON
@@ -98,17 +97,12 @@ func boardJSON(board string) http.HandlerFunc {
 			text404(res)
 			return
 		}
-		if compareEtag(res, req, ident, etagStart(boardCounter(board)), true) {
+		if compareEtag(res, req, etagStart(boardCounter(board)), true) {
 			return
 		}
-		_, err := res.Write(readBoardJSON(board, ident))
+		_, err := res.Write(marshalJSON(NewReader(board, ident).GetBoard()))
 		throw(err)
 	}
-}
-
-// Reads and formats board JSON from the DB
-func readBoardJSON(board string, ident Ident) []byte {
-	return marshalJSON(NewReader(board, ident).GetBoard())
 }
 
 // Serves `/:board/:thread` page HTML
@@ -119,27 +113,11 @@ func threadHTML(board string) httprouter.Handle {
 		ps httprouter.Params,
 	) {
 		id, err := strconv.ParseUint(ps[0].Value, 10, 64)
-		ident := lookUpIdent(req.RequestURI)
-		if !validateThreadRequest(err, board, id, ident) {
+		if !validateThreadRequest(err, board, id) {
 			notFound(res)
 			return
 		}
-		lastN := detectLastN(req)
-		isMobile := detectMobile(req)
-		template := chooseTemplate(isMobile)
-		etag := etagStart(threadCounter(id)) + htmlEtag(template.Hash, isMobile)
-		if lastN != 0 {
-			etag += "-last" + strconv.Itoa(lastN)
-		}
-		if !compareEtag(res, req, ident, etag, false) {
-			return
-		}
-		writeTemplate(
-			res,
-			template,
-			ident,
-			readThreadJSON(board, id, ident, lastN),
-		)
+		serveIndexTemplate(res, req)
 	}
 }
 
@@ -152,7 +130,7 @@ func threadJSON(board string) httprouter.Handle {
 	) {
 		id, err := strconv.ParseUint(ps[0].Value, 10, 64)
 		ident := lookUpIdent(req.RequestURI)
-		if !validateThreadRequest(err, board, id, ident) {
+		if !validateThreadRequest(err, board, id) {
 			text404(res)
 			return
 		}
@@ -161,78 +139,28 @@ func threadJSON(board string) httprouter.Handle {
 		if lastN != 0 {
 			etag += "-last" + strconv.Itoa(lastN)
 		}
-		if !compareEtag(res, req, ident, etag, true) {
+		if !compareEtag(res, req, etag, true) {
 			return
 		}
-		_, err = res.Write(readThreadJSON(board, id, ident, lastN))
+		data := marshalJSON(NewReader(board, ident).GetThread(id, lastN))
+		_, err = res.Write(data)
 		throw(err)
 	}
 }
 
-// Reads and formats thread JSON from the DB
-func readThreadJSON(board string, id uint64, ident Ident, lastN int) []byte {
-	return marshalJSON(NewReader(board, ident).GetThread(id, lastN))
-}
-
 // Cofirm thread request is proper, thread exists and client had right of access
-func validateThreadRequest(
-	err error,
-	board string,
-	id uint64,
-	ident Ident,
-) bool {
-	return err == nil &&
-		validateOP(id, board) &&
-		canAccessThread(id, board, ident)
-}
-
-// Serves HTML for the "/all/" meta-board, that contains threads from all boards
-func allBoardHTML(res http.ResponseWriter, req *http.Request) {
-	ident := lookUpIdent(req.RequestURI)
-	if ident.Banned {
-		notFound(res)
-		return
-	}
-	isMobile := detectMobile(req)
-	template := chooseTemplate(isMobile)
-	etag := etagStart(postCounter()) + htmlEtag(template.Hash, isMobile)
-	if !compareEtag(res, req, ident, etag, false) {
-		return
-	}
-	writeTemplate(res, template, ident, readAllBoardJSON(ident))
+func validateThreadRequest(err error, board string, id uint64) bool {
+	return err == nil && validateOP(id, board)
 }
 
 // Serves JSON for the "/all/" meta-board, that contains threads from all boards
 func allBoardJSON(res http.ResponseWriter, req *http.Request) {
-	ident := lookUpIdent(req.RequestURI)
-	if ident.Banned {
-		text404(res)
+	if !compareEtag(res, req, etagStart(postCounter()), true) {
 		return
 	}
-	if !compareEtag(res, req, ident, etagStart(postCounter()), true) {
-		return
-	}
-	_, err := res.Write(readAllBoardJSON(ident))
+	ident := lookUpIdent(req.RemoteAddr)
+	_, err := res.Write(marshalJSON(NewReader("all", ident).GetAllBoard()))
 	throw(err)
-}
-
-// Reads and formats the `/all/` meta-board JSON form the DB
-func readAllBoardJSON(ident Ident) []byte {
-	return marshalJSON(NewReader("all", ident).GetAllBoard())
-}
-
-// Detects mobile user agents, so we can serve the apropriate template and
-// client files
-func detectMobile(req *http.Request) bool {
-	return user_agent.New(req.UserAgent()).Mobile()
-}
-
-// Return a mobile or desktop template accordingly
-func chooseTemplate(isMobile bool) templateStore {
-	if isMobile {
-		return resources["mobile"]
-	}
-	return resources["index"]
 }
 
 // Build an etag for HTML pages and check if it matches the one provided by the
@@ -241,37 +169,19 @@ func chooseTemplate(isMobile bool) templateStore {
 func compareEtag(
 	res http.ResponseWriter,
 	req *http.Request,
-	ident Ident,
 	etag string,
 	json bool,
 ) bool {
-	hasAuth := ident.Auth != ""
-	if hasAuth {
-		etag += "-" + ident.Auth
-	}
 	if checkClientEtag(res, req, etag) { // If etags match, no need to rerender
 		return false
 	}
 	setHeaders(res, etag, json)
-	if hasAuth { //Don't expose restricted data publicly through caches
-		head := res.Header()
-		head.Set("Cache-Control", head.Get("Cache-Control")+"; private")
-	}
 	return true
 }
 
 // Build the main part of the etag
 func etagStart(counter uint64) string {
 	return "W/" + idToString(counter)
-}
-
-// Extra part of the etag only used for HTML pages
-func htmlEtag(hash string, isMobile bool) string {
-	etag := "-" + hash
-	if isMobile {
-		etag += "-mobile"
-	}
-	return etag
 }
 
 /*
@@ -283,31 +193,11 @@ func checkClientEtag(
 	req *http.Request,
 	etag string,
 ) bool {
-	if val := req.Header.Get("If-None-Match"); val != "" {
+	if etag == req.Header.Get("If-None-Match") {
 		res.WriteHeader(304)
 		return true
 	}
 	return false
-}
-
-// Concatenate post JSON with HTML template and write to client
-func writeTemplate(
-	res http.ResponseWriter,
-	tmpl templateStore,
-	ident Ident,
-	data []byte,
-) {
-	parts := [][]byte{
-		tmpl.Parts[0], data, tmpl.Parts[1],
-		loginCredentials(ident), tmpl.Parts[2],
-	}
-	out := new(bytes.Buffer)
-	for _, buf := range parts {
-		_, err := out.Write(buf)
-		throw(err)
-	}
-	_, err := res.Write(out.Bytes())
-	throw(err)
 }
 
 // Serve custom error page
@@ -362,14 +252,6 @@ func setHeaders(res http.ResponseWriter, etag string, json bool) {
 		contentType = "text/html"
 	}
 	head.Set("Content-Type", contentType+"; charset=UTF-8")
-}
-
-// Inject staff login credentials, if any. These will be used to download the
-// moderation JS client bundle.
-func loginCredentials(ident Ident) []byte {
-	// TODO: Inject the variables for our new login system
-
-	return []byte{}
 }
 
 // Validate the client's last N posts to display setting
