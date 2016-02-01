@@ -27,9 +27,6 @@ type joinedThread struct {
 // GetThread retrieves thread JSON from the database
 func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 	thread := getJoinedThread(id)
-	if thread.Left.ID == 0 || thread.Right.ID == 0 {
-		return ThreadContainer{}
-	}
 
 	// Get all other posts
 	var posts []Post
@@ -37,7 +34,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 		GetAllByIndex("op", id).
 		Filter(r.Row.Field("id").Eq(id).Not()) // Exclude OP
 	if lastN != 0 { // Only fetch last N number of replies
-		query = query.Slice(-lastN + 1)
+		query = query.CoerceTo("array").OrderBy("id").Slice(-lastN)
 	}
 	db()(query).All(&posts)
 
@@ -49,6 +46,11 @@ func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 		if parsed.ID != 0 {
 			filtered[idToString(parsed.ID)] = parsed
 		}
+	}
+
+	// No replies in thread or all replies deleted
+	if len(filtered) == 0 {
+		filtered = map[string]Post(nil)
 	}
 
 	// Compose into the client-side thread type
@@ -66,10 +68,11 @@ func getJoinedThread(id uint64) (thread joinedThread) {
 	db()(r.
 		Expr(map[string]r.Term{
 		"left":  getThread(id),
-		"right": getPost(id).Without("op"),
+		"right": getPost(id),
 	}).
 		Merge(getThreadMeta()),
 	).One(&thread)
+	thread.Right.OP = 0
 	return
 }
 
@@ -94,8 +97,7 @@ func getThreadMeta() map[string]map[string]r.Term {
 	}
 }
 
-// parsePost formats the Post struct according to the access level of the
-// current client
+// parsePost formats the Post struct for public distribution
 func (rd *Reader) parsePost(post Post) Post {
 	if post.Deleted {
 		return Post{}
@@ -109,17 +111,13 @@ func (rd *Reader) parsePost(post Post) Post {
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id uint64) Post {
-	var post Post
+func (rd *Reader) GetPost(id uint64) (post Post) {
 	db()(getPost(id)).One(&post)
 	if post.ID == 0 {
-		return Post{}
+		return
 	}
 	post = rd.parsePost(post)
-	if post.ID == 0 {
-		return Post{}
-	}
-	return post
+	return
 }
 
 // GetBoard retrieves all OPs of a single board
@@ -163,6 +161,9 @@ func (rd *Reader) parseThreads(threads []joinedThread) []ThreadContainer {
 			Thread: thread.Left,
 			Post:   thread.Right,
 		})
+	}
+	if len(filtered) == 0 {
+		filtered = []ThreadContainer(nil)
 	}
 	return filtered
 }

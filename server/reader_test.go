@@ -101,14 +101,6 @@ func (*DB) TestParseThreads(c *C) {
 	threads := []joinedThread{
 		{
 			Left: Thread{
-				ID: 1,
-			},
-			Right: Post{
-				ID: 1,
-			},
-		},
-		{
-			Left: Thread{
 				ID:      2,
 				Deleted: true,
 			},
@@ -118,14 +110,27 @@ func (*DB) TestParseThreads(c *C) {
 		},
 	}
 	setupBoardAccess()
+	r := NewReader("a", Ident{})
 
+	// Zero length
+	c.Assert(r.parseThreads(threads), DeepEquals, []ThreadContainer(nil))
+
+	threads = append([]joinedThread{
+		{
+			Left: Thread{
+				ID: 1,
+			},
+			Right: Post{
+				ID: 1,
+			},
+		},
+	}, threads...)
 	standard := []ThreadContainer{
 		{
 			Thread: Thread{ID: 1},
 			Post:   Post{ID: 1},
 		},
 	}
-	r := NewReader("a", Ident{})
 	c.Assert(r.parseThreads(threads), DeepEquals, standard)
 }
 
@@ -251,4 +256,59 @@ func (*DB) TestGetAllBoard(c *C) {
 		},
 	}
 	c.Assert(NewReader("a", Ident{}).GetAllBoard(), DeepEquals, standard)
+}
+
+func (*DB) TestReaderGetThread(c *C) {
+	setupBoardAccess()
+	setupPosts()
+	rd := NewReader("a", Ident{})
+
+	// No replies ;_;
+	standard := ThreadContainer{
+		Thread: Thread{
+			ID:    3,
+			Board: "a",
+		},
+		Post: Post{
+			ID:    3,
+			Board: "a",
+			Image: genericImage,
+		},
+	}
+	c.Assert(rd.GetThread(3, 0), DeepEquals, standard)
+
+	// With replies
+	additional := Post{
+		ID:    5,
+		OP:    1,
+		Board: "a",
+		Image: genericImage,
+	}
+	db()(r.Table("posts").Insert(additional)).Exec()
+	standard = ThreadContainer{
+		Thread: Thread{
+			ID:       1,
+			Board:    "a",
+			PostCtr:  2,
+			ImageCtr: 1,
+		},
+		Post: Post{
+			ID:    1,
+			Board: "a",
+			Image: genericImage,
+		},
+		Posts: map[string]Post{
+			"2": {
+				ID:    2,
+				OP:    1,
+				Board: "a",
+			},
+			"5": additional,
+		},
+	}
+	c.Assert(rd.GetThread(1, 0), DeepEquals, standard)
+
+	// Last 1 post
+	delete(standard.Posts, "2")
+	c.Assert(rd.GetThread(1, 1), DeepEquals, standard)
 }
