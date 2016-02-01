@@ -226,21 +226,64 @@ func (*WebServer) TestEtagStart(c *C) {
 	c.Assert(etagStart(1), Equals, "W/1")
 }
 
-// func (*WebServer) TestDetectMobile(c *C) {
-// 	req := newRequest(c)
-// 	req.Header.Set(
-// 		"User-Agent",
-// 		"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko)"+
-// 			" Chrome/41.0.2228.0 Safari/537.36",
-// 	)
-// 	c.Assert(detectMobile(req), Equals, false)
-//
-// 	req = newRequest(c)
-// 	req.Header.Set(
-// 		"User-Agent",
-// 		"Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C)"+
-// 			" AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166"+
-// 			" Mobile Safari/535.19",
-// 	)
-// 	c.Assert(detectMobile(req), Equals, true)
-// }
+func (*WebServer) TestServeIndexTemplate(c *C) {
+	const (
+		desktopUA = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 " +
+			"(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+		mobileUA = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus" +
+			" Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko)" +
+			" Chrome/18.0.1025.166 Mobile Safari/535.19"
+	)
+	desktop := templateStore{[]byte("desktop"), "dhash"}
+	mobile := templateStore{[]byte("mobile"), "mhash"}
+	resources = templateMap{}
+	resources["index"] = desktop
+	resources["mobile"] = mobile
+
+	// Desktop
+	req := newRequest(c)
+	req.Header.Set("User-Agent", desktopUA)
+	rec := httptest.NewRecorder()
+	serveIndexTemplate(rec, req)
+	c.Assert(rec.Body.Bytes(), DeepEquals, desktop.HTML)
+	c.Assert(rec.Header().Get("ETag"), Equals, desktop.Hash)
+
+	// Mobile
+	req = newRequest(c)
+	req.Header.Set("User-Agent", mobileUA)
+	rec = httptest.NewRecorder()
+	serveIndexTemplate(rec, req)
+	c.Assert(rec.Body.Bytes(), DeepEquals, mobile.HTML)
+	c.Assert(rec.Header().Get("ETag"), Equals, mobile.Hash+"-mobile")
+
+	// Etag matches
+	req = newRequest(c)
+	req.Header.Set("If-None-Match", desktop.Hash)
+	rec = httptest.NewRecorder()
+	serveIndexTemplate(rec, req)
+	c.Assert(rec.Code, Equals, 304)
+}
+
+func (*DB) TestThreadHTML(c *C) {
+	// Non-existant thread
+	rec := httptest.NewRecorder()
+	req := customRequest(c, "/a/22")
+	body := []byte("body")
+	resources = templateMap{
+		"index": templateStore{
+			HTML: body,
+			Hash: "hash",
+		},
+	}
+	webRoot = "./test"
+	threadHTML("a")(rec, req, httprouter.Params{{Value: "22"}})
+	c.Assert(rec.Code, Equals, 404)
+
+	// Thread exists
+	setupBoardAccess()
+	setupPosts()
+	rec = httptest.NewRecorder()
+	req = customRequest(c, "/a/1")
+	threadHTML("a")(rec, req, httprouter.Params{{Value: "1"}})
+	c.Assert(rec.Body.Bytes(), DeepEquals, body)
+}
