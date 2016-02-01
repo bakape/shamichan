@@ -27,6 +27,8 @@ r.get('pCounter', function(err, res){
 		pyu_counter = parseInt(res, 10);
 });
 
+exports.getPyu = () => pyu_counter
+
 function roll_dice(frag, post) {
 	if (!frag.length)
 		return;

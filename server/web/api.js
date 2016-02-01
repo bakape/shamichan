@@ -2,7 +2,8 @@
  Read-only JSON API
  */
 
-let caps = require('../caps'),
+let amusement = require('../amusement'),
+	caps = require('../caps'),
 	config = require('../../config'),
 	db = require('../../db'),
 	express = require('express'),
@@ -79,3 +80,6 @@ app.get('/config', function(req, res) {
 		hot: state.clientHotConfig
 	});
 });
+
+app.get('/pyu', (req, res) =>
+	res.json(amusement.getPyu()))
