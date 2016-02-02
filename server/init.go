@@ -23,7 +23,7 @@ func Start() {
 	}
 	arg := os.Args[1]
 	switch arg {
-	case "init":
+	case "init": // For internal use only
 		os.Exit(0)
 	case "debug":
 		config.Debug = true
@@ -61,7 +61,6 @@ func printUsage() {
     start   - start the meguca server
     stop    - stop a running daemonised meguca server
     restart - combination of stop + start
-    init    - create intial files and folders and exit
     debug   - debug mode
     help    - print this help text
 `)

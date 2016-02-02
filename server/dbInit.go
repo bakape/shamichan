@@ -7,6 +7,7 @@ package server
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
+	"log"
 )
 
 const dbVersion = 2
@@ -72,8 +73,10 @@ type infoDocument struct {
 
 // Initialize a rethinkDB database
 func initRethinkDB() {
-	db()(r.DBCreate(config.Rethinkdb.Db)).Exec()
-	rSession.Use(config.Rethinkdb.Db)
+	dbName := config.Rethinkdb.Db
+	log.Printf("Initialising database '%s'", dbName)
+	db()(r.DBCreate(dbName)).Exec()
+	rSession.Use(dbName)
 	createTables()
 	db()(r.Table("main").Insert([...]interface{}{
 		infoDocument{Document{"info"}, dbVersion, 0},
