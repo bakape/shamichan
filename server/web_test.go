@@ -384,3 +384,38 @@ func (*DB) TestAllBoardJSON(c *C) {
 	allBoardJSON(rec, req)
 	assertCode(rec, 304, c)
 }
+
+func (*DB) TestThreadJSON(c *C) {
+	setupBoardAccess()
+	setupPosts()
+
+	// Invalid post number
+	rec := httptest.NewRecorder()
+	threadJSON("a")(rec, newRequest(c), httprouter.Params{{Value: "www"}})
+	assertCode(rec, 404, c)
+
+	// Non-existing thread
+	rec = httptest.NewRecorder()
+	threadJSON("a")(rec, newRequest(c), httprouter.Params{{Value: "22"}})
+	assertCode(rec, 404, c)
+
+	// Valid thread request
+	rec = httptest.NewRecorder()
+	threadJSON("a")(rec, newRequest(c), httprouter.Params{{Value: "1"}})
+	assertBody(
+		rec,
+		`{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,"editing":false,`+
+			`"src":"foo","time":0,"body":"","posts":{"2":{"editing":false,`+
+			`"op":1,"id":2,"time":0,"board":"a","body":""}}}`,
+		c,
+	)
+	const etag = "W/1"
+	assertEtag(rec, etag, c)
+
+	// Etags match
+	rec = httptest.NewRecorder()
+	req := newRequest(c)
+	req.Header.Set("If-None-Match", etag)
+	threadJSON("a")(rec, req, httprouter.Params{{Value: "1"}})
+	assertCode(rec, 304, c)
+}

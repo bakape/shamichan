@@ -130,15 +130,12 @@ func threadJSON(board string) httprouter.Handle {
 			text404(res)
 			return
 		}
-		lastN := detectLastN(req)
-		etag := etagStart(threadCounter(id))
-		if lastN != 0 {
-			etag += "-last" + strconv.Itoa(lastN)
-		}
-		if !compareEtag(res, req, etag, true) {
+		if !compareEtag(res, req, etagStart(threadCounter(id)), true) {
 			return
 		}
-		data := marshalJSON(NewReader(board, ident).GetThread(id, lastN))
+		data := marshalJSON(
+			NewReader(board, ident).GetThread(id, detectLastN(req)),
+		)
 		_, err = res.Write(data)
 		throw(err)
 	}
