@@ -456,3 +456,35 @@ func assertRoute(method string, rc routeCheck, r *httprouter.Router, c *C) {
 	c.Assert(params, DeepEquals, rc.params)
 	c.Assert(handle, NotNil, Commentf("No handler on path '%s'", rc.path))
 }
+
+func (*WebServer) TestWrapRouter(c *C) {
+	config = serverConfigs{}
+
+	// Test GZIP
+	r := httprouter.New()
+	r.HandlerFunc("GET", "/", func(res http.ResponseWriter, _ *http.Request) {
+		_, err := res.Write([]byte("Kyoani is shit"))
+		c.Assert(err, IsNil)
+	})
+	rec := httptest.NewRecorder()
+	req := customRequest(c, "/")
+	req.Header.Set("Accept-Encoding", "gzip")
+	wrapRouter(r).ServeHTTP(rec, req)
+	c.Assert(rec.Header().Get("Content-Encoding"), Equals, "gzip")
+
+	// Test honouring "X-Forwarded-For" headers
+	config.HTTP.TrustProxies = true
+	r = httprouter.New()
+	var remoteIP string
+	r.HandlerFunc("GET", "/", func(res http.ResponseWriter, req *http.Request) {
+		_, err := res.Write([]byte("Kyoani is shit"))
+		c.Assert(err, IsNil)
+		remoteIP = req.RemoteAddr
+	})
+	rec = httptest.NewRecorder()
+	req = customRequest(c, "/")
+	const ip = "68.180.194.242"
+	req.Header.Set("X-Forwarded-For", ip)
+	wrapRouter(r).ServeHTTP(rec, req)
+	c.Assert(remoteIP, Equals, ip)
+}
