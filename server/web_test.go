@@ -284,22 +284,19 @@ func (*DB) TestThreadHTML(c *C) {
 
 	// Unparsable thread number
 	rec := httptest.NewRecorder()
-	req := newRequest(c)
-	threadHTML("a")(rec, req, httprouter.Params{{Value: "www"}})
+	threadHTML("a")(rec, newRequest(c), httprouter.Params{{Value: "www"}})
 	assertCode(rec, 404, c)
 
 	// Non-existant thread
 	rec = httptest.NewRecorder()
-	req = newRequest(c)
-	threadHTML("a")(rec, req, httprouter.Params{{Value: "22"}})
+	threadHTML("a")(rec, newRequest(c), httprouter.Params{{Value: "22"}})
 	assertCode(rec, 404, c)
 
 	// Thread exists
 	setupBoardAccess()
 	setupPosts()
 	rec = httptest.NewRecorder()
-	req = newRequest(c)
-	threadHTML("a")(rec, req, httprouter.Params{{Value: "1"}})
+	threadHTML("a")(rec, newRequest(c), httprouter.Params{{Value: "1"}})
 	assertBody(rec, string(body), c)
 }
 
@@ -309,21 +306,18 @@ func (*DB) TestServePost(c *C) {
 
 	// Invalid post number
 	rec := httptest.NewRecorder()
-	req := newRequest(c)
-	servePost(rec, req, httprouter.Params{{Value: "www"}})
+	servePost(rec, newRequest(c), httprouter.Params{{Value: "www"}})
 	assertCode(rec, 404, c)
 
 	// Non-existing post or otherwise invalid post
 	rec = httptest.NewRecorder()
-	req = newRequest(c)
-	servePost(rec, req, httprouter.Params{{Value: "66"}})
+	servePost(rec, newRequest(c), httprouter.Params{{Value: "66"}})
 	assertCode(rec, 404, c)
 
 	// Existing post
 	rec = httptest.NewRecorder()
-	req = newRequest(c)
 	const etag = "d96fa6542aaf4c9e"
-	servePost(rec, req, httprouter.Params{{Value: "2"}})
+	servePost(rec, newRequest(c), httprouter.Params{{Value: "2"}})
 	assertBody(
 		rec,
 		`{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}`,
@@ -333,7 +327,7 @@ func (*DB) TestServePost(c *C) {
 
 	// Etags match
 	rec = httptest.NewRecorder()
-	req = newRequest(c)
+	req := newRequest(c)
 	req.Header.Set("If-None-Match", etag)
 	servePost(rec, req, httprouter.Params{{Value: "2"}})
 	assertCode(rec, 304, c)
@@ -344,8 +338,7 @@ func (*DB) TestBoardJSON(c *C) {
 	setupBoardAccess()
 
 	rec := httptest.NewRecorder()
-	req := newRequest(c)
-	boardJSON("a")(rec, req)
+	boardJSON("a")(rec, newRequest(c))
 	assertBody(
 		rec,
 		`{"ctr":7,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,`+
@@ -359,8 +352,35 @@ func (*DB) TestBoardJSON(c *C) {
 
 	// Etags match
 	rec = httptest.NewRecorder()
-	req = newRequest(c)
+	req := newRequest(c)
 	req.Header.Set("If-None-Match", etag)
 	boardJSON("a")(rec, req)
+	assertCode(rec, 304, c)
+}
+
+func (*DB) TestAllBoardJSON(c *C) {
+	setupBoardAccess()
+	setupPosts()
+
+	rec := httptest.NewRecorder()
+	allBoardJSON(rec, newRequest(c))
+	const etag = "W/8"
+	assertBody(
+		rec,
+		`{"ctr":8,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,`+
+			`"replyTime":0,"editing":false,"src":"foo","time":0,"body":""},`+
+			`{"postCtr":0,"imageCtr":0,"bumpTime":0,"replyTime":0,`+
+			`"editing":false,"src":"foo","time":0,"body":""},{"postCtr":1,`+
+			`"imageCtr":0,"bumpTime":0,"replyTime":0,"editing":false,`+
+			`"src":"foo","time":0,"body":""}]}`,
+		c,
+	)
+	assertEtag(rec, etag, c)
+
+	// Etags match
+	rec = httptest.NewRecorder()
+	req := newRequest(c)
+	req.Header.Set("If-None-Match", etag)
+	allBoardJSON(rec, req)
 	assertCode(rec, 304, c)
 }

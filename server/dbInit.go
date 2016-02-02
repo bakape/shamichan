@@ -100,4 +100,10 @@ func createIndeces() {
 			db()(r.Table(table).IndexCreate(key)).Exec()
 		}
 	}
+
+	// Make sure all indeces are ready to awoid the race condition of and index
+	// being accessed before its full creation.
+	for _, table := range allTables {
+		db()(r.Table(table).IndexWait()).Exec()
+	}
 }
