@@ -1,4 +1,3 @@
-
 /*
  Webserver
 */
@@ -93,14 +92,10 @@ func serveIndexTemplate(res http.ResponseWriter, req *http.Request) {
 // Serves `/api/:board/` page JSON
 func boardJSON(board string) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+		if !compareEtag(res, req, etagStart(boardCounter(board)), true) {
+			return
+		}
 		ident := lookUpIdent(req.RemoteAddr)
-		if !canAccessBoard(board, ident) {
-			text404(res)
-			return
-		}
-		if compareEtag(res, req, etagStart(boardCounter(board)), true) {
-			return
-		}
 		_, err := res.Write(marshalJSON(NewReader(board, ident).GetBoard()))
 		throw(err)
 	}

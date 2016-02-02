@@ -32,8 +32,26 @@ func (*WebServer) TestDefaultBoardRedirect(c *C) {
 	config = serverConfigs{}
 	config.Boards.Default = "a"
 	rec := runHandler(c, redirectToDefault)
-	c.Assert(rec.Code, Equals, 302)
+	assertCode(rec, 302, c)
 	c.Assert(rec.Header().Get("Location"), Equals, "/a/")
+}
+
+func assertEtag(rec *httptest.ResponseRecorder, etag string, c *C) {
+	c.Assert(rec.Header().Get("ETag"), Equals, etag)
+}
+
+func assertBody(rec *httptest.ResponseRecorder, body string, c *C) {
+	c.Assert(rec.Body.String(), DeepEquals, body)
+}
+
+func assertCode(rec *httptest.ResponseRecorder, status int, c *C) {
+	c.Assert(rec.Code, Equals, status)
+}
+
+func assertHeaders(c *C, rec *httptest.ResponseRecorder, h map[string]string) {
+	for key, val := range h {
+		c.Assert(rec.Header().Get(key), Equals, val)
+	}
 }
 
 func runHandler(c *C, h http.HandlerFunc) *httptest.ResponseRecorder {
@@ -54,16 +72,16 @@ func (*WebServer) TestConfigServing(c *C) {
 	clientConfig = clientConfigs{}
 	etag := "W/" + configHash
 	rec := runHandler(c, serveConfigs)
-	c.Assert(rec.Code, Equals, 200)
-	c.Assert(rec.Body.String(), Equals, string(marshalJSON(clientConfig)))
-	c.Assert(rec.Header().Get("ETag"), Equals, etag)
+	assertCode(rec, 200, c)
+	assertBody(rec, string(marshalJSON(clientConfig)), c)
+	assertEtag(rec, etag, c)
 
 	// And with etag
 	rec = httptest.NewRecorder()
 	req := newRequest(c)
 	req.Header.Set("If-None-Match", etag)
 	serveConfigs(rec, req)
-	c.Assert(rec.Code, Equals, 304)
+	assertCode(rec, 304, c)
 }
 
 func (*WebServer) TestEtagComparison(c *C) {
@@ -77,12 +95,8 @@ func (*WebServer) TestEtagComparison(c *C) {
 func (*WebServer) TestNotFoundHandler(c *C) {
 	webRoot = "./test"
 	rec := runHandler(c, notFoundHandler)
-	c.Assert(
-		rec.Body.String(),
-		Equals,
-		"<!doctype html><html>404</html>\n",
-	)
-	c.Assert(rec.Code, Equals, 404)
+	assertBody(rec, "<!doctype html><html>404</html>\n", c)
+	assertCode(rec, 404, c)
 	headers := map[string]string{
 		"Content-Type":           "text/html; charset=UTF-8",
 		"X-Content-Type-Options": "nosniff",
@@ -90,18 +104,12 @@ func (*WebServer) TestNotFoundHandler(c *C) {
 	assertHeaders(c, rec, headers)
 }
 
-func assertHeaders(c *C, rec *httptest.ResponseRecorder, h map[string]string) {
-	for key, val := range h {
-		c.Assert(rec.Header().Get(key), Equals, val)
-	}
-}
-
 func (*WebServer) TestText404(c *C) {
 	rec := runHandler(c, func(res http.ResponseWriter, _ *http.Request) {
 		text404(res)
 	})
-	c.Assert(rec.Code, Equals, 404)
-	c.Assert(rec.Body.String(), Equals, "404 Not found\n")
+	assertCode(rec, 404, c)
+	assertBody(rec, "404 Not found\n", c)
 }
 
 func (*WebServer) TestPanicHandler(c *C) {
@@ -114,8 +122,8 @@ func (*WebServer) TestPanicHandler(c *C) {
 		panicHandler(res, req, err)
 	})
 	log.SetOutput(os.Stdout)
-	c.Assert(rec.Code, Equals, 500)
-	c.Assert(rec.Body.String(), Equals, "<!doctype html><html>50x</html>\n")
+	assertCode(rec, 500, c)
+	assertBody(rec, "<!doctype html><html>50x</html>\n", c)
 }
 
 func (*WebServer) TestSetHeaders(c *C) {
@@ -180,7 +188,7 @@ func (*WebServer) TestImageServer(c *C) {
 	serveImages(rec, req, params)
 	buf, err := ioutil.ReadFile(path)
 	c.Assert(err, IsNil)
-	c.Assert(rec.Body.String(), Equals, string(buf))
+	assertBody(rec, string(buf), c)
 	headers := map[string]string{
 		"Cache-Control":   "max-age=30240000",
 		"X-Frame-Options": "sameorigin",
@@ -193,14 +201,14 @@ func (*WebServer) TestImageServer(c *C) {
 	rec = httptest.NewRecorder()
 	req.Header.Set("If-None-Match", "0")
 	serveImages(rec, req, params)
-	c.Assert(rec.Code, Equals, 304)
+	assertCode(rec, 304, c)
 
 	// Non-existing file
 	req = customRequest(c, notFound)
 	rec = httptest.NewRecorder()
 	params[0].Value = notFoundTruncated
 	serveImages(rec, req, params)
-	c.Assert(rec.Code, Equals, 404)
+	assertCode(rec, 404, c)
 }
 
 func (*WebServer) TestCompareEtag(c *C) {
@@ -245,23 +253,23 @@ func (*WebServer) TestServeIndexTemplate(c *C) {
 	req.Header.Set("User-Agent", desktopUA)
 	rec := httptest.NewRecorder()
 	serveIndexTemplate(rec, req)
-	c.Assert(rec.Body.Bytes(), DeepEquals, desktop.HTML)
-	c.Assert(rec.Header().Get("ETag"), Equals, desktop.Hash)
+	assertBody(rec, string(desktop.HTML), c)
+	assertEtag(rec, desktop.Hash, c)
 
 	// Mobile
 	req = newRequest(c)
 	req.Header.Set("User-Agent", mobileUA)
 	rec = httptest.NewRecorder()
 	serveIndexTemplate(rec, req)
-	c.Assert(rec.Body.Bytes(), DeepEquals, mobile.HTML)
-	c.Assert(rec.Header().Get("ETag"), Equals, mobile.Hash+"-mobile")
+	assertBody(rec, string(mobile.HTML), c)
+	assertEtag(rec, mobile.Hash+"-mobile", c)
 
 	// Etag matches
 	req = newRequest(c)
 	req.Header.Set("If-None-Match", desktop.Hash)
 	rec = httptest.NewRecorder()
 	serveIndexTemplate(rec, req)
-	c.Assert(rec.Code, Equals, 304)
+	assertCode(rec, 304, c)
 }
 
 func (*DB) TestThreadHTML(c *C) {
@@ -276,23 +284,23 @@ func (*DB) TestThreadHTML(c *C) {
 
 	// Unparsable thread number
 	rec := httptest.NewRecorder()
-	req := customRequest(c, "/a/www")
+	req := newRequest(c)
 	threadHTML("a")(rec, req, httprouter.Params{{Value: "www"}})
-	c.Assert(rec.Code, Equals, 404)
+	assertCode(rec, 404, c)
 
 	// Non-existant thread
 	rec = httptest.NewRecorder()
-	req = customRequest(c, "/a/22")
+	req = newRequest(c)
 	threadHTML("a")(rec, req, httprouter.Params{{Value: "22"}})
-	c.Assert(rec.Code, Equals, 404)
+	assertCode(rec, 404, c)
 
 	// Thread exists
 	setupBoardAccess()
 	setupPosts()
 	rec = httptest.NewRecorder()
-	req = customRequest(c, "/a/1")
+	req = newRequest(c)
 	threadHTML("a")(rec, req, httprouter.Params{{Value: "1"}})
-	c.Assert(rec.Body.Bytes(), DeepEquals, body)
+	assertBody(rec, string(body), c)
 }
 
 func (*DB) TestServePost(c *C) {
@@ -301,32 +309,58 @@ func (*DB) TestServePost(c *C) {
 
 	// Invalid post number
 	rec := httptest.NewRecorder()
-	req := customRequest(c, "/api/post/www")
+	req := newRequest(c)
 	servePost(rec, req, httprouter.Params{{Value: "www"}})
-	c.Assert(rec.Code, Equals, 404)
+	assertCode(rec, 404, c)
 
 	// Non-existing post or otherwise invalid post
 	rec = httptest.NewRecorder()
-	req = customRequest(c, "/api/post/66")
+	req = newRequest(c)
 	servePost(rec, req, httprouter.Params{{Value: "66"}})
-	c.Assert(rec.Code, Equals, 404)
+	assertCode(rec, 404, c)
 
 	// Existing post
 	rec = httptest.NewRecorder()
-	req = customRequest(c, "/api/post/2")
+	req = newRequest(c)
 	const etag = "d96fa6542aaf4c9e"
 	servePost(rec, req, httprouter.Params{{Value: "2"}})
-	c.Assert(
-		rec.Body.String(),
-		Equals,
+	assertBody(
+		rec,
 		`{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}`,
+		c,
 	)
-	c.Assert(rec.Header().Get("ETag"), Equals, etag)
+	assertEtag(rec, etag, c)
 
 	// Etags match
 	rec = httptest.NewRecorder()
-	req = customRequest(c, "/api/post/2")
+	req = newRequest(c)
 	req.Header.Set("If-None-Match", etag)
 	servePost(rec, req, httprouter.Params{{Value: "2"}})
-	c.Assert(rec.Code, Equals, 304)
+	assertCode(rec, 304, c)
+}
+
+func (*DB) TestBoardJSON(c *C) {
+	setupPosts()
+	setupBoardAccess()
+
+	rec := httptest.NewRecorder()
+	req := newRequest(c)
+	boardJSON("a")(rec, req)
+	assertBody(
+		rec,
+		`{"ctr":7,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,`+
+			`"replyTime":0,"editing":false,"src":"foo","time":0,"body":""},`+
+			`{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,`+
+			`"editing":false,"src":"foo","time":0,"body":""}]}`,
+		c,
+	)
+	const etag = "W/7"
+	assertEtag(rec, etag, c)
+
+	// Etags match
+	rec = httptest.NewRecorder()
+	req = newRequest(c)
+	req.Header.Set("If-None-Match", etag)
+	boardJSON("a")(rec, req)
+	assertCode(rec, 304, c)
 }

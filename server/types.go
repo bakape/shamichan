@@ -7,7 +7,7 @@ package server
 // Board stores board metadata and the OPs of all threads
 type Board struct {
 	Ctr     uint64            `json:"ctr"`
-	Threads []ThreadContainer `json:"threads"`
+	Threads []ThreadContainer `json:"threads,omitempty"`
 }
 
 // ThreadContainer is a transport/export wrapper that stores both the thread
@@ -16,8 +16,8 @@ type Board struct {
 type ThreadContainer struct {
 	Thread
 	Post
-	Posts   map[string]Post `json:"posts" gorethink:"-"`
-	Updates []Message       `json:"updates" gorethink:"-"`
+	Posts   map[string]Post `json:"posts,omitempty"`
+	Updates []Message       `json:"updates,omitempty"`
 }
 
 // Thread stores thread metadata
