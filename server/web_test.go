@@ -265,9 +265,6 @@ func (*WebServer) TestServeIndexTemplate(c *C) {
 }
 
 func (*DB) TestThreadHTML(c *C) {
-	// Non-existant thread
-	rec := httptest.NewRecorder()
-	req := customRequest(c, "/a/22")
 	body := []byte("body")
 	resources = templateMap{
 		"index": templateStore{
@@ -276,6 +273,16 @@ func (*DB) TestThreadHTML(c *C) {
 		},
 	}
 	webRoot = "./test"
+
+	// Unparsable thread number
+	rec := httptest.NewRecorder()
+	req := customRequest(c, "/a/www")
+	threadHTML("a")(rec, req, httprouter.Params{{Value: "www"}})
+	c.Assert(rec.Code, Equals, 404)
+
+	// Non-existant thread
+	rec = httptest.NewRecorder()
+	req = customRequest(c, "/a/22")
 	threadHTML("a")(rec, req, httprouter.Params{{Value: "22"}})
 	c.Assert(rec.Code, Equals, 404)
 
@@ -286,4 +293,40 @@ func (*DB) TestThreadHTML(c *C) {
 	req = customRequest(c, "/a/1")
 	threadHTML("a")(rec, req, httprouter.Params{{Value: "1"}})
 	c.Assert(rec.Body.Bytes(), DeepEquals, body)
+}
+
+func (*DB) TestServePost(c *C) {
+	setupBoardAccess()
+	setupPosts()
+
+	// Invalid post number
+	rec := httptest.NewRecorder()
+	req := customRequest(c, "/api/post/www")
+	servePost(rec, req, httprouter.Params{{Value: "www"}})
+	c.Assert(rec.Code, Equals, 404)
+
+	// Non-existing post or otherwise invalid post
+	rec = httptest.NewRecorder()
+	req = customRequest(c, "/api/post/66")
+	servePost(rec, req, httprouter.Params{{Value: "66"}})
+	c.Assert(rec.Code, Equals, 404)
+
+	// Existing post
+	rec = httptest.NewRecorder()
+	req = customRequest(c, "/api/post/2")
+	const etag = "d96fa6542aaf4c9e"
+	servePost(rec, req, httprouter.Params{{Value: "2"}})
+	c.Assert(
+		rec.Body.String(),
+		Equals,
+		`{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}`,
+	)
+	c.Assert(rec.Header().Get("ETag"), Equals, etag)
+
+	// Etags match
+	rec = httptest.NewRecorder()
+	req = customRequest(c, "/api/post/2")
+	req.Header.Set("If-None-Match", etag)
+	servePost(rec, req, httprouter.Params{{Value: "2"}})
+	c.Assert(rec.Code, Equals, 304)
 }

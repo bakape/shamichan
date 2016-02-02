@@ -113,11 +113,15 @@ func (rd *Reader) parsePost(post Post) Post {
 // GetPost reads a single post from the database
 func (rd *Reader) GetPost(id uint64) (post Post) {
 	db()(getPost(id)).One(&post)
-	if post.ID == 0 {
-		return
+	if post.ID == 0 || !canAccessBoard(post.Board, rd.ident) {
+		return Post{}
 	}
-	post = rd.parsePost(post)
-	return
+	var deleted bool // Check if parent thread was not deleted
+	db()(getThread(post.OP).Field("deleted").Default(false)).One(&deleted)
+	if deleted {
+		return Post{}
+	}
+	return rd.parsePost(post)
 }
 
 // GetBoard retrieves all OPs of a single board

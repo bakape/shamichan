@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"errors"
-	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 	"log"
 	"net/http"
@@ -165,22 +164,4 @@ func (*Util) TestLogError(c *C) {
 		Matches,
 		`\d+/\d+/\d+ \d+:\d+:\d+ panic serving ::1: foo`,
 	)
-}
-
-func (*DB) TestCanAccessThread(c *C) {
-	db()(r.Table("threads").Insert(map[string]int{"id": 1})).Exec()
-	setupBoardAccess()
-	ident := Ident{}
-
-	// Not deleted
-	c.Assert(canAccessThread(1, "a", ident), Equals, true)
-
-	// Deleted
-	db()(r.Table("threads").Get(1).Update(map[string]bool{
-		"deleted": true,
-	})).Exec()
-	c.Assert(canAccessThread(1, "a", ident), Equals, false)
-
-	// Invalid board
-	c.Assert(canAccessThread(1, "c", ident), Equals, false)
 }

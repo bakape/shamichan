@@ -1,3 +1,4 @@
+
 /*
  Webserver
 */
@@ -288,20 +289,13 @@ func servePost(
 		text404(res)
 		return
 	}
-	board := parentBoard(id)
-	thread := parentThread(id)
-	ident := lookUpIdent(req.RemoteAddr)
-	if board == "" || thread == 0 || !canAccessThread(thread, board, ident) {
-		text404(res)
-		return
-	}
-	post := NewReader(board, ident).GetPost(id)
+	post := NewReader("", lookUpIdent(req.RemoteAddr)).GetPost(id)
 	if post.ID == 0 { // No post in the database or no access
 		text404(res)
 		return
 	}
 	data := marshalJSON(post)
-	etag := "W/" + hashBuffer(data)
+	etag := hashBuffer(data)
 	if checkClientEtag(res, req, etag) {
 		return
 	}

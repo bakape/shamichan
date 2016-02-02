@@ -41,20 +41,45 @@ func (*DB) TestParsePost(c *C) {
 
 func (*DB) TestGetPost(c *C) {
 	standard := Post{
-		ID: 3,
-		OP: 1,
+		ID:    3,
+		OP:    1,
+		Board: "a",
 	}
 	db()(r.Table("posts").Insert([]Post{
 		{
 			ID:      2,
 			OP:      1,
 			Deleted: true,
+			Board:   "a",
 		},
 		standard,
+		{
+			ID:    5,
+			OP:    4,
+			Board: "a",
+		},
+		{
+			ID:    8,
+			OP:    1,
+			Board: "q",
+		},
+	})).Exec()
+	db()(r.Table("threads").Insert([]Thread{
+		{
+			ID:      4,
+			Deleted: true,
+			Board:   "a",
+		},
+		{
+			ID:    1,
+			Board: "a",
+		},
 	})).Exec()
 	r := NewReader("a", Ident{})
-	c.Assert(r.GetPost(5), DeepEquals, Post{})   // Does not exist
-	c.Assert(r.GetPost(2), DeepEquals, Post{})   // Can not access
+	c.Assert(r.GetPost(7), DeepEquals, Post{})   // Does not exist
+	c.Assert(r.GetPost(2), DeepEquals, Post{})   // Post deleted
+	c.Assert(r.GetPost(5), DeepEquals, Post{})   // Thread deleted
+	c.Assert(r.GetPost(8), DeepEquals, Post{})   // Board no longer accessable
 	c.Assert(r.GetPost(3), DeepEquals, standard) // Valid read
 }
 

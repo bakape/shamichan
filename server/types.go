@@ -70,19 +70,19 @@ type Post struct {
 
 // Image contains a post's image and thumbnail data
 type Image struct {
-	APNG    bool      `json:"apng,omitempty" gorethink:"apng,omitempty"`
-	Audio   bool      `json:"audio,omitempty" gorethink:"audio,omitempty"`
-	Spoiler uint8     `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
-	Length  [3]uint8  `json:"lenght,omitempty" gorethink:"lenght,omitempty"`
-	Dims    [2]uint16 `json:"dims,omitempty" gorethink:"dims,omitempty"`
-	Size    uint      `json:"size,omitempty" gorethink:"size,omitempty"`
-	Mid     string    `json:"mid,omitempty" gorethink:"mid,omitempty"`
-	Thumb   string    `json:"thumb,omitempty" gorethink:"thumb,omitempty"`
-	Src     string    `json:"src,omitempty" gorethink:"src,omitempty"`
-	Ext     string    `json:"ext,omitempty" gorethink:"ext,omitempty"`
-	MD5     string    `json:",omitempty",gorethink:",omitempty"`
-	SHA1    string    `json:",omitempty",gorethink:",omitempty"`
-	Imgnm   string    `json:"imgnm,omitempty" gorethink:"imgnm,omitempty"`
+	APNG    bool     `json:"apng,omitempty" gorethink:"apng,omitempty"`
+	Audio   bool     `json:"audio,omitempty" gorethink:"audio,omitempty"`
+	Spoiler uint8    `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
+	Length  []uint8  `json:"length,omitempty" gorethink:"length,omitempty"`
+	Dims    []uint16 `json:"dims,omitempty" gorethink:"dims,omitempty"`
+	Size    int64    `json:"size,omitempty" gorethink:"size,omitempty"`
+	Mid     string   `json:"mid,omitempty" gorethink:"mid,omitempty"`
+	Thumb   string   `json:"thumb,omitempty" gorethink:"thumb,omitempty"`
+	Src     string   `json:"src,omitempty" gorethink:"src,omitempty"`
+	Ext     string   `json:"ext,omitempty" gorethink:"ext,omitempty"`
+	MD5     string   `json:",omitempty" gorethink:",omitempty"`
+	SHA1    string   `json:",omitempty" gorethink:",omitempty"`
+	Imgnm   string   `json:"imgnm,omitempty" gorethink:"imgnm,omitempty"`
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to

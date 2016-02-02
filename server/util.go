@@ -70,16 +70,6 @@ func canAccessBoard(board string, ident Ident) bool {
 	return isBoard && !ident.Banned
 }
 
-// Confirm thread exists and client has rights to access it's board
-func canAccessThread(id uint64, board string, ident Ident) bool {
-	if !canAccessBoard(board, ident) {
-		return false
-	}
-	var deleted bool
-	db()(getThread(id).Field("deleted").Default(false)).One(&deleted)
-	return !deleted
-}
-
 // Compute a truncated MD5 hash from a buffer
 func hashBuffer(buf []byte) string {
 	hasher := md5.New()
