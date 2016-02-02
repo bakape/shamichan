@@ -22,6 +22,13 @@ var (
 )
 
 func startWebServer() {
+	log.Println("Listening on " + config.HTTP.Addr)
+	log.Fatal(http.ListenAndServe(config.HTTP.Addr, wrapRouter(createRouter())))
+}
+
+// Create the monolithic router for routing HTTP requests. Separated into own
+// function for easier testability.
+func createRouter() *httprouter.Router {
 	router := httprouter.New()
 	router.NotFound = http.HandlerFunc(notFoundHandler)
 	router.PanicHandler = panicHandler
@@ -50,15 +57,19 @@ func startWebServer() {
 	// Image upload
 	router.HandlerFunc("POST", "/upload", NewImageUpload)
 
+	return router
+}
+
+// Wraps the router in additional helper handlers. Seperated for easier
+// testability.
+func wrapRouter(router *httprouter.Router) http.Handler {
 	// Wrap router with extra handlers
 	handler := http.Handler(router)
 	if config.HTTP.TrustProxies { // Infer IP from header, if configured to
 		handler = handlers.ProxyHeaders(router)
 	}
 	handler = handlers.CompressHandler(handler) //GZIP
-
-	log.Println("Listening on " + config.HTTP.Addr)
-	log.Fatal(http.ListenAndServe(config.HTTP.Addr, handler))
+	return handler
 }
 
 // Redirects to frontpage, if set, or the default board

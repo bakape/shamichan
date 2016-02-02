@@ -419,3 +419,40 @@ func (*DB) TestThreadJSON(c *C) {
 	threadJSON("a")(rec, req, httprouter.Params{{Value: "1"}})
 	assertCode(rec, 304, c)
 }
+
+type routeCheck struct {
+	path   string
+	params httprouter.Params
+}
+
+func (*WebServer) TestCreateRouter(c *C) {
+	config = serverConfigs{}
+	config.Boards.Enabled = []string{"a"}
+	r := createRouter()
+	gets := [...]routeCheck{
+		{"/", nil},
+		{"/all/", nil},
+		{"/api/all/", nil},
+		{"/a/", nil},
+		{"/api/a/", nil},
+		{"/a/1", httprouter.Params{{"thread", "1"}}},
+		{"/api/a/1", httprouter.Params{{"thread", "1"}}},
+		{"/api/config", nil},
+		{"/api/post/1", httprouter.Params{{"post", "1"}}},
+		{"/ass/favicon.gif", httprouter.Params{{"filepath", "/favicon.gif"}}},
+		{
+			"/img/src/madotsuki.png",
+			httprouter.Params{{"filepath", "/src/madotsuki.png"}},
+		},
+	}
+	for _, rc := range gets {
+		assertRoute("GET", rc, r, c)
+	}
+	assertRoute("POST", routeCheck{"/upload", nil}, r, c)
+}
+
+func assertRoute(method string, rc routeCheck, r *httprouter.Router, c *C) {
+	handle, params, _ := r.Lookup(method, rc.path)
+	c.Assert(params, DeepEquals, rc.params)
+	c.Assert(handle, NotNil, Commentf("No handler on path '%s'", rc.path))
+}
