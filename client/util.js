@@ -1,99 +1,72 @@
 /*
  Client-side helper functions
  */
+/* @flow */
 
 import {config} from './main'
-import {escape} from '../vendor/underscore'
+import {escape} from 'underscore'
 
-/**
- * Make spoiler tags toggleable on mobile
- * @param {Element}
- */
-export function touchable_spoiler_tag(del) {
-	del.html = '<del onclick="void(0)">'
+// Make spoiler tags toggleable on mobile
+export function touchable_spoiler_tag(del :Element) {
+	del.innerHTML = '<del onclick="void(0)">'
 }
 
-/**
- * Retrieve post number of post element
- * @param {Element} el
- * @returns {int}
- */
-export function getNum(el) {
+// Retrieve post number of post element
+export function getNum(el :Element|null) :number {
 	if (!el) {
 		return 0
 	}
 	return parseInt(el.getAttribute('id').slice(1), 10)
 }
 
-/**
- * Retrieve post number of closest parent post
- * @param {Element} el
- * @returns {int}
- */
-export function getID(el) {
+// Retrieve post number of closest parent post
+export function getID(el :Element|null) :number {
 	if (!el) {
 		return 0
 	}
 	return getNum(el.closest('article, section'))
 }
 
-/**
- * Parse HTML string to node array
- * @param {string} string
- * @returns {Element[]}
- */
-export function parseEls(string) {
+
+// Parse HTML string to node array
+export function parseEls(string :string) :Array<Element> {
 	const el = document.createElement('div')
 	el.innerHTML = string
 	const children = el.childNodes
 	return Array.from(children)
 }
 
-/**
- * Parse HTML string to Element
- * @param {string} string
- * @returns {Element}
- */
-export function parseEl(string) {
+// Parse HTML string to single Element
+export function parseEl(string :string) :Element {
 	const el = document.createElement('div')
 	el.innerHTML = string
 	return el.firstChild
 }
 
-/**
- * Add an event listener that filters targets according to a CSS selector
- * @param {Element} el - Target element
- * @param {string} type - Event type
- * @param {string} selector - CSS selector
- * @param {function} handler - Callback function
- */
-export function listener(el, type, selector, handler) {
-	el.addEventListener(type, function (event) {
+// Add an event listener that filters targets according to a CSS selector
+export function listener(
+	el :Element,
+	type :string,
+	selector :string,
+	handler :EventHandler
+) {
+	el.addEventListener(type, event => {
 		if (event.target.matches(selector)) {
-			handler.call(this, event)
+			handler(event)
 		}
 	})
 }
 
-/**
- * Add event listener to element, that will only be executed once
- * @param {Element} el - Target element
- * @param {string} type	- Event type
- * @param {function} handler - Callback function
- */
-export function once(el, type, handler) {
-	el.addEventListener(type, function (event) {
-		handler.call(this, event)
+// Add event listener to element, that will only be executed once
+export function once(el :Element, type :string, handler :EventHandler) {
+	el.addEventListener(type, event => {
+		handler(event)
 		el.removeEventListener(type, handler)
 	})
 }
 
-/**
- * Return width of element with padding and margin
- * @param {Element} el
- * @returns {int}
- */
-export function outerWidth(el) {
+// Return width of element with padding and margin
+export function outerWidth(el :Element) :number {
 	const style =  getComputedStyle(el),
 		props = ['marginLeft', 'marginRight', 'paddingLeft','paddingRight']
 	let width = 0
@@ -103,181 +76,117 @@ export function outerWidth(el) {
 	return width
 }
 
-/**
- * Confirms email is saging
- * @param {string} email
- * @returns {bool}
- */
-export function isSage(email) {
-	return email && email.trim() === 'sage'
+
+// Confirms email is saging
+export function isSage(email :string|void) :boolean {
+	if (email) {
+		return email.trim() === 'sage'
+	}
+	return false
 }
 
 // TODO: Refactor server time syncronisation
-let cachedOffset;
-export function serverTime() {
-	const d = Date.now();
-	if (imports.isNode)
-		return d;
+// let cachedOffset;
+// export function serverTime() :number {
+// 	const d = Date.now();
+// 	if (imports.isNode)
+// 		return d;
+//
+// 	// The offset is intialised as 0, so there is something to return, until
+// 	// we get a propper number from the server.
+// 	if (!cachedOffset)
+// 		cachedOffset = imports.main.request('time:offset');
+// 	return d + cachedOffset;
+// }
 
-	// The offset is intialised as 0, so there is something to return, until
-	// we get a propper number from the server.
-	if (!cachedOffset)
-		cachedOffset = imports.main.request('time:offset');
-	return d + cachedOffset;
-}
-
-export function readable_dice(bit, dice) {
-	let inner;
-	switch (bit) {
-		case '#flip':
-			inner = (dice[2] == 2).toString();
-			break;
-		case '#8ball':
-			inner = imports.hotConfig.EIGHT_BALL[dice[2] - 1];
-			break;
-		case '#pyu':
-		case '#pcount':
-		case '#q':
-			inner = dice[0];
-			break;
+// Pick the next spoiler from one of the available spoilers
+export function pick_spoiler(metaIndex :number) :{index :number, next :number} {
+	const imgs = config.SPOILER_IMAGES,
+		n = imgs.length
+	let i
+	if (metaIndex < 0) {
+		i = Math.floor(Math.random() * n)
+	} else {
+		i = metaIndex % n
 	}
-	if (inner !== undefined)
-		return escape(`${bit} (${inner})`);
-	if (/^#sw/.test(bit))
-		return readableSyncwatch(dice[0]);
-	return readableRegularDice(bit, dice);
-}
-
-function readableSyncwatch(dice) {
-	dice.class = 'embed';
-	return parseHTML
-		`<syncwatch ${dice}>
-			syncwatch
-		</syncwatch>`;
-}
-
-function readableRegularDice(bit, dice) {
-	const [max, bias, ...rolls] = dice
-	bit += ' (';
-	const eq = rolls.length > 1 || bias;
-	if (eq)
-		bit += rolls.join(', ');
-	if (bias)
-		bit += (bias < 0 ? ' - ' + (-bias) : ' + ' + bias);
-	let sum = bias;
-	for (let roll of rolls) {
-		sum += roll;
-	}
-	return bit + (eq ? ' = ' : '') + sum + ')';
-}
-
-export function pick_spoiler(metaIndex) {
-	const imgs = imports.config.SPOILER_IMAGES,
-		n = imgs.length;
-	let i;
-	if (metaIndex < 0)
-		i = Math.floor(Math.random() * n);
-	else
-		i = metaIndex % n;
 	return {
 		index: imgs[i],
 		next: (i + 1) % n
-	};
+	}
 }
 
 export const thumbStyles = ['small', 'sharp', 'hide']
 
-export function pad(n) {
-	return (n < 10 ? '0' : '') + n;
+// Pad an integer with a leading zero, if below 10
+export function pad(n :number) :string {
+	return (n < 10 ? '0' : '') + n
 }
 
 // Various UI-related links wrapped in []
-export function action_link_html(href, name, id, cls) {
-	return parseHTML
-		`<span class="act">
-			<a href="${href}"
-				${id && ` id="${id}"`}
-				${cls && ` class="${cls}"`}
-			>
-				${name}
-			</a>
-		</span>`;
-}
+// export function action_link_html(href , name, id, cls) {
+// 	return parseHTML
+// 		`<span class="act">
+// 			<a href="${href}"
+// 				${id && ` id="${id}"`}
+// 				${cls && ` class="${cls}"`}
+// 			>
+// 				${name}
+// 			</a>
+// 		</span>`;
+// }
 
-/**
- * Confirm last N posts to view setting matches bounds
- * @param {int} n
- * @returns {bool}
- */
-export function resonableLastN(n) {
+// Confirm last N posts to view setting matches bounds
+export function resonableLastN(n :number) :boolean {
 	return Number.isInteger(n) && n <= 500
 }
 
-export function parse_name(name) {
-	var tripcode = '', secure = '';
-	var hash = name.indexOf('#');
-	if (hash >= 0) {
-		tripcode = name.substr(hash + 1);
-		name = name.substr(0, hash);
-		hash = tripcode.indexOf('#');
-		if (hash >= 0) {
-			secure = escape(tripcode.substr(hash + 1));
-			tripcode = tripcode.substr(0, hash);
-		}
-		tripcode = escape(tripcode);
-	}
-	name = name.trim().replace(imports.hotConfig.EXCLUDE_REGEXP, '');
-	return [
-		name.substr(0, 100), tripcode.substr(0, 128),
-		secure.substr(0, 128)
-	];
-}
+// export function parse_name(name) {
+// 	var tripcode = '', secure = '';
+// 	var hash = name.indexOf('#');
+// 	if (hash >= 0) {
+// 		tripcode = name.substr(hash + 1);
+// 		name = name.substr(0, hash);
+// 		hash = tripcode.indexOf('#');
+// 		if (hash >= 0) {
+// 			secure = escape(tripcode.substr(hash + 1));
+// 			tripcode = tripcode.substr(0, hash);
+// 		}
+// 		tripcode = escape(tripcode);
+// 	}
+// 	name = name.trim().replace(imports.hotConfig.EXCLUDE_REGEXP, '');
+// 	return [
+// 		name.substr(0, 100), tripcode.substr(0, 128),
+// 		secure.substr(0, 128)
+// 	];
+// }
 
-/**
- * Generate a random alphannumeric string of lower and upper case hexadecimal
- * characters
- * @param {int} len	- String length
- * @returns {string}
- */
-export function randomID(len) {
+// Generate a random alphannumeric string of lower and upper case hexadecimal
+// characters
+export function randomID(len :number) :string {
 	let id = ''
 	for (let i = 0; i < len; i++) {
 		let char = (Math.random() * 36).toString(36)[0]
-		if (Math.random() < 0.5)
+		if (Math.random() < 0.5) {
 			char = char.toUpperCase()
+		}
 		id += char
 	}
 	return id
 }
 
-/**
- * Template string tag function for HTML. Strips indentation and trailing
- * newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
- * @param {*}
- * @returns {string}
- */
-export function parseHTML(callSite, ...args) {
-	// if arguments.length === 1
-	if (typeof callSite === 'string') {
-		return formatHTML(callSite)
-	}
-	if (typeof callSite === 'function') {
-		return (...args) => formatHTML(callSite(...args))
-	}
-
+// Template string tag function for HTML. Strips indentation and trailing
+// newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
+export function parseHTML(
+	callSite :Array<string>,
+	...args :Array<string>
+) :string {
 	let output = callSite[0]
 	for (let i = 1; i <= args.length; i++) {
 		output += args[i - 1] + callSite[i]
 	}
 
-	return formatHTML(output)
-}
-
-/**
- * Strip indentation and remove empty lines from HTML string
- */
-function formatHTML(str) {
-	return str.replace(/\s*\n\s*/g, '')
+	// Strip indentation and remove empty lines from HTML string
+	return output.replace(/\s*\n\s*/g, '')
 }
 
 /**
@@ -285,25 +194,24 @@ function formatHTML(str) {
  * @param {Object} attrs
  * @returns {string}
  */
-export function parseAttributes(attrs) {
+export function parseAttributes(
+	attrs :{[key :string] :string|boolean}
+) :string {
 	let html = ''
 	for (let key in attrs) {
 		html += ' '
 		const val = attrs[key]
-		if (val === true)
+		if (val === true) {
 			html += key
-		else if (val || val === 0)
+		} else if (val || val === 0) {
 			html += `${key}="${val}"`
+		}
 	}
 	return html
 }
 
-/**
- * Makes a ', ' seperated list out of on array of strings
- * @param {string[]} items
- * @returns {string}
- */
-export function commaList(items) {
+// Makes a ', ' seperated list out of on array of strings
+export function commaList(items :Array<string>) :string {
 	let html = ''
 	for (let item of items) {
 		if (html) {
@@ -314,13 +222,9 @@ export function commaList(items) {
 	return html
 }
 
-/**
- * Acertains client has the proper authorisation to perfrom task. This is only
- * for rendering. The same validation is performed server-side.
- * @param {string} action - Privilidged action to check permission for
- * @returns {bool}
- */
-export function checkAuth(action) {
+// Acertains client has the proper authorisation to perfrom task. This is only
+// for rendering. The same validation is performed server-side.
+export function checkAuth(action :string) :boolean {
 	const cls = config.staff.classes[main.ident && main.ident.auth]
 	return cls && !!cls.rights[action]
 }
