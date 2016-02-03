@@ -1,4 +1,4 @@
-import {extend} from '../../vendor/underscore'
+import {extend} from 'underscore'
 import options from '../options'
 import opts from './opts'
 
@@ -6,14 +6,9 @@ import opts from './opts'
 const optionModels = {}
 export default optionModels
 
-/**
- * Coontroler for each individual option
- */
+// Controler for each individual option
 class OptionModel {
-	/**
-	 * Create new option model from template model
-	 * @param {Object} model
-	 */
+	// Create new option model from template model
 	constructor(model) {
 		// Condition for loading option. Optional.
 		if (model.load !== undefined && !model.load) {
@@ -36,19 +31,12 @@ class OptionModel {
 		optionModels[this.id] = this
 	}
 
-	/**
-	 * Read value from localStorage
-	 * @returns {string}
-	 */
+	// Read value from localStorage
 	read() {
-		return localStorage.getItem(this.id)
+		return localStorage[this.id] || ""
 	}
 
-	/**
-	 * Retrieve option value from storage and parse result. If none, return
-	 * default.
-	 * @returns {string|bool|int}
-	 */
+	// Retrieve option value from storage and parse result. If none, return
 	get() {
 		const stored = this.read()
 		if (!stored) {
@@ -68,40 +56,27 @@ class OptionModel {
 		}
 	}
 
-	/**
-	 * Handler to be executed on field change in central options storage model
-	 * @param {*} val
-	 */
+	// Handler to be executed on field change in central options storage model
 	onChange(val) {
 		this.execute(val)
 		this.set(val)
 	}
 
-	/**
-	 * Execute handler function, if any
-	 * @param {*} val
-	 */
+	// Execute handler function, if any
 	execute(val) {
 		if (this.exec) {
 			this.exec(val)
 		}
 	}
 
-	/**
-	 * Write value to localStorage, if needed
-	 * @param {*} val
-	 */
+	// Write value to localStorage, if needed
 	set(val) {
 		if (val !== this.default || this.read()) {
-			localStorage.setItem(this.id, val)
+			localStorage.setItem(this.id, val.toString())
 		}
 	}
 
-	/**
-	 * Perform value validation, if any. Othervise return true.
-	 * @param {*} val
-	 * @returns {bool}
-	 */
+	// Perform value validation, if any. Othervise return true.
 	validate(val) {
 		if (this.validation) {
 			return this.validation(val)

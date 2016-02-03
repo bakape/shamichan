@@ -1,16 +1,12 @@
-/* @flow */
 import Model from './model'
 import {extend} from 'underscore'
 
 // Generic view class, that all over view classes extend
 export default class View {
-	model :Model;
-	el :Element;
-
 	// Creates a new View and binds it to the target model. If none, creates a
 	// blank model. If no element suplied, creates a new one from tags. Sets
 	// some other default variables.
-	constructor(args :Object) {
+	constructor(args) {
 		extend(this, args)
 		if (!this.model) {
 			this.model = new Model()
@@ -39,9 +35,9 @@ export default class View {
 	}
 
 	// Add selector-specific event listeners to the view
-	on(type :string, selector :string, fn :EventHandler) {
+	on(type, selector, fn) {
 		this.el.addEventListener(type, event => {
-			if (event.target.matches(selector)) {
+			if (event.target.matches && event.target.matches(selector)) {
 				fn(event)
 			}
 		})
@@ -49,21 +45,21 @@ export default class View {
 
 	// Shorthand for adding multiple click event listeners as an object.
 	// We use those the most, so nice to have.
-	onClick(events :{[key :string]: EventHandler}) {
+	onClick(events) {
 		for (let selector in events) {
 			this.on('click', selector, events[selector])
 		}
 	}
 
 	// Add event listener to view's element, whithout filtering by selector
-	onAll(type :string, fn :EventHandler) {
+	onAll(type, fn) {
 		this.el.addEventListener(type, fn)
 	}
 
 	// Add selector-specific event listener, that will execute only once
-	once(type :string, selector :string, fn :EventHandler) {
+	once(type, selector, fn) {
 		this.el.addEventListener(type, event => {
-			if (event.target.matches(selector)) {
+			if (event.target.matches && event.target.matches(selector)) {
 				fn(event)
 				this.el.removeEventListener(type, fn)
 			}
@@ -71,7 +67,7 @@ export default class View {
 	}
 
 	// Add event listener, that will execute only once
-	onceAll(type :string, fn :EventHandler) {
+	onceAll(type, fn) {
 		this.el.addEventListener(type, event => {
 			fn(event)
 			this.el.removeEventListener(type, fn)

@@ -2,7 +2,6 @@
  * Client entry point.
  * NOTE: All modules use strict mode through the Babel transpiler
  */
-/* @flow */
 
 import * as dom4 from '../vendor/dom4' // DOM level 4 polyfill
 import * as Cookie from '../vendor/js-cookie'

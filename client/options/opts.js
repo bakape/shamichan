@@ -1,4 +1,4 @@
-import * as Cookie from '../../vendor/js-cookie'
+import * as Cookie from 'js-cookie'
 import {thumbStyles, resonableLastN, parseEl} from '../util'
 import {config, isMobile} from '../state'
 import {langApplied} from 'lang'

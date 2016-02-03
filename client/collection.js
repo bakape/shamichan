@@ -1,14 +1,10 @@
-/* @flow */
 import Model from './model'
 
 // Holds a collection of models
 export default class Collection {
-	// Flow can't seem to make sense of a map of imported types.
-	// Thus 'any' type.
-	models :any = {};
-
 	// Creates a new Collection instance
-	constructor(models :Array<Model>) {
+	constructor(models) {
+		this.models = {}
 		if (models) {
 			for (let model of models) {
 				this.add(model)
@@ -17,13 +13,13 @@ export default class Collection {
 	}
 
 	// Add model to collection
-	add(model :Model) {
+	add(model) {
 		this.models[model.id] = model
 		model.collection = this
 	}
 
 	// Remove model from the collection
-	remove(model :Model) {
+	remove(model) {
 		delete this.models[model.id]
 		delete model.collection
 	}
@@ -36,12 +32,8 @@ export default class Collection {
 		this.models = {}
 	}
 
-	/**
-	 * Runs the suplied function for each model in the collection
-	 * @param {string} method - Method to be called
-	 * @param {...*=} args - Arguments to pass
-	 */
-	forEach(fn :(model :Model) => void) {
+	// Runs the suplied function for each model in the collection
+	forEach(fn) {
 		for (let id in this.models) {
 			fn(this.models[id])
 		}

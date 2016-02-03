@@ -1,40 +1,30 @@
-/* @flow */
 import {extend} from 'underscore'
 import View from './view'
 import Collection from './collection'
 
-declare type hook = (val :mixed) => void
-declare type hookMap = {[key :string]: hook | Array<hook>}
-
 // Generic model class, that all other model classes extend
 export default class Model {
-	attrs :Object = {};
-	views :Array<View> = [];
-	changeHooks :hookMap = {};
-	id :string;
-	collection: Collection;
-
-	constructor(attrs :?Object) {
-		if (attrs) {
-			this.attrs = attrs
-		}
+	constructor(attrs = {}) {
+		this.attrs = attrs
+		this.views = []
+		this.changeHooks = {}
 	}
 
 	// Retrieve a strored value of specific key from the model's attribute
 	// object
-	get(key :string) :mixed {
+	get(key) {
 		return this.attrs[key]
 	}
 
 	// Set a key to a target value
-	set(key :string, val :mixed) {
+	set(key, val) {
 		this.attrs[key] = val
 		this.execChangeHooks(key)
 	}
 
 	// Extend the model attribute hash, with the suplied object. Shorthand, for
 	// setting multiple fields simultaniously.
-	setAttrs(attrs :Object) {
+	setAttrs(attrs) {
 		extend(this.attrs, attrs)
 		for (let key in attrs) {
 			this.execChangeHooks(key)
@@ -43,7 +33,7 @@ export default class Model {
 
 	// Append value to an array strored at the given key. If the array does not
 	// exist, it is created.
-	append(key :string, val :mixed) {
+	append(key, val) {
 		if (this.attrs[key]) {
 			this.attrs[key].push(val)
 		} else {
@@ -54,7 +44,7 @@ export default class Model {
 
 	// Extend an object at target key. If key does not exist, simply assign the
 	// object to the key.
-	extend(key :string, object :Object) {
+	extend(key, object) {
 		if (this.attrs[key]) {
 			extend(this.attrs[key], object)
 		} else {
@@ -65,13 +55,13 @@ export default class Model {
 
 	// Attach a view to a model. Simply adds the view to the model's view array.
 	// Each model's method will then provide individual logic for calling the
-	attach(view :View) {
+	attach(view) {
 		this.views.push(view)
 	}
 
 	// Detach a view from the model. Removes reference, so model and/or view
 	// can be garbage collected.
-	detach(view :View) {
+	detach(view) {
 		this.views.splice(this.views.indexOf(view), 1)
 	}
 
@@ -88,7 +78,7 @@ export default class Model {
 
 	// Add a function to be executed, when .set(), .setAttrs(), .append() or
 	// .extend() modify a key's value.
-	onChange(key :string, func :hook) {
+	onChange(key, func) {
 		if (this.changeHooks[key]) {
 			this.changeHooks[key].push(func)
 		} else {
@@ -98,7 +88,7 @@ export default class Model {
 
 	// Execute handlers hooked into key change, if any
 	// @param {string} key
-	execChangeHooks(key :string) {
+	execChangeHooks(key) {
 		if (!this.changeHooks[key]) {
 			return
 		}

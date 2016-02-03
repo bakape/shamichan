@@ -57,7 +57,8 @@ Selects and loads the client files
 		// Alias the appropriate language pack to "lang"
 		map: {
 			lang: 'lang/' + (localStorage.lang || config.lang.default),
-			underscore: 'vendor/underscore'
+			underscore: 'vendor/underscore',
+			'js-cookie': 'vendor/js-cookie'
 		},
 		meta: meta
 	})

@@ -1,25 +1,20 @@
-/* @flow */
 import {isEmpty, size} from 'underscore'
 
 // All instances of the Memory class
 const memories = {}
 
-/**
- * Listen for storage events and update the stored value for exising memory
- * instances, if the key changes. These only fire, if the write happens in
- * another tab of the same origin.
- */
+// Listen for storage events and update the stored value for exising memory
+// instances, if the key changes. These only fire, if the write happens in
+// another tab of the same origin.
 window.addEventListener('storage', ({key, newValue}) => {
 	if (key in memories) {
 		memories[key].cached = parseSet(newValue)
 	}
 })
 
-type intmap = {[key: string]: number}
-
 // Parse a stringified set
-function parseSet(set :string) :intmap {
-	let val :intmap = {}
+function parseSet(set) {
+	let val = {}
 	try {
 		val = JSON.parse(set)
 	}
@@ -29,11 +24,7 @@ function parseSet(set :string) :intmap {
 
 // Self-expiring localStorage set manager
 export default class Memory {
-	key: string;
-	expiry: number;
-	cached: {[key: string]: number};
-
-	constructor(key :string, expiry :number) {
+	constructor(key, expiry) {
 		this.key = key
 		memories[key] = this
 		this.expiry = expiry
@@ -46,7 +37,7 @@ export default class Memory {
 	}
 
 	// Return current time in seconds
-	now() :number {
+	now() {
 		return Math.floor(Date.now() / 1000)
 	}
 
@@ -56,7 +47,7 @@ export default class Memory {
 	}
 
 	// Read and parse the stringified set from localStorage
-	read() :intmap {
+	read() {
 		const key = localStorage.getItem(this.key)
 		if (!key) {
 			return {}
@@ -65,12 +56,12 @@ export default class Memory {
 	}
 
 	// Return, if the given key exists in the set
-	has(key :string) :boolean {
+	has(key) {
 		return !!this.cached[key]
 	}
 
 	// Replace the existing set, if any, with the suplied one
-	writeAll(set :intmap) {
+	writeAll(set) {
 		if (isEmpty(set)) {
 			return this.purgeAll()
 		}
@@ -78,7 +69,7 @@ export default class Memory {
 	}
 
 	// Write a single key to the stored set
-	write(key :string) :number {
+	write(key) {
 		// When performing writes, best fetch everything, rather than rely on
 		// events for browser tab cache synchronisation. Browser backround tab
 		// optimisation might fuck us over.
@@ -89,7 +80,7 @@ export default class Memory {
 	}
 
 	// Return the current size of the stored Set
-	size() :number {
+	size() {
 		return size(this.cached)
 	}
 

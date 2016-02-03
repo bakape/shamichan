@@ -1,18 +1,17 @@
 /*
  Client-side helper functions
  */
-/* @flow */
 
 import {config} from './main'
 import {escape} from 'underscore'
 
 // Make spoiler tags toggleable on mobile
-export function touchable_spoiler_tag(del :Element) {
+export function touchable_spoiler_tag(del) {
 	del.innerHTML = '<del onclick="void(0)">'
 }
 
 // Retrieve post number of post element
-export function getNum(el :Element|null) :number {
+export function getNum(el) {
 	if (!el) {
 		return 0
 	}
@@ -20,7 +19,7 @@ export function getNum(el :Element|null) :number {
 }
 
 // Retrieve post number of closest parent post
-export function getID(el :Element|null) :number {
+export function getID(el) {
 	if (!el) {
 		return 0
 	}
@@ -29,7 +28,7 @@ export function getID(el :Element|null) :number {
 
 
 // Parse HTML string to node array
-export function parseEls(string :string) :Array<Element> {
+export function parseEls(string) {
 	const el = document.createElement('div')
 	el.innerHTML = string
 	const children = el.childNodes
@@ -37,19 +36,14 @@ export function parseEls(string :string) :Array<Element> {
 }
 
 // Parse HTML string to single Element
-export function parseEl(string :string) :Element {
+export function parseEl(string) {
 	const el = document.createElement('div')
 	el.innerHTML = string
 	return el.firstChild
 }
 
 // Add an event listener that filters targets according to a CSS selector
-export function listener(
-	el :Element,
-	type :string,
-	selector :string,
-	handler :EventHandler
-) {
+export function listener(el, type, selector, handler) {
 	el.addEventListener(type, event => {
 		if (event.target.matches(selector)) {
 			handler(event)
@@ -58,7 +52,7 @@ export function listener(
 }
 
 // Add event listener to element, that will only be executed once
-export function once(el :Element, type :string, handler :EventHandler) {
+export function once(el, type, handler) {
 	el.addEventListener(type, event => {
 		handler(event)
 		el.removeEventListener(type, handler)
@@ -66,7 +60,7 @@ export function once(el :Element, type :string, handler :EventHandler) {
 }
 
 // Return width of element with padding and margin
-export function outerWidth(el :Element) :number {
+export function outerWidth(el) {
 	const style =  getComputedStyle(el),
 		props = ['marginLeft', 'marginRight', 'paddingLeft','paddingRight']
 	let width = 0
@@ -78,7 +72,7 @@ export function outerWidth(el :Element) :number {
 
 
 // Confirms email is saging
-export function isSage(email :string|void) :boolean {
+export function isSage(email) {
 	if (email) {
 		return email.trim() === 'sage'
 	}
@@ -100,7 +94,7 @@ export function isSage(email :string|void) :boolean {
 // }
 
 // Pick the next spoiler from one of the available spoilers
-export function pick_spoiler(metaIndex :number) :{index :number, next :number} {
+export function pick_spoiler(metaIndex) {
 	const imgs = config.SPOILER_IMAGES,
 		n = imgs.length
 	let i
@@ -118,7 +112,7 @@ export function pick_spoiler(metaIndex :number) :{index :number, next :number} {
 export const thumbStyles = ['small', 'sharp', 'hide']
 
 // Pad an integer with a leading zero, if below 10
-export function pad(n :number) :string {
+export function pad(n) {
 	return (n < 10 ? '0' : '') + n
 }
 
@@ -136,7 +130,7 @@ export function pad(n :number) :string {
 // }
 
 // Confirm last N posts to view setting matches bounds
-export function resonableLastN(n :number) :boolean {
+export function resonableLastN(n) {
 	return Number.isInteger(n) && n <= 500
 }
 
@@ -162,7 +156,7 @@ export function resonableLastN(n :number) :boolean {
 
 // Generate a random alphannumeric string of lower and upper case hexadecimal
 // characters
-export function randomID(len :number) :string {
+export function randomID(len) {
 	let id = ''
 	for (let i = 0; i < len; i++) {
 		let char = (Math.random() * 36).toString(36)[0]
@@ -176,10 +170,7 @@ export function randomID(len :number) :string {
 
 // Template string tag function for HTML. Strips indentation and trailing
 // newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
-export function parseHTML(
-	callSite :Array<string>,
-	...args :Array<string>
-) :string {
+export function parseHTML(callSite, ...args) {
 	let output = callSite[0]
 	for (let i = 1; i <= args.length; i++) {
 		output += args[i - 1] + callSite[i]
@@ -189,14 +180,9 @@ export function parseHTML(
 	return output.replace(/\s*\n\s*/g, '')
 }
 
-/**
- * Generate an HTML element attribute list
- * @param {Object} attrs
- * @returns {string}
- */
-export function parseAttributes(
-	attrs :{[key :string] :string|boolean}
-) :string {
+
+// Generate an HTML element attribute list
+export function parseAttributes(attrs) {
 	let html = ''
 	for (let key in attrs) {
 		html += ' '
@@ -211,7 +197,7 @@ export function parseAttributes(
 }
 
 // Makes a ', ' seperated list out of on array of strings
-export function commaList(items :Array<string>) :string {
+export function commaList(items) {
 	let html = ''
 	for (let item of items) {
 		if (html) {
@@ -224,7 +210,7 @@ export function commaList(items :Array<string>) :string {
 
 // Acertains client has the proper authorisation to perfrom task. This is only
 // for rendering. The same validation is performed server-side.
-export function checkAuth(action :string) :boolean {
+export function checkAuth(action) {
 	const cls = config.staff.classes[main.ident && main.ident.auth]
 	return cls && !!cls.rights[action]
 }
