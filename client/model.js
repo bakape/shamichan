@@ -1,58 +1,46 @@
-import {extend} from '../vendor/underscore'
+/* @flow */
+import {extend} from 'underscore'
+import View from './view'
 
-/**
- * Generic model class, that all other model classes extend
- */
+type hook = (val :mixed) => void
+type hookMap = {[key :string]: hook | Array<hook>}
+
+// Generic model class, that all other model classes extend
 export default class Model {
-	/**
-	 * Constructs a new model object with the specified attribute object
-	 * @param {Object} attrs
-	 */
-	constructor(attrs = {}) {
-		this.attrs = attrs
-		this.views = []
-		this.changeHooks = {}
+	attrs :Object = {};
+	views :Array<View> = [];
+	changeHooks :hookMap = {};
+
+	constructor(attrs :?Object) {
+		if (attrs) {
+			this.attrs = attrs
+		}
 	}
 
-	/**
-	 * Retrieve a strored value of specific key from the model's attribute
-	 * object
-	 * @param {string} key
-	 * @returns {*}
-	 */
-	get(key) {
+	// Retrieve a strored value of specific key from the model's attribute
+	// object
+	get(key :string) :mixed {
 		return this.attrs[key]
 	}
 
-	/**
-	 * Set a key to a target value
-	 * @param {string} key
-	 * @param {*} val
-	 */
-	set(key, val) {
+	// Set a key to a target value
+	set(key :string, val :mixed) {
 		this.attrs[key] = val
 		this.execChangeHooks(key)
 	}
 
-	/**
-	 * Extend the model attribute hash, with the suplied object. Shorthand, for
-	 * setting multiple fields simultaniously.
-	 * @param {Object} attrs
-	 */
-	setAttrs(attrs) {
+	// Extend the model attribute hash, with the suplied object. Shorthand, for
+	// setting multiple fields simultaniously.
+	setAttrs(attrs :Object) {
 		extend(this.attrs, attrs)
 		for (let key in attrs) {
 			this.execChangeHooks(key)
 		}
 	}
 
-	/**
-	 * Append value to an array strored at the given key. If the array does not
-	 * exist, it is created.
-	 * @param {string} key
-	 * @param {*} val
-	 */
-	append(key, val) {
+	// Append value to an array strored at the given key. If the array does not
+	// exist, it is created.
+	append(key :string, val :mixed) {
 		if (this.attrs[key]) {
 			this.attrs[key].push(val)
 		} else {
@@ -61,13 +49,9 @@ export default class Model {
 		this.execChangeHooks(key)
 	}
 
-	/**
-	 * Extend an object at target key. If key does not exist, simply assign the
-	 * object to the key.
-	 * @param {string} key
-	 * @param {Object} object
-	 */
-	extend(key, object) {
+	// Extend an object at target key. If key does not exist, simply assign the
+	// object to the key.
+	extend(key :string, object :Object) {
 		if (this.attrs[key]) {
 			extend(this.attrs[key], object)
 		} else {
@@ -76,28 +60,19 @@ export default class Model {
 		this.execChangeHooks(key)
 	}
 
-	/**
-	 * Attach a view to a model. Simply adds the view to the model's view array.
-	 * Each model's method will then provide individual logic for calling the
-	 * attached views' methods.
-	 * @param {View} view
-	 */
-	attach(view) {
+	// Attach a view to a model. Simply adds the view to the model's view array.
+	// Each model's method will then provide individual logic for calling the
+	attach(view :View) {
 		this.views.push(view)
 	}
 
-	/**
-	 * Detach a view from the model. Removes reference, so model and/or view
-	 * can be garbage collected.
-	 * @param {View} view
-	 */
-	detach(view) {
+	// Detach a view from the model. Removes reference, so model and/or view
+	// can be garbage collected.
+	detach(view :View) {
 		this.views.splice(this.views.indexOf(view), 1)
 	}
 
-	/**
-	 * Remove the model from its collection, if any, and remove all its views
-	 */
+ 	// Remove the model from its collection, if any, and remove all its views
 	remove() {
 		if (this.collection) {
 			this.collection.remove(this)
@@ -107,13 +82,10 @@ export default class Model {
 		}
 	}
 
-	/**
-	 * Add a function to be executed, when .set(), .setAttrs(), .append() or
-	 * .extend() modify a key's value.
-	 * @param {string} key
-	 * @param {function} func
-	 */
-	onChange(key, func) {
+
+ 	// Add a function to be executed, when .set(), .setAttrs(), .append() or
+	// .extend() modify a key's value.
+	onChange(key :string, func :hook) {
 		if (this.changeHooks[key]) {
 			this.changeHooks[key].push(func)
 		} else {
@@ -121,11 +93,9 @@ export default class Model {
 		}
 	}
 
-	/**
-	 * Execute handlers hooked into key change, if any
-	 * @param {string} key
-	 */
-	execChangeHooks(key) {
+	// Execute handlers hooked into key change, if any
+	// @param {string} key
+	execChangeHooks(key :string) {
 		if (!this.changeHooks[key]) {
 			return
 		}

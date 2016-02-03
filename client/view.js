@@ -1,17 +1,29 @@
+/* @flow */
 import Model from './model'
-import {extend} from '../vendor/underscore'
+import {extend} from 'underscore'
 
-/**
- * Generic view class, that all over view classes extend
- */
+declare class Event {
+	target :Element;
+}
+
+type EventHandler = (event :Event) => void
+
+declare class Element {
+	addEventListener(type :string, handler :EventHandler) :void;
+	removeEventListener(type :string, handler :EventHandler) :void;
+	matches(selector :string) :void;
+	remove() :void;
+}
+
+// Generic view class, that all over view classes extend
 export default class View {
-	/**
-	 * Creates a new View and binds it to the target model. If none, creates a
-	 * blank model. If no element suplied, creates a new one from tags. Sets
-	 * some other default variables.
-	 * @param {Object} args - Attributes to attach to the View instance
-	 */
-	constructor(args) {
+	model :Model;
+	el :Element;
+
+	// Creates a new View and binds it to the target model. If none, creates a
+	// blank model. If no element suplied, creates a new one from tags. Sets
+	// some other default variables.
+	constructor(args :Object) {
 		extend(this, args)
 		if (!this.model) {
 			this.model = new Model()
@@ -24,81 +36,58 @@ export default class View {
 
 			// Set element attributes, if any
 			for (let key of ['id', 'class']) {
-				if (key in this) {
-					el.setAttribute(key, this[key])
+				if (key in args) {
+					el.setAttribute(key, args[key])
 				}
 			}
 		}
 	}
 
-	/**
-	 * Remove the element from the DOM and detach from its model, allowing the
-	 * View instance to be garbage collected.
-	 */
+	// Remove the element from the DOM and detach from its model, allowing the
+	// View instance to be garbage collected.
 	remove() {
 		this.el.remove()
 		this.model.detach(this)
 		delete this.model
 	}
 
-	/**
-	 * Add selector-specific event listeners to the view
-	 * @param {string} type - DOM event type
-	 * @param {string} selector - Selector to match the event.target against
-	 * @param {string} method - Class method for handling the event
-	 */
-	on(type, selector, method) {
+	// Add selector-specific event listeners to the view
+	on(type :string, selector :string, fn :EventHandler) {
 		this.el.addEventListener(type, event => {
 			if (event.target.matches(selector)) {
-				this[method](event)
+				fn(event)
 			}
 		})
 	}
 
-	/**
-	 * Shorthand for adding multiple click event listeners as an object.
-	 * We use those the most, so nice to have.
-	 * @param {Object} events - Map of selectors to handlers
-	 */
-	onClick(events) {
+	// Shorthand for adding multiple click event listeners as an object.
+	// We use those the most, so nice to have.
+	onClick(events :{[key :string]: EventHandler}) {
 		for (let selector in events) {
 			this.on('click', selector, events[selector])
 		}
 	}
 
-	/**
-	 * Add event listener to view's element, whithout filtering by selector
-	 * @param {string} type - DOM event type
-	 * @param {string} method - Class method for handling the event
-	 */
-	onAll(type, method) {
-		this.el.addEventListener(type, event => this[method](event))
+	// Add event listener to view's element, whithout filtering by selector
+	onAll(type :string, fn :EventHandler) {
+		this.el.addEventListener(type, fn)
 	}
 
-	/**
-	 * Add selector-specific event listener, that will execute only once
-	 * @param {string} type - DOM event type
-	 * @param {string} selector - Selector to match the event.target against
-	 * @param {string} method - Class method for handling the event
-	 */
-	once(type, selector, method) {
+	// Add selector-specific event listener, that will execute only once
+	once(type :string, selector :string, fn :EventHandler) {
 		this.el.addEventListener(type, event => {
 			if (event.target.matches(selector)) {
-				this[method](event)
-				this.el.removeEventListener(type, this[method])
+				fn(event)
+				this.el.removeEventListener(type, fn)
 			}
 		})
 	}
 
-	/**
-	 * Add event listener, that will execute only once
-	 * @param {string} type - DOM event type
-	 * @param {string} method - Class method for handling the event
-	 */
-	onceAll(type, method) {
+	// Add event listener, that will execute only once
+	onceAll(type :string, fn :EventHandler) {
 		this.el.addEventListener(type, event => {
-			this[method](event)
-			this.el.removeEventListener(type, this[method])
+			fn(event)
+			this.el.removeEventListener(type, fn)
 		})
 	}
 }
