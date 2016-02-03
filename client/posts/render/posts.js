@@ -1,19 +1,10 @@
-/**
- * Posts rendering module
- */
-
 import {parseHTML} from '../../util'
 import {renderHeader} from './header'
 import {renderImage} from './image'
 import {renderBanned, renderBacklinks} from './etc'
 import {renderBody} from './body'
 
-/**
- * Render the OP
- * @param {Post} data - Post model
- * @param {string=} cls - Class to assign to post
- * @returns {string}
- */
+// Render the OP
 export function renderSection(data, cls = '') {
 	if (data.locked) {
 		cls += ' locked'
@@ -21,7 +12,7 @@ export function renderSection(data, cls = '') {
 	if (data.editing) {
 		cls += ' editing'
 	}
-	data.image.large = true // Larger thumbnails
+	data.largeThumb = true // Larger thumbnails
 
 	return parseHTML
 		`<section id="p${data.num}" class="${cls}">
@@ -32,11 +23,7 @@ export function renderSection(data, cls = '') {
 		</section>`
 }
 
-/**
- * Render a reply post
- * @param {Post} data
- * @returns {string}
- */
+// Render a reply post
 export function renderArticle(data) {
 	let cls = 'glass'
 	if (data.editing) {
@@ -49,11 +36,11 @@ export function renderArticle(data) {
 }
 
 function renderPost(data) {
-	const {image, mod, body, backlinks, banned} = data
+	const {mod, body, backlinks, banned} = data
 
 	return parseHTML
 		`${renderHeader(data)}
-		${renderImage(image)}
+		${renderImage(data)}
 		<div class="container">
 			${mod ? renderModInfo(mod) : ''}
 			<blockquote>

@@ -1,6 +1,6 @@
-/**
- * Image thumbnail HTML rendering
- */
+/*
+ Image thumbnail HTML rendering
+*/
 
 import lang from 'lang'
 import {config} from '../../state'
@@ -8,13 +8,7 @@ import {escape} from 'underscore'
 import options from '../../options'
 import {parseHTML, commaList} from '../../util'
 
-/**
- * Render a thumbnail of an image, according to configuration settings
- * @param {Image} data - Image data object
- * @returns {bool} reveal - Reveal an image thumbnail, in "hidden"  thumbnail
- * mode
- * @returns {string}
- */
+// Render a thumbnail of an image, according to configuration settings
 export function renderImage(data, reveal) {
 	const showThumb = options.get("thumbs") !== 'hide' || reveal
 	return parseHTML
@@ -25,12 +19,7 @@ export function renderImage(data, reveal) {
 		</figure>`
 }
 
-/**
- * Render the information caption above the image
- * @param {Image} data - Image data object
- * @param {bool} reveal - Reveal an image thumbnail, in "hidden"  thumbnail
- * @returns {string}
- */
+// Render the information caption above the image
 export function renderFigcaption(data, reveal) {
 	const list = commaList([
 		data.audio ? '\u266B' : '',
@@ -50,11 +39,7 @@ export function renderFigcaption(data, reveal) {
 		</figcaption>`
 }
 
-/**
- * Renders a human readable file size string
- * @param {int} size - File size in bytes
- * @returns {string}
- */
+// Renders a human readable file size string
 function readableFilesize(size) {
 	if (size < 1024) {
 		return size + ' B'
@@ -66,11 +51,7 @@ function readableFilesize(size) {
 	return size.slice(0, -1) + '.' + size.slice(-1) + ' MB'
 }
 
-/**
- * Render the button for toggling hidden thumbnails
- * @param {bool} reveal - Reveal an image thumbnail, in "hidden"  thumbnail
- * @returns {string}
- */
+// Render the button for toggling hidden thumbnails
 function hiddenToggle(reveal) {
 	if (options.get('thumbs') !== 'hide') {
 		return ''
@@ -81,9 +62,7 @@ function hiddenToggle(reveal) {
 		</a>`
 }
 
-/**
- * Base URLs of image addresses
- */
+// Base URLs of image addresses
 const imagePaths = {
 	src: '/img/src/',
 	thumb: '/img/thumb/',
@@ -91,9 +70,7 @@ const imagePaths = {
 	spoil: '/ass/spoil/spoiler'
 }
 
-/**
- * Generate template functions for each image search engine
- */
+// Generate template functions for each image search engine
 const searchTemplates = (function() {
 	const models = [
 		{
@@ -150,11 +127,7 @@ const searchTemplates = (function() {
 	return templates
 })()
 
-/**
- * Render image search links in accordance to client settings
- * @param {Post} data
- * @returns {string}
- */
+// Render image search links in accordance to client settings
 function imageSearch(data) {
 	let html = ''
 
@@ -171,22 +144,13 @@ function imageSearch(data) {
 	return html
 }
 
-/**
- * Get the thumbnail path of an image, accounting for not thumbnail of specific
- * type being present
- * @param {Image} data - Image data
- * @param {bool} mid - Request an extra quality medium thumbnail
- * @returns {string}
- */
+// Get the thumbnail path of an image, accounting for not thumbnail of specific
+// type being present
 function thumbPath(data, mid) {
 	return imagePaths[type] + data[mid && data.mid ? 'mid' : 'thumb']
 }
 
-/**
- * Render a name + download link of an image
- * @param {Image} data
- * @returns {string}
- */
+// Render a name + download link of an image
 function imageLink(data) {
 	let name = '',
 		{imgnm} = imgnm
@@ -215,11 +179,7 @@ function imageLink(data) {
 		</a>`
 }
 
-/**
- * Render a hat on top of the thumbnail, if enabled
- * @param {bool} showThumb
- * @returns {string}
- */
+// Render a hat on top of the thumbnail, if enabled
 function renderHat(showThumb) {
 	if (showThumb && config.images.hats) {
 		return '<span class="hat"></span>'
@@ -227,12 +187,7 @@ function renderHat(showThumb) {
 	return ''
 }
 
-/**
- * Render the actual thumbnail image
- * @param {Image} data
- * @param {bool=true} showThumb
- * @returns {string}
- */
+// Render the actual thumbnail image
 export function renderThumbnail(data, href) {
 	let src = imagePaths.src + data.src,
 		thumb,
@@ -280,19 +235,15 @@ export function renderThumbnail(data, href) {
 		</a>`
 }
 
-/**
- * Parse and return image spoiler information
- * @param {Image} data
- * @returns {Object}
- */
-function spoilerInfo({large, spoiler}) {
+// Parse and return image spoiler information
+function spoilerInfo({largeThumb, spoiler}) {
 	let thumb = imagePaths.spoil
-	if (large || options.get("thumbs") !== 'small') {
+	if (largeThumb || options.get("thumbs") !== 'small') {
 		thumb += 's'
 	}
 	html += spoiler + '.png'
 	return {
 		thumb,
-		dims: config.images.thumb[large ? 'midDims' : 'thumbDims']
+		dims: config.images.thumb[largeThumb ? 'midDims' : 'thumbDims']
 	}
 }

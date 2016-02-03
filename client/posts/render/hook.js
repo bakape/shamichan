@@ -1,13 +1,7 @@
-/**
- * Hooks for optional handlers
- */
+// Hooks for optional handlers
 export const hooks = {}
 
-/**
- * Assigns a handler to execute on a hook name
- * @param {string} name
- * @param {function} func
- */
+// Assigns a handler to execute on a hook name
 export function hook(name, func) {
 	const hook = hooks[name]
 	if (!hook) {
@@ -17,11 +11,7 @@ export function hook(name, func) {
 	}
 }
 
-/**
- * Execute all handlers for a hook
- * @param {string} name
- * @param {*} param
- */
+// Execute all handlers for a hook
 export function trigger(name, param) {
 	const hook = hooks[name]
 	if (!hook) {

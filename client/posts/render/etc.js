@@ -1,13 +1,7 @@
 import {page, mine} from '../../state'
 import lang from 'lang'
 
-/**
- * Render a link to other posts
- * @param {(int|string)} num
- * @param {string} board
- * @param {int} op
- * @returns {string}
- */
+// Render a link to other posts
 export function renderPostLink(num, board, op) {
 	let text = '>>'
 	if (board !== page.get('board')) { // Cross-board
@@ -26,12 +20,7 @@ export function renderPostLink(num, board, op) {
 	return postAnchor(`/${board}/${op}#${num}`, text)
 }
 
-/**
- * Render the anchor element of a post link
- * @param {string} href
- * @param {string} href
- * @returns {string}
- */
+// Render the anchor element of a post link
 function postAnchor(href, text) {
 	return parseHTML
 		`<a class="history" href="${href}">
@@ -39,19 +28,12 @@ function postAnchor(href, text) {
 		</a>`
 }
 
-/**
- * Render USER WAS BANNED FOR THIS POST message, or similar
- * @returns {string}
- */
+// Render USER WAS BANNED FOR THIS POST message, or similar
 export function renerBanned() {
 	return `<b class="admin banMessage">${lang.mod.banMessage}</b>`
 }
 
-/**
- * Render moderation information. Only exposed to authenticated staff.
- * @param {Object[]} info
- * @returns {string}
- */
+// Render moderation information. Only exposed to authenticated staff.
 export function renderModInfo(info) {
 	let html = '<b class="modLog admin">'
 	for (let action of info) {
@@ -61,11 +43,7 @@ export function renderModInfo(info) {
 	return html
 }
 
-/**
- * Render links to posts that are linking to the target post
- * @returns {Object} links
- * @returns {string}
- */
+// Render links to posts that are linking to the target post
 export function renderBacklinks(links) {
 	if (!links) {
 		return ''

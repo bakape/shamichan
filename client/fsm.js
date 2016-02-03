@@ -1,11 +1,6 @@
-/**
- * Finite State Machine
- */
+// Finite State Machine
 export default class FSM {
-    /**
-     * Create a new finite state machine
-     * @param {string} start - Initial state
-     */
+    // Create a new finite state machine
     constructor(start) {
         this.state = start
         this.spec = {
@@ -16,21 +11,14 @@ export default class FSM {
         }
     }
 
-    /**
-     * Clone the current FSM
-     * @returns {FSM}
-     */
+    // Clone the current FSM
     clone() {
         const second = new FSM(this.state)
         second.spec = this.spec
         return second
     }
 
-    /**
-     * Assign a handler to be execute on arrival to a new state
-     * @param {string} key - Target state
-     * @param {function} f - Handler
-     */
+    // Assign a handler to be execute on arrival to a new state
     on(key, f) {
         const ons = this.spec.ons[key]
         if (ons) {
@@ -40,11 +28,7 @@ export default class FSM {
         }
     }
 
-    /**
-     * Assign sanity check to perform before transition to a new state
-     * @param {string} key - Target state
-     * @param {function} f - Handler
-     */
+    // Assign sanity check to perform before transition to a new state
     preflight(key, f) {
         const pres = this.spec.preflights[key]
         if (pres) {
@@ -54,11 +38,7 @@ export default class FSM {
         }
     }
 
-    /**
-     * Specify transition and an optional handler to execute on it
-     * @param {string} trans_spec - Transition specification
-     * @param {function=} on_func - Handler
-     */
+    // Specify transition and an optional handler to execute on it
     act(trans_spec, on_func) {
         const halves = trans_spec.split('->')
         if (halves.length != 2) {
@@ -95,12 +75,7 @@ export default class FSM {
         }
     }
 
-    /**
-     * Transition the FSM to a new state
-     * @param {string} ev - Target state
-     * @param {*} param - Argument for the handler functions
-     * @returns {bool} - Passed preflight sanity check, if any
-     */
+    // Transition the FSM to a new state
     feed(ev, param) {
         const {spec} = this,
             from = this.state,
@@ -122,12 +97,8 @@ export default class FSM {
         return true
     }
 
-    /**
-     * Returns a function that executes FSM.prototype.feed with the suplied
-     * argument
-     * @param {string} ev - Target state
-     * @returns {function}
-     */
+    // Returns a function that executes FSM.prototype.feed with the suplied
+    // argument
     feeder(ev) {
         return param =>  this.feed(ev, param)
     }

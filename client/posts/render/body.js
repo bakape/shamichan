@@ -1,12 +1,8 @@
 import {config} from '../state'
-import {escape} from '../../../vendor/underscore'
+import {escape} from 'underscore'
 import {renderPostLink} from './etc'
 
-/**
- * Render the text body of a post
- * @param {Model} data
- * @returns {string}
- */
+// Render the text body of a post
 export function renderBody(data) {
 	if (!data.state) {
 		// Initial post state [new_line, no_qoute, no_spoiler, no_dice]
@@ -22,12 +18,7 @@ export function renderBody(data) {
 	return html
 }
 
-/**
- * Parse commited text body fragment
- * @param {string} frag
- * @param {Model} data
- * @returns {string}
- */
+// Parse commited text body fragment
 export function renderFragment(frag, data) {
 	const lines = frag.split('\n'),
 		{state} = data
@@ -62,12 +53,7 @@ export function renderFragment(frag, data) {
 	return html
 }
 
-/**
- * Convert a word to it's appropriate HTML representation
- * @param {string} word
- * @param {Model} data
- * @returns {string}
- */
+// Convert a word to it's appropriate HTML representation
 function parseWord(word, data) {
 	// `[spoiler]` and `[/spoiler]` are treated the same way. You can't nest
 	// them.
@@ -101,12 +87,7 @@ function parseWord(word, data) {
 	return html
 }
 
-/**
- * Verify and render a link to other posts
- * @param {string} bit
- * @param {Object} links
- * @returns {string}
- */
+// Verify and render a link to other posts
 function parsePostLink(bit, links) {
 	if (!links) {
 		return bit
@@ -129,11 +110,7 @@ for (let [name, link] of boards.psuedo.concat(boards.links)) {
 	refTargets[name] = link
 }
 
-/**
- * Parse internal or customly set reference URL
- * @param {string} bit
- * @returns {string}
- */
+// Parse internal or customly set reference URL
 function parseReference(bit) {
 	const name = bit.match(/^>>>\/(\w+)\/$/)[1],
 		href = refTargets[name]
@@ -143,21 +120,12 @@ function parseReference(bit) {
 	return newTabLink(href, bit)
 }
 
-/**
- * Render and anchor link that opens in a new tab
- * @param {string} href
- * @param {text} href
- * @returns {string}
- */
+// Render and anchor link that opens in a new tab
 function newTabLink(href, text) {
 	return `<a href="${href}" target="_blank">${text}</a>`
 }
 
-/**
- * Render generic URLs and embed, if aplicable
- * @param {string} bit
- * @returns {string}
- */
+// Render generic URLs and embed, if aplicable
 function parseURL(bit) {
 
 	// TODO: Embeds

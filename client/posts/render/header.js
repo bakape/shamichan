@@ -1,14 +1,10 @@
-import {escape} from '../../../vendor/underscore'
+import {escape} from 'underscore'
 import {parseHTML, parseAttributes, pad} from '../../util'
 import lang from 'lang'
 import {config} from '../../state'
 import options from '../../options'
 
-/**
- * Render the header with various post information
- * @param {Post} data
- * @returns {string}
- */
+// Render the header with various post information
 export function renderHeader(data) {
 	const {num, op, subject} = data,
 		postURL = renderPostURL(num)
@@ -30,11 +26,7 @@ export function renderHeader(data) {
 		<span class="oi control" data-glyph="chevron-bottom"></span>`
 }
 
-/**
- * Render the name of a post's poster
- * @param {Post} data
- * @returns {string}
- */
+// Render the name of a post's poster
 export function renderName(data) {
 	let html = '<b class="name'
 	const {auth, email} = data
@@ -61,11 +53,7 @@ export function renderName(data) {
 	return html
 }
 
-/**
- * Determine the name and tripcode combination to render
- * @param {Post} data
- * @returns {string}
- */
+// Determine the name and tripcode combination to render
 function resolveName(data) {
 	let html = ''
 	const {trip, name, auth} = data
@@ -94,20 +82,12 @@ function resolveName(data) {
 	return html
 }
 
-/**
- * Renders a poster identification mnemonic
- * @param {string} mnemonic
- * @returns {string}
- */
+// Renders a poster identification mnemonic
 export function renderMnemonic(mnemonic) {
 	return `<b class="mod addr">${mnem}</b>`
 }
 
-/**
- * Renders a time element. Can be either absolute or relative.
- * @param {int} time
- * @param {string}
- */
+// Renders a time element. Can be either absolute or relative.
 export function renderTime(time) {
 	// Format according to client's relative post timestamp setting
 	let title, text
@@ -122,11 +102,7 @@ export function renderTime(time) {
 		</time>`
 }
 
-/**
- * Renders classic absolute timestamp
- * @param {int} time
- * @returns {string}
- */
+// Renders classic absolute timestamp
 function readableTime(time) {
 	let d = new Date(time)
 	return pad(d.getDate()) + ' '
@@ -136,12 +112,7 @@ function readableTime(time) {
 		+`${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-/**
- * Renders readable elapsed time since post
- * @param {int} then
- * @param {int} now
- * @returns {string}
- */
+// Renders readable elapsed time since post
 function relativeTime(then, now) {
 	let time = Math.floor((now - then) / 60000),
 		isFuture = false
@@ -167,11 +138,7 @@ function relativeTime(then, now) {
 	return lang.ago(time, lang.time.year, isFuture)
 }
 
-/**
- * Render an anchor that points to the target post number
- * @param {int} num
- * @returns {string}
- */
+// Render an anchor that points to the target post number
 export function renderPostURL(num) {
 	return `#p${num}`
 }

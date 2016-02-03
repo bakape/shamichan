@@ -1,5 +1,5 @@
-'use strict';System.register(['../../util','./header','./image','./etc','./body'],function(_export,_context){var parseHTML,renderHeader,renderImage,renderBanned,renderBacklinks,renderBody;function renderPost(data){const image=data.image;const mod=data.mod;const body=data.body;const backlinks=data.backlinks;const banned=data.banned;return parseHTML`${ renderHeader(data) }
-		${ renderImage(image) }
+'use strict';System.register(['../../util','./header','./image','./etc','./body'],function(_export,_context){var parseHTML,renderHeader,renderImage,renderBanned,renderBacklinks,renderBody;function renderPost(data){const mod=data.mod;const body=data.body;const backlinks=data.backlinks;const banned=data.banned;return parseHTML`${ renderHeader(data) }
+		${ renderImage(data) }
 		<div class="container">
 			${ mod?renderModInfo(mod):'' }
 			<blockquote>
@@ -9,7 +9,7 @@
 				${ renderBacklinks(backlinks) }
 			</small>
 			${ banned?renderBanned():'' }
-		</div>`;}return {setters:[function(_util){parseHTML=_util.parseHTML;},function(_header){renderHeader=_header.renderHeader;},function(_image){renderImage=_image.renderImage;},function(_etc){renderBanned=_etc.renderBanned;renderBacklinks=_etc.renderBacklinks;},function(_body){renderBody=_body.renderBody;}],execute:function(){function renderSection(data){let cls=arguments.length<=1||arguments[1]===undefined?'':arguments[1];if(data.locked){cls+=' locked';}if(data.editing){cls+=' editing';}data.image.large=true;return parseHTML`<section id="p${ data.num }" class="${ cls }">
+		</div>`;}return {setters:[function(_util){parseHTML=_util.parseHTML;},function(_header){renderHeader=_header.renderHeader;},function(_image){renderImage=_image.renderImage;},function(_etc){renderBanned=_etc.renderBanned;renderBacklinks=_etc.renderBacklinks;},function(_body){renderBody=_body.renderBody;}],execute:function(){function renderSection(data){let cls=arguments.length<=1||arguments[1]===undefined?'':arguments[1];if(data.locked){cls+=' locked';}if(data.editing){cls+=' editing';}data.largeThumb=true;return parseHTML`<section id="p${ data.num }" class="${ cls }">
 			<div class="background glass">
 				${ renderPost(data) }
 				<span class="omit"></span>
