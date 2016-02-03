@@ -46,13 +46,13 @@ func passError(
 }
 
 func parseUploadForm(req *http.Request) (id string, spoiler uint8, err error) {
-	err = req.ParseMultipartForm(1073741824) // 10 MB
+	err = req.ParseMultipartForm(512)
 	if err != nil {
 		return
 	}
 	id = req.FormValue("id")
 	if id == "" {
-		err = errors.New("Invalid client ID")
+		err = errors.New("No client ID specified")
 		return
 	}
 
@@ -60,10 +60,10 @@ func parseUploadForm(req *http.Request) (id string, spoiler uint8, err error) {
 	if unparsed := req.FormValue("spoiler"); unparsed != "" {
 		var unconverted int
 		unconverted, err = strconv.Atoi(unparsed)
-		spoiler = uint8(unconverted)
 		if err != nil || !isValidSpoiler(spoiler) {
-			err = errors.New("Invalid spoiler ID")
+			err = fmt.Errorf("Invalid spoiler ID: %s", unparsed)
 		}
+		spoiler = uint8(unconverted)
 	}
 	return
 }
@@ -83,20 +83,36 @@ var mimeTypes = map[string]string{
 	"image/png":                ".png",
 	"image/gif":                ".gif",
 	"video/webm":               ".webm",
-	"text/xml; charset=utf-8":  ".xml",
 	"application/pdf":          ".pdf",
 	"application/octet-stream": "unknown",
 }
 
-func detectFileType(req *http.Request, file multipart.File) error {
-	first512 := make([]byte, 512)
-	if _, err := file.Read(first512); err != nil {
-		return err
+func detectFileType(file multipart.File) (string, error) {
+	buf := make([]byte, 512)
+	if _, err := file.Read(buf); err != nil {
+		return "", err
 	}
-	mimeType := http.DetectContentType(first512)
-	ext, ok := mimeTypes[mimeType]
-	if ok {
-		fmt.Println(ext)
+	mimeType := http.DetectContentType(buf)
+	if ext, ok := mimeTypes[mimeType]; ok {
+		switch ext {
+		case "unknown":
+			switch {
+			case detectSVG(buf):
+				return ".svg", nil
+			case detectMP3(buf):
+				return ".mp3", nil
+			}
+		default:
+			return ext, nil
+		}
 	}
-	return nil
+	return "", fmt.Errorf("Unsupported mime type: %s", mimeType)
+}
+
+func detectSVG(buf []byte) bool {
+	return false
+}
+
+func detectMP3(buf []byte) bool {
+	return false
 }
