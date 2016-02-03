@@ -56,7 +56,8 @@ Selects and loads the client files
 		defaultJSExtensions: true,
 		// Alias the appropriate language pack to "lang"
 		map: {
-			lang:'lang/' + (localStorage.lang || config.lang.default)
+			lang: 'lang/' + (localStorage.lang || config.lang.default),
+			underscore: 'vendor/underscore'
 		},
 		meta: meta
 	})

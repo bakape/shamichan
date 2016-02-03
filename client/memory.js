@@ -1,4 +1,5 @@
-import {isObject, isEmpty, size} from '../vendor/underscore'
+/* @flow */
+import {isEmpty, size} from 'underscore'
 
 // All instances of the Memory class
 const memories = {}
@@ -14,30 +15,25 @@ window.addEventListener('storage', ({key, newValue}) => {
 	}
 })
 
-/**
- * Parse a stringified set
- * @param {string} set
- * @returns {Object}
- */
-function parseSet(set) {
-	let val
+type intmap = {[key: string]: number}
+
+// Parse a stringified set
+function parseSet(set :string) :intmap {
+	let val :intmap = {}
 	try {
 		val = JSON.parse(set)
 	}
 	catch(e) {}
-	return isObject(val) ? val : {}
+	return val
 }
 
-/**
- * Self-expiring localStorage set manager
- */
+// Self-expiring localStorage set manager
 export default class Memory {
-	/**
-	 * Construct a new localStorage controller
-	 * @param {string} key - localStorage key
-	 * @param {int} expiry - Entry lifetime in days
-	 */
-	constructor(key, expiry) {
+	key: string;
+	expiry: number;
+	cached: {[key: string]: number};
+
+	constructor(key :string, expiry :number) {
 		this.key = key
 		memories[key] = this
 		this.expiry = expiry
@@ -49,26 +45,18 @@ export default class Memory {
 		setTimeout(() => this.purgeExpired(), 5000)
 	}
 
-	/**
-	 * Return current time in seconds
-	 * @returns {int}
-	 */
-	now() {
+	// Return current time in seconds
+	now() :number {
 		return Math.floor(Date.now() / 1000)
 	}
 
-	/**
-	 * Clear the stored set
-	 */
+	// Clear the stored set
 	purgeAll() {
 		localStorage.removeItem(this.key)
 	}
 
-	/**
-	 * Read and parse the stringified set from localStorage
-	 * @returns {Object}
-	 */
-	read() {
+	// Read and parse the stringified set from localStorage
+	read() :intmap {
 		const key = localStorage.getItem(this.key)
 		if (!key) {
 			return {}
@@ -76,31 +64,21 @@ export default class Memory {
 		return parseSet(key)
 	}
 
-	/**
-	 * Return, if the given key exists in the set
-	 * @param {string} key
-	 * @returns {bool}
-	 */
-	has(key) {
+	// Return, if the given key exists in the set
+	has(key :string) :boolean {
 		return !!this.cached[key]
 	}
 
-	/**
-	 * Replace the existing set, if any, with the suplied one
-	 * @param {Object} set
-	 */
-	writeAll(set) {
+	// Replace the existing set, if any, with the suplied one
+	writeAll(set :intmap) {
 		if (isEmpty(set)) {
 			return this.purgeAll()
 		}
 		localStorage.setItem(this.key, JSON.stringify(set))
 	}
 
-	/**
-	 * Write a single key to the stored set
-	 * @returns {int} - Size of new set
-	 */
-	write(key) {
+	// Write a single key to the stored set
+	write(key :string) :number {
 		// When performing writes, best fetch everything, rather than rely on
 		// events for browser tab cache synchronisation. Browser backround tab
 		// optimisation might fuck us over.
@@ -110,16 +88,12 @@ export default class Memory {
 		return size(this.cached) // Return number of items
 	}
 
-	/**
-	 * Return the current size of the stored Set
-	 */
-	size() {
+	// Return the current size of the stored Set
+	size() :number {
 		return size(this.cached)
 	}
 
-	/**
-	 * Delete expired entries from set and write to localStorage
-	 */
+	// Delete expired entries from set and write to localStorage
 	purgeExpired() {
 		this.cached = this.read()
 		const now = this.now(),

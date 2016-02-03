@@ -124,12 +124,18 @@ function babelConfig(version) {
 		return _.extend(base, {
 			presets: ['es2015'],
 			plugins: [
+				'syntax-class-properties',
+				"transform-class-properties",
+				'transform-flow-strip-types',
 				'transform-es2015-modules-systemjs'
 			]
 		})
 	}
 	return _.extend(base, {
 		plugins: [
+			'syntax-class-properties',
+			"transform-class-properties",
+			'transform-flow-strip-types',
 			'transform-es2015-destructuring',
 			'transform-es2015-parameters',
 			'transform-es2015-modules-systemjs'
