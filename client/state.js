@@ -1,15 +1,22 @@
 /*
  * Central model keeping the state of the page
  */
+/* @flow */
 
-import {extend} from '../vendor/underscore'
+import {extend} from 'underscore'
 import Memory from './memory'
 import {randomID, getID} from './util'
 import Model from './model'
 import Collection from './collection'
 
+declare type State = {
+	board :string;
+	thread :number;
+	lastN :number;
+}
+
 // Read page state by parsing a URL
-export function read(href) {
+export function read(href :string) :State {
 	const state = {
 		board: href.match(/\/([a-zA-Z0-9]+?)\//)[1],
 		thread: href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
@@ -33,25 +40,25 @@ export let page = new Model(initial)
 // TODO: We need actual listeners to this model for hot reloads
 
 // Tracks the synchronisation counter of each thread
-export let syncs = {}
+export let syncs :{[key :string] :number} = {}
 
 // Posts I made in this tab
-export const ownPosts = {}
+export const ownPosts :{[key :string] :number} = {}
 
 // Configuration object, passed from the server
-export const config = window.config
+export const config :Object = window.config
 
 // Hash of the the configuration object
-export const configHash = window.configHash
+export const configHash :string = window.configHash
 
 // Indicates, if in mobile mode. Determined server-side.
-export const isMobile = window.isMobile
+export const isMobile :boolean = window.isMobile
 
 // Cached DOM elements
-export const $threads = document.query('threads')
-export const $name = document.query('#name')
-export const $email = document.query('#email')
-export const $banner = document.query('#banner')
+export const $threads :Element = document.query('threads')
+export const $name :Element = document.query('#name')
+export const $email :Element = document.query('#email')
+export const $banner :Element = document.query('#banner')
 
 // Remember which posts are mine for two days
 export const mine = new Memory('mine', 2)
@@ -59,9 +66,7 @@ export const mine = new Memory('mine', 2)
 // All posts currently displayed
 export const posts = new Collection()
 
-/**
- * Clear the current post state and HTML
- */
+// Clear the current post state and HTML
 export function clear() {
 	/*
 	 * Emptying the whole element should be faster than removing each post
@@ -81,21 +86,8 @@ export function clear() {
 	events.request('massExpander:unset')
 }
 
-// Post links verified server-side
-export const links = {}
-
-export function addLinks(addition) {
-	if (addition) {
-		extend(links, addition);
-	}
-}
-
-/**
- * Retrieve model of closest parent post
- * @param {Element} el
- * @returns {(Backbone.Model|null)}
- */
-export function getModel(el) {
+// Retrieve model of closest parent post
+export function getModel(el :Element) :string {
 	const id = getID(el)
 	if (!id) {
 		return null

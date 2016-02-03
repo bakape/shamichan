@@ -2,19 +2,6 @@
 import Model from './model'
 import {extend} from 'underscore'
 
-declare class Event {
-	target :Element;
-}
-
-type EventHandler = (event :Event) => void
-
-declare class Element {
-	addEventListener(type :string, handler :EventHandler) :void;
-	removeEventListener(type :string, handler :EventHandler) :void;
-	matches(selector :string) :void;
-	remove() :void;
-}
-
 // Generic view class, that all over view classes extend
 export default class View {
 	model :Model;

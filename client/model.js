@@ -1,15 +1,18 @@
 /* @flow */
 import {extend} from 'underscore'
 import View from './view'
+import Collection from './collection'
 
-type hook = (val :mixed) => void
-type hookMap = {[key :string]: hook | Array<hook>}
+declare type hook = (val :mixed) => void
+declare type hookMap = {[key :string]: hook | Array<hook>}
 
 // Generic model class, that all other model classes extend
 export default class Model {
 	attrs :Object = {};
 	views :Array<View> = [];
 	changeHooks :hookMap = {};
+	id :string;
+	collection: Collection;
 
 	constructor(attrs :?Object) {
 		if (attrs) {
@@ -72,7 +75,7 @@ export default class Model {
 		this.views.splice(this.views.indexOf(view), 1)
 	}
 
- 	// Remove the model from its collection, if any, and remove all its views
+	// Remove the model from its collection, if any, and remove all its views
 	remove() {
 		if (this.collection) {
 			this.collection.remove(this)
@@ -83,7 +86,7 @@ export default class Model {
 	}
 
 
- 	// Add a function to be executed, when .set(), .setAttrs(), .append() or
+	// Add a function to be executed, when .set(), .setAttrs(), .append() or
 	// .extend() modify a key's value.
 	onChange(key :string, func :hook) {
 		if (this.changeHooks[key]) {
