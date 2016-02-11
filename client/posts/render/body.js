@@ -5,7 +5,7 @@ import {renderPostLink} from './etc'
 // Render the text body of a post
 export function renderBody(data) {
 	if (!data.state) {
-		// Initial post state [new_line, no_qoute, no_spoiler, no_dice]
+		// Initial post state [new_line, no_qoute, no_spoiler]
 		data.state = [0, 0, 0]
 	}
 	let html = renderFragment(data.body, data.state, data.dice)
