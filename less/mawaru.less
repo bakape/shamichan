@@ -14,13 +14,15 @@ article, aside, .modal, .bmodal, .pagination {
 	border-right: @border;
 	border-bottom: @border;
 }
-article.highlight {
-	background-color: #333;
-	border-color: #222;
-}
-.editing {
-	background-color: #311;
-	border-color: #200;
+article {
+	&.highlight {
+		background-color: #333;
+		border-color: #222;
+	}
+	&.editing {
+		background-color: #311;
+		border-color: #200;
+	}
 }
 body {
 	color: #eee;

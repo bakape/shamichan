@@ -14,14 +14,16 @@ article, aside, .pagination {
 	border-right: @border;
 	border-bottom: @border;
 }
-article.highlight {
-	background-color: #ccc;
-	border-color: #bbb;
-}
-// shouldn't happen
-.editing {
-	background-color: #fa6;
-	border-color: #e95;
+article {
+	&.highlight {
+		background-color: #ccc;
+		border-color: #bbb;
+	}
+	// shouldn't happen
+	&.editing {
+		background-color: #fa6;
+		border-color: #e95;
+	}
 }
 body {
 	background-color: #f0f0f0;

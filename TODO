@@ -1,5 +1,0 @@
-* Update `syncs` in client when on /live
-* Actually tell user when a particular thread failed to sync
-* Tokenize text instead of multiple levels of regexps
-* Should retrieve live body and hctr in one transaction
-* Consolidate or disambiguate the (three!) different hook/trigger mechanisms

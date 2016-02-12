@@ -23,7 +23,7 @@ let save = _.debounce(function() {
 		// Staff login method
 		if (email === config.LOGIN_KEYWORD) {
 			$email.val('');
-			$script(config.MEDIA_URL + 'js/login.js?v=' + main.clientHash);
+			$script('/ass/js/scripts/login.js');
 			email = false;
 		}
 

@@ -34,7 +34,7 @@ function today_id() {
 
 function create() {
 	const nonces = get(),
-		nonce = common.random_id();
+		nonce = common.randomID(32);
 	nonces[nonce] = {
 		tab: state.page.get('tabID'),
 		day: today_id()

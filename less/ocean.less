@@ -29,18 +29,20 @@ blockquote a {
 a:hover {
     color: #af005f;
 }
-.pagination,.preview, article, aside {
+.pagination, article, aside {
     background-color: @postBG;
     border-right: @border;
     border-bottom: @border;
 }
-article.highlight {
-    background-color: rgba(44, 44, 51, .95);
-    border-color: #21212c;
-}
-.editing {
-    background-color: rgba(44, 57, 71, 0.88);
-    border-color: #2c2121;
+article {
+    &.highlight {
+        background-color: rgba(44, 44, 51, .95);
+        border-color: #21212c;
+    }
+    &.editing {
+        background-color: rgba(44, 57, 71, 0.88);
+        border-color: #2c2121;
+    }
 }
 body {
     color: #389EB6;

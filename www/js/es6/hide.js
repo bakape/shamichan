@@ -1,0 +1,2 @@
+'use strict';System.register([],function(_export,_context){return {setters:[],execute:function(){let main=require('./main');let hidden=new main.Memory('hide',7,true);main.reply('hide',function(model){if(model.get('mine'))return;const count=hidden.write(model.get('num'));model.remove();main.request('hide:render',count);});main.reply('hide:clear',() => hidden.purgeAll());main.defer(() => main.request('hide:render',hidden.size()));}};});
+//# sourceMappingURL=maps/hide.js.map

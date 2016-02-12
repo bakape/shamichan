@@ -1,0 +1,2 @@
+'use strict';System.register([],function(_export,_context){return {setters:[],execute:function(){const main=require('main');function getSelected(){const checked=[];loopCheckboxes(el => el.checked&&checked.push(main.etc.getID(el)));return main._.compact(checked);}exports.getSelected=getSelected;function loopCheckboxes(func){const els=main.$threads[0].getElementsByClassName('postCheckbox');for(let i=0;i<els.length;i++){func(els[i]);}}exports.loopCheckboxes=loopCheckboxes;}};});
+//# sourceMappingURL=../maps/mod/util.js.map

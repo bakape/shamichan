@@ -2,10 +2,23 @@
  * Thumbnail and image renderring
  */
 
-const main = require('../main'),
-	{$, $threads, _, Backbone, common, etc, oneeSama, options, state} = main;
+import View from '../view'
+import {$threads} from '../state'
 
-const Hidamari = exports.Hidamari = {
+/**
+ * Thumbnail and image renderring logic
+ */
+class Imager extends View {
+    /**
+     * Construct a new post image handler
+     * @param {Object} args
+     */
+    constructor(args) {
+        super(args)
+    }
+}
+
+exports.Hidamari = Backbone.View.extend({
 	/*
 	 Render entire <figure>. Rerenderring completely each time is considerable
 	 overhed, but the alternative is very convoluted logic. I don't really want
@@ -16,23 +29,28 @@ const Hidamari = exports.Hidamari = {
 		 All kinds of listeners call this method, so we need to ensure we
 		 always get the appropriate image object.
 		 */
-		const reveal = arg === true;
-		let model = this.model,
-			$el = this.$el;
+		const reveal = arg === true,
+			{model, el} = this;
 		if (!image || !image.src)
 			image = model.get('image');
-		$el.children('figure').remove();
+		const figure = el.query('figure');
+		if (figure)
+			figure.remove();
+
 		// Remove image on mod deletion
 		if (!image)
 			return;
-		$el.children('header')[model.get('op') ? 'after' : 'before'](
-			oneeSama.image(image, reveal)
-		);
+		el.query('blockquote')
+			.before(util.parseDOM(oneeSama.image(image, reveal)));
 
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
-		if (manual && model.get('tallImage'))
-			$(window).scrollTop($el.offset().top - $('#banner').height());
+		if (manual && model.get('tallImage')) {
+			window.scrollTop = el.getBoundingClientRect().top
+				+ document.body.scrollTop
+				- document.query('#banner').height;
+		}
+
 		model.set({
 			// Only used in hidden thumbnail mode
 			thumbnailRevealed: reveal,
@@ -63,37 +81,26 @@ const Hidamari = exports.Hidamari = {
 	fitImage(img, fit){
 		// Open PDF in a new tab on click
 		if (img.ext === '.pdf')
-			return window.open(oneeSama.imagePaths().src + img.src,
-				'_blank'
-			);
+			return window.open(oneeSama.imagePaths().src + img.src, '_blank');
+
 		// Audio controls are always the same height and do not need to be
 		// fitted
 		if (img.ext === '.mp3')
 			return this.renderAudio(img);
+
 		let newWidth, newHeight,
 			width = newWidth = img.dims[0],
 			height = newHeight = img.dims[1];
-		if (fit === 'full') {
-			return this.expandImage(img, {
-				width,
-				height
-			});
-		}
+		if (fit === 'full')
+			return this.expandImage(img, {width, height});
+
 		const both = fit === 'both',
 			widthFlag = both || fit === 'width',
 			heightFlag = both || fit === 'height',
-			aspect = width / height,
-			isArticle = !!this.model.get('op');
+			aspect = width / height;
 		let fullWidth, fullHeight;
 		if (widthFlag) {
-			let maxWidth = $(window).width()
-				// We need to go wider
-				- this.$el
-					.closest('section')[0]
-					.getBoundingClientRect()
-					.left * (isArticle ? 1 : 2);
-			if (isArticle)
-				maxWidth -= this.$el.outerWidth() - this.$el.width() + 5;
+			const maxWidth = this.imageMaxWidth();
 			if (newWidth > maxWidth) {
 				newWidth = maxWidth;
 				newHeight = newWidth / aspect;
@@ -101,7 +108,8 @@ const Hidamari = exports.Hidamari = {
 			}
 		}
 		if (heightFlag) {
-			let maxHeight = $(window).height() - $('#banner').outerHeight();
+			let maxHeight = window.innerHeight
+				- document.query('#banner').offsetHeight;
 			if (newHeight > maxHeight) {
 				newHeight = maxHeight;
 				newWidth = newHeight * aspect;
@@ -112,54 +120,51 @@ const Hidamari = exports.Hidamari = {
 			width = newWidth;
 			height = newHeight;
 		}
-		this.expandImage(img, {
-			width,
-			height,
-			fullWidth: fullWidth && !fullHeight
-		});
+		this.expandImage(img, width, height, fullHeight && !fullWidth);
 	},
-	expandImage(img, opts) {
+	// Calculate maximum horizontal dimension an image can be expanded to
+	imageMaxWidth() {
+		const {el, model} = this;
+		return window.innerWidth
+			- parseInt(el.closest('section').getBoundingClientRect().left) * 2
+			- util.outerWidth(model.get('op') ? el : el.query('.background'));
+	},
+	expandImage(img, width, height, noMargin) {
 		const isVideo = img.ext === '.webm';
-		let attrs = {
+		const attrs = {
 			src: oneeSama.imagePaths().src + img.src,
-			width: opts.width,
-			height: opts.height
+			width,
+			height
 		};
 		let cls = 'expanded';
-		if (opts.fullWidth)
-			cls += ' fullWidth';
+		if (noMargin)
+			cls += ' noMargin';
 		attrs.class = cls;
 
 		if (isVideo)
 			attrs.autoplay = attrs.loop = attrs.controls = true
 
-		this.$el
-			.children('figure')
-			.children('a')
-			.html(common.parseHTML`<${isVideo ? 'video' : 'img'} ${attrs}>`);
+		this.el.query('figure').lastChild.innerHTML = common.parseHTML
+			`<${isVideo ? 'video' : 'img'} ${attrs}>`;
 		this.model.set({
 			imageExpanded: true,
-			tallImage: opts.height > window.innerHeight
+			tallImage: height > window.innerHeight
 		});
 	},
 	renderAudio(img) {
-		this.$el
-			.children('figure')
-			.append(common.parseHTML
-				`<audio src="${oneeSama.imagePaths().src + img.src}"
-					width="300"
-					height="3em"
-					autoplay loop controls
-				>
-				</audio>`
-			);
+		this.el.query('figure').append(util.parseDOM(common.parseHTML
+			`<audio src="${oneeSama.imagePaths().src + img.src}"
+				width="300"
+				height="3em"
+				autoplay loop controls
+			>
+			</audio>`));
 		this.model.set('imageExpanded', true);
 	}
-};
+});
 
 // Expand all images
 const ExpanderModel = Backbone.Model.extend({
-	id: 'massExpander',
 	initialize() {
 		$threads.on('click', '#expandImages', e => {
 			e.preventDefault();
@@ -200,10 +205,11 @@ main.reply('massExpander:unset', () => massExpander.unset());
 $threads.on('click', 'img, video', function(e) {
 	if (options.get('inlinefit') == 'none' || e.which !== 1)
 		return;
-	let model = etc.getModel(e.target);
+	let model = util.getModel(e.target);
 	if (!model)
 		return;
 	e.preventDefault();
+
 	// Remove image hover preview, if any
 	main.request('imager:clicked');
 	model.dispatch('toggleImageExpansion', !model.get('imageExpanded'),
@@ -213,7 +219,7 @@ $threads.on('click', 'img, video', function(e) {
 // Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
 $threads.on('click', '.imageToggle', function(e) {
 	e.preventDefault();
-	let model = etc.getModel(e.target);
+	let model = util.getModel(e.target);
 	if (!model)
 		return;
 	main.follow(() =>

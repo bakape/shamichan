@@ -5,7 +5,7 @@
  */
 
 const main = require('./main'),
-	{etc, follow, options, oneeSama} = main,
+	{util, follow, options, oneeSama} = main,
 	{posts} = main.state;
 
 options.on({

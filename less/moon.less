@@ -9,11 +9,13 @@
 a:hover {
 	color: #d00;
 }
-article.highlight {
-	background-color: #f5f5f5;
-}
-.editing {
-	background-color: #fa6;
+article {
+	&.highlight {
+		background-color: #f5f5f5;
+	}
+	&.editing {
+		background-color: #fa6;
+	}
 }
 body, pre, .themed {
 	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro";
@@ -43,7 +45,7 @@ small a {
 .omit {
 	color: gray;
 }
-#trans {
+#input {
 	margin-bottom: -7px;
 }
 // Override defaults

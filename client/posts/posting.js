@@ -2,13 +2,13 @@
  * Evertything related to writing and commiting posts
  */
 
-const main = require('../main'),
+const Article = require('./article'),
+	main = require('../main'),
 	embed = require('./embed'),
 	ident = require('./identity'),
 	imager = require('./imager'),
-	inject = require('./common').inject,
-	{$, _, Backbone, common, config, connSM, etc, lang, options, postSM, state, oneeSama, Cookie}
-		= main;
+	{$, _, Backbone, Cookie, common, config, connSM, util, lang, oneeSama,
+		options, postSM, state} = main;
 
 let postForm, postModel;
 /*
@@ -25,9 +25,7 @@ let	inputMinSize = 300;
 if (window.screen && screen.width <= 320)
 	inputMinSize = 50;
 
-var ComposerModel = Backbone.Model.extend({
-	idAttribute: 'num'
-});
+const ComposerModel = Backbone.Model.extend({idAttribute: 'num'});
 
 // Synchronyse postform state with websocket connectivity
 connSM.on('synced', postSM.feeder('sync'));
@@ -37,34 +35,36 @@ connSM.on('desynced', postSM.feeder('desync'));
 // Allow remotely altering posting FSM state
 main.reply('postSM:feed', state => postSM.feed(state));
 
-postSM.act('* + desync -> none', function() {
+postSM.act('* + desync -> none', () => {
 	// TODO: Desync logic
 	if (postForm) {
-		postForm.$el.removeClass('editing');
+		postForm.el.classList.remove('editing');
 		postForm.$input.val('');
 		postForm.finish();
 	}
 	main.$threads.find('aside.posting').hide();
 });
 
-postSM.act('none + sync, draft, alloc + done -> ready', function() {
+postSM.act('none + sync, draft, alloc + done -> ready', () => {
 	// TODO: Add unfinished post checking
 
 	if (postForm) {
 		postForm.remove();
 		postForm = postModel = null;
 	}
-	main.$threads.find('aside.posting').show();
+	for (let el of main.$threads[0].queryAll('aside.posting')) {
+		el.style.display = '';
+	}
 });
 
 // Make new postform
-postSM.act('ready + new -> draft', function($aside) {
-	var op = null;
-	var $sec = $aside.closest('section');
-	if ($sec.length)
-		op = extractNum($sec);
+postSM.act('ready + new -> draft', aside => {
+	let op,
+		section = aside.closest('section');
+	if (section)
+		op = util.getNum(section);
 	else
-		$sec = $('<section/>');
+		section = document.createElement('section');
 
 	// Shift OP's replies on board pages
 	if (op && !state.page.get('thread'))
@@ -72,32 +72,21 @@ postSM.act('ready + new -> draft', function($aside) {
 
 	postForm = new ComposerView({
 		model: postModel = new ComposerModel({op}),
-		$dest: $aside,
-		$sec: $sec
+		destination: aside,
+		section
 	});
 });
 
-// Extract post number
-function extractNum($post) {
-	return parseInt($post.attr('id'), 10);
-}
+postSM.preflight('draft', aside => aside.matches('aside'));
 
-postSM.preflight('draft', function(aside) {
-	return aside.is('aside');
-});
-
-postSM.act('draft + alloc -> alloc', function(msg) {
-	postForm.onAllocation(msg);
-});
+postSM.act('draft + alloc -> alloc', msg => postForm.onAllocation(msg));
 
 // Render image upload status messages
-main.dispatcher[common.IMAGE_STATUS] = function(msg) {
-	if (postForm)
-		postForm.dispatch(msg[0]);
-};
+main.dispatcher[common.IMAGE_STATUS] = msg =>
+	postForm && postForm.dispatch(msg[0]);
 
-main.$doc.on('click', 'aside.posting a', function() {
-	postSM.feed('new', $(this).parent());
+main.$doc.on('click', 'aside.posting a', function () {
+	postSM.feed('new', this.parentNode);
 });
 
 main.$doc.on('keydown', handle_shortcut);
@@ -106,27 +95,25 @@ function handle_shortcut(event) {
 	if (!event.altKey)
 		return;
 
-	var used = false,
-		opts = options.attributes;
+	const opts = options.attributes;
 	switch(event.which) {
 		case opts.new:
-			var $aside = state.page.get('thread')
-				? main.$threads.find('aside.posting') : $ceiling().next();
-			if ($aside.is('aside') && $aside.length === 1) {
-				postSM.feed('new', $aside);
-				used = true;
+			const aside = document.query('aside.posting');
+			if (aside) {
+				postSM.feed('new', aside);
+				prevent();
 			}
 			break;
 		case opts.togglespoiler:
 			if (postForm) {
 				postForm.onToggle(event);
-				used = true;
+				prevent();
 			}
 			break;
 		case opts.done:
 			if (postForm && !postForm.$submit.attr('disabled')) {
 				postForm.finish();
-				used = true;
+				prevent();
 			}
 			break;
 		// Insert text spoiler
@@ -137,53 +124,48 @@ function handle_shortcut(event) {
 				var sp = (postState ? '[/' : ' [') + 'spoiler]';
 				this.imouto.state2.spoiler = !postState;
 				this.$input.val(this.$input.val() + sp);
-				used = true;
+				prevent();
 			}
 			break;
 		case opts.expandAll:
 			imager.massExpander.toggle();
-			used = true;
+			prevent();
 			break;
 		case opts.workMode:
 			const val = main.oneeSama.workMode = !main.oneeSama.workMode;
-			Cookie.set('workModeTOG',val);
+			Cookie.set('workModeTOG', val);
 			const banner = document.querySelector("h1 > img");
 			if(banner!=null)
 				banner.style.display =  val? 'none':'';
 			document.getElementById('theme').setAttribute('href',
-				`${config.MEDIA_URL}css/${val? state.hotConfig.get('DEFAULT_CSS'): main.options.get("theme")}.css?v=${main.cssHash}`);
+					`${config.MEDIA_URL}css/${val? state.hotConfig.get('DEFAULT_CSS'): main.options.get("theme")}.css?v=${main.cssHash}`);
 			oneeSama.thumbStyle = val? 'hide': main.options.get('thumbs');
 			main.options.trigger("workModeTOG");
 			window.addEventListener('beforeunload', function () {
 				Cookie.set("workModeTOG",false);
 			});
-			used = true;
+			prevent()
 			break;
 	}
 
-	if (used) {
+	function prevent() {
 		event.stopImmediatePropagation();
 		event.preventDefault();
 	}
 }
 
-// Gets the top <hr> of <threads>
-function $ceiling() {
-	return main.$threads.children('hr').first();
-}
-
 // TODO: Unify self-updates with OneeSama; this is redundant
-main.oneeSama.hook('insertOwnPost', function (info) {
-	if (!postForm || !info.links)
+main.oneeSama.hook('insertOwnPost', ({links}) => {
+	if (!postForm || !links)
 		return;
-	postForm.$buffer.find('.nope').each(function() {
+	postForm.$buffer.find('.nope').each(function () {
 		var $a = $(this);
 		const text = $a.text(),
 			m = text.match(/^>>(\d+)/);
 		if (!m)
 			return;
 		const num = m[1],
-			op = info.links[num];
+			op = links[num];
 		if (!op)
 			return;
 		let $ref = $(common.join([postForm.imouto.postRef(num, op, false)]));
@@ -194,7 +176,191 @@ main.oneeSama.hook('insertOwnPost', function (info) {
 	});
 });
 
-var ComposerView = Backbone.View.extend({
+const ArticleComposer = Article.extend({
+	events: {
+		'click #cancel': 'cancel',
+		'change #imageInput': 'onImageChosen',
+		'input #trans': 'onInput',
+		'keydown #trans': 'onKeyDown',
+		'click #done': 'finish',
+		'click #toggle': 'onToggle'
+	},
+	initialize(args) {
+		// super() call
+		Article.prototype.initialize.call(this);
+		this.listenTo(this.model, {
+			'change': this.renderButtons,
+			'change:spoiler': this.renderSpoilerPane
+		});
+		this.render(args).insertIntoDOM(args);
+		this.model.set({
+			spoiler: 0,
+			nextSpoiler: -1
+		});
+
+		this.pending = '';
+		this.line_count = 1;
+		this.char_count = 0;
+
+		// Initialize the form's private rendering singleton instance
+		const imouto = this.imouto = new common.OneeSama({
+			callback: inject,
+			op: state.page.get('thread'),
+			blockqoute: this.blockqoute,
+			eLinkify: main.oneeSama.eLinkify,
+			lang: main.lang,
+			tamashii(num) {
+				let section = document.query('#p' + num);
+				section = section && section.closest('section');
+				if (section) {
+					const desc = num in state.mine.readAll() && lang.you;
+					return this.postRef(num, util.getNum(section), desc);
+				}
+				else
+					return `<a class="nope">&gt;&gt;${num}</a>`;
+			}
+		});
+		imouto.setModel(this.model);
+	},
+	// Initial render
+	render() {
+		// Define attributes separatly for readbility
+		const attrs = {
+			input: {
+				name: 'body',
+				id: 'input',
+				rows: 1,
+				class: 'themed exclude',
+				autocomplete: main.isMobile
+			},
+			form: {
+				method: 'post',
+				enctype: 'multipart/form-data',
+				target: 'upload',
+				id: 'uploadForm'
+			},
+			cancel: {
+				type: 'buttom',
+				value: lang.cancel,
+				id: 'cancel'
+			},
+			imageInput: {
+				type:'file',
+				id: 'imageInput',
+				name: 'image',
+				accept: 'image/*;.webm;.pdf;.mp3'
+			},
+			toggle: {
+				type: 'button',
+				id: 'toggle'
+			}
+		};
+
+		this.el.innerHTML = parseHTML
+			`<header>
+				<a class="name nope" target="_blank">
+					<b></b>
+				</a>
+			</header>
+			<span class="oi control" data-glyph="chevron-bottom"></span>
+			<div class="container">
+				<blockquote>
+					<p id="buffer" class="exclude"></p>
+					<p id="lineBuffer" class="exclude"></p>
+					<textarea ${attrs.input}></textarea>
+				</blockquote>
+				<form ${attrs.form}>
+					<input ${attrs.cancel}>
+					<input ${attrs.imageInput}>
+					<input ${attrs.toggle}>
+					<strong id="uploadStatus"></strong>
+				</form>
+				<small></small>
+			</div>`;
+
+		// Cache elements to avoid lookup
+		const els = ['buffer', 'lineBuffer', 'input', 'uploadForm', 'cancel',
+			'imageInput', 'toggle', 'uploadStatus', 'hiddenUpload', 'sizer'];
+		for (let el of els) {
+			this[el] = document.query('#' + el);
+		}
+		this.renderIdentity();
+		return this;
+	},
+	// Name, emaail and tripcode field
+	renderIdentity() {
+		// Model has already been alocated and has a proper identity rendered
+		if (this.model.get('num'))
+			return;
+		const parsed = common.parse_name(main.$name.val(), main.$email.val()),
+			haveTrip = !!(parsed[1] || parsed[2]);
+		const el = this.el.query('.name'),
+			name = el.query('a');
+		if (parsed[0])
+			name.textContent = parsed[0] + ' ';
+		else
+			name.tetxContent = haveTrip ? '' : lang.anon;
+		if (haveTrip)
+			util.parseDOM(' <code>!?</code>').forEach(el => name.after(el));
+
+		// Insert staff title
+		main.oneeSama.trigger('fillMyName', name);
+		const email = main.$email.val().trim();
+		if (email) {
+			el.setAttribute('href', 'mailto:' + email);
+			el.classList.remove('nope');
+			el.classList.add('email');
+		}
+		else {
+			el.removeAttribute('href');
+			el.classList.add('nope');
+			el.classList.remove('email');
+		}
+	},
+	insertIntoDOM({destination}) {
+		destination.before(this.el);
+		this.resizeInput();
+		main.$threads.queryAll('aside.postsing').forEach(el =>
+			el.style.display = 'none');
+		this.fun();
+	},
+	/*
+	 Allows keeping the input buffer sized as if the text was monospace,
+	 without actually displaying monospace font. Keeps the input buffer from
+	 shifting around needlessly.
+	 */
+	resizeInput(val) {
+		const {sizer, input} = this;
+		if (typeof val !== 'string')
+			val = input.value;
+		sizer.textContent = val;
+		let size = sizer.width + common.INPUT_ROOM;
+		size = Math.max(size, inputMinSize
+			- input.getBoundingClientRect().left
+			- this.el.getBoundingClientRect().left);
+		this.input.style.width = size + 'px';
+	},
+	renderButtons() {
+		const {num, uploading, uploaded, uploadStatus, sentAllocRequest}
+			= this.model.attributes;
+		const allocWait = sentAllocRequest && !num;
+		this.submit.disabled = !!(uploading || allocWait);
+		if (uploaded)
+			this.submit.style.marginLeft = 0;
+		this.cancel.disabled = !!allocWait;
+		this.cancel.style.display = (!num || uploading) ? '' : 'none';
+		this.imageInput.disabled = !!uploading;
+		this.uploadStatus.innerHTML = uploadStatus;
+	},
+	renderSpoilerPane(model, spoiler) {
+		const background = spoiler
+			? `${config.MEDIA_URL}spoil/spoil${spoiler}.png`
+			: config.MEDIA_URL + 'css/ui/pane.png';
+		this.toggle.style.backgroundImage = `url("${background}")`;
+	}
+});
+
+const ComposerView = Backbone.View.extend({
 	events: {
 		'input #trans': 'onInput',
 		'keydown #trans': 'onKeyDown',
@@ -218,6 +384,7 @@ var ComposerView = Backbone.View.extend({
 			callback: inject,
 			op: state.page.get('thread'),
 			state: [common.S_BOL, 0],
+
 			// TODO: Convert current OneeSama.state array to more flexible
 			// object
 			state2: {spoiler: 0},
@@ -225,27 +392,24 @@ var ComposerView = Backbone.View.extend({
 			eLinkify: main.oneeSama.eLinkify,
 			lang: main.lang,
 			tamashii(num) {
-				var $sec = $('#' + num);
-				if (!$sec.is('section'))
-					$sec = $sec.closest('section');
-				if ($sec.is('section')) {
+				let section = document.query('#p' + num);
+				section = section && section.closest('section');
+				if (section) {
 					const desc = num in state.mine.readAll() && this.lang.you;
-					this.callback(this.postRef(num, extractNum($sec), desc));
+					return this.postRef(num, util.getNum(section), desc);
 				}
-				else {
-					this.callback(
-						common.safe(`<a class="nope">&gt;&gt;${num}</a>`)
-					);
-				}
+				else
+					return `<a class="nope">&gt;&gt;${num}</a>`;
 			}
 		});
-		imouto.hook('spoilerTag', etc.touchable_spoiler_tag);
+		imouto.hook('spoilerTag', util.touchable_spoiler_tag);
 		main.oneeSama.trigger('imouto', imouto);
 	},
 	// Initial render
-	render(args) {
+	render({destination, section}) {
 		const op = this.model.get('op');
-		this.setElement((op ? $('<article/>') : args.$sec)[0]);
+		this.setElement((op ? document.createElement('article') : section));
+
 		// A defined op means the post is a reply, not a new thread
 		this.isThread = !op;
 
@@ -288,18 +452,20 @@ var ComposerView = Backbone.View.extend({
 		}
 		this.$uploadForm = this.renderUploadForm();
 		this.$el.append(this.$uploadForm);
+
 		// Add a menu to the postform
 		main.oneeSama.trigger('draft', this.$el);
 		this.renderIdentity();
-		args.$dest.hide();
 
+		// Insert into the DOM
+		destination.style.display = 'none';
 		if (this.isThread) {
-			this.$el.insertAfter(args.$dest);
-			this.$el.after('<hr>');
+			destination.after(this.el);
+			this.el.after(document.createElement('hr'));
 			this.$subject.focus();
 		}
 		else {
-			this.$el.insertBefore(args.$dest);
+			destination.before(this.el);
 			this.resizeInput();
 			this.$input.focus();
 		}
@@ -418,7 +584,7 @@ var ComposerView = Backbone.View.extend({
 				.val(extra[k])
 				.appendTo(this.$uploadForm);
 		}
-		this.$uploadForm.prop('action', etc.uploadURL());
+		this.$uploadForm.prop('action', util.uploadURL());
 		this.$uploadForm.submit();
 		this.$iframe.load(function() {
 			if (!postForm)
@@ -581,7 +747,7 @@ var ComposerView = Backbone.View.extend({
 			return false;
 		params = params.split('&');
 		for (let i = 0, len = params.length; i < len; i++) {
-			let pair = '#' + params[i];
+			let pair = '#p' + params[i];
 			if (embed.youtube_time_re.test(pair))
 				return pair;
 		}
@@ -706,7 +872,8 @@ var ComposerView = Backbone.View.extend({
 							checkAgain(n - 1);
 					}, 100);
 				})(5); //retry 5 times
-			}else
+			}
+			else
 				postSM.feed('done');
 		}else
 			postSM.feed('done');
@@ -750,7 +917,7 @@ var ComposerView = Backbone.View.extend({
 		 removed from syncs client and server-side. Hmm.
 		 */
 
-		this.$el.attr('id', num);
+		this.$el.attr('id', 'p' + num);
 
 		if (msg.image)
 			this.insertUploaded(msg.image);
@@ -888,11 +1055,7 @@ var ComposerView = Backbone.View.extend({
 exports.ComposerView = ComposerView;
 
 function openPostBox(num) {
-	let $a = main.$threads.find('#' + num);
-	postSM.feed(
-		'new',
-		$a[$a.is('section') ? 'children' : 'siblings']('aside.posting')
-	);
+	postSM.feed('new', document.query(`#p${num} aside.posting`));
 }
 main.reply('openPostBox', openPostBox);
 
@@ -911,19 +1074,20 @@ main.$threads.on('click', 'a.quote', function(e) {
 	 Make sure the selection both starts and ends in the quoted post's
 	 blockquote
 	 */
-	let $post = $(e.target).closest('article, section'),
-		gsel = getSelection();
-	const num = $post.attr('id');
+	const post = e.target.closest('article, section'),
+		gsel = getSelection(),
+		num = util.getNum(post);
 
-	function isInside(p) {
-		var $el = $(gsel[p] && gsel[p].parentElement);
-		return $el.closest('blockquote').length
-			&& $el.closest('article, section').is($post);
+	function isInside(prop) {
+		const el = gsel[prop] && gsel[prop].parentElement;
+		return  el
+			&& el.closest('blockquote')
+			&& el.closest('article, section') === post;
 	}
 
 	let sel;
 	if (isInside('baseNode') && isInside('focusNode'))
 		sel = gsel.toString();
-	openPostBox(num);
+	openPostBox(util.getNum(post.closest('section')));
 	postForm.addReference(num, sel);
 });

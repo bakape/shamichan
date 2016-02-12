@@ -1,5 +1,16 @@
-language: node_js
-node_js: node
+language: go
+go: tip
+before_install:
+    - nvm install node
+    - nvm use node
+    - npm install
+    - npm test
+    - source /etc/lsb-release && echo "deb http://download.rethinkdb.com/apt $DISTRIB_CODENAME main" | sudo tee /etc/apt/sources.list.d/rethinkdb.list
+    - wget -qO- https://download.rethinkdb.com/apt/pubkey.gpg | sudo apt-key add -
+    - sudo apt-get update
+    - sudo apt-get install rethinkdb
+    - sudo cp /etc/rethinkdb/default.conf.sample /etc/rethinkdb/instances.d/instance1.conf
+    - sudo /etc/init.d/rethinkdb restart
 env: CXX=g++-4.8
 addons:
   apt:

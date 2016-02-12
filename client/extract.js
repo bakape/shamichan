@@ -3,7 +3,7 @@
  */
 
 const main = require('./main'),
-	{_, options, state, posts} = main;
+	{_, util, options, state, posts} = main;
 
 class Extract {
 	constructor(catalog) {
@@ -65,7 +65,7 @@ class Extract {
 		}
 	}
 	extractModel(el) {
-		let info = this.posts[el.getAttribute('id')];
+		let info = this.posts[util.getNum(el)];
 		// Did I make this post?
 		if (info.num in this.mine)
 			info.mine = true;

@@ -14,13 +14,15 @@ article, aside, .pagination {
 	border-right: @border;
 	border-bottom: @border;
 }
-article.highlight {
-	background-color: #d6bad0;
-	border-color: #ba9dbf;
-}
-.editing {
-	background-color: #fa6;
-	border-color: #e95;
+article {
+	&.highlight {
+		background-color: #d6bad0;
+		border-color: #ba9dbf;
+	}
+	&.editing {
+		background-color: #fa6;
+		border-color: #e95;
+	}
 }
 body {
 	background-color: #eef2ff;

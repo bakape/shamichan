@@ -19,7 +19,7 @@ function dragonDrop(e) {
 		else {
 			const section = e.target.closest('section');
 			if (section)
-				main.request('openPostBox', section.getAttribute('id'));
+				main.request('openPostBox', etc.getNum(section));
 		}
 	}
 	else {

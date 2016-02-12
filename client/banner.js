@@ -93,7 +93,7 @@ const NotificationView = exports.notification = Backbone.View.extend({
 				<b class="admin">
 					${msg}
 				</b>
-			</span>`)[0];
+			</span>`);
 		banner.el.after(el);
 		this.setElement(el);
 		return this;

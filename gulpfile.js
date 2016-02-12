@@ -1,138 +1,167 @@
 /*
 Builds client JS and CSS
  */
-'use strict';
+'use strict'
 
-const babelify = require('babelify'),
-	browserify = require('browserify'),
-	buffer = require('vinyl-buffer'),
-	config = require('./config'),
+const _ = require('underscore'),
+	babel = require('gulp-babel'),
+	cache = require('gulp-cached'),
+	chalk = require('chalk'),
+	fs = require('fs-extra'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
 	gutil = require('gulp-util'),
 	less = require('gulp-less'),
 	nano = require('gulp-cssnano'),
-	source = require('vinyl-source-stream'),
+	rename = require('gulp-rename'),
 	sourcemaps = require('gulp-sourcemaps'),
-	uglify = require('gulp-uglify');
+	uglify = require('gulp-uglify')
 
-const debug = config.DEBUG;
+const langs = fs.readdirSync('./lang')
+fs.mkdirsSync('./www/js/vendor')
 
-function build(name, b, dest) {
-	gulp.task(name, function() {
-		return bundler(name, b, dest);
-	});
-}
+// Keep script alive and rebuild on file changes
+// Triggered with the `-w` flag
+const watch = gutil.env.w
 
-function bundler(name, b, dest) {
-	// TEMP: Don't minify the client, until we get minification support for ES6
-	const canMinify = !debug && name !== 'client';
-	return b.bundle()
-		// Transform into vinyl stream
-		.pipe(source(name + '.js'))
-		.pipe(buffer())
-		.pipe(sourcemaps.init({loadMaps: true}))
-		.pipe(gulpif(canMinify, uglify()))
-		.on('error', gutil.log)
-		.pipe(sourcemaps.write('./'))
-		.pipe(gulp.dest(dest));
-}
+// Dependancy tasks for the default tasks
+const tasks = langs.slice()
 
-function buildClient() {
-	return browserify({
-		entries: './client/main',
-		// Needed for sourcemaps
-		debug: true,
-		bundleExternal: false,
-		external: [
-			'jquery', 'js-cookie', 'underscore', 'backbone', 'backbone.radio',
-			'stack-blur', 'lang', 'core-js', 'scriptjs', 'dom4'
-		]
-	})
-		// Exclude these requires on the client
-		.exclude('../config')
-		.exclude('../lang/')
-		.exclude('../server/state')
-		// Make available outside the bundle with require() under a
-		// shorthand name
-		.require('./client/main', {expose: 'main'});
-}
+// Client JS files
+buildClient('es5')
+buildClient('es6')
 
-// Main client bundler
-{
-	const b = buildClient()
-		// Transpile ES6 functionality that is not yet supported by the latest
-		// stable Chrome and FF to ES5
-		.transform(babelify, {
-			plugins: [
-				'babel-plugin-transform-es2015-classes',
-				'transform-es2015-block-scoping',
-				'transform-es2015-classes',
-				'transform-es2015-destructuring',
-				'transform-es2015-object-super',
-				'transform-es2015-parameters',
-				'transform-es2015-sticky-regex',
-				'transform-es2015-unicode-regex',
-				'transform-strict-mode'
-			]
-		})
-	build('client', b, './www/js');
-}
+// Various little scripts
+createTask('scripts', './clientScripts/*.js', src =>
+	src
+		.pipe(sourcemaps.init())
+		.pipe(uglify())
+		.pipe(sourcemaps.write('./maps'))
+		.pipe(gulp.dest('./www/js/scripts')))
 
-// Less performant client for older browser compatibility
-{
-	const b = buildClient().transform(babelify, {
-		presets: ['es2015'],
-		plugins: ['transform-strict-mode']
-	})
-	build('legacy', b, './www/js')
-}
-
-// Libraries
-{
-	const b = browserify({
-		require: [
-			'jquery', 'js-cookie', 'underscore', 'backbone', 'backbone.radio',
-			'scriptjs', 'sockjs-client', 'dom4'
-		],
-		debug: true
-	})
-		.require('./lib/stack-blur', {expose: 'stack-blur'})
-		.require('core-js/es6', {expose: 'core-js'});
-
-	build('vendor', b, './www/js');
-}
-
-// Language bundles
-gulp.task('lang', function() {
-	for (let lang of config.LANGS) {
-		const b = browserify({debug: true})
-			.require(`./lang/${lang}/common`, {expose: 'lang'});
-		bundler(lang, b, './www/js/lang');
-	}
-});
-
-// Moderation
-{
-	const b = browserify({
-		debug: true,
-		bundleExternal: false,
-		external: ['main']
-	})
-		.require('./client/mod', {expose: 'mod'})
-		.transform(babelify, {
-			presets: ['es2015'],
-			plugins: ['transform-strict-mode']
-		})
-
-	build('mod', b, './state/');
-}
-
-gulp.task('css', function() {
-	return gulp.src('./less/*.less')
+// Compile Less to CSS
+createTask('css', './less/*.less', src =>
+	src
 		.pipe(sourcemaps.init())
 		.pipe(less())
 		.pipe(nano())
-		.pipe(sourcemaps.write('./maps/'))
-		.pipe(gulp.dest('./www/css'));
-});
+		.pipe(sourcemaps.write('./maps'))
+		.pipe(gulp.dest('./www/css')))
+
+// Language packs
+langs.forEach(lang =>
+	createTask(lang, `./lang/${lang}/client.js`, src =>
+		src
+			.pipe(rename({basename: lang}))
+			.pipe(sourcemaps.init())
+			.pipe(babel({plugins: ['transform-es2015-modules-systemjs']}))
+			.pipe(uglify())
+			.pipe(sourcemaps.write('./maps'))
+			.pipe(gulp.dest('./www/js/lang'))))
+
+// Dependancy libraries
+copyVendor([
+	'./node_modules/systemjs/dist/system.js',
+	'./node_modules/systemjs/dist/system.js.map',
+	'./node_modules/dom4/build/dom4.js',
+	'./lib/sockjs.js'
+])
+compileVendor('corejs', 'node_modules/core-js/client/core.js')
+compileVendor('js-cookie', 'node_modules/js-cookie/src/js.cookie.js')
+compileVendor('underscore', 'node_modules/underscore/underscore.js')
+compileVendor('stack-blur', './lib/stack-blur.js')
+
+gulp.task('default', tasks)
+
+/**
+ * Builds the client files of the apropriate ECMAScript version
+ * @param {string} version
+ */
+function buildClient(version) {
+	createTask(version, './client/**/*.js', src =>
+		src
+			.pipe(sourcemaps.init())
+			.pipe(babel(babelConfig(version)))
+
+			// UglifyJS does not yet fully support ES6, so best not minify
+			// to be on the safe side
+			.pipe(gulpif(version === 'es5', uglify()))
+			.pipe(sourcemaps.write('./maps'))
+			.pipe(gulp.dest('./www/js/' + version)))
+}
+
+/**
+ * Create a new gulp taks and set it to execute on default and incrementally
+ * rebuild in watch mode.
+ * @param {string} name
+ * @param {string} path
+ * @param {function} task
+ */
+function createTask(name, path, task) {
+	tasks.push(name)
+	gulp.task(name, () =>
+		task(gulp.src(path)
+			.on('error', gutil.log)
+			.pipe(cache(name))))
+
+	// Recompile on source update, if running with the `-w` flag
+	if (watch) {
+		gulp.watch(path, [name])
+	}
+}
+
+/**
+ * Return a babel configuration object, depending on target ES version
+ * @param {string} version
+ * @returns {Object}
+ */
+function babelConfig(version) {
+	const base = {
+		compact: true,
+		comments: false
+	}
+	if (version === 'es5') {
+		return _.extend(base, {
+			presets: ['es2015'],
+			plugins: [
+				'transform-es2015-modules-systemjs'
+			]
+		})
+	}
+	return _.extend(base, {
+		plugins: [
+			'transform-es2015-destructuring',
+			'transform-es2015-parameters',
+			'transform-es2015-modules-systemjs'
+		]
+	})
+}
+
+/**
+ * Copy a dependancy library, minify and generate sourcemaps
+ * @param {string} name - Task and output file name
+ * @param {string} path - path to file
+ */
+function compileVendor(name, path) {
+	createTask(name, path, src =>
+		src
+			.pipe(rename({basename: name}))
+			.pipe(sourcemaps.init())
+			.pipe(uglify())
+			.pipe(sourcemaps.write('./maps'))
+			.pipe(gulp.dest('./www/js/vendor')))
+}
+
+/**
+ * Copies a dependancy library from node_modules to the vendor directory
+ * @param {string[]} paths - File paths
+ */
+function copyVendor(paths) {
+	for (let path of paths) {
+		fs.copySync(
+			path,
+			'./www/js/vendor/' + _.last(path.split('/')),
+			{clobber: true}
+		)
+	}
+}

@@ -4,7 +4,7 @@
 export DEBIAN_FRONTEND=noninteractive;
 apt-get update  < /dev/null
 apt-get install -y build-essential git redis-server imagemagick\
-	iptables-persistent	software-properties-common pngquant < /dev/null
+	iptables-persistent software-properties-common pngquant < /dev/null
 # ffmpeg PPA
 add-apt-repository ppa:mc3man/trusty-media -y
 # Node.js setup script

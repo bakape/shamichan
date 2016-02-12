@@ -1,0 +1,196 @@
+{
+    "HTTP": {
+        "addr": ":8000",
+        "origin": "http://localhost:8000",
+        "trustProxies": true,
+        "websockets": true
+    },
+    "rethinkdb": {
+        "addr": "localhost:28015",
+        "db": "meguca"
+    },
+    "boards": {
+        "enabled": ["a", "staff"],
+        "boards": {
+            "a": {
+                "maxThreads": 100,
+                "maxBump": 500,
+                "title": "/a/ - Animu & Mango"
+            },
+            "all": {
+                "title": "/all/ - Aggregator Metaboard"
+            },
+            "staff": {
+                "maxThreads": 20,
+                "maxBump": 2000,
+                "title": "/staff/ - Moderator Circlejerk"
+            }
+        },
+        "default": "a",
+        "staff": "staff",
+        "psuedo": [
+            ["g", "https://google.com"]
+        ],
+        "links": [
+            ["4chan", "http://www.4chan.org/"]
+        ],
+        "prune": false
+    },
+    "lang": {
+        "enabled": ["en_GB"],
+        "default": "en_GB"
+    },
+    "staff": {
+        "classes": {
+            "admin": {
+                "alias": "Admin",
+                "rights": {
+                    "seeMnemonics": true,
+                    "seeModeration": true,
+                    "accessStaffBoard": true,
+                    "spoiler": true,
+                    "deleteImages": true,
+                    "deletePosts": true,
+                    "lockThread": true,
+                    "ban": true,
+                    "sendNotifications": true,
+                    "adminPanel": true,
+                    "dj": false
+                },
+                "members": {
+                    "lalc@email.com": "lalc"
+                }
+            },
+            "moderator": {
+                "alias": "Moderator",
+                "rights": {
+                    "seeMnemonics": true,
+                    "seeModeration": true,
+                    "accessStaffBoard": true,
+                    "spoiler": true,
+                    "deleteImages": true,
+                    "deletePosts": true,
+                    "lockThread": true,
+                    "ban": true
+                },
+                "members": {
+                    "mod1@email.com": "mod1",
+                    "mod2@email.com": "mod2"
+                }
+            },
+            "janitor": {
+                "alias": "Janitor",
+                "rights": {
+                    "seeModeration": true,
+                    "accessStaffBoard": true,
+                    "spoiler": true,
+                    "deleteImages": true,
+                    "deletePosts": true
+                },
+                "members": {
+                    "janitor@email.com": "janny1"
+                }
+            },
+            "dj": {
+                "alias": "DJ",
+                "rights": {
+                    "seeMnemonics": true,
+                    "dj": true
+                },
+                "members": {
+                    "dj@email.com": "dj1"
+                }
+            }
+        },
+        "keyword": "login",
+        "sessionTime": 1209600
+    },
+    "images": {
+        "max": {
+            "size": 3145728,
+            "width": 6000,
+            "heigth": 6000,
+            "pixels": 20250000
+        },
+        "thumb": {
+            "quality": 50,
+            "thumbDims": [125, 125],
+            "midDims": [250, 250],
+            "highQuality": true,
+            "png": false,
+            "pngQuality": "0-10"
+        },
+        "formats": {
+			"png": true,
+			"jpg": true,
+			"gif": true,
+            "webm": true,
+            "mp3": true,
+            "svg": true,
+            "pdf": true
+        },
+		"webmAudio": true,
+        "duplicateThreshold": 26,
+        "spoilers": [1, 2, 3],
+        "hats": false
+    },
+    "banners": [
+        "banner01.png"
+    ],
+    "schedule": [
+        ["Mon", "", ""],
+        ["Tue", "", ""],
+        ["Wed", "", ""],
+        ["Thu", "", ""],
+        ["Fri", "", ""],
+        ["Sat", "", ""],
+        ["Sun", "", ""]
+    ],
+    "FAQ": [
+        "Upload size limit is 3 MB",
+        "Accepted upload file types: JPG, JPEG, PNG, APNG, GIF, WEBM, SVG, PDF, MP3(must have cover art)",
+        "<hr>",
+        "Hash commands:",
+        "#d100 #2d100 #2d100+10 - Roll dice",
+        "#flip - Coinflip",
+        "#8ball - An 8ball",
+        "#q - Print r/a/dio song queue",
+        "#sw24:15 #sw2:24:15 #sw24:15+30 #sw24:15-30 - Syncronised duration timer",
+        "<hr>",
+        "Source code repository: <a href=\"https://github.com/bakape/doushio\" target=\"_blank\">github.com/bakape/meguca</a>"
+    ],
+    "filter": [
+
+    ],
+    "eightball": [
+        "Yes",
+        "No",
+        "Maybe",
+        "It can't be helped",
+        "Hell yeah, motherfucker",
+        "Ara ara~",
+        "That is my fetish",
+        "Anta baka?"
+    ],
+    "posts": {
+        "salt": "LALALALALALALALALALALALALALALALALALALALA",
+        "readOnly": false,
+        "threadCreationCooldown": 60,
+        "maxSubjectLength": 50,
+        "excludeRegex": "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
+        "sageEnabled": true,
+        "forcedAnon": true
+    },
+    "recaptcha": {
+        "public": "",
+        "private": ""
+    },
+    "radio": false,
+    "pyu": false,
+    "illyaDance": false,
+    "feedbackEmail": "lalc@email.com",
+    "defaultCSS": "moe",
+    "frontpage": "",
+    "infoBanner": "",
+    "injectJSPath": ""
+}

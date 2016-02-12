@@ -3,7 +3,7 @@ Toggle and preview staff titles on new posts
  */
 
 const main = require('main'),
-	{lang} = main,
+	{etc, lang, state} = main,
 	{auth} = main.ident;
 
 // Insert toggler checkbox into name form
@@ -16,12 +16,12 @@ main.$name.after(main.common.parseHTML
 const $authName = main.$('#authName');
 
 // Preview the title in postForm
-main.oneeSama.hook('fillMyName', $el => {
+main.oneeSama.hook('fillMyName', el => {
 	const checked = $authName[0].checked;
-	$el.toggleClass(auth === 'admin' ? 'admin' : 'moderator', checked);
 	if (checked) {
-		$el.append(' ## ' + main.state.hotConfig
-			.get('staff_aliases')[auth] || auth);
+		el.classList.add(auth === 'admin' ? 'admin' : 'moderator');
+		el.append(document.createTextNode(' ## '
+			+ state.hotConfig.get('staff_aliases')[auth]));
 	}
 });
 $authName.change(() => main.request('postForm:indentity'));

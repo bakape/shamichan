@@ -2,87 +2,88 @@
  * Central model keeping the state of the page
  */
 
-let main = require('./main'),
-	{_, Backbone} = main;
+import {extend} from 'underscore'
+import Memory from './memory'
+import {randomID, getID} from './util'
+import Model from './model'
+import Collection from './collection'
 
 // Read page state by parsing a URL
-function read(url) {
-	// Strip minimal mode, so we save a proper URL into History
-	const href = url.split('#')[0].replace(/[\?&]minimal=true/, '');
-
-	// Display last N posts setting on thread pages
-	let lastN = href.match(/[\?&]last=(\d+)/),
-		thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
-		page = href.match(/\/page(\d+)$/);
-	lastN = lastN ? parseInt(lastN[1], 10) : 0;
-	thread = thread ? parseInt(thread[1], 10) : 0;
-	page = page ? parseInt(page[1], 10) : -1;
-	return {
-		href,
-		thread,
-		page,
-		lastN,
+export function read(href) {
+	const state = {
 		board: href.match(/\/([a-zA-Z0-9]+?)\//)[1],
-		catalog: /\/catalog/.test(href),
-
-		// Indicates if on the 'live' board page, which needs extra server-side
-		// logic.
-		live: page === -1 && thread === 0
-	};
+		thread: href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
+		// Displayed last N posts setting on thread pages
+		lastN: href.match(/[\?&]last=(\d+)/)
+	}
+	for (let key of ['thread', 'lastN']) {
+		const val = state[key]
+		state[key] = val ? parseInt(val[1]) : 0
+	}
+	return state
 }
-exports.read = read;
 
 // Initial page state
-let page = exports.page = new Backbone.Model(read(location.href));
+const initial = read(location.href)
+initial.tabID = randomID(32)
+export let page = new Model(initial)
 
 // Hot-reloadable configuration
-// TODO: We need actual listeners to this model for hot reloads.
-exports.hotConfig = new Backbone.Model(imports.hotConfig);
-// Hash of all the config variables
-exports.configHash = imports.configHash;
+
+// TODO: We need actual listeners to this model for hot reloads
 
 // Tracks the synchronisation counter of each thread
-exports.syncs = {};
+export let syncs = {}
+
 // Posts I made in this tab
-exports.ownPosts = {};
-// remember which posts are mine for two days
-let mine = exports.mine = new main.Memory('mine', 2, true);
+export const ownPosts = {}
+
+// Configuration object, passed from the server
+export const config = window.config
+
+// Hash of the the configuration object
+export const configHash = window.configHash
+
+// Indicates, if in mobile mode. Determined server-side.
+export const isMobile = window.isMobile
+
+// Cached DOM elements
+export const $thread = document.query('threads')
+export const $name = document.query('#name')
+export const $email = document.query('#email')
+export const $banner = document.query('#banner')
+
+// Remember which posts are mine for two days
+export const mine = new Memory('mine', 2)
 
 // All posts currently displayed
-let PostCollection = Backbone.Collection.extend({
-	// Needed, because we use different model classes in the same
-	// collection. Apperently Backbone >=1.2.0 no longer picks those up
-	// automatically.
-	modelId(attrs) {
-		return attrs.num;
-	}
-});
-let posts = exports.posts = new PostCollection();
-main.on('state:clear', function() {
+export const posts = new Collection()
+
+// Clear the current post state and HTML
+export function clear() {
 	/*
 	 * Emptying the whole element should be faster than removing each post
-	 * individually through models and listeners. Not that the `remove()`s
-	 * don't fire anymore...
+	 * individually through models and listeners
 	 */
-	main.$threads[0].innerHTML = '';
-	const models = posts.models;
-	for (let i = 0, l = models.length; i < l; i++) {
-		// The <threads> tag has already been emptied, no need to perform
-		// element removal with the default `.remove()` method
-		models[i].dispatch('stopListening');
-	}
-	posts.reset();
+	$threads.innerHTML = ''
+
+	// The <threads> tag has already been emptied, no need to perform
+	// element removal with the default `.remove()` method
+	models.each(model =>
+		model.dispatch('stopListening'))
+
+	posts.reset()
+
 	// Prevent old threads from syncing
-	exports.syncs = {};
-	main.request('massExpander:unset');
-});
-
-// Post links verified server-side
-let links = exports.links = {};
-
-function addLinks(addition) {
-	if (addition) {
-		_.extend(links, addition);
-	}
+	exports.syncs = {}
+	events.request('massExpander:unset')
 }
-exports.addLinks = addLinks;
+
+// Retrieve model of closest parent post
+export function getModel(el) {
+	const id = getID(el)
+	if (!id) {
+		return null
+	}
+	return posts.get(id)
+}

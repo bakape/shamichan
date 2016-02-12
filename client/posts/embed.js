@@ -5,7 +5,7 @@ Youtube, soundcloud and pastebin link embeding
 // TODO: DRY this shit
 
 let main = require('../main'),
-	{$, etc} = main;
+	{$, util} = main;
 
 // >80 char rule
 const youtube_url_re = exports.youtube_url_re = /(?:>>>*?)?(?:https?:\/\/)?(?:www\.|m.)?youtube\.com\/watch\/?\?((?:[^\s#&=]+=[^\s#&]*&)*)?v=([\w-]{11})((?:&[^\s#&=]+=[^\s#&]*)*)&?(#t=[\dhms]{1,9})?/,
@@ -215,7 +215,7 @@ main.$threads.on('click', '.soundcloud', function (e) {
 		if (err)
 			return alert(err);
 		target.append(document.createElement('br'));
-		target.append(etc.parseDOM(json.html)[0]);
+		target.append(util.parseDOM(json.html));
 		target.style.width = width + 'px';
 	});
 });

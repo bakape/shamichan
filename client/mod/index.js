@@ -34,4 +34,4 @@ const staff = config.STAFF_BOARD;
 $('#navTop')
 	.children('a')
 	.last()
-	.after(` / <a href="../${staff}/" class="history">${staff}</a>`);
+	.after(` / <a href="/${staff}/" class="history">${staff}</a>`);

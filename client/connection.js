@@ -2,6 +2,11 @@
  * Websocket controller and connection notifier
  */
 
+/**
+ * Websocket call handler map
+ */
+export const dispatcher = {}
+
 const main = require('./main'),
 	{_, common, config, connSM, state, SockJS} = main,
 	lang = main.lang.sync;
@@ -87,7 +92,7 @@ function new_socket() {
 
 connSM.act('conn, reconn + open -> syncing', () => {
 	sync_status(lang.syncing);
-	const connID = common.random_id(),
+	const connID = common.randomID(32),
 		{page} = state;
 	page.set('connID', connID);
 	send([common.SYNCHRONIZE, connID, page.get('board'), state.syncs,

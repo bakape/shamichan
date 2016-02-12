@@ -3,14 +3,12 @@
  */
 
 const main = require('./main'),
-	{$, Backbone, config, connSM, state, options} = main;
-
-const mediaURL = config.MEDIA_URL;
+	{$, _, Backbone, config, connSM, etc, state, options} = main;
 
 // Needs to be available with no connectivity, so we download and cache it
 let discoFavicon = '',
 	xhr = new XMLHttpRequest();
-xhr.open('GET', mediaURL + 'css/ui/disconnected.ico');
+xhr.open('GET', '/ass/css/ui/disconnected.ico');
 xhr.responseType = 'blob';
 xhr.onload = function() {
 	if (this.status === 200)
@@ -51,7 +49,7 @@ let NotifyModel = Backbone.Model.extend({
 	},
 	check(model) {
 		const {hidden, unreadCount, reply, alert} = model.attributes;
-		let icon = mediaURL + 'favicon.ico';
+		let icon = '/ass/favicon.ico';
 		if (alert)
 			return this.render(discoFavicon, '--- ');
 		else if (!hidden)
@@ -59,11 +57,11 @@ let NotifyModel = Backbone.Model.extend({
 		let prefix = '';
 		if (unreadCount) {
 			prefix += `(${unreadCount}) `;
-			icon = mediaURL + 'css/ui/unreadFavicon.ico';
+			icon = '/ass/css/ui/unreadFavicon.ico';
 		}
 		if (reply){
 			prefix = '>> ' + prefix;
-			icon = mediaURL + 'css/ui/replyFavicon.ico';
+			icon = '/ass/css/ui/replyFavicon.ico';
 		}
 		this.render(icon, prefix);
 	},
@@ -97,12 +95,12 @@ main.reply('repliedToMe', function (num) {
 		let n = new Notification(main.lang.quoted, {
 			// if the post doesn't have a image we use a bigger favicon
 			icon: (post.image && options.get('thumbs')!=='hide' && !main.oneeSama.workMode) ? main.oneeSama.thumbPath(post.image)
-				: mediaURL + 'css/ui/favbig.png',
+				: '/ass/css/ui/favbig.png',
 			body: post.body
 		});
 		n.onclick = function() {
 			window.focus();
-			location.hash = '#' + num;
+			location.hash = '#p' + num;
 		};
 	}
 

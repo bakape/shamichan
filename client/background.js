@@ -3,9 +3,10 @@
  */
 
 const main = require('./main'),
-	{Backbone, common, options, stackBlur, state, oneeSama} = main;
+	{Backbone, common, etc, oneeSama, options, stackBlur, state} = main;
 
 const BackgroundView = Backbone.View.extend({
+	tagName: 'style',
 	colourMap: {
 		glass: {
 			normal: 'rgba(40, 42, 46, 0.5)',
@@ -17,7 +18,8 @@ const BackgroundView = Backbone.View.extend({
 		}
 	},
 	initialize() {
-		this.css = document.query('#backgroundCSS');
+		document.head.append(this.el);
+		document.body.append(etc.parseDOM('<div id="user_bg"></div>'));
 		this.render();
 
 		main.reply('background:store', this.store, this);
@@ -64,8 +66,6 @@ const BackgroundView = Backbone.View.extend({
 	render() {
 		const {el} = this;
 		el.innerHTML = '';
-		el.style.background = 'none';
-		this.css.innerHTML = '';
 		if (options.get('illyaBGToggle') && state.hotConfig.get('ILLYA_DANCE'))
 			this.renderIllya();
 		else if (options.get('userBG') && !main.oneeSama.workMode)
@@ -75,35 +75,40 @@ const BackgroundView = Backbone.View.extend({
 		const bg = localStorage.background;
 		if (!bg)
 			return;
-		const {el} = this;
-		el.style.background = `url(${bg}) no-repeat fixed center`;
-		el.style.backgroundSize = 'cover';
+		let html = common.parseHTML
+			`#user_bg {
+				background: url(${bg}) no-repeat fixed center;
+				background-size: cover;
+			}`;
 
 		// Add blurred background image to elements, if theme is glass or ocean
-		const theme = main.oneeSama.workMode? state.hotConfig.get('DEFAULT_CSS'):options.get('theme');
-		if (theme !== 'glass' && theme !== 'ocean')
-			return;
-		const blurred = localStorage.blurred;
-		if (!blurred)
-			return;
-		this.css.innerHTML = this.renderGlass(theme, blurred);
+		const theme = main.oneeSama.workMode
+			? state.hotConfig.get('DEFAULT_CSS') : options.get('theme')
+		if (theme === 'glass' || theme === 'ocean') {
+			const {blurred} = localStorage;
+			if (blurred)
+				html += ' ' + this.renderGlass(theme, blurred);
+		}
+		this.el.innerHTML = html;
 	},
 	renderGlass(theme, blurred) {
 		const {normal, editing} = this.colourMap[theme];
 		return common.parseHTML
-			`article, aside, .pagination, .popup-menu, .modal, .bmodal,
-				.preview, #banner
-			{
+			`.glass {
 				background:
 					linear-gradient(${normal}, ${normal}),
 					url(${blurred}) center fixed no-repeat;
 				background-size: cover;
 			}
-			.editing {
+			.glass.editing, .editing .background {
 				background:
 					linear-gradient(${editing}, ${editing}),
 					url(${blurred}) center fixed no-repeat;
 				background-size: cover;
+			}
+			.background {
+				padding: 10px;
+				margin: 2px;
 			}`;
 	},
 	renderIllya() {
@@ -116,4 +121,4 @@ const BackgroundView = Backbone.View.extend({
 	}
 });
 
-main.defer(() => module.exports = new BackgroundView({el: '#user_bg'}));
+main.defer(() => module.exports = new BackgroundView());

@@ -7,7 +7,7 @@ const main = require('main'),
 		state} = main
 
 const PanelView = Backbone.View.extend({
-	className: 'modal mod panel',
+	className: 'modal mod panel glass',
 	initialize() {
 		this.$el.appendTo(main.$overlay);
 		modals[this.type] = this;
@@ -42,7 +42,7 @@ const ModLogView = PanelView.extend({
 	renderContents(info) {
 		return table(info, act => [
 			// Unbans do not have a target post
-			act.num ? oneeSama.postRef(act.num, act.op).safe : '',
+			act.num ? oneeSama.postRef(act.num, act.op) : '',
 			lang.mod.formatLog(act),
 			oneeSama.time(act.time)
 		]);

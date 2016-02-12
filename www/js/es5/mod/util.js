@@ -1,0 +1,2 @@
+"use strict";System.register([],function(e,t){function r(){var e=[];return n(function(t){return t.checked&&e.push(c.etc.getID(t))}),c._.compact(e)}function n(e){for(var t=c.$threads[0].getElementsByClassName("postCheckbox"),r=0;r<t.length;r++)e(t[r])}var c;return{setters:[],execute:function(){c=require("main"),exports.getSelected=r,exports.loopCheckboxes=n}}});
+//# sourceMappingURL=../maps/mod/util.js.map

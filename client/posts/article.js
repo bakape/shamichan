@@ -2,29 +2,19 @@
  * Reply posts
  */
 
-let main = require('../main'),
-	postCommon = require('./common'),
-	{$, _, Backbone, options, state} = main;
+const main = require('../main'),
+	PostCommon = require('./common'),
+	{_, Backbone} = main;
 
-var Article = module.exports = Backbone.View.extend({
+module.exports = PostCommon.extend({
 	tagName: 'article',
 	render() {
 		this.setElement(main.oneeSama.article(this.model.attributes));
 		return this;
 	},
 	insertIntoDOM() {
-		main.$threads.children('#' + this.model.get('op'))
-			.children('blockquote, .omit, form, article[id]:last')
-			.last()
-			.after(this.$el);
+		_.last(document.query('#p' + this.model.get('op')).queryAll('article'))
+			.after(this.el);
 		this.autoExpandImage().fun();
-	},
-	renderEditing(model, editing) {
-		this.$el.toggleClass('editing', !!editing);
-		if (!editing)
-			this.$el.children('blockquote')[0].normalize();
 	}
 });
-
-// Extend with common mixins
-_.extend(Article.prototype, postCommon);
