@@ -1,5 +1,3 @@
-[![GoDoc](https://godoc.org/gopkg.in/bakape/meguca.v2?status.svg)](https://godoc.org/gopkg.in/bakape/meguca.v2) [![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
-
 ##Setup
 * Install [dependencies](#dependencies) listed below
 * Sign up for reCAPTCHA
@@ -8,18 +6,12 @@
 * Run `node builder.js` to start an auto-reloading development server
 
 ##Cross-platform development with Vagrant
-* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and 
+* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and
 [Vagrant](http://www.vagrantup.com/downloads.html)
 * Open a shell in meguca's root directory and run `vagrant up`
 * Grab a coffee
-* Run `vagrant ssh` and `node builder`, once logged in. Your changes will 
+* Run `vagrant ssh` and `node builder`, once logged in. Your changes will
 automatically sync both ways. [More info](https://www.vagrantup.com/)
-
-##Automatic deployment
-Users less familiar with Linux and sysadmin procedures can paste the 
-following line into the root shell to automatically setup a default 
-installation on an fresh Ubuntu >=14.04 LTS VPS.
-`wget -q -O - https://raw.githubusercontent.com/bakape/meguca/master/scripts/deploy.sh | bash -`
 
 ##Production
 * Have your webserver serve `www/`
@@ -28,7 +20,7 @@ installation on an fresh Ubuntu >=14.04 LTS VPS.
   webserver, you still need to set `MEDIA_URL` in `config/imager` for image
   search links to work.
 * Run `npm start/stop/restart` to start/stop/restart the server
-* You can update `config/hot.js` and client files without restarting the server 
+* You can update `config/hot.js` and client files without restarting the server
 with `node server/kill.js`
 * All errors are logged to `./error.log`
 
