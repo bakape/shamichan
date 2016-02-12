@@ -16,7 +16,7 @@ import (
 	"strconv"
 )
 
-// Wrapper type for compund errors errors
+// Wrapper type for compound errors
 type wrapError struct {
 	text  string
 	inner error
