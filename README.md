@@ -1,4 +1,9 @@
-[![GoDoc](https://godoc.org/gopkg.in/bakape/meguca.v2?status.svg)](https://godoc.org/gopkg.in/bakape/meguca.v2) [![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=v2)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
+[![GoDoc](https://godoc.org/github.com/bakape/meguca/server?status.svg)](https://godoc.org/github.com/bakape/meguca/server) [![Build Status](https://travis-ci.org/bakape/meguca.svg)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
+
+** Note: The version in the master branch is currently in early development.
+For deploying a production-ready legacy meguca instance, download the [latests
+release](https://github.com/bakape/meguca/releases/latest) and consult the
+bundled README. **
 
 ##Setup
 * Install [dependencies](#dependencies) listed below
@@ -38,12 +43,6 @@ incrementally rebuild the client
 * Grab a coffee
 * Run `vagrant ssh` and `node builder`, once logged in. Your changes will
 automatically sync both ways. [More info](https://www.vagrantup.com/)
-
-##Automatic deployment
-Users less familiar with Linux and sysadmin procedures can paste the
-following line into the root shell to automatically setup a default
-installation on an fresh Ubuntu >=14.04 LTS VPS.
-`wget -q -O - https://raw.githubusercontent.com/bakape/meguca/master/scripts/deploy.sh | bash -`
 
 ##Production
 * Have your webserver serve `www/`
