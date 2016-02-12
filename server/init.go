@@ -50,7 +50,7 @@ func Start() {
 // TODO: CL flags to override this
 func chdirToSource() {
 	if gopath := os.Getenv("GOPATH"); gopath != "" {
-		workDir := gopath + "/src/gopkg.in/bakape/meguca.v2"
+		workDir := gopath + "/src/github.com/bakape/meguca"
 		throw(os.Chdir(workDir))
 		daemonContext.WorkDir = workDir
 	}

@@ -68,11 +68,15 @@ func (*ClientSuite) TestClose(c *C) {
 	wg.Add(2)
 	go readServerErrors(c, cl, &wg)
 	go readClientErrors(c, wcl, &wg)
-	c.Assert(normalCloseClient(cl), IsNil)
+	closeClient(c, cl)
 	wg.Wait()
 
 	// Already closed
-	c.Assert(normalCloseClient(cl), ErrorMatches, "^websocket: close sent$")
+	c.Assert(
+		cl.close(websocket.CloseNormalClosure, ""),
+		ErrorMatches,
+		"^websocket: close sent$",
+	)
 }
 
 func readServerErrors(c *C, cl *Client, wg *sync.WaitGroup) {
@@ -102,8 +106,8 @@ func readClientErrors(c *C, conn *websocket.Conn, wg *sync.WaitGroup) {
 	}
 }
 
-func normalCloseClient(cl *Client) error {
-	return cl.close(websocket.CloseNormalClosure, "")
+func closeClient(c *C, cl *Client) {
+	c.Assert(cl.close(websocket.CloseNormalClosure, ""), IsNil)
 }
 
 var dialer = websocket.Dialer{}
@@ -160,4 +164,23 @@ func (*ClientSuite) TestProtocolError(c *C) {
 		ErrorMatches,
 		errMsg+": websocket: close sent",
 	)
+}
+
+func (*ClientSuite) TestSend(c *C) {
+	std := []byte("foo")
+	cl, sv, _, wcl := newConnectedClient(c)
+	defer sv.CloseClientConnections()
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go readServerErrors(c, cl, &wg)
+	go func() {
+		defer wg.Done()
+		typ, msg, err := wcl.ReadMessage()
+		c.Assert(err, IsNil)
+		c.Assert(typ, Equals, websocket.BinaryMessage)
+		c.Assert(msg, DeepEquals, std)
+	}()
+	c.Assert(cl.send(std), IsNil)
+	closeClient(c, cl)
+	wg.Wait()
 }
