@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.7.3 - 2016-02-12
+* Change
+	- Lock down current stable, so we can move v2 into master
+
 ##v1.7.2 - 2015-12-27
 * Fix
 	- Server crashing on no thumbnail catalog OP renders
