@@ -155,13 +155,24 @@ func (*Util) TestLogError(c *C) {
 	req := newRequest(c)
 	err := errors.New("foo")
 	req.RemoteAddr = "::1"
+	log := captureLog(func() {
+		logError(req, err)
+	})
+	assertLog(c, strings.Split(log, "\n")[0], "panic serving ::1: foo")
+}
+
+func assertLog(c *C, input, standard string) {
+	c.Assert(input, Matches, `\d+/\d+/\d+ \d+:\d+:\d+ `+standard)
+}
+
+func captureLog(fn func()) string {
 	buf := new(bytes.Buffer)
 	log.SetOutput(buf)
-	logError(req, err)
+	fn()
 	log.SetOutput(os.Stdout)
-	c.Assert(
-		strings.Split(buf.String(), "\n")[0],
-		Matches,
-		`\d+/\d+/\d+ \d+:\d+:\d+ panic serving ::1: foo`,
-	)
+	return buf.String()
+}
+
+func (*Util) TestRandomID(c *C) {
+	c.Assert(randomID(32), Matches, "^[0-9a-zA-Z]{32}$")
 }

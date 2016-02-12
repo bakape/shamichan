@@ -439,6 +439,7 @@ func (*WebServer) TestCreateRouter(c *C) {
 		{"/api/a/1", httprouter.Params{{"thread", "1"}}},
 		{"/api/config", nil},
 		{"/api/post/1", httprouter.Params{{"post", "1"}}},
+		{"/socket", nil},
 		{"/ass/favicon.gif", httprouter.Params{{"filepath", "/favicon.gif"}}},
 		{
 			"/img/src/madotsuki.png",

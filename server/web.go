@@ -50,6 +50,9 @@ func createRouter() *httprouter.Router {
 	router.HandlerFunc("GET", "/api/config", serveConfigs)
 	router.GET("/api/post/:post", servePost)
 
+	// Websocket API
+	router.HandlerFunc("GET", "/socket", websocketHandler)
+
 	// Static assets
 	router.ServeFiles("/ass/*filepath", http.Dir("./www"))
 	router.GET("/img/*filepath", serveImages)
