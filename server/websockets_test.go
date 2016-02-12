@@ -58,9 +58,7 @@ func (*ClientSuite) TestLogError(c *C) {
 	log := captureLog(func() {
 		cl.logError(errors.New(msg))
 	})
-	err := `\d+/\d+/\d+ \d+:\d+:\d+ ` +
-		fmt.Sprintf("Error by %s: %s\n", ip, msg)
-	c.Assert(log, Matches, err)
+	assertLog(c, log, fmt.Sprintf("Error by %s: %s\n", ip, msg))
 }
 
 func (*ClientSuite) TestClose(c *C) {
@@ -126,4 +124,40 @@ func newConnectedClient(c *C) (
 	wcl, _, err := dialer.Dial(strings.Replace(sv.URL, "http", "ws", 1), nil)
 	c.Assert(err, IsNil)
 	return
+}
+
+func (*ClientSuite) TestProtocolError(c *C) {
+	const (
+		msg    = "JIBUN WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+		errMsg = "Invalid message: " + msg
+	)
+	cl, sv, _, wcl := newConnectedClient(c)
+	defer sv.CloseClientConnections()
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go readServerErrors(c, cl, &wg)
+	go func() {
+		defer wg.Done()
+		for {
+			_, _, err := wcl.ReadMessage()
+			c.Assert(
+				err.Error(),
+				Equals,
+				"websocket: close 1002 (protocol error): "+errMsg,
+			)
+			if err != nil {
+				break
+			}
+		}
+	}()
+	buf := []byte(msg)
+	c.Assert(cl.protocolError(buf), ErrorMatches, errMsg)
+	wg.Wait()
+
+	// Already closed
+	c.Assert(
+		cl.protocolError(buf),
+		ErrorMatches,
+		errMsg+": websocket: close sent",
+	)
 }
