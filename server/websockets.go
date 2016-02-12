@@ -45,15 +45,13 @@ func websocketHandler(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	c := NewClient(conn, req)
+	c := NewClient(conn)
 	go c.receiverLoop()
 	c.listen()
 }
 
 // Client stores and manages a websocket-connected remote client and its
-// interaction with the server and database. Do not use any of the methods on
-// this struct and only pass messages to the Receiver, Sender and Closer
-// channels.
+// interaction with the server and database
 type Client struct {
 	synced bool
 	closed bool
@@ -61,21 +59,21 @@ type Client struct {
 	sync.Mutex
 	id       string
 	conn     *websocket.Conn
-	Receiver chan []byte
-	Sender   chan []byte
-	Closer   chan websocket.CloseError
+	receiver chan []byte
+	sender   chan []byte
+	closer   chan websocket.CloseError
 }
 
 //
 
 // NewClient creates a new websocket client
-func NewClient(conn *websocket.Conn, req *http.Request) *Client {
+func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		id:       randomID(32),
-		ident:    lookUpIdent(req.RemoteAddr),
-		Receiver: make(chan []byte),
-		Sender:   make(chan []byte),
-		Closer:   make(chan websocket.CloseError),
+		ident:    lookUpIdent(conn.RemoteAddr().String()),
+		receiver: make(chan []byte),
+		sender:   make(chan []byte),
+		closer:   make(chan websocket.CloseError),
 		conn:     conn,
 	}
 }
@@ -85,13 +83,13 @@ func NewClient(conn *websocket.Conn, req *http.Request) *Client {
 func (c *Client) listen() error {
 	for c.isOpen() {
 		select {
-		case msg := <-c.Closer:
+		case msg := <-c.closer:
 			return c.close(msg.Code, msg.Text)
-		case msg := <-c.Receiver:
+		case msg := <-c.receiver:
 			if err := c.receive(msg); err != nil {
 				return err
 			}
-		case msg := <-c.Sender:
+		case msg := <-c.sender:
 			if err := c.send(msg); err != nil {
 				return err
 			}
@@ -125,13 +123,13 @@ func (c *Client) receiverLoop() error {
 		case err != nil:
 			return err
 		case typ != websocket.BinaryMessage:
-			c.Closer <- websocket.CloseError{
+			c.closer <- websocket.CloseError{
 				Code: websocket.CloseUnsupportedData,
 				Text: "Only binary frames allowed",
 			}
 			return errors.New("Client sent text frames")
 		default:
-			c.Receiver <- message
+			c.receiver <- message
 		}
 	}
 	return nil
@@ -181,6 +179,11 @@ func (c *Client) send(msg []byte) error {
 	return c.conn.WriteMessage(websocket.BinaryMessage, msg)
 }
 
+// Send thread-safely sends a message to the websocket client
+func (c *Client) Send(msg []byte) {
+	c.sender <- msg
+}
+
 // close closes a websocket connection with the provided status code and
 // optional reason
 func (c *Client) close(status int, reason string) error {
@@ -194,4 +197,13 @@ func (c *Client) close(status int, reason string) error {
 		return err
 	}
 	return c.conn.Close()
+}
+
+// Close thread-safely closes the websocket connection with the supplied status
+// code and optional reason string
+func (c *Client) Close(status int, reason string) {
+	c.closer <- websocket.CloseError{
+		Code: status,
+		Text: reason,
+	}
 }
