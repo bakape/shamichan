@@ -11,6 +11,12 @@ import (
 	"sync"
 )
 
+const (
+	protocolError  = "websocket: close 1002 (protocol error): "
+	policyError    = "websocket: close 1008 (policy violation): "
+	invalidMessage = "Invalid message: "
+)
+
 type ClientSuite struct{}
 
 var _ = Suite(&ClientSuite{})
@@ -138,7 +144,7 @@ func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 func (*ClientSuite) TestProtocolError(c *C) {
 	const (
 		msg    = "JIBUN WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
-		errMsg = "Invalid message: " + msg
+		errMsg = invalidMessage + msg
 	)
 	sv := newWSServer(c)
 	defer sv.Close()
@@ -146,7 +152,7 @@ func (*ClientSuite) TestProtocolError(c *C) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go readServerErrors(c, cl, &wg)
-	go assertProtocolError(c, wcl, errMsg, &wg)
+	go assertWebsocketError(c, wcl, protocolError+errMsg, &wg)
 	buf := []byte(msg)
 	c.Assert(cl.protocolError(buf), ErrorMatches, errMsg)
 	wg.Wait()
@@ -159,7 +165,7 @@ func (*ClientSuite) TestProtocolError(c *C) {
 	)
 }
 
-func assertProtocolError(
+func assertWebsocketError(
 	c *C,
 	conn *websocket.Conn,
 	errMsg string,
@@ -167,11 +173,7 @@ func assertProtocolError(
 ) {
 	defer wg.Done()
 	_, _, err := conn.ReadMessage()
-	c.Assert(
-		err.Error(),
-		Equals,
-		"websocket: close 1002 (protocol error): "+errMsg,
-	)
+	c.Assert(err.Error(), Equals, errMsg)
 }
 
 func (*ClientSuite) TestSend(c *C) {
@@ -216,4 +218,50 @@ func (*ClientSuite) TestExternalSend(c *C) {
 	}
 	go cl.Send(std)
 	c.Assert(<-cl.sender, DeepEquals, std)
+}
+
+func (*ClientSuite) TestReceive(c *C) {
+	const (
+		invalidLength = invalidMessage + "\x01"
+		notSync       = invalidMessage + "@\x01"
+	)
+	sv := newWSServer(c)
+	defer sv.Close()
+
+	// Banned
+	cl, wcl := sv.NewClient()
+	cl.ident.Banned = true
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go readServerErrors(c, cl, &wg)
+	go assertWebsocketError(c, wcl, policyError+"You are banned", &wg)
+	c.Assert(cl.receive([]byte("natsutte tsuchatta")), IsNil)
+	wg.Wait()
+
+	// Message too short
+	msg := []byte{1}
+	cl, wcl = sv.NewClient()
+	wg.Add(2)
+	go readServerErrors(c, cl, &wg)
+	go assertWebsocketError(c, wcl, protocolError+invalidLength, &wg)
+	c.Assert(cl.receive(msg).Error(), Equals, invalidLength)
+	wg.Wait()
+
+	// Not a sync message, when not synced
+	msg = []byte{64, 1}
+	cl, wcl = sv.NewClient()
+	wg.Add(2)
+	go readServerErrors(c, cl, &wg)
+	go assertWebsocketError(c, wcl, protocolError+notSync, &wg)
+	c.Assert(cl.receive(msg).Error(), Equals, notSync)
+	wg.Wait()
+
+	// No handler
+	cl, wcl = sv.NewClient()
+	cl.synced = true
+	wg.Add(2)
+	go readServerErrors(c, cl, &wg)
+	go assertWebsocketError(c, wcl, protocolError+notSync, &wg)
+	c.Assert(cl.receive(msg).Error(), Equals, notSync)
+	wg.Wait()
 }
