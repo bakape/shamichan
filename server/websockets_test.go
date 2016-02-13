@@ -193,3 +193,27 @@ func (*ClientSuite) TestSend(c *C) {
 	closeClient(c, cl)
 	wg.Wait()
 }
+
+func (*ClientSuite) TestExternalClose(c *C) {
+	const (
+		status = 2
+		text   = "tsurupettan"
+	)
+	cl := Client{
+		closer: make(chan websocket.CloseError),
+	}
+	go cl.Close(status, text)
+	c.Assert(<-cl.closer, DeepEquals, websocket.CloseError{
+		Code: status,
+		Text: text,
+	})
+}
+
+func (*ClientSuite) TestExternalSend(c *C) {
+	std := []byte("WOW WOW")
+	cl := Client{
+		sender: make(chan []byte),
+	}
+	go cl.Send(std)
+	c.Assert(<-cl.sender, DeepEquals, std)
+}
