@@ -32,6 +32,11 @@ var upgrader = websocket.Upgrader{
 	HandshakeTimeout: 5 * time.Second,
 }
 
+var textFrameReceived = websocket.CloseError{
+	Code: websocket.CloseUnsupportedData,
+	Text: "Only binary frames allowed",
+}
+
 func websocketHandler(res http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(res, req, nil)
 	if _, ok := err.(websocket.HandshakeError); ok {
@@ -63,8 +68,6 @@ type Client struct {
 	sender   chan []byte
 	closer   chan websocket.CloseError
 }
-
-//
 
 // NewClient creates a new websocket client
 func NewClient(conn *websocket.Conn) *Client {
@@ -114,25 +117,21 @@ func (c *Client) setClosed() {
 
 // Convert the blocking websocket.Conn.ReadMessage() into a channel stream and
 // handle errors
-func (c *Client) receiverLoop() error {
+func (c *Client) receiverLoop() {
 	for c.isOpen() {
 		typ, message, err := c.conn.ReadMessage() // Blocking
 		switch {
 		case !c.isOpen(): // Closed, while waiting for message
-			return nil
+			return
 		case err != nil:
-			return err
+			return
 		case typ != websocket.BinaryMessage:
-			c.closer <- websocket.CloseError{
-				Code: websocket.CloseUnsupportedData,
-				Text: "Only binary frames allowed",
-			}
-			return errors.New("Client sent text frames")
+			c.closer <- textFrameReceived
+			return
 		default:
 			c.receiver <- message
 		}
 	}
-	return nil
 }
 
 // receive parses a message received from the client through websockets

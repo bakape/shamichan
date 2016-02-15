@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -59,12 +60,11 @@ func (*ClientSuite) TestClose(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go readServerErrors(c, cl, &wg)
-	go readClientErrors(c, wcl, &wg)
+	sv.Add(2)
+	go readServerErrors(c, cl, sv)
+	go readClientErrors(c, wcl, sv)
 	closeClient(c, cl)
-	wg.Wait()
+	sv.Wait()
 
 	// Already closed
 	c.Assert(
@@ -74,8 +74,8 @@ func (*ClientSuite) TestClose(c *C) {
 	)
 }
 
-func readServerErrors(c *C, cl *Client, wg *sync.WaitGroup) {
-	defer wg.Done()
+func readServerErrors(c *C, cl *Client, sv *mockWSServer) {
+	defer sv.Done()
 	for cl.isOpen() {
 		_, _, err := cl.conn.ReadMessage()
 		if !cl.isOpen() {
@@ -85,8 +85,8 @@ func readServerErrors(c *C, cl *Client, wg *sync.WaitGroup) {
 	}
 }
 
-func readClientErrors(c *C, conn *websocket.Conn, wg *sync.WaitGroup) {
-	defer wg.Done()
+func readClientErrors(c *C, conn *websocket.Conn, sv *mockWSServer) {
+	defer sv.Done()
 	for {
 		_, _, err := conn.ReadMessage()
 		c.Assert(
@@ -111,6 +111,7 @@ type mockWSServer struct {
 	c          *C
 	server     *httptest.Server
 	connSender chan *websocket.Conn
+	sync.WaitGroup
 }
 
 func newWSServer(c *C) *mockWSServer {
@@ -149,13 +150,12 @@ func (*ClientSuite) TestProtocolError(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go readServerErrors(c, cl, &wg)
-	go assertWebsocketError(c, wcl, protocolError+errMsg, &wg)
+	sv.Add(2)
+	go readServerErrors(c, cl, sv)
+	go assertWebsocketError(c, wcl, protocolError+errMsg, sv)
 	buf := []byte(msg)
 	c.Assert(cl.protocolError(buf), ErrorMatches, errMsg)
-	wg.Wait()
+	sv.Wait()
 
 	// Already closed
 	c.Assert(
@@ -169,9 +169,9 @@ func assertWebsocketError(
 	c *C,
 	conn *websocket.Conn,
 	errMsg string,
-	wg *sync.WaitGroup,
+	sv *mockWSServer,
 ) {
-	defer wg.Done()
+	defer sv.Done()
 	_, _, err := conn.ReadMessage()
 	c.Assert(err.Error(), Equals, errMsg)
 }
@@ -181,11 +181,10 @@ func (*ClientSuite) TestSend(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go readServerErrors(c, cl, &wg)
+	sv.Add(2)
+	go readServerErrors(c, cl, sv)
 	go func() {
-		defer wg.Done()
+		defer sv.Done()
 		typ, msg, err := wcl.ReadMessage()
 		c.Assert(err, IsNil)
 		c.Assert(typ, Equals, websocket.BinaryMessage)
@@ -193,7 +192,7 @@ func (*ClientSuite) TestSend(c *C) {
 	}()
 	c.Assert(cl.send(std), IsNil)
 	closeClient(c, cl)
-	wg.Wait()
+	sv.Wait()
 }
 
 func (*ClientSuite) TestExternalClose(c *C) {
@@ -231,37 +230,86 @@ func (*ClientSuite) TestReceive(c *C) {
 	// Banned
 	cl, wcl := sv.NewClient()
 	cl.ident.Banned = true
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go readServerErrors(c, cl, &wg)
-	go assertWebsocketError(c, wcl, policyError+"You are banned", &wg)
+	sv.Add(2)
+	go readServerErrors(c, cl, sv)
+	go assertWebsocketError(c, wcl, policyError+"You are banned", sv)
 	c.Assert(cl.receive([]byte("natsutte tsuchatta")), IsNil)
-	wg.Wait()
+	sv.Wait()
 
 	// Message too short
 	msg := []byte{1}
 	cl, wcl = sv.NewClient()
-	wg.Add(2)
-	go readServerErrors(c, cl, &wg)
-	go assertWebsocketError(c, wcl, protocolError+invalidLength, &wg)
+	sv.Add(2)
+	go readServerErrors(c, cl, sv)
+	go assertWebsocketError(c, wcl, protocolError+invalidLength, sv)
 	c.Assert(cl.receive(msg).Error(), Equals, invalidLength)
-	wg.Wait()
+	sv.Wait()
 
 	// Not a sync message, when not synced
 	msg = []byte{64, 1}
 	cl, wcl = sv.NewClient()
-	wg.Add(2)
-	go readServerErrors(c, cl, &wg)
-	go assertWebsocketError(c, wcl, protocolError+notSync, &wg)
+	sv.Add(2)
+	go readServerErrors(c, cl, sv)
+	go assertWebsocketError(c, wcl, protocolError+notSync, sv)
 	c.Assert(cl.receive(msg).Error(), Equals, notSync)
-	wg.Wait()
+	sv.Wait()
 
 	// No handler
 	cl, wcl = sv.NewClient()
 	cl.synced = true
-	wg.Add(2)
-	go readServerErrors(c, cl, &wg)
-	go assertWebsocketError(c, wcl, protocolError+notSync, &wg)
+	sv.Add(2)
+	go readServerErrors(c, cl, sv)
+	go assertWebsocketError(c, wcl, protocolError+notSync, sv)
 	c.Assert(cl.receive(msg).Error(), Equals, notSync)
-	wg.Wait()
+	sv.Wait()
+}
+
+func (*ClientSuite) TestReceiverLoop(c *C) {
+	const normalClose = "websocket: close 1000 (normal)"
+	sv := newWSServer(c)
+	defer sv.Close()
+	msg := []byte("shouganai wa ne")
+
+	// NOTE: Can't test client being already closed after returning from
+	// c.conn.ReadMessage(), because it's a race condition.
+
+	// Client diconnected
+	cl, wcl := sv.NewClient()
+	sv.Add(2)
+	go runReceiveLoop(cl, sv)
+	go assertWebsocketError(c, wcl, "websocket: close 1005 (no status)", sv)
+	c.Assert(
+		wcl.WriteControl(
+			websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+			time.Now().Add(time.Second*5),
+		),
+		IsNil,
+	)
+	sv.Wait()
+
+	// Text frame type
+	sv.Add(2)
+	cl, wcl = sv.NewClient()
+	go runReceiveLoop(cl, sv)
+	go assertWebsocketError(c, wcl, normalClose, sv)
+	c.Assert(wcl.WriteMessage(websocket.TextMessage, msg), IsNil)
+	c.Assert(<-cl.closer, DeepEquals, textFrameReceived)
+	closeClient(c, cl)
+	sv.Wait()
+
+	// Proper message
+	sv.Add(2)
+	cl, wcl = sv.NewClient()
+	go runReceiveLoop(cl, sv)
+	go assertWebsocketError(c, wcl, normalClose, sv)
+	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, msg), IsNil)
+	c.Assert(<-cl.receiver, DeepEquals, msg)
+	closeClient(c, cl)
+	sv.Wait()
+}
+
+func runReceiveLoop(cl *Client, sv *mockWSServer) {
+	defer sv.Done()
+	cl.receiverLoop()
 }
