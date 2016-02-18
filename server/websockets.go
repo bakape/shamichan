@@ -87,6 +87,9 @@ func (c *Client) listen() error {
 	for c.isOpen() {
 		select {
 		case msg := <-c.closer:
+			if !c.isOpen() { // Already closed. Just terminating this loop.
+				return nil
+			}
 			return c.close(msg.Code, msg.Text)
 		case msg := <-c.receiver:
 			if err := c.receive(msg); err != nil {
@@ -192,6 +195,7 @@ func (c *Client) close(status int, reason string) error {
 		time.Now().Add(time.Second*5),
 	)
 	c.setClosed()
+	close(c.closer) // Stop any looping select statements listening to this
 	if err != nil {
 		return err
 	}

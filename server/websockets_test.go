@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	protocolError  = "websocket: close 1002 (protocol error): "
-	policyError    = "websocket: close 1008 (policy violation): "
+	protocolError  = `websocket: close 1002 \(protocol error\): `
+	policyError    = `websocket: close 1008 \(policy violation\): `
 	invalidMessage = "Invalid message: "
 )
 
@@ -68,9 +68,11 @@ func (*ClientSuite) TestClose(c *C) {
 
 	// Already closed
 	c.Assert(
-		cl.close(websocket.CloseNormalClosure, ""),
-		ErrorMatches,
-		"^websocket: close sent$",
+		func() {
+			cl.close(websocket.CloseNormalClosure, "")
+		},
+		PanicMatches,
+		"^close of closed channel",
 	)
 }
 
@@ -159,9 +161,11 @@ func (*ClientSuite) TestProtocolError(c *C) {
 
 	// Already closed
 	c.Assert(
-		cl.protocolError(buf),
-		ErrorMatches,
-		errMsg+": websocket: close sent",
+		func() {
+			cl.protocolError(buf)
+		},
+		PanicMatches,
+		"^close of closed channel",
 	)
 }
 
@@ -173,7 +177,7 @@ func assertWebsocketError(
 ) {
 	defer sv.Done()
 	_, _, err := conn.ReadMessage()
-	c.Assert(err.Error(), Equals, errMsg)
+	c.Assert(err, ErrorMatches, errMsg)
 }
 
 func (*ClientSuite) TestSend(c *C) {
@@ -265,7 +269,7 @@ func (*ClientSuite) TestReceive(c *C) {
 }
 
 func (*ClientSuite) TestReceiverLoop(c *C) {
-	const normalClose = "websocket: close 1000 (normal)"
+	const normalClose = `websocket: close 1000 \(normal\)`
 	sv := newWSServer(c)
 	defer sv.Close()
 	msg := []byte("shouganai wa ne")
@@ -277,7 +281,7 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 	cl, wcl := sv.NewClient()
 	sv.Add(2)
 	go runReceiveLoop(cl, sv)
-	go assertWebsocketError(c, wcl, "websocket: close 1005 (no status)", sv)
+	go assertWebsocketError(c, wcl, `websocket: close 1005 \(no status\)`, sv)
 	c.Assert(
 		wcl.WriteControl(
 			websocket.CloseMessage,
@@ -312,4 +316,84 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 func runReceiveLoop(cl *Client, sv *mockWSServer) {
 	defer sv.Done()
 	cl.receiverLoop()
+}
+
+func (*ClientSuite) TestListen(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+
+	// Receive close request
+	cl, wcl := sv.NewClient()
+	sv.Add(3)
+	go readServerErrors(c, cl, sv)
+	go assertWebsocketError(
+		c,
+		wcl,
+		`websocket: close 1011 \(internal server error\)`,
+		sv,
+	)
+	go func() {
+		defer sv.Done()
+		c.Assert(cl.listen(), IsNil)
+	}()
+	cl.Close(websocket.CloseInternalServerErr, "")
+	sv.Wait()
+
+	// Receive a message
+	const (
+		invalid       = invalidMessage + "@"
+		invalidClient = protocolError + invalid
+	)
+	msg := []byte{64}
+	cl, wcl = sv.NewClient()
+	sv.Add(3)
+	go readServerErrors(c, cl, sv)
+	go assertWebsocketError(c, wcl, invalidClient, sv)
+	go func() {
+		defer sv.Done()
+		c.Assert(cl.listen(), ErrorMatches, invalid)
+	}()
+	cl.receiver <- msg
+	sv.Wait()
+
+	// Send a message
+	cl, wcl = sv.NewClient()
+	sv.Add(3)
+	go readServerErrors(c, cl, sv)
+	go func() {
+		defer sv.Done()
+		_, msg, err := wcl.ReadMessage()
+		c.Assert(err, IsNil)
+		c.Assert(msg, DeepEquals, msg)
+	}()
+	go func() {
+		defer sv.Done()
+		cl.sender <- msg
+		cl.Close(websocket.CloseNormalClosure, "")
+	}()
+	c.Assert(cl.listen(), IsNil)
+	sv.Wait()
+
+	// Closed client
+	cl, wcl = sv.NewClient()
+	sv.Add(3)
+	go readServerErrors(c, cl, sv)
+	go func() {
+		defer sv.Done()
+		_, _, err := wcl.ReadMessage()
+		c.Assert(err, IsNil)
+	}()
+	go func() {
+		defer sv.Done()
+		fmt.Println("sending")
+		cl.setClosed()
+		cl.sender <- msg
+		fmt.Println("sent")
+	}()
+	fmt.Println("listening")
+	c.Assert(cl.listen(), IsNil)
+	fmt.Println("server done")
+	closeClient(c, cl)
+	sv.Wait()
+	c.Assert(cl.listen(), IsNil)
 }
