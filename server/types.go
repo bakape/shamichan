@@ -1,5 +1,5 @@
 /*
- Commonly used types in a single place. Purely for organisation purposes.
+ Commonly used types and their encoding/decoding methods.
 */
 
 package server
@@ -73,13 +73,11 @@ type Image struct {
 	APNG    bool     `json:"apng,omitempty" gorethink:"apng,omitempty"`
 	Audio   bool     `json:"audio,omitempty" gorethink:"audio,omitempty"`
 	Spoiler uint8    `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
-	Length  []uint8  `json:"length,omitempty" gorethink:"length,omitempty"`
+	Ext     uint8    `json:"ext,omitempty" gorethink:"ext,omitempty"`
+	Length  int32    `json:"length,omitempty" gorethink:"length,omitempty"`
 	Dims    []uint16 `json:"dims,omitempty" gorethink:"dims,omitempty"`
+	File    string   `json:"file,omitempty" gorethink:"file,omitempty"`
 	Size    int64    `json:"size,omitempty" gorethink:"size,omitempty"`
-	Mid     string   `json:"mid,omitempty" gorethink:"mid,omitempty"`
-	Thumb   string   `json:"thumb,omitempty" gorethink:"thumb,omitempty"`
-	Src     string   `json:"src,omitempty" gorethink:"src,omitempty"`
-	Ext     string   `json:"ext,omitempty" gorethink:"ext,omitempty"`
 	MD5     string   `json:",omitempty" gorethink:",omitempty"`
 	SHA1    string   `json:",omitempty" gorethink:",omitempty"`
 	Imgnm   string   `json:"imgnm,omitempty" gorethink:"imgnm,omitempty"`

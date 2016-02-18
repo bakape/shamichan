@@ -90,7 +90,7 @@ func getThreadMeta() map[string]map[string]r.Term {
 			// Image count
 			"imageCtr": r.Table("posts").
 				GetAllByIndex("op", id).
-				HasFields("src").
+				HasFields("file").
 				Count().
 				Sub(1),
 		},

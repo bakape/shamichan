@@ -15,7 +15,7 @@ func (*DB) TestParsePost(c *C) {
 	// Regular post
 	setupBoardAccess()
 	r := NewReader("a", Ident{})
-	img := Image{Src: "foo"}
+	img := Image{File: "foo"}
 	init := Post{
 		Body:  "foo",
 		Image: img,
@@ -89,7 +89,7 @@ func (*DB) TestGetJoinedThread(c *C) {
 	db()(r.Table("posts").Insert(Post{
 		ID:    1,
 		OP:    1,
-		Image: Image{Src: "Foo"},
+		Image: Image{File: "Foo"},
 	})).Exec()
 	standard := joinedThread{
 		Left: Thread{
@@ -97,7 +97,7 @@ func (*DB) TestGetJoinedThread(c *C) {
 		},
 		Right: Post{
 			ID:    1,
-			Image: Image{Src: "Foo"},
+			Image: Image{File: "Foo"},
 		},
 	}
 	c.Assert(getJoinedThread(1), DeepEquals, standard)
@@ -115,7 +115,7 @@ func (*DB) TestGetJoinedThread(c *C) {
 	db()(r.Table("posts").Insert(Post{
 		ID:    3,
 		OP:    1,
-		Image: Image{Src: "foo"},
+		Image: Image{File: "foo"},
 	})).Exec()
 	standard.Left.PostCtr++
 	standard.Left.ImageCtr++
@@ -159,7 +159,7 @@ func (*DB) TestParseThreads(c *C) {
 	c.Assert(r.parseThreads(threads), DeepEquals, standard)
 }
 
-var genericImage = Image{Src: "foo"}
+var genericImage = Image{File: "foo"}
 
 func (*DB) TestGetBoard(c *C) {
 	setupPosts()

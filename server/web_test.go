@@ -342,9 +342,9 @@ func (*DB) TestBoardJSON(c *C) {
 	assertBody(
 		rec,
 		`{"ctr":7,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,`+
-			`"replyTime":0,"editing":false,"src":"foo","time":0,"body":""},`+
+			`"replyTime":0,"editing":false,"file":"foo","time":0,"body":""},`+
 			`{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,`+
-			`"editing":false,"src":"foo","time":0,"body":""}]}`,
+			`"editing":false,"file":"foo","time":0,"body":""}]}`,
 		c,
 	)
 	const etag = "W/7"
@@ -368,11 +368,11 @@ func (*DB) TestAllBoardJSON(c *C) {
 	assertBody(
 		rec,
 		`{"ctr":8,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,`+
-			`"replyTime":0,"editing":false,"src":"foo","time":0,"body":""},`+
+			`"replyTime":0,"editing":false,"file":"foo","time":0,"body":""},`+
 			`{"postCtr":0,"imageCtr":0,"bumpTime":0,"replyTime":0,`+
-			`"editing":false,"src":"foo","time":0,"body":""},{"postCtr":1,`+
+			`"editing":false,"file":"foo","time":0,"body":""},{"postCtr":1,`+
 			`"imageCtr":0,"bumpTime":0,"replyTime":0,"editing":false,`+
-			`"src":"foo","time":0,"body":""}]}`,
+			`"file":"foo","time":0,"body":""}]}`,
 		c,
 	)
 	assertEtag(rec, etag, c)
@@ -405,7 +405,7 @@ func (*DB) TestThreadJSON(c *C) {
 	assertBody(
 		rec,
 		`{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,"editing":false,`+
-			`"src":"foo","time":0,"body":"","posts":{"2":{"editing":false,`+
+			`"file":"foo","time":0,"body":"","posts":{"2":{"editing":false,`+
 			`"op":1,"id":2,"time":0,"board":"a","body":""}}}`,
 		c,
 	)
