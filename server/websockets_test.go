@@ -281,7 +281,7 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 	cl, wcl := sv.NewClient()
 	sv.Add(2)
 	go runReceiveLoop(cl, sv)
-	go assertWebsocketError(c, wcl, `websocket: close 1005 \(no status\)`, sv)
+	go assertWebsocketError(c, wcl, normalClose, sv)
 	c.Assert(
 		wcl.WriteControl(
 			websocket.CloseMessage,
