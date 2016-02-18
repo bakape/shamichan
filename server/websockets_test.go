@@ -385,14 +385,10 @@ func (*ClientSuite) TestListen(c *C) {
 	}()
 	go func() {
 		defer sv.Done()
-		fmt.Println("sending")
 		cl.setClosed()
 		cl.sender <- msg
-		fmt.Println("sent")
 	}()
-	fmt.Println("listening")
 	c.Assert(cl.listen(), IsNil)
-	fmt.Println("server done")
 	closeClient(c, cl)
 	sv.Wait()
 	c.Assert(cl.listen(), IsNil)
