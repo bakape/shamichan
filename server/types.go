@@ -16,8 +16,7 @@ type Board struct {
 type ThreadContainer struct {
 	Thread
 	Post
-	Posts   map[string]Post `json:"posts,omitempty"`
-	Updates []Message       `json:"updates,omitempty"`
+	Posts map[string]Post `json:"posts,omitempty"`
 }
 
 // Thread stores thread metadata
@@ -32,19 +31,6 @@ type Thread struct {
 	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
 	Board     string `json:"board" gorethink:"board"`
-}
-
-// Message is the universal transport container of all live updates through
-// websockets
-type Message struct {
-	Type string `json:"type" gorethink:"type"`
-
-	// If present, determines a priviledged access level, the client has to
-	// have, to recieve this message
-	Priv string `json:"priv,omitempty" gorethink:"priv,omitempty"`
-
-	// The actual contents of the message. Very variadic, thus interface{}.
-	Msg interface{} `json:"msg,omitempty" gorethink:"msg,omitempty"`
 }
 
 // Post is a generic post. Either OP or reply.
@@ -84,7 +70,7 @@ type Image struct {
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to
-// corresponding Link tuples
+// corresponding Link structs
 type LinkMap map[string]Link
 
 // Link stores the target post's parent board and parent thread
@@ -95,8 +81,7 @@ type Link struct {
 
 // Ident is used to verify a client's access and write permissions
 type Ident struct {
-	// Indicates priveledged access rights for staff.
 	Banned bool
-	Auth   string
+	Auth   string // Indicates priveledged access rights for staff
 	IP     string
 }

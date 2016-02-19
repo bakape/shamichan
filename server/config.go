@@ -19,8 +19,8 @@ var configRoot = "./config"
 type serverConfigs struct {
 	// Configuration that can not be hot-reloaded without restarting the server
 	HTTP struct {
-		Addr, Origin             string
-		TrustProxies, Websockets bool
+		Addr, Origin string
+		TrustProxies bool
 	}
 	Rethinkdb struct {
 		Addr, Db string
@@ -87,9 +87,6 @@ var config serverConfigs
 
 // Subset of serverConfigs, that is visible to all clients
 type clientConfigs struct {
-	HTTP struct {
-		Websockets bool `json:"websockets"`
-	} `json:"HTTP"`
 	Boards struct {
 		Enabled []string `json:"enabled"`
 		Boards  map[string]struct {

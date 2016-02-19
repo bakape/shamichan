@@ -10,10 +10,12 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"runtime"
 	"strconv"
+	"time"
 )
 
 // Wrapper type for compound errors
@@ -127,4 +129,21 @@ func logError(req *http.Request, err interface{}) {
 	buf := make([]byte, size)
 	buf = buf[:runtime.Stack(buf, false)]
 	log.Printf("panic serving %v: %v\n%s", req.RemoteAddr, err, buf)
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+const randSource = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+	"0123456789"
+
+// Generates a randomID of uppercase and lowercase letters and numbers of
+// desired length
+func randomID(length int) string {
+	buf := make([]byte, length)
+	for i := range buf {
+		buf[i] = randSource[rand.Int63()%int64(len(randSource))]
+	}
+	return string(buf)
 }
