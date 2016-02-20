@@ -7,6 +7,7 @@ package server
 import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/handlers"
 	"github.com/julienschmidt/httprouter"
@@ -94,11 +95,11 @@ func redirectToDefault(res http.ResponseWriter, req *http.Request) {
 
 func serveIndexTemplate(res http.ResponseWriter, req *http.Request) {
 	isMobile := user_agent.New(req.UserAgent()).Mobile()
-	var template templateStore
+	var template templates.Store
 	if isMobile {
-		template = resources["mobile"]
+		template = templates.Resources["mobile"]
 	} else {
-		template = resources["index"]
+		template = templates.Resources["index"]
 	}
 	etag := template.Hash
 	if isMobile {

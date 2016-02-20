@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/templates"
 	"github.com/julienschmidt/httprouter"
 	. "gopkg.in/check.v1"
 	"io/ioutil"
@@ -248,11 +249,12 @@ func (*WebServer) TestServeIndexTemplate(c *C) {
 			" Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko)" +
 			" Chrome/18.0.1025.166 Mobile Safari/535.19"
 	)
-	desktop := templateStore{[]byte("desktop"), "dhash"}
-	mobile := templateStore{[]byte("mobile"), "mhash"}
-	resources = templateMap{}
-	resources["index"] = desktop
-	resources["mobile"] = mobile
+	desktop := templates.Store{[]byte("desktop"), "dhash"}
+	mobile := templates.Store{[]byte("mobile"), "mhash"}
+	templates.Resources = templates.Map{
+		"index":  desktop,
+		"mobile": mobile,
+	}
 
 	// Desktop
 	req := newRequest(c)
@@ -280,8 +282,8 @@ func (*WebServer) TestServeIndexTemplate(c *C) {
 
 func (*DB) TestThreadHTML(c *C) {
 	body := []byte("body")
-	resources = templateMap{
-		"index": templateStore{
+	templates.Resources = templates.Map{
+		"index": templates.Store{
 			HTML: body,
 			Hash: "hash",
 		},

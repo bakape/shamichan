@@ -1,10 +1,13 @@
-package server
+package templates
 
 import (
 	"github.com/bakape/meguca/config"
 	. "gopkg.in/check.v1"
 	"html/template"
+	"testing"
 )
+
+func Test(t *testing.T) { TestingT(t) }
 
 type Templates struct{}
 
@@ -30,7 +33,7 @@ func (t *Templates) TestBoardNavigation(c *C) {
 }
 
 func (t *Templates) TestBuildIndexTemplate(c *C) {
-	vars := templateVars{
+	v := vars{
 		Config:     template.JS("c()"),
 		ConfigHash: "a",
 		Navigation: template.HTML("<hr>"),
@@ -42,11 +45,11 @@ func (t *Templates) TestBuildIndexTemplate(c *C) {
 			`<script>{{.IsMobile}}</script>`,
 	)
 	c.Assert(err, IsNil)
-	standard := templateStore{
+	standard := Store{
 		HTML: []byte("<script>c()</script><b>a</b><hr><script>false</script>"),
 		Hash: "d99e2949415f7ec0",
 	}
-	res := buildIndexTemplate(tmpl, vars, false)
+	res := buildIndexTemplate(tmpl, v, false)
 	c.Assert(res, DeepEquals, standard)
 }
 
@@ -55,15 +58,15 @@ func (t *Templates) TestCompileTemplates(c *C) {
 	config.Config = config.Server{}
 	config.ClientConfig = []byte{1}
 	config.Config.Boards.Enabled = []string{"a"}
-	standard := templateStore{
+	standard := Store{
 		HTML: []byte("<a></a>\n"),
 		Hash: "eb51aca26e55050a",
 	}
 	defer func() {
 		c.Assert(recover(), IsNil)
 	}()
-	resources = templateMap{}
-	compileTemplates()
-	c.Assert(resources["index"], DeepEquals, standard)
-	c.Assert(resources["mobile"], DeepEquals, standard)
+	Resources = Map{}
+	Compile()
+	c.Assert(Resources["index"], DeepEquals, standard)
+	c.Assert(Resources["mobile"], DeepEquals, standard)
 }

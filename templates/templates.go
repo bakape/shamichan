@@ -1,9 +1,5 @@
-/*
- Compiles HTML templates to be used for rendering pages during dynamic content
- insertion
-*/
-
-package server
+// Package templates generates and stores HTML templates
+package templates
 
 import (
 	"bytes"
@@ -17,32 +13,32 @@ import (
 // Overriden in tests
 var templateRoot = "./tmpl"
 
-// templateStore stores the compiled HTML template and the corresponding
-// truncated MD5 hash of said template
-type templateStore struct {
+// Store stores the compiled HTML template and the corresponding truncated MD5
+// hash of said template
+type Store struct {
 	HTML []byte
 	Hash string
 }
 
-// templateMap stores all available templates
-type templateMap map[string]templateStore
+// Map stores all available templates
+type Map map[string]Store
 
-// resources exports temolates and their hashes by language
-var resources = templateMap{}
+// Resources conatains all available templates
+var Resources = Map{}
 
-// compileTemplates reads template HTML from disk, injects dynamic variables,
+// Compile reads template HTML from disk, injects dynamic variables,
 // hashes and stores them
-func compileTemplates() {
+func Compile() {
 	// Only one for now, but there will be more later
 	index, mobile := indexTemplate()
-	resources["index"] = index
-	resources["mobile"] = mobile
+	Resources["index"] = index
+	Resources["mobile"] = mobile
 }
 
 // clientFileHash is the combined, shortened MD5 hash of all client files
 var clientFileHash string
 
-type templateVars struct {
+type vars struct {
 	Config     template.JS
 	Navigation template.HTML
 	ConfigHash string
@@ -51,17 +47,17 @@ type templateVars struct {
 
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
-func indexTemplate() (templateStore, templateStore) {
-	vars := templateVars{ConfigHash: config.Hash}
-	vars.Config = template.JS(config.ClientConfig)
-	vars.Navigation = boardNavigation()
+func indexTemplate() (Store, Store) {
+	v := vars{ConfigHash: config.Hash}
+	v.Config = template.JS(config.ClientConfig)
+	v.Navigation = boardNavigation()
 	tmpl, err := template.ParseFiles(templateRoot + "/index.html")
 	util.Throw(err)
 
 	// Rigt now the desktop and mobile templates are almost identical. This will
 	// change, when we get a dedicated mobile GUI.
-	return buildIndexTemplate(tmpl, vars, false),
-		buildIndexTemplate(tmpl, vars, true)
+	return buildIndexTemplate(tmpl, v, false),
+		buildIndexTemplate(tmpl, v, true)
 }
 
 // boardNavigation renders interboard navigation we put in the top banner
@@ -97,9 +93,9 @@ func boardLink(notFirst bool, name, url string) string {
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it
 func buildIndexTemplate(
 	tmpl *template.Template,
-	vars templateVars,
+	vars vars,
 	isMobile bool,
-) templateStore {
+) Store {
 	vars.IsMobile = isMobile
 	buffer := new(bytes.Buffer)
 	util.Throw(tmpl.Execute(buffer, vars))
@@ -107,7 +103,7 @@ func buildIndexTemplate(
 		MinifyScripts: true,
 	})
 	util.Throw(err)
-	return templateStore{
+	return Store{
 		minified,
 		util.HashBuffer(minified),
 	}
