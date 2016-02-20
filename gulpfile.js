@@ -63,8 +63,7 @@ langs.forEach(lang =>
 copyVendor([
 	'./node_modules/systemjs/dist/system.js',
 	'./node_modules/systemjs/dist/system.js.map',
-	'./node_modules/dom4/build/dom4.js',
-	'./lib/sockjs.js'
+	'./node_modules/dom4/build/dom4.js'
 ])
 compileVendor('corejs', 'node_modules/core-js/client/core.js')
 compileVendor('js-cookie', 'node_modules/js-cookie/src/js.cookie.js')
@@ -73,10 +72,7 @@ compileVendor('stack-blur', './lib/stack-blur.js')
 
 gulp.task('default', tasks)
 
-/**
- * Builds the client files of the apropriate ECMAScript version
- * @param {string} version
- */
+// Builds the client files of the apropriate ECMAScript version
 function buildClient(version) {
 	createTask(version, './client/**/*.js', src =>
 		src
@@ -90,13 +86,7 @@ function buildClient(version) {
 			.pipe(gulp.dest('./www/js/' + version)))
 }
 
-/**
- * Create a new gulp taks and set it to execute on default and incrementally
- * rebuild in watch mode.
- * @param {string} name
- * @param {string} path
- * @param {function} task
- */
+// Create a new gulp taks and set it to execute on default and incrementally
 function createTask(name, path, task) {
 	tasks.push(name)
 	gulp.task(name, () =>
@@ -110,11 +100,7 @@ function createTask(name, path, task) {
 	}
 }
 
-/**
- * Return a babel configuration object, depending on target ES version
- * @param {string} version
- * @returns {Object}
- */
+// Return a babel configuration object, depending on target ES version
 function babelConfig(version) {
 	const base = {
 		compact: true,
@@ -137,11 +123,7 @@ function babelConfig(version) {
 	})
 }
 
-/**
- * Copy a dependancy library, minify and generate sourcemaps
- * @param {string} name - Task and output file name
- * @param {string} path - path to file
- */
+// Copy a dependancy library, minify and generate sourcemaps
 function compileVendor(name, path) {
 	createTask(name, path, src =>
 		src
@@ -152,10 +134,7 @@ function compileVendor(name, path) {
 			.pipe(gulp.dest('./www/js/vendor')))
 }
 
-/**
- * Copies a dependancy library from node_modules to the vendor directory
- * @param {string[]} paths - File paths
- */
+// Copies a dependancy library from node_modules to the vendor directory
 function copyVendor(paths) {
 	for (let path of paths) {
 		fs.copySync(

@@ -1,1 +1,1 @@
-{"version":3,"sources":[],"names":[],"mappings":"","file":"options.js","sourcesContent":[],"sourceRoot":"/source/"}
+{"version":3,"sources":["options.js"],"names":[],"mappings":"gHAIO,2CAGP,aAAa,UAAb,CAAwB,SAAxB,oBACe,IAAI,KAAJ","file":"options.js","sourcesContent":["/**\n * Small container module for easily importing the loaded options.\n */\n\nimport Model from './model'\n\n// Delete legacy options localStorage entry, if any\nlocalStorage.removeItem(\"options\")\nexport default new Model()\n"],"sourceRoot":"/source/"}
