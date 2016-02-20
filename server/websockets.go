@@ -7,6 +7,8 @@ package server
 import (
 	"errors"
 	"fmt"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/util"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -60,7 +62,7 @@ func websocketHandler(res http.ResponseWriter, req *http.Request) {
 type Client struct {
 	synced bool
 	closed bool
-	ident  Ident
+	ident  auth.Ident
 	sync.Mutex
 	id       string
 	conn     *websocket.Conn
@@ -72,8 +74,8 @@ type Client struct {
 // NewClient creates a new websocket client
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
-		id:       randomID(32),
-		ident:    lookUpIdent(conn.RemoteAddr().String()),
+		id:       util.RandomID(32),
+		ident:    auth.LookUpIdent(conn.RemoteAddr().String()),
 		receiver: make(chan []byte),
 		sender:   make(chan []byte),
 		closer:   make(chan websocket.CloseError),
@@ -166,7 +168,7 @@ func (c *Client) receive(msg []byte) error {
 func (c *Client) protocolError(msg []byte) error {
 	errMsg := fmt.Sprintf("Invalid message: %s", msg)
 	if err := c.close(websocket.CloseProtocolError, errMsg); err != nil {
-		return wrapError{errMsg, err}
+		return util.WrapError{errMsg, err}
 	}
 	return errors.New(errMsg)
 }

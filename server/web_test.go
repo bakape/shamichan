@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"github.com/bakape/meguca/config"
 	"github.com/julienschmidt/httprouter"
 	. "gopkg.in/check.v1"
 	"io/ioutil"
@@ -15,9 +16,15 @@ type WebServer struct{}
 
 var _ = Suite(&WebServer{})
 
+func (*WebServer) SetUpTest(_ *C) {
+	config.Config = config.Server{}
+	config.Config.Boards.Enabled = []string{"a"}
+	config.Hash = ""
+	config.ClientConfig = nil
+}
+
 func (*WebServer) TestFrontpageRedirect(c *C) {
-	config = serverConfigs{}
-	config.Frontpage = "./test/frontpage.html"
+	config.Config.Frontpage = "./test/frontpage.html"
 	server := httptest.NewServer(http.HandlerFunc(redirectToDefault))
 	defer server.Close()
 	res, err := http.Get(server.URL)
@@ -29,8 +36,7 @@ func (*WebServer) TestFrontpageRedirect(c *C) {
 }
 
 func (*WebServer) TestDefaultBoardRedirect(c *C) {
-	config = serverConfigs{}
-	config.Boards.Default = "a"
+	config.Config.Boards.Default = "a"
 	rec := runHandler(c, redirectToDefault)
 	assertCode(rec, 302, c)
 	c.Assert(rec.Header().Get("Location"), Equals, "/a/")
@@ -68,12 +74,12 @@ func newRequest(c *C) *http.Request {
 }
 
 func (*WebServer) TestConfigServing(c *C) {
-	configHash = "foo"
-	clientConfig = clientConfigs{}
-	etag := "W/" + configHash
+	config.Hash = "foo"
+	config.ClientConfig = []byte{1}
+	etag := "W/" + config.Hash
 	rec := runHandler(c, serveConfigs)
 	assertCode(rec, 200, c)
-	assertBody(rec, string(marshalJSON(clientConfig)), c)
+	assertBody(rec, string([]byte{1}), c)
 	assertEtag(rec, etag, c)
 
 	// And with etag
@@ -293,7 +299,6 @@ func (*DB) TestThreadHTML(c *C) {
 	assertCode(rec, 404, c)
 
 	// Thread exists
-	setupBoardAccess()
 	setupPosts()
 	rec = httptest.NewRecorder()
 	threadHTML("a")(rec, newRequest(c), httprouter.Params{{Value: "1"}})
@@ -301,7 +306,6 @@ func (*DB) TestThreadHTML(c *C) {
 }
 
 func (*DB) TestServePost(c *C) {
-	setupBoardAccess()
 	setupPosts()
 
 	// Invalid post number
@@ -335,7 +339,6 @@ func (*DB) TestServePost(c *C) {
 
 func (*DB) TestBoardJSON(c *C) {
 	setupPosts()
-	setupBoardAccess()
 
 	rec := httptest.NewRecorder()
 	boardJSON("a")(rec, newRequest(c))
@@ -359,7 +362,6 @@ func (*DB) TestBoardJSON(c *C) {
 }
 
 func (*DB) TestAllBoardJSON(c *C) {
-	setupBoardAccess()
 	setupPosts()
 
 	rec := httptest.NewRecorder()
@@ -386,7 +388,6 @@ func (*DB) TestAllBoardJSON(c *C) {
 }
 
 func (*DB) TestThreadJSON(c *C) {
-	setupBoardAccess()
 	setupPosts()
 
 	// Invalid post number
@@ -426,8 +427,6 @@ type routeCheck struct {
 }
 
 func (*WebServer) TestCreateRouter(c *C) {
-	config = serverConfigs{}
-	config.Boards.Enabled = []string{"a"}
 	r := createRouter()
 	gets := [...]routeCheck{
 		{"/", nil},
@@ -437,7 +436,7 @@ func (*WebServer) TestCreateRouter(c *C) {
 		{"/api/a/", nil},
 		{"/a/1", httprouter.Params{{"thread", "1"}}},
 		{"/api/a/1", httprouter.Params{{"thread", "1"}}},
-		{"/api/config", nil},
+		{"/api/config.Config", nil},
 		{"/api/post/1", httprouter.Params{{"post", "1"}}},
 		{"/socket", nil},
 		{"/ass/favicon.gif", httprouter.Params{{"filepath", "/favicon.gif"}}},
@@ -459,8 +458,6 @@ func assertRoute(method string, rc routeCheck, r *httprouter.Router, c *C) {
 }
 
 func (*WebServer) TestWrapRouter(c *C) {
-	config = serverConfigs{}
-
 	// Test GZIP
 	r := httprouter.New()
 	r.HandlerFunc("GET", "/", func(res http.ResponseWriter, _ *http.Request) {
@@ -474,7 +471,7 @@ func (*WebServer) TestWrapRouter(c *C) {
 	c.Assert(rec.Header().Get("Content-Encoding"), Equals, "gzip")
 
 	// Test honouring "X-Forwarded-For" headers
-	config.HTTP.TrustProxies = true
+	config.Config.HTTP.TrustProxies = true
 	r = httprouter.New()
 	var remoteIP string
 	r.HandlerFunc("GET", "/", func(res http.ResponseWriter, req *http.Request) {

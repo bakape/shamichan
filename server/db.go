@@ -5,6 +5,7 @@
 package server
 
 import (
+	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -16,20 +17,20 @@ type DatabaseHelper struct {
 // Exec excutes the inner query and only returns an error, if any
 func (d DatabaseHelper) Exec() {
 	err := d.query.Exec(rSession)
-	throw(err)
+	util.Throw(err)
 }
 
 // One writes the query result into the target pointer or returns error
 func (d DatabaseHelper) One(res interface{}) {
 	c, err := d.query.Run(rSession)
-	throw(err)
+	util.Throw(err)
 	c.One(res)
 }
 
 // All writes all responses into target pointer to slice or returns error
 func (d DatabaseHelper) All(res interface{}) {
 	c, err := d.query.Run(rSession)
-	throw(err)
+	util.Throw(err)
 	c.All(res)
 }
 

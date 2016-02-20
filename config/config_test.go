@@ -1,16 +1,19 @@
-package server
+package config
 
 import (
 	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"os"
+	"testing"
 )
 
-type Config struct{}
+func Test(t *testing.T) { TestingT(t) }
 
-var _ = Suite(&Config{})
+type Tests struct{}
 
-func (cf *Config) TestLoadConfig(c *C) {
+var _ = Suite(&Tests{})
+
+func (*Tests) TestLoadConfig(c *C) {
 	configRoot = "./test"
 	def := configRoot + "/defaults.json"
 	path := configRoot + "/config.json"
@@ -22,7 +25,7 @@ func (cf *Config) TestLoadConfig(c *C) {
 	}
 
 	// Config file does not exist
-	loadConfig()
+	LoadConfig()
 	file, err := ioutil.ReadFile(path)
 	c.Assert(err, IsNil)
 	c.Assert(file, DeepEquals, standard)
@@ -35,7 +38,7 @@ func (cf *Config) TestLoadConfig(c *C) {
 		c.Assert(recover() != nil, Equals, true)
 		removeFile(path, c)
 	}()
-	loadConfig()
+	LoadConfig()
 }
 
 func removeFile(path string, c *C) {

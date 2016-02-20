@@ -1,20 +1,20 @@
 package server
 
 import (
+	"github.com/bakape/meguca/auth"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
 
 func (*DB) TestNewReader(c *C) {
-	ident := Ident{}
+	ident := auth.Ident{}
 	standard := &Reader{"a", ident}
 	c.Assert(NewReader("a", ident), DeepEquals, standard)
 }
 
 func (*DB) TestParsePost(c *C) {
 	// Regular post
-	setupBoardAccess()
-	r := NewReader("a", Ident{})
+	r := NewReader("a", auth.Ident{})
 	img := Image{File: "foo"}
 	init := Post{
 		Body:  "foo",
@@ -75,7 +75,7 @@ func (*DB) TestGetPost(c *C) {
 			Board: "a",
 		},
 	})).Exec()
-	r := NewReader("a", Ident{})
+	r := NewReader("a", auth.Ident{})
 	c.Assert(r.GetPost(7), DeepEquals, Post{})   // Does not exist
 	c.Assert(r.GetPost(2), DeepEquals, Post{})   // Post deleted
 	c.Assert(r.GetPost(5), DeepEquals, Post{})   // Thread deleted
@@ -134,8 +134,7 @@ func (*DB) TestParseThreads(c *C) {
 			},
 		},
 	}
-	setupBoardAccess()
-	r := NewReader("a", Ident{})
+	r := NewReader("a", auth.Ident{})
 
 	// Zero length
 	c.Assert(r.parseThreads(threads), DeepEquals, []ThreadContainer(nil))
@@ -163,7 +162,6 @@ var genericImage = Image{File: "foo"}
 
 func (*DB) TestGetBoard(c *C) {
 	setupPosts()
-	setupBoardAccess()
 	standard := Board{
 		Ctr: 7,
 		Threads: []ThreadContainer{
@@ -192,7 +190,7 @@ func (*DB) TestGetBoard(c *C) {
 			},
 		},
 	}
-	c.Assert(NewReader("a", Ident{}).GetBoard(), DeepEquals, standard)
+	c.Assert(NewReader("a", auth.Ident{}).GetBoard(), DeepEquals, standard)
 }
 
 // Create a multipurpose set of threads and posts for tests
@@ -239,7 +237,6 @@ func setupPosts() {
 
 func (*DB) TestGetAllBoard(c *C) {
 	setupPosts()
-	setupBoardAccess()
 
 	standard := Board{
 		Ctr: 8,
@@ -280,13 +277,12 @@ func (*DB) TestGetAllBoard(c *C) {
 			},
 		},
 	}
-	c.Assert(NewReader("a", Ident{}).GetAllBoard(), DeepEquals, standard)
+	c.Assert(NewReader("a", auth.Ident{}).GetAllBoard(), DeepEquals, standard)
 }
 
 func (*DB) TestReaderGetThread(c *C) {
-	setupBoardAccess()
 	setupPosts()
-	rd := NewReader("a", Ident{})
+	rd := NewReader("a", auth.Ident{})
 
 	// No replies ;_;
 	standard := ThreadContainer{

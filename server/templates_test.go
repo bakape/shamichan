@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/bakape/meguca/config"
 	. "gopkg.in/check.v1"
 	"html/template"
 )
@@ -10,10 +11,10 @@ type Templates struct{}
 var _ = Suite(&Templates{})
 
 func (t *Templates) TestBoardNavigation(c *C) {
-	config = serverConfigs{}
-	config.Boards.Enabled = []string{"a", "staff"}
-	config.Boards.Staff = "staff"
-	config.Boards.Psuedo = [][2]string{
+	config.Config = config.Server{}
+	config.Config.Boards.Enabled = []string{"a", "staff"}
+	config.Config.Boards.Staff = "staff"
+	config.Config.Boards.Psuedo = [][2]string{
 		[2]string{"g", "https://google.com"},
 	}
 	html := boardNavigation()
@@ -51,9 +52,9 @@ func (t *Templates) TestBuildIndexTemplate(c *C) {
 
 func (t *Templates) TestCompileTemplates(c *C) {
 	templateRoot = "./test"
-	config = serverConfigs{}
-	clientConfig = clientConfigs{}
-	config.Boards.Enabled = []string{"a"}
+	config.Config = config.Server{}
+	config.ClientConfig = []byte{1}
+	config.Config.Boards.Enabled = []string{"a"}
 	standard := templateStore{
 		HTML: []byte("<a></a>\n"),
 		Hash: "eb51aca26e55050a",

@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"github.com/bakape/meguca/config"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 	"strconv"
@@ -48,8 +49,13 @@ func connectToRethinkDb(c *C) {
 	c.Assert(err, IsNil)
 }
 
+func (*DB) SetUpTest(_ *C) {
+	config.Config = config.Server{}
+	config.Config.Boards.Enabled = []string{"a"}
+}
+
 // Clear all documents from all tables after each test.
-func (*DB) TearDownTest(c *C) {
+func (*DB) TearDownTest(_ *C) {
 	for _, table := range allTables {
 		db()(r.Table(table).Delete()).Exec()
 	}
@@ -84,10 +90,10 @@ func (*DBInit) TestDb(c *C) {
 }
 
 func (*DBInit) TestLoadDB(c *C) {
-	config = serverConfigs{}
-	config.Rethinkdb.Addr = "localhost:28015"
+	config.Config = config.Server{}
+	config.Config.Rethinkdb.Addr = "localhost:28015"
 	dbName := uniqueDBName()
-	config.Rethinkdb.Db = dbName
+	config.Config.Rethinkdb.Db = dbName
 	defer func() {
 		db()(r.DBDrop(dbName)).Exec()
 		c.Assert(rSession.Close(), IsNil)

@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	"github.com/bakape/meguca/config"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -19,7 +20,7 @@ type ProtoImage struct {
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
-	req.Body = http.MaxBytesReader(res, req.Body, config.Images.Max.Size)
+	req.Body = http.MaxBytesReader(res, req.Body, config.Config.Images.Max.Size)
 	clientID, spoiler, err := parseUploadForm(req)
 	if err != nil {
 		passError(res, req, err, 400)
@@ -69,7 +70,7 @@ func parseUploadForm(req *http.Request) (id string, spoiler uint8, err error) {
 }
 
 func isValidSpoiler(id uint8) bool {
-	for _, valid := range config.Images.Spoilers {
+	for _, valid := range config.Config.Images.Spoilers {
 		if id == valid {
 			return true
 		}

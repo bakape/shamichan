@@ -1,12 +1,16 @@
 package server
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"github.com/bakape/meguca/auth"
 	"github.com/gorilla/websocket"
 	. "gopkg.in/check.v1"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -29,7 +33,7 @@ func (*ClientSuite) TestNewClient(c *C) {
 	c.Assert(cl.id, Matches, "^[0-9a-zA-Z]{32}$")
 	c.Assert(cl.synced, Equals, false)
 	c.Assert(cl.closed, Equals, false)
-	c.Assert(cl.ident, DeepEquals, Ident{IP: wcl.LocalAddr().String()})
+	c.Assert(cl.ident, DeepEquals, auth.Ident{IP: wcl.LocalAddr().String()})
 }
 
 func (*ClientSuite) TestOpenClose(c *C) {
@@ -54,6 +58,18 @@ func (*ClientSuite) TestLogError(c *C) {
 		cl.logError(errors.New(msg))
 	})
 	assertLog(c, log, fmt.Sprintf("Error by %s: %s\n", ip, msg))
+}
+
+func captureLog(fn func()) string {
+	buf := new(bytes.Buffer)
+	log.SetOutput(buf)
+	fn()
+	log.SetOutput(os.Stdout)
+	return buf.String()
+}
+
+func assertLog(c *C, input, standard string) {
+	c.Assert(input, Matches, `\d+/\d+/\d+ \d+:\d+:\d+ `+standard)
 }
 
 func (*ClientSuite) TestClose(c *C) {

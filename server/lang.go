@@ -5,6 +5,8 @@
 package server
 
 import (
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
 	"io/ioutil"
 )
 
@@ -23,11 +25,11 @@ var langs packMap
 // loadLanguagePacks reads and exports server-side language packs from JSON
 func loadLanguagePacks() {
 	langs = packMap{}
-	for _, lang := range config.Lang.Enabled {
+	for _, lang := range config.Config.Lang.Enabled {
 		file, err := ioutil.ReadFile(langRoot + "/" + lang + "/server.json")
-		throw(err)
+		util.Throw(err)
 		var parsed LanguagePack
-		unmarshalJSON(file, &parsed)
+		util.UnmarshalJSON(file, &parsed)
 		langs[lang] = parsed
 	}
 }

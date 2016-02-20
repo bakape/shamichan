@@ -8,6 +8,8 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
 	"github.com/dchest/htmlmin"
 	"html/template"
 )
@@ -50,11 +52,11 @@ type templateVars struct {
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
 func indexTemplate() (templateStore, templateStore) {
-	vars := templateVars{ConfigHash: configHash}
-	vars.Config = template.JS(marshalJSON(clientConfig))
+	vars := templateVars{ConfigHash: config.Hash}
+	vars.Config = template.JS(util.MarshalJSON(config.ClientConfig))
 	vars.Navigation = boardNavigation()
 	tmpl, err := template.ParseFiles(templateRoot + "/index.html")
-	throw(err)
+	util.Throw(err)
 
 	// Rigt now the desktop and mobile templates are almost identical. This will
 	// change, when we get a dedicated mobile GUI.
@@ -65,17 +67,18 @@ func indexTemplate() (templateStore, templateStore) {
 // boardNavigation renders interboard navigation we put in the top banner
 func boardNavigation() template.HTML {
 	html := `<b id="navTop">[`
+	conf := config.Config.Boards
 
 	// Actual boards and "/all/" metaboard
-	for i, board := range append(config.Boards.Enabled, "all") {
-		if board == config.Boards.Staff {
+	for i, board := range append(conf.Enabled, "all") {
+		if board == conf.Staff {
 			continue
 		}
 		html += boardLink(i > 0, board, "../"+board+"/")
 	}
 
 	// Add custom URLs to board navigation
-	for _, link := range config.Boards.Psuedo {
+	for _, link := range conf.Psuedo {
 		html += boardLink(true, link[0], link[1])
 	}
 	html += `]</b>`
@@ -99,13 +102,13 @@ func buildIndexTemplate(
 ) templateStore {
 	vars.IsMobile = isMobile
 	buffer := new(bytes.Buffer)
-	throw(tmpl.Execute(buffer, vars))
+	util.Throw(tmpl.Execute(buffer, vars))
 	minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
 		MinifyScripts: true,
 	})
-	throw(err)
+	util.Throw(err)
 	return templateStore{
 		minified,
-		hashBuffer(minified),
+		util.HashBuffer(minified),
 	}
 }

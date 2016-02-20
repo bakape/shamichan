@@ -5,6 +5,9 @@
 package server
 
 import (
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
 	"github.com/gorilla/handlers"
 	"github.com/julienschmidt/httprouter"
 	"github.com/mssola/user_agent"
@@ -22,8 +25,13 @@ var (
 )
 
 func startWebServer() {
-	log.Println("Listening on " + config.HTTP.Addr)
-	log.Fatal(http.ListenAndServe(config.HTTP.Addr, wrapRouter(createRouter())))
+	log.Println("Listening on " + config.Config.HTTP.Addr)
+	log.Fatal(
+		http.ListenAndServe(
+			config.Config.HTTP.Addr,
+			wrapRouter(createRouter()),
+		),
+	)
 }
 
 // Create the monolithic router for routing HTTP requests. Separated into own
@@ -37,7 +45,7 @@ func createRouter() *httprouter.Router {
 	router.HandlerFunc("GET", "/", redirectToDefault)
 	router.HandlerFunc("GET", "/all/", serveIndexTemplate)
 	router.HandlerFunc("GET", "/api/all/", allBoardJSON)
-	for _, board := range config.Boards.Enabled {
+	for _, board := range config.Config.Boards.Enabled {
 		router.HandlerFunc("GET", "/"+board+"/", serveIndexTemplate)
 		router.HandlerFunc("GET", "/api/"+board+"/", boardJSON(board))
 
@@ -47,7 +55,7 @@ func createRouter() *httprouter.Router {
 	}
 
 	// Other JSON API handlers
-	router.HandlerFunc("GET", "/api/config", serveConfigs)
+	router.HandlerFunc("GET", "/api/config.Config", serveConfigs)
 	router.GET("/api/post/:post", servePost)
 
 	// Websocket API
@@ -68,7 +76,7 @@ func createRouter() *httprouter.Router {
 func wrapRouter(router *httprouter.Router) http.Handler {
 	// Wrap router with extra handlers
 	handler := http.Handler(router)
-	if config.HTTP.TrustProxies { // Infer IP from header, if configured to
+	if config.Config.HTTP.TrustProxies { // Infer IP from header, if configured to
 		handler = handlers.ProxyHeaders(router)
 	}
 	handler = handlers.CompressHandler(handler) //GZIP
@@ -77,10 +85,10 @@ func wrapRouter(router *httprouter.Router) http.Handler {
 
 // Redirects to frontpage, if set, or the default board
 func redirectToDefault(res http.ResponseWriter, req *http.Request) {
-	if config.Frontpage != "" {
-		http.ServeFile(res, req, config.Frontpage)
+	if config.Config.Frontpage != "" {
+		http.ServeFile(res, req, config.Config.Frontpage)
 	} else {
-		http.Redirect(res, req, "/"+config.Boards.Default+"/", 302)
+		http.Redirect(res, req, "/"+config.Config.Boards.Default+"/", 302)
 	}
 }
 
@@ -100,7 +108,7 @@ func serveIndexTemplate(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	_, err := res.Write(template.HTML)
-	throw(err)
+	util.Throw(err)
 }
 
 // Serves `/api/:board/` page JSON
@@ -109,9 +117,11 @@ func boardJSON(board string) http.HandlerFunc {
 		if !compareEtag(res, req, etagStart(boardCounter(board)), true) {
 			return
 		}
-		ident := lookUpIdent(req.RemoteAddr)
-		_, err := res.Write(marshalJSON(NewReader(board, ident).GetBoard()))
-		throw(err)
+		ident := auth.LookUpIdent(req.RemoteAddr)
+		_, err := res.Write(
+			util.MarshalJSON(NewReader(board, ident).GetBoard()),
+		)
+		util.Throw(err)
 	}
 }
 
@@ -139,7 +149,7 @@ func threadJSON(board string) httprouter.Handle {
 		ps httprouter.Params,
 	) {
 		id, err := strconv.ParseUint(ps[0].Value, 10, 64)
-		ident := lookUpIdent(req.RequestURI)
+		ident := auth.LookUpIdent(req.RequestURI)
 		if !validateThreadRequest(err, board, id) {
 			text404(res)
 			return
@@ -147,11 +157,11 @@ func threadJSON(board string) httprouter.Handle {
 		if !compareEtag(res, req, etagStart(threadCounter(id)), true) {
 			return
 		}
-		data := marshalJSON(
+		data := util.MarshalJSON(
 			NewReader(board, ident).GetThread(id, detectLastN(req)),
 		)
 		_, err = res.Write(data)
-		throw(err)
+		util.Throw(err)
 	}
 }
 
@@ -165,9 +175,9 @@ func allBoardJSON(res http.ResponseWriter, req *http.Request) {
 	if !compareEtag(res, req, etagStart(postCounter()), true) {
 		return
 	}
-	ident := lookUpIdent(req.RemoteAddr)
-	_, err := res.Write(marshalJSON(NewReader("all", ident).GetAllBoard()))
-	throw(err)
+	ident := auth.LookUpIdent(req.RemoteAddr)
+	_, err := res.Write(util.MarshalJSON(NewReader("all", ident).GetAllBoard()))
+	util.Throw(err)
 }
 
 // Build an etag for HTML pages and check if it matches the one provided by the
@@ -188,7 +198,7 @@ func compareEtag(
 
 // Build the main part of the etag
 func etagStart(counter uint64) string {
-	return "W/" + idToString(counter)
+	return "W/" + util.IDToString(counter)
 }
 
 /*
@@ -211,7 +221,7 @@ func checkClientEtag(
 func notFound(res http.ResponseWriter) {
 	setErrorHeaders(res)
 	res.WriteHeader(404)
-	copyFile(webRoot+"/404.html", res)
+	util.CopyFile(webRoot+"/404.html", res)
 }
 
 // Addapter for using notFound as a route handler
@@ -234,8 +244,8 @@ func setErrorHeaders(res http.ResponseWriter) {
 func panicHandler(res http.ResponseWriter, req *http.Request, err interface{}) {
 	setErrorHeaders(res)
 	res.WriteHeader(500)
-	copyFile(webRoot+"/50x.html", res)
-	logError(req, err)
+	util.CopyFile(webRoot+"/50x.html", res)
+	util.LogError(req, err)
 }
 
 // Set HTTP headers to the response object
@@ -275,13 +285,13 @@ func detectLastN(req *http.Request) int {
 
 // Serve public configuration information as JSON
 func serveConfigs(res http.ResponseWriter, req *http.Request) {
-	etag := "W/" + configHash
+	etag := "W/" + config.Hash
 	if checkClientEtag(res, req, etag) {
 		return
 	}
 	setHeaders(res, etag, true)
-	_, err := res.Write(marshalJSON(clientConfig))
-	throw(err)
+	_, err := res.Write(config.ClientConfig)
+	util.Throw(err)
 }
 
 // Serve a single post as JSON
@@ -295,19 +305,19 @@ func servePost(
 		text404(res)
 		return
 	}
-	post := NewReader("", lookUpIdent(req.RemoteAddr)).GetPost(id)
+	post := NewReader("", auth.LookUpIdent(req.RemoteAddr)).GetPost(id)
 	if post.ID == 0 { // No post in the database or no access
 		text404(res)
 		return
 	}
-	data := marshalJSON(post)
-	etag := hashBuffer(data)
+	data := util.MarshalJSON(post)
+	etag := util.HashBuffer(data)
 	if checkClientEtag(res, req, etag) {
 		return
 	}
 	setHeaders(res, etag, true)
 	_, err = res.Write(data)
-	throw(err)
+	util.Throw(err)
 }
 
 // More performant handler for serving image assets. These are immutable
@@ -336,5 +346,5 @@ func serveImages(
 	headers.Set("Cache-Control", "max-age=30240000")
 	headers.Set("X-Frame-Options", "sameorigin")
 	_, err = io.Copy(res, file)
-	throw(err)
+	util.Throw(err)
 }

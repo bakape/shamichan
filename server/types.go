@@ -78,10 +78,3 @@ type Link struct {
 	Board string `json:"board" gorethink:"board"`
 	OP    int    `json:"op" gorethink:"op"`
 }
-
-// Ident is used to verify a client's access and write permissions
-type Ident struct {
-	Banned bool
-	Auth   string // Indicates priveledged access rights for staff
-	IP     string
-}

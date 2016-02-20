@@ -1,13 +1,11 @@
-/*
- Parses JSON configuration files and exports the config struct for server-side
- use and the clientConfig struct, for JSON stringification and passing to the
- client
-*/
-
-package server
+// Package config parses JSON configuration files and exports the Config struct
+// for server-side use and the ClientConfig struct, for JSON stringification and
+// passing to the  client,
+package config
 
 import (
 	"github.com/Soreil/mnemonics"
+	"github.com/bakape/meguca/util"
 	"io/ioutil"
 	"os"
 )
@@ -15,9 +13,10 @@ import (
 // Overridable path for tests
 var configRoot = "./config"
 
-// Global configuration store
-type serverConfigs struct {
-	// Configuration that can not be hot-reloaded without restarting the server
+// Server stores the global configuration. It is loaded only once
+// during start up and considered implicitly immutable during the rest of
+// runtime.
+type Server struct {
 	HTTP struct {
 		Addr, Origin string
 		TrustProxies bool
@@ -40,7 +39,7 @@ type serverConfigs struct {
 		Default string
 	}
 	Staff struct {
-		Classes     map[string]staffClass
+		Classes     map[string]StaffClass
 		Keyword     string
 		SessionTime int
 	}
@@ -68,25 +67,24 @@ type serverConfigs struct {
 	Recaptcha struct {
 		Public, Private string
 	}
-	Debug                                                          bool
 	Banners, FAQ, Eightball                                        []string
 	Schedule                                                       [][3]string
 	Radio, Pyu, IllyaDance                                         bool
 	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
 }
 
-// Contains properties of a single staff personel type
-type staffClass struct {
+// StaffClass contains properties of a single staff personel type
+type StaffClass struct {
 	Alias   string
 	Members map[string]string
 	Rights  map[string]bool
 }
 
-// config contains currently loaded configuration
-var config serverConfigs
+// Config contains currently loaded server configuration
+var Config Server
 
-// Subset of serverConfigs, that is visible to all clients
-type clientConfigs struct {
+// client is a subset of serverConfigs, that is exported as JSON to all clients
+type client struct {
 	Boards struct {
 		Enabled []string `json:"enabled"`
 		Boards  map[string]struct {
@@ -115,7 +113,6 @@ type clientConfigs struct {
 		Spoilers []int `json:"spoilers"`
 		Hats     bool  `json:"hats"`
 	} `json:"images"`
-	Debug         bool        `json:"debug"`
 	Banners       []string    `json:"banners"`
 	FAQ           []string    `json:"FAQ"`
 	Eightball     []string    `json:"eightball"`
@@ -127,14 +124,14 @@ type clientConfigs struct {
 	InfoBanner    string      `json:"infoBanner"`
 }
 
-// clientConfig exports public settings all clients can access
-var clientConfig clientConfigs
+// ClientConfig exports public settings all clients can access
+var ClientConfig []byte
 
-// configHash is the truncated MD5 hash of the JSON configuration file
-var configHash string
+// Hash stores the truncated MD5 hash of Config
+var Hash string
 
-// loadConfig reads and parses JSON config files
-func loadConfig() {
+// LoadConfig reads and parses the JSON config file
+func LoadConfig() {
 	path := configRoot + "/config.json"
 	file, err := ioutil.ReadFile(path)
 
@@ -142,15 +139,17 @@ func loadConfig() {
 	if err != nil {
 		if os.IsNotExist(err) {
 			file, err = ioutil.ReadFile(configRoot + "/defaults.json")
-			throw(err)
-			throw(ioutil.WriteFile(path, file, 0600))
+			util.Throw(err)
+			util.Throw(ioutil.WriteFile(path, file, 0600))
 		} else {
 			panic(err)
 		}
 	}
 
-	unmarshalJSON(file, &config)
-	unmarshalJSON(file, &clientConfig)
-	configHash = hashBuffer(file)
-	throw(mnemonic.SetSalt(config.Posts.Salt))
+	util.UnmarshalJSON(file, &Config)
+	var data client
+	util.UnmarshalJSON(file, &data)
+	ClientConfig = util.MarshalJSON(data)
+	Hash = util.HashBuffer(file)
+	util.Throw(mnemonic.SetSalt(Config.Posts.Salt))
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/bakape/meguca/config"
 	. "gopkg.in/check.v1"
 	"mime/multipart"
 	"os"
@@ -11,8 +12,8 @@ type Imager struct{}
 var _ = Suite(&Imager{})
 
 func (*Imager) TestIsValidSpoiler(c *C) {
-	config = serverConfigs{}
-	config.Images.Spoilers = []uint8{1, 2}
+	config.Config = config.Server{}
+	config.Config.Images.Spoilers = []uint8{1, 2}
 	c.Assert(isValidSpoiler(8), Equals, false)
 	c.Assert(isValidSpoiler(1), Equals, true)
 }

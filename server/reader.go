@@ -1,17 +1,19 @@
 package server
 
 import (
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
 // Reader reads on formats thread and post structs
 type Reader struct {
 	board string
-	ident Ident
+	ident auth.Ident
 }
 
 // NewReader constructs a new Reader instance
-func NewReader(board string, ident Ident) *Reader {
+func NewReader(board string, ident auth.Ident) *Reader {
 	return &Reader{
 		board: board,
 		ident: ident,
@@ -44,7 +46,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 	for _, post := range posts {
 		parsed := rd.parsePost(post)
 		if parsed.ID != 0 {
-			filtered[idToString(parsed.ID)] = parsed
+			filtered[util.IDToString(parsed.ID)] = parsed
 		}
 	}
 
@@ -67,9 +69,9 @@ func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 func getJoinedThread(id uint64) (thread joinedThread) {
 	db()(r.
 		Expr(map[string]r.Term{
-		"left":  getThread(id),
-		"right": getPost(id),
-	}).
+			"left":  getThread(id),
+			"right": getPost(id),
+		}).
 		Merge(getThreadMeta()),
 	).One(&thread)
 	thread.Right.OP = 0
@@ -113,7 +115,7 @@ func (rd *Reader) parsePost(post Post) Post {
 // GetPost reads a single post from the database
 func (rd *Reader) GetPost(id uint64) (post Post) {
 	db()(getPost(id)).One(&post)
-	if post.ID == 0 || !canAccessBoard(post.Board, rd.ident) {
+	if post.ID == 0 || !auth.CanAccessBoard(post.Board, rd.ident) {
 		return Post{}
 	}
 	var deleted bool // Check if parent thread was not deleted

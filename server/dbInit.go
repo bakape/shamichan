@@ -6,6 +6,8 @@ package server
 
 import (
 	"fmt"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	"log"
 )
@@ -30,14 +32,14 @@ func db() func(r.Term) DatabaseHelper {
 func loadDB() {
 	var err error
 	rSession, err = r.Connect(r.ConnectOpts{
-		Address: config.Rethinkdb.Addr,
+		Address: config.Config.Rethinkdb.Addr,
 	})
-	throw(err)
+	util.Throw(err)
 
 	var isCreated bool
-	db()(r.DBList().Contains(config.Rethinkdb.Db)).One(&isCreated)
+	db()(r.DBList().Contains(config.Config.Rethinkdb.Db)).One(&isCreated)
 	if isCreated {
-		rSession.Use(config.Rethinkdb.Db)
+		rSession.Use(config.Config.Rethinkdb.Db)
 		verifyDBVersion()
 	} else {
 		initRethinkDB()
@@ -73,7 +75,7 @@ type infoDocument struct {
 
 // Initialize a rethinkDB database
 func initRethinkDB() {
-	dbName := config.Rethinkdb.Db
+	dbName := config.Config.Rethinkdb.Db
 	log.Printf("Initialising database '%s'", dbName)
 	db()(r.DBCreate(dbName)).Exec()
 	rSession.Use(dbName)

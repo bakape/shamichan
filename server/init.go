@@ -4,6 +4,8 @@ package server
 
 import (
 	"fmt"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
 	"github.com/sevlyar/go-daemon"
 	"log"
 	"os"
@@ -11,10 +13,12 @@ import (
 	"time"
 )
 
+var debugMode bool
+
 // Start parses command line arguments and initializes the server.
 func Start() {
 	chdirToSource()
-	loadConfig()
+	config.LoadConfig()
 	createDirs()
 
 	// Parse command line arguments
@@ -26,7 +30,7 @@ func Start() {
 	case "init": // For internal use only
 		os.Exit(0)
 	case "debug":
-		config.Debug = true
+		debugMode = true
 	case "start":
 	case "stop":
 		killDaemon()
@@ -37,7 +41,7 @@ func Start() {
 		printUsage()
 	}
 
-	if !config.Debug {
+	if debugMode {
 		daemonise()
 	} else {
 		startServer()
@@ -51,7 +55,7 @@ func Start() {
 func chdirToSource() {
 	if gopath := os.Getenv("GOPATH"); gopath != "" {
 		workDir := gopath + "/src/github.com/bakape/meguca"
-		throw(os.Chdir(workDir))
+		util.Throw(os.Chdir(workDir))
 		daemonContext.WorkDir = workDir
 	}
 }
@@ -96,7 +100,7 @@ func daemonise() {
 	defer daemonContext.Release()
 	log.Println("Server started ------------------------------------")
 	go startServer()
-	throw(daemon.ServeSignals())
+	util.Throw(daemon.ServeSignals())
 	log.Println("Server terminated")
 }
 
@@ -107,7 +111,7 @@ func killDaemon() {
 		panic(err)
 	}
 	if proc != nil {
-		throw(proc.Signal(syscall.SIGTERM))
+		util.Throw(proc.Signal(syscall.SIGTERM))
 
 		// Assertain process has exited
 		for {
@@ -125,6 +129,6 @@ func killDaemon() {
 // Create all needed directories for server operation
 func createDirs() {
 	for _, dir := range [...]string{"src", "thumb", "mid"} {
-		throw(os.MkdirAll("./img/"+dir, 0750))
+		util.Throw(os.MkdirAll("./img/"+dir, 0750))
 	}
 }
