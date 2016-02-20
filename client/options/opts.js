@@ -238,9 +238,7 @@ for (let short of shorts) {
 	opts.push(short)
 }
 
-/**
- * Create a function to append and toggle a style element in <head>
- */
+// Create a function to append and toggle a style element in <head>
 function toggleHeadStyle(id, css) {
 	return toggle => {
 		if (!document.getElementById(id)) {
@@ -255,7 +253,5 @@ function toggleHeadStyle(id, css) {
 	}
 }
 
-/**
- * Exports the generated option model templates
- */
+// Exports the generated option model templates
 export default opts

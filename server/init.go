@@ -41,7 +41,7 @@ func Start() {
 		printUsage()
 	}
 
-	if debugMode {
+	if !debugMode {
 		daemonise()
 	} else {
 		startServer()
@@ -72,7 +72,6 @@ func printUsage() {
 }
 
 func startServer() {
-	loadLanguagePacks()
 	compileTemplates()
 	loadDB()
 	startWebServer()

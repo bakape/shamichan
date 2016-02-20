@@ -17,7 +17,6 @@ const _ = require('underscore'),
 	sourcemaps = require('gulp-sourcemaps'),
 	uglify = require('gulp-uglify')
 
-const langs = fs.readdirSync('./lang')
 fs.mkdirsSync('./www/js/vendor')
 
 // Keep script alive and rebuild on file changes
@@ -25,7 +24,7 @@ fs.mkdirsSync('./www/js/vendor')
 const watch = gutil.env.w
 
 // Dependancy tasks for the default tasks
-const tasks = langs.slice()
+const tasks = []
 
 // Client JS files
 buildClient('es5')
@@ -47,17 +46,6 @@ createTask('css', './less/*.less', src =>
 		.pipe(nano())
 		.pipe(sourcemaps.write('./maps'))
 		.pipe(gulp.dest('./www/css')))
-
-// Language packs
-langs.forEach(lang =>
-	createTask(lang, `./lang/${lang}/client.js`, src =>
-		src
-			.pipe(rename({basename: lang}))
-			.pipe(sourcemaps.init())
-			.pipe(babel({plugins: ['transform-es2015-modules-systemjs']}))
-			.pipe(uglify())
-			.pipe(sourcemaps.write('./maps'))
-			.pipe(gulp.dest('./www/js/lang'))))
 
 // Dependancy libraries
 copyVendor([

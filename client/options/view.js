@@ -5,13 +5,8 @@ import {each, find} from '../../vendor/underscore'
 import options from '../options'
 import {importConfigs} from 'lang'
 
-/**
- * View of the options panel
- */
+// View of the options panel
 export default class OptionsPanel extends BannerModal {
-	/**
-	 * Construct new OptionsPanel
-	 */
 	constructor() {
 		super({id: 'options-panel'})
 		this.onClick({
@@ -23,9 +18,7 @@ export default class OptionsPanel extends BannerModal {
 		this.onAll('change', 'applyChange')
 	}
 
-	/**
-	 * Render the contents of the options panel and insert it into the DOM
-	 */
+	// Render the contents of the options panel and insert it into the DOM
 	render() {
 		this.el.innerHTML = renderContents()
 		this.assignValues()
@@ -35,10 +28,8 @@ export default class OptionsPanel extends BannerModal {
 		// events.reply('hide:render', this.renderHidden, this)
 	}
 
-	/**
-	 * Assign loaded option settings to the respective elements in the options
-	 * panel
-	 */
+	// Assign loaded option settings to the respective elements in the options
+	// panel
 	assignValues() {
 		for (let id in optionModels) {
 			const model = optionModels[id],
@@ -57,10 +48,7 @@ export default class OptionsPanel extends BannerModal {
 		}
 	}
 
-	/**
-	 * Switch to a tab, when clicking the tab butt
-	 * @param {Event} event
-	 */
+	// Switch to a tab, when clicking the tab butt
 	switchTab(event) {
 		event.preventDefault()
 		const el = event.target
@@ -77,11 +65,8 @@ export default class OptionsPanel extends BannerModal {
 			.classList.add('tab_sel')
 	}
 
-	/**
-	 * Propagate options panel changes through
-	 * options -> optionModels -> localStorage
-	 * @param {Event} event
-	 */
+	// Propagate options panel changes through
+	// options -> optionModels -> localStorage
 	applyChange(event) {
 		const el = event.target,
 			id = el.getAttribute('id'),
@@ -116,9 +101,7 @@ export default class OptionsPanel extends BannerModal {
 		}
 	}
 
-	/**
-	 * Dump options to JSON file and upload to user
-	 */
+	// Dump options to JSON file and upload to user
 	exportConfigs() {
 		const a = document.getElementById('export')
 		a.setAttribute('href', window.URL
@@ -129,10 +112,7 @@ export default class OptionsPanel extends BannerModal {
 		a.setAttribute('download', 'meguca-config.json')
 	}
 
-	/**
-	 * Import options from uploaded JSON file
-	 * @param {Event} event
-	 */
+	// Import options from uploaded JSON file
 	importConfigs(event) {
 		// Proxy to hidden file input
 		event.preventDefault()
@@ -161,18 +141,13 @@ export default class OptionsPanel extends BannerModal {
 		})
 	}
 
-	/**
-	 * Render Hiden posts counter
-	 * @param {int} count
-	 */
+	// Render Hiden posts counter
 	renderHidden(count) {
 		const el = this.hidden
 		el.textContent = el.textContent.replace(/\d+$/, count)
 	}
 
-	/**
-	 * Clear displayed hidden post counter
-	 */
+	// Clear displayed hidden post counter
 	clearHidden() {
 		main.request('hide:clear')
 		this.renderHidden(0)

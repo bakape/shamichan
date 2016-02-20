@@ -1,6 +1,7 @@
 /*
-Selects and loads the client files
- */
+ Selects and loads the client files
+ Use only pure ES5.
+*/
 
 (function () {
 	// Check for browser compatibility by trying to detect some ES6 features
@@ -51,12 +52,19 @@ Selects and loads the client files
 	var meta = {}
 	meta['es5/*'] = meta['es6/*'] = {format: 'register'}
 
+	// Alias the appropriate language pack to "lang"
+	var lang = '/lang/' + (localStorage.lang || config.lang.default)
+	if (legacy) {
+		lang = 'es5' + lang
+	} else {
+		lang = 'es6' + lang
+	}
+
 	System.config({
 		baseURL: '/ass/js',
 		defaultJSExtensions: true,
-		// Alias the appropriate language pack to "lang"
 		map: {
-			lang: 'lang/' + (localStorage.lang || config.lang.default),
+			lang: lang,
 			underscore: 'vendor/underscore',
 			'js-cookie': 'vendor/js-cookie'
 		},

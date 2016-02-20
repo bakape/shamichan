@@ -53,7 +53,7 @@ type templateVars struct {
 // imageboard
 func indexTemplate() (templateStore, templateStore) {
 	vars := templateVars{ConfigHash: config.Hash}
-	vars.Config = template.JS(util.MarshalJSON(config.ClientConfig))
+	vars.Config = template.JS(config.ClientConfig)
 	vars.Navigation = boardNavigation()
 	tmpl, err := template.ParseFiles(templateRoot + "/index.html")
 	util.Throw(err)

@@ -1,13 +1,9 @@
 import {filter} from '../../vendor/underscore'
 import {parseHTML, parseAttributes} from '../util'
 import options from "./opts"
-import ln from 'lang'
+import {opts as lang} from 'lang'
 
-const lang = ln.opts
-
-/**
- * Render the inner HTML of the options panel
- */
+// Render the inner HTML of the options panel
 export default function () {
 	let html = '<ul class="option_tab_sel">'
 	const {tabs} = lang,
@@ -51,9 +47,7 @@ export default function () {
 	return html
 }
 
-/**
- * Render tab contents
- */
+// Render tab contents
 function renderTab(opts, i) {
 	if (!opts.length) {
 		return ''
@@ -80,9 +74,7 @@ function renderTab(opts, i) {
 	return html
 }
 
-/**
- * Render a single option from it's schema
- */
+// Render a single option from it's schema
 function renderOption(opt) {
 	let html = ''
 	const isShortcut = opt.type === 'shortcut',
@@ -126,9 +118,7 @@ function renderOption(opt) {
 	return html
 }
 
-/**
- * Hidden post reset, Export and Import links to first tab
- */
+// Hidden post reset, Export and Import links to first tab
 function renderExtras() {
 	let html = '<br>'
 	const links = ['export', 'import', 'hidden']
