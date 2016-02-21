@@ -2,9 +2,12 @@ package server
 
 import (
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
+
+var genericImage = types.Image{File: "foo"}
 
 func (*DB) TestNewReader(c *C) {
 	ident := auth.Ident{}
@@ -15,13 +18,13 @@ func (*DB) TestNewReader(c *C) {
 func (*DB) TestParsePost(c *C) {
 	// Regular post
 	r := NewReader("a", auth.Ident{})
-	img := Image{File: "foo"}
-	init := Post{
+	img := types.Image{File: "foo"}
+	init := types.Post{
 		Body:  "foo",
 		Image: img,
 		IP:    "::1",
 	}
-	standard := Post{
+	standard := types.Post{
 		Body:  "foo",
 		Image: img,
 	}
@@ -31,21 +34,21 @@ func (*DB) TestParsePost(c *C) {
 	// Image deleted
 	p = init
 	p.ImgDeleted = true
-	c.Assert(r.parsePost(p), DeepEquals, Post{Body: "foo"})
+	c.Assert(r.parsePost(p), DeepEquals, types.Post{Body: "foo"})
 
 	// Post deleted
 	p = init
 	p.Deleted = true
-	c.Assert(r.parsePost(p), DeepEquals, Post{})
+	c.Assert(r.parsePost(p), DeepEquals, types.Post{})
 }
 
 func (*DB) TestGetPost(c *C) {
-	standard := Post{
+	standard := types.Post{
 		ID:    3,
 		OP:    1,
 		Board: "a",
 	}
-	db()(r.Table("posts").Insert([]Post{
+	db()(r.Table("posts").Insert([]types.Post{
 		{
 			ID:      2,
 			OP:      1,
@@ -64,7 +67,7 @@ func (*DB) TestGetPost(c *C) {
 			Board: "q",
 		},
 	})).Exec()
-	db()(r.Table("threads").Insert([]Thread{
+	db()(r.Table("threads").Insert([]types.Thread{
 		{
 			ID:      4,
 			Deleted: true,
@@ -76,34 +79,35 @@ func (*DB) TestGetPost(c *C) {
 		},
 	})).Exec()
 	r := NewReader("a", auth.Ident{})
-	c.Assert(r.GetPost(7), DeepEquals, Post{})   // Does not exist
-	c.Assert(r.GetPost(2), DeepEquals, Post{})   // Post deleted
-	c.Assert(r.GetPost(5), DeepEquals, Post{})   // Thread deleted
-	c.Assert(r.GetPost(8), DeepEquals, Post{})   // Board no longer accessable
+	empty := types.Post{}
+	c.Assert(r.GetPost(7), DeepEquals, empty)    // Does not exist
+	c.Assert(r.GetPost(2), DeepEquals, empty)    // Post deleted
+	c.Assert(r.GetPost(5), DeepEquals, empty)    // Thread deleted
+	c.Assert(r.GetPost(8), DeepEquals, empty)    // Board no longer accessable
 	c.Assert(r.GetPost(3), DeepEquals, standard) // Valid read
 }
 
 func (*DB) TestGetJoinedThread(c *C) {
 	// Only OP
-	db()(r.Table("threads").Insert(Thread{ID: 1})).Exec()
-	db()(r.Table("posts").Insert(Post{
+	db()(r.Table("threads").Insert(types.Thread{ID: 1})).Exec()
+	db()(r.Table("posts").Insert(types.Post{
 		ID:    1,
 		OP:    1,
-		Image: Image{File: "Foo"},
+		Image: genericImage,
 	})).Exec()
 	standard := joinedThread{
-		Left: Thread{
+		Left: types.Thread{
 			ID: 1,
 		},
-		Right: Post{
+		Right: types.Post{
 			ID:    1,
-			Image: Image{File: "Foo"},
+			Image: genericImage,
 		},
 	}
 	c.Assert(getJoinedThread(1), DeepEquals, standard)
 
 	// 1 reply, no image
-	db()(r.Table("posts").Insert(Post{
+	db()(r.Table("posts").Insert(types.Post{
 		ID: 2,
 		OP: 1,
 	})).Exec()
@@ -112,10 +116,10 @@ func (*DB) TestGetJoinedThread(c *C) {
 	c.Assert(getJoinedThread(1), DeepEquals, standard)
 
 	// 2 replies, 1 image
-	db()(r.Table("posts").Insert(Post{
+	db()(r.Table("posts").Insert(types.Post{
 		ID:    3,
 		OP:    1,
-		Image: Image{File: "foo"},
+		Image: genericImage,
 	})).Exec()
 	standard.Left.PostCtr++
 	standard.Left.ImageCtr++
@@ -125,11 +129,11 @@ func (*DB) TestGetJoinedThread(c *C) {
 func (*DB) TestParseThreads(c *C) {
 	threads := []joinedThread{
 		{
-			Left: Thread{
+			Left: types.Thread{
 				ID:      2,
 				Deleted: true,
 			},
-			Right: Post{
+			Right: types.Post{
 				ID: 2,
 			},
 		},
@@ -137,52 +141,50 @@ func (*DB) TestParseThreads(c *C) {
 	r := NewReader("a", auth.Ident{})
 
 	// Zero length
-	c.Assert(r.parseThreads(threads), DeepEquals, []ThreadContainer(nil))
+	c.Assert(r.parseThreads(threads), DeepEquals, []types.ThreadContainer(nil))
 
 	threads = append([]joinedThread{
 		{
-			Left: Thread{
+			Left: types.Thread{
 				ID: 1,
 			},
-			Right: Post{
+			Right: types.Post{
 				ID: 1,
 			},
 		},
 	}, threads...)
-	standard := []ThreadContainer{
+	standard := []types.ThreadContainer{
 		{
-			Thread: Thread{ID: 1},
-			Post:   Post{ID: 1},
+			Thread: types.Thread{ID: 1},
+			Post:   types.Post{ID: 1},
 		},
 	}
 	c.Assert(r.parseThreads(threads), DeepEquals, standard)
 }
 
-var genericImage = Image{File: "foo"}
-
 func (*DB) TestGetBoard(c *C) {
 	setupPosts()
-	standard := Board{
+	standard := types.Board{
 		Ctr: 7,
-		Threads: []ThreadContainer{
+		Threads: []types.ThreadContainer{
 			{
-				Thread: Thread{
+				Thread: types.Thread{
 					ID:    3,
 					Board: "a",
 				},
-				Post: Post{
+				Post: types.Post{
 					ID:    3,
 					Board: "a",
 					Image: genericImage,
 				},
 			},
 			{
-				Thread: Thread{
+				Thread: types.Thread{
 					ID:      1,
 					PostCtr: 1,
 					Board:   "a",
 				},
-				Post: Post{
+				Post: types.Post{
 					ID:    1,
 					Board: "a",
 					Image: genericImage,
@@ -195,12 +197,12 @@ func (*DB) TestGetBoard(c *C) {
 
 // Create a multipurpose set of threads and posts for tests
 func setupPosts() {
-	db()(r.Table("threads").Insert([]Thread{
+	db()(r.Table("threads").Insert([]types.Thread{
 		{ID: 1, Board: "a"},
 		{ID: 3, Board: "a"},
 		{ID: 4, Board: "c"},
 	})).Exec()
-	db()(r.Table("posts").Insert([]Post{
+	db()(r.Table("posts").Insert([]types.Post{
 		{
 			ID:    1,
 			OP:    1,
@@ -238,38 +240,38 @@ func setupPosts() {
 func (*DB) TestGetAllBoard(c *C) {
 	setupPosts()
 
-	standard := Board{
+	standard := types.Board{
 		Ctr: 8,
-		Threads: []ThreadContainer{
+		Threads: []types.ThreadContainer{
 			{
-				Thread: Thread{
+				Thread: types.Thread{
 					ID:    4,
 					Board: "c",
 				},
-				Post: Post{
+				Post: types.Post{
 					ID:    4,
 					Board: "c",
 					Image: genericImage,
 				},
 			},
 			{
-				Thread: Thread{
+				Thread: types.Thread{
 					ID:    3,
 					Board: "a",
 				},
-				Post: Post{
+				Post: types.Post{
 					ID:    3,
 					Board: "a",
 					Image: genericImage,
 				},
 			},
 			{
-				Thread: Thread{
+				Thread: types.Thread{
 					ID:      1,
 					PostCtr: 1,
 					Board:   "a",
 				},
-				Post: Post{
+				Post: types.Post{
 					ID:    1,
 					Board: "a",
 					Image: genericImage,
@@ -285,12 +287,12 @@ func (*DB) TestReaderGetThread(c *C) {
 	rd := NewReader("a", auth.Ident{})
 
 	// No replies ;_;
-	standard := ThreadContainer{
-		Thread: Thread{
+	standard := types.ThreadContainer{
+		Thread: types.Thread{
 			ID:    3,
 			Board: "a",
 		},
-		Post: Post{
+		Post: types.Post{
 			ID:    3,
 			Board: "a",
 			Image: genericImage,
@@ -299,26 +301,26 @@ func (*DB) TestReaderGetThread(c *C) {
 	c.Assert(rd.GetThread(3, 0), DeepEquals, standard)
 
 	// With replies
-	additional := Post{
+	additional := types.Post{
 		ID:    5,
 		OP:    1,
 		Board: "a",
 		Image: genericImage,
 	}
 	db()(r.Table("posts").Insert(additional)).Exec()
-	standard = ThreadContainer{
-		Thread: Thread{
+	standard = types.ThreadContainer{
+		Thread: types.Thread{
 			ID:       1,
 			Board:    "a",
 			PostCtr:  2,
 			ImageCtr: 1,
 		},
-		Post: Post{
+		Post: types.Post{
 			ID:    1,
 			Board: "a",
 			Image: genericImage,
 		},
-		Posts: map[string]Post{
+		Posts: map[string]types.Post{
 			"2": {
 				ID:    2,
 				OP:    1,

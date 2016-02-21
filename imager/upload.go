@@ -1,9 +1,11 @@
-package server
+// Package imager handles image, video, etc. upload requests and processing.
+package imager
 
 import (
 	"errors"
 	"fmt"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/types"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -13,7 +15,7 @@ import (
 // ProtoImage stores data of an image that is being processed as well as data,
 // that will be stored, once the image finishes processing.
 type ProtoImage struct {
-	Image
+	types.Image
 	ClientID string
 }
 
@@ -26,7 +28,7 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 		passError(res, req, err, 400)
 	}
 	image := &ProtoImage{
-		Image: Image{
+		Image: types.Image{
 			Spoiler: spoiler,
 		},
 		ClientID: clientID,

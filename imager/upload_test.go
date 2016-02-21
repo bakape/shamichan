@@ -1,11 +1,14 @@
-package server
+package imager
 
 import (
 	"github.com/bakape/meguca/config"
 	. "gopkg.in/check.v1"
 	"mime/multipart"
 	"os"
+	"testing"
 )
+
+func Test(t *testing.T) { TestingT(t) }
 
 type Imager struct{}
 

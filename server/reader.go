@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
@@ -22,16 +23,16 @@ func NewReader(board string, ident auth.Ident) *Reader {
 
 // Used to query equal joins of thread + OP from the DB
 type joinedThread struct {
-	Left  Thread `gorethink:"left"`
-	Right Post   `gorethink:"right"`
+	Left  types.Thread `gorethink:"left"`
+	Right types.Post   `gorethink:"right"`
 }
 
 // GetThread retrieves thread JSON from the database
-func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
+func (rd *Reader) GetThread(id uint64, lastN int) types.ThreadContainer {
 	thread := getJoinedThread(id)
 
 	// Get all other posts
-	var posts []Post
+	var posts []types.Post
 	query := r.Table("posts").
 		GetAllByIndex("op", id).
 		Filter(r.Row.Field("id").Eq(id).Not()) // Exclude OP
@@ -42,7 +43,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 
 	// Parse posts, remove those that the client can not access and allocate the
 	// rest to a map
-	filtered := make(map[string]Post, len(posts))
+	filtered := make(map[string]types.Post, len(posts))
 	for _, post := range posts {
 		parsed := rd.parsePost(post)
 		if parsed.ID != 0 {
@@ -52,11 +53,11 @@ func (rd *Reader) GetThread(id uint64, lastN int) ThreadContainer {
 
 	// No replies in thread or all replies deleted
 	if len(filtered) == 0 {
-		filtered = map[string]Post(nil)
+		filtered = map[string]types.Post(nil)
 	}
 
 	// Compose into the client-side thread type
-	return ThreadContainer{
+	return types.ThreadContainer{
 		// Guranteed to have access rights, if thread is accessable
 		Post:   rd.parsePost(thread.Right),
 		Thread: thread.Left,
@@ -100,12 +101,12 @@ func getThreadMeta() map[string]map[string]r.Term {
 }
 
 // parsePost formats the Post struct for public distribution
-func (rd *Reader) parsePost(post Post) Post {
+func (rd *Reader) parsePost(post types.Post) types.Post {
 	if post.Deleted {
-		return Post{}
+		return types.Post{}
 	}
 	if post.ImgDeleted {
-		post.Image = Image{}
+		post.Image = types.Image{}
 		post.ImgDeleted = false
 	}
 	post.IP = "" // Never pass IPs client-side
@@ -113,21 +114,21 @@ func (rd *Reader) parsePost(post Post) Post {
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id uint64) (post Post) {
+func (rd *Reader) GetPost(id uint64) (post types.Post) {
 	db()(getPost(id)).One(&post)
 	if post.ID == 0 || !auth.CanAccessBoard(post.Board, rd.ident) {
-		return Post{}
+		return types.Post{}
 	}
 	var deleted bool // Check if parent thread was not deleted
 	db()(getThread(post.OP).Field("deleted").Default(false)).One(&deleted)
 	if deleted {
-		return Post{}
+		return types.Post{}
 	}
 	return rd.parsePost(post)
 }
 
 // GetBoard retrieves all OPs of a single board
-func (rd *Reader) GetBoard() (board Board) {
+func (rd *Reader) GetBoard() (board types.Board) {
 	var threads []joinedThread
 	db()(r.
 		Table("threads").
@@ -143,7 +144,7 @@ func (rd *Reader) GetBoard() (board Board) {
 
 // GetAllBoard retrieves all threads the client has access to for the "/all/"
 // meta-board
-func (rd *Reader) GetAllBoard() (board Board) {
+func (rd *Reader) GetAllBoard() (board types.Board) {
 	var threads []joinedThread
 	db()(r.Table("threads").
 		EqJoin("id", r.Table("posts")).
@@ -157,19 +158,19 @@ func (rd *Reader) GetAllBoard() (board Board) {
 
 // Parse and format board query results and discard those threads, that the
 // client can't access
-func (rd *Reader) parseThreads(threads []joinedThread) []ThreadContainer {
-	filtered := make([]ThreadContainer, 0, len(threads))
+func (rd *Reader) parseThreads(threads []joinedThread) []types.ThreadContainer {
+	filtered := make([]types.ThreadContainer, 0, len(threads))
 	for _, thread := range threads {
 		if thread.Left.Deleted {
 			continue
 		}
-		filtered = append(filtered, ThreadContainer{
+		filtered = append(filtered, types.ThreadContainer{
 			Thread: thread.Left,
 			Post:   thread.Right,
 		})
 	}
 	if len(filtered) == 0 {
-		filtered = []ThreadContainer(nil)
+		filtered = []types.ThreadContainer(nil)
 	}
 	return filtered
 }

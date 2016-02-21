@@ -1,8 +1,5 @@
-/*
- Commonly used types and their encoding/decoding methods.
-*/
-
-package server
+// Package types contains common shared types used throughout the project.
+package types
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {

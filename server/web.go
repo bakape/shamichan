@@ -7,6 +7,7 @@ package server
 import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/handlers"
@@ -67,7 +68,7 @@ func createRouter() *httprouter.Router {
 	router.GET("/img/*filepath", serveImages)
 
 	// Image upload
-	router.HandlerFunc("POST", "/upload", NewImageUpload)
+	router.HandlerFunc("POST", "/upload", imager.NewImageUpload)
 
 	return router
 }
