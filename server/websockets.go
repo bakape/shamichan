@@ -54,7 +54,9 @@ func websocketHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	c := NewClient(conn)
 	go c.receiverLoop()
-	c.listen()
+	if err := c.listen(); err != nil {
+		c.logError(err)
+	}
 }
 
 // Client stores and manages a websocket-connected remote client and its
