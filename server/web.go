@@ -7,6 +7,7 @@ package server
 import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
@@ -116,12 +117,12 @@ func serveIndexTemplate(res http.ResponseWriter, req *http.Request) {
 // Serves `/api/:board/` page JSON
 func boardJSON(board string) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		if !compareEtag(res, req, etagStart(boardCounter(board)), true) {
+		if !compareEtag(res, req, etagStart(db.BoardCounter(board)), true) {
 			return
 		}
 		ident := auth.LookUpIdent(req.RemoteAddr)
 		_, err := res.Write(
-			util.MarshalJSON(NewReader(board, ident).GetBoard()),
+			util.MarshalJSON(db.NewReader(board, ident).GetBoard()),
 		)
 		util.Throw(err)
 	}
@@ -156,11 +157,11 @@ func threadJSON(board string) httprouter.Handle {
 			text404(res)
 			return
 		}
-		if !compareEtag(res, req, etagStart(threadCounter(id)), true) {
+		if !compareEtag(res, req, etagStart(db.ThreadCounter(id)), true) {
 			return
 		}
 		data := util.MarshalJSON(
-			NewReader(board, ident).GetThread(id, detectLastN(req)),
+			db.NewReader(board, ident).GetThread(id, detectLastN(req)),
 		)
 		_, err = res.Write(data)
 		util.Throw(err)
@@ -169,16 +170,18 @@ func threadJSON(board string) httprouter.Handle {
 
 // Cofirm thread request is proper, thread exists and client had right of access
 func validateThreadRequest(err error, board string, id uint64) bool {
-	return err == nil && validateOP(id, board)
+	return err == nil && db.ValidateOP(id, board)
 }
 
 // Serves JSON for the "/all/" meta-board, that contains threads from all boards
 func allBoardJSON(res http.ResponseWriter, req *http.Request) {
-	if !compareEtag(res, req, etagStart(postCounter()), true) {
+	if !compareEtag(res, req, etagStart(db.PostCounter()), true) {
 		return
 	}
 	ident := auth.LookUpIdent(req.RemoteAddr)
-	_, err := res.Write(util.MarshalJSON(NewReader("all", ident).GetAllBoard()))
+	_, err := res.Write(
+		util.MarshalJSON(db.NewReader("all", ident).GetAllBoard()),
+	)
 	util.Throw(err)
 }
 
@@ -307,7 +310,7 @@ func servePost(
 		text404(res)
 		return
 	}
-	post := NewReader("", auth.LookUpIdent(req.RemoteAddr)).GetPost(id)
+	post := db.NewReader("", auth.LookUpIdent(req.RemoteAddr)).GetPost(id)
 	if post.ID == 0 { // No post in the database or no access
 		text404(res)
 		return

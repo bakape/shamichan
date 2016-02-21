@@ -5,6 +5,7 @@ package server
 import (
 	"fmt"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/sevlyar/go-daemon"
@@ -74,7 +75,7 @@ func printUsage() {
 
 func startServer() {
 	templates.Compile()
-	loadDB()
+	db.LoadDB()
 	startWebServer()
 }
 

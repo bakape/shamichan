@@ -1,4 +1,4 @@
-package server
+package db
 
 import (
 	"github.com/bakape/meguca/auth"
@@ -9,13 +9,13 @@ import (
 
 var genericImage = types.Image{File: "foo"}
 
-func (*DB) TestNewReader(c *C) {
+func (*DBSuite) TestNewReader(c *C) {
 	ident := auth.Ident{}
 	standard := &Reader{"a", ident}
 	c.Assert(NewReader("a", ident), DeepEquals, standard)
 }
 
-func (*DB) TestParsePost(c *C) {
+func (*DBSuite) TestParsePost(c *C) {
 	// Regular post
 	r := NewReader("a", auth.Ident{})
 	img := types.Image{File: "foo"}
@@ -42,13 +42,13 @@ func (*DB) TestParsePost(c *C) {
 	c.Assert(r.parsePost(p), DeepEquals, types.Post{})
 }
 
-func (*DB) TestGetPost(c *C) {
+func (*DBSuite) TestGetPost(c *C) {
 	standard := types.Post{
 		ID:    3,
 		OP:    1,
 		Board: "a",
 	}
-	db()(r.Table("posts").Insert([]types.Post{
+	DB()(r.Table("posts").Insert([]types.Post{
 		{
 			ID:      2,
 			OP:      1,
@@ -67,7 +67,7 @@ func (*DB) TestGetPost(c *C) {
 			Board: "q",
 		},
 	})).Exec()
-	db()(r.Table("threads").Insert([]types.Thread{
+	DB()(r.Table("threads").Insert([]types.Thread{
 		{
 			ID:      4,
 			Deleted: true,
@@ -87,10 +87,10 @@ func (*DB) TestGetPost(c *C) {
 	c.Assert(r.GetPost(3), DeepEquals, standard) // Valid read
 }
 
-func (*DB) TestGetJoinedThread(c *C) {
+func (*DBSuite) TestGetJoinedThread(c *C) {
 	// Only OP
-	db()(r.Table("threads").Insert(types.Thread{ID: 1})).Exec()
-	db()(r.Table("posts").Insert(types.Post{
+	DB()(r.Table("threads").Insert(types.Thread{ID: 1})).Exec()
+	DB()(r.Table("posts").Insert(types.Post{
 		ID:    1,
 		OP:    1,
 		Image: genericImage,
@@ -107,7 +107,7 @@ func (*DB) TestGetJoinedThread(c *C) {
 	c.Assert(getJoinedThread(1), DeepEquals, standard)
 
 	// 1 reply, no image
-	db()(r.Table("posts").Insert(types.Post{
+	DB()(r.Table("posts").Insert(types.Post{
 		ID: 2,
 		OP: 1,
 	})).Exec()
@@ -116,7 +116,7 @@ func (*DB) TestGetJoinedThread(c *C) {
 	c.Assert(getJoinedThread(1), DeepEquals, standard)
 
 	// 2 replies, 1 image
-	db()(r.Table("posts").Insert(types.Post{
+	DB()(r.Table("posts").Insert(types.Post{
 		ID:    3,
 		OP:    1,
 		Image: genericImage,
@@ -126,7 +126,7 @@ func (*DB) TestGetJoinedThread(c *C) {
 	c.Assert(getJoinedThread(1), DeepEquals, standard)
 }
 
-func (*DB) TestParseThreads(c *C) {
+func (*DBSuite) TestParseThreads(c *C) {
 	threads := []joinedThread{
 		{
 			Left: types.Thread{
@@ -162,7 +162,7 @@ func (*DB) TestParseThreads(c *C) {
 	c.Assert(r.parseThreads(threads), DeepEquals, standard)
 }
 
-func (*DB) TestGetBoard(c *C) {
+func (*DBSuite) TestGetBoard(c *C) {
 	setupPosts()
 	standard := types.Board{
 		Ctr: 7,
@@ -197,12 +197,12 @@ func (*DB) TestGetBoard(c *C) {
 
 // Create a multipurpose set of threads and posts for tests
 func setupPosts() {
-	db()(r.Table("threads").Insert([]types.Thread{
+	DB()(r.Table("threads").Insert([]types.Thread{
 		{ID: 1, Board: "a"},
 		{ID: 3, Board: "a"},
 		{ID: 4, Board: "c"},
 	})).Exec()
-	db()(r.Table("posts").Insert([]types.Post{
+	DB()(r.Table("posts").Insert([]types.Post{
 		{
 			ID:    1,
 			OP:    1,
@@ -227,17 +227,17 @@ func setupPosts() {
 			Image: genericImage,
 		},
 	})).Exec()
-	db()(r.Table("main").Insert(map[string]interface{}{
+	DB()(r.Table("main").Insert(map[string]interface{}{
 		"id": "histCounts",
 		"a":  7,
 	})).Exec()
-	db()(r.Table("main").Insert(map[string]interface{}{
+	DB()(r.Table("main").Insert(map[string]interface{}{
 		"id":      "info",
 		"postCtr": 8,
 	})).Exec()
 }
 
-func (*DB) TestGetAllBoard(c *C) {
+func (*DBSuite) TestGetAllBoard(c *C) {
 	setupPosts()
 
 	standard := types.Board{
@@ -282,7 +282,7 @@ func (*DB) TestGetAllBoard(c *C) {
 	c.Assert(NewReader("a", auth.Ident{}).GetAllBoard(), DeepEquals, standard)
 }
 
-func (*DB) TestReaderGetThread(c *C) {
+func (*DBSuite) TestReaderGetThread(c *C) {
 	setupPosts()
 	rd := NewReader("a", auth.Ident{})
 
@@ -307,7 +307,7 @@ func (*DB) TestReaderGetThread(c *C) {
 		Board: "a",
 		Image: genericImage,
 	}
-	db()(r.Table("posts").Insert(additional)).Exec()
+	DB()(r.Table("posts").Insert(additional)).Exec()
 	standard = types.ThreadContainer{
 		Thread: types.Thread{
 			ID:       1,

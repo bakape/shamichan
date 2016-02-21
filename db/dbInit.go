@@ -1,8 +1,8 @@
 /*
- Initialises and loads Redis and RethinkDB
+ Initialises and loads RethinkDB
 */
 
-package server
+package db
 
 import (
 	"fmt"
@@ -14,32 +14,33 @@ import (
 
 const dbVersion = 2
 
-// rSession exports the RethinkDB connection session
-var rSession *r.Session
+// RSession exports the RethinkDB connection session. Used globally by the
+// entire server.
+var RSession *r.Session
 
-// db returns a function that creates a new DatabaseHelper. Used to simplify
+// DB returns a function that creates a new DatabaseHelper. Used to simplify
 // database queries.
-// Simply db()(${query}).${method}()
-// Example: db()(r.Table("posts").Get(1)).One(&Post)
-func db() func(r.Term) DatabaseHelper {
+// Simply DB()(${query}).${method}()
+// Example: DB()(r.Table("posts").Get(1)).One(&Post)
+func DB() func(r.Term) DatabaseHelper {
 	return func(query r.Term) DatabaseHelper {
 		return DatabaseHelper{query}
 	}
 }
 
-// loadDB establishes connections to RethinkDB and Redis and bootstraps both
+// LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
-func loadDB() {
+func LoadDB() {
 	var err error
-	rSession, err = r.Connect(r.ConnectOpts{
+	RSession, err = r.Connect(r.ConnectOpts{
 		Address: config.Config.Rethinkdb.Addr,
 	})
 	util.Throw(err)
 
 	var isCreated bool
-	db()(r.DBList().Contains(config.Config.Rethinkdb.Db)).One(&isCreated)
+	DB()(r.DBList().Contains(config.Config.Rethinkdb.Db)).One(&isCreated)
 	if isCreated {
-		rSession.Use(config.Config.Rethinkdb.Db)
+		RSession.Use(config.Config.Rethinkdb.Db)
 		verifyDBVersion()
 	} else {
 		initRethinkDB()
@@ -50,7 +51,7 @@ func loadDB() {
 // mess up the DB irreversably.
 func verifyDBVersion() {
 	var version int
-	db()(r.Table("main").Get("info").Field("dbVersion")).One(&version)
+	DB()(r.Table("main").Get("info").Field("dbVersion")).One(&version)
 	if version != dbVersion {
 		panic(fmt.Errorf("Incompatible RethinkDB database version: %d."+
 			"See docs/migration.md", version))
@@ -62,7 +63,8 @@ type Document struct {
 	ID string `gorethink:"id"`
 }
 
-var allTables = [...]string{"main", "threads", "posts", "images", "updates"}
+// All  tables needed for meguca operation
+var AllTables = [...]string{"main", "threads", "posts", "images", "updates"}
 
 // Central global information document
 type infoDocument struct {
@@ -77,38 +79,38 @@ type infoDocument struct {
 func initRethinkDB() {
 	dbName := config.Config.Rethinkdb.Db
 	log.Printf("Initialising database '%s'", dbName)
-	db()(r.DBCreate(dbName)).Exec()
-	rSession.Use(dbName)
-	createTables()
-	db()(r.Table("main").Insert([...]interface{}{
+	DB()(r.DBCreate(dbName)).Exec()
+	RSession.Use(dbName)
+	CreateTables()
+	DB()(r.Table("main").Insert([...]interface{}{
 		infoDocument{Document{"info"}, dbVersion, 0},
 
 		// History aka progress counters of boards, that get incremented on
 		// post creation
 		Document{"histCounts"},
 	})).Exec()
-	createIndeces()
+	CreateIndeces()
 }
 
-// Create all tables needed for meguca operation
-func createTables() {
-	for _, table := range allTables {
-		db()(r.TableCreate(table)).Exec()
+// CreateTables creates all tables needed for meguca operation
+func CreateTables() {
+	for _, table := range AllTables {
+		DB()(r.TableCreate(table)).Exec()
 	}
 }
 
-// Create secondary indeces for faster table queries
-func createIndeces() {
-	db()(r.Table("threads").IndexCreate("board")).Exec()
+// CreateIndeces create secondary indeces for faster table queries
+func CreateIndeces() {
+	DB()(r.Table("threads").IndexCreate("board")).Exec()
 	for _, key := range [...]string{"op", "board"} {
 		for _, table := range [...]string{"posts", "updates"} {
-			db()(r.Table(table).IndexCreate(key)).Exec()
+			DB()(r.Table(table).IndexCreate(key)).Exec()
 		}
 	}
 
 	// Make sure all indeces are ready to avoid the race condition of and index
 	// being accessed before its full creation.
-	for _, table := range allTables {
-		db()(r.Table(table).IndexWait()).Exec()
+	for _, table := range AllTables {
+		DB()(r.Table(table).IndexWait()).Exec()
 	}
 }

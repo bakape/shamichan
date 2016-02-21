@@ -3,7 +3,10 @@ package server
 import (
 	"errors"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
+	"github.com/bakape/meguca/types"
+	r "github.com/dancannon/gorethink"
 	"github.com/julienschmidt/httprouter"
 	. "gopkg.in/check.v1"
 	"io/ioutil"
@@ -11,7 +14,103 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
+	"time"
 )
+
+var genericImage = types.Image{File: "foo"}
+
+// Does not seem like we can easily resuse testing functions. Thus copy/paste
+// for now.
+type DB struct {
+	dbName string
+}
+
+var testDBName string
+
+var _ = Suite(&DB{})
+
+func (d *DB) SetUpSuite(c *C) {
+	d.dbName = uniqueDBName()
+	connectToRethinkDb(c)
+	db.DB()(r.DBCreate(d.dbName)).Exec()
+	db.RSession.Use(d.dbName)
+	db.CreateTables()
+	db.CreateIndeces()
+}
+
+// Returns a unique datatabase name. Needed so multiple concurent `go test`
+// don't clash in the same database.
+func uniqueDBName() string {
+	return "meguca_tests_" + strconv.FormatInt(time.Now().UnixNano(), 10)
+}
+
+func connectToRethinkDb(c *C) {
+	var err error
+	db.RSession, err = r.Connect(r.ConnectOpts{
+		Address: "localhost:28015",
+	})
+	c.Assert(err, IsNil)
+}
+
+func (*DB) SetUpTest(_ *C) {
+	config.Config = config.Server{}
+	config.Config.Boards.Enabled = []string{"a"}
+}
+
+// Clear all documents from all tables after each test.
+func (*DB) TearDownTest(_ *C) {
+	for _, table := range db.AllTables {
+		db.DB()(r.Table(table).Delete()).Exec()
+	}
+}
+
+func (d *DB) TearDownSuite(c *C) {
+	c.Assert(r.DBDrop(d.dbName).Exec(db.RSession), IsNil)
+	c.Assert(db.RSession.Close(), IsNil)
+}
+
+// Create a multipurpose set of threads and posts for tests
+func setupPosts() {
+	db.DB()(r.Table("threads").Insert([]types.Thread{
+		{ID: 1, Board: "a"},
+		{ID: 3, Board: "a"},
+		{ID: 4, Board: "c"},
+	})).Exec()
+	db.DB()(r.Table("posts").Insert([]types.Post{
+		{
+			ID:    1,
+			OP:    1,
+			Board: "a",
+			Image: genericImage,
+		},
+		{
+			ID:    2,
+			OP:    1,
+			Board: "a",
+		},
+		{
+			ID:    3,
+			OP:    3,
+			Board: "a",
+			Image: genericImage,
+		},
+		{
+			ID:    4,
+			OP:    4,
+			Board: "c",
+			Image: genericImage,
+		},
+	})).Exec()
+	db.DB()(r.Table("main").Insert(map[string]interface{}{
+		"id": "histCounts",
+		"a":  7,
+	})).Exec()
+	db.DB()(r.Table("main").Insert(map[string]interface{}{
+		"id":      "info",
+		"postCtr": 8,
+	})).Exec()
+}
 
 type WebServer struct{}
 

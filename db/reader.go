@@ -1,4 +1,4 @@
-package server
+package db
 
 import (
 	"github.com/bakape/meguca/auth"
@@ -7,7 +7,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-// Reader reads on formats thread and post structs
+// Reader reads on formats thread, post and board structs
 type Reader struct {
 	board string
 	ident auth.Ident
@@ -39,7 +39,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) types.ThreadContainer {
 	if lastN != 0 { // Only fetch last N number of replies
 		query = query.CoerceTo("array").OrderBy("id").Slice(-lastN)
 	}
-	db()(query).All(&posts)
+	DB()(query).All(&posts)
 
 	// Parse posts, remove those that the client can not access and allocate the
 	// rest to a map
@@ -68,7 +68,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) types.ThreadContainer {
 // Retrieve the thread metadata along with the OP post in the same format as
 // multiple thread joins, for interoperability
 func getJoinedThread(id uint64) (thread joinedThread) {
-	db()(r.
+	DB()(r.
 		Expr(map[string]r.Term{
 			"left":  getThread(id),
 			"right": getPost(id),
@@ -115,12 +115,12 @@ func (rd *Reader) parsePost(post types.Post) types.Post {
 
 // GetPost reads a single post from the database
 func (rd *Reader) GetPost(id uint64) (post types.Post) {
-	db()(getPost(id)).One(&post)
+	DB()(getPost(id)).One(&post)
 	if post.ID == 0 || !auth.CanAccessBoard(post.Board, rd.ident) {
 		return types.Post{}
 	}
 	var deleted bool // Check if parent thread was not deleted
-	db()(getThread(post.OP).Field("deleted").Default(false)).One(&deleted)
+	DB()(getThread(post.OP).Field("deleted").Default(false)).One(&deleted)
 	if deleted {
 		return types.Post{}
 	}
@@ -130,14 +130,14 @@ func (rd *Reader) GetPost(id uint64) (post types.Post) {
 // GetBoard retrieves all OPs of a single board
 func (rd *Reader) GetBoard() (board types.Board) {
 	var threads []joinedThread
-	db()(r.
+	DB()(r.
 		Table("threads").
 		GetAllByIndex("board", rd.board).
 		EqJoin("id", r.Table("posts")).
 		Merge(getThreadMeta()).
 		Without(map[string]string{"right": "op"}),
 	).All(&threads)
-	board.Ctr = boardCounter(rd.board)
+	board.Ctr = BoardCounter(rd.board)
 	board.Threads = rd.parseThreads(threads)
 	return
 }
@@ -146,12 +146,12 @@ func (rd *Reader) GetBoard() (board types.Board) {
 // meta-board
 func (rd *Reader) GetAllBoard() (board types.Board) {
 	var threads []joinedThread
-	db()(r.Table("threads").
+	DB()(r.Table("threads").
 		EqJoin("id", r.Table("posts")).
 		Merge(getThreadMeta()).
 		Without(map[string]string{"right": "op"}),
 	).All(&threads)
-	board.Ctr = postCounter()
+	board.Ctr = PostCounter()
 	board.Threads = rd.parseThreads(threads)
 	return
 }

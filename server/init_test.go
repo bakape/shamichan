@@ -3,7 +3,10 @@ package server
 import (
 	. "gopkg.in/check.v1"
 	"os"
+	"testing"
 )
+
+func Test(t *testing.T) { TestingT(t) }
 
 type Init struct{}
 
