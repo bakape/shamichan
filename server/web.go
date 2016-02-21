@@ -29,12 +29,15 @@ var (
 
 func startWebServer() {
 	log.Println("Listening on " + config.Config.HTTP.Addr)
-	log.Fatal(
-		http.ListenAndServe(
-			config.Config.HTTP.Addr,
-			wrapRouter(createRouter()),
-		),
-	)
+	var err error
+	conf := config.Config.HTTP
+	r := createRouter()
+	if conf.SSL {
+		err = http.ListenAndServeTLS(conf.Addr, conf.Cert, conf.Key, r)
+	} else {
+		err = http.ListenAndServe(conf.Addr, r)
+	}
+	log.Fatal(err)
 }
 
 // Create the monolithic router for routing HTTP requests. Separated into own

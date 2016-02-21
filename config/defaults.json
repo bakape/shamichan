@@ -1,8 +1,11 @@
 {
     "HTTP": {
         "addr": ":8000",
-        "origin": "http://localhost:8000",
-        "trustProxies": true
+        "domain": "localhost",
+        "SSL": false,
+        "cert": "",
+        "key": "",
+        "trustProxies": false
     },
     "rethinkdb": {
         "addr": "localhost:28015",

@@ -18,8 +18,8 @@ var configRoot = "./config"
 // runtime.
 type Server struct {
 	HTTP struct {
-		Addr, Origin string
-		TrustProxies bool
+		Addr, Domain, Cert, Key string
+		SSL, TrustProxies       bool
 	}
 	Rethinkdb struct {
 		Addr, Db string
