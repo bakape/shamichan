@@ -11,7 +11,7 @@ import (
 )
 
 // Overriden in tests
-var templateRoot = "./tmpl"
+var templateRoot = "./templates"
 
 // Store stores the compiled HTML template and the corresponding truncated MD5
 // hash of said template
