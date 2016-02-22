@@ -1,2 +1,0 @@
-"use strict";System.register([],function(r,t){var e;return{setters:[],execute:function(){function t(r,t){var o=e[r];o?o.push(t):e[r]=[t]}function o(r,t){var o=e[r];if(o){var n=!0,i=!1,a=void 0;try{for(var u,f=o[Symbol.iterator]();!(n=(u=f.next()).done);n=!0){var s=u.value;s(t)}}catch(c){i=!0,a=c}finally{try{!n&&f["return"]&&f["return"]()}finally{if(i)throw a}}}}r("hooks",e={}),r("hooks",e),r("hook",t),r("trigger",o)}}});
-//# sourceMappingURL=../../maps/posts/render/hook.js.map

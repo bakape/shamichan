@@ -1,2 +1,0 @@
-'use strict';System.register([],function(_export,_context){return {setters:[],execute:function(){const main=require('../main');const PostCommon=require('./common');const _=main._;const Backbone=main.Backbone;module.exports=PostCommon.extend({tagName:'article',render(){this.setElement(main.oneeSama.article(this.model.attributes));return this;},insertIntoDOM(){_.last(document.query('#p'+this.model.get('op')).queryAll('article')).after(this.el);this.autoExpandImage().fun();}});}};});
-//# sourceMappingURL=../maps/posts/article.js.map

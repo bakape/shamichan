@@ -1,2 +1,0 @@
-'use strict';System.register(['./view'],function(_export,_context){var View;return {setters:[function(_view){View=_view.default;}],execute:function(){class Modal extends View{constructor(args){const addClass='modal glass';if(args.class){args.class+=' '+addClass;}else {args.class=addClass;}super(args);this.render();document.body.append(this.el);}}_export('Modal',Modal);class BannerModal extends Modal{constructor(args){args.class='bmodal';super(args);}}_export('BannerModal',BannerModal);}};});
-//# sourceMappingURL=maps/modal.js.map

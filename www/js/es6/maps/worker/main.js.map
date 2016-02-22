@@ -1,0 +1,1 @@
+{"version":3,"sources":["worker/main.js"],"names":[],"mappings":"iGAIA,KAAK,SAAL,CAAiB,OACb,QAAQ,GAAR,CAAY,GAAZ,CADa","file":"worker/main.js","sourcesContent":["/*\n ServiceWorker entry point\n*/\n\nthis.onmessage = msg =>\n    console.log(msg)\n"],"sourceRoot":"/source/"}
