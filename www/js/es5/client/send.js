@@ -1,0 +1,2 @@
+"use strict";System.register(["../common"],function(e,t){function n(){var e=navigator.serviceWorker.controller;return e?void e.postMessage(location.href,[r.port2]):void setTimeout(n,10)}var o,r;return{setters:[function(e){o=e.message}],execute:function(){function t(e,t){t?r.port1.postMessage(e,t):r.port1.postMessage(e)}r=new MessageChannel,e("send",t),n(),window.addEventListener("beforeunload",function(){return t(o.disconnect)})}}});
+//# sourceMappingURL=../maps/client/send.js.map

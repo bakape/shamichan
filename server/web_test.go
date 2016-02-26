@@ -537,7 +537,7 @@ func (*WebServer) TestCreateRouter(c *C) {
 		{"/api/a/", nil},
 		{"/a/1", httprouter.Params{{"thread", "1"}}},
 		{"/api/a/1", httprouter.Params{{"thread", "1"}}},
-		{"/api/config.Config", nil},
+		{"/api/config", nil},
 		{"/api/post/1", httprouter.Params{{"post", "1"}}},
 		{"/socket", nil},
 		{"/ass/favicon.gif", httprouter.Params{{"filepath", "/favicon.gif"}}},

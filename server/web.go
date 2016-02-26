@@ -25,7 +25,7 @@ import (
 var (
 	webRoot      = "./www"
 	imageWebRoot = "./img"
-	workerPath = "./www/js/scripts/worker.js"
+	workerPath   = "./www/js/scripts/worker.js"
 )
 
 func startWebServer() {
@@ -62,7 +62,7 @@ func createRouter() *httprouter.Router {
 	}
 
 	// Other JSON API handlers
-	router.HandlerFunc("GET", "/api/config.Config", serveConfigs)
+	router.HandlerFunc("GET", "/api/config", serveConfigs)
 	router.GET("/api/post/:post", servePost)
 
 	// Websocket API

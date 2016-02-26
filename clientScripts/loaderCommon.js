@@ -49,38 +49,41 @@
 	}
 
 	this.initModuleLoader = function (cb) {
-		// Load all client modules as precompiled System.register format modules
-		var meta = {}
-		meta['es5/*'] = meta['es6/*'] = {format: 'register'}
+		return new Promise(function (resolve, reject) {
+			// Load all client modules as precompiled System.register format modules
+			var meta = {}
+			meta['es5/*'] = meta['es6/*'] = {format: 'register'}
 
-		// Alias the appropriate language pack to "lang"
-		// TODO: Properly detect language, in some way
-		var lang = '/lang/' + "en_GB"
-		if (legacy) {
-			lang = 'es5' + lang
-		} else {
-			lang = 'es6' + lang
-		}
+			// Alias the appropriate language pack to "lang"
+			// TODO: Properly detect language, in some way
+			var lang = '/lang/' + "en_GB"
+			if (legacy) {
+				lang = 'es5' + lang
+			} else {
+				lang = 'es6' + lang
+			}
 
-		System.config({
-			baseURL: '/ass/js',
-			defaultJSExtensions: true,
-			map: {
-				lang: lang,
-				underscore: 'vendor/underscore',
-				'js-cookie': 'vendor/js-cookie'
-			},
-			meta: meta
-		})
+			System.config({
+				baseURL: '/ass/js',
+				defaultJSExtensions: true,
+				map: {
+					lang: lang,
+					underscore: 'vendor/underscore',
+					'js-cookie': 'vendor/js-cookie'
+				},
+				meta: meta
+			})
 
-		// Load core-js polyfill, if above tests fail
-		if (legacy) {
-			return System.import('vendor/corejs')
-				.then(function () {
-					return cb(legacy)
+			// Load core-js polyfill, if above tests fail
+			if (legacy) {
+				System.import('vendor/corejs').then(function () {
+					resolve(legacy)
+				}, function (err) {
+					reject(err)
 				})
-		} else {
-			return cb(legacy)
-		}
+			} else {
+				resolve(legacy)
+			}
+		})
 	}
 })()

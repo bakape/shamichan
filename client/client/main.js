@@ -4,17 +4,7 @@
  */
 
 import * as Cookie from 'js-cookie'
-import {parseEl, parseHTML} from './util'
-import {defer, execDeferred} from './defer'
-import lang from 'lang'
-
-// TEMP: Will later get imported by the post modules
-import * as state from './state'
-
-import OptionsPanel from './options/view'
-
-//Renders the options panel, after more important computation has been done
-defer(() => new OptionsPanel())
+import * as send from './send'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 3
@@ -31,21 +21,33 @@ if (localStorage.cookieVersion != cookieVersion) {
 	localStorage.cookieVersion = cookieVersion
 }
 
-// You can invoke the client-side debug mode with the `debug=true` query string
-if (/[&\?]debug=true/.test(location.href)) {
-	config.debug = true
-}
+// import {parseEl, parseHTML} from './util'
+// import {defer, execDeferred} from './defer'
+// import lang from 'lang'
+//
+// // TEMP: Will later get imported by the post modules
+// import * as state from './state'
+//
+// import OptionsPanel from './options/view'
+//
+// //Renders the options panel, after more important computation has been done
+// defer(() => new OptionsPanel())
 
-// Load language-specific CSS
-document.head.appendChild(parseEl(parseHTML
-	`<style>
-		.locked:after {
-			content: "${lang.thread_locked}";
-		}
-		.locked > header nav:after {
-			content: " (${lang.locked})";
-		}
-	</style>`))
+// // You can invoke the client-side debug mode with the `debug=true` query string
+// if (/[&\?]debug=true/.test(location.href)) {
+// 	config.debug = true
+// }
+
+// // Load language-specific CSS
+// document.head.appendChild(parseEl(parseHTML
+// 	`<style>
+// 		.locked:after {
+// 			content: "${lang.thread_locked}";
+// 		}
+// 		.locked > header nav:after {
+// 			content: " (${lang.locked})";
+// 		}
+// 	</style>`))
 
 /*
 // 2nd tier dependacy modules. These are needed before the websocket
@@ -70,5 +72,5 @@ extend(main, {
 })
 */
 
-execDeferred()
+// execDeferred()
 //events.request('loading:hide')

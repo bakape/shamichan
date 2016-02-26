@@ -8,26 +8,6 @@ import {randomID, getID} from './util'
 import Model from './model'
 import Collection from './collection'
 
-// Read page state by parsing a URL
-export function read(href) {
-	const state = {
-		board: href.match(/\/([a-zA-Z0-9]+?)\//)[1],
-		thread: href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
-		// Displayed last N posts setting on thread pages
-		lastN: href.match(/[\?&]last=(\d+)/)
-	}
-	for (let key of ['thread', 'lastN']) {
-		const val = state[key]
-		state[key] = val ? parseInt(val[1]) : 0
-	}
-	return state
-}
-
-// Initial page state
-const initial = read(location.href)
-initial.tabID = randomID(32)
-export let page = new Model(initial)
-
 // Hot-reloadable configuration
 
 // TODO: We need actual listeners to this model for hot reloads

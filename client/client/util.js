@@ -154,20 +154,6 @@ export function resonableLastN(n) {
 // 	];
 // }
 
-// Generate a random alphannumeric string of lower and upper case hexadecimal
-// characters
-export function randomID(len) {
-	let id = ''
-	for (let i = 0; i < len; i++) {
-		let char = (Math.random() * 36).toString(36)[0]
-		if (Math.random() < 0.5) {
-			char = char.toUpperCase()
-		}
-		id += char
-	}
-	return id
-}
-
 // Template string tag function for HTML. Strips indentation and trailing
 // newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
 export function parseHTML(callSite, ...args) {

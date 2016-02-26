@@ -1,2 +1,2 @@
-importScripts("/ass/js/vendor/system.js","/ass/js/scripts/loaderCommon.js"),self.addEventListener("install",function(s){s.waitUntil(self.initModuleLoader(function(s){return System["import"]("es"+(s?5:6)+"/worker/main")}))}),self.addEventListener("activate",function(s){s.waitUntil(self.clients.claim())});
+function fetchConfig(){return fetch("/api/config").then(function(n){return n.json()}).then(function(n){self.config=n})}importScripts("/ass/js/vendor/system.js","/ass/js/scripts/loaderCommon.js"),self.oninstall=function(n){n.waitUntil(self.initModuleLoader().then(function(n){return System["import"]("es"+(n?5:6)+"/worker/main")}))},self.onactivate=function(n){n.waitUntil(Promise.all([fetchConfig(),self.clients.claim()]))};
 //# sourceMappingURL=maps/worker.js.map
