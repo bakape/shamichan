@@ -7,11 +7,11 @@ bundled README.__
 
 ##Setup
 * Install [dependencies](#dependencies) listed below
-* `go get -u gopkg.in/bakape/meguca.v2`
-* `meguca.v2 init`
+* `go get -u github.com/bakape/meguca`
+* `meguca init`
 * Configure the server, installed in the standard location of your Go workspace
 (configuration WebUI soon™)
-* See `meguca.v2 help` for usage guide
+* See `meguca help` for usage guide
 
 ##Dependencies
 * [Go](https://golang.org/doc/install)
