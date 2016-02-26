@@ -5,19 +5,15 @@
 
 (function () {
 	if ('serviceWorker' in navigator) {
-		navigator.serviceWorker
-			.register("/ass/js/scripts/workerLoader.js")
-			.then(function() {
-				return navigator.serviceWorker.ready
-			})
+		navigator.serviceWorker.register("/worker.js")
 	} else {
-		alert("Install Gentoo")
+		alert("Browser outdated. Install latest Chrome/Firefox/Opera")
 		return
 	}
 
 	this.initModuleLoader(function (legacy) {
-		// Application entry point
 		return System.import("vendor/dom4").then(function () {
+			// Application entry point
 			return System.import("es" + (legacy ? 5 : 6) + '/client/main')
 		})
 	})

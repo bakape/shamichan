@@ -541,6 +541,7 @@ func (*WebServer) TestCreateRouter(c *C) {
 		{"/api/post/1", httprouter.Params{{"post", "1"}}},
 		{"/socket", nil},
 		{"/ass/favicon.gif", httprouter.Params{{"filepath", "/favicon.gif"}}},
+		{"/worker.js", nil},
 		{
 			"/img/src/madotsuki.png",
 			httprouter.Params{{"filepath", "/src/madotsuki.png"}},
@@ -586,4 +587,9 @@ func (*WebServer) TestWrapRouter(c *C) {
 	req.Header.Set("X-Forwarded-For", ip)
 	wrapRouter(r).ServeHTTP(rec, req)
 	c.Assert(remoteIP, Equals, ip)
+}
+
+func (*WebServer) TestServeWorker(c *C) {
+	workerPath = "./test/frontpage.html"
+	assertBody(runHandler(c, serveWorker), "<!doctype html><html></html>\n", c)
 }
