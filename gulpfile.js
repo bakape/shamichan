@@ -6,10 +6,8 @@ Builds client JS and CSS
 const _ = require('underscore'),
 	babel = require('gulp-babel'),
 	cache = require('gulp-cached'),
-	chalk = require('chalk'),
 	fs = require('fs-extra'),
 	gulp = require('gulp'),
-	gulpif = require('gulp-if'),
 	gutil = require('gulp-util'),
 	jsonminify = require('gulp-jsonminify'),
 	less = require('gulp-less'),
@@ -29,8 +27,7 @@ const watch = gutil.env.w
 const tasks = []
 
 // Client JS files
-buildClient('es5')
-buildClient('es6')
+buildClient()
 
 // Various little scripts
 createTask('scripts', './clientScripts/*.js', src =>
@@ -61,7 +58,6 @@ copyVendor([
 	'./node_modules/systemjs/dist/system.js.map',
 	'./node_modules/dom4/build/dom4.js'
 ])
-compileVendor('corejs', 'node_modules/core-js/client/core.js')
 compileVendor('underscore', 'node_modules/underscore/underscore.js')
 compileVendor('stack-blur', './lib/stack-blur.js')
 
@@ -70,18 +66,21 @@ gulp.task('default', tasks)
 const tsProject = ts.createProject('./client/tsconfig.json')
 
 // Builds the client files of the apropriate ECMAScript version
-function buildClient(version) {
-	createTask(version, './client/**/*.ts', src =>
+function buildClient() {
+	createTask("client", './client/**/*.ts', src =>
 		src
 			.pipe(sourcemaps.init())
 			.pipe(ts(tsProject))
-			.pipe(babel(babelConfig(version)))
-
-			// UglifyJS does not yet fully support ES6, so best not minify
-			// to be on the safe side
-			.pipe(gulpif(version === 'es5', uglify()))
+			.pipe(babel({
+				compact: true,
+				comments: false,
+				plugins: [
+					'transform-es2015-destructuring',
+					'transform-es2015-parameters'
+				]
+			}))
 			.pipe(sourcemaps.write('./maps'))
-			.pipe(gulp.dest('./www/js/' + version)))
+			.pipe(gulp.dest('./www/js/')))
 }
 
 // Create a new gulp taks and set it to execute on default and incrementally
@@ -96,25 +95,6 @@ function createTask(name, path, task) {
 	if (watch) {
 		gulp.watch(path, [name])
 	}
-}
-
-// Return a babel configuration object, depending on target ES version
-function babelConfig(version) {
-	const base = {
-		compact: true,
-		comments: false
-	}
-	if (version === 'es5') {
-		return _.extend(base, {
-			presets: ['es2015']
-		})
-	}
-	return _.extend(base, {
-		plugins: [
-			'transform-es2015-destructuring',
-			'transform-es2015-parameters'
-		]
-	})
 }
 
 // Copy a dependancy library, minify and generate sourcemaps

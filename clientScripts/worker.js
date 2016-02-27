@@ -3,11 +3,10 @@
 */
 
 importScripts("/ass/js/vendor/system.js", "/ass/js/scripts/loaderCommon.js")
+initModuleLoader()
 
 self.oninstall = function (event) {
-    event.waitUntil(self.initModuleLoader().then(function (legacy) {
-        return System.import("es" + (legacy ? 5 : 6) + "/worker/main")
-    }))
+    event.waitUntil(System.import("worker/main"))
 }
 
 self.onactivate = function (event) {
