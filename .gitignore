@@ -4,8 +4,10 @@
 config/config.json
 error.log
 node_modules
-meguca
-meguca.v2
+./meguca
 www/illya.mp4
 www/illya.webm
-./img/
+www/css/*.css
+www/js
+www/lang
+./img

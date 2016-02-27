@@ -1,2 +1,0 @@
-!function(){if(!navigator.serviceWorker||"undefined"==typeof Promise)return void alert("Browser outdated. Install latest Chrome/Firefox/Opera");var e;navigator.serviceWorker.register("/worker.js").then(function(){return initModuleLoader()}).then(function(r){return e=r,System["import"]("vendor/dom4")}).then(function(){return navigator.serviceWorker.ready}).then(function(){return System["import"]("es"+(e?5:6)+"/client/main")})}();
-//# sourceMappingURL=maps/loader.js.map

@@ -11,10 +11,12 @@ const _ = require('underscore'),
 	gulp = require('gulp'),
 	gulpif = require('gulp-if'),
 	gutil = require('gulp-util'),
+	jsonminify = require('gulp-jsonminify'),
 	less = require('gulp-less'),
 	nano = require('gulp-cssnano'),
 	rename = require('gulp-rename'),
 	sourcemaps = require('gulp-sourcemaps'),
+	ts = require('gulp-typescript'),
 	uglify = require('gulp-uglify')
 
 fs.mkdirsSync('./www/js/vendor')
@@ -47,6 +49,12 @@ createTask('css', './less/*.less', src =>
 		.pipe(sourcemaps.write('./maps'))
 		.pipe(gulp.dest('./www/css')))
 
+// Language packs
+createTask('lang', './lang/*.json', src =>
+	src
+		.pipe(jsonminify())
+		.pipe(gulp.dest('./www/lang')))
+
 // Dependancy libraries
 copyVendor([
 	'./node_modules/systemjs/dist/system.js',
@@ -54,17 +62,19 @@ copyVendor([
 	'./node_modules/dom4/build/dom4.js'
 ])
 compileVendor('corejs', 'node_modules/core-js/client/core.js')
-compileVendor('js-cookie', 'node_modules/js-cookie/src/js.cookie.js')
 compileVendor('underscore', 'node_modules/underscore/underscore.js')
 compileVendor('stack-blur', './lib/stack-blur.js')
 
 gulp.task('default', tasks)
 
+const tsProject = ts.createProject('./client/tsconfig.json')
+
 // Builds the client files of the apropriate ECMAScript version
 function buildClient(version) {
-	createTask(version, './client/**/*.js', src =>
+	createTask(version, './client/**/*.ts', src =>
 		src
 			.pipe(sourcemaps.init())
+			.pipe(ts(tsProject))
 			.pipe(babel(babelConfig(version)))
 
 			// UglifyJS does not yet fully support ES6, so best not minify
@@ -96,17 +106,13 @@ function babelConfig(version) {
 	}
 	if (version === 'es5') {
 		return _.extend(base, {
-			presets: ['es2015'],
-			plugins: [
-				'transform-es2015-modules-systemjs'
-			]
+			presets: ['es2015']
 		})
 	}
 	return _.extend(base, {
 		plugins: [
 			'transform-es2015-destructuring',
-			'transform-es2015-parameters',
-			'transform-es2015-modules-systemjs'
+			'transform-es2015-parameters'
 		]
 	})
 }

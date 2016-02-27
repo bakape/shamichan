@@ -1,0 +1,3 @@
+/*
+ Stores the state of the ServiceWorker
+*/

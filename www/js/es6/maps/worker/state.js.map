@@ -1,1 +1,0 @@
-{"version":3,"sources":["worker/state.js"],"names":[],"mappings":"2IAIQ,iDACI","file":"worker/state.js","sourcesContent":["/*\n Stores the state of the ServiceWorker\n*/\n\nimport {fetchJSON} from '../common'\nimport * as clients from './clients'\n"],"sourceRoot":"/source/"}

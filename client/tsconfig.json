@@ -1,0 +1,8 @@
+{
+	"compileOnSave": false,
+	"compilerOptions": {
+		"target": "ES6",
+		"module": "system",
+		"moduleResolution": "node"
+	}
+}

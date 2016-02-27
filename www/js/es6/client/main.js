@@ -1,2 +1,0 @@
-'use strict';System.register(['js-cookie','./send'],function(_export,_context){var Cookie,send;return {setters:[function(_jsCookie){Cookie=_jsCookie;},function(_send){send=_send;}],execute:function(){const cookieVersion=3;if(localStorage.cookieVersion!=cookieVersion){for(let cookie in Cookie.get()){const paths=config.boards.enabled.slice();paths.push('','/');for(let path of paths){Cookie.remove(cookie,{path});}}localStorage.cookieVersion=cookieVersion;}}};});
-//# sourceMappingURL=../maps/client/main.js.map

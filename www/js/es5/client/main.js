@@ -1,2 +1,0 @@
-"use strict";System.register(["js-cookie","./send"],function(e,o){var t,r,n,i,c,a,s,l,f,u,y;return{setters:[function(e){t=e},function(e){r=e}],execute:function(){if(n=3,localStorage.cookieVersion!=n){for(i in t.get()){c=config.boards.enabled.slice(),c.push("","/"),a=!0,s=!1,l=void 0;try{for(f=c[Symbol.iterator]();!(a=(u=f.next()).done);a=!0)y=u.value,t.remove(i,{path:y})}catch(e){s=!0,l=e}finally{try{!a&&f["return"]&&f["return"]()}finally{if(s)throw l}}}localStorage.cookieVersion=n}}}});
-//# sourceMappingURL=../maps/client/main.js.map

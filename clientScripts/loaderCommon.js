@@ -68,8 +68,7 @@
 				defaultJSExtensions: true,
 				map: {
 					lang: lang,
-					underscore: 'vendor/underscore',
-					'js-cookie': 'vendor/js-cookie'
+					underscore: 'vendor/underscore'
 				},
 				meta: meta
 			})
