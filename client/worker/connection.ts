@@ -10,34 +10,40 @@ export const message: {[type: string]: number} = {
 
 }
 
-export let connection: Connection
+let connection: Connection,
+	reconnTimer: any
 
 // Websocket connection handler
 class Connection extends WebSocket {
 	constructor() {
-		super('/socket')
-		this.onmessage = msg => this.receive(msg)
+		let path = location.protocol === 'https' ? 'wss' : 'ws'
+		path += location.host + '/socket'
+		super(path)
+		this.binaryType = "arraybuffer"
+		this.onmessage = msg => this.onMessage(msg)
+		this.onopen = () => this.onOpen()
+		this.onclose = () => this.onClose()
 	}
 
-	receive(msg: MessageEvent) {
+	onMessage(msg: MessageEvent) {
 		console.log(msg)
 	}
-}
 
-let reconnTimer: number
-
-export function connect(): void {
-	connection = new Connection()
-	connection.onopen = () => {
+	onOpen() {
 		if (reconnTimer) {
 			clearInterval(reconnTimer)
 			reconnTimer = null
 		}
 	}
-	connection.onclose = () => {
+
+	onClose() {
 		if (!reconnTimer) {
 			reconnTimer = setInterval(connect, 5000)
 			sendAll(tabMessage.syncStatus, [syncStatus.disconnected])
 		}
 	}
+}
+
+export function connect(): void {
+	connection = new Connection()
 }
