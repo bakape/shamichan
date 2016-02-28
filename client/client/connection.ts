@@ -27,7 +27,7 @@ export function send(msg: any, transfers?: any[]) {
 }
 
 // Establish a private message channel with the ServiceWorker
-export function connect(): void {
+export function connect() {
 	const cont = navigator.serviceWorker.controller
 	if (!cont) {
 		setTimeout(connect, 10)

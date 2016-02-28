@@ -54,7 +54,7 @@ class Client {
 	}
 
 	// Remove client from client byPage map
-	private unsetState(): void {
+	private unsetState() {
 		byPage.remove(this.board, this)
 		byPage.remove(this.thread, this)
 	}
@@ -73,14 +73,14 @@ class Client {
 	}
 
 	// Remove the client's instance
-	remove(): void {
+	remove() {
 		this.unsetState()
 		this.port.close()
 		delete byID[this.id]
 	}
 
 	// Receive and handle messages from the browser tab
-	private receive(msg: MessageEvent): void {
+	private receive(msg: MessageEvent) {
 		const fn = handlers[msg.data]
 		if (!fn) {
 			throw new Error('Unknown client message type: ' + msg.data)
