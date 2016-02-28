@@ -23,11 +23,11 @@ interface ClientState {
 // Handles interactions with the client browser tabs. In an MVC sense, these
 // contain only the View part.
 class Client {
-	port: MessagePort
-	id: string
-	board: string
-	thread: number
-	lastN: number
+	private port: MessagePort
+	private id: string
+	private board: string
+	private thread: number
+	private lastN: number
 
 	constructor(msg: MessageEvent) {
 		this.port = msg.ports[0]

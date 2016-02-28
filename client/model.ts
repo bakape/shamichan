@@ -8,9 +8,9 @@ type HookMap = {[key: string]: HookHandler[]}
 // Generic model class, that all other model classes extend
 export default class Model {
 	attrs: ModelAttrs
-	changeHooks: HookMap = {}
 	id: string|number
 	collection: Collection
+	private changeHooks: HookMap = {}
 
 	constructor(attrs: ModelAttrs = {}) {
 		this.attrs = attrs

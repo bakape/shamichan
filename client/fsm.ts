@@ -5,9 +5,9 @@ type ActMap = SetMap<string, ActHandler>
 
 // Finite State Machine
 export default class FSM {
-	stateHandlers: ActMap
-	transitions: {[transition: string]: string}
-	transitionHandlers: ActMap
+	private stateHandlers: ActMap
+	private transitions: {[transition: string]: string}
+	private transitionHandlers: ActMap
 	state: string
 
 	// Create a new finite state machine with the supplied start state
