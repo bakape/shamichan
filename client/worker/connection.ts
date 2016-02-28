@@ -44,6 +44,8 @@ class Connection extends WebSocket {
 	}
 }
 
-export function connect(): void {
+function connect(): void {
 	connection = new Connection()
 }
+
+connect()
