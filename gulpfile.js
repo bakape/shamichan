@@ -33,6 +33,7 @@ createTask('scripts', './clientScripts/*.js', src =>
 	src
 		.pipe(sourcemaps.init())
 		.pipe(uglify())
+		.on('error', handleError)
 		.pipe(sourcemaps.write('./maps'))
 		.pipe(gulp.dest('./www/js/scripts')))
 
@@ -41,6 +42,7 @@ createTask('css', './less/*.less', src =>
 	src
 		.pipe(sourcemaps.init())
 		.pipe(less())
+		.on('error', handleError)
 		.pipe(nano())
 		.pipe(sourcemaps.write('./maps'))
 		.pipe(gulp.dest('./www/css')))
@@ -49,6 +51,7 @@ createTask('css', './less/*.less', src =>
 createTask('lang', './lang/*.json', src =>
 	src
 		.pipe(jsonminify())
+		.on('error', handleError)
 		.pipe(gulp.dest('./www/lang')))
 
 // Dependancy libraries
@@ -72,9 +75,9 @@ function buildClient() {
 	tasks.push(name)
 	gulp.task(name, () =>
 		gulp.src(path)
-			.on('error', gutil.log)
 			.pipe(sourcemaps.init())
 			.pipe(ts(tsProject))
+			.on('error', handleError)
 			.pipe(sourcemaps.write('./maps'))
 			.pipe(gulp.dest('./www/js/')))
 
@@ -84,13 +87,20 @@ function buildClient() {
 	}
 }
 
+// Simply log the error on continous builds, but fail the build and exit with
+// an error status, if failing a one-time build. This way we can use failure to
+// build the client to not pass Travis CL tests.
+function handleError(err) {
+	if (!watch) {
+		throw err
+	}
+}
+
 // Create a new gulp taks and set it to execute on default and incrementally
 function createTask(name, path, task) {
 	tasks.push(name)
 	gulp.task(name, () =>
-		task(gulp.src(path)
-			.on('error', gutil.log)
-			.pipe(cache(name))))
+		task(gulp.src(path).pipe(cache(name))))
 
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {
@@ -105,6 +115,7 @@ function compileVendor(name, path) {
 			.pipe(rename({basename: name}))
 			.pipe(sourcemaps.init())
 			.pipe(uglify())
+			.on('error', handleError)
 			.pipe(sourcemaps.write('./maps'))
 			.pipe(gulp.dest('./www/js/vendor')))
 }
