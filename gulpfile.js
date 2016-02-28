@@ -54,15 +54,24 @@ createTask('lang', './lang/*.json', src =>
 		.on('error', handleError)
 		.pipe(gulp.dest('./www/lang')))
 
-// Dependancy libraries
-copyVendor([
-	'./node_modules/systemjs/dist/system.js',
-	'./node_modules/systemjs/dist/system.js.map',
-	'./node_modules/dom4/build/dom4.js',
-	'./node_modules/underscore/underscore-min.js',
-	'./node_modules/underscore/underscore-min.map'
-])
-compileVendor('stack-blur', './lib/stack-blur.js')
+// Copies a dependancy library from node_modules to the vendor directory
+tasks.push('vendor')
+gulp.task('vendor', () => {
+	const paths = [
+		'./node_modules/systemjs/dist/system.js',
+		'./node_modules/systemjs/dist/system.js.map',
+		'./node_modules/dom4/build/dom4.js',
+		'./node_modules/underscore/underscore-min.js',
+		'./node_modules/underscore/underscore-min.map'
+	]
+	for (let path of paths) {
+		fs.copySync(
+			path,
+			'./www/js/vendor/' + _.last(path.split('/')),
+			{clobber: true}
+		)
+	}
+})
 
 gulp.task('default', tasks)
 
@@ -105,28 +114,5 @@ function createTask(name, path, task) {
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {
 		gulp.watch(path, [name])
-	}
-}
-
-// Copy a dependancy library, minify and generate sourcemaps
-function compileVendor(name, path) {
-	createTask(name, path, src =>
-		src
-			.pipe(rename({basename: name}))
-			.pipe(sourcemaps.init())
-			.pipe(uglify())
-			.on('error', handleError)
-			.pipe(sourcemaps.write('./maps'))
-			.pipe(gulp.dest('./www/js/vendor')))
-}
-
-// Copies a dependancy library from node_modules to the vendor directory
-function copyVendor(paths) {
-	for (let path of paths) {
-		fs.copySync(
-			path,
-			'./www/js/vendor/' + _.last(path.split('/')),
-			{clobber: true}
-		)
 	}
 }
