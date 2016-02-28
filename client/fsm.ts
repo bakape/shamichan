@@ -49,7 +49,7 @@ export default class FSM {
 
 	// Returns a function that executes FSM.prototype.feed with the suplied
 	// argument
-	feeder(state: string) {
+	feeder(state: string): (arg?: any) => void {
 		return arg => this.feed(state, arg)
 	}
 }
