@@ -31,8 +31,8 @@ export function randomID(len: number): string {
 }
 
 // Simple map of sets with automatic array creation and removal
-export class WeakSetMap<K, V> {
-	map: Map<K, Set<V>>;
+export class SetMap<K, V> {
+	map: Map<K, Set<V>>
 
 	constructor() {
 		this.map = new Map()

@@ -2,11 +2,11 @@
  Functions for sending and receiving messages from clients
 */
 
-import {randomID, WeakSetMap, message} from '../common'
+import {randomID, SetMap, message} from '../common'
 import {extend} from 'underscore'
 
 export const byID: {[id: string]: Client} = {}
-export const byPage = new WeakSetMap<number|string, Client>()
+export const byPage = new SetMap<number|string, Client>()
 export const handlers: {(msg: MessageEvent, client: Client)}[] = []
 
 // Establish a private communication channel and SW-side instance of tab. Only
@@ -23,11 +23,11 @@ interface ClientState {
 // Handles interactions with the client browser tabs. In an MVC sense, these
 // contain only the View part.
 class Client {
-	port: MessagePort;
-	id: string;
-	board: string;
-	thread: number;
-	lastN: number;
+	port: MessagePort
+	id: string
+	board: string
+	thread: number
+	lastN: number
 
 	constructor(msg: MessageEvent) {
 		this.port = msg.ports[0]
