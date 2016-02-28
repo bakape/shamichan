@@ -24,13 +24,9 @@
     "watch": "gulp -w"
   },
   "dependencies": {
-    "babel-core": "^6.1.2",
-    "babel-plugin-transform-es2015-destructuring": "^6.0.18",
-    "babel-plugin-transform-es2015-parameters": "^6.4.2",
     "dom4": "^1.5.1",
     "fs-extra": "^0.26.3",
     "gulp": "^3.8.11",
-    "gulp-babel": "^6.1.1",
     "gulp-cached": "^1.1.0",
     "gulp-cssnano": "^2.0.0",
     "gulp-jsonminify": "^1.0.0",

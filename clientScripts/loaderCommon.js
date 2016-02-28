@@ -7,7 +7,7 @@ function initModuleLoader() {
 		baseURL: '/ass/js',
 		defaultJSExtensions: true,
 		map: {
-			underscore: 'vendor/underscore'
+			underscore: 'vendor/underscore-min'
 		},
 
 		// Load all client modules as precompiled System.register format

@@ -3,6 +3,8 @@
 	"compilerOptions": {
 		"target": "ES6",
 		"module": "system",
-		"moduleResolution": "node"
+		"moduleResolution": "node",
+		"newLine": "LF",
+		"removeComments": true
 	}
 }
