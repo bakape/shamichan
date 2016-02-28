@@ -42,6 +42,13 @@
 		'return typeof Promise === "function"',
 		// ServiceWorker
 		'return typeof navigator.serviceWorker === "object"',
+		// Default parameters
+		'return (function (a = 1, b = 2) { return a === 3 && b === 2; }(3));',
+		// Destructuring decliration
+		'var [a,,[b],c] = [5,null,[6]];return a===5 && b===6 && c===undefined',
+		// Parameter destructuring
+		'return function([a,,[b],c]){return a===5 && b===6 && c===undefined;}'
+			+ '([5,null,[6]])'
 	]
 
 	for (var i = 0; i < tests.length; i++) {
