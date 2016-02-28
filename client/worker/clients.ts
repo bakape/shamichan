@@ -45,7 +45,7 @@ class Client {
 
 	// Replace previous client state with new one parsed from the supplied URL,
 	// assing to the client lookup map
-	setState(url: string) {
+	private setState(url: string) {
 		this.unsetState()
 		const state = this.parseURL(url)
 		extend(this, state)
@@ -54,14 +54,14 @@ class Client {
 	}
 
 	// Remove client from client byPage map
-	unsetState(): void {
+	private unsetState(): void {
 		byPage.remove(this.board, this)
 		byPage.remove(this.thread, this)
 	}
 
 	// Parse the client URL into a board name, thread number and last to display
 	// post number setting
-	parseURL(href: string): ClientState {
+	private parseURL(href: string): ClientState {
 		const board = href.match(/\/([a-zA-Z0-9]+?)\//)[1],
 			thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
 			lastN = href.match(/[\?&]last=(\d+)/)
@@ -80,7 +80,7 @@ class Client {
 	}
 
 	// Receive and handle messages from the browser tab
-	receive(msg: MessageEvent): void {
+	private receive(msg: MessageEvent): void {
 		const fn = handlers[msg.data]
 		if (!fn) {
 			throw new Error('Unknown client message type: ' + msg.data)

@@ -35,7 +35,7 @@ export default class FSM {
 	}
 
 	// Generate a transition string representation
-	transitionString(start: string, added: string): string {
+	private transitionString(start: string, added: string): string {
 		return `${start}+${added}`
 	}
 

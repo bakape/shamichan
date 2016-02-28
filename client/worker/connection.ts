@@ -25,18 +25,18 @@ class Connection extends WebSocket {
 		this.onclose = () => this.onClose()
 	}
 
-	onMessage(msg: MessageEvent) {
+	private onMessage(msg: MessageEvent) {
 		console.log(msg)
 	}
 
-	onOpen() {
+	private onOpen() {
 		if (reconnTimer) {
 			clearInterval(reconnTimer)
 			reconnTimer = null
 		}
 	}
 
-	onClose() {
+	private onClose() {
 		if (!reconnTimer) {
 			reconnTimer = setInterval(connect, 5000)
 			sendAll(tabMessage.syncStatus, [syncStatus.disconnected])
