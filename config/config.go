@@ -11,7 +11,7 @@ import (
 )
 
 // Overridable path for tests
-var configRoot = "./config"
+var configPath = "/etc/meguca/config.json"
 
 // Server stores the global configuration. It is loaded only once
 // during start up and considered implicitly immutable during the rest of
@@ -131,16 +131,18 @@ var ClientConfig []byte
 var Hash string
 
 // LoadConfig reads and parses the JSON config file
-func LoadConfig() {
-	path := configRoot + "/config.json"
-	file, err := ioutil.ReadFile(path)
+func LoadConfig(debug bool) {
+	if debug {
+		configPath = "./config/config.json"
+	}
+	file, err := ioutil.ReadFile(configPath)
 
 	// If config file does not exist, read and copy defaults file
 	if err != nil {
-		if os.IsNotExist(err) {
-			file, err = ioutil.ReadFile(configRoot + "/defaults.json")
+		if os.IsNotExist(err) && debug {
+			file, err = ioutil.ReadFile("./config/defaults.json")
 			util.Throw(err)
-			util.Throw(ioutil.WriteFile(path, file, 0600))
+			util.Throw(ioutil.WriteFile(configPath, file, 0600))
 		} else {
 			panic(err)
 		}

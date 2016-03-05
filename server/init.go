@@ -11,18 +11,20 @@ import (
 	"github.com/sevlyar/go-daemon"
 	"log"
 	"os"
+	"os/user"
+	"strconv"
 	"syscall"
 	"time"
 )
 
+// debugMode denotes the server has been started with the `debug` parameter.
+// This will cause it to assume, it is run from the project source root
+// directory. Also changes some folder paths to be located under non-system
+// paths like `/etc` and `/var`.
 var debugMode bool
 
 // Start parses command line arguments and initializes the server.
 func Start() {
-	chdirToSource()
-	config.LoadConfig()
-	createDirs()
-
 	// Parse command line arguments
 	if len(os.Args) < 2 {
 		printUsage()
@@ -43,27 +45,25 @@ func Start() {
 		printUsage()
 	}
 
+	config.LoadConfig(debugMode)
+
 	if !debugMode {
+		cur, err := user.Current()
+		util.Throw(err)
+		if cur.Uid != "0" {
+			log.Fatalln("Must be started as root, if in non-debug mode")
+		}
 		daemonise()
 	} else {
+		webRoot = "./www"
+		imageWebRoot = "./img"
+		createDebugDirs()
 		startServer()
 	}
 }
 
-// Changes the working directory to meguca's source directory, so we can
-// properly read configs, serve web resources, etc., while still being able to
-// run from meguca from any directory
-// TODO: CL flags to override this
-func chdirToSource() {
-	if gopath := os.Getenv("GOPATH"); gopath != "" {
-		workDir := gopath + "/src/github.com/bakape/meguca"
-		util.Throw(os.Chdir(workDir))
-		daemonContext.WorkDir = workDir
-	}
-}
-
 func printUsage() {
-	fmt.Print(`usage: meguca.v2 [ start | stop | debug | help ]
+	fmt.Print(`usage: meguca.v2 [ start | stop | restart | debug | help ]
     start   - start the meguca server
     stop    - stop a running daemonised meguca server
     restart - combination of stop + start
@@ -81,8 +81,22 @@ func startServer() {
 
 // Configuration variables for handling daemons
 var daemonContext = &daemon.Context{
-	PidFileName: "./.pid",
-	LogFileName: "./error.log",
+	PidFileName: "/var/run/meguca.pid",
+	LogFileName: "/var/log/meguca.error.log",
+	Credential:  getCredentials(),
+}
+
+func getCredentials() *syscall.Credential {
+	us, err := user.Lookup("meguca")
+	util.Throw(err)
+	uid, err := strconv.Atoi(us.Gid)
+	util.Throw(err)
+	gid, err := strconv.Atoi(us.Gid)
+	util.Throw(err)
+	return &syscall.Credential{
+		Uid: uint32(uid),
+		Gid: uint32(gid),
+	}
 }
 
 // Spawn a detached process to work in the background
@@ -127,8 +141,8 @@ func killDaemon() {
 	}
 }
 
-// Create all needed directories for server operation
-func createDirs() {
+// Create all needed directories for server operation in debug mode
+func createDebugDirs() {
 	for _, dir := range [...]string{"src", "thumb", "mid"} {
 		util.Throw(os.MkdirAll("./img/"+dir, 0750))
 	}

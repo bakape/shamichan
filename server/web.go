@@ -23,9 +23,8 @@ import (
 
 // Used for overriding during tests
 var (
-	webRoot      = "./www"
-	imageWebRoot = "./img"
-	workerPath   = "./www/js/scripts/worker.js"
+	webRoot      = "/var/lib/meguca/www"
+	imageWebRoot = "/var/lib/meguca/img"
 )
 
 func startWebServer() {
@@ -71,7 +70,6 @@ func createRouter() *httprouter.Router {
 	// Static assets
 	router.ServeFiles("/ass/*filepath", http.Dir("./www"))
 	router.GET("/img/*filepath", serveImages)
-	router.HandlerFunc("GET", "/worker.js", serveWorker)
 
 	// Image upload
 	router.HandlerFunc("POST", "/upload", imager.NewImageUpload)
@@ -357,11 +355,4 @@ func serveImages(
 	headers.Set("X-Frame-Options", "sameorigin")
 	_, err = io.Copy(res, file)
 	util.Throw(err)
-}
-
-// Seperate handler for serving the worker script file. Needed to bypass
-// security restrictions of not being able to proxy files above the sript URL
-// root. The alternative is adding a header to resources. Want to avoid that.
-func serveWorker(res http.ResponseWriter, req *http.Request) {
-	http.ServeFile(res, req, workerPath)
 }

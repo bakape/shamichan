@@ -4,6 +4,7 @@ Builds client JS and CSS
 'use strict'
 
 const _ = require('underscore'),
+	babel = require('gulp-babel'),
 	cache = require('gulp-cached'),
 	fs = require('fs-extra'),
 	gulp = require('gulp'),
@@ -73,6 +74,20 @@ gulp.task('vendor', () => {
 	}
 })
 
+// Client for legacy browsers. Must be run in a separate gulp invocation,
+// because of typescript and babel constraints.
+gulp.task("es5", () =>
+	gulp.src('./client/**/*.ts')
+		.pipe(sourcemaps.init())
+		.pipe(ts(tsProject))
+		.on('error', handleError)
+		.pipe(babel({
+			presets: ["babel-preset-es2015"]
+		}))
+		.pipe(uglify())
+		.pipe(sourcemaps.write('./maps'))
+		.pipe(gulp.dest('./www/js/es5')))
+
 gulp.task('default', tasks)
 
 const tsProject = ts.createProject('./client/tsconfig.json')
@@ -88,7 +103,7 @@ function buildClient() {
 			.pipe(ts(tsProject))
 			.on('error', handleError)
 			.pipe(sourcemaps.write('./maps'))
-			.pipe(gulp.dest('./www/js/')))
+			.pipe(gulp.dest('./www/js/es6')))
 
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {

@@ -1,7 +1,7 @@
-import {SetMap} from './common'
+import {SetMap} from './util'
 
 type ActHandler = (arg?: any) => void
-type ActMap = SetMap<string, ActHandler>
+type ActMap = SetMap<ActHandler>
 
 // Finite State Machine
 export default class FSM {
@@ -13,8 +13,8 @@ export default class FSM {
 	// Create a new finite state machine with the supplied start state
 	constructor(start: string) {
 		this.state = start
-		this.stateHandlers = new SetMap<string, ActHandler>()
-		this.transitionHandlers = new SetMap<string, ActHandler>()
+		this.stateHandlers = new SetMap<ActHandler>()
+		this.transitionHandlers = new SetMap<ActHandler>()
 	}
 
 	// Assign a handler to be execute on arrival to a new state

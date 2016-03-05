@@ -1,10 +1,9 @@
-.pid
+.build
 .directory
 .vagrant
 config/config.json
-error.log
 node_modules
-./meguca
+meguca
 www/illya.mp4
 www/illya.webm
 www/css/*.css

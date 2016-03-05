@@ -1,33 +1,33 @@
 Vagrant.configure(2) do |config|
 	config.vm.box = "ubuntu/trusty32"
 	config.vm.provision "shell", inline: <<-SHELL
-		echo "Updating virtual machine..."
 		export DEBIAN_FRONTEND=noninteractive
 
-        # ffmpeg PPA
-        add-apt-repository ppa:mc3man/trusty-media -y
+		add-apt-repository ppa:ubuntu-lxc/lxd-stable -y
 
         # Node.js setup script
         wget -q -O - https://deb.nodesource.com/setup_5.x | bash -
-        apt-get dist-upgrade -y  < /dev/null
 
     	echo "Installing dependancies..."
-        apt-get install -y ffmpeg nodejs build-essential redis-server\
-        	software-properties-common imagemagick pngquant < /dev/null
+        apt-get install -y nodejs build-essential git golang < /dev/nullx
 
-		echo "Installing npm modules. This will take a while..."
+		echo "Compiling project..."
 		su vagrant -
 			cd /vagrant
-			npm i --unsafe-perm
+
+			echo "Building server..."
+			make server
+
+			echo "Building client. This can take a while..."
+			make client
 
 			# cd to meguca's root on login
 			echo 'cd /vagrant' >> /etc/profile
 		exit
+
+		echo "Virtual machine setup finished successfully"
 	SHELL
 
 	# Server
 	config.vm.network :forwarded_port, host: 8000, guest: 8000
-
-	# Node debug port
-	config.vm.network :forwarded_port, host: 5858, guest: 5858
 end

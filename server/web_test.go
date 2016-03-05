@@ -15,8 +15,11 @@ import (
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"testing"
 	"time"
 )
+
+func Test(t *testing.T) { TestingT(t) }
 
 var genericImage = types.Image{File: "foo"}
 
@@ -348,8 +351,14 @@ func (*WebServer) TestServeIndexTemplate(c *C) {
 			" Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko)" +
 			" Chrome/18.0.1025.166 Mobile Safari/535.19"
 	)
-	desktop := templates.Store{[]byte("desktop"), "dhash"}
-	mobile := templates.Store{[]byte("mobile"), "mhash"}
+	desktop := templates.Store{
+		HTML: []byte("desktop"),
+		Hash: "dhash",
+	}
+	mobile := templates.Store{
+		HTML: []byte("mobile"),
+		Hash: "mhash",
+	}
 	templates.Resources = templates.Map{
 		"index":  desktop,
 		"mobile": mobile,
@@ -541,7 +550,6 @@ func (*WebServer) TestCreateRouter(c *C) {
 		{"/api/post/1", httprouter.Params{{"post", "1"}}},
 		{"/socket", nil},
 		{"/ass/favicon.gif", httprouter.Params{{"filepath", "/favicon.gif"}}},
-		{"/worker.js", nil},
 		{
 			"/img/src/madotsuki.png",
 			httprouter.Params{{"filepath", "/src/madotsuki.png"}},
@@ -587,9 +595,4 @@ func (*WebServer) TestWrapRouter(c *C) {
 	req.Header.Set("X-Forwarded-For", ip)
 	wrapRouter(r).ServeHTTP(rec, req)
 	c.Assert(remoteIP, Equals, ip)
-}
-
-func (*WebServer) TestServeWorker(c *C) {
-	workerPath = "./test/frontpage.html"
-	assertBody(runHandler(c, serveWorker), "<!doctype html><html></html>\n", c)
 }

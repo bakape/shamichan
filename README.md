@@ -5,57 +5,49 @@ For deploying a production-ready legacy meguca instance, download the [latests
 release](https://github.com/bakape/meguca/releases/latest) and consult the
 bundled README.__
 
-##Setup
-* Install [dependencies](#dependencies) listed below
-* `go get -u github.com/bakape/meguca`
-* `meguca init`
-* Configure the server, installed in the standard location of your Go workspace
-(configuration WebUI soon™)
-* Run `npm intall` inside the project directory to build the client
-* See `meguca help` for usage guide
-
-##Dependencies
-* [Go](https://golang.org/doc/install)
+##Runtime dependencies
 * [RethinkDB](https://rethinkdb.com/docs/install/)
     * RethinkDB does not enable a configuration file by default. If you don't
     want to configure anything, just copy `/etc/rethinkdb/default.conf.sample`
 	into `/etc/rethinkdb/instances.d/instance1.conf`. You might also set it to
-	autostart on boot. See the [official guide](http://www.rethinkdb.com/docs/start-on-startup/).
-* [Node.js](https://nodejs.org) Required for building the client
+	autostart on boot. See the
+    [official guide](http://www.rethinkdb.com/docs/start-on-startup/).
 
-##Updating
-* `go get -u gopkg.in/bakape/meguca`
-* `npm install` inside the project directory
-* `meguca restart`
-* See `docs/` for upgrading between semver major releases
+##Installable binaries
+Coming soon™
+
+##Building from source
+* Install:
+    * GCC or Clang
+    * make
+    * [Go](https://golang.org/doc/install)
+    * [Node.js](https://nodejs.org) (required for building the client)
+* Run `make`
+
+##Production
+* Install the server by running `make install` as root
+* Edit `/etc/meguca/config.json` to configure your instance
+* See `meguca help` for server daemon control
+* `make uninstall` to uninstall
+* `make upgrade` to ugprade installed server to a new version
+* For upgarding between semver major releases see `docs/migration.md`
 
 ##Development
-* `npm install` to install build dependencies
-* `npm run-script build` to build the client
-* `npm run-script watch` to watch for file changes and automatically
-incrementally rebuild the client
-* Use `meguca debug` to run the server
-
-// TODO: Rewrite everything below for v2
+* No need to install system-wide
+* Use `./meguca debug` to run the server from the project root directory
+* `make server` and `make client` build the server and client separately
+* `make watch` watches the file system for changes and incrementally rebuilds
+the client
 
 ##Cross-platform development with Vagrant
 * Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and
 [Vagrant](http://www.vagrantup.com/downloads.html)
 * Open a shell in meguca's root directory and run `vagrant up`
 * Grab a coffee
-* Run `vagrant ssh` and `node builder`, once logged in. Your changes will
-automatically sync both ways. [More info](https://www.vagrantup.com/)
+* Run `vagrant ssh`. Your changes will automatically sync both ways.
+[More info](https://www.vagrantup.com/)
 
-##Production
-* Have your webserver serve `www/`
-  * It is highly recommended to use a dedicated webserver for serving static
-  files and as a reverse proxy. Even if you choose to use the default inbuilt
-  webserver, you still need to set `MEDIA_URL` in `config/imager` for image
-  search links to work.
-* Run `npm start/stop/restart` to start/stop/restart the server
-* You can update `config/hot.js` and client files without restarting the server
-with `node server/kill.js`
-* All errors are logged to `./error.log`
+// TODO: Rewrite everything below for v2
 
 ## Documentation
 * docs/api.md - JSON API spec
