@@ -24,6 +24,7 @@ server_deps: build_dirs
 		| tr "[" " " \
 		| tr "]" " " \
 		| xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' \
+		| grep -v 'github.com/bakape/meguca' \
 		| xargs go get -v
 
 build_dirs:
