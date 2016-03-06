@@ -1,6 +1,5 @@
 .build
 .directory
-.vagrant
 config/config.json
 node_modules
 meguca

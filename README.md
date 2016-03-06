@@ -39,14 +39,6 @@ Coming soon™
 * `make watch` watches the file system for changes and incrementally rebuilds
 the client
 
-##Cross-platform development with Vagrant
-* Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and
-[Vagrant](http://www.vagrantup.com/downloads.html)
-* Open a shell in meguca's root directory and run `vagrant up`
-* Grab a coffee
-* Run `vagrant ssh`. Your changes will automatically sync both ways.
-[More info](https://www.vagrantup.com/)
-
 // TODO: Rewrite everything below for v2
 
 ## Documentation
