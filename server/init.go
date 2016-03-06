@@ -48,11 +48,6 @@ func Start() {
 	config.LoadConfig(debugMode)
 
 	if !debugMode {
-		cur, err := user.Current()
-		util.Throw(err)
-		if cur.Uid != "0" {
-			log.Fatalln("Must be started as root, if in non-debug mode")
-		}
 		daemonise()
 	} else {
 		webRoot = "./www"
@@ -103,6 +98,12 @@ func getCredentials() *syscall.Credential {
 func daemonise() {
 	child, err := daemonContext.Reborn()
 	if err != nil {
+		cur, err := user.Current()
+		util.Throw(err)
+		fmt.Print(cur.Uid)
+		if cur.Uid != "0" {
+			log.Fatalln("Must be started as root, if in non-debug mode")
+		}
 		if err.Error() == "resource temporarily unavailable" {
 			fmt.Println("Error: Server already running")
 			os.Exit(1)
