@@ -23,8 +23,8 @@ import (
 
 // Used for overriding during tests
 var (
-	webRoot      = "/var/lib/meguca/www"
-	imageWebRoot = "/var/lib/meguca/img"
+	webRoot      = "./www"
+	imageWebRoot = "./img"
 )
 
 func startWebServer() {

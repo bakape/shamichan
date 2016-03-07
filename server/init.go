@@ -45,14 +45,11 @@ func Start() {
 		printUsage()
 	}
 
-	config.LoadConfig(debugMode)
+	config.LoadConfig()
 
 	if !debugMode {
 		daemonise()
 	} else {
-		webRoot = "./www"
-		imageWebRoot = "./img"
-		createDebugDirs()
 		startServer()
 	}
 }
@@ -76,9 +73,8 @@ func startServer() {
 
 // Configuration variables for handling daemons
 var daemonContext = &daemon.Context{
-	PidFileName: "/var/run/meguca.pid",
-	LogFileName: "/var/log/meguca.error.log",
-	Credential:  getCredentials(),
+	PidFileName: ".pid",
+	LogFileName: "error.log",
 }
 
 func getCredentials() *syscall.Credential {
@@ -98,12 +94,6 @@ func getCredentials() *syscall.Credential {
 func daemonise() {
 	child, err := daemonContext.Reborn()
 	if err != nil {
-		cur, err := user.Current()
-		util.Throw(err)
-		fmt.Print(cur.Uid)
-		if cur.Uid != "0" {
-			log.Fatalln("Must be started as root, if in non-debug mode")
-		}
 		if err.Error() == "resource temporarily unavailable" {
 			fmt.Println("Error: Server already running")
 			os.Exit(1)
@@ -139,12 +129,5 @@ func killDaemon() {
 			}
 			time.Sleep(100 * time.Millisecond)
 		}
-	}
-}
-
-// Create all needed directories for server operation in debug mode
-func createDebugDirs() {
-	for _, dir := range [...]string{"src", "thumb", "mid"} {
-		util.Throw(os.MkdirAll("./img/"+dir, 0750))
 	}
 }

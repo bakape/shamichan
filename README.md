@@ -23,21 +23,22 @@ Coming soon™
     * [Go](https://golang.org/doc/install)
     * [Node.js](https://nodejs.org) (required for building the client)
 * Run `make`
+* Prepare server for operation by running `make init`
 
 ##Production
-* Install the server by running `make install` as root
-* Edit `/etc/meguca/config.json` to configure your instance
-* See `meguca help` for server daemon control
-* `make uninstall` to uninstall
-* `make upgrade` to ugprade installed server to a new version
+* Edit `./config/config.json` to configure your instance
+* See `./meguca help` for server daemon control
 * For upgarding between semver major releases see `docs/migration.md`
 
 ##Development
 * No need to install system-wide
-* Use `./meguca debug` to run the server from the project root directory
+* `./meguca debug` to run the server in development mode
 * `make server` and `make client` build the server and client separately
 * `make watch` watches the file system for changes and incrementally rebuilds
 the client
+* `make clean` removes files from the previous compilation
+* `make dist_clean` in addition to the above, removes configuration, images and
+stored assets
 
 // TODO: Rewrite everything below for v2
 

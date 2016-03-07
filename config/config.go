@@ -7,11 +7,10 @@ import (
 	"github.com/Soreil/mnemonics"
 	"github.com/bakape/meguca/util"
 	"io/ioutil"
-	"os"
 )
 
 // Overridable path for tests
-var configPath = "/etc/meguca/config.json"
+var configRoot = "./config"
 
 // Server stores the global configuration. It is loaded only once
 // during start up and considered implicitly immutable during the rest of
@@ -131,22 +130,10 @@ var ClientConfig []byte
 var Hash string
 
 // LoadConfig reads and parses the JSON config file
-func LoadConfig(debug bool) {
-	if debug {
-		configPath = "./config/config.json"
-	}
-	file, err := ioutil.ReadFile(configPath)
-
-	// If config file does not exist, read and copy defaults file
-	if err != nil {
-		if os.IsNotExist(err) && debug {
-			file, err = ioutil.ReadFile("./config/defaults.json")
-			util.Throw(err)
-			util.Throw(ioutil.WriteFile(configPath, file, 0600))
-		} else {
-			panic(err)
-		}
-	}
+func LoadConfig() {
+	path := configRoot + "/config.json"
+	file, err := ioutil.ReadFile(path)
+	util.Throw(err)
 
 	util.UnmarshalJSON(file, &Config)
 	var data client

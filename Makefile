@@ -37,23 +37,12 @@ clean: client_clean
 client_clean:
 	rm -rf www/js www/css/*.css www/lang
 
-install:
-	if ! getent passwd meguca > /dev/null 2>&1; then \
-		useradd -MrU meguca; \
-	fi
-	mkdir -p $(MEGUCA_VAR)/img/src
-	mkdir -p $(MEGUCA_VAR)/img/thumb
-	mkdir -p $(MEGUCA_VAR)/img/mid
-	mkdir -p /etc/meguca/assets
-	cp -n config/defaults.json /etc/meguca/config.json
-	cp -r www /var/lib/meguca
-	cp meguca /usr/bin
+dist_clean: clean
+	rm -rf img config/config.json assets error.log
 
-uninstall:
-	if getent passwd meguca > /dev/null 2>&1; then \
-		userdel meguca; \
-	fi
-	rm -r /var/lib/meguca/www
-	rm /usr/bin/meguca
-
-upgrade: uninstall install
+init:
+	mkdir -p img/src
+	mkdir -p img/thumb
+	mkdir -p img/mid
+	mkdir -p assets
+	cp -n config/defaults.json config/config.json

@@ -1,6 +1,9 @@
 .build
 .directory
+.pid
+assets
 config/config.json
+error.log
 node_modules
 meguca
 www/illya.mp4
@@ -8,4 +11,4 @@ www/illya.webm
 www/css/*.css
 www/js
 www/lang
-./img
+img
