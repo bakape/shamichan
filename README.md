@@ -5,6 +5,8 @@ For deploying a production-ready legacy meguca instance, download the [latests
 release](https://github.com/bakape/meguca/releases/latest) and consult the
 bundled README.__
 
+Platforms: Linux, OSX, Win64
+
 ##Runtime dependencies
 * [RethinkDB](https://rethinkdb.com/docs/install/)
     * RethinkDB does not enable a configuration file by default. If you don't

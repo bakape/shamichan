@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
@@ -127,7 +128,7 @@ func (*WebServer) SetUpTest(_ *C) {
 }
 
 func (*WebServer) TestFrontpageRedirect(c *C) {
-	config.Config.Frontpage = "./test/frontpage.html"
+	config.Config.Frontpage = filepath.FromSlash("test/frontpage.html")
 	server := httptest.NewServer(http.HandlerFunc(redirectToDefault))
 	defer server.Close()
 	res, err := http.Get(server.URL)
@@ -202,7 +203,7 @@ func (*WebServer) TestEtagComparison(c *C) {
 }
 
 func (*WebServer) TestNotFoundHandler(c *C) {
-	webRoot = "./test"
+	webRoot = "test"
 	rec := runHandler(c, notFoundHandler)
 	assertBody(rec, "<!doctype html><html>404</html>\n", c)
 	assertCode(rec, 404, c)
@@ -222,7 +223,7 @@ func (*WebServer) TestText404(c *C) {
 }
 
 func (*WebServer) TestPanicHandler(c *C) {
-	webRoot = "./test"
+	webRoot = "test"
 	err := errors.New("foo")
 
 	// Prevent printing stack trace to terminal
@@ -281,7 +282,7 @@ func (*WebServer) TestImageServer(c *C) {
 		truncated         = "/src/tis life.gif"
 		notFoundTruncated = "src/nobody here.gif"
 	)
-	imageWebRoot = "./test"
+	imageWebRoot = "test"
 	path := imageWebRoot + truncated
 	notFound := imageWebRoot + notFoundTruncated
 
@@ -396,7 +397,7 @@ func (*DB) TestThreadHTML(c *C) {
 			Hash: "hash",
 		},
 	}
-	webRoot = "./test"
+	webRoot = "test"
 
 	// Unparsable thread number
 	rec := httptest.NewRecorder()

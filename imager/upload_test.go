@@ -5,6 +5,7 @@ import (
 	. "gopkg.in/check.v1"
 	"mime/multipart"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -25,7 +26,7 @@ func (*Imager) TestDetectFileType(c *C) {
 	// Supported file types
 	types := [...]string{".jpg", ".gif", ".png", ".webm", ".pdf"}
 	for _, ext := range types {
-		f := openFile("./test/uploads/sample"+ext, c)
+		f := openFile(filepath.FromSlash("./test/uploads/sample"+ext), c)
 		t, err := detectFileType(f)
 		c.Assert(err, IsNil)
 		c.Assert(t, Equals, ext)

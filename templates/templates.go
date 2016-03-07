@@ -8,10 +8,11 @@ import (
 	"github.com/bakape/meguca/util"
 	"github.com/dchest/htmlmin"
 	"html/template"
+	"path/filepath"
 )
 
 // Overriden in tests
-var templateRoot = "./templates"
+var templateRoot = "templates"
 
 // Store stores the compiled HTML template and the corresponding truncated MD5
 // hash of said template
@@ -51,7 +52,9 @@ func indexTemplate() (Store, Store) {
 	v := vars{ConfigHash: config.Hash}
 	v.Config = template.JS(config.ClientConfig)
 	v.Navigation = boardNavigation()
-	tmpl, err := template.ParseFiles(templateRoot + "/index.html")
+	tmpl, err := template.ParseFiles(
+		filepath.FromSlash(templateRoot + "/index.html"),
+	)
 	util.Throw(err)
 
 	// Rigt now the desktop and mobile templates are almost identical. This will

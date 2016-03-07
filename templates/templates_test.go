@@ -54,7 +54,7 @@ func (t *Templates) TestBuildIndexTemplate(c *C) {
 }
 
 func (t *Templates) TestCompileTemplates(c *C) {
-	templateRoot = "./test"
+	templateRoot = "test"
 	config.Config = config.Server{}
 	config.ClientConfig = []byte{1}
 	config.Config.Boards.Enabled = []string{"a"}

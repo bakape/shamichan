@@ -4,6 +4,7 @@ import (
 	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -14,9 +15,9 @@ type Tests struct{}
 var _ = Suite(&Tests{})
 
 func (*Tests) TestLoadConfig(c *C) {
-	configRoot = "./test"
-	def := configRoot + "/defaults.json"
-	path := configRoot + "/config.json"
+	configRoot = "test"
+	def := filepath.FromSlash(configRoot + "/defaults.json")
+	path := filepath.FromSlash(configRoot + "/config.json")
 	standard, err := ioutil.ReadFile(def)
 	c.Assert(err, IsNil)
 
@@ -24,7 +25,7 @@ func (*Tests) TestLoadConfig(c *C) {
 	c.Assert(
 		func() { LoadConfig() },
 		PanicMatches,
-		"open ./test/config.json: no such file or directory",
+		"open test/config.json: no such file or directory",
 	)
 
 	c.Assert(ioutil.WriteFile(path, standard, 0600), IsNil)

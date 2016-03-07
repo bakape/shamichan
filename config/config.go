@@ -7,10 +7,11 @@ import (
 	"github.com/Soreil/mnemonics"
 	"github.com/bakape/meguca/util"
 	"io/ioutil"
+	"path/filepath"
 )
 
 // Overridable path for tests
-var configRoot = "./config"
+var configRoot = "config"
 
 // Server stores the global configuration. It is loaded only once
 // during start up and considered implicitly immutable during the rest of
@@ -131,7 +132,7 @@ var Hash string
 
 // LoadConfig reads and parses the JSON config file
 func LoadConfig() {
-	path := configRoot + "/config.json"
+	path := filepath.FromSlash(configRoot + "/config.json")
 	file, err := ioutil.ReadFile(path)
 	util.Throw(err)
 

@@ -18,13 +18,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
 // Used for overriding during tests
 var (
-	webRoot      = "./www"
-	imageWebRoot = "./img"
+	webRoot      = "www"
+	imageWebRoot = "img"
 )
 
 func startWebServer() {
@@ -229,7 +230,7 @@ func checkClientEtag(
 func notFound(res http.ResponseWriter) {
 	setErrorHeaders(res)
 	res.WriteHeader(404)
-	util.CopyFile(webRoot+"/404.html", res)
+	util.CopyFile(filepath.FromSlash(webRoot+"/404.html"), res)
 }
 
 // Addapter for using notFound as a route handler
@@ -252,7 +253,7 @@ func setErrorHeaders(res http.ResponseWriter) {
 func panicHandler(res http.ResponseWriter, req *http.Request, err interface{}) {
 	setErrorHeaders(res)
 	res.WriteHeader(500)
-	util.CopyFile(webRoot+"/50x.html", res)
+	util.CopyFile(filepath.FromSlash(webRoot+"/50x.html"), res)
 	util.LogError(req, err)
 }
 
@@ -335,7 +336,9 @@ func serveImages(
 	req *http.Request,
 	ps httprouter.Params,
 ) {
-	file, err := os.Open(imageWebRoot + httprouter.CleanPath(ps[0].Value))
+	file, err := os.Open(
+		filepath.FromSlash(imageWebRoot + httprouter.CleanPath(ps[0].Value)),
+	)
 	defer file.Close()
 	if err != nil {
 		text404(res)
