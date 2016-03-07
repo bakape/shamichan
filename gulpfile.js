@@ -55,7 +55,7 @@ createTask('lang', './lang/*.json', src =>
 		.on('error', handleError)
 		.pipe(gulp.dest('./www/lang')))
 
-// Copies a dependancy library from node_modules to the vendor directory
+// Copies a dependancy libraries from node_modules to the vendor directory
 tasks.push('vendor')
 gulp.task('vendor', () => {
 	const paths = [
@@ -63,7 +63,9 @@ gulp.task('vendor', () => {
 		'./node_modules/systemjs/dist/system.js.map',
 		'./node_modules/dom4/build/dom4.js',
 		'./node_modules/underscore/underscore-min.js',
-		'./node_modules/underscore/underscore-min.map'
+		'./node_modules/underscore/underscore-min.map',
+		'./node_modules/core-js/client/core.min.js',
+		'./node_modules/core-js/client/core.min.js.map'
 	]
 	for (let path of paths) {
 		fs.copySync(
@@ -73,6 +75,8 @@ gulp.task('vendor', () => {
 		)
 	}
 })
+
+compileVendor('fetch', 'node_modules/whatwg-fetch/fetch.js')
 
 // Client for legacy browsers. Must be run in a separate gulp invocation,
 // because of typescript and babel constraints.
@@ -130,4 +134,15 @@ function createTask(name, path, task) {
 	if (watch) {
 		gulp.watch(path, [name])
 	}
+}
+
+// Copy a dependancy library, minify and generate sourcemaps
+function compileVendor(name, path) {
+	createTask(name, path, src =>
+		src
+			.pipe(rename({basename: name}))
+			.pipe(sourcemaps.init())
+			.pipe(uglify())
+			.pipe(sourcemaps.write('./maps'))
+			.pipe(gulp.dest('./www/js/vendor')))
 }

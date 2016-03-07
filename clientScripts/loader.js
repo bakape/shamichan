@@ -40,32 +40,83 @@
 			+ 'new C("baz"); return passed;',
 		// Promises
 		'return typeof Promise === "function"',
-		// ServiceWorker
-		'return typeof navigator.serviceWorker === "object"',
 		// Default parameters
 		'return (function (a = 1, b = 2) { return a === 3 && b === 2; }(3));',
 		// Destructuring decliration
 		'var [a,,[b],c] = [5,null,[6]];return a===5 && b===6 && c===undefined',
 		// Parameter destructuring
 		'return function([a,,[b],c]){return a===5 && b===6 && c===undefined;}'
-			+ '([5,null,[6]])'
+			+ '([5,null,[6]])',
+		// Fetch API
+		'return typeof window.fetch === "function"'
 	]
 
 	for (var i = 0; i < tests.length; i++) {
 		if (!check(tests[i])) {
-			alert("Browser outdated. Install latest Chrome/Firefox/Opera")
-			return
+			window.legacy = true
+			break
 		}
 	}
 
-	initModuleLoader()
+	var scriptCount = 0,
+		polyfills = ['dom4'],
+		legacy = window.legacy
 
-	navigator.serviceWorker.register("/worker.js").then(function () {
-		return System.import("vendor/dom4")
-	}).then(function () {
-		// Wait until serviceWorker is ready
-		return navigator.serviceWorker.ready
-	}).then(function () {
-		return System.import('client/main')
-	})
+	// Stuff them full of hot, fat and juicy polyfills, if even one test failed.
+	if (legacy) {
+		polyfills.push('core.min', 'fetch')
+	}
+
+	var head = document.getElementsByTagName('head')[0]
+
+	// Load apropriate language pack
+	scriptCount++
+	var xhr = new XMLHttpRequest()
+	xhr.open(
+		'GET',
+		'/ass/lang/' + (localStorage.lang || config.lang.default) + '.json'
+	)
+	xhr.responseType = 'json'
+	xhr.onload = function () {
+		if (this.status !== 200) {
+			throw new Error("Error fetching language pack: " + this.status)
+		}
+		window.lang = this.response
+		loadClient()
+	}
+	xhr.send()
+
+	for (var i = 0; i < polyfills.length; i++) {
+		scriptCount++
+		var script = document.createElement('script')
+		script.type = 'text/javascript'
+		script.src = '/ass/js/vendor/' + polyfills[i] + '.js'
+		script.onload = loadClient
+		head.appendChild(script)
+	}
+
+	function loadClient() {
+		// This function might be called multiple times. Only load the client,
+		// when all polyfills are loaded.
+		scriptCount--
+		if (scriptCount !== 0) {
+			return
+		}
+
+		// Load all client modules as precompiled System.register format
+		// modules
+		var meta = {}
+		meta['es5/*'] = meta['es6/*'] = {format: 'register'}
+
+		System.config({
+			baseURL: '/ass/js',
+			defaultJSExtensions: true,
+			map: {
+				underscore: 'vendor/underscore-min'
+			},
+			meta: meta
+		})
+
+		System.import('es' + (legacy ? 5 : 6) + '/main')
+	}
 })()
