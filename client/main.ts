@@ -1,6 +1,6 @@
 /*
  * Client entry point.
- * NOTE: All modules use strict mode through the Babel transpiler
+ * NOTE: All modules use strict mode implicitly
  */
 
 // Clear cookies, if versions mismatch.
@@ -18,10 +18,10 @@ if (localStorage.getItem("cookieVersion") != cookieVersion) {
 // document.head.appendChild(parseEl(parseHTML
 // 	`<style>
 // 		.locked:after {
-// 			content: "${lang.thread_locked}";
+// 			content: "${posts.threadLocked}";
 // 		}
 // 		.locked > header nav:after {
-// 			content: " (${lang.locked})";
+// 			content: " (${posts.locked})";
 // 		}
 // 	</style>`))
 

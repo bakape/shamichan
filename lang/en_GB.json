@@ -1,56 +1,57 @@
 {
-	"anon": "Anonymous",
-	"search": "Search",
-	"show": "Show",
-	"hide": "Hide",
-	"report": "Report",
-	"focus": "Focus",
-	"expand": "Expand",
-	"last": "Last",
-	"see_all": "See all",
-	"bottom": "Bottom",
-	"expand_images": "Expand Images",
-	"live": "live",
-	"catalog": "Catalog",
-	"return": "Return",
-	"top": "Top",
-	"reply": "Reply",
-	"newThread": "New thread",
-	"locked_to_bottom": "Locked to bottom",
-	"you": "(You)",
-	"OP": "(OP)",
-	"done": "Done",
-	"send": "Send",
-	"locked": "locked",
-	"thread_locked": "This thread is locked.",
-	"langApplied": "Language settings applied. The page will now reload.",
-	"googleSong": "Click to google song",
-	"quoted": "You have been quoted",
-	"syncwatchStarting": "Syncwatch starting in 10 seconds",
-	"finished": "Finished",
-	"expander": ["Expand Images", "Contract Images"],
-	"uploading": "Uploading...",
-	"subject": "Subject",
-	"cancel": "Cancel",
-	"unknownUpload": "Unknown upload error",
-	"unknownResult": "Unknown result",
-	"rescan": "Rescan",
-	"catalog_omit": "Replies/Images",
-	"showSeconds": "Click to show seconds",
-	"worksBestWith": "works best with",
-	"name": "Name:",
-	"email": "Email:",
-	"options": "Options",
-	"identity": "Identity",
-	"faq": "FAQ",
-	"schedule": "Schedule",
-	"feedback": "Feedback",
-	"onlineCounter": "Online Counter",
-	"received": "% received...",
+	"posts": {
+		"anon": "Anonymous",
+		"newThread": "New thread",
+		"reply": "Reply",
+		"you": "(You)",
+		"OP": "(OP)",
+		"locked": "locked",
+		"uploading": "Uploading...",
+		"subject": "Subject",
+		"received": "% received...",
+		"unknownUpload": "Unknown upload error",
+		"unknownResult": "Unknown result",
+		"thread_locked": "This thread is locked.",
+		"done": "Done",
+		"send": "Send",
+		"quoted": "You have been quoted",
+		"cancel": "Cancel",
+	},
 
-	"importConfigs": {
-		"done":"Import successfull. The page will now reload.",
-		"corrupt": "Import failed. File corrupt"
+	"banner": {
+		"showSeconds": "Click to show seconds",
+		"worksBestWith": "works best with",
+		"name": "Name:",
+		"email": "Email:",
+		"options": "Options",
+		"identity": "Identity",
+		"faq": "FAQ",
+		"feedback": "Feedback",
+		"onlineCounter": "Online Counter",
+		"googleSong": "Click to google song",
+	},
+
+	"images": {
+		"show": "Show",
+		"hide": "Hide",
+		"expand": "Expand Images",
+		"contract": "Contract Images",
+	},
+
+	"navigation": {
+		"seeAll": "See all",
+		"search": "Search",
+		"report": "Report",
+		"focus": "Focus",
+		"last": "Last",
+		"bottom": "Bottom",
+		"expand": "Expand",
+		"catalog": "Catalog",
+		"return": "Return",
+		"top": "Top",
+		"lockedToBottom": "Locked to bottom",
+		"catalogOmit": "Replies/Images",
+		"rescan": "Rescan",
 	},
 
 	"reports": {
@@ -63,11 +64,11 @@
 
 	"time": {
 		"week": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-		"year": [
+		"calendar": [
 			"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
 			"Oct", "Nov", "Dec"
 		],
-		"just_now": "just now",
+		"justNow": "just now",
 		"minute": "minute",
 		"minutes": "minutes",
 		"hour": "hour",
@@ -83,7 +84,12 @@
 	"sync": {
 		"0": "Disconnected",
 		"1": "Syncing",
-		"3": "Synced"
+		"2": "Synced"
+	},
+
+	"syncwatch": {
+		"starting": "Syncwatch starting in 10 seconds",
+		"finished": "Finished",
 	},
 
 	"opts": {
@@ -98,6 +104,11 @@
 			"height": "fit to height",
 			"both": "fit to both"
 		},
+		"importConfig": {
+			"done":"Import successfull. The page will now reload.",
+			"corrupt": "Import failed. File corrupt"
+		},
+		"langApplied": "Language settings applied. The page will now reload.",
 		"labels": {
 			"export": [
 				"Export",
@@ -138,10 +149,6 @@
 			"spoilers": [
 				"Image Spoilers",
 				"Don't spoiler images"
-			],
-			"linkify": [
-				"Linkify text URLs",
-				"Convert in-post text URLs to clickable links"
 			],
 			"notification": [
 				"Desktop Notifications",
@@ -203,7 +210,7 @@
 				"New Post",
 				"Open new post"
 			],
-			"togglespoiler": [
+			"toggleSpoiler": [
 				"Image Spoiler",
 				"Toggle spoiler in the open post"
 			],
