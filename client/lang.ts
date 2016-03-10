@@ -17,10 +17,16 @@ type LanguagePack = {
 declare var lang: LanguagePack
 
 // Export each container indivudually for namespacing purposes
-export const {
-	posts, banner, images, navigation, reports, time, sync, syncwatch, opts
-} = lang
-
+// Can't use destructuring, because it breaks with the SystemJS module compiler.
+export const posts = lang.posts
+export const banner = lang.banner
+export const images = lang.images
+export const navigation = lang.navigation
+export const reports = lang.reports
+export const time = lang.time
+export const sync = lang.sync
+export const syncwatch = lang.syncwatch
+export const opts = lang.opts
 
 type LnPosts = {
 	anon: string
