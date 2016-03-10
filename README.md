@@ -33,7 +33,6 @@ Coming soon™
 * For upgarding between semver major releases see `docs/migration.md`
 
 ##Development
-* No need to install system-wide
 * `./meguca debug` to run the server in development mode
 * `make server` and `make client` build the server and client separately
 * `make watch` watches the file system for changes and incrementally rebuilds
