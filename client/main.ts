@@ -3,6 +3,9 @@
  * NOTE: All modules use strict mode implicitly
  */
 
+import {parseHTML, parseEl} from './util'
+import {posts} from './lang'
+
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
 if (localStorage.getItem("cookieVersion") != cookieVersion) {
@@ -14,15 +17,15 @@ if (localStorage.getItem("cookieVersion") != cookieVersion) {
 	localStorage.setItem("cookieVersion", cookieVersion.toString())
 }
 
-// // Load language-specific CSS
-// document.head.appendChild(parseEl(parseHTML
-// 	`<style>
-// 		.locked:after {
-// 			content: "${posts.threadLocked}";
-// 		}
-// 		.locked > header nav:after {
-// 			content: " (${posts.locked})";
-// 		}
-// 	</style>`))
+// Load language-specific CSS
+document.head.appendChild(parseEl(parseHTML
+	`<style>
+		.locked:after {
+			content: "${posts.threadLocked}";
+		}
+		.locked > header nav:after {
+			content: " (${posts.locked})";
+		}
+	</style>`))
 
 //events.request('loading:hide')

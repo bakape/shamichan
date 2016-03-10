@@ -15,7 +15,7 @@
 		"done": "Done",
 		"send": "Send",
 		"quoted": "You have been quoted",
-		"cancel": "Cancel",
+		"cancel": "Cancel"
 	},
 
 	"banner": {
@@ -28,14 +28,14 @@
 		"faq": "FAQ",
 		"feedback": "Feedback",
 		"onlineCounter": "Online Counter",
-		"googleSong": "Click to google song",
+		"googleSong": "Click to google song"
 	},
 
 	"images": {
 		"show": "Show",
 		"hide": "Hide",
 		"expand": "Expand Images",
-		"contract": "Contract Images",
+		"contract": "Contract Images"
 	},
 
 	"navigation": {
@@ -51,7 +51,7 @@
 		"top": "Top",
 		"lockedToBottom": "Locked to bottom",
 		"catalogOmit": "Replies/Images",
-		"rescan": "Rescan",
+		"rescan": "Rescan"
 	},
 
 	"reports": {
@@ -89,7 +89,7 @@
 
 	"syncwatch": {
 		"starting": "Syncwatch starting in 10 seconds",
-		"finished": "Finished",
+		"finished": "Finished"
 	},
 
 	"opts": {
