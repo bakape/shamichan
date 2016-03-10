@@ -1,11 +1,11 @@
 import Model from './model'
 
 // Holds a collection of models
-export default class Collection {
-	models: {[key: string]: Model} = {}
+export default class Collection<M extends Model> {
+	models: {[key: number]: M} = {}
 
 	// Creates a new Collection instance, with optional starting set of models
-	constructor(models?: Model[]) {
+	constructor(models?: M[]) {
 		if (models) {
 			for (let model of models) {
 				this.add(model)
@@ -13,14 +13,19 @@ export default class Collection {
 		}
 	}
 
+	// Retrieve a model by its ID
+	get(id: number): M {
+		return this.models[id]
+	}
+
 	// Add model to collection
-	add(model: Model) {
+	add(model: M) {
 		this.models[model.id] = model
 		model.collection = this
 	}
 
 	// Remove model from the collection
-	remove(model: Model) {
+	remove(model: M) {
 		delete this.models[model.id]
 		delete model.collection
 	}
@@ -34,7 +39,7 @@ export default class Collection {
 	}
 
 	// Runs the suplied function for each model in the collection
-	forEach(fn: (model: Model) => void) {
+	forEach(fn: (model: M) => void) {
 		for (let id in this.models) {
 			fn(this.models[id])
 		}

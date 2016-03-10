@@ -9,7 +9,7 @@ type HookMap = {[key: string]: HookHandler[]}
 export default class Model {
 	attrs: ModelAttrs
 	id: string|number
-	collection: Collection
+	collection: Collection<Model>
 	private changeHooks: HookMap = {}
 
 	constructor(attrs: ModelAttrs = {}) {
