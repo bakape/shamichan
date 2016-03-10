@@ -68,7 +68,6 @@ type Server struct {
 		Public, Private string
 	}
 	Banners, FAQ, Eightball                                        []string
-	Schedule                                                       [][3]string
 	Radio, Pyu, IllyaDance                                         bool
 	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
 }
@@ -113,15 +112,14 @@ type client struct {
 		Spoilers []int `json:"spoilers"`
 		Hats     bool  `json:"hats"`
 	} `json:"images"`
-	Banners       []string    `json:"banners"`
-	FAQ           []string    `json:"FAQ"`
-	Eightball     []string    `json:"eightball"`
-	Schedule      [][3]string `json:"schedule"`
-	Radio         bool        `json:"radio"`
-	IllyaDance    bool        `json:"illiyaDance"`
-	FeedbackEmail string      `json:"feedbackEmail"`
-	DefaultCSS    string      `json:"defaultCSS"`
-	InfoBanner    string      `json:"infoBanner"`
+	Banners       []string `json:"banners"`
+	FAQ           []string `json:"FAQ"`
+	Eightball     []string `json:"eightball"`
+	Radio         bool     `json:"radio"`
+	IllyaDance    bool     `json:"illiyaDance"`
+	FeedbackEmail string   `json:"feedbackEmail"`
+	DefaultCSS    string   `json:"defaultCSS"`
+	InfoBanner    string   `json:"infoBanner"`
 }
 
 // ClientConfig exports public settings all clients can access

@@ -7,6 +7,63 @@ import {Post} from './posts/models'
 import Collection from './collection'
 import {getID} from './util'
 
+// Allows us to typecheck configs. See config/defaults.json for more info.
+type Configs = {
+	boards: {
+		enabled: string[]
+		boards: {[name: string]: {title: string}}
+		default: string
+		staff: string
+		psuedo: string[][]
+		links: string[][]
+	}
+
+	lang: {
+		default: string
+		enabled: string[]
+	}
+
+	staff: {
+		classes: {[name: string]: StaffClass}
+		keyword: string
+	}
+
+	images: {
+		thumb: {
+			thumbDims: number[]
+			midDims: number[]
+		}
+		spoilers: number[]
+		hats: boolean
+	}
+
+	banners: string[]
+	FAQ: string[]
+	eightball: string[]
+	radio: boolean
+	illyaDance: boolean
+	feedbackEmail: string
+	defaultCSS: string
+	infoBanner: string
+}
+
+type StaffClass = {
+	alias: string
+	rights: {[right: string]: boolean}
+}
+
+// Configuration passed from the server. Some values can be changed during
+// runtime.
+export let config: Configs
+
+// Indicates, if in mobile mode. Determined server-side.
+export let isMobile: boolean
+
+export function init(cf: Configs, iM: boolean) {
+	config = cf
+	isMobile = iM
+}
+
 interface PageState {
 	board: string
 	thread: number

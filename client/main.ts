@@ -5,10 +5,12 @@
 
 import {parseHTML, parseEl} from './util'
 import {posts} from './lang'
-import {init} from './state'
+import {init as initState} from './state'
 
-// Indicates, if in mobile mode. Determined server-side.
+declare var config: any
 declare var isMobile: boolean
+
+initState(config, isMobile)
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
