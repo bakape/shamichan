@@ -85,6 +85,7 @@ export const $thread = document.query('threads')
 export const $name = document.query('#name')
 export const $email = document.query('#email')
 export const $banner = document.query('#banner')
+export const $loading = document.query('#loadingImage')
 
 // All posts currently displayed
 export const posts = new Collection<Post>()
@@ -104,4 +105,9 @@ export function getModel(el: Element): Post {
 		return null
 	}
 	return posts.get(id)
+}
+
+// Display or hide the loading animation
+export function displayLoading(loading: boolean) {
+	$loading.style.display = loading ? 'block' : 'none'
 }

@@ -4,11 +4,10 @@
  */
 
  // TODO: Remove, when proper structure done
-import * as state from './state'
-const s = state
 import * as options from './options'
 const o = options
 
+import {displayLoading} from './state'
 import {parseHTML, parseEl} from './util'
 import {posts} from './lang'
 import {exec} from './defer'
@@ -36,5 +35,6 @@ document.head.appendChild(parseEl(parseHTML
 	</style>`))
 
 exec()
+displayLoading(false)
 
 //events.request('loading:hide')
