@@ -24,14 +24,14 @@ export default function (): string {
 		if (!opts[i].length) {
 			continue
 		}
-		const attrs = {
+		const attrs: ElementAttributes = {
 			'data-content': `tab-${i}`,
 			class: 'tab_link'
 		}
 
 		// Highlight the first tabButt by default
 		if (i === 0) {
-			attrs.class += ' tab_sel'
+			attrs['class'] += ' tab_sel'
 		}
 		html += parseHTML
 			`<li>
@@ -139,7 +139,7 @@ function renderExtras() {
 	}
 
 	// Hidden file input for uploading the JSON
-	const attrs = {
+	const attrs: ElementAttributes = {
 		type: 'file',
 		id: 'importSettings',
 		name: "Import Settings"
