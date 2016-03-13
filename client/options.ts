@@ -14,7 +14,7 @@ const options = new Model()
 export default options
 
 // All loaded option models
-const models: {[key: number]: OptionModel} = {}
+const models: {[key: string]: OptionModel} = {}
 
 // Option model IDs
 export type OptionID =

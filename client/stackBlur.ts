@@ -94,10 +94,31 @@ export default function blurCanvas(
 		imageData = context.getImageData(top_x, top_y, width, height),
 		pixels = imageData.data
 
-	let x, y, i, p, yp, yi, yw, r_sum, g_sum, b_sum, a_sum,
-		r_out_sum, g_out_sum, b_out_sum, a_out_sum,
-		r_in_sum, g_in_sum, b_in_sum, a_in_sum,
-		pr, pg, pb, pa, rbs
+	let x: number,
+		y: number,
+		i: number,
+		p: number,
+		yp: number,
+		yi: number,
+		yw: number,
+		r_sum: number,
+		g_sum: number,
+		b_sum: number,
+		a_sum: number,
+		r_out_sum: number,
+		g_out_sum: number,
+		b_out_sum: number,
+		a_out_sum: number,
+		r_in_sum: number,
+		g_in_sum: number,
+		b_in_sum: number,
+		a_in_sum: number,
+		pr: number,
+		pg: number,
+		pb: number,
+		pa: number,
+		rbs: number
+
 
 	const div = radius + radius + 1,
 		widthMinus1  = width - 1,
@@ -107,7 +128,7 @@ export default function blurCanvas(
 
 	const stackStart = new BlurStack()
 	let stack = stackStart,
-		stackEnd
+		stackEnd: BlurStack
 	for (i = 1; i < div; i++) {
 		stack = stack.next = new BlurStack()
 		if (i == radiusPlus1) {
@@ -115,7 +136,8 @@ export default function blurCanvas(
 		}
 	}
 	stack.next = stackStart
-	let stackIn, stackOut
+	let stackIn: BlurStack,
+		stackOut: BlurStack
 
 	yw = yi = 0
 
@@ -318,6 +340,11 @@ export default function blurCanvas(
 	context.putImageData(imageData, top_x, top_y)
 }
 
-function BlurStack() {
-	this.r = this.g = this.b = this.a = 0
+class BlurStack {
+	r: number = 0
+	g: number = 0
+	b: number = 0
+	a: number = 0
+	next: BlurStack
+	constructor() {}
 }

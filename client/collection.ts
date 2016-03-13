@@ -2,7 +2,7 @@ import Model from './model'
 
 // Holds a collection of models
 export default class Collection<M extends Model> {
-	models: {[key: number]: M} = {}
+	models: {[key: string]: M} = {}
 
 	// Creates a new Collection instance, with optional starting set of models
 	constructor(models?: M[]) {

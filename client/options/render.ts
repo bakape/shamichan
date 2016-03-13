@@ -98,7 +98,7 @@ function renderOption(spec: OptionSpec): string {
 
 // Common input field render logic
 function renderInput(id: OptionID, attrs: ElementAttributes): string {
-	const [label,title] = lang.labels[id]
+	const [label, title] = lang.labels[id]
 	extend(attrs, {id, title})
 	return `<input ${parseAttributes(attrs)}>` + renderLabel(id, title, label)
 }

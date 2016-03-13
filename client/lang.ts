@@ -118,58 +118,13 @@ type LnSyncwatch = {
 
 type LnOpts = {
 	tabs: string[]
-	modes: {
-		small: string
-		sharp: string
-		hide: string
-		none: string
-		full: string
-		width: string
-		height: string
-		both: string
-	}
+	modes: {[mode: string]: string}
 	importConfig: {
 		done: string
 		corrupt: string
 	}
 	langApplied: string
-	labels: {
-		lang: OptLabel
-		inlineFit: OptLabel
-		thumbs: OptLabel
-		imageHover: OptLabel
-		webmHover: OptLabel
-		autogif: OptLabel
-		spoilers: OptLabel
-		notification: OptLabel
-		anonymise: OptLabel
-		relativeTime: OptLabel
-		nowPlaying: OptLabel
-		illyaDance: OptLabel
-		illyaDanceMute: OptLabel
-		horizontalPosting: OptLabel
-		replyRight: OptLabel
-		theme: OptLabel
-		userBG: OptLabel
-		userBGImage: OptLabel
-		lastN: OptLabel
-		alwaysLock: OptLabel
-		newPost: OptLabel
-		togglespoiler: OptLabel
-		textSpoiler: OptLabel
-		done: OptLabel
-		expandAll: OptLabel
-		workMode: OptLabel
-		export: OptLabel
-		import: OptLabel
-		hidden: OptLabel
-		workModeToggle: OptLabel
-		google: OptLabel
-		iqdb: OptLabel
-		saucenao: OptLabel
-		desustorage: OptLabel
-		exhentai: OptLabel
-	}
+	labels: {[id: string]: OptLabel}
 }
 
 export type OptLabel = string[]

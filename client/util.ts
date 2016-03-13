@@ -125,13 +125,16 @@ export function onceAll(el: Element, type: string, fn: EventListener) {
 
 // Return width of element with padding and margin
 export function outerWidth(el: Element): number {
-	const style =  getComputedStyle(el),
-		props = ['marginLeft', 'marginRight', 'paddingLeft','paddingRight']
-	let width = 0
-	for (let prop of props) {
-		width += parseInt(style[prop]);
+	const style =  getComputedStyle(el)
+	const widths = [
+		style.marginLeft, style.marginRight, style.paddingLeft,
+		style.paddingRight
+	]
+	let total = 0
+	for (let width of widths) {
+		total += parseInt(width)
 	}
-	return width
+	return total
 }
 
 // Confirms email is saging

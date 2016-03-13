@@ -5,6 +5,7 @@
 		"module": "system",
 		"moduleResolution": "node",
 		"newLine": "LF",
-		"removeComments": true
+		"removeComments": true,
+		"noImplicitAny": true
 	}
 }

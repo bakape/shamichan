@@ -285,7 +285,7 @@ for (let short of shorts) {
 }
 
 // Create a function to append and toggle a style element in <head>
-function toggleHeadStyle(id: string, css: string) {
+function toggleHeadStyle(id: string, css: string): (toggle: boolean) => void {
 	return toggle => {
 		if (!document.getElementById(id)) {
 			document.head.append(parseEl(`<style id="${id}">${css}</style>`))
