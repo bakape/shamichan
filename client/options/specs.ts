@@ -15,23 +15,19 @@ export const enum optionType {checkbox, number, image, shortcut, menu}
 // Options panel display tabs
 export const enum tabs {general, style, imagesearch, fun, shortcuts}
 
+// Can't  use enums for ones below, because they persist to localStorage
+
 // Available thumbnail display styles
-export enum thumbStyles {small, sharp, hide}
+export const thumbStyles = ['small', 'sharp', 'hide']
 
 // Thumbnail expansion modes
-export enum thumbExpansion {none, full, height, width, both}
+export const thumbExpansions = ['none', 'full', 'height', 'width', 'both']
 
 // Available themes
-export enum themes {
-	moe, gar, mawaru, moon, ashita, console, tea, higan, ocean, rave, tavern,
-	glass
-}
-
-// Convert enum to an array of its keys
-function enumToArray(en: {}): string[] {
-	const keys = Object.keys(en)
-	return keys.slice(keys.length / 2)
-}
+export const themes = [
+	'moe', 'gar', 'mawaru', 'moon', 'ashita', 'console', 'tea', 'higan',
+	'ocean', 'rave', 'tavern', 'glass'
+]
 
 export type OptionValue =  boolean|string|number
 
@@ -89,17 +85,17 @@ export const specs: OptionSpec[] = [
 	{
 		id: 'inlineFit',
 		type: optionType.menu,
-		list: enumToArray(thumbExpansion),
+		list: thumbExpansions,
 		tab: tabs.style,
-		default: thumbExpansion.width
+		default: 'width'
 	},
 	// Thumbnail display style
 	{
 		id: 'thumbs',
 		type: optionType.menu,
-		list: enumToArray(thumbStyles),
+		list: thumbStyles,
 		tab: tabs.style,
-		default: thumbStyles.small
+		default: 'small'
 	},
 	// Image hover expansion
 	{
@@ -198,7 +194,7 @@ export const specs: OptionSpec[] = [
 	{
 		id: 'theme',
 		type: optionType.menu,
-		list: enumToArray(themes),
+		list: themes,
 		tab: tabs.style,
 		default: config.defaultCSS,
 		noExecOnStart: true,

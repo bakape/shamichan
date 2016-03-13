@@ -37,16 +37,19 @@ export default class OptionsPanel extends BannerModal {
 		for (let id in models) {
 			const model = models[id],
 				el = this.el.query('#' + id),
-				{type} = model.spec,
 				val = model.get()
-			if (type === optionType.checkbox) {
+			switch (model.spec.type) {
+			case optionType.checkbox:
 				el.checked = val as boolean
-			} else if (type === optionType.number || type === optionType.menu) {
+				break
+			case optionType.number:
+			case optionType.menu:
 				el.value = val
-			} else if (type === optionType.shortcut) {
+				break
+			case optionType.shortcut:
 				el.value = String.fromCharCode(val as number).toUpperCase()
+				break
 			}
-
 			// 'image' type simply falls through, as those don't need to be set
 		}
 	}
@@ -59,25 +62,25 @@ export default class OptionsPanel extends BannerModal {
 			model = models[id]
 		let val: boolean|string|number
 		switch (model.spec.type) {
-			case optionType.checkbox:
-				val = el.checked
-				break
-			case optionType.number:
-				val = parseInt(el.value)
-				break
+		case optionType.checkbox:
+			val = el.checked
+			break
+		case optionType.number:
+			val = parseInt(el.value)
+			break
+		case optionType.menu:
+			val = el.value
+			break
+		case optionType.shortcut:
+			val = el.value.toUpperCase().charCodeAt(0)
+			break
 
-			/*
-			TODO: System.import().then()
-			case 'image':
-				// Not recorded. Extracted directly by the background handler.
-				return events.request('background:store', event.target)
-			*/
-
-			case optionType.shortcut:
-				val = el.value.toUpperCase().charCodeAt(0)
-				break
-			default:
-				val = el.value
+		/*
+		TODO: System.import().then()
+		case 'image':
+			// Not recorded. Extracted directly by the background handler.
+			return events.request('background:store', event.target)
+		*/
 		}
 
 		if (!model.validate(val)) {

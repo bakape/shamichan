@@ -45,7 +45,6 @@ class OptionModel {
 		// No type = checkbox + default false
 		if (!spec.type) {
 			spec.type = optionType.checkbox
-			spec.default = false
 		}
 
 		// Store option value in central stotage options Model
@@ -59,7 +58,7 @@ class OptionModel {
 	}
 
 	// Read value from localStorage
-	read(): string {
+	private read(): string {
 		return localStorage.getItem(this.id) || ""
 	}
 
@@ -84,13 +83,13 @@ class OptionModel {
 	}
 
 	// Handler to be executed on field change in central options storage model
-	onChange(val: OptionValue) {
+	private onChange(val: OptionValue) {
 		this.execute(val)
 		this.set(val)
 	}
 
 	// Execute handler function, if any
-	execute(val: OptionValue) {
+	private execute(val: OptionValue) {
 		if (this.spec.exec) {
 			this.spec.exec(val)
 		}
