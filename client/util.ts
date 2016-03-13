@@ -143,7 +143,7 @@ export function parseHTML(callSite: string[], ...args: string[]): string {
 	return output.replace(/\s*\n\s*/g, '')
 }
 
-type ElementAttributes = {[key: string]: string}
+export type ElementAttributes = {[key: string]: string}
 
 // Generate an HTML element attribute list. If a key has an empty string, it's
 // value will be considered "true"

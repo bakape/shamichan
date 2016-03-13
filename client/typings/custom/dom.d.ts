@@ -4,7 +4,11 @@ interface Document {
 }
 
 interface Element {
+	disabled?: boolean
+
+	append(...nodes: (Node|string)[]): void
 	closest(selector: string): Element
+	matches(selector: string): boolean
 	query(selector: string): Element
 	queryAll(selector: string): Elements
 }

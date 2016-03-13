@@ -134,9 +134,6 @@ type LnOpts = {
 	}
 	langApplied: string
 	labels: {
-		export: OptLabel
-		import: OptLabel
-		hidden: OptLabel
 		lang: OptLabel
 		inlineFit: OptLabel
 		thumbs: OptLabel
@@ -144,25 +141,29 @@ type LnOpts = {
 		webmHover: OptLabel
 		autogif: OptLabel
 		spoilers: OptLabel
-		notifications: OptLabel
+		notification: OptLabel
 		anonymise: OptLabel
 		relativeTime: OptLabel
 		nowPlaying: OptLabel
-		illyaBGToggle: OptLabel
-		illyaMuteToggle: OptLabel
+		illyaDance: OptLabel
+		illyaDanceMute: OptLabel
 		horizontalPosting: OptLabel
+		replyRight: OptLabel
 		theme: OptLabel
 		userBG: OptLabel
-		userBGimage: OptLabel
-		lastn: OptLabel
-		postUnloading: OptLabel
+		userBGImage: OptLabel
+		lastN: OptLabel
 		alwaysLock: OptLabel
-		new: OptLabel
-		toggleSpoiler: OptLabel
+		newPost: OptLabel
+		togglespoiler: OptLabel
 		textSpoiler: OptLabel
 		done: OptLabel
 		expandAll: OptLabel
 		workMode: OptLabel
+		export: OptLabel
+		import: OptLabel
+		hidden: OptLabel
+		workModeToggle: OptLabel
 		google: OptLabel
 		iqdb: OptLabel
 		saucenao: OptLabel
@@ -171,4 +172,4 @@ type LnOpts = {
 	}
 }
 
-type OptLabel = string[]
+export type OptLabel = string[]

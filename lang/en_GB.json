@@ -126,7 +126,7 @@
 				"Language",
 				"Change interface language"
 			],
-			"inlinefit": [
+			"inlineFit": [
 				"Expansion",
 				"Expand images inside the parent post and resize according to setting"
 			],
@@ -166,11 +166,11 @@
 				"Now Playing Banner",
 				"Currently playing song on r/a/dio and other stream information in the top banner."
 			],
-			"illyaBGToggle": [
+			"illyaDance": [
 				"Illya Dance",
 				"Dancing loli in the background"
 			],
-			"illyaMuteToggle": [
+			"illyaDanceMute": [
 				"Mute Illya",
 				"Mute dancing loli"
 			],
@@ -178,7 +178,7 @@
 				"Horizontal Posting",
 				"38chan nostalgia"
 			],
-			"replyright": [
+			"replyRight": [
 				"[Reply] at Right",
 				"Move Reply button to the right side of the page"
 			],
@@ -194,7 +194,7 @@
 				"",
 				"Image to use as the background"
 			],
-			"lastn": [
+			"lastN": [
 				"[Last #]",
 				"Number of posts to display with the \"Last N\" thread expansion link"
 			],
@@ -206,7 +206,7 @@
 				"Always Lock to Bottom",
 				"Lock scrolling to page bottom even when tab is hidden"
 			],
-			"new": [
+			"newPost": [
 				"New Post",
 				"Open new post"
 			],
@@ -230,7 +230,7 @@
 				"Work mode",
 				"Hides images, defaults theme and disables user background"
 			],
-			"workModeTOG": [
+			"workModeToggle": [
 				"Work mode",
 				"Hides images, defaults theme and disables user background"
 			],

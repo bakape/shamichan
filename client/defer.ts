@@ -4,15 +4,17 @@
  computations to later.
 */
 
-const deferred = []
+type DeferedFunc = () => void
+
+const deferred: DeferedFunc[] = []
 
 // Add a function to be executed, once the module finishes loading
-export function defer(func) {
+export function defer(func: DeferedFunc) {
 	deferred.push(func)
 }
 
 // Execute all stored deferred functions
-export function execDeferred() {
+export function exec() {
 	while (deferred.length > 0) {
 		deferred.shift()()
 	}

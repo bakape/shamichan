@@ -1,9 +1,9 @@
 import {extend} from 'underscore'
 import Collection from './collection'
 
-type ModelAttrs = {[attr: string]: any}
-type HookHandler = (arg: any) => void
-type HookMap = {[key: string]: HookHandler[]}
+declare type ModelAttrs = {[attr: string]: any}
+declare type HookHandler = (arg: any) => void
+declare type HookMap = {[key: string]: HookHandler[]}
 
 // Generic model class, that all other model classes extend
 export default class Model {
