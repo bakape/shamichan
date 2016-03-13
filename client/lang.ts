@@ -14,7 +14,7 @@ type LanguagePack = {
 	opts: LnOpts
 }
 
-declare var lang: LanguagePack
+const lang = (window as any).lang
 
 // Export each container indivudually for namespacing purposes
 // Can't use destructuring, because it breaks with the SystemJS module compiler.

@@ -3,14 +3,15 @@
  * NOTE: All modules use strict mode implicitly
  */
 
+ // TODO: Remove, when proper structure done
+import * as state from './state'
+const s = state
+import * as options from './options'
+const o = options
+
 import {parseHTML, parseEl} from './util'
 import {posts} from './lang'
-import {init as initState} from './state'
-
-declare var config: any
-declare var isMobile: boolean
-
-initState(config, isMobile)
+import {exec} from './defer'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -33,5 +34,7 @@ document.head.appendChild(parseEl(parseHTML
 			content: " (${posts.locked})";
 		}
 	</style>`))
+
+exec()
 
 //events.request('loading:hide')

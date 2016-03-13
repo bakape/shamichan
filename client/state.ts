@@ -54,15 +54,10 @@ type StaffClass = {
 
 // Configuration passed from the server. Some values can be changed during
 // runtime.
-export let config: Configs
+export const config: Configs = (window as any).config
 
 // Indicates, if in mobile mode. Determined server-side.
-export let isMobile: boolean
-
-export function init(cf: Configs, iM: boolean) {
-	config = cf
-	isMobile = iM
-}
+export const isMobile: boolean = (window as any).isMobile
 
 interface PageState {
 	board: string

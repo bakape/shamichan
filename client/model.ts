@@ -52,7 +52,7 @@ export default class Model {
 
 	// Extend an object at target key. If key does not exist, simply assign the
 	// object to the key.
-	extend(key: string, object: Object) {
+	extend(key: string, object: {}) {
 		if (this.attrs[key]) {
 			extend(this.attrs[key], object)
 		} else {

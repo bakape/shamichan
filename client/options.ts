@@ -5,6 +5,8 @@
 import Model from './model'
 import {extend} from 'underscore'
 import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
+import OptionsPanel from './options/view'
+import {defer} from './defer'
 
 // Delete legacy options localStorage entry, if any
 localStorage.removeItem("options")
@@ -14,7 +16,7 @@ const options = new Model()
 export default options
 
 // All loaded option models
-const models: {[key: string]: OptionModel} = {}
+export const models: {[key: string]: OptionModel} = {}
 
 // Option model IDs
 export type OptionID =
@@ -22,7 +24,7 @@ export type OptionID =
 	| 'spoilers' | 'notification' | 'anonymise' | 'relativeTime' | 'nowPlaying'
 	| 'illyaDance' | 'illyaDanceMute' | 'horizontalPosting' | 'replyRight'
 	| 'theme' | 'userBG' | 'userBGImage' | 'lastN' | 'alwaysLock' | 'newPost'
-	| 'togglespoiler' | 'textSpoiler' | 'done' | 'expandAll' |'workMode'
+	| 'toggleSpoiler' | 'textSpoiler' | 'done' | 'expandAll' |'workMode'
 	| 'export' | 'import' | 'hidden' | 'workModeToggle' | 'google' | 'iqdb'
 	| 'saucenao' | 'desustorage' | 'exhentai'
 
@@ -114,3 +116,5 @@ class OptionModel {
 for (let spec of specs) {
 	new OptionModel(spec)
 }
+
+defer(() => new OptionsPanel())

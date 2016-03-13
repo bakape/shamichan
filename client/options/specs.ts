@@ -271,7 +271,7 @@ export const specs: OptionSpec[] = [
 // SHORTCUT KEYS
 const shorts: any = [
 	{id: 'newPost', default: 78},
-	{id: 'togglespoiler', default: 73},
+	{id: 'toggleSpoiler', default: 73},
 	{id: 'textSpoiler', default: 68},
 	{id: 'done', default: 83},
 	{id: 'expandAll', default: 69},

@@ -3,10 +3,20 @@ interface Document {
 	queryAll(selector: string): Elements
 }
 
+interface Node {
+	children: HTMLCollection
+}
+
 interface Element {
 	disabled?: boolean
+	checked?: boolean
+	value?: any
+	children: HTMLCollection
+	files?: FileList
+	style: CSSStyleDeclaration
 
 	append(...nodes: (Node|string)[]): void
+	click(): void
 	closest(selector: string): Element
 	matches(selector: string): boolean
 	query(selector: string): Element

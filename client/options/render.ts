@@ -115,7 +115,7 @@ function renderLabel(id: OptionID, title: string, label: string): string {
 // Render drop down selection menu
 function renderMenu({id, list}: OptionSpec): string {
 	const [label, title] = lang.labels[id]
-	let html = '<select id="${id}" title="${title}">'
+	let html = `<select id="${id}" title="${title}">`
 	for (let item of list) {
 		html += parseHTML
 			`<option value="${item}">
@@ -127,7 +127,7 @@ function renderMenu({id, list}: OptionSpec): string {
 }
 
 // Hidden post reset, Export and Import links to first tab
-function renderExtras() {
+function renderExtras(): string {
 	let html = '<br>'
 	const links = ['export', 'import', 'hidden']
 	for (let id of links) {
