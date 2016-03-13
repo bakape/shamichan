@@ -1,15 +1,17 @@
 import {extend} from 'underscore'
 import Collection from './collection'
+import View from './view'
 
-declare type ModelAttrs = {[attr: string]: any}
-declare type HookHandler = (arg: any) => void
-declare type HookMap = {[key: string]: HookHandler[]}
+export type ModelAttrs = {[attr: string]: any}
+export type HookHandler = (arg: any) => void
+export type HookMap = {[key: string]: HookHandler[]}
 
 // Generic model class, that all other model classes extend
 export default class Model {
 	attrs: ModelAttrs
 	id: string|number
 	collection: Collection<Model>
+	views: Set<View> = new Set<View>()
 	private changeHooks: HookMap = {}
 
 	constructor(attrs: ModelAttrs = {}) {
@@ -88,5 +90,19 @@ export default class Model {
 		}
 		delete this.changeHooks
 		delete this.attrs
+		for (let view of this.views) {
+			view.remove()
+		}
+	}
+
+	// Attach a view to the model. Each model can have several views attached to
+	// it.
+	attach(view: View) {
+		this.views.add(view)
+	}
+
+	// Detach a view from the model
+	detach(view: View) {
+		this.views.delete(view)
 	}
 }

@@ -86,24 +86,40 @@ export function parseEl(DOMString: string): Node {
 }
 
 // Add an event listener that filters targets according to a CSS selector
-export function onEvent(
+export function on(
 	el: Element,
 	type: string,
 	selector: string,
-	handler: EventListener
+	fn: EventListener
 ) {
 	el.addEventListener(type, event => {
 		if (event.target.matches(selector)) {
-			handler(event)
+			fn(event)
+		}
+	})
+}
+
+// Add event listener to element, that will only be executed once with a
+// specific tartget.
+export function once(
+	el: Element,
+	type: string,
+	selector: string,
+	fn: EventListener
+) {
+	el.addEventListener(type, event => {
+		if (event.target.matches(selector)) {
+			fn(event)
+			el.removeEventListener(type, fn)
 		}
 	})
 }
 
 // Add event listener to element, that will only be executed once
-export function once(el: Element, type: string, handler: EventListener) {
+export function onceAll(el: Element, type: string, fn: EventListener) {
 	el.addEventListener(type, event => {
-		handler(event)
-		el.removeEventListener(type, handler)
+		fn(event)
+		el.removeEventListener(type, fn)
 	})
 }
 
