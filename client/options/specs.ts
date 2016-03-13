@@ -106,13 +106,13 @@ export const specs: OptionSpec[] = [
 		id: 'imageHover',
 		default: true,
 		noLoad: isMobile,
-		tab: tabs.style
+		tab: tabs.general
 	},
 	// WebM hover expansion
 	{
 		id: 'webmHover',
 		noLoad: isMobile,
-		tab: tabs.style
+		tab: tabs.general
 	},
 	// Animated GIF thumbnails
 	{
@@ -255,8 +255,9 @@ export const specs: OptionSpec[] = [
 	}
 ]
 
-// Image search link toggle
 // TODO: Selective rendering logic
+//
+// Image search link toggle
 // for (let engine of ['google', 'iqdb', 'saucenao', 'desustorage', 'exhentai']) {
 // 	opts.push({
 // 		id: engine,
