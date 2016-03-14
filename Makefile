@@ -35,7 +35,7 @@ clean: client_clean
 	rm -rf .build node_modules meguca
 
 client_clean:
-	rm -rf www/js www/css/*.css www/lang
+	rm -rf www/js www/css/*.css www/css/maps www/lang
 
 dist_clean: clean
 	rm -rf img config/config.json assets error.log
