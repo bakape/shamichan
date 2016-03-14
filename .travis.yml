@@ -10,8 +10,7 @@ before_install:
     - sudo apt-get install rethinkdb
     - sudo cp /etc/rethinkdb/default.conf.sample /etc/rethinkdb/instances.d/instance1.conf
     - sudo /etc/init.d/rethinkdb restart
-env: CXX=g++-4.8
 addons:
   apt:
     sources: ubuntu-toolchain-r-test
-    packages: g++-4.8
+    packages: g++
