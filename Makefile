@@ -46,3 +46,7 @@ init:
 	mkdir -p img/mid
 	mkdir -p assets
 	cp -n config/defaults.json config/config.json
+
+test: server_deps
+	go get -v gopkg.in/check.v1
+	go test -v ./...
