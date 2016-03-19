@@ -33,9 +33,12 @@ func Start() {
 
 	// Can't daemonise in windows, so only args they have is "start" and "help"
 	if isWindows {
-		if  arg == "start" {
+		switch arg {
+		case "start":
 			startServer()
-		} else {
+		case "init": // For internal use only
+			os.Exit(0)
+		default:
 			printUsage()
 		}
 	} else {

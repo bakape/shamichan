@@ -6,6 +6,7 @@ config/config.json
 error.log
 node_modules
 meguca
+meguca.exe
 www/illya.mp4
 www/illya.webm
 www/css/*.css
