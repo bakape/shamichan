@@ -34,6 +34,8 @@ func Start() {
 	// Can't daemonise in windows, so only args they have is "start" and "help"
 	if isWindows {
 		switch arg {
+		case "debug":
+			fallthrough
 		case "start":
 			startServer()
 		case "init": // For internal use only
@@ -60,15 +62,17 @@ func printUsage() {
 	var help string
 	toPrint := []string{"start"}
 	if !isWindows {
-		toPrint = append(toPrint, []string{"stop", "restart", "debug"}...)
+		toPrint = append(toPrint, []string{"stop", "restart"}...)
+	} else {
+		arguments["debug"] = `alias of "start"`
 	}
-	toPrint = append(toPrint, "help")
+	toPrint = append(toPrint, []string{"debug", "help"}...)
 	for i, arg := range toPrint {
 		if i != 0 {
 			usage += "|"
 		}
 		usage += arg
-		help += fmt.Sprintf("  %s - %s\n", arg, arguments[arg])
+		help += fmt.Sprintf("  %s\t  %s\n", arg, arguments[arg])
 	}
 	os.Stderr.WriteString(usage + "\n" + help)
 	os.Exit(1)

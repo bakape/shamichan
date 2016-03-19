@@ -17,16 +17,18 @@ import (
 func init() {
 	handleDaemon = func(arg string) {
 		switch arg {
-		case "init": // For internal use only
-			os.Exit(0)
 		case "debug":
-			debugMode = true
-		case "start":
+			startServer()
 		case "stop":
 			killDaemon()
+			fallthrough
+		case "init": // For internal use only
 			os.Exit(0)
 		case "restart":
 			killDaemon()
+			fallthrough
+		case "start":
+			daemonise()
 		default:
 			printUsage()
 		}
