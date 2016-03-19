@@ -41,7 +41,7 @@ build_dirs:
 		rm -rf $(BUILD_PATH); \
 	fi
 	mkdir -p $(BUILD_PATH)
-	 ln -sf "$(shell pwd)" $(BUILD_PATH)
+	 ln -sfn "$(shell pwd)" $(BUILD_PATH)/meguca
 
 clean: client_clean
 	rm -rf .build node_modules $(BINARY)
