@@ -81,11 +81,7 @@
 		"years": "year"
 	},
 
-	"sync": {
-		"0": "Disconnected",
-		"1": "Syncing",
-		"2": "Synced"
-	},
+	"sync": ["Disconnected", "Connecting", "Syncing", "Synced", "Desynced"],
 
 	"syncwatch": {
 		"starting": "Syncwatch starting in 10 seconds",

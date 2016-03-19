@@ -2,6 +2,8 @@
  Provides type-safe and selective mappings for the language packs
 */
 
+import {parseEl, parseHTML} from './util'
+
 type LanguagePack = {
 	posts: LnPosts
 	banner: LnBanner
@@ -9,12 +11,12 @@ type LanguagePack = {
 	navigation: LnNavigation
 	reports: LnReports
 	time: LnTime
-	sync: LnSync
+	sync: string[]
 	syncwatch: LnSyncwatch
 	opts: LnOpts
 }
 
-const lang = (window as any).lang
+const lang = (window as any).lang as LanguagePack
 
 // Export each container indivudually for namespacing purposes
 // Can't use destructuring, because it breaks with the SystemJS module compiler.
@@ -105,12 +107,6 @@ type LnTime = {
 	years: string
 }
 
-type LnSync = {
-	0: string
-	1: string
-	2: string
-}
-
 type LnSyncwatch = {
 	starting: string
 	finished: string
@@ -128,3 +124,14 @@ type LnOpts = {
 }
 
 export type OptLabel = string[]
+
+// Load language-specific CSS
+document.head.appendChild(parseEl(parseHTML
+	`<style>
+		.locked:after {
+			content: "${posts.threadLocked}";
+		}
+		.locked > header nav:after {
+			content: " (${posts.locked})";
+		}
+	</style>`))

@@ -93,8 +93,6 @@ export const posts = new Collection<Post>()
 // Posts I made in this tab
 export const ownPosts = new Set<number>()
 
-
-
 // Tracks the synchronisation counter of each thread/board
 export const syncs = {}
 
@@ -111,3 +109,6 @@ export function getModel(el: Element): Post {
 export function displayLoading(loading: boolean) {
 	$loading.style.display = loading ? 'block' : 'none'
 }
+
+// Debug mode with more verbose logging
+export const debug = /[\?&]debug=true/.test(location.href)

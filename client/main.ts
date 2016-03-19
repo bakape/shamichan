@@ -1,6 +1,6 @@
 /*
- * Client entry point.
- * NOTE: All modules use strict mode implicitly
+  Client entry point.
+  NOTE: All modules use strict mode implicitly
  */
 
  // TODO: Remove, when proper structure done
@@ -8,9 +8,8 @@ import * as options from './options'
 const o = options
 
 import {displayLoading} from './state'
-import {parseHTML, parseEl} from './util'
-import {posts} from './lang'
 import {exec} from './defer'
+import {start} from './connection'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -23,18 +22,6 @@ if (localStorage.getItem("cookieVersion") != cookieVersion) {
 	localStorage.setItem("cookieVersion", cookieVersion.toString())
 }
 
-// Load language-specific CSS
-document.head.appendChild(parseEl(parseHTML
-	`<style>
-		.locked:after {
-			content: "${posts.threadLocked}";
-		}
-		.locked > header nav:after {
-			content: " (${posts.locked})";
-		}
-	</style>`))
-
+start()
 exec()
 displayLoading(false)
-
-//events.request('loading:hide')
