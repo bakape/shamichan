@@ -5,7 +5,7 @@ For deploying a production-ready legacy meguca instance, download the [latests
 release](https://github.com/bakape/meguca/releases/latest) and consult the
 bundled README.__
 
-Platforms: Linux, OSX, Win64(soon™)
+Platforms: Linux, OSX, Win64
 
 ##Runtime dependencies
 * [RethinkDB](https://rethinkdb.com/docs/install/)
@@ -19,17 +19,21 @@ Platforms: Linux, OSX, Win64(soon™)
 Coming soon™
 
 ##Building from source
+* Windows only: Install [MSYS2](https://sourceforge.net/projects/msys2/) and
+clone/move meguca somewhere within it's root directory (`C:\msys64` by default)
 * Install:
     * GCC or Clang
     * make
     * [Go](https://golang.org/doc/install)
-    * [Node.js](https://nodejs.org) (required for building the client)
+    * [Node.js](https://nodejs.org) (for building the client)
 * Run `make`
 * Prepare server for operation by running `make init`
 
 ##Production
 * Edit `./config/config.json` to configure your instance
 * See `./meguca help` for server daemon control
+    * Windows does not support daemonisation. The `stop|restart` arguments
+    are not available and `start` is an alias for `debug`
 * For upgarding between semver major releases see `docs/migration.md`
 
 ##Development

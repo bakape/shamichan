@@ -7,21 +7,21 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
-	"github.com/bakape/meguca/util"
-	"github.com/sevlyar/go-daemon"
-	"log"
 	"os"
-	"os/user"
-	"strconv"
-	"syscall"
-	"time"
+	"runtime"
 )
 
-// debugMode denotes the server has been started with the `debug` parameter.
-// This will cause it to assume, it is run from the project source root
-// directory. Also changes some folder paths to be located under non-system
-// paths like `/etc` and `/var`.
-var debugMode bool
+var (
+	// debugMode denotes the server has been started with the `debug` parameter.
+	// This will cause not to spawn a daemon and stay attached to the launching
+	// shell.
+	debugMode bool
+	isWindows = runtime.GOOS == "windows"
+
+	// Is assigned in ./daemon.go to control/spawn a daemon process. That file
+	// is never compiled on Windows and this function is never called.
+	handleDaemon func(string)
+)
 
 // Start parses command line arguments and initializes the server.
 func Start() {
@@ -30,104 +30,57 @@ func Start() {
 		printUsage()
 	}
 	arg := os.Args[1]
-	switch arg {
-	case "init": // For internal use only
-		os.Exit(0)
-	case "debug":
-		debugMode = true
-	case "start":
-	case "stop":
-		killDaemon()
-		os.Exit(0)
-	case "restart":
-		killDaemon()
-	default:
-		printUsage()
-	}
 
-	config.LoadConfig()
-
-	if !debugMode {
-		daemonise()
+	// Can't daemonise in windows, so only args they have is "start" and "help"
+	if isWindows {
+		switch arg {
+		case "debug":
+			fallthrough
+		case "start":
+			startServer()
+		case "init": // For internal use only
+			os.Exit(0)
+		default:
+			printUsage()
+		}
 	} else {
-		startServer()
+		handleDaemon(arg)
 	}
 }
 
+var arguments = map[string]string{
+	"start":   "start the meguca server",
+	"stop":    "stop a running daemonised meguca server",
+	"restart": "combination of stop + start",
+	"debug":   "start server in debug mode without deamonising",
+	"help":    "print this help text",
+}
+
+// Constructs and prints the CLI help text
 func printUsage() {
-	fmt.Print(`usage: meguca.v2 [ start | stop | restart | debug | help ]
-    start   - start the meguca server
-    stop    - stop a running daemonised meguca server
-    restart - combination of stop + start
-    debug   - debug mode
-    help    - print this help text
-`)
+	usage := "usage: meguca "
+	var help string
+	toPrint := []string{"start"}
+	if !isWindows {
+		toPrint = append(toPrint, []string{"stop", "restart"}...)
+	} else {
+		arguments["debug"] = `alias of "start"`
+	}
+	toPrint = append(toPrint, []string{"debug", "help"}...)
+	for i, arg := range toPrint {
+		if i != 0 {
+			usage += "|"
+		}
+		usage += arg
+		help += fmt.Sprintf("  %s\t  %s\n", arg, arguments[arg])
+	}
+	os.Stderr.WriteString(usage + "\n" + help)
 	os.Exit(1)
 }
 
 func startServer() {
+	config.LoadConfig()
 	templates.Compile()
 	db.LoadDB()
 	startWebServer()
-}
-
-// Configuration variables for handling daemons
-var daemonContext = &daemon.Context{
-	PidFileName: ".pid",
-	LogFileName: "error.log",
-}
-
-func getCredentials() *syscall.Credential {
-	us, err := user.Lookup("meguca")
-	util.Throw(err)
-	uid, err := strconv.Atoi(us.Gid)
-	util.Throw(err)
-	gid, err := strconv.Atoi(us.Gid)
-	util.Throw(err)
-	return &syscall.Credential{
-		Uid: uint32(uid),
-		Gid: uint32(gid),
-	}
-}
-
-// Spawn a detached process to work in the background
-func daemonise() {
-	child, err := daemonContext.Reborn()
-	if err != nil {
-		if err.Error() == "resource temporarily unavailable" {
-			fmt.Println("Error: Server already running")
-			os.Exit(1)
-		}
-		panic(err)
-	}
-	if child != nil {
-		return
-	}
-	defer daemonContext.Release()
-	log.Println("Server started ------------------------------------")
-	go startServer()
-	util.Throw(daemon.ServeSignals())
-	log.Println("Server terminated")
-}
-
-// Terminate the running meguca server daemon
-func killDaemon() {
-	proc, err := daemonContext.Search()
-	if err != nil && (!os.IsNotExist(err) && err.Error() != "EOF") {
-		panic(err)
-	}
-	if proc != nil {
-		util.Throw(proc.Signal(syscall.SIGTERM))
-
-		// Assertain process has exited
-		for {
-			if err := proc.Signal(syscall.Signal(0)); err != nil {
-				if err.Error() == "os: process already finished" {
-					break
-				}
-				panic(err)
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-	}
 }

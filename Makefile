@@ -1,8 +1,15 @@
 GULP="./node_modules/.bin/gulp"
-LINKED_PATH="./.build/src/github.com/bakape"
 MEGUCA_VAR=/var/lib/meguca
 
-export GOPATH=$(shell pwd)/.build
+ifeq ($(OS), Windows_NT)
+	BUILD_PATH="/.meguca_build/src/github.com/bakape"
+	export GOPATH="/.meguca_build"
+	BINARY=meguca.exe
+else
+	BUILD_PATH="./.build/src/github.com/bakape"
+	export GOPATH=$(shell pwd)/.build
+	BINARY=meguca
+endif
 
 .PHONY: client server
 
@@ -17,7 +24,7 @@ watch:
 	$(GULP) -w
 
 server: server_deps
-	go build -o meguca
+	go build -o $(BINARY)
 
 server_deps: build_dirs
 	go list -f '{{.Deps}}' . \
@@ -28,14 +35,20 @@ server_deps: build_dirs
 		| xargs go get -v
 
 build_dirs:
-	mkdir -p $(LINKED_PATH)
-	ln -sf "$(shell pwd)" $(LINKED_PATH)
+	if [ $(OS) == Windows_NT ]; then \
+		rm -rf $(BUILD_PATH); \
+	fi
+	mkdir -p $(BUILD_PATH)
+	 ln -sf "$(shell pwd)" $(BUILD_PATH)
 
 clean: client_clean
-	rm -rf .build node_modules meguca
+	rm -rf .build node_modules $(BINARY)
 
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang
+	if [ $(OS) == Windows_NT ]; then \
+		rm -rf /.meguca_build; \
+	fi
 
 dist_clean: clean
 	rm -rf img config/config.json assets error.log
