@@ -31,7 +31,7 @@ clone/move meguca somewhere within it's root directory (`C:\msys64` by default)
 
 ##Production
 * Edit `./config/config.json` to configure your instance
-* See `./meguca help` for server daemon control
+* See `./meguca help`
     * Windows does not support daemonisation. The `stop|restart` arguments
     are not available and `start` is an alias for `debug`
 * For upgarding between semver major releases see `docs/migration.md`
