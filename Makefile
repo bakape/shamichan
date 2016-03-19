@@ -5,10 +5,12 @@ ifeq ($(OS), Windows_NT)
 	BUILD_PATH="/.meguca_build/src/github.com/bakape"
 	export GOPATH="/.meguca_build"
 	BINARY=meguca.exe
+	ISWINDOWS=true
 else
 	BUILD_PATH="./.build/src/github.com/bakape"
 	export GOPATH=$(shell pwd)/.build
 	BINARY=meguca
+	ISWINDOWS=false
 endif
 
 .PHONY: client server
@@ -35,7 +37,7 @@ server_deps: build_dirs
 		| xargs go get -v
 
 build_dirs:
-	if [ $(OS) == Windows_NT ]; then \
+	if $(ISWINDOWS) = true; then \
 		rm -rf $(BUILD_PATH); \
 	fi
 	mkdir -p $(BUILD_PATH)
@@ -46,7 +48,7 @@ clean: client_clean
 
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang
-	if [ $(OS) == Windows_NT ]; then \
+	if $(ISWINDOWS) = true; then \
 		rm -rf /.meguca_build; \
 	fi
 
