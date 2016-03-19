@@ -22,11 +22,18 @@ func (*Tests) TestLoadConfig(c *C) {
 	c.Assert(err, IsNil)
 
 	// Config file does not exist
-	c.Assert(
-		func() { LoadConfig() },
-		PanicMatches,
-		"open test/config.json: no such file or directory",
-	)
+	func() {
+		defer func() {
+			err := recover().(error)	
+			c.Assert(
+				os.IsNotExist(err),
+				Equals,
+				true,
+				Commentf("expected: ENOENT\ngot: %s", err),
+			)
+		}()
+		LoadConfig()
+	}()
 
 	c.Assert(ioutil.WriteFile(path, standard, 0600), IsNil)
 	defer func() {
