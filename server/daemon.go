@@ -5,7 +5,12 @@
 package server
 
 import (
+	"fmt"
+	"github.com/bakape/meguca/util"
 	"github.com/sevlyar/go-daemon"
+	"log"
+	"os"
+	"syscall"
 )
 
 func init() {
