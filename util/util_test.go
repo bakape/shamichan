@@ -19,7 +19,7 @@ var _ = Suite(&Util{})
 
 func (*Util) TestWrapError(c *C) {
 	err := errors.New("foo")
-	wrapped := WrapError{"bar", err}
+	wrapped := WrapError("bar", err)
 	c.Assert(wrapped.Error(), Equals, "bar: foo")
 }
 

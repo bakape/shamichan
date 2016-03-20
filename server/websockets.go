@@ -187,7 +187,7 @@ func (c *Client) receive(msg []byte) error {
 func (c *Client) protocolError(msg []byte) error {
 	errMsg := fmt.Sprintf("Invalid message: %s", msg)
 	if err := c.close(websocket.CloseProtocolError, errMsg); err != nil {
-		return util.WrapError{Text: errMsg, Inner: err}
+		return util.WrapError(errMsg, err)
 	}
 	return errors.New(errMsg)
 }

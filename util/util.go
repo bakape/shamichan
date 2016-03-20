@@ -17,16 +17,22 @@ import (
 )
 
 // WrapError wraps error types to create compound error chains
-type WrapError struct {
-	Text  string
-	Inner error
+func WrapError(text string, err error) error {
+	return wrapedError{
+		text:  text,
+		inner: err,
+	}
 }
 
-// Error recursively converts the error chain into a string
-func (e WrapError) Error() string {
-	text := e.Text
-	if e.Inner != nil {
-		text += ": " + e.Inner.Error()
+type wrapedError struct {
+	text  string
+	inner error
+}
+
+func (e wrapedError) Error() string {
+	text := e.text
+	if e.inner != nil {
+		text += ": " + e.inner.Error()
 	}
 	return text
 }
