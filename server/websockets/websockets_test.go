@@ -40,7 +40,7 @@ func (*ClientSuite) TestNewClient(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	c.Assert(cl.id, Matches, "^[0-9a-zA-Z]{16}$")
+	c.Assert(cl.id, Equals, "")
 	c.Assert(cl.synced, Equals, false)
 	c.Assert(cl.closed, Equals, false)
 	c.Assert(cl.ident, DeepEquals, auth.Ident{IP: wcl.LocalAddr().String()})

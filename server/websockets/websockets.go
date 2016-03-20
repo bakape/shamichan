@@ -93,7 +93,6 @@ type client struct {
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn) *client {
 	return &client{
-		id:       util.RandomID(16),
 		ident:    auth.LookUpIdent(conn.RemoteAddr().String()),
 		receiver: make(chan []byte),
 		sender:   make(chan []byte),
