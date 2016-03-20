@@ -1,4 +1,4 @@
-package server
+package websockets
 
 import (
 	"bytes"
@@ -26,6 +26,12 @@ const (
 type ClientSuite struct{}
 
 var _ = Suite(&ClientSuite{})
+
+func newRequest(c *C) *http.Request {
+	req, err := http.NewRequest("GET", "/", nil)
+	c.Assert(err, IsNil)
+	return req
+}
 
 func (*ClientSuite) TestNewClient(c *C) {
 	sv := newWSServer(c)
@@ -158,7 +164,7 @@ func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 		nil,
 	)
 	m.c.Assert(err, IsNil)
-	return NewClient(<-m.connSender), wcl
+	return newClient(<-m.connSender), wcl
 }
 
 func (*ClientSuite) TestProtocolError(c *C) {

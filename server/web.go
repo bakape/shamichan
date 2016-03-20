@@ -9,6 +9,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
+	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/handlers"
@@ -66,7 +67,7 @@ func createRouter() *httprouter.Router {
 	router.GET("/api/post/:post", servePost)
 
 	// Websocket API
-	router.HandlerFunc("GET", "/socket", websocketHandler)
+	router.HandlerFunc("GET", "/socket", websockets.Handler)
 
 	// Static assets
 	router.ServeFiles("/ass/*filepath", http.Dir("./www"))

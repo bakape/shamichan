@@ -1,8 +1,6 @@
-/*
- Websocket server and client controler struct
-*/
-
-package server
+// Package websockets manages active websocket connections and messages received
+// from and sent to them.
+package websockets
 
 import (
 	"errors"
@@ -56,7 +54,9 @@ var textFrameReceived = websocket.CloseError{
 	Text: "Only binary frames allowed",
 }
 
-func websocketHandler(res http.ResponseWriter, req *http.Request) {
+// Handler is an http.HandleFunc that responds to new websocket connection
+// requests.
+func Handler(res http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(res, req, nil)
 	if _, ok := err.(websocket.HandshakeError); ok {
 		http.Error(
@@ -69,7 +69,7 @@ func websocketHandler(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	c := NewClient(conn)
+	c := newClient(conn)
 	go c.receiverLoop()
 	if err := c.listen(); err != nil {
 		c.logError(err)
@@ -90,10 +90,10 @@ type Client struct {
 	closer   chan websocket.CloseError
 }
 
-// NewClient creates a new websocket client
-func NewClient(conn *websocket.Conn) *Client {
+// newClient creates a new websocket client
+func newClient(conn *websocket.Conn) *Client {
 	return &Client{
-		id:       util.RandomID(32),
+		id:       util.RandomID(16),
 		ident:    auth.LookUpIdent(conn.RemoteAddr().String()),
 		receiver: make(chan []byte),
 		sender:   make(chan []byte),
