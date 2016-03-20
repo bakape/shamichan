@@ -22,14 +22,21 @@ func (*Imager) TestIsValidSpoiler(c *C) {
 	c.Assert(isValidSpoiler(1), Equals, true)
 }
 
+var extensions = map[string]int{
+	"jpg":  jpeg,
+	"png":  png,
+	"gif":  gif,
+	"webm": webm,
+	"pdf":  pdf,
+}
+
 func (*Imager) TestDetectFileType(c *C) {
 	// Supported file types
-	types := [...]string{".jpg", ".gif", ".png", ".webm", ".pdf"}
-	for _, ext := range types {
-		f := openFile(filepath.FromSlash("./test/uploads/sample"+ext), c)
+	for ext, code := range extensions {
+		f := openFile(filepath.FromSlash("./test/uploads/sample."+ext), c)
 		t, err := detectFileType(f)
 		c.Assert(err, IsNil)
-		c.Assert(t, Equals, ext)
+		c.Assert(t, Equals, code)
 	}
 }
 

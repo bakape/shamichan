@@ -12,6 +12,27 @@ import (
 	"strconv"
 )
 
+const (
+	jpeg = iota
+	png
+	gif
+	webm
+	pdf
+	svg
+	mp4
+	mp3
+	ogg
+)
+
+// Map of oficial MIME types to the extension representations we deal with
+var mimeTypes = map[string]int{
+	"image/jpeg":      jpeg,
+	"image/png":       png,
+	"image/gif":       gif,
+	"video/webm":      webm,
+	"application/pdf": pdf,
+}
+
 // ProtoImage stores data of an image that is being processed as well as data,
 // that will be stored, once the image finishes processing.
 type ProtoImage struct {
@@ -80,37 +101,38 @@ func isValidSpoiler(id uint8) bool {
 	return false
 }
 
-// Map of oficial MIME types to the extension representations we deal with
-var mimeTypes = map[string]string{
-	"image/jpeg":               ".jpg",
-	"image/png":                ".png",
-	"image/gif":                ".gif",
-	"video/webm":               ".webm",
-	"application/pdf":          ".pdf",
-	"application/octet-stream": "unknown",
-}
-
-func detectFileType(file multipart.File) (string, error) {
+// detectFileType detects if the upload is of a supported file type, by reading
+// its first 512 bytes. OGG and MP4 are also cheked to contain HTML5 supported
+// video and audio streams.
+func detectFileType(file multipart.File) (int, error) {
 	buf := make([]byte, 512)
 	if _, err := file.Read(buf); err != nil {
-		return "", err
+		return -1, err
 	}
 	mimeType := http.DetectContentType(buf)
-	if ext, ok := mimeTypes[mimeType]; ok {
-		switch ext {
-		case "unknown":
-			switch {
-			case detectSVG(buf):
-				return ".svg", nil
-			case detectMP3(buf):
-				return ".mp3", nil
-			}
+	mime, ok := mimeTypes[mimeType]
+	if !ok {
+		switch {
+		case detectSVG(buf):
+			return svg, nil
+		case detectMP3(buf):
+			return mp3, nil
 		default:
-			return ext, nil
+			is, err := detectCompatibleMP4(buf)
+			if is {
+				return mp4, err
+			}
+			is, err = detectCompatibleOGG(buf)
+			if is {
+				return ogg, err
+			}
+			return -1, fmt.Errorf("Unsupported mime type: %s", mimeType)
 		}
 	}
-	return "", fmt.Errorf("Unsupported mime type: %s", mimeType)
+	return mime, nil
 }
+
+// TODO: Waiting on Soreil
 
 func detectSVG(buf []byte) bool {
 	return false
@@ -118,4 +140,12 @@ func detectSVG(buf []byte) bool {
 
 func detectMP3(buf []byte) bool {
 	return false
+}
+
+func detectCompatibleOGG(buf []byte) (bool, error) {
+	return false, nil
+}
+
+func detectCompatibleMP4(buf []byte) (bool, error) {
+	return false, nil
 }
