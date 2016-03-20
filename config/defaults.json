@@ -1,7 +1,7 @@
 {
     "HTTP": {
         "addr": ":8000",
-        "domain": "localhost",
+        "origin": "localhost",
         "SSL": false,
         "cert": "",
         "key": "",

@@ -8,10 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -32,6 +34,21 @@ const (
 
 var upgrader = websocket.Upgrader{
 	HandshakeTimeout: 5 * time.Second,
+	CheckOrigin:      CheckOrigin,
+}
+
+// CheckOrigin asserts the client matches the origin specified by the server or
+// has none.
+func CheckOrigin(req *http.Request) bool {
+	origin := req.Header.Get("Origin")
+	if origin == "" {
+		return true
+	}
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	return u.Host == config.Config.HTTP.Origin
 }
 
 var textFrameReceived = websocket.CloseError{
@@ -170,7 +187,7 @@ func (c *Client) receive(msg []byte) error {
 func (c *Client) protocolError(msg []byte) error {
 	errMsg := fmt.Sprintf("Invalid message: %s", msg)
 	if err := c.close(websocket.CloseProtocolError, errMsg); err != nil {
-		return util.WrapError{errMsg, err}
+		return util.WrapError{Text: errMsg, Inner: err}
 	}
 	return errors.New(errMsg)
 }

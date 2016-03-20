@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
 	"github.com/gorilla/websocket"
 	. "gopkg.in/check.v1"
 	"log"
@@ -378,9 +379,9 @@ func (*ClientSuite) TestListen(c *C) {
 	go readServerErrors(c, cl, sv)
 	go func() {
 		defer sv.Done()
-		_, msg, err := wcl.ReadMessage()
+		_, received, err := wcl.ReadMessage()
 		c.Assert(err, IsNil)
-		c.Assert(msg, DeepEquals, msg)
+		c.Assert(received, DeepEquals, received)
 	}()
 	go func() {
 		defer sv.Done()
@@ -408,4 +409,28 @@ func (*ClientSuite) TestListen(c *C) {
 	closeClient(c, cl)
 	sv.Wait()
 	c.Assert(cl.listen(), IsNil)
+}
+
+func (*ClientSuite) TestCheckOrigin(c *C) {
+	config.Config = config.Server{}
+	config.Config.HTTP.Origin = "fubar.com"
+
+	// No header
+	req := newRequest(c)
+	c.Assert(CheckOrigin(req), Equals, true)
+
+	// Invalid URL
+	req = newRequest(c)
+	req.Header.Set("Origin", "111111")
+	c.Assert(CheckOrigin(req), Equals, false)
+
+	// Matching header
+	req = newRequest(c)
+	req.Header.Set("Origin", "http://fubar.com")
+	c.Assert(CheckOrigin(req), Equals, true)
+
+	// Non-matching
+	req = newRequest(c)
+	req.Header.Set("Origin", "http://fubar.ru")
+	c.Assert(CheckOrigin(req), Equals, false)
 }

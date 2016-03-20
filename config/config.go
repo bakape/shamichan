@@ -18,7 +18,7 @@ var configRoot = "config"
 // runtime.
 type Server struct {
 	HTTP struct {
-		Addr, Domain, Cert, Key string
+		Addr, Origin, Cert, Key string
 		SSL, TrustProxies       bool
 	}
 	Rethinkdb struct {
