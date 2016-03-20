@@ -102,7 +102,7 @@ func (*ClientSuite) TestClose(c *C) {
 	)
 }
 
-func readServerErrors(c *C, cl *Client, sv *mockWSServer) {
+func readServerErrors(c *C, cl *client, sv *mockWSServer) {
 	defer sv.Done()
 	for cl.isOpen() {
 		_, _, err := cl.conn.ReadMessage()
@@ -129,7 +129,7 @@ func readClientErrors(c *C, conn *websocket.Conn, sv *mockWSServer) {
 	}
 }
 
-func closeClient(c *C, cl *Client) {
+func closeClient(c *C, cl *client) {
 	c.Assert(cl.close(websocket.CloseNormalClosure, ""), IsNil)
 }
 
@@ -161,7 +161,7 @@ func (m *mockWSServer) Close() {
 	m.server.Close()
 }
 
-func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
+func (m *mockWSServer) NewClient() (*client, *websocket.Conn) {
 	wcl, _, err := dialer.Dial(
 		strings.Replace(m.server.URL, "http", "ws", 1),
 		nil,
@@ -230,7 +230,7 @@ func (*ClientSuite) TestExternalClose(c *C) {
 		status = 2
 		text   = "tsurupettan"
 	)
-	cl := Client{
+	cl := client{
 		closer: make(chan websocket.CloseError),
 	}
 	go cl.Close(status, text)
@@ -242,7 +242,7 @@ func (*ClientSuite) TestExternalClose(c *C) {
 
 func (*ClientSuite) TestExternalSend(c *C) {
 	std := []byte("WOW WOW")
-	cl := Client{
+	cl := client{
 		sender: make(chan []byte),
 	}
 	go cl.Send(std)
@@ -339,7 +339,7 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 	sv.Wait()
 }
 
-func runReceiveLoop(cl *Client, sv *mockWSServer) {
+func runReceiveLoop(cl *client, sv *mockWSServer) {
 	defer sv.Done()
 	cl.receiverLoop()
 }
