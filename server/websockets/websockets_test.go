@@ -14,6 +14,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 )
 
@@ -22,6 +23,8 @@ const (
 	policyError    = `websocket: close 1008 \(policy violation\): `
 	invalidMessage = "Invalid message: "
 )
+
+func Test(t *testing.T) { TestingT(t) }
 
 type ClientSuite struct{}
 
@@ -37,7 +40,7 @@ func (*ClientSuite) TestNewClient(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	c.Assert(cl.id, Matches, "^[0-9a-zA-Z]{32}$")
+	c.Assert(cl.id, Matches, "^[0-9a-zA-Z]{16}$")
 	c.Assert(cl.synced, Equals, false)
 	c.Assert(cl.closed, Equals, false)
 	c.Assert(cl.ident, DeepEquals, auth.Ident{IP: wcl.LocalAddr().String()})
