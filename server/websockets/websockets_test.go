@@ -159,6 +159,7 @@ func newWSServer(c *C) *mockWSServer {
 func (m *mockWSServer) Close() {
 	m.server.CloseClientConnections()
 	m.server.Close()
+	close(m.connSender)
 }
 
 func (m *mockWSServer) NewClient() (*client, *websocket.Conn) {

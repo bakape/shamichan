@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
 	"log"
 	"mime/multipart"
@@ -44,17 +45,24 @@ type ProtoImage struct {
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
 	req.Body = http.MaxBytesReader(res, req.Body, config.Config.Images.Max.Size)
-	clientID, spoiler, err := parseUploadForm(req)
+
+	defer func() {
+		if err := req.MultipartForm.RemoveAll(); err != nil {
+			log.Printf("Error removing temporary files: %s", err)
+		}
+	}()
+
+	img, err := parseUploadForm(req)
 	if err != nil {
 		passError(res, req, err, 400)
+		return
 	}
-	image := &ProtoImage{
-		Image: types.Image{
-			Spoiler: spoiler,
-		},
-		ClientID: clientID,
-	}
-	fmt.Printf("%#v\n", image)
+
+	head := res.Header()
+	head.Set("Content-Type", "text/html; charset=UTF-8")
+	head.Set("Access-Control-Allow-Origin", config.Config.HTTP.Origin)
+
+	fmt.Println(img)
 }
 
 // Pass error message to client and log server-side
@@ -69,29 +77,56 @@ func passError(
 	log.Printf("Upload error: %s : %s", req.RemoteAddr, text)
 }
 
-func parseUploadForm(req *http.Request) (id string, spoiler uint8, err error) {
-	err = req.ParseMultipartForm(512)
+func parseUploadForm(req *http.Request) (*ProtoImage, error) {
+	length, err := strconv.ParseInt(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
-		return
+		return nil, err
 	}
-	id = req.FormValue("id")
-	if id == "" {
-		err = errors.New("No client ID specified")
-		return
+	if length > config.Config.Images.Max.Size {
+		return nil, errors.New("File too large")
 	}
 
+	err = req.ParseMultipartForm(512)
+	if err != nil {
+		return nil, err
+	}
+
+	id := req.FormValue("id")
+	if id == "" {
+		return nil, errors.New("No client ID specified")
+	}
+	if !websockets.Clients.Has(id) {
+		return nil, fmt.Errorf("Bad client ID: %s", id)
+	}
+	spoiler, err := extractSpoiler(req)
+	if err != nil {
+		return nil, err
+	}
+
+	img := &ProtoImage{
+		Image: types.Image{
+			Spoiler: spoiler,
+		},
+		ClientID: id,
+	}
+	return img, nil
+}
+
+// Extracts and validates a spoiler number from the form
+func extractSpoiler(req *http.Request) (sp uint8, err error) {
 	// Read the spoiler the client had chosen for the image, if any
 	if unparsed := req.FormValue("spoiler"); unparsed != "" {
 		var unconverted int
 		unconverted, err = strconv.Atoi(unparsed)
-		if err != nil || !isValidSpoiler(spoiler) {
+		sp = uint8(unconverted)
+		if !(err == nil && isValidSpoiler(sp)) {
 			err = fmt.Errorf("Invalid spoiler ID: %s", unparsed)
 		}
-		spoiler = uint8(unconverted)
 	}
 	return
 }
 
+// Confirms a spoiler exists in configuration
 func isValidSpoiler(id uint8) bool {
 	for _, valid := range config.Config.Images.Spoilers {
 		if id == valid {
