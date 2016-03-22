@@ -40,7 +40,7 @@ func (*ClientSuite) TestNewClient(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	c.Assert(cl.id, Equals, "")
+	c.Assert(cl.ID, Equals, "")
 	c.Assert(cl.synced, Equals, false)
 	c.Assert(cl.closed, Equals, false)
 	c.Assert(cl.ident, DeepEquals, auth.Ident{IP: wcl.LocalAddr().String()})
@@ -102,7 +102,7 @@ func (*ClientSuite) TestClose(c *C) {
 	)
 }
 
-func readServerErrors(c *C, cl *client, sv *mockWSServer) {
+func readServerErrors(c *C, cl *Client, sv *mockWSServer) {
 	defer sv.Done()
 	for cl.isOpen() {
 		_, _, err := cl.conn.ReadMessage()
@@ -129,7 +129,7 @@ func readClientErrors(c *C, conn *websocket.Conn, sv *mockWSServer) {
 	}
 }
 
-func closeClient(c *C, cl *client) {
+func closeClient(c *C, cl *Client) {
 	c.Assert(cl.close(websocket.CloseNormalClosure, ""), IsNil)
 }
 
@@ -162,7 +162,7 @@ func (m *mockWSServer) Close() {
 	close(m.connSender)
 }
 
-func (m *mockWSServer) NewClient() (*client, *websocket.Conn) {
+func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 	wcl, _, err := dialer.Dial(
 		strings.Replace(m.server.URL, "http", "ws", 1),
 		nil,
@@ -231,7 +231,7 @@ func (*ClientSuite) TestExternalClose(c *C) {
 		status = 2
 		text   = "tsurupettan"
 	)
-	cl := client{
+	cl := Client{
 		closer: make(chan websocket.CloseError),
 	}
 	go cl.Close(status, text)
@@ -243,7 +243,7 @@ func (*ClientSuite) TestExternalClose(c *C) {
 
 func (*ClientSuite) TestExternalSend(c *C) {
 	std := []byte("WOW WOW")
-	cl := client{
+	cl := Client{
 		sender: make(chan []byte),
 	}
 	go cl.Send(std)
@@ -340,7 +340,7 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 	sv.Wait()
 }
 
-func runReceiveLoop(cl *client, sv *mockWSServer) {
+func runReceiveLoop(cl *Client, sv *mockWSServer) {
 	defer sv.Done()
 	cl.receiverLoop()
 }

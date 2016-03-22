@@ -76,14 +76,14 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// client stores and manages a websocket-connected remote client and its
+// Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
-type client struct {
+type Client struct {
 	synced bool
 	closed bool
 	ident  auth.Ident
 	sync.Mutex
-	id       string
+	ID       string
 	conn     *websocket.Conn
 	receiver chan []byte
 	sender   chan []byte
@@ -91,8 +91,8 @@ type client struct {
 }
 
 // newClient creates a new websocket client
-func newClient(conn *websocket.Conn) *client {
-	return &client{
+func newClient(conn *websocket.Conn) *Client {
+	return &Client{
 		ident:    auth.LookUpIdent(conn.RemoteAddr().String()),
 		receiver: make(chan []byte),
 		sender:   make(chan []byte),
@@ -103,7 +103,7 @@ func newClient(conn *websocket.Conn) *client {
 
 // listen listens for incoming messages on the Receiver, Sender and Closer
 // channels and processes them sequentially
-func (c *client) listen() error {
+func (c *Client) listen() error {
 	for c.isOpen() {
 		select {
 		case msg := <-c.closer:
@@ -125,14 +125,14 @@ func (c *client) listen() error {
 }
 
 // Thread-safe way of checking, if the websocket connection is open
-func (c *client) isOpen() bool {
+func (c *Client) isOpen() bool {
 	c.Lock()
 	defer c.Unlock()
 	return !c.closed
 }
 
 // Set client to closed in a thread-safe way. Seperated for cleaner testing.
-func (c *client) setClosed() {
+func (c *Client) setClosed() {
 	c.Lock()
 	c.closed = true
 	c.Unlock()
@@ -140,7 +140,7 @@ func (c *client) setClosed() {
 
 // Convert the blocking websocket.Conn.ReadMessage() into a channel stream and
 // handle errors
-func (c *client) receiverLoop() {
+func (c *Client) receiverLoop() {
 	for c.isOpen() {
 		typ, message, err := c.conn.ReadMessage() // Blocking
 		switch {
@@ -158,7 +158,7 @@ func (c *client) receiverLoop() {
 }
 
 // receive parses a message received from the client through websockets
-func (c *client) receive(msg []byte) error {
+func (c *Client) receive(msg []byte) error {
 	if c.ident.Banned {
 		return c.close(websocket.ClosePolicyViolation, "You are banned")
 	}
@@ -183,7 +183,7 @@ func (c *client) receive(msg []byte) error {
 }
 
 // protocolError handles malformed messages received from the client
-func (c *client) protocolError(msg []byte) error {
+func (c *Client) protocolError(msg []byte) error {
 	errMsg := fmt.Sprintf("Invalid message: %s", msg)
 	if err := c.close(websocket.CloseProtocolError, errMsg); err != nil {
 		return util.WrapError(errMsg, err)
@@ -192,23 +192,23 @@ func (c *client) protocolError(msg []byte) error {
 }
 
 // logError writes the client's websocket error to the error log (or stdout)
-func (c *client) logError(err error) {
+func (c *Client) logError(err error) {
 	log.Printf("Error by %s: %v\n", c.ident.IP, err)
 }
 
 // send sends a provided message as a websocket frame to the client
-func (c *client) send(msg []byte) error {
+func (c *Client) send(msg []byte) error {
 	return c.conn.WriteMessage(websocket.BinaryMessage, msg)
 }
 
 // Send thread-safely sends a message to the websocket client
-func (c *client) Send(msg []byte) {
+func (c *Client) Send(msg []byte) {
 	c.sender <- msg
 }
 
 // close closes a websocket connection with the provided status code and
 // optional reason
-func (c *client) close(status int, reason string) error {
+func (c *Client) close(status int, reason string) error {
 	err := c.conn.WriteControl(
 		websocket.CloseMessage,
 		websocket.FormatCloseMessage(status, reason),
@@ -224,7 +224,7 @@ func (c *client) close(status int, reason string) error {
 
 // Close thread-safely closes the websocket connection with the supplied status
 // code and optional reason string
-func (c *client) Close(status int, reason string) {
+func (c *Client) Close(status int, reason string) {
 	c.closer <- websocket.CloseError{
 		Code: status,
 		Text: reason,

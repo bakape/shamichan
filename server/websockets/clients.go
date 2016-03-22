@@ -7,17 +7,17 @@ import (
 
 // Clients stores all synchronised websocket clients in a theread-safe map
 var Clients = ClientMap{
-	clients: make(map[string]*client),
+	clients: make(map[string]*Client),
 }
 
 // ClientMap is a threadsame store for *clients
 type ClientMap struct {
-	clients map[string]*client
+	clients map[string]*Client
 	sync.RWMutex
 }
 
 // Add adds a client to the map
-func (c *ClientMap) Add(cl *client) {
+func (c *ClientMap) Add(cl *Client) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -30,7 +30,7 @@ func (c *ClientMap) Add(cl *client) {
 		}
 	}
 
-	cl.id = id
+	cl.ID = id
 	c.clients[id] = cl
 }
 

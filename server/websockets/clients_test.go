@@ -16,16 +16,16 @@ func (*Map) TestAddHasRemove(c *C) {
 	// Add client
 	cl, _ := sv.NewClient()
 	m.Add(cl)
-	c.Assert(m.Has(cl.id), Equals, true)
+	c.Assert(m.Has(cl.ID), Equals, true)
 
 	// Remove client
-	m.Remove(cl.id)
-	c.Assert(m.Has(cl.id), Equals, false)
+	m.Remove(cl.ID)
+	c.Assert(m.Has(cl.ID), Equals, false)
 }
 
 func newClientMap() *ClientMap {
 	return &ClientMap{
-		clients: make(map[string]*client),
+		clients: make(map[string]*Client),
 	}
 }
 
@@ -34,7 +34,7 @@ func (*Map) TestCountByIP(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 
-	cls := [3]*client{}
+	cls := [3]*Client{}
 	for i := range cls {
 		cl, _ := sv.NewClient()
 		cls[i] = cl
