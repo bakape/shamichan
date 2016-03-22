@@ -64,7 +64,7 @@ func (*Imager) TestIsValidSpoiler(c *C) {
 	c.Assert(isValidSpoiler(1), Equals, true)
 }
 
-var extensions = map[string]int{
+var extensions = map[string]uint8{
 	"jpg":  jpeg,
 	"png":  png,
 	"gif":  gif,

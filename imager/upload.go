@@ -13,6 +13,7 @@ import (
 	"strconv"
 )
 
+// Supported file formats
 const (
 	jpeg = iota
 	png
@@ -26,7 +27,7 @@ const (
 )
 
 // Map of oficial MIME types to the extension representations we deal with
-var mimeTypes = map[string]int{
+var mimeTypes = map[string]uint8{
 	"image/jpeg":      jpeg,
 	"image/png":       png,
 	"image/gif":       gif,
@@ -37,6 +38,7 @@ var mimeTypes = map[string]int{
 // ProtoImage stores data of an image that is being processed as well as data,
 // that will be stored, once the image finishes processing.
 type ProtoImage struct {
+	fileType uint8
 	types.Image
 	ClientID string
 }
@@ -48,9 +50,13 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 
 	defer func() {
 		if err := req.MultipartForm.RemoveAll(); err != nil {
-			log.Printf("Error removing temporary files: %s", err)
+			log.Printf("Error removing temporary files: %s\n", err)
 		}
 	}()
+
+	head := res.Header()
+	head.Set("Content-Type", "text/html; charset=UTF-8")
+	head.Set("Access-Control-Allow-Origin", config.Config.HTTP.Origin)
 
 	img, err := parseUploadForm(req)
 	if err != nil {
@@ -58,11 +64,27 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	head := res.Header()
-	head.Set("Content-Type", "text/html; charset=UTF-8")
-	head.Set("Access-Control-Allow-Origin", config.Config.HTTP.Origin)
+	file, fileHeader, err := req.FormFile("image")
+	if err != nil {
+		passError(res, req, err, 400)
+		return
+	}
 
-	fmt.Println(img)
+	fileType, err := detectFileType(file)
+	if err != nil {
+		passError(res, req, err, 400)
+		return
+	}
+	img.fileType = fileType
+
+	if imgID, err := processFile(file, fileHeader, img); err != nil {
+		passError(res, req, err, 400)
+	} else {
+		_, err := res.Write([]byte(imgID))
+		if err != nil {
+			log.Printf("Error responding to upload request: %s\n", err)
+		}
+	}
 }
 
 // Pass error message to client and log server-side
@@ -74,9 +96,10 @@ func passError(
 ) {
 	text := err.Error()
 	http.Error(res, text, code)
-	log.Printf("Upload error: %s : %s", req.RemoteAddr, text)
+	log.Printf("Upload error: %s : %s\n", req.RemoteAddr, text)
 }
 
+// Parse and validate the form of the upload request
 func parseUploadForm(req *http.Request) (*ProtoImage, error) {
 	length, err := strconv.ParseInt(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
@@ -139,10 +162,10 @@ func isValidSpoiler(id uint8) bool {
 // detectFileType detects if the upload is of a supported file type, by reading
 // its first 512 bytes. OGG and MP4 are also cheked to contain HTML5 supported
 // video and audio streams.
-func detectFileType(file multipart.File) (int, error) {
+func detectFileType(file multipart.File) (uint8, error) {
 	buf := make([]byte, 512)
 	if _, err := file.Read(buf); err != nil {
-		return -1, err
+		return 0, err
 	}
 	mimeType := http.DetectContentType(buf)
 	mime, ok := mimeTypes[mimeType]
@@ -161,7 +184,7 @@ func detectFileType(file multipart.File) (int, error) {
 			if is {
 				return ogg, err
 			}
-			return -1, fmt.Errorf("Unsupported mime type: %s", mimeType)
+			return 0, fmt.Errorf("Unsupported mime type: %s", mimeType)
 		}
 	}
 	return mime, nil
@@ -183,4 +206,23 @@ func detectCompatibleOGG(buf []byte) (bool, error) {
 
 func detectCompatibleMP4(buf []byte) (bool, error) {
 	return false, nil
+}
+
+// Delegate the processing of the file to an apropriate function by file type
+func processFile(
+	file multipart.File,
+	fileHeader *multipart.FileHeader,
+	img *ProtoImage,
+) (string, error) {
+	switch img.fileType {
+	case webm:
+		return processWebm(file, fileHeader, img)
+	case jpeg:
+		fallthrough
+	case png:
+		fallthrough
+	case gif:
+		return processImage(file, fileHeader, img)
+	}
+	return "", nil
 }
