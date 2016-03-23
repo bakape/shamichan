@@ -70,11 +70,11 @@ test: server_deps
 build_ffmpeg_deb:
 	apt-get update
 	apt-get install -y libvpx-dev libmp3lame-dev libopus-dev libvorbis-dev \
-		libx264-dev libfdk-aac-dev libtheora-dev git build-essential yasm
+		libx264-dev libtheora-dev git build-essential yasm
 	git clone --depth 1 -b release/3.0 git://source.ffmpeg.org/ffmpeg.git \
 		.ffmpeg
 	cd .ffmpeg; \
-	./configure --enable-libfdk_aac --enable-libmp3lame --enable-libx264 \
-		--enable-libvpx --enable-libvorbis --enable-libopus --enable-libtheora;\
+	./configure --enable-libmp3lame --enable-libx264 --enable-libvpx \
+		--enable-libvorbis --enable-libopus --enable-libtheora;\
 	make -j$(THREADS); \
 	make install; \
