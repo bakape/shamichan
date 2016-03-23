@@ -75,6 +75,6 @@ build_ffmpeg_deb:
 		.ffmpeg
 	cd .ffmpeg; \
 	./configure --enable-libmp3lame --enable-libx264 --enable-libvpx \
-		--enable-libvorbis --enable-libopus --enable-libtheora;\
+		--enable-libvorbis --enable-libopus --enable-libtheora --enable-gpl;\
 	make -j$(THREADS); \
 	make install; \
