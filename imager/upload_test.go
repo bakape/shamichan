@@ -75,7 +75,7 @@ var extensions = map[string]uint8{
 func (*Imager) TestDetectFileType(c *C) {
 	// Supported file types
 	for ext, code := range extensions {
-		f := openFile(filepath.FromSlash("./test/uploads/sample."+ext), c)
+		f := openFile(filepath.FromSlash("test/sample."+ext), c)
 		t, err := detectFileType(f)
 		c.Assert(err, IsNil)
 		c.Assert(t, Equals, code)
