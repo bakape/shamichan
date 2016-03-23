@@ -1,5 +1,6 @@
 GULP="./node_modules/.bin/gulp"
 MEGUCA_VAR=/var/lib/meguca
+THREADS=`nproc`
 
 ifeq ($(OS), Windows_NT)
 	BUILD_PATH="/.meguca_build/src/github.com/bakape"
@@ -44,7 +45,7 @@ build_dirs:
 	 ln -sfn "$(shell pwd)" $(BUILD_PATH)/meguca
 
 clean: client_clean
-	rm -rf .build node_modules $(BINARY)
+	rm -rf .build .ffmpeg node_modules $(BINARY)
 
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang
@@ -65,3 +66,15 @@ init:
 test: server_deps
 	go get -v gopkg.in/check.v1
 	go test -v ./...
+
+build_ffmpeg_deb:
+	apt-get update
+	apt-get install -y libvpx-dev libmp3lame-dev libopus-dev libvorbis-dev \
+		libx264-dev libfdk-aac-dev libtheora-dev git build-essential yasm
+	git clone --depth 1 -b release/3.0 git://source.ffmpeg.org/ffmpeg.git \
+		.ffmpeg
+	cd .ffmpeg; \
+	./configure --enable-libfdk_aac --enable-libmp3lame --enable-libx264 \
+		--enable-libvpx --enable-libvorbis --enable-libopus --enable-libtheora;\
+	make -j$(THREADS); \
+	make install; \
