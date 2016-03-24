@@ -9,7 +9,9 @@ const o = options
 
 import {displayLoading} from './state'
 import {exec} from './defer'
-import {start} from './connection'
+import {start as connect} from './connection'
+import {loadFromDB} from './state'
+import {open} from './db'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -22,6 +24,13 @@ if (localStorage.getItem("cookieVersion") != cookieVersion) {
 	localStorage.setItem("cookieVersion", cookieVersion.toString())
 }
 
+// Load all stateful modules in dependancy order
+async function start() {
+	await open()
+	await loadFromDB()
+	connect()
+	exec()
+	displayLoading(false)
+}
+
 start()
-exec()
-displayLoading(false)

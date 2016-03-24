@@ -6,6 +6,7 @@ import Model from './model'
 import {Post} from './posts/models'
 import Collection from './collection'
 import {getID} from './util'
+import {db} from './db'
 
 // Allows us to typecheck configs. See config/defaults.json for more info.
 type Configs = {
@@ -89,6 +90,20 @@ export const $loading = document.query('#loadingImage')
 
 // All posts currently displayed
 export const posts = new Collection<Post>()
+
+// Posts I made in any tab
+export let mine: Set<number>
+
+// Load post number sets from the database
+export async function loadFromDB() {
+	const resMine = await db
+		.transaction('posts', 'readonly')
+		.objectStore('posts')
+		.get('mine')
+		.exec()
+	delete resMine.id
+	mine = new Set<number>([resMine])
+}
 
 // Posts I made in this tab
 export const ownPosts = new Set<number>()
