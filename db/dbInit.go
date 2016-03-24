@@ -63,8 +63,8 @@ type Document struct {
 	ID string `gorethink:"id"`
 }
 
-// All  tables needed for meguca operation
-var AllTables = [...]string{"main", "threads", "posts", "images", "updates"}
+// AllTables are all tables needed for meguca operation
+var AllTables = [...]string{"main", "threads", "posts"}
 
 // Central global information document
 type infoDocument struct {
@@ -103,9 +103,7 @@ func CreateTables() {
 func CreateIndeces() {
 	DB()(r.Table("threads").IndexCreate("board")).Exec()
 	for _, key := range [...]string{"op", "board"} {
-		for _, table := range [...]string{"posts", "updates"} {
-			DB()(r.Table(table).IndexCreate(key)).Exec()
-		}
+		DB()(r.Table("posts").IndexCreate(key)).Exec()
 	}
 
 	// Make sure all indeces are ready to avoid the race condition of and index

@@ -112,15 +112,13 @@ func (*DBInit) TestLoadDB(c *C) {
 		indexMissing("threads", "board", c)
 	}
 
-	for _, table := range [...]string{"posts", "updates"} {
-		var missingIndeces []string
-		DB()(r.
-			Expr([...]string{"op", "board"}).
-			Difference(r.Table(table).IndexList()),
-		).One(&missingIndeces)
-		for _, index := range missingIndeces {
-			indexMissing(table, index, c)
-		}
+	var missingIndeces []string
+	DB()(r.
+		Expr([...]string{"op", "board"}).
+		Difference(r.Table("posts").IndexList()),
+	).One(&missingIndeces)
+	for _, index := range missingIndeces {
+		indexMissing("posts", index, c)
 	}
 
 	var info infoDocument

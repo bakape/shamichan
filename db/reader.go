@@ -70,7 +70,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) types.ThreadContainer {
 func getJoinedThread(id uint64) (thread joinedThread) {
 	DB()(r.
 		Expr(map[string]r.Term{
-			"left":  getThread(id),
+			"left":  getThread(id).Without("history"),
 			"right": getPost(id),
 		}).
 		Merge(getThreadMeta()),
