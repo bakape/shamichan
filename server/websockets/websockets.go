@@ -16,6 +16,11 @@ import (
 	"time"
 )
 
+const (
+	readTimeout  = time.Second * 30
+	writeTimeout = time.Second * 10
+)
+
 // uint8 identifiers for various message types
 // 1 - 29 modify post model state
 const (
@@ -49,29 +54,21 @@ func CheckOrigin(req *http.Request) bool {
 	return u.Host == config.Config.HTTP.Origin
 }
 
-var textFrameReceived = websocket.CloseError{
-	Code: websocket.CloseUnsupportedData,
-	Text: "Only binary frames allowed",
-}
-
 // Handler is an http.HandleFunc that responds to new websocket connection
 // requests.
 func Handler(res http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(res, req, nil)
-	if _, ok := err.(websocket.HandshakeError); ok {
-		http.Error(
-			res,
-			`Can only Upgrade to the Websocket protocol`,
-			http.StatusBadRequest,
+	if err != nil {
+		log.Printf(
+			"Error upgrading to websockets: %s: %s\n",
+			req.RemoteAddr,
+			err,
 		)
 		return
-	} else if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
-		return
 	}
+
 	c := newClient(conn)
-	go c.receiverLoop()
-	if err := c.listen(); err != nil {
+	if err := c.Listen(); err != nil {
 		c.logError(err)
 	}
 }
@@ -80,124 +77,139 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // interaction with the server and database
 type Client struct {
 	synced bool
-	closed bool
 	ident  auth.Ident
 	sync.Mutex
 	ID       string
 	conn     *websocket.Conn
-	receiver chan []byte
+	receiver chan receivedMessage
 	sender   chan []byte
-	closer   chan websocket.CloseError
+	closer   chan struct{}
+}
+
+type receivedMessage struct {
+	typ int
+	msg []byte
+	err error
 }
 
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn) *Client {
 	return &Client{
 		ident:    auth.LookUpIdent(conn.RemoteAddr().String()),
-		receiver: make(chan []byte),
 		sender:   make(chan []byte),
-		closer:   make(chan websocket.CloseError),
+		receiver: make(chan receivedMessage),
+		closer:   make(chan struct{}),
 		conn:     conn,
 	}
 }
 
-// listen listens for incoming messages on the Receiver, Sender and Closer
-// channels and processes them sequentially
-func (c *Client) listen() error {
-	for c.isOpen() {
+// Listen listens for incoming messages on the channels and processes them
+func (c *Client) Listen() error {
+	go c.receiverLoop()
+	for {
 		select {
-		case msg := <-c.closer:
-			if !c.isOpen() { // Already closed. Just terminating this loop.
-				return nil
-			}
-			return c.close(msg.Code, msg.Text)
+		case <-c.closer:
+			return nil
 		case msg := <-c.receiver:
-			if err := c.receive(msg); err != nil {
+			if msg.err != nil {
+				return msg.err
+			}
+			if err := c.receive(msg.typ, msg.msg); err != nil {
 				return err
 			}
 		case msg := <-c.sender:
-			if err := c.send(msg); err != nil {
+			err := c.send(msg)
+			if err != nil {
 				return err
 			}
 		}
 	}
-	return nil
 }
 
-// Thread-safe way of checking, if the websocket connection is open
-func (c *Client) isOpen() bool {
-	c.Lock()
-	defer c.Unlock()
-	return !c.closed
-}
-
-// Set client to closed in a thread-safe way. Seperated for cleaner testing.
-func (c *Client) setClosed() {
-	c.Lock()
-	c.closed = true
-	c.Unlock()
-}
-
-// Convert the blocking websocket.Conn.ReadMessage() into a channel stream and
-// handle errors
+// receiverLoop proxies the blocking conn.ReadMessage() into the main client
+// select loop.
 func (c *Client) receiverLoop() {
-	for c.isOpen() {
-		typ, message, err := c.conn.ReadMessage() // Blocking
-		switch {
-		case !c.isOpen(): // Closed, while waiting for message
-			return
-		case err != nil:
-			return
-		case typ != websocket.BinaryMessage:
-			c.closer <- textFrameReceived
+	// Handle websocket timeout
+	c.conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+	c.conn.SetPongHandler(func(string) error {
+		c.conn.SetReadDeadline(time.Now().Add(readTimeout))
+		return nil
+	})
+
+	for {
+		select {
+		case <-c.closer:
 			return
 		default:
-			c.receiver <- message
+			typ, msg, err := c.conn.ReadMessage() // Blocking
+			if err != nil {
+				select {
+				case <-c.closer:
+				default:
+					close(c.closer)
+				}
+				return
+			}
+			c.receiver <- receivedMessage{
+				typ: typ,
+				msg: msg,
+				err: err,
+			}
 		}
 	}
 }
 
 // receive parses a message received from the client through websockets
-func (c *Client) receive(msg []byte) error {
+func (c *Client) receive(msgType int, msg []byte) error {
+	if msgType != websocket.BinaryMessage {
+		return c.Close(
+			websocket.CloseUnsupportedData,
+			"Only binary frames allowed",
+		)
+	}
 	if c.ident.Banned {
-		return c.close(websocket.ClosePolicyViolation, "You are banned")
+		return c.Close(websocket.ClosePolicyViolation, "You are banned")
 	}
 	if len(msg) < 2 {
 		return c.protocolError(msg)
 	}
+
 	typ := uint8(msg[0])
 	if !c.synced && typ != messageSynchronise {
 		return c.protocolError(msg)
 	}
 
 	data := msg[1:]
-	var err error
 	switch typ {
 	case messageInsertThread:
 		// TODO: Actual handlers
 		fmt.Println(data)
+		return nil
 	default:
-		err = c.protocolError(msg)
+		return c.protocolError(msg)
 	}
-	return err
 }
 
 // protocolError handles malformed messages received from the client
 func (c *Client) protocolError(msg []byte) error {
 	errMsg := fmt.Sprintf("Invalid message: %s", msg)
-	if err := c.close(websocket.CloseProtocolError, errMsg); err != nil {
+	if err := c.Close(websocket.CloseProtocolError, errMsg); err != nil {
 		return util.WrapError(errMsg, err)
 	}
 	return errors.New(errMsg)
 }
 
 // logError writes the client's websocket error to the error log (or stdout)
+// and closes the websocket connection, if not already closed.
 func (c *Client) logError(err error) {
 	log.Printf("Error by %s: %v\n", c.ident.IP, err)
+	c.Close(websocket.CloseInternalServerErr, err.Error())
 }
 
 // send sends a provided message as a websocket frame to the client
 func (c *Client) send(msg []byte) error {
+	c.Lock()
+	defer c.Unlock()
 	return c.conn.WriteMessage(websocket.BinaryMessage, msg)
 }
 
@@ -206,27 +218,18 @@ func (c *Client) Send(msg []byte) {
 	c.sender <- msg
 }
 
-// close closes a websocket connection with the provided status code and
+// Close closes a websocket connection with the provided status code and
 // optional reason
-func (c *Client) close(status int, reason string) error {
-	err := c.conn.WriteControl(
-		websocket.CloseMessage,
-		websocket.FormatCloseMessage(status, reason),
-		time.Now().Add(time.Second*5),
-	)
-	c.setClosed()
-	close(c.closer) // Stop any looping select statements listening to this
-	if err != nil {
-		return err
-	}
-	return c.conn.Close()
-}
-
-// Close thread-safely closes the websocket connection with the supplied status
-// code and optional reason string
-func (c *Client) Close(status int, reason string) {
-	c.closer <- websocket.CloseError{
-		Code: status,
-		Text: reason,
+func (c *Client) Close(status int, reason string) error {
+	select {
+	case <-c.closer:
+		return nil
+	default:
+		close(c.closer) // Stop any looping select statements listening to this
+		return c.conn.WriteControl(
+			websocket.CloseMessage,
+			websocket.FormatCloseMessage(status, reason),
+			time.Now().Add(writeTimeout),
+		)
 	}
 }

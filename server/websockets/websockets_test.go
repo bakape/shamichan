@@ -19,9 +19,10 @@ import (
 )
 
 const (
-	protocolError  = `websocket: close 1002 \(protocol error\): `
-	policyError    = `websocket: close 1008 \(policy violation\): `
-	invalidMessage = "Invalid message: "
+	protocolError  = `websocket: close 1002 .*`
+	policyError    = `websocket: close 1008 .*`
+	invalidMessage = "Invalid message: .*"
+	onlyBinary     = "*. Only binary frames allowed"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -36,23 +37,53 @@ func newRequest(c *C) *http.Request {
 	return req
 }
 
+type mockWSServer struct {
+	c          *C
+	server     *httptest.Server
+	connSender chan *websocket.Conn
+	sync.WaitGroup
+}
+
+func newWSServer(c *C) *mockWSServer {
+	connSender := make(chan *websocket.Conn)
+	handler := func(res http.ResponseWriter, req *http.Request) {
+		conn, err := upgrader.Upgrade(res, req, nil)
+		c.Assert(err, IsNil)
+		connSender <- conn
+	}
+	return &mockWSServer{
+		c:          c,
+		connSender: connSender,
+		server:     httptest.NewServer(http.HandlerFunc(handler)),
+	}
+}
+
+func (m *mockWSServer) Close() {
+	m.server.CloseClientConnections()
+	m.server.Close()
+	close(m.connSender)
+}
+
+func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
+	wcl := dialServer(m.c, m.server)
+	return newClient(<-m.connSender), wcl
+}
+
+var dialer = websocket.Dialer{}
+
+func dialServer(c *C, sv *httptest.Server) *websocket.Conn {
+	wcl, _, err := dialer.Dial(strings.Replace(sv.URL, "http", "ws", 1), nil)
+	c.Assert(err, IsNil)
+	return wcl
+}
+
 func (*ClientSuite) TestNewClient(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	c.Assert(cl.ID, Equals, "")
 	c.Assert(cl.synced, Equals, false)
-	c.Assert(cl.closed, Equals, false)
 	c.Assert(cl.ident, DeepEquals, auth.Ident{IP: wcl.LocalAddr().String()})
-}
-
-func (*ClientSuite) TestOpenClose(c *C) {
-	sv := newWSServer(c)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	c.Assert(cl.isOpen(), Equals, true)
-	cl.setClosed()
-	c.Assert(cl.isOpen(), Equals, false)
 }
 
 func (*ClientSuite) TestLogError(c *C) {
@@ -87,113 +118,41 @@ func (*ClientSuite) TestClose(c *C) {
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	sv.Add(2)
-	go readServerErrors(c, cl, sv)
-	go readClientErrors(c, wcl, sv)
+	go readWebsocketErrors(c, cl.conn, sv)
+	go readWebsocketErrors(c, wcl, sv)
 	closeClient(c, cl)
 	sv.Wait()
 
 	// Already closed
+	closeClient(c, cl)
+}
+
+func readWebsocketErrors(c *C, conn *websocket.Conn, sv *mockWSServer) {
+	defer sv.Done()
+	_, _, err := conn.ReadMessage()
 	c.Assert(
-		func() {
-			cl.close(websocket.CloseNormalClosure, "")
-		},
-		PanicMatches,
-		"^close of closed channel",
+		websocket.IsCloseError(err, websocket.CloseNormalClosure),
+		Equals,
+		true,
+		Commentf("Unexpected error type: %v", err),
 	)
-}
-
-func readServerErrors(c *C, cl *Client, sv *mockWSServer) {
-	defer sv.Done()
-	for cl.isOpen() {
-		_, _, err := cl.conn.ReadMessage()
-		if !cl.isOpen() {
-			return
-		}
-		c.Assert(err, IsNil)
-	}
-}
-
-func readClientErrors(c *C, conn *websocket.Conn, sv *mockWSServer) {
-	defer sv.Done()
-	for {
-		_, _, err := conn.ReadMessage()
-		c.Assert(
-			websocket.IsCloseError(err, websocket.CloseNormalClosure),
-			Equals,
-			true,
-			Commentf("Unexpected error type: %v", err),
-		)
-		if err != nil {
-			break
-		}
-	}
 }
 
 func closeClient(c *C, cl *Client) {
-	c.Assert(cl.close(websocket.CloseNormalClosure, ""), IsNil)
-}
-
-var dialer = websocket.Dialer{}
-
-type mockWSServer struct {
-	c          *C
-	server     *httptest.Server
-	connSender chan *websocket.Conn
-	sync.WaitGroup
-}
-
-func newWSServer(c *C) *mockWSServer {
-	connSender := make(chan *websocket.Conn)
-	handler := func(res http.ResponseWriter, req *http.Request) {
-		conn, err := upgrader.Upgrade(res, req, nil)
-		c.Assert(err, IsNil)
-		connSender <- conn
-	}
-	return &mockWSServer{
-		c:          c,
-		connSender: connSender,
-		server:     httptest.NewServer(http.HandlerFunc(handler)),
-	}
-}
-
-func (m *mockWSServer) Close() {
-	m.server.CloseClientConnections()
-	m.server.Close()
-	close(m.connSender)
-}
-
-func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
-	wcl, _, err := dialer.Dial(
-		strings.Replace(m.server.URL, "http", "ws", 1),
-		nil,
-	)
-	m.c.Assert(err, IsNil)
-	return newClient(<-m.connSender), wcl
+	c.Assert(cl.Close(websocket.CloseNormalClosure, ""), IsNil)
 }
 
 func (*ClientSuite) TestProtocolError(c *C) {
-	const (
-		msg    = "JIBUN WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
-		errMsg = invalidMessage + msg
-	)
+	const msg = "JIBUN WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	sv.Add(2)
-	go readServerErrors(c, cl, sv)
-	go assertWebsocketError(c, wcl, protocolError+errMsg, sv)
+	go assertWebsocketError(c, cl.conn, protocolError, sv)
+	go assertWebsocketError(c, wcl, protocolError, sv)
 	buf := []byte(msg)
-	c.Assert(cl.protocolError(buf), ErrorMatches, errMsg)
+	c.Assert(cl.protocolError(buf), ErrorMatches, invalidMessage)
 	sv.Wait()
-
-	// Already closed
-	c.Assert(
-		func() {
-			cl.protocolError(buf)
-		},
-		PanicMatches,
-		"^close of closed channel",
-	)
 }
 
 func assertWebsocketError(
@@ -212,8 +171,7 @@ func (*ClientSuite) TestSend(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	sv.Add(2)
-	go readServerErrors(c, cl, sv)
+	sv.Add(1)
 	go func() {
 		defer sv.Done()
 		typ, msg, err := wcl.ReadMessage()
@@ -226,21 +184,6 @@ func (*ClientSuite) TestSend(c *C) {
 	sv.Wait()
 }
 
-func (*ClientSuite) TestExternalClose(c *C) {
-	const (
-		status = 2
-		text   = "tsurupettan"
-	)
-	cl := Client{
-		closer: make(chan websocket.CloseError),
-	}
-	go cl.Close(status, text)
-	c.Assert(<-cl.closer, DeepEquals, websocket.CloseError{
-		Code: status,
-		Text: text,
-	})
-}
-
 func (*ClientSuite) TestExternalSend(c *C) {
 	std := []byte("WOW WOW")
 	cl := Client{
@@ -251,174 +194,90 @@ func (*ClientSuite) TestExternalSend(c *C) {
 }
 
 func (*ClientSuite) TestReceive(c *C) {
-	const (
-		invalidLength = invalidMessage + "\x01"
-		notSync       = invalidMessage + "@\x01"
-	)
 	sv := newWSServer(c)
 	defer sv.Close()
+	msg := []byte("natsutte tsuchatta")
+
+	// Non-binary message
+	cl, wcl := sv.NewClient()
+	sv.Add(1)
+	go assertWebsocketError(c, wcl, onlyBinary, sv)
+	c.Assert(cl.receive(websocket.TextMessage, msg), IsNil)
+	sv.Wait()
 
 	// Banned
-	cl, wcl := sv.NewClient()
+	cl, wcl = sv.NewClient()
 	cl.ident.Banned = true
-	sv.Add(2)
-	go readServerErrors(c, cl, sv)
+	sv.Add(1)
 	go assertWebsocketError(c, wcl, policyError+"You are banned", sv)
-	c.Assert(cl.receive([]byte("natsutte tsuchatta")), IsNil)
+	c.Assert(cl.receive(websocket.BinaryMessage, msg), IsNil)
 	sv.Wait()
 
 	// Message too short
-	msg := []byte{1}
+	msg = []byte{1}
 	cl, wcl = sv.NewClient()
-	sv.Add(2)
-	go readServerErrors(c, cl, sv)
-	go assertWebsocketError(c, wcl, protocolError+invalidLength, sv)
-	c.Assert(cl.receive(msg).Error(), Equals, invalidLength)
+	sv.Add(1)
+	go assertWebsocketError(c, wcl, protocolError+invalidMessage, sv)
+	c.Assert(
+		cl.receive(websocket.BinaryMessage, msg),
+		ErrorMatches,
+		invalidMessage,
+	)
 	sv.Wait()
 
 	// Not a sync message, when not synced
 	msg = []byte{64, 1}
 	cl, wcl = sv.NewClient()
-	sv.Add(2)
-	go readServerErrors(c, cl, sv)
-	go assertWebsocketError(c, wcl, protocolError+notSync, sv)
-	c.Assert(cl.receive(msg).Error(), Equals, notSync)
+	sv.Add(1)
+	go assertWebsocketError(c, wcl, protocolError, sv)
+	c.Assert(
+		cl.receive(websocket.BinaryMessage, msg),
+		ErrorMatches,
+		invalidMessage,
+	)
 	sv.Wait()
 
 	// No handler
 	cl, wcl = sv.NewClient()
 	cl.synced = true
-	sv.Add(2)
-	go readServerErrors(c, cl, sv)
-	go assertWebsocketError(c, wcl, protocolError+notSync, sv)
-	c.Assert(cl.receive(msg).Error(), Equals, notSync)
+	sv.Add(1)
+	go assertWebsocketError(c, wcl, protocolError, sv)
+	c.Assert(
+		cl.receive(websocket.BinaryMessage, msg),
+		ErrorMatches,
+		invalidMessage,
+	)
 	sv.Wait()
 }
 
 func (*ClientSuite) TestReceiverLoop(c *C) {
-	const normalClose = `websocket: close 1000 \(normal\)`
 	sv := newWSServer(c)
 	defer sv.Close()
-	msg := []byte("shouganai wa ne")
+	std := receivedMessage{
+		typ: websocket.BinaryMessage,
+		msg: []byte("shoganai wa ne"),
+		err: nil,
+	}
 
-	// NOTE: Can't test client being already closed after returning from
-	// c.conn.ReadMessage(), because it's a race condition.
-
-	// Client diconnected
 	cl, wcl := sv.NewClient()
-	sv.Add(2)
-	go runReceiveLoop(cl, sv)
-	go assertWebsocketError(c, wcl, normalClose, sv)
-	c.Assert(
-		wcl.WriteControl(
-			websocket.CloseMessage,
-			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
-			time.Now().Add(time.Second*5),
-		),
-		IsNil,
-	)
+	sv.Add(1)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer sv.Done()
+		c.Assert(<-cl.receiver, DeepEquals, std)
+	}()
+	go func() {
+		defer wg.Done()
+		cl.receiverLoop()
+	}()
+	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, std.msg), IsNil)
 	sv.Wait()
-
-	// Text frame type
-	sv.Add(2)
-	cl, wcl = sv.NewClient()
-	go runReceiveLoop(cl, sv)
-	go assertWebsocketError(c, wcl, normalClose, sv)
-	c.Assert(wcl.WriteMessage(websocket.TextMessage, msg), IsNil)
-	c.Assert(<-cl.closer, DeepEquals, textFrameReceived)
 	closeClient(c, cl)
-	sv.Wait()
+	wg.Wait()
 
-	// Proper message
-	sv.Add(2)
-	cl, wcl = sv.NewClient()
-	go runReceiveLoop(cl, sv)
-	go assertWebsocketError(c, wcl, normalClose, sv)
-	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, msg), IsNil)
-	c.Assert(<-cl.receiver, DeepEquals, msg)
-	closeClient(c, cl)
-	sv.Wait()
-}
-
-func runReceiveLoop(cl *Client, sv *mockWSServer) {
-	defer sv.Done()
+	// Already closed
 	cl.receiverLoop()
-}
-
-func (*ClientSuite) TestListen(c *C) {
-	sv := newWSServer(c)
-	defer sv.Close()
-
-	// Receive close request
-	cl, wcl := sv.NewClient()
-	sv.Add(3)
-	go readServerErrors(c, cl, sv)
-	go assertWebsocketError(
-		c,
-		wcl,
-		`websocket: close 1011 \(internal server error\)`,
-		sv,
-	)
-	go func() {
-		defer sv.Done()
-		c.Assert(cl.listen(), IsNil)
-	}()
-	cl.Close(websocket.CloseInternalServerErr, "")
-	sv.Wait()
-
-	// Receive a message
-	const (
-		invalid       = invalidMessage + "@"
-		invalidClient = protocolError + invalid
-	)
-	msg := []byte{64}
-	cl, wcl = sv.NewClient()
-	sv.Add(3)
-	go readServerErrors(c, cl, sv)
-	go assertWebsocketError(c, wcl, invalidClient, sv)
-	go func() {
-		defer sv.Done()
-		c.Assert(cl.listen(), ErrorMatches, invalid)
-	}()
-	cl.receiver <- msg
-	sv.Wait()
-
-	// Send a message
-	cl, wcl = sv.NewClient()
-	sv.Add(3)
-	go readServerErrors(c, cl, sv)
-	go func() {
-		defer sv.Done()
-		_, received, err := wcl.ReadMessage()
-		c.Assert(err, IsNil)
-		c.Assert(received, DeepEquals, received)
-	}()
-	go func() {
-		defer sv.Done()
-		cl.sender <- msg
-		cl.Close(websocket.CloseNormalClosure, "")
-	}()
-	c.Assert(cl.listen(), IsNil)
-	sv.Wait()
-
-	// Closed client
-	cl, wcl = sv.NewClient()
-	sv.Add(3)
-	go readServerErrors(c, cl, sv)
-	go func() {
-		defer sv.Done()
-		_, _, err := wcl.ReadMessage()
-		c.Assert(err, IsNil)
-	}()
-	go func() {
-		defer sv.Done()
-		cl.setClosed()
-		cl.sender <- msg
-	}()
-	c.Assert(cl.listen(), IsNil)
-	closeClient(c, cl)
-	sv.Wait()
-	c.Assert(cl.listen(), IsNil)
 }
 
 func (*ClientSuite) TestCheckOrigin(c *C) {
@@ -443,4 +302,80 @@ func (*ClientSuite) TestCheckOrigin(c *C) {
 	req = newRequest(c)
 	req.Header.Set("Origin", "http://fubar.ru")
 	c.Assert(CheckOrigin(req), Equals, false)
+}
+
+func (*ClientSuite) TestListen(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	msg := []byte{1, 2, 3}
+
+	// Receive invalid message
+	cl, wcl := sv.NewClient()
+	sv.Add(2)
+	go readListenErrors(c, cl, sv)
+	go assertWebsocketError(c, wcl, onlyBinary, sv)
+	c.Assert(wcl.WriteMessage(websocket.TextMessage, msg), IsNil)
+	sv.Wait()
+
+	// Client closed socket without message or timed out
+	cl, wcl = sv.NewClient()
+	sv.Add(1)
+	go readListenErrors(c, cl, sv)
+	c.Assert(wcl.Close(), IsNil)
+	sv.Wait()
+
+	// Client properly closed connection with a control message
+	cl, wcl = sv.NewClient()
+	sv.Add(1)
+	go readListenErrors(c, cl, sv)
+	normalCloseWebClient(c, wcl)
+	sv.Wait()
+
+	// Protocol error
+	cl, wcl = sv.NewClient()
+	sv.Add(2)
+	go func() {
+		defer sv.Done()
+		c.Assert(cl.Listen(), ErrorMatches, invalidMessage)
+	}()
+	go assertWebsocketError(c, wcl, protocolError, sv)
+	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, []byte{123, 4}), IsNil)
+	sv.Wait()
+
+	// Send a message
+	std := []byte{127, 0, 0, 1}
+	cl, wcl = sv.NewClient()
+	sv.Add(2)
+	go readListenErrors(c, cl, sv)
+	go func() {
+		defer sv.Done()
+		typ, msg, err := wcl.ReadMessage()
+		c.Assert(err, IsNil)
+		c.Assert(typ, Equals, websocket.BinaryMessage)
+		c.Assert(msg, DeepEquals, std)
+	}()
+	cl.Send(std)
+	sv.Wait()
+}
+
+func normalCloseWebClient(c *C, wcl *websocket.Conn) {
+	err := wcl.WriteControl(
+		websocket.CloseMessage,
+		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+		time.Now().Add(writeTimeout),
+	)
+	c.Assert(err, IsNil)
+}
+
+func readListenErrors(c *C, cl *Client, sv *mockWSServer) {
+	defer sv.Done()
+	c.Assert(cl.Listen(), IsNil)
+}
+
+func (*Client) TestHandler(c *C) {
+	// Proper connection and client-side close
+	sv := httptest.NewServer(http.HandlerFunc(Handler))
+	defer sv.Close()
+	wcl := dialServer(c, sv)
+	normalCloseWebClient(c, wcl)
 }
