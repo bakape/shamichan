@@ -8,6 +8,7 @@ export default class FSM<S, E> {
 	private stateHandlers: ActMap = new SetMap<ActHandler>()
 	private transitions: {[transition: string]: S} = {}
 	private transitionHandlers: ActMap = new SetMap<ActHandler>()
+	private wilds: {[event: string]: S} = {}
 	state: S
 
 	// Create a new finite state machine with the supplied start state
@@ -32,6 +33,15 @@ export default class FSM<S, E> {
 		}
 	}
 
+	// Specify an event and optional handler, that will cause any state to
+	// transition to the target result state.
+	wildAct(event: E, result: S, handler?: ActHandler) {
+		this.wilds[event as any] = result
+		if (handler) {
+			this.on(result, handler)
+		}
+	}
+
 	// Generate a transition string representation
 	private transitionString(start: S, event: E): string {
 		return `${start}+${event}`
@@ -39,9 +49,14 @@ export default class FSM<S, E> {
 
 	// Feed an event to the FSM
 	feed(event: E, arg?: any) {
-		const trans = this.transitionString(this.state, event)
-		this.transitionHandlers.forEach(trans, fn => fn(arg))
-		const result = this.transitions[trans]
+		let result: S
+		if (event as any in this.wilds) {
+			result = this.wilds[event as any]
+		} else {
+			const trans = this.transitionString(this.state, event)
+			this.transitionHandlers.forEach(trans, fn => fn(arg))
+			result = this.transitions[trans]
+		}
 		this.stateHandlers.forEach(result as any, fn => fn(arg))
 		this.state = result
 	}

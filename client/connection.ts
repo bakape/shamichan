@@ -133,32 +133,24 @@ function resetAttempts() {
 	attempts = 0
 }
 
-connSM.act(
-	[
-		connState.connecting, connState.syncing, connState.synced,
-		connState.reconnecting
-	],
-	connEvent.close,
-	connState.dropped,
-	err => {
-		nullSocket()
-		if (debug) {
-			console.error(err)
-		}
-		if (attemptTimer) {
-			clearTimeout(attemptTimer)
-			attemptTimer = 0
-		}
-		renderStatus(syncStatus.disconnected)
-
-		// Wait maxes out at ~1min
-		const wait = 500 * Math.pow(
-			1.5,
-			Math.min(Math.floor(++attempts / 2), 12)
-		)
-		setTimeout(connSM.feeder(connEvent.retry), wait)
+connSM.wildAct(connEvent.close, connState.dropped, err => {
+	nullSocket()
+	if (debug) {
+		console.error(err)
 	}
-)
+	if (attemptTimer) {
+		clearTimeout(attemptTimer)
+		attemptTimer = 0
+	}
+	renderStatus(syncStatus.disconnected)
+
+	// Wait maxes out at ~1min
+	const wait = 500 * Math.pow(
+		1.5,
+		Math.min(Math.floor(++attempts / 2), 12)
+	)
+	setTimeout(connSM.feeder(connEvent.retry), wait)
+})
 
 connSM.act([connState.dropped], connEvent.retry, connState.reconnecting, () => {
 	connect()
