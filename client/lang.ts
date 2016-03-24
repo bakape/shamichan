@@ -45,6 +45,7 @@ type LnPosts = {
 	threadLocked: string
 	quoted: string
 	cancel: string
+	[index: string]: string
 }
 
 type LnBanner = {
@@ -58,6 +59,7 @@ type LnBanner = {
 	feedback: string
 	onlineCounter: string
 	googleSong: string
+	[index: string]: string
 }
 
 type LnImages = {
@@ -65,6 +67,7 @@ type LnImages = {
 	hide: string
 	expand: string
 	contract: string
+	[index: string]: string
 }
 
 type LnNavigation = {
@@ -81,6 +84,7 @@ type LnNavigation = {
 	lockedToBottom: string
 	seeAll: string
 	catalogOmit: string
+	[index: string]: string
 }
 
 type LnReports = {
@@ -89,6 +93,7 @@ type LnReports = {
 	submitted: string
 	setup: string
 	leadError: string
+	[index: string]: string
 }
 
 type LnTime = {
@@ -105,11 +110,13 @@ type LnTime = {
 	months: string
 	year: string
 	years: string
+	[index: string]: string|string[]
 }
 
 type LnSyncwatch = {
 	starting: string
 	finished: string
+	[index: string]: string
 }
 
 type LnOpts = {

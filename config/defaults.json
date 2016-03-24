@@ -114,25 +114,21 @@
             "heigth": 6000,
             "pixels": 20250000
         },
-        "thumb": {
-            "quality": 50,
-            "thumbDims": [125, 125],
-            "midDims": [250, 250],
-            "highQuality": true,
-            "png": false,
-            "pngQuality": "0-10"
-        },
+        "jpegQuality": 50,
+        "pngQuality": "0-10",
         "formats": {
+            "jpeg": true,
 			"png": true,
-			"jpg": true,
 			"gif": true,
             "webm": true,
-            "mp3": true,
+            "pdf": true,
             "svg": true,
-            "pdf": true
+            "mp4": true,
+            "mp3": true,
+            "ogg": true
         },
 		"webmAudio": true,
-        "duplicateThreshold": 26,
+        "duplicateThreshold": 5,
         "spoilers": [1, 2, 3],
         "hats": false
     },

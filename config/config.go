@@ -47,12 +47,8 @@ type Server struct {
 		Max struct {
 			Size, Width, Height, Pixels int64
 		}
-		Thumb struct {
-			HighQuality, PNG   bool
-			Quality            int
-			ThumbDims, MidDims [2]int
-			PNGQuality         string
-		}
+		JpegQuality        uint8
+		PngQuality         string
 		WebmAudio          bool
 		Hats               bool
 		DuplicateThreshold uint8
