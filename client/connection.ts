@@ -178,26 +178,16 @@ export function start() {
 // Work arround browser slowing down/suspending tabs and keep the FSM up to date
 // with the actual status.
 function onWindowFocus() {
-	switch (connSM.state) {
-	case connState.desynced:
-		return
-	case connState.synced:
-	case connState.syncing:
-	case connState.connecting:
-	case connState.reconnecting:
-		const rs = socket.readyState
-		if ((rs !== 1 && rs !== 0) || navigator.onLine === false) {
-			connSM.feed(connEvent.close)
-			return
-		}
-		break
+	if (connSM.state !== connState.desynced && navigator.onLine) {
+		connSM.feed(connEvent.retry)
 	}
-
-	connSM.feed(connEvent.retry)
 }
 
-document.addEventListener('visibilitychange', event =>
-	!(event.target as Document).hidden && setTimeout(onWindowFocus, 20))
+document.addEventListener('visibilitychange', event => {
+	if (!(event.target as Document).hidden) {
+		onWindowFocus()
+	}
+})
 
 window.addEventListener('online', () => {
 	resetAttempts()
