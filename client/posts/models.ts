@@ -11,7 +11,7 @@ export interface PostData {
 	editing?: boolean
 	deleted?: boolean
 	imgDeleted?: boolean
-	Image?: ImageData
+	image?: ImageData
 	op: number
 	id: number
 	time: number
@@ -24,9 +24,7 @@ export interface PostData {
 	backlinks?: PostLinks
 	links?: PostLinks
 	state?: number[]
-}
-
-export interface ThreadData extends PostData {
+	largeThumb?: boolean
 	locked?: boolean
 	archived?: boolean
 	sticky?: boolean

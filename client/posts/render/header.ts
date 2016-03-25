@@ -2,11 +2,11 @@ import {escape} from 'underscore'
 import {parseHTML, parseAttributes, pad, ElementAttributes} from '../../util'
 import {config} from '../../state'
 import options from '../../options'
-import {ThreadData, PostData} from '../models'
+import {PostData} from '../models'
 import {posts as lang, time as timeLang} from '../../lang'
 
 // Render the header with various post informationt
-export function renderHeader(data: ThreadData): string {
+export function renderHeader(data: PostData): string {
 	const {id, op, subject} = data,
 		postURL = renderPostURL(id)
 	return parseHTML
