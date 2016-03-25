@@ -100,16 +100,13 @@ type LnTime = {
 	week: string[]
 	calendar: string[]
 	justNow: string
-	minute: string
-	minutes: string
-	hour: string
-	hours: string
-	day: string
-	days: string
-	month: string
-	months: string
-	year: string
-	years: string
+	minute: string[]
+	hour: string[]
+	day: string[]
+	month: string[]
+	year: string[]
+	in: string
+	ago: string
 	[index: string]: string|string[]
 }
 

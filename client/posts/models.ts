@@ -33,6 +33,7 @@ export interface ThreadData extends PostData {
 	imageCtr: number
 	bumpTime: number
 	replyTime: number
+	subject?: string
 }
 
 export interface ImageData {

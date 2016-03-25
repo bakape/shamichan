@@ -1,13 +1,14 @@
 import {escape} from 'underscore'
 import {parseHTML, parseAttributes, pad} from '../../util'
-import lang from 'lang'
 import {config} from '../../state'
 import options from '../../options'
+import {ThreadData, PostData} from '../models'
+import {posts as lang, time as timeLang} from '../../lang'
 
-// Render the header with various post information
-export function renderHeader(data) {
-	const {num, op, subject} = data,
-		postURL = renderPostURL(num)
+// Render the header with various post informationt
+export function renderHeader(data: ThreadData): string {
+	const {id, op, subject} = data,
+		postURL = renderPostURL(id)
 	return parseHTML
 		`<header>
 			<input type="checkbox" class="postCheckbox">
@@ -19,7 +20,7 @@ export function renderHeader(data) {
 					No.
 				</a>
 				<a href="${postURL}" class="quote">
-					${num}
+					${id.toString()}
 				</a>
 			</nav>
 		</header>
@@ -27,7 +28,7 @@ export function renderHeader(data) {
 }
 
 // Render the name of a post's poster
-export function renderName(data) {
+export function renderName(data: PostData): string {
 	let html = '<b class="name'
 	const {auth, email} = data
 	if (auth) {
@@ -47,14 +48,11 @@ export function renderName(data) {
 		html += '</a>'
 	}
 	html += '</b>'
-	if (data.mnemonic) {
-		html += ' ' + renderMnemonic(data.mnemonic)
-	}
 	return html
 }
 
 // Determine the name and tripcode combination to render
-function resolveName(data) {
+function resolveName(data: PostData): string {
 	let html = ''
 	const {trip, name, auth} = data
 	if (name || !trip) {
@@ -71,7 +69,7 @@ function resolveName(data) {
 		html += `<code>${escape(trip)}</code>`
 	}
 	if (auth) { // Render staff title
-		let alias
+		let alias: string
 		if (auth in config.staff.classes) {
 			alias = config.staff.classes[auth].alias
 		} else {
@@ -82,15 +80,17 @@ function resolveName(data) {
 	return html
 }
 
-// Renders a poster identification mnemonic
-export function renderMnemonic(mnemonic) {
-	return `<b class="mod addr">${mnem}</b>`
-}
+// TODO: Resolve, once moderation implemented
+// // Renders a poster identification mnemonic
+// export function renderMnemonic(mnemonic) {
+// 	return `<b class="mod addr">${mnem}</b>`
+// }
 
 // Renders a time element. Can be either absolute or relative.
-export function renderTime(time) {
+export function renderTime(time: number): string {
 	// Format according to client's relative post timestamp setting
-	let title, text
+	let title: string,
+		text :string
 	const readable = readableTime(time)
 	if (options.get('relativeTime')) {
 		title = readable
@@ -103,22 +103,22 @@ export function renderTime(time) {
 }
 
 // Renders classic absolute timestamp
-function readableTime(time) {
+function readableTime(time: number): string {
 	let d = new Date(time)
 	return pad(d.getDate()) + ' '
-		+ lang.time.year[d.getMonth()] + ' '
+		+ timeLang.year[d.getMonth()] + ' '
 		+ d.getFullYear()
-		+ `(${lang.time.week[d.getDay()]})`
+		+ `(${timeLang.week[d.getDay()]})`
 		+`${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 // Renders readable elapsed time since post
-function relativeTime(then, now) {
+function relativeTime(then: number, now: number): string {
 	let time = Math.floor((now - then) / 60000),
 		isFuture = false
 	if (time < 1) {
 		if (time > -5) { // Assume to be client clock imprecission
-			return lang.time.just_now
+			return timeLang.justNow
 		}
 		else {
 			isFuture = true
@@ -130,15 +130,26 @@ function relativeTime(then, now) {
 		unit = ['minute', 'hour', 'day', 'month']
 	for (let i = 0; i < divide.length; i++) {
 		if (time < divide[i]) {
-			return lang.ago(time, lang.time[unit[i]], isFuture)
+			return ago(time, timeLang[unit[i]] as string[], isFuture)
 		}
 		time = Math.floor(time / divide[i])
 	}
 
-	return lang.ago(time, lang.time.year, isFuture)
+	return ago(time, timeLang.year, isFuture)
+}
+
+// Renders "56 minutes ago" or "in 56 minutes" like relative time text
+function ago(time: number, units: string[], isFuture: boolean): string {
+	let text = units[time > 1 ? 1 : 0]
+	if (isFuture) {
+		text += `${timeLang.in} ${text}`
+	} else {
+		text += ` ${timeLang.ago}`
+	}
+	return text
 }
 
 // Render an anchor that points to the target post number
-export function renderPostURL(num) {
-	return `#p${num}`
+export function renderPostURL(id: number): string {
+	return `#p${id}`
 }

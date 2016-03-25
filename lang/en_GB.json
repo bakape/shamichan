@@ -69,16 +69,13 @@
 			"Oct", "Nov", "Dec"
 		],
 		"justNow": "just now",
-		"minute": "minute",
-		"minutes": "minutes",
-		"hour": "hour",
-		"hours": "hours",
-		"day": "day",
-		"days": "days",
-		"month": "month",
-		"months": "months",
-		"year": "year",
-		"years": "year"
+		"minute": ["minute", "minutes"],
+		"hour": ["hour", "hours"],
+		"day": ["day", "days"],
+		"month": ["month", "months"],
+		"year": ["year", "years"],
+		"in": "in",
+		"ago": "ago"
 	},
 
 	"sync": ["Disconnected", "Connecting", "Syncing", "Synced", "Desynced"],
