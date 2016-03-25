@@ -23,6 +23,7 @@ export interface PostData {
 	email?: string
 	backlinks?: PostLinks
 	links?: PostLinks
+	state?: number[]
 }
 
 export interface ThreadData extends PostData {

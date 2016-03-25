@@ -1,14 +1,15 @@
-import {config} from '../state'
+import {config} from '../../state'
 import {escape} from 'underscore'
 import {renderPostLink} from './etc'
+import {PostData, PostLinks} from '../models'
 
 // Render the text body of a post
-export function renderBody(data) {
+export function renderBody(data: PostData): string {
 	if (!data.state) {
 		// Initial post state [new_line, no_qoute, no_spoiler]
 		data.state = [0, 0, 0]
 	}
-	let html = renderFragment(data.body, data.state, data.dice)
+	let html = renderFragment(data.body, data)
 	if (data.state[1]) { // Close quote on post end
 		html += '</em>'
 	}
@@ -19,7 +20,7 @@ export function renderBody(data) {
 }
 
 // Parse commited text body fragment
-export function renderFragment(frag, data) {
+export function renderFragment(frag: string, data: PostData): string {
 	const lines = frag.split('\n'),
 		{state} = data
 	let html = ''
@@ -54,7 +55,7 @@ export function renderFragment(frag, data) {
 }
 
 // Convert a word to it's appropriate HTML representation
-function parseWord(word, data) {
+function parseWord(word: string, data: PostData): string {
 	// `[spoiler]` and `[/spoiler]` are treated the same way. You can't nest
 	// them.
 	const split = word.split(/\[\/?spoiler]/i)
@@ -88,20 +89,20 @@ function parseWord(word, data) {
 }
 
 // Verify and render a link to other posts
-function parsePostLink(bit, links) {
+function parsePostLink(bit: string, links: PostLinks): string {
 	if (!links) {
 		return bit
 	}
-	const num = bit.match(/^>>\/(\d+)$/)[1],
+	const num = parseInt(bit.match(/^>>\/(\d+)$/)[1]),
 		verified = links[num]
 	if (!verified) {
 		return bit
 	}
-	return renderPostLink(num, verified.board, verified.OP)
+	return renderPostLink(num, verified.board, verified.op)
 }
 
 // Generate all possible refference name and link pairs
-const refTargets = {},
+const refTargets: {[ref: string]: string} = {},
 	{boards} = config
 for (let board of boards.enabled) {
 	refTargets[board] = `../${board}/`
@@ -111,7 +112,7 @@ for (let [name, link] of boards.psuedo.concat(boards.links)) {
 }
 
 // Parse internal or customly set reference URL
-function parseReference(bit) {
+function parseReference(bit: string): string {
 	const name = bit.match(/^>>>\/(\w+)\/$/)[1],
 		href = refTargets[name]
 	if (!href) {
@@ -121,14 +122,14 @@ function parseReference(bit) {
 }
 
 // Render and anchor link that opens in a new tab
-function newTabLink(href, text) {
+function newTabLink(href: string, text: string): string {
 	return `<a href="${href}" target="_blank">${text}</a>`
 }
 
 // Render generic URLs and embed, if aplicable
-function parseURL(bit) {
+function parseURL(bit: string): string {
 
 	// TODO: Embeds
 
-	return newTabLink(encodeURI(href), bit)
+	return newTabLink(encodeURI(bit), bit)
 }

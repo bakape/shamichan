@@ -1,5 +1,5 @@
 import {escape} from 'underscore'
-import {parseHTML, parseAttributes, pad} from '../../util'
+import {parseHTML, parseAttributes, pad, ElementAttributes} from '../../util'
 import {config} from '../../state'
 import options from '../../options'
 import {ThreadData, PostData} from '../models'
@@ -36,7 +36,7 @@ export function renderName(data: PostData): string {
 	}
 	html += '">'
 	if (email) {
-		const attrs = {
+		const attrs: ElementAttributes = {
 			class: 'email',
 			href: 'mailto:' + encodeURI(email),
 			target: 'blank'
