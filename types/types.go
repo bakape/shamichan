@@ -28,7 +28,7 @@ type Thread struct {
 	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
 	Board     string `json:"board" gorethink:"board"`
-	Subject   string `json:"subject" gorethink:"subject"`
+	Subject   string `json:"subject,omitempty" gorethink:"subject,omitempty"`
 }
 
 // Post is a generic post. Either OP or reply.
