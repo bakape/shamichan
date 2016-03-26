@@ -17,7 +17,7 @@ func (d DatabaseHelper) Exec() {
 	util.Throw(err)
 }
 
-// One writes the query result into the target pointer or returns error
+// One writes the query result into the target pointer or throws an error
 func (d DatabaseHelper) One(res interface{}) {
 	c, err := d.query.Run(RSession)
 	util.Throw(err)
