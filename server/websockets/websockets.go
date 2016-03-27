@@ -12,7 +12,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 )
 
@@ -76,9 +75,8 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	synced bool
-	ident  auth.Ident
-	sync.Mutex
+	synced   bool
+	ident    auth.Ident
 	ID       string
 	conn     *websocket.Conn
 	receiver chan receivedMessage
@@ -208,8 +206,6 @@ func (c *Client) logError(err error) {
 
 // send sends a provided message as a websocket frame to the client
 func (c *Client) send(msg []byte) error {
-	c.Lock()
-	defer c.Unlock()
 	return c.conn.WriteMessage(websocket.BinaryMessage, msg)
 }
 
