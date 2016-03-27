@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"github.com/bakape/meguca/config"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
@@ -29,10 +28,10 @@ var testDBName string
 func (d *DBSuite) SetUpSuite(c *C) {
 	d.dbName = uniqueDBName()
 	connectToRethinkDb(c)
-	DB()(r.DBCreate(d.dbName)).Exec()
+	c.Assert(DB()(r.DBCreate(d.dbName)).Exec(), IsNil)
 	RSession.Use(d.dbName)
-	CreateTables()
-	CreateIndeces()
+	c.Assert(CreateTables(), IsNil)
+	c.Assert(CreateIndeces(), IsNil)
 }
 
 // Returns a unique datatabase name. Needed so multiple concurent `go test`
@@ -55,9 +54,9 @@ func (*DBSuite) SetUpTest(_ *C) {
 }
 
 // Clear all documents from all tables after each test.
-func (*DBSuite) TearDownTest(_ *C) {
+func (*DBSuite) TearDownTest(c *C) {
 	for _, table := range AllTables {
-		DB()(r.Table(table).Delete()).Exec()
+		c.Assert(DB()(r.Table(table).Delete()).Exec(), IsNil)
 	}
 }
 
@@ -68,19 +67,21 @@ func (d *DBSuite) TearDownSuite(c *C) {
 
 func (*DBSuite) TestVerifyVersion(c *C) {
 	// Correct DB version
-	DB()(r.Table("main").Insert(map[string]interface{}{
+	info := map[string]interface{}{
 		"id":        "info",
 		"dbVersion": dbVersion,
-	})).Exec()
-	verifyDBVersion()
+	}
+	c.Assert(DB()(r.Table("main").Insert(info)).Exec(), IsNil)
+	c.Assert(verifyDBVersion(), IsNil)
 
 	// Incompatible DB version
-	DB()(r.Table("main").Get("info").Update(map[string]int{
-		"dbVersion": 0,
-	})).Exec()
-	err := errors.New("Incompatible RethinkDB database version: 0." +
-		"See docs/migration.md")
-	c.Assert(verifyDBVersion, Panics, err)
+	update := map[string]int{"dbVersion": 0}
+	c.Assert(DB()(r.Table("main").Get("info").Update(update)).Exec(), IsNil)
+	c.Assert(
+		verifyDBVersion(),
+		ErrorMatches,
+		"Incompatible RethinkDB database version: 0.*",
+	)
 }
 
 func (*DBInit) TestDb(c *C) {
@@ -95,42 +96,44 @@ func (*DBInit) TestLoadDB(c *C) {
 	dbName := uniqueDBName()
 	config.Config.Rethinkdb.Db = dbName
 	defer func() {
-		DB()(r.DBDrop(dbName)).Exec()
+		c.Assert(DB()(r.DBDrop(dbName)).Exec(), IsNil)
 		c.Assert(RSession.Close(), IsNil)
 	}()
-	LoadDB()
+	c.Assert(LoadDB(), IsNil)
 
 	var missingTables []string
-	DB()(r.Expr(AllTables).Difference(r.TableList())).One(&missingTables)
+	err := DB()(r.Expr(AllTables).Difference(r.TableList())).One(&missingTables)
+	c.Assert(err, IsNil)
 	for _, table := range missingTables {
 		c.Fatalf("table '%s' not created", table)
 	}
 
 	var hasIndex bool
-	DB()(r.Table("threads").IndexList().Contains("board")).One(&hasIndex)
+	err = DB()(r.Table("threads").IndexList().Contains("board")).One(&hasIndex)
+	c.Assert(err, IsNil)
 	if !hasIndex {
 		indexMissing("threads", "board", c)
 	}
 
 	var missingIndeces []string
-	DB()(r.
+	query := r.
 		Expr([...]string{"op", "board"}).
-		Difference(r.Table("posts").IndexList()),
-	).One(&missingIndeces)
+		Difference(r.Table("posts").IndexList())
+	c.Assert(DB()(query).One(&missingIndeces), IsNil)
 	for _, index := range missingIndeces {
 		indexMissing("posts", index, c)
 	}
 
 	var info infoDocument
-	DB()(r.Table("main").Get("info")).One(&info)
+	c.Assert(DB()(r.Table("main").Get("info")).One(&info), IsNil)
 	c.Assert(info, Equals, infoDocument{Document{"info"}, dbVersion, 0})
 
 	var histCounts Document
-	DB()(r.Table("main").Get("histCounts")).One(&histCounts)
+	c.Assert(DB()(r.Table("main").Get("histCounts")).One(&histCounts), IsNil)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
 
 	c.Assert(RSession.Close(), IsNil)
-	LoadDB()
+	c.Assert(LoadDB(), IsNil)
 }
 
 func indexMissing(table, index string, c *C) {

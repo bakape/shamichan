@@ -37,10 +37,10 @@ var _ = Suite(&DB{})
 func (d *DB) SetUpSuite(c *C) {
 	d.dbName = uniqueDBName()
 	connectToRethinkDb(c)
-	db.DB()(r.DBCreate(d.dbName)).Exec()
+	c.Assert(db.DB()(r.DBCreate(d.dbName)).Exec(), IsNil)
 	db.RSession.Use(d.dbName)
-	db.CreateTables()
-	db.CreateIndeces()
+	c.Assert(db.CreateTables(), IsNil)
+	c.Assert(db.CreateIndeces(), IsNil)
 }
 
 // Returns a unique datatabase name. Needed so multiple concurent `go test`
@@ -63,9 +63,9 @@ func (*DB) SetUpTest(_ *C) {
 }
 
 // Clear all documents from all tables after each test.
-func (*DB) TearDownTest(_ *C) {
+func (*DB) TearDownTest(c *C) {
 	for _, table := range db.AllTables {
-		db.DB()(r.Table(table).Delete()).Exec()
+		c.Assert(db.DB()(r.Table(table).Delete()).Exec(), IsNil)
 	}
 }
 
@@ -75,13 +75,15 @@ func (d *DB) TearDownSuite(c *C) {
 }
 
 // Create a multipurpose set of threads and posts for tests
-func setupPosts() {
-	db.DB()(r.Table("threads").Insert([]types.Thread{
+func setupPosts(c *C) {
+	threads := []types.Thread{
 		{ID: 1, Board: "a"},
 		{ID: 3, Board: "a"},
 		{ID: 4, Board: "c"},
-	})).Exec()
-	db.DB()(r.Table("posts").Insert([]types.Post{
+	}
+	c.Assert(db.DB()(r.Table("threads").Insert(threads)).Exec(), IsNil)
+
+	posts := []types.Post{
 		{
 			ID:    1,
 			OP:    1,
@@ -105,15 +107,20 @@ func setupPosts() {
 			Board: "c",
 			Image: genericImage,
 		},
-	})).Exec()
-	db.DB()(r.Table("main").Insert(map[string]interface{}{
-		"id": "histCounts",
-		"a":  7,
-	})).Exec()
-	db.DB()(r.Table("main").Insert(map[string]interface{}{
-		"id":      "info",
-		"postCtr": 8,
-	})).Exec()
+	}
+	c.Assert(db.DB()(r.Table("posts").Insert(posts)).Exec(), IsNil)
+
+	main := []map[string]interface{}{
+		{
+			"id": "histCounts",
+			"a":  7,
+		},
+		{
+			"id":      "info",
+			"postCtr": 8,
+		},
+	}
+	c.Assert(db.DB()(r.Table("main").Insert(main)).Exec(), IsNil)
 }
 
 type WebServer struct{}
@@ -410,14 +417,14 @@ func (*DB) TestThreadHTML(c *C) {
 	assertCode(rec, 404, c)
 
 	// Thread exists
-	setupPosts()
+	setupPosts(c)
 	rec = httptest.NewRecorder()
 	threadHTML("a")(rec, newRequest(c), httprouter.Params{{Value: "1"}})
 	assertBody(rec, string(body), c)
 }
 
 func (*DB) TestServePost(c *C) {
-	setupPosts()
+	setupPosts(c)
 
 	// Invalid post number
 	rec := httptest.NewRecorder()
@@ -449,7 +456,7 @@ func (*DB) TestServePost(c *C) {
 }
 
 func (*DB) TestBoardJSON(c *C) {
-	setupPosts()
+	setupPosts(c)
 
 	rec := httptest.NewRecorder()
 	boardJSON("a")(rec, newRequest(c))
@@ -473,7 +480,7 @@ func (*DB) TestBoardJSON(c *C) {
 }
 
 func (*DB) TestAllBoardJSON(c *C) {
-	setupPosts()
+	setupPosts(c)
 
 	rec := httptest.NewRecorder()
 	allBoardJSON(rec, newRequest(c))
@@ -499,7 +506,7 @@ func (*DB) TestAllBoardJSON(c *C) {
 }
 
 func (*DB) TestThreadJSON(c *C) {
-	setupPosts()
+	setupPosts(c)
 
 	// Invalid post number
 	rec := httptest.NewRecorder()

@@ -29,11 +29,15 @@ var Resources = Map{}
 
 // Compile reads template HTML from disk, injects dynamic variables,
 // hashes and stores them
-func Compile() {
+func Compile() error {
 	// Only one for now, but there will be more later
-	index, mobile := indexTemplate()
+	index, mobile, err := indexTemplate()
+	if err != nil {
+		return err
+	}
 	Resources["index"] = index
 	Resources["mobile"] = mobile
+	return nil
 }
 
 // clientFileHash is the combined, shortened MD5 hash of all client files
@@ -48,19 +52,26 @@ type vars struct {
 
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
-func indexTemplate() (Store, Store) {
+func indexTemplate() (desktop Store, mobile Store, err error) {
 	v := vars{ConfigHash: config.Hash}
 	v.Config = template.JS(config.ClientConfig)
 	v.Navigation = boardNavigation()
 	tmpl, err := template.ParseFiles(
 		filepath.FromSlash(templateRoot + "/index.html"),
 	)
-	util.Throw(err)
+	if err != nil {
+		err = util.WrapError("Error parsing index temlate", err)
+		return
+	}
 
 	// Rigt now the desktop and mobile templates are almost identical. This will
 	// change, when we get a dedicated mobile GUI.
-	return buildIndexTemplate(tmpl, v, false),
-		buildIndexTemplate(tmpl, v, true)
+	desktop, err = buildIndexTemplate(tmpl, v, false)
+	if err != nil {
+		return
+	}
+	mobile, err = buildIndexTemplate(tmpl, v, true)
+	return
 }
 
 // boardNavigation renders interboard navigation we put in the top banner
@@ -98,16 +109,20 @@ func buildIndexTemplate(
 	tmpl *template.Template,
 	vars vars,
 	isMobile bool,
-) Store {
+) (Store, error) {
 	vars.IsMobile = isMobile
 	buffer := new(bytes.Buffer)
-	util.Throw(tmpl.Execute(buffer, vars))
-	minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
-		MinifyScripts: true,
-	})
-	util.Throw(err)
-	return Store{
-		minified,
-		util.HashBuffer(minified),
+	if err := tmpl.Execute(buffer, vars); err != nil {
+		return Store{}, util.WrapError("Error compiling index template", err)
 	}
+	opts := &htmlmin.Options{MinifyScripts: true}
+	minified, err := htmlmin.Minify(buffer.Bytes(), opts)
+	if err != nil {
+		return Store{}, util.WrapError("Error minifying index template", err)
+	}
+	hash, err := util.HashBuffer(minified)
+	if err != nil {
+		return Store{}, util.WrapError("Error hashing index template", err)
+	}
+	return Store{minified, hash}, nil
 }

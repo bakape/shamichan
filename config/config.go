@@ -4,6 +4,7 @@
 package config
 
 import (
+	"encoding/json"
 	"github.com/Soreil/mnemonics"
 	"github.com/bakape/meguca/util"
 	"io/ioutil"
@@ -125,15 +126,38 @@ var ClientConfig []byte
 var Hash string
 
 // LoadConfig reads and parses the JSON config file
-func LoadConfig() {
+func LoadConfig() error {
 	path := filepath.FromSlash(configRoot + "/config.json")
 	file, err := ioutil.ReadFile(path)
-	util.Throw(err)
+	if err != nil {
+		return util.WrapError("Error reading configuration file", err)
+	}
 
-	util.UnmarshalJSON(file, &Config)
+	if err := json.Unmarshal(file, &Config); err != nil {
+		return parseError(err)
+	}
+
 	var data client
-	util.UnmarshalJSON(file, &data)
-	ClientConfig = util.MarshalJSON(data)
-	Hash = util.HashBuffer(file)
-	util.Throw(mnemonic.SetSalt(Config.Posts.Salt))
+	if err := json.Unmarshal(file, &data); err != nil {
+		return parseError(err)
+	}
+
+	clientJSON, err := json.Marshal(data)
+	if err != nil {
+		return parseError(err)
+	}
+	ClientConfig = clientJSON
+	hash, err := util.HashBuffer(file)
+	if err != nil {
+		return parseError(err)
+	}
+	Hash = hash
+	if err := mnemonic.SetSalt(Config.Posts.Salt); err != nil {
+		return err
+	}
+	return nil
+}
+
+func parseError(err error) error {
+	return util.WrapError("Error parsing configuration file", err)
 }

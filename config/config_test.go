@@ -22,25 +22,14 @@ func (*Tests) TestLoadConfig(c *C) {
 	c.Assert(err, IsNil)
 
 	// Config file does not exist
-	func() {
-		defer func() {
-			err := recover().(error)	
-			c.Assert(
-				os.IsNotExist(err),
-				Equals,
-				true,
-				Commentf("expected: ENOENT\ngot: %s", err),
-			)
-		}()
-		LoadConfig()
-	}()
+	c.Assert(LoadConfig(), ErrorMatches, "Error reading configuration file.*")
 
 	c.Assert(ioutil.WriteFile(path, standard, 0600), IsNil)
 	defer func() {
 		c.Assert(os.Remove(path), IsNil)
 	}()
 
-	LoadConfig()
+	c.Assert(LoadConfig(), IsNil)
 	stdConfig := Server{}
 	stdConfig.Posts.Salt = "LALALALALALALALALALALALALALALALALALALALA"
 	c.Assert(Config, DeepEquals, stdConfig)

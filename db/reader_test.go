@@ -18,15 +18,14 @@ func (*DBSuite) TestNewReader(c *C) {
 func (*DBSuite) TestParsePost(c *C) {
 	// Regular post
 	r := NewReader("a", auth.Ident{})
-	img := types.Image{File: "foo"}
 	init := types.Post{
 		Body:  "foo",
-		Image: img,
+		Image: genericImage,
 		IP:    "::1",
 	}
 	standard := types.Post{
 		Body:  "foo",
-		Image: img,
+		Image: genericImage,
 	}
 	p := init
 	c.Assert(r.parsePost(p), DeepEquals, standard)
@@ -48,7 +47,7 @@ func (*DBSuite) TestGetPost(c *C) {
 		OP:    1,
 		Board: "a",
 	}
-	DB()(r.Table("posts").Insert([]types.Post{
+	samplePosts := []types.Post{
 		{
 			ID:      2,
 			OP:      1,
@@ -66,8 +65,9 @@ func (*DBSuite) TestGetPost(c *C) {
 			OP:    1,
 			Board: "q",
 		},
-	})).Exec()
-	DB()(r.Table("threads").Insert([]types.Thread{
+	}
+	c.Assert(DB()(r.Table("posts").Insert(samplePosts)).Exec(), IsNil)
+	sampleThreads := []types.Thread{
 		{
 			ID:      4,
 			Deleted: true,
@@ -77,24 +77,47 @@ func (*DBSuite) TestGetPost(c *C) {
 			ID:    1,
 			Board: "a",
 		},
-	})).Exec()
+	}
+	c.Assert(DB()(r.Table("threads").Insert(sampleThreads)).Exec(), IsNil)
+
 	r := NewReader("a", auth.Ident{})
 	empty := types.Post{}
-	c.Assert(r.GetPost(7), DeepEquals, empty)    // Does not exist
-	c.Assert(r.GetPost(2), DeepEquals, empty)    // Post deleted
-	c.Assert(r.GetPost(5), DeepEquals, empty)    // Thread deleted
-	c.Assert(r.GetPost(8), DeepEquals, empty)    // Board no longer accessable
-	c.Assert(r.GetPost(3), DeepEquals, standard) // Valid read
+
+	// Does not exist
+	post, err := r.GetPost(7)
+	c.Assert(err, IsNil)
+	c.Assert(post, DeepEquals, empty)
+
+	// Post deleted
+	post, err = r.GetPost(2)
+	c.Assert(err, IsNil)
+	c.Assert(post, DeepEquals, empty)
+
+	// Thread deleted
+	post, err = r.GetPost(5)
+	c.Assert(err, IsNil)
+	c.Assert(post, DeepEquals, empty)
+
+	// Board no longer accessable
+	post, err = r.GetPost(8)
+	c.Assert(err, IsNil)
+	c.Assert(post, DeepEquals, empty)
+
+	// Valid read
+	post, err = r.GetPost(3)
+	c.Assert(err, IsNil)
+	c.Assert(post, DeepEquals, standard)
 }
 
 func (*DBSuite) TestGetJoinedThread(c *C) {
 	// Only OP
-	DB()(r.Table("threads").Insert(types.Thread{ID: 1})).Exec()
-	DB()(r.Table("posts").Insert(types.Post{
+	c.Assert(DB()(r.Table("threads").Insert(types.Thread{ID: 1})).Exec(), IsNil)
+	samplePosts := types.Post{
 		ID:    1,
 		OP:    1,
 		Image: genericImage,
-	})).Exec()
+	}
+	c.Assert(DB()(r.Table("posts").Insert(samplePosts)).Exec(), IsNil)
 	standard := joinedThread{
 		Left: types.Thread{
 			ID: 1,
@@ -104,26 +127,34 @@ func (*DBSuite) TestGetJoinedThread(c *C) {
 			Image: genericImage,
 		},
 	}
-	c.Assert(getJoinedThread(1), DeepEquals, standard)
+
+	thread, err := getJoinedThread(1)
+	c.Assert(err, IsNil)
+	c.Assert(thread, DeepEquals, standard)
 
 	// 1 reply, no image
-	DB()(r.Table("posts").Insert(types.Post{
+	sampleReply := types.Post{
 		ID: 2,
 		OP: 1,
-	})).Exec()
-
+	}
+	c.Assert(DB()(r.Table("posts").Insert(sampleReply)).Exec(), IsNil)
 	standard.Left.PostCtr++
-	c.Assert(getJoinedThread(1), DeepEquals, standard)
+	thread, err = getJoinedThread(1)
+	c.Assert(err, IsNil)
+	c.Assert(thread, DeepEquals, standard)
 
 	// 2 replies, 1 image
-	DB()(r.Table("posts").Insert(types.Post{
+	imagePost := types.Post{
 		ID:    3,
 		OP:    1,
 		Image: genericImage,
-	})).Exec()
+	}
+	c.Assert(DB()(r.Table("posts").Insert(imagePost)).Exec(), IsNil)
 	standard.Left.PostCtr++
 	standard.Left.ImageCtr++
-	c.Assert(getJoinedThread(1), DeepEquals, standard)
+	thread, err = getJoinedThread(1)
+	c.Assert(err, IsNil)
+	c.Assert(thread, DeepEquals, standard)
 }
 
 func (*DBSuite) TestParseThreads(c *C) {
@@ -163,7 +194,7 @@ func (*DBSuite) TestParseThreads(c *C) {
 }
 
 func (*DBSuite) TestGetBoard(c *C) {
-	setupPosts()
+	setupPosts(c)
 	standard := types.Board{
 		Ctr: 7,
 		Threads: []types.ThreadContainer{
@@ -192,17 +223,21 @@ func (*DBSuite) TestGetBoard(c *C) {
 			},
 		},
 	}
-	c.Assert(NewReader("a", auth.Ident{}).GetBoard(), DeepEquals, standard)
+	board, err := NewReader("a", auth.Ident{}).GetBoard()
+	c.Assert(err, IsNil)
+	c.Assert(board, DeepEquals, standard)
 }
 
 // Create a multipurpose set of threads and posts for tests
-func setupPosts() {
-	DB()(r.Table("threads").Insert([]types.Thread{
+func setupPosts(c *C) {
+	threads := []types.Thread{
 		{ID: 1, Board: "a"},
 		{ID: 3, Board: "a"},
 		{ID: 4, Board: "c"},
-	})).Exec()
-	DB()(r.Table("posts").Insert([]types.Post{
+	}
+	c.Assert(DB()(r.Table("threads").Insert(threads)).Exec(), IsNil)
+
+	posts := []types.Post{
 		{
 			ID:    1,
 			OP:    1,
@@ -226,19 +261,24 @@ func setupPosts() {
 			Board: "c",
 			Image: genericImage,
 		},
-	})).Exec()
-	DB()(r.Table("main").Insert(map[string]interface{}{
-		"id": "histCounts",
-		"a":  7,
-	})).Exec()
-	DB()(r.Table("main").Insert(map[string]interface{}{
-		"id":      "info",
-		"postCtr": 8,
-	})).Exec()
+	}
+	c.Assert(DB()(r.Table("posts").Insert(posts)).Exec(), IsNil)
+
+	main := []map[string]interface{}{
+		{
+			"id": "histCounts",
+			"a":  7,
+		},
+		{
+			"id":      "info",
+			"postCtr": 8,
+		},
+	}
+	c.Assert(DB()(r.Table("main").Insert(main)).Exec(), IsNil)
 }
 
 func (*DBSuite) TestGetAllBoard(c *C) {
-	setupPosts()
+	setupPosts(c)
 
 	standard := types.Board{
 		Ctr: 8,
@@ -279,11 +319,14 @@ func (*DBSuite) TestGetAllBoard(c *C) {
 			},
 		},
 	}
-	c.Assert(NewReader("a", auth.Ident{}).GetAllBoard(), DeepEquals, standard)
+
+	board, err := NewReader("a", auth.Ident{}).GetAllBoard()
+	c.Assert(err, IsNil)
+	c.Assert(board, DeepEquals, standard)
 }
 
 func (*DBSuite) TestReaderGetThread(c *C) {
-	setupPosts()
+	setupPosts(c)
 	rd := NewReader("a", auth.Ident{})
 
 	// No replies ;_;
@@ -298,7 +341,9 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 			Image: genericImage,
 		},
 	}
-	c.Assert(rd.GetThread(3, 0), DeepEquals, standard)
+	thread, err := rd.GetThread(3, 0)
+	c.Assert(err, IsNil)
+	c.Assert(thread, DeepEquals, standard)
 
 	// With replies
 	additional := types.Post{
@@ -307,7 +352,7 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 		Board: "a",
 		Image: genericImage,
 	}
-	DB()(r.Table("posts").Insert(additional)).Exec()
+	c.Assert(DB()(r.Table("posts").Insert(additional)).Exec(), IsNil)
 	standard = types.ThreadContainer{
 		Thread: types.Thread{
 			ID:       1,
@@ -329,9 +374,13 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 			"5": additional,
 		},
 	}
-	c.Assert(rd.GetThread(1, 0), DeepEquals, standard)
+	thread, err = rd.GetThread(1, 0)
+	c.Assert(err, IsNil)
+	c.Assert(thread, DeepEquals, standard)
 
 	// Last 1 post
 	delete(standard.Posts, "2")
-	c.Assert(rd.GetThread(1, 1), DeepEquals, standard)
+	thread, err = rd.GetThread(1, 1)
+	c.Assert(err, IsNil)
+	c.Assert(thread, DeepEquals, standard)
 }

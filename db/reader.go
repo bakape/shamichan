@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
@@ -28,8 +29,14 @@ type joinedThread struct {
 }
 
 // GetThread retrieves thread JSON from the database
-func (rd *Reader) GetThread(id uint64, lastN int) types.ThreadContainer {
-	thread := getJoinedThread(id)
+func (rd *Reader) GetThread(id uint64, lastN int) (
+	types.ThreadContainer,
+	error,
+) {
+	thread, err := getJoinedThread(id)
+	if err != nil {
+		return types.ThreadContainer{}, err
+	}
 
 	// Get all other posts
 	var posts []types.Post
@@ -39,7 +46,11 @@ func (rd *Reader) GetThread(id uint64, lastN int) types.ThreadContainer {
 	if lastN != 0 { // Only fetch last N number of replies
 		query = query.CoerceTo("array").OrderBy("id").Slice(-lastN)
 	}
-	DB()(query).All(&posts)
+	err = DB()(query).All(&posts)
+	if err != nil {
+		msg := fmt.Sprintf("Error retrieving thread: %d:last%d", id, lastN)
+		return types.ThreadContainer{}, util.WrapError(msg, err)
+	}
 
 	// Parse posts, remove those that the client can not access and allocate the
 	// rest to a map
@@ -62,19 +73,24 @@ func (rd *Reader) GetThread(id uint64, lastN int) types.ThreadContainer {
 		Post:   rd.parsePost(thread.Right),
 		Thread: thread.Left,
 		Posts:  filtered,
-	}
+	}, nil
 }
 
 // Retrieve the thread metadata along with the OP post in the same format as
 // multiple thread joins, for interoperability
-func getJoinedThread(id uint64) (thread joinedThread) {
-	DB()(r.
+func getJoinedThread(id uint64) (thread joinedThread, err error) {
+	query := r.
 		Expr(map[string]r.Term{
 			"left":  getThread(id).Without("history"),
 			"right": getPost(id),
 		}).
-		Merge(getThreadMeta()),
-	).One(&thread)
+		Merge(getThreadMeta())
+	err = DB()(query).One(&thread)
+	if err != nil {
+		msg := fmt.Sprintf("Error retrieving joined thread: %d", id)
+		err = util.WrapError(msg, err)
+		return
+	}
 	thread.Right.OP = 0
 	return
 }
@@ -114,44 +130,77 @@ func (rd *Reader) parsePost(post types.Post) types.Post {
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id uint64) (post types.Post) {
-	DB()(getPost(id)).One(&post)
+func (rd *Reader) GetPost(id uint64) (post types.Post, err error) {
+	err = DB()(getPost(id)).One(&post)
+	if err != nil {
+		msg := fmt.Sprintf("Error retrieving post: %d", id)
+		err = util.WrapError(msg, err)
+		return
+	}
 	if post.ID == 0 || !auth.CanAccessBoard(post.Board, rd.ident) {
-		return types.Post{}
+		return types.Post{}, nil
 	}
-	var deleted bool // Check if parent thread was not deleted
-	DB()(getThread(post.OP).Field("deleted").Default(false)).One(&deleted)
+
+	// Check if parent thread was not deleted
+	var deleted bool
+	err = DB()(getThread(post.OP).Field("deleted").Default(false)).One(&deleted)
+	if err != nil {
+		msg := fmt.Sprintf(
+			"Error checking, if parent thread is deleted: %d",
+			id,
+		)
+		return types.Post{}, util.WrapError(msg, err)
+	}
 	if deleted {
-		return types.Post{}
+		return types.Post{}, nil
 	}
-	return rd.parsePost(post)
+	return rd.parsePost(post), nil
 }
 
 // GetBoard retrieves all OPs of a single board
-func (rd *Reader) GetBoard() (board types.Board) {
+func (rd *Reader) GetBoard() (board types.Board, err error) {
 	var threads []joinedThread
-	DB()(r.
+	err = DB()(r.
 		Table("threads").
 		GetAllByIndex("board", rd.board).
 		EqJoin("id", r.Table("posts")).
 		Merge(getThreadMeta()).
 		Without(map[string]string{"right": "op"}),
-	).All(&threads)
-	board.Ctr = BoardCounter(rd.board)
+	).
+		All(&threads)
+	if err != nil {
+		err = util.WrapError(
+			fmt.Sprintf("Error retrieving board: %s", rd.board),
+			err,
+		)
+		return
+	}
+	board.Ctr, err = BoardCounter(rd.board)
+	if err != nil {
+		return
+	}
 	board.Threads = rd.parseThreads(threads)
 	return
 }
 
 // GetAllBoard retrieves all threads the client has access to for the "/all/"
 // meta-board
-func (rd *Reader) GetAllBoard() (board types.Board) {
+func (rd *Reader) GetAllBoard() (board types.Board, err error) {
 	var threads []joinedThread
-	DB()(r.Table("threads").
+	err = DB()(r.Table("threads").
 		EqJoin("id", r.Table("posts")).
 		Merge(getThreadMeta()).
 		Without(map[string]string{"right": "op"}),
-	).All(&threads)
-	board.Ctr = PostCounter()
+	).
+		All(&threads)
+	if err != nil {
+		err = util.WrapError("Error retrieving /all/ board", err)
+		return
+	}
+	board.Ctr, err = PostCounter()
+	if err != nil {
+		return
+	}
 	board.Threads = rd.parseThreads(threads)
 	return
 }

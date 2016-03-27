@@ -7,6 +7,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
+	"log"
 	"os"
 	"runtime"
 )
@@ -79,8 +80,16 @@ func printUsage() {
 }
 
 func startServer() {
-	config.LoadConfig()
-	templates.Compile()
-	db.LoadDB()
-	startWebServer()
+	fns := []func() error{
+		config.LoadConfig,
+		templates.Compile,
+		db.LoadDB,
+		startWebServer,
+	}
+	for _, fn := range fns {
+		err := fn()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }

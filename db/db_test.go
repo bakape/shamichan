@@ -6,36 +6,53 @@ import (
 )
 
 func (*DBSuite) TestParentThread(c *C) {
-	DB()(r.Table("posts").Insert(map[string]int{
+	std := map[string]int{
 		"id": 2,
 		"op": 1,
-	})).Exec()
-	c.Assert(parentThread(2), Equals, uint64(1))
+	}
+	c.Assert(DB()(r.Table("posts").Insert(std)).Exec(), IsNil)
+	thread, err := parentThread(2)
+	c.Assert(err, IsNil)
+	c.Assert(thread, Equals, uint64(1))
 
 	// Post does not exist
-	c.Assert(parentThread(15), Equals, uint64(0))
+	thread, err = parentThread(15)
+	c.Assert(err, IsNil)
+	c.Assert(thread, Equals, uint64(0))
 }
 
 func (*DBSuite) TestParentBoard(c *C) {
-	DB()(r.Table("posts").Insert(map[string]interface{}{
+	std := map[string]interface{}{
 		"id":    1,
 		"board": "a",
-	})).Exec()
-	c.Assert(parentBoard(1), Equals, "a")
+	}
+	c.Assert(DB()(r.Table("posts").Insert(std)).Exec(), IsNil)
+
+	b, err := parentBoard(1)
+	c.Assert(err, IsNil)
+	c.Assert(b, Equals, "a")
 
 	// Post does not exist
-	c.Assert(parentBoard(15), Equals, "")
+	b, err = parentBoard(15)
+	c.Assert(err, IsNil)
+	c.Assert(b, Equals, "")
 }
 
 func (*DBSuite) TestValidateOP(c *C) {
-	DB()(r.Table("threads").Insert(map[string]interface{}{
+	std := map[string]interface{}{
 		"id":    1,
 		"board": "a",
-	})).Exec()
-	c.Assert(ValidateOP(1, "a"), Equals, true)
+	}
+	c.Assert(DB()(r.Table("threads").Insert(std)).Exec(), IsNil)
+
+	v, err := ValidateOP(1, "a")
+	c.Assert(err, IsNil)
+	c.Assert(v, Equals, true)
 
 	// Thread does not exist
-	c.Assert(ValidateOP(15, "a"), Equals, false)
+	v, err = ValidateOP(15, "a")
+	c.Assert(err, IsNil)
+	c.Assert(v, Equals, false)
 }
 
 func (*DBSuite) TestGetThread(c *C) {
@@ -43,49 +60,71 @@ func (*DBSuite) TestGetThread(c *C) {
 }
 
 func (*DBSuite) TestPostCounter(c *C) {
-	DB()(r.Table("main").Insert(map[string]interface{}{
+	std := map[string]interface{}{
 		"id":      "info",
 		"postCtr": 1,
-	})).Exec()
-	c.Assert(PostCounter(), Equals, uint64(1))
+	}
+	c.Assert(DB()(r.Table("main").Insert(std)).Exec(), IsNil)
+
+	count, err := PostCounter()
+	c.Assert(err, IsNil)
+	c.Assert(count, Equals, uint64(1))
 }
 
 func (*DBSuite) TestBoardCounter(c *C) {
-	DB()(r.Table("main").Insert(map[string]string{"id": "histCounts"})).Exec()
-	c.Assert(BoardCounter("a"), Equals, uint64(0))
+	std := map[string]string{"id": "histCounts"}
+	c.Assert(DB()(r.Table("main").Insert(std)).Exec(), IsNil)
 
-	DB()(r.Table("main").Get("histCounts").Update(map[string]int{
-		"a": 1,
-	})).Exec()
-	c.Assert(BoardCounter("a"), Equals, uint64(1))
+	count, err := BoardCounter("a")
+	c.Assert(err, IsNil)
+	c.Assert(count, Equals, uint64(0))
+
+	update := map[string]int{"a": 1}
+	err = DB()(r.Table("main").Get("histCounts").Update(update)).Exec()
+	c.Assert(err, IsNil)
+
+	count, err = BoardCounter("a")
+	c.Assert(err, IsNil)
+	c.Assert(count, Equals, uint64(1))
 }
 
 func (*DBSuite) TestThreadCounter(c *C) {
-	DB()(r.Table("posts").Insert(map[string]int{
+	std := map[string]int{
 		"id": 1,
 		"op": 1,
-	})).Exec()
-	c.Assert(ThreadCounter(1), Equals, uint64(0))
+	}
+	c.Assert(DB()(r.Table("posts").Insert(std)).Exec(), IsNil)
 
-	DB()(r.Table("posts").Insert(map[string]int{
+	count, err := ThreadCounter(1)
+	c.Assert(err, IsNil)
+	c.Assert(count, Equals, uint64(0))
+
+	more := map[string]int{
 		"id": 2,
 		"op": 1,
-	})).Exec()
-	c.Assert(ThreadCounter(1), Equals, uint64(1))
+	}
+	c.Assert(DB()(r.Table("posts").Insert(more)).Exec(), IsNil)
+
+	count, err = ThreadCounter(1)
+	c.Assert(err, IsNil)
+	c.Assert(count, Equals, uint64(1))
 }
 
 func (*DBSuite) TestDatabaseHelper(c *C) {
 	standard := Document{"doc"}
 	helper := DatabaseHelper{r.Table("main").Insert(standard)}
-	helper.Exec()
+	err := helper.Exec()
+	c.Assert(err, IsNil)
 
 	var doc Document
 	helper = DatabaseHelper{r.Table("main").Get("doc")}
-	helper.One(&doc)
+	err = helper.One(&doc)
+	c.Assert(err, IsNil)
 	c.Assert(doc, DeepEquals, standard)
 
 	var docs []Document
 	helper = DatabaseHelper{r.Table("main")}
-	helper.All(&docs)
+	err = helper.All(&docs)
+	c.Assert(err, IsNil)
 	c.Assert(docs, DeepEquals, []Document{standard})
 }

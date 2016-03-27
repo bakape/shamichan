@@ -5,6 +5,7 @@
 package server
 
 import (
+	"encoding/json"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -29,9 +30,8 @@ var (
 	imageWebRoot = "img"
 )
 
-func startWebServer() {
+func startWebServer() (err error) {
 	log.Println("Listening on " + config.Config.HTTP.Addr)
-	var err error
 	conf := config.Config.HTTP
 	r := createRouter()
 	if conf.SSL {
@@ -39,7 +39,10 @@ func startWebServer() {
 	} else {
 		err = http.ListenAndServe(conf.Addr, r)
 	}
-	log.Fatal(err)
+	if err != nil {
+		return util.WrapError("Error starting web server", err)
+	}
+	return
 }
 
 // Create the monolithic router for routing HTTP requests. Separated into own
@@ -116,20 +119,57 @@ func serveIndexTemplate(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	_, err := res.Write(template.HTML)
-	util.Throw(err)
+	if err != nil {
+		panicHandler(res, req, err)
+		return
+	}
 }
 
 // Serves `/api/:board/` page JSON
 func boardJSON(board string) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		if !compareEtag(res, req, etagStart(db.BoardCounter(board)), true) {
+		counter, err := db.BoardCounter(board)
+		if err != nil {
+			panicHandler(res, req, err)
+			return
+		}
+		if !compareEtag(res, req, etagStart(counter), true) {
 			return
 		}
 		ident := auth.LookUpIdent(req.RemoteAddr)
-		_, err := res.Write(
-			util.MarshalJSON(db.NewReader(board, ident).GetBoard()),
-		)
-		util.Throw(err)
+		writeJSON(res, req, func() (interface{}, error) {
+			return db.NewReader(board, ident).GetBoard()
+		})
+	}
+}
+
+// writeJSON is a helper function for calling the same error handler on the
+// first to fail operation, when writing JSON to the client
+func writeJSON(
+	res http.ResponseWriter,
+	req *http.Request,
+	source func() (interface{}, error),
+) {
+	var (
+		data interface{}
+		JSON []byte
+	)
+	fns := []func() error{
+		func() (err error) {
+			data, err = source()
+			return
+		},
+		func() (err error) {
+			JSON, err = json.Marshal(data)
+			return
+		},
+		func() (err error) {
+			_, err = res.Write(JSON)
+			return
+		},
+	}
+	if err := util.Waterfall(fns); err != nil {
+		panicHandler(res, req, err)
 	}
 }
 
@@ -141,7 +181,12 @@ func threadHTML(board string) httprouter.Handle {
 		ps httprouter.Params,
 	) {
 		id, err := strconv.ParseUint(ps[0].Value, 10, 64)
-		if !validateThreadRequest(err, board, id) {
+		valid, err := validateThreadRequest(err, board, id)
+		if err != nil {
+			panicHandler(res, req, err)
+			return
+		}
+		if !valid {
 			notFound(res)
 			return
 		}
@@ -157,37 +202,59 @@ func threadJSON(board string) httprouter.Handle {
 		ps httprouter.Params,
 	) {
 		id, err := strconv.ParseUint(ps[0].Value, 10, 64)
-		ident := auth.LookUpIdent(req.RequestURI)
-		if !validateThreadRequest(err, board, id) {
+		valid, err := validateThreadRequest(err, board, id)
+		if err != nil {
+			panicHandler(res, req, err)
+			return
+		}
+		if !valid {
 			text404(res)
 			return
 		}
-		if !compareEtag(res, req, etagStart(db.ThreadCounter(id)), true) {
+
+		ident := auth.LookUpIdent(req.RequestURI)
+
+		counter, err := db.ThreadCounter(id)
+		if err != nil {
+			panicHandler(res, req, err)
 			return
 		}
-		data := util.MarshalJSON(
-			db.NewReader(board, ident).GetThread(id, detectLastN(req)),
-		)
-		_, err = res.Write(data)
-		util.Throw(err)
+		if !compareEtag(res, req, etagStart(counter), true) {
+			return
+		}
+
+		writeJSON(res, req, func() (interface{}, error) {
+			return db.NewReader(board, ident).GetThread(id, detectLastN(req))
+		})
 	}
 }
 
 // Cofirm thread request is proper, thread exists and client had right of access
-func validateThreadRequest(err error, board string, id uint64) bool {
-	return err == nil && db.ValidateOP(id, board)
+func validateThreadRequest(err error, board string, id uint64) (bool, error) {
+	if err != nil {
+		return false, nil
+	}
+	valid, err := db.ValidateOP(id, board)
+	if err != nil {
+		return false, err
+	}
+	return valid, nil
 }
 
 // Serves JSON for the "/all/" meta-board, that contains threads from all boards
 func allBoardJSON(res http.ResponseWriter, req *http.Request) {
-	if !compareEtag(res, req, etagStart(db.PostCounter()), true) {
+	counter, err := db.PostCounter()
+	if err != nil {
+		panicHandler(res, req, err)
+		return
+	}
+	if !compareEtag(res, req, etagStart(counter), true) {
 		return
 	}
 	ident := auth.LookUpIdent(req.RemoteAddr)
-	_, err := res.Write(
-		util.MarshalJSON(db.NewReader("all", ident).GetAllBoard()),
-	)
-	util.Throw(err)
+	writeJSON(res, req, func() (interface{}, error) {
+		return db.NewReader("all", ident).GetAllBoard()
+	})
 }
 
 // Build an etag for HTML pages and check if it matches the one provided by the
@@ -199,7 +266,8 @@ func compareEtag(
 	etag string,
 	json bool,
 ) bool {
-	if checkClientEtag(res, req, etag) { // If etags match, no need to rerender
+	// If etags match, no need to rerender
+	if checkClientEtag(res, req, etag) {
 		return false
 	}
 	setHeaders(res, etag, json)
@@ -211,10 +279,8 @@ func etagStart(counter uint64) string {
 	return "W/" + util.IDToString(counter)
 }
 
-/*
- Check is any of the etags the client provides in the "If-None-Match" header
- match the generated etag. If yes, write 304 and return true.
-*/
+// Check is any of the etags the client provides in the "If-None-Match" header
+// match the generated etag. If yes, write 304 and return true.
 func checkClientEtag(
 	res http.ResponseWriter,
 	req *http.Request,
@@ -231,7 +297,10 @@ func checkClientEtag(
 func notFound(res http.ResponseWriter) {
 	setErrorHeaders(res)
 	res.WriteHeader(404)
-	util.CopyFile(filepath.FromSlash(webRoot+"/404.html"), res)
+	err := util.CopyFile(filepath.FromSlash(webRoot+"/404.html"), res)
+	if err != nil {
+		log.Panicln(err)
+	}
 }
 
 // Addapter for using notFound as a route handler
@@ -254,7 +323,10 @@ func setErrorHeaders(res http.ResponseWriter) {
 func panicHandler(res http.ResponseWriter, req *http.Request, err interface{}) {
 	setErrorHeaders(res)
 	res.WriteHeader(500)
-	util.CopyFile(filepath.FromSlash(webRoot+"/50x.html"), res)
+	copyErr := util.CopyFile(filepath.FromSlash(webRoot+"/50x.html"), res)
+	if copyErr != nil {
+		log.Println(copyErr)
+	}
 	util.LogError(req, err)
 }
 
@@ -301,7 +373,9 @@ func serveConfigs(res http.ResponseWriter, req *http.Request) {
 	}
 	setHeaders(res, etag, true)
 	_, err := res.Write(config.ClientConfig)
-	util.Throw(err)
+	if err != nil {
+		panicHandler(res, req, err)
+	}
 }
 
 // Serve a single post as JSON
@@ -315,19 +389,38 @@ func servePost(
 		text404(res)
 		return
 	}
-	post := db.NewReader("", auth.LookUpIdent(req.RemoteAddr)).GetPost(id)
+
+	post, err := db.NewReader("", auth.LookUpIdent(req.RemoteAddr)).GetPost(id)
+	if err != nil {
+		panicHandler(res, req, err)
+		return
+	}
 	if post.ID == 0 { // No post in the database or no access
 		text404(res)
 		return
 	}
-	data := util.MarshalJSON(post)
-	etag := util.HashBuffer(data)
+
+	data, err := json.Marshal(post)
+	if err != nil {
+		panicHandler(res, req, err)
+		return
+	}
+
+	etag, err := util.HashBuffer(data)
+	if err != nil {
+		panicHandler(res, req, err)
+		return
+	}
 	if checkClientEtag(res, req, etag) {
 		return
 	}
+
 	setHeaders(res, etag, true)
 	_, err = res.Write(data)
-	util.Throw(err)
+	if err != nil {
+		panicHandler(res, req, err)
+		return
+	}
 }
 
 // More performant handler for serving image assets. These are immutable
@@ -358,5 +451,8 @@ func serveImages(
 	headers.Set("Cache-Control", "max-age=30240000")
 	headers.Set("X-Frame-Options", "sameorigin")
 	_, err = io.Copy(res, file)
-	util.Throw(err)
+	if err != nil {
+		panicHandler(res, req, err)
+		return
+	}
 }

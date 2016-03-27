@@ -5,8 +5,6 @@
 package server
 
 import (
-	"fmt"
-	"github.com/bakape/meguca/util"
 	"github.com/sevlyar/go-daemon"
 	"log"
 	"os"
@@ -44,12 +42,8 @@ var daemonContext = &daemon.Context{
 // Spawn a detached process to work in the background
 func daemonise() {
 	child, err := daemonContext.Reborn()
-	if err != nil {
-		if err.Error() == "resource temporarily unavailable" {
-			fmt.Println("Error: Server already running")
-			os.Exit(1)
-		}
-		panic(err)
+	if err != nil && err.Error() == "resource temporarily unavailable" {
+		log.Fatalln("Error: Server already running")
 	}
 	if child != nil {
 		return
@@ -57,7 +51,9 @@ func daemonise() {
 	defer daemonContext.Release()
 	log.Println("Server started ------------------------------------")
 	go startServer()
-	util.Throw(daemon.ServeSignals())
+	if err := daemon.ServeSignals(); err != nil {
+		log.Fatalf("Daemon runtime error: %s\n", err)
+	}
 	log.Println("Server terminated")
 }
 
@@ -65,10 +61,12 @@ func daemonise() {
 func killDaemon() {
 	proc, err := daemonContext.Search()
 	if err != nil && (!os.IsNotExist(err) && err.Error() != "EOF") {
-		panic(err)
+		log.Fatalf("Error locating running daemon: %s\n", err)
 	}
 	if proc != nil {
-		util.Throw(proc.Signal(syscall.SIGTERM))
+		if err := proc.Signal(syscall.SIGTERM); err != nil {
+			log.Fatalf("Error killing running daemon: %s\n", err)
+		}
 
 		// Assertain process has exited
 		for {
@@ -76,7 +74,7 @@ func killDaemon() {
 				if err.Error() == "os: process already finished" {
 					break
 				}
-				panic(err)
+				log.Fatalf("Error ascertaining daemon exited: %s\n", err)
 			}
 			time.Sleep(100 * time.Millisecond)
 		}

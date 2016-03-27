@@ -23,21 +23,10 @@ func (*Util) TestWrapError(c *C) {
 	c.Assert(wrapped.Error(), Equals, "bar: foo")
 }
 
-func (*Util) TestThrowNoError(c *C) {
-	defer c.Assert(recover(), IsNil)
-	Throw(nil)
-}
-
-func (*Util) TestThrowWithError(c *C) {
-	err := errors.New("foo")
-	defer func() {
-		c.Assert(recover(), DeepEquals, err)
-	}()
-	Throw(err)
-}
-
 func (*Util) TestHashBuffer(c *C) {
-	c.Assert(HashBuffer([]byte{1, 2, 3}), Equals, "5289df737df57326")
+	hash, err := HashBuffer([]byte{1, 2, 3})
+	c.Assert(err, IsNil)
+	c.Assert(hash, Equals, "5289df737df57326")
 }
 
 type jsonSample struct {
@@ -45,22 +34,9 @@ type jsonSample struct {
 	B string `json:"b"`
 }
 
-func (*Util) TestMarshalJSON(c *C) {
-	s := jsonSample{1, "b"}
-	c.Assert(string(MarshalJSON(s)), Equals, `{"a":1,"b":"b"}`)
-}
-
-func (*Util) TestUnmarshalJSON(c *C) {
-	const json = `{"a":1,"b":"b"}`
-	var store jsonSample
-	result := jsonSample{1, "b"}
-	UnmarshalJSON([]byte(json), &store)
-	c.Assert(store, DeepEquals, result)
-}
-
 func (*Util) TestCopyFile(c *C) {
 	buf := new(bytes.Buffer)
-	CopyFile("./test/frontpage.html", buf)
+	c.Assert(CopyFile("./test/frontpage.html", buf), IsNil)
 	c.Assert(buf.String(), Equals, "<!doctype html><html></html>\n")
 }
 
@@ -93,4 +69,29 @@ func captureLog(fn func()) string {
 
 func (*Util) TestRandomID(c *C) {
 	c.Assert(RandomID(32), Matches, "^[0-9a-zA-Z]{32}$")
+}
+
+func (*Util) TestWaterfall(c *C) {
+	// All pass
+	var wasRun int
+	fn := func() error {
+		wasRun++
+		return nil
+	}
+	fns := []func() error{fn, fn}
+	c.Assert(Waterfall(fns), IsNil)
+	c.Assert(wasRun, Equals, 2)
+
+	// 2nd function returns error
+	wasRun = 0
+	fns = []func() error{
+		fn,
+		func() error {
+			wasRun++
+			return errors.New("foo")
+		},
+		fn,
+	}
+	c.Assert(Waterfall(fns), ErrorMatches, "foo")
+	c.Assert(wasRun, Equals, 2)
 }

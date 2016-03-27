@@ -21,7 +21,7 @@ var RSession *r.Session
 // DB returns a function that creates a new DatabaseHelper. Used to simplify
 // database queries.
 // Simply DB()(${query}).${method}()
-// Example: DB()(r.Table("posts").Get(1)).One(&Post)
+// Example: err := DB()(r.Table("posts").Get(1)).One(&Post)
 func DB() func(r.Term) DatabaseHelper {
 	return func(query r.Term) DatabaseHelper {
 		return DatabaseHelper{query}
@@ -30,32 +30,42 @@ func DB() func(r.Term) DatabaseHelper {
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
-func LoadDB() {
-	var err error
+func LoadDB() (err error) {
 	RSession, err = r.Connect(r.ConnectOpts{
 		Address: config.Config.Rethinkdb.Addr,
 	})
-	util.Throw(err)
+	if err != nil {
+		return util.WrapError("Error connecting to RethinkDB", err)
+	}
 
 	var isCreated bool
-	DB()(r.DBList().Contains(config.Config.Rethinkdb.Db)).One(&isCreated)
+	err = DB()(r.DBList().Contains(config.Config.Rethinkdb.Db)).One(&isCreated)
+	if err != nil {
+		return util.WrapError("Error checking, if database exists", err)
+	}
 	if isCreated {
 		RSession.Use(config.Config.Rethinkdb.Db)
-		verifyDBVersion()
-	} else {
-		initRethinkDB()
+		return verifyDBVersion()
 	}
+	return initRethinkDB()
 }
 
 // Confirm database verion is compatible, if not refuse to start, so we don't
 // mess up the DB irreversably.
-func verifyDBVersion() {
+func verifyDBVersion() error {
 	var version int
-	DB()(r.Table("main").Get("info").Field("dbVersion")).One(&version)
-	if version != dbVersion {
-		panic(fmt.Errorf("Incompatible RethinkDB database version: %d."+
-			"See docs/migration.md", version))
+	err := DB()(r.Table("main").Get("info").Field("dbVersion")).One(&version)
+	if err != nil {
+		return util.WrapError("Error reading database version", err)
 	}
+	if version != dbVersion {
+		return fmt.Errorf(
+			"Incompatible RethinkDB database version: %d. "+
+				"See docs/migration.md",
+			version,
+		)
+	}
+	return nil
 }
 
 // Document is a eneric RethinkDB Document. For DRY-ness.
@@ -76,39 +86,68 @@ type infoDocument struct {
 }
 
 // Initialize a rethinkDB database
-func initRethinkDB() {
+func initRethinkDB() error {
 	dbName := config.Config.Rethinkdb.Db
 	log.Printf("Initialising database '%s'", dbName)
-	DB()(r.DBCreate(dbName)).Exec()
+	if err := DB()(r.DBCreate(dbName)).Exec(); err != nil {
+		return util.WrapError("Error creating database", err)
+	}
+
 	RSession.Use(dbName)
-	CreateTables()
-	DB()(r.Table("main").Insert([...]interface{}{
+
+	if err := CreateTables(); err != nil {
+		return err
+	}
+
+	main := [...]interface{}{
 		infoDocument{Document{"info"}, dbVersion, 0},
 
 		// History aka progress counters of boards, that get incremented on
 		// post creation
 		Document{"histCounts"},
-	})).Exec()
-	CreateIndeces()
+	}
+	if err := DB()(r.Table("main").Insert(main)).Exec(); err != nil {
+		return util.WrapError("Error initializing database", err)
+	}
+
+	return CreateIndeces()
 }
 
 // CreateTables creates all tables needed for meguca operation
-func CreateTables() {
+func CreateTables() error {
 	for _, table := range AllTables {
-		DB()(r.TableCreate(table)).Exec()
+		err := DB()(r.TableCreate(table)).Exec()
+		if err != nil {
+			return util.WrapError("Error creating table", err)
+		}
 	}
+	return nil
 }
 
 // CreateIndeces create secondary indeces for faster table queries
-func CreateIndeces() {
-	DB()(r.Table("threads").IndexCreate("board")).Exec()
+func CreateIndeces() error {
+	err := DB()(r.Table("threads").IndexCreate("board")).Exec()
+	if err != nil {
+		return indexCreationError(err)
+	}
 	for _, key := range [...]string{"op", "board"} {
-		DB()(r.Table("posts").IndexCreate(key)).Exec()
+		err := DB()(r.Table("posts").IndexCreate(key)).Exec()
+		if err != nil {
+			return indexCreationError(err)
+		}
 	}
 
 	// Make sure all indeces are ready to avoid the race condition of and index
 	// being accessed before its full creation.
 	for _, table := range AllTables {
-		DB()(r.Table(table).IndexWait()).Exec()
+		err := DB()(r.Table(table).IndexWait()).Exec()
+		if err != nil {
+			return util.WrapError("Error waiting for index", err)
+		}
 	}
+	return nil
+}
+
+func indexCreationError(err error) error {
+	return util.WrapError("Error creating index", err)
 }
