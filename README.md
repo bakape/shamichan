@@ -30,7 +30,7 @@ with `node server/kill.js`
 * See `docs/` for upgrading between semver major releases
 
 ##Dependencies
-* node.js >=2.0.0
+* node.js >=5.0.0
 * [node-gyp dependancies](https://github.com/TooTallNate/node-gyp/#installation)
 * imagemagick
 * redis
