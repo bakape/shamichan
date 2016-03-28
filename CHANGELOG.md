@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.7.4 - 2016-03-28
+* Fix:
+	- Post hover anonymisation
+
 ##v1.7.3 - 2016-02-12
 * Change
 	- Lock down current stable, so we can move v2 into master
