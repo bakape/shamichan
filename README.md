@@ -25,7 +25,15 @@ clone/move meguca somewhere within it's root directory (`C:\msys64` by default)
     * GCC or Clang
     * make
     * [Go](https://golang.org/doc/install)
-    * [Node.js](https://nodejs.org) (for building the client)
+    * [Node.js](https://nodejs.org) >=5.0 (for building the client)
+    * ffmpeg >=3.0 development libraries (libavcodec, libavutil, libavformat, 
+    libswscale) compiled with:
+        * libvpx
+        * libvorbis
+        * libopus
+        * libtheora
+        * libx264
+        * libmp3lame
 * Run `make`
 * Prepare server for operation by running `make init`
 
