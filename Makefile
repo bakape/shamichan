@@ -1,5 +1,4 @@
 GULP="./node_modules/.bin/gulp"
-MEGUCA_VAR=/var/lib/meguca
 THREADS=`nproc`
 
 ifeq ($(OS), Windows_NT)
@@ -67,14 +66,18 @@ test: server_deps
 	go get -v gopkg.in/check.v1
 	go test -v ./...
 
-build_ffmpeg_deb:
+ffmpeg_deps_deb:
 	apt-get update
 	apt-get install -y libvpx-dev libmp3lame-dev libopus-dev libvorbis-dev \
 		libx264-dev libtheora-dev git build-essential yasm
+
+build_ffmpeg:
 	git clone --depth 1 -b release/3.0 git://source.ffmpeg.org/ffmpeg.git \
 		.ffmpeg
 	cd .ffmpeg; \
 	./configure --enable-libmp3lame --enable-libx264 --enable-libvpx \
-		--enable-libvorbis --enable-libopus --enable-libtheora --enable-gpl;\
-	make -j$(THREADS); \
-	make install; \
+		--enable-libvorbis --enable-libopus --enable-libtheora --enable-gpl
+	$(MAKE) -C .ffmpeg -j$(THREADS)
+
+install_ffmpeg:
+	$(MAKE) -C .ffmpeg install

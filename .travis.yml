@@ -11,6 +11,7 @@ before_install:
     - sudo apt-get install rethinkdb -y
     - sudo cp /etc/rethinkdb/default.conf.sample /etc/rethinkdb/instances.d/instance1.conf
     - sudo /etc/init.d/rethinkdb restart
-    - sudo make build_ffmpeg_deb
-    - make
+    - sudo make ffmpeg_deps_deb
+    - make build_ffmpeg
+    - sudo make install_ffmpeg
 script: make test
