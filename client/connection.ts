@@ -110,6 +110,7 @@ function nullSocket() {
 			= socket.onopen
 			= socket.onclose
 			= socket.onerror
+			= socket
 			= null
 	}
 }
