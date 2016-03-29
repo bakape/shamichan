@@ -61,7 +61,7 @@ function onMessage({data}: MessageEvent) {
 	}
 	const handler = handlers[data[0]]
 	if (handler) {
-		handler(data.slice(1))
+		handler(data)
 	}
 }
 
