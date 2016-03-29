@@ -1,4 +1,4 @@
-[![GoDoc](https://godoc.org/github.com/bakape/meguca/server?status.svg)](https://godoc.org/github.com/bakape/meguca/server) [![Build Status](https://travis-ci.org/bakape/meguca.svg)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
+[![GoDoc](https://godoc.org/github.com/bakape/meguca?status.svg)](https://godoc.org/github.com/bakape/meguca) [![Build Status](https://travis-ci.org/bakape/meguca.svg)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
 
 __Note: The version in the master branch is currently in early development.
 For deploying a production-ready legacy meguca instance, download the [latests
