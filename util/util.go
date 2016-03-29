@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"math/rand"
-	"net/http"
 	"os"
 	"runtime"
 	"strconv"
@@ -82,11 +81,11 @@ func IDToString(id uint64) string {
 }
 
 // LogError logs an error with its stack trace
-func LogError(req *http.Request, err interface{}) {
+func LogError(ip string, err error) {
 	const size = 64 << 10
 	buf := make([]byte, size)
 	buf = buf[:runtime.Stack(buf, false)]
-	log.Printf("panic serving %v: %v\n%s", req.RemoteAddr, err, buf)
+	log.Printf("panic serving %v: %v\n%s", ip, err, buf)
 }
 
 func init() {

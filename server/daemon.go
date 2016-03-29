@@ -48,6 +48,7 @@ func daemonise() {
 	if child != nil {
 		return
 	}
+	daemonised = true
 	defer daemonContext.Release()
 	log.Println("Server started ------------------------------------")
 	go startServer()

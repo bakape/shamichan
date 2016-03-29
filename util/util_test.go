@@ -5,7 +5,6 @@ import (
 	"errors"
 	. "gopkg.in/check.v1"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -45,12 +44,9 @@ func (*Util) TestIDToString(c *C) {
 }
 
 func (*Util) TestLogError(c *C) {
-	req, e := http.NewRequest("GET", "/", nil)
-	c.Assert(e, IsNil)
 	err := errors.New("foo")
-	req.RemoteAddr = "::1"
 	log := captureLog(func() {
-		LogError(req, err)
+		LogError("::1", err)
 	})
 	assertLog(c, strings.Split(log, "\n")[0], "panic serving ::1: foo")
 }

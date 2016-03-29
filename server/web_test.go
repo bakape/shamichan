@@ -7,7 +7,7 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-	"github.com/julienschmidt/httprouter"
+	"github.com/dimfeld/httptreemux"
 	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"log"
@@ -28,6 +28,7 @@ var genericImage = types.Image{File: "foo"}
 // for now.
 type DB struct {
 	dbName string
+	r      http.Handler
 }
 
 var testDBName string
@@ -41,6 +42,8 @@ func (d *DB) SetUpSuite(c *C) {
 	db.RSession.Use(d.dbName)
 	c.Assert(db.CreateTables(), IsNil)
 	c.Assert(db.CreateIndeces(), IsNil)
+	setupPosts(c)
+	d.r = createRouter()
 }
 
 // Returns a unique datatabase name. Needed so multiple concurent `go test`
@@ -60,13 +63,6 @@ func connectToRethinkDb(c *C) {
 func (*DB) SetUpTest(_ *C) {
 	config.Config = config.Server{}
 	config.Config.Boards.Enabled = []string{"a"}
-}
-
-// Clear all documents from all tables after each test.
-func (*DB) TearDownTest(c *C) {
-	for _, table := range db.AllTables {
-		c.Assert(db.DB()(r.Table(table).Delete()).Exec(), IsNil)
-	}
 }
 
 func (d *DB) TearDownSuite(c *C) {
@@ -123,9 +119,16 @@ func setupPosts(c *C) {
 	c.Assert(db.DB()(r.Table("main").Insert(main)).Exec(), IsNil)
 }
 
-type WebServer struct{}
+type WebServer struct {
+	r http.Handler
+}
 
 var _ = Suite(&WebServer{})
+
+func (w *WebServer) SetUpSuite(c *C) {
+	webRoot = "test"
+	w.r = createRouter()
+}
 
 func (*WebServer) SetUpTest(_ *C) {
 	config.Config = config.Server{}
@@ -134,21 +137,20 @@ func (*WebServer) SetUpTest(_ *C) {
 	config.ClientConfig = nil
 }
 
-func (*WebServer) TestFrontpageRedirect(c *C) {
+func (w *WebServer) TestFrontpageRedirect(c *C) {
 	config.Config.Frontpage = filepath.FromSlash("test/frontpage.html")
-	server := httptest.NewServer(http.HandlerFunc(redirectToDefault))
-	defer server.Close()
-	res, err := http.Get(server.URL)
-	c.Assert(err, IsNil)
-	frontpage, err := ioutil.ReadAll(res.Body)
-	c.Assert(err, IsNil)
-	c.Assert(res.Body.Close(), IsNil)
-	c.Assert(string(frontpage), Equals, "<!doctype html><html></html>\n")
+	req := newRequest(c, "/")
+	rec := httptest.NewRecorder()
+	w.r.ServeHTTP(rec, req)
+	assertBody(rec, "<!doctype html><html></html>\n", c)
+	assertCode(rec, 200, c)
 }
 
-func (*WebServer) TestDefaultBoardRedirect(c *C) {
+func (w *WebServer) TestDefaultBoardRedirect(c *C) {
 	config.Config.Boards.Default = "a"
-	rec := runHandler(c, redirectToDefault)
+	rec := httptest.NewRecorder()
+	req := newRequest(c, "/")
+	w.r.ServeHTTP(rec, req)
 	assertCode(rec, 302, c)
 	c.Assert(rec.Header().Get("Location"), Equals, "/a/")
 }
@@ -171,76 +173,74 @@ func assertHeaders(c *C, rec *httptest.ResponseRecorder, h map[string]string) {
 	}
 }
 
-func runHandler(c *C, h http.HandlerFunc) *httptest.ResponseRecorder {
-	req := newRequest(c)
-	rec := httptest.NewRecorder()
-	h(rec, req)
-	return rec
-}
-
-func newRequest(c *C) *http.Request {
-	req, err := http.NewRequest("GET", "/", nil)
+func newRequest(c *C, url string) *http.Request {
+	req, err := http.NewRequest("GET", url, nil)
 	c.Assert(err, IsNil)
 	return req
 }
 
-func (*WebServer) TestConfigServing(c *C) {
+func newPair(c *C, url string) (*httptest.ResponseRecorder, *http.Request) {
+	return httptest.NewRecorder(), newRequest(c, url)
+}
+
+func (w *WebServer) TestConfigServing(c *C) {
 	config.Hash = "foo"
 	config.ClientConfig = []byte{1}
-	etag := "W/" + config.Hash
-	rec := runHandler(c, serveConfigs)
+	etag := config.Hash
+
+	rec, req := newPair(c, "/api/config")
+	w.r.ServeHTTP(rec, req)
 	assertCode(rec, 200, c)
 	assertBody(rec, string([]byte{1}), c)
 	assertEtag(rec, etag, c)
 
 	// And with etag
-	rec = httptest.NewRecorder()
-	req := newRequest(c)
+	rec, req = newPair(c, "/api/config")
 	req.Header.Set("If-None-Match", etag)
-	serveConfigs(rec, req)
+	w.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
 }
 
-func (*WebServer) TestEtagComparison(c *C) {
-	req := newRequest(c)
-	const etag = "foo"
-	req.Header.Set("If-None-Match", etag)
-	rec := httptest.NewRecorder()
-	c.Assert(checkClientEtag(rec, req, etag), Equals, true)
-}
-
-func (*WebServer) TestNotFoundHandler(c *C) {
+func (w *WebServer) TestNotFoundHandler(c *C) {
 	webRoot = "test"
-	rec := runHandler(c, notFoundHandler)
+	rec, req := newPair(c, "/lalala/")
+	w.r.ServeHTTP(rec, req)
 	assertBody(rec, "<!doctype html><html>404</html>\n", c)
 	assertCode(rec, 404, c)
-	headers := map[string]string{
-		"Content-Type":           "text/html; charset=UTF-8",
-		"X-Content-Type-Options": "nosniff",
-	}
-	assertHeaders(c, rec, headers)
 }
 
-func (*WebServer) TestText404(c *C) {
-	rec := runHandler(c, func(res http.ResponseWriter, _ *http.Request) {
-		text404(res)
-	})
+func (w *WebServer) TestText404(c *C) {
+	rec, req := newPair(c, "/api/post/nope")
+	w.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
-	assertBody(rec, "404 Not found\n", c)
+	assertBody(rec, "404 Not found", c)
 }
 
-func (*WebServer) TestPanicHandler(c *C) {
+func (w *WebServer) TestPanicHandler(c *C) {
 	webRoot = "test"
-	err := errors.New("foo")
+	r := httptreemux.New()
+	h := wrapHandler(func(_ http.ResponseWriter, _ *http.Request) {
+		panic(errors.New("foo"))
+	})
+	r.GET("/panic", h)
+	r.PanicHandler = panicHandler
+	rec := httptest.NewRecorder()
+	req := newRequest(c, "/panic")
 
 	// Prevent printing stack trace to terminal
 	log.SetOutput(ioutil.Discard)
-	rec := runHandler(c, func(res http.ResponseWriter, req *http.Request) {
-		panicHandler(res, req, err)
-	})
+	r.ServeHTTP(rec, req)
 	log.SetOutput(os.Stdout)
+
 	assertCode(rec, 500, c)
 	assertBody(rec, "<!doctype html><html>50x</html>\n", c)
+}
+
+func (w *WebServer) TestText500(c *C) {
+	rec, req := newPair(c, "/")
+	text404(rec, req)
+	assertCode(rec, 404, c)
+	assertBody(rec, "404 Not found", c)
 }
 
 func (*WebServer) TestSetHeaders(c *C) {
@@ -252,36 +252,23 @@ func (*WebServer) TestSetHeaders(c *C) {
 		"Cache-Control":   "max-age=0, must-revalidate",
 		"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
 		"ETag":            etag,
-		"Content-Type":    "text/html; charset=UTF-8",
 	}
-	setHeaders(rec, etag, false)
-	assertHeaders(c, rec, headers)
-
-	// JSON
-	headers["Content-Type"] = "application/json; charset=UTF-8"
-	rec = httptest.NewRecorder()
-	setHeaders(rec, etag, true)
+	setHeaders(rec, etag)
 	assertHeaders(c, rec, headers)
 }
 
 func (*WebServer) TestDetectLastN(c *C) {
 	// No lastN query string
-	req := customRequest(c, "/a/1")
+	req := newRequest(c, "/a/1")
 	c.Assert(detectLastN(req), Equals, 0)
 
 	// ?lastN value within bounds
-	req = customRequest(c, "/a/1?lastN=100")
+	req = newRequest(c, "/a/1?lastN=100")
 	c.Assert(detectLastN(req), Equals, 100)
 
 	// ?lastN value beyond max
-	req = customRequest(c, "/a/1?lastN=1000")
+	req = newRequest(c, "/a/1?lastN=1000")
 	c.Assert(detectLastN(req), Equals, 0)
-}
-
-func customRequest(c *C, url string) *http.Request {
-	req, err := http.NewRequest("GET", url, nil)
-	c.Assert(err, IsNil)
-	return req
 }
 
 func (*WebServer) TestImageServer(c *C) {
@@ -294,13 +281,9 @@ func (*WebServer) TestImageServer(c *C) {
 	notFound := imageWebRoot + notFoundTruncated
 
 	// Succesful first serve
-	req := customRequest(c, path)
-	rec := httptest.NewRecorder()
-	params := httprouter.Params{
-		httprouter.Param{
-			Key:   "filepath",
-			Value: truncated,
-		},
+	rec, req := newPair(c, path)
+	params := map[string]string{
+		"path": truncated,
 	}
 	serveImages(rec, req, params)
 	buf, err := ioutil.ReadFile(path)
@@ -314,36 +297,31 @@ func (*WebServer) TestImageServer(c *C) {
 	assertHeaders(c, rec, headers)
 
 	// Fake etag validation
-	req = customRequest(c, path)
-	rec = httptest.NewRecorder()
+	rec, req = newPair(c, path)
 	req.Header.Set("If-None-Match", "0")
 	serveImages(rec, req, params)
 	assertCode(rec, 304, c)
 
 	// Non-existing file
-	req = customRequest(c, notFound)
-	rec = httptest.NewRecorder()
-	params[0].Value = notFoundTruncated
+	rec, req = newPair(c, notFound)
+	params["path"] = notFoundTruncated
 	serveImages(rec, req, params)
 	assertCode(rec, 404, c)
 }
 
 func (*WebServer) TestCompareEtag(c *C) {
 	// Etag comparison
-	rec := httptest.NewRecorder()
-	req := newRequest(c)
+	rec, req := newPair(c, "/")
 	const etag = "foo"
 	req.Header.Set("If-None-Match", etag)
-	c.Assert(compareEtag(rec, req, etag, false), Equals, false)
+	c.Assert(pageEtag(rec, req, etag), Equals, false)
 
-	rec = httptest.NewRecorder()
-	req = newRequest(c)
+	rec, req = newPair(c, "")
 	headers := map[string]string{
 		"ETag":          etag,
-		"Content-Type":  "text/html; charset=UTF-8",
 		"Cache-Control": "max-age=0, must-revalidate",
 	}
-	compareEtag(rec, req, etag, false)
+	pageEtag(rec, req, etag)
 	assertHeaders(c, rec, headers)
 }
 
@@ -351,7 +329,7 @@ func (*WebServer) TestEtagStart(c *C) {
 	c.Assert(etagStart(1), Equals, "W/1")
 }
 
-func (*WebServer) TestServeIndexTemplate(c *C) {
+func (w *WebServer) TestServeIndexTemplate(c *C) {
 	const (
 		desktopUA = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 " +
 			"(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
@@ -373,30 +351,27 @@ func (*WebServer) TestServeIndexTemplate(c *C) {
 	}
 
 	// Desktop
-	req := newRequest(c)
+	rec, req := newPair(c, "/a/")
 	req.Header.Set("User-Agent", desktopUA)
-	rec := httptest.NewRecorder()
-	serveIndexTemplate(rec, req)
+	w.r.ServeHTTP(rec, req)
 	assertBody(rec, string(desktop.HTML), c)
 	assertEtag(rec, desktop.Hash, c)
 
 	// Mobile
-	req = newRequest(c)
+	rec, req = newPair(c, "/a/")
 	req.Header.Set("User-Agent", mobileUA)
-	rec = httptest.NewRecorder()
-	serveIndexTemplate(rec, req)
+	w.r.ServeHTTP(rec, req)
 	assertBody(rec, string(mobile.HTML), c)
 	assertEtag(rec, mobile.Hash+"-mobile", c)
 
 	// Etag matches
-	req = newRequest(c)
+	rec, req = newPair(c, "/a/")
 	req.Header.Set("If-None-Match", desktop.Hash)
-	rec = httptest.NewRecorder()
-	serveIndexTemplate(rec, req)
+	w.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
 }
 
-func (*DB) TestThreadHTML(c *C) {
+func (d *DB) TestThreadHTML(c *C) {
 	body := []byte("body")
 	templates.Resources = templates.Map{
 		"index": templates.Store{
@@ -407,39 +382,36 @@ func (*DB) TestThreadHTML(c *C) {
 	webRoot = "test"
 
 	// Unparsable thread number
-	rec := httptest.NewRecorder()
-	threadHTML("a")(rec, newRequest(c), httprouter.Params{{Value: "www"}})
+	rec, req := newPair(c, "/a/www")
+	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
 	// Non-existant thread
-	rec = httptest.NewRecorder()
-	threadHTML("a")(rec, newRequest(c), httprouter.Params{{Value: "22"}})
+	rec, req = newPair(c, "/a/22")
+	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
 	// Thread exists
-	setupPosts(c)
-	rec = httptest.NewRecorder()
-	threadHTML("a")(rec, newRequest(c), httprouter.Params{{Value: "1"}})
+	rec, req = newPair(c, "/a/1")
+	d.r.ServeHTTP(rec, req)
 	assertBody(rec, string(body), c)
 }
 
-func (*DB) TestServePost(c *C) {
-	setupPosts(c)
-
+func (d *DB) TestServePost(c *C) {
 	// Invalid post number
-	rec := httptest.NewRecorder()
-	servePost(rec, newRequest(c), httprouter.Params{{Value: "www"}})
+	rec, req := newPair(c, "/api/post/www")
+	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
 	// Non-existing post or otherwise invalid post
-	rec = httptest.NewRecorder()
-	servePost(rec, newRequest(c), httprouter.Params{{Value: "66"}})
+	rec, req = newPair(c, "/api/post/66")
+	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
 	// Existing post
-	rec = httptest.NewRecorder()
 	const etag = "d96fa6542aaf4c9e"
-	servePost(rec, newRequest(c), httprouter.Params{{Value: "2"}})
+	rec, req = newPair(c, "/api/post/2")
+	d.r.ServeHTTP(rec, req)
 	assertBody(
 		rec,
 		`{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}`,
@@ -448,159 +420,111 @@ func (*DB) TestServePost(c *C) {
 	assertEtag(rec, etag, c)
 
 	// Etags match
-	rec = httptest.NewRecorder()
-	req := newRequest(c)
+	rec, req = newPair(c, "/api/post/2")
 	req.Header.Set("If-None-Match", etag)
-	servePost(rec, req, httprouter.Params{{Value: "2"}})
+	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
 }
 
-func (*DB) TestBoardJSON(c *C) {
-	setupPosts(c)
+func (d *DB) TestBoardJSON(c *C) {
+	// Invalid board
+	rec, req := newPair(c, "/api/nope/")
+	d.r.ServeHTTP(rec, req)
+	assertCode(rec, 404, c)
 
-	rec := httptest.NewRecorder()
-	boardJSON("a")(rec, newRequest(c))
-	assertBody(
-		rec,
-		`{"ctr":7,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,`+
-			`"replyTime":0,"editing":false,"file":"foo","time":0,"body":""},`+
-			`{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,`+
-			`"editing":false,"file":"foo","time":0,"body":""}]}`,
-		c,
-	)
+	rec, req = newPair(c, "/api/a/")
+	const body = `{"ctr":7,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,` +
+		`"replyTime":0,"editing":false,"file":"foo","time":0,"body":""},` +
+		`{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,` +
+		`"editing":false,"file":"foo","time":0,"body":""}]}`
+	d.r.ServeHTTP(rec, req)
+	assertBody(rec, body, c)
 	const etag = "W/7"
 	assertEtag(rec, etag, c)
 
 	// Etags match
-	rec = httptest.NewRecorder()
-	req := newRequest(c)
+	rec, req = newPair(c, "/api/a/")
 	req.Header.Set("If-None-Match", etag)
-	boardJSON("a")(rec, req)
+	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
 }
 
-func (*DB) TestAllBoardJSON(c *C) {
-	setupPosts(c)
-
-	rec := httptest.NewRecorder()
-	allBoardJSON(rec, newRequest(c))
+func (d *DB) TestAllBoardJSON(c *C) {
 	const etag = "W/8"
-	assertBody(
-		rec,
-		`{"ctr":8,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,`+
-			`"replyTime":0,"editing":false,"file":"foo","time":0,"body":""},`+
-			`{"postCtr":0,"imageCtr":0,"bumpTime":0,"replyTime":0,`+
-			`"editing":false,"file":"foo","time":0,"body":""},{"postCtr":1,`+
-			`"imageCtr":0,"bumpTime":0,"replyTime":0,"editing":false,`+
-			`"file":"foo","time":0,"body":""}]}`,
-		c,
-	)
+	const body = `{"ctr":8,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,` +
+		`"replyTime":0,"editing":false,"file":"foo","time":0,"body":""},` +
+		`{"postCtr":0,"imageCtr":0,"bumpTime":0,"replyTime":0,` +
+		`"editing":false,"file":"foo","time":0,"body":""},{"postCtr":1,` +
+		`"imageCtr":0,"bumpTime":0,"replyTime":0,"editing":false,` +
+		`"file":"foo","time":0,"body":""}]}`
+	rec, req := newPair(c, "/api/all/")
+	d.r.ServeHTTP(rec, req)
+	assertBody(rec, body, c)
 	assertEtag(rec, etag, c)
 
 	// Etags match
-	rec = httptest.NewRecorder()
-	req := newRequest(c)
+	rec, req = newPair(c, "/api/all/")
 	req.Header.Set("If-None-Match", etag)
+	d.r.ServeHTTP(rec, req)
 	allBoardJSON(rec, req)
 	assertCode(rec, 304, c)
 }
 
-func (*DB) TestThreadJSON(c *C) {
-	setupPosts(c)
+func (d *DB) TestThreadJSON(c *C) {
+	// Invalid board
+	rec, req := newPair(c, "/api/nope/1")
+	d.r.ServeHTTP(rec, req)
+	assertCode(rec, 404, c)
 
 	// Invalid post number
-	rec := httptest.NewRecorder()
-	threadJSON("a")(rec, newRequest(c), httprouter.Params{{Value: "www"}})
+	rec, req = newPair(c, "/api/a/www")
+	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
 	// Non-existing thread
-	rec = httptest.NewRecorder()
-	threadJSON("a")(rec, newRequest(c), httprouter.Params{{Value: "22"}})
+	rec, req = newPair(c, "/api/a/22")
+	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
 	// Valid thread request
-	rec = httptest.NewRecorder()
-	threadJSON("a")(rec, newRequest(c), httprouter.Params{{Value: "1"}})
-	assertBody(
-		rec,
-		`{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,"editing":false,`+
-			`"file":"foo","time":0,"body":"","posts":{"2":{"editing":false,`+
-			`"op":1,"id":2,"time":0,"board":"a","body":""}}}`,
-		c,
-	)
+	const body = `{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,` +
+		`"editing":false,"file":"foo","time":0,"body":"","posts":{"2":` +
+		`{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}}}`
 	const etag = "W/1"
+	rec, req = newPair(c, "/api/a/1")
+	d.r.ServeHTTP(rec, req)
+	assertBody(rec, body, c)
 	assertEtag(rec, etag, c)
 
 	// Etags match
-	rec = httptest.NewRecorder()
-	req := newRequest(c)
+	rec, req = newPair(c, "/api/a/1")
 	req.Header.Set("If-None-Match", etag)
-	threadJSON("a")(rec, req, httprouter.Params{{Value: "1"}})
+	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
 }
 
-type routeCheck struct {
-	path   string
-	params httprouter.Params
-}
-
-func (*WebServer) TestCreateRouter(c *C) {
+func (w *WebServer) TestGzip(c *C) {
+	config.Config.HTTP.Gzip = true
 	r := createRouter()
-	gets := [...]routeCheck{
-		{"/", nil},
-		{"/all/", nil},
-		{"/api/all/", nil},
-		{"/a/", nil},
-		{"/api/a/", nil},
-		{"/a/1", httprouter.Params{{"thread", "1"}}},
-		{"/api/a/1", httprouter.Params{{"thread", "1"}}},
-		{"/api/config", nil},
-		{"/api/post/1", httprouter.Params{{"post", "1"}}},
-		{"/socket", nil},
-		{"/ass/favicon.gif", httprouter.Params{{"filepath", "/favicon.gif"}}},
-		{
-			"/img/src/madotsuki.png",
-			httprouter.Params{{"filepath", "/src/madotsuki.png"}},
-		},
-	}
-	for _, rc := range gets {
-		assertRoute("GET", rc, r, c)
-	}
-	assertRoute("POST", routeCheck{"/upload", nil}, r, c)
-}
-
-func assertRoute(method string, rc routeCheck, r *httprouter.Router, c *C) {
-	handle, params, _ := r.Lookup(method, rc.path)
-	c.Assert(params, DeepEquals, rc.params)
-	c.Assert(handle, NotNil, Commentf("No handler on path '%s'", rc.path))
-}
-
-func (*WebServer) TestWrapRouter(c *C) {
-	// Test GZIP
-	r := httprouter.New()
-	r.HandlerFunc("GET", "/", func(res http.ResponseWriter, _ *http.Request) {
-		_, err := res.Write([]byte("Kyoani is shit"))
-		c.Assert(err, IsNil)
-	})
-	rec := httptest.NewRecorder()
-	req := customRequest(c, "/")
+	rec, req := newPair(c, "/api/config")
 	req.Header.Set("Accept-Encoding", "gzip")
-	wrapRouter(r).ServeHTTP(rec, req)
+	r.ServeHTTP(rec, req)
 	c.Assert(rec.Header().Get("Content-Encoding"), Equals, "gzip")
+}
 
-	// Test honouring "X-Forwarded-For" headers
-	config.Config.HTTP.TrustProxies = true
-	r = httprouter.New()
-	var remoteIP string
-	r.HandlerFunc("GET", "/", func(res http.ResponseWriter, req *http.Request) {
-		_, err := res.Write([]byte("Kyoani is shit"))
-		c.Assert(err, IsNil)
-		remoteIP = req.RemoteAddr
-	})
-	rec = httptest.NewRecorder()
-	req = customRequest(c, "/")
+func (w *WebServer) TestProxyHeaders(c *C) {
 	const ip = "68.180.194.242"
+	config.Config.HTTP.TrustProxies = true
+	r := createRouter()
+	rec, req := newPair(c, "/api/config")
 	req.Header.Set("X-Forwarded-For", ip)
-	wrapRouter(r).ServeHTTP(rec, req)
-	c.Assert(remoteIP, Equals, ip)
+	req.RemoteAddr = "1.2.3.4:1234"
+	r.ServeHTTP(rec, req)
+	c.Assert(req.RemoteAddr, Equals, ip+":1234")
+}
+
+func (w *WebServer) TestAssetServer(c *C) {
+	rec, req := newPair(c, "/ass/frontpage.html")
+	w.r.ServeHTTP(rec, req)
+	assertBody(rec, "<!doctype html><html></html>\n", c)
 }

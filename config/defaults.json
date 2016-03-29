@@ -5,7 +5,8 @@
         "SSL": false,
         "cert": "",
         "key": "",
-        "trustProxies": false
+        "trustProxies": true,
+        "gzip": false
     },
     "rethinkdb": {
         "addr": "localhost:28015",

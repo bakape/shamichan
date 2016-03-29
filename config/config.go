@@ -20,7 +20,7 @@ var configRoot = "config"
 type Server struct {
 	HTTP struct {
 		Addr, Origin, Cert, Key string
-		SSL, TrustProxies       bool
+		SSL, TrustProxies, Gzip bool
 	}
 	Rethinkdb struct {
 		Addr, Db string
