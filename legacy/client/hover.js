@@ -46,6 +46,7 @@ let PostPreview = Article.extend({
 		this.parentNum = args.parentNum;
 		this.listenTo(this.model, 'dispatch', this.redirect)
 			.render().$el.addClass('preview');
+		this.clientInit()
 		this.update();
 	},
 	update() {
