@@ -93,7 +93,7 @@ function buildClient() {
 	const b = browserify({
 		require: [
 			'jquery', 'js-cookie', 'underscore', 'backbone', 'backbone.radio',
-			'scriptjs', 'sockjs-client', 'dom4'
+			'scriptjs', 'dom4'
 		],
 		debug: true
 	})

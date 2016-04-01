@@ -3,7 +3,7 @@
  */
 
 const main = require('./main'),
-	{_, common, config, connSM, state, SockJS} = main,
+	{_, common, config, connSM, state} = main,
 	lang = main.lang.sync;
 
 let socket, attempts, attemptTimer;
