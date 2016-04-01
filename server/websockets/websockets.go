@@ -75,13 +75,14 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	synced   bool
-	ident    auth.Ident
-	ID       string
-	conn     *websocket.Conn
-	receiver chan receivedMessage
-	sender   chan []byte
-	closer   chan struct{}
+	synced       bool
+	ident        auth.Ident
+	subscription uint64
+	ID           string
+	conn         *websocket.Conn
+	receiver     chan receivedMessage
+	sender       chan []byte
+	closer       chan struct{}
 }
 
 type receivedMessage struct {
@@ -93,8 +94,10 @@ type receivedMessage struct {
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn) *Client {
 	return &Client{
-		ident:    auth.LookUpIdent(conn.RemoteAddr().String()),
-		sender:   make(chan []byte),
+		ident: auth.LookUpIdent(conn.RemoteAddr().String()),
+
+		// Without buffering, a busy client would block the subscription
+		sender:   make(chan []byte, 1),
 		receiver: make(chan receivedMessage),
 		closer:   make(chan struct{}),
 		conn:     conn,
@@ -103,6 +106,10 @@ func newClient(conn *websocket.Conn) *Client {
 
 // Listen listens for incoming messages on the channels and processes them
 func (c *Client) Listen() error {
+	// Clean up, when loop exits
+	defer Subs.Unlisten(c.subscription, c.ID)
+	defer Clients.Remove(c.ID)
+
 	go c.receiverLoop()
 	for {
 		select {

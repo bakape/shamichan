@@ -358,6 +358,23 @@ func (*ClientSuite) TestListen(c *C) {
 	sv.Wait()
 }
 
+func (*ClientSuite) TestCleanUp(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+
+	cl, wcl := sv.NewClient()
+	Clients.Add(cl)
+	c.Assert(Clients.Has(cl.ID), Equals, true)
+	sv.Add(1)
+	go func() {
+		defer sv.Done()
+		c.Assert(cl.Listen(), IsNil)
+	}()
+	normalCloseWebClient(c, wcl)
+	sv.Wait()
+	c.Assert(Clients.Has(cl.ID), Equals, false)
+}
+
 func normalCloseWebClient(c *C, wcl *websocket.Conn) {
 	err := wcl.WriteControl(
 		websocket.CloseMessage,
