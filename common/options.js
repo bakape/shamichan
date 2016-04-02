@@ -198,7 +198,7 @@ module.exports = function(isMobile) {
 			// Arrays will turn into selection boxes
 			type: [
 				'moe', 'gar', 'mawaru', 'moon', 'ashita', 'console', 'tea',
-				'higan', 'ocean', 'rave', 'tavern', 'glass'
+				'higan', 'ocean', 'rave', 'tavern', 'glass', 'material'
 			],
 			tab: 1,
 			default: hotConfig.DEFAULT_CSS,
