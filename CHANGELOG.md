@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.8.1 - 2016-04-05
+* Fix:
+	- Websocket heartbeat timeout crashes
+
 ##v1.8.0 - 2016-04-03
 * Add:
 	- Material Design theme
