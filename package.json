@@ -1,6 +1,6 @@
 {
   "name": "meguca",
-  "version": "1.7.3",
+  "version": "1.8.1",
   "description": "Real-time imageboard",
   "keywords": [
     "realtime",
@@ -62,8 +62,7 @@
     "redis": "^2.3.0",
     "request": "^2.53.0",
     "scriptjs": "^2.5.7",
-    "sockjs": "^0.3.15",
-    "sockjs-client": "^1.0.2",
+    "sockjs": "^0.3.16",
     "tmp": "^0.0.24",
     "ua-parser-js": "^0.7.9",
     "underscore": "^1.8.3",
