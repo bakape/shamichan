@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -36,28 +37,20 @@ var testDBName string
 var _ = Suite(&DB{})
 
 func (d *DB) SetUpSuite(c *C) {
-	d.dbName = uniqueDBName()
-	connectToRethinkDb(c)
+	d.dbName = "meguca_tests_" + strconv.FormatInt(time.Now().UnixNano(), 10)
+
+	var err error
+	db.RSession, err = r.Connect(r.ConnectOpts{
+		Address: "localhost:28015",
+	})
+	c.Assert(err, IsNil)
+
 	c.Assert(db.DB()(r.DBCreate(d.dbName)).Exec(), IsNil)
 	db.RSession.Use(d.dbName)
 	c.Assert(db.CreateTables(), IsNil)
 	c.Assert(db.CreateIndeces(), IsNil)
 	setupPosts(c)
 	d.r = createRouter()
-}
-
-// Returns a unique datatabase name. Needed so multiple concurent `go test`
-// don't clash in the same database.
-func uniqueDBName() string {
-	return "meguca_tests_" + strconv.FormatInt(time.Now().UnixNano(), 10)
-}
-
-func connectToRethinkDb(c *C) {
-	var err error
-	db.RSession, err = r.Connect(r.ConnectOpts{
-		Address: "localhost:28015",
-	})
-	c.Assert(err, IsNil)
 }
 
 func (*DB) SetUpTest(_ *C) {
@@ -73,9 +66,21 @@ func (d *DB) TearDownSuite(c *C) {
 // Create a multipurpose set of threads and posts for tests
 func setupPosts(c *C) {
 	threads := []types.Thread{
-		{ID: 1, Board: "a"},
-		{ID: 3, Board: "a"},
-		{ID: 4, Board: "c"},
+		{
+			ID:     1,
+			Board:  "a",
+			LogCtr: 11,
+		},
+		{
+			ID:     3,
+			Board:  "a",
+			LogCtr: 33,
+		},
+		{
+			ID:     4,
+			Board:  "c",
+			LogCtr: 44,
+		},
 	}
 	c.Assert(db.DB()(r.Table("threads").Insert(threads)).Exec(), IsNil)
 
@@ -371,6 +376,12 @@ func (w *WebServer) TestServeIndexTemplate(c *C) {
 	assertCode(rec, 304, c)
 }
 
+func removeIndentation(s string) string {
+	s = strings.Replace(s, "\t", "", -1)
+	s = strings.Replace(s, "\n", "", -1)
+	return s
+}
+
 func (d *DB) TestThreadHTML(c *C) {
 	body := []byte("body")
 	templates.Resources = templates.Map{
@@ -433,12 +444,38 @@ func (d *DB) TestBoardJSON(c *C) {
 	assertCode(rec, 404, c)
 
 	rec, req = newPair(c, "/api/a/")
-	const body = `{"ctr":7,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,` +
-		`"replyTime":0,"editing":false,"file":"foo","time":0,"body":""},` +
-		`{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,` +
-		`"editing":false,"file":"foo","time":0,"body":""}]}`
+	const body = `
+{
+	"ctr":7,
+	"threads":[
+		{
+			"postCtr":1,
+			"imageCtr":0,
+			"bumpTime":0,
+			"replyTime":0,
+			"logCtr":11,
+			"editing":false,
+			"file":"foo",
+			"id":1,
+			"time":0,
+			"body":""
+		},
+		{
+			"postCtr":0,
+			"imageCtr":0,
+			"bumpTime":0,
+			"replyTime":0,
+			"logCtr":33,
+			"editing":false,
+			"file":"foo",
+			"id":3,
+			"time":0,
+			"body":""
+		}
+	]
+}`
 	d.r.ServeHTTP(rec, req)
-	assertBody(rec, body, c)
+	assertBody(rec, removeIndentation(body), c)
 	const etag = "W/7"
 	assertEtag(rec, etag, c)
 
@@ -451,15 +488,51 @@ func (d *DB) TestBoardJSON(c *C) {
 
 func (d *DB) TestAllBoardJSON(c *C) {
 	const etag = "W/8"
-	const body = `{"ctr":8,"threads":[{"postCtr":0,"imageCtr":0,"bumpTime":0,` +
-		`"replyTime":0,"editing":false,"file":"foo","time":0,"body":""},` +
-		`{"postCtr":0,"imageCtr":0,"bumpTime":0,"replyTime":0,` +
-		`"editing":false,"file":"foo","time":0,"body":""},{"postCtr":1,` +
-		`"imageCtr":0,"bumpTime":0,"replyTime":0,"editing":false,` +
-		`"file":"foo","time":0,"body":""}]}`
+	const body = `
+{
+	"ctr":8,
+	"threads":[
+		{
+			"postCtr":1,
+			"imageCtr":0,
+			"bumpTime":0,
+			"replyTime":0,
+			"logCtr":11,
+			"editing":false,
+			"file":"foo",
+			"id":1,
+			"time":0,
+			"body":""
+		},
+		{
+			"postCtr":0,
+			"imageCtr":0,
+			"bumpTime":0,
+			"replyTime":0,
+			"logCtr":33,
+			"editing":false,
+			"file":"foo",
+			"id":3,
+			"time":0,
+			"body":""
+		},
+		{
+			"postCtr":0,
+			"imageCtr":0,
+			"bumpTime":0,
+			"replyTime":0,
+			"logCtr":44,
+			"editing":false,
+			"file":"foo",
+			"id":4,
+			"time":0,
+			"body":""
+		}
+	]
+}`
 	rec, req := newPair(c, "/api/all/")
 	d.r.ServeHTTP(rec, req)
-	assertBody(rec, body, c)
+	assertBody(rec, removeIndentation(body), c)
 	assertEtag(rec, etag, c)
 
 	// Etags match
@@ -487,13 +560,33 @@ func (d *DB) TestThreadJSON(c *C) {
 	assertCode(rec, 404, c)
 
 	// Valid thread request
-	const body = `{"postCtr":1,"imageCtr":0,"bumpTime":0,"replyTime":0,` +
-		`"editing":false,"file":"foo","time":0,"body":"","posts":{"2":` +
-		`{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}}}`
-	const etag = "W/1"
+	const body = `
+{
+	"postCtr":1,
+	"imageCtr":0,
+	"bumpTime":0,
+	"replyTime":0,
+	"logCtr":11,
+	"editing":false,
+	"file":"foo",
+	"id":1,
+	"time":0,
+	"body":"",
+	"posts":{
+		"2":{
+			"editing":false,
+			"op":1,
+			"id":2,
+			"time":0,
+			"board":"a",
+			"body":""
+		}
+	}
+}`
+	const etag = "W/11"
 	rec, req = newPair(c, "/api/a/1")
 	d.r.ServeHTTP(rec, req)
-	assertBody(rec, body, c)
+	assertBody(rec, removeIndentation(body), c)
 	assertEtag(rec, etag, c)
 
 	// Etags match

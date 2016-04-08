@@ -90,24 +90,14 @@ func (*DBSuite) TestBoardCounter(c *C) {
 
 func (*DBSuite) TestThreadCounter(c *C) {
 	std := map[string]int{
-		"id": 1,
-		"op": 1,
+		"id":     1,
+		"logCtr": 22,
 	}
-	c.Assert(DB()(r.Table("posts").Insert(std)).Exec(), IsNil)
+	c.Assert(DB()(r.Table("threads").Insert(std)).Exec(), IsNil)
 
 	count, err := ThreadCounter(1)
 	c.Assert(err, IsNil)
-	c.Assert(count, Equals, uint64(0))
-
-	more := map[string]int{
-		"id": 2,
-		"op": 1,
-	}
-	c.Assert(DB()(r.Table("posts").Insert(more)).Exec(), IsNil)
-
-	count, err = ThreadCounter(1)
-	c.Assert(err, IsNil)
-	c.Assert(count, Equals, uint64(1))
+	c.Assert(count, Equals, uint64(22))
 }
 
 func (*DBSuite) TestDatabaseHelper(c *C) {
@@ -127,4 +117,16 @@ func (*DBSuite) TestDatabaseHelper(c *C) {
 	err = helper.All(&docs)
 	c.Assert(err, IsNil)
 	c.Assert(docs, DeepEquals, []Document{standard})
+}
+
+func (*DBSuite) TestReplicationLog(c *C) {
+	std := []string{"1", "2", "3"}
+	thread := map[string]interface{}{
+		"id":  1,
+		"log": std,
+	}
+	c.Assert(DB()(r.Table("threads").Insert(thread)).Exec(), IsNil)
+	log, err := ReplicationLog(1)
+	c.Assert(err, IsNil)
+	c.Assert(log, DeepEquals, std)
 }

@@ -24,9 +24,10 @@ type Thread struct {
 	Deleted   bool   `json:"deleted,omitempty" gorethink:"deleted,omitempty"`
 	PostCtr   uint16 `json:"postCtr" gorethink:"postCtr"`
 	ImageCtr  uint16 `json:"imageCtr" gorethink:"imageCtr"`
-	ID        uint64 `json:"id" gorethink:"id"`
+	ID        uint64 `json:"-" gorethink:"id"`
 	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
+	LogCtr    uint64 `json:"logCtr" gorethink:"logCtr"`
 	Board     string `json:"board" gorethink:"board"`
 	Subject   string `json:"subject,omitempty" gorethink:"subject,omitempty"`
 }

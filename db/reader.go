@@ -81,7 +81,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) (
 func getJoinedThread(id uint64) (thread joinedThread, err error) {
 	query := r.
 		Expr(map[string]r.Term{
-			"left":  getThread(id).Without("history"),
+			"left":  getThread(id).Without("log"),
 			"right": getPost(id),
 		}).
 		Merge(getThreadMeta())

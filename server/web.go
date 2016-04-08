@@ -184,6 +184,7 @@ func threadHTML(
 		notFoundPage(res, req)
 		return
 	}
+
 	valid, err := validateThreadRequest(board, id)
 	if err != nil {
 		errorPage(res, req, err)
@@ -193,6 +194,7 @@ func threadHTML(
 		notFoundPage(res, req)
 		return
 	}
+
 	serveIndexTemplate(res, req)
 }
 
@@ -208,8 +210,8 @@ func threadJSON(
 		text404(res, req)
 		return
 	}
-	valid, err := validateThreadRequest(board, id)
 
+	valid, err := validateThreadRequest(board, id)
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
@@ -229,12 +231,20 @@ func threadJSON(
 		return
 	}
 
+	// Send a cached copy, if a thread exists, to ensure read and write
+	// consistency in single thread boundries.
+	if cached := websockets.Subs.ThreadJSON(id); cached != nil {
+		writeJSON(res, req, cached)
+		return
+	}
+
 	data, err := db.NewReader(board, ident).
 		GetThread(id, detectLastN(req))
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
 	}
+
 	writeJSON(res, req, data)
 }
 
@@ -310,6 +320,7 @@ func text404(res http.ResponseWriter, req *http.Request) {
 	writeData(res, req, []byte("404 Not found"))
 }
 
+// Write a []byte to the client
 func writeData(res http.ResponseWriter, req *http.Request, data []byte) {
 	_, err := res.Write(data)
 	if err != nil {
@@ -317,6 +328,7 @@ func writeData(res http.ResponseWriter, req *http.Request, data []byte) {
 	}
 }
 
+// Convert input data to JSON an write to client
 func writeJSON(res http.ResponseWriter, req *http.Request, data interface{}) {
 	JSON, err := json.Marshal(data)
 	if err != nil {

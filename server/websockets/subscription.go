@@ -1,6 +1,9 @@
 package websockets
 
 import (
+	"encoding/json"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
 	"sync"
 	"time"
@@ -45,6 +48,7 @@ func (s *SubscriptionMap) newSubsctiption(id uint64) (*Subscription, error) {
 		add:     make(chan addRequest),
 		remove:  make(chan string),
 		write:   make(chan []byte),
+		getJSON: make(chan chan []byte),
 		close:   make(chan error),
 	}
 	if err := sub.Open(); err != nil {
@@ -80,15 +84,35 @@ func (s *SubscriptionMap) Remove(id uint64) {
 	delete(s.subs, id)
 }
 
+// ThreadJSON fetches the post data of a thread, if it exists. Otherwise
+// returns a nil slice. This used to insure consistency, by making it impossible
+// for writes to the thread to happen during the fetch.
+func (s *SubscriptionMap) ThreadJSON(id uint64) []byte {
+	s.RLock()
+	defer s.RUnlock()
+	sub, ok := s.subs[id]
+	if !ok {
+		return nil
+	}
+	return sub.GetJSON()
+}
+
 // Subscription manages a map of listener `chan []byte` and sends events to all
 // of them, allowing for thread-safe eventful distribution
 type Subscription struct {
 	id      uint64
+	counter uint64
 	add     chan addRequest
 	remove  chan string
 	write   chan []byte
+	getJSON chan chan []byte
 	close   chan error
 	clients subscribedCleints
+	data    struct {
+		counter uint64
+		buffer  []byte
+	}
+	log []string
 }
 
 // Request for adding a Client to a Subscription
@@ -101,6 +125,12 @@ type subscribedCleints map[string]chan<- []byte
 
 // Open intializes the Subscription and start it's internal loop
 func (s *Subscription) Open() error {
+	log, err := db.ReplicationLog(s.id)
+	if err != nil {
+		return util.WrapError("Error opening subscription", err)
+	}
+	s.counter = uint64(len(log))
+	s.log = log
 	go s.loop()
 	return nil
 }
@@ -118,6 +148,14 @@ func (s *Subscription) Remove(id string) {
 	s.remove <- id
 }
 
+// GetJSON retrieves cached thread post data or reads new data from the
+// database, if the cached data is more than 100 messages outdated.
+func (s *Subscription) GetJSON() []byte {
+	req := make(chan []byte)
+	s.getJSON <- req
+	return <-req
+}
+
 // loop handles the internal channel messages
 func (s *Subscription) loop() {
 	defer func() { // Remove Subscription, when loop stops
@@ -127,7 +165,7 @@ func (s *Subscription) loop() {
 		s.clients = nil
 		Subs.Remove(s.id)
 	}()
-	var shutdown <-chan time.Time
+	var shutdown <-chan time.Time // Loop termination timer
 
 	for {
 		select {
@@ -143,6 +181,8 @@ func (s *Subscription) loop() {
 			for _, cl := range s.clients {
 				cl <- buf
 			}
+		case req := <-s.getJSON:
+			s.sendJSON(req)
 		case <-s.close:
 			return
 		case <-shutdown:
@@ -152,6 +192,28 @@ func (s *Subscription) loop() {
 			shutdown = nil
 		}
 	}
+}
+
+// sendJSON retrieves cached thread post data or reads new data from the
+// database, if the cached data is more than 100 messages outdated, then sends
+// that data to the requester channel.
+func (s *Subscription) sendJSON(req chan<- []byte) {
+	if s.data.buffer != nil && s.counter-s.data.counter < 100 {
+		req <- s.data.buffer
+		return
+	}
+	thread, err := db.NewReader("", auth.Ident{}).GetThread(s.id, 0)
+	if err != nil {
+		req <- nil
+		return
+	}
+	s.data.counter = thread.LogCtr
+	data, err := json.Marshal(thread)
+	if err != nil {
+		req <- nil
+		return
+	}
+	req <- data
 }
 
 // Close terminates the Subscription

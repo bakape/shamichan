@@ -101,11 +101,17 @@ func BoardCounter(board string) (counter uint64, err error) {
 
 // ThreadCounter retrieve the history or "progress" counter of a thread
 func ThreadCounter(id uint64) (counter uint64, err error) {
-	err = DB()(r.Table("posts").GetAllByIndex("op", id).Count().Sub(1)).
-		One(&counter)
+	err = DB()(getThread(id).Field("logCtr")).One(&counter)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving thread counter: %d", id)
 		err = util.WrapError(msg, err)
 	}
+	return
+}
+
+// ReplicationLog retrieves the replication log of the specified thread. Always
+// return a non-nil map.
+func ReplicationLog(id uint64) (log []string, err error) {
+	err = DB()(getThread(id).Field("log")).All(&log)
 	return
 }

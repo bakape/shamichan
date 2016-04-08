@@ -200,23 +200,23 @@ func (*DBSuite) TestGetBoard(c *C) {
 		Threads: []types.ThreadContainer{
 			{
 				Thread: types.Thread{
-					ID:    3,
-					Board: "a",
-				},
-				Post: types.Post{
-					ID:    3,
-					Board: "a",
-					Image: genericImage,
-				},
-			},
-			{
-				Thread: types.Thread{
 					ID:      1,
 					PostCtr: 1,
 					Board:   "a",
 				},
 				Post: types.Post{
 					ID:    1,
+					Board: "a",
+					Image: genericImage,
+				},
+			},
+			{
+				Thread: types.Thread{
+					ID:    3,
+					Board: "a",
+				},
+				Post: types.Post{
+					ID:    3,
 					Board: "a",
 					Image: genericImage,
 				},
@@ -285,35 +285,35 @@ func (*DBSuite) TestGetAllBoard(c *C) {
 		Threads: []types.ThreadContainer{
 			{
 				Thread: types.Thread{
-					ID:    4,
-					Board: "c",
-				},
-				Post: types.Post{
-					ID:    4,
-					Board: "c",
-					Image: genericImage,
-				},
-			},
-			{
-				Thread: types.Thread{
-					ID:    3,
-					Board: "a",
-				},
-				Post: types.Post{
-					ID:    3,
-					Board: "a",
-					Image: genericImage,
-				},
-			},
-			{
-				Thread: types.Thread{
 					ID:      1,
-					PostCtr: 1,
 					Board:   "a",
+					PostCtr: 1,
 				},
 				Post: types.Post{
 					ID:    1,
 					Board: "a",
+					Image: genericImage,
+				},
+			},
+			{
+				Thread: types.Thread{
+					ID:    3,
+					Board: "a",
+				},
+				Post: types.Post{
+					ID:    3,
+					Board: "a",
+					Image: genericImage,
+				},
+			},
+			{
+				Thread: types.Thread{
+					ID:    4,
+					Board: "c",
+				},
+				Post: types.Post{
+					ID:    4,
+					Board: "c",
 					Image: genericImage,
 				},
 			},
