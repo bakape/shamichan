@@ -45,7 +45,7 @@ func (d *DB) SetUpSuite(c *C) {
 	})
 	c.Assert(err, IsNil)
 
-	c.Assert(db.DB()(r.DBCreate(d.dbName)).Exec(), IsNil)
+	c.Assert(db.DB(r.DBCreate(d.dbName)).Exec(), IsNil)
 	db.RSession.Use(d.dbName)
 	c.Assert(db.CreateTables(), IsNil)
 	c.Assert(db.CreateIndeces(), IsNil)
@@ -82,7 +82,7 @@ func setupPosts(c *C) {
 			LogCtr: 44,
 		},
 	}
-	c.Assert(db.DB()(r.Table("threads").Insert(threads)).Exec(), IsNil)
+	c.Assert(db.DB(r.Table("threads").Insert(threads)).Exec(), IsNil)
 
 	posts := []types.Post{
 		{
@@ -109,7 +109,7 @@ func setupPosts(c *C) {
 			Image: genericImage,
 		},
 	}
-	c.Assert(db.DB()(r.Table("posts").Insert(posts)).Exec(), IsNil)
+	c.Assert(db.DB(r.Table("posts").Insert(posts)).Exec(), IsNil)
 
 	main := []map[string]interface{}{
 		{
@@ -121,7 +121,7 @@ func setupPosts(c *C) {
 			"postCtr": 8,
 		},
 	}
-	c.Assert(db.DB()(r.Table("main").Insert(main)).Exec(), IsNil)
+	c.Assert(db.DB(r.Table("main").Insert(main)).Exec(), IsNil)
 }
 
 type WebServer struct {

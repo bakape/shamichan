@@ -28,7 +28,7 @@ var testDBName string
 func (d *DBSuite) SetUpSuite(c *C) {
 	d.dbName = uniqueDBName()
 	connectToRethinkDb(c)
-	c.Assert(DB()(r.DBCreate(d.dbName)).Exec(), IsNil)
+	c.Assert(DB(r.DBCreate(d.dbName)).Exec(), IsNil)
 	RSession.Use(d.dbName)
 	c.Assert(CreateTables(), IsNil)
 	c.Assert(CreateIndeces(), IsNil)
@@ -56,7 +56,7 @@ func (*DBSuite) SetUpTest(_ *C) {
 // Clear all documents from all tables after each test.
 func (*DBSuite) TearDownTest(c *C) {
 	for _, table := range AllTables {
-		c.Assert(DB()(r.Table(table).Delete()).Exec(), IsNil)
+		c.Assert(DB(r.Table(table).Delete()).Exec(), IsNil)
 	}
 }
 
@@ -71,12 +71,12 @@ func (*DBSuite) TestVerifyVersion(c *C) {
 		"id":        "info",
 		"dbVersion": dbVersion,
 	}
-	c.Assert(DB()(r.Table("main").Insert(info)).Exec(), IsNil)
+	c.Assert(DB(r.Table("main").Insert(info)).Exec(), IsNil)
 	c.Assert(verifyDBVersion(), IsNil)
 
 	// Incompatible DB version
 	update := map[string]int{"dbVersion": 0}
-	c.Assert(DB()(r.Table("main").Get("info").Update(update)).Exec(), IsNil)
+	c.Assert(DB(r.Table("main").Get("info").Update(update)).Exec(), IsNil)
 	c.Assert(
 		verifyDBVersion(),
 		ErrorMatches,
@@ -87,7 +87,7 @@ func (*DBSuite) TestVerifyVersion(c *C) {
 func (*DBInit) TestDb(c *C) {
 	query := r.Table("posts").Get(1)
 	standard := DatabaseHelper{query}
-	c.Assert(DB()(query), DeepEquals, standard)
+	c.Assert(DB(query), DeepEquals, standard)
 }
 
 func (*DBInit) TestLoadDB(c *C) {
@@ -96,20 +96,20 @@ func (*DBInit) TestLoadDB(c *C) {
 	dbName := uniqueDBName()
 	config.Config.Rethinkdb.Db = dbName
 	defer func() {
-		c.Assert(DB()(r.DBDrop(dbName)).Exec(), IsNil)
+		c.Assert(DB(r.DBDrop(dbName)).Exec(), IsNil)
 		c.Assert(RSession.Close(), IsNil)
 	}()
 	c.Assert(LoadDB(), IsNil)
 
 	var missingTables []string
-	err := DB()(r.Expr(AllTables).Difference(r.TableList())).One(&missingTables)
+	err := DB(r.Expr(AllTables).Difference(r.TableList())).One(&missingTables)
 	c.Assert(err, IsNil)
 	for _, table := range missingTables {
 		c.Fatalf("table '%s' not created", table)
 	}
 
 	var hasIndex bool
-	err = DB()(r.Table("threads").IndexList().Contains("board")).One(&hasIndex)
+	err = DB(r.Table("threads").IndexList().Contains("board")).One(&hasIndex)
 	c.Assert(err, IsNil)
 	if !hasIndex {
 		indexMissing("threads", "board", c)
@@ -119,17 +119,17 @@ func (*DBInit) TestLoadDB(c *C) {
 	query := r.
 		Expr([...]string{"op", "board"}).
 		Difference(r.Table("posts").IndexList())
-	c.Assert(DB()(query).One(&missingIndeces), IsNil)
+	c.Assert(DB(query).One(&missingIndeces), IsNil)
 	for _, index := range missingIndeces {
 		indexMissing("posts", index, c)
 	}
 
 	var info infoDocument
-	c.Assert(DB()(r.Table("main").Get("info")).One(&info), IsNil)
+	c.Assert(DB(r.Table("main").Get("info")).One(&info), IsNil)
 	c.Assert(info, Equals, infoDocument{Document{"info"}, dbVersion, 0})
 
 	var histCounts Document
-	c.Assert(DB()(r.Table("main").Get("histCounts")).One(&histCounts), IsNil)
+	c.Assert(DB(r.Table("main").Get("histCounts")).One(&histCounts), IsNil)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
 
 	c.Assert(RSession.Close(), IsNil)

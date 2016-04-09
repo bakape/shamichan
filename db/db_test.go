@@ -10,7 +10,7 @@ func (*DBSuite) TestParentThread(c *C) {
 		"id": 2,
 		"op": 1,
 	}
-	c.Assert(DB()(r.Table("posts").Insert(std)).Exec(), IsNil)
+	c.Assert(DB(r.Table("posts").Insert(std)).Exec(), IsNil)
 	thread, err := parentThread(2)
 	c.Assert(err, IsNil)
 	c.Assert(thread, Equals, uint64(1))
@@ -26,7 +26,7 @@ func (*DBSuite) TestParentBoard(c *C) {
 		"id":    1,
 		"board": "a",
 	}
-	c.Assert(DB()(r.Table("posts").Insert(std)).Exec(), IsNil)
+	c.Assert(DB(r.Table("posts").Insert(std)).Exec(), IsNil)
 
 	b, err := parentBoard(1)
 	c.Assert(err, IsNil)
@@ -43,7 +43,7 @@ func (*DBSuite) TestValidateOP(c *C) {
 		"id":    1,
 		"board": "a",
 	}
-	c.Assert(DB()(r.Table("threads").Insert(std)).Exec(), IsNil)
+	c.Assert(DB(r.Table("threads").Insert(std)).Exec(), IsNil)
 
 	v, err := ValidateOP(1, "a")
 	c.Assert(err, IsNil)
@@ -64,7 +64,7 @@ func (*DBSuite) TestPostCounter(c *C) {
 		"id":      "info",
 		"postCtr": 1,
 	}
-	c.Assert(DB()(r.Table("main").Insert(std)).Exec(), IsNil)
+	c.Assert(DB(r.Table("main").Insert(std)).Exec(), IsNil)
 
 	count, err := PostCounter()
 	c.Assert(err, IsNil)
@@ -73,14 +73,14 @@ func (*DBSuite) TestPostCounter(c *C) {
 
 func (*DBSuite) TestBoardCounter(c *C) {
 	std := map[string]string{"id": "histCounts"}
-	c.Assert(DB()(r.Table("main").Insert(std)).Exec(), IsNil)
+	c.Assert(DB(r.Table("main").Insert(std)).Exec(), IsNil)
 
 	count, err := BoardCounter("a")
 	c.Assert(err, IsNil)
 	c.Assert(count, Equals, uint64(0))
 
 	update := map[string]int{"a": 1}
-	err = DB()(r.Table("main").Get("histCounts").Update(update)).Exec()
+	err = DB(r.Table("main").Get("histCounts").Update(update)).Exec()
 	c.Assert(err, IsNil)
 
 	count, err = BoardCounter("a")
@@ -93,7 +93,7 @@ func (*DBSuite) TestThreadCounter(c *C) {
 		"id":     1,
 		"logCtr": 22,
 	}
-	c.Assert(DB()(r.Table("threads").Insert(std)).Exec(), IsNil)
+	c.Assert(DB(r.Table("threads").Insert(std)).Exec(), IsNil)
 
 	count, err := ThreadCounter(1)
 	c.Assert(err, IsNil)
@@ -125,7 +125,7 @@ func (*DBSuite) TestReplicationLog(c *C) {
 		"id":  1,
 		"log": std,
 	}
-	c.Assert(DB()(r.Table("threads").Insert(thread)).Exec(), IsNil)
+	c.Assert(DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
 	log, err := ReplicationLog(1)
 	c.Assert(err, IsNil)
 	c.Assert(log, DeepEquals, std)

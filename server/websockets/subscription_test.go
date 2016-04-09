@@ -24,7 +24,7 @@ func (s *SubSuite) SetUpSuite(c *C) {
 	})
 	c.Assert(err, IsNil)
 
-	c.Assert(db.DB()(r.DBCreate(s.dbName)).Exec(), IsNil)
+	c.Assert(db.DB(r.DBCreate(s.dbName)).Exec(), IsNil)
 	db.RSession.Use(s.dbName)
 	c.Assert(db.CreateTables(), IsNil)
 	c.Assert(db.CreateIndeces(), IsNil)
@@ -39,7 +39,7 @@ func (s *SubSuite) TearDownSuite(c *C) {
 func (*SubSuite) TearDownTest(c *C) {
 	Subs.subs = make(map[uint64]*Subscription)
 	for _, table := range db.AllTables {
-		c.Assert(db.DB()(r.Table(table).Delete()).Exec(), IsNil)
+		c.Assert(db.DB(r.Table(table).Delete()).Exec(), IsNil)
 	}
 }
 
@@ -52,7 +52,7 @@ func (*SubSuite) TestBasicSubscription(c *C) {
 		"id":  id,
 		"log": []string{"log"},
 	}
-	c.Assert(db.DB()(r.Table("threads").Insert(thread)).Exec(), IsNil)
+	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
 
 	// New Subscription
 	c.Assert(Subs.Exists(id), Equals, false)
@@ -96,9 +96,9 @@ func (*SubSuite) TestReadJSON(c *C) {
 		"logCtr": 10,
 		"log":    []string{"log"},
 	}
-	c.Assert(db.DB()(r.Table("threads").Insert(thread)).Exec(), IsNil)
+	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
 	post := types.Post{ID: 1}
-	c.Assert(db.DB()(r.Table("posts").Insert(post)).Exec(), IsNil)
+	c.Assert(db.DB(r.Table("posts").Insert(post)).Exec(), IsNil)
 
 	sv := newWSServer(c)
 	defer sv.Close()

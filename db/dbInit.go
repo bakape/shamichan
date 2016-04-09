@@ -18,14 +18,10 @@ const dbVersion = 2
 // entire server.
 var RSession *r.Session
 
-// DB returns a function that creates a new DatabaseHelper. Used to simplify
-// database queries.
-// Simply DB()(${query}).${method}()
-// Example: err := DB()(r.Table("posts").Get(1)).One(&Post)
-func DB() func(r.Term) DatabaseHelper {
-	return func(query r.Term) DatabaseHelper {
-		return DatabaseHelper{query}
-	}
+// DB creates a new DatabaseHelper. Used to simplify database queries.
+// Example: err := DB(r.Table("posts").Get(1)).One(&Post)
+func DB(query r.Term) DatabaseHelper {
+	return DatabaseHelper{query}
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -39,7 +35,7 @@ func LoadDB() (err error) {
 	}
 
 	var isCreated bool
-	err = DB()(r.DBList().Contains(config.Config.Rethinkdb.Db)).One(&isCreated)
+	err = DB(r.DBList().Contains(config.Config.Rethinkdb.Db)).One(&isCreated)
 	if err != nil {
 		return util.WrapError("Error checking, if database exists", err)
 	}
@@ -54,7 +50,7 @@ func LoadDB() (err error) {
 // mess up the DB irreversably.
 func verifyDBVersion() error {
 	var version int
-	err := DB()(r.Table("main").Get("info").Field("dbVersion")).One(&version)
+	err := DB(r.Table("main").Get("info").Field("dbVersion")).One(&version)
 	if err != nil {
 		return util.WrapError("Error reading database version", err)
 	}
@@ -89,7 +85,7 @@ type infoDocument struct {
 func initRethinkDB() error {
 	dbName := config.Config.Rethinkdb.Db
 	log.Printf("Initialising database '%s'", dbName)
-	if err := DB()(r.DBCreate(dbName)).Exec(); err != nil {
+	if err := DB(r.DBCreate(dbName)).Exec(); err != nil {
 		return util.WrapError("Error creating database", err)
 	}
 
@@ -106,7 +102,7 @@ func initRethinkDB() error {
 		// post creation
 		Document{"histCounts"},
 	}
-	if err := DB()(r.Table("main").Insert(main)).Exec(); err != nil {
+	if err := DB(r.Table("main").Insert(main)).Exec(); err != nil {
 		return util.WrapError("Error initializing database", err)
 	}
 
@@ -116,7 +112,7 @@ func initRethinkDB() error {
 // CreateTables creates all tables needed for meguca operation
 func CreateTables() error {
 	for _, table := range AllTables {
-		err := DB()(r.TableCreate(table)).Exec()
+		err := DB(r.TableCreate(table)).Exec()
 		if err != nil {
 			return util.WrapError("Error creating table", err)
 		}
@@ -126,12 +122,12 @@ func CreateTables() error {
 
 // CreateIndeces create secondary indeces for faster table queries
 func CreateIndeces() error {
-	err := DB()(r.Table("threads").IndexCreate("board")).Exec()
+	err := DB(r.Table("threads").IndexCreate("board")).Exec()
 	if err != nil {
 		return indexCreationError(err)
 	}
 	for _, key := range [...]string{"op", "board"} {
-		err := DB()(r.Table("posts").IndexCreate(key)).Exec()
+		err := DB(r.Table("posts").IndexCreate(key)).Exec()
 		if err != nil {
 			return indexCreationError(err)
 		}
@@ -140,7 +136,7 @@ func CreateIndeces() error {
 	// Make sure all indeces are ready to avoid the race condition of and index
 	// being accessed before its full creation.
 	for _, table := range AllTables {
-		err := DB()(r.Table(table).IndexWait()).Exec()
+		err := DB(r.Table(table).IndexWait()).Exec()
 		if err != nil {
 			return util.WrapError("Error waiting for index", err)
 		}

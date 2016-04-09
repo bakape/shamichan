@@ -46,7 +46,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) (
 	if lastN != 0 { // Only fetch last N number of replies
 		query = query.CoerceTo("array").OrderBy("id").Slice(-lastN)
 	}
-	err = DB()(query).All(&posts)
+	err = DB(query).All(&posts)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving thread: %d:last%d", id, lastN)
 		return types.ThreadContainer{}, util.WrapError(msg, err)
@@ -85,7 +85,7 @@ func getJoinedThread(id uint64) (thread joinedThread, err error) {
 			"right": getPost(id),
 		}).
 		Merge(getThreadMeta())
-	err = DB()(query).One(&thread)
+	err = DB(query).One(&thread)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving joined thread: %d", id)
 		err = util.WrapError(msg, err)
@@ -131,7 +131,7 @@ func (rd *Reader) parsePost(post types.Post) types.Post {
 
 // GetPost reads a single post from the database
 func (rd *Reader) GetPost(id uint64) (post types.Post, err error) {
-	err = DB()(getPost(id)).One(&post)
+	err = DB(getPost(id)).One(&post)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving post: %d", id)
 		err = util.WrapError(msg, err)
@@ -143,7 +143,7 @@ func (rd *Reader) GetPost(id uint64) (post types.Post, err error) {
 
 	// Check if parent thread was not deleted
 	var deleted bool
-	err = DB()(getThread(post.OP).Field("deleted").Default(false)).One(&deleted)
+	err = DB(getThread(post.OP).Field("deleted").Default(false)).One(&deleted)
 	if err != nil {
 		msg := fmt.Sprintf(
 			"Error checking, if parent thread is deleted: %d",
@@ -160,7 +160,7 @@ func (rd *Reader) GetPost(id uint64) (post types.Post, err error) {
 // GetBoard retrieves all OPs of a single board
 func (rd *Reader) GetBoard() (board types.Board, err error) {
 	var threads []joinedThread
-	err = DB()(r.
+	err = DB(r.
 		Table("threads").
 		GetAllByIndex("board", rd.board).
 		EqJoin("id", r.Table("posts")).
@@ -187,7 +187,7 @@ func (rd *Reader) GetBoard() (board types.Board, err error) {
 // meta-board
 func (rd *Reader) GetAllBoard() (board types.Board, err error) {
 	var threads []joinedThread
-	err = DB()(r.Table("threads").
+	err = DB(r.Table("threads").
 		EqJoin("id", r.Table("posts")).
 		Merge(getThreadMeta()).
 		Without(map[string]string{"right": "op"}),

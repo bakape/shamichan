@@ -66,7 +66,7 @@ func (*DBSuite) TestGetPost(c *C) {
 			Board: "q",
 		},
 	}
-	c.Assert(DB()(r.Table("posts").Insert(samplePosts)).Exec(), IsNil)
+	c.Assert(DB(r.Table("posts").Insert(samplePosts)).Exec(), IsNil)
 	sampleThreads := []types.Thread{
 		{
 			ID:      4,
@@ -78,7 +78,7 @@ func (*DBSuite) TestGetPost(c *C) {
 			Board: "a",
 		},
 	}
-	c.Assert(DB()(r.Table("threads").Insert(sampleThreads)).Exec(), IsNil)
+	c.Assert(DB(r.Table("threads").Insert(sampleThreads)).Exec(), IsNil)
 
 	r := NewReader("a", auth.Ident{})
 	empty := types.Post{}
@@ -111,13 +111,13 @@ func (*DBSuite) TestGetPost(c *C) {
 
 func (*DBSuite) TestGetJoinedThread(c *C) {
 	// Only OP
-	c.Assert(DB()(r.Table("threads").Insert(types.Thread{ID: 1})).Exec(), IsNil)
+	c.Assert(DB(r.Table("threads").Insert(types.Thread{ID: 1})).Exec(), IsNil)
 	samplePosts := types.Post{
 		ID:    1,
 		OP:    1,
 		Image: genericImage,
 	}
-	c.Assert(DB()(r.Table("posts").Insert(samplePosts)).Exec(), IsNil)
+	c.Assert(DB(r.Table("posts").Insert(samplePosts)).Exec(), IsNil)
 	standard := joinedThread{
 		Left: types.Thread{
 			ID: 1,
@@ -137,7 +137,7 @@ func (*DBSuite) TestGetJoinedThread(c *C) {
 		ID: 2,
 		OP: 1,
 	}
-	c.Assert(DB()(r.Table("posts").Insert(sampleReply)).Exec(), IsNil)
+	c.Assert(DB(r.Table("posts").Insert(sampleReply)).Exec(), IsNil)
 	standard.Left.PostCtr++
 	thread, err = getJoinedThread(1)
 	c.Assert(err, IsNil)
@@ -149,7 +149,7 @@ func (*DBSuite) TestGetJoinedThread(c *C) {
 		OP:    1,
 		Image: genericImage,
 	}
-	c.Assert(DB()(r.Table("posts").Insert(imagePost)).Exec(), IsNil)
+	c.Assert(DB(r.Table("posts").Insert(imagePost)).Exec(), IsNil)
 	standard.Left.PostCtr++
 	standard.Left.ImageCtr++
 	thread, err = getJoinedThread(1)
@@ -235,7 +235,7 @@ func setupPosts(c *C) {
 		{ID: 3, Board: "a"},
 		{ID: 4, Board: "c"},
 	}
-	c.Assert(DB()(r.Table("threads").Insert(threads)).Exec(), IsNil)
+	c.Assert(DB(r.Table("threads").Insert(threads)).Exec(), IsNil)
 
 	posts := []types.Post{
 		{
@@ -262,7 +262,7 @@ func setupPosts(c *C) {
 			Image: genericImage,
 		},
 	}
-	c.Assert(DB()(r.Table("posts").Insert(posts)).Exec(), IsNil)
+	c.Assert(DB(r.Table("posts").Insert(posts)).Exec(), IsNil)
 
 	main := []map[string]interface{}{
 		{
@@ -274,7 +274,7 @@ func setupPosts(c *C) {
 			"postCtr": 8,
 		},
 	}
-	c.Assert(DB()(r.Table("main").Insert(main)).Exec(), IsNil)
+	c.Assert(DB(r.Table("main").Insert(main)).Exec(), IsNil)
 }
 
 func (*DBSuite) TestGetAllBoard(c *C) {
@@ -352,7 +352,7 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 		Board: "a",
 		Image: genericImage,
 	}
-	c.Assert(DB()(r.Table("posts").Insert(additional)).Exec(), IsNil)
+	c.Assert(DB(r.Table("posts").Insert(additional)).Exec(), IsNil)
 	standard = types.ThreadContainer{
 		Thread: types.Thread{
 			ID:       1,
