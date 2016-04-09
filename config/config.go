@@ -5,9 +5,11 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/DisposaBoy/JsonConfigReader"
 	"github.com/Soreil/mnemonics"
 	"github.com/bakape/meguca/util"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sync"
 )
@@ -154,14 +156,22 @@ func LoadConfig() error {
 		path       = filepath.FromSlash(configRoot + "/config.json")
 	)
 
-	file, err := ioutil.ReadFile(path)
+	file, err := os.Open(path)
 	if err != nil {
 		return util.WrapError("Error reading configuration file", err)
 	}
-	if err := json.Unmarshal(file, &tempServer); err != nil {
+	defer file.Close()
+
+	// Strip comments
+	buf, err := ioutil.ReadAll(JsonConfigReader.New(file))
+	if err != nil {
 		return parseError(err)
 	}
-	if err := json.Unmarshal(file, &tempClient); err != nil {
+
+	if err := json.Unmarshal(buf, &tempServer); err != nil {
+		return parseError(err)
+	}
+	if err := json.Unmarshal(buf, &tempClient); err != nil {
 		return parseError(err)
 	}
 
@@ -169,7 +179,7 @@ func LoadConfig() error {
 	if err != nil {
 		return parseError(err)
 	}
-	tempHash, err := util.HashBuffer(file)
+	tempHash, err := util.HashBuffer(buf)
 	if err != nil {
 		return parseError(err)
 	}
