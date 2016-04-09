@@ -236,22 +236,6 @@
         // details
         "pngQuality": "0-10",
 
-        // File formats to accept as file uploads
-        "formats": {
-            "jpeg": true,
-			"png": true,
-			"gif": true,
-            "webm": true,
-            "pdf": true,
-            "svg": true,
-            "mp4": true,
-            "mp3": true,
-            "ogg": true
-        },
-
-        // Accept WebM uploads with audio
-		"webmAudio": true,
-
         // Threshold for the image duplicate detector 1-255
         "duplicateThreshold": 5,
 

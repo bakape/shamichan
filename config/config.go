@@ -92,7 +92,6 @@ type ImageConfig struct {
 	}
 	Spoilers   []uint8
 	PngQuality string
-	Formats    map[string]bool
 }
 
 // PostConfig stores configuration related to creating posts
