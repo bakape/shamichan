@@ -105,7 +105,6 @@
                 }
             }
         },
-        "keyword": "login",
         "sessionTime": 1209600
     },
     "images": {
@@ -181,6 +180,5 @@
     "feedbackEmail": "lalc@email.com",
     "defaultCSS": "moe",
     "frontpage": "",
-    "infoBanner": "",
-    "injectJSPath": ""
+    "infoBanner": ""
 }

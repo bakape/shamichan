@@ -30,8 +30,8 @@ func (*Tests) TestLoadConfig(c *C) {
 	}()
 
 	c.Assert(LoadConfig(), IsNil)
-	stdConfig := Server{}
+	stdConfig := ServerConfigs{}
 	stdConfig.Posts.Salt = "LALALALALALALALALALALALALALALALALALALALA"
-	c.Assert(Config, DeepEquals, stdConfig)
-	c.Assert(Hash, Equals, "eeba38176564a577")
+	c.Assert(config, DeepEquals, stdConfig)
+	c.Assert(hash, Equals, "eeba38176564a577")
 }

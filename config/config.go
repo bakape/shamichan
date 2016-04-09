@@ -1,6 +1,6 @@
-// Package config parses JSON configuration files and exports the Config struct
-// for server-side use and the ClientConfig struct, for JSON stringification and
-// passing to the  client,
+// Package config parses JSON configuration files and exports the configuration
+// for server-side use and the public availability JSON struct, which includes
+// a small subset of the server configuration.
 package config
 
 import (
@@ -9,64 +9,67 @@ import (
 	"github.com/bakape/meguca/util"
 	"io/ioutil"
 	"path/filepath"
+	"sync"
 )
 
-// Overridable path for tests
-var configRoot = "config"
+var (
+	// Overridable path for tests
+	configRoot = "config"
 
-// Server stores the global configuration. It is loaded only once
-// during start up and considered implicitly immutable during the rest of
-// runtime.
-type Server struct {
-	HTTP struct {
-		Addr, Origin, Cert, Key string
-		SSL, TrustProxies, Gzip bool
+	// Ensures no reads happen, while the configuration is reloading
+	mu sync.RWMutex
+
+	// Contains currently loaded server configuration
+	config ServerConfigs
+
+	// JSON of client-accessable configuration
+	clientJSON []byte
+
+	// Hash of the config file. Used live updating configuration on the client
+	hash string
+)
+
+// Stores the global configuration
+type ServerConfigs struct {
+	HTTP       HTTPConfigs
+	Rethinkdb  RethinkDBConfig
+	Boards     BoardConfig
+	Staff      StaffConfig
+	Images     ImageConfig
+	Posts      PostConfig
+	Recaptcha  RecaptchaConfig
+	Radio, Pyu bool
+	InfoBanner string
+}
+
+// HTTPConfigs stores HTTP server configuration
+type HTTPConfigs struct {
+	SSL, TrustProxies, Gzip bool
+	Addr, Origin, Cert, Key string
+	Frontpage               string
+}
+
+// RethinkDBConfig stores address and datbase name to connect to
+type RethinkDBConfig struct {
+	Addr, Db string
+}
+
+// BoardConfig stores overall board configuration
+type BoardConfig struct {
+	Enabled []string
+	Boards  map[string]struct {
+		MaxThreads, MaxBump int
+		Title               string
 	}
-	Rethinkdb struct {
-		Addr, Db string
-	}
-	Boards struct {
-		Enabled []string
-		Boards  map[string]struct {
-			MaxThreads, MaxBump int
-			Title               string
-		}
-		Default, Staff string
-		Psuedo, Links  [][2]string
-		Prune          bool
-	}
-	Lang struct {
-		Enabled []string
-		Default string
-	}
-	Staff struct {
-		Classes     map[string]StaffClass
-		Keyword     string
-		SessionTime int
-	}
-	Images struct {
-		Max struct {
-			Size, Width, Height, Pixels int64
-		}
-		JpegQuality        uint8
-		PngQuality         string
-		WebmAudio          bool
-		Hats               bool
-		DuplicateThreshold uint8
-		Spoilers           []uint8
-		Formats            map[string]bool
-	}
-	Posts struct {
-		Salt, ExcludeRegex                       string
-		ThreadCreationCooldown, MaxSubjectLength int
-		ReadOnly, SageEnabled, ForcedAnon        bool
-	}
-	Recaptcha struct {
-		Public, Private string
-	}
-	Banners, FAQ, Eightball                                        []string
-	Radio, Pyu, IllyaDance                                         bool
-	FeedbackEmail, DefaultCSS, Frontpage, InfoBanner, InjectJSPath string
+	Default, Staff string
+	Psuedo, Links  [][2]string
+	Prune          bool
+}
+
+// StaffConfig stores moderation staff related configuration
+type StaffConfig struct {
+	Classes     map[string]StaffClass
+	SessionTime int
 }
 
 // StaffClass contains properties of a single staff personel type
@@ -76,11 +79,35 @@ type StaffClass struct {
 	Rights  map[string]bool
 }
 
-// Config contains currently loaded server configuration
-var Config Server
+// ImageConfig stores file upload processing and thumbnailing configuration
+type ImageConfig struct {
+	WebmAudio          bool
+	Hats               bool
+	JpegQuality        uint8
+	DuplicateThreshold uint8
+	Max                struct {
+		Size, Width, Height, Pixels int64
+	}
+	Spoilers   []uint8
+	PngQuality string
+	Formats    map[string]bool
+}
 
-// client is a subset of serverConfigs, that is exported as JSON to all clients
-type client struct {
+// PostConfig stores configuration related to creating posts
+type PostConfig struct {
+	ThreadCreationCooldown, MaxSubjectLength int
+	ReadOnly, SageEnabled, ForcedAnon        bool
+	Salt, ExcludeRegex                       string
+}
+
+// RecaptchaConfig stores the public and private key fot Google ReCaptcha
+// authentication
+type RecaptchaConfig struct {
+	Public, Private string
+}
+
+// A subset of ServerConfigs, that is exported as JSON to all clients
+type clientConfigs struct {
 	Boards struct {
 		Enabled []string `json:"enabled"`
 		Boards  map[string]struct {
@@ -99,7 +126,6 @@ type client struct {
 			Alias  string          `json:"alias"`
 			Rights map[string]bool `json:"rights"`
 		} `json:"classes"`
-		Keyword string `json:"keyword"`
 	} `json:"staff"`
 	Images struct {
 		thumb struct {
@@ -119,45 +145,143 @@ type client struct {
 	InfoBanner    string   `json:"infoBanner"`
 }
 
-// ClientConfig exports public settings all clients can access
-var ClientConfig []byte
-
-// Hash stores the truncated MD5 hash of Config
-var Hash string
-
-// LoadConfig reads and parses the JSON config file
+// LoadConfig reads and parses the JSON config file and thread-safely loads it
+// into the server
 func LoadConfig() error {
-	path := filepath.FromSlash(configRoot + "/config.json")
+	var (
+		tempServer ServerConfigs
+		tempClient clientConfigs
+		path       = filepath.FromSlash(configRoot + "/config.json")
+	)
+
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
 		return util.WrapError("Error reading configuration file", err)
 	}
-
-	if err := json.Unmarshal(file, &Config); err != nil {
+	if err := json.Unmarshal(file, &tempServer); err != nil {
+		return parseError(err)
+	}
+	if err := json.Unmarshal(file, &tempClient); err != nil {
 		return parseError(err)
 	}
 
-	var data client
-	if err := json.Unmarshal(file, &data); err != nil {
-		return parseError(err)
-	}
-
-	clientJSON, err := json.Marshal(data)
+	tempJSON, err := json.Marshal(tempClient)
 	if err != nil {
 		return parseError(err)
 	}
-	ClientConfig = clientJSON
-	hash, err := util.HashBuffer(file)
+	tempHash, err := util.HashBuffer(file)
 	if err != nil {
 		return parseError(err)
 	}
-	Hash = hash
-	if err := mnemonic.SetSalt(Config.Posts.Salt); err != nil {
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	config = tempServer
+	clientJSON = tempJSON
+	hash = tempHash
+	if err := mnemonic.SetSalt(config.Posts.Salt); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func parseError(err error) error {
 	return util.WrapError("Error parsing configuration file", err)
+}
+
+// HTTP returns HTTP server configuration
+func HTTP() HTTPConfigs {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.HTTP
+}
+
+// Rethinkdb returns address and datbase name to connect to
+func RethinkDB() RethinkDBConfig {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.Rethinkdb
+}
+
+// Boards returns overall board configuration
+func Boards() BoardConfig {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.Boards
+}
+
+// EnabledBoards returns a slice of curently enabled boards
+func EnabledBoards() []string {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.Boards.Enabled
+}
+
+// Staff returns moderation staff related configuration
+func Staff() StaffConfig {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.Staff
+}
+
+// Images returns file upload processing and thumbnailing configuration
+func Images() ImageConfig {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.Images
+}
+
+// Posts returns configuration related to creating posts
+func Posts() PostConfig {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.Posts
+}
+
+// Recaptcha returns the public and private key fot Google ReCaptcha
+// authentication
+func Recaptcha() RecaptchaConfig {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.Recaptcha
+}
+
+// Client returns punlic availability configuration JSON and a truncated
+// configuration MD5 hash
+func Client() ([]byte, string) {
+	mu.RLock()
+	defer mu.RUnlock()
+	return clientJSON, hash
+}
+
+// Radio returns, if r-a-d.io integration is enabled
+func Radio() bool {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.Radio
+}
+
+// Pyu returns, if don't ask is enabled
+func Pyu() bool {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.Pyu
+}
+
+// Set sets the internal configuration struct. To be used onl in tests.
+func Set(c ServerConfigs) {
+	mu.Lock()
+	defer mu.Unlock()
+	config = c
+}
+
+// SetClient sets the client configuration JSON and hash. To be used only in
+// tests.
+func SetClient(json []byte, cHash string) {
+	mu.Lock()
+	defer mu.Unlock()
+	clientJSON = json
+	hash = cHash
 }

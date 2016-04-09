@@ -281,8 +281,9 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 }
 
 func (*ClientSuite) TestCheckOrigin(c *C) {
-	config.Config = config.Server{}
-	config.Config.HTTP.Origin = "fubar.com"
+	conf := config.ServerConfigs{}
+	conf.HTTP.Origin = "fubar.com"
+	config.Set(conf)
 
 	// No header
 	req := newRequest(c)

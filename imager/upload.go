@@ -46,7 +46,7 @@ type ProtoImage struct {
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
-	req.Body = http.MaxBytesReader(res, req.Body, config.Config.Images.Max.Size)
+	req.Body = http.MaxBytesReader(res, req.Body, config.Images().Max.Size)
 
 	defer func() {
 		if err := req.MultipartForm.RemoveAll(); err != nil {
@@ -56,7 +56,7 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 
 	head := res.Header()
 	head.Set("Content-Type", "text/html; charset=UTF-8")
-	head.Set("Access-Control-Allow-Origin", config.Config.HTTP.Origin)
+	head.Set("Access-Control-Allow-Origin", config.HTTP().Origin)
 
 	img, err := parseUploadForm(req)
 	if err != nil {
@@ -105,7 +105,7 @@ func parseUploadForm(req *http.Request) (*ProtoImage, error) {
 	if err != nil {
 		return nil, err
 	}
-	if length > config.Config.Images.Max.Size {
+	if length > config.Images().Max.Size {
 		return nil, errors.New("File too large")
 	}
 
@@ -151,7 +151,7 @@ func extractSpoiler(req *http.Request) (sp uint8, err error) {
 
 // Confirms a spoiler exists in configuration
 func isValidSpoiler(id uint8) bool {
-	for _, valid := range config.Config.Images.Spoilers {
+	for _, valid := range config.Images().Spoilers {
 		if id == valid {
 			return true
 		}

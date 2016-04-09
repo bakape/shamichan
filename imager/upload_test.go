@@ -20,11 +20,13 @@ type Imager struct{}
 var _ = Suite(&Imager{})
 
 func (*Imager) SetUpTest(c *C) {
-	config.Config = config.Server{}
+	config.Set(config.ServerConfigs{})
 }
 
 func (*Imager) TestExtractSpoiler(c *C) {
-	config.Config.Images.Spoilers = []uint8{1, 2}
+	conf := config.ServerConfigs{}
+	conf.Images.Spoilers = []uint8{1, 2}
+	config.Set(conf)
 
 	// No spoiler
 	body, w := newMultiWriter()
@@ -59,7 +61,9 @@ func assertExtraction(c *C, b io.Reader, w *multipart.Writer) (uint8, error) {
 }
 
 func (*Imager) TestIsValidSpoiler(c *C) {
-	config.Config.Images.Spoilers = []uint8{1, 2}
+	conf := config.ServerConfigs{}
+	conf.Images.Spoilers = []uint8{1, 2}
+	config.Set(conf)
 	c.Assert(isValidSpoiler(8), Equals, false)
 	c.Assert(isValidSpoiler(1), Equals, true)
 }
@@ -103,7 +107,9 @@ func newRequest(c *C, body io.Reader, w *multipart.Writer) *http.Request {
 }
 
 func (*Imager) TestParseUploadForm(c *C) {
-	config.Config.Images.Max.Size = 1024
+	conf := config.ServerConfigs{}
+	conf.Images.Max.Size = 1024
+	config.Set(conf)
 	headers := map[string]string{}
 	fields := map[string]string{}
 
@@ -156,7 +162,8 @@ func (*Imager) TestParseUploadForm(c *C) {
 	defer websockets.Clients.Remove(cl.ID)
 
 	// Invalid spoiler
-	config.Config.Images.Spoilers = []uint8{1, 2}
+	conf.Images.Spoilers = []uint8{1, 2}
+	config.Set(conf)
 	fields["spoiler"] = "12"
 	b, w = newMultiWriter()
 	writeFields(c, w, fields)

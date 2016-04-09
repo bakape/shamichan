@@ -49,8 +49,8 @@ func connectToRethinkDb(c *C) {
 }
 
 func (*DBSuite) SetUpTest(_ *C) {
-	config.Config = config.Server{}
-	config.Config.Boards.Enabled = []string{"a"}
+	conf := config.ServerConfigs{}
+	conf.Boards.Enabled = []string{"a"}
 }
 
 // Clear all documents from all tables after each test.
@@ -91,10 +91,11 @@ func (*DBInit) TestDb(c *C) {
 }
 
 func (*DBInit) TestLoadDB(c *C) {
-	config.Config = config.Server{}
-	config.Config.Rethinkdb.Addr = "localhost:28015"
+	conf := config.ServerConfigs{}
+	conf.Rethinkdb.Addr = "localhost:28015"
 	dbName := uniqueDBName()
-	config.Config.Rethinkdb.Db = dbName
+	conf.Rethinkdb.Db = dbName
+	config.Set(conf)
 	defer func() {
 		c.Assert(DB(r.DBDrop(dbName)).Exec(), IsNil)
 		c.Assert(RSession.Close(), IsNil)

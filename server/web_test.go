@@ -54,8 +54,9 @@ func (d *DB) SetUpSuite(c *C) {
 }
 
 func (*DB) SetUpTest(_ *C) {
-	config.Config = config.Server{}
-	config.Config.Boards.Enabled = []string{"a"}
+	conf := config.ServerConfigs{}
+	conf.Boards.Enabled = []string{"a"}
+	config.Set(conf)
 }
 
 func (d *DB) TearDownSuite(c *C) {
@@ -136,14 +137,17 @@ func (w *WebServer) SetUpSuite(c *C) {
 }
 
 func (*WebServer) SetUpTest(_ *C) {
-	config.Config = config.Server{}
-	config.Config.Boards.Enabled = []string{"a"}
-	config.Hash = ""
-	config.ClientConfig = nil
+	conf := config.ServerConfigs{}
+	conf.Boards.Enabled = []string{"a"}
+	conf.Boards.Default = "a"
+	config.Set(conf)
+	config.SetClient(nil, "")
 }
 
 func (w *WebServer) TestFrontpageRedirect(c *C) {
-	config.Config.Frontpage = filepath.FromSlash("test/frontpage.html")
+	conf := config.ServerConfigs{}
+	conf.HTTP.Frontpage = filepath.FromSlash("test/frontpage.html")
+	config.Set(conf)
 	req := newRequest(c, "/")
 	rec := httptest.NewRecorder()
 	w.r.ServeHTTP(rec, req)
@@ -152,7 +156,6 @@ func (w *WebServer) TestFrontpageRedirect(c *C) {
 }
 
 func (w *WebServer) TestDefaultBoardRedirect(c *C) {
-	config.Config.Boards.Default = "a"
 	rec := httptest.NewRecorder()
 	req := newRequest(c, "/")
 	w.r.ServeHTTP(rec, req)
@@ -189,9 +192,8 @@ func newPair(c *C, url string) (*httptest.ResponseRecorder, *http.Request) {
 }
 
 func (w *WebServer) TestConfigServing(c *C) {
-	config.Hash = "foo"
-	config.ClientConfig = []byte{1}
-	etag := config.Hash
+	etag := "foo"
+	config.SetClient([]byte{1}, etag)
 
 	rec, req := newPair(c, "/api/config")
 	w.r.ServeHTTP(rec, req)
@@ -350,10 +352,8 @@ func (w *WebServer) TestServeIndexTemplate(c *C) {
 		HTML: []byte("mobile"),
 		Hash: "mhash",
 	}
-	templates.Resources = templates.Map{
-		"index":  desktop,
-		"mobile": mobile,
-	}
+	templates.Set("index", desktop)
+	templates.Set("mobile", mobile)
 
 	// Desktop
 	rec, req := newPair(c, "/a/")
@@ -384,12 +384,10 @@ func removeIndentation(s string) string {
 
 func (d *DB) TestThreadHTML(c *C) {
 	body := []byte("body")
-	templates.Resources = templates.Map{
-		"index": templates.Store{
-			HTML: body,
-			Hash: "hash",
-		},
-	}
+	templates.Set("index", templates.Store{
+		HTML: body,
+		Hash: "hash",
+	})
 	webRoot = "test"
 
 	// Unparsable thread number
@@ -597,7 +595,9 @@ func (d *DB) TestThreadJSON(c *C) {
 }
 
 func (w *WebServer) TestGzip(c *C) {
-	config.Config.HTTP.Gzip = true
+	conf := config.ServerConfigs{}
+	conf.HTTP.Gzip = true
+	config.Set(conf)
 	r := createRouter()
 	rec, req := newPair(c, "/api/config")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -607,7 +607,9 @@ func (w *WebServer) TestGzip(c *C) {
 
 func (w *WebServer) TestProxyHeaders(c *C) {
 	const ip = "68.180.194.242"
-	config.Config.HTTP.TrustProxies = true
+	conf := config.ServerConfigs{}
+	conf.HTTP.TrustProxies = true
+	config.Set(conf)
 	r := createRouter()
 	rec, req := newPair(c, "/api/config")
 	req.Header.Set("X-Forwarded-For", ip)

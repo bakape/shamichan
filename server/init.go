@@ -52,8 +52,10 @@ var arguments = map[string]string{
 	"start":   "start the meguca server",
 	"stop":    "stop a running daemonised meguca server",
 	"restart": "combination of stop + start",
-	"debug":   "start server in debug mode without deamonising",
-	"help":    "print this help text",
+	"reload": "reload configuration and templates without restarting the " +
+		"server",
+	"debug": "start server in debug mode without deamonising",
+	"help":  "print this help text",
 }
 
 // Constructs and prints the CLI help text
@@ -62,7 +64,7 @@ func printUsage() {
 	var help string
 	toPrint := []string{"start"}
 	if !isWindows {
-		toPrint = append(toPrint, []string{"stop", "restart"}...)
+		toPrint = append(toPrint, []string{"stop", "restart", "reload"}...)
 	} else {
 		arguments["debug"] = `alias of "start"`
 	}
@@ -72,7 +74,7 @@ func printUsage() {
 			usage += "|"
 		}
 		usage += arg
-		help += fmt.Sprintf("  %s\t  %s\n", arg, arguments[arg])
+		help += fmt.Sprintf("  %s\n    \t%s\n", arg, arguments[arg])
 	}
 	os.Stderr.WriteString(usage + "\n" + help)
 	os.Exit(1)

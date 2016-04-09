@@ -9,10 +9,18 @@ import (
 	"github.com/dchest/htmlmin"
 	"html/template"
 	"path/filepath"
+	"sync"
 )
 
-// Overriden in tests
-var templateRoot = "templates"
+var (
+	// Overriden in tests
+	templateRoot = "templates"
+
+	// resources conatains all available templates
+	resources = map[string]Store{}
+
+	mu sync.RWMutex
+)
 
 // Store stores the compiled HTML template and the corresponding truncated MD5
 // hash of said template
@@ -20,12 +28,6 @@ type Store struct {
 	HTML []byte
 	Hash string
 }
-
-// Map stores all available templates
-type Map map[string]Store
-
-// Resources conatains all available templates
-var Resources = Map{}
 
 // Compile reads template HTML from disk, injects dynamic variables,
 // hashes and stores them
@@ -35,8 +37,11 @@ func Compile() error {
 	if err != nil {
 		return err
 	}
-	Resources["index"] = index
-	Resources["mobile"] = mobile
+
+	mu.Lock()
+	defer mu.Unlock()
+	resources["index"] = index
+	resources["mobile"] = mobile
 	return nil
 }
 
@@ -53,8 +58,9 @@ type vars struct {
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
 func indexTemplate() (desktop Store, mobile Store, err error) {
-	v := vars{ConfigHash: config.Hash}
-	v.Config = template.JS(config.ClientConfig)
+	clientJSON, hash := config.Client()
+	v := vars{ConfigHash: hash}
+	v.Config = template.JS(clientJSON)
 	v.Navigation = boardNavigation()
 	tmpl, err := template.ParseFiles(
 		filepath.FromSlash(templateRoot + "/index.html"),
@@ -77,7 +83,7 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 // boardNavigation renders interboard navigation we put in the top banner
 func boardNavigation() template.HTML {
 	html := `<b id="navTop">[`
-	conf := config.Config.Boards
+	conf := config.Boards()
 
 	// Actual boards and "/all/" metaboard
 	for i, board := range append(conf.Enabled, "all") {
@@ -125,4 +131,18 @@ func buildIndexTemplate(
 		return Store{}, util.WrapError("Error hashing index template", err)
 	}
 	return Store{minified, hash}, nil
+}
+
+// Get retrieves a compiled template by its name
+func Get(name string) Store {
+	mu.RLock()
+	defer mu.RUnlock()
+	return resources[name]
+}
+
+// Set sets a template to the specified value. Only use in tests.
+func Set(name string, s Store) {
+	mu.Lock()
+	defer mu.Unlock()
+	resources[name] = s
 }

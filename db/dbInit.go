@@ -27,20 +27,21 @@ func DB(query r.Term) DatabaseHelper {
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
 func LoadDB() (err error) {
+	conf := config.RethinkDB()
 	RSession, err = r.Connect(r.ConnectOpts{
-		Address: config.Config.Rethinkdb.Addr,
+		Address: conf.Addr,
 	})
 	if err != nil {
 		return util.WrapError("Error connecting to RethinkDB", err)
 	}
 
 	var isCreated bool
-	err = DB(r.DBList().Contains(config.Config.Rethinkdb.Db)).One(&isCreated)
+	err = DB(r.DBList().Contains(conf.Db)).One(&isCreated)
 	if err != nil {
 		return util.WrapError("Error checking, if database exists", err)
 	}
 	if isCreated {
-		RSession.Use(config.Config.Rethinkdb.Db)
+		RSession.Use(conf.Db)
 		return verifyDBVersion()
 	}
 	return initRethinkDB()
@@ -83,7 +84,7 @@ type infoDocument struct {
 
 // Initialize a rethinkDB database
 func initRethinkDB() error {
-	dbName := config.Config.Rethinkdb.Db
+	dbName := config.RethinkDB().Db
 	log.Printf("Initialising database '%s'", dbName)
 	if err := DB(r.DBCreate(dbName)).Exec(); err != nil {
 		return util.WrapError("Error creating database", err)

@@ -13,14 +13,15 @@ type Auth struct{}
 var _ = Suite(&Auth{})
 
 func (*Auth) TestCheckAuth(c *C) {
-	config.Config = config.Server{}
-	config.Config.Staff.Classes = make(map[string]config.StaffClass, 1)
-	config.Config.Staff.Classes["admin"] = config.StaffClass{
+	conf := config.ServerConfigs{}
+	conf.Staff.Classes = make(map[string]config.StaffClass, 1)
+	conf.Staff.Classes["admin"] = config.StaffClass{
 		Rights: map[string]bool{
 			"canFoo": true,
 			"canBar": false,
 		},
 	}
+	config.Set(conf)
 
 	// Staff with rights
 	ident := Ident{Auth: "admin"}
@@ -46,8 +47,9 @@ func (*Auth) TestLookupIdent(c *C) {
 }
 
 func (*Auth) TestCanAccessBoard(c *C) {
-	config.Config = config.Server{}
-	config.Config.Boards.Enabled = []string{"a"}
+	conf := config.ServerConfigs{}
+	conf.Boards.Enabled = []string{"a"}
+	config.Set(conf)
 	ident := Ident{}
 
 	// Board exists

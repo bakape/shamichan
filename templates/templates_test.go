@@ -14,12 +14,13 @@ type Templates struct{}
 var _ = Suite(&Templates{})
 
 func (t *Templates) TestBoardNavigation(c *C) {
-	config.Config = config.Server{}
-	config.Config.Boards.Enabled = []string{"a", "staff"}
-	config.Config.Boards.Staff = "staff"
-	config.Config.Boards.Psuedo = [][2]string{
+	conf := config.ServerConfigs{}
+	conf.Boards.Enabled = []string{"a", "staff"}
+	conf.Boards.Staff = "staff"
+	conf.Boards.Psuedo = [][2]string{
 		[2]string{"g", "https://google.com"},
 	}
+	config.Set(conf)
 	html := boardNavigation()
 	std := `<b id="navTop">[<a href="../a/">a</a> / <a href="../all/">all</a>` +
 		` / <a href="https://google.com">g</a>]</b>`
@@ -46,10 +47,11 @@ func (t *Templates) TestBuildIndexTemplate(c *C) {
 }
 
 func (t *Templates) TestCompileTemplates(c *C) {
+	config.SetClient([]byte{1}, "hash")
+	conf := config.ServerConfigs{}
+	conf.Boards.Enabled = []string{"a"}
+	config.Set(conf)
 	templateRoot = "test"
-	config.Config = config.Server{}
-	config.ClientConfig = []byte{1}
-	config.Config.Boards.Enabled = []string{"a"}
 	standard := Store{
 		HTML: []byte("<a></a>\n"),
 		Hash: "eb51aca26e55050a",
@@ -57,8 +59,8 @@ func (t *Templates) TestCompileTemplates(c *C) {
 	defer func() {
 		c.Assert(recover(), IsNil)
 	}()
-	Resources = Map{}
+	resources = map[string]Store{}
 	c.Assert(Compile(), IsNil)
-	c.Assert(Resources["index"], DeepEquals, standard)
-	c.Assert(Resources["mobile"], DeepEquals, standard)
+	c.Assert(Get("index"), DeepEquals, standard)
+	c.Assert(Get("mobile"), DeepEquals, standard)
 }

@@ -34,7 +34,7 @@ var (
 )
 
 func startWebServer() (err error) {
-	conf := config.Config.HTTP
+	conf := config.HTTP()
 	r := createRouter()
 	log.Println("Listening on " + conf.Addr)
 
@@ -81,10 +81,11 @@ func createRouter() http.Handler {
 	r.POST("/upload", wrapHandler(imager.NewImageUpload))
 
 	h := http.Handler(r)
-	if config.Config.HTTP.Gzip {
+	conf := config.HTTP()
+	if conf.Gzip {
 		h = gziphandler.GzipHandler(h)
 	}
-	if config.Config.HTTP.TrustProxies {
+	if conf.TrustProxies {
 		h = xff.Handler(h)
 	}
 
@@ -104,10 +105,11 @@ func wrapHandler(fn http.HandlerFunc) httptreemux.HandlerFunc {
 
 // Redirects to frontpage, if set, or the default board
 func redirectToDefault(res http.ResponseWriter, req *http.Request) {
-	if config.Config.Frontpage != "" {
-		http.ServeFile(res, req, config.Config.Frontpage)
+	frontpage := config.HTTP().Frontpage
+	if frontpage != "" {
+		http.ServeFile(res, req, frontpage)
 	} else {
-		http.Redirect(res, req, "/"+config.Config.Boards.Default+"/", 302)
+		http.Redirect(res, req, "/"+config.Boards().Default+"/", 302)
 	}
 }
 
@@ -116,9 +118,9 @@ func serveIndexTemplate(res http.ResponseWriter, req *http.Request) {
 	isMobile := user_agent.New(req.UserAgent()).Mobile()
 	var template templates.Store
 	if isMobile {
-		template = templates.Resources["mobile"]
+		template = templates.Get("mobile")
 	} else {
-		template = templates.Resources["index"]
+		template = templates.Get("index")
 	}
 	etag := template.Hash
 	if isMobile {
@@ -389,12 +391,13 @@ func detectLastN(req *http.Request) int {
 
 // Serve public configuration information as JSON
 func serveConfigs(res http.ResponseWriter, req *http.Request) {
-	etag := config.Hash
+	json, etag := config.Client()
 	if checkClientEtag(res, req, etag) {
 		return
 	}
 	setHeaders(res, etag)
-	writeData(res, req, config.ClientConfig)
+	res.Header().Set("Content-Type", "aplication/json")
+	writeData(res, req, json)
 }
 
 // Serve a single post as JSON

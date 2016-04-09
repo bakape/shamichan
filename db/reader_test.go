@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
@@ -42,6 +43,9 @@ func (*DBSuite) TestParsePost(c *C) {
 }
 
 func (*DBSuite) TestGetPost(c *C) {
+	conf := config.ServerConfigs{}
+	conf.Boards.Enabled = []string{"a"}
+	config.Set(conf)
 	standard := types.Post{
 		ID:    3,
 		OP:    1,
