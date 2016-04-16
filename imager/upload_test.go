@@ -69,7 +69,7 @@ func (*Imager) TestIsValidSpoiler(c *C) {
 }
 
 var extensions = map[string]uint8{
-	"jpg":  jpeg,
+	"jpeg": jpeg,
 	"png":  png,
 	"gif":  gif,
 	"webm": webm,
@@ -79,15 +79,16 @@ var extensions = map[string]uint8{
 func (*Imager) TestDetectFileType(c *C) {
 	// Supported file types
 	for ext, code := range extensions {
-		f := openFile(filepath.FromSlash("test/sample."+ext), c)
+		f := openFile("sample."+ext, c)
+		defer f.Close()
 		t, err := detectFileType(f)
 		c.Assert(err, IsNil)
 		c.Assert(t, Equals, code)
 	}
 }
 
-func openFile(path string, c *C) multipart.File {
-	f, err := os.Open(path)
+func openFile(name string, c *C) *os.File {
+	f, err := os.Open(filepath.FromSlash("test/" + name))
 	c.Assert(err, IsNil)
 	return f
 }

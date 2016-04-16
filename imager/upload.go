@@ -7,6 +7,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -162,7 +163,7 @@ func isValidSpoiler(id uint8) bool {
 // detectFileType detects if the upload is of a supported file type, by reading
 // its first 512 bytes. OGG and MP4 are also cheked to contain HTML5 supported
 // video and audio streams.
-func detectFileType(file multipart.File) (uint8, error) {
+func detectFileType(file io.Reader) (uint8, error) {
 	buf := make([]byte, 512)
 	if _, err := file.Read(buf); err != nil {
 		return 0, err
@@ -217,12 +218,9 @@ func processFile(
 	switch img.fileType {
 	case webm:
 		return processWebm(file, fileHeader, img)
-	case jpeg:
-		fallthrough
-	case png:
-		fallthrough
-	case gif:
+	case jpeg, png, gif:
 		return processImage(file, fileHeader, img)
+	default:
+		return "", nil
 	}
-	return "", nil
 }

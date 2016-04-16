@@ -31,7 +31,7 @@ var (
 	hash string
 )
 
-// Stores the global configuration
+// ServerConfigs stores the global configuration
 type ServerConfigs struct {
 	HTTP       HTTPConfigs
 	Rethinkdb  RethinkDBConfig
@@ -88,7 +88,8 @@ type ImageConfig struct {
 	JpegQuality        uint8
 	DuplicateThreshold uint8
 	Max                struct {
-		Size, Width, Height, Pixels int64
+		Size          int64
+		Width, Height int
 	}
 	Spoilers   []uint8
 	PngQuality string
@@ -207,7 +208,7 @@ func HTTP() HTTPConfigs {
 	return config.HTTP
 }
 
-// Rethinkdb returns address and datbase name to connect to
+// RethinkDB returns address and datbase name to connect to
 func RethinkDB() RethinkDBConfig {
 	mu.RLock()
 	defer mu.RUnlock()

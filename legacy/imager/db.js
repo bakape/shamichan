@@ -13,40 +13,7 @@ export class ClientController extends events.EventEmitter {
 	constructor() {
 		super();
 	}
-	track_temporary(path, cb) {
-		redis.sadd('temps', path, (err, tracked) => {
-			if (err)
-				return cb(err);
-			if (tracked > 0)
-				setTimeout(() => this.del_temp(path), (IMG_EXPIRY + 1) * 1000);
-			cb(null);
-		});
-	}
-	lose_temporaries(files, cb) {
-		redis.srem('temps', files, cb);
-	}
-	del_temp(path) {
-		this.cleanup_image_alloc(path, function(err) {
-			if (err)
-				winston.warn(`unlink ${path}: ${err}`);
-		});
-	}
-	// if an image doesn't get used in a post in a timely fashion, delete it
-	cleanup_image_alloc(path, cb) {
-		redis.srem('temps', path, function(err, n) {
-			if (err)
-				return winston.warn(err);
-			if (n) {
-				fs.unlink(path, function(err) {
-					if (err)
-						return cb(err);
-					cb(null, true);
-				});
-			}
-			else
-				cb(null, false); // wasn't found
-		});
-	}
+
 	check_duplicate(image, callback) {
 		redis.zrangebyscore('imageDups', Date.now(), '+inf',
 			function(err, hashes) {
@@ -68,12 +35,6 @@ export class ClientController extends events.EventEmitter {
 				callback(isDup);
 			}
 		);
-	}
-	record_image_alloc(id, alloc, callback) {
-		redis.setex('image:' + id, IMG_EXPIRY, JSON.stringify(alloc), callback);
-	}
-	client_message(client_id, msg) {
-		redis.publish('client:' + client_id, JSON.stringify(msg));
 	}
 }
 

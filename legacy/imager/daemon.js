@@ -39,130 +39,7 @@ class ImageUpload {
 		this.db = new db.ClientController;
 		this.client_id = client_id;
 	}
-	status(msg) {
-		this.client_call('status', msg);
-	}
-	client_call (t, msg) {
-		this.db.client_message(this.client_id, {t, arg: msg});
-	}
-	respond(code, msg) {
-		if (!this.resp)
-			return;
-		this.resp.writeHead(code, {
-			'Content-Type': 'text/html; charset=UTF-8',
-			'Access-Control-Allow-Origin': config.MAIN_SERVER_ORIGIN
-		});
-		this.resp.end(common.parseHTML
-			`<!doctype html>
-			<title>
-				Upload result
-			</title>
-			This is a legitimate imager response.
-			<script>
-				parent.postMessage(${JSON.stringify(msg) + ', '
-					+ JSON.stringify(config.MAIN_SERVER_ORIGIN)
-				});
-			</script>`);
-		this.resp = null;
-	}
-	handle_request(req, resp) {
-		if (req.method.toLowerCase() != 'post') {
-			resp.writeHead(405, {Allow: 'POST'});
-			resp.end();
-			return;
-		}
-		this.resp = resp;
-		const query = req.query || urlParse(req.url, true).query;
 
-		// Set response language. Checks if client language is set and exixts on
-		// the server.
-		this.lang = lang[etc.resolveConfig(config.LANGS,
-			cookie.parse(req.headers.cookie).lang, config.DEFAULT_LANG)].im;
-
-		this.client_id = parseInt(query.id, 10);
-		if (!this.client_id || this.client_id < 1) {
-			this.respond(400, this.lang.bad_client);
-			return;
-		}
-
-		const len = parseInt(req.headers['content-length'], 10);
-		if (len > 0 && len > config.IMAGE_FILESIZE_MAX + (20*1024))
-			return this.failure(Muggle(this.lang.too_large));
-
-		const form = new formidable.IncomingForm();
-		form.uploadDir = config.MEDIA_DIRS.tmp;
-		form.maxFieldsSize = 50 * 1024;
-		form.hash = 'md5';
-		form.onPart = function (part) {
-			if (part.filename && part.name == 'image')
-				form.handlePart(part);
-			else if (!part.filename && ['spoiler', 'op'].indexOf(part.name) >= 0)
-				form.handlePart(part);
-		};
-		form.once('error', err =>
-			this.failure(Muggle(this.lang.req_problem, err)));
-		form.once('aborted', err =>
-			this.failure(Muggle(this.lang.aborted, err)));
-		this.lastProgress = 0;
-		form.on('progress', this.upload_progress_status.bind(this));
-
-		try {
-			form.parse(req, this.parse_form.bind(this));
-		}
-		catch (err) {
-			this.failure(err);
-		}
-	}
-	upload_progress_status(received, total) {
-		const percent = Math.floor(100 * received / total),
-			increment = (total > (512 * 1024)) ? 10 : 25,
-			quantized = Math.floor(percent / increment) * increment;
-		if (quantized > this.lastProgress) {
-			this.status(percent + this.lang.received);
-			this.lastProgress = quantized;
-		}
-	}
-	parse_form(err, fields, files) {
-		if (err)
-			return this.failure(Muggle(this.lang.invalid, err));
-		if (!files.image)
-			return this.failure(Muggle(this.lang.no_image));
-		this.image = files.image;
-		this.pinky = !!parseInt(fields.op, 10);
-
-		const spoiler = parseInt(fields.spoiler, 10);
-		if (spoiler) {
-			if (config.SPOILER_IMAGES.indexOf(spoiler) < 0)
-				return this.failure(Muggle(this.lang.bad_spoiler));
-			this.image.spoiler = spoiler;
-		}
-
-		this.image.MD5 = index.squish_MD5(this.image.hash);
-
-		this.db.track_temporary(this.image.path, err => {
-			if (err)
-				winston.warn(this.lang.temp_tracking + err);
-			this.process();
-		});
-	}
-	process() {
-		if (this.failed)
-			return;
-		const {image} = this,
-			filename = image.filename || image.name;
-		image.ext = path.extname(filename).toLowerCase();
-		if (image.ext == '.jpeg')
-			image.ext = '.jpg';
-		if (IMAGE_EXTS.indexOf(image.ext) < 0)
-			return this.failure(Muggle(this.lang.invalid_format));
-		image.imgnm = filename.substr(0, 256);
-
-		this.status(this.lang.verifying);
-		if (image.ext == '.webm' || image.ext == '.mp3')
-			video_still(image.path, this.verify_webm.bind(this));
-		else
-			this.verify_image();
-	}
 	verify_webm(err, info) {
 		if (err)
 			return this.failure(Muggle(this.lang[err] || err));
@@ -186,6 +63,7 @@ class ImageUpload {
 			this.verify_image();
 		});
 	}
+
 	verify_image() {
 		const {image} = this,
 			stream = fs.createReadStream(image.path);
@@ -220,50 +98,7 @@ class ImageUpload {
 			this.verified();
 		});
 	}
-	// Flow control and callbacks of stream -> child process -> buffer jobs
-	undine(stream, child, cb) {
-		// Hold the response buffers for later concatenation
-		const stderr = [],
-			stdout = [];
-		stream.pipe(child.stdin);
-		// Proxy errors to stream
-		child.once('error', err =>
-			stream.emit('error', err));
-		child.stderr.on('data', data =>
-			stderr.push(data));
-		child.stdout.on('data', data =>
-			stdout.push(data));
-		child.once('close', () => {
-			const err = stderr.length === 0 ? null : Buffer.concat(stderr);
-			cb(err, Buffer.concat(stdout));
-		});
-	}
-	// Pass file to imagemagick's identify
-	identify(stream, cb) {
-		const child = child_process.spawn(identifyBin, [
-			'-[0]', '-format', '%Wx%H'
-		]);
-		this.undine(stream, child, function(err, out) {
-			if (err) {
-				let msg = 'bad';
-				err = err.toString();
-				if (err.match(/no such file/i))
-					msg = 'missing';
-				else if (err.match(/improper image header/i))
-					msg = 'not_image';
-				else if (err.match(/no decode delegate/i))
-					msg = 'unsupported';
-				return cb(msg);
-			}
-			const m = out.toString().trim().match(/ (\d+)x(\d+)/);
-			if (!m)
-				return cb('dims_fail');
-			return cb(null, {
-				width: parseInt(m[1], 10),
-				height: parseInt(m[2], 10)
-			});
-		});
-	}
+
 	// In-memory image duplicate detection ala findimagedupes.pl.
 	perceptual_hash(stream, cb) {
 		const child = child_process.spawn(convertBin, [
@@ -309,30 +144,7 @@ class ImageUpload {
 			}
 		});
 	}
-	verified() {
-		if (this.failed)
-			return;
-		const {image, lang} = this,
-			desc = lang[image.video ? 'video' : 'image'],
-			[w, h] = image.dims;
-		if (!w || !h)
-			return this.failure(Muggle(lang.bad_dims));
-		if (config.IMAGE_PIXELS_MAX && w * h > config.IMAGE_PIXELS_MAX)
-			return this.failure(Muggle(lang.too_many_pixels));
-		if (w > config.IMAGE_WIDTH_MAX && h > config.IMAGE_HEIGHT_MAX)
-			return this.failure(Muggle(desc + lang.too_wide_and_tall));
-		if (w > config.IMAGE_WIDTH_MAX)
-			return this.failure(Muggle(desc + lang.too_wide));
-		if (h > config.IMAGE_HEIGHT_MAX)
-			return this.failure(Muggle(desc + lang.too_tall));
 
-		// Perform hash comparison against the database
-		this.db.check_duplicate(image.hash, err => {
-			if (err)
-				return this.failure(err);
-			this.deduped();
-		});
-	}
 	// Start the thumbnailing pathway
 	deduped() {
 		if (this.failed)
@@ -684,12 +496,3 @@ StillJob.prototype.perform_job = function () {
 function video_still(src, cb) {
 	jobs.schedule(new StillJob(src), cb);
 }
-
-// Look up binary paths
-var identifyBin, convertBin, exiftoolBin, ffmpegBin, pngquantBin;
-etc.which('identify', function (bin) { identifyBin = bin; });
-etc.which('convert', function (bin) { convertBin = bin; });
-if (config.PNG_THUMBS)
-	etc.which('pngquant', function (bin) { pngquantBin = bin; });
-if (config.WEBM)
-	etc.which('ffmpeg', function (bin) { ffmpegBin = bin; });

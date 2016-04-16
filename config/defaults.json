@@ -223,10 +223,7 @@
             "width": 6000,
 
             // Maximum height of uploaded images
-            "heigth": 6000,
-
-            // Maximum number of pixels an uploaded may have
-            "pixels": 20250000
+            "heigth": 6000
         },
 
         // Quality of JPEG image thumbnails
