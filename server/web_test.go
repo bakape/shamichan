@@ -15,10 +15,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
-	"time"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -37,18 +35,9 @@ var testDBName string
 var _ = Suite(&DB{})
 
 func (d *DB) SetUpSuite(c *C) {
-	d.dbName = "meguca_tests_" + strconv.FormatInt(time.Now().UnixNano(), 10)
-
-	var err error
-	db.RSession, err = r.Connect(r.ConnectOpts{
-		Address: "localhost:28015",
-	})
-	c.Assert(err, IsNil)
-
-	c.Assert(db.DB(r.DBCreate(d.dbName)).Exec(), IsNil)
-	db.RSession.Use(d.dbName)
-	c.Assert(db.CreateTables(), IsNil)
-	c.Assert(db.CreateIndeces(), IsNil)
+	d.dbName = db.UniqueDBName()
+	c.Assert(db.Connect(""), IsNil)
+	c.Assert(db.InitDB(d.dbName), IsNil)
 	setupPosts(c)
 	d.r = createRouter()
 }
@@ -112,17 +101,12 @@ func setupPosts(c *C) {
 	}
 	c.Assert(db.DB(r.Table("posts").Insert(posts)).Exec(), IsNil)
 
-	main := []map[string]interface{}{
-		{
-			"id": "histCounts",
-			"a":  7,
-		},
-		{
-			"id":      "info",
-			"postCtr": 8,
-		},
-	}
-	c.Assert(db.DB(r.Table("main").Insert(main)).Exec(), IsNil)
+	c.Assert(db.DB(r.Table("main").Get("histCounts").Update(map[string]int{
+		"a": 7,
+	})).Exec(), IsNil)
+	c.Assert(db.DB(r.Table("main").Update(map[string]int{
+		"postCtr": 8,
+	})).Exec(), IsNil)
 }
 
 type WebServer struct {

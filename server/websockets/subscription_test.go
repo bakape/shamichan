@@ -5,7 +5,6 @@ import (
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
-	"strconv"
 	"time"
 )
 
@@ -16,22 +15,13 @@ type SubSuite struct {
 var _ = Suite(&SubSuite{})
 
 func (s *SubSuite) SetUpSuite(c *C) {
-	s.dbName = "meguca_tests_" + strconv.FormatInt(time.Now().UnixNano(), 10)
-
-	var err error
-	db.RSession, err = r.Connect(r.ConnectOpts{
-		Address: "localhost:28015",
-	})
-	c.Assert(err, IsNil)
-
-	c.Assert(db.DB(r.DBCreate(s.dbName)).Exec(), IsNil)
-	db.RSession.Use(s.dbName)
-	c.Assert(db.CreateTables(), IsNil)
-	c.Assert(db.CreateIndeces(), IsNil)
+	s.dbName = db.UniqueDBName()
+	c.Assert(db.Connect(""), IsNil)
+	c.Assert(db.InitDB(s.dbName), IsNil)
 }
 
 func (s *SubSuite) TearDownSuite(c *C) {
-	c.Assert(r.DBDrop(s.dbName).Exec(db.RSession), IsNil)
+	c.Assert(db.DB(r.DBDrop(s.dbName)).Exec(), IsNil)
 	c.Assert(db.RSession.Close(), IsNil)
 }
 

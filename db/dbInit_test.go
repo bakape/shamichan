@@ -4,9 +4,7 @@ import (
 	"github.com/bakape/meguca/config"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
-	"strconv"
 	"testing"
-	"time"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -26,26 +24,9 @@ var _ = Suite(&DBSuite{})
 var testDBName string
 
 func (d *DBSuite) SetUpSuite(c *C) {
-	d.dbName = uniqueDBName()
-	connectToRethinkDb(c)
-	c.Assert(DB(r.DBCreate(d.dbName)).Exec(), IsNil)
-	RSession.Use(d.dbName)
-	c.Assert(CreateTables(), IsNil)
-	c.Assert(CreateIndeces(), IsNil)
-}
-
-// Returns a unique datatabase name. Needed so multiple concurent `go test`
-// don't clash in the same database.
-func uniqueDBName() string {
-	return "meguca_tests_" + strconv.FormatInt(time.Now().UnixNano(), 10)
-}
-
-func connectToRethinkDb(c *C) {
-	var err error
-	RSession, err = r.Connect(r.ConnectOpts{
-		Address: "localhost:28015",
-	})
-	c.Assert(err, IsNil)
+	d.dbName = UniqueDBName()
+	c.Assert(Connect(""), IsNil)
+	c.Assert(InitDB(d.dbName), IsNil)
 }
 
 func (*DBSuite) SetUpTest(_ *C) {
@@ -93,7 +74,7 @@ func (*DBInit) TestDb(c *C) {
 func (*DBInit) TestLoadDB(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Rethinkdb.Addr = "localhost:28015"
-	dbName := uniqueDBName()
+	dbName := UniqueDBName()
 	conf.Rethinkdb.Db = dbName
 	config.Set(conf)
 	defer func() {
@@ -132,6 +113,13 @@ func (*DBInit) TestLoadDB(c *C) {
 	var histCounts Document
 	c.Assert(DB(r.Table("main").Get("histCounts")).One(&histCounts), IsNil)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
+
+	var imageHashes imageHashDocument
+	c.Assert(DB(r.Table("main").Get("imageHashes")).One(&imageHashes), IsNil)
+	c.Assert(imageHashes, DeepEquals, imageHashDocument{
+		Document: Document{"imageHashes"},
+		Hashes:   []interface{}{},
+	})
 
 	c.Assert(RSession.Close(), IsNil)
 	c.Assert(LoadDB(), IsNil)

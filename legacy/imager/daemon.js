@@ -99,32 +99,6 @@ class ImageUpload {
 		});
 	}
 
-	// In-memory image duplicate detection ala findimagedupes.pl.
-	perceptual_hash(stream, cb) {
-		const child = child_process.spawn(convertBin, [
-			'-[0]',
-			'-background', 'white', '-mosaic', '+matte',
-			'-sample', '160x160!',
-			'-type', 'grayscale',
-			'-blur', '2x2',
-			'-normalize',
-			'-equalize', '1',
-			'-scale', '16x16',
-			'-depth', '1',
-			'r:-'
-		]);
-		this.undine(stream, child, function(err, out) {
-			/*
-			 * Let error fall trough silently. identify() can do the detailed
-			 * error logging.
-			 */
-			// Last char is always padding '='
-			out = out.toString('base64').slice(0, -1);
-			if (out.length !== 43)
-				return cb('hashing');
-			cb(null, out);
-		});
-	}
 	detectAPNG(stream, cb) {
 		const detector = new findapng.apngDetector();
 		let done;

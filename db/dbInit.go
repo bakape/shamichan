@@ -10,6 +10,8 @@ import (
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	"log"
+	"strconv"
+	"time"
 )
 
 const dbVersion = 2
@@ -28,11 +30,9 @@ func DB(query r.Term) DatabaseHelper {
 // databases, if not yet done.
 func LoadDB() (err error) {
 	conf := config.RethinkDB()
-	RSession, err = r.Connect(r.ConnectOpts{
-		Address: conf.Addr,
-	})
-	if err != nil {
-		return util.WrapError("Error connecting to RethinkDB", err)
+
+	if err := Connect(conf.Addr); err != nil {
+		return err
 	}
 
 	var isCreated bool
@@ -44,7 +44,21 @@ func LoadDB() (err error) {
 		RSession.Use(conf.Db)
 		return verifyDBVersion()
 	}
-	return initRethinkDB()
+
+	return InitDB(config.RethinkDB().Db)
+}
+
+// Connect establishes a connection to RethinkDB. Address passed separately for
+// easier testing.
+func Connect(addr string) (err error) {
+	if addr == "" { // For easier use in tests
+		addr = "localhost:28015"
+	}
+	RSession, err = r.Connect(r.ConnectOpts{Address: addr})
+	if err != nil {
+		err = util.WrapError("Error connecting to RethinkDB", err)
+	}
+	return
 }
 
 // Confirm database verion is compatible, if not refuse to start, so we don't
@@ -82,9 +96,13 @@ type infoDocument struct {
 	PostCtr uint64 `gorethink:"postCtr"`
 }
 
-// Initialize a rethinkDB database
-func initRethinkDB() error {
-	dbName := config.RethinkDB().Db
+type imageHashDocument struct {
+	Document
+	Hashes []interface{} `gorethink:"hashes"`
+}
+
+// InitDB initialize a rethinkDB database
+func InitDB(dbName string) error {
 	log.Printf("Initialising database '%s'", dbName)
 	if err := DB(r.DBCreate(dbName)).Exec(); err != nil {
 		return util.WrapError("Error creating database", err)
@@ -102,6 +120,9 @@ func initRethinkDB() error {
 		// History aka progress counters of boards, that get incremented on
 		// post creation
 		Document{"histCounts"},
+
+		// Image perceptual hash storage for upload deduplication
+		imageHashDocument{Document: Document{"imageHashes"}},
 	}
 	if err := DB(r.Table("main").Insert(main)).Exec(); err != nil {
 		return util.WrapError("Error initializing database", err)
@@ -147,4 +168,10 @@ func CreateIndeces() error {
 
 func indexCreationError(err error) error {
 	return util.WrapError("Error creating index", err)
+}
+
+// UniqueDBName returns a unique datatabase name. Needed so multiple concurent
+// `go test` don't clash in the same database.
+func UniqueDBName() string {
+	return "meguca_tests_" + strconv.FormatInt(time.Now().UnixNano(), 10)
 }

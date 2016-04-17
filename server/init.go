@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/templates"
 	"log"
 	"os"
@@ -85,6 +86,7 @@ func startServer() {
 		config.LoadConfig,
 		templates.Compile,
 		db.LoadDB,
+		imager.InitImager,
 		startWebServer,
 	}
 	for _, fn := range fns {

@@ -5,7 +5,7 @@ package imager
 import (
 	"errors"
 	"fmt"
-	_ "github.com/Soreil/imager"
+	_ "github.com/Soreil/imager" // TEMP
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	"image"
