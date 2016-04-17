@@ -2,8 +2,7 @@ import {BannerModal} from '../modal'
 import renderContents from './render'
 import {models, default as options} from '../options'
 import {optionType} from './specs'
-import {each, find} from 'underscore'
-import {onceAll} from '../util'
+import {onceAll, each, find} from '../util'
 import {opts as lang} from '../lang'
 
 // View of the options panel
@@ -96,12 +95,12 @@ export default class OptionsPanel extends BannerModal {
 		const el = event.target as Element
 
 		// Deselect previous tab
-		each(this.el.children, el =>
+		each<Element>(this.el.children, el =>
 			el.query('.tab_sel').classList.remove('tab_sel'))
 
 		// Select the new one
 		el.classList.add('tab_sel')
-		find(this.el.lastChild.children, li =>
+		find<Element>(this.el.lastChild.children, li =>
 			li.classList.contains(el.getAttribute('data-content'))
 		)
 			.classList.add('tab_sel')

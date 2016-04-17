@@ -22,7 +22,6 @@
     "gulp-uglify": "^1.1.0",
     "gulp-util": "^3.0.4",
     "systemjs": "^0.19.9",
-    "underscore": "^1.8.3",
     "whatwg-fetch": "^0.11.0"
   }
 }

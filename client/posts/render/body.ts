@@ -1,5 +1,4 @@
 import {config} from '../../state'
-import {escape} from 'underscore'
 import {renderPostLink} from './etc'
 import {PostData, PostLinks} from '../models'
 
@@ -82,7 +81,7 @@ function parseWord(word: string, data: PostData): string {
 			// Hash command results. Already verified server-side.
 			html += bit
 		} else {
-			html += escape(bit)
+			html += encodeURIComponent(bit)
 		}
 	}
 	return html

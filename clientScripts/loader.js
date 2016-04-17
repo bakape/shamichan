@@ -111,9 +111,6 @@
 		System.config({
 			baseURL: '/ass/js',
 			defaultJSExtensions: true,
-			map: {
-				underscore: 'vendor/underscore-min'
-			},
 			meta: meta
 		})
 

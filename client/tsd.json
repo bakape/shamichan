@@ -5,9 +5,6 @@
   "path": "typings",
   "bundle": "typings/tsd.d.ts",
   "installed": {
-    "underscore/underscore.d.ts": {
-      "commit": "163a4277199c3d896d9efffe24ea84c85f55c8ac"
-    },
     "whatwg-fetch/whatwg-fetch.d.ts": {
       "commit": "163a4277199c3d896d9efffe24ea84c85f55c8ac"
     }

@@ -3,7 +3,6 @@
 */
 
 import {config} from '../../state'
-import {escape} from 'underscore'
 import options from '../../options'
 import {
 	parseHTML, commaList, parseAttributes, ElementAttributes
@@ -201,12 +200,12 @@ function imageLink(data: ImageData): string {
 	if (m) {
 		name = m[1]
 	}
-	const fullName = escape(imgnm),
+	const fullName = encodeURIComponent(imgnm),
 		tooLong = name.length >= 38
 	if (tooLong) {
-		imgnm = escape(name.slice(0, 30))
+		imgnm = encodeURIComponent(name.slice(0, 30))
 			+ '(&hellip;)'
-			+ escape(sourceExtension(fileType))
+			+ encodeURIComponent(sourceExtension(fileType))
 	}
 	const attrs: ElementAttributes = {
 		href: sourcePath(data),

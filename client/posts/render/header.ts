@@ -1,4 +1,3 @@
-import {escape} from 'underscore'
 import {parseHTML, parseAttributes, pad, ElementAttributes} from '../../util'
 import {config} from '../../state'
 import options from '../../options'
@@ -12,7 +11,7 @@ export function renderHeader(data: PostData): string {
 	return parseHTML
 		`<header>
 			<input type="checkbox" class="postCheckbox">
-			${subject ? `<h3>「${escape(data.subject)}」</h3>` : ''}
+			${subject ? `<h3>「${encodeURIComponent(data.subject)}」</h3>` : ''}
 			${renderName(data)}
 			${renderTime(data.time)}
 			<nav>
@@ -57,7 +56,7 @@ function resolveName(data: PostData): string {
 	const {trip, name, auth} = data
 	if (name || !trip) {
 		if (name) {
-			html += escape(name)
+			html += encodeURIComponent(name)
 		} else {
 			html += lang.anon
 		}
@@ -66,7 +65,7 @@ function resolveName(data: PostData): string {
 		}
 	}
 	if (trip) {
-		html += `<code>${escape(trip)}</code>`
+		html += `<code>${encodeURIComponent(trip)}</code>`
 	}
 	if (auth) { // Render staff title
 		let alias: string

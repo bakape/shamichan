@@ -2,8 +2,9 @@
  Renders the HTML of the options panel
 */
 
-import {filter, extend, groupBy} from 'underscore'
-import {parseHTML, parseAttributes, ElementAttributes} from '../util'
+import {
+	filter, extend, groupBy, parseHTML, parseAttributes, ElementAttributes
+} from '../util'
 import {opts as lang, OptLabel} from '../lang'
 import {specs, OptionSpec, optionType} from './specs'
 import {OptionID} from '../options'
@@ -19,7 +20,7 @@ export default function (): string {
 	for (let i = 0; i < tabs.length; i++) {
 		// Pick the options for this specific tab, according to current
 		// template and server configuration
-		opts[i] = filter<OptionSpec>(byTab[i], spec =>
+		opts[i] = filter(byTab[i], spec =>
 			!spec.noLoad && !spec.hidden)
 
 		if (!opts[i].length) {

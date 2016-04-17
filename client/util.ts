@@ -191,3 +191,60 @@ export function commaList(items: string[]): string {
 	}
 	return html
 }
+
+type AnyHash = {[key: string]: any}
+
+// Copy all properties from the source object to the destination object
+export function extend(dest: AnyHash, source: AnyHash) {
+	for (let key in source) {
+		dest[key] = source[key]
+	}
+}
+
+// Remove values from the array, that do not pass the truth test
+export function filter<T>(array: T[], fn: (item: T) => boolean): T[] {
+	const filtered: T[] = []
+	for (let item of array) {
+		if (fn(item)) {
+			filtered.push(item)
+		}
+	}
+	return filtered
+}
+
+// Group all objects in array by a property of the object
+export function groupBy<T extends Object>(array: T[], prop: string): T[][] {
+	const groups: {[key: string]: T[]} = {}
+	for (let item of array) {
+		const dest = (item as AnyHash)[prop]
+		if (dest in groups) {
+			groups[dest].push(item)
+		} else {
+			groups[dest] = [item]
+		}
+	}
+
+	const vals: T[][] = []
+	for (let key in groups) {
+		vals.push(groups[key])
+	}
+	return vals
+}
+
+// Returns the first element of an array, that passes the truth test, or
+// undefined
+export function find<T>(arrayLike: ArrayLike<T>, fn: (item: T) => boolean): T {
+	for (let i = 0; i < arrayLike.length; i++) {
+		if (fn(arrayLike[i])) {
+			return arrayLike[i]
+		}
+	}
+	return undefined
+}
+
+// Iterates over an array-like object, like HTMLCollection
+export function each<T>(arrayLike: ArrayLike<T>, fn: (item: T) => void) {
+	for (let i = 0; i < arrayLike.length; i++) {
+		fn(arrayLike[i])
+	}
+}

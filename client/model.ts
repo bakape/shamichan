@@ -1,4 +1,4 @@
-import {extend} from 'underscore'
+import {extend} from './util'
 import Collection from './collection'
 import View from './view'
 

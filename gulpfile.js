@@ -3,8 +3,7 @@ Builds client JS and CSS
  */
 'use strict'
 
-const _ = require('underscore'),
-	babel = require('gulp-babel'),
+const babel = require('gulp-babel'),
 	cache = require('gulp-cached'),
 	fs = require('fs-extra'),
 	gulp = require('gulp'),
@@ -62,17 +61,13 @@ gulp.task('vendor', () => {
 		'./node_modules/systemjs/dist/system.js',
 		'./node_modules/systemjs/dist/system.js.map',
 		'./node_modules/dom4/build/dom4.js',
-		'./node_modules/underscore/underscore-min.js',
-		'./node_modules/underscore/underscore-min.map',
 		'./node_modules/core-js/client/core.min.js',
 		'./node_modules/core-js/client/core.min.js.map'
 	]
 	for (let path of paths) {
-		fs.copySync(
-			path,
-			'./www/js/vendor/' + _.last(path.split('/')),
-			{clobber: true}
-		)
+		const split = path.split('/'),
+			dest = './www/js/vendor/' + split[split.length-1]
+		fs.copySync(path, dest, {clobber: true})
 	}
 })
 

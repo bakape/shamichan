@@ -3,7 +3,7 @@
 */
 
 import Model from './model'
-import {extend} from 'underscore'
+import {extend} from './util'
 import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
 import OptionsPanel from './options/view'
 import {defer} from './defer'
