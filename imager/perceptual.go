@@ -16,6 +16,10 @@ import (
 var (
 	// Request channel for image deduplication
 	dedupImage = make(chan dedupRequest)
+
+	// Interval at which to clean up expired image hash entries. Overriden in
+	// tests.
+	cleanUpInterval = time.Minute
 )
 
 // Request to verify image has no duplicates and persist it to the stored image
@@ -26,36 +30,6 @@ type dedupRequest struct {
 	// Channel to receive the post number, that contains a mactching image, or
 	// 0, if no matches found
 	res chan uint64
-}
-
-// InitImager cleans up any dangling artefacts and start the processing
-// goroutines. Needs to be called after a database connection is established.
-func InitImager() error {
-	go handlePerceptualHashes(nil)
-
-	// Clean up on server start
-	return cleanUpHashes()
-}
-
-// Handles dudplication and persistance of perceptual hashes as a dedicated
-// goroutine. The close channel is only intended for testing, as the goroutine
-// never stops during production.
-func handlePerceptualHashes(close <-chan struct{}) {
-	// Timer for cleaning up old entries from the database
-	cleanUp := time.Tick(time.Minute)
-
-	for {
-		select {
-		case req := <-dedupImage:
-			handleDedupRequest(req)
-		case <-cleanUp:
-			if err := cleanUpHashes(); err != nil {
-				log.Println(err)
-			}
-		case <-close:
-			return
-		}
-	}
 }
 
 // HashEntry is a storage structs of a single post's image's hash
@@ -72,6 +46,36 @@ type HashEntry struct {
 type DatabaseHashEntry struct {
 	HashEntry
 	Expires r.Term `gorethink:"expires"`
+}
+
+// InitImager cleans up any dangling artefacts and start the processing
+// goroutines. Needs to be called after a database connection is established.
+func InitImager() error {
+	go handlePerceptualHashes(nil)
+
+	// Clean up on server start
+	return cleanUpHashes()
+}
+
+// Handles dudplication and persistance of perceptual hashes as a dedicated
+// goroutine. The close channel is only intended for testing, as the goroutine
+// never stops during production.
+func handlePerceptualHashes(close <-chan struct{}) {
+	// Timer for cleaning up old entries from the database
+	cleanUp := time.Tick(cleanUpInterval)
+
+	for {
+		select {
+		case req := <-dedupImage:
+			handleDedupRequest(req)
+		case <-cleanUp:
+			if err := cleanUpHashes(); err != nil {
+				log.Println(err)
+			}
+		case <-close:
+			return
+		}
+	}
 }
 
 func handleDedupRequest(req dedupRequest) {
