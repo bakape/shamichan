@@ -65,7 +65,7 @@ func Connect(addr string) (err error) {
 // mess up the DB irreversably.
 func verifyDBVersion() error {
 	var version int
-	err := DB(r.Table("main").Get("info").Field("dbVersion")).One(&version)
+	err := DB(GetMain("info").Field("dbVersion")).One(&version)
 	if err != nil {
 		return util.WrapError("Error reading database version", err)
 	}

@@ -79,9 +79,14 @@ func getPost(id uint64) r.Term {
 	return r.Table("posts").Get(id)
 }
 
+// GetMain is a shorthand for constructing main table queries
+func GetMain(id string) r.Term {
+	return r.Table("main").Get(id)
+}
+
 // PostCounter retrieves the current post counter number
 func PostCounter() (counter uint64, err error) {
-	err = DB(r.Table("main").Get("info").Field("postCtr")).One(&counter)
+	err = DB(GetMain("info").Field("postCtr")).One(&counter)
 	if err != nil {
 		err = util.WrapError("Error retrieving post counter", err)
 	}
@@ -90,8 +95,7 @@ func PostCounter() (counter uint64, err error) {
 
 // BoardCounter retrieves the history or "progress" counter of a board
 func BoardCounter(board string) (counter uint64, err error) {
-	err = DB(r.Table("main").Get("histCounts").Field(board).Default(0)).
-		One(&counter)
+	err = DB(GetMain("histCounts").Field(board).Default(0)).One(&counter)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving board counter: %s", board)
 		err = util.WrapError(msg, err)

@@ -57,7 +57,7 @@ func (*DBSuite) TestVerifyVersion(c *C) {
 
 	// Incompatible DB version
 	update := map[string]int{"dbVersion": 0}
-	c.Assert(DB(r.Table("main").Get("info").Update(update)).Exec(), IsNil)
+	c.Assert(DB(GetMain("info").Update(update)).Exec(), IsNil)
 	c.Assert(
 		verifyDBVersion(),
 		ErrorMatches,
@@ -107,15 +107,15 @@ func (*DBInit) TestLoadDB(c *C) {
 	}
 
 	var info infoDocument
-	c.Assert(DB(r.Table("main").Get("info")).One(&info), IsNil)
+	c.Assert(DB(GetMain("info")).One(&info), IsNil)
 	c.Assert(info, Equals, infoDocument{Document{"info"}, dbVersion, 0})
 
 	var histCounts Document
-	c.Assert(DB(r.Table("main").Get("histCounts")).One(&histCounts), IsNil)
+	c.Assert(DB(GetMain("histCounts")).One(&histCounts), IsNil)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
 
 	var imageHashes imageHashDocument
-	c.Assert(DB(r.Table("main").Get("imageHashes")).One(&imageHashes), IsNil)
+	c.Assert(DB(GetMain("imageHashes")).One(&imageHashes), IsNil)
 	c.Assert(imageHashes, DeepEquals, imageHashDocument{
 		Document: Document{"imageHashes"},
 		Hashes:   []interface{}{},

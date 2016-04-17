@@ -80,7 +80,7 @@ func (*DBSuite) TestBoardCounter(c *C) {
 	c.Assert(count, Equals, uint64(0))
 
 	update := map[string]int{"a": 1}
-	err = DB(r.Table("main").Get("histCounts").Update(update)).Exec()
+	err = DB(GetMain("histCounts").Update(update)).Exec()
 	c.Assert(err, IsNil)
 
 	count, err = BoardCounter("a")
@@ -107,7 +107,7 @@ func (*DBSuite) TestDatabaseHelper(c *C) {
 	c.Assert(err, IsNil)
 
 	var doc Document
-	helper = DatabaseHelper{r.Table("main").Get("doc")}
+	helper = DatabaseHelper{GetMain("doc")}
 	err = helper.One(&doc)
 	c.Assert(err, IsNil)
 	c.Assert(doc, DeepEquals, standard)

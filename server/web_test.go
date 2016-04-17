@@ -101,12 +101,10 @@ func setupPosts(c *C) {
 	}
 	c.Assert(db.DB(r.Table("posts").Insert(posts)).Exec(), IsNil)
 
-	c.Assert(db.DB(r.Table("main").Get("histCounts").Update(map[string]int{
-		"a": 7,
-	})).Exec(), IsNil)
-	c.Assert(db.DB(r.Table("main").Update(map[string]int{
-		"postCtr": 8,
-	})).Exec(), IsNil)
+	infoUpdate := db.GetMain("info").Update(map[string]int{"postCtr": 8})
+	histUpdate := db.GetMain("histCounts").Update(map[string]int{"a": 7})
+	c.Assert(db.DB(infoUpdate).Exec(), IsNil)
+	c.Assert(db.DB(histUpdate).Exec(), IsNil)
 }
 
 type WebServer struct {
