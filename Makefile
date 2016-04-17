@@ -64,7 +64,7 @@ init:
 
 test: server_deps
 	go get -v gopkg.in/check.v1
-	go test -v ./...
+	go test ./...
 
 ffmpeg_deps_deb:
 	apt-get update

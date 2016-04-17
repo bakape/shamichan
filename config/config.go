@@ -87,6 +87,7 @@ type ImageConfig struct {
 	Hats               bool
 	JpegQuality        uint8
 	DuplicateThreshold uint8
+	DulicateLifetime   int64
 	Max                struct {
 		Size          int64
 		Width, Height int
