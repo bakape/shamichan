@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.8.3 - 2016-04-17
+* Change:
+	- Restore web manifest install promt on Android Chrome/FF
+
 ##v1.8.2 - 2016-04-11
 * Fix:
 	- Revert bugged SockJS version change
