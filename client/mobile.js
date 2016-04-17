@@ -17,8 +17,6 @@ main.defer(function() {
 		isChrome = /Chrome/.test(n),
 		isFF = /Firefox/.test(n);
 	// Only Chrome works for now
-	if (!isChrome)
-		return;
 	let msg ='To install meguca as a fullscreen webapp, tap the menu button'
 		+ ' and select ';
 	if (isChrome)
@@ -27,7 +25,7 @@ main.defer(function() {
 		msg += '"Page > Add to Home Screen"';
 	msg += '. Tap this message to close. It will not appear again.';
 
-	$('<a class="mobile">Install Webapp (BETA)</a>')
+	$('<a class="mobile">Install Webapp</a>')
 		.click(function(e){
 			main.request('notification', msg);
 			e.target.remove();
