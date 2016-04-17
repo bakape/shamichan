@@ -17,15 +17,12 @@ export default function (): string {
 		opts: OptionSpec[][] = []
 
 	// Render tab butts
-	for (let i = 0; i < tabs.length; i++) {
+	for (let i = 0; i < byTab.length; i++) {
 		// Pick the options for this specific tab, according to current
 		// template and server configuration
 		opts[i] = filter(byTab[i], spec =>
 			!spec.noLoad && !spec.hidden)
 
-		if (!opts[i].length) {
-			continue
-		}
 		const attrs: ElementAttributes = {
 			'data-content': `tab-${i}`,
 			class: 'tab_link'
