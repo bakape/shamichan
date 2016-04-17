@@ -26,7 +26,7 @@ export const thumbExpansions = ['none', 'full', 'height', 'width', 'both']
 // Available themes
 export const themes = [
 	'moe', 'gar', 'mawaru', 'moon', 'ashita', 'console', 'tea', 'higan',
-	'ocean', 'rave', 'tavern', 'glass'
+	'ocean', 'rave', 'tavern', 'glass', 'material'
 ]
 
 export type OptionValue =  boolean|string|number
