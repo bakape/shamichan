@@ -213,7 +213,9 @@ export function filter<T>(array: T[], fn: (item: T) => boolean): T[] {
 }
 
 // Group all objects in array by a property of the object
-export function groupBy<T extends Object>(array: T[], prop: string): T[][] {
+export function groupBy<T extends Object>(
+	array: T[], prop: string
+): {[key: string]: T[]} {
 	const groups: {[key: string]: T[]} = {}
 	for (let item of array) {
 		const dest = (item as AnyHash)[prop]
@@ -223,12 +225,7 @@ export function groupBy<T extends Object>(array: T[], prop: string): T[][] {
 			groups[dest] = [item]
 		}
 	}
-
-	const vals: T[][] = []
-	for (let key in groups) {
-		vals.push(groups[key])
-	}
-	return vals
+	return groups
 }
 
 // Returns the first element of an array, that passes the truth test, or

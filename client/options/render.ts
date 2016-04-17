@@ -14,14 +14,24 @@ export default function (): string {
 	let html = '<ul class="option_tab_sel">'
 	const {tabs} = lang,
 		byTab = groupBy(specs, 'tab'),
-		opts: OptionSpec[][] = []
+		opts: {[key: number]: OptionSpec[]} = []
 
 	// Render tab butts
-	for (let i = 0; i < byTab.length; i++) {
+	for (let i = 0; i < tabs.length; i++) {
+		// No options in this tab
+		if (!byTab[i]) {
+			continue
+		}
+
 		// Pick the options for this specific tab, according to current
 		// template and server configuration
 		opts[i] = filter(byTab[i], spec =>
 			!spec.noLoad && !spec.hidden)
+
+		// All options disaled
+		if (!opts[i].length) {
+			continue
+		}
 
 		const attrs: ElementAttributes = {
 			'data-content': `tab-${i}`,
@@ -41,8 +51,8 @@ export default function (): string {
 	}
 
 	html += '</ul><ul class="option_tab_cont">'
-	for (let i = 0; i < opts.length; i++) {
-		html += renderTab(opts[i], i)
+	for (let tabNumber in opts) {
+		html += renderTab(opts[tabNumber], parseInt(tabNumber))
 	}
 	html += '</ul>'
 
