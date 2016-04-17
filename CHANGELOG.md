@@ -2,7 +2,25 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##v1.7.5 - 2016-04-014
+##v1.8.3 - 2016-04-17
+* Change:
+	- Restore web manifest install promt on Android Chrome/FF
+
+##v1.8.2 - 2016-04-11
+* Fix:
+	- Revert bugged SockJS version change
+
+##v1.8.1 - 2016-04-05
+* Fix:
+	- Websocket heartbeat timeout crashes
+
+##v1.8.0 - 2016-04-03
+* Add:
+	- Material Design theme
+* Fix:
+	- Syncing of mobile devices
+
+##v1.7.5 - 2016-04-01
 * Fix:
 	- Not being able to connect to websocket in some cases
 

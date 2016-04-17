@@ -278,12 +278,9 @@ span.control .popup-menu {
 	z-index: 100;
 }
 // For the Install Webapp message
-#banner_center {
-	.mobile {
+@media all and (display-mode: standalone) {
+	.mobile{
 		display: none;
-		&:-webkit-full-screen, &:-moz-full-screen {
-			display: block;
-		}
 	}
 }
 .bfloat {
