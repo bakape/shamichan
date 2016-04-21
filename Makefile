@@ -4,6 +4,9 @@ THREADS=`nproc`
 ifeq ($(OS), Windows_NT)
 	BUILD_PATH="/.meguca_build/src/github.com/bakape"
 	export GOPATH="/.meguca_build"
+	export PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig/
+	export PKG_CONFIG_LIBDIR=/mingw64/lib/pkgconfig/
+	export PATH:=$(PATH):/mingw64/bin/
 	BINARY=meguca.exe
 	ISWINDOWS=true
 else
@@ -13,9 +16,9 @@ else
 	ISWINDOWS=false
 endif
 
-.PHONY: client server
+.PHONY: server client init
 
-all: server client
+all: server client init
 
 client:
 	npm update
@@ -26,7 +29,10 @@ watch:
 	$(GULP) -w
 
 server: server_deps
-	go build -o $(BINARY)
+	go build -v -o $(BINARY)
+ifeq ($(ISWINDOWS),true)
+	cp /mingw64/bin/*.dll ./
+endif
 
 server_deps: build_dirs
 	go list -f '{{.Deps}}' . \
@@ -37,20 +43,20 @@ server_deps: build_dirs
 		| xargs go get -v
 
 build_dirs:
-	if $(ISWINDOWS) = true; then \
-		rm -rf $(BUILD_PATH); \
-	fi
+ifeq ($(ISWINDOWS),true)
+	rm -rf $(BUILD_PATH)
+endif
 	mkdir -p $(BUILD_PATH)
-	 ln -sfn "$(shell pwd)" $(BUILD_PATH)/meguca
+	ln -sfn "$(shell pwd)" $(BUILD_PATH)/meguca
 
 clean: client_clean
 	rm -rf .build .ffmpeg node_modules $(BINARY)
+ifeq ($(ISWINDOWS),true)
+	rm -rf /.meguca_build *.dll
+endif
 
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang
-	if $(ISWINDOWS) = true; then \
-		rm -rf /.meguca_build; \
-	fi
 
 dist_clean: clean
 	rm -rf img config/config.json assets error.log
