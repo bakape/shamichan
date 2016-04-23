@@ -19,14 +19,16 @@ Platforms: Linux, OSX, Win64
 Coming soon™
 
 ##Building from source
-* Windows only: Install [MSYS2](https://sourceforge.net/projects/msys2/) and
-clone/move meguca somewhere within it's root directory (`C:\msys64` by default)
+
+###All Platforms
+* Install [Go](https://golang.org/doc/install) >=1.6
+* Install [Node.js](https://nodejs.org) >=5.0 (for building the client)
+
+###Linux and OSX
 * Install:
     * GCC or Clang
     * make
-    * [Go](https://golang.org/doc/install)
-    * [Node.js](https://nodejs.org) >=5.0 (for building the client)
-    * ffmpeg >=3.0 development libraries (libavcodec, libavutil, libavformat, 
+    * ffmpeg >=3.0 development libraries (libavcodec, libavutil, libavformat,
     libswscale) compiled with:
         * libvpx
         * libvorbis
@@ -35,7 +37,18 @@ clone/move meguca somewhere within it's root directory (`C:\msys64` by default)
         * libx264
         * libmp3lame
 * Run `make`
-* Prepare server for operation by running `make init`
+
+###Windows
+* Install [MSYS2](https://sourceforge.net/projects/msys2/)
+* Open MSYS2 shell
+* Install with pacman:
+    * mingw-w64-x86_64-ffmpeg
+    * mingw-w64-x86_64-gcc
+    * mingw-w64-x86_64-pkg-config
+    * git
+    * make
+* Navigate to the meguca root directory
+* Run `make`
 
 ##Production
 * Edit `./config/config.json` to configure your instance

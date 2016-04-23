@@ -29,10 +29,12 @@ var (
 // Start parses command line arguments and initializes the server.
 func Start() {
 	// Parse command line arguments
+	var arg string
 	if len(os.Args) < 2 {
-		printUsage()
+		arg = "start"
+	} else {
+		arg = os.Args[1]
 	}
-	arg := os.Args[1]
 
 	// Can't daemonise in windows, so only args they have is "start" and "help"
 	if isWindows {
@@ -55,7 +57,7 @@ var arguments = map[string]string{
 	"restart": "combination of stop + start",
 	"reload": "reload configuration and templates without restarting the " +
 		"server",
-	"debug": "start server in debug mode without deamonising",
+	"debug": "start server in debug mode without deamonising (default)",
 	"help":  "print this help text",
 }
 

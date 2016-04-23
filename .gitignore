@@ -2,6 +2,7 @@
 .directory
 .ffmpeg
 .pid
+*.dll
 assets
 config/config.json
 error.log
