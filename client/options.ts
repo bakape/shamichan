@@ -78,7 +78,7 @@ class OptionModel {
 			if (num || num === 0) {
 				return num
 			}
-			return this.spec.default
+			return stored
 		}
 	}
 
