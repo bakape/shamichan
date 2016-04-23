@@ -3,24 +3,18 @@
 package imager
 
 import (
-	"fmt"
 	webmTool "github.com/Soreil/webm"
-	"mime/multipart"
+	"io"
 )
 
-func processWebm(
-	file multipart.File,
-	fileHeader *multipart.FileHeader,
-	img *ProtoImage,
-) (string, error) {
-	return "", nil
+func processWebm(file io.ReadSeeker, img *ProtoImage) error {
+	return nil
 }
 
-func verifyWebm(file multipart.File) error {
-	conf, err := webmTool.DecodeConfig(file)
+func verifyWebm(file io.ReadSeeker) error {
+	_, err := webmTool.DecodeConfig(file)
 	if err != nil {
 		return err
 	}
-	fmt.Println(conf)
 	return nil
 }

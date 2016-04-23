@@ -25,26 +25,26 @@ var (
 // Request to verify image has no duplicates and persist it to the stored image
 // hash set
 type dedupRequest struct {
-	entry HashEntry
+	entry hashEntry
 
 	// Channel to receive the post number, that contains a mactching image, or
 	// 0, if no matches found
 	res chan uint64
 }
 
-// HashEntry is a storage structs of a single post's image's hash
-type HashEntry struct {
+// hashEntry is a storage structs of a single post's image's hash
+type hashEntry struct {
 	// Parent post number
 	ID uint64 `gorethink:"id"`
 
 	// Perceptual hash of the image
-	Hash uint64 `gorethink:"hash"`
+	Hash float64 `gorethink:"hash"`
 }
 
-// DatabaseHashEntry includes the additional expires field, that only exists
+// databaseHashEntry includes the additional expires field, that only exists
 // database-side
-type DatabaseHashEntry struct {
-	HashEntry
+type databaseHashEntry struct {
+	hashEntry
 	Expires r.Term `gorethink:"expires"`
 }
 
@@ -80,7 +80,7 @@ func handlePerceptualHashes(close <-chan struct{}) {
 
 func handleDedupRequest(req dedupRequest) {
 	// Retrive all entries from the DB
-	var entries []HashEntry
+	var entries []hashEntry
 	err := db.DB(db.GetMain("imageHashes").Field("hashes")).All(&entries)
 	if err != nil {
 		req.res <- 0
@@ -89,28 +89,25 @@ func handleDedupRequest(req dedupRequest) {
 	}
 
 	minDistance := uint64(config.Images().DuplicateThreshold)
-	var matched bool
+	cast := uint64(req.entry.Hash)
 	for _, entry := range entries {
-		if imghash.Distance(req.entry.Hash, entry.Hash) <= minDistance {
+		if imghash.Distance(cast, uint64(entry.Hash)) <= minDistance {
 			req.res <- entry.ID
-			matched = true
-			break
+			return
 		}
 	}
 
-	if !matched {
-		if err := persistHash(req.entry); err != nil {
-			log.Printf("Error persisting image hash: %s\n", err)
-		}
-		req.res <- 0
+	if err := persistHash(req.entry); err != nil {
+		log.Printf("Error persisting image hash: %s\n", err)
 	}
+	req.res <- 0
 }
 
 // Persist hash entry to the database
-func persistHash(entry HashEntry) error {
+func persistHash(entry hashEntry) error {
 	update := map[string]r.Term{
-		"hashes": r.Row.Field("hashes").Append(DatabaseHashEntry{
-			HashEntry: entry,
+		"hashes": r.Row.Field("hashes").Append(databaseHashEntry{
+			hashEntry: entry,
 			Expires:   r.Now(),
 		}),
 	}

@@ -5,21 +5,19 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func (*Imager) TestVerifyImageFormat(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.Max.Height = 10000
-	conf.Images.Max.Width = 10000
-	config.Set(conf)
+func (*DB) TestVerifyImageFormat(c *C) {
 	samples := map[string]bool{
 		"jpeg": true,
 		"gif":  true,
 		"png":  true,
-		"webm": false,
+		// "webm": false,
 	}
+	var postID uint64
 	for ext, shouldPass := range samples {
 		file := openFile("sample."+ext, c)
 		defer file.Close()
-		err := verifyImage(file)
+		err := verifyImage(file, postID)
+		postID++
 		if shouldPass {
 			c.Assert(err, IsNil)
 		} else {
@@ -30,10 +28,11 @@ func (*Imager) TestVerifyImageFormat(c *C) {
 	// Failure to decode
 	file := openFile("sample.txt", c)
 	defer file.Close()
-	c.Assert(verifyImage(file), ErrorMatches, "Error decoding image: .*")
+	err := verifyImage(file, postID)
+	c.Assert(err, ErrorMatches, "Error decoding image: .*")
 }
 
-func (*Imager) TestVerifyDimentions(c *C) {
+func (*DB) TestVerifyDimentions(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Images.Max.Width = 2000
 	conf.Images.Max.Height = 2000
@@ -48,7 +47,16 @@ func (*Imager) TestVerifyDimentions(c *C) {
 		pass.Close()
 	}()
 
-	c.Assert(verifyImage(tooTall), ErrorMatches, "Image too tall")
-	c.Assert(verifyImage(tooWide), ErrorMatches, "Image too wide")
-	c.Assert(verifyImage(pass), IsNil)
+	c.Assert(verifyImage(tooTall, 1), ErrorMatches, "Image too tall")
+	c.Assert(verifyImage(tooWide, 2), ErrorMatches, "Image too wide")
+	c.Assert(verifyImage(pass, 3), IsNil)
+}
+
+func (*DB) TestDupDetection(c *C) {
+	sample := openFile("sample.jpeg", c)
+	defer sample.Close()
+	c.Assert(verifyImage(sample, 1), IsNil)
+	_, err := sample.Seek(0, 0)
+	c.Assert(err, IsNil)
+	c.Assert(verifyImage(sample, 2), ErrorMatches, "Duplicate image of post 1")
 }

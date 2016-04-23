@@ -9,7 +9,6 @@ import (
 	"github.com/bakape/meguca/types"
 	"io"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"strconv"
 )
@@ -42,6 +41,7 @@ type ProtoImage struct {
 	fileType uint8
 	types.Image
 	ClientID string
+	PostID   uint64
 }
 
 // NewImageUpload  handles the clients' image (or other file) upload request
@@ -71,6 +71,8 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	img.Image.Imgnm = fileHeader.Filename
+
 	fileType, err := detectFileType(file)
 	if err != nil {
 		passError(res, req, err, 400)
@@ -78,13 +80,10 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	}
 	img.fileType = fileType
 
-	if imgID, err := processFile(file, fileHeader, img); err != nil {
+	if err := processFile(file, img); err != nil {
 		passError(res, req, err, 400)
 	} else {
-		_, err := res.Write([]byte(imgID))
-		if err != nil {
-			log.Printf("Error responding to upload request: %s\n", err)
-		}
+		// fmt.Println(img)
 	}
 }
 
@@ -210,17 +209,13 @@ func detectCompatibleMP4(buf []byte) (bool, error) {
 }
 
 // Delegate the processing of the file to an apropriate function by file type
-func processFile(
-	file multipart.File,
-	fileHeader *multipart.FileHeader,
-	img *ProtoImage,
-) (string, error) {
+func processFile(file io.ReadSeeker, img *ProtoImage) error {
 	switch img.fileType {
 	case webm:
-		return processWebm(file, fileHeader, img)
+		return processWebm(file, img)
 	case jpeg, png, gif:
-		return processImage(file, fileHeader, img)
+		return processImage(file, img)
 	default:
-		return "", nil
+		return fmt.Errorf("File type slipped in: %d", img.FileType)
 	}
 }
