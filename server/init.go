@@ -31,7 +31,7 @@ func Start() {
 	// Parse command line arguments
 	var arg string
 	if len(os.Args) < 2 {
-		arg = "start"
+		arg = "debug"
 	} else {
 		arg = os.Args[1]
 	}
