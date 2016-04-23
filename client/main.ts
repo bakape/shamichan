@@ -6,8 +6,6 @@
  // TODO: Remove, when proper structure done
 import * as options from './options'
 const o = options
-import * as banner from './banner'
-const b = banner
 
 import {displayLoading} from './state'
 import {exec} from './defer'

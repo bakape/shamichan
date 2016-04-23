@@ -15,21 +15,8 @@ export class Modal extends View {
 			args.cls = addClass
 		}
 		super(args)
-		document.body.append(this.el)
-		this.render()
 	}
-
-    // Placeholder method for overriding
-    render() {}
 
 	// TODO: Add close button and unify modal structure
 
-}
-
-// A modal element, that is positioned fixed right beneath the banner
-export class BannerModal extends Modal {
-	constructor(args: ViewAttrs) {
-		args.cls = 'banner-modal'
-		super(args)
-	}
 }

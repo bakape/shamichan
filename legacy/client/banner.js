@@ -20,32 +20,12 @@ const BannerView = Backbone.View.extend({
 		main.reply('banner:radio:clear', this.clearRadio, this);
 	},
 	events: {
-		'click .bfloat': 'revealBmodal'
+		'click .banner-float': 'revealBmodal'
 	},
 	renderInfo(msg) {
 		this.info.innerHTML = msg;
 	},
-	// Toggle the display of the modal windows under the banner
-	revealBmodal(event) {
-		const bmodal = modalMap[event.target.closest('.bfloat')
-			.getAttribute('id')];
-		if (!bmodal)
-			return;
-		const el = document.getElementById(bmodal),
-			isShown = el && getComputedStyle(el).display !== 'none';
-		for (let el of document.queryAll('.bmodal')) {
-			el.style.display = 'none'
-		}
 
-		// We hid the currently displayed window. All is well
-		if (isShown)
-			return;
-
-		// Place 5 pixels bellow banner
-		el.style.top = document.getElementById('banner').offsetHeight + 5
-			+ 'px';
-		el.style.display = 'block';
-	},
 	// r/a/dio stream info rendering
 	renderRadio(data) {
 		data = JSON.parse(data);

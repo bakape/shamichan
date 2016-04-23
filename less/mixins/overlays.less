@@ -1,7 +1,3 @@
-fieldset {
-	border: 0;
-}
-
 .overlay {
 	width: 100%;
 	height: 100%;
@@ -10,6 +6,8 @@ fieldset {
 	position: fixed;
 	pointer-events: none;
 	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
 	z-index: 300;
 
 	// Proper fixed element rendering with dynamic animated backgrounds
@@ -55,19 +53,14 @@ label.ident {
 #banner{
 	display: inline-block;
 	text-align: center;
-	position: fixed;
 	width: 100%;
 	top: 0;
 }
 
-.bfloat {
+.banner-float {
 	font-weight: bold;
 	float: right;
 	margin: 0 0.15em 0 0.15em;
-	svg {
-		width: 1em;
-		height: 1em;
-	}
 }
 #options {
 	margin-right: 0.2em;
@@ -159,6 +152,7 @@ input[type=number] {
 	max-height: 80%;
 	max-width: 80%;
 	overflow: auto;
+	margin: 0.5em;
 	padding: 1em;
 	white-space: nowrap;
 	box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
@@ -171,8 +165,6 @@ input[type=number] {
 }
 
 .banner-modal {
-	margin-right: 0.2em;
-	right: 0;
 	display: none;
 }
 
@@ -202,7 +194,7 @@ input[type=number] {
 	}
 }
 
-#options-panel .tab-4 input {
+.shortcut {
 	border: none;
 	width: 2em;
 }

@@ -1,4 +1,4 @@
-import {BannerModal} from '../modal'
+import {BannerModal} from '../banner'
 import renderContents from './render'
 import {models, default as options} from '../options'
 import {optionType} from './specs'
@@ -10,7 +10,8 @@ export default class OptionsPanel extends BannerModal {
 	$hidden: Element
 
 	constructor() {
-		super({id: 'options-panel'})
+		super({el: document.query('#options-panel')})
+		this.render()
 		this.onClick({
 			'.tab_link': e => this.switchTab(e),
 			'#export': () => this.exportConfigs(),
@@ -162,36 +163,3 @@ export default class OptionsPanel extends BannerModal {
 		this.renderHidden(0)
 	}
 }
-
-// Highlight options button by fading out and in, if no options are set
-(function() {
-	if (localStorage.getItem('optionsSeen')) {
-		return
-	}
-	const el = document.query('#options')
-	el.style.opacity = '1'
-	let out = true,
-		clicked: boolean
-	el.addEventListener("click", () => {
-		clicked = true
-		localStorage.setItem('optionsSeen', '1')
-	})
-	tick()
-
-	function tick() {
-		// Stop
-		if (clicked) {
-			el.style.opacity = '1'
-			return
-		}
-
-		el.style.opacity = (+el.style.opacity + (out ? -0.02 : 0.02)).toString()
-		const now = +el.style.opacity
-
-		// Reverse direction
-		if ((out && now <= 0) || (!out && now >= 1)) {
-			out = !out
-		}
-		requestAnimationFrame(tick)
-	}
-})()

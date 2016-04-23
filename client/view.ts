@@ -13,18 +13,28 @@ export type ViewAttrs = {
 export default class View {
 	model: Model
 	el: Element
+	id: string|number
 
 	// Creates a new View and binds it to the target model. If none, creates a
 	// blank model. If no element suplied, creates a new one from tags. Sets
 	// class and id, if supplied.
 	constructor({el, model, tag, cls, id}: ViewAttrs) {
 		this.model = model || new Model()
-		this.el = el || document.createElement(tag || 'div')
-		if (id) {
-			this.el.setAttribute('id', id)
-		}
-		if (cls) {
-			this.el.setAttribute('class', cls)
+		if (!el) {
+			this.el = document.createElement(tag || 'div')
+			if (id) {
+				this.el.setAttribute('id', id)
+				this.id = id
+			}
+			if (cls) {
+				this.el.setAttribute('class', cls)
+			}
+		} else {
+			this.el = el
+			const id = el.getAttribute('id')
+			if (id) {
+				this.id = id
+			}
 		}
 		this.model.attach(this)
 	}

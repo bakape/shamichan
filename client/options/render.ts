@@ -90,7 +90,10 @@ function renderTab(opts: OptionSpec[], i: number): string {
 function renderOption(spec: OptionSpec): string {
 	switch (spec.type) {
 		case optionType.shortcut:
-			return 'Alt+' + renderInput(spec.id, {maxlength: '1'})
+			return 'Alt+' + renderInput(spec.id, {
+				maxlength: '1',
+				class: 'shortcut'
+			})
 		case optionType.checkbox:
 			return renderInput(spec.id, {type: 'checkbox'})
 		case optionType.number:
