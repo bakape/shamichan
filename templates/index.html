@@ -14,7 +14,13 @@
 			configHash = '{{.ConfigHash}}',
 			isMobile = {{.IsMobile}}
 	</script>
-	<script src="/ass/js/scripts/setup.js"></script>
+	<!-- Load theme CSS !-->
+	<script>
+		document.getElementById('theme').href =
+			'/ass/css/'
+			+ (localStorage.theme || config.defaultCSS)
+			+ '.css'
+	</script>
 	<noscript>
 		<h1 id="noscriptHeader">
 			>disabling JavaScript
