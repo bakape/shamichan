@@ -29,7 +29,7 @@ export class Modal extends View {
 // A modal element, that is positioned fixed right beneath the banner
 export class BannerModal extends Modal {
 	constructor(args: ViewAttrs) {
-		args.cls = 'bmodal'
+		args.cls = 'banner-modal'
 		super(args)
 	}
 }
