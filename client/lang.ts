@@ -55,10 +55,11 @@ type LnBanner = {
 	email: string
 	options: string
 	identity: string
-	faq: string
+	FAQ: string
 	feedback: string
-	onlineCounter: string
+	onlineCount: string
 	googleSong: string
+	sync: string
 	[index: string]: string
 }
 

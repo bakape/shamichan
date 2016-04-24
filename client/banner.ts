@@ -117,3 +117,17 @@ class IdentityPanel extends BannerModal {
 }
 
 defer(() => new IdentityPanel())
+
+// Apply localised hover tooltips to banner links
+defer(() => {
+	for (let id of ['feedback', 'FAQ', 'identity', 'options']) {
+		setTitle('banner-' + id, id)
+	}
+	for (let id of ['sync', 'onlineCount']) {
+		setTitle(id, id)
+	}
+})
+
+function setTitle(id: string, langID: string) {
+	document.query('#' + id).setAttribute('title', lang[langID])
+}

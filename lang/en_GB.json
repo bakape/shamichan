@@ -25,10 +25,11 @@
 		"email": "Email:",
 		"options": "Options",
 		"identity": "Identity",
-		"faq": "FAQ",
+		"FAQ": "Information",
 		"feedback": "Feedback",
-		"onlineCounter": "Online Counter",
-		"googleSong": "Click to google song"
+		"onlineCount": "Online user counter",
+		"googleSong": "Click to google song",
+		"sync": "Connection status"
 	},
 
 	"images": {

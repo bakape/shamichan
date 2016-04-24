@@ -51,6 +51,7 @@ var clientFileHash string
 type vars struct {
 	Config     template.JS
 	Navigation template.HTML
+	Email      string
 	ConfigHash string
 	IsMobile   bool
 }
@@ -59,12 +60,14 @@ type vars struct {
 // imageboard
 func indexTemplate() (desktop Store, mobile Store, err error) {
 	clientJSON, hash := config.Client()
-	v := vars{ConfigHash: hash}
-	v.Config = template.JS(clientJSON)
-	v.Navigation = boardNavigation()
-	tmpl, err := template.ParseFiles(
-		filepath.FromSlash(templateRoot + "/index.html"),
-	)
+	v := vars{
+		Config:     template.JS(clientJSON),
+		ConfigHash: hash,
+		Navigation: boardNavigation(),
+		Email:      config.FeedbackEmail(),
+	}
+	path := filepath.FromSlash(templateRoot + "/index.html")
+	tmpl, err := template.ParseFiles(path)
 	if err != nil {
 		err = util.WrapError("Error parsing index temlate", err)
 		return

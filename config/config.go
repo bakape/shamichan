@@ -33,15 +33,16 @@ var (
 
 // ServerConfigs stores the global configuration
 type ServerConfigs struct {
-	HTTP       HTTPConfigs
-	Rethinkdb  RethinkDBConfig
-	Boards     BoardConfig
-	Staff      StaffConfig
-	Images     ImageConfig
-	Posts      PostConfig
-	Recaptcha  RecaptchaConfig
-	Radio, Pyu bool
-	InfoBanner string
+	HTTP          HTTPConfigs
+	Rethinkdb     RethinkDBConfig
+	Boards        BoardConfig
+	Staff         StaffConfig
+	Images        ImageConfig
+	Posts         PostConfig
+	Recaptcha     RecaptchaConfig
+	Radio, Pyu    bool
+	InfoBanner    string
+	FeedbackEmail string
 }
 
 // HTTPConfigs stores HTTP server configuration
@@ -138,14 +139,13 @@ type clientConfigs struct {
 		Spoilers []int `json:"spoilers"`
 		Hats     bool  `json:"hats"`
 	} `json:"images"`
-	Banners       []string `json:"banners"`
-	FAQ           []string `json:"FAQ"`
-	Eightball     []string `json:"eightball"`
-	Radio         bool     `json:"radio"`
-	IllyaDance    bool     `json:"illiyaDance"`
-	FeedbackEmail string   `json:"feedbackEmail"`
-	DefaultCSS    string   `json:"defaultCSS"`
-	InfoBanner    string   `json:"infoBanner"`
+	Banners    []string `json:"banners"`
+	FAQ        []string `json:"FAQ"`
+	Eightball  []string `json:"eightball"`
+	Radio      bool     `json:"radio"`
+	IllyaDance bool     `json:"illiyaDance"`
+	DefaultCSS string   `json:"defaultCSS"`
+	InfoBanner string   `json:"infoBanner"`
 }
 
 // LoadConfig reads and parses the JSON config file and thread-safely loads it
@@ -279,6 +279,13 @@ func Pyu() bool {
 	mu.RLock()
 	defer mu.RUnlock()
 	return config.Pyu
+}
+
+// FeedbackEmail returns email address for user feedback
+func FeedbackEmail() string {
+	mu.RLock()
+	defer mu.RUnlock()
+	return config.FeedbackEmail
 }
 
 // Set sets the internal configuration struct. To be used onl in tests.
