@@ -7,6 +7,7 @@ import {Post} from './posts/models'
 import Collection from './collection'
 import {getID} from './util'
 import {db} from './db'
+import {write} from './render'
 
 // Allows us to typecheck configs. See config/defaults.json for more info.
 type Configs = {
@@ -122,7 +123,7 @@ export function getModel(el: Element): Post {
 
 // Display or hide the loading animation
 export function displayLoading(loading: boolean) {
-	$loading.style.display = loading ? 'block' : 'none'
+	write(() => $loading.style.display = loading ? 'block' : 'none')
 }
 
 // Debug mode with more verbose logging

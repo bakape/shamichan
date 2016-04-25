@@ -3,6 +3,8 @@
 */
 
 import {parseEl, parseHTML} from './util'
+import {write} from './render'
+import {defer} from './defer'
 
 type LanguagePack = {
 	posts: LnPosts
@@ -131,12 +133,17 @@ type LnOpts = {
 export type OptLabel = string[]
 
 // Load language-specific CSS
-document.head.appendChild(parseEl(parseHTML
-	`<style>
-		.locked:after {
-			content: "${posts.threadLocked}";
-		}
-		.locked > header nav:after {
-			content: " (${posts.locked})";
-		}
-	</style>`))
+function languageCSS() {
+	const el = parseEl(parseHTML
+		`<style>
+			.locked:after {
+				content: "${posts.threadLocked}";
+			}
+			.locked > header nav:after {
+				content: " (${posts.locked})";
+			}
+		</style>`)
+	write(() => document.head.appendChild(el))
+}
+
+defer(languageCSS)

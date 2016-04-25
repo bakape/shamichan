@@ -5,6 +5,7 @@
 import FSM from './fsm'
 import {debug} from './state'
 import {sync as lang} from './lang'
+import {write} from './render'
 
 // Message types of the WebSocket communication protocol
 export const message: {[type: string]: number} = {
@@ -69,7 +70,7 @@ const syncEl = document.getElementById('sync')
 
 // Render connction status indicator
 function renderStatus(status: syncStatus) {
-	syncEl.textContent = lang[status]
+	write(() => syncEl.textContent = lang[status])
 }
 
 connSM.act([connState.loading], connEvent.start, connState.connecting, () => {

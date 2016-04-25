@@ -1,5 +1,6 @@
 import {on, once, onceAll} from './util'
 import Model from './model'
+import {write} from './render'
 
 export type ViewAttrs = {
 	el?: Element
@@ -42,9 +43,9 @@ export default class View {
 	// Remove the element from the DOM and detach from its model, allowing the
 	// View instance to be garbage collected.
 	remove() {
-		this.el.remove()
 		this.model.detach(this)
 		delete this.model
+		write(() => this.el.remove())
 	}
 
 	// Add selector-specific event listeners to the view

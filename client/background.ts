@@ -5,13 +5,16 @@ import options from './options'
 import {config, displayLoading} from './state'
 import {parseHTML, load} from './util'
 import {db} from './db'
+import {write} from './render'
 
 const container = document.createElement('div')
 const style = document.createElement('style')
 
 container.id = 'user-background'
-document.body.append(container)
-document.head.append(style)
+write(() => {
+	document.body.append(container)
+	document.head.append(style)
+})
 
 type BackgroundStore = {
 	id: string
@@ -21,8 +24,10 @@ type BackgroundStore = {
 
 // Central render function. Resets state and renders the apropriate background.
 export function render(bg?: BackgroundStore) {
-	container.innerHTML = ''
-	style.innerHTML = ''
+	write(() => {
+		container.innerHTML = ''
+		style.innerHTML = ''
+	})
 	if (options.get('illyaDance') && config.illyaDance) {
 		renderIllya()
 	} else if (options.get('userBG') && !options.get('workModeToggle')) {
@@ -45,11 +50,12 @@ function renderIllya() {
 	if (options.get('illyaDanceMute')) {
 		args += ' muted'
 	}
-	container.innerHTML = parseHTML
+	const html = parseHTML
 		`<video ${args}>
 			<source src="${urlBase + 'webm'}" type="video/webm">
 			<source src="${urlBase + 'mp4'}" type="video/mp4">
 		</video>`
+	write(() => container.innerHTML = html)
 }
 
 // Render a custom user-set background apply blurred glass to elements, if
@@ -77,7 +83,7 @@ async function renderBackground(bg?: BackgroundStore) {
 	if (theme === 'glass' || theme === 'ocean') {
 		html += ' ' + renderGlass(theme, bg.blurred)
 	}
-	style.innerHTML = html
+	write(() => style.innerHTML = html)
 }
 
 type BackgroundGradients = {

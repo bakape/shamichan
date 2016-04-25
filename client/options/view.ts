@@ -4,6 +4,7 @@ import {models, default as options} from '../options'
 import {optionType} from './specs'
 import {onceAll, each, find, loadModule} from '../util'
 import {opts as lang} from '../lang'
+import {write, read} from '../render'
 
 // View of the options panel
 export default class OptionsPanel extends BannerModal {
@@ -12,20 +13,25 @@ export default class OptionsPanel extends BannerModal {
 	constructor() {
 		super({el: document.query('#options-panel')})
 		this.render()
-		this.onClick({
-			'.tab_link': e => this.switchTab(e),
-			'#export': () => this.exportConfigs(),
-			'#import': e => this.importConfigs(e),
-			'#hidden': () => this.clearHidden()
+		read(() => {
+			this.onClick({
+				'.tab_link': e => this.switchTab(e),
+				'#export': () => this.exportConfigs(),
+				'#import': e => this.importConfigs(e),
+				'#hidden': () => this.clearHidden()
+			})
+			this.onAll('change', e => this.applyChange(e))
 		})
-		this.onAll('change', e => this.applyChange(e))
 	}
 
 	// Render the contents of the options panel and insert it into the DOM
 	render() {
-		this.el.innerHTML = renderContents()
-		this.assignValues()
-		this.$hidden = this.el.query('#hidden')
+		const html = renderContents()
+		write(() => {
+			this.el.innerHTML = html
+			this.assignValues()
+		})
+		read(() => this.$hidden = this.el.query('#hidden'))
 
 		// TODO: Hidden posts count rendering
 		// events.reply('hide:render', this.renderHidden, this)
@@ -93,16 +99,18 @@ export default class OptionsPanel extends BannerModal {
 		event.preventDefault()
 		const el = event.target as Element
 
-		// Deselect previous tab
-		each<Element>(this.el.children, el =>
-			el.query('.tab_sel').classList.remove('tab_sel'))
+		write(() => {
+			// Deselect previous tab
+			each<Element>(this.el.children, el =>
+				el.query('.tab_sel').classList.remove('tab_sel'))
 
-		// Select the new one
-		el.classList.add('tab_sel')
-		find<Element>(this.el.lastChild.children, li =>
-			li.classList.contains(el.getAttribute('data-content'))
-		)
-			.classList.add('tab_sel')
+			// Select the new one
+			el.classList.add('tab_sel')
+			find<Element>(this.el.lastChild.children, li =>
+				li.classList.contains(el.getAttribute('data-content'))
+			)
+				.classList.add('tab_sel')
+		})
 	}
 
 	// Dump options to JSON file and upload to user
@@ -148,8 +156,10 @@ export default class OptionsPanel extends BannerModal {
 
 	// Render Hiden posts counter
 	renderHidden(count: number) {
-		const el = this.$hidden
-		el.textContent = el.textContent.replace(/\d+$/, count.toString())
+		write(() => {
+			const el = this.$hidden
+			el.textContent = el.textContent.replace(/\d+$/, count.toString())
+		})
 	}
 
 	// Clear displayed hidden post counter

@@ -5,6 +5,7 @@ import {defer} from './defer'
 import {Modal} from './modal'
 import {ViewAttrs} from './view'
 import {banner as lang} from './lang'
+import {write, read} from './render'
 
 // Highlight options button by fading out and in, if no options are set
 function highlightBanner() {
@@ -52,9 +53,10 @@ export class BannerModal extends Modal {
 	constructor(args: ViewAttrs) {
 		super(args)
 		bannerModals[this.id] = this
-		document
-			.query('#banner-' + (this.id as string).split('-')[0])
-			.addEventListener('click', () => this.toggle())
+		read(() =>
+			document
+				.query('#banner-' + (this.id as string).split('-')[0])
+				.addEventListener('click', () => this.toggle()))
 	}
 
 	// Show the element, if hidden, hide - if shown. Hide already visible
@@ -73,13 +75,13 @@ export class BannerModal extends Modal {
 
 	// Unhide the element
 	private show() {
-		this.el.style.display = 'inline-table'
+		write(() => this.el.style.display = 'inline-table')
 		visible = this
 	}
 
 	// Hide the element
 	private hide() {
-		this.el.style.display = 'none'
+		write(() => this.el.style.display = 'none')
 		visible = null
 	}
 }
@@ -97,7 +99,7 @@ class FAQPanel extends BannerModal {
 			html += `<li>${line}</line>`
 		}
 		html += `</ul>`
-		this.el.innerHTML = html
+		write(() => this.el.innerHTML = html)
 	}
 }
 
@@ -107,7 +109,7 @@ defer(() => new FAQPanel())
 class IdentityPanel extends BannerModal {
 	constructor() {
 		super({el: document.query('#identity-panel')})
-		this.render()
+		write(() => this.render())
 	}
 
 	render() {
@@ -119,14 +121,16 @@ class IdentityPanel extends BannerModal {
 defer(() => new IdentityPanel())
 
 // Apply localised hover tooltips to banner links
-defer(() => {
+function localiseTitles() {
 	for (let id of ['feedback', 'FAQ', 'identity', 'options']) {
 		setTitle('banner-' + id, id)
 	}
 	for (let id of ['sync', 'onlineCount']) {
 		setTitle(id, id)
 	}
-})
+}
+
+defer(() =>	write(localiseTitles))
 
 function setTitle(id: string, langID: string) {
 	document.query('#' + id).setAttribute('title', lang[langID])
