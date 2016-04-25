@@ -20,13 +20,13 @@ type BackgroundStore = {
 }
 
 // Central render function. Resets state and renders the apropriate background.
-export function render() {
+export function render(bg?: BackgroundStore) {
 	container.innerHTML = ''
 	style.innerHTML = ''
 	if (options.get('illyaDance') && config.illyaDance) {
 		renderIllya()
 	} else if (options.get('userBG') && !options.get('workModeToggle')) {
-		renderBackground()
+		renderBackground(bg)
 	}
 }
 
@@ -54,14 +54,16 @@ function renderIllya() {
 
 // Render a custom user-set background apply blurred glass to elements, if
 // needed.
-async function renderBackground() {
-	const bg: BackgroundStore = await db
-		.transaction(['main'], 'readonly')
-		.objectStore('main')
-		.get('background')
-		.exec()
-	if (!bg.normal || !bg.blurred) {
-		return
+async function renderBackground(bg?: BackgroundStore) {
+	if (!bg) {
+		bg = await db
+			.transaction(['main'], 'readonly')
+			.objectStore('main')
+			.get('background')
+			.exec()
+		if (!bg.normal || !bg.blurred) {
+			return
+		}
 	}
 	const normal = URL.createObjectURL(bg.normal)
 	let html = parseHTML
@@ -138,18 +140,20 @@ export async function store(file: File) {
 	stackBlur(canvas, 0, 0, img.width, img.height, 10)
 	const blurred = await canvasToBlob(canvas)
 
+	const bg = {
+		id: 'background',
+		normal,
+		blurred
+	}
+
 	await db
 		.transaction(['main'], 'readwrite')
 		.objectStore('main')
-		.put({
-			id: 'background',
-			normal,
-			blurred
-		})
+		.put(bg)
 		.exec()
 
 	if (options.get('userBG')) {
-		render()
+		render(bg)
 	}
 	displayLoading(false)
 }
