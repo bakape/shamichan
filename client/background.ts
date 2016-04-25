@@ -24,6 +24,10 @@ type BackgroundStore = {
 
 // Central render function. Resets state and renders the apropriate background.
 export function render(bg?: BackgroundStore) {
+	// Assert we were passaded a BackgroundStore
+	if (bg && !bg.normal) {
+		bg = undefined
+	}
 	write(() => {
 		container.innerHTML = ''
 		style.innerHTML = ''
