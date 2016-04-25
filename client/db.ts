@@ -2,7 +2,7 @@
  IndexedDB database controller
 */
 
-const dbVersion = 2
+const dbVersion = 3
 
 export let db: IDBDatabase
 
@@ -42,6 +42,10 @@ export function open(): Promise<void> {
 
 			// Same for boards
 			db.createObjectStore('boards', {keyPath: 'id'})
+
+			// Variuos miisceleneous objects
+			const main = db.createObjectStore('main', {keyPath: 'id'})
+			main.add({id: 'background'})
 		}
 	})
 }

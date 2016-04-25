@@ -2,7 +2,7 @@ import {BannerModal} from '../banner'
 import renderContents from './render'
 import {models, default as options} from '../options'
 import {optionType} from './specs'
-import {onceAll, each, find} from '../util'
+import {onceAll, each, find, loadModule} from '../util'
 import {opts as lang} from '../lang'
 
 // View of the options panel
@@ -74,13 +74,11 @@ export default class OptionsPanel extends BannerModal {
 		case optionType.shortcut:
 			val = el.value.toUpperCase().charCodeAt(0)
 			break
-
-		/*
-		TODO: System.import().then()
-		case 'image':
-			// Not recorded. Extracted directly by the background handler.
-			return events.request('background:store', event.target)
-		*/
+		case optionType.image:
+			// Not recorded. Extracted directly by the background handler
+			loadModule('background').then(module =>
+				module.store((event as any).target.files[0]))
+			return
 		}
 
 		if (!model.validate(val)) {

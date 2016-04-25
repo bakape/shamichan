@@ -245,3 +245,22 @@ export function each<T>(arrayLike: ArrayLike<T>, fn: (item: T) => void) {
 		fn(arrayLike[i])
 	}
 }
+
+interface Loader {
+	onload: EventListener
+	onerror: EventListener
+}
+
+// Wraps event style object with onload() method to Promise style
+export function load(loader: Loader): Promise<Event> {
+	return new Promise<Event>((resolve, reject) => {
+		loader.onload = resolve
+		loader.onerror = reject
+	})
+}
+
+// Dynamically lead a System module
+export function loadModule(path: string): Promise<any> {
+	path = `es${(window as any).legacy ? 5 : 6}/${path}`
+	return System.import(path)
+}

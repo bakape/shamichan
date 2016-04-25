@@ -4,7 +4,7 @@
 
 import {config, isMobile} from '../state'
 import {opts as lang} from '../lang'
-import {parseEl} from '../util'
+import {parseEl, loadModule} from '../util'
 import {OptionID} from '../options'
 
 // TODO: Send function
@@ -212,19 +212,18 @@ export const specs: OptionSpec[] = [
 	{
 		id: 'userBG',
 		noLoad: isMobile,
-		tab: tabs.style
+		tab: tabs.style,
+		noExecOnStart: true,
+		exec(render) {
+			loadModule('background').then(module => module.render())
+		}
 	},
 	// Upload field for the custom background image
 	{
 		id: 'userBGImage',
 		noLoad: isMobile,
 		type: optionType.image,
-		tab: tabs.style,
-		noExecOnStart: true,
-		exec(upload) {
-			// TODO: System.import().then()
-			//events.request('background:store', upload)
-		}
+		tab: tabs.style
 	},
 	// Last N posts to display in a thread, if viewing in Last N mode
 	{

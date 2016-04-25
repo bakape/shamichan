@@ -3,7 +3,7 @@
 */
 
 import Model from './model'
-import {extend} from './util'
+import {extend, loadModule} from './util'
 import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
 import OptionsPanel from './options/view'
 import {defer} from './defer'
@@ -117,3 +117,9 @@ for (let spec of specs) {
 }
 
 defer(() => new OptionsPanel())
+
+// Conditionally load custom background module and render background
+if (options.get('userBG')) {
+	defer(() =>
+		loadModule('background').then(module => module.render()))
+}
