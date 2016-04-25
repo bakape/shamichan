@@ -97,9 +97,10 @@ export default class OptionsPanel extends BannerModal {
 	// Switch to a tab, when clicking the tab butt
 	switchTab(event: Event) {
 		event.preventDefault()
-		const el = event.target as Element
 
 		write(() => {
+			const el = event.target as Element
+
 			// Deselect previous tab
 			each<Element>(this.el.children, el =>
 				el.query('.tab_sel').classList.remove('tab_sel'))
