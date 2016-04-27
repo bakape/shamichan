@@ -1,5 +1,6 @@
 {
-    "name": "Meguca.org",
+    "name": "meguca.org",
+    "short_name": "meguca.org",
     "icons": [
         {
             "src": "/mobile/icon48.png",
@@ -29,5 +30,7 @@
     ],
     "start_url": "/",
     "display": "fullscreen",
-    "orientation": "any"
+    "orientation": "any",
+    "theme_color": "#1d1f21",
+    "background_color": "#1d1f21"
 }

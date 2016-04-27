@@ -53,4 +53,10 @@ Selects and loads the client files
 			}
 		});
 	});
+
+	if ('serviceWorker' in navigator) {
+		navigator.serviceWorker.register("../worker.js").catch(function (err) {
+			throw err
+		})
+	}
 })();
