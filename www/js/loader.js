@@ -56,7 +56,7 @@ Selects and loads the client files
 
 	if ('serviceWorker' in navigator) {
 		navigator.serviceWorker
-			.register(imports.config.MEDIA_URL + "js/worker.js")
+			.register("/worker.js")
 			.catch(function (err) {
 				throw err
 			})

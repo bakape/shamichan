@@ -35,6 +35,7 @@ server {
 	location = /503.ico {}
 	location = /503.html {}
 	location /mobile {}
+	location /worker.js {}
 
 	# Handles static assets (images, JS, CSS, etc.)
 	# Set "SERVE_STATIC_FILES: false" and  `MEDIA_URL` to the full path of
