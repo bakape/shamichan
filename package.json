@@ -62,7 +62,7 @@
     "redis": "^2.3.0",
     "request": "^2.53.0",
     "scriptjs": "^2.5.7",
-    "sockjs": "^0.3.15",
+    "sockjs": "^0.3.17",
     "tmp": "^0.0.24",
     "ua-parser-js": "^0.7.9",
     "underscore": "^1.8.3",
