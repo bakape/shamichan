@@ -34,7 +34,7 @@ var (
 )
 
 func startWebServer() (err error) {
-	conf := config.HTTP()
+	conf := config.Get().HTTP
 	r := createRouter()
 	log.Println("Listening on " + conf.Addr)
 
@@ -81,7 +81,7 @@ func createRouter() http.Handler {
 	r.POST("/upload", wrapHandler(imager.NewImageUpload))
 
 	h := http.Handler(r)
-	conf := config.HTTP()
+	conf := config.Get().HTTP
 	if conf.Gzip {
 		h = gziphandler.GzipHandler(h)
 	}
@@ -105,11 +105,12 @@ func wrapHandler(fn http.HandlerFunc) httptreemux.HandlerFunc {
 
 // Redirects to frontpage, if set, or the default board
 func redirectToDefault(res http.ResponseWriter, req *http.Request) {
-	frontpage := config.HTTP().Frontpage
+	conf := config.Get()
+	frontpage := conf.HTTP.Frontpage
 	if frontpage != "" {
 		http.ServeFile(res, req, frontpage)
 	} else {
-		http.Redirect(res, req, "/"+config.Boards().Default+"/", 302)
+		http.Redirect(res, req, "/"+conf.Boards.Default+"/", 302)
 	}
 }
 
@@ -391,7 +392,7 @@ func detectLastN(req *http.Request) int {
 
 // Serve public configuration information as JSON
 func serveConfigs(res http.ResponseWriter, req *http.Request) {
-	json, etag := config.Client()
+	json, etag := config.GetClient()
 	if checkClientEtag(res, req, etag) {
 		return
 	}

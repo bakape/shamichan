@@ -88,7 +88,7 @@ func handleDedupRequest(req dedupRequest) {
 		return
 	}
 
-	minDistance := uint64(config.Images().DuplicateThreshold)
+	minDistance := uint64(config.Get().Images.DuplicateThreshold)
 	cast := uint64(req.entry.Hash)
 	for _, entry := range entries {
 		if imghash.Distance(cast, uint64(entry.Hash)) <= minDistance {
@@ -122,7 +122,7 @@ func cleanUpHashes() (err error) {
 		Update(map[string]r.Term{
 			"hashes": r.Row.Field("hashes").Filter(func(doc r.Term) r.Term {
 				return doc.Field("expires").
-					Gt(r.Now().Sub(config.Images().DulicateLifetime))
+					Gt(r.Now().Sub(config.Get().Images.DulicateLifetime))
 			}),
 		})
 	err = db.DB(query).Exec()

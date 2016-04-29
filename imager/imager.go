@@ -52,7 +52,7 @@ func verifyImage(buf io.Reader, postID uint64) error {
 
 // Verify an image does not exceed the preset maximum dimentions
 func verifyDimentions(decoded image.Image) error {
-	conf := config.Images().Max
+	conf := config.Get().Images.Max
 	rect := decoded.Bounds()
 	if rect.Max.X-rect.Min.X > conf.Width {
 		return errors.New("Image too wide")

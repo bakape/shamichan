@@ -50,7 +50,7 @@ func CheckOrigin(req *http.Request) bool {
 	if err != nil {
 		return false
 	}
-	return u.Host == config.HTTP().Origin
+	return u.Host == config.Get().HTTP.Origin
 }
 
 // Handler is an http.HandleFunc that responds to new websocket connection

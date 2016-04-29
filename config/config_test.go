@@ -30,8 +30,24 @@ func (*Tests) TestLoadConfig(c *C) {
 	}()
 
 	c.Assert(LoadConfig(), IsNil)
-	stdConfig := ServerConfigs{}
+	stdConfig := &ServerConfigs{}
 	stdConfig.Posts.Salt = "LALALALALALALALALALALALALALALALALALALALA"
 	c.Assert(config, DeepEquals, stdConfig)
 	c.Assert(hash, Equals, "eeba38176564a577")
+}
+
+func (*Tests) TestSettingAndGetting(c *C) {
+	conf := ServerConfigs{}
+	conf.Boards.Enabled = []string{"a", "l", "k"}
+	Set(conf)
+	c.Assert(Get(), DeepEquals, &conf)
+}
+
+func (*Tests) TestSettingAndGettingClient(c *C) {
+	std := []byte{1, 2, 3}
+	hash := "foo"
+	SetClient(std, hash)
+	json, jsonHash := GetClient()
+	c.Assert(json, DeepEquals, std)
+	c.Assert(jsonHash, Equals, hash)
 }

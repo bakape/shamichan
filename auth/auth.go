@@ -9,7 +9,7 @@ import (
 // Check checks if the suplied Ident is priveledged to perform the specified
 // action
 func Check(action string, ident Ident) bool {
-	if class, ok := config.Staff().Classes[ident.Auth]; ok {
+	if class, ok := config.Get().Staff.Classes[ident.Auth]; ok {
 		return class.Rights[action]
 	}
 	return false
@@ -30,7 +30,7 @@ func CanAccessBoard(board string, ident Ident) bool {
 	if board == "all" {
 		isBoard = true
 	} else {
-		for _, b := range config.EnabledBoards() {
+		for _, b := range config.Get().Boards.Enabled {
 			if board == b {
 				isBoard = true
 				break

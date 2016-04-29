@@ -59,12 +59,12 @@ type vars struct {
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
 func indexTemplate() (desktop Store, mobile Store, err error) {
-	clientJSON, hash := config.Client()
+	clientJSON, hash := config.GetClient()
 	v := vars{
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,
 		Navigation: boardNavigation(),
-		Email:      config.FeedbackEmail(),
+		Email:      config.Get().FeedbackEmail,
 	}
 	path := filepath.FromSlash(templateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)
@@ -86,7 +86,7 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 // boardNavigation renders interboard navigation we put in the top banner
 func boardNavigation() template.HTML {
 	html := `<b id="navTop">[`
-	conf := config.Boards()
+	conf := config.Get().Boards
 
 	// Actual boards and "/all/" metaboard
 	for i, board := range append(conf.Enabled, "all") {

@@ -29,7 +29,7 @@ func DB(query r.Term) DatabaseHelper {
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
 func LoadDB() (err error) {
-	conf := config.RethinkDB()
+	conf := config.Get().Rethinkdb
 
 	if err := Connect(conf.Addr); err != nil {
 		return err
@@ -45,7 +45,7 @@ func LoadDB() (err error) {
 		return verifyDBVersion()
 	}
 
-	return InitDB(config.RethinkDB().Db)
+	return InitDB(conf.Db)
 }
 
 // Connect establishes a connection to RethinkDB. Address passed separately for

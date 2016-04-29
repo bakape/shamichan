@@ -21,8 +21,10 @@ var (
 	// Ensures no reads happen, while the configuration is reloading
 	mu sync.RWMutex
 
-	// Contains currently loaded server configuration
-	config ServerConfigs
+	// Contains currently loaded server configuration. Intialised to an empty
+	// struct pointer, so we don't have to explicitly initialise it in all our
+	// tests.
+	config = &ServerConfigs{}
 
 	// JSON of client-accessable configuration
 	clientJSON []byte
@@ -188,7 +190,7 @@ func LoadConfig() error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	config = tempServer
+	config = &tempServer
 	clientJSON = tempJSON
 	hash = tempHash
 	if err := mnemonic.SetSalt(config.Posts.Salt); err != nil {
@@ -202,97 +204,27 @@ func parseError(err error) error {
 	return util.WrapError("Error parsing configuration file", err)
 }
 
-// HTTP returns HTTP server configuration
-func HTTP() HTTPConfigs {
+// Get returns a pointer to the current server configuration struct. Callers
+// should not modify this struct.
+func Get() *ServerConfigs {
 	mu.RLock()
 	defer mu.RUnlock()
-	return config.HTTP
+	return config
 }
 
-// RethinkDB returns address and datbase name to connect to
-func RethinkDB() RethinkDBConfig {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.Rethinkdb
-}
-
-// Boards returns overall board configuration
-func Boards() BoardConfig {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.Boards
-}
-
-// EnabledBoards returns a slice of curently enabled boards
-func EnabledBoards() []string {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.Boards.Enabled
-}
-
-// Staff returns moderation staff related configuration
-func Staff() StaffConfig {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.Staff
-}
-
-// Images returns file upload processing and thumbnailing configuration
-func Images() ImageConfig {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.Images
-}
-
-// Posts returns configuration related to creating posts
-func Posts() PostConfig {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.Posts
-}
-
-// Recaptcha returns the public and private key fot Google ReCaptcha
-// authentication
-func Recaptcha() RecaptchaConfig {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.Recaptcha
-}
-
-// Client returns punlic availability configuration JSON and a truncated
+// GetClient returns punlic availability configuration JSON and a truncated
 // configuration MD5 hash
-func Client() ([]byte, string) {
+func GetClient() ([]byte, string) {
 	mu.RLock()
 	defer mu.RUnlock()
 	return clientJSON, hash
 }
 
-// Radio returns, if r-a-d.io integration is enabled
-func Radio() bool {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.Radio
-}
-
-// Pyu returns, if don't ask is enabled
-func Pyu() bool {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.Pyu
-}
-
-// FeedbackEmail returns email address for user feedback
-func FeedbackEmail() string {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config.FeedbackEmail
-}
-
-// Set sets the internal configuration struct. To be used onl in tests.
+// Set sets the internal configuration struct. To be used only in tests.
 func Set(c ServerConfigs) {
 	mu.Lock()
 	defer mu.Unlock()
-	config = c
+	config = &c
 }
 
 // SetClient sets the client configuration JSON and hash. To be used only in
