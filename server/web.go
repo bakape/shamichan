@@ -501,5 +501,6 @@ func serveAssets(
 // Server the service worker script file. It needs to be on the root scope, for
 // security reasons.
 func serverWorker(res http.ResponseWriter, req *http.Request) {
-	http.ServeFile(res, req, filepath.FromSlash(webRoot+"/worker.js"))
+	path := filepath.FromSlash(webRoot + "/js/scripts/worker.js")
+	http.ServeFile(res, req, path)
 }
