@@ -2,9 +2,13 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.9.1 - 2016-04-29
+* Fix:
+	- Spontanious server crashes
+
 ##v1.9.0 - 2016-04-29
 * Change:
-	Replace homebrew webapp install prompt with Android Chrome install banner
+	- Replace homebrew webapp install prompt with Android Chrome install banner
 
 ##v1.8.3 - 2016-04-17
 * Change:
