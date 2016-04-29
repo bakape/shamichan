@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.9.0 - 2016-04-29
+* Change:
+	Replace homebrew webapp install prompt with Android Chrome install banner
+
 ##v1.8.3 - 2016-04-17
 * Change:
 	- Restore web manifest install promt on Android Chrome/FF

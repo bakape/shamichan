@@ -116,4 +116,12 @@
 
 		System.import('es' + (legacy ? 5 : 6) + '/main')
 	}
+
+	if ('serviceWorker' in navigator) {
+		navigator.serviceWorker
+			.register("/worker.js")
+			.catch(function (err) {
+				throw err
+			})
+	}
 })()

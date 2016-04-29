@@ -336,6 +336,9 @@ func (w *WebServer) TestServeIndexTemplate(c *C) {
 	}
 	templates.Set("index", desktop)
 	templates.Set("mobile", mobile)
+	headers := map[string]string{
+		"Content-Type": "text/html",
+	}
 
 	// Desktop
 	rec, req := newPair(c, "/a/")
@@ -343,6 +346,7 @@ func (w *WebServer) TestServeIndexTemplate(c *C) {
 	w.r.ServeHTTP(rec, req)
 	assertBody(rec, string(desktop.HTML), c)
 	assertEtag(rec, desktop.Hash, c)
+	assertHeaders(c, rec, headers)
 
 	// Mobile
 	rec, req = newPair(c, "/a/")
@@ -350,6 +354,7 @@ func (w *WebServer) TestServeIndexTemplate(c *C) {
 	w.r.ServeHTTP(rec, req)
 	assertBody(rec, string(mobile.HTML), c)
 	assertEtag(rec, mobile.Hash+"-mobile", c)
+	assertHeaders(c, rec, headers)
 
 	// Etag matches
 	rec, req = newPair(c, "/a/")
@@ -604,4 +609,10 @@ func (w *WebServer) TestAssetServer(c *C) {
 	rec, req := newPair(c, "/ass/frontpage.html")
 	w.r.ServeHTTP(rec, req)
 	assertBody(rec, "<!doctype html><html></html>\n", c)
+}
+
+func (w *WebServer) TestServeWorker(c *C) {
+	rec, req := newPair(c, "/worker.js")
+	w.r.ServeHTTP(rec, req)
+	assertBody(rec, "console.log(\"Worker dess\")\n", c)
 }

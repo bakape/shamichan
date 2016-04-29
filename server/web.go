@@ -33,6 +33,24 @@ var (
 	assetServer  http.Handler
 )
 
+// Base set of HTTP headers for both HTML and JSON
+var vanillaHeaders = map[string]string{
+	"X-Frame-Options": "sameorigin",
+	"Cache-Control":   "max-age=0, must-revalidate",
+	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
+}
+
+// Set of headers for serving images (and other uploaded files)
+var imageHeaders = map[string]string{
+	// max-age set to 350 days. Some caches and browsers ignore max-age, if it
+	// is a year or greater, so keep it a little below.
+	"Cache-Control": "max-age=30240000",
+
+	// Fake etag to stop agressive browser cache busting
+	"ETag":            "0",
+	"X-Frame-Options": "sameorigin",
+}
+
 func startWebServer() (err error) {
 	conf := config.Get().HTTP
 	r := createRouter()
@@ -73,6 +91,7 @@ func createRouter() http.Handler {
 	assetServer = http.FileServer(http.Dir(webRoot))
 	r.GET("/ass/*path", serveAssets)
 	r.GET("/img/*path", serveImages)
+	r.GET("/worker.js", wrapHandler(serverWorker))
 
 	// Websocket API
 	r.GET("/socket", wrapHandler(websockets.Handler))
@@ -363,12 +382,6 @@ func errorPage(res http.ResponseWriter, req *http.Request, e interface{}) {
 	util.LogError(req.RemoteAddr, err)
 }
 
-var vanillaHeaders = map[string]string{
-	"X-Frame-Options": "sameorigin",
-	"Cache-Control":   "max-age=0, must-revalidate",
-	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
-}
-
 // Set HTTP headers to the response object
 func setHeaders(res http.ResponseWriter, etag string) {
 	head := res.Header()
@@ -445,16 +458,6 @@ func servePost(
 	writeData(res, req, data)
 }
 
-var imageHeaders = map[string]string{
-	// max-age set to 350 days. Some caches and browsers ignore max-age, if it
-	// is a year or greater, so keep it a little below.
-	"Cache-Control": "max-age=30240000",
-
-	// Fake etag to stop agressive browser cache busting
-	"ETag":            "0",
-	"X-Frame-Options": "sameorigin",
-}
-
 // More performant handler for serving image assets. These are immutable
 // (except deletion), so we can also set seperate caching policies for them.
 func serveImages(
@@ -493,4 +496,10 @@ func serveAssets(
 ) {
 	req.URL.Path = params["path"]
 	assetServer.ServeHTTP(res, req)
+}
+
+// Server the service worker script file. It needs to be on the root scope, for
+// security reasons.
+func serverWorker(res http.ResponseWriter, req *http.Request) {
+	http.ServeFile(res, req, filepath.FromSlash(webRoot+"/worker.js"))
 }
