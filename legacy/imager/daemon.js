@@ -64,61 +64,6 @@ class ImageUpload {
 		});
 	}
 
-	verify_image() {
-		const {image} = this,
-			stream = fs.createReadStream(image.path);
-		this.tagged_path = image.ext.replace('.', '') + ':' + image.path;
-
-		stream.once('err', err => {
-			winston.error(err);
-			stream.close();
-			this.failure(Muggle(err));
-		});
-		const checks = {
-			// Get more accurate filesize. Formidable passes the gzipped one
-			stat: fs.stat.bind(fs, image.video || image.path),
-			dims: this.identify.bind(this, stream),
-			hash: this.perceptual_hash.bind(this, stream)
-		};
-		if (image.ext == '.png')
-			checks.apng = this.detectAPNG.bind(this, stream);
-
-		async.parallel(checks, (err, rs) => {
-			if (err)
-				/*
-				 * All functions, except for fs.stat() will return a localisable
-				 * error message
-				 */
-				return this.failure(Muggle(this.lang[err] || err));
-			image.size = rs.stat.size;
-			image.dims = [rs.dims.width, rs.dims.height];
-			image.hash = rs.hash;
-			if (rs.apng)
-				image.apng = true;
-			this.verified();
-		});
-	}
-
-	detectAPNG(stream, cb) {
-		const detector = new findapng.apngDetector();
-		let done;
-		/*
-		 * If it throws an exception, that's pretty much it for the server. Don't
-		 * know if there is actually a better method of error handling for native
-		 * code.
-		 */
-		stream.on('data', function(data) {
-			if (done)
-				return;
-			const result = detector.Detect(data),
-				isAPNG = result === 1;
-			if (isAPNG || result === 2) {
-				done = true;
-				cb(null, isAPNG);
-			}
-		});
-	}
-
 	// Start the thumbnailing pathway
 	deduped() {
 		if (this.failed)
@@ -167,17 +112,7 @@ class ImageUpload {
 			this.got_nails();
 		});
 	}
-	/*
-	 * Currently only used for exhentai image search, but might as well do it
-	 * for everything for consistency.
-	 */
-	sha1Hash(stream, cb){
-		const sha1sum = crypto.createHash('sha1');
-		stream.on('data', data =>
-			sha1sum.update(data));
-		stream.once('end', () =>
-			cb(null, sha1sum.digest('hex')));
-	}
+
 	get_thumb_specs(image, pinky, scale) {
 		const [w, h] = image.dims,
 			bound = config[pinky ? 'PINKY_DIMENSIONS' : 'THUMB_DIMENSIONS'],

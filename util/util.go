@@ -49,12 +49,8 @@ func Waterfall(fns []func() error) (err error) {
 
 // HashBuffer computes a truncated MD5 hash from a buffer
 func HashBuffer(buf []byte) (string, error) {
-	hasher := md5.New()
-	_, err := hasher.Write(buf)
-	if err != nil {
-		return "", WrapError("Error hashing buffer", err)
-	}
-	return hex.EncodeToString(hasher.Sum(nil))[:16], nil
+	hash := md5.Sum(buf)
+	return hex.EncodeToString(hash[:])[:16], nil
 }
 
 // CopyFile reads a file from disk and copies it into the writer

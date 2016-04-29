@@ -4,8 +4,12 @@ package imager
 
 import (
 	"bytes"
+	"crypto/md5"
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/Soreil/apngdetector"
 	_ "github.com/Soreil/imager" // TEMP
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
@@ -13,6 +17,14 @@ import (
 	"image"
 	"io"
 	"io/ioutil"
+)
+
+var (
+	// Maximum dimentions for a normal small thumbnail
+	normal = image.Point{X: 125, Y: 125}
+
+	// Maximum dimentions for a high quality thumbnail
+	sharp = image.Point{X: 250, Y: 250}
 )
 
 // Verify image parameters and create thumbnails
@@ -25,6 +37,16 @@ func processImage(file io.Reader, img *ProtoImage) error {
 	if err := verifyImage(buf, img.PostID); err != nil {
 		return err
 	}
+	if img.FileType == png {
+		img.APNG = apngdetector.Detect(data)
+	}
+
+	// These hashes will already be calculated, if the source file is a video,
+	// MP3, etc.
+	if img.SHA1 == "" {
+		hashFile(data, img)
+	}
+
 	return nil
 }
 
@@ -46,7 +68,6 @@ func verifyImage(buf io.Reader, postID uint64) error {
 	if err := verifyUniqueness(decoded, postID); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -63,6 +84,7 @@ func verifyDimentions(decoded image.Image) error {
 	return nil
 }
 
+// Verify an image has not been posted already recently
 func verifyUniqueness(img image.Image, postID uint64) error {
 	res := make(chan uint64)
 	dedupImage <- dedupRequest{
@@ -77,4 +99,12 @@ func verifyUniqueness(img image.Image, postID uint64) error {
 		return nil
 	}
 	return fmt.Errorf("Duplicate image of post %d", dup)
+}
+
+// Calculate SHA1 and MD5 hashes for a file
+func hashFile(data []byte, img *ProtoImage) {
+	sha1Hash := sha1.Sum(data)
+	md5Hash := md5.Sum(data)
+	img.SHA1 = hex.EncodeToString(sha1Hash[:])
+	img.MD5 = hex.EncodeToString(md5Hash[:])
 }

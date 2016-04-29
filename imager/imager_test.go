@@ -60,3 +60,10 @@ func (*DB) TestDupDetection(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(verifyImage(sample, 2), ErrorMatches, "Duplicate image of post 1")
 }
+
+func (*Imager) TestFileHashing(c *C) {
+	img := &ProtoImage{}
+	hashFile([]byte{1, 2, 3}, img)
+	c.Assert(img.SHA1, Equals, "7037807198c22a7d2b0807371d763779a84fdfcf")
+	c.Assert(img.MD5, Equals, "5289df737df57326fcdd22597afb1fac")
+}

@@ -40,8 +40,10 @@ var mimeTypes = map[string]uint8{
 type ProtoImage struct {
 	fileType uint8
 	types.Image
-	ClientID string
-	PostID   uint64
+	ClientID       string
+	PostID         uint64
+	Thumbnail      []byte
+	SharpThumbnail []byte
 }
 
 // NewImageUpload  handles the clients' image (or other file) upload request
