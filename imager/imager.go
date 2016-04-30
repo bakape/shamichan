@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Soreil/apngdetector"
-	_ "github.com/Soreil/imager" // TEMP
+	"github.com/Soreil/imager"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	"github.com/jteeuwen/imghash"
@@ -33,7 +33,7 @@ func processImage(file io.Reader, img *ProtoImage) error {
 	if err != nil {
 		return util.WrapError("Error reading from file", err)
 	}
-	buf := bytes.NewBuffer(data)
+	buf := bytes.NewReader(data)
 	if err := verifyImage(buf, img.PostID); err != nil {
 		return err
 	}
@@ -46,6 +46,14 @@ func processImage(file io.Reader, img *ProtoImage) error {
 	if img.SHA1 == "" {
 		hashFile(data, img)
 	}
+
+	buf.Seek(0, 0)
+	large, small, _, err := imager.TwoThumbnails(buf, sharp, normal)
+	if err != nil {
+		return err
+	}
+	img.SharpThumbnail = large
+	img.Thumbnail = small
 
 	return nil
 }

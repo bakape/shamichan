@@ -40,10 +40,9 @@ var mimeTypes = map[string]uint8{
 type ProtoImage struct {
 	fileType uint8
 	types.Image
-	ClientID       string
-	PostID         uint64
-	Thumbnail      []byte
-	SharpThumbnail []byte
+	ClientID                  string
+	PostID                    uint64
+	Thumbnail, SharpThumbnail io.Reader
 }
 
 // NewImageUpload  handles the clients' image (or other file) upload request
@@ -86,7 +85,9 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	if err := processFile(file, img); err != nil {
 		passError(res, req, err, 400)
 	} else {
-		// fmt.Println(img)
+
+		// TODO: Call a method on the client to allocate the image.
+
 	}
 }
 
