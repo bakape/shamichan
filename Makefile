@@ -72,10 +72,10 @@ test: server_deps
 	go get -v gopkg.in/check.v1
 	go test ./...
 
-ffmpeg_deps_deb:
+install_deps_deb:
 	apt-get update
 	apt-get install -y libvpx-dev libmp3lame-dev libopus-dev libvorbis-dev \
-		libx264-dev libtheora-dev git build-essential yasm
+		libx264-dev libtheora-dev git build-essential yasm pngquant
 
 build_ffmpeg:
 	git clone --depth 1 -b release/3.0 git://source.ffmpeg.org/ffmpeg.git \

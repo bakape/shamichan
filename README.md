@@ -36,6 +36,7 @@ Coming soon™
         * libtheora
         * libx264
         * libmp3lame
+    * pngquant
 * Run `make`
 
 ###Windows
@@ -47,6 +48,8 @@ Coming soon™
     * mingw-w64-x86_64-pkg-config
     * git
     * make
+* Compile and install:
+    * pngquant
 * Navigate to the meguca root directory
 * Run `make`
 
