@@ -8,8 +8,16 @@ import {sync as lang} from './lang'
 import {write} from './render'
 
 // Message types of the WebSocket communication protocol
-export const message: {[type: string]: number} = {
+export const enum message {
+	invalid,
 
+	// 1 - 29 modify post model state
+	insertThread,
+	insertPost,
+
+	// >= 30 are miscelenious and do not write to post models
+	synchronise = 30,
+	switchSync,
 }
 
 export type MessageHandler = (data: ArrayBuffer) => void
@@ -39,9 +47,10 @@ let socket: WebSocket,
 	attemptTimer: number
 
 // Send a message to the server
-export function send(msg: ArrayBuffer) {
+export function send(type: message, msg: {}) {
 	if (connSM.state !== connState.synced
 		&& connSM.state !== connState.syncing
+		&& type !== message.synchronise
 	) {
 		return
 	}
@@ -52,7 +61,16 @@ export function send(msg: ArrayBuffer) {
 	if (debug) {
 		console.log('<', msg)
 	}
-	socket.send(msg)
+	socket.send(leftPad(type) + JSON.stringify(msg))
+}
+
+// Ensure message type is always a 2 characters long string
+function leftPad(type: message): string {
+	let str = type.toString()
+	if (str.length === 1) {
+		str = '0' + str
+	}
+	return str
 }
 
 // Routes messages from the server to the respective handler
@@ -60,9 +78,11 @@ function onMessage({data}: MessageEvent) {
 	if (debug) {
 		console.log('>', data)
 	}
-	const handler = handlers[data[0]]
+
+	// First two charecters of a message define its type
+	const handler = handlers[parseInt(data.slice(0, 2))]
 	if (handler) {
-		handler(data)
+		handler(JSON.parse(data.slice(2)))
 	}
 }
 
@@ -89,7 +109,6 @@ function connect() {
 		return
 	}
 	socket = new WebSocket(path)
-	socket.binaryType = "arraybuffer"
 	socket.onopen = connSM.feeder(connEvent.open)
 	socket.onclose = connSM.feeder(connEvent.close)
 	socket.onmessage = onMessage

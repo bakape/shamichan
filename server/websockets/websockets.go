@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -166,28 +167,35 @@ func (c *Client) receiverLoop() {
 
 // receive parses a message received from the client through websockets
 func (c *Client) receive(msgType int, msg []byte) error {
-	if msgType != websocket.BinaryMessage {
+	if msgType != websocket.TextMessage {
 		return c.Close(
 			websocket.CloseUnsupportedData,
-			"Only binary frames allowed",
+			"Only text frames allowed",
 		)
 	}
 	if c.ident.Banned {
 		return c.Close(websocket.ClosePolicyViolation, "You are banned")
 	}
-	if len(msg) < 2 {
+	if len(msg) < 3 {
 		return c.protocolError(msg)
 	}
 
-	typ := uint8(msg[0])
+	// First two characters of a message define its type
+	unconved, err := strconv.Atoi(string(msg[:2]))
+	if err != nil {
+		return c.protocolError(msg)
+	}
+	typ := uint8(unconved)
 	if !c.synced && typ != messageSynchronise {
 		return c.protocolError(msg)
 	}
 
-	data := msg[1:]
+	data := msg[2:]
 	switch typ {
 	case messageInsertThread:
+
 		// TODO: Actual handlers
+
 		fmt.Println(data)
 		return nil
 	default:
@@ -213,7 +221,7 @@ func (c *Client) logError(err error) {
 
 // send sends a provided message as a websocket frame to the client
 func (c *Client) send(msg []byte) error {
-	return c.conn.WriteMessage(websocket.BinaryMessage, msg)
+	return c.conn.WriteMessage(websocket.TextMessage, msg)
 }
 
 // Send thread-safely sends a message to the websocket client

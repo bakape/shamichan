@@ -22,7 +22,7 @@ const (
 	protocolError  = `websocket: close 1002 .*`
 	policyError    = `websocket: close 1008 .*`
 	invalidMessage = "Invalid message: .*"
-	onlyBinary     = "*. Only binary frames allowed"
+	onlyText       = "*. Only text frames allowed"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -176,7 +176,7 @@ func (*ClientSuite) TestSend(c *C) {
 		defer sv.Done()
 		typ, msg, err := wcl.ReadMessage()
 		c.Assert(err, IsNil)
-		c.Assert(typ, Equals, websocket.BinaryMessage)
+		c.Assert(typ, Equals, websocket.TextMessage)
 		c.Assert(msg, DeepEquals, std)
 	}()
 	c.Assert(cl.send(std), IsNil)
@@ -198,11 +198,11 @@ func (*ClientSuite) TestReceive(c *C) {
 	defer sv.Close()
 	msg := []byte("natsutte tsuchatta")
 
-	// Non-binary message
+	// Non-text message
 	cl, wcl := sv.NewClient()
 	sv.Add(1)
-	go assertWebsocketError(c, wcl, onlyBinary, sv)
-	c.Assert(cl.receive(websocket.TextMessage, msg), IsNil)
+	go assertWebsocketError(c, wcl, onlyText, sv)
+	c.Assert(cl.receive(websocket.BinaryMessage, msg), IsNil)
 	sv.Wait()
 
 	// Banned
@@ -210,28 +210,40 @@ func (*ClientSuite) TestReceive(c *C) {
 	cl.ident.Banned = true
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, policyError+"You are banned", sv)
-	c.Assert(cl.receive(websocket.BinaryMessage, msg), IsNil)
+	c.Assert(cl.receive(websocket.TextMessage, msg), IsNil)
 	sv.Wait()
 
 	// Message too short
-	msg = []byte{1}
+	msg = []byte("12")
 	cl, wcl = sv.NewClient()
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, protocolError+invalidMessage, sv)
 	c.Assert(
-		cl.receive(websocket.BinaryMessage, msg),
+		cl.receive(websocket.TextMessage, msg),
+		ErrorMatches,
+		invalidMessage,
+	)
+	sv.Wait()
+
+	// Unparsable message type
+	msg = []byte("nope")
+	cl, wcl = sv.NewClient()
+	sv.Add(1)
+	go assertWebsocketError(c, wcl, protocolError, sv)
+	c.Assert(
+		cl.receive(websocket.TextMessage, msg),
 		ErrorMatches,
 		invalidMessage,
 	)
 	sv.Wait()
 
 	// Not a sync message, when not synced
-	msg = []byte{64, 1}
+	msg = []byte("99no")
 	cl, wcl = sv.NewClient()
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, protocolError, sv)
 	c.Assert(
-		cl.receive(websocket.BinaryMessage, msg),
+		cl.receive(websocket.TextMessage, msg),
 		ErrorMatches,
 		invalidMessage,
 	)
@@ -243,7 +255,7 @@ func (*ClientSuite) TestReceive(c *C) {
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, protocolError, sv)
 	c.Assert(
-		cl.receive(websocket.BinaryMessage, msg),
+		cl.receive(websocket.TextMessage, msg),
 		ErrorMatches,
 		invalidMessage,
 	)
@@ -314,8 +326,8 @@ func (*ClientSuite) TestListen(c *C) {
 	cl, wcl := sv.NewClient()
 	sv.Add(2)
 	go readListenErrors(c, cl, sv)
-	go assertWebsocketError(c, wcl, onlyBinary, sv)
-	c.Assert(wcl.WriteMessage(websocket.TextMessage, msg), IsNil)
+	go assertWebsocketError(c, wcl, onlyText, sv)
+	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, msg), IsNil)
 	sv.Wait()
 
 	// Client closed socket without message or timed out
@@ -340,7 +352,7 @@ func (*ClientSuite) TestListen(c *C) {
 		c.Assert(cl.Listen(), ErrorMatches, invalidMessage)
 	}()
 	go assertWebsocketError(c, wcl, protocolError, sv)
-	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, []byte{123, 4}), IsNil)
+	c.Assert(wcl.WriteMessage(websocket.TextMessage, []byte{123, 4}), IsNil)
 	sv.Wait()
 
 	// Send a message
@@ -352,7 +364,7 @@ func (*ClientSuite) TestListen(c *C) {
 		defer sv.Done()
 		typ, msg, err := wcl.ReadMessage()
 		c.Assert(err, IsNil)
-		c.Assert(typ, Equals, websocket.BinaryMessage)
+		c.Assert(typ, Equals, websocket.TextMessage)
 		c.Assert(msg, DeepEquals, std)
 	}()
 	cl.Send(std)
