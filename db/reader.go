@@ -29,7 +29,7 @@ type joinedThread struct {
 }
 
 // GetThread retrieves thread JSON from the database
-func (rd *Reader) GetThread(id uint64, lastN int) (
+func (rd *Reader) GetThread(id int64, lastN int) (
 	types.ThreadContainer,
 	error,
 ) {
@@ -78,7 +78,7 @@ func (rd *Reader) GetThread(id uint64, lastN int) (
 
 // Retrieve the thread metadata along with the OP post in the same format as
 // multiple thread joins, for interoperability
-func getJoinedThread(id uint64) (thread joinedThread, err error) {
+func getJoinedThread(id int64) (thread joinedThread, err error) {
 	query := r.
 		Expr(map[string]r.Term{
 			"left":  getThread(id).Without("log"),
@@ -130,7 +130,7 @@ func (rd *Reader) parsePost(post types.Post) types.Post {
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id uint64) (post types.Post, err error) {
+func (rd *Reader) GetPost(id int64) (post types.Post, err error) {
 	err = DB(getPost(id)).One(&post)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving post: %d", id)

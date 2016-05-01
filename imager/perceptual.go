@@ -29,13 +29,13 @@ type dedupRequest struct {
 
 	// Channel to receive the post number, that contains a mactching image, or
 	// 0, if no matches found
-	res chan uint64
+	res chan int64
 }
 
 // hashEntry is a storage structs of a single post's image's hash
 type hashEntry struct {
 	// Parent post number
-	ID uint64 `gorethink:"id"`
+	ID int64 `gorethink:"id"`
 
 	// Perceptual hash of the image
 	Hash float64 `gorethink:"hash"`

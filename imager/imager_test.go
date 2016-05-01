@@ -13,7 +13,7 @@ func (*DB) TestVerifyImageFormat(c *C) {
 		"png":  true,
 		"webm": false,
 	}
-	var postID uint64
+	var postID int64
 	for ext, shouldPass := range samples {
 		file := openFile("sample."+ext, c)
 		defer file.Close()
@@ -80,7 +80,7 @@ func (*DB) TestImageProcessing(c *C) {
 		defer file.Close()
 		img := &ProtoImage{
 			fileType: filetype,
-			PostID:   uint64(filetype) + 20,
+			PostID:   int64(filetype) + 20,
 		}
 		c.Assert(processImage(file, img), IsNil)
 		c.Assert(len(img.SHA1) > len(img.MD5), Equals, true)

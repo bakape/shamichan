@@ -93,7 +93,7 @@ type infoDocument struct {
 	DBVersion int `gorethink:"dbVersion"`
 
 	// Is incremented on each new post. Ensures post number uniqueness
-	PostCtr uint64 `gorethink:"postCtr"`
+	PostCtr int64 `gorethink:"postCtr"`
 }
 
 type imageHashDocument struct {

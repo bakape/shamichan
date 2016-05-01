@@ -3,7 +3,7 @@ package types
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {
-	Ctr     uint64            `json:"ctr"`
+	Ctr     int64             `json:"ctr"`
 	Threads []ThreadContainer `json:"threads,omitempty"`
 }
 
@@ -24,10 +24,10 @@ type Thread struct {
 	Deleted   bool   `json:"deleted,omitempty" gorethink:"deleted,omitempty"`
 	PostCtr   uint16 `json:"postCtr" gorethink:"postCtr"`
 	ImageCtr  uint16 `json:"imageCtr" gorethink:"imageCtr"`
-	ID        uint64 `json:"-" gorethink:"id"`
+	ID        int64  `json:"-" gorethink:"id"`
 	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
-	LogCtr    uint64 `json:"logCtr" gorethink:"logCtr"`
+	LogCtr    int64  `json:"logCtr" gorethink:"logCtr"`
 	Board     string `json:"board" gorethink:"board"`
 	Subject   string `json:"subject,omitempty" gorethink:"subject,omitempty"`
 }
@@ -38,8 +38,8 @@ type Post struct {
 	Deleted    bool `json:"-" gorethink:"deleted,omitempty"`
 	ImgDeleted bool `json:"-" gorethink:"imgDeleted,omitempty"`
 	Image
-	OP        uint64  `json:"op,omitempty" gorethink:"op"`
-	ID        uint64  `json:"id" gorethink:"id"`
+	OP        int64   `json:"op,omitempty" gorethink:"op"`
+	ID        int64   `json:"id" gorethink:"id"`
 	Time      int64   `json:"time" gorethink:"time"`
 	IP        string  `json:"-" gorethink:"ip"`
 	Board     string  `json:"board" gorethink:"board"`

@@ -26,8 +26,8 @@ func decodeMessage(data []byte, dest interface{}) error {
 }
 
 type syncMessage struct {
-	Ctr    uint64 `json:"ctr"`
-	Thread uint64 `json:"thread"`
+	Ctr    int64  `json:"ctr"`
+	Thread int64  `json:"thread"`
 	Board  string `json:"string"`
 }
 

@@ -27,7 +27,7 @@ func (s *SubSuite) TearDownSuite(c *C) {
 
 // Clear all documents from all tables after each test.
 func (*SubSuite) TearDownTest(c *C) {
-	Subs.subs = make(map[uint64]*Subscription)
+	Subs.subs = make(map[int64]*Subscription)
 	for _, table := range db.AllTables {
 		c.Assert(db.DB(r.Table(table).Delete()).Exec(), IsNil)
 	}
@@ -101,7 +101,7 @@ func (*SubSuite) TestReadJSON(c *C) {
 	sub := Subs.subs[1]
 	sub.counter = 20
 	c.Assert(Subs.ThreadJSON(1), NotNil)
-	c.Assert(sub.data.counter, Equals, uint64(10))
+	c.Assert(sub.data.counter, Equals, int64(10))
 
 	// Cached data still fresh
 	std := []byte{1, 2, 3}

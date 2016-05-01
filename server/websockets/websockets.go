@@ -78,7 +78,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 type Client struct {
 	synced       bool
 	ident        auth.Ident
-	subscription uint64
+	subscription int64
 	ID           string
 	conn         *websocket.Conn
 	receiver     chan receivedMessage

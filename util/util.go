@@ -72,8 +72,8 @@ func copyError(err error) error {
 }
 
 // IDToString is a  helper for converting a post ID to a string for JSON keys
-func IDToString(id uint64) string {
-	return strconv.FormatUint(id, 10)
+func IDToString(id int64) string {
+	return strconv.FormatInt(id, 10)
 }
 
 // LogError logs an error with its stack trace

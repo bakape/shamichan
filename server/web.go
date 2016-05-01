@@ -201,7 +201,7 @@ func threadHTML(
 	params map[string]string,
 ) {
 	board := params["board"]
-	id, err := strconv.ParseUint(params["thread"], 10, 64)
+	id, err := strconv.ParseInt(params["thread"], 10, 64)
 	if err != nil {
 		notFoundPage(res, req)
 		return
@@ -227,7 +227,7 @@ func threadJSON(
 	params map[string]string,
 ) {
 	board := params["board"]
-	id, err := strconv.ParseUint(params["thread"], 10, 64)
+	id, err := strconv.ParseInt(params["thread"], 10, 64)
 	if err != nil {
 		text404(res, req)
 		return
@@ -271,7 +271,7 @@ func threadJSON(
 }
 
 // Cofirm thread request is proper, thread exists and client hadsright of access
-func validateThreadRequest(board string, id uint64) (bool, error) {
+func validateThreadRequest(board string, id int64) (bool, error) {
 	valid, err := db.ValidateOP(id, board)
 	if err != nil {
 		return false, err
@@ -312,7 +312,7 @@ func pageEtag(res http.ResponseWriter, req *http.Request, etag string) bool {
 }
 
 // Build the main part of the etag
-func etagStart(counter uint64) string {
+func etagStart(counter int64) string {
 	return "W/" + util.IDToString(counter)
 }
 
@@ -420,7 +420,7 @@ func servePost(
 	req *http.Request,
 	params map[string]string,
 ) {
-	id, err := strconv.ParseUint(params["post"], 10, 64)
+	id, err := strconv.ParseInt(params["post"], 10, 64)
 	if err != nil {
 		text404(res, req)
 		return

@@ -41,7 +41,7 @@ type ProtoImage struct {
 	fileType uint8
 	types.Image
 	ClientID                  string
-	PostID                    uint64
+	PostID                    int64
 	Thumbnail, SharpThumbnail io.Reader
 }
 

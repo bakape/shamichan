@@ -12,18 +12,18 @@ import (
 // Subs is the only instance of SubscriptionMap in this running instance, that
 // constains and manages all active subscriptions
 var Subs = SubscriptionMap{
-	subs: make(map[uint64]*Subscription),
+	subs: make(map[int64]*Subscription),
 }
 
 // SubscriptionMap contains all active Subscriptions to threads and boards
 type SubscriptionMap struct {
 	sync.RWMutex
-	subs map[uint64]*Subscription
+	subs map[int64]*Subscription
 }
 
 // ListenTo assigns a client to listen to the specified subscription. If the
 // subscription is not currently active, it is created.
-func (s *SubscriptionMap) ListenTo(id uint64, client *Client) {
+func (s *SubscriptionMap) ListenTo(id int64, client *Client) {
 	s.Lock()
 	defer s.Unlock()
 	var sub *Subscription
@@ -41,7 +41,7 @@ func (s *SubscriptionMap) ListenTo(id uint64, client *Client) {
 }
 
 // newSubsctiption creates and initializes a new Subscription instance
-func (s *SubscriptionMap) newSubsctiption(id uint64) (*Subscription, error) {
+func (s *SubscriptionMap) newSubsctiption(id int64) (*Subscription, error) {
 	sub := &Subscription{
 		id:      id,
 		clients: make(subscribedCleints),
@@ -60,7 +60,7 @@ func (s *SubscriptionMap) newSubsctiption(id uint64) (*Subscription, error) {
 
 // Unlisten removes a listener from a subscription and removes the subscription,
 // if it no longer has any listeners.
-func (s *SubscriptionMap) Unlisten(subID uint64, clientID string) {
+func (s *SubscriptionMap) Unlisten(subID int64, clientID string) {
 	s.Lock()
 	defer s.Unlock()
 	sub, ok := s.subs[subID]
@@ -70,7 +70,7 @@ func (s *SubscriptionMap) Unlisten(subID uint64, clientID string) {
 }
 
 // Exists returns weather a subscription for a thread already exists
-func (s *SubscriptionMap) Exists(id uint64) bool {
+func (s *SubscriptionMap) Exists(id int64) bool {
 	s.RLock()
 	defer s.RUnlock()
 	_, ok := s.subs[id]
@@ -78,7 +78,7 @@ func (s *SubscriptionMap) Exists(id uint64) bool {
 }
 
 // Remove a subscription from the subscription map
-func (s *SubscriptionMap) Remove(id uint64) {
+func (s *SubscriptionMap) Remove(id int64) {
 	s.Lock()
 	defer s.Unlock()
 	delete(s.subs, id)
@@ -87,7 +87,7 @@ func (s *SubscriptionMap) Remove(id uint64) {
 // ThreadJSON fetches the post data of a thread, if it exists. Otherwise
 // returns a nil slice. This used to insure consistency, by making it impossible
 // for writes to the thread to happen during the fetch.
-func (s *SubscriptionMap) ThreadJSON(id uint64) []byte {
+func (s *SubscriptionMap) ThreadJSON(id int64) []byte {
 	s.RLock()
 	defer s.RUnlock()
 	sub, ok := s.subs[id]
@@ -100,8 +100,8 @@ func (s *SubscriptionMap) ThreadJSON(id uint64) []byte {
 // Subscription manages a map of listener `chan []byte` and sends events to all
 // of them, allowing for thread-safe eventful distribution
 type Subscription struct {
-	id      uint64
-	counter uint64
+	id      int64
+	counter int64
 	add     chan addRequest
 	remove  chan string
 	write   chan []byte
@@ -109,7 +109,7 @@ type Subscription struct {
 	close   chan error
 	clients subscribedCleints
 	data    struct {
-		counter uint64
+		counter int64
 		buffer  []byte
 	}
 	log []string
@@ -129,7 +129,7 @@ func (s *Subscription) Open() error {
 	if err != nil {
 		return util.WrapError("Error opening subscription", err)
 	}
-	s.counter = uint64(len(log))
+	s.counter = int64(len(log))
 	s.log = log
 	go s.loop()
 	return nil

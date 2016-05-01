@@ -13,12 +13,12 @@ func (*DBSuite) TestParentThread(c *C) {
 	c.Assert(DB(r.Table("posts").Insert(std)).Exec(), IsNil)
 	thread, err := parentThread(2)
 	c.Assert(err, IsNil)
-	c.Assert(thread, Equals, uint64(1))
+	c.Assert(thread, Equals, int64(1))
 
 	// Post does not exist
 	thread, err = parentThread(15)
 	c.Assert(err, IsNil)
-	c.Assert(thread, Equals, uint64(0))
+	c.Assert(thread, Equals, int64(0))
 }
 
 func (*DBSuite) TestParentBoard(c *C) {
@@ -68,7 +68,7 @@ func (*DBSuite) TestPostCounter(c *C) {
 
 	count, err := PostCounter()
 	c.Assert(err, IsNil)
-	c.Assert(count, Equals, uint64(1))
+	c.Assert(count, Equals, int64(1))
 }
 
 func (*DBSuite) TestBoardCounter(c *C) {
@@ -77,7 +77,7 @@ func (*DBSuite) TestBoardCounter(c *C) {
 
 	count, err := BoardCounter("a")
 	c.Assert(err, IsNil)
-	c.Assert(count, Equals, uint64(0))
+	c.Assert(count, Equals, int64(0))
 
 	update := map[string]int{"a": 1}
 	err = DB(GetMain("histCounts").Update(update)).Exec()
@@ -85,7 +85,7 @@ func (*DBSuite) TestBoardCounter(c *C) {
 
 	count, err = BoardCounter("a")
 	c.Assert(err, IsNil)
-	c.Assert(count, Equals, uint64(1))
+	c.Assert(count, Equals, int64(1))
 }
 
 func (*DBSuite) TestThreadCounter(c *C) {
@@ -97,7 +97,7 @@ func (*DBSuite) TestThreadCounter(c *C) {
 
 	count, err := ThreadCounter(1)
 	c.Assert(err, IsNil)
-	c.Assert(count, Equals, uint64(22))
+	c.Assert(count, Equals, int64(22))
 }
 
 func (*DBSuite) TestDatabaseHelper(c *C) {

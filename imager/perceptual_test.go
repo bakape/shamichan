@@ -89,13 +89,13 @@ func (*DB) TestFreshHashAdding(c *C) {
 		ID:   1,
 		Hash: 111,
 	}
-	res := make(chan uint64)
+	res := make(chan int64)
 	dedupImage <- dedupRequest{
 		entry: std,
 		res:   res,
 	}
 
-	c.Assert(<-res, Equals, uint64(0))
+	c.Assert(<-res, Equals, int64(0))
 	query := db.GetMain("imageHashes").Field("hashes")
 	var hashes []hashEntry
 	c.Assert(db.DB(query).All(&hashes), IsNil)
@@ -121,16 +121,16 @@ func (*DB) TestDuplicateMatching(c *C) {
 	}
 	c.Assert(persistHash(base), IsNil)
 
-	res := make(chan uint64)
+	res := make(chan int64)
 	dedupImage <- dedupRequest{
 		entry: match,
 		res:   res,
 	}
-	c.Assert(<-res, Equals, uint64(1))
+	c.Assert(<-res, Equals, int64(1))
 
 	dedupImage <- dedupRequest{
 		entry: noMatch,
 		res:   res,
 	}
-	c.Assert(<-res, Equals, uint64(0))
+	c.Assert(<-res, Equals, int64(0))
 }

@@ -60,7 +60,7 @@ func processImage(file io.Reader, img *ProtoImage) error {
 
 // Verify image dimentions and that it has not been posted before in the
 // configured time
-func verifyImage(buf io.Reader, postID uint64) error {
+func verifyImage(buf io.Reader, postID int64) error {
 	decoded, format, err := image.Decode(buf)
 	if err != nil {
 		return util.WrapError("Error decoding image", err)
@@ -93,8 +93,8 @@ func verifyDimentions(decoded image.Image) error {
 }
 
 // Verify an image has not been posted already recently
-func verifyUniqueness(img image.Image, postID uint64) error {
-	res := make(chan uint64)
+func verifyUniqueness(img image.Image, postID int64) error {
+	res := make(chan int64)
 	dedupImage <- dedupRequest{
 		entry: hashEntry{
 			ID:   postID,
