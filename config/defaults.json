@@ -305,12 +305,12 @@
         // Regex used for removing various illegal charecters from input strings
         "excludeRegex": "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
 
-        // Enable users to typr sage into the email field, thusly preventing
+        // Enable users to type sage into the email field, thusly preventing
         // their post from bumping the thread to the top of the page
         "sageEnabled": true,
 
         // Force all posters to be Anonymous
-        "forcedAnon": true
+        "forcedAnon": false
     },
 
     // Configuration for human authentication with Google's ReCaptcha service
