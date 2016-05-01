@@ -82,13 +82,6 @@ function read(href: string): PageState {
 // Load initial page state
 export const page = new Model(read(location.href))
 
-// Cached DOM elements
-export const $thread = document.query('threads')
-export const $name = document.query('#name')
-export const $email = document.query('#email')
-export const $banner = document.query('#banner')
-export const $loading = document.query('#loadingImage')
-
 // All posts currently displayed
 export const posts = new Collection<Post>()
 
@@ -109,8 +102,8 @@ export async function loadFromDB() {
 // Posts I made in this tab
 export const ownPosts = new Set<number>()
 
-// Tracks the synchronisation counter of each thread/board
-export const syncs = {}
+// Tracks the synchronisation progress of the current thread/board
+export let syncCounter: number
 
 // Retrieve model of closest parent post
 export function getModel(el: Element): Post {
@@ -120,6 +113,8 @@ export function getModel(el: Element): Post {
 	}
 	return posts.get(id)
 }
+
+const $loading = document.query('#loadingImage')
 
 // Display or hide the loading animation
 export function displayLoading(loading: boolean) {

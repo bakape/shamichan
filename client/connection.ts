@@ -3,7 +3,7 @@
 */
 
 import FSM from './fsm'
-import {debug} from './state'
+import {debug, syncCounter, page} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
 
@@ -141,9 +141,20 @@ connSM.act(
 	connState.syncing,
 	() => {
 		renderStatus(syncStatus.connecting)
+		sendSyncRequest()
 		attemptTimer = setTimeout(() => resetAttempts(), 10000)
 	}
 )
+
+// Send a requests to the server to syschronise to the current page and
+// subscribe to the apropriate event feeds.
+function sendSyncRequest() {
+	send(message.synchronise, {
+		board: page.get('board'),
+		thread: page.get('thread'),
+		ctr: syncCounter,
+	})
+}
 
 // Reset the reconnection attempt counter and timers
 function resetAttempts() {

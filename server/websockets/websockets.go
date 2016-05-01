@@ -181,23 +181,29 @@ func (c *Client) receive(msgType int, msg []byte) error {
 	}
 
 	// First two characters of a message define its type
-	unconved, err := strconv.Atoi(string(msg[:2]))
+	typ, err := strconv.Atoi(string(msg[:2]))
 	if err != nil {
 		return c.protocolError(msg)
 	}
-	typ := uint8(unconved)
 	if !c.synced && typ != messageSynchronise {
 		return c.protocolError(msg)
 	}
 
+	if err := c.runHandler(typ, msg); err != nil {
+		if _, ok := err.(errInvalidMessage); ok {
+			return c.passError(msg, err)
+		}
+		return err
+	}
+	return nil
+}
+
+// Run the apropriate handler for the websocket message
+func (c *Client) runHandler(typ int, msg []byte) error {
 	data := msg[2:]
 	switch typ {
-	case messageInsertThread:
-
-		// TODO: Actual handlers
-
-		fmt.Println(data)
-		return nil
+	case messageSynchronise:
+		return c.synchronise(data)
 	default:
 		return c.protocolError(msg)
 	}
@@ -205,7 +211,12 @@ func (c *Client) receive(msgType int, msg []byte) error {
 
 // protocolError handles malformed messages received from the client
 func (c *Client) protocolError(msg []byte) error {
-	errMsg := fmt.Sprintf("Invalid message: %s", msg)
+	return c.passError(msg, "Invalid message")
+}
+
+// Like protocolError, but allows passing a more detailed reason to the client.
+func (c *Client) passError(msg []byte, reason interface{}) error {
+	errMsg := fmt.Sprintf("%s: %s", reason, msg)
 	if err := c.Close(websocket.CloseProtocolError, errMsg); err != nil {
 		return util.WrapError(errMsg, err)
 	}
