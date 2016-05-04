@@ -1,5 +1,4 @@
 GULP="./node_modules/.bin/gulp"
-THREADS=`nproc`
 
 ifeq ($(OS), Windows_NT)
 	BUILD_PATH="/.meguca_build/src/github.com/bakape"
@@ -83,7 +82,7 @@ build_ffmpeg:
 	cd .ffmpeg; \
 	./configure --enable-libmp3lame --enable-libx264 --enable-libvpx \
 		--enable-libvorbis --enable-libopus --enable-libtheora --enable-gpl
-	$(MAKE) -C .ffmpeg -j$(THREADS)
+	$(MAKE) -C .ffmpeg
 
 install_ffmpeg:
 	$(MAKE) -C .ffmpeg install

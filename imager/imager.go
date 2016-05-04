@@ -48,12 +48,12 @@ func processImage(file io.Reader, img *ProtoImage) error {
 	}
 
 	buf.Seek(0, 0)
-	large, small, _, err := imager.TwoThumbnails(buf, sharp, normal)
+	thumbs, _, err := imager.Thumbnails(buf, sharp, normal)
 	if err != nil {
 		return err
 	}
-	img.SharpThumbnail = large
-	img.Thumbnail = small
+	img.SharpThumbnail = thumbs[0]
+	img.Thumbnail = thumbs[1]
 
 	return nil
 }
