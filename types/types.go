@@ -3,46 +3,50 @@ package types
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {
-	Ctr     int64             `json:"ctr"`
-	Threads []ThreadContainer `json:"threads,omitempty"`
+	Ctr     int64    `json:"ctr"`
+	Threads []Thread `json:"threads"`
 }
 
-// ThreadContainer is a transport/export wrapper that stores both the thread
-// metada, its opening post data and its contained posts. The composite type
-// itself is not stored in the database.
-type ThreadContainer struct {
-	Thread
-	Post
-	Posts map[string]Post `json:"posts,omitempty"`
-}
-
-// Thread stores thread metadata
+// Thread is a transport/export wrapper that stores both the thread metada, its
+// opening post data and its contained posts. The composite type itself is not
+// stored in the database.
 type Thread struct {
-	Locked    bool   `json:"locked,omitempty" gorethink:"locked,omitempty"`
-	Archived  bool   `json:"archived,omitempty" gorethink:"archived,omitempty"`
-	Sticky    bool   `json:"sticky,omitempty" gorethink:"sticky,omitempty"`
-	Deleted   bool   `json:"deleted,omitempty" gorethink:"deleted,omitempty"`
-	PostCtr   uint16 `json:"postCtr" gorethink:"postCtr"`
-	ImageCtr  uint16 `json:"imageCtr" gorethink:"imageCtr"`
-	ID        int64  `json:"-" gorethink:"id"`
-	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
-	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
-	LogCtr    int64  `json:"logCtr" gorethink:"logCtr"`
-	Board     string `json:"board" gorethink:"board"`
-	Subject   string `json:"subject,omitempty" gorethink:"subject,omitempty"`
+	Locked   bool  `json:"locked,omitempty" gorethink:"locked"`
+	Archived bool  `json:"archived,omitempty" gorethink:"archived"`
+	Sticky   bool  `json:"sticky,omitempty" gorethink:"sticky"`
+	PostCtr  int16 `json:"postCtr" gorethink:"postCtr"`
+	ImageCtr int16 `json:"imageCtr" gorethink:"imageCtr"`
+	Post
+	LogCtr    int64           `json:"logCtr" gorethink:"logCtr"`
+	BumpTime  int64           `json:"bumpTime" gorethink:"bumpTime"`
+	ReplyTime int64           `json:"replyTime" gorethink:"replyTime"`
+	Subject   string          `json:"subject,omitempty" gorethink:"subject"`
+	Board     string          `json:"board" gorethink:"board"`
+	Posts     map[string]Post `json:"posts,omitempty" gorethink:"posts"`
+}
+
+// DatabaseThread is a template for wririting new threads to the database
+type DatabaseThread struct {
+	PostCtr   int16           `gorethink:"postCtr"`
+	ImageCtr  int16           `gorethink:"imageCtr"`
+	ID        int64           `gorethink:"id"`
+	BumpTime  int64           `gorethink:"bumpTime"`
+	ReplyTime int64           `gorethink:"replyTime"`
+	Subject   string          `gorethink:"subject,omitempty"`
+	Board     string          `gorethink:"board"`
+	Posts     map[string]Post `gorethink:"posts"`
+	Log       [][]byte        `gorethink:"log"`
 }
 
 // Post is a generic post. Either OP or reply.
 type Post struct {
 	Editing    bool `json:"editing" gorethink:"editing"`
-	Deleted    bool `json:"-" gorethink:"deleted,omitempty"`
-	ImgDeleted bool `json:"-" gorethink:"imgDeleted,omitempty"`
+	Deleted    bool `json:"deleted,omitempty" gorethink:"deleted,omitempty"`
+	ImgDeleted bool `json:"imgDeleted,omitempty" gorethink:"imgDeleted,omitempty"`
 	Image
-	OP        int64   `json:"op,omitempty" gorethink:"op"`
 	ID        int64   `json:"id" gorethink:"id"`
 	Time      int64   `json:"time" gorethink:"time"`
 	IP        string  `json:"-" gorethink:"ip"`
-	Board     string  `json:"board" gorethink:"board"`
 	Nonce     string  `json:"-" gorethink:"nonce"`
 	Body      string  `json:"body" gorethink:"body"`
 	Name      string  `json:"name,omitempty" gorethink:"name,omitempty"`
@@ -58,7 +62,7 @@ type Image struct {
 	APNG     bool     `json:"apng,omitempty" gorethink:"apng,omitempty"`
 	Audio    bool     `json:"audio,omitempty" gorethink:"audio,omitempty"`
 	Spoiler  uint8    `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
-	FileType uint8    `json:"fileType,omitempty" gorethink:"ext,fileType"`
+	FileType uint8    `json:"fileType,omitempty" gorethink:"fileType,omitempty"`
 	Length   int32    `json:"length,omitempty" gorethink:"length,omitempty"`
 	Dims     []uint16 `json:"dims,omitempty" gorethink:"dims,omitempty"`
 	File     string   `json:"file,omitempty" gorethink:"file,omitempty"`

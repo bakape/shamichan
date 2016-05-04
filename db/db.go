@@ -39,7 +39,12 @@ func (d DatabaseHelper) All(res interface{}) error {
 
 // parentThread determines the parent thread of a post
 func parentThread(id int64) (op int64, err error) {
-	err = DB(getPost(id).Field("op").Default(0)).One(&op)
+	query := r.
+		Table("threads").
+		Filter(r.Row.Field("posts").HasFields(util.IDToString(id))).
+		Field("id").
+		Default(0)
+	err = DB(query).One(&op)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving parent thread number: %d", id)
 		err = util.WrapError(msg, err)
@@ -47,25 +52,13 @@ func parentThread(id int64) (op int64, err error) {
 	return
 }
 
-// parentBoard determines the parent board of the post
-func parentBoard(id int64) (board string, err error) {
-	err = DB(getPost(id).Field("board").Default("")).One(&board)
-	if err != nil {
-		msg := fmt.Sprintf("Error retrieving parent board: %d", id)
-		err = util.WrapError(msg, err)
-	}
-	return
-}
-
 // ValidateOP confirms the specified thread exists on specific board
 func ValidateOP(id int64, board string) (valid bool, err error) {
-	var b string
-	err = DB(getThread(id).Field("board").Default("")).One(&b)
+	err = DB(getThread(id).Field("board").Eq(board).Default(false)).One(&valid)
 	if err != nil {
 		msg := fmt.Sprintf("Error validating OP: %d of board %s", id, board)
 		err = util.WrapError(msg, err)
 	}
-	valid = b == board
 	return
 }
 
@@ -75,8 +68,8 @@ func getThread(id int64) r.Term {
 }
 
 // shorthand for constructing post queries
-func getPost(id int64) r.Term {
-	return r.Table("posts").Get(id)
+func getPost(id, op int64) r.Term {
+	return getThread(id).Field("posts").Field(id)
 }
 
 // GetMain is a shorthand for constructing main table queries
@@ -84,7 +77,7 @@ func GetMain(id string) r.Term {
 	return r.Table("main").Get(id)
 }
 
-// PostCounter retrieves the current post counter number
+// PostCounter retrieves the current global post count
 func PostCounter() (counter int64, err error) {
 	err = DB(GetMain("info").Field("postCtr")).One(&counter)
 	if err != nil {
@@ -105,7 +98,7 @@ func BoardCounter(board string) (counter int64, err error) {
 
 // ThreadCounter retrieve the history or "progress" counter of a thread
 func ThreadCounter(id int64) (counter int64, err error) {
-	err = DB(getThread(id).Field("logCtr")).One(&counter)
+	err = DB(getThread(id).Field("log").Count()).One(&counter)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving thread counter: %d", id)
 		err = util.WrapError(msg, err)
@@ -113,9 +106,8 @@ func ThreadCounter(id int64) (counter int64, err error) {
 	return
 }
 
-// ReplicationLog retrieves the replication log of the specified thread. Always
-// return a non-nil map.
-func ReplicationLog(id int64) (log []string, err error) {
+// ReplicationLog retrieves the replication log of the specified thread
+func ReplicationLog(id int64) (log [][]byte, err error) {
 	err = DB(getThread(id).Field("log")).All(&log)
 	return
 }

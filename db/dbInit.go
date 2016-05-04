@@ -14,11 +14,35 @@ import (
 	"time"
 )
 
-const dbVersion = 2
+const dbVersion = 3
 
-// RSession exports the RethinkDB connection session. Used globally by the
-// entire server.
-var RSession *r.Session
+var (
+	// RSession exports the RethinkDB connection session. Used globally by the
+	// entire server.
+	RSession *r.Session
+
+	// AllTables are all tables needed for meguca operation
+	AllTables = [...]string{"main", "threads"}
+)
+
+// Document is a eneric RethinkDB Document. For DRY-ness.
+type Document struct {
+	ID string `gorethink:"id"`
+}
+
+// Central global information document
+type infoDocument struct {
+	Document
+	DBVersion int `gorethink:"dbVersion"`
+
+	// Is incremented on each new post. Ensures post number uniqueness
+	PostCtr int64 `gorethink:"postCtr"`
+}
+
+type imageHashDocument struct {
+	Document
+	Hashes []interface{} `gorethink:"hashes"`
+}
 
 // DB creates a new DatabaseHelper. Used to simplify database queries.
 // Example: err := DB(r.Table("posts").Get(1)).One(&Post)
@@ -79,28 +103,6 @@ func verifyDBVersion() error {
 	return nil
 }
 
-// Document is a eneric RethinkDB Document. For DRY-ness.
-type Document struct {
-	ID string `gorethink:"id"`
-}
-
-// AllTables are all tables needed for meguca operation
-var AllTables = [...]string{"main", "threads", "posts"}
-
-// Central global information document
-type infoDocument struct {
-	Document
-	DBVersion int `gorethink:"dbVersion"`
-
-	// Is incremented on each new post. Ensures post number uniqueness
-	PostCtr int64 `gorethink:"postCtr"`
-}
-
-type imageHashDocument struct {
-	Document
-	Hashes []interface{} `gorethink:"hashes"`
-}
-
 // InitDB initialize a rethinkDB database
 func InitDB(dbName string) error {
 	log.Printf("Initialising database '%s'", dbName)
@@ -144,15 +146,8 @@ func CreateTables() error {
 
 // CreateIndeces create secondary indeces for faster table queries
 func CreateIndeces() error {
-	err := DB(r.Table("threads").IndexCreate("board")).Exec()
-	if err != nil {
-		return indexCreationError(err)
-	}
-	for _, key := range [...]string{"op", "board"} {
-		err := DB(r.Table("posts").IndexCreate(key)).Exec()
-		if err != nil {
-			return indexCreationError(err)
-		}
+	if err := DB(r.Table("threads").IndexCreate("board")).Exec(); err != nil {
+		return util.WrapError("Error creating index", err)
 	}
 
 	// Make sure all indeces are ready to avoid the race condition of and index
@@ -164,10 +159,6 @@ func CreateIndeces() error {
 		}
 	}
 	return nil
-}
-
-func indexCreationError(err error) error {
-	return util.WrapError("Error creating index", err)
 }
 
 // UniqueDBName returns a unique datatabase name. Needed so multiple concurent

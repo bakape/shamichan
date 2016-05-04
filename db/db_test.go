@@ -1,16 +1,22 @@
 package db
 
 import (
+	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
 
 func (*DBSuite) TestParentThread(c *C) {
-	std := map[string]int{
-		"id": 2,
-		"op": 1,
+	std := types.DatabaseThread{
+		ID:    1,
+		Board: "a",
+		Posts: map[string]types.Post{
+			"2": {
+				ID: 2,
+			},
+		},
 	}
-	c.Assert(DB(r.Table("posts").Insert(std)).Exec(), IsNil)
+	c.Assert(DB(r.Table("threads").Insert(std)).Exec(), IsNil)
 	thread, err := parentThread(2)
 	c.Assert(err, IsNil)
 	c.Assert(thread, Equals, int64(1))
@@ -21,27 +27,10 @@ func (*DBSuite) TestParentThread(c *C) {
 	c.Assert(thread, Equals, int64(0))
 }
 
-func (*DBSuite) TestParentBoard(c *C) {
-	std := map[string]interface{}{
-		"id":    1,
-		"board": "a",
-	}
-	c.Assert(DB(r.Table("posts").Insert(std)).Exec(), IsNil)
-
-	b, err := parentBoard(1)
-	c.Assert(err, IsNil)
-	c.Assert(b, Equals, "a")
-
-	// Post does not exist
-	b, err = parentBoard(15)
-	c.Assert(err, IsNil)
-	c.Assert(b, Equals, "")
-}
-
 func (*DBSuite) TestValidateOP(c *C) {
-	std := map[string]interface{}{
-		"id":    1,
-		"board": "a",
+	std := types.DatabaseThread{
+		ID:    1,
+		Board: "a",
 	}
 	c.Assert(DB(r.Table("threads").Insert(std)).Exec(), IsNil)
 
@@ -60,9 +49,9 @@ func (*DBSuite) TestGetThread(c *C) {
 }
 
 func (*DBSuite) TestPostCounter(c *C) {
-	std := map[string]interface{}{
-		"id":      "info",
-		"postCtr": 1,
+	std := infoDocument{
+		Document: Document{"info"},
+		PostCtr:  1,
 	}
 	c.Assert(DB(r.Table("main").Insert(std)).Exec(), IsNil)
 
@@ -72,7 +61,7 @@ func (*DBSuite) TestPostCounter(c *C) {
 }
 
 func (*DBSuite) TestBoardCounter(c *C) {
-	std := map[string]string{"id": "histCounts"}
+	std := Document{"histCounts"}
 	c.Assert(DB(r.Table("main").Insert(std)).Exec(), IsNil)
 
 	count, err := BoardCounter("a")
@@ -80,8 +69,7 @@ func (*DBSuite) TestBoardCounter(c *C) {
 	c.Assert(count, Equals, int64(0))
 
 	update := map[string]int{"a": 1}
-	err = DB(GetMain("histCounts").Update(update)).Exec()
-	c.Assert(err, IsNil)
+	c.Assert(DB(GetMain("histCounts").Update(update)).Exec(), IsNil)
 
 	count, err = BoardCounter("a")
 	c.Assert(err, IsNil)
@@ -89,15 +77,19 @@ func (*DBSuite) TestBoardCounter(c *C) {
 }
 
 func (*DBSuite) TestThreadCounter(c *C) {
-	std := map[string]int{
-		"id":     1,
-		"logCtr": 22,
+	std := types.DatabaseThread{
+		ID: 1,
+		Log: [][]byte{
+			{1},
+			{2},
+			{3},
+		},
 	}
 	c.Assert(DB(r.Table("threads").Insert(std)).Exec(), IsNil)
 
 	count, err := ThreadCounter(1)
 	c.Assert(err, IsNil)
-	c.Assert(count, Equals, int64(22))
+	c.Assert(count, Equals, int64(3))
 }
 
 func (*DBSuite) TestDatabaseHelper(c *C) {
@@ -120,10 +112,10 @@ func (*DBSuite) TestDatabaseHelper(c *C) {
 }
 
 func (*DBSuite) TestReplicationLog(c *C) {
-	std := []string{"1", "2", "3"}
-	thread := map[string]interface{}{
-		"id":  1,
-		"log": std,
+	std := [][]byte{{1}, {2}, {3}}
+	thread := types.DatabaseThread{
+		ID:  1,
+		Log: std,
 	}
 	c.Assert(DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
 	log, err := ReplicationLog(1)

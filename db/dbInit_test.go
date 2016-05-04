@@ -66,7 +66,7 @@ func (*DBSuite) TestVerifyVersion(c *C) {
 }
 
 func (*DBInit) TestDb(c *C) {
-	query := r.Table("posts").Get(1)
+	query := r.Table("threads").Get(1)
 	standard := DatabaseHelper{query}
 	c.Assert(DB(query), DeepEquals, standard)
 }
@@ -95,15 +95,6 @@ func (*DBInit) TestLoadDB(c *C) {
 	c.Assert(err, IsNil)
 	if !hasIndex {
 		indexMissing("threads", "board", c)
-	}
-
-	var missingIndeces []string
-	query := r.
-		Expr([...]string{"op", "board"}).
-		Difference(r.Table("posts").IndexList())
-	c.Assert(DB(query).One(&missingIndeces), IsNil)
-	for _, index := range missingIndeces {
-		indexMissing("posts", index, c)
 	}
 
 	var info infoDocument
