@@ -55,56 +55,66 @@ func (d *DB) TearDownSuite(c *C) {
 
 // Create a multipurpose set of threads and posts for tests
 func setupPosts(c *C) {
-	threads := []types.Thread{
-		{
-			ID:     1,
-			Board:  "a",
-			LogCtr: 11,
-		},
-		{
-			ID:     3,
-			Board:  "a",
-			LogCtr: 33,
-		},
-		{
-			ID:     4,
-			Board:  "c",
-			LogCtr: 44,
-		},
-	}
-	c.Assert(db.DB(r.Table("threads").Insert(threads)).Exec(), IsNil)
-
-	posts := []types.Post{
+	threads := []types.DatabaseThread{
 		{
 			ID:    1,
-			OP:    1,
 			Board: "a",
-			Image: genericImage,
-		},
-		{
-			ID:    2,
-			OP:    1,
-			Board: "a",
+			Log:   dummyLog(11),
+			Posts: map[string]types.Post{
+				"1": {
+					ID:    1,
+					OP:    1,
+					Board: "a",
+					Image: genericImage,
+				},
+				"2": {
+					ID:    2,
+					OP:    1,
+					Board: "a",
+				},
+			},
 		},
 		{
 			ID:    3,
-			OP:    3,
 			Board: "a",
-			Image: genericImage,
+			Log:   dummyLog(33),
+			Posts: map[string]types.Post{
+				"3": {
+					ID:    3,
+					Image: genericImage,
+					OP:    3,
+					Board: "a",
+				},
+			},
 		},
 		{
 			ID:    4,
-			OP:    4,
 			Board: "c",
-			Image: genericImage,
+			Log:   dummyLog(44),
+			Posts: map[string]types.Post{
+				"4": {
+					ID:    4,
+					Image: genericImage,
+					OP:    4,
+					Board: "c",
+				},
+			},
 		},
 	}
-	c.Assert(db.DB(r.Table("posts").Insert(posts)).Exec(), IsNil)
+	c.Assert(db.DB(r.Table("threads").Insert(threads)).Exec(), IsNil)
 
 	infoUpdate := db.GetMain("info").Update(map[string]int{"postCtr": 8})
 	histUpdate := db.GetMain("histCounts").Update(map[string]int{"a": 7})
 	c.Assert(db.DB(infoUpdate).Exec(), IsNil)
 	c.Assert(db.DB(histUpdate).Exec(), IsNil)
+}
+
+func dummyLog(n int) [][]byte {
+	log := make([][]byte, n)
+	for i := 0; i < n; i++ {
+		log[i] = []byte{1}
+	}
+	return log
 }
 
 type WebServer struct {
@@ -120,7 +130,7 @@ func (w *WebServer) SetUpSuite(c *C) {
 
 func (*WebServer) SetUpTest(_ *C) {
 	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
+	conf.Boards.Enabled = []string{"a", "c"}
 	conf.Boards.Default = "a"
 	config.Set(conf)
 	config.SetClient(nil, "")
@@ -405,14 +415,13 @@ func (d *DB) TestServePost(c *C) {
 	assertCode(rec, 404, c)
 
 	// Existing post
-	const etag = "d96fa6542aaf4c9e"
+	const (
+		etag = "d96fa6542aaf4c9e"
+		body = `{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}`
+	)
 	rec, req = newPair(c, "/api/post/2")
 	d.r.ServeHTTP(rec, req)
-	assertBody(
-		rec,
-		`{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}`,
-		c,
-	)
+	assertBody(rec, body, c)
 	assertEtag(rec, etag, c)
 
 	// Etags match
@@ -434,28 +443,30 @@ func (d *DB) TestBoardJSON(c *C) {
 	"ctr":7,
 	"threads":[
 		{
-			"postCtr":1,
-			"imageCtr":0,
-			"bumpTime":0,
-			"replyTime":0,
-			"logCtr":11,
-			"editing":false,
-			"file":"foo",
-			"id":1,
-			"time":0,
-			"body":""
-		},
-		{
 			"postCtr":0,
 			"imageCtr":0,
-			"bumpTime":0,
-			"replyTime":0,
-			"logCtr":33,
 			"editing":false,
 			"file":"foo",
 			"id":3,
 			"time":0,
-			"body":""
+			"board":"a",
+			"body":"",
+			"logCtr":33,
+			"bumpTime":0,
+			"replyTime":0
+		},
+		{
+			"postCtr":0,
+			"imageCtr":0,
+			"editing":false,
+			"file":"foo",
+			"id":1,
+			"time":0,
+			"board":"a",
+			"body":"",
+			"logCtr":11,
+			"bumpTime":0,
+			"replyTime":0
 		}
 	]
 }`
@@ -478,40 +489,43 @@ func (d *DB) TestAllBoardJSON(c *C) {
 	"ctr":8,
 	"threads":[
 		{
-			"postCtr":1,
-			"imageCtr":0,
-			"bumpTime":0,
-			"replyTime":0,
-			"logCtr":11,
-			"editing":false,
-			"file":"foo",
-			"id":1,
-			"time":0,
-			"body":""
-		},
-		{
 			"postCtr":0,
 			"imageCtr":0,
-			"bumpTime":0,
-			"replyTime":0,
-			"logCtr":33,
-			"editing":false,
-			"file":"foo",
-			"id":3,
-			"time":0,
-			"body":""
-		},
-		{
-			"postCtr":0,
-			"imageCtr":0,
-			"bumpTime":0,
-			"replyTime":0,
-			"logCtr":44,
 			"editing":false,
 			"file":"foo",
 			"id":4,
 			"time":0,
-			"body":""
+			"board":"c",
+			"body":"",
+			"logCtr":44,
+			"bumpTime":0,
+			"replyTime":0
+		},
+		{
+			"postCtr":0,
+			"imageCtr":0,
+			"editing":false,
+			"file":"foo",
+			"id":3,
+			"time":0,
+			"board":"a",
+			"body":"",
+			"logCtr":33,
+			"bumpTime":0,
+			"replyTime":0
+		},
+		{
+			"postCtr":0,
+			"imageCtr":0,
+			"editing":false,
+			"file":"foo",
+			"id":1,
+			"time":0,
+			"board":"a",
+			"body":"",
+			"logCtr":11,
+			"bumpTime":0,
+			"replyTime":0
 		}
 	]
 }`
@@ -547,16 +561,17 @@ func (d *DB) TestThreadJSON(c *C) {
 	// Valid thread request
 	const body = `
 {
-	"postCtr":1,
+	"postCtr":0,
 	"imageCtr":0,
-	"bumpTime":0,
-	"replyTime":0,
-	"logCtr":11,
 	"editing":false,
 	"file":"foo",
 	"id":1,
 	"time":0,
+	"board":"a",
 	"body":"",
+	"logCtr":11,
+	"bumpTime":0,
+	"replyTime":0,
 	"posts":{
 		"2":{
 			"editing":false,

@@ -19,15 +19,18 @@ var (
 			PostCtr:  2,
 			Posts: map[string]types.Post{
 				"1": {
+					Board: "a",
 					ID:    1,
 					Image: genericImage,
 				},
 				"2": {
+					Board: "a",
 					ID:    2,
 					Image: genericImage,
 				},
 				"3": {
-					ID: 3,
+					Board: "a",
+					ID:    3,
 				},
 			},
 			Log: [][]byte{
@@ -41,6 +44,7 @@ var (
 			Board: "a",
 			Posts: map[string]types.Post{
 				"4": {
+					Board: "a",
 					ID:    4,
 					Image: genericImage,
 				},
@@ -51,6 +55,7 @@ var (
 			Board: "c",
 			Posts: map[string]types.Post{
 				"5": {
+					Board: "c",
 					ID:    5,
 					Image: genericImage,
 				},
@@ -62,9 +67,9 @@ var (
 		Ctr: 7,
 		Threads: []types.Thread{
 			{
-				Board: "a",
 				Post: types.Post{
 					ID:    4,
+					Board: "a",
 					Image: genericImage,
 				},
 				Posts: nil,
@@ -73,9 +78,9 @@ var (
 				ImageCtr: 1,
 				PostCtr:  2,
 				LogCtr:   3,
-				Board:    "a",
 				Post: types.Post{
 					ID:    1,
+					Board: "a",
 					Image: genericImage,
 				},
 				Posts: nil,
@@ -115,7 +120,10 @@ func (*DBSuite) TestGetPost(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
 	config.Set(conf)
-	std := types.Post{ID: 2}
+	std := types.Post{
+		ID:    2,
+		Board: "a",
+	}
 	threads := []types.DatabaseThread{
 		{
 			ID:    1,
@@ -123,6 +131,7 @@ func (*DBSuite) TestGetPost(c *C) {
 			Posts: map[string]types.Post{
 				"2": std,
 				"3": {
+					Board:   "a",
 					ID:      3,
 					Deleted: true,
 				},
@@ -133,7 +142,8 @@ func (*DBSuite) TestGetPost(c *C) {
 			Board: "q",
 			Posts: map[string]types.Post{
 				"5": {
-					ID: 5,
+					Board: "q",
+					ID:    5,
 				},
 			},
 		},
@@ -144,23 +154,20 @@ func (*DBSuite) TestGetPost(c *C) {
 
 	empties := [...]struct {
 		id, op int64
-		board  string
 	}{
-		{2, 1, "c"},  // Wrong board
-		{2, 76, "a"}, // Thread does not exist
-		{8, 1, "a"},  // Post does not exist
-		{3, 1, "a"},  // Post deleted
-		{4, 5, "q"},  // Board no longer accessable
+		{2, 76}, // Thread does not exist
+		{8, 1},  // Post does not exist
+		{3, 1},  // Post deleted
 	}
 
 	for _, args := range empties {
-		post, err := rd.GetPost(args.id, args.op, args.board)
+		post, err := rd.GetPost(args.id, args.op)
 		c.Assert(err, IsNil)
 		c.Assert(post, DeepEquals, types.Post{})
 	}
 
 	// Valid read
-	post, err := rd.GetPost(2, 1, "a")
+	post, err := rd.GetPost(2, 1)
 	c.Assert(err, IsNil)
 	c.Assert(post, DeepEquals, std)
 }
@@ -228,9 +235,23 @@ func (*DBSuite) TestGetAllBoard(c *C) {
 	}
 	c.Assert(DB(r.Table("main").Insert(info)).Exec(), IsNil)
 
+	std := boardStandard
+	std.Threads = []types.Thread{
+		boardStandard.Threads[0],
+		{
+			Post: types.Post{
+				ID:    5,
+				Board: "c",
+				Image: genericImage,
+			},
+			Posts: nil,
+		},
+		boardStandard.Threads[1],
+	}
+
 	board, err := NewReader(auth.Ident{}).GetAllBoard()
 	c.Assert(err, IsNil)
-	c.Assert(board, DeepEquals, &boardStandard)
+	c.Assert(board, DeepEquals, &std)
 }
 
 func (*DBSuite) TestReaderGetThread(c *C) {
@@ -242,8 +263,8 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 
 	// No replies ;_;
 	std := &types.Thread{
-		Board: "a",
 		Post: types.Post{
+			Board: "a",
 			ID:    4,
 			Image: genericImage,
 		},
@@ -255,21 +276,23 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 
 	// With replies
 	std = &types.Thread{
-		Board:    "a",
 		ImageCtr: 1,
 		PostCtr:  2,
 		LogCtr:   3,
 		Post: types.Post{
+			Board: "a",
 			ID:    1,
 			Image: genericImage,
 		},
 		Posts: map[string]types.Post{
 			"2": {
+				Board: "a",
 				ID:    2,
 				Image: genericImage,
 			},
 			"3": {
-				ID: 3,
+				Board: "a",
+				ID:    3,
 			},
 		},
 	}

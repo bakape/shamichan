@@ -17,12 +17,12 @@ func (*DBSuite) TestParentThread(c *C) {
 		},
 	}
 	c.Assert(DB(r.Table("threads").Insert(std)).Exec(), IsNil)
-	thread, err := parentThread(2)
+	thread, err := ParentThread(2)
 	c.Assert(err, IsNil)
 	c.Assert(thread, Equals, int64(1))
 
 	// Post does not exist
-	thread, err = parentThread(15)
+	thread, err = ParentThread(15)
 	c.Assert(err, IsNil)
 	c.Assert(thread, Equals, int64(0))
 }

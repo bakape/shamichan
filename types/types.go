@@ -21,7 +21,6 @@ type Thread struct {
 	BumpTime  int64           `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime int64           `json:"replyTime" gorethink:"replyTime"`
 	Subject   string          `json:"subject,omitempty" gorethink:"subject"`
-	Board     string          `json:"board" gorethink:"board"`
 	Posts     map[string]Post `json:"posts,omitempty" gorethink:"posts"`
 }
 
@@ -44,8 +43,10 @@ type Post struct {
 	Deleted    bool `json:"deleted,omitempty" gorethink:"deleted,omitempty"`
 	ImgDeleted bool `json:"imgDeleted,omitempty" gorethink:"imgDeleted,omitempty"`
 	Image
+	OP        int64   `json:"op,omitempty" gorethink:"op"`
 	ID        int64   `json:"id" gorethink:"id"`
 	Time      int64   `json:"time" gorethink:"time"`
+	Board     string  `json:"board" gorethink:"board"`
 	IP        string  `json:"-" gorethink:"ip"`
 	Nonce     string  `json:"-" gorethink:"nonce"`
 	Body      string  `json:"body" gorethink:"body"`
@@ -65,8 +66,8 @@ type Image struct {
 	FileType uint8    `json:"fileType,omitempty" gorethink:"fileType,omitempty"`
 	Length   int32    `json:"length,omitempty" gorethink:"length,omitempty"`
 	Dims     []uint16 `json:"dims,omitempty" gorethink:"dims,omitempty"`
-	File     string   `json:"file,omitempty" gorethink:"file,omitempty"`
 	Size     int64    `json:"size,omitempty" gorethink:"size,omitempty"`
+	File     string   `json:"file,omitempty" gorethink:"file,omitempty"`
 	MD5      string   `json:",omitempty" gorethink:",omitempty"`
 	SHA1     string   `json:",omitempty" gorethink:",omitempty"`
 	Imgnm    string   `json:"imgnm,omitempty" gorethink:"imgnm,omitempty"`

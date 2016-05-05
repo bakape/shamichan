@@ -37,8 +37,9 @@ func (d DatabaseHelper) All(res interface{}) error {
 	return nil
 }
 
-// parentThread determines the parent thread of a post
-func parentThread(id int64) (op int64, err error) {
+// ParentThread determines the parent thread of a post. Returns 0, if post not
+// found.
+func ParentThread(id int64) (op int64, err error) {
 	query := r.
 		Table("threads").
 		Filter(r.Row.Field("posts").HasFields(util.IDToString(id))).

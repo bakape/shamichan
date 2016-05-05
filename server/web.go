@@ -186,7 +186,7 @@ func boardJSON(
 	if !pageEtag(res, req, etagStart(counter)) {
 		return
 	}
-	data, err := db.NewReader(board, ident).GetBoard()
+	data, err := db.NewReader(ident).GetBoard(board)
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
@@ -207,7 +207,7 @@ func threadHTML(
 		return
 	}
 
-	valid, err := validateThreadRequest(board, id)
+	valid, err := db.ValidateOP(id, board)
 	if err != nil {
 		errorPage(res, req, err)
 		return
@@ -233,7 +233,7 @@ func threadJSON(
 		return
 	}
 
-	valid, err := validateThreadRequest(board, id)
+	valid, err := db.ValidateOP(id, board)
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
@@ -253,30 +253,13 @@ func threadJSON(
 		return
 	}
 
-	// Send a cached copy, if a thread exists, to ensure read and write
-	// consistency in single thread boundries.
-	if cached := websockets.Subs.ThreadJSON(id); cached != nil {
-		writeJSON(res, req, cached)
-		return
-	}
-
-	data, err := db.NewReader(board, ident).
-		GetThread(id, detectLastN(req))
+	data, err := db.NewReader(ident).GetThread(id, detectLastN(req))
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
 	}
 
 	writeJSON(res, req, data)
-}
-
-// Cofirm thread request is proper, thread exists and client hadsright of access
-func validateThreadRequest(board string, id int64) (bool, error) {
-	valid, err := db.ValidateOP(id, board)
-	if err != nil {
-		return false, err
-	}
-	return valid, nil
 }
 
 // Serves JSON for the "/all/" meta-board, that contains threads from all boards
@@ -291,7 +274,7 @@ func allBoardJSON(res http.ResponseWriter, req *http.Request) {
 	}
 
 	ident := auth.LookUpIdent(req.RemoteAddr)
-	data, err := db.NewReader("all", ident).GetAllBoard()
+	data, err := db.NewReader(ident).GetAllBoard()
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
@@ -426,14 +409,24 @@ func servePost(
 		return
 	}
 
+	op, err := db.ParentThread(id)
+	if err != nil {
+		textErrorPage(res, req, err)
+		return
+	} else if op == 0 {
+		text404(res, req)
+		return
+	}
+
 	ident := auth.LookUpIdent(req.RemoteAddr)
-	post, err := db.NewReader("", ident).GetPost(id)
+	post, err := db.NewReader(ident).GetPost(id, op)
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
 	}
 
-	// No post in the database or no access
+	// No post in the database or no access. Need a second check, because post
+	// might have been deleted between the queries.
 	if post.ID == 0 {
 		text404(res, req)
 		return

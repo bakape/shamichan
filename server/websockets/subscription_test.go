@@ -2,7 +2,6 @@ package websockets
 
 import (
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 	"time"
@@ -75,37 +74,4 @@ func (*SubSuite) TestBasicSubscription(c *C) {
 func assertMessage(c *C, cl *Client, std []byte, sv *mockWSServer) {
 	defer sv.Done()
 	c.Assert(<-cl.sender, DeepEquals, std)
-}
-
-func (*SubSuite) TestReadJSON(c *C) {
-	// No thread
-	c.Assert(Subs.ThreadJSON(1), IsNil)
-
-	thread := map[string]interface{}{
-		"id":     1,
-		"logCtr": 10,
-		"log":    []string{"log"},
-	}
-	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
-	post := types.Post{ID: 1}
-	c.Assert(db.DB(r.Table("posts").Insert(post)).Exec(), IsNil)
-
-	sv := newWSServer(c)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	Clients.Add(cl)
-	Subs.ListenTo(1, cl)
-	defer Subs.Unlisten(1, cl.ID)
-
-	// No cached data
-	sub := Subs.subs[1]
-	sub.counter = 20
-	c.Assert(Subs.ThreadJSON(1), NotNil)
-	c.Assert(sub.data.counter, Equals, int64(10))
-
-	// Cached data still fresh
-	std := []byte{1, 2, 3}
-	sub.data.buffer = std
-	sub.data.counter = 20
-	c.Assert(Subs.ThreadJSON(1), DeepEquals, std)
 }

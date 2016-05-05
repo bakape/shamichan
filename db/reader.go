@@ -3,7 +3,6 @@ package db
 import (
 	"fmt"
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -51,7 +50,7 @@ func (rd *Reader) GetThread(id int64, lastN int) (*types.Thread, error) {
 	}
 
 	var thread types.Thread
-	err := DB(getThread(id).Merge(toMerge...).Without("log")).One(&thread)
+	err := DB(getThread(id).Merge(toMerge...).Without("log", "op")).One(&thread)
 	if err != nil {
 		return nil, err
 	}
@@ -86,20 +85,10 @@ func (rd *Reader) parsePost(post types.Post) types.Post {
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id, op int64, board string) (
-	post types.Post, err error,
-) {
-	if !auth.CanAccessBoard(board, rd.ident) {
-		return types.Post{}, nil
-	}
-
-	thread := getThread(op)
-	query := r.
-		Branch(
-			thread.Field("board").Eq(board),
-			thread.Field("posts").Field(util.IDToString(id)),
-			nil,
-		).
+func (rd *Reader) GetPost(id, op int64) (post types.Post, err error) {
+	query := getThread(op).
+		Field("posts").
+		Field(util.IDToString(id)).
 		Default(nil)
 
 	err = DB(query).One(&post)
@@ -108,9 +97,7 @@ func (rd *Reader) GetPost(id, op int64, board string) (
 		err = util.WrapError(msg, err)
 		return
 	}
-	if post.ID == 0 {
-		return types.Post{}, nil
-	}
+
 	return rd.parsePost(post), nil
 }
 
@@ -120,7 +107,7 @@ func (rd *Reader) GetBoard(board string) (out *types.Board, err error) {
 		Table("threads").
 		GetAllByIndex("board", board).
 		Merge(getThreadOP, getLogCounter).
-		Without("posts", "log")
+		Without("posts", "log", "op")
 	out = &types.Board{}
 	err = DB(query).All(&out.Threads)
 	if err != nil {
@@ -141,19 +128,10 @@ func (rd *Reader) GetBoard(board string) (out *types.Board, err error) {
 // GetAllBoard retrieves all threads the client has access to for the "/all/"
 // meta-board
 func (rd *Reader) GetAllBoard() (board *types.Board, err error) {
-	// Can not cast a slice type to another slice type, so create a new slice
-	// to pass to GetAllByIndex()
-	enabled := config.Get().Boards.Enabled
-	args := make([]interface{}, len(enabled))
-	for i := 0; i < len(enabled); i++ {
-		args[i] = enabled[i]
-	}
-
 	query := r.
 		Table("threads").
-		GetAllByIndex("board", args...).
 		Merge(getThreadOP, getLogCounter).
-		Without("posts", "log")
+		Without("posts", "log", "op")
 	board = &types.Board{}
 	err = DB(query).All(&board.Threads)
 	if err != nil {
