@@ -27,7 +27,6 @@
 		"identity": "Identity",
 		"FAQ": "Information",
 		"feedback": "Feedback",
-		"onlineCount": "Online user counter",
 		"googleSong": "Click to google song",
 		"sync": "Connection status"
 	},
@@ -79,7 +78,7 @@
 		"ago": "ago"
 	},
 
-	"sync": ["Disconnected", "Connecting", "Syncing", "Synced", "Desynced"],
+	"sync": ["disconnected", "connecting", "syncing", "synced", "desynced"],
 
 	"syncwatch": {
 		"starting": "Syncwatch starting in 10 seconds",

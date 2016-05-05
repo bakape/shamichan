@@ -59,7 +59,6 @@ type LnBanner = {
 	identity: string
 	FAQ: string
 	feedback: string
-	onlineCount: string
 	googleSong: string
 	sync: string
 	[index: string]: string

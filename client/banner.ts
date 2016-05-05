@@ -125,9 +125,7 @@ function localiseTitles() {
 	for (let id of ['feedback', 'FAQ', 'identity', 'options']) {
 		setTitle('banner-' + id, id)
 	}
-	for (let id of ['sync', 'onlineCount']) {
-		setTitle(id, id)
-	}
+	setTitle('sync', 'sync')
 }
 
 defer(() =>	write(localiseTitles))
