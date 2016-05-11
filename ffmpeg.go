@@ -259,8 +259,8 @@ func Decode(data []byte) (image.Image, error) {
 	}
 	ctx.pb = avioCtx.avAVIOContext
 	if ctx = C.create_context(ctx); ctx == nil {
-		return nil, errors.New("Failed to initialize AVFormatContext")
 		avioCtx.Free()
+		return nil, errors.New("Failed to initialize AVFormatContext")
 	}
 	f := C.extract_video_image(ctx)
 	if f == nil {
@@ -293,8 +293,8 @@ func DecodeConfig(data []byte) (image.Config, error) {
 	}
 	ctx.pb = avioCtx.avAVIOContext
 	if ctx = C.create_context(ctx); ctx == nil {
-		return image.Config{}, errors.New("Failed to initialize AVFormatContext")
 		avioCtx.Free()
+		return image.Config{}, errors.New("Failed to initialize AVFormatContext")
 	}
 	f := C.extract_video(ctx)
 	if f == nil {
