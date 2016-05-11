@@ -72,13 +72,12 @@ static inline AVFrame * extract_video_image(AVFormatContext *ctx)
 			AVFrame * frame = av_frame_alloc();
 			err = avcodec_decode_video2(codecCtx, frame, &got, &pkt);
 			if (err < 0) {
-			av_strerror(err,errstringbuf,1024);
-			fprintf(stderr,"%s\n",errstringbuf);
+				av_strerror(err,errstringbuf,1024);
+				fprintf(stderr,"%s\n",errstringbuf);
 				return NULL;
 			}
 
-			if (got)
-			{
+			if (got) {
 				return frame;
 			}
 			av_frame_free(&frame);
@@ -110,7 +109,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"log"
 	"strings"
 	"unsafe"
 )
@@ -271,9 +269,6 @@ func Decode(data []byte) (image.Image, error) {
 
 	if C.GoString(C.av_get_pix_fmt_name(int32(f.format))) != "yuv420p" {
 		return nil, errors.New("Didn't get format: " + image.YCbCrSubsampleRatio420.String() + "instead got: " + C.GoString(C.av_get_pix_fmt_name(int32(f.format))))
-	}
-	if f.color_range != C.AVCOL_RANGE_MPEG {
-		log.Println("Unexpected color range: ", f.color_range)
 	}
 	y := C.GoBytes(unsafe.Pointer(f.data[0]), f.linesize[0]*f.height)
 	u := C.GoBytes(unsafe.Pointer(f.data[1]), f.linesize[0]*f.height/4)
