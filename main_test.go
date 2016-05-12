@@ -17,6 +17,8 @@ var _ = Suite(&Main{})
 
 func (m *Main) TestServerStart(c *C) {
 	os.Args = []string{os.Args[0], "init"}
-	defer c.Assert(recover(), IsNil)
+	defer func() {
+		c.Assert(recover(), IsNil)
+	}()
 	main()
 }

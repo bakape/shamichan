@@ -1,4 +1,4 @@
-// Utility functions for reducing layout tharshing, by batching DOM writes and
+// Utility functions for reducing layout thrashing, by batching DOM writes and
 // reads. Basically a stripped down version of FastDOM.
 
 type Operation = () => void

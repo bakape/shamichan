@@ -105,7 +105,11 @@ func createRouter() http.Handler {
 		h = gziphandler.GzipHandler(h)
 	}
 	if conf.TrustProxies {
-		h = xff.Handler(h)
+		xffParser, err := xff.Default()
+		if err != nil {
+			log.Fatal(err)
+		}
+		h = xffParser.Handler(h)
 	}
 
 	return h

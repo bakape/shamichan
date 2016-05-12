@@ -1,4 +1,4 @@
-import {on, once, onceAll} from './util'
+import {on} from './util'
 import Model from './model'
 import {write} from './render'
 
@@ -49,15 +49,21 @@ export default class View {
 	}
 
 	// Add selector-specific event listeners to the view
-	on(type: string, selector: string, fn: EventListener) {
-		on(this.el, type, selector, fn)
+	on(
+		type: string,
+		selector: string,
+		fn: EventListener,
+		opts?: EventListenerOptions
+	) {
+		on(this.el, type, selector, fn, opts)
 	}
 
 	// Shorthand for adding multiple click event listeners as an object.
-	// We use those the most, so nice to have.
+	// We use those the most, so nice to have. Also prevents default behavior
+	// from triggering.
 	onClick(events: {[selector: string]: EventListener}) {
 		for (let selector in events) {
-			this.on('click', selector, events[selector])
+			this.on('click', selector, events[selector], {capture: true})
 		}
 	}
 
@@ -69,11 +75,11 @@ export default class View {
 	// Add selector-specific event listener, that will execute only once on a
 	// specific target
 	once(type: string, selector: string, fn: EventListener) {
-		once(this.el, type, selector, fn)
+		on(this.el, type, selector, fn, {once: true})
 	}
 
 	// Add event listener, that will execute only once
 	onceAll(type: string, fn: EventListener) {
-		onceAll(this.el, type, fn)
+		this.el.addEventListener(type, fn, {once: true})
 	}
 }
