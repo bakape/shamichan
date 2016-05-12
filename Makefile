@@ -29,7 +29,7 @@ watch:
 
 server: server_deps
 	go build -v -o $(BINARY)
-ifeq ($(ISWINDOWS),true)
+ifeq ($(ISWINDOWS), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
@@ -42,7 +42,7 @@ server_deps: build_dirs
 		| xargs go get -v
 
 build_dirs:
-ifeq ($(ISWINDOWS),true)
+ifeq ($(ISWINDOWS), true)
 	rm -rf $(BUILD_PATH)
 endif
 	mkdir -p $(BUILD_PATH)
@@ -50,7 +50,7 @@ endif
 
 clean: client_clean
 	rm -rf .build .ffmpeg node_modules $(BINARY)
-ifeq ($(ISWINDOWS),true)
+ifeq ($(ISWINDOWS), true)
 	rm -rf /.meguca_build *.dll
 endif
 
@@ -74,7 +74,7 @@ test: server_deps
 install_deps_deb:
 	apt-get update
 	apt-get install -y libvpx-dev libmp3lame-dev libopus-dev libvorbis-dev \
-		libx264-dev libtheora-dev git build-essential yasm pngquant
+		libx264-dev libtheora-dev git build-essential yasm
 
 build_ffmpeg:
 	git clone --depth 1 -b release/3.0 git://source.ffmpeg.org/ffmpeg.git \
