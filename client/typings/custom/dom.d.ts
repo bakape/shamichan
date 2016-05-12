@@ -15,6 +15,11 @@ interface Element {
 	files?: FileList
 	style: CSSStyleDeclaration
 
+	addEventListener(
+		type: string,
+		handler: EventListener,
+		options?: boolean|EventListenerOptions
+	): void
 	append(...nodes: (Node|string)[]): void
 	click(): void
 	closest(selector: string): Element
@@ -29,5 +34,16 @@ declare class Elements extends Array<Element> {
 }
 
 interface EventTarget {
+	addEventListener(
+		type: string,
+		handler: EventListener,
+		options?: boolean|EventListenerOptions
+	): void
 	matches?(selector: string): boolean
+}
+
+type EventListenerOptions = {
+	capture?: boolean
+	once?: boolean
+	passive?: boolean
 }

@@ -2,7 +2,7 @@ import {BannerModal} from '../banner'
 import renderContents from './render'
 import {models, default as options} from '../options'
 import {optionType} from './specs'
-import {onceAll, each, find, loadModule} from '../util'
+import {each, find, loadModule} from '../util'
 import {opts as lang} from '../lang'
 import {write, read} from '../render'
 
@@ -13,15 +13,13 @@ export default class OptionsPanel extends BannerModal {
 	constructor() {
 		super({el: document.query('#options-panel')})
 		this.render()
-		read(() => {
-			this.onClick({
-				'.tab_link': e => this.switchTab(e),
-				'#export': () => this.exportConfigs(),
-				'#import': e => this.importConfigs(e),
-				'#hidden': () => this.clearHidden()
-			})
-			this.onAll('change', e => this.applyChange(e))
+		this.onClick({
+			'.tab_link': e => this.switchTab(e),
+			'#export': () => this.exportConfigs(),
+			'#import': e => this.importConfigs(e),
+			'#hidden': () => this.clearHidden()
 		})
+		this.onAll('change', e => this.applyChange(e))
 	}
 
 	// Render the contents of the options panel and insert it into the DOM
@@ -96,8 +94,6 @@ export default class OptionsPanel extends BannerModal {
 
 	// Switch to a tab, when clicking the tab butt
 	switchTab(event: Event) {
-		event.preventDefault()
-
 		write(() => {
 			const el = event.target as Element
 
@@ -127,10 +123,9 @@ export default class OptionsPanel extends BannerModal {
 	// Import options from uploaded JSON file
 	importConfigs(event: Event) {
 		// Proxy to hidden file input
-		event.preventDefault()
 		const el = document.query('#importSettings')
 		el.click()
-		onceAll(el, 'change', () => {
+		this.onceAll('change', () => {
 			const reader = new FileReader()
 			reader.readAsText(el.files[0])
 			reader.onload = event => {
@@ -166,7 +161,7 @@ export default class OptionsPanel extends BannerModal {
 	// Clear displayed hidden post counter
 	clearHidden() {
 
-		// TODO: Fix  after psot hiding ported
+		// TODO: Fix  after post hiding ported
 		// main.request('hide:clear')
 
 		this.renderHidden(0)

@@ -53,10 +53,11 @@ export class BannerModal extends Modal {
 	constructor(args: ViewAttrs) {
 		super(args)
 		bannerModals[this.id] = this
-		read(() =>
-			document
-				.query('#banner-' + (this.id as string).split('-')[0])
-				.addEventListener('click', () => this.toggle()))
+
+		// Add click listener to the toggle button of the modal in the banner
+		document
+			.query('#banner-' + (this.id as string).split('-')[0])
+			.addEventListener('click', () => this.toggle(), {capture: true})
 	}
 
 	// Show the element, if hidden, hide - if shown. Hide already visible
