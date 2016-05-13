@@ -1,18 +1,21 @@
 package mkv
 
 import (
+	"bytes"
 	"image"
 	"io"
 	"io/ioutil"
+	"log"
 
 	"github.com/Soreil/video"
 )
 
-// 1A 45 DF A3
-const mkvHeader = "???????????????????????????matroska"
-
+//The integer field sizes can differ in a EBML (MKV) header.
 func init() {
-	image.RegisterFormat("mkv", mkvHeader, Decode, DecodeConfig)
+	image.RegisterFormat("mkv", "\x1A\x45\xDF\xA3???????????????????????????matroska", Decode, DecodeConfig)
+	image.RegisterFormat("mkv", "\x1A\x45\xDF\xA3????????????????????matroska", Decode, DecodeConfig)
+	image.RegisterFormat("mkv", "\x1A\x45\xDF\xA3????????????matroska", Decode, DecodeConfig)
+	image.RegisterFormat("mkv", "\x1A\x45\xDF\xA3????matroska", Decode, DecodeConfig)
 }
 
 //Decodes the first frame of an mkv video in to an image
@@ -27,6 +30,7 @@ func Decode(r io.Reader) (image.Image, error) {
 //Returns mkv metadata
 func DecodeConfig(r io.Reader) (image.Config, error) {
 	b, err := ioutil.ReadAll(r)
+	log.Println("Trash prefix length:", bytes.Index(b, []byte("matroska")))
 	if err != nil {
 		return image.Config{}, err
 	}
