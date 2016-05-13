@@ -1,11 +1,9 @@
 package mkv
 
 import (
-	"bytes"
 	"image"
 	"io"
 	"io/ioutil"
-	"log"
 
 	"github.com/Soreil/video"
 )
@@ -30,7 +28,6 @@ func Decode(r io.Reader) (image.Image, error) {
 //Returns mkv metadata
 func DecodeConfig(r io.Reader) (image.Config, error) {
 	b, err := ioutil.ReadAll(r)
-	log.Println("Trash prefix length:", bytes.Index(b, []byte("matroska")))
 	if err != nil {
 		return image.Config{}, err
 	}
