@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	protocolError  = `websocket: close 1002 .*`
+	invalidPayload = `websocket: close 1007 .*`
 	policyError    = `websocket: close 1008 .*`
 	invalidMessage = "Invalid message: .*"
 	onlyText       = "*. Only text frames allowed"
@@ -150,16 +150,16 @@ func closeClient(c *C, cl *Client) {
 	c.Assert(cl.Close(websocket.CloseNormalClosure, ""), IsNil)
 }
 
-func (*ClientSuite) TestProtocolError(c *C) {
+func (*ClientSuite) TestInvalidPayload(c *C) {
 	const msg = "JIBUN WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	sv.Add(2)
-	go assertWebsocketError(c, cl.conn, protocolError, sv)
-	go assertWebsocketError(c, wcl, protocolError, sv)
+	go assertWebsocketError(c, cl.conn, invalidPayload, sv)
+	go assertWebsocketError(c, wcl, invalidPayload, sv)
 	buf := []byte(msg)
-	c.Assert(cl.protocolError(buf), ErrorMatches, invalidMessage)
+	c.Assert(cl.invalidPayload(buf), ErrorMatches, invalidMessage)
 	sv.Wait()
 }
 
@@ -210,7 +210,7 @@ func (*ClientSuite) TestParseMessage(c *C) {
 	msg = []byte("12")
 	cl, wcl = sv.NewClient()
 	sv.Add(1)
-	go assertWebsocketError(c, wcl, protocolError+invalidMessage, sv)
+	go assertWebsocketError(c, wcl, invalidPayload+invalidMessage, sv)
 	c.Assert(
 		cl.handleMessage(websocket.TextMessage, msg),
 		ErrorMatches,
@@ -222,7 +222,7 @@ func (*ClientSuite) TestParseMessage(c *C) {
 	msg = []byte("nope")
 	cl, wcl = sv.NewClient()
 	sv.Add(1)
-	go assertWebsocketError(c, wcl, protocolError, sv)
+	go assertWebsocketError(c, wcl, invalidPayload, sv)
 	c.Assert(
 		cl.handleMessage(websocket.TextMessage, msg),
 		ErrorMatches,
@@ -234,7 +234,7 @@ func (*ClientSuite) TestParseMessage(c *C) {
 	msg = []byte("99no")
 	cl, wcl = sv.NewClient()
 	sv.Add(1)
-	go assertWebsocketError(c, wcl, protocolError, sv)
+	go assertWebsocketError(c, wcl, invalidPayload, sv)
 	c.Assert(
 		cl.handleMessage(websocket.TextMessage, msg),
 		ErrorMatches,
@@ -246,7 +246,7 @@ func (*ClientSuite) TestParseMessage(c *C) {
 	cl, wcl = sv.NewClient()
 	cl.synced = true
 	sv.Add(1)
-	go assertWebsocketError(c, wcl, protocolError, sv)
+	go assertWebsocketError(c, wcl, invalidPayload, sv)
 	c.Assert(
 		cl.handleMessage(websocket.TextMessage, msg),
 		ErrorMatches,
@@ -350,7 +350,7 @@ func (*ClientSuite) TestListen(c *C) {
 		defer sv.Done()
 		c.Assert(cl.Listen(), ErrorMatches, invalidMessage)
 	}()
-	go assertWebsocketError(c, wcl, protocolError, sv)
+	go assertWebsocketError(c, wcl, invalidPayload, sv)
 	c.Assert(wcl.WriteMessage(websocket.TextMessage, []byte{123, 4}), IsNil)
 	sv.Wait()
 

@@ -58,7 +58,6 @@ func CheckOrigin(req *http.Request) bool {
 // requests.
 func Handler(res http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(res, req, nil)
-	fmt.Println(conn.Subprotocol())
 	if err != nil {
 		log.Printf(
 			"Error upgrading to websockets: %s: %s\n",
@@ -181,16 +180,16 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 		return c.Close(websocket.ClosePolicyViolation, "You are banned")
 	}
 	if len(msg) < 3 {
-		return c.protocolError(msg)
+		return c.invalidPayload(msg)
 	}
 
 	// First two characters of a message define its type
 	typ, err := strconv.Atoi(string(msg[:2]))
 	if err != nil {
-		return c.protocolError(msg)
+		return c.invalidPayload(msg)
 	}
 	if !c.synced && typ != messageSynchronise && typ != messageResynchronise {
-		return c.protocolError(msg)
+		return c.invalidPayload(msg)
 	}
 
 	if err := c.runHandler(typ, msg); err != nil {
@@ -211,19 +210,20 @@ func (c *Client) runHandler(typ int, msg []byte) error {
 	case messageResynchronise:
 		return c.resynchronise(data)
 	default:
-		return c.protocolError(msg)
+		return c.invalidPayload(msg)
 	}
 }
 
-// protocolError handles malformed messages received from the client
-func (c *Client) protocolError(msg []byte) error {
+// invalidPayload handles malformed messages received from the client
+func (c *Client) invalidPayload(msg []byte) error {
 	return c.passError(msg, "Invalid message")
 }
 
-// Like protocolError, but allows passing a more detailed reason to the client.
+// Like invalidPayload, but allows passing a more detailed reason to the client.
 func (c *Client) passError(msg []byte, reason interface{}) error {
 	errMsg := fmt.Sprintf("%s: %s", reason, msg)
-	if err := c.Close(websocket.CloseProtocolError, errMsg); err != nil {
+	err := c.Close(websocket.CloseInvalidFramePayloadData, errMsg)
+	if err != nil {
 		return util.WrapError(errMsg, err)
 	}
 	return errors.New(errMsg)
