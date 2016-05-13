@@ -45,6 +45,16 @@ func (c *Client) synchronise(data []byte) error {
 	if !valid {
 		return errInvalidMessage("Invalid thread or board")
 	}
-	Subs.ListenTo(msg.Thread, c)
+	Clients.Add(c)
+	// Subs.ListenTo(msg.Thread, c, msg.Ctr)
 	return nil
+}
+
+// Syncronise the client after a disconnect and restore any post in progress,
+// if it is still not collected in the database
+func (c *Client) resynchronise(data []byte) error {
+
+	// TODO: Open post restoration logic
+
+	return c.synchronise(data)
 }

@@ -123,3 +123,10 @@ export function displayLoading(loading: boolean) {
 
 // Debug mode with more verbose logging
 export const debug = /[\?&]debug=true/.test(location.href)
+
+// ID of the current tab on the server. Set after synchronisation.
+export let clientID: string
+
+export function setClientID(id: string) {
+	clientID = id
+}

@@ -16,22 +16,22 @@ import (
 	"time"
 )
 
-const (
+// Overridable for faster testing
+var (
 	readTimeout  = time.Second * 30
-	writeTimeout = time.Second * 10
+	writeTimeout = time.Second * 30
 )
 
-// uint8 identifiers for various message types
-// 1 - 29 modify post model state
+// integer identifiers for various message types
 const (
+	// 1 - 29 modify post model state
 	messageInvalid = iota
 	messageInsertThread
 	messageInsertPost
-)
 
-// >= 30 are miscelenious and do not write to post models
-const (
+	// >= 30 are miscelenious and do not write to post models
 	messageSynchronise = 30 + iota
+	messageResynchronise
 	messageSwitchSync
 )
 
@@ -58,6 +58,7 @@ func CheckOrigin(req *http.Request) bool {
 // requests.
 func Handler(res http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(res, req, nil)
+	fmt.Println(conn.Subprotocol())
 	if err != nil {
 		log.Printf(
 			"Error upgrading to websockets: %s: %s\n",
@@ -76,14 +77,18 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	synced       bool
-	ident        auth.Ident
-	subscription int64
-	ID           string
-	conn         *websocket.Conn
-	receiver     chan receivedMessage
-	sender       chan []byte
-	closer       chan struct{}
+	synced bool
+	ident  auth.Ident
+	ID     string
+	conn   *websocket.Conn
+
+	// Internal message receiver channel
+	receive chan receivedMessage
+
+	// Send thread-safely sends a message to the websocket client
+	Send chan []byte
+
+	close chan error
 }
 
 type receivedMessage struct {
@@ -97,34 +102,33 @@ func newClient(conn *websocket.Conn) *Client {
 	return &Client{
 		ident: auth.LookUpIdent(conn.RemoteAddr().String()),
 
-		// Without buffering, a busy client would block the subscription
-		sender:   make(chan []byte, 1),
-		receiver: make(chan receivedMessage),
-		closer:   make(chan struct{}),
-		conn:     conn,
+		// Without buffering, a busy client would block the entire sender
+		Send:    make(chan []byte, 1),
+		close:   make(chan error, 1),
+		receive: make(chan receivedMessage),
+		conn:    conn,
 	}
 }
 
 // Listen listens for incoming messages on the channels and processes them
 func (c *Client) Listen() error {
 	// Clean up, when loop exits
-	defer Subs.Unlisten(c.subscription, c.ID)
 	defer Clients.Remove(c.ID)
 
 	go c.receiverLoop()
 	for {
 		select {
-		case <-c.closer:
+		case <-c.close:
 			return nil
-		case msg := <-c.receiver:
+		case msg := <-c.receive:
 			if msg.err != nil {
 				return msg.err
 			}
-			if err := c.receive(msg.typ, msg.msg); err != nil {
+			if err := c.handleMessage(msg.typ, msg.msg); err != nil {
 				return err
 			}
-		case msg := <-c.sender:
-			err := c.send(msg)
+		case msg := <-c.Send:
+			err := c.conn.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
 				return err
 			}
@@ -136,7 +140,7 @@ func (c *Client) Listen() error {
 // select loop.
 func (c *Client) receiverLoop() {
 	// Handle websocket timeout
-	c.conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+	c.conn.SetReadDeadline(time.Now().Add(readTimeout))
 	c.conn.SetPongHandler(func(string) error {
 		c.conn.SetReadDeadline(time.Now().Add(readTimeout))
 		return nil
@@ -144,19 +148,19 @@ func (c *Client) receiverLoop() {
 
 	for {
 		select {
-		case <-c.closer:
+		case <-c.close:
 			return
 		default:
 			typ, msg, err := c.conn.ReadMessage() // Blocking
 			if err != nil {
 				select {
-				case <-c.closer:
+				case <-c.close:
 				default:
-					close(c.closer)
+					close(c.close)
 				}
 				return
 			}
-			c.receiver <- receivedMessage{
+			c.receive <- receivedMessage{
 				typ: typ,
 				msg: msg,
 				err: err,
@@ -165,8 +169,8 @@ func (c *Client) receiverLoop() {
 	}
 }
 
-// receive parses a message received from the client through websockets
-func (c *Client) receive(msgType int, msg []byte) error {
+// handleMessage parses a message received from the client through websockets
+func (c *Client) handleMessage(msgType int, msg []byte) error {
 	if msgType != websocket.TextMessage {
 		return c.Close(
 			websocket.CloseUnsupportedData,
@@ -185,7 +189,7 @@ func (c *Client) receive(msgType int, msg []byte) error {
 	if err != nil {
 		return c.protocolError(msg)
 	}
-	if !c.synced && typ != messageSynchronise {
+	if !c.synced && typ != messageSynchronise && typ != messageResynchronise {
 		return c.protocolError(msg)
 	}
 
@@ -204,6 +208,8 @@ func (c *Client) runHandler(typ int, msg []byte) error {
 	switch typ {
 	case messageSynchronise:
 		return c.synchronise(data)
+	case messageResynchronise:
+		return c.resynchronise(data)
 	default:
 		return c.protocolError(msg)
 	}
@@ -230,24 +236,14 @@ func (c *Client) logError(err error) {
 	c.Close(websocket.CloseInternalServerErr, err.Error())
 }
 
-// send sends a provided message as a websocket frame to the client
-func (c *Client) send(msg []byte) error {
-	return c.conn.WriteMessage(websocket.TextMessage, msg)
-}
-
-// Send thread-safely sends a message to the websocket client
-func (c *Client) Send(msg []byte) {
-	c.sender <- msg
-}
-
 // Close closes a websocket connection with the provided status code and
 // optional reason
 func (c *Client) Close(status int, reason string) error {
 	select {
-	case <-c.closer:
+	case <-c.close:
 		return nil
 	default:
-		close(c.closer) // Stop any looping select statements listening to this
+		close(c.close) // Stop any looping select statements listening to this
 		return c.conn.WriteControl(
 			websocket.CloseMessage,
 			websocket.FormatCloseMessage(status, reason),

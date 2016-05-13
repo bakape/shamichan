@@ -64,17 +64,25 @@ func (m *mockWSServer) Close() {
 	close(m.connSender)
 }
 
+var dialer = websocket.Dialer{}
+
 func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 	wcl := dialServer(m.c, m.server)
 	return newClient(<-m.connSender), wcl
 }
 
-var dialer = websocket.Dialer{}
-
 func dialServer(c *C, sv *httptest.Server) *websocket.Conn {
 	wcl, _, err := dialer.Dial(strings.Replace(sv.URL, "http", "ws", 1), nil)
 	c.Assert(err, IsNil)
 	return wcl
+}
+
+func assertMessage(con *websocket.Conn, msg []byte, sv *mockWSServer, c *C) {
+	defer sv.Done()
+	typ, msg, err := con.ReadMessage()
+	c.Assert(err, IsNil)
+	c.Assert(typ, Equals, websocket.TextMessage)
+	c.Assert(msg, DeepEquals, msg)
 }
 
 func (*ClientSuite) TestNewClient(c *C) {
@@ -172,28 +180,13 @@ func (*ClientSuite) TestSend(c *C) {
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	sv.Add(1)
-	go func() {
-		defer sv.Done()
-		typ, msg, err := wcl.ReadMessage()
-		c.Assert(err, IsNil)
-		c.Assert(typ, Equals, websocket.TextMessage)
-		c.Assert(msg, DeepEquals, std)
-	}()
-	c.Assert(cl.send(std), IsNil)
-	closeClient(c, cl)
+	go cl.Listen()
+	go assertMessage(wcl, std, sv, c)
+	cl.Send <- std
 	sv.Wait()
 }
 
-func (*ClientSuite) TestExternalSend(c *C) {
-	std := []byte("WOW WOW")
-	cl := Client{
-		sender: make(chan []byte),
-	}
-	go cl.Send(std)
-	c.Assert(<-cl.sender, DeepEquals, std)
-}
-
-func (*ClientSuite) TestReceive(c *C) {
+func (*ClientSuite) TestParseMessage(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	msg := []byte("natsutte tsuchatta")
@@ -202,7 +195,7 @@ func (*ClientSuite) TestReceive(c *C) {
 	cl, wcl := sv.NewClient()
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, onlyText, sv)
-	c.Assert(cl.receive(websocket.BinaryMessage, msg), IsNil)
+	c.Assert(cl.handleMessage(websocket.BinaryMessage, msg), IsNil)
 	sv.Wait()
 
 	// Banned
@@ -210,7 +203,7 @@ func (*ClientSuite) TestReceive(c *C) {
 	cl.ident.Banned = true
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, policyError+"You are banned", sv)
-	c.Assert(cl.receive(websocket.TextMessage, msg), IsNil)
+	c.Assert(cl.handleMessage(websocket.TextMessage, msg), IsNil)
 	sv.Wait()
 
 	// Message too short
@@ -219,7 +212,7 @@ func (*ClientSuite) TestReceive(c *C) {
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, protocolError+invalidMessage, sv)
 	c.Assert(
-		cl.receive(websocket.TextMessage, msg),
+		cl.handleMessage(websocket.TextMessage, msg),
 		ErrorMatches,
 		invalidMessage,
 	)
@@ -231,7 +224,7 @@ func (*ClientSuite) TestReceive(c *C) {
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, protocolError, sv)
 	c.Assert(
-		cl.receive(websocket.TextMessage, msg),
+		cl.handleMessage(websocket.TextMessage, msg),
 		ErrorMatches,
 		invalidMessage,
 	)
@@ -243,7 +236,7 @@ func (*ClientSuite) TestReceive(c *C) {
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, protocolError, sv)
 	c.Assert(
-		cl.receive(websocket.TextMessage, msg),
+		cl.handleMessage(websocket.TextMessage, msg),
 		ErrorMatches,
 		invalidMessage,
 	)
@@ -255,7 +248,7 @@ func (*ClientSuite) TestReceive(c *C) {
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, protocolError, sv)
 	c.Assert(
-		cl.receive(websocket.TextMessage, msg),
+		cl.handleMessage(websocket.TextMessage, msg),
 		ErrorMatches,
 		invalidMessage,
 	)
@@ -277,7 +270,7 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 	wg.Add(1)
 	go func() {
 		defer sv.Done()
-		c.Assert(<-cl.receiver, DeepEquals, std)
+		c.Assert(<-cl.receive, DeepEquals, std)
 	}()
 	go func() {
 		defer wg.Done()
@@ -332,10 +325,16 @@ func (*ClientSuite) TestListen(c *C) {
 
 	// Client closed socket without message or timed out
 	cl, wcl = sv.NewClient()
+	oldR := readTimeout
+	oldW := writeTimeout
+	readTimeout = time.Second
+	writeTimeout = readTimeout
 	sv.Add(1)
 	go readListenErrors(c, cl, sv)
 	c.Assert(wcl.Close(), IsNil)
 	sv.Wait()
+	readTimeout = oldR
+	writeTimeout = oldW
 
 	// Client properly closed connection with a control message
 	cl, wcl = sv.NewClient()
@@ -358,8 +357,8 @@ func (*ClientSuite) TestListen(c *C) {
 	// Send a message
 	std := []byte{127, 0, 0, 1}
 	cl, wcl = sv.NewClient()
-	sv.Add(2)
-	go readListenErrors(c, cl, sv)
+	sv.Add(1)
+	go cl.Listen()
 	go func() {
 		defer sv.Done()
 		typ, msg, err := wcl.ReadMessage()
@@ -367,7 +366,7 @@ func (*ClientSuite) TestListen(c *C) {
 		c.Assert(typ, Equals, websocket.TextMessage)
 		c.Assert(msg, DeepEquals, std)
 	}()
-	cl.Send(std)
+	cl.Send <- std
 	sv.Wait()
 }
 
@@ -402,7 +401,7 @@ func readListenErrors(c *C, cl *Client, sv *mockWSServer) {
 	c.Assert(cl.Listen(), IsNil)
 }
 
-func (*Client) TestHandler(c *C) {
+func (*ClientSuite) TestHandler(c *C) {
 	// Proper connection and client-side close
 	sv := httptest.NewServer(http.HandlerFunc(Handler))
 	defer sv.Close()

@@ -3,9 +3,18 @@
 */
 
 import FSM from './fsm'
-import {debug, syncCounter, page} from './state'
+import {debug, syncCounter, page, clientID} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
+
+// A reqeust message to synchronise or resynchronise (after a connection loss)
+// to the server
+type SyncRequest = {
+	board: string
+	thread: number
+	ctr: number
+	id?: string
+}
 
 // Message types of the WebSocket communication protocol
 export const enum message {
@@ -17,10 +26,11 @@ export const enum message {
 
 	// >= 30 are miscelenious and do not write to post models
 	synchronise = 30,
+	resynchronise,
 	switchSync,
 }
 
-export type MessageHandler = (data: ArrayBuffer) => void
+export type MessageHandler = (msg: {}) => void
 
 // Websocket message handlers. Each handler responds to its distinct message
 // type.
@@ -111,15 +121,11 @@ function connect() {
 	socket = new WebSocket(path)
 	socket.onopen = connSM.feeder(connEvent.open)
 	socket.onclose = connSM.feeder(connEvent.close)
+	socket.onerror = connSM.feeder(connEvent.close)
 	socket.onmessage = onMessage
-	socket.onerror = onError
 	if (debug) {
 		(window as any).socket = socket
 	}
-}
-
-function onError(err: Event) {
-	console.error(err)
 }
 
 // Strip all handlers and remove references from Websocket instance
@@ -141,20 +147,28 @@ connSM.act(
 	connState.syncing,
 	() => {
 		renderStatus(syncStatus.connecting)
-		sendSyncRequest()
+
+		// Send a requests to the server to syschronise to the current page and
+		// subscribe to the apropriate event feeds.
+		const msg: SyncRequest = {
+			board: page.get('board'),
+			thread: page.get('thread'),
+			ctr: syncCounter,
+		}
+		let type = message.synchronise
+
+		// If clientID is set, then this attempt to synchronise comes after a
+		// connection loss. Attempt to recover lost server-side state.
+		if (clientID) {
+			msg.id = clientID
+			type = message.resynchronise
+		}
+
+		send(type, msg)
+
 		attemptTimer = setTimeout(() => resetAttempts(), 10000)
 	}
 )
-
-// Send a requests to the server to syschronise to the current page and
-// subscribe to the apropriate event feeds.
-function sendSyncRequest() {
-	send(message.synchronise, {
-		board: page.get('board'),
-		thread: page.get('thread'),
-		ctr: syncCounter,
-	})
-}
 
 // Reset the reconnection attempt counter and timers
 function resetAttempts() {
@@ -165,14 +179,19 @@ function resetAttempts() {
 	attempts = 0
 }
 
-connSM.wildAct(connEvent.close, connState.dropped, err => {
+connSM.wildAct(connEvent.close, connState.dropped, event => {
 	nullSocket()
 	if (debug) {
-		console.error(err)
+		console.error(event)
 	}
 	if (attemptTimer) {
 		clearTimeout(attemptTimer)
 		attemptTimer = 0
+	}
+	if (event.code !== 1000) {
+		alert(`Websocket error: ${event.reason}`)
+		renderStatus(syncStatus.desynced)
+		return
 	}
 	renderStatus(syncStatus.disconnected)
 

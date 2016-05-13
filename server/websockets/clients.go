@@ -65,6 +65,6 @@ func (c *ClientMap) SendAll(msg []byte) {
 	c.RLock()
 	defer c.RUnlock()
 	for _, cl := range c.clients {
-		cl.Send(msg)
+		cl.Send <- msg
 	}
 }
