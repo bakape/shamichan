@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const dataDirectory = "testData/"
+const dataDirectory = "testdata/"
 
 func TestMKVToPNG(t *testing.T) {
 	const filename = dataDirectory + "sample.mkv"

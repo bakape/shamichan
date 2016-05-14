@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const dataDirectory = "testData/"
+const dataDirectory = "testdata/"
 
 func TestWebmToPNG(t *testing.T) {
 	const filename = dataDirectory + "wafel.webm"
