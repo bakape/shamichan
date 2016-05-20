@@ -22,7 +22,7 @@ import (
 const (
 	invalidPayload = `websocket: close 1007 .*`
 	policyError    = `websocket: close 1008 .*`
-	invalidMessage = "Invalid message: .*"
+	invalidMessage = "Invalid message.*"
 	onlyText       = "*. Only text frames allowed"
 )
 
@@ -192,7 +192,7 @@ func (*ClientSuite) TestSend(c *C) {
 	sv.Wait()
 }
 
-func (*ClientSuite) TestParseMessage(c *C) {
+func (*ClientSuite) TestHandleMessage(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	msg := []byte("natsutte tsuchatta")
@@ -217,11 +217,8 @@ func (*ClientSuite) TestParseMessage(c *C) {
 	cl, wcl = sv.NewClient()
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, invalidPayload+invalidMessage, sv)
-	c.Assert(
-		cl.handleMessage(websocket.TextMessage, msg),
-		ErrorMatches,
-		invalidMessage,
-	)
+	err := cl.handleMessage(websocket.TextMessage, msg)
+	c.Assert(err, ErrorMatches, invalidMessage)
 	sv.Wait()
 
 	// Unparsable message type
@@ -229,11 +226,8 @@ func (*ClientSuite) TestParseMessage(c *C) {
 	cl, wcl = sv.NewClient()
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, invalidPayload, sv)
-	c.Assert(
-		cl.handleMessage(websocket.TextMessage, msg),
-		ErrorMatches,
-		invalidMessage,
-	)
+	err = cl.handleMessage(websocket.TextMessage, msg)
+	c.Assert(err, ErrorMatches, invalidMessage)
 	sv.Wait()
 
 	// Not a sync message, when not synced
@@ -241,11 +235,8 @@ func (*ClientSuite) TestParseMessage(c *C) {
 	cl, wcl = sv.NewClient()
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, invalidPayload, sv)
-	c.Assert(
-		cl.handleMessage(websocket.TextMessage, msg),
-		ErrorMatches,
-		invalidMessage,
-	)
+	err = cl.handleMessage(websocket.TextMessage, msg)
+	c.Assert(err, ErrorMatches, invalidMessage)
 	sv.Wait()
 
 	// No handler
@@ -253,11 +244,18 @@ func (*ClientSuite) TestParseMessage(c *C) {
 	cl.synced = true
 	sv.Add(1)
 	go assertWebsocketError(c, wcl, invalidPayload, sv)
-	c.Assert(
-		cl.handleMessage(websocket.TextMessage, msg),
-		ErrorMatches,
-		invalidMessage,
-	)
+	err = cl.handleMessage(websocket.TextMessage, msg)
+	c.Assert(err, ErrorMatches, invalidMessage)
+	sv.Wait()
+
+	// Invalid inner message payload. Test proper type reflection of the
+	// errInvalidMessage error type
+	cl, wcl = sv.NewClient()
+	cl.synced = true
+	sv.Add(1)
+	go assertWebsocketError(c, wcl, invalidPayload, sv)
+	err = cl.handleMessage(websocket.TextMessage, []byte("30nope"))
+	c.Assert(err, ErrorMatches, invalidMessage)
 	sv.Wait()
 }
 

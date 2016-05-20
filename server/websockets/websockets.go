@@ -25,13 +25,15 @@ var (
 )
 
 // integer identifiers for various message types
+// 1 - 29 modify post model state
 const (
-	// 1 - 29 modify post model state
 	messageInvalid = iota
 	messageInsertThread
 	messageInsertPost
+)
 
-	// >= 30 are miscelenious and do not write to post models
+// >= 30 are miscelenious and do not write to post models
+const (
 	messageSynchronise = 30 + iota
 	messageResynchronise
 	messageSwitchSync
@@ -234,10 +236,12 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 	}
 
 	if err := c.runHandler(typ, msg); err != nil {
-		if _, ok := err.(errInvalidMessage); ok {
+		switch err := err.(type) {
+		case errInvalidMessage:
 			return c.passError(msg, err)
+		default:
+			return err
 		}
-		return err
 	}
 	return nil
 }
