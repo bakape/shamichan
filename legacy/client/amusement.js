@@ -40,13 +40,3 @@ oneeSama.hook('insertOwnPost', ({dice}) => {
 		}
 	}
 });
-
-// Execute server-sent JS in fun threads
-main.dispatcher[common.EXECUTE_JS] = ([js]) => {
-	try {
-		eval(js);
-	}
-	catch (e) {
-		console.error(e);
-	}
-};

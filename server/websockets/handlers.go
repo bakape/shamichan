@@ -38,7 +38,7 @@ func decodeMessage(data []byte, dest interface{}) error {
 type syncMessage struct {
 	Ctr    int64  `json:"ctr"`
 	Thread int64  `json:"thread"`
-	Board  string `json:"string"`
+	Board  string `json:"board"`
 }
 
 // Syncronise the client to a certain thread, assign it's ID and prepare to

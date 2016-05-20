@@ -3,7 +3,7 @@
 */
 
 import FSM from './fsm'
-import {debug, syncCounter, page, clientID} from './state'
+import {debug, syncCounter, page, clientID, setClientID} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
 
@@ -46,7 +46,7 @@ export const enum connState {
 
 // Events passable to the connection FSM
 export const enum connEvent {
-	start, open, close, retry, error
+	start, open, close, retry, error, sync,
 }
 
 // Finite state machine for managing websocket connectivity
@@ -179,6 +179,15 @@ function resetAttempts() {
 	attempts = 0
 }
 
+// Syncronise to the server and start receiving updates on the apropriate
+// channel
+handlers[message.synchronise] = connSM.feeder(connEvent.sync)
+
+connSM.act([connState.syncing], connEvent.sync, connState.synced, id => {
+	setClientID(id)
+	renderStatus(syncStatus.synced)
+})
+
 connSM.wildAct(connEvent.close, connState.dropped, event => {
 	nullSocket()
 	if (debug) {
@@ -189,7 +198,7 @@ connSM.wildAct(connEvent.close, connState.dropped, event => {
 		attemptTimer = 0
 	}
 	if (event.code !== 1000) {
-		alert(`Websocket error: ${event.reason}`)
+		console.error(event)
 		renderStatus(syncStatus.desynced)
 		return
 	}
