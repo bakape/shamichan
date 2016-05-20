@@ -68,10 +68,11 @@ export function send(type: message, msg: {}) {
 		console.warn("Attempting to send while socket closed")
 		return
 	}
+	const str = leftPad(type) + JSON.stringify(msg)
 	if (debug) {
-		console.log('<', msg)
+		console.log('<', str)
 	}
-	socket.send(leftPad(type) + JSON.stringify(msg))
+	socket.send(str)
 }
 
 // Ensure message type is always a 2 characters long string
@@ -153,7 +154,7 @@ connSM.act(
 		const msg: SyncRequest = {
 			board: page.get('board'),
 			thread: page.get('thread'),
-			ctr: syncCounter,
+			ctr: syncCounter || 0,
 		}
 		let type = message.synchronise
 
@@ -196,11 +197,6 @@ connSM.wildAct(connEvent.close, connState.dropped, event => {
 	if (attemptTimer) {
 		clearTimeout(attemptTimer)
 		attemptTimer = 0
-	}
-	if (event.code !== 1000) {
-		console.error(event)
-		renderStatus(syncStatus.desynced)
-		return
 	}
 	renderStatus(syncStatus.disconnected)
 
