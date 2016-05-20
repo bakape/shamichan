@@ -1,18 +1,3 @@
-const _ = require('underscore'),
-	admin = require('../server/admin'),
-	amusement = require('../server/amusement'),
-	cache = require('./cache'),
-	common = require('../common'),
-	config = require('../config'),
-	imager = require('../imager'),
-	Muggle = require('../util/etc').Muggle,
-	Promise = require('bluebird'),
-	r = require('rethinkdb'),
-	radio = config.RADIO && require('../server/radio'),
-	{rcon, redis} = global,
-	state = require('../server/state'),
-	tripcode = require('bindings')('tripcode'),
-	util = require('./util')
 
 /**
  * Performs approprite database I/O in response to client websocket messages

@@ -4,10 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
-	"github.com/gorilla/websocket"
-	. "gopkg.in/check.v1"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +12,11 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
+	"github.com/gorilla/websocket"
+	. "gopkg.in/check.v1"
 )
 
 const (
@@ -125,9 +126,14 @@ func (*ClientSuite) TestClose(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	sv.Add(2)
+	cl.closeFeed = make(chan struct{})
+	sv.Add(3)
 	go readWebsocketErrors(c, cl.conn, sv)
 	go readWebsocketErrors(c, wcl, sv)
+	go func() {
+		defer sv.Done()
+		<-cl.closeFeed
+	}()
 	closeClient(c, cl)
 	sv.Wait()
 
@@ -375,7 +381,7 @@ func (*ClientSuite) TestCleanUp(c *C) {
 	defer sv.Close()
 
 	cl, wcl := sv.NewClient()
-	Clients.Add(cl)
+	Clients.Add(cl, "1")
 	c.Assert(Clients.Has(cl.ID), Equals, true)
 	sv.Add(1)
 	go func() {

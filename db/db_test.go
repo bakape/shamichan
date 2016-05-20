@@ -111,14 +111,27 @@ func (*DBSuite) TestDatabaseHelper(c *C) {
 	c.Assert(docs, DeepEquals, []Document{standard})
 }
 
-func (*DBSuite) TestReplicationLog(c *C) {
-	std := [][]byte{{1}, {2}, {3}}
-	thread := types.DatabaseThread{
-		ID:  1,
-		Log: std,
-	}
+func (*DBSuite) TestStreamUpdates(c *C) {
+	thread := types.DatabaseThread{ID: 1}
 	c.Assert(DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
-	log, err := ReplicationLog(1)
+
+	// Empty log
+	read := make(chan []byte, 1)
+	initial, cls, err := StreamUpdates(1, read)
 	c.Assert(err, IsNil)
-	c.Assert(log, DeepEquals, std)
+	c.Assert(initial, DeepEquals, [][]byte{})
+
+	addition := []byte{1, 0, 0, 3, 2}
+	log := [][]byte{addition}
+	update := map[string][][]byte{"log": log}
+	c.Assert(DB(getThread(1).Update(update)).Exec(), IsNil)
+	c.Assert(<-read, DeepEquals, addition)
+	close(cls)
+
+	// Existing data
+	read = make(chan []byte, 1)
+	initial, cls, err = StreamUpdates(1, read)
+	c.Assert(err, IsNil)
+	c.Assert(initial, DeepEquals, log)
+	close(cls)
 }

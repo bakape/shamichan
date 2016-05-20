@@ -2,34 +2,6 @@
 Main redis controller module
  */
 
-const _ = require('underscore'),
-    async = require('async'),
-    caps = require('./server/caps'),
-    common = require('./common'),
-    config = require('./config'),
-    events = require('events'),
-    fs = require('fs'),
-    hooks = require('./util/hooks'),
-	Muggle = require('./util/etc').Muggle,
-	okyaku = require('./server/websockets'),
-	state = require('./server/state'),
-	{hot} = state,
-	cache = state.dbCache,
-	nodeRedis = require('redis'),
-    tail = require('./util/tail'),
-    winston = require('winston');
-
-//Caches. Maps post numbers to threads.
-const OPs = exports.OPs = cache.OPs,
-	// Maps thread numbers to boards
-	BOARDS = exports.boards = cache.boards,
-	// Contains all public redis subscriptions for sharing
-	SUBS = exports.SUBS = cache.threadSubs;
-
-/* REAL-TIME UPDATES */
-
-/* SOCIETY */
-
 // Main database controller class
 class Yakusoku extends events.EventEmitter {
 	constructor(board, ident) {
@@ -284,38 +256,6 @@ Yakusoku.prototype.moderationSpecs = {
 };
 
 exports.Yakusoku = Yakusoku;
-
-/* LURKERS */
-
-// Retrieve post info from cache
-function postInfo(num) {
-	const isOP = num in BOARDS;
-	return {
-		isOP,
-		board: isOP ? BOARDS[num] : BOARDS[OPs[num]]
-	};
-}
-exports.postInfo = postInfo;
-
-/* HELPERS */
-
-function is_board (board) {
-	return config.BOARDS.indexOf(board) >= 0;
-}
-exports.is_board = is_board;
-
-// Format post hash for passing to renderer and clients
-function extract(post) {
-	// Only used internally and should not be exported to clients
-	for (let key of ['ip', 'deleted', 'imgDeleted']) {
-		delete post[key];
-	}
-
-	for (let key of ['num', 'time']) {
-		post[key] = parseInt(post[key], 10);
-	}
-	imager.nestImageProps(post);
-}
 
 function postKey(num, op) {
 	return `${op == num ? 'thread' : 'post'}:${num}`;

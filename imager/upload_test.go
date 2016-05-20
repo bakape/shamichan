@@ -2,15 +2,16 @@ package imager
 
 import (
 	"bytes"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/server/websockets"
-	. "gopkg.in/check.v1"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/server/websockets"
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -158,7 +159,7 @@ func (*Imager) TestParseUploadForm(c *C) {
 
 	// Add client to synced clients map
 	cl := &websockets.Client{}
-	websockets.Clients.Add(cl)
+	websockets.Clients.Add(cl, "1")
 	fields["id"] = cl.ID
 	defer websockets.Clients.Remove(cl.ID)
 

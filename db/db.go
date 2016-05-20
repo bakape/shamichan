@@ -3,6 +3,8 @@ package db
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
@@ -107,8 +109,55 @@ func ThreadCounter(id int64) (counter int64, err error) {
 	return
 }
 
-// ReplicationLog retrieves the replication log of the specified thread
-func ReplicationLog(id int64) (log [][]byte, err error) {
-	err = DB(getThread(id).Field("log")).All(&log)
-	return
+// Precompiled query for extracting only the changed fields from the replication
+// log feed
+var formatUpdateFeed = r.Row.
+	Field("new_val").
+	Field("log").
+	Slice(
+		r.Row.
+			Field("old_val").
+			Field("log").
+			Count().
+			Default(0),
+	)
+
+// StreamUpdates produces a stream of the replication log updates for the
+// specified thread and sends it on read. Close the close channel to stop
+// receiving updates. The intial contents of the log are returned immediately.
+func StreamUpdates(id int64, write chan<- []byte) (
+	[][]byte, chan struct{}, error,
+) {
+	cursor, err := getThread(id).
+		Changes(r.ChangesOpts{IncludeInitial: true}).
+		Map(formatUpdateFeed).
+		Run(RSession)
+	if err != nil {
+		return nil, nil, util.WrapError("Error establishing update feed", err)
+	}
+
+	read := make(chan [][]byte)
+	close := make(chan struct{})
+	cursor.Listen(read)
+	initial := <-read
+
+	go func() {
+		for {
+			select {
+			case messageStack := <-read:
+				// Several update messages may come from the feed at a time.
+				// Separate and send each individually.
+				for _, msg := range messageStack {
+					write <- msg
+				}
+			case <-close:
+				if err := cursor.Close(); err != nil {
+					log.Printf("Error closing update feed: %s\n", err)
+				}
+				return
+			}
+		}
+	}()
+
+	return initial, close, nil
 }

@@ -3,17 +3,19 @@
 package websockets
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/util"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
+	"github.com/gorilla/websocket"
 )
 
 // Overridable for faster testing
@@ -78,8 +80,8 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 type Client struct {
 	synced bool
 	ident  auth.Ident
-	ID     string
 	conn   *websocket.Conn
+	ID     string
 
 	// Internal message receiver channel
 	receive chan receivedMessage
@@ -87,7 +89,11 @@ type Client struct {
 	// Send thread-safely sends a message to the websocket client
 	Send chan []byte
 
+	// Close the client and free all  used resources
 	close chan error
+
+	// Close the currently subscribed to update feed, if any
+	closeFeed chan struct{}
 }
 
 type receivedMessage struct {
@@ -127,12 +133,39 @@ func (c *Client) Listen() error {
 				return err
 			}
 		case msg := <-c.Send:
-			err := c.conn.WriteMessage(websocket.TextMessage, msg)
-			if err != nil {
+			if err := c.send(msg); err != nil {
 				return err
 			}
 		}
 	}
+}
+
+// Sends a message to the client. Not safe for concurent use. Generally, you
+// should be passing []byte to Client.Send instead.
+func (c *Client) send(msg []byte) error {
+	return c.conn.WriteMessage(websocket.TextMessage, msg)
+}
+
+// Format a mesage type as JSON and send it to the client. Not safe for
+// concurent use.
+func (c *Client) sendMessage(typ int, msg interface{}) error {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	encoded := make([]byte, len(data)+2)
+	typeString := strconv.Itoa(typ)
+
+	// Ensure type string is always 2 chars long
+	if len(typeString) == 1 {
+		encoded[0] = '0'
+		encoded[1] = typeString[0]
+	} else {
+		copy(encoded, typeString)
+	}
+
+	copy(encoded[2:], data)
+	return c.send(encoded)
 }
 
 // receiverLoop proxies the blocking conn.ReadMessage() into the main client
@@ -155,7 +188,7 @@ func (c *Client) receiverLoop() {
 				select {
 				case <-c.close:
 				default:
-					close(c.close)
+					c.closeChannels()
 				}
 				return
 			}
@@ -165,6 +198,14 @@ func (c *Client) receiverLoop() {
 				err: err,
 			}
 		}
+	}
+}
+
+// Close channels to exit all running goroutines spawned for this client
+func (c *Client) closeChannels() {
+	close(c.close)
+	if c.closeFeed != nil {
+		close(c.closeFeed)
 	}
 }
 
@@ -243,11 +284,9 @@ func (c *Client) Close(status int, reason string) error {
 	case <-c.close:
 		return nil
 	default:
-		close(c.close) // Stop any looping select statements listening to this
-		return c.conn.WriteControl(
-			websocket.CloseMessage,
-			websocket.FormatCloseMessage(status, reason),
-			time.Now().Add(writeTimeout),
-		)
+		c.closeChannels()
+		msg := websocket.FormatCloseMessage(status, reason)
+		deadline := time.Now().Add(writeTimeout)
+		return c.conn.WriteControl(websocket.CloseMessage, msg, deadline)
 	}
 }
