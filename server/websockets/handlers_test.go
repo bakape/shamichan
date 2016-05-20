@@ -49,10 +49,10 @@ func (*ClientSuite) TestDecodeMessage(c *C) {
 	c.Assert(msg, DeepEquals, std)
 }
 
-func marshalJSON(data interface{}, c *C) []byte {
-	buf, err := json.Marshal(data)
+func marshalJSON(msg interface{}, c *C) []byte {
+	data, err := json.Marshal(msg)
 	c.Assert(err, IsNil)
-	return buf
+	return data
 }
 
 func (*ClientSuite) TestOldFeedClosing(c *C) {
@@ -144,7 +144,6 @@ func (*DB) TestSyncToThread(c *C) {
 	// Receive missed messages
 	sv.Add(1)
 	go cl.Listen()
-	defer closeClient(c, cl)
 	go assertMessage(wcl, backlog1, sv, c)
 	c.Assert(cl.synchronise(data), IsNil)
 	c.Assert(Clients.Has(cl.ID), Equals, true)
@@ -166,4 +165,46 @@ func (*DB) TestSyncToThread(c *C) {
 	sv.Add(1)
 	go assertMessage(wcl, newMessage, sv, c)
 	sv.Wait()
+	closeClient(c, cl)
+
+	// Test that only missed messages get sent as backlog
+	cl, wcl = sv.NewClient()
+	msg.Ctr = 1
+	data = marshalJSON(msg, c)
+	sv.Add(1)
+	go cl.Listen()
+	go assertMessage(wcl, backlog2, sv, c)
+	c.Assert(cl.synchronise(data), IsNil)
+	sv.Wait()
+
+	sv.Add(1)
+	go assertMessage(wcl, newMessage, sv, c)
+	sv.Wait()
+	closeClient(c, cl)
+}
+
+func (*DB) TestMaliciousCounterGuard(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	thread := types.DatabaseThread{
+		ID: 1,
+		Board: "a",
+		Log: [][]byte{{1}},
+	}
+	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
+
+	// Negative counter
+	msg := syncMessage{
+		Board: "a",
+		Thread: 1,
+		Ctr: -10,
+	}
+	data := marshalJSON(msg, c)
+	c.Assert(cl.synchronise(data), Equals, errInvalidCounter)
+
+	// Counter larger than in the database
+	msg.Ctr = 7
+	data = marshalJSON(msg, c)
+	c.Assert(cl.synchronise(data), Equals, errInvalidCounter)
 }

@@ -23,6 +23,7 @@ var (
 	errInvalidStructure = errInvalidMessage("Invalid message structure")
 	errInvalidBoard = errInvalidMessage("Invalid board")
 	errInvalidThread = errInvalidMessage("Invalid thread")
+	errInvalidCounter = errInvalidMessage("Invalid progress counter")
 )
 
 // Decode message JSON into the suplied type
@@ -95,6 +96,13 @@ func (c *Client) syncToThread(board string, thread, ctr int64) error {
 	if err != nil {
 		return err
 	}
+
+	// Guard against malicious counters, that result in out of bounds slicing
+	// panic
+	if int(ctr) < 0 || int(ctr) > len(initial) {
+		return errInvalidCounter
+	}
+
 	c.registerSync(util.IDToString(thread))
 
 	// Send any messages the client is not up to date with
