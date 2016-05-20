@@ -32,6 +32,7 @@ func (d *DBSuite) SetUpSuite(c *C) {
 func (*DBSuite) SetUpTest(_ *C) {
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
+	config.Set(conf)
 }
 
 // Clear all documents from all tables after each test.

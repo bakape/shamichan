@@ -19,11 +19,17 @@ func (e errInvalidMessage) Error() string {
 	return string(e)
 }
 
+var (
+	errInvalidStructure = errInvalidMessage("Invalid message structure")
+	errInvalidBoard = errInvalidMessage("Invalid board")
+	errInvalidThread = errInvalidMessage("Invalid thread")
+)
+
 // Decode message JSON into the suplied type
 func decodeMessage(data []byte, dest interface{}) error {
 	err := json.Unmarshal(data, dest)
 	if err != nil {
-		return errInvalidMessage("Invalid message structure")
+		return errInvalidStructure
 	}
 	return nil
 }
@@ -48,7 +54,7 @@ func (c *Client) synchronise(data []byte) error {
 		return err
 	}
 	if !auth.CanAccessBoard(msg.Board, c.ident) {
-		return errInvalidMessage("Invalid board")
+		return errInvalidBoard
 	}
 
 	if msg.Thread == 0 {
@@ -82,7 +88,7 @@ func (c *Client) syncToThread(board string, thread, ctr int64) error {
 		return err
 	}
 	if !valid {
-		return errInvalidMessage("Invalid thread")
+		return errInvalidThread
 	}
 
 	initial, cls, err := db.StreamUpdates(thread, c.Send)

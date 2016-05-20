@@ -88,3 +88,10 @@ func (c *ClientMap) SendAll(msg []byte) {
 		cl.client.Send <- msg
 	}
 }
+
+// Clear removes all clients from the map
+func (c *ClientMap) Clear() {
+	c.Lock()
+	defer c.Unlock()
+	c.clients = make(map[string]clientContainer)
+}

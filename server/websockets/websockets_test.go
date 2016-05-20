@@ -32,6 +32,11 @@ type ClientSuite struct{}
 
 var _ = Suite(&ClientSuite{})
 
+func (*ClientSuite) SetUpTest(_ *C)  {
+	Clients.Clear()
+	config.Set(config.ServerConfigs{}) // Reset configs on test start
+}
+
 func newRequest(c *C) *http.Request {
 	req, err := http.NewRequest("GET", "/", nil)
 	c.Assert(err, IsNil)
@@ -392,12 +397,9 @@ func (*ClientSuite) TestCleanUp(c *C) {
 }
 
 func normalCloseWebClient(c *C, wcl *websocket.Conn) {
-	err := wcl.WriteControl(
-		websocket.CloseMessage,
-		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
-		time.Now().Add(writeTimeout),
-	)
-	c.Assert(err, IsNil)
+	msg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")
+	deadline := time.Now().Add(writeTimeout)
+	c.Assert(wcl.WriteControl(websocket.CloseMessage, msg, deadline), IsNil)
 }
 
 func readListenErrors(c *C, cl *Client, sv *mockWSServer) {
@@ -411,4 +413,22 @@ func (*ClientSuite) TestHandler(c *C) {
 	defer sv.Close()
 	wcl := dialServer(c, sv)
 	normalCloseWebClient(c, wcl)
+}
+
+func (*ClientSuite) TestSendMessage(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+
+	// 1 char type string
+	sv.Add(1)
+	go assertMessage(wcl, []byte("01null"), sv, c)
+	c.Assert(cl.sendMessage(messageInsertPost, nil), IsNil)
+	sv.Wait()
+
+	// 2 char type string
+	sv.Add(1)
+	go assertMessage(wcl, []byte("30null"), sv, c)
+	c.Assert(cl.sendMessage(messageSynchronise, nil), IsNil)
+	sv.Wait()
 }
