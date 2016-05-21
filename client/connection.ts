@@ -190,13 +190,9 @@ connSM.act([connState.syncing], connEvent.sync, connState.synced, id => {
 })
 
 connSM.wildAct(connEvent.close, connState.dropped, event => {
-	nullSocket()
+	clearModuleState()
 	if (debug) {
 		console.error(event)
-	}
-	if (attemptTimer) {
-		clearTimeout(attemptTimer)
-		attemptTimer = 0
 	}
 	renderStatus(syncStatus.disconnected)
 
@@ -208,6 +204,14 @@ connSM.wildAct(connEvent.close, connState.dropped, event => {
 	setTimeout(connSM.feeder(connEvent.retry), wait)
 })
 
+function clearModuleState() {
+	nullSocket()
+	if (attemptTimer) {
+		clearTimeout(attemptTimer)
+		attemptTimer = 0
+	}
+}
+
 connSM.act([connState.dropped], connEvent.retry, connState.reconnecting, () => {
 	connect()
 
@@ -217,6 +221,12 @@ connSM.act([connState.dropped], connEvent.retry, connState.reconnecting, () => {
 			renderStatus(syncStatus.connecting)
 		}
 	}, 100)
+})
+
+// Invalid message or some other critical error
+connSM.wildAct(connEvent.error, connState.desynced, () => {
+	renderStatus(syncStatus.desynced)
+	clearModuleState()
 })
 
 export function start() {

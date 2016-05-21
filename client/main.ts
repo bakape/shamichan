@@ -5,7 +5,9 @@
 
  // TODO: Remove, when proper structure done
 import * as options from './options'
+import * as client from './client'
 const o = options
+const c = client
 
 import {displayLoading} from './state'
 import {exec} from './defer'
