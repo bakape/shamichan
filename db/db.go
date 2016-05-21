@@ -3,7 +3,6 @@ package db
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -125,39 +124,33 @@ var formatUpdateFeed = r.Row.
 // StreamUpdates produces a stream of the replication log updates for the
 // specified thread and sends it on read. Close the close channel to stop
 // receiving updates. The intial contents of the log are returned immediately.
-func StreamUpdates(id int64, write chan<- []byte) (
-	[][]byte, chan struct{}, error,
-) {
+func StreamUpdates(
+	id int64,
+	write chan<- []byte,
+	closer *util.AtomicCloser,
+) ([][]byte, error) {
 	cursor, err := getThread(id).
 		Changes(r.ChangesOpts{IncludeInitial: true}).
 		Map(formatUpdateFeed).
 		Run(RSession)
 	if err != nil {
-		return nil, nil, util.WrapError("Error establishing update feed", err)
+		return nil, util.WrapError("Error establishing update feed", err)
 	}
 
 	read := make(chan [][]byte)
-	close := make(chan struct{})
 	cursor.Listen(read)
 	initial := <-read
 
 	go func() {
-		for {
-			select {
-			case messageStack := <-read:
-				// Several update messages may come from the feed at a time.
-				// Separate and send each individually.
-				for _, msg := range messageStack {
-					write <- msg
-				}
-			case <-close:
-				if err := cursor.Close(); err != nil {
-					log.Printf("Error closing update feed: %s\n", err)
-				}
-				return
+		for closer.IsOpen() {
+			// Several update messages may come from the feed at a time.
+			// Separate and send each individually.
+			messageStack := <-read
+			for _, msg := range messageStack {
+				write <- msg
 			}
 		}
 	}()
 
-	return initial, close, nil
+	return initial, nil
 }

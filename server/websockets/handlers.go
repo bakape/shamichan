@@ -21,9 +21,9 @@ func (e errInvalidMessage) Error() string {
 
 var (
 	errInvalidStructure = errInvalidMessage("Invalid message structure")
-	errInvalidBoard = errInvalidMessage("Invalid board")
-	errInvalidThread = errInvalidMessage("Invalid thread")
-	errInvalidCounter = errInvalidMessage("Invalid progress counter")
+	errInvalidBoard     = errInvalidMessage("Invalid board")
+	errInvalidThread    = errInvalidMessage("Invalid thread")
+	errInvalidCounter   = errInvalidMessage("Invalid progress counter")
 )
 
 // Decode message JSON into the suplied type
@@ -45,9 +45,9 @@ type syncMessage struct {
 // receive update messages.
 func (c *Client) synchronise(data []byte) error {
 	// Close previous update feed, if any
-	if c.closeFeed != nil {
-		close(c.closeFeed)
-		c.closeFeed = nil
+	if c.updateFeedCloser != nil && c.updateFeedCloser.IsOpen() {
+		c.updateFeedCloser.Close()
+		c.updateFeedCloser = nil
 	}
 
 	var msg syncMessage
@@ -92,7 +92,8 @@ func (c *Client) syncToThread(board string, thread, ctr int64) error {
 		return errInvalidThread
 	}
 
-	initial, cls, err := db.StreamUpdates(thread, c.Send)
+	closer := new(util.AtomicCloser)
+	initial, err := db.StreamUpdates(thread, c.Send, closer)
 	if err != nil {
 		return err
 	}
@@ -100,17 +101,17 @@ func (c *Client) syncToThread(board string, thread, ctr int64) error {
 	// Guard against malicious counters, that result in out of bounds slicing
 	// panic
 	if int(ctr) < 0 || int(ctr) > len(initial) {
+		closer.Close()
 		return errInvalidCounter
 	}
 
+	c.updateFeedCloser = closer
 	c.registerSync(util.IDToString(thread))
 
 	// Send any messages the client is not up to date with
 	for _, loggedMessage := range initial[ctr:] {
 		c.Send <- loggedMessage
 	}
-
-	c.closeFeed = cls
 
 	return c.sendMessage(messageSynchronise, c.ID)
 }

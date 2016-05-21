@@ -3,11 +3,12 @@ package util
 import (
 	"bytes"
 	"errors"
-	. "gopkg.in/check.v1"
 	"log"
 	"os"
 	"strings"
 	"testing"
+
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -90,4 +91,11 @@ func (*Util) TestWaterfall(c *C) {
 	}
 	c.Assert(Waterfall(fns), ErrorMatches, "foo")
 	c.Assert(wasRun, Equals, 2)
+}
+
+func (*Util) TestAtomicCloser(c *C) {
+	ac := AtomicCloser{}
+	c.Assert(ac.IsOpen(), Equals, true)
+	ac.Close()
+	c.Assert(ac.IsOpen(), Equals, false)
 }

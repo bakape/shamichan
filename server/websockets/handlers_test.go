@@ -2,17 +2,19 @@ package websockets
 
 import (
 	"encoding/json"
-	. "gopkg.in/check.v1"
+
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
+	. "gopkg.in/check.v1"
 )
 
 var _ = Suite(&DB{})
 
 // Tests that require database access
-type DB struct{
+type DB struct {
 	dbName string
 }
 
@@ -22,7 +24,7 @@ func (d *DB) SetUpSuite(c *C) {
 	c.Assert(db.InitDB(d.dbName), IsNil)
 }
 
-func (d *DB) SetUpTest(c *C)  {
+func (d *DB) SetUpTest(c *C) {
 	Clients.Clear()
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
@@ -60,16 +62,17 @@ func (*ClientSuite) TestOldFeedClosing(c *C) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 
-	closeFeed := make(chan struct{})
-	cl.closeFeed = closeFeed
+	closer := new(util.AtomicCloser)
+	cl.updateFeedCloser = closer
 	sv.Add(1)
 	go func() {
 		defer sv.Done()
-		<-closeFeed
+		for closer.IsOpen() {
+		}
 	}()
 	cl.synchronise(nil)
 	sv.Wait()
-	c.Assert(cl.closeFeed, IsNil)
+	c.Assert(cl.updateFeedCloser, IsNil)
 }
 
 func (*ClientSuite) TestSyncToBoard(c *C) {
@@ -86,7 +89,7 @@ func (*ClientSuite) TestSyncToBoard(c *C) {
 	// Invalid board
 	msg := syncMessage{
 		Thread: 0,
-		Board: "c",
+		Board:  "c",
 	}
 	data := marshalJSON(msg, c)
 	c.Assert(cl.synchronise(data), Equals, errInvalidBoard)
@@ -118,13 +121,12 @@ func (*ClientSuite) TestRegisterSync(c *C) {
 	c.Assert(Clients.clients[cl.ID].syncID, Equals, "2")
 }
 
-
 func (*DB) TestSyncToThread(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	msg := syncMessage{
-		Board: "a",
+		Board:  "a",
 		Thread: 1,
 	}
 
@@ -132,12 +134,12 @@ func (*DB) TestSyncToThread(c *C) {
 	data := marshalJSON(msg, c)
 	c.Assert(cl.synchronise(data), Equals, errInvalidThread)
 
-	backlog1 := []byte{1,2,3}
-	backlog2 := []byte{4,5,6}
+	backlog1 := []byte{1, 2, 3}
+	backlog2 := []byte{4, 5, 6}
 	thread := types.DatabaseThread{
-		ID: 1,
+		ID:    1,
 		Board: "a",
-		Log: [][]byte{backlog1, backlog2},
+		Log:   [][]byte{backlog1, backlog2},
 	}
 	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
 
@@ -156,7 +158,7 @@ func (*DB) TestSyncToThread(c *C) {
 	sv.Wait()
 
 	// Receive new messages
-	newMessage := []byte{7,8,9}
+	newMessage := []byte{7, 8, 9}
 	update := map[string]r.Term{
 		"log": r.Row.Field("log").Append(newMessage),
 	}
@@ -165,7 +167,7 @@ func (*DB) TestSyncToThread(c *C) {
 	sv.Add(1)
 	go assertMessage(wcl, newMessage, sv, c)
 	sv.Wait()
-	closeClient(c, cl)
+	cl.Close(nil)
 
 	// Test that only missed messages get sent as backlog
 	cl, wcl = sv.NewClient()
@@ -180,7 +182,7 @@ func (*DB) TestSyncToThread(c *C) {
 	sv.Add(1)
 	go assertMessage(wcl, newMessage, sv, c)
 	sv.Wait()
-	closeClient(c, cl)
+	cl.Close(nil)
 }
 
 func (*DB) TestMaliciousCounterGuard(c *C) {
@@ -188,17 +190,17 @@ func (*DB) TestMaliciousCounterGuard(c *C) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	thread := types.DatabaseThread{
-		ID: 1,
+		ID:    1,
 		Board: "a",
-		Log: [][]byte{{1}},
+		Log:   [][]byte{{1}},
 	}
 	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
 
 	// Negative counter
 	msg := syncMessage{
-		Board: "a",
+		Board:  "a",
 		Thread: 1,
-		Ctr: -10,
+		Ctr:    -10,
 	}
 	data := marshalJSON(msg, c)
 	c.Assert(cl.synchronise(data), Equals, errInvalidCounter)

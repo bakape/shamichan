@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -117,7 +118,8 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 
 	// Empty log
 	read := make(chan []byte, 1)
-	initial, cls, err := StreamUpdates(1, read)
+	closer := new(util.AtomicCloser)
+	initial, err := StreamUpdates(1, read, closer)
 	c.Assert(err, IsNil)
 	c.Assert(initial, DeepEquals, [][]byte{})
 
@@ -126,12 +128,13 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 	update := map[string][][]byte{"log": log}
 	c.Assert(DB(getThread(1).Update(update)).Exec(), IsNil)
 	c.Assert(<-read, DeepEquals, addition)
-	close(cls)
+	closer.Close()
 
 	// Existing data
 	read = make(chan []byte, 1)
-	initial, cls, err = StreamUpdates(1, read)
+	closer = new(util.AtomicCloser)
+	initial, err = StreamUpdates(1, read, closer)
 	c.Assert(err, IsNil)
 	c.Assert(initial, DeepEquals, log)
-	close(cls)
+	closer.Close()
 }

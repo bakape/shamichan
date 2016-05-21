@@ -11,6 +11,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -99,4 +100,26 @@ func RandomID(length int) string {
 		buf[i] = randSource[rand.Int63()%int64(len(randSource))]
 	}
 	return string(buf)
+}
+
+// AtomicCloser is a simple boolean guarded by a mutex for atomically managing
+// a shared close/open state from multiple goroutines. Can be safely emebedded
+// into other structs.
+type AtomicCloser struct {
+	closed bool
+	sync.RWMutex
+}
+
+// IsOpen returns, if AtomicCloser is still open
+func (a *AtomicCloser) IsOpen() bool {
+	a.RLock()
+	defer a.RUnlock()
+	return !a.closed
+}
+
+// Close closes AtomicCloser
+func (a *AtomicCloser) Close() {
+	a.Lock()
+	defer a.Unlock()
+	a.closed = true
 }

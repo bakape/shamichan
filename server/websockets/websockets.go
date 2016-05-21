@@ -4,7 +4,6 @@ package websockets
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -42,6 +41,21 @@ const (
 var upgrader = websocket.Upgrader{
 	HandshakeTimeout: 5 * time.Second,
 	CheckOrigin:      CheckOrigin,
+}
+
+// errInvalidPayload denotes a malformed messages received from the client
+type errInvalidPayload []byte
+
+func (e errInvalidPayload) Error() string {
+	return fmt.Sprintf("Invalid message: %s", string(e))
+}
+
+// errInvalidFrame denotes an invalid websocket frame in some other way than
+// errInvalidMessage
+type errInvalidFrame string
+
+func (e errInvalidFrame) Error() string {
+	return string(e)
 }
 
 // CheckOrigin asserts the client matches the origin specified by the server or
@@ -84,6 +98,8 @@ type Client struct {
 	ident  auth.Ident
 	conn   *websocket.Conn
 	ID     string
+	util.AtomicCloser
+	updateFeedCloser *util.AtomicCloser
 
 	// Internal message receiver channel
 	receive chan receivedMessage
@@ -93,15 +109,11 @@ type Client struct {
 
 	// Close the client and free all  used resources
 	close chan error
-
-	// Close the currently subscribed to update feed, if any
-	closeFeed chan struct{}
 }
 
 type receivedMessage struct {
 	typ int
 	msg []byte
-	err error
 }
 
 // newClient creates a new websocket client
@@ -118,28 +130,63 @@ func newClient(conn *websocket.Conn) *Client {
 }
 
 // Listen listens for incoming messages on the channels and processes them
-func (c *Client) Listen() error {
-	// Clean up, when loop exits
-	defer Clients.Remove(c.ID)
-
+func (c *Client) Listen() (err error) {
 	go c.receiverLoop()
+
+outer:
 	for {
 		select {
-		case <-c.close:
-			return nil
+		case err = <-c.close:
+			break outer
 		case msg := <-c.receive:
-			if msg.err != nil {
-				return msg.err
-			}
-			if err := c.handleMessage(msg.typ, msg.msg); err != nil {
-				return err
+			err = c.handleMessage(msg.typ, msg.msg)
+			if err != nil {
+				break outer
 			}
 		case msg := <-c.Send:
-			if err := c.send(msg); err != nil {
-				return err
+			err = c.send(msg)
+			if err != nil {
+				break outer
 			}
 		}
 	}
+
+	// Clean up, when loop exits
+	Clients.Remove(c.ID)
+	return c.closeConnections(err)
+}
+
+// Close all conections aso
+func (c *Client) closeConnections(err error) error {
+	// Close client and update feed
+	c.AtomicCloser.Close()
+	if c.updateFeedCloser != nil {
+		c.updateFeedCloser.Close()
+	}
+
+	// Send the client the reason for closing
+	switch err.(type) {
+	case errInvalidPayload, errInvalidFrame:
+		c.sendMessage(messageInvalid, err.Error())
+	}
+
+	// Ignore normal client-side websocket closure
+	normalClosure := websocket.IsCloseError(
+		err,
+		websocket.CloseNormalClosure,
+		websocket.CloseGoingAway,
+	)
+	if normalClosure {
+		err = nil
+	}
+
+	// Close socket
+	closeError := c.conn.Close()
+	if closeError != nil {
+		err = util.WrapError(closeError.Error(), err)
+	}
+
+	return err
 }
 
 // Sends a message to the client. Not safe for concurent use. Generally, you
@@ -180,65 +227,44 @@ func (c *Client) receiverLoop() {
 		return nil
 	})
 
-	for {
-		select {
-		case <-c.close:
-			return
-		default:
-			typ, msg, err := c.conn.ReadMessage() // Blocking
-			if err != nil {
-				select {
-				case <-c.close:
-				default:
-					c.closeChannels()
-				}
-				return
-			}
-			c.receive <- receivedMessage{
-				typ: typ,
-				msg: msg,
-				err: err,
-			}
+	for c.IsOpen() {
+		typ, msg, err := c.conn.ReadMessage() // Blocking
+		if err != nil {
+			c.Close(err)
+			break
 		}
-	}
-}
-
-// Close channels to exit all running goroutines spawned for this client
-func (c *Client) closeChannels() {
-	close(c.close)
-	if c.closeFeed != nil {
-		close(c.closeFeed)
+		c.receive <- receivedMessage{
+			typ: typ,
+			msg: msg,
+		}
 	}
 }
 
 // handleMessage parses a message received from the client through websockets
 func (c *Client) handleMessage(msgType int, msg []byte) error {
 	if msgType != websocket.TextMessage {
-		return c.Close(
-			websocket.CloseUnsupportedData,
-			"Only text frames allowed",
-		)
+		return errInvalidFrame("Only text frames allowed")
 	}
 	if c.ident.Banned {
-		return c.Close(websocket.ClosePolicyViolation, "You are banned")
+		return errInvalidFrame("You are banned")
 	}
 	if len(msg) < 3 {
-		return c.invalidPayload(msg)
+		return errInvalidPayload(msg)
 	}
 
 	// First two characters of a message define its type
 	typ, err := strconv.Atoi(string(msg[:2]))
 	if err != nil {
-		return c.invalidPayload(msg)
+		return errInvalidPayload(msg)
 	}
 	if !c.synced && typ != messageSynchronise && typ != messageResynchronise {
-		return c.invalidPayload(msg)
+		return errInvalidPayload(msg)
 	}
 
 	if err := c.runHandler(typ, msg); err != nil {
 		switch err := err.(type) {
 		case errInvalidMessage:
-			return c.passError(msg, err)
+			return util.WrapError(err.Error(), errInvalidPayload(msg))
 		default:
 			return err
 		}
@@ -255,42 +281,19 @@ func (c *Client) runHandler(typ int, msg []byte) error {
 	case messageResynchronise:
 		return c.resynchronise(data)
 	default:
-		return c.invalidPayload(msg)
+		return errInvalidPayload(msg)
 	}
-}
-
-// invalidPayload handles malformed messages received from the client
-func (c *Client) invalidPayload(msg []byte) error {
-	return c.passError(msg, "Invalid message")
-}
-
-// Like invalidPayload, but allows passing a more detailed reason to the client.
-func (c *Client) passError(msg []byte, reason interface{}) error {
-	errMsg := fmt.Sprintf("%s: %s", reason, msg)
-	err := c.Close(websocket.CloseInvalidFramePayloadData, errMsg)
-	if err != nil {
-		return util.WrapError(errMsg, err)
-	}
-	return errors.New(errMsg)
 }
 
 // logError writes the client's websocket error to the error log (or stdout)
-// and closes the websocket connection, if not already closed.
 func (c *Client) logError(err error) {
 	log.Printf("Error by %s: %v\n", c.ident.IP, err)
-	c.Close(websocket.CloseInternalServerErr, err.Error())
 }
 
 // Close closes a websocket connection with the provided status code and
 // optional reason
-func (c *Client) Close(status int, reason string) error {
-	select {
-	case <-c.close:
-		return nil
-	default:
-		c.closeChannels()
-		msg := websocket.FormatCloseMessage(status, reason)
-		deadline := time.Now().Add(writeTimeout)
-		return c.conn.WriteControl(websocket.CloseMessage, msg, deadline)
+func (c *Client) Close(err error) {
+	if c.IsOpen() {
+		c.close <- err
 	}
 }
