@@ -119,11 +119,9 @@ type receivedMessage struct {
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn) *Client {
 	return &Client{
-		ident: auth.LookUpIdent(conn.RemoteAddr().String()),
-
-		// Without buffering, a busy client would block the entire sender
-		Send:    make(chan []byte, 1),
-		close:   make(chan error, 1),
+		ident:   auth.LookUpIdent(conn.RemoteAddr().String()),
+		Send:    make(chan []byte),
+		close:   make(chan error),
 		receive: make(chan receivedMessage),
 		conn:    conn,
 	}
@@ -156,13 +154,15 @@ outer:
 	return c.closeConnections(err)
 }
 
-// Close all conections aso
+// Close all conections an goroutines asociated with the Client
 func (c *Client) closeConnections(err error) error {
 	// Close client and update feed
 	c.AtomicCloser.Close()
 	if c.updateFeedCloser != nil {
 		c.updateFeedCloser.Close()
 	}
+	close(c.Send)
+	close(c.close)
 
 	// Send the client the reason for closing
 	switch err.(type) {
