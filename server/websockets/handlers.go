@@ -108,12 +108,19 @@ func (c *Client) syncToThread(board string, thread, ctr int64) error {
 	c.updateFeedCloser = closer
 	c.registerSync(util.IDToString(thread))
 
-	// Send any messages the client is not up to date with
-	for _, loggedMessage := range initial[ctr:] {
-		c.Send <- loggedMessage
+	// Send the client its ID
+	if err := c.sendMessage(messageSynchronise, c.ID); err != nil {
+		return err
 	}
 
-	return c.sendMessage(messageSynchronise, c.ID)
+	// Send any messages the client is behind on
+	for _, loggedMessage := range initial[ctr:] {
+		if err := c.send(loggedMessage); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Syncronise the client after a disconnect and restore any post in progress,

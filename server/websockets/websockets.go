@@ -198,11 +198,21 @@ func (c *Client) send(msg []byte) error {
 // Format a mesage type as JSON and send it to the client. Not safe for
 // concurent use.
 func (c *Client) sendMessage(typ int, msg interface{}) error {
-	data, err := json.Marshal(msg)
+	encoded, err := encodeMessage(typ, msg)
 	if err != nil {
 		return err
 	}
-	encoded := make([]byte, len(data)+2)
+	return c.send(encoded)
+}
+
+// Encodes a message for sending through websockets. Separate function, so it
+// can be used in tests.1
+func encodeMessage(typ int, msg interface{}) (encoded []byte, err error) {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return
+	}
+	encoded = make([]byte, len(data)+2)
 	typeString := strconv.Itoa(typ)
 
 	// Ensure type string is always 2 chars long
@@ -214,7 +224,7 @@ func (c *Client) sendMessage(typ int, msg interface{}) error {
 	}
 
 	copy(encoded[2:], data)
-	return c.send(encoded)
+	return
 }
 
 // receiverLoop proxies the blocking conn.ReadMessage() into the main client

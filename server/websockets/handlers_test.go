@@ -8,6 +8,7 @@ import (
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
+	"github.com/gorilla/websocket"
 	. "gopkg.in/check.v1"
 )
 
@@ -34,6 +35,19 @@ func (d *DB) SetUpTest(c *C) {
 	}
 }
 
+func syncAssertMessage(conn *websocket.Conn, msg []byte, c *C) {
+	typ, buf, err := conn.ReadMessage()
+	c.Assert(err, IsNil)
+	c.Assert(typ, Equals, websocket.TextMessage)
+	c.Assert(buf, DeepEquals, msg)
+}
+
+func marshalJSON(msg interface{}, c *C) []byte {
+	data, err := json.Marshal(msg)
+	c.Assert(err, IsNil)
+	return data
+}
+
 func (*ClientSuite) TestDecodeMessage(c *C) {
 	// Unparsable message
 	var msg syncMessage
@@ -49,12 +63,6 @@ func (*ClientSuite) TestDecodeMessage(c *C) {
 	data := marshalJSON(std, c)
 	c.Assert(decodeMessage(data, &msg), IsNil)
 	c.Assert(msg, DeepEquals, std)
-}
-
-func marshalJSON(msg interface{}, c *C) []byte {
-	data, err := json.Marshal(msg)
-	c.Assert(err, IsNil)
-	return data
 }
 
 func (*ClientSuite) TestOldFeedClosing(c *C) {
@@ -121,19 +129,29 @@ func (*ClientSuite) TestRegisterSync(c *C) {
 	c.Assert(Clients.clients[cl.ID].syncID, Equals, "2")
 }
 
-func (*DB) TestSyncToThread(c *C) {
+func (*DB) TestInvalidThreadSync(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
-	cl, wcl := sv.NewClient()
+	cl, _ := sv.NewClient()
 	msg := syncMessage{
 		Board:  "a",
 		Thread: 1,
 	}
-
-	// Invalid thread in request
 	data := marshalJSON(msg, c)
 	c.Assert(cl.synchronise(data), Equals, errInvalidThread)
+}
 
+func (*DB) TestSyncToThread(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+	sv.Add(1)
+	go readListenErrors(c, cl, sv)
+	msg := syncMessage{
+		Board:  "a",
+		Thread: 1,
+	}
+	data := marshalJSON(msg, c)
 	backlog1 := []byte{1, 2, 3}
 	backlog2 := []byte{4, 5, 6}
 	thread := types.DatabaseThread{
@@ -142,47 +160,63 @@ func (*DB) TestSyncToThread(c *C) {
 		Log:   [][]byte{backlog1, backlog2},
 	}
 	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
-
-	// Receive missed messages
-	sv.Add(1)
-	go cl.Listen()
-	go assertMessage(wcl, backlog1, sv, c)
 	c.Assert(cl.synchronise(data), IsNil)
 	c.Assert(Clients.Has(cl.ID), Equals, true)
 	c.Assert(Clients.clients[cl.ID].syncID, Equals, "1")
-	sv.Wait()
 
-	// Second message
-	sv.Add(1)
-	go assertMessage(wcl, backlog2, sv, c)
-	sv.Wait()
+	assertSyncResponse(wcl, cl, c)      // Receive client ID
+	syncAssertMessage(wcl, backlog1, c) // Receive first missed message
+	syncAssertMessage(wcl, backlog2, c) // Second message
 
-	// Receive new messages
+	// Receive new message
 	newMessage := []byte{7, 8, 9}
 	update := map[string]r.Term{
 		"log": r.Row.Field("log").Append(newMessage),
 	}
 	c.Assert(db.DB(r.Table("threads").Get(1).Update(update)).Exec(), IsNil)
-
-	sv.Add(1)
-	go assertMessage(wcl, newMessage, sv, c)
-	sv.Wait()
+	syncAssertMessage(wcl, newMessage, c)
 	cl.Close(nil)
+	sv.Wait()
+}
 
-	// Test that only missed messages get sent as backlog
-	cl, wcl = sv.NewClient()
-	msg.Ctr = 1
-	data = marshalJSON(msg, c)
+func assertSyncResponse(wcl *websocket.Conn, cl *Client, c *C) {
+	res, err := encodeMessage(messageSynchronise, cl.ID)
+	c.Assert(err, IsNil)
+	syncAssertMessage(wcl, res, c)
+}
+
+// Test that only missed messages get sent as backlog.
+func (*DB) TestOnlyMissedMessageSyncing(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
 	sv.Add(1)
-	go cl.Listen()
-	go assertMessage(wcl, backlog2, sv, c)
+	go readListenErrors(c, cl, sv)
+
+	msg := syncMessage{
+		Board:  "a",
+		Thread: 1,
+		Ctr:    1,
+	}
+	data := marshalJSON(msg, c)
+	backlogs := [][]byte{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}
+	thread := types.DatabaseThread{
+		ID:    1,
+		Board: "a",
+		Log:   backlogs,
+	}
+	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
+
 	c.Assert(cl.synchronise(data), IsNil)
-	sv.Wait()
-
-	sv.Add(1)
-	go assertMessage(wcl, newMessage, sv, c)
-	sv.Wait()
+	assertSyncResponse(wcl, cl, c)         // Receive client ID
+	syncAssertMessage(wcl, backlogs[1], c) // Receive first missed message
+	syncAssertMessage(wcl, backlogs[2], c) // Second missed message
 	cl.Close(nil)
+	sv.Wait()
 }
 
 func (*DB) TestMaliciousCounterGuard(c *C) {
