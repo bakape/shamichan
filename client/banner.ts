@@ -12,7 +12,7 @@ function highlightBanner() {
 	if (localStorage.getItem('optionsSeen')) {
 		return
 	}
-	const el = document.query('#banner-options')
+	const el = document.querySelector('#banner-options')
 	el.style.opacity = '1'
 	let out = true,
 		clicked: boolean
@@ -56,7 +56,7 @@ export class BannerModal extends Modal {
 
 		// Add click listener to the toggle button of the modal in the banner
 		document
-			.query('#banner-' + (this.id as string).split('-')[0])
+			.querySelector('#banner-' + (this.id as string).split('-')[0])
 			.addEventListener('click', () => this.toggle(), {capture: true})
 	}
 
@@ -90,7 +90,7 @@ export class BannerModal extends Modal {
 // Frequently asked question and other information modal
 class FAQPanel extends BannerModal {
 	constructor() {
-		super({el: document.query('#FAQ-panel')})
+		super({el: document.querySelector('#FAQ-panel')})
 		this.render()
 	}
 
@@ -109,13 +109,13 @@ defer(() => new FAQPanel())
 // Name and email input pannel
 class IdentityPanel extends BannerModal {
 	constructor() {
-		super({el: document.query('#identity-panel')})
+		super({el: document.querySelector('#identity-panel')})
 		write(() => this.render())
 	}
 
 	render() {
-		this.el.query('label[for=name]').textContent = lang.name
-		this.el.query('label[for=email]').textContent = lang.email
+		this.el.querySelector('label[for=name]').textContent = lang.name
+		this.el.querySelector('label[for=email]').textContent = lang.email
 	}
 }
 
@@ -132,5 +132,5 @@ function localiseTitles() {
 defer(() =>	write(localiseTitles))
 
 function setTitle(id: string, langID: string) {
-	document.query('#' + id).setAttribute('title', lang[langID])
+	document.querySelector('#' + id).setAttribute('title', lang[langID])
 }

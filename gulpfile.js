@@ -71,6 +71,13 @@ gulp.task('vendor', () => {
 	}
 })
 
+tasks.push('polyfill')
+gulp.task('polyfill', () => {
+	const path = './client/polyfill.js',
+		dest = './www/js/scripts/polyfill.js'
+	fs.copySync(path, dest, {clobber: true})
+})
+
 compileVendor('fetch', 'node_modules/whatwg-fetch/fetch.js')
 
 // Client for legacy browsers. Must be run in a separate gulp invocation,

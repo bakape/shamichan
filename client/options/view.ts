@@ -11,7 +11,7 @@ export default class OptionsPanel extends BannerModal {
 	$hidden: Element
 
 	constructor() {
-		super({el: document.query('#options-panel')})
+		super({el: document.querySelector('#options-panel')})
 		this.render()
 		this.onClick({
 			'.tab_link': e => this.switchTab(e),
@@ -29,7 +29,7 @@ export default class OptionsPanel extends BannerModal {
 			this.el.innerHTML = html
 			this.assignValues()
 		})
-		read(() => this.$hidden = this.el.query('#hidden'))
+		read(() => this.$hidden = this.el.querySelector('#hidden'))
 
 		// TODO: Hidden posts count rendering
 		// events.reply('hide:render', this.renderHidden, this)
@@ -40,7 +40,7 @@ export default class OptionsPanel extends BannerModal {
 	assignValues() {
 		for (let id in models) {
 			const model = models[id],
-				el = this.el.query('#' + id),
+				el = this.el.querySelector('#' + id),
 				val = model.get()
 			switch (model.spec.type) {
 			case optionType.checkbox:
@@ -99,7 +99,7 @@ export default class OptionsPanel extends BannerModal {
 
 			// Deselect previous tab
 			each<Element>(this.el.children, el =>
-				el.query('.tab_sel').classList.remove('tab_sel'))
+				el.querySelector('.tab_sel').classList.remove('tab_sel'))
 
 			// Select the new one
 			el.classList.add('tab_sel')
@@ -123,7 +123,7 @@ export default class OptionsPanel extends BannerModal {
 	// Import options from uploaded JSON file
 	importConfigs(event: Event) {
 		// Proxy to hidden file input
-		const el = document.query('#importSettings')
+		const el = document.querySelector('#importSettings')
 		el.click()
 		this.onceAll('change', () => {
 			const reader = new FileReader()

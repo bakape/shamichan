@@ -6,7 +6,7 @@
  // TODO: Remove, when proper structure done
 import * as options from './options'
 import * as client from './client'
-const o = options
+const o = options // Prevents the compiler from removing as an unused import
 const c = client
 
 import {displayLoading} from './state'

@@ -7,7 +7,17 @@
 	// Check for browser compatibility by trying to detect some ES6 features
 	function check(func) {
 		try {
-			return eval('(function(){' + func + '})();')
+			return eval('(function(){' + func + '})()')
+		}
+		catch(e) {
+			return false
+		}
+	}
+
+	// Check if a browser API function is defined
+	function checkFunction(func) {
+		try {
+			return typeof eval(func) === 'function'
 		}
 		catch(e) {
 			return false
@@ -38,8 +48,6 @@
 			+ 'class B {constructor(a) {  passed = (a === "barbaz")}};'
 			+ 'class C extends B {constructor(a) {super("bar" + a)}};'
 			+ 'new C("baz"); return passed;',
-		// Promises
-		'return typeof Promise === "function"',
 		// Default parameters
 		'return (function (a = 1, b = 2) { return a === 3 && b === 2; }(3));',
 		// Destructuring decliration
@@ -47,9 +55,36 @@
 		// Parameter destructuring
 		'return function([a,,[b],c]){return a===5 && b===6 && c===undefined;}'
 			+ '([5,null,[6]])',
-		// Fetch API
-		'return typeof window.fetch === "function"'
+		// Generators
+		'function * generator(){yield 5; yield 6};'
+			+ 'var iterator = generator();'
+			+ 'var item = iterator.next();'
+			+ 'var passed = item.value === 5 && item.done === false;'
+			+ 'item = iterator.next();'
+			+ 'passed &= item.value === 6 && item.done === false;'
+			+ 'item = iterator.next();'
+			+ 'passed &= item.value === undefined && item.done === true;'
+			+ 'return passed;'
 	]
+
+	var functionTests = [
+		// Promises
+		'Promise ',
+		// Fetch API
+		'window.fetch',
+		// DOM level 4 methods
+		'Element.prototype.remove',
+		// DOM 3 query methods
+		'Element.prototype.querySelector',
+		'Element.prototype.querySelectorAll'
+	]
+
+	for (var i = 0; i < functionTests.length; i++) {
+		if (!checkFunction(functionTests[i])) {
+			window.legacy = true
+			break
+		}
+	}
 
 	for (var i = 0; i < tests.length; i++) {
 		if (!check(tests[i])) {
@@ -59,12 +94,16 @@
 	}
 
 	var scriptCount = 0,
-		polyfills = ['dom4'],
+		polyfills = [],
 		legacy = window.legacy
 
-	// Stuff them full of hot, fat and juicy polyfills, if even one test failed.
 	if (legacy) {
-		polyfills.push('core.min', 'fetch')
+		// Stuff them full of hot, fat and juicy polyfills, if even one test
+		// failed
+		polyfills.push('vendor/dom4', 'vendor/core.min', 'vendor/fetch')
+	} else {
+		// Minimalistic polyfill for modern browsers
+		polyfills.push('scripts/polyfill')
 	}
 
 	var head = document.getElementsByTagName('head')[0]
@@ -82,7 +121,7 @@
 			throw new Error("Error fetching language pack: " + this.status)
 		}
 		window.lang = this.response
-		loadClient()
+		checkAllLoaded()
 	}
 	xhr.send()
 
@@ -90,19 +129,21 @@
 		scriptCount++
 		var script = document.createElement('script')
 		script.type = 'text/javascript'
-		script.src = '/ass/js/vendor/' + polyfills[i] + '.js'
-		script.onload = loadClient
+		script.src = '/ass/js/' + polyfills[i] + '.js'
+		script.onload = checkAllLoaded
 		head.appendChild(script)
 	}
 
-	function loadClient() {
+	function checkAllLoaded() {
 		// This function might be called multiple times. Only load the client,
 		// when all polyfills are loaded.
 		scriptCount--
-		if (scriptCount !== 0) {
-			return
+		if (scriptCount === 0) {
+			loadClient()
 		}
+	}
 
+	function loadClient() {
 		// Load all client modules as precompiled System.register format
 		// modules
 		var meta = {}
