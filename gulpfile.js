@@ -61,8 +61,7 @@ gulp.task('vendor', () => {
 		'./node_modules/systemjs/dist/system.js',
 		'./node_modules/systemjs/dist/system.js.map',
 		'./node_modules/dom4/build/dom4.js',
-		'./node_modules/core-js/client/core.min.js',
-		'./node_modules/core-js/client/core.min.js.map'
+		"./node_modules/babel-polyfill/dist/polyfill.min.js"
 	]
 	for (let path of paths) {
 		const split = path.split('/'),

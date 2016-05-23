@@ -100,7 +100,7 @@
 	if (legacy) {
 		// Stuff them full of hot, fat and juicy polyfills, if even one test
 		// failed
-		polyfills.push('vendor/dom4', 'vendor/core.min', 'vendor/fetch')
+		polyfills.push('vendor/dom4', 'vendor/fetch', 'vendor/polyfill.min')
 	} else {
 		// Minimalistic polyfill for modern browsers
 		polyfills.push('scripts/polyfill')
