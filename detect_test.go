@@ -21,3 +21,20 @@ func TestDetectAVFormat(t *testing.T) {
 	t.Log("audio:", a)
 	t.Log("video:", v)
 }
+func TestDetectAVFormatDetail(t *testing.T) {
+	f, err := os.Open("testdata/sample.mp4")
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a, v, err := DecodeAVFormatDetail(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("audio:", a)
+	t.Log("video:", v)
+}

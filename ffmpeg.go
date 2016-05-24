@@ -346,7 +346,6 @@ func DecodeAVFormatDetail(data []byte) (audio, video string, err error) {
 		err = errors.New("Failed to decode video stream")
 		return
 	}
-	fmt.Printf("%#v\n", f.codec)
 	video = C.GoString(f.codec.long_name)
 
 	f = C.extract_audio(ctx)
@@ -354,7 +353,6 @@ func DecodeAVFormatDetail(data []byte) (audio, video string, err error) {
 		err = errors.New("Failed to decode audio stream")
 		return
 	}
-	fmt.Printf("%#v\n", f.codec)
 	audio = C.GoString(f.codec.long_name)
 	return
 }
@@ -377,7 +375,6 @@ func DecodeAVFormat(data []byte) (audio, video string, err error) {
 		err = errors.New("Failed to decode video stream")
 		return
 	}
-	fmt.Printf("%#v\n", f.codec)
 	video = C.GoString(f.codec.name)
 
 	f = C.extract_audio(ctx)
@@ -385,7 +382,6 @@ func DecodeAVFormat(data []byte) (audio, video string, err error) {
 		err = errors.New("Failed to decode audio stream")
 		return
 	}
-	fmt.Printf("%#v\n", f.codec)
 	audio = C.GoString(f.codec.name)
 	return
 }
