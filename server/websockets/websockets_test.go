@@ -294,20 +294,48 @@ func assertListenError(cl *Client, pattern string, sv *mockWSServer, c *C) {
 func (*ClientSuite) TestClientTimeout(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
-	cl, wcl := sv.NewClient()
 
-	cl, wcl = sv.NewClient()
-	oldR := readTimeout
-	oldW := writeTimeout
-	readTimeout = time.Second
-	writeTimeout = readTimeout
+	cl, wcl := sv.NewClient()
+	oldPing := pingTimer
+	oldRead := readTimeout
+	pingTimer = time.Second
+	readTimeout = time.Second * 2
 	defer func() {
-		readTimeout = oldR
-		writeTimeout = oldW
+		pingTimer = oldPing
+		readTimeout = oldRead
 	}()
 	sv.Add(1)
-	go assertListenError(cl, abnormalClosure, sv, c)
-	c.Assert(wcl.Close(), IsNil)
+
+	// Ignore incomming pings
+	wcl.SetPingHandler(func(string) error {
+		return nil
+	})
+
+	go assertListenError(cl, ".* i/o timeout", sv, c)
+	sv.Wait()
+}
+
+func (*ClientSuite) TestPingPong(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+
+	cl, wcl := sv.NewClient()
+	oldPing := pingTimer
+	oldRead := readTimeout
+	pingTimer = time.Second
+	readTimeout = time.Second * 2
+	defer func() {
+		pingTimer = oldPing
+		readTimeout = oldRead
+	}()
+
+	sv.Add(1)
+	go readListenErrors(c, cl, sv)
+	go wcl.ReadMessage()
+
+	// If Client outlives this with no errors, ping/pong is working
+	time.Sleep(time.Second * 3)
+	cl.Close(nil)
 	sv.Wait()
 }
 

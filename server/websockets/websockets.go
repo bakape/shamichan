@@ -19,8 +19,10 @@ import (
 
 // Overridable for faster testing
 var (
-	readTimeout  = time.Second * 30
 	writeTimeout = time.Second * 30
+	pingTimer    = time.Second * 30
+	readTimeout  = time.Second * 40
+	pingMessage  = []byte{1}
 )
 
 // integer identifiers for various message types
@@ -130,6 +132,7 @@ func newClient(conn *websocket.Conn) *Client {
 // Listen listens for incoming messages on the channels and processes them
 func (c *Client) Listen() (err error) {
 	go c.receiverLoop()
+	ping := time.Tick(pingTimer)
 
 outer:
 	for {
@@ -143,6 +146,15 @@ outer:
 			}
 		case msg := <-c.Send:
 			err = c.send(msg)
+			if err != nil {
+				break outer
+			}
+		case <-ping:
+			err = c.conn.WriteControl(
+				websocket.PingMessage,
+				pingMessage,
+				time.Now().Add(writeTimeout),
+			)
 			if err != nil {
 				break outer
 			}
@@ -230,7 +242,7 @@ func encodeMessage(typ int, msg interface{}) (encoded []byte, err error) {
 // receiverLoop proxies the blocking conn.ReadMessage() into the main client
 // select loop.
 func (c *Client) receiverLoop() {
-	// Handle websocket timeout
+	// Timeout connection, if no pongs received for 40 seconds
 	c.conn.SetReadDeadline(time.Now().Add(readTimeout))
 	c.conn.SetPongHandler(func(string) error {
 		c.conn.SetReadDeadline(time.Now().Add(readTimeout))
