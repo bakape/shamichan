@@ -101,6 +101,23 @@ static inline AVCodecContext * extract_video(AVFormatContext *ctx)
 	}
 	return codecCtx;
 }
+
+static inline AVCodecContext * extract_audio(AVFormatContext *ctx)
+{
+	char errstringbuf[1024];
+	int err;
+	AVCodec * codec = NULL;
+	int strm = av_find_best_stream(ctx, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
+
+	AVCodecContext * codecCtx = ctx->streams[strm]->codec;
+	err = avcodec_open2(codecCtx, codec, NULL);
+	if (err < 0) {
+		av_strerror(err,errstringbuf,1024);
+		fprintf(stderr,"%s\n",errstringbuf);
+		return NULL;
+	}
+	return codecCtx;
+}
 */
 import "C"
 import (
@@ -309,4 +326,66 @@ func DecodeConfig(data []byte) (image.Config, error) {
 			Width:  int(f.width),
 			Height: int(f.height)}, nil
 	}
+}
+
+func DecodeAVFormatDetail(data []byte) (audio, video string, err error) {
+	ctx := C.avformat_alloc_context()
+	r := bytes.NewReader(data)
+	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{ReadPacket: r.Read, Seek: r.Seek})
+	if err != nil {
+		panic(err)
+	}
+	ctx.pb = avioCtx.avAVIOContext
+	if ctx = C.create_context(ctx); ctx == nil {
+		avioCtx.Free()
+		err = errors.New("Failed to initialize AVFormatContext")
+		return
+	}
+	f := C.extract_video(ctx)
+	if f == nil {
+		err = errors.New("Failed to decode video stream")
+		return
+	}
+	fmt.Printf("%#v\n", f.codec)
+	video = C.GoString(f.codec.long_name)
+
+	f = C.extract_audio(ctx)
+	if f == nil {
+		err = errors.New("Failed to decode audio stream")
+		return
+	}
+	fmt.Printf("%#v\n", f.codec)
+	audio = C.GoString(f.codec.long_name)
+	return
+}
+
+func DecodeAVFormat(data []byte) (audio, video string, err error) {
+	ctx := C.avformat_alloc_context()
+	r := bytes.NewReader(data)
+	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{ReadPacket: r.Read, Seek: r.Seek})
+	if err != nil {
+		panic(err)
+	}
+	ctx.pb = avioCtx.avAVIOContext
+	if ctx = C.create_context(ctx); ctx == nil {
+		avioCtx.Free()
+		err = errors.New("Failed to initialize AVFormatContext")
+		return
+	}
+	f := C.extract_video(ctx)
+	if f == nil {
+		err = errors.New("Failed to decode video stream")
+		return
+	}
+	fmt.Printf("%#v\n", f.codec)
+	video = C.GoString(f.codec.name)
+
+	f = C.extract_audio(ctx)
+	if f == nil {
+		err = errors.New("Failed to decode audio stream")
+		return
+	}
+	fmt.Printf("%#v\n", f.codec)
+	audio = C.GoString(f.codec.name)
+	return
 }
