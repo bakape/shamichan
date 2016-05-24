@@ -122,7 +122,11 @@ export function displayLoading(loading: boolean) {
 }
 
 // Debug mode with more verbose logging
-export const debug = /[\?&]debug=true/.test(location.href)
+export let debug: boolean = /[\?&]debug=true/.test(location.href)
+
+// Allow switching to debug mode from the JS console
+; (window as any).debugMode = (setting: boolean) =>
+	debug = setting
 
 // ID of the current tab on the server. Set after synchronisation.
 export let clientID: string
