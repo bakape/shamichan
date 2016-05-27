@@ -187,15 +187,19 @@ class Catalog extends RenderBase {
 			{oneeSama} = this;
 
 		// Downscale thumbnail
-		const {image} = post,
-			{dims} = image
-		if (dims[2]) {
+		const {image} = post
+		let thumb = ""
+
+		// Account for image being deleted
+		if (image) {
+			const {dims} = image
 			dims[2] /= 1.66
 			dims[3] /= 1.66
+			thumb = oneeSama.thumbnail(image, post.num)
 		}
 
 		html.push(
-			safe(oneeSama.thumbnail(image, post.num)),
+			safe(thumb),
 			safe(parseHTML
 				`<br>
 				<small>
