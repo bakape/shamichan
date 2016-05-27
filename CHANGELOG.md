@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.9.2 - 2016-05-27
+* Fix:
+	- Server crashes on catalog pages
+
 ##v1.9.1 - 2016-04-29
 * Fix:
 	- Spontanious server crashes
