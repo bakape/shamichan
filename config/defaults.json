@@ -243,7 +243,7 @@
         // Indicates which spoiler images may be selected by posters.
         // each number or ID corresponds to a set of image pairs in ./www/spoil
         // named spoilX.png and spoilerX.png
-        "spoilers": [1, 2, 3],
+        "spoilers": [0],
 
         // Attach hats to all images
         "hats": false
