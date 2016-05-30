@@ -2,9 +2,10 @@
 <head>
 	<meta charset="utf-8">
 	<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/ass/favicon.ico">
-	<link rel="manifest" href="/ass/mobile/manifest.json">
-	<meta name="description" content="Real-time imageboard">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel="manifest" href="/ass/mobile/manifest.json">
+	<meta name="application-name" content="meguca">
+	<meta name="description" content="Realtime imageboard">
 	<!-- Main and theme-specific stylesheets !-->
 	<link rel="stylesheet" href="/ass/css/base.css">
 	<link rel="stylesheet" id="theme">
@@ -27,58 +28,60 @@
 		</h1>
 	</noscript>
 </head>
-<!-- Loading indicator image !-->
-<image src="/ass/css/ui/loading.gif" id="loadingImage">
-<!-- For post and image hover previews !-->
-<div id="hover-overlay" class="overlay"></div>
-<!-- For modal windows -->
-<div id="modal-overlay" class="overlay">
-	<!-- Top banner !-->
-	<span id="banner" class="glass">
-		<!--- Interboard navigation !-->
-	    {{.Navigation}}
-		<!-- For r/a/dio stream status and such !-->
-		<b id="banner-center"></b>
-		<!-- For various annoucments and such. See ./config/config.json.infoBanner !-->
-		<b id="banner-info"></b>
-		<!-- Various buttons, that unhide modal windows !-->
-		<a id="banner-options" class="banner-float">
-			<span class="oi" data-glyph="cog"></span>
-		</a>
-		<a id="banner-identity" class="banner-float">
-			<span class="oi" data-glyph="person"></span>
-		</a>
-	    <a id="banner-FAQ" class="banner-float">
-			<span class="oi" data-glyph="info"></span>
-	    </a>
-		<a id="banner-feedback" href="mailto:{{.Email}}" target="_blank" class="banner-float">
-			<span class="oi" data-glyph="envelope-closed"></span>
-		</a>
-		<!-- Websocket connection status indicator !-->
-		<b id="sync" class="banner-float"></b>
-	</span>
-	<!-- Frequently Asked Quetions panel !-->
-	<div id="FAQ-panel" class="banner-modal modal glass"></div>
-	<!-- Name and email input form !-->
-	<fieldset id="identity-panel" class="banner-modal modal glass">
-		<label for="name" class="ident"></label>
-		<input id="name" name="name">
-		<br>
-		<label for="email" class="ident"></label>
-		<input id="email" name="email">
-		<br>
-	</fieldset>
-	<div id="options-panel" class="banner-modal modal glass"></div>
-</div>
-<!-- Used for adding space bellow the top banner, because the <h1> bellow is not always non-empty !-->
-<div id="headerTopMargin"></div>
-<h1></h1>
-<!-- Contains posts and threads !-->
-<threads></threads>
-<!-- For image uploads !-->
-<iframe name="upload" id="hiddenUpload"></iframe>
-<!-- Used to make the text input field on the postForm to have a width, as if it was static !-->
-<pre id="sizer"></pre>
-<!-- Dynamic module loader!-->
-<script src="/ass/js/vendor/system.js"></script>
-<script src="/ass/js/scripts/loader.js"></script>
+<body>
+	<!-- Loading indicator image !-->
+	<image src="/ass/css/ui/loading.gif" id="loadingImage">
+	<!-- For post and image hover previews !-->
+	<div id="hover-overlay" class="overlay"></div>
+	<!-- For modal windows -->
+	<div id="modal-overlay" class="overlay">
+		<!-- Top banner !-->
+		<span id="banner" class="glass">
+			<!--- Interboard navigation !-->
+		    {{.Navigation}}
+			<!-- For r/a/dio stream status and such !-->
+			<b id="banner-center"></b>
+			<!-- For various annoucments and such. See ./config/config.json.infoBanner !-->
+			<b id="banner-info"></b>
+			<!-- Various buttons, that unhide modal windows !-->
+			<a id="banner-options" class="banner-float">
+				<span class="oi" data-glyph="cog"></span>
+			</a>
+			<a id="banner-identity" class="banner-float">
+				<span class="oi" data-glyph="person"></span>
+			</a>
+		    <a id="banner-FAQ" class="banner-float">
+				<span class="oi" data-glyph="info"></span>
+		    </a>
+			<a id="banner-feedback" href="mailto:{{.Email}}" target="_blank" class="banner-float">
+				<span class="oi" data-glyph="envelope-closed"></span>
+			</a>
+			<!-- Websocket connection status indicator !-->
+			<b id="sync" class="banner-float"></b>
+		</span>
+		<!-- Frequently Asked Quetions panel !-->
+		<div id="FAQ-panel" class="banner-modal modal glass"></div>
+		<!-- Name and email input form !-->
+		<fieldset id="identity-panel" class="banner-modal modal glass">
+			<label for="name" class="ident"></label>
+			<input id="name" name="name">
+			<br>
+			<label for="email" class="ident"></label>
+			<input id="email" name="email">
+			<br>
+		</fieldset>
+		<div id="options-panel" class="banner-modal modal glass"></div>
+	</div>
+	<!-- Used for adding space bellow the top banner, because the <h1> bellow is not always non-empty !-->
+	<div id="headerTopMargin"></div>
+	<h1></h1>
+	<!-- Contains posts and threads !-->
+	<threads></threads>
+	<!-- For image uploads !-->
+	<iframe name="upload" id="hiddenUpload"></iframe>
+	<!-- Used to make the text input field on the postForm to have a width, as if it was static !-->
+	<pre id="sizer"></pre>
+	<!-- Dynamic module loader!-->
+	<script src="/ass/js/vendor/system.js"></script>
+	<script src="/ass/js/scripts/loader.js"></script>
+</body>
