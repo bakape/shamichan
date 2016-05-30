@@ -252,7 +252,7 @@
     // File names of the images to use as banners inside the ./www/banners
     // Example: ['banner01.png', 'banner02.gif', 'banner03.jpg']
     "banners": [
-        "banner01.png"
+        "banner0.png"
     ],
 
     // Entries for the banner's Frequently Asked Questions list
