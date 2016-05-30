@@ -90,7 +90,7 @@ func init() {
 }
 
 const randSource = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-	"0123456789"
+	"0123456789-_"
 
 // RandomID generates a randomID of uppercase and lowercase letters and numbers
 // of desired length
