@@ -23,6 +23,7 @@ const (
 	invalidMessage  = "Invalid message: .*"
 	onlyText        = "Only text frames allowed.*"
 	abnormalClosure = "websocket: close 1006 .*"
+	closeNormal     = "websocket: close 1000 .*"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -158,6 +159,17 @@ func (*ClientSuite) TestClose(c *C) {
 
 	// Already closed
 	cl.Close(err)
+}
+
+func (*ClientSuite) TestCloseMessageSending(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+	sv.Add(2)
+	go readListenErrors(c, cl, sv)
+	go assertWebsocketError(c, wcl, closeNormal, sv)
+	cl.Close(nil)
+	sv.Wait()
 }
 
 func (*ClientSuite) TestInvalidPayloadError(c *C) {
