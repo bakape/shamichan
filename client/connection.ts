@@ -158,12 +158,14 @@ connSM.act(
 		}
 		let type = message.synchronise
 
-		// If clientID is set, then this attempt to synchronise comes after a
-		// connection loss. Attempt to recover lost server-side state.
-		if (clientID) {
-			msg.id = clientID
-			type = message.resynchronise
-		}
+
+		// TODO: Resynchronisation logic, with open post right retrieval
+		// // If clientID is set, then this attempt to synchronise comes after a
+		// // connection loss. Attempt to recover lost server-side state.
+		// if (clientID) {
+		// 	msg.id = clientID
+		// 	type = message.resynchronise
+		// }
 
 		send(type, msg)
 
