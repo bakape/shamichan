@@ -1,17 +1,18 @@
 import {parseHTML, parseAttributes, pad, ElementAttributes} from '../../util'
 import {config} from '../../state'
 import options from '../../options'
-import {PostData} from '../models'
+import {Post, Thread} from '../models'
 import {posts as lang, time as timeLang} from '../../lang'
 
 // Render the header with various post informationt
-export function renderHeader(data: PostData): string {
-	const {id, op, subject} = data,
+export function renderHeader(data: Post): string {
+	const {id, op, subject} = data as any,
 		postURL = renderPostURL(id)
+	let subjectHTML: string
 	return parseHTML
 		`<header>
 			<input type="checkbox" class="postCheckbox">
-			${subject ? `<h3>「${encodeURIComponent(data.subject)}」</h3>` : ''}
+			${subject ? `<h3>「${encodeURIComponent(subject)}」</h3>` : ''}
 			${renderName(data)}
 			${renderTime(data.time)}
 			<nav>
@@ -27,7 +28,7 @@ export function renderHeader(data: PostData): string {
 }
 
 // Render the name of a post's poster
-export function renderName(data: PostData): string {
+export function renderName(data: Post): string {
 	let html = '<b class="name'
 	const {auth, email} = data
 	if (auth) {
@@ -51,7 +52,7 @@ export function renderName(data: PostData): string {
 }
 
 // Determine the name and tripcode combination to render
-function resolveName(data: PostData): string {
+function resolveName(data: Post): string {
 	let html = ''
 	const {trip, name, auth} = data
 	if (name || !trip) {

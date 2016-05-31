@@ -1,4 +1,5 @@
-import Model from '../model'
+import {default as Model, ModelAttrs} from '../model'
+import {extend} from '../util'
 
 export type PostLink = {
 	board: string
@@ -7,35 +8,29 @@ export type PostLink = {
 
 export type PostLinks = {[id: number]: PostLink}
 
-export interface PostData {
-	editing?: boolean
-	deleted?: boolean
-	imgDeleted?: boolean
-	image?: ImageData
+export class Post extends Model {
 	op: number
-	id: number
+	image: ImageData
 	time: number
 	board: string
 	body: string
-	name?: string
-	trip?: string
-	auth?: string
-	email?: string
-	backlinks?: PostLinks
-	links?: PostLinks
-	state?: number[]
-	largeThumb?: boolean
-	locked?: boolean
-	archived?: boolean
-	sticky?: boolean
-	postCtr?: number
-	imageCtr: number
-	bumpTime: number
-	replyTime: number
-	subject?: string
+	name: string
+	trip: string
+	auth: string
+	email: string
+	deleted: boolean
+	imgDeleted: boolean
+	state: number[]
+	backlinks: PostLinks
+	links: PostLinks
+
+	constructor(attrs: ModelAttrs = {}) {
+		super()
+		extend(this, attrs)
+	}
 }
 
-export interface ImageData {
+export type ImageData = {
 	apng?: boolean
 	audio?: boolean
 	spoiler?: number
@@ -53,8 +48,26 @@ export interface ImageData {
 export const enum fileTypes {jpeg, png, gif, webm, pdf, svg, mp4, mp3, ogg}
 
 // Generic post model. OP or Reply.
-export class Post extends Model {
-	constructor() {
-		super()
+export class Reply extends Post {
+	editing: boolean
+
+	constructor(attrs: ModelAttrs) {
+		super(attrs)
+	}
+}
+
+export class Thread extends Post {
+	largeThumb: boolean
+	locked: boolean
+	archived: boolean
+	sticky: boolean
+	postCtr: number
+	imageCtr: number
+	bumpTime: number
+	replyTime: number
+	subject: string
+
+	constructor(attrs: ModelAttrs) {
+		super(attrs)
 	}
 }

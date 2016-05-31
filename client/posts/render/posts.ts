@@ -3,15 +3,12 @@ import {renderHeader} from './header'
 import {renderImage} from './image'
 import {renderBacklinks} from './etc'
 import {renderBody} from './body'
-import {PostData} from '../models'
+import {Post, Thread, Reply} from '../models'
 
 // Render the OP
-export function renderSection(data: PostData, cls: string = ''): string {
+export function renderSection(data: Thread, cls: string = ''): string {
 	if (data.locked) {
 		cls += ' locked'
-	}
-	if (data.editing) {
-		cls += ' editing'
 	}
 	data.largeThumb = true // Larger thumbnails
 
@@ -25,7 +22,7 @@ export function renderSection(data: PostData, cls: string = ''): string {
 }
 
 // Render a reply post
-export function renderArticle(data: PostData): string {
+export function renderArticle(data: Reply): string {
 	let cls = 'glass'
 	if (data.editing) {
 		cls += ' editing'
@@ -36,7 +33,7 @@ export function renderArticle(data: PostData): string {
 		</article>`
 }
 
-function renderPost(data: PostData): string {
+function renderPost(data: Post): string {
 	const {body, backlinks} = data
 
 	return parseHTML
