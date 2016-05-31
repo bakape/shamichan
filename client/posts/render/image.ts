@@ -5,7 +5,7 @@
 import {config} from '../../state'
 import {default as options, OptionID} from '../../options'
 import {
-	parseHTML, commaList, parseAttributes, ElementAttributes
+	parseHTML, commaList, parseAttributes, ElementAttributes, escape
 } from '../../util'
 import {ImageData, fileTypes} from '../models'
 import {images as lang} from '../../lang'
@@ -151,7 +151,7 @@ function imageSearch(data: ImageData): string {
 
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
-function thumbPath(data: ImageData, mid: boolean): string {
+function thumbPath(data: ImageData, mid?: boolean): string {
 	const type = mid ? 'mid' : 'thumb'
 	let ext: string
 	switch (data.fileType) {
@@ -173,23 +173,20 @@ function thumbPath(data: ImageData, mid: boolean): string {
 
 // Resolve the path to the source file of an upload
 function sourcePath({file, fileType}: ImageData): string {
-	return imagePaths['src'] + file + sourceExtension(fileType)
+	return imagePaths['src'] + file + sourceExtension[fileType]
 }
 
-// Resolve the extension of the source file
-function sourceExtension(fileType: fileTypes): string {
-	const extensions: {[type: number]: string} = {
-		[fileTypes.jpeg]: '.jpg',
-		[fileTypes.png]: '.png',
-		[fileTypes.gif]: '.gif',
-		[fileTypes.webm]: '.webm',
-		[fileTypes.pdf]: '.pdf',
-		[fileTypes.svg]: '.svg',
-		[fileTypes.mp4]: '.mp4',
-		[fileTypes.mp3]: '.mp3',
-		[fileTypes.ogg]: '.ogg'
-	}
-	return extensions[fileType]
+// Map of enums to the appropriate file type extension
+const sourceExtension: {[type: number]: string} = {
+	[fileTypes.jpeg]: '.jpg',
+	[fileTypes.png]: '.png',
+	[fileTypes.gif]: '.gif',
+	[fileTypes.webm]: '.webm',
+	[fileTypes.pdf]: '.pdf',
+	[fileTypes.svg]: '.svg',
+	[fileTypes.mp4]: '.mp4',
+	[fileTypes.mp3]: '.mp3',
+	[fileTypes.ogg]: '.ogg'
 }
 
 // Render a name + download link of an image
@@ -200,12 +197,12 @@ function imageLink(data: ImageData): string {
 	if (m) {
 		name = m[1]
 	}
-	const fullName = encodeURIComponent(imgnm),
+	const fullName = escape(imgnm),
 		tooLong = name.length >= 38
 	if (tooLong) {
-		imgnm = encodeURIComponent(name.slice(0, 30))
+		imgnm = escape(name.slice(0, 30))
 			+ '(&hellip;)'
-			+ encodeURIComponent(sourceExtension(fileType))
+			+ escape(sourceExtension[fileType])
 	}
 	const attrs: ElementAttributes = {
 		href: sourcePath(data),

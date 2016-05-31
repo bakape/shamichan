@@ -241,3 +241,19 @@ export function loadModule(path: string): Promise<any> {
 	path = `es${(window as any).legacy ? 5 : 6}/${path}`
 	return System.import(path)
 }
+
+
+const escapeMap = {
+	'&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '`': '&#x60;',
+}
+
+// Escape a user-submitted unsafe string to protect against XSS.
+export function escape (str: string) {
+    return str.replace(/[&<>'"`]/g , char =>
+		escapeMap[char])
+}

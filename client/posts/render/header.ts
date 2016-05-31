@@ -1,4 +1,6 @@
-import {parseHTML, parseAttributes, pad, ElementAttributes} from '../../util'
+import {
+	parseHTML, parseAttributes, pad, ElementAttributes, escape
+} from '../../util'
 import {config} from '../../state'
 import options from '../../options'
 import {Post, Thread} from '../models'
@@ -12,7 +14,7 @@ export function renderHeader(data: Post): string {
 	return parseHTML
 		`<header>
 			<input type="checkbox" class="postCheckbox">
-			${subject ? `<h3>「${encodeURIComponent(subject)}」</h3>` : ''}
+			${subject ? `<h3>「${escape(subject)}」</h3>` : ''}
 			${renderName(data)}
 			${renderTime(data.time)}
 			<nav>
@@ -57,7 +59,7 @@ function resolveName(data: Post): string {
 	const {trip, name, auth} = data
 	if (name || !trip) {
 		if (name) {
-			html += encodeURIComponent(name)
+			html += escape(name)
 		} else {
 			html += lang.anon
 		}
@@ -66,7 +68,7 @@ function resolveName(data: Post): string {
 		}
 	}
 	if (trip) {
-		html += `<code>${encodeURIComponent(trip)}</code>`
+		html += `<code>${escape(trip)}</code>`
 	}
 	if (auth) { // Render staff title
 		let alias: string

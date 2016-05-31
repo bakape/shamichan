@@ -1,6 +1,7 @@
 import {config} from '../../state'
 import {renderPostLink} from './etc'
 import {Post, PostLinks} from '../models'
+import {escape} from '../../util'
 
 // Render the text body of a post
 export function renderBody(data: Post): string {
@@ -81,7 +82,7 @@ function parseWord(word: string, data: Post): string {
 			// Hash command results. Already verified server-side.
 			html += bit
 		} else {
-			html += encodeURIComponent(bit)
+			html += escape(bit)
 		}
 	}
 	return html
