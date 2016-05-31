@@ -243,7 +243,7 @@ export function loadModule(path: string): Promise<any> {
 }
 
 
-const escapeMap = {
+const escapeMap: {[key: string]: string} = {
 	'&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',

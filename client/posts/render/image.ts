@@ -152,22 +152,8 @@ function imageSearch(data: ImageData): string {
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
 function thumbPath(data: ImageData, mid?: boolean): string {
-	const type = mid ? 'mid' : 'thumb'
-	let ext: string
-	switch (data.fileType) {
-	case fileTypes.mp4:
-	case fileTypes.jpeg:
-		ext = '.jpg'
-		break
-	case fileTypes.png:
-	case fileTypes.gif:
-	case fileTypes.webm:
-	case fileTypes.pdf:
-	case fileTypes.mp3:
-	case fileTypes.ogg:
-		ext = '.png'
-		break
-	}
+	const type = mid ? 'mid' : 'thumb',
+		ext = data.fileType === fileTypes.jpeg ? ".jpeg" : ".png"
 	return imagePaths[type] + data.file + ext
 }
 
