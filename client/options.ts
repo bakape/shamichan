@@ -2,7 +2,7 @@
  User-set settings storage and change handling
 */
 
-import Model from './model'
+import {EventfulModel} from './model'
 import {extend, loadModule} from './util'
 import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
 import OptionsPanel from './options/view'
@@ -12,7 +12,7 @@ import {defer} from './defer'
 localStorage.removeItem("options")
 
 // Central options storage model
-const options = new Model()
+const options = new EventfulModel<OptionID>()
 export default options
 
 // All loaded option models

@@ -1,7 +1,7 @@
 // Background controller. Wallpapers, proper fitting and video backgrounds.
 
 import stackBlur from './stackBlur'
-import options from './options'
+import {default as options, OptionID} from './options'
 import {config, displayLoading} from './state'
 import {parseHTML, load} from './util'
 import {db} from './db'
@@ -40,7 +40,7 @@ export function render(bg?: BackgroundStore) {
 }
 
 // Listen to  changes in related options, that do not call render() directly
-const changeProps = [
+const changeProps: OptionID[] = [
 	'illyaDance', 'illyaDanceMute', 'theme', 'workModeToggle'
 ]
 for (let param of changeProps) {

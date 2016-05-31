@@ -8,79 +8,11 @@ export type HookMap = {[key: string]: HookHandler[]}
 
 // Generic model class, that all other model classes extend
 export default class Model {
-	attrs: ModelAttrs
-	id: string|number
+	id: number
 	collection: Collection<Model>
 	views: Set<View> = new Set<View>()
-	private changeHooks: HookMap = {}
 
-	constructor(attrs: ModelAttrs = {}) {
-		this.attrs = attrs
-	}
-
-	// Retrieve a stored value of specific key from the model's attribute
-	// object
-	get(key: string): any {
-		return this.attrs[key]
-	}
-
-	// Set a key to a target value
-	set(key: string, val: any) {
-		this.attrs[key] = val
-		this.execChangeHooks(key, val)
-	}
-
-	// Extend the model attribute hash, with the suplied object. Shorthand, for
-	// setting multiple fields simultaniously.
-	setAttrs(attrs: ModelAttrs) {
-		extend(this.attrs, attrs)
-		for (let key in attrs) {
-			this.execChangeHooks(key, attrs[key])
-		}
-	}
-
-	// Append value to an array strored at the given key. If the array does not
-	// exist, it is created.
-	append(key: string, val: any) {
-		if (this.attrs[key]) {
-			this.attrs[key].push(val)
-		} else {
-			this.attrs[key] = [val]
-		}
-		this.execChangeHooks(key, this.get(key))
-	}
-
-	// Extend an object at target key. If key does not exist, simply assign the
-	// object to the key.
-	extend(key: string, object: {}) {
-		if (this.attrs[key]) {
-			extend(this.attrs[key], object)
-		} else {
-			this.attrs[key] = object
-		}
-		this.execChangeHooks(key, this.get(key))
-	}
-
-	// Add a function to be executed, when .set(), .setAttrs(), .append() or
-	// .extend() modify a key's value.
-	onChange(key: string, func: HookHandler) {
-		if (this.changeHooks[key]) {
-			this.changeHooks[key].push(func)
-		} else {
-			this.changeHooks[key] = [func]
-		}
-	}
-
-	// Execute handlers hooked into key change, if any
-	private execChangeHooks(key: string, val: any) {
-		const hooks = this.changeHooks[key]
-		if (!hooks) {
-			return
-		}
-		for (let func of hooks) {
-			func(val)
-		}
-	}
+	constructor() {}
 
 	// Remove the model from its collection, detach all references and allow to
 	// be garbage collected.
@@ -88,8 +20,6 @@ export default class Model {
 		if (this.collection) {
 			this.collection.remove(this)
 		}
-		delete this.changeHooks
-		delete this.attrs
 		for (let view of this.views) {
 			view.remove()
 		}
@@ -104,5 +34,58 @@ export default class Model {
 	// Detach a view from the model
 	detach(view: View) {
 		this.views.delete(view)
+	}
+}
+
+// An extension of Model, which supports eventful hooks on attribute change
+export class EventfulModel<K> extends Model {
+	attrs: ModelAttrs
+	changeHooks: HookMap = {}
+
+	constructor(attrs: {[key: string]: any} = {}) {
+		super()
+		this.attrs = attrs
+	}
+
+	// Add a function to be executed, when .set(), .setAttrs(), .append() or
+	// .extend() modify a key's value.
+	onChange(key: K, func: HookHandler) {
+		const hooks = this.changeHooks[key as any]
+		if (hooks) {
+			hooks.push(func)
+		} else {
+			this.changeHooks[key as any] = [func]
+		}
+	}
+
+	// Execute handlers hooked into key change, if any
+	execChangeHooks(key: K, val: any) {
+		const hooks = this.changeHooks[key as any]
+		if (!hooks) {
+			return
+		}
+		for (let func of hooks) {
+			func(val)
+		}
+	}
+
+	// Retrieve a stored value of specific key from the model's attribute
+	// object
+	get(key: K): any {
+		return this.attrs[key as any]
+	}
+
+	// Set a key to a target value
+	set(key: K, val: any) {
+		this.attrs[key as any] = val
+		this.execChangeHooks(key , val)
+	}
+
+	// Remove the model from its collection, detach all references and allow to
+	// be garbage collected.
+	remove() {
+		super.remove()
+		delete this.attrs
+		delete this.changeHooks
 	}
 }

@@ -1,6 +1,6 @@
 import {BannerModal} from '../banner'
 import renderContents from './render'
-import {models, default as options} from '../options'
+import {OptionID, models, default as options} from '../options'
 import {optionType} from './specs'
 import {each, find, loadModule} from '../util'
 import {opts as lang} from '../lang'
@@ -62,7 +62,7 @@ export default class OptionsPanel extends BannerModal {
 	// options-panel -> options -> OptionModel
 	applyChange(event: Event) {
 		const el = event.target as Element,
-			id = el.getAttribute('id'),
+			id = el.getAttribute('id') as OptionID,
 			model = models[id]
 		let val: boolean|string|number
 		switch (model.spec.type) {

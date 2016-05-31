@@ -54,7 +54,7 @@ export const enum fileTypes {jpeg, png, gif, webm, pdf, svg, mp4, mp3, ogg}
 
 // Generic post model. OP or Reply.
 export class Post extends Model {
-	constructor(attrs: {[key:string]: any} = {}) {
-		super(attrs)
+	constructor() {
+		super()
 	}
 }

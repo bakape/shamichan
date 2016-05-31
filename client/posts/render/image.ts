@@ -3,7 +3,7 @@
 */
 
 import {config} from '../../state'
-import options from '../../options'
+import {default as options, OptionID} from '../../options'
 import {
 	parseHTML, commaList, parseAttributes, ElementAttributes
 } from '../../util'
@@ -117,7 +117,7 @@ const searchTemplates = (function() {
 			class: 'imageSearch ' + engine
 		}
 		templates[engine] = data => {
-			if (!options.get(engine)) {
+			if (!options.get(engine as OptionID)) {
 				return ''
 			}
 			attrs['href'] = url

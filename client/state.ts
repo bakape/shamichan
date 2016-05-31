@@ -2,7 +2,7 @@
  Stores the state of the web application
 */
 
-import Model from './model'
+import {EventfulModel} from './model'
 import {Post} from './posts/models'
 import Collection from './collection'
 import {getID} from './util'
@@ -79,8 +79,10 @@ function read(href: string): PageState {
 	}
 }
 
+export type PageStateParam = "board" | "lastN" | "thread"
+
 // Load initial page state
-export const page = new Model(read(location.href))
+export const page = new EventfulModel<PageStateParam>(read(location.href))
 
 // All posts currently displayed
 export const posts = new Collection<Post>()
