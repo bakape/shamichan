@@ -4,13 +4,14 @@ package imager
 import (
 	"errors"
 	"fmt"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/server/websockets"
-	"github.com/bakape/meguca/types"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/server/websockets"
+	"github.com/bakape/meguca/types"
 )
 
 // Supported file formats
@@ -61,34 +62,34 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	head.Set("Content-Type", "text/html; charset=UTF-8")
 	head.Set("Access-Control-Allow-Origin", conf.HTTP.Origin)
 
-	img, err := parseUploadForm(req)
-	if err != nil {
-		passError(res, req, err, 400)
-		return
-	}
-
-	file, fileHeader, err := req.FormFile("image")
-	if err != nil {
-		passError(res, req, err, 400)
-		return
-	}
-
-	img.Image.Imgnm = fileHeader.Filename
-
-	fileType, err := detectFileType(file)
-	if err != nil {
-		passError(res, req, err, 400)
-		return
-	}
-	img.fileType = fileType
-
-	if err := processFile(file, img); err != nil {
-		passError(res, req, err, 400)
-	} else {
-
-		// TODO: Call a method on the client to allocate the image.
-
-	}
+	// clientID, spoiler, err := parseUploadForm(req)
+	// if err != nil {
+	// 	passError(res, req, err, 400)
+	// 	return
+	// }
+	//
+	// file, fileHeader, err := req.FormFile("image")
+	// if err != nil {
+	// 	passError(res, req, err, 400)
+	// 	return
+	// }
+	//
+	// img.Image.Imgnm = fileHeader.Filename
+	//
+	// fileType, err := detectFileType(file)
+	// if err != nil {
+	// 	passError(res, req, err, 400)
+	// 	return
+	// }
+	// img.fileType = fileType
+	//
+	// if err := processFile(file, img); err != nil {
+	// 	passError(res, req, err, 400)
+	// } else {
+	//
+	// 	// TODO: Call a method on the client to allocate the image.
+	//
+	// }
 }
 
 // Pass error message to client and log server-side
@@ -104,39 +105,35 @@ func passError(
 }
 
 // Parse and validate the form of the upload request
-func parseUploadForm(req *http.Request) (*ProtoImage, error) {
+func parseUploadForm(req *http.Request) (
+	clientID string, spoiler uint8, err error,
+) {
 	length, err := strconv.ParseInt(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if length > config.Get().Images.Max.Size {
-		return nil, errors.New("File too large")
+		err = errors.New("File too large")
+		return
 	}
 
 	err = req.ParseMultipartForm(512)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	id := req.FormValue("id")
-	if id == "" {
-		return nil, errors.New("No client ID specified")
+	clientID = req.FormValue("id")
+	if clientID == "" {
+		err = errors.New("No client ID specified")
+		return
 	}
-	if !websockets.Clients.Has(id) {
-		return nil, fmt.Errorf("Bad client ID: %s", id)
+	if !websockets.Clients.Has(clientID) {
+		err = fmt.Errorf("Bad client ID: %s", clientID)
+		return
 	}
-	spoiler, err := extractSpoiler(req)
-	if err != nil {
-		return nil, err
-	}
+	spoiler, err = extractSpoiler(req)
 
-	img := &ProtoImage{
-		Image: types.Image{
-			Spoiler: spoiler,
-		},
-		ClientID: id,
-	}
-	return img, nil
+	return
 }
 
 // Extracts and validates a spoiler number from the form

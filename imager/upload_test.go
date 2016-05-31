@@ -21,7 +21,14 @@ type Imager struct{}
 var _ = Suite(&Imager{})
 
 func (*Imager) SetUpTest(c *C) {
-	config.Set(config.ServerConfigs{})
+	conf := config.ServerConfigs{}
+	conf.Images.Max.Size = 1024
+	conf.Images.Spoilers = []uint8{1, 2}
+	config.Set(conf)
+}
+
+func (*Imager) TearDownTest(c *C) {
+	websockets.Clients.Clear()
 }
 
 func (*Imager) TestExtractSpoiler(c *C) {
@@ -108,84 +115,88 @@ func newRequest(c *C, body io.Reader, w *multipart.Writer) *http.Request {
 	return req
 }
 
-func (*Imager) TestParseUploadForm(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.Max.Size = 1024
-	config.Set(conf)
-	headers := map[string]string{}
-	fields := map[string]string{}
-
-	// Invalid content-length header
+func (*Imager) TestInvalidContentLengthHeader(c *C) {
 	b, w := newMultiWriter()
 	req := newRequest(c, b, w)
-	headers["Content-Length"] = "KAWFEE"
-	setHeaders(req, headers)
-	_, err := parseUploadForm(req)
+	setHeaders(req, map[string]string{
+		"Content-Length": "KAWFEE",
+	})
+
+	_, _, err := parseUploadForm(req)
 	c.Assert(err, ErrorMatches, ".* invalid syntax")
+}
 
-	// File too large
-	b, w = newMultiWriter()
-	req = newRequest(c, b, w)
-	headers["Content-Length"] = "1025"
-	setHeaders(req, headers)
-	_, err = parseUploadForm(req)
+func (*Imager) TestUploadTooLarge(c *C) {
+	b, w := newMultiWriter()
+	req := newRequest(c, b, w)
+	req.Header.Set("Content-Length", "1025")
+
+	_, _, err := parseUploadForm(req)
 	c.Assert(err, ErrorMatches, "File too large")
+}
 
-	// Invalid form
-	b, w = newMultiWriter()
-	req = newRequest(c, b, w)
-	headers["Content-Type"] = "GWEEN TEA"
-	headers["Content-Length"] = "1024"
-	setHeaders(req, headers)
-	_, err = parseUploadForm(req)
+func (*Imager) TestInvalidForm(c *C) {
+	b, w := newMultiWriter()
+	req := newRequest(c, b, w)
+	setHeaders(req, map[string]string{
+		"Content-Length": "1024",
+		"Content-Type":   "GWEEN TEA",
+	})
+
+	_, _, err := parseUploadForm(req)
 	c.Assert(err, NotNil)
+}
 
-	// No client ID
-	b, w = newMultiWriter()
-	req = newRequest(c, b, w)
-	delete(headers, "Content-Type")
-	setHeaders(req, headers)
-	_, err = parseUploadForm(req)
+func (*Imager) TestNoClientID(c *C) {
+	b, w := newMultiWriter()
+	req := newRequest(c, b, w)
+	req.Header.Set("Content-Length", "1024")
+
+	_, _, err := parseUploadForm(req)
 	c.Assert(err, ErrorMatches, "No client ID specified")
+}
 
-	// Client ID not synchronised with server
-	b, w = newMultiWriter()
-	fields["id"] = "Rokka"
-	writeFields(c, w, fields)
-	req = newRequest(c, b, w)
-	setHeaders(req, headers)
-	_, err = parseUploadForm(req)
+func (*Imager) TestClientNotSynced(c *C) {
+	b, w := newMultiWriter()
+	writeFields(c, w, map[string]string{"id": "Rokka"})
+	req := newRequest(c, b, w)
+	req.Header.Set("Content-Length", "1024")
+
+	_, _, err := parseUploadForm(req)
 	c.Assert(err, ErrorMatches, "Bad client ID: .*")
+}
 
-	// Add client to synced clients map
+func (*Imager) TestInvalidSpoiler(c *C) {
+	b, w := newMultiWriter()
+	fields := syncClient()
+	fields["spoiler"] = "12"
+	writeFields(c, w, fields)
+	req := newRequest(c, b, w)
+	req.Header.Set("Content-Length", "1024")
+
+	_, _, err := parseUploadForm(req)
+	c.Assert(err, ErrorMatches, "Invalid spoiler ID: .*")
+}
+
+// Add client to synced clients map
+func syncClient() map[string]string {
 	cl := &websockets.Client{}
 	websockets.Clients.Add(cl, "1")
-	fields["id"] = cl.ID
-	defer websockets.Clients.Remove(cl.ID)
+	return map[string]string{"id": cl.ID}
+}
 
-	// Invalid spoiler
-	conf.Images.Spoilers = []uint8{1, 2}
-	config.Set(conf)
-	fields["spoiler"] = "12"
-	b, w = newMultiWriter()
+func (*Imager) TestSuccessfulFormParse(c *C) {
+	b, w := newMultiWriter()
+	fields := syncClient()
+	fields["spoiler"] = "2"
 	writeFields(c, w, fields)
-	req = newRequest(c, b, w)
-	setHeaders(req, headers)
-	_, err = parseUploadForm(req)
-	c.Assert(err, ErrorMatches, "Invalid spoiler ID: .*")
+	req := newRequest(c, b, w)
+	req.Header.Set("Content-Length", "1024")
 
-	// Success
-	delete(fields, "spoiler")
-	std := &ProtoImage{
-		ClientID: cl.ID,
-	}
-	b, w = newMultiWriter()
-	writeFields(c, w, fields)
-	req = newRequest(c, b, w)
-	setHeaders(req, headers)
-	img, err := parseUploadForm(req)
+	id, spoiler, err := parseUploadForm(req)
 	c.Assert(err, IsNil)
-	c.Assert(img, DeepEquals, std)
+	c.Assert(id, Equals, fields["id"])
+	c.Assert(spoiler, Equals, uint8(2))
 }
 
 func setHeaders(req *http.Request, headers map[string]string) {

@@ -6,15 +6,16 @@ package db
 
 import (
 	"fmt"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/util"
-	r "github.com/dancannon/gorethink"
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
+	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 3
+const dbVersion = 4
 
 var (
 	// RSession exports the RethinkDB connection session. Used globally by the
@@ -22,7 +23,7 @@ var (
 	RSession *r.Session
 
 	// AllTables are all tables needed for meguca operation
-	AllTables = [...]string{"main", "threads"}
+	AllTables = [...]string{"main", "threads", "images"}
 )
 
 // Document is a eneric RethinkDB Document. For DRY-ness.
@@ -135,12 +136,20 @@ func InitDB(dbName string) error {
 
 // CreateTables creates all tables needed for meguca operation
 func CreateTables() error {
-	for _, table := range AllTables {
+	for _, table := range AllTables[:len(AllTables)-1] {
 		err := DB(r.TableCreate(table)).Exec()
 		if err != nil {
-			return util.WrapError("Error creating table", err)
+			return err
 		}
 	}
+
+	err := DB(r.TableCreate("images", r.TableCreateOpts{
+		PrimaryKey: "file",
+	})).Exec()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
