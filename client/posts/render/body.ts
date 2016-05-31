@@ -58,7 +58,7 @@ export function renderFragment(frag: string, data: Post): string {
 function parseWord(word: string, data: Post): string {
 	// `[spoiler]` and `[/spoiler]` are treated the same way. You can't nest
 	// them.
-	const split = word.split(/\[\/?spoiler]/i)
+	const split = word.split(/\[\/?spoiler]|\*\*/)
 	let html = ''
 	for (let i = 0; i < split.length; i++) {
 		// Insert spoiler tags
@@ -75,13 +75,16 @@ function parseWord(word: string, data: Post): string {
 		} else if (/^>>>\/\w+\//.test(bit)) {
 			// Internal and custom reference URLs
 			html += parseReference(bit)
-		} else if (/^https?:\/\/[^-A-Za-z0-9+&@#/%?=~_]$/.test(bit)) {
+		} else if (bit.startsWith("http")) {
 			// Generic URLs
 			html += parseURL(bit)
-		} else if (/<strong>.+<\/strong>/.test(bit)) {
-			// Hash command results. Already verified server-side.
-			html += bit
-		} else {
+		}
+
+		// TODO: Hash command rendering
+		// else if (/<strong>.+<\/strong>/.test(bit)) {
+		// 	html += bit
+
+		else {
 			html += escape(bit)
 		}
 	}
@@ -116,7 +119,7 @@ function parseReference(bit: string): string {
 	const name = bit.match(/^>>>\/(\w+)\/$/)[1],
 		href = refTargets[name]
 	if (!href) {
-		return bit
+		return escape(bit)
 	}
 	return newTabLink(href, bit)
 }
@@ -131,5 +134,9 @@ function parseURL(bit: string): string {
 
 	// TODO: Embeds
 
-	return newTabLink(encodeURI(bit), bit)
+	if (/^https?:\/\/[^-A-Za-z0-9+&@#/%?=~_]$/.test(bit)) {
+		return newTabLink(encodeURI(bit), bit)
+	}
+
+	return escape(bit)
 }

@@ -242,7 +242,6 @@ export function loadModule(path: string): Promise<any> {
 	return System.import(path)
 }
 
-
 const escapeMap: {[key: string]: string} = {
 	'&': '&amp;',
     '<': '&lt;',
