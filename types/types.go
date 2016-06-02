@@ -1,6 +1,24 @@
 // Package types contains common shared types used throughout the project.
 package types
 
+// CommandType are the various struct types of hash commands and their
+// responses, such as dice rolls, #flip, #8ball, etc.
+type CommandType uint8
+
+const (
+	// Dice is the dice roll command type
+	Dice CommandType = iota
+	// Flip is the coinflip command type
+	Flip
+	// EightBall is the the #8ball random answer dispenser command type
+	EightBall
+	// SyncWatch is the syncronised timer command type for syncronising episode
+	// time during group anime watching and such
+	SyncWatch
+	// Pyu - don't ask
+	Pyu
+)
+
 // Board stores board metadata and the OPs of all threads
 type Board struct {
 	Ctr     int64    `json:"ctr"`
@@ -39,21 +57,22 @@ type DatabaseThread struct {
 
 // Post is a generic post. Either OP or reply.
 type Post struct {
-	Editing   bool    `json:"editing" gorethink:"editing"`
-	Image     *Image  `json:"image,omitempty" gorethink:"image,omitempty"`
-	OP        int64   `json:"op,omitempty" gorethink:"op"`
-	ID        int64   `json:"id" gorethink:"id"`
-	Time      int64   `json:"time" gorethink:"time"`
-	Board     string  `json:"board" gorethink:"board"`
-	IP        string  `json:"-" gorethink:"ip"`
-	Nonce     string  `json:"-" gorethink:"nonce"`
-	Body      string  `json:"body" gorethink:"body"`
-	Name      string  `json:"name,omitempty" gorethink:"name,omitempty"`
-	Trip      string  `json:"trip,omitempty" gorethink:"trip,omitempty"`
-	Auth      string  `json:"auth,omitempty" gorethink:"auth,omitempty"`
-	Email     string  `json:"email,omitempty" gorethink:"email,omitempty"`
-	Backlinks LinkMap `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
-	Links     LinkMap `json:"links,omitempty" gorethink:"links,omitempty"`
+	Editing   bool      `json:"editing" gorethink:"editing"`
+	OP        int64     `json:"op,omitempty" gorethink:"op"`
+	ID        int64     `json:"id" gorethink:"id"`
+	Time      int64     `json:"time" gorethink:"time"`
+	Board     string    `json:"board" gorethink:"board"`
+	IP        string    `json:"-" gorethink:"ip"`
+	Nonce     string    `json:"-" gorethink:"nonce"`
+	Body      string    `json:"body" gorethink:"body"`
+	Name      string    `json:"name,omitempty" gorethink:"name,omitempty"`
+	Trip      string    `json:"trip,omitempty" gorethink:"trip,omitempty"`
+	Auth      string    `json:"auth,omitempty" gorethink:"auth,omitempty"`
+	Email     string    `json:"email,omitempty" gorethink:"email,omitempty"`
+	Image     *Image    `json:"image,omitempty" gorethink:"image,omitempty"`
+	Backlinks LinkMap   `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
+	Links     LinkMap   `json:"links,omitempty" gorethink:"links,omitempty"`
+	Commands  []Command `json:"commands,omitempty" gorethink:"commands,omitempty"`
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to
@@ -64,4 +83,11 @@ type LinkMap map[string]Link
 type Link struct {
 	Board string `json:"board" gorethink:"board"`
 	OP    int    `json:"op" gorethink:"op"`
+}
+
+// Command contains the type and value array of hash commands, such as dice
+// rolls, #flip, #8ball, etc.
+type Command struct {
+	Type CommandType `json:"type" gorethink:"type"`
+	Vals []int16     `json:"vals" gorethink:"vals"`
 }

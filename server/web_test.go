@@ -451,6 +451,10 @@ func (d *DB) TestBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
+			"id":3,
+			"time":0,
+			"board":"a",
+			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
@@ -460,10 +464,6 @@ func (d *DB) TestBoardJSON(c *C) {
 				"SHA1":"",
 				"imgnm":""
 			},
-			"id":3,
-			"time":0,
-			"board":"a",
-			"body":"",
 			"logCtr":33,
 			"bumpTime":0,
 			"replyTime":0
@@ -472,6 +472,10 @@ func (d *DB) TestBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
+			"id":1,
+			"time":0,
+			"board":"a",
+			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
@@ -481,10 +485,6 @@ func (d *DB) TestBoardJSON(c *C) {
 				"SHA1":"",
 				"imgnm":""
 			},
-			"id":1,
-			"time":0,
-			"board":"a",
-			"body":"",
 			"logCtr":11,
 			"bumpTime":0,
 			"replyTime":0
@@ -513,6 +513,10 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
+			"id":4,
+			"time":0,
+			"board":"c",
+			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
@@ -522,10 +526,6 @@ func (d *DB) TestAllBoardJSON(c *C) {
 				"SHA1":"",
 				"imgnm":""
 			},
-			"id":4,
-			"time":0,
-			"board":"c",
-			"body":"",
 			"logCtr":44,
 			"bumpTime":0,
 			"replyTime":0
@@ -534,6 +534,10 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
+			"id":3,
+			"time":0,
+			"board":"a",
+			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
@@ -543,10 +547,6 @@ func (d *DB) TestAllBoardJSON(c *C) {
 				"SHA1":"",
 				"imgnm":""
 			},
-			"id":3,
-			"time":0,
-			"board":"a",
-			"body":"",
 			"logCtr":33,
 			"bumpTime":0,
 			"replyTime":0
@@ -555,6 +555,10 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
+			"id":1,
+			"time":0,
+			"board":"a",
+			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
@@ -564,10 +568,6 @@ func (d *DB) TestAllBoardJSON(c *C) {
 				"SHA1":"",
 				"imgnm":""
 			},
-			"id":1,
-			"time":0,
-			"board":"a",
-			"body":"",
 			"logCtr":11,
 			"bumpTime":0,
 			"replyTime":0
@@ -609,6 +609,10 @@ func (d *DB) TestThreadJSON(c *C) {
 	"postCtr":0,
 	"imageCtr":0,
 	"editing":false,
+	"id":1,
+	"time":0,
+	"board":"a",
+	"body":"",
 	"image":{
 		"fileType":0,
 		"dims":[0,0,0,0],
@@ -618,10 +622,6 @@ func (d *DB) TestThreadJSON(c *C) {
 		"SHA1":"",
 		"imgnm":""
 	},
-	"id":1,
-	"time":0,
-	"board":"a",
-	"body":"",
 	"logCtr":11,
 	"bumpTime":0,
 	"replyTime":0,
