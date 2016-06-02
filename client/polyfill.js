@@ -46,8 +46,8 @@ ET.addEventListener = function (type, handler, options) {
 	if (options && options.once) {
 		const oldHandler = handler
 		handler = event => {
-			this.removeEventListener(handler)
-			oldHandler(event)
+			this.removeEventListener(type, handler)
+			oldHandler.call(this, event)
 		}
 	}
 	this._oldAddEventListener(type, handler, options)

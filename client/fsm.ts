@@ -5,10 +5,10 @@ type ActMap = SetMap<ActHandler>
 
 // Finite State Machine
 export default class FSM<S, E> {
-	private stateHandlers: ActMap = new SetMap<ActHandler>()
-	private transitions: {[transition: string]: S} = {}
-	private transitionHandlers: ActMap = new SetMap<ActHandler>()
-	private wilds: {[event: string]: S} = {}
+	stateHandlers: ActMap = new SetMap<ActHandler>()
+	transitions: {[transition: string]: S} = {}
+	transitionHandlers: ActMap = new SetMap<ActHandler>()
+	wilds: {[event: string]: S} = {}
 	state: S
 
 	// Create a new finite state machine with the supplied start state
@@ -43,7 +43,7 @@ export default class FSM<S, E> {
 	}
 
 	// Generate a transition string representation
-	private transitionString(start: S, event: E): string {
+	transitionString(start: S, event: E): string {
 		return `${start}+${event}`
 	}
 

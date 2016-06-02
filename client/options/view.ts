@@ -2,13 +2,14 @@ import {BannerModal} from '../banner'
 import renderContents from './render'
 import {OptionID, models, default as options} from '../options'
 import {optionType} from './specs'
-import {each, find, loadModule} from '../util'
+import {each, find, loadModule, load} from '../util'
 import {opts as lang} from '../lang'
 import {write, read} from '../render'
 
 // View of the options panel
 export default class OptionsPanel extends BannerModal {
 	$hidden: Element
+	$import: Element
 
 	constructor() {
 		super({el: document.querySelector('#options-panel')})
@@ -29,7 +30,10 @@ export default class OptionsPanel extends BannerModal {
 			this.el.innerHTML = html
 			this.assignValues()
 		})
-		read(() => this.$hidden = this.el.querySelector('#hidden'))
+		read(() => {
+			this.$hidden = this.el.querySelector('#hidden')
+			this.$import = this.el.querySelector("#importSettings")
+		})
 
 		// TODO: Hidden posts count rendering
 		// events.reply('hide:render', this.renderHidden, this)
@@ -64,6 +68,12 @@ export default class OptionsPanel extends BannerModal {
 		const el = event.target as Element,
 			id = el.getAttribute('id') as OptionID,
 			model = models[id]
+
+		// Not an option input element
+		if (!model) {
+			return
+		}
+
 		let val: boolean|string|number
 		switch (model.spec.type) {
 		case optionType.checkbox:
@@ -123,31 +133,33 @@ export default class OptionsPanel extends BannerModal {
 	// Import options from uploaded JSON file
 	importConfigs(event: Event) {
 		// Proxy to hidden file input
-		const el = document.querySelector('#importSettings')
-		el.click()
-		this.onceAll('change', () => {
-			const reader = new FileReader()
-			reader.readAsText(el.files[0])
-			reader.onload = event => {
-				event as FileReaderOnloadEvent
+		this.$import.click()
+		const handler = () => this.importConfigFile()
+		this.$import.addEventListener("change", handler, {once: true})
+	}
 
-				// In case of curruption
-				let json: {[key: string]: string}
-				try {
-					json = JSON.parse(event.target.result)
-				}
-				catch(err) {
-					alert(lang.importConfig.corrupt)
-					return
-				}
-				localStorage.clear()
-				for (let key in json) {
-					localStorage.setItem(key, json[key])
-				}
-				alert(lang.importConfig.done)
-				location.reload()
-			}
-		})
+	// After the file has been uploaded, parse it and import the configs
+	async importConfigFile() {
+		const reader = new FileReader()
+		reader.readAsText(this.$import.files[0])
+		const event = await load(reader) as FileReaderOnloadEvent
+
+		// In case of curruption
+		let json: {[key: string]: string}
+		try {
+			json = JSON.parse(event.target.result)
+		}
+		catch(err) {
+			alert(lang.importConfig.corrupt)
+			return
+		}
+
+		localStorage.clear()
+		for (let key in json) {
+			localStorage.setItem(key, json[key])
+		}
+		alert(lang.importConfig.done)
+		location.reload()
 	}
 
 	// Render Hiden posts counter

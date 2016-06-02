@@ -23,7 +23,7 @@ export function randomID(len: number): string {
 
 // Simple map of sets with automatic array creation and removal
 export class SetMap<V> {
-	private map: {[key: string]: Set<V>} = {}
+	map: {[key: string]: Set<V>} = {}
 
 	// Add item to key
 	add(key: string, item: V) {
