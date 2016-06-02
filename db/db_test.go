@@ -147,10 +147,11 @@ func (*DBSuite) TestFindNonexistantImageThumb(c *C) {
 
 func (*DBSuite) TestFindImageThumb(c *C) {
 	thumbnailed := types.ProtoImage{
-		File:     "123",
-		SHA1:     "foo",
-		FileType: 1,
-		Posts:    1,
+		ImageCommon: types.ImageCommon{
+			File: "123",
+			SHA1: "foo",
+		},
+		Posts: 1,
 	}
 	insertProtoImage(thumbnailed, c)
 
@@ -175,7 +176,9 @@ func assertImageRefCount(id string, count int, c *C) {
 func (*DBSuite) TestDecreaseImageRefCount(c *C) {
 	const id = "123"
 	img := types.ProtoImage{
-		File:  id,
+		ImageCommon: types.ImageCommon{
+			File: id,
+		},
 		Posts: 2,
 	}
 	insertProtoImage(img, c)
@@ -187,7 +190,9 @@ func (*DBSuite) TestDecreaseImageRefCount(c *C) {
 func (*DBSuite) TestRemoveUnreffedImage(c *C) {
 	const id = "123"
 	img := types.ProtoImage{
-		File:  id,
+		ImageCommon: types.ImageCommon{
+			File: id,
+		},
 		Posts: 1,
 	}
 	insertProtoImage(img, c)

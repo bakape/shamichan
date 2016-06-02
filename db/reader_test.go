@@ -9,7 +9,11 @@ import (
 )
 
 var (
-	genericImage = types.Image{File: "foo"}
+	genericImage = &types.Image{
+		ImageCommon: types.ImageCommon{
+			File: "foo",
+		},
+	}
 
 	sampleThreads = []types.DatabaseThread{
 		{

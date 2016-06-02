@@ -74,7 +74,9 @@ func (*DB) TestImageProcessing(c *C) {
 		file := openFile("sample."+ext, c)
 		defer file.Close()
 		img := &types.ProtoImage{
-			FileType: filetype,
+			ImageCommon: types.ImageCommon{
+				FileType: filetype,
+			},
 		}
 
 		large, small, err := processImage(file, int64(filetype)+20, img)

@@ -39,8 +39,8 @@ type DatabaseThread struct {
 
 // Post is a generic post. Either OP or reply.
 type Post struct {
-	Editing bool `json:"editing" gorethink:"editing"`
-	Image
+	Editing   bool    `json:"editing" gorethink:"editing"`
+	Image     *Image  `json:"image,omitempty" gorethink:"image,omitempty"`
 	OP        int64   `json:"op,omitempty" gorethink:"op"`
 	ID        int64   `json:"id" gorethink:"id"`
 	Time      int64   `json:"time" gorethink:"time"`
@@ -54,37 +54,6 @@ type Post struct {
 	Email     string  `json:"email,omitempty" gorethink:"email,omitempty"`
 	Backlinks LinkMap `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
 	Links     LinkMap `json:"links,omitempty" gorethink:"links,omitempty"`
-}
-
-// Image contains a post's image and thumbnail data
-type Image struct {
-	APNG     bool     `json:"apng,omitempty" gorethink:"apng,omitempty"`
-	Audio    bool     `json:"audio,omitempty" gorethink:"audio,omitempty"`
-	Spoiler  uint8    `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
-	FileType uint8    `json:"fileType,omitempty" gorethink:"fileType,omitempty"`
-	Length   int32    `json:"length,omitempty" gorethink:"length,omitempty"`
-	Dims     []uint16 `json:"dims,omitempty" gorethink:"dims,omitempty"`
-	Size     int64    `json:"size,omitempty" gorethink:"size,omitempty"`
-	File     string   `json:"file,omitempty" gorethink:"file,omitempty"`
-	MD5      string   `json:",omitempty" gorethink:",omitempty"`
-	SHA1     string   `json:",omitempty" gorethink:",omitempty"`
-	Imgnm    string   `json:"imgnm,omitempty" gorethink:"imgnm,omitempty"`
-}
-
-// ProtoImage stores image data related to the source and thumbnail resources
-// itself. This struct is partially coppied into the image struct on image
-// allocattion.
-type ProtoImage struct {
-	APNG     bool      `gorethink:"apng,omitempty"`
-	Audio    bool      `gorethink:"audio,omitempty"`
-	FileType uint8     `gorethink:"fileType"`
-	Length   int32     `gorethink:"length,omitempty"`
-	Dims     [4]uint16 `gorethink:"dims"`
-	Posts    int       `gorethink:"posts,omitempty"`
-	Size     int64     `gorethink:"size"`
-	File     string    `gorethink:"file"`
-	MD5      string
-	SHA1     string
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to

@@ -2,13 +2,6 @@ package server
 
 import (
 	"errors"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/templates"
-	"github.com/bakape/meguca/types"
-	r "github.com/dancannon/gorethink"
-	"github.com/dimfeld/httptreemux"
-	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,11 +10,23 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/templates"
+	"github.com/bakape/meguca/types"
+	r "github.com/dancannon/gorethink"
+	"github.com/dimfeld/httptreemux"
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
 
-var genericImage = types.Image{File: "foo"}
+var genericImage = &types.Image{
+	ImageCommon: types.ImageCommon{
+		File: "foo",
+	},
+}
 
 // Does not seem like we can easily resuse testing functions. Thus copy/paste
 // for now.
@@ -446,7 +451,15 @@ func (d *DB) TestBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
-			"file":"foo",
+			"image":{
+				"fileType":0,
+				"dims":[0,0,0,0],
+				"size":0,
+				"file":"foo",
+				"MD5":"",
+				"SHA1":"",
+				"imgnm":""
+			},
 			"id":3,
 			"time":0,
 			"board":"a",
@@ -459,7 +472,15 @@ func (d *DB) TestBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
-			"file":"foo",
+			"image":{
+				"fileType":0,
+				"dims":[0,0,0,0],
+				"size":0,
+				"file":"foo",
+				"MD5":"",
+				"SHA1":"",
+				"imgnm":""
+			},
 			"id":1,
 			"time":0,
 			"board":"a",
@@ -492,7 +513,15 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
-			"file":"foo",
+			"image":{
+				"fileType":0,
+				"dims":[0,0,0,0],
+				"size":0,
+				"file":"foo",
+				"MD5":"",
+				"SHA1":"",
+				"imgnm":""
+			},
 			"id":4,
 			"time":0,
 			"board":"c",
@@ -505,7 +534,15 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
-			"file":"foo",
+			"image":{
+				"fileType":0,
+				"dims":[0,0,0,0],
+				"size":0,
+				"file":"foo",
+				"MD5":"",
+				"SHA1":"",
+				"imgnm":""
+			},
 			"id":3,
 			"time":0,
 			"board":"a",
@@ -518,7 +555,15 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			"postCtr":0,
 			"imageCtr":0,
 			"editing":false,
-			"file":"foo",
+			"image":{
+				"fileType":0,
+				"dims":[0,0,0,0],
+				"size":0,
+				"file":"foo",
+				"MD5":"",
+				"SHA1":"",
+				"imgnm":""
+			},
 			"id":1,
 			"time":0,
 			"board":"a",
@@ -564,7 +609,15 @@ func (d *DB) TestThreadJSON(c *C) {
 	"postCtr":0,
 	"imageCtr":0,
 	"editing":false,
-	"file":"foo",
+	"image":{
+		"fileType":0,
+		"dims":[0,0,0,0],
+		"size":0,
+		"file":"foo",
+		"MD5":"",
+		"SHA1":"",
+		"imgnm":""
+	},
 	"id":1,
 	"time":0,
 	"board":"a",
