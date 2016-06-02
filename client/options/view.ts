@@ -64,7 +64,7 @@ export default class OptionsPanel extends BannerModal {
 
 	// Propagate options panel changes through
 	// options-panel -> options -> OptionModel
-	applyChange(event: Event) {
+	async applyChange(event: Event) {
 		const el = event.target as Element,
 			id = el.getAttribute('id') as OptionID,
 			model = models[id]
@@ -90,8 +90,8 @@ export default class OptionsPanel extends BannerModal {
 			break
 		case optionType.image:
 			// Not recorded. Extracted directly by the background handler
-			loadModule('background').then(module =>
-				module.store((event as any).target.files[0]))
+			const module = await loadModule('background')
+			module.store((event as any).target.files[0])
 			return
 		}
 

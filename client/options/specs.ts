@@ -214,8 +214,9 @@ export const specs: OptionSpec[] = [
 		noLoad: isMobile,
 		tab: tabs.style,
 		noExecOnStart: true,
-		exec(render) {
-			loadModule('background').then(module => module.render())
+		async exec(render) {
+			const module = await loadModule('background')
+			module.render()
 		}
 	},
 	// Upload field for the custom background image

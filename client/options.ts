@@ -3,7 +3,7 @@
 */
 
 import {EventfulModel} from './model'
-import {extend, loadModule} from './util'
+import {extend} from './util'
 import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
 import OptionsPanel from './options/view'
 import {defer} from './defer'
@@ -58,7 +58,7 @@ class OptionModel {
 	}
 
 	// Read value from localStorage
-	private read(): string {
+	read(): string {
 		return localStorage.getItem(this.id) || ""
 	}
 
@@ -83,13 +83,13 @@ class OptionModel {
 	}
 
 	// Handler to be executed on field change in central options storage model
-	private onChange(val: OptionValue) {
+	onChange(val: OptionValue) {
 		this.execute(val)
 		this.set(val)
 	}
 
 	// Execute handler function, if any
-	private execute(val: OptionValue) {
+	execute(val: OptionValue) {
 		if (this.spec.exec) {
 			this.spec.exec(val)
 		}
@@ -121,5 +121,5 @@ defer(() => new OptionsPanel())
 // Conditionally load custom background module and render background
 if (options.get('userBG')) {
 	defer(() =>
-		loadModule('background').then(module => module.render()))
+		models["userBG"].execute(true))
 }
