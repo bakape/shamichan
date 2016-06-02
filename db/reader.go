@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
@@ -58,30 +59,7 @@ func (rd *Reader) GetThread(id int64, lastN int) (*types.Thread, error) {
 	// Remove OP from posts map to prevent possible duplication
 	delete(thread.Posts, util.IDToString(id))
 
-	// Parse posts, remove those that the client can not access and allocate
-	// the rest to a map
-	filtered := make(map[string]types.Post, len(thread.Posts))
-	for _, post := range thread.Posts {
-		parsed := rd.parsePost(post)
-		if parsed.ID != 0 {
-			filtered[util.IDToString(parsed.ID)] = parsed
-		}
-	}
-	thread.Posts = filtered
-
 	return &thread, nil
-}
-
-// parsePost formats the Post struct for public distribution
-func (rd *Reader) parsePost(post types.Post) types.Post {
-	if post.Deleted {
-		return types.Post{}
-	}
-	if post.ImgDeleted {
-		post.Image = types.Image{}
-		post.ImgDeleted = false
-	}
-	return post
 }
 
 // GetPost reads a single post from the database
@@ -95,10 +73,9 @@ func (rd *Reader) GetPost(id, op int64) (post types.Post, err error) {
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving post: %d", id)
 		err = util.WrapError(msg, err)
-		return
 	}
 
-	return rd.parsePost(post), nil
+	return
 }
 
 // GetBoard retrieves all OPs of a single board
@@ -117,11 +94,7 @@ func (rd *Reader) GetBoard(board string) (out *types.Board, err error) {
 	}
 
 	out.Ctr, err = BoardCounter(board)
-	if err != nil {
-		return
-	}
 
-	out.Threads = rd.parseThreads(out.Threads)
 	return
 }
 
@@ -140,23 +113,6 @@ func (rd *Reader) GetAllBoard() (board *types.Board, err error) {
 	}
 
 	board.Ctr, err = PostCounter()
-	if err != nil {
-		return
-	}
 
-	board.Threads = rd.parseThreads(board.Threads)
 	return
-}
-
-// Parse and format board query results and discard those threads, that the
-// client can't access
-func (rd *Reader) parseThreads(threads []types.Thread) []types.Thread {
-	filtered := make([]types.Thread, 0, len(threads))
-	for _, thread := range threads {
-		if thread.Deleted {
-			continue
-		}
-		filtered = append(filtered, thread)
-	}
-	return filtered
 }

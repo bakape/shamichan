@@ -95,27 +95,6 @@ func (*DBSuite) TestNewReader(c *C) {
 	c.Assert(NewReader(ident), DeepEquals, standard)
 }
 
-func (*DBSuite) TestParsePost(c *C) {
-	// Regular post
-	r := NewReader(auth.Ident{})
-	standard := types.Post{
-		Body:  "foo",
-		Image: genericImage,
-	}
-	p := standard
-	c.Assert(r.parsePost(p), DeepEquals, standard)
-
-	// Image deleted
-	p = standard
-	p.ImgDeleted = true
-	c.Assert(r.parsePost(p), DeepEquals, types.Post{Body: "foo"})
-
-	// Post deleted
-	p = standard
-	p.Deleted = true
-	c.Assert(r.parsePost(p), DeepEquals, types.Post{})
-}
-
 func (*DBSuite) TestGetPost(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
@@ -130,11 +109,6 @@ func (*DBSuite) TestGetPost(c *C) {
 			Board: "a",
 			Posts: map[string]types.Post{
 				"2": std,
-				"3": {
-					Board:   "a",
-					ID:      3,
-					Deleted: true,
-				},
 			},
 		},
 		{
@@ -157,7 +131,6 @@ func (*DBSuite) TestGetPost(c *C) {
 	}{
 		{2, 76}, // Thread does not exist
 		{8, 1},  // Post does not exist
-		{3, 1},  // Post deleted
 	}
 
 	for _, args := range empties {
@@ -170,39 +143,6 @@ func (*DBSuite) TestGetPost(c *C) {
 	post, err := rd.GetPost(2, 1)
 	c.Assert(err, IsNil)
 	c.Assert(post, DeepEquals, std)
-}
-
-func (*DBSuite) TestParseThreads(c *C) {
-	threads := []types.Thread{
-		{
-			Post: types.Post{
-				ID:      2,
-				Deleted: true,
-			},
-			Posts: map[string]types.Post{
-				"2": {
-					ID: 2,
-				},
-			},
-		},
-	}
-	r := NewReader(auth.Ident{})
-
-	// Zero length
-	c.Assert(r.parseThreads(threads), DeepEquals, []types.Thread{})
-
-	std := types.Thread{
-		Post: types.Post{
-			ID: 1,
-		},
-		Posts: map[string]types.Post{
-			"1": {
-				ID: 1,
-			},
-		},
-	}
-	threads = append(threads, std)
-	c.Assert(r.parseThreads(threads), DeepEquals, []types.Thread{std})
 }
 
 func (*DBSuite) TestGetBoard(c *C) {

@@ -39,9 +39,7 @@ type DatabaseThread struct {
 
 // Post is a generic post. Either OP or reply.
 type Post struct {
-	Editing    bool `json:"editing" gorethink:"editing"`
-	Deleted    bool `json:"deleted,omitempty" gorethink:"deleted,omitempty"`
-	ImgDeleted bool `json:"imgDeleted,omitempty" gorethink:"imgDeleted,omitempty"`
+	Editing bool `json:"editing" gorethink:"editing"`
 	Image
 	OP        int64   `json:"op,omitempty" gorethink:"op"`
 	ID        int64   `json:"id" gorethink:"id"`
