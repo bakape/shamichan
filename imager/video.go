@@ -3,12 +3,16 @@
 package imager
 
 import (
-	webmTool "github.com/Soreil/webm"
 	"io"
+
+	webmTool "github.com/Soreil/webm"
+	"github.com/bakape/meguca/types"
 )
 
-func processWebm(file io.ReadSeeker, img *ProtoImage) error {
-	return nil
+func processWebm(file io.ReadSeeker, postID int64, img *types.ProtoImage) (
+	io.Reader, io.Reader, error,
+) {
+	return nil, nil, nil
 }
 
 func verifyWebm(file io.ReadSeeker) error {

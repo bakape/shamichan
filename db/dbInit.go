@@ -136,38 +136,31 @@ func InitDB(dbName string) error {
 
 // CreateTables creates all tables needed for meguca operation
 func CreateTables() error {
+	fns := make([]func() error, 0, len(AllTables))
 	for _, table := range AllTables[:len(AllTables)-1] {
-		err := DB(r.TableCreate(table)).Exec()
-		if err != nil {
-			return err
-		}
+		fns = append(fns, DB(r.TableCreate(table)).Exec)
 	}
 
-	err := DB(r.TableCreate("images", r.TableCreateOpts{
-		PrimaryKey: "file",
-	})).Exec()
-	if err != nil {
-		return err
-	}
+	opts := r.TableCreateOpts{PrimaryKey: "file"}
+	fns = append(fns, DB(r.TableCreate("images", opts)).Exec)
 
-	return nil
+	return util.Waterfall(fns)
 }
 
 // CreateIndeces create secondary indeces for faster table queries
 func CreateIndeces() error {
-	if err := DB(r.Table("threads").IndexCreate("board")).Exec(); err != nil {
-		return util.WrapError("Error creating index", err)
+	fns := []func() error{
+		DB(r.Table("threads").IndexCreate("board")).Exec,
+		DB(r.Table("images").IndexCreate("SHA1")).Exec,
 	}
 
 	// Make sure all indeces are ready to avoid the race condition of and index
 	// being accessed before its full creation.
 	for _, table := range AllTables {
-		err := DB(r.Table(table).IndexWait()).Exec()
-		if err != nil {
-			return util.WrapError("Error waiting for index", err)
-		}
+		fns = append(fns, DB(r.Table(table).IndexWait()).Exec)
 	}
-	return nil
+
+	return util.Waterfall(fns)
 }
 
 // UniqueDBName returns a unique datatabase name. Needed so multiple concurent

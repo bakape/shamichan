@@ -36,16 +36,6 @@ var mimeTypes = map[string]uint8{
 	"application/pdf": pdf,
 }
 
-// ProtoImage stores data of an image that is being processed as well as data,
-// that will be stored, once the image finishes processing.
-type ProtoImage struct {
-	fileType uint8
-	types.Image
-	ClientID                  string
-	PostID                    int64
-	Thumbnail, SharpThumbnail io.Reader
-}
-
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
@@ -62,18 +52,19 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	head.Set("Content-Type", "text/html; charset=UTF-8")
 	head.Set("Access-Control-Allow-Origin", conf.HTTP.Origin)
 
-	// clientID, spoiler, err := parseUploadForm(req)
-	// if err != nil {
-	// 	passError(res, req, err, 400)
-	// 	return
-	// }
-	//
-	// file, fileHeader, err := req.FormFile("image")
-	// if err != nil {
-	// 	passError(res, req, err, 400)
-	// 	return
-	// }
-	//
+	_, _, err := parseUploadForm(req)
+	if err != nil {
+		passError(res, req, err, 400)
+		return
+	}
+
+	file, _, err := req.FormFile("image")
+	if err != nil {
+		passError(res, req, err, 400)
+		return
+	}
+	defer file.Close()
+
 	// img.Image.Imgnm = fileHeader.Filename
 	//
 	// fileType, err := detectFileType(file)
@@ -117,7 +108,7 @@ func parseUploadForm(req *http.Request) (
 		return
 	}
 
-	err = req.ParseMultipartForm(512)
+	err = req.ParseMultipartForm(0)
 	if err != nil {
 		return
 	}
@@ -210,13 +201,15 @@ func detectCompatibleMP4(buf []byte) (bool, error) {
 }
 
 // Delegate the processing of the file to an apropriate function by file type
-func processFile(file io.ReadSeeker, img *ProtoImage) error {
-	switch img.fileType {
+func processFile(file io.ReadSeeker, postID int64, img *types.ProtoImage) (
+	io.Reader, io.Reader, error,
+) {
+	switch img.FileType {
 	case webm:
-		return processWebm(file, img)
+		return processWebm(file, postID, img)
 	case jpeg, png, gif:
-		return processImage(file, img)
+		return processImage(file, postID, img)
 	default:
-		return fmt.Errorf("File type slipped in: %d", img.FileType)
+		return nil, nil, fmt.Errorf("File type slipped in: %d", img.FileType)
 	}
 }

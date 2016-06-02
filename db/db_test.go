@@ -138,3 +138,63 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 	c.Assert(initial, DeepEquals, log)
 	closer.Close()
 }
+
+func (*DBSuite) TestFindNonexistantImageThumb(c *C) {
+	img, err := FindImageThumb("sha")
+	c.Assert(err, IsNil)
+	c.Assert(img, DeepEquals, types.ProtoImage{})
+}
+
+func (*DBSuite) TestFindImageThumb(c *C) {
+	thumbnailed := types.ProtoImage{
+		File:     "123",
+		SHA1:     "foo",
+		FileType: 1,
+		Posts:    1,
+	}
+	insertProtoImage(thumbnailed, c)
+
+	img, err := FindImageThumb("foo")
+	c.Assert(err, IsNil)
+	thumbnailed.Posts++
+	c.Assert(img, DeepEquals, thumbnailed)
+
+	assertImageRefCount("123", 2, c)
+}
+
+func insertProtoImage(img types.ProtoImage, c *C) {
+	c.Assert(DB(r.Table("images").Insert(img)).Exec(), IsNil)
+}
+
+func assertImageRefCount(id string, count int, c *C) {
+	var posts int
+	c.Assert(DB(GetImage(id).Field("posts")).One(&posts), IsNil)
+	c.Assert(posts, Equals, count)
+}
+
+func (*DBSuite) TestDecreaseImageRefCount(c *C) {
+	const id = "123"
+	img := types.ProtoImage{
+		File:  id,
+		Posts: 2,
+	}
+	insertProtoImage(img, c)
+
+	c.Assert(UnreferenceImage(id), IsNil)
+	assertImageRefCount(id, 1, c)
+}
+
+func (*DBSuite) TestRemoveUnreffedImage(c *C) {
+	const id = "123"
+	img := types.ProtoImage{
+		File:  id,
+		Posts: 1,
+	}
+	insertProtoImage(img, c)
+
+	c.Assert(UnreferenceImage(id), IsNil)
+
+	var noImage bool
+	c.Assert(DB(GetImage(id).Eq(nil)).One(&noImage), IsNil)
+	c.Assert(noImage, Equals, true)
+}

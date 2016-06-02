@@ -1,10 +1,11 @@
 package db
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/config"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -91,11 +92,21 @@ func (*DBInit) TestLoadDB(c *C) {
 		c.Fatalf("table '%s' not created", table)
 	}
 
-	var hasIndex bool
-	err = DB(r.Table("threads").IndexList().Contains("board")).One(&hasIndex)
-	c.Assert(err, IsNil)
-	if !hasIndex {
-		indexMissing("threads", "board", c)
+	indexes := map[string]string{
+		"threads": "board",
+		"images":  "SHA1",
+	}
+	for table, index := range indexes {
+		var hasIndex bool
+		err = DB(r.Table(table).IndexList().Contains(index)).One(&hasIndex)
+		c.Assert(err, IsNil)
+		if !hasIndex {
+			c.Fatalf(
+				"no secondary index '%s' created for table '%s'",
+				index,
+				table,
+			)
+		}
 	}
 
 	var info infoDocument
@@ -115,8 +126,4 @@ func (*DBInit) TestLoadDB(c *C) {
 
 	c.Assert(RSession.Close(), IsNil)
 	c.Assert(LoadDB(), IsNil)
-}
-
-func indexMissing(table, index string, c *C) {
-	c.Fatalf("no secondary index '%s' created for table '%s'", index, table)
 }

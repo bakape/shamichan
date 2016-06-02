@@ -73,6 +73,22 @@ type Image struct {
 	Imgnm    string   `json:"imgnm,omitempty" gorethink:"imgnm,omitempty"`
 }
 
+// ProtoImage stores image data related to the source and thumbnail resources
+// itself. This struct is partially coppied into the image struct on image
+// allocattion.
+type ProtoImage struct {
+	APNG     bool      `gorethink:"apng,omitempty"`
+	Audio    bool      `gorethink:"audio,omitempty"`
+	FileType uint8     `gorethink:"fileType"`
+	Length   int32     `gorethink:"length,omitempty"`
+	Dims     [4]uint16 `gorethink:"dims"`
+	Posts    int       `gorethink:"posts,omitempty"`
+	Size     int64     `gorethink:"size"`
+	File     string    `gorethink:"file"`
+	MD5      string
+	SHA1     string
+}
+
 // LinkMap contains a map of post numbers, this tread is linking, to
 // corresponding Link structs
 type LinkMap map[string]Link

@@ -1,9 +1,11 @@
 package imager
 
 import (
-	"github.com/bakape/meguca/config"
-	. "gopkg.in/check.v1"
 	"io/ioutil"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/types"
+	. "gopkg.in/check.v1"
 )
 
 func (*DB) TestVerifyImageFormat(c *C) {
@@ -62,13 +64,6 @@ func (*DB) TestDupDetection(c *C) {
 	c.Assert(verifyImage(sample, 2), ErrorMatches, "Duplicate image of post 1")
 }
 
-func (*Imager) TestFileHashing(c *C) {
-	img := &ProtoImage{}
-	hashFile([]byte{1, 2, 3}, img)
-	c.Assert(img.SHA1, Equals, "7037807198c22a7d2b0807371d763779a84fdfcf")
-	c.Assert(img.MD5, Equals, "5289df737df57326fcdd22597afb1fac")
-}
-
 func (*DB) TestImageProcessing(c *C) {
 	samples := map[string]uint8{
 		"jpeg": jpeg,
@@ -78,16 +73,16 @@ func (*DB) TestImageProcessing(c *C) {
 	for ext, filetype := range samples {
 		file := openFile("sample."+ext, c)
 		defer file.Close()
-		img := &ProtoImage{
-			fileType: filetype,
-			PostID:   int64(filetype) + 20,
+		img := &types.ProtoImage{
+			FileType: filetype,
 		}
-		c.Assert(processImage(file, img), IsNil)
-		c.Assert(len(img.SHA1) > len(img.MD5), Equals, true)
-		small, err := ioutil.ReadAll(img.Thumbnail)
+
+		large, small, err := processImage(file, int64(filetype)+20, img)
 		c.Assert(err, IsNil)
-		large, err := ioutil.ReadAll(img.SharpThumbnail)
+		smallBuf, err := ioutil.ReadAll(small)
 		c.Assert(err, IsNil)
-		c.Assert(len(large) > len(small), Equals, true)
+		largeBuf, err := ioutil.ReadAll(large)
+		c.Assert(err, IsNil)
+		c.Assert(len(largeBuf) > len(smallBuf), Equals, true)
 	}
 }
