@@ -14,6 +14,7 @@ IDBRequest.prototype.exec = function (): Promise<any> {
 	})
 }
 
+// Open a connection to the IndexedDB database
 export function open(): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
 		const r = indexedDB.open('meguca', dbVersion)
