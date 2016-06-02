@@ -1,6 +1,6 @@
 import {BannerModal} from '../banner'
 import renderContents from './render'
-import {OptionID, models, default as options} from '../options'
+import {models, default as options} from '../options'
 import {optionType} from './specs'
 import {each, find, loadModule, load} from '../util'
 import {opts as lang} from '../lang'
@@ -66,7 +66,7 @@ export default class OptionsPanel extends BannerModal {
 	// options-panel -> options -> OptionModel
 	async applyChange(event: Event) {
 		const el = event.target as Element,
-			id = el.getAttribute('id') as OptionID,
+			id = el.getAttribute('id'),
 			model = models[id]
 
 		// Not an option input element
@@ -98,7 +98,7 @@ export default class OptionsPanel extends BannerModal {
 		if (!model.validate(val)) {
 			el.value = ''
 		} else {
-			options.set(id, val)
+			options[id] = val
 		}
 	}
 

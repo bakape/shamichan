@@ -68,12 +68,15 @@
 	]
 
 	var functionTests = [
-		// Promises
-		'Promise ',
+		'Promise',
+		'Proxy',
+
 		// Fetch API
 		'window.fetch',
+
 		// DOM level 4 methods
 		'Element.prototype.remove',
+
 		// DOM 3 query methods
 		'Element.prototype.querySelector',
 		'Element.prototype.querySelectorAll'

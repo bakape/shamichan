@@ -3,7 +3,7 @@
 */
 
 import {config} from '../../state'
-import {default as options, OptionID} from '../../options'
+import options from '../../options'
 import {
 	parseHTML, commaList, parseAttributes, ElementAttributes, escape
 } from '../../util'
@@ -12,7 +12,7 @@ import {images as lang} from '../../lang'
 
 // Render a thumbnail of an image, according to configuration settings
 export function renderImage(data: ImageData, reveal?: boolean): string {
-	const showThumb = options.get("thumbs") !== 'hide' || reveal
+	const showThumb = options.thumbs !== 'hide' || reveal
 	return parseHTML
 		`<figure>
 			${renderFigcaption(data, reveal)}
@@ -33,7 +33,6 @@ export function renderFigcaption(data: ImageData, reveal: boolean): string {
 	return parseHTML
 		`<figcaption>
 			${hiddenToggle(reveal)}
-			${imageSearch(data)}
 			<span>
 				(${list})
 			</span>
@@ -55,7 +54,7 @@ function readableFilesize(size: number): string {
 
 // Render the button for toggling hidden thumbnails
 function hiddenToggle(reveal: boolean): string {
-	if (options.get('thumbs') !== 'hide') {
+	if (options.thumbs !== 'hide') {
 		return ''
 	}
 	return parseHTML
@@ -72,82 +71,82 @@ const imagePaths: {[type: string]: string} = {
 	spoil: '/ass/spoil/spoiler'
 }
 
-type ISTemplate = (data: ImageData) => string
-
-// Generate template functions for each image search engine
-const searchTemplates = (function() {
-	const models = [
-		{
-			engine: 'google',
-			url: 'https://www.google.com/searchbyimage?image_url=',
-			type: 'thumb',
-			symbol: 'G'
-		},
-		{
-			engine: 'iqdb',
-			url: 'http://iqdb.org/?url=',
-			type: 'thumb',
-			symbol: 'Iq'
-		},
-		{
-			engine: 'saucenao',
-			url: 'http://saucenao.com/search.php?db=999&url=',
-			type: 'thumb',
-			symbol: 'Sn'
-		},
-		{
-			engine: 'desustorage',
-			type: 'MD5',
-			url: 'https://desustorage.org/_/search/image/',
-			symbol: 'Ds'
-		},
-		{
-			engine: 'exhentai',
-			type: 'SHA1',
-			url: 'http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=',
-			symbol: 'Ex'
-		}
-	]
-
-	const templates: {[engine: string]: ISTemplate} = {}
-	for (let {engine, url, type, symbol} of models) {
-		const attrs: ElementAttributes = {
-			target: '_blank',
-			rel: 'nofollow',
-			class: 'imageSearch ' + engine
-		}
-		templates[engine] = data => {
-			if (!options.get(engine as OptionID)) {
-				return ''
-			}
-			attrs['href'] = url
-				+ (type === 'thumb' ? thumbPath(data, false) : data[type])
-			return parseHTML
-				`<a ${parseAttributes(attrs)}>
-					${symbol}
-				</a>`
-		}
-	}
-
-	return templates
-})()
-
-// Render image search links in accordance to client settings
-function imageSearch(data: ImageData): string {
-	let html = ''
-
-	// Only render google for PDFs
-	if (data.fileType === fileTypes.pdf) {
-		if (options.get("google")) {
-			return searchTemplates['google'](data)
-		}
-		return ''
-	}
-	for (let engine in searchTemplates) {
-		html += searchTemplates[engine](data)
-	}
-	return html
-}
+// type ISTemplate = (data: ImageData) => string
+//
+// // Generate template functions for each image search engine
+// const searchTemplates = (function() {
+// 	const models = [
+// 		{
+// 			engine: 'google',
+// 			url: 'https://www.google.com/searchbyimage?image_url=',
+// 			type: 'thumb',
+// 			symbol: 'G'
+// 		},
+// 		{
+// 			engine: 'iqdb',
+// 			url: 'http://iqdb.org/?url=',
+// 			type: 'thumb',
+// 			symbol: 'Iq'
+// 		},
+// 		{
+// 			engine: 'saucenao',
+// 			url: 'http://saucenao.com/search.php?db=999&url=',
+// 			type: 'thumb',
+// 			symbol: 'Sn'
+// 		},
+// 		{
+// 			engine: 'desustorage',
+// 			type: 'MD5',
+// 			url: 'https://desustorage.org/_/search/image/',
+// 			symbol: 'Ds'
+// 		},
+// 		{
+// 			engine: 'exhentai',
+// 			type: 'SHA1',
+// 			url: 'http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=',
+// 			symbol: 'Ex'
+// 		}
+// 	]
+//
+// 	const templates: {[engine: string]: ISTemplate} = {}
+// 	for (let {engine, url, type, symbol} of models) {
+// 		const attrs: ElementAttributes = {
+// 			target: '_blank',
+// 			rel: 'nofollow',
+// 			class: 'imageSearch ' + engine
+// 		}
+// 		templates[engine] = data => {
+// 			if (!options[engine]) {
+// 				return ''
+// 			}
+// 			attrs['href'] = url
+// 				+ (type === 'thumb' ? thumbPath(data, false) : data[type])
+// 			return parseHTML
+// 				`<a ${parseAttributes(attrs)}>
+// 					${symbol}
+// 				</a>`
+// 		}
+// 	}
+//
+// 	return templates
+// })()
+//
+// // Render image search links in accordance to client settings
+// function imageSearch(data: ImageData): string {
+// 	let html = ''
+//
+// 	// Only render google for PDFs
+// 	if (data.fileType === fileTypes.pdf) {
+// 		if (options.google) {
+// 			return searchTemplates['google'](data)
+// 		}
+// 		return ''
+// 	}
+// 	for (let engine in searchTemplates) {
+// 		html += searchTemplates[engine](data)
+// 	}
+// 	return html
+// }
 
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
@@ -218,15 +217,15 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 	let thumb: string,
 		[width, height, thumbWidth, thumbHeight] = data.dims
 
-	if (data.spoiler && options.get('spoilers')) {
+	if (data.spoiler && options.spoilers) {
 		// Spoilered and spoilers enabled
 		thumb = imagePaths['spoil'] + data.spoiler + '.jpg'
 		thumbWidth = thumbHeight = 250
-	} else if (data.fileType === fileTypes.gif && options.get('autogif')) {
+	} else if (data.fileType === fileTypes.gif && options.autogif) {
 		// Animated GIF thumbnails
 		thumb = src
 	} else {
-		thumb = thumbPath(data, options.get('thumbs') !== 'small')
+		thumb = thumbPath(data, options.thumbs !== 'small')
 	}
 
 	const linkAttrs: ElementAttributes = {
@@ -247,7 +246,7 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 
 		// No image hover previews
 		imgAttrs['class'] = 'expanded'
-		if(options.get('thumbs') === 'hide') {
+		if(options.thumbs === 'hide') {
 			imgAttrs['style'] = 'display: none'
 		}
 	}

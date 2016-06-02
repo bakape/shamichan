@@ -2,7 +2,7 @@
  Stores the state of the web application
 */
 
-import {EventfulModel} from './model'
+import {emitChanges} from './model'
 import {Post} from './posts/models'
 import Collection from './collection'
 import {getID} from './util'
@@ -61,7 +61,7 @@ export const config: Configs = (window as any).config
 // Indicates, if in mobile mode. Determined server-side.
 export const isMobile: boolean = (window as any).isMobile
 
-interface PageState {
+interface PageState extends ChangeEmitter {
 	board: string
 	thread: number
 	lastN: number
@@ -76,13 +76,11 @@ function read(href: string): PageState {
 		board,
 		thread: thread ? parseInt(thread[1]) : 0,
 		lastN: lastN ? parseInt(lastN[1]) : 0,
-	}
+	} as PageState
 }
 
-export type PageStateParam = "board" | "lastN" | "thread"
-
 // Load initial page state
-export const page = new EventfulModel<PageStateParam>(read(location.href))
+export const page = emitChanges<PageState>(read(location.href))
 
 // All posts currently displayed
 export const posts = new Collection<Post>()

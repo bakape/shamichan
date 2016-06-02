@@ -10,14 +10,14 @@ import {PostLinks} from '../models'
 // Render a link to other posts
 export function renderPostLink(num: number, board: string, op: number): string {
 	let text = '>>'
-	if (board !== page.get('board')) { // Cross-board
+	if (board !== page.board) { // Cross-board
 		text += `>/${board}/`
 	}
 	text += num
 	if (mine.has(num)) { // Post, I made
 		text += ' ' + lang.you
 	}
-	const thread = page.get('thread')
+	const {thread} = page
 	if (op !== thread) { // Cross-thread
 		text += ' \u27a1'
 	} else if (num == thread) { // OP post of this thread

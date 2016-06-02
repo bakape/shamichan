@@ -152,8 +152,8 @@ connSM.act(
 		// Send a requests to the server to syschronise to the current page and
 		// subscribe to the apropriate event feeds.
 		const msg: SyncRequest = {
-			board: page.get('board'),
-			thread: page.get('thread'),
+			board: page.board,
+			thread: page.thread,
 			ctr: syncCounter || 0,
 		}
 		let type = message.synchronise

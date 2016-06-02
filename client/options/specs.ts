@@ -5,7 +5,6 @@
 import {config, isMobile} from '../state'
 import {opts as lang} from '../lang'
 import {parseEl, loadModule} from '../util'
-import {OptionID} from '../options'
 
 // TODO: Send function
 
@@ -34,7 +33,7 @@ export type OptionValue =  boolean|string|number
 // Full schema of the option interface
 export type OptionSpec = {
 	// Identifier of the option. Used for DOM element and localStorage tagging
-	id: OptionID
+	id: string
 
 	// Type of option. Determines storage and rendering method. Defaults to
 	// 'checkbox', if omitted.

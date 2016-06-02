@@ -7,7 +7,6 @@ import {
 } from '../util'
 import {opts as lang, OptLabel} from '../lang'
 import {specs, OptionSpec, optionType} from './specs'
-import {OptionID} from '../options'
 
 // Render the inner HTML of the options panel
 export default function (): string {
@@ -109,14 +108,14 @@ function renderOption(spec: OptionSpec): string {
 }
 
 // Common input field render logic
-function renderInput(id: OptionID, attrs: ElementAttributes): string {
+function renderInput(id: string, attrs: ElementAttributes): string {
 	const [label, title] = lang.labels[id]
 	extend(attrs, {id, title})
 	return `<input ${parseAttributes(attrs)}>` + renderLabel(id, title, label)
 }
 
 // Render the description label to the right of the option
-function renderLabel(id: OptionID, title: string, label: string): string {
+function renderLabel(id: string, title: string, label: string): string {
 	return parseHTML
 		`<label for="${id}" title="${title}">
 			${label}

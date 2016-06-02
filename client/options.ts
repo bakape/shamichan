@@ -2,7 +2,7 @@
  User-set settings storage and change handling
 */
 
-import {EventfulModel} from './model'
+import {emitChanges} from './model'
 import {extend} from './util'
 import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
 import OptionsPanel from './options/view'
@@ -11,26 +11,47 @@ import {defer} from './defer'
 // Delete legacy options localStorage entry, if any
 localStorage.removeItem("options")
 
+interface Options extends ChangeEmitter {
+	lang: string
+	inlineFit: string
+	thumbs: string
+	imageHover: boolean
+	webmHover: boolean
+	autogif: boolean
+	spoilers: boolean
+	notification: boolean
+	anonymise: boolean
+	relativeTime: boolean
+	nowPlaying: boolean
+	illyaDance: boolean
+	illyaDanceMute: boolean
+	horizontalPosting: boolean
+	replyRight: boolean
+	theme: string
+	userBG: boolean
+	lastN: number
+	alwaysLock: boolean
+	newPost: string
+	toggleSpoiler: string
+	textSpoiler: string
+	done: string
+	expandAll: string
+	workMode: string
+	workModeToggle: boolean
+
+	[index: string]: any
+}
+
 // Central options storage model
-const options = new EventfulModel<OptionID>()
+const options = emitChanges<Options>()
 export default options
 
 // All loaded option models
 export const models: {[key: string]: OptionModel} = {}
 
-// Option model IDs
-export type OptionID =
-	'lang' | 'inlineFit' | 'thumbs' | 'imageHover' | 'webmHover' | 'autogif'
-	| 'spoilers' | 'notification' | 'anonymise' | 'relativeTime' | 'nowPlaying'
-	| 'illyaDance' | 'illyaDanceMute' | 'horizontalPosting' | 'replyRight'
-	| 'theme' | 'userBG' | 'userBGImage' | 'lastN' | 'alwaysLock' | 'newPost'
-	| 'toggleSpoiler' | 'textSpoiler' | 'done' | 'expandAll' |'workMode'
-	| 'export' | 'import' | 'hidden' | 'workModeToggle' | 'google' | 'iqdb'
-	| 'saucenao' | 'desustorage' | 'exhentai'
-
 // Controler for each individual option
 class OptionModel {
-	id: OptionID
+	id: string
 	spec: OptionSpec
 
 	// Create new option model from template spec
@@ -48,7 +69,7 @@ class OptionModel {
 		}
 
 		// Store option value in central stotage options Model
-		const val = options.attrs[this.id] = this.get()
+		const val = options[this.id] = this.get()
 		options.onChange(this.id, val =>
 			this.onChange(val))
 		if (!spec.noExecOnStart) {
@@ -119,7 +140,7 @@ for (let spec of specs) {
 defer(() => new OptionsPanel())
 
 // Conditionally load custom background module and render background
-if (options.get('userBG')) {
+if (options.userBG) {
 	defer(() =>
 		models["userBG"].execute(true))
 }

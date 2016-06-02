@@ -1,7 +1,7 @@
 // Background controller. Wallpapers, proper fitting and video backgrounds.
 
 import stackBlur from './stackBlur'
-import {default as options, OptionID} from './options'
+import options from './options'
 import {config, displayLoading} from './state'
 import {parseHTML, load} from './util'
 import {db} from './db'
@@ -32,15 +32,15 @@ export function render(bg?: BackgroundStore) {
 		container.innerHTML = ''
 		style.innerHTML = ''
 	})
-	if (options.get('illyaDance') && config.illyaDance) {
+	if (options.illyaDance && config.illyaDance) {
 		renderIllya()
-	} else if (options.get('userBG') && !options.get('workModeToggle')) {
+	} else if (options.userBG && !options.workModeToggle) {
 		renderBackground(bg)
 	}
 }
 
 // Listen to  changes in related options, that do not call render() directly
-const changeProps: OptionID[] = [
+const changeProps = [
 	'illyaDance', 'illyaDanceMute', 'theme', 'workModeToggle'
 ]
 for (let param of changeProps) {
@@ -51,7 +51,7 @@ for (let param of changeProps) {
 function renderIllya() {
 	const urlBase = '/ass/illya.'
 	let args = 'autoplay loop'
-	if (options.get('illyaDanceMute')) {
+	if (options.illyaDanceMute) {
 		args += ' muted'
 	}
 	const html = parseHTML
@@ -83,7 +83,7 @@ async function renderBackground(bg?: BackgroundStore) {
 		}`
 
 	// Add blurred background image to elements, if theme is glass or ocean
-	const theme = options.get('theme')
+	const {theme} = options
 	if (theme === 'glass' || theme === 'ocean') {
 		html += ' ' + renderGlass(theme, bg.blurred)
 	}
@@ -162,7 +162,7 @@ export async function store(file: File) {
 		.put(bg)
 		.exec()
 
-	if (options.get('userBG')) {
+	if (options.userBG) {
 		render(bg)
 	}
 	displayLoading(false)

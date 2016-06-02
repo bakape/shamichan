@@ -94,7 +94,7 @@ export function renderTime(time: number): string {
 	let title: string,
 		text :string
 	const readable = readableTime(time)
-	if (options.get('relativeTime')) {
+	if (options.relativeTime) {
 		title = readable
 		text = relativeTime(time, Date.now())
 	}
