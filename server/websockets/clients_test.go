@@ -86,3 +86,21 @@ func (*Map) TestSendAll(c *C) {
 	m.SendAll(msg)
 	sv.Wait()
 }
+
+func (*Map) TestGetNonExistantClient(c *C) {
+	m := newClientMap()
+	_, err := m.Get("1")
+	c.Assert(err, ErrorMatches, "no client found: .*")
+}
+
+func (*Map) TestGetClient(c *C) {
+	m := newClientMap()
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	m.Add(cl, "100")
+
+	res, err := m.Get(cl.ID)
+	c.Assert(err, IsNil)
+	c.Assert(res, DeepEquals, cl)
+}

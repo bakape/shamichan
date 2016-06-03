@@ -172,10 +172,11 @@ func StreamUpdates(
 // of the image will be incremented. If a successfull allocattion is not
 // performed, call UnreferenceImage() on this image, to avoid possible dangling
 // images.
-func FindImageThumb(hash string) (img types.ProtoImage, err error) {
+func FindImageThumb(hash string) (img types.Image, err error) {
 	query := r.
 		Table("images").
 		GetAllByIndex("SHA1", hash).
+		AtIndex(0).
 		Update(incrementImageRefCount, returnChanges).
 		Field("changes").
 		Field("new_val").
@@ -185,8 +186,9 @@ func FindImageThumb(hash string) (img types.ProtoImage, err error) {
 }
 
 // UnreferenceImage decrements the image's refference counter. If the counter
-// would become zero, the image is immediately deleted.
-func UnreferenceImage(id string) error {
+// would become zero, the image entry is immediately deleted. If so, returns
+// true.
+func UnreferenceImage(id string) (deleted bool, err error) {
 	query := GetImage(id).
 		Replace(func(doc r.Term) r.Term {
 			return r.Branch(
@@ -196,6 +198,11 @@ func UnreferenceImage(id string) error {
 					"posts": doc.Field("posts").Sub(1),
 				}),
 			)
-		})
-	return DB(query).Exec()
+		}).
+		Field("deleted").
+		Eq(1).
+		Default(false)
+
+	err = DB(query).One(&deleted)
+	return
 }

@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/bakape/meguca/util"
@@ -67,6 +68,17 @@ func (c *ClientMap) Has(id string) bool {
 	defer c.RUnlock()
 	_, ok := c.clients[id]
 	return ok
+}
+
+// Get returns a *Client of the passed ID or an error, if there is none
+func (c *ClientMap) Get(id string) (*Client, error) {
+	c.RLock()
+	defer c.RUnlock()
+	cl, ok := c.clients[id]
+	if !ok {
+		return nil, fmt.Errorf("no client found: %s", id)
+	}
+	return cl.client, nil
 }
 
 // CountByIP returns the number of unique IPs synchronised with the server

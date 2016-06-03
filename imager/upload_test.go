@@ -7,10 +7,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/server/websockets"
+	"github.com/bakape/meguca/types"
 	. "gopkg.in/check.v1"
 )
 
@@ -156,16 +159,6 @@ func (*Imager) TestNoClientID(c *C) {
 	c.Assert(err, ErrorMatches, "No client ID specified")
 }
 
-func (*Imager) TestClientNotSynced(c *C) {
-	b, w := newMultiWriter()
-	writeFields(c, w, map[string]string{"id": "Rokka"})
-	req := newRequest(c, b, w)
-	req.Header.Set("Content-Length", "1024")
-
-	_, _, err := parseUploadForm(req)
-	c.Assert(err, ErrorMatches, "Bad client ID: .*")
-}
-
 func (*Imager) TestInvalidSpoiler(c *C) {
 	b, w := newMultiWriter()
 	fields := syncClient()
@@ -209,4 +202,35 @@ func writeFields(c *C, w *multipart.Writer, fields map[string]string) {
 	for key, val := range fields {
 		c.Assert(w.WriteField(key, val), IsNil)
 	}
+}
+
+func (*Imager) TestPassImage(c *C) {
+	img := types.Image{
+		ImageCommon: types.ImageCommon{
+			File: "123",
+		},
+	}
+	client := new(websockets.Client)
+	client.AllocateImage = make(chan types.Image)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		c.Assert(<-client.AllocateImage, DeepEquals, img)
+	}()
+	c.Assert(passImage(img, client), Equals, true)
+	wg.Wait()
+}
+
+func (*Imager) TestPassImageTimeout(c *C) {
+	oldTimeout := allocationTimeout
+	allocationTimeout = time.Second
+	defer func() {
+		allocationTimeout = oldTimeout
+	}()
+	client := new(websockets.Client)
+	client.AllocateImage = make(chan types.Image)
+
+	c.Assert(passImage(types.Image{}, client), Equals, false)
 }

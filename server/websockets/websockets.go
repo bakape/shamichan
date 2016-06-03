@@ -13,6 +13,7 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/websocket"
 )
@@ -111,6 +112,10 @@ type Client struct {
 
 	// Close the client and free all  used resources
 	close chan error
+
+	// AllocateImage receives Image structs from the thumbnailer for allocation
+	// by the client
+	AllocateImage chan types.Image
 }
 
 type receivedMessage struct {
@@ -121,11 +126,12 @@ type receivedMessage struct {
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn) *Client {
 	return &Client{
-		ident:   auth.LookUpIdent(conn.RemoteAddr().String()),
-		Send:    make(chan []byte),
-		close:   make(chan error),
-		receive: make(chan receivedMessage),
-		conn:    conn,
+		ident:         auth.LookUpIdent(conn.RemoteAddr().String()),
+		Send:          make(chan []byte),
+		close:         make(chan error),
+		receive:       make(chan receivedMessage),
+		AllocateImage: make(chan types.Image),
+		conn:          conn,
 	}
 }
 
@@ -158,6 +164,10 @@ outer:
 			if err != nil {
 				break outer
 			}
+		case <-c.AllocateImage:
+
+			// TODO: Image allocation
+
 		}
 	}
 

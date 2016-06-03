@@ -2,14 +2,18 @@
 package imager
 
 import (
+	"crypto/sha1"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
 )
@@ -27,14 +31,19 @@ const (
 	ogg
 )
 
-// Map of oficial MIME types to the extension representations we deal with
-var mimeTypes = map[string]uint8{
-	"image/jpeg":      jpeg,
-	"image/png":       png,
-	"image/gif":       gif,
-	"video/webm":      webm,
-	"application/pdf": pdf,
-}
+var (
+	// Map of oficial MIME types to the extension representations we deal with
+	mimeTypes = map[string]uint8{
+		"image/jpeg":      jpeg,
+		"image/png":       png,
+		"image/gif":       gif,
+		"video/webm":      webm,
+		"application/pdf": pdf,
+	}
+
+	// Overridable for tests
+	allocationTimeout = time.Second * 10
+)
 
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
@@ -52,18 +61,47 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	head.Set("Content-Type", "text/html; charset=UTF-8")
 	head.Set("Access-Control-Allow-Origin", conf.HTTP.Origin)
 
-	_, _, err := parseUploadForm(req)
+	clientID, spoiler, err := parseUploadForm(req)
 	if err != nil {
 		passError(res, req, err, 400)
 		return
 	}
 
-	file, _, err := req.FormFile("image")
+	client, err := websockets.Clients.Get(clientID)
+	if err != nil {
+		passError(res, req, err, 400)
+		return
+	}
+
+	file, fileHeader, err := req.FormFile("image")
 	if err != nil {
 		passError(res, req, err, 400)
 		return
 	}
 	defer file.Close()
+
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		passError(res, req, err, 500)
+		return
+	}
+
+	sha1Sum := sha1.Sum(data)
+	SHA1 := string(sha1Sum[:])
+	img, err := db.FindImageThumb(SHA1)
+	if err != nil {
+		passError(res, req, err, 500)
+		return
+	}
+	img.Imgnm = fileHeader.Filename
+	img.Spoiler = spoiler
+
+	// Already have a thumbnail
+	if img.File != "" {
+		if !passImage(img, client) {
+		}
+		return
+	}
 
 	// img.Image.Imgnm = fileHeader.Filename
 	//
@@ -118,10 +156,6 @@ func parseUploadForm(req *http.Request) (
 		err = errors.New("No client ID specified")
 		return
 	}
-	if !websockets.Clients.Has(clientID) {
-		err = fmt.Errorf("Bad client ID: %s", clientID)
-		return
-	}
 	spoiler, err = extractSpoiler(req)
 
 	return
@@ -149,6 +183,17 @@ func isValidSpoiler(id uint8) bool {
 		}
 	}
 	return false
+}
+
+// Passes the image struct to the requesting client. Returns, if the image was
+// succesfully passed before the 10 second timeout.
+func passImage(img types.Image, client *websockets.Client) bool {
+	select {
+	case client.AllocateImage <- img:
+		return true
+	case <-time.Tick(allocationTimeout):
+		return false
+	}
 }
 
 // detectFileType detects if the upload is of a supported file type, by reading

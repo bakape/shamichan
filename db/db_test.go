@@ -142,7 +142,7 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 func (*DBSuite) TestFindNonexistantImageThumb(c *C) {
 	img, err := FindImageThumb("sha")
 	c.Assert(err, IsNil)
-	c.Assert(img, DeepEquals, types.ProtoImage{})
+	c.Assert(img, DeepEquals, types.Image{})
 }
 
 func (*DBSuite) TestFindImageThumb(c *C) {
@@ -158,7 +158,9 @@ func (*DBSuite) TestFindImageThumb(c *C) {
 	img, err := FindImageThumb("foo")
 	c.Assert(err, IsNil)
 	thumbnailed.Posts++
-	c.Assert(img, DeepEquals, thumbnailed)
+	c.Assert(img, DeepEquals, types.Image{
+		ImageCommon: thumbnailed.ImageCommon,
+	})
 
 	assertImageRefCount("123", 2, c)
 }
@@ -183,7 +185,9 @@ func (*DBSuite) TestDecreaseImageRefCount(c *C) {
 	}
 	insertProtoImage(img, c)
 
-	c.Assert(UnreferenceImage(id), IsNil)
+	deleted, err := UnreferenceImage(id)
+	c.Assert(err, IsNil)
+	c.Assert(deleted, Equals, false)
 	assertImageRefCount(id, 1, c)
 }
 
@@ -197,7 +201,9 @@ func (*DBSuite) TestRemoveUnreffedImage(c *C) {
 	}
 	insertProtoImage(img, c)
 
-	c.Assert(UnreferenceImage(id), IsNil)
+	deleted, err := UnreferenceImage(id)
+	c.Assert(err, IsNil)
+	c.Assert(deleted, Equals, true)
 
 	var noImage bool
 	c.Assert(DB(GetImage(id).Eq(nil)).One(&noImage), IsNil)
