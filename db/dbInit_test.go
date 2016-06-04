@@ -117,13 +117,6 @@ func (*DBInit) TestLoadDB(c *C) {
 	c.Assert(DB(GetMain("histCounts")).One(&histCounts), IsNil)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
 
-	var imageHashes imageHashDocument
-	c.Assert(DB(GetMain("imageHashes")).One(&imageHashes), IsNil)
-	c.Assert(imageHashes, DeepEquals, imageHashDocument{
-		Document: Document{"imageHashes"},
-		Hashes:   []interface{}{},
-	})
-
 	c.Assert(RSession.Close(), IsNil)
 	c.Assert(LoadDB(), IsNil)
 }

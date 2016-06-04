@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
 )
@@ -88,7 +87,7 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 
 	sha1Sum := sha1.Sum(data)
 	SHA1 := string(sha1Sum[:])
-	img, err := db.FindImageThumb(SHA1)
+	img, err := FindImageThumb(SHA1)
 	if err != nil {
 		passError(res, req, err, 500)
 		return

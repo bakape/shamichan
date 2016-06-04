@@ -40,11 +40,6 @@ type infoDocument struct {
 	PostCtr int64 `gorethink:"postCtr"`
 }
 
-type imageHashDocument struct {
-	Document
-	Hashes []interface{} `gorethink:"hashes"`
-}
-
 // DB creates a new DatabaseHelper. Used to simplify database queries.
 // Example: err := DB(r.Table("posts").Get(1)).One(&Post)
 func DB(query r.Term) DatabaseHelper {
@@ -123,9 +118,6 @@ func InitDB(dbName string) error {
 		// History aka progress counters of boards, that get incremented on
 		// post creation
 		Document{"histCounts"},
-
-		// Image perceptual hash storage for upload deduplication
-		imageHashDocument{Document: Document{"imageHashes"}},
 	}
 	if err := DB(r.Table("main").Insert(main)).Exec(); err != nil {
 		return util.WrapError("Error initializing database", err)

@@ -23,16 +23,16 @@ func (d *DB) SetUpSuite(c *C) {
 }
 
 func (d *DB) SetUpTest(c *C) {
-	query := db.GetMain("imageHashes").Replace(map[string]interface{}{
-		"id":     "imageHashes",
-		"hashes": []string{},
-	})
-	c.Assert(db.DB(query).Exec(), IsNil)
-
 	conf := config.ServerConfigs{}
 	conf.Images.Max.Height = 10000
 	conf.Images.Max.Width = 10000
 	config.Set(conf)
+}
+
+func (d *DB) TearDownTest(c *C) {
+	for _, table := range db.AllTables {
+		c.Assert(db.DB(r.Table(table).Delete()).Exec(), IsNil)
+	}
 }
 
 func (d *DB) TearDownSuite(c *C) {

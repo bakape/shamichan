@@ -4,13 +4,13 @@ package server
 
 import (
 	"fmt"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager"
-	"github.com/bakape/meguca/templates"
 	"log"
 	"os"
 	"runtime"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/templates"
 )
 
 var (
@@ -88,7 +88,6 @@ func startServer() {
 		config.LoadConfig,
 		templates.Compile,
 		db.LoadDB,
-		imager.InitImager,
 		startWebServer,
 	}
 	for _, fn := range fns {
