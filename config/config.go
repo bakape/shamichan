@@ -46,6 +46,7 @@ type ServerConfigs struct {
 	Radio, Pyu    bool
 	InfoBanner    string
 	FeedbackEmail string
+	DefaultCSS    string
 }
 
 // HTTPConfigs stores HTTP server configuration

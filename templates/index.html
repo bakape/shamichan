@@ -8,7 +8,7 @@
 	<meta name="description" content="Realtime imageboard">
 	<!-- Main and theme-specific stylesheets !-->
 	<link rel="stylesheet" href="/ass/css/base.css">
-	<link rel="stylesheet" id="theme">
+	<link rel="stylesheet" id="theme" href="/ass/css/{{.DefaultCSS}}.css">
 	<!-- Configuration injection see ./tmpl/tmpl.go !-->
 	<script>
 		var config = {{.Config}},
@@ -17,10 +17,12 @@
 	</script>
 	<!-- Load theme CSS !-->
 	<script>
-		document.getElementById('theme').href =
-			'/ass/css/'
-			+ (localStorage.theme || config.defaultCSS)
-			+ '.css'
+		if (localStorage.theme !== config.DefaultCSS) {
+			document.getElementById('theme').href =
+				'/ass/css/'
+				+ localStorage.theme
+				+ '.css'
+		}
 	</script>
 	<noscript>
 		<h1 id="noscriptHeader">

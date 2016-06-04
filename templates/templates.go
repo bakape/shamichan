@@ -4,12 +4,13 @@ package templates
 import (
 	"bytes"
 	"fmt"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/util"
-	"github.com/dchest/htmlmin"
 	"html/template"
 	"path/filepath"
 	"sync"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
+	"github.com/dchest/htmlmin"
 )
 
 var (
@@ -49,22 +50,25 @@ func Compile() error {
 var clientFileHash string
 
 type vars struct {
+	IsMobile   bool
 	Config     template.JS
 	Navigation template.HTML
 	Email      string
 	ConfigHash string
-	IsMobile   bool
+	DefaultCSS string
 }
 
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
 func indexTemplate() (desktop Store, mobile Store, err error) {
 	clientJSON, hash := config.GetClient()
+	conf := config.Get()
 	v := vars{
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,
 		Navigation: boardNavigation(),
-		Email:      config.Get().FeedbackEmail,
+		Email:      conf.FeedbackEmail,
+		DefaultCSS: conf.DefaultCSS,
 	}
 	path := filepath.FromSlash(templateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)
