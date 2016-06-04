@@ -85,19 +85,27 @@ export function parseEl(DOMString: string): Node {
 	return el.firstChild
 }
 
-// Add an event listener that filters targets according to a CSS selector
+export interface OnOptions extends EventListenerOptions {
+	selector?: string
+}
+
+// Add an event listener that optionally filters targets according to a CSS
+// selector.
 export function on(
 	el: Element,
 	type: string,
-	selector: string,
 	fn: EventListener,
-	opts?: EventListenerOptions
+	opts?: OnOptions
 ) {
-	el.addEventListener(type, event => {
-		if (event.target.matches(selector)) {
-			fn(event)
+	if (opts && opts.selector) {
+		const oldFn = fn
+		fn = event => {
+			if (event.target.matches(opts.selector)) {
+				oldFn(event)
+			}
 		}
-	}, opts)
+	}
+	el.addEventListener(type, fn, opts)
 }
 
 // Return width of element with padding and margin

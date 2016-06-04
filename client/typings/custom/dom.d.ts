@@ -34,7 +34,7 @@ interface EventTarget {
 	matches?(selector: string): boolean
 }
 
-type EventListenerOptions = {
+interface EventListenerOptions {
 	capture?: boolean
 	once?: boolean
 	passive?: boolean

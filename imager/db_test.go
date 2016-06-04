@@ -52,9 +52,7 @@ func (*Imager) TestDecreaseImageRefCount(c *C) {
 	}
 	insertProtoImage(img, c)
 
-	deleted, err := UnreferenceImage(id)
-	c.Assert(err, IsNil)
-	c.Assert(deleted, Equals, false)
+	c.Assert(UnreferenceImage(id), IsNil)
 	assertImageRefCount(id, 1, c)
 }
 
@@ -68,9 +66,7 @@ func (*Imager) TestRemoveUnreffedImage(c *C) {
 	}
 	insertProtoImage(img, c)
 
-	deleted, err := UnreferenceImage(id)
-	c.Assert(err, IsNil)
-	c.Assert(deleted, Equals, true)
+	c.Assert(UnreferenceImage(id), IsNil)
 
 	var noImage bool
 	c.Assert(db.DB(db.GetImage(id).Eq(nil)).One(&noImage), IsNil)

@@ -20,7 +20,7 @@ export default class OptionsPanel extends BannerModal {
 			'#import': e => this.importConfigs(e),
 			'#hidden': () => this.clearHidden()
 		})
-		this.onAll('change', e => this.applyChange(e))
+		this.on('change', e => this.applyChange(e))
 	}
 
 	// Render the contents of the options panel and insert it into the DOM

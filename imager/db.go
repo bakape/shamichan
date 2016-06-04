@@ -12,9 +12,6 @@ var (
 	incrementImageRefCount = map[string]r.Term{
 		"posts": r.Row.Field("posts").Add(1),
 	}
-
-	// Return changes after an update
-	returnChanges = r.UpdateOpts{ReturnChanges: true}
 )
 
 // FindImageThumb searches for an existing image with the specified hash and
@@ -28,7 +25,7 @@ func FindImageThumb(hash string) (img types.Image, err error) {
 		Table("images").
 		GetAllByIndex("SHA1", hash).
 		AtIndex(0).
-		Update(incrementImageRefCount, returnChanges).
+		Update(incrementImageRefCount, r.UpdateOpts{ReturnChanges: true}).
 		Field("changes").
 		Field("new_val").
 		Default(nil)
@@ -36,24 +33,41 @@ func FindImageThumb(hash string) (img types.Image, err error) {
 	return
 }
 
+type unreferenceResponse struct {
+	Posts    int   `gorethink:"posts"`
+	FileType uint8 `gorethink:"fileType"`
+}
+
 // UnreferenceImage decrements the image's refference counter. If the counter
 // would become zero, the image entry is immediately deleted. If so, returns
 // true.
-func UnreferenceImage(id string) (deleted bool, err error) {
+func UnreferenceImage(id string) error {
 	query := db.GetImage(id).
-		Replace(func(doc r.Term) r.Term {
-			return r.Branch(
-				doc.Field("posts").Eq(1),
-				nil,
-				doc.Merge(map[string]r.Term{
-					"posts": doc.Field("posts").Sub(1),
-				}),
-			)
-		}).
-		Field("deleted").
-		Eq(1).
-		Default(false)
+		Replace(
+			func(doc r.Term) r.Term {
+				return r.Branch(
+					doc.Field("posts").Eq(1),
+					nil,
+					doc.Merge(map[string]r.Term{
+						"posts": doc.Field("posts").Sub(1),
+					}),
+				)
+			},
+			r.ReplaceOpts{ReturnChanges: true},
+		).
+		Field("old_val").
+		Default(nil)
 
-	err = db.DB(query).One(&deleted)
-	return
+	var res unreferenceResponse
+	err := db.DB(query).One(&res)
+	if err != nil {
+		return err
+	}
+	<-make(chan bool)
+
+	if res.Posts == 1 {
+		deleteAssets(id, res.FileType)
+	}
+
+	return nil
 }
