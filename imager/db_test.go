@@ -7,13 +7,13 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func (*DB) TestFindNonexistantImageThumb(c *C) {
+func (*Imager) TestFindNonexistantImageThumb(c *C) {
 	img, err := FindImageThumb("sha")
 	c.Assert(err, IsNil)
 	c.Assert(img, DeepEquals, types.Image{})
 }
 
-func (*DB) TestFindImageThumb(c *C) {
+func (*Imager) TestFindImageThumb(c *C) {
 	thumbnailed := types.ProtoImage{
 		ImageCommon: types.ImageCommon{
 			File: "123",
@@ -42,7 +42,7 @@ func assertImageRefCount(id string, count int, c *C) {
 	c.Assert(posts, Equals, count)
 }
 
-func (*DB) TestDecreaseImageRefCount(c *C) {
+func (*Imager) TestDecreaseImageRefCount(c *C) {
 	const id = "123"
 	img := types.ProtoImage{
 		ImageCommon: types.ImageCommon{
@@ -58,7 +58,7 @@ func (*DB) TestDecreaseImageRefCount(c *C) {
 	assertImageRefCount(id, 1, c)
 }
 
-func (*DB) TestRemoveUnreffedImage(c *C) {
+func (*Imager) TestRemoveUnreffedImage(c *C) {
 	const id = "123"
 	img := types.ProtoImage{
 		ImageCommon: types.ImageCommon{

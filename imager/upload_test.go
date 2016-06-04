@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"testing"
 	"time"
 
 	"github.com/bakape/meguca/config"
@@ -16,23 +15,6 @@ import (
 	"github.com/bakape/meguca/types"
 	. "gopkg.in/check.v1"
 )
-
-func Test(t *testing.T) { TestingT(t) }
-
-type Imager struct{}
-
-var _ = Suite(&Imager{})
-
-func (*Imager) SetUpTest(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.Max.Size = 1024
-	conf.Images.Spoilers = []uint8{1, 2}
-	config.Set(conf)
-}
-
-func (*Imager) TearDownTest(c *C) {
-	websockets.Clients.Clear()
-}
 
 func (*Imager) TestExtractSpoiler(c *C) {
 	conf := config.ServerConfigs{}
@@ -79,17 +61,9 @@ func (*Imager) TestIsValidSpoiler(c *C) {
 	c.Assert(isValidSpoiler(1), Equals, true)
 }
 
-var extensions = map[string]uint8{
-	"jpeg": jpeg,
-	"png":  png,
-	"gif":  gif,
-	"webm": webm,
-	"pdf":  pdf,
-}
-
 func (*Imager) TestDetectFileType(c *C) {
 	// Supported file types
-	for ext, code := range extensions {
+	for code, ext := range extensions {
 		f := openFile("sample."+ext, c)
 		defer f.Close()
 		t, err := detectFileType(f)
