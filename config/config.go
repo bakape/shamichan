@@ -5,13 +5,14 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/DisposaBoy/JsonConfigReader"
-	"github.com/Soreil/mnemonics"
-	"github.com/bakape/meguca/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/DisposaBoy/JsonConfigReader"
+	"github.com/Soreil/mnemonics"
+	"github.com/bakape/meguca/util"
 )
 
 var (
@@ -86,12 +87,10 @@ type StaffClass struct {
 
 // ImageConfig stores file upload processing and thumbnailing configuration
 type ImageConfig struct {
-	WebmAudio          bool
-	Hats               bool
-	JpegQuality        uint8
-	DuplicateThreshold uint8
-	DulicateLifetime   int64
-	Max                struct {
+	WebmAudio   bool
+	Hats        bool
+	JpegQuality uint8
+	Max         struct {
 		Size          int64
 		Width, Height int
 	}

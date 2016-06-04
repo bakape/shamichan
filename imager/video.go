@@ -6,10 +6,9 @@ import (
 	"io"
 
 	webmTool "github.com/Soreil/webm"
-	"github.com/bakape/meguca/types"
 )
 
-func processWebm(file io.ReadSeeker, postID int64, img *types.ProtoImage) (
+func processWebm(file io.ReadSeeker) (
 	io.Reader, io.Reader, error,
 ) {
 	return nil, nil, nil

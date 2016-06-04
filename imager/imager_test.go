@@ -4,9 +4,41 @@ import (
 	"io/ioutil"
 
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/db"
+	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
+
+type DB struct {
+	dbName           string
+	perceptualCloser chan struct{}
+}
+
+var _ = Suite(&DB{})
+
+func (d *DB) SetUpSuite(c *C) {
+	d.dbName = db.UniqueDBName()
+	c.Assert(db.Connect(""), IsNil)
+	c.Assert(db.InitDB(d.dbName), IsNil)
+}
+
+func (d *DB) SetUpTest(c *C) {
+	query := db.GetMain("imageHashes").Replace(map[string]interface{}{
+		"id":     "imageHashes",
+		"hashes": []string{},
+	})
+	c.Assert(db.DB(query).Exec(), IsNil)
+
+	conf := config.ServerConfigs{}
+	conf.Images.Max.Height = 10000
+	conf.Images.Max.Width = 10000
+	config.Set(conf)
+}
+
+func (d *DB) TearDownSuite(c *C) {
+	c.Assert(db.DB(r.DBDrop(d.dbName)).Exec(), IsNil)
+	c.Assert(db.RSession.Close(), IsNil)
+}
 
 func (*DB) TestVerifyImageFormat(c *C) {
 	samples := map[string]bool{
@@ -15,12 +47,10 @@ func (*DB) TestVerifyImageFormat(c *C) {
 		"png":  true,
 		"webm": false,
 	}
-	var postID int64
 	for ext, shouldPass := range samples {
 		file := openFile("sample."+ext, c)
 		defer file.Close()
-		err := verifyImage(file, postID)
-		postID++
+		err := verifyImage(file)
 		if shouldPass {
 			c.Assert(err, IsNil)
 		} else {
@@ -31,7 +61,7 @@ func (*DB) TestVerifyImageFormat(c *C) {
 	// Failure to decode
 	file := openFile("sample.txt", c)
 	defer file.Close()
-	err := verifyImage(file, postID)
+	err := verifyImage(file)
 	c.Assert(err, ErrorMatches, "Error decoding image: .*")
 }
 
@@ -50,36 +80,17 @@ func (*DB) TestVerifyDimentions(c *C) {
 		pass.Close()
 	}()
 
-	c.Assert(verifyImage(tooTall, 1), ErrorMatches, "Image too tall")
-	c.Assert(verifyImage(tooWide, 2), ErrorMatches, "Image too wide")
-	c.Assert(verifyImage(pass, 3), IsNil)
-}
-
-func (*DB) TestDupDetection(c *C) {
-	sample := openFile("sample.jpeg", c)
-	defer sample.Close()
-	c.Assert(verifyImage(sample, 1), IsNil)
-	_, err := sample.Seek(0, 0)
-	c.Assert(err, IsNil)
-	c.Assert(verifyImage(sample, 2), ErrorMatches, "Duplicate image of post 1")
+	c.Assert(verifyImage(tooTall), ErrorMatches, "Image too tall")
+	c.Assert(verifyImage(tooWide), ErrorMatches, "Image too wide")
+	c.Assert(verifyImage(pass), IsNil)
 }
 
 func (*DB) TestImageProcessing(c *C) {
-	samples := map[string]uint8{
-		"jpeg": jpeg,
-		"gif":  gif,
-		"png":  png,
-	}
-	for ext, filetype := range samples {
+	for _, ext := range [...]string{"jpeg", "gif", "png"} {
 		file := openFile("sample."+ext, c)
 		defer file.Close()
-		img := &types.ProtoImage{
-			ImageCommon: types.ImageCommon{
-				FileType: filetype,
-			},
-		}
 
-		large, small, err := processImage(file, int64(filetype)+20, img)
+		large, small, err := processImage(file)
 		c.Assert(err, IsNil)
 		smallBuf, err := ioutil.ReadAll(small)
 		c.Assert(err, IsNil)

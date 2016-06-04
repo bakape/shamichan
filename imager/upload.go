@@ -246,14 +246,14 @@ func detectCompatibleMP4(buf []byte) (bool, error) {
 }
 
 // Delegate the processing of the file to an apropriate function by file type
-func processFile(file io.ReadSeeker, postID int64, img *types.ProtoImage) (
+func processFile(file io.ReadSeeker, postID int64, img types.Image) (
 	io.Reader, io.Reader, error,
 ) {
 	switch img.FileType {
 	case webm:
-		return processWebm(file, postID, img)
+		return processWebm(file)
 	case jpeg, png, gif:
-		return processImage(file, postID, img)
+		return processImage(file)
 	default:
 		return nil, nil, fmt.Errorf("File type slipped in: %d", img.FileType)
 	}

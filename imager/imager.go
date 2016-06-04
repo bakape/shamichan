@@ -10,9 +10,7 @@ import (
 
 	"github.com/Soreil/imager"
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
-	"github.com/jteeuwen/imghash"
 )
 
 var (
@@ -24,10 +22,10 @@ var (
 )
 
 // Verify image parameters and create thumbnails
-func processImage(file io.ReadSeeker, postID int64, img *types.ProtoImage) (
+func processImage(file io.ReadSeeker) (
 	large io.Reader, small io.Reader, err error,
 ) {
-	err = verifyImage(file, postID)
+	err = verifyImage(file)
 	if err != nil {
 		return
 	}
@@ -49,7 +47,7 @@ func processImage(file io.ReadSeeker, postID int64, img *types.ProtoImage) (
 
 // Verify image dimentions and that it has not been posted before in the
 // configured time
-func verifyImage(file io.ReadSeeker, postID int64) error {
+func verifyImage(file io.ReadSeeker) error {
 	decoded, format, err := image.Decode(file)
 	if err != nil {
 		return util.WrapError("Error decoding image", err)
@@ -61,10 +59,7 @@ func verifyImage(file io.ReadSeeker, postID int64) error {
 		return fmt.Errorf("Unsupported image format: %s", format)
 	}
 
-	if err := verifyDimentions(decoded); err != nil {
-		return err
-	}
-	return verifyUniqueness(decoded, postID)
+	return verifyDimentions(decoded)
 }
 
 // Verify an image does not exceed the preset maximum dimentions
@@ -78,21 +73,4 @@ func verifyDimentions(decoded image.Image) error {
 		return errors.New("Image too tall")
 	}
 	return nil
-}
-
-// Verify an image has not been posted already recently
-func verifyUniqueness(img image.Image, postID int64) error {
-	res := make(chan int64)
-	dedupImage <- dedupRequest{
-		entry: hashEntry{
-			ID:   postID,
-			Hash: float64(imghash.Average(img)),
-		},
-		res: res,
-	}
-	dup := <-res
-	if dup == 0 {
-		return nil
-	}
-	return fmt.Errorf("Duplicate image of post %d", dup)
 }

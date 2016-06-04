@@ -233,13 +233,6 @@
         // details
         "pngQuality": "0-10",
 
-        // Threshold for the image duplicate detector. 1-64. The smaller the
-        // number, the more two images need to match to trigger a duplicate.
-        "duplicateThreshold": 5,
-
-        // Time in seconds till a duplicate image can be posted again.
-        "duplicateLifetime": 7200,
-
         // Indicates which spoiler images may be selected by posters.
         // each number or ID corresponds to a set of image pairs in ./www/spoil
         // named spoilX.png and spoilerX.png
