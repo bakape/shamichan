@@ -38,10 +38,10 @@ type unreferenceResponse struct {
 	FileType uint8 `gorethink:"fileType"`
 }
 
-// UnreferenceImage decrements the image's refference counter. If the counter
+// DeallocateImage decrements the image's refference counter. If the counter
 // would become zero, the image entry is immediately deleted allong with its
 // file assets.
-func UnreferenceImage(id string) error {
+func DeallocateImage(id string) error {
 	query := db.GetImage(id).
 		Replace(
 			func(doc r.Term) r.Term {

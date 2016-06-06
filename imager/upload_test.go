@@ -193,7 +193,7 @@ func (*Imager) TestPassImage(c *C) {
 		defer wg.Done()
 		c.Assert(<-client.AllocateImage, DeepEquals, img)
 	}()
-	c.Assert(passImage(img, client), Equals, true)
+	passImage(img, client)
 	wg.Wait()
 }
 
@@ -206,5 +206,19 @@ func (*Imager) TestPassImageTimeout(c *C) {
 	client := new(websockets.Client)
 	client.AllocateImage = make(chan types.Image)
 
-	c.Assert(passImage(types.Image{}, client), Equals, false)
+	const id = "123"
+	proto := types.ProtoImage{
+		ImageCommon: types.ImageCommon{
+			FileType: jpeg,
+			File:     id,
+		},
+		Posts: 2,
+	}
+	img := types.Image{
+		ImageCommon: proto.ImageCommon,
+	}
+	insertProtoImage(proto, c)
+
+	passImage(img, client)
+	assertImageRefCount(img.File, 1, c)
 }

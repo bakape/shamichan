@@ -10,6 +10,39 @@ import (
 	. "gopkg.in/check.v1"
 )
 
+type allocationTester struct {
+	c            *C
+	name, source string
+	paths        [3]string
+}
+
+func newAllocatioTester(
+	source,
+	name string,
+	fileType uint8,
+	c *C,
+) *allocationTester {
+	return &allocationTester{
+		source: filepath.FromSlash("./test/" + source),
+		paths:  getFilePaths(name, fileType),
+		c:      c,
+	}
+}
+
+func (a *allocationTester) Allocate() {
+	for _, dest := range a.paths {
+		a.c.Assert(os.Link(a.source, dest), IsNil)
+	}
+}
+
+func (a *allocationTester) AssertDeleted() {
+	for _, path := range a.paths {
+		_, err := os.Stat(path)
+		a.c.Assert(err, NotNil)
+		a.c.Assert(os.IsNotExist(err), Equals, true)
+	}
+}
+
 func (*Imager) TestFindNonexistantImageThumb(c *C) {
 	img, err := FindImageThumb("sha")
 	c.Assert(err, IsNil)
@@ -55,7 +88,7 @@ func (*Imager) TestDecreaseImageRefCount(c *C) {
 	}
 	insertProtoImage(img, c)
 
-	c.Assert(UnreferenceImage(id), IsNil)
+	c.Assert(DeallocateImage(id), IsNil)
 	assertImageRefCount(id, 1, c)
 }
 
@@ -69,13 +102,10 @@ func (*Imager) TestRemoveUnreffedImage(c *C) {
 		Posts: 1,
 	}
 	insertProtoImage(img, c)
-	paths := getFilePaths(id, jpeg)
-	source := filepath.FromSlash("./test/sample.jpg")
-	for _, dest := range paths {
-		c.Assert(os.Link(source, dest), IsNil)
-	}
+	at := newAllocatioTester("sample.jpg", id, jpeg, c)
+	at.Allocate()
 
-	c.Assert(UnreferenceImage(id), IsNil)
+	c.Assert(DeallocateImage(id), IsNil)
 
 	// Assert database document is deleted
 	var noImage bool
@@ -83,9 +113,5 @@ func (*Imager) TestRemoveUnreffedImage(c *C) {
 	c.Assert(noImage, Equals, true)
 
 	// Assert files are deleted
-	for _, path := range paths {
-		_, err := os.Stat(path)
-		c.Assert(err, NotNil)
-		c.Assert(os.IsNotExist(err), Equals, true)
-	}
+	at.AssertDeleted()
 }

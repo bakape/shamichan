@@ -2,6 +2,8 @@
 package imager
 
 import (
+	"bytes"
+	"crypto/md5"
 	"crypto/sha1"
 	"errors"
 	"fmt"
@@ -12,6 +14,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Soreil/apngdetector"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
@@ -97,27 +100,37 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 
 	// Already have a thumbnail
 	if img.File != "" {
-		if !passImage(img, client) {
-		}
+		passImage(img, client)
 		return
 	}
 
-	// img.Image.Imgnm = fileHeader.Filename
-	//
-	// fileType, err := detectFileType(file)
-	// if err != nil {
-	// 	passError(res, req, err, 400)
-	// 	return
-	// }
-	// img.fileType = fileType
-	//
-	// if err := processFile(file, img); err != nil {
-	// 	passError(res, req, err, 400)
-	// } else {
-	//
-	// 	// TODO: Call a method on the client to allocate the image.
-	//
-	// }
+	fileType, err := detectFileType(file)
+	if err != nil {
+		passError(res, req, err, 400)
+		return
+	}
+	img.FileType = fileType
+	md5Sum := md5.Sum(data)
+	img.MD5 = string(md5Sum[:])
+
+	reader := bytes.NewReader(data)
+	if fileType == png {
+		img.APNG, err = apngdetector.Detect(reader)
+		if err != nil {
+			passError(res, req, err, 500)
+			return
+		}
+		reader.Seek(0, 0)
+	}
+
+	if _, _, err := processFile(reader, img); err != nil {
+
+		// TODO: Image allocattion
+
+		passError(res, req, err, 400)
+	} else {
+		passImage(img, client)
+	}
 }
 
 // Pass error message to client and log server-side
@@ -184,14 +197,15 @@ func isValidSpoiler(id uint8) bool {
 	return false
 }
 
-// Passes the image struct to the requesting client. Returns, if the image was
-// succesfully passed before the 10 second timeout.
-func passImage(img types.Image, client *websockets.Client) bool {
+// Passes the image struct to the requesting client. If the image is not
+// succesfully passed in 10 seconds, it is deallocated.
+func passImage(img types.Image, client *websockets.Client) {
 	select {
 	case client.AllocateImage <- img:
-		return true
 	case <-time.Tick(allocationTimeout):
-		return false
+		if err := DeallocateImage(img.File); err != nil {
+			log.Printf("counld't deallocate image: %s", img.File)
+		}
 	}
 }
 
@@ -245,7 +259,7 @@ func detectCompatibleMP4(buf []byte) (bool, error) {
 }
 
 // Delegate the processing of the file to an apropriate function by file type
-func processFile(file io.ReadSeeker, postID int64, img types.Image) (
+func processFile(file io.ReadSeeker, img types.Image) (
 	io.Reader, io.Reader, error,
 ) {
 	switch img.FileType {
