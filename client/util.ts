@@ -2,9 +2,10 @@
  Utuility functions.
 */
 
-// Fetches a JSON response from the API and returns a Promise
-export function fetchJSON(url: string): Promise<Object> {
-	return fetch("api/" + url).then(res => res.json())
+// Fetches and decodes a JSON response from the API
+export async function fetchJSON(url: string): Promise<any> {
+	const res = await fetch("api/" + url)
+	return await res.json()
 }
 
 // Generate a random alphannumeric string of lower and upper case hexadecimal
@@ -33,7 +34,7 @@ export class SetMap<V> {
 		this.map[key].add(item)
 	}
 
-	// Remove and item from a key
+	// Remove an item from a key
 	remove(key: string, item: V) {
 		const set = this.map[key]
 		if (!set) {
