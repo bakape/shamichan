@@ -34,6 +34,9 @@ export default class Model {
 	}
 }
 
+// Wrap an object with a Proxy that executes handlers on property changes.
+// To add new handlers, call the .onChange method on the object. 
+// For type safety, the passed generic interface must extend ChangeEmitter.
 export function emitChanges<T extends ChangeEmitter>(obj: T = {} as T): T {
 	const changeHooks: HookMap = {}
 
