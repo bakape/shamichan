@@ -156,10 +156,9 @@ export function parseAttributes(attrs: ElementAttributes): string {
 	for (let key in attrs) {
 		html += ' '
 		const val = attrs[key]
+		html += key
 		if (val) {
-			html += `${key}="${val}"`
-		} else {
-			html += key
+			html += `="${val}"`
 		}
 	}
 	return html
