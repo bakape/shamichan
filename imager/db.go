@@ -39,8 +39,8 @@ type unreferenceResponse struct {
 }
 
 // UnreferenceImage decrements the image's refference counter. If the counter
-// would become zero, the image entry is immediately deleted. If so, returns
-// true.
+// would become zero, the image entry is immediately deleted allong with its
+// file assets.
 func UnreferenceImage(id string) error {
 	query := db.GetImage(id).
 		Replace(
@@ -55,18 +55,20 @@ func UnreferenceImage(id string) error {
 			},
 			r.ReplaceOpts{ReturnChanges: true},
 		).
+		Field("changes").
 		Field("old_val").
-		Default(nil)
+		Pluck("posts", "fileType")
 
 	var res unreferenceResponse
 	err := db.DB(query).One(&res)
 	if err != nil {
 		return err
 	}
-	<-make(chan bool)
 
 	if res.Posts == 1 {
-		deleteAssets(id, res.FileType)
+		if err := deleteAssets(id, res.FileType); err != nil {
+			return err
+		}
 	}
 
 	return nil

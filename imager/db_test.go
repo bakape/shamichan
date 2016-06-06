@@ -1,6 +1,9 @@
 package imager
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
@@ -60,15 +63,29 @@ func (*Imager) TestRemoveUnreffedImage(c *C) {
 	const id = "123"
 	img := types.ProtoImage{
 		ImageCommon: types.ImageCommon{
-			File: id,
+			FileType: jpeg,
+			File:     id,
 		},
 		Posts: 1,
 	}
 	insertProtoImage(img, c)
+	paths := getFilePaths(id, jpeg)
+	source := filepath.FromSlash("./test/sample.jpg")
+	for _, dest := range paths {
+		c.Assert(os.Link(source, dest), IsNil)
+	}
 
 	c.Assert(UnreferenceImage(id), IsNil)
 
+	// Assert database document is deleted
 	var noImage bool
 	c.Assert(db.DB(db.GetImage(id).Eq(nil)).One(&noImage), IsNil)
 	c.Assert(noImage, Equals, true)
+
+	// Assert files are deleted
+	for _, path := range paths {
+		_, err := os.Stat(path)
+		c.Assert(err, NotNil)
+		c.Assert(os.IsNotExist(err), Equals, true)
+	}
 }
