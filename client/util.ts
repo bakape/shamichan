@@ -154,9 +154,8 @@ export type ElementAttributes = {[key: string]: string}
 export function parseAttributes(attrs: ElementAttributes): string {
 	let html = ''
 	for (let key in attrs) {
-		html += ' '
+		html += ' ' + key
 		const val = attrs[key]
-		html += key
 		if (val) {
 			html += `="${val}"`
 		}
