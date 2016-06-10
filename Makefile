@@ -58,17 +58,14 @@ client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang
 
 dist_clean: clean
-	rm -rf img config/config.json assets error.log
+	rm -rf img config/config.json assets error.log .package
 
 init:
-	mkdir -p img/src
-	mkdir -p img/thumb
-	mkdir -p img/mid
-	mkdir -p assets
+	mkdir -p assets img/{src,thumb,mid}
 	cp -n config/defaults.json config/config.json
 
 test: server_deps
-	go get -v gopkg.in/check.v1
+	go get gopkg.in/check.v1
 	go test ./...
 
 install_deps_deb:
@@ -86,3 +83,13 @@ build_ffmpeg:
 
 install_ffmpeg:
 	$(MAKE) -C .ffmpeg install
+
+package_win64: all
+	rm -rf .package
+	mkdir -p .package/{config,templates} .package/img/{src,thum,mid}
+	cp -r docs scripts www *.dll CHANGELOG.md README.md LICENSE $(BINARY) \
+		.package/
+	cp config/defaults.json .package/config/
+	cp config/defaults.json .package/config/config.json
+	cp -r templates/*.html .package/templates/
+	cd .package; zip -r meguca_win64.zip .

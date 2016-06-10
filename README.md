@@ -28,6 +28,7 @@ Coming soon™
 * Install:
     * GCC or Clang
     * make
+    * zip
     * ffmpeg >=3.0 development libraries (libavcodec, libavutil, libavformat,
     libswscale) compiled with:
         * libvpx
