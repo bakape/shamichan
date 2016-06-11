@@ -24,7 +24,7 @@ func Test(t *testing.T) { TestingT(t) }
 
 var genericImage = &types.Image{
 	ImageCommon: types.ImageCommon{
-		File: "foo",
+		SHA1: "foo",
 	},
 }
 
@@ -459,9 +459,8 @@ func (d *DB) TestBoardJSON(c *C) {
 				"fileType":0,
 				"dims":[0,0,0,0],
 				"size":0,
-				"file":"foo",
 				"MD5":"",
-				"SHA1":"",
+				"SHA1":"foo",
 				"imgnm":""
 			},
 			"logCtr":33,
@@ -480,9 +479,8 @@ func (d *DB) TestBoardJSON(c *C) {
 				"fileType":0,
 				"dims":[0,0,0,0],
 				"size":0,
-				"file":"foo",
 				"MD5":"",
-				"SHA1":"",
+				"SHA1":"foo",
 				"imgnm":""
 			},
 			"logCtr":11,
@@ -521,9 +519,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 				"fileType":0,
 				"dims":[0,0,0,0],
 				"size":0,
-				"file":"foo",
 				"MD5":"",
-				"SHA1":"",
+				"SHA1":"foo",
 				"imgnm":""
 			},
 			"logCtr":44,
@@ -542,9 +539,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 				"fileType":0,
 				"dims":[0,0,0,0],
 				"size":0,
-				"file":"foo",
 				"MD5":"",
-				"SHA1":"",
+				"SHA1":"foo",
 				"imgnm":""
 			},
 			"logCtr":33,
@@ -563,9 +559,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 				"fileType":0,
 				"dims":[0,0,0,0],
 				"size":0,
-				"file":"foo",
 				"MD5":"",
-				"SHA1":"",
+				"SHA1":"foo",
 				"imgnm":""
 			},
 			"logCtr":11,
@@ -617,9 +612,8 @@ func (d *DB) TestThreadJSON(c *C) {
 		"fileType":0,
 		"dims":[0,0,0,0],
 		"size":0,
-		"file":"foo",
 		"MD5":"",
-		"SHA1":"",
+		"SHA1":"foo",
 		"imgnm":""
 	},
 	"logCtr":11,

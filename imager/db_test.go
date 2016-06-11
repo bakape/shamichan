@@ -52,22 +52,22 @@ func (*Imager) TestFindNonexistantImageThumb(c *C) {
 }
 
 func (*Imager) TestFindImageThumb(c *C) {
+	const id = "foo"
 	thumbnailed := types.ProtoImage{
 		ImageCommon: types.ImageCommon{
-			File: "123",
-			SHA1: "foo",
+			SHA1: id,
 		},
 		Posts: 1,
 	}
 	insertProtoImage(thumbnailed, c)
 
-	img, err := FindImageThumb("foo")
+	img, err := FindImageThumb(id)
 	c.Assert(err, IsNil)
 	c.Assert(img, DeepEquals, types.Image{
 		ImageCommon: thumbnailed.ImageCommon,
 	})
 
-	assertImageRefCount("123", 2, c)
+	assertImageRefCount(id, 2, c)
 }
 
 func insertProtoImage(img types.ProtoImage, c *C) {
@@ -84,7 +84,7 @@ func (*Imager) TestDecreaseImageRefCount(c *C) {
 	const id = "123"
 	img := types.ProtoImage{
 		ImageCommon: types.ImageCommon{
-			File: id,
+			SHA1: id,
 		},
 		Posts: 2,
 	}
@@ -99,7 +99,7 @@ func (*Imager) TestRemoveUnreffedImage(c *C) {
 	img := types.ProtoImage{
 		ImageCommon: types.ImageCommon{
 			FileType: jpeg,
-			File:     id,
+			SHA1:     id,
 		},
 		Posts: 1,
 	}
@@ -127,7 +127,7 @@ func (*Imager) TestFailedAllocationCleanUp(c *C) {
 	err := errors.New("foo")
 	img := types.Image{
 		ImageCommon: types.ImageCommon{
-			File:     id,
+			SHA1:     id,
 			FileType: jpeg,
 		},
 	}
@@ -146,7 +146,7 @@ func (*Imager) TestImageAllocation(c *C) {
 	}
 	img := types.Image{
 		ImageCommon: types.ImageCommon{
-			File:     id,
+			SHA1:     id,
 			FileType: jpeg,
 		},
 	}

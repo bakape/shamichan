@@ -184,7 +184,7 @@ func writeFields(c *C, w *multipart.Writer, fields map[string]string) {
 func (*Imager) TestPassImage(c *C) {
 	img := types.Image{
 		ImageCommon: types.ImageCommon{
-			File: "123",
+			SHA1: "123",
 		},
 	}
 	client := new(websockets.Client)
@@ -215,7 +215,7 @@ func (*Imager) TestPassImageTimeout(c *C) {
 	proto := types.ProtoImage{
 		ImageCommon: types.ImageCommon{
 			FileType: jpeg,
-			File:     id,
+			SHA1:     id,
 		},
 		Posts: 2,
 	}
@@ -227,5 +227,5 @@ func (*Imager) TestPassImageTimeout(c *C) {
 	code, err := passImage(img, client)
 	c.Assert(err, Equals, errUsageTimeout)
 	c.Assert(code, Equals, 408)
-	assertImageRefCount(img.File, 1, c)
+	assertImageRefCount(img.SHA1, 1, c)
 }

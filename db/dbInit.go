@@ -15,7 +15,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 4
+const dbVersion = 5
 
 var (
 	// RSession exports the RethinkDB connection session. Used globally by the
@@ -133,7 +133,7 @@ func CreateTables() error {
 		fns = append(fns, DB(r.TableCreate(table)).Exec)
 	}
 
-	opts := r.TableCreateOpts{PrimaryKey: "file"}
+	opts := r.TableCreateOpts{PrimaryKey: "SHA1"}
 	fns = append(fns, DB(r.TableCreate("images", opts)).Exec)
 
 	return util.Waterfall(fns)
@@ -143,7 +143,6 @@ func CreateTables() error {
 func CreateIndeces() error {
 	fns := []func() error{
 		DB(r.Table("threads").IndexCreate("board")).Exec,
-		DB(r.Table("images").IndexCreate("SHA1")).Exec,
 	}
 
 	// Make sure all indeces are ready to avoid the race condition of and index

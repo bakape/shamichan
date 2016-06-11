@@ -94,7 +94,6 @@ func (*DBInit) TestLoadDB(c *C) {
 
 	indexes := map[string]string{
 		"threads": "board",
-		"images":  "SHA1",
 	}
 	for table, index := range indexes {
 		var hasIndex bool

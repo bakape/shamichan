@@ -105,7 +105,7 @@ func newImageUpload(req *http.Request) (int, error) {
 	img.Spoiler = spoiler
 
 	// Already have a thumbnail
-	if img.File != "" {
+	if img.SHA1 != "" {
 		return passImage(img, client)
 	}
 
@@ -114,6 +114,7 @@ func newImageUpload(req *http.Request) (int, error) {
 		return 400, err
 	}
 	img.FileType = fileType
+	img.SHA1 = SHA1
 
 	md5Sum := md5.Sum(data)
 	img.MD5 = string(md5Sum[:])
@@ -198,8 +199,8 @@ func passImage(img types.Image, client *websockets.Client) (int, error) {
 	case client.AllocateImage <- img:
 		return 200, nil
 	case <-time.Tick(allocationTimeout):
-		if err := DeallocateImage(img.File); err != nil {
-			log.Printf("counld't deallocate image: %s", img.File)
+		if err := DeallocateImage(img.SHA1); err != nil {
+			log.Printf("counld't deallocate image: %s", img.SHA1)
 		}
 		return 408, errUsageTimeout
 	}

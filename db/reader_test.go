@@ -11,7 +11,7 @@ import (
 var (
 	genericImage = &types.Image{
 		ImageCommon: types.ImageCommon{
-			File: "foo",
+			SHA1: "foo",
 		},
 	}
 

@@ -41,11 +41,10 @@ func writeAssets(
 	fileType uint8,
 	src, thumb, mid io.Reader,
 ) error {
-	paths := getFilePaths(name, fileType)
 	readers := [3]io.Reader{src, thumb, mid}
 
-	for i := range paths {
-		err := writeFile(paths[i], readers[i])
+	for i, path := range getFilePaths(name, fileType) {
+		err := writeFile(path, readers[i])
 		if err != nil {
 			return err
 		}
