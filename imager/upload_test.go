@@ -196,7 +196,9 @@ func (*Imager) TestPassImage(c *C) {
 		defer wg.Done()
 		c.Assert(<-client.AllocateImage, DeepEquals, img)
 	}()
-	passImage(img, client)
+	code, err := passImage(img, client)
+	c.Assert(err, IsNil)
+	c.Assert(code, Equals, 200)
 	wg.Wait()
 }
 
@@ -222,6 +224,8 @@ func (*Imager) TestPassImageTimeout(c *C) {
 	}
 	insertProtoImage(proto, c)
 
-	passImage(img, client)
+	code, err := passImage(img, client)
+	c.Assert(err, Equals, errUsageTimeout)
+	c.Assert(code, Equals, 408)
 	assertImageRefCount(img.File, 1, c)
 }

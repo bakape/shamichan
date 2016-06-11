@@ -45,6 +45,8 @@ var (
 
 	// Overridable for tests
 	allocationTimeout = time.Second * 10
+
+	errUsageTimeout = errors.New("image usage timeout")
 )
 
 // NewImageUpload  handles the clients' image (or other file) upload request
@@ -52,62 +54,64 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
 	conf := config.Get()
 	req.Body = http.MaxBytesReader(res, req.Body, conf.Images.Max.Size)
+	res.Header().Set("Access-Control-Allow-Origin", conf.HTTP.Origin)
 
+	code, err := newImageUpload(req)
+	if err != nil {
+		text := err.Error()
+		http.Error(res, text, code)
+		log.Printf("Upload error: %s : %s\n", req.RemoteAddr, text)
+	}
+}
+
+// Separate function for cleaner error handling. Returns the HTTP status code of
+// the response and error, if any.
+func newImageUpload(req *http.Request) (int, error) {
+	// Remove temporary files, when function returns
 	defer func() {
 		if err := req.MultipartForm.RemoveAll(); err != nil {
 			log.Printf("Error removing temporary files: %s\n", err)
 		}
 	}()
 
-	head := res.Header()
-	head.Set("Content-Type", "text/html; charset=UTF-8")
-	head.Set("Access-Control-Allow-Origin", conf.HTTP.Origin)
-
 	clientID, spoiler, err := parseUploadForm(req)
 	if err != nil {
-		passError(res, req, err, 400)
-		return
+		return 400, err
 	}
 
 	client, err := websockets.Clients.Get(clientID)
 	if err != nil {
-		passError(res, req, err, 400)
-		return
+		return 400, err
 	}
 
 	file, fileHeader, err := req.FormFile("image")
 	if err != nil {
-		passError(res, req, err, 400)
-		return
+		return 400, err
 	}
 	defer file.Close()
 
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
-		passError(res, req, err, 500)
-		return
+		return 500, err
 	}
 
 	sha1Sum := sha1.Sum(data)
 	SHA1 := string(sha1Sum[:])
 	img, err := FindImageThumb(SHA1)
 	if err != nil {
-		passError(res, req, err, 500)
-		return
+		return 500, err
 	}
 	img.Imgnm = fileHeader.Filename
 	img.Spoiler = spoiler
 
 	// Already have a thumbnail
 	if img.File != "" {
-		passImage(img, client)
-		return
+		return passImage(img, client)
 	}
 
 	fileType, err := detectFileType(data)
 	if err != nil {
-		passError(res, req, err, 400)
-		return
+		return 400, err
 	}
 	img.FileType = fileType
 
@@ -118,35 +122,21 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	if fileType == png {
 		img.APNG, err = apngdetector.Detect(reader)
 		if err != nil {
-			passError(res, req, err, 500)
-			return
+			return 500, err
 		}
 		reader.Seek(0, 0)
 	}
 
 	mid, thumb, err := processFile(reader, img)
 	if err != nil {
-		passError(res, req, err, 400)
-		return
+		return 400, err
 	}
 	reader.Seek(0, 0)
 	if err := allocateImage(reader, thumb, mid, img); err != nil {
-		passError(res, req, err, 500)
-		return
+		return 500, err
 	}
-	passImage(img, client)
-}
 
-// Pass error message to client and log server-side
-func passError(
-	res http.ResponseWriter,
-	req *http.Request,
-	err error,
-	code int,
-) {
-	text := err.Error()
-	http.Error(res, text, code)
-	log.Printf("Upload error: %s : %s\n", req.RemoteAddr, text)
+	return passImage(img, client)
 }
 
 // Parse and validate the form of the upload request
@@ -203,13 +193,15 @@ func isValidSpoiler(id uint8) bool {
 
 // Passes the image struct to the requesting client. If the image is not
 // succesfully passed in 10 seconds, it is deallocated.
-func passImage(img types.Image, client *websockets.Client) {
+func passImage(img types.Image, client *websockets.Client) (int, error) {
 	select {
 	case client.AllocateImage <- img:
+		return 200, nil
 	case <-time.Tick(allocationTimeout):
 		if err := DeallocateImage(img.File); err != nil {
 			log.Printf("counld't deallocate image: %s", img.File)
 		}
+		return 408, errUsageTimeout
 	}
 }
 
