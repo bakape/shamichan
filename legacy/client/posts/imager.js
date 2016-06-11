@@ -180,19 +180,27 @@ const ExpanderModel = Backbone.Model.extend({
 	},
 	// More efficent than individual listeners
 	massToggle(expand) {
-		const fit = options.get('inlinefit');
+		const fit = options.get('inlinefit')
 		if (fit === 'none')
-			return;
-		let models = state.posts.models;
-		for (let i = 0, l = models.length; i < l; i++) {
-			let model = models[i],
-				img = model.get('image');
-			if (!img)
-				continue;
-			if (expand)
-				model.dispatch('fitImage', img, fit);
-			else
-				model.dispatch('renderImage', null, img);
+			return
+
+		for (let model of state.posts.models) {
+			const img = model.get("image")
+
+			if (!img || img.audio) {
+				continue
+			}
+			switch (img.ext) {
+			case ".pdf":
+			case ".mp3":
+				continue
+			}
+
+			if (expand) {
+				model.dispatch('fitImage', img, fit)
+			} else {
+				model.dispatch('renderImage', null, img)
+			}
 		}
 	}
 });
