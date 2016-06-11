@@ -104,12 +104,13 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fileType, err := detectFileType(file)
+	fileType, err := detectFileType(data)
 	if err != nil {
 		passError(res, req, err, 400)
 		return
 	}
 	img.FileType = fileType
+
 	md5Sum := md5.Sum(data)
 	img.MD5 = string(md5Sum[:])
 
@@ -212,11 +213,7 @@ func passImage(img types.Image, client *websockets.Client) {
 // detectFileType detects if the upload is of a supported file type, by reading
 // its first 512 bytes. OGG and MP4 are also cheked to contain HTML5 supported
 // video and audio streams.
-func detectFileType(file io.Reader) (uint8, error) {
-	buf := make([]byte, 512)
-	if _, err := file.Read(buf); err != nil {
-		return 0, err
-	}
+func detectFileType(buf []byte) (uint8, error) {
 	mimeType := http.DetectContentType(buf)
 	mime, ok := mimeTypes[mimeType]
 	if !ok {
@@ -263,8 +260,8 @@ func processFile(file io.ReadSeeker, img types.Image) (
 	io.Reader, io.Reader, error,
 ) {
 	switch img.FileType {
-	case webm:
-		return processWebm(file)
+	// case webm:
+	// 	return processWebm(file)
 	case jpeg, png, gif:
 		return processImage(file)
 	default:

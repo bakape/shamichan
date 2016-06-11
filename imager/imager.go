@@ -30,10 +30,6 @@ func processImage(file io.ReadSeeker) (
 		return
 	}
 
-	// if img.FileType == png {
-	// 	img.APNG = apngdetector.Detect(data)
-	// }
-
 	file.Seek(0, 0)
 	thumbs, _, err := imager.Thumbnails(file, sharp, normal)
 	if err != nil {

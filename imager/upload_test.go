@@ -3,6 +3,7 @@ package imager
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -66,7 +67,9 @@ func (*Imager) TestDetectFileType(c *C) {
 	for code, ext := range extensions {
 		f := openFile("sample."+ext, c)
 		defer f.Close()
-		t, err := detectFileType(f)
+		buf, err := ioutil.ReadAll(f)
+		c.Assert(err, IsNil)
+		t, err := detectFileType(buf)
 		c.Assert(err, IsNil)
 		c.Assert(t, Equals, code)
 	}
