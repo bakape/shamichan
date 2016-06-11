@@ -113,8 +113,10 @@ func newImageUpload(req *http.Request) (int, error) {
 	if err != nil {
 		return 400, err
 	}
+
 	img.FileType = fileType
 	img.SHA1 = SHA1
+	img.Size = len(data)
 
 	md5Sum := md5.Sum(data)
 	img.MD5 = string(md5Sum[:])

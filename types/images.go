@@ -22,7 +22,7 @@ type ImageCommon struct {
 	FileType uint8     `json:"fileType" gorethink:"fileType"`
 	Length   int32     `json:"length,omitempty" gorethink:"length,omitempty"`
 	Dims     [4]uint16 `json:"dims" gorethink:"dims"`
-	Size     int64     `json:"size" gorethink:"size"`
+	Size     int       `json:"size" gorethink:"size"`
 	MD5      string
 	SHA1     string
 }
