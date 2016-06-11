@@ -1,10 +1,14 @@
 package imager
 
 import (
+	"io"
+	"os"
+
 	r "github.com/dancannon/gorethink"
 
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/util"
 )
 
 var (
@@ -72,4 +76,31 @@ func DeallocateImage(id string) error {
 	}
 
 	return nil
+}
+
+// Allocate an image's file resources to their respective served directories and
+// write its data to the database
+func allocateImage(src, thumb, mid io.Reader, img types.Image) error {
+	err := writeAssets(img.File, img.FileType, src, thumb, mid)
+	if err != nil {
+		return cleanUpFailedAllocation(img, err)
+	}
+
+	query := r.
+		Table("images").
+		Insert(types.ProtoImage{ImageCommon: img.ImageCommon})
+	err = db.DB(query).Exec()
+	if err != nil {
+		return cleanUpFailedAllocation(img, err)
+	}
+	return nil
+}
+
+// Delete any dangling image files in case of a failed image allocattion
+func cleanUpFailedAllocation(img types.Image, err error) error {
+	delErr := deleteAssets(img.File, img.FileType)
+	if err != nil && !os.IsNotExist(delErr) {
+		err = util.WrapError(err.Error(), delErr)
+	}
+	return err
 }

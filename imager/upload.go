@@ -124,14 +124,17 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 		reader.Seek(0, 0)
 	}
 
-	if _, _, err := processFile(reader, img); err != nil {
-
-		// TODO: Image allocattion
-
+	mid, thumb, err := processFile(reader, img)
+	if err != nil {
 		passError(res, req, err, 400)
-	} else {
-		passImage(img, client)
+		return
 	}
+	reader.Seek(0, 0)
+	if err := allocateImage(reader, thumb, mid, img); err != nil {
+		passError(res, req, err, 500)
+		return
+	}
+	passImage(img, client)
 }
 
 // Pass error message to client and log server-side

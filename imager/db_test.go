@@ -1,6 +1,8 @@
 package imager
 
 import (
+	"errors"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -114,4 +116,60 @@ func (*Imager) TestRemoveUnreffedImage(c *C) {
 
 	// Assert files are deleted
 	at.AssertDeleted()
+}
+
+func (*Imager) TestFailedAllocationCleanUp(c *C) {
+	const id = "123"
+	at := newAllocatioTester("sample.jpg", id, jpeg, c)
+	at.Allocate()
+	c.Assert(os.Remove(filepath.FromSlash("img/mid/"+id+".jpg")), IsNil)
+
+	err := errors.New("foo")
+	img := types.Image{
+		ImageCommon: types.ImageCommon{
+			File:     id,
+			FileType: jpeg,
+		},
+	}
+
+	c.Assert(cleanUpFailedAllocation(img, err), Equals, err)
+	at.AssertDeleted()
+}
+
+func (*Imager) TestImageAllocation(c *C) {
+	const id = "123"
+	var samples [3]*os.File
+	for i, name := range [...]string{"sample", "thumb", "mid"} {
+		path := filepath.FromSlash(name + ".jpg")
+		samples[i] = openFile(path, c)
+		defer samples[i].Close()
+	}
+	img := types.Image{
+		ImageCommon: types.ImageCommon{
+			File:     id,
+			FileType: jpeg,
+		},
+	}
+
+	c.Assert(allocateImage(samples[0], samples[1], samples[2], img), IsNil)
+
+	// Assert files and remove them
+	for i, path := range getFilePaths(id, jpeg) {
+		_, err := samples[i].Seek(0, 0)
+		c.Assert(err, IsNil)
+		sampleBuf, err := ioutil.ReadAll(samples[i])
+		c.Assert(err, IsNil)
+		buf, err := ioutil.ReadFile(path)
+		c.Assert(err, IsNil)
+		c.Assert(buf, DeepEquals, sampleBuf)
+
+		c.Assert(os.Remove(path), IsNil)
+	}
+
+	// Assert database document
+	var imageDoc types.ProtoImage
+	c.Assert(db.DB(db.GetImage(id)).One(&imageDoc), IsNil)
+	c.Assert(imageDoc, DeepEquals, types.ProtoImage{
+		ImageCommon: img.ImageCommon,
+	})
 }
