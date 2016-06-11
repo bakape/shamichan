@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.9.3 - 2016-06-11
+* Fix:
+	- Don't autoexpand files with audio and PDF
+
 ##v1.9.2 - 2016-05-27
 * Fix:
 	- Server crashes on catalog pages
