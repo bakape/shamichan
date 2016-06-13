@@ -5,7 +5,7 @@ package imager
 import (
 	"io"
 
-	webmTool "github.com/Soreil/webm"
+	webmTool "github.com/Soreil/video/webm"
 )
 
 func processWebm(file io.ReadSeeker) (
