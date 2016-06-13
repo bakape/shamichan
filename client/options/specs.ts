@@ -94,7 +94,7 @@ export const specs: OptionSpec[] = [
 		type: optionType.menu,
 		list: thumbStyles,
 		tab: tabs.style,
-		default: 'small'
+		default: isMobile ? 'small' : 'sharp'
 	},
 	// Image hover expansion
 	{
