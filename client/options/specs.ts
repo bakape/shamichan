@@ -16,11 +16,8 @@ export const enum tabs {general, style, imagesearch, fun, shortcuts}
 
 // Can't  use enums for ones below, because they persist to localStorage
 
-// Available thumbnail display styles
-export const thumbStyles = ['small', 'sharp', 'hide']
-
 // Thumbnail expansion modes
-export const thumbExpansions = ['none', 'full', 'height', 'width', 'both']
+export const thumbExpansions = ['none', 'width', 'screen']
 
 // Available themes
 export const themes = [
@@ -88,13 +85,10 @@ export const specs: OptionSpec[] = [
 		tab: tabs.style,
 		default: 'width'
 	},
-	// Thumbnail display style
+	// Hide thumbnails, until explicitly revealed
 	{
-		id: 'thumbs',
-		type: optionType.menu,
-		list: thumbStyles,
+		id: 'hideThumbs',
 		tab: tabs.style,
-		default: isMobile ? 'small' : 'sharp'
 	},
 	// Image hover expansion
 	{

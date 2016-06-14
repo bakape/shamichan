@@ -88,14 +88,9 @@
 	"opts": {
 		"tabs": ["General", "Style", "ImageSearch", "Fun", "Shortcuts"],
 		"modes": {
-			"small": "small",
-			"sharp": "sharp",
-			"hide": "hide",
 			"none": "none",
-			"full": "full-size",
 			"width": "fit to width",
-			"height": "fit to height",
-			"both": "fit to both"
+			"screen": "fit to screen"
 		},
 		"importConfig": {
 			"done":"Import successfull. The page will now reload.",
@@ -114,6 +109,10 @@
 			"hidden": [
 				"Hidden: 0",
 				"Clear hidden posts"
+			],
+			"hideThumbs": [
+				"Hide thumbnails",
+				"Display a [Show] button in place of thumbnails"
 			],
 			"lang": [
 				"Language",

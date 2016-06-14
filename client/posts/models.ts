@@ -37,7 +37,6 @@ export type ImageData = {
 	fileType: fileTypes
 	length?: number
 	dims: number[]
-	file: string
 	size: number
 	MD5: string
 	SHA1: string
@@ -45,7 +44,7 @@ export type ImageData = {
 	[index: string]: string|number|number[]|boolean
 }
 
-export const enum fileTypes {jpeg, png, gif, webm, pdf, svg, mp4, mp3, ogg}
+export enum fileTypes {jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg}
 
 // Generic post model. OP or Reply.
 export class Reply extends Post {
@@ -57,7 +56,6 @@ export class Reply extends Post {
 }
 
 export class Thread extends Post {
-	largeThumb: boolean
 	locked: boolean
 	archived: boolean
 	sticky: boolean

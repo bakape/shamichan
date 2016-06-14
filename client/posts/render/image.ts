@@ -12,7 +12,7 @@ import {images as lang} from '../../lang'
 
 // Render a thumbnail of an image, according to configuration settings
 export function renderImage(data: ImageData, reveal?: boolean): string {
-	const showThumb = options.thumbs !== 'hide' || reveal
+	const showThumb = options.hideThumbs || reveal
 	return parseHTML
 		`<figure>
 			${renderFigcaption(data, reveal)}
@@ -54,7 +54,7 @@ function readableFilesize(size: number): string {
 
 // Render the button for toggling hidden thumbnails
 function hiddenToggle(reveal: boolean): string {
-	if (options.thumbs !== 'hide') {
+	if (options.hideThumbs) {
 		return ''
 	}
 	return parseHTML
@@ -65,9 +65,6 @@ function hiddenToggle(reveal: boolean): string {
 
 // Base URLs of image addresses
 const imagePaths: {[type: string]: string} = {
-	src: '/img/src/',
-	thumb: '/img/thumb/',
-	mid: '/img/mid/',
 	spoil: '/ass/spoil/spoiler'
 }
 
@@ -150,29 +147,16 @@ const imagePaths: {[type: string]: string} = {
 
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
-function thumbPath(data: ImageData, mid?: boolean): string {
-	const type = mid ? 'mid' : 'thumb',
-		ext = data.fileType === fileTypes.jpeg ? ".jpeg" : ".png"
-	return imagePaths[type] + data.file + ext
+function thumbPath({SHA1, fileType}: ImageData): string {
+	const ext = fileType === fileTypes.jpg ? "jpg" : "png"
+	return `/img/thumb/${SHA1}.${ext}`
 }
 
 // Resolve the path to the source file of an upload
-function sourcePath({file, fileType}: ImageData): string {
-	return imagePaths['src'] + file + sourceExtension[fileType]
+function sourcePath({SHA1, fileType}: ImageData): string {
+	return `/img/src/${SHA1}.${fileTypes[fileType]}`
 }
 
-// Map of enums to the appropriate file type extension
-const sourceExtension: {[type: number]: string} = {
-	[fileTypes.jpeg]: '.jpg',
-	[fileTypes.png]: '.png',
-	[fileTypes.gif]: '.gif',
-	[fileTypes.webm]: '.webm',
-	[fileTypes.pdf]: '.pdf',
-	[fileTypes.svg]: '.svg',
-	[fileTypes.mp4]: '.mp4',
-	[fileTypes.mp3]: '.mp3',
-	[fileTypes.ogg]: '.ogg'
-}
 
 // Render a name + download link of an image
 function imageLink(data: ImageData): string {
@@ -184,11 +168,13 @@ function imageLink(data: ImageData): string {
 	}
 	const fullName = escape(imgnm),
 		tooLong = name.length >= 38
+
 	if (tooLong) {
 		imgnm = escape(name.slice(0, 30))
 			+ '(&hellip;)'
-			+ escape(sourceExtension[fileType])
+			+ escape(fileTypes[fileType])
 	}
+
 	const attrs: ElementAttributes = {
 		href: sourcePath(data),
 		rel: 'nofollow',
@@ -197,6 +183,7 @@ function imageLink(data: ImageData): string {
 	if (tooLong) {
 		attrs['title'] = fullName
 	}
+
 	return parseHTML
 		`<a ${parseAttributes(attrs)}>
 			${imgnm}
@@ -225,7 +212,7 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 		// Animated GIF thumbnails
 		thumb = src
 	} else {
-		thumb = thumbPath(data, options.thumbs !== 'small')
+		thumb = thumbPath(data)
 	}
 
 	const linkAttrs: ElementAttributes = {
@@ -246,7 +233,7 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 
 		// No image hover previews
 		imgAttrs['class'] = 'expanded'
-		if(options.thumbs === 'hide') {
+		if (options.hideThumbs) {
 			imgAttrs['style'] = 'display: none'
 		}
 	}

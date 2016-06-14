@@ -14,7 +14,7 @@ localStorage.removeItem("options")
 interface Options extends ChangeEmitter {
 	lang: string
 	inlineFit: string
-	thumbs: string
+	hideThumbs: boolean
 	imageHover: boolean
 	webmHover: boolean
 	autogif: boolean

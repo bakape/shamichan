@@ -10,7 +10,6 @@ export function renderSection(data: Thread, cls: string = ''): string {
 	if (data.locked) {
 		cls += ' locked'
 	}
-	data.largeThumb = true // Larger thumbnails
 
 	return parseHTML
 		`<section id="p${data.id.toString()}" class="${cls}">
