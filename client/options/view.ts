@@ -90,8 +90,8 @@ export default class OptionsPanel extends BannerModal {
 			break
 		case optionType.image:
 			// Not recorded. Extracted directly by the background handler
-			const module = await loadModule('background')
-			module.store((event as any).target.files[0])
+			(await loadModule('background'))
+				.store((event as any).target.files[0])
 			return
 		}
 
