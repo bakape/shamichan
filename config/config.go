@@ -90,13 +90,13 @@ type StaffClass struct {
 type ImageConfig struct {
 	WebmAudio   bool
 	Hats        bool
-	JpegQuality uint8
+	JpegQuality int
+	PngQuality  int
 	Max         struct {
 		Size          int64
-		Width, Height int
+		Width, Height uint16
 	}
-	Spoilers   []uint8
-	PngQuality string
+	Spoilers []uint8
 }
 
 // PostConfig stores configuration related to creating posts
@@ -134,10 +134,6 @@ type clientConfigs struct {
 		} `json:"classes"`
 	} `json:"staff"`
 	Images struct {
-		thumb struct {
-			ThumbDims [2]int `json:"thumbDims"`
-			MidDims   [2]int `json:"midDims"`
-		}
 		Spoilers []int `json:"spoilers"`
 		Hats     bool  `json:"hats"`
 	} `json:"images"`

@@ -130,12 +130,14 @@ func newImageUpload(req *http.Request) (int, error) {
 		reader.Seek(0, 0)
 	}
 
-	mid, thumb, err := processFile(reader, img)
+	thumb, dims, err := processFile(reader, img)
 	if err != nil {
 		return 400, err
 	}
+	img.Dims = dims
+
 	reader.Seek(0, 0)
-	if err := allocateImage(reader, thumb, mid, img); err != nil {
+	if err := allocateImage(reader, thumb, img); err != nil {
 		return 500, err
 	}
 
@@ -255,7 +257,7 @@ func detectCompatibleMP4(buf []byte) (bool, error) {
 
 // Delegate the processing of the file to an apropriate function by file type
 func processFile(file io.ReadSeeker, img types.Image) (
-	io.Reader, io.Reader, error,
+	io.Reader, [4]uint16, error,
 ) {
 	switch img.FileType {
 	// case webm:
@@ -263,6 +265,6 @@ func processFile(file io.ReadSeeker, img types.Image) (
 	case jpeg, png, gif:
 		return processImage(file)
 	default:
-		return nil, nil, fmt.Errorf("File type slipped in: %d", img.FileType)
+		return nil, [4]uint16{}, fmt.Errorf("File type slipped in: %d", img.FileType)
 	}
 }

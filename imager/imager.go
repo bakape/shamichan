@@ -4,8 +4,8 @@ package imager
 
 import (
 	"errors"
-	"fmt"
 	"image"
+	jpegLib "image/jpeg"
 	"io"
 
 	"github.com/Soreil/imager"
@@ -14,59 +14,61 @@ import (
 )
 
 var (
-	// Maximum dimentions for a normal small thumbnail
-	normal = image.Point{X: 125, Y: 125}
-
-	// Maximum dimentions for a high quality thumbnail
-	sharp = image.Point{X: 250, Y: 250}
+	errTooWide = errors.New("image too wide") // No such thing
+	errTooTall = errors.New("image too tall")
 )
 
-// Verify image parameters and create thumbnails
+// InitImager applies the thumbnail quality configuration
+func InitImager() error {
+	conf := config.Get().Images
+	imager.JPEGOptions = jpegLib.Options{Quality: conf.JpegQuality}
+	imager.PNGQuantization = conf.PngQuality
+	return nil // To comply to the rest of the initialization functions
+}
+
+// Verify image parameters and create a thumbnail. The dims array contains
+// [src_width, src_height, thumb_width, thumb_height].
 func processImage(file io.ReadSeeker) (
-	large io.Reader, small io.Reader, err error,
+	thumb io.Reader, dims [4]uint16, err error,
 ) {
-	err = verifyImage(file)
-	if err != nil {
-		return
-	}
-
 	file.Seek(0, 0)
-	thumbs, _, err := imager.Thumbnails(file, sharp, normal)
+	src, format, err := image.Decode(file)
+	if err != nil {
+		err = util.WrapError("error decoding source image", err)
+		return
+	}
+
+	dims, err = verifyDimentions(src)
 	if err != nil {
 		return
 	}
 
-	large = thumbs[0]
-	small = thumbs[1]
+	scaled := imager.Scale(src, image.Point{X: 125, Y: 125})
+	dims[2], dims[3] = getDims(scaled)
+	thumbFormat := "png"
+	if format == "jpeg" {
+		thumbFormat = "jpeg"
+	}
+	thumb, err = imager.Encode(scaled, thumbFormat)
 	return
 }
 
-// Verify image dimentions and that it has not been posted before in the
-// configured time
-func verifyImage(file io.ReadSeeker) error {
-	decoded, format, err := image.Decode(file)
-	if err != nil {
-		return util.WrapError("Error decoding image", err)
+// Verify an image does not exceed the preset maximum dimentions and return them
+func verifyDimentions(img image.Image) (dims [4]uint16, err error) {
+	dims[0], dims[1] = getDims(img)
+	conf := config.Get().Images.Max
+	if dims[0] > conf.Width {
+		err = errTooWide
+		return
 	}
-
-	switch format {
-	case "jpeg", "png", "gif":
-	default:
-		return fmt.Errorf("Unsupported image format: %s", format)
+	if dims[1] > conf.Height {
+		err = errTooTall
 	}
-
-	return verifyDimentions(decoded)
+	return
 }
 
-// Verify an image does not exceed the preset maximum dimentions
-func verifyDimentions(decoded image.Image) error {
-	conf := config.Get().Images.Max
-	rect := decoded.Bounds()
-	if rect.Max.X-rect.Min.X > conf.Width {
-		return errors.New("Image too wide")
-	}
-	if rect.Max.Y-rect.Min.Y > conf.Height {
-		return errors.New("Image too tall")
-	}
-	return nil
+// Calculates the width and height of an image
+func getDims(img image.Image) (uint16, uint16) {
+	rect := img.Bounds()
+	return uint16(rect.Max.X - rect.Min.X), uint16(rect.Max.Y - rect.Min.Y)
 }

@@ -18,34 +18,28 @@ var extensions = map[uint8]string{
 	pdf:  "pdf",
 }
 
-func getFilePaths(name string, fileType uint8) [3]string {
+// Generate file paths of the source file and its thumbnail
+func getFilePaths(name string, fileType uint8) (paths [2]string) {
 	thumbExtension := "png"
 	if fileType == jpeg {
 		thumbExtension = "jpg"
 	}
-
-	var paths [3]string
-	paths[0] = fmt.Sprintf("src/%s.%s", name, extensions[fileType])
-	paths[1] = fmt.Sprintf("thumb/%s.%s", name, thumbExtension)
-	paths[2] = fmt.Sprintf("mid/%s.%s", name, thumbExtension)
+	paths[0] = fmt.Sprintf("img/src/%s.%s", name, extensions[fileType])
+	paths[1] = fmt.Sprintf("img/thumb/%s.%s", name, thumbExtension)
 
 	for i := range paths {
-		paths[i] = filepath.FromSlash("./img/" + paths[i])
+		paths[i] = filepath.FromSlash(paths[i])
 	}
 
-	return paths
+	return
 }
 
-func writeAssets(
-	name string,
-	fileType uint8,
-	src, thumb, mid io.Reader,
-) error {
-	readers := [3]io.Reader{src, thumb, mid}
+// Write file assets to disk
+func writeAssets(name string, fileType uint8, src, thumb io.Reader) error {
+	readers := [2]io.Reader{src, thumb}
 
 	for i, path := range getFilePaths(name, fileType) {
-		err := writeFile(path, readers[i])
-		if err != nil {
+		if err := writeFile(path, readers[i]); err != nil {
 			return err
 		}
 	}
@@ -53,6 +47,7 @@ func writeAssets(
 	return nil
 }
 
+// Write a single file to disk with the appropriate permissions and flags
 func writeFile(path string, r io.Reader) error {
 	file, err := os.OpenFile(path, fileCreationFlags, 0660)
 	if err != nil {
@@ -73,6 +68,7 @@ func writeFile(path string, r io.Reader) error {
 	return nil
 }
 
+// Delete file assets belonging to a single upload
 func deleteAssets(name string, fileType uint8) error {
 	for _, path := range getFilePaths(name, fileType) {
 		if err := os.Remove(path); err != nil {

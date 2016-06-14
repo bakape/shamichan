@@ -227,11 +227,10 @@
         },
 
         // Quality of JPEG image thumbnails
-        "jpegQuality": 50,
+        "jpegQuality": 90,
 
-        // PNG thumbail quality setting. Consult the pngquant manula for more
-        // details
-        "pngQuality": "0-10",
+        // PNG thumbail quality
+        "pngQuality": 20,
 
         // Indicates which spoiler images may be selected by posters.
         // each number or ID corresponds to a set of image pairs in ./www/spoil

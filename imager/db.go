@@ -77,8 +77,8 @@ func DeallocateImage(id string) error {
 
 // Allocate an image's file resources to their respective served directories and
 // write its data to the database
-func allocateImage(src, thumb, mid io.Reader, img types.Image) error {
-	err := writeAssets(img.SHA1, img.FileType, src, thumb, mid)
+func allocateImage(src, thumb io.Reader, img types.Image) error {
+	err := writeAssets(img.SHA1, img.FileType, src, thumb)
 	if err != nil {
 		return cleanUpFailedAllocation(img, err)
 	}

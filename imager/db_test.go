@@ -15,7 +15,7 @@ import (
 type allocationTester struct {
 	c            *C
 	name, source string
-	paths        [3]string
+	paths        [2]string
 }
 
 func newAllocatioTester(
@@ -122,7 +122,7 @@ func (*Imager) TestFailedAllocationCleanUp(c *C) {
 	const id = "123"
 	at := newAllocatioTester("sample.jpg", id, jpeg, c)
 	at.Allocate()
-	c.Assert(os.Remove(filepath.FromSlash("img/mid/"+id+".jpg")), IsNil)
+	c.Assert(os.Remove(filepath.FromSlash("img/thumb/"+id+".jpg")), IsNil)
 
 	err := errors.New("foo")
 	img := types.Image{
@@ -139,7 +139,7 @@ func (*Imager) TestFailedAllocationCleanUp(c *C) {
 func (*Imager) TestImageAllocation(c *C) {
 	const id = "123"
 	var samples [3]*os.File
-	for i, name := range [...]string{"sample", "thumb", "mid"} {
+	for i, name := range [...]string{"sample", "thumb"} {
 		path := filepath.FromSlash(name + ".jpg")
 		samples[i] = openFile(path, c)
 		defer samples[i].Close()
@@ -151,7 +151,7 @@ func (*Imager) TestImageAllocation(c *C) {
 		},
 	}
 
-	c.Assert(allocateImage(samples[0], samples[1], samples[2], img), IsNil)
+	c.Assert(allocateImage(samples[0], samples[1], img), IsNil)
 
 	// Assert files and remove them
 	for i, path := range getFilePaths(id, jpeg) {

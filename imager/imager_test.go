@@ -1,14 +1,18 @@
 package imager
 
 import (
+	"image"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	jpegLib "image/jpeg"
 	"testing"
 
+	"github.com/Soreil/imager"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+
 	"github.com/bakape/meguca/server/websockets"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
@@ -28,8 +32,8 @@ func (d *Imager) SetUpSuite(c *C) {
 	c.Assert(db.Connect(""), IsNil)
 	c.Assert(db.InitDB(d.dbName), IsNil)
 
-	for _, dir := range [...]string{"src", "thumb", "mid"} {
-		path := filepath.FromSlash("./img/" + dir)
+	for _, dir := range [...]string{"src", "thumb"} {
+		path := filepath.FromSlash("img/" + dir)
 		c.Assert(os.MkdirAll(path, 0770), IsNil)
 	}
 }
@@ -56,30 +60,40 @@ func (d *Imager) TearDownSuite(c *C) {
 	c.Assert(os.RemoveAll("img"), IsNil)
 }
 
-func (*Imager) TestVerifyImageFormat(c *C) {
-	samples := map[string]bool{
-		"jpg":  true,
-		"gif":  true,
-		"png":  true,
-		"webm": false,
-	}
-	for ext, shouldPass := range samples {
-		file := openFile("sample."+ext, c)
-		defer file.Close()
-		err := verifyImage(file)
-		if shouldPass {
-			c.Assert(err, IsNil)
-		} else {
-			c.Assert(err, ErrorMatches, "Unsupported image format: .*")
-		}
-	}
-
-	// Failure to decode
-	file := openFile("sample.txt", c)
-	defer file.Close()
-	err := verifyImage(file)
-	c.Assert(err, ErrorMatches, "Error decoding image: .*")
+func (*Imager) TestInitImager(c *C) {
+	conf := config.ServerConfigs{}
+	conf.Images.JpegQuality = 90
+	conf.Images.PngQuality = 20
+	config.Set(conf)
+	InitImager()
+	c.Assert(imager.JPEGOptions, Equals, jpegLib.Options{Quality: 90})
+	c.Assert(imager.PNGQuantization, Equals, 20)
 }
+
+// func (*Imager) TestVerifyImageFormat(c *C) {
+// 	samples := map[string]bool{
+// 		"jpg":  true,
+// 		"gif":  true,
+// 		"png":  true,
+// 		"webm": false,
+// 	}
+// 	for ext, shouldPass := range samples {
+// 		file := openFile("sample."+ext, c)
+// 		defer file.Close()
+// 		err := verifyImage(file)
+// 		if shouldPass {
+// 			c.Assert(err, IsNil)
+// 		} else {
+// 			c.Assert(err, ErrorMatches, "Unsupported image format: .*")
+// 		}
+// 	}
+//
+// 	// Failure to decode
+// 	file := openFile("sample.txt", c)
+// 	defer file.Close()
+// 	err := verifyImage(file)
+// 	c.Assert(err, ErrorMatches, "Error decoding image: .*")
+// }
 
 func (*Imager) TestVerifyDimentions(c *C) {
 	conf := config.ServerConfigs{}
@@ -87,31 +101,49 @@ func (*Imager) TestVerifyDimentions(c *C) {
 	conf.Images.Max.Height = 2000
 	config.Set(conf)
 
-	tooWide := openFile("too wide.jpg", c)
-	tooTall := openFile("too tall.jpg", c)
-	pass := openFile("sample.jpg", c)
-	defer func() {
-		tooTall.Close()
-		tooWide.Close()
-		pass.Close()
-	}()
+	samples := []struct {
+		name string
+		err  error
+		dims [4]uint16
+	}{
+		{"too wide.jpg", errTooWide, [4]uint16{2001, 720, 0, 0}},
+		{"too tall.jpg", errTooTall, [4]uint16{1280, 2001, 0, 0}},
+		{"sample.jpg", nil, [4]uint16{1084, 881, 0, 0}},
+	}
 
-	c.Assert(verifyImage(tooTall), ErrorMatches, "Image too tall")
-	c.Assert(verifyImage(tooWide), ErrorMatches, "Image too wide")
-	c.Assert(verifyImage(pass), IsNil)
+	for _, s := range samples {
+		file := openFile(s.name, c)
+		defer file.Close()
+		img, _, err := image.Decode(file)
+		c.Assert(err, IsNil)
+		dims, err := verifyDimentions(img)
+		c.Assert(err, Equals, s.err)
+		c.Assert(dims, Equals, s.dims)
+	}
 }
 
 func (*Imager) TestImageProcessing(c *C) {
-	for _, ext := range [...]string{"jpg", "gif", "png"} {
-		file := openFile("sample."+ext, c)
+	samples := []struct {
+		ext  string
+		dims [4]uint16
+	}{
+		{"jpg", [4]uint16{1084, 881, 125, 101}},
+		{"png", [4]uint16{1280, 720, 125, 70}},
+		{"gif", [4]uint16{584, 720, 101, 125}},
+	}
+
+	for _, s := range samples {
+		file := openFile("sample."+s.ext, c)
 		defer file.Close()
 
-		large, small, err := processImage(file)
+		thumb, dims, err := processImage(file)
 		c.Assert(err, IsNil)
-		smallBuf, err := ioutil.ReadAll(small)
+
+		// How do we assert a thumbnail?
+		buf, err := ioutil.ReadAll(thumb)
 		c.Assert(err, IsNil)
-		largeBuf, err := ioutil.ReadAll(large)
-		c.Assert(err, IsNil)
-		c.Assert(len(largeBuf) > len(smallBuf), Equals, true)
+		c.Assert(len(buf) > 100, Equals, true)
+
+		c.Assert(dims, Equals, s.dims)
 	}
 }

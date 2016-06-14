@@ -16,12 +16,10 @@ func (*Imager) TestGetFilePaths(c *C) {
 	checks := [...]struct {
 		got, expected string
 	}{
-		{webm[0], "./img/src/jingai.webm"},
-		{webm[1], "./img/thumb/jingai.png"},
-		{webm[2], "./img/mid/jingai.png"},
-		{jpeg[0], "./img/src/modoki.jpg"},
-		{jpeg[1], "./img/thumb/modoki.jpg"},
-		{jpeg[2], "./img/mid/modoki.jpg"},
+		{webm[0], "img/src/jingai.webm"},
+		{webm[1], "img/thumb/jingai.png"},
+		{jpeg[0], "img/src/modoki.jpg"},
+		{jpeg[1], "img/thumb/modoki.jpg"},
 	}
 	for _, check := range checks {
 		c.Assert(check.got, Equals, filepath.FromSlash(check.expected))
@@ -78,14 +76,13 @@ func (*Imager) TestWriteAssets(c *C) {
 	std := [...][]byte{
 		{1, 2, 3},
 		{4, 5, 6},
-		{7, 8, 9},
 	}
-	var rs [3]io.Reader
+	var rs [2]io.Reader
 	for i := range std {
 		rs[i] = bytes.NewReader(std[i])
 	}
 
-	c.Assert(writeAssets(name, fileType, rs[0], rs[1], rs[2]), IsNil)
+	c.Assert(writeAssets(name, fileType, rs[0], rs[1]), IsNil)
 	for i, path := range getFilePaths(name, fileType) {
 		buf, err := ioutil.ReadFile(path)
 		c.Assert(err, IsNil)
