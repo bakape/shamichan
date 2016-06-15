@@ -61,7 +61,7 @@ dist_clean: clean
 	rm -rf img config/config.json assets error.log .package
 
 init:
-	mkdir -p assets img/{src,thumb}
+	mkdir -p assets img/src img/thumb
 	cp -n config/defaults.json config/config.json
 
 test: server_deps
@@ -86,7 +86,8 @@ install_ffmpeg:
 
 package_win64: all
 	rm -rf .package
-	mkdir -p .package/{config,templates} .package/img/{src,thumb}
+	mkdir -p .package/config .package/templates .package/img/src \
+		.package/img/thumb
 	cp -r docs scripts www *.dll CHANGELOG.md README.md LICENSE $(BINARY) \
 		.package/
 	cp config/defaults.json .package/config/
