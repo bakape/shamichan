@@ -1,8 +1,6 @@
 package imager
 
 import (
-	"bytes"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -58,9 +56,8 @@ func (*Imager) TestDeleteAssets(c *C) {
 
 func (*Imager) TestWriteFile(c *C) {
 	std := []byte{1, 0, 0, 3, 2}
-	r := bytes.NewReader(std)
 	path := filepath.FromSlash("img/src/write_test")
-	c.Assert(writeFile(path, r), IsNil)
+	c.Assert(writeFile(path, std), IsNil)
 	defer os.Remove(path)
 
 	buf, err := ioutil.ReadFile(path)
@@ -77,12 +74,8 @@ func (*Imager) TestWriteAssets(c *C) {
 		{1, 2, 3},
 		{4, 5, 6},
 	}
-	var rs [2]io.Reader
-	for i := range std {
-		rs[i] = bytes.NewReader(std[i])
-	}
 
-	c.Assert(writeAssets(name, fileType, rs[0], rs[1]), IsNil)
+	c.Assert(writeAssets(name, fileType, std[0], std[1]), IsNil)
 	for i, path := range getFilePaths(name, fileType) {
 		buf, err := ioutil.ReadFile(path)
 		c.Assert(err, IsNil)

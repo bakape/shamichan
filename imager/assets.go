@@ -2,8 +2,6 @@ package imager
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -35,11 +33,11 @@ func getFilePaths(name string, fileType uint8) (paths [2]string) {
 }
 
 // Write file assets to disk
-func writeAssets(name string, fileType uint8, src, thumb io.Reader) error {
-	readers := [2]io.Reader{src, thumb}
+func writeAssets(name string, fileType uint8, src, thumb []byte) error {
+	data := [2][]byte{src, thumb}
 
 	for i, path := range getFilePaths(name, fileType) {
-		if err := writeFile(path, readers[i]); err != nil {
+		if err := writeFile(path, data[i]); err != nil {
 			return err
 		}
 	}
@@ -48,24 +46,15 @@ func writeAssets(name string, fileType uint8, src, thumb io.Reader) error {
 }
 
 // Write a single file to disk with the appropriate permissions and flags
-func writeFile(path string, r io.Reader) error {
+func writeFile(path string, data []byte) error {
 	file, err := os.OpenFile(path, fileCreationFlags, 0660)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	buf, err := ioutil.ReadAll(r)
-	if err != nil {
-		return err
-	}
-
-	_, err = file.Write(buf)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err = file.Write(data)
+	return err
 }
 
 // Delete file assets belonging to a single upload

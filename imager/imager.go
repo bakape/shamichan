@@ -28,19 +28,17 @@ func InitImager() error {
 
 // Verify image parameters and create a thumbnail. The dims array contains
 // [src_width, src_height, thumb_width, thumb_height].
-func processImage(file io.ReadSeeker) (
-	thumb io.Reader, dims [4]uint16, err error,
-) {
+func processImage(file io.ReadSeeker) ([]byte, [4]uint16, error) {
 	file.Seek(0, 0)
 	src, format, err := image.Decode(file)
 	if err != nil {
 		err = util.WrapError("error decoding source image", err)
-		return
+		return nil, [4]uint16{}, err
 	}
 
-	dims, err = verifyDimentions(src)
+	dims, err := verifyDimentions(src)
 	if err != nil {
-		return
+		return nil, dims, err
 	}
 
 	scaled := imager.Scale(src, image.Point{X: 125, Y: 125})
@@ -49,8 +47,12 @@ func processImage(file io.ReadSeeker) (
 	if format == "jpeg" {
 		thumbFormat = "jpeg"
 	}
-	thumb, err = imager.Encode(scaled, thumbFormat)
-	return
+	thumb, err := imager.Encode(scaled, thumbFormat)
+	if err != nil {
+		return nil, dims, err
+	}
+
+	return thumb.Bytes(), dims, err
 }
 
 // Verify an image does not exceed the preset maximum dimentions and return them

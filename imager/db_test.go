@@ -138,11 +138,12 @@ func (*Imager) TestFailedAllocationCleanUp(c *C) {
 
 func (*Imager) TestImageAllocation(c *C) {
 	const id = "123"
-	var samples [3]*os.File
+	var samples [3][]byte
 	for i, name := range [...]string{"sample", "thumb"} {
-		path := filepath.FromSlash(name + ".jpg")
-		samples[i] = openFile(path, c)
-		defer samples[i].Close()
+		path := filepath.FromSlash("test/" + name + ".jpg")
+		var err error
+		samples[i], err = ioutil.ReadFile(path)
+		c.Assert(err, IsNil)
 	}
 	img := types.Image{
 		ImageCommon: types.ImageCommon{
@@ -155,13 +156,9 @@ func (*Imager) TestImageAllocation(c *C) {
 
 	// Assert files and remove them
 	for i, path := range getFilePaths(id, jpeg) {
-		_, err := samples[i].Seek(0, 0)
-		c.Assert(err, IsNil)
-		sampleBuf, err := ioutil.ReadAll(samples[i])
-		c.Assert(err, IsNil)
 		buf, err := ioutil.ReadFile(path)
 		c.Assert(err, IsNil)
-		c.Assert(buf, DeepEquals, sampleBuf)
+		c.Assert(buf, DeepEquals, samples[i])
 
 		c.Assert(os.Remove(path), IsNil)
 	}

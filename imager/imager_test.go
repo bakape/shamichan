@@ -2,7 +2,6 @@ package imager
 
 import (
 	"image"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -70,31 +69,6 @@ func (*Imager) TestInitImager(c *C) {
 	c.Assert(imager.PNGQuantization, Equals, 20)
 }
 
-// func (*Imager) TestVerifyImageFormat(c *C) {
-// 	samples := map[string]bool{
-// 		"jpg":  true,
-// 		"gif":  true,
-// 		"png":  true,
-// 		"webm": false,
-// 	}
-// 	for ext, shouldPass := range samples {
-// 		file := openFile("sample."+ext, c)
-// 		defer file.Close()
-// 		err := verifyImage(file)
-// 		if shouldPass {
-// 			c.Assert(err, IsNil)
-// 		} else {
-// 			c.Assert(err, ErrorMatches, "Unsupported image format: .*")
-// 		}
-// 	}
-//
-// 	// Failure to decode
-// 	file := openFile("sample.txt", c)
-// 	defer file.Close()
-// 	err := verifyImage(file)
-// 	c.Assert(err, ErrorMatches, "Error decoding image: .*")
-// }
-
 func (*Imager) TestVerifyDimentions(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Images.Max.Width = 2000
@@ -140,9 +114,7 @@ func (*Imager) TestImageProcessing(c *C) {
 		c.Assert(err, IsNil)
 
 		// How do we assert a thumbnail?
-		buf, err := ioutil.ReadAll(thumb)
-		c.Assert(err, IsNil)
-		c.Assert(len(buf) > 100, Equals, true)
+		c.Assert(len(thumb) > 100, Equals, true)
 
 		c.Assert(dims, Equals, s.dims)
 	}
