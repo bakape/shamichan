@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bakape/apngdetector"
+	"github.com/Soreil/apngdetector"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
