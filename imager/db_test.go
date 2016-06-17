@@ -140,10 +140,7 @@ func (*Imager) TestImageAllocation(c *C) {
 	const id = "123"
 	var samples [3][]byte
 	for i, name := range [...]string{"sample", "thumb"} {
-		path := filepath.FromSlash("test/" + name + ".jpg")
-		var err error
-		samples[i], err = ioutil.ReadFile(path)
-		c.Assert(err, IsNil)
+		samples[i] = readSample(name+".jpg", c)
 	}
 	img := types.Image{
 		ImageCommon: types.ImageCommon{
@@ -159,8 +156,6 @@ func (*Imager) TestImageAllocation(c *C) {
 		buf, err := ioutil.ReadFile(path)
 		c.Assert(err, IsNil)
 		c.Assert(buf, DeepEquals, samples[i])
-
-		c.Assert(os.Remove(path), IsNil)
 	}
 
 	// Assert database document
@@ -169,4 +164,11 @@ func (*Imager) TestImageAllocation(c *C) {
 	c.Assert(imageDoc, DeepEquals, types.ProtoImage{
 		ImageCommon: img.ImageCommon,
 	})
+}
+
+func readSample(name string, c *C) []byte {
+	path := filepath.FromSlash("test/" + name)
+	data, err := ioutil.ReadFile(path)
+	c.Assert(err, IsNil)
+	return data
 }

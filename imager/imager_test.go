@@ -1,7 +1,9 @@
 package imager
 
 import (
+	"fmt"
 	"image"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -24,7 +26,14 @@ type Imager struct {
 	perceptualCloser chan struct{}
 }
 
-var _ = Suite(&Imager{})
+var (
+	_ = Suite(&Imager{})
+
+	// Resulting dimentions after thumbnailing samples
+	jpegDims = [4]uint16{1084, 881, 125, 101}
+	pngDims  = [4]uint16{1280, 720, 125, 70}
+	gifDims  = [4]uint16{584, 720, 101, 125}
+)
 
 func (d *Imager) SetUpSuite(c *C) {
 	d.dbName = db.UniqueDBName()
@@ -47,10 +56,25 @@ func (d *Imager) SetUpTest(c *C) {
 }
 
 func (d *Imager) TearDownTest(c *C) {
+	// Clear DB tables
 	for _, table := range db.AllTables {
 		c.Assert(db.DB(r.Table(table).Delete()).Exec(), IsNil)
 	}
+
+	// Clear synchtonised clients
 	websockets.Clients.Clear()
+
+	// Clear image asset folders
+	for _, dir := range [...]string{"src", "thumb"} {
+		path := filepath.FromSlash("img/" + dir)
+		files, err := ioutil.ReadDir(path)
+		c.Assert(err, IsNil)
+		for _, file := range files {
+			path := fmt.Sprintf("img/%s/%s", dir, file.Name())
+			path = filepath.FromSlash(path)
+			c.Assert(os.Remove(path), IsNil)
+		}
+	}
 }
 
 func (d *Imager) TearDownSuite(c *C) {
@@ -101,21 +125,20 @@ func (*Imager) TestImageProcessing(c *C) {
 		ext  string
 		dims [4]uint16
 	}{
-		{"jpg", [4]uint16{1084, 881, 125, 101}},
-		{"png", [4]uint16{1280, 720, 125, 70}},
-		{"gif", [4]uint16{584, 720, 101, 125}},
+		{"jpg", jpegDims},
+		{"png", pngDims},
+		{"gif", gifDims},
 	}
 
 	for _, s := range samples {
-		file := openFile("sample."+s.ext, c)
-		defer file.Close()
-
-		thumb, dims, err := processImage(file)
+		thumb, dims, err := processImage(readSample("sample."+s.ext, c))
 		c.Assert(err, IsNil)
-
-		// How do we assert a thumbnail?
-		c.Assert(len(thumb) > 100, Equals, true)
-
+		assertThumbnail(thumb, c)
 		c.Assert(dims, Equals, s.dims)
 	}
+}
+
+// How do we assert a thumbnail?
+func assertThumbnail(thumb []byte, c *C) {
+	c.Assert(len(thumb) > 100, Equals, true)
 }

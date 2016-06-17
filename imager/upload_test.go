@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
 	. "gopkg.in/check.v1"
@@ -228,4 +229,109 @@ func (*Imager) TestPassImageTimeout(c *C) {
 	c.Assert(err, Equals, errUsageTimeout)
 	c.Assert(code, Equals, 408)
 	assertImageRefCount(img.SHA1, 1, c)
+}
+
+func (*Imager) TestWrongFileType(c *C) {
+	data := readSample("sample.txt", c)
+	code, err := newThumbnail(data, types.Image{}, nil)
+	c.Assert(err, ErrorMatches, "unsupported file type.*")
+	c.Assert(code, Equals, 400)
+}
+
+func (*Imager) TestNewThumbnail(c *C) {
+	const (
+		id   = "123"
+		name = "sample.jpg"
+	)
+	data := readSample(name, c)
+	img := types.Image{
+		ImageCommon: types.ImageCommon{
+			SHA1: id,
+		},
+		Imgnm: name,
+	}
+
+	std := img
+	std.FileType = jpeg
+	std.Dims = jpegDims
+	std.Imgnm = name
+	std.MD5 = "60e41092581f7b329b057b8402caa8a7"
+	std.Size = 300792
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	code, err := newThumbnail(data, img, assertImage(std, wg, c))
+	c.Assert(err, IsNil)
+	c.Assert(code, Equals, 200)
+
+	assertDBRecord(std, c)
+	assertFiles(name, id, jpeg, c)
+}
+
+// Assert the image sent to the client matches the standard
+func assertImage(std types.Image, wg sync.WaitGroup, c *C) *websockets.Client {
+	ch := make(chan types.Image)
+	go func() {
+		defer wg.Done()
+		c.Assert(<-ch, Equals, std)
+	}()
+	return &websockets.Client{
+		AllocateImage: ch,
+	}
+}
+
+// Assert the image record in the database matches the sample
+func assertDBRecord(img types.Image, c *C) {
+	c.Assert(getImageRecord(img.SHA1, c), Equals, img.ImageCommon)
+}
+
+func getImageRecord(id string, c *C) (res types.ImageCommon) {
+	c.Assert(db.DB(db.GetImage(id)).One(&res), IsNil)
+	return
+}
+
+// Assert image file assets were created with the correct paths
+func assertFiles(src, id string, fileType uint8, c *C) {
+	var (
+		paths [3]string
+		data  [3][]byte
+	)
+	paths[0] = filepath.FromSlash("test/" + src)
+	destPaths := getFilePaths(id, fileType)
+	paths[1], paths[2] = destPaths[0], destPaths[1]
+
+	for i := range paths {
+		var err error
+		data[i], err = ioutil.ReadFile(paths[i])
+		c.Assert(err, IsNil)
+	}
+
+	c.Assert(data[0], DeepEquals, data[1])
+	c.Assert(len(data[1]) > len(data[2]), Equals, true)
+}
+
+func (*Imager) TestAPNGThumbnailing(c *C) {
+	for _, ext := range [...]string{"png", "apng"} {
+		img := types.Image{
+			ImageCommon: types.ImageCommon{
+				SHA1: ext,
+			},
+		}
+		data := readSample("sample."+ext, c)
+
+		_, err := newThumbnail(data, img, newClient())
+		c.Assert(err, IsNil)
+
+		c.Assert(getImageRecord(ext, c).APNG, Equals, ext == "apng")
+	}
+}
+
+func newClient() *websockets.Client {
+	ch := make(chan types.Image)
+	go func() {
+		<-ch
+	}()
+	return &websockets.Client{
+		AllocateImage: ch,
+	}
 }

@@ -2,19 +2,18 @@
 package imager
 
 import (
-	"bytes"
 	"crypto/md5"
 	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/Soreil/apngdetector"
+	"github.com/bakape/apngdetector"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
@@ -48,6 +47,13 @@ var (
 
 	errUsageTimeout = errors.New("image usage timeout")
 )
+
+// Response from a thumbnail generation performed concurently
+type thumbResponse struct {
+	thumb []byte
+	dims  [4]uint16
+	err   error
+}
 
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
@@ -95,8 +101,8 @@ func newImageUpload(req *http.Request) (int, error) {
 		return 500, err
 	}
 
-	sha1Sum := sha1.Sum(data)
-	SHA1 := string(sha1Sum[:])
+	sum := sha1.Sum(data)
+	SHA1 := hex.EncodeToString(sum[:])
 	img, err := FindImageThumb(SHA1)
 	if err != nil {
 		return 500, err
@@ -108,39 +114,9 @@ func newImageUpload(req *http.Request) (int, error) {
 	if img.SHA1 != "" {
 		return passImage(img, client)
 	}
-
-	fileType, err := detectFileType(data)
-	if err != nil {
-		return 400, err
-	}
-
-	img.FileType = fileType
 	img.SHA1 = SHA1
-	img.Size = len(data)
 
-	md5Sum := md5.Sum(data)
-	img.MD5 = string(md5Sum[:])
-
-	reader := bytes.NewReader(data)
-	if fileType == png {
-		img.APNG, err = apngdetector.Detect(reader)
-		if err != nil {
-			return 500, err
-		}
-		reader.Seek(0, 0)
-	}
-
-	thumb, dims, err := processFile(reader, img)
-	if err != nil {
-		return 400, err
-	}
-	img.Dims = dims
-
-	if err := allocateImage(data, thumb, img); err != nil {
-		return 500, err
-	}
-
-	return passImage(img, client)
+	return newThumbnail(data, img, client)
 }
 
 // Parse and validate the form of the upload request
@@ -209,6 +185,40 @@ func passImage(img types.Image, client *websockets.Client) (int, error) {
 	}
 }
 
+// Create a new thumbnail, commit its resources to the DB and filesystem, and
+// pass the image data to the client.
+func newThumbnail(data []byte, img types.Image, client *websockets.Client) (
+	int, error,
+) {
+	fileType, err := detectFileType(data)
+	if err != nil {
+		return 400, err
+	}
+
+	// Generate MD5 hash and thumbnail concurently
+	md5 := genMD5(data)
+	thumb := processFile(data, fileType)
+
+	if fileType == png {
+		img.APNG = apngdetector.Detect(data)
+	}
+
+	img.FileType = fileType
+	img.Size = len(data)
+	img.MD5 = <-md5
+	res := <-thumb
+	if res.err != nil {
+		return 400, res.err
+	}
+	img.Dims = res.dims
+
+	if err := allocateImage(data, res.thumb, img); err != nil {
+		return 500, err
+	}
+
+	return passImage(img, client)
+}
+
 // detectFileType detects if the upload is of a supported file type, by reading
 // its first 512 bytes. OGG and MP4 are also cheked to contain HTML5 supported
 // video and audio streams.
@@ -230,7 +240,7 @@ func detectFileType(buf []byte) (uint8, error) {
 			if is {
 				return ogg, err
 			}
-			return 0, fmt.Errorf("Unsupported mime type: %s", mimeType)
+			return 0, fmt.Errorf("unsupported file type: %s", mimeType)
 		}
 	}
 	return mime, nil
@@ -254,16 +264,35 @@ func detectCompatibleMP4(buf []byte) (bool, error) {
 	return false, nil
 }
 
-// Delegate the processing of the file to an apropriate function by file type
-func processFile(file io.ReadSeeker, img types.Image) (
-	[]byte, [4]uint16, error,
-) {
-	switch img.FileType {
-	// case webm:
-	// 	return processWebm(file)
-	case jpeg, png, gif:
-		return processImage(file)
-	default:
-		return nil, [4]uint16{}, fmt.Errorf("File type slipped in: %d", img.FileType)
-	}
+// Concurently delegate the processing of the file to an apropriate function by file
+// type
+func processFile(data []byte, fileType uint8) <-chan thumbResponse {
+	ch := make(chan thumbResponse)
+
+	go func() {
+		var res thumbResponse
+		switch fileType {
+
+		// TODO: WebM thumbnailing
+		// case webm:
+		// 	return processWebm(file)
+
+		case jpeg, png, gif:
+			res.thumb, res.dims, res.err = processImage(data)
+		}
+
+		ch <- res
+	}()
+
+	return ch
+}
+
+// Concurently generates the MD5 hash of an image
+func genMD5(data []byte) <-chan string {
+	ch := make(chan string)
+	go func() {
+		sum := md5.Sum(data)
+		ch <- hex.EncodeToString(sum[:])
+	}()
+	return ch
 }

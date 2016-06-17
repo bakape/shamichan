@@ -3,10 +3,10 @@
 package imager
 
 import (
+	"bytes"
 	"errors"
 	"image"
 	jpegLib "image/jpeg"
-	"io"
 
 	"github.com/Soreil/imager"
 	"github.com/bakape/meguca/config"
@@ -28,9 +28,8 @@ func InitImager() error {
 
 // Verify image parameters and create a thumbnail. The dims array contains
 // [src_width, src_height, thumb_width, thumb_height].
-func processImage(file io.ReadSeeker) ([]byte, [4]uint16, error) {
-	file.Seek(0, 0)
-	src, format, err := image.Decode(file)
+func processImage(data []byte) ([]byte, [4]uint16, error) {
+	src, format, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
 		err = util.WrapError("error decoding source image", err)
 		return nil, [4]uint16{}, err

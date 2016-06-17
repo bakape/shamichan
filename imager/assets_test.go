@@ -58,7 +58,6 @@ func (*Imager) TestWriteFile(c *C) {
 	std := []byte{1, 0, 0, 3, 2}
 	path := filepath.FromSlash("img/src/write_test")
 	c.Assert(writeFile(path, std), IsNil)
-	defer os.Remove(path)
 
 	buf, err := ioutil.ReadFile(path)
 	c.Assert(err, IsNil)
