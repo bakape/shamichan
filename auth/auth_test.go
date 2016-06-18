@@ -1,9 +1,10 @@
 package auth
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/config"
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -46,22 +47,17 @@ func (*Auth) TestLookupIdent(c *C) {
 	c.Assert(LookUpIdent(ip), DeepEquals, ident)
 }
 
-func (*Auth) TestCanAccessBoard(c *C) {
+func (*Auth) TestIsBoard(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
 	config.Set(conf)
-	ident := Ident{}
 
 	// Board exists
-	c.Assert(CanAccessBoard("a", ident), Equals, true)
+	c.Assert(IsBoard("a"), Equals, true)
 
 	// Board doesn't exist
-	c.Assert(CanAccessBoard("b", ident), Equals, false)
+	c.Assert(IsBoard("b"), Equals, false)
 
 	// /all/ board
-	c.Assert(CanAccessBoard("all", ident), Equals, true)
-
-	// Banned
-	ident = Ident{Banned: true}
-	c.Assert(CanAccessBoard("a", ident), Equals, false)
+	c.Assert(IsBoard("all"), Equals, true)
 }

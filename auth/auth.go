@@ -24,20 +24,17 @@ func LookUpIdent(ip string) Ident {
 	return ident
 }
 
-// CanAccessBoard confirms the client has rights to access the board
-func CanAccessBoard(board string, ident Ident) bool {
-	var isBoard bool
+// IsBoard confirms the string is a valid board
+func IsBoard(board string) bool {
 	if board == "all" {
-		isBoard = true
-	} else {
-		for _, b := range config.Get().Boards.Enabled {
-			if board == b {
-				isBoard = true
-				break
-			}
+		return true
+	}
+	for _, b := range config.Get().Boards.Enabled {
+		if board == b {
+			return true
 		}
 	}
-	return isBoard && !ident.Banned
+	return false
 }
 
 // Ident is used to verify a client's access and write permissions

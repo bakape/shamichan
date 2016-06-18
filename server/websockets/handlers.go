@@ -54,7 +54,7 @@ func (c *Client) synchronise(data []byte) error {
 	if err := decodeMessage(data, &msg); err != nil {
 		return err
 	}
-	if !auth.CanAccessBoard(msg.Board, c.ident) {
+	if !auth.IsBoard(msg.Board) {
 		return errInvalidBoard
 	}
 

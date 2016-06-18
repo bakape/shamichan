@@ -6,6 +6,14 @@ package server
 
 import (
 	"encoding/json"
+	"io"
+	"log"
+	"net/http"
+	"net/http/httputil"
+	"os"
+	"path/filepath"
+	"strconv"
+
 	"github.com/NYTimes/gziphandler"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
@@ -17,13 +25,6 @@ import (
 	"github.com/dimfeld/httptreemux"
 	"github.com/mssola/user_agent"
 	"github.com/sebest/xff"
-	"io"
-	"log"
-	"net/http"
-	"net/http/httputil"
-	"os"
-	"path/filepath"
-	"strconv"
 )
 
 // Used for overriding during tests
@@ -163,7 +164,7 @@ func boardHTML(
 	req *http.Request,
 	params map[string]string,
 ) {
-	if auth.CanAccessBoard(params["board"], auth.LookUpIdent(req.RemoteAddr)) {
+	if auth.IsBoard(params["board"]) {
 		serveIndexTemplate(res, req)
 	} else {
 		notFoundPage(res, req)
@@ -177,8 +178,7 @@ func boardJSON(
 	params map[string]string,
 ) {
 	board := params["board"]
-	ident := auth.LookUpIdent(req.RemoteAddr)
-	if !auth.CanAccessBoard(board, ident) {
+	if !auth.IsBoard(board) {
 		text404(res, req)
 		return
 	}
@@ -190,6 +190,7 @@ func boardJSON(
 	if !pageEtag(res, req, etagStart(counter)) {
 		return
 	}
+	ident := auth.LookUpIdent(req.RemoteAddr)
 	data, err := db.NewReader(ident).GetBoard(board)
 	if err != nil {
 		textErrorPage(res, req, err)
