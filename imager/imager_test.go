@@ -50,7 +50,7 @@ func (d *Imager) SetUpTest(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Images.Max.Height = 10000
 	conf.Images.Max.Width = 10000
-	conf.Images.Max.Size = 1024
+	conf.Images.Max.Size = 1024 * 1024 * 10
 	conf.Images.Spoilers = []uint8{1, 2}
 	config.Set(conf)
 }

@@ -12,7 +12,7 @@ type Image struct {
 // allocattion.
 type ProtoImage struct {
 	ImageCommon
-	Posts int64 `gorethink:"posts,omitempty"`
+	Posts int64 `gorethink:"posts"`
 }
 
 // ImageCommon contains the common fields of both Image and ProtoImage structs

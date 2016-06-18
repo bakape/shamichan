@@ -66,7 +66,7 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		text := err.Error()
 		http.Error(res, text, code)
-		log.Printf("Upload error: %s : %s\n", req.RemoteAddr, text)
+		log.Printf("upload error: %s: %s\n", req.RemoteAddr, text)
 	}
 }
 
@@ -75,8 +75,10 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 func newImageUpload(req *http.Request) (int, error) {
 	// Remove temporary files, when function returns
 	defer func() {
-		if err := req.MultipartForm.RemoveAll(); err != nil {
-			log.Printf("Error removing temporary files: %s\n", err)
+		if req.MultipartForm != nil {
+			if err := req.MultipartForm.RemoveAll(); err != nil {
+				log.Printf("couldn't remove temporary files: %s\n", err)
+			}
 		}
 	}()
 
