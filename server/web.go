@@ -81,17 +81,17 @@ func createRouter() http.Handler {
 	r.GET("/:board/", boardHTML)
 	r.GET("/:board/:thread", threadHTML)
 
-	// JSON
-	r.GET("/api/all/", wrapHandler(allBoardJSON))
-	r.GET("/api/:board/", boardJSON)
-	r.GET("/api/:board/:thread", threadJSON)
-	r.GET("/api/config", wrapHandler(serveConfigs))
-	r.GET("/api/post/:post", servePost)
+	// JSON API
+	r.GET("/json/all/", wrapHandler(allBoardJSON))
+	r.GET("/json/:board/", boardJSON)
+	r.GET("/json/:board/:thread", threadJSON)
+	r.GET("/json/config", wrapHandler(serveConfigs))
+	r.GET("/json/post/:post", servePost)
 
 	// Assets
 	assetServer = http.FileServer(http.Dir(webRoot))
-	r.GET("/ass/*path", serveAssets)
-	r.GET("/img/*path", serveImages)
+	r.GET("/assets/*path", serveAssets)
+	r.GET("/images/*path", serveImages)
 	r.GET("/worker.js", wrapHandler(serverWorker))
 
 	// Websocket API

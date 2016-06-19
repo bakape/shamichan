@@ -116,7 +116,7 @@
 	var xhr = new XMLHttpRequest()
 	xhr.open(
 		'GET',
-		'/ass/lang/' + (localStorage.lang || config.lang.default) + '.json'
+		'/assets/lang/' + (localStorage.lang || config.lang.default) + '.json'
 	)
 	xhr.responseType = 'json'
 	xhr.onload = function () {
@@ -132,7 +132,7 @@
 		scriptCount++
 		var script = document.createElement('script')
 		script.type = 'text/javascript'
-		script.src = '/ass/js/' + polyfills[i] + '.js'
+		script.src = '/assets/js/' + polyfills[i] + '.js'
 		script.onload = checkAllLoaded
 		head.appendChild(script)
 	}
@@ -153,7 +153,7 @@
 		meta['es5/*'] = meta['es6/*'] = {format: 'register'}
 
 		System.config({
-			baseURL: '/ass/js',
+			baseURL: '/assets/js',
 			defaultJSExtensions: true,
 			meta: meta
 		})

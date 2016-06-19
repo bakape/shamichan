@@ -4,7 +4,7 @@
 
 // Fetches and decodes a JSON response from the API
 export async function fetchJSON(url: string): Promise<any> {
-	const res = await fetch("api/" + url)
+	const res = await fetch("json/" + url)
 	return await res.json()
 }
 

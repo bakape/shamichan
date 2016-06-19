@@ -192,14 +192,14 @@ func (w *WebServer) TestConfigServing(c *C) {
 	etag := "foo"
 	config.SetClient([]byte{1}, etag)
 
-	rec, req := newPair(c, "/api/config")
+	rec, req := newPair(c, "/json/config")
 	w.r.ServeHTTP(rec, req)
 	assertCode(rec, 200, c)
 	assertBody(rec, string([]byte{1}), c)
 	assertEtag(rec, etag, c)
 
 	// And with etag
-	rec, req = newPair(c, "/api/config")
+	rec, req = newPair(c, "/json/config")
 	req.Header.Set("If-None-Match", etag)
 	w.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
@@ -214,7 +214,7 @@ func (w *WebServer) TestNotFoundHandler(c *C) {
 }
 
 func (w *WebServer) TestText404(c *C) {
-	rec, req := newPair(c, "/api/post/nope")
+	rec, req := newPair(c, "/json/post/nope")
 	w.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 	assertBody(rec, "404 Not found", c)
@@ -410,12 +410,12 @@ func (d *DB) TestThreadHTML(c *C) {
 
 func (d *DB) TestServePost(c *C) {
 	// Invalid post number
-	rec, req := newPair(c, "/api/post/www")
+	rec, req := newPair(c, "/json/post/www")
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
 	// Non-existing post or otherwise invalid post
-	rec, req = newPair(c, "/api/post/66")
+	rec, req = newPair(c, "/json/post/66")
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
@@ -424,13 +424,13 @@ func (d *DB) TestServePost(c *C) {
 		etag = "d96fa6542aaf4c9e"
 		body = `{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}`
 	)
-	rec, req = newPair(c, "/api/post/2")
+	rec, req = newPair(c, "/json/post/2")
 	d.r.ServeHTTP(rec, req)
 	assertBody(rec, body, c)
 	assertEtag(rec, etag, c)
 
 	// Etags match
-	rec, req = newPair(c, "/api/post/2")
+	rec, req = newPair(c, "/json/post/2")
 	req.Header.Set("If-None-Match", etag)
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
@@ -438,11 +438,11 @@ func (d *DB) TestServePost(c *C) {
 
 func (d *DB) TestBoardJSON(c *C) {
 	// Invalid board
-	rec, req := newPair(c, "/api/nope/")
+	rec, req := newPair(c, "/json/nope/")
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
-	rec, req = newPair(c, "/api/a/")
+	rec, req = newPair(c, "/json/a/")
 	const body = `
 {
 	"ctr":7,
@@ -495,7 +495,7 @@ func (d *DB) TestBoardJSON(c *C) {
 	assertEtag(rec, etag, c)
 
 	// Etags match
-	rec, req = newPair(c, "/api/a/")
+	rec, req = newPair(c, "/json/a/")
 	req.Header.Set("If-None-Match", etag)
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
@@ -569,13 +569,13 @@ func (d *DB) TestAllBoardJSON(c *C) {
 		}
 	]
 }`
-	rec, req := newPair(c, "/api/all/")
+	rec, req := newPair(c, "/json/all/")
 	d.r.ServeHTTP(rec, req)
 	assertBody(rec, removeIndentation(body), c)
 	assertEtag(rec, etag, c)
 
 	// Etags match
-	rec, req = newPair(c, "/api/all/")
+	rec, req = newPair(c, "/json/all/")
 	req.Header.Set("If-None-Match", etag)
 	d.r.ServeHTTP(rec, req)
 	allBoardJSON(rec, req)
@@ -584,17 +584,17 @@ func (d *DB) TestAllBoardJSON(c *C) {
 
 func (d *DB) TestThreadJSON(c *C) {
 	// Invalid board
-	rec, req := newPair(c, "/api/nope/1")
+	rec, req := newPair(c, "/json/nope/1")
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
 	// Invalid post number
-	rec, req = newPair(c, "/api/a/www")
+	rec, req = newPair(c, "/json/a/www")
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
 	// Non-existing thread
-	rec, req = newPair(c, "/api/a/22")
+	rec, req = newPair(c, "/json/a/22")
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 404, c)
 
@@ -631,13 +631,13 @@ func (d *DB) TestThreadJSON(c *C) {
 	}
 }`
 	const etag = "W/11"
-	rec, req = newPair(c, "/api/a/1")
+	rec, req = newPair(c, "/json/a/1")
 	d.r.ServeHTTP(rec, req)
 	assertBody(rec, removeIndentation(body), c)
 	assertEtag(rec, etag, c)
 
 	// Etags match
-	rec, req = newPair(c, "/api/a/1")
+	rec, req = newPair(c, "/json/a/1")
 	req.Header.Set("If-None-Match", etag)
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
@@ -648,7 +648,7 @@ func (w *WebServer) TestGzip(c *C) {
 	conf.HTTP.Gzip = true
 	config.Set(conf)
 	r := createRouter()
-	rec, req := newPair(c, "/api/config")
+	rec, req := newPair(c, "/json/config")
 	req.Header.Set("Accept-Encoding", "gzip")
 	r.ServeHTTP(rec, req)
 	c.Assert(rec.Header().Get("Content-Encoding"), Equals, "gzip")
@@ -660,7 +660,7 @@ func (w *WebServer) TestProxyHeaders(c *C) {
 	conf.HTTP.TrustProxies = true
 	config.Set(conf)
 	r := createRouter()
-	rec, req := newPair(c, "/api/config")
+	rec, req := newPair(c, "/json/config")
 	req.Header.Set("X-Forwarded-For", ip)
 	req.RemoteAddr = "1.2.3.4:1234"
 	r.ServeHTTP(rec, req)
@@ -668,7 +668,7 @@ func (w *WebServer) TestProxyHeaders(c *C) {
 }
 
 func (w *WebServer) TestAssetServer(c *C) {
-	rec, req := newPair(c, "/ass/frontpage.html")
+	rec, req := newPair(c, "/assets/frontpage.html")
 	w.r.ServeHTTP(rec, req)
 	assertBody(rec, "<!doctype html><html></html>\n", c)
 }

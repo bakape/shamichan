@@ -197,7 +197,7 @@ export const specs: OptionSpec[] = [
 			}
 			document.getElementById('theme').setAttribute(
 				'href',
-				`/ass/css/${theme}.css`
+				`/assets/css/${theme}.css`
 			)
 		}
 	},

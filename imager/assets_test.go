@@ -14,10 +14,10 @@ func (*Imager) TestGetFilePaths(c *C) {
 	checks := [...]struct {
 		got, expected string
 	}{
-		{webm[0], "img/src/jingai.webm"},
-		{webm[1], "img/thumb/jingai.png"},
-		{jpeg[0], "img/src/modoki.jpg"},
-		{jpeg[1], "img/thumb/modoki.jpg"},
+		{webm[0], "images/src/jingai.webm"},
+		{webm[1], "images/thumb/jingai.png"},
+		{jpeg[0], "images/src/modoki.jpg"},
+		{jpeg[1], "images/thumb/modoki.jpg"},
 	}
 	for _, check := range checks {
 		c.Assert(check.got, Equals, filepath.FromSlash(check.expected))
@@ -56,7 +56,7 @@ func (*Imager) TestDeleteAssets(c *C) {
 
 func (*Imager) TestWriteFile(c *C) {
 	std := []byte{1, 0, 0, 3, 2}
-	path := filepath.FromSlash("img/src/write_test")
+	path := filepath.FromSlash("images/src/write_test")
 	c.Assert(writeFile(path, std), IsNil)
 
 	buf, err := ioutil.ReadFile(path)

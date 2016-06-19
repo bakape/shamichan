@@ -2,13 +2,13 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
-	<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/ass/favicons/default.ico">
-	<link rel="manifest" href="/ass/mobile/manifest.json">
+	<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">
+	<link rel="manifest" href="/assets/mobile/manifest.json">
 	<meta name="application-name" content="meguca">
 	<meta name="description" content="Realtime imageboard">
 	<!-- Main and theme-specific stylesheets !-->
-	<link rel="stylesheet" href="/ass/css/base.css">
-	<link rel="stylesheet" id="theme" href="/ass/css/{{.DefaultCSS}}.css">
+	<link rel="stylesheet" href="/assets/css/base.css">
+	<link rel="stylesheet" id="theme" href="/assets/css/{{.DefaultCSS}}.css">
 	<!-- Configuration injection see ./tmpl/tmpl.go !-->
 	<script>
 		var config = {{.Config}},
@@ -19,7 +19,7 @@
 	<script>
 		if (localStorage.theme !== config.DefaultCSS) {
 			document.getElementById('theme').href =
-				'/ass/css/'
+				'/assets/css/'
 				+ localStorage.theme
 				+ '.css'
 		}
@@ -32,7 +32,7 @@
 </head>
 <body>
 	<!-- Loading indicator image !-->
-	<image src="/ass/loading.svg" id="loadingImage">
+	<image src="/assets/loading.svg" id="loadingImage">
 	<!-- For post and image hover previews !-->
 	<div id="hover-overlay" class="overlay"></div>
 	<!-- For modal windows -->
@@ -84,6 +84,6 @@
 	<!-- Used to make the text input field on the postForm to have a width, as if it was static !-->
 	<pre id="sizer"></pre>
 	<!-- Dynamic module loader!-->
-	<script src="/ass/js/vendor/system.js"></script>
-	<script src="/ass/js/scripts/loader.js"></script>
+	<script src="/assets/js/vendor/system.js"></script>
+	<script src="/assets/js/scripts/loader.js"></script>
 </body>

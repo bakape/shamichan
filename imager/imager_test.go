@@ -41,7 +41,7 @@ func (d *Imager) SetUpSuite(c *C) {
 	c.Assert(db.InitDB(d.dbName), IsNil)
 
 	for _, dir := range [...]string{"src", "thumb"} {
-		path := filepath.FromSlash("img/" + dir)
+		path := filepath.FromSlash("images/" + dir)
 		c.Assert(os.MkdirAll(path, 0770), IsNil)
 	}
 }
@@ -66,11 +66,11 @@ func (d *Imager) TearDownTest(c *C) {
 
 	// Clear image asset folders
 	for _, dir := range [...]string{"src", "thumb"} {
-		path := filepath.FromSlash("img/" + dir)
+		path := filepath.FromSlash("images/" + dir)
 		files, err := ioutil.ReadDir(path)
 		c.Assert(err, IsNil)
 		for _, file := range files {
-			path := fmt.Sprintf("img/%s/%s", dir, file.Name())
+			path := fmt.Sprintf("images/%s/%s", dir, file.Name())
 			path = filepath.FromSlash(path)
 			c.Assert(os.Remove(path), IsNil)
 		}

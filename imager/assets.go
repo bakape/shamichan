@@ -22,8 +22,8 @@ func getFilePaths(name string, fileType uint8) (paths [2]string) {
 	if fileType == jpeg {
 		thumbExtension = "jpg"
 	}
-	paths[0] = fmt.Sprintf("img/src/%s.%s", name, extensions[fileType])
-	paths[1] = fmt.Sprintf("img/thumb/%s.%s", name, thumbExtension)
+	paths[0] = fmt.Sprintf("images/src/%s.%s", name, extensions[fileType])
+	paths[1] = fmt.Sprintf("images/thumb/%s.%s", name, thumbExtension)
 
 	for i := range paths {
 		paths[i] = filepath.FromSlash(paths[i])

@@ -58,10 +58,10 @@ client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang
 
 dist_clean: clean
-	rm -rf img config/config.json assets error.log .package
+	rm -rf images config/config.json assets error.log .package
 
 init:
-	mkdir -p assets img/src img/thumb
+	mkdir -p assets images/src images/thumb
 	cp -n config/defaults.json config/config.json
 
 test: server_deps
@@ -86,8 +86,8 @@ install_ffmpeg:
 
 package_win64: all
 	rm -rf .package
-	mkdir -p .package/config .package/templates .package/img/src \
-		.package/img/thumb
+	mkdir -p .package/config .package/templates .package/images/src \
+		.package/images/thumb
 	cp -r docs scripts www *.dll CHANGELOG.md README.md LICENSE $(BINARY) \
 		.package/
 	cp config/defaults.json .package/config/

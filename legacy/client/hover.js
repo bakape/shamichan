@@ -33,7 +33,7 @@ let ImageHoverView = Backbone.View.extend({
 			|| (isWebm && !options.get('webmHover'))
 		)
 			return this.$el.empty();
-		$(isWebm ? '<video/>' : '<img/>', {
+		$(isWebm ? '<video/>' : '<images/>', {
 			src: src,
 			autoplay: true,
 			loop: true

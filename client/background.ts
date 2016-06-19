@@ -49,7 +49,7 @@ for (let param of changeProps) {
 
 // Attach Illya Dance to the background
 function renderIllya() {
-	const urlBase = '/ass/illya.'
+	const urlBase = '/assets/illya.'
 	let args = 'autoplay loop'
 	if (options.illyaDanceMute) {
 		args += ' muted'

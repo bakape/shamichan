@@ -65,7 +65,7 @@ function hiddenToggle(reveal: boolean): string {
 
 // Base URLs of image addresses
 const imagePaths: {[type: string]: string} = {
-	spoil: '/ass/spoil/spoiler'
+	spoil: '/assets/spoil/spoiler'
 }
 
 // type ISTemplate = (data: ImageData) => string
@@ -149,12 +149,12 @@ const imagePaths: {[type: string]: string} = {
 // type being present
 function thumbPath({SHA1, fileType}: ImageData): string {
 	const ext = fileType === fileTypes.jpg ? "jpg" : "png"
-	return `/img/thumb/${SHA1}.${ext}`
+	return `/images/thumb/${SHA1}.${ext}`
 }
 
 // Resolve the path to the source file of an upload
 function sourcePath({SHA1, fileType}: ImageData): string {
-	return `/img/src/${SHA1}.${fileTypes[fileType]}`
+	return `/images/src/${SHA1}.${fileTypes[fileType]}`
 }
 
 

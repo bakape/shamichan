@@ -122,7 +122,7 @@ func (*Imager) TestFailedAllocationCleanUp(c *C) {
 	const id = "123"
 	at := newAllocatioTester("sample.jpg", id, jpeg, c)
 	at.Allocate()
-	c.Assert(os.Remove(filepath.FromSlash("img/thumb/"+id+".jpg")), IsNil)
+	c.Assert(os.Remove(filepath.FromSlash("images/thumb/"+id+".jpg")), IsNil)
 
 	err := errors.New("foo")
 	img := types.Image{
