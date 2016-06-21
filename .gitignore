@@ -10,6 +10,7 @@ error.log
 node_modules
 meguca
 meguca.exe
+meguca-*.zip
 www/illya.mp4
 www/illya.webm
 www/css/*.css
