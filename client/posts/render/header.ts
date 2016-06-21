@@ -24,7 +24,7 @@ export function renderHeader(data: Post): string {
 				</a>
 			</nav>
 		</header>
-		<span class="oi control" data-glyph="chevron-bottom"></span>`
+		<span class="control">▼</span>`
 }
 
 // Render the name of a post's poster
