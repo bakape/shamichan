@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v2.0.0-alpha - 2016-06-21
+	Start tracking v2 progress in versions for easier debugging
+	- Rewriting server in Go
+	- Rewriting client in TypeScript
+	- Switched DBMS to RethinkDB
+
 ##v1.9.3 - 2016-06-11
 * Fix:
 	- Don't autoexpand files with audio and PDF
