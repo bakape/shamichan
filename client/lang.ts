@@ -2,7 +2,7 @@
  Provides type-safe and selective mappings for the language packs
 */
 
-import {parseEl, parseHTML} from './util'
+import {makeEl, HTML} from './util'
 import {write} from './render'
 import {defer} from './defer'
 
@@ -133,7 +133,7 @@ export type OptLabel = string[]
 
 // Load language-specific CSS
 function languageCSS() {
-	const el = parseEl(parseHTML
+	const el = makeEl(HTML
 		`<style>
 			.locked:after {
 				content: "${posts.threadLocked}";

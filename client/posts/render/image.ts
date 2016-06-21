@@ -4,16 +4,14 @@
 
 import {config} from '../../state'
 import options from '../../options'
-import {
-	parseHTML, commaList, parseAttributes, ElementAttributes, escape
-} from '../../util'
+import {HTML, commaList, makeAttrs, ElementAttributes, escape} from '../../util'
 import {ImageData, fileTypes} from '../models'
 import {images as lang} from '../../lang'
 
 // Render a thumbnail of an image, according to configuration settings
 export function renderImage(data: ImageData, reveal?: boolean): string {
 	const showThumb = options.hideThumbs || reveal
-	return parseHTML
+	return HTML
 		`<figure>
 			${renderFigcaption(data, reveal)}
 			${config.images.hats && showThumb ? '<span class="hat"></span>': ''}
@@ -30,7 +28,7 @@ export function renderFigcaption(data: ImageData, reveal: boolean): string {
 		`${data.dims[0]}x${data.dims[1]}`,
 		data.apng ? 'APNG' : ''
 	])
-	return parseHTML
+	return HTML
 		`<figcaption>
 			${hiddenToggle(reveal)}
 			<span>
@@ -57,7 +55,7 @@ function hiddenToggle(reveal: boolean): string {
 	if (options.hideThumbs) {
 		return ''
 	}
-	return parseHTML
+	return HTML
 		`<a class="imageToggle">
 			[${lang[reveal ? 'hide' : 'show']}]
 		</a>`
@@ -118,8 +116,8 @@ const imagePaths: {[type: string]: string} = {
 // 			}
 // 			attrs['href'] = url
 // 				+ (type === 'thumb' ? thumbPath(data, false) : data[type])
-// 			return parseHTML
-// 				`<a ${parseAttributes(attrs)}>
+// 			return HTML
+// 				`<a ${makeAttrs(attrs)}>
 // 					${symbol}
 // 				</a>`
 // 		}
@@ -184,8 +182,8 @@ function imageLink(data: ImageData): string {
 		attrs['title'] = fullName
 	}
 
-	return parseHTML
-		`<a ${parseAttributes(attrs)}>
+	return HTML
+		`<a ${makeAttrs(attrs)}>
 			${imgnm}
 		</a>`
 }
@@ -238,8 +236,8 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 		}
 	}
 
-	return parseHTML
-		`<a ${parseAttributes(linkAttrs)}>
-			<img ${parseAttributes(imgAttrs)}>
+	return HTML
+		`<a ${makeAttrs(linkAttrs)}>
+			<img ${makeAttrs(imgAttrs)}>
 		</a>`
 }

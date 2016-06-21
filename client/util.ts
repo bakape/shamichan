@@ -73,14 +73,14 @@ export function getID(el: Element): number {
 }
 
 // Parse HTML string to node array
-export function parseEls(DOMString: string): Node[] {
+export function makeEls(DOMString: string): Node[] {
 	const el = document.createElement('div')
 	el.innerHTML = DOMString
 	return Array.from(el.childNodes)
 }
 
 // Parse HTML string to a single Node
-export function parseEl(DOMString: string): Node {
+export function makeEl(DOMString: string): Node {
 	const el = document.createElement('div')
 	el.innerHTML = DOMString
 	return el.firstChild
@@ -138,7 +138,7 @@ export function pad(n: number): string {
 
 // Template string tag function for HTML. Strips indentation and trailing
 // newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
-export function parseHTML(callSite: string[], ...args: string[]): string {
+export function HTML(callSite: string[], ...args: string[]): string {
 	let output = callSite[0]
 	for (let i = 1; i <= args.length; i++) {
 		output += args[i - 1] + callSite[i]
@@ -152,7 +152,7 @@ export type ElementAttributes = {[key: string]: string}
 
 // Generate an HTML element attribute list. If a key has an empty string, it's
 // value will be considered "true"
-export function parseAttributes(attrs: ElementAttributes): string {
+export function makeAttrs(attrs: ElementAttributes): string {
 	let html = ''
 	for (let key in attrs) {
 		html += ' ' + key
@@ -197,9 +197,9 @@ export function filter<T>(array: T[], fn: (item: T) => boolean): T[] {
 }
 
 // Group all objects in array by a property of the object
-export function groupBy<T extends Object>(
-	array: T[], prop: string
-): {[key: string]: T[]} {
+export function groupBy<T extends Object>(array: T[], prop: string)
+	: {[key: string]: T[]}
+{
 	const groups: {[key: string]: T[]} = {}
 	for (let item of array) {
 		const dest = (item as AnyHash)[prop]

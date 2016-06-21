@@ -3,7 +3,7 @@
 import stackBlur from './stackBlur'
 import options from './options'
 import {config, displayLoading} from './state'
-import {parseHTML, load} from './util'
+import {HTML, load} from './util'
 import {db} from './db'
 import {write} from './render'
 
@@ -54,7 +54,7 @@ function renderIllya() {
 	if (options.illyaDanceMute) {
 		args += ' muted'
 	}
-	const html = parseHTML
+	const html = HTML
 		`<video ${args}>
 			<source src="${urlBase + 'webm'}" type="video/webm">
 			<source src="${urlBase + 'mp4'}" type="video/mp4">
@@ -76,7 +76,7 @@ async function renderBackground(bg?: BackgroundStore) {
 		}
 	}
 	const normal = URL.createObjectURL(bg.normal)
-	let html = parseHTML
+	let html = HTML
 		`#user-background {
 			background: url(${normal}) no-repeat fixed center;
 			background-size: cover;
@@ -111,7 +111,7 @@ const colourMap: {[key: string]: BackgroundGradients} = {
 function renderGlass(theme: string, blob: Blob): string {
 	const {normal, editing} = colourMap[theme],
 		blurred = URL.createObjectURL(blob)
-	return parseHTML
+	return HTML
 		`.glass {
 			background:
 				linear-gradient(${normal}, ${normal}),

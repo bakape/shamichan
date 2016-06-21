@@ -1,6 +1,4 @@
-import {
-	parseHTML, parseAttributes, pad, ElementAttributes, escape
-} from '../../util'
+import {HTML, makeAttrs, pad, ElementAttributes, escape} from '../../util'
 import {config} from '../../state'
 import options from '../../options'
 import {Post, Thread} from '../models'
@@ -11,7 +9,7 @@ export function renderHeader(data: Post): string {
 	const {id, op, subject} = data as any,
 		postURL = renderPostURL(id)
 	let subjectHTML: string
-	return parseHTML
+	return HTML
 		`<header>
 			<input type="checkbox" class="postCheckbox">
 			${subject ? `<h3>「${escape(subject)}」</h3>` : ''}
@@ -43,7 +41,7 @@ export function renderName(data: Post): string {
 			href: 'mailto:' + encodeURI(email),
 			target: 'blank'
 		}
-		html += `<a ${parseAttributes(attrs)}>`
+		html += `<a ${makeAttrs(attrs)}>`
 	}
 	html += resolveName(data)
 	if (email) {
@@ -98,7 +96,7 @@ export function renderTime(time: number): string {
 		title = readable
 		text = relativeTime(time, Date.now())
 	}
-	return parseHTML
+	return HTML
 		`<time title="${title}">
 			${text || readable}
 		</time>`

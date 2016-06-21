@@ -4,7 +4,7 @@
 
 import {config, isMobile} from '../state'
 import {opts as lang} from '../lang'
-import {parseEl, loadModule} from '../util'
+import {makeEl, loadModule} from '../util'
 
 // TODO: Send function
 
@@ -277,7 +277,7 @@ for (let short of shorts) {
 function toggleHeadStyle(id: string, css: string): (toggle: boolean) => void {
 	return toggle => {
 		if (!document.getElementById(id)) {
-			document.head.append(parseEl(`<style id="${id}">${css}</style>`))
+			document.head.append(makeEl(`<style id="${id}">${css}</style>`))
 		}
 
 		// The disabled property only exists on elements in the DOM, so we do

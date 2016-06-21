@@ -1,4 +1,4 @@
-import {parseHTML} from '../../util'
+import {HTML} from '../../util'
 import {renderHeader} from './header'
 import {renderImage} from './image'
 import {renderBacklinks} from './etc'
@@ -11,7 +11,7 @@ export function renderSection(data: Thread, cls: string = ''): string {
 		cls += ' locked'
 	}
 
-	return parseHTML
+	return HTML
 		`<section id="p${data.id.toString()}" class="${cls}">
 			<div class="background glass">
 				${renderPost(data)}
@@ -26,7 +26,7 @@ export function renderArticle(data: Reply): string {
 	if (data.editing) {
 		cls += ' editing'
 	}
-	return parseHTML
+	return HTML
 		`<article id="p${data.id.toString()}" class="${cls}">
 			${renderPost(data)}
 		</article>`
@@ -35,7 +35,7 @@ export function renderArticle(data: Reply): string {
 function renderPost(data: Post): string {
 	const {body, backlinks} = data
 
-	return parseHTML
+	return HTML
 		`${renderHeader(data)}
 		${data.image ? renderImage(data.image): ''}
 		<div class="container">

@@ -3,7 +3,7 @@
 */
 
 import {
-	filter, extend, groupBy, parseHTML, parseAttributes, ElementAttributes
+	filter, extend, groupBy, HTML, makeAttrs, ElementAttributes
 } from '../util'
 import {opts as lang, OptLabel} from '../lang'
 import {specs, OptionSpec, optionType} from './specs'
@@ -41,9 +41,9 @@ export default function (): string {
 		if (i === 0) {
 			attrs['class'] += ' tab_sel'
 		}
-		html += parseHTML
+		html += HTML
 			`<li>
-				<a ${parseAttributes(attrs)}>
+				<a ${makeAttrs(attrs)}>
 					${tabs[i]}
 				</a>
 			</li>`
@@ -111,12 +111,12 @@ function renderOption(spec: OptionSpec): string {
 function renderInput(id: string, attrs: ElementAttributes): string {
 	const [label, title] = lang.labels[id]
 	extend(attrs, {id, title})
-	return `<input ${parseAttributes(attrs)}>` + renderLabel(id, title, label)
+	return `<input ${makeAttrs(attrs)}>` + renderLabel(id, title, label)
 }
 
 // Render the description label to the right of the option
 function renderLabel(id: string, title: string, label: string): string {
-	return parseHTML
+	return HTML
 		`<label for="${id}" title="${title}">
 			${label}
 		</label>
@@ -128,7 +128,7 @@ function renderMenu({id, list}: OptionSpec): string {
 	const [label, title] = lang.labels[id]
 	let html = `<select id="${id}" title="${title}">`
 	for (let item of list) {
-		html += parseHTML
+		html += HTML
 			`<option value="${item}">
 				${lang.modes[item] || item}
 			</option>`
@@ -143,7 +143,7 @@ function renderExtras(): string {
 	const links = ['export', 'import', 'hidden']
 	for (let id of links) {
 		const [label, title] = lang.labels[id]
-		html += parseHTML
+		html += HTML
 			`<a id="${id}" title="${title}">
 				${label}
 			</a> `
@@ -155,7 +155,7 @@ function renderExtras(): string {
 		id: 'importSettings',
 		name: "Import Settings"
 	}
-	html += `<input ${parseAttributes(attrs)}>`
+	html += `<input ${makeAttrs(attrs)}>`
 
 	return html
 }

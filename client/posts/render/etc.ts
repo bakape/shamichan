@@ -4,7 +4,7 @@
 
 import {page, mine} from '../../state'
 import {posts as lang} from '../../lang'
-import {parseHTML} from '../../util'
+import {HTML} from '../../util'
 import {PostLinks} from '../models'
 
 // Render a link to other posts
@@ -28,7 +28,7 @@ export function renderPostLink(num: number, board: string, op: number): string {
 
 // Render the anchor element of a post link
 function postAnchor(href: string, text: string): string {
-	return parseHTML
+	return HTML
 		`<a class="history" href="${href}">
 			${text}
 		</a>`
