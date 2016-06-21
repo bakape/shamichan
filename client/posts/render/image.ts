@@ -4,7 +4,7 @@
 
 import {config} from '../../state'
 import options from '../../options'
-import {HTML, commaList, makeAttrs, ElementAttributes, escape} from '../../util'
+import {HTML, commaList, makeAttrs, escape} from '../../util'
 import {ImageData, fileTypes} from '../models'
 import {images as lang} from '../../lang'
 
@@ -105,7 +105,7 @@ const imagePaths: {[type: string]: string} = {
 //
 // 	const templates: {[engine: string]: ISTemplate} = {}
 // 	for (let {engine, url, type, symbol} of models) {
-// 		const attrs: ElementAttributes = {
+// 		const attrs: StringMap = {
 // 			target: '_blank',
 // 			rel: 'nofollow',
 // 			class: 'imageSearch ' + engine
@@ -173,7 +173,7 @@ function imageLink(data: ImageData): string {
 			+ escape(fileTypes[fileType])
 	}
 
-	const attrs: ElementAttributes = {
+	const attrs: StringMap = {
 		href: sourcePath(data),
 		rel: 'nofollow',
 		download: fullName
@@ -213,12 +213,12 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 		thumb = thumbPath(data)
 	}
 
-	const linkAttrs: ElementAttributes = {
+	const linkAttrs: StringMap = {
 		target: '_blank',
 		rel: 'nofollow',
 		href: href || src
 	}
-	const imgAttrs: ElementAttributes = {
+	const imgAttrs: StringMap = {
 		src: thumb,
 		width: thumbWidth.toString(),
 		height: thumbHeight.toString()

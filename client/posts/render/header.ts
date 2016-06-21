@@ -1,4 +1,4 @@
-import {HTML, makeAttrs, pad, ElementAttributes, escape} from '../../util'
+import {HTML, makeAttrs, pad, escape} from '../../util'
 import {config} from '../../state'
 import options from '../../options'
 import {Post, Thread} from '../models'
@@ -36,7 +36,7 @@ export function renderName(data: Post): string {
 	}
 	html += '">'
 	if (email) {
-		const attrs: ElementAttributes = {
+		const attrs: StringMap = {
 			class: 'email',
 			href: 'mailto:' + encodeURI(email),
 			target: 'blank'

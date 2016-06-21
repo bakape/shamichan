@@ -148,11 +148,9 @@ export function HTML(callSite: string[], ...args: string[]): string {
 	return output.replace(/\s*\n\s*/g, '')
 }
 
-export type ElementAttributes = {[key: string]: string}
-
 // Generate an HTML element attribute list. If a key has an empty string, it's
 // value will be considered "true"
-export function makeAttrs(attrs: ElementAttributes): string {
+export function makeAttrs(attrs: StringMap): string {
 	let html = ''
 	for (let key in attrs) {
 		html += ' ' + key

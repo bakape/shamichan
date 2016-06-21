@@ -2,9 +2,7 @@
  Renders the HTML of the options panel
 */
 
-import {
-	filter, extend, groupBy, HTML, makeAttrs, ElementAttributes
-} from '../util'
+import {filter, extend, groupBy, HTML, makeAttrs} from '../util'
 import {opts as lang, OptLabel} from '../lang'
 import {specs, OptionSpec, optionType} from './specs'
 
@@ -32,7 +30,7 @@ export default function (): string {
 			continue
 		}
 
-		const attrs: ElementAttributes = {
+		const attrs: StringMap = {
 			'data-content': `tab-${i}`,
 			class: 'tab_link'
 		}
@@ -108,7 +106,7 @@ function renderOption(spec: OptionSpec): string {
 }
 
 // Common input field render logic
-function renderInput(id: string, attrs: ElementAttributes): string {
+function renderInput(id: string, attrs: {[key: string]: string}): string {
 	const [label, title] = lang.labels[id]
 	extend(attrs, {id, title})
 	return `<input ${makeAttrs(attrs)}>` + renderLabel(id, title, label)
@@ -150,7 +148,7 @@ function renderExtras(): string {
 	}
 
 	// Hidden file input for uploading the JSON
-	const attrs: ElementAttributes = {
+	const attrs: StringMap = {
 		type: 'file',
 		id: 'importSettings',
 		name: "Import Settings"
