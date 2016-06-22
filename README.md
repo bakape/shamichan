@@ -8,35 +8,43 @@ bundled README.__
 Platforms: Linux, OSX, Win64
 
 ##Runtime dependencies
-* [RethinkDB](https://rethinkdb.com/docs/install/)
-    * RethinkDB does not enable a configuration file by default. If you don't
-    want to configure anything, just copy `/etc/rethinkdb/default.conf.sample`
-	into `/etc/rethinkdb/instances.d/instance1.conf`. You might also set it to
-	autostart on boot. See the
-    [official guide](http://www.rethinkdb.com/docs/start-on-startup/).
+* [RethinkDB](https://rethinkdb.com/docs/install/). 
+On Linux RethinkDB does not enable a configuration file by default. If you don't
+want to configure anything, just copy `/etc/rethinkdb/default.conf.sample` into 
+`/etc/rethinkdb/instances.d/instance1.conf`.
+* ffmpeg >= 3.0 libraries (libavcodec, libavutil, libavformat, libswscale)
+compiled with:
+	* libvpx
+	* libvorbis
+	* libopus
+	* libtheora
+	* libx264
+	* libmp3lame
 
-##Installable binaries
-Coming soon™
+##Compiled Binaries
+Compiled binary release archives for linux/x86_64 and windows/x86_64 are downloadable
+from the [release](https://github.com/bakape/meguca/releases) page.
+
+##Production
+* Edit `./config/config.json` to configure your instance
+* See `./meguca help`
+* For upgarding between semver major releases see `docs/migration.md`
 
 ##Building from source
 
 ###All Platforms
-* Install [Go](https://golang.org/doc/install) >=1.6
-* Install [Node.js](https://nodejs.org) >=5.0 (for building the client)
+* Install:
+	* [Go](https://golang.org/doc/install) >=1.6
+	* [Node.js](https://nodejs.org) >=5.0 (for building the client)
 
 ###Linux and OSX
 * Install:
     * GCC or Clang
     * make
+    * ffmpeg >= 3.0 development libraries (libavcodec, libavutil, 
+    libavformat, libswscale)
+    * git
     * zip
-    * ffmpeg >=3.0 development libraries (libavcodec, libavutil, libavformat,
-    libswscale) compiled with:
-        * libvpx
-        * libvorbis
-        * libopus
-        * libtheora
-        * libx264
-        * libmp3lame
 * Run `make`
 
 ###Windows
@@ -48,15 +56,9 @@ Coming soon™
     * mingw-w64-x86_64-pkg-config
     * git
     * make
+    * zip
 * Navigate to the meguca root directory
 * Run `make`
-
-##Production
-* Edit `./config/config.json` to configure your instance
-* See `./meguca help`
-    * Windows does not support daemonisation. The `stop|restart` arguments
-    are not available and `start` is an alias for `debug`
-* For upgarding between semver major releases see `docs/migration.md`
 
 ##Development
 * `./meguca` to run the server in development mode
