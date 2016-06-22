@@ -3,7 +3,6 @@ package imager
 import (
 	"fmt"
 	"image"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -67,10 +66,13 @@ func (d *Imager) TearDownTest(c *C) {
 	// Clear image asset folders
 	for _, dir := range [...]string{"src", "thumb"} {
 		path := filepath.FromSlash("images/" + dir)
-		files, err := ioutil.ReadDir(path)
+		dirh, err := os.Open(path)
+		c.Assert(err, IsNil)
+		defer dirh.Close()
+		files, err := dirh.Readdirnames(-1)
 		c.Assert(err, IsNil)
 		for _, file := range files {
-			path := fmt.Sprintf("images/%s/%s", dir, file.Name())
+			path := fmt.Sprintf("images/%s/%s", dir, file)
 			path = filepath.FromSlash(path)
 			c.Assert(os.Remove(path), IsNil)
 		}
