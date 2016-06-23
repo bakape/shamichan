@@ -138,3 +138,22 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 	c.Assert(initial, DeepEquals, log)
 	closer.Close()
 }
+
+func (*DBSuite) TestRegisterAccount(c *C) {
+	const id = "123"
+	hash := []byte{1, 2, 3}
+	user := types.User{
+		ID:        id,
+		Password:  hash,
+		Positions: []types.Position{},
+	}
+
+	// New user
+	c.Assert(RegisterAccount(id, hash), IsNil)
+	var res types.User
+	c.Assert(DB(GetAccount(id)).One(&res), IsNil)
+	c.Assert(res, DeepEquals, user)
+
+	// User name already registered
+	c.Assert(RegisterAccount(id, hash), ErrorMatches, "user name already taken")
+}

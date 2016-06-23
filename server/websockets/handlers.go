@@ -4,11 +4,41 @@ package websockets
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
+	"golang.org/x/crypto/bcrypt"
 )
+
+// integer identifiers for various message types
+// 1 - 29 modify post model state
+const (
+	messageInvalid = iota
+	messageInsertThread
+	messageInsertPost
+)
+
+// >= 30 are miscelenious and do not write to post models
+const (
+	// Update feeds
+	messageSynchronise = 30 + iota
+	messageResynchronise
+	messageSwitchSync
+
+	// Account management
+	messageRegister
+	messageLogin
+	messageLogout
+)
+
+// Lookup table for message handlers
+var handlers = map[int]func([]byte, *Client) error{
+	messageSynchronise:   synchronise,
+	messageResynchronise: resynchronise,
+	messageRegister:      register,
+}
 
 // Error while parsing the message. Denotes that either the message does not
 // follow the structural spec or contains optional fields in unsupported
@@ -43,7 +73,7 @@ type syncMessage struct {
 
 // Syncronise the client to a certain thread, assign it's ID and prepare to
 // receive update messages.
-func (c *Client) synchronise(data []byte) error {
+func synchronise(data []byte, c *Client) error {
 	// Close previous update feed, if any
 	if c.updateFeedCloser != nil && c.updateFeedCloser.IsOpen() {
 		c.updateFeedCloser.Close()
@@ -59,21 +89,21 @@ func (c *Client) synchronise(data []byte) error {
 	}
 
 	if msg.Thread == 0 {
-		return c.syncToBoard(msg.Board)
+		return syncToBoard(msg.Board, c)
 	}
 
-	return c.syncToThread(msg.Board, msg.Thread, msg.Ctr)
+	return syncToThread(msg.Board, msg.Thread, msg.Ctr, c)
 }
 
 // Board pages do not have any live feeds (for now, at least). Just send the
 // client its ID.
-func (c *Client) syncToBoard(board string) error {
-	c.registerSync(board)
+func syncToBoard(board string, c *Client) error {
+	registerSync(board, c)
 	return c.sendMessage(messageSynchronise, c.ID)
 }
 
 // Register the client with the central client storage datastructure
-func (c *Client) registerSync(syncID string) {
+func registerSync(syncID string, c *Client) {
 	if !c.synced {
 		Clients.Add(c, syncID)
 	} else {
@@ -83,7 +113,7 @@ func (c *Client) registerSync(syncID string) {
 
 // Sends a response to the client's synchronisation request with any missed
 // messages and starts streaming in updates.
-func (c *Client) syncToThread(board string, thread, ctr int64) error {
+func syncToThread(board string, thread, ctr int64, c *Client) error {
 	valid, err := db.ValidateOP(thread, board)
 	if err != nil {
 		return err
@@ -106,7 +136,7 @@ func (c *Client) syncToThread(board string, thread, ctr int64) error {
 	}
 
 	c.updateFeedCloser = closer
-	c.registerSync(util.IDToString(thread))
+	registerSync(util.IDToString(thread), c)
 
 	// Send the client its ID
 	if err := c.sendMessage(messageSynchronise, c.ID); err != nil {
@@ -125,9 +155,36 @@ func (c *Client) syncToThread(board string, thread, ctr int64) error {
 
 // Syncronise the client after a disconnect and restore any post in progress,
 // if it is still not collected in the database
-func (c *Client) resynchronise(data []byte) error {
+func resynchronise(data []byte, c *Client) error {
 
 	// TODO: Open post restoration logic
 
-	return c.synchronise(data)
+	return synchronise(data, c)
+}
+
+type registrationRequest struct {
+	ID       string `json:"id"`
+	Password string `json:"password"`
+}
+
+func register(data []byte, c *Client) error {
+	var req registrationRequest
+	if err := decodeMessage(data, &req); err != nil {
+		return err
+	}
+
+	length := len(req.Password)
+	if length < 6 {
+		return errors.New("password too short")
+	}
+	if length > 50 {
+		return errors.New("password too long")
+	}
+
+	_, err := bcrypt.GenerateFromPassword([]byte(req.ID+req.Password), 10)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

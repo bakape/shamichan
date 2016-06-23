@@ -58,15 +58,15 @@ createTask('lang', './lang/*.json', src =>
 tasks.push('vendor')
 gulp.task('vendor', () => {
 	const paths = [
-		'./node_modules/systemjs/dist/system.js',
-		'./node_modules/systemjs/dist/system.js.map',
-		'./node_modules/dom4/build/dom4.js',
-		"./node_modules/babel-polyfill/dist/polyfill.min.js"
+		'systemjs/dist/system.js',
+		'systemjs/dist/system.js.map',
+		'dom4/build/dom4.js',
+		"babel-polyfill/dist/polyfill.min.js"
 	]
 	for (let path of paths) {
 		const split = path.split('/'),
 			dest = './www/js/vendor/' + split[split.length-1]
-		fs.copySync(path, dest, {clobber: true})
+		fs.copySync("node_modules/" + path, dest, {clobber: true})
 	}
 })
 

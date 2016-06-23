@@ -12,18 +12,6 @@ const cache = require('./state').dbCache,
 	websockets = require('./websockets'),
 	winston = require('winston');
 
-const mnemonizer = new mnemonics.mnemonizer(config.SECURE_SALT);
-
-function genMnemonic(ip) {
-	if (!ip)
-		return;
-	const mnemonic = mnemonizer.Apply_mnemonic(ip);
-	if (!mnemonic)
-		winston.error('Could not parse IP: ' + ip);
-	return mnemonic;
-}
-exports.genMnemonic = genMnemonic;
-
 const dispatcher = websockets.dispatcher,
 	redis = global.redis;
 

@@ -28,6 +28,11 @@ export const enum message {
 	synchronise = 30,
 	resynchronise,
 	switchSync,
+
+	// Account management
+	register,
+	login,
+	logout,
 }
 
 export type MessageHandler = (msg: {}) => void

@@ -26,21 +26,6 @@ var (
 	pingMessage  = []byte{1}
 )
 
-// integer identifiers for various message types
-// 1 - 29 modify post model state
-const (
-	messageInvalid = iota
-	messageInsertThread
-	messageInsertPost
-)
-
-// >= 30 are miscelenious and do not write to post models
-const (
-	messageSynchronise = 30 + iota
-	messageResynchronise
-	messageSwitchSync
-)
-
 var upgrader = websocket.Upgrader{
 	HandshakeTimeout: 5 * time.Second,
 	CheckOrigin:      CheckOrigin,
@@ -316,14 +301,11 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 // Run the apropriate handler for the websocket message
 func (c *Client) runHandler(typ int, msg []byte) error {
 	data := msg[2:]
-	switch typ {
-	case messageSynchronise:
-		return c.synchronise(data)
-	case messageResynchronise:
-		return c.resynchronise(data)
-	default:
+	handler, ok := handlers[typ]
+	if !ok {
 		return errInvalidPayload(msg)
 	}
+	return handler(data, c)
 }
 
 // logError writes the client's websocket error to the error log (or stdout)

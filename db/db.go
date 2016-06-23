@@ -2,8 +2,10 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
@@ -28,9 +30,17 @@ type DatabaseHelper struct {
 	query r.Term
 }
 
-// Exec excutes the inner query and only returns an error, if any
+// Exec excutes the query and only returns an error, if any. Do not use for
+// write queries.
 func (d DatabaseHelper) Exec() error {
 	return d.query.Exec(RSession)
+}
+
+// Write executes the inner query and returns an error, if any. Only use this
+// function for write queries
+func (d DatabaseHelper) Write() error {
+	_, err := d.query.RunWrite(RSession)
+	return err
 }
 
 // One writes the query result into the target pointer or throws an error
@@ -87,6 +97,11 @@ func getThread(id int64) r.Term {
 // GetMain is a shorthand for retrieving a document from the "main" table
 func GetMain(id string) r.Term {
 	return r.Table("main").Get(id)
+}
+
+// GetAccount is a shorthand for retrieving a document from the "accounts" table
+func GetAccount(id string) r.Term {
+	return r.Table("accounts").Get(id)
 }
 
 // GetImage is a shorthand for retrieving a document from the "images" table
@@ -155,4 +170,18 @@ func StreamUpdates(
 	}()
 
 	return initial, nil
+}
+
+// RegisterAccount accont writes the ID and password hash of a new user account
+// to the database
+func RegisterAccount(ID string, hash []byte) error {
+	user := types.User{
+		ID:       ID,
+		Password: hash,
+	}
+	err := DB(r.Table("accounts").Insert(user)).Write()
+	if r.IsConflictErr(err) {
+		return errors.New("user name already taken")
+	}
+	return err
 }

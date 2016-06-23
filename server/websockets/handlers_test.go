@@ -78,7 +78,7 @@ func (*ClientSuite) TestOldFeedClosing(c *C) {
 		for closer.IsOpen() {
 		}
 	}()
-	cl.synchronise(nil)
+	synchronise(nil, cl)
 	sv.Wait()
 	c.Assert(cl.updateFeedCloser, IsNil)
 }
@@ -92,7 +92,7 @@ func (*ClientSuite) TestSyncToBoard(c *C) {
 	config.Set(conf)
 
 	// Invalid message
-	c.Assert(cl.synchronise(nil), Equals, errInvalidStructure)
+	c.Assert(synchronise(nil, cl), Equals, errInvalidStructure)
 
 	// Invalid board
 	msg := syncMessage{
@@ -100,7 +100,7 @@ func (*ClientSuite) TestSyncToBoard(c *C) {
 		Board:  "c",
 	}
 	data := marshalJSON(msg, c)
-	c.Assert(cl.synchronise(data), Equals, errInvalidBoard)
+	c.Assert(synchronise(data, cl), Equals, errInvalidBoard)
 
 	// Valid synchronisation
 	msg.Board = "a"
@@ -108,7 +108,7 @@ func (*ClientSuite) TestSyncToBoard(c *C) {
 	sv.Add(1)
 	cl.ID = "hex"
 	go assertMessage(wcl, []byte(`30{id:"hex"}`), sv, c)
-	c.Assert(cl.synchronise(data), IsNil)
+	c.Assert(synchronise(data, cl), IsNil)
 	sv.Wait()
 }
 
@@ -118,13 +118,13 @@ func (*ClientSuite) TestRegisterSync(c *C) {
 	cl, _ := sv.NewClient()
 
 	// Not synced yet
-	cl.registerSync("1")
+	registerSync("1", cl)
 	id := cl.ID
 	c.Assert(Clients.Has(id), Equals, true)
 	c.Assert(Clients.clients[cl.ID].syncID, Equals, "1")
 
 	// Already synced
-	cl.registerSync("2")
+	registerSync("2", cl)
 	c.Assert(Clients.Has(id), Equals, true)
 	c.Assert(Clients.clients[cl.ID].syncID, Equals, "2")
 }
@@ -138,7 +138,7 @@ func (*DB) TestInvalidThreadSync(c *C) {
 		Thread: 1,
 	}
 	data := marshalJSON(msg, c)
-	c.Assert(cl.synchronise(data), Equals, errInvalidThread)
+	c.Assert(synchronise(data, cl), Equals, errInvalidThread)
 }
 
 func (*DB) TestSyncToThread(c *C) {
@@ -160,7 +160,7 @@ func (*DB) TestSyncToThread(c *C) {
 		Log:   [][]byte{backlog1, backlog2},
 	}
 	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
-	c.Assert(cl.synchronise(data), IsNil)
+	c.Assert(synchronise(data, cl), IsNil)
 	c.Assert(Clients.Has(cl.ID), Equals, true)
 	c.Assert(Clients.clients[cl.ID].syncID, Equals, "1")
 
@@ -211,7 +211,7 @@ func (*DB) TestOnlyMissedMessageSyncing(c *C) {
 	}
 	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
 
-	c.Assert(cl.synchronise(data), IsNil)
+	c.Assert(synchronise(data, cl), IsNil)
 	assertSyncResponse(wcl, cl, c)         // Receive client ID
 	syncAssertMessage(wcl, backlogs[1], c) // Receive first missed message
 	syncAssertMessage(wcl, backlogs[2], c) // Second missed message
@@ -237,10 +237,10 @@ func (*DB) TestMaliciousCounterGuard(c *C) {
 		Ctr:    -10,
 	}
 	data := marshalJSON(msg, c)
-	c.Assert(cl.synchronise(data), Equals, errInvalidCounter)
+	c.Assert(synchronise(data, cl), Equals, errInvalidCounter)
 
 	// Counter larger than in the database
 	msg.Ctr = 7
 	data = marshalJSON(msg, c)
-	c.Assert(cl.synchronise(data), Equals, errInvalidCounter)
+	c.Assert(synchronise(data, cl), Equals, errInvalidCounter)
 }

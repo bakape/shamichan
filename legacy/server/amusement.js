@@ -119,25 +119,3 @@ function pushJS() {
 	readJS(js => js && push([0, common.EXECUTE_JS, js]));
 }
 exports.pushJS = pushJS;
-
-// Regex replacement filter
-function hot_filter(frag) {
-	let filter = state.hot.FILTER
-	if (!filter)
-		return frag
-	for (let f of filter) {
-		const m = frag.match(f.p)
-		if (m) {
-			// Case sensitivity
-			if (m[0].length > 2) {
-				if (/[A-Z]/.test(m[0].charAt(1)))
-					f.r = f.r.toUpperCase()
-				else if (/[A-Z]/.test(m[0].charAt(0)))
-					f.r = f.r.charAt(0).toUpperCase() + f.r.slice(1)
-			}
-			return frag.replace(f.p, f.r)
-		}
-	}
-	return frag
-}
-exports.hot_filter = hot_filter
