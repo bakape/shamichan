@@ -8,17 +8,19 @@ import {banner as lang} from './lang'
 import {write, read} from './render'
 
 // Highlight options button by fading out and in, if no options are set
-function highlightBanner() {
-	if (localStorage.getItem('optionsSeen')) {
+function highlightBanner(name: string) {
+	const key = name + "_seen"
+	if (localStorage.getItem(key)) {
 		return
 	}
-	const el = document.querySelector('#banner-options')
+
+	const el = document.querySelector('#banner-' + name)
 	el.style.opacity = '1'
 	let out = true,
 		clicked: boolean
 	el.addEventListener("click", () => {
 		clicked = true
-		localStorage.setItem('optionsSeen', '1')
+		localStorage.setItem(key, '1')
 	})
 	tick()
 
@@ -40,7 +42,7 @@ function highlightBanner() {
 	}
 }
 
-defer(highlightBanner)
+defer(() => ["options", "FAQ", "identity"].forEach(highlightBanner))
 
 // Stores the views of all BannerModal instances
 export const bannerModals: {[key: string]: BannerModal} = {}

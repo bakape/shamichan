@@ -2,8 +2,14 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##vNext
+* License:
+	- Relicense under GNU AGPL
+* Change:
+	- Highlight all banner panel toggles, until clicked
+
 ##v2.0.0-alpha - 2016-06-21
-	Start tracking v2 progress in versions for easier debugging
+Start tracking v2 progress in versions for easier debugging
 	- Rewriting server in Go
 	- Rewriting client in TypeScript
 	- Switched DBMS to RethinkDB
