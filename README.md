@@ -6,11 +6,12 @@ release](https://github.com/bakape/meguca/releases/latest) and consult the
 bundled README.__
 
 Platforms: Linux, OSX, Win64
+License: GNU AGPL
 
 ##Runtime dependencies
-* [RethinkDB](https://rethinkdb.com/docs/install/). 
+* [RethinkDB](https://rethinkdb.com/docs/install/).
 On Linux RethinkDB does not enable a configuration file by default. If you don't
-want to configure anything, just copy `/etc/rethinkdb/default.conf.sample` into 
+want to configure anything, just copy `/etc/rethinkdb/default.conf.sample` into
 `/etc/rethinkdb/instances.d/instance1.conf`.
 * ffmpeg >= 3.0 libraries (libavcodec, libavutil, libavformat, libswscale)
 compiled with:
@@ -41,7 +42,7 @@ from the [release](https://github.com/bakape/meguca/releases) page.
 * Install:
     * GCC or Clang
     * make
-    * ffmpeg >= 3.0 development libraries (libavcodec, libavutil, 
+    * ffmpeg >= 3.0 development libraries (libavcodec, libavutil,
     libavformat, libswscale)
     * git
     * zip
