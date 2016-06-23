@@ -6,6 +6,7 @@ release](https://github.com/bakape/meguca/releases/latest) and consult the
 bundled README.__
 
 Platforms: Linux, OSX, Win64
+
 License: GNU AGPL
 
 ##Runtime dependencies
