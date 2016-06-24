@@ -22,9 +22,6 @@ const BannerView = Backbone.View.extend({
 	events: {
 		'click .banner-float': 'revealBmodal'
 	},
-	renderInfo(msg) {
-		this.info.innerHTML = msg;
-	},
 
 	// r/a/dio stream info rendering
 	renderRadio(data) {
@@ -82,7 +79,6 @@ const NotificationView = exports.notification = Backbone.View.extend({
 main.reply('notification', msg => new NotificationView(msg));
 
 dispatcher[common.NOTIFICATION] = msg => new NotificationView(msg[0]);
-dispatcher[common.UPDATE_BANNER] = msg => banner.renderInfo(msg[0]);
 // R/a/dio banner is disabled on mobile
 dispatcher[common.RADIO] = msg =>
 	options.get('nowPlaying') && !main.isMobile && banner.renderRadio(msg[0]);

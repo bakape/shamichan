@@ -138,84 +138,6 @@ class ClientController {
 	}
 
 	/**
-	 * Allocate a processed image and its thumbnails to be served with a post
-	 * @param {int} id
-	 * @param {redis.multi} m
-	 * @param {boolean} isThread
-	 * @returns {Object} - Image object
-	 */
-	async allocateImage(id, m, isThread) {
-		const alloc = await obtainImageAlloc(id),
-			{image} = alloc
-		if (isThread && image.pinky)
-			throw Muggle('Image is the wrong size')
-		delete image.pinky
-
-		/*
-		 Write the perceptual hash of an image to a specialised sorted set to
-		 later check for duplicates against
-		*/
-		const till = Date.now() + (config.DEBUG ? 30000 : 3600000)
-		m.zadd('imageDups', till, `${num}:${image.hash}`)
-
-		// Useless after image hash has been written
-		delete image.hash
-		await commitImageAlloc(alloc)
-		return image
-	}
-
-	/**
-	 * Read image allocation data with supplied id from database
-	 * @param {string} id
-	 * @returns {Object}
-	 */
-	async obtainImageAlloc(id) {
-		const m = redis.multi(),
-			key = 'image:' + id
-		m.get(key)
-		m.setnx('lock:' + key, '1');
-		m.expire('lock:' + key, 60);
-		let [alloc, status] = await m.execAsync()
-		if (status !== '1')
-			throw Muggle('Image in use')
-		if (!alloc)
-			throw Muggle('Image lost')
-		alloc = JSON.parse(res[0])
-		alloc.id = id
-
-		// Validate allocation request
-		if (!alloc || !alloc.image || !alloc.tmps)
-			throw Muggle('Invalid image alloc')
-		for (let dir in alloc.tmps) {
-			const fileName = alloc.tmps[dir]
-			if (!/^[\w_]+$/.test(fileName))
-				throw Muggle(`Suspicious filename: ${JSON.stringify(fileName)}`
-		}
-		return alloc
-	}
-
-	/**
-	 * Copy image files from temporary folders to permanent served ones
-	 * @param {Object} alloc
-	 */
-	async commitImageAlloc(alloc) {
-		const tasks = []
-		for (let kind in alloc.tmps) {
-			tasks.push(etc.copyAsync(imager.media_path('tmp', alloc.tmps[kind]),
-				imager.media_path(kind, alloc.image[kind])))
-		}
-		await Promise.all(tasks).catch(err =>
-			throw Muggle('Couldn\'t copy file into place:', err))
-
-		// We should already hold the lock at this point.
-		const key = 'image:' + alloc.id,
-			m = redis.multi()
-		m.del(key)
-		m.del('lock:' + key)
-		await m.execAsync()
-	}
-
-	/**
 	 * Increment the history counter of the board, which is used to generate
 	 * e-tags
 	 * @param {string} board
@@ -465,19 +387,6 @@ class ClientController {
 		post.body = post.body.concat(body)
 		post.length += postLength(body)
 		await this.backlinks(links)
-	}
-
-	/**
-	 * Insert image into an existing post
-	 * @param {string} id
-	 */
-	async insertImage(id) {
-		const {post} = this.client,
-			m = redis.multi(),
-			image = post.image
-				= await this.allocateImage(id, redis.multi(), false)
-		await m.execAsync()
-		await this.updatePost(post.id, this.op, {image})
 	}
 
 	/**

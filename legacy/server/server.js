@@ -85,9 +85,3 @@ dispatcher[common.INSERT_IMAGE] = function ([msg], client) {
 		client.disconnect(Muggle('Image insertion error:', err)))
 	return true
 }
-
-// Send current hot hash to client on sync
-hooks.hook('clientSynced', function(info, cb){
-	info.client.send([0, common.HOT_INJECTION, 0, STATE.clientConfigHash]);
-	cb(null);
-});

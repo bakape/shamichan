@@ -90,32 +90,3 @@ hooks.hook('clientSynced', function (info, cb) {
 		cb();
 	});
 });
-
-// Inject JS on client synchronisation
-hooks.hook('clientSynced', (info, cb) => {
-	readJS(js => {
-		if (!js)
-			return cb();
-		info.client.send([0, common.EXECUTE_JS, js]);
-		cb();
-	});
-});
-
-function readJS(cb) {
-	const {inject_js} = state.hot
-	if (!inject_js)
-		return cb()
-	fs.readFile(inject_js, {encoding: 'utf8'}, (err, js) => {
-		if (err) {
-			winston.error('Failed ro read JS injection:', err)
-			return cb()
-		}
-		cb(js)
-	});
-}
-
-// Push injection to all clients on hot reload
-function pushJS() {
-	readJS(js => js && push([0, common.EXECUTE_JS, js]));
-}
-exports.pushJS = pushJS;
