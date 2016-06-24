@@ -78,7 +78,7 @@ func IDToString(id int64) string {
 }
 
 // LogError logs an error with its stack trace
-func LogError(ip string, err error) {
+func LogError(ip string, err interface{}) {
 	const size = 64 << 10
 	buf := make([]byte, size)
 	buf = buf[:runtime.Stack(buf, false)]

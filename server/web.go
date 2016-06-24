@@ -10,7 +10,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"os"
 
 	r "github.com/dancannon/gorethink"
@@ -76,8 +75,8 @@ func startWebServer() (err error) {
 // function for easier testability.
 func createRouter() http.Handler {
 	r := httptreemux.New()
-	r.NotFoundHandler = notFoundPage
-	r.PanicHandler = panicHandler
+	r.NotFoundHandler = text404
+	r.PanicHandler = textErrorPage
 
 	// HTML
 	r.GET("/", wrapHandler(redirectToDefault))
@@ -171,7 +170,7 @@ func boardHTML(
 	if auth.IsBoard(params["board"]) {
 		serveIndexTemplate(res, req)
 	} else {
-		notFoundPage(res, req)
+		text404(res, req)
 	}
 }
 
@@ -211,17 +210,17 @@ func threadHTML(
 	board := params["board"]
 	id, err := strconv.ParseInt(params["thread"], 10, 64)
 	if err != nil {
-		notFoundPage(res, req)
+		text404(res, req)
 		return
 	}
 
 	valid, err := db.ValidateOP(id, board)
 	if err != nil {
-		errorPage(res, req, err)
+		textErrorPage(res, req, err)
 		return
 	}
 	if !valid {
-		notFoundPage(res, req)
+		text404(res, req)
 		return
 	}
 
@@ -247,7 +246,7 @@ func threadJSON(
 		return
 	}
 	if !valid {
-		notFoundPage(res, req)
+		text404(res, req)
 		return
 	}
 
@@ -319,12 +318,6 @@ func checkClientEtag(
 	return false
 }
 
-// Serve custom error page
-func notFoundPage(res http.ResponseWriter, req *http.Request) {
-	res.WriteHeader(404)
-	http.ServeFile(res, req, filepath.FromSlash(webRoot+"/404.html"))
-}
-
 // Text-only 404 response
 func text404(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(404)
@@ -351,22 +344,9 @@ func writeJSON(res http.ResponseWriter, req *http.Request, data interface{}) {
 }
 
 // Text-only 500 response
-func textErrorPage(res http.ResponseWriter, req *http.Request, err error) {
+func textErrorPage(res http.ResponseWriter, req *http.Request, err interface{}) {
 	res.WriteHeader(500)
 	writeData(res, req, []byte(fmt.Sprintf("500 %s", err)))
-}
-
-// Cactch and log panics in webserver goroutines
-func panicHandler(res http.ResponseWriter, req *http.Request, err interface{}) {
-	errorPage(res, req, err.(error))
-}
-
-// Serve error page and log stack trace on error
-func errorPage(res http.ResponseWriter, req *http.Request, err error) {
-	res.WriteHeader(500)
-	http.ServeFile(res, req, filepath.FromSlash(webRoot+"/50x.html"))
-	dump, _ := httputil.DumpRequest(req, false)
-	err = util.WrapError(string(dump), err)
 	util.LogError(req.RemoteAddr, err)
 }
 

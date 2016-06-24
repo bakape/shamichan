@@ -20,6 +20,10 @@ import (
 	. "gopkg.in/check.v1"
 )
 
+const (
+	notFound = "404 Not found"
+)
+
 func Test(t *testing.T) { TestingT(t) }
 
 var genericImage = &types.Image{
@@ -205,19 +209,11 @@ func (w *WebServer) TestConfigServing(c *C) {
 	assertCode(rec, 304, c)
 }
 
-func (w *WebServer) TestNotFoundHandler(c *C) {
-	webRoot = "test"
+func (w *WebServer) TestText404(c *C) {
 	rec, req := newPair(c, "/lalala/")
 	w.r.ServeHTTP(rec, req)
-	assertBody(rec, "<!doctype html><html>404</html>\n", c)
 	assertCode(rec, 404, c)
-}
-
-func (w *WebServer) TestText404(c *C) {
-	rec, req := newPair(c, "/json/post/nope")
-	w.r.ServeHTTP(rec, req)
-	assertCode(rec, 404, c)
-	assertBody(rec, "404 Not found", c)
+	assertBody(rec, notFound, c)
 }
 
 func (w *WebServer) TestPanicHandler(c *C) {
@@ -227,7 +223,7 @@ func (w *WebServer) TestPanicHandler(c *C) {
 		panic(errors.New("foo"))
 	})
 	r.GET("/panic", h)
-	r.PanicHandler = panicHandler
+	r.PanicHandler = textErrorPage
 	rec := httptest.NewRecorder()
 	req := newRequest(c, "/panic")
 
@@ -237,7 +233,7 @@ func (w *WebServer) TestPanicHandler(c *C) {
 	log.SetOutput(os.Stdout)
 
 	assertCode(rec, 500, c)
-	assertBody(rec, "<!doctype html><html>50x</html>\n", c)
+	assertBody(rec, "500 foo", c)
 }
 
 func (w *WebServer) TestText500(c *C) {

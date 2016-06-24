@@ -7,6 +7,9 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Relicense under GNU AGPL
 * Change:
 	- Highlight all banner panel toggles, until clicked
+	- Descriptive text error pages instead of graphical ones
+* Fix:
+	- Duplicative header writing, when using Chrome dev tools
 
 ##v2.0.0-alpha - 2016-06-21
 Start tracking v2 progress in versions for easier debugging
