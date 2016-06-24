@@ -57,7 +57,7 @@ func (d *Imager) SetUpTest(c *C) {
 func (d *Imager) TearDownTest(c *C) {
 	// Clear DB tables
 	for _, table := range db.AllTables {
-		c.Assert(db.DB(r.Table(table).Delete()).Exec(), IsNil)
+		c.Assert(db.Write(r.Table(table).Delete()), IsNil)
 	}
 
 	// Clear synchtonised clients
@@ -80,7 +80,7 @@ func (d *Imager) TearDownTest(c *C) {
 }
 
 func (d *Imager) TearDownSuite(c *C) {
-	c.Assert(db.DB(r.DBDrop(d.dbName)).Exec(), IsNil)
+	c.Assert(db.Write(r.DBDrop(d.dbName)), IsNil)
 	c.Assert(db.RSession.Close(), IsNil)
 	c.Assert(os.RemoveAll("img"), IsNil)
 }

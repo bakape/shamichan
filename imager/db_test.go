@@ -46,9 +46,8 @@ func (a *allocationTester) AssertDeleted() {
 }
 
 func (*Imager) TestFindNonexistantImageThumb(c *C) {
-	img, err := FindImageThumb("sha")
-	c.Assert(err, IsNil)
-	c.Assert(img, DeepEquals, types.Image{})
+	_, err := FindImageThumb("sha")
+	c.Assert(err, Equals, r.ErrEmptyResult)
 }
 
 func (*Imager) TestFindImageThumb(c *C) {
@@ -71,12 +70,12 @@ func (*Imager) TestFindImageThumb(c *C) {
 }
 
 func insertProtoImage(img types.ProtoImage, c *C) {
-	c.Assert(db.DB(r.Table("images").Insert(img)).Exec(), IsNil)
+	c.Assert(db.Write(r.Table("images").Insert(img)), IsNil)
 }
 
 func assertImageRefCount(id string, count int, c *C) {
 	var posts int
-	c.Assert(db.DB(db.GetImage(id).Field("posts")).One(&posts), IsNil)
+	c.Assert(db.One(db.GetImage(id).Field("posts"), &posts), IsNil)
 	c.Assert(posts, Equals, count)
 }
 
@@ -111,7 +110,7 @@ func (*Imager) TestRemoveUnreffedImage(c *C) {
 
 	// Assert database document is deleted
 	var noImage bool
-	c.Assert(db.DB(db.GetImage(id).Eq(nil)).One(&noImage), IsNil)
+	c.Assert(db.One(db.GetImage(id).Eq(nil), &noImage), IsNil)
 	c.Assert(noImage, Equals, true)
 
 	// Assert files are deleted
@@ -160,7 +159,7 @@ func (*Imager) TestImageAllocation(c *C) {
 
 	// Assert database document
 	var imageDoc types.ProtoImage
-	c.Assert(db.DB(db.GetImage(id)).One(&imageDoc), IsNil)
+	c.Assert(db.One(db.GetImage(id), &imageDoc), IsNil)
 	c.Assert(imageDoc, DeepEquals, types.ProtoImage{
 		ImageCommon: img.ImageCommon,
 	})

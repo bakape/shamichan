@@ -6,11 +6,15 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
+
+	r "github.com/dancannon/gorethink"
+
 	"path/filepath"
 	"strconv"
 
@@ -352,7 +356,7 @@ func writeJSON(res http.ResponseWriter, req *http.Request, data interface{}) {
 // Text-only 500 response
 func textErrorPage(res http.ResponseWriter, req *http.Request, err error) {
 	res.WriteHeader(500)
-	writeData(res, req, []byte("500 Internal server error"))
+	writeData(res, req, []byte(fmt.Sprintf("500 %s", err)))
 }
 
 // Cactch and log panics in webserver goroutines
@@ -361,8 +365,7 @@ func panicHandler(res http.ResponseWriter, req *http.Request, err interface{}) {
 }
 
 // Serve error page and log stack trace on error
-func errorPage(res http.ResponseWriter, req *http.Request, e interface{}) {
-	err := e.(error)
+func errorPage(res http.ResponseWriter, req *http.Request, err error) {
 	res.WriteHeader(500)
 	http.ServeFile(res, req, filepath.FromSlash(webRoot+"/50x.html"))
 	dump, _ := httputil.DumpRequest(req, false)
@@ -416,24 +419,16 @@ func servePost(
 
 	op, err := db.ParentThread(id)
 	if err != nil {
-		textErrorPage(res, req, err)
-		return
-	} else if op == 0 {
-		text404(res, req)
+		respondToJSONError(res, req, err)
 		return
 	}
 
 	ident := auth.LookUpIdent(req.RemoteAddr)
 	post, err := db.NewReader(ident).GetPost(id, op)
 	if err != nil {
-		textErrorPage(res, req, err)
-		return
-	}
-
-	// No post in the database or no access. Need a second check, because post
-	// might have been deleted between the queries.
-	if post.ID == 0 {
-		text404(res, req)
+		// No post in the database. Need a second check, because the post might
+		// have been deleted between the queries.
+		respondToJSONError(res, req, err)
 		return
 	}
 
@@ -454,6 +449,14 @@ func servePost(
 
 	setHeaders(res, etag)
 	writeData(res, req, data)
+}
+
+func respondToJSONError(res http.ResponseWriter, req *http.Request, err error) {
+	if err == r.ErrEmptyResult {
+		text404(res, req)
+	} else {
+		textErrorPage(res, req, err)
+	}
 }
 
 // More performant handler for serving image assets. These are immutable

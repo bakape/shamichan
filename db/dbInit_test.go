@@ -30,17 +30,15 @@ func (d *DBSuite) SetUpSuite(c *C) {
 	c.Assert(InitDB(d.dbName), IsNil)
 }
 
-func (*DBSuite) SetUpTest(_ *C) {
+func (*DBSuite) SetUpTest(c *C) {
+	// Clear all documents from all tables after each test.
+	for _, table := range AllTables {
+		c.Assert(Write(r.Table(table).Delete()), IsNil)
+	}
+
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
 	config.Set(conf)
-}
-
-// Clear all documents from all tables after each test.
-func (*DBSuite) TearDownTest(c *C) {
-	for _, table := range AllTables {
-		c.Assert(DB(r.Table(table).Delete()).Exec(), IsNil)
-	}
 }
 
 func (d *DBSuite) TearDownSuite(c *C) {
@@ -54,23 +52,17 @@ func (*DBSuite) TestVerifyVersion(c *C) {
 		"id":        "info",
 		"dbVersion": dbVersion,
 	}
-	c.Assert(DB(r.Table("main").Insert(info)).Exec(), IsNil)
+	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
 	c.Assert(verifyDBVersion(), IsNil)
 
 	// Incompatible DB version
 	update := map[string]int{"dbVersion": 0}
-	c.Assert(DB(GetMain("info").Update(update)).Exec(), IsNil)
+	c.Assert(Write(GetMain("info").Update(update)), IsNil)
 	c.Assert(
 		verifyDBVersion(),
 		ErrorMatches,
 		"Incompatible RethinkDB database version: 0.*",
 	)
-}
-
-func (*DBInit) TestDb(c *C) {
-	query := r.Table("threads").Get(1)
-	standard := DatabaseHelper{query}
-	c.Assert(DB(query), DeepEquals, standard)
 }
 
 func (*DBInit) TestLoadDB(c *C) {
@@ -80,13 +72,14 @@ func (*DBInit) TestLoadDB(c *C) {
 	conf.Rethinkdb.Db = dbName
 	config.Set(conf)
 	defer func() {
-		c.Assert(DB(r.DBDrop(dbName)).Exec(), IsNil)
+		c.Assert(Write(r.DBDrop(dbName)), IsNil)
 		c.Assert(RSession.Close(), IsNil)
 	}()
 	c.Assert(LoadDB(), IsNil)
 
 	var missingTables []string
-	err := DB(r.Expr(AllTables).Difference(r.TableList())).One(&missingTables)
+	query := r.Expr(AllTables).Difference(r.TableList()).Default([]string{})
+	err := All(query, &missingTables)
 	c.Assert(err, IsNil)
 	for _, table := range missingTables {
 		c.Fatalf("table '%s' not created", table)
@@ -97,7 +90,7 @@ func (*DBInit) TestLoadDB(c *C) {
 	}
 	for table, index := range indexes {
 		var hasIndex bool
-		err = DB(r.Table(table).IndexList().Contains(index)).One(&hasIndex)
+		err = One(r.Table(table).IndexList().Contains(index), &hasIndex)
 		c.Assert(err, IsNil)
 		if !hasIndex {
 			c.Fatalf(
@@ -109,11 +102,11 @@ func (*DBInit) TestLoadDB(c *C) {
 	}
 
 	var info infoDocument
-	c.Assert(DB(GetMain("info")).One(&info), IsNil)
+	c.Assert(One(GetMain("info"), &info), IsNil)
 	c.Assert(info, Equals, infoDocument{Document{"info"}, dbVersion, 0})
 
 	var histCounts Document
-	c.Assert(DB(GetMain("histCounts")).One(&histCounts), IsNil)
+	c.Assert(One(GetMain("histCounts"), &histCounts), IsNil)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
 
 	c.Assert(RSession.Close(), IsNil)

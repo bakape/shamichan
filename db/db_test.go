@@ -17,14 +17,14 @@ func (*DBSuite) TestParentThread(c *C) {
 			},
 		},
 	}
-	c.Assert(DB(r.Table("threads").Insert(std)).Exec(), IsNil)
+	c.Assert(Write(r.Table("threads").Insert(std)), IsNil)
 	thread, err := ParentThread(2)
 	c.Assert(err, IsNil)
 	c.Assert(thread, Equals, int64(1))
 
 	// Post does not exist
 	thread, err = ParentThread(15)
-	c.Assert(err, IsNil)
+	c.Assert(err, Equals, r.ErrEmptyResult)
 	c.Assert(thread, Equals, int64(0))
 }
 
@@ -33,7 +33,7 @@ func (*DBSuite) TestValidateOP(c *C) {
 		ID:    1,
 		Board: "a",
 	}
-	c.Assert(DB(r.Table("threads").Insert(std)).Exec(), IsNil)
+	c.Assert(Write(r.Table("threads").Insert(std)), IsNil)
 
 	v, err := ValidateOP(1, "a")
 	c.Assert(err, IsNil)
@@ -54,7 +54,7 @@ func (*DBSuite) TestPostCounter(c *C) {
 		Document: Document{"info"},
 		PostCtr:  1,
 	}
-	c.Assert(DB(r.Table("main").Insert(std)).Exec(), IsNil)
+	c.Assert(Write(r.Table("main").Insert(std)), IsNil)
 
 	count, err := PostCounter()
 	c.Assert(err, IsNil)
@@ -63,14 +63,14 @@ func (*DBSuite) TestPostCounter(c *C) {
 
 func (*DBSuite) TestBoardCounter(c *C) {
 	std := Document{"histCounts"}
-	c.Assert(DB(r.Table("main").Insert(std)).Exec(), IsNil)
+	c.Assert(Write(r.Table("main").Insert(std)), IsNil)
 
 	count, err := BoardCounter("a")
 	c.Assert(err, IsNil)
 	c.Assert(count, Equals, int64(0))
 
 	update := map[string]int{"a": 1}
-	c.Assert(DB(GetMain("histCounts").Update(update)).Exec(), IsNil)
+	c.Assert(Write(GetMain("histCounts").Update(update)), IsNil)
 
 	count, err = BoardCounter("a")
 	c.Assert(err, IsNil)
@@ -86,35 +86,16 @@ func (*DBSuite) TestThreadCounter(c *C) {
 			{3},
 		},
 	}
-	c.Assert(DB(r.Table("threads").Insert(std)).Exec(), IsNil)
+	c.Assert(Write(r.Table("threads").Insert(std)), IsNil)
 
 	count, err := ThreadCounter(1)
 	c.Assert(err, IsNil)
 	c.Assert(count, Equals, int64(3))
 }
 
-func (*DBSuite) TestDatabaseHelper(c *C) {
-	standard := Document{"doc"}
-	helper := DatabaseHelper{r.Table("main").Insert(standard)}
-	err := helper.Exec()
-	c.Assert(err, IsNil)
-
-	var doc Document
-	helper = DatabaseHelper{GetMain("doc")}
-	err = helper.One(&doc)
-	c.Assert(err, IsNil)
-	c.Assert(doc, DeepEquals, standard)
-
-	var docs []Document
-	helper = DatabaseHelper{r.Table("main")}
-	err = helper.All(&docs)
-	c.Assert(err, IsNil)
-	c.Assert(docs, DeepEquals, []Document{standard})
-}
-
 func (*DBSuite) TestStreamUpdates(c *C) {
 	thread := types.DatabaseThread{ID: 1}
-	c.Assert(DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
+	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
 
 	// Empty log
 	read := make(chan []byte, 1)
@@ -126,7 +107,7 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 	addition := []byte{1, 0, 0, 3, 2}
 	log := [][]byte{addition}
 	update := map[string][][]byte{"log": log}
-	c.Assert(DB(getThread(1).Update(update)).Exec(), IsNil)
+	c.Assert(Write(getThread(1).Update(update)), IsNil)
 	c.Assert(<-read, DeepEquals, addition)
 	closer.Close()
 
@@ -151,7 +132,7 @@ func (*DBSuite) TestRegisterAccount(c *C) {
 	// New user
 	c.Assert(RegisterAccount(id, hash), IsNil)
 	var res types.User
-	c.Assert(DB(GetAccount(id)).One(&res), IsNil)
+	c.Assert(One(GetAccount(id), &res), IsNil)
 	c.Assert(res, DeepEquals, user)
 
 	// User name already registered

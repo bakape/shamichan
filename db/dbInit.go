@@ -40,12 +40,6 @@ type infoDocument struct {
 	PostCtr int64 `gorethink:"postCtr"`
 }
 
-// DB creates a new DatabaseHelper. Used to simplify database queries.
-// Example: err := DB(r.Table("posts").Get(1)).One(&Post)
-func DB(query r.Term) DatabaseHelper {
-	return DatabaseHelper{query}
-}
-
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
 func LoadDB() (err error) {
@@ -56,7 +50,7 @@ func LoadDB() (err error) {
 	}
 
 	var isCreated bool
-	err = DB(r.DBList().Contains(conf.Db)).One(&isCreated)
+	err = One(r.DBList().Contains(conf.Db), &isCreated)
 	if err != nil {
 		return util.WrapError("Error checking, if database exists", err)
 	}
@@ -85,7 +79,7 @@ func Connect(addr string) (err error) {
 // mess up the DB irreversably.
 func verifyDBVersion() error {
 	var version int
-	err := DB(GetMain("info").Field("dbVersion")).One(&version)
+	err := One(GetMain("info").Field("dbVersion"), &version)
 	if err != nil {
 		return util.WrapError("Error reading database version", err)
 	}
@@ -102,7 +96,7 @@ func verifyDBVersion() error {
 // InitDB initialize a rethinkDB database
 func InitDB(dbName string) error {
 	log.Printf("Initialising database '%s'", dbName)
-	if err := DB(r.DBCreate(dbName)).Exec(); err != nil {
+	if err := Write(r.DBCreate(dbName)); err != nil {
 		return util.WrapError("Error creating database", err)
 	}
 
@@ -119,7 +113,7 @@ func InitDB(dbName string) error {
 		// post creation
 		Document{"histCounts"},
 	}
-	if err := DB(r.Table("main").Insert(main)).Exec(); err != nil {
+	if err := Write(r.Table("main").Insert(main)); err != nil {
 		return util.WrapError("Error initializing database", err)
 	}
 
@@ -134,28 +128,45 @@ func CreateTables() error {
 		if table == "images" {
 			continue
 		}
-		fns = append(fns, DB(r.TableCreate(table)).Exec)
+		fns = append(fns, createTable(table))
 	}
 
-	opts := r.TableCreateOpts{PrimaryKey: "SHA1"}
-	fns = append(fns, DB(r.TableCreate("images", opts)).Exec)
+	fns = append(fns, func() error {
+		return Write(r.TableCreate("images", r.TableCreateOpts{
+			PrimaryKey: "SHA1",
+		}))
+	})
 
 	return util.Waterfall(fns)
+}
+
+func createTable(name string) func() error {
+	return func() error {
+		return Write(r.TableCreate(name))
+	}
 }
 
 // CreateIndeces create secondary indeces for faster table queries
 func CreateIndeces() error {
 	fns := []func() error{
-		DB(r.Table("threads").IndexCreate("board")).Exec,
+		func() error {
+			return Write(r.Table("threads").IndexCreate("board"))
+		},
 	}
 
 	// Make sure all indeces are ready to avoid the race condition of and index
 	// being accessed before its full creation.
 	for _, table := range AllTables {
-		fns = append(fns, DB(r.Table(table).IndexWait()).Exec)
+		fns = append(fns, waitForIndex(table))
 	}
 
 	return util.Waterfall(fns)
+}
+
+func waitForIndex(table string) func() error {
+	return func() error {
+		return Exec(r.Table(table).IndexWait())
+	}
 }
 
 // UniqueDBName returns a unique datatabase name. Needed so multiple concurent

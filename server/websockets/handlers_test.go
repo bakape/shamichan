@@ -31,7 +31,7 @@ func (d *DB) SetUpTest(c *C) {
 	conf.Boards.Enabled = []string{"a"}
 	config.Set(conf)
 	for _, table := range db.AllTables {
-		c.Assert(db.DB(r.Table(table).Delete()).Exec(), IsNil)
+		c.Assert(db.Write(r.Table(table).Delete()), IsNil)
 	}
 }
 
@@ -159,7 +159,7 @@ func (*DB) TestSyncToThread(c *C) {
 		Board: "a",
 		Log:   [][]byte{backlog1, backlog2},
 	}
-	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 	c.Assert(synchronise(data, cl), IsNil)
 	c.Assert(Clients.Has(cl.ID), Equals, true)
 	c.Assert(Clients.clients[cl.ID].syncID, Equals, "1")
@@ -173,7 +173,7 @@ func (*DB) TestSyncToThread(c *C) {
 	update := map[string]r.Term{
 		"log": r.Row.Field("log").Append(newMessage),
 	}
-	c.Assert(db.DB(r.Table("threads").Get(1).Update(update)).Exec(), IsNil)
+	c.Assert(db.Write(r.Table("threads").Get(1).Update(update)), IsNil)
 	syncAssertMessage(wcl, newMessage, c)
 	cl.Close(nil)
 	sv.Wait()
@@ -209,7 +209,7 @@ func (*DB) TestOnlyMissedMessageSyncing(c *C) {
 		Board: "a",
 		Log:   backlogs,
 	}
-	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 
 	c.Assert(synchronise(data, cl), IsNil)
 	assertSyncResponse(wcl, cl, c)         // Receive client ID
@@ -228,7 +228,7 @@ func (*DB) TestMaliciousCounterGuard(c *C) {
 		Board: "a",
 		Log:   [][]byte{{1}},
 	}
-	c.Assert(db.DB(r.Table("threads").Insert(thread)).Exec(), IsNil)
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 
 	// Negative counter
 	msg := syncMessage{

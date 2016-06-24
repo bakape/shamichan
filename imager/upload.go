@@ -17,6 +17,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
+	r "github.com/dancannon/gorethink"
 )
 
 // Supported file formats
@@ -106,14 +107,15 @@ func newImageUpload(req *http.Request) (int, error) {
 	sum := sha1.Sum(data)
 	SHA1 := hex.EncodeToString(sum[:])
 	img, err := FindImageThumb(SHA1)
-	if err != nil {
+	noThumbnail := err == r.ErrEmptyResult
+	if err != nil && !noThumbnail {
 		return 500, err
 	}
 	img.Imgnm = fileHeader.Filename
 	img.Spoiler = spoiler
 
 	// Already have a thumbnail
-	if img.SHA1 != "" {
+	if !noThumbnail {
 		return passImage(img, client)
 	}
 	img.SHA1 = SHA1

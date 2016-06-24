@@ -29,7 +29,7 @@ func FindImageThumb(hash string) (img types.Image, err error) {
 		Field("changes").
 		Field("new_val").
 		Default(nil)
-	err = db.DB(query).One(&img)
+	err = db.One(query, &img)
 	return
 }
 
@@ -60,7 +60,7 @@ func DeallocateImage(id string) error {
 		Pluck("posts", "fileType")
 
 	var res unreferenceResponse
-	err := db.DB(query).One(&res)
+	err := db.One(query, &res)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func allocateImage(src, thumb []byte, img types.Image) error {
 	query := r.
 		Table("images").
 		Insert(types.ProtoImage{ImageCommon: img.ImageCommon})
-	err = db.DB(query).Exec()
+	err = db.Write(query)
 	if err != nil {
 		return cleanUpFailedAllocation(img, err)
 	}

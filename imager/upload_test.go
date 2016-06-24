@@ -301,7 +301,7 @@ func assertDBRecord(img types.Image, c *C) {
 }
 
 func getImageRecord(id string, c *C) (res types.ImageCommon) {
-	c.Assert(db.DB(db.GetImage(id)).One(&res), IsNil)
+	c.Assert(db.One(db.GetImage(id), &res), IsNil)
 	return
 }
 

@@ -32,35 +32,33 @@ type DatabaseHelper struct {
 
 // Exec excutes the query and only returns an error, if any. Do not use for
 // write queries.
-func (d DatabaseHelper) Exec() error {
-	return d.query.Exec(RSession)
+func Exec(query r.Term) error {
+	return query.Exec(RSession)
 }
 
 // Write executes the inner query and returns an error, if any. Only use this
 // function for write queries
-func (d DatabaseHelper) Write() error {
-	_, err := d.query.RunWrite(RSession)
+func Write(query r.Term) error {
+	_, err := query.RunWrite(RSession)
 	return err
 }
 
 // One writes the query result into the target pointer or throws an error
-func (d DatabaseHelper) One(res interface{}) error {
-	c, err := d.query.Run(RSession)
+func One(query r.Term, res interface{}) error {
+	c, err := query.Run(RSession)
 	if err != nil {
 		return err
 	}
-	c.One(res)
-	return nil
+	return c.One(res)
 }
 
 // All writes all responses into target pointer to slice or returns error
-func (d DatabaseHelper) All(res interface{}) error {
-	c, err := d.query.Run(RSession)
+func All(query r.Term, res interface{}) error {
+	c, err := query.Run(RSession)
 	if err != nil {
 		return err
 	}
-	c.All(res)
-	return nil
+	return c.All(res)
 }
 
 // ParentThread determines the parent thread of a post. Returns 0, if post not
@@ -71,9 +69,9 @@ func ParentThread(id int64) (op int64, err error) {
 		Filter(r.Row.Field("posts").HasFields(util.IDToString(id))).
 		Field("id").
 		Default(0)
-	err = DB(query).One(&op)
-	if err != nil {
-		msg := fmt.Sprintf("Error retrieving parent thread number: %d", id)
+	err = One(query, &op)
+	if err != nil && err != r.ErrEmptyResult {
+		msg := fmt.Sprintf("error retrieving parent thread: %d", id)
 		err = util.WrapError(msg, err)
 	}
 	return
@@ -81,9 +79,9 @@ func ParentThread(id int64) (op int64, err error) {
 
 // ValidateOP confirms the specified thread exists on specific board
 func ValidateOP(id int64, board string) (valid bool, err error) {
-	err = DB(getThread(id).Field("board").Eq(board).Default(false)).One(&valid)
+	err = One(getThread(id).Field("board").Eq(board).Default(false), &valid)
 	if err != nil {
-		msg := fmt.Sprintf("Error validating OP: %d of board %s", id, board)
+		msg := fmt.Sprintf("error validating OP %d of board %s", id, board)
 		err = util.WrapError(msg, err)
 	}
 	return
@@ -111,7 +109,7 @@ func GetImage(id string) r.Term {
 
 // PostCounter retrieves the current global post count
 func PostCounter() (counter int64, err error) {
-	err = DB(GetMain("info").Field("postCtr")).One(&counter)
+	err = One(GetMain("info").Field("postCtr"), &counter)
 	if err != nil {
 		err = util.WrapError("Error retrieving post counter", err)
 	}
@@ -120,7 +118,7 @@ func PostCounter() (counter int64, err error) {
 
 // BoardCounter retrieves the history or "progress" counter of a board
 func BoardCounter(board string) (counter int64, err error) {
-	err = DB(GetMain("histCounts").Field(board).Default(0)).One(&counter)
+	err = One(GetMain("histCounts").Field(board).Default(0), &counter)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving board counter: %s", board)
 		err = util.WrapError(msg, err)
@@ -130,7 +128,7 @@ func BoardCounter(board string) (counter int64, err error) {
 
 // ThreadCounter retrieve the history or "progress" counter of a thread
 func ThreadCounter(id int64) (counter int64, err error) {
-	err = DB(getThread(id).Field("log").Count()).One(&counter)
+	err = One(getThread(id).Field("log").Count(), &counter)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving thread counter: %d", id)
 		err = util.WrapError(msg, err)
@@ -179,7 +177,7 @@ func RegisterAccount(ID string, hash []byte) error {
 		ID:       ID,
 		Password: hash,
 	}
-	err := DB(r.Table("accounts").Insert(user)).Write()
+	err := Write(r.Table("accounts").Insert(user))
 	if r.IsConflictErr(err) {
 		return errors.New("user name already taken")
 	}

@@ -51,7 +51,7 @@ func (rd *Reader) GetThread(id int64, lastN int) (*types.Thread, error) {
 	}
 
 	var thread types.Thread
-	err := DB(getThread(id).Merge(toMerge...).Without("log", "op")).One(&thread)
+	err := One(getThread(id).Merge(toMerge...).Without("log", "op"), &thread)
 	if err != nil {
 		return nil, err
 	}
@@ -69,9 +69,9 @@ func (rd *Reader) GetPost(id, op int64) (post types.Post, err error) {
 		Field(util.IDToString(id)).
 		Default(nil)
 
-	err = DB(query).One(&post)
-	if err != nil {
-		msg := fmt.Sprintf("Error retrieving post: %d", id)
+	err = One(query, &post)
+	if err != nil && err != r.ErrEmptyResult {
+		msg := fmt.Sprintf("error retrieving post: %d", id)
 		err = util.WrapError(msg, err)
 	}
 
@@ -86,9 +86,9 @@ func (rd *Reader) GetBoard(board string) (out *types.Board, err error) {
 		Merge(getThreadOP, getLogCounter).
 		Without("posts", "log", "op")
 	out = &types.Board{}
-	err = DB(query).All(&out.Threads)
-	if err != nil {
-		msg := fmt.Sprintf("Error retrieving board: %s", board)
+	err = All(query, &out.Threads)
+	if err != nil && err != r.ErrEmptyResult {
+		msg := fmt.Sprintf("error retrieving board: %s", board)
 		err = util.WrapError(msg, err)
 		return
 	}
@@ -106,9 +106,9 @@ func (rd *Reader) GetAllBoard() (board *types.Board, err error) {
 		Merge(getThreadOP, getLogCounter).
 		Without("posts", "log", "op")
 	board = &types.Board{}
-	err = DB(query).All(&board.Threads)
-	if err != nil {
-		err = util.WrapError("Error retrieving /all/ board", err)
+	err = All(query, &board.Threads)
+	if err != nil && err != r.ErrEmptyResult {
+		err = util.WrapError("error retrieving /all/ board", err)
 		return
 	}
 

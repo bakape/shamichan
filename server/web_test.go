@@ -106,12 +106,12 @@ func setupPosts(c *C) {
 			},
 		},
 	}
-	c.Assert(db.DB(r.Table("threads").Insert(threads)).Exec(), IsNil)
+	c.Assert(db.Write(r.Table("threads").Insert(threads)), IsNil)
 
 	infoUpdate := db.GetMain("info").Update(map[string]int{"postCtr": 8})
 	histUpdate := db.GetMain("histCounts").Update(map[string]int{"a": 7})
-	c.Assert(db.DB(infoUpdate).Exec(), IsNil)
-	c.Assert(db.DB(histUpdate).Exec(), IsNil)
+	c.Assert(db.Write(infoUpdate), IsNil)
+	c.Assert(db.Write(histUpdate), IsNil)
 }
 
 func dummyLog(n int) [][]byte {

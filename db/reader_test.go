@@ -126,7 +126,7 @@ func (*DBSuite) TestGetPost(c *C) {
 			},
 		},
 	}
-	c.Assert(DB(r.Table("threads").Insert(threads)).Exec(), IsNil)
+	c.Assert(Write(r.Table("threads").Insert(threads)), IsNil)
 
 	rd := NewReader(auth.Ident{})
 
@@ -139,7 +139,7 @@ func (*DBSuite) TestGetPost(c *C) {
 
 	for _, args := range empties {
 		post, err := rd.GetPost(args.id, args.op)
-		c.Assert(err, IsNil)
+		c.Assert(err, Equals, r.ErrEmptyResult)
 		c.Assert(post, DeepEquals, types.Post{})
 	}
 
@@ -151,13 +151,13 @@ func (*DBSuite) TestGetPost(c *C) {
 
 func (*DBSuite) TestGetBoard(c *C) {
 	setEnabledBoards("a")
-	c.Assert(DB(r.Table("threads").Insert(sampleThreads)).Exec(), IsNil)
+	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
 
 	boardCounters := map[string]interface{}{
 		"id": "histCounts",
 		"a":  7,
 	}
-	c.Assert(DB(r.Table("main").Insert(boardCounters)).Exec(), IsNil)
+	c.Assert(Write(r.Table("main").Insert(boardCounters)), IsNil)
 
 	board, err := NewReader(auth.Ident{}).GetBoard("a")
 	c.Assert(err, IsNil)
@@ -170,14 +170,24 @@ func setEnabledBoards(boards ...string) {
 	config.Set(conf)
 }
 
+func (*DBSuite) TestGetEmptyBoard(c *C) {
+	setEnabledBoards("a")
+	boardCounters := Document{"histCounts"}
+	c.Assert(Write(r.Table("main").Insert(boardCounters)), IsNil)
+
+	board, err := NewReader(auth.Ident{}).GetBoard("a")
+	c.Assert(err, IsNil)
+	c.Assert(board, DeepEquals, new(types.Board))
+}
+
 func (*DBSuite) TestGetAllBoard(c *C) {
 	setEnabledBoards("a")
-	c.Assert(DB(r.Table("threads").Insert(sampleThreads)).Exec(), IsNil)
+	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
 	info := infoDocument{
 		Document: Document{"info"},
 		PostCtr:  7,
 	}
-	c.Assert(DB(r.Table("main").Insert(info)).Exec(), IsNil)
+	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
 
 	std := boardStandard
 	std.Threads = []types.Thread{
@@ -198,11 +208,22 @@ func (*DBSuite) TestGetAllBoard(c *C) {
 	c.Assert(board, DeepEquals, &std)
 }
 
+func (*DBSuite) TestGetEmptyAllBoard(c *C) {
+	setEnabledBoards("a")
+	info := infoDocument{
+		Document: Document{"info"},
+	}
+	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
+	board, err := NewReader(auth.Ident{}).GetAllBoard()
+	c.Assert(err, IsNil)
+	c.Assert(board, DeepEquals, new(types.Board))
+}
+
 func (*DBSuite) TestReaderGetThread(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
 	config.Set(conf)
-	c.Assert(DB(r.Table("threads").Insert(sampleThreads)).Exec(), IsNil)
+	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
 	rd := NewReader(auth.Ident{})
 
 	// No replies ;_;
