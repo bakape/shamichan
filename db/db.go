@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
@@ -14,15 +14,19 @@ var (
 	// Precompiled query for extracting only the changed fields from the replication
 	// log feed
 	formatUpdateFeed = r.Row.
-		Field("new_val").
-		Field("log").
-		Slice(
+				Field("new_val").
+				Field("log").
+				Slice(
 			r.Row.
 				Field("old_val").
 				Field("log").
 				Count().
 				Default(0),
 		)
+
+	// ErrUserNameTaken denotes a user name the client is trying  to register
+	// with is already taken
+	ErrUserNameTaken = errors.New("user name already taken")
 )
 
 // DatabaseHelper simplifies managing queries, by providing extra utility
@@ -111,7 +115,7 @@ func GetImage(id string) r.Term {
 func PostCounter() (counter int64, err error) {
 	err = One(GetMain("info").Field("postCtr"), &counter)
 	if err != nil {
-		err = util.WrapError("Error retrieving post counter", err)
+		err = util.WrapError("error retrieving post counter", err)
 	}
 	return
 }
@@ -120,7 +124,7 @@ func PostCounter() (counter int64, err error) {
 func BoardCounter(board string) (counter int64, err error) {
 	err = One(GetMain("histCounts").Field(board).Default(0), &counter)
 	if err != nil {
-		msg := fmt.Sprintf("Error retrieving board counter: %s", board)
+		msg := fmt.Sprintf("error retrieving board counter: %s", board)
 		err = util.WrapError(msg, err)
 	}
 	return
@@ -130,7 +134,7 @@ func BoardCounter(board string) (counter int64, err error) {
 func ThreadCounter(id int64) (counter int64, err error) {
 	err = One(getThread(id).Field("log").Count(), &counter)
 	if err != nil {
-		msg := fmt.Sprintf("Error retrieving thread counter: %d", id)
+		msg := fmt.Sprintf("error retrieving thread counter: %d", id)
 		err = util.WrapError(msg, err)
 	}
 	return
@@ -149,7 +153,7 @@ func StreamUpdates(
 		Map(formatUpdateFeed).
 		Run(RSession)
 	if err != nil {
-		return nil, util.WrapError("Error establishing update feed", err)
+		return nil, util.WrapError("error establishing update feed", err)
 	}
 
 	read := make(chan [][]byte)
@@ -170,16 +174,16 @@ func StreamUpdates(
 	return initial, nil
 }
 
-// RegisterAccount accont writes the ID and password hash of a new user account
-// to the database
+// RegisterAccount writes the ID and password hash of a new user account to the
+// database
 func RegisterAccount(ID string, hash []byte) error {
-	user := types.User{
+	user := auth.User{
 		ID:       ID,
 		Password: hash,
 	}
 	err := Write(r.Table("accounts").Insert(user))
 	if r.IsConflictErr(err) {
-		return errors.New("user name already taken")
+		return ErrUserNameTaken
 	}
 	return err
 }

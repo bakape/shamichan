@@ -82,10 +82,11 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	synced bool
-	ident  auth.Ident
-	conn   *websocket.Conn
-	ID     string
+	synced   bool // to any change feed and the global Clients map
+	loggedIn bool // as an authorised account. Optional
+	ident    auth.Ident
+	conn     *websocket.Conn
+	ID       string
 	util.AtomicCloser
 	updateFeedCloser *util.AtomicCloser
 
@@ -270,9 +271,6 @@ func (c *Client) receiverLoop() {
 func (c *Client) handleMessage(msgType int, msg []byte) error {
 	if msgType != websocket.TextMessage {
 		return errInvalidFrame("Only text frames allowed")
-	}
-	if c.ident.Banned {
-		return errInvalidFrame("You are banned")
 	}
 	if len(msg) < 3 {
 		return errInvalidPayload(msg)

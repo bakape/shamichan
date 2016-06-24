@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -123,15 +124,15 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 func (*DBSuite) TestRegisterAccount(c *C) {
 	const id = "123"
 	hash := []byte{1, 2, 3}
-	user := types.User{
-		ID:        id,
-		Password:  hash,
-		Positions: []types.Position{},
+	user := auth.User{
+		ID:       id,
+		Password: hash,
+		Rigths:   []auth.Right{},
 	}
 
 	// New user
 	c.Assert(RegisterAccount(id, hash), IsNil)
-	var res types.User
+	var res auth.User
 	c.Assert(One(GetAccount(id), &res), IsNil)
 	c.Assert(res, DeepEquals, user)
 

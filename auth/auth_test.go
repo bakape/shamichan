@@ -13,34 +13,6 @@ type Auth struct{}
 
 var _ = Suite(&Auth{})
 
-func (*Auth) TestCheckAuth(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Staff.Classes = make(map[string]config.StaffClass, 1)
-	conf.Staff.Classes["admin"] = config.StaffClass{
-		Rights: map[string]bool{
-			"canFoo": true,
-			"canBar": false,
-		},
-	}
-	config.Set(conf)
-
-	// Staff with rights
-	ident := Ident{Auth: "admin"}
-	c.Assert(Check("canFoo", ident), Equals, true)
-
-	// Staff without rights
-	c.Assert(Check("canBar", ident), Equals, false)
-	c.Assert(Check("canBaz", ident), Equals, false)
-
-	// Non-existant staff
-	ident = Ident{Auth: "butler"}
-	c.Assert(Check("canFoo", ident), Equals, false)
-
-	// Not staff
-	ident = Ident{}
-	c.Assert(Check("canFoo", ident), Equals, false)
-}
-
 func (*Auth) TestLookupIdent(c *C) {
 	const ip = "::1"
 	ident := Ident{IP: ip}

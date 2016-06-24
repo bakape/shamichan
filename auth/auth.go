@@ -6,20 +6,31 @@ import (
 	"github.com/bakape/meguca/config"
 )
 
-// Check checks if the suplied Ident is priveledged to perform the specified
-// action
-func Check(action string, ident Ident) bool {
-	if class, ok := config.Get().Staff.Classes[ident.Auth]; ok {
-		return class.Rights[action]
-	}
-	return false
+// User contains ID, password hash and board-related data of a registered user
+// account
+type User struct {
+	ID       string  `gorethink:"id"`
+	Password []byte  `gorethink:"password"`
+	Rigths   []Right `gorethink:"rights"`
+}
+
+// Right defines an ability of authority on a certain board
+type Right struct {
+	Board string `gorethink:"board"`
+	Can   string `gorethink:"can"`
+}
+
+// Ident is used to verify a client's access and write permissions
+type Ident struct {
+	User
+	IP string
 }
 
 // LookUpIdent determine access rights of an IP
 func LookUpIdent(ip string) Ident {
 	ident := Ident{IP: ip}
 
-	// TODO: BANS
+	// TODO: Bans and Authorisation
 
 	return ident
 }
@@ -35,11 +46,4 @@ func IsBoard(board string) bool {
 		}
 	}
 	return false
-}
-
-// Ident is used to verify a client's access and write permissions
-type Ident struct {
-	Banned bool
-	Auth   string // Indicates priveledged access rights for staff
-	IP     string
 }

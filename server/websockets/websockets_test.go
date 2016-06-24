@@ -200,11 +200,6 @@ func (*ClientSuite) TestHandleMessage(c *C) {
 	err := cl.handleMessage(websocket.BinaryMessage, msg)
 	c.Assert(err, ErrorMatches, onlyText)
 
-	// Banned
-	cl, _ = sv.NewClient()
-	cl.ident.Banned = true
-	asserHandlerError(cl, msg, "You are banned", c)
-
 	// Message too short
 	msg = []byte("12")
 	cl, _ = sv.NewClient()
