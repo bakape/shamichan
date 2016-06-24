@@ -3,7 +3,6 @@ package db
 import (
 	"fmt"
 
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -23,20 +22,8 @@ var (
 	}
 )
 
-// Reader reads on formats thread, post and board structs
-type Reader struct {
-	ident auth.Ident
-}
-
-// NewReader constructs a new Reader instance
-func NewReader(ident auth.Ident) *Reader {
-	return &Reader{
-		ident: ident,
-	}
-}
-
 // GetThread retrieves thread JSON from the database
-func (rd *Reader) GetThread(id int64, lastN int) (*types.Thread, error) {
+func GetThread(id int64, lastN int) (*types.Thread, error) {
 	toMerge := []interface{}{getThreadOP, getLogCounter}
 
 	// Only fetch last N number of replies
@@ -63,7 +50,7 @@ func (rd *Reader) GetThread(id int64, lastN int) (*types.Thread, error) {
 }
 
 // GetPost reads a single post from the database
-func (rd *Reader) GetPost(id, op int64) (post types.Post, err error) {
+func GetPost(id, op int64) (post types.Post, err error) {
 	query := getThread(op).
 		Field("posts").
 		Field(util.IDToString(id)).
@@ -79,7 +66,7 @@ func (rd *Reader) GetPost(id, op int64) (post types.Post, err error) {
 }
 
 // GetBoard retrieves all OPs of a single board
-func (rd *Reader) GetBoard(board string) (out *types.Board, err error) {
+func GetBoard(board string) (out *types.Board, err error) {
 	query := r.
 		Table("threads").
 		GetAllByIndex("board", board).
@@ -100,7 +87,7 @@ func (rd *Reader) GetBoard(board string) (out *types.Board, err error) {
 
 // GetAllBoard retrieves all threads the client has access to for the "/all/"
 // meta-board
-func (rd *Reader) GetAllBoard() (board *types.Board, err error) {
+func GetAllBoard() (board *types.Board, err error) {
 	query := r.
 		Table("threads").
 		Merge(getThreadOP, getLogCounter).

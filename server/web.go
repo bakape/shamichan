@@ -194,8 +194,7 @@ func boardJSON(
 	if !pageEtag(res, req, etagStart(counter)) {
 		return
 	}
-	ident := auth.LookUpIdent(req.RemoteAddr)
-	data, err := db.NewReader(ident).GetBoard(board)
+	data, err := db.GetBoard(board)
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
@@ -252,7 +251,6 @@ func threadJSON(
 		return
 	}
 
-	ident := auth.LookUpIdent(req.RemoteAddr)
 	counter, err := db.ThreadCounter(id)
 	if err != nil {
 		textErrorPage(res, req, err)
@@ -262,7 +260,7 @@ func threadJSON(
 		return
 	}
 
-	data, err := db.NewReader(ident).GetThread(id, detectLastN(req))
+	data, err := db.GetThread(id, detectLastN(req))
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
@@ -282,8 +280,7 @@ func allBoardJSON(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ident := auth.LookUpIdent(req.RemoteAddr)
-	data, err := db.NewReader(ident).GetAllBoard()
+	data, err := db.GetAllBoard()
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
@@ -423,8 +420,7 @@ func servePost(
 		return
 	}
 
-	ident := auth.LookUpIdent(req.RemoteAddr)
-	post, err := db.NewReader(ident).GetPost(id, op)
+	post, err := db.GetPost(id, op)
 	if err != nil {
 		// No post in the database. Need a second check, because the post might
 		// have been deleted between the queries.

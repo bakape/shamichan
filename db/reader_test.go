@@ -1,7 +1,6 @@
 package db
 
 import (
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
@@ -93,12 +92,6 @@ var (
 	}
 )
 
-func (*DBSuite) TestNewReader(c *C) {
-	ident := auth.Ident{}
-	standard := &Reader{ident}
-	c.Assert(NewReader(ident), DeepEquals, standard)
-}
-
 func (*DBSuite) TestGetPost(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
@@ -128,8 +121,6 @@ func (*DBSuite) TestGetPost(c *C) {
 	}
 	c.Assert(Write(r.Table("threads").Insert(threads)), IsNil)
 
-	rd := NewReader(auth.Ident{})
-
 	empties := [...]struct {
 		id, op int64
 	}{
@@ -138,13 +129,13 @@ func (*DBSuite) TestGetPost(c *C) {
 	}
 
 	for _, args := range empties {
-		post, err := rd.GetPost(args.id, args.op)
+		post, err := GetPost(args.id, args.op)
 		c.Assert(err, Equals, r.ErrEmptyResult)
 		c.Assert(post, DeepEquals, types.Post{})
 	}
 
 	// Valid read
-	post, err := rd.GetPost(2, 1)
+	post, err := GetPost(2, 1)
 	c.Assert(err, IsNil)
 	c.Assert(post, DeepEquals, std)
 }
@@ -159,7 +150,7 @@ func (*DBSuite) TestGetBoard(c *C) {
 	}
 	c.Assert(Write(r.Table("main").Insert(boardCounters)), IsNil)
 
-	board, err := NewReader(auth.Ident{}).GetBoard("a")
+	board, err := GetBoard("a")
 	c.Assert(err, IsNil)
 	c.Assert(board, DeepEquals, &boardStandard)
 }
@@ -175,7 +166,7 @@ func (*DBSuite) TestGetEmptyBoard(c *C) {
 	boardCounters := Document{"histCounts"}
 	c.Assert(Write(r.Table("main").Insert(boardCounters)), IsNil)
 
-	board, err := NewReader(auth.Ident{}).GetBoard("a")
+	board, err := GetBoard("a")
 	c.Assert(err, IsNil)
 	c.Assert(board, DeepEquals, new(types.Board))
 }
@@ -203,7 +194,7 @@ func (*DBSuite) TestGetAllBoard(c *C) {
 		boardStandard.Threads[1],
 	}
 
-	board, err := NewReader(auth.Ident{}).GetAllBoard()
+	board, err := GetAllBoard()
 	c.Assert(err, IsNil)
 	c.Assert(board, DeepEquals, &std)
 }
@@ -214,7 +205,7 @@ func (*DBSuite) TestGetEmptyAllBoard(c *C) {
 		Document: Document{"info"},
 	}
 	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
-	board, err := NewReader(auth.Ident{}).GetAllBoard()
+	board, err := GetAllBoard()
 	c.Assert(err, IsNil)
 	c.Assert(board, DeepEquals, new(types.Board))
 }
@@ -224,7 +215,6 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 	conf.Boards.Enabled = []string{"a"}
 	config.Set(conf)
 	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
-	rd := NewReader(auth.Ident{})
 
 	// No replies ;_;
 	std := &types.Thread{
@@ -235,7 +225,7 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 		},
 		Posts: map[string]types.Post{},
 	}
-	thread, err := rd.GetThread(4, 0)
+	thread, err := GetThread(4, 0)
 	c.Assert(err, IsNil)
 	c.Assert(thread, DeepEquals, std)
 
@@ -261,13 +251,13 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 			},
 		},
 	}
-	thread, err = rd.GetThread(1, 0)
+	thread, err = GetThread(1, 0)
 	c.Assert(err, IsNil)
 	c.Assert(thread, DeepEquals, std)
 
 	// Last 1 post
 	delete(std.Posts, "2")
-	thread, err = rd.GetThread(1, 1)
+	thread, err = GetThread(1, 1)
 	c.Assert(err, IsNil)
 	c.Assert(thread, DeepEquals, std)
 }
