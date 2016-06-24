@@ -214,7 +214,7 @@ func (c *Client) send(msg []byte) error {
 
 // Format a mesage type as JSON and send it to the client. Not safe for
 // concurent use.
-func (c *Client) sendMessage(typ int, msg interface{}) error {
+func (c *Client) sendMessage(typ messageType, msg interface{}) error {
 	encoded, err := encodeMessage(typ, msg)
 	if err != nil {
 		return err
@@ -224,13 +224,15 @@ func (c *Client) sendMessage(typ int, msg interface{}) error {
 
 // Encodes a message for sending through websockets. Separate function, so it
 // can be used in tests.1
-func encodeMessage(typ int, msg interface{}) (encoded []byte, err error) {
+func encodeMessage(typ messageType, msg interface{}) (
+	encoded []byte, err error,
+) {
 	data, err := json.Marshal(msg)
 	if err != nil {
 		return
 	}
 	encoded = make([]byte, len(data)+2)
-	typeString := strconv.Itoa(typ)
+	typeString := strconv.FormatUint(uint64(typ), 10)
 
 	// Ensure type string is always 2 chars long
 	if len(typeString) == 1 {
@@ -277,10 +279,11 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 	}
 
 	// First two characters of a message define its type
-	typ, err := strconv.Atoi(string(msg[:2]))
+	uncast, err := strconv.ParseUint(string(msg[:2]), 10, 8)
 	if err != nil {
 		return errInvalidPayload(msg)
 	}
+	typ := messageType(uncast)
 	if !c.synced && typ != messageSynchronise && typ != messageResynchronise {
 		return errInvalidPayload(msg)
 	}
@@ -297,7 +300,7 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 }
 
 // Run the apropriate handler for the websocket message
-func (c *Client) runHandler(typ int, msg []byte) error {
+func (c *Client) runHandler(typ messageType, msg []byte) error {
 	data := msg[2:]
 	handler, ok := handlers[typ]
 	if !ok {

@@ -12,10 +12,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// integer identifiers for various message types
+// identifier codes for websocket message types
+type messageType uint8
+
 // 1 - 29 modify post model state
 const (
-	messageInvalid = iota
+	messageInvalid messageType = iota
 	messageInsertThread
 	messageInsertPost
 )
@@ -23,7 +25,7 @@ const (
 // >= 30 are miscelenious and do not write to post models
 const (
 	// Update feeds
-	messageSynchronise = 30 + iota
+	messageSynchronise messageType = 30 + iota
 	messageResynchronise
 	messageSwitchSync
 
@@ -46,7 +48,7 @@ const (
 )
 
 // Lookup table for message handlers
-var handlers = map[int]func([]byte, *Client) error{
+var handlers = map[messageType]func([]byte, *Client) error{
 	messageSynchronise:   synchronise,
 	messageResynchronise: resynchronise,
 	messageRegister:      register,
