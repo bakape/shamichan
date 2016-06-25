@@ -27,11 +27,14 @@ const (
 	messageLogout
 )
 
+type handler func([]byte, *Client) error
+
 // Lookup table for message handlers
-var handlers = map[messageType]func([]byte, *Client) error{
+var handlers = map[messageType]handler{
 	messageSynchronise:   synchronise,
 	messageResynchronise: resynchronise,
 	messageRegister:      register,
+	messageLogin:         login,
 }
 
 // Error while parsing the message. Denotes that either the message does not

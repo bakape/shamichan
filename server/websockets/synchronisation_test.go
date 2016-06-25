@@ -50,11 +50,9 @@ func (*ClientSuite) TestSyncToBoard(c *C) {
 	// Valid synchronisation
 	msg.Board = "a"
 	data = marshalJSON(msg, c)
-	sv.Add(1)
 	cl.ID = "hex"
-	go assertMessage(wcl, []byte(`30{id:"hex"}`), sv, c)
 	c.Assert(synchronise(data, cl), IsNil)
-	sv.Wait()
+	assertMessage(wcl, []byte(`30{id:"hex"}`), c)
 }
 
 func (*ClientSuite) TestRegisterSync(c *C) {
@@ -63,13 +61,13 @@ func (*ClientSuite) TestRegisterSync(c *C) {
 	cl, _ := sv.NewClient()
 
 	// Not synced yet
-	registerSync("1", cl)
+	c.Assert(registerSync("1", cl), IsNil)
 	id := cl.ID
 	c.Assert(Clients.Has(id), Equals, true)
 	c.Assert(Clients.clients[cl.ID].syncID, Equals, "1")
 
 	// Already synced
-	registerSync("2", cl)
+	c.Assert(registerSync("2", cl), IsNil)
 	c.Assert(Clients.Has(id), Equals, true)
 	c.Assert(Clients.clients[cl.ID].syncID, Equals, "2")
 }

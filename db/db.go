@@ -187,3 +187,10 @@ func RegisterAccount(ID string, hash []byte) error {
 	}
 	return err
 }
+
+// GetLoginHash retrieves the login hash of the registered user account
+func GetLoginHash(id string) (hash []byte, err error) {
+	query := GetAccount(id).Field("password").Default(nil)
+	err = One(query, &hash)
+	return
+}

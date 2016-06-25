@@ -16,7 +16,7 @@ func (*Map) TestAddHasRemove(c *C) {
 	// Add client
 	cl, _ := sv.NewClient()
 	m.Add(cl, "1")
-	c.Assert(cl.ID, Matches, "[A-Za-z0-9-_]{16}")
+	c.Assert(cl.ID, Matches, "^.{43}$")
 	c.Assert(m.Has(cl.ID), Equals, true)
 
 	// Remove client

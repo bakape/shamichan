@@ -9,9 +9,10 @@ import (
 // User contains ID, password hash and board-related data of a registered user
 // account
 type User struct {
-	ID       string  `gorethink:"id"`
-	Password []byte  `gorethink:"password"`
-	Rigths   []Right `gorethink:"rights"`
+	ID       string   `gorethink:"id"`
+	Password []byte   `gorethink:"password"`
+	Sessions []string `gorethink:"sessions"`
+	Rigths   []Right  `gorethink:"rights"`
 }
 
 // Right defines an ability of authority on a certain board

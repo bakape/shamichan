@@ -128,6 +128,7 @@ func (*DBSuite) TestRegisterAccount(c *C) {
 		ID:       id,
 		Password: hash,
 		Rigths:   []auth.Right{},
+		Sessions: []string{},
 	}
 
 	// New user
@@ -138,4 +139,23 @@ func (*DBSuite) TestRegisterAccount(c *C) {
 
 	// User name already registered
 	c.Assert(RegisterAccount(id, hash), ErrorMatches, "user name already taken")
+}
+
+func (*DBSuite) TestNonExistantUserGetHash(c *C) {
+	_, err := GetLoginHash("123")
+	c.Assert(err, Equals, r.ErrEmptyResult)
+}
+
+func (*DBSuite) TestGetLoginHash(c *C) {
+	const id = "123"
+	hash := []byte{1, 2, 3}
+	user := auth.User{
+		ID:       id,
+		Password: hash,
+	}
+	c.Assert(Write(r.Table("accounts").Insert(user)), IsNil)
+
+	res, err := GetLoginHash(id)
+	c.Assert(err, IsNil)
+	c.Assert(res, DeepEquals, hash)
 }

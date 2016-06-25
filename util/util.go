@@ -4,15 +4,15 @@ package util
 
 import (
 	"crypto/md5"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"io"
 	"log"
-	"math/rand"
 	"os"
 	"runtime"
 	"strconv"
 	"sync"
-	"time"
 )
 
 // WrapError wraps error types to create compound error chains
@@ -85,21 +85,11 @@ func LogError(ip string, err interface{}) {
 	log.Printf("panic serving %v: %v\n%s", ip, err, buf)
 }
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-const randSource = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-	"0123456789-_"
-
-// RandomID generates a randomID of uppercase and lowercase letters and numbers
-// of desired length
-func RandomID(length int) string {
+// RandomID generates a randomID of bas64 characters of desired byte length
+func RandomID(length int) (string, error) {
 	buf := make([]byte, length)
-	for i := range buf {
-		buf[i] = randSource[rand.Int63()%int64(len(randSource))]
-	}
-	return string(buf)
+	_, err := rand.Read(buf)
+	return base64.RawStdEncoding.EncodeToString(buf), err
 }
 
 // AtomicCloser is a simple boolean guarded by a mutex for atomically managing

@@ -157,7 +157,7 @@ func (*Imager) TestNoClientID(c *C) {
 
 func (*Imager) TestInvalidSpoiler(c *C) {
 	b, w := newMultiWriter()
-	fields := syncClient()
+	fields := syncClient(c)
 	fields["spoiler"] = "12"
 	writeFields(c, w, fields)
 	req := newRequest(c, b, w)
@@ -168,15 +168,15 @@ func (*Imager) TestInvalidSpoiler(c *C) {
 }
 
 // Add client to synced clients map
-func syncClient() map[string]string {
+func syncClient(c *C) map[string]string {
 	cl := &websockets.Client{}
-	websockets.Clients.Add(cl, "1")
+	c.Assert(websockets.Clients.Add(cl, "1"), IsNil)
 	return map[string]string{"id": cl.ID}
 }
 
 func (*Imager) TestSuccessfulFormParse(c *C) {
 	b, w := newMultiWriter()
-	fields := syncClient()
+	fields := syncClient(c)
 	fields["spoiler"] = "2"
 	writeFields(c, w, fields)
 	req := newRequest(c, b, w)
@@ -366,7 +366,7 @@ func (*Imager) TestNonExistantClient(c *C) {
 
 func (*Imager) TestNoImageUploaded(c *C) {
 	b, w := newMultiWriter()
-	writeFields(c, w, syncClient())
+	writeFields(c, w, syncClient(c))
 	req := newRequest(c, b, w)
 	req.Header.Set("Content-Length", "300792")
 
@@ -412,7 +412,7 @@ func assertImage(std types.Image, wg *sync.WaitGroup, c *C) map[string]string {
 	cl := &websockets.Client{
 		AllocateImage: ch,
 	}
-	websockets.Clients.Add(cl, "1")
+	c.Assert(websockets.Clients.Add(cl, "1"), IsNil)
 
 	go func() {
 		defer wg.Done()

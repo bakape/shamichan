@@ -25,14 +25,17 @@ type ClientMap struct {
 }
 
 // Add adds a client to the map
-func (c *ClientMap) Add(cl *Client, syncID string) {
+func (c *ClientMap) Add(cl *Client, syncID string) (err error) {
 	c.Lock()
 	defer c.Unlock()
 
 	// Dedup client ID
 	var id string
 	for {
-		id = util.RandomID(16)
+		id, err = util.RandomID(32)
+		if err != nil {
+			return err
+		}
 		if _, ok := c.clients[id]; !ok {
 			break
 		}
@@ -44,6 +47,8 @@ func (c *ClientMap) Add(cl *Client, syncID string) {
 		client: cl,
 	}
 	cl.synced = true
+
+	return nil
 }
 
 // ChangeSync changes the thread or board ID the client is synchronised to

@@ -3,36 +3,47 @@
 package websockets
 
 import (
-	"errors"
-
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/util"
+	r "github.com/dancannon/gorethink"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // Account registration and login response codes
-type accountResponse uint8
+type loginResponseCode uint8
 
 const (
-	loginSuccess accountResponse = iota
+	loginSuccess loginResponseCode = iota
 	userNameTaken
+	wrongCredentials
 	idTooShort
 	idTooLong
 	passwordTooShort
 	passwordTooLong
 )
 
-type registrationRequest struct {
+var (
+	errAlreadyLoggedIn = errInvalidMessage("already logged in")
+)
+
+// Request struct for logging in to an existing or registering a new account
+type loginRequest struct {
 	ID       string `json:"id"`
 	Password string `json:"password"`
+}
+
+type loginResponse struct {
+	Code    loginResponseCode `json:"code"`
+	Session string            `json:"session"`
 }
 
 // Register a new user account
 func register(data []byte, c *Client) error {
 	if c.loggedIn {
-		return errors.New("already logged in")
+		return errAlreadyLoggedIn
 	}
 
-	var req registrationRequest
+	var req loginRequest
 	if err := decodeMessage(data, &req); err != nil {
 		return err
 	}
@@ -41,19 +52,13 @@ func register(data []byte, c *Client) error {
 	if err != nil {
 		return err
 	}
-	if err := c.sendMessage(messageLogin, code); err != nil {
-		return err
-	}
 
-	if code == loginSuccess {
-		c.loggedIn = true
-	}
-	return nil
+	return commitLogin(code, req.ID, c)
 }
 
 // Seperated into its own function for cleanliness and testability
 func handleRegistration(id, password string) (
-	code accountResponse, err error,
+	code loginResponseCode, err error,
 ) {
 	// Validate string lengths
 	switch {
@@ -86,4 +91,60 @@ func handleRegistration(id, password string) (
 	}
 
 	return
+}
+
+// If login succesful, generate a session token and comit to DB. Otherwise
+// simply send the response code the client.
+func commitLogin(code loginResponseCode, id string, c *Client) (err error) {
+	msg := loginResponse{Code: code}
+	if code == loginSuccess {
+		msg.Session, err = util.RandomID(40)
+		if err != nil {
+			return err
+		}
+
+		query := db.GetAccount(id).Update(map[string]r.Term{
+			"sessions": r.Row.Field("sessions").Append(msg.Session),
+		})
+		if err := db.Write(query); err != nil {
+			return err
+		}
+
+		c.loggedIn = true
+	}
+
+	return c.sendMessage(messageLogin, msg)
+}
+
+// Log in a registered user account
+func login(data []byte, c *Client) error {
+	if c.loggedIn {
+		return errAlreadyLoggedIn
+	}
+
+	var req loginRequest
+	if err := decodeMessage(data, &req); err != nil {
+		return err
+	}
+
+	hash, err := db.GetLoginHash(req.ID)
+	if err != nil {
+		if err == r.ErrEmptyResult {
+			return commitLogin(wrongCredentials, req.ID, c)
+		}
+		return err
+	}
+
+	var code loginResponseCode
+	err = bcrypt.CompareHashAndPassword(hash, []byte(req.ID+req.Password))
+	switch err {
+	case bcrypt.ErrMismatchedHashAndPassword:
+		code = wrongCredentials
+	case nil:
+		code = loginSuccess
+	default:
+		return err
+	}
+
+	return commitLogin(code, req.ID, c)
 }

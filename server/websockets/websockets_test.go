@@ -83,8 +83,7 @@ func dialServer(c *C, sv *httptest.Server) *websocket.Conn {
 	return wcl
 }
 
-func assertMessage(con *websocket.Conn, msg []byte, sv *mockWSServer, c *C) {
-	defer sv.Done()
+func assertMessage(con *websocket.Conn, msg []byte, c *C) {
 	typ, msg, err := con.ReadMessage()
 	c.Assert(err, IsNil)
 	c.Assert(typ, Equals, websocket.TextMessage)
@@ -183,11 +182,9 @@ func (*ClientSuite) TestSend(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	sv.Add(1)
 	go cl.Listen()
-	go assertMessage(wcl, std, sv, c)
 	cl.Send <- std
-	sv.Wait()
+	assertMessage(wcl, std, c)
 }
 
 func (*ClientSuite) TestHandleMessage(c *C) {
@@ -284,11 +281,11 @@ func (*ClientSuite) TestInvalidMessage(c *C) {
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 
-	sv.Add(2)
+	sv.Add(1)
 	res := fmt.Sprintf("00\"%s\"", onlyText)
-	go assertMessage(wcl, []byte(res), sv, c)
 	go assertListenError(cl, onlyText, sv, c)
 	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, []byte{1}), IsNil)
+	assertMessage(wcl, []byte(res), c)
 	sv.Wait()
 }
 
@@ -376,11 +373,9 @@ func (*ClientSuite) TestMessageSending(c *C) {
 	// Send a message
 	std := []byte{127, 0, 0, 1}
 	cl, wcl := sv.NewClient()
-	sv.Add(1)
 	go cl.Listen()
-	go assertMessage(wcl, std, sv, c)
 	cl.Send <- std
-	sv.Wait()
+	assertMessage(wcl, std, c)
 }
 
 func (*ClientSuite) TestCleanUp(c *C) {
@@ -388,7 +383,7 @@ func (*ClientSuite) TestCleanUp(c *C) {
 	defer sv.Close()
 
 	cl, wcl := sv.NewClient()
-	Clients.Add(cl, "1")
+	c.Assert(Clients.Add(cl, "1"), IsNil)
 	c.Assert(Clients.Has(cl.ID), Equals, true)
 	sv.Add(1)
 	go readListenErrors(c, cl, sv)
@@ -411,14 +406,10 @@ func (*ClientSuite) TestSendMessage(c *C) {
 	cl, wcl := sv.NewClient()
 
 	// 1 char type string
-	sv.Add(1)
-	go assertMessage(wcl, []byte("01null"), sv, c)
 	c.Assert(cl.sendMessage(messageInsertPost, nil), IsNil)
-	sv.Wait()
+	assertMessage(wcl, []byte("01null"), c)
 
 	// 2 char type string
-	sv.Add(1)
-	go assertMessage(wcl, []byte("30null"), sv, c)
 	c.Assert(cl.sendMessage(messageSynchronise, nil), IsNil)
-	sv.Wait()
+	assertMessage(wcl, []byte("30null"), c)
 }

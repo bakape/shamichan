@@ -65,7 +65,9 @@ func captureLog(fn func()) string {
 }
 
 func (*Util) TestRandomID(c *C) {
-	c.Assert(RandomID(32), Matches, "^[0-9a-zA-Z-_]{32}$")
+	hash, err := RandomID(32)
+	c.Assert(err, IsNil)
+	c.Assert(hash, Matches, "^.{43}$")
 }
 
 func (*Util) TestWaterfall(c *C) {
