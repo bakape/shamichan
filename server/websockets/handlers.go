@@ -25,6 +25,7 @@ const (
 	messageRegister
 	messageLogin
 	messageLogout
+	messageLogOutAll
 )
 
 type handler func([]byte, *Client) error
@@ -48,9 +49,6 @@ func (e errInvalidMessage) Error() string {
 
 var (
 	errInvalidStructure = errInvalidMessage("Invalid message structure")
-	errInvalidBoard     = errInvalidMessage("Invalid board")
-	errInvalidThread    = errInvalidMessage("Invalid thread")
-	errInvalidCounter   = errInvalidMessage("Invalid progress counter")
 )
 
 // Decode message JSON into the suplied type

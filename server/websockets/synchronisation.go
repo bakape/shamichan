@@ -8,6 +8,12 @@ import (
 	"github.com/bakape/meguca/util"
 )
 
+var (
+	errInvalidBoard   = errInvalidMessage("Invalid board")
+	errInvalidThread  = errInvalidMessage("Invalid thread")
+	errInvalidCounter = errInvalidMessage("Invalid progress counter")
+)
+
 type syncRequest struct {
 	Ctr    int64  `json:"ctr"`
 	Thread int64  `json:"thread"`
