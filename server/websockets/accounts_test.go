@@ -1,8 +1,10 @@
 package websockets
 
 import (
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
+	r "github.com/dancannon/gorethink"
 	"golang.org/x/crypto/bcrypt"
 	. "gopkg.in/check.v1"
 )
@@ -63,8 +65,9 @@ func (*DB) TestRegisterAlreadyLoggedIn(c *C) {
 	cl := &Client{
 		loggedIn: true,
 	}
-	c.Assert(register(nil, cl), Equals, errAlreadyLoggedIn)
-	c.Assert(login(nil, cl), Equals, errAlreadyLoggedIn)
+	for _, fn := range [...]handler{register, login, authenticateSession} {
+		c.Assert(fn(nil, cl), Equals, errAlreadyLoggedIn)
+	}
 }
 
 func (*DB) TestNoUserRegistered(c *C) {
@@ -79,7 +82,8 @@ func assertHandlerResponse(req interface{}, fn handler, msg []byte, c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	c.Assert(fn(marshalJSON(req, c), cl), IsNil)
+	data := marshalJSON(req, c)
+	c.Assert(fn(data, cl), IsNil)
 	assertMessage(wcl, msg, c)
 }
 
@@ -102,4 +106,41 @@ func (*DB) TestLogin(c *C) {
 	// Wrong password
 	req.Password += "1"
 	assertHandlerResponse(req, login, wrongCredentialsResopnse, c)
+}
+
+func (*DB) TestAuthenticateNonExistantUser(c *C) {
+	req := authenticationRequest{
+		ID: "123",
+	}
+	assertHandlerResponse(req, authenticateSession, []byte("false"), c)
+}
+
+func (*DB) TestAuthenticateInvalidSession(c *C) {
+	const id = "123"
+	req := authenticationRequest{
+		ID: "123",
+	}
+	c.Assert(db.RegisterAccount(id, []byte("bar")), IsNil)
+
+	assertHandlerResponse(req, authenticateSession, []byte("false"), c)
+}
+
+func (*DB) TestAuthentication(c *C) {
+	const (
+		id      = "123"
+		session = "foo"
+	)
+	user := auth.User{
+		ID:       id,
+		Sessions: []string{session},
+	}
+	c.Assert(db.Write(r.Table("accounts").Insert(user)), IsNil)
+	sv := newWSServer(c)
+	defer sv.Close()
+
+	req := authenticationRequest{
+		ID:      id,
+		Session: session,
+	}
+	assertHandlerResponse(req, authenticateSession, []byte("true"), c)
 }

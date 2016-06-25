@@ -37,6 +37,11 @@ type loginResponse struct {
 	Session string            `json:"session"`
 }
 
+type authenticationRequest struct {
+	ID      string `json:"id"`
+	Session string `json:"session"`
+}
+
 // Register a new user account
 func register(data []byte, c *Client) error {
 	if c.loggedIn {
@@ -147,4 +152,27 @@ func login(data []byte, c *Client) error {
 	}
 
 	return commitLogin(code, req.ID, c)
+}
+
+func authenticateSession(data []byte, c *Client) error {
+	if c.loggedIn {
+		return errAlreadyLoggedIn
+	}
+
+	var req authenticationRequest
+	if err := decodeMessage(data, &req); err != nil {
+		return err
+	}
+
+	var isSession bool
+	query := db.
+		GetAccount(req.ID).
+		Field("sessions").
+		Contains(req.Session).
+		Default(false)
+	if err := db.One(query, &isSession); err != nil && err != r.ErrEmptyResult {
+		return err
+	}
+
+	return c.sendMessage(messageAuthenticate, isSession)
 }

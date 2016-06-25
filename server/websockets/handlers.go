@@ -24,6 +24,7 @@ const (
 	// Account management
 	messageRegister
 	messageLogin
+	messageAuthenticate
 	messageLogout
 	messageLogOutAll
 )
@@ -36,6 +37,7 @@ var handlers = map[messageType]handler{
 	messageResynchronise: resynchronise,
 	messageRegister:      register,
 	messageLogin:         login,
+	messageAuthenticate:  authenticateSession,
 }
 
 // Error while parsing the message. Denotes that either the message does not
