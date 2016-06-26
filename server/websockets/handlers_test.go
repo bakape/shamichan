@@ -22,6 +22,9 @@ func (d *DB) SetUpSuite(c *C) {
 	c.Assert(db.Connect(""), IsNil)
 	c.Assert(db.InitDB(d.dbName), IsNil)
 }
+func (d *DB) TearDownSuite(c *C) {
+	c.Assert(db.Exec(r.DBDrop(d.dbName)), IsNil)
+}
 
 func (d *DB) SetUpTest(c *C) {
 	Clients.Clear()

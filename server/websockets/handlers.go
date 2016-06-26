@@ -38,6 +38,8 @@ var handlers = map[messageType]handler{
 	messageRegister:      register,
 	messageLogin:         login,
 	messageAuthenticate:  authenticateSession,
+	messageLogout:        logOut,
+	messageLogOutAll:     logOutAll,
 }
 
 // Error while parsing the message. Denotes that either the message does not

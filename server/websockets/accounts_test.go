@@ -1,6 +1,8 @@
 package websockets
 
 import (
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
@@ -55,18 +57,26 @@ func assertValidLogin(req interface{}, fn handler, c *C) {
 	cl, wcl := sv.NewClient()
 
 	c.Assert(fn(marshalJSON(req, c), cl), IsNil)
-	c.Assert(cl.loggedIn, Equals, true)
+	c.Assert(cl.isLoggedIn(), Equals, true)
+	c.Assert(cl.userID, Not(Equals), "")
 	_, msg, err := wcl.ReadMessage()
 	c.Assert(err, IsNil)
 	c.Assert(string(msg[:23]), Equals, `34{"code":0,"session":"`)
 }
 
-func (*DB) TestRegisterAlreadyLoggedIn(c *C) {
+func (*DB) TestAlreadyLoggedIn(c *C) {
 	cl := &Client{
-		loggedIn: true,
+		sessionToken: "foo",
 	}
 	for _, fn := range [...]handler{register, login, authenticateSession} {
 		c.Assert(fn(nil, cl), Equals, errAlreadyLoggedIn)
+	}
+}
+
+func (*DB) TestNotLoggedIn(c *C) {
+	cl := new(Client)
+	for _, fn := range [...]handler{logOut, logOutAll} {
+		c.Assert(fn(nil, cl), Equals, errNotLoggedIn)
 	}
 }
 
@@ -131,16 +141,85 @@ func (*DB) TestAuthentication(c *C) {
 		session = "foo"
 	)
 	user := auth.User{
-		ID:       id,
-		Sessions: []string{session},
+		ID: id,
+		Sessions: []auth.Session{
+			{
+				Token:   session,
+				Expires: time.Now().Add(sessionExpiry),
+			},
+		},
 	}
 	c.Assert(db.Write(r.Table("accounts").Insert(user)), IsNil)
-	sv := newWSServer(c)
-	defer sv.Close()
 
 	req := authenticationRequest{
 		ID:      id,
 		Session: session,
 	}
-	assertHandlerResponse(req, authenticateSession, []byte("true"), c)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+	data := marshalJSON(req, c)
+	c.Assert(authenticateSession(data, cl), IsNil)
+	c.Assert(cl.sessionToken, Equals, session)
+	c.Assert(cl.userID, Equals, id)
+	assertMessage(wcl, []byte("true"), c)
+}
+
+func (*DB) TestLogOut(c *C) {
+	const id = "123"
+	sessions := []auth.Session{
+		{Token: "foo"},
+		{Token: "bar"},
+	}
+	user := auth.User{
+		ID:       id,
+		Sessions: sessions,
+	}
+	c.Assert(db.Write(r.Table("accounts").Insert(user)), IsNil)
+
+	assertLogout(id, logOut, c)
+
+	// Assert database user document
+	var res []auth.Session
+	c.Assert(db.All(db.GetAccount(id).Field("sessions"), &res), IsNil)
+	res[0].Expires = time.Time{}
+	c.Assert(res, DeepEquals, []auth.Session{sessions[1]})
+}
+
+func assertLogout(id string, fn handler, c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+
+	cl.userID = id
+	cl.sessionToken = "foo"
+
+	c.Assert(fn(nil, cl), IsNil)
+	assertMessage(wcl, []byte("true"), c)
+	c.Assert(cl.userID, Equals, "")
+	c.Assert(cl.sessionToken, Equals, "")
+}
+
+func (*DB) TestLogOutAll(c *C) {
+	const id = "123"
+	sessions := []auth.Session{
+		{Token: "foo"},
+		{Token: "bar"},
+	}
+	user := auth.User{
+		ID:       id,
+		Sessions: sessions,
+		Password: []byte{1, 2, 3},
+		Rigths:   []auth.Right{},
+	}
+	c.Assert(db.Write(r.Table("accounts").Insert(user)), IsNil)
+
+	assertLogout(id, logOutAll, c)
+
+	// Assert database user document
+	var res auth.User
+	c.Assert(db.One(db.GetAccount(id), &res), IsNil)
+	user.Sessions = []auth.Session{}
+	c.Assert(res, DeepEquals, user)
 }

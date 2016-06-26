@@ -82,11 +82,12 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	synced   bool // to any change feed and the global Clients map
-	loggedIn bool // as an authorised account. Optional
-	ident    auth.Ident
-	conn     *websocket.Conn
-	ID       string
+	synced       bool // to any change feed and the global Clients map
+	ident        auth.Ident
+	conn         *websocket.Conn
+	ID           string
+	userID       string // ID an authenticated user, if currently logged in
+	sessionToken string // Token of an authenticated user session, if any
 	util.AtomicCloser
 	updateFeedCloser *util.AtomicCloser
 
@@ -320,4 +321,9 @@ func (c *Client) Close(err error) {
 	if c.IsOpen() {
 		c.close <- err
 	}
+}
+
+// Small helper method for more DRY-ness. Not thread-safe.
+func (c *Client) isLoggedIn() bool {
+	return c.sessionToken != ""
 }

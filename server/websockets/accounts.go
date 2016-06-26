@@ -3,6 +3,9 @@
 package websockets
 
 import (
+	"time"
+
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -22,8 +25,11 @@ const (
 	passwordTooLong
 )
 
+const sessionExpiry = time.Hour * 24 * 30
+
 var (
 	errAlreadyLoggedIn = errInvalidMessage("already logged in")
+	errNotLoggedIn     = errInvalidMessage("not logged in")
 )
 
 // Request struct for logging in to an existing or registering a new account
@@ -44,7 +50,7 @@ type authenticationRequest struct {
 
 // Register a new user account
 func register(data []byte, c *Client) error {
-	if c.loggedIn {
+	if c.isLoggedIn() {
 		return errAlreadyLoggedIn
 	}
 
@@ -108,14 +114,19 @@ func commitLogin(code loginResponseCode, id string, c *Client) (err error) {
 			return err
 		}
 
+		session := auth.Session{
+			Token:   msg.Session,
+			Expires: time.Now().Add(sessionExpiry),
+		}
 		query := db.GetAccount(id).Update(map[string]r.Term{
-			"sessions": r.Row.Field("sessions").Append(msg.Session),
+			"sessions": r.Row.Field("sessions").Append(session),
 		})
 		if err := db.Write(query); err != nil {
 			return err
 		}
 
-		c.loggedIn = true
+		c.sessionToken = msg.Session
+		c.userID = id
 	}
 
 	return c.sendMessage(messageLogin, msg)
@@ -123,7 +134,7 @@ func commitLogin(code loginResponseCode, id string, c *Client) (err error) {
 
 // Log in a registered user account
 func login(data []byte, c *Client) error {
-	if c.loggedIn {
+	if c.isLoggedIn() {
 		return errAlreadyLoggedIn
 	}
 
@@ -154,8 +165,9 @@ func login(data []byte, c *Client) error {
 	return commitLogin(code, req.ID, c)
 }
 
+// Authenticate the session token of an existing logged in user account
 func authenticateSession(data []byte, c *Client) error {
-	if c.loggedIn {
+	if c.isLoggedIn() {
 		return errAlreadyLoggedIn
 	}
 
@@ -168,11 +180,60 @@ func authenticateSession(data []byte, c *Client) error {
 	query := db.
 		GetAccount(req.ID).
 		Field("sessions").
-		Contains(req.Session).
+		Contains(func(doc r.Term) r.Term {
+			return doc.Field("token").Eq(req.Session)
+		}).
 		Default(false)
 	if err := db.One(query, &isSession); err != nil && err != r.ErrEmptyResult {
 		return err
 	}
 
+	if isSession {
+		c.sessionToken = req.Session
+		c.userID = req.ID
+	}
+
 	return c.sendMessage(messageAuthenticate, isSession)
+}
+
+// Log out user from session and remove the session key from the database
+func logOut(_ []byte, c *Client) error {
+	if !c.isLoggedIn() {
+		return errNotLoggedIn
+	}
+
+	// Remove current session from user's session document
+	query := db.GetAccount(c.userID).
+		Update(map[string]r.Term{
+			"sessions": r.Row.
+				Field("sessions").
+				Filter(func(s r.Term) r.Term {
+					return s.Field("token").Eq(c.sessionToken).Not()
+				}),
+		})
+	return commitLogout(query, c)
+}
+
+// Common part of both logout functions
+func commitLogout(query r.Term, c *Client) error {
+	c.userID = ""
+	c.sessionToken = ""
+	if err := db.Write(query); err != nil {
+		return err
+	}
+
+	return c.sendMessage(messageLogout, []byte("true"))
+}
+
+// Log out all sessions of the specific user
+func logOutAll(_ []byte, c *Client) error {
+	if !c.isLoggedIn() {
+		return errNotLoggedIn
+	}
+
+	query := db.GetAccount(c.userID).
+		Update(map[string][]string{
+			"sessions": []string{},
+		})
+	return commitLogout(query, c)
 }
