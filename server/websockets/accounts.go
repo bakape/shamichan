@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -24,8 +25,6 @@ const (
 	passwordTooShort
 	passwordTooLong
 )
-
-const sessionExpiry = time.Hour * 24 * 30
 
 var (
 	errAlreadyLoggedIn = errInvalidMessage("already logged in")
@@ -114,9 +113,11 @@ func commitLogin(code loginResponseCode, id string, c *Client) (err error) {
 			return err
 		}
 
+		expiryTime := config.Get().Staff.SessionExpiry * time.Hour * 24
+
 		session := auth.Session{
 			Token:   msg.Session,
-			Expires: time.Now().Add(sessionExpiry),
+			Expires: time.Now().Add(expiryTime),
 		}
 		query := db.GetAccount(id).Update(map[string]r.Term{
 			"sessions": r.Row.Field("sessions").Append(session),

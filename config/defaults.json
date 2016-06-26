@@ -111,8 +111,8 @@
 
     // Moderation staff configuration
     "staff": {
-        // Time in hours until staff are automaticallt logged out
-        "sessionTime": 1209600,
+        // Time in days until staff are automatically logged out
+        "sessionExpiry": 30,
 
         // Map of staff_class_name: staff_class_configuration_object pairs.
         // You can add new clases to the map or remove existing ones. For the

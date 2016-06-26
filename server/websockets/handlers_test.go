@@ -30,6 +30,7 @@ func (d *DB) SetUpTest(c *C) {
 	Clients.Clear()
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
+	conf.Staff.SessionExpiry = 30
 	config.Set(conf)
 	for _, table := range db.AllTables {
 		c.Assert(db.Write(r.Table(table).Delete()), IsNil)

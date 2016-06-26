@@ -59,7 +59,12 @@ func LoadDB() (err error) {
 		return verifyDBVersion()
 	}
 
-	return InitDB(conf.Db)
+	if err := InitDB(conf.Db); err != nil {
+		return err
+	}
+
+	go runCleanupTasks()
+	return nil
 }
 
 // Connect establishes a connection to RethinkDB. Address passed separately for

@@ -145,7 +145,7 @@ func (*DB) TestAuthentication(c *C) {
 		Sessions: []auth.Session{
 			{
 				Token:   session,
-				Expires: time.Now().Add(sessionExpiry),
+				Expires: time.Now().Add(30 * 24 * time.Hour),
 			},
 		},
 	}

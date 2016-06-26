@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/DisposaBoy/JsonConfigReader"
 	"github.com/Soreil/mnemonics"
@@ -75,8 +76,8 @@ type BoardConfig struct {
 
 // StaffConfig stores moderation staff related configuration
 type StaffConfig struct {
-	Classes     map[string]StaffClass
-	SessionTime int
+	Classes       map[string]StaffClass
+	SessionExpiry time.Duration
 }
 
 // StaffClass contains properties of a single staff personel type
