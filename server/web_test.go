@@ -140,7 +140,6 @@ func (w *WebServer) SetUpSuite(c *C) {
 func (*WebServer) SetUpTest(_ *C) {
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a", "c"}
-	conf.Boards.Default = "a"
 	config.Set(conf)
 	config.SetClient(nil, "")
 }
@@ -156,12 +155,12 @@ func (w *WebServer) TestFrontpageRedirect(c *C) {
 	assertCode(rec, 200, c)
 }
 
-func (w *WebServer) TestDefaultBoardRedirect(c *C) {
+func (w *WebServer) TestAllBoardRedirect(c *C) {
 	rec := httptest.NewRecorder()
 	req := newRequest(c, "/")
 	w.r.ServeHTTP(rec, req)
 	assertCode(rec, 302, c)
-	c.Assert(rec.Header().Get("Location"), Equals, "/a/")
+	c.Assert(rec.Header().Get("Location"), Equals, "/all/")
 }
 
 func assertEtag(rec *httptest.ResponseRecorder, etag string, c *C) {

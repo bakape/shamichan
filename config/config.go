@@ -69,9 +69,8 @@ type BoardConfig struct {
 		MaxThreads, MaxBump int
 		Title               string
 	}
-	Default, Staff string
-	Psuedo, Links  [][2]string
-	Prune          bool
+	Psuedo, Links [][2]string
+	Prune         bool
 }
 
 // StaffConfig stores moderation staff related configuration

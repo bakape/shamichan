@@ -43,7 +43,7 @@
     // Board configuration
     "boards": {
         // Boards currently enabled on the server
-        "enabled": ["a", "staff"],
+        "enabled": ["a"],
 
         // Configuration for each individual board. Key name is board title and
         // value is a hash optionally containing the following fields in the
@@ -63,20 +63,8 @@
             },
             "all": {
                 "title": "/all/ - Aggregator Metaboard"
-            },
-            "staff": {
-                "maxThreads": 20,
-                "maxBump": 2000,
-                "title": "/staff/ - Moderator Circlejerk"
             }
         },
-
-        // Default board. If HTTP.frontpage is not set, requests to "/" are
-        // redirected here.
-        "default": "a",
-
-        // Name of the board only accessable to priviledged moderation staff.
-        "staff": "staff",
 
         // External links that are added to the board navigation bar in the
         // banner. The schema is ["link_name", "link_address"]

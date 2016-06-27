@@ -16,8 +16,7 @@ var _ = Suite(&Templates{})
 
 func (t *Templates) TestBoardNavigation(c *C) {
 	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a", "staff"}
-	conf.Boards.Staff = "staff"
+	conf.Boards.Enabled = []string{"a"}
 	conf.Boards.Psuedo = [][2]string{
 		[2]string{"g", "https://google.com"},
 	}

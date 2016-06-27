@@ -74,7 +74,7 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 	path := filepath.FromSlash(templateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)
 	if err != nil {
-		err = util.WrapError("Error parsing index temlate", err)
+		err = util.WrapError("error parsing index temlate", err)
 		return
 	}
 
@@ -95,9 +95,6 @@ func boardNavigation() template.HTML {
 
 	// Actual boards and "/all/" metaboard
 	for i, board := range append(conf.Enabled, "all") {
-		if board == conf.Staff {
-			continue
-		}
 		html += boardLink(i > 0, board, "../"+board+"/")
 	}
 
