@@ -6,7 +6,7 @@ import {Modal} from './modal'
 import {ViewAttrs} from './view'
 import {banner as lang} from './lang'
 import {write, read} from './render'
-import {setPlaceholder, find} from './util'
+import {setLabel, find} from './util'
 
 // Highlight options button by fading out and in, if no options are set
 function highlightBanner(name: string) {
@@ -146,7 +146,7 @@ class IdentityPanel extends BannerModal {
 
 	render() {
 		for (let name of ["name", "email"]) {
-			setPlaceholder(this.el, `input[name=${name}]`, lang[name])
+			setLabel(this.el, name, lang[name])
 		}
 	}
 }

@@ -263,6 +263,6 @@ export function escape (str: string) {
 }
 
 // Set the placeholder attribute on a child of the element
-export function setPlaceholder(el: Element, sel: string, placeholder: string) {
-	el.querySelector(sel).setAttribute("placeholder", placeholder)
+export function setLabel(el: Element, forName: string, text: string) {
+	el.querySelector(`label[for=${forName}]`).textContent = text + ":"
 }

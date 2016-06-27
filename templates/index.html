@@ -78,10 +78,24 @@
 		<div id="FAQ-panel" class="banner-modal modal glass"></div>
 		<!-- Name and email input form !-->
 		<fieldset id="identity-panel" class="banner-modal modal glass">
-			<input name="name">
-			<br>
-			<input name="email">
-			<br>
+			<table>
+				<tr>
+					<td>
+						<label for="name"></label>
+					</td>
+					<td>
+						<input name="name">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label for="email"></label>
+					</td>
+					<td>
+						<input name="email">
+					</td>
+				</tr>
+			</table>
 		</fieldset>
 		<!-- Account login/register panel !-->
 		<div id="account-panel" class="banner-modal  modal glass">
@@ -93,21 +107,55 @@
 			<div class="tab-cont">
 				<div class="tab-sel" data-id="0">
 					<form id="login-form">
-						<input name="login" minlength="3" maxlength="20" required>
-						<br>
-						<input type="password" name="password" minlength="6" maxlength="30" required>
-						<br>
+						<table>
+							<tr>
+								<td>
+									<label for="login"></label>
+								</td>
+								<td>
+									<input name="login" minlength="3" maxlength="20" required pattern="\w+">
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label for="password"></label>
+								</td>
+								<td>
+									<input type="password" name="password" minlength="6" maxlength="30" required>
+								</td>
+							</tr>
+						</table>
 						<input type="submit">
 					</form>
 				</div>
 				<div data-id="1">
 					<form id="registration-form">
-						<input name="login" minlength="3" maxlength="20" required>
-						<br>
-						<input type="password" name="password" minlength="6" maxlength="30" required>
-						<br>
-						<input type="password" name="password-repeat" minlength="6" maxlength="30" required>
-						<br>
+						<table>
+							<tr>
+								<td>
+									<label for="login"></label>
+								</td>
+								<td>
+									<input name="login" minlength="3" maxlength="20" required pattern="\w+">
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label for="password"></label>
+								</td>
+								<td>
+									<input type="password" name="password" minlength="6" maxlength="30" required>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label for="repeat"></label>
+								</td>
+								<td>
+									<input type="password" name="repeat" minlength="6" maxlength="30" required>
+								</td>
+							</tr>
+						</table>
 						<input type="submit">
 					</form>
 				</div>

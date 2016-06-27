@@ -4,31 +4,37 @@ import {TabbedModal} from '../banner'
 import {write} from '../render'
 import {defer} from '../defer'
 import {mod as lang} from '../lang'
-import {setPlaceholder} from '../util'
+import {setLabel} from '../util'
 
 // Account login and registration
 class AccountPanel extends TabbedModal {
+	$login: HTMLFormElement
+	$register: HTMLFormElement
+
 	constructor() {
 		super({el: document.querySelector('#account-panel')})
-		write(() => this.render())
+		this.$login = this.el
+			.querySelector("#login-form") as HTMLFormElement
+		this.$register = this.el
+			.querySelector("#registration-form") as HTMLFormElement
+		write(() => this.renderInitial())
 	}
 
 	// Render localised labels to the login and registration forms
-	render() {
+	renderInitial() {
 		const {el} = this,
 			tabLinks = el.querySelectorAll(".tab-link")
 		tabLinks[0].textContent = lang.login
 		tabLinks[1].textContent = lang.register
 
-		for (let sel of ["#login-form", "#registration-form"]) {
-			const tab = el.querySelector(sel)
-			for (let sel of ["login", "password"]) {
-				setPlaceholder(tab, `input[name=${sel}]`,  lang[sel])
+		for (let tab of [this.$login, this.$register]) {
+			for (let name of ["login", "password"]) {
+				setLabel(tab, name, lang[name])
 			}
 			(tab.lastChild as HTMLInputElement).value = lang.submit
 		}
 
-		setPlaceholder(el, "input[name=password-repeat]", lang.repeat)
+		setLabel(el, "repeat", lang.repeat)
 	}
 }
 
