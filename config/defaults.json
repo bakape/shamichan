@@ -66,12 +66,6 @@
             }
         },
 
-        // External links that are added to the board navigation bar in the
-        // banner. The schema is ["link_name", "link_address"]
-        "psuedo": [
-            ["g", "https://google.com"]
-        ],
-
         // Enables linking to arbitrary URLs in posts, using the
         // >>>${name}/${destiantion} location. For example, the configuration
         // entry ["4chan", "http://www.4chan.org/"] enables posters to type
@@ -80,7 +74,6 @@
         "links": [
             ["4chan", "http://www.4chan.org/"]
         ],
-
 
         // Delete threads and their images, when they exceed the board's thread
         // limit

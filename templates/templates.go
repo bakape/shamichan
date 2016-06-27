@@ -74,7 +74,7 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 	path := filepath.FromSlash(templateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)
 	if err != nil {
-		err = util.WrapError("error parsing index temlate", err)
+		err = util.WrapError("Error parsing index temlate", err)
 		return
 	}
 
@@ -90,29 +90,19 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 
 // boardNavigation renders interboard navigation we put in the top banner
 func boardNavigation() template.HTML {
-	html := `<b id="navTop">[`
+	html := bytes.NewBuffer([]byte(`<b id="navTop">[`))
 	conf := config.Get().Boards
 
 	// Actual boards and "/all/" metaboard
 	for i, board := range append(conf.Enabled, "all") {
-		html += boardLink(i > 0, board, "../"+board+"/")
+		if i != 0 {
+			html.WriteString(" / ")
+		}
+		fmt.Fprintf(html, `<a href="../%s/">%s</a>`, board, board)
 	}
 
-	// Add custom URLs to board navigation
-	for _, link := range conf.Psuedo {
-		html += boardLink(true, link[0], link[1])
-	}
-	html += `]</b>`
-	return template.HTML(html)
-}
-
-// Builds a a board link, for the interboard navigation bar
-func boardLink(notFirst bool, name, url string) string {
-	link := fmt.Sprintf(`<a href="%v">%v</a>`, url, name)
-	if notFirst {
-		link = " / " + link
-	}
-	return link
+	html.WriteString(`]</b>`)
+	return template.HTML(html.Bytes())
 }
 
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it

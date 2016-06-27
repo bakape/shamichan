@@ -17,13 +17,10 @@ var _ = Suite(&Templates{})
 func (t *Templates) TestBoardNavigation(c *C) {
 	conf := config.ServerConfigs{}
 	conf.Boards.Enabled = []string{"a"}
-	conf.Boards.Psuedo = [][2]string{
-		[2]string{"g", "https://google.com"},
-	}
 	config.Set(conf)
 	html := boardNavigation()
 	std := `<b id="navTop">[<a href="../a/">a</a> / <a href="../all/">all</a>` +
-		` / <a href="https://google.com">g</a>]</b>`
+		`]</b>`
 	c.Assert(string(html), Equals, std)
 }
 
