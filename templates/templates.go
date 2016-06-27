@@ -10,7 +10,8 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	"github.com/dchest/htmlmin"
+	"github.com/tdewolff/minify"
+	htmlMin "github.com/tdewolff/minify/html"
 )
 
 var (
@@ -118,24 +119,26 @@ func boardLink(notFirst bool, name, url string) string {
 }
 
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it
-func buildIndexTemplate(
-	tmpl *template.Template,
-	vars vars,
-	isMobile bool,
-) (Store, error) {
+func buildIndexTemplate(tmpl *template.Template, vars vars, isMobile bool) (
+	store Store, err error,
+) {
 	vars.IsMobile = isMobile
 	buffer := new(bytes.Buffer)
-	if err := tmpl.Execute(buffer, vars); err != nil {
-		return Store{}, util.WrapError("Error compiling index template", err)
-	}
-	opts := &htmlmin.Options{MinifyScripts: true}
-	minified, err := htmlmin.Minify(buffer.Bytes(), opts)
+	err = tmpl.Execute(buffer, vars)
 	if err != nil {
-		return Store{}, util.WrapError("Error minifying index template", err)
+		return
 	}
+
+	min := minify.New()
+	min.AddFunc("text/html", htmlMin.Minify)
+	minified, err := min.Bytes("text/html", buffer.Bytes())
+	if err != nil {
+		return
+	}
+
 	hash, err := util.HashBuffer(minified)
 	if err != nil {
-		return Store{}, util.WrapError("Error hashing index template", err)
+		return
 	}
 	return Store{minified, hash}, nil
 }

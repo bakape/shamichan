@@ -261,3 +261,8 @@ export function escape (str: string) {
     return str.replace(/[&<>'"`]/g , char =>
 		escapeMap[char])
 }
+
+// Set the placeholder attribute on a child of the element
+export function setPlaceholder(el: Element, sel: string, placeholder: string) {
+	el.querySelector(sel).setAttribute("placeholder", placeholder)
+}

@@ -6,8 +6,10 @@
  // TODO: Remove, when proper structure done
 import * as options from './options'
 import * as client from './client'
+import * as login from './mod/login'
 const o = options // Prevents the compiler from removing as an unused import
 const c = client
+const l = login
 
 import {displayLoading} from './state'
 import {exec} from './defer'

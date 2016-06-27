@@ -6,6 +6,7 @@ import {Modal} from './modal'
 import {ViewAttrs} from './view'
 import {banner as lang} from './lang'
 import {write, read} from './render'
+import {setPlaceholder, find} from './util'
 
 // Highlight options button by fading out and in, if no options are set
 function highlightBanner(name: string) {
@@ -42,7 +43,7 @@ function highlightBanner(name: string) {
 	}
 }
 
-defer(() => ["options", "FAQ", "identity"].forEach(highlightBanner))
+defer(() => ["options", "FAQ", "identity", "account"].forEach(highlightBanner))
 
 // Stores the views of all BannerModal instances
 export const bannerModals: {[key: string]: BannerModal} = {}
@@ -89,6 +90,34 @@ export class BannerModal extends Modal {
 	}
 }
 
+// A view that supports switching between multiple tabs
+export class TabbedModal extends BannerModal {
+	constructor(args: ViewAttrs) {
+		super(args)
+		this.onClick({'.tab-link': e => this.switchTab(e)})
+	}
+
+	// Switch to a tab, when clicking the tab butt
+	switchTab(event: Event) {
+		write(() => {
+			const el = event.target as Element
+
+			// Deselect previous tab
+			for (let selected of this.el.querySelectorAll('.tab-sel')) {
+				selected.classList.remove('tab-sel')
+			}
+
+			// Select the new one
+			el.classList.add('tab-sel')
+			const id = el.getAttribute('data-id')
+			find<Element>(this.el.lastChild.children, li =>
+				li.getAttribute('data-id') === id
+			)
+				.classList.add('tab-sel')
+		})
+	}
+}
+
 // Frequently asked question and other information modal
 class FAQPanel extends BannerModal {
 	constructor() {
@@ -116,8 +145,9 @@ class IdentityPanel extends BannerModal {
 	}
 
 	render() {
-		this.el.querySelector('label[for=name]').textContent = lang.name
-		this.el.querySelector('label[for=email]').textContent = lang.email
+		for (let name of ["name", "email"]) {
+			setPlaceholder(this.el, `input[name=${name}]`, lang[name])
+		}
 	}
 }
 
@@ -125,7 +155,7 @@ defer(() => new IdentityPanel())
 
 // Apply localised hover tooltips to banner links
 function localiseTitles() {
-	for (let id of ['feedback', 'FAQ', 'identity', 'options']) {
+	for (let id of ['feedback', 'FAQ', 'identity', 'options', 'account']) {
 		setTitle('banner-' + id, id)
 	}
 	setTitle('sync', 'sync')

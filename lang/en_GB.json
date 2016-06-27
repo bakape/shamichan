@@ -21,8 +21,8 @@
 	"banner": {
 		"showSeconds": "Click to show seconds",
 		"worksBestWith": "works best with",
-		"name": "Name:",
-		"email": "Email:",
+		"name": "Name",
+		"email": "Email",
 		"options": "Options",
 		"identity": "Identity",
 		"FAQ": "Information",
@@ -83,6 +83,14 @@
 	"syncwatch": {
 		"starting": "Syncwatch starting in 10 seconds",
 		"finished": "Finished"
+	},
+
+	"mod": {
+		"login": "Login",
+		"register": "Register",
+		"submit": "Submit",
+		"password": "Password",
+		"repeat": "Repeat password"
 	},
 
 	"opts": {

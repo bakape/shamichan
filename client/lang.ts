@@ -15,6 +15,7 @@ type LanguagePack = {
 	time: LnTime
 	sync: string[]
 	syncwatch: LnSyncwatch
+	mod: LnMod
 	opts: LnOpts
 }
 
@@ -30,6 +31,7 @@ export const reports = lang.reports
 export const time = lang.time
 export const sync = lang.sync
 export const syncwatch = lang.syncwatch
+export const mod = lang.mod
 export const opts = lang.opts
 
 type LnPosts = {
@@ -115,6 +117,15 @@ type LnTime = {
 type LnSyncwatch = {
 	starting: string
 	finished: string
+	[index: string]: string
+}
+
+type LnMod = {
+	login: string
+	register: string
+	submit: string
+	password: string
+	repeat: string
 	[index: string]: string
 }
 

@@ -32,7 +32,9 @@ export const enum message {
 	// Account management
 	register,
 	login,
+	authenticate,
 	logout,
+	logoutAll,
 }
 
 export type MessageHandler = (msg: {}) => void

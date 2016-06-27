@@ -1,13 +1,13 @@
-import {BannerModal} from '../banner'
+import {TabbedModal} from '../banner'
 import renderContents from './render'
 import {models, default as options} from '../options'
 import {optionType} from './specs'
-import {each, find, loadModule, load} from '../util'
+import {loadModule, load} from '../util'
 import {opts as lang} from '../lang'
 import {write, read} from '../render'
 
 // View of the options panel
-export default class OptionsPanel extends BannerModal {
+export default class OptionsPanel extends TabbedModal {
 	$hidden: Element
 	$import: Element
 
@@ -15,7 +15,6 @@ export default class OptionsPanel extends BannerModal {
 		super({el: document.querySelector('#options-panel')})
 		this.render()
 		this.onClick({
-			'.tab_link': e => this.switchTab(e),
 			'#export': () => this.exportConfigs(),
 			'#import': e => this.importConfigs(e),
 			'#hidden': () => this.clearHidden()
@@ -100,24 +99,6 @@ export default class OptionsPanel extends BannerModal {
 		} else {
 			options[id] = val
 		}
-	}
-
-	// Switch to a tab, when clicking the tab butt
-	switchTab(event: Event) {
-		write(() => {
-			const el = event.target as Element
-
-			// Deselect previous tab
-			each<Element>(this.el.children, el =>
-				el.querySelector('.tab_sel').classList.remove('tab_sel'))
-
-			// Select the new one
-			el.classList.add('tab_sel')
-			find<Element>(this.el.lastChild.children, li =>
-				li.classList.contains(el.getAttribute('data-content'))
-			)
-				.classList.add('tab_sel')
-		})
 	}
 
 	// Dump options to JSON file and upload to user

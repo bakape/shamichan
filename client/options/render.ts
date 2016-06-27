@@ -8,7 +8,7 @@ import {specs, OptionSpec, optionType} from './specs'
 
 // Render the inner HTML of the options panel
 export default function (): string {
-	let html = '<ul class="option_tab_sel">'
+	let html = '<div class="tab-butts">'
 	const {tabs} = lang,
 		byTab = groupBy(specs, 'tab'),
 		opts: {[key: number]: OptionSpec[]} = []
@@ -31,27 +31,22 @@ export default function (): string {
 		}
 
 		const attrs: StringMap = {
-			'data-content': `tab-${i}`,
-			class: 'tab_link'
+			'data-id': i.toString(),
+			class: 'tab-link'
 		}
 
 		// Highlight the first tabButt by default
 		if (i === 0) {
-			attrs['class'] += ' tab_sel'
+			attrs['class'] += ' tab-sel'
 		}
-		html += HTML
-			`<li>
-				<a ${makeAttrs(attrs)}>
-					${tabs[i]}
-				</a>
-			</li>`
+		html += `<a ${makeAttrs(attrs)}>${tabs[i]}</a>`
 	}
 
-	html += '</ul><ul class="option_tab_cont">'
+	html += '</div><hr><div class="tab-cont">'
 	for (let tabNumber in opts) {
 		html += renderTab(opts[tabNumber], parseInt(tabNumber))
 	}
-	html += '</ul>'
+	html += '</div>'
 
 	return html
 }
@@ -61,14 +56,13 @@ function renderTab(opts: OptionSpec[], i: number): string {
 	if (!opts.length) {
 		return ''
 	}
-	let html = ''
-	html += `<li class="tab-${i}`
+	let html = `<div data-id="${i}"`
 
 	// Show the first tab by default
 	if (i === 0) {
-		html += ' tab_sel'
+		html += ' class="tab-sel"'
 	}
-	html += '">'
+	html += '>'
 
 	// Render the actual options
 	for (let opt of opts) {
@@ -78,7 +72,7 @@ function renderTab(opts: OptionSpec[], i: number): string {
 	if (i === 0) {
 		html += renderExtras()
 	}
-	html += '</li>'
+	html += '</div>'
 
 	return html
 }
