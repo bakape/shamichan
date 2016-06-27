@@ -86,11 +86,15 @@
 	},
 
 	"mod": {
-		"login": "Login",
+		"id": "Login",
 		"register": "Register",
 		"submit": "Submit",
 		"password": "Password",
-		"repeat": "Repeat"
+		"repeat": "Repeat",
+		"mustMatch": "Passwords must match",
+		"nameTaken": "Login name already taken",
+		"wrongCredentials": "Incorrect login name or password",
+		"theFuck": "SOMEBODY FUCKED UP"
 	},
 
 	"opts": {

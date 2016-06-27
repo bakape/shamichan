@@ -121,11 +121,15 @@ type LnSyncwatch = {
 }
 
 type LnMod = {
-	login: string
+	id: string
 	register: string
 	submit: string
 	password: string
 	repeat: string
+	mustMatch: string
+	nameTaken: string
+	wrongCredentials: string
+	theFuck: string
 	[index: string]: string
 }
 

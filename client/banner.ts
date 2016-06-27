@@ -110,7 +110,7 @@ export class TabbedModal extends BannerModal {
 			// Select the new one
 			el.classList.add('tab-sel')
 			const id = el.getAttribute('data-id')
-			find<Element>(this.el.lastChild.children, li =>
+			find<Element>(this.el.querySelector(".tab-cont").children, li =>
 				li.getAttribute('data-id') === id
 			)
 				.classList.add('tab-sel')
