@@ -5,6 +5,7 @@
 package server
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,7 +18,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/NYTimes/gziphandler"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -26,6 +26,7 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/dimfeld/httptreemux"
+	"github.com/gorilla/handlers"
 	"github.com/mssola/user_agent"
 	"github.com/sebest/xff"
 )
@@ -109,7 +110,7 @@ func createRouter() http.Handler {
 	h := http.Handler(r)
 	conf := config.Get()
 	if conf.Gzip {
-		h = gziphandler.GzipHandler(h)
+		h = handlers.CompressHandlerLevel(h, gzip.DefaultCompression)
 	}
 	if conf.TrustProxies {
 		xffParser, err := xff.Default()
