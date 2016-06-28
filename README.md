@@ -71,6 +71,12 @@ the client
 * `make dist_clean` in addition to the above, removes configuration, images and
 stored assets
 
+###Linux only
+* make creates a Go workspace in the `.build` subdirectory. If you don't have a
+proper Go worksapce set up, you can simply `export GOPATH=$(pwd)/.build` to
+temporarily assign `.build` as your Go workspace in the current shell. This will
+allow you to use native go commands such as `go test` and `go build`.
+
 // TODO: Rewrite everything below for v2
 
 ## Documentation
