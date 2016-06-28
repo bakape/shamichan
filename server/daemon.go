@@ -24,8 +24,6 @@ func init() {
 			fallthrough
 		case "init": // For internal use only
 			os.Exit(0)
-		case "reload":
-			reloadDaemonConfigs()
 		case "restart":
 			killDaemon()
 			fallthrough
@@ -106,13 +104,4 @@ func findDaemon() *os.Process {
 		log.Fatalf("error locating running daemon: %s\n", err)
 	}
 	return proc
-}
-
-func reloadDaemonConfigs() {
-	proc := findDaemon()
-	if proc != nil {
-		if err := proc.Signal(syscall.SIGUSR1); err != nil {
-			log.Fatalf("error reloading configuration: %s\n", err)
-		}
-	}
 }
