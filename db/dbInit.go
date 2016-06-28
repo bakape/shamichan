@@ -10,20 +10,25 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 6
+const dbVersion = 7
 
 var (
+	// Address of the RethinkDB cluster instance to connect to
+	Address = "localhost:28015"
+
+	// DBName is the name of the database to use
+	DBName = "meguca"
+
 	// RSession exports the RethinkDB connection session. Used globally by the
 	// entire server.
 	RSession *r.Session
 
 	// AllTables are all tables needed for meguca operation
-	AllTables = [...]string{"main", "threads", "images", "accounts"}
+	AllTables = [...]string{"main", "threads", "images", "accounts", "boards"}
 )
 
 // Document is a eneric RethinkDB Document. For DRY-ness.
@@ -43,39 +48,34 @@ type infoDocument struct {
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
 func LoadDB() (err error) {
-	conf := config.Get().Rethinkdb
-
-	if err := Connect(conf.Addr); err != nil {
+	if err := Connect(); err != nil {
 		return err
 	}
 
 	var isCreated bool
-	err = One(r.DBList().Contains(conf.Db), &isCreated)
+	err = One(r.DBList().Contains(DBName), &isCreated)
 	if err != nil {
-		return util.WrapError("Error checking, if database exists", err)
+		return util.WrapError("error checking, if database exists", err)
 	}
 	if isCreated {
-		RSession.Use(conf.Db)
+		RSession.Use(DBName)
 		return verifyDBVersion()
 	}
 
-	if err := InitDB(conf.Db); err != nil {
+	if err := InitDB(); err != nil {
 		return err
 	}
 
 	go runCleanupTasks()
-	return nil
+	return loadConfigs()
 }
 
 // Connect establishes a connection to RethinkDB. Address passed separately for
 // easier testing.
-func Connect(addr string) (err error) {
-	if addr == "" { // For easier use in tests
-		addr = "localhost:28015"
-	}
-	RSession, err = r.Connect(r.ConnectOpts{Address: addr})
+func Connect() (err error) {
+	RSession, err = r.Connect(r.ConnectOpts{Address: Address})
 	if err != nil {
-		err = util.WrapError("Error connecting to RethinkDB", err)
+		err = util.WrapError("error connecting to RethinkDB", err)
 	}
 	return
 }
@@ -86,7 +86,7 @@ func verifyDBVersion() error {
 	var version int
 	err := One(GetMain("info").Field("dbVersion"), &version)
 	if err != nil {
-		return util.WrapError("Error reading database version", err)
+		return util.WrapError("error reading database version", err)
 	}
 	if version != dbVersion {
 		return fmt.Errorf(
@@ -99,13 +99,13 @@ func verifyDBVersion() error {
 }
 
 // InitDB initialize a rethinkDB database
-func InitDB(dbName string) error {
-	log.Printf("Initialising database '%s'", dbName)
-	if err := Write(r.DBCreate(dbName)); err != nil {
-		return util.WrapError("Error creating database", err)
+func InitDB() error {
+	log.Printf("initialising database '%s'", DBName)
+	if err := Write(r.DBCreate(DBName)); err != nil {
+		return util.WrapError("error creating database", err)
 	}
 
-	RSession.Use(dbName)
+	RSession.Use(DBName)
 
 	if err := CreateTables(); err != nil {
 		return err

@@ -20,9 +20,9 @@ var (
 
 // InitImager applies the thumbnail quality configuration
 func InitImager() error {
-	conf := config.Get().Images
-	imager.JPEGOptions = jpegLib.Options{Quality: conf.JpegQuality}
-	imager.PNGQuantization = conf.PngQuality
+	conf := config.Get()
+	imager.JPEGOptions = jpegLib.Options{Quality: conf.JPEGQuality}
+	imager.PNGQuantization = conf.PNGQuality
 	return nil // To comply to the rest of the initialization functions
 }
 
@@ -57,12 +57,12 @@ func processImage(data []byte) ([]byte, [4]uint16, error) {
 // Verify an image does not exceed the preset maximum dimentions and return them
 func verifyDimentions(img image.Image) (dims [4]uint16, err error) {
 	dims[0], dims[1] = getDims(img)
-	conf := config.Get().Images.Max
-	if dims[0] > conf.Width {
+	conf := config.Get()
+	if dims[0] > conf.MaxWidth {
 		err = errTooWide
 		return
 	}
-	if dims[1] > conf.Height {
+	if dims[1] > conf.MaxHeight {
 		err = errTooTall
 	}
 	return

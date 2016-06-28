@@ -21,8 +21,6 @@ import (
 func Test(t *testing.T) { TestingT(t) }
 
 type Imager struct {
-	dbName           string
-	perceptualCloser chan struct{}
 }
 
 var (
@@ -35,9 +33,9 @@ var (
 )
 
 func (d *Imager) SetUpSuite(c *C) {
-	d.dbName = db.UniqueDBName()
-	c.Assert(db.Connect(""), IsNil)
-	c.Assert(db.InitDB(d.dbName), IsNil)
+	db.DBName = db.UniqueDBName()
+	c.Assert(db.Connect(), IsNil)
+	c.Assert(db.InitDB(), IsNil)
 
 	for _, dir := range [...]string{"src", "thumb"} {
 		path := filepath.FromSlash("images/" + dir)
@@ -46,12 +44,12 @@ func (d *Imager) SetUpSuite(c *C) {
 }
 
 func (d *Imager) SetUpTest(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.Max.Height = 10000
-	conf.Images.Max.Width = 10000
-	conf.Images.Max.Size = 1024 * 1024 * 10
-	conf.Images.Spoilers = []uint8{1, 2}
-	config.Set(conf)
+	config.Set(config.Configs{
+		MaxHeight: 10000,
+		MaxWidth:  10000,
+		MaxSize:   1024 * 1024 * 10,
+		Spoilers:  []uint8{1, 2},
+	})
 }
 
 func (d *Imager) TearDownTest(c *C) {
@@ -80,26 +78,26 @@ func (d *Imager) TearDownTest(c *C) {
 }
 
 func (d *Imager) TearDownSuite(c *C) {
-	c.Assert(db.Write(r.DBDrop(d.dbName)), IsNil)
+	c.Assert(db.Write(r.DBDrop(db.DBName)), IsNil)
 	c.Assert(db.RSession.Close(), IsNil)
 	c.Assert(os.RemoveAll("img"), IsNil)
 }
 
 func (*Imager) TestInitImager(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.JpegQuality = 90
-	conf.Images.PngQuality = 20
-	config.Set(conf)
+	config.Set(config.Configs{
+		JPEGQuality: 90,
+		PNGQuality:  20,
+	})
 	InitImager()
 	c.Assert(imager.JPEGOptions, Equals, jpegLib.Options{Quality: 90})
 	c.Assert(imager.PNGQuantization, Equals, 20)
 }
 
 func (*Imager) TestVerifyDimentions(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.Max.Width = 2000
-	conf.Images.Max.Height = 2000
-	config.Set(conf)
+	config.Set(config.Configs{
+		MaxWidth:  2000,
+		MaxHeight: 2000,
+	})
 
 	samples := []struct {
 		name string

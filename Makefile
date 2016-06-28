@@ -61,11 +61,10 @@ client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang
 
 dist_clean: clean
-	rm -rf images config/config.json assets error.log .package
+	rm -rf images assets error.log .package
 
 init:
 	mkdir -p assets images/src images/thumb
-	cp -n config/defaults.json config/config.json
 
 test: server_deps
 	go get gopkg.in/check.v1
@@ -89,14 +88,11 @@ install_ffmpeg:
 
 package: all
 	rm -rf .package
-	mkdir -p .package/config .package/templates .package/images/src \
-		.package/images/thumb
+	mkdir -p .package/templates .package/images/src .package/images/thumb
 	cp -r docs scripts www CHANGELOG.md README.md LICENSE $(BINARY) .package/
 ifeq ($(ISWINDOWS), true)
 	cp *.dll .package/
 endif
-	cp config/defaults.json .package/config/
-	cp config/defaults.json .package/config/config.json
 	cp -r templates/*.html .package/templates/
 ifeq ($(ISWINDOWS), true)
 	cp *.dll .package/

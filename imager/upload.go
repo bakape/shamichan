@@ -60,8 +60,8 @@ type thumbResponse struct {
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
 	conf := config.Get()
-	req.Body = http.MaxBytesReader(res, req.Body, conf.Images.Max.Size)
-	res.Header().Set("Access-Control-Allow-Origin", conf.HTTP.Origin)
+	req.Body = http.MaxBytesReader(res, req.Body, conf.MaxSize)
+	res.Header().Set("Access-Control-Allow-Origin", conf.Origin)
 
 	code, err := newImageUpload(req)
 	if err != nil {
@@ -131,7 +131,7 @@ func parseUploadForm(req *http.Request) (
 	if err != nil {
 		return
 	}
-	if length > config.Get().Images.Max.Size {
+	if length > config.Get().MaxSize {
 		err = errors.New("File too large")
 		return
 	}
@@ -167,7 +167,7 @@ func extractSpoiler(req *http.Request) (sp uint8, err error) {
 
 // Confirms a spoiler exists in configuration
 func isValidSpoiler(id uint8) bool {
-	for _, valid := range config.Get().Images.Spoilers {
+	for _, valid := range config.Get().Spoilers {
 		if id == valid {
 			return true
 		}

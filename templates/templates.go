@@ -91,10 +91,9 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 // boardNavigation renders interboard navigation we put in the top banner
 func boardNavigation() template.HTML {
 	html := bytes.NewBuffer([]byte(`<b id="navTop">[`))
-	conf := config.Get().Boards
 
 	// Actual boards and "/all/" metaboard
-	for i, board := range append(conf.Enabled, "all") {
+	for i, board := range append(config.GetBoards(), "all") {
 		if i != 0 {
 			html.WriteString(" / ")
 		}

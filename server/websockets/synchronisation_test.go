@@ -32,9 +32,7 @@ func (*ClientSuite) TestSyncToBoard(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	config.Set(conf)
+	config.SetBoards([]string{"a"})
 
 	// Invalid message
 	c.Assert(synchronise(nil, cl), Equals, errInvalidStructure)

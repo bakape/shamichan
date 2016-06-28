@@ -8,8 +8,12 @@ Project uses [Semantic Versioning](http://semver.org/)
 * Change:
 	- Highlight all banner panel toggles, until clicked
 	- Descriptive text error pages instead of graphical ones
+	- Hardcode /all/ as default board
 * Fix:
 	- Duplicative header writing, when using Chrome dev tools
+* Remove
+	- Staff board
+	- Pseudo boards
 
 ##v2.0.0-alpha - 2016-06-21
 Start tracking v2 progress in versions for easier debugging

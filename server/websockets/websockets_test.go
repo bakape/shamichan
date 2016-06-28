@@ -34,7 +34,7 @@ var _ = Suite(&ClientSuite{})
 
 func (*ClientSuite) SetUpTest(_ *C) {
 	Clients.Clear()
-	config.Set(config.ServerConfigs{}) // Reset configs on test start
+	config.Set(config.Configs{}) // Reset configs on test start
 }
 
 func newRequest(c *C) *http.Request {
@@ -252,9 +252,9 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 }
 
 func (*ClientSuite) TestCheckOrigin(c *C) {
-	conf := config.ServerConfigs{}
-	conf.HTTP.Origin = "fubar.com"
-	config.Set(conf)
+	config.Set(config.Configs{
+		Origin: "fubar.com",
+	})
 
 	// No header
 	req := newRequest(c)

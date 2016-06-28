@@ -45,24 +45,23 @@
         // Boards currently enabled on the server
         "enabled": ["a"],
 
+        // Maximum number of threads a board will retain, before the
+        // last ones are deleted, if "prune" is set to true.
+        "maxThreads": 100,
+
+        // Maximum number of replies a thread may have, before it no
+        // longer is bumped to the front of the board
+        "maxBump": 500,
+
+        "allTitle": "/all/ - Aggregator Metaboard",
+
         // Configuration for each individual board. Key name is board title and
         // value is a hash optionally containing the following fields in the
         // example bellow.
         "boards": {
             "a": {
-                // Maximum number of threads a board will retain, before the
-                // last ones are deleted, if "prune" is set to true.
-                "maxThreads": 100,
-
-                // Maximum number of replies a thread may have, before it no
-                // longer is bumped to the front of the board
-                "maxBump": 500,
-
                 // Title of the board, that is displayed on the board's page
                 "title": "/a/ - Animu & Mango"
-            },
-            "all": {
-                "title": "/all/ - Aggregator Metaboard"
             }
         },
 
@@ -90,10 +89,11 @@
         "default": "en_GB"
     },
 
+    // Time in days until staff are automatically logged out
+    "sessionExpiry": 30,
+
     // Moderation staff configuration
     "staff": {
-        // Time in days until staff are automatically logged out
-        "sessionExpiry": 30,
 
         // Map of staff_class_name: staff_class_configuration_object pairs.
         // You can add new clases to the map or remove existing ones. For the
@@ -303,10 +303,4 @@
 
     // User feedback email
     "feedbackEmail": "admin@email.com",
-
-    // Default theme to use
-    "defaultCSS": "moe",
-
-    // Information to display in the top banner. Accepts HTML.
-    "infoBanner": ""
 }

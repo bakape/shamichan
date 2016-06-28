@@ -30,6 +30,9 @@ import (
 	"github.com/sebest/xff"
 )
 
+// Address is the listening address of the HTTP web server
+var Address = ":8000"
+
 // Used for overriding during tests
 var (
 	webRoot      = "www"
@@ -56,17 +59,17 @@ var imageHeaders = map[string]string{
 }
 
 func startWebServer() (err error) {
-	conf := config.Get().HTTP
+	conf := config.Get()
 	r := createRouter()
-	log.Println("Listening on " + conf.Addr)
+	log.Println("listening on " + Address)
 
 	if conf.SSL {
-		err = http.ListenAndServeTLS(conf.Addr, conf.Cert, conf.Key, r)
+		err = http.ListenAndServeTLS(Address, conf.SSLCert, conf.SSLKey, r)
 	} else {
-		err = http.ListenAndServe(conf.Addr, r)
+		err = http.ListenAndServe(Address, r)
 	}
 	if err != nil {
-		return util.WrapError("Error starting web server", err)
+		return util.WrapError("error starting web server", err)
 	}
 	return
 }
@@ -104,7 +107,7 @@ func createRouter() http.Handler {
 	r.POST("/upload", wrapHandler(imager.NewImageUpload))
 
 	h := http.Handler(r)
-	conf := config.Get().HTTP
+	conf := config.Get()
 	if conf.Gzip {
 		h = gziphandler.GzipHandler(h)
 	}
@@ -132,8 +135,7 @@ func wrapHandler(fn http.HandlerFunc) httptreemux.HandlerFunc {
 
 // Redirects to frontpage, if set, or the /all/ board
 func redirectToDefault(res http.ResponseWriter, req *http.Request) {
-	conf := config.Get()
-	frontpage := conf.HTTP.Frontpage
+	frontpage := config.Get().Frontpage
 	if frontpage != "" {
 		http.ServeFile(res, req, frontpage)
 	} else {

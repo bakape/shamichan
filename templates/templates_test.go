@@ -15,9 +15,7 @@ type Templates struct{}
 var _ = Suite(&Templates{})
 
 func (t *Templates) TestBoardNavigation(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	config.Set(conf)
+	config.SetBoards([]string{"a"})
 	html := boardNavigation()
 	std := `<b id="navTop">[<a href="../a/">a</a> / <a href="../all/">all</a>` +
 		`]</b>`
@@ -40,9 +38,7 @@ func (t *Templates) TestBuildIndexTemplate(c *C) {
 
 func (t *Templates) TestCompileTemplates(c *C) {
 	config.SetClient([]byte{1}, "hash")
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	config.Set(conf)
+	config.SetBoards([]string{"a"})
 	templateRoot = "test"
 	defer func() {
 		c.Assert(recover(), IsNil)

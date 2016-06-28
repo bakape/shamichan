@@ -35,9 +35,9 @@ var (
 )
 
 func (*Imager) TestExtractSpoiler(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.Spoilers = []uint8{1, 2}
-	config.Set(conf)
+	config.Set(config.Configs{
+		Spoilers: []uint8{1, 2},
+	})
 
 	// No spoiler
 	body, w := newMultiWriter()
@@ -72,9 +72,9 @@ func assertExtraction(c *C, b io.Reader, w *multipart.Writer) (uint8, error) {
 }
 
 func (*Imager) TestIsValidSpoiler(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.Spoilers = []uint8{1, 2}
-	config.Set(conf)
+	config.Set(config.Configs{
+		Spoilers: []uint8{1, 2},
+	})
 	c.Assert(isValidSpoiler(8), Equals, false)
 	c.Assert(isValidSpoiler(1), Equals, true)
 }
@@ -125,7 +125,7 @@ func (*Imager) TestInvalidContentLengthHeader(c *C) {
 
 func (*Imager) TestUploadTooLarge(c *C) {
 	conf := config.Get()
-	(*conf).Images.Max.Size = 1024
+	(*conf).MaxSize = 1024
 	b, w := newMultiWriter()
 	req := newRequest(c, b, w)
 	req.Header.Set("Content-Length", "1048587")
@@ -428,7 +428,7 @@ func (*Imager) TestUploadHandler(c *C) {
 
 	NewImageUpload(rec, req)
 	acao := rec.Header().Get("Access-Control-Allow-Origin")
-	c.Assert(acao, Equals, config.Get().HTTP.Origin)
+	c.Assert(acao, Equals, config.Get().Origin)
 	c.Assert(rec.Code, Equals, 200)
 	wg.Wait()
 }

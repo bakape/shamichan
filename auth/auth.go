@@ -50,7 +50,7 @@ func IsBoard(board string) bool {
 	if board == "all" {
 		return true
 	}
-	for _, b := range config.Get().Boards.Enabled {
+	for _, b := range config.GetBoards() {
 		if board == b {
 			return true
 		}

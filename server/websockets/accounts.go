@@ -113,7 +113,7 @@ func commitLogin(code loginResponseCode, id string, c *Client) (err error) {
 			return err
 		}
 
-		expiryTime := config.Get().Staff.SessionExpiry * time.Hour * 24
+		expiryTime := config.Get().SessionExpiry * time.Hour * 24
 
 		session := auth.Session{
 			Token:   msg.Session,

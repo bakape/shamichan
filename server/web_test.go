@@ -35,8 +35,7 @@ var genericImage = &types.Image{
 // Does not seem like we can easily resuse testing functions. Thus copy/paste
 // for now.
 type DB struct {
-	dbName string
-	r      http.Handler
+	r http.Handler
 }
 
 var testDBName string
@@ -44,21 +43,20 @@ var testDBName string
 var _ = Suite(&DB{})
 
 func (d *DB) SetUpSuite(c *C) {
-	d.dbName = db.UniqueDBName()
-	c.Assert(db.Connect(""), IsNil)
-	c.Assert(db.InitDB(d.dbName), IsNil)
+	db.DBName = db.UniqueDBName()
+	c.Assert(db.Connect(), IsNil)
+	c.Assert(db.InitDB(), IsNil)
 	setupPosts(c)
 	d.r = createRouter()
 }
 
 func (*DB) SetUpTest(_ *C) {
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	config.Set(conf)
+	config.Set(config.Configs{})
+	config.SetBoards([]string{"a"})
 }
 
 func (d *DB) TearDownSuite(c *C) {
-	c.Assert(r.DBDrop(d.dbName).Exec(db.RSession), IsNil)
+	c.Assert(r.DBDrop(db.DBName).Exec(db.RSession), IsNil)
 	c.Assert(db.RSession.Close(), IsNil)
 }
 
@@ -138,16 +136,14 @@ func (w *WebServer) SetUpSuite(c *C) {
 }
 
 func (*WebServer) SetUpTest(_ *C) {
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a", "c"}
-	config.Set(conf)
+	config.SetBoards([]string{"a", "c"})
 	config.SetClient(nil, "")
 }
 
 func (w *WebServer) TestFrontpageRedirect(c *C) {
-	conf := config.ServerConfigs{}
-	conf.HTTP.Frontpage = filepath.FromSlash("test/frontpage.html")
-	config.Set(conf)
+	config.Set(config.Configs{
+		Frontpage: filepath.FromSlash("test/frontpage.html"),
+	})
 	req := newRequest(c, "/")
 	rec := httptest.NewRecorder()
 	w.r.ServeHTTP(rec, req)
@@ -639,9 +635,9 @@ func (d *DB) TestThreadJSON(c *C) {
 }
 
 func (w *WebServer) TestGzip(c *C) {
-	conf := config.ServerConfigs{}
-	conf.HTTP.Gzip = true
-	config.Set(conf)
+	config.Set(config.Configs{
+		Gzip: true,
+	})
 	r := createRouter()
 	rec, req := newPair(c, "/json/config")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -651,9 +647,9 @@ func (w *WebServer) TestGzip(c *C) {
 
 func (w *WebServer) TestProxyHeaders(c *C) {
 	const ip = "68.180.194.242"
-	conf := config.ServerConfigs{}
-	conf.HTTP.TrustProxies = true
-	config.Set(conf)
+	config.Set(config.Configs{
+		TrustProxies: true,
+	})
 	r := createRouter()
 	rec, req := newPair(c, "/json/config")
 	req.Header.Set("X-Forwarded-For", ip)

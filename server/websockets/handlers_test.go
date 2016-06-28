@@ -13,25 +13,23 @@ import (
 var _ = Suite(&DB{})
 
 // Tests that require database access
-type DB struct {
-	dbName string
-}
+type DB struct{}
 
 func (d *DB) SetUpSuite(c *C) {
-	d.dbName = db.UniqueDBName()
-	c.Assert(db.Connect(""), IsNil)
-	c.Assert(db.InitDB(d.dbName), IsNil)
+	db.DBName = db.UniqueDBName()
+	c.Assert(db.Connect(), IsNil)
+	c.Assert(db.InitDB(), IsNil)
 }
 func (d *DB) TearDownSuite(c *C) {
-	c.Assert(db.Exec(r.DBDrop(d.dbName)), IsNil)
+	c.Assert(db.Exec(r.DBDrop(db.DBName)), IsNil)
 }
 
 func (d *DB) SetUpTest(c *C) {
 	Clients.Clear()
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	conf.Staff.SessionExpiry = 30
-	config.Set(conf)
+	config.SetBoards([]string{"a"})
+	config.Set(config.Configs{
+		SessionExpiry: 30,
+	})
 	for _, table := range db.AllTables {
 		c.Assert(db.Write(r.Table(table).Delete()), IsNil)
 	}
