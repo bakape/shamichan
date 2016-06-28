@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/bakape/meguca/config"
@@ -54,6 +55,7 @@ type vars struct {
 	IsMobile   bool
 	Config     template.JS
 	Navigation template.HTML
+	FAQ        template.HTML
 	Email      string
 	ConfigHash string
 	DefaultCSS string
@@ -64,17 +66,21 @@ type vars struct {
 func indexTemplate() (desktop Store, mobile Store, err error) {
 	clientJSON, hash := config.GetClient()
 	conf := config.Get()
+
 	v := vars{
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,
 		Navigation: boardNavigation(),
+
+		// Replace all newlines in the FAQ with `<br>`
+		FAQ:        template.HTML(strings.Replace(conf.FAQ, "\n", "<br>", -1)),
 		Email:      conf.FeedbackEmail,
 		DefaultCSS: conf.DefaultCSS,
 	}
 	path := filepath.FromSlash(templateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)
 	if err != nil {
-		err = util.WrapError("Error parsing index temlate", err)
+		err = util.WrapError("error parsing index temlate", err)
 		return
 	}
 

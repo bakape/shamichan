@@ -118,24 +118,11 @@ export class TabbedModal extends BannerModal {
 	}
 }
 
-// Frequently asked question and other information modal
-class FAQPanel extends BannerModal {
-	constructor() {
-		super({el: document.querySelector('#FAQ-panel')})
-		this.render()
-	}
-
-	render() {
-		let html = '<ul>'
-		for (let line of config.FAQ) {
-			html += `<li>${line}</line>`
-		}
-		html += `</ul>`
-		write(() => this.el.innerHTML = html)
-	}
-}
-
-defer(() => new FAQPanel())
+// Frequently asked questions and other information modal
+defer(() =>
+	new BannerModal({
+		el: document.querySelector('#FAQ-panel')
+	}))
 
 // Name and email input pannel
 class IdentityPanel extends BannerModal {

@@ -11,18 +11,12 @@
 	<link rel="stylesheet" id="theme" href="/assets/css/{{.DefaultCSS}}.css">
 	<!-- Configuration injection see ./tmpl/tmpl.go !-->
 	<script>
-		var config = {{.Config}},
-			configHash = '{{.ConfigHash}}',
-			isMobile = {{.IsMobile}}
+		var config = {{.Config}}, configHash = '{{.ConfigHash}}', isMobile = {{.IsMobile}}
 	</script>
 	<!-- Load theme CSS !-->
 	<script>
-		if (localStorage.theme !== config.DefaultCSS) {
-			document.getElementById('theme').href =
-				'/assets/css/'
-				+ localStorage.theme
-				+ '.css'
-		}
+		if (localStorage.theme !== config.DefaultCSS)
+			document.getElementById('theme').href ='/assets/css/'+ localStorage.theme + '.css'
 	</script>
 	<noscript>
 		<h1 id="noscriptHeader">
@@ -75,7 +69,19 @@
 			<b id="sync" class="banner-float"></b>
 		</span>
 		<!-- Frequently Asked Quetions panel !-->
-		<div id="FAQ-panel" class="banner-modal modal glass"></div>
+		<div id="FAQ-panel" class="banner-modal modal glass">
+			meguca is licensed under the
+			<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">
+				GNU Affero General Public License
+			</a>
+			<br>
+			Source code repository:&nbsp;
+			<a href="https://github.com/bakape/meguca" target="_blank">
+				github.com/bakape/meguca
+			</a>
+			<hr>
+			{{.FAQ}}
+		</div>
 		<!-- Name and email input form !-->
 		<fieldset id="identity-panel" class="banner-modal modal glass">
 			<table>

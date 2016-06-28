@@ -20,7 +20,6 @@ type Configs = {
 	defaultCSS: string
 	boards: string[]
 	langs: string[]
-	FAQ: string[]
 	links: string[][]
 	spoilers: number[]
 }

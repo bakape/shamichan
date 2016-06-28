@@ -30,37 +30,47 @@ var (
 	hash string
 )
 
+// Default string for the FAQ panel
+const defaultFAQ = `Upload size limit is 3 MB
+Accepted upload file types: JPG, JPEG, PNG, GIF, WEBM, SVG, PDF, MP3, MP4, OGG
+<hr>Hash commands:
+#d100 #2d100 - Roll dice
+#flip - Coin flip
+#8ball - An 8ball
+#queue - Print r/a/dio song queue
+#sw24:15 #sw2:24:15 #sw24:15+30 #sw24:15-30 - Syncronised duration timer`
+
 // Configs stores the global configuration
 type Configs struct {
-	SSL              bool     `json:"-"`
-	TrustProxies     bool     `json:"-" gorethink:"trustProxies"`
-	Gzip             bool     `json:"-" gorethink:"gzip"`
-	Prune            bool     `json:"-" gorethink:"prune"`
-	Radio            bool     `json:"radio" gorethink:"radio"`
-	WebmAudio        bool     `json:"-" gorethink:"webmAudio"`
-	Hats             bool     `json:"hats" gorethink:"hats"`
-	IllyaDance       bool     `json:"illyaDance" gorethink:"illyaDance"`
-	MaxWidth         uint16   `json:"-" gorethink:"maxWidth"`
-	MaxHeight        uint16   `json:"-" gorethink:"maxHeight"`
-	MaxThreads       int      `json:"-" gorethink:"maxThreads"`
-	MaxBump          int      `json:"-" gorethink:"maxBump"`
-	JPEGQuality      int      `json:"-"`
-	PNGQuality       int      `json:"-"`
-	ThreadCooldown   int      `json:"threadCooldown" gorethink:"threadCooldown"`
-	MaxSubjectLength int      `json:"maxSubjectLength" gorethink:"maxSubjectLength"`
-	MaxSize          int64    `json:"-" gorethink:"maxSize"`
-	Origin           string   `json:"-" gorethink:"origin"`
-	DefaultLang      string   `json:"defaultLang" gorethink:"defaultLang"`
-	SSLCert          string   `json:"-"`
-	SSLKey           string   `json:"-"`
-	Frontpage        string   `json:"-" gorethink:"frontpage"`
-	DefaultCSS       string   `json:"defaultCSS" gorethink:"defaultCSS"`
-	Salt             string   `json:"-" gorethink:"salt"`
-	ExcludeRegex     string   `json:"-" gorethink:"excludeRegex"`
-	FeedbackEmail    string   `json:"-" gorethink:"feedbackEmail"`
-	Boards           []string `json:"boards" gorethink:"boards"`
-	Langs            []string `json:"langs" gorethink:"langs"`
-	FAQ              []string
+	SSL              bool   `json:"-"`
+	TrustProxies     bool   `json:"-" gorethink:"trustProxies"`
+	Gzip             bool   `json:"-" gorethink:"gzip"`
+	Prune            bool   `json:"-" gorethink:"prune"`
+	Radio            bool   `json:"radio" gorethink:"radio"`
+	WebmAudio        bool   `json:"-" gorethink:"webmAudio"`
+	Hats             bool   `json:"hats" gorethink:"hats"`
+	IllyaDance       bool   `json:"illyaDance" gorethink:"illyaDance"`
+	MaxWidth         uint16 `json:"-" gorethink:"maxWidth"`
+	MaxHeight        uint16 `json:"-" gorethink:"maxHeight"`
+	MaxThreads       int    `json:"-" gorethink:"maxThreads"`
+	MaxBump          int    `json:"-" gorethink:"maxBump"`
+	JPEGQuality      int    `json:"-"`
+	PNGQuality       int    `json:"-"`
+	ThreadCooldown   int    `json:"threadCooldown" gorethink:"threadCooldown"`
+	MaxSubjectLength int    `json:"maxSubjectLength" gorethink:"maxSubjectLength"`
+	MaxSize          int64  `json:"-" gorethink:"maxSize"`
+	Origin           string `json:"-" gorethink:"origin"`
+	DefaultLang      string `json:"defaultLang" gorethink:"defaultLang"`
+	SSLCert          string `json:"-"`
+	SSLKey           string `json:"-"`
+	Frontpage        string `json:"-" gorethink:"frontpage"`
+	DefaultCSS       string `json:"defaultCSS" gorethink:"defaultCSS"`
+	Salt             string `json:"-" gorethink:"salt"`
+	ExcludeRegex     string `json:"-" gorethink:"excludeRegex"`
+	FeedbackEmail    string `json:"-" gorethink:"feedbackEmail"`
+	FAQ              string
+	Boards           []string      `json:"boards" gorethink:"boards"`
+	Langs            []string      `json:"langs" gorethink:"langs"`
 	Links            [][2]string   `json:"links" gorethink:"links"`
 	Spoilers         spoilers      `json:"spoilers" gorethink:"spoliers"`
 	SessionExpiry    time.Duration `json:"-" gorethink:"sessionExpiry"`
@@ -83,36 +93,37 @@ func (s spoilers) MarshalJSON() ([]byte, error) {
 
 // Defaults contains the default server configuration values
 var Defaults = Configs{
-	Origin:           "localhost:8000",
 	TrustProxies:     false,
-	Gzip:             true,
+	Gzip:             false,
 	SSL:              false,
-	SSLCert:          "",
-	SSLKey:           "",
-	Frontpage:        "",
-	MaxThreads:       100,
-	MaxBump:          1000,
-	Links:            [][2]string{{"4chan", "http://www.4chan.org/"}},
-	Prune:            true,
+	Prune:            false,
 	WebmAudio:        true,
 	Hats:             false,
+	Radio:            false,
+	MaxThreads:       100,
+	MaxBump:          1000,
 	JPEGQuality:      90,
 	PNGQuality:       20,
 	MaxSize:          3145728,
 	MaxHeight:        6000,
 	MaxWidth:         6000,
-	Spoilers:         spoilers{0},
-	DefaultCSS:       "moe",
 	ThreadCooldown:   60,
 	MaxSubjectLength: 50,
-	Salt:             "LALALALALALALALALALALALALALALALALALALALA",
-	ExcludeRegex:     "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
-	Radio:            false,
 	SessionExpiry:    30,
+	ExcludeRegex:     "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
+	Origin:           "localhost:8000",
+	SSLCert:          "",
+	SSLKey:           "",
+	Frontpage:        "",
+	DefaultCSS:       "moe",
+	Salt:             "LALALALALALALALALALALALALALALALALALALALA",
 	FeedbackEmail:    "admin@email.com",
+	FAQ:              defaultFAQ,
+	DefaultLang:      "en_GB",
+	Spoilers:         spoilers{0},
 	Langs:            []string{"en_GB"},
 	Boards:           []string{},
-	DefaultLang:      "en_GB",
+	Links:            [][2]string{{"4chan", "http://www.4chan.org/"}},
 }
 
 // BoardConfigs stores overall board configuration
