@@ -43,7 +43,7 @@ func (*Templates) TestBuildIndexTemplate(c *C) {
 
 func (*Templates) TestCompileTemplates(c *C) {
 	config.SetClient([]byte{1}, "hash")
-	templateRoot = "test"
+	TemplateRoot = "test"
 	defer func() {
 		c.Assert(recover(), IsNil)
 	}()

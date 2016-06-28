@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	// Overriden in tests
-	templateRoot = "templates"
+	// TemplateRoot stores the root directory of all HTML templates. Overriden
+	// in tests.
+	TemplateRoot = "templates"
 
 	// resources conatains all available templates
 	resources = map[string]Store{}
@@ -77,7 +78,7 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 		Email:      conf.FeedbackEmail,
 		DefaultCSS: conf.DefaultCSS,
 	}
-	path := filepath.FromSlash(templateRoot + "/index.html")
+	path := filepath.FromSlash(TemplateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)
 	if err != nil {
 		err = util.WrapError("error parsing index temlate", err)

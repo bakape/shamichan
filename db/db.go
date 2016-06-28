@@ -16,13 +16,11 @@ var (
 	formatUpdateFeed = r.Row.
 				Field("new_val").
 				Field("log").
-				Slice(
-			r.Row.
-				Field("old_val").
-				Field("log").
-				Count().
-				Default(0),
-		)
+				Slice(r.Row.
+					Field("old_val").
+					Field("log").
+					Count().
+					Default(0))
 
 	// ErrUserNameTaken denotes a user name the client is trying  to register
 	// with is already taken

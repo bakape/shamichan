@@ -102,6 +102,10 @@ func (*DBInit) TestLoadDB(c *C) {
 	c.Assert(One(GetMain("histCounts"), &histCounts), IsNil)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
 
+	var conf config.Configs
+	c.Assert(One(GetMain("config"), &conf), IsNil)
+	c.Assert(conf, DeepEquals, config.Defaults)
+
 	c.Assert(RSession.Close(), IsNil)
 	c.Assert(LoadDB(), IsNil)
 }

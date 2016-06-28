@@ -10,11 +10,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 7
+const dbVersion = 8
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -43,6 +44,12 @@ type infoDocument struct {
 
 	// Is incremented on each new post. Ensures post number uniqueness
 	PostCtr int64 `gorethink:"postCtr"`
+}
+
+// Central configuration document
+type configDocument struct {
+	Document
+	config.Configs
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -117,6 +124,11 @@ func InitDB() error {
 		// History aka progress counters of boards, that get incremented on
 		// post creation
 		Document{"histCounts"},
+
+		configDocument{
+			Document{"config"},
+			config.Defaults,
+		},
 	}
 	if err := Write(r.Table("main").Insert(main)); err != nil {
 		return util.WrapError("Error initializing database", err)
