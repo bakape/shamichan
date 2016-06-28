@@ -14,7 +14,7 @@ export function renderImage(data: ImageData, reveal?: boolean): string {
 	return HTML
 		`<figure>
 			${renderFigcaption(data, reveal)}
-			${config.images.hats && showThumb ? '<span class="hat"></span>': ''}
+			${config.hats && showThumb ? '<span class="hat"></span>': ''}
 			${showThumb ? renderThumbnail(data) : ''}
 		</figure>`
 }
@@ -186,14 +186,6 @@ function imageLink(data: ImageData): string {
 		`<a ${makeAttrs(attrs)}>
 			${imgnm}
 		</a>`
-}
-
-// Render a hat on top of the thumbnail, if enabled
-function renderHat(showThumb: boolean): string {
-	if (showThumb && config.images.hats) {
-		return '<span class="hat"></span>'
-	}
-	return ''
 }
 
 // Render the actual thumbnail image

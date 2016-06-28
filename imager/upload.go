@@ -56,6 +56,13 @@ type thumbResponse struct {
 	err   error
 }
 
+// Spoiler ID is unparsable or not enabled
+type errInvalidSpoiler string
+
+func (e errInvalidSpoiler) Error() string {
+	return "invalid spoiler ID: " + string(e)
+}
+
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
@@ -152,17 +159,24 @@ func parseUploadForm(req *http.Request) (
 }
 
 // Extracts and validates a spoiler number from the form
-func extractSpoiler(req *http.Request) (sp uint8, err error) {
+func extractSpoiler(req *http.Request) (uint8, error) {
 	// Read the spoiler the client had chosen for the image, if any
-	if unparsed := req.FormValue("spoiler"); unparsed != "" {
-		var unconverted int
-		unconverted, err = strconv.Atoi(unparsed)
-		sp = uint8(unconverted)
-		if !(err == nil && isValidSpoiler(sp)) {
-			err = fmt.Errorf("Invalid spoiler ID: %s", unparsed)
-		}
+	unparsed := req.FormValue("spoiler")
+	if unparsed == "" {
+		return 0, nil
 	}
-	return
+
+	unconverted, err := strconv.ParseUint(unparsed, 10, 8)
+	if err != nil {
+		return 0, errInvalidSpoiler(unparsed)
+	}
+
+	sp := uint8(unconverted)
+	if !isValidSpoiler(sp) {
+		return 0, errInvalidSpoiler(unparsed)
+	}
+
+	return sp, nil
 }
 
 // Confirms a spoiler exists in configuration

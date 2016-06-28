@@ -49,13 +49,13 @@ func (*Imager) TestExtractSpoiler(c *C) {
 	body, w = newMultiWriter()
 	c.Assert(w.WriteField("spoiler", "shibireru darou"), IsNil)
 	sp, err = assertExtraction(c, body, w)
-	c.Assert(err, ErrorMatches, `Invalid spoiler ID: shibireru darou`)
+	c.Assert(err, ErrorMatches, `invalid spoiler ID: shibireru darou`)
 
 	// Not an enabled spoiler
 	body, w = newMultiWriter()
 	c.Assert(w.WriteField("spoiler", "10"), IsNil)
 	sp, err = assertExtraction(c, body, w)
-	c.Assert(err, ErrorMatches, `Invalid spoiler ID: 10`)
+	c.Assert(err, ErrorMatches, `invalid spoiler ID: 10`)
 
 	// Valid spoiler
 	body, w = newMultiWriter()
@@ -164,7 +164,7 @@ func (*Imager) TestInvalidSpoiler(c *C) {
 	req.Header.Set("Content-Length", "1024")
 
 	_, _, err := parseUploadForm(req)
-	c.Assert(err, ErrorMatches, "Invalid spoiler ID: .*")
+	c.Assert(err, ErrorMatches, "invalid spoiler ID: .*")
 }
 
 // Add client to synced clients map

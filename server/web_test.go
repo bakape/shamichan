@@ -47,12 +47,14 @@ func (d *DB) SetUpSuite(c *C) {
 	c.Assert(db.Connect(), IsNil)
 	c.Assert(db.InitDB(), IsNil)
 	setupPosts(c)
+	config.Set(config.Configs{})
 	d.r = createRouter()
 }
 
 func (*DB) SetUpTest(_ *C) {
-	config.Set(config.Configs{})
-	config.SetBoards([]string{"a"})
+	config.Set(config.Configs{
+		Boards: []string{"a"},
+	})
 }
 
 func (d *DB) TearDownSuite(c *C) {
@@ -136,7 +138,9 @@ func (w *WebServer) SetUpSuite(c *C) {
 }
 
 func (*WebServer) SetUpTest(_ *C) {
-	config.SetBoards([]string{"a", "c"})
+	config.Set(config.Configs{
+		Boards: []string{"a", "c"},
+	})
 	config.SetClient(nil, "")
 }
 

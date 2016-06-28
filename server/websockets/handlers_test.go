@@ -26,9 +26,9 @@ func (d *DB) TearDownSuite(c *C) {
 
 func (d *DB) SetUpTest(c *C) {
 	Clients.Clear()
-	config.SetBoards([]string{"a"})
 	config.Set(config.Configs{
 		SessionExpiry: 30,
+		Boards:        []string{"a"},
 	})
 	for _, table := range db.AllTables {
 		c.Assert(db.Write(r.Table(table).Delete()), IsNil)

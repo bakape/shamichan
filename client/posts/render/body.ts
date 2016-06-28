@@ -3,6 +3,9 @@ import {renderPostLink} from './etc'
 import {Post, PostLinks} from '../models'
 import {escape} from '../../util'
 
+// Map of {name: url} for generating `>>>/foo/bar` type reference links
+let refTargets: StringMap
+
 // Render the text body of a post
 export function renderBody(data: Post): string {
 	if (!data.state) {
@@ -104,15 +107,22 @@ function parsePostLink(bit: string, links: PostLinks): string {
 	return renderPostLink(num, verified.board, verified.op)
 }
 
-// Generate all possible refference name and link pairs
-const refTargets: {[ref: string]: string} = {},
-	{boards} = config
-for (let board of boards.enabled) {
-	refTargets[board] = `../${board}/`
+// Generate all possible refference name and link pairs for externa
+// `>>>/foo/bar` links
+export function genRefTargets() {
+	const targets: StringMap = {}
+
+	for (let link of config.links) {
+		targets[link[0]] = link[1]
+	}
+	for (let board of config.boards) { // Boards override links
+		refTargets[board] = `../${board}/`
+	}
+
+	refTargets = targets
 }
-for (let [name, link] of boards.psuedo.concat(boards.links)) {
-	refTargets[name] = link
-}
+
+genRefTargets()
 
 // Parse internal or customly set reference URL
 function parseReference(bit: string): string {

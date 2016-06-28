@@ -59,10 +59,10 @@ func LoadDB() (err error) {
 	}
 	if isCreated {
 		RSession.Use(DBName)
-		return verifyDBVersion()
-	}
-
-	if err := InitDB(); err != nil {
+		if err := verifyDBVersion(); err != nil {
+			return err
+		}
+	} else if err := InitDB(); err != nil {
 		return err
 	}
 

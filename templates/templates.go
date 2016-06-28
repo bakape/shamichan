@@ -93,7 +93,7 @@ func boardNavigation() template.HTML {
 	html := bytes.NewBuffer([]byte(`<b id="navTop">[`))
 
 	// Actual boards and "/all/" metaboard
-	for i, board := range append(config.GetBoards(), "all") {
+	for i, board := range append(config.Get().Boards, "all") {
 		if i != 0 {
 			html.WriteString(" / ")
 		}
@@ -122,11 +122,7 @@ func buildIndexTemplate(tmpl *template.Template, vars vars, isMobile bool) (
 		return
 	}
 
-	hash, err := util.HashBuffer(minified)
-	if err != nil {
-		return
-	}
-	return Store{minified, hash}, nil
+	return Store{minified, util.HashBuffer(minified)}, nil
 }
 
 // Get retrieves a compiled template by its name

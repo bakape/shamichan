@@ -11,47 +11,22 @@ import {write} from './render'
 
 // Allows us to typecheck configs. See config/defaults.json for more info.
 type Configs = {
-	boards: {
-		enabled: string[]
-		boards: {[name: string]: {title: string}}
-		default: string
-		staff: string
-		psuedo: string[][]
-		links: string[][]
-	}
-
-	lang: {
-		default: string
-		enabled: string[]
-	}
-
-	staff: {
-		classes: {[name: string]: StaffClass}
-		keyword: string
-	}
-
-	images: {
-		thumb: {
-			thumbDims: number[]
-			midDims: number[]
-		}
-		spoilers: number[]
-		hats: boolean
-	}
-
-	banners: string[]
-	FAQ: string[]
-	eightball: string[]
 	radio: boolean
+	hats: boolean
 	illyaDance: boolean
-	feedbackEmail: string
+	threadCooldown: number
+	maxSubjectLength: number
+	defaultLang: string
 	defaultCSS: string
-	infoBanner: string
+	boards: string[]
+	langs: string[]
+	FAQ: string[]
+	links: string[][]
+	spoilers: number[]
 }
 
-type StaffClass = {
-	alias: string
-	rights: {[right: string]: boolean}
+type BoardConfigs = {
+	staffClasses: string[]
 }
 
 // Configuration passed from the server. Some values can be changed during

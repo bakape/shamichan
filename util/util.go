@@ -49,9 +49,9 @@ func Waterfall(fns []func() error) (err error) {
 }
 
 // HashBuffer computes a truncated MD5 hash from a buffer
-func HashBuffer(buf []byte) (string, error) {
+func HashBuffer(buf []byte) string {
 	hash := md5.Sum(buf)
-	return hex.EncodeToString(hash[:])[:16], nil
+	return hex.EncodeToString(hash[:])[:16]
 }
 
 // CopyFile reads a file from disk and copies it into the writer

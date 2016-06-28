@@ -14,15 +14,20 @@ type Templates struct{}
 
 var _ = Suite(&Templates{})
 
-func (t *Templates) TestBoardNavigation(c *C) {
-	config.SetBoards([]string{"a"})
+func (*Templates) SetUpTest(c *C) {
+	config.Set(config.Configs{
+		Boards: []string{"a"},
+	})
+}
+
+func (*Templates) TestBoardNavigation(c *C) {
 	html := boardNavigation()
 	std := `<b id="navTop">[<a href="../a/">a</a> / <a href="../all/">all</a>` +
 		`]</b>`
 	c.Assert(string(html), Equals, std)
 }
 
-func (t *Templates) TestBuildIndexTemplate(c *C) {
+func (*Templates) TestBuildIndexTemplate(c *C) {
 	v := vars{
 		Config:     template.JS("c()"),
 		ConfigHash: "a",
@@ -36,9 +41,8 @@ func (t *Templates) TestBuildIndexTemplate(c *C) {
 	c.Assert(err, IsNil)
 }
 
-func (t *Templates) TestCompileTemplates(c *C) {
+func (*Templates) TestCompileTemplates(c *C) {
 	config.SetClient([]byte{1}, "hash")
-	config.SetBoards([]string{"a"})
 	templateRoot = "test"
 	defer func() {
 		c.Assert(recover(), IsNil)

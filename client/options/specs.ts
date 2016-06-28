@@ -68,9 +68,9 @@ export const specs: OptionSpec[] = [
 	{
 		id: 'lang',
 		type: optionType.menu,
-		list: config.lang.enabled,
+		list: config.langs,
 		tab: tabs.general,
-		default: config.lang.default,
+		default: config.defaultLang,
 		noExecOnStart: true,
 		exec() {
 			alert(lang.langApplied)

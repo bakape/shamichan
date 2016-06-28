@@ -416,11 +416,7 @@ func servePost(
 		return
 	}
 
-	etag, err := util.HashBuffer(data)
-	if err != nil {
-		textErrorPage(res, req, err)
-		return
-	}
+	etag := util.HashBuffer(data)
 	if checkClientEtag(res, req, etag) {
 		return
 	}

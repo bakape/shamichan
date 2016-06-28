@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"testing"
 
 	. "gopkg.in/check.v1"
@@ -12,11 +13,21 @@ type Tests struct{}
 
 var _ = Suite(&Tests{})
 
+func (*Tests) SetUpTest(c *C) {
+	global = nil
+	clientJSON = nil
+	boardConfigs = nil
+	hash = ""
+}
+
 func (*Tests) TestSetGet(c *C) {
 	conf := Configs{}
 	conf.Hats = true
-	Set(conf)
+	c.Assert(Set(conf), IsNil)
 	c.Assert(Get(), DeepEquals, &conf)
+	json, hash := GetClient()
+	c.Assert(json, NotNil)
+	c.Assert(hash, Not(Equals), "")
 }
 
 func (*Tests) TestSetGetClient(c *C) {
@@ -28,8 +39,8 @@ func (*Tests) TestSetGetClient(c *C) {
 	c.Assert(jsonHash, Equals, hash)
 }
 
-func (*Tests) TestSetGetBoards(c *C) {
-	std := []string{"a"}
-	SetBoards(std)
-	c.Assert(GetBoards(), DeepEquals, std)
+func (*Tests) TestMarshalSpoilers(c *C) {
+	data, err := json.Marshal(spoilers{1, 2, 3})
+	c.Assert(err, IsNil)
+	c.Assert(string(data), Equals, `[1,2,3]`)
 }

@@ -24,9 +24,7 @@ func (*Util) TestWrapError(c *C) {
 }
 
 func (*Util) TestHashBuffer(c *C) {
-	hash, err := HashBuffer([]byte{1, 2, 3})
-	c.Assert(err, IsNil)
-	c.Assert(hash, Equals, "5289df737df57326")
+	c.Assert(HashBuffer([]byte{1, 2, 3}), Equals, "5289df737df57326")
 }
 
 type jsonSample struct {

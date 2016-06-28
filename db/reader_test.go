@@ -93,7 +93,9 @@ var (
 )
 
 func (*DBSuite) TestGetPost(c *C) {
-	config.SetBoards([]string{"a"})
+	config.Set(config.Configs{
+		Boards: []string{"a"},
+	})
 	std := types.Post{
 		ID:    2,
 		Board: "a",
@@ -154,7 +156,9 @@ func (*DBSuite) TestGetBoard(c *C) {
 }
 
 func setEnabledBoards(boards ...string) {
-	config.SetBoards(boards)
+	config.Set(config.Configs{
+		Boards: boards,
+	})
 }
 
 func (*DBSuite) TestGetEmptyBoard(c *C) {

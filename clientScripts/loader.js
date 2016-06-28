@@ -116,7 +116,7 @@
 	var xhr = new XMLHttpRequest()
 	xhr.open(
 		'GET',
-		'/assets/lang/' + (localStorage.lang || config.lang.default) + '.json'
+		'/assets/lang/' + (localStorage.lang || config.defaultLang) + '.json'
 	)
 	xhr.responseType = 'json'
 	xhr.onload = function () {

@@ -33,7 +33,9 @@ func (*DBSuite) SetUpTest(c *C) {
 	for _, table := range AllTables {
 		c.Assert(Write(r.Table(table).Delete()), IsNil)
 	}
-	config.SetBoards([]string{"a"})
+	config.Set(config.Configs{
+		Boards: []string{"a"},
+	})
 }
 
 func (d *DBSuite) TearDownSuite(c *C) {

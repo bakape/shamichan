@@ -4,21 +4,20 @@
 package config
 
 import (
+	"encoding/json"
+	"strconv"
 	"sync"
 	"time"
+
+	"github.com/bakape/meguca/util"
 )
 
 var (
 	// Ensures no reads happen, while the configuration is reloading
-	globalMu, boardConfigMu, boardsMu sync.RWMutex
+	globalMu, boardsMu sync.RWMutex
 
-	// Contains currently loaded server configuration. Intialised to an empty
-	// struct pointer, so we don't have to explicitly initialise it in all our
-	// tests.
-	global = &Configs{}
-
-	// All existing boards
-	boards []string
+	// Contains currently loaded global server configuration
+	global *Configs
 
 	// Map of board IDs to their cofiguration structs
 	boardConfigs map[string]BoardConfigs
@@ -27,39 +26,59 @@ var (
 	clientJSON []byte
 
 	// Hash of the gloabal configs. Used for live reloading configuration on the
-	// client
+	// client.
 	hash string
 )
 
 // Configs stores the global configuration
 type Configs struct {
-	SSL              bool          `json:"-"`
-	TrustProxies     bool          `json:"-" gorethink:"trustProxies"`
-	Gzip             bool          `json:"-" gorethink:"gzip"`
-	Prune            bool          `json:"-" gorethink:"prune"`
-	Radio            bool          `json:"radio" gorethink:"radio"`
-	WebmAudio        bool          `json:"-" gorethink:"webmAudio"`
-	Hats             bool          `json:"hats" gorethink:"hats"`
-	MaxWidth         uint16        `json:"-" gorethink:"maxWidth"`
-	MaxHeight        uint16        `json:"-" gorethink:"maxHeight"`
-	MaxThreads       int           `json:"-" gorethink:"maxThreads"`
-	MaxBump          int           `json:"-" gorethink:"maxBump"`
-	JPEGQuality      int           `json:"-"`
-	PNGQuality       int           `json:"-"`
-	ThreadCooldown   int           `json:"threadCooldown" gorethink:"threadCooldown"`
-	MaxSubjectLength int           `json:"maxSubjectLength" gorethink:"maxSubjectLength"`
-	MaxSize          int64         `json:"-" gorethink:"maxSize"`
-	Origin           string        `json:"-" gorethink:"origin"`
-	SSLCert          string        `json:"-"`
-	SSLKey           string        `json:"-"`
-	Frontpage        string        `json:"-" gorethink:"frontpage"`
-	DefaultCSS       string        `json:"defaultCSS" gorethink:"defaultCSS"`
-	Salt             string        `json:"-" gorethink:"salt"`
-	ExcludeRegex     string        `json:"excludeRegex" gorethink:"excludeRegex"`
-	FeedbackEmail    string        `json:"-" gorethink:"feedbackEmail"`
+	SSL              bool     `json:"-"`
+	TrustProxies     bool     `json:"-" gorethink:"trustProxies"`
+	Gzip             bool     `json:"-" gorethink:"gzip"`
+	Prune            bool     `json:"-" gorethink:"prune"`
+	Radio            bool     `json:"radio" gorethink:"radio"`
+	WebmAudio        bool     `json:"-" gorethink:"webmAudio"`
+	Hats             bool     `json:"hats" gorethink:"hats"`
+	IllyaDance       bool     `json:"illyaDance" gorethink:"illyaDance"`
+	MaxWidth         uint16   `json:"-" gorethink:"maxWidth"`
+	MaxHeight        uint16   `json:"-" gorethink:"maxHeight"`
+	MaxThreads       int      `json:"-" gorethink:"maxThreads"`
+	MaxBump          int      `json:"-" gorethink:"maxBump"`
+	JPEGQuality      int      `json:"-"`
+	PNGQuality       int      `json:"-"`
+	ThreadCooldown   int      `json:"threadCooldown" gorethink:"threadCooldown"`
+	MaxSubjectLength int      `json:"maxSubjectLength" gorethink:"maxSubjectLength"`
+	MaxSize          int64    `json:"-" gorethink:"maxSize"`
+	Origin           string   `json:"-" gorethink:"origin"`
+	DefaultLang      string   `json:"defaultLang" gorethink:"defaultLang"`
+	SSLCert          string   `json:"-"`
+	SSLKey           string   `json:"-"`
+	Frontpage        string   `json:"-" gorethink:"frontpage"`
+	DefaultCSS       string   `json:"defaultCSS" gorethink:"defaultCSS"`
+	Salt             string   `json:"-" gorethink:"salt"`
+	ExcludeRegex     string   `json:"-" gorethink:"excludeRegex"`
+	FeedbackEmail    string   `json:"-" gorethink:"feedbackEmail"`
+	Boards           []string `json:"boards" gorethink:"boards"`
+	Langs            []string `json:"langs" gorethink:"langs"`
+	FAQ              []string
 	Links            [][2]string   `json:"links" gorethink:"links"`
-	Spoilers         []uint8       `json:"spoilers" gorethink:"spoliers"`
+	Spoilers         spoilers      `json:"spoilers" gorethink:"spoliers"`
 	SessionExpiry    time.Duration `json:"-" gorethink:"sessionExpiry"`
+}
+
+// Need a custom json.Marshaler, because []uint8 decodes the same as []byte by
+// default
+type spoilers []uint8
+
+func (s spoilers) MarshalJSON() ([]byte, error) {
+	buf := []byte{'['}
+	for i, sp := range s {
+		if i != 0 {
+			buf = append(buf, ',')
+		}
+		buf = strconv.AppendUint(buf, uint64(sp), 10)
+	}
+	return append(buf, ']'), nil
 }
 
 // Defaults contains the default server configuration values
@@ -82,7 +101,7 @@ var Defaults = Configs{
 	MaxSize:          3145728,
 	MaxHeight:        6000,
 	MaxWidth:         6000,
-	Spoilers:         []uint8{0},
+	Spoilers:         spoilers{0},
 	DefaultCSS:       "moe",
 	ThreadCooldown:   60,
 	MaxSubjectLength: 50,
@@ -91,6 +110,9 @@ var Defaults = Configs{
 	Radio:            false,
 	SessionExpiry:    30,
 	FeedbackEmail:    "admin@email.com",
+	Langs:            []string{"en_GB"},
+	Boards:           []string{},
+	DefaultLang:      "en_GB",
 }
 
 // BoardConfigs stores overall board configuration
@@ -105,10 +127,19 @@ func Get() *Configs {
 }
 
 // Set sets the internal configuration struct. To be used only in tests.
-func Set(c Configs) {
+func Set(c Configs) error {
+	client, err := json.Marshal(c)
+	if err != nil {
+		return err
+	}
+	h := util.HashBuffer(client)
+
 	globalMu.Lock()
 	defer globalMu.Unlock()
+	clientJSON = client
 	global = &c
+	hash = h
+	return nil
 }
 
 // GetClient returns punlic availability configuration JSON and a truncated
@@ -126,19 +157,4 @@ func SetClient(json []byte, cHash string) {
 	defer globalMu.Unlock()
 	clientJSON = json
 	hash = cHash
-}
-
-// GetBoards returns all boards currently existing. Receivers must not modify
-// the slice.
-func GetBoards() []string {
-	boardsMu.RLock()
-	defer boardsMu.RUnlock()
-	return boards
-}
-
-// SetBoards updates the all boards currently existing set
-func SetBoards(b []string) {
-	boardsMu.Lock()
-	defer boardsMu.Unlock()
-	boards = b
 }

@@ -110,8 +110,8 @@ func printUsage() {
 
 func startServer() {
 	fns := []func() error{
-		templates.Compile,
 		db.LoadDB,
+		templates.Compile,
 		imager.InitImager,
 		startWebServer,
 	}
