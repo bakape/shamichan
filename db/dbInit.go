@@ -199,7 +199,7 @@ func UniqueDBName() string {
 
 // Create the admin account and write it to the database
 func createAdminAccount() error {
-	hash, err := bcrypt.GenerateFromPassword([]byte("password"), 10)
+	hash, err := bcrypt.GenerateFromPassword([]byte("adminpassword"), 10)
 	if err != nil {
 		return err
 	}
