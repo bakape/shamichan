@@ -46,9 +46,8 @@ func (*DB) TestSyncToBoard(c *C) {
 	// Valid synchronisation
 	msg.Board = "a"
 	data = marshalJSON(msg, c)
-	cl.ID = "hex"
 	c.Assert(synchronise(data, cl), IsNil)
-	assertMessage(wcl, []byte(`30{id:"hex"}`), c)
+	assertMessage(wcl, []byte(`30"`+cl.ID+`"`), c)
 }
 
 func (*ClientSuite) TestRegisterSync(c *C) {

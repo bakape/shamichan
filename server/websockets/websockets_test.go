@@ -83,11 +83,11 @@ func dialServer(c *C, sv *httptest.Server) *websocket.Conn {
 	return wcl
 }
 
-func assertMessage(con *websocket.Conn, msg []byte, c *C) {
+func assertMessage(con *websocket.Conn, std []byte, c *C) {
 	typ, msg, err := con.ReadMessage()
 	c.Assert(err, IsNil)
 	c.Assert(typ, Equals, websocket.TextMessage)
-	c.Assert(msg, DeepEquals, msg)
+	c.Assert(string(msg), Equals, string(std))
 }
 
 func assertWebsocketError(
@@ -282,10 +282,9 @@ func (*ClientSuite) TestInvalidMessage(c *C) {
 	cl, wcl := sv.NewClient()
 
 	sv.Add(1)
-	res := fmt.Sprintf("00\"%s\"", onlyText)
 	go assertListenError(cl, onlyText, sv, c)
 	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, []byte{1}), IsNil)
-	assertMessage(wcl, []byte(res), c)
+	assertMessage(wcl, []byte(`00"Only text frames allowed"`), c)
 	sv.Wait()
 }
 
@@ -407,7 +406,7 @@ func (*ClientSuite) TestSendMessage(c *C) {
 
 	// 1 char type string
 	c.Assert(cl.sendMessage(messageInsertPost, nil), IsNil)
-	assertMessage(wcl, []byte("01null"), c)
+	assertMessage(wcl, []byte("02null"), c)
 
 	// 2 char type string
 	c.Assert(cl.sendMessage(messageSynchronise, nil), IsNil)

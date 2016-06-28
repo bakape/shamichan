@@ -75,7 +75,7 @@ func (*DB) TestAlreadyLoggedIn(c *C) {
 
 func (*DB) TestNotLoggedIn(c *C) {
 	cl := new(Client)
-	for _, fn := range [...]handler{logOut, logOutAll} {
+	for _, fn := range [...]handler{logOut, logOutAll, changePassword} {
 		c.Assert(fn(nil, cl), Equals, errNotLoggedIn)
 	}
 }
@@ -122,7 +122,7 @@ func (*DB) TestAuthenticateNonExistantUser(c *C) {
 	req := authenticationRequest{
 		ID: "123",
 	}
-	assertHandlerResponse(req, authenticateSession, []byte("false"), c)
+	assertHandlerResponse(req, authenticateSession, []byte("35false"), c)
 }
 
 func (*DB) TestAuthenticateInvalidSession(c *C) {
@@ -132,7 +132,7 @@ func (*DB) TestAuthenticateInvalidSession(c *C) {
 	}
 	c.Assert(db.RegisterAccount(id, []byte("bar")), IsNil)
 
-	assertHandlerResponse(req, authenticateSession, []byte("false"), c)
+	assertHandlerResponse(req, authenticateSession, []byte("35false"), c)
 }
 
 func (*DB) TestAuthentication(c *C) {
@@ -163,7 +163,7 @@ func (*DB) TestAuthentication(c *C) {
 	c.Assert(authenticateSession(data, cl), IsNil)
 	c.Assert(cl.sessionToken, Equals, session)
 	c.Assert(cl.userID, Equals, id)
-	assertMessage(wcl, []byte("true"), c)
+	assertMessage(wcl, []byte("35true"), c)
 }
 
 func (*DB) TestLogOut(c *C) {
@@ -196,7 +196,7 @@ func assertLogout(id string, fn handler, c *C) {
 	cl.sessionToken = "foo"
 
 	c.Assert(fn(nil, cl), IsNil)
-	assertMessage(wcl, []byte("true"), c)
+	assertMessage(wcl, []byte("36true"), c)
 	c.Assert(cl.userID, Equals, "")
 	c.Assert(cl.sessionToken, Equals, "")
 }
@@ -222,4 +222,51 @@ func (*DB) TestLogOutAll(c *C) {
 	c.Assert(db.One(db.GetAccount(id), &res), IsNil)
 	user.Sessions = []auth.Session{}
 	c.Assert(res, DeepEquals, user)
+}
+
+func (*DB) TestChangePassword(c *C) {
+	const (
+		id  = "123"
+		old = "123456"
+		new = "654321"
+	)
+	hash, err := bcrypt.GenerateFromPassword([]byte(old), 10)
+	c.Assert(err, IsNil)
+	c.Assert(db.RegisterAccount(id, hash), IsNil)
+
+	// Wrong password
+	req := passwordChangeRequest{
+		Old: "1234567",
+		New: new,
+	}
+	assertLoggedInResponse(req, changePassword, id, []byte("38false"), c)
+
+	// Correct password
+	req = passwordChangeRequest{
+		Old: old,
+		New: new,
+	}
+	assertLoggedInResponse(req, changePassword, id, []byte("38true"), c)
+
+	// Assert new hash was generated from the old
+	hash, err = db.GetLoginHash(id)
+	c.Assert(err, IsNil)
+	c.Assert(bcrypt.CompareHashAndPassword(hash, []byte(new)), IsNil)
+}
+
+func assertLoggedInResponse(
+	req interface{},
+	fn handler,
+	id string,
+	msg []byte,
+	c *C,
+) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+	cl.sessionToken = "foo"
+	cl.userID = id
+	data := marshalJSON(req, c)
+	c.Assert(fn(data, cl), IsNil)
+	assertMessage(wcl, msg, c)
 }
