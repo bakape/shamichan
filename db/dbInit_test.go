@@ -106,6 +106,10 @@ func (*DBInit) TestLoadDB(c *C) {
 	c.Assert(One(GetMain("config"), &conf), IsNil)
 	c.Assert(conf, DeepEquals, config.Defaults)
 
+	var exists bool
+	c.Assert(One(GetAccount("admin").Eq(nil).Not(), &exists), IsNil)
+	c.Assert(exists, Equals, true)
+
 	c.Assert(RSession.Close(), IsNil)
 	c.Assert(LoadDB(), IsNil)
 }

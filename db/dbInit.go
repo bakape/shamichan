@@ -13,6 +13,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const dbVersion = 8
@@ -131,7 +132,11 @@ func InitDB() error {
 		},
 	}
 	if err := Write(r.Table("main").Insert(main)); err != nil {
-		return util.WrapError("Error initializing database", err)
+		return util.WrapError("error initializing database", err)
+	}
+
+	if err := createAdminAccount(); err != nil {
+		return err
 	}
 
 	return CreateIndeces()
@@ -190,4 +195,13 @@ func waitForIndex(table string) func() error {
 // `go test` don't clash in the same database.
 func UniqueDBName() string {
 	return "meguca_tests_" + strconv.FormatInt(time.Now().UnixNano(), 10)
+}
+
+// Create the admin account and write it to the database
+func createAdminAccount() error {
+	hash, err := bcrypt.GenerateFromPassword([]byte("password"), 10)
+	if err != nil {
+		return err
+	}
+	return RegisterAccount("admin", hash)
 }
