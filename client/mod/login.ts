@@ -4,8 +4,8 @@ import {TabbedModal} from '../banner'
 import {write} from '../render'
 import {defer} from '../defer'
 import {mod as lang} from '../lang'
-import {setLabel, on} from '../util'
-import {handlers, send, message} from '../connection'
+import {setLabel, on, HTML} from '../util'
+import {register, send, message} from '../connection'
 
 // Login/Registration request sent to the server through websocket
 type LoginRequest = {
@@ -26,7 +26,8 @@ type LoginResponse = {
 	session: string // Session ID token
 }
 
-let sessionToken = localStorage.getItem("sessionToken"),
+let loginID = localStorage.getItem("loginID"),
+	sessionToken = localStorage.getItem("sessionToken"),
 	panel: AccountPanel
 
 // Account login and registration
@@ -39,16 +40,13 @@ class AccountPanel extends TabbedModal {
 	constructor() {
 		super({el: document.querySelector('#account-panel')})
 
-		// Not already logged in
-		if (!sessionToken) {
-			on(this.$login, 'submit', e => this.login(e))
-			on(this.$register, 'submit', e => this.register(e))
-			this.validatePasswordMatch()
-
-			write(() => this.renderInitial())
-		} else {
-			write(() => this.renderControls())
-		}
+		on(this.$register, 'submit', e => this.register(e))
+		on(this.$login, 'submit', e => this.login(e))
+		this.validatePasswordMatch()
+		write(() => this.renderInitial())
+		this.onClick({
+			'#logout': () => this.logout(),
+		})
 	}
 
 	// Render localised labels to the login and registration forms
@@ -96,7 +94,17 @@ class AccountPanel extends TabbedModal {
 
 	// Render board creation and management controls
 	renderControls() {
+		this.el.innerHTML = HTML
+			`<a id="logout">
+				${lang.logout}
+			</a>`
+	}
 
+	// Log out of the user account
+	logout() {
+		localStorage.removeItem("sessionToken")
+		localStorage.removeItem("loginID")
+		location.reload()
 	}
 }
 
@@ -110,17 +118,19 @@ function sendRequest(el: HTMLFormElement, type: message) {
 			.querySelector(`input[name=${key}]`) as HTMLInputElement)
 			.value
 	}
+	loginID = req.id
 	send(type, req)
 }
 
 // Both registration and login requests reply with the same messsage type
-handlers[message.login] = ({code, session}: LoginResponse) => {
+register(message.login, ({code, session}: LoginResponse) => {
 	let text: string
 	switch (code) {
 	case responseCode.success:
 		sessionToken = session
 		localStorage.setItem("sessionToken", session)
-		panel.renderControls()
+		localStorage.setItem("loginID", loginID)
+		write(() => panel.renderControls())
 		return
 	case responseCode.nameTaken:
 		text = lang.nameTaken
@@ -135,4 +145,21 @@ handlers[message.login] = ({code, session}: LoginResponse) => {
 	}
 
 	document.querySelector("#login-response").textContent = text
+})
+
+// Send the authentication request to the server
+export function authenticate() {
+	if (!sessionToken) {
+		return
+	}
+	send(message.authenticate, {
+		id: loginID,
+		session: sessionToken,
+	})
 }
+
+register(message.authenticate, (success: boolean) => {
+	if (success) {
+		write(() => panel.renderControls())
+	}
+})

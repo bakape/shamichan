@@ -123,6 +123,7 @@ type LnSyncwatch = {
 type LnMod = {
 	id: string
 	register: string
+	logout: string
 	submit: string
 	password: string
 	repeat: string

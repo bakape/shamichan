@@ -30,7 +30,8 @@ Compiled binary release archives for linux/x86_64 and windows/x86_64 are downloa
 from the [release](https://github.com/bakape/meguca/releases) page.
 
 ##Production
-* See `./meguca help`
+* See `./meguca help` for server operation
+* Login into the "admin" with the password "password" and change the password
 * For upgrading between semver major releases see `docs/migration.md`
 
 ##Building from source

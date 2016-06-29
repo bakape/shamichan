@@ -88,6 +88,7 @@
 	"mod": {
 		"id": "Login",
 		"register": "Register",
+		"logout": "Logout",
 		"submit": "Submit",
 		"password": "Password",
 		"repeat": "Repeat",

@@ -6,6 +6,8 @@ import FSM from './fsm'
 import {debug, syncCounter, page, clientID, setClientID} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
+import {authenticate} from './mod/login'
+import {defer} from './defer'
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server
@@ -41,7 +43,7 @@ export type MessageHandler = (msg: {}) => void
 
 // Websocket message handlers. Each handler responds to its distinct message
 // type.
-export const handlers: {[type: number]: MessageHandler} = {}
+const handlers: {[type: number]: MessageHandler} = {}
 
 // Websocket connection and syncronisation with server states
 const enum syncStatus {disconnected, connecting, syncing, synced, desynced}
@@ -63,14 +65,14 @@ let socket: WebSocket,
 	attempts: number,
 	attemptTimer: number
 
+// Register a handler for a websocket message type
+export function register(type: message, handler: MessageHandler) {
+	// Defered for now. Will not be needed with native ES6 modules
+	defer(() => handlers[type] = handler)
+}
+
 // Send a message to the server
 export function send(type: message, msg: {}) {
-	if (connSM.state !== connState.synced
-		&& connSM.state !== connState.syncing
-		&& type !== message.synchronise
-	) {
-		return
-	}
 	if (socket.readyState !== 1) {
 		console.warn("Attempting to send while socket closed")
 		return
@@ -175,6 +177,7 @@ connSM.act(
 		// }
 
 		send(type, msg)
+		authenticate()
 
 		attemptTimer = setTimeout(() => resetAttempts(), 10000)
 	}
