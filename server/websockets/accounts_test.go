@@ -7,7 +7,6 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
-	"golang.org/x/crypto/bcrypt"
 	. "gopkg.in/check.v1"
 )
 
@@ -102,7 +101,7 @@ func (*DB) TestLogin(c *C) {
 		id       = "123"
 		password = "123456"
 	)
-	hash, err := bcrypt.GenerateFromPassword([]byte(id+password), 10)
+	hash, err := util.PasswordHash(id, password)
 	c.Assert(err, IsNil)
 	c.Assert(db.RegisterAccount(id, hash), IsNil)
 	req := loginRequest{
@@ -230,7 +229,7 @@ func (*DB) TestChangePassword(c *C) {
 		old = "123456"
 		new = "654321"
 	)
-	hash, err := bcrypt.GenerateFromPassword([]byte(old), 10)
+	hash, err := util.PasswordHash(id, old)
 	c.Assert(err, IsNil)
 	c.Assert(db.RegisterAccount(id, hash), IsNil)
 
@@ -248,10 +247,10 @@ func (*DB) TestChangePassword(c *C) {
 	}
 	assertLoggedInResponse(req, changePassword, id, []byte("38true"), c)
 
-	// Assert new hash was generated from the old
+	// Assert new hash matches new password
 	hash, err = db.GetLoginHash(id)
 	c.Assert(err, IsNil)
-	c.Assert(bcrypt.CompareHashAndPassword(hash, []byte(new)), IsNil)
+	c.Assert(util.ComparePassword(id, new, hash), IsNil)
 }
 
 func assertLoggedInResponse(

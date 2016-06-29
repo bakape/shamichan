@@ -12,10 +12,13 @@
 		"unknownUpload": "Unknown upload error",
 		"unknownResult": "Unknown result",
 		"thread_locked": "This thread is locked.",
+		"quoted": "You have been quoted"
+	},
+
+	"ui": {
+		"cancel": "Cancel",
 		"done": "Done",
-		"send": "Send",
-		"quoted": "You have been quoted",
-		"cancel": "Cancel"
+		"send": "Send"
 	},
 
 	"banner": {
@@ -90,12 +93,16 @@
 		"id": "Login",
 		"register": "Register",
 		"logout": "Logout",
+		"changePassword": "Change password",
+		"oldPassword": "Old password",
+		"newPassword": "New password",
 		"submit": "Submit",
 		"password": "Password",
 		"repeat": "Repeat",
 		"mustMatch": "Passwords must match",
 		"nameTaken": "Login name already taken",
 		"wrongCredentials": "Incorrect login name or password",
+		"wrongPassword": "Incorrect password",
 		"theFuck": "SOMEBODY FUCKED UP"
 	},
 

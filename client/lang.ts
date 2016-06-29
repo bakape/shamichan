@@ -8,6 +8,7 @@ import {defer} from './defer'
 
 type LanguagePack = {
 	posts: LnPosts
+	ui: LnUI
 	banner: LnBanner
 	images: LnImages
 	navigation: LnNavigation
@@ -24,6 +25,7 @@ const lang = (window as any).lang as LanguagePack
 // Export each container indivudually for namespacing purposes
 // Can't use destructuring, because it breaks with the SystemJS module compiler.
 export const posts = lang.posts
+export const ui = lang.ui
 export const banner = lang.banner
 export const images = lang.images
 export const navigation = lang.navigation
@@ -48,7 +50,13 @@ type LnPosts = {
 	unknownResult: string
 	threadLocked: string
 	quoted: string
+	[index: string]: string
+}
+
+type LnUI = {
 	cancel: string
+	done: string
+	send: string
 	[index: string]: string
 }
 
@@ -59,6 +67,7 @@ type LnBanner = {
 	email: string
 	options: string
 	identity: string
+	acccount: string
 	FAQ: string
 	feedback: string
 	googleSong: string
@@ -127,9 +136,13 @@ type LnMod = {
 	submit: string
 	password: string
 	repeat: string
+	changePassword: string
+	oldPassword: string
+	newPassword: string
 	mustMatch: string
 	nameTaken: string
 	wrongCredentials: string
+	wrongPassword: string
 	theFuck: string
 	[index: string]: string
 }

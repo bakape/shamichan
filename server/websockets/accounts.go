@@ -90,7 +90,7 @@ func handleRegistration(id, password string) (
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(id+password), 10)
+	hash, err := util.PasswordHash(id, password)
 	if err != nil {
 		return
 	}
@@ -158,7 +158,7 @@ func login(data []byte, c *Client) error {
 	}
 
 	var code loginResponseCode
-	err = bcrypt.CompareHashAndPassword(hash, []byte(req.ID+req.Password))
+	err = util.ComparePassword(req.ID, req.Password, hash)
 	switch err {
 	case bcrypt.ErrMismatchedHashAndPassword:
 		code = wrongCredentials
@@ -263,7 +263,7 @@ func changePassword(data []byte, c *Client) error {
 
 	// Validate old password
 	var success bool
-	err = bcrypt.CompareHashAndPassword(hash, []byte(req.Old))
+	err = util.ComparePassword(c.userID, req.Old, hash)
 	switch err {
 	case nil:
 		success = true
@@ -274,7 +274,7 @@ func changePassword(data []byte, c *Client) error {
 
 	// If old password matched, write new hash to DB
 	if success {
-		hash, err := bcrypt.GenerateFromPassword([]byte(req.New), 10)
+		hash, err := util.PasswordHash(c.userID, req.New)
 		if err != nil {
 			return err
 		}

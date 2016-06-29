@@ -80,23 +80,6 @@ const AdminPanelView = PanelView.extend({
 });
 exports.adminPanel = AdminPanelView;
 
-/**
- * Construct a table from an array of items and a consumer funtion that returns
- * an array of column contents.
- */
-function table(rows, func) {
-	let html = '<table>';
-	for (let row of rows) {
-		html += '<tr>';
-		for (let cell of func(row)) {
-			html += `<td>${cell}</td>`;
-		}
-		html += '</tr>';
-	}
-	html += '</table>';
-	return html;
-}
-
 const RequestPanelView = PanelView.extend({
 	type: 'djPanel',
 	events: {

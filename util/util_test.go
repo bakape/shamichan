@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"golang.org/x/crypto/bcrypt"
 	. "gopkg.in/check.v1"
 )
 
@@ -98,4 +99,21 @@ func (*Util) TestAtomicCloser(c *C) {
 	c.Assert(ac.IsOpen(), Equals, true)
 	ac.Close()
 	c.Assert(ac.IsOpen(), Equals, false)
+}
+
+func (*Util) TestPasswordHash(c *C) {
+	const (
+		id       = "123"
+		password = "123456"
+	)
+	hash, err := PasswordHash(id, password)
+	c.Assert(err, IsNil)
+
+	// Mismatch
+	err = ComparePassword(id, password+"1", hash)
+	c.Assert(err, Equals, bcrypt.ErrMismatchedHashAndPassword)
+
+	// Correct
+	err = ComparePassword(id, password, hash)
+	c.Assert(err, IsNil)
 }

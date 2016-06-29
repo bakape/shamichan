@@ -16,7 +16,4 @@ export class Modal extends View {
 		}
 		super(args)
 	}
-
-	// TODO: Add close button and unify modal structure
-
 }

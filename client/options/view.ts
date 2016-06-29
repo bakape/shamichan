@@ -63,7 +63,7 @@ export default class OptionsPanel extends TabbedModal {
 
 	// Propagate options panel changes through
 	// options-panel -> options -> OptionModel
-	async applyChange(event: Event) {
+	applyChange(event: Event) {
 		const el = event.target as Element,
 			id = el.getAttribute('id'),
 			model = models[id]
@@ -89,8 +89,8 @@ export default class OptionsPanel extends TabbedModal {
 			break
 		case optionType.image:
 			// Not recorded. Extracted directly by the background handler
-			(await loadModule('background'))
-				.store((event as any).target.files[0])
+			loadModule('background').then(m =>
+				m.store((event as any).target.files[0]))
 			return
 		}
 

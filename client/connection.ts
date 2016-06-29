@@ -37,13 +37,14 @@ export const enum message {
 	authenticate,
 	logout,
 	logoutAll,
+	changePassword,
 }
 
 export type MessageHandler = (msg: {}) => void
 
 // Websocket message handlers. Each handler responds to its distinct message
 // type.
-const handlers: {[type: number]: MessageHandler} = {}
+export const handlers: {[type: number]: MessageHandler} = {}
 
 // Websocket connection and syncronisation with server states
 const enum syncStatus {disconnected, connecting, syncing, synced, desynced}
@@ -64,12 +65,6 @@ export const connSM = new FSM<connState, connEvent>(connState.loading)
 let socket: WebSocket,
 	attempts: number,
 	attemptTimer: number
-
-// Register a handler for a websocket message type
-export function register(type: message, handler: MessageHandler) {
-	// Defered for now. Will not be needed with native ES6 modules
-	defer(() => handlers[type] = handler)
-}
 
 // Send a message to the server
 export function send(type: message, msg: {}) {

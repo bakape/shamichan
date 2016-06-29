@@ -13,7 +13,6 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
-	"golang.org/x/crypto/bcrypt"
 )
 
 const dbVersion = 8
@@ -199,7 +198,7 @@ func UniqueDBName() string {
 
 // Create the admin account and write it to the database
 func createAdminAccount() error {
-	hash, err := bcrypt.GenerateFromPassword([]byte("adminpassword"), 10)
+	hash, err := util.PasswordHash("admin", "password")
 	if err != nil {
 		return err
 	}
