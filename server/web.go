@@ -31,8 +31,28 @@ import (
 	"github.com/sebest/xff"
 )
 
-// Address is the listening address of the HTTP web server
-var Address = ":8000"
+var (
+	// Address is the listening address of the HTTP web server
+	address = ":8000"
+
+	// Defines if HTTPS should be used for listening for incomming connections.
+	// Requires sslCert and sslKey to be set.
+	ssl bool
+
+	// Path to SSL certificate
+	sslCert string
+
+	// Path to SSL key
+	sslKey string
+
+	// Defines, if the server should interpret X-Forwarded-For headers as the
+	// actual IP of the request
+	trustProxies bool
+
+	// Defines, if all trafic should be piped through a gzip compression
+	// -decompression handler
+	enableGzip bool
+)
 
 // Used for overriding during tests
 var (
@@ -60,14 +80,13 @@ var imageHeaders = map[string]string{
 }
 
 func startWebServer() (err error) {
-	conf := config.Get()
 	r := createRouter()
-	log.Println("listening on " + Address)
+	log.Println("listening on " + address)
 
-	if conf.SSL {
-		err = http.ListenAndServeTLS(Address, conf.SSLCert, conf.SSLKey, r)
+	if ssl {
+		err = http.ListenAndServeTLS(address, sslCert, sslKey, r)
 	} else {
-		err = http.ListenAndServe(Address, r)
+		err = http.ListenAndServe(address, r)
 	}
 	if err != nil {
 		return util.WrapError("error starting web server", err)
@@ -108,11 +127,10 @@ func createRouter() http.Handler {
 	r.POST("/upload", wrapHandler(imager.NewImageUpload))
 
 	h := http.Handler(r)
-	conf := config.Get()
-	if conf.Gzip {
+	if enableGzip {
 		h = handlers.CompressHandlerLevel(h, gzip.DefaultCompression)
 	}
-	if conf.TrustProxies {
+	if trustProxies {
 		xffParser, err := xff.Default()
 		if err != nil {
 			log.Fatal(err)

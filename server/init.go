@@ -32,23 +32,39 @@ var (
 func Start() {
 	// Define flags
 	flag.StringVar(
-		&Address,
-		"-http-addr",
+		&address,
+		"http-addr",
 		":8000",
 		"address to listen on for incomming HTTP connections",
 	)
 	flag.StringVar(
 		&db.Address,
-		"-db-addr",
+		"db-addr",
 		"localhost:28015",
 		"address of the RethinkDB server to connect to",
 	)
 	flag.StringVar(
 		&db.DBName,
-		"-db-name",
+		"db-name",
 		"meguca",
 		"name of the RethinkDB database to use",
 	)
+	flag.BoolVar(
+		&ssl,
+		"ssl",
+		false,
+		"serve and listen only through HTTPS. Requires -ssl-cert and "+
+			"-ssl-key to be set",
+	)
+	flag.StringVar(&sslCert, "ssl-cert", "", "path to SSL certificate")
+	flag.StringVar(&sslKey, "ssl-key", "", "path to SSL key")
+	flag.BoolVar(
+		&trustProxies,
+		"trust-proxies",
+		false,
+		"honour X-Forwarded-For headers",
+	)
+	flag.BoolVar(&enableGzip, "gzip", false, "compress all traffic with gzip")
 	flag.Usage = printUsage
 
 	// Parse command line arguments

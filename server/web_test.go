@@ -52,6 +52,8 @@ func (d *DB) SetUpSuite(c *C) {
 }
 
 func (*DB) SetUpTest(_ *C) {
+	enableGzip = false
+	trustProxies = false
 	config.Set(config.Configs{
 		Boards: []string{"a"},
 	})
@@ -639,9 +641,7 @@ func (d *DB) TestThreadJSON(c *C) {
 }
 
 func (w *WebServer) TestGzip(c *C) {
-	config.Set(config.Configs{
-		Gzip: true,
-	})
+	enableGzip = true
 	r := createRouter()
 	rec, req := newPair(c, "/json/config")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -651,9 +651,7 @@ func (w *WebServer) TestGzip(c *C) {
 
 func (w *WebServer) TestProxyHeaders(c *C) {
 	const ip = "68.180.194.242"
-	config.Set(config.Configs{
-		TrustProxies: true,
-	})
+	trustProxies = true
 	r := createRouter()
 	rec, req := newPair(c, "/json/config")
 	req.Header.Set("X-Forwarded-For", ip)

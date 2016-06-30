@@ -42,14 +42,10 @@ Accepted upload file types: JPG, JPEG, PNG, GIF, WEBM, SVG, PDF, MP3, MP4, OGG
 
 // Configs stores the global configuration
 type Configs struct {
-	SSL              bool   `json:"-"`
-	TrustProxies     bool   `json:"-" gorethink:"trustProxies"`
-	Gzip             bool   `json:"-" gorethink:"gzip"`
 	Prune            bool   `json:"-" gorethink:"prune"`
 	Radio            bool   `json:"radio" gorethink:"radio"`
 	WebmAudio        bool   `json:"-" gorethink:"webmAudio"`
 	Hats             bool   `json:"hats" gorethink:"hats"`
-	IllyaDance       bool   `json:"illyaDance" gorethink:"illyaDance"`
 	MaxWidth         uint16 `json:"-" gorethink:"maxWidth"`
 	MaxHeight        uint16 `json:"-" gorethink:"maxHeight"`
 	MaxThreads       int    `json:"-" gorethink:"maxThreads"`
@@ -59,11 +55,9 @@ type Configs struct {
 	ThreadCooldown   int    `json:"threadCooldown" gorethink:"threadCooldown"`
 	MaxSubjectLength int    `json:"maxSubjectLength" gorethink:"maxSubjectLength"`
 	MaxSize          int64  `json:"-" gorethink:"maxSize"`
-	Origin           string `json:"-" gorethink:"origin"`
 	DefaultLang      string `json:"defaultLang" gorethink:"defaultLang"`
-	SSLCert          string `json:"-"`
-	SSLKey           string `json:"-"`
 	Frontpage        string `json:"-" gorethink:"frontpage"`
+	Origin           string `json:"-" gorethink:"origin"`
 	DefaultCSS       string `json:"defaultCSS" gorethink:"defaultCSS"`
 	Salt             string `json:"-" gorethink:"salt"`
 	ExcludeRegex     string `json:"-" gorethink:"excludeRegex"`
@@ -93,9 +87,6 @@ func (s spoilers) MarshalJSON() ([]byte, error) {
 
 // Defaults contains the default server configuration values
 var Defaults = Configs{
-	TrustProxies:     false,
-	Gzip:             false,
-	SSL:              false,
 	Prune:            false,
 	WebmAudio:        true,
 	Hats:             false,
@@ -112,8 +103,6 @@ var Defaults = Configs{
 	SessionExpiry:    30,
 	ExcludeRegex:     "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
 	Origin:           "localhost:8000",
-	SSLCert:          "",
-	SSLKey:           "",
 	Frontpage:        "",
 	DefaultCSS:       "moe",
 	Salt:             "LALALALALALALALALALALALALALALALALALALALA",
