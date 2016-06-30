@@ -360,7 +360,7 @@ func writeJSON(res http.ResponseWriter, req *http.Request, data interface{}) {
 		textErrorPage(res, req, err)
 		return
 	}
-	res.Header().Set("Content-Type", "aplication/json")
+	res.Header().Set("Content-Type", "application/json")
 	writeData(res, req, JSON)
 }
 
@@ -399,7 +399,7 @@ func serveConfigs(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	setHeaders(res, etag)
-	res.Header().Set("Content-Type", "aplication/json")
+	res.Header().Set("Content-Type", "application/json")
 	writeData(res, req, json)
 }
 
