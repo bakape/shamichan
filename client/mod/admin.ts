@@ -5,6 +5,7 @@ type ServerConfigs = {
 	prune: boolean
 	radio: boolean
 	hats: boolean
+	illyaDance: boolean
 	maxWidth: number
 	maxHeight: number
 	maxThreads: number
