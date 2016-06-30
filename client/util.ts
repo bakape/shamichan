@@ -245,7 +245,7 @@ export const escape = (str: string): string =>
 	str.replace(/[&<>'"`]/g , char =>
 		escapeMap[char])
 
-// Set the placeholder attribute on a child of the element
+// Set the text and for attribute of a label element
 export const setLabel = (el: Element, forName: string, text: string): string =>
 	el.querySelector(`label[for=${forName}]`).textContent = text + ":"
 

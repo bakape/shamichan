@@ -4,7 +4,9 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
+	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -42,32 +44,71 @@ Accepted upload file types: JPG, JPEG, PNG, GIF, WEBM, SVG, PDF, MP3, MP4, OGG
 
 // Configs stores the global configuration
 type Configs struct {
-	Prune            bool   `json:"-" gorethink:"prune"`
-	Radio            bool   `json:"radio" gorethink:"radio"`
-	WebmAudio        bool   `json:"-" gorethink:"webmAudio"`
-	Hats             bool   `json:"hats" gorethink:"hats"`
-	MaxWidth         uint16 `json:"-" gorethink:"maxWidth"`
-	MaxHeight        uint16 `json:"-" gorethink:"maxHeight"`
-	MaxThreads       int    `json:"-" gorethink:"maxThreads"`
-	MaxBump          int    `json:"-" gorethink:"maxBump"`
-	JPEGQuality      int    `json:"-"`
-	PNGQuality       int    `json:"-"`
-	ThreadCooldown   int    `json:"threadCooldown" gorethink:"threadCooldown"`
-	MaxSubjectLength int    `json:"maxSubjectLength" gorethink:"maxSubjectLength"`
-	MaxSize          int64  `json:"-" gorethink:"maxSize"`
-	DefaultLang      string `json:"defaultLang" gorethink:"defaultLang"`
-	Frontpage        string `json:"-" gorethink:"frontpage"`
-	Origin           string `json:"-" gorethink:"origin"`
-	DefaultCSS       string `json:"defaultCSS" gorethink:"defaultCSS"`
-	Salt             string `json:"-" gorethink:"salt"`
-	ExcludeRegex     string `json:"-" gorethink:"excludeRegex"`
-	FeedbackEmail    string `json:"-" gorethink:"feedbackEmail"`
-	FAQ              string
-	Boards           []string      `json:"boards" gorethink:"boards"`
-	Langs            []string      `json:"langs" gorethink:"langs"`
-	Links            [][2]string   `json:"links" gorethink:"links"`
-	Spoilers         spoilers      `json:"spoilers" gorethink:"spoliers"`
-	SessionExpiry    time.Duration `json:"-" gorethink:"sessionExpiry"`
+	Prune            bool   `json:"prune" gorethink:"prune"`
+	Radio            bool   `json:"radio" gorethink:"radio" public:"true"`
+	Hats             bool   `json:"hats" gorethink:"hats" public:"true"`
+	MaxWidth         uint16 `json:"maxWidth" gorethink:"maxWidth"`
+	MaxHeight        uint16 `json:"maxHeight" gorethink:"maxHeight"`
+	MaxThreads       int    `json:"maxThreads" gorethink:"maxThreads"`
+	MaxBump          int    `json:"maxBump" gorethink:"maxBump"`
+	JPEGQuality      int
+	PNGQuality       int
+	ThreadCooldown   int           `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
+	MaxSubjectLength int           `json:"maxSubjectLength" gorethink:"maxSubjectLength" public:"true"`
+	MaxSize          int64         `json:"maxSize" gorethink:"maxSize"`
+	DefaultLang      string        `json:"defaultLang" gorethink:"defaultLang" public:"true"`
+	Frontpage        string        `json:"frontpage" gorethink:"frontpage"`
+	Origin           string        `json:"origin" gorethink:"origin"`
+	DefaultCSS       string        `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
+	Salt             string        `json:"salt" gorethink:"salt"`
+	ExcludeRegex     string        `json:"excludeRegex" gorethink:"excludeRegex"`
+	FeedbackEmail    string        `json:"feedbackEmail" gorethink:"feedbackEmail"`
+	FAQ              string        `public:"true"`
+	Boards           []string      `json:"-" gorethink:"boards" public:"true"`
+	Langs            []string      `json:"langs" gorethink:"langs" public:"true"`
+	Links            [][2]string   `json:"links" gorethink:"links" public:"true"`
+	Spoilers         spoilers      `json:"spoilers" gorethink:"spoilers" public:"true"`
+	SessionExpiry    time.Duration `json:"sessionExpiry" gorethink:"sessionExpiry"`
+}
+
+// Only marshal JSON with the `public:"true"` tag for publicly exposed
+// configuration
+func (c *Configs) marshalPublicJSON() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	t := reflect.TypeOf(*c)
+	v := reflect.ValueOf(*c)
+	var notFirst bool
+
+	buf.WriteByte('{')
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Tag.Get("public") != "true" {
+			continue
+		}
+
+		name := t.Field(i).Tag.Get("gorethink")
+		if name == "" {
+			name = field.Name
+		}
+
+		if notFirst {
+			buf.WriteByte(',')
+		}
+		buf.WriteByte('"')
+		buf.WriteString(name)
+		buf.WriteString(`":`)
+
+		data, err := json.Marshal(v.Field(i).Interface())
+		if err != nil {
+			return nil, err
+		}
+		buf.Write(data)
+
+		notFirst = true
+	}
+	buf.WriteByte('}')
+
+	return buf.Bytes(), nil
 }
 
 // Need a custom json.Marshaler, because []uint8 decodes the same as []byte by
@@ -75,7 +116,8 @@ type Configs struct {
 type spoilers []uint8
 
 func (s spoilers) MarshalJSON() ([]byte, error) {
-	buf := []byte{'['}
+	buf := make([]byte, 1, 2+len(s)*2) // Aproxmations of string length
+	buf[0] = '['
 	for i, sp := range s {
 		if i != 0 {
 			buf = append(buf, ',')
@@ -88,12 +130,11 @@ func (s spoilers) MarshalJSON() ([]byte, error) {
 // Defaults contains the default server configuration values
 var Defaults = Configs{
 	Prune:            false,
-	WebmAudio:        true,
 	Hats:             false,
 	Radio:            false,
 	MaxThreads:       100,
 	MaxBump:          1000,
-	JPEGQuality:      90,
+	JPEGQuality:      80,
 	PNGQuality:       20,
 	MaxSize:          3145728,
 	MaxHeight:        6000,
@@ -128,7 +169,7 @@ func Get() *Configs {
 
 // Set sets the internal configuration struct. To be used only in tests.
 func Set(c Configs) error {
-	client, err := json.Marshal(c)
+	client, err := c.marshalPublicJSON()
 	if err != nil {
 		return err
 	}

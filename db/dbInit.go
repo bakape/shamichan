@@ -46,8 +46,8 @@ type infoDocument struct {
 	PostCtr int64 `gorethink:"postCtr"`
 }
 
-// Central configuration document
-type configDocument struct {
+// ConfigDocument holds the global server configurations
+type ConfigDocument struct {
 	Document
 	config.Configs
 }
@@ -125,7 +125,7 @@ func InitDB() error {
 		// post creation
 		Document{"histCounts"},
 
-		configDocument{
+		ConfigDocument{
 			Document{"config"},
 			config.Defaults,
 		},

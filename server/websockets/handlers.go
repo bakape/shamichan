@@ -28,6 +28,11 @@ const (
 	messageLogout
 	messageLogOutAll
 	messageChangePassword
+
+	// Board administration
+	messageConfigServer
+	messageCreateBoard
+	messageConfigBoard
 )
 
 type handler func([]byte, *Client) error

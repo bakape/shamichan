@@ -13,11 +13,10 @@ import {write} from './render'
 type Configs = {
 	radio: boolean
 	hats: boolean
-	illyaDance: boolean
-	threadCooldown: number
 	maxSubjectLength: number
 	defaultLang: string
 	defaultCSS: string
+	FAQ: string
 	boards: string[]
 	langs: string[]
 	links: string[][]

@@ -20,7 +20,7 @@ func (*DBSuite) TestLoadConfigs(c *C) {
 		isTest = false
 	}()
 	templates.TemplateRoot = "test"
-	sample := configDocument{
+	sample := ConfigDocument{
 		Document{"config"},
 		config.Defaults,
 	}
