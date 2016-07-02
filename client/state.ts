@@ -25,16 +25,20 @@ type Configs = {
 	spoilers: number[]
 }
 
-type BoardConfigs = {
-	staffClasses: string[]
-}
-
 // Configuration passed from the server. Some values can be changed during
 // runtime.
 export const config: Configs = (window as any).config
 
 // Indicates, if in mobile mode. Determined server-side.
 export const isMobile: boolean = (window as any).isMobile
+
+// TODO: Board-specific configuration loading
+
+type BoardConfigs = {
+	staffClasses: string[]
+}
+
+export let boardConfig: BoardConfigs = {} as BoardConfigs
 
 interface PageState extends ChangeEmitter {
 	board: string

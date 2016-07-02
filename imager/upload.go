@@ -132,7 +132,7 @@ func newImageUpload(req *http.Request) (int, error) {
 
 // Parse and validate the form of the upload request
 func parseUploadForm(req *http.Request) (
-	clientID string, spoiler uint8, err error,
+	clientID string, spoiler bool, err error,
 ) {
 	length, err := strconv.ParseInt(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
@@ -159,34 +159,13 @@ func parseUploadForm(req *http.Request) (
 }
 
 // Extracts and validates a spoiler number from the form
-func extractSpoiler(req *http.Request) (uint8, error) {
+func extractSpoiler(req *http.Request) (bool, error) {
 	// Read the spoiler the client had chosen for the image, if any
 	unparsed := req.FormValue("spoiler")
 	if unparsed == "" {
-		return 0, nil
+		return false, nil
 	}
-
-	unconverted, err := strconv.ParseUint(unparsed, 10, 8)
-	if err != nil {
-		return 0, errInvalidSpoiler(unparsed)
-	}
-
-	sp := uint8(unconverted)
-	if !isValidSpoiler(sp) {
-		return 0, errInvalidSpoiler(unparsed)
-	}
-
-	return sp, nil
-}
-
-// Confirms a spoiler exists in configuration
-func isValidSpoiler(id uint8) bool {
-	for _, valid := range config.Get().Spoilers {
-		if id == valid {
-			return true
-		}
-	}
-	return false
+	return strconv.ParseBool(unparsed)
 }
 
 // Passes the image struct to the requesting client. If the image is not

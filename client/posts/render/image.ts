@@ -2,7 +2,7 @@
  Image thumbnail HTML rendering
 */
 
-import {config} from '../../state'
+import {config, page} from '../../state'
 import options from '../../options'
 import {HTML, commaList, makeAttrs, escape} from '../../util'
 import {ImageData, fileTypes} from '../models'
@@ -59,11 +59,6 @@ function hiddenToggle(reveal: boolean): string {
 		`<a class="imageToggle">
 			[${lang[reveal ? 'hide' : 'show']}]
 		</a>`
-}
-
-// Base URLs of image addresses
-const imagePaths: {[type: string]: string} = {
-	spoil: '/assets/spoil/spoiler'
 }
 
 // type ISTemplate = (data: ImageData) => string
@@ -196,8 +191,8 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 
 	if (data.spoiler && options.spoilers) {
 		// Spoilered and spoilers enabled
-		thumb = imagePaths['spoil'] + data.spoiler + '.jpg'
-		thumbWidth = thumbHeight = 250
+		thumb = '/assets/spoil/' + page.board
+		thumbWidth = thumbHeight = 125
 	} else if (data.fileType === fileTypes.gif && options.autogif) {
 		// Animated GIF thumbnails
 		thumb = src

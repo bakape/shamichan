@@ -48,7 +48,6 @@ func (d *Imager) SetUpTest(c *C) {
 		MaxHeight: 10000,
 		MaxWidth:  10000,
 		MaxSize:   1024 * 1024 * 10,
-		Spoilers:  []uint8{1, 2},
 	})
 }
 

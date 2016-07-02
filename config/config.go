@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"reflect"
-	"strconv"
 	"sync"
 	"time"
 
@@ -69,7 +68,6 @@ type Configs struct {
 	Boards           []string      `json:"-" gorethink:"boards" public:"true"`
 	Langs            []string      `json:"langs" gorethink:"langs" public:"true"`
 	Links            [][2]string   `json:"links" gorethink:"links" public:"true"`
-	Spoilers         spoilers      `json:"spoilers" gorethink:"spoilers" public:"true"`
 	SessionExpiry    time.Duration `json:"sessionExpiry" gorethink:"sessionExpiry"`
 }
 
@@ -113,22 +111,6 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Need a custom json.Marshaler, because []uint8 decodes the same as []byte by
-// default
-type spoilers []uint8
-
-func (s spoilers) MarshalJSON() ([]byte, error) {
-	buf := make([]byte, 1, 2+len(s)*2) // Aproxmations of string length
-	buf[0] = '['
-	for i, sp := range s {
-		if i != 0 {
-			buf = append(buf, ',')
-		}
-		buf = strconv.AppendUint(buf, uint64(sp), 10)
-	}
-	return append(buf, ']'), nil
-}
-
 // Defaults contains the default server configuration values
 var Defaults = Configs{
 	Prune:            false,
@@ -152,7 +134,6 @@ var Defaults = Configs{
 	FeedbackEmail:    "admin@email.com",
 	FAQ:              defaultFAQ,
 	DefaultLang:      "en_GB",
-	Spoilers:         spoilers{0},
 	Langs:            []string{"en_GB"},
 	Boards:           []string{},
 	Links:            [][2]string{{"4chan", "http://www.4chan.org/"}},
