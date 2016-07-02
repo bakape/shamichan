@@ -1,9 +1,9 @@
-import View from '../view'
-import {HTML, table, makeAttrs, inputValue} from '../util'
-import {mod as lang, ui} from '../lang'
-import {write, read} from '../render'
+import {table, makeAttrs, inputValue} from '../util'
+import {mod as lang} from '../lang'
+import {write} from '../render'
 import {send, handlers, message} from '../connection'
-import {validatePasswordMatch} from './login'
+import AccountPanel, {validatePasswordMatch} from './login'
+import {FormView} from './util'
 
 type PasswordChangeRequest = {
 	old: string
@@ -11,22 +11,14 @@ type PasswordChangeRequest = {
 }
 
 // View for changing a password, that gets embedded below the parent view
-export default class PasswordChangeView extends View {
-	$parent: Element
-
-	constructor(parent: Element) {
-		super({})
-		this.$parent = parent
+export default class PasswordChangeView extends FormView {
+	constructor(parent: AccountPanel) {
+		super(parent, el =>
+			send(message.changePassword, {
+				old: inputValue(el, "oldPassword"),
+				new: inputValue(el, "newPassword"),
+			}))
 		this.render()
-		write(() =>
-			this.$parent.after(this.el))
-
-		this.onClick({
-			"input[name=cancel]": () =>
-				this.remove()
-		})
-		this.on("submit", e =>
-			this.submit(e))
 
 		validatePasswordMatch(this.el, "newPassword", "repeat")
 
@@ -51,34 +43,20 @@ export default class PasswordChangeView extends View {
 			]
 		})
 
-		this.el.innerHTML = HTML
-			`<form>
-				${tableHTML}
-				<input type="submit" value="${lang.submit}">
-				<input type="button" name="cancel" value="${ui.cancel}">
-			</form>
-			<div class="form-response admin"></div>`
-	}
-
-	// Submit password change to server
-	submit(event: Event) {
-		event.preventDefault()
-		const el = event.target as Element
-		send(message.changePassword, {
-			old: inputValue(el, "oldPassword"),
-			new: inputValue(el, "newPassword"),
-		})
+		this.renderForm(tableHTML)
 	}
 
 	// Handle the changePassword response from the server
 	handleResponse(success: boolean) {
-		if (success) {
-			this.remove()
-		} else {
-			this.el
-				.querySelector(".form-response")
-				.textContent = lang.wrongPassword
-		}
+		write(() => {
+			if (success) {
+				this.remove()
+			} else {
+				this.el
+					.querySelector(".form-response")
+					.textContent = lang.wrongPassword
+			}
+		})
 	}
 
 	// Also remove the websocket message handler, so this instance can be GCed

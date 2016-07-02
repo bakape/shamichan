@@ -2,42 +2,13 @@
     // HTTP server options. Note, that none of the containing settings, except
     // for "frontpage" will take effect without a server restart.
     "HTTP": {
-        // Address for the HTTP server to listen on
-        "addr": ":8000",
-
         // Outward origin of the server. Make sure both domain and port match
         // the address your client is being server from.
         "origin": "localhost:8000",
 
-        // Use Go's native SSL encryption for HTTP transport. Requires "cert"
-        // and "key" to be set.
-        "SSL": false,
-
-        // Path to  SSL certificate file
-        "cert": "",
-
-        // Path to SSL key file
-        "key": "",
-
-        // Honour X-Forwarded-For HTTP headers for client IP determination. Only
-        // use, when behind a reverse proxy like Ngingx.
-        "trustProxies": true,
-
-        // Use Go's native Gzip. Enable, if not behind a reverse proxy.
-        "gzip": false,
-
         // Path tp HTML file to load on "/" HTTP requsts. If "", redirects to
         // default board page.
         "frontpage": ""
-    },
-
-    // RethinkDB database connection credentials
-    "rethinkdb": {
-        // Address of the RethinkDB server
-        "addr": "localhost:28015",
-
-        // Database to use for storage. Will be created, if not present.
-        "db": "meguca"
     },
 
     // Board configuration
@@ -73,10 +44,6 @@
         "links": [
             ["4chan", "http://www.4chan.org/"]
         ],
-
-        // Delete threads and their images, when they exceed the board's thread
-        // limit
-        "prune": false
     },
 
     // Languagepack loading settings
@@ -290,16 +257,6 @@
         // Private key
         "private": ""
     },
-
-    // Enable integration with https://r-a-d.io
-    "radio": false,
-
-    // Don't ask.
-    "pyu": false,
-
-    // Local http://loli.dance/ implementation. Videos not included in git tree.
-    // Place illya.webm and illya.mp4 into the www directory, if you want this.
-    "illyaDance": false,
 
     // User feedback email
     "feedbackEmail": "admin@email.com",

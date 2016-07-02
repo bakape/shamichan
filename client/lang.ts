@@ -2,9 +2,10 @@
  Provides type-safe and selective mappings for the language packs
 */
 
-import {makeEl, HTML} from './util'
+import {makeEl, HTML, fetchJSON} from './util'
 import {write} from './render'
 import {defer} from './defer'
+import options from './options'
 
 type LanguagePack = {
 	posts: LnPosts
@@ -35,6 +36,7 @@ export const sync = lang.sync
 export const syncwatch = lang.syncwatch
 export const mod = lang.mod
 export const opts = lang.opts
+export let admin: LnAdmin
 
 type LnPosts = {
 	anon: string
@@ -133,6 +135,7 @@ type LnMod = {
 	id: string
 	register: string
 	logout: string
+	logoutAll: string
 	submit: string
 	password: string
 	repeat: string
@@ -144,7 +147,19 @@ type LnMod = {
 	wrongCredentials: string
 	wrongPassword: string
 	theFuck: string
+	configureServer: string
+	createBoard: string
+	configureBoard: string
 	[index: string]: string
+}
+
+type LnAdmin = {
+	prune: OptLabel
+	radio: OptLabel
+	pyu: OptLabel
+	illyaDance: OptLabel
+	hats: OptLabel
+	[index: string]: OptLabel
 }
 
 type LnOpts = {
@@ -171,7 +186,12 @@ function languageCSS() {
 				content: " (${posts.locked})";
 			}
 		</style>`)
-	write(() => document.head.appendChild(el))
+	write(() =>
+		document.head.appendChild(el))
 }
 
 defer(languageCSS)
+
+// Fetch the administrator language pack
+export const fetchAdminPack = async (): Promise<LnAdmin> =>
+	admin = await fetchJSON(`/assets/lang/${options.lang}/admin.json`)

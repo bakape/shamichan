@@ -93,6 +93,7 @@
 		"id": "Login",
 		"register": "Register",
 		"logout": "Logout",
+		"logoutAll": "Log out all devices",
 		"changePassword": "Change password",
 		"oldPassword": "Old password",
 		"newPassword": "New password",
@@ -103,7 +104,10 @@
 		"nameTaken": "Login name already taken",
 		"wrongCredentials": "Incorrect login name or password",
 		"wrongPassword": "Incorrect password",
-		"theFuck": "SOMEBODY FUCKED UP"
+		"theFuck": "SOMEBODY FUCKED UP",
+		"configureServer": "Configure server",
+		"createBoard": "Create board",
+		"configureBoard": "Configure board"
 	},
 
 	"opts": {

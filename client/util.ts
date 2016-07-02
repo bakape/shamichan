@@ -4,7 +4,7 @@
 
 // Fetches and decodes a JSON response from the API
 export const fetchJSON = async (url: string): Promise<any> =>
-	await (await fetch("json/" + url)).json()
+	await (await fetch(url)).json()
 
 // Generate a random alphannumeric string of lower and upper case hexadecimal
 // characters

@@ -23,7 +23,7 @@ func (*DB) TestServerConfigRequest(c *C) {
 	cl, wcl := sv.NewClient()
 	cl.userID = "admin"
 
-	c.Assert(configServer([]byte{}, cl), IsNil)
+	c.Assert(configServer([]byte("null"), cl), IsNil)
 	msg, err := encodeMessage(messageConfigServer, config.Get())
 	c.Assert(err, IsNil)
 	assertMessage(wcl, msg, c)
@@ -31,8 +31,10 @@ func (*DB) TestServerConfigRequest(c *C) {
 
 func (*DB) TestServerConfigSetting(c *C) {
 	init := db.ConfigDocument{
-		Document: db.Document{"config"},
-		Configs:  config.Defaults,
+		Document: db.Document{
+			ID: "config",
+		},
+		Configs: config.Defaults,
 	}
 	c.Assert(db.Write(r.Table("main").Insert(init)), IsNil)
 

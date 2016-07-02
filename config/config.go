@@ -48,6 +48,7 @@ type Configs struct {
 	Radio            bool   `json:"radio" gorethink:"radio" public:"true"`
 	Hats             bool   `json:"hats" gorethink:"hats" public:"true"`
 	IllyaDance       bool   `json:"illyaDance" gorethink:"illyaDance" public:"true"`
+	Pyu              bool   `json:"pyu" gorethink:"pyu"`
 	MaxWidth         uint16 `json:"maxWidth" gorethink:"maxWidth"`
 	MaxHeight        uint16 `json:"maxHeight" gorethink:"maxHeight"`
 	MaxThreads       int    `json:"maxThreads" gorethink:"maxThreads"`

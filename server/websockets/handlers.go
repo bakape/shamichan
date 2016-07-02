@@ -47,6 +47,7 @@ var handlers = map[messageType]handler{
 	messageLogout:         logOut,
 	messageLogOutAll:      logOutAll,
 	messageChangePassword: changePassword,
+	messageConfigServer:   configServer,
 }
 
 // Error while parsing the message. Denotes that either the message does not

@@ -1,0 +1,22 @@
+{
+	"prune": [
+		"Prune threads",
+		"Delete threads and their images, when they exceed the board's thread limit"
+	],
+	"radio": [
+		"R/a/dio integration",
+		"Enable \"Now playing\" song display in the top banner and the #queue hash command"
+	],
+	"pyu": [
+		"#pyu",
+		"Don't ask"
+	],
+	"illyaDance": [
+		"Illya dance background",
+		"Local http://loli.dance/ implementation. Videos not included by default. Place illya.webm and illya.mp4 into the www directory, if you want this."
+	],
+	"hats": [
+		"Hats on images",
+		"Attach hats to all image thumbnails"
+	]
+}

@@ -8,6 +8,7 @@ import Collection from './collection'
 import {getID} from './util'
 import {db} from './db'
 import {write} from './render'
+import {send} from './connection'
 
 // Allows us to typecheck configs. See config/defaults.json for more info.
 type Configs = {
@@ -98,9 +99,10 @@ export function displayLoading(loading: boolean) {
 // Debug mode with more verbose logging
 export let debug: boolean = /[\?&]debug=true/.test(location.href)
 
-// Allow switching to debug mode from the JS console
-; (window as any).debugMode = (setting: boolean) =>
+; (window as any).debugMode = (setting: boolean) => {
 	debug = setting
+	; (window as any).send = send
+}
 
 // ID of the current tab on the server. Set after synchronisation.
 export let clientID: string

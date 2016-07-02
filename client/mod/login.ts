@@ -1,10 +1,10 @@
 // Login/logout facilities for the account system
 
 import {TabbedModal} from '../banner'
-import {write, read} from '../render'
+import {write} from '../render'
 import {defer} from '../defer'
 import {mod as lang} from '../lang'
-import {setLabel, on, HTML, loadModule, inputValue} from '../util'
+import {on, loadModule, setLabel, inputValue} from '../util'
 import {handlers, send, message} from '../connection'
 
 // Login/Registration request sent to the server through websocket
@@ -30,7 +30,7 @@ let loginID = localStorage.getItem("loginID"),
 	sessionToken = localStorage.getItem("sessionToken")
 
 // Account login and registration
-class AccountPanel extends TabbedModal {
+export default class AccountPanel extends TabbedModal {
 	$login: HTMLFormElement = (this.el
 		.querySelector("#login-form") as HTMLFormElement)
 	$register: HTMLFormElement = (this.el
@@ -52,10 +52,8 @@ class AccountPanel extends TabbedModal {
 		this.onClick({
 			'#logout': () =>
 				this.logout(),
-			// Dynamically load password change view module
-			"#changePassword": e =>
-				loadModule("mod/changePassword").then(m =>
-					new m.default(e.target as Element))
+			"#changePassword":  this.loadConditionalView("mod/changePassword"),
+			"#configureServer": this.loadConditionalView("mod/admin"),
 		})
 
 		handlers[message.login] = (msg: LoginResponse) =>
@@ -124,15 +122,22 @@ class AccountPanel extends TabbedModal {
 
 	// Render board creation and management controls
 	renderControls() {
-		this.el.innerHTML = HTML
-			`${this.renderLink("logout")}
-			<br>
-			${this.renderLink("changePassword")}
-			<br>`
+		let menu = ""
+		const ids = [
+			"logout", "logoutAll", "changePassword", "createBoard",
+			"configureBoard"
+		]
+		for (let id of ids) {
+			menu += this.renderLink(id)
+		}
+		if (loginID === "admin") {
+			menu += this.renderLink("configureServer")
+		}
+		this.el.innerHTML = `<div class="menu">${menu}</div>`
 	}
 
 	renderLink(name: string): string {
-		return `<a id="${name}">${lang[name]}</a>`
+		return `<a id="${name}">${lang[name]}</a><br>`
 	}
 
 	// Log out of the user account
@@ -146,6 +151,24 @@ class AccountPanel extends TabbedModal {
 	authenticationResponse(success: boolean) {
 		success && write(() =>
 			this.renderControls())
+	}
+
+	// Create handler for ynamically loading and rendering conditional view
+	// modules
+	loadConditionalView(path: string): EventListener {
+		return () =>
+			loadModule(path).then(m => {
+				this.hideMenu()
+				new m.default(this)
+			})
+	}
+
+	hideMenu() {
+		this.el.querySelector(".menu").style.display = "none"
+	}
+
+	unhideMenu() {
+		this.el.querySelector(".menu").style.display = ""
 	}
 }
 

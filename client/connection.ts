@@ -38,6 +38,11 @@ export const enum message {
 	logout,
 	logoutAll,
 	changePassword,
+
+	// Board and server administration
+	configServer,
+	createBoard,
+	configBoard,
 }
 
 export type MessageHandler = (msg: {}) => void

@@ -48,7 +48,7 @@ createTask('css', './less/*.less', src =>
 		.pipe(gulp.dest('./www/css')))
 
 // Language packs
-createTask('lang', './lang/*.json', src =>
+createTask('lang', './lang/**/*.json', src =>
 	src
 		.pipe(jsonminify())
 		.on('error', handleError)
