@@ -3,6 +3,7 @@ package websockets
 import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -54,4 +55,50 @@ func (*DB) TestServerConfigSetting(c *C) {
 	std := config.Defaults
 	std.DefaultCSS = "ashita"
 	c.Assert(conf, DeepEquals, std)
+}
+
+func (*DB) TestBoardTitleTooLong(c *C) {
+	title, err := util.RandomID(101)
+	c.Assert(err, IsNil)
+	req := boardCreationRequest{
+		Name:  "a",
+		Title: title,
+	}
+	assertLoggedInResponse(req, createBoard, "123", []byte("402"), c)
+}
+
+func (*DB) TestBoardNameTaken(c *C) {
+	q := r.Table("boards").Insert(db.Document{ID: "a"})
+	c.Assert(db.Write(q), IsNil)
+	req := boardCreationRequest{
+		Name:  "a",
+		Title: "/a/ - Animu & Mango",
+	}
+	assertLoggedInResponse(req, createBoard, "123", []byte("401"), c)
+}
+
+func (*DB) TestBoardCreation(c *C) {
+	const (
+		id     = "a"
+		userID = "123"
+		title  = "/a/ - Animu & Mango"
+	)
+	req := boardCreationRequest{
+		Name:  id,
+		Title: title,
+	}
+	assertLoggedInResponse(req, createBoard, userID, []byte("400"), c)
+
+	var board config.BoardConfigs
+	c.Assert(db.One(db.GetBoardConfig(id), &board), IsNil)
+	std := config.BoardConfigs{
+		ID:        id,
+		Spoiler:   "default.jpg",
+		Title:     title,
+		Eightball: config.EightballDefaults,
+		Staff: map[string][]string{
+			"owners": []string{userID},
+		},
+	}
+	c.Assert(board, DeepEquals, std)
 }

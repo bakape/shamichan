@@ -74,7 +74,8 @@ func (*DB) TestAlreadyLoggedIn(c *C) {
 
 func (*DB) TestNotLoggedIn(c *C) {
 	cl := new(Client)
-	for _, fn := range [...]handler{logOut, logOutAll, changePassword} {
+	fns := [...]handler{logOut, logOutAll, changePassword, createBoard}
+	for _, fn := range fns {
 		c.Assert(fn(nil, cl), Equals, errNotLoggedIn)
 	}
 }
@@ -210,7 +211,6 @@ func (*DB) TestLogOutAll(c *C) {
 		ID:       id,
 		Sessions: sessions,
 		Password: []byte{1, 2, 3},
-		Rigths:   []auth.Right{},
 	}
 	c.Assert(db.Write(r.Table("accounts").Insert(user)), IsNil)
 

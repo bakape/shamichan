@@ -109,6 +109,12 @@ func GetImage(id string) r.Term {
 	return r.Table("images").Get(id)
 }
 
+// GetBoardConfig is a shorthand for retrieving a document from the "boards"
+// table
+func GetBoardConfig(id string) r.Term {
+	return r.Table("boards").Get(id)
+}
+
 // PostCounter retrieves the current global post count
 func PostCounter() (counter int64, err error) {
 	err = One(GetMain("info").Field("postCtr"), &counter)

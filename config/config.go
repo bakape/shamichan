@@ -135,8 +135,27 @@ var Defaults = Configs{
 	Links:            [][2]string{{"4chan", "http://www.4chan.org/"}},
 }
 
-// BoardConfigs stores overall board configuration
-type BoardConfigs struct{}
+// BoardConfigs stores board-specific configuration
+type BoardConfigs struct {
+	ReadOnly   bool                `json:"readOnly" gorethink:"readOnly"`
+	ForcedAnon bool                `json:"forcedAnon" gorethink:"forcedAnon"`
+	ID         string              `json:"id" gorethink:"id"`
+	Spoiler    string              `json:"spoiler" gorethink:"spoiler"`
+	Title      string              `json:"title" gorethink:"title"`
+	Notice     string              `json:"notice" gorethink:"notice"`
+	Eightball  []string            `json:"eightball" gorethink:"eightball"`
+	Staff      map[string][]string `json:"staff" gorethink:"staff"`
+}
+
+// EightballDefaults contains the default eightball answer set
+var EightballDefaults = []string{
+	"Yes",
+	"No",
+	"Maybe",
+	"It can't be helped",
+	"Hell yeah, motherfucker",
+	"Anta baka?",
+}
 
 // Get returns a pointer to the current server configuration struct. Callers
 // should not modify this struct.

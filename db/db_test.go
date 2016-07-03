@@ -127,7 +127,6 @@ func (*DBSuite) TestRegisterAccount(c *C) {
 	user := auth.User{
 		ID:       id,
 		Password: hash,
-		Rigths:   []auth.Right{},
 		Sessions: []auth.Session{},
 	}
 
