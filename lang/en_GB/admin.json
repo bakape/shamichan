@@ -64,7 +64,7 @@
 		"Outward origin of the server. Make sure both domain and port match the address your client is being served from."
 	],
 	"salt": [
-		"Salt",
+		"Secure salt",
 		"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
 	],
 	"feedbackEmail": [
