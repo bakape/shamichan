@@ -307,15 +307,15 @@ func (*ClientSuite) TestClientTimeout(c *C) {
 		pingTimer = oldPing
 		readTimeout = oldRead
 	}()
-	sv.Add(1)
 
 	// Ignore incomming pings
 	wcl.SetPingHandler(func(string) error {
 		return nil
 	})
 
-	go assertListenError(cl, ".* i/o timeout", sv, c)
-	sv.Wait()
+	// Timeout may occur either server or client-side, so we just make sure it
+	// exits with an error
+	c.Assert(cl.Listen(), NotNil)
 }
 
 func (*ClientSuite) TestPingPong(c *C) {
