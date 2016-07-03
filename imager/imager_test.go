@@ -47,7 +47,7 @@ func (d *Imager) SetUpTest(c *C) {
 	config.Set(config.Configs{
 		MaxHeight: 10000,
 		MaxWidth:  10000,
-		MaxSize:   1024 * 1024 * 10,
+		MaxSize:   10,
 	})
 }
 

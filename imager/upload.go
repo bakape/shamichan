@@ -67,7 +67,7 @@ func (e errInvalidSpoiler) Error() string {
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
 	conf := config.Get()
-	req.Body = http.MaxBytesReader(res, req.Body, conf.MaxSize)
+	req.Body = http.MaxBytesReader(res, req.Body, conf.MaxSize*1024*1024)
 	res.Header().Set("Access-Control-Allow-Origin", conf.Origin)
 
 	code, err := newImageUpload(req)
@@ -138,7 +138,7 @@ func parseUploadForm(req *http.Request) (
 	if err != nil {
 		return
 	}
-	if length > config.Get().MaxSize {
+	if length > config.Get().MaxSize*1024*1024 {
 		err = errors.New("File too large")
 		return
 	}

@@ -29,7 +29,7 @@
 	],
 	"maxSize": [
 		"Image size limit",
-		"Maximum size of uploaded images in bytes"
+		"Maximum size of uploaded images in MB"
 	],
 	"JPEGQuality": [
 		"JPEG thumbnail quality",

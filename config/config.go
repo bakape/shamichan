@@ -32,7 +32,7 @@ var (
 )
 
 // Default string for the FAQ panel
-const defaultFAQ = `Upload size limit is 3 MB
+const defaultFAQ = `Upload size limit is 5 MB
 Accepted upload file types: JPG, JPEG, PNG, GIF, WEBM, SVG, PDF, MP3, MP4, OGG
 <hr>Hash commands:
 #d100 #2d100 - Roll dice
@@ -118,7 +118,7 @@ var Defaults = Configs{
 	MaxBump:          1000,
 	JPEGQuality:      80,
 	PNGQuality:       20,
-	MaxSize:          3145728,
+	MaxSize:          5,
 	MaxHeight:        6000,
 	MaxWidth:         6000,
 	ThreadCooldown:   60,

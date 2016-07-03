@@ -107,10 +107,10 @@ func (*Imager) TestInvalidContentLengthHeader(c *C) {
 
 func (*Imager) TestUploadTooLarge(c *C) {
 	conf := config.Get()
-	(*conf).MaxSize = 1024
+	(*conf).MaxSize = 1
 	b, w := newMultiWriter()
 	req := newRequest(c, b, w)
-	req.Header.Set("Content-Length", "1048587")
+	req.Header.Set("Content-Length", "1048577")
 
 	_, _, err := parseUploadForm(req)
 	c.Assert(err, ErrorMatches, "File too large")
