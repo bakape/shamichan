@@ -20,7 +20,7 @@ type Configs = {
 	defaultCSS: string
 	FAQ: string
 	boards: string[]
-	links: string[][]
+	links: StringMap
 }
 
 // Configuration passed from the server. Some values can be changed during

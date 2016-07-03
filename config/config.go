@@ -54,19 +54,19 @@ type Configs struct {
 	MaxBump          int    `json:"maxBump" gorethink:"maxBump"`
 	JPEGQuality      int
 	PNGQuality       int
-	ThreadCooldown   int           `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
-	MaxSubjectLength int           `json:"maxSubjectLength" gorethink:"maxSubjectLength" public:"true"`
-	MaxSize          int64         `json:"maxSize" gorethink:"maxSize"`
-	DefaultLang      string        `json:"defaultLang" gorethink:"defaultLang" public:"true"`
-	Origin           string        `json:"origin" gorethink:"origin"`
-	DefaultCSS       string        `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
-	Salt             string        `json:"salt" gorethink:"salt"`
-	ExcludeRegex     string        `json:"excludeRegex" gorethink:"excludeRegex"`
-	FeedbackEmail    string        `json:"feedbackEmail" gorethink:"feedbackEmail"`
-	FAQ              string        `public:"true"`
-	Boards           []string      `json:"-" gorethink:"boards" public:"true"`
-	Links            [][2]string   `json:"links" gorethink:"links" public:"true"`
-	SessionExpiry    time.Duration `json:"sessionExpiry" gorethink:"sessionExpiry"`
+	ThreadCooldown   int               `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
+	MaxSubjectLength int               `json:"maxSubjectLength" gorethink:"maxSubjectLength" public:"true"`
+	MaxSize          int64             `json:"maxSize" gorethink:"maxSize"`
+	DefaultLang      string            `json:"defaultLang" gorethink:"defaultLang" public:"true"`
+	Origin           string            `json:"origin" gorethink:"origin"`
+	DefaultCSS       string            `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
+	Salt             string            `json:"salt" gorethink:"salt"`
+	ExcludeRegex     string            `json:"excludeRegex" gorethink:"excludeRegex"`
+	FeedbackEmail    string            `json:"feedbackEmail" gorethink:"feedbackEmail"`
+	FAQ              string            `public:"true"`
+	Boards           []string          `json:"-" gorethink:"boards" public:"true"`
+	Links            map[string]string `json:"links" gorethink:"links" public:"true"`
+	SessionExpiry    time.Duration     `json:"sessionExpiry" gorethink:"sessionExpiry"`
 }
 
 // Only marshal JSON with the `public:"true"` tag for publicly exposed
@@ -132,7 +132,7 @@ var Defaults = Configs{
 	FAQ:              defaultFAQ,
 	DefaultLang:      "en_GB",
 	Boards:           []string{},
-	Links:            [][2]string{{"4chan", "http://www.4chan.org/"}},
+	Links:            map[string]string{"4chan": "http://www.4chan.org/"},
 }
 
 // BoardConfigs stores board-specific configuration

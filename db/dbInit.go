@@ -15,7 +15,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 9
+const dbVersion = 10
 
 var (
 	// Address of the RethinkDB cluster instance to connect to

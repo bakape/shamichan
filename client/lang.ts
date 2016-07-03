@@ -59,6 +59,7 @@ type LnUI = {
 	cancel: string
 	done: string
 	send: string
+	add: string
 	[index: string]: string
 }
 

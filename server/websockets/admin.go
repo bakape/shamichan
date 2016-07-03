@@ -42,8 +42,15 @@ func configServer(data []byte, c *Client) error {
 		return err
 	}
 
-	// Client can not set boards, so don't upate this field
-	query := db.GetMain("config").Update(r.Expr(conf).Without("boards"))
+	query := db.GetMain("config").
+		Replace(func(doc r.Term) r.Term {
+			return r.Expr(conf).
+				// Client can not set boards, so don't update this field
+				Merge(map[string]interface{}{
+					"id":     "config",
+					"boards": doc.Field("boards"),
+				})
+		})
 	if err := db.Write(query); err != nil {
 		return err
 	}

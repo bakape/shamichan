@@ -6,6 +6,7 @@ import {defer} from '../defer'
 import {mod as lang} from '../lang'
 import {on, loadModule, setLabel, inputValue} from '../util'
 import {handlers, send, message} from '../connection'
+import Model from '../model'
 
 // Login/Registration request sent to the server through websocket
 type LoginRequest = {
@@ -30,7 +31,7 @@ let loginID = localStorage.getItem("loginID"),
 	sessionToken = localStorage.getItem("sessionToken")
 
 // Account login and registration
-export default class AccountPanel extends TabbedModal {
+export default class AccountPanel extends TabbedModal<Model> {
 	$login: HTMLFormElement = (this.el
 		.querySelector("#login-form") as HTMLFormElement)
 	$register: HTMLFormElement = (this.el

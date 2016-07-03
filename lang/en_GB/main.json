@@ -18,7 +18,8 @@
 	"ui": {
 		"cancel": "Cancel",
 		"done": "Done",
-		"send": "Send"
+		"send": "Send",
+		"add": "Add"
 	},
 
 	"banner": {

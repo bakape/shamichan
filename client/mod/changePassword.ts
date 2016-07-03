@@ -4,6 +4,7 @@ import {write} from '../render'
 import {send, handlers, message} from '../connection'
 import AccountPanel, {validatePasswordMatch} from './login'
 import {FormView} from './util'
+import Model from '../model'
 
 type PasswordChangeRequest = {
 	old: string
@@ -11,9 +12,9 @@ type PasswordChangeRequest = {
 }
 
 // View for changing a password, that gets embedded below the parent view
-export default class PasswordChangeView extends FormView {
+export default class PasswordChangeView extends FormView<Model> {
 	constructor(parent: AccountPanel) {
-		super(parent, el =>
+		super({parent}, el =>
 			send(message.changePassword, {
 				old: inputValue(el, "oldPassword"),
 				new: inputValue(el, "newPassword"),

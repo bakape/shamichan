@@ -1,10 +1,13 @@
-import {HTML, makeAttrs} from '../util'
+import {HTML, makeAttrs, makeEls} from '../util'
 import {mod as lang, ui} from '../lang'
-import View from '../view'
+import View, {ViewAttrs} from '../view'
 import AccountPanel from './login'
 import {write, read} from '../render'
+import Model from '../model'
 
-export const enum inputType {boolean, number, string, select, multiline}
+export const enum inputType {
+	boolean, number, string, select, multiline, map,
+}
 
 // Spec of a single input element for board and server control panels
 export type InputSpec = {
@@ -12,13 +15,13 @@ export type InputSpec = {
 	name: string
 	label?: string
 	tooltip?: string
-	value?: number|string|boolean
+	value?: number|string|boolean|StringMap
 	min?: number
 	max?: number
 	minLength?: number
 	maxLength?: number
 	choices?: string[]
-	[index: string]: number|string|boolean|string[]
+	[index: string]: any
 }
 
 // Render a form input element for consumption by ../util.table
@@ -52,6 +55,8 @@ export function renderInput(spec: InputSpec): string[] {
 		return renderSelect(spec)
 	case inputType.multiline:
 		return renderTextArea(spec)
+	case inputType.map:
+		return renderMap(spec)
 	}
 
 	return [renderLabel(spec), `<input ${makeAttrs(attrs)}>`]
@@ -86,6 +91,31 @@ function renderTextArea(spec: InputSpec): string[] {
 	]
 }
 
+// Render a subform for assining map-like data
+function renderMap(spec: InputSpec): string[] {
+	let html = `<div name="${spec.name}" title="${spec.tooltip}">`
+	const vals = spec.value
+	for (let key in spec.value as StringMap) {
+		html += renderKeyValuePair(key, (spec.value as StringMap)[key])
+	}
+	html += `<a class="map-add">${ui.add}</a><br></div>`
+
+	return [renderLabel(spec), html]
+}
+
+// Render a single key-value input field pair in a map subform
+function renderKeyValuePair(key: string, value: string): string {
+	return HTML
+		`<span>
+			<input type="text" class="map-field" value=${key}>
+			<input type="text" class="map-field" value=${value}>
+			<a class="map-remove">
+				[X]
+			</a>
+			<br>
+		</span>`
+}
+
 function renderLabel(spec: InputSpec): string {
 	return HTML
 	`<label for="${spec.name}" title="${spec.tooltip}">
@@ -99,17 +129,21 @@ type FormHandler = (form: Element) => void
 // Generic input form that is embedded into AccountPanel. Takes the parent
 // AccountPanel view and function for extracting the form and sending the
 // request as parameters.
-export class FormView extends View {
+export class FormView<M extends Model> extends View<M> {
 	parent: AccountPanel
 	handleForm: FormHandler // Function used for sending the form to the client
 
-	constructor(parent: AccountPanel, handler: FormHandler) {
-		super({})
-		this.parent = parent
+	constructor(attrs: ViewAttrs, handler: FormHandler) {
+		super(attrs)
+		this.parent = attrs.parent as AccountPanel
 		this.handleForm = handler
 		this.onClick({
 			"input[name=cancel]": () =>
-				this.remove()
+				this.remove(),
+			".map-remove": e =>
+				this.removeMapInput(e),
+			".map-add": e =>
+				this.addMapInput(e),
 		})
 		this.on('submit', e =>
 			this.submit(e))
@@ -141,5 +175,19 @@ export class FormView extends View {
 	remove() {
 		super.remove()
 		this.parent.unhideMenu()
+	}
+
+	// Render an additional map key-value input field pair
+	addMapInput(event: Event) {
+		write(() =>
+			(event.target as Element)
+				.before(...makeEls(renderKeyValuePair("", ""))))
+	}
+
+	// Remove a map key-vale input field pair
+	removeMapInput(event: Event) {
+		write(() =>
+			(event.target as Element)
+				.closest("span").remove())
 	}
 }

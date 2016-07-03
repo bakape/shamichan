@@ -112,8 +112,8 @@ function parsePostLink(bit: string, links: PostLinks): string {
 export function genRefTargets() {
 	const targets: StringMap = {}
 
-	for (let link of config.links) {
-		targets[link[0]] = link[1]
+	for (let name in config.links) {
+		targets[name] = config.links[name]
 	}
 	for (let board of config.boards) { // Boards override links
 		refTargets[board] = `../${board}/`

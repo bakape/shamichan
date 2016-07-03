@@ -7,6 +7,7 @@ import {ViewAttrs} from './view'
 import {banner as lang} from './lang'
 import {write, read} from './render'
 import {setLabel, find} from './util'
+import Model from './model'
 
 // Highlight options button by fading out and in, if no options are set
 function highlightBanner(name: string) {
@@ -46,13 +47,13 @@ function highlightBanner(name: string) {
 defer(() => ["options", "FAQ", "identity", "account"].forEach(highlightBanner))
 
 // Stores the views of all BannerModal instances
-export const bannerModals: {[key: string]: BannerModal} = {}
+export const bannerModals: {[key: string]: BannerModal<any>} = {}
 
 // View of the modal currently displayed, if any
-let visible: BannerModal
+let visible: BannerModal<any>
 
 // A modal element, that is positioned fixed right beneath the banner
-export class BannerModal extends Modal {
+export class BannerModal<M extends Model> extends Modal<M> {
 	constructor(args: ViewAttrs) {
 		super(args)
 		bannerModals[this.id] = this
@@ -79,7 +80,7 @@ export class BannerModal extends Modal {
 
 	// Unhide the element
 	private show() {
-		write(() => this.el.style.display = 'inline-table')
+		write(() => this.el.style.display = 'block')
 		visible = this
 	}
 
@@ -91,7 +92,7 @@ export class BannerModal extends Modal {
 }
 
 // A view that supports switching between multiple tabs
-export class TabbedModal extends BannerModal {
+export class TabbedModal<M extends Model> extends BannerModal<M> {
 	constructor(args: ViewAttrs) {
 		super(args)
 		this.onClick({'.tab-link': e => this.switchTab(e)})
@@ -125,7 +126,7 @@ defer(() =>
 	}))
 
 // Name and email input pannel
-class IdentityPanel extends BannerModal {
+class IdentityPanel extends BannerModal<Model> {
 	constructor() {
 		super({el: document.querySelector('#identity-panel')})
 		write(() => this.render())

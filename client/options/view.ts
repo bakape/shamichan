@@ -5,9 +5,10 @@ import {optionType} from './specs'
 import {loadModule, load} from '../util'
 import {opts as lang} from '../lang'
 import {write, read} from '../render'
+import Model from '../model'
 
 // View of the options panel
-export default class OptionsPanel extends TabbedModal {
+export default class OptionsPanel extends TabbedModal<Model> {
 	$hidden: Element
 	$import: Element
 

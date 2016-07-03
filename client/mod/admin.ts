@@ -1,13 +1,14 @@
 import View from '../view'
+import Model from '../model'
 import {write} from '../render'
 import {handlers, send, message} from '../connection'
 import {InputSpec, renderInput, inputType, FormView} from './util'
 import {admin as lang, fetchAdminPack, mod} from '../lang'
 import AccountPanel from './login'
-import {HTML, table} from '../util'
+import {HTML, table, extend} from '../util'
 import {langs, themes} from '../options/specs'
 
-type ServerConfigs = {
+class ServerConfigs extends Model {
 	prune: boolean
 	radio: boolean
 	hats: boolean
@@ -30,8 +31,7 @@ type ServerConfigs = {
 	FAQ: string
 	defaultCSS: string
 	defaultLang: string
-	links: string[][]
-	[index: string]: any
+	links: StringMap
 }
 
 const specs: InputSpec[] = [
@@ -132,12 +132,16 @@ const specs: InputSpec[] = [
 		name: "FAQ",
 		type: inputType.multiline,
 	},
+	{
+		name: "links",
+		type: inputType.map
+	}
 ]
 
 // Panel for server administration controls such as global server settings
-export default class ConfigPanel extends FormView {
+export default class ConfigPanel extends FormView<ServerConfigs> {
 	constructor(parent: AccountPanel) {
-		super(parent, el =>
+		super({parent, model: new ServerConfigs()}, el =>
 			this.extractConfigs(el))
 
 		// Request curent configuration and render the panel
@@ -151,7 +155,7 @@ export default class ConfigPanel extends FormView {
 
 	// Render the panel element contents
 	render(conf: ServerConfigs) {
-		const html = table(specs, spec => {
+		let html = table(specs, spec => {
 			[spec.label, spec.tooltip] = lang[spec.name]
 			spec.value = conf[spec.name]
 			return renderInput(spec)
@@ -167,10 +171,10 @@ export default class ConfigPanel extends FormView {
 
 	// Exteract the configuration struct from the form
 	extractConfigs(form: Element) {
-		const conf: {[key: string]: any} = {}
 		const els = form
-			.querySelectorAll("input,select,textarea") as NodeListOf<HTMLInputElement>
-		for (let el of els) {
+			.querySelectorAll("input[name],select[name],textarea[name]")
+
+		for (let el of els as NodeListOf<HTMLInputElement>) {
 			let val: any
 			switch (el.type) {
 			case "submit":
@@ -185,9 +189,19 @@ export default class ConfigPanel extends FormView {
 			default:
 				val = el.value
 			}
-			conf[el.name] = val
+			this.model[el.name] = val
 		}
-		send(message.configServer, conf)
+
+		// Read links key-value pairs
+		const keyVals = this.el.querySelectorAll(
+			"div[name=links] .map-field"
+		) as NodeListOf<HTMLInputElement>
+		this.model.links = {}
+		for (let i = 0; i < keyVals.length; i += 2) {
+			this.model.links[keyVals[i].value] = keyVals[i+1].value
+		}
+
+		send(message.configServer, this.model)
 		this.remove()
 	}
 }
