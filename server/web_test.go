@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -144,17 +143,6 @@ func (*WebServer) SetUpTest(_ *C) {
 		Boards: []string{"a", "c"},
 	})
 	config.SetClient(nil, "")
-}
-
-func (w *WebServer) TestFrontpageRedirect(c *C) {
-	config.Set(config.Configs{
-		Frontpage: filepath.FromSlash("test/frontpage.html"),
-	})
-	req := newRequest(c, "/")
-	rec := httptest.NewRecorder()
-	w.r.ServeHTTP(rec, req)
-	assertBody(rec, "<!doctype html><html></html>\n", c)
-	assertCode(rec, 200, c)
 }
 
 func (w *WebServer) TestAllBoardRedirect(c *C) {

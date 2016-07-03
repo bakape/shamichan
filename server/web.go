@@ -152,14 +152,9 @@ func wrapHandler(fn http.HandlerFunc) httptreemux.HandlerFunc {
 	}
 }
 
-// Redirects to frontpage, if set, or the /all/ board
+// Redirects to / requests to /all/ board
 func redirectToDefault(res http.ResponseWriter, req *http.Request) {
-	frontpage := config.Get().Frontpage
-	if frontpage != "" {
-		http.ServeFile(res, req, frontpage)
-	} else {
-		http.Redirect(res, req, "/all/", 302)
-	}
+	http.Redirect(res, req, "/all/", 302)
 }
 
 // Serves the standard HTML for desktop or mobile pages

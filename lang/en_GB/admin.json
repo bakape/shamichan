@@ -5,7 +5,7 @@
 	],
 	"radio": [
 		"R/a/dio integration",
-		"Enable \"Now playing\" song display in the top banner and the #queue hash command"
+		"Enable 'Now playing' song display in the top banner and the #queue hash command"
 	],
 	"pyu": [
 		"#pyu",
@@ -18,5 +18,69 @@
 	"hats": [
 		"Hats on images",
 		"Attach hats to all image thumbnails"
+	],
+	"maxWidth": [
+		"Image width limit",
+		"Maximum width of uploaded images"
+	],
+	"maxHeight": [
+		"Image height limit",
+		"Maximum height of uploaded images"
+	],
+	"maxSize": [
+		"Image size limit",
+		"Maximum size of uploaded images in bytes"
+	],
+	"JPEGQuality": [
+		"JPEG thumbnail quality",
+		"Quality of image JPEG thumbnails"
+	],
+	"PNGQuality": [
+		"PNG thumbnail compression",
+		"Lossy compression level of PNG thumbnails. Higher is lossier."
+	],
+	"maxThreads": [
+		"Threads per board limit",
+		"Maximum number of threads a board will retain, before the last ones are deleted, if thread pruning is enabled"
+	],
+	"maxBump": [
+		"Thread bump limit",
+		"Maximum number of replies a thread may have, before it no longer is bumped to the top of the board"
+	],
+	"threadCooldown": [
+		"Thread creation cooldown",
+		"Cooldown in seconds for new thread creation by the same IP"
+	],
+	"maxSubjectLength": [
+		"Subject length limit",
+		"Maximum length of a thread subject field"
+	],
+	"sessionExpiry": [
+		"Account session expiry",
+		"Time in days until user accoubts are automatically logged out"
+	],
+	"origin": [
+		"HTTP origin",
+		"Outward origin of the server. Make sure both domain and port match the address your client is being served from."
+	],
+	"salt": [
+		"Salt",
+		"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
+	],
+	"feedbackEmail": [
+		"Feedback email",
+		"User feedback email to display in the top banner"
+	],
+	"FAQ": [
+		"Info text",
+		"Entries for the banner's Frequently Asked Questions list and information modal"
+	],
+	"defaultLang": [
+		"Default language",
+		"Language pack to load by default"
+	],
+	"defaultCSS": [
+		"Default theme",
+		"Theme to load by default, when none is set by the client"
 	]
 }

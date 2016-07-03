@@ -58,7 +58,6 @@ type Configs struct {
 	MaxSubjectLength int           `json:"maxSubjectLength" gorethink:"maxSubjectLength" public:"true"`
 	MaxSize          int64         `json:"maxSize" gorethink:"maxSize"`
 	DefaultLang      string        `json:"defaultLang" gorethink:"defaultLang" public:"true"`
-	Frontpage        string        `json:"frontpage" gorethink:"frontpage"`
 	Origin           string        `json:"origin" gorethink:"origin"`
 	DefaultCSS       string        `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
 	Salt             string        `json:"salt" gorethink:"salt"`
@@ -66,7 +65,6 @@ type Configs struct {
 	FeedbackEmail    string        `json:"feedbackEmail" gorethink:"feedbackEmail"`
 	FAQ              string        `public:"true"`
 	Boards           []string      `json:"-" gorethink:"boards" public:"true"`
-	Langs            []string      `json:"langs" gorethink:"langs" public:"true"`
 	Links            [][2]string   `json:"links" gorethink:"links" public:"true"`
 	SessionExpiry    time.Duration `json:"sessionExpiry" gorethink:"sessionExpiry"`
 }
@@ -128,13 +126,11 @@ var Defaults = Configs{
 	SessionExpiry:    30,
 	ExcludeRegex:     "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
 	Origin:           "localhost:8000",
-	Frontpage:        "",
 	DefaultCSS:       "moe",
 	Salt:             "LALALALALALALALALALALALALALALALALALALALA",
 	FeedbackEmail:    "admin@email.com",
 	FAQ:              defaultFAQ,
 	DefaultLang:      "en_GB",
-	Langs:            []string{"en_GB"},
 	Boards:           []string{},
 	Links:            [][2]string{{"4chan", "http://www.4chan.org/"}},
 }

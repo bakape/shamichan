@@ -5,6 +5,7 @@ import {InputSpec, renderInput, inputType, FormView} from './util'
 import {admin as lang, fetchAdminPack, mod} from '../lang'
 import AccountPanel from './login'
 import {HTML} from '../util'
+import {langs, themes} from '../options/specs'
 
 type ServerConfigs = {
 	prune: boolean
@@ -22,17 +23,14 @@ type ServerConfigs = {
 	maxSubjectLength: number
 	maxSize: number
 	sessionExpiry: number
-	defaultLang: string
-	frontPage: string
 	origin: string
-	defaultCSS: string
 	salt: string
 	excludeRegex: string
 	feedbackEmail: string
 	FAQ: string
-	langs: string[]
+	defaultCSS: string
+	defaultLang: string
 	links: string[][]
-	spoilers: number[]
 	[index: string]: any
 }
 
@@ -56,6 +54,83 @@ const specs: InputSpec[] = [
 	{
 		name: "hats",
 		type: inputType.boolean,
+	},
+	{
+		name: "maxWidth",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "maxHeight",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "maxSize",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "JPEGQuality",
+		type: inputType.number,
+		min: 1,
+		max: 100,
+	},
+	{
+		name: "PNGQuality",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "maxThreads",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "maxBump",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "threadCooldown",
+		type: inputType.number,
+		min: 0,
+	},
+	{
+		name: "maxSubjectLength",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: 'sessionExpiry',
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "origin",
+		type: inputType.string,
+	},
+	{
+		name: "salt",
+		type: inputType.string,
+	},
+	{
+		name: "feedbackEmail",
+		type: inputType.string,
+	},
+	{
+		name: "defaultLang",
+		type: inputType.select,
+		choices: langs,
+	},
+	{
+		name: "defaultCSS",
+		type: inputType.select,
+		choices: themes,
+	},
+	{
+		name: "FAQ",
+		type: inputType.multiline,
 	},
 ]
 
@@ -97,7 +172,7 @@ export default class ConfigPanel extends FormView {
 	extractConfigs(form: Element) {
 		const conf: {[key: string]: any} = {}
 		const els = form
-			.querySelectorAll("input") as NodeListOf<HTMLInputElement>
+			.querySelectorAll("input,select,textarea") as NodeListOf<HTMLInputElement>
 		for (let el of els) {
 			let val: any
 			switch (el.type) {
@@ -106,9 +181,16 @@ export default class ConfigPanel extends FormView {
 				continue
 			case "checkbox":
 				val = el.checked
+				break
+			case "number":
+				val = parseInt(el.value)
+				break
+			default:
+				val = el.value
 			}
 			conf[el.name] = val
 		}
-		console.log(conf)
+		send(message.configServer, conf)
+		this.remove()
 	}
 }

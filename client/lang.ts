@@ -154,11 +154,6 @@ type LnMod = {
 }
 
 type LnAdmin = {
-	prune: OptLabel
-	radio: OptLabel
-	pyu: OptLabel
-	illyaDance: OptLabel
-	hats: OptLabel
 	[index: string]: OptLabel
 }
 

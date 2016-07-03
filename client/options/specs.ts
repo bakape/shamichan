@@ -19,11 +19,14 @@ export const enum tabs {general, style, imagesearch, fun, shortcuts}
 // Thumbnail expansion modes
 export const thumbExpansions = ['none', 'width', 'screen']
 
-// Available themes
+// Available themes. Change this, when adding any new ones.
 export const themes = [
 	'moe', 'gar', 'mawaru', 'moon', 'ashita', 'console', 'tea', 'higan',
 	'ocean', 'rave', 'tavern', 'glass', 'material'
 ]
+
+// Available language packs. Change this, when adding any new ones.
+export const langs = ["en_GB"]
 
 export type OptionValue =  boolean|string|number
 
@@ -68,7 +71,7 @@ export const specs: OptionSpec[] = [
 	{
 		id: 'lang',
 		type: optionType.menu,
-		list: config.langs,
+		list: langs,
 		tab: tabs.general,
 		default: config.defaultLang,
 		noExecOnStart: true,
