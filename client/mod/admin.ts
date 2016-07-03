@@ -4,7 +4,7 @@ import {handlers, send, message} from '../connection'
 import {InputSpec, renderInput, inputType, FormView} from './util'
 import {admin as lang, fetchAdminPack, mod} from '../lang'
 import AccountPanel from './login'
-import {HTML} from '../util'
+import {HTML, table} from '../util'
 import {langs, themes} from '../options/specs'
 
 type ServerConfigs = {
@@ -40,15 +40,62 @@ const specs: InputSpec[] = [
 		type: inputType.boolean,
 	},
 	{
+		name: "maxThreads",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "maxBump",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "threadCooldown",
+		type: inputType.number,
+		min: 0,
+	},
+	{
+		name: "maxSubjectLength",
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "origin",
+		type: inputType.string,
+	},
+	{
+		name: "salt",
+		type: inputType.string,
+	},
+	{
+		name: 'sessionExpiry',
+		type: inputType.number,
+		min: 1,
+	},
+	{
+		name: "feedbackEmail",
+		type: inputType.string,
+	},
+	{
+		name: "defaultLang",
+		type: inputType.select,
+		choices: langs,
+	},
+	{
+		name: "defaultCSS",
+		type: inputType.select,
+		choices: themes,
+	},
+	{
 		name: "radio",
 		type: inputType.boolean,
 	},
 	{
-		name: "pyu",
+		name: "illyaDance",
 		type: inputType.boolean,
 	},
 	{
-		name: "illyaDance",
+		name: "pyu",
 		type: inputType.boolean,
 	},
 	{
@@ -82,53 +129,6 @@ const specs: InputSpec[] = [
 		min: 1,
 	},
 	{
-		name: "maxThreads",
-		type: inputType.number,
-		min: 1,
-	},
-	{
-		name: "maxBump",
-		type: inputType.number,
-		min: 1,
-	},
-	{
-		name: "threadCooldown",
-		type: inputType.number,
-		min: 0,
-	},
-	{
-		name: "maxSubjectLength",
-		type: inputType.number,
-		min: 1,
-	},
-	{
-		name: 'sessionExpiry',
-		type: inputType.number,
-		min: 1,
-	},
-	{
-		name: "origin",
-		type: inputType.string,
-	},
-	{
-		name: "salt",
-		type: inputType.string,
-	},
-	{
-		name: "feedbackEmail",
-		type: inputType.string,
-	},
-	{
-		name: "defaultLang",
-		type: inputType.select,
-		choices: langs,
-	},
-	{
-		name: "defaultCSS",
-		type: inputType.select,
-		choices: themes,
-	},
-	{
 		name: "FAQ",
 		type: inputType.multiline,
 	},
@@ -151,15 +151,12 @@ export default class ConfigPanel extends FormView {
 
 	// Render the panel element contents
 	render(conf: ServerConfigs) {
-		let inputs = ""
-		for (let spec of specs) {
-			const ln = lang[spec.name]
-			spec.label = ln[0]
-			spec.tooltip = ln[1]
+		const html = table(specs, spec => {
+			[spec.label, spec.tooltip] = lang[spec.name]
 			spec.value = conf[spec.name]
-			inputs += renderInput(spec)
-		}
-		this.renderForm(inputs)
+			return renderInput(spec)
+		})
+		this.renderForm(html)
 	}
 
 	// Clean up any dangling references and GC the view

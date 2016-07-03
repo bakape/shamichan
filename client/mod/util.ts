@@ -2,7 +2,7 @@ import {HTML, makeAttrs} from '../util'
 import {mod as lang, ui} from '../lang'
 import View from '../view'
 import AccountPanel from './login'
-import {write} from '../render'
+import {write, read} from '../render'
 
 export const enum inputType {boolean, number, string, select, multiline}
 
@@ -15,12 +15,14 @@ export type InputSpec = {
 	value?: number|string|boolean
 	min?: number
 	max?: number
+	minLength?: number
+	maxLength?: number
 	choices?: string[]
 	[index: string]: number|string|boolean|string[]
 }
 
-// Render a form input element
-export function renderInput(spec: InputSpec): string {
+// Render a form input element for consumption by ../util.table
+export function renderInput(spec: InputSpec): string[] {
 	const attrs: StringMap = {
 		name: spec.name,
 		title: spec.tooltip,
@@ -52,35 +54,42 @@ export function renderInput(spec: InputSpec): string {
 		return renderTextArea(spec)
 	}
 
-	return `<input ${makeAttrs(attrs)}>` + renderLabel(spec)
+	return [renderLabel(spec), `<input ${makeAttrs(attrs)}>`]
 }
 
-function renderSelect(spec: InputSpec): string {
+function renderSelect(spec: InputSpec): string[] {
 	let html = `<select title="${spec.tooltip}" name="${spec.name}">`
 	for (let item of spec.choices) {
 		html += `<option value="${item}">${item}</option>`
 	}
-	html += "</select>" + renderLabel(spec)
-	return html
+	html += "</select>"
+	return [renderLabel(spec), html]
 }
 
-function renderTextArea(spec: InputSpec): string {
+function renderTextArea(spec: InputSpec): string[] {
 	const attrs: StringMap = {
 		name: spec.name,
 		title: spec.tooltip,
 		rows: "3",
 	}
-	return HTML
-		`<textarea ${makeAttrs(attrs)}>
-			${spec.value as string}
-		</textarea>`
-		+ renderLabel(spec)
+
+	// Because textarea is a retardedly non-standard piece of shit that
+	// can't even fucking support a fucking value attribute.
+	read(() =>
+		document
+		.querySelector(`textarea[name=${spec.name}]`)
+		.value = spec.value)
+
+	return [
+		renderLabel(spec),
+		`<textarea ${makeAttrs(attrs)}></textarea>`,
+	]
 }
 
 function renderLabel(spec: InputSpec): string {
 	return HTML
 	`<label for="${spec.name}" title="${spec.tooltip}">
-		${spec.label}
+		${spec.label}:
 	</label>
 	<br>`
 }
