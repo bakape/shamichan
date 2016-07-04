@@ -61,7 +61,6 @@ type Configs struct {
 	Origin           string            `json:"origin" gorethink:"origin"`
 	DefaultCSS       string            `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
 	Salt             string            `json:"salt" gorethink:"salt"`
-	ExcludeRegex     string            `json:"excludeRegex" gorethink:"excludeRegex"`
 	FeedbackEmail    string            `json:"feedbackEmail" gorethink:"feedbackEmail"`
 	FAQ              string            `public:"true"`
 	Boards           []string          `json:"-" gorethink:"boards" public:"true"`
@@ -124,7 +123,6 @@ var Defaults = Configs{
 	ThreadCooldown:   60,
 	MaxSubjectLength: 50,
 	SessionExpiry:    30,
-	ExcludeRegex:     "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
 	Origin:           "localhost:8000",
 	DefaultCSS:       "moe",
 	Salt:             "LALALALALALALALALALALALALALALALALALALALA",
