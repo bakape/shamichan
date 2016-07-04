@@ -52,6 +52,11 @@ export function renderInput(spec: InputSpec): string[] {
 	case inputType.string:
 		attrs["type"] = "text"
 		attrs["value"] = spec.value as string || ""
+		for (let prop of ["minLength", "maxLength"]) {
+			if (prop in spec) {
+				attrs[prop] = spec[prop].toString()
+			}
+		}
 		break
 	case inputType.select:
 		return renderSelect(spec)

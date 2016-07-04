@@ -91,6 +91,13 @@ func (*DB) TestBoardCreation(c *C) {
 		userID = "123"
 		title  = "/a/ - Animu & Mango"
 	)
+
+	conf := db.ConfigDocument{
+		Document: db.Document{ID: "config"},
+		Configs:  config.Defaults,
+	}
+	c.Assert(db.Write(r.Table("main").Insert(conf)), IsNil)
+
 	req := boardCreationRequest{
 		Name:  id,
 		Title: title,
@@ -109,4 +116,8 @@ func (*DB) TestBoardCreation(c *C) {
 		},
 	}
 	c.Assert(board, DeepEquals, std)
+
+	var boards []string
+	c.Assert(db.All(db.GetMain("config").Field("boards"), &boards), IsNil)
+	c.Assert(boards, DeepEquals, []string{"a"})
 }

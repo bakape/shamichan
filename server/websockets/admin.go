@@ -91,5 +91,13 @@ func createBoard(data []byte, c *Client) error {
 		return err
 	}
 
+	// Need to update the config struct separatly
+	q = db.GetMain("config").Update(map[string]r.Term{
+		"boards": r.Row.Field("boards").Append(req.Name),
+	})
+	if err := db.Write(q); err != nil {
+		return err
+	}
+
 	return c.sendMessage(messageCreateBoard, boardCreated)
 }
