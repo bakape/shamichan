@@ -1,4 +1,5 @@
 {
+	"boardNameTaken": "Board name already taken",
 	"prune": [
 		"Prune threads",
 		"Delete threads and their images, when they exceed the board's thread limit"
@@ -86,5 +87,13 @@
 	"links": [
 		"Extrenal links",
 		"Add, remove or edit external >>>/4chan/-type references"
+	],
+	"boardName": [
+		"Board name",
+		"Name of the new board. Up to 3 characters long"
+	],
+	"boardTitle": [
+		"Board title",
+		"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
 	]
 }

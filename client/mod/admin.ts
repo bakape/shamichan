@@ -141,7 +141,12 @@ const specs: InputSpec[] = [
 // Panel for server administration controls such as global server settings
 export default class ConfigPanel extends FormView<ServerConfigs> {
 	constructor(parent: AccountPanel) {
-		super({parent, model: new ServerConfigs()}, el =>
+		const attrs = {
+			parent,
+			model: new ServerConfigs(),
+			cls: 'wide-fields' // The panel needs much larger text inputs
+		}
+		super(attrs, el =>
 			this.extractConfigs(el))
 
 		// Request curent configuration and render the panel

@@ -155,7 +155,8 @@ type LnMod = {
 }
 
 type LnAdmin = {
-	[index: string]: OptLabel
+	boardNameTaken: string
+	[index: string]: OptLabel|string
 }
 
 type LnOpts = {
@@ -190,4 +191,4 @@ defer(languageCSS)
 
 // Fetch the administrator language pack
 export const fetchAdminPack = async (): Promise<LnAdmin> =>
-	admin = await fetchJSON(`/assets/lang/${options.lang}/admin.json`)
+	admin = admin || await fetchJSON(`/assets/lang/${options.lang}/admin.json`)

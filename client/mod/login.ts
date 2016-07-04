@@ -55,6 +55,7 @@ export default class AccountPanel extends TabbedModal<Model> {
 				this.logout(),
 			"#changePassword":  this.loadConditionalView("mod/changePassword"),
 			"#configureServer": this.loadConditionalView("mod/admin"),
+			"#createBoard": this.loadConditionalView("mod/createBoard"),
 		})
 
 		handlers[message.login] = (msg: LoginResponse) =>
@@ -105,8 +106,8 @@ export default class AccountPanel extends TabbedModal<Model> {
 			text = lang.wrongCredentials
 			break
 		default:
-			// These response codes are never supposed to make it here, because of
-			// HTML5 form validation
+			// These response codes are never supposed to make it here, because
+			// of HTML5 form validation
 			text = lang.theFuck
 		}
 

@@ -57,6 +57,14 @@ func (*DB) TestServerConfigSetting(c *C) {
 	c.Assert(conf, DeepEquals, std)
 }
 
+func (*DB) TestBpardNameTooLong(c *C) {
+	req := boardCreationRequest{
+		Name:  "abcd",
+		Title: "foo",
+	}
+	assertLoggedInResponse(req, createBoard, "123", []byte("402"), c)
+}
+
 func (*DB) TestBoardTitleTooLong(c *C) {
 	title, err := util.RandomID(101)
 	c.Assert(err, IsNil)
@@ -64,7 +72,7 @@ func (*DB) TestBoardTitleTooLong(c *C) {
 		Name:  "a",
 		Title: title,
 	}
-	assertLoggedInResponse(req, createBoard, "123", []byte("402"), c)
+	assertLoggedInResponse(req, createBoard, "123", []byte("403"), c)
 }
 
 func (*DB) TestBoardNameTaken(c *C) {

@@ -24,6 +24,7 @@ type boardCreationRequest struct {
 const (
 	boardCreated = iota
 	boardNameTaken
+	boardNameTooLong
 	titleTooLong
 )
 
@@ -67,6 +68,9 @@ func createBoard(data []byte, c *Client) error {
 	var req boardCreationRequest
 	if err := decodeMessage(data, &req); err != nil {
 		return err
+	}
+	if len(req.Name) > 3 {
+		return c.sendMessage(messageCreateBoard, boardNameTooLong)
 	}
 	if len(req.Title) > 100 {
 		return c.sendMessage(messageCreateBoard, titleTooLong)

@@ -40,7 +40,9 @@ export function renderInput(spec: InputSpec): string[] {
 		break
 	case inputType.number:
 		attrs["type"] = 'number'
-		attrs['value'] = spec.value.toString()
+		if (spec.value !== undefined) {
+			attrs['value'] = spec.value.toString()
+		}
 		for (let prop of ['min', 'max']) {
 			if (prop in spec) {
 				attrs[prop] = spec[prop].toString()
@@ -49,7 +51,7 @@ export function renderInput(spec: InputSpec): string[] {
 		break
 	case inputType.string:
 		attrs["type"] = "text"
-		attrs["value"] = spec.value as string
+		attrs["value"] = spec.value as string || ""
 		break
 	case inputType.select:
 		return renderSelect(spec)
@@ -94,9 +96,10 @@ function renderTextArea(spec: InputSpec): string[] {
 // Render a subform for assining map-like data
 function renderMap(spec: InputSpec): string[] {
 	let html = `<div name="${spec.name}" title="${spec.tooltip}">`
-	const vals = spec.value
-	for (let key in spec.value as StringMap) {
-		html += renderKeyValuePair(key, (spec.value as StringMap)[key])
+	if (spec.value) {
+		for (let key in spec.value as StringMap) {
+			html += renderKeyValuePair(key, (spec.value as StringMap)[key])
+		}
 	}
 	html += `<a class="map-add">${ui.add}</a><br></div>`
 
