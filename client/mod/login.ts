@@ -53,9 +53,18 @@ export default class AccountPanel extends TabbedModal<Model> {
 		this.onClick({
 			'#logout': () =>
 				this.logout(),
+
+			// TODO: Log out all devices
+			"#logoutAll": () =>
+				alert("TODO"),
+
 			"#changePassword":  this.loadConditionalView("mod/changePassword"),
 			"#configureServer": this.loadConditionalView("mod/admin"),
 			"#createBoard": this.loadConditionalView("mod/createBoard"),
+
+			// TODO: Board configuration UI
+			"#configureBoard": () =>
+				alert("TODO"),
 		})
 
 		handlers[message.login] = (msg: LoginResponse) =>

@@ -49,6 +49,7 @@ var handlers = map[messageType]handler{
 	messageChangePassword: changePassword,
 	messageConfigServer:   configServer,
 	messageCreateBoard:    createBoard,
+	messageConfigBoard:    configBoard,
 }
 
 // Error while parsing the message. Denotes that either the message does not

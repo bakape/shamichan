@@ -1,5 +1,3 @@
-// Board creation and configuration
-
 import {FormView, renderInput, InputSpec, inputType} from './util'
 import Model from '../model'
 import AccountPanel from './login'
