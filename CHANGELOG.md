@@ -2,15 +2,20 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##vNext
+##v2.1.0-alpha - 2016-07-04
 * License:
 	- Relicense under GNU AGPL
 * Add:
 	- HTTP and database connection flags. See `./meguca help`.
+	- Server configuration WebUI
+	- Basic account management for staff
+	- User-creatable boards
+	- Global "admin" account
 * Change:
 	- Highlight all banner panel toggles, until clicked
 	- Descriptive text error pages instead of graphical ones
 	- Hardcode /all/ as default board
+	- Make spoilers board-specific
 * Fix:
 	- Duplicative header writing, when using Chrome dev tools
 * Remove
