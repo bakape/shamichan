@@ -77,7 +77,15 @@ export function send(type: message, msg: {}) {
 		console.warn("Attempting to send while socket closed")
 		return
 	}
-	const str = leftPad(type) + JSON.stringify(msg)
+
+	// Exclude collections and views, when stringifying models
+	const str = leftPad(type) + JSON.stringify(msg, (key, val) => {
+		if (key === 'collection' || key === 'views') {
+			return undefined
+		}
+		return val
+	})
+
 	if (debug) {
 		console.log('<', str)
 	}
