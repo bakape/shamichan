@@ -20,9 +20,9 @@ func (*Auth) TestLookupIdent(c *C) {
 }
 
 func (*Auth) TestIsBoard(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	config.Set(conf)
+	config.Set(config.Configs{
+		Boards: []string{"a"},
+	})
 
 	// Board exists
 	c.Assert(IsBoard("a"), Equals, true)

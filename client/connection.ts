@@ -6,6 +6,8 @@ import FSM from './fsm'
 import {debug, syncCounter, page, clientID, setClientID} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
+import {authenticate} from './mod/login'
+import {defer} from './defer'
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server
@@ -35,6 +37,12 @@ export const enum message {
 	authenticate,
 	logout,
 	logoutAll,
+	changePassword,
+
+	// Board and server administration
+	configServer,
+	createBoard,
+	configBoard,
 }
 
 export type MessageHandler = (msg: {}) => void
@@ -65,17 +73,19 @@ let socket: WebSocket,
 
 // Send a message to the server
 export function send(type: message, msg: {}) {
-	if (connSM.state !== connState.synced
-		&& connSM.state !== connState.syncing
-		&& type !== message.synchronise
-	) {
-		return
-	}
 	if (socket.readyState !== 1) {
 		console.warn("Attempting to send while socket closed")
 		return
 	}
-	const str = leftPad(type) + JSON.stringify(msg)
+
+	// Exclude collections and views, when stringifying models
+	const str = leftPad(type) + JSON.stringify(msg, (key, val) => {
+		if (key === 'collection' || key === 'views') {
+			return undefined
+		}
+		return val
+	})
+
 	if (debug) {
 		console.log('<', str)
 	}
@@ -175,6 +185,7 @@ connSM.act(
 		// }
 
 		send(type, msg)
+		authenticate()
 
 		attemptTimer = setTimeout(() => resetAttempts(), 10000)
 	}

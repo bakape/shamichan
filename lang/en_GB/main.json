@@ -12,10 +12,14 @@
 		"unknownUpload": "Unknown upload error",
 		"unknownResult": "Unknown result",
 		"thread_locked": "This thread is locked.",
+		"quoted": "You have been quoted"
+	},
+
+	"ui": {
+		"cancel": "Cancel",
 		"done": "Done",
 		"send": "Send",
-		"quoted": "You have been quoted",
-		"cancel": "Cancel"
+		"add": "Add"
 	},
 
 	"banner": {
@@ -25,6 +29,7 @@
 		"email": "Email",
 		"options": "Options",
 		"identity": "Identity",
+		"account": "Account and board management",
 		"FAQ": "Information",
 		"feedback": "Feedback",
 		"googleSong": "Click to google song",
@@ -88,13 +93,22 @@
 	"mod": {
 		"id": "Login",
 		"register": "Register",
+		"logout": "Logout",
+		"logoutAll": "Log out all devices",
+		"changePassword": "Change password",
+		"oldPassword": "Old password",
+		"newPassword": "New password",
 		"submit": "Submit",
 		"password": "Password",
 		"repeat": "Repeat",
 		"mustMatch": "Passwords must match",
 		"nameTaken": "Login name already taken",
 		"wrongCredentials": "Incorrect login name or password",
-		"theFuck": "SOMEBODY FUCKED UP"
+		"wrongPassword": "Incorrect password",
+		"theFuck": "SOMEBODY FUCKED UP",
+		"configureServer": "Configure server",
+		"createBoard": "Create board",
+		"configureBoard": "Configure board"
 	},
 
 	"opts": {

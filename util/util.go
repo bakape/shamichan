@@ -13,6 +13,8 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // WrapError wraps error types to create compound error chains
@@ -49,9 +51,9 @@ func Waterfall(fns []func() error) (err error) {
 }
 
 // HashBuffer computes a truncated MD5 hash from a buffer
-func HashBuffer(buf []byte) (string, error) {
+func HashBuffer(buf []byte) string {
 	hash := md5.Sum(buf)
-	return hex.EncodeToString(hash[:])[:16], nil
+	return hex.EncodeToString(hash[:])[:16]
 }
 
 // CopyFile reads a file from disk and copies it into the writer
@@ -112,4 +114,15 @@ func (a *AtomicCloser) Close() {
 	a.Lock()
 	defer a.Unlock()
 	a.closed = true
+}
+
+// PasswordHash generates a bcrypt hash from the passed login ID and password
+func PasswordHash(id, password string) ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(id+password), 10)
+}
+
+// ComparePassword conpares a bcrypt hash with the login ID and password of a
+// user
+func ComparePassword(id, password string, hash []byte) error {
+	return bcrypt.CompareHashAndPassword(hash, []byte(id+password))
 }

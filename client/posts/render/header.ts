@@ -55,6 +55,7 @@ export function renderName(data: Post): string {
 function resolveName(data: Post): string {
 	let html = ''
 	const {trip, name, auth} = data
+
 	if (name || !trip) {
 		if (name) {
 			html += escape(name)
@@ -65,18 +66,15 @@ function resolveName(data: Post): string {
 			html += ' '
 		}
 	}
+
 	if (trip) {
 		html += `<code>${escape(trip)}</code>`
 	}
+
 	if (auth) { // Render staff title
-		let alias: string
-		if (auth in config.staff.classes) {
-			alias = config.staff.classes[auth].alias
-		} else {
-			alias = auth
-		}
-		html += ` ## ${alias}`
+		html += ` ## ${auth}`
 	}
+
 	return html
 }
 

@@ -63,6 +63,10 @@
 	}
 }
 
+form label {
+	padding: 0.2em;
+}
+
 #navTop {
 	float: left;
 }
@@ -97,10 +101,6 @@
 	float: right;
 }
 
-input[type=number] {
-	width: 3em;
-}
-
 .notification {
 	position: fixed;
 	text-align: center;
@@ -115,20 +115,6 @@ input[type=number] {
 	width: 90%;
 }
 
-#FAQ-panel > ul {
-	list-style-type:none;
-	-webkit-margin-before: 0em;
-	margin-top: 0em;
-	-webkit-margin-after: 0em;
-	margin-bottom: 0em;
-	-webkit-margin-start: 0px;
-	-webkit-margin-end: 0px;
-	-webkit-padding-start: 0px;
-	-moz-margin-start: 0em;
-	-moz-margin-end: 0px;
-	-moz-padding-start: 0px;
-}
-
 #UTCClock {
 	text-align: center;
 	b {
@@ -139,13 +125,27 @@ input[type=number] {
 
 .modal {
 	text-align: left;
-	max-height: 80%;
-	max-width: 80%;
+	max-height: 95%;
+	max-width: 95%;
 	overflow: auto;
 	margin: 0.5em;
 	padding: 1em;
 	white-space: nowrap;
 	box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
+	input[type=number] {
+		width: 5em;
+	}
+	input[type=text] {
+		width: 10em;
+	}
+	.wide-fields {
+		input[type=text], textarea {
+			width: 20em;
+			&.map-field {
+				width: 9.3em;
+			}
+		}
+	}
 }
 
 .modal, #banner {

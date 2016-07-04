@@ -4,230 +4,194 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
-	"io/ioutil"
-	"os"
-	"path/filepath"
+	"reflect"
 	"sync"
 	"time"
 
-	"github.com/DisposaBoy/JsonConfigReader"
-	"github.com/Soreil/mnemonics"
 	"github.com/bakape/meguca/util"
 )
 
 var (
-	// Overridable path for tests
-	configRoot = "config"
-
 	// Ensures no reads happen, while the configuration is reloading
-	mu sync.RWMutex
+	globalMu, boardsMu sync.RWMutex
 
-	// Contains currently loaded server configuration. Intialised to an empty
-	// struct pointer, so we don't have to explicitly initialise it in all our
-	// tests.
-	config = &ServerConfigs{}
+	// Contains currently loaded global server configuration
+	global *Configs
+
+	// Map of board IDs to their cofiguration structs
+	boardConfigs map[string]BoardConfigs
 
 	// JSON of client-accessable configuration
 	clientJSON []byte
 
-	// Hash of the config file. Used live updating configuration on the client
+	// Hash of the gloabal configs. Used for live reloading configuration on the
+	// client.
 	hash string
 )
 
-// ServerConfigs stores the global configuration
-type ServerConfigs struct {
-	HTTP          HTTPConfigs
-	Rethinkdb     RethinkDBConfig
-	Boards        BoardConfig
-	Staff         StaffConfig
-	Images        ImageConfig
-	Posts         PostConfig
-	Recaptcha     RecaptchaConfig
-	Radio, Pyu    bool
-	InfoBanner    string
-	FeedbackEmail string
-	DefaultCSS    string
+// Default string for the FAQ panel
+const defaultFAQ = `Upload size limit is 5 MB
+Accepted upload file types: JPG, JPEG, PNG, GIF, WEBM, SVG, PDF, MP3, MP4, OGG
+<hr>Hash commands:
+#d100 #2d100 - Roll dice
+#flip - Coin flip
+#8ball - An 8ball
+#queue - Print r/a/dio song queue
+#sw24:15 #sw2:24:15 #sw24:15+30 #sw24:15-30 - Syncronised duration timer`
+
+// Configs stores the global configuration
+type Configs struct {
+	Prune            bool   `json:"prune" gorethink:"prune"`
+	Radio            bool   `json:"radio" gorethink:"radio" public:"true"`
+	Hats             bool   `json:"hats" gorethink:"hats" public:"true"`
+	IllyaDance       bool   `json:"illyaDance" gorethink:"illyaDance" public:"true"`
+	Pyu              bool   `json:"pyu" gorethink:"pyu"`
+	MaxWidth         uint16 `json:"maxWidth" gorethink:"maxWidth"`
+	MaxHeight        uint16 `json:"maxHeight" gorethink:"maxHeight"`
+	MaxThreads       int    `json:"maxThreads" gorethink:"maxThreads"`
+	MaxBump          int    `json:"maxBump" gorethink:"maxBump"`
+	JPEGQuality      int
+	PNGQuality       int
+	ThreadCooldown   int               `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
+	MaxSubjectLength int               `json:"maxSubjectLength" gorethink:"maxSubjectLength" public:"true"`
+	MaxSize          int64             `json:"maxSize" gorethink:"maxSize"`
+	DefaultLang      string            `json:"defaultLang" gorethink:"defaultLang" public:"true"`
+	Origin           string            `json:"origin" gorethink:"origin"`
+	DefaultCSS       string            `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
+	Salt             string            `json:"salt" gorethink:"salt"`
+	FeedbackEmail    string            `json:"feedbackEmail" gorethink:"feedbackEmail"`
+	FAQ              string            `public:"true"`
+	Boards           []string          `json:"-" gorethink:"boards" public:"true"`
+	Links            map[string]string `json:"links" gorethink:"links" public:"true"`
+	SessionExpiry    time.Duration     `json:"sessionExpiry" gorethink:"sessionExpiry"`
 }
 
-// HTTPConfigs stores HTTP server configuration
-type HTTPConfigs struct {
-	SSL, TrustProxies, Gzip bool
-	Addr, Origin, Cert, Key string
-	Frontpage               string
-}
+// Only marshal JSON with the `public:"true"` tag for publicly exposed
+// configuration
+func (c *Configs) marshalPublicJSON() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	t := reflect.TypeOf(*c)
+	v := reflect.ValueOf(*c)
+	var notFirst bool
 
-// RethinkDBConfig stores address and datbase name to connect to
-type RethinkDBConfig struct {
-	Addr, Db string
-}
+	buf.WriteByte('{')
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Tag.Get("public") != "true" {
+			continue
+		}
 
-// BoardConfig stores overall board configuration
-type BoardConfig struct {
-	Enabled []string
-	Boards  map[string]struct {
-		MaxThreads, MaxBump int
-		Title               string
+		name := t.Field(i).Tag.Get("gorethink")
+		if name == "" {
+			name = field.Name
+		}
+
+		if notFirst {
+			buf.WriteByte(',')
+		}
+		buf.WriteByte('"')
+		buf.WriteString(name)
+		buf.WriteString(`":`)
+
+		data, err := json.Marshal(v.Field(i).Interface())
+		if err != nil {
+			return nil, err
+		}
+		buf.Write(data)
+
+		notFirst = true
 	}
-	Links [][2]string
-	Prune bool
+	buf.WriteByte('}')
+
+	return buf.Bytes(), nil
 }
 
-// StaffConfig stores moderation staff related configuration
-type StaffConfig struct {
-	Classes       map[string]StaffClass
-	SessionExpiry time.Duration
+// Defaults contains the default server configuration values
+var Defaults = Configs{
+	Prune:            false,
+	Hats:             false,
+	Radio:            false,
+	MaxThreads:       100,
+	MaxBump:          1000,
+	JPEGQuality:      80,
+	PNGQuality:       20,
+	MaxSize:          5,
+	MaxHeight:        6000,
+	MaxWidth:         6000,
+	ThreadCooldown:   60,
+	MaxSubjectLength: 50,
+	SessionExpiry:    30,
+	Origin:           "localhost:8000",
+	DefaultCSS:       "moe",
+	Salt:             "LALALALALALALALALALALALALALALALALALALALA",
+	FeedbackEmail:    "admin@email.com",
+	FAQ:              defaultFAQ,
+	DefaultLang:      "en_GB",
+	Boards:           []string{},
+	Links:            map[string]string{"4chan": "http://www.4chan.org/"},
 }
 
-// StaffClass contains properties of a single staff personel type
-type StaffClass struct {
-	Alias   string
-	Members map[string]string
-	Rights  map[string]bool
+// BoardConfigs stores board-specific configuration
+type BoardConfigs struct {
+	ReadOnly   bool                `json:"readOnly" gorethink:"readOnly"`
+	ForcedAnon bool                `json:"forcedAnon" gorethink:"forcedAnon"`
+	ID         string              `json:"id" gorethink:"id"`
+	Spoiler    string              `json:"spoiler" gorethink:"spoiler"`
+	Title      string              `json:"title" gorethink:"title"`
+	Notice     string              `json:"notice" gorethink:"notice"`
+	Eightball  []string            `json:"eightball" gorethink:"eightball"`
+	Staff      map[string][]string `json:"staff" gorethink:"staff"`
 }
 
-// ImageConfig stores file upload processing and thumbnailing configuration
-type ImageConfig struct {
-	WebmAudio   bool
-	Hats        bool
-	JpegQuality int
-	PngQuality  int
-	Max         struct {
-		Size          int64
-		Width, Height uint16
-	}
-	Spoilers []uint8
-}
-
-// PostConfig stores configuration related to creating posts
-type PostConfig struct {
-	ThreadCreationCooldown, MaxSubjectLength int
-	ReadOnly, SageEnabled, ForcedAnon        bool
-	Salt, ExcludeRegex                       string
-}
-
-// RecaptchaConfig stores the public and private key fot Google ReCaptcha
-// authentication
-type RecaptchaConfig struct {
-	Public, Private string
-}
-
-// A subset of ServerConfigs, that is exported as JSON to all clients
-type clientConfigs struct {
-	Boards struct {
-		Enabled []string `json:"enabled"`
-		Boards  map[string]struct {
-			Title string `json:"title"`
-		} `json:"boards"`
-		Default string      `json:"default"`
-		Psuedo  [][2]string `json:"psuedo"`
-		Links   [][2]string `json:"links"`
-	} `json:"boards"`
-	Lang struct {
-		Enabled []string `json:"enabled"`
-		Default string   `json:"default"`
-	} `json:"lang"`
-	Staff struct {
-		Classes map[string]struct {
-			Alias  string          `json:"alias"`
-			Rights map[string]bool `json:"rights"`
-		} `json:"classes"`
-	} `json:"staff"`
-	Images struct {
-		Spoilers []int `json:"spoilers"`
-		Hats     bool  `json:"hats"`
-	} `json:"images"`
-	Banners    []string `json:"banners"`
-	FAQ        []string `json:"FAQ"`
-	Eightball  []string `json:"eightball"`
-	Radio      bool     `json:"radio"`
-	IllyaDance bool     `json:"illiyaDance"`
-	DefaultCSS string   `json:"defaultCSS"`
-	InfoBanner string   `json:"infoBanner"`
-}
-
-// LoadConfig reads and parses the JSON config file and thread-safely loads it
-// into the server
-func LoadConfig() error {
-	var (
-		tempServer ServerConfigs
-		tempClient clientConfigs
-		path       = filepath.FromSlash(configRoot + "/config.json")
-	)
-
-	file, err := os.Open(path)
-	if err != nil {
-		return util.WrapError("Error reading configuration file", err)
-	}
-	defer file.Close()
-
-	// Strip comments
-	buf, err := ioutil.ReadAll(JsonConfigReader.New(file))
-	if err != nil {
-		return parseError(err)
-	}
-
-	if err := json.Unmarshal(buf, &tempServer); err != nil {
-		return parseError(err)
-	}
-	if err := json.Unmarshal(buf, &tempClient); err != nil {
-		return parseError(err)
-	}
-
-	tempJSON, err := json.Marshal(tempClient)
-	if err != nil {
-		return parseError(err)
-	}
-	tempHash, err := util.HashBuffer(buf)
-	if err != nil {
-		return parseError(err)
-	}
-
-	mu.Lock()
-	defer mu.Unlock()
-
-	config = &tempServer
-	clientJSON = tempJSON
-	hash = tempHash
-	if err := mnemonic.SetSalt(config.Posts.Salt); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func parseError(err error) error {
-	return util.WrapError("Error parsing configuration file", err)
+// EightballDefaults contains the default eightball answer set
+var EightballDefaults = []string{
+	"Yes",
+	"No",
+	"Maybe",
+	"It can't be helped",
+	"Hell yeah, motherfucker",
+	"Anta baka?",
 }
 
 // Get returns a pointer to the current server configuration struct. Callers
 // should not modify this struct.
-func Get() *ServerConfigs {
-	mu.RLock()
-	defer mu.RUnlock()
-	return config
+func Get() *Configs {
+	globalMu.RLock()
+	defer globalMu.RUnlock()
+	return global
+}
+
+// Set sets the internal configuration struct. To be used only in tests.
+func Set(c Configs) error {
+	client, err := c.marshalPublicJSON()
+	if err != nil {
+		return err
+	}
+	h := util.HashBuffer(client)
+
+	globalMu.Lock()
+	defer globalMu.Unlock()
+	clientJSON = client
+	global = &c
+	hash = h
+	return nil
 }
 
 // GetClient returns punlic availability configuration JSON and a truncated
 // configuration MD5 hash
 func GetClient() ([]byte, string) {
-	mu.RLock()
-	defer mu.RUnlock()
+	globalMu.RLock()
+	defer globalMu.RUnlock()
 	return clientJSON, hash
-}
-
-// Set sets the internal configuration struct. To be used only in tests.
-func Set(c ServerConfigs) {
-	mu.Lock()
-	defer mu.Unlock()
-	config = &c
 }
 
 // SetClient sets the client configuration JSON and hash. To be used only in
 // tests.
 func SetClient(json []byte, cHash string) {
-	mu.Lock()
-	defer mu.Unlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
 	clientJSON = json
 	hash = cHash
 }

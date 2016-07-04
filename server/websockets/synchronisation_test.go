@@ -1,7 +1,6 @@
 package websockets
 
 import (
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
@@ -28,13 +27,10 @@ func (*ClientSuite) TestOldFeedClosing(c *C) {
 	c.Assert(cl.updateFeedCloser, IsNil)
 }
 
-func (*ClientSuite) TestSyncToBoard(c *C) {
+func (*DB) TestSyncToBoard(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	config.Set(conf)
 
 	// Invalid message
 	c.Assert(synchronise(nil, cl), Equals, errInvalidStructure)
@@ -50,9 +46,8 @@ func (*ClientSuite) TestSyncToBoard(c *C) {
 	// Valid synchronisation
 	msg.Board = "a"
 	data = marshalJSON(msg, c)
-	cl.ID = "hex"
 	c.Assert(synchronise(data, cl), IsNil)
-	assertMessage(wcl, []byte(`30{id:"hex"}`), c)
+	assertMessage(wcl, []byte(`30"`+cl.ID+`"`), c)
 }
 
 func (*ClientSuite) TestRegisterSync(c *C) {

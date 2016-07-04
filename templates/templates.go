@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/bakape/meguca/config"
@@ -15,8 +16,9 @@ import (
 )
 
 var (
-	// Overriden in tests
-	templateRoot = "templates"
+	// TemplateRoot stores the root directory of all HTML templates. Overriden
+	// in tests.
+	TemplateRoot = "templates"
 
 	// resources conatains all available templates
 	resources = map[string]Store{}
@@ -54,6 +56,7 @@ type vars struct {
 	IsMobile   bool
 	Config     template.JS
 	Navigation template.HTML
+	FAQ        template.HTML
 	Email      string
 	ConfigHash string
 	DefaultCSS string
@@ -64,17 +67,21 @@ type vars struct {
 func indexTemplate() (desktop Store, mobile Store, err error) {
 	clientJSON, hash := config.GetClient()
 	conf := config.Get()
+
 	v := vars{
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,
 		Navigation: boardNavigation(),
+
+		// Replace all newlines in the FAQ with `<br>`
+		FAQ:        template.HTML(strings.Replace(conf.FAQ, "\n", "<br>", -1)),
 		Email:      conf.FeedbackEmail,
 		DefaultCSS: conf.DefaultCSS,
 	}
-	path := filepath.FromSlash(templateRoot + "/index.html")
+	path := filepath.FromSlash(TemplateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)
 	if err != nil {
-		err = util.WrapError("Error parsing index temlate", err)
+		err = util.WrapError("error parsing index temlate", err)
 		return
 	}
 
@@ -91,10 +98,9 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 // boardNavigation renders interboard navigation we put in the top banner
 func boardNavigation() template.HTML {
 	html := bytes.NewBuffer([]byte(`<b id="navTop">[`))
-	conf := config.Get().Boards
 
 	// Actual boards and "/all/" metaboard
-	for i, board := range append(conf.Enabled, "all") {
+	for i, board := range append(config.Get().Boards, "all") {
 		if i != 0 {
 			html.WriteString(" / ")
 		}
@@ -123,11 +129,7 @@ func buildIndexTemplate(tmpl *template.Template, vars vars, isMobile bool) (
 		return
 	}
 
-	hash, err := util.HashBuffer(minified)
-	if err != nil {
-		return
-	}
-	return Store{minified, hash}, nil
+	return Store{minified, util.HashBuffer(minified)}, nil
 }
 
 // Get retrieves a compiled template by its name

@@ -5,9 +5,10 @@ import {optionType} from './specs'
 import {loadModule, load} from '../util'
 import {opts as lang} from '../lang'
 import {write, read} from '../render'
+import Model from '../model'
 
 // View of the options panel
-export default class OptionsPanel extends TabbedModal {
+export default class OptionsPanel extends TabbedModal<Model> {
 	$hidden: Element
 	$import: Element
 
@@ -63,7 +64,7 @@ export default class OptionsPanel extends TabbedModal {
 
 	// Propagate options panel changes through
 	// options-panel -> options -> OptionModel
-	async applyChange(event: Event) {
+	applyChange(event: Event) {
 		const el = event.target as Element,
 			id = el.getAttribute('id'),
 			model = models[id]
@@ -89,8 +90,8 @@ export default class OptionsPanel extends TabbedModal {
 			break
 		case optionType.image:
 			// Not recorded. Extracted directly by the background handler
-			(await loadModule('background'))
-				.store((event as any).target.files[0])
+			loadModule('background').then(m =>
+				m.store((event as any).target.files[0]))
 			return
 		}
 

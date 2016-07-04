@@ -2,12 +2,14 @@
  Provides type-safe and selective mappings for the language packs
 */
 
-import {makeEl, HTML} from './util'
+import {makeEl, HTML, fetchJSON} from './util'
 import {write} from './render'
 import {defer} from './defer'
+import options from './options'
 
 type LanguagePack = {
 	posts: LnPosts
+	ui: LnUI
 	banner: LnBanner
 	images: LnImages
 	navigation: LnNavigation
@@ -24,6 +26,7 @@ const lang = (window as any).lang as LanguagePack
 // Export each container indivudually for namespacing purposes
 // Can't use destructuring, because it breaks with the SystemJS module compiler.
 export const posts = lang.posts
+export const ui = lang.ui
 export const banner = lang.banner
 export const images = lang.images
 export const navigation = lang.navigation
@@ -33,6 +36,7 @@ export const sync = lang.sync
 export const syncwatch = lang.syncwatch
 export const mod = lang.mod
 export const opts = lang.opts
+export let admin: LnAdmin
 
 type LnPosts = {
 	anon: string
@@ -48,7 +52,14 @@ type LnPosts = {
 	unknownResult: string
 	threadLocked: string
 	quoted: string
+	[index: string]: string
+}
+
+type LnUI = {
 	cancel: string
+	done: string
+	send: string
+	add: string
 	[index: string]: string
 }
 
@@ -59,6 +70,7 @@ type LnBanner = {
 	email: string
 	options: string
 	identity: string
+	acccount: string
 	FAQ: string
 	feedback: string
 	googleSong: string
@@ -123,14 +135,28 @@ type LnSyncwatch = {
 type LnMod = {
 	id: string
 	register: string
+	logout: string
+	logoutAll: string
 	submit: string
 	password: string
 	repeat: string
+	changePassword: string
+	oldPassword: string
+	newPassword: string
 	mustMatch: string
 	nameTaken: string
 	wrongCredentials: string
+	wrongPassword: string
 	theFuck: string
+	configureServer: string
+	createBoard: string
+	configureBoard: string
 	[index: string]: string
+}
+
+type LnAdmin = {
+	boardNameTaken: string
+	[index: string]: OptLabel|string
 }
 
 type LnOpts = {
@@ -157,7 +183,12 @@ function languageCSS() {
 				content: " (${posts.locked})";
 			}
 		</style>`)
-	write(() => document.head.appendChild(el))
+	write(() =>
+		document.head.appendChild(el))
 }
 
 defer(languageCSS)
+
+// Fetch the administrator language pack
+export const fetchAdminPack = async (): Promise<LnAdmin> =>
+	admin = admin || await fetchJSON(`/assets/lang/${options.lang}/admin.json`)

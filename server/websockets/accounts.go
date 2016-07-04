@@ -47,6 +47,11 @@ type authenticationRequest struct {
 	Session string `json:"session"`
 }
 
+type passwordChangeRequest struct {
+	Old string `json:"old"`
+	New string `json:"new"`
+}
+
 // Register a new user account
 func register(data []byte, c *Client) error {
 	if c.isLoggedIn() {
@@ -85,7 +90,7 @@ func handleRegistration(id, password string) (
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(id+password), 10)
+	hash, err := util.PasswordHash(id, password)
 	if err != nil {
 		return
 	}
@@ -113,7 +118,7 @@ func commitLogin(code loginResponseCode, id string, c *Client) (err error) {
 			return err
 		}
 
-		expiryTime := config.Get().Staff.SessionExpiry * time.Hour * 24
+		expiryTime := config.Get().SessionExpiry * time.Hour * 24
 
 		session := auth.Session{
 			Token:   msg.Session,
@@ -153,7 +158,7 @@ func login(data []byte, c *Client) error {
 	}
 
 	var code loginResponseCode
-	err = bcrypt.CompareHashAndPassword(hash, []byte(req.ID+req.Password))
+	err = util.ComparePassword(req.ID, req.Password, hash)
 	switch err {
 	case bcrypt.ErrMismatchedHashAndPassword:
 		code = wrongCredentials
@@ -223,7 +228,7 @@ func commitLogout(query r.Term, c *Client) error {
 		return err
 	}
 
-	return c.sendMessage(messageLogout, []byte("true"))
+	return c.sendMessage(messageLogout, true)
 }
 
 // Log out all sessions of the specific user
@@ -237,4 +242,51 @@ func logOutAll(_ []byte, c *Client) error {
 			"sessions": []string{},
 		})
 	return commitLogout(query, c)
+}
+
+// Change the account password
+func changePassword(data []byte, c *Client) error {
+	if !c.isLoggedIn() {
+		return errNotLoggedIn
+	}
+
+	var req passwordChangeRequest
+	if err := decodeMessage(data, &req); err != nil {
+		return err
+	}
+
+	// Get old hash
+	hash, err := db.GetLoginHash(c.userID)
+	if err != nil {
+		return err
+	}
+
+	// Validate old password
+	var success bool
+	err = util.ComparePassword(c.userID, req.Old, hash)
+	switch err {
+	case nil:
+		success = true
+	case bcrypt.ErrMismatchedHashAndPassword:
+	default:
+		return err
+	}
+
+	// If old password matched, write new hash to DB
+	if success {
+		hash, err := util.PasswordHash(c.userID, req.New)
+		if err != nil {
+			return err
+		}
+
+		q := db.GetAccount(c.userID).
+			Update(map[string][]byte{
+				"password": hash,
+			})
+		if err := db.Write(q); err != nil {
+			return err
+		}
+	}
+
+	return c.sendMessage(messageChangePassword, success)
 }

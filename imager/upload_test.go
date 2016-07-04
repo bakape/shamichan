@@ -30,53 +30,35 @@ var (
 			Size:     300792,
 		},
 		Imgnm:   "sample.jpg",
-		Spoiler: 1,
+		Spoiler: true,
 	}
 )
 
 func (*Imager) TestExtractSpoiler(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.Spoilers = []uint8{1, 2}
-	config.Set(conf)
-
 	// No spoiler
 	body, w := newMultiWriter()
 	sp, err := assertExtraction(c, body, w)
 	c.Assert(err, IsNil)
-	c.Assert(sp, Equals, uint8(0))
+	c.Assert(sp, Equals, false)
 
 	// Invalid spoiler
 	body, w = newMultiWriter()
 	c.Assert(w.WriteField("spoiler", "shibireru darou"), IsNil)
 	sp, err = assertExtraction(c, body, w)
-	c.Assert(err, ErrorMatches, `Invalid spoiler ID: shibireru darou`)
-
-	// Not an enabled spoiler
-	body, w = newMultiWriter()
-	c.Assert(w.WriteField("spoiler", "10"), IsNil)
-	sp, err = assertExtraction(c, body, w)
-	c.Assert(err, ErrorMatches, `Invalid spoiler ID: 10`)
+	c.Assert(err, ErrorMatches, `strconv.ParseBool: parsing.*`)
 
 	// Valid spoiler
 	body, w = newMultiWriter()
-	c.Assert(w.WriteField("spoiler", "1"), IsNil)
+	c.Assert(w.WriteField("spoiler", "true"), IsNil)
 	sp, err = assertExtraction(c, body, w)
 	c.Assert(err, IsNil)
-	c.Assert(sp, Equals, uint8(1))
+	c.Assert(sp, Equals, true)
 }
 
-func assertExtraction(c *C, b io.Reader, w *multipart.Writer) (uint8, error) {
+func assertExtraction(c *C, b io.Reader, w *multipart.Writer) (bool, error) {
 	req := newRequest(c, b, w)
 	c.Assert(req.ParseMultipartForm(0), IsNil)
 	return extractSpoiler(req)
-}
-
-func (*Imager) TestIsValidSpoiler(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Images.Spoilers = []uint8{1, 2}
-	config.Set(conf)
-	c.Assert(isValidSpoiler(8), Equals, false)
-	c.Assert(isValidSpoiler(1), Equals, true)
 }
 
 func (*Imager) TestDetectFileType(c *C) {
@@ -125,10 +107,10 @@ func (*Imager) TestInvalidContentLengthHeader(c *C) {
 
 func (*Imager) TestUploadTooLarge(c *C) {
 	conf := config.Get()
-	(*conf).Images.Max.Size = 1024
+	(*conf).MaxSize = 1
 	b, w := newMultiWriter()
 	req := newRequest(c, b, w)
-	req.Header.Set("Content-Length", "1048587")
+	req.Header.Set("Content-Length", "1048577")
 
 	_, _, err := parseUploadForm(req)
 	c.Assert(err, ErrorMatches, "File too large")
@@ -164,7 +146,7 @@ func (*Imager) TestInvalidSpoiler(c *C) {
 	req.Header.Set("Content-Length", "1024")
 
 	_, _, err := parseUploadForm(req)
-	c.Assert(err, ErrorMatches, "Invalid spoiler ID: .*")
+	c.Assert(err, ErrorMatches, "strconv.ParseBool: parsing.*")
 }
 
 // Add client to synced clients map
@@ -177,7 +159,7 @@ func syncClient(c *C) map[string]string {
 func (*Imager) TestSuccessfulFormParse(c *C) {
 	b, w := newMultiWriter()
 	fields := syncClient(c)
-	fields["spoiler"] = "2"
+	fields["spoiler"] = "true"
 	writeFields(c, w, fields)
 	req := newRequest(c, b, w)
 	req.Header.Set("Content-Length", "1024")
@@ -185,7 +167,7 @@ func (*Imager) TestSuccessfulFormParse(c *C) {
 	id, spoiler, err := parseUploadForm(req)
 	c.Assert(err, IsNil)
 	c.Assert(id, Equals, fields["id"])
-	c.Assert(spoiler, Equals, uint8(2))
+	c.Assert(spoiler, Equals, true)
 }
 
 func setHeaders(req *http.Request, headers map[string]string) {
@@ -428,7 +410,7 @@ func (*Imager) TestUploadHandler(c *C) {
 
 	NewImageUpload(rec, req)
 	acao := rec.Header().Get("Access-Control-Allow-Origin")
-	c.Assert(acao, Equals, config.Get().HTTP.Origin)
+	c.Assert(acao, Equals, config.Get().Origin)
 	c.Assert(rec.Code, Equals, 200)
 	wg.Wait()
 }

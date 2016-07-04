@@ -5,7 +5,6 @@
 .pid
 *.dll
 assets
-config/config.json
 error.log
 node_modules
 meguca

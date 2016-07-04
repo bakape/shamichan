@@ -5,6 +5,7 @@
 package server
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,7 +18,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/NYTimes/gziphandler"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -26,8 +26,32 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/dimfeld/httptreemux"
+	"github.com/gorilla/handlers"
 	"github.com/mssola/user_agent"
 	"github.com/sebest/xff"
+)
+
+var (
+	// Address is the listening address of the HTTP web server
+	address = ":8000"
+
+	// Defines if HTTPS should be used for listening for incomming connections.
+	// Requires sslCert and sslKey to be set.
+	ssl bool
+
+	// Path to SSL certificate
+	sslCert string
+
+	// Path to SSL key
+	sslKey string
+
+	// Defines, if the server should interpret X-Forwarded-For headers as the
+	// actual IP of the request
+	trustProxies bool
+
+	// Defines, if all trafic should be piped through a gzip compression
+	// -decompression handler
+	enableGzip bool
 )
 
 // Used for overriding during tests
@@ -56,17 +80,16 @@ var imageHeaders = map[string]string{
 }
 
 func startWebServer() (err error) {
-	conf := config.Get().HTTP
 	r := createRouter()
-	log.Println("Listening on " + conf.Addr)
+	log.Println("listening on " + address)
 
-	if conf.SSL {
-		err = http.ListenAndServeTLS(conf.Addr, conf.Cert, conf.Key, r)
+	if ssl {
+		err = http.ListenAndServeTLS(address, sslCert, sslKey, r)
 	} else {
-		err = http.ListenAndServe(conf.Addr, r)
+		err = http.ListenAndServe(address, r)
 	}
 	if err != nil {
-		return util.WrapError("Error starting web server", err)
+		return util.WrapError("error starting web server", err)
 	}
 	return
 }
@@ -104,11 +127,10 @@ func createRouter() http.Handler {
 	r.POST("/upload", wrapHandler(imager.NewImageUpload))
 
 	h := http.Handler(r)
-	conf := config.Get().HTTP
-	if conf.Gzip {
-		h = gziphandler.GzipHandler(h)
+	if enableGzip {
+		h = handlers.CompressHandlerLevel(h, gzip.DefaultCompression)
 	}
-	if conf.TrustProxies {
+	if trustProxies {
 		xffParser, err := xff.Default()
 		if err != nil {
 			log.Fatal(err)
@@ -130,15 +152,9 @@ func wrapHandler(fn http.HandlerFunc) httptreemux.HandlerFunc {
 	}
 }
 
-// Redirects to frontpage, if set, or the /all/ board
+// Redirects to / requests to /all/ board
 func redirectToDefault(res http.ResponseWriter, req *http.Request) {
-	conf := config.Get()
-	frontpage := conf.HTTP.Frontpage
-	if frontpage != "" {
-		http.ServeFile(res, req, frontpage)
-	} else {
-		http.Redirect(res, req, "/all/", 302)
-	}
+	http.Redirect(res, req, "/all/", 302)
 }
 
 // Serves the standard HTML for desktop or mobile pages
@@ -339,7 +355,7 @@ func writeJSON(res http.ResponseWriter, req *http.Request, data interface{}) {
 		textErrorPage(res, req, err)
 		return
 	}
-	res.Header().Set("Content-Type", "aplication/json")
+	res.Header().Set("Content-Type", "application/json")
 	writeData(res, req, JSON)
 }
 
@@ -378,7 +394,7 @@ func serveConfigs(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	setHeaders(res, etag)
-	res.Header().Set("Content-Type", "aplication/json")
+	res.Header().Set("Content-Type", "application/json")
 	writeData(res, req, json)
 }
 
@@ -414,11 +430,7 @@ func servePost(
 		return
 	}
 
-	etag, err := util.HashBuffer(data)
-	if err != nil {
-		textErrorPage(res, req, err)
-		return
-	}
+	etag := util.HashBuffer(data)
 	if checkClientEtag(res, req, etag) {
 		return
 	}

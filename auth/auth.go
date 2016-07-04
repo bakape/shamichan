@@ -14,7 +14,6 @@ type User struct {
 	ID       string    `gorethink:"id"`
 	Password []byte    `gorethink:"password"`
 	Sessions []Session `gorethink:"sessions"`
-	Rigths   []Right   `gorethink:"rights"`
 }
 
 // Session contains the token and expiry time of a single authenticated login
@@ -22,12 +21,6 @@ type User struct {
 type Session struct {
 	Token   string    `gorethink:"token"`
 	Expires time.Time `gorethink:"expires"`
-}
-
-// Right defines an ability of authority on a certain board
-type Right struct {
-	Board string `gorethink:"board"`
-	Can   string `gorethink:"can"`
 }
 
 // Ident is used to verify a client's access and write permissions
@@ -50,7 +43,7 @@ func IsBoard(board string) bool {
 	if board == "all" {
 		return true
 	}
-	for _, b := range config.Get().Boards.Enabled {
+	for _, b := range config.Get().Boards {
 		if board == b {
 			return true
 		}

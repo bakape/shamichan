@@ -34,7 +34,7 @@ var _ = Suite(&ClientSuite{})
 
 func (*ClientSuite) SetUpTest(_ *C) {
 	Clients.Clear()
-	config.Set(config.ServerConfigs{}) // Reset configs on test start
+	config.Set(config.Configs{}) // Reset configs on test start
 }
 
 func newRequest(c *C) *http.Request {
@@ -83,11 +83,11 @@ func dialServer(c *C, sv *httptest.Server) *websocket.Conn {
 	return wcl
 }
 
-func assertMessage(con *websocket.Conn, msg []byte, c *C) {
+func assertMessage(con *websocket.Conn, std []byte, c *C) {
 	typ, msg, err := con.ReadMessage()
 	c.Assert(err, IsNil)
 	c.Assert(typ, Equals, websocket.TextMessage)
-	c.Assert(msg, DeepEquals, msg)
+	c.Assert(string(msg), Equals, string(std))
 }
 
 func assertWebsocketError(
@@ -252,9 +252,9 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 }
 
 func (*ClientSuite) TestCheckOrigin(c *C) {
-	conf := config.ServerConfigs{}
-	conf.HTTP.Origin = "fubar.com"
-	config.Set(conf)
+	config.Set(config.Configs{
+		Origin: "fubar.com",
+	})
 
 	// No header
 	req := newRequest(c)
@@ -282,10 +282,9 @@ func (*ClientSuite) TestInvalidMessage(c *C) {
 	cl, wcl := sv.NewClient()
 
 	sv.Add(1)
-	res := fmt.Sprintf("00\"%s\"", onlyText)
 	go assertListenError(cl, onlyText, sv, c)
 	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, []byte{1}), IsNil)
-	assertMessage(wcl, []byte(res), c)
+	assertMessage(wcl, []byte(`00"Only text frames allowed"`), c)
 	sv.Wait()
 }
 
@@ -308,15 +307,15 @@ func (*ClientSuite) TestClientTimeout(c *C) {
 		pingTimer = oldPing
 		readTimeout = oldRead
 	}()
-	sv.Add(1)
 
 	// Ignore incomming pings
 	wcl.SetPingHandler(func(string) error {
 		return nil
 	})
 
-	go assertListenError(cl, ".* i/o timeout", sv, c)
-	sv.Wait()
+	// Timeout may occur either server or client-side, so we just make sure it
+	// exits with an error
+	c.Assert(cl.Listen(), NotNil)
 }
 
 func (*ClientSuite) TestPingPong(c *C) {
@@ -407,7 +406,7 @@ func (*ClientSuite) TestSendMessage(c *C) {
 
 	// 1 char type string
 	c.Assert(cl.sendMessage(messageInsertPost, nil), IsNil)
-	assertMessage(wcl, []byte("01null"), c)
+	assertMessage(wcl, []byte("02null"), c)
 
 	// 2 char type string
 	c.Assert(cl.sendMessage(messageSynchronise, nil), IsNil)

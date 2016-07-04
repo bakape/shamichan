@@ -5,13 +5,13 @@
 package server
 
 import (
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/templates"
-	"github.com/sevlyar/go-daemon"
 	"log"
 	"os"
 	"syscall"
 	"time"
+
+	"github.com/bakape/meguca/templates"
+	"github.com/sevlyar/go-daemon"
 )
 
 func init() {
@@ -24,8 +24,6 @@ func init() {
 			fallthrough
 		case "init": // For internal use only
 			os.Exit(0)
-		case "reload":
-			reloadDaemonConfigs()
 		case "restart":
 			killDaemon()
 			fallthrough
@@ -58,25 +56,24 @@ func daemonise() {
 
 	// Hot reload server configuration
 	daemon.SetSigHandler(func(_ os.Signal) error {
-		err := config.LoadConfig()
-		if err != nil {
-			log.Printf("Error reloading configuration: %s\n", err)
-		}
+
+		// TODO: Configuration reloading
+
 		err = templates.Compile()
 		if err != nil {
-			log.Printf("Error reloading templates: %s\n", err)
+			log.Printf("error reloading templates: %s\n", err)
 		}
 		if err == nil {
-			log.Println("Configuration reloaded")
+			log.Println("configuration reloaded")
 		}
 		return nil
 	}, syscall.SIGUSR1)
 
 	go startServer()
 	if err := daemon.ServeSignals(); err != nil {
-		log.Fatalf("Daemon runtime error: %s\n", err)
+		log.Fatalf("daemon runtime error: %s\n", err)
 	}
-	log.Println("Server terminated")
+	log.Println("server terminated")
 }
 
 // Terminate the running meguca server daemon
@@ -84,7 +81,7 @@ func killDaemon() {
 	proc := findDaemon()
 	if proc != nil {
 		if err := proc.Signal(syscall.SIGTERM); err != nil {
-			log.Fatalf("Error killing running daemon: %s\n", err)
+			log.Fatalf("error killing running daemon: %s\n", err)
 		}
 
 		// Assertain process has exited
@@ -93,7 +90,7 @@ func killDaemon() {
 				if err.Error() == "os: process already finished" {
 					break
 				}
-				log.Fatalf("Error ascertaining daemon exited: %s\n", err)
+				log.Fatalf("error ascertaining daemon exited: %s\n", err)
 			}
 			time.Sleep(100 * time.Millisecond)
 		}
@@ -104,16 +101,7 @@ func killDaemon() {
 func findDaemon() *os.Process {
 	proc, err := daemonContext.Search()
 	if err != nil && (!os.IsNotExist(err) && err.Error() != "EOF") {
-		log.Fatalf("Error locating running daemon: %s\n", err)
+		log.Fatalf("error locating running daemon: %s\n", err)
 	}
 	return proc
-}
-
-func reloadDaemonConfigs() {
-	proc := findDaemon()
-	if proc != nil {
-		if err := proc.Signal(syscall.SIGUSR1); err != nil {
-			log.Fatalf("Error reloading configuration: %s\n", err)
-		}
-	}
 }

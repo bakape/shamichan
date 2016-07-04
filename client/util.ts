@@ -3,10 +3,8 @@
 */
 
 // Fetches and decodes a JSON response from the API
-export async function fetchJSON(url: string): Promise<any> {
-	const res = await fetch("json/" + url)
-	return await res.json()
-}
+export const fetchJSON = async (url: string): Promise<any> =>
+	await (await fetch(url)).json()
 
 // Generate a random alphannumeric string of lower and upper case hexadecimal
 // characters
@@ -57,20 +55,12 @@ export class SetMap<V> {
 }
 
 // Retrieve post number of post element
-export function getNum(el: Element): number {
-	if (!el) {
-		return 0
-	}
-	return parseInt(el.getAttribute('id').slice(1), 10)
-}
+export const getNum = (el: Element): number =>
+	el ? parseInt(el.getAttribute('id').slice(1), 10) : 0
 
 // Retrieve post number of closest parent post element
-export function getID(el: Element): number {
-	if (!el) {
-		return 0
-	}
-	return getNum(el.closest('article, section'))
-}
+export const getID = (el: Element): number =>
+	el ? getNum(el.closest('article, section')) : 0
 
 // Parse HTML string to node array
 export function makeEls(DOMString: string): Node[] {
@@ -124,17 +114,12 @@ export function outerWidth(el: Element): number {
 }
 
 // Confirms email is saging
-export function isSage(email: string) :boolean {
-	if (email) {
-		return email.trim() === 'sage'
-	}
-	return false
-}
+export const isSage = (email: string): boolean =>
+	email ? email.trim() === 'sage' : false
 
 // Pad an integer with a leading zero, if below 10
-export function pad(n: number): string {
-	return (n < 10 ? '0' : '') + n
-}
+export const pad = (n: number): string =>
+	(n < 10 ? '0' : '') + n
 
 // Template string tag function for HTML. Strips indentation and trailing
 // newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
@@ -234,12 +219,11 @@ interface Loader {
 }
 
 // Wraps event style object with onload() method to Promise style
-export function load(loader: Loader): Promise<Event> {
-	return new Promise<Event>((resolve, reject) => {
+export const load = (loader: Loader): Promise<Event> =>
+	new Promise<Event>((resolve, reject) => {
 		loader.onload = resolve
 		loader.onerror = reject
 	})
-}
 
 // Dynamically lead a System module
 export function loadModule(path: string): Promise<any> {
@@ -257,12 +241,30 @@ const escapeMap: {[key: string]: string} = {
 }
 
 // Escape a user-submitted unsafe string to protect against XSS.
-export function escape (str: string) {
-    return str.replace(/[&<>'"`]/g , char =>
+export const escape = (str: string): string =>
+	str.replace(/[&<>'"`]/g , char =>
 		escapeMap[char])
+
+// Set the text and for attribute of a label element
+export const setLabel = (el: Element, forName: string, text: string): string =>
+	el.querySelector(`label[for=${forName}]`).textContent = text + ":"
+
+// Construct a table from an array of objects and a consumer funtion,
+// that returns an array of cells.
+export function table<T>(rows: T[], func: (arg: T) => string[]): string {
+	let html = '<table>'
+	for (let row of rows) {
+		html += '<tr>'
+		for (let cell of func(row)) {
+			html += `<td>${cell}</td>`
+		}
+		html += '</tr>'
+	}
+	html += '</table>'
+	return html
 }
 
-// Set the placeholder attribute on a child of the element
-export function setLabel(el: Element, forName: string, text: string) {
-	el.querySelector(`label[for=${forName}]`).textContent = text + ":"
-}
+// Extract the value of a named input field, which is a child of the parameter
+// element
+export const inputValue = (el: Element, name: string): string =>
+	(el.querySelector(`input[name=${name}]`) as HTMLInputElement).value

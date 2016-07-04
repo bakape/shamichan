@@ -16,18 +16,16 @@ type DBInit struct{}
 var _ = Suite(&DBInit{})
 
 // All other functions that depend on the database
-type DBSuite struct {
-	dbName string
-}
+type DBSuite struct{}
 
 var _ = Suite(&DBSuite{})
 
 var testDBName string
 
 func (d *DBSuite) SetUpSuite(c *C) {
-	d.dbName = UniqueDBName()
-	c.Assert(Connect(""), IsNil)
-	c.Assert(InitDB(d.dbName), IsNil)
+	DBName = UniqueDBName()
+	c.Assert(Connect(), IsNil)
+	c.Assert(InitDB(), IsNil)
 }
 
 func (*DBSuite) SetUpTest(c *C) {
@@ -35,14 +33,13 @@ func (*DBSuite) SetUpTest(c *C) {
 	for _, table := range AllTables {
 		c.Assert(Write(r.Table(table).Delete()), IsNil)
 	}
-
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	config.Set(conf)
+	config.Set(config.Configs{
+		Boards: []string{"a"},
+	})
 }
 
 func (d *DBSuite) TearDownSuite(c *C) {
-	c.Assert(r.DBDrop(d.dbName).Exec(RSession), IsNil)
+	c.Assert(r.DBDrop(DBName).Exec(RSession), IsNil)
 	c.Assert(RSession.Close(), IsNil)
 }
 
@@ -66,13 +63,9 @@ func (*DBSuite) TestVerifyVersion(c *C) {
 }
 
 func (*DBInit) TestLoadDB(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Rethinkdb.Addr = "localhost:28015"
-	dbName := UniqueDBName()
-	conf.Rethinkdb.Db = dbName
-	config.Set(conf)
+	DBName = UniqueDBName()
 	defer func() {
-		c.Assert(Write(r.DBDrop(dbName)), IsNil)
+		c.Assert(Write(r.DBDrop(DBName)), IsNil)
 		c.Assert(RSession.Close(), IsNil)
 	}()
 	c.Assert(LoadDB(), IsNil)
@@ -108,6 +101,14 @@ func (*DBInit) TestLoadDB(c *C) {
 	var histCounts Document
 	c.Assert(One(GetMain("histCounts"), &histCounts), IsNil)
 	c.Assert(histCounts, Equals, Document{"histCounts"})
+
+	var conf config.Configs
+	c.Assert(One(GetMain("config"), &conf), IsNil)
+	c.Assert(conf, DeepEquals, config.Defaults)
+
+	var exists bool
+	c.Assert(One(GetAccount("admin").Eq(nil).Not(), &exists), IsNil)
+	c.Assert(exists, Equals, true)
 
 	c.Assert(RSession.Close(), IsNil)
 	c.Assert(LoadDB(), IsNil)

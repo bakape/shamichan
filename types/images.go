@@ -2,7 +2,7 @@ package types
 
 // Image contains a post's image and thumbnail data
 type Image struct {
-	Spoiler uint8 `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
+	Spoiler bool `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
 	ImageCommon
 	Imgnm string `json:"imgnm" gorethink:"imgnm"`
 }

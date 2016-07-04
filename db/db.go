@@ -16,13 +16,11 @@ var (
 	formatUpdateFeed = r.Row.
 				Field("new_val").
 				Field("log").
-				Slice(
-			r.Row.
-				Field("old_val").
-				Field("log").
-				Count().
-				Default(0),
-		)
+				Slice(r.Row.
+					Field("old_val").
+					Field("log").
+					Count().
+					Default(0))
 
 	// ErrUserNameTaken denotes a user name the client is trying  to register
 	// with is already taken
@@ -109,6 +107,12 @@ func GetAccount(id string) r.Term {
 // GetImage is a shorthand for retrieving a document from the "images" table
 func GetImage(id string) r.Term {
 	return r.Table("images").Get(id)
+}
+
+// GetBoardConfig is a shorthand for retrieving a document from the "boards"
+// table
+func GetBoardConfig(id string) r.Term {
+	return r.Table("boards").Get(id)
 }
 
 // PostCounter retrieves the current global post count

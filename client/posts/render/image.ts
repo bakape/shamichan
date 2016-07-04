@@ -2,7 +2,7 @@
  Image thumbnail HTML rendering
 */
 
-import {config} from '../../state'
+import {config, page} from '../../state'
 import options from '../../options'
 import {HTML, commaList, makeAttrs, escape} from '../../util'
 import {ImageData, fileTypes} from '../models'
@@ -14,7 +14,7 @@ export function renderImage(data: ImageData, reveal?: boolean): string {
 	return HTML
 		`<figure>
 			${renderFigcaption(data, reveal)}
-			${config.images.hats && showThumb ? '<span class="hat"></span>': ''}
+			${config.hats && showThumb ? '<span class="hat"></span>': ''}
 			${showThumb ? renderThumbnail(data) : ''}
 		</figure>`
 }
@@ -59,11 +59,6 @@ function hiddenToggle(reveal: boolean): string {
 		`<a class="imageToggle">
 			[${lang[reveal ? 'hide' : 'show']}]
 		</a>`
-}
-
-// Base URLs of image addresses
-const imagePaths: {[type: string]: string} = {
-	spoil: '/assets/spoil/spoiler'
 }
 
 // type ISTemplate = (data: ImageData) => string
@@ -188,14 +183,6 @@ function imageLink(data: ImageData): string {
 		</a>`
 }
 
-// Render a hat on top of the thumbnail, if enabled
-function renderHat(showThumb: boolean): string {
-	if (showThumb && config.images.hats) {
-		return '<span class="hat"></span>'
-	}
-	return ''
-}
-
 // Render the actual thumbnail image
 export function renderThumbnail(data: ImageData, href?: string): string {
 	const src = sourcePath(data)
@@ -204,8 +191,8 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 
 	if (data.spoiler && options.spoilers) {
 		// Spoilered and spoilers enabled
-		thumb = imagePaths['spoil'] + data.spoiler + '.jpg'
-		thumbWidth = thumbHeight = 250
+		thumb = '/assets/spoil/' + page.board
+		thumbWidth = thumbHeight = 125
 	} else if (data.fileType === fileTypes.gif && options.autogif) {
 		// Animated GIF thumbnails
 		thumb = src

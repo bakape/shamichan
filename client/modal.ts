@@ -3,9 +3,10 @@
  */
 
 import {default as View, ViewAttrs} from './view'
+import Model from './model'
 
 // Modal elements, that float above other content
-export class Modal extends View {
+export class Modal<M extends Model> extends View<M> {
 	constructor(args: ViewAttrs) {
 		// Child classes must always pass a ViewAttrs object
 		const addClass = 'modal glass'
@@ -16,7 +17,4 @@ export class Modal extends View {
 		}
 		super(args)
 	}
-
-	// TODO: Add close button and unify modal structure
-
 }

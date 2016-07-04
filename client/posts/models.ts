@@ -33,7 +33,7 @@ export class Post extends Model {
 export type ImageData = {
 	apng?: boolean
 	audio?: boolean
-	spoiler?: number
+	spoiler?: boolean
 	fileType: fileTypes
 	length?: number
 	dims: number[]

@@ -56,12 +56,19 @@ type thumbResponse struct {
 	err   error
 }
 
+// Spoiler ID is unparsable or not enabled
+type errInvalidSpoiler string
+
+func (e errInvalidSpoiler) Error() string {
+	return "invalid spoiler ID: " + string(e)
+}
+
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
 	conf := config.Get()
-	req.Body = http.MaxBytesReader(res, req.Body, conf.Images.Max.Size)
-	res.Header().Set("Access-Control-Allow-Origin", conf.HTTP.Origin)
+	req.Body = http.MaxBytesReader(res, req.Body, conf.MaxSize*1024*1024)
+	res.Header().Set("Access-Control-Allow-Origin", conf.Origin)
 
 	code, err := newImageUpload(req)
 	if err != nil {
@@ -125,13 +132,13 @@ func newImageUpload(req *http.Request) (int, error) {
 
 // Parse and validate the form of the upload request
 func parseUploadForm(req *http.Request) (
-	clientID string, spoiler uint8, err error,
+	clientID string, spoiler bool, err error,
 ) {
 	length, err := strconv.ParseInt(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
 		return
 	}
-	if length > config.Get().Images.Max.Size {
+	if length > config.Get().MaxSize*1024*1024 {
 		err = errors.New("File too large")
 		return
 	}
@@ -152,27 +159,13 @@ func parseUploadForm(req *http.Request) (
 }
 
 // Extracts and validates a spoiler number from the form
-func extractSpoiler(req *http.Request) (sp uint8, err error) {
+func extractSpoiler(req *http.Request) (bool, error) {
 	// Read the spoiler the client had chosen for the image, if any
-	if unparsed := req.FormValue("spoiler"); unparsed != "" {
-		var unconverted int
-		unconverted, err = strconv.Atoi(unparsed)
-		sp = uint8(unconverted)
-		if !(err == nil && isValidSpoiler(sp)) {
-			err = fmt.Errorf("Invalid spoiler ID: %s", unparsed)
-		}
+	unparsed := req.FormValue("spoiler")
+	if unparsed == "" {
+		return false, nil
 	}
-	return
-}
-
-// Confirms a spoiler exists in configuration
-func isValidSpoiler(id uint8) bool {
-	for _, valid := range config.Get().Images.Spoilers {
-		if id == valid {
-			return true
-		}
-	}
-	return false
+	return strconv.ParseBool(unparsed)
 }
 
 // Passes the image struct to the requesting client. If the image is not

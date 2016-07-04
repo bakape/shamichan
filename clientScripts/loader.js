@@ -82,23 +82,25 @@
 		'Element.prototype.querySelectorAll'
 	]
 
+	var legacy
+
 	for (var i = 0; i < functionTests.length; i++) {
 		if (!checkFunction(functionTests[i])) {
-			window.legacy = true
+			legacy = true
 			break
 		}
 	}
 
 	for (var i = 0; i < tests.length; i++) {
 		if (!check(tests[i])) {
-			window.legacy = true
+			legacy = true
 			break
 		}
 	}
 
 	var scriptCount = 0,
-		polyfills = [],
-		legacy = window.legacy
+		polyfills = []
+	window.legacy = !!legacy
 
 	if (legacy) {
 		// Stuff them full of hot, fat and juicy polyfills, if even one test
@@ -114,10 +116,10 @@
 	// Load apropriate language pack
 	scriptCount++
 	var xhr = new XMLHttpRequest()
-	xhr.open(
-		'GET',
-		'/assets/lang/' + (localStorage.lang || config.lang.default) + '.json'
-	)
+	var langPath = '/assets/lang/'
+		+ (localStorage.lang || config.defaultLang)
+		+ '/main.json'
+	xhr.open('GET', langPath)
 	xhr.responseType = 'json'
 	xhr.onload = function () {
 		if (this.status !== 200) {

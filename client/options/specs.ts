@@ -19,11 +19,14 @@ export const enum tabs {general, style, imagesearch, fun, shortcuts}
 // Thumbnail expansion modes
 export const thumbExpansions = ['none', 'width', 'screen']
 
-// Available themes
+// Available themes. Change this, when adding any new ones.
 export const themes = [
 	'moe', 'gar', 'mawaru', 'moon', 'ashita', 'console', 'tea', 'higan',
 	'ocean', 'rave', 'tavern', 'glass', 'material'
 ]
+
+// Available language packs. Change this, when adding any new ones.
+export const langs = ["en_GB"]
 
 export type OptionValue =  boolean|string|number
 
@@ -68,9 +71,9 @@ export const specs: OptionSpec[] = [
 	{
 		id: 'lang',
 		type: optionType.menu,
-		list: config.lang.enabled,
+		list: langs,
 		tab: tabs.general,
-		default: config.lang.default,
+		default: config.defaultLang,
 		noExecOnStart: true,
 		exec() {
 			alert(lang.langApplied)
@@ -207,8 +210,9 @@ export const specs: OptionSpec[] = [
 		noLoad: isMobile,
 		tab: tabs.style,
 		noExecOnStart: true,
-		async exec(render) {
-			(await loadModule('background')).render()
+		exec() {
+			loadModule('background').then(m =>
+				m.render())
 		}
 	},
 	// Upload field for the custom background image

@@ -93,9 +93,9 @@ var (
 )
 
 func (*DBSuite) TestGetPost(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	config.Set(conf)
+	config.Set(config.Configs{
+		Boards: []string{"a"},
+	})
 	std := types.Post{
 		ID:    2,
 		Board: "a",
@@ -156,9 +156,9 @@ func (*DBSuite) TestGetBoard(c *C) {
 }
 
 func setEnabledBoards(boards ...string) {
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = boards
-	config.Set(conf)
+	config.Set(config.Configs{
+		Boards: boards,
+	})
 }
 
 func (*DBSuite) TestGetEmptyBoard(c *C) {
@@ -211,9 +211,7 @@ func (*DBSuite) TestGetEmptyAllBoard(c *C) {
 }
 
 func (*DBSuite) TestReaderGetThread(c *C) {
-	conf := config.ServerConfigs{}
-	conf.Boards.Enabled = []string{"a"}
-	config.Set(conf)
+	setEnabledBoards("a")
 	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
 
 	// No replies ;_;

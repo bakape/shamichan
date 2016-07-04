@@ -3,12 +3,13 @@
 package server
 
 import (
+	"bytes"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"runtime"
 
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/templates"
@@ -29,12 +30,48 @@ var (
 
 // Start parses command line arguments and initializes the server.
 func Start() {
+	// Define flags
+	flag.StringVar(
+		&address,
+		"http-addr",
+		":8000",
+		"address to listen on for incomming HTTP connections",
+	)
+	flag.StringVar(
+		&db.Address,
+		"db-addr",
+		"localhost:28015",
+		"address of the RethinkDB server to connect to",
+	)
+	flag.StringVar(
+		&db.DBName,
+		"db-name",
+		"meguca",
+		"name of the RethinkDB database to use",
+	)
+	flag.BoolVar(
+		&ssl,
+		"ssl",
+		false,
+		"serve and listen only through HTTPS. Requires -ssl-cert and "+
+			"-ssl-key to be set",
+	)
+	flag.StringVar(&sslCert, "ssl-cert", "", "path to SSL certificate")
+	flag.StringVar(&sslKey, "ssl-key", "", "path to SSL key")
+	flag.BoolVar(
+		&trustProxies,
+		"trust-proxies",
+		false,
+		"honour X-Forwarded-For headers",
+	)
+	flag.BoolVar(&enableGzip, "gzip", false, "compress all traffic with gzip")
+	flag.Usage = printUsage
+
 	// Parse command line arguments
-	var arg string
-	if len(os.Args) < 2 {
+	flag.Parse()
+	arg := flag.Arg(0)
+	if arg == "" {
 		arg = "debug"
-	} else {
-		arg = os.Args[1]
 	}
 
 	// Can't daemonise in windows, so only args they have is "start" and "help"
@@ -56,39 +93,41 @@ var arguments = map[string]string{
 	"start":   "start the meguca server",
 	"stop":    "stop a running daemonised meguca server",
 	"restart": "combination of stop + start",
-	"reload": "reload configuration and templates without restarting the " +
-		"server",
-	"debug": "start server in debug mode without deamonising (default)",
-	"help":  "print this help text",
+	"debug":   "start server in debug mode without deamonising (default)",
+	"help":    "print this help text",
 }
 
 // Constructs and prints the CLI help text
 func printUsage() {
-	usage := "usage: meguca "
-	var help string
+	os.Stderr.WriteString("Usage: meguca [OPTIONS]... [MODE]\n\nMODES:\n")
+
 	toPrint := []string{"start"}
 	if !isWindows {
-		toPrint = append(toPrint, []string{"stop", "restart", "reload"}...)
+		toPrint = append(toPrint, []string{"stop", "restart"}...)
 	} else {
 		arguments["debug"] = `alias of "start"`
 	}
 	toPrint = append(toPrint, []string{"debug", "help"}...)
-	for i, arg := range toPrint {
-		if i != 0 {
-			usage += "|"
-		}
-		usage += arg
-		help += fmt.Sprintf("  %s\n    \t%s\n", arg, arguments[arg])
+
+	help := new(bytes.Buffer)
+	for _, arg := range toPrint {
+		fmt.Fprintf(help, "  %s\n    \t%s\n", arg, arguments[arg])
 	}
-	os.Stderr.WriteString(usage + "\n" + help)
+
+	help.WriteString("\nOPTIONS:\n")
+	os.Stderr.Write(help.Bytes())
+	flag.PrintDefaults()
+	os.Stderr.WriteString(
+		"\nConsult the bundled README.md for more information\n",
+	)
+
 	os.Exit(1)
 }
 
 func startServer() {
 	fns := []func() error{
-		config.LoadConfig,
-		templates.Compile,
 		db.LoadDB,
+		templates.Compile,
 		imager.InitImager,
 		startWebServer,
 	}

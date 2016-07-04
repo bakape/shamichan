@@ -8,50 +8,19 @@ import Collection from './collection'
 import {getID} from './util'
 import {db} from './db'
 import {write} from './render'
+import {send} from './connection'
 
 // Allows us to typecheck configs. See config/defaults.json for more info.
 type Configs = {
-	boards: {
-		enabled: string[]
-		boards: {[name: string]: {title: string}}
-		default: string
-		staff: string
-		psuedo: string[][]
-		links: string[][]
-	}
-
-	lang: {
-		default: string
-		enabled: string[]
-	}
-
-	staff: {
-		classes: {[name: string]: StaffClass}
-		keyword: string
-	}
-
-	images: {
-		thumb: {
-			thumbDims: number[]
-			midDims: number[]
-		}
-		spoilers: number[]
-		hats: boolean
-	}
-
-	banners: string[]
-	FAQ: string[]
-	eightball: string[]
 	radio: boolean
+	hats: boolean
 	illyaDance: boolean
-	feedbackEmail: string
+	maxSubjectLength: number
+	defaultLang: string
 	defaultCSS: string
-	infoBanner: string
-}
-
-type StaffClass = {
-	alias: string
-	rights: {[right: string]: boolean}
+	FAQ: string
+	boards: string[]
+	links: StringMap
 }
 
 // Configuration passed from the server. Some values can be changed during
@@ -60,6 +29,14 @@ export const config: Configs = (window as any).config
 
 // Indicates, if in mobile mode. Determined server-side.
 export const isMobile: boolean = (window as any).isMobile
+
+// TODO: Board-specific configuration loading
+
+type BoardConfigs = {
+	staffClasses: string[]
+}
+
+export let boardConfig: BoardConfigs = {} as BoardConfigs
 
 interface PageState extends ChangeEmitter {
 	board: string
@@ -124,9 +101,10 @@ export function displayLoading(loading: boolean) {
 // Debug mode with more verbose logging
 export let debug: boolean = /[\?&]debug=true/.test(location.href)
 
-// Allow switching to debug mode from the JS console
-; (window as any).debugMode = (setting: boolean) =>
+; (window as any).debugMode = (setting: boolean) => {
 	debug = setting
+	; (window as any).send = send
+}
 
 // ID of the current tab on the server. Set after synchronisation.
 export let clientID: string

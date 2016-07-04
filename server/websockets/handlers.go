@@ -27,19 +27,29 @@ const (
 	messageAuthenticate
 	messageLogout
 	messageLogOutAll
+	messageChangePassword
+
+	// Board administration
+	messageConfigServer
+	messageCreateBoard
+	messageConfigBoard
 )
 
 type handler func([]byte, *Client) error
 
 // Lookup table for message handlers
 var handlers = map[messageType]handler{
-	messageSynchronise:   synchronise,
-	messageResynchronise: resynchronise,
-	messageRegister:      register,
-	messageLogin:         login,
-	messageAuthenticate:  authenticateSession,
-	messageLogout:        logOut,
-	messageLogOutAll:     logOutAll,
+	messageSynchronise:    synchronise,
+	messageResynchronise:  resynchronise,
+	messageRegister:       register,
+	messageLogin:          login,
+	messageAuthenticate:   authenticateSession,
+	messageLogout:         logOut,
+	messageLogOutAll:      logOutAll,
+	messageChangePassword: changePassword,
+	messageConfigServer:   configServer,
+	messageCreateBoard:    createBoard,
+	messageConfigBoard:    configBoard,
 }
 
 // Error while parsing the message. Denotes that either the message does not

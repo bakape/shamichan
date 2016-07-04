@@ -1,4 +1,6 @@
-[![GoDoc](https://godoc.org/github.com/bakape/meguca?status.svg)](https://godoc.org/github.com/bakape/meguca) [![Build Status](https://travis-ci.org/bakape/meguca.svg)](https://travis-ci.org/bakape/meguca) [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
+[![GoDoc](https://godoc.org/github.com/bakape/meguca?status.svg)](https://godoc.org/github.com/bakape/meguca)
+[![Build Status](https://travis-ci.org/bakape/meguca.svg)](https://travis-ci.org/bakape/meguca)
+[![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
 
 __Note: The version in the master branch is currently in early development.
 For deploying a production-ready legacy meguca instance, download the [latests
@@ -28,9 +30,9 @@ Compiled binary release archives for linux/x86_64 and windows/x86_64 are downloa
 from the [release](https://github.com/bakape/meguca/releases) page.
 
 ##Production
-* Edit `./config/config.json` to configure your instance
-* See `./meguca help`
-* For upgarding between semver major releases see `docs/migration.md`
+* See `./meguca help` for server operation
+* Login into the "admin" with the password "password" and change the password
+* For upgrading between semver major releases see `docs/migration.md`
 
 ##Building from source
 
@@ -63,7 +65,7 @@ from the [release](https://github.com/bakape/meguca/releases) page.
 * Run `make`
 
 ##Development
-* `./meguca` to run the server in development mode
+* `./meguca` or `./meguca debug` to run the server in development mode
 * `make server` and `make client` build the server and client separately
 * `make watch` watches the file system for changes and incrementally rebuilds
 the client

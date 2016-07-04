@@ -7,7 +7,7 @@ export type ModelAttrs = {[attr: string]: any}
 export default class Model {
 	id: number
 	collection: Collection<Model>
-	views: Set<View> = new Set<View>()
+	views: Set<View<Model>> = new Set<View<Model>>()
 
 	constructor() {}
 
@@ -24,18 +24,20 @@ export default class Model {
 
 	// Attach a view to the model. Each model can have several views attached to
 	// it.
-	attach(view: View) {
+	attach(view: View<Model>) {
 		this.views.add(view)
 	}
 
 	// Detach a view from the model
-	detach(view: View) {
+	detach(view: View<Model>) {
 		this.views.delete(view)
 	}
+
+	[index: string]: any
 }
 
 // Wrap an object with a Proxy that executes handlers on property changes.
-// To add new handlers, call the .onChange method on the object. 
+// To add new handlers, call the .onChange method on the object.
 // For type safety, the passed generic interface must extend ChangeEmitter.
 export function emitChanges<T extends ChangeEmitter>(obj: T = {} as T): T {
 	const changeHooks: HookMap = {}
