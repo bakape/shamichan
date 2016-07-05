@@ -50,6 +50,7 @@ var handlers = map[messageType]handler{
 	messageConfigServer:   configServer,
 	messageCreateBoard:    createBoard,
 	messageConfigBoard:    configBoard,
+	messageInsertThread:   insertThread,
 }
 
 // Error while parsing the message. Denotes that either the message does not

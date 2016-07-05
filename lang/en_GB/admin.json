@@ -52,10 +52,6 @@
 		"Thread creation cooldown",
 		"Cooldown in seconds for new thread creation by the same IP"
 	],
-	"maxSubjectLength": [
-		"Subject length limit",
-		"Maximum length of a thread subject field"
-	],
 	"sessionExpiry": [
 		"Account session expiry",
 		"Time in days until user accoubts are automatically logged out"

@@ -55,6 +55,18 @@ type DatabaseThread struct {
 	Log       [][]byte        `gorethink:"log"`
 }
 
+// ThreadCreationRequest contains data for creating a thread passed from the
+// client theough websockets
+type ThreadCreationRequest struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Auth     string `json:"auth"`
+	Subject  string `json:"subject"`
+	Board    string `json:"board"`
+	Password string `json:"password"`
+	Body     string `json:"body"`
+}
+
 // Post is a generic post. Either OP or reply.
 type Post struct {
 	Editing   bool      `json:"editing" gorethink:"editing"`
@@ -63,7 +75,7 @@ type Post struct {
 	Time      int64     `json:"time" gorethink:"time"`
 	Board     string    `json:"board" gorethink:"board"`
 	IP        string    `json:"-" gorethink:"ip"`
-	Nonce     string    `json:"-" gorethink:"nonce"`
+	Password  string    `json:"-" gorethink:"password"`
 	Body      string    `json:"body" gorethink:"body"`
 	Name      string    `json:"name,omitempty" gorethink:"name,omitempty"`
 	Trip      string    `json:"trip,omitempty" gorethink:"trip,omitempty"`

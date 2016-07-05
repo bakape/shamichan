@@ -4,22 +4,6 @@ Core server module and application entry point
 
 const dispatcher = websockets.dispatcher;
 
-dispatcher[common.INSERT_THREAD] = ([msg], client) => {
-    const spec = {
-        image: 'string',
-        nonce: 'string',
-        name: 'opt string',
-        email: 'opt string',
-        auth: 'opt string',
-        subject: 'opt string'
-    }
-    if (!canInsertPost(msg, spec, client))
-        return false
-    client.db.insertThread(msg).catch(err =>
-		client.disconnect(Muggle('Allocation failure', err)))
-	return true
-}
-
 /**
  * Validate post has the proper fields and client has posting rights
  * @param {Object} msg

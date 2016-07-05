@@ -43,29 +43,28 @@ Accepted upload file types: JPG, JPEG, PNG, GIF, WEBM, SVG, PDF, MP3, MP4, OGG
 
 // Configs stores the global configuration
 type Configs struct {
-	Prune            bool   `json:"prune" gorethink:"prune"`
-	Radio            bool   `json:"radio" gorethink:"radio" public:"true"`
-	Hats             bool   `json:"hats" gorethink:"hats" public:"true"`
-	IllyaDance       bool   `json:"illyaDance" gorethink:"illyaDance" public:"true"`
-	Pyu              bool   `json:"pyu" gorethink:"pyu"`
-	MaxWidth         uint16 `json:"maxWidth" gorethink:"maxWidth"`
-	MaxHeight        uint16 `json:"maxHeight" gorethink:"maxHeight"`
-	MaxThreads       int    `json:"maxThreads" gorethink:"maxThreads"`
-	MaxBump          int    `json:"maxBump" gorethink:"maxBump"`
-	JPEGQuality      int
-	PNGQuality       int
-	ThreadCooldown   int               `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
-	MaxSubjectLength int               `json:"maxSubjectLength" gorethink:"maxSubjectLength" public:"true"`
-	MaxSize          int64             `json:"maxSize" gorethink:"maxSize"`
-	DefaultLang      string            `json:"defaultLang" gorethink:"defaultLang" public:"true"`
-	Origin           string            `json:"origin" gorethink:"origin"`
-	DefaultCSS       string            `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
-	Salt             string            `json:"salt" gorethink:"salt"`
-	FeedbackEmail    string            `json:"feedbackEmail" gorethink:"feedbackEmail"`
-	FAQ              string            `public:"true"`
-	Boards           []string          `json:"-" gorethink:"boards" public:"true"`
-	Links            map[string]string `json:"links" gorethink:"links" public:"true"`
-	SessionExpiry    time.Duration     `json:"sessionExpiry" gorethink:"sessionExpiry"`
+	Prune          bool   `json:"prune" gorethink:"prune"`
+	Radio          bool   `json:"radio" gorethink:"radio" public:"true"`
+	Hats           bool   `json:"hats" gorethink:"hats" public:"true"`
+	IllyaDance     bool   `json:"illyaDance" gorethink:"illyaDance" public:"true"`
+	Pyu            bool   `json:"pyu" gorethink:"pyu"`
+	MaxWidth       uint16 `json:"maxWidth" gorethink:"maxWidth"`
+	MaxHeight      uint16 `json:"maxHeight" gorethink:"maxHeight"`
+	MaxThreads     int    `json:"maxThreads" gorethink:"maxThreads"`
+	MaxBump        int    `json:"maxBump" gorethink:"maxBump"`
+	JPEGQuality    int
+	PNGQuality     int
+	ThreadCooldown int               `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
+	MaxSize        int64             `json:"maxSize" gorethink:"maxSize"`
+	DefaultLang    string            `json:"defaultLang" gorethink:"defaultLang" public:"true"`
+	Origin         string            `json:"origin" gorethink:"origin"`
+	DefaultCSS     string            `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
+	Salt           string            `json:"salt" gorethink:"salt"`
+	FeedbackEmail  string            `json:"feedbackEmail" gorethink:"feedbackEmail"`
+	FAQ            string            `public:"true"`
+	Boards         []string          `json:"-" gorethink:"boards" public:"true"`
+	Links          map[string]string `json:"links" gorethink:"links" public:"true"`
+	SessionExpiry  time.Duration     `json:"sessionExpiry" gorethink:"sessionExpiry"`
 }
 
 // Only marshal JSON with the `public:"true"` tag for publicly exposed
@@ -110,27 +109,26 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 
 // Defaults contains the default server configuration values
 var Defaults = Configs{
-	Prune:            false,
-	Hats:             false,
-	Radio:            false,
-	MaxThreads:       100,
-	MaxBump:          1000,
-	JPEGQuality:      80,
-	PNGQuality:       20,
-	MaxSize:          5,
-	MaxHeight:        6000,
-	MaxWidth:         6000,
-	ThreadCooldown:   60,
-	MaxSubjectLength: 50,
-	SessionExpiry:    30,
-	Origin:           "localhost:8000",
-	DefaultCSS:       "moe",
-	Salt:             "LALALALALALALALALALALALALALALALALALALALA",
-	FeedbackEmail:    "admin@email.com",
-	FAQ:              defaultFAQ,
-	DefaultLang:      "en_GB",
-	Boards:           []string{},
-	Links:            map[string]string{"4chan": "http://www.4chan.org/"},
+	Prune:          false,
+	Hats:           false,
+	Radio:          false,
+	MaxThreads:     100,
+	MaxBump:        1000,
+	JPEGQuality:    80,
+	PNGQuality:     20,
+	MaxSize:        5,
+	MaxHeight:      6000,
+	MaxWidth:       6000,
+	ThreadCooldown: 60,
+	SessionExpiry:  30,
+	Origin:         "localhost:8000",
+	DefaultCSS:     "moe",
+	Salt:           "LALALALALALALALALALALALALALALALALALALALA",
+	FeedbackEmail:  "admin@email.com",
+	FAQ:            defaultFAQ,
+	DefaultLang:    "en_GB",
+	Boards:         []string{},
+	Links:          map[string]string{"4chan": "http://www.4chan.org/"},
 }
 
 // BoardConfigs stores board-specific configuration

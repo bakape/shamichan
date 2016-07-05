@@ -21,7 +21,6 @@ class ServerConfigs extends Model {
 	JPEGQuality: number
 	PNGQuality: number
 	threadCooldown: number
-	maxSubjectLength: number
 	maxSize: number
 	sessionExpiry: number
 	origin: string
@@ -53,11 +52,6 @@ const specs: InputSpec[] = [
 		name: "threadCooldown",
 		type: inputType.number,
 		min: 0,
-	},
-	{
-		name: "maxSubjectLength",
-		type: inputType.number,
-		min: 1,
 	},
 	{
 		name: "origin",

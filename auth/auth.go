@@ -43,6 +43,12 @@ func IsBoard(board string) bool {
 	if board == "all" {
 		return true
 	}
+	return IsNonMetaBoard(board)
+}
+
+// IsNonMetaBoard returns wheather a valid board is a classic board and not
+// some other path that emulates a board
+func IsNonMetaBoard(board string) bool {
 	for _, b := range config.Get().Boards {
 		if board == b {
 			return true

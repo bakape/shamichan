@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	errInvalidBoard   = errInvalidMessage("Invalid board")
-	errInvalidThread  = errInvalidMessage("Invalid thread")
-	errInvalidCounter = errInvalidMessage("Invalid progress counter")
+	errInvalidBoard   = errInvalidMessage("invalid board")
+	errInvalidThread  = errInvalidMessage("invalid thread")
+	errInvalidCounter = errInvalidMessage("invalid progress counter")
 )
 
 type syncRequest struct {

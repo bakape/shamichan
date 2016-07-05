@@ -15,7 +15,6 @@ type Configs = {
 	radio: boolean
 	hats: boolean
 	illyaDance: boolean
-	maxSubjectLength: number
 	defaultLang: string
 	defaultCSS: string
 	FAQ: string

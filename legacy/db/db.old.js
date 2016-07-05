@@ -27,20 +27,6 @@ class Yakusoku extends events.EventEmitter {
 			callback(exists && Muggle('Too soon.'));
 		});
 	}
-	get_banner(cb) {
-		redis.get('banner:info', cb);
-	}
-	set_banner(message, cb) {
-		redis.set('banner:info', message, err => {
-			if (err)
-				return cb(err);
-
-			// Dispatch new banner
-			const m = redis.multi();
-			this._log(m, 0, common.UPDATE_BANNER, [message]);
-			m.exec(cb);
-		});
-	}
 }
 
 exports.Yakusoku = Yakusoku;

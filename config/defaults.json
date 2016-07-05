@@ -1,16 +1,4 @@
 {
-    // Board configuration
-    "boards": {
-        // Enables linking to arbitrary URLs in posts, using the
-        // >>>${name}/${destiantion} location. For example, the configuration
-        // entry ["4chan", "http://www.4chan.org/"] enables posters to type
-        // >>>/4chan/g/ , which is converted to a link to
-        // "http://www.4chan.org/g/"
-        "links": [
-            ["4chan", "http://www.4chan.org/"]
-        ],
-    },
-
     // Moderation staff configuration
     "staff": {
 
@@ -136,9 +124,6 @@
     "posts": {
         // Disable creation of new posts and threads
         "readOnly": false,
-
-        // Regex used for removing various illegal charecters from input strings
-        "excludeRegex": "/[\u2000-\u200f\u202a-\u202f\u205f-\u206f]+/g",
 
         // Force all posters to be Anonymous
         "forcedAnon": false
