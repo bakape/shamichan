@@ -140,10 +140,12 @@ func (*DB) TestBoardConfiguration(c *C) {
 		board = "a"
 	)
 	req := config.BoardConfigs{
-		ID:         board,
-		ForcedAnon: true,
-		Eightball:  []string{},
-		Staff:      map[string][]string{},
+		ID: board,
+		PostParseConfigs: config.PostParseConfigs{
+			ForcedAnon: true,
+		},
+		Eightball: []string{},
+		Staff:     map[string][]string{},
 	}
 	init := config.BoardConfigs{
 		ID:        board,

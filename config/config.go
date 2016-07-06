@@ -39,7 +39,9 @@ Accepted upload file types: JPG, JPEG, PNG, GIF, WEBM, SVG, PDF, MP3, MP4, OGG
 #flip - Coin flip
 #8ball - An 8ball
 #queue - Print r/a/dio song queue
-#sw24:15 #sw2:24:15 #sw24:15+30 #sw24:15-30 - Syncronised duration timer`
+#sw24:15 #sw2:24:15 #sw24:15+30 #sw24:15-30 - Syncronised duration timer
+
+All hash commands need to be input on their own line`
 
 // Configs stores the global configuration
 type Configs struct {
@@ -133,14 +135,22 @@ var Defaults = Configs{
 
 // BoardConfigs stores board-specific configuration
 type BoardConfigs struct {
-	ReadOnly   bool                `json:"readOnly" gorethink:"readOnly"`
-	ForcedAnon bool                `json:"forcedAnon" gorethink:"forcedAnon"`
-	ID         string              `json:"id" gorethink:"id"`
-	Spoiler    string              `json:"spoiler" gorethink:"spoiler"`
-	Title      string              `json:"title" gorethink:"title"`
-	Notice     string              `json:"notice" gorethink:"notice"`
-	Eightball  []string            `json:"eightball" gorethink:"eightball"`
-	Staff      map[string][]string `json:"staff" gorethink:"staff"`
+	PostParseConfigs
+	ID        string              `json:"id" gorethink:"id"`
+	Spoiler   string              `json:"spoiler" gorethink:"spoiler"`
+	Title     string              `json:"title" gorethink:"title"`
+	Notice    string              `json:"notice" gorethink:"notice"`
+	Eightball []string            `json:"eightball" gorethink:"eightball"`
+	Staff     map[string][]string `json:"staff" gorethink:"staff"`
+}
+
+// PostParseConfigs contains board-specific flags for post text parsing
+type PostParseConfigs struct {
+	ReadOnly     bool `json:"readOnly" gorethink:"readOnly"`
+	ForcedAnon   bool `json:"forcedAnon" gorethink:"forcedAnon"`
+	Spoilers     bool `json:"spoilers" gorethink:"spoilers"`
+	HashCommands bool `json:"hashCommands" gorethink:"hashCommands"`
+	CodeTags     bool `json:"codeTags" gorethink:"codeTags"`
 }
 
 // EightballDefaults contains the default eightball answer set
@@ -149,7 +159,7 @@ var EightballDefaults = []string{
 	"No",
 	"Maybe",
 	"It can't be helped",
-	"Hell yeah, motherfucker",
+	"Hell yeah, motherfucker!",
 	"Anta baka?",
 }
 

@@ -58,13 +58,19 @@ type DatabaseThread struct {
 // ThreadCreationRequest contains data for creating a thread passed from the
 // client theough websockets
 type ThreadCreationRequest struct {
+	PostCredentials
+	Subject string `json:"subject"`
+	Board   string `json:"board"`
+	Body    string `json:"body"`
+}
+
+// PostCredentials contains the common poster credential part of thread and
+// reply creation requests
+type PostCredentials struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Auth     string `json:"auth"`
-	Subject  string `json:"subject"`
-	Board    string `json:"board"`
 	Password string `json:"password"`
-	Body     string `json:"body"`
 }
 
 // Post is a generic post. Either OP or reply.
@@ -98,8 +104,13 @@ type Link struct {
 }
 
 // Command contains the type and value array of hash commands, such as dice
-// rolls, #flip, #8ball, etc.
+// rolls, #flip, #8ball, etc. The Val field depends on the Type field.
+// Dice: []uint16
+// Flip: bool
+// EightBall: string
+// SyncWatch: TODO: SyncWatch storage type
+// Pyu: int64
 type Command struct {
 	Type CommandType `json:"type" gorethink:"type"`
-	Vals []int16     `json:"vals" gorethink:"vals"`
+	Val  interface{} `json:"val" gorethink:"val"`
 }

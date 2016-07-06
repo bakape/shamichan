@@ -102,42 +102,6 @@ class ClientController {
 	}
 
 	/**
-	 * Parse post name, tipcode, email and titles and assign to post object
-	 * @param {Object} msg
-	 */
-	parseName(msg) {
-		const {post} = this.client
-		if ('auth' in msg) {
-			if (!msg.auth
-				|| !client.ident
-				|| msg.auth !== client.ident.auth
-			)
-				throw Muggle('Bad auth')
-			post.auth = msg.auth
-		}
-
-		// Replace names, when a song plays on r/a/dio
-		if (radio && radio.name)
-			post.name = radio.name
-		else if (!state.hot.forced_anon) {
-			if (msg.name) {
-				const parsed = common.parse_name(msg.name)
-				post.name = parsed[0]
-				const spec = state.hot.SPECIAL_TRIPCODES
-				if (spec && parsed[1] && parsed[1] in spec)
-					post.trip = spec[parsed[1]]
-				else if (parsed[1] || parsed[2]) {
-					const trip = tripcode.hash(parsed[1], parsed[2])
-					if (trip)
-						post.trip = trip
-				}
-			}
-			if (msg.email)
-				post.email = msg.email.trim().substr(0, 320)
-		}
-	}
-
-	/**
 	 * Increment the history counter of the board, which is used to generate
 	 * e-tags
 	 * @param {string} board
