@@ -1,4 +1,3 @@
-
 /**
  * Performs approprite database I/O in response to client websocket messages
  */
@@ -188,87 +187,6 @@ class ClientController {
 				null
 			)
 		).run(rcon)
-	}
-
-	/**
-	 * Parse message text body into post object
-	 * @param {Object} msg
-	 * @returns {Object} - Confirmed post links inside text
-	 */
-	async parseBody(msg) {
-		const {post} = this.client,
-			{frag} = msg
-		let body = ''
-		if (frag) {
-			if (/^\s*$/g.test(frag))
-				throw Muggle('Bad post body')
-			if (frag.length > common.MAX_POST_CHARS)
-				throw Muggle('Post is too long')
-			body = amusement.hot_filter(frag
-				.replace(state.hot.EXCLUDE_REGEXP, ''))
-		}
-
-		const [parsed, links] = await this.parseFragment(body)
-		post.body = parsed
-		this.client.postLength = postLength(parsed)
-		return links
-	}
-
-	/**
-	 * Parse text body message fragment string
-	 * @param {string} frag
-	 * @returns {[Array,Object]} - Parsed post body array and confirmed post
-	 * 	links it contains
-	 */
-	async parseFragment(frag) {
-		const m = frag.match(/>>\d+/g)
-		frag = frag.split(' ')
-		if (!m)
-			return [frag, {}]
-
-		// Validate links and determine their parent board and thread
-		const links = [],
-			multi = redis.multi()
-		m.forEach(link => links.push(link.slice(2)))
-		links.forEach(num => cache.getParenthood(multi, num))
-		const res = await multi.execAsync(),
-			confirmed = {}
-		for (let i = 0; i < res.length; i += 2) {
-			const board = res[i],
-				thread = res[i + 1]
-			if (board && thread)
-				confirmed[links[i / 2]] = [board, parseInt(thread)]
-		}
-
-		// Insert post links and hash commands as tumples into the text body
-		// array
-		const parsed = []
-		frag.forEach(word => this.injectLink(word, parsed, confirmed)
-			|| amusement.roll_dice(word, parsed)
-			|| parsed.push(word))
-		return [parsed, confimed]
-	}
-
-	/**
-	 * Insert links to other posts as tuples into the text body array
-	 * @param {string} word - Word to parse
-	 * @param {Array} parsed - Array to fill with parse results
-	 * @param {Object} confirmed - Object of confirmed links to posts
-	 * @returns {boolean} - Link matched
-	 */
-	injectLink(word, parsed, confirmed) {
-		const m = word.match(/^(>{2,})(\d+)$/)
-		if (!m)
-			return false
-		const link = confirmed[m[2]]
-		if (!link)
-			return false
-
-		// Separate leadind />+/ for qoutes
-		if (m[1].length > 2)
-			parsed.push(m[1].slice(2))
-		parsed.push([common.tupleTypes.link, ...link])
-		return true
 	}
 
 	/**
