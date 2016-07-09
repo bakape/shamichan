@@ -5,6 +5,9 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
+
+	// TEMP
+	_ "github.com/bakape/meguca/parser"
 )
 
 var (
