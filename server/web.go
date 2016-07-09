@@ -410,17 +410,13 @@ func servePost(
 		return
 	}
 
-	op, err := db.ParentThread(id)
+	post, err := db.GetPost(id)
 	if err != nil {
-		respondToJSONError(res, req, err)
-		return
-	}
-
-	post, err := db.GetPost(id, op)
-	if err != nil {
-		// No post in the database. Need a second check, because the post might
-		// have been deleted between the queries.
-		respondToJSONError(res, req, err)
+		if err == r.ErrEmptyResult {
+			text404(res, req)
+		} else {
+			respondToJSONError(res, req, err)
+		}
 		return
 	}
 

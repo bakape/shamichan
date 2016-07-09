@@ -15,7 +15,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 10
+const dbVersion = 11
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -172,6 +172,24 @@ func CreateIndeces() error {
 	fns := []func() error{
 		func() error {
 			return Write(r.Table("threads").IndexCreate("board"))
+		},
+
+		// For quick post parent thread lookups
+		func() error {
+			q := r.Table("threads").
+				IndexCreateFunc(
+					"post",
+					func(thread r.Term) r.Term {
+						return thread.
+							Field("posts").
+							Keys().
+							Map(func(id r.Term) r.Term {
+								return id.CoerceTo("number")
+							})
+					},
+					r.IndexCreateOpts{Multi: true},
+				)
+			return Write(q)
 		},
 	}
 

@@ -74,6 +74,7 @@ func (b BodyParser) parseCommand(commands []types.Command, match string) (
 	return append(commands, com), nil
 }
 
+// Parse dice thow commands
 func parseDice(match string) ([]uint16, error) {
 	dice := diceRegexp.FindStringSubmatch(match)
 

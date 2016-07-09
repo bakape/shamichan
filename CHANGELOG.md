@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##vNext
+* Change:
+	- Required Go version to 1.7
+
 ##v2.1.0-alpha - 2016-07-04
 * License:
 	- Relicense under GNU AGPL

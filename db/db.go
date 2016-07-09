@@ -3,7 +3,6 @@ package db
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/util"
@@ -63,29 +62,19 @@ func All(query r.Term, res interface{}) error {
 	return c.All(res)
 }
 
-// ParentThread determines the parent thread of a post. Returns 0, if post not
-// found.
-func ParentThread(id int64) (op int64, err error) {
-	query := r.
+// FindPost is a shorthand for finding posts only by ID number
+func FindPost(id int64) r.Term {
+	return r.
 		Table("threads").
-		Filter(r.Row.Field("posts").HasFields(util.IDToString(id))).
-		Field("id").
-		Default(0)
-	err = One(query, &op)
-	if err != nil && err != r.ErrEmptyResult {
-		msg := fmt.Sprintf("error retrieving parent thread: %d", id)
-		err = util.WrapError(msg, err)
-	}
-	return
+		GetAllByIndex("post", id).
+		AtIndex(0).
+		Field("posts").
+		Field(util.IDToString(id))
 }
 
 // ValidateOP confirms the specified thread exists on specific board
 func ValidateOP(id int64, board string) (valid bool, err error) {
 	err = One(getThread(id).Field("board").Eq(board).Default(false), &valid)
-	if err != nil {
-		msg := fmt.Sprintf("error validating OP %d of board %s", id, board)
-		err = util.WrapError(msg, err)
-	}
 	return
 }
 
@@ -118,29 +107,18 @@ func GetBoardConfig(id string) r.Term {
 // PostCounter retrieves the current global post count
 func PostCounter() (counter int64, err error) {
 	err = One(GetMain("info").Field("postCtr"), &counter)
-	if err != nil {
-		err = util.WrapError("error retrieving post counter", err)
-	}
 	return
 }
 
 // BoardCounter retrieves the history or "progress" counter of a board
 func BoardCounter(board string) (counter int64, err error) {
 	err = One(GetMain("histCounts").Field(board).Default(0), &counter)
-	if err != nil {
-		msg := fmt.Sprintf("error retrieving board counter: %s", board)
-		err = util.WrapError(msg, err)
-	}
 	return
 }
 
 // ThreadCounter retrieve the history or "progress" counter of a thread
 func ThreadCounter(id int64) (counter int64, err error) {
 	err = One(getThread(id).Field("log").Count(), &counter)
-	if err != nil {
-		msg := fmt.Sprintf("error retrieving thread counter: %d", id)
-		err = util.WrapError(msg, err)
-	}
 	return
 }
 

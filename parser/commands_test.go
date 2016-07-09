@@ -65,14 +65,6 @@ func (*Tests) TestDice(c *C) {
 
 func (*Tests) Test8ball(c *C) {
 	answers := []string{"Yes", "No"}
-	db.DBName = db.UniqueDBName()
-	c.Assert(db.Connect(), IsNil)
-	c.Assert(db.Exec(r.DBCreate(db.DBName)), IsNil)
-	db.RSession.Use(db.DBName)
-	c.Assert(db.Exec(r.TableCreate("boards")), IsNil)
-	defer func() {
-		c.Assert(db.Exec(r.DBDrop(db.DBName)), IsNil)
-	}()
 	q := r.Table("boards").Insert(config.BoardConfigs{
 		ID:        "a",
 		Eightball: answers,

@@ -8,27 +8,6 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func (*DBSuite) TestParentThread(c *C) {
-	std := types.DatabaseThread{
-		ID:    1,
-		Board: "a",
-		Posts: map[string]types.Post{
-			"2": {
-				ID: 2,
-			},
-		},
-	}
-	c.Assert(Write(r.Table("threads").Insert(std)), IsNil)
-	thread, err := ParentThread(2)
-	c.Assert(err, IsNil)
-	c.Assert(thread, Equals, int64(1))
-
-	// Post does not exist
-	thread, err = ParentThread(15)
-	c.Assert(err, Equals, r.ErrEmptyResult)
-	c.Assert(thread, Equals, int64(0))
-}
-
 func (*DBSuite) TestValidateOP(c *C) {
 	std := types.DatabaseThread{
 		ID:    1,

@@ -35,24 +35,24 @@ type Thread struct {
 	PostCtr  int16 `json:"postCtr" gorethink:"postCtr"`
 	ImageCtr int16 `json:"imageCtr" gorethink:"imageCtr"`
 	Post
-	LogCtr    int64           `json:"logCtr" gorethink:"logCtr"`
-	BumpTime  int64           `json:"bumpTime" gorethink:"bumpTime"`
-	ReplyTime int64           `json:"replyTime" gorethink:"replyTime"`
-	Subject   string          `json:"subject,omitempty" gorethink:"subject"`
-	Posts     map[string]Post `json:"posts,omitempty" gorethink:"posts"`
+	LogCtr    int64          `json:"logCtr" gorethink:"logCtr"`
+	BumpTime  int64          `json:"bumpTime" gorethink:"bumpTime"`
+	ReplyTime int64          `json:"replyTime" gorethink:"replyTime"`
+	Subject   string         `json:"subject,omitempty" gorethink:"subject"`
+	Posts     map[int64]Post `json:"posts,omitempty" gorethink:"posts"`
 }
 
 // DatabaseThread is a template for wririting new threads to the database
 type DatabaseThread struct {
-	PostCtr   int16           `gorethink:"postCtr"`
-	ImageCtr  int16           `gorethink:"imageCtr"`
-	ID        int64           `gorethink:"id"`
-	BumpTime  int64           `gorethink:"bumpTime"`
-	ReplyTime int64           `gorethink:"replyTime"`
-	Subject   string          `gorethink:"subject,omitempty"`
-	Board     string          `gorethink:"board"`
-	Posts     map[string]Post `gorethink:"posts"`
-	Log       [][]byte        `gorethink:"log"`
+	PostCtr   int16          `gorethink:"postCtr"`
+	ImageCtr  int16          `gorethink:"imageCtr"`
+	ID        int64          `gorethink:"id"`
+	BumpTime  int64          `gorethink:"bumpTime"`
+	ReplyTime int64          `gorethink:"replyTime"`
+	Subject   string         `gorethink:"subject,omitempty"`
+	Board     string         `gorethink:"board"`
+	Posts     map[int64]Post `gorethink:"posts"`
+	Log       [][]byte       `gorethink:"log"`
 }
 
 // ThreadCreationRequest contains data for creating a thread passed from the
@@ -95,7 +95,7 @@ type Post struct {
 
 // LinkMap contains a map of post numbers, this tread is linking, to
 // corresponding Link structs
-type LinkMap map[string]Link
+type LinkMap map[int64]Link
 
 // Link stores the target post's parent board and parent thread
 type Link struct {

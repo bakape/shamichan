@@ -70,14 +70,14 @@ func setupPosts(c *C) {
 			ID:    1,
 			Board: "a",
 			Log:   dummyLog(11),
-			Posts: map[string]types.Post{
-				"1": {
+			Posts: map[int64]types.Post{
+				1: {
 					ID:    1,
 					OP:    1,
 					Board: "a",
 					Image: genericImage,
 				},
-				"2": {
+				2: {
 					ID:    2,
 					OP:    1,
 					Board: "a",
@@ -88,8 +88,8 @@ func setupPosts(c *C) {
 			ID:    3,
 			Board: "a",
 			Log:   dummyLog(33),
-			Posts: map[string]types.Post{
-				"3": {
+			Posts: map[int64]types.Post{
+				3: {
 					ID:    3,
 					Image: genericImage,
 					OP:    3,
@@ -101,8 +101,8 @@ func setupPosts(c *C) {
 			ID:    4,
 			Board: "c",
 			Log:   dummyLog(44),
-			Posts: map[string]types.Post{
-				"4": {
+			Posts: map[int64]types.Post{
+				4: {
 					ID:    4,
 					Image: genericImage,
 					OP:    4,

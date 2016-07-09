@@ -78,18 +78,21 @@ func (*DBInit) TestLoadDB(c *C) {
 		c.Fatalf("table '%s' not created", table)
 	}
 
-	indexes := map[string]string{
-		"threads": "board",
+	indexes := [...]struct {
+		table, index string
+	}{
+		{"threads", "board"},
+		{"threads", "post"},
 	}
-	for table, index := range indexes {
+	for _, i := range indexes {
 		var hasIndex bool
-		err = One(r.Table(table).IndexList().Contains(index), &hasIndex)
+		err = One(r.Table(i.table).IndexList().Contains(i.index), &hasIndex)
 		c.Assert(err, IsNil)
 		if !hasIndex {
 			c.Fatalf(
 				"no secondary index '%s' created for table '%s'",
-				index,
-				table,
+				i.index,
+				i.table,
 			)
 		}
 	}

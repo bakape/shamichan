@@ -136,6 +136,8 @@ var Defaults = Configs{
 // BoardConfigs stores board-specific configuration
 type BoardConfigs struct {
 	PostParseConfigs
+	Spoilers  bool                `json:"spoilers" gorethink:"spoilers"`
+	CodeTags  bool                `json:"codeTags" gorethink:"codeTags"`
 	ID        string              `json:"id" gorethink:"id"`
 	Spoiler   string              `json:"spoiler" gorethink:"spoiler"`
 	Title     string              `json:"title" gorethink:"title"`
@@ -148,9 +150,7 @@ type BoardConfigs struct {
 type PostParseConfigs struct {
 	ReadOnly     bool `json:"readOnly" gorethink:"readOnly"`
 	ForcedAnon   bool `json:"forcedAnon" gorethink:"forcedAnon"`
-	Spoilers     bool `json:"spoilers" gorethink:"spoilers"`
 	HashCommands bool `json:"hashCommands" gorethink:"hashCommands"`
-	CodeTags     bool `json:"codeTags" gorethink:"codeTags"`
 }
 
 // EightballDefaults contains the default eightball answer set

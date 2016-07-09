@@ -38,7 +38,7 @@ from the [release](https://github.com/bakape/meguca/releases) page.
 
 ###All Platforms
 * Install:
-	* [Go](https://golang.org/doc/install) >=1.6
+	* [Go](https://golang.org/doc/install) >=1.7
 	* [Node.js](https://nodejs.org) >=5.0 (for building the client)
 
 ###Linux and OSX

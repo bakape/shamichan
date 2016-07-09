@@ -44,24 +44,14 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 	}
 
 	// Remove OP from posts map to prevent possible duplication
-	delete(thread.Posts, util.IDToString(id))
+	delete(thread.Posts, id)
 
 	return &thread, nil
 }
 
 // GetPost reads a single post from the database
-func GetPost(id, op int64) (post types.Post, err error) {
-	query := getThread(op).
-		Field("posts").
-		Field(util.IDToString(id)).
-		Default(nil)
-
-	err = One(query, &post)
-	if err != nil && err != r.ErrEmptyResult {
-		msg := fmt.Sprintf("error retrieving post: %d", id)
-		err = util.WrapError(msg, err)
-	}
-
+func GetPost(id int64) (post types.Post, err error) {
+	err = One(FindPost(id).Default(nil), &post)
 	return
 }
 

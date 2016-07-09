@@ -34,12 +34,13 @@ func (b BodyParser) ParseBody(body string) (res BodyParseResults, err error) {
 	}
 
 	body = stripAndTrim(body)
-	lines := strings.Split(body, "\n")
-	for _, line := range lines {
-		if b.Config.HashCommands {
-			command := commandRegexp.FindStringSubmatch(line)
-			if command != nil {
-				res.Commands, err = b.parseCommand(res.Commands, command[1])
+
+	// Find and parse hash commands
+	if b.Config.HashCommands {
+		for _, line := range strings.Split(body, "\n") {
+			match := commandRegexp.FindStringSubmatch(line)
+			if match != nil {
+				res.Commands, err = b.parseCommand(res.Commands, match[1])
 				if err != nil {
 					return res, err
 				}
@@ -47,5 +48,6 @@ func (b BodyParser) ParseBody(body string) (res BodyParseResults, err error) {
 		}
 	}
 
-	return res, nil
+	res.Links, err = parseLinks(body)
+	return
 }

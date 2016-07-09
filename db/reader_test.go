@@ -20,18 +20,18 @@ var (
 			Board:    "a",
 			ImageCtr: 1,
 			PostCtr:  2,
-			Posts: map[string]types.Post{
-				"1": {
+			Posts: map[int64]types.Post{
+				1: {
 					Board: "a",
 					ID:    1,
 					Image: genericImage,
 				},
-				"2": {
+				2: {
 					Board: "a",
 					ID:    2,
 					Image: genericImage,
 				},
-				"3": {
+				3: {
 					Board: "a",
 					ID:    3,
 				},
@@ -45,8 +45,8 @@ var (
 		{
 			ID:    4,
 			Board: "a",
-			Posts: map[string]types.Post{
-				"4": {
+			Posts: map[int64]types.Post{
+				4: {
 					Board: "a",
 					ID:    4,
 					Image: genericImage,
@@ -56,8 +56,8 @@ var (
 		{
 			ID:    5,
 			Board: "c",
-			Posts: map[string]types.Post{
-				"5": {
+			Posts: map[int64]types.Post{
+				5: {
 					Board: "c",
 					ID:    5,
 					Image: genericImage,
@@ -100,42 +100,23 @@ func (*DBSuite) TestGetPost(c *C) {
 		ID:    2,
 		Board: "a",
 	}
-	threads := []types.DatabaseThread{
-		{
-			ID:    1,
-			Board: "a",
-			Posts: map[string]types.Post{
-				"2": std,
-			},
-		},
-		{
-			ID:    4,
-			Board: "q",
-			Posts: map[string]types.Post{
-				"5": {
-					Board: "q",
-					ID:    5,
-				},
-			},
+	thread := types.DatabaseThread{
+
+		ID:    1,
+		Board: "a",
+		Posts: map[int64]types.Post{
+			2: std,
 		},
 	}
-	c.Assert(Write(r.Table("threads").Insert(threads)), IsNil)
+	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
 
-	empties := [...]struct {
-		id, op int64
-	}{
-		{2, 76}, // Thread does not exist
-		{8, 1},  // Post does not exist
-	}
-
-	for _, args := range empties {
-		post, err := GetPost(args.id, args.op)
-		c.Assert(err, Equals, r.ErrEmptyResult)
-		c.Assert(post, DeepEquals, types.Post{})
-	}
+	// Post does not exist
+	post, err := GetPost(8)
+	c.Assert(err, Equals, r.ErrEmptyResult)
+	c.Assert(post, DeepEquals, types.Post{})
 
 	// Valid read
-	post, err := GetPost(2, 1)
+	post, err = GetPost(2)
 	c.Assert(err, IsNil)
 	c.Assert(post, DeepEquals, std)
 }
@@ -221,7 +202,7 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 			ID:    4,
 			Image: genericImage,
 		},
-		Posts: map[string]types.Post{},
+		Posts: map[int64]types.Post{},
 	}
 	thread, err := GetThread(4, 0)
 	c.Assert(err, IsNil)
@@ -237,13 +218,13 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 			ID:    1,
 			Image: genericImage,
 		},
-		Posts: map[string]types.Post{
-			"2": {
+		Posts: map[int64]types.Post{
+			2: {
 				Board: "a",
 				ID:    2,
 				Image: genericImage,
 			},
-			"3": {
+			3: {
 				Board: "a",
 				ID:    3,
 			},
@@ -254,7 +235,7 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 	c.Assert(thread, DeepEquals, std)
 
 	// Last 1 post
-	delete(std.Posts, "2")
+	delete(std.Posts, 2)
 	thread, err = GetThread(1, 1)
 	c.Assert(err, IsNil)
 	c.Assert(thread, DeepEquals, std)
