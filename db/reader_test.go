@@ -126,7 +126,7 @@ func (*DBSuite) TestGetBoard(c *C) {
 	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
 
 	boardCounters := map[string]interface{}{
-		"id": "histCounts",
+		"id": "boardCtrs",
 		"a":  7,
 	}
 	c.Assert(Write(r.Table("main").Insert(boardCounters)), IsNil)
@@ -144,7 +144,7 @@ func setEnabledBoards(boards ...string) {
 
 func (*DBSuite) TestGetEmptyBoard(c *C) {
 	setEnabledBoards("a")
-	boardCounters := Document{"histCounts"}
+	boardCounters := Document{"boardCtrs"}
 	c.Assert(Write(r.Table("main").Insert(boardCounters)), IsNil)
 
 	board, err := GetBoard("a")

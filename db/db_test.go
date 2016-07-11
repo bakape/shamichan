@@ -42,7 +42,7 @@ func (*DBSuite) TestPostCounter(c *C) {
 }
 
 func (*DBSuite) TestBoardCounter(c *C) {
-	std := Document{"histCounts"}
+	std := Document{"boardCtrs"}
 	c.Assert(Write(r.Table("main").Insert(std)), IsNil)
 
 	count, err := BoardCounter("a")
@@ -50,7 +50,7 @@ func (*DBSuite) TestBoardCounter(c *C) {
 	c.Assert(count, Equals, int64(0))
 
 	update := map[string]int{"a": 1}
-	c.Assert(Write(GetMain("histCounts").Update(update)), IsNil)
+	c.Assert(Write(GetMain("boardCtrs").Update(update)), IsNil)
 
 	count, err = BoardCounter("a")
 	c.Assert(err, IsNil)
@@ -136,4 +136,82 @@ func (*DBSuite) TestGetLoginHash(c *C) {
 	res, err := GetLoginHash(id)
 	c.Assert(err, IsNil)
 	c.Assert(res, DeepEquals, hash)
+}
+
+func (*DBSuite) TestGetImage(c *C) {
+	c.Assert(GetImage("123").String(), Equals, `r.Table("images").Get("123")`)
+}
+
+func (*DBSuite) TestGetBoardConfig(c *C) {
+	c.Assert(GetBoardConfig("a").String(), Equals, `r.Table("boards").Get("a")`)
+}
+
+func (*DBSuite) TestReservePostID(c *C) {
+	info := map[string]interface{}{
+		"id":      "info",
+		"postCtr": 0,
+	}
+	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
+
+	for i := int64(1); i <= 2; i++ {
+		id, err := ReservePostID()
+		c.Assert(err, IsNil)
+		c.Assert(id, Equals, i)
+	}
+}
+
+func (*DBSuite) TestIncrementBoardCounter(c *C) {
+	c.Assert(Write(r.Table("main").Insert(Document{"boardCtrs"})), IsNil)
+
+	// Check both a fresh board counter and incrementing an existing one
+	for i := int64(1); i <= 2; i++ {
+		c.Assert(IncrementBoardCounter("a"), IsNil)
+		ctr, err := BoardCounter("a")
+		c.Assert(err, IsNil)
+		c.Assert(ctr, Equals, i)
+	}
+}
+
+func (*DBSuite) TestWriteBacklinks(c *C) {
+	threads := []types.DatabaseThread{
+		{
+			ID: 1,
+			Posts: map[int64]types.Post{
+				1: {
+					ID: 1,
+				},
+				2: {
+					ID: 2,
+				},
+			},
+		},
+		{
+			ID: 5,
+			Posts: map[int64]types.Post{
+				7: {
+					ID: 7,
+				},
+			},
+		},
+	}
+	c.Assert(Write(r.Table("threads").Insert(threads)), IsNil)
+
+	// Generate dummy Linkmap
+	links := make(types.LinkMap, 4)
+	for _, id := range [...]int64{1, 2, 7, 8} {
+		links[id] = types.Link{}
+	}
+	c.Assert(WriteBacklinks(10, 9, "a", links), IsNil)
+
+	// Assert each post had a backlink inserted
+	std := types.Link{
+		OP:    9,
+		Board: "a",
+	}
+	for _, id := range [...]int64{1, 2, 7} {
+		var link types.Link
+		q := FindPost(id).Field("backlinks").Field("10")
+		c.Assert(One(q, &link), IsNil)
+		c.Assert(link, Equals, std)
+	}
 }

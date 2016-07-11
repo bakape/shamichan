@@ -29,16 +29,16 @@ type Board struct {
 // opening post data and its contained posts. The composite type itself is not
 // stored in the database.
 type Thread struct {
-	Locked   bool  `json:"locked,omitempty" gorethink:"locked"`
-	Archived bool  `json:"archived,omitempty" gorethink:"archived"`
-	Sticky   bool  `json:"sticky,omitempty" gorethink:"sticky"`
+	Locked   bool  `json:"locked,omitempty" gorethink:"locked,omitempty"`
+	Archived bool  `json:"archived,omitempty" gorethink:"archived,omitempty"`
+	Sticky   bool  `json:"sticky,omitempty" gorethink:"sticky,omitempty"`
 	PostCtr  int16 `json:"postCtr" gorethink:"postCtr"`
 	ImageCtr int16 `json:"imageCtr" gorethink:"imageCtr"`
 	Post
 	LogCtr    int64          `json:"logCtr" gorethink:"logCtr"`
 	BumpTime  int64          `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime int64          `json:"replyTime" gorethink:"replyTime"`
-	Subject   string         `json:"subject,omitempty" gorethink:"subject"`
+	Subject   string         `json:"subject,omitempty" gorethink:"subject,omitempty"`
 	Posts     map[int64]Post `json:"posts,omitempty" gorethink:"posts"`
 }
 
@@ -99,8 +99,8 @@ type LinkMap map[int64]Link
 
 // Link stores the target post's parent board and parent thread
 type Link struct {
+	OP    int64  `json:"op" gorethink:"op"`
 	Board string `json:"board" gorethink:"board"`
-	OP    int    `json:"op" gorethink:"op"`
 }
 
 // Command contains the type and value array of hash commands, such as dice

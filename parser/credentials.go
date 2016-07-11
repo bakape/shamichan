@@ -8,6 +8,10 @@ import (
 	"github.com/bakape/meguca/config"
 )
 
+var (
+	errNoPostPassword = errors.New("no post password")
+)
+
 // ParseName parses the name field into a name and tripcode, if any
 func ParseName(name string) (string, string, error) {
 
@@ -17,7 +21,7 @@ func ParseName(name string) (string, string, error) {
 		return name, name, nil
 	}
 	if len(name) > maxLengthName {
-		return "", "", errors.New("name too long")
+		return "", "", ErrTooLong("name")
 	}
 	name = stripAndTrim(name)
 
@@ -34,4 +38,27 @@ func ParseName(name string) (string, string, error) {
 	}
 
 	return name, "", nil
+}
+
+// ParseSubject verifies and trims a thread subject string
+func ParseSubject(s string) (string, error) {
+	if s == "" {
+		return s, nil
+	}
+	if len(s) > maxLengthSubject {
+		return s, ErrTooLong("subject")
+	}
+	return stripAndTrim(s), nil
+}
+
+// VerifyPostPassword verifies a post password exists does not surpass the
+// maximum allowed length
+func VerifyPostPassword(s string) error {
+	if s == "" {
+		return errNoPostPassword
+	}
+	if len(s) > maxLengthPostPassword {
+		return ErrTooLong("post password")
+	}
+	return nil
 }

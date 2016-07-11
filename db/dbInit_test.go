@@ -101,9 +101,9 @@ func (*DBInit) TestLoadDB(c *C) {
 	c.Assert(One(GetMain("info"), &info), IsNil)
 	c.Assert(info, Equals, infoDocument{Document{"info"}, dbVersion, 0})
 
-	var histCounts Document
-	c.Assert(One(GetMain("histCounts"), &histCounts), IsNil)
-	c.Assert(histCounts, Equals, Document{"histCounts"})
+	var boardCtrs Document
+	c.Assert(One(GetMain("boardCtrs"), &boardCtrs), IsNil)
+	c.Assert(boardCtrs, Equals, Document{"boardCtrs"})
 
 	var conf config.Configs
 	c.Assert(One(GetMain("config"), &conf), IsNil)

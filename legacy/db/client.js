@@ -14,101 +14,11 @@ class ClientController {
 	}
 
 	/**
-	 * Insert thread into DB
-	 * @param {Object} msg
-	 */
-	async insertThread(msg) {
-		// Check if IP has not created a thread recently to prevent spam
-		if (!config.DEBUG
-			&& await redis.existsAsync(`ip:${this.ident.ip}:throttle`)
-		)
-			throw Muggle('Too soon')
-		const {client} = this,
-			now = Date.now(),
-			{ip} = this.ident
-
-		// A thread is just a container for posts with metadata attached. The OP
-		// is actually stored as a post in the thread with the same ID as the
-		// thread.
-		const thread = {
-			ip,
-			time: now,
-			nonce: msg.nonce,
-			bumpTime: now,
-			board: this.board,
-			posts: {},
-
-			// Stores all updates that happened to the thread, so we can
-			// pass them to the client, if they are behind
-			history: []
-		}
-		const post = {
-			ip,
-			time: now,
-			nonce: msg.nonce,
-			editing: true
-		}
-		const id = await this.assignPostID(post)
-		thread.id = post.op = id
-		thread.posts[id] = post
-
-		this.parseName(msg)
-		if (msg.subject) {
-			const subject = msg.subject
-				.trim()
-				.replace(state.hot.EXCLUDE_REGEXP, '')
-				.replace(/[「」]/g, '')
-				.slice(0, STATE.hot.SUBJECT_MAX_LENGTH)
-			if (subject)
-				post.subject = subject
-		}
-		client.postLength = 0
-		const m = redis.multi()
-		post.image = await this.allocateImage(msg.image, m, true)
-		await Promise.join(r.table('threads').insert(thread).run(rcon),
-			this.boardCounter(this.board))
-
-		// Prevent thread spam
-		m.setex(`ip:${ip}:throttle`, config.THREAD_THROTTLE, post.id)
-		cache.add(m, post.id, post.id, this.board)
-		await m.execAsync()
-
-		// Redirect the client to the new thread
-		client.send([common.REDIRECT, this.board, post.id, true])
-	}
-
-	/**
-	 * Incerement post counter in the DB and assign to the new post
-	 * @param {Object} post
-	 * @returns {int} - Post ID
-	 */
-	async assignPostID(post) {
-		this.checkSynced()
-		this.client.post = post
-		return post.id = await r.table('main').get('info')
-			.update({post_ctr: r.row('post_ctr').add(1)},
-				{returnChanges: true})
-			('changes')('new_val')('post_ctr')(0)
-			.run(rcon)
-	}
-
-	/**
 	 * Ensure client did not disconnect midway
 	 */
 	checkSynced() {
 		if (!this.client.synced)
 			throw Muggle('Dropped; post aborted')
-	}
-
-	/**
-	 * Increment the history counter of the board, which is used to generate
-	 * e-tags
-	 * @param {string} board
-	 */
-	async boardCounter(board) {
-	    await r.('main').get('boardCtrs').update({
-			[board]: r.row(board).default(0).add(1)
-		}).run(rcon)
 	}
 
 	/**
@@ -199,35 +109,6 @@ class ClientController {
 	async publish(m, op, msg) {
 		m.publish(op, msg)
 		await m.execAsync()
-	}
-
-	/**
-	 * Write this post's location data to the post we are linking
-	 * @param {Object} links
-	 */
-	async backlinks(links) {
-		const {id} = this.client.post
-
-		// Run all operations in parallel
-		await Promise.all(Object.keys(links).map(async num => {
-			const [board, op] = links[num]
-
-			// Coerce to integer
-			num = +num
-			const op = await cache.parentThread(num)
-
-			// Fail silently, because it does not effect the source post
-			if (!op)
-				continue
-			await Promise.join(
-				this.updatePost(num, op, {
-					backlinks: {
-						[id]: [this.board, this.op]
-					}
-				}),
-				this.boardCounter(board)
-			)
-		}))
 	}
 
 	/**

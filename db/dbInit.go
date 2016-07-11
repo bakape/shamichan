@@ -122,8 +122,8 @@ func InitDB() error {
 		infoDocument{Document{"info"}, dbVersion, 0},
 
 		// History aka progress counters of boards, that get incremented on
-		// post creation
-		Document{"histCounts"},
+		// post and thread creation
+		Document{"boardCtrs"},
 
 		ConfigDocument{
 			Document{"config"},
