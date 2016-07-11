@@ -2,8 +2,13 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.9.5 - 2016-07-12
+* Fix:
+	- Outdated desustorage URL
+
 ##v1.9.4 - 2016-06-21
-	- Fix server crashing, when launched from init script on Debian
+* Fix:
+	- Server crashing, when launched from init script on Debian
 
 ##v1.9.3 - 2016-06-11
 * Fix:
