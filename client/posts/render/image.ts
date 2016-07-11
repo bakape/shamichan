@@ -87,7 +87,7 @@ function hiddenToggle(reveal: boolean): string {
 // 		{
 // 			engine: 'desustorage',
 // 			type: 'MD5',
-// 			url: 'https://desustorage.org/_/search/image/',
+// 			url: 'https://desuarchive.org/_/search/image/',
 // 			symbol: 'Ds'
 // 		},
 // 		{

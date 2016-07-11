@@ -21,7 +21,7 @@ PID=${DOUSHIO_DIR}/server/.server.pid
 
 do_start()
 {
-    su -l $USER -c "cd $DOUSHIO_DIR; npm start &"
+    su $USER -c "cd $DOUSHIO_DIR; npm start &"
 }
 
 do_stop()
@@ -37,7 +37,7 @@ do_restart()
 
 do_reload()
 {
-    su -l $USER -c "cd $DOUSHIO_DIR; $NODE server/kill.js --pid doushio.pid"
+    su $USER -c "cd $DOUSHIO_DIR; $NODE server/kill.js --pid doushio.pid"
 }
 
 case "$1" in

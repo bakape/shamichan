@@ -1,6 +1,6 @@
 {
   "name": "meguca",
-  "license": "MIT",
+  "license": "AGPL",
   "repository": {
     "type": "git",
     "url": "https://github.com/bakape/meguca.git"

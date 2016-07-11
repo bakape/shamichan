@@ -33,6 +33,14 @@ Start tracking v2 progress in versions for easier debugging
 	- Rewriting client in TypeScript
 	- Switched DBMS to RethinkDB
 
+##v1.9.5 - 2016-07-12
+* Fix:
+	- Outdated desustorage URL
+
+##v1.9.4 - 2016-06-21
+* Fix:
+	- Server crashing, when launched from init script on Debian
+
 ##v1.9.3 - 2016-06-11
 * Fix:
 	- Don't autoexpand files with audio and PDF
