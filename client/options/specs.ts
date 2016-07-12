@@ -80,82 +80,82 @@ export const specs: OptionSpec[] = [
 			location.reload()
 		}
 	},
-	// Thumbnail inline expansion mode
-	{
-		id: 'inlineFit',
-		type: optionType.menu,
-		list: thumbExpansions,
-		tab: tabs.style,
-		default: 'width'
-	},
-	// Hide thumbnails, until explicitly revealed
-	{
-		id: 'hideThumbs',
-		tab: tabs.style,
-	},
-	// Image hover expansion
-	{
-		id: 'imageHover',
-		default: true,
-		noLoad: isMobile,
-		tab: tabs.general
-	},
-	// WebM hover expansion
-	{
-		id: 'webmHover',
-		noLoad: isMobile,
-		tab: tabs.general
-	},
-	// Animated GIF thumbnails
-	{
-		id: 'autogif',
-		noLoad: isMobile,
-		tab: tabs.style
-	},
-	// Enable thumnail spoilers
-	{
-		id: 'spoilers',
-		tab: tabs.style,
-		default: true
-	},
-	// Desktop Notifications
-	{
-		id: 'notification',
-		tab: tabs.general,
-		exec(toggle) {
-			if (toggle && Notification.permission !== "granted") {
-				Notification.requestPermission()
-			}
-		}
-	},
-	// Anonymise all poster names
-	{
-		id: 'anonymise',
-		tab: tabs.general
-	},
-	// Relative post timestamps
-	{
-		id: 'relativeTime',
-		tab: tabs.general,
-		default: false
-	},
-	// R/a/dio now playing banner
-	{
-		id: 'nowPlaying',
-		noLoad: isMobile || !config.radio,
-		tab: tabs.fun,
-		default: true,
-		exec(toggle) {
-			if (toggle) {
-				// TODO: Implement send()
-				// Query the server for current stream info
-				// send({type: 'radio'})
-			} else {
-				// TODO: System.import().then()
-				//events.request('banner:radio:clear');
-			}
-		}
-	},
+	// // Thumbnail inline expansion mode
+	// {
+	// 	id: 'inlineFit',
+	// 	type: optionType.menu,
+	// 	list: thumbExpansions,
+	// 	tab: tabs.style,
+	// 	default: 'width'
+	// },
+	// // Hide thumbnails, until explicitly revealed
+	// {
+	// 	id: 'hideThumbs',
+	// 	tab: tabs.style,
+	// },
+	// // Image hover expansion
+	// {
+	// 	id: 'imageHover',
+	// 	default: true,
+	// 	noLoad: isMobile,
+	// 	tab: tabs.general
+	// },
+	// // WebM hover expansion
+	// {
+	// 	id: 'webmHover',
+	// 	noLoad: isMobile,
+	// 	tab: tabs.general
+	// },
+	// // Animated GIF thumbnails
+	// {
+	// 	id: 'autogif',
+	// 	noLoad: isMobile,
+	// 	tab: tabs.style
+	// },
+	// // Enable thumnail spoilers
+	// {
+	// 	id: 'spoilers',
+	// 	tab: tabs.style,
+	// 	default: true
+	// },
+	// // Desktop Notifications
+	// {
+	// 	id: 'notification',
+	// 	tab: tabs.general,
+	// 	exec(toggle) {
+	// 		if (toggle && Notification.permission !== "granted") {
+	// 			Notification.requestPermission()
+	// 		}
+	// 	}
+	// },
+	// // Anonymise all poster names
+	// {
+	// 	id: 'anonymise',
+	// 	tab: tabs.general
+	// },
+	// // Relative post timestamps
+	// {
+	// 	id: 'relativeTime',
+	// 	tab: tabs.general,
+	// 	default: false
+	// },
+	// // R/a/dio now playing banner
+	// {
+	// 	id: 'nowPlaying',
+	// 	noLoad: isMobile || !config.radio,
+	// 	tab: tabs.fun,
+	// 	default: true,
+	// 	exec(toggle) {
+	// 		if (toggle) {
+	// 			// TODO: Implement send()
+	// 			// Query the server for current stream info
+	// 			// send({type: 'radio'})
+	// 		} else {
+	// 			// TODO: System.import().then()
+	// 			//events.request('banner:radio:clear');
+	// 		}
+	// 	}
+	// },
 	// Illya dance in the background
 	{
 		id: 'illyaDance',
@@ -168,24 +168,24 @@ export const specs: OptionSpec[] = [
 		noLoad: isMobile || !config.illyaDance,
 		tab: tabs.fun
 	},
-	// Tile posts horizontally too
-	{
-		id: 'horizontalPosting',
-		tab: tabs.fun,
-		exec: toggleHeadStyle(
-			'horizontal',
-			'article,aside{display:inline-block;}'
-		)
-	},
-	// Move [Reply] to the right side of the screen
-	{
-		id: 'replyRight',
-		tab: tabs.style,
-		exec: toggleHeadStyle(
-			'reply-at-right',
-			'section>aside{margin: -26px 0 2px auto;}'
-		)
-	},
+	// // Tile posts horizontally too
+	// {
+	// 	id: 'horizontalPosting',
+	// 	tab: tabs.fun,
+	// 	exec: toggleHeadStyle(
+	// 		'horizontal',
+	// 		'article,aside{display:inline-block;}'
+	// 	)
+	// },
+	// // Move [Reply] to the right side of the screen
+	// {
+	// 	id: 'replyRight',
+	// 	tab: tabs.style,
+	// 	exec: toggleHeadStyle(
+	// 		'reply-at-right',
+	// 		'section>aside{margin: -26px 0 2px auto;}'
+	// 	)
+	// },
 	// Change theme
 	{
 		id: 'theme',
@@ -222,16 +222,16 @@ export const specs: OptionSpec[] = [
 		type: optionType.image,
 		tab: tabs.style
 	},
-	// Last N posts to display in a thread, if viewing in Last N mode
-	{
-		id: 'lastN',
-		type: optionType.number,
-		tab: tabs.general,
-		validation(n: number) {
-			return Number.isInteger(n) && n <= 500
-		},
-		default: 100
-	},
+	// // Last N posts to display in a thread, if viewing in Last N mode
+	// {
+	// 	id: 'lastN',
+	// 	type: optionType.number,
+	// 	tab: tabs.general,
+	// 	validation(n: number) {
+	// 		return Number.isInteger(n) && n <= 500
+	// 	},
+	// 	default: 100
+	// },
 	// KEEP THREAD LENGTH WITHIN LASTN
 	/*
 	 Disabled, until dependancy features are implemnted (see issue #280)
@@ -241,10 +241,10 @@ export const specs: OptionSpec[] = [
 	},*/
 	// Lock thread scrolling to bottom, when bottom in view, even when the tab
 	// is hidden
-	{
-		id: 'alwaysLock',
-		tab: tabs.general
-	}
+	// {
+	// 	id: 'alwaysLock',
+	// 	tab: tabs.general
+	// }
 ]
 
 // TODO: Selective rendering logic
@@ -261,21 +261,21 @@ export const specs: OptionSpec[] = [
 // 	})
 // }
 
-// SHORTCUT KEYS
-const shorts: any = [
-	{id: 'newPost', default: 78},
-	{id: 'toggleSpoiler', default: 73},
-	{id: 'textSpoiler', default: 68},
-	{id: 'done', default: 83},
-	{id: 'expandAll', default: 69},
-	{id: 'workMode', default: 66}
-]
-for (let short of shorts) {
-	short.type = optionType.shortcut
-	short.tab = tabs.shortcuts
-	short.noLoad = isMobile
-	specs.push(short)
-}
+// // SHORTCUT KEYS
+// const shorts: any = [
+// 	{id: 'newPost', default: 78},
+// 	{id: 'toggleSpoiler', default: 73},
+// 	{id: 'textSpoiler', default: 68},
+// 	{id: 'done', default: 83},
+// 	{id: 'expandAll', default: 69},
+// 	{id: 'workMode', default: 66}
+// ]
+// for (let short of shorts) {
+// 	short.type = optionType.shortcut
+// 	short.tab = tabs.shortcuts
+// 	short.noLoad = isMobile
+// 	specs.push(short)
+// }
 
 // Create a function to append and toggle a style element in <head>
 function toggleHeadStyle(id: string, css: string): (toggle: boolean) => void {
