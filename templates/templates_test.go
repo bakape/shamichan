@@ -20,18 +20,10 @@ func (*Templates) SetUpTest(c *C) {
 	})
 }
 
-func (*Templates) TestBoardNavigation(c *C) {
-	html := boardNavigation()
-	std := `<b id="navTop">[<a href="../a/">a</a> / <a href="../all/">all</a>` +
-		`]</b>`
-	c.Assert(string(html), Equals, std)
-}
-
 func (*Templates) TestBuildIndexTemplate(c *C) {
 	v := vars{
 		Config:     template.JS("c()"),
 		ConfigHash: "a",
-		Navigation: template.HTML("<hr>"),
 	}
 	source := `<script>{{.Config}}</script><b>{{.ConfigHash}}</b>` +
 		`{{.Navigation}}<script>{{.IsMobile}}</script>`

@@ -1,4 +1,4 @@
-GULP="./node_modules/.bin/gulp"
+GULP=./node_modules/.bin/gulp
 VERSION=$(shell git describe --abbrev=0 --tags)
 
 ifeq ($(OS), Windows_NT)

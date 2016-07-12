@@ -9,8 +9,10 @@ export let db: IDBDatabase
 // Execute a database request as a promise
 IDBRequest.prototype.exec = function (): Promise<any> {
 	return new Promise<any>((resolve, reject) => {
-		this.onerror = () => reject(this.error)
-		this.onsuccess = () => resolve(this.result)
+		this.onerror = () =>
+			reject(this.error)
+		this.onsuccess = () =>
+			resolve(this.result)
 	})
 }
 

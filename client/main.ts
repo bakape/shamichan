@@ -6,11 +6,12 @@
  // TODO: Remove, when proper structure done
 import * as options from './options'
 import * as client from './client'
+import BoardNavigation from './page/boardNavigation'
+import {exec, defer} from './defer'
 const o = options // Prevents the compiler from removing as an unused import
 const c = client
 
 import {displayLoading} from './state'
-import {exec} from './defer'
 import {start as connect} from './connection'
 import {loadFromDB} from './state'
 import {open} from './db'
@@ -25,6 +26,9 @@ if (localStorage.getItem("cookieVersion") !== cookieVersion.toString()) {
 	}
 	localStorage.setItem("cookieVersion", cookieVersion.toString())
 }
+
+defer(() =>
+	new BoardNavigation())
 
 // Load all stateful modules in dependancy order
 async function start() {

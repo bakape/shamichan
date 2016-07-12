@@ -345,11 +345,11 @@ type Stack = {
 	g: number
 	b: number
 	a: number
-	next: Stack
+	next?: Stack
 }
 
 function newStack(): Stack {
-	const stack: any = {
+	const stack: Stack = {
 		r: 0,
 		g: 0,
 		b: 0,

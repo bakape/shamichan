@@ -137,7 +137,8 @@ for (let spec of specs) {
 	new OptionModel(spec)
 }
 
-defer(() => new OptionsPanel())
+defer(() =>
+	new OptionsPanel())
 
 // Conditionally load custom background module and render background
 if (options.userBG) {

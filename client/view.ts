@@ -50,7 +50,8 @@ export default class View<M extends Model> {
 	remove() {
 		this.model.detach(this)
 		delete this.model
-		write(() => this.el.remove())
+		write(() =>
+			this.el.remove())
 	}
 
 	// Add  optionally selector-specific event listeners to the view

@@ -1,5 +1,5 @@
-@import './mixins/overlays';
-@import './mixins/mod';
+@import 'overlays.mix.less';
+@import 'mod.mix.less';
 
 a {
 	border: none;
@@ -42,6 +42,14 @@ a, aside, .banner-float, .soundcloud, .watch, .control {
 
 blockquote {
 	word-break: break-all;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.mono {
+	font-family: monospace;
 }
 
 .control {
@@ -149,21 +157,9 @@ figure {
 	}
 }
 
-// Can't have conditional CSS, so we use a spacing div to avoid JS
-#headerTopMargin {
-	width: 100%;
-	height: 1.1em;
-}
-
-h1 {
-	// Need different margins for when we have an image banner and don't
-	margin-top: 0;
-	body > & {
-		margin-bottom: 0;
-	}
-	threads > & {
-		margin-bottom: 0.5em;
-	}
+#image-banner {
+	margin-top: 1.1em;
+	margin-bottom: 0;
 }
 
 h1, h2 {
@@ -414,7 +410,7 @@ table {
 		margin-left: 0;
 		margin-right: 0;
 	}
-	#navTop {
+	#board-navigation {
 		margin-left: 0;
 	}
 	#options {

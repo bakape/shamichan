@@ -3,7 +3,6 @@ package templates
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"path/filepath"
 	"strings"
@@ -71,7 +70,6 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 	v := vars{
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,
-		Navigation: boardNavigation(),
 
 		// Replace all newlines in the FAQ with `<br>`
 		FAQ:        template.HTML(strings.Replace(conf.FAQ, "\n", "<br>", -1)),
@@ -93,22 +91,6 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 	}
 	mobile, err = buildIndexTemplate(tmpl, v, true)
 	return
-}
-
-// boardNavigation renders interboard navigation we put in the top banner
-func boardNavigation() template.HTML {
-	html := bytes.NewBuffer([]byte(`<b id="navTop">[`))
-
-	// Actual boards and "/all/" metaboard
-	for i, board := range append(config.Get().Boards, "all") {
-		if i != 0 {
-			html.WriteString(" / ")
-		}
-		fmt.Fprintf(html, `<a href="../%s/">%s</a>`, board, board)
-	}
-
-	html.WriteString(`]</b>`)
-	return template.HTML(html.Bytes())
 }
 
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it

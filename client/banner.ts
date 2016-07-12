@@ -2,7 +2,7 @@
 
 import {config} from './state'
 import {defer} from './defer'
-import {Modal} from './modal'
+import Modal from './modal'
 import {ViewAttrs} from './view'
 import {banner as lang} from './lang'
 import {write, read} from './render'
@@ -44,7 +44,9 @@ function highlightBanner(name: string) {
 	}
 }
 
-defer(() => ["options", "FAQ", "identity", "account"].forEach(highlightBanner))
+defer(() =>
+	["options", "FAQ", "identity", "account"]
+	.forEach(highlightBanner))
 
 // Stores the views of all BannerModal instances
 export const bannerModals: {[key: string]: BannerModal<any>} = {}
@@ -79,13 +81,13 @@ export class BannerModal<M extends Model> extends Modal<M> {
 	}
 
 	// Unhide the element
-	private show() {
+	show() {
 		write(() => this.el.style.display = 'block')
 		visible = this
 	}
 
 	// Hide the element
-	private hide() {
+	hide() {
 		write(() => this.el.style.display = 'none')
 		visible = null
 	}
@@ -121,15 +123,14 @@ export class TabbedModal<M extends Model> extends BannerModal<M> {
 
 // Frequently asked questions and other information modal
 defer(() =>
-	new BannerModal({
-		el: document.querySelector('#FAQ-panel')
-	}))
+	new BannerModal({el: document.querySelector('#FAQ-panel')}))
 
 // Name and email input pannel
 class IdentityPanel extends BannerModal<Model> {
 	constructor() {
 		super({el: document.querySelector('#identity-panel')})
-		write(() => this.render())
+		write(() =>
+			this.render())
 	}
 
 	render() {
@@ -139,7 +140,8 @@ class IdentityPanel extends BannerModal<Model> {
 	}
 }
 
-defer(() => new IdentityPanel())
+defer(() =>
+	new IdentityPanel())
 
 // Apply localised hover tooltips to banner links
 function localiseTitles() {
@@ -149,7 +151,8 @@ function localiseTitles() {
 	setTitle('sync', 'sync')
 }
 
-defer(() =>	write(localiseTitles))
+defer(() =>
+	write(localiseTitles))
 
 function setTitle(id: string, langID: string) {
 	document.querySelector('#' + id).setAttribute('title', lang[langID])

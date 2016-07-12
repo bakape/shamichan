@@ -64,7 +64,7 @@ export type OptionSpec = {
 	hidden?: boolean
 }
 
-// Option parse and position in the options panel is defined by order in the
+// Option position in the options panel is defined by order in the
 // array.
 export const specs: OptionSpec[] = [
 	// Language selection

@@ -27,14 +27,11 @@
 <body>
 	<!-- Loading indicator image !-->
 	<image src="/assets/loading.svg" id="loadingImage">
-	<!-- For post and image hover previews !-->
-	<div id="hover-overlay" class="overlay"></div>
-	<!-- For modal windows -->
-	<div id="modal-overlay" class="overlay">
+	<div id="overlay-container">
 		<!-- Top banner !-->
 		<span id="banner" class="glass">
 			<!--- Interboard navigation !-->
-		    {{.Navigation}}
+			<nav id="board-navigation"></nav>
 			<!-- For r/a/dio stream status and such !-->
 			<b id="banner-center"></b>
 			<!-- For various annoucments and such. See ./config/config.json.infoBanner !-->
@@ -42,7 +39,7 @@
 			<!-- Various buttons, that unhide modal windows !-->
 			<a id="banner-options" class="banner-float">
 				<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
-					<path d="M5.5 0c-1.38 0-2.5 1.12-2.5 2.5 0 .32.08.62.19.91l-2.91 2.88c-.39.39-.39 1.05 0 1.44.2.2.46.28.72.28.26 0 .52-.09.72-.28l2.88-2.91c.28.11.58.19.91.19 1.38 0 2.5-1.12 2.5-2.5 0-.16 0-.32-.03-.47l-.97.97h-2v-2l.97-.97c-.15-.03-.31-.03-.47-.03zm-4.5 6.5c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5z"/>
+				  <path d="M3.5 0l-.5 1.19c-.1.03-.19.08-.28.13l-1.19-.5-.72.72.5 1.19c-.05.1-.09.18-.13.28l-1.19.5v1l1.19.5c.04.1.08.18.13.28l-.5 1.19.72.72 1.19-.5c.09.04.18.09.28.13l.5 1.19h1l.5-1.19c.09-.04.19-.08.28-.13l1.19.5.72-.72-.5-1.19c.04-.09.09-.19.13-.28l1.19-.5v-1l-1.19-.5c-.03-.09-.08-.19-.13-.28l.5-1.19-.72-.72-1.19.5c-.09-.04-.19-.09-.28-.13l-.5-1.19h-1zm.5 2.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5z"/>
 				</svg>
 			</a>
 			<a id="banner-identity" class="banner-float">
@@ -55,7 +52,7 @@
 					<path d="m 2,2.681 c -1.31,0 -2,1.01 -2,2 0,0.99 0.69,2 2,2 0.79,0 1.42,-0.56 2,-1.22 0.58,0.66 1.19,1.22 2,1.22 1.31,0 2,-1.01 2,-2 0,-0.99 -0.69,-2 -2,-2 -0.81,0 -1.42,0.56 -2,1.22 C 3.42,3.241 2.79,2.681 2,2.681 Z m 0,1 c 0.42,0 0.88,0.47 1.34,1 -0.46,0.53 -0.92,1 -1.34,1 -0.74,0 -1,-0.54 -1,-1 0,-0.46 0.26,-1 1,-1 z m 4,0 c 0.74,0 1,0.54 1,1 0,0.46 -0.26,1 -1,1 -0.43,0 -0.89,-0.47 -1.34,-1 0.46,-0.53 0.91,-1 1.34,-1 z" id="path4" />
 				</svg>
 			</a>
-		    <a id="banner-FAQ" class="banner-float">
+			<a id="banner-FAQ" class="banner-float">
 				<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
 					<path d="M3 0c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm-1.5 2.5c-.83 0-1.5.67-1.5 1.5h1c0-.28.22-.5.5-.5s.5.22.5.5-1 1.64-1 2.5c0 .86.67 1.5 1.5 1.5s1.5-.67 1.5-1.5h-1c0 .28-.22.5-.5.5s-.5-.22-.5-.5c0-.36 1-1.84 1-2.5 0-.81-.67-1.5-1.5-1.5z" transform="translate(2)"/>
 				</svg>
@@ -68,114 +65,119 @@
 			<!-- Websocket connection status indicator !-->
 			<b id="sync" class="banner-float"></b>
 		</span>
-		<!-- Frequently Asked Quetions panel !-->
-		<div id="FAQ-panel" class="banner-modal modal glass">
-			meguca is licensed under the
-			<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">
-				GNU Affero General Public License
-			</a>
-			<br>
-			Source code repository:&nbsp;
-			<a href="https://github.com/bakape/meguca" target="_blank">
-				github.com/bakape/meguca
-			</a>
-			<hr>
-			{{.FAQ}}
-		</div>
-		<!-- Name and email input form !-->
-		<fieldset id="identity-panel" class="banner-modal modal glass">
-			<table>
-				<tr>
-					<td>
-						<label for="name"></label>
-					</td>
-					<td>
-						<input type="text" name="name">
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<label for="email"></label>
-					</td>
-					<td>
-						<input type="text" name="email">
-					</td>
-				</tr>
-			</table>
-		</fieldset>
-		<!-- Account login/register panel !-->
-		<div id="account-panel" class="banner-modal  modal glass">
-			<div class="tab-butts">
-				<a class="tab-link tab-sel" data-id="0"></a>
-				<a class="tab-link" data-id="1"></a>
+		<!-- For modal windows -->
+		<div id="modal-overlay" class="overlay">
+			<!-- Frequently Asked Quetions panel !-->
+			<div id="FAQ-panel" class="banner-modal modal glass">
+				meguca is licensed under the
+				<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">
+					GNU Affero General Public License
+				</a>
+				<br>
+				Source code repository:&nbsp;
+				<a href="https://github.com/bakape/meguca" target="_blank">
+					github.com/bakape/meguca
+				</a>
+				<hr>
+				{{.FAQ}}
 			</div>
-			<hr>
-			<div class="tab-cont">
-				<div class="tab-sel" data-id="0">
-					<form id="login-form">
-						<table>
-							<tr>
-								<td>
-									<label for="id"></label>
-								</td>
-								<td>
-									<input name="id" minlength="3" maxlength="20" required pattern="\w+">
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<label for="password"></label>
-								</td>
-								<td>
-									<input type="password" name="password" minlength="6" maxlength="30" required>
-								</td>
-							</tr>
-						</table>
-						<input type="submit">
-					</form>
+			<!-- Name and email input form !-->
+			<fieldset id="identity-panel" class="banner-modal modal glass">
+				<table>
+					<tr>
+						<td>
+							<label for="name"></label>
+						</td>
+						<td>
+							<input type="text" name="name">
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="email"></label>
+						</td>
+						<td>
+							<input type="text" name="email">
+						</td>
+					</tr>
+				</table>
+			</fieldset>
+			<!-- Account login/register panel !-->
+			<div id="account-panel" class="banner-modal  modal glass">
+				<div class="tab-butts">
+					<a class="tab-link tab-sel" data-id="0"></a>
+					<a class="tab-link" data-id="1"></a>
 				</div>
-				<div data-id="1">
-					<form id="registration-form">
-						<table>
-							<tr>
-								<td>
-									<label for="id"></label>
-								</td>
-								<td>
-									<input name="id" minlength="3" maxlength="20" required pattern="\w+">
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<label for="password"></label>
-								</td>
-								<td>
-									<input type="password" name="password" minlength="6" maxlength="30" required>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<label for="repeat"></label>
-								</td>
-								<td>
-									<input type="password" name="repeat" minlength="6" maxlength="30" required>
-								</td>
-							</tr>
-						</table>
-						<input type="submit">
-					</form>
+				<hr>
+				<div class="tab-cont">
+					<div class="tab-sel" data-id="0">
+						<form id="login-form">
+							<table>
+								<tr>
+									<td>
+										<label for="id"></label>
+									</td>
+									<td>
+										<input name="id" minlength="3" maxlength="20" required pattern="\w+">
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<label for="password"></label>
+									</td>
+									<td>
+										<input type="password" name="password" minlength="6" maxlength="30" required>
+									</td>
+								</tr>
+							</table>
+							<input type="submit">
+						</form>
+					</div>
+					<div data-id="1">
+						<form id="registration-form">
+							<table>
+								<tr>
+									<td>
+										<label for="id"></label>
+									</td>
+									<td>
+										<input name="id" minlength="3" maxlength="20" required pattern="\w+">
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<label for="password"></label>
+									</td>
+									<td>
+										<input type="password" name="password" minlength="6" maxlength="30" required>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<label for="repeat"></label>
+									</td>
+									<td>
+										<input type="password" name="repeat" minlength="6" maxlength="30" required>
+									</td>
+								</tr>
+							</table>
+							<input type="submit">
+						</form>
+					</div>
 				</div>
+				<div class="admin form-response"></div>
 			</div>
-			<div class="admin form-response"></div>
+			<!-- Client-side option panel !-->
+			<div id="options-panel" class="banner-modal modal glass"></div>
 		</div>
-		<!-- Client-side option panel !-->
-		<div id="options-panel" class="banner-modal modal glass"></div>
 	</div>
 	<!-- Used for adding space bellow the top banner, because the <h1> bellow is not always non-empty !-->
-	<div id="headerTopMargin"></div>
-	<h1></h1>
-	<!-- Contains posts and threads !-->
-	<threads></threads>
+	<h1 id="image-banner">
+		<img src="/assets/banners/banner0.png">
+	</h1>
+	<h1 id="page-title"></h1>
+	<!-- Contains posts, page naviagtion and the catalog !-->
+	<section id="threads"></section>
 	<!-- For image uploads !-->
 	<iframe name="upload" id="hiddenUpload"></iframe>
 	<!-- Used to make the text input field on the postForm to have a width, as if it was static !-->

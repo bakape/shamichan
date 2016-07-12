@@ -45,25 +45,22 @@ export function emitChanges<T extends ChangeEmitter>(obj: T = {} as T): T {
 	const proxy = new Proxy<T>(obj, {
 		set(target: T, key: string, val: any) {
 			(target as any)[key] = val
-			execChangeHooks(key, val)
+
+			// Execute handlers hooked into the key change, if any
+			const hooks = changeHooks[key]
+			if (hooks) {
+				for (let func of hooks) {
+					func(val)
+				}
+			}
+
 			return true
 		},
 	})
 
-	// Execute handlers hooked into key change, if any
-	function execChangeHooks(key: string, val: any) {
-		const hooks = changeHooks[key]
-		if (!hooks) {
-			return
-		}
-		for (let func of hooks) {
-			func(val)
-		}
-	}
-
 	// Add a function to be executed, when a key is set on the object.
 	// Proxies do not have a prototype. Some hacks required.
-	proxy.onChange = function onChange(key: string, func: HookHandler) {
+	proxy.onChange = (key: string, func: HookHandler) => {
 		const hooks = changeHooks[key]
 		if (hooks) {
 			hooks.push(func)

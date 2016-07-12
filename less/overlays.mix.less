@@ -1,18 +1,21 @@
-.overlay {
+#overlay-container {
 	width: 100%;
 	height: 100%;
 	top: 0;
 	right: 0;
 	position: fixed;
-	pointer-events: none;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
 	z-index: 300;
+}
 
-	// Proper fixed element rendering with dynamic animated backgrounds
-	-webkit-backface-visibility: hidden;
-	-webkit-transform: translateZ(0);
+.overlay {
+	display: flex;
+	pointer-events: none;
+	flex-direction: row-reverse;;
+	align-items: flex-start;
+	.float-left {
+		left: 0;
+		margin-right: auto;
+	}
 }
 
 #loadingImage {
@@ -51,6 +54,7 @@
 	text-align: center;
 	width: 100%;
 	top: 0;
+	left: 0;
 }
 
 .banner-float {
@@ -63,12 +67,16 @@
 	}
 }
 
-form label {
-	padding: 0.2em;
+#board-navigation {
+	display: inline-block;
+	float: left;
+	a.history {
+		font-weight: bold;
+	}
 }
 
-#navTop {
-	float: left;
+form label {
+	padding: 0.2em;
 }
 
 .tab-butts {

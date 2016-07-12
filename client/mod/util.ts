@@ -189,13 +189,13 @@ export class FormView<M extends Model> extends View<M> {
 	addMapInput(event: Event) {
 		write(() =>
 			(event.target as Element)
-				.before(...makeEls(renderKeyValuePair("", ""))))
+			.before(...makeEls(renderKeyValuePair("", ""))))
 	}
 
 	// Remove a map key-vale input field pair
 	removeMapInput(event: Event) {
 		write(() =>
 			(event.target as Element)
-				.closest("span").remove())
+			.closest("span").remove())
 	}
 }
