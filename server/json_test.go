@@ -35,14 +35,16 @@ func (d *DB) SetUpSuite(c *C) {
 	db.DBName = db.UniqueDBName()
 	c.Assert(db.Connect(), IsNil)
 	c.Assert(db.InitDB(), IsNil)
-	setupPosts(c)
 	config.Set(config.Configs{})
 	d.r = createRouter()
 }
 
-func (*DB) SetUpTest(_ *C) {
+func (*DB) SetUpTest(c *C) {
 	enableGzip = false
 	trustProxies = false
+	for _, table := range db.AllTables {
+		c.Assert(db.Exec(r.Table(table).Delete()), IsNil)
+	}
 	config.Set(config.Configs{
 		Boards: []string{"a"},
 	})
@@ -103,10 +105,17 @@ func setupPosts(c *C) {
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(threads)), IsNil)
 
-	infoUpdate := db.GetMain("info").Update(map[string]int{"postCtr": 8})
-	histUpdate := db.GetMain("boardCtrs").Update(map[string]int{"a": 7})
-	c.Assert(db.Write(infoUpdate), IsNil)
-	c.Assert(db.Write(histUpdate), IsNil)
+	mains := []map[string]interface{}{
+		{
+			"id":      "info",
+			"postCtr": 8,
+		},
+		{
+			"id": "boardCtrs",
+			"a":  7,
+		},
+	}
+	c.Assert(db.Write(r.Table("main").Insert(mains)), IsNil)
 }
 
 func (w *WebServer) TestConfigServing(c *C) {
@@ -141,6 +150,8 @@ func (*WebServer) TestDetectLastN(c *C) {
 }
 
 func (d *DB) TestServePost(c *C) {
+	setupPosts(c)
+
 	// Invalid post number
 	rec, req := newPair(c, "/json/post/www")
 	d.r.ServeHTTP(rec, req)
@@ -169,6 +180,8 @@ func (d *DB) TestServePost(c *C) {
 }
 
 func (d *DB) TestBoardJSON(c *C) {
+	setupPosts(c)
+
 	// Invalid board
 	rec, req := newPair(c, "/json/nope/")
 	d.r.ServeHTTP(rec, req)
@@ -234,6 +247,8 @@ func (d *DB) TestBoardJSON(c *C) {
 }
 
 func (d *DB) TestAllBoardJSON(c *C) {
+	setupPosts(c)
+
 	const etag = "W/8"
 	const body = `
 {
@@ -315,6 +330,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 }
 
 func (d *DB) TestThreadJSON(c *C) {
+	setupPosts(c)
+
 	// Invalid board
 	rec, req := newPair(c, "/json/nope/1")
 	d.r.ServeHTTP(rec, req)
@@ -398,4 +415,34 @@ func (d *DB) TestServeBoardConfigs(c *C) {
 	rec, req := newPair(c, "/json/boardConfig/a")
 	d.r.ServeHTTP(rec, req)
 	assertBody(rec, string(std), c)
+}
+
+func (d *DB) TestServeBoardList(c *C) {
+	conf := []config.BoardConfigs{
+		{
+			ID:    "a",
+			Title: "Animu",
+		},
+		{
+			ID:    "g",
+			Title: "Technology",
+		},
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+
+	std := removeIndentation(`
+[
+	{
+		"id":"a",
+		"title":"Animu"
+	},
+	{
+		"id":"g",
+		"title":"Technology"
+	}
+]`)
+
+	rec, req := newPair(c, "/json/boardList")
+	d.r.ServeHTTP(rec, req)
+	assertBody(rec, std, c)
 }

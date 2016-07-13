@@ -51,6 +51,7 @@ func (w *WebServer) TestServeIndexTemplate(c *C) {
 }
 
 func (d *DB) TestThreadHTML(c *C) {
+	setupPosts(c)
 	body := []byte("body")
 	templates.Set("index", templates.Store{
 		HTML: body,

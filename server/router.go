@@ -74,9 +74,10 @@ func createRouter() http.Handler {
 	r.GET("/json/all/", wrapHandler(allBoardJSON))
 	r.GET("/json/:board/", boardJSON)
 	r.GET("/json/:board/:thread", threadJSON)
-	r.GET("/json/config", wrapHandler(serveConfigs))
 	r.GET("/json/post/:post", servePost)
+	r.GET("/json/config", wrapHandler(serveConfigs))
 	r.GET("/json/boardConfig/:board", serveBoardConfigs)
+	r.GET("/json/boardList", wrapHandler(serveBoardList))
 
 	// Assets
 	assetServer = http.FileServer(http.Dir(webRoot))

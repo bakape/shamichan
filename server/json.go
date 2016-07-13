@@ -34,6 +34,21 @@ func serveJSON(
 	writeData(res, req, data)
 }
 
+// Convert input data to JSON an write to client
+func writeJSON(res http.ResponseWriter, req *http.Request, data interface{}) {
+	JSON, err := json.Marshal(data)
+	if err != nil {
+		textErrorPage(res, req, err)
+		return
+	}
+	setJSONCType(res)
+	writeData(res, req, JSON)
+}
+
+func setJSONCType(res http.ResponseWriter) {
+	res.Header().Set("Content-Type", "application/json")
+}
+
 // Validate the client's last N posts to display setting
 func detectLastN(req *http.Request) int {
 	query := req.URL.Query().Get("lastN")
@@ -107,21 +122,6 @@ func serveBoardConfigs(
 
 	data, err := conf.MarshalPublicJSON()
 	serveJSON(res, req, data, err)
-}
-
-// Convert input data to JSON an write to client
-func writeJSON(res http.ResponseWriter, req *http.Request, data interface{}) {
-	JSON, err := json.Marshal(data)
-	if err != nil {
-		textErrorPage(res, req, err)
-		return
-	}
-	setJSONCType(res)
-	writeData(res, req, JSON)
-}
-
-func setJSONCType(res http.ResponseWriter) {
-	res.Header().Set("Content-Type", "application/json")
 }
 
 // Serves thread page JSON
@@ -209,4 +209,19 @@ func boardJSON(
 		return
 	}
 	writeJSON(res, req, data)
+}
+
+// Serve a JSON array of all available boards and their titles
+func serveBoardList(res http.ResponseWriter, req *http.Request) {
+	var list []struct {
+		ID    string `json:"id"`
+		Title string `json:"title"`
+	}
+	q := r.Table("boards").Pluck("id", "title")
+	if err := db.All(q, &list); err != nil {
+		textErrorPage(res, req, err)
+		return
+	}
+	data, err := json.Marshal(list)
+	serveJSON(res, req, data, err)
 }
