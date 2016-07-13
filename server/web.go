@@ -1,6 +1,4 @@
-/*
- Webserver
-*/
+// Webserver
 
 package server
 
@@ -12,9 +10,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-
-	r "github.com/dancannon/gorethink"
-
 	"path/filepath"
 	"strconv"
 
@@ -25,6 +20,7 @@ import (
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
+	r "github.com/dancannon/gorethink"
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
 	"github.com/mssola/user_agent"
@@ -113,6 +109,7 @@ func createRouter() http.Handler {
 	r.GET("/json/:board/:thread", threadJSON)
 	r.GET("/json/config", wrapHandler(serveConfigs))
 	r.GET("/json/post/:post", servePost)
+	r.GET("/json/boardConfig/:board", serveBoardConfigs)
 
 	// Assets
 	assetServer = http.FileServer(http.Dir(webRoot))
@@ -355,8 +352,12 @@ func writeJSON(res http.ResponseWriter, req *http.Request, data interface{}) {
 		textErrorPage(res, req, err)
 		return
 	}
-	res.Header().Set("Content-Type", "application/json")
+	setJSONCType(res)
 	writeData(res, req, JSON)
+}
+
+func setJSONCType(res http.ResponseWriter) {
+	res.Header().Set("Content-Type", "application/json")
 }
 
 // Text-only 500 response
@@ -394,7 +395,7 @@ func serveConfigs(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	setHeaders(res, etag)
-	res.Header().Set("Content-Type", "application/json")
+	setJSONCType(res)
 	writeData(res, req, json)
 }
 
@@ -483,9 +484,36 @@ func serveAssets(
 	assetServer.ServeHTTP(res, req)
 }
 
-// Server the service worker script file. It needs to be on the root scope, for
+// Serve the service worker script file. It needs to be on the root scope for
 // security reasons.
 func serverWorker(res http.ResponseWriter, req *http.Request) {
 	path := filepath.FromSlash(webRoot + "/js/scripts/worker.js")
 	http.ServeFile(res, req, path)
+}
+
+// Serve board-specific configuration JSON
+func serveBoardConfigs(
+	res http.ResponseWriter,
+	req *http.Request,
+	params map[string]string,
+) {
+	board := params["board"]
+	if !auth.IsNonMetaBoard(board) {
+		text404(res, req)
+		return
+	}
+
+	var conf config.BoardConfigs
+	if err := db.One(db.GetBoardConfig(board), &conf); err != nil {
+		textErrorPage(res, req, err)
+		return
+	}
+
+	data, err := conf.MarshalPublicJSON()
+	if err != nil {
+		textErrorPage(res, req, err)
+		return
+	}
+	setJSONCType(res)
+	writeData(res, req, data)
 }

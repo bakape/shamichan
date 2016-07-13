@@ -659,3 +659,28 @@ func (w *WebServer) TestServeWorker(c *C) {
 	w.r.ServeHTTP(rec, req)
 	assertBody(rec, "console.log(\"Worker dess\")\n", c)
 }
+
+func (d *DB) TestServeBoardConfigsInvalidBoard(c *C) {
+	(*config.Get()).Boards = []string{}
+	rec, req := newPair(c, "/json/boardConfig/a")
+	d.r.ServeHTTP(rec, req)
+	assertCode(rec, 404, c)
+}
+
+func (d *DB) TestServeBoardConfigs(c *C) {
+	(*config.Get()).Boards = []string{"a"}
+	conf := config.BoardConfigs{
+		ID:       "a",
+		CodeTags: true,
+		Title:    "Animu",
+		Notice:   "Notice",
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+
+	std, err := conf.MarshalPublicJSON()
+	c.Assert(err, IsNil)
+
+	rec, req := newPair(c, "/json/boardConfig/a")
+	d.r.ServeHTTP(rec, req)
+	assertBody(rec, string(std), c)
+}

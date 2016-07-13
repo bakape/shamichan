@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"testing"
 
 	. "gopkg.in/check.v1"
@@ -36,4 +37,24 @@ func (*Tests) TestSetGetClient(c *C) {
 	json, jsonHash := GetClient()
 	c.Assert(json, DeepEquals, std)
 	c.Assert(jsonHash, Equals, hash)
+}
+func (*Tests) TestMarshalPublicBoardJSON(c *C) {
+	b := BoardConfigs{
+		CodeTags: true,
+		Spoiler:  "foo.png",
+		Title:    "Animu",
+	}
+	std := `
+{
+	"codeTags":true,
+	"spoiler":"foo.png",
+	"title":"Animu",
+	"notice":""
+}`
+	std = strings.Replace(std, "\t", "", -1)
+	std = strings.Replace(std, "\n", "", -1)
+
+	data, err := b.MarshalPublicJSON()
+	c.Assert(err, IsNil)
+	c.Assert(string(data), Equals, std)
 }

@@ -12,7 +12,6 @@ const break_re = new RegExp("(\\S{" + index.WORD_LENGTH_LIMIT + "})");
 
 class OneeSama {
 
-
 	readableUTCTime(d, seconds) {
 		let html = pad(d.getUTCDate()) + ' '
 			+ this.lang.year[d.getUTCMonth()] + ' '

@@ -88,25 +88,37 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 		if name == "" {
 			name = field.Name
 		}
-
-		if notFirst {
-			buf.WriteByte(',')
-		}
-		buf.WriteByte('"')
-		buf.WriteString(name)
-		buf.WriteString(`":`)
-
-		data, err := json.Marshal(v.Field(i).Interface())
-		if err != nil {
+		if err := writeField(name, notFirst, v.Field(i), buf); err != nil {
 			return nil, err
 		}
-		buf.Write(data)
 
 		notFirst = true
 	}
 	buf.WriteByte('}')
 
 	return buf.Bytes(), nil
+}
+
+func writeField(
+	name string,
+	notFirst bool,
+	field reflect.Value,
+	buf *bytes.Buffer,
+) error {
+	if notFirst {
+		buf.WriteByte(',')
+	}
+	buf.WriteByte('"')
+	buf.WriteString(name)
+	buf.WriteString(`":`)
+
+	data, err := json.Marshal(field.Interface())
+	if err != nil {
+		return err
+	}
+	buf.Write(data)
+
+	return nil
 }
 
 // Defaults contains the default server configuration values
@@ -137,11 +149,11 @@ var Defaults = Configs{
 type BoardConfigs struct {
 	PostParseConfigs
 	Spoilers  bool                `json:"spoilers" gorethink:"spoilers"`
-	CodeTags  bool                `json:"codeTags" gorethink:"codeTags"`
+	CodeTags  bool                `json:"codeTags" gorethink:"codeTags" public:"true"`
 	ID        string              `json:"id" gorethink:"id"`
-	Spoiler   string              `json:"spoiler" gorethink:"spoiler"`
-	Title     string              `json:"title" gorethink:"title"`
-	Notice    string              `json:"notice" gorethink:"notice"`
+	Spoiler   string              `json:"spoiler" gorethink:"spoiler" public:"true"`
+	Title     string              `json:"title" gorethink:"title" public:"true"`
+	Notice    string              `json:"notice" gorethink:"notice" public:"true"`
 	Eightball []string            `json:"eightball" gorethink:"eightball"`
 	Staff     map[string][]string `json:"staff" gorethink:"staff"`
 }
@@ -151,6 +163,33 @@ type PostParseConfigs struct {
 	ReadOnly     bool `json:"readOnly" gorethink:"readOnly"`
 	ForcedAnon   bool `json:"forcedAnon" gorethink:"forcedAnon"`
 	HashCommands bool `json:"hashCommands" gorethink:"hashCommands"`
+}
+
+// MarshalPublicJSON marshals the publically exposed fields of a board-specific
+// configuration
+func (b *BoardConfigs) MarshalPublicJSON() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	t := reflect.TypeOf(*b)
+	v := reflect.ValueOf(*b)
+	var notFirst bool
+
+	buf.WriteByte('{')
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Tag.Get("public") != "true" {
+			continue
+		}
+
+		err := writeField(t.Field(i).Tag.Get("json"), notFirst, v.Field(i), buf)
+		if err != nil {
+			return nil, err
+		}
+
+		notFirst = true
+	}
+	buf.WriteByte('}')
+
+	return buf.Bytes(), nil
 }
 
 // EightballDefaults contains the default eightball answer set

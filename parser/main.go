@@ -1,3 +1,4 @@
+// Package parser parses and verifies user-sent post data
 package parser
 
 import (
