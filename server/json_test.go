@@ -1,35 +1,15 @@
 package server
 
 import (
-	"errors"
-	"io/ioutil"
-	"log"
 	"net/http"
-	"net/http/httptest"
-	"os"
 	"strings"
-	"testing"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-	"github.com/dimfeld/httptreemux"
 	. "gopkg.in/check.v1"
 )
-
-const (
-	notFound = "404 Not found"
-)
-
-func Test(t *testing.T) { TestingT(t) }
-
-var genericImage = &types.Image{
-	ImageCommon: types.ImageCommon{
-		SHA1: "foo",
-	},
-}
 
 // Does not seem like we can easily resuse testing functions. Thus copy/paste
 // for now.
@@ -37,9 +17,19 @@ type DB struct {
 	r http.Handler
 }
 
-var testDBName string
-
 var _ = Suite(&DB{})
+
+var genericImage = &types.Image{
+	ImageCommon: types.ImageCommon{
+		SHA1: "foo",
+	},
+}
+
+func removeIndentation(s string) string {
+	s = strings.Replace(s, "\t", "", -1)
+	s = strings.Replace(s, "\n", "", -1)
+	return s
+}
 
 func (d *DB) SetUpSuite(c *C) {
 	db.DBName = db.UniqueDBName()
@@ -119,68 +109,6 @@ func setupPosts(c *C) {
 	c.Assert(db.Write(histUpdate), IsNil)
 }
 
-func dummyLog(n int) [][]byte {
-	log := make([][]byte, n)
-	for i := 0; i < n; i++ {
-		log[i] = []byte{1}
-	}
-	return log
-}
-
-type WebServer struct {
-	r http.Handler
-}
-
-var _ = Suite(&WebServer{})
-
-func (w *WebServer) SetUpSuite(c *C) {
-	webRoot = "test"
-	w.r = createRouter()
-}
-
-func (*WebServer) SetUpTest(_ *C) {
-	config.Set(config.Configs{
-		Boards: []string{"a", "c"},
-	})
-	config.SetClient(nil, "")
-}
-
-func (w *WebServer) TestAllBoardRedirect(c *C) {
-	rec := httptest.NewRecorder()
-	req := newRequest(c, "/")
-	w.r.ServeHTTP(rec, req)
-	assertCode(rec, 302, c)
-	c.Assert(rec.Header().Get("Location"), Equals, "/all/")
-}
-
-func assertEtag(rec *httptest.ResponseRecorder, etag string, c *C) {
-	c.Assert(rec.Header().Get("ETag"), Equals, etag)
-}
-
-func assertBody(rec *httptest.ResponseRecorder, body string, c *C) {
-	c.Assert(rec.Body.String(), DeepEquals, body)
-}
-
-func assertCode(rec *httptest.ResponseRecorder, status int, c *C) {
-	c.Assert(rec.Code, Equals, status)
-}
-
-func assertHeaders(c *C, rec *httptest.ResponseRecorder, h map[string]string) {
-	for key, val := range h {
-		c.Assert(rec.Header().Get(key), Equals, val)
-	}
-}
-
-func newRequest(c *C, url string) *http.Request {
-	req, err := http.NewRequest("GET", url, nil)
-	c.Assert(err, IsNil)
-	return req
-}
-
-func newPair(c *C, url string) (*httptest.ResponseRecorder, *http.Request) {
-	return httptest.NewRecorder(), newRequest(c, url)
-}
-
 func (w *WebServer) TestConfigServing(c *C) {
 	etag := "foo"
 	config.SetClient([]byte{1}, etag)
@@ -198,54 +126,6 @@ func (w *WebServer) TestConfigServing(c *C) {
 	assertCode(rec, 304, c)
 }
 
-func (w *WebServer) TestText404(c *C) {
-	rec, req := newPair(c, "/lalala/")
-	w.r.ServeHTTP(rec, req)
-	assertCode(rec, 404, c)
-	assertBody(rec, notFound, c)
-}
-
-func (w *WebServer) TestPanicHandler(c *C) {
-	webRoot = "test"
-	r := httptreemux.New()
-	h := wrapHandler(func(_ http.ResponseWriter, _ *http.Request) {
-		panic(errors.New("foo"))
-	})
-	r.GET("/panic", h)
-	r.PanicHandler = textErrorPage
-	rec := httptest.NewRecorder()
-	req := newRequest(c, "/panic")
-
-	// Prevent printing stack trace to terminal
-	log.SetOutput(ioutil.Discard)
-	r.ServeHTTP(rec, req)
-	log.SetOutput(os.Stdout)
-
-	assertCode(rec, 500, c)
-	assertBody(rec, "500 foo", c)
-}
-
-func (w *WebServer) TestText500(c *C) {
-	rec, req := newPair(c, "/")
-	text404(rec, req)
-	assertCode(rec, 404, c)
-	assertBody(rec, "404 Not found", c)
-}
-
-func (*WebServer) TestSetHeaders(c *C) {
-	// HTML
-	rec := httptest.NewRecorder()
-	const etag = "foo"
-	headers := map[string]string{
-		"X-Frame-Options": "sameorigin",
-		"Cache-Control":   "max-age=0, must-revalidate",
-		"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
-		"ETag":            etag,
-	}
-	setHeaders(rec, etag)
-	assertHeaders(c, rec, headers)
-}
-
 func (*WebServer) TestDetectLastN(c *C) {
 	// No lastN query string
 	req := newRequest(c, "/a/1")
@@ -258,139 +138,6 @@ func (*WebServer) TestDetectLastN(c *C) {
 	// ?lastN value beyond max
 	req = newRequest(c, "/a/1?lastN=1000")
 	c.Assert(detectLastN(req), Equals, 0)
-}
-
-func (*WebServer) TestImageServer(c *C) {
-	const (
-		truncated         = "/src/tis life.gif"
-		notFoundTruncated = "src/nobody here.gif"
-	)
-	imageWebRoot = "test"
-	path := imageWebRoot + truncated
-	notFound := imageWebRoot + notFoundTruncated
-
-	// Succesful first serve
-	rec, req := newPair(c, path)
-	params := map[string]string{
-		"path": truncated,
-	}
-	serveImages(rec, req, params)
-	buf, err := ioutil.ReadFile(path)
-	c.Assert(err, IsNil)
-	assertBody(rec, string(buf), c)
-	headers := map[string]string{
-		"Cache-Control":   "max-age=30240000",
-		"X-Frame-Options": "sameorigin",
-		"ETag":            "0",
-	}
-	assertHeaders(c, rec, headers)
-
-	// Fake etag validation
-	rec, req = newPair(c, path)
-	req.Header.Set("If-None-Match", "0")
-	serveImages(rec, req, params)
-	assertCode(rec, 304, c)
-
-	// Non-existing file
-	rec, req = newPair(c, notFound)
-	params["path"] = notFoundTruncated
-	serveImages(rec, req, params)
-	assertCode(rec, 404, c)
-}
-
-func (*WebServer) TestCompareEtag(c *C) {
-	// Etag comparison
-	rec, req := newPair(c, "/")
-	const etag = "foo"
-	req.Header.Set("If-None-Match", etag)
-	c.Assert(pageEtag(rec, req, etag), Equals, false)
-
-	rec, req = newPair(c, "")
-	headers := map[string]string{
-		"ETag":          etag,
-		"Cache-Control": "max-age=0, must-revalidate",
-	}
-	pageEtag(rec, req, etag)
-	assertHeaders(c, rec, headers)
-}
-
-func (*WebServer) TestEtagStart(c *C) {
-	c.Assert(etagStart(1), Equals, "W/1")
-}
-
-func (w *WebServer) TestServeIndexTemplate(c *C) {
-	const (
-		desktopUA = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 " +
-			"(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
-		mobileUA = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus" +
-			" Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko)" +
-			" Chrome/18.0.1025.166 Mobile Safari/535.19"
-	)
-	desktop := templates.Store{
-		HTML: []byte("desktop"),
-		Hash: "dhash",
-	}
-	mobile := templates.Store{
-		HTML: []byte("mobile"),
-		Hash: "mhash",
-	}
-	templates.Set("index", desktop)
-	templates.Set("mobile", mobile)
-	headers := map[string]string{
-		"Content-Type": "text/html",
-	}
-
-	// Desktop
-	rec, req := newPair(c, "/a/")
-	req.Header.Set("User-Agent", desktopUA)
-	w.r.ServeHTTP(rec, req)
-	assertBody(rec, string(desktop.HTML), c)
-	assertEtag(rec, desktop.Hash, c)
-	assertHeaders(c, rec, headers)
-
-	// Mobile
-	rec, req = newPair(c, "/a/")
-	req.Header.Set("User-Agent", mobileUA)
-	w.r.ServeHTTP(rec, req)
-	assertBody(rec, string(mobile.HTML), c)
-	assertEtag(rec, mobile.Hash+"-mobile", c)
-	assertHeaders(c, rec, headers)
-
-	// Etag matches
-	rec, req = newPair(c, "/a/")
-	req.Header.Set("If-None-Match", desktop.Hash)
-	w.r.ServeHTTP(rec, req)
-	assertCode(rec, 304, c)
-}
-
-func removeIndentation(s string) string {
-	s = strings.Replace(s, "\t", "", -1)
-	s = strings.Replace(s, "\n", "", -1)
-	return s
-}
-
-func (d *DB) TestThreadHTML(c *C) {
-	body := []byte("body")
-	templates.Set("index", templates.Store{
-		HTML: body,
-		Hash: "hash",
-	})
-	webRoot = "test"
-
-	// Unparsable thread number
-	rec, req := newPair(c, "/a/www")
-	d.r.ServeHTTP(rec, req)
-	assertCode(rec, 404, c)
-
-	// Non-existant thread
-	rec, req = newPair(c, "/a/22")
-	d.r.ServeHTTP(rec, req)
-	assertCode(rec, 404, c)
-
-	// Thread exists
-	rec, req = newPair(c, "/a/1")
-	d.r.ServeHTTP(rec, req)
-	assertBody(rec, string(body), c)
 }
 
 func (d *DB) TestServePost(c *C) {
@@ -626,38 +373,6 @@ func (d *DB) TestThreadJSON(c *C) {
 	req.Header.Set("If-None-Match", etag)
 	d.r.ServeHTTP(rec, req)
 	assertCode(rec, 304, c)
-}
-
-func (w *WebServer) TestGzip(c *C) {
-	enableGzip = true
-	r := createRouter()
-	rec, req := newPair(c, "/json/config")
-	req.Header.Set("Accept-Encoding", "gzip")
-	r.ServeHTTP(rec, req)
-	c.Assert(rec.Header().Get("Content-Encoding"), Equals, "gzip")
-}
-
-func (w *WebServer) TestProxyHeaders(c *C) {
-	const ip = "68.180.194.242"
-	trustProxies = true
-	r := createRouter()
-	rec, req := newPair(c, "/json/config")
-	req.Header.Set("X-Forwarded-For", ip)
-	req.RemoteAddr = "1.2.3.4:1234"
-	r.ServeHTTP(rec, req)
-	c.Assert(req.RemoteAddr, Equals, ip+":1234")
-}
-
-func (w *WebServer) TestAssetServer(c *C) {
-	rec, req := newPair(c, "/assets/frontpage.html")
-	w.r.ServeHTTP(rec, req)
-	assertBody(rec, "<!doctype html><html></html>\n", c)
-}
-
-func (w *WebServer) TestServeWorker(c *C) {
-	rec, req := newPair(c, "/worker.js")
-	w.r.ServeHTTP(rec, req)
-	assertBody(rec, "console.log(\"Worker dess\")\n", c)
 }
 
 func (d *DB) TestServeBoardConfigsInvalidBoard(c *C) {
