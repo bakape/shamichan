@@ -4,7 +4,6 @@
 package config
 
 import (
-	"bytes"
 	"encoding/json"
 	"reflect"
 	"sync"
@@ -72,12 +71,11 @@ type Configs struct {
 // Only marshal JSON with the `public:"true"` tag for publicly exposed
 // configuration
 func (c *Configs) marshalPublicJSON() ([]byte, error) {
-	buf := new(bytes.Buffer)
 	t := reflect.TypeOf(*c)
 	v := reflect.ValueOf(*c)
-	var notFirst bool
 
-	buf.WriteByte('{')
+	// Copy the fields we need to a map
+	temp := make(map[string]interface{}, 9)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if field.Tag.Get("public") != "true" {
@@ -88,37 +86,10 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 		if name == "" {
 			name = field.Name
 		}
-		if err := writeField(name, notFirst, v.Field(i), buf); err != nil {
-			return nil, err
-		}
-
-		notFirst = true
+		temp[name] = v.Field(i).Interface()
 	}
-	buf.WriteByte('}')
 
-	return buf.Bytes(), nil
-}
-
-func writeField(
-	name string,
-	notFirst bool,
-	field reflect.Value,
-	buf *bytes.Buffer,
-) error {
-	if notFirst {
-		buf.WriteByte(',')
-	}
-	buf.WriteByte('"')
-	buf.WriteString(name)
-	buf.WriteString(`":`)
-
-	data, err := json.Marshal(field.Interface())
-	if err != nil {
-		return err
-	}
-	buf.Write(data)
-
-	return nil
+	return json.Marshal(temp)
 }
 
 // Defaults contains the default server configuration values
@@ -158,38 +129,45 @@ type BoardConfigs struct {
 	Staff     map[string][]string `json:"staff" gorethink:"staff"`
 }
 
-// PostParseConfigs contains board-specific flags for post text parsing
-type PostParseConfigs struct {
-	ReadOnly     bool `json:"readOnly" gorethink:"readOnly"`
-	ForcedAnon   bool `json:"forcedAnon" gorethink:"forcedAnon"`
-	HashCommands bool `json:"hashCommands" gorethink:"hashCommands"`
-}
-
 // MarshalPublicJSON marshals the publically exposed fields of a board-specific
 // configuration
 func (b *BoardConfigs) MarshalPublicJSON() ([]byte, error) {
-	buf := new(bytes.Buffer)
 	t := reflect.TypeOf(*b)
 	v := reflect.ValueOf(*b)
-	var notFirst bool
 
-	buf.WriteByte('{')
+	// Convert all the fields of PostParseConfigs
+	temp := b.PostParseConfigs.toMap(8)
+
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if field.Tag.Get("public") != "true" {
 			continue
 		}
-
-		err := writeField(t.Field(i).Tag.Get("json"), notFirst, v.Field(i), buf)
-		if err != nil {
-			return nil, err
-		}
-
-		notFirst = true
+		temp[t.Field(i).Tag.Get("json")] = v.Field(i).Interface()
 	}
-	buf.WriteByte('}')
 
-	return buf.Bytes(), nil
+	return json.Marshal(temp)
+}
+
+// PostParseConfigs contains board-specific flags for post text parsing
+type PostParseConfigs struct {
+	ReadOnly     bool `json:"readOnly" gorethink:"readOnly"`
+	TextOnly     bool `json:"textOnly" gorethink:"textOnly"`
+	ForcedAnon   bool `json:"forcedAnon" gorethink:"forcedAnon"`
+	HashCommands bool `json:"hashCommands" gorethink:"hashCommands"`
+}
+
+// Converts p to a a map[string]interface{} of desired length
+func (p PostParseConfigs) toMap(length int) map[string]interface{} {
+	t := reflect.TypeOf(p)
+	v := reflect.ValueOf(p)
+	m := make(map[string]interface{}, length)
+
+	for i := 0; i < t.NumField(); i++ {
+		m[t.Field(i).Tag.Get("json")] = v.Field(i).Interface()
+	}
+
+	return m
 }
 
 // EightballDefaults contains the default eightball answer set

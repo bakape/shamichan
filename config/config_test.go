@@ -41,15 +41,22 @@ func (*Tests) TestSetGetClient(c *C) {
 func (*Tests) TestMarshalPublicBoardJSON(c *C) {
 	b := BoardConfigs{
 		CodeTags: true,
-		Spoiler:  "foo.png",
-		Title:    "Animu",
+		PostParseConfigs: PostParseConfigs{
+			ReadOnly: true,
+		},
+		Spoiler: "foo.png",
+		Title:   "Animu",
 	}
 	std := `
 {
 	"codeTags":true,
+	"forcedAnon":false,
+	"hashCommands":false,
+	"notice":"",
+	"readOnly":true,
 	"spoiler":"foo.png",
-	"title":"Animu",
-	"notice":""
+	"textOnly":false,
+	"title":"Animu"
 }`
 	std = strings.Replace(std, "\t", "", -1)
 	std = strings.Replace(std, "\n", "", -1)
