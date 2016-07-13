@@ -17,7 +17,7 @@ var (
 	// Overridable for tests
 	imageAllocationTimeout = time.Minute * 15
 
-	errImageAllocationTimeour = errors.New("image allocation timeout")
+	errImageAllocationTimeout = errors.New("image allocation timeout")
 	errReadOnly               = errInvalidMessage("read only board")
 )
 
@@ -80,11 +80,13 @@ func insertThread(data []byte, c *Client) (err error) {
 	post.Links = res.Links
 	post.Commands = res.Commands
 
-	select {
-	case img := <-c.AllocateImage:
-		post.Image = &img
-	case <-time.Tick(imageAllocationTimeout):
-		return errImageAllocationTimeour
+	if !conf.TextOnly {
+		select {
+		case img := <-c.AllocateImage:
+			post.Image = &img
+		case <-time.Tick(imageAllocationTimeout):
+			return errImageAllocationTimeout
+		}
 	}
 
 	id, err := db.ReservePostID()

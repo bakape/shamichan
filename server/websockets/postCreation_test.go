@@ -1,11 +1,25 @@
 package websockets
 
 import (
+	"time"
+
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
+)
+
+var (
+	sampleThreadCreationRequest = types.ThreadCreationRequest{
+		PostCredentials: types.PostCredentials{
+			Name:     "name",
+			Password: "123",
+		},
+		Subject: "subject",
+		Board:   "a",
+		Body:    "body",
+	}
 )
 
 func (*DB) TestCreateThreadOnInvalidBoard(c *C) {
@@ -31,20 +45,8 @@ func (*DB) TestCreateThreadOnReadOnlyBoard(c *C) {
 }
 
 func (*DB) TestThreadCreation(c *C) {
-	mains := []map[string]interface{}{
-		{
-			"id":      "info",
-			"postCtr": 5,
-		},
-		{
-			"id": "boardCtrs",
-		},
-	}
-	c.Assert(db.Write(r.Table("main").Insert(mains)), IsNil)
-	conf := config.BoardConfigs{
-		ID: "a",
-	}
-	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	populateMainTable(c)
+	writeGenericBoardConfig(c)
 
 	sv := newWSServer(c)
 	defer sv.Close()
@@ -61,15 +63,6 @@ func (*DB) TestThreadCreation(c *C) {
 		sendImage <- img
 	}()
 
-	req := types.ThreadCreationRequest{
-		PostCredentials: types.PostCredentials{
-			Name:     "name",
-			Password: "123",
-		},
-		Subject: "subject",
-		Board:   "a",
-		Body:    "body",
-	}
 	std := types.DatabaseThread{
 		ID:      6,
 		Subject: "subject",
@@ -89,7 +82,8 @@ func (*DB) TestThreadCreation(c *C) {
 		Log: [][]byte{},
 	}
 
-	c.Assert(insertThread(marshalJSON(req, c), cl), IsNil)
+	data := marshalJSON(sampleThreadCreationRequest, c)
+	c.Assert(insertThread(data, cl), IsNil)
 	assertMessage(wcl, []byte("01true"), c)
 
 	var thread types.DatabaseThread
@@ -104,4 +98,62 @@ func (*DB) TestThreadCreation(c *C) {
 	std.Posts[6] = post
 
 	c.Assert(thread, DeepEquals, std)
+}
+
+func populateMainTable(c *C) {
+	mains := []map[string]interface{}{
+		{
+			"id":      "info",
+			"postCtr": 5,
+		},
+		{
+			"id": "boardCtrs",
+		},
+	}
+	c.Assert(db.Write(r.Table("main").Insert(mains)), IsNil)
+}
+
+func writeGenericBoardConfig(c *C) {
+	conf := config.BoardConfigs{
+		ID: "a",
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+}
+
+func (*DB) TestTextOnlyThreadCreation(c *C) {
+	populateMainTable(c)
+	conf := config.BoardConfigs{
+		ID: "a",
+		PostParseConfigs: config.PostParseConfigs{
+			TextOnly: true,
+		},
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	data := marshalJSON(sampleThreadCreationRequest, c)
+	c.Assert(insertThread(data, cl), IsNil)
+
+	var post types.Post
+	c.Assert(db.One(db.FindPost(6), &post), IsNil)
+	c.Assert(post.Image, IsNil)
+}
+
+func (*DB) TestThreadCreationImageTimeout(c *C) {
+	old := imageAllocationTimeout
+	imageAllocationTimeout = time.Second
+	defer func() {
+		imageAllocationTimeout = old
+	}()
+	populateMainTable(c)
+	writeGenericBoardConfig(c)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	data := marshalJSON(sampleThreadCreationRequest, c)
+
+	c.Assert(insertThread(data, cl), Equals, errImageAllocationTimeout)
 }
