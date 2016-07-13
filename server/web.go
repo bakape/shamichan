@@ -422,6 +422,17 @@ func servePost(
 	}
 
 	data, err := json.Marshal(post)
+	serveJSON(res, req, data, err)
+}
+
+// Serve JSON retrieved from the database and handle i ETag-related
+// functionality
+func serveJSON(
+	res http.ResponseWriter,
+	req *http.Request,
+	data []byte,
+	err error,
+) {
 	if err != nil {
 		textErrorPage(res, req, err)
 		return
@@ -431,8 +442,8 @@ func servePost(
 	if checkClientEtag(res, req, etag) {
 		return
 	}
-
 	setHeaders(res, etag)
+	setJSONCType(res)
 	writeData(res, req, data)
 }
 
@@ -510,10 +521,5 @@ func serveBoardConfigs(
 	}
 
 	data, err := conf.MarshalPublicJSON()
-	if err != nil {
-		textErrorPage(res, req, err)
-		return
-	}
-	setJSONCType(res)
-	writeData(res, req, data)
+	serveJSON(res, req, data, err)
 }
