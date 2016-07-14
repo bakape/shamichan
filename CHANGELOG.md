@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
 ##vNext
+* Add:
+	- Configurable board navigation panel
 * Change:
 	- Required Go version to 1.7
 	- Move origin configuration to server flag
