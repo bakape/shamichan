@@ -251,10 +251,8 @@ func (*ClientSuite) TestReceiverLoop(c *C) {
 	wg.Wait()
 }
 
-func (*ClientSuite) TestCheckOrigin(c *C) {
-	config.Set(config.Configs{
-		Origin: "fubar.com",
-	})
+func (*ClientSuite) TestCheck(c *C) {
+	config.AllowedOrigin = "fubar.com"
 
 	// No header
 	req := newRequest(c)

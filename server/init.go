@@ -10,6 +10,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/templates"
@@ -63,6 +64,12 @@ func Start() {
 		"trust-proxies",
 		false,
 		"honour X-Forwarded-For headers",
+	)
+	flag.StringVar(
+		&config.AllowedOrigin,
+		"origin",
+		"localhost:8000",
+		"outward origin of the server. Must match location.origin in the browser.",
 	)
 	flag.BoolVar(&enableGzip, "gzip", false, "compress all traffic with gzip")
 	flag.Usage = printUsage

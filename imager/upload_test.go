@@ -410,7 +410,7 @@ func (*Imager) TestUploadHandler(c *C) {
 
 	NewImageUpload(rec, req)
 	acao := rec.Header().Get("Access-Control-Allow-Origin")
-	c.Assert(acao, Equals, config.Get().Origin)
+	c.Assert(acao, Equals, config.AllowedOrigin)
 	c.Assert(rec.Code, Equals, 200)
 	wg.Wait()
 }

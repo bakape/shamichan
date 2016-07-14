@@ -5,6 +5,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 ##vNext
 * Change:
 	- Required Go version to 1.7
+	- Move origin configuration to server flag
 * Fix:
 	- Client HTTPS detection
 

@@ -66,9 +66,9 @@ func (e errInvalidSpoiler) Error() string {
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
-	conf := config.Get()
-	req.Body = http.MaxBytesReader(res, req.Body, conf.MaxSize*1024*1024)
-	res.Header().Set("Access-Control-Allow-Origin", conf.Origin)
+	maxSize := config.Get().MaxSize * 1024 * 1024
+	req.Body = http.MaxBytesReader(res, req.Body, maxSize)
+	res.Header().Set("Access-Control-Allow-Origin", config.AllowedOrigin)
 
 	code, err := newImageUpload(req)
 	if err != nil {

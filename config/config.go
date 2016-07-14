@@ -28,6 +28,10 @@ var (
 	// Hash of the gloabal configs. Used for live reloading configuration on the
 	// client.
 	hash string
+
+	// AllowedOrigin stores the accepted client origin for websocket and file
+	// upload requests. Set only on server start.
+	AllowedOrigin string
 )
 
 // Default string for the FAQ panel
@@ -58,7 +62,6 @@ type Configs struct {
 	ThreadCooldown int               `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
 	MaxSize        int64             `json:"maxSize" gorethink:"maxSize"`
 	DefaultLang    string            `json:"defaultLang" gorethink:"defaultLang" public:"true"`
-	Origin         string            `json:"origin" gorethink:"origin"`
 	DefaultCSS     string            `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
 	Salt           string            `json:"salt" gorethink:"salt"`
 	FeedbackEmail  string            `json:"feedbackEmail" gorethink:"feedbackEmail"`
@@ -106,7 +109,6 @@ var Defaults = Configs{
 	MaxWidth:       6000,
 	ThreadCooldown: 60,
 	SessionExpiry:  30,
-	Origin:         "localhost:8000",
 	DefaultCSS:     "moe",
 	Salt:           "LALALALALALALALALALALALALALALALALALALALA",
 	FeedbackEmail:  "admin@email.com",
