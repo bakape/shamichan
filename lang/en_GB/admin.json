@@ -56,10 +56,6 @@
 		"Account session expiry",
 		"Time in days until user accoubts are automatically logged out"
 	],
-	"origin": [
-		"HTTP origin",
-		"Outward origin of the server. Make sure both domain and port match the address your client is being served from."
-	],
 	"salt": [
 		"Secure salt",
 		"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
