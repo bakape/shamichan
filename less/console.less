@@ -9,13 +9,16 @@
 .act a {
 	color: white;
 }
+
 a:hover, #sync.error {
 	color: #e50000;
 }
+
 article, aside {
 	margin: 0;
 	padding: 10pt;
 }
+
 article {
 	form {
 		margin-top: 10pt;
@@ -30,21 +33,25 @@ article {
 		}
 	}
 }
+
 b {
 	font-weight: normal;
 }
+
 b.admin {
 	&, code {
 		background-color: #e50000;
 		color: black;
 	}
 }
+
 b.moderator {
 	&, code {
 		background-color: #00e500;
 		color: black;
 	}
 }
+
 blockquote {
 	margin: 10pt 0 0 0;
 	max-width: 80em;
@@ -56,19 +63,23 @@ blockquote {
 		font-weight: normal;
 	}
 }
+
 header a {
 	color: #00a5b2;
 }
+
 body {
 	background-color: #050505;
 	margin: 0;
 	padding: 0;
 }
+
 body, pre, .themed, fieldset input {
 	font-family: Monaco, "Andale Mono", Courier, monospace;
 	font-size: 10pt;
 	color: #ccc;
 }
+
 del, del em {
 	&, em {
 		background-color: white;
@@ -80,18 +91,11 @@ del, del em {
 		}
 	}
 }
+
 em {
 	color: #b200b2;
 }
-fieldset {
-	input{
-		background-color: transparent;
-		border: solid 1px gray;
-	}
-	label {
-		color: gray;
-	}
-}
+
 .embed {
 	background-color: rgba(255, 255, 255, 0.25);
 	border-radius: 0;
@@ -100,42 +104,54 @@ fieldset {
 	margin: 0;
 	padding: 0;
 }
+
 code {
 	color: #5833fe;
 }
+
 figcaption, figcaption a {
 	&, a {
 		color: #989800;
 		text-transform: lowercase;
 	}
 }
+
 header {
 	color: gray;
 }
+
 h1, h2 {
 	color: white;
 	font-size: inherit;
 	font-weight: bold;
 }
-h1:before {
-	content: "= ";
+
+h1 {
+	&:before {
+		content: "= ";
+	}
+	&:after {
+		content: " =";
+	}
 }
-h1:after {
-	content: " =";
-}
+
 h3 {
 	color: #0e0;
 }
+
 hr {
 	visibility: hidden;
 }
+
 .popup-menu li:hover {
 	background-color: white;
 }
+
 section {
 	margin: 30pt 10pt 10pt 10pt;
 	padding: 0;
 }
+
 small {
 	font-size: 10pt;
 	color: #444;
@@ -143,36 +159,46 @@ small {
 		color: #666;
 	}
 }
+
 .act, .omit {
 	color: #444;
 }
+
 .act:before {
 	content: ">";
 }
+
 .act:after {
 	content: "<";
 }
+
 .email {
 	color: #2020ff;
 }
-.modal, .banner-modal, .preview, .popup-menu {
+
+.modal, .preview, .popup-menu {
 	border: @border;
 	background: black;
 }
+
 #feedback {
 	right: 0;
 	top: 5pt;
 }
+
 #input {
 	margin-bottom: -4px;
 }
+
 #lock {
 	background-image: none;
 }
+
 // Override default with a fully opaque banner
 #banner {
 	background: black;
 }
+
 a.tab-sel {
 	outline: double;
 }
