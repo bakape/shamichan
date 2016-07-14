@@ -121,7 +121,7 @@ connSM.act([connState.loading], connEvent.start, connState.connecting, () => {
 	connect()
 })
 
-const path = (location.protocol === 'https' ? 'wss' : 'ws')
+const path = (location.protocol === 'https:' ? 'wss' : 'ws')
 	+ `://${location.host}/socket`
 
 function connect() {
