@@ -21,11 +21,14 @@ func (*Auth) TestLookupIdent(c *C) {
 
 func (*Auth) TestIsBoard(c *C) {
 	config.Set(config.Configs{
-		Boards: []string{"a"},
+		Boards: []string{"a", ":^)"},
 	})
 
 	// Board exists
 	c.Assert(IsBoard("a"), Equals, true)
+
+	// Non-alphanumeric board name
+	c.Assert(IsBoard(`:%5E%29`), Equals, true)
 
 	// Board doesn't exist
 	c.Assert(IsBoard("b"), Equals, false)

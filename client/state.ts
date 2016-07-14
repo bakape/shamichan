@@ -69,7 +69,7 @@ function read(href: string): PageState {
 		thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
 		lastN = href.match(/[\?&]last=(\d+)/)
 	return {
-		board,
+		board: decodeURIComponent(board),
 		thread: thread ? parseInt(thread[1]) : 0,
 		lastN: lastN ? parseInt(lastN[1]) : 0,
 	} as PageState
