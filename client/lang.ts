@@ -60,6 +60,8 @@ type LnUI = {
 	done: string
 	send: string
 	add: string
+	apply: string
+	search: string
 	[index: string]: string
 }
 

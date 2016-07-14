@@ -70,6 +70,7 @@
 	var functionTests = [
 		'Promise',
 		'Proxy',
+		'Array.prototype.includes',
 
 		// Fetch API
 		'window.fetch',

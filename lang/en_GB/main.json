@@ -19,7 +19,9 @@
 		"cancel": "Cancel",
 		"done": "Done",
 		"send": "Send",
-		"add": "Add"
+		"add": "Add",
+		"apply": "Apply",
+		"search": "Search"
 	},
 
 	"banner": {
@@ -45,7 +47,6 @@
 
 	"navigation": {
 		"seeAll": "See all",
-		"search": "Search",
 		"report": "Report",
 		"focus": "Focus",
 		"last": "Last",
