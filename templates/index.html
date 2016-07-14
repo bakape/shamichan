@@ -11,12 +11,16 @@
 	<link rel="stylesheet" id="theme" href="/assets/css/{{.DefaultCSS}}.css">
 	<!-- Configuration injection see ./tmpl/tmpl.go !-->
 	<script>
-		var config = {{.Config}}, configHash = '{{.ConfigHash}}', isMobile = {{.IsMobile}}
+		var config = {{.Config}},
+			configHash = '{{.ConfigHash}}',
+			isMobile = {{.IsMobile}}
 	</script>
 	<!-- Load theme CSS !-->
 	<script>
-		if (localStorage.theme !== config.DefaultCSS)
-			document.getElementById('theme').href ='/assets/css/'+ localStorage.theme + '.css'
+		if (localStorage.theme !== config.DefaultCSS) {
+			document.getElementById('theme').href =
+				'/assets/css/'+ localStorage.theme + '.css'
+		}
 	</script>
 	<noscript>
 		<h1 id="noscriptHeader">
@@ -185,4 +189,8 @@
 	<!-- Dynamic module loader!-->
 	<script src="/assets/js/vendor/system.js"></script>
 	<script src="/assets/js/scripts/loader.js"></script>
+	{{if .Captcha -}}
+	<!-- Captcha script !-->
+	<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>
+	{{- end}}
 </body>

@@ -53,6 +53,7 @@ var clientFileHash string
 
 type vars struct {
 	IsMobile   bool
+	Captcha    bool
 	Config     template.JS
 	Navigation template.HTML
 	FAQ        template.HTML
@@ -70,6 +71,7 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 	v := vars{
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,
+		Captcha:    conf.Captcha,
 
 		// Replace all newlines in the FAQ with `<br>`
 		FAQ:        template.HTML(strings.Replace(conf.FAQ, "\n", "<br>", -1)),

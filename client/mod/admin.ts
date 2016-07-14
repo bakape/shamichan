@@ -58,6 +58,18 @@ const specs: InputSpec[] = [
 		type: inputType.string,
 	},
 	{
+		name: "captcha",
+		type: inputType.boolean,
+	},
+	{
+		name: "captchaPublicKey",
+		type: inputType.string,
+	},
+	{
+		name: "captchaPrivateKey",
+		type: inputType.string,
+	},
+	{
 		name: 'sessionExpiry',
 		type: inputType.number,
 		min: 1,
