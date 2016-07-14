@@ -54,10 +54,6 @@ const specs: InputSpec[] = [
 		min: 0,
 	},
 	{
-		name: "origin",
-		type: inputType.string,
-	},
-	{
 		name: "salt",
 		type: inputType.string,
 	},
