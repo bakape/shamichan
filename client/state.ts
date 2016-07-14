@@ -2,11 +2,12 @@
 
 import {emitChanges} from './model'
 import {Post} from './posts/models'
-import Collection from './collection'
+import PostCollection from './posts/collection'
 import {getID} from './util'
 import {db} from './db'
 import {write} from './render'
 import {send} from './connection'
+import PostView from './posts/view'
 
 // Allows us to typecheck configs. See config/defaults.json for more info.
 type Configs = {
@@ -45,7 +46,7 @@ export let boardConfig: BoardConfigs = {} as BoardConfigs
 export const page = emitChanges<PageState>(read(location.href))
 
 // All posts currently displayed
-export const posts = new Collection<Post>()
+export const posts = new PostCollection<Post<PostView<any>>>()
 
 // Posts I made in any tab
 export let mine: Set<number>
@@ -86,7 +87,7 @@ export async function loadFromDB() {
 }
 
 // Retrieve model of closest parent post
-export function getModel(el: Element): Post {
+export function getModel(el: Element): Post<PostView<any>> {
 	const id = getID(el)
 	if (!id) {
 		return null

@@ -1,7 +1,7 @@
-import Model from './model'
+import {Post} from './models'
 
 // Holds a collection of models
-export default class Collection<M extends Model> {
+export default class PostCollection<M extends Post<any>> {
 	models: {[key: string]: M} = {}
 
 	// Creates a new Collection instance, with optional starting set of models

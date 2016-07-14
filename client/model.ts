@@ -1,37 +1,8 @@
-import Collection from './collection'
-import View from './view'
-
 export type ModelAttrs = {[attr: string]: any}
 
 // Generic model class, that all other model classes extend
 export default class Model {
 	id: number
-	collection: Collection<Model>
-	views: Set<View<Model>> = new Set<View<Model>>()
-
-	constructor() {}
-
-	// Remove the model from its collection, detach all references and allow to
-	// be garbage collected.
-	remove() {
-		if (this.collection) {
-			this.collection.remove(this)
-		}
-		for (let view of this.views) {
-			view.remove()
-		}
-	}
-
-	// Attach a view to the model. Each model can have several views attached to
-	// it.
-	attach(view: View<Model>) {
-		this.views.add(view)
-	}
-
-	// Detach a view from the model
-	detach(view: View<Model>) {
-		this.views.delete(view)
-	}
 
 	[index: string]: any
 }

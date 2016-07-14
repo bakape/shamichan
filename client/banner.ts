@@ -8,6 +8,7 @@ import {banner as lang} from './lang'
 import {write, read} from './render'
 import {setLabel, find} from './util'
 import Model from './model'
+import View from './view'
 
 // Highlight options button by fading out and in, if no options are set
 function highlightBanner(name: string) {
@@ -55,7 +56,7 @@ export const bannerModals: {[key: string]: BannerModal<any>} = {}
 let visible: BannerModal<any>
 
 // A modal element, that is positioned fixed right beneath the banner
-export class BannerModal<M extends Model> extends Modal<M> {
+export class BannerModal<M> extends Modal<M> {
 	constructor(args: ViewAttrs) {
 		super(args)
 		bannerModals[this.id] = this
@@ -94,7 +95,7 @@ export class BannerModal<M extends Model> extends Modal<M> {
 }
 
 // A view that supports switching between multiple tabs
-export class TabbedModal<M extends Model> extends BannerModal<M> {
+export class TabbedModal<M> extends BannerModal<M> {
 	constructor(args: ViewAttrs) {
 		super(args)
 		this.onClick({'.tab-link': e => this.switchTab(e)})

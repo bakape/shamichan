@@ -24,6 +24,12 @@ export type InputSpec = {
 	[index: string]: any
 }
 
+type FormHandler = (form: Element) => void
+
+interface FormViewAttrs extends ViewAttrs {
+	parent?: AccountPanel
+}
+
 // Render a form input element for consumption by ../util.table
 export function renderInput(spec: InputSpec): string[] {
 	const attrs: StringMap = {
@@ -132,18 +138,16 @@ function renderLabel(spec: InputSpec): string {
 	<br>`
 }
 
-type FormHandler = (form: Element) => void
-
 // Generic input form that is embedded into AccountPanel. Takes the parent
 // AccountPanel view and function for extracting the form and sending the
 // request as parameters.
-export class FormView<M extends Model> extends View<M> {
-	parent: AccountPanel
+export class FormView<M> extends View<M> {
 	handleForm: FormHandler // Function used for sending the form to the client
+	parent: AccountPanel
 
-	constructor(attrs: ViewAttrs, handler: FormHandler) {
+	constructor(attrs: FormViewAttrs, handler: FormHandler) {
 		super(attrs)
-		this.parent = attrs.parent as AccountPanel
+		this.parent = attrs.parent
 		this.handleForm = handler
 		this.onClick({
 			"input[name=cancel]": () =>

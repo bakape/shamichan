@@ -7,7 +7,7 @@ import {escape} from '../../util'
 let refTargets: StringMap
 
 // Render the text body of a post
-export function renderBody(data: Post): string {
+export function renderBody(data: Post<any>): string {
 	if (!data.state) {
 		// Initial post state [new_line, no_qoute, no_spoiler]
 		data.state = [0, 0, 0]
@@ -23,7 +23,7 @@ export function renderBody(data: Post): string {
 }
 
 // Parse commited text body fragment
-export function renderFragment(frag: string, data: Post): string {
+export function renderFragment(frag: string, data: Post<any>): string {
 	const lines = frag.split('\n'),
 		{state} = data
 	let html = ''
@@ -58,7 +58,7 @@ export function renderFragment(frag: string, data: Post): string {
 }
 
 // Convert a word to it's appropriate HTML representation
-function parseWord(word: string, data: Post): string {
+function parseWord(word: string, data: Post<any>): string {
 	// `[spoiler]` and `[/spoiler]` are treated the same way. You can't nest
 	// them.
 	const split = word.split(/\[\/?spoiler]|\*\*/)

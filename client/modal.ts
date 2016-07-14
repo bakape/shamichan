@@ -2,7 +2,7 @@ import {default as View, ViewAttrs} from './view'
 import Model from './model'
 
 // Modal elements, that float above other content
-export default class Modal<M extends Model> extends View<M> {
+export default class Modal<M> extends View<M> {
 	constructor(args: ViewAttrs) {
 		// Child classes must always pass a ViewAttrs object
 		const addClass = 'modal glass'

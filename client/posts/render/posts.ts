@@ -32,7 +32,7 @@ export function renderArticle(data: Reply): string {
 		</article>`
 }
 
-function renderPost(data: Post): string {
+function renderPost(data: Post<any>): string {
 	const {body, backlinks} = data
 
 	return HTML
