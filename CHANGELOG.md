@@ -8,6 +8,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Move origin configuration to server flag
 * Fix:
 	- Client HTTPS detection
+	- SystemJS not loading in Palemoon
 
 ##v2.1.0-alpha - 2016-07-04
 * License:

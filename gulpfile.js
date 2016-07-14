@@ -70,6 +70,8 @@ gulp.task('vendor', () => {
 	const paths = [
 		'systemjs/dist/system.js',
 		'systemjs/dist/system.js.map',
+		'systemjs/dist/system-polyfills.js',
+		'systemjs/dist/system-polyfills.js.map',
 		'dom4/build/dom4.js',
 		"babel-polyfill/dist/polyfill.min.js"
 	]
