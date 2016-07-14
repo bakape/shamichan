@@ -69,7 +69,7 @@ func Start() {
 		&config.AllowedOrigin,
 		"origin",
 		"localhost:8000",
-		"outward origin of the server. Must match location.origin in the browser.",
+		"outward origin of the server. Must match location.host in the browser.",
 	)
 	flag.BoolVar(&enableGzip, "gzip", false, "compress all traffic with gzip")
 	flag.Usage = printUsage
