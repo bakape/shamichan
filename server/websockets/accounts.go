@@ -175,6 +175,10 @@ func login(data []byte, c *Client) error {
 		return err
 	}
 
+	if !authenticateCaptcha(req.Captcha, c.IP) {
+		return c.sendMessage(messageLogin, invalidCaptcha)
+	}
+
 	hash, err := db.GetLoginHash(req.ID)
 	if err != nil {
 		if err == r.ErrEmptyResult {
