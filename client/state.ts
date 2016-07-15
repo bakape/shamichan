@@ -14,6 +14,8 @@ type Configs = {
 	radio: boolean
 	hats: boolean
 	illyaDance: boolean
+	captcha: boolean
+	captchaPublicKey: string
 	defaultLang: string
 	defaultCSS: string
 	FAQ: string
@@ -98,13 +100,12 @@ export function getModel(el: Element): Post<PostView<any>> {
 const $loading = document.querySelector('#loadingImage')
 
 // Display or hide the loading animation
-export function displayLoading(loading: boolean) {
+export const displayLoading = (loading: boolean) =>
 	write(() =>
 		$loading.style.display = loading ? 'block' : 'none')
-}
 
-; (window as any).debugMode = (setting: boolean) => {
-	debug = setting
+; (window as any).debugMode = () => {
+	debug = true
 	; (window as any).send = send
 }
 

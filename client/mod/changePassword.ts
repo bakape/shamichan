@@ -1,8 +1,10 @@
 import {table, makeAttrs, inputValue} from '../util'
-import {mod as lang} from '../lang'
+import {mod as lang, ui} from '../lang'
 import {write} from '../render'
 import {send, handlers, message} from '../connection'
-import AccountPanel, {validatePasswordMatch} from './login'
+import AccountPanel, {
+	validatePasswordMatch, responseCode, renderFormResponse
+} from './login'
 import {FormView} from './util'
 import Model from '../model'
 
@@ -23,7 +25,7 @@ export default class PasswordChangeView extends FormView<Model> {
 
 		validatePasswordMatch(this.el, "newPassword", "repeat")
 
-		handlers[message.changePassword] = (msg: boolean) =>
+		handlers[message.changePassword] = (msg: responseCode) =>
 			this.handleResponse(msg)
 	}
 
@@ -48,16 +50,24 @@ export default class PasswordChangeView extends FormView<Model> {
 	}
 
 	// Handle the changePassword response from the server
-	handleResponse(success: boolean) {
-		write(() => {
-			if (success) {
-				this.remove()
-			} else {
-				this.el
-					.querySelector(".form-response")
-					.textContent = lang.wrongPassword
-			}
-		})
+	handleResponse(code: responseCode) {
+		let text: string
+		switch (code) {
+		case responseCode.success:
+			this.remove()
+			return
+		case responseCode.wrongCredentials:
+			text = lang.wrongPassword
+			break
+		case responseCode.invalidCaptcha:
+			text = ui.invalidCaptcha
+			break
+		default:
+			// Not supposed to happen, because of client-side form validation
+			text = lang.theFuck
+		}
+
+		renderFormResponse(this.el, text)
 	}
 
 	// Also remove the websocket message handler, so this instance can be GCed

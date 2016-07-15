@@ -21,7 +21,8 @@
 		"send": "Send",
 		"add": "Add",
 		"apply": "Apply",
-		"search": "Search"
+		"search": "Search",
+		"invalidCaptcha": "Invalid captcha"
 	},
 
 	"banner": {

@@ -62,6 +62,7 @@ type LnUI = {
 	add: string
 	apply: string
 	search: string
+	invalidCaptcha: string
 	[index: string]: string
 }
 
