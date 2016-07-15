@@ -53,7 +53,7 @@ type Configs struct {
 	Hats              bool   `json:"hats" gorethink:"hats" public:"true"`
 	IllyaDance        bool   `json:"illyaDance" gorethink:"illyaDance" public:"true"`
 	Pyu               bool   `json:"pyu" gorethink:"pyu"`
-	Captcha           bool   `json:"captcha" gorethink:"captcha" public="true"`
+	Captcha           bool   `json:"captcha" gorethink:"captcha" public:"true"`
 	MaxWidth          uint16 `json:"maxWidth" gorethink:"maxWidth"`
 	MaxHeight         uint16 `json:"maxHeight" gorethink:"maxHeight"`
 	MaxThreads        int    `json:"maxThreads" gorethink:"maxThreads"`
@@ -81,7 +81,7 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 	v := reflect.ValueOf(*c)
 
 	// Copy the fields we need to a map
-	temp := make(map[string]interface{}, 11)
+	temp := make(map[string]interface{}, 10)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if field.Tag.Get("public") != "true" {
