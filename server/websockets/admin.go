@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 
 	"github.com/bakape/meguca/db"
@@ -18,6 +19,7 @@ var (
 type boardCreationRequest struct {
 	Name  string `json:"name"`
 	Title string `json:"title"`
+	types.Captcha
 }
 
 // Board creation request responses
@@ -26,6 +28,8 @@ const (
 	boardNameTaken
 	boardNameTooLong
 	titleTooLong
+	noBoardName
+	invalidBoardCreationCaptcha
 )
 
 // Answer the admin account's requests for the current server configuration or
@@ -69,11 +73,20 @@ func createBoard(data []byte, c *Client) error {
 	if err := decodeMessage(data, &req); err != nil {
 		return err
 	}
-	if len(req.Name) > 3 {
-		return c.sendMessage(messageCreateBoard, boardNameTooLong)
+
+	var code int
+	switch {
+	case len(req.Name) > 3:
+		code = boardNameTooLong
+	case req.Name == "":
+		code = noBoardName
+	case len(req.Title) > 100:
+		code = titleTooLong
+	case !authenticateCaptcha(req.Captcha, c.IP):
+		code = invalidBoardCreationCaptcha
 	}
-	if len(req.Title) > 100 {
-		return c.sendMessage(messageCreateBoard, titleTooLong)
+	if code > 0 {
+		return c.sendMessage(messageCreateBoard, code)
 	}
 
 	q := r.Table("boards").Insert(config.BoardConfigs{

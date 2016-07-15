@@ -12,6 +12,7 @@ const enum responseCode {
 	boardNameTaken,
 	boardNameTooLong,
 	titleTooLong,
+	noBoardName,
 	invalidCaptcha,
 }
 

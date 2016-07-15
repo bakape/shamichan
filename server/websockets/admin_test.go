@@ -65,6 +65,13 @@ func (*DB) TestBpardNameTooLong(c *C) {
 	assertLoggedInResponse(req, createBoard, "123", []byte("402"), c)
 }
 
+func (*DB) TestNoBoardName(c *C) {
+	req := boardCreationRequest{
+		Title: "foo",
+	}
+	assertLoggedInResponse(req, createBoard, "123", []byte("404"), c)
+}
+
 func (*DB) TestBoardTitleTooLong(c *C) {
 	title, err := util.RandomID(101)
 	c.Assert(err, IsNil)
