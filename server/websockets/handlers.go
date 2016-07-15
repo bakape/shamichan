@@ -3,9 +3,8 @@
 package websockets
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -119,20 +118,24 @@ func authenticateCaptcha(captcha types.Captcha, ip string) bool {
 	}
 	res, err := http.PostForm("http://verify.solvemedia.com/papi/verify", data)
 	if err != nil {
-		log.Println(errCaptcha{err})
+		printCapthcaError(err)
 		return false
 	}
 	defer res.Body.Close()
 
-	buf, err := ioutil.ReadAll(res.Body)
+	reader := bufio.NewReader(res.Body)
+	status, err := reader.ReadString('\n')
 	if err != nil {
-		log.Println(errCaptcha{err})
+		printCapthcaError(err)
 		return false
 	}
-	lines := bytes.SplitN(buf, []byte{'\n'}, 1)
-	if string(lines[0]) != "true" {
+	if status != "true" {
 		return false
 	}
 
 	return true
+}
+
+func printCapthcaError(err error) {
+	log.Println(errCaptcha{err})
 }
