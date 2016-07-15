@@ -23,7 +23,8 @@ type Session struct {
 	Expires time.Time `gorethink:"expires"`
 }
 
-// Ident is used to verify a client's access and write permissions
+// Ident is used to verify a client's access and write permissions. Contains its
+// IP and logged in user data, if any.
 type Ident struct {
 	User
 	IP string

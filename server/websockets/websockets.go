@@ -86,7 +86,6 @@ type Client struct {
 	auth.Ident
 	conn         *websocket.Conn
 	ID           string
-	userID       string // ID an authenticated user, if currently logged in
 	sessionToken string // Token of an authenticated user session, if any
 	util.AtomicCloser
 	updateFeedCloser *util.AtomicCloser
