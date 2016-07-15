@@ -243,4 +243,4 @@ export const renderFormResponse = (el: Element, text: string) =>
 	write(() =>
 		el
 		.querySelector(".form-response")
-		.textContent = lang.wrongPassword)
+		.textContent = text)
