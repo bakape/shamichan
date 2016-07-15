@@ -4,12 +4,14 @@ import {TabbedModal} from '../banner'
 import {write} from '../render'
 import {defer} from '../defer'
 import {mod as lang, ui} from '../lang'
-import {on, loadModule, setLabel, inputValue} from '../util'
+import {on, loadModule, setLabel, inputValue, extend} from '../util'
 import {handlers, send, message} from '../connection'
 import Model from '../model'
+import CaptchaView, {Captcha} from '../captcha'
+import {config} from '../state'
 
 // Login/Registration request sent to the server through websocket
-type LoginRequest = {
+interface LoginRequest extends Captcha {
 	id: string
 	password: string
 }
@@ -41,6 +43,7 @@ export default class AccountPanel extends TabbedModal<Model> {
 		.querySelector("#login-form") as HTMLFormElement)
 	$register: HTMLFormElement = (this.el
 		.querySelector("#registration-form") as HTMLFormElement)
+	captcha: CaptchaView
 
 	constructor() {
 		super({el: document.querySelector('#account-panel')})
@@ -93,12 +96,29 @@ export default class AccountPanel extends TabbedModal<Model> {
 		}
 
 		setLabel(el, "repeat", lang.repeat)
+
+		if (config.captcha) {
+			this.captcha = new CaptchaView("login-captcha")
+		}
+	}
+
+	// Extract login ID and password from form and captcha data, if enabled
+	sendRequest(el: HTMLFormElement, type: message) {
+		const req: any = {}
+		for (let key of ['id', 'password']) {
+			req[key] = inputValue(el, key)
+		}
+		loginID = req.id
+		if (config.captcha) {
+			extend(req, this.captcha.data())
+		}
+		send(type, req)
 	}
 
 	// Handle login form
 	login(event: Event) {
 		event.preventDefault()
-		sendRequest(event.target as HTMLFormElement, message.login)
+		this.sendRequest(event.target as HTMLFormElement, message.login)
 	}
 
 	// Handle the login request response from the server.
@@ -133,7 +153,7 @@ export default class AccountPanel extends TabbedModal<Model> {
 	// Handle registration form
 	register(event: Event) {
 		event.preventDefault()
-		sendRequest(event.target as HTMLFormElement, message.register)
+		this.sendRequest(event.target as HTMLFormElement, message.register)
 	}
 
 	// Render board creation and management controls
@@ -176,28 +196,21 @@ export default class AccountPanel extends TabbedModal<Model> {
 
 	hideMenu() {
 		write(() =>
-			this.el.querySelector(".menu").style.display = "none")
-
+			this.el
+			.querySelector(".menu")
+			.style.display = "none")
 	}
 
 	unhideMenu() {
 		write(() =>
-			this.el.querySelector(".menu").style.display = "")
+			this.el
+			.querySelector(".menu")
+			.style.display = "")
 	}
 }
 
 defer(() =>
 	new AccountPanel())
-
-// Extract login ID and password from form
-function sendRequest(el: HTMLFormElement, type: message) {
-	const req: any = {}
-	for (let key of ['id', 'password']) {
-		req[key] = inputValue(el, key)
-	}
-	loginID = req.id
-	send(type, req)
-}
 
 // Send the authentication request to the server
 export function authenticate() {
@@ -226,9 +239,8 @@ const findInputEl = (parent: Element, name: string) =>
 	parent.querySelector(`input[name=${name}]`) as HTMLInputElement
 
 // Render a text comment about the response status below the text
-export function renderFormResponse(el: Element, text: string) {
+export const renderFormResponse = (el: Element, text: string) =>
 	write(() =>
 		el
 		.querySelector(".form-response")
 		.textContent = lang.wrongPassword)
-}
