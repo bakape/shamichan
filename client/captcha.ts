@@ -21,7 +21,7 @@ export default class CaptchaView extends View<Model> {
 
 	render() {
 		this.widget = ACPuzzle.create(config.captchaPublicKey, this.id, {
-			multi: true
+			multi: true,
 		})
 	}
 
@@ -34,8 +34,8 @@ export default class CaptchaView extends View<Model> {
 	// Returns the data from the captcha widget
 	data(): Captcha {
 		return {
-			captcha: ACPuzzle.get_response(),
-			captchaID: ACPuzzle.get_challenge(),
+			captcha: this.widget.get_response(),
+			captchaID: this.widget.get_challenge(),
 		}
 	}
 }
