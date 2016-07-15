@@ -82,8 +82,8 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	synced       bool // to any change feed and the global Clients map
-	ident        auth.Ident
+	synced bool // to any change feed and the global Clients map
+	auth.Ident
 	conn         *websocket.Conn
 	ID           string
 	userID       string // ID an authenticated user, if currently logged in
@@ -113,7 +113,7 @@ type receivedMessage struct {
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn) *Client {
 	return &Client{
-		ident:         auth.LookUpIdent(conn.RemoteAddr().String()),
+		Ident:         auth.LookUpIdent(conn.RemoteAddr().String()),
 		Send:          make(chan []byte),
 		close:         make(chan error),
 		receive:       make(chan receivedMessage),
@@ -312,7 +312,7 @@ func (c *Client) runHandler(typ messageType, msg []byte) error {
 
 // logError writes the client's websocket error to the error log (or stdout)
 func (c *Client) logError(err error) {
-	log.Printf("Error by %s: %v\n", c.ident.IP, err)
+	log.Printf("Error by %s: %v\n", c.IP, err)
 }
 
 // Close closes a websocket connection with the provided status code and

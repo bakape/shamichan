@@ -58,9 +58,9 @@ func (*Map) TestCountByIP(c *C) {
 		cls[i] = cl
 		m.Add(cl, "1")
 	}
-	cls[0].ident.IP = "foo"
-	cls[1].ident.IP = "foo"
-	cls[2].ident.IP = "bar"
+	cls[0].IP = "foo"
+	cls[1].IP = "foo"
+	cls[2].IP = "bar"
 
 	c.Assert(m.CountByIP(), Equals, 2)
 }

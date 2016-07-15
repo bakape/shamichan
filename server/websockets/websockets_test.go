@@ -130,7 +130,7 @@ func (*ClientSuite) TestNewClient(c *C) {
 	cl, wcl := sv.NewClient()
 	c.Assert(cl.ID, Equals, "")
 	c.Assert(cl.synced, Equals, false)
-	c.Assert(cl.ident, DeepEquals, auth.Ident{IP: wcl.LocalAddr().String()})
+	c.Assert(cl.Ident, DeepEquals, auth.Ident{IP: wcl.LocalAddr().String()})
 }
 
 func (*ClientSuite) TestLogError(c *C) {
@@ -141,7 +141,7 @@ func (*ClientSuite) TestLogError(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	cl.ident.IP = ip
+	cl.IP = ip
 	log := captureLog(func() {
 		cl.logError(errors.New(msg))
 	})

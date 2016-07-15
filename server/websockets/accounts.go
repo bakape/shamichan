@@ -8,9 +8,17 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	minIDLength       = 3
+	maxIDLength       = 20
+	minPasswordLength = 6
+	maxPasswordLength = 30
 )
 
 // Account registration and login response codes
@@ -24,6 +32,7 @@ const (
 	idTooLong
 	passwordTooShort
 	passwordTooLong
+	invalidCaptcha
 )
 
 var (
@@ -35,6 +44,7 @@ var (
 type loginRequest struct {
 	ID       string `json:"id"`
 	Password string `json:"password"`
+	types.Captcha
 }
 
 type loginResponse struct {
@@ -50,6 +60,7 @@ type authenticationRequest struct {
 type passwordChangeRequest struct {
 	Old string `json:"old"`
 	New string `json:"new"`
+	types.Captcha
 }
 
 // Register a new user account
@@ -63,7 +74,7 @@ func register(data []byte, c *Client) error {
 		return err
 	}
 
-	code, err := handleRegistration(req.ID, req.Password)
+	code, err := handleRegistration(req, c)
 	if err != nil {
 		return err
 	}
@@ -72,31 +83,31 @@ func register(data []byte, c *Client) error {
 }
 
 // Seperated into its own function for cleanliness and testability
-func handleRegistration(id, password string) (
+func handleRegistration(req loginRequest, c *Client) (
 	code loginResponseCode, err error,
 ) {
-	// Validate string lengths
+	// Validate string lengths and captcha, if enabled
 	switch {
-	case len(id) < 3:
+	case len(req.ID) < minIDLength:
 		code = idTooShort
-	case len(id) > 20:
+	case len(req.ID) > maxIDLength:
 		code = idTooLong
-	case len(password) < 6:
-		code = passwordTooShort
-	case len(password) > 30:
-		code = passwordTooLong
 	}
 	if code > 0 {
 		return
 	}
+	code = checkPasswordAndCaptcha(req.Password, c.IP, req.Captcha)
+	if code > 0 {
+		return
+	}
 
-	hash, err := util.PasswordHash(id, password)
+	hash, err := util.PasswordHash(req.ID, req.Password)
 	if err != nil {
 		return
 	}
 
 	// Check for collision and write to DB
-	err = db.RegisterAccount(id, hash)
+	err = db.RegisterAccount(req.ID, hash)
 	switch err {
 	case nil:
 		code = loginSuccess
@@ -105,6 +116,21 @@ func handleRegistration(id, password string) (
 		err = nil
 	}
 
+	return
+}
+
+// Check password length and authenticate captcha, if needed
+func checkPasswordAndCaptcha(password, ip string, captcha types.Captcha) (
+	code loginResponseCode,
+) {
+	switch {
+	case len(password) < minPasswordLength:
+		code = passwordTooShort
+	case len(password) > maxPasswordLength:
+		code = passwordTooLong
+	case !authenticateCaptcha(captcha, ip):
+		code = invalidCaptcha
+	}
 	return
 }
 
@@ -255,6 +281,11 @@ func changePassword(data []byte, c *Client) error {
 		return err
 	}
 
+	code := checkPasswordAndCaptcha(req.New, c.IP, req.Captcha)
+	if code > 0 {
+		return c.sendMessage(messageChangePassword, code)
+	}
+
 	// Get old hash
 	hash, err := db.GetLoginHash(c.userID)
 	if err != nil {
@@ -262,18 +293,17 @@ func changePassword(data []byte, c *Client) error {
 	}
 
 	// Validate old password
-	var success bool
 	err = util.ComparePassword(c.userID, req.Old, hash)
 	switch err {
 	case nil:
-		success = true
 	case bcrypt.ErrMismatchedHashAndPassword:
+		code = wrongCredentials
 	default:
 		return err
 	}
 
 	// If old password matched, write new hash to DB
-	if success {
+	if code == 0 {
 		hash, err := util.PasswordHash(c.userID, req.New)
 		if err != nil {
 			return err
@@ -288,5 +318,5 @@ func changePassword(data []byte, c *Client) error {
 		}
 	}
 
-	return c.sendMessage(messageChangePassword, success)
+	return c.sendMessage(messageChangePassword, code)
 }

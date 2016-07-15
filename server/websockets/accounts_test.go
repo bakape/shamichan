@@ -14,13 +14,13 @@ var (
 	wrongCredentialsResopnse = []byte(`34{"code":2,"session":""}`)
 )
 
-func (*DB) TestRegistrationStringValidations(c *C) {
+func (*DB) TestRegistrationValidations(c *C) {
 	r21, err := util.RandomID(21)
 	c.Assert(err, IsNil)
 	r31, err := util.RandomID(31)
 	c.Assert(err, IsNil)
 
-	samples := []struct {
+	samples := [...]struct {
 		id, password string
 		code         loginResponseCode
 	}{
@@ -31,7 +31,16 @@ func (*DB) TestRegistrationStringValidations(c *C) {
 	}
 
 	for _, s := range samples {
-		code, err := handleRegistration(s.id, s.password)
+		req := loginRequest{
+			ID:       s.id,
+			Password: s.password,
+		}
+		cl := &Client{
+			Ident: auth.Ident{
+				IP: "::1",
+			},
+		}
+		code, err := handleRegistration(req, cl)
 		c.Assert(err, IsNil)
 		c.Assert(code, Equals, s.code)
 	}
@@ -240,14 +249,14 @@ func (*DB) TestChangePassword(c *C) {
 		Old: "1234567",
 		New: new,
 	}
-	assertLoggedInResponse(req, changePassword, id, []byte("38false"), c)
+	assertLoggedInResponse(req, changePassword, id, []byte("382"), c)
 
 	// Correct password
 	req = passwordChangeRequest{
 		Old: old,
 		New: new,
 	}
-	assertLoggedInResponse(req, changePassword, id, []byte("38true"), c)
+	assertLoggedInResponse(req, changePassword, id, []byte("380"), c)
 
 	// Assert new hash matches new password
 	hash, err = db.GetLoginHash(id)
