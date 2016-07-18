@@ -144,11 +144,11 @@ func StreamUpdates(
 	initial := <-read
 
 	go func() {
+		defer cursor.Close()
 		for closer.IsOpen() {
 			// Several update messages may come from the feed at a time.
 			// Separate and send each individually.
-			messageStack := <-read
-			for _, msg := range messageStack {
+			for _, msg := range <-read {
 				write <- msg
 			}
 		}
