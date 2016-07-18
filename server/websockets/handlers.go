@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 
@@ -110,11 +111,16 @@ func authenticateCaptcha(captcha types.Captcha, ip string) bool {
 		return false
 	}
 
+	host, _, err := net.SplitHostPort(ip)
+	if err != nil {
+		printCapthcaError(err)
+		return false
+	}
 	data := url.Values{
 		"privatekey": {conf.CaptchaPrivateKey},
 		"challenge":  {captcha.CaptchaID},
 		"response":   {captcha.Captcha},
-		"remoteip":   {ip},
+		"remoteip":   {host},
 	}
 	res, err := http.PostForm("http://verify.solvemedia.com/papi/verify", data)
 	if err != nil {
