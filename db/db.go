@@ -219,7 +219,7 @@ func WriteBacklinks(id, op int64, board string, links types.LinkMap) error {
 
 	type msi map[string]interface{}
 
-	// 3rd level nesting update. Looks ugly, but run completely DB-side
+	// 3rd level nesting update. Looks ugly, but runs completely DB-side.
 	q := r.
 		Expr(targets).
 		ForEach(func(t r.Term) r.Term {

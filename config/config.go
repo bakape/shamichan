@@ -100,9 +100,6 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 
 // Defaults contains the default server configuration values
 var Defaults = Configs{
-	Prune:          false,
-	Hats:           false,
-	Radio:          false,
 	MaxThreads:     100,
 	MaxBump:        1000,
 	JPEGQuality:    80,

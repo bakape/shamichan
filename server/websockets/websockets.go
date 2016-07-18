@@ -65,15 +65,12 @@ func CheckOrigin(req *http.Request) bool {
 func Handler(res http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		log.Printf(
-			"Error upgrading to websockets: %s: %s\n",
-			req.RemoteAddr,
-			err,
-		)
+		ip := auth.GetIP(req)
+		log.Printf("Error upgrading to websockets: %s: %s\n", ip, err)
 		return
 	}
 
-	c := newClient(conn)
+	c := newClient(conn, req)
 	if err := c.Listen(); err != nil {
 		c.logError(err)
 	}
@@ -110,9 +107,9 @@ type receivedMessage struct {
 }
 
 // newClient creates a new websocket client
-func newClient(conn *websocket.Conn) *Client {
+func newClient(conn *websocket.Conn, req *http.Request) *Client {
 	return &Client{
-		Ident:         auth.LookUpIdent(conn.RemoteAddr().String()),
+		Ident:         auth.LookUpIdent(req),
 		Send:          make(chan []byte),
 		close:         make(chan error),
 		receive:       make(chan receivedMessage),

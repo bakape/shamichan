@@ -158,7 +158,7 @@ func commitLogin(code loginResponseCode, id string, c *Client) (err error) {
 		}
 
 		c.sessionToken = msg.Session
-		c.Ident.ID = id
+		c.UserID = id
 	}
 
 	return c.sendMessage(messageLogin, msg)
@@ -228,7 +228,7 @@ func authenticateSession(data []byte, c *Client) error {
 
 	if isSession {
 		c.sessionToken = req.Session
-		c.Ident.ID = req.ID
+		c.UserID = req.ID
 	}
 
 	return c.sendMessage(messageAuthenticate, isSession)
@@ -241,7 +241,7 @@ func logOut(_ []byte, c *Client) error {
 	}
 
 	// Remove current session from user's session document
-	query := db.GetAccount(c.Ident.ID).
+	query := db.GetAccount(c.UserID).
 		Update(map[string]r.Term{
 			"sessions": r.Row.
 				Field("sessions").
@@ -254,7 +254,7 @@ func logOut(_ []byte, c *Client) error {
 
 // Common part of both logout functions
 func commitLogout(query r.Term, c *Client) error {
-	c.Ident.ID = ""
+	c.UserID = ""
 	c.sessionToken = ""
 	if err := db.Write(query); err != nil {
 		return err
@@ -269,7 +269,7 @@ func logOutAll(_ []byte, c *Client) error {
 		return errNotLoggedIn
 	}
 
-	query := db.GetAccount(c.Ident.ID).
+	query := db.GetAccount(c.UserID).
 		Update(map[string][]string{
 			"sessions": []string{},
 		})
@@ -293,13 +293,13 @@ func changePassword(data []byte, c *Client) error {
 	}
 
 	// Get old hash
-	hash, err := db.GetLoginHash(c.Ident.ID)
+	hash, err := db.GetLoginHash(c.UserID)
 	if err != nil {
 		return err
 	}
 
 	// Validate old password
-	err = util.ComparePassword(c.Ident.ID, req.Old, hash)
+	err = util.ComparePassword(c.UserID, req.Old, hash)
 	switch err {
 	case nil:
 	case bcrypt.ErrMismatchedHashAndPassword:
@@ -310,12 +310,12 @@ func changePassword(data []byte, c *Client) error {
 
 	// If old password matched, write new hash to DB
 	if code == 0 {
-		hash, err := util.PasswordHash(c.Ident.ID, req.New)
+		hash, err := util.PasswordHash(c.UserID, req.New)
 		if err != nil {
 			return err
 		}
 
-		q := db.GetAccount(c.Ident.ID).
+		q := db.GetAccount(c.UserID).
 			Update(map[string][]byte{
 				"password": hash,
 			})

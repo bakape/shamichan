@@ -66,7 +66,7 @@ func assertValidLogin(req interface{}, fn handler, c *C) {
 
 	c.Assert(fn(marshalJSON(req, c), cl), IsNil)
 	c.Assert(cl.isLoggedIn(), Equals, true)
-	c.Assert(cl.Ident.ID, Not(Equals), "")
+	c.Assert(cl.UserID, Not(Equals), "")
 	_, msg, err := wcl.ReadMessage()
 	c.Assert(err, IsNil)
 	c.Assert(string(msg[:23]), Equals, `34{"code":0,"session":"`)
@@ -173,7 +173,7 @@ func (*DB) TestAuthentication(c *C) {
 	data := marshalJSON(req, c)
 	c.Assert(authenticateSession(data, cl), IsNil)
 	c.Assert(cl.sessionToken, Equals, session)
-	c.Assert(cl.Ident.ID, Equals, id)
+	c.Assert(cl.UserID, Equals, id)
 	assertMessage(wcl, []byte("35true"), c)
 }
 
@@ -203,12 +203,12 @@ func assertLogout(id string, fn handler, c *C) {
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 
-	cl.Ident.ID = id
+	cl.UserID = id
 	cl.sessionToken = "foo"
 
 	c.Assert(fn(nil, cl), IsNil)
 	assertMessage(wcl, []byte("36true"), c)
-	c.Assert(cl.Ident.ID, Equals, "")
+	c.Assert(cl.UserID, Equals, "")
 	c.Assert(cl.sessionToken, Equals, "")
 }
 
@@ -275,7 +275,7 @@ func assertLoggedInResponse(
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	cl.sessionToken = "foo"
-	cl.Ident.ID = id
+	cl.UserID = id
 	data := marshalJSON(req, c)
 	c.Assert(fn(data, cl), IsNil)
 	assertMessage(wcl, msg, c)

@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/gorilla/websocket"
 	. "gopkg.in/check.v1"
@@ -74,7 +73,7 @@ var dialer = websocket.Dialer{}
 
 func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 	wcl := dialServer(m.c, m.server)
-	return newClient(<-m.connSender), wcl
+	return newClient(<-m.connSender, httptest.NewRequest("GET", "/", nil)), wcl
 }
 
 func dialServer(c *C, sv *httptest.Server) *websocket.Conn {
@@ -127,10 +126,9 @@ func readWebsocketErrors(c *C, conn *websocket.Conn, sv *mockWSServer) {
 func (*ClientSuite) TestNewClient(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
-	cl, wcl := sv.NewClient()
+	cl, _ := sv.NewClient()
 	c.Assert(cl.ID, Equals, "")
 	c.Assert(cl.synced, Equals, false)
-	c.Assert(cl.Ident, DeepEquals, auth.Ident{IP: wcl.LocalAddr().String()})
 }
 
 func (*ClientSuite) TestLogError(c *C) {

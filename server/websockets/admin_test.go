@@ -22,7 +22,7 @@ func (*DB) TestServerConfigRequest(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	cl.Ident.ID = "admin"
+	cl.UserID = "admin"
 
 	c.Assert(configServer([]byte("null"), cl), IsNil)
 	msg, err := encodeMessage(messageConfigServer, config.Get())
@@ -42,7 +42,7 @@ func (*DB) TestServerConfigSetting(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	cl.Ident.ID = "admin"
+	cl.UserID = "admin"
 
 	req := config.Defaults
 	req.Boards = []string{"fa"}
@@ -135,9 +135,7 @@ func (*DB) TestNotBoardOwner(c *C) {
 	}
 	cl := &Client{
 		Ident: auth.Ident{
-			User: auth.User{
-				ID: "123",
-			},
+			UserID: "123",
 		},
 		sessionToken: "foo",
 	}

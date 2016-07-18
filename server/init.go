@@ -10,6 +10,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
@@ -27,6 +28,15 @@ var (
 	// Is assigned in ./daemon.go to control/spawn a daemon process. That file
 	// is never compiled on Windows and this function is never called.
 	handleDaemon func(string)
+
+	// CLI mode arguments and descriptions
+	arguments = map[string]string{
+		"start":   "start the meguca server",
+		"stop":    "stop a running daemonised meguca server",
+		"restart": "combination of stop + start",
+		"debug":   "start server in debug mode without deamonising (default)",
+		"help":    "print this help text",
+	}
 )
 
 // Start parses command line arguments and initializes the server.
@@ -58,18 +68,23 @@ func Start() {
 			"-ssl-key to be set",
 	)
 	flag.StringVar(&sslCert, "ssl-cert", "", "path to SSL certificate")
-	flag.StringVar(&sslKey, "ssl-key", "", "path to SSL key")
-	flag.BoolVar(
-		&trustProxies,
-		"trust-proxies",
-		false,
-		"honour X-Forwarded-For headers",
-	)
 	flag.StringVar(
 		&config.AllowedOrigin,
 		"origin",
 		"localhost:8000",
 		"outward origin of the server. Must match location.host in the browser.",
+	)
+	flag.BoolVar(
+		&auth.IsReverseProxied,
+		"reverse-proxied",
+		false,
+		"assume server is behind reverse proxy, when resolving client IPs",
+	)
+	flag.StringVar(
+		&auth.ReverseProxyIP,
+		"reverse-proxy-IP",
+		"",
+		"IP of the reverse proxy. Only needed, when reverse proxy is not on localhost.",
 	)
 	flag.BoolVar(&enableGzip, "gzip", false, "compress all traffic with gzip")
 	flag.Usage = printUsage
@@ -94,14 +109,6 @@ func Start() {
 	} else {
 		handleDaemon(arg)
 	}
-}
-
-var arguments = map[string]string{
-	"start":   "start the meguca server",
-	"stop":    "stop a running daemonised meguca server",
-	"restart": "combination of stop + start",
-	"debug":   "start server in debug mode without deamonising (default)",
-	"help":    "print this help text",
 }
 
 // Constructs and prints the CLI help text

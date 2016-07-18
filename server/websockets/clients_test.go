@@ -1,12 +1,17 @@
 package websockets
 
 import (
+	"github.com/bakape/meguca/config"
 	. "gopkg.in/check.v1"
 )
 
 type Map struct{}
 
 var _ = Suite(&Map{})
+
+func (*Map) SetUpTest(_ *C) {
+	config.Set(config.Configs{})
+}
 
 func (*Map) TestAddHasRemove(c *C) {
 	m := newClientMap()

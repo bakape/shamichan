@@ -35,7 +35,7 @@ const (
 // Answer the admin account's requests for the current server configuration or
 // set the server configuration to match the one sent from the admin account.
 func configServer(data []byte, c *Client) error {
-	if c.Ident.ID != "admin" {
+	if c.UserID != "admin" {
 		return errAccessDenied
 	}
 	if string(data) == "null" { // Request to send current configs
@@ -95,7 +95,7 @@ func createBoard(data []byte, c *Client) error {
 		Spoiler:   "default.jpg",
 		Eightball: config.EightballDefaults,
 		Staff: map[string][]string{
-			"owners": []string{c.Ident.ID},
+			"owners": []string{c.UserID},
 		},
 	})
 	if err := db.Write(q); r.IsConflictErr(err) {
@@ -131,7 +131,7 @@ func configBoard(data []byte, c *Client) error {
 	q := db.GetBoardConfig(req.ID).
 		Field("staff").
 		Field("owners").
-		Contains(c.Ident.ID).
+		Contains(c.UserID).
 		Default(false)
 	if err := db.One(q, &isOwner); err != nil {
 		return err
