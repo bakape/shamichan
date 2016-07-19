@@ -5,8 +5,8 @@ package websockets
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 
@@ -111,16 +111,11 @@ func authenticateCaptcha(captcha types.Captcha, ip string) bool {
 		return false
 	}
 
-	host, _, err := net.SplitHostPort(ip)
-	if err != nil {
-		printCapthcaError(err)
-		return false
-	}
 	data := url.Values{
 		"privatekey": {conf.CaptchaPrivateKey},
 		"challenge":  {captcha.CaptchaID},
 		"response":   {captcha.Captcha},
-		"remoteip":   {host},
+		"remoteip":   {ip},
 	}
 	res, err := http.PostForm("http://verify.solvemedia.com/papi/verify", data)
 	if err != nil {
@@ -135,7 +130,9 @@ func authenticateCaptcha(captcha types.Captcha, ip string) bool {
 		printCapthcaError(err)
 		return false
 	}
-	if status != "true" {
+	if status[:len(status)-1] != "true" {
+		reason, _ := reader.ReadString('\n')
+		printCapthcaError(errors.New(reason[:len(reason)-1]))
 		return false
 	}
 
