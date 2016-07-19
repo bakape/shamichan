@@ -3,8 +3,6 @@
 package websockets
 
 import (
-	"errors"
-
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
@@ -13,7 +11,7 @@ import (
 )
 
 var (
-	errAccessDenied = errors.New("access denied")
+	errAccessDenied = errInvalidMessage("access denied")
 )
 
 type boardCreationRequest struct {

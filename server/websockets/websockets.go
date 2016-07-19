@@ -147,10 +147,6 @@ outer:
 			if err != nil {
 				break outer
 			}
-		case <-c.AllocateImage:
-
-			// TODO: Image allocation
-
 		}
 	}
 

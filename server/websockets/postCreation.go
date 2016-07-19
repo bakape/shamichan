@@ -1,7 +1,6 @@
 package websockets
 
 import (
-	"errors"
 	"time"
 
 	"github.com/bakape/meguca/auth"
@@ -17,7 +16,7 @@ var (
 	// Overridable for tests
 	imageAllocationTimeout = time.Minute * 15
 
-	errImageAllocationTimeout = errors.New("image allocation timeout")
+	errImageAllocationTimeout = errInvalidMessage("image allocation timeout")
 	errReadOnly               = errInvalidMessage("read only board")
 )
 
