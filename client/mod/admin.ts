@@ -146,7 +146,8 @@ export default class ConfigPanel extends FormView<ServerConfigs> {
 		const attrs = {
 			parent,
 			model: new ServerConfigs(),
-			cls: 'wide-fields' // The panel needs much larger text inputs
+			cls: 'wide-fields', // The panel needs much larger text inputs
+			noCaptcha: true,
 		}
 		super(attrs, el =>
 			this.extractConfigs(el))

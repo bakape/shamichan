@@ -4,7 +4,9 @@ import {TabbedModal} from '../banner'
 import {write} from '../render'
 import {defer} from '../defer'
 import {mod as lang, ui} from '../lang'
-import {on, loadModule, setLabel, inputValue, extend} from '../util'
+import {
+	on, loadModule, setLabel, inputValue, extend, makeEl, each
+} from '../util'
 import {handlers, send, message} from '../connection'
 import Model from '../model'
 import CaptchaView, {Captcha} from '../captcha'
@@ -43,7 +45,7 @@ export default class AccountPanel extends TabbedModal<Model> {
 		.querySelector("#login-form") as HTMLFormElement)
 	$register: HTMLFormElement = (this.el
 		.querySelector("#registration-form") as HTMLFormElement)
-	captcha: CaptchaView
+	captchas: {[key: string]: CaptchaView}
 
 	constructor() {
 		super({el: document.querySelector('#account-panel')})
@@ -54,10 +56,8 @@ export default class AccountPanel extends TabbedModal<Model> {
 			this.login(e))
 
 		validatePasswordMatch(this.$register, "password", "repeat")
-
 		write(() =>
 			this.renderInitial())
-
 		this.onClick({
 			'#logout': () =>
 				this.logout(),
@@ -98,7 +98,10 @@ export default class AccountPanel extends TabbedModal<Model> {
 		setLabel(el, "repeat", lang.repeat)
 
 		if (config.captcha) {
-			this.captcha = new CaptchaView("login-captcha")
+			this.captchas = {
+				login: new CaptchaView("login-captcha"),
+				register: new CaptchaView("registration-captcha"),
+			}
 		}
 	}
 
@@ -109,8 +112,11 @@ export default class AccountPanel extends TabbedModal<Model> {
 			req[key] = inputValue(el, key)
 		}
 		loginID = req.id
-		if (config.captcha) {
-			extend(req, this.captcha.data())
+		if (this.captchas) {
+			const captcha = this.captchas[
+				type === message.login ? "login" : "register"
+			]
+			extend(req, captcha.data())
 		}
 		send(type, req)
 	}
@@ -147,6 +153,11 @@ export default class AccountPanel extends TabbedModal<Model> {
 			text = lang.theFuck
 		}
 
+		if (this.captchas) {
+			for (let key in this.captchas) {
+				this.captchas[key].reload()
+			}
+		}
 		renderFormResponse(this.el, text)
 	}
 
@@ -169,8 +180,11 @@ export default class AccountPanel extends TabbedModal<Model> {
 		if (loginID === "admin") {
 			menu += this.renderLink("configureServer")
 		}
-		write(() =>
-			this.el.innerHTML = `<div class="menu">${menu}</div>`)
+		write(() => {
+			each(this.el.children, el =>
+				el.style.display = "none")
+			this.el.append(makeEl(`<div class="menu">${menu}</div>`))
+		})
 	}
 
 	renderLink(name: string): string {

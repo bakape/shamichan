@@ -5,6 +5,7 @@ declare class ACPuzzleController  {
 	destroy(): void
 	get_challenge(): string
 	get_response(): string
+	reload(): void
 }
 
 interface ACPuzzleOptions {

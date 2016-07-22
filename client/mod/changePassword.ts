@@ -16,7 +16,7 @@ type PasswordChangeRequest = {
 // View for changing a password, that gets embedded below the parent view
 export default class PasswordChangeView extends FormView<Model> {
 	constructor(parent: AccountPanel) {
-		super({parent}, el =>
+		super({parent, id: "change-password"}, el =>
 			send(message.changePassword, {
 				old: inputValue(el, "oldPassword"),
 				new: inputValue(el, "newPassword"),
@@ -67,6 +67,7 @@ export default class PasswordChangeView extends FormView<Model> {
 			text = lang.theFuck
 		}
 
+		this.reloadCaptcha(code)
 		renderFormResponse(this.el, text)
 	}
 

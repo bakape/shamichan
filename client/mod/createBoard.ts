@@ -5,6 +5,7 @@ import {send, message, handlers} from '../connection'
 import {inputValue, table} from '../util'
 import {admin as lang, mod, fetchAdminPack, ui} from '../lang'
 import {write} from '../render'
+import {config} from '../state'
 
 // Response codes for board creation requests
 const enum responseCode {
@@ -19,11 +20,8 @@ const enum responseCode {
 // Panel view for creating boards
 export default class BoardCreationPanel extends FormView<Model> {
 	constructor(parent: AccountPanel) {
-		super({parent}, el =>
-			send(message.createBoard, {
-				name: inputValue(el, 'boardName'),
-				title: inputValue(el, 'boardTitle'),
-			}))
+		super({parent, id: "create-board"}, el =>
+			this.sendRequest(el))
 		fetchAdminPack().then(() =>
 			this.render())
 		handlers[message.createBoard] = (res: responseCode) =>
@@ -50,6 +48,15 @@ export default class BoardCreationPanel extends FormView<Model> {
 		super.remove()
 	}
 
+	sendRequest(el: Element) {
+		const req = {
+			name: inputValue(el, 'boardName'),
+			title: inputValue(el, 'boardTitle'),
+		}
+		this.injectCaptcha(req)
+		send(message.createBoard, req)
+	}
+
 	handleResponse(res: responseCode) {
 		let text: string
 		switch (res) {
@@ -66,6 +73,7 @@ export default class BoardCreationPanel extends FormView<Model> {
 			text = mod.theFuck // Should not happen
 		}
 
+		this.reloadCaptcha(res)
 		renderFormResponse(this.el, text)
 	}
 }

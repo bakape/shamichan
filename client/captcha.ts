@@ -9,13 +9,13 @@ export interface Captcha {
 	captchaID: string
 }
 
-// Wrapper around Solve Media's captcha service
+// Wrapper around Solve Media's captcha service AJAX API
 export default class CaptchaView extends View<Model> {
 	widget: ACPuzzleController
 	id: string
 
 	constructor(id: string) {
-		super({id: id})
+		super({el: document.getElementById(id)})
 		this.render()
 	}
 
@@ -23,6 +23,11 @@ export default class CaptchaView extends View<Model> {
 		this.widget = ACPuzzle.create(config.captchaPublicKey, this.id, {
 			multi: true,
 		})
+	}
+
+	// Load a new captcha
+	reload() {
+		this.widget.reload()
 	}
 
 	remove() {
