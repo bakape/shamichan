@@ -87,5 +87,17 @@
 	"boardTitle": [
 		"Board title",
 		"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
+	],
+	"captcha": [
+		"Captcha",
+		"Ask users to complete a captcha for certain tasks like registration and thread creation"
+	],
+	"captchaPublicKey": [
+		"Captcha public key",
+		"Key used for communicating with external captcha service"
+	],
+	"captchaPrivateKey": [
+		"Captcha private key",
+		"Key used for authenticating solved captchas server-side"
 	]
 }

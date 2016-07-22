@@ -19,9 +19,12 @@ func (d *DB) SetUpSuite(c *C) {
 	db.DBName = db.UniqueDBName()
 	c.Assert(db.Connect(), IsNil)
 	c.Assert(db.InitDB(), IsNil)
+	isTest = true
 }
+
 func (d *DB) TearDownSuite(c *C) {
 	c.Assert(db.Exec(r.DBDrop(db.DBName)), IsNil)
+	isTest = false
 }
 
 func (d *DB) SetUpTest(c *C) {

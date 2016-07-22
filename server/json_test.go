@@ -41,7 +41,6 @@ func (d *DB) SetUpSuite(c *C) {
 
 func (*DB) SetUpTest(c *C) {
 	enableGzip = false
-	trustProxies = false
 	for _, table := range db.AllTables {
 		c.Assert(db.Exec(r.Table(table).Delete()), IsNil)
 	}

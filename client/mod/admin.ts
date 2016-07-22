@@ -58,6 +58,18 @@ const specs: InputSpec[] = [
 		type: inputType.string,
 	},
 	{
+		name: "captcha",
+		type: inputType.boolean,
+	},
+	{
+		name: "captchaPublicKey",
+		type: inputType.string,
+	},
+	{
+		name: "captchaPrivateKey",
+		type: inputType.string,
+	},
+	{
 		name: 'sessionExpiry',
 		type: inputType.number,
 		min: 1,
@@ -134,7 +146,8 @@ export default class ConfigPanel extends FormView<ServerConfigs> {
 		const attrs = {
 			parent,
 			model: new ServerConfigs(),
-			cls: 'wide-fields' // The panel needs much larger text inputs
+			cls: 'wide-fields', // The panel needs much larger text inputs
+			noCaptcha: true,
 		}
 		super(attrs, el =>
 			this.extractConfigs(el))

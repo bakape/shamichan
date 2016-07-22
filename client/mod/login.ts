@@ -3,22 +3,31 @@
 import {TabbedModal} from '../banner'
 import {write} from '../render'
 import {defer} from '../defer'
-import {mod as lang} from '../lang'
-import {on, loadModule, setLabel, inputValue} from '../util'
+import {mod as lang, ui} from '../lang'
+import {
+	on, loadModule, setLabel, inputValue, extend, makeEl, each
+} from '../util'
 import {handlers, send, message} from '../connection'
 import Model from '../model'
+import CaptchaView, {Captcha} from '../captcha'
+import {config} from '../state'
 
 // Login/Registration request sent to the server through websocket
-type LoginRequest = {
+interface LoginRequest extends Captcha {
 	id: string
 	password: string
 }
 
-// Response codes of LoginResponse
-const enum responseCode {
+// Response codes for loging in, registration and password changing
+export const enum responseCode {
 	success,
 	nameTaken,
-	wrongCredentials
+	wrongCredentials,
+	idTooShort,
+	idTooLong,
+	passwordTooShort,
+	passwordTooLong,
+	invalidCaptcha,
 }
 
 // Login/Registration response received from the server
@@ -36,6 +45,7 @@ export default class AccountPanel extends TabbedModal<Model> {
 		.querySelector("#login-form") as HTMLFormElement)
 	$register: HTMLFormElement = (this.el
 		.querySelector("#registration-form") as HTMLFormElement)
+	captchas: {[key: string]: CaptchaView}
 
 	constructor() {
 		super({el: document.querySelector('#account-panel')})
@@ -46,10 +56,8 @@ export default class AccountPanel extends TabbedModal<Model> {
 			this.login(e))
 
 		validatePasswordMatch(this.$register, "password", "repeat")
-
 		write(() =>
 			this.renderInitial())
-
 		this.onClick({
 			'#logout': () =>
 				this.logout(),
@@ -69,8 +77,8 @@ export default class AccountPanel extends TabbedModal<Model> {
 
 		handlers[message.login] = (msg: LoginResponse) =>
 			this.loginResponse(msg)
-		handlers[message.authenticate]  = (msg: boolean) =>
-			this.authenticationResponse(msg)
+		handlers[message.authenticate]  = (success: boolean) =>
+			success && this.renderControls()
 	}
 
 	// Render localised labels to the login and registration forms
@@ -88,12 +96,35 @@ export default class AccountPanel extends TabbedModal<Model> {
 		}
 
 		setLabel(el, "repeat", lang.repeat)
+
+		if (config.captcha) {
+			this.captchas = {
+				login: new CaptchaView("login-captcha"),
+				register: new CaptchaView("registration-captcha"),
+			}
+		}
+	}
+
+	// Extract login ID and password from form and captcha data, if enabled
+	sendRequest(el: HTMLFormElement, type: message) {
+		const req: any = {}
+		for (let key of ['id', 'password']) {
+			req[key] = inputValue(el, key)
+		}
+		loginID = req.id
+		if (this.captchas) {
+			const captcha = this.captchas[
+				type === message.login ? "login" : "register"
+			]
+			extend(req, captcha.data())
+		}
+		send(type, req)
 	}
 
 	// Handle login form
 	login(event: Event) {
 		event.preventDefault()
-		sendRequest(event.target as HTMLFormElement, message.login)
+		this.sendRequest(event.target as HTMLFormElement, message.login)
 	}
 
 	// Handle the login request response from the server.
@@ -105,8 +136,7 @@ export default class AccountPanel extends TabbedModal<Model> {
 			sessionToken = session
 			localStorage.setItem("sessionToken", session)
 			localStorage.setItem("loginID", loginID)
-			write(() =>
-				this.renderControls())
+			this.renderControls()
 			return
 		case responseCode.nameTaken:
 			text = lang.nameTaken
@@ -114,21 +144,27 @@ export default class AccountPanel extends TabbedModal<Model> {
 		case responseCode.wrongCredentials:
 			text = lang.wrongCredentials
 			break
+		case responseCode.invalidCaptcha:
+			text = ui.invalidCaptcha
+			break
 		default:
 			// These response codes are never supposed to make it here, because
 			// of HTML5 form validation
 			text = lang.theFuck
 		}
 
-		this.el
-			.querySelector(".form-response")
-			.textContent = text
+		if (this.captchas) {
+			for (let key in this.captchas) {
+				this.captchas[key].reload()
+			}
+		}
+		renderFormResponse(this.el, text)
 	}
 
 	// Handle registration form
 	register(event: Event) {
 		event.preventDefault()
-		sendRequest(event.target as HTMLFormElement, message.register)
+		this.sendRequest(event.target as HTMLFormElement, message.register)
 	}
 
 	// Render board creation and management controls
@@ -144,7 +180,8 @@ export default class AccountPanel extends TabbedModal<Model> {
 		if (loginID === "admin") {
 			menu += this.renderLink("configureServer")
 		}
-		this.el.innerHTML = `<div class="menu">${menu}</div>`
+		write(() =>
+			this.el.innerHTML = `<div class="menu">${menu}</div>`)
 	}
 
 	renderLink(name: string): string {
@@ -158,12 +195,6 @@ export default class AccountPanel extends TabbedModal<Model> {
 		location.reload()
 	}
 
-	// Handle authentication response message
-	authenticationResponse(success: boolean) {
-		success && write(() =>
-			this.renderControls())
-	}
-
 	// Create handler for ynamically loading and rendering conditional view
 	// modules
 	loadConditionalView(path: string): EventListener {
@@ -175,26 +206,22 @@ export default class AccountPanel extends TabbedModal<Model> {
 	}
 
 	hideMenu() {
-		this.el.querySelector(".menu").style.display = "none"
+		write(() =>
+			this.el
+			.querySelector(".menu")
+			.style.display = "none")
 	}
 
 	unhideMenu() {
-		this.el.querySelector(".menu").style.display = ""
+		write(() =>
+			this.el
+			.querySelector(".menu")
+			.style.display = "")
 	}
 }
 
 defer(() =>
 	new AccountPanel())
-
-// Extract login ID and password from form
-function sendRequest(el: HTMLFormElement, type: message) {
-	const req: any = {}
-	for (let key of ['id', 'password']) {
-		req[key] = inputValue(el, key)
-	}
-	loginID = req.id
-	send(type, req)
-}
 
 // Send the authentication request to the server
 export function authenticate() {
@@ -215,10 +242,16 @@ export function validatePasswordMatch (
 	const el1 = findInputEl(parent, name1),
 		el2 = findInputEl(parent, name2)
 	el2.onchange = () =>
-		el2.value !== el1.value
-			? el2.setCustomValidity(lang.mustMatch)
-			: el2.setCustomValidity("")
+		el2.setCustomValidity(el2.value !== el1.value ? lang.mustMatch : "")
 }
 
+// Find an input element by name within a parent form element
 const findInputEl = (parent: Element, name: string) =>
 	parent.querySelector(`input[name=${name}]`) as HTMLInputElement
+
+// Render a text comment about the response status below the text
+export const renderFormResponse = (el: Element, text: string) =>
+	write(() =>
+		el
+		.querySelector(".form-response")
+		.textContent = text)

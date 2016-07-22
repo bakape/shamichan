@@ -1,10 +1,11 @@
 import {FormView, renderInput, InputSpec, inputType} from './util'
 import Model from '../model'
-import AccountPanel from './login'
+import AccountPanel, {renderFormResponse} from './login'
 import {send, message, handlers} from '../connection'
 import {inputValue, table} from '../util'
-import {admin as lang, mod, fetchAdminPack} from '../lang'
+import {admin as lang, mod, fetchAdminPack, ui} from '../lang'
 import {write} from '../render'
+import {config} from '../state'
 
 // Response codes for board creation requests
 const enum responseCode {
@@ -12,16 +13,15 @@ const enum responseCode {
 	boardNameTaken,
 	boardNameTooLong,
 	titleTooLong,
+	noBoardName,
+	invalidCaptcha,
 }
 
 // Panel view for creating boards
 export default class BoardCreationPanel extends FormView<Model> {
 	constructor(parent: AccountPanel) {
-		super({parent}, el =>
-			send(message.createBoard, {
-				name: inputValue(el, 'boardName'),
-				title: inputValue(el, 'boardTitle'),
-			}))
+		super({parent, id: "create-board"}, el =>
+			this.sendRequest(el))
 		fetchAdminPack().then(() =>
 			this.render())
 		handlers[message.createBoard] = (res: responseCode) =>
@@ -48,8 +48,17 @@ export default class BoardCreationPanel extends FormView<Model> {
 		super.remove()
 	}
 
+	sendRequest(el: Element) {
+		const req = {
+			name: inputValue(el, 'boardName'),
+			title: inputValue(el, 'boardTitle'),
+		}
+		this.injectCaptcha(req)
+		send(message.createBoard, req)
+	}
+
 	handleResponse(res: responseCode) {
-		let text = ""
+		let text: string
 		switch (res) {
 		case responseCode.boardCreated:
 			this.remove()
@@ -57,12 +66,14 @@ export default class BoardCreationPanel extends FormView<Model> {
 		case responseCode.boardNameTaken:
 			text = lang.boardNameTaken
 			break
+		case responseCode.invalidCaptcha:
+			text = ui.invalidCaptcha
+			break
 		default:
 			text = mod.theFuck // Should not happen
 		}
-		write(() =>
-			this.el
-			.querySelector(".form-response")
-			.textContent = text)
+
+		this.reloadCaptcha(res)
+		renderFormResponse(this.el, text)
 	}
 }

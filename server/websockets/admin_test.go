@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
@@ -9,9 +10,8 @@ import (
 )
 
 func (*DB) TestNotAdmin(c *C) {
-	cl := &Client{
-		userID: "foo",
-	}
+	cl := &Client{}
+	cl.ID = "foo"
 	for _, fn := range []handler{configServer} {
 		c.Assert(fn(nil, cl), Equals, errAccessDenied)
 	}
@@ -22,7 +22,7 @@ func (*DB) TestServerConfigRequest(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	cl.userID = "admin"
+	cl.UserID = "admin"
 
 	c.Assert(configServer([]byte("null"), cl), IsNil)
 	msg, err := encodeMessage(messageConfigServer, config.Get())
@@ -42,7 +42,7 @@ func (*DB) TestServerConfigSetting(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	cl.userID = "admin"
+	cl.UserID = "admin"
 
 	req := config.Defaults
 	req.Boards = []string{"fa"}
@@ -63,6 +63,13 @@ func (*DB) TestBpardNameTooLong(c *C) {
 		Title: "foo",
 	}
 	assertLoggedInResponse(req, createBoard, "123", []byte("402"), c)
+}
+
+func (*DB) TestNoBoardName(c *C) {
+	req := boardCreationRequest{
+		Title: "foo",
+	}
+	assertLoggedInResponse(req, createBoard, "123", []byte("404"), c)
 }
 
 func (*DB) TestBoardTitleTooLong(c *C) {
@@ -127,7 +134,9 @@ func (*DB) TestNotBoardOwner(c *C) {
 		ID: "a",
 	}
 	cl := &Client{
-		userID:       "123",
+		Ident: auth.Ident{
+			UserID: "123",
+		},
 		sessionToken: "foo",
 	}
 	data := marshalJSON(req, c)

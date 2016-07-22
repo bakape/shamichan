@@ -65,15 +65,12 @@ func CheckOrigin(req *http.Request) bool {
 func Handler(res http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		log.Printf(
-			"Error upgrading to websockets: %s: %s\n",
-			req.RemoteAddr,
-			err,
-		)
+		ip := auth.GetIP(req)
+		log.Printf("Error upgrading to websockets: %s: %s\n", ip, err)
 		return
 	}
 
-	c := newClient(conn)
+	c := newClient(conn, req)
 	if err := c.Listen(); err != nil {
 		c.logError(err)
 	}
@@ -82,11 +79,10 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	synced       bool // to any change feed and the global Clients map
-	ident        auth.Ident
+	synced bool // to any change feed and the global Clients map
+	auth.Ident
 	conn         *websocket.Conn
 	ID           string
-	userID       string // ID an authenticated user, if currently logged in
 	sessionToken string // Token of an authenticated user session, if any
 	util.AtomicCloser
 	updateFeedCloser *util.AtomicCloser
@@ -111,9 +107,9 @@ type receivedMessage struct {
 }
 
 // newClient creates a new websocket client
-func newClient(conn *websocket.Conn) *Client {
+func newClient(conn *websocket.Conn, req *http.Request) *Client {
 	return &Client{
-		ident:         auth.LookUpIdent(conn.RemoteAddr().String()),
+		Ident:         auth.LookUpIdent(req),
 		Send:          make(chan []byte),
 		close:         make(chan error),
 		receive:       make(chan receivedMessage),
@@ -151,10 +147,6 @@ outer:
 			if err != nil {
 				break outer
 			}
-		case <-c.AllocateImage:
-
-			// TODO: Image allocation
-
 		}
 	}
 
@@ -312,7 +304,7 @@ func (c *Client) runHandler(typ messageType, msg []byte) error {
 
 // logError writes the client's websocket error to the error log (or stdout)
 func (c *Client) logError(err error) {
-	log.Printf("Error by %s: %v\n", c.ident.IP, err)
+	log.Printf("Error by %s: %v\n", c.IP, err)
 }
 
 // Close closes a websocket connection with the provided status code and

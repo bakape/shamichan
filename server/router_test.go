@@ -67,14 +67,3 @@ func (w *WebServer) TestGzip(c *C) {
 	r.ServeHTTP(rec, req)
 	c.Assert(rec.Header().Get("Content-Encoding"), Equals, "gzip")
 }
-
-func (w *WebServer) TestProxyHeaders(c *C) {
-	const ip = "68.180.194.242"
-	trustProxies = true
-	r := createRouter()
-	rec, req := newPair(c, "/json/config")
-	req.Header.Set("X-Forwarded-For", ip)
-	req.RemoteAddr = "1.2.3.4:1234"
-	r.ServeHTTP(rec, req)
-	c.Assert(req.RemoteAddr, Equals, ip+":1234")
-}

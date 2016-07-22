@@ -1,9 +1,11 @@
-import {HTML, makeAttrs, makeEls} from '../util'
+import {HTML, makeAttrs, makeEls, extend} from '../util'
 import {mod as lang, ui} from '../lang'
 import View, {ViewAttrs} from '../view'
 import AccountPanel from './login'
 import {write, read} from '../render'
 import Model from '../model'
+import CaptchaView from '../captcha'
+import {config} from '../state'
 
 export const enum inputType {
 	boolean, number, string, select, multiline, map,
@@ -28,6 +30,7 @@ type FormHandler = (form: Element) => void
 
 interface FormViewAttrs extends ViewAttrs {
 	parent?: AccountPanel
+	noCaptcha?: boolean
 }
 
 // Render a form input element for consumption by ../util.table
@@ -144,11 +147,14 @@ function renderLabel(spec: InputSpec): string {
 export class FormView<M> extends View<M> {
 	handleForm: FormHandler // Function used for sending the form to the client
 	parent: AccountPanel
+	captcha: CaptchaView
+	noCaptcha: boolean
 
 	constructor(attrs: FormViewAttrs, handler: FormHandler) {
 		super(attrs)
 		this.parent = attrs.parent
 		this.handleForm = handler
+		this.noCaptcha = attrs.noCaptcha
 		this.onClick({
 			"input[name=cancel]": () =>
 				this.remove(),
@@ -164,9 +170,12 @@ export class FormView<M> extends View<M> {
 	// Render a form field and embed the input fields inside it. Then append it
 	// to the parrent view.
 	renderForm(fields: string) {
+		const captchaID = this.id + "-captcha"
+
 		this.el.innerHTML = HTML
 			`<form>
 				${fields}
+				<div id="${captchaID}"></div>
 				<input type="submit" value="${lang.submit}">
 				<input type="button" name="cancel" value="${ui.cancel}">
 			</form>
@@ -174,6 +183,9 @@ export class FormView<M> extends View<M> {
 		write(() => {
 			this.parent.hideMenu()
 			this.parent.el.append(this.el)
+			if (config.captcha && !this.noCaptcha) {
+				this.captcha = new CaptchaView(captchaID)
+			}
 		})
 	}
 
@@ -185,8 +197,25 @@ export class FormView<M> extends View<M> {
 
 	// Unhide the parent AccountPanel, when this view is removed
 	remove() {
+		if (this.captcha) {
+			this.captcha.remove()
+		}
 		super.remove()
 		this.parent.unhideMenu()
+	}
+
+	// Inject captcha data into the request struct, if any
+	injectCaptcha(req: {}) {
+		if (this.captcha) {
+			extend(req, this.captcha.data())
+		}
+	}
+
+	// Load a new captcha, if present and response code is not 0
+	reloadCaptcha(code: number) {
+		if (code !== 0 && this.captcha) {
+			this.captcha.reload()
+		}
 	}
 
 	// Render an additional map key-value input field pair

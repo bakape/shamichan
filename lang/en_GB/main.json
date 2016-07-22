@@ -21,7 +21,10 @@
 		"send": "Send",
 		"add": "Add",
 		"apply": "Apply",
-		"search": "Search"
+		"search": "Search",
+		"invalidCaptcha": "Invalid captcha",
+		"focusForCaptcha": "Focus to load captcha",
+		"reloadCaptcha": "Click to reload"
 	},
 
 	"banner": {

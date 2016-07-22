@@ -1,7 +1,6 @@
 package websockets
 
 import (
-	"errors"
 	"time"
 
 	"github.com/bakape/meguca/auth"
@@ -17,7 +16,7 @@ var (
 	// Overridable for tests
 	imageAllocationTimeout = time.Minute * 15
 
-	errImageAllocationTimeout = errors.New("image allocation timeout")
+	errImageAllocationTimeout = errInvalidMessage("image allocation timeout")
 	errReadOnly               = errInvalidMessage("read only board")
 )
 
@@ -30,6 +29,9 @@ func insertThread(data []byte, c *Client) (err error) {
 	if !auth.IsNonMetaBoard(req.Board) {
 		return errInvalidBoard
 	}
+	if !authenticateCaptcha(req.Captcha, c.IP) {
+		return c.sendMessage(messageInsertThread, false)
+	}
 
 	var conf config.PostParseConfigs
 	if err := db.One(db.GetBoardConfig(req.Board), &conf); err != nil {
@@ -38,8 +40,6 @@ func insertThread(data []byte, c *Client) (err error) {
 	if conf.ReadOnly {
 		return errReadOnly
 	}
-
-	// TODO: Thread creation cooldown
 
 	now := time.Now().Unix() * 1000
 	thread := types.DatabaseThread{
@@ -50,7 +50,7 @@ func insertThread(data []byte, c *Client) (err error) {
 	post := types.Post{
 		Time:  now,
 		Board: req.Board,
-		IP:    c.ident.IP,
+		IP:    c.IP,
 	}
 
 	post.Name, post.Trip, err = parser.ParseName(req.Name)

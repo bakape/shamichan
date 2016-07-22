@@ -92,7 +92,7 @@ func (c *ClientMap) CountByIP() int {
 	defer c.RUnlock()
 	ips := make(map[string]bool, len(c.clients))
 	for _, cl := range c.clients {
-		ips[cl.client.ident.IP] = true
+		ips[cl.client.IP] = true
 	}
 	return len(ips)
 }

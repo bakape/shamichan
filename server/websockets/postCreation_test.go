@@ -26,7 +26,7 @@ func (*DB) TestCreateThreadOnInvalidBoard(c *C) {
 	req := types.ThreadCreationRequest{
 		Board: "all",
 	}
-	c.Assert(insertThread(marshalJSON(req, c), nil), Equals, errInvalidBoard)
+	c.Assert(insertThread(marshalJSON(req, c), new(Client)), Equals, errInvalidBoard)
 }
 
 func (*DB) TestCreateThreadOnReadOnlyBoard(c *C) {
@@ -41,7 +41,8 @@ func (*DB) TestCreateThreadOnReadOnlyBoard(c *C) {
 	req := types.ThreadCreationRequest{
 		Board: "a",
 	}
-	c.Assert(insertThread(marshalJSON(req, c), nil), Equals, errReadOnly)
+	err := insertThread(marshalJSON(req, c), new(Client))
+	c.Assert(err, Equals, errReadOnly)
 }
 
 func (*DB) TestThreadCreation(c *C) {
@@ -53,7 +54,7 @@ func (*DB) TestThreadCreation(c *C) {
 	cl, wcl := sv.NewClient()
 	sendImage := make(chan types.Image)
 	cl.AllocateImage = sendImage
-	cl.ident.IP = "::1"
+	cl.IP = "::1"
 	img := types.Image{
 		ImageCommon: types.ImageCommon{
 			SHA1: "sha1",

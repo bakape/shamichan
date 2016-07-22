@@ -62,6 +62,7 @@ type ThreadCreationRequest struct {
 	Subject string `json:"subject"`
 	Board   string `json:"board"`
 	Body    string `json:"body"`
+	Captcha
 }
 
 // PostCredentials contains the common poster credential part of thread and

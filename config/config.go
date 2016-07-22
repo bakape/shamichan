@@ -48,27 +48,30 @@ All hash commands need to be input on their own line`
 
 // Configs stores the global configuration
 type Configs struct {
-	Prune          bool   `json:"prune" gorethink:"prune"`
-	Radio          bool   `json:"radio" gorethink:"radio" public:"true"`
-	Hats           bool   `json:"hats" gorethink:"hats" public:"true"`
-	IllyaDance     bool   `json:"illyaDance" gorethink:"illyaDance" public:"true"`
-	Pyu            bool   `json:"pyu" gorethink:"pyu"`
-	MaxWidth       uint16 `json:"maxWidth" gorethink:"maxWidth"`
-	MaxHeight      uint16 `json:"maxHeight" gorethink:"maxHeight"`
-	MaxThreads     int    `json:"maxThreads" gorethink:"maxThreads"`
-	MaxBump        int    `json:"maxBump" gorethink:"maxBump"`
-	JPEGQuality    int
-	PNGQuality     int
-	ThreadCooldown int               `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
-	MaxSize        int64             `json:"maxSize" gorethink:"maxSize"`
-	DefaultLang    string            `json:"defaultLang" gorethink:"defaultLang" public:"true"`
-	DefaultCSS     string            `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
-	Salt           string            `json:"salt" gorethink:"salt"`
-	FeedbackEmail  string            `json:"feedbackEmail" gorethink:"feedbackEmail"`
-	FAQ            string            `public:"true"`
-	Boards         []string          `json:"-" gorethink:"boards" public:"true"`
-	Links          map[string]string `json:"links" gorethink:"links" public:"true"`
-	SessionExpiry  time.Duration     `json:"sessionExpiry" gorethink:"sessionExpiry"`
+	Prune             bool   `json:"prune" gorethink:"prune"`
+	Radio             bool   `json:"radio" gorethink:"radio" public:"true"`
+	Hats              bool   `json:"hats" gorethink:"hats" public:"true"`
+	IllyaDance        bool   `json:"illyaDance" gorethink:"illyaDance" public:"true"`
+	Pyu               bool   `json:"pyu" gorethink:"pyu"`
+	Captcha           bool   `json:"captcha" gorethink:"captcha" public:"true"`
+	MaxWidth          uint16 `json:"maxWidth" gorethink:"maxWidth"`
+	MaxHeight         uint16 `json:"maxHeight" gorethink:"maxHeight"`
+	MaxThreads        int    `json:"maxThreads" gorethink:"maxThreads"`
+	MaxBump           int    `json:"maxBump" gorethink:"maxBump"`
+	JPEGQuality       int
+	PNGQuality        int
+	ThreadCooldown    int               `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
+	MaxSize           int64             `json:"maxSize" gorethink:"maxSize"`
+	DefaultLang       string            `json:"defaultLang" gorethink:"defaultLang" public:"true"`
+	DefaultCSS        string            `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
+	Salt              string            `json:"salt" gorethink:"salt"`
+	FeedbackEmail     string            `json:"feedbackEmail" gorethink:"feedbackEmail"`
+	FAQ               string            `public:"true"`
+	CaptchaPublicKey  string            `json:"captchaPublicKey" gorethink:"captchaPublicKey" public:"true"`
+	CaptchaPrivateKey string            `json:"captchaPrivateKey" gorethink:"captchaPrivateKey"`
+	Boards            []string          `json:"-" gorethink:"boards" public:"true"`
+	Links             map[string]string `json:"links" gorethink:"links" public:"true"`
+	SessionExpiry     time.Duration     `json:"sessionExpiry" gorethink:"sessionExpiry"`
 }
 
 // Only marshal JSON with the `public:"true"` tag for publicly exposed
@@ -78,7 +81,7 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 	v := reflect.ValueOf(*c)
 
 	// Copy the fields we need to a map
-	temp := make(map[string]interface{}, 9)
+	temp := make(map[string]interface{}, 10)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if field.Tag.Get("public") != "true" {
@@ -97,9 +100,6 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 
 // Defaults contains the default server configuration values
 var Defaults = Configs{
-	Prune:          false,
-	Hats:           false,
-	Radio:          false,
 	MaxThreads:     100,
 	MaxBump:        1000,
 	JPEGQuality:    80,

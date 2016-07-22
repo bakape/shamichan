@@ -10,7 +10,6 @@ import (
 	"github.com/bakape/meguca/util"
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
-	"github.com/sebest/xff"
 )
 
 var (
@@ -26,10 +25,6 @@ var (
 
 	// Path to SSL key
 	sslKey string
-
-	// Defines, if the server should interpret X-Forwarded-For headers as the
-	// actual IP of the request
-	trustProxies bool
 
 	// Defines, if all trafic should be piped through a gzip compression
 	// -decompression handler
@@ -88,19 +83,12 @@ func createRouter() http.Handler {
 	// Websocket API
 	r.GET("/socket", wrapHandler(websockets.Handler))
 
-	// Image upload
+	// File upload
 	r.POST("/upload", wrapHandler(imager.NewImageUpload))
 
 	h := http.Handler(r)
 	if enableGzip {
 		h = handlers.CompressHandlerLevel(h, gzip.DefaultCompression)
-	}
-	if trustProxies {
-		xffParser, err := xff.Default()
-		if err != nil {
-			log.Fatal(err)
-		}
-		h = xffParser.Handler(h)
 	}
 
 	return h

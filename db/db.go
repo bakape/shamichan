@@ -144,11 +144,11 @@ func StreamUpdates(
 	initial := <-read
 
 	go func() {
+		defer cursor.Close()
 		for closer.IsOpen() {
 			// Several update messages may come from the feed at a time.
 			// Separate and send each individually.
-			messageStack := <-read
-			for _, msg := range messageStack {
+			for _, msg := range <-read {
 				write <- msg
 			}
 		}
@@ -219,7 +219,7 @@ func WriteBacklinks(id, op int64, board string, links types.LinkMap) error {
 
 	type msi map[string]interface{}
 
-	// 3rd level nesting update. Looks ugly, but run completely DB-side
+	// 3rd level nesting update. Looks ugly, but runs completely DB-side.
 	q := r.
 		Expr(targets).
 		ForEach(func(t r.Term) r.Term {

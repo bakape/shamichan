@@ -2,6 +2,8 @@
  Utuility functions.
 */
 
+type AnyHash = {[key: string]: any}
+
 // Fetches and decodes a JSON response from the API
 export const fetchJSON = async (url: string): Promise<any> =>
 	await (await fetch(url)).json()
@@ -159,12 +161,10 @@ export function commaList(items: string[]): string {
 	return html
 }
 
-type AnyHash = {[key: string]: any}
-
 // Copy all properties from the source object to the destination object
-export function extend(dest: AnyHash, source: AnyHash) {
+export function extend(dest: {}, source: {}) {
 	for (let key in source) {
-		dest[key] = source[key]
+		(dest as AnyHash)[key] = (source as AnyHash)[key]
 	}
 }
 

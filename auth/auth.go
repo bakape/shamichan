@@ -3,10 +3,23 @@
 package auth
 
 import (
+	"net"
+	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/bakape/meguca/config"
+)
+
+var (
+	// IsReverseProxied specifies, if the server is deployed behind a reverse
+	// proxy.
+	IsReverseProxied bool
+
+	// ReverseProxyIP specifies the IP of a non-localost reverse proxy. Used for
+	// filtering in XFF IP determination.
+	ReverseProxyIP string
 )
 
 // User contains ID, password hash and board-related data of a registered user
@@ -24,18 +37,18 @@ type Session struct {
 	Expires time.Time `gorethink:"expires"`
 }
 
-// Ident is used to verify a client's access and write permissions
+// Ident is used to verify a client's access and write permissions. Contains its
+// IP and logged in user data, if any.
 type Ident struct {
-	User
-	IP string
+	UserID string
+	IP     string
 }
 
 // LookUpIdent determine access rights of an IP
-func LookUpIdent(ip string) Ident {
-	ident := Ident{IP: ip}
-
-	// TODO: Bans and Authorisation
-
+func LookUpIdent(req *http.Request) Ident {
+	ident := Ident{
+		IP: GetIP(req),
+	}
 	return ident
 }
 
@@ -57,4 +70,29 @@ func IsNonMetaBoard(board string) bool {
 		}
 	}
 	return false
+}
+
+// GetIP extracts the IP of a request, honouring reverse proxies, if set
+func GetIP(req *http.Request) string {
+	if IsReverseProxied {
+		for _, h := range [...]string{"X-Forwarded-For", "X-Real-Ip"} {
+			addresses := strings.Split(req.Header.Get(h), ",")
+
+			// March from right to left until we get a public address.
+			// That will be the address right before our reverse proxy.
+			for i := len(addresses) - 1; i >= 0; i-- {
+				// Header can contain padding spaces
+				ip := strings.TrimSpace(addresses[i])
+
+				// Filter the reverse proxy IPs
+				switch {
+				case ip == ReverseProxyIP:
+				case !net.ParseIP(ip).IsGlobalUnicast():
+				default:
+					return ip
+				}
+			}
+		}
+	}
+	return req.RemoteAddr
 }

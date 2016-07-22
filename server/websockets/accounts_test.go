@@ -14,13 +14,13 @@ var (
 	wrongCredentialsResopnse = []byte(`34{"code":2,"session":""}`)
 )
 
-func (*DB) TestRegistrationStringValidations(c *C) {
+func (*DB) TestRegistrationValidations(c *C) {
 	r21, err := util.RandomID(21)
 	c.Assert(err, IsNil)
 	r31, err := util.RandomID(31)
 	c.Assert(err, IsNil)
 
-	samples := []struct {
+	samples := [...]struct {
 		id, password string
 		code         loginResponseCode
 	}{
@@ -31,7 +31,16 @@ func (*DB) TestRegistrationStringValidations(c *C) {
 	}
 
 	for _, s := range samples {
-		code, err := handleRegistration(s.id, s.password)
+		req := loginRequest{
+			ID:       s.id,
+			Password: s.password,
+		}
+		cl := &Client{
+			Ident: auth.Ident{
+				IP: "::1",
+			},
+		}
+		code, err := handleRegistration(req, cl)
 		c.Assert(err, IsNil)
 		c.Assert(code, Equals, s.code)
 	}
@@ -57,7 +66,7 @@ func assertValidLogin(req interface{}, fn handler, c *C) {
 
 	c.Assert(fn(marshalJSON(req, c), cl), IsNil)
 	c.Assert(cl.isLoggedIn(), Equals, true)
-	c.Assert(cl.userID, Not(Equals), "")
+	c.Assert(cl.UserID, Not(Equals), "")
 	_, msg, err := wcl.ReadMessage()
 	c.Assert(err, IsNil)
 	c.Assert(string(msg[:23]), Equals, `34{"code":0,"session":"`)
@@ -164,7 +173,7 @@ func (*DB) TestAuthentication(c *C) {
 	data := marshalJSON(req, c)
 	c.Assert(authenticateSession(data, cl), IsNil)
 	c.Assert(cl.sessionToken, Equals, session)
-	c.Assert(cl.userID, Equals, id)
+	c.Assert(cl.UserID, Equals, id)
 	assertMessage(wcl, []byte("35true"), c)
 }
 
@@ -194,12 +203,12 @@ func assertLogout(id string, fn handler, c *C) {
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 
-	cl.userID = id
+	cl.UserID = id
 	cl.sessionToken = "foo"
 
 	c.Assert(fn(nil, cl), IsNil)
 	assertMessage(wcl, []byte("36true"), c)
-	c.Assert(cl.userID, Equals, "")
+	c.Assert(cl.UserID, Equals, "")
 	c.Assert(cl.sessionToken, Equals, "")
 }
 
@@ -240,14 +249,14 @@ func (*DB) TestChangePassword(c *C) {
 		Old: "1234567",
 		New: new,
 	}
-	assertLoggedInResponse(req, changePassword, id, []byte("38false"), c)
+	assertLoggedInResponse(req, changePassword, id, []byte("382"), c)
 
 	// Correct password
 	req = passwordChangeRequest{
 		Old: old,
 		New: new,
 	}
-	assertLoggedInResponse(req, changePassword, id, []byte("38true"), c)
+	assertLoggedInResponse(req, changePassword, id, []byte("380"), c)
 
 	// Assert new hash matches new password
 	hash, err = db.GetLoginHash(id)
@@ -266,7 +275,7 @@ func assertLoggedInResponse(
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	cl.sessionToken = "foo"
-	cl.userID = id
+	cl.UserID = id
 	data := marshalJSON(req, c)
 	c.Assert(fn(data, cl), IsNil)
 	assertMessage(wcl, msg, c)
