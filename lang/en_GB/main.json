@@ -22,7 +22,9 @@
 		"add": "Add",
 		"apply": "Apply",
 		"search": "Search",
-		"invalidCaptcha": "Invalid captcha"
+		"invalidCaptcha": "Invalid captcha",
+		"focusForCaptcha": "Focus to load captcha",
+		"reloadCaptcha": "Click to reload"
 	},
 
 	"banner": {

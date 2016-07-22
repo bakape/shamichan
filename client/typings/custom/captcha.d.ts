@@ -10,6 +10,8 @@ declare class ACPuzzleController  {
 
 interface ACPuzzleOptions {
 	multi: boolean
+	id: string
+	theme: string
 }
 
 interface Window {

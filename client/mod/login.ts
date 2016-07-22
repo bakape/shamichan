@@ -180,11 +180,8 @@ export default class AccountPanel extends TabbedModal<Model> {
 		if (loginID === "admin") {
 			menu += this.renderLink("configureServer")
 		}
-		write(() => {
-			each(this.el.children, el =>
-				el.style.display = "none")
-			this.el.append(makeEl(`<div class="menu">${menu}</div>`))
-		})
+		write(() =>
+			this.el.innerHTML = `<div class="menu">${menu}</div>`)
 	}
 
 	renderLink(name: string): string {

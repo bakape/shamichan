@@ -5,6 +5,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 ##vNext
 * Add:
 	- Configurable board navigation panel
+	- Optional Solve Media captcha integartion
 * Change:
 	- Required Go version to 1.7
 	- Move origin configuration to server flag
