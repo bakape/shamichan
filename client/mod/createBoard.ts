@@ -9,11 +9,10 @@ import {config} from '../state'
 
 // Response codes for board creation requests
 const enum responseCode {
-	boardCreated,
+	success,
+	invalidBoardName,
 	boardNameTaken,
-	boardNameTooLong,
 	titleTooLong,
-	noBoardName,
 	invalidCaptcha,
 }
 
@@ -31,15 +30,23 @@ export default class BoardCreationPanel extends FormView<Model> {
 	render() {
 		const html = table(['boardName', 'boardTitle'], name => {
 			const [label, tooltip] = lang[name]
-			return renderInput({
+			const spec: InputSpec = {
 				name,
 				label,
 				tooltip,
 				type: inputType.string,
 				minLength: 1,
-				maxLength: name === "boardName" ? 3 : 100
-			})
+			}
+			if (name === "boardName") {
+				spec.maxLength = 3
+				spec.pattern = "^[a-z0-9]{1,3}$"
+			} else {
+				spec.maxLength = 100
+			}
+
+			return renderInput(spec)
 		})
+
 		this.renderForm(html)
 	}
 
@@ -60,7 +67,7 @@ export default class BoardCreationPanel extends FormView<Model> {
 	handleResponse(res: responseCode) {
 		let text: string
 		switch (res) {
-		case responseCode.boardCreated:
+		case responseCode.success:
 			this.remove()
 			return
 		case responseCode.boardNameTaken:

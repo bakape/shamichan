@@ -4,9 +4,7 @@ import {TabbedModal} from '../banner'
 import {write} from '../render'
 import {defer} from '../defer'
 import {mod as lang, ui} from '../lang'
-import {
-	on, loadModule, setLabel, inputValue, extend, makeEl, each
-} from '../util'
+import {on, loadModule, setLabel, inputValue, extend} from '../util'
 import {handlers, send, message} from '../connection'
 import Model from '../model'
 import CaptchaView, {Captcha} from '../captcha'

@@ -29,10 +29,9 @@ func (*Tests) TestIsBoard(c *C) {
 		in      string
 		isBoard bool
 	}{
-		{"a", true},       // Board exists
-		{"b", false},      // Board doesn't exist
-		{"all", true},     // /all/ board
-		{`:%5E%29`, true}, // Non-alphanumeric board name
+		{"a", true},   // Board exists
+		{"b", false},  // Board doesn't exist
+		{"all", true}, // /all/ board
 	}
 
 	for _, s := range samples {

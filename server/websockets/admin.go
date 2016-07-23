@@ -3,6 +3,8 @@
 package websockets
 
 import (
+	"regexp"
+
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
@@ -12,6 +14,8 @@ import (
 
 var (
 	errAccessDenied = errInvalidMessage("access denied")
+
+	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,3}$`)
 )
 
 type boardCreationRequest struct {
@@ -23,10 +27,9 @@ type boardCreationRequest struct {
 // Board creation request responses
 const (
 	boardCreated = iota
+	invalidBoardName
 	boardNameTaken
-	boardNameTooLong
 	titleTooLong
-	noBoardName
 	invalidBoardCreationCaptcha
 )
 
@@ -74,10 +77,8 @@ func createBoard(data []byte, c *Client) error {
 
 	var code int
 	switch {
-	case len(req.Name) > 3:
-		code = boardNameTooLong
-	case req.Name == "":
-		code = noBoardName
+	case !boardNameValidation.MatchString(req.Name):
+		code = invalidBoardName
 	case len(req.Title) > 100:
 		code = titleTooLong
 	case !authenticateCaptcha(req.Captcha, c.IP):

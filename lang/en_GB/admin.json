@@ -82,7 +82,7 @@
 	],
 	"boardName": [
 		"Board name",
-		"Name of the new board. Up to 3 characters long"
+		"Name of the new board. Can contain up to 3 lowercase Latin letters or numbers."
 	],
 	"boardTitle": [
 		"Board title",

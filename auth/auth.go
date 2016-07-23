@@ -5,7 +5,6 @@ package auth
 import (
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -63,7 +62,6 @@ func IsBoard(board string) bool {
 // IsNonMetaBoard returns wheather a valid board is a classic board and not
 // some other path that emulates a board
 func IsNonMetaBoard(board string) bool {
-	board, _ = url.QueryUnescape(board) // For non-alphanumeric boards
 	for _, b := range config.Get().Boards {
 		if board == b {
 			return true

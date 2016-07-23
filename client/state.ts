@@ -67,7 +67,7 @@ export let clientID: string
 
 // Read page state by parsing a URL
 function read(href: string): PageState {
-	const board = href.match(/[a-zA-Z0-9:]+\/([^\/]+)\//)[1],
+	const board = href.match(/\/(\w+)\//)[1],
 		thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
 		lastN = href.match(/[\?&]last=(\d+)/)
 	return {

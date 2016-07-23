@@ -17,6 +17,7 @@ export type InputSpec = {
 	name: string
 	label?: string
 	tooltip?: string
+	pattern?: string
 	value?: number|string|boolean|StringMap
 	min?: number
 	max?: number
@@ -61,6 +62,9 @@ export function renderInput(spec: InputSpec): string[] {
 	case inputType.string:
 		attrs["type"] = "text"
 		attrs["value"] = spec.value as string || ""
+		if (spec.pattern) {
+			attrs["pattern"] = spec.pattern
+		}
 		for (let prop of ["minLength", "maxLength"]) {
 			if (prop in spec) {
 				attrs[prop] = spec[prop].toString()
