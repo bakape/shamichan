@@ -213,14 +213,19 @@ func boardJSON(
 
 // Serve a JSON array of all available boards and their titles
 func serveBoardList(res http.ResponseWriter, req *http.Request) {
-	var list []struct {
+	type boardEntries []struct {
 		ID    string `json:"id"`
 		Title string `json:"title"`
 	}
+
+	var list boardEntries
 	q := r.Table("boards").Pluck("id", "title")
 	if err := db.All(q, &list); err != nil {
 		textErrorPage(res, req, err)
 		return
+	}
+	if list == nil { // Ensure always serving an array
+		list = boardEntries{}
 	}
 	data, err := json.Marshal(list)
 	serveJSON(res, req, data, err)

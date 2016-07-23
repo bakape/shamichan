@@ -445,3 +445,9 @@ func (d *DB) TestServeBoardList(c *C) {
 	d.r.ServeHTTP(rec, req)
 	assertBody(rec, std, c)
 }
+
+func (d *DB) TestServeBoardListNoBoards(c *C) {
+	rec, req := newPair(c, "/json/boardList")
+	d.r.ServeHTTP(rec, req)
+	assertBody(rec, "[]", c)
+}

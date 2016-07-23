@@ -13,6 +13,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 * Fix:
 	- Client HTTPS detection
 	- SystemJS not loading in Palemoon
+	- Board list retrieval with no boards created
 
 ##v2.1.0-alpha - 2016-07-04
 * License:
