@@ -140,8 +140,10 @@ for (let spec of specs) {
 defer(() =>
 	new OptionsPanel())
 
-// Conditionally load custom background module and render background
-if (options.userBG) {
-	defer(() =>
-		models["userBG"].execute(true))
+// Conditionally load and execute optional modules
+for (let opt of ["userBG", "nowPlaying"]) {
+	if (options[opt]) {
+		defer(() =>
+			models[opt].execute(true))
+	}
 }

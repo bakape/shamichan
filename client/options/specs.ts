@@ -139,23 +139,19 @@ export const specs: OptionSpec[] = [
 	// 	tab: tabs.general,
 	// 	default: false
 	// },
-	// // R/a/dio now playing banner
-	// {
-	// 	id: 'nowPlaying',
-	// 	noLoad: isMobile || !config.radio,
-	// 	tab: tabs.fun,
-	// 	default: true,
-	// 	exec(toggle) {
-	// 		if (toggle) {
-	// 			// TODO: Implement send()
-	// 			// Query the server for current stream info
-	// 			// send({type: 'radio'})
-	// 		} else {
-	// 			// TODO: System.import().then()
-	// 			//events.request('banner:radio:clear');
-	// 		}
-	// 	}
-	// },
+
+	// R/a/dio now playing banner
+	{
+		id: 'nowPlaying',
+		noLoad: isMobile || !config.radio,
+		tab: tabs.fun,
+		default: true,
+		noExecOnStart: true,
+		exec() {
+			loadModule("r-a-dio")
+		}
+	},
+
 	// Illya dance in the background
 	{
 		id: 'illyaDance',
