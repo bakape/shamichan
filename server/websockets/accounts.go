@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	minIDLength       = 3
+	minIDLength       = 1
 	maxIDLength       = 20
 	minPasswordLength = 6
 	maxPasswordLength = 30

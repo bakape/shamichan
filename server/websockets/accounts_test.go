@@ -24,7 +24,7 @@ func (*DB) TestRegistrationValidations(c *C) {
 		id, password string
 		code         loginResponseCode
 	}{
-		{"12", "123456", idTooShort},
+		{"", "123456", idTooShort},
 		{r21, "123456", idTooLong},
 		{"123", "12345", passwordTooShort},
 		{"123", r31, passwordTooLong},
