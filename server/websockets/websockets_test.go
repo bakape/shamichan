@@ -150,12 +150,16 @@ func (*ClientSuite) TestClose(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	err := errors.New("foo")
-	go cl.Close(err)
-	c.Assert(cl.Listen(), DeepEquals, err)
+	sv.Add(1)
+	go func() {
+		defer sv.Done()
+		c.Assert(cl.Listen(), IsNil)
+	}()
+	cl.Close()
+	sv.Wait()
 
 	// Already closed
-	cl.Close(err)
+	cl.Close()
 }
 
 func (*ClientSuite) TestCloseMessageSending(c *C) {
@@ -165,7 +169,7 @@ func (*ClientSuite) TestCloseMessageSending(c *C) {
 	sv.Add(2)
 	go readListenErrors(c, cl, sv)
 	go assertWebsocketError(c, wcl, closeNormal, sv)
-	cl.Close(nil)
+	cl.Close()
 	sv.Wait()
 }
 
@@ -181,7 +185,7 @@ func (*ClientSuite) TestSend(c *C) {
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	go cl.Listen()
-	cl.Send <- std
+	cl.write <- std
 	assertMessage(wcl, std, c)
 }
 
@@ -223,33 +227,7 @@ func asserHandlerError(cl *Client, msg []byte, pattern string, c *C) {
 	c.Assert(err, ErrorMatches, pattern)
 }
 
-func (*ClientSuite) TestReceiverLoop(c *C) {
-	sv := newWSServer(c)
-	defer sv.Close()
-	std := receivedMessage{
-		typ: websocket.BinaryMessage,
-		msg: []byte("shoganai wa ne"),
-	}
-
-	cl, wcl := sv.NewClient()
-	sv.Add(1)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer sv.Done()
-		c.Assert(<-cl.receive, DeepEquals, std)
-	}()
-	go func() {
-		defer wg.Done()
-		cl.receiverLoop()
-	}()
-	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, std.msg), IsNil)
-	sv.Wait()
-	cl.AtomicCloser.Close()
-	wg.Wait()
-}
-
-func (*ClientSuite) TestCheck(c *C) {
+func (*ClientSuite) TestCheckOrigin(c *C) {
 	config.AllowedOrigin = "fubar.com"
 
 	// No header
@@ -334,7 +312,7 @@ func (*ClientSuite) TestPingPong(c *C) {
 
 	// If Client outlives this with no errors, ping/pong is working
 	time.Sleep(time.Second * 3)
-	cl.Close(nil)
+	cl.Close()
 	sv.Wait()
 }
 
@@ -369,7 +347,7 @@ func (*ClientSuite) TestMessageSending(c *C) {
 	std := []byte{127, 0, 0, 1}
 	cl, wcl := sv.NewClient()
 	go cl.Listen()
-	cl.Send <- std
+	cl.write <- std
 	assertMessage(wcl, std, c)
 }
 

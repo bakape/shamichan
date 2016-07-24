@@ -70,28 +70,6 @@ func (*Map) TestCountByIP(c *C) {
 	c.Assert(m.CountByIP(), Equals, 2)
 }
 
-func (*Map) TestSendAll(c *C) {
-	m := newClientMap()
-	sv := newWSServer(c)
-	defer sv.Close()
-	msg := []byte{1, 2, 3}
-
-	cls := [3]*Client{}
-	for i := range cls {
-		cl, _ := sv.NewClient()
-		cls[i] = cl
-		m.Add(cl, "1")
-		sv.Add(1)
-		go func() {
-			c.Assert(<-cl.Send, DeepEquals, msg)
-			sv.Done()
-		}()
-	}
-
-	m.SendAll(msg)
-	sv.Wait()
-}
-
 func (*Map) TestGetNonExistantClient(c *C) {
 	m := newClientMap()
 	_, err := m.Get("1")

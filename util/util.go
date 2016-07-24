@@ -12,7 +12,6 @@ import (
 	"os"
 	"runtime"
 	"strconv"
-	"sync"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -92,28 +91,6 @@ func RandomID(length int) (string, error) {
 	buf := make([]byte, length)
 	_, err := rand.Read(buf)
 	return base64.RawStdEncoding.EncodeToString(buf), err
-}
-
-// AtomicCloser is a simple boolean guarded by a mutex for atomically managing
-// a shared close/open state from multiple goroutines. Can be safely emebedded
-// into other structs.
-type AtomicCloser struct {
-	closed bool
-	sync.RWMutex
-}
-
-// IsOpen returns, if AtomicCloser is still open
-func (a *AtomicCloser) IsOpen() bool {
-	a.RLock()
-	defer a.RUnlock()
-	return !a.closed
-}
-
-// Close closes AtomicCloser
-func (a *AtomicCloser) Close() {
-	a.Lock()
-	defer a.Unlock()
-	a.closed = true
 }
 
 // PasswordHash generates a bcrypt hash from the passed login ID and password

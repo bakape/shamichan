@@ -3,7 +3,6 @@ package db
 import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/types"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -79,7 +78,7 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 
 	// Empty log
 	read := make(chan []byte, 1)
-	closer := new(util.AtomicCloser)
+	closer := make(chan struct{})
 	initial, err := StreamUpdates(1, read, closer)
 	c.Assert(err, IsNil)
 	c.Assert(initial, DeepEquals, [][]byte{})
@@ -89,15 +88,15 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 	update := map[string][][]byte{"log": log}
 	c.Assert(Write(getThread(1).Update(update)), IsNil)
 	c.Assert(<-read, DeepEquals, addition)
-	closer.Close()
+	close(closer)
 
 	// Existing data
 	read = make(chan []byte, 1)
-	closer = new(util.AtomicCloser)
+	closer = make(chan struct{})
 	initial, err = StreamUpdates(1, read, closer)
 	c.Assert(err, IsNil)
 	c.Assert(initial, DeepEquals, log)
-	closer.Close()
+	close(closer)
 }
 
 func (*DBSuite) TestRegisterAccount(c *C) {

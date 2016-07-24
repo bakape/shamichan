@@ -94,13 +94,6 @@ func (*Util) TestWaterfall(c *C) {
 	c.Assert(wasRun, Equals, 2)
 }
 
-func (*Util) TestAtomicCloser(c *C) {
-	ac := AtomicCloser{}
-	c.Assert(ac.IsOpen(), Equals, true)
-	ac.Close()
-	c.Assert(ac.IsOpen(), Equals, false)
-}
-
 func (*Util) TestPasswordHash(c *C) {
 	const (
 		id       = "123"

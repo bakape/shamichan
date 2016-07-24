@@ -24,9 +24,9 @@ type syncRequest struct {
 // receive update messages.
 func synchronise(data []byte, c *Client) error {
 	// Close previous update feed, if any
-	if c.updateFeedCloser != nil && c.updateFeedCloser.IsOpen() {
-		c.updateFeedCloser.Close()
-		c.updateFeedCloser = nil
+	if c.closeUpdateFeed != nil {
+		close(c.closeUpdateFeed)
+		c.closeUpdateFeed = nil
 	}
 
 	var msg syncRequest
@@ -73,8 +73,8 @@ func syncToThread(board string, thread, ctr int64, c *Client) error {
 		return errInvalidThread
 	}
 
-	closer := new(util.AtomicCloser)
-	initial, err := db.StreamUpdates(thread, c.Send, closer)
+	closeFeed := make(chan struct{})
+	initial, err := db.StreamUpdates(thread, c.write, closeFeed)
 	if err != nil {
 		return err
 	}
@@ -82,11 +82,11 @@ func syncToThread(board string, thread, ctr int64, c *Client) error {
 	// Guard against malicious counters, that result in out of bounds slicing
 	// panic
 	if int(ctr) < 0 || int(ctr) > len(initial) {
-		closer.Close()
+		close(closeFeed)
 		return errInvalidCounter
 	}
 
-	c.updateFeedCloser = closer
+	c.closeUpdateFeed = closeFeed
 	registerSync(util.IDToString(thread), c)
 
 	// Send the client its ID

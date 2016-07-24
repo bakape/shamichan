@@ -3,7 +3,6 @@ package websockets
 import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	"github.com/gorilla/websocket"
 	. "gopkg.in/check.v1"
@@ -14,17 +13,16 @@ func (*ClientSuite) TestOldFeedClosing(c *C) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 
-	closer := new(util.AtomicCloser)
-	cl.updateFeedCloser = closer
+	closer := make(chan struct{})
+	cl.closeUpdateFeed = closer
 	sv.Add(1)
 	go func() {
 		defer sv.Done()
-		for closer.IsOpen() {
-		}
+		<-closer
 	}()
 	synchronise(nil, cl)
 	sv.Wait()
-	c.Assert(cl.updateFeedCloser, IsNil)
+	c.Assert(cl.closeUpdateFeed, IsNil)
 }
 
 func (*DB) TestSyncToBoard(c *C) {
@@ -113,7 +111,7 @@ func (*DB) TestSyncToThread(c *C) {
 	}
 	c.Assert(db.Write(r.Table("threads").Get(1).Update(update)), IsNil)
 	syncAssertMessage(wcl, newMessage, c)
-	cl.Close(nil)
+	cl.Close()
 	sv.Wait()
 }
 
@@ -153,7 +151,7 @@ func (*DB) TestOnlyMissedMessageSyncing(c *C) {
 	assertSyncResponse(wcl, cl, c)         // Receive client ID
 	syncAssertMessage(wcl, backlogs[1], c) // Receive first missed message
 	syncAssertMessage(wcl, backlogs[2], c) // Second missed message
-	cl.Close(nil)
+	cl.Close()
 	sv.Wait()
 }
 

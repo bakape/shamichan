@@ -97,15 +97,6 @@ func (c *ClientMap) CountByIP() int {
 	return len(ips)
 }
 
-// SendAll sends a message to all  synchronised websocket clients
-func (c *ClientMap) SendAll(msg []byte) {
-	c.RLock()
-	defer c.RUnlock()
-	for _, cl := range c.clients {
-		cl.client.Send <- msg
-	}
-}
-
 // Clear removes all clients from the map
 func (c *ClientMap) Clear() {
 	c.Lock()

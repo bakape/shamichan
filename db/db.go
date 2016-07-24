@@ -126,17 +126,15 @@ func ThreadCounter(id int64) (counter int64, err error) {
 // StreamUpdates produces a stream of the replication log updates for the
 // specified thread and sends it on read. Close the close channel to stop
 // receiving updates. The intial contents of the log are returned immediately.
-func StreamUpdates(
-	id int64,
-	write chan<- []byte,
-	closer *util.AtomicCloser,
-) ([][]byte, error) {
+func StreamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
+	[][]byte, error,
+) {
 	cursor, err := getThread(id).
 		Changes(r.ChangesOpts{IncludeInitial: true}).
 		Map(formatUpdateFeed).
 		Run(RSession)
 	if err != nil {
-		return nil, util.WrapError("error establishing update feed", err)
+		return nil, util.WrapError("update feed", err)
 	}
 
 	read := make(chan [][]byte)
@@ -145,11 +143,17 @@ func StreamUpdates(
 
 	go func() {
 		defer cursor.Close()
-		for closer.IsOpen() {
-			// Several update messages may come from the feed at a time.
-			// Separate and send each individually.
-			for _, msg := range <-read {
-				write <- msg
+
+		for {
+			select {
+			case <-close:
+				return
+			case updates := <-read:
+				// Several update messages may come from the feed at a time.
+				// Separate and send each individually.
+				for _, msg := range updates {
+					write <- msg
+				}
 			}
 		}
 	}()

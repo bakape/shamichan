@@ -84,17 +84,18 @@ type Client struct {
 	conn         *websocket.Conn
 	ID           string
 	sessionToken string // Token of an authenticated user session, if any
-	util.AtomicCloser
-	updateFeedCloser *util.AtomicCloser
 
 	// Internal message receiver channel
 	receive chan receivedMessage
 
-	// Send thread-safely sends a message to the websocket client
-	Send chan []byte
+	// Thread-safely sends a message to the websocket client
+	write chan []byte
 
-	// Close the client and free all  used resources
-	close chan error
+	// Close the client and free all used resources
+	close chan struct{}
+
+	// Close the update feed of a thread or board
+	closeUpdateFeed chan struct{}
 
 	// AllocateImage receives Image structs from the thumbnailer for allocation
 	// by the client
@@ -104,14 +105,15 @@ type Client struct {
 type receivedMessage struct {
 	typ int
 	msg []byte
+	err error
 }
 
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn, req *http.Request) *Client {
 	return &Client{
 		Ident:         auth.LookUpIdent(req),
-		Send:          make(chan []byte),
-		close:         make(chan error),
+		write:         make(chan []byte),
+		close:         make(chan struct{}),
 		receive:       make(chan receivedMessage),
 		AllocateImage: make(chan types.Image),
 		conn:          conn,
@@ -119,51 +121,57 @@ func newClient(conn *websocket.Conn, req *http.Request) *Client {
 }
 
 // Listen listens for incoming messages on the channels and processes them
-func (c *Client) Listen() (err error) {
+func (c *Client) Listen() error {
 	go c.receiverLoop()
+
+	// Clean up, when loop exits
+	err := c.listenerLoop()
+	Clients.Remove(c.ID)
+	return c.closeConnections(err)
+}
+
+// Separate function to ease error handling of the intenal client loop
+func (c *Client) listenerLoop() error {
 	ping := time.Tick(pingTimer)
 
-outer:
 	for {
 		select {
-		case err = <-c.close:
-			break outer
+		case <-c.close:
+			return nil
 		case msg := <-c.receive:
-			err = c.handleMessage(msg.typ, msg.msg)
-			if err != nil {
-				break outer
+			if msg.err != nil {
+				return msg.err
 			}
-		case msg := <-c.Send:
-			err = c.send(msg)
-			if err != nil {
-				break outer
+			if err := c.handleMessage(msg.typ, msg.msg); err != nil {
+				return err
+			}
+		case msg := <-c.write:
+			if err := c.send(msg); err != nil {
+				return err
 			}
 		case <-ping:
-			err = c.conn.WriteControl(
+			err := c.conn.WriteControl(
 				websocket.PingMessage,
 				pingMessage,
 				time.Now().Add(writeTimeout),
 			)
 			if err != nil {
-				break outer
+				return err
 			}
 		}
 	}
-
-	// Clean up, when loop exits
-	Clients.Remove(c.ID)
-	return c.closeConnections(err)
 }
 
 // Close all conections an goroutines asociated with the Client
 func (c *Client) closeConnections(err error) error {
 	// Close client and update feed
-	c.AtomicCloser.Close()
-	if c.updateFeedCloser != nil {
-		c.updateFeedCloser.Close()
+	if c.closeUpdateFeed != nil {
+		close(c.closeUpdateFeed)
 	}
-	close(c.Send)
-	close(c.close)
+	if err != nil {
+		close(c.close)
+	}
+	close(c.write)
 
 	// Send the client the reason for closing
 	var closeType int
@@ -249,15 +257,14 @@ func (c *Client) receiverLoop() {
 		return nil
 	})
 
-	for c.IsOpen() {
-		typ, msg, err := c.conn.ReadMessage() // Blocking
-		if err != nil {
-			c.Close(err)
-			break
-		}
-		c.receive <- receivedMessage{
-			typ: typ,
-			msg: msg,
+	for {
+		msg := receivedMessage{}
+		msg.typ, msg.msg, msg.err = c.conn.ReadMessage() // Blocking
+
+		select {
+		case <-c.close:
+			return
+		case c.receive <- msg:
 		}
 	}
 }
@@ -309,9 +316,11 @@ func (c *Client) logError(err error) {
 
 // Close closes a websocket connection with the provided status code and
 // optional reason
-func (c *Client) Close(err error) {
-	if c.IsOpen() {
-		c.close <- err
+func (c *Client) Close() {
+	select {
+	case <-c.close:
+	default:
+		close(c.close)
 	}
 }
 
