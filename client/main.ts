@@ -1,7 +1,4 @@
-/*
-  Client entry point.
-  NOTE: All modules use strict mode implicitly
- */
+// Client entry point
 
  // TODO: Remove, when proper structure done
 import * as options from './options'
@@ -13,7 +10,7 @@ const c = client
 
 import {displayLoading} from './state'
 import {start as connect} from './connection'
-import {loadFromDB} from './state'
+import {loadFromDB, loadBoardConfig} from './state'
 import {open} from './db'
 
 // Clear cookies, if versions mismatch.
@@ -32,8 +29,11 @@ defer(() =>
 
 // Load all stateful modules in dependancy order
 async function start() {
+	// Load asynchronously and concurently as fast as possible
+	const boardConf = loadBoardConfig()
 	await open()
 	await loadFromDB()
+	await boardConf
 	connect()
 	exec()
 	displayLoading(false)

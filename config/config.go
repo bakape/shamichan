@@ -22,6 +22,10 @@ var (
 	// Map of board IDs to their cofiguration structs
 	boardConfigs map[string]BoardConfigs
 
+	// AllBoardConfigs stores board-specific configurations for the /all/
+	// metaboard. Constant.
+	AllBoardConfigs []byte
+
 	// JSON of client-accessable configuration
 	clientJSON []byte
 
@@ -32,6 +36,35 @@ var (
 	// AllowedOrigin stores the accepted client origin for websocket and file
 	// upload requests. Set only on server start.
 	AllowedOrigin string
+
+	// Defaults contains the default server configuration values
+	Defaults = Configs{
+		MaxThreads:    100,
+		MaxBump:       1000,
+		JPEGQuality:   80,
+		PNGQuality:    20,
+		MaxSize:       5,
+		MaxHeight:     6000,
+		MaxWidth:      6000,
+		SessionExpiry: 30,
+		DefaultCSS:    "moe",
+		Salt:          "LALALALALALALALALALALALALALALALALALALALA",
+		FeedbackEmail: "admin@email.com",
+		FAQ:           defaultFAQ,
+		DefaultLang:   "en_GB",
+		Boards:        []string{},
+		Links:         map[string]string{"4chan": "http://www.4chan.org/"},
+	}
+
+	// EightballDefaults contains the default eightball answer set
+	EightballDefaults = []string{
+		"Yes",
+		"No",
+		"Maybe",
+		"It can't be helped",
+		"Hell yeah, motherfucker!",
+		"Anta baka?",
+	}
 )
 
 // Default string for the FAQ panel
@@ -60,7 +93,6 @@ type Configs struct {
 	MaxBump           int    `json:"maxBump" gorethink:"maxBump"`
 	JPEGQuality       int
 	PNGQuality        int
-	ThreadCooldown    int               `json:"threadCooldown" gorethink:"threadCooldown" public:"true"`
 	MaxSize           int64             `json:"maxSize" gorethink:"maxSize"`
 	DefaultLang       string            `json:"defaultLang" gorethink:"defaultLang" public:"true"`
 	DefaultCSS        string            `json:"defaultCSS" gorethink:"defaultCSS" public:"true"`
@@ -98,26 +130,6 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 	return json.Marshal(temp)
 }
 
-// Defaults contains the default server configuration values
-var Defaults = Configs{
-	MaxThreads:     100,
-	MaxBump:        1000,
-	JPEGQuality:    80,
-	PNGQuality:     20,
-	MaxSize:        5,
-	MaxHeight:      6000,
-	MaxWidth:       6000,
-	ThreadCooldown: 60,
-	SessionExpiry:  30,
-	DefaultCSS:     "moe",
-	Salt:           "LALALALALALALALALALALALALALALALALALALALA",
-	FeedbackEmail:  "admin@email.com",
-	FAQ:            defaultFAQ,
-	DefaultLang:    "en_GB",
-	Boards:         []string{},
-	Links:          map[string]string{"4chan": "http://www.4chan.org/"},
-}
-
 // BoardConfigs stores board-specific configuration
 type BoardConfigs struct {
 	PostParseConfigs
@@ -128,6 +140,7 @@ type BoardConfigs struct {
 	Title     string              `json:"title" gorethink:"title" public:"true"`
 	Notice    string              `json:"notice" gorethink:"notice" public:"true"`
 	Eightball []string            `json:"eightball" gorethink:"eightball"`
+	Banners   []string            `json:"banners" gorethink:"banners" public:"true"`
 	Staff     map[string][]string `json:"staff" gorethink:"staff"`
 }
 
@@ -138,7 +151,7 @@ func (b *BoardConfigs) MarshalPublicJSON() ([]byte, error) {
 	v := reflect.ValueOf(*b)
 
 	// Convert all the fields of PostParseConfigs
-	temp := b.PostParseConfigs.toMap(8)
+	temp := b.PostParseConfigs.toMap(9)
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
@@ -172,14 +185,24 @@ func (p PostParseConfigs) toMap(length int) map[string]interface{} {
 	return m
 }
 
-// EightballDefaults contains the default eightball answer set
-var EightballDefaults = []string{
-	"Yes",
-	"No",
-	"Maybe",
-	"It can't be helped",
-	"Hell yeah, motherfucker!",
-	"Anta baka?",
+// Generate /all/ board configs
+func init() {
+	conf := BoardConfigs{
+		PostParseConfigs: PostParseConfigs{
+			HashCommands: true,
+		},
+		Spoilers: true,
+		CodeTags: true,
+		Spoiler:  "default.jpg",
+		Title:    "Aggregator metaboard",
+		Banners:  []string{},
+	}
+
+	var err error
+	AllBoardConfigs, err = conf.MarshalPublicJSON()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Get returns a pointer to the current server configuration struct. Callers

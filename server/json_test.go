@@ -405,6 +405,7 @@ func (d *DB) TestServeBoardConfigs(c *C) {
 		CodeTags: true,
 		Title:    "Animu",
 		Notice:   "Notice",
+		Banners:  []string{},
 	}
 	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
 
@@ -412,6 +413,14 @@ func (d *DB) TestServeBoardConfigs(c *C) {
 	c.Assert(err, IsNil)
 
 	rec, req := newPair(c, "/json/boardConfig/a")
+	d.r.ServeHTTP(rec, req)
+	assertBody(rec, string(std), c)
+}
+
+func (d *DB) TestServeAllBoardConfigs(c *C) {
+	std := []byte("foo")
+	config.AllBoardConfigs = std
+	rec, req := newPair(c, "/json/boardConfig/all")
 	d.r.ServeHTTP(rec, req)
 	assertBody(rec, string(std), c)
 }

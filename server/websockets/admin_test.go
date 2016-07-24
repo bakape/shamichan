@@ -113,6 +113,7 @@ func (*DB) TestBoardCreation(c *C) {
 		Spoiler:   "default.jpg",
 		Title:     title,
 		Eightball: config.EightballDefaults,
+		Banners:   []string{},
 		Staff: map[string][]string{
 			"owners": []string{userID},
 		},
@@ -149,11 +150,13 @@ func (*DB) TestBoardConfiguration(c *C) {
 			ForcedAnon: true,
 		},
 		Eightball: []string{},
+		Banners:   []string{},
 		Staff:     map[string][]string{},
 	}
 	init := config.BoardConfigs{
 		ID:        board,
 		Eightball: []string{},
+		Banners:   []string{},
 		Staff: map[string][]string{
 			"owners": []string{id},
 		},

@@ -1,5 +1,15 @@
 export type ModelAttrs = {[attr: string]: any}
 
+type HookHandler = (arg: any) => void
+type HookMap = {[key: string]: HookHandler[]}
+
+export interface ChangeEmitter {
+	onChange(key: string, func: HookHandler): void
+	replaceWith(newObj: ChangeEmitter): void
+
+	[index: string]: any
+}
+
 // Generic model class, that all other model classes extend
 export default class Model {
 	id: number
@@ -39,6 +49,18 @@ export function emitChanges<T extends ChangeEmitter>(obj: T = {} as T): T {
 			changeHooks[key] = [func]
 		}
 	}
+	proxy.replaceWith = replaceWith
 
 	return proxy
+}
+
+// Replace the properties of a ChangeEmitter without triggering updates on
+// unchanged keys
+function replaceWith(newObj: ChangeEmitter) {
+	for (let key in newObj) {
+		const newProp = newObj[key]
+		if (newProp !== this[key]) {
+			this[key] = newProp
+		}
+	}
 }

@@ -1,30 +1,41 @@
 // Stores the state of the web application
 
-import {emitChanges} from './model'
+import {emitChanges, ChangeEmitter} from './model'
 import {Post} from './posts/models'
 import PostCollection from './posts/collection'
-import {getID} from './util'
+import {getID, fetchJSON} from './util'
 import {db} from './db'
 import {write} from './render'
 import {send} from './connection'
 import PostView from './posts/view'
 
-// Allows us to typecheck configs. See config/defaults.json for more info.
-type Configs = {
+// Server-wide global configurations
+interface Configs extends ChangeEmitter {
 	radio: boolean
 	hats: boolean
 	illyaDance: boolean
 	captcha: boolean
-	captchaPublicKey: string
 	defaultLang: string
 	defaultCSS: string
 	FAQ: string
+	captchaPublicKey: string
 	boards: string[]
 	links: StringMap
 }
 
-type BoardConfigs = {
-	staffClasses: string[]
+// Board-specific configurations
+interface BoardConfigs extends ChangeEmitter {
+	readOnly: boolean
+	textOnly: boolean
+	forcedAnon: boolean
+	hashCommands: boolean
+	spoilers: boolean
+	codeTags: boolean
+	spoiler: string
+	title: string
+	notice: string
+	banners: string[]
+	[index: string]: any
 }
 
 interface PageState extends ChangeEmitter {
@@ -40,9 +51,7 @@ export const config: Configs = (window as any).config
 // Indicates, if in mobile mode. Determined server-side.
 export const isMobile: boolean = (window as any).isMobile
 
-// TODO: Board-specific configuration loading
-
-export let boardConfig: BoardConfigs = {} as BoardConfigs
+export let boardConfig: BoardConfigs = emitChanges({} as BoardConfigs)
 
 // Load initial page state
 export const page = emitChanges<PageState>(read(location.href))
@@ -87,6 +96,10 @@ export async function loadFromDB() {
 	delete resMine.id
 	mine = new Set<number>([resMine])
 }
+
+// Fetch and load board-specfic configurations
+export const loadBoardConfig = async () =>
+	boardConfig.replaceWith(await fetchJSON(`/json/boardConfig/${page.board}`))
 
 // Retrieve model of closest parent post
 export function getModel(el: Element): Post<PostView<any>> {

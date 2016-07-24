@@ -109,6 +109,10 @@ func serveBoardConfigs(
 	params map[string]string,
 ) {
 	board := params["board"]
+	if board == "all" {
+		serveJSON(res, req, config.AllBoardConfigs, nil)
+		return
+	}
 	if !auth.IsNonMetaBoard(board) {
 		text404(res, req)
 		return

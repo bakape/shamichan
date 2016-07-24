@@ -2,7 +2,7 @@
  User-set settings storage and change handling
 */
 
-import {emitChanges} from './model'
+import {emitChanges, ChangeEmitter} from './model'
 import {extend} from './util'
 import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
 import OptionsPanel from './options/view'
@@ -38,8 +38,6 @@ interface Options extends ChangeEmitter {
 	expandAll: string
 	workMode: string
 	workModeToggle: boolean
-
-	[index: string]: any
 }
 
 // Central options storage model

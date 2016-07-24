@@ -93,6 +93,7 @@ func createBoard(data []byte, c *Client) error {
 		Title:     req.Title,
 		Spoiler:   "default.jpg",
 		Eightball: config.EightballDefaults,
+		Banners:   []string{},
 		Staff: map[string][]string{
 			"owners": []string{c.UserID},
 		},

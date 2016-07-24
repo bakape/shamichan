@@ -46,9 +46,11 @@ func (*Tests) TestMarshalPublicBoardJSON(c *C) {
 		},
 		Spoiler: "foo.png",
 		Title:   "Animu",
+		Banners: []string{},
 	}
 	std := `
 {
+	"banners":[],
 	"codeTags":true,
 	"forcedAnon":false,
 	"hashCommands":false,
