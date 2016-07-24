@@ -268,3 +268,8 @@ export function table<T>(rows: T[], func: (arg: T) => string[]): string {
 // element
 export const inputValue = (el: Element, name: string): string =>
 	(el.querySelector(`input[name=${name}]`) as HTMLInputElement).value
+
+// Return a random item from an array
+export function random<T>(array: T[]): T {
+	return array[Math.floor(Math.random() * array.length)]
+}

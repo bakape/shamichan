@@ -52,8 +52,5 @@ class OneeSama {
 	replyBox() {
 		return this.asideLink('reply', null, 'posting');
 	}
-	newThreadBox() {
-		return this.asideLink('newThread', null, 'posting');
-	}
 }
 module.exports = OneeSama;

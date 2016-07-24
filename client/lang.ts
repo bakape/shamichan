@@ -1,6 +1,4 @@
-/*
- Provides type-safe and selective mappings for the language packs
-*/
+// Provides type-safe and selective mappings for the language packs
 
 import {makeEl, HTML, fetchJSON} from './util'
 import {write} from './render'

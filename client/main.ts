@@ -12,6 +12,7 @@ import {displayLoading} from './state'
 import {start as connect} from './connection'
 import {loadFromDB, loadBoardConfig} from './state'
 import {open} from './db'
+import {renderBoard} from './page/board'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -34,6 +35,7 @@ async function start() {
 	await open()
 	await loadFromDB()
 	await boardConf
+	renderBoard()
 	connect()
 	exec()
 	displayLoading(false)
