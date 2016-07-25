@@ -157,7 +157,12 @@ export default class AccountPanel extends TabbedModal<Model> {
 
 		if (this.captchas) {
 			for (let key in this.captchas) {
-				this.captchas[key].reload()
+				// Account for lazy loading of captchas, because we don't know
+				// which form the request came from
+				const widget = this.captchas[key].widget
+				if (widget) {
+					widget.reload()
+				}
 			}
 		}
 		renderFormResponse(this.el, text)

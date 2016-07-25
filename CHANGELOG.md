@@ -14,6 +14,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Client HTTPS detection
 	- SystemJS not loading in Palemoon
 	- Board list retrieval with no boards created
+	- Captcha reloading in login/registration forms
 
 ##v2.1.0-alpha - 2016-07-04
 * License:
