@@ -70,6 +70,22 @@ test: server_deps
 	go get gopkg.in/check.v1
 	go test ./...
 
+install_deps_deb:
+	apt-get update
+	apt-get install -y libvpx-dev libmp3lame-dev libopus-dev libvorbis-dev \
+		libx264-dev libtheora-dev git build-essential yasm
+
+build_ffmpeg:
+	git clone --depth 1 -b release/3.0 git://source.ffmpeg.org/ffmpeg.git \
+		.ffmpeg
+	cd .ffmpeg; \
+	./configure --enable-libmp3lame --enable-libx264 --enable-libvpx \
+		--enable-libvorbis --enable-libopus --enable-libtheora --enable-gpl
+	$(MAKE) -C .ffmpeg
+
+install_ffmpeg:
+	$(MAKE) -C .ffmpeg install
+
 package: all
 	rm -rf .package
 	mkdir -p .package/templates .package/images/src .package/images/thumb
