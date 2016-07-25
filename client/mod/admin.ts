@@ -1,12 +1,8 @@
-import View from '../view'
-import Model from '../model'
-import {write} from '../render'
 import {handlers, send, message} from '../connection'
 import {InputSpec, renderInput, inputType} from '../forms'
 import AccountFormView from './common'
-import {admin as lang, fetchAdminPack, mod} from '../lang'
-import AccountPanel from './login'
-import {HTML, table, extend} from '../util'
+import {admin as lang, fetchAdminPack} from '../lang'
+import {table} from '../util'
 import {langs, themes} from '../options/specs'
 
 type ServerConfigs = {
@@ -150,8 +146,8 @@ export default class ConfigPanel extends AccountFormView {
 			cls: 'wide-fields', // The panel needs much larger text inputs
 			noCaptcha: true,
 		}
-		super(attrs, el =>
-			this.extractConfigs(el))
+		super({}, () =>
+			this.extractConfigs())
 
 		// Request curent configuration and render the panel
 		send(message.configServer, null)
@@ -179,9 +175,9 @@ export default class ConfigPanel extends AccountFormView {
 	}
 
 	// Extract the configuration struct from the form
-	extractConfigs(form: Element) {
+	extractConfigs() {
 		const req = {} as ServerConfigs
-		const els = form
+		const els = this.el
 			.querySelectorAll("input[name], select[name], textarea[name]")
 
 		for (let el of els as NodeListOf<HTMLInputElement>) {

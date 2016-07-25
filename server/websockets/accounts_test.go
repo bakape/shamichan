@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/bakape/meguca/auth"
@@ -53,13 +54,13 @@ func (*DB) TestRegistration(c *C) {
 	}
 
 	// Valid registration
-	assertValidLogin(req, register, c)
+	assertValidLogin(req, register, messageRegister, c)
 
 	// User name taken
-	assertHandlerResponse(req, register, []byte(`34{"code":1,"session":""}`), c)
+	assertHandlerResponse(req, register, []byte(`33{"code":1,"session":""}`), c)
 }
 
-func assertValidLogin(req interface{}, fn handler, c *C) {
+func assertValidLogin(req interface{}, fn handler, typ messageType, c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
@@ -69,7 +70,8 @@ func assertValidLogin(req interface{}, fn handler, c *C) {
 	c.Assert(cl.UserID, Not(Equals), "")
 	_, msg, err := wcl.ReadMessage()
 	c.Assert(err, IsNil)
-	c.Assert(string(msg[:23]), Equals, `34{"code":0,"session":"`)
+	std := strconv.Itoa(int(typ)) + `{"code":0,"session":"`
+	c.Assert(string(msg[:23]), Equals, std)
 }
 
 func (*DB) TestAlreadyLoggedIn(c *C) {
@@ -122,7 +124,7 @@ func (*DB) TestLogin(c *C) {
 	}
 
 	// Valid login
-	assertValidLogin(req, login, c)
+	assertValidLogin(req, login, messageLogin, c)
 
 	// Wrong password
 	req.Password += "1"

@@ -1,12 +1,8 @@
 import {renderInput, InputSpec, inputType} from '../forms'
 import AccountFormView from './common'
-import Model from '../model'
-import AccountPanel, {renderFormResponse} from './login'
 import {send, message, handlers} from '../connection'
 import {inputValue, table} from '../util'
 import {admin as lang, mod, fetchAdminPack, ui} from '../lang'
-import {write} from '../render'
-import {config} from '../state'
 
 // Response codes for board creation requests
 const enum responseCode {
@@ -20,8 +16,8 @@ const enum responseCode {
 // Panel view for creating boards
 export default class BoardCreationPanel extends AccountFormView {
 	constructor() {
-		super({id: "create-board"}, el =>
-			this.sendRequest(el))
+		super({}, () =>
+			this.sendRequest())
 		fetchAdminPack().then(() =>
 			this.render())
 		handlers[message.createBoard] = (res: responseCode) =>
@@ -56,10 +52,10 @@ export default class BoardCreationPanel extends AccountFormView {
 		super.remove()
 	}
 
-	sendRequest(el: Element) {
+	sendRequest() {
 		const req = {
-			name: inputValue(el, 'boardName'),
-			title: inputValue(el, 'boardTitle'),
+			name: inputValue(this.el, 'boardName'),
+			title: inputValue(this.el, 'boardTitle'),
 		}
 		this.injectCaptcha(req)
 		send(message.createBoard, req)
@@ -82,6 +78,6 @@ export default class BoardCreationPanel extends AccountFormView {
 		}
 
 		this.reloadCaptcha(res)
-		renderFormResponse(this.el, text)
+		this.renderFormResponse(text)
 	}
 }

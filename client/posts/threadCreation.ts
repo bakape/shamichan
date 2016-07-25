@@ -6,7 +6,8 @@ import {$threads} from '../page/common'
 import View from '../view'
 import Model from '../model'
 import {write} from '../render'
-import CaptchaView, {Captcha} from '../captcha'
+import {FormView} from '../forms'
+import {Captcha} from '../captcha'
 
 interface ThreadCreationRequest extends Captcha {
 	name: string
@@ -17,28 +18,28 @@ interface ThreadCreationRequest extends Captcha {
 	board: string
 }
 
+// For ensuring we have unique captcha IDs
+let threadFormCounter = 0
+
 on($threads, "click", e => new ThreadForm(e), {selector: ".new-thread-button"})
 
 // Form view for creating new threads
-class ThreadForm extends View<ThreadCreationRequest> {
+class ThreadForm extends FormView {
 	$parent: Element
 	$aside: Element
 
 	constructor(event: Event) {
-		super({
-			tag: "form",
-			cls: "thread-form",
-		})
+		super({}, () =>
+			this.sendRequest())
 		this.$parent = event.target as Element
 		this.$aside = this.$parent.closest("aside")
 		this.render()
 	}
 
+	// Render the element
 	render() {
-		const html = HTML
-			`<input type="text" name="subject">
-			<label for="subject">`
-		this.el.innerHTML = html
+		const html = ""
+		this.renderForm(html)
 		write(() => {
 			this.$parent.style.display = "none"
 			this.$aside.classList.remove("act")
@@ -52,5 +53,9 @@ class ThreadForm extends View<ThreadCreationRequest> {
 			this.$parent.style.display = ""
 			this.$aside.classList.add("act")
 		})
+	}
+
+	sendRequest() {
+
 	}
 }

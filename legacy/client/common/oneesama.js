@@ -1,15 +1,3 @@
-/*
- Rendering singleton both server and client-side
- */
-
-const _ = require('underscore'),
-	index = require('./index'),
-	util = require('./util'),
-	{config} = imports,
-	{pad, parseHTML} = util;
-
-const break_re = new RegExp("(\\S{" + index.WORD_LENGTH_LIMIT + "})");
-
 class OneeSama {
 
 	readableUTCTime(d, seconds) {
@@ -38,7 +26,6 @@ class OneeSama {
 			</span>`;
 	}
 
-
 	asideLink(inner, href, cls, innerCls) {
 		return parseHTML
 			`<aside class="act glass ${cls}">
@@ -49,8 +36,8 @@ class OneeSama {
 				</a>
 			</aside>`
 	}
+
 	replyBox() {
 		return this.asideLink('reply', null, 'posting');
 	}
 }
-module.exports = OneeSama;

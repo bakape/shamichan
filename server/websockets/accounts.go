@@ -79,7 +79,7 @@ func register(data []byte, c *Client) error {
 		return err
 	}
 
-	return commitLogin(code, req.ID, c)
+	return commitLogin(code, messageRegister, req.ID, c)
 }
 
 // Seperated into its own function for cleanliness and testability
@@ -136,7 +136,9 @@ func checkPasswordAndCaptcha(password, ip string, captcha types.Captcha) (
 
 // If login succesful, generate a session token and comit to DB. Otherwise
 // simply send the response code the client.
-func commitLogin(code loginResponseCode, id string, c *Client) (err error) {
+func commitLogin(code loginResponseCode, typ messageType, id string, c *Client) (
+	err error,
+) {
 	msg := loginResponse{Code: code}
 	if code == loginSuccess {
 		msg.Session, err = util.RandomID(40)
@@ -161,7 +163,7 @@ func commitLogin(code loginResponseCode, id string, c *Client) (err error) {
 		c.UserID = id
 	}
 
-	return c.sendMessage(messageLogin, msg)
+	return c.sendMessage(typ, msg)
 }
 
 // Log in a registered user account
@@ -184,7 +186,7 @@ func login(data []byte, c *Client) error {
 	hash, err := db.GetLoginHash(req.ID)
 	if err != nil {
 		if err == r.ErrEmptyResult {
-			return commitLogin(wrongCredentials, req.ID, c)
+			return commitLogin(wrongCredentials, messageLogin, req.ID, c)
 		}
 		return err
 	}
@@ -200,7 +202,7 @@ func login(data []byte, c *Client) error {
 		return err
 	}
 
-	return commitLogin(code, req.ID, c)
+	return commitLogin(code, messageLogin, req.ID, c)
 }
 
 // Authenticate the session token of an existing logged in user account

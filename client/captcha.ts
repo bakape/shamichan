@@ -5,20 +5,23 @@ import {config} from './state'
 import {HTML, makeAttrs} from './util'
 import {ui} from './lang'
 
-// For generating unique IDs for every captcha
-let captchaCounter = 0
-
 // Data of a captcha challenge
 export interface Captcha {
 	captcha: string
 	captchaID: string
 }
 
+// For generating unique IDs for every captcha
+let captchaCounter = 0
+
+// Returns a unique ID for captcha containers
+export const newCaptchaID = (): string =>
+	`captcha-${captchaCounter++}`
+
 // Wrapper around Solve Media's captcha service AJAX API
 export default class CaptchaView extends View<Model> {
 	widget: ACPuzzleController
 	id: string
-	captchaID: number = captchaCounter++
 
 	constructor(id: string) {
 		super({el: document.getElementById(id)})
@@ -39,7 +42,7 @@ export default class CaptchaView extends View<Model> {
 
 	// Render the container for the captcha
 	render() {
-		const id = this.captchaID.toString()
+		const {id} = this
 		const imageAttrs: StringMap = {
 			id: `adcopy-puzzle-image-${id}`,
 			class: 'captcha-image',
@@ -74,7 +77,7 @@ export default class CaptchaView extends View<Model> {
 	// Render the actual captcha
 	renderWidget() {
 		this.widget = ACPuzzle.create(config.captchaPublicKey, this.id, {
-			id: this.captchaID.toString(),
+			id: this.id,
 			multi: true,
 			theme: "custom",
 		})

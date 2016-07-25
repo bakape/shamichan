@@ -47,7 +47,7 @@ exports.Post = Backbone.Model.extend({
 	removeImage(info) {
 		// Staff won't have the image removed, but rerendered with
 		// indication, that it has been deleted and extra information
-		this.moderationInfo(info) 
+		this.moderationInfo(info)
 			|| this.unset('image').dispatch('renderImage');
 	},
 	deletePost(info) {
@@ -69,7 +69,7 @@ exports.Post = Backbone.Model.extend({
 	// Add info about the moderation action taken. This is only used on
 	// authenticated staff clients, but for sanity, lets keep it here in
 	// common model methods.
-	moderationInfo(info) { 
+	moderationInfo(info) {
 		if (!info)
 			return false;
 		const mod = this.get('mod') || [];
@@ -104,23 +104,7 @@ exports.Thread = exports.Post.extend({
 				model.remove();
 		}
 	},
-	/*
-	 With the current renderring and storage implementations we can not get the
-	 image omit count during the server-side render.
-	 */
-	getImageOmit() {
-		let image_omit = this.get('imgctr') -1;
-		const replies = this.get('replies');
 
-		for (let i = 0, lim = replies.length; i < lim; i++) {
-			let model = state.posts.get(replies[i]);
-			if (!model)
-				continue;
-			if (model.get('image'))
-				image_omit--;
-		}
-		this.set('image_omit', image_omit);
-	},
 	toggleLocked(val, info) {
 		this.moderationInfo(info);
 		this.set('locked', val).dispatch('renderLocked', val);

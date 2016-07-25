@@ -6,11 +6,9 @@ import Model from './model'
 import {write, read} from './render'
 import {ui} from './lang'
 import {config} from './state'
-import CaptchaView from './captcha'
+import CaptchaView, {newCaptchaID} from './captcha'
 
-export const enum inputType {
-	boolean, number, string, select, multiline, map,
-}
+export const enum inputType {boolean, number, string, select, multiline, map}
 
 // Spec of a single input element for board and server control panels
 export type InputSpec = {
@@ -26,8 +24,6 @@ export type InputSpec = {
 	choices?: string[]
 	[index: string]: any
 }
-
-export type FormHandler = (form: Element) => void
 
 export interface FormViewAttrs extends ViewAttrs {
 	noCaptcha?: boolean
@@ -144,11 +140,12 @@ function renderLabel(spec: InputSpec): string {
 
 // Generic input form view with optional captcha support
 export class FormView extends View<Model> {
-	handleForm: FormHandler // Function used for sending the form to the client
+	handleForm: () => void // Function used for sending the form to the client
 	captcha: CaptchaView
 	noCaptcha: boolean
 
-	constructor(attrs: FormViewAttrs, handler: FormHandler) {
+	constructor(attrs: FormViewAttrs, handler: () => void) {
+		attrs.tag = "form"
 		super(attrs)
 		this.handleForm = handler
 		this.noCaptcha = attrs.noCaptcha
@@ -166,7 +163,7 @@ export class FormView extends View<Model> {
 
 	// Render a form field and embed the input fields inside it
 	renderForm(fields: string) {
-		const captchaID = this.id + "-captcha"
+		const captchaID = newCaptchaID()
 
 		this.el.innerHTML = HTML
 			`<form>
@@ -176,6 +173,7 @@ export class FormView extends View<Model> {
 				<input type="button" name="cancel" value="${ui.cancel}">
 			</form>
 			<div class="form-response admin"></div>`
+
 		write(() => {
 			if (config.captcha && !this.noCaptcha) {
 				this.captcha = new CaptchaView(captchaID)
@@ -186,7 +184,7 @@ export class FormView extends View<Model> {
 	// Submit form to server. Pass it to the assigned handler function
 	submit(event: Event) {
 		event.preventDefault()
-		this.handleForm(event.target as Element)
+		this.handleForm()
 	}
 
 	// Also destroy captcha, if any
@@ -202,6 +200,12 @@ export class FormView extends View<Model> {
 		if (this.captcha) {
 			extend(req, this.captcha.data())
 		}
+	}
+
+	// Render a text comment about the response status below the form
+	renderFormResponse(text: string) {
+		write(() =>
+			this.el.querySelector(".form-response").textContent = text)
 	}
 
 	// Load a new captcha, if present and response code is not 0

@@ -1,14 +1,11 @@
-import {table, makeAttrs, inputValue} from '../util'
+import {inputValue} from '../util'
 import {mod as lang, ui} from '../lang'
-import {write} from '../render'
 import {send, handlers, message} from '../connection'
-import AccountPanel, {
-	validatePasswordMatch, responseCode, renderFormResponse
-} from './login'
-import AccountFormView from './common'
-import Model from '../model'
+import {responseCode} from './login'
+import AccountFormView, {renderFields, validatePasswordMatch} from './common'
+import {Captcha} from '../captcha'
 
-type PasswordChangeRequest = {
+interface PasswordChangeRequest extends Captcha {
 	old: string
 	new: string
 }
@@ -16,10 +13,10 @@ type PasswordChangeRequest = {
 // View for changing a password, that gets embedded below the parent view
 export default class PasswordChangeView extends AccountFormView {
 	constructor() {
-		super({id: "change-password"}, el =>
+		super({}, () =>
 			send(message.changePassword, {
-				old: inputValue(el, "oldPassword"),
-				new: inputValue(el, "newPassword"),
+				old: inputValue(this.el, "oldPassword"),
+				new: inputValue(this.el, "newPassword"),
 			}))
 		this.render()
 
@@ -31,21 +28,8 @@ export default class PasswordChangeView extends AccountFormView {
 
 	// Render the element
 	render() {
-		const tableData = ["oldPassword", "newPassword", "repeat"]
-		const tableHTML = table(tableData, name => {
-			const attrs: StringMap = {
-				name,
-				type: "password",
-				maxlength: "30",
-				required: "",
-			}
-			return [
-				`<label for="${name}">${lang[name]}:</label>`,
-				`<input ${makeAttrs(attrs)}>`
-			]
-		})
-
-		this.renderForm(tableHTML)
+		const html = renderFields("oldPassword", "newPassword", "repeat")
+		this.renderForm(html)
 	}
 
 	// Handle the changePassword response from the server
@@ -67,7 +51,7 @@ export default class PasswordChangeView extends AccountFormView {
 		}
 
 		this.reloadCaptcha(code)
-		renderFormResponse(this.el, text)
+		this.renderFormResponse(text)
 	}
 
 	// Also remove the websocket message handler, so this instance can be GCed
