@@ -96,11 +96,14 @@ export default class AccountPanel extends TabbedModal<Model> {
 				<div data-id="1"></div>
 			</div>`
 
-		write(() => {
-			this.el.innerHTML = html
+		write(() =>
+			this.el.innerHTML = html)
+		read(() => {
 			const tabs = this.el.querySelectorAll(".tab-cont div")
-			tabs[0].append(new LoginForm().el)
-			tabs[1].append(new RegistrationForm().el)
+			write(() => {
+				tabs[0].append(new LoginForm().el)
+				tabs[1].append(new RegistrationForm().el)
+			})
 		})
 	}
 

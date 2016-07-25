@@ -164,8 +164,7 @@ export class FormView extends View<Model> {
 	// Render a form field and embed the input fields inside it
 	renderForm(fields: string) {
 		const captchaID = newCaptchaID()
-
-		this.el.innerHTML = HTML
+		const html = HTML
 			`<form>
 				${fields}
 				<div id="${captchaID}"></div>
@@ -174,11 +173,12 @@ export class FormView extends View<Model> {
 			</form>
 			<div class="form-response admin"></div>`
 
-		write(() => {
-			if (config.captcha && !this.noCaptcha) {
-				this.captcha = new CaptchaView(captchaID)
-			}
-		})
+		write(() =>
+			this.el.innerHTML = html)
+		if (config.captcha && !this.noCaptcha) {
+			read(() =>
+				this.captcha = new CaptchaView(captchaID))
+		}
 	}
 
 	// Submit form to server. Pass it to the assigned handler function

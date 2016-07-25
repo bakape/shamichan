@@ -29,13 +29,15 @@ function scheduleFlush() {
 
 // Perform all write tasks and then read tasks in the stack
 function flush() {
-	for (let i = 0; i < writeStack.length; i++) {
-		writeStack[i]()
-	}
-	for (let i = 0; i < readStack.length; i++) {
-		readStack[i]()
-	}
+	const writes = writeStack,
+		reads = readStack
 	writeStack = []
 	readStack = []
+	for (let i = 0; i < writes.length; i++) {
+		writes[i]()
+	}
+	for (let i = 0; i < reads.length; i++) {
+		reads[i]()
+	}
 	scheduled = false
 }
