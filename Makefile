@@ -73,7 +73,7 @@ test: server_deps
 travis_build_ffmpeg:
 	apt-get install -y libvpx-dev libmp3lame-dev libopus-dev libvorbis-dev \
 		libx264-dev libtheora-dev git build-essential yasm
-ifeq ("$(wildcard .ffmpeg)", "")
+ifeq ("$(wildcard .ffmpeg/ffmpeg)", "")
 	git clone --depth 1 -b release/3.0 https://github.com/FFmpeg/FFmpeg.git \
 		.ffmpeg
 	cd .ffmpeg; \
