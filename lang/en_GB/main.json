@@ -24,7 +24,8 @@
 		"search": "Search",
 		"invalidCaptcha": "Invalid captcha",
 		"focusForCaptcha": "Focus to load captcha",
-		"reloadCaptcha": "Click to reload"
+		"reloadCaptcha": "Click to reload",
+		"submit": "Submit"
 	},
 
 	"banner": {
@@ -102,7 +103,6 @@
 		"changePassword": "Change password",
 		"oldPassword": "Old password",
 		"newPassword": "New password",
-		"submit": "Submit",
 		"password": "Password",
 		"repeat": "Repeat",
 		"mustMatch": "Passwords must match",

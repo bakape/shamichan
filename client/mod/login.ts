@@ -37,6 +37,9 @@ type LoginResponse = {
 let loginID = localStorage.getItem("loginID"),
 	sessionToken = localStorage.getItem("sessionToken")
 
+// Only active AccountPanel instance
+export let accountPannel: AccountPanel
+
 // Account login and registration
 export default class AccountPanel extends TabbedModal<Model> {
 	$login: HTMLFormElement = (this.el
@@ -47,6 +50,7 @@ export default class AccountPanel extends TabbedModal<Model> {
 
 	constructor() {
 		super({el: document.querySelector('#account-panel')})
+		accountPannel = this
 
 		on(this.$register, 'submit', e =>
 			this.register(e))
@@ -90,7 +94,7 @@ export default class AccountPanel extends TabbedModal<Model> {
 			for (let name of ["id", "password"]) {
 				setLabel(tab, name, lang[name])
 			}
-			(tab.lastChild as HTMLInputElement).value = lang.submit
+			(tab.lastChild as HTMLInputElement).value = ui.submit
 		}
 
 		setLabel(el, "repeat", lang.repeat)
@@ -199,7 +203,7 @@ export default class AccountPanel extends TabbedModal<Model> {
 		return () =>
 			loadModule(path).then(m => {
 				this.hideMenu()
-				new m.default(this)
+				new m.default()
 			})
 	}
 

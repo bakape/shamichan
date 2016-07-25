@@ -63,6 +63,7 @@ type LnUI = {
 	invalidCaptcha: string
 	focusForCaptcha: string
 	reloadCaptcha: string
+	submit: string
 	[index: string]: string
 }
 
@@ -140,7 +141,6 @@ type LnMod = {
 	register: string
 	logout: string
 	logoutAll: string
-	submit: string
 	password: string
 	repeat: string
 	changePassword: string

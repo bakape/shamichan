@@ -5,8 +5,10 @@ import * as options from './options'
 import * as client from './client'
 import BoardNavigation from './page/boardNavigation'
 import {exec, defer} from './defer'
+import * as threadCreation from './posts/threadCreation'
 const o = options // Prevents the compiler from removing as an unused import
 const c = client
+const t = threadCreation
 
 import {displayLoading} from './state'
 import {start as connect} from './connection'

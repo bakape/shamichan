@@ -2,13 +2,14 @@ import View from '../view'
 import Model from '../model'
 import {write} from '../render'
 import {handlers, send, message} from '../connection'
-import {InputSpec, renderInput, inputType, FormView} from './util'
+import {InputSpec, renderInput, inputType} from '../forms'
+import AccountFormView from './common'
 import {admin as lang, fetchAdminPack, mod} from '../lang'
 import AccountPanel from './login'
 import {HTML, table, extend} from '../util'
 import {langs, themes} from '../options/specs'
 
-class ServerConfigs extends Model {
+type ServerConfigs = {
 	prune: boolean
 	radio: boolean
 	hats: boolean
@@ -31,6 +32,8 @@ class ServerConfigs extends Model {
 	defaultCSS: string
 	defaultLang: string
 	links: StringMap
+
+	[index: string]: any
 }
 
 const specs: InputSpec[] = [
@@ -141,11 +144,9 @@ const specs: InputSpec[] = [
 ]
 
 // Panel for server administration controls such as global server settings
-export default class ConfigPanel extends FormView<ServerConfigs> {
-	constructor(parent: AccountPanel) {
+export default class ConfigPanel extends AccountFormView {
+	constructor() {
 		const attrs = {
-			parent,
-			model: new ServerConfigs(),
 			cls: 'wide-fields', // The panel needs much larger text inputs
 			noCaptcha: true,
 		}
@@ -177,10 +178,11 @@ export default class ConfigPanel extends FormView<ServerConfigs> {
 		super.remove()
 	}
 
-	// Exteract the configuration struct from the form
+	// Extract the configuration struct from the form
 	extractConfigs(form: Element) {
+		const req = {} as ServerConfigs
 		const els = form
-			.querySelectorAll("input[name],select[name],textarea[name]")
+			.querySelectorAll("input[name], select[name], textarea[name]")
 
 		for (let el of els as NodeListOf<HTMLInputElement>) {
 			let val: any
@@ -197,19 +199,19 @@ export default class ConfigPanel extends FormView<ServerConfigs> {
 			default:
 				val = el.value
 			}
-			this.model[el.name] = val
+			req[el.name] = val
 		}
 
 		// Read links key-value pairs
 		const keyVals = this.el.querySelectorAll(
 			"div[name=links] .map-field"
 		) as NodeListOf<HTMLInputElement>
-		this.model.links = {}
+		req.links = {}
 		for (let i = 0; i < keyVals.length; i += 2) {
-			this.model.links[keyVals[i].value] = keyVals[i+1].value
+			req.links[keyVals[i].value] = keyVals[i+1].value
 		}
 
-		send(message.configServer, this.model)
+		send(message.configServer, req)
 		this.remove()
 	}
 }

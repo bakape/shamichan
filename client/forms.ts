@@ -1,11 +1,12 @@
-import {HTML, makeAttrs, makeEls, extend} from '../util'
-import {mod as lang, ui} from '../lang'
-import View, {ViewAttrs} from '../view'
-import AccountPanel from './login'
-import {write, read} from '../render'
-import Model from '../model'
-import CaptchaView from '../captcha'
-import {config} from '../state'
+// Utility functions and classes for rendering forms
+
+import {HTML, makeAttrs, makeEls, extend} from './util'
+import View, {ViewAttrs} from './view'
+import Model from './model'
+import {write, read} from './render'
+import {ui} from './lang'
+import {config} from './state'
+import CaptchaView from './captcha'
 
 export const enum inputType {
 	boolean, number, string, select, multiline, map,
@@ -27,10 +28,9 @@ export type InputSpec = {
 	[index: string]: any
 }
 
-type FormHandler = (form: Element) => void
+export type FormHandler = (form: Element) => void
 
-interface FormViewAttrs extends ViewAttrs {
-	parent?: AccountPanel
+export interface FormViewAttrs extends ViewAttrs {
 	noCaptcha?: boolean
 }
 
@@ -145,18 +145,14 @@ function renderLabel(spec: InputSpec): string {
 	<br>`
 }
 
-// Generic input form that is embedded into AccountPanel. Takes the parent
-// AccountPanel view and function for extracting the form and sending the
-// request as parameters.
-export class FormView<M> extends View<M> {
+// Generic input form view with optional captcha support
+export class FormView extends View<Model> {
 	handleForm: FormHandler // Function used for sending the form to the client
-	parent: AccountPanel
 	captcha: CaptchaView
 	noCaptcha: boolean
 
 	constructor(attrs: FormViewAttrs, handler: FormHandler) {
 		super(attrs)
-		this.parent = attrs.parent
 		this.handleForm = handler
 		this.noCaptcha = attrs.noCaptcha
 		this.onClick({
@@ -171,8 +167,7 @@ export class FormView<M> extends View<M> {
 			this.submit(e))
 	}
 
-	// Render a form field and embed the input fields inside it. Then append it
-	// to the parrent view.
+	// Render a form field and embed the input fields inside it
 	renderForm(fields: string) {
 		const captchaID = this.id + "-captcha"
 
@@ -180,32 +175,29 @@ export class FormView<M> extends View<M> {
 			`<form>
 				${fields}
 				<div id="${captchaID}"></div>
-				<input type="submit" value="${lang.submit}">
+				<input type="submit" value="${ui.submit}">
 				<input type="button" name="cancel" value="${ui.cancel}">
 			</form>
 			<div class="form-response admin"></div>`
 		write(() => {
-			this.parent.hideMenu()
-			this.parent.el.append(this.el)
 			if (config.captcha && !this.noCaptcha) {
 				this.captcha = new CaptchaView(captchaID)
 			}
 		})
 	}
 
-	// Submit form to server. Pass it to the assigned send function
+	// Submit form to server. Pass it to the assigned handler function
 	submit(event: Event) {
 		event.preventDefault()
 		this.handleForm(event.target as Element)
 	}
 
-	// Unhide the parent AccountPanel, when this view is removed
+	// Also destroy captcha, if any
 	remove() {
 		if (this.captcha) {
 			this.captcha.remove()
 		}
 		super.remove()
-		this.parent.unhideMenu()
 	}
 
 	// Inject captcha data into the request struct, if any

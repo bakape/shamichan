@@ -7,7 +7,7 @@ import {$threads} from './common'
 // Button for expanding the thread creation form
 const newThreadButton = HTML
 	`<aside class="act glass posting">
-		<a>
+		<a class="new-thread-button">
 			${lang.newThread}
 		</a>
 	</aside>`

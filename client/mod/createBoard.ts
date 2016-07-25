@@ -1,4 +1,5 @@
-import {FormView, renderInput, InputSpec, inputType} from './util'
+import {renderInput, InputSpec, inputType} from '../forms'
+import AccountFormView from './common'
 import Model from '../model'
 import AccountPanel, {renderFormResponse} from './login'
 import {send, message, handlers} from '../connection'
@@ -17,9 +18,9 @@ const enum responseCode {
 }
 
 // Panel view for creating boards
-export default class BoardCreationPanel extends FormView<Model> {
-	constructor(parent: AccountPanel) {
-		super({parent, id: "create-board"}, el =>
+export default class BoardCreationPanel extends AccountFormView {
+	constructor() {
+		super({id: "create-board"}, el =>
 			this.sendRequest(el))
 		fetchAdminPack().then(() =>
 			this.render())

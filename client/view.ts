@@ -20,7 +20,9 @@ export default class View<M> {
 	// blank model. If no element suplied, creates a new one from tags. Sets
 	// class and id, if supplied.
 	constructor({el, model, tag, cls, id}: ViewAttrs) {
-		this.model = model || new Model() as any
+		if (model) {
+			this.model = model as any
+		}
 		if (!el) {
 			this.el = document.createElement(tag || 'div')
 			if (id) {
