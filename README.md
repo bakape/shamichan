@@ -70,8 +70,7 @@ from the [release](https://github.com/bakape/meguca/releases) page.
 * `make watch` watches the file system for changes and incrementally rebuilds
 the client
 * `make clean` removes files from the previous compilation
-* `make dist_clean` in addition to the above, removes configuration, images and
-stored assets
+* `make dist_clean` in addition to the above removes images and stored assets
 
 ###Linux only
 * make creates a Go workspace in the `.build` subdirectory. If you don't have a
