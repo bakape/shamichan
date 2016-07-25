@@ -115,10 +115,6 @@ export function outerWidth(el: Element): number {
 	return total
 }
 
-// Confirms email is saging
-export const isSage = (email: string): boolean =>
-	email ? email.trim() === 'sage' : false
-
 // Pad an integer with a leading zero, if below 10
 export const pad = (n: number): string =>
 	(n < 10 ? '0' : '') + n

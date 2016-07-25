@@ -8,6 +8,7 @@ import Model from '../model'
 import {write} from '../render'
 import {FormView} from '../forms'
 import {Captcha} from '../captcha'
+import identity from './identity'
 
 interface ThreadCreationRequest extends Captcha {
 	name: string
@@ -56,6 +57,6 @@ class ThreadForm extends FormView {
 	}
 
 	sendRequest() {
-
+		identity
 	}
 }
