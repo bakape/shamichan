@@ -27,6 +27,7 @@ export type InputSpec = {
 
 export interface FormViewAttrs extends ViewAttrs {
 	noCaptcha?: boolean
+	noCancel?: boolean
 }
 
 // Render a form input element for consumption by ../util.table
@@ -143,12 +144,14 @@ export class FormView extends View<Model> {
 	handleForm: () => void // Function used for sending the form to the client
 	captcha: CaptchaView
 	noCaptcha: boolean
+	noCancel: boolean
 
 	constructor(attrs: FormViewAttrs, handler: () => void) {
 		attrs.tag = "form"
 		super(attrs)
 		this.handleForm = handler
 		this.noCaptcha = attrs.noCaptcha
+		this.noCancel = attrs.noCancel
 		this.onClick({
 			"input[name=cancel]": () =>
 				this.remove(),
@@ -163,13 +166,14 @@ export class FormView extends View<Model> {
 
 	// Render a form field and embed the input fields inside it
 	renderForm(fields: string) {
-		const captchaID = newCaptchaID()
+		const captchaID = newCaptchaID(),
+			cancel = `<input type="button" name="cancel" value="${ui.cancel}">`
 		const html = HTML
 			`<form>
 				${fields}
 				<div id="${captchaID}"></div>
 				<input type="submit" value="${ui.submit}">
-				<input type="button" name="cancel" value="${ui.cancel}">
+				${this.noCancel ? "" : cancel}
 			</form>
 			<div class="form-response admin"></div>`
 

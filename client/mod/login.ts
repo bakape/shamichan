@@ -162,7 +162,7 @@ defer(() =>
 // Common functionality of LoginForm and RegistrationForm
 class BaseLoginForm extends FormView {
 	constructor(handler: () => void) {
-		super({}, handler)
+		super({noCancel: true}, handler)
 	}
 
 	// Extract and send login ID and password and captcha (if any) from a form
