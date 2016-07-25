@@ -22,7 +22,6 @@ export type InputSpec = {
 	value?: number|string|boolean|StringMap
 	min?: number
 	max?: number
-	minLength?: number
 	maxLength?: number
 	choices?: string[]
 	[index: string]: any
@@ -65,10 +64,8 @@ export function renderInput(spec: InputSpec): string[] {
 		if (spec.pattern) {
 			attrs["pattern"] = spec.pattern
 		}
-		for (let prop of ["minLength", "maxLength"]) {
-			if (prop in spec) {
-				attrs[prop] = spec[prop].toString()
-			}
+		if ("maxLength" in spec) {
+			attrs["maxlength"] = spec.maxLength.toString()
 		}
 		break
 	case inputType.select:

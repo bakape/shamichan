@@ -36,7 +36,6 @@ export default class PasswordChangeView extends AccountFormView {
 			const attrs: StringMap = {
 				name,
 				type: "password",
-				minlength: "6",
 				maxlength: "30",
 				required: "",
 			}

@@ -10,6 +10,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Required Go version to 1.7
 	- Move origin configuration to server flag
 	- Restrict board names to [a-z0-9]{1,3}
+	- Remove minimum length requirement for passwords
 * Fix:
 	- Client HTTPS detection
 	- SystemJS not loading in Palemoon
