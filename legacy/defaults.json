@@ -99,42 +99,5 @@
                 }
             }
         }
-    },
-
-    // File names of the images to use as banners inside the ./www/banners
-    // Example: ['banner01.png', 'banner02.gif', 'banner03.jpg']
-    "banners": [
-        "banner0.png"
-    ],
-
-    // Array of answers for the 8ball random wisdom dispenser. To use, type
-    // #8ball in a new line of a post, followed by enter.
-    "eightball": [
-        "Yes",
-        "No",
-        "Maybe",
-        "It can't be helped",
-        "Hell yeah, motherfucker",
-        "Ara ara~",
-        "That is my fetish",
-        "Anta baka?"
-    ],
-
-    // Post creation configuration
-    "posts": {
-        // Disable creation of new posts and threads
-        "readOnly": false,
-
-        // Force all posters to be Anonymous
-        "forcedAnon": false
-    },
-
-    // Configuration for human authentication with Google's ReCaptcha service
-    "recaptcha": {
-        // Public key
-        "public": "",
-
-        // Private key
-        "private": ""
-    },
+    }
 }
