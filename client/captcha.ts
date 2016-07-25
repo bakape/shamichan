@@ -89,8 +89,10 @@ export default class CaptchaView extends View<Model> {
 	}
 
 	remove() {
-		write(() =>
-			this.widget.destroy())
+		if (this.widget) {
+			write(() =>
+				this.widget.destroy())
+		}
 		super.remove()
 	}
 
