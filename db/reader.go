@@ -22,7 +22,7 @@ var (
 	}
 )
 
-// GetThread retrieves thread JSON from the database
+// GetThread retrieves public thread data from the database
 func GetThread(id int64, lastN int) (*types.Thread, error) {
 	toMerge := []interface{}{getThreadOP, getLogCounter}
 
@@ -38,7 +38,7 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 	}
 
 	var thread types.Thread
-	err := One(getThread(id).Merge(toMerge...).Without("log", "op"), &thread)
+	err := One(getThread(id).Merge(toMerge...).Without("log"), &thread)
 	if err != nil {
 		return nil, err
 	}
@@ -49,9 +49,21 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 	return &thread, nil
 }
 
-// GetPost reads a single post from the database
-func GetPost(id int64) (post types.Post, err error) {
-	err = One(FindPost(id).Default(nil), &post)
+// GetPost reads a single post from the database complete with parent board and
+// thread
+func GetPost(id int64) (post types.StandalonePost, err error) {
+	q := FindParentThread(id).
+		Do(func(t r.Term) r.Term {
+			return t.
+				Field("posts").
+				Field(util.IDToString(id)).
+				Merge(map[string]r.Term{
+					"op":    t.Field("id"),
+					"board": t.Field("board"),
+				})
+		}).
+		Default(nil)
+	err = One(q, &post)
 	return
 }
 
@@ -75,8 +87,7 @@ func GetBoard(board string) (out *types.Board, err error) {
 	return
 }
 
-// GetAllBoard retrieves all threads the client has access to for the "/all/"
-// meta-board
+// GetAllBoard retrieves all threads for the "/all/" meta-board
 func GetAllBoard() (board *types.Board, err error) {
 	query := r.
 		Table("threads").

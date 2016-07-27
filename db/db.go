@@ -63,12 +63,17 @@ func All(query r.Term, res interface{}) error {
 	return c.All(res)
 }
 
-// FindPost is a shorthand for finding posts only by ID number
-func FindPost(id int64) r.Term {
+// FindParentThread finds the parent thread of an arbitrary post number
+func FindParentThread(id int64) r.Term {
 	return r.
 		Table("threads").
 		GetAllByIndex("post", id).
-		AtIndex(0).
+		AtIndex(0)
+}
+
+// FindPost finds a post only by ID number
+func FindPost(id int64) r.Term {
+	return FindParentThread(id).
 		Field("posts").
 		Field(util.IDToString(id))
 }

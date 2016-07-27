@@ -64,14 +64,10 @@ func setupPosts(c *C) {
 			Posts: map[int64]types.Post{
 				1: {
 					ID:    1,
-					OP:    1,
-					Board: "a",
 					Image: genericImage,
 				},
 				2: {
-					ID:    2,
-					OP:    1,
-					Board: "a",
+					ID: 2,
 				},
 			},
 		},
@@ -83,8 +79,6 @@ func setupPosts(c *C) {
 				3: {
 					ID:    3,
 					Image: genericImage,
-					OP:    3,
-					Board: "a",
 				},
 			},
 		},
@@ -96,8 +90,6 @@ func setupPosts(c *C) {
 				4: {
 					ID:    4,
 					Image: genericImage,
-					OP:    4,
-					Board: "c",
 				},
 			},
 		},
@@ -163,8 +155,8 @@ func (d *DB) TestServePost(c *C) {
 
 	// Existing post
 	const (
-		etag = "d96fa6542aaf4c9e"
-		body = `{"editing":false,"op":1,"id":2,"time":0,"board":"a","body":""}`
+		etag = "998db21ac97653d1"
+		body = `{"editing":false,"id":2,"time":0,"body":"","op":1,"board":"a"}`
 	)
 	rec, req = newPair(c, "/json/post/2")
 	d.r.ServeHTTP(rec, req)
@@ -197,7 +189,6 @@ func (d *DB) TestBoardJSON(c *C) {
 			"editing":false,
 			"id":3,
 			"time":0,
-			"board":"a",
 			"body":"",
 			"image":{
 				"fileType":0,
@@ -209,7 +200,8 @@ func (d *DB) TestBoardJSON(c *C) {
 			},
 			"logCtr":33,
 			"bumpTime":0,
-			"replyTime":0
+			"replyTime":0,
+			"board":"a"
 		},
 		{
 			"postCtr":0,
@@ -217,7 +209,6 @@ func (d *DB) TestBoardJSON(c *C) {
 			"editing":false,
 			"id":1,
 			"time":0,
-			"board":"a",
 			"body":"",
 			"image":{
 				"fileType":0,
@@ -229,7 +220,8 @@ func (d *DB) TestBoardJSON(c *C) {
 			},
 			"logCtr":11,
 			"bumpTime":0,
-			"replyTime":0
+			"replyTime":0,
+			"board":"a"
 		}
 	]
 }`
@@ -259,7 +251,6 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			"editing":false,
 			"id":4,
 			"time":0,
-			"board":"c",
 			"body":"",
 			"image":{
 				"fileType":0,
@@ -271,7 +262,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			},
 			"logCtr":44,
 			"bumpTime":0,
-			"replyTime":0
+			"replyTime":0,
+			"board":"c"
 		},
 		{
 			"postCtr":0,
@@ -279,7 +271,6 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			"editing":false,
 			"id":3,
 			"time":0,
-			"board":"a",
 			"body":"",
 			"image":{
 				"fileType":0,
@@ -291,7 +282,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			},
 			"logCtr":33,
 			"bumpTime":0,
-			"replyTime":0
+			"replyTime":0,
+			"board":"a"
 		},
 		{
 			"postCtr":0,
@@ -299,7 +291,6 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			"editing":false,
 			"id":1,
 			"time":0,
-			"board":"a",
 			"body":"",
 			"image":{
 				"fileType":0,
@@ -311,7 +302,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 			},
 			"logCtr":11,
 			"bumpTime":0,
-			"replyTime":0
+			"replyTime":0,
+			"board":"a"
 		}
 	]
 }`
@@ -354,7 +346,6 @@ func (d *DB) TestThreadJSON(c *C) {
 	"editing":false,
 	"id":1,
 	"time":0,
-	"board":"a",
 	"body":"",
 	"image":{
 		"fileType":0,
@@ -367,13 +358,12 @@ func (d *DB) TestThreadJSON(c *C) {
 	"logCtr":11,
 	"bumpTime":0,
 	"replyTime":0,
+	"board":"a",
 	"posts":{
 		"2":{
 			"editing":false,
-			"op":1,
 			"id":2,
 			"time":0,
-			"board":"a",
 			"body":""
 		}
 	}

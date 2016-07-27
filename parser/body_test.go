@@ -32,10 +32,7 @@ func (*Tests) TestParseBody(c *C) {
 	thread := types.DatabaseThread{
 		ID: 1,
 		Posts: map[int64]types.Post{
-			7: types.Post{
-				OP:    1,
-				Board: "a",
-			},
+			7: types.Post{},
 		},
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
@@ -43,10 +40,7 @@ func (*Tests) TestParseBody(c *C) {
 	std := BodyParseResults{
 		Body: "foo >>7\n#flip\n #flip\n >>7 >>8",
 		Links: map[int64]types.Link{
-			7: {
-				OP:    1,
-				Board: "a",
-			},
+			7: {},
 		},
 		Commands: []types.Command{
 			{

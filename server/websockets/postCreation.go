@@ -48,9 +48,8 @@ func insertThread(data []byte, c *Client) (err error) {
 		Board:     req.Board,
 	}
 	post := types.Post{
-		Time:  now,
-		Board: req.Board,
-		IP:    c.IP,
+		Time: now,
+		IP:   c.IP,
 	}
 
 	post.Name, post.Trip, err = parser.ParseName(req.Name)
@@ -95,7 +94,6 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 	thread.ID = id
 	post.ID = id
-	post.OP = id
 	thread.Posts = map[int64]types.Post{
 		id: post,
 	}

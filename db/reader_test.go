@@ -8,12 +8,6 @@ import (
 )
 
 var (
-	genericImage = &types.Image{
-		ImageCommon: types.ImageCommon{
-			SHA1: "foo",
-		},
-	}
-
 	sampleThreads = []types.DatabaseThread{
 		{
 			ID:       1,
@@ -22,18 +16,13 @@ var (
 			PostCtr:  2,
 			Posts: map[int64]types.Post{
 				1: {
-					Board: "a",
-					ID:    1,
-					Image: genericImage,
+					ID: 1,
 				},
 				2: {
-					Board: "a",
-					ID:    2,
-					Image: genericImage,
+					ID: 2,
 				},
 				3: {
-					Board: "a",
-					ID:    3,
+					ID: 3,
 				},
 			},
 			Log: [][]byte{
@@ -47,9 +36,7 @@ var (
 			Board: "a",
 			Posts: map[int64]types.Post{
 				4: {
-					Board: "a",
-					ID:    4,
-					Image: genericImage,
+					ID: 4,
 				},
 			},
 		},
@@ -58,9 +45,7 @@ var (
 			Board: "c",
 			Posts: map[int64]types.Post{
 				5: {
-					Board: "c",
-					ID:    5,
-					Image: genericImage,
+					ID: 5,
 				},
 			},
 		},
@@ -70,21 +55,19 @@ var (
 		Ctr: 7,
 		Threads: []types.Thread{
 			{
+				Board: "a",
 				Post: types.Post{
-					ID:    4,
-					Board: "a",
-					Image: genericImage,
+					ID: 4,
 				},
 				Posts: nil,
 			},
 			{
+				Board:    "a",
 				ImageCtr: 1,
 				PostCtr:  2,
 				LogCtr:   3,
 				Post: types.Post{
-					ID:    1,
-					Board: "a",
-					Image: genericImage,
+					ID: 1,
 				},
 				Posts: nil,
 			},
@@ -96,16 +79,18 @@ func (*DBSuite) TestGetPost(c *C) {
 	config.Set(config.Configs{
 		Boards: []string{"a"},
 	})
-	std := types.Post{
-		ID:    2,
+	std := types.StandalonePost{
 		Board: "a",
+		OP:    1,
+		Post: types.Post{
+			ID: 2,
+		},
 	}
 	thread := types.DatabaseThread{
-
 		ID:    1,
 		Board: "a",
 		Posts: map[int64]types.Post{
-			2: std,
+			2: std.Post,
 		},
 	}
 	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
@@ -113,7 +98,7 @@ func (*DBSuite) TestGetPost(c *C) {
 	// Post does not exist
 	post, err := GetPost(8)
 	c.Assert(err, Equals, r.ErrEmptyResult)
-	c.Assert(post, DeepEquals, types.Post{})
+	c.Assert(post, DeepEquals, types.StandalonePost{})
 
 	// Valid read
 	post, err = GetPost(2)
@@ -165,10 +150,9 @@ func (*DBSuite) TestGetAllBoard(c *C) {
 	std.Threads = []types.Thread{
 		boardStandard.Threads[0],
 		{
+			Board: "c",
 			Post: types.Post{
-				ID:    5,
-				Board: "c",
-				Image: genericImage,
+				ID: 5,
 			},
 			Posts: nil,
 		},
@@ -197,10 +181,9 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 
 	// No replies ;_;
 	std := &types.Thread{
+		Board: "a",
 		Post: types.Post{
-			Board: "a",
-			ID:    4,
-			Image: genericImage,
+			ID: 4,
 		},
 		Posts: map[int64]types.Post{},
 	}
@@ -213,20 +196,16 @@ func (*DBSuite) TestReaderGetThread(c *C) {
 		ImageCtr: 1,
 		PostCtr:  2,
 		LogCtr:   3,
+		Board:    "a",
 		Post: types.Post{
-			Board: "a",
-			ID:    1,
-			Image: genericImage,
+			ID: 1,
 		},
 		Posts: map[int64]types.Post{
 			2: {
-				Board: "a",
-				ID:    2,
-				Image: genericImage,
+				ID: 2,
 			},
 			3: {
-				Board: "a",
-				ID:    3,
+				ID: 3,
 			},
 		},
 	}

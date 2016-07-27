@@ -29,16 +29,17 @@ type Board struct {
 // opening post data and its contained posts. The composite type itself is not
 // stored in the database.
 type Thread struct {
-	Locked   bool  `json:"locked,omitempty" gorethink:"locked,omitempty"`
-	Archived bool  `json:"archived,omitempty" gorethink:"archived,omitempty"`
-	Sticky   bool  `json:"sticky,omitempty" gorethink:"sticky,omitempty"`
+	Locked   bool  `json:"locked,omitempty" gorethink:"locked"`
+	Archived bool  `json:"archived,omitempty" gorethink:"archived"`
+	Sticky   bool  `json:"sticky,omitempty" gorethink:"sticky"`
 	PostCtr  int16 `json:"postCtr" gorethink:"postCtr"`
 	ImageCtr int16 `json:"imageCtr" gorethink:"imageCtr"`
 	Post
 	LogCtr    int64          `json:"logCtr" gorethink:"logCtr"`
 	BumpTime  int64          `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime int64          `json:"replyTime" gorethink:"replyTime"`
-	Subject   string         `json:"subject,omitempty" gorethink:"subject,omitempty"`
+	Board     string         `json:"board" gorethink:"board"`
+	Subject   string         `json:"subject,omitempty" gorethink:"subject"`
 	Posts     map[int64]Post `json:"posts,omitempty" gorethink:"posts"`
 }
 
@@ -77,10 +78,8 @@ type PostCredentials struct {
 // Post is a generic post. Either OP or reply.
 type Post struct {
 	Editing   bool      `json:"editing" gorethink:"editing"`
-	OP        int64     `json:"op,omitempty" gorethink:"op"`
 	ID        int64     `json:"id" gorethink:"id"`
 	Time      int64     `json:"time" gorethink:"time"`
-	Board     string    `json:"board" gorethink:"board"`
 	IP        string    `json:"-" gorethink:"ip"`
 	Password  string    `json:"-" gorethink:"password"`
 	Body      string    `json:"body" gorethink:"body"`
@@ -92,6 +91,16 @@ type Post struct {
 	Backlinks LinkMap   `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
 	Links     LinkMap   `json:"links,omitempty" gorethink:"links,omitempty"`
 	Commands  []Command `json:"commands,omitempty" gorethink:"commands,omitempty"`
+}
+
+// StandalonePost is an extension of Post for serving through `/json/post/:id`.
+// Regular posts do not contain or need "op" or "board" fields, because they are
+// always retrieved in a known thread context. StandalonePost has these fields
+// to allow serving post parenthood for random posts of unknown parenthood.
+type StandalonePost struct {
+	Post
+	OP    int64  `json:"op" gorethink:"op"`
+	Board string `json:"board" gorethink:"board"`
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to

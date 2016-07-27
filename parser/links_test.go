@@ -18,10 +18,7 @@ func (*Tests) TestLinks(c *C) {
 		ID:    2,
 		Board: "a",
 		Posts: map[int64]types.Post{
-			4: types.Post{
-				OP:    2,
-				Board: "a",
-			},
+			4: types.Post{},
 		},
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
@@ -29,10 +26,7 @@ func (*Tests) TestLinks(c *C) {
 	links, err := parseLinks(">>1 >>4")
 	c.Assert(err, IsNil)
 	c.Assert(links, DeepEquals, types.LinkMap{
-		4: types.Link{
-			OP:    2,
-			Board: "a",
-		},
+		4: types.Link{},
 	})
 }
 

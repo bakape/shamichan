@@ -71,8 +71,6 @@ func (*DB) TestThreadCreation(c *C) {
 		Posts: map[int64]types.Post{
 			6: types.Post{
 				ID:       6,
-				OP:       6,
-				Board:    "a",
 				IP:       "::1",
 				Password: "123",
 				Body:     "body",
