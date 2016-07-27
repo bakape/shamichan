@@ -33,11 +33,11 @@ function flush() {
 		reads = readStack
 	writeStack = []
 	readStack = []
+	scheduled = false
 	for (let i = 0; i < writes.length; i++) {
 		writes[i]()
 	}
 	for (let i = 0; i < reads.length; i++) {
 		reads[i]()
 	}
-	scheduled = false
 }

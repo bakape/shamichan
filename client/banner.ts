@@ -61,6 +61,9 @@ defer(() =>
 
 // A modal element, that is positioned fixed right beneath the banner
 export class BannerModal extends Modal<Model> {
+	// Are the contents already rendered? Used for lazy rendering.
+	isRendered: boolean
+
 	constructor(args: ViewAttrs) {
 		let cls = "banner-modal"
 		if (args.class) {
@@ -79,6 +82,14 @@ export class BannerModal extends Modal<Model> {
 			$overlay.append(this.el))
 	}
 
+	// Inert the HTML into the element and set flag to true for lazy rendering
+	lazyRender(html: string) {
+		write(() => {
+			this.el.innerHTML = html
+			this.isRendered = true
+		})
+	}
+
 	// Show the element, if hidden, hide - if shown. Hide already visible
 	// banner modal, if any.
 	toggle() {
@@ -93,8 +104,13 @@ export class BannerModal extends Modal<Model> {
 		}
 	}
 
-	// Unhide the element
+	// Unhide the element. If the element has not been rendered yet, do it.
 	show() {
+		if (!this.isRendered) {
+			// All child classes must implement the .render() method.
+			// Tell TS to fuck off for this one.
+			(this as any).render()
+		}
 		write(() =>
 			this.el.style.display = 'block')
 		visible = this
@@ -143,7 +159,6 @@ export class TabbedModal extends BannerModal {
 class FAQPanel extends BannerModal {
 	constructor() {
 		super({id: "FAQ"})
-		this.render()
 	}
 
 	render() {
@@ -159,8 +174,8 @@ class FAQPanel extends BannerModal {
 			</a>
 			<hr>
 			${config.FAQ.replace(/\n/g, "<br>")}`
-		write(() =>
-			this.el.innerHTML = html)
+
+		this.lazyRender(html)
 	}
 }
 

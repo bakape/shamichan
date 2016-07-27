@@ -42,6 +42,9 @@ export let accountPannel: AccountPanel
 
 // Account login and registration
 export default class AccountPanel extends TabbedModal {
+	// Switched between this.renderInitial and this.renderControls() at runtime
+	render: () => void
+
 	constructor() {
 		super({id: "account-panel"})
 		accountPannel = this
@@ -63,18 +66,14 @@ export default class AccountPanel extends TabbedModal {
 				alert("TODO"),
 		})
 
-		let rendered: boolean
-		if (!sessionToken) {
-			this.renderInitial()
-			rendered = true
-		}
+		this.render = this.renderInitial
 		handlers[message.authenticate]  = (success: boolean) => {
 			if (success) {
-				this.renderControls()
-			} else if (!rendered) {
-				this.renderInitial()
+				this.render = this.renderControls
+				if (this.isRendered) {
+					this.render()
+				}
 			}
-			rendered = true
 		}
 	}
 
@@ -95,8 +94,7 @@ export default class AccountPanel extends TabbedModal {
 				<div data-id="1"></div>
 			</div>`
 
-		write(() =>
-			this.el.innerHTML = html)
+		this.lazyRender(html)
 		read(() => {
 			const tabs = this.el.querySelectorAll(".tab-cont div")
 			write(() => {
@@ -119,8 +117,8 @@ export default class AccountPanel extends TabbedModal {
 		if (loginID === "admin") {
 			menu += this.renderLink("configureServer")
 		}
-		write(() =>
-			this.el.innerHTML = `<div class="menu">${menu}</div>`)
+
+		this.lazyRender(`<div class="menu">${menu}</div>`)
 	}
 
 	renderLink(name: string): string {

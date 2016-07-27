@@ -14,7 +14,6 @@ export default class OptionsPanel extends TabbedModal {
 
 	constructor() {
 		super({id: 'options'})
-		this.render()
 		this.onClick({
 			'#export': () =>
 				this.exportConfigs(),
@@ -29,11 +28,9 @@ export default class OptionsPanel extends TabbedModal {
 
 	// Render the contents of the options panel and insert it into the DOM
 	render() {
-		const html = renderContents()
-		write(() => {
-			this.el.innerHTML = html
-			this.assignValues()
-		})
+		this.lazyRender(renderContents())
+		write(() =>
+			this.assignValues())
 		read(() => {
 			this.$hidden = this.el.querySelector('#hidden')
 			this.$import = this.el.querySelector("#importSettings")

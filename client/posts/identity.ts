@@ -2,12 +2,11 @@
 // propagation
 
 import {emitChanges, ChangeEmitter} from '../model'
-import {write} from '../render'
 import {defer} from '../defer'
 import {BannerModal} from '../banner'
 import {identity as lang} from '../lang'
 import {table, randomID} from '../util'
-import {InputSpec, inputType, renderInput} from '../forms'
+import {inputType, renderInput} from '../forms'
 
 interface Identity extends ChangeEmitter {
 	name: string
@@ -36,7 +35,6 @@ export default emitChanges(identity)
 class IdentityPanel extends BannerModal {
 	constructor() {
 		super({id: "identity"})
-		this.render()
 		this.on("input", e =>
 			this.onInput(e))
 	}
@@ -53,8 +51,7 @@ class IdentityPanel extends BannerModal {
 			})
 		})
 
-		write(() =>
-			this.el.innerHTML = html)
+		this.lazyRender(html)
 	}
 
 	onInput(event: Event) {
