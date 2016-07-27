@@ -86,7 +86,7 @@ func LogError(ip string, err interface{}) {
 	log.Printf("panic serving %v: %v\n%s", ip, err, buf)
 }
 
-// RandomID generates a randomID of bas64 characters of desired byte length
+// RandomID generates a randomID of base64 characters of desired byte length
 func RandomID(length int) (string, error) {
 	buf := make([]byte, length)
 	_, err := rand.Read(buf)

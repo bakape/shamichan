@@ -5,7 +5,7 @@ import {HTML, on, makeEl} from '../util'
 import {$threads} from '../page/common'
 import View from '../view'
 import Model from '../model'
-import {write} from '../render'
+import {write, read} from '../render'
 import {FormView} from '../forms'
 import {Captcha} from '../captcha'
 import identity from './identity'
@@ -13,7 +13,7 @@ import identity from './identity'
 interface ThreadCreationRequest extends Captcha {
 	name: string
 	email: string
-	auth: string
+	auth: string // TODO
 	password: string
 	subject: string
 	board: string
@@ -32,8 +32,8 @@ class ThreadForm extends FormView {
 	constructor(event: Event) {
 		super({}, () =>
 			this.sendRequest())
-		this.$parent = event.target as Element
 		this.$aside = this.$parent.closest("aside")
+		this.$parent = event.target as Element
 		this.render()
 	}
 

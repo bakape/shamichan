@@ -65,7 +65,7 @@ class BoardSelectionPanel extends Modal<Model> {
 	parentEl: Element
 
 	constructor(parentEl: Element) {
-		super({cls: "float-left"})
+		super({class: "float-left"})
 		this.parentEl = parentEl
 		this.render()
 		this.onClick({

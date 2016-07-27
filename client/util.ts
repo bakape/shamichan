@@ -1,25 +1,29 @@
-/*
- Utuility functions.
-*/
+// Utility functions
+
+import {write, read} from './render'
 
 type AnyHash = {[key: string]: any}
+
+const base64 =
+	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
+	.split("")
 
 // Fetches and decodes a JSON response from the API
 export const fetchJSON = async (url: string): Promise<any> =>
 	await (await fetch(url)).json()
 
-// Generate a random alphannumeric string of lower and upper case hexadecimal
-// characters
+// Generate a random base64 string of desird length
 export function randomID(len: number): string {
 	let id = ''
 	for (let i = 0; i < len; i++) {
-		let char = (Math.random() * 36).toString(36)[0]
-		if (Math.random() < 0.5) {
-			char = char.toUpperCase()
-		}
-		id += char
+		id += random(base64)
 	}
 	return id
+}
+
+// Return a random item from an array
+export function random<T>(array: T[]): T {
+	return array[Math.floor(Math.random() * array.length)]
 }
 
 // Simple map of sets with automatic array creation and removal
@@ -241,10 +245,6 @@ export const escape = (str: string): string =>
 	str.replace(/[&<>'"`]/g , char =>
 		escapeMap[char])
 
-// Set the text and for attribute of a label element
-export const setLabel = (el: Element, forName: string, text: string): string =>
-	el.querySelector(`label[for=${forName}]`).textContent = text + ":"
-
 // Construct a table from an array of objects and a consumer funtion,
 // that returns an array of cells.
 export function table<T>(rows: T[], func: (arg: T) => string[]): string {
@@ -264,8 +264,3 @@ export function table<T>(rows: T[], func: (arg: T) => string[]): string {
 // element
 export const inputValue = (el: Element, name: string): string =>
 	(el.querySelector(`input[name=${name}]`) as HTMLInputElement).value
-
-// Return a random item from an array
-export function random<T>(array: T[]): T {
-	return array[Math.floor(Math.random() * array.length)]
-}

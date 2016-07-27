@@ -8,19 +8,23 @@ import {write, read} from '../render'
 import Model from '../model'
 
 // View of the options panel
-export default class OptionsPanel extends TabbedModal<Model> {
+export default class OptionsPanel extends TabbedModal {
 	$hidden: Element
 	$import: Element
 
 	constructor() {
-		super({el: document.querySelector('#options-panel')})
+		super({id: 'options'})
 		this.render()
 		this.onClick({
-			'#export': () => this.exportConfigs(),
-			'#import': e => this.importConfigs(e),
-			'#hidden': () => this.clearHidden()
+			'#export': () =>
+				this.exportConfigs(),
+			'#import': e =>
+				this.importConfigs(e),
+			'#hidden': () =>
+				this.clearHidden(),
 		})
-		this.on('change', e => this.applyChange(e))
+		this.on('change', e =>
+			this.applyChange(e))
 	}
 
 	// Render the contents of the options panel and insert it into the DOM
@@ -116,7 +120,8 @@ export default class OptionsPanel extends TabbedModal<Model> {
 	importConfigs(event: Event) {
 		// Proxy to hidden file input
 		this.$import.click()
-		const handler = () => this.importConfigFile()
+		const handler = () =>
+			this.importConfigFile()
 		this.$import.addEventListener("change", handler, {once: true})
 	}
 

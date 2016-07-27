@@ -38,8 +38,6 @@
 			<nav id="board-navigation"></nav>
 			<!-- For r/a/dio stream status and such !-->
 			<b id="banner-center"></b>
-			<!-- For various annoucments and such. See ./config/config.json.infoBanner !-->
-			<b id="banner-info"></b>
 			<!-- Various buttons, that unhide modal windows !-->
 			<a id="banner-options" class="banner-float">
 				<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
@@ -71,20 +69,6 @@
 		</span>
 		<!-- For modal windows -->
 		<div id="modal-overlay" class="overlay">
-			<!-- Frequently Asked Quetions panel !-->
-			<div id="FAQ-panel" class="banner-modal modal glass">
-				meguca is licensed under the
-				<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">
-					GNU Affero General Public License
-				</a>
-				<br>
-				Source code repository:&nbsp;
-				<a href="https://github.com/bakape/meguca" target="_blank">
-					github.com/bakape/meguca
-				</a>
-				<hr>
-				{{.FAQ}}
-			</div>
 			<!-- Name and email input form !-->
 			<div id="identity-panel" class="banner-modal modal glass">
 				<table>
@@ -104,12 +88,16 @@
 							<input id="email" type="text" name="email">
 						</td>
 					</tr>
+					<tr>
+						<td>
+							<label for="post-password"></label>
+						</td>
+						<td>
+							<input id="post-password" type="text" name="post-password">
+						</td>
+					</tr>
 				</table>
 			</div>
-			<!-- Account, board and server management panel !-->
-			<div id="account-panel" class="banner-modal modal glass"></div>
-			<!-- Client-side option panel !-->
-			<div id="options-panel" class="banner-modal modal glass"></div>
 		</div>
 	</div>
 	<!-- Contains posts, page naviagation, title, image banner and the catalog !-->

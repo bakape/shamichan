@@ -6,7 +6,6 @@ import {defer} from '../defer'
 import {mod as lang, ui} from '../lang'
 import {loadModule, inputValue, HTML} from '../util'
 import {handlers, send, message} from '../connection'
-import Model from '../model'
 import {Captcha} from '../captcha'
 import {FormView} from '../forms'
 import {renderFields, validatePasswordMatch} from './common'
@@ -42,9 +41,9 @@ let loginID = localStorage.getItem("loginID"),
 export let accountPannel: AccountPanel
 
 // Account login and registration
-export default class AccountPanel extends TabbedModal<Model> {
+export default class AccountPanel extends TabbedModal {
 	constructor() {
-		super({el: document.querySelector('#account-panel')})
+		super({id: "account-panel"})
 		accountPannel = this
 
 		this.onClick({

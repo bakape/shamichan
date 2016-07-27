@@ -31,8 +31,6 @@
 	"banner": {
 		"showSeconds": "Click to show seconds",
 		"worksBestWith": "works best with",
-		"name": "Name",
-		"email": "Email",
 		"options": "Options",
 		"identity": "Identity",
 		"account": "Account and board management",
@@ -113,6 +111,21 @@
 		"configureServer": "Configure server",
 		"createBoard": "Create board",
 		"configureBoard": "Configure board"
+	},
+
+	"identity": {
+		"name": [
+			"Name",
+			"Name to attach to new posts"
+		],
+		"email": [
+			"Email",
+			"Email to include in new posts. If 'sage' is input, the parent thread will not be bumped on reply."
+		],
+		"postPassword": [
+			"Password",
+			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+		]
 	},
 
 	"opts": {

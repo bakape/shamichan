@@ -6,9 +6,16 @@ import Modal from './modal'
 import {ViewAttrs} from './view'
 import {banner as lang} from './lang'
 import {write, read} from './render'
-import {setLabel, find} from './util'
+import {find, HTML} from './util'
 import Model from './model'
 import View from './view'
+
+// Stores the views of all BannerModal instances
+export const bannerModals: {[key: string]: BannerModal} = {}
+
+// View of the modal currently displayed, if any
+let visible: BannerModal
+const $overlay = document.querySelector("#modal-overlay")
 
 // Highlight options button by fading out and in, if no options are set
 function highlightBanner(name: string) {
@@ -17,15 +24,18 @@ function highlightBanner(name: string) {
 		return
 	}
 
-	const el = document.querySelector('#banner-' + name)
-	el.style.opacity = '1'
 	let out = true,
-		clicked: boolean
-	el.addEventListener("click", () => {
-		clicked = true
-		localStorage.setItem(key, '1')
+		clicked: boolean,
+		el: Element
+
+	read(() => {
+		el = document.querySelector('#banner-' + name)
+		el.addEventListener("click", () => {
+			clicked = true
+			localStorage.setItem(key, '1')
+		})
+		tick()
 	})
-	tick()
 
 	function tick() {
 		// Stop
@@ -49,22 +59,24 @@ defer(() =>
 	["options", "FAQ", "identity", "account"]
 	.forEach(highlightBanner))
 
-// Stores the views of all BannerModal instances
-export const bannerModals: {[key: string]: BannerModal<any>} = {}
-
-// View of the modal currently displayed, if any
-let visible: BannerModal<any>
-
 // A modal element, that is positioned fixed right beneath the banner
-export class BannerModal<M> extends Modal<M> {
+export class BannerModal extends Modal<Model> {
 	constructor(args: ViewAttrs) {
+		let cls = "banner-modal"
+		if (args.class) {
+			cls += " " + args.class
+		}
+		args.class = cls
 		super(args)
 		bannerModals[this.id] = this
 
 		// Add click listener to the toggle button of the modal in the banner
-		document
+		read(() =>
+			document
 			.querySelector('#banner-' + (this.id as string).split('-')[0])
-			.addEventListener('click', () => this.toggle(), {capture: true})
+			.addEventListener('click', () => this.toggle(), {capture: true}))
+		write(() =>
+			$overlay.append(this.el))
 	}
 
 	// Show the element, if hidden, hide - if shown. Hide already visible
@@ -83,22 +95,27 @@ export class BannerModal<M> extends Modal<M> {
 
 	// Unhide the element
 	show() {
-		write(() => this.el.style.display = 'block')
+		write(() =>
+			this.el.style.display = 'block')
 		visible = this
 	}
 
 	// Hide the element
 	hide() {
-		write(() => this.el.style.display = 'none')
+		write(() =>
+			this.el.style.display = 'none')
 		visible = null
 	}
 }
 
 // A view that supports switching between multiple tabs
-export class TabbedModal<M> extends BannerModal<M> {
+export class TabbedModal extends BannerModal {
 	constructor(args: ViewAttrs) {
 		super(args)
-		this.onClick({'.tab-link': e => this.switchTab(e)})
+		this.onClick({
+			'.tab-link': e =>
+				this.switchTab(e),
+		})
 	}
 
 	// Switch to a tab, when clicking the tab butt
@@ -122,27 +139,34 @@ export class TabbedModal<M> extends BannerModal<M> {
 	}
 }
 
-// Frequently asked questions and other information modal
-defer(() =>
-	new BannerModal({el: document.querySelector('#FAQ-panel')}))
-
-// Name and email input pannel
-class IdentityPanel extends BannerModal<Model> {
+// FAQ and information pannel
+class FAQPanel extends BannerModal {
 	constructor() {
-		super({el: document.querySelector('#identity-panel')})
-		write(() =>
-			this.render())
+		super({id: "FAQ"})
+		this.render()
 	}
 
 	render() {
-		for (let name of ["name", "email"]) {
-			setLabel(this.el, name, lang[name])
-		}
+		const html = HTML
+			`meguca is licensed under the
+			<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">
+				GNU Affero General Public License
+			</a>
+			<br>
+			Source code repository:&nbsp;
+			<a href="https://github.com/bakape/meguca" target="_blank">
+				github.com/bakape/meguca
+			</a>
+			<hr>
+			${config.FAQ.replace(/\n/g, "<br>")}`
+		write(() =>
+			this.el.innerHTML = html)
 	}
 }
 
+// Frequently asked questions and other information modal
 defer(() =>
-	new IdentityPanel())
+	new FAQPanel())
 
 // Apply localised hover tooltips to banner links
 function localiseTitles() {
@@ -152,9 +176,10 @@ function localiseTitles() {
 	setTitle('sync', 'sync')
 }
 
-defer(() =>
-	write(localiseTitles))
+defer(localiseTitles)
 
-function setTitle(id: string, langID: string) {
-	document.querySelector('#' + id).setAttribute('title', lang[langID])
-}
+// Set the title of an element to a localised string
+export const setTitle = (id: string, langID: string) =>
+	read(() =>
+		document.querySelector('#' + id)
+		.setAttribute('title', lang[langID]))

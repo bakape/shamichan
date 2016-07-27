@@ -2,41 +2,69 @@
 // propagation
 
 import {emitChanges, ChangeEmitter} from '../model'
-import {write, read} from '../render'
+import {write} from '../render'
 import {defer} from '../defer'
+import {BannerModal} from '../banner'
+import {identity as lang} from '../lang'
+import {table, randomID} from '../util'
+import {InputSpec, inputType, renderInput} from '../forms'
 
 interface Identity extends ChangeEmitter {
 	name: string
 	email: string
+	postPassword: string
+	[index: string]: any
 }
 
 // Values of the name and tripcode fields
-const identity: Identity = {
-	name: "",
-	email: "",
-} as Identity
-export default identity
+const identity = {} as Identity
+
+// Load from localStorage or initialize
+for (let name of ["name", "email"]) {
+	identity[name] = localStorage.getItem(name) || ""
+}
+let stored = localStorage.getItem("postPassword")
+if (!stored) {
+	stored = randomID(32)
+	localStorage.setItem("postPassword", stored)
+}
+identity.postPassword = stored
+
+export default emitChanges(identity)
+
+// Name and email input pannel
+class IdentityPanel extends BannerModal {
+	constructor() {
+		super({id: "identity"})
+		this.render()
+		this.on("input", e =>
+			this.onInput(e))
+	}
+
+	render() {
+		const html = table(["name", "email", "postPassword"], name => {
+			const [label, tooltip] = lang[name]
+			return renderInput({
+				name,
+				label,
+				tooltip,
+				type: inputType.string,
+				value: identity[name]
+			})
+		})
+
+		write(() =>
+			this.el.innerHTML = html)
+	}
+
+	onInput(event: Event) {
+		const el = event.target as Element,
+			name = el.getAttribute("name"),
+			val = el.value
+		localStorage.setItem(name, val)
+		identity[name] = val
+	}
+}
 
 defer(() =>
-	read(() => {
-		for (let id of ["name", "email"]) {
-			listenToField(id)
-		}
-	}))
-
-
-// Iniitialize, listem to and propagate changes of an identity field
-function listenToField(name: string) {
-	const el = document.getElementById(name)
-	write(() => {
-		el.value = localStorage.getItem(name)
-		el.addEventListener("input", () => {
-			let val = el.value.trim()
-			identity[name] = val
-			if (name === "email" && val === "sage") {
-				val = ""
-			}
-			localStorage.setItem(name, val)
-		})
-	})
-}
+	new IdentityPanel())

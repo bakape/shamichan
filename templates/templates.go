@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"html/template"
 	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/bakape/meguca/config"
@@ -56,7 +55,6 @@ type vars struct {
 	Captcha    bool
 	Config     template.JS
 	Navigation template.HTML
-	FAQ        template.HTML
 	Email      string
 	ConfigHash string
 	DefaultCSS string
@@ -72,9 +70,6 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,
 		Captcha:    conf.Captcha,
-
-		// Replace all newlines in the FAQ with `<br>`
-		FAQ:        template.HTML(strings.Replace(conf.FAQ, "\n", "<br>", -1)),
 		Email:      conf.FeedbackEmail,
 		DefaultCSS: conf.DefaultCSS,
 	}

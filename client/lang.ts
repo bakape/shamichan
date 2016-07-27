@@ -17,6 +17,7 @@ type LanguagePack = {
 	syncwatch: LnSyncwatch
 	mod: LnMod
 	opts: LnOpts
+	identity: LnIdentity
 }
 
 const lang = (window as any).lang as LanguagePack
@@ -34,6 +35,7 @@ export const sync = lang.sync
 export const syncwatch = lang.syncwatch
 export const mod = lang.mod
 export const opts = lang.opts
+export const identity = lang.identity
 export let admin: LnAdmin
 
 type LnPosts = {
@@ -70,8 +72,6 @@ type LnUI = {
 type LnBanner = {
 	showSeconds: string
 	worksBestWith: string
-	name: string
-	email: string
 	options: string
 	identity: string
 	acccount: string
@@ -81,6 +81,8 @@ type LnBanner = {
 	sync: string
 	[index: string]: string
 }
+
+type LnIdentity = {[name: string]: OptLabel}
 
 type LnImages = {
 	show: string
