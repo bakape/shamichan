@@ -43,17 +43,17 @@ type Thread struct {
 	Posts     map[int64]Post `json:"posts,omitempty" gorethink:"posts"`
 }
 
-// DatabaseThread is a template for wririting new threads to the database
+// DatabaseThread is a template for writing new threads to the database
 type DatabaseThread struct {
-	PostCtr   int16          `gorethink:"postCtr"`
-	ImageCtr  int16          `gorethink:"imageCtr"`
-	ID        int64          `gorethink:"id"`
-	BumpTime  int64          `gorethink:"bumpTime"`
-	ReplyTime int64          `gorethink:"replyTime"`
-	Subject   string         `gorethink:"subject,omitempty"`
-	Board     string         `gorethink:"board"`
-	Posts     map[int64]Post `gorethink:"posts"`
-	Log       [][]byte       `gorethink:"log"`
+	PostCtr   int16                  `gorethink:"postCtr"`
+	ImageCtr  int16                  `gorethink:"imageCtr"`
+	ID        int64                  `gorethink:"id"`
+	BumpTime  int64                  `gorethink:"bumpTime"`
+	ReplyTime int64                  `gorethink:"replyTime"`
+	Subject   string                 `gorethink:"subject,omitempty"`
+	Board     string                 `gorethink:"board"`
+	Posts     map[int64]DatabasePost `gorethink:"posts"`
+	Log       [][]byte               `gorethink:"log"`
 }
 
 // ThreadCreationRequest contains data for creating a thread passed from the
@@ -75,13 +75,12 @@ type PostCredentials struct {
 	Password string `json:"password"`
 }
 
-// Post is a generic post. Either OP or reply.
+// Post is a generic post exposed publically through the JSON API. Either OP or
+// reply.
 type Post struct {
 	Editing   bool      `json:"editing" gorethink:"editing"`
 	ID        int64     `json:"id" gorethink:"id"`
 	Time      int64     `json:"time" gorethink:"time"`
-	IP        string    `json:"-" gorethink:"ip"`
-	Password  string    `json:"-" gorethink:"password"`
 	Body      string    `json:"body" gorethink:"body"`
 	Name      string    `json:"name,omitempty" gorethink:"name,omitempty"`
 	Trip      string    `json:"trip,omitempty" gorethink:"trip,omitempty"`
@@ -91,6 +90,14 @@ type Post struct {
 	Backlinks LinkMap   `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
 	Links     LinkMap   `json:"links,omitempty" gorethink:"links,omitempty"`
 	Commands  []Command `json:"commands,omitempty" gorethink:"commands,omitempty"`
+}
+
+// DatabasePost is for writing new posts to a database. It contains the IP and
+// Password fields, which are never exposed publically through Post.
+type DatabasePost struct {
+	Post
+	IP       string `json:"-" gorethink:"ip"`
+	Password []byte `json:"-" gorethink:"password"`
 }
 
 // StandalonePost is an extension of Post for serving through `/json/post/:id`.

@@ -14,15 +14,21 @@ var (
 			Board:    "a",
 			ImageCtr: 1,
 			PostCtr:  2,
-			Posts: map[int64]types.Post{
+			Posts: map[int64]types.DatabasePost{
 				1: {
-					ID: 1,
+					Post: types.Post{
+						ID: 1,
+					},
 				},
 				2: {
-					ID: 2,
+					Post: types.Post{
+						ID: 2,
+					},
 				},
 				3: {
-					ID: 3,
+					Post: types.Post{
+						ID: 3,
+					},
 				},
 			},
 			Log: [][]byte{
@@ -34,18 +40,22 @@ var (
 		{
 			ID:    4,
 			Board: "a",
-			Posts: map[int64]types.Post{
+			Posts: map[int64]types.DatabasePost{
 				4: {
-					ID: 4,
+					Post: types.Post{
+						ID: 4,
+					},
 				},
 			},
 		},
 		{
 			ID:    5,
 			Board: "c",
-			Posts: map[int64]types.Post{
+			Posts: map[int64]types.DatabasePost{
 				5: {
-					ID: 5,
+					Post: types.Post{
+						ID: 5,
+					},
 				},
 			},
 		},
@@ -89,8 +99,10 @@ func (*DBSuite) TestGetPost(c *C) {
 	thread := types.DatabaseThread{
 		ID:    1,
 		Board: "a",
-		Posts: map[int64]types.Post{
-			2: std.Post,
+		Posts: map[int64]types.DatabasePost{
+			2: {
+				Post: std.Post,
+			},
 		},
 	}
 	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)

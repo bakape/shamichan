@@ -175,20 +175,26 @@ func (*DBSuite) TestWriteBacklinks(c *C) {
 	threads := []types.DatabaseThread{
 		{
 			ID: 1,
-			Posts: map[int64]types.Post{
+			Posts: map[int64]types.DatabasePost{
 				1: {
-					ID: 1,
+					Post: types.Post{
+						ID: 1,
+					},
 				},
 				2: {
-					ID: 2,
+					Post: types.Post{
+						ID: 2,
+					},
 				},
 			},
 		},
 		{
 			ID: 5,
-			Posts: map[int64]types.Post{
+			Posts: map[int64]types.DatabasePost{
 				7: {
-					ID: 7,
+					Post: types.Post{
+						ID: 7,
+					},
 				},
 			},
 		},

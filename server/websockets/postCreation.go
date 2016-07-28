@@ -47,9 +47,11 @@ func insertThread(data []byte, c *Client) (err error) {
 		ReplyTime: now,
 		Board:     req.Board,
 	}
-	post := types.Post{
-		Time: now,
-		IP:   c.IP,
+	post := types.DatabasePost{
+		Post: types.Post{
+			Time: now,
+		},
+		IP: c.IP,
 	}
 
 	post.Name, post.Trip, err = parser.ParseName(req.Name)
@@ -65,7 +67,10 @@ func insertThread(data []byte, c *Client) (err error) {
 	if err := parser.VerifyPostPassword(req.Password); err != nil {
 		return err
 	}
-	post.Password = req.Password
+	post.Password, err = auth.BcryptHash(req.Password, 6)
+	if err != nil {
+		return err
+	}
 
 	bp := parser.BodyParser{
 		Config: conf,
@@ -94,7 +99,7 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 	thread.ID = id
 	post.ID = id
-	thread.Posts = map[int64]types.Post{
+	thread.Posts = map[int64]types.DatabasePost{
 		id: post,
 	}
 

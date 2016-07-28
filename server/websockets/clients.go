@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/bakape/meguca/util"
+	"github.com/bakape/meguca/auth"
 )
 
 // Clients stores all synchronised websocket clients in a theread-safe map
@@ -32,7 +32,7 @@ func (c *ClientMap) Add(cl *Client, syncID string) (err error) {
 	// Dedup client ID
 	var id string
 	for {
-		id, err = util.RandomID(32)
+		id, err = auth.RandomID(64)
 		if err != nil {
 			return err
 		}

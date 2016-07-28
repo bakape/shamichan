@@ -4,7 +4,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -68,8 +67,9 @@ func (*DB) TestInvalidBoardName(c *C) {
 }
 
 func (*DB) TestBoardTitleTooLong(c *C) {
-	title, err := util.RandomID(101)
+	title, err := auth.RandomID(101)
 	c.Assert(err, IsNil)
+	title = title[:101]
 	req := boardCreationRequest{
 		Name:  "a",
 		Title: title,

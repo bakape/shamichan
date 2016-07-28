@@ -9,7 +9,6 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -101,7 +100,7 @@ func handleRegistration(req loginRequest, c *Client) (
 		return
 	}
 
-	hash, err := util.PasswordHash(req.ID, req.Password)
+	hash, err := auth.BcryptHash(req.Password, 10)
 	if err != nil {
 		return
 	}
@@ -141,7 +140,7 @@ func commitLogin(code loginResponseCode, typ messageType, id string, c *Client) 
 ) {
 	msg := loginResponse{Code: code}
 	if code == loginSuccess {
-		msg.Session, err = util.RandomID(40)
+		msg.Session, err = auth.RandomID(128)
 		if err != nil {
 			return err
 		}
@@ -192,7 +191,7 @@ func login(data []byte, c *Client) error {
 	}
 
 	var code loginResponseCode
-	err = util.ComparePassword(req.ID, req.Password, hash)
+	err = auth.BcryptCompare(req.Password, hash)
 	switch err {
 	case bcrypt.ErrMismatchedHashAndPassword:
 		code = wrongCredentials
@@ -301,7 +300,7 @@ func changePassword(data []byte, c *Client) error {
 	}
 
 	// Validate old password
-	err = util.ComparePassword(c.UserID, req.Old, hash)
+	err = auth.BcryptCompare(req.Old, hash)
 	switch err {
 	case nil:
 	case bcrypt.ErrMismatchedHashAndPassword:
@@ -312,7 +311,7 @@ func changePassword(data []byte, c *Client) error {
 
 	// If old password matched, write new hash to DB
 	if code == 0 {
-		hash, err := util.PasswordHash(c.UserID, req.New)
+		hash, err := auth.BcryptHash(req.New, 10)
 		if err != nil {
 			return err
 		}

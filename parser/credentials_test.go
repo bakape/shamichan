@@ -1,8 +1,8 @@
 package parser
 
 import (
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/util"
 	. "gopkg.in/check.v1"
 )
 
@@ -49,7 +49,7 @@ func (*Tests) TestParseSubject(c *C) {
 }
 
 func randomString(length int, c *C) string {
-	s, err := util.RandomID(length)
+	s, err := auth.RandomID(length)
 	c.Assert(err, IsNil)
 	return s[:length]
 }

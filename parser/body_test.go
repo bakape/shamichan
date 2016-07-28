@@ -1,10 +1,10 @@
 package parser
 
 import (
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -21,7 +21,7 @@ func (*Tests) TestBodyAllWhitespace(c *C) {
 }
 
 func (Tests) TestBodyTooLong(c *C) {
-	body, err := util.RandomID(maxLengthBody + 1)
+	body, err := auth.RandomID(maxLengthBody + 1)
 	c.Assert(err, IsNil)
 	_, err = BodyParser{}.ParseBody(body)
 	c.Assert(err, Equals, errBodyTooLong)
@@ -31,8 +31,8 @@ func (*Tests) TestParseBody(c *C) {
 	const in = " \u2000\u200ffoo >>7\n#flip\n #flip\n >>7 >>8"
 	thread := types.DatabaseThread{
 		ID: 1,
-		Posts: map[int64]types.Post{
-			7: types.Post{},
+		Posts: map[int64]types.DatabasePost{
+			7: types.DatabasePost{},
 		},
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)

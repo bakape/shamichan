@@ -4,6 +4,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/bakape/meguca/config"
 	. "gopkg.in/check.v1"
 )
@@ -73,4 +75,26 @@ func (*Tests) TestGetIP(c *C) {
 		}
 		c.Assert(GetIP(req), Equals, s.out)
 	}
+}
+
+func (*Tests) TestBcryptHash(c *C) {
+	const (
+		password = "123456"
+	)
+	hash, err := BcryptHash(password, 8)
+	c.Assert(err, IsNil)
+
+	// Mismatch
+	err = BcryptCompare(password+"1", hash)
+	c.Assert(err, Equals, bcrypt.ErrMismatchedHashAndPassword)
+
+	// Correct
+	err = BcryptCompare(password, hash)
+	c.Assert(err, IsNil)
+}
+
+func (*Tests) TestRandomID(c *C) {
+	hash, err := RandomID(32)
+	c.Assert(err, IsNil)
+	c.Assert(hash, Matches, "^.{43}$")
 }

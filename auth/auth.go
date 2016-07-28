@@ -3,10 +3,14 @@
 package auth
 
 import (
+	"encoding/base64"
+	"math/rand"
 	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/bakape/meguca/config"
 )
@@ -93,4 +97,21 @@ func GetIP(req *http.Request) string {
 		}
 	}
 	return req.RemoteAddr
+}
+
+// RandomID generates a randomID of base64 characters of desired byte length
+func RandomID(length int) (string, error) {
+	buf := make([]byte, length)
+	_, err := rand.Read(buf)
+	return base64.RawStdEncoding.EncodeToString(buf), err
+}
+
+// BcryptHash generates a bcrypt hash from the passed string
+func BcryptHash(password string, rounds int) ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(password), rounds)
+}
+
+// BcryptCompare compares a bcrypt hash with a user-suplied string
+func BcryptCompare(password string, hash []byte) error {
+	return bcrypt.CompareHashAndPassword(hash, []byte(password))
 }

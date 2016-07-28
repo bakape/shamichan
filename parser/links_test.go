@@ -17,8 +17,8 @@ func (*Tests) TestLinks(c *C) {
 	thread := types.DatabaseThread{
 		ID:    2,
 		Board: "a",
-		Posts: map[int64]types.Post{
-			4: types.Post{},
+		Posts: map[int64]types.DatabasePost{
+			4: types.DatabasePost{},
 		},
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)

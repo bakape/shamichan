@@ -6,7 +6,6 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -16,10 +15,12 @@ var (
 )
 
 func (*DB) TestRegistrationValidations(c *C) {
-	r21, err := util.RandomID(21)
+	r21, err := auth.RandomID(21)
 	c.Assert(err, IsNil)
-	r31, err := util.RandomID(31)
+	r21 = r21[:21]
+	r31, err := auth.RandomID(31)
 	c.Assert(err, IsNil)
+	r31 = r31[:31]
 
 	samples := [...]struct {
 		id, password string
@@ -115,7 +116,7 @@ func (*DB) TestLogin(c *C) {
 		id       = "123"
 		password = "123456"
 	)
-	hash, err := util.PasswordHash(id, password)
+	hash, err := auth.BcryptHash(password, 10)
 	c.Assert(err, IsNil)
 	c.Assert(db.RegisterAccount(id, hash), IsNil)
 	req := loginRequest{
@@ -242,7 +243,7 @@ func (*DB) TestChangePassword(c *C) {
 		old = "123456"
 		new = "654321"
 	)
-	hash, err := util.PasswordHash(id, old)
+	hash, err := auth.BcryptHash(old, 10)
 	c.Assert(err, IsNil)
 	c.Assert(db.RegisterAccount(id, hash), IsNil)
 
@@ -263,7 +264,7 @@ func (*DB) TestChangePassword(c *C) {
 	// Assert new hash matches new password
 	hash, err = db.GetLoginHash(id)
 	c.Assert(err, IsNil)
-	c.Assert(util.ComparePassword(id, new, hash), IsNil)
+	c.Assert(auth.BcryptCompare(new, hash), IsNil)
 }
 
 func assertLoggedInResponse(

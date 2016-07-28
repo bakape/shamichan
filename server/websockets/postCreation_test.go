@@ -68,14 +68,15 @@ func (*DB) TestThreadCreation(c *C) {
 		ID:      6,
 		Subject: "subject",
 		Board:   "a",
-		Posts: map[int64]types.Post{
-			6: types.Post{
-				ID:       6,
-				IP:       "::1",
-				Password: "123",
-				Body:     "body",
-				Name:     "name",
-				Image:    &img,
+		Posts: map[int64]types.DatabasePost{
+			6: types.DatabasePost{
+				IP: "::1",
+				Post: types.Post{
+					ID:    6,
+					Body:  "body",
+					Name:  "name",
+					Image: &img,
+				},
 			},
 		},
 		Log: [][]byte{},
@@ -88,12 +89,13 @@ func (*DB) TestThreadCreation(c *C) {
 	var thread types.DatabaseThread
 	c.Assert(db.One(r.Table("threads").Get(6), &thread), IsNil)
 
-	// Normalize timestamps
+	// Normalize timestamps and password
 	then := thread.BumpTime
 	std.BumpTime = then
 	std.ReplyTime = then
 	post := std.Posts[6]
 	post.Time = then
+	post.Password = thread.Posts[6].Password
 	std.Posts[6] = post
 
 	c.Assert(thread, DeepEquals, std)

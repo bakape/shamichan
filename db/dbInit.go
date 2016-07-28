@@ -10,12 +10,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 11
+const dbVersion = 12
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -216,7 +217,7 @@ func UniqueDBName() string {
 
 // Create the admin account and write it to the database
 func createAdminAccount() error {
-	hash, err := util.PasswordHash("admin", "password")
+	hash, err := auth.BcryptHash("password", 10)
 	if err != nil {
 		return err
 	}
