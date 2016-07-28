@@ -15,12 +15,14 @@ export type InputSpec = {
 	type: inputType
 	name: string
 	label?: string
+	placeholders?: boolean // Render placeholders inside input elements
 	tooltip?: string
 	pattern?: string
 	value?: number|string|boolean|StringMap
 	min?: number
 	max?: number
 	maxLength?: number
+	rows?: number
 	choices?: string[]
 	[index: string]: any
 }
@@ -34,7 +36,10 @@ export interface FormViewAttrs extends ViewAttrs {
 export function renderInput(spec: InputSpec): string[] {
 	const attrs: StringMap = {
 		name: spec.name,
-		title: spec.tooltip,
+		title: spec.tooltip || "",
+	}
+	if (spec.placeholders) {
+		attrs["placeholder"] = spec.label
 	}
 
 	switch (spec.type) {
@@ -77,7 +82,7 @@ export function renderInput(spec: InputSpec): string[] {
 }
 
 function renderSelect(spec: InputSpec): string[] {
-	let html = `<select title="${spec.tooltip}" name="${spec.name}">`
+	let html = `<select title="${spec.tooltip || ""}" name="${spec.name}">`
 	for (let item of spec.choices) {
 		html += `<option value="${item}">${item}</option>`
 	}
@@ -85,19 +90,25 @@ function renderSelect(spec: InputSpec): string[] {
 	return [renderLabel(spec), html]
 }
 
+// Render a multiline input textarea
 function renderTextArea(spec: InputSpec): string[] {
 	const attrs: StringMap = {
 		name: spec.name,
-		title: spec.tooltip,
-		rows: "3",
+		title: spec.tooltip || "",
+		rows: (spec.rows || 3).toString(),
+	}
+	if (spec.placeholders) {
+		attrs["placeholder"] = spec.label
 	}
 
 	// Because textarea is a retardedly non-standard piece of shit that
 	// can't even fucking support a fucking value attribute.
-	read(() =>
-		document
-		.querySelector(`textarea[name=${spec.name}]`)
-		.value = spec.value)
+	if (spec.value) {
+		read(() =>
+			document
+			.querySelector(`textarea[name=${spec.name}]`)
+			.value = spec.value)
+	}
 
 	return [
 		renderLabel(spec),
@@ -107,7 +118,7 @@ function renderTextArea(spec: InputSpec): string[] {
 
 // Render a subform for assining map-like data
 function renderMap(spec: InputSpec): string[] {
-	let html = `<div name="${spec.name}" title="${spec.tooltip}">`
+	let html = `<div name="${spec.name}" title="${spec.tooltip || ""}">`
 	if (spec.value) {
 		for (let key in spec.value as StringMap) {
 			html += renderKeyValuePair(key, (spec.value as StringMap)[key])
@@ -133,7 +144,7 @@ function renderKeyValuePair(key: string, value: string): string {
 
 function renderLabel(spec: InputSpec): string {
 	return HTML
-	`<label for="${spec.name}" title="${spec.tooltip}">
+	`<label for="${spec.name}" title="${spec.tooltip || ""}">
 		${spec.label}:
 	</label>
 	<br>`

@@ -52,6 +52,8 @@ type LnPosts = {
 	unknownResult: string
 	threadLocked: string
 	quoted: string
+	board: string
+	body: string
 	[index: string]: string
 }
 

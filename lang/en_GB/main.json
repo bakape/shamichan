@@ -12,7 +12,9 @@
 		"unknownUpload": "Unknown upload error",
 		"unknownResult": "Unknown result",
 		"thread_locked": "This thread is locked.",
-		"quoted": "You have been quoted"
+		"quoted": "You have been quoted",
+		"board": "Board",
+		"body": "Comment"
 	},
 
 	"ui": {

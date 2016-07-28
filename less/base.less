@@ -14,25 +14,6 @@ a {
 	}
 }
 
-article, aside {
-	display: table;
-	padding: 4px 10px;
-}
-
-aside {
-	margin: 1em;
-	section > & {
-		margin: 2px;
-	}
-	&.compact {
-		margin: 0 1em;
-	}
-	a {
-		position: relative;
-		z-index: 15;
-	}
-}
-
 a, aside, .banner-float, .soundcloud, .watch, .control {
 	cursor: pointer;
 }
@@ -43,6 +24,10 @@ a, aside, .banner-float, .soundcloud, .watch, .control {
 
 .mono {
 	font-family: monospace;
+}
+
+textarea {
+	resize: both;
 }
 
 #sync {

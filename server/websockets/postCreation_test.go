@@ -84,7 +84,7 @@ func (*DB) TestThreadCreation(c *C) {
 
 	data := marshalJSON(sampleThreadCreationRequest, c)
 	c.Assert(insertThread(data, cl), IsNil)
-	assertMessage(wcl, []byte("01true"), c)
+	assertMessage(wcl, []byte("010"), c)
 
 	var thread types.DatabaseThread
 	c.Assert(db.One(r.Table("threads").Get(6), &thread), IsNil)

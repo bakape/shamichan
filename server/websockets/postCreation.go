@@ -14,10 +14,16 @@ import (
 
 var (
 	// Overridable for tests
-	imageAllocationTimeout = time.Minute * 15
+	imageAllocationTimeout = time.Minute * 10
 
 	errImageAllocationTimeout = errInvalidMessage("image allocation timeout")
 	errReadOnly               = errInvalidMessage("read only board")
+)
+
+// Websocket message response codes
+const (
+	postCreated = iota
+	invalidInsertionCaptcha
 )
 
 // Insert a new thread into the database
@@ -30,7 +36,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		return errInvalidBoard
 	}
 	if !authenticateCaptcha(req.Captcha, c.IP) {
-		return c.sendMessage(messageInsertThread, false)
+		return c.sendMessage(messageInsertThread, invalidInsertionCaptcha)
 	}
 
 	var conf config.PostParseConfigs
@@ -113,5 +119,5 @@ func insertThread(data []byte, c *Client) (err error) {
 		return err
 	}
 
-	return c.sendMessage(messageInsertThread, true)
+	return c.sendMessage(messageInsertThread, postCreated)
 }

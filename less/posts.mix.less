@@ -3,6 +3,37 @@ a.referenced {
 	border-bottom: 1px dashed currentColor;
 }
 
+article, aside {
+	display: table;
+	padding: 4px 10px;
+}
+
+aside {
+	margin: 1em;
+	section > & {
+		margin: 2px;
+	}
+	&.compact {
+		margin: 0 1em;
+	}
+	a {
+		position: relative;
+		z-index: 15;
+	}
+	&.expanded {
+		padding: 0.7em;
+		&:before {
+			content: "";
+		}
+		&:after {
+			content: "";
+		}
+		& > a {
+			display: none;
+		}
+	}
+}
+
 blockquote {
 	word-break: break-all;
 }
@@ -179,4 +210,14 @@ pre, .themed {
 	resize: none;
 	text-wrap: none;
 	vertical-align: baseline;
+}
+
+.new-thread-form {
+	input[type=text], textarea {
+		width: 100%;
+		box-sizing: border-box;
+	}
+	textarea {
+		width: 20em;
+	}
 }

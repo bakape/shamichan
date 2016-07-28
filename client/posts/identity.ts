@@ -1,5 +1,4 @@
-// Name, email, tripcode and staff title persistence and postform
-// propagation
+// Name, email, tripcode and staff title persistence and postform propagation
 
 import {emitChanges, ChangeEmitter} from '../model'
 import {defer} from '../defer'
@@ -13,6 +12,14 @@ interface Identity extends ChangeEmitter {
 	email: string
 	postPassword: string
 	[index: string]: any
+}
+
+// Maximum lengths of input fields
+const maxLengths: {[key: string]: number} = {
+	name: 50,
+	email: 100,
+	auth: 50,
+	postPassword: 50
 }
 
 // Values of the name and tripcode fields
@@ -47,7 +54,8 @@ class IdentityPanel extends BannerModal {
 				label,
 				tooltip,
 				type: inputType.string,
-				value: identity[name]
+				value: identity[name],
+				maxLength: maxLengths[name],
 			})
 		})
 
