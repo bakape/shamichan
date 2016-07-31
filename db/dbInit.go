@@ -81,7 +81,7 @@ func LoadDB() (err error) {
 	}
 
 	if !isTest {
-		runCleanupTasks()
+		go runCleanupTasks()
 	}
 	return loadConfigs()
 }
