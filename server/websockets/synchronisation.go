@@ -47,19 +47,17 @@ func synchronise(data []byte, c *Client) error {
 // Board pages do not have any live feeds (for now, at least). Just send the
 // client its ID.
 func syncToBoard(board string, c *Client) error {
-	if err := registerSync(board, c); err != nil {
-		return err
-	}
-	return c.sendMessage(messageSynchronise, c.ID)
+	registerSync("b:"+board, c)
+	return c.sendMessage(messageSynchronise, 0)
 }
 
 // Register the client with the central client storage datastructure
-func registerSync(syncID string, c *Client) error {
+func registerSync(syncID string, c *Client) {
 	if !c.synced {
-		return Clients.Add(c, syncID)
+		Clients.Add(c, syncID)
+	} else {
+		Clients.ChangeSync(c, syncID)
 	}
-	Clients.ChangeSync(c.ID, syncID)
-	return nil
 }
 
 // Sends a response to the client's synchronisation request with any missed
@@ -89,8 +87,7 @@ func syncToThread(board string, thread, ctr int64, c *Client) error {
 	c.closeUpdateFeed = closeFeed
 	registerSync(util.IDToString(thread), c)
 
-	// Send the client its ID
-	if err := c.sendMessage(messageSynchronise, c.ID); err != nil {
+	if err := c.sendMessage(messageSynchronise, 0); err != nil {
 		return err
 	}
 

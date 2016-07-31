@@ -78,10 +78,12 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	synced bool // to any change feed and the global Clients map
+	// Synchronised to any change feed and regstered in the global Clients map.
+	// Should only be mutated from Clients.
+	synced bool
+
 	auth.Ident
 	conn         *websocket.Conn
-	ID           string
 	sessionToken string // Token of an authenticated user session, if any
 
 	// Internal message receiver channel
@@ -120,7 +122,7 @@ func (c *Client) Listen() error {
 
 	// Clean up, when loop exits
 	err := c.listenerLoop()
-	Clients.Remove(c.ID)
+	Clients.Remove(c)
 	return c.closeConnections(err)
 }
 

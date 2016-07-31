@@ -3,7 +3,7 @@
 */
 
 import FSM from './fsm'
-import {debug, syncCounter, page, clientID, setClientID} from './state'
+import {debug, syncCounter, page} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
 import {authenticate} from './mod/login'
@@ -198,10 +198,8 @@ function resetAttempts() {
 // channel
 handlers[message.synchronise] = connSM.feeder(connEvent.sync)
 
-connSM.act([connState.syncing], connEvent.sync, connState.synced, id => {
-	setClientID(id)
-	renderStatus(syncStatus.synced)
-})
+connSM.act([connState.syncing], connEvent.sync, connState.synced, id =>
+	renderStatus(syncStatus.synced))
 
 connSM.wildAct(connEvent.close, connState.dropped, event => {
 	clearModuleState()

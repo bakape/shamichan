@@ -71,9 +71,6 @@ export let syncCounter: number
 // Debug mode with more verbose logging
 export let debug: boolean = /[\?&]debug=true/.test(location.href)
 
-// ID of the current tab on the server. Set after synchronisation.
-export let clientID: string
-
 // Read page state by parsing a URL
 function read(href: string): PageState {
 	const board = href.match(/\/(\w+)\//)[1],
@@ -121,6 +118,3 @@ export const displayLoading = (loading: boolean) =>
 	debug = true
 	; (window as any).send = send
 }
-
-export const setClientID = (id: string) =>
-	clientID = id

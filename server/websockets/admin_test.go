@@ -10,7 +10,7 @@ import (
 
 func (*DB) TestNotAdmin(c *C) {
 	cl := &Client{}
-	cl.ID = "foo"
+	cl.UserID = "foo"
 	for _, fn := range []handler{configServer} {
 		c.Assert(fn(nil, cl), Equals, errAccessDenied)
 	}

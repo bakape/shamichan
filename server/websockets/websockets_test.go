@@ -127,7 +127,6 @@ func (*ClientSuite) TestNewClient(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	c.Assert(cl.ID, Equals, "")
 	c.Assert(cl.synced, Equals, false)
 }
 
@@ -356,13 +355,14 @@ func (*ClientSuite) TestCleanUp(c *C) {
 	defer sv.Close()
 
 	cl, wcl := sv.NewClient()
-	c.Assert(Clients.Add(cl, "1"), IsNil)
-	c.Assert(Clients.Has(cl.ID), Equals, true)
+	Clients.Add(cl, "1")
+	c.Assert(Clients.clients[cl], Equals, "1")
 	sv.Add(1)
 	go readListenErrors(c, cl, sv)
 	normalCloseWebClient(c, wcl)
 	sv.Wait()
-	c.Assert(Clients.Has(cl.ID), Equals, false)
+	_, ok := Clients.clients[cl]
+	c.Assert(ok, Equals, false)
 }
 
 func (*ClientSuite) TestHandler(c *C) {

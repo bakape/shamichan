@@ -45,7 +45,7 @@ func (*DB) TestSyncToBoard(c *C) {
 	msg.Board = "a"
 	data = marshalJSON(msg, c)
 	c.Assert(synchronise(data, cl), IsNil)
-	assertMessage(wcl, []byte(`30"`+cl.ID+`"`), c)
+	assertMessage(wcl, []byte(`300`), c)
 }
 
 func (*ClientSuite) TestRegisterSync(c *C) {
@@ -54,15 +54,12 @@ func (*ClientSuite) TestRegisterSync(c *C) {
 	cl, _ := sv.NewClient()
 
 	// Not synced yet
-	c.Assert(registerSync("1", cl), IsNil)
-	id := cl.ID
-	c.Assert(Clients.Has(id), Equals, true)
-	c.Assert(Clients.clients[cl.ID].syncID, Equals, "1")
+	registerSync("1", cl)
+	c.Assert(Clients.clients[cl], Equals, "1")
 
 	// Already synced
-	c.Assert(registerSync("2", cl), IsNil)
-	c.Assert(Clients.Has(id), Equals, true)
-	c.Assert(Clients.clients[cl.ID].syncID, Equals, "2")
+	registerSync("2", cl)
+	c.Assert(Clients.clients[cl], Equals, "2")
 }
 
 func (*DB) TestInvalidThreadSync(c *C) {
@@ -97,10 +94,9 @@ func (*DB) TestSyncToThread(c *C) {
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 	c.Assert(synchronise(data, cl), IsNil)
-	c.Assert(Clients.Has(cl.ID), Equals, true)
-	c.Assert(Clients.clients[cl.ID].syncID, Equals, "1")
+	c.Assert(Clients.clients[cl], Equals, "1")
 
-	assertSyncResponse(wcl, cl, c)      // Receive client ID
+	assertSyncResponse(wcl, c)          // Receive client ID
 	syncAssertMessage(wcl, backlog1, c) // Receive first missed message
 	syncAssertMessage(wcl, backlog2, c) // Second message
 
@@ -115,8 +111,8 @@ func (*DB) TestSyncToThread(c *C) {
 	sv.Wait()
 }
 
-func assertSyncResponse(wcl *websocket.Conn, cl *Client, c *C) {
-	res, err := encodeMessage(messageSynchronise, cl.ID)
+func assertSyncResponse(wcl *websocket.Conn, c *C) {
+	res, err := encodeMessage(messageSynchronise, 0)
 	c.Assert(err, IsNil)
 	syncAssertMessage(wcl, res, c)
 }
@@ -148,7 +144,7 @@ func (*DB) TestOnlyMissedMessageSyncing(c *C) {
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 
 	c.Assert(synchronise(data, cl), IsNil)
-	assertSyncResponse(wcl, cl, c)         // Receive client ID
+	assertSyncResponse(wcl, c)             // Receive client ID
 	syncAssertMessage(wcl, backlogs[1], c) // Receive first missed message
 	syncAssertMessage(wcl, backlogs[2], c) // Second missed message
 	cl.Close()

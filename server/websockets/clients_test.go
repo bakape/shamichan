@@ -21,17 +21,17 @@ func (*Map) TestAddHasRemove(c *C) {
 	// Add client
 	cl, _ := sv.NewClient()
 	m.Add(cl, "1")
-	c.Assert(cl.ID, Matches, "^.{86}$")
-	c.Assert(m.Has(cl.ID), Equals, true)
+	c.Assert(m.clients[cl], Equals, "1")
 
 	// Remove client
-	m.Remove(cl.ID)
-	c.Assert(m.Has(cl.ID), Equals, false)
+	m.Remove(cl)
+	_, ok := m.clients[cl]
+	c.Assert(ok, Equals, false)
 }
 
 func newClientMap() *ClientMap {
 	return &ClientMap{
-		clients: make(map[string]clientContainer),
+		clients: make(map[*Client]string),
 	}
 }
 
@@ -46,10 +46,10 @@ func (*Map) TestChangeSync(c *C) {
 
 	cl, _ := sv.NewClient()
 	m.Add(cl, oldThread)
-	c.Assert(m.clients[cl.ID].syncID, Equals, oldThread)
+	c.Assert(m.clients[cl], Equals, oldThread)
 
-	m.ChangeSync(cl.ID, newThread)
-	c.Assert(m.clients[cl.ID].syncID, Equals, newThread)
+	m.ChangeSync(cl, newThread)
+	c.Assert(m.clients[cl], Equals, newThread)
 }
 
 func (*Map) TestCountByIP(c *C) {
@@ -68,22 +68,4 @@ func (*Map) TestCountByIP(c *C) {
 	cls[2].IP = "bar"
 
 	c.Assert(m.CountByIP(), Equals, 2)
-}
-
-func (*Map) TestGetNonExistantClient(c *C) {
-	m := newClientMap()
-	_, err := m.Get("1")
-	c.Assert(err, ErrorMatches, "no client found: .*")
-}
-
-func (*Map) TestGetClient(c *C) {
-	m := newClientMap()
-	sv := newWSServer(c)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	m.Add(cl, "100")
-
-	res, err := m.Get(cl.ID)
-	c.Assert(err, IsNil)
-	c.Assert(res, DeepEquals, cl)
 }
