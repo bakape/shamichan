@@ -1,23 +1,24 @@
 package websockets
 
 import (
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager"
+	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-
-	"github.com/bakape/meguca/parser"
 )
 
 var (
-	// Overridable for tests
-	imageAllocationTimeout = time.Minute * 10
-
-	errImageAllocationTimeout = errInvalidMessage("image allocation timeout")
-	errReadOnly               = errInvalidMessage("read only board")
+	errReadOnly          = errInvalidMessage("read only board")
+	errInvalidImageToken = errInvalidMessage("invalid image token")
+	errNoImageName       = errInvalidMessage("no image name")
+	errImageNameTooLong  = errInvalidMessage("image name too long")
 )
 
 // Websocket message response codes
@@ -90,12 +91,11 @@ func insertThread(data []byte, c *Client) (err error) {
 	post.Links = res.Links
 	post.Commands = res.Commands
 
+	// Perform this last, so there are less dangling images because of an error
 	if !conf.TextOnly {
-		select {
-		case img := <-c.AllocateImage:
-			post.Image = &img
-		case <-time.Tick(imageAllocationTimeout):
-			return errImageAllocationTimeout
+		post.Image, err = getImage(req.ImageToken, req.ImageName, req.Spoiler)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -120,4 +120,35 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 
 	return c.sendMessage(messageInsertThread, postCreated)
+}
+
+// Performs some validations and retrieves processed image data by token ID.
+// Embeds spoiler and image name in result struct. The last extension is
+// stripped from the name.
+func getImage(token, name string, spoiler bool) (img *types.Image, err error) {
+	switch {
+	case len(token) > 127, token == "": // RethinkDB key length limit
+		err = errInvalidImageToken
+	case name == "":
+		err = errNoImageName
+	case len(name) > 200:
+		err = errImageNameTooLong
+	}
+	if err != nil {
+		return
+	}
+
+	imgCommon, err := imager.UseImageToken(token)
+	if err != nil {
+		if err == imager.ErrInvalidToken {
+			err = errInvalidImageToken
+		}
+		return
+	}
+
+	return &types.Image{
+		ImageCommon: imgCommon,
+		Spoiler:     spoiler,
+		Name:        strings.TrimSuffix(name, filepath.Ext(name)),
+	}, nil
 }

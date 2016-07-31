@@ -11,11 +11,9 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/Soreil/apngdetector"
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -33,34 +31,20 @@ const (
 	ogg
 )
 
-var (
-	// Map of oficial MIME types to the extension representations we deal with
-	mimeTypes = map[string]uint8{
-		"image/jpeg":      jpeg,
-		"image/png":       png,
-		"image/gif":       gif,
-		"video/webm":      webm,
-		"application/pdf": pdf,
-	}
-
-	// Overridable for tests
-	allocationTimeout = time.Second * 10
-
-	errUsageTimeout = errors.New("image usage timeout")
-)
+// Map of stdlib MIME types to the constants used internally
+var mimeTypes = map[string]uint8{
+	"image/jpeg":      jpeg,
+	"image/png":       png,
+	"image/gif":       gif,
+	"video/webm":      webm,
+	"application/pdf": pdf,
+}
 
 // Response from a thumbnail generation performed concurently
 type thumbResponse struct {
 	thumb []byte
 	dims  [4]uint16
 	err   error
-}
-
-// Spoiler ID is unparsable or not enabled
-type errInvalidSpoiler string
-
-func (e errInvalidSpoiler) Error() string {
-	return "invalid spoiler ID: " + string(e)
 }
 
 // NewImageUpload  handles the clients' image (or other file) upload request
@@ -70,17 +54,18 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	req.Body = http.MaxBytesReader(res, req.Body, maxSize)
 	res.Header().Set("Access-Control-Allow-Origin", config.AllowedOrigin)
 
-	code, err := newImageUpload(req)
+	code, id, err := newImageUpload(req)
 	if err != nil {
 		text := err.Error()
 		http.Error(res, text, code)
 		log.Printf("upload error: %s: %s\n", req.RemoteAddr, text)
 	}
+	res.Write([]byte(id))
 }
 
 // Separate function for cleaner error handling. Returns the HTTP status code of
 // the response and error, if any.
-func newImageUpload(req *http.Request) (int, error) {
+func newImageUpload(req *http.Request) (int, string, error) {
 	// Remove temporary files, when function returns
 	defer func() {
 		if req.MultipartForm != nil {
@@ -90,25 +75,20 @@ func newImageUpload(req *http.Request) (int, error) {
 		}
 	}()
 
-	clientID, spoiler, err := parseUploadForm(req)
+	err := parseUploadForm(req)
 	if err != nil {
-		return 400, err
+		return 400, "", err
 	}
 
-	client, err := websockets.Clients.Get(clientID)
+	file, _, err := req.FormFile("image")
 	if err != nil {
-		return 400, err
-	}
-
-	file, fileHeader, err := req.FormFile("image")
-	if err != nil {
-		return 400, err
+		return 400, "", err
 	}
 	defer file.Close()
 
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
-		return 500, err
+		return 500, "", err
 	}
 
 	sum := sha1.Sum(data)
@@ -116,80 +96,36 @@ func newImageUpload(req *http.Request) (int, error) {
 	img, err := FindImageThumb(SHA1)
 	noThumbnail := err == r.ErrEmptyResult
 	if err != nil && !noThumbnail {
-		return 500, err
+		return 500, "", err
 	}
-	img.Imgnm = fileHeader.Filename
-	img.Spoiler = spoiler
 
 	// Already have a thumbnail
 	if !noThumbnail {
-		return passImage(img, client)
+		return NewImageToken(SHA1)
 	}
-	img.SHA1 = SHA1
 
-	return newThumbnail(data, img, client)
+	img.SHA1 = SHA1
+	return newThumbnail(data, img)
 }
 
 // Parse and validate the form of the upload request
-func parseUploadForm(req *http.Request) (
-	clientID string, spoiler bool, err error,
-) {
+func parseUploadForm(req *http.Request) error {
 	length, err := strconv.ParseInt(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
-		return
+		return err
 	}
 	if length > config.Get().MaxSize*1024*1024 {
-		err = errors.New("File too large")
-		return
+		return errors.New("file too large")
 	}
-
-	err = req.ParseMultipartForm(0)
-	if err != nil {
-		return
-	}
-
-	clientID = req.FormValue("id")
-	if clientID == "" {
-		err = errors.New("No client ID specified")
-		return
-	}
-	spoiler, err = extractSpoiler(req)
-
-	return
-}
-
-// Extracts and validates a spoiler number from the form
-func extractSpoiler(req *http.Request) (bool, error) {
-	// Read the spoiler the client had chosen for the image, if any
-	unparsed := req.FormValue("spoiler")
-	if unparsed == "" {
-		return false, nil
-	}
-	return strconv.ParseBool(unparsed)
-}
-
-// Passes the image struct to the requesting client. If the image is not
-// succesfully passed in 10 seconds, it is deallocated.
-func passImage(img types.Image, client *websockets.Client) (int, error) {
-	select {
-	case client.AllocateImage <- img:
-		return 200, nil
-	case <-time.Tick(allocationTimeout):
-		if err := DeallocateImage(img.SHA1); err != nil {
-			log.Printf("counld't deallocate image: %s", img.SHA1)
-		}
-		return 408, errUsageTimeout
-	}
+	return req.ParseMultipartForm(0)
 }
 
 // Create a new thumbnail, commit its resources to the DB and filesystem, and
 // pass the image data to the client.
-func newThumbnail(data []byte, img types.Image, client *websockets.Client) (
-	int, error,
-) {
+func newThumbnail(data []byte, img types.ImageCommon) (int, string, error) {
 	fileType, err := detectFileType(data)
 	if err != nil {
-		return 400, err
+		return 400, "", err
 	}
 
 	// Generate MD5 hash and thumbnail concurently
@@ -205,15 +141,15 @@ func newThumbnail(data []byte, img types.Image, client *websockets.Client) (
 	img.MD5 = <-md5
 	res := <-thumb
 	if res.err != nil {
-		return 400, res.err
+		return 400, "", res.err // Some errors aren't actually 400, but most are
 	}
 	img.Dims = res.dims
 
 	if err := allocateImage(data, res.thumb, img); err != nil {
-		return 500, err
+		return 500, "", err
 	}
 
-	return passImage(img, client)
+	return NewImageToken(img.SHA1)
 }
 
 // detectFileType detects if the upload is of a supported file type, by reading

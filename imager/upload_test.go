@@ -10,12 +10,11 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
+	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
 
@@ -29,37 +28,10 @@ var (
 			MD5:      "60e41092581f7b329b057b8402caa8a7",
 			Size:     300792,
 		},
-		Imgnm:   "sample.jpg",
+		Name:    "sample.jpg",
 		Spoiler: true,
 	}
 )
-
-func (*Imager) TestExtractSpoiler(c *C) {
-	// No spoiler
-	body, w := newMultiWriter()
-	sp, err := assertExtraction(c, body, w)
-	c.Assert(err, IsNil)
-	c.Assert(sp, Equals, false)
-
-	// Invalid spoiler
-	body, w = newMultiWriter()
-	c.Assert(w.WriteField("spoiler", "shibireru darou"), IsNil)
-	sp, err = assertExtraction(c, body, w)
-	c.Assert(err, ErrorMatches, `strconv.ParseBool: parsing.*`)
-
-	// Valid spoiler
-	body, w = newMultiWriter()
-	c.Assert(w.WriteField("spoiler", "true"), IsNil)
-	sp, err = assertExtraction(c, body, w)
-	c.Assert(err, IsNil)
-	c.Assert(sp, Equals, true)
-}
-
-func assertExtraction(c *C, b io.Reader, w *multipart.Writer) (bool, error) {
-	req := newRequest(c, b, w)
-	c.Assert(req.ParseMultipartForm(0), IsNil)
-	return extractSpoiler(req)
-}
 
 func (*Imager) TestDetectFileType(c *C) {
 	// Supported file types
@@ -87,8 +59,7 @@ func newMultiWriter() (*bytes.Buffer, *multipart.Writer) {
 }
 
 func newRequest(c *C, body io.Reader, w *multipart.Writer) *http.Request {
-	req, err := http.NewRequest("PUT", "/", body)
-	c.Assert(err, IsNil)
+	req := httptest.NewRequest("PUT", "/", body)
 	c.Assert(w.Close(), IsNil)
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	return req
@@ -101,8 +72,7 @@ func (*Imager) TestInvalidContentLengthHeader(c *C) {
 		"Content-Length": "KAWFEE",
 	})
 
-	_, _, err := parseUploadForm(req)
-	c.Assert(err, ErrorMatches, ".* invalid syntax")
+	c.Assert(parseUploadForm(req), ErrorMatches, ".* invalid syntax")
 }
 
 func (*Imager) TestUploadTooLarge(c *C) {
@@ -112,8 +82,7 @@ func (*Imager) TestUploadTooLarge(c *C) {
 	req := newRequest(c, b, w)
 	req.Header.Set("Content-Length", "1048577")
 
-	_, _, err := parseUploadForm(req)
-	c.Assert(err, ErrorMatches, "File too large")
+	c.Assert(parseUploadForm(req), ErrorMatches, "file too large")
 }
 
 func (*Imager) TestInvalidForm(c *C) {
@@ -124,50 +93,15 @@ func (*Imager) TestInvalidForm(c *C) {
 		"Content-Type":   "GWEEN TEA",
 	})
 
-	_, _, err := parseUploadForm(req)
-	c.Assert(err, NotNil)
-}
-
-func (*Imager) TestNoClientID(c *C) {
-	b, w := newMultiWriter()
-	req := newRequest(c, b, w)
-	req.Header.Set("Content-Length", "1024")
-
-	_, _, err := parseUploadForm(req)
-	c.Assert(err, ErrorMatches, "No client ID specified")
-}
-
-func (*Imager) TestInvalidSpoiler(c *C) {
-	b, w := newMultiWriter()
-	fields := syncClient(c)
-	fields["spoiler"] = "12"
-	writeFields(c, w, fields)
-	req := newRequest(c, b, w)
-	req.Header.Set("Content-Length", "1024")
-
-	_, _, err := parseUploadForm(req)
-	c.Assert(err, ErrorMatches, "strconv.ParseBool: parsing.*")
-}
-
-// Add client to synced clients map
-func syncClient(c *C) map[string]string {
-	cl := &websockets.Client{}
-	c.Assert(websockets.Clients.Add(cl, "1"), IsNil)
-	return map[string]string{"id": cl.ID}
+	c.Assert(parseUploadForm(req), NotNil)
 }
 
 func (*Imager) TestSuccessfulFormParse(c *C) {
 	b, w := newMultiWriter()
-	fields := syncClient(c)
-	fields["spoiler"] = "true"
-	writeFields(c, w, fields)
 	req := newRequest(c, b, w)
 	req.Header.Set("Content-Length", "1024")
 
-	id, spoiler, err := parseUploadForm(req)
-	c.Assert(err, IsNil)
-	c.Assert(id, Equals, fields["id"])
-	c.Assert(spoiler, Equals, true)
+	c.Assert(parseUploadForm(req), IsNil)
 }
 
 func setHeaders(req *http.Request, headers map[string]string) {
@@ -176,115 +110,29 @@ func setHeaders(req *http.Request, headers map[string]string) {
 	}
 }
 
-func writeFields(c *C, w *multipart.Writer, fields map[string]string) {
-	for key, val := range fields {
-		c.Assert(w.WriteField(key, val), IsNil)
-	}
-}
-
-func (*Imager) TestPassImage(c *C) {
-	img := types.Image{
-		ImageCommon: types.ImageCommon{
-			SHA1: "123",
-		},
-	}
-	client := new(websockets.Client)
-	client.AllocateImage = make(chan types.Image)
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		c.Assert(<-client.AllocateImage, DeepEquals, img)
-	}()
-	code, err := passImage(img, client)
-	c.Assert(err, IsNil)
-	c.Assert(code, Equals, 200)
-	wg.Wait()
-}
-
-func (*Imager) TestPassImageTimeout(c *C) {
-	oldTimeout := allocationTimeout
-	allocationTimeout = time.Second
-	defer func() {
-		allocationTimeout = oldTimeout
-	}()
-	client := new(websockets.Client)
-	client.AllocateImage = make(chan types.Image)
-
-	const id = "123"
-	proto := types.ProtoImage{
-		ImageCommon: types.ImageCommon{
-			FileType: jpeg,
-			SHA1:     id,
-		},
-		Posts: 2,
-	}
-	img := types.Image{
-		ImageCommon: proto.ImageCommon,
-	}
-	insertProtoImage(proto, c)
-
-	code, err := passImage(img, client)
-	c.Assert(err, Equals, errUsageTimeout)
-	c.Assert(code, Equals, 408)
-	assertImageRefCount(img.SHA1, 1, c)
-}
-
 func (*Imager) TestWrongFileType(c *C) {
 	data := readSample("sample.txt", c)
-	code, err := newThumbnail(data, types.Image{}, nil)
+	code, _, err := newThumbnail(data, types.ImageCommon{})
 	c.Assert(err, ErrorMatches, "unsupported file type.*")
 	c.Assert(code, Equals, 400)
 }
 
 func (*Imager) TestNewThumbnail(c *C) {
-	const (
-		id   = "123"
-		name = "sample.jpg"
-	)
-	data := readSample(name, c)
-	img := types.Image{
-		ImageCommon: types.ImageCommon{
-			SHA1: id,
-		},
-		Imgnm: name,
+	req := newJPEGRequest(c)
+	rec := httptest.NewRecorder()
+	NewImageUpload(rec, req)
+	c.Assert(rec.Code, Equals, 200)
+
+	std := types.ProtoImage{
+		ImageCommon: stdJPEG.ImageCommon,
+		Posts:       1,
 	}
+	var img types.ProtoImage
+	c.Assert(db.One(r.Table("images").Get(std.SHA1), &img), IsNil)
+	c.Assert(img, DeepEquals, std)
 
-	std := img
-	std.FileType = jpeg
-	std.Dims = jpegDims
-	std.Imgnm = name
-	std.MD5 = "60e41092581f7b329b057b8402caa8a7"
-	std.Size = 300792
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	ch := make(chan types.Image)
-	go func() {
-		defer wg.Done()
-		c.Assert(<-ch, Equals, std)
-	}()
-
-	code, err := newThumbnail(data, img, &websockets.Client{
-		AllocateImage: ch,
-	})
-	c.Assert(err, IsNil)
-	c.Assert(code, Equals, 200)
-	wg.Wait()
-
-	assertDBRecord(std, c)
-	assertFiles(name, id, jpeg, c)
-}
-
-// Assert the image record in the database matches the sample
-func assertDBRecord(img types.Image, c *C) {
-	c.Assert(getImageRecord(img.SHA1, c), Equals, img.ImageCommon)
-}
-
-func getImageRecord(id string, c *C) (res types.ImageCommon) {
-	c.Assert(db.One(db.GetImage(id), &res), IsNil)
-	return
+	assertImageToken(rec.Body.String(), std.SHA1, stdJPEG.Name, c)
+	assertFiles("sample.jpg", std.SHA1, jpeg, c)
 }
 
 // Assert image file assets were created with the correct paths
@@ -307,118 +155,82 @@ func assertFiles(src, id string, fileType uint8, c *C) {
 	c.Assert(len(data[1]) > len(data[2]), Equals, true)
 }
 
+func assertImageToken(id, SHA1, name string, c *C) {
+	q := r.Table("imageTokens").Get(id).Field("SHA1").Eq(SHA1)
+	var isEqual bool
+	c.Assert(db.One(q, &isEqual), IsNil)
+	c.Assert(isEqual, Equals, true)
+}
+
 func (*Imager) TestAPNGThumbnailing(c *C) {
 	for _, ext := range [...]string{"png", "apng"} {
-		img := types.Image{
-			ImageCommon: types.ImageCommon{
-				SHA1: ext,
-			},
+		img := types.ImageCommon{
+			SHA1: ext,
 		}
 		data := readSample("sample."+ext, c)
 
-		_, err := newThumbnail(data, img, newClient())
+		_, _, err := newThumbnail(data, img)
 		c.Assert(err, IsNil)
 
 		c.Assert(getImageRecord(ext, c).APNG, Equals, ext == "apng")
 	}
 }
 
-func newClient() *websockets.Client {
-	ch := make(chan types.Image)
-	go func() {
-		<-ch
-	}()
-	return &websockets.Client{
-		AllocateImage: ch,
-	}
-}
-
-func (*Imager) TestNonExistantClient(c *C) {
-	b, w := newMultiWriter()
-	writeFields(c, w, map[string]string{
-		"id": "123",
-	})
-	req := newRequest(c, b, w)
-	req.Header.Set("Content-Length", "300792")
-
-	code, err := newImageUpload(req)
-	c.Assert(err, ErrorMatches, "no client found: 123")
-	c.Assert(code, Equals, 400)
+func getImageRecord(id string, c *C) (res types.ImageCommon) {
+	c.Assert(db.One(db.GetImage(id), &res), IsNil)
+	return
 }
 
 func (*Imager) TestNoImageUploaded(c *C) {
 	b, w := newMultiWriter()
-	writeFields(c, w, syncClient(c))
 	req := newRequest(c, b, w)
 	req.Header.Set("Content-Length", "300792")
 
-	code, err := newImageUpload(req)
+	code, _, err := newImageUpload(req)
 	c.Assert(err, ErrorMatches, "http: no such file")
 	c.Assert(code, Equals, 400)
 }
 
 func (*Imager) TestThumbNailReuse(c *C) {
 	for i := 0; i < 2; i++ {
-		req, wg := newJPEGRequest(c)
-
-		code, err := newImageUpload(req)
+		req := newJPEGRequest(c)
+		code, _, err := newImageUpload(req)
 		c.Assert(err, IsNil)
 		c.Assert(code, Equals, 200)
 
-		wg.Wait()
+		assertImageRefCount(stdJPEG.SHA1, i+1, c)
 	}
 }
 
-func newJPEGRequest(c *C) (*http.Request, *sync.WaitGroup) {
+func newJPEGRequest(c *C) *http.Request {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	b, w := newMultiWriter()
-	fields := assertImage(stdJPEG, &wg, c)
-	fields["spoiler"] = "1"
-	writeFields(c, w, fields)
 
-	file, err := w.CreateFormFile("image", stdJPEG.Imgnm)
+	file, err := w.CreateFormFile("image", stdJPEG.Name)
 	c.Assert(err, IsNil)
-	_, err = file.Write(readSample(stdJPEG.Imgnm, c))
+	_, err = file.Write(readSample(stdJPEG.Name, c))
 	c.Assert(err, IsNil)
 
 	req := newRequest(c, b, w)
 	req.Header.Set("Content-Length", "300792")
 
-	return req, &wg
-}
-
-// Assert the image sent to the client matches the standard
-func assertImage(std types.Image, wg *sync.WaitGroup, c *C) map[string]string {
-	ch := make(chan types.Image)
-	cl := &websockets.Client{
-		AllocateImage: ch,
-	}
-	c.Assert(websockets.Clients.Add(cl, "1"), IsNil)
-
-	go func() {
-		defer wg.Done()
-		c.Assert(<-ch, Equals, std)
-	}()
-
-	return map[string]string{"id": cl.ID}
+	return req
 }
 
 func (*Imager) TestUploadHandler(c *C) {
-	req, wg := newJPEGRequest(c)
+	req := newJPEGRequest(c)
 	rec := httptest.NewRecorder()
 
 	NewImageUpload(rec, req)
 	acao := rec.Header().Get("Access-Control-Allow-Origin")
 	c.Assert(acao, Equals, config.AllowedOrigin)
 	c.Assert(rec.Code, Equals, 200)
-	wg.Wait()
 }
 
 func (*Imager) TestErrorPassing(c *C) {
 	const ip = "::1"
-	req, err := http.NewRequest("GET", "/", nil)
-	c.Assert(err, IsNil)
+	req := httptest.NewRequest("GET", "/", nil)
 	req.RemoteAddr = ip
 	rec := httptest.NewRecorder()
 

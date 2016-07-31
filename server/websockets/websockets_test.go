@@ -219,7 +219,7 @@ func (*ClientSuite) TestHandleMessage(c *C) {
 	// Invalid inner message payload. Test proper type reflection of the
 	// errInvalidMessage error type
 	msg = []byte("30nope")
-	asserHandlerError(cl, msg, "Invalid message structure.*", c)
+	asserHandlerError(cl, msg, "Invalid message:.*", c)
 }
 
 func asserHandlerError(cl *Client, msg []byte, pattern string, c *C) {

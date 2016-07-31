@@ -3,25 +3,21 @@ package imager
 import (
 	"fmt"
 	"image"
+	jpegLib "image/jpeg"
 	"os"
 	"path/filepath"
-
-	jpegLib "image/jpeg"
 	"testing"
 
 	"github.com/Soreil/imager"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-
-	"github.com/bakape/meguca/server/websockets"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
 
-type Imager struct {
-}
+type Imager struct{}
 
 var (
 	_ = Suite(&Imager{})
@@ -33,6 +29,7 @@ var (
 )
 
 func (d *Imager) SetUpSuite(c *C) {
+	isTest = true
 	db.DBName = db.UniqueDBName()
 	c.Assert(db.Connect(), IsNil)
 	c.Assert(db.InitDB(), IsNil)
@@ -56,9 +53,6 @@ func (d *Imager) TearDownTest(c *C) {
 	for _, table := range db.AllTables {
 		c.Assert(db.Write(r.Table(table).Delete()), IsNil)
 	}
-
-	// Clear synchtonised clients
-	websockets.Clients.Clear()
 
 	// Clear image asset folders
 	for _, dir := range [...]string{"src", "thumb"} {

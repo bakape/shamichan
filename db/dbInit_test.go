@@ -64,6 +64,7 @@ func (*DBSuite) TestVerifyVersion(c *C) {
 
 func (*DBInit) TestLoadDB(c *C) {
 	DBName = UniqueDBName()
+	isTest = true
 	defer func() {
 		c.Assert(Write(r.DBDrop(DBName)), IsNil)
 		c.Assert(RSession.Close(), IsNil)

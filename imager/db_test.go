@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
@@ -62,9 +63,7 @@ func (*Imager) TestFindImageThumb(c *C) {
 
 	img, err := FindImageThumb(id)
 	c.Assert(err, IsNil)
-	c.Assert(img, DeepEquals, types.Image{
-		ImageCommon: thumbnailed.ImageCommon,
-	})
+	c.Assert(img, DeepEquals, thumbnailed.ImageCommon)
 
 	assertImageRefCount(id, 2, c)
 }
@@ -124,11 +123,9 @@ func (*Imager) TestFailedAllocationCleanUp(c *C) {
 	c.Assert(os.Remove(filepath.FromSlash("images/thumb/"+id+".jpg")), IsNil)
 
 	err := errors.New("foo")
-	img := types.Image{
-		ImageCommon: types.ImageCommon{
-			SHA1:     id,
-			FileType: jpeg,
-		},
+	img := types.ImageCommon{
+		SHA1:     id,
+		FileType: jpeg,
 	}
 
 	c.Assert(cleanUpFailedAllocation(img, err), Equals, err)
@@ -141,11 +138,9 @@ func (*Imager) TestImageAllocation(c *C) {
 	for i, name := range [...]string{"sample", "thumb"} {
 		samples[i] = readSample(name+".jpg", c)
 	}
-	img := types.Image{
-		ImageCommon: types.ImageCommon{
-			SHA1:     id,
-			FileType: jpeg,
-		},
+	img := types.ImageCommon{
+		SHA1:     id,
+		FileType: jpeg,
 	}
 
 	c.Assert(allocateImage(samples[0], samples[1], img), IsNil)
@@ -161,7 +156,8 @@ func (*Imager) TestImageAllocation(c *C) {
 	var imageDoc types.ProtoImage
 	c.Assert(db.One(db.GetImage(id), &imageDoc), IsNil)
 	c.Assert(imageDoc, DeepEquals, types.ProtoImage{
-		ImageCommon: img.ImageCommon,
+		ImageCommon: img,
+		Posts:       1,
 	})
 }
 
@@ -170,4 +166,54 @@ func readSample(name string, c *C) []byte {
 	data, err := ioutil.ReadFile(path)
 	c.Assert(err, IsNil)
 	return data
+}
+
+func (*Imager) TestTokenExpiry(c *C) {
+	const SHA1 = "123"
+	img := types.ProtoImage{
+		ImageCommon: types.ImageCommon{
+			SHA1:     "123",
+			FileType: jpeg,
+		},
+		Posts: 7,
+	}
+	c.Assert(db.Write(r.Table("images").Insert(img)), IsNil)
+
+	expired := time.Now().Add(-time.Minute)
+	tokens := [...]allocationToken{
+		{
+			SHA1:    SHA1,
+			Expires: expired,
+		},
+		{
+			SHA1:    SHA1,
+			Expires: expired,
+		},
+		{
+			SHA1:    SHA1,
+			Expires: time.Now().Add(time.Minute),
+		},
+	}
+	c.Assert(db.Write(r.Table("imageTokens").Insert(tokens)), IsNil)
+
+	exireImageTokens()
+	var posts int
+	c.Assert(db.One(db.GetImage(SHA1).Field("posts"), &posts), IsNil)
+	c.Assert(posts, Equals, 5)
+}
+
+func (*Imager) TestUseImageToken(c *C) {
+	const name = "foo.jpeg"
+	proto := types.ProtoImage{
+		ImageCommon: stdJPEG.ImageCommon,
+		Posts:       1,
+	}
+	c.Assert(db.Write(r.Table("images").Insert(proto)), IsNil)
+
+	_, id, err := NewImageToken(stdJPEG.SHA1)
+	c.Assert(err, IsNil)
+
+	img, err := UseImageToken(id)
+	c.Assert(err, IsNil)
+	c.Assert(img, DeepEquals, stdJPEG.ImageCommon)
 }

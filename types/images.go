@@ -4,7 +4,7 @@ package types
 type Image struct {
 	Spoiler bool `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
 	ImageCommon
-	Imgnm string `json:"imgnm" gorethink:"imgnm"`
+	Name string `json:"name" gorethink:"name"`
 }
 
 // ProtoImage stores image data related to the source and thumbnail resources

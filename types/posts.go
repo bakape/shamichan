@@ -59,10 +59,13 @@ type DatabaseThread struct {
 // ThreadCreationRequest contains data for creating a thread passed from the
 // client theough websockets
 type ThreadCreationRequest struct {
+	Spoiler bool `json:"spoiler"`
 	PostCredentials
-	Subject string `json:"subject"`
-	Board   string `json:"board"`
-	Body    string `json:"body"`
+	Subject    string `json:"subject"`
+	Board      string `json:"board"`
+	Body       string `json:"body"`
+	ImageToken string `json:"imageToken"`
+	ImageName  string `json:"imageName"`
 	Captcha
 }
 

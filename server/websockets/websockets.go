@@ -13,7 +13,6 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/websocket"
 )
@@ -96,10 +95,6 @@ type Client struct {
 
 	// Close the update feed of a thread or board
 	closeUpdateFeed chan struct{}
-
-	// AllocateImage receives Image structs from the thumbnailer for allocation
-	// by the client
-	AllocateImage chan types.Image
 }
 
 type receivedMessage struct {
@@ -111,12 +106,11 @@ type receivedMessage struct {
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn, req *http.Request) *Client {
 	return &Client{
-		Ident:         auth.LookUpIdent(req),
-		write:         make(chan []byte),
-		close:         make(chan struct{}),
-		receive:       make(chan receivedMessage),
-		AllocateImage: make(chan types.Image),
-		conn:          conn,
+		Ident:   auth.LookUpIdent(req),
+		write:   make(chan []byte),
+		close:   make(chan struct{}),
+		receive: make(chan receivedMessage),
+		conn:    conn,
 	}
 }
 
@@ -225,14 +219,12 @@ func (c *Client) sendMessage(typ messageType, msg interface{}) error {
 
 // Encodes a message for sending through websockets. Separate function, so it
 // can be used in tests.1
-func encodeMessage(typ messageType, msg interface{}) (
-	encoded []byte, err error,
-) {
+func encodeMessage(typ messageType, msg interface{}) ([]byte, error) {
 	data, err := json.Marshal(msg)
 	if err != nil {
-		return
+		return nil, err
 	}
-	encoded = make([]byte, len(data)+2)
+	encoded := make([]byte, len(data)+2)
 	typeString := strconv.FormatUint(uint64(typ), 10)
 
 	// Ensure type string is always 2 chars long
@@ -244,7 +236,8 @@ func encodeMessage(typ messageType, msg interface{}) (
 	}
 
 	copy(encoded[2:], data)
-	return
+
+	return encoded, nil
 }
 
 // receiverLoop proxies the blocking conn.ReadMessage() into the main client
@@ -291,7 +284,8 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 	if err := c.runHandler(typ, msg); err != nil {
 		switch err := err.(type) {
 		case errInvalidMessage:
-			return util.WrapError(err.Error(), errInvalidPayload(msg))
+			errMsg := append([]byte(err.Error()+": "), msg...)
+			return errInvalidPayload(errMsg)
 		default:
 			return err
 		}

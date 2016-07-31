@@ -7,6 +7,7 @@ import (
 	"errors"
 	"image"
 	jpegLib "image/jpeg"
+	"time"
 
 	"github.com/Soreil/imager"
 	"github.com/bakape/meguca/config"
@@ -16,13 +17,28 @@ import (
 var (
 	errTooWide = errors.New("image too wide") // No such thing
 	errTooTall = errors.New("image too tall")
+
+	// Don't run scheduled tasks during tests
+	isTest bool
 )
 
-// InitImager applies the thumbnail quality configuration
+// InitImager applies the thumbnail quality configuration and starts the image
+// token expiry scheduler
 func InitImager() error {
 	conf := config.Get()
 	imager.JPEGOptions = jpegLib.Options{Quality: conf.JPEGQuality}
 	imager.PNGQuantization = conf.PNGQuality
+
+	if !isTest {
+		go func() {
+			timer := time.Tick(time.Minute)
+			for {
+				exireImageTokens()
+				<-timer
+			}
+		}()
+	}
+
 	return nil // To comply to the rest of the initialization functions
 }
 

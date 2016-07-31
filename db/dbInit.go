@@ -1,6 +1,4 @@
-/*
- Initialises and loads RethinkDB
-*/
+// Initialises and loads RethinkDB
 
 package db
 
@@ -16,7 +14,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 12
+const dbVersion = 13
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -30,7 +28,15 @@ var (
 	RSession *r.Session
 
 	// AllTables are all tables needed for meguca operation
-	AllTables = [...]string{"main", "threads", "images", "accounts", "boards"}
+	AllTables = [...]string{
+		"main",        // Various global information
+		"threads",     // Thread and post data
+		"images",      // Thumbnailed upload data
+		"imageTokens", // Tokens for claiming thumbnailed images from the
+		// "images" table
+		"accounts", // Registered user accounts
+		"boards",   // Board configurations
+	}
 )
 
 // Document is a eneric RethinkDB Document. For DRY-ness.
@@ -74,7 +80,9 @@ func LoadDB() (err error) {
 		return err
 	}
 
-	go runCleanupTasks()
+	if !isTest {
+		runCleanupTasks()
+	}
 	return loadConfigs()
 }
 

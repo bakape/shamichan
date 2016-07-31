@@ -204,7 +204,7 @@ func (d *DB) TestBoardJSON(c *C) {
 				"size":0,
 				"MD5":"",
 				"SHA1":"foo",
-				"imgnm":""
+				"name":""
 			},
 			"logCtr":33,
 			"bumpTime":0,
@@ -224,7 +224,7 @@ func (d *DB) TestBoardJSON(c *C) {
 				"size":0,
 				"MD5":"",
 				"SHA1":"foo",
-				"imgnm":""
+				"name":""
 			},
 			"logCtr":11,
 			"bumpTime":0,
@@ -266,7 +266,7 @@ func (d *DB) TestAllBoardJSON(c *C) {
 				"size":0,
 				"MD5":"",
 				"SHA1":"foo",
-				"imgnm":""
+				"name":""
 			},
 			"logCtr":44,
 			"bumpTime":0,
@@ -286,7 +286,7 @@ func (d *DB) TestAllBoardJSON(c *C) {
 				"size":0,
 				"MD5":"",
 				"SHA1":"foo",
-				"imgnm":""
+				"name":""
 			},
 			"logCtr":33,
 			"bumpTime":0,
@@ -306,7 +306,7 @@ func (d *DB) TestAllBoardJSON(c *C) {
 				"size":0,
 				"MD5":"",
 				"SHA1":"foo",
-				"imgnm":""
+				"name":""
 			},
 			"logCtr":11,
 			"bumpTime":0,
@@ -361,7 +361,7 @@ func (d *DB) TestThreadJSON(c *C) {
 		"size":0,
 		"MD5":"",
 		"SHA1":"foo",
-		"imgnm":""
+		"name":""
 	},
 	"logCtr":11,
 	"bumpTime":0,
