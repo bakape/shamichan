@@ -2,7 +2,6 @@ package imager
 
 import (
 	"errors"
-	"log"
 	"os"
 	"time"
 
@@ -27,16 +26,25 @@ var (
 	// non-existant token. The token might have expired (60 to 119 seconds) or
 	// the client could have provided an invalid token to begin with.
 	ErrInvalidToken = errors.New("invalid image token")
-
-	// Cached query
-	expiredImageTokenQuery = r.
-				Table("imageTokens").
-				Filter(r.Row.Field("expires").Lt(r.Now())).
-				Delete(r.DeleteOpts{ReturnChanges: true}).
-				Field("changes").
-				Field("old_val").
-				Field("SHA1")
 )
+
+// Cached query
+var expireImageTokensQuery = r.
+	Table("imageTokens").
+	Filter(r.Row.Field("expires").Lt(r.Now())).
+	Delete(r.DeleteOpts{ReturnChanges: true}).
+	Do(func(d r.Term) r.Term {
+		return d.
+			Field("deleted").
+			Eq(0).
+			Branch(
+				r.Expr([]string{}),
+				d.
+					Field("changes").
+					Field("old_val").
+					Field("SHA1"),
+			)
+	})
 
 // Document for registering a token coresponding to a client's right to allocate
 // an image in its post
@@ -177,16 +185,17 @@ func cleanUpFailedAllocation(img types.ImageCommon, err error) error {
 
 // Remove any expired image tokens and decrement or dealocate their target
 // image's assets
-func exireImageTokens() {
+func expireImageTokens() error {
 	var toDealloc []string
-	if err := db.All(expiredImageTokenQuery, &toDealloc); err != nil {
-		log.Printf("image token expiry: %s\n", err)
-		return
+	if err := db.All(expireImageTokensQuery, &toDealloc); err != nil {
+		return err
 	}
 
 	for _, sha1 := range toDealloc {
 		if err := DeallocateImage(sha1); err != nil {
-			log.Println(err)
+			return err
 		}
 	}
+
+	return nil
 }

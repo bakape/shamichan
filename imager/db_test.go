@@ -196,10 +196,14 @@ func (*Imager) TestTokenExpiry(c *C) {
 	}
 	c.Assert(db.Write(r.Table("imageTokens").Insert(tokens)), IsNil)
 
-	exireImageTokens()
+	c.Assert(expireImageTokens(), IsNil)
 	var posts int
 	c.Assert(db.One(db.GetImage(SHA1).Field("posts"), &posts), IsNil)
 	c.Assert(posts, Equals, 5)
+}
+
+func (*Imager) TestTokenExpiryNoTokens(c *C) {
+	c.Assert(expireImageTokens(), IsNil)
 }
 
 func (*Imager) TestUseImageToken(c *C) {

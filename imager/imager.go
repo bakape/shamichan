@@ -7,6 +7,7 @@ import (
 	"errors"
 	"image"
 	jpegLib "image/jpeg"
+	"log"
 	"time"
 
 	"github.com/Soreil/imager"
@@ -33,7 +34,9 @@ func InitImager() error {
 		go func() {
 			timer := time.Tick(time.Minute)
 			for {
-				exireImageTokens()
+				if err := expireImageTokens(); err != nil {
+					log.Println(err)
+				}
 				<-timer
 			}
 		}()
