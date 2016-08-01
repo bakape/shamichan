@@ -72,6 +72,7 @@ class ThreadForm extends FormView implements UploadForm {
 			{
 				name: "body",
 				type: inputType.multiline,
+				required: true,
 				rows: 4,
 				maxLength: 2000,
 			},

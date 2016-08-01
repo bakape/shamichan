@@ -13,6 +13,7 @@ export const enum inputType {boolean, number, string, select, multiline, map}
 // Spec of a single input element for board and server control panels
 export type InputSpec = {
 	type: inputType
+	required?: boolean
 	name: string
 	label?: string
 	placeholders?: boolean // Render placeholders inside input elements
@@ -40,6 +41,9 @@ export function renderInput(spec: InputSpec): string[] {
 	}
 	if (spec.placeholders) {
 		attrs["placeholder"] = spec.label
+	}
+	if (spec.required) {
+		attrs["required"] = ""
 	}
 
 	switch (spec.type) {
@@ -73,7 +77,7 @@ export function renderInput(spec: InputSpec): string[] {
 	case inputType.select:
 		return renderSelect(spec)
 	case inputType.multiline:
-		return renderTextArea(spec)
+		return renderTextArea(spec, attrs)
 	case inputType.map:
 		return renderMap(spec)
 	}
@@ -91,15 +95,8 @@ function renderSelect(spec: InputSpec): string[] {
 }
 
 // Render a multiline input textarea
-function renderTextArea(spec: InputSpec): string[] {
-	const attrs: StringMap = {
-		name: spec.name,
-		title: spec.tooltip || "",
-		rows: (spec.rows || 3).toString(),
-	}
-	if (spec.placeholders) {
-		attrs["placeholder"] = spec.label
-	}
+function renderTextArea(spec: InputSpec, attrs: StringMap): string[] {
+	attrs["rows"] = (spec.rows || 3).toString()
 
 	// Because textarea is a retardedly non-standard piece of shit that
 	// can't even fucking support a fucking value attribute.
