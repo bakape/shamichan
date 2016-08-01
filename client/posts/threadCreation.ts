@@ -1,10 +1,7 @@
-// TEMP
-export default null
-
-import {HTML, on, makeEl, table, inputValue, applyMixins} from '../util'
+import {
+	HTML, on, inputValue, applyMixins, fetchBoardList, fetchBoarConfigs,
+} from '../util'
 import {$threads} from '../page/common'
-import View from '../view'
-import Model from '../model'
 import {write, read} from '../render'
 import {FormView, inputType, renderInput, InputSpec} from '../forms'
 import {Captcha} from '../captcha'
@@ -33,11 +30,18 @@ export const enum responseCode {success, invalidCaptcha}
 // For ensuring we have unique captcha IDs
 let threadFormCounter = 0
 
-on($threads, "click", e => new ThreadForm(e), {selector: ".new-thread-button"})
+// Bind event listener to the thread container
+export default () =>
+	on($threads, "click", e => new ThreadForm(e),{
+		selector: ".new-thread-button",
+	})
 
 // Form view for creating new threads
 class ThreadForm extends FormView implements UploadForm {
 	$aside: Element
+	$board: Element
+	$uploadContainer: Element
+	needImage: boolean // Does the board require an OP image?
 
 	// UploadForm properties
 	$uploadStatus: Element
@@ -58,7 +62,7 @@ class ThreadForm extends FormView implements UploadForm {
 
 	// Render the element, hide the parent element's existing contents and
 	// hide the "["..."]" encasing it
-	render() {
+	async render() {
 		const specs: InputSpec[] = [
 			{
 				name: "subject",
@@ -75,11 +79,37 @@ class ThreadForm extends FormView implements UploadForm {
 
 		// Have the user to select the target board, if on the "/all/" metaboard
 		if (page.board === "all") {
-			// TODO: Some kind of selection panel
+
+			// TODO: Some kind of more elegant selection panel
+
+			// Hide the image upload controls, if the first board on the list
+			// is a text-only board
+			const boards = await fetchBoardList(),
+				[first] = boards
+			let display = ""
+			this.needImage = true
+			if (first && (await fetchBoarConfigs(first.id)).textOnly) {
+				display = "none"
+				this.needImage = false
+			}
+			read(() => {
+				// Bind event listener for changes to the board selection
+				this.$board = this.el.querySelector("select[name=board]")
+				on(this.$board, "input", () =>
+					this.toggleUploadForm())
+
+				this.$uploadContainer =
+					this.el
+					.querySelector(".upload-container")
+				write(() =>
+					this.$uploadContainer.style.display = display)
+			})
+
 			specs.unshift({
 				name: "board",
-				type: inputType.string,
-				maxLength: 3,
+				type: inputType.select,
+				choices: boards.map(({title, id}) =>
+					`${id} - ${title}`),
 			})
 		}
 
@@ -89,9 +119,11 @@ class ThreadForm extends FormView implements UploadForm {
 			spec.placeholders = true
 			html += renderInput(spec)[1] + "<br>"
 		}
-
 		if (!boardConfig.textOnly) {
 			html += this.renderUploadForm() + "<br>"
+			if (page.board !== "all") {
+				this.needImage = true
+			}
 		}
 
 		this.renderForm(html)
@@ -103,6 +135,23 @@ class ThreadForm extends FormView implements UploadForm {
 		})
 	}
 
+	// When on the /all/ board, you may possibly post to boards that are
+	// configured text-only. If a text-only board is selected, hide the upload
+	// inputs.
+	async toggleUploadForm() {
+		const {textOnly} = await fetchBoarConfigs(this.getSelectedBoard()),
+			display = textOnly ? "none" : ""
+		this.needImage = !textOnly
+		write(() =>
+			this.$uploadContainer.style.display = display)
+	}
+
+	// Retrieve the curently selected board, if on the /all/ board
+	getSelectedBoard(): string {
+		return this.$board.value.match(/^(\w+) -/)[1]
+	}
+
+	// Reset new thread form to initial state
 	remove() {
 		super.remove()
 		write(() => {
@@ -117,7 +166,7 @@ class ThreadForm extends FormView implements UploadForm {
 			password: identity.postPassword,
 		} as ThreadCreationRequest
 
-		if (this.$uploadInput) {
+		if (this.needImage) {
 			if (!(await this.uploadFile(req))) {
 				return
 			}
@@ -134,9 +183,7 @@ class ThreadForm extends FormView implements UploadForm {
 			req.subject = subject
 		}
 		req.body = this.el.querySelector("textarea[name=body]").value
-		if (page.board === "all") {
-			req["board"] = inputValue(this.el, "board")
-		}
+		req.board = page.board === "all" ? this.getSelectedBoard() : page.board
 		this.injectCaptcha(req)
 		send(message.insertThread, req)
 	}

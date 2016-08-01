@@ -1,15 +1,10 @@
 import View from '../view'
 import Model from '../model'
 import {write} from '../render'
-import {HTML, fetchJSON, makeAttrs} from '../util'
+import {HTML, fetchBoardList, BoardEntry, makeAttrs} from '../util'
 import Modal from '../modal'
 import {ui} from '../lang'
 import {formatHeader} from './board'
-
-type BoardEntry = {
-	id: string
-	title: string
-}
 
 let boards: BoardEntry[],
 	selected: string[],
@@ -81,10 +76,7 @@ class BoardSelectionPanel extends Modal<Model> {
 
 	// Fetch the board list from the server and render the selection form
 	async render() {
-		boards =
-			((await fetchJSON("/json/boardList") as BoardEntry[]))
-			.sort((a, b) =>
-				a.id.localeCompare(b.id))
+		boards = await fetchBoardList()
 
 		let boardList = ""
 		for (let {id, title} of boards) {

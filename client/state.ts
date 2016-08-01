@@ -3,7 +3,7 @@
 import {emitChanges, ChangeEmitter} from './model'
 import {Post} from './posts/models'
 import PostCollection from './posts/collection'
-import {getID, fetchJSON} from './util'
+import {getID, fetchBoarConfigs} from './util'
 import {db} from './db'
 import {write} from './render'
 import {send} from './connection'
@@ -24,7 +24,7 @@ interface Configs extends ChangeEmitter {
 }
 
 // Board-specific configurations
-interface BoardConfigs extends ChangeEmitter {
+export interface BoardConfigs extends ChangeEmitter {
 	readOnly: boolean
 	textOnly: boolean
 	forcedAnon: boolean
@@ -96,7 +96,7 @@ export async function loadFromDB() {
 
 // Fetch and load board-specfic configurations
 export const loadBoardConfig = async () =>
-	boardConfig.replaceWith(await fetchJSON(`/json/boardConfig/${page.board}`))
+	boardConfig.replaceWith(await fetchBoarConfigs(page.board))
 
 // Retrieve model of closest parent post
 export function getModel(el: Element): Post<PostView<any>> {

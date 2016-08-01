@@ -1,8 +1,13 @@
-// Utility functions
-
 import {write, read} from './render'
+import {BoardConfigs} from './state'
 
 type AnyHash = {[key: string]: any}
+
+// Single entry of the array, fetched through `/json/boardList`
+export type BoardEntry = {
+	id: string
+	title: string
+}
 
 const base64 =
 	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
@@ -11,6 +16,16 @@ const base64 =
 // Fetches and decodes a JSON response from the API
 export const fetchJSON = async (url: string): Promise<any> =>
 	await (await fetch(url)).json()
+
+// Returns a list of all boards created in alphabetical order
+export const fetchBoardList = async (): Promise<BoardEntry[]> =>
+	((await fetchJSON("/json/boardList") as BoardEntry[]))
+	.sort((a, b) =>
+		a.id.localeCompare(b.id))
+
+// Fetch configurations of a specific board
+export const fetchBoarConfigs = async (board: string): Promise<BoardConfigs> =>
+	await fetchJSON(`/json/boardConfig/${board}`)
 
 // Generate a random base64 string of desird length
 export function randomID(len: number): string {

@@ -2,9 +2,7 @@
 
  // TODO: Remove, when proper structure done
 import * as client from './client'
-import * as threadCreation from './posts/threadCreation'
 const c = client  // Prevents the compiler from removing as an unused import
-const t = threadCreation
 
 import {displayLoading} from './state'
 import {start as connect} from './connection'
@@ -13,6 +11,7 @@ import {open} from './db'
 import {renderBoard} from './page/board'
 import BoardNavigation from './page/boardNavigation'
 import {exec, defer} from './defer'
+import bindThreadCreation from './posts/threadCreation'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -32,6 +31,7 @@ async function start() {
 	await open()
 	await loadFromDB()
 	await boardConf
+	bindThreadCreation()
 	renderBoard()
 	new BoardNavigation()
 	connect()

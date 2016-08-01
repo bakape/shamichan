@@ -29,13 +29,15 @@ export default class UploadForm {
 		})
 
 		return HTML
-			`<input type="checkbox" name="spoiler">
-			<label for="spoiler" class="spoiler">
-				${lang.spoiler}
-			</label>
-			<strong class="upload-status"></strong>
-			<br>
-			<input type="file" name="image" accept="${acceptedFormats}">`
+			`<span class="upload-container">
+				<input type="checkbox" name="spoiler">
+				<label for="spoiler" class="spoiler">
+					${lang.spoiler}
+				</label>
+				<strong class="upload-status"></strong>
+				<br>
+				<input type="file" name="image" accept="${acceptedFormats}">
+			</span>`
 	}
 
 	// Read the file from $uploadInput and send as a POST request to the server.
