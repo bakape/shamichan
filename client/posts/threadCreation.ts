@@ -168,6 +168,7 @@ class ThreadForm extends FormView implements UploadForm {
 
 		if (this.needImage) {
 			if (!(await this.uploadFile(req))) {
+				this.reloadCaptcha(1)
 				return
 			}
 		}
