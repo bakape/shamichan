@@ -47,13 +47,12 @@ type LnPosts = {
 	locked: string
 	uploading: string
 	subject: string
-	received: string
-	unknownUpload: string
-	unknownResult: string
+	uploadProgress: string
 	threadLocked: string
 	quoted: string
 	board: string
 	body: string
+	spoiler: string
 	[index: string]: string
 }
 

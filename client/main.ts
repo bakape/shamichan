@@ -1,13 +1,9 @@
 // Client entry point
 
  // TODO: Remove, when proper structure done
-import * as options from './options'
 import * as client from './client'
-import BoardNavigation from './page/boardNavigation'
-import {exec, defer} from './defer'
 import * as threadCreation from './posts/threadCreation'
-const o = options // Prevents the compiler from removing as an unused import
-const c = client
+const c = client  // Prevents the compiler from removing as an unused import
 const t = threadCreation
 
 import {displayLoading} from './state'
@@ -15,6 +11,8 @@ import {start as connect} from './connection'
 import {loadFromDB, loadBoardConfig} from './state'
 import {open} from './db'
 import {renderBoard} from './page/board'
+import BoardNavigation from './page/boardNavigation'
+import {exec, defer} from './defer'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -27,9 +25,6 @@ if (localStorage.getItem("cookieVersion") !== cookieVersion.toString()) {
 	localStorage.setItem("cookieVersion", cookieVersion.toString())
 }
 
-defer(() =>
-	new BoardNavigation())
-
 // Load all stateful modules in dependancy order
 async function start() {
 	// Load asynchronously and concurently as fast as possible
@@ -38,6 +33,7 @@ async function start() {
 	await loadFromDB()
 	await boardConf
 	renderBoard()
+	new BoardNavigation()
 	connect()
 	exec()
 	displayLoading(false)

@@ -6,15 +6,13 @@
 		"you": "(You)",
 		"OP": "(OP)",
 		"locked": "locked",
-		"uploading": "Uploading...",
 		"subject": "Subject",
-		"received": "% received...",
-		"unknownUpload": "Unknown upload error",
-		"unknownResult": "Unknown result",
+		"uploadProgress": "uploaded...",
 		"thread_locked": "This thread is locked.",
 		"quoted": "You have been quoted",
 		"board": "Board",
-		"body": "Comment"
+		"body": "Comment",
+		"spoiler": "Spoiler"
 	},
 
 	"ui": {

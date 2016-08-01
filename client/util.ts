@@ -264,3 +264,9 @@ export function table<T>(rows: T[], func: (arg: T) => string[]): string {
 // element
 export const inputValue = (el: Element, name: string): string =>
 	(el.querySelector(`input[name=${name}]`) as HTMLInputElement).value
+
+// Applies mixins to destination object's prototype
+export const applyMixins = (dest: any, ...mixins: any[]) =>
+	mixins.forEach(mixin =>
+		Object.getOwnPropertyNames(mixin.prototype).forEach(name =>
+			dest.prototype[name] = mixin.prototype[name]))
