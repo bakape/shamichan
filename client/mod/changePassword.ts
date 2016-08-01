@@ -4,6 +4,7 @@ import {send, handlers, message} from '../connection'
 import {responseCode} from './login'
 import AccountFormView, {renderFields, validatePasswordMatch} from './common'
 import {Captcha} from '../captcha'
+import {read} from '../render'
 
 interface PasswordChangeRequest extends Captcha {
 	old: string
@@ -19,8 +20,8 @@ export default class PasswordChangeView extends AccountFormView {
 				new: inputValue(this.el, "newPassword"),
 			}))
 		this.render()
-
-		validatePasswordMatch(this.el, "newPassword", "repeat")
+		read(() =>
+			validatePasswordMatch(this.el, "newPassword", "repeat"))
 
 		handlers[message.changePassword] = (msg: responseCode) =>
 			this.handleResponse(msg)
