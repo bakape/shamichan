@@ -143,8 +143,10 @@ class ThreadForm extends FormView implements UploadForm {
 		const {textOnly} = await fetchBoarConfigs(this.getSelectedBoard()),
 			display = textOnly ? "none" : ""
 		this.needImage = !textOnly
-		write(() =>
-			this.$uploadContainer.style.display = display)
+		write(() => {
+			this.$uploadContainer.style.display = display
+			this.$uploadInput.disabled = textOnly
+		})
 	}
 
 	// Retrieve the curently selected board, if on the /all/ board

@@ -1,5 +1,5 @@
 import {posts as lang} from '../lang'
-import {HTML, commaList, load} from '../util'
+import {HTML, commaList, load, makeAttrs} from '../util'
 import {read, write} from '../render'
 
 // Uploaded file data to be embeded in thread and reply creation or appendage
@@ -28,6 +28,12 @@ export default class UploadForm {
 				.el.querySelector("input[name=image]") as HTMLInputElement
 		})
 
+		const attrs: StringMap = {
+			type: "file",
+			name: "image",
+			accept: acceptedFormats,
+			required: "",
+		}
 		return HTML
 			`<span class="upload-container">
 				<input type="checkbox" name="spoiler">
@@ -36,7 +42,7 @@ export default class UploadForm {
 				</label>
 				<strong class="upload-status"></strong>
 				<br>
-				<input type="file" name="image" accept="${acceptedFormats}">
+				<input ${makeAttrs(attrs)}>
 			</span>`
 	}
 
