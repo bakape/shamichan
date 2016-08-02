@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	invalidMessage  = "Invalid message: .*"
-	onlyText        = "Only text frames allowed.*"
+	invalidMessage  = "invalid message: .*"
+	onlyText        = "only text frames allowed.*"
 	abnormalClosure = "websocket: close 1006 .*"
 	closeNormal     = "websocket: close 1000 .*"
 )
@@ -142,7 +142,7 @@ func (*ClientSuite) TestLogError(c *C) {
 	log := captureLog(func() {
 		cl.logError(errors.New(msg))
 	})
-	assertLog(c, log, fmt.Sprintf("Error by %s: %s\n", ip, msg))
+	assertLog(c, log, fmt.Sprintf("error by %s: %s\n", ip, msg))
 }
 
 func (*ClientSuite) TestClose(c *C) {
@@ -175,7 +175,7 @@ func (*ClientSuite) TestCloseMessageSending(c *C) {
 func (*ClientSuite) TestInvalidPayloadError(c *C) {
 	const msg = "JIBUN WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
 	err := errInvalidPayload(msg)
-	c.Assert(err, ErrorMatches, "Invalid message: "+msg)
+	c.Assert(err, ErrorMatches, "invalid message: "+msg)
 }
 
 func (*ClientSuite) TestSend(c *C) {
@@ -218,7 +218,7 @@ func (*ClientSuite) TestHandleMessage(c *C) {
 	// Invalid inner message payload. Test proper type reflection of the
 	// errInvalidMessage error type
 	msg = []byte("30nope")
-	asserHandlerError(cl, msg, "Invalid message:.*", c)
+	asserHandlerError(cl, msg, "invalid message structure", c)
 }
 
 func asserHandlerError(cl *Client, msg []byte, pattern string, c *C) {
@@ -257,7 +257,7 @@ func (*ClientSuite) TestInvalidMessage(c *C) {
 	sv.Add(1)
 	go assertListenError(cl, onlyText, sv, c)
 	c.Assert(wcl.WriteMessage(websocket.BinaryMessage, []byte{1}), IsNil)
-	assertMessage(wcl, []byte(`00"Only text frames allowed"`), c)
+	assertMessage(wcl, []byte(`00"only text frames allowed"`), c)
 	sv.Wait()
 }
 

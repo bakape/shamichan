@@ -3,15 +3,17 @@
 package websockets
 
 import (
+	"errors"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
 )
 
 var (
-	errInvalidBoard   = errInvalidMessage("invalid board")
-	errInvalidThread  = errInvalidMessage("invalid thread")
-	errInvalidCounter = errInvalidMessage("invalid progress counter")
+	errInvalidBoard   = errors.New("invalid board")
+	errInvalidThread  = errors.New("invalid thread")
+	errInvalidCounter = errors.New("invalid progress counter")
 )
 
 type syncRequest struct {

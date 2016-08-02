@@ -48,8 +48,8 @@ const (
 var (
 	isTest bool
 
-	errInvalidStructure = errInvalidMessage("Invalid message structure")
-	errInValidCaptcha   = errInvalidMessage("no captcha provided")
+	errInvalidStructure = errors.New("invalid message structure")
+	errInValidCaptcha   = errors.New("no captcha provided")
 
 	// Lookup table for message handlers
 	handlers = map[messageType]handler{
@@ -67,15 +67,6 @@ var (
 		messageInsertThread:   insertThread,
 	}
 )
-
-// Error while parsing the message. Denotes that either the message does not
-// follow the structural spec or contains optional fields in unsupported
-// combinations.
-type errInvalidMessage string
-
-func (e errInvalidMessage) Error() string {
-	return string(e)
-}
 
 // Error during authenticating a captcha. These are not reported to the client,
 // only logged.

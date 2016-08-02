@@ -55,7 +55,7 @@ func (*ClientSuite) TestDecodeMessage(c *C) {
 	// Unparsable message
 	var msg syncRequest
 	err := decodeMessage([]byte{0}, &msg)
-	c.Assert(err, ErrorMatches, "Invalid message structure")
+	c.Assert(err, ErrorMatches, "invalid message structure")
 
 	// Valid message
 	std := syncRequest{

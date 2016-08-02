@@ -34,7 +34,7 @@ var upgrader = websocket.Upgrader{
 type errInvalidPayload []byte
 
 func (e errInvalidPayload) Error() string {
-	return fmt.Sprintf("Invalid message: %s", string(e))
+	return fmt.Sprintf("invalid message: %s", string(e))
 }
 
 // errInvalidFrame denotes an invalid websocket frame in some other way than
@@ -65,7 +65,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
 		ip := auth.GetIP(req)
-		log.Printf("Error upgrading to websockets: %s: %s\n", ip, err)
+		log.Printf("websockets: %s: %s\n", ip, err)
 		return
 	}
 
@@ -172,9 +172,6 @@ func (c *Client) closeConnections(err error) error {
 	// Send the client the reason for closing
 	var closeType int
 	switch err.(type) {
-	case errInvalidPayload, errInvalidFrame:
-		c.sendMessage(messageInvalid, err.Error())
-		closeType = websocket.CloseInvalidFramePayloadData
 	case *websocket.CloseError:
 		// Normal client-side websocket closure
 		switch err.(*websocket.CloseError).Code {
@@ -185,7 +182,8 @@ func (c *Client) closeConnections(err error) error {
 	case nil:
 		closeType = websocket.CloseNormalClosure
 	default:
-		closeType = websocket.CloseInternalServerErr
+		c.sendMessage(messageInvalid, err.Error())
+		closeType = websocket.CloseInvalidFramePayloadData
 	}
 
 	// Try to send the client a close frame. This might fail, so ignore any
@@ -267,7 +265,7 @@ func (c *Client) receiverLoop() {
 // handleMessage parses a message received from the client through websockets
 func (c *Client) handleMessage(msgType int, msg []byte) error {
 	if msgType != websocket.TextMessage {
-		return errInvalidFrame("Only text frames allowed")
+		return errInvalidFrame("only text frames allowed")
 	}
 	if len(msg) < 3 {
 		return errInvalidPayload(msg)
@@ -284,13 +282,7 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 	}
 
 	if err := c.runHandler(typ, msg); err != nil {
-		switch err := err.(type) {
-		case errInvalidMessage:
-			errMsg := append([]byte(err.Error()+": "), msg...)
-			return errInvalidPayload(errMsg)
-		default:
-			return err
-		}
+		return err
 	}
 	return nil
 }
@@ -307,7 +299,7 @@ func (c *Client) runHandler(typ messageType, msg []byte) error {
 
 // logError writes the client's websocket error to the error log (or stdout)
 func (c *Client) logError(err error) {
-	log.Printf("Error by %s: %v\n", c.IP, err)
+	log.Printf("error by %s: %v\n", c.IP, err)
 }
 
 // Close closes a websocket connection with the provided status code and

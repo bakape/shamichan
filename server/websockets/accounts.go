@@ -3,6 +3,7 @@
 package websockets
 
 import (
+	"errors"
 	"time"
 
 	"github.com/bakape/meguca/auth"
@@ -35,8 +36,8 @@ const (
 )
 
 var (
-	errAlreadyLoggedIn = errInvalidMessage("already logged in")
-	errNotLoggedIn     = errInvalidMessage("not logged in")
+	errAlreadyLoggedIn = errors.New("already logged in")
+	errNotLoggedIn     = errors.New("not logged in")
 )
 
 // Request struct for logging in to an existing or registering a new account

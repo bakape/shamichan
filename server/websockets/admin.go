@@ -3,17 +3,17 @@
 package websockets
 
 import (
+	"errors"
 	"regexp"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-
-	"github.com/bakape/meguca/db"
 )
 
 var (
-	errAccessDenied = errInvalidMessage("access denied")
+	errAccessDenied = errors.New("access denied")
 
 	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,3}$`)
 )

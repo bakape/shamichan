@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"errors"
 	"path/filepath"
 	"strings"
 	"time"
@@ -15,10 +16,10 @@ import (
 )
 
 var (
-	errReadOnly          = errInvalidMessage("read only board")
-	errInvalidImageToken = errInvalidMessage("invalid image token")
-	errNoImageName       = errInvalidMessage("no image name")
-	errImageNameTooLong  = errInvalidMessage("image name too long")
+	errReadOnly          = errors.New("read only board")
+	errInvalidImageToken = errors.New("invalid image token")
+	errNoImageName       = errors.New("no image name")
+	errImageNameTooLong  = errors.New("image name too long")
 )
 
 // Websocket message response codes
