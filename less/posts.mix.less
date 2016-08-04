@@ -69,17 +69,6 @@ article {
 	}
 }
 
-small {
-	clear: left;
-	display: block;
-	&:empty {
-		display: none;
-	}
-	section > & {
-		padding-bottom: 0.5em;
-	}
-}
-
 del {
 	text-decoration: none;
 	&, em {
@@ -137,9 +126,6 @@ header {
 	code {
 		font-family: inherit;
 		font-weight: normal;
-	}
-	.expansionLinks {
-		margin-left: 1em;
 	}
 }
 
@@ -223,5 +209,34 @@ pre, .themed {
 	}
 	textarea {
 		width: 20em;
+	}
+}
+
+#catalog {
+	margin: 0 0.85em;
+	article {
+		max-width: 165px;
+		max-height: 320px;
+		display: inline-block;
+		text-align: center;
+		word-wrap:break-word;
+		overflow: hidden;
+		vertical-align: top;
+		padding: 0.6em;
+		margin: 0.15em;
+	}
+	small {
+		clear: none;
+		display: inline-block;
+		& span:first-child {
+			margin-right: 0.2em;
+		}
+	}
+}
+
+.thread-links {
+	padding-bottom: 0.5em;
+	&:empty {
+		display: none;
 	}
 }

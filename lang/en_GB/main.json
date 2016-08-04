@@ -230,7 +230,7 @@
 				"Image to use as the background"
 			],
 			"lastN": [
-				"[Last #]",
+				"Last # post number",
 				"Number of posts to display with the \"Last N\" thread expansion link"
 			],
 			"postUnloading": [

@@ -1,12 +1,8 @@
-/*
- Specs for individual option models
-*/
+// Specs for individual option models
 
 import {config, isMobile} from '../state'
 import {opts as lang} from '../lang'
 import {makeEl, loadModule} from '../util'
-
-// TODO: Send function
 
 // Types of option models
 export const enum optionType {checkbox, number, image, shortcut, menu}
@@ -78,21 +74,24 @@ export const specs: OptionSpec[] = [
 		exec() {
 			alert(lang.langApplied)
 			location.reload()
-		}
+		},
 	},
-	// // Thumbnail inline expansion mode
-	// {
-	// 	id: 'inlineFit',
-	// 	type: optionType.menu,
-	// 	list: thumbExpansions,
-	// 	tab: tabs.style,
-	// 	default: 'width'
-	// },
-	// // Hide thumbnails, until explicitly revealed
-	// {
-	// 	id: 'hideThumbs',
-	// 	tab: tabs.style,
-	// },
+
+	// Thumbnail inline expansion mode
+	{
+		id: 'inlineFit',
+		type: optionType.menu,
+		list: thumbExpansions,
+		tab: tabs.style,
+		default: 'width'
+	},
+
+	// Hide thumbnails, until explicitly revealed
+	{
+		id: 'hideThumbs',
+		tab: tabs.style,
+	},
+
 	// // Image hover expansion
 	// {
 	// 	id: 'imageHover',
@@ -106,18 +105,21 @@ export const specs: OptionSpec[] = [
 	// 	noLoad: isMobile,
 	// 	tab: tabs.general
 	// },
-	// // Animated GIF thumbnails
-	// {
-	// 	id: 'autogif',
-	// 	noLoad: isMobile,
-	// 	tab: tabs.style
-	// },
-	// // Enable thumnail spoilers
-	// {
-	// 	id: 'spoilers',
-	// 	tab: tabs.style,
-	// 	default: true
-	// },
+
+	// Animated GIF thumbnails
+	{
+		id: 'autogif',
+		noLoad: isMobile,
+		tab: tabs.style,
+	},
+
+	// Enable thumnail spoilers
+	{
+		id: 'spoilers',
+		tab: tabs.style,
+		default: true,
+	},
+
 	// // Desktop Notifications
 	// {
 	// 	id: 'notification',
@@ -128,17 +130,19 @@ export const specs: OptionSpec[] = [
 	// 		}
 	// 	}
 	// },
-	// // Anonymise all poster names
-	// {
-	// 	id: 'anonymise',
-	// 	tab: tabs.general
-	// },
-	// // Relative post timestamps
-	// {
-	// 	id: 'relativeTime',
-	// 	tab: tabs.general,
-	// 	default: false
-	// },
+
+	// Anonymise all poster names
+	{
+		id: 'anonymise',
+		tab: tabs.general,
+	},
+
+	// Relative post timestamps
+	{
+		id: 'relativeTime',
+		tab: tabs.general,
+		default: false,
+	},
 
 	// R/a/dio now playing banner
 	{
@@ -149,21 +153,22 @@ export const specs: OptionSpec[] = [
 		noExecOnStart: true,
 		exec() {
 			loadModule("r-a-dio")
-		}
+		},
 	},
 
 	// Illya dance in the background
 	{
 		id: 'illyaDance',
 		noLoad: isMobile || !config.illyaDance,
-		tab: tabs.fun
+		tab: tabs.fun,
 	},
 	// Mute Illya dance
 	{
 		id: 'illyaDanceMute',
 		noLoad: isMobile || !config.illyaDance,
-		tab: tabs.fun
+		tab: tabs.fun,
 	},
+
 	// // Tile posts horizontally too
 	// {
 	// 	id: 'horizontalPosting',
@@ -182,6 +187,7 @@ export const specs: OptionSpec[] = [
 	// 		'section>aside{margin: -26px 0 2px auto;}'
 	// 	)
 	// },
+
 	// Change theme
 	{
 		id: 'theme',
@@ -198,8 +204,9 @@ export const specs: OptionSpec[] = [
 				'href',
 				`/assets/css/${theme}.css`
 			)
-		}
+		},
 	},
+
 	// Custom user-set background
 	{
 		id: 'userBG',
@@ -218,23 +225,24 @@ export const specs: OptionSpec[] = [
 		type: optionType.image,
 		tab: tabs.style
 	},
-	// // Last N posts to display in a thread, if viewing in Last N mode
-	// {
-	// 	id: 'lastN',
-	// 	type: optionType.number,
-	// 	tab: tabs.general,
-	// 	validation(n: number) {
-	// 		return Number.isInteger(n) && n <= 500
-	// 	},
-	// 	default: 100
-	// },
-	// KEEP THREAD LENGTH WITHIN LASTN
-	/*
-	 Disabled, until dependancy features are implemnted (see issue #280)
+
+	// Last N posts to display in a thread, if viewing in Last N mode
 	{
-		id: 'postUnloading',
-		tab: 0
-	},*/
+		id: 'lastN',
+		type: optionType.number,
+		tab: tabs.general,
+		validation(n: number) {
+			return Number.isInteger(n) && n <= 500
+		},
+		default: 100,
+	},
+
+	// KEEP THREAD LENGTH WITHIN LASTN
+	// Disabled, until dependancy features are implemnted (see issue #280)
+	// {
+	// 	id: 'postUnloading',
+	// 	tab: 0
+	// },
 	// Lock thread scrolling to bottom, when bottom in view, even when the tab
 	// is hidden
 	// {
@@ -257,6 +265,7 @@ export const specs: OptionSpec[] = [
 // 	})
 // }
 
+// TODO: Reimplement shortcu keys
 // // SHORTCUT KEYS
 // const shorts: any = [
 // 	{id: 'newPost', default: 78},

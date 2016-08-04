@@ -1,5 +1,6 @@
 import {write, read} from './render'
 import {BoardConfigs} from './state'
+import {ThreadData} from './posts/models'
 
 type AnyHash = {[key: string]: any}
 
@@ -7,6 +8,12 @@ type AnyHash = {[key: string]: any}
 export type BoardEntry = {
 	id: string
 	title: string
+}
+
+// Data of a single board retrieved from the server through `/json/:board`
+export type BoardData = {
+	ctr: number
+	threads: ThreadData[]
 }
 
 const base64 =
@@ -26,6 +33,10 @@ export const fetchBoardList = async (): Promise<BoardEntry[]> =>
 // Fetch configurations of a specific board
 export const fetchBoarConfigs = async (board: string): Promise<BoardConfigs> =>
 	await fetchJSON(`/json/boardConfig/${board}`)
+
+// Fetch board contents from the server
+export const fetchBoard = async (board: string): Promise<BoardData> =>
+	await fetchJSON(`/json/${board}`)
 
 // Generate a random base64 string of desird length
 export function randomID(len: number): string {

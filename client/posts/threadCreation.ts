@@ -1,8 +1,7 @@
 import {
-	HTML, on, inputValue, applyMixins, fetchBoardList, fetchBoarConfigs,
+	on, inputValue, applyMixins, fetchBoardList, fetchBoarConfigs,
 } from '../util'
-import {$threads} from '../page/common'
-import {write, read} from '../render'
+import {write, read, $threads} from '../render'
 import {FormView, inputType, renderInput, InputSpec} from '../forms'
 import {Captcha} from '../captcha'
 import identity from './identity'

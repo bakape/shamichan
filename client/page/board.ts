@@ -1,8 +1,10 @@
 import {HTML, random, escape} from '../util'
-import {posts as lang} from '../lang'
+import {posts as lang, navigation} from '../lang'
 import {boardConfig, page} from '../state'
-import {write} from '../render'
-import {$threads} from './common'
+import {ThreadData} from '../posts/models'
+import {renderThumbnail} from '../posts/render/image'
+import {renderBody} from '../posts/render/body'
+import options from '../options'
 
 // Button for expanding the thread creation form
 const newThreadButton = HTML
@@ -16,7 +18,8 @@ const newThreadButton = HTML
 export const formatHeader = (name: string, title: string): string =>
 	escape(`/${name}/ - ${title}`)
 
-export function renderBoard() {
+// Render a board page's HTML
+export function renderBoard(threads: ThreadData[]): string {
 	let html = ""
 	if (boardConfig.banners.length) {
 		const banner = random(boardConfig.banners)
@@ -28,9 +31,48 @@ export function renderBoard() {
 		</h1>
 		${newThreadButton}
 		<hr>
-		// TODO: Catalog
+		${renderCatalog(threads)}
 		<hr>
 		${newThreadButton}`
-	write(() =>
-		$threads.innerHTML = html)
+
+	return html
+}
+
+// Render the thread catalog
+function renderCatalog(threads: ThreadData[]): string {
+	let html = `<div id="catalog">`
+	for (let thread of threads) {
+		html += renderThread(thread)
+	}
+	html += "</div>"
+
+	return html
+}
+
+// Render a single thread for the thread catalog
+function renderThread(thread: ThreadData): string {
+	const href = `../${thread.board}/${thread.id}`,
+		lastN = options.lastN.toString()
+
+	return HTML
+	`<article class="glass">
+		${thread.image ? renderThumbnail(thread.image, href)  + "<br>" : ""}
+		<small class="thread-links">
+			<span title="${navigation.catalogOmit}">
+				${thread.postCtr.toString()}/${thread.imageCtr.toString()}
+			</span>
+			<span class="act">
+				<a href="${href}" class="history">
+					${navigation.expand}
+				</a>
+				] [
+				<a href="${href}?last=${lastN}" class="history">
+					${navigation.last} ${lastN}
+				</a>
+			</span>
+		</small>
+		<br>
+		${thread.subject ? `<h3>「${escape(thread.subject)}」</h3>` : ""}
+		${renderBody(thread)}
+	</article>`
 }

@@ -1,11 +1,11 @@
 import {HTML, makeAttrs, pad, escape} from '../../util'
 import {config} from '../../state'
 import options from '../../options'
-import {Post, Thread} from '../models'
+import {PostData, ThreadData} from '../models'
 import {posts as lang, time as timeLang} from '../../lang'
 
 // Render the header with various post informationt
-export function renderHeader(data: Post<any>): string {
+export function renderHeader(data: PostData): string {
 	const {id, op, subject} = data as any,
 		postURL = renderPostURL(id)
 	let subjectHTML: string
@@ -28,7 +28,7 @@ export function renderHeader(data: Post<any>): string {
 }
 
 // Render the name of a post's poster
-export function renderName(data: Post<any>): string {
+export function renderName(data: PostData): string {
 	let html = '<b class="name'
 	const {auth, email} = data
 	if (auth) {
@@ -52,7 +52,7 @@ export function renderName(data: Post<any>): string {
 }
 
 // Determine the name and tripcode combination to render
-function resolveName(data: Post<any>): string {
+function resolveName(data: PostData): string {
 	let html = ''
 	const {trip, name, auth} = data
 

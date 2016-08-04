@@ -1,7 +1,3 @@
-/*
- Image thumbnail HTML rendering
-*/
-
 import {config, page} from '../../state'
 import options from '../../options'
 import {HTML, commaList, makeAttrs, escape} from '../../util'
@@ -61,6 +57,8 @@ function hiddenToggle(reveal: boolean): string {
 		</a>`
 }
 
+// TODO: Refactor image search rendering
+//
 // type ISTemplate = (data: ImageData) => string
 //
 // // Generate template functions for each image search engine
@@ -223,8 +221,5 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 		}
 	}
 
-	return HTML
-		`<a ${makeAttrs(linkAttrs)}>
-			<img ${makeAttrs(imgAttrs)}>
-		</a>`
+	return `<a ${makeAttrs(linkAttrs)}><img ${makeAttrs(imgAttrs)}></a>`
 }

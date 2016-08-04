@@ -41,8 +41,8 @@ interface Options extends ChangeEmitter {
 }
 
 // Central options storage model
-const options = emitChanges<Options>()
-export default options
+let options: Options
+export default options = emitChanges({} as Options)
 
 // All loaded option models
 export const models: {[key: string]: OptionModel} = {}

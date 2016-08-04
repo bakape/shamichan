@@ -3,10 +3,10 @@ import {renderHeader} from './header'
 import {renderImage} from './image'
 import {renderBacklinks} from './etc'
 import {renderBody} from './body'
-import {Post, Thread, Reply} from '../models'
+import {PostData, ThreadData} from '../models'
 
 // Render the OP
-export function renderSection(data: Thread, cls: string = ''): string {
+export function renderSection(data: ThreadData, cls: string = ''): string {
 	if (data.locked) {
 		cls += ' locked'
 	}
@@ -21,7 +21,7 @@ export function renderSection(data: Thread, cls: string = ''): string {
 }
 
 // Render a reply post
-export function renderArticle(data: Reply): string {
+export function renderArticle(data: PostData): string {
 	let cls = 'glass'
 	if (data.editing) {
 		cls += ' editing'
@@ -32,7 +32,7 @@ export function renderArticle(data: Reply): string {
 		</article>`
 }
 
-function renderPost(data: Post<any>): string {
+function renderPost(data: PostData): string {
 	const {body, backlinks} = data
 
 	return HTML

@@ -1,6 +1,9 @@
 // Utility functions for reducing layout thrashing, by batching DOM writes and
 // reads. Basically a stripped down version of FastDOM.
 
+// Cached element containing the banners, posts, catalog and other board HTML
+export const $threads = document.querySelector("#threads")
+
 type Operation = () => void
 
 let readStack: Operation[] = [],

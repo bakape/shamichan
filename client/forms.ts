@@ -97,6 +97,9 @@ function renderSelect(spec: InputSpec): string[] {
 // Render a multiline input textarea
 function renderTextArea(spec: InputSpec, attrs: StringMap): string[] {
 	attrs["rows"] = (spec.rows || 3).toString()
+	if ("maxLength" in spec) {
+		attrs["maxlength"] = spec.maxLength.toString()
+	}
 
 	// Because textarea is a retardedly non-standard piece of shit that
 	// can't even fucking support a fucking value attribute.

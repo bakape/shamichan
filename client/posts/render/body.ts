@@ -1,13 +1,13 @@
 import {config} from '../../state'
 import {renderPostLink} from './etc'
-import {Post, PostLinks} from '../models'
+import {PostData, PostLinks} from '../models'
 import {escape} from '../../util'
 
 // Map of {name: url} for generating `>>>/foo/bar` type reference links
 let refTargets: StringMap
 
 // Render the text body of a post
-export function renderBody(data: Post<any>): string {
+export function renderBody(data: PostData): string {
 	if (!data.state) {
 		// Initial post state [new_line, no_qoute, no_spoiler]
 		data.state = [0, 0, 0]
@@ -23,7 +23,7 @@ export function renderBody(data: Post<any>): string {
 }
 
 // Parse commited text body fragment
-export function renderFragment(frag: string, data: Post<any>): string {
+export function renderFragment(frag: string, data: PostData): string {
 	const lines = frag.split('\n'),
 		{state} = data
 	let html = ''
@@ -58,7 +58,7 @@ export function renderFragment(frag: string, data: Post<any>): string {
 }
 
 // Convert a word to it's appropriate HTML representation
-function parseWord(word: string, data: Post<any>): string {
+function parseWord(word: string, data: PostData): string {
 	// `[spoiler]` and `[/spoiler]` are treated the same way. You can't nest
 	// them.
 	const split = word.split(/\[\/?spoiler]|\*\*/)
@@ -116,7 +116,7 @@ export function genRefTargets() {
 		targets[name] = config.links[name]
 	}
 	for (let board of config.boards) { // Boards override links
-		refTargets[board] = `../${board}/`
+		targets[board] = `../${board}/`
 	}
 
 	refTargets = targets

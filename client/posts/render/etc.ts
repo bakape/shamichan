@@ -1,6 +1,4 @@
-/*
- Miscalleneous post component rendering functions
-*/
+// Miscalleneous post component rendering functions
 
 import {page, mine} from '../../state'
 import {posts as lang} from '../../lang'
