@@ -128,9 +128,7 @@ class ThreadForm extends FormView implements UploadForm {
 
 		this.renderForm(html)
 		write(() => {
-			const cls = this.$aside.classList
-			cls.remove("act")
-			cls.add("expanded")
+			this.$aside.classList.add("expanded")
 			this.$aside.append(this.el)
 		})
 	}
@@ -156,11 +154,8 @@ class ThreadForm extends FormView implements UploadForm {
 	// Reset new thread form to initial state
 	remove() {
 		super.remove()
-		write(() => {
-			const cls = this.$aside.classList
-			cls.remove("expanded")
-			cls.add("act")
-		})
+		write(() =>
+			this.$aside.classList.remove("expanded"))
 	}
 
 	async sendRequest() {
