@@ -41,7 +41,7 @@ var (
 	Defaults = Configs{
 		MaxThreads:    100,
 		MaxBump:       1000,
-		JPEGQuality:   80,
+		JPEGQuality:   90,
 		PNGQuality:    20,
 		MaxSize:       5,
 		MaxHeight:     6000,
