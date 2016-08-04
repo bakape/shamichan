@@ -12,6 +12,7 @@ import (
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -80,18 +81,6 @@ func insertThread(data []byte, c *Client) (err error) {
 		return err
 	}
 
-	bp := parser.BodyParser{
-		Config: conf,
-		Board:  req.Board,
-	}
-	res, err := bp.ParseBody(req.Body)
-	if err != nil {
-		return err
-	}
-	post.Body = res.Body
-	post.Links = res.Links
-	post.Commands = res.Commands
-
 	// Perform this last, so there are less dangling images because of an error
 	if !conf.TextOnly {
 		post.Image, err = getImage(req.ImageToken, req.ImageName, req.Spoiler)
@@ -116,11 +105,27 @@ func insertThread(data []byte, c *Client) (err error) {
 	if err := db.IncrementBoardCounter(req.Board); err != nil {
 		return err
 	}
-	if err := db.WriteBacklinks(id, id, req.Board, post.Links); err != nil {
+	if err := c.sendMessage(messageInsertThread, postCreated); err != nil {
 		return err
 	}
 
-	return c.sendMessage(messageInsertThread, postCreated)
+	return syncToThread(req.Board, id, 0, c)
+}
+
+// Syncronise to a newly-created thread
+func syncToNewThread(id int64, c *Client) error {
+	close(c.closeUpdateFeed)
+	c.closeUpdateFeed = nil
+
+	closeFeed := make(chan struct{})
+	if _, err := db.StreamUpdates(id, c.write, closeFeed); err != nil {
+		return err
+	}
+
+	c.closeUpdateFeed = closeFeed
+	registerSync(util.IDToString(id), c)
+
+	return c.sendMessage(messageSynchronise, 0)
 }
 
 // Performs some validations and retrieves processed image data by token ID.

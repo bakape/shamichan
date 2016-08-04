@@ -11,7 +11,7 @@ const (
 	maxLengthEMail        = 100
 	maxLengthAuth         = 50
 	maxLengthPostPassword = 50
-	maxLengthSubject      = 50
+	maxLengthSubject      = 100
 	maxLengthBody         = 2000
 )
 

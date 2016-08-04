@@ -38,3 +38,10 @@ func (*Tests) TestMarshalUnmarshalCommands(c *C) {
 		c.Assert(val.Type, Equals, s.typ)
 	}
 }
+
+func (*Tests) TestMarshalEmptyBoard(c *C) {
+	b := Board{}
+	data, err := json.Marshal(&b)
+	c.Assert(err, IsNil)
+	c.Assert(string(data), Equals, `{"ctr":0,"threads":[]}`)
+}

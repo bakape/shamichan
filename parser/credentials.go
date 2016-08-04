@@ -10,13 +10,11 @@ import (
 
 var (
 	errNoPostPassword = errors.New("no post password")
+	errNoSubject      = errors.New("no subject")
 )
 
 // ParseName parses the name field into a name and tripcode, if any
 func ParseName(name string) (string, string, error) {
-
-	// TODO: R/a/dio name swapping
-
 	if name == "" {
 		return name, name, nil
 	}
@@ -43,7 +41,7 @@ func ParseName(name string) (string, string, error) {
 // ParseSubject verifies and trims a thread subject string
 func ParseSubject(s string) (string, error) {
 	if s == "" {
-		return s, nil
+		return s, errNoSubject
 	}
 	if len(s) > maxLengthSubject {
 		return s, ErrTooLong("subject")

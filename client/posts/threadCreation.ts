@@ -18,9 +18,9 @@ export interface PostCredentials extends Captcha, FileData {
 }
 
 interface ThreadCreationRequest extends PostCredentials {
-	subject?: string
+	subject: string
 	board: string
-	body: string
+	[index: string]: string
 }
 
 // Response codes for thread and post insertion requests
@@ -31,7 +31,7 @@ let threadFormCounter = 0
 
 // Bind event listener to the thread container
 export default () =>
-	on($threads, "click", e => new ThreadForm(e),{
+	on($threads, "click", e => new ThreadForm(e), {
 		selector: ".new-thread-button",
 	})
 
@@ -52,8 +52,10 @@ class ThreadForm extends FormView implements UploadForm {
 	constructor(event: Event) {
 		super({class: "new-thread-form"}, () =>
 			this.sendRequest())
-		this.$aside = (event.target as Element).closest("aside")
-		this.render()
+		read(() => {
+			this.$aside = (event.target as Element).closest("aside")
+			this.render()
+		})
 
 		handlers[message.insertThread] = (code: responseCode) =>
 			this.handleResponse(code)
@@ -62,63 +64,19 @@ class ThreadForm extends FormView implements UploadForm {
 	// Render the element, hide the parent element's existing contents and
 	// hide the "["..."]" encasing it
 	async render() {
-		const specs: InputSpec[] = [
-			{
-				name: "subject",
-				type: inputType.string,
-				maxLength: 50,
-			},
-			{
-				name: "body",
-				type: inputType.multiline,
-				required: true,
-				rows: 4,
-				maxLength: 2000,
-			},
-		]
+		let html = ""
 
 		// Have the user to select the target board, if on the "/all/" metaboard
 		if (page.board === "all") {
-
-			// TODO: Some kind of more elegant selection panel
-
-			// Hide the image upload controls, if the first board on the list
-			// is a text-only board
-			const boards = await fetchBoardList(),
-				[first] = boards
-			let display = ""
-			this.needImage = true
-			if (first && (await fetchBoarConfigs(first.id)).textOnly) {
-				display = "none"
-				this.needImage = false
-			}
-			read(() => {
-				// Bind event listener for changes to the board selection
-				this.$board = this.el.querySelector("select[name=board]")
-				on(this.$board, "input", () =>
-					this.toggleUploadForm())
-
-				this.$uploadContainer =
-					this.el
-					.querySelector(".upload-container")
-				write(() =>
-					this.$uploadContainer.style.display = display)
-			})
-
-			specs.unshift({
-				name: "board",
-				type: inputType.select,
-				choices: boards.map(({title, id}) =>
-					`${id} - ${title}`),
-			})
+			html += await this.initBoardSelection()
 		}
 
-		let html = ""
-		for (let spec of specs) {
-			spec.label = lang[spec.name]
-			spec.placeholders = true
-			html += renderInput(spec)[1] + "<br>"
-		}
+		html += renderField({
+			name: "subject",
+			type: inputType.string,
+			maxLength: 100,
+			required: true,
+		})
 		if (!boardConfig.textOnly) {
 			html += this.renderUploadForm() + "<br>"
 			if (page.board !== "all") {
@@ -130,6 +88,42 @@ class ThreadForm extends FormView implements UploadForm {
 		write(() => {
 			this.$aside.classList.add("expanded")
 			this.$aside.append(this.el)
+		})
+	}
+
+	// Initialize the board selection input for the /all/ board and return its
+	// HTML
+	async initBoardSelection(): Promise<string> {
+		// TODO: Some kind of more elegant selection panel
+
+		// Hide the image upload controls, if the first board on the list
+		// is a text-only board
+		const boards = await fetchBoardList(),
+			[first] = boards
+		let display = ""
+		this.needImage = true
+		if (first && (await fetchBoarConfigs(first.id)).textOnly) {
+			display = "none"
+			this.needImage = false
+		}
+		read(() => {
+			// Bind event listener for changes to the board selection
+			this.$board = this.el.querySelector("select[name=board]")
+			on(this.$board, "input", () =>
+				this.toggleUploadForm())
+
+			this.$uploadContainer =
+				this.el
+				.querySelector(".upload-container")
+			write(() =>
+				this.$uploadContainer.style.display = display)
+		})
+
+		return renderField({
+			name: "board",
+			type: inputType.select,
+			choices: boards.map(({title, id}) =>
+				`${id} - ${title}`),
 		})
 	}
 
@@ -159,9 +153,9 @@ class ThreadForm extends FormView implements UploadForm {
 	}
 
 	async sendRequest() {
-		const req: any = {
+		const req: ThreadCreationRequest = {
 			password: identity.postPassword,
-		} as ThreadCreationRequest
+		} as any
 
 		if (this.needImage) {
 			if (!(await this.uploadFile(req))) {
@@ -176,11 +170,7 @@ class ThreadForm extends FormView implements UploadForm {
 				req[key] = val
 			}
 		}
-		const subject = inputValue(this.el, "subject")
-		if (subject) {
-			req.subject = subject
-		}
-		req.body = this.el.querySelector("textarea[name=body]").value
+		req.subject = inputValue(this.el, "subject")
 		req.board = page.board === "all" ? this.getSelectedBoard() : page.board
 		this.injectCaptcha(req)
 		send(message.insertThread, req)
@@ -191,7 +181,7 @@ class ThreadForm extends FormView implements UploadForm {
 		case responseCode.success:
 			this.remove()
 
-			// TODO: Redirect to newly-created thread
+			// TODO: Redirect to newly-created thread and open PostForm
 
 			break
 		case responseCode.invalidCaptcha:
@@ -203,3 +193,10 @@ class ThreadForm extends FormView implements UploadForm {
 }
 
 applyMixins(ThreadForm, UploadForm)
+
+// Render a single field of the form
+function renderField(spec: InputSpec): string {
+	spec.label = lang[spec.name]
+	spec.placeholders = true
+	return renderInput(spec)[1] + "<br>"
+}

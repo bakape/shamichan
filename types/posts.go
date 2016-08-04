@@ -1,6 +1,14 @@
 // Package types contains common shared types used throughout the project.
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+)
+
+var emptyBoard = []Thread{}
+
 // CommandType are the various struct types of hash commands and their
 // responses, such as dice rolls, #flip, #8ball, etc.
 type CommandType uint8
@@ -23,6 +31,25 @@ const (
 type Board struct {
 	Ctr     int64    `json:"ctr"`
 	Threads []Thread `json:"threads"`
+}
+
+// MarshalJSON ensures b.Threads is marshalled to a JSON array even when nil
+func (b *Board) MarshalJSON() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	fmt.Fprintf(buf, `{"ctr":%d,"threads":`, b.Ctr)
+
+	if b.Threads == nil {
+		buf.WriteString("[]}")
+		return buf.Bytes(), nil
+	}
+
+	data, err := json.Marshal(b.Threads)
+	if err != nil {
+		return nil, err
+	}
+	buf.Write(data)
+	buf.WriteRune('}')
+	return buf.Bytes(), nil
 }
 
 // Thread is a transport/export wrapper that stores both the thread metada, its
@@ -63,7 +90,6 @@ type ThreadCreationRequest struct {
 	PostCredentials
 	Subject    string `json:"subject"`
 	Board      string `json:"board"`
-	Body       string `json:"body"`
 	ImageToken string `json:"imageToken"`
 	ImageName  string `json:"imageName"`
 	Captcha

@@ -72,7 +72,9 @@ function renderThread(thread: ThreadData): string {
 			</span>
 		</small>
 		<br>
-		${thread.subject ? `<h3>「${escape(thread.subject)}」</h3>` : ""}
+		<h3>
+			「${escape(thread.subject)}」
+		</h3>
 		${renderBody(thread)}
 	</article>`
 }

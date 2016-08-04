@@ -209,10 +209,7 @@ connSM.wildAct(connEvent.close, connState.dropped, event => {
 	renderStatus(syncStatus.disconnected)
 
 	// Wait maxes out at ~1min
-	const wait = 500 * Math.pow(
-		1.5,
-		Math.min(Math.floor(++attempts / 2), 12)
-	)
+	const wait = 500 * Math.pow(1.5, Math.min(Math.floor(++attempts / 2), 12))
 	setTimeout(connSM.feeder(connEvent.retry), wait)
 })
 

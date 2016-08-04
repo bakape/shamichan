@@ -14,7 +14,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 13
+const dbVersion = 14
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -118,7 +118,7 @@ func verifyDBVersion() error {
 func InitDB() error {
 	log.Printf("initialising database '%s'", DBName)
 	if err := Write(r.DBCreate(DBName)); err != nil {
-		return util.WrapError("error creating database", err)
+		return util.WrapError("creating database", err)
 	}
 
 	RSession.Use(DBName)
@@ -140,7 +140,7 @@ func InitDB() error {
 		},
 	}
 	if err := Write(r.Table("main").Insert(main)); err != nil {
-		return util.WrapError("error initializing database", err)
+		return util.WrapError("initializing database", err)
 	}
 
 	if err := createAdminAccount(); err != nil {

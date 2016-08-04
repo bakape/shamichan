@@ -34,7 +34,7 @@ func (*Tests) TestParseSubject(c *C) {
 		in, out string
 		err     error
 	}{
-		{"", "", nil},
+		{"", "", errNoSubject},
 		{randomString(maxLengthSubject+1, c), "", ErrTooLong("subject")},
 		{" abc ", "abc", nil},
 	}

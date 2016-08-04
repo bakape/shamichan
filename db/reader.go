@@ -1,8 +1,6 @@
 package db
 
 import (
-	"fmt"
-
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -20,6 +18,12 @@ var (
 		// Replication log counter
 		"logCtr": r.Row.Field("log").Count(),
 	}
+
+	// Retrieves all threads for the /all/ metaboard
+	getAllBoard = r.
+			Table("threads").
+			Merge(getThreadOP, getLogCounter).
+			Without("posts", "log")
 )
 
 // GetThread retrieves public thread data from the database
@@ -68,39 +72,30 @@ func GetPost(id int64) (post types.StandalonePost, err error) {
 }
 
 // GetBoard retrieves all OPs of a single board
-func GetBoard(board string) (out *types.Board, err error) {
+func GetBoard(board string) (*types.Board, error) {
+	ctr, err := BoardCounter(board)
+	if err != nil {
+		return nil, err
+	}
+
 	query := r.
 		Table("threads").
 		GetAllByIndex("board", board).
 		Merge(getThreadOP, getLogCounter).
-		Without("posts", "log", "op")
-	out = &types.Board{}
+		Without("posts", "log")
+	out := &types.Board{Ctr: ctr}
 	err = All(query, &out.Threads)
-	if err != nil && err != r.ErrEmptyResult {
-		msg := fmt.Sprintf("error retrieving board: %s", board)
-		err = util.WrapError(msg, err)
-		return
-	}
 
-	out.Ctr, err = BoardCounter(board)
-
-	return
+	return out, err
 }
 
 // GetAllBoard retrieves all threads for the "/all/" meta-board
 func GetAllBoard() (board *types.Board, err error) {
-	query := r.
-		Table("threads").
-		Merge(getThreadOP, getLogCounter).
-		Without("posts", "log", "op")
-	board = &types.Board{}
-	err = All(query, &board.Threads)
-	if err != nil && err != r.ErrEmptyResult {
-		err = util.WrapError("error retrieving /all/ board", err)
+	ctr, err := PostCounter()
+	if err != nil {
 		return
 	}
-
-	board.Ctr, err = PostCounter()
-
+	board = &types.Board{Ctr: ctr}
+	err = All(getAllBoard, &board.Threads)
 	return
 }

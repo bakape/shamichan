@@ -25,7 +25,8 @@ func (*DB) TestCreateThreadOnInvalidBoard(c *C) {
 	req := types.ThreadCreationRequest{
 		Board: "all",
 	}
-	c.Assert(insertThread(marshalJSON(req, c), new(Client)), Equals, errInvalidBoard)
+	err := insertThread(marshalJSON(req, c), new(Client))
+	c.Assert(err, Equals, errInvalidBoard)
 }
 
 func (*DB) TestCreateThreadOnReadOnlyBoard(c *C) {
@@ -54,6 +55,7 @@ func (*DB) TestThreadCreation(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
+	Clients.Add(cl, "a")
 	cl.IP = "::1"
 
 	std := types.DatabaseThread{
@@ -65,7 +67,6 @@ func (*DB) TestThreadCreation(c *C) {
 				IP: "::1",
 				Post: types.Post{
 					ID:   6,
-					Body: "body",
 					Name: "name",
 					Image: &types.Image{
 						Spoiler:     true,
@@ -85,14 +86,16 @@ func (*DB) TestThreadCreation(c *C) {
 		},
 		Subject:    "subject",
 		Board:      "a",
-		Body:       "body",
 		ImageName:  "foo.jpeg",
 		ImageToken: token,
 		Spoiler:    true,
 	}
 	data := marshalJSON(req, c)
 	c.Assert(insertThread(data, cl), IsNil)
-	assertMessage(wcl, []byte("010"), c)
+	for _, msg := range [...]string{"010", "300"} {
+		assertMessage(wcl, []byte(msg), c)
+	}
+	c.Assert(Clients.clients[cl], Equals, "6")
 
 	var thread types.DatabaseThread
 	c.Assert(db.One(r.Table("threads").Get(6), &thread), IsNil)
@@ -153,7 +156,6 @@ func (*DB) TestTextOnlyThreadCreation(c *C) {
 		},
 		Subject: "subject",
 		Board:   "a",
-		Body:    "body",
 	}
 	data := marshalJSON(req, c)
 	c.Assert(insertThread(data, cl), IsNil)
