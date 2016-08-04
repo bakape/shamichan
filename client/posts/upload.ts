@@ -56,7 +56,7 @@ export default class UploadForm {
 		// Not using fetch, because no ProgressEvent support
 		const xhr = new XMLHttpRequest()
 		xhr.open("POST", "/upload")
-		xhr.onprogress = e =>
+		xhr.upload.onprogress = e =>
 			this.renderProgress(e)
 		xhr.send(formData)
 		await load(xhr)
