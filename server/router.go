@@ -32,10 +32,7 @@ var (
 )
 
 // Used for overriding during tests
-var (
-	webRoot      = "www"
-	imageWebRoot = "img"
-)
+var webRoot = "www"
 
 func startWebServer() (err error) {
 	r := createRouter()

@@ -19,6 +19,9 @@ var (
 		"X-Frame-Options": "sameorigin",
 	}
 
+	// For overriding during tests
+	imageWebRoot = "images/"
+
 	assetServer http.Handler
 )
 
@@ -29,8 +32,7 @@ func serveImages(
 	req *http.Request,
 	params map[string]string,
 ) {
-	path := filepath.FromSlash(imageWebRoot + params["path"])
-	file, err := os.Open(path)
+	file, err := os.Open(filepath.FromSlash(imageWebRoot + params["path"]))
 	if err != nil {
 		text404(res, req)
 		return
