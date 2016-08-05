@@ -22,6 +22,13 @@ const (
 	messageInvalid messageType = iota
 	messageInsertThread
 	messageInsertPost
+	messageAppend
+	messageBackspace
+	messageSplice
+	messageInsertLine
+	messageClosePost
+	messageBacklink
+	messageCommand
 )
 
 // >= 30 are miscelenious and do not write to post models

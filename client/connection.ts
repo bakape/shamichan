@@ -25,6 +25,13 @@ export const enum message {
 	// 1 - 29 modify post model state
 	insertThread,
 	insertPost,
+	append,
+	backspace,
+	splice,
+	insertLine,
+	closePost,
+	backlink,
+	command,
 
 	// >= 30 are miscelenious and do not write to post models
 	synchronise = 30,

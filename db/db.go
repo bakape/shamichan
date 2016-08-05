@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
@@ -214,40 +213,5 @@ func IncrementBoardCounter(board string) error {
 		Update(map[string]r.Term{
 			board: r.Row.Field(board).Default(0).Add(1),
 		})
-	return Write(q)
-}
-
-// WriteBacklinks writes the parenthood data of the post linking posts to the
-// the posts being linked
-func WriteBacklinks(id, op int64, board string, links types.LinkMap) error {
-	// Extract IDs of posts being linked
-	targets := make([]int64, 0, len(links))
-	for id := range links {
-		targets = append(targets, id)
-	}
-
-	type msi map[string]interface{}
-
-	// 3rd level nesting update. Looks ugly, but runs completely DB-side.
-	q := r.
-		Expr(targets).
-		ForEach(func(t r.Term) r.Term {
-			return r.Table("threads").
-				GetAllByIndex("post", t).
-				Update(msi{
-					"posts": r.Object(
-						t.CoerceTo("string"),
-						msi{
-							"backlinks": map[string]types.Link{
-								util.IDToString(id): {
-									OP:    op,
-									Board: board,
-								},
-							},
-						},
-					),
-				})
-		})
-
 	return Write(q)
 }
