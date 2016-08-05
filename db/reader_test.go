@@ -63,23 +63,17 @@ var (
 
 	boardStandard = types.Board{
 		Ctr: 7,
-		Threads: []types.Thread{
+		Threads: []types.BoardThread{
 			{
 				Board: "a",
-				Post: types.Post{
-					ID: 4,
-				},
-				Posts: nil,
+				ID:    4,
 			},
 			{
 				Board:    "a",
 				ImageCtr: 1,
 				PostCtr:  2,
 				LogCtr:   3,
-				Post: types.Post{
-					ID: 1,
-				},
-				Posts: nil,
+				ID:       1,
 			},
 		},
 	}
@@ -159,14 +153,11 @@ func (*DBSuite) TestGetAllBoard(c *C) {
 	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
 
 	std := boardStandard
-	std.Threads = []types.Thread{
+	std.Threads = []types.BoardThread{
 		boardStandard.Threads[0],
 		{
 			Board: "c",
-			Post: types.Post{
-				ID: 5,
-			},
-			Posts: nil,
+			ID:    5,
 		},
 		boardStandard.Threads[1],
 	}

@@ -29,8 +29,8 @@ const (
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {
-	Ctr     int64    `json:"ctr"`
-	Threads []Thread `json:"threads"`
+	Ctr     int64         `json:"ctr"`
+	Threads []BoardThread `json:"threads"`
 }
 
 // MarshalJSON ensures b.Threads is marshalled to a JSON array even when nil
@@ -50,6 +50,28 @@ func (b *Board) MarshalJSON() ([]byte, error) {
 	buf.Write(data)
 	buf.WriteRune('}')
 	return buf.Bytes(), nil
+}
+
+// BoardThread is a stripped down version of Thread for whole-board retrieval
+// queries. Reduces server memory usage and served JSON payload.
+type BoardThread struct {
+	Locked    bool   `json:"locked,omitempty" gorethink:"locked"`
+	Archived  bool   `json:"archived,omitempty" gorethink:"archived"`
+	Sticky    bool   `json:"sticky,omitempty" gorethink:"sticky"`
+	PostCtr   int16  `json:"postCtr" gorethink:"postCtr"`
+	ImageCtr  int16  `json:"imageCtr" gorethink:"imageCtr"`
+	ID        int64  `json:"id" gorethink:"id"`
+	Time      int64  `json:"time" gorethink:"time"`
+	Name      string `json:"name,omitempty" gorethink:"name,omitempty"`
+	Trip      string `json:"trip,omitempty" gorethink:"trip,omitempty"`
+	Auth      string `json:"auth,omitempty" gorethink:"auth,omitempty"`
+	Email     string `json:"email,omitempty" gorethink:"email,omitempty"`
+	Image     *Image `json:"image,omitempty" gorethink:"image,omitempty"`
+	LogCtr    int64  `json:"logCtr" gorethink:"logCtr"`
+	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
+	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
+	Board     string `json:"board" gorethink:"board"`
+	Subject   string `json:"subject,omitempty" gorethink:"subject"`
 }
 
 // Thread is a transport/export wrapper that stores both the thread metada, its

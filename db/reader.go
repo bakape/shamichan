@@ -22,8 +22,14 @@ var (
 	// Retrieves all threads for the /all/ metaboard
 	getAllBoard = r.
 			Table("threads").
-			Merge(getThreadOP, getLogCounter).
-			Without("posts", "log")
+			Merge(getThreadOP.Without("body"), getLogCounter).
+			Without(omitForBoards)
+
+	// Fields to omit in board queries. Decreases payload of DB replies.
+	omitForBoards = []string{
+		"posts", "log", "body", "password", "commands", "links", "backlinks",
+		"ip",
+	}
 )
 
 // GetThread retrieves public thread data from the database
@@ -82,7 +88,7 @@ func GetBoard(board string) (*types.Board, error) {
 		Table("threads").
 		GetAllByIndex("board", board).
 		Merge(getThreadOP, getLogCounter).
-		Without("posts", "log")
+		Without(omitForBoards)
 	out := &types.Board{Ctr: ctr}
 	err = All(query, &out.Threads)
 

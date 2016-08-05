@@ -194,10 +194,8 @@ func (d *DB) TestBoardJSON(c *C) {
 		{
 			"postCtr":0,
 			"imageCtr":0,
-			"editing":false,
 			"id":3,
 			"time":0,
-			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
@@ -214,10 +212,8 @@ func (d *DB) TestBoardJSON(c *C) {
 		{
 			"postCtr":0,
 			"imageCtr":0,
-			"editing":false,
 			"id":1,
 			"time":0,
-			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
@@ -256,10 +252,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 		{
 			"postCtr":0,
 			"imageCtr":0,
-			"editing":false,
 			"id":4,
 			"time":0,
-			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
@@ -276,10 +270,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 		{
 			"postCtr":0,
 			"imageCtr":0,
-			"editing":false,
 			"id":3,
 			"time":0,
-			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
@@ -296,10 +288,8 @@ func (d *DB) TestAllBoardJSON(c *C) {
 		{
 			"postCtr":0,
 			"imageCtr":0,
-			"editing":false,
 			"id":1,
 			"time":0,
-			"body":"",
 			"image":{
 				"fileType":0,
 				"dims":[0,0,0,0],
