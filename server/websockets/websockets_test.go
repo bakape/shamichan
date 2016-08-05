@@ -356,13 +356,12 @@ func (*ClientSuite) TestCleanUp(c *C) {
 
 	cl, wcl := sv.NewClient()
 	Clients.Add(cl, "1")
-	c.Assert(Clients.clients[cl], Equals, "1")
+	c.Assert(Clients.GetSync(cl), Equals, "1")
 	sv.Add(1)
 	go readListenErrors(c, cl, sv)
 	normalCloseWebClient(c, wcl)
 	sv.Wait()
-	_, ok := Clients.clients[cl]
-	c.Assert(ok, Equals, false)
+	c.Assert(Clients.GetSync(cl), Equals, "")
 }
 
 func (*ClientSuite) TestHandler(c *C) {

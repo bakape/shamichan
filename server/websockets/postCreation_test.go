@@ -95,7 +95,7 @@ func (*DB) TestThreadCreation(c *C) {
 	for _, msg := range [...]string{"010", "300"} {
 		assertMessage(wcl, []byte(msg), c)
 	}
-	c.Assert(Clients.clients[cl], Equals, "6")
+	c.Assert(Clients.GetSync(cl), Equals, "6")
 
 	var thread types.DatabaseThread
 	c.Assert(db.One(r.Table("threads").Get(6), &thread), IsNil)

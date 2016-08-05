@@ -13,6 +13,7 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/websocket"
 )
@@ -82,14 +83,22 @@ type Client struct {
 	// Should only be mutated from Clients.
 	synced bool
 
+	// Client identity information
 	auth.Ident
-	conn         *websocket.Conn
-	sessionToken string // Token of an authenticated user session, if any
+
+	// Underlyting websocket connection
+	conn *websocket.Conn
+
+	// Token of an authenticated user session, if any
+	sessionToken string
+
+	// Post currently open by the client
+	openPost *types.Post
 
 	// Internal message receiver channel
 	receive chan receivedMessage
 
-	// Thread-safely sends a message to the websocket client
+	// Thread-safely send a message to the websocket client
 	write chan []byte
 
 	// Close the client and free all used resources
@@ -315,4 +324,9 @@ func (c *Client) Close() {
 // Small helper method for more DRY-ness. Not thread-safe.
 func (c *Client) isLoggedIn() bool {
 	return c.sessionToken != ""
+}
+
+// Helper for determining, if the client currently has an open post
+func (c *Client) hasPost() bool {
+	return c.openPost != nil
 }

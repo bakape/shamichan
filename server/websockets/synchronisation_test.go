@@ -55,11 +55,11 @@ func (*ClientSuite) TestRegisterSync(c *C) {
 
 	// Not synced yet
 	registerSync("1", cl)
-	c.Assert(Clients.clients[cl], Equals, "1")
+	c.Assert(Clients.GetSync(cl), Equals, "1")
 
 	// Already synced
 	registerSync("2", cl)
-	c.Assert(Clients.clients[cl], Equals, "2")
+	c.Assert(Clients.GetSync(cl), Equals, "2")
 }
 
 func (*DB) TestInvalidThreadSync(c *C) {
@@ -94,7 +94,7 @@ func (*DB) TestSyncToThread(c *C) {
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 	c.Assert(synchronise(data, cl), IsNil)
-	c.Assert(Clients.clients[cl], Equals, "1")
+	c.Assert(Clients.GetSync(cl), Equals, "1")
 
 	assertSyncResponse(wcl, c)          // Receive client ID
 	syncAssertMessage(wcl, backlog1, c) // Receive first missed message

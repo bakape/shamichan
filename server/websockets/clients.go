@@ -40,11 +40,11 @@ func (c *ClientMap) Remove(cl *Client) {
 // CountByIP returns the number of unique IPs synchronised with the server
 func (c *ClientMap) CountByIP() int {
 	c.RLock()
-	defer c.RUnlock()
 	ips := make(map[string]bool, len(c.clients))
 	for cl := range c.clients {
 		ips[cl.IP] = true
 	}
+	c.RUnlock()
 	return len(ips)
 }
 
@@ -53,4 +53,13 @@ func (c *ClientMap) Clear() {
 	c.Lock()
 	defer c.Unlock()
 	c.clients = make(map[*Client]string)
+}
+
+// GetSync returns the current synced thread or board of a client. If the client
+// is not synced, returns an empty string.
+func (c *ClientMap) GetSync(cl *Client) string {
+	c.RLock()
+	sync, _ := c.clients[cl]
+	c.RUnlock()
+	return sync
 }

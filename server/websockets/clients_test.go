@@ -21,12 +21,11 @@ func (*Map) TestAddHasRemove(c *C) {
 	// Add client
 	cl, _ := sv.NewClient()
 	m.Add(cl, "1")
-	c.Assert(m.clients[cl], Equals, "1")
+	c.Assert(m.GetSync(cl), Equals, "1")
 
 	// Remove client
 	m.Remove(cl)
-	_, ok := m.clients[cl]
-	c.Assert(ok, Equals, false)
+	c.Assert(m.GetSync(cl), Equals, "")
 }
 
 func newClientMap() *ClientMap {
@@ -46,10 +45,10 @@ func (*Map) TestChangeSync(c *C) {
 
 	cl, _ := sv.NewClient()
 	m.Add(cl, oldThread)
-	c.Assert(m.clients[cl], Equals, oldThread)
+	c.Assert(m.GetSync(cl), Equals, oldThread)
 
 	m.ChangeSync(cl, newThread)
-	c.Assert(m.clients[cl], Equals, newThread)
+	c.Assert(m.GetSync(cl), Equals, newThread)
 }
 
 func (*Map) TestCountByIP(c *C) {
