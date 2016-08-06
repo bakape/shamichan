@@ -114,6 +114,12 @@ func (*DB) TestThreadCreation(c *C) {
 	std.Posts[6] = post
 
 	c.Assert(thread, DeepEquals, std)
+
+	c.Assert(cl.openPost, DeepEquals, openPost{
+		id:    6,
+		op:    6,
+		board: "a",
+	})
 }
 
 func populateMainTable(c *C) {

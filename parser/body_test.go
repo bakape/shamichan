@@ -21,10 +21,10 @@ func (*Tests) TestBodyAllWhitespace(c *C) {
 }
 
 func (Tests) TestBodyTooLong(c *C) {
-	body, err := auth.RandomID(maxLengthBody + 1)
+	body, err := auth.RandomID(MaxLengthBody + 1)
 	c.Assert(err, IsNil)
 	_, err = BodyParser{}.ParseBody(body)
-	c.Assert(err, Equals, errBodyTooLong)
+	c.Assert(err, Equals, ErrBodyTooLong)
 }
 
 func (*Tests) TestParseBody(c *C) {

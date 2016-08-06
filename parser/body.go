@@ -12,7 +12,9 @@ var (
 	commandRegexp       = regexp.MustCompile(`(?m)^#(flip|\d*d\d+|8ball)$`)
 	allWhitespaceRegexp = regexp.MustCompile(`(?m)^\s*$`)
 
-	errBodyTooLong = ErrTooLong("post body")
+	// ErrBodyTooLong is returned, when a post text body has exceeded
+	// MaxLengthBody
+	ErrBodyTooLong = ErrTooLong("post body")
 
 	// ErrOnlyWhitespace indicates the text body contains only whitespace and
 	// therefore is invalid
@@ -34,8 +36,8 @@ type BodyParseResults struct {
 
 // ParseBody parses a full text body of a post
 func (b BodyParser) ParseBody(body string) (res BodyParseResults, err error) {
-	if len(body) > maxLengthBody {
-		return res, errBodyTooLong
+	if len(body) > MaxLengthBody {
+		return res, ErrBodyTooLong
 	}
 
 	body = stripAndTrim(body)

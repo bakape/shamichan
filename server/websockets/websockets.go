@@ -3,6 +3,7 @@
 package websockets
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/websocket"
 )
@@ -46,6 +46,52 @@ func (e errInvalidFrame) Error() string {
 	return string(e)
 }
 
+// Client stores and manages a websocket-connected remote client and its
+// interaction with the server and database
+type Client struct {
+	// Synchronised to any change feed and regstered in the global Clients map.
+	// Should only be mutated from Clients.
+	synced bool
+
+	// Client identity information
+	auth.Ident
+
+	// Underlyting websocket connection
+	conn *websocket.Conn
+
+	// Token of an authenticated user session, if any
+	sessionToken string
+
+	// Post currently open by the client
+	openPost openPost
+
+	// Internal message receiver channel
+	receive chan receivedMessage
+
+	// Thread-safely send a message to the websocket client
+	write chan []byte
+
+	// Close the client and free all used resources
+	close chan struct{}
+
+	// Close the update feed of a thread or board
+	closeUpdateFeed chan struct{}
+}
+
+type receivedMessage struct {
+	typ int
+	msg []byte
+	err error
+}
+
+// Data of a post currently being written to by a Client
+type openPost struct {
+	bytes.Buffer
+	bodyLength int
+	id, op     int64
+	board      string
+}
+
 // CheckOrigin asserts the client matches the origin specified by the server or
 // has none.
 func CheckOrigin(req *http.Request) bool {
@@ -74,44 +120,6 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 	if err := c.Listen(); err != nil {
 		c.logError(err)
 	}
-}
-
-// Client stores and manages a websocket-connected remote client and its
-// interaction with the server and database
-type Client struct {
-	// Synchronised to any change feed and regstered in the global Clients map.
-	// Should only be mutated from Clients.
-	synced bool
-
-	// Client identity information
-	auth.Ident
-
-	// Underlyting websocket connection
-	conn *websocket.Conn
-
-	// Token of an authenticated user session, if any
-	sessionToken string
-
-	// Post currently open by the client
-	openPost *types.Post
-
-	// Internal message receiver channel
-	receive chan receivedMessage
-
-	// Thread-safely send a message to the websocket client
-	write chan []byte
-
-	// Close the client and free all used resources
-	close chan struct{}
-
-	// Close the update feed of a thread or board
-	closeUpdateFeed chan struct{}
-}
-
-type receivedMessage struct {
-	typ int
-	msg []byte
-	err error
 }
 
 // newClient creates a new websocket client
@@ -328,5 +336,5 @@ func (c *Client) isLoggedIn() bool {
 
 // Helper for determining, if the client currently has an open post
 func (c *Client) hasPost() bool {
-	return c.openPost != nil
+	return c.openPost.id != 0
 }

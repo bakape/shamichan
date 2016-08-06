@@ -1,7 +1,10 @@
 package websockets
 
 import (
+	"bytes"
+
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
@@ -71,4 +74,68 @@ func (*DB) TestWriteBacklinks(c *C) {
 		c.Assert(db.One(q, &constains), IsNil)
 		c.Assert(constains, Equals, true)
 	}
+}
+
+func (*DB) TestNoOpenPost(c *C) {
+	fns := [...]func([]byte, *Client) error{appendRune}
+	sv := newWSServer(c)
+	defer sv.Close()
+
+	for _, fn := range fns {
+		cl, _ := sv.NewClient()
+		c.Assert(fn(nil, cl), Equals, errNoPostOpen)
+	}
+}
+
+func (*DB) TestAppendBodyTooLong(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+
+	cl, _ := sv.NewClient()
+	cl.openPost.id = 1
+	cl.openPost.bodyLength = parser.MaxLengthBody
+
+	c.Assert(appendRune(nil, cl), Equals, parser.ErrBodyTooLong)
+}
+
+func (*DB) TestAppendRune(c *C) {
+	thread := types.DatabaseThread{
+		ID:  1,
+		Log: dummyLog,
+		Posts: map[int64]types.DatabasePost{
+			1: {
+				Post: types.Post{
+					ID:   1,
+					Body: "abc",
+				},
+			},
+		},
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         1,
+		op:         1,
+		bodyLength: 3,
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+
+	c.Assert(appendRune([]byte("100"), cl), IsNil)
+
+	c.Assert(cl.openPost.bodyLength, Equals, 4)
+	c.Assert(cl.openPost.String(), Equals, "abcd")
+
+	var body string
+	q := db.FindPost(1).Field("body")
+	c.Assert(db.One(q, &body), IsNil)
+	c.Assert(body, Equals, "abcd")
+
+	stdMsg := []byte(`03[1,100]`)
+	var log [][]byte
+	q = db.FindParentThread(1).Field("log")
+	c.Assert(db.All(q, &log), IsNil)
+	c.Assert(log, DeepEquals, append(dummyLog, stdMsg))
 }

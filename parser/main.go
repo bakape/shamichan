@@ -12,7 +12,9 @@ const (
 	maxLengthAuth         = 50
 	maxLengthPostPassword = 50
 	maxLengthSubject      = 100
-	maxLengthBody         = 2000
+
+	// MaxLengthBody is the maximum length of a post text body
+	MaxLengthBody = 2000
 )
 
 // ErrTooLong is passed, when a field exceeds the maximum string lenghth for

@@ -108,6 +108,15 @@ func insertThread(data []byte, c *Client) (err error) {
 	if err := c.sendMessage(messageInsertThread, postCreated); err != nil {
 		return err
 	}
+	if err := syncToThread(req.Board, id, 0, c); err != nil {
+		return err
+	}
+
+	c.openPost = openPost{
+		id:    id,
+		op:    id,
+		board: req.Board,
+	}
 
 	return syncToThread(req.Board, id, 0, c)
 }
