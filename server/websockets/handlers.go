@@ -74,6 +74,7 @@ var (
 		messageInsertThread:   insertThread,
 		messageAppend:         appendRune,
 		messageBackspace:      backspace,
+		messageClosePost:      closePost,
 	}
 )
 

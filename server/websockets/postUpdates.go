@@ -32,7 +32,7 @@ func appendRune(data []byte, c *Client) error {
 	}
 
 	if char == '\n' {
-		return parseLine(c)
+		return parseLine(c, true)
 	}
 
 	id := c.openPost.id
@@ -87,31 +87,35 @@ func appendLog(msg []byte) r.Term {
 
 // Parse line contents and commit newline. If line contains hash commands or
 // links to other posts also commit those and generate backlinks, if needed.
-func parseLine(c *Client) error {
+// Appending the newline can be optionally omitted, to optimise post closing
+// and similar.
+func parseLine(c *Client, insertNewline bool) error {
 	c.openPost.bodyLength++
 	links, comm, err := parser.ParseLine(c.openPost.Bytes(), c.openPost.board)
 	if err != nil {
 		return err
 	}
 	defer c.openPost.Reset()
-
-	msg, err := encodeMessage(messageAppend, [2]int64{
-		c.openPost.id,
-		int64('\n'),
-	})
-	if err != nil {
-		return err
-	}
 	idStr := util.IDToString(c.openPost.id)
-	update := msi{
-		"body": r.Row.
-			Field("posts").
-			Field(idStr).
-			Field("body").
-			Add("\n"),
-	}
-	if err := c.updatePost(update, msg); err != nil {
-		return err
+
+	if insertNewline {
+		msg, err := encodeMessage(messageAppend, [2]int64{
+			c.openPost.id,
+			int64('\n'),
+		})
+		if err != nil {
+			return err
+		}
+		update := msi{
+			"body": r.Row.
+				Field("posts").
+				Field(idStr).
+				Field("body").
+				Add("\n"),
+		}
+		if err := c.updatePost(update, msg); err != nil {
+			return err
+		}
 	}
 
 	switch {
@@ -214,6 +218,30 @@ func backspace(_ []byte, c *Client) error {
 		"body": postBody(id).Slice(0, -1),
 	}
 	msg, err := encodeMessage(messageBackspace, id)
+	if err != nil {
+		return err
+	}
+	return c.updatePost(update, msg)
+}
+
+// Close an open post and parse the last line, if needed.
+func closePost(_ []byte, c *Client) error {
+	if !c.hasPost() {
+		return errNoPostOpen
+	}
+	if c.openPost.Len() != 0 {
+		if err := parseLine(c, false); err != nil {
+			return err
+		}
+	}
+
+	defer func() {
+		c.openPost = openPost{}
+	}()
+	update := msi{
+		"editing": false,
+	}
+	msg, err := encodeMessage(messageClosePost, c.openPost.id)
 	if err != nil {
 		return err
 	}

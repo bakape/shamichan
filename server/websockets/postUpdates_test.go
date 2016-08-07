@@ -23,8 +23,9 @@ var (
 		Posts: map[int64]types.DatabasePost{
 			2: {
 				Post: types.Post{
-					ID:   2,
-					Body: "abc",
+					Editing: true,
+					ID:      2,
+					Body:    "abc",
 				},
 			},
 		},
@@ -94,10 +95,10 @@ func (*DB) TestWriteBacklinks(c *C) {
 }
 
 func (*DB) TestNoOpenPost(c *C) {
-	fns := [...]func([]byte, *Client) error{appendRune, backspace}
 	sv := newWSServer(c)
 	defer sv.Close()
 
+	fns := [...]func([]byte, *Client) error{appendRune, backspace, closePost}
 	for _, fn := range fns {
 		cl, _ := sv.NewClient()
 		c.Assert(fn(nil, cl), Equals, errNoPostOpen)
@@ -347,4 +348,36 @@ func (*DB) TestBackspace(c *C) {
 
 	assertRepLog(2, append(dummyLog, []byte("041")), c)
 	assertBody(2, "ab", c)
+}
+
+func (*DB) TestClosePost(c *C) {
+	thread := sampleThread
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+	conf := config.BoardConfigs{
+		ID: "a",
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		board:      "a",
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+
+	c.Assert(closePost([]byte{}, cl), IsNil)
+
+	c.Assert(cl.openPost, DeepEquals, openPost{})
+	assertRepLog(2, append(dummyLog, []byte("062")), c)
+	assertBody(2, "abc", c)
+
+	var editing bool
+	q := db.FindPost(2).Field("editing")
+	c.Assert(db.One(q, &editing), IsNil)
+	c.Assert(editing, Equals, false)
 }
