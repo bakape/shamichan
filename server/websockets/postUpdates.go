@@ -12,6 +12,7 @@ import (
 
 var (
 	errNoPostOpen = errors.New("no post open")
+	errLineEmpty  = errors.New("line empty")
 )
 
 // Shorthand. We use it a lot for update query construction.
@@ -41,11 +42,7 @@ func appendRune(data []byte, c *Client) error {
 	}
 
 	update := msi{
-		"body": r.Row.
-			Field("posts").
-			Field(util.IDToString(id)).
-			Field("body").
-			Add(string(char)),
+		"body": postBody(id).Add(string(char)),
 	}
 	if err := c.updatePost(update, msg); err != nil {
 		return err
@@ -54,6 +51,14 @@ func appendRune(data []byte, c *Client) error {
 	c.openPost.bodyLength++
 
 	return nil
+}
+
+// Shorthand for retrievinf the post's body field from a thread document
+func postBody(id int64) r.Term {
+	return r.Row.
+		Field("posts").
+		Field(util.IDToString(id)).
+		Field("body")
 }
 
 // Helper for running post update queries on the current open post
@@ -190,4 +195,27 @@ func writeBacklink(id, op int64, board string, destID int64) error {
 		Update(createUpdate(destID, update, msg))
 
 	return db.Write(q)
+}
+
+// Remove one character from the end of the line in the open post
+func backspace(_ []byte, c *Client) error {
+	if !c.hasPost() {
+		return errNoPostOpen
+	}
+	length := c.openPost.Len()
+	if length == 0 {
+		return errLineEmpty
+	}
+	c.openPost.Truncate(length - 1)
+	c.openPost.bodyLength--
+
+	id := c.openPost.id
+	update := msi{
+		"body": postBody(id).Slice(0, -1),
+	}
+	msg, err := encodeMessage(messageBackspace, id)
+	if err != nil {
+		return err
+	}
+	return c.updatePost(update, msg)
 }

@@ -72,6 +72,8 @@ var (
 		messageCreateBoard:    createBoard,
 		messageConfigBoard:    configBoard,
 		messageInsertThread:   insertThread,
+		messageAppend:         appendRune,
+		messageBackspace:      backspace,
 	}
 )
 

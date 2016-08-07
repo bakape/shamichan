@@ -94,13 +94,25 @@ func (*DB) TestWriteBacklinks(c *C) {
 }
 
 func (*DB) TestNoOpenPost(c *C) {
-	fns := [...]func([]byte, *Client) error{appendRune}
+	fns := [...]func([]byte, *Client) error{appendRune, backspace}
 	sv := newWSServer(c)
 	defer sv.Close()
 
 	for _, fn := range fns {
 		cl, _ := sv.NewClient()
 		c.Assert(fn(nil, cl), Equals, errNoPostOpen)
+	}
+}
+
+func (*DB) TestLineEmpty(c *C) {
+	fns := [...]func([]byte, *Client) error{backspace}
+	sv := newWSServer(c)
+	defer sv.Close()
+
+	for _, fn := range fns {
+		cl, _ := sv.NewClient()
+		cl.openPost.id = 1
+		c.Assert(fn(nil, cl), Equals, errLineEmpty)
 	}
 }
 
@@ -312,4 +324,27 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 		c.Assert(db.One(q, &links), IsNil)
 		c.Assert(links, DeepEquals, s.val)
 	}
+}
+
+func (*DB) TestBackspace(c *C) {
+	thread := sampleThread
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+
+	c.Assert(backspace([]byte{}, cl), IsNil)
+
+	c.Assert(cl.openPost.String(), Equals, "ab")
+	c.Assert(cl.openPost.bodyLength, Equals, 2)
+
+	assertRepLog(2, append(dummyLog, []byte("041")), c)
+	assertBody(2, "ab", c)
 }
