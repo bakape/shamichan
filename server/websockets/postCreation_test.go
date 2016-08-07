@@ -66,8 +66,9 @@ func (*DB) TestThreadCreation(c *C) {
 			6: types.DatabasePost{
 				IP: "::1",
 				Post: types.Post{
-					ID:   6,
-					Name: "name",
+					Editing: true,
+					ID:      6,
+					Name:    "name",
 					Image: &types.Image{
 						Spoiler:     true,
 						ImageCommon: stdJPEG,

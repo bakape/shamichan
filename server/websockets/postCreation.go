@@ -58,7 +58,8 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 	post := types.DatabasePost{
 		Post: types.Post{
-			Time: now,
+			Editing: true,
+			Time:    now,
 		},
 		IP: c.IP,
 	}
