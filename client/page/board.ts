@@ -75,6 +75,5 @@ function renderThread(thread: ThreadData): string {
 		<h3>
 			「${escape(thread.subject)}」
 		</h3>
-		${renderBody(thread)}
 	</article>`
 }
