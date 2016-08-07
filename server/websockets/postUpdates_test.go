@@ -3,6 +3,7 @@ package websockets
 import (
 	"bytes"
 
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
@@ -10,10 +11,25 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-var dummyLog = [][]byte{
-	{1, 2, 3},
-	{3, 4, 5},
-}
+var (
+	dummyLog = [][]byte{
+		{1, 2, 3},
+		{3, 4, 5},
+	}
+
+	sampleThread = types.DatabaseThread{
+		ID:  1,
+		Log: dummyLog,
+		Posts: map[int64]types.DatabasePost{
+			2: {
+				Post: types.Post{
+					ID:   2,
+					Body: "abc",
+				},
+			},
+		},
+	}
+)
 
 func (*DB) TestWriteBacklinks(c *C) {
 	threads := []types.DatabaseThread{
@@ -56,10 +72,11 @@ func (*DB) TestWriteBacklinks(c *C) {
 		OP:    9,
 		Board: "a",
 	}
-	stdMsg, err := encodeMessage(messageBacklink, backlinkInsertionMessage{
-		ID:    10,
-		OP:    9,
-		Board: "a",
+	stdMsg, err := encodeMessage(messageBacklink, types.LinkMap{
+		10: {
+			OP:    9,
+			Board: "a",
+		},
 	})
 	c.Assert(err, IsNil)
 
@@ -99,14 +116,79 @@ func (*DB) TestAppendBodyTooLong(c *C) {
 }
 
 func (*DB) TestAppendRune(c *C) {
+	thread := sampleThread
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+
+	c.Assert(appendRune([]byte("100"), cl), IsNil)
+
+	c.Assert(cl.openPost.bodyLength, Equals, 4)
+	c.Assert(cl.openPost.String(), Equals, "abcd")
+	assertBody(2, "abcd", c)
+
+	assertRepLog(2, append(dummyLog, []byte(`03[1,100]`)), c)
+}
+
+func assertBody(id int64, body string, c *C) {
+	var res string
+	q := db.FindPost(2).Field("body")
+	c.Assert(db.One(q, &res), IsNil)
+	c.Assert(res, Equals, body)
+}
+
+func assertRepLog(id int64, log [][]byte, c *C) {
+	var res [][]byte
+	q := db.FindParentThread(id).Field("log")
+	c.Assert(db.All(q, &res), IsNil)
+	c.Assert(log, DeepEquals, log)
+}
+
+func (*DB) TestAppendNewline(c *C) {
+	thread := sampleThread
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		board:      "a",
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+
+	conf := config.BoardConfigs{
+		ID: "a",
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+
+	c.Assert(appendRune([]byte("10"), cl), IsNil)
+
+	c.Assert(cl.openPost.bodyLength, Equals, 4)
+	c.Assert(cl.openPost.String(), Equals, "")
+	assertBody(2, "abc\n", c)
+	assertRepLog(2, append(dummyLog, []byte("03[1,10]")), c)
+}
+
+func (*DB) TestAppendNewlineWithHashCommand(c *C) {
 	thread := types.DatabaseThread{
 		ID:  1,
 		Log: dummyLog,
 		Posts: map[int64]types.DatabasePost{
-			1: {
+			2: {
 				Post: types.Post{
-					ID:   1,
-					Body: "abc",
+					ID:   2,
+					Body: "#flip",
 				},
 			},
 		},
@@ -117,25 +199,117 @@ func (*DB) TestAppendRune(c *C) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.openPost = openPost{
-		id:         1,
+		id:         2,
 		op:         1,
 		bodyLength: 3,
-		Buffer:     *bytes.NewBuffer([]byte("abc")),
+		board:      "a",
+		Buffer:     *bytes.NewBuffer([]byte("#flip")),
 	}
 
-	c.Assert(appendRune([]byte("100"), cl), IsNil)
+	conf := config.BoardConfigs{
+		ID: "a",
+		PostParseConfigs: config.PostParseConfigs{
+			HashCommands: true,
+		},
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
 
-	c.Assert(cl.openPost.bodyLength, Equals, 4)
-	c.Assert(cl.openPost.String(), Equals, "abcd")
+	c.Assert(appendRune([]byte("10"), cl), IsNil)
 
-	var body string
-	q := db.FindPost(1).Field("body")
-	c.Assert(db.One(q, &body), IsNil)
-	c.Assert(body, Equals, "abcd")
+	var typ int
+	q := db.FindPost(2).Field("commands").AtIndex(0).Field("type")
+	c.Assert(db.One(q, &typ), IsNil)
+	c.Assert(typ, Equals, int(types.Flip))
 
-	stdMsg := []byte(`03[1,100]`)
-	var log [][]byte
-	q = db.FindParentThread(1).Field("log")
-	c.Assert(db.All(q, &log), IsNil)
-	c.Assert(log, DeepEquals, append(dummyLog, stdMsg))
+	var log []byte
+	q = db.FindParentThread(2).Field("log").Nth(-1)
+	c.Assert(db.One(q, &log), IsNil)
+	c.Assert(string(log), Matches, `09\{"type":1,"val":(?:true|false)\}`)
+}
+
+func (*DB) TestAppendNewlineWithLinks(c *C) {
+	threads := []types.DatabaseThread{
+		{
+			ID:    1,
+			Board: "a",
+			Log:   [][]byte{},
+			Posts: map[int64]types.DatabasePost{
+				2: {
+					Post: types.Post{
+						ID:   2,
+						Body: " >>22 ",
+					},
+				},
+			},
+		},
+		{
+			ID:    21,
+			Board: "c",
+			Log:   [][]byte{},
+			Posts: map[int64]types.DatabasePost{
+				22: {
+					Post: types.Post{
+						ID: 22,
+					},
+				},
+			},
+		},
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(threads)), IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		board:      "a",
+		Buffer:     *bytes.NewBuffer([]byte(" >>22 ")),
+	}
+
+	conf := config.BoardConfigs{
+		ID: "a",
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+
+	c.Assert(appendRune([]byte("10"), cl), IsNil)
+
+	std := [...]struct {
+		id    int64
+		log   string
+		field string
+		val   types.LinkMap
+	}{
+		{
+			2,
+			`07{"22":{"op":21,"board":"c"}}`,
+			"links",
+			types.LinkMap{
+				22: {
+					OP:    21,
+					Board: "c",
+				},
+			},
+		},
+		{
+			22,
+			`08{"2":{"op":1,"board":"a"}}`,
+			"backlinks",
+			types.LinkMap{
+				2: {
+					OP:    1,
+					Board: "a",
+				},
+			},
+		},
+	}
+	for _, s := range std {
+		assertRepLog(s.id, [][]byte{[]byte(s.log)}, c)
+
+		var links types.LinkMap
+		q := db.FindPost(s.id).Field(s.field)
+		c.Assert(db.One(q, &links), IsNil)
+		c.Assert(links, DeepEquals, s.val)
+	}
 }

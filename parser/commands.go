@@ -3,14 +3,14 @@
 package parser
 
 import (
+	"bytes"
 	"math/rand"
 	"regexp"
 	"strconv"
 	"time"
 
-	"github.com/bakape/meguca/types"
-
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/types"
 )
 
 var (
@@ -18,6 +18,9 @@ var (
 
 	errTooManyRolls = diceError(0)
 	errDieTooBig    = diceError(1)
+
+	flipCommand      = []byte("flip")
+	eightballCommand = []byte("8ball")
 )
 
 type diceError int
@@ -31,59 +34,52 @@ func init() {
 }
 
 // Parse a matched hash command
-func (b BodyParser) parseCommand(commands []types.Command, match string) (
-	[]types.Command, error,
-) {
+func parseCommand(match []byte, board string) (types.Command, error) {
 
 	// TODO: #pyu, #queue and #syncwatch
 
 	var com types.Command
-	switch match {
-	case "flip":
+	switch {
+	case bytes.Equal(match, flipCommand):
 		com.Type = types.Flip
 		com.Val = rand.Intn(2) > 1
-	case "8ball":
+		return com, nil
+	case bytes.Equal(match, eightballCommand):
 		com.Type = types.EightBall
 
 		// Select random string from the the 8ball answer array
 		q := db.
-			GetBoardConfig(b.Board).
+			GetBoardConfig(board).
 			Field("eightball").
 			Sample(1).
 			AtIndex(0)
-		if err := db.One(q, &com.Val); err != nil {
-			return nil, err
-		}
+		err := db.One(q, &com.Val)
+		return com, err
 	default:
 		val, err := parseDice(match)
 		switch err {
 		case nil:
 			com.Type = types.Dice
 			com.Val = val
-		// Consider command invalid
-		case errTooManyRolls, errDieTooBig:
-			return commands, nil
+			return com, nil
+		case errTooManyRolls, errDieTooBig: // Consider command invalid
+			return com, nil
 		default:
-			return nil, err
+			return com, err
 		}
 	}
-
-	if commands == nil {
-		return []types.Command{com}, nil
-	}
-	return append(commands, com), nil
 }
 
 // Parse dice thow commands
-func parseDice(match string) ([]uint16, error) {
-	dice := diceRegexp.FindStringSubmatch(match)
+func parseDice(match []byte) ([]uint16, error) {
+	dice := diceRegexp.FindSubmatch(match)
 
 	var rolls int
-	if dice[1] == "" {
+	if len(dice[1]) == 0 {
 		rolls = 1
 	} else {
 		var err error
-		rolls, err = strconv.Atoi(dice[1])
+		rolls, err = strconv.Atoi(string(dice[1]))
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +88,7 @@ func parseDice(match string) ([]uint16, error) {
 		}
 	}
 
-	max, err := strconv.Atoi(dice[2])
+	max, err := strconv.Atoi(string(dice[2]))
 	if err != nil {
 		return nil, err
 	}

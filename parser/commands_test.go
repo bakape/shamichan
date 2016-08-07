@@ -11,28 +11,10 @@ import (
 )
 
 func (*Tests) TestParseFlip(c *C) {
-	comms, err := BodyParser{}.parseCommand(nil, "flip")
+	com, err := parseCommand([]byte("flip"), "a")
 	c.Assert(err, IsNil)
-	c.Assert(len(comms), Equals, 1)
-	c.Assert(comms[0].Type, Equals, types.Flip)
-	c.Assert(reflect.TypeOf(comms[0].Val).Kind(), Equals, reflect.Bool)
-}
-
-func (*Tests) TestAppendCommand(c *C) {
-	var (
-		first = types.Command{
-			Type: types.Dice,
-			Val:  []uint16{1, 2, 3},
-		}
-		comms = []types.Command{first}
-	)
-
-	comms, err := BodyParser{}.parseCommand(comms, "flip")
-	c.Assert(err, IsNil)
-	c.Assert(len(comms), Equals, 2)
-	c.Assert(comms[0], DeepEquals, first)
-	c.Assert(comms[1].Type, Equals, types.Flip)
-	c.Assert(reflect.TypeOf(comms[1].Val).Kind(), Equals, reflect.Bool)
+	c.Assert(com.Type, Equals, types.Flip)
+	c.Assert(reflect.TypeOf(com.Val).Kind(), Equals, reflect.Bool)
 }
 
 func (*Tests) TestDice(c *C) {
@@ -48,13 +30,11 @@ func (*Tests) TestDice(c *C) {
 		{`10d100`, false, 10, 100},
 	}
 	for _, s := range samples {
-		comms, err := BodyParser{}.parseCommand(nil, s.in)
+		com, err := parseCommand([]byte(s.in), "a")
 		c.Assert(err, IsNil)
 		if s.isNil {
-			c.Assert(comms, IsNil)
+			c.Assert(com.Val, IsNil)
 		} else {
-			c.Assert(len(comms), Equals, 1)
-			com := comms[0]
 			c.Assert(com.Type, Equals, types.Dice)
 			val := com.Val.([]uint16)
 			c.Assert(val[0], Equals, uint16(s.max))
@@ -71,13 +51,8 @@ func (*Tests) Test8ball(c *C) {
 	})
 	c.Assert(db.Write(q), IsNil)
 
-	bp := BodyParser{
-		Board: "a",
-	}
-	comms, err := bp.parseCommand(nil, "8ball")
+	com, err := parseCommand([]byte("8ball"), "a")
 	c.Assert(err, IsNil)
-	c.Assert(len(comms), Equals, 1)
-	com := comms[0]
 	c.Assert(com.Type, Equals, types.EightBall)
 	val := com.Val.(string)
 	if val != answers[0] && val != answers[1] {

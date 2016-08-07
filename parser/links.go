@@ -13,27 +13,34 @@ var linkRegexp = regexp.MustCompile(`>>(\d+)`)
 
 // Extract post links from a text fragment, verify and retrieve their
 // parenthood
-func parseLinks(frag string) (types.LinkMap, error) {
-	matches := linkRegexp.FindAllStringSubmatch(frag, -1)
+func parseLinks(frag []byte) (types.LinkMap, error) {
+	matches := linkRegexp.FindAllSubmatch(frag, -1)
 	if matches == nil {
 		return nil, nil
 	}
 	links := make(types.LinkMap, len(matches))
 	for _, match := range matches {
-		id, err := strconv.ParseInt(match[1], 10, 64)
+		id, err := strconv.ParseInt(string(match[1]), 10, 64)
 		if err != nil {
 			return nil, err
 		}
 
-		var link types.Link
-		err = db.One(db.FindPost(id).Pluck("op", "board").Default(nil), &link)
+		var parent struct {
+			ID    int64  `gorethink:"id"`
+			Board string `gorethink:"board"`
+		}
+		q := db.FindParentThread(id).Pluck("id", "board").Default(nil)
+		err = db.One(q, &parent)
 		if err != nil {
 			if err == r.ErrEmptyResult { // Points to invalid post. Ignore.
 				continue
 			}
 			return nil, err
 		}
-		links[id] = link
+		links[id] = types.Link{
+			OP:    parent.ID,
+			Board: parent.Board,
+		}
 	}
 
 	// All links invalid

@@ -28,6 +28,9 @@ func (*Tests) TearDownSuite(c *C) {
 
 func (*Tests) SetUpTest(c *C) {
 	config.Set(config.Configs{})
+	for _, t := range db.AllTables {
+		c.Assert(db.Write(r.Table(t).Delete()), IsNil)
+	}
 }
 
 func (*Tests) TestStripPsuedoWhitespace(c *C) {

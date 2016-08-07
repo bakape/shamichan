@@ -17,14 +17,6 @@ var (
 // Shorthand. We use it a lot for update query construction.
 type msi map[string]interface{}
 
-// Sent to the thread of the post being linked and appended to its replication
-// log. Then propagated to all listeners subscribed to this log.
-type backlinkInsertionMessage struct {
-	ID    int64  `json:"id"`
-	OP    int64  `json:"op"`
-	Board string `json:"board"`
-}
-
 // Append a rune to the body of the open post
 func appendRune(data []byte, c *Client) error {
 	if !c.hasPost() {
@@ -88,18 +80,97 @@ func appendLog(msg []byte) r.Term {
 	return r.Row.Field("log").Append(msg)
 }
 
-// TODO: Line parsing
+// Parse line contents and commit newline. If line contains hash commands or
+// links to other posts also commit those and generate backlinks, if needed.
 func parseLine(c *Client) error {
+	c.openPost.bodyLength++
+	links, comm, err := parser.ParseLine(c.openPost.Bytes(), c.openPost.board)
+	if err != nil {
+		return err
+	}
+	defer c.openPost.Reset()
+
+	msg, err := encodeMessage(messageAppend, [2]int64{
+		c.openPost.id,
+		int64('\n'),
+	})
+	if err != nil {
+		return err
+	}
+	idStr := util.IDToString(c.openPost.id)
+	update := msi{
+		"body": r.Row.
+			Field("posts").
+			Field(idStr).
+			Field("body").
+			Add("\n"),
+	}
+	if err := c.updatePost(update, msg); err != nil {
+		return err
+	}
+
+	switch {
+	case comm.Val != nil:
+		return writeCommand(comm, idStr, c)
+	case links != nil:
+		return writeLinks(links, c)
+	default:
+		return nil
+	}
+}
+
+// Write a hash command to the database
+func writeCommand(comm types.Command, idStr string, c *Client) error {
+	msg, err := encodeMessage(messageCommand, comm)
+	if err != nil {
+		return err
+	}
+	update := msi{
+		"commands": r.Row.
+			Field("posts").
+			Field(idStr).
+			Field("commands").
+			Default([]types.Command{}).
+			Append(comm),
+	}
+	return c.updatePost(update, msg)
+}
+
+// Write new links to other posts to the database
+func writeLinks(links types.LinkMap, c *Client) error {
+	msg, err := encodeMessage(messageLink, links)
+	if err != nil {
+		return err
+	}
+	update := msi{
+		"links": links,
+	}
+	if err := c.updatePost(update, msg); err != nil {
+		return err
+	}
+
+	// Most often this loop will iterate only once, so no need to think heavily
+	// about optimisations
+	for destID := range links {
+		id := c.openPost.id
+		op := c.openPost.op
+		board := c.openPost.board
+		if err := writeBacklink(id, op, board, destID); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // Writes the location data of the post linking a post to the the post being
 // linked
 func writeBacklink(id, op int64, board string, destID int64) error {
-	msg, err := encodeMessage(messageBacklink, backlinkInsertionMessage{
-		ID:    id,
-		OP:    op,
-		Board: board,
+	msg, err := encodeMessage(messageBacklink, types.LinkMap{
+		id: {
+			OP:    op,
+			Board: board,
+		},
 	})
 	if err != nil {
 		return err

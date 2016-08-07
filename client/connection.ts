@@ -28,8 +28,8 @@ export const enum message {
 	append,
 	backspace,
 	splice,
-	insertLine,
 	closePost,
+	link,
 	backlink,
 	command,
 

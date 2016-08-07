@@ -25,8 +25,8 @@ const (
 	messageAppend
 	messageBackspace
 	messageSplice
-	messageInsertLine
 	messageClosePost
+	messageLink
 	messageBacklink
 	messageCommand
 )
