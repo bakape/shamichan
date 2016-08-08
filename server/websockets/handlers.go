@@ -75,6 +75,7 @@ var (
 		messageAppend:         appendRune,
 		messageBackspace:      backspace,
 		messageClosePost:      closePost,
+		messageSplice:         spliceLine,
 	}
 )
 

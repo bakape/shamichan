@@ -2,6 +2,7 @@ package websockets
 
 import (
 	"bytes"
+	"strings"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -10,6 +11,34 @@ import (
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
+
+// Sample wall of text
+const longPost = `Shut the fuck up. I'm so tired of being disrespected on this
+goddamn website. All I wanted to do was post my opinion. MY OPINION. But no,
+you little bastards think it's "hilarious" to mock those with good opinions.
+My opinion. while not absolute, is definitely worth the respect to formulate
+an ACTUAL FUCKING RESPONSE AND NOT JUST A SHORT MEME OF A REPLY. I've been on
+this site for 6 months: 6 MONTHS and I have never felt this wronged. It boils
+me up that I could spend so much time thinking and putting effort into things
+while you shits sit around (probably jerking off to Gardevoir or whatever
+furbait you like) and make fun of the intellectuals of this world. You're
+laughing at me? Good for fucking you. Literally no one cares that your little
+brain is to underdeveloped and rotted to comprehend this game...THIS GREAT
+GREAT GAME. I could sit here all day whining, but I won't. I'm NOT a whiner.
+I'm a realist and an intellectual. I know when to call it quits and to leave
+the babybrains to themselves. I'm done with this goddamn site and you goddamn
+immature children. I have lived my life up until this point having to deal
+with memesters and idiots like you. I know how you work. I know that you all
+think you're "epik trolls" but you're not. You think you baited me? NAH. I've
+never taken any bait. This is my 100% real opinion divorced from anger. I'm
+calm, I'm serene. I LAUGH when people imply I'm intellectually low enough to
+take bait. I always choose to reply just to spite you. I won. I've always won.
+Losing is not in my skillset. So you're probably gonna reply "lol epik
+trolled" or "u mad bro" but once you've done that you've shown me I've won.
+I've tricked the trickster and conquered memery. I live everyday growing
+stronger to fight you plebs and low level trolls who are probably 11 (baby,
+you gotta be 18 to use 4chan). But whatever, I digress. It's just fucking
+annoying that I'm never taken serious on this site, goddamn.`
 
 var (
 	dummyLog = [][]byte{
@@ -98,7 +127,9 @@ func (*DB) TestNoOpenPost(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 
-	fns := [...]func([]byte, *Client) error{appendRune, backspace, closePost}
+	fns := [...]func([]byte, *Client) error{
+		appendRune, backspace, closePost, spliceLine,
+	}
 	for _, fn := range fns {
 		cl, _ := sv.NewClient()
 		c.Assert(fn(nil, cl), Equals, errNoPostOpen)
@@ -380,4 +411,128 @@ func (*DB) TestClosePost(c *C) {
 	q := db.FindPost(2).Field("editing")
 	c.Assert(db.One(q, &editing), IsNil)
 	c.Assert(editing, Equals, false)
+}
+
+func (*DB) TestSpliceValidityChecks(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id: 2,
+	}
+
+	var tooLong string
+	for i := 0; i < 2001; i++ {
+		tooLong += "a"
+	}
+
+	samples := [...]struct {
+		start, len int
+		text, line string
+		err        error
+	}{
+		{-1, 1, "", "", errInvalidSpliceCoords},
+		{0, -1, "", "", errInvalidSpliceCoords},
+		{2, 1, "", "abc", errInvalidSpliceCoords},
+		{0, 0, "", "", errSpliceNOOP},
+		{0, 0, tooLong, "", errSpliceTooLong},
+		{0, 0, "abc\nddd", "", errNewlineInSplice},
+	}
+	for _, s := range samples {
+		req := spliceMessage{
+			Start: s.start,
+			Len:   s.len,
+			Text:  s.text,
+		}
+		c.Assert(spliceLine(marshalJSON(req, c), cl), Equals, s.err)
+	}
+}
+
+func (*DB) TestSplice(c *C) {
+	const longSplice = `Never gonna give you up ` +
+		`Never gonna let you down ` +
+		`Never gonna run around and desert you ` +
+		`Never gonna make you cry ` +
+		`Never gonna say goodbye ` +
+		`Never gonna tell a lie and hurt you `
+
+	sv := newWSServer(c)
+	defer sv.Close()
+
+	samples := [...]struct {
+		start, len             int
+		text, init, final, log string
+	}{
+		{
+			start: 0,
+			len:   0,
+			text:  "abc",
+			init:  "",
+			final: "abc",
+			log:   `05{"start":0,"len":0,"text":"abc"}`,
+		},
+		{
+			start: 2,
+			len:   3,
+			text:  "abcdefg",
+			init:  "00\n012345",
+			final: "00\n01abcdefg5",
+			log:   `05{"start":2,"len":3,"text":"abcdefg"}`,
+		},
+		{
+			start: 52,
+			len:   0,
+			text:  longSplice,
+			init:  longPost,
+			final: longPost[:1943] + longSplice[:57],
+			log:   `05{"start":2,"len":3,"text":"abcdefg"}`,
+		},
+	}
+
+	for _, s := range samples {
+		thread := types.DatabaseThread{
+			ID:  1,
+			Log: [][]byte{},
+			Posts: map[int64]types.DatabasePost{
+				2: {
+					Post: types.Post{
+						Editing: true,
+						ID:      2,
+						Body:    s.init,
+					},
+				},
+			},
+		}
+		c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+		cl, _ := sv.NewClient()
+		cl.openPost = openPost{
+			id:         2,
+			op:         1,
+			bodyLength: len(s.init),
+			board:      "a",
+			Buffer:     *bytes.NewBuffer([]byte(lastLine(s.init))),
+		}
+
+		req := spliceMessage{
+			Start: s.start,
+			Len:   s.len,
+			Text:  s.text,
+		}
+		data := marshalJSON(req, c)
+		c.Assert(spliceLine(data, cl), IsNil)
+
+		c.Assert(cl.openPost.String(), Equals, lastLine(s.final))
+		c.Assert(cl.openPost.bodyLength, Equals, len(s.final))
+		assertRepLog(2, [][]byte{[]byte(s.log)}, c)
+		assertBody(2, s.final, c)
+
+		// Clean up
+		c.Assert(db.Write(r.Table("threads").Delete()), IsNil)
+	}
+}
+
+func lastLine(s string) string {
+	lines := strings.Split(s, "\n")
+	return lines[len(lines)-1]
 }

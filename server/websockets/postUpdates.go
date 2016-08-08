@@ -2,6 +2,8 @@ package websockets
 
 import (
 	"errors"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
@@ -11,9 +13,21 @@ import (
 )
 
 var (
-	errNoPostOpen = errors.New("no post open")
-	errLineEmpty  = errors.New("line empty")
+	errNoPostOpen          = errors.New("no post open")
+	errLineEmpty           = errors.New("line empty")
+	errInvalidSpliceCoords = errors.New("invalid splice coordinates")
+	errSpliceTooLong       = errors.New("splice text too long")
+	errNewlineInSplice     = errors.New("newline in splice text")
+	errSpliceNOOP          = errors.New("splice NOOP")
 )
+
+// Request or response to replace the current line's text starting at an exact
+// position in the current line
+type spliceMessage struct {
+	Start int    `json:"start"`
+	Len   int    `json:"len"`
+	Text  string `json:"text"`
+}
 
 // Shorthand. We use it a lot for update query construction.
 type msi map[string]interface{}
@@ -210,7 +224,8 @@ func backspace(_ []byte, c *Client) error {
 	if length == 0 {
 		return errLineEmpty
 	}
-	c.openPost.Truncate(length - 1)
+	_, lastRuneLen := utf8.DecodeLastRune(c.openPost.Bytes())
+	c.openPost.Truncate(length - lastRuneLen)
 	c.openPost.bodyLength--
 
 	id := c.openPost.id
@@ -245,5 +260,72 @@ func closePost(_ []byte, c *Client) error {
 	if err != nil {
 		return err
 	}
+	return c.updatePost(update, msg)
+}
+
+// Splice the current line's text in the open post. This call is also used for
+// text pastes.
+func spliceLine(data []byte, c *Client) error {
+	if !c.hasPost() {
+		return errNoPostOpen
+	}
+
+	old := c.openPost.String()
+
+	var req spliceMessage
+	err := decodeMessage(data, &req)
+	switch {
+	case err != nil:
+		return err
+	case req.Start < 0, req.Len < 0, req.Start+req.Len > len(old):
+		return errInvalidSpliceCoords
+	case req.Len == 0 && req.Text == "":
+		return errSpliceNOOP // This does nothing. Client-side error.
+	case len(req.Text) > parser.MaxLengthBody:
+		return errSpliceTooLong // Nice try, kid
+	case strings.ContainsRune(req.Text, '\n'):
+		// To reduce complexity force the client to split multiline splices
+		return errNewlineInSplice
+	}
+
+	new := old[:req.Start] + req.Text + old[req.Start+req.Len:]
+	c.openPost.bodyLength += -req.Len + len(req.Text)
+
+	// Goes over max post length. Trim the end.
+	if c.openPost.bodyLength > parser.MaxLengthBody {
+		exceeding := c.openPost.bodyLength - parser.MaxLengthBody
+		new = new[:len(new)-exceeding]
+		req.Len = -1 // Special meaning. Client should replace till line end.
+		req.Text = new
+		c.openPost.bodyLength = parser.MaxLengthBody
+	}
+
+	c.openPost.Reset()
+	c.openPost.WriteString(new)
+
+	msg, err := encodeMessage(messageSplice, req)
+	if err != nil {
+		return err
+	}
+
+	// Split body into lines, remove last line and replace with new text
+	update := msi{
+		"body": postBody(c.openPost.id).
+			Split("\n").
+			Do(func(b r.Term) r.Term {
+				return b.
+					Slice(0, -1).
+					Append(new).
+					Fold("", func(all, line r.Term) r.Term {
+						return all.Add(
+							all.Eq("").Branch(
+								line,
+								r.Expr("\n").Add(line),
+							),
+						)
+					})
+			}),
+	}
+
 	return c.updatePost(update, msg)
 }
