@@ -118,15 +118,11 @@ function renderGlass(theme: string, blob: Blob): string {
 				url(${blurred}) center fixed no-repeat;
 			background-size: cover;
 		}
-		.glass.editing, .editing .background {
+		.glass.editing {
 			background:
 				linear-gradient(${editing}, ${editing}),
 				url(${blurred}) center fixed no-repeat;
 			background-size: cover;
-		}
-		.background {
-			padding: 10px;
-			margin: 2px;
 		}`
 }
 

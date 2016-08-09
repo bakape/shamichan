@@ -16,7 +16,6 @@ export type PostLinks = {[id: number]: PostLink}
 // property.
 export interface PostData {
 	editing: boolean
-	op: number
 	image?: ImageData
 	time: number
 	id: number

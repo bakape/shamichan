@@ -39,22 +39,6 @@ textarea {
 	font-weight: bold;
 }
 
-.embed {
-	background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 4px;
-	-moz-border-radius: 4px;
-	-webkit-border-radius: 4px;
-	display: inline-block;
-	font-style: normal;
-	margin: -2px;
-	padding: 2px;
-	color: black;
-}
-
-em {
-	font-style: normal;
-}
-
 label {
 	padding: 0.2em;
 }
@@ -81,8 +65,7 @@ hr {
 	clear: both;
 }
 
-section {
-	display: block;
+#threads {
 	margin: 0 1em 1em 1em;
 }
 
@@ -97,13 +80,6 @@ section {
 	}
 	& + & {
 		margin-left: 0.1em;
-	}
-}
-
-// For the Install Webapp message
-@media all and (display-mode: standalone) {
-	.mobile{
-		display: none;
 	}
 }
 
@@ -150,9 +126,6 @@ table {
 }
 
 @media screen and (max-device-width: 700px) {
-	article {
-		clear: both;
-	}
 	body {
 		margin: 1px 0;
 		-webkit-text-size-adjust: none;
@@ -160,34 +133,7 @@ table {
 	blockquote {
 		margin: 0.5em 0 0.5em 0.5em;
 	}
-	section {
+	#threads {
 		margin: 0;
-	}
-	#return {
-		min-width: inherit;
-		margin-right: 0.5em;
-	}
-	#banner {
-		margin-left: 0;
-		margin-right: 0;
-	}
-	#board-navigation {
-		margin-left: 0;
-	}
-	#options {
-		margin-right: 0;
-	}
-}
-
-@media screen and (max-device-width: 700px) and (orientation: portrait) {
-	section > blockquote, section > header, section > .omit {
-		margin-left: 0.5em;
-		margin-right: 0.5em;
-	}
-	section > header {
-		clear: both;
-	}
-	.full figcaption i {
-		display: block;
 	}
 }

@@ -11,7 +11,6 @@ export function renderHeader(data: PostData): string {
 	let subjectHTML: string
 	return HTML
 		`<header>
-			<input type="checkbox" class="postCheckbox">
 			${subject ? `<h3>「${escape(subject)}」</h3>` : ''}
 			${renderName(data)}
 			${renderTime(data.time)}
@@ -23,8 +22,8 @@ export function renderHeader(data: PostData): string {
 					${id.toString()}
 				</a>
 			</nav>
-		</header>
-		<span class="control">▼</span>`
+			<span class="control">▼</span>
+		</header>`
 }
 
 // Render the name of a post's poster
@@ -94,17 +93,20 @@ export function renderTime(time: number): string {
 		title = readable
 		text = relativeTime(time, Date.now())
 	}
-	return HTML
-		`<time title="${title}">
-			${text || readable}
-		</time>`
+
+	let html = "<time"
+	if (title) {
+		html += ` title="${title}"`
+	}
+	html += `>${text || readable}</time>`
+	return html
 }
 
 // Renders classic absolute timestamp
 function readableTime(time: number): string {
 	let d = new Date(time)
 	return pad(d.getDate()) + ' '
-		+ timeLang.year[d.getMonth()] + ' '
+		+ timeLang.calendar[d.getMonth()] + ' '
 		+ d.getFullYear()
 		+ `(${timeLang.week[d.getDay()]})`
 		+`${pad(d.getHours())}:${pad(d.getMinutes())}`

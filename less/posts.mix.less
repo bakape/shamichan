@@ -4,12 +4,11 @@ a.referenced {
 }
 
 article, aside {
-	display: table;
 	padding: 4px 10px;
 }
 
 aside {
-	margin: 1em;
+	display: table;
 	section > & {
 		margin: 2px;
 	}
@@ -28,14 +27,14 @@ aside {
 	}
 }
 
-blockquote {
-	word-break: break-all;
+#thread-container, article {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
 }
 
-.control {
-	margin-left: 1em;
-	display: inline-block;
-	float: right;
+blockquote {
+	word-break: break-all;
 }
 
 .popup-menu, .act {
@@ -76,18 +75,34 @@ del {
 	}
 }
 
+.embed {
+	background-color: rgba(255, 255, 255, 0.5);
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	display: inline-block;
+	font-style: normal;
+	margin: -2px;
+	padding: 2px;
+	color: black;
+}
+
+em {
+	font-style: normal;
+}
+
 figcaption {
-	display: block;
 	margin: 2px 0;
-	text-decoration: none;
-	*:before {
-		content: ' ';
+	.imageSearch {
+		font-weight: bold;
+		display: none;
 	}
 }
 
-.imageSearch {
-	font-weight: bold;
-	display: none;
+figcaption, header {
+	& > *:before {
+		content: ' ';
+	}
 }
 
 figure {
@@ -107,6 +122,15 @@ figure {
 	section & img {
 		margin-bottom: 0.5em;
 	}
+	.hat {
+		background: url('/assets/hat.png') no-repeat;
+		position: absolute;
+		left: 10px;
+		top: -75px;
+		width: 70px;
+		height: 141px;
+		z-index: 10;
+	}
 }
 
 header {
@@ -114,45 +138,21 @@ header {
 	padding-left: 14px;
 	position: relative;
 	display: inline-block;
-	& > *:before {
-		content: ' ';
+	nav {
+		display: initial;
 	}
 	code {
 		font-family: inherit;
 		font-weight: normal;
 	}
-}
-
-.postCheckbox {
-	display: none;
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	background: url('ui/box2x.png');
-	width: 0.9em;
-	height: 0.9em;
-	background-size: 100% 100%;
-	margin: 0;
-	&:checked {
-		background: url('ui/sel2x.png'), url('ui/box2x.png');
-		background-size: 100% 100%;
+	.email {
+		text-decoration: underline !important;
 	}
-	&:focus {
-		outline: 0;
+	.control {
+		margin-left: 1em;
+		display: inline-block;
+		float: right;
 	}
-}
-
-.email {
-	text-decoration: underline !important;
-}
-
-.hat {
-	background: url('/assets/hat.png') no-repeat;
-	position: absolute;
-	left: 10px;
-	top: -75px;
-	width: 70px;
-	height: 141px;
-	z-index: 10;
 }
 
 .locked aside {

@@ -1,49 +1,33 @@
 import {HTML} from '../../util'
 import {renderHeader} from './header'
-import {renderImage} from './image'
+import {renderImage, renderFigcaption} from './image'
 import {renderBacklinks} from './etc'
 import {renderBody} from './body'
 import {PostData, ThreadData} from '../models'
 
-// Render the OP
-export function renderSection(data: ThreadData, cls: string = ''): string {
-	if (data.locked) {
-		cls += ' locked'
-	}
-
-	return HTML
-		`<section id="p${data.id.toString()}" class="${cls}">
-			<div class="background glass">
-				${renderPost(data)}
-				<span class="omit"></span>
-			</div>
-		</section>`
-}
-
-// Render a reply post
-export function renderArticle(data: PostData): string {
+// Render post HTML
+export default function (data: PostData|ThreadData): string {
 	let cls = 'glass'
 	if (data.editing) {
 		cls += ' editing'
 	}
 	return HTML
 		`<article id="p${data.id.toString()}" class="${cls}">
-			${renderPost(data)}
+			${renderHeader(data)}
+			${data.image ? renderFigcaption(data.image): ''}
+			<div class="post-container">
+				${data.image ? renderImage(data.image): ''}
+				<blockquote>
+					${renderBody(data)}
+				</blockquote>
+			</div>
+			<small>
+				${renderBacklinks(data.backlinks)}
+			</small>
+			${(data as any).subject ? renderOmit(data as ThreadData) : ""}
 		</article>`
 }
 
-function renderPost(data: PostData): string {
-	const {body, backlinks} = data
-
-	return HTML
-		`${renderHeader(data)}
-		${data.image ? renderImage(data.image): ''}
-		<div class="container">
-			<blockquote>
-				${renderBody(data)}
-			</blockquote>
-			<small>
-				${renderBacklinks(backlinks)}
-			</small>
-		</div>`
+export function renderOmit(data: ThreadData): string {
+	return ""
 }

@@ -6,29 +6,33 @@ import {images as lang} from '../../lang'
 
 // Render a thumbnail of an image, according to configuration settings
 export function renderImage(data: ImageData, reveal?: boolean): string {
-	const showThumb = options.hideThumbs || reveal
+	const showThumb = !options.hideThumbs || reveal
 	return HTML
 		`<figure>
-			${renderFigcaption(data, reveal)}
 			${config.hats && showThumb ? '<span class="hat"></span>': ''}
 			${showThumb ? renderThumbnail(data) : ''}
 		</figure>`
 }
 
 // Render the information caption above the image
-export function renderFigcaption(data: ImageData, reveal: boolean): string {
-	const list = commaList([
-		data.audio ? '\u266B' : '',
-		data.length.toString(),
-		readableFilesize(data.size),
-		`${data.dims[0]}x${data.dims[1]}`,
-		data.apng ? 'APNG' : ''
-	])
+export function renderFigcaption(data: ImageData, reveal?: boolean): string {
+	const list: string[] = []
+	if (data.audio) {
+		list.push('\u266B')
+	}
+	if (data.length) {
+		list.push(data.length.toString())
+	}
+	list.push(readableFilesize(data.size), `${data.dims[0]}x${data.dims[1]}`)
+	if (data.apng) {
+		list.push('APNG')
+	}
+
 	return HTML
 		`<figcaption>
 			${hiddenToggle(reveal)}
 			<span>
-				(${list})
+				(${commaList(list)})
 			</span>
 			${imageLink(data)}
 		</figcaption>`
@@ -48,7 +52,7 @@ function readableFilesize(size: number): string {
 
 // Render the button for toggling hidden thumbnails
 function hiddenToggle(reveal: boolean): string {
-	if (options.hideThumbs) {
+	if (!options.hideThumbs) {
 		return ''
 	}
 	return HTML
@@ -150,31 +154,24 @@ function sourcePath({SHA1, fileType}: ImageData): string {
 
 // Render a name + download link of an image
 function imageLink(data: ImageData): string {
-	let name = '',
-		{file, fileType, imgnm} = data
-	const m = imgnm.match(/^(.*)\.\w{3,4}$/)
-	if (m) {
-		name = m[1]
-	}
-	const fullName = escape(imgnm),
+	let {name} = data
+	const {fileType} = data,
+		ext = fileTypes[fileType],
+		fullName = `${escape(name)}.${ext}`,
 		tooLong = name.length >= 38
-
-	if (tooLong) {
-		imgnm = escape(name.slice(0, 30))
-			+ '(&hellip;)'
-			+ escape(fileTypes[fileType])
-	}
-
 	const attrs: StringMap = {
 		href: sourcePath(data),
-		rel: 'nofollow',
-		download: fullName
-	}
-	if (tooLong) {
-		attrs['title'] = fullName
+		download: fullName,
 	}
 
-	return `<a ${makeAttrs(attrs)}>${imgnm}</a>`
+	if (tooLong) {
+		name = `${escape(name.slice(0, 30))}(&hellip;).${ext}`
+		attrs['title'] = fullName
+	} else {
+		name = fullName
+	}
+
+	return `<a ${makeAttrs(attrs)}>${name}</a>`
 }
 
 // Render the actual thumbnail image
@@ -195,7 +192,6 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 	}
 
 	const linkAttrs: StringMap = {
-		rel: 'nofollow',
 		href: href || src
 	}
 	const imgAttrs: StringMap = {

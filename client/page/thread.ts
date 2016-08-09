@@ -3,6 +3,7 @@ import {navigation as lang} from '../lang'
 import {ThreadData} from '../posts/models'
 import {page} from '../state'
 import {write, $threads} from '../render'
+import renderPost from '../posts/render/posts'
 
 // Render the HTML of a thread page
 export default function renderThread(thread: ThreadData) {
@@ -26,7 +27,9 @@ export default function renderThread(thread: ThreadData) {
 			</a>
 		</span>
 		<hr>
-		${renderPosts(thread)}
+		<div id="thread-container">
+			${renderPosts(thread)}
+		</div>
 		<hr>
 		<span class="act">
 			<a href="." class="history">
@@ -47,5 +50,5 @@ export default function renderThread(thread: ThreadData) {
 }
 
 function renderPosts(thread: ThreadData): string {
-	return ""
+	return renderPost(thread)
 }
