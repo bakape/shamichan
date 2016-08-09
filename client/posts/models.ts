@@ -37,6 +37,7 @@ export interface ThreadData extends PostData {
 	sticky?: boolean
 	postCtr: number
 	imageCtr: number
+	logCtr: number
 	bumpTime: number
 	replyTime: number
 	subject: string

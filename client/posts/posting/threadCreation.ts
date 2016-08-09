@@ -1,5 +1,6 @@
-import {on, inputValue, applyMixins} from '../../util'
-import {fetchBoardList, fetchBoarConfigs} from '../../fetch'
+import {
+	on, inputValue, applyMixins, fetchBoardList, fetchBoarConfigs,
+} from '../../util'
 import {write, read, $threads} from '../../render'
 import {FormView, inputType, renderInput, InputSpec} from '../../forms'
 import {Captcha} from '../../captcha'

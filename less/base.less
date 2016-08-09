@@ -86,12 +86,17 @@ section {
 	margin: 0 1em 1em 1em;
 }
 
-.act:not(.expanded) {
-	&:before {
-		content: "[";
+.act {
+	&:not(.expanded) {
+		&:before {
+			content: "[";
+		}
+		&:after {
+			content: "]";
+		}
 	}
-	&:after {
-		content: "]";
+	& + & {
+		margin-left: 0.1em;
 	}
 }
 

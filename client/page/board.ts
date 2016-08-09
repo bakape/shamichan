@@ -4,6 +4,7 @@ import {boardConfig, page} from '../state'
 import {ThreadData} from '../posts/models'
 import {renderThumbnail} from '../posts/render/image'
 import options from '../options'
+import {write, $threads} from '../render'
 
 // Button for expanding the thread creation form
 const newThreadButton = HTML
@@ -18,7 +19,10 @@ export const formatHeader = (name: string, title: string): string =>
 	escape(`/${name}/ - ${title}`)
 
 // Render a board page's HTML
-export default function renderBoard(threads: ThreadData[]): string {
+export default function renderBoard(threads: ThreadData[]) {
+
+	// TODO: Apply board title as tab title
+
 	let html = ""
 	const {banners, title} = boardConfig
 	if (banners.length) {
@@ -34,7 +38,8 @@ export default function renderBoard(threads: ThreadData[]): string {
 		<hr>
 		${newThreadButton}`
 
-	return html
+	write(() =>
+		$threads.innerHTML = html)
 }
 
 // Render the thread catalog

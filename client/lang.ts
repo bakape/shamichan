@@ -1,7 +1,6 @@
 // Provides type-safe and selective mappings for the language packs
 
-import {makeEl, HTML} from './util'
-import {fetchJSON} from './fetch'
+import {makeEl, HTML, fetchJSON} from './util'
 import {write} from './render'
 import {defer} from './defer'
 import options from './options'

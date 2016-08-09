@@ -195,7 +195,6 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 	}
 
 	const linkAttrs: StringMap = {
-		target: '_blank',
 		rel: 'nofollow',
 		href: href || src
 	}
@@ -215,6 +214,8 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 		if (options.hideThumbs) {
 			imgAttrs['style'] = 'display: none'
 		}
+	} else {
+		linkAttrs["target"] = "_blank"
 	}
 
 	return `<a ${makeAttrs(linkAttrs)}><img ${makeAttrs(imgAttrs)}></a>`
