@@ -79,27 +79,3 @@ function mouikkai() {
 
 main.defer(batcTimeRender)
 	.defer(mouikkai)
-	.defer(function() {
-		// Append UTC clock to the top of the schedule
-		let seconds;
-		let el = document.getElementById('UTCClock').firstChild;
-		el.addEventListener('click', handler);
-
-		function handler() {
-			seconds = true;
-			this.removeAttribute('title');
-			this.style.cursor = 'default';
-			this.removeEventListener('click', handler);
-			render();
-		}
-
-		function render() {
-			if (!serverTimeOffset)
-				return setTimeout(render, 1000);
-			el.innerHTML = oneeSama
-				.readableUTCTime(new Date(common.serverTime()), seconds);
-			setTimeout(render, seconds ? 1000 : 60000);
-		}
-
-		render();
-	});

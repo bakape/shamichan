@@ -24,35 +24,6 @@ export function serverTime() :number {
 	return d + cachedOffset;
 }
 
-// Pick the next spoiler from one of the available spoilers
-export function pick_spoiler(metaIndex) {
-	const imgs = config.SPOILER_IMAGES,
-		n = imgs.length
-	let i
-	if (metaIndex < 0) {
-		i = Math.floor(Math.random() * n)
-	} else {
-		i = metaIndex % n
-	}
-	return {
-		index: imgs[i],
-		next: (i + 1) % n
-	}
-}
-
-// Various UI-related links wrapped in []
-export function action_link_html(href , name, id, cls) {
-	return parseHTML
-		`<span class="act">
-			<a href="${href}"
-				${id && ` id="${id}"`}
-				${cls && ` class="${cls}"`}
-			>
-				${name}
-			</a>
-		</span>`;
-}
-
 export function parse_name(name) {
 	var tripcode = '', secure = '';
 	var hash = name.indexOf('#');
@@ -71,11 +42,4 @@ export function parse_name(name) {
 		name.substr(0, 100), tripcode.substr(0, 128),
 		secure.substr(0, 128)
 	];
-}
-
-// Acertains client has the proper authorisation to perfrom task. This is only
-// for rendering. The same validation is performed server-side.
-export function checkAuth(action) {
-	const cls = config.staff.classes[main.ident && main.ident.auth]
-	return cls && !!cls.rights[action]
 }

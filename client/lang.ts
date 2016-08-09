@@ -71,7 +71,6 @@ type LnUI = {
 }
 
 type LnBanner = {
-	showSeconds: string
 	worksBestWith: string
 	options: string
 	identity: string
