@@ -1,9 +1,8 @@
 import {HTML, random, escape} from '../util'
 import {posts as lang, navigation} from '../lang'
-import {boardConfig, page} from '../state'
+import {BoardConfigs} from '../state'
 import {ThreadData} from '../posts/models'
 import {renderThumbnail} from '../posts/render/image'
-import {renderBody} from '../posts/render/body'
 import options from '../options'
 
 // Button for expanding the thread creation form
@@ -19,15 +18,19 @@ export const formatHeader = (name: string, title: string): string =>
 	escape(`/${name}/ - ${title}`)
 
 // Render a board page's HTML
-export function renderBoard(threads: ThreadData[]): string {
+export default function renderBoard(
+	board: string,
+	conf: BoardConfigs,
+	threads: ThreadData[]
+): string {
 	let html = ""
-	if (boardConfig.banners.length) {
-		const banner = random(boardConfig.banners)
+	if (conf.banners.length) {
+		const banner = random(conf.banners)
 		html += `<h1><img src="/assets/banners/${banner}"></h1>`
 	}
 	html += HTML
 		`<h1>
-			${formatHeader(page.board, boardConfig.title)}
+			${formatHeader(board, conf.title)}
 		</h1>
 		${newThreadButton}
 		<hr>

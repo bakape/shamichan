@@ -1,11 +1,11 @@
 // Name, email, tripcode and staff title persistence and postform propagation
 
-import {emitChanges, ChangeEmitter} from '../model'
-import {defer} from '../defer'
-import {BannerModal} from '../banner'
-import {identity as lang} from '../lang'
-import {table, randomID} from '../util'
-import {inputType, renderInput} from '../forms'
+import {emitChanges, ChangeEmitter} from '../../model'
+import {defer} from '../../defer'
+import {BannerModal} from '../../banner'
+import {identity as lang} from '../../lang'
+import {table, randomID} from '../../util'
+import {inputType, renderInput} from '../../forms'
 
 interface Identity extends ChangeEmitter {
 	name: string

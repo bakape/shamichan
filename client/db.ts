@@ -39,13 +39,6 @@ export function open(): Promise<void> {
 			posts.add({id: 'mine'}) // Posts this client has made
 			posts.add({id: 'hidden'}) // Posts this client has hidden
 
-			// Chache of thread models, so we don't have to store JSON and
-			// reparse it, when restoring to a previous state
-			db.createObjectStore('threads', {keyPath: 'id'})
-
-			// Same for boards
-			db.createObjectStore('boards', {keyPath: 'id'})
-
 			// Variuos miisceleneous objects
 			const main = db.createObjectStore('main', {keyPath: 'id'})
 			main.add({id: 'background'})

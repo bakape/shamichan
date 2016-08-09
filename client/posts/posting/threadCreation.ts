@@ -1,13 +1,12 @@
-import {
-	on, inputValue, applyMixins, fetchBoardList, fetchBoarConfigs,
-} from '../util'
-import {write, read, $threads} from '../render'
-import {FormView, inputType, renderInput, InputSpec} from '../forms'
-import {Captcha} from '../captcha'
+import {on, inputValue, applyMixins} from '../../util'
+import {fetchBoardList, fetchBoarConfigs} from '../../fetch'
+import {write, read, $threads} from '../../render'
+import {FormView, inputType, renderInput, InputSpec} from '../../forms'
+import {Captcha} from '../../captcha'
 import identity from './identity'
-import {page, boardConfig} from '../state'
-import {posts as lang, ui} from '../lang'
-import {send, message, handlers} from '../connection'
+import {page, boardConfig} from '../../state'
+import {posts as lang, ui} from '../../lang'
+import {send, message, handlers} from '../../connection'
 import UploadForm, {FileData} from './upload'
 
 export interface PostCredentials extends Captcha, FileData {

@@ -1,7 +1,8 @@
 import View from '../view'
 import Model from '../model'
-import {write} from '../render'
-import {HTML, fetchBoardList, BoardEntry, makeAttrs} from '../util'
+import {read, write} from '../render'
+import {HTML, makeAttrs} from '../util'
+import {fetchBoardList, BoardEntry} from '../fetch'
 import Modal from '../modal'
 import {ui} from '../lang'
 import {formatHeader} from './board'
@@ -14,7 +15,10 @@ let boards: BoardEntry[],
 // View for navigating between boards and selecting w
 export default class BoardNavigation extends View<Model> {
 	constructor() {
-		super({el: document.querySelector("#board-navigation")})
+		super({
+			id: "board-navigation",
+			tag: "nav",
+		})
 		navigation = this
 		const sel = localStorage.getItem("selectedBoards")
 		selected = sel ? JSON.parse(sel) : []
@@ -32,7 +36,10 @@ export default class BoardNavigation extends View<Model> {
 			if (i !== 0) {
 				html += " / "
 			}
-			html += `<a href="../${boards[i]}" class="history">${boards[i]}</a>`
+			html += HTML
+				`<a href="../${boards[i]}/" class="history">
+					${boards[i]}
+				</a>`
 		}
 		html += HTML
 			`] [
@@ -41,8 +48,13 @@ export default class BoardNavigation extends View<Model> {
 			</a>
 			]
 			</nav>`
-		write(() =>
-			this.el.innerHTML = html)
+
+		this.el.innerHTML = html
+		read(() => {
+			const $banner = document.querySelector("#banner")
+			write(() =>
+				$banner.prepend(this.el))
+		})
 	}
 
 	toggleBoardSelectionPanel(el: Element) {

@@ -1,6 +1,6 @@
-import {posts as lang} from '../lang'
-import {HTML, commaList, load, makeAttrs} from '../util'
-import {read, write} from '../render'
+import {posts as lang} from '../../lang'
+import {HTML, commaList, load, makeAttrs} from '../../util'
+import {read, write} from '../../render'
 
 // Uploaded file data to be embeded in thread and reply creation or appendage
 // requests

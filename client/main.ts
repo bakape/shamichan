@@ -6,14 +6,15 @@ const c = client  // Prevents the compiler from removing as an unused import
 
 import {displayLoading} from './state'
 import {start as connect} from './connection'
-import {loadFromDB, loadBoardConfig, page} from './state'
+import {loadFromDB, page, boardConfig} from './state'
 import {open} from './db'
-import {renderBoard} from './page/board'
+import renderBoard from './page/board'
 import BoardNavigation from './page/boardNavigation'
 import {exec, defer} from './defer'
-import bindThreadCreation from './posts/threadCreation'
-import {fetchBoard} from './util'
+import bindThreadCreation from './posts/posting/threadCreation'
+import bindHistory from './history'
 import {write, $threads} from './render'
+import {fetchBoarConfigs, fetchBoard} from './fetch'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -29,16 +30,20 @@ if (localStorage.getItem("cookieVersion") !== cookieVersion.toString()) {
 // Load all stateful modules in dependancy order
 async function start() {
 	// Load asynchronously and concurently as fast as possible
-	const boardConf = loadBoardConfig(),
-		boardData = fetchBoard(page.board)
+	const {board} = page,
+		boardConf = fetchBoarConfigs(board),
+		boardData = fetchBoard(board)
 	await open()
 	await loadFromDB()
-	await boardConf
-	bindThreadCreation()
+	const conf = await boardConf,
+		data = await boardData
 	new BoardNavigation()
-	const html = renderBoard((await boardData).threads)
+	boardConfig.replaceWith(conf)
+	const html = renderBoard(board, conf, data.threads)
 	write(() =>
 		$threads.innerHTML = html)
+	bindThreadCreation()
+	bindHistory()
 	connect()
 	exec()
 	displayLoading(false)

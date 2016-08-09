@@ -3,7 +3,7 @@
 import {emitChanges, ChangeEmitter} from './model'
 import {Post} from './posts/models'
 import PostCollection from './posts/collection'
-import {getID, fetchBoarConfigs} from './util'
+import {getID} from './util'
 import {db} from './db'
 import {write} from './render'
 import {send} from './connection'
@@ -39,9 +39,10 @@ export interface BoardConfigs extends ChangeEmitter {
 }
 
 interface PageState extends ChangeEmitter {
-	board: string
 	thread: number
 	lastN: number
+	board: string
+	href: string
 }
 
 // Configuration passed from the server. Some values can be changed during
@@ -71,12 +72,17 @@ export let syncCounter: number
 // Debug mode with more verbose logging
 export let debug: boolean = /[\?&]debug=true/.test(location.href)
 
+// Set the synchronisation counter
+export const setSyncCounter = (ctr: number) =>
+	syncCounter = ctr
+
 // Read page state by parsing a URL
-function read(href: string): PageState {
+export function read(href: string): PageState {
 	const board = href.match(/\/(\w+)\//)[1],
 		thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
 		lastN = href.match(/[\?&]last=(\d+)/)
 	return {
+		href,
 		board: decodeURIComponent(board),
 		thread: thread ? parseInt(thread[1]) : 0,
 		lastN: lastN ? parseInt(lastN[1]) : 0,
@@ -93,10 +99,6 @@ export async function loadFromDB() {
 	delete resMine.id
 	mine = new Set<number>([resMine])
 }
-
-// Fetch and load board-specfic configurations
-export const loadBoardConfig = async () =>
-	boardConfig.replaceWith(await fetchBoarConfigs(page.board))
 
 // Retrieve model of closest parent post
 export function getModel(el: Element): Post<PostView<any>> {

@@ -1,6 +1,7 @@
 // R/a/dio integration
 
-import {fetchJSON, HTML, makeAttrs} from './util'
+import {HTML, makeAttrs, isMatch} from './util'
+import {fetchJSON} from './fetch'
 import options from './options'
 import {write} from './render'
 import {banner as lang} from './lang'
@@ -30,12 +31,9 @@ async function fetchData() {
 		await fetchJSON('https://r-a-d.io/api')
 
 	const newData: RadioData = {np, listeners, dj}
-	for (let key in newData) {
-		if (newData[key] !== data[key]) {
-			data = newData
-			render()
-			break
-		}
+	if (!isMatch(newData, data)) {
+		data = newData
+		render()
 	}
 }
 

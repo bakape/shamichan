@@ -166,31 +166,33 @@ connSM.act(
 	connState.syncing,
 	() => {
 		renderStatus(syncStatus.connecting)
-
-		// Send a requests to the server to syschronise to the current page and
-		// subscribe to the apropriate event feeds.
-		const msg: SyncRequest = {
-			board: page.board,
-			thread: page.thread,
-			ctr: syncCounter || 0,
-		}
-		let type = message.synchronise
-
-
-		// TODO: Resynchronisation logic, with open post right retrieval
-		// // If clientID is set, then this attempt to synchronise comes after a
-		// // connection loss. Attempt to recover lost server-side state.
-		// if (clientID) {
-		// 	msg.id = clientID
-		// 	type = message.resynchronise
-		// }
-
-		send(type, msg)
+		synchronise()
 		authenticate()
-
 		attemptTimer = setTimeout(() => resetAttempts(), 10000)
 	}
 )
+
+// Send a requests to the server to syschronise to the current page and
+// subscribe to the apropriate event feeds.
+export function synchronise() {
+	const msg: SyncRequest = {
+		board: page.board,
+		thread: page.thread,
+		ctr: syncCounter || 0,
+	}
+	let type = message.synchronise
+
+
+	// TODO: Resynchronisation logic, with open post right retrieval
+	// // If clientID is set, then this attempt to synchronise comes after a
+	// // connection loss. Attempt to recover lost server-side state.
+	// if (clientID) {
+	// 	msg.id = clientID
+	// 	type = message.resynchronise
+	// }
+
+	send(type, msg)
+}
 
 // Reset the reconnection attempt counter and timers
 function resetAttempts() {

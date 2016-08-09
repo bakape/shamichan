@@ -1,42 +1,21 @@
-import {write, read} from './render'
-import {BoardConfigs} from './state'
-import {ThreadData} from './posts/models'
+// Various utility functions
 
 type AnyHash = {[key: string]: any}
 
-// Single entry of the array, fetched through `/json/boardList`
-export type BoardEntry = {
-	id: string
-	title: string
+// Options for the on() addEventListener() wrapper
+export interface OnOptions extends EventListenerOptions {
+	selector?: string
 }
 
-// Data of a single board retrieved from the server through `/json/:board`
-export type BoardData = {
-	ctr: number
-	threads: ThreadData[]
+// Any object with an event-based interface for passing to load()
+interface Loader {
+	onload: EventListener
+	onerror: EventListener
 }
 
 const base64 =
 	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
 	.split("")
-
-// Fetches and decodes a JSON response from the API
-export const fetchJSON = async (url: string): Promise<any> =>
-	await (await fetch(url)).json()
-
-// Returns a list of all boards created in alphabetical order
-export const fetchBoardList = async (): Promise<BoardEntry[]> =>
-	((await fetchJSON("/json/boardList") as BoardEntry[]))
-	.sort((a, b) =>
-		a.id.localeCompare(b.id))
-
-// Fetch configurations of a specific board
-export const fetchBoarConfigs = async (board: string): Promise<BoardConfigs> =>
-	await fetchJSON(`/json/boardConfig/${board}`)
-
-// Fetch board contents from the server
-export const fetchBoard = async (board: string): Promise<BoardData> =>
-	await fetchJSON(`/json/${board}`)
 
 // Generate a random base64 string of desird length
 export function randomID(len: number): string {
@@ -108,14 +87,10 @@ export function makeEl(DOMString: string): Node {
 	return el.firstChild
 }
 
-export interface OnOptions extends EventListenerOptions {
-	selector?: string
-}
-
 // Add an event listener that optionally filters targets according to a CSS
 // selector.
 export function on(
-	el: Element,
+	el: EventTarget,
 	type: string,
 	fn: EventListener,
 	opts?: OnOptions
@@ -239,11 +214,6 @@ export function each<T>(arrayLike: ArrayLike<T>, fn: (item: T) => void) {
 	}
 }
 
-interface Loader {
-	onload: EventListener
-	onerror: EventListener
-}
-
 // Wraps event style object with onload() method to Promise style
 export const load = (loader: Loader): Promise<Event> =>
 	new Promise<Event>((resolve, reject) => {
@@ -296,3 +266,13 @@ export const applyMixins = (dest: any, ...mixins: any[]) =>
 	mixins.forEach(mixin =>
 		Object.getOwnPropertyNames(mixin.prototype).forEach(name =>
 			dest.prototype[name] = mixin.prototype[name]))
+
+// Compares all keys on a with keys on b for equality
+export function isMatch(a: AnyHash, b: AnyHash): boolean {
+	for (let key in a) {
+		if (a[key] !== b[key]) {
+			return false
+		}
+	}
+	return true
+}
