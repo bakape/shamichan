@@ -79,8 +79,9 @@ export const setSyncCounter = (ctr: number) =>
 
 // Read page state by parsing a URL
 export function read(href: string): PageState {
+	href = href.split("#")[0]
 	const board = href.match(/\/(\w+)\//)[1],
-		thread = href.match(/\/(\d+)(:?#\d+)?(?:[\?&]\w+=\w+)*$/),
+		thread = href.match(/\/(\d+)(?:[\?&]\w+=\w+)*$/),
 		lastN = href.match(/[\?&]last=(\d+)/)
 	return {
 		href,
