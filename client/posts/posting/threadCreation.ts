@@ -19,7 +19,6 @@ export interface PostCredentials extends Captcha, FileData {
 interface ThreadCreationRequest extends PostCredentials {
 	subject: string
 	board: string
-	[index: string]: string
 }
 
 // Response codes for thread and post insertion requests

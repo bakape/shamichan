@@ -7,6 +7,8 @@ import {read, write} from '../../render'
 export interface FileData {
 	imageToken: string
 	imageName: string
+	spoiler: boolean
+	[index: string]: any
 }
 
 const acceptedFormats = commaList([
@@ -68,6 +70,7 @@ export default class UploadForm {
 		}
 		req.imageName = file.name
 		req.imageToken = xhr.response
+		req.spoiler = this.el.querySelector("input[name=spoiler]").checked
 		return true
 	}
 

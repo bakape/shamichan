@@ -1,4 +1,4 @@
-import {config, page} from '../../state'
+import {config, page, boardConfig} from '../../state'
 import options from '../../options'
 import {HTML, commaList, makeAttrs, escape} from '../../util'
 import {ImageData, fileTypes} from '../models'
@@ -148,7 +148,6 @@ function sourcePath({SHA1, fileType}: ImageData): string {
 	return `/images/src/${SHA1}.${fileTypes[fileType]}`
 }
 
-
 // Render a name + download link of an image
 function imageLink(data: ImageData): string {
 	let name = '',
@@ -175,10 +174,7 @@ function imageLink(data: ImageData): string {
 		attrs['title'] = fullName
 	}
 
-	return HTML
-		`<a ${makeAttrs(attrs)}>
-			${imgnm}
-		</a>`
+	return `<a ${makeAttrs(attrs)}>${imgnm}</a>`
 }
 
 // Render the actual thumbnail image
@@ -189,7 +185,7 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 
 	if (data.spoiler && options.spoilers) {
 		// Spoilered and spoilers enabled
-		thumb = '/assets/spoil/' + page.board
+		thumb = '/assets/spoil/' + boardConfig.spoiler
 		thumbWidth = thumbHeight = 125
 	} else if (data.fileType === fileTypes.gif && options.autogif) {
 		// Animated GIF thumbnails

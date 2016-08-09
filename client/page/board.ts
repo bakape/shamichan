@@ -1,6 +1,6 @@
 import {HTML, random, escape} from '../util'
 import {posts as lang, navigation} from '../lang'
-import {BoardConfigs} from '../state'
+import {boardConfig, page} from '../state'
 import {ThreadData} from '../posts/models'
 import {renderThumbnail} from '../posts/render/image'
 import options from '../options'
@@ -18,19 +18,15 @@ export const formatHeader = (name: string, title: string): string =>
 	escape(`/${name}/ - ${title}`)
 
 // Render a board page's HTML
-export default function renderBoard(
-	board: string,
-	conf: BoardConfigs,
-	threads: ThreadData[]
-): string {
+export default function renderBoard(threads: ThreadData[]): string {
 	let html = ""
-	if (conf.banners.length) {
-		const banner = random(conf.banners)
-		html += `<h1><img src="/assets/banners/${banner}"></h1>`
+	const {banners, title} = boardConfig
+	if (banners.length) {
+		html += `<h1><img src="/assets/banners/${random(banners)}"></h1>`
 	}
 	html += HTML
 		`<h1>
-			${formatHeader(board, conf.title)}
+			${formatHeader(page.board, title)}
 		</h1>
 		${newThreadButton}
 		<hr>

@@ -37,10 +37,10 @@ async function navigate(url: string, event: Event) {
 		fConf = fetchBoarConfigs(board),
 		fData = fetchBoard(board),
 		conf = await fConf,
-		data = await fData,
-		html = renderBoard(board, conf, data.threads)
+		data = await fData
 	page.replaceWith(nextState)
 	boardConfig.replaceWith(conf)
+	const html = renderBoard(data.threads)
 
 	setSyncCounter(0)
 	synchronise()

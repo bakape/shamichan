@@ -39,7 +39,7 @@ async function start() {
 		data = await boardData
 	new BoardNavigation()
 	boardConfig.replaceWith(conf)
-	const html = renderBoard(board, conf, data.threads)
+	const html = renderBoard(data.threads)
 	write(() =>
 		$threads.innerHTML = html)
 	bindThreadCreation()
