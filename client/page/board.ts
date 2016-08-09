@@ -56,11 +56,12 @@ function renderCatalog(threads: ThreadData[]): string {
 // Render a single thread for the thread catalog
 function renderThread(thread: ThreadData): string {
 	const href = `../${thread.board}/${thread.id}`,
-		lastN = options.lastN.toString()
+		lastN = options.lastN.toString(),
+		needImage = !!thread.image && !options.hideThumbs
 
 	return HTML
 	`<article class="glass">
-		${thread.image ? renderThumbnail(thread.image, href)  + "<br>" : ""}
+		${needImage ? renderThumbnail(thread.image, href)  + "<br>" : ""}
 		<small class="thread-links">
 			<span title="${navigation.catalogOmit}">
 				${thread.postCtr.toString()}/${thread.imageCtr.toString()}

@@ -211,9 +211,6 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 
 		// No image hover previews
 		imgAttrs['class'] = 'expanded'
-		if (options.hideThumbs) {
-			imgAttrs['style'] = 'display: none'
-		}
 	} else {
 		linkAttrs["target"] = "_blank"
 	}
