@@ -140,11 +140,12 @@ function relativeTime(then: number, now: number): string {
 
 // Renders "56 minutes ago" or "in 56 minutes" like relative time text
 function ago(time: number, units: string[], isFuture: boolean): string {
-	let text = units[time > 1 ? 1 : 0]
+	const unit = units[time > 1 ? 1 : 0]
+	let text: string
 	if (isFuture) {
-		text += `${timeLang.in} ${text}`
+		text = `${timeLang.in} ${time} ${unit}`
 	} else {
-		text += ` ${timeLang.ago}`
+		text = `${time} ${unit} ${timeLang.ago}`
 	}
 	return text
 }
