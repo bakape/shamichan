@@ -5,19 +5,6 @@
 import View from '../view'
 import {$threads} from '../state'
 
-/**
- * Thumbnail and image renderring logic
- */
-class Imager extends View {
-    /**
-     * Construct a new post image handler
-     * @param {Object} args
-     */
-    constructor(args) {
-        super(args)
-    }
-}
-
 exports.Hidamari = Backbone.View.extend({
 	/*
 	 Render entire <figure>. Rerenderring completely each time is considerable

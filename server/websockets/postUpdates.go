@@ -17,7 +17,6 @@ var (
 	errLineEmpty           = errors.New("line empty")
 	errInvalidSpliceCoords = errors.New("invalid splice coordinates")
 	errSpliceTooLong       = errors.New("splice text too long")
-	errNewlineInSplice     = errors.New("newline in splice text")
 	errSpliceNOOP          = errors.New("splice NOOP")
 )
 
@@ -265,42 +264,58 @@ func closePost(_ []byte, c *Client) error {
 
 // Splice the current line's text in the open post. This call is also used for
 // text pastes.
-func spliceLine(data []byte, c *Client) error {
+func spliceText(data []byte, c *Client) error {
 	if !c.hasPost() {
 		return errNoPostOpen
 	}
 
-	old := c.openPost.String()
-
 	var req spliceMessage
+	oldLength := len(c.openPost.String())
 	err := decodeMessage(data, &req)
 	switch {
 	case err != nil:
 		return err
-	case req.Start < 0, req.Len < 0, req.Start+req.Len > len(old):
+	case req.Start < 0, req.Len < 0, req.Start+req.Len > oldLength:
 		return errInvalidSpliceCoords
 	case req.Len == 0 && req.Text == "":
 		return errSpliceNOOP // This does nothing. Client-side error.
 	case len(req.Text) > parser.MaxLengthBody:
 		return errSpliceTooLong // Nice try, kid
-	case strings.ContainsRune(req.Text, '\n'):
-		// To reduce complexity force the client to split multiline splices
-		return errNewlineInSplice
 	}
 
-	new := old[:req.Start] + req.Text + old[req.Start+req.Len:]
+	return spliceLine(req, c)
+}
+
+// Splice the first line of the text. If there are more lines, parse the
+// previous one and recurse until all lines are parsed.
+func spliceLine(req spliceMessage, c *Client) error {
+	old := c.openPost.String()
+	start := old[:req.Start]
+	end := req.Text + old[req.Start+req.Len:]
 	c.openPost.bodyLength += -req.Len + len(req.Text)
 
-	// Goes over max post length. Trim the end.
-	if c.openPost.bodyLength > parser.MaxLengthBody {
-		exceeding := c.openPost.bodyLength - parser.MaxLengthBody
-		new = new[:len(new)-exceeding]
+	// Slice until newline, if any, and delay the next line's splicing until the
+	// next recursive spliceLine call
+	var delayed string
+	if firstNewline := strings.IndexRune(end, '\n'); firstNewline > -1 {
+		delayed = end[firstNewline+1:]
+		end = end[:firstNewline]
 		req.Len = -1 // Special meaning. Client should replace till line end.
-		req.Text = new
+		req.Text = end
+		c.openPost.bodyLength -= len(delayed) + 1
+	}
+
+	// Goes over max post length. Trim the end.
+	exceeding := c.openPost.bodyLength - parser.MaxLengthBody
+	if exceeding > 0 {
+		end = end[:len(end)-exceeding]
+		req.Len = -1
+		req.Text = end
 		c.openPost.bodyLength = parser.MaxLengthBody
 	}
 
 	c.openPost.Reset()
+	new := start + end
 	c.openPost.WriteString(new)
 
 	msg, err := encodeMessage(messageSplice, req)
@@ -326,6 +341,17 @@ func spliceLine(data []byte, c *Client) error {
 					})
 			}),
 	}
+	if err := c.updatePost(update, msg); err != nil {
+		return err
+	}
 
-	return c.updatePost(update, msg)
+	// Recurse on the text sliced after the newline, until all lines are
+	// processed. Unless the text body is already over max length
+	if delayed != "" && exceeding < 0 {
+		if err := parseLine(c, true); err != nil {
+			return err
+		}
+		return spliceLine(spliceMessage{Text: delayed}, c)
+	}
+	return nil
 }

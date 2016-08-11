@@ -42,8 +42,13 @@ annoying that I'm never taken serious on this site, goddamn.`
 
 var (
 	dummyLog = [][]byte{
-		{1, 2, 3},
-		{3, 4, 5},
+		{102, 111, 111},
+		{98, 97, 114},
+	}
+
+	strDummyLog = []string{
+		"foo",
+		"bar",
 	}
 
 	sampleThread = types.DatabaseThread{
@@ -128,7 +133,7 @@ func (*DB) TestNoOpenPost(c *C) {
 	defer sv.Close()
 
 	fns := [...]func([]byte, *Client) error{
-		appendRune, backspace, closePost, spliceLine,
+		appendRune, backspace, closePost, spliceText,
 	}
 	for _, fn := range fns {
 		cl, _ := sv.NewClient()
@@ -179,7 +184,7 @@ func (*DB) TestAppendRune(c *C) {
 	c.Assert(cl.openPost.String(), Equals, "abcd")
 	assertBody(2, "abcd", c)
 
-	assertRepLog(2, append(dummyLog, []byte(`03[1,100]`)), c)
+	assertRepLog(2, append(strDummyLog, `03[2,100]`), c)
 }
 
 func assertBody(id int64, body string, c *C) {
@@ -189,11 +194,16 @@ func assertBody(id int64, body string, c *C) {
 	c.Assert(res, Equals, body)
 }
 
-func assertRepLog(id int64, log [][]byte, c *C) {
+func assertRepLog(id int64, log []string, c *C) {
 	var res [][]byte
 	q := db.FindParentThread(id).Field("log")
 	c.Assert(db.All(q, &res), IsNil)
-	c.Assert(log, DeepEquals, log)
+
+	strRes := make([]string, len(res))
+	for i := range res {
+		strRes[i] = string(res[i])
+	}
+	c.Assert(strRes, DeepEquals, log)
 }
 
 func (*DB) TestAppendNewline(c *C) {
@@ -221,7 +231,7 @@ func (*DB) TestAppendNewline(c *C) {
 	c.Assert(cl.openPost.bodyLength, Equals, 4)
 	c.Assert(cl.openPost.String(), Equals, "")
 	assertBody(2, "abc\n", c)
-	assertRepLog(2, append(dummyLog, []byte("03[1,10]")), c)
+	assertRepLog(2, append(strDummyLog, "03[2,10]"), c)
 }
 
 func (*DB) TestAppendNewlineWithHashCommand(c *C) {
@@ -321,15 +331,18 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 
 	std := [...]struct {
 		id    int64
-		log   string
+		log   []string
 		field string
 		val   types.LinkMap
 	}{
 		{
-			2,
-			`07{"22":{"op":21,"board":"c"}}`,
-			"links",
-			types.LinkMap{
+			id: 2,
+			log: []string{
+				`03[2,10]`,
+				`07{"22":{"op":21,"board":"c"}}`,
+			},
+			field: "links",
+			val: types.LinkMap{
 				22: {
 					OP:    21,
 					Board: "c",
@@ -337,10 +350,12 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 			},
 		},
 		{
-			22,
-			`08{"2":{"op":1,"board":"a"}}`,
-			"backlinks",
-			types.LinkMap{
+			id: 22,
+			log: []string{
+				`08{"2":{"op":1,"board":"a"}}`,
+			},
+			field: "backlinks",
+			val: types.LinkMap{
 				2: {
 					OP:    1,
 					Board: "a",
@@ -349,7 +364,7 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 		},
 	}
 	for _, s := range std {
-		assertRepLog(s.id, [][]byte{[]byte(s.log)}, c)
+		assertRepLog(s.id, s.log, c)
 
 		var links types.LinkMap
 		q := db.FindPost(s.id).Field(s.field)
@@ -377,7 +392,7 @@ func (*DB) TestBackspace(c *C) {
 	c.Assert(cl.openPost.String(), Equals, "ab")
 	c.Assert(cl.openPost.bodyLength, Equals, 2)
 
-	assertRepLog(2, append(dummyLog, []byte("041")), c)
+	assertRepLog(2, append(strDummyLog, "042"), c)
 	assertBody(2, "ab", c)
 }
 
@@ -404,7 +419,7 @@ func (*DB) TestClosePost(c *C) {
 	c.Assert(closePost([]byte{}, cl), IsNil)
 
 	c.Assert(cl.openPost, DeepEquals, openPost{})
-	assertRepLog(2, append(dummyLog, []byte("062")), c)
+	assertRepLog(2, append(strDummyLog, "062"), c)
 	assertBody(2, "abc", c)
 
 	var editing bool
@@ -436,7 +451,6 @@ func (*DB) TestSpliceValidityChecks(c *C) {
 		{2, 1, "", "abc", errInvalidSpliceCoords},
 		{0, 0, "", "", errSpliceNOOP},
 		{0, 0, tooLong, "", errSpliceTooLong},
-		{0, 0, "abc\nddd", "", errNewlineInSplice},
 	}
 	for _, s := range samples {
 		req := spliceMessage{
@@ -444,7 +458,7 @@ func (*DB) TestSpliceValidityChecks(c *C) {
 			Len:   s.len,
 			Text:  s.text,
 		}
-		c.Assert(spliceLine(marshalJSON(req, c), cl), Equals, s.err)
+		c.Assert(spliceText(marshalJSON(req, c), cl), Equals, s.err)
 	}
 }
 
@@ -459,9 +473,15 @@ func (*DB) TestSplice(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 
+	conf := config.BoardConfigs{
+		ID: "a",
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+
 	samples := [...]struct {
-		start, len             int
-		text, init, final, log string
+		start, len        int
+		text, init, final string
+		log               []string
 	}{
 		{
 			start: 0,
@@ -469,7 +489,7 @@ func (*DB) TestSplice(c *C) {
 			text:  "abc",
 			init:  "",
 			final: "abc",
-			log:   `05{"start":0,"len":0,"text":"abc"}`,
+			log:   []string{`05{"start":0,"len":0,"text":"abc"}`},
 		},
 		{
 			start: 2,
@@ -477,7 +497,7 @@ func (*DB) TestSplice(c *C) {
 			text:  "abcdefg",
 			init:  "00\n012345",
 			final: "00\n01abcdefg5",
-			log:   `05{"start":2,"len":3,"text":"abcdefg"}`,
+			log:   []string{`05{"start":2,"len":3,"text":"abcdefg"}`},
 		},
 		{
 			start: 52,
@@ -485,7 +505,45 @@ func (*DB) TestSplice(c *C) {
 			text:  longSplice,
 			init:  longPost,
 			final: longPost[:1943] + longSplice[:57],
-			log:   `05{"start":2,"len":3,"text":"abcdefg"}`,
+			log: []string{
+				`05{"start":52,"len":-1,"text":"Never gonna give you up Never` +
+					` gonna let you down Never go"}`,
+			},
+		},
+		{
+			start: 60,
+			len:   0,
+			text:  longSplice + "\n",
+			init:  longPost,
+			final: longPost + longSplice[:49],
+			log: []string{
+				`05{"start":60,"len":-1,"text":"Never gonna give you up Never` +
+					` gonna let you down "}`,
+			},
+		},
+		{
+			start: 2,
+			len:   1,
+			text:  "abc\nefg",
+			init:  "00\n012345",
+			final: "00\n01abc\nefg345",
+			log: []string{
+				`05{"start":2,"len":-1,"text":"abc"}`,
+				"03[2,10]",
+				`05{"start":0,"len":0,"text":"efg345"}`,
+			},
+		},
+		{
+			start: 2,
+			len:   0,
+			text:  "\n",
+			init:  "012345",
+			final: "01\n2345",
+			log: []string{
+				`05{"start":2,"len":-1,"text":""}`,
+				"03[2,10]",
+				`05{"start":0,"len":0,"text":"2345"}`,
+			},
 		},
 	}
 
@@ -520,12 +578,12 @@ func (*DB) TestSplice(c *C) {
 			Text:  s.text,
 		}
 		data := marshalJSON(req, c)
-		c.Assert(spliceLine(data, cl), IsNil)
+		c.Assert(spliceText(data, cl), IsNil)
 
 		c.Assert(cl.openPost.String(), Equals, lastLine(s.final))
 		c.Assert(cl.openPost.bodyLength, Equals, len(s.final))
-		assertRepLog(2, [][]byte{[]byte(s.log)}, c)
 		assertBody(2, s.final, c)
+		assertRepLog(2, s.log, c)
 
 		// Clean up
 		c.Assert(db.Write(r.Table("threads").Delete()), IsNil)
