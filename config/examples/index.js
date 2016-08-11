@@ -50,7 +50,7 @@ module.exports = {
 	containment_boards: ['meta'],
 
 // Language settings. You can easily map more. See ./lang/
-	LANGS: ['en_GB', 'pt_BR', 'es_ES'],
+	LANGS: ['en_GB', 'es_ES', 'pt_BR', 'tr_TR'],
 	DEFAULT_LANG: 'en_GB',
 
 // Thread creation cooldown for the same IP in seconds
