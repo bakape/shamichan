@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v1.9.6 - 2016-08-11
+* Add:
+	- Turkish language pack
+
 ##v1.9.5 - 2016-07-12
 * Fix:
 	- Outdated desustorage URL
