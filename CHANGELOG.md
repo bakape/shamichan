@@ -45,6 +45,10 @@ Start tracking v2 progress in versions for easier debugging
 	- Rewriting client in TypeScript
 	- Switched DBMS to RethinkDB
 
+##v1.9.6 - 2016-08-11
+* Add:
+	- Turkish language pack
+
 ##v1.9.5 - 2016-07-12
 * Fix:
 	- Outdated desustorage URL
