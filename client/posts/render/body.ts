@@ -56,8 +56,9 @@ function parseOpenBody(data: PostData): string {
 // Parse a single terminated line
 function parseTerminatedLine(line: string, data: PostData): string {
 	let html = ""
+	const {state} = data
 	if (line[0] === ">") {
-		data.state.quote = true
+		state.quote = true
 		html += "<em>"
 	} else if (line[0] === "#") {
 
@@ -74,19 +75,30 @@ function parseTerminatedLine(line: string, data: PostData): string {
 		const i = line.indexOf("**")
 		html += parseFragment(line.substring(i), data)
 		if (i !== -1) {
-			html += `<${data.state.spoiler ? '/' : ''}del>`
-			data.state.spoiler = !data.state.spoiler
+			html += `<${state.spoiler ? '/' : ''}del>`
+			state.spoiler = !state.spoiler
 			line = line.substring(i + 1)
 		} else {
 			break
 		}
 	}
 
-	if (data.state.quote) {
-		data.state.quote = false
+	html += terminateTags(state)
+	return html + "<br>"
+}
+
+// Close all open tags at line end
+function terminateTags(state: TextState): string {
+	let html = ""
+	if (state.spoiler) {
+		state.spoiler = false
+		html += "</del>"
+	}
+	if (state.quote) {
+		state.quote = false
 		html += "</em>"
 	}
-	return html + "<br>"
+	return html
 }
 
 // Parse a line that is still being editted
@@ -111,10 +123,7 @@ function parseOpenLine(state: TextState): string {
 		}
 	}
 
-	// Close quote in progress
-	if (state.quote) {
-		html += '</em>'
-	}
+	html += terminateTags(state)
 
 	return html
 }

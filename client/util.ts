@@ -96,10 +96,10 @@ export const getID = (el: Element): number =>
 	el ? getNum(el.closest('article, section')) : 0
 
 // Parse HTML string to node array
-export function makeEls(DOMString: string): Node[] {
-	const el = document.createElement('div')
+export function makeFrag(DOMString: string): DocumentFragment {
+	const el = document.createElement("template") as HTMLTemplateElement
 	el.innerHTML = DOMString
-	return Array.from(el.childNodes)
+	return el.content
 }
 
 // Parse HTML string to a single Node

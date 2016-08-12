@@ -27,9 +27,7 @@ export default function renderThread(thread: ThreadData) {
 			</a>
 		</span>
 		<hr>
-		<div id="thread-container">
-			${renderPosts(thread)}
-		</div>
+		<div id="thread-container"></div>
 		<hr>
 		<span class="act">
 			<a href="." class="history">
@@ -44,9 +42,6 @@ export default function renderThread(thread: ThreadData) {
 		<span id="lock">
 			${lang.lockedToBottom}
 		</span>`
-
-	write(() =>
-		$threads.innerHTML = html)
 }
 
 function renderPosts(thread: ThreadData): string {

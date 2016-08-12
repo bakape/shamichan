@@ -103,4 +103,27 @@ export class Post<V extends PostView<any>> extends Model implements PostData {
 			this.view.remove()
 		}
 	}
+
+	// Append a character to the text body
+	append(code: number) {
+		const char = String.fromCharCode(code),
+			{state} = this
+
+		// Render quote or spoiler tags
+		if (state.line === "" && char === ">") {
+			state.quote = true
+			this.view.startQuote()
+		} else if (isQoute(state.line, char)) {
+			state.spoiler = !state.spoiler
+			this.view.insertSpoilerTag()
+		} else {
+			this.view.appendString(char)
+		}
+
+		state.line += char
+	}
 }
+
+// Detects if the "**" qoute command is used
+const isQoute = (line: string, char: string): boolean =>
+	char === "*" && line[line.length - 1] === "*"

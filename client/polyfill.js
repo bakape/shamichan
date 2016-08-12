@@ -1,7 +1,7 @@
 // A watered down version of https://github.com/WebReflection/dom4, so we don't
 // have to load the entire thing for up to date Chrome and Firefox.
 
-const elementExtends = {
+const nodeExtends = {
 	before(...nodes) {
 		if (this.parentNode) {
 			this.parentNode.insertBefore(mutationMacro(...nodes), this)
@@ -33,8 +33,8 @@ const elementExtends = {
 	}
 }
 
-for (let method in elementExtends) {
-	Element.prototype[method] = elementExtends[method]
+for (let method in nodeExtends) {
+	Node.prototype[method] = nodeExtends[method]
 }
 
 const ET = EventTarget.prototype

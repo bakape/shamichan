@@ -1,6 +1,6 @@
 // Utility functions and classes for rendering forms
 
-import {HTML, makeAttrs, makeEls, extend} from './util'
+import {HTML, makeAttrs, makeFrag, extend} from './util'
 import View, {ViewAttrs} from './view'
 import Model from './model'
 import {write, read} from './render'
@@ -234,7 +234,7 @@ export class FormView extends View<Model> {
 	addMapInput(event: Event) {
 		write(() =>
 			(event.target as Element)
-			.before(...makeEls(renderKeyValuePair("", ""))))
+			.before(makeFrag(renderKeyValuePair("", ""))))
 	}
 
 	// Remove a map key-vale input field pair

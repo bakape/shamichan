@@ -5,8 +5,6 @@
 const main = require('./main'),
 	{_, common, dispatcher, util, posts, state} = main;
 
-const online = document.query('#onlineCount');
-
 _.extend(dispatcher, {
 	[common.INSERT_POST](message) {
 		let [msg, bump] = message;
@@ -136,9 +134,6 @@ _.extend(dispatcher, {
 	[common.BACKLINK](msg) {
 		modelHandler(msg[0], model => model.addBacklink(msg[1], msg[2]));
 	},
-	[common.ONLINE_COUNT](msg) {
-		online.textContent = '['+msg[0]+']';
-	},
 	// Sync settings with server
 	[common.HOT_INJECTION](msg) {
 		const [force, hash, hotConfig] = msg;
@@ -154,9 +149,6 @@ _.extend(dispatcher, {
 	}
 });
 
-dispatcher[common.SYNCHRONIZE] = main.connSM.feeder('sync');
-dispatcher[common.INVALID] = main.connSM.feeder('invalid');
-
 // Check if new posts links to one of my posts
 function checkRepliedToMe(links, sourceNum) {
 	if (!links)
@@ -166,13 +158,6 @@ function checkRepliedToMe(links, sourceNum) {
 		if (num in mine)
 			main.request('repliedToMe', sourceNum);
 	}
-}
-
-// Find model and pass it to function, if it exists
-function modelHandler(num, func) {
-	const model = state.posts.get(num);
-	if (model)
-		func(model);
 }
 
 // Make the text spoilers toggle revealing on click

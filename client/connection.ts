@@ -1,6 +1,4 @@
-/*
- Handles Websocket connectivity
-*/
+// Handles Websocket connectivity and messaging
 
 import FSM from './fsm'
 import {debug, syncCounter, page} from './state'
