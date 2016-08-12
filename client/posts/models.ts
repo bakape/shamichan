@@ -24,9 +24,17 @@ export interface PostData {
 	trip?: string
 	auth?: string
 	email?: string
-	state: number[] // Used for live rendering and updates of the post body
+	state: TextState
 	backlinks?: PostLinks
 	links?: PostLinks
+}
+
+// State of a post's text. Used for adding enclosing tags to the HTML while
+// parsing
+export type TextState = {
+	spoiler: boolean
+	quote: boolean
+	line?: string
 }
 
 // Data of an OP post
@@ -64,7 +72,7 @@ export enum fileTypes {jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg}
 // Generic post model
 export class Post<V extends PostView<any>> extends Model implements PostData {
 	collection: Collection<Post<V>>
-	views: V[] = []
+	view: V
 
 	// PostData properties
 	editing: boolean
@@ -76,7 +84,7 @@ export class Post<V extends PostView<any>> extends Model implements PostData {
 	trip: string
 	auth: string
 	email: string
-	state: number[]
+	state: TextState
 	backlinks: PostLinks
 	links: PostLinks
 
@@ -91,20 +99,8 @@ export class Post<V extends PostView<any>> extends Model implements PostData {
 		if (this.collection) {
 			this.collection.remove(this)
 		}
-		for (let view of this.views) {
-			view.remove()
+		if (this.view) {
+			this.view.remove()
 		}
-	}
-
-	// Attach a view to the model. Each model can have several views attached to
-	// it.
-	attach(view: V) {
-		this.views.push(view)
-	}
-
-	// Detach a view from the model
-	detach(view: V) {
-		const {views} = this
-		this.views = views.splice(views.indexOf(view), 1)
 	}
 }

@@ -146,16 +146,13 @@ export function outerWidth(el: Element): number {
 export const pad = (n: number): string =>
 	(n < 10 ? '0' : '') + n
 
-// Template string tag function for HTML. Strips indentation and trailing
-// newlines. Based on https://gist.github.com/zenparsing/5dffde82d9acef19e43c
+// Template string tag function for HTML. Strips indentation and newlines.
 export function HTML(callSite: string[], ...args: string[]): string {
 	let output = callSite[0]
 	for (let i = 1; i <= args.length; i++) {
 		output += args[i - 1] + callSite[i]
 	}
-
-	// Strip indentation and remove empty lines from HTML string
-	return output.replace(/\s*\n\s*/g, '')
+	return output.replace('\n', '').replace('\t', '')
 }
 
 // Generate an HTML element attribute list. If a key has an empty string, it's

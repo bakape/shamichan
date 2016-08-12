@@ -1,6 +1,6 @@
 import {config} from '../../state'
 import {renderPostLink} from './etc'
-import {PostData, PostLinks} from '../models'
+import {PostData, PostLinks, TextState} from '../models'
 import {escape} from '../../util'
 
 // Map of {name: url} for generating `>>>/foo/bar` type reference links
@@ -8,89 +8,142 @@ let refTargets: StringMap
 
 // Render the text body of a post
 export function renderBody(data: PostData): string {
-	if (!data.state) {
-		// Initial post state [new_line, no_qoute, no_spoiler]
-		data.state = [0, 0, 0]
+	if (data.editing) {
+		return parseOpenBody(data)
 	}
-	let html = renderFragment(data.body, data)
-	if (data.state[1]) { // Close quote on post end
-		html += '</em>'
+	return parseClosedBody(data)
+}
+
+// Parse a text body of a closed post
+function parseClosedBody(data: PostData): string {
+	data.state = {
+		spoiler: false,
+		quote: false,
 	}
-	if (data.state[2]) { // Same with spoilers
+	let html = ""
+	for (let line of data.body.split("\n")) {
+		html += parseTerminatedLine(line, data)
+	}
+	if (data.state.spoiler) { // Close spoiler tag on post end
 		html += '</del>'
 	}
+	data.state = null // Clean up a bit
+
 	return html
 }
 
-// Parse commited text body fragment
-export function renderFragment(frag: string, data: PostData): string {
-	const lines = frag.split('\n'),
-		{state} = data
-	let html = ''
-	for (let i = 0; i < lines.length; i++) {
-		// Start a new line
-		if (state[0] && i % 2) {
-			// Close quoute
-			if (state[1] % 2) {
-				html += '</em>'
-				state[1]++
-			}
-			html += '<br>'
-			state[0] = 0
-		}
-
-		// Quote or line starts with link/embed
-		const line = lines[i]
-		if (!state[0] && line.startsWith('>')) {
-			html += '<em>'
-			state[1]++
-		}
-
-		// Bodies may be empty
-		if (frag) {
-			for (let word of line.split(' ')) {
-				html += parseWord(word, data)
-				state[0] = 1
-			}
-		}
+// Parse a text body, that is still being editted
+function parseOpenBody(data: PostData): string {
+	const state: TextState = data.state = {
+		spoiler: false,
+		quote: false,
 	}
+	let html = ""
+	const lines = data.body.split("\n")
+	for (let i = 0; i < lines.length - 1; i++) {
+		html += parseTerminatedLine(lines[i], data)
+	}
+
+	state.line = lines[lines.length - 1]
+	html += parseOpenLine(state)
+	if (state.spoiler) {
+		html += '</del>'
+	}
+
 	return html
 }
 
-// Convert a word to it's appropriate HTML representation
-function parseWord(word: string, data: PostData): string {
-	// `[spoiler]` and `[/spoiler]` are treated the same way. You can't nest
-	// them.
-	const split = word.split(/\[\/?spoiler]|\*\*/)
-	let html = ''
-	for (let i = 0; i < split.length; i++) {
-		// Insert spoiler tags
-		if (i % 2) {
-			html += `<${data.state[2]++ % 2 ? '/' : ''}del>`
-
-			// TODO: Do we need special logic for postForms here?
-		}
-
-		const bit = split[i]
-		if (/^>>\d+$/.test(bit)) {
-			// Post links
-			html += parsePostLink(bit, data.links)
-		} else if (/^>>>\/\w+\//.test(bit)) {
-			// Internal and custom reference URLs
-			html += parseReference(bit)
-		} else if (bit.startsWith("http")) {
-			// Generic URLs
-			html += parseURL(bit)
-		}
+// Parse a single terminated line
+function parseTerminatedLine(line: string, data: PostData): string {
+	let html = ""
+	if (line[0] === ">") {
+		data.state.quote = true
+		html += "<em>"
+	} else if (line[0] === "#") {
 
 		// TODO: Hash command rendering
-		// else if (/<strong>.+<\/strong>/.test(bit)) {
-		// 	html += bit
 
-		else {
-			html += escape(bit)
+		const m = line.match(/^#(flip|\d*d\d+|8ball)$/)
+		if (m) {
+			return line
 		}
 	}
+
+	// Check for spoilers
+	while (true) {
+		const i = line.indexOf("**")
+		html += parseFragment(line.substring(i), data)
+		if (i !== -1) {
+			html += `<${data.state.spoiler ? '/' : ''}del>`
+			data.state.spoiler = !data.state.spoiler
+			line = line.substring(i + 1)
+		} else {
+			break
+		}
+	}
+
+	if (data.state.quote) {
+		data.state.quote = false
+		html += "</em>"
+	}
+	return html + "<br>"
+}
+
+// Parse a line that is still being editted
+function parseOpenLine(state: TextState): string {
+	let html = ""
+	if (state.line[0] === ">") {
+		state.quote = true
+		html += "<em>"
+	}
+
+	// Check for spoilers
+	let {line} = state
+	while (true) {
+		const i = line.indexOf("**")
+		html += line.substring(i)
+		if (i !== -1) {
+			html += `<${state.spoiler ? '/' : ''}del>`
+			state.spoiler = !state.spoiler
+			line = line.substring(i + 1)
+		} else {
+			break
+		}
+	}
+
+	// Close quote in progress
+	if (state.quote) {
+		html += '</em>'
+	}
+
+	return html
+}
+
+// Parse a line fragment
+function parseFragment(frag: string, data: PostData): string {
+	let html = ""
+	for (let word of frag.split(" ")) {
+		if (!frag) {
+			continue
+		}
+		if (word[0] === ">") {
+			if (/^>>\d+$/.test(word)) {
+				// Post links
+				html += parsePostLink(word, data.links)
+				continue
+			} else if (/^>>>\/\w+\//.test(word)) {
+				// Internal and custom reference URLs
+				html += parseReference(word)
+				continue
+			}
+		} else if (word.startsWith("http")) {
+			// Generic URLs
+			html += parseURL(word)
+			continue
+		}
+		html += escape(word)
+	}
+
 	return html
 }
 
@@ -136,7 +189,7 @@ function parseReference(bit: string): string {
 
 // Render and anchor link that opens in a new tab
 function newTabLink(href: string, text: string): string {
-	return `<a href="${href}" target="_blank">${text}</a>`
+	return `<a href="${encodeURI(href)}" target="_blank">${escape(text)}</a>`
 }
 
 // Render generic URLs and embed, if aplicable
@@ -144,8 +197,8 @@ function parseURL(bit: string): string {
 
 	// TODO: Embeds
 
-	if (/^https?:\/\/[^-A-Za-z0-9+&@#/%?=~_]$/.test(bit)) {
-		return newTabLink(encodeURI(bit), bit)
+	if (/^https?:\/\/[^-A-Za-z0-9+&@#/%?=~_:\.]$/.test(bit)) {
+		return newTabLink(bit, bit)
 	}
 
 	return escape(bit)
