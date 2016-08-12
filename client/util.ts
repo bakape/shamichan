@@ -152,7 +152,7 @@ export function HTML(callSite: string[], ...args: string[]): string {
 	for (let i = 1; i <= args.length; i++) {
 		output += args[i - 1] + callSite[i]
 	}
-	return output.replace('\n', '').replace('\t', '')
+	return output.replace(/[\t\n]+/g, '')
 }
 
 // Generate an HTML element attribute list. If a key has an empty string, it's
@@ -248,11 +248,11 @@ export function loadModule(path: string): Promise<any> {
 
 const escapeMap: {[key: string]: string} = {
 	'&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '`': '&#x60;',
+	'<': '&lt;',
+	'>': '&gt;',
+	'"': '&quot;',
+	"'": '&#x27;',
+	'`': '&#x60;',
 }
 
 // Escape a user-submitted unsafe string to protect against XSS.
