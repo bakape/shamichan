@@ -49,6 +49,7 @@ export interface ThreadData extends PostData {
 	replyTime: number
 	subject: string
 	board: string
+	posts: {[id: number]: PostData}
 }
 
 // Image data embedable in posts and thread hashes
@@ -70,9 +71,9 @@ export type ImageData = {
 export enum fileTypes {jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg}
 
 // Generic post model
-export class Post<V extends PostView<any>> extends Model implements PostData {
-	collection: Collection<Post<V>>
-	view: V
+export class Post extends Model implements PostData {
+	collection: Collection
+	view: PostView
 
 	// PostData properties
 	editing: boolean

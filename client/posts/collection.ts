@@ -1,11 +1,11 @@
 import {Post} from './models'
 
 // Holds a collection of models
-export default class PostCollection<M extends Post<any>> {
-	models: {[key: string]: M} = {}
+export default class PostCollection{
+	models: {[key: string]: Post} = {}
 
 	// Creates a new Collection instance, with optional starting set of models
-	constructor(models?: M[]) {
+	constructor(models?: Post[]) {
 		if (models) {
 			for (let model of models) {
 				this.add(model)
@@ -14,18 +14,18 @@ export default class PostCollection<M extends Post<any>> {
 	}
 
 	// Retrieve a model by its ID
-	get(id: number): M {
+	get(id: number): Post {
 		return this.models[id]
 	}
 
 	// Add model to collection
-	add(model: M) {
+	add(model: Post) {
 		this.models[model.id] = model
 		model.collection = this
 	}
 
 	// Remove model from the collection
-	remove(model: M) {
+	remove(model: Post) {
 		delete this.models[model.id]
 		delete model.collection
 	}
@@ -39,7 +39,7 @@ export default class PostCollection<M extends Post<any>> {
 	}
 
 	// Runs the suplied function for each model in the collection
-	forEach(fn: (model: M) => void) {
+	forEach(fn: (model: Post) => void) {
 		for (let id in this.models) {
 			fn(this.models[id])
 		}

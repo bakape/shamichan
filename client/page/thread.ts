@@ -1,9 +1,13 @@
-import {HTML, escape} from '../util'
+import {HTML, escape, makeFrag} from '../util'
 import {navigation as lang} from '../lang'
-import {ThreadData} from '../posts/models'
-import {page} from '../state'
+import {ThreadData, PostData, Post} from '../posts/models'
+import PostView from '../posts/view'
+import {page, posts} from '../state'
 import {write, $threads} from '../render'
 import renderPost from '../posts/render/posts'
+
+// Container for all rendered posts
+export let $threadContainer: Element
 
 // Render the HTML of a thread page
 export default function renderThread(thread: ThreadData) {
@@ -42,8 +46,24 @@ export default function renderThread(thread: ThreadData) {
 		<span id="lock">
 			${lang.lockedToBottom}
 		</span>`
+
+	const frag = makeFrag(html)
+	$threadContainer = frag.querySelector("#thread-container")
+	const els: Element[] = []
+	els.push(createPost(thread))
+	for (let id in thread.posts) {
+		els.push(createPost(thread.posts[id]))
+	}
+	$threadContainer.append(...els)
+	write(() => {
+		$threads.innerHTML = ""
+		$threads.append(frag)
+	})
 }
 
-function renderPosts(thread: ThreadData): string {
-	return renderPost(thread)
+function createPost(data: PostData): Element {
+	const model = new Post(data),
+		view = new PostView(model)
+	posts.add(model)
+	return view.el
 }

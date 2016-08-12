@@ -59,7 +59,7 @@ export let boardConfig: BoardConfigs = emitChanges({} as BoardConfigs)
 export const page = emitChanges<PageState>(read(location.href))
 
 // All posts currently displayed
-export const posts = new PostCollection<Post<PostView<any>>>()
+export const posts = new PostCollection()
 
 // Posts I made in any tab
 export let mine: Set<number>
@@ -103,7 +103,7 @@ export async function loadFromDB() {
 }
 
 // Retrieve model of closest parent post
-export function getModel(el: Element): Post<PostView<any>> {
+export function getModel(el: Element): Post {
 	const id = getID(el)
 	if (!id) {
 		return null

@@ -6,11 +6,11 @@ import renderPost from './render/posts'
 import {write} from '../render'
 
 // Base post view class
-export default class PostView<M extends Post<any>> extends View<M> {
+export default class PostView extends View<Post> {
 	$buffer: Node // Contains the current line being edited, if any
 	$blockQoute: Element
 
-	constructor(model: M) {
+	constructor(model: Post) {
 		let cls = 'glass'
 		if (model.editing) {
 			cls += ' editing'
@@ -25,6 +25,7 @@ export default class PostView<M extends Post<any>> extends View<M> {
 			class: cls,
 		})
 		this.model.view = this
+		this.render()
 	}
 
 	// Render the element contents, but don't insert it into the DOM
