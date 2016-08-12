@@ -111,6 +111,16 @@ func parseLine(c *Client, insertNewline bool) error {
 	defer c.openPost.Reset()
 	idStr := util.IDToString(c.openPost.id)
 
+	switch {
+	case comm.Val != nil:
+		err = writeCommand(comm, idStr, c)
+	case links != nil:
+		err = writeLinks(links, c)
+	}
+	if err != nil {
+		return err
+	}
+
 	if insertNewline {
 		msg, err := encodeMessage(messageAppend, [2]int64{
 			c.openPost.id,
@@ -131,14 +141,7 @@ func parseLine(c *Client, insertNewline bool) error {
 		}
 	}
 
-	switch {
-	case comm.Val != nil:
-		return writeCommand(comm, idStr, c)
-	case links != nil:
-		return writeLinks(links, c)
-	default:
-		return nil
-	}
+	return nil
 }
 
 // Write a hash command to the database

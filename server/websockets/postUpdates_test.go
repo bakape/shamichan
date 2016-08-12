@@ -278,6 +278,10 @@ func (*DB) TestAppendNewlineWithHashCommand(c *C) {
 	var log []byte
 	q = db.FindParentThread(2).Field("log").Nth(-1)
 	c.Assert(db.One(q, &log), IsNil)
+	c.Assert(string(log), Equals, "03[2,10]")
+
+	q = db.FindParentThread(2).Field("log").Nth(-2)
+	c.Assert(db.One(q, &log), IsNil)
 	c.Assert(string(log), Matches, `09\{"type":1,"val":(?:true|false)\}`)
 }
 
@@ -338,8 +342,8 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 		{
 			id: 2,
 			log: []string{
-				`03[2,10]`,
 				`07{"22":{"op":21,"board":"c"}}`,
+				`03[2,10]`,
 			},
 			field: "links",
 			val: types.LinkMap{
