@@ -11,7 +11,6 @@
 		"thread_locked": "This thread is locked.",
 		"quoted": "You have been quoted",
 		"board": "Board",
-		"body": "Comment",
 		"spoiler": "Spoiler"
 	},
 
@@ -128,7 +127,7 @@
 	},
 
 	"opts": {
-		"tabs": ["General", "Style", "ImageSearch", "Fun", "Shortcuts"],
+		"tabs": ["General", "Style", "Image Search", "Fun", "Shortcuts"],
 		"modes": {
 			"none": "none",
 			"width": "fit to width",
@@ -230,7 +229,7 @@
 			],
 			"lastN": [
 				"Last # post number",
-				"Number of posts to display with the \"Last N\" thread expansion link"
+				"Number of posts to display with the 'Last N' thread expansion link"
 			],
 			"postUnloading": [
 				"Dynamic Post Unloading",
@@ -270,8 +269,8 @@
 			],
 			"google": ["Google", "Google image search"],
 			"iqdb": ["IQDB", "iqdb.org image search"],
-			"saucenao": ["SauceNao", "saucenao.com imagesearch"],
-			"desustorage": ["DesuStorage", "desustorage.org imagesearch"],
+			"saucenao": ["SauceNao", "saucenao.com image search"],
+			"desustorage": ["DesuStorage", "desustorage.org image search"],
 			"exhentai": ["Exhentai", "exhentai.org image search"]
 		}
 	}

@@ -1,0 +1,103 @@
+{
+	"boardNameTaken": "Board name already taken",
+	"prune": [
+		"Prune threads",
+		"Delete threads and their images, when they exceed the board's thread limit"
+	],
+	"radio": [
+		"R/a/dio integration",
+		"Enable 'Now playing' song display in the top banner and the #queue hash command"
+	],
+	"pyu": [
+		"#pyu",
+		"Don't ask"
+	],
+	"illyaDance": [
+		"Illya dance background",
+		"Local http://loli.dance/ implementation. Videos not included by default. Place illya.webm and illya.mp4 into the www directory, if you want this."
+	],
+	"hats": [
+		"Hats on images",
+		"Attach hats to all image thumbnails"
+	],
+	"maxWidth": [
+		"Image width limit",
+		"Maximum width of uploaded images"
+	],
+	"maxHeight": [
+		"Image height limit",
+		"Maximum height of uploaded images"
+	],
+	"maxSize": [
+		"Image size limit",
+		"Maximum size of uploaded images in MB"
+	],
+	"JPEGQuality": [
+		"JPEG thumbnail quality",
+		"Quality of image JPEG thumbnails"
+	],
+	"PNGQuality": [
+		"PNG thumbnail compression",
+		"Lossy compression level of PNG thumbnails. Higher is lossier."
+	],
+	"maxThreads": [
+		"Threads per board limit",
+		"Maximum number of threads a board will retain, before the last ones are deleted, if thread pruning is enabled"
+	],
+	"maxBump": [
+		"Thread bump limit",
+		"Maximum number of replies a thread may have, before it no longer is bumped to the top of the board"
+	],
+	"threadCooldown": [
+		"Thread creation cooldown",
+		"Cooldown in seconds for new thread creation by the same IP"
+	],
+	"sessionExpiry": [
+		"Account session expiry",
+		"Time in days until user accoubts are automatically logged out"
+	],
+	"salt": [
+		"Secure salt",
+		"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
+	],
+	"feedbackEmail": [
+		"Feedback email",
+		"User feedback email to display in the top banner"
+	],
+	"FAQ": [
+		"Information panel text",
+		"Entries for the banner's Frequently Asked Questions list and information modal"
+	],
+	"defaultLang": [
+		"Default language",
+		"Language pack to load by default"
+	],
+	"defaultCSS": [
+		"Default theme",
+		"Theme to load by default, when none is set by the client"
+	],
+	"links": [
+		"Extrenal links",
+		"Add, remove or edit external >>>/4chan/-type references"
+	],
+	"boardName": [
+		"Board name",
+		"Name of the new board. Can contain up to 3 lowercase Latin letters or numbers."
+	],
+	"boardTitle": [
+		"Board title",
+		"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
+	],
+	"captcha": [
+		"Captcha",
+		"Ask users to complete a captcha for certain tasks like registration and thread creation"
+	],
+	"captchaPublicKey": [
+		"Captcha public key",
+		"Key used for communicating with external captcha service"
+	],
+	"captchaPrivateKey": [
+		"Captcha private key",
+		"Key used for authenticating solved captchas server-side"
+	]
+}

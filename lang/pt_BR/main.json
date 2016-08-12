@@ -1,0 +1,277 @@
+{
+	"posts": {
+		"anon": "Anônimo",
+		"newThread": "Novo tópico",
+		"reply": "Postar",
+		"you": "(Tu)",
+		"OP": "(OP)",
+		"locked": "trancado",
+		"subject": "Assunto",
+		"uploadProgress": "uploaded...",
+		"thread_locked": "Este tópico está trancado.",
+		"quoted": "Você foi quotado",
+		"board": "Board",
+		"spoiler": "Spoiler"
+	},
+
+	"ui": {
+		"cancel": "Cancelar",
+		"done": "Feito",
+		"send": "Enviar",
+		"add": "Add",
+		"apply": "Apply",
+		"search": "Pesquisa",
+		"invalidCaptcha": "Invalid captcha",
+		"focusForCaptcha": "Focus to load captcha",
+		"reloadCaptcha": "Click to reload",
+		"submit": "Submit"
+	},
+
+	"banner": {
+		"worksBestWith": "funciona melhor com",
+		"options": "Options",
+		"identity": "Identity",
+		"account": "Account and board management",
+		"FAQ": "Information",
+		"feedback": "Feedback",
+		"googleSong": "Clique para pesquisar (google) a música",
+		"sync": "Connection status"
+	},
+
+	"images": {
+		"show": "Exibir",
+		"hide": "Esconder",
+		"expand": "Expand Images",
+		"contract": "Contract Images"
+	},
+
+	"navigation": {
+		"seeAll": "Ver todos",
+		"report": "Reportar",
+		"focus": "Focar",
+		"last": "Últimos",
+		"bottom": "Rodapé",
+		"expand": "Expandir",
+		"catalog": "Catalog",
+		"return": "Retornar",
+		"top": "Topo",
+		"lockedToBottom": "Travado ao rodapé",
+		"catalogOmit": "Respostas/Imagens",
+		"rescan": "Rescan"
+	},
+
+	"reports": {
+		"post": "Reportando post",
+		"reporting": "Reportando...",
+		"submitted": "Denúncia enviada!",
+		"setup": "Obtendo reCAPTCHA...",
+		"loadError": "Não foi possível carregar o reCATPCHA"
+	},
+
+	"time": {
+		"week": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"],
+		"calendar": [
+			"Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set",
+			"Out", "Nov", "Dez"
+		],
+		"justNow": "agora mesmo",
+		"minute": ["minute", "minutes"],
+		"hour": ["hour", "hours"],
+		"day": ["day", "days"],
+		"month": ["month", "months"],
+		"year": ["year", "years"],
+		"in": "in",
+		"ago": "ago"
+	},
+
+	"sync": ["disconnected", "connecting", "syncing", "synced", "desynced"],
+
+	"syncwatch": {
+		"starting": "Syncwatch começará em 10 segundos",
+		"finished": "Terminado"
+	},
+
+	"mod": {
+		"id": "Login",
+		"register": "Register",
+		"logout": "Logout",
+		"logoutAll": "Log out all devices",
+		"changePassword": "Change password",
+		"oldPassword": "Old password",
+		"newPassword": "New password",
+		"password": "Password",
+		"repeat": "Repeat",
+		"mustMatch": "Passwords must match",
+		"nameTaken": "Login name already taken",
+		"wrongCredentials": "Incorrect login name or password",
+		"wrongPassword": "Incorrect password",
+		"theFuck": "SOMEBODY FUCKED UP",
+		"configureServer": "Configure server",
+		"createBoard": "Create board",
+		"configureBoard": "Configure board"
+	},
+
+	"identity": {
+		"name": [
+			"Name",
+			"Name to attach to new posts"
+		],
+		"email": [
+			"Email",
+			"Email to include in new posts. If 'sage' is input, the parent thread will not be bumped on reply."
+		],
+		"postPassword": [
+			"Password",
+			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+		]
+	},
+
+	"opts": {
+		"tabs": ["Geral", "Aparência", "Pesquisa", "Diversão", "Atalhos"],
+		"modes": {
+			"none": "nenhum",
+			"width": "ajustar à largura",
+			"screen": "fit to screen"
+		},
+		"importConfig": {
+			"done":"Import successfull. The page will now reload.",
+			"corrupt": "Import failed. File corrupt"
+		},
+		"langApplied": "Configurações de linguagem foram mudadas. Esta página recarregará agora.",
+		"labels": {
+			"export": [
+				"Exportar",
+				"Exportar opções para arquivo"
+			],
+			"import": [
+				"Importar",
+				"Importar opções de arquivo"
+			],
+			"hidden": [
+				"Escondidos: 0",
+				"Limpa os posts escondidos"
+			],
+			"hideThumbs": [
+				"Hide thumbnails",
+				"Display a [Show] button in place of thumbnails"
+			],
+			"lang": [
+				"Linguagem",
+				"Mudar a linguagem da interface"
+			],
+			"inlineFit": [
+				"Miniaturas",
+				"Escolha o tipo de miniatura:\nPequena: 125x125, tamanho de arquivo pequeno;\nSharp: 125x125, mais detalhada;\nEsconder: esconde todas as imagens;"
+			],
+			"thumbs": [
+				"Thumbnails",
+				"Set thumbnail style:\nSmall: 125x125, small file size;\nSharp: 125x125, more detailed;\nHide: hide all images;"
+			],
+			"imageHover": [
+				"Expansão de Imagem ao Pairar",
+				"Mostra prévias de imagens ao pairar"
+			],
+			"webmHover": [
+				"Expansão de WebM ao pairar",
+				"Mostra prévias de WebM ao pairar. Requer Expansão de Imagem ao Pairar ativado."
+			],
+			"autogif": [
+				"Miniaturas de GIF animadas",
+				"Miniaturas de GIF animadas"
+			],
+			"spoilers": [
+				"Imagens em spoiler",
+				"Não colocar spoilers em imagens"
+			],
+			"notification": [
+				"Notificações de Desktop",
+				"Tenha notificações no desktop ao ser quotado ou quando o syncwatch começar"
+			],
+			"anonymise": [
+				"Anonimizar",
+				"Mostra todos os postadores como anônimos"
+			],
+			"relativeTime": [
+				"Estampas de tempo relativas",
+				"Estampas de tempo relativas. Ex.: '1 hora atrás'"
+			],
+			"nowPlaying": [
+				"Tocando agora",
+				"Música atual da r/a/dio e outras informações de stream no banner superior"
+			],
+			"illyaDance": [
+				"Illya Dance",
+				"Loli dançando no fundo"
+			],
+			"illyaDanceMute": [
+				"Mutar a Illya",
+				"Loli dançando sem som"
+			],
+			"horizontalPosting": [
+				"Postagem Horizontal",
+				"Nostalgia do 38chan"
+			],
+			"replyRight": [
+				"[Postar] à direita",
+				"Move o botão de Postar para a direita da página"
+			],
+			"theme": [
+				"Tema",
+				"Selecione o tema CSS"
+			],
+			"userBG": [
+				"Fundo personalizado",
+				"Ativa o fundo personalizado da página"
+			],
+			"userBGImage": [
+				"",
+				"Imagem para usar como fundo"
+			],
+			"lastN": [
+				"[Ùltimos #]",
+				"Número de posts a exibir no link de expansão do tópico 'Últimos n'"
+			],
+			"postUnloading": [
+				"Descarregamento dinâmico de posts",
+				"Torna a thread mais resposiva ao descarregar posts do topo da thread, para que a contagem de posts se mantenha no valor do Últimos #. Somente se aplica a threads com o Últimos # ativado."
+			],
+			"alwaysLock": [
+				"Sempre travar no rodapé",
+				"Trava o scroll da página no rodapé mesmo com a aba no fundo."
+			],
+			"newPost": [
+				"Novo post",
+				"Abre um novo post"
+			],
+			"toggleSpoiler": [
+				"Spoiler na imagem",
+				"Ativa spoiler no post aberto"
+			],
+			"textSpoiler": [
+				"Spoiler de texto",
+				"Insere uma tag de spoiler no texto"
+			],
+			"done": [
+				"Terminar post",
+				"Fecha o post aberto"
+			],
+			"expandAll": [
+				"Expandir Todas Imagens",
+				"Expande todas as imagens. Webm, PDF, MP3 e seu próprio post não são afetados. Novos posts de imagem também são expandidos"
+			],
+			"workMode": [
+				"Work mode",
+				"Hides images, defaults theme and disables user background"
+			],
+			"workModeToggle": [
+				"Work mode",
+				"Hides images, defaults theme and disables user background"
+			],
+			"google": ["Google", "Google pesquisa de Imagens"],
+			"iqdb": ["IQDB", "iqdb.org pesquisa de Imagens"],
+			"saucenao": ["SauceNao", "saucenao.com pesquisa de Imagens"],
+			"desustorage": ["DesuStorage", "desustorage.org pesquisa de Imagens"],
+			"exhentai": ["Exhentai", "exhentai.org pesquisa de Imagens"]
+		}
+	}
+}

@@ -51,7 +51,6 @@ type LnPosts = {
 	threadLocked: string
 	quoted: string
 	board: string
-	body: string
 	spoiler: string
 	[index: string]: string
 }

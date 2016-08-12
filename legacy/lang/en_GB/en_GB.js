@@ -1,8 +1,3 @@
-/*
- Client-side language pack
-*/
-
-// TODO: Port moderation to the new client
 // Moderation
 export const mod = {
 	title: ['Title', 'Display staff title on new posts'],
@@ -52,17 +47,6 @@ export function formatModeration(act) {
 		msg += ' for ' + act.reason
 	}
 	return msg
-}
-
-// 56 minutes ago / in 56 minutes
-export function ago(time, unit, isFuture) {
-	var res = pluralize(time, unit)
-	if (isFuture) {
-		res = 'in ' + res
-	} else {
-		res += ' ago'
-	}
-	return res
 }
 
 // 47 replies and 21 images omitted
