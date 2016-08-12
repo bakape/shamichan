@@ -22,7 +22,11 @@ export function renderHeader(data: PostData): string {
 					${id.toString()}
 				</a>
 			</nav>
-			<span class="control">▼</span>
+			<span class="control">
+				<a>
+					⮟
+				</a>
+			</span>
 		</header>`
 }
 
