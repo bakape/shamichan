@@ -155,7 +155,7 @@ func (*DB) TestTextOnlyThreadCreation(c *C) {
 
 	sv := newWSServer(c)
 	defer sv.Close()
-	cl, _ := sv.NewClient()
+	cl, wcl := sv.NewClient()
 	req := types.ThreadCreationRequest{
 		PostCredentials: types.PostCredentials{
 			Name:     "name",
@@ -166,6 +166,9 @@ func (*DB) TestTextOnlyThreadCreation(c *C) {
 	}
 	data := marshalJSON(req, c)
 	c.Assert(insertThread(data, cl), IsNil)
+	for _, msg := range [...]string{"010", "300"} {
+		assertMessage(wcl, []byte(msg), c)
+	}
 
 	var post types.Post
 	c.Assert(db.One(db.FindPost(6), &post), IsNil)

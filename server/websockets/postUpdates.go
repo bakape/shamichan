@@ -20,12 +20,18 @@ var (
 	errSpliceNOOP          = errors.New("splice NOOP")
 )
 
-// Request or response to replace the current line's text starting at an exact
-// position in the current line
-type spliceMessage struct {
+// Request or to replace the current line's text starting at an exact position
+// in the current line
+type spliceRequest struct {
 	Start int    `json:"start"`
 	Len   int    `json:"len"`
 	Text  string `json:"text"`
+}
+
+// Response to a spliceRequest. Sent to all listening clients.
+type spliceResponse struct {
+	ID int64 `json:"id"`
+	spliceRequest
 }
 
 // Shorthand. We use it a lot for update query construction.
@@ -272,7 +278,7 @@ func spliceText(data []byte, c *Client) error {
 		return errNoPostOpen
 	}
 
-	var req spliceMessage
+	var req spliceRequest
 	oldLength := len(c.openPost.String())
 	err := decodeMessage(data, &req)
 	switch {
@@ -291,11 +297,15 @@ func spliceText(data []byte, c *Client) error {
 
 // Splice the first line of the text. If there are more lines, parse the
 // previous one and recurse until all lines are parsed.
-func spliceLine(req spliceMessage, c *Client) error {
+func spliceLine(req spliceRequest, c *Client) error {
 	old := c.openPost.String()
 	start := old[:req.Start]
 	end := req.Text + old[req.Start+req.Len:]
 	c.openPost.bodyLength += -req.Len + len(req.Text)
+	res := spliceResponse{
+		ID:            c.openPost.id,
+		spliceRequest: req,
+	}
 
 	// Slice until newline, if any, and delay the next line's splicing until the
 	// next recursive spliceLine call
@@ -303,8 +313,8 @@ func spliceLine(req spliceMessage, c *Client) error {
 	if firstNewline := strings.IndexRune(end, '\n'); firstNewline > -1 {
 		delayed = end[firstNewline+1:]
 		end = end[:firstNewline]
-		req.Len = -1 // Special meaning. Client should replace till line end.
-		req.Text = end
+		res.Len = -1 // Special meaning. Client should replace till line end.
+		res.Text = end
 		c.openPost.bodyLength -= len(delayed) + 1
 	}
 
@@ -312,8 +322,8 @@ func spliceLine(req spliceMessage, c *Client) error {
 	exceeding := c.openPost.bodyLength - parser.MaxLengthBody
 	if exceeding > 0 {
 		end = end[:len(end)-exceeding]
-		req.Len = -1
-		req.Text = end
+		res.Len = -1
+		res.Text = end
 		c.openPost.bodyLength = parser.MaxLengthBody
 	}
 
@@ -321,7 +331,7 @@ func spliceLine(req spliceMessage, c *Client) error {
 	new := start + end
 	c.openPost.WriteString(new)
 
-	msg, err := encodeMessage(messageSplice, req)
+	msg, err := encodeMessage(messageSplice, res)
 	if err != nil {
 		return err
 	}
@@ -354,7 +364,7 @@ func spliceLine(req spliceMessage, c *Client) error {
 		if err := parseLine(c, true); err != nil {
 			return err
 		}
-		return spliceLine(spliceMessage{Text: delayed}, c)
+		return spliceLine(spliceRequest{Text: delayed}, c)
 	}
 	return nil
 }

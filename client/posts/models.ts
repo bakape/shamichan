@@ -2,6 +2,7 @@ import {default as Model, ModelAttrs} from '../model'
 import {extend} from '../util'
 import Collection from './collection'
 import PostView from './view'
+import {SpliceResponse} from '../client'
 
 // Generic link object containing target post board and thread
 export type PostLink = {
@@ -159,5 +160,20 @@ export class Post extends Model implements PostData {
 		} else {
 			view.backspace()
 		}
+	}
+
+	// Splice the current open line of text
+	splice({start, len, text}: SpliceResponse) {
+		const {state: {line}} = this,
+			keep = line.slice(0, start)
+		let end: string
+		if (len === -1) { // Special meaning - replace till line end
+			end = text
+		} else {
+			end = text + line.substring(start+len, -1)
+		}
+		this.state.line = keep + end
+		this.resetState()
+		this.view.reparseLine()
 	}
 }

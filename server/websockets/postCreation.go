@@ -68,12 +68,10 @@ func insertThread(data []byte, c *Client) (err error) {
 	if err != nil {
 		return err
 	}
-
 	thread.Subject, err = parser.ParseSubject(req.Subject)
 	if err != nil {
 		return err
 	}
-
 	if err := parser.VerifyPostPassword(req.Password); err != nil {
 		return err
 	}

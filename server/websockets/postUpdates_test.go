@@ -457,7 +457,7 @@ func (*DB) TestSpliceValidityChecks(c *C) {
 		{0, 0, tooLong, "", errSpliceTooLong},
 	}
 	for _, s := range samples {
-		req := spliceMessage{
+		req := spliceRequest{
 			Start: s.start,
 			Len:   s.len,
 			Text:  s.text,
@@ -493,7 +493,7 @@ func (*DB) TestSplice(c *C) {
 			text:  "abc",
 			init:  "",
 			final: "abc",
-			log:   []string{`05{"start":0,"len":0,"text":"abc"}`},
+			log:   []string{`05{"id":2,"start":0,"len":0,"text":"abc"}`},
 		},
 		{
 			start: 2,
@@ -501,7 +501,7 @@ func (*DB) TestSplice(c *C) {
 			text:  "abcdefg",
 			init:  "00\n012345",
 			final: "00\n01abcdefg5",
-			log:   []string{`05{"start":2,"len":3,"text":"abcdefg"}`},
+			log:   []string{`05{"id":2,"start":2,"len":3,"text":"abcdefg"}`},
 		},
 		{
 			start: 52,
@@ -510,8 +510,8 @@ func (*DB) TestSplice(c *C) {
 			init:  longPost,
 			final: longPost[:1943] + longSplice[:57],
 			log: []string{
-				`05{"start":52,"len":-1,"text":"Never gonna give you up Never` +
-					` gonna let you down Never go"}`,
+				`05{"id":2,"start":52,"len":-1,"text":"Never gonna give you` +
+					` up Never gonna let you down Never go"}`,
 			},
 		},
 		{
@@ -521,8 +521,8 @@ func (*DB) TestSplice(c *C) {
 			init:  longPost,
 			final: longPost + longSplice[:49],
 			log: []string{
-				`05{"start":60,"len":-1,"text":"Never gonna give you up Never` +
-					` gonna let you down "}`,
+				`05{"id":2,"start":60,"len":-1,"text":"Never gonna give you` +
+					` up Never gonna let you down "}`,
 			},
 		},
 		{
@@ -532,9 +532,9 @@ func (*DB) TestSplice(c *C) {
 			init:  "00\n012345",
 			final: "00\n01abc\nefg345",
 			log: []string{
-				`05{"start":2,"len":-1,"text":"abc"}`,
+				`05{"id":2,"start":2,"len":-1,"text":"abc"}`,
 				"03[2,10]",
-				`05{"start":0,"len":0,"text":"efg345"}`,
+				`05{"id":2,"start":0,"len":0,"text":"efg345"}`,
 			},
 		},
 		{
@@ -544,9 +544,9 @@ func (*DB) TestSplice(c *C) {
 			init:  "012345",
 			final: "01\n2345",
 			log: []string{
-				`05{"start":2,"len":-1,"text":""}`,
+				`05{"id":2,"start":2,"len":-1,"text":""}`,
 				"03[2,10]",
-				`05{"start":0,"len":0,"text":"2345"}`,
+				`05{"id":2,"start":0,"len":0,"text":"2345"}`,
 			},
 		},
 	}
@@ -576,7 +576,7 @@ func (*DB) TestSplice(c *C) {
 			Buffer:     *bytes.NewBuffer([]byte(lastLine(s.init))),
 		}
 
-		req := spliceMessage{
+		req := spliceRequest{
 			Start: s.start,
 			Len:   s.len,
 			Text:  s.text,
