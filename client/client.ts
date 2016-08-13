@@ -15,6 +15,9 @@ handlers[message.invalid] = (msg: string) => {
 handlers[message.append] = ([id, char]: number[]) =>
 	handle(id, m =>
 		m.append(char))
+handlers[message.backspace] = (id: number) =>
+	handle(id, m =>
+		m.backspace())
 
 // Run a function on model, if it exists
 function handle(id: number, fn: (m: Post) => void) {

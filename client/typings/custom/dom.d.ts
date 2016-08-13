@@ -6,6 +6,7 @@ interface Node {
 	before(...nodes: (Node|string)[]): void
 	closest(selector: string): Element
 	prepend(...nodes: (Node|string)[]): void
+	remove(): void
 	replaceWith(...nodes: (Node|string)[]): void
 }
 

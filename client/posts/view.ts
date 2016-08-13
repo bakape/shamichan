@@ -3,12 +3,15 @@ import {Post} from './models'
 import {mine} from '../state'
 import {makeFrag} from '../util'
 import renderPost from './render/posts'
+import {parseOpenLine} from './render/body'
 import {write} from '../render'
 
 // Base post view class
 export default class PostView extends View<Post> {
-	$buffer: Node // Contains the current line being edited, if any
-	$blockQoute: Element
+	// Only exist on open posts
+	$buffer: Node        // Text node being written to
+	$blockQoute: Element // Entire text body of post
+	$lastLine: Element   // Contains the current line being edited, if any
 
 	constructor(model: Post) {
 		let cls = 'glass'
@@ -31,15 +34,24 @@ export default class PostView extends View<Post> {
 	// Render the element contents, but don't insert it into the DOM
 	render() {
 		const frag = makeFrag(renderPost(this.model))
-		let $b = this.$blockQoute = frag.querySelector("blockqoute")
-		if (this.model.state.quote) {
-			$b = $b.querySelector("em:last-of-type")
+		if (this.model.editing) {
+			this.$blockQoute = frag.querySelector("blockqoute")
+			this.$lastLine = this.$blockQoute.lastElementChild
+			this.findBuffer(this.$lastLine)
 		}
-		if (this.model.state.spoiler) {
-			$b = $b.querySelector("del:las-of-type")
+		this.el.append(frag)
+	}
+
+	// Find the text buffer in an open line
+	findBuffer($b: Node) {
+		const {state} = this.model
+		if (state.quote) {
+			$b = $b.lastChild
+		}
+		if (state.spoiler) {
+			$b = $b.lastChild
 		}
 		this.$buffer = $b
-		this.el.append(frag)
 	}
 
 	// Remove the element from the DOM and detach from its model, allowing the
@@ -48,6 +60,16 @@ export default class PostView extends View<Post> {
 		delete this.model.view
 		delete this.model
 		super.remove()
+	}
+
+	// Replace the current line with a reparsed fragment
+	reparseLine() {
+		const frag = makeFrag(parseOpenLine(this.model.state))
+		this.findBuffer(frag)
+		write(() => {
+			this.$lastLine.replaceWith(frag)
+			this.$lastLine = frag as Element
+		})
 	}
 
 	// Start the new line as a quote
@@ -59,36 +81,15 @@ export default class PostView extends View<Post> {
 			this.$blockQoute.append(em))
 	}
 
-	// Insert either an opening or closing spoiler tag in the $buffer
-	insertSpoilerTag() {
-		const {state} = this.model,
-			$b = document.createTextNode("")
-		if (!state.spoiler) {
-			const del = document.createElement("del")
-			del.append($b)
-			const moveBuffer =
-				state.quote
-				? () =>
-					this.$buffer.after(del)
-				: () =>
-					this.$blockQoute.append(del)
-			write(() => {
-				this.$buffer.textContent = state.line.slice(-1)
-				moveBuffer()
-				this.$buffer = $b
-			})
-		} else {
-			if (!state.quote) {
-				this.$buffer = this.$buffer.parentNode
-			} else {
-				this.$buffer = this.$blockQoute
-			}
-		}
-	}
-
 	// Append a string to the current text buffer
 	appendString(s: string) {
 		write(() =>
 			this.$buffer.append(s))
+	}
+
+	// Remove one character from the current buffer
+	backspace() {
+		write(() =>
+			this.$buffer.textContent = this.$buffer.textContent.slice(0, -1))
 	}
 }

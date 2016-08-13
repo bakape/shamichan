@@ -34,7 +34,9 @@ const nodeExtends = {
 }
 
 for (let method in nodeExtends) {
-	Node.prototype[method] = nodeExtends[method]
+	if (Node.prototype[method] === undefined) {
+		Node.prototype[method] = nodeExtends[method]
+	}
 }
 
 const ET = EventTarget.prototype

@@ -120,22 +120,35 @@ export class Post extends Model implements PostData {
 	append(code: number) {
 		const char = String.fromCharCode(code),
 			{state} = this
+		state.line += char
 
 		// Render quote or spoiler tags
-		if (state.line === "" && char === ">") {
+		if (state.line === ">") {
 			state.quote = true
 			this.view.startQuote()
-		} else if (isQoute(state.line, char)) {
-			state.spoiler = !state.spoiler
-			this.view.insertSpoilerTag()
+		} else if (state.line.endsWith("**")) {
+			this.resetState()
+			this.view.reparseLine()
 		} else {
 			this.view.appendString(char)
 		}
+	}
 
-		state.line += char
+	// Reset spoiler and qoute state of the line
+	resetState() {
+		this.state.spoiler = this.state.quote = false
+	}
+
+	// Backspace one character in the current line
+	backspace() {
+		const {state, view} = this,
+			needReparse = state.line === ">" || state.line.endsWith("**")
+		state.line = state.line.slice(0, -1)
+		if (needReparse) {
+			this.resetState()
+			view.reparseLine()
+		} else {
+			view.backspace()
+		}
 	}
 }
-
-// Detects if the "**" qoute command is used
-const isQoute = (line: string, char: string): boolean =>
-	char === "*" && line[line.length - 1] === "*"

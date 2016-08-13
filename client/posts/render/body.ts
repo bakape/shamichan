@@ -25,9 +25,6 @@ function parseClosedBody(data: PostData): string {
 	for (let line of data.body.split("\n")) {
 		html += parseTerminatedLine(line, data)
 	}
-	if (data.state.spoiler) { // Close spoiler tag on post end
-		html += '</del>'
-	}
 	data.state = null // Clean up a bit
 
 	return html
@@ -48,16 +45,13 @@ function parseOpenBody(data: PostData): string {
 
 	state.line = lines[lines.length - 1]
 	html += parseOpenLine(state)
-	if (state.spoiler) {
-		html += '</del>'
-	}
 
 	return html
 }
 
 // Parse a single terminated line
 function parseTerminatedLine(line: string, data: PostData): string {
-	let html = ""
+	let html = "<span>"
 	const {state} = data
 	if (line[0] === ">") {
 		state.quote = true
@@ -82,8 +76,8 @@ function parseTerminatedLine(line: string, data: PostData): string {
 		}
 	}
 
-	html += terminateTags(state)
-	return html + "<br>"
+	html += terminateTags(state) + "<br>"
+	return html
 }
 
 // Close all open tags at line end
@@ -97,12 +91,12 @@ function terminateTags(state: TextState): string {
 		state.quote = false
 		html += "</em>"
 	}
-	return html
+	return html + "</span>"
 }
 
 // Parse a line that is still being editted
-function parseOpenLine(state: TextState): string {
-	let html = ""
+export function parseOpenLine(state: TextState): string {
+	let html = "<span>"
 	if (state.line[0] === ">") {
 		state.quote = true
 		html += "<em>"
@@ -213,6 +207,7 @@ function parseURL(bit: string): string {
 
 // Parse a hash command
 function parseCommand(bit: string, {commands, state}: PostData): string {
+	// Guard against the first command being an invalid dice roll
 	if (!commands) {
 		return ""
 	}
