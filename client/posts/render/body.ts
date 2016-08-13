@@ -145,7 +145,7 @@ function parseFragment(frag: string, data: PostData): string {
 				html += parseReference(word)
 				continue
 			}
-		} else if (word.startsWith("http")) {
+		} else if (word.startsWith("http") || word.startsWith("magnet:?")) {
 			// Generic URLs
 			html += parseURL(word)
 			continue
@@ -206,7 +206,7 @@ function parseURL(bit: string): string {
 
 	// TODO: Embeds
 
-	if (/^https?:\/\/[^-A-Za-z0-9+&@#/%?=~_:\.]$/.test(bit)) {
+	if (/^(?:magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$/.test(bit)) {
 		return newTabLink(bit, bit)
 	}
 
