@@ -37,8 +37,7 @@ func (*Tests) TestDice(c *C) {
 		} else {
 			c.Assert(com.Type, Equals, types.Dice)
 			val := com.Val.([]uint16)
-			c.Assert(val[0], Equals, uint16(s.max))
-			c.Assert(len(val), Equals, s.rolls+1)
+			c.Assert(len(val), Equals, s.rolls)
 		}
 	}
 }

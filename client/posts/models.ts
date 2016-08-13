@@ -27,6 +27,7 @@ export interface PostData {
 	state: TextState
 	backlinks?: PostLinks
 	links?: PostLinks
+	commands?: Command[]
 }
 
 // State of a post's text. Used for adding enclosing tags to the HTML while
@@ -34,7 +35,17 @@ export interface PostData {
 export type TextState = {
 	spoiler: boolean
 	quote: boolean
+	iDice: number // Index of the next dice array item to use
 	line?: string
+}
+
+// Types of hash command entries
+export const enum commandType {dice, flip, eightBall, syncWatch, pyu}
+
+// Single hash command result delivered from the server
+export type Command = {
+	type: commandType
+	val: number[]|boolean|string
 }
 
 // Data of an OP post

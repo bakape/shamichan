@@ -19,6 +19,7 @@ function parseClosedBody(data: PostData): string {
 	data.state = {
 		spoiler: false,
 		quote: false,
+		iDice: 0,
 	}
 	let html = ""
 	for (let line of data.body.split("\n")) {
@@ -37,6 +38,7 @@ function parseOpenBody(data: PostData): string {
 	const state: TextState = data.state = {
 		spoiler: false,
 		quote: false,
+		iDice: 0,
 	}
 	let html = ""
 	const lines = data.body.split("\n")
@@ -61,12 +63,9 @@ function parseTerminatedLine(line: string, data: PostData): string {
 		state.quote = true
 		html += "<em>"
 	} else if (line[0] === "#") {
-
-		// TODO: Hash command rendering
-
 		const m = line.match(/^#(flip|\d*d\d+|8ball)$/)
 		if (m) {
-			return line
+			return parseCommand(m[1], data)
 		}
 	}
 
@@ -197,9 +196,8 @@ function parseReference(bit: string): string {
 }
 
 // Render and anchor link that opens in a new tab
-function newTabLink(href: string, text: string): string {
-	return `<a href="${encodeURI(href)}" target="_blank">${escape(text)}</a>`
-}
+const newTabLink = (href: string, text: string): string =>
+	`<a href="${encodeURI(href)}" target="_blank">${escape(text)}</a>`
 
 // Render generic URLs and embed, if aplicable
 function parseURL(bit: string): string {
@@ -211,4 +209,40 @@ function parseURL(bit: string): string {
 	}
 
 	return escape(bit)
+}
+
+// Parse a hash command
+function parseCommand(bit: string, {commands, state}: PostData): string {
+	let inner: string
+	switch (bit) {
+	case "flip":
+		inner = commands[state.iDice++].val.toString()
+		break
+	case "8ball":
+		inner = commands[state.iDice++].val as string
+		break
+	default:
+		// Validate dice
+		const m = bit.match(/(\d*)d(\d+)/)
+		if (parseInt(m[1]) > 10 || parseInt(m[2]) > 100) {
+			break
+		}
+
+		const rolls = commands[state.iDice++].val as number[]
+		inner = ""
+		let sum = 0
+		for (let roll of rolls) {
+			if (inner) {
+				inner += ", "
+			}
+			sum += roll
+			inner += roll
+		}
+		inner += " = " + sum
+	}
+
+	if (inner !== undefined) {
+		return `<strong>#${bit} (${inner})</strong>`
+	}
+	return ""
 }

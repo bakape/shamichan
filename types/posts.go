@@ -7,8 +7,6 @@ import (
 	"fmt"
 )
 
-var emptyBoard = []Thread{}
-
 // CommandType are the various struct types of hash commands and their
 // responses, such as dice rolls, #flip, #8ball, etc.
 type CommandType uint8
@@ -35,8 +33,8 @@ type Board struct {
 
 // MarshalJSON ensures b.Threads is marshalled to a JSON array even when nil
 func (b *Board) MarshalJSON() ([]byte, error) {
-	buf := new(bytes.Buffer)
-	fmt.Fprintf(buf, `{"ctr":%d,"threads":`, b.Ctr)
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, `{"ctr":%d,"threads":`, b.Ctr)
 
 	if b.Threads == nil {
 		buf.WriteString("[]}")
