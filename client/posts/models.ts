@@ -119,18 +119,26 @@ export class Post extends Model implements PostData {
 	// Append a character to the text body
 	append(code: number) {
 		const char = String.fromCharCode(code),
-			{state} = this
+			{state, view} = this
+		this.body += char
 		state.line += char
 
-		// Render quote or spoiler tags
-		if (state.line === ">") {
+		if (char === "\n") { // Start new line
+			view.startNewLine()
+			this.state = {
+				quote: false,
+				spoiler: false,
+				iDice: 0,
+				line: "",
+			}
+		} else if (state.line === ">") { // Start qoute
 			state.quote = true
-			this.view.startQuote()
-		} else if (state.line.endsWith("**")) {
+			view.startQuote()
+		} else if (state.line.endsWith("**")) { // Start or close spoiler
 			this.resetState()
-			this.view.reparseLine()
+			view.reparseLine()
 		} else {
-			this.view.appendString(char)
+			view.appendString(char)
 		}
 	}
 
@@ -144,6 +152,7 @@ export class Post extends Model implements PostData {
 		const {state, view} = this,
 			needReparse = state.line === ">" || state.line.endsWith("**")
 		state.line = state.line.slice(0, -1)
+		this.body = this.body.slice(0, -1)
 		if (needReparse) {
 			this.resetState()
 			view.reparseLine()

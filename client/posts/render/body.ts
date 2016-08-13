@@ -50,7 +50,7 @@ function parseOpenBody(data: PostData): string {
 }
 
 // Parse a single terminated line
-function parseTerminatedLine(line: string, data: PostData): string {
+export function parseTerminatedLine(line: string, data: PostData): string {
 	let html = "<span>"
 	const {state} = data
 	if (line[0] === ">") {

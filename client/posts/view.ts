@@ -3,7 +3,7 @@ import {Post} from './models'
 import {mine} from '../state'
 import {makeFrag} from '../util'
 import renderPost from './render/posts'
-import {parseOpenLine} from './render/body'
+import {parseOpenLine, parseTerminatedLine} from './render/body'
 import {write} from '../render'
 
 // Base post view class
@@ -91,5 +91,18 @@ export default class PostView extends View<Post> {
 	backspace() {
 		write(() =>
 			this.$buffer.textContent = this.$buffer.textContent.slice(0, -1))
+	}
+
+	// Start a new line and reparse the old one
+	startNewLine() {
+		const line = this.model.state.line.slice(0, -1),
+			frag = makeFrag(parseTerminatedLine(line, this.model))
+		write(() => {
+			this.$lastLine.replaceWith(frag),
+			this.$buffer = document.createTextNode("")
+			this.$lastLine = document.createElement("span")
+			this.$lastLine.append(this.$buffer)
+			this.$blockQoute.append(this.$lastLine)
+		})
 	}
 }
