@@ -107,19 +107,23 @@ func (*DB) TestWriteBacklinks(c *C) {
 		OP:    9,
 		Board: "a",
 	}
-	stdMsg, err := encodeMessage(messageBacklink, types.LinkMap{
-		10: {
-			OP:    9,
-			Board: "a",
-		},
-	})
-	c.Assert(err, IsNil)
 
 	for _, id := range [...]int64{1, 2, 7} {
 		var link types.Link
 		q := db.FindPost(id).Field("backlinks").Field("10")
 		c.Assert(db.One(q, &link), IsNil)
 		c.Assert(link, Equals, std)
+
+		stdMsg, err := encodeMessage(messageBacklink, linkMessage{
+			ID: id,
+			Links: types.LinkMap{
+				10: {
+					OP:    9,
+					Board: "a",
+				},
+			},
+		})
+		c.Assert(err, IsNil)
 
 		var constains bool
 		q = db.FindParentThread(id).Field("log").Contains(stdMsg)
@@ -342,7 +346,7 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 		{
 			id: 2,
 			log: []string{
-				`07{"22":{"op":21,"board":"c"}}`,
+				`07{"id":2,"links":{"22":{"op":21,"board":"c"}}}`,
 				`03[2,10]`,
 			},
 			field: "links",
@@ -356,7 +360,7 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 		{
 			id: 22,
 			log: []string{
-				`08{"2":{"op":1,"board":"a"}}`,
+				`08{"id":22,"links":{"2":{"op":1,"board":"a"}}}`,
 			},
 			field: "backlinks",
 			val: types.LinkMap{

@@ -80,19 +80,6 @@ _.extend(dispatcher, {
 		// generic model to fire a separate image render
 		modelHandler(num, model => model.setImage(img, toPostForm));
 	},
-	[common.UPDATE_POST]([num, frag, extra = {}]) {
-		modelHandler(num, model => {
-			state.addLinks(extra.links);
-			model.update(frag, extra);
-			checkRepliedToMe(extra.links, num);
-
-			// Am I updating my own post?
-			if (num in state.ownPosts)
-				main.oneeSama.trigger('insertOwnPost', extra);
-			else
-				model.dispatch('updateBody', frag);
-		});
-	},
 	[common.FINISH_POST](msg) {
 		const [num] = msg;
 		delete state.ownPosts[num];
@@ -130,9 +117,6 @@ _.extend(dispatcher, {
 			num = info.num;
 		}
 		modelHandler(num, model => model.setBan(num, info));
-	},
-	[common.BACKLINK](msg) {
-		modelHandler(msg[0], model => model.addBacklink(msg[1], msg[2]));
 	},
 	// Sync settings with server
 	[common.HOT_INJECTION](msg) {

@@ -1,8 +1,8 @@
 // Core websocket message handlers
 
 import {handlers, message, connSM, connEvent} from './connection'
-import {posts} from './state'
-import {Post} from './posts/models'
+import {posts, mine} from './state'
+import {Post, PostLinks} from './posts/models'
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -10,6 +10,13 @@ export type SpliceResponse = {
 	start: number
 	len: number
 	text: string
+}
+
+// Message sent to listening clients about a link or backlink insertion into
+// a post
+type LinkMessage = {
+	id: number
+	links: PostLinks
 }
 
 handlers[message.invalid] = (msg: string) => {
@@ -29,6 +36,12 @@ handlers[message.backspace] = (id: number) =>
 handlers[message.splice] = (msg: SpliceResponse) =>
 	handle(msg.id, m =>
 		m.splice(msg))
+handlers[message.link] = ({id, links}: LinkMessage) =>
+	handle(id, m =>
+		m.insertLink(links))
+handlers[message.backlink] = ({id, links}: LinkMessage) =>
+	handle(id, m =>
+		m.insertBacklink(links))
 
 // Run a function on model, if it exists
 function handle(id: number, fn: (m: Post) => void) {

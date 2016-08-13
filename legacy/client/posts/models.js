@@ -10,27 +10,6 @@ exports.Post = Backbone.Model.extend({
 	initialize() {
 		state.posts.add(this);
 	},
-	// Proxy commands to the view(s). Using a central channel helps us reduce
-	// listener count overhead.
-	dispatch(command, ...args) {
-		this.trigger('dispatch', command, ...args);
-	},
-	remove() {
-		// Remove view
-		this.stopListening().dispatch('remove');
-		// Remove from post collection
-		state.posts.remove(this);
-	},
-	update(frag, links, dice) {
-		const updates = {
-			body: this.get('body') + frag
-		};
-		if (links)
-			_.extend(this.get('links'), links);
-		if (dice)
-			updates.dice = (this.get('dice') || []).concat(dice);
-		this.set(updates);
-	},
 	// Calling a method is always less overhead than binding a dedicated
 	// listener for each post's image
 	setImage(image, silent) {
@@ -60,12 +39,6 @@ exports.Post = Backbone.Model.extend({
 			this.set('ban', true).dispatch('renderBan');
 		this.moderationInfo(info);
 	},
-	addBacklink(num, op) {
-		let backlinks = this.get('backlinks') || {};
-		backlinks[num] = op;
-		this.set({backlinks})
-			.dispatch('renderBacklinks', backlinks);
-	},
 	// Add info about the moderation action taken. This is only used on
 	// authenticated staff clients, but for sanity, lets keep it here in
 	// common model methods.
@@ -92,19 +65,6 @@ exports.Thread = exports.Post.extend({
 			this.getImageOmit();
 		state.posts.add(this);
 	},
-	remove() {
-		this.stopListening().dispatch('remove');
-		state.posts.remove(this);
-
-		// Propagate model removal to all replies
-		const replies = this.get('replies');
-		for (let i = 0, lim = replies.length; i < lim; i++) {
-			let model = state.posts.get(replies[i]);
-			if (model)
-				model.remove();
-		}
-	},
-
 	toggleLocked(val, info) {
 		this.moderationInfo(info);
 		this.set('locked', val).dispatch('renderLocked', val);

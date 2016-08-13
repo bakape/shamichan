@@ -1,10 +1,11 @@
-import View, {ViewAttrs} from '../view'
+import View from '../view'
 import {Post} from './models'
 import {mine} from '../state'
 import {makeFrag} from '../util'
 import renderPost from './render/posts'
 import {parseOpenLine, parseTerminatedLine} from './render/body'
-import {write} from '../render'
+import {write, read} from '../render'
+import {renderBacklinks} from './render/etc'
 
 // Base post view class
 export default class PostView extends View<Post> {
@@ -18,9 +19,26 @@ export default class PostView extends View<Post> {
 		if (model.editing) {
 			cls += ' editing'
 		}
+
+		let highlight: boolean
 		if (mine.has(model.id)) {
+			highlight = true
+		} else if (model.links) {
+			for (let id in model.links) {
+				if (mine.has(parseInt(id))) {
+					highlight = true
+					break
+				}
+			}
+		}
+		if (highlight) {
 			cls += ' highlight'
 		}
+
+		// TODO: If post has links to my posts, send desktop notifications. Best
+		// integrate with a last post seen counter? Maybe we need to store a
+		// "seen" status for all posts, but that would be a lot of overhead.
+
 		super({
 			model,
 			id: "p" + model.id,
@@ -103,6 +121,16 @@ export default class PostView extends View<Post> {
 			this.$lastLine = document.createElement("span")
 			this.$lastLine.append(this.$buffer)
 			this.$blockQoute.append(this.$lastLine)
+		})
+	}
+
+	// Render links to posts linking to this post
+	renderBacklinks() {
+		const html = renderBacklinks(this.model.backlinks)
+		read(() => {
+			const el = this.el.querySelector("small")
+			write(() =>
+				el.innerHTML = html)
 		})
 	}
 }

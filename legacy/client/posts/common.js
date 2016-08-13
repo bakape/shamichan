@@ -12,31 +12,8 @@ module.exports = imager.Hidamari.extend({
 	initialize() {
 		this.listenTo(this.model, 'dispatch', this.redirect);
 	},
-	// Extra initialisation logic for posts renderred client-side
-	clientInit() {
-		if (options.get('anonymise'))
-			this.anonymise();
-		return this;
-	},
-	// Proxy to the appropriate method
-	redirect(command, ...args) {
-		this[command](...args);
-	},
-	// Update the post's text body
-	updateBody(frag) {
-		if (!this.blockquote)
-			this.blockquote = this.el.query('blockquote');
-
-		// This will rerender the HTML content on each update. Might be
-		// some overhead involved, but simplifies live updates greatly.
-		const model = this.model.attributes;
-		this.blockquote.innerHTML = oneeSama.setModel(model).body(model.body);
-	},
 	renderTime() {
 		this.el.query('time').outerHTML = oneeSama.time(this.model.get('time'));
-	},
-	renderBacklinks(links) {
-		this.el.query('small').innerHTML = oneeSama.backlinks(links);
 	},
 	// Admin JS injections
 	fun() {
@@ -63,13 +40,4 @@ module.exports = imager.Hidamari.extend({
 		el.query('.banMessage').remove();
 		el.query('blockquote').after(util.parseDOM(oneeSama.banned()));
 	},
-	renderEditing(editing) {
-		const {el} = this;
-		if (editing)
-			el.classList.add('editing');
-		else {
-			el.classList.remove('editing');
-			el.query('blockquote').normalize();
-		}
-	}
 });

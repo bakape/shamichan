@@ -1,4 +1,4 @@
-import {default as Model, ModelAttrs} from '../model'
+import Model from '../model'
 import {extend} from '../util'
 import Collection from './collection'
 import PostView from './view'
@@ -175,5 +175,29 @@ export class Post extends Model implements PostData {
 		this.state.line = keep + end
 		this.resetState()
 		this.view.reparseLine()
+	}
+
+	// Extend a field on the model, if it exists. Assign if it doesn't
+	extendField(key: string, obj: {}) {
+		if (this[key]) {
+			extend(this[key], obj)
+		} else {
+			this[key] = obj
+		}
+	}
+
+	// Insert data about a link to another post into the model
+	insertLink(links: PostLinks) {
+
+		// TODO: Trigger Desktop Notification and highlight post, if linking to
+		// my post
+
+		this.extendField("links", links)
+	}
+
+	// Insert data about another post linking this post into the model
+	insertBacklink(links: PostLinks) {
+		this.extendField("links", links)
+		this.view.renderBacklinks()
 	}
 }

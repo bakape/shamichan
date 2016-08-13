@@ -34,6 +34,13 @@ type spliceResponse struct {
 	spliceRequest
 }
 
+// Message sent to listening clients about a link or backlink insertion into
+// a post
+type linkMessage struct {
+	ID    int64         `json:"id"`
+	Links types.LinkMap `json:"links"`
+}
+
 // Shorthand. We use it a lot for update query construction.
 type msi map[string]interface{}
 
@@ -169,7 +176,10 @@ func writeCommand(comm types.Command, idStr string, c *Client) error {
 
 // Write new links to other posts to the database
 func writeLinks(links types.LinkMap, c *Client) error {
-	msg, err := encodeMessage(messageLink, links)
+	msg, err := encodeMessage(messageLink, linkMessage{
+		ID:    c.openPost.id,
+		Links: links,
+	})
 	if err != nil {
 		return err
 	}
@@ -197,10 +207,13 @@ func writeLinks(links types.LinkMap, c *Client) error {
 // Writes the location data of the post linking a post to the the post being
 // linked
 func writeBacklink(id, op int64, board string, destID int64) error {
-	msg, err := encodeMessage(messageBacklink, types.LinkMap{
-		id: {
-			OP:    op,
-			Board: board,
+	msg, err := encodeMessage(messageBacklink, linkMessage{
+		ID: destID,
+		Links: types.LinkMap{
+			id: {
+				OP:    op,
+				Board: board,
+			},
 		},
 	})
 	if err != nil {
