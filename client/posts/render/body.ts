@@ -213,6 +213,10 @@ function parseURL(bit: string): string {
 
 // Parse a hash command
 function parseCommand(bit: string, {commands, state}: PostData): string {
+	if (!commands) {
+		return ""
+	}
+
 	let inner: string
 	switch (bit) {
 	case "flip":
