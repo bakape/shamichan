@@ -134,6 +134,16 @@ export default class PostView extends View<Post> {
 				el.innerHTML = html)
 		})
 	}
+
+	// Close an open post and clean up
+	closePost() {
+		const html = parseTerminatedLine(this.model.state.line, this.model)
+		write(() => {
+			this.el.classList.remove("editing")
+			this.$lastLine.innerHTML = html
+			this.$lastLine = this.$buffer = this.$blockquote = null
+		})
+	}
 }
 
 // View of a threads opening post. Contains some extra functionality.

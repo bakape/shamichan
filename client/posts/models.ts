@@ -209,6 +209,14 @@ export class Post extends Model implements PostData {
 		}
 		this.commands.push({type, val})
 	}
+
+	// Close an open post and reparse its last line
+	closePost() {
+		this.editing = false
+		this.resetState()
+		this.view.closePost()
+		this.state = null
+	}
 }
 
 // Model of the opening post of a thread

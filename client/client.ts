@@ -50,6 +50,9 @@ handlers[message.backlink] = ({id, links}: LinkMessage) =>
 handlers[message.command] = ({id, type, val}: CommandMessage) =>
 	handle(id, m =>
 		m.insertCommand(type, val))
+handlers[message.closePost] = (id: number) =>
+	handle(id, m =>
+		m.closePost())
 
 // Run a function on model, if it exists
 function handle(id: number, fn: (m: Post) => void) {
