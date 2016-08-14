@@ -59,9 +59,10 @@ func (*DB) TestThreadCreation(c *C) {
 	cl.IP = "::1"
 
 	std := types.DatabaseThread{
-		ID:      6,
-		Subject: "subject",
-		Board:   "a",
+		ID:       6,
+		Subject:  "subject",
+		Board:    "a",
+		ImageCtr: 1,
 		Posts: map[int64]types.DatabasePost{
 			6: types.DatabasePost{
 				IP: "::1",

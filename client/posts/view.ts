@@ -1,17 +1,18 @@
 import View from '../view'
-import {Post} from './models'
-import {mine} from '../state'
-import {makeFrag} from '../util'
+import {Post, OP} from './models'
+import {mine, posts, page} from '../state'
+import {makeFrag, pluralize, HTML} from '../util'
 import renderPost from './render/posts'
 import {parseOpenLine, parseTerminatedLine} from './render/body'
 import {write, read} from '../render'
 import {renderBacklinks} from './render/etc'
+import {posts as lang, navigation} from '../lang'
 
 // Base post view class
 export default class PostView extends View<Post> {
 	// Only exist on open posts
 	$buffer: Node        // Text node being written to
-	$blockQoute: Element // Entire text body of post
+	$blockquote: Element // Entire text body of post
 	$lastLine: Element   // Contains the current line being edited, if any
 
 	constructor(model: Post) {
@@ -53,8 +54,8 @@ export default class PostView extends View<Post> {
 	render() {
 		const frag = makeFrag(renderPost(this.model))
 		if (this.model.editing) {
-			this.$blockQoute = frag.querySelector("blockqoute")
-			this.$lastLine = this.$blockQoute.lastElementChild
+			this.$blockquote = frag.querySelector("blockquote")
+			this.$lastLine = this.$blockquote.lastElementChild
 			this.findBuffer(this.$lastLine)
 		}
 		this.el.append(frag)
@@ -96,7 +97,7 @@ export default class PostView extends View<Post> {
 		this.$buffer = document.createTextNode(">")
 		em.append(this.$buffer)
 		write(() =>
-			this.$blockQoute.append(em))
+			this.$blockquote.append(em))
 	}
 
 	// Append a string to the current text buffer
@@ -120,7 +121,7 @@ export default class PostView extends View<Post> {
 			this.$buffer = document.createTextNode("")
 			this.$lastLine = document.createElement("span")
 			this.$lastLine.append(this.$buffer)
-			this.$blockQoute.append(this.$lastLine)
+			this.$blockquote.append(this.$lastLine)
 		})
 	}
 
@@ -132,5 +133,54 @@ export default class PostView extends View<Post> {
 			write(() =>
 				el.innerHTML = html)
 		})
+	}
+}
+
+// View of a threads opening post. Contains some extra functionality.
+export class OPView extends PostView {
+	$omit: Element
+	model: OP
+
+	constructor(model: Post) {
+		super(model)
+	}
+
+	// Also attach the omitted post and image indicator
+	render() {
+		super.render()
+		this.$omit = document.createElement("span")
+		this.$omit.setAttribute("class", "omit")
+		this.el.append(this.$omit)
+	}
+
+	// Render posts and images omited indicator
+	renderOmit() {
+		let images = 0,
+			replies = -1
+		for (let id in posts.models) {
+			replies++
+			if (posts.models[id].image) {
+				images++
+			}
+		}
+
+		const {imageCtr, postCtr} = this.model,
+			imageOmit = imageCtr - images,
+			replyOmit = postCtr - replies
+		if (replyOmit === 0) {
+			return
+		}
+		let html = pluralize(replyOmit, lang.post)
+		if (imageOmit !== 0) {
+			html += ` ${lang.and} ${pluralize(imageOmit, lang.image)} `
+		}
+		html += HTML
+			`<span class="act">
+				<a href="${page.href.split("?")[0]}" class="history">
+					${navigation.seeAll}
+				</a>
+			<span>`
+		write(() =>
+			this.$omit.innerHTML = html)
 	}
 }

@@ -83,6 +83,7 @@ func insertThread(data []byte, c *Client) (err error) {
 	// Perform this last, so there are less dangling images because of an error
 	if !conf.TextOnly {
 		post.Image, err = getImage(req.ImageToken, req.ImageName, req.Spoiler)
+		thread.ImageCtr = 1
 		if err != nil {
 			return err
 		}

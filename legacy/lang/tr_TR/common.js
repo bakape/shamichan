@@ -48,22 +48,4 @@ var lang = {
 			return msg;
 		}
 	},
-
-	plurals: {
-		cevap: "cevaplar",
-		resim: "resimler"
-	},
-
-	// 47 replies and 21 images omitted
-	abbrev_msg:  function(omit, img_omit, url) {
-		var html = lang.pluralize(omit, "cevap");
-		if (img_omit)
-			html += " ve " + lang.pluralize(img_omit, "resim");
-		html += " gizlendi";
-		if (url) {
-			html += " <span class="act"><a href="" + url + "" class="history">"
-				+ lang.see_all + "</a></span>";
-		}
-		return html;
-	}
 };

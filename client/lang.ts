@@ -52,7 +52,11 @@ type LnPosts = {
 	quoted: string
 	board: string
 	spoiler: string
-	[index: string]: string
+	and: string
+	omitted: string
+	post: string[]
+	image: string[]
+	[index: string]: any
 }
 
 type LnUI = {

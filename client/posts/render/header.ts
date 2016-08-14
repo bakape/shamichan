@@ -1,4 +1,4 @@
-import {HTML, makeAttrs, pad, escape} from '../../util'
+import {HTML, makeAttrs, pad, escape, pluralize} from '../../util'
 import {config} from '../../state'
 import options from '../../options'
 import {PostData, ThreadData} from '../models'
@@ -144,14 +144,8 @@ function relativeTime(then: number, now: number): string {
 
 // Renders "56 minutes ago" or "in 56 minutes" like relative time text
 function ago(time: number, units: string[], isFuture: boolean): string {
-	const unit = units[time > 1 ? 1 : 0]
-	let text: string
-	if (isFuture) {
-		text = `${timeLang.in} ${time} ${unit}`
-	} else {
-		text = `${time} ${unit} ${timeLang.ago}`
-	}
-	return text
+	const count = pluralize(time, units)
+	return isFuture ? `${timeLang.in} ${count}` : `${count} ${timeLang.ago}`
 }
 
 // Render an anchor that points to the target post number

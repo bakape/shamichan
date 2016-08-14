@@ -11,7 +11,11 @@
 		"thread_locked": "Bu konu kilitlendi.",
 		"quoted": "Biri sizden alıntı yaptı",
 		"board": "Board",
-		"spoiler": "Spoiler"
+		"spoiler": "Spoiler",
+		"and": "and",
+		"omitted": "omitted",
+		"post": ["cevap", "cevaplar"],
+		"image": ["resim", "resimler"]
 	},
 
 	"ui": {

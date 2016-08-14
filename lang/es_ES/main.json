@@ -11,7 +11,11 @@
 		"thread_locked": "Este hilo esta cerrado.",
 		"quoted": "Has sido citado",
 		"board": "Board",
-		"spoiler": "Spoiler"
+		"spoiler": "Spoiler",
+		"and": "and",
+		"omitted": "omitted",
+		"post": ["post", "posts"],
+		"image": ["image", "images"]
 	},
 
 	"ui": {

@@ -11,7 +11,11 @@
 		"thread_locked": "Este tópico está trancado.",
 		"quoted": "Você foi quotado",
 		"board": "Board",
-		"spoiler": "Spoiler"
+		"spoiler": "Spoiler",
+		"and": "and",
+		"omitted": "omitted",
+		"post": ["post", "posts"],
+		"image": ["image", "images"]
 	},
 
 	"ui": {

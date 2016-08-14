@@ -18,10 +18,5 @@ export default function (data: PostData|ThreadData): string {
 		</div>
 		<small>
 			${renderBacklinks(data.backlinks)}
-		</small>
-		${(data as any).subject ? renderOmit(data as ThreadData) : ""}`
-}
-
-export function renderOmit(data: ThreadData): string {
-	return ""
+		</small>`
 }

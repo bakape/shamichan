@@ -48,17 +48,3 @@ export function formatModeration(act) {
 	}
 	return msg
 }
-
-// 47 replies and 21 images omitted
-export function abbrevMsg(omit, img_omit, url) {
-	var html = pluralize(omit, 'reply')
-	if (img_omit) {
-		html += ' and ' + pluralize(img_omit, 'image')
-	}
-	html += ' omitted'
-	if (url) {
-		html += ` <span class="act"><a href="${url}" class="history">`
-			+ lang.see_all + '</a></span>'
-	}
-	return html
-}

@@ -11,7 +11,11 @@
 		"thread_locked": "This thread is locked.",
 		"quoted": "You have been quoted",
 		"board": "Board",
-		"spoiler": "Spoiler"
+		"spoiler": "Spoiler",
+		"and": "and",
+		"omitted": "omitted",
+		"post": ["post", "posts"],
+		"image": ["image", "images"]
 	},
 
 	"ui": {

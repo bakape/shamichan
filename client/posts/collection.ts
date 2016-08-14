@@ -1,8 +1,9 @@
-import {Post} from './models'
+import {Post, OP} from './models'
 
 // Holds a collection of models
 export default class PostCollection{
 	models: {[key: string]: Post} = {}
+	op: OP
 
 	// Creates a new Collection instance, with optional starting set of models
 	constructor(models?: Post[]) {
@@ -24,6 +25,12 @@ export default class PostCollection{
 		model.collection = this
 	}
 
+	// Add the OP of a thread to the collection
+	addOP(model: OP) {
+		this.op = model
+		this.add(model)
+	}
+
 	// Remove model from the collection
 	remove(model: Post) {
 		delete this.models[model.id]
@@ -36,6 +43,7 @@ export default class PostCollection{
 			delete this.models[id].collection
 		}
 		this.models = {}
+		this.op = null
 	}
 
 	// Runs the suplied function for each model in the collection

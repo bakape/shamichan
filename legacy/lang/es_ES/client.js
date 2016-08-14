@@ -48,17 +48,4 @@ var lang = {
 			return msg;
 		}
 	},
-
-	// 47 respuestas y 21 imágenes omitidas
-	abbrev_msg:  function(omit, img_omit, url) {
-		var html = lang.pluralize(omit, "respuesta");
-		if (img_omit)
-			html += " y " + lang.pluralize(img_omit, "imagen");
-		html += " omitida";
-		if (url) {
-			html += " <span class="act"><a href="" + url + "" class="history">"
-				+ lang.see_all + "</a></span>";
-		}
-		return html;
-	}
 };
