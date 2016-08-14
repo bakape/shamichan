@@ -11,13 +11,13 @@ import {FormView} from '../forms'
 import {renderFields, validatePasswordMatch} from './common'
 
 // Login/Registration request sent to the server through websocket
-interface LoginRequest extends Captcha {
+class LoginRequest extends Captcha {
 	id: string
 	password: string
 }
 
 // Login/Registration response received from the server
-type LoginResponse = {
+class LoginResponse {
 	code: responseCode
 	session: string // Session ID token
 }

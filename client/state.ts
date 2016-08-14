@@ -10,7 +10,7 @@ import {send} from './connection'
 import PostView from './posts/view'
 
 // Server-wide global configurations
-interface Configs extends ChangeEmitter {
+class Configs extends ChangeEmitter {
 	radio: boolean
 	hats: boolean
 	illyaDance: boolean
@@ -24,7 +24,7 @@ interface Configs extends ChangeEmitter {
 }
 
 // Board-specific configurations
-export interface BoardConfigs extends ChangeEmitter {
+export class BoardConfigs extends ChangeEmitter {
 	readOnly: boolean
 	textOnly: boolean
 	forcedAnon: boolean

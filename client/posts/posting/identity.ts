@@ -7,7 +7,7 @@ import {identity as lang} from '../../lang'
 import {table, randomID} from '../../util'
 import {inputType, renderInput} from '../../forms'
 
-interface Identity extends ChangeEmitter {
+class Identity extends ChangeEmitter {
 	name: string
 	email: string
 	postPassword: string

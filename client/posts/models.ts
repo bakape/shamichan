@@ -5,7 +5,7 @@ import PostView from './view'
 import {SpliceResponse} from '../client'
 
 // Generic link object containing target post board and thread
-export type PostLink = {
+export class PostLink {
 	board: string
 	op: number
 }
@@ -44,7 +44,7 @@ export type TextState = {
 export const enum commandType {dice, flip, eightBall, syncWatch, pyu}
 
 // Single hash command result delivered from the server
-export type Command = {
+export class Command {
 	type: commandType
 	val: number[]|boolean|string
 }
@@ -99,6 +99,7 @@ export class Post extends Model implements PostData {
 	email: string
 	state: TextState
 	backlinks: PostLinks
+	commands: Command[]
 	links: PostLinks
 
 	constructor(attrs: PostData) {
@@ -199,6 +200,14 @@ export class Post extends Model implements PostData {
 	insertBacklink(links: PostLinks) {
 		this.extendField("links", links)
 		this.view.renderBacklinks()
+	}
+
+	// Insert a new command result into the model
+	insertCommand(type: commandType, val: any) {
+		if (!this.commands) {
+			this.commands = []
+		}
+		this.commands.push({type, val})
 	}
 }
 

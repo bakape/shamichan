@@ -5,7 +5,7 @@ import {admin as lang, fetchAdminPack} from '../lang'
 import {table} from '../util'
 import {langs, themes} from '../options/specs'
 
-type ServerConfigs = {
+class ServerConfigs {
 	prune: boolean
 	radio: boolean
 	hats: boolean

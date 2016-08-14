@@ -6,7 +6,7 @@ import {HTML, makeAttrs} from './util'
 import {ui} from './lang'
 
 // Data of a captcha challenge
-export interface Captcha {
+export class Captcha {
 	captcha: string
 	captchaID: string
 }

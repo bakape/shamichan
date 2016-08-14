@@ -6,7 +6,7 @@ import AccountFormView, {renderFields, validatePasswordMatch} from './common'
 import {Captcha} from '../captcha'
 import {read} from '../render'
 
-interface PasswordChangeRequest extends Captcha {
+class PasswordChangeRequest extends Captcha {
 	old: string
 	new: string
 }

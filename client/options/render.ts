@@ -1,6 +1,4 @@
-/*
- Renders the HTML of the options panel
-*/
+// Renders the HTML of the options panel
 
 import {filter, extend, groupBy, HTML, makeAttrs} from '../util'
 import {opts as lang, OptLabel} from '../lang'

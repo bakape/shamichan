@@ -5,7 +5,7 @@ import {mod as lang} from '../lang'
 import {table, makeAttrs} from '../util'
 
 // Specification for a single account management field
-interface FieldSpec {
+class FieldSpec {
 	type: string
 	name: string
 	maxLength: number

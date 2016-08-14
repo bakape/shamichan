@@ -286,7 +286,7 @@ func (*DB) TestAppendNewlineWithHashCommand(c *C) {
 
 	q = db.FindParentThread(2).Field("log").Nth(-2)
 	c.Assert(db.One(q, &log), IsNil)
-	c.Assert(string(log), Matches, `09\{"type":1,"val":(?:true|false)\}`)
+	c.Assert(string(log), Matches, `09{"id":2,"type":1,"val":(?:true|false)}`)
 }
 
 func (*DB) TestAppendNewlineWithLinks(c *C) {

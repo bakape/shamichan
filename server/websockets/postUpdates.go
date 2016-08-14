@@ -41,6 +41,12 @@ type linkMessage struct {
 	Links types.LinkMap `json:"links"`
 }
 
+// Message sent to all clients to inject a command result into a model
+type commandMessage struct {
+	ID int64 `json:"id"`
+	types.Command
+}
+
 // Shorthand. We use it a lot for update query construction.
 type msi map[string]interface{}
 
@@ -159,7 +165,10 @@ func parseLine(c *Client, insertNewline bool) error {
 
 // Write a hash command to the database
 func writeCommand(comm types.Command, idStr string, c *Client) error {
-	msg, err := encodeMessage(messageCommand, comm)
+	msg, err := encodeMessage(messageCommand, commandMessage{
+		ID:      c.openPost.id,
+		Command: comm,
+	})
 	if err != nil {
 		return err
 	}
