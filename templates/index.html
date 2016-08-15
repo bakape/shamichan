@@ -27,6 +27,99 @@
 			>disabling JavaScript
 		</h1>
 	</noscript>
+	<!-- Templates for our various views !-->
+	<template name="article">
+		<header>
+			<h3 hidden></h3>
+			<b class="name">
+				<code hidden></code>
+			</b>
+			<time></time>
+			<nav>
+				<a class="history">
+					No.
+				</a>
+				<a class="quote"></a>
+			</nav>
+			<span class="control">
+				<a>
+					⮟
+				</a>
+			</span>
+		</header>
+		<figcaption hidden>
+			<a class="image-toggle act" hidden></a>
+			<span></span>
+			<a></a>
+		</figcaption>
+		<div class="post-container">
+			<figure hidden>
+				<span class="hat" hidden></span>
+				<a>
+					<img>
+				</a>
+			</figure>
+			<blockquote></blockquote>
+		</div>
+		<small></small>
+	</template>
+	<template name="board">
+		<h1 class="image-banner" hidden>
+			<img>
+		</h1>
+		<h1 class="page-title"></h1>
+		<aside class="act glass posting">
+			<a class="new-thread-button"></a>
+		</aside>
+		<hr>
+		<div id="catalog"></div>
+		<hr>
+		<aside class="act glass posting">
+			<a class="new-thread-button"></a>
+		</aside>
+	</template>
+	<template name="thread">
+		<h1 class="page-title"></h1>
+		<span class="act">
+			<a href="#bottom"></a>
+		</span>
+		<span class="act">
+			<a id="expand-images"></a>
+		</span>
+		<hr>
+		<div id="thread-container"></div>
+		<hr>
+		<span class="act">
+			<a href="." class="history"></a>
+		</span>
+		<span class="act">
+			<a href="#"></a>
+		</span>
+		<span id="lock"></span>
+	</template>
+	<template name="catalog-thread">
+		<article class="glass">
+			<span hidden>
+				<figure>
+					<span class="hat" hidden></span>
+					<a>
+						<img>
+					</a>
+				</figure>
+				<br>
+			</span>
+			<small class="thread-links">
+				<span></span>
+				<span class="act">
+					<a class="history"></a>
+					] [
+					<a class="history"></a>
+				</span>
+			</small>
+			<br>
+			<h3></h3>
+		</article>
+	</template>
 </head>
 <body>
 	<!-- Loading indicator image !-->

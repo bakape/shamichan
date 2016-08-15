@@ -13,6 +13,7 @@ import BoardNavigation from './page/boardNavigation'
 import {exec, defer} from './defer'
 import bindThreadCreation from './posts/posting/threadCreation'
 import bindHistory from './history'
+import {initOptions} from './options'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -33,6 +34,7 @@ async function start() {
 		renderPage = resolve)
 	const pageLoader = loadPage(page, ready)
 
+	initOptions()
 	await open()
 	await loadFromDB()
 	renderPage()

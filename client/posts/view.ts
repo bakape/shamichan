@@ -4,7 +4,7 @@ import {mine, posts, page} from '../state'
 import {makeFrag, pluralize, HTML} from '../util'
 import renderPost from './render/posts'
 import {parseOpenLine, parseTerminatedLine} from './render/body'
-import {write, read} from '../render'
+import {write, read, importTemplate} from '../render'
 import {renderBacklinks} from './render/etc'
 import {posts as lang, navigation} from '../lang'
 
@@ -52,7 +52,8 @@ export default class PostView extends View<Post> {
 
 	// Render the element contents, but don't insert it into the DOM
 	render() {
-		const frag = makeFrag(renderPost(this.model))
+		const frag = importTemplate("article")
+		renderPost(frag, this.model)
 		if (this.model.editing) {
 			this.$blockquote = frag.querySelector("blockquote")
 			this.$lastLine = this.$blockquote.lastElementChild

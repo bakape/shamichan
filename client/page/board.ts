@@ -4,81 +4,64 @@ import {boardConfig, page} from '../state'
 import {ThreadData} from '../posts/models'
 import {renderThumbnail} from '../posts/render/image'
 import options from '../options'
-import {write, $threads} from '../render'
-
-// Button for expanding the thread creation form
-const newThreadButton = HTML
-	`<aside class="act glass posting">
-		<a class="new-thread-button">
-			${lang.newThread}
-		</a>
-	</aside>`
+import {write, $threads, importTemplate} from '../render'
 
 // Format a board name and title into cannonical board header format
 export const formatHeader = (name: string, title: string): string =>
 	escape(`/${name}/ - ${title}`)
 
 // Render a board page's HTML
-export default function renderBoard(threads: ThreadData[]) {
+export default function (threads: ThreadData[]) {
 
 	// TODO: Apply board title as tab title
 
-	let html = ""
-	const {banners, title} = boardConfig
+	const frag = importTemplate("board"),
+		{banners, title} = boardConfig
 	if (banners.length) {
-		html += `<h1><img src="/assets/banners/${random(banners)}"></h1>`
+		const banner = frag.querySelector(".image-banner")
+		banner.hidden = false
+		banner
+			.firstElementChild
+			.setAttribute("src", `/assets/banners/${random(banners)}`)
 	}
-	html += HTML
-		`<h1>
-			${formatHeader(page.board, title)}
-		</h1>
-		${newThreadButton}
-		<hr>
-		${renderCatalog(threads)}
-		<hr>
-		${newThreadButton}`
 
-	write(() =>
-		$threads.innerHTML = html)
-}
+	frag
+		.querySelector(".page-title")
+		.textContent = formatHeader(page.board, title)
 
-// Render the thread catalog
-function renderCatalog(threads: ThreadData[]): string {
-	let html = `<div id="catalog">`
-	for (let thread of threads) {
-		html += renderThread(thread)
+	const threadEls: DocumentFragment[] = []
+	for (let i = 0; i < threads.length; i++) {
+		threadEls[i] = renderThread(threads[i])
 	}
-	html += "</div>"
+	frag.querySelector("#catalog").append(...threadEls)
 
-	return html
+	write(() => {
+		$threads.innerHTML = ""
+		$threads.append(frag)
+	})
 }
 
 // Render a single thread for the thread catalog
-function renderThread(thread: ThreadData): string {
-	const href = `../${thread.board}/${thread.id}`,
-		lastN = options.lastN.toString(),
-		needImage = !!thread.image && !options.hideThumbs
+function renderThread(thread: ThreadData): DocumentFragment {
+	const frag = importTemplate("catalog-thread"),
+		href = `../${thread.board}/${thread.id}`,
+		lastN = options.lastN.toString()
 
-	return HTML
-	`<article class="glass">
-		${needImage ? renderThumbnail(thread.image, href)  + "<br>" : ""}
-		<small class="thread-links">
-			<span title="${navigation.catalogOmit}">
-				${thread.postCtr.toString()}/${thread.imageCtr.toString()}
-			</span>
-			<span class="act">
-				<a href="${href}" class="history">
-					${navigation.expand}
-				</a>
-				] [
-				<a href="${href}?last=${lastN}" class="history">
-					${navigation.last} ${lastN}
-				</a>
-			</span>
-		</small>
-		<br>
-		<h3>
-			「${escape(thread.subject)}」
-		</h3>
-	</article>`
+	if (thread.image && !options.hideThumbs) {
+		const container = frag.querySelector("span")
+		container.hidden = false
+		renderThumbnail(container.querySelector("figure a"), thread.image, href)
+	}
+
+	const links = frag.querySelector(".thread-links")
+	links.firstElementChild.textContent = `${thread.postCtr}/${thread.imageCtr}`
+	const act = links.lastElementChild
+	links.firstElementChild.setAttribute("href", href)
+	const $lastN = links.lastElementChild
+	$lastN.setAttribute("href", `${href}?last=${lastN}`)
+	$lastN.textContent = `${navigation.last} ${lastN}`
+
+	frag.querySelector("h3").textContent = `「${escape(thread.subject)}」`
+
+	return frag
 }

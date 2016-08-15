@@ -8,7 +8,7 @@ import {specs, OptionSpec, optionType} from './specs'
 export default function (): string {
 	let html = '<div class="tab-butts">'
 	const {tabs} = lang,
-		byTab = groupBy(specs, 'tab'),
+		byTab = groupBy(specs(), 'tab'),
 		opts: {[key: number]: OptionSpec[]} = []
 
 	// Render tab butts

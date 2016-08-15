@@ -130,18 +130,21 @@ class OptionModel {
 	}
 }
 
-// Populate option model collection and central model
-for (let spec of specs) {
-	new OptionModel(spec)
-}
-
-defer(() =>
-	new OptionsPanel())
-
-// Conditionally load and execute optional modules
-for (let opt of ["userBG", "nowPlaying"]) {
-	if (options[opt]) {
-		defer(() =>
-			models[opt].execute(true))
+// Intialize options system
+export const initOptions = () => {
+	// Populate option model collection and central model
+	for (let spec of specs()) {
+		new OptionModel(spec)
 	}
+
+	// Conditionally load and execute optional modules
+	for (let opt of ["userBG", "nowPlaying"]) {
+		if (options[opt]) {
+			defer(() =>
+				models[opt].execute(true))
+		}
+	}
+
+	defer(() =>
+		new OptionsPanel())
 }

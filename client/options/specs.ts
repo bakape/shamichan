@@ -62,7 +62,7 @@ export type OptionSpec = {
 
 // Option position in the options panel is defined by order in the
 // array.
-export const specs: OptionSpec[] = [
+export const specs = (): OptionSpec[] => [
 	// Language selection
 	{
 		id: 'lang',

@@ -13,10 +13,10 @@ interface Node {
 interface Element {
 	disabled?: boolean
 	checked?: boolean
+	hidden: boolean
 	value?: any
 	files?: FileList
 	style: CSSStyleDeclaration
-
 
 	addEventListener(
 		type: string,

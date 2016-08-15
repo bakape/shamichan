@@ -39,7 +39,7 @@ export class BoardConfigs extends ChangeEmitter {
 }
 
 // The current state of a board or thread page
-export interface PageState extends ChangeEmitter {
+export class PageState extends ChangeEmitter {
 	thread: number
 	lastN: number
 	board: string

@@ -1,21 +1,23 @@
-import {config, page, boardConfig} from '../../state'
+import {config, boardConfig} from '../../state'
 import options from '../../options'
-import {HTML, commaList, makeAttrs, escape} from '../../util'
+import {commaList, escape, setAttrs} from '../../util'
 import {ImageData, fileTypes} from '../models'
 import {images as lang} from '../../lang'
 
 // Render a thumbnail of an image, according to configuration settings
-export function renderImage(data: ImageData, reveal?: boolean): string {
+export function renderImage(el: Element, data: ImageData, reveal?: boolean) {
+	el.hidden = false
 	const showThumb = !options.hideThumbs || reveal
-	return HTML
-		`<figure>
-			${config.hats && showThumb ? '<span class="hat"></span>': ''}
-			${showThumb ? renderThumbnail(data) : ''}
-		</figure>`
+	if (config.hats && showThumb) {
+		el.firstElementChild.hidden = false
+	}
+	if (showThumb) {
+		renderThumbnail(el.lastElementChild, data)
+	}
 }
 
 // Render the information caption above the image
-export function renderFigcaption(data: ImageData, reveal?: boolean): string {
+export function renderFigcaption(el:Element, data: ImageData, reveal?: boolean) {
 	const list: string[] = []
 	if (data.audio) {
 		list.push('\u266B')
@@ -28,14 +30,16 @@ export function renderFigcaption(data: ImageData, reveal?: boolean): string {
 		list.push('APNG')
 	}
 
-	return HTML
-		`<figcaption>
-			${hiddenToggle(reveal)}
-			<span>
-				(${commaList(list)})
-			</span>
-			${imageLink(data)}
-		</figcaption>`
+	const [hToggle, info, link] = Array.from(el.children)
+	if (!options.hideThumbs) {
+		hToggle.hidden = true
+	} else {
+		hToggle.hidden = false
+		hToggle.textContent = lang[reveal ? 'hide' : 'show']
+	}
+	info.textContent = `(${commaList(list)})`
+	imageLink(link, data)
+	el.hidden = false
 }
 
 // Renders a human readable file size string
@@ -48,17 +52,6 @@ function readableFilesize(size: number): string {
 	}
 	const text = Math.round(size / 104857.6).toString()
 	return `${text.slice(0, -1)}.${text.slice(-1)} MB`
-}
-
-// Render the button for toggling hidden thumbnails
-function hiddenToggle(reveal: boolean): string {
-	if (!options.hideThumbs) {
-		return ''
-	}
-	return HTML
-		`<a class="imageToggle">
-			[${lang[reveal ? 'hide' : 'show']}]
-		</a>`
 }
 
 // TODO: Refactor image search rendering
@@ -153,7 +146,7 @@ function sourcePath({SHA1, fileType}: ImageData): string {
 }
 
 // Render a name + download link of an image
-function imageLink(data: ImageData): string {
+function imageLink(el: Element, data: ImageData) {
 	let {name} = data
 	const {fileType} = data,
 		ext = fileTypes[fileType],
@@ -171,11 +164,12 @@ function imageLink(data: ImageData): string {
 		name = fullName
 	}
 
-	return `<a ${makeAttrs(attrs)}>${name}</a>`
+	setAttrs(el, attrs)
+	el.textContent = name
 }
 
 // Render the actual thumbnail image
-export function renderThumbnail(data: ImageData, href?: string): string {
+export function renderThumbnail(el: Element, data: ImageData, href?: string) {
 	const src = sourcePath(data)
 	let thumb: string,
 		[width, height, thumbWidth, thumbHeight] = data.dims
@@ -211,5 +205,6 @@ export function renderThumbnail(data: ImageData, href?: string): string {
 		linkAttrs["target"] = "_blank"
 	}
 
-	return `<a ${makeAttrs(linkAttrs)}><img ${makeAttrs(imgAttrs)}></a>`
+	setAttrs(el, linkAttrs)
+	setAttrs(el.firstElementChild, imgAttrs)
 }

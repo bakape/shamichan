@@ -169,6 +169,13 @@ export function makeAttrs(attrs: StringMap): string {
 	return html
 }
 
+// Set attributes from a key-value map to the element
+export function setAttrs(el: Element, attrs: StringMap) {
+	for (let key in attrs) {
+		el.setAttribute(key, attrs[key])
+	}
+}
+
 // Makes a ', ' seperated list
 export function commaList(items: string[]): string {
 	let html = ''
