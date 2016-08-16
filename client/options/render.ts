@@ -2,13 +2,21 @@
 
 import {filter, extend, groupBy, HTML, makeAttrs} from '../util'
 import {opts as lang, OptLabel} from '../lang'
-import {specs, OptionSpec, optionType} from './specs'
+import {OptionSpec, optionType} from './specs'
+import {models} from '../options'
 
 // Render the inner HTML of the options panel
 export default function (): string {
 	let html = '<div class="tab-butts">'
-	const {tabs} = lang,
-		byTab = groupBy(specs(), 'tab'),
+	const {tabs} = lang
+
+	// Extract populated specs from options models
+	const specs: OptionSpec[] = []
+	for (let id in models) {
+		specs.push(models[id].spec)
+	}
+
+	const byTab = groupBy(specs, 'tab'),
 		opts: {[key: number]: OptionSpec[]} = []
 
 	// Render tab butts

@@ -61,7 +61,8 @@ export type OptionSpec = {
 }
 
 // Option position in the options panel is defined by order in the
-// array.
+// array. A function, so we can ensure it is not created before state.ts is
+// loaded.
 export const specs = (): OptionSpec[] => [
 	// Language selection
 	{
