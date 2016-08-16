@@ -150,18 +150,16 @@
 	}
 
 	function loadClient() {
-		// Load all client modules as precompiled System.register format
-		// modules
-		var meta = {}
-		meta['es5/*'] = meta['es6/*'] = {format: 'register'}
-
 		System.config({
 			baseURL: '/assets/js',
 			defaultJSExtensions: true,
-			meta: meta
 		})
 
 		System.import('es' + (legacy ? 5 : 6) + '/main')
+			.catch(function (err) {
+				alert(err)
+				throw err
+			})
 
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker

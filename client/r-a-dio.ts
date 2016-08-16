@@ -5,7 +5,7 @@ import options from './options'
 import {write} from './render'
 import {banner as lang} from './lang'
 
-class RadioData {
+type RadioData = {
 	np: string
 	listeners: number
 	dj: string

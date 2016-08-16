@@ -1,6 +1,6 @@
 {
   "name": "meguca",
-  "license": "AGPL",
+  "license": "AGPL-3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/bakape/meguca.git"
@@ -22,6 +22,7 @@
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.4",
     "systemjs": "^0.19.9",
+    "typescript": "^1.8.10",
     "whatwg-fetch": "^1.0.0"
   }
 }

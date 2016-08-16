@@ -3,9 +3,9 @@ export type ModelAttrs = {[attr: string]: any}
 type HookHandler = (arg: any) => void
 type HookMap = {[key: string]: HookHandler[]}
 
-export class ChangeEmitter {
-	onChange: (key: string, func: HookHandler) => void
-	replaceWith: (newObj: ChangeEmitter) => void
+export interface ChangeEmitter {
+	onChange(key: string, func: HookHandler): void
+	replaceWith(newObj: ChangeEmitter): void
 
 	[index: string]: any
 }

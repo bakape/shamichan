@@ -6,18 +6,11 @@ import {defer} from '../defer'
 import {mod as lang, ui} from '../lang'
 import {loadModule, inputValue, HTML} from '../util'
 import {handlers, send, message} from '../connection'
-import {Captcha} from '../captcha'
 import {FormView} from '../forms'
 import {renderFields, validatePasswordMatch} from './common'
 
-// Login/Registration request sent to the server through websocket
-class LoginRequest extends Captcha {
-	id: string
-	password: string
-}
-
 // Login/Registration response received from the server
-class LoginResponse {
+type LoginResponse = {
 	code: responseCode
 	session: string // Session ID token
 }

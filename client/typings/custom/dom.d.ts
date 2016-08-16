@@ -24,6 +24,7 @@ interface Element {
 		options?: boolean|EventListenerOptions
 	): void
 	click(): void
+	focus(): void
 	matches(selector: string): boolean
 }
 

@@ -77,9 +77,14 @@ export default class PostView extends View<Post> {
 	// Remove the element from the DOM and detach from its model, allowing the
 	// PostView instance to be garbage collected
 	remove() {
-		delete this.model.view
-		delete this.model
+		this.unbind()
 		super.remove()
+	}
+
+	// Remove the model's cross references, but don't remove the element from
+	// the DOM
+	unbind() {
+		this.model.view = this.model = null
 	}
 
 	// Replace the current line with a reparsed fragment

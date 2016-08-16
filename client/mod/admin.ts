@@ -5,7 +5,7 @@ import {admin as lang, fetchAdminPack} from '../lang'
 import {table} from '../util'
 import {langs, themes} from '../options/specs'
 
-class ServerConfigs {
+type ServerConfigs = {
 	prune: boolean
 	radio: boolean
 	hats: boolean
@@ -146,7 +146,7 @@ export default class ConfigPanel extends AccountFormView {
 			cls: 'wide-fields', // The panel needs much larger text inputs
 			noCaptcha: true,
 		}
-		super({}, () =>
+		super(attrs, () =>
 			this.extractConfigs())
 
 		// Request curent configuration and render the panel

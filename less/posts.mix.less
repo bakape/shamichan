@@ -106,8 +106,6 @@ figcaption, header {
 }
 
 figure {
-	display: inline;
-	position: relative;
 	margin: 0;
 	img {
 		border: 0;
@@ -115,12 +113,6 @@ figure {
 		float: left;
 		margin: 3px 20px 0 0;
 		vertical-align: top;
-		&.noMargin {
-			margin-right: 0;
-		}
-	}
-	section & img {
-		margin-bottom: 0.5em;
 	}
 	.hat {
 		background: url('/assets/hat.png') no-repeat;
@@ -163,33 +155,14 @@ header {
 	line-height: 200%;
 }
 
-.themed {
-	background-color: transparent;
-	color: #444;
-	outline: none;
-}
-
-pre {
-	height: auto;
-	margin: 0;
-	position: absolute;
-	top: 0;
-	width: auto;
-	visibility: hidden;
-}
-
-pre, .themed {
+#text-input {
 	border: 0;
 	padding: 0;
-}
-
-#input {
-	display: inline;
-	margin: 0 0 -3px 0;
+	background-color: transparent;
+	outline: none;
 	overflow-y: hidden;
 	resize: none;
-	text-wrap: none;
-	vertical-align: baseline;
+	display: block;
 }
 
 .upload-status {
@@ -221,6 +194,11 @@ pre, .themed {
 		& span:first-child {
 			margin-right: 0.2em;
 		}
+	}
+	figure img {
+		clear: none;
+		float: none;
+		margin: 0;
 	}
 }
 

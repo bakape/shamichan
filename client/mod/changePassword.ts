@@ -6,7 +6,7 @@ import AccountFormView, {renderFields, validatePasswordMatch} from './common'
 import {Captcha} from '../captcha'
 import {read} from '../render'
 
-class PasswordChangeRequest extends Captcha {
+interface PasswordChangeRequest extends Captcha {
 	old: string
 	new: string
 }
@@ -15,10 +15,7 @@ class PasswordChangeRequest extends Captcha {
 export default class PasswordChangeView extends AccountFormView {
 	constructor() {
 		super({}, () =>
-			send(message.changePassword, {
-				old: inputValue(this.el, "oldPassword"),
-				new: inputValue(this.el, "newPassword"),
-			}))
+			this.sendRequest())
 		this.render()
 		read(() =>
 			validatePasswordMatch(this.el, "newPassword", "repeat"))
@@ -59,5 +56,14 @@ export default class PasswordChangeView extends AccountFormView {
 	remove() {
 		delete handlers[message.changePassword]
 		super.remove()
+	}
+
+	sendRequest() {
+		const req: PasswordChangeRequest = {
+			old: inputValue(this.el, "oldPassword"),
+			new: inputValue(this.el, "newPassword"),
+		} as PasswordChangeRequest
+		this.injectCaptcha(req)
+		send(message.changePassword, req)
 	}
 }

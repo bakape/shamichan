@@ -29,7 +29,7 @@ export function open(): Promise<void> {
 			}
 			resolve()
 		}
-		r.onupgradeneeded = event => {
+		r.onupgradeneeded = () => {
 			const db = r.result as IDBDatabase
 
 			// Various post number sets, like posts the user has made, posts

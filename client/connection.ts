@@ -5,7 +5,6 @@ import {debug, syncCounter, page} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
 import {authenticate} from './mod/login'
-import {defer} from './defer'
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server
@@ -205,7 +204,7 @@ function resetAttempts() {
 // channel
 handlers[message.synchronise] = connSM.feeder(connEvent.sync)
 
-connSM.act([connState.syncing], connEvent.sync, connState.synced, id =>
+connSM.act([connState.syncing], connEvent.sync, connState.synced, () =>
 	renderStatus(syncStatus.synced))
 
 connSM.wildAct(connEvent.close, connState.dropped, event => {

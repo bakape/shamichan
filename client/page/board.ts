@@ -1,5 +1,5 @@
-import {HTML, random, escape} from '../util'
-import {posts as lang, navigation} from '../lang'
+import {random, escape} from '../util'
+import {navigation} from '../lang'
 import {boardConfig, page} from '../state'
 import {ThreadData} from '../posts/models'
 import {renderThumbnail} from '../posts/render/image'
@@ -48,16 +48,15 @@ function renderThread(thread: ThreadData): DocumentFragment {
 		lastN = options.lastN.toString()
 
 	if (thread.image && !options.hideThumbs) {
-		const container = frag.querySelector("span")
-		container.hidden = false
-		renderThumbnail(container.querySelector("figure a"), thread.image, href)
+		const fig = frag.querySelector("figure")
+		fig.hidden = false
+		renderThumbnail(fig.querySelector("a"), thread.image, href)
 	}
 
 	const links = frag.querySelector(".thread-links")
 	links.firstElementChild.textContent = `${thread.postCtr}/${thread.imageCtr}`
-	const act = links.lastElementChild
-	links.firstElementChild.setAttribute("href", href)
-	const $lastN = links.lastElementChild
+	const [expand, $lastN] = links.querySelectorAll("a.history")
+	expand.setAttribute("href", href)
 	$lastN.setAttribute("href", `${href}?last=${lastN}`)
 	$lastN.textContent = `${navigation.last} ${lastN}`
 

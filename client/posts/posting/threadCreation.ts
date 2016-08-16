@@ -9,6 +9,8 @@ import {page, boardConfig} from '../../state'
 import {posts as lang, ui} from '../../lang'
 import {send, message, handlers} from '../../connection'
 import UploadForm, {FileData} from './upload'
+import navigate from '../../history'
+import {OPFormModel} from './form'
 
 export interface PostCredentials extends Captcha, FileData {
 	name?: string
@@ -25,6 +27,11 @@ interface ThreadCreationRequest extends PostCredentials {
 // Response codes for thread and post insertion requests
 export const enum responseCode {success, invalidCaptcha}
 
+type ThreadCreationResponse = {
+	code: responseCode
+	id: number
+}
+
 // For ensuring we have unique captcha IDs
 let threadFormCounter = 0
 
@@ -40,6 +47,7 @@ class ThreadForm extends FormView implements UploadForm {
 	$board: Element
 	$uploadContainer: Element
 	needImage: boolean // Does the board require an OP image?
+	selectedBoard: string
 
 	// UploadForm properties
 	$uploadStatus: Element
@@ -56,8 +64,8 @@ class ThreadForm extends FormView implements UploadForm {
 			this.render()
 		})
 
-		handlers[message.insertThread] = (code: responseCode) =>
-			this.handleResponse(code)
+		handlers[message.insertThread] = (msg: ThreadCreationResponse) =>
+			this.handleResponse(msg)
 	}
 
 	// Render the element, hide the parent element's existing contents and
@@ -170,18 +178,19 @@ class ThreadForm extends FormView implements UploadForm {
 			}
 		}
 		req.subject = inputValue(this.el, "subject")
-		req.board = page.board === "all" ? this.getSelectedBoard() : page.board
+		this.selectedBoard = req.board =
+			page.board === "all"
+				? this.getSelectedBoard()
+				: page.board
 		this.injectCaptcha(req)
 		send(message.insertThread, req)
 	}
 
-	handleResponse(code: responseCode) {
+	async handleResponse({code, id}: ThreadCreationResponse) {
 		switch (code) {
 		case responseCode.success:
-			this.remove()
-
-			// TODO: Redirect to newly-created thread and open PostForm
-
+			await navigate(`/${this.selectedBoard}/${id}`, null, true)
+			new OPFormModel(id)
 			break
 		case responseCode.invalidCaptcha:
 			this.renderFormResponse(ui.invalidCaptcha)

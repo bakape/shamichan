@@ -29,6 +29,12 @@ const (
 	invalidInsertionCaptcha
 )
 
+// Response to a thread creation request
+type threadCreationResponse struct {
+	Code int   `json:"code"`
+	ID   int64 `json:"id"`
+}
+
 // Insert a new thread into the database
 func insertThread(data []byte, c *Client) (err error) {
 	var req types.ThreadCreationRequest
@@ -39,7 +45,9 @@ func insertThread(data []byte, c *Client) (err error) {
 		return errInvalidBoard
 	}
 	if !authenticateCaptcha(req.Captcha, c.IP) {
-		return c.sendMessage(messageInsertThread, invalidInsertionCaptcha)
+		return c.sendMessage(messageInsertThread, threadCreationResponse{
+			Code: invalidInsertionCaptcha,
+		})
 	}
 
 	var conf config.PostParseConfigs
@@ -105,7 +113,11 @@ func insertThread(data []byte, c *Client) (err error) {
 	if err := db.IncrementBoardCounter(req.Board); err != nil {
 		return err
 	}
-	if err := c.sendMessage(messageInsertThread, postCreated); err != nil {
+	msg := threadCreationResponse{
+		Code: postCreated,
+		ID:   id,
+	}
+	if err := c.sendMessage(messageInsertThread, msg); err != nil {
 		return err
 	}
 	if err := syncToThread(req.Board, id, 0, c); err != nil {

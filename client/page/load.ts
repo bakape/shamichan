@@ -5,7 +5,7 @@ import renderBoard from './board'
 import {ThreadData} from '../posts/models'
 
 // Data of a single board retrieved from the server through `/json/:board`
-class BoardData {
+type BoardData = {
 	ctr: number
 	threads: ThreadData[]
 }

@@ -1,10 +1,9 @@
-import {HTML, escape, makeFrag} from '../util'
+import {escape} from '../util'
 import {navigation as lang} from '../lang'
-import {ThreadData, PostData, Post} from '../posts/models'
+import {ThreadData, PostData, Post, OP} from '../posts/models'
 import PostView, {OPView} from '../posts/view'
-import {page, posts} from '../state'
+import {page, posts as postCollection} from '../state'
 import {write, $threads, importTemplate} from '../render'
-import renderPost from '../posts/render/posts'
 
 // Container for all rendered posts
 export let $threadContainer: Element
@@ -24,9 +23,10 @@ export default function renderThread(thread: ThreadData) {
 		{posts} = thread
 	delete thread.posts // Reduce strain on the GC. We won't be usng these.
 
-	const opModel = new Post(thread),
+	const opModel = new OP(thread),
 		opView = new OPView(opModel)
 	els.push(opView.el)
+	postCollection.addOP(opModel)
 
 	for (let id in posts) {
 		els.push(createPost(thread.posts[id]))
@@ -46,6 +46,6 @@ export default function renderThread(thread: ThreadData) {
 function createPost(data: PostData): Element {
 	const model = new Post(data),
 		view = new PostView(model)
-	posts.add(model)
+	postCollection.add(model)
 	return view.el
 }

@@ -5,7 +5,7 @@ import PostView from './view'
 import {SpliceResponse} from '../client'
 
 // Generic link object containing target post board and thread
-export class PostLink {
+export type PostLink = {
 	board: string
 	op: number
 }
@@ -44,7 +44,7 @@ export type TextState = {
 export const enum commandType {dice, flip, eightBall, syncWatch, pyu}
 
 // Single hash command result delivered from the server
-export class Command {
+export interface Command {
 	type: commandType
 	val: number[]|boolean|string
 }
@@ -164,18 +164,28 @@ export class Post extends Model implements PostData {
 	}
 
 	// Splice the current open line of text
-	splice({start, len, text}: SpliceResponse) {
-		const {state: {line}} = this,
-			keep = line.slice(0, start)
+	splice(msg: SpliceResponse) {
+		const {state} = this
+		state.line = this.spliceLine(state.line, msg)
+		this.resetState()
+		this.view.reparseLine()
+	}
+
+	// Extra method for code reuse in PostForms
+	spliceLine(line: string, {start, len, text}: SpliceResponse): string {
+		const keep = line.slice(0, start)
 		let end: string
 		if (len === -1) { // Special meaning - replace till line end
 			end = text
 		} else {
-			end = text + line.substring(start+len, -1)
+			end = text + line.substring(start + len, -1)
 		}
-		this.state.line = keep + end
-		this.resetState()
-		this.view.reparseLine()
+		line = keep + end
+
+		// Replace last line in text body
+		this.body = this.body.split("\n").slice(0, -1).join("\n") + line
+
+		return line
 	}
 
 	// Extend a field on the model, if it exists. Assign if it doesn't

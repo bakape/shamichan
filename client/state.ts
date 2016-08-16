@@ -10,7 +10,7 @@ import {send} from './connection'
 import PostView from './posts/view'
 
 // Server-wide global configurations
-class Configs extends ChangeEmitter {
+interface Configs extends ChangeEmitter {
 	radio: boolean
 	hats: boolean
 	illyaDance: boolean
@@ -24,7 +24,7 @@ class Configs extends ChangeEmitter {
 }
 
 // Board-specific configurations
-export class BoardConfigs extends ChangeEmitter {
+export interface BoardConfigs extends ChangeEmitter {
 	readOnly: boolean
 	textOnly: boolean
 	forcedAnon: boolean
@@ -39,7 +39,7 @@ export class BoardConfigs extends ChangeEmitter {
 }
 
 // The current state of a board or thread page
-export class PageState extends ChangeEmitter {
+export interface PageState extends ChangeEmitter {
 	thread: number
 	lastN: number
 	board: string
@@ -63,9 +63,6 @@ export const posts = new PostCollection()
 
 // Posts I made in any tab
 export let mine: Set<number>
-
-// Posts I made in this tab
-export const ownPosts = new Set<number>()
 
 // Tracks the synchronisation progress of the current thread/board
 export let syncCounter: number

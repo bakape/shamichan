@@ -6,10 +6,9 @@ import loadPage from './page/load'
 import {synchronise} from './connection'
 
 // Bind event listener
-export default () =>
-	on(document, "click", handleClick, {
-		selector: "a.history, a.history img",
-	})
+on(document, "click", handleClick, {
+	selector: "a.history, a.history img",
+})
 
 function handleClick(event: KeyboardEvent) {
 	if (event.ctrlKey) {
@@ -19,12 +18,12 @@ function handleClick(event: KeyboardEvent) {
 		((event.target as Element)
 			.closest("a.history") as HTMLAnchorElement)
 		.href
-	navigate(href, event)
+	navigate(href, event, true).catch(alertError)
 }
 
 // Navigate to the target og the URL and load its data. NewPoint indicates, if
 // a new history state should be pushed.
-async function navigate(url: string, event: Event) {
+async function navigate(url: string, event: Event, needPush: boolean) {
 	let nextState = read(url)
 
 	// Does the link point to the same page as this one?
@@ -48,17 +47,20 @@ async function navigate(url: string, event: Event) {
 	await pageLoader
 	synchronise()
 
-	if (event) {
+	if (needPush) {
 		history.pushState(null, null, nextState.href)
 	}
 	displayLoading(false)
 }
 
+export default navigate
+
 function alertError(err: Error) {
 	displayLoading(false)
 	alert(err)
+	throw err
 }
 
 // For back and forward history events
 window.onpopstate = (event: any) =>
-	navigate(event.target.location.href, null).catch(alertError)
+	navigate(event.target.location.href, null, false).catch(alertError)

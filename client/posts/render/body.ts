@@ -76,12 +76,12 @@ export function parseTerminatedLine(line: string, data: PostData): string {
 		}
 	}
 
-	html += terminateTags(state) + "<br>"
+	html += terminateTags(state, true)
 	return html
 }
 
 // Close all open tags at line end
-function terminateTags(state: TextState): string {
+function terminateTags(state: TextState, newLine: boolean): string {
 	let html = ""
 	if (state.spoiler) {
 		state.spoiler = false
@@ -90,6 +90,9 @@ function terminateTags(state: TextState): string {
 	if (state.quote) {
 		state.quote = false
 		html += "</em>"
+	}
+	if (newLine) {
+		html += "<br>"
 	}
 	return html + "</span>"
 }
@@ -116,7 +119,7 @@ export function parseOpenLine(state: TextState): string {
 		}
 	}
 
-	html += terminateTags(state)
+	html += terminateTags(state, false)
 
 	return html
 }

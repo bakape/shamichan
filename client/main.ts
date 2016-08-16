@@ -2,7 +2,8 @@
 
  // TODO: Remove, when proper structure done
 import * as client from './client'
-const c = client  // Prevents the compiler from removing as an unused import
+let c = client  // Prevents the compiler from removing as an unused import
+c = null
 
 import {displayLoading} from './state'
 import {start as connect} from './connection'
@@ -10,9 +11,8 @@ import {loadFromDB, page} from './state'
 import {open} from './db'
 import loadPage from './page/load'
 import BoardNavigation from './page/boardNavigation'
-import {exec, defer} from './defer'
+import {exec} from './defer'
 import bindThreadCreation from './posts/posting/threadCreation'
-import bindHistory from './history'
 import {initOptions} from './options'
 
 // Clear cookies, if versions mismatch.
@@ -41,7 +41,6 @@ async function start() {
 	new BoardNavigation()
 	connect()
 	bindThreadCreation()
-	bindHistory()
 	exec()
 	await pageLoader
 	displayLoading(false)

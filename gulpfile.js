@@ -99,7 +99,8 @@ gulp.task("es5", () =>
 	.pipe(ts(tsProject))
 	.on('error', handleError)
 	.pipe(babel({
-		presets: ["babel-preset-es2015"]
+		presets: ["babel-preset-es2015"],
+		compact: true,
 	}))
 	.pipe(uglify())
 	.pipe(sourcemaps.write('maps'))
@@ -107,7 +108,9 @@ gulp.task("es5", () =>
 
 gulp.task('default', tasks)
 
-const tsProject = ts.createProject('client/tsconfig.json')
+const tsProject = ts.createProject('client/tsconfig.json', {
+	typescript: require("typescript"),
+})
 
 // Builds the client files of the apropriate ECMAScript version
 function buildClient() {

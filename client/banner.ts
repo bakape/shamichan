@@ -8,7 +8,6 @@ import {banner as lang} from './lang'
 import {write, read} from './render'
 import {find, HTML} from './util'
 import Model from './model'
-import View from './view'
 
 // Stores the views of all BannerModal instances
 export const bannerModals: {[key: string]: BannerModal} = {}

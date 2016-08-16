@@ -1,11 +1,11 @@
 // Core websocket message handlers
 
 import {handlers, message, connSM, connEvent} from './connection'
-import {posts, mine} from './state'
-import {Post, PostLinks, Command, commandType} from './posts/models'
+import {posts} from './state'
+import {Post, PostLinks, Command} from './posts/models'
 
 // Message for splicing the contents of the current line
-export class SpliceResponse {
+export type SpliceResponse = {
 	id: number
 	start: number
 	len: number
@@ -14,13 +14,13 @@ export class SpliceResponse {
 
 // Message sent to listening clients about a link or backlink insertion into
 // a post
-class LinkMessage {
+type LinkMessage = {
 	id: number
 	links: PostLinks
 }
 
 // Meesage to inject a new command result into a model
-class CommandMessage extends Command {
+interface CommandMessage extends Command {
 	id: number
 }
 

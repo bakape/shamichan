@@ -66,10 +66,6 @@ postSM.act('ready + new -> draft', aside => {
 	else
 		section = document.createElement('section');
 
-	// Shift OP's replies on board pages
-	if (op && !state.page.get('thread'))
-		state.posts.get(op).dispatch('shiftReplies', true);
-
 	postForm = new ComposerView({
 		model: postModel = new ComposerModel({op}),
 		destination: aside,
@@ -154,28 +150,6 @@ function handle_shortcut(event) {
 	}
 }
 
-// TODO: Unify self-updates with OneeSama; this is redundant
-main.oneeSama.hook('insertOwnPost', ({links}) => {
-	if (!postForm || !links)
-		return;
-	postForm.$buffer.find('.nope').each(function () {
-		var $a = $(this);
-		const text = $a.text(),
-			m = text.match(/^>>(\d+)/);
-		if (!m)
-			return;
-		const num = m[1],
-			op = links[num];
-		if (!op)
-			return;
-		let $ref = $(common.join([postForm.imouto.postRef(num, op, false)]));
-		$a.attr('href', $ref.attr('href')).attr('class', 'history');
-		const refText = $ref.text();
-		if (refText != text)
-			$a.text(refText);
-	});
-});
-
 const ComposerView = Backbone.View.extend({
 	events: {
 		'input #trans': 'onInput',
@@ -223,14 +197,6 @@ const ComposerView = Backbone.View.extend({
 	},
 	// Initial render
 	render({destination, section}) {
-		const op = this.model.get('op');
-		this.setElement((op ? document.createElement('article') : section));
-
-		// A defined op means the post is a reply, not a new thread
-		this.isThread = !op;
-
-		this.$buffer = $('<p/>');
-		this.$lineBuffer = $('<p/>');
 		this.$meta = $('<header><a class="nope"><b/></a> <time/></header>');
 		this.$input = $('<textarea/>', {
 			name: 'body',
@@ -244,20 +210,6 @@ const ComposerView = Backbone.View.extend({
 			type: 'button',
 			value: main.lang.done
 		});
-		this.$subject = $('<input/>', {
-			id: 'subject',
-			class: 'themed',
-			maxlength: state.hotConfig.SUBJECT_MAX_LENGTH,
-			width: '80%'
-		});
-		this.$blockquote = $('<blockquote/>');
-
-		/*
-		 Allows keeping the input buffer sized as if the text was monospace,
-		 without actually displaying monospace font. Keeps the input buffer from
-		 shifting around needlessly.
-		 */
-		this.$sizer = $('<pre/>').appendTo('body');
 
 		this.$blockquote.append(this.$buffer, this.$lineBuffer, this.$input);
 		this.$el.append(this.$meta, this.$blockquote, '<small/>');
@@ -266,8 +218,6 @@ const ComposerView = Backbone.View.extend({
 				this.$subject);
 			this.$blockquote.hide();
 		}
-		this.$uploadForm = this.renderUploadForm();
-		this.$el.append(this.$uploadForm);
 
 		// Add a menu to the postform
 		main.oneeSama.trigger('draft', this.$el);

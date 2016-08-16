@@ -16,7 +16,7 @@ write(() => {
 	document.head.append(style)
 })
 
-class BackgroundStore {
+type BackgroundStore = {
 	id: string
 	normal: Blob
 	blurred: Blob
