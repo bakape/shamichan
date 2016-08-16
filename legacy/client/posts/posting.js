@@ -157,6 +157,7 @@ const ComposerView = Backbone.View.extend({
 		'click #done': 'finish',
 		'click #toggle': 'onToggle'
 	},
+
 	initialize(args) {
 		this.listenTo(this.model, {
 			'change': this.renderButtons,
@@ -169,76 +170,21 @@ const ComposerView = Backbone.View.extend({
 		this.line_count = 1;
 		this.char_count = 0;
 
-		// Initialize the form's private rendering singleton instance
-		let imouto = this.imouto = new common.OneeSama({
-			callback: inject,
-			op: state.page.get('thread'),
-			state: [common.S_BOL, 0],
-
-			// TODO: Convert current OneeSama.state array to more flexible
-			// object
-			state2: {spoiler: 0},
-			$buffer: this.$buffer,
-			eLinkify: main.oneeSama.eLinkify,
-			lang: main.lang,
-			tamashii(num) {
-				let section = document.query('#p' + num);
-				section = section && section.closest('section');
-				if (section) {
-					const desc = num in state.mine.readAll() && this.lang.you;
-					return this.postRef(num, util.getNum(section), desc);
-				}
-				else
-					return `<a class="nope">&gt;&gt;${num}</a>`;
-			}
-		});
 		imouto.hook('spoilerTag', util.touchable_spoiler_tag);
 		main.oneeSama.trigger('imouto', imouto);
 	},
+
 	// Initial render
 	render({destination, section}) {
 		this.$meta = $('<header><a class="nope"><b/></a> <time/></header>');
-		this.$input = $('<textarea/>', {
-			name: 'body',
-			id: 'trans',
-			rows: '1',
-			class: 'themed',
-			autocomplete: main.isMobile
-		});
-		this.$submit = $('<input/>', {
-			id: 'done',
-			type: 'button',
-			value: main.lang.done
-		});
-
-		this.$blockquote.append(this.$buffer, this.$lineBuffer, this.$input);
-		this.$el.append(this.$meta, this.$blockquote, '<small/>');
-		if (this.isThread) {
-			this.$el.append(`<label for="subject">${lang.subject}: </label>`,
-				this.$subject);
-			this.$blockquote.hide();
-		}
 
 		// Add a menu to the postform
 		main.oneeSama.trigger('draft', this.$el);
 		this.renderIdentity();
 
-		// Insert into the DOM
-		destination.style.display = 'none';
-		if (this.isThread) {
-			destination.after(this.el);
-			this.el.after(document.createElement('hr'));
-			this.$subject.focus();
-		}
-		else {
-			destination.before(this.el);
-			this.resizeInput();
-			this.$input.focus();
-		}
-
 		main.$threads.find('aside.posting').hide();
-		this.fun();
 	},
+
 	// Render the name, email, and admin title, if any
 	renderIdentity() {
 		// Model has already been alocated and has a proper identity rendered
@@ -278,6 +224,7 @@ const ComposerView = Backbone.View.extend({
 			- this.$input.offset().left - this.$el.offset().left);
 		this.$input.css('width', size + 'px');
 	},
+
 	onInput(val) {
 		if (val === undefined || val instanceof $.Event)
 			val = this.$input.val();
@@ -374,6 +321,7 @@ const ComposerView = Backbone.View.extend({
 		this.$input.attr('maxlength', common.MAX_POST_CHARS - this.char_count);
 		this.resizeInput(val);
 	},
+
 	findTimeArg(params) {
 		if (!params || params.indexOf('t=') < 0)
 			return false;
@@ -385,6 +333,7 @@ const ComposerView = Backbone.View.extend({
 		}
 		return false;
 	},
+
 	// Commit any staged words to the server
 	commit(text) {
 		var lines;
@@ -429,6 +378,7 @@ const ComposerView = Backbone.View.extend({
 			this.$lineBuffer[0].normalize();
 		}
 	},
+
 	// Construct the message for post allocation in the database
 	allocationMessage(text, image) {
 		var msg = {nonce: main.request('nonce:create')};
@@ -447,6 +397,7 @@ const ComposerView = Backbone.View.extend({
 
 		return msg;
 	},
+
 	onKeyDown(event) {
 		main.follow(() => {
 			switch(event.which) {
@@ -467,6 +418,7 @@ const ComposerView = Backbone.View.extend({
 			}
 		});
 	},
+
 	finish() {
 		if (this.model.get('num')) {
 			this.flushPending();
@@ -510,6 +462,7 @@ const ComposerView = Backbone.View.extend({
 		}else
 			postSM.feed('done');
 	},
+
 	// Send any unstaged words
 	flushPending() {
 		if (this.pending) {
@@ -517,6 +470,7 @@ const ComposerView = Backbone.View.extend({
 			this.pending = '';
 		}
 	},
+
 	onToggle(event) {
 		const attrs = this.model.attributes;
 		if (attrs.uploading || attrs.uploaded)
@@ -533,6 +487,7 @@ const ComposerView = Backbone.View.extend({
 			nextSpoiler: pick.next
 		});
 	},
+
 	onAllocation(msg) {
 		const num = msg.num;
 		state.ownPosts[num] = num;
@@ -573,6 +528,7 @@ const ComposerView = Backbone.View.extend({
 			return "You have an unfinished post.";
 		};
 	},
+
 	// Insert an image that has been uploaded and processed by the server
 	insertUploaded(info) {
 		this.renderImage(null, info);
@@ -598,6 +554,7 @@ const ComposerView = Backbone.View.extend({
 
 		this.resizeInput();
 	},
+
 	// Handle image upload status
 	dispatch(msg) {
 		const a = msg.arg;
@@ -613,6 +570,7 @@ const ComposerView = Backbone.View.extend({
 				break;
 		}
 	},
+
 	onImageAllocation(msg) {
 		const attrs = this.model.attributes;
 		if (attrs.cancelled)
@@ -624,21 +582,7 @@ const ComposerView = Backbone.View.extend({
 		else
 			main.send([common.INSERT_IMAGE, msg]);
 	},
-	uploadError(msg) {
-		if (this.model.get('cancelled'))
-			return;
-		this.model.set({
-			uploadStatus: msg,
-			uploading: false
-		});
-		if (this.$uploadForm)
-			this.$uploadForm.find('input[name=alloc]').remove();
-	},
-	uploadStatus(msg) {
-		if (this.model.get('cancelled'))
-			return;
-		this.model.set('uploadStatus', msg);
-	},
+
 	addReference(num, sel) {
 		// If a >>link exists, put this one on the next line
 		var val = this.$input.val();
@@ -660,6 +604,7 @@ const ComposerView = Backbone.View.extend({
 		this.onInput();
 		this.$input.focus();
 	},
+
 	remove() {
 		if (!this.preserve) {
 			if (this.isThread)
@@ -674,15 +619,6 @@ const ComposerView = Backbone.View.extend({
 		this.stopListening();
 		window.onbeforeunload = null;
 	},
-	// Extend with imager.js methods
-	renderImage: imager.Hidamari.renderImage,
-	// Overrides automatic image expansion, if any
-	autoExpandImage() {
-		return this;
-	},
-	fun() {
-
-	}
 });
 exports.ComposerView = ComposerView;
 

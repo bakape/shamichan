@@ -86,7 +86,9 @@ applyMixins(OPFormModel, FormModel)
 class FormView extends PostView {
 	model: Post & FormModel
 	$input: HTMLTextAreaElement
+	$sizer: HTMLPreElement // Used for dynamically resizing $input
 	$done: HTMLInputElement
+	$postControls: Element
 
 	constructor(model: Post) {
 		super(model)
@@ -107,21 +109,43 @@ class FormView extends PostView {
 		}
 		setAttrs(this.$input, attrs)
 
+		this.$sizer = document.createElement("pre")
+
+		this.$postControls = document.createElement("div")
+		this.$postControls.id = "post-controls"
+
 		this.$done = document.createElement("input")
 		setAttrs(this.$done, {
 			name: "done",
 			type: "button",
 			value: ui.done,
 		})
+		this.$postControls.append(this.$done)
 
-		this.$blockquote.innerHTML = ""
-		this.$blockquote.append(this.$input)
-		this.el.querySelector(".post-container").after(this.$done)
-		write(() =>
-			this.$input.focus())
+		write(() => {
+			this.$blockquote.innerHTML = ""
+			this.$blockquote.append(this.$input)
+			this.el.append(this.$postControls)
+			this.$input.focus()
+			document.body.append(this.$sizer)
+			this.resizeInput("")
+		})
 
 		// TODO: UploadForm integrations
 
+	}
+
+	// Resize $input according to the text inside. Can't really use async
+	// methods of render.ts here. Need an immediate response.
+	resizeInput(val = this.$input.value) {
+		this.$sizer.textContent = val
+		const min =
+			300
+			+ this.$input.getBoundingClientRect().left
+			+ this.el.getBoundingClientRect().left
+			+ document.body.scrollLeft * 2
+		const size = Math.max(this.$sizer.offsetWidth + 20, min)
+		this.$input.style.width = size + "px"
 	}
 
 	// Parse and replace the temporary like closed by the PostForm with a proper

@@ -9,9 +9,6 @@ article, aside {
 
 aside {
 	display: table;
-	section > & {
-		margin: 2px;
-	}
 	&.compact {
 		margin: 0 1em;
 	}
@@ -31,10 +28,6 @@ aside {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-}
-
-blockquote {
-	word-break: break-all;
 }
 
 .popup-menu, .act {
@@ -60,6 +53,14 @@ article {
 	small {
 		padding-top: 0.5em;
 	}
+	blockquote {
+		word-break: break-word;
+		max-width: 100%;
+	}
+}
+
+.post-container {
+	display: inline-block;
 }
 
 del {
@@ -107,12 +108,10 @@ figcaption, header {
 
 figure {
 	margin: 0;
+	float: left;
 	img {
 		border: 0;
-		clear: both;
-		float: left;
 		margin: 3px 20px 0 0;
-		vertical-align: top;
 	}
 	.hat {
 		background: url('/assets/hat.png') no-repeat;
@@ -160,9 +159,21 @@ header {
 	padding: 0;
 	background-color: transparent;
 	outline: none;
-	overflow-y: hidden;
+	overflow: hidden;
 	resize: none;
 	display: block;
+}
+
+// Used for dynamically resizing #text-input
+pre {
+	height: auto;
+	margin: 0;
+	position: absolute;
+	top: 0;
+	width: auto;
+	visibility: hidden;
+	border: 0;
+	padding: 0;
 }
 
 .upload-status {
@@ -195,8 +206,7 @@ header {
 			margin-right: 0.2em;
 		}
 	}
-	figure img {
-		clear: none;
+	figure {
 		float: none;
 		margin: 0;
 	}
