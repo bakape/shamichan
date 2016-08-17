@@ -15,6 +15,11 @@ export default function (threads: ThreadData[]) {
 
 	// TODO: Apply board title as tab title
 
+	// TODO: Cutomisable sorting order
+
+	threads = threads.sort((a, b) =>
+		b.bumpTime - a.bumpTime)
+
 	const frag = importTemplate("board"),
 		{banners, title} = boardConfig
 	if (banners.length) {
