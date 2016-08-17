@@ -94,10 +94,7 @@ func (*DB) TestThreadCreation(c *C) {
 	}
 	data := marshalJSON(req, c)
 	c.Assert(insertThread(data, cl), IsNil)
-	for _, msg := range [...]string{`01{"code":0,"id":6}`, "300"} {
-		assertMessage(wcl, []byte(msg), c)
-	}
-	c.Assert(Clients.GetSync(cl), Equals, "6")
+	assertMessage(wcl, []byte(`01{"code":0,"id":6}`), c)
 
 	var thread types.DatabaseThread
 	c.Assert(db.One(r.Table("threads").Get(6), &thread), IsNil)
@@ -167,9 +164,7 @@ func (*DB) TestTextOnlyThreadCreation(c *C) {
 	}
 	data := marshalJSON(req, c)
 	c.Assert(insertThread(data, cl), IsNil)
-	for _, msg := range [...]string{`01{"code":0,"id":6}`, "300"} {
-		assertMessage(wcl, []byte(msg), c)
-	}
+	assertMessage(wcl, []byte(`01{"code":0,"id":6}`), c)
 
 	var post types.Post
 	c.Assert(db.One(db.FindPost(6), &post), IsNil)

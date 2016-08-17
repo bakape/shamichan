@@ -11,11 +11,7 @@ interface Node {
 }
 
 interface Element {
-	disabled?: boolean
-	checked?: boolean
 	hidden: boolean
-	value?: any
-	files?: FileList
 	style: CSSStyleDeclaration
 
 	addEventListener(
@@ -26,6 +22,14 @@ interface Element {
 	click(): void
 	focus(): void
 	matches(selector: string): boolean
+}
+
+interface HTMLInputElement {
+	addEventListener(
+		type: string,
+		handler: EventListener,
+		options?: boolean|EventListenerOptions
+	): void
 }
 
 interface EventTarget {

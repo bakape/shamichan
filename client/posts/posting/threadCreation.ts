@@ -44,7 +44,7 @@ export default () =>
 // Form view for creating new threads
 class ThreadForm extends FormView implements UploadForm {
 	$aside: Element
-	$board: Element
+	$board: HTMLSelectElement
 	$uploadContainer: Element
 	needImage: boolean // Does the board require an OP image?
 	selectedBoard: string
@@ -116,7 +116,8 @@ class ThreadForm extends FormView implements UploadForm {
 		}
 		read(() => {
 			// Bind event listener for changes to the board selection
-			this.$board = this.el.querySelector("select[name=board]")
+			this.$board =
+				this.el.querySelector("select[name=board]") as HTMLSelectElement
 			on(this.$board, "input", () =>
 				this.toggleUploadForm())
 

@@ -63,7 +63,7 @@ class IdentityPanel extends BannerModal {
 	}
 
 	onInput(event: Event) {
-		const el = event.target as Element,
+		const el = event.target as HTMLInputElement,
 			name = el.getAttribute("name"),
 			val = el.value
 		localStorage.setItem(name, val)

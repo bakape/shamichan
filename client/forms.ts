@@ -105,9 +105,9 @@ function renderTextArea(spec: InputSpec, attrs: StringMap): string[] {
 	// can't even fucking support a fucking value attribute.
 	if (spec.value) {
 		read(() =>
-			document
-			.querySelector(`textarea[name=${spec.name}]`)
-			.value = spec.value)
+			(document
+			.querySelector(`textarea[name=${spec.name}]`) as HTMLInputElement)
+			.value = spec.value as string)
 	}
 
 	return [

@@ -109,7 +109,7 @@ export default class PostView extends View<Post> {
 	// Append a string to the current text buffer
 	appendString(s: string) {
 		write(() =>
-			this.$buffer.append(s))
+			this.$buffer.textContent += s)
 	}
 
 	// Remove one character from the current buffer

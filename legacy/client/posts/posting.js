@@ -164,14 +164,7 @@ const ComposerView = Backbone.View.extend({
 			'change:spoiler': this.renderSpoilerPane
 		});
 
-		this.render(args);
-
-		this.pending = '';
-		this.line_count = 1;
-		this.char_count = 0;
-
 		imouto.hook('spoilerTag', util.touchable_spoiler_tag);
-		main.oneeSama.trigger('imouto', imouto);
 	},
 
 	// Initial render
@@ -216,12 +209,6 @@ const ComposerView = Backbone.View.extend({
 	},
 
 	onInput(val) {
-		if (val === undefined || val instanceof $.Event)
-			val = this.$input.val();
-		var start = this.$input[0].selectionStart,
-			end = this.$input[0].selectionEnd;
-
-		var nl = val.lastIndexOf('\n');
 		if (nl >= 0) {
 			var ok = val.substr(0, nl);
 			val = val.substr(nl + 1);
@@ -229,37 +216,6 @@ const ComposerView = Backbone.View.extend({
 			if (this.model.get('sentAllocRequest') || /[^ ]/.test(ok))
 				this.commit(ok + '\n');
 		}
-		else {
-			m = val
-				.split('')
-				.reverse()
-				.join('')
-				.match(/^(\s*\S+\s+\S+)\s+(?=\S)/);
-			if (m) {
-				var lim = val.length - m[1].length;
-				this.commit(val.substr(0, lim));
-				val = val.substr(lim);
-				start -= lim;
-				end -= lim;
-				this.$input.val(val);
-				this.$input[0].setSelectionRange(start, end);
-			}
-		}
-
-		this.$input.attr('maxlength', common.MAX_POST_CHARS - this.char_count);
-		this.resizeInput(val);
-	},
-
-	findTimeArg(params) {
-		if (!params || params.indexOf('t=') < 0)
-			return false;
-		params = params.split('&');
-		for (let i = 0, len = params.length; i < len; i++) {
-			let pair = '#p' + params[i];
-			if (embed.youtube_time_re.test(pair))
-				return pair;
-		}
-		return false;
 	},
 
 	// Commit any staged words to the server
@@ -327,24 +283,7 @@ const ComposerView = Backbone.View.extend({
 	},
 
 	onKeyDown(event) {
-		main.follow(() => {
-			switch(event.which) {
-				case 13:
-					event.preventDefault();
-				// fall-through
-				case 32:
-					// predict result
-					var input = this.$input[0];
-					var val = this.$input.val();
-					val = val.slice(0, input.selectionStart)
-						+ (event.which == 13 ? '\n' : ' ')
-						+ val.slice(input.selectionEnd);
-					this.onInput(val);
-					break;
-				default:
-					handle_shortcut.bind(this)(event);
-			}
-		});
+		handle_shortcut.bind(this)(event);
 	},
 
 	finish() {
@@ -389,14 +328,6 @@ const ComposerView = Backbone.View.extend({
 				postSM.feed('done');
 		}else
 			postSM.feed('done');
-	},
-
-	// Send any unstaged words
-	flushPending() {
-		if (this.pending) {
-			main.send(this.pending);
-			this.pending = '';
-		}
 	},
 
 	onToggle(event) {

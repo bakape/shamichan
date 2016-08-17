@@ -70,7 +70,9 @@ export default class UploadForm {
 		}
 		req.imageName = file.name
 		req.imageToken = xhr.response
-		req.spoiler = this.el.querySelector("input[name=spoiler]").checked
+		req.spoiler =
+			(this.el.querySelector("input[name=spoiler]") as HTMLInputElement)
+			.checked
 		return true
 	}
 

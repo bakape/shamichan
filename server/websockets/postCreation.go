@@ -113,16 +113,6 @@ func insertThread(data []byte, c *Client) (err error) {
 	if err := db.IncrementBoardCounter(req.Board); err != nil {
 		return err
 	}
-	msg := threadCreationResponse{
-		Code: postCreated,
-		ID:   id,
-	}
-	if err := c.sendMessage(messageInsertThread, msg); err != nil {
-		return err
-	}
-	if err := syncToThread(req.Board, id, 0, c); err != nil {
-		return err
-	}
 
 	c.openPost = openPost{
 		id:    id,
@@ -130,7 +120,11 @@ func insertThread(data []byte, c *Client) (err error) {
 		board: req.Board,
 	}
 
-	return syncToThread(req.Board, id, 0, c)
+	msg := threadCreationResponse{
+		Code: postCreated,
+		ID:   id,
+	}
+	return c.sendMessage(messageInsertThread, msg)
 }
 
 // Syncronise to a newly-created thread

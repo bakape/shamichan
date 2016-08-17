@@ -10,7 +10,7 @@ import Model from '../model'
 // View of the options panel
 export default class OptionsPanel extends TabbedModal {
 	$hidden: Element
-	$import: Element
+	$import: HTMLInputElement
 
 	constructor() {
 		super({id: 'options'})
@@ -33,7 +33,8 @@ export default class OptionsPanel extends TabbedModal {
 			this.assignValues())
 		read(() => {
 			this.$hidden = this.el.querySelector('#hidden')
-			this.$import = this.el.querySelector("#importSettings")
+			this.$import =
+				this.el.querySelector("#importSettings") as HTMLInputElement
 		})
 
 		// TODO: Hidden posts count rendering
@@ -45,7 +46,7 @@ export default class OptionsPanel extends TabbedModal {
 	assignValues() {
 		for (let id in models) {
 			const model = models[id],
-				el = this.el.querySelector('#' + id),
+				el = this.el.querySelector('#' + id) as HTMLInputElement,
 				val = model.get()
 			switch (model.spec.type) {
 			case optionType.checkbox:
@@ -53,7 +54,7 @@ export default class OptionsPanel extends TabbedModal {
 				break
 			case optionType.number:
 			case optionType.menu:
-				el.value = val
+				el.value = val as string
 				break
 			case optionType.shortcut:
 				el.value = String.fromCharCode(val as number).toUpperCase()
@@ -66,7 +67,7 @@ export default class OptionsPanel extends TabbedModal {
 	// Propagate options panel changes through
 	// options-panel -> options -> OptionModel
 	applyChange(event: Event) {
-		const el = event.target as Element,
+		const el = event.target as HTMLInputElement,
 			id = el.getAttribute('id'),
 			model = models[id]
 
