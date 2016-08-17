@@ -199,7 +199,7 @@ func (*ClientSuite) TestHandleMessage(c *C) {
 	c.Assert(err, ErrorMatches, onlyText)
 
 	// Message too short
-	msg = []byte("12")
+	msg = []byte("0")
 	cl, _ = sv.NewClient()
 	asserHandlerError(cl, msg, invalidMessage, c)
 

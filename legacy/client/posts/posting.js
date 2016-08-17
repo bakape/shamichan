@@ -215,83 +215,11 @@ const ComposerView = Backbone.View.extend({
 			$tag.removeAttr('href').removeAttr('target').attr('class', 'nope');
 	},
 
-	resizeInput(val) {
-		if (typeof val !== 'string')
-			val = this.$input.val();
-		this.$sizer.text(val);
-		var size = this.$sizer.width() + common.INPUT_ROOM;
-		size = Math.max(size, inputMinSize
-			- this.$input.offset().left - this.$el.offset().left);
-		this.$input.css('width', size + 'px');
-	},
-
 	onInput(val) {
 		if (val === undefined || val instanceof $.Event)
 			val = this.$input.val();
 		var start = this.$input[0].selectionStart,
 			end = this.$input[0].selectionEnd;
-
-		var changed = false,
-			m, time, video;
-
-		// Turn YouTube links into proper refs
-		while(true) {
-			m = val.match(embed.youtube_url_re);
-			if (!m)
-				break;
-			// Substitute
-			time = this.findTimeArg(m[3])
-				|| this.findTimeArg(m[1])
-				|| m[4]
-				|| '';
-			video = '>>>/watch?v=' + m[2] + time;
-			val = embedRewrite(m, video);
-		}
-
-		//Youtu.be links
-		while(true) {
-			m = val.match(embed.youtube_short_re);
-			if (!m)
-				break;
-			// Substitute
-			time = this.findTimeArg(m[2]) || '';
-			video = '>>>/watch?v=' + m[1] + time;
-			val = embedRewrite(m, video);
-		}
-
-		// SoundCloud links
-		while(true) {
-			m = val.match(embed.soundcloud_url_re);
-			if (!m)
-				break;
-			var sc = '>>>/soundcloud/' + m[1];
-			val = embedRewrite(m, sc);
-		}
-
-		// Pastebin links
-		while(true) {
-			m = val.match(embed.pastebin_re);
-			if (!m)
-				break;
-			var pbin = '>>>/pastebin/' + m[1];
-			val = embedRewrite(m, pbin);
-		}
-
-		// Rewite embedable URLs to native embed URL syntax
-		function embedRewrite(m, rw) {
-			var old = m[0].length;
-			var newVal = val.substr(0, m.index) + rw + val.substr(m.index + old);
-			changed = true;
-			if (m.index < start) {
-				var diff = old - rw.length;
-				start -= diff;
-				end -= diff;
-			}
-			return newVal;
-		}
-
-		if (changed)
-			this.$input.val(val);
 
 		var nl = val.lastIndexOf('\n');
 		if (nl >= 0) {

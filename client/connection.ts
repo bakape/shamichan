@@ -75,14 +75,18 @@ let socket: WebSocket,
 	attempts: number,
 	attemptTimer: number
 
-// Send a message to the server
-export function send(type: message, msg: {}) {
+// Send a message to the server. If msg is null, it is omitted from sent
+// websocket message.
+export function send(type: message, msg: any) {
 	if (socket.readyState !== 1) {
 		console.warn("Attempting to send while socket closed")
 		return
 	}
 
-	const str = leftPad(type) + JSON.stringify(msg)
+	let str = leftPad(type)
+	if (msg !== null) {
+		str += JSON.stringify(msg)
+	}
 
 	if (debug) {
 		console.log('<', str)
