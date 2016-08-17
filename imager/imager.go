@@ -59,7 +59,7 @@ func processImage(data []byte) ([]byte, [4]uint16, error) {
 		return nil, dims, err
 	}
 
-	scaled := imager.Scale(src, image.Point{X: 125, Y: 125})
+	scaled := imager.Scale(src, image.Point{X: 150, Y: 150})
 	dims[2], dims[3] = getDims(scaled)
 	thumbFormat := "png"
 	if format == "jpeg" {

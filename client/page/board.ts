@@ -52,10 +52,13 @@ function renderThread(thread: ThreadData): DocumentFragment {
 		href = `../${thread.board}/${thread.id}`,
 		lastN = options.lastN.toString()
 
-	if (thread.image && !options.hideThumbs) {
-		const fig = frag.querySelector("figure")
-		fig.hidden = false
-		renderThumbnail(fig.querySelector("a"), thread.image, href)
+	if (thread.image) {
+		thread.image.large = true // Display larger thumbnails
+		if (!options.hideThumbs) {
+			const fig = frag.querySelector("figure")
+			fig.hidden = false
+			renderThumbnail(fig.querySelector("a"), thread.image, href)
+		}
 	}
 
 	const links = frag.querySelector(".thread-links")

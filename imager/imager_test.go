@@ -23,9 +23,9 @@ var (
 	_ = Suite(&Imager{})
 
 	// Resulting dimentions after thumbnailing samples
-	jpegDims = [4]uint16{1084, 881, 125, 101}
-	pngDims  = [4]uint16{1280, 720, 125, 70}
-	gifDims  = [4]uint16{584, 720, 101, 125}
+	jpegDims = [4]uint16{0x43c, 0x371, 0x96, 0x79}
+	pngDims  = [4]uint16{0x500, 0x2d0, 0x96, 0x54}
+	gifDims  = [4]uint16{0x248, 0x2d0, 0x7a, 0x96}
 )
 
 func (d *Imager) SetUpSuite(c *C) {
@@ -92,7 +92,7 @@ func (*Imager) TestVerifyDimentions(c *C) {
 		MaxHeight: 2000,
 	})
 
-	samples := []struct {
+	samples := [...]struct {
 		name string
 		err  error
 		dims [4]uint16
@@ -114,7 +114,7 @@ func (*Imager) TestVerifyDimentions(c *C) {
 }
 
 func (*Imager) TestImageProcessing(c *C) {
-	samples := []struct {
+	samples := [...]struct {
 		ext  string
 		dims [4]uint16
 	}{

@@ -69,6 +69,7 @@ export type ImageData = {
 	apng?: boolean
 	audio?: boolean
 	spoiler?: boolean
+	large?: boolean // Added at runtime to render larger thumbnails
 	fileType: fileTypes
 	length?: number
 	size: number
