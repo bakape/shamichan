@@ -39,7 +39,7 @@ func configServer(data []byte, c *Client) error {
 	if c.UserID != "admin" {
 		return errAccessDenied
 	}
-	if string(data) == "null" { // Request to send current configs
+	if len(data) == 0 { // Request to send current configs
 		return c.sendMessage(messageConfigServer, config.Get())
 	}
 

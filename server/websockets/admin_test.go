@@ -23,7 +23,7 @@ func (*DB) TestServerConfigRequest(c *C) {
 	cl, wcl := sv.NewClient()
 	cl.UserID = "admin"
 
-	c.Assert(configServer([]byte("null"), cl), IsNil)
+	c.Assert(configServer([]byte{}, cl), IsNil)
 	msg, err := encodeMessage(messageConfigServer, config.Get())
 	c.Assert(err, IsNil)
 	assertMessage(wcl, msg, c)
