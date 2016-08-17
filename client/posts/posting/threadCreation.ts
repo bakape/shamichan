@@ -95,6 +95,7 @@ class ThreadForm extends FormView implements UploadForm {
 		write(() => {
 			this.$aside.classList.add("expanded")
 			this.$aside.append(this.el)
+			this.el.querySelector("input, select").focus()
 		})
 	}
 
