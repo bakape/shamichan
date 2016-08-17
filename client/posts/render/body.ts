@@ -131,6 +131,9 @@ function parseFragment(frag: string, data: PostData): string {
 		if (!frag) {
 			continue
 		}
+		if (html) {
+			html += " "
+		}
 		if (word[0] === ">") {
 			if (/^>>\d+$/.test(word)) {
 				// Post links
