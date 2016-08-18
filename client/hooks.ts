@@ -1,6 +1,4 @@
-/*
- Hooks for optional modules to execute code in exposed functions
-*/
+// Hooks for optional modules to execute code in exposed functions
 
 type Hook = (arg?: any) => any
 type HookMap = {[key: string]: Hook[]}

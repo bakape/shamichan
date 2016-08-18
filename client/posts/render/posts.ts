@@ -10,14 +10,14 @@ import options from '../../options'
 export default function (frag: DocumentFragment, data: PostData|ThreadData) {
 	if ((data as ThreadData).subject) {
 		const el = frag.querySelector("h3")
-		el.textContent = `「${escape((data as ThreadData).subject)}」`
+		el.innerHTML = `「${escape((data as ThreadData).subject)}」`
 		el.hidden = false
 	}
 
 	renderTime(frag.querySelector("time"), data.time)
 	renderName(frag.querySelector(".name"), data)
 	frag.querySelector("blockquote").innerHTML = renderBody(data)
-	frag.querySelector("small").textContent = renderBacklinks(data.backlinks)
+	frag.querySelector("small").innerHTML = renderBacklinks(data.backlinks)
 
 	const nav = frag.querySelector("nav"),
 		link = nav.firstChild as HTMLAnchorElement,

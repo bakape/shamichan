@@ -135,11 +135,11 @@ function parseFragment(frag: string, data: PostData): string {
 			html += " "
 		}
 		if (word[0] === ">") {
-			if (/^>>\d+$/.test(word)) {
+			if (/^>{2,}\d+$/.test(word)) {
 				// Post links
 				html += parsePostLink(word, data.links)
 				continue
-			} else if (/^>>>\/\w+\//.test(word)) {
+			} else if (/^>{3,}\/\w+\//.test(word)) {
 				// Internal and custom reference URLs
 				html += parseReference(word)
 				continue
@@ -158,14 +158,16 @@ function parseFragment(frag: string, data: PostData): string {
 // Verify and render a link to other posts
 function parsePostLink(bit: string, links: PostLinks): string {
 	if (!links) {
-		return bit
+		return escape(bit)
 	}
-	const num = parseInt(bit.match(/^>>\/(\d+)$/)[1]),
+	const [ , extraQoutes, id] = bit.match(/>>(>*)(\d+)$/),
+		num = parseInt(id),
 		verified = links[num]
 	if (!verified) {
-		return bit
+		return escape(bit)
 	}
-	return renderPostLink(num, verified.board, verified.op)
+	return escape(extraQoutes)
+		+ renderPostLink(num, verified.board, verified.op)
 }
 
 // Generate all possible refference name and link pairs for externa
@@ -187,12 +189,12 @@ genRefTargets()
 
 // Parse internal or customly set reference URL
 function parseReference(bit: string): string {
-	const name = bit.match(/^>>>\/(\w+)\/$/)[1],
+	const [ , extraQoutes, name] = bit.match(/^>>>(>*)\/(\w+)\/$/),
 		href = refTargets[name]
 	if (!href) {
 		return escape(bit)
 	}
-	return newTabLink(href, bit)
+	return escape(extraQoutes) + newTabLink(href, bit)
 }
 
 // Render and anchor link that opens in a new tab

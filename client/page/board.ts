@@ -68,7 +68,7 @@ function renderThread(thread: ThreadData): DocumentFragment {
 	$lastN.setAttribute("href", `${href}?last=${lastN}`)
 	$lastN.textContent = `${navigation.last} ${lastN}`
 
-	frag.querySelector("h3").textContent = `「${escape(thread.subject)}」`
+	frag.querySelector("h3").innerHTML = `「${escape(thread.subject)}」`
 
 	return frag
 }
