@@ -4,7 +4,7 @@ import {mine, posts, page} from '../state'
 import {makeFrag, pluralize, HTML} from '../util'
 import renderPost from './render/posts'
 import {parseOpenLine, parseTerminatedLine} from './render/body'
-import {write, read, importTemplate} from '../render'
+import {write, importTemplate} from '../render'
 import {renderBacklinks} from './render/etc'
 import {posts as lang, navigation} from '../lang'
 

@@ -87,13 +87,21 @@ export class SetMap<V> {
 	}
 }
 
-// Retrieve post number of post element
-export const getNum = (el: Element): number =>
-	el ? parseInt(el.getAttribute('id').slice(1), 10) : 0
+// Retrieve post id of post element
+export function getID(el: Element): number {
+	if (!el) {
+		return 0
+	}
+	return parseInt(el.getAttribute('id').slice(1), 10)
+}
 
 // Retrieve post number of closest parent post element
-export const getID = (el: Element): number =>
-	el ? getNum(el.closest('article, section')) : 0
+export function getClosestID(el: Element): number {
+	if (!el) {
+		return 0
+	}
+	return getID(el.closest('article'))
+}
 
 // Parse HTML string to node array
 export function makeFrag(DOMString: string): DocumentFragment {
@@ -143,8 +151,9 @@ export function outerWidth(el: Element): number {
 }
 
 // Pad an integer with a leading zero, if below 10
-export const pad = (n: number): string =>
-	(n < 10 ? '0' : '') + n
+export function pad(n: number): string {
+	return (n < 10 ? '0' : '') + n
+}
 
 // Template string tag function for HTML. Strips indentation and newlines.
 export function HTML(callSite: string[], ...args: string[]): string {
@@ -241,11 +250,12 @@ export function each<T>(arrayLike: ArrayLike<T>, fn: (item: T) => void) {
 }
 
 // Wraps event style object with onload() method to Promise style
-export const load = (loader: Loader): Promise<Event> =>
-	new Promise<Event>((resolve, reject) => {
+export function load(loader: Loader): Promise<Event> {
+	return new Promise<Event>((resolve, reject) => {
 		loader.onload = resolve
 		loader.onerror = reject
 	})
+}
 
 // Dynamically lead a System module
 export function loadModule(path: string): Promise<any> {
@@ -263,9 +273,10 @@ const escapeMap: {[key: string]: string} = {
 }
 
 // Escape a user-submitted unsafe string to protect against XSS.
-export const escape = (str: string): string =>
-	str.replace(/[&<>'"`]/g , char =>
+export function escape(str: string): string {
+	return str.replace(/[&<>'"`]/g , char =>
 		escapeMap[char])
+}
 
 // Construct a table from an array of objects and a consumer funtion,
 // that returns an array of cells.
@@ -284,14 +295,17 @@ export function table<T>(rows: T[], func: (arg: T) => string[]): string {
 
 // Extract the value of a named input field, which is a child of the parameter
 // element
-export const inputValue = (el: Element, name: string): string =>
-	(el.querySelector(`input[name=${name}]`) as HTMLInputElement).value
+export function inputValue(el: Element, name: string): string {
+	return (el.querySelector(`input[name=${name}]`) as HTMLInputElement)
+		.value
+}
 
 // Applies mixins to destination object's prototype
-export const applyMixins = (dest: any, ...mixins: any[]) =>
+export function applyMixins(dest: any, ...mixins: any[]) {
 	mixins.forEach(mixin =>
 		Object.getOwnPropertyNames(mixin.prototype).forEach(name =>
 			dest.prototype[name] = mixin.prototype[name]))
+}
 
 // Compares all keys on a with keys on b for equality
 export function isMatch(a: AnyHash, b: AnyHash): boolean {
@@ -305,5 +319,6 @@ export function isMatch(a: AnyHash, b: AnyHash): boolean {
 
 // Return either the singular or plural form of a translation, depending on
 // number
-export const pluralize = (num: number, word: string[]): string =>
-	`${num} ${word[num === 1 || num === -1 ? 0 : 1]}`
+export function pluralize(num: number, word: string[]): string {
+	return `${num} ${word[num === 1 || num === -1 ? 0 : 1]}`
+}

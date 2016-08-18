@@ -7,8 +7,9 @@ import options from '../options'
 import {write, $threads, importTemplate} from '../render'
 
 // Format a board name and title into cannonical board header format
-export const formatHeader = (name: string, title: string): string =>
-	escape(`/${name}/ - ${title}`)
+export function formatHeader(name: string, title: string): string {
+	return escape(`/${name}/ - ${title}`)
+}
 
 // Render a board page's HTML
 export default function (threads: ThreadData[]) {

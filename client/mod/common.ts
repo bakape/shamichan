@@ -30,27 +30,26 @@ for (let name of ["password", "repeat", "oldPassword", "newPassword"]) {
 }
 
 // Render account management input fields from specs
-export const renderFields = (...names: string[]): string =>
-	table(
-		names.map(name =>
-			fieldSpecs[name]),
-		({type, name, maxLength}) => {
-			const attrs: StringMap = {
-				type,
-				name,
-				maxlength: maxLength.toString() ,
-				required: "",
-			}
-			return [
-				`<label for="${name}">${lang[name]}:</label>`,
-				`<input ${makeAttrs(attrs)}>`,
-			]
+export function renderFields(...names: string[]): string {
+	const fields = names.map(name =>
+		fieldSpecs[name])
+	return table(fields, ({type, name, maxLength}) => {
+		const attrs: StringMap = {
+			type,
+			name,
+			maxlength: maxLength.toString() ,
+			required: "",
 		}
-	)
+		return [
+			`<label for="${name}">${lang[name]}:</label>`,
+			`<input ${makeAttrs(attrs)}>`,
+		]
+	})
+}
 
 // Set a password match validator function for 2 input elements, that are
 // children of the passed element.
-export function validatePasswordMatch (
+export function validatePasswordMatch(
 	parent: Element, name1: string, name2: string
 ) {
 	const el1 = findInputEl(parent, name1),
@@ -60,8 +59,9 @@ export function validatePasswordMatch (
 }
 
 // Find an input element by name within a parent form element
-const findInputEl = (parent: Element, name: string) =>
-	parent.querySelector(`input[name=${name}]`) as HTMLInputElement
+function findInputEl(parent: Element, name: string): HTMLInputElement  {
+	return parent.querySelector(`input[name=${name}]`) as HTMLInputElement
+}
 
 // Generic input form that is embedded into AccountPanel
 export default class AccountFormView extends FormView {

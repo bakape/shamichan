@@ -32,9 +32,6 @@ type ThreadCreationResponse = {
 	id: number
 }
 
-// For ensuring we have unique captcha IDs
-let threadFormCounter = 0
-
 // Bind event listener to the thread container
 export default () =>
 	on($threads, "click", e => new ThreadForm(e), {

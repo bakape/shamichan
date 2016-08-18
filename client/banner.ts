@@ -189,7 +189,8 @@ function localiseTitles() {
 defer(localiseTitles)
 
 // Set the title of an element to a localised string
-export const setTitle = (id: string, langID: string) =>
+export function setTitle(id: string, langID: string) {
 	write(() =>
 		document.querySelector('#' + id)
 		.setAttribute('title', lang[langID]))
+}

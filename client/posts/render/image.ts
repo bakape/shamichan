@@ -172,7 +172,7 @@ function imageLink(el: Element, data: ImageData) {
 export function renderThumbnail(el: Element, data: ImageData, href?: string) {
 	const src = sourcePath(data)
 	let thumb: string,
-		[width, height, thumbWidth, thumbHeight] = data.dims
+		[ , , thumbWidth, thumbHeight] = data.dims
 
 	if (data.spoiler && options.spoilers) {
 		// Spoilered and spoilers enabled

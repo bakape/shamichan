@@ -1,7 +1,7 @@
 // Renders the HTML of the options panel
 
 import {filter, extend, groupBy, HTML, makeAttrs} from '../util'
-import {opts as lang, OptLabel} from '../lang'
+import {opts as lang} from '../lang'
 import {OptionSpec, optionType} from './specs'
 import {models} from '../options'
 

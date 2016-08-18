@@ -1,13 +1,13 @@
 // Facilities for creating and updating open posts
 
 import PostView, {OPView} from '../view'
-import {Post, PostData, OP, ThreadData, TextState} from '../models'
+import {Post, OP, ThreadData, TextState} from '../models'
 import {SpliceResponse} from '../../client'
 import {applyMixins, makeFrag, setAttrs} from '../../util'
 import {posts, isMobile} from '../../state'
 import {parseTerminatedLine} from '../render/body'
-import {read, write} from '../../render'
-import {posts as lang, ui} from '../../lang'
+import {write} from '../../render'
+import {ui} from '../../lang'
 import {send, message} from "../../connection"
 
 // Current PostForm and model instances

@@ -1,9 +1,6 @@
-/*
- User-set settings storage and change handling
-*/
+// User-set settings storage and change handling
 
 import {emitChanges, ChangeEmitter} from './model'
-import {extend} from './util'
 import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
 import OptionsPanel from './options/view'
 import {defer} from './defer'
@@ -131,7 +128,7 @@ class OptionModel {
 }
 
 // Intialize options system
-export const initOptions = () => {
+export function initOptions() {
 	// Populate option model collection and central model
 	for (let spec of specs()) {
 		new OptionModel(spec)

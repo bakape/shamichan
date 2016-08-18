@@ -1,5 +1,4 @@
 import {escape} from '../util'
-import {navigation as lang} from '../lang'
 import {ThreadData, PostData, Post, OP} from '../posts/models'
 import PostView, {OPView} from '../posts/view'
 import {page, posts as postCollection} from '../state'

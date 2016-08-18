@@ -7,7 +7,6 @@ import {getID} from './util'
 import {db} from './db'
 import {write} from './render'
 import {send} from './connection'
-import PostView from './posts/view'
 
 // Server-wide global configurations
 interface Configs extends ChangeEmitter {
@@ -71,8 +70,9 @@ export let syncCounter: number
 export let debug: boolean = /[\?&]debug=true/.test(location.href)
 
 // Set the synchronisation counter
-export const setSyncCounter = (ctr: number) =>
+export function setSyncCounter(ctr: number) {
 	syncCounter = ctr
+}
 
 // Read page state by parsing a URL
 export function read(href: string): PageState {
@@ -111,9 +111,10 @@ export function getModel(el: Element): Post {
 const $loading = document.querySelector('#loadingImage')
 
 // Display or hide the loading animation
-export const displayLoading = (loading: boolean) =>
+export function displayLoading(loading: boolean) {
 	write(() =>
 		$loading.style.display = loading ? 'block' : 'none')
+}
 
 ; (window as any).debugMode = () => {
 	debug = true

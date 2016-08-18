@@ -1,6 +1,6 @@
 import View from '../view'
 import Model from '../model'
-import {read, write} from '../render'
+import {write} from '../render'
 import {HTML, makeAttrs, fetchBoardList, BoardEntry} from '../util'
 import Modal from '../modal'
 import {ui} from '../lang'

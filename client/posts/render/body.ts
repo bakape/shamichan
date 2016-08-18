@@ -198,8 +198,9 @@ function parseReference(bit: string): string {
 }
 
 // Render and anchor link that opens in a new tab
-const newTabLink = (href: string, text: string): string =>
-	`<a href="${encodeURI(href)}" target="_blank">${escape(text)}</a>`
+function newTabLink(href: string, text: string): string {
+	return `<a href="${encodeURI(href)}" target="_blank">${escape(text)}</a>`
+}
 
 // Render generic URLs and embed, if aplicable
 function parseURL(bit: string): string {

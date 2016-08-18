@@ -84,5 +84,6 @@ export default class UploadForm {
 	}
 }
 
-const formatProgress = (done: number, total: number): string =>
-	Math.floor(done / total * 100) + "%"
+function formatProgress(done: number, total: number): string {
+	return Math.floor(done / total * 100) + "%"
+}

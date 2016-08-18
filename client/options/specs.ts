@@ -2,7 +2,7 @@
 
 import {config, isMobile} from '../state'
 import {opts as lang} from '../lang'
-import {makeEl, loadModule} from '../util'
+import {loadModule} from '../util'
 
 // Types of option models
 export const enum optionType {checkbox, number, image, shortcut, menu}
@@ -282,16 +282,16 @@ export const specs = (): OptionSpec[] => [
 // 	short.noLoad = isMobile
 // 	specs.push(short)
 // }
-
-// Create a function to append and toggle a style element in <head>
-function toggleHeadStyle(id: string, css: string): (toggle: boolean) => void {
-	return toggle => {
-		if (!document.getElementById(id)) {
-			document.head.append(makeEl(`<style id="${id}">${css}</style>`))
-		}
-
-		// The disabled property only exists on elements in the DOM, so we do
-		// another query
-		(document.getElementById(id) as HTMLInputElement).disabled = !toggle
-	}
-}
+//
+// // Create a function to append and toggle a style element in <head>
+// function toggleHeadStyle(id: string, css: string): (toggle: boolean) => void {
+// 	return toggle => {
+// 		if (!document.getElementById(id)) {
+// 			document.head.append(makeEl(`<style id="${id}">${css}</style>`))
+// 		}
+//
+// 		// The disabled property only exists on elements in the DOM, so we do
+// 		// another query
+// 		(document.getElementById(id) as HTMLInputElement).disabled = !toggle
+// 	}
+// }

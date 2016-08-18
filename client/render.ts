@@ -51,8 +51,9 @@ for (let el of document.head.querySelectorAll("template")) {
 }
 
 // Import a prepared template and return it's HTML contents
-export const importTemplate = (name: string): DocumentFragment =>
-	document.importNode(templates[name], true) as DocumentFragment
+export function importTemplate(name: string): DocumentFragment {
+	return document.importNode(templates[name], true) as DocumentFragment
+}
 
 // Schedule a DOM write operation
 export function write(operation: Operation) {

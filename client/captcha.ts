@@ -15,8 +15,9 @@ export interface Captcha {
 let captchaCounter = 0
 
 // Returns a unique ID for captcha containers
-export const newCaptchaID = (): string =>
-	`captcha-${captchaCounter++}`
+export function newCaptchaID(): string {
+	return `captcha-${captchaCounter++}`
+}
 
 // Wrapper around Solve Media's captcha service AJAX API
 export default class CaptchaView extends View<Model> {

@@ -59,13 +59,6 @@ export function renderName(el: Element, data: PostData) {
 	el.prepend(text)
 }
 
-// Determine the name and tripcode combination to render
-function resolveName(data: PostData): string {
-	let html = ''
-
-	return html
-}
-
 // TODO: Resolve, once moderation implemented
 // // Renders a poster identification mnemonic
 // export function renderMnemonic(mnemonic) {

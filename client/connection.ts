@@ -127,7 +127,8 @@ const syncEl = document.getElementById('sync')
 
 // Render connction status indicator
 function renderStatus(status: syncStatus) {
-	write(() => syncEl.textContent = lang[status])
+	write(() =>
+		syncEl.textContent = lang[status])
 }
 
 connSM.act([connState.loading], connEvent.start, connState.connecting, () => {
@@ -136,7 +137,8 @@ connSM.act([connState.loading], connEvent.start, connState.connecting, () => {
 	connect()
 })
 
-const path = (location.protocol === 'https:' ? 'wss' : 'ws')
+const path =
+	(location.protocol === 'https:' ? 'wss' : 'ws')
 	+ `://${location.host}/socket`
 
 function connect() {

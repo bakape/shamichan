@@ -6,6 +6,8 @@
 		"moduleResolution": "node",
 		"newLine": "LF",
 		"removeComments": true,
-		"noImplicitAny": true
+		"noImplicitAny": true,
+		"noUnusedLocals": true,
+		"skipLibCheck": true
 	}
 }
