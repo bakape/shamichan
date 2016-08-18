@@ -84,11 +84,9 @@ export function parseTerminatedLine(line: string, data: PostData): string {
 function terminateTags(state: TextState, newLine: boolean): string {
 	let html = ""
 	if (state.spoiler) {
-		state.spoiler = false
 		html += "</del>"
 	}
 	if (state.quote) {
-		state.quote = false
 		html += "</em>"
 	}
 	if (newLine) {

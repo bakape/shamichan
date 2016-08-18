@@ -13,7 +13,6 @@ export default class PostView extends View<Post> {
 	// Only exist on open posts
 	$buffer: Node        // Text node being written to
 	$blockquote: Element // Entire text body of post
-	$lastLine: Element   // Contains the current line being edited, if any
 
 	constructor(model: Post) {
 		let cls = 'glass'
@@ -56,8 +55,7 @@ export default class PostView extends View<Post> {
 		renderPost(frag, this.model)
 		if (this.model.editing) {
 			this.$blockquote = frag.querySelector("blockquote")
-			this.$lastLine = this.$blockquote.lastElementChild
-			this.findBuffer(this.$lastLine)
+			this.findBuffer(this.$blockquote.lastElementChild)
 		}
 		this.el.append(frag)
 	}
@@ -92,19 +90,14 @@ export default class PostView extends View<Post> {
 		const frag = makeFrag(parseOpenLine(this.model.state)),
 			line = frag.querySelector("span")
 		this.findBuffer(frag)
-		write(() => {
-			this.$lastLine.replaceWith(frag)
-			this.$lastLine = line
-		})
+		write(() =>
+			this.lastLine().replaceWith(frag))
 	}
 
-	// Start the new line as a quote
-	startQuote() {
-		const em = document.createElement("em")
-		this.$buffer = document.createTextNode(">")
-		em.append(this.$buffer)
-		write(() =>
-			this.$blockquote.append(em))
+	// Return the last line of the text body
+	lastLine(): Element {
+		const ch = this.$blockquote.children
+		return ch[ch.length - 1]
 	}
 
 	// Append a string to the current text buffer
@@ -124,38 +117,36 @@ export default class PostView extends View<Post> {
 		const line = this.model.state.line.slice(0, -1),
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
-			this.$lastLine.replaceWith(frag),
+			this.lastLine().replaceWith(frag)
+
+			const $line = document.createElement("span")
 			this.$buffer = document.createTextNode("")
-			this.$lastLine = document.createElement("span")
-			this.$lastLine.append(this.$buffer)
-			this.$blockquote.append(this.$lastLine)
+			$line.append(this.$buffer)
+			this.$blockquote.append($line)
 		})
 	}
 
 	// Render links to posts linking to this post
 	renderBacklinks() {
 		const html = renderBacklinks(this.model.backlinks)
-		read(() => {
-			const el = this.el.querySelector("small")
-			write(() =>
-				el.innerHTML = html)
-		})
+		write(() =>
+			this.el.querySelector("small").innerHTML = html)
 	}
 
 	// Close an open post and clean up
 	closePost() {
-		const html = parseTerminatedLine(this.model.state.line, this.model)
+		const html = parseTerminatedLine(this.model.state.line, this.model),
+			frag = makeFrag(html)
 		write(() => {
 			this.el.classList.remove("editing")
-			this.$lastLine.innerHTML = html
-			this.$lastLine = this.$buffer = this.$blockquote = null
+			this.lastLine().replaceWith(frag)
+			this.$buffer = this.$blockquote = null
 		})
 	}
 }
 
 // View of a threads opening post. Contains some extra functionality.
 export class OPView extends PostView {
-	$omit: Element
 	model: OP
 
 	constructor(model: Post) {
@@ -165,9 +156,9 @@ export class OPView extends PostView {
 	// Also attach the omitted post and image indicator
 	render() {
 		super.render()
-		this.$omit = document.createElement("span")
-		this.$omit.setAttribute("class", "omit")
-		this.el.append(this.$omit)
+		const $omit = document.createElement("span")
+		$omit.setAttribute("class", "omit")
+		this.el.append($omit)
 	}
 
 	// Render posts and images omited indicator
@@ -198,6 +189,6 @@ export class OPView extends PostView {
 				</a>
 			<span>`
 		write(() =>
-			this.$omit.innerHTML = html)
+			this.el.querySelector(".omit").innerHTML = html)
 	}
 }

@@ -59,11 +59,8 @@ class ThreadForm extends FormView implements UploadForm {
 	constructor(event: Event) {
 		super({class: "new-thread-form"}, () =>
 			this.sendRequest())
-		read(() => {
-			this.$aside = (event.target as Element).closest("aside")
-			this.render()
-		})
-
+		this.$aside = (event.target as Element).closest("aside")
+		this.render()
 		handlers[message.insertThread] = (msg: ThreadCreationResponse) =>
 			this.handleResponse(msg)
 	}
@@ -114,19 +111,17 @@ class ThreadForm extends FormView implements UploadForm {
 			display = "none"
 			this.needImage = false
 		}
-		read(() => {
-			// Bind event listener for changes to the board selection
-			this.$board =
-				this.el.querySelector("select[name=board]") as HTMLSelectElement
-			on(this.$board, "input", () =>
-				this.toggleUploadForm())
 
-			this.$uploadContainer =
-				this.el
-				.querySelector(".upload-container")
-			write(() =>
-				this.$uploadContainer.style.display = display)
-		})
+		// Bind event listener for changes to the board selection
+		this.$board =
+			this.el
+			.querySelector("select[name=board]") as HTMLSelectElement
+		on(this.$board, "input", () =>
+			this.toggleUploadForm())
+
+		this.$uploadContainer = this.el.querySelector(".upload-container")
+		write(() =>
+			this.$uploadContainer.style.display = display)
 
 		return renderField({
 			name: "board",

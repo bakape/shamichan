@@ -49,11 +49,8 @@ export default class BoardNavigation extends View<Model> {
 			</nav>`
 
 		this.el.innerHTML = html
-		read(() => {
-			const $banner = document.querySelector("#banner")
-			write(() =>
-				$banner.prepend(this.el))
-		})
+		write(() =>
+			document.querySelector("#banner").prepend(this.el))
 	}
 
 	toggleBoardSelectionPanel(el: Element) {

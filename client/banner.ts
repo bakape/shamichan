@@ -5,7 +5,7 @@ import {defer} from './defer'
 import Modal from './modal'
 import {ViewAttrs} from './view'
 import {banner as lang} from './lang'
-import {write, read} from './render'
+import {write} from './render'
 import {find, HTML} from './util'
 import Model from './model'
 
@@ -24,17 +24,14 @@ function highlightBanner(name: string) {
 	}
 
 	let out = true,
-		clicked: boolean,
-		el: Element
+		clicked: boolean
+	const el = document.querySelector('#banner-' + name)
 
-	read(() => {
-		el = document.querySelector('#banner-' + name)
-		el.addEventListener("click", () => {
-			clicked = true
-			localStorage.setItem(key, '1')
-		})
-		tick()
+	el.addEventListener("click", () => {
+		clicked = true
+		localStorage.setItem(key, '1')
 	})
+	tick()
 
 	function tick() {
 		// Stop
@@ -73,10 +70,9 @@ export class BannerModal extends Modal<Model> {
 		bannerModals[this.id] = this
 
 		// Add click listener to the toggle button of the modal in the banner
-		read(() =>
-			document
+		document
 			.querySelector('#banner-' + (this.id as string).split('-')[0])
-			.addEventListener('click', () => this.toggle(), {capture: true}))
+			.addEventListener('click', () => this.toggle(), {capture: true})
 		write(() =>
 			$overlay.append(this.el))
 	}
@@ -194,6 +190,6 @@ defer(localiseTitles)
 
 // Set the title of an element to a localised string
 export const setTitle = (id: string, langID: string) =>
-	read(() =>
+	write(() =>
 		document.querySelector('#' + id)
 		.setAttribute('title', lang[langID]))

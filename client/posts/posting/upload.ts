@@ -26,8 +26,9 @@ export default class UploadForm {
 	renderUploadForm() {
 		read(() => {
 			this.$uploadStatus = this.el.querySelector(".upload-status")
-			this.$uploadInput = this
-				.el.querySelector("input[name=image]") as HTMLInputElement
+			this.$uploadInput =
+				this.el
+				.querySelector("input[name=image]") as HTMLInputElement
 		})
 
 		const attrs: StringMap = {

@@ -135,8 +135,7 @@ export class Post extends Model implements PostData {
 				line: "",
 			}
 		} else if (state.line === ">") { // Start qoute
-			state.quote = true
-			view.startQuote()
+			view.reparseLine()
 		} else if (state.line.endsWith("**")) { // Start or close spoiler
 			this.resetState()
 			view.reparseLine()

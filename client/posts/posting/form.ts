@@ -19,6 +19,7 @@ export class OPFormModel extends OP implements FormModel {
 	bodyLength: number
 	parsedLines: number
 	view: FormView
+	inputState: TextState
 
 	commitChar: (char: string) => void
 	commitBackspace: () => void
@@ -56,7 +57,10 @@ class FormModel {
 	parsedLines: number // Number of closed, commited and parsed lines
 	body: string
 	view: PostView & FormView
-	state: TextState
+
+	// State of line being edditted. Must be seperated to not affect the
+	// asynchronous updates of commited lines
+	inputState: TextState
 
 	spliceLine: (line: string, msg: SpliceResponse) => string
 	resetState: () => void
@@ -73,7 +77,6 @@ class FormModel {
 
 	// Remove the last character from the model's body
 	backspace() {
-		const {state} = this
 		this.body = this.body.slice(0, -1)
 	}
 
@@ -84,7 +87,7 @@ class FormModel {
 
 	// Compare new value to old and generate apropriate commands
 	parseInput(val: string): void {
-		const old = this.state.line,
+		const old = this.inputState.line,
 			lenDiff = val.length - old.length,
 			exceeding = this.bodyLength + lenDiff - 2000
 
@@ -111,9 +114,9 @@ class FormModel {
 		if (char === "\n") {
 			this.resetState()
 			this.view.startNewLine()
-			this.state.line = ""
+			this.inputState.line = ""
 		} else {
-			this.state.line += char
+			this.inputState.line += char
 		}
 		send(message.append, char.charCodeAt(0))
 	}
@@ -121,14 +124,14 @@ class FormModel {
 	// Send a message about removing the last character of the line to the
 	// server
 	commitBackspace() {
-		this.state.line = this.state.line.slice(0, -1)
+		this.inputState.line = this.inputState.line.slice(0, -1)
 		this.bodyLength--
 		send(message.backspace, null)
 	}
 
 	// Commit any other $input change that is not an append or backspace
 	commitSplice(val: string, lenDiff: number) {
-		const old = this.state.line
+		const old = this.inputState.line
 		let start: number,
 			len: number,
 			text: string
@@ -155,7 +158,7 @@ class FormModel {
 
 		send(message.splice, {start, len, text})
 		this.bodyLength += lenDiff
-		this.state.line = val
+		this.inputState.line = val
 
 		// If splice contained newlines, reformat text accordingly
 		const lines = val.split("\n")
@@ -163,7 +166,7 @@ class FormModel {
 			const lastLine = lines[lines.length - 1]
 			this.view.injectLines(lines.slice(0, -1), lastLine)
 			this.resetState()
-			this.state.line = lastLine
+			this.inputState.line = lastLine
 		}
 	}
 
@@ -248,7 +251,7 @@ class FormView extends PostView {
 	onKeyDown(event: KeyboardEvent) {
 		if (event.which === 13) { // Enter
 			event.preventDefault()
-			return this.onInput(this.model.state.line + "\n")
+			return this.onInput(this.model.inputState.line + "\n")
 		}
 	}
 
@@ -262,7 +265,7 @@ class FormView extends PostView {
 
 	// Start a new line in the input field and close the previous one
 	startNewLine() {
-		const line = this.model.state.line.slice(0, -1),
+		const line = this.model.inputState.line.slice(0, -1),
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
 			this.$input.before(frag)
