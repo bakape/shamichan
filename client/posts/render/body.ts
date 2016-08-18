@@ -66,12 +66,13 @@ export function parseTerminatedLine(line: string, data: PostData): string {
 	// Check for spoilers
 	while (true) {
 		const i = line.indexOf("**")
-		html += parseFragment(line.substring(i), data)
 		if (i !== -1) {
-			html += `<${state.spoiler ? '/' : ''}del>`
+			html += parseFragment(line.slice(0, i), data)
+			 	+ `<${state.spoiler ? '/' : ''}del>`
 			state.spoiler = !state.spoiler
-			line = line.substring(i + 1)
+			line = line.substring(i + 2)
 		} else {
+			html += parseFragment(line, data)
 			break
 		}
 	}
@@ -107,12 +108,13 @@ export function parseOpenLine(state: TextState): string {
 	let {line} = state
 	while (true) {
 		const i = line.indexOf("**")
-		html += line.substring(i)
 		if (i !== -1) {
-			html += `<${state.spoiler ? '/' : ''}del>`
+			html += escape(line.slice(0, i))
+				+ `<${state.spoiler ? '/' : ''}del>`
 			state.spoiler = !state.spoiler
-			line = line.substring(i + 1)
+			line = line.slice(i + 2)
 		} else {
+			html += escape(line.substring(i))
 			break
 		}
 	}

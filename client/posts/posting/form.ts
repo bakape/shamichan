@@ -12,7 +12,7 @@ import {send, message} from "../../connection"
 
 // Current PostForm and model instances
 export let postForm: FormView
-export let postModel: Post & FormModel
+export let postModel: FormModel
 
 // Form Model of an OP post
 export class OPFormModel extends OP implements FormModel {
@@ -24,6 +24,7 @@ export class OPFormModel extends OP implements FormModel {
 	commitChar: (char: string) => void
 	commitBackspace: () => void
 	commitSplice: (val: string) => void
+	init: () => void
 	lastBodyLine: () => string
 	parseInput: (val: string) => void
 
@@ -41,10 +42,9 @@ export class OPFormModel extends OP implements FormModel {
 		// Replace old model and view pair with the postForm pair
 		posts.addOP(this)
 		postForm = new OPFormView(this)
-		postModel = this
 		oldView.el.replaceWith(postForm.el)
 
-		this.bodyLength = this.parsedLines = 0
+		this.init()
 
 		// TODO: Hide [Reply] button
 
@@ -53,8 +53,8 @@ export class OPFormModel extends OP implements FormModel {
 
 // Override mixin for post authoring models
 class FormModel {
-	bodyLength: number  // Compound length of the input text body
-	parsedLines: number // Number of closed, commited and parsed lines
+	bodyLength: number = 0 // Compound length of the input text body
+	parsedLines: number = 0 // Number of closed, commited and parsed lines
 	body: string
 	view: PostView & FormView
 
@@ -64,6 +64,18 @@ class FormModel {
 
 	spliceLine: (line: string, msg: SpliceResponse) => string
 	resetState: () => void
+
+	// Initialize state
+	init() {
+		this.bodyLength = this.parsedLines = 0
+		this.inputState = {
+			quote: false,
+			spoiler: false,
+			iDice: 0, // Not used in FormModel. TypeScipt demands it.
+			line: "",
+		}
+		postModel = this
+	}
 
 	// Append a character to the model's body and reparse the line, if it's a
 	// newline

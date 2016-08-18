@@ -55,7 +55,7 @@ export default class PostView extends View<Post> {
 		renderPost(frag, this.model)
 		if (this.model.editing) {
 			this.$blockquote = frag.querySelector("blockquote")
-			this.findBuffer(this.$blockquote.lastElementChild)
+			this.findBuffer(this.$blockquote.lastChild)
 		}
 		this.el.append(frag)
 	}
@@ -87,9 +87,8 @@ export default class PostView extends View<Post> {
 
 	// Replace the current line with a reparsed fragment
 	reparseLine() {
-		const frag = makeFrag(parseOpenLine(this.model.state)),
-			line = frag.querySelector("span")
-		this.findBuffer(frag)
+		const frag = makeFrag(parseOpenLine(this.model.state))
+		this.findBuffer(frag.firstChild)
 		write(() =>
 			this.lastLine().replaceWith(frag))
 	}
@@ -103,13 +102,17 @@ export default class PostView extends View<Post> {
 	// Append a string to the current text buffer
 	appendString(s: string) {
 		write(() =>
-			this.$buffer.textContent += s)
+			this.$buffer.append(s))
 	}
 
 	// Remove one character from the current buffer
 	backspace() {
-		write(() =>
-			this.$buffer.textContent = this.$buffer.textContent.slice(0, -1))
+		write(() => {
+			// Merge multiple successive nodes created by appendString()
+			this.$buffer.normalize()
+			const $text = this.$buffer.lastChild
+			$text.textContent = $text.textContent.slice(0, -1)
+		})
 	}
 
 	// Start a new line and reparse the old one
