@@ -145,8 +145,7 @@ applyMixins(OPFormModel, FormModel)
 // Post creation and update view
 class FormView extends PostView {
 	model: Post & FormModel
-	$input: HTMLTextAreaElement
-	$sizer: HTMLPreElement // Used for dynamically resizing $input
+	$input: HTMLSpanElement
 	$done: HTMLInputElement
 	$postControls: Element
 
@@ -158,22 +157,21 @@ class FormView extends PostView {
 	// Render extra input fields for inputting text and optionally uploading
 	// images
 	renderInputs() {
-		this.$input = document.createElement("textarea")
+		this.$input = document.createElement("span")
 		const attrs: StringMap = {
 			id: "text-input",
 			name: "body",
-			rows: "1",
+			contenteditable: "",
 		}
 		if (isMobile) {
 			attrs["autocomplete"] = ""
 		}
 		setAttrs(this.$input, attrs)
+		this.$input.textContent = ""
 		this.$input.addEventListener("input", (event: Event) =>
-			this.onInput((event.target as HTMLTextAreaElement).value))
+			this.onInput((event.target as Element).textContent))
 		this.$input.addEventListener("keydown", (event: KeyboardEvent) =>
 			this.onKeyDown(event))
-
-		this.$sizer = document.createElement("pre")
 
 		this.$postControls = document.createElement("div")
 		this.$postControls.id = "post-controls"
@@ -191,8 +189,6 @@ class FormView extends PostView {
 			this.$blockquote.append(this.$input)
 			this.el.append(this.$postControls)
 			this.$input.focus()
-			document.body.append(this.$sizer)
-			this.resizeInput("")
 		})
 
 		// TODO: UploadForm integrations
@@ -202,20 +198,6 @@ class FormView extends PostView {
 	// Handle input events on $input
 	onInput(val: string) {
 		this.model.parseInput(val)
-		this.resizeInput(val)
-	}
-
-	// Resize $input according to the text inside. Can't really use async
-	// methods of render.ts here. Need an immediate response.
-	resizeInput(val = this.$input.value) {
-		this.$sizer.textContent = val
-		const min =
-			300
-			+ this.$input.getBoundingClientRect().left
-			+ this.el.getBoundingClientRect().left
-			+ document.body.scrollLeft * 2
-		const size = Math.max(this.$sizer.offsetWidth + 20, min)
-		this.$input.style.width = size + "px"
 	}
 
 	// Handle keydown events on $input
@@ -228,18 +210,19 @@ class FormView extends PostView {
 
 	// Trim $input from the end by the suplied length
 	trimInput(length: number) {
-		const val = this.$input.value.slice(0, -length)
-		this.$input.value = val
-		this.resizeInput(val)
+		const val = this.$input.textContent.slice(0, -length)
+		write(() =>
+			this.$input.textContent = val)
 	}
 
 	// Start a new line in the input field and close the previous one
 	startNewLine() {
 		const line = this.model.state.line.slice(0, -1),
 			frag = makeFrag(parseTerminatedLine(line, this.model))
-		this.$input.before(frag)
-		this.$input.value = ""
-		this.resizeInput("")
+		write(() => {
+			this.$input.before(frag)
+			this.$input.textContent = ""
+		})
 	}
 
 	// Parse and replace the temporary like closed by $input with a proper
@@ -247,7 +230,8 @@ class FormView extends PostView {
 	terminateLine(num: number) {
 		const html = parseTerminatedLine(this.model.lastBodyLine(), this.model),
 			frag = makeFrag(html)
-		this.$blockquote.children[num].replaceWith(frag)
+		write(() =>
+			this.$blockquote.children[num].replaceWith(frag))
 	}
 }
 

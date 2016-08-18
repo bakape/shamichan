@@ -152,21 +152,11 @@ header {
 	padding: 0;
 	background-color: transparent;
 	outline: none;
-	overflow: hidden;
-	resize: none;
+	min-height: 1em;
+	min-width: 20em;
+	white-space: pre-wrap;
+	cursor: text;
 	display: block;
-}
-
-// Used for dynamically resizing #text-input
-pre {
-	height: auto;
-	margin: 0;
-	position: absolute;
-	top: 0;
-	width: auto;
-	visibility: hidden;
-	border: 0;
-	padding: 0;
 }
 
 .upload-status {
