@@ -500,6 +500,14 @@ func (*DB) TestSplice(c *C) {
 			log:   []string{`05{"id":2,"start":0,"len":0,"text":"abc"}`},
 		},
 		{
+			start: 0,
+			len:   1,
+			text:  "",
+			init:  "abc",
+			final: "bc",
+			log:   []string{`05{"id":2,"start":0,"len":1,"text":""}`},
+		},
+		{
 			start: 2,
 			len:   3,
 			text:  "abcdefg",

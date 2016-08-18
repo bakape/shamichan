@@ -1,7 +1,7 @@
 // Handles Websocket connectivity and messaging
 
 import FSM from './fsm'
-import {debug, syncCounter, page} from './state'
+import {debug, syncCounter, setSyncCounter, page} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
 import {authenticate} from './mod/login'
@@ -110,8 +110,15 @@ function onMessage({data}: MessageEvent) {
 	}
 
 	// First two charecters of a message define its type
-	const handler = handlers[parseInt(data.slice(0, 2))]
+	const type = parseInt(data.slice(0, 2)),
+		handler = handlers[type]
 	if (handler) {
+		// Message was written to replication log. Increment syncronisation
+		// counter.
+		if (type > 1 && type < 30) {
+			setSyncCounter(syncCounter + 1)
+		}
+
 		handler(JSON.parse(data.slice(2)))
 	}
 }

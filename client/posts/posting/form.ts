@@ -102,7 +102,7 @@ class FormModel {
 			return this.commitBackspace()
 		}
 
-		return this.commitSplice(val)
+		return this.commitSplice(val, lenDiff)
 	}
 
 	// Commit a character appendage to the end of the line to the server
@@ -127,10 +127,44 @@ class FormModel {
 	}
 
 	// Commit any other $input change that is not an append or backspace
-	commitSplice(val: string) {
+	commitSplice(val: string, lenDiff: number) {
+		const old = this.state.line
+		let start: number,
+			len: number,
+			text: string
 
-		// TODO
+		// Find first differing character
+		for (let i = 0; i < old.length; i++) {
+			if (old[i] !== val[i]) {
+				start = i
+				break
+			}
+		}
 
+		// Find last common character and the differing part
+		const maxLen = Math.max(old.length, val.length),
+			vOffset = val.length - maxLen,
+			oOffset = old.length - maxLen
+		for (let i = maxLen; i >= start; i--) {
+			if (old[i + oOffset] !== val[i + vOffset]) {
+				len = i + oOffset - start + 1
+				text = val.slice(start).slice(0, len - 1)
+				break
+			}
+		}
+
+		send(message.splice, {start, len, text})
+		this.bodyLength += lenDiff
+		this.state.line = val
+
+		// If splice contained newlines, reformat text accordingly
+		const lines = val.split("\n")
+		if (lines.length > 1) {
+			const lastLine = lines[lines.length - 1]
+			this.view.injectLines(lines.slice(0, -1), lastLine)
+			this.resetState()
+			this.state.line = lastLine
+		}
 	}
 
 	// Return the last line of the body
@@ -145,6 +179,7 @@ applyMixins(OPFormModel, FormModel)
 // Post creation and update view
 class FormView extends PostView {
 	model: Post & FormModel
+	inputLock: boolean
 	$input: HTMLSpanElement
 	$done: HTMLInputElement
 	$postControls: Element
@@ -197,7 +232,16 @@ class FormView extends PostView {
 
 	// Handle input events on $input
 	onInput(val: string) {
-		this.model.parseInput(val)
+		if (!this.inputLock) {
+			this.model.parseInput(val)
+		}
+	}
+
+	// Ignore any oninput events on $input during suplied function call
+	lockInput(fn: () => void) {
+		this.inputLock = true
+		fn()
+		this.inputLock = false
 	}
 
 	// Handle keydown events on $input
@@ -212,7 +256,8 @@ class FormView extends PostView {
 	trimInput(length: number) {
 		const val = this.$input.textContent.slice(0, -length)
 		write(() =>
-			this.$input.textContent = val)
+			this.lockInput(() =>
+				this.$input.textContent = val))
 	}
 
 	// Start a new line in the input field and close the previous one
@@ -221,7 +266,22 @@ class FormView extends PostView {
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
 			this.$input.before(frag)
-			this.$input.textContent = ""
+			this.lockInput(() =>
+				this.$input.textContent = "")
+		})
+	}
+
+	// Inject lines before $input and set $input contents to lastLine
+	injectLines(lines: string[], lastLine: string) {
+		const frag = document.createDocumentFragment()
+		for (let line of lines) {
+			const el = makeFrag(parseTerminatedLine(line, this.model))
+			frag.append(el)
+		}
+		write(() => {
+			this.$input.before(frag)
+			this.lockInput(() =>
+				this.$input.textContent = lastLine)
 		})
 	}
 

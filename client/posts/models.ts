@@ -179,7 +179,7 @@ export class Post extends Model implements PostData {
 		if (len === -1) { // Special meaning - replace till line end
 			end = text
 		} else {
-			end = text + line.substring(start + len, -1)
+			end = text + line.slice(start + len)
 		}
 		line = keep + end
 

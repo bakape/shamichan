@@ -89,11 +89,12 @@ export default class PostView extends View<Post> {
 
 	// Replace the current line with a reparsed fragment
 	reparseLine() {
-		const frag = makeFrag(parseOpenLine(this.model.state))
+		const frag = makeFrag(parseOpenLine(this.model.state)),
+			line = frag.querySelector("span")
 		this.findBuffer(frag)
 		write(() => {
 			this.$lastLine.replaceWith(frag)
-			this.$lastLine = frag as Element
+			this.$lastLine = line
 		})
 	}
 
