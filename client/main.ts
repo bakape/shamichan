@@ -14,6 +14,7 @@ import BoardNavigation from './page/boardNavigation'
 import {exec} from './defer'
 import bindThreadCreation from './posts/posting/threadCreation'
 import {initOptions} from './options'
+import bindEtc from './etc'
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -41,6 +42,7 @@ async function start() {
 	new BoardNavigation()
 	connect()
 	bindThreadCreation()
+	bindEtc()
 	exec()
 	await pageLoader
 	displayLoading(false)

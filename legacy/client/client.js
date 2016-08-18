@@ -143,11 +143,3 @@ function checkRepliedToMe(links, sourceNum) {
 			main.request('repliedToMe', sourceNum);
 	}
 }
-
-// Make the text spoilers toggle revealing on click
-util.listener(document, 'click', 'del', function (event) {
-	if (event.spoilt)
-		return;
-	event.spoilt = true;
-	event.target.classList.toggle('reveal');
-});
