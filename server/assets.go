@@ -1,10 +1,10 @@
 package server
 
 import (
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 var (
@@ -12,10 +12,7 @@ var (
 	imageHeaders = map[string]string{
 		// max-age set to 350 days. Some caches and browsers ignore max-age, if it
 		// is a year or greater, so keep it a little below.
-		"Cache-Control": "max-age=30240000",
-
-		// Fake etag to stop agressive browser cache busting
-		"ETag":            "0",
+		"Cache-Control":   "max-age=30240000",
 		"X-Frame-Options": "sameorigin",
 	}
 
@@ -27,41 +24,26 @@ var (
 
 // More performant handler for serving image assets. These are immutable
 // (except deletion), so we can also set seperate caching policies for them.
-func serveImages(
-	res http.ResponseWriter,
-	req *http.Request,
-	params map[string]string,
-) {
-	file, err := os.Open(filepath.FromSlash(imageWebRoot + params["path"]))
+func serveImages(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	file, err := os.Open(filepath.FromSlash(imageWebRoot + p["path"]))
 	if err != nil {
-		text404(res, req)
+		text404(w, r)
 		return
 	}
 	defer file.Close()
 
-	if checkClientEtag(res, req, "0") {
-		return
-	}
-	head := res.Header()
+	head := w.Header()
 	for key, val := range imageHeaders {
 		head.Set(key, val)
 	}
 
-	_, err = io.Copy(res, file)
-	if err != nil {
-		textErrorPage(res, req, err)
-		return
-	}
+	http.ServeContent(w, r, p["path"], time.Time{}, file)
 }
 
 // Server static assets
-func serveAssets(
-	res http.ResponseWriter,
-	req *http.Request,
-	params map[string]string,
-) {
-	req.URL.Path = params["path"]
-	assetServer.ServeHTTP(res, req)
+func serveAssets(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	r.URL.Path = p["path"]
+	assetServer.ServeHTTP(w, r)
 }
 
 // Serve the service worker script file. It needs to be on the root scope for

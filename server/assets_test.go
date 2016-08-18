@@ -36,18 +36,10 @@ func (*WebServer) TestImageServer(c *C) {
 	buf, err := ioutil.ReadFile(path)
 	c.Assert(err, IsNil)
 	assertBody(rec, string(buf), c)
-	headers := map[string]string{
+	assertHeaders(c, rec, map[string]string{
 		"Cache-Control":   "max-age=30240000",
 		"X-Frame-Options": "sameorigin",
-		"ETag":            "0",
-	}
-	assertHeaders(c, rec, headers)
-
-	// Fake etag validation
-	rec, req = newPair(c, path)
-	req.Header.Set("If-None-Match", "0")
-	serveImages(rec, req, params)
-	assertCode(rec, 304, c)
+	})
 
 	// Non-existing file
 	rec, req = newPair(c, notFound)
