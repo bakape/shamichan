@@ -48,7 +48,7 @@ export function renderName(el: Element, data: PostData) {
 	}
 
 	if (trip) {
-		const code = el.lastElementChild
+		const code = el.lastElementChild as HTMLElement
 		code.hidden = false
 		code.textContent = escape(trip)
 	}

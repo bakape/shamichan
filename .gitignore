@@ -3,6 +3,7 @@
 .ffmpeg
 .package
 .pid
+.vscode
 *.dll
 assets
 error.log

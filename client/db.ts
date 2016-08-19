@@ -1,6 +1,4 @@
-/*
- IndexedDB database controller
-*/
+// IndexedDB database controller
 
 const dbVersion = 3
 

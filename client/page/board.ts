@@ -24,7 +24,7 @@ export default function (threads: ThreadData[]) {
 	const frag = importTemplate("board"),
 		{banners, title} = boardConfig
 	if (banners.length) {
-		const banner = frag.querySelector(".image-banner")
+		const banner = frag.querySelector(".image-banner") as HTMLElement
 		banner.hidden = false
 		banner
 			.firstElementChild

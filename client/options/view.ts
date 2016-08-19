@@ -126,7 +126,7 @@ export default class OptionsPanel extends TabbedModal {
 	async importConfigFile() {
 		const reader = new FileReader()
 		reader.readAsText(this.$import.files[0])
-		const event = await load(reader) as FileReaderOnloadEvent
+		const event = await load(reader) as any
 
 		// In case of curruption
 		let json: {[key: string]: string}

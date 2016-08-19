@@ -1,4 +1,5 @@
 {
+	"enableAutoDiscovery": true,
 	"compileOnSave": false,
 	"compilerOptions": {
 		"target": "ES6",
@@ -7,7 +8,6 @@
 		"newLine": "LF",
 		"removeComments": true,
 		"noImplicitAny": true,
-		"noUnusedLocals": true,
-		"skipLibCheck": true
+		"noUnusedLocals": true
 	}
 }

@@ -25,7 +25,7 @@ function highlightBanner(name: string) {
 
 	let out = true,
 		clicked: boolean
-	const el = document.querySelector('#banner-' + name)
+	const el = document.querySelector('#banner-' + name) as HTMLElement
 
 	el.addEventListener("click", () => {
 		clicked = true
@@ -107,14 +107,14 @@ export class BannerModal extends Modal<Model> {
 			(this as any).render()
 		}
 		write(() =>
-			this.el.style.display = 'block')
+			(this.el as HTMLElement).style.display = 'block')
 		visible = this
 	}
 
 	// Hide the element
 	hide() {
 		write(() =>
-			this.el.style.display = 'none')
+			(this.el as HTMLElement).style.display = 'none')
 		visible = null
 	}
 }

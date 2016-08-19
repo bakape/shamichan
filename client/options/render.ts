@@ -36,7 +36,7 @@ export default function (): string {
 			continue
 		}
 
-		const attrs: StringMap = {
+		const attrs = {
 			'data-id': i.toString(),
 			class: 'tab-link'
 		}
@@ -148,7 +148,7 @@ function renderExtras(): string {
 	}
 
 	// Hidden file input for uploading the JSON
-	const attrs: StringMap = {
+	const attrs = {
 		type: 'file',
 		id: 'importSettings',
 		name: "Import Settings"

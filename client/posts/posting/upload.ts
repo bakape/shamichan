@@ -31,7 +31,7 @@ export default class UploadForm {
 				.querySelector("input[name=image]") as HTMLInputElement
 		})
 
-		const attrs: StringMap = {
+		const attrs = {
 			type: "file",
 			name: "image",
 			accept: acceptedFormats,

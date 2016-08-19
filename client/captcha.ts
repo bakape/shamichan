@@ -5,6 +5,28 @@ import {config} from './state'
 import {HTML, makeAttrs} from './util'
 import {ui} from './lang'
 
+// Solve Media AJAX API controler
+// https://portal.solvemedia.com/portal/help/pub/ajax
+interface ACPuzzleController  {
+	create(
+		key: string,
+		elID: string,
+		opts?: ACPuzzleOptions
+	): ACPuzzleController
+	destroy(): void
+	get_challenge(): string
+	get_response(): string
+	reload(): void
+}
+
+interface ACPuzzleOptions {
+	multi: boolean
+	id: string
+	theme: string
+}
+
+declare var ACPuzzle: ACPuzzleController
+
 // Data of a captcha challenge
 export interface Captcha {
 	captcha: string
@@ -44,12 +66,12 @@ export default class CaptchaView extends View<Model> {
 	// Render the container for the captcha
 	render() {
 		const {id} = this
-		const imageAttrs: StringMap = {
+		const imageAttrs = {
 			id: `adcopy-puzzle-image-${id}`,
 			class: 'captcha-image',
 			title: ui.reloadCaptcha,
 		}
-		const inputAttrs: StringMap = {
+		const inputAttrs = {
 			id: `adcopy_response-${id}`,
 			class: 'full-width',
 			name: 'adcopy_response',

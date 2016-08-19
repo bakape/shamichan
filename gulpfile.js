@@ -1,6 +1,5 @@
-/*
-Builds client JS and CSS
- */
+// Builds client JS and CSS
+
 'use strict'
 
 const babel = require('gulp-babel'),

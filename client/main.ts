@@ -1,6 +1,6 @@
 // Client entry point
 
- // TODO: Remove, when proper structure done
+// TODO: Remove, when proper structure done
 import * as client from './client'
 let c = client  // Prevents the compiler from removing as an unused import
 c = null

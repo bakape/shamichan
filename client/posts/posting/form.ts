@@ -208,7 +208,7 @@ class FormView extends PostView {
 	// images
 	renderInputs() {
 		this.$input = document.createElement("span")
-		const attrs: StringMap = {
+		const attrs: {[key: string]: string} = {
 			id: "text-input",
 			name: "body",
 			contenteditable: "",

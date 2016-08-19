@@ -19,7 +19,7 @@ interface Configs extends ChangeEmitter {
 	FAQ: string
 	captchaPublicKey: string
 	boards: string[]
-	links: StringMap
+	links: {[key: string]: string}
 }
 
 // Board-specific configurations
@@ -108,7 +108,7 @@ export function getModel(el: Element): Post {
 	return posts.get(id)
 }
 
-const $loading = document.querySelector('#loadingImage')
+const $loading = document.querySelector('#loadingImage') as HTMLElement
 
 // Display or hide the loading animation
 export function displayLoading(loading: boolean) {

@@ -5,11 +5,15 @@ import {ImageData, fileTypes} from '../models'
 import {images as lang} from '../../lang'
 
 // Render a thumbnail of an image, according to configuration settings
-export function renderImage(el: Element, data: ImageData, reveal?: boolean) {
+export function renderImage(
+	el: HTMLElement,
+	data: ImageData,
+	reveal?: boolean,
+) {
 	el.hidden = false
 	const showThumb = !options.hideThumbs || reveal
 	if (config.hats && showThumb) {
-		el.firstElementChild.hidden = false
+		(el.firstElementChild as HTMLElement).hidden = false
 	}
 	if (showThumb) {
 		renderThumbnail(el.lastElementChild, data)
@@ -17,7 +21,11 @@ export function renderImage(el: Element, data: ImageData, reveal?: boolean) {
 }
 
 // Render the information caption above the image
-export function renderFigcaption(el:Element, data: ImageData, reveal?: boolean) {
+export function renderFigcaption(
+	el: HTMLElement,
+	data: ImageData,
+	reveal?: boolean,
+) {
 	const list: string[] = []
 	if (data.audio) {
 		list.push('\u266B')
@@ -30,7 +38,7 @@ export function renderFigcaption(el:Element, data: ImageData, reveal?: boolean) 
 		list.push('APNG')
 	}
 
-	const [hToggle, info, link] = Array.from(el.children)
+	const [hToggle, info, link] = Array.from(el.children) as HTMLElement[]
 	if (!options.hideThumbs) {
 		hToggle.hidden = true
 	} else {
@@ -152,7 +160,7 @@ function imageLink(el: Element, data: ImageData) {
 		ext = fileTypes[fileType],
 		fullName = `${escape(name)}.${ext}`,
 		tooLong = name.length >= 38
-	const attrs: StringMap = {
+	const attrs: {[key: string]: string} = {
 		href: sourcePath(data),
 		download: fullName,
 	}
@@ -191,10 +199,10 @@ export function renderThumbnail(el: Element, data: ImageData, href?: string) {
 		thumbHeight *= 0.8333
 	}
 
-	const linkAttrs: StringMap = {
+	const linkAttrs: {[key: string]: string} = {
 		href: href || src
 	}
-	const imgAttrs: StringMap = {
+	const imgAttrs: {[key: string]: string} = {
 		src: thumb,
 		width: thumbWidth.toString(),
 		height: thumbHeight.toString()

@@ -88,11 +88,11 @@ class BoardSelectionPanel extends Modal<Model> {
 
 		let boardList = ""
 		for (let {id, title} of boards) {
-			const attrs: StringMap = {
+			const attrs: {[key: string]: string} = {
 				type: "checkbox",
 				name: id
 			}
-			if (selected.includes(id)) {
+			if (selected.indexOf(id) > -1) {
 				attrs["checked"] = ""
 			}
 			boardList += HTML
@@ -105,7 +105,7 @@ class BoardSelectionPanel extends Modal<Model> {
 				</span>`
 		}
 
-		const searchAttrs: StringMap = {
+		const searchAttrs = {
 			type: "text",
 			name: "search",
 			placeholder: ui.search,
@@ -161,11 +161,15 @@ class BoardSelectionPanel extends Modal<Model> {
 		}
 
 		write(() => {
-			for (let el of this.el.querySelectorAll(`.input-span`)) {
-				el.style.display =
-					matched.includes(el.getAttribute("data-id"))
-					? "block"
-					: "none"
+			const els = this.el.querySelectorAll(`.input-span`) as HTMLElement[]
+			for (let el of els) {
+				let display: string
+				if (matched.indexOf(el.getAttribute("data-id")) > -1) {
+					display = "block"
+				} else {
+					display = "none"
+				}
+				el.style.display = display
 			}
 		})
 	}

@@ -1,4 +1,4 @@
-import {handlers, send, message} from '../connection'
+import { handlers, send, message } from '../connection'
 import {InputSpec, renderInput, inputType} from '../forms'
 import AccountFormView from './common'
 import {admin as lang, fetchAdminPack} from '../lang'
@@ -27,7 +27,7 @@ type ServerConfigs = {
 	FAQ: string
 	defaultCSS: string
 	defaultLang: string
-	links: StringMap
+	links: {[key: string]: string}
 
 	[index: string]: any
 }
@@ -151,11 +151,8 @@ export default class ConfigPanel extends AccountFormView {
 
 		// Request curent configuration and render the panel
 		send(message.configServer, null)
-		handlers[message.configServer] = async (conf: ServerConfigs) => {
-			delete handlers[message.configServer]
-			await fetchAdminPack()
-			this.render(conf)
-		}
+		handlers[message.configServer] = async (conf: ServerConfigs) =>
+			this.handleResponse(conf)
 	}
 
 	// Render the panel element contents
@@ -180,7 +177,7 @@ export default class ConfigPanel extends AccountFormView {
 		const els = this.el
 			.querySelectorAll("input[name], select[name], textarea[name]")
 
-		for (let el of els as NodeListOf<HTMLInputElement>) {
+		for (let el of els as HTMLInputElement[]) {
 			let val: any
 			switch (el.type) {
 			case "submit":
@@ -201,7 +198,7 @@ export default class ConfigPanel extends AccountFormView {
 		// Read links key-value pairs
 		const keyVals = this.el.querySelectorAll(
 			"div[name=links] .map-field"
-		) as NodeListOf<HTMLInputElement>
+		) as HTMLInputElement[]
 		req.links = {}
 		for (let i = 0; i < keyVals.length; i += 2) {
 			req.links[keyVals[i].value] = keyVals[i+1].value
@@ -209,5 +206,12 @@ export default class ConfigPanel extends AccountFormView {
 
 		send(message.configServer, req)
 		this.remove()
+	}
+
+	// Handle server response
+	async handleResponse(conf: ServerConfigs) {
+		delete handlers[message.configServer]
+		await fetchAdminPack()
+		this.render(conf)
 	}
 }

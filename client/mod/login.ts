@@ -137,12 +137,14 @@ export default class AccountPanel extends TabbedModal {
 
 	hideMenu() {
 		write(() =>
-			this.el.querySelector(".menu").style.display = "none")
+			(this.el.querySelector(".menu") as HTMLElement)
+			.style.display = "none")
 	}
 
 	unhideMenu() {
 		write(() =>
-			this.el.querySelector(".menu").style.display = "")
+			(this.el.querySelector(".menu") as HTMLElement)
+			.style.display = "")
 	}
 }
 

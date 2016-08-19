@@ -128,7 +128,7 @@ export function on(
 	if (opts && opts.selector) {
 		const oldFn = fn
 		fn = event => {
-			if (event.target.matches(opts.selector)) {
+			if ((event.target as Element).matches(opts.selector)) {
 				oldFn(event)
 			}
 		}
@@ -166,7 +166,7 @@ export function HTML(callSite: string[], ...args: string[]): string {
 
 // Generate an HTML element attribute list. If a key has an empty string, it's
 // value will be considered "true"
-export function makeAttrs(attrs: StringMap): string {
+export function makeAttrs(attrs: {[key: string]: string}): string {
 	let html = ''
 	for (let key in attrs) {
 		html += ' ' + key
@@ -179,7 +179,7 @@ export function makeAttrs(attrs: StringMap): string {
 }
 
 // Set attributes from a key-value map to the element
-export function setAttrs(el: Element, attrs: StringMap) {
+export function setAttrs(el: Element, attrs: {[key: string]: string}) {
 	for (let key in attrs) {
 		el.setAttribute(key, attrs[key])
 	}

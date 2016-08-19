@@ -89,7 +89,7 @@ class ThreadForm extends FormView implements UploadForm {
 		write(() => {
 			this.$aside.classList.add("expanded")
 			this.$aside.append(this.el)
-			this.el.querySelector("input, select").focus()
+			; (this.el.querySelector("input, select") as HTMLElement).focus()
 		})
 	}
 
@@ -119,7 +119,8 @@ class ThreadForm extends FormView implements UploadForm {
 
 			this.$uploadContainer = this.el.querySelector(".upload-container")
 			write(() =>
-				this.$uploadContainer.style.display = display)
+				(this.$uploadContainer as HTMLElement)
+				.style.display = display)
 		})
 
 		return renderField({
@@ -138,7 +139,7 @@ class ThreadForm extends FormView implements UploadForm {
 			display = textOnly ? "none" : ""
 		this.needImage = !textOnly
 		write(() => {
-			this.$uploadContainer.style.display = display
+			(this.$uploadContainer as HTMLElement).style.display = display
 			this.$uploadInput.disabled = textOnly
 		})
 	}

@@ -8,6 +8,8 @@ import {ui} from './lang'
 import {config} from './state'
 import CaptchaView, {newCaptchaID} from './captcha'
 
+type StringMap = {[key: string]: string}
+
 export const enum inputType {boolean, number, string, select, multiline, map}
 
 // Spec of a single input element for board and server control panels

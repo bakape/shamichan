@@ -34,7 +34,7 @@ export function renderFields(...names: string[]): string {
 	const fields = names.map(name =>
 		fieldSpecs[name])
 	return table(fields, ({type, name, maxLength}) => {
-		const attrs: StringMap = {
+		const attrs = {
 			type,
 			name,
 			maxlength: maxLength.toString() ,

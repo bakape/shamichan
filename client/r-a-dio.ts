@@ -44,7 +44,7 @@ function render() {
 		return
 	}
 
-	const attrs: StringMap = {
+	const attrs = {
 		title: lang.googleSong,
 		href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
 		target: "_blank",

@@ -4,7 +4,7 @@ import {PostData, PostLinks, TextState} from '../models'
 import {escape} from '../../util'
 
 // Map of {name: url} for generating `>>>/foo/bar` type reference links
-let refTargets: StringMap
+let refTargets: {[key: string]: string}
 
 // Render the text body of a post
 export function renderBody(data: PostData): string {
@@ -173,7 +173,7 @@ function parsePostLink(bit: string, links: PostLinks): string {
 // Generate all possible refference name and link pairs for externa
 // `>>>/foo/bar` links
 export function genRefTargets() {
-	const targets: StringMap = {}
+	const targets: {[key: string]: string} = {}
 
 	for (let name in config.links) {
 		targets[name] = config.links[name]
