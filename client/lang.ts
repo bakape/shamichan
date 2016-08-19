@@ -54,6 +54,7 @@ type LnPosts = {
 	spoiler: string
 	and: string
 	omitted: string
+	unfinishedPost: string
 	post: string[]
 	image: string[]
 	[index: string]: any

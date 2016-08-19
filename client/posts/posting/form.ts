@@ -7,7 +7,7 @@ import {applyMixins, makeFrag, setAttrs} from '../../util'
 import {posts, isMobile} from '../../state'
 import {parseTerminatedLine} from '../render/body'
 import {write} from '../../render'
-import {ui} from '../../lang'
+import {posts as lang, ui} from '../../lang'
 import {send, message} from "../../connection"
 
 // TODO: State machine for handling connection issues during post authoring
@@ -48,10 +48,18 @@ export class OPFormModel extends OP implements FormModel {
 		oldView.el.replaceWith(postForm.el)
 
 		this.init()
+		bindNagging()
 
 		// TODO: Hide [Reply] button
 
 	}
+}
+
+// Ensures you are nagged at by the browser, when navigating away from an
+// unfinished allocated post.
+function bindNagging() {
+	window.onbeforeunload = (event: BeforeUnloadEvent) =>
+		event.returnValue = lang.unfinishedPost
 }
 
 // Override mixin for post authoring models
@@ -190,6 +198,7 @@ class FormModel {
 	commitClose() {
 		// Normalize state
 		this.state.line = this.inputState.line
+		window.onbeforeunload = postForm = postModel = null
 		this.view.cleanUp()
 		send(message.closePost, null)
 	}

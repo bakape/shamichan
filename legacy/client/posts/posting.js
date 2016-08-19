@@ -220,25 +220,6 @@ const ComposerView = Backbone.View.extend({
 
 	// Commit any staged words to the server
 	commit(text) {
-		var lines;
-		if (text.indexOf('\n') >= 0) {
-			lines = text.split('\n');
-			this.line_count += lines.length - 1;
-			const breach = this.line_count - common.MAX_POST_LINES + 1;
-			if (breach > 0) {
-				for (var i = 0; i < breach; i++)
-					lines.pop();
-				text = lines.join('\n');
-				this.line_count = common.MAX_POST_LINES;
-			}
-		}
-		const left = common.MAX_POST_CHARS - this.char_count;
-		if (left < text.length)
-			text = text.substr(0, left);
-		if (!text)
-			return;
-		this.char_count += text.length;
-
 		// Either get an allocation or send the committed text
 		const attrs = this.model.attributes;
 		if (!attrs.num && !attrs.sentAllocRequest) {
@@ -249,18 +230,6 @@ const ComposerView = Backbone.View.extend({
 			main.send(text);
 		else
 			this.pending += text;
-
-		// Add it to the user's display
-		if (lines) {
-			lines[0] = this.$lineBuffer.text() + lines[0];
-			this.$lineBuffer.text(lines.pop());
-			for (let o = 0, len = lines.length; o < len; o++)
-				this.imouto.fragment(lines[o] + '\n');
-		}
-		else {
-			this.$lineBuffer.append(document.createTextNode(text));
-			this.$lineBuffer[0].normalize();
-		}
 	},
 
 	// Construct the message for post allocation in the database
@@ -284,50 +253,6 @@ const ComposerView = Backbone.View.extend({
 
 	onKeyDown(event) {
 		handle_shortcut.bind(this)(event);
-	},
-
-	finish() {
-		if (this.model.get('num')) {
-			this.flushPending();
-			this.commit(this.$input.val());
-			this.$input.remove();
-			this.$submit.remove();
-			if (this.$uploadForm)
-				this.$uploadForm.remove();
-			if (this.$iframe) {
-				this.$iframe.remove();
-				this.$iframe = null;
-			}
-			this.imouto.fragment(this.$lineBuffer.text());
-			this.$buffer.replaceWith(this.$buffer.contents());
-			this.$lineBuffer.remove();
-			this.$blockquote.css({
-				'margin-left': '', 'padding-left': ''
-			}
-			);
-			main.send([common.FINISH_POST]);
-			this.preserve = true;
-			if (this.isThread)
-				this.$el.append(main.oneeSama.replyBox());
-
-			let missing = this.imouto.allRolls.sent - this.imouto.allRolls.seen;
-			//if missing>0 we have to wait until insertOwnPosts "sees" the
-			// dice
-			if (missing > 0) {
-				let checkAgain;
-				(checkAgain= (n) => {
-					setTimeout(()=> {
-						if (this.imouto.allRolls.seen == this.imouto.allRolls.sent || n ==0)
-							postSM.feed('done');
-						else
-							checkAgain(n - 1);
-					}, 100);
-				})(5); //retry 5 times
-			}
-			else
-				postSM.feed('done');
-		}else
-			postSM.feed('done');
 	},
 
 	onToggle(event) {
@@ -355,8 +280,6 @@ const ComposerView = Backbone.View.extend({
 		var header = $(main.oneeSama.header(msg));
 		this.$meta.replaceWith(header);
 		this.$meta = header;
-		if (!this.isThread)
-			this.$el.addClass('editing');
 
 		/*
 		 TODO: Hide threads that are over THREADS_PER_PAGE. Also would need to be
@@ -372,20 +295,6 @@ const ComposerView = Backbone.View.extend({
 			this.$uploadForm.append(this.$submit);
 		else
 			this.$blockquote.after(this.$submit);
-		if (this.isThread) {
-			this.$subject.siblings('label').andSelf().remove();
-			this.$blockquote.show();
-			this.resizeInput();
-			this.$input.focus();
-		}
-
-		/*
-		 Ensures you are nagged at by the browser, when navigating away from an
-		 unfinished allocated post.
-		 */
-		window.onbeforeunload = function() {
-			return "You have an unfinished post.";
-		};
 	},
 
 	// Insert an image that has been uploaded and processed by the server
@@ -462,21 +371,6 @@ const ComposerView = Backbone.View.extend({
 		this.$input[0].selectionStart = this.$input.val().length;
 		this.onInput();
 		this.$input.focus();
-	},
-
-	remove() {
-		if (!this.preserve) {
-			if (this.isThread)
-				this.$el.next('hr').remove();
-			this.$el.remove();
-		}
-		this.$sizer.remove();
-		if (this.$iframe) {
-			this.$iframe.remove();
-			this.$iframe = null;
-		}
-		this.stopListening();
-		window.onbeforeunload = null;
 	},
 });
 exports.ComposerView = ComposerView;
