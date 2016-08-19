@@ -73,7 +73,7 @@ export default class AccountFormView extends FormView {
 	// to the parrent view.
 	renderForm(fields: string) {
 		super.renderForm(fields)
-		accountPannel.hideMenu()
+		accountPannel.toggleMenu(false)
 		write(() =>
 			accountPannel.el.append(this.el))
 	}
@@ -81,6 +81,6 @@ export default class AccountFormView extends FormView {
 	// Unhide the parent AccountPanel, when this view is removed
 	remove() {
 		super.remove()
-		accountPannel.unhideMenu()
+		accountPannel.toggleMenu(true)
 	}
 }

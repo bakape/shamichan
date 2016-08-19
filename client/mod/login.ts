@@ -130,21 +130,17 @@ export default class AccountPanel extends TabbedModal {
 	loadConditionalView(path: string): EventListener {
 		return () =>
 			loadModule(path).then(m => {
-				this.hideMenu()
+				this.toggleMenu(false)
 				new m.default()
 			})
 	}
 
-	hideMenu() {
+	// Either hide or show the selection menu
+	toggleMenu(show: boolean) {
+		const display = show ? "" : "none"
 		write(() =>
 			(this.el.querySelector(".menu") as HTMLElement)
-			.style.display = "none")
-	}
-
-	unhideMenu() {
-		write(() =>
-			(this.el.querySelector(".menu") as HTMLElement)
-			.style.display = "")
+			.style.display = display)
 	}
 }
 
