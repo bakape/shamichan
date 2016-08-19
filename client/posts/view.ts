@@ -121,11 +121,8 @@ export default class PostView extends View<Post> {
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
 			this.lastLine().replaceWith(frag)
-
-			const $line = document.createElement("span")
-			this.$buffer = document.createTextNode("")
-			$line.append(this.$buffer)
-			this.$blockquote.append($line)
+			this.$buffer = document.createElement("span")
+			this.$blockquote.append(this.$buffer)
 		})
 	}
 

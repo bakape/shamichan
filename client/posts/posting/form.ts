@@ -10,6 +10,8 @@ import {write} from '../../render'
 import {ui} from '../../lang'
 import {send, message} from "../../connection"
 
+// TODO: State machine for handling connection issues during post authoring
+
 // Current PostForm and model instances
 export let postForm: FormView
 export let postModel: FormModel
@@ -23,6 +25,7 @@ export class OPFormModel extends OP implements FormModel {
 
 	commitChar: (char: string) => void
 	commitBackspace: () => void
+	commitClose: () => void
 	commitSplice: (val: string) => void
 	init: () => void
 	lastBodyLine: () => string
@@ -57,6 +60,7 @@ class FormModel {
 	parsedLines: number = 0 // Number of closed, commited and parsed lines
 	body: string
 	view: PostView & FormView
+	state: TextState // State of the underlying normal post model
 
 	// State of line being edditted. Must be seperated to not affect the
 	// asynchronous updates of commited lines
@@ -182,6 +186,14 @@ class FormModel {
 		}
 	}
 
+	// Close the form and revert to regular post
+	commitClose() {
+		// Normalize state
+		this.state.line = this.inputState.line
+		this.view.cleanUp()
+		send(message.closePost, null)
+	}
+
 	// Return the last line of the body
 	lastBodyLine(): string {
 		const lines = this.body.split("\n")
@@ -232,6 +244,8 @@ class FormView extends PostView {
 			type: "button",
 			value: ui.done,
 		})
+		this.$done.addEventListener("click", () =>
+			this.model.commitClose())
 		this.$postControls.append(this.$done)
 
 		write(() => {
@@ -307,6 +321,17 @@ class FormView extends PostView {
 			frag = makeFrag(html)
 		write(() =>
 			this.$blockquote.children[num].replaceWith(frag))
+	}
+
+	// Remove any dangling form controls deallocate references
+	cleanUp() {
+		write(() => {
+			this.$postControls.remove()
+			this.$postControls = this.$done = null
+		})
+
+		// TODO: Unhide [Reply]
+
 	}
 }
 
