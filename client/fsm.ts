@@ -1,14 +1,12 @@
 import {SetMap} from './util'
 
-type ActHandler = (arg?: any) => void
-type ActMap = SetMap<ActHandler>
+type StateHandler = (arg?: any) => void
 
 // Finite State Machine
 export default class FSM<S, E> {
-	stateHandlers: ActMap = new SetMap<ActHandler>()
-	transitions: {[transition: string]: S} = {}
-	transitionHandlers: ActMap = new SetMap<ActHandler>()
-	wilds: {[event: string]: S} = {}
+	stateHandlers: SetMap<StateHandler> = new SetMap<StateHandler>()
+	transitions: {[transition: string]: (arg?: any) => S} = {}
+	wilds: {[event: string]: (arg?: any) => S} = {}
 	state: S
 
 	// Create a new finite state machine with the supplied start state
@@ -17,29 +15,20 @@ export default class FSM<S, E> {
 	}
 
 	// Assign a handler to be execute on arrival to a new state
-	on(state: S, handler: ActHandler) {
+	on(state: S, handler: StateHandler) {
 		this.stateHandlers.add(state as any, handler)
 	}
 
-	// Specify state transition and an optional handler to execute on it.
-	// Any of starts[] + event -> result
-	act(starts: S[], event: E, result: S, handler?: ActHandler) {
-		for (let start of starts) {
-			const trans = this.transitionString(start, event)
-			this.transitions[trans] = result
-			if (handler) {
-				this.transitionHandlers.add(trans, handler)
-			}
-		}
+	// Specify state transition and a handler to execute on it. The hendler must
+	// return the next state of FSM.
+	act(start: S, event: E, handler: (arg?: any) => S) {
+		this.transitions[this.transitionString(start, event)] = handler
 	}
 
-	// Specify an event and optional handler, that will cause any state to
-	// transition to the target result state.
-	wildAct(event: E, result: S, handler?: ActHandler) {
-		this.wilds[event as any] = result
-		if (handler) {
-			this.on(result, handler)
-		}
+	// Specify an event and handler, that will execute, when this event is fired
+	// on any state.
+	wildAct(event: E, handler: (arg?: any) => S) {
+		this.wilds[event as any] = handler
 	}
 
 	// Generate a transition string representation
@@ -51,19 +40,24 @@ export default class FSM<S, E> {
 	feed(event: E, arg?: any) {
 		let result: S
 		if (event as any in this.wilds) {
-			result = this.wilds[event as any]
+			result = this.wilds[event as any]()
 		} else {
-			const trans = this.transitionString(this.state, event)
-			this.transitionHandlers.forEach(trans, fn => fn(arg))
-			result = this.transitions[trans]
+			const transition = this.transitionString(this.state, event),
+				handler = this.transitions[transition]
+			if (!handler) { // Not registered. NOOP
+				return
+			}
+			result = handler()
 		}
-		this.stateHandlers.forEach(result as any, fn => fn(arg))
+		this.stateHandlers.forEach(result as any, fn =>
+			fn(arg))
 		this.state = result
 	}
 
-	// Returns a function that executes FSM.prototype.feed with the suplied
+	// Returns a function that executes FSM.prototype.feed with the passed
 	// argument
-	feeder(event: E): (arg?: any) => void {
-		return arg => this.feed(event, arg)
+	feeder(event: E): StateHandler {
+		return arg =>
+			this.feed(event, arg)
 	}
 }

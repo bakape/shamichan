@@ -6,30 +6,128 @@ import {SpliceResponse} from '../../client'
 import {applyMixins, makeFrag, setAttrs} from '../../util'
 import {posts, isMobile} from '../../state'
 import {parseTerminatedLine} from '../render/body'
-import {write} from '../../render'
+import {write, $threads} from '../../render'
 import {posts as lang, ui} from '../../lang'
-import {send, message} from "../../connection"
+import {send, message, connSM, connState} from "../../connection"
+import FSM from "../../fsm"
 
-// TODO: State machine for handling connection issues during post authoring
+type BufferedMessage = [message, any]
 
 // Current PostForm and model instances
 export let postForm: FormView
 export let postModel: FormModel
 
+// Post authoring finite state machine
+export const enum postState {
+	none,    // No state. Awating first connection.
+	ready,   // Ready to create posts
+	halted,  // Post allocated to thhe server but no connection
+	locked,  // No post open. Post creation controls locked.
+	alloc,   // Post open and allocated to the server
+	draft,   // Post open, but not yet allocated.
+	errored, // Suffered unrecoverable error
+}
+export const enum postEvent {
+	sync,       // Synchronised to the server
+	disconnect, // Disconnected from server
+	error,      // Unrecoverable error
+	done,       // Post closed
+	open,       // New post opened
+	hijack,     // Hijacked an existing post as a postForm
+	reset,      // Set to none. Used during page navigation.
+}
+export const postSM = new FSM<postState, postEvent>(postState.none)
+
+// Synchronise with connection state machine
+connSM.on(connState.synced, postSM.feeder(postEvent.sync))
+connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
+connSM.on(connState.desynced, postSM.feeder(postEvent.error))
+
+// Find the post creation button and style it
+const stylePostControls = (fn: (el: HTMLElement) => void) =>
+	write(() =>
+		fn($threads.querySelector("aside.posting") as HTMLElement))
+
+// Handle connection loss
+postSM.wildAct(postEvent.disconnect, () => {
+	if (postState.alloc) {
+		return postState.halted
+	}
+
+	// Clear any unallocated postForm
+	if (postState.draft) {
+		postForm.remove()
+		postModel = postForm = null
+		stylePostControls(el =>
+			el.style.display = "")
+	}
+	stylePostControls(el =>
+		el.classList.add("disabled"))
+	return postState.locked
+})
+
+// Regained conectitvity, when post is open
+postSM.act(postState.halted, postEvent.sync, () =>
+	(postModel.flushBuffer(),
+	postModel.allocated ?  postState.alloc : postState.draft))
+
+// Regained connectivity, when no post open
+postSM.act(postState.locked, postEvent.sync, () =>
+	postState.ready)
+
+// Handle critical errors
+postSM.wildAct(postEvent.error, () =>
+	(stylePostControls(el =>
+		el.classList.add("errored")),
+	postState.errored))
+
+// Reset state during page navigation
+postSM.wildAct(postEvent.reset, () =>
+	(postForm = postModel = null,
+	postState.none))
+
+// Register all transitions that lead to postState.ready
+const toReady = () =>
+	postState.ready
+const readyTransitions: [postState, postEvent][] = [
+	[postState.none, postEvent.sync],
+	[postState.draft, postEvent.done],
+	[postState.alloc, postEvent.done],
+	[postState.halted, postEvent.done],
+]
+for (let [state, event] of readyTransitions) {
+	postSM.act(state, event, toReady)
+}
+postSM.on(postState.ready, () =>
+	stylePostControls(el =>
+		(el.style.display = "",
+		el.classList.remove("disabled"))))
+
+// Hide post controls, when a postForm is open
+const hidePostControls = () =>
+	stylePostControls(el =>
+		el.style.display = "none")
+postSM.on(postState.draft, hidePostControls)
+postSM.on(postState.alloc, hidePostControls)
+
 // Form Model of an OP post
 export class OPFormModel extends OP implements FormModel {
+	allocated: boolean
 	bodyLength: number
 	parsedLines: number
 	view: FormView
 	inputState: TextState
+	messageBuffer: BufferedMessage[]
 
 	commitChar: (char: string) => void
 	commitBackspace: () => void
 	commitClose: () => void
 	commitSplice: (val: string) => void
+	flushBuffer: () => void
 	init: () => void
 	lastBodyLine: () => string
 	parseInput: (val: string) => void
+	send: (type: message, msg: any) => void
 
 	constructor(id: number) {
 
@@ -46,12 +144,10 @@ export class OPFormModel extends OP implements FormModel {
 		posts.addOP(this)
 		postForm = new OPFormView(this)
 		oldView.el.replaceWith(postForm.el)
+		postSM.feed(postEvent.hijack)
 
 		this.init()
 		bindNagging()
-
-		// TODO: Hide [Reply] button
-
 	}
 }
 
@@ -64,6 +160,7 @@ function bindNagging() {
 
 // Override mixin for post authoring models
 class FormModel {
+	allocated: boolean     // Is the post allocated to the server?
 	bodyLength: number = 0 // Compound length of the input text body
 	parsedLines: number = 0 // Number of closed, commited and parsed lines
 	body: string
@@ -73,6 +170,9 @@ class FormModel {
 	// State of line being edditted. Must be seperated to not affect the
 	// asynchronous updates of commited lines
 	inputState: TextState
+
+	// Buffer for messages commited during connection outage
+	messageBuffer: BufferedMessage[]
 
 	spliceLine: (line: string, msg: SpliceResponse) => string
 	resetState: () => void
@@ -142,7 +242,24 @@ class FormModel {
 		} else {
 			this.inputState.line += char
 		}
-		send(message.append, char.charCodeAt(0))
+		this.send(message.append, char.charCodeAt(0))
+	}
+
+	// Optionally buffer all data, if currently disconnected
+	send(type: message, msg: any) {
+		if (postSM.state === postState.halted) {
+			this.messageBuffer.push([type, msg])
+		} else {
+			send(type, msg)
+		}
+	}
+
+	// Flush any buffered messages to the server
+	flushBuffer() {
+		for (let [type, msg] of this.messageBuffer) {
+			send(type, msg)
+		}
+		this.messageBuffer = []
 	}
 
 	// Send a message about removing the last character of the line to the
@@ -150,7 +267,7 @@ class FormModel {
 	commitBackspace() {
 		this.inputState.line = this.inputState.line.slice(0, -1)
 		this.bodyLength--
-		send(message.backspace, null)
+		this.send(message.backspace, null)
 	}
 
 	// Commit any other $input change that is not an append or backspace
@@ -180,7 +297,7 @@ class FormModel {
 			}
 		}
 
-		send(message.splice, {start, len, text})
+		this.send(message.splice, {start, len, text})
 		this.bodyLength += lenDiff
 		this.inputState.line = val
 
@@ -196,11 +313,16 @@ class FormModel {
 
 	// Close the form and revert to regular post
 	commitClose() {
+
+		// TODO: Need some warning, if closing a post, when there is no
+		// connectivity. This might become very confusing otherwisse.
+
 		// Normalize state
 		this.state.line = this.inputState.line
 		window.onbeforeunload = postForm = postModel = null
 		this.view.cleanUp()
-		send(message.closePost, null)
+		this.send(message.closePost, null)
+		postSM.feed(postEvent.done)
 	}
 
 	// Return the last line of the body
@@ -316,11 +438,10 @@ class FormView extends PostView {
 			const el = makeFrag(parseTerminatedLine(line, this.model))
 			frag.append(el)
 		}
-		write(() => {
-			this.$input.before(frag)
+		write(() =>
+			(this.$input.before(frag),
 			this.lockInput(() =>
-				this.$input.textContent = lastLine)
-		})
+				this.$input.textContent = lastLine)))
 	}
 
 	// Parse and replace the temporary like closed by $input with a proper
@@ -334,13 +455,9 @@ class FormView extends PostView {
 
 	// Remove any dangling form controls deallocate references
 	cleanUp() {
-		write(() => {
-			this.$postControls.remove()
-			this.$postControls = this.$done = null
-		})
-
-		// TODO: Unhide [Reply]
-
+		write(() =>
+			(this.$postControls.remove(),
+			this.$postControls = this.$done = null))
 	}
 }
 

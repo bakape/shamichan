@@ -38,6 +38,8 @@ export const opts = lang.opts
 export const identity = lang.identity
 export let admin: LnAdmin
 
+type StringTuple = [string, string]
+
 type LnPosts = {
 	anon: string
 	newThread: string
@@ -55,8 +57,8 @@ type LnPosts = {
 	and: string
 	omitted: string
 	unfinishedPost: string
-	post: string[]
-	image: string[]
+	post: StringTuple
+	image: StringTuple
 	[index: string]: any
 }
 
@@ -86,7 +88,7 @@ type LnBanner = {
 	[index: string]: string
 }
 
-type LnIdentity = {[name: string]: OptLabel}
+type LnIdentity = {[name: string]: StringTuple}
 
 type LnImages = {
 	show: string
@@ -126,11 +128,11 @@ type LnTime = {
 	week: string[]
 	calendar: string[]
 	justNow: string
-	minute: string[]
-	hour: string[]
-	day: string[]
-	month: string[]
-	year: string[]
+	minute: StringTuple
+	hour: StringTuple
+	day: StringTuple
+	month: StringTuple
+	year: StringTuple
 	in: string
 	ago: string
 	[index: string]: string|string[]
@@ -165,7 +167,7 @@ type LnMod = {
 
 type LnAdmin = {
 	boardNameTaken: string
-	[index: string]: OptLabel|string
+	[index: string]: StringTuple|string
 }
 
 type LnOpts = {
@@ -176,10 +178,8 @@ type LnOpts = {
 		corrupt: string
 	}
 	langApplied: string
-	labels: {[id: string]: OptLabel}
+	labels: {[id: string]: StringTuple}
 }
-
-export type OptLabel = string[]
 
 // Load language-specific CSS
 function languageCSS() {

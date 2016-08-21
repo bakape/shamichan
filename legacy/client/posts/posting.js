@@ -19,43 +19,10 @@ main.reply('postForm', () => postForm)
 	.reply('postModel', () => postModel)
 	.reply('postForm:indentity', () => postForm && postForm.renderIdentity());
 
-// Minimal size of the input buffer
-let	inputMinSize = 300;
-// For mobile
-if (window.screen && screen.width <= 320)
-	inputMinSize = 50;
-
 const ComposerModel = Backbone.Model.extend({idAttribute: 'num'});
-
-// Synchronyse postform state with websocket connectivity
-connSM.on('synced', postSM.feeder('sync'));
-connSM.on('dropped', postSM.feeder('desync'));
-connSM.on('desynced', postSM.feeder('desync'));
 
 // Allow remotely altering posting FSM state
 main.reply('postSM:feed', state => postSM.feed(state));
-
-postSM.act('* + desync -> none', () => {
-	// TODO: Desync logic
-	if (postForm) {
-		postForm.el.classList.remove('editing');
-		postForm.$input.val('');
-		postForm.finish();
-	}
-	main.$threads.find('aside.posting').hide();
-});
-
-postSM.act('none + sync, draft, alloc + done -> ready', () => {
-	// TODO: Add unfinished post checking
-
-	if (postForm) {
-		postForm.remove();
-		postForm = postModel = null;
-	}
-	for (let el of main.$threads[0].queryAll('aside.posting')) {
-		el.style.display = '';
-	}
-});
 
 // Make new postform
 postSM.act('ready + new -> draft', aside => {
@@ -76,10 +43,6 @@ postSM.act('ready + new -> draft', aside => {
 postSM.preflight('draft', aside => aside.matches('aside'));
 
 postSM.act('draft + alloc -> alloc', msg => postForm.onAllocation(msg));
-
-// Render image upload status messages
-main.dispatcher[common.IMAGE_STATUS] = msg =>
-	postForm && postForm.dispatch(msg[0]);
 
 main.$doc.on('click', 'aside.posting a', function () {
 	postSM.feed('new', this.parentNode);
@@ -388,8 +351,6 @@ window.addEventListener('message', function(event) {
 
 main.$threads.on('click', 'a.quote', function(e) {
 	e.preventDefault();
-
-	// TODO: Set highlighted post
 
 	/*
 	 Make sure the selection both starts and ends in the quoted post's

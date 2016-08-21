@@ -22,6 +22,14 @@ aside {
 			display: none;
 		}
 	}
+	&.disabled a {
+		color: grey !important;
+		cursor: default;
+	}
+	&.errored a {
+		color: red;
+		cursor: default;
+	}
 }
 
 #thread-container, article {
@@ -134,7 +142,6 @@ header {
 	}
 	.control {
 		margin-left: 0.5em;
-		display: inline-block;
 		float: right;
 	}
 }

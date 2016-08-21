@@ -131,10 +131,11 @@ function renderStatus(status: syncStatus) {
 		syncEl.textContent = lang[status])
 }
 
-connSM.act([connState.loading], connEvent.start, connState.connecting, () => {
+connSM.act(connState.loading, connEvent.start, () => {
 	renderStatus(syncStatus.connecting)
 	attempts = 0
 	connect()
+	return connState.connecting
 })
 
 const path =
@@ -170,17 +171,17 @@ function nullSocket() {
 	}
 }
 
-connSM.act(
-	[connState.connecting, connState.reconnecting],
-	connEvent.open,
-	connState.syncing,
-	() => {
-		renderStatus(syncStatus.connecting)
-		synchronise()
-		authenticate()
-		attemptTimer = setTimeout(() => resetAttempts(), 10000)
-	}
-)
+for (let state of [connState.connecting, connState.reconnecting]) {
+	connSM.act(state, connEvent.open, prepareToSync)
+}
+
+function prepareToSync() {
+	renderStatus(syncStatus.connecting)
+	synchronise()
+	authenticate()
+	attemptTimer = setTimeout(() => resetAttempts(), 10000)
+	return connState.syncing
+}
 
 // Send a requests to the server to syschronise to the current page and
 // subscribe to the apropriate event feeds.
@@ -217,10 +218,12 @@ function resetAttempts() {
 // channel
 handlers[message.synchronise] = connSM.feeder(connEvent.sync)
 
-connSM.act([connState.syncing], connEvent.sync, connState.synced, () =>
-	renderStatus(syncStatus.synced))
+connSM.act(connState.syncing, connEvent.sync, () => {
+	renderStatus(syncStatus.synced)
+	return  connState.synced
+})
 
-connSM.wildAct(connEvent.close, connState.dropped, event => {
+connSM.wildAct(connEvent.close, event => {
 	clearModuleState()
 	if (debug) {
 		console.error(event)
@@ -230,6 +233,8 @@ connSM.wildAct(connEvent.close, connState.dropped, event => {
 	// Wait maxes out at ~1min
 	const wait = 500 * Math.pow(1.5, Math.min(Math.floor(++attempts / 2), 12))
 	setTimeout(connSM.feeder(connEvent.retry), wait)
+
+	return connState.dropped
 })
 
 function clearModuleState() {
@@ -240,7 +245,7 @@ function clearModuleState() {
 	}
 }
 
-connSM.act([connState.dropped], connEvent.retry, connState.reconnecting, () => {
+connSM.act(connState.dropped, connEvent.retry, () => {
 	connect()
 
 	// Don't show this immediately so we don't thrash on network loss
@@ -249,12 +254,15 @@ connSM.act([connState.dropped], connEvent.retry, connState.reconnecting, () => {
 			renderStatus(syncStatus.connecting)
 		}
 	}, 100)
+
+	return connState.reconnecting
 })
 
 // Invalid message or some other critical error
-connSM.wildAct(connEvent.error, connState.desynced, () => {
+connSM.wildAct(connEvent.error, () => {
 	renderStatus(syncStatus.desynced)
 	clearModuleState()
+	return connState.desynced
 })
 
 export function start() {
