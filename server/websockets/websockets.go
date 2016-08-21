@@ -87,9 +87,9 @@ type receivedMessage struct {
 // Data of a post currently being written to by a Client
 type openPost struct {
 	bytes.Buffer
-	bodyLength int
-	id, op     int64
-	board      string
+	bodyLength   int
+	id, op, time int64
+	board        string
 }
 
 // CheckOrigin asserts the client matches the origin specified by the server or
@@ -334,7 +334,15 @@ func (c *Client) isLoggedIn() bool {
 	return c.sessionToken != ""
 }
 
-// Helper for determining, if the client currently has an open post
-func (c *Client) hasPost() bool {
-	return c.openPost.id != 0
+// Helper for determining, if the client currently has an open post not older
+// than 29 minutes. If the post is older, it is closed automatically.
+func (c *Client) hasPost() (bool, error) {
+	switch {
+	case c.openPost.id == 0:
+		return false, errNoPostOpen
+	case c.openPost.time < time.Now().Add(-time.Minute*29).Unix():
+		return false, closePost(nil, c)
+	default:
+		return true, nil
+	}
 }

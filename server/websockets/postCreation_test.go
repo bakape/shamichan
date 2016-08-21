@@ -118,6 +118,7 @@ func (*DB) TestThreadCreation(c *C) {
 		id:    6,
 		op:    6,
 		board: "a",
+		time:  then,
 	})
 }
 

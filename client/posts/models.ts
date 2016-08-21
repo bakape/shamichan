@@ -222,6 +222,13 @@ export class Post extends Model implements PostData {
 
 	// Close an open post and reparse its last line
 	closePost() {
+		// Posts may be closed from multiple sources. It may be the user
+		// closing the post manually, the sheduled cleanup task closing or
+		// the check done when writing to open posts. Therefore some
+		// duplication is possible. Ignore closing of already closed posts.
+		if (!this.editing) {
+			return
+		}
 		this.editing = false
 		this.resetState()
 		this.view.closePost()

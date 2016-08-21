@@ -3,6 +3,7 @@ package websockets
 import (
 	"bytes"
 	"strings"
+	"time"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -153,6 +154,7 @@ func (*DB) TestLineEmpty(c *C) {
 	for _, fn := range fns {
 		cl, _ := sv.NewClient()
 		cl.openPost.id = 1
+		cl.openPost.time = time.Now().Unix()
 		c.Assert(fn(nil, cl), Equals, errLineEmpty)
 	}
 }
@@ -162,15 +164,16 @@ func (*DB) TestAppendBodyTooLong(c *C) {
 	defer sv.Close()
 
 	cl, _ := sv.NewClient()
-	cl.openPost.id = 1
-	cl.openPost.bodyLength = parser.MaxLengthBody
-
+	cl.openPost = openPost{
+		id:         1,
+		time:       time.Now().Unix(),
+		bodyLength: parser.MaxLengthBody,
+	}
 	c.Assert(appendRune(nil, cl), Equals, parser.ErrBodyTooLong)
 }
 
 func (*DB) TestAppendRune(c *C) {
-	thread := sampleThread
-	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
 
 	sv := newWSServer(c)
 	defer sv.Close()
@@ -179,6 +182,7 @@ func (*DB) TestAppendRune(c *C) {
 		id:         2,
 		op:         1,
 		bodyLength: 3,
+		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
 
@@ -211,8 +215,7 @@ func assertRepLog(id int64, log []string, c *C) {
 }
 
 func (*DB) TestAppendNewline(c *C) {
-	thread := sampleThread
-	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
 
 	sv := newWSServer(c)
 	defer sv.Close()
@@ -222,6 +225,7 @@ func (*DB) TestAppendNewline(c *C) {
 		op:         1,
 		bodyLength: 3,
 		board:      "a",
+		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
 
@@ -261,6 +265,7 @@ func (*DB) TestAppendNewlineWithHashCommand(c *C) {
 		op:         1,
 		bodyLength: 3,
 		board:      "a",
+		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte("#flip")),
 	}
 
@@ -327,6 +332,7 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 		op:         1,
 		bodyLength: 3,
 		board:      "a",
+		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte(" >>22 ")),
 	}
 
@@ -382,8 +388,7 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 }
 
 func (*DB) TestBackspace(c *C) {
-	thread := sampleThread
-	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
 
 	sv := newWSServer(c)
 	defer sv.Close()
@@ -392,6 +397,7 @@ func (*DB) TestBackspace(c *C) {
 		id:         2,
 		op:         1,
 		bodyLength: 3,
+		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
 
@@ -405,8 +411,7 @@ func (*DB) TestBackspace(c *C) {
 }
 
 func (*DB) TestClosePost(c *C) {
-	thread := sampleThread
-	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
 
 	conf := config.BoardConfigs{
 		ID: "a",
@@ -441,7 +446,8 @@ func (*DB) TestSpliceValidityChecks(c *C) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.openPost = openPost{
-		id: 2,
+		id:   2,
+		time: time.Now().Unix(),
 	}
 
 	var tooLong string
@@ -585,6 +591,7 @@ func (*DB) TestSplice(c *C) {
 			op:         1,
 			bodyLength: len(s.init),
 			board:      "a",
+			time:       time.Now().Unix(),
 			Buffer:     *bytes.NewBuffer([]byte(lastLine(s.init))),
 		}
 
@@ -609,4 +616,41 @@ func (*DB) TestSplice(c *C) {
 func lastLine(s string) string {
 	lines := strings.Split(s, "\n")
 	return lines[len(lines)-1]
+}
+
+func (*DB) TestCloseOldOpenPost(c *C) {
+	then := time.Now().Add(time.Minute * -30).Unix()
+	thread := types.DatabaseThread{
+		ID:  1,
+		Log: [][]byte{},
+		Posts: map[int64]types.DatabasePost{
+			1: {
+				Post: types.Post{
+					Editing: true,
+					ID:      1,
+					Time:    then,
+				},
+			},
+		},
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:   1,
+		op:   1,
+		time: then,
+	}
+
+	has, err := cl.hasPost()
+	c.Assert(has, Equals, false)
+	c.Assert(err, IsNil)
+
+	var editing bool
+	c.Assert(db.One(db.FindPost(1).Field("editing"), &editing), IsNil)
+	c.Assert(editing, Equals, false)
+
+	assertRepLog(1, []string{"061"}, c)
 }

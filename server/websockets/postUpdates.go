@@ -52,8 +52,10 @@ type msi map[string]interface{}
 
 // Append a rune to the body of the open post
 func appendRune(data []byte, c *Client) error {
-	if !c.hasPost() {
-		return errNoPostOpen
+	if has, err := c.hasPost(); err != nil {
+		return err
+	} else if !has {
+		return nil
 	}
 	if c.openPost.bodyLength+1 > parser.MaxLengthBody {
 		return parser.ErrBodyTooLong
@@ -247,8 +249,10 @@ func writeBacklink(id, op int64, board string, destID int64) error {
 
 // Remove one character from the end of the line in the open post
 func backspace(_ []byte, c *Client) error {
-	if !c.hasPost() {
-		return errNoPostOpen
+	if has, err := c.hasPost(); err != nil {
+		return err
+	} else if !has {
+		return nil
 	}
 	length := c.openPost.Len()
 	if length == 0 {
@@ -271,7 +275,7 @@ func backspace(_ []byte, c *Client) error {
 
 // Close an open post and parse the last line, if needed.
 func closePost(_ []byte, c *Client) error {
-	if !c.hasPost() {
+	if c.openPost.id == 0 {
 		return errNoPostOpen
 	}
 	if c.openPost.Len() != 0 {
@@ -280,9 +284,6 @@ func closePost(_ []byte, c *Client) error {
 		}
 	}
 
-	defer func() {
-		c.openPost = openPost{}
-	}()
 	update := msi{
 		"editing": false,
 	}
@@ -290,14 +291,21 @@ func closePost(_ []byte, c *Client) error {
 	if err != nil {
 		return err
 	}
-	return c.updatePost(update, msg)
+	if err := c.updatePost(update, msg); err != nil {
+		return err
+	}
+
+	c.openPost = openPost{}
+	return nil
 }
 
 // Splice the current line's text in the open post. This call is also used for
 // text pastes.
 func spliceText(data []byte, c *Client) error {
-	if !c.hasPost() {
-		return errNoPostOpen
+	if has, err := c.hasPost(); err != nil {
+		return err
+	} else if !has {
+		return nil
 	}
 
 	var req spliceRequest

@@ -27,7 +27,7 @@ export default async function (
 
 	await ready
 	boardConfig.replaceWith(await conf)
-	setSyncCounter((data as ThreadData).logCtr || (data as BoardData).ctr)
+	setSyncCounter((data as ThreadData).logCtr || (data as BoardData).ctr || 0)
 	posts.clear()
 
 	if (thread) {

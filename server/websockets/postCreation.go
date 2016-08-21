@@ -58,7 +58,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		return errReadOnly
 	}
 
-	now := time.Now().Unix() * 1000
+	now := time.Now().Unix()
 	thread := types.DatabaseThread{
 		BumpTime:  now,
 		ReplyTime: now,
@@ -117,6 +117,7 @@ func insertThread(data []byte, c *Client) (err error) {
 	c.openPost = openPost{
 		id:    id,
 		op:    id,
+		time:  now,
 		board: req.Board,
 	}
 
