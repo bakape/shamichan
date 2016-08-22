@@ -108,7 +108,7 @@ export function getModel(el: Element): Post {
 	return posts.get(id)
 }
 
-const $loading = document.querySelector('#loadingImage') as HTMLElement
+const $loading = document.querySelector('#loading-image') as HTMLElement
 
 // Display or hide the loading animation
 export function displayLoading(loading: boolean) {

@@ -19,13 +19,11 @@
 	}
 }
 
-#loadingImage {
+#loading-image {
 	position: fixed;
 	z-index: 310;
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+	right: 0;
+	bottom: 0;
 	pointer-events: none;
 }
 
@@ -50,7 +48,7 @@
 	}
 }
 
-#banner{
+#banner {
 	display: inline-block;
 	text-align: center;
 	width: 100%;
@@ -69,7 +67,6 @@
 }
 
 #board-navigation {
-	display: inline-block;
 	float: left;
 	a.history {
 		font-weight: bold;
@@ -160,6 +157,7 @@
 .modal, #banner {
 	-webkit-box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
 	-moz-box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
+	box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
 	pointer-events: all;
 }
 

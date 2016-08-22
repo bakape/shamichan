@@ -69,7 +69,7 @@ postSM.wildAct(postEvent.disconnect, () => {
 // Regained conectitvity, when post is open
 postSM.act(postState.halted, postEvent.sync, () =>
 	(postModel.flushBuffer(),
-	postModel.allocated ?  postState.alloc : postState.draft))
+	postModel.allocated ? postState.alloc : postState.draft))
 
 // Regained connectivity, when no post open
 postSM.act(postState.locked, postEvent.sync, () =>
