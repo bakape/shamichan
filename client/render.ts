@@ -38,6 +38,7 @@ for (let el of document.head.querySelectorAll("template")) {
 	for (let i = 0; i < actEls.length; i++) {
 		actEls[i].textContent = actText[i]
 	}
+	frag.querySelector("aside.posting a").textContent = lang.posts.reply
 	frag.querySelector("#lock").textContent = lang.navigation.lockedToBottom
 }
 {
