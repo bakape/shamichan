@@ -8,7 +8,7 @@ import (
 
 const (
 	maxLengthName         = 50
-	maxLengthEMail        = 100
+	maxLengthEmail        = 100
 	maxLengthAuth         = 50
 	maxLengthPostPassword = 50
 	maxLengthSubject      = 100

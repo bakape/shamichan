@@ -202,7 +202,9 @@ func insertPost(data []byte, c *Client) error {
 	updates := make(msi, 6)
 	updates["postCtr"] = r.Row.Field("postCtr").Add(1)
 	updates["replyTime"] = now
-	if threadAttrs.PostCtr < config.Get().MaxBump {
+
+	// TODO: More dynamic maximum bump limit generation
+	if req.Email != "sage" && threadAttrs.PostCtr < config.Get().MaxBump {
 		updates["bumpTime"] = now
 	}
 
@@ -282,6 +284,7 @@ func constructPost(req postCreationCommon, c *Client) (
 		Post: types.Post{
 			Editing: true,
 			Time:    now,
+			Email:   parser.FormatEmail(req.Email),
 		},
 		IP: c.IP,
 	}
@@ -294,6 +297,9 @@ func constructPost(req postCreationCommon, c *Client) (
 		return
 	}
 	post.Password, err = auth.BcryptHash(req.Password, 6)
+
+	// TODO: Staff title verification
+
 	return
 }
 

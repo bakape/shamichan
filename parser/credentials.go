@@ -49,6 +49,14 @@ func ParseSubject(s string) (string, error) {
 	return stripAndTrim(s), nil
 }
 
+// FormatEmail validates and checks
+func FormatEmail(email string) string {
+	if email == "" || email == "sage" || len(email) > maxLengthEmail {
+		return ""
+	}
+	return stripAndTrim(email)
+}
+
 // VerifyPostPassword verifies a post password exists does not surpass the
 // maximum allowed length
 func VerifyPostPassword(s string) error {

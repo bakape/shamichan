@@ -68,3 +68,18 @@ func (*Tests) TestVerifyPostPassword(c *C) {
 		c.Assert(VerifyPostPassword(s.in), Equals, s.err)
 	}
 }
+
+func (*Tests) TestFormatEmail(c *C) {
+	samples := [...]struct {
+		in, out string
+	}{
+		{"", ""},
+		{"sage", ""},
+		{"foo", "foo"},
+		{"h\u2000e\u200fl\u202al\u202fo\u205f\u206f", "hello"},
+		{randomString(maxLengthEmail+1, c), ""},
+	}
+	for _, s := range samples {
+		c.Assert(FormatEmail(s.in), Equals, s.out)
+	}
+}

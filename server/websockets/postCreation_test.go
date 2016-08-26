@@ -310,6 +310,7 @@ func (*DB) TestPostCreation(c *C) {
 		Body: "a",
 		postCreationCommon: postCreationCommon{
 			Password: "123",
+			Email:    "wew lad",
 			Image: imageRequest{
 				Name:    "foo.jpeg",
 				Token:   token,
@@ -331,6 +332,7 @@ func (*DB) TestPostCreation(c *C) {
 		ID:      6,
 		Time:    then,
 		Body:    "a",
+		Email:   "wew lad",
 		Image: &types.Image{
 			Name:        "foo",
 			Spoiler:     true,
@@ -471,6 +473,41 @@ func (*DB) TestBumpLimit(c *C) {
 
 	var res types.DatabaseThread
 	c.Assert(db.One(db.FindParentThread(6), &res), IsNil)
+	c.Assert(res.BumpTime, Equals, then)
+	c.Assert(res.ReplyTime > then, Equals, true)
+}
+
+func (*DB) TestSaging(c *C) {
+	(*config.Get()).MaxBump = 10
+	then := time.Now().Add(-time.Minute).Unix()
+	thread := types.DatabaseThread{
+		ID:        1,
+		Board:     "a",
+		BumpTime:  then,
+		ReplyTime: then,
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	populateMainTable(c)
+	writeBoardConfigs(true, c)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	Clients.Add(cl, SyncID{1, "a"})
+
+	req := replyCreationRequest{
+		Body: "a",
+		postCreationCommon: postCreationCommon{
+			Password: "123",
+			Email:    "sage",
+		},
+	}
+	data := marshalJSON(req, c)
+	c.Assert(insertPost(data, cl), IsNil)
+
+	var res types.DatabaseThread
+	q := db.FindParentThread(6).Pluck("replyTime", "bumpTime")
+	c.Assert(db.One(q, &res), IsNil)
 	c.Assert(res.BumpTime, Equals, then)
 	c.Assert(res.ReplyTime > then, Equals, true)
 }
