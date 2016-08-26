@@ -17,38 +17,53 @@ func (*Map) TestAddHasRemove(c *C) {
 	m := newClientMap()
 	sv := newWSServer(c)
 	defer sv.Close()
+	id := SyncID{
+		OP:    1,
+		Board: "a",
+	}
 
 	// Add client
 	cl, _ := sv.NewClient()
-	m.Add(cl, "1")
-	c.Assert(m.GetSync(cl), Equals, "1")
+	m.Add(cl, id)
+	synced, sync := m.GetSync(cl)
+	c.Assert(synced, Equals, true)
+	c.Assert(sync, Equals, id)
 
 	// Remove client
 	m.Remove(cl)
-	c.Assert(m.GetSync(cl), Equals, "")
+	synced, _ = m.GetSync(cl)
+	c.Assert(synced, Equals, false)
 }
 
 func newClientMap() *ClientMap {
 	return &ClientMap{
-		clients: make(map[*Client]string),
+		clients: make(map[*Client]SyncID),
 	}
 }
 
 func (*Map) TestChangeSync(c *C) {
-	const (
-		oldThread = "1"
-		newThread = "2"
-	)
+	oldSync := SyncID{
+		OP:    1,
+		Board: "a",
+	}
+	newSync := SyncID{
+		OP:    2,
+		Board: "g",
+	}
 	m := newClientMap()
 	sv := newWSServer(c)
 	defer sv.Close()
 
 	cl, _ := sv.NewClient()
-	m.Add(cl, oldThread)
-	c.Assert(m.GetSync(cl), Equals, oldThread)
+	m.Add(cl, oldSync)
+	synced, sync := m.GetSync(cl)
+	c.Assert(synced, Equals, true)
+	c.Assert(sync, Equals, oldSync)
 
-	m.ChangeSync(cl, newThread)
-	c.Assert(m.GetSync(cl), Equals, newThread)
+	m.ChangeSync(cl, newSync)
+	synced, sync = m.GetSync(cl)
+	c.Assert(synced, Equals, true)
+	c.Assert(sync, Equals, newSync)
 }
 
 func (*Map) TestCountByIP(c *C) {
@@ -57,10 +72,14 @@ func (*Map) TestCountByIP(c *C) {
 	defer sv.Close()
 
 	cls := [3]*Client{}
+	id := SyncID{
+		OP:    1,
+		Board: "a",
+	}
 	for i := range cls {
 		cl, _ := sv.NewClient()
 		cls[i] = cl
-		m.Add(cl, "1")
+		m.Add(cl, id)
 	}
 	cls[0].IP = "foo"
 	cls[1].IP = "foo"

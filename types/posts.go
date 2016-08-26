@@ -103,27 +103,6 @@ type DatabaseThread struct {
 	Log       [][]byte               `gorethink:"log"`
 }
 
-// ThreadCreationRequest contains data for creating a thread passed from the
-// client theough websockets
-type ThreadCreationRequest struct {
-	Spoiler bool `json:"spoiler"`
-	PostCredentials
-	Subject    string `json:"subject"`
-	Board      string `json:"board"`
-	ImageToken string `json:"imageToken"`
-	ImageName  string `json:"imageName"`
-	Captcha
-}
-
-// PostCredentials contains the common poster credential part of thread and
-// reply creation requests
-type PostCredentials struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Auth     string `json:"auth"`
-	Password string `json:"password"`
-}
-
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {

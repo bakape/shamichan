@@ -353,15 +353,21 @@ func (*ClientSuite) TestMessageSending(c *C) {
 func (*ClientSuite) TestCleanUp(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
+	id := SyncID{
+		OP:    1,
+		Board: "a",
+	}
 
 	cl, wcl := sv.NewClient()
-	Clients.Add(cl, "1")
-	c.Assert(Clients.GetSync(cl), Equals, "1")
+	Clients.Add(cl, id)
+	_, sync := Clients.GetSync(cl)
+	c.Assert(sync, Equals, id)
 	sv.Add(1)
 	go readListenErrors(c, cl, sv)
 	normalCloseWebClient(c, wcl)
 	sv.Wait()
-	c.Assert(Clients.GetSync(cl), Equals, "")
+	synced, _ := Clients.GetSync(cl)
+	c.Assert(synced, Equals, false)
 }
 
 func (*ClientSuite) TestHandler(c *C) {

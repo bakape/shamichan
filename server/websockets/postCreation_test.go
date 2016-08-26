@@ -1,6 +1,9 @@
 package websockets
 
 import (
+	"bytes"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -19,10 +22,19 @@ var (
 		MD5:      "60e41092581f7b329b057b8402caa8a7",
 		Size:     300792,
 	}
+
+	sampleImagelessThreadCreationRequest = threadCreationRequest{
+		postCreationCommon: postCreationCommon{
+			Name:     "name",
+			Password: "123",
+		},
+		Subject: "subject",
+		Board:   "a",
+	}
 )
 
 func (*DB) TestCreateThreadOnInvalidBoard(c *C) {
-	req := types.ThreadCreationRequest{
+	req := threadCreationRequest{
 		Board: "all",
 	}
 	err := insertThread(marshalJSON(req, c), new(Client))
@@ -38,7 +50,7 @@ func (*DB) TestCreateThreadOnReadOnlyBoard(c *C) {
 	})
 	c.Assert(db.Write(q), IsNil)
 
-	req := types.ThreadCreationRequest{
+	req := threadCreationRequest{
 		Board: "a",
 	}
 	err := insertThread(marshalJSON(req, c), new(Client))
@@ -47,7 +59,7 @@ func (*DB) TestCreateThreadOnReadOnlyBoard(c *C) {
 
 func (*DB) TestThreadCreation(c *C) {
 	populateMainTable(c)
-	writeGenericBoardConfig(c)
+	writeBoardConfigs(false, c)
 	c.Assert(db.Write(r.Table("images").Insert(stdJPEG)), IsNil)
 	_, token, err := imager.NewImageToken(stdJPEG.SHA1)
 	c.Assert(err, IsNil)
@@ -55,7 +67,10 @@ func (*DB) TestThreadCreation(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	Clients.Add(cl, "a")
+	Clients.Add(cl, SyncID{
+		OP:    0,
+		Board: "all",
+	})
 	cl.IP = "::1"
 
 	std := types.DatabaseThread{
@@ -81,20 +96,21 @@ func (*DB) TestThreadCreation(c *C) {
 		Log: [][]byte{},
 	}
 
-	req := types.ThreadCreationRequest{
-		PostCredentials: types.PostCredentials{
-			Name:     "name",
-			Password: "123",
+	req := threadCreationRequest{
+		postCreationCommon: postCreationCommon{
+			Name:       "name",
+			Password:   "123",
+			ImageName:  "foo.jpeg",
+			ImageToken: token,
+			Spoiler:    true,
 		},
-		Subject:    "subject",
-		Board:      "a",
-		ImageName:  "foo.jpeg",
-		ImageToken: token,
-		Spoiler:    true,
+		Subject: "subject",
+		Board:   "a",
 	}
 	data := marshalJSON(req, c)
 	c.Assert(insertThread(data, cl), IsNil)
 	assertMessage(wcl, []byte(`01{"code":0,"id":6}`), c)
+	assertIP(6, "::1", c)
 
 	var thread types.DatabaseThread
 	c.Assert(db.One(r.Table("threads").Get(6), &thread), IsNil)
@@ -135,35 +151,31 @@ func populateMainTable(c *C) {
 	c.Assert(db.Write(r.Table("main").Insert(mains)), IsNil)
 }
 
-func writeGenericBoardConfig(c *C) {
+func writeBoardConfigs(textOnly bool, c *C) {
 	conf := config.BoardConfigs{
 		ID: "a",
+		PostParseConfigs: config.PostParseConfigs{
+			TextOnly: textOnly,
+		},
 	}
 	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
 }
 
+func assertIP(id int64, ip string, c *C) {
+	q := db.FindPost(id).Field("ip")
+	var res string
+	c.Assert(db.One(q, &res), IsNil)
+	c.Assert(res, Equals, ip)
+}
+
 func (*DB) TestTextOnlyThreadCreation(c *C) {
 	populateMainTable(c)
-	conf := config.BoardConfigs{
-		ID: "a",
-		PostParseConfigs: config.PostParseConfigs{
-			TextOnly: true,
-		},
-	}
-	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	writeBoardConfigs(true, c)
 
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	req := types.ThreadCreationRequest{
-		PostCredentials: types.PostCredentials{
-			Name:     "name",
-			Password: "123",
-		},
-		Subject: "subject",
-		Board:   "a",
-	}
-	data := marshalJSON(req, c)
+	data := marshalJSON(sampleImagelessThreadCreationRequest, c)
 	c.Assert(insertThread(data, cl), IsNil)
 	assertMessage(wcl, []byte(`01{"code":0,"id":6}`), c)
 
@@ -199,4 +211,249 @@ func (*DB) TestGetInvalidImage(c *C) {
 		_, err := getImage(s.token, s.name, false)
 		c.Assert(err, Equals, s.err)
 	}
+}
+
+func (*DB) TestClosePreviousPostOnCreation(c *C) {
+	thread := sampleThread
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	populateMainTable(c)
+	writeBoardConfigs(true, c)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		board:      "a",
+		time:       time.Now().Unix(),
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+	data := marshalJSON(sampleImagelessThreadCreationRequest, c)
+
+	c.Assert(insertThread(data, cl), IsNil)
+
+	assertMessage(wcl, []byte(`01{"code":0,"id":6}`), c)
+	assertRepLog(2, append(strDummyLog, "062"), c)
+	assertPostClosed(2, c)
+}
+
+func (*DB) TestPostCreationValidations(c *C) {
+	writeBoardConfigs(false, c)
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	Clients.Add(cl, SyncID{1, "a"})
+
+	samples := [...]struct {
+		text, token, name string
+	}{
+		{"", "", "abc"},
+		{"", "abc", ""},
+	}
+
+	for _, s := range samples {
+		req := replyCreationRequest{
+			Body: s.text,
+			postCreationCommon: postCreationCommon{
+				ImageName:  s.name,
+				ImageToken: s.token,
+			},
+		}
+		err := insertPost(marshalJSON(req, c), cl)
+		c.Assert(err, Equals, errNoTextOrImage)
+	}
+}
+
+func (*DB) TestPoctCreationOnLockedThread(c *C) {
+	thread := msi{
+		"id":      1,
+		"postCtr": 0,
+		"locked":  true,
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	writeBoardConfigs(true, c)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	Clients.Add(cl, SyncID{1, "a"})
+
+	req := replyCreationRequest{
+		Body: "a",
+	}
+	data := marshalJSON(req, c)
+	c.Assert(insertPost(data, cl), Equals, errThreadIsLocked)
+}
+
+func (*DB) TestPostCreation(c *C) {
+	(*config.Get()).MaxBump = 500
+	now := time.Now().Unix()
+	thread := types.DatabaseThread{
+		ID:        1,
+		Board:     "a",
+		PostCtr:   0,
+		ImageCtr:  1,
+		Log:       dummyLog,
+		BumpTime:  now,
+		ReplyTime: now,
+		Posts: map[int64]types.DatabasePost{
+			1: {
+				Post: types.Post{
+					Time: now,
+					ID:   1,
+				},
+			},
+		},
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	populateMainTable(c)
+	writeBoardConfigs(false, c)
+	c.Assert(db.Write(r.Table("images").Insert(stdJPEG)), IsNil)
+	_, token, err := imager.NewImageToken(stdJPEG.SHA1)
+	c.Assert(err, IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	Clients.Add(cl, SyncID{1, "a"})
+	cl.IP = "::1"
+
+	req := replyCreationRequest{
+		Body: "a",
+		postCreationCommon: postCreationCommon{
+			Password:   "123",
+			ImageName:  "foo.jpeg",
+			ImageToken: token,
+			Spoiler:    true,
+		},
+	}
+	data := marshalJSON(req, c)
+	c.Assert(insertPost(data, cl), IsNil)
+
+	// Get the time value from the DB and normalize against it
+	var then int64
+	c.Assert(db.One(db.FindPost(6).Field("time"), &then), IsNil)
+	c.Assert(then >= now, Equals, true)
+
+	post := types.Post{
+		Editing: true,
+		ID:      6,
+		Time:    then,
+		Body:    "a",
+		Image: &types.Image{
+			Name:        "foo",
+			Spoiler:     true,
+			ImageCommon: stdJPEG,
+		},
+	}
+	stdMsg, err := encodeMessage(messageInsertPost, post)
+	c.Assert(err, IsNil)
+
+	assertRepLog(6, append(strDummyLog, string(stdMsg)), c)
+	assertIP(6, "::1", c)
+
+	// Assert thread was bumped
+	type threadAttrs struct {
+		PostCtr   int   `gorethink:"postCtr"`
+		ImageCtr  int   `gorethink:"imageCtr"`
+		BumpTime  int64 `gorethink:"bumpTime"`
+		ReplyTime int64 `gorethink:"replyTime"`
+	}
+
+	var attrs threadAttrs
+	q := db.FindParentThread(6).
+		Pluck("postCtr", "imageCtr", "bumpTime", "replyTime")
+	c.Assert(db.One(q, &attrs), IsNil)
+	c.Assert(attrs, DeepEquals, threadAttrs{
+		PostCtr:   1,
+		ImageCtr:  2,
+		BumpTime:  then,
+		ReplyTime: then,
+	})
+
+	var boardCtr int
+	q = db.GetMain("boardCtrs").Field("a")
+	c.Assert(db.One(q, &boardCtr), IsNil)
+	c.Assert(boardCtr, Equals, 1)
+}
+
+func (*DB) TestBumpLimit(c *C) {
+	(*config.Get()).MaxBump = 10
+	then := time.Now().Add(-time.Minute).Unix()
+	thread := types.DatabaseThread{
+		ID:        1,
+		PostCtr:   10,
+		Board:     "a",
+		BumpTime:  then,
+		ReplyTime: then,
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	populateMainTable(c)
+	writeBoardConfigs(true, c)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	Clients.Add(cl, SyncID{1, "a"})
+
+	req := replyCreationRequest{
+		Body: "a",
+		postCreationCommon: postCreationCommon{
+			Password: "123",
+		},
+	}
+	data := marshalJSON(req, c)
+	c.Assert(insertPost(data, cl), IsNil)
+
+	var res types.DatabaseThread
+	c.Assert(db.One(db.FindParentThread(6), &res), IsNil)
+	c.Assert(res.BumpTime, Equals, then)
+	c.Assert(res.ReplyTime > then, Equals, true)
+}
+
+func (*DB) TestPostCreationWithNewlines(c *C) {
+	(*config.Get()).MaxBump = 500
+	thread := types.DatabaseThread{
+		ID:    1,
+		Board: "a",
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	populateMainTable(c)
+	writeBoardConfigs(true, c)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	Clients.Add(cl, SyncID{1, "a"})
+
+	req := replyCreationRequest{
+		Body: "abc\nd",
+		postCreationCommon: postCreationCommon{
+			Password: "123",
+		},
+	}
+	data := marshalJSON(req, c)
+	c.Assert(insertPost(data, cl), IsNil)
+
+	var then int64
+	c.Assert(db.One(db.FindPost(6).Field("time"), &then), IsNil)
+
+	post := types.Post{
+		Editing: true,
+		ID:      6,
+		Time:    then,
+		Body:    "abc",
+	}
+	postMsg, err := encodeMessage(messageInsertPost, post)
+	c.Assert(err, IsNil)
+	log := []string{
+		string(postMsg),
+		"03[6,10]",
+		`05{"id":6,"start":0,"len":0,"text":"d"}`,
+	}
+	assertRepLog(6, log, c)
+
+	assertBody(6, "abc\nd", c)
 }

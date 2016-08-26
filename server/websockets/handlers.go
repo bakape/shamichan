@@ -76,6 +76,7 @@ var (
 		messageBackspace:      backspace,
 		messageClosePost:      closePost,
 		messageSplice:         spliceText,
+		messageInsertPost:     insertPost,
 	}
 )
 

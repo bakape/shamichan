@@ -197,7 +197,7 @@ func (*DB) TestAppendRune(c *C) {
 
 func assertBody(id int64, body string, c *C) {
 	var res string
-	q := db.FindPost(2).Field("body")
+	q := db.FindPost(id).Field("body")
 	c.Assert(db.One(q, &res), IsNil)
 	c.Assert(res, Equals, body)
 }
@@ -228,11 +228,7 @@ func (*DB) TestAppendNewline(c *C) {
 		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
-
-	conf := config.BoardConfigs{
-		ID: "a",
-	}
-	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	writeBoardConfigs(false, c)
 
 	c.Assert(appendRune([]byte("10"), cl), IsNil)
 
@@ -335,11 +331,7 @@ func (*DB) TestAppendNewlineWithLinks(c *C) {
 		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte(" >>22 ")),
 	}
-
-	conf := config.BoardConfigs{
-		ID: "a",
-	}
-	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	writeBoardConfigs(false, c)
 
 	c.Assert(appendRune([]byte("10"), cl), IsNil)
 
@@ -412,11 +404,7 @@ func (*DB) TestBackspace(c *C) {
 
 func (*DB) TestClosePost(c *C) {
 	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
-
-	conf := config.BoardConfigs{
-		ID: "a",
-	}
-	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	writeBoardConfigs(false, c)
 
 	sv := newWSServer(c)
 	defer sv.Close()
@@ -434,9 +422,12 @@ func (*DB) TestClosePost(c *C) {
 	c.Assert(cl.openPost, DeepEquals, openPost{})
 	assertRepLog(2, append(strDummyLog, "062"), c)
 	assertBody(2, "abc", c)
+	assertPostClosed(2, c)
+}
 
+func assertPostClosed(id int64, c *C) {
 	var editing bool
-	q := db.FindPost(2).Field("editing")
+	q := db.FindPost(id).Field("editing")
 	c.Assert(db.One(q, &editing), IsNil)
 	c.Assert(editing, Equals, false)
 }
@@ -486,11 +477,7 @@ func (*DB) TestSplice(c *C) {
 
 	sv := newWSServer(c)
 	defer sv.Close()
-
-	conf := config.BoardConfigs{
-		ID: "a",
-	}
-	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	writeBoardConfigs(false, c)
 
 	samples := [...]struct {
 		start, len        int

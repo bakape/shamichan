@@ -52,14 +52,18 @@ func (*ClientSuite) TestRegisterSync(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
+	syncs := [...]SyncID{
+		{1, "a"},
+		{2, "a"},
+	}
 
-	// Not synced yet
-	registerSync("1", cl)
-	c.Assert(Clients.GetSync(cl), Equals, "1")
-
-	// Already synced
-	registerSync("2", cl)
-	c.Assert(Clients.GetSync(cl), Equals, "2")
+	// Both for new syncs and swicthing syncs
+	for _, s := range syncs {
+		registerSync(s.Board, s.OP, cl)
+		synced, sync := Clients.GetSync(cl)
+		c.Assert(synced, Equals, true)
+		c.Assert(sync, Equals, s)
+	}
 }
 
 func (*DB) TestInvalidThreadSync(c *C) {
@@ -94,7 +98,11 @@ func (*DB) TestSyncToThread(c *C) {
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 	c.Assert(synchronise(data, cl), IsNil)
-	c.Assert(Clients.GetSync(cl), Equals, "1")
+	_, sync := Clients.GetSync(cl)
+	c.Assert(sync, Equals, SyncID{
+		OP:    1,
+		Board: "a",
+	})
 
 	assertSyncResponse(wcl, c)          // Receive client ID
 	syncAssertMessage(wcl, backlog1, c) // Receive first missed message

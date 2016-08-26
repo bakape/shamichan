@@ -50,7 +50,9 @@ func (e errInvalidFrame) Error() string {
 // interaction with the server and database
 type Client struct {
 	// Synchronised to any change feed and regstered in the global Clients map.
-	// Should only be mutated from Clients.
+	// Should only be mutated from Clients, which also contains weather this
+	// Client is synced. The local property exists mainly to reduce lock
+	// contention on Clients.
 	synced bool
 
 	// Client identity information

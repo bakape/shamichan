@@ -7,7 +7,6 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/util"
 )
 
 var (
@@ -49,16 +48,20 @@ func synchronise(data []byte, c *Client) error {
 // Board pages do not have any live feeds (for now, at least). Just send the
 // client its ID.
 func syncToBoard(board string, c *Client) error {
-	registerSync("b:"+board, c)
+	registerSync(board, 0, c)
 	return c.sendMessage(messageSynchronise, 0)
 }
 
 // Register the client with the central client storage datastructure
-func registerSync(syncID string, c *Client) {
+func registerSync(board string, op int64, c *Client) {
+	id := SyncID{
+		OP:    op,
+		Board: board,
+	}
 	if !c.synced {
-		Clients.Add(c, syncID)
+		Clients.Add(c, id)
 	} else {
-		Clients.ChangeSync(c, syncID)
+		Clients.ChangeSync(c, id)
 	}
 }
 
@@ -87,7 +90,7 @@ func syncToThread(board string, thread, ctr int64, c *Client) error {
 	}
 
 	c.closeUpdateFeed = closeFeed
-	registerSync(util.IDToString(thread), c)
+	registerSync(board, thread, c)
 
 	if err := c.sendMessage(messageSynchronise, 0); err != nil {
 		return err
