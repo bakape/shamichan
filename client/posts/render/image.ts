@@ -217,6 +217,8 @@ export function renderThumbnail(el: Element, data: ImageData, href?: string) {
 		imgAttrs['class'] = 'expanded'
 	} else {
 		linkAttrs["target"] = "_blank"
+		linkAttrs["download"] =
+			`${escape(data.name)}.${fileTypes[data.fileType]}`
 	}
 
 	setAttrs(el, linkAttrs)
