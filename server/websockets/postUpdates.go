@@ -18,6 +18,8 @@ var (
 	errInvalidSpliceCoords = errors.New("invalid splice coordinates")
 	errSpliceTooLong       = errors.New("splice text too long")
 	errSpliceNOOP          = errors.New("splice NOOP")
+	errTextOnly            = errors.New("text only board")
+	errHasImage            = errors.New("post already has image")
 )
 
 // Request or to replace the current line's text starting at an exact position
@@ -45,6 +47,12 @@ type linkMessage struct {
 type commandMessage struct {
 	ID int64 `json:"id"`
 	types.Command
+}
+
+// Message that signals and insertion of an image into an existing post
+type imageMessage struct {
+	types.Image
+	ID int64 `json:"id"`
 }
 
 // Shorthand. We use it a lot for update query construction.
@@ -396,5 +404,59 @@ func spliceLine(req spliceRequest, c *Client) error {
 		}
 		return spliceLine(spliceRequest{Text: delayed}, c)
 	}
+	return nil
+}
+
+// Insert and image into an existing open post
+func insertImage(data []byte, c *Client) error {
+	if has, err := c.hasPost(); err != nil {
+		return err
+	} else if !has {
+		return nil
+	}
+	if c.openPost.hasImage {
+		return errHasImage
+	}
+
+	var req imageRequest
+	if err := decodeMessage(data, &req); err != nil {
+		return err
+	}
+
+	var textOnly bool
+	q := db.GetBoardConfig(c.openPost.board).Field("textOnly")
+	if err := db.One(q, &textOnly); err != nil {
+		return err
+	}
+	if textOnly {
+		return errTextOnly
+	}
+
+	img, err := getImage(req.Token, req.Name, req.Spoiler)
+	if err != nil {
+		return err
+	}
+	msg, err := encodeMessage(messageInsertImage, imageMessage{
+		ID: c.openPost.id,
+		Image: *img,
+	})
+	if err != nil {
+		return err
+	}
+	update := msi{
+		"log":      appendLog(msg),
+		"imageCtr": r.Row.Field("imageCtr").Add(1),
+		"posts": map[string]map[string]types.Image{
+			util.IDToString(c.openPost.id): {
+				"image": *img,
+			},
+		},
+	}
+	q = r.Table("threads").Get(c.openPost.op).Update(update)
+	if err := db.Write(q); err != nil {
+		return err
+	}
+
+	c.openPost.hasImage = true
 	return nil
 }

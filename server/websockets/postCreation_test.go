@@ -98,11 +98,13 @@ func (*DB) TestThreadCreation(c *C) {
 
 	req := threadCreationRequest{
 		postCreationCommon: postCreationCommon{
-			Name:       "name",
-			Password:   "123",
-			ImageName:  "foo.jpeg",
-			ImageToken: token,
-			Spoiler:    true,
+			Name:     "name",
+			Password: "123",
+			Image: imageRequest{
+				Name:    "foo.jpeg",
+				Token:   token,
+				Spoiler: true,
+			},
 		},
 		Subject: "subject",
 		Board:   "a",
@@ -131,10 +133,11 @@ func (*DB) TestThreadCreation(c *C) {
 	c.Assert(thread, DeepEquals, std)
 
 	c.Assert(cl.openPost, DeepEquals, openPost{
-		id:    6,
-		op:    6,
-		board: "a",
-		time:  then,
+		id:       6,
+		op:       6,
+		board:    "a",
+		time:     then,
+		hasImage: true,
 	})
 }
 
@@ -178,6 +181,7 @@ func (*DB) TestTextOnlyThreadCreation(c *C) {
 	data := marshalJSON(sampleImagelessThreadCreationRequest, c)
 	c.Assert(insertThread(data, cl), IsNil)
 	assertMessage(wcl, []byte(`01{"code":0,"id":6}`), c)
+	c.Assert(cl.openPost.hasImage, Equals, false)
 
 	var post types.Post
 	c.Assert(db.One(db.FindPost(6), &post), IsNil)
@@ -257,8 +261,10 @@ func (*DB) TestPostCreationValidations(c *C) {
 		req := replyCreationRequest{
 			Body: s.text,
 			postCreationCommon: postCreationCommon{
-				ImageName:  s.name,
-				ImageToken: s.token,
+				Image: imageRequest{
+					Name:  s.name,
+					Token: s.token,
+				},
 			},
 		}
 		err := insertPost(marshalJSON(req, c), cl)
@@ -288,27 +294,7 @@ func (*DB) TestPoctCreationOnLockedThread(c *C) {
 }
 
 func (*DB) TestPostCreation(c *C) {
-	(*config.Get()).MaxBump = 500
-	now := time.Now().Unix()
-	thread := types.DatabaseThread{
-		ID:        1,
-		Board:     "a",
-		PostCtr:   0,
-		ImageCtr:  1,
-		Log:       dummyLog,
-		BumpTime:  now,
-		ReplyTime: now,
-		Posts: map[int64]types.DatabasePost{
-			1: {
-				Post: types.Post{
-					Time: now,
-					ID:   1,
-				},
-			},
-		},
-	}
-	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
-	populateMainTable(c)
+	now := prepareForPostCreation(c)
 	writeBoardConfigs(false, c)
 	c.Assert(db.Write(r.Table("images").Insert(stdJPEG)), IsNil)
 	_, token, err := imager.NewImageToken(stdJPEG.SHA1)
@@ -323,13 +309,16 @@ func (*DB) TestPostCreation(c *C) {
 	req := replyCreationRequest{
 		Body: "a",
 		postCreationCommon: postCreationCommon{
-			Password:   "123",
-			ImageName:  "foo.jpeg",
-			ImageToken: token,
-			Spoiler:    true,
+			Password: "123",
+			Image: imageRequest{
+				Name:    "foo.jpeg",
+				Token:   token,
+				Spoiler: true,
+			},
 		},
 	}
 	data := marshalJSON(req, c)
+
 	c.Assert(insertPost(data, cl), IsNil)
 
 	// Get the time value from the DB and normalize against it
@@ -385,7 +374,71 @@ func (*DB) TestPostCreation(c *C) {
 		board:      "a",
 		bodyLength: 1,
 		Buffer:     *bytes.NewBuffer([]byte("a")),
+		hasImage:   true,
 	})
+}
+
+func prepareForPostCreation(c *C) int64 {
+	now := time.Now().Unix()
+	(*config.Get()).MaxBump = 500
+	thread := types.DatabaseThread{
+		ID:        1,
+		Board:     "a",
+		PostCtr:   0,
+		ImageCtr:  1,
+		Log:       dummyLog,
+		BumpTime:  now,
+		ReplyTime: now,
+		Posts: map[int64]types.DatabasePost{
+			1: {
+				Post: types.Post{
+					Time: now,
+					ID:   1,
+				},
+			},
+		},
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	populateMainTable(c)
+	return now
+}
+
+func (*DB) TestTextOnlyPostCreation(c *C) {
+	prepareForPostCreation(c)
+	writeBoardConfigs(true, c)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	Clients.Add(cl, SyncID{1, "a"})
+
+	req := replyCreationRequest{
+		Body: "a",
+		postCreationCommon: postCreationCommon{
+			Password: "123",
+		},
+	}
+	data := marshalJSON(req, c)
+
+	c.Assert(insertPost(data, cl), IsNil)
+
+	// Assert image counter did not change
+	assertImageCounter(6, 1, c)
+
+	// Assert no image in post
+	var hasImage bool
+	q := db.FindPost(6).HasFields("image")
+	c.Assert(db.One(q, &hasImage), IsNil)
+	c.Assert(hasImage, Equals, false)
+
+	c.Assert(cl.openPost.hasImage, Equals, false)
+}
+
+func assertImageCounter(id int64, ctr int, c *C) {
+	var res int
+	q := db.FindParentThread(id).Field("imageCtr")
+	c.Assert(db.One(q, &res), IsNil)
+	c.Assert(res, Equals, ctr)
 }
 
 func (*DB) TestBumpLimit(c *C) {

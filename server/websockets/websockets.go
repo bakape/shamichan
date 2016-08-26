@@ -88,6 +88,7 @@ type receivedMessage struct {
 
 // Data of a post currently being written to by a Client
 type openPost struct {
+	hasImage bool
 	bytes.Buffer
 	bodyLength   int
 	id, op, time int64

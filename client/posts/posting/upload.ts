@@ -4,11 +4,10 @@ import {read, write} from '../../render'
 
 // Uploaded file data to be embeded in thread and reply creation or appendage
 // requests
-export interface FileData {
-	imageToken: string
-	imageName: string
-	spoiler: boolean
-	[index: string]: any
+export type FileData = {
+	token: string
+	name: string
+	spoiler?: boolean
 }
 
 const acceptedFormats = commaList([
@@ -50,8 +49,8 @@ export default class UploadForm {
 	}
 
 	// Read the file from $uploadInput and send as a POST request to the server.
-	// Assigns the file data to the passed request object.
-	async uploadFile(req: FileData): Promise<boolean> {
+	// Returns image request data, if upload succeeded.
+	async uploadFile(): Promise<FileData> {
 		const formData = new FormData(),
 			file = this.$uploadInput.files[0]
 		formData.append("image", file)
@@ -67,14 +66,20 @@ export default class UploadForm {
 		if (xhr.status !== 200) {
 			write(() =>
 				this.$uploadStatus.textContent = xhr.response)
-			return false
+			return null
 		}
-		req.imageName = file.name
-		req.imageToken = xhr.response
-		req.spoiler =
+
+		const img: FileData = {
+			name: file.name,
+			token: xhr.response,
+		}
+		const spoiler =
 			(this.el.querySelector("input[name=spoiler]") as HTMLInputElement)
 			.checked
-		return true
+		if (spoiler) {
+			img.spoiler = true
+		}
+		return img
 	}
 
 	renderProgress({total, loaded}: ProgressEvent) {

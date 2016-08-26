@@ -29,6 +29,7 @@ const (
 	messageLink
 	messageBacklink
 	messageCommand
+	messageInsertImage
 )
 
 // >= 30 are miscelenious and do not write to post models
@@ -77,6 +78,7 @@ var (
 		messageClosePost:      closePost,
 		messageSplice:         spliceText,
 		messageInsertPost:     insertPost,
+		messageInsertImage:    insertImage,
 	}
 )
 
@@ -92,13 +94,10 @@ func (e errCaptcha) Error() string {
 
 type handler func([]byte, *Client) error
 
-// Decode message JSON into the suplied type
+// Decode message JSON into the suplied type. Will augment, once we switch to
+// a binary message protocol.
 func decodeMessage(data []byte, dest interface{}) error {
-	err := json.Unmarshal(data, dest)
-	if err != nil {
-		return errInvalidStructure
-	}
-	return nil
+	return json.Unmarshal(data, dest)
 }
 
 // Post a request to the SolveMedia API to authenticate a captcha

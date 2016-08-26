@@ -12,11 +12,14 @@ import UploadForm, {FileData} from './upload'
 import navigate from '../../history'
 import {OPFormModel} from './form'
 
-export interface PostCredentials extends Captcha, FileData {
+export interface PostCredentials extends Captcha {
 	name?: string
 	email?: string
 	auth?: string // TODO
 	password: string
+	image?: FileData
+
+	[index: string]: any
 }
 
 interface ThreadCreationRequest extends PostCredentials {
@@ -50,7 +53,7 @@ class ThreadForm extends FormView implements UploadForm {
 	$uploadStatus: Element
 	$uploadInput: HTMLInputElement
 	renderUploadForm: () => string
-	uploadFile: (req: FileData) => Promise<boolean>
+	uploadFile: () => Promise<FileData>
 	renderProgress: (event: ProgressEvent) => void
 
 	constructor(event: Event) {
@@ -162,7 +165,8 @@ class ThreadForm extends FormView implements UploadForm {
 		} as any
 
 		if (this.needImage) {
-			if (!(await this.uploadFile(req))) {
+			req.image = await this.uploadFile()
+			if (!req.image) {
 				this.reloadCaptcha(1)
 				return
 			}

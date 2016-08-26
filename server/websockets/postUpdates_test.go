@@ -7,6 +7,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
@@ -138,7 +139,7 @@ func (*DB) TestNoOpenPost(c *C) {
 	defer sv.Close()
 
 	fns := [...]func([]byte, *Client) error{
-		appendRune, backspace, closePost, spliceText,
+		appendRune, backspace, closePost, spliceText, insertImage,
 	}
 	for _, fn := range fns {
 		cl, _ := sv.NewClient()
@@ -640,4 +641,92 @@ func (*DB) TestCloseOldOpenPost(c *C) {
 	c.Assert(editing, Equals, false)
 
 	assertRepLog(1, []string{"061"}, c)
+}
+
+func (*DB) TestInsertImageIntoPostWithImage(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:       1,
+		time:     time.Now().Unix(),
+		hasImage: true,
+	}
+	c.Assert(insertImage(nil, cl), Equals, errHasImage)
+}
+
+func (*DB) TestInsertImageOnTextOnlyBoard(c *C) {
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:    1,
+		board: "a",
+		time:  time.Now().Unix(),
+	}
+	writeBoardConfigs(true, c)
+
+	req := imageRequest{
+		Name:  "foo.jpeg",
+		Token: "123",
+	}
+	data := marshalJSON(req, c)
+	c.Assert(insertImage(data, cl), Equals, errTextOnly)
+}
+
+func (*DB) TestInsertImage(c *C) {
+	writeBoardConfigs(false, c)
+	thread := types.DatabaseThread{
+		ID:      1,
+		Board:   "a",
+		PostCtr: 1,
+		Posts: map[int64]types.DatabasePost{
+			2: {
+				Post: types.Post{
+					ID: 2,
+				},
+			},
+		},
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:    2,
+		board: "a",
+		op:    1,
+		time:  time.Now().Unix(),
+	}
+
+	c.Assert(db.Write(r.Table("images").Insert(stdJPEG)), IsNil)
+	_, token, err := imager.NewImageToken(stdJPEG.SHA1)
+	c.Assert(err, IsNil)
+
+	req := imageRequest{
+		Name:  "foo.jpeg",
+		Token: token,
+	}
+	data := marshalJSON(req, c)
+	c.Assert(insertImage(data, cl), IsNil)
+
+	std := types.Image{
+		Name:        "foo",
+		ImageCommon: stdJPEG,
+	}
+	msg, err := encodeMessage(messageInsertImage, imageMessage{
+		ID:    2,
+		Image: std,
+	})
+	c.Assert(err, IsNil)
+	assertRepLog(2, []string{string(msg)}, c)
+	assertImageCounter(2, 1, c)
+
+	var res types.Image
+	q := db.FindPost(2).Field("image")
+	c.Assert(db.One(q, &res), IsNil)
+	c.Assert(res, Equals, std)
+
+	c.Assert(cl.openPost.hasImage, Equals, true)
 }

@@ -40,13 +40,17 @@ type threadCreationRequest struct {
 }
 
 type postCreationCommon struct {
-	Spoiler    bool   `json:"spoiler"`
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	Auth       string `json:"auth"`
-	Password   string `json:"password"`
-	ImageToken string `json:"imageToken"`
-	ImageName  string `json:"imageName"`
+	Image    imageRequest `json:"image"`
+	Name     string       `json:"name"`
+	Email    string       `json:"email"`
+	Auth     string       `json:"auth"`
+	Password string       `json:"password"`
+}
+
+type imageRequest struct {
+	Spoiler bool   `json:"spoiler"`
+	Token   string `json:"token"`
+	Name    string `json:"name"`
 }
 
 type replyCreationRequest struct {
@@ -99,7 +103,8 @@ func insertThread(data []byte, c *Client) (err error) {
 
 	// Perform this last, so there are less dangling images because of an error
 	if !conf.TextOnly {
-		post.Image, err = getImage(req.ImageToken, req.ImageName, req.Spoiler)
+		img := req.Image
+		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
 		thread.ImageCtr = 1
 		if err != nil {
 			return err
@@ -124,10 +129,11 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 
 	c.openPost = openPost{
-		id:    id,
-		op:    id,
-		time:  now,
-		board: req.Board,
+		id:       id,
+		op:       id,
+		time:     now,
+		board:    req.Board,
+		hasImage: !conf.TextOnly,
 	}
 
 	msg := threadCreationResponse{
@@ -155,7 +161,7 @@ func insertPost(data []byte, c *Client) error {
 	}
 
 	// Post must have either at least one character or an image to be allocated
-	noImage := conf.TextOnly || req.ImageToken == "" || req.ImageName == ""
+	noImage := conf.TextOnly || req.Image.Token == "" || req.Image.Name == ""
 	if req.Body == "" && noImage {
 		return errNoTextOrImage
 	}
@@ -201,7 +207,8 @@ func insertPost(data []byte, c *Client) error {
 	}
 
 	if !noImage {
-		post.Image, err = getImage(req.ImageToken, req.ImageName, req.Spoiler)
+		img := req.Image
+		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
 		if err != nil {
 			return err
 		}
@@ -233,6 +240,7 @@ func insertPost(data []byte, c *Client) error {
 		board:      sync.Board,
 		Buffer:     *bytes.NewBuffer([]byte(req.Body)),
 		bodyLength: len(req.Body),
+		hasImage:   !noImage,
 	}
 
 	if forSplicing != "" {

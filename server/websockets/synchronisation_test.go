@@ -31,7 +31,7 @@ func (*DB) TestSyncToBoard(c *C) {
 	cl, wcl := sv.NewClient()
 
 	// Invalid message
-	c.Assert(synchronise(nil, cl), Equals, errInvalidStructure)
+	c.Assert(synchronise(nil, cl), ErrorMatches, "unexpected end of JSON input")
 
 	// Invalid board
 	msg := syncRequest{

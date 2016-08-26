@@ -29,6 +29,7 @@ export const enum message {
 	link,
 	backlink,
 	command,
+	insertImage,
 
 	// >= 30 are miscelenious and do not write to post models
 	synchronise = 30,

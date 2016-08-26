@@ -23,6 +23,7 @@ const (
 	onlyText        = "only text frames allowed.*"
 	abnormalClosure = "websocket: close 1006 .*"
 	closeNormal     = "websocket: close 1000 .*"
+	invalidCharacter = "invalid character .*"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -218,7 +219,7 @@ func (*ClientSuite) TestHandleMessage(c *C) {
 	// Invalid inner message payload. Test proper type reflection of the
 	// errInvalidMessage error type
 	msg = []byte("30nope")
-	asserHandlerError(cl, msg, "invalid message structure", c)
+	asserHandlerError(cl, msg, invalidCharacter, c)
 }
 
 func asserHandlerError(cl *Client, msg []byte, pattern string, c *C) {
