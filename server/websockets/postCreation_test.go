@@ -377,6 +377,15 @@ func (*DB) TestPostCreation(c *C) {
 	q = db.GetMain("boardCtrs").Field("a")
 	c.Assert(db.One(q, &boardCtr), IsNil)
 	c.Assert(boardCtr, Equals, 1)
+
+	c.Assert(cl.openPost, DeepEquals, openPost{
+		id:         6,
+		op:         1,
+		time:       then,
+		board:      "a",
+		bodyLength: 1,
+		Buffer:     *bytes.NewBuffer([]byte("a")),
+	})
 }
 
 func (*DB) TestBumpLimit(c *C) {
