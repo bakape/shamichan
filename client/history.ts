@@ -4,7 +4,7 @@ import {on, isMatch} from './util'
 import {read, page, displayLoading} from './state'
 import loadPage from './page/load'
 import {synchronise} from './connection'
-import {postSM, postEvent} from "./posts/posting/form"
+import {postSM, postEvent} from "./posts/posting/main"
 
 // Bind event listener
 on(document, "click", handleClick, {

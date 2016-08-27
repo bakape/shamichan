@@ -10,7 +10,7 @@ import {posts as lang, ui} from '../../lang'
 import {send, message, handlers} from '../../connection'
 import UploadForm, {FileData} from './upload'
 import navigate from '../../history'
-import {OPFormModel} from './form'
+import {OPFormModel} from './model'
 
 export interface PostCredentials extends Captcha {
 	name?: string
