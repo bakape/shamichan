@@ -48,7 +48,9 @@ export class OPFormModel extends OP implements FormModel {
 		posts.addOP(this)
 		const view = new OPFormView(this)
 		oldView.el.replaceWith(view.el)
+
 		postSM.feed(postEvent.hijack, {view, model: this})
+		this.sentAllocRequest = true
 
 		this.init()
 	}
