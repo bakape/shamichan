@@ -21,32 +21,7 @@ main.reply('postForm', () => postForm)
 
 const ComposerModel = Backbone.Model.extend({idAttribute: 'num'});
 
-// Allow remotely altering posting FSM state
-main.reply('postSM:feed', state => postSM.feed(state));
-
-// Make new postform
-postSM.act('ready + new -> draft', aside => {
-	let op,
-		section = aside.closest('section');
-	if (section)
-		op = util.getNum(section);
-	else
-		section = document.createElement('section');
-
-	postForm = new ComposerView({
-		model: postModel = new ComposerModel({op}),
-		destination: aside,
-		section
-	});
-});
-
-postSM.preflight('draft', aside => aside.matches('aside'));
-
 postSM.act('draft + alloc -> alloc', msg => postForm.onAllocation(msg));
-
-main.$doc.on('click', 'aside.posting a', function () {
-	postSM.feed('new', this.parentNode);
-});
 
 main.$doc.on('keydown', handle_shortcut);
 

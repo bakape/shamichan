@@ -1,10 +1,9 @@
-import {inputValue} from '../util'
+import {inputValue, makeFrag} from '../util'
 import {mod as lang, ui} from '../lang'
 import {send, handlers, message} from '../connection'
 import {responseCode} from './login'
 import AccountFormView, {renderFields, validatePasswordMatch} from './common'
 import {Captcha} from '../captcha'
-import {read} from '../render'
 
 interface PasswordChangeRequest extends Captcha {
 	old: string
@@ -17,8 +16,7 @@ export default class PasswordChangeView extends AccountFormView {
 		super({}, () =>
 			this.sendRequest())
 		this.render()
-		read(() =>
-			validatePasswordMatch(this.el, "newPassword", "repeat"))
+		validatePasswordMatch(this.el, "newPassword", "repeat")
 
 		handlers[message.changePassword] = (msg: responseCode) =>
 			this.handleResponse(msg)
@@ -27,7 +25,7 @@ export default class PasswordChangeView extends AccountFormView {
 	// Render the element
 	render() {
 		const html = renderFields("oldPassword", "newPassword", "repeat")
-		this.renderForm(html)
+		this.renderForm(makeFrag(html))
 	}
 
 	// Handle the changePassword response from the server

@@ -1,9 +1,7 @@
 import View from './view'
 import Model from './model'
-import {write, read} from './render'
+import {write} from './render'
 import {config} from './state'
-import {HTML, makeAttrs} from './util'
-import {ui} from './lang'
 
 // Solve Media AJAX API controler
 // https://portal.solvemedia.com/portal/help/pub/ajax
@@ -36,26 +34,22 @@ export interface Captcha {
 // For generating unique IDs for every captcha
 let captchaCounter = 0
 
-// Returns a unique ID for captcha containers
-export function newCaptchaID(): string {
-	return `captcha-${captchaCounter++}`
-}
-
 // Wrapper around Solve Media's captcha service AJAX API
 export default class CaptchaView extends View<Model> {
 	widget: ACPuzzleController
 	id: string
 
-	constructor(id: string) {
-		super({el: document.getElementById(id)})
+	constructor(el: Element) {
+		super({el})
+		this.el.id = this.id = `captcha-${captchaCounter++}`
+		; (this.el as HTMLElement).hidden = false
 		this.render()
 
 		// Render the captcha widget only after the input field is focused
-		read(() =>
-			this.el
+		this.el
 			.querySelector("input[name=adcopy_response]")
 			.addEventListener("focus", () =>
-				this.renderWidget()))
+				this.renderWidget())
 
 		this.onClick({
 			".captcha-image img": () =>
@@ -63,38 +57,18 @@ export default class CaptchaView extends View<Model> {
 		})
 	}
 
-	// Render the container for the captcha
+
 	render() {
-		const {id} = this
-		const imageAttrs = {
-			id: `adcopy-puzzle-image-${id}`,
-			class: 'captcha-image',
-			title: ui.reloadCaptcha,
+		// We need different IDs on all our elements because the spec is
+		// retarded
+		for (let el of this.el.querySelectorAll("*[data-id]")) {
+			el.id = `${el.getAttribute("data-id")}-${this.id}`
 		}
-		const inputAttrs = {
-			id: `adcopy_response-${id}`,
-			class: 'full-width',
-			name: 'adcopy_response',
-			type: "text",
-			placeholder: ui.focusForCaptcha,
+
+		// Reenable input fields
+		for (let el of this.el.querySelectorAll("input")) {
+			(el as HTMLInputElement).hidden = false
 		}
-		const html = HTML
-			`<div id="adcopy-outer-${id}">
-				<div ${makeAttrs(imageAttrs)}></div>
-				<div id="adcopy-puzzle-audio-${id}" class="hidden"></div>
-				<div id="adcopy-pixel-image-${id}" class="hidden"></div>
-				<div>
-					<span id="adcopy-instr-${id}" class="hidden"></span>
-				</div>
-				<input ${makeAttrs(inputAttrs)}>
-				<input type="hidden" name="adcopy_challenge" id="adcopy_challenge-${id}">
-				<a id="adcopy-link-refresh-${id}" class="hidden"></a>
-				<a id="adcopy-link-audio-${id}" class="hidden"></a>
-				<a id="adcopy-link-image-${id}" class="hidden"></a>
-				<a id="adcopy-link-info-${id}" class="hidden"></a>
-			</div>`
-		write(() =>
-			this.el.innerHTML = html)
 	}
 
 	// Render the actual captcha

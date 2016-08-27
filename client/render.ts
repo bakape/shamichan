@@ -31,8 +31,8 @@ for (let el of document.head.querySelectorAll("template")) {
 	const actText = [
 		lang.navigation.bottom,
 		lang.images.expand,
-		lang.navigation.top,
 		lang.navigation.return,
+		lang.navigation.top,
 	]
 	const actEls = frag.querySelectorAll("span a")
 	for (let i = 0; i < actEls.length; i++) {
@@ -49,6 +49,17 @@ for (let el of document.head.querySelectorAll("template")) {
 		.lastElementChild
 		.firstElementChild
 		.textContent = lang.navigation.expand
+}
+{
+	const frag = templates["form"]
+	; (frag.querySelector("input[type=submit]") as HTMLInputElement)
+		.value = lang.ui.submit
+	; (frag.querySelector("input[name=cancel]") as HTMLInputElement)
+		.value = lang.ui.cancel
+	frag.querySelector(".captcha-image")
+		.setAttribute("title", lang.ui.reloadCaptcha)
+	frag.querySelector("input[name=adcopy_response]")
+		.setAttribute("placeholder", lang.ui.focusForCaptcha)
 }
 
 // Import a prepared template and return it's HTML contents

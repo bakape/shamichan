@@ -68,7 +68,7 @@
 			<img>
 		</h1>
 		<h1 class="page-title"></h1>
-		<aside class="act glass posting">
+		<aside class="act glass">
 			<a class="new-thread-button"></a>
 		</aside>
 		<hr>
@@ -93,10 +93,10 @@
 		</aside>
 		<hr>
 		<span class="act" id="bottom">
-			<a href="#" class="history"></a>
+			<a href="." class="history"></a>
 		</span>
 		<span class="act">
-			<a href="."></a>
+			<a href="#"></a>
 		</span>
 		<span id="lock"></span>
 	</template>
@@ -119,6 +119,27 @@
 			<br>
 			<h3></h3>
 		</article>
+	</template>
+	<template name="form">
+		<div class="captcha-container" hidden>
+			<div data-id="adcopy-outer">
+				<div data-id="adcopy-puzzle-image" class="captcha-image"></div>
+				<div data-id="adcopy-puzzle-audio" class="hidden"></div>
+				<div data-id="adcopy-pixel-image" class="hidden"></div>
+				<div>
+					<span data-id="adcopy-instr" class="hidden"></span>
+				</div>
+				<input data-id="adcopy_response" name="adcopy_response" class="full-width" type="text" hidden>
+				<input type="hidden" name="adcopy_challenge" data-id="adcopy_challenge" hidden>
+				<a data-id="adcopy-link-refresh" class="hidden"></a>
+				<a data-id="adcopy-link-audio" class="hidden"></a>
+				<a data-id="adcopy-link-image" class="hidden"></a>
+				<a data-id="adcopy-link-info" class="hidden"></a>
+			</div>
+		</div>
+		<input type="submit">
+		<input type="button" name="cancel">
+		<div class="form-response admin"></div>
 	</template>
 </head>
 <body>

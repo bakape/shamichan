@@ -8,23 +8,39 @@ import {setAttrs, makeFrag, applyMixins} from "../../util"
 import {parseTerminatedLine} from "../render/body"
 import {write} from "../../render"
 import {ui} from "../../lang"
+import {$threadContainer} from "../../page/thread"
+import {postSM, postEvent} from "./main"
+import UploadForm, {FileData} from "./upload"
 
 // Post creation and update view
-export class FormView extends PostView {
+export class FormView extends PostView implements UploadForm {
 	model: Post & FormModel
 	inputLock: boolean
 	$input: HTMLSpanElement
 	$done: HTMLInputElement
+	$cancel: HTMLInputElement
 	$postControls: Element
 
-	constructor(model: Post) {
+	// UploadForm properties
+	$uploadStatus: Element
+	$uploadInput: HTMLInputElement
+	renderUploadForm: () => string
+	uploadFile: () => Promise<FileData>
+	renderProgress: (event: ProgressEvent) => void
+
+	[index: string]: any
+
+	constructor(model: Post, allocated: boolean) {
 		super(model)
-		this.renderInputs()
+		this.renderInputs(allocated)
+		if (!allocated) {
+			this.initDraft()
+		}
 	}
 
 	// Render extra input fields for inputting text and optionally uploading
 	// images
-	renderInputs() {
+	renderInputs(allocated: boolean) {
 		this.$input = document.createElement("span")
 		const attrs: {[key: string]: string} = {
 			id: "text-input",
@@ -43,16 +59,8 @@ export class FormView extends PostView {
 
 		this.$postControls = document.createElement("div")
 		this.$postControls.id = "post-controls"
-
-		this.$done = document.createElement("input")
-		setAttrs(this.$done, {
-			name: "done",
-			type: "button",
-			value: ui.done,
-		})
-		this.$done.addEventListener("click", () =>
-			this.model.commitClose())
-		this.$postControls.append(this.$done)
+		this.$postControls
+			.append(allocated ? this.renderDone() : this.renderDraftInputs())
 
 		write(() => {
 			this.$blockquote.innerHTML = ""
@@ -60,9 +68,44 @@ export class FormView extends PostView {
 			this.el.append(this.$postControls)
 			this.$input.focus()
 		})
+	}
+
+	// Aditional controls for draft forms
+	renderDraftInputs(): DocumentFragment {
+		const frag = document.createDocumentFragment()
+		const $cancel = this.createButton("cancel", () =>
+			(postSM.feed(postEvent.done),
+			this.remove()))
+		frag.append($cancel)
 
 		// TODO: UploadForm integrations
 
+		return frag
+	}
+
+	// Button for closing allocated posts
+	renderDone(): HTMLInputElement {
+		return this.createButton("done", () =>
+			this.model.commitClose())
+	}
+
+	// Create a clickable button element
+	createButton(name: string, clickHandler: () => void): HTMLInputElement {
+		const el = document.createElement("input")
+		setAttrs(el, {
+			name,
+			type: "button",
+			value: ui[name],
+		})
+		el.addEventListener("click", clickHandler)
+		return this["$" + name] = el
+	}
+
+	// Initialize extra elements for a draft unallocated post
+	initDraft() {
+		this.el.querySelector("header").classList.add("temporary")
+		write(() =>
+			$threadContainer.append(this.el))
 	}
 
 	// Handle input events on $input
@@ -134,6 +177,13 @@ export class FormView extends PostView {
 			(this.$postControls.remove(),
 			this.$postControls = this.$done = null))
 	}
+
+	// Lock the post form after a crytical error accours
+	renderError() {
+		write(() =>
+			(this.$blockquote.classList.add("errored"),
+			this.$input.setAttribute("contenteditable", "false")))
+	}
 }
 
 // FormView of an OP post
@@ -143,7 +193,7 @@ export class OPFormView extends FormView implements OPView {
 	renderOmit: () => void
 
 	constructor(model: OP) {
-		super(model)
+		super(model, true)
 	}
 }
 

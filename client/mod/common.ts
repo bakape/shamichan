@@ -71,7 +71,7 @@ export default class AccountFormView extends FormView {
 
 	// Render a form field and embed the input fields inside it. Then append it
 	// to the parrent view.
-	renderForm(fields: string) {
+	renderForm(fields: DocumentFragment) {
 		super.renderForm(fields)
 		accountPannel.toggleMenu(false)
 		write(() =>

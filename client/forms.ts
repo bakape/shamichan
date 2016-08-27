@@ -3,10 +3,10 @@
 import {HTML, makeAttrs, makeFrag, extend} from './util'
 import View, {ViewAttrs} from './view'
 import Model from './model'
-import {write, read} from './render'
+import {write, read, importTemplate} from './render'
 import {ui} from './lang'
 import {config} from './state'
-import CaptchaView, {newCaptchaID} from './captcha'
+import CaptchaView from './captcha'
 
 type StringMap = {[key: string]: string}
 
@@ -178,24 +178,18 @@ export class FormView extends View<Model> {
 	}
 
 	// Render a form field and embed the input fields inside it
-	renderForm(fields: string) {
-		const captchaID = newCaptchaID(),
-			cancel = `<input type="button" name="cancel" value="${ui.cancel}">`
-		const html = HTML
-			`<form>
-				${fields}
-				<div id="${captchaID}"></div>
-				<input type="submit" value="${ui.submit}">
-				${this.noCancel ? "" : cancel}
-			</form>
-			<div class="form-response admin"></div>`
-
-		write(() =>
-			this.el.innerHTML = html)
-		if (config.captcha && !this.noCaptcha) {
-			read(() =>
-				this.captcha = new CaptchaView(captchaID))
+	renderForm(fields: DocumentFragment) {
+		const frag = importTemplate("form")
+		if (this.noCancel) {
+			(frag.querySelector("input[name=cancel]") as HTMLInputElement)
+				.hidden = true
 		}
+		if (config.captcha && !this.noCaptcha) {
+			this.captcha =
+				new CaptchaView(frag.querySelector(".captcha-container"))
+		}
+		frag.prepend(fields)
+		this.el.append(frag)
 	}
 
 	// Submit form to server. Pass it to the assigned handler function

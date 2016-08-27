@@ -40,14 +40,14 @@ export default class FSM<S, E> {
 	feed(event: E, arg?: any) {
 		let result: S
 		if (event as any in this.wilds) {
-			result = this.wilds[event as any]()
+			result = this.wilds[event as any](arg)
 		} else {
 			const transition = this.transitionString(this.state, event),
 				handler = this.transitions[transition]
 			if (!handler) { // Not registered. NOOP
 				return
 			}
-			result = handler()
+			result = handler(arg)
 		}
 		this.stateHandlers.forEach(result as any, fn =>
 			fn(arg))

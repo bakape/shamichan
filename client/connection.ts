@@ -132,12 +132,11 @@ function renderStatus(status: syncStatus) {
 		syncEl.textContent = lang[status])
 }
 
-connSM.act(connState.loading, connEvent.start, () => {
-	renderStatus(syncStatus.connecting)
-	attempts = 0
-	connect()
-	return connState.connecting
-})
+connSM.act(connState.loading, connEvent.start, () =>
+	(renderStatus(syncStatus.connecting),
+	attempts = 0,
+	connect(),
+	connState.connecting))
 
 const path =
 	(location.protocol === 'https:' ? 'wss' : 'ws')
@@ -219,10 +218,9 @@ function resetAttempts() {
 // channel
 handlers[message.synchronise] = connSM.feeder(connEvent.sync)
 
-connSM.act(connState.syncing, connEvent.sync, () => {
-	renderStatus(syncStatus.synced)
-	return  connState.synced
-})
+connSM.act(connState.syncing, connEvent.sync, () =>
+	(renderStatus(syncStatus.synced),
+	connState.synced))
 
 connSM.wildAct(connEvent.close, event => {
 	clearModuleState()
@@ -246,25 +244,22 @@ function clearModuleState() {
 	}
 }
 
-connSM.act(connState.dropped, connEvent.retry, () => {
-	connect()
+connSM.act(connState.dropped, connEvent.retry, () =>
+	(connect(),
 
 	// Don't show this immediately so we don't thrash on network loss
-	setTimeout(() => {
-		if (connSM.state === connState.reconnecting) {
-			renderStatus(syncStatus.connecting)
-		}
-	}, 100)
-
-	return connState.reconnecting
-})
+	setTimeout(
+		() =>
+			connSM.state === connState.reconnecting
+			&& renderStatus(syncStatus.connecting),
+		100),
+	connState.reconnecting))
 
 // Invalid message or some other critical error
-connSM.wildAct(connEvent.error, () => {
-	renderStatus(syncStatus.desynced)
-	clearModuleState()
-	return connState.desynced
-})
+connSM.wildAct(connEvent.error, () =>
+	(renderStatus(syncStatus.desynced),
+	clearModuleState(),
+	connState.desynced))
 
 export function start() {
 	connSM.feed(connEvent.start)
@@ -284,8 +279,7 @@ document.addEventListener('visibilitychange', event => {
 	}
 })
 
-window.addEventListener('online', () => {
-	resetAttempts()
-	connSM.feed(connEvent.retry)
-})
+window.addEventListener('online', () =>
+	(resetAttempts(),
+	connSM.feed(connEvent.retry)))
 window.addEventListener('offline', connSM.feeder(connEvent.close))

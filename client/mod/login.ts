@@ -4,7 +4,7 @@ import {TabbedModal} from '../banner'
 import {write, read} from '../render'
 import {defer} from '../defer'
 import {mod as lang, ui} from '../lang'
-import {loadModule, inputValue, HTML} from '../util'
+import {loadModule, inputValue, HTML, makeFrag} from '../util'
 import {handlers, send, message} from '../connection'
 import {FormView} from '../forms'
 import {renderFields, validatePasswordMatch} from './common'
@@ -129,10 +129,9 @@ export default class AccountPanel extends TabbedModal {
 	// modules
 	loadConditionalView(path: string): EventListener {
 		return () =>
-			loadModule(path).then(m => {
-				this.toggleMenu(false)
-				new m.default()
-			})
+			loadModule(path).then(m =>
+				(this.toggleMenu(false),
+				new m.default()))
 	}
 
 	// Either hide or show the selection menu
@@ -200,7 +199,7 @@ class LoginForm extends BaseLoginForm {
 	constructor() {
 		super(() =>
 			this.sendRequest(message.login))
-		this.renderForm(renderFields("id", "password"))
+		this.renderForm(makeFrag(renderFields("id", "password")))
 
 		handlers[message.login] = (msg: LoginResponse) =>
 			this.loginResponse(msg)
@@ -212,7 +211,7 @@ class RegistrationForm extends BaseLoginForm {
 	constructor() {
 		super(() =>
 			this.sendRequest(message.register))
-		this.renderForm(renderFields("id", "password", "repeat"))
+		this.renderForm(makeFrag(renderFields("id", "password", "repeat")))
 		read(() =>
 			validatePasswordMatch(this.el, "password", "repeat"))
 

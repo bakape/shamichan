@@ -27,7 +27,10 @@ aside {
 		color: grey !important;
 		cursor: default;
 	}
-	&.errored a {
+}
+
+.errored {
+	&, & a, & a:hover {
 		color: red;
 		cursor: default;
 	}
@@ -143,6 +146,9 @@ header {
 	.control {
 		margin-left: 0.5em;
 		float: right;
+	}
+	&.temporary > *:not(.name) {
+		display: none;
 	}
 }
 

@@ -1,5 +1,5 @@
 import {
-	on, inputValue, applyMixins, fetchBoardList, fetchBoarConfigs,
+	on, inputValue, applyMixins, fetchBoardList, fetchBoarConfigs, makeFrag,
 } from '../../util'
 import {write, read, $threads} from '../../render'
 import {FormView, inputType, renderInput, InputSpec} from '../../forms'
@@ -88,7 +88,7 @@ class ThreadForm extends FormView implements UploadForm {
 			}
 		}
 
-		this.renderForm(html)
+		this.renderForm(makeFrag(html))
 		write(() => {
 			this.$aside.classList.add("expanded")
 			this.$aside.append(this.el)

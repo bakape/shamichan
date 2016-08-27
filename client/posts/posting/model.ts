@@ -88,11 +88,11 @@ export class ReplyFormModel extends Post implements FormModel {
 
 // Override mixin for post authoring models
 export class FormModel {
-	bodyLength: number = 0 // Compound length of the input text body
+	bodyLength: number = 0  // Compound length of the input text body
 	parsedLines: number = 0 // Number of closed, commited and parsed lines
 	body: string
 	view: PostView & FormView
-	state: TextState // State of the underlying normal post model
+	state: TextState        // State of the underlying normal post model
 
 	// State of line being edditted. Must be seperated to not affect the
 	// asynchronous updates of commited lines
@@ -253,8 +253,8 @@ export class FormModel {
 
 	// Return the last line of the body
 	lastBodyLine(): string {
-		const lines = this.body.split("\n")
-		return lines[lines.length - 1]
+		const i = this.body.lastIndexOf("\n")
+		return this.body.slice(i + 1)
 	}
 }
 

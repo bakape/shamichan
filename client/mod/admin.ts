@@ -2,7 +2,7 @@ import { handlers, send, message } from '../connection'
 import {InputSpec, renderInput, inputType} from '../forms'
 import AccountFormView from './common'
 import {admin as lang, fetchAdminPack} from '../lang'
-import {table} from '../util'
+import {table, makeFrag} from '../util'
 import {langs, themes} from '../options/specs'
 
 type ServerConfigs = {
@@ -162,7 +162,7 @@ export default class ConfigPanel extends AccountFormView {
 			spec.value = conf[spec.name]
 			return renderInput(spec)
 		})
-		this.renderForm(html)
+		this.renderForm(makeFrag(html))
 	}
 
 	// Clean up any dangling references and GC the view

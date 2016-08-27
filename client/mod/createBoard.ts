@@ -1,7 +1,7 @@
 import {renderInput, InputSpec, inputType} from '../forms'
 import AccountFormView from './common'
 import {send, message, handlers} from '../connection'
-import {inputValue, table} from '../util'
+import {inputValue, table, makeFrag} from '../util'
 import {admin as lang, mod, fetchAdminPack, ui} from '../lang'
 
 // Response codes for board creation requests
@@ -44,7 +44,7 @@ export default class BoardCreationPanel extends AccountFormView {
 			return renderInput(spec)
 		})
 
-		this.renderForm(html)
+		this.renderForm(makeFrag(html))
 	}
 
 	remove() {

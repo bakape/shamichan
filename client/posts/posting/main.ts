@@ -7,6 +7,7 @@ import FSM from "../../fsm"
 import {connState, connSM} from "../../connection"
 import {write, $threads} from "../../render"
 import {posts as lang} from "../../lang"
+import {on} from "../../util"
 
 // Sent to the FSM via the "open" and "hijack" events
 export type FormMessage = {
@@ -36,6 +37,7 @@ export const enum postEvent {
 	open,       // New post opened
 	hijack,     // Hijacked an existing post as a postForm
 	reset,      // Set to none. Used during page navigation.
+	alloc,      // Allocated the draft post to the server
 }
 export const postSM = new FSM<postState, postEvent>(postState.none)
 
@@ -51,19 +53,19 @@ const stylePostControls = (fn: (el: HTMLElement) => void) =>
 
 // Handle connection loss
 postSM.wildAct(postEvent.disconnect, () => {
-	if (postState.alloc) {
+	switch (postSM.state) {
+	case postState.alloc:       // Pause current allocated post
 		return postState.halted
-	}
-
-	// Clear any unallocated postForm
-	if (postState.draft) {
+	case postState.draft:       // Clear any unallocated postForm
 		postForm.remove()
 		postModel = postForm = null
 		stylePostControls(el =>
 			el.style.display = "")
 	}
+
 	stylePostControls(el =>
 		el.classList.add("disabled"))
+
 	return postState.locked
 })
 
@@ -80,12 +82,23 @@ postSM.act(postState.locked, postEvent.sync, () =>
 postSM.wildAct(postEvent.error, () =>
 	(stylePostControls(el =>
 		el.classList.add("errored")),
+	postForm && postForm.renderError(),
 	postState.errored))
 
 // Reset state during page navigation
 postSM.wildAct(postEvent.reset, () =>
-	(window.onbeforeunload = postForm = postModel = null,
-	postState.none))
+	(resetState(),
+	postState.ready))
+
+// Reset module state to initial
+function resetState() {
+	window.onbeforeunload = postForm = postModel = null
+}
+
+// Transition a draft post into allocated state. All the logic for this is
+// model- and view-side.
+postSM.act(postState.draft, postEvent.alloc, () =>
+	postState.alloc)
 
 // Hijack and existing post and replace with post form and model
 postSM.act(postState.ready, postEvent.hijack, ({view, model}: FormMessage) =>
@@ -105,21 +118,24 @@ function bindNagging() {
 // Open a new post creation form, if none open
 postSM.act(postState.ready, postEvent.open, () =>
 	(postModel = new ReplyFormModel(),
-	postForm = new FormView(postModel),
+	postForm = new FormView(postModel, false),
 	postState.alloc))
 
-// Close an allocated post
-postSM.act(postState.alloc, postEvent.done, () =>
-	(window.onbeforeunload = postForm = postModel = null,
-	postState.ready))
+// Hide post controls, when a postForm is open
+const hidePostControls = () =>
+	stylePostControls(el =>
+		el.style.display = "none")
+postSM.on(postState.draft, hidePostControls)
+postSM.on(postState.alloc, hidePostControls)
 
 // Register all transitions that lead to postState.ready
 const toReady = () =>
-	postState.ready
+	(resetState(),
+	postState.ready)
 const readyTransitions: [postState, postEvent][] = [
 	[postState.none, postEvent.sync],
 	[postState.draft, postEvent.done],
-	[postState.halted, postEvent.done],
+	[postState.alloc, postEvent.done],
 ]
 for (let [state, event] of readyTransitions) {
 	postSM.act(state, event, toReady)
@@ -129,9 +145,7 @@ postSM.on(postState.ready, () =>
 		(el.style.display = "",
 		el.classList.remove("disabled"))))
 
-// Hide post controls, when a postForm is open
-const hidePostControls = () =>
-	stylePostControls(el =>
-		el.style.display = "none")
-postSM.on(postState.draft, hidePostControls)
-postSM.on(postState.alloc, hidePostControls)
+// Handle clicks on the [Reply] button
+on($threads, "click", postSM.feeder(postEvent.open), {
+	selector: "aside.posting a",
+})
