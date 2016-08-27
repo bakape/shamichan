@@ -33,7 +33,7 @@ export default function (threads: ThreadData[]) {
 
 	frag
 		.querySelector(".page-title")
-		.textContent = formatHeader(page.board, title)
+		.innerHTML = formatHeader(page.board, title)
 
 	const threadEls: DocumentFragment[] = []
 	for (let i = 0; i < threads.length; i++) {
