@@ -68,33 +68,25 @@ export function renderName(el: Element, data: PostData) {
 // Renders a time element. Can be either absolute or relative.
 export function renderTime(el: Element, time: number) {
 	// Format according to client's relative post timestamp setting
-	let title: string,
-		text :string
-	const readable = readableTime(time)
+	let text = readableTime(time)
 	if (options.relativeTime) {
-		title = readable
-		text = relativeTime(time, Date.now())
-	}
-
-	if (title) {
-		el.setAttribute("title", title)
+		el.setAttribute("title", text)
+		text = relativeTime(time, Math.floor(Date.now() / 1000))
 	}
 	el.textContent = text
 }
 
 // Renders classic absolute timestamp
 function readableTime(time: number): string {
-	let d = new Date(time)
-	return pad(d.getDate()) + ' '
-		+ timeLang.calendar[d.getMonth()] + ' '
-		+ d.getFullYear()
-		+ `(${timeLang.week[d.getDay()]})`
+	let d = new Date(time * 1000)
+	return `${pad(d.getDate())} ${timeLang.calendar[d.getMonth()]} `
+		+ `${d.getFullYear()} (${timeLang.week[d.getDay()]}) `
 		+`${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 // Renders readable elapsed time since post
 function relativeTime(then: number, now: number): string {
-	let time = Math.floor((now - then) / 60000),
+	let time = Math.floor((now - then) / 60),
 		isFuture = false
 	if (time < 1) {
 		if (time > -5) { // Assume to be client clock imprecission
