@@ -1,7 +1,7 @@
 import {
 	on, inputValue, applyMixins, fetchBoardList, fetchBoarConfigs, makeFrag,
 } from '../../util'
-import {write, read, $threads} from '../../render'
+import {write, $threads} from '../../render'
 import {FormView, inputType, renderInput, InputSpec} from '../../forms'
 import {Captcha} from '../../captcha'
 import identity from './identity'
@@ -45,11 +45,12 @@ export default () =>
 class ThreadForm extends FormView implements UploadForm {
 	$aside: Element
 	$board: HTMLSelectElement
-	$uploadContainer: Element
-	needImage: boolean // Does the board require an OP image?
+	$uploadContainer: HTMLSpanElement
+	needImage: boolean = true // Does the board require an OP image?
 	selectedBoard: string
 
 	// UploadForm properties
+	$spoiler: HTMLSpanElement
 	$uploadStatus: Element
 	$uploadInput: HTMLInputElement
 	renderUploadForm: () => string
@@ -68,70 +69,75 @@ class ThreadForm extends FormView implements UploadForm {
 	// Render the element, hide the parent element's existing contents and
 	// hide the "["..."]" encasing it
 	async render() {
-		let html = ""
+		const frag = document.createDocumentFragment()
 
-		// Have the user to select the target board, if on the "/all/" metaboard
+		// Have the user to select the target board, if on the "/all/"
+		// metaboard
 		if (page.board === "all") {
-			html += await this.initBoardSelection()
+			frag.append(await this.initBoardSelection())
 		}
 
-		html += renderField({
+		const html = renderField({
 			name: "subject",
 			type: inputType.string,
 			maxLength: 100,
 			required: true,
 		})
+		frag.append(makeFrag(html))
+
+		// Render image upload controls
 		if (!boardConfig.textOnly) {
-			html += this.renderUploadForm() + "<br>"
-			if (page.board !== "all") {
-				this.needImage = true
+			this.renderUploadForm()
+			this.$uploadContainer = document.createElement("span")
+			this.$uploadContainer.setAttribute("class", "upload-container")
+			this.$uploadContainer.append(
+				this.$spoiler,
+				this.$uploadStatus,
+				document.createElement("br"),
+				this.$uploadInput,
+				document.createElement("br"),
+			)
+			if (!this.needImage) {
+				this.$uploadContainer.style.display = "none"
 			}
+			frag.append(this.$uploadContainer)
 		}
 
-		this.renderForm(makeFrag(html))
-		write(() => {
-			this.$aside.classList.add("expanded")
-			this.$aside.append(this.el)
-			; (this.el.querySelector("input, select") as HTMLElement).focus()
-		})
+		this.renderForm(frag)
+		write(() =>
+			(this.$aside.classList.add("expanded"),
+			this.$aside.append(this.el),
+			(this.el.querySelector("input, select") as HTMLElement).focus()))
 	}
 
 	// Initialize the board selection input for the /all/ board and return its
 	// HTML
-	async initBoardSelection(): Promise<string> {
+	async initBoardSelection(): Promise<DocumentFragment> {
 		// TODO: Some kind of more elegant selection panel
 
 		// Hide the image upload controls, if the first board on the list
 		// is a text-only board
 		const boards = await fetchBoardList(),
 			[first] = boards
-		let display = ""
-		this.needImage = true
 		if (first && (await fetchBoarConfigs(first.id)).textOnly) {
-			display = "none"
 			this.needImage = false
 		}
 
-		read(() => {
-			// Bind event listener for changes to the board selection
-			this.$board =
-				this.el
-				.querySelector("select[name=board]") as HTMLSelectElement
-			on(this.$board, "input", () =>
-				this.toggleUploadForm())
-
-			this.$uploadContainer = this.el.querySelector(".upload-container")
-			write(() =>
-				(this.$uploadContainer as HTMLElement)
-				.style.display = display)
-		})
-
-		return renderField({
+		const html = renderField({
 			name: "board",
 			type: inputType.select,
 			choices: boards.map(({title, id}) =>
 				`${id} - ${title}`),
 		})
+		const frag = makeFrag(html)
+
+		// Assign and bind event listener for changes to the board selection
+		this.$board = frag
+			.querySelector("select[name=board]") as HTMLSelectElement
+		on(this.$board, "input", () =>
+			this.toggleUploadForm())
+
+		return frag
 	}
 
 	// When on the /all/ board, you may possibly post to boards that are

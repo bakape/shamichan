@@ -146,30 +146,6 @@ const ComposerView = Backbone.View.extend({
 			$tag.removeAttr('href').removeAttr('target').attr('class', 'nope');
 	},
 
-	onInput(val) {
-		if (nl >= 0) {
-			var ok = val.substr(0, nl);
-			val = val.substr(nl + 1);
-			this.$input.val(val);
-			if (this.model.get('sentAllocRequest') || /[^ ]/.test(ok))
-				this.commit(ok + '\n');
-		}
-	},
-
-	// Commit any staged words to the server
-	commit(text) {
-		// Either get an allocation or send the committed text
-		const attrs = this.model.attributes;
-		if (!attrs.num && !attrs.sentAllocRequest) {
-			main.send([common.INSERT_POST, this.allocationMessage(text, null)]);
-			this.model.set({sentAllocRequest: true});
-		}
-		else if (attrs.num)
-			main.send(text);
-		else
-			this.pending += text;
-	},
-
 	// Construct the message for post allocation in the database
 	allocationMessage(text, image) {
 		var msg = {nonce: main.request('nonce:create')};
@@ -312,17 +288,6 @@ const ComposerView = Backbone.View.extend({
 	},
 });
 exports.ComposerView = ComposerView;
-
-function openPostBox(num) {
-	postSM.feed('new', document.query(`#p${num} aside.posting`));
-}
-main.reply('openPostBox', openPostBox);
-
-window.addEventListener('message', function(event) {
-	const msg = event.data;
-	if (msg !== 'OK' && postForm)
-		postForm.uploadError(msg);
-}, false);
 
 main.$threads.on('click', 'a.quote', function(e) {
 	e.preventDefault();

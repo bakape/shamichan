@@ -1,6 +1,6 @@
 import {posts as lang} from '../../lang'
-import {HTML, commaList, load, makeAttrs} from '../../util'
-import {read, write} from '../../render'
+import {HTML, commaList, load, setAttrs, makeFrag} from '../../util'
+import {write} from '../../render'
 
 // Uploaded file data to be embeded in thread and reply creation or appendage
 // requests
@@ -18,34 +18,31 @@ const acceptedFormats = commaList([
 // Mixin for handling file uploads
 export default class UploadForm {
 	el: Element
+	$spoiler: HTMLSpanElement
 	$uploadStatus: Element
 	$uploadInput: HTMLInputElement
 
-	// Return the HTML of the file upload elements and intialize the mixin
+	// Initialize the mixin by rendering and assigning the various upload form
+	// elements
 	renderUploadForm() {
-		read(() => {
-			this.$uploadStatus = this.el.querySelector(".upload-status")
-			this.$uploadInput =
-				this.el
-				.querySelector("input[name=image]") as HTMLInputElement
-		})
-
-		const attrs = {
+		this.$uploadInput = document.createElement("input")
+		setAttrs(this.$uploadInput, {
 			type: "file",
 			name: "image",
 			accept: acceptedFormats,
 			required: "",
-		}
-		return HTML
-			`<span class="upload-container">
-				<input type="checkbox" name="spoiler">
-				<label for="spoiler" class="spoiler">
-					${lang.spoiler}
-				</label>
-				<strong class="upload-status"></strong>
-				<br>
-				<input ${makeAttrs(attrs)}>
-			</span>`
+		})
+
+		this.$spoiler = document.createElement("span")
+		const html = HTML
+			`<input type="checkbox" name="spoiler">
+			<label for="spoiler" class="spoiler">
+				${lang.spoiler}
+			</label>`
+		this.$spoiler.append(makeFrag(html))
+
+		this.$uploadStatus = document.createElement("strong")
+		this.$uploadInput.setAttribute("class", "upload-status")
 	}
 
 	// Read the file from $uploadInput and send as a POST request to the server.

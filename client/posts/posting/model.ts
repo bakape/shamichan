@@ -9,11 +9,13 @@ import {postSM, postEvent, postState} from "./main"
 import {applyMixins} from "../../util"
 import PostView from "../view"
 import {SpliceResponse} from "../../client"
+import {FileData} from "./upload"
 
 type BufferedMessage = [message, any]
 
 // Form Model of an OP post
 export class OPFormModel extends OP implements FormModel {
+	sentAllocRequest: boolean
 	bodyLength: number
 	parsedLines: number
 	view: FormView
@@ -28,6 +30,7 @@ export class OPFormModel extends OP implements FormModel {
 	init: () => void
 	lastBodyLine: () => string
 	parseInput: (val: string) => void
+	requestAlloc: (body: string|null, image: FileData|null) => void
 	send: (type: message, msg: any) => void
 
 	constructor(id: number) {
@@ -53,6 +56,7 @@ export class OPFormModel extends OP implements FormModel {
 
 // Form model for regular reply posts
 export class ReplyFormModel extends Post implements FormModel {
+	sentAllocRequest: boolean
 	bodyLength: number
 	parsedLines: number
 	view: FormView
@@ -67,6 +71,7 @@ export class ReplyFormModel extends Post implements FormModel {
 	init: () => void
 	lastBodyLine: () => string
 	parseInput: (val: string) => void
+	requestAlloc: (body: string|null, image: FileData|null) => void
 	send: (type: message, msg: any) => void
 
 	constructor() {
@@ -88,11 +93,12 @@ export class ReplyFormModel extends Post implements FormModel {
 
 // Override mixin for post authoring models
 export class FormModel {
-	bodyLength: number = 0  // Compound length of the input text body
-	parsedLines: number = 0 // Number of closed, commited and parsed lines
+	sentAllocRequest: boolean
+	bodyLength: number = 0    // Compound length of the input text body
+	parsedLines: number = 0   // Number of closed, commited and parsed lines
 	body: string
 	view: PostView & FormView
-	state: TextState        // State of the underlying normal post model
+	state: TextState          // State of the underlying normal post model
 
 	// State of line being edditted. Must be seperated to not affect the
 	// asynchronous updates of commited lines
@@ -146,6 +152,10 @@ export class FormModel {
 		if (exceeding > 0) {
 			this.view.trimInput(exceeding)
 			return this.parseInput(val.slice(0, -exceeding))
+		}
+
+		if (!this.sentAllocRequest) {
+			return this.requestAlloc(val, null)
 		}
 
 		if (lenDiff === 1 && val.slice(0, -1) === old) {
@@ -235,6 +245,11 @@ export class FormModel {
 			this.resetState()
 			this.inputState.line = lastLine
 		}
+	}
+
+	// Request alocation of a draft post to the server
+	requestAlloc(body: string|null, image: FileData|null) {
+
 	}
 
 	// Close the form and revert to regular post
