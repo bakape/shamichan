@@ -143,8 +143,7 @@
 	function checkAllLoaded() {
 		// This function might be called multiple times. Only load the client,
 		// when all polyfills are loaded.
-		scriptCount--
-		if (scriptCount === 0) {
+		if (--scriptCount === 0) {
 			loadClient()
 		}
 	}
@@ -153,6 +152,14 @@
 		System.config({
 			baseURL: '/assets/js',
 			defaultJSExtensions: true,
+			meta: {
+				"es5/*": {
+					format: "register"
+				},
+				"es6/*": {
+					format: "register"
+				}
+			}
 		})
 
 		System.import('es' + (legacy ? 5 : 6) + '/main')
