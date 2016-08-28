@@ -109,6 +109,9 @@ figcaption {
 	& > *:before {
 		content: ' ';
 	}
+	& > .act:not(.expanded):before {
+		content: " [";
+	}
 }
 
 figure {
