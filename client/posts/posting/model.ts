@@ -223,17 +223,19 @@ export class FormModel {
 			}
 		}
 
-		// Find last common character and the differing part
-		const maxLen = Math.max(old.length, val.length),
-			vOffset = val.length - maxLen,
-			oOffset = old.length - maxLen
-		for (let i = maxLen; i >= start; i--) {
+		// Find the length of the deleted text from old
+		const max = Math.max(old.length, val.length),
+			vOffset = val.length - max - 1,
+			oOffset = old.length - max - 1
+		for (let i = max - 1; i >= start; i--) {
 			if (old[i + oOffset] !== val[i + vOffset]) {
 				len = i + oOffset - start + 1
-				text = val.slice(start).slice(0, len - 1)
 				break
 			}
 		}
+
+		// Find text to be inserted at the start position
+		text = val.substring(start, val.lastIndexOf(old.slice(start + len)))
 
 		this.send(message.splice, {start, len, text})
 		this.bodyLength += lenDiff
