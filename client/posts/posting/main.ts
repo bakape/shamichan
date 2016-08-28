@@ -83,6 +83,7 @@ postSM.wildAct(postEvent.error, () =>
 	(stylePostControls(el =>
 		el.classList.add("errored")),
 	postForm && postForm.renderError(),
+	window.onbeforeunload = null,
 	postState.errored))
 
 // Reset state during page navigation
