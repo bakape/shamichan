@@ -20,7 +20,7 @@ export function renderPostLink(num: number, board: string, op: number): string {
 	} else if (num == thread) { // OP post of this thread
 		text += ' ' + lang.OP
 	}
-	return postAnchor(`/${board}/${op}#${num}`, text)
+	return postAnchor(`/${board}/${op}#p${num}`, text)
 }
 
 // Render the anchor element of a post link
