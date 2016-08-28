@@ -143,7 +143,7 @@ export class FormView extends PostView implements UploadForm {
 
 	// Start a new line in the input field and close the previous one
 	startNewLine() {
-		const line = this.model.inputState.line.slice(0, -1),
+		const {line} = this.model.inputState,
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
 			this.$input.before(frag)

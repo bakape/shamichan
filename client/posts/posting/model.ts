@@ -107,6 +107,7 @@ export class ReplyFormModel extends Post implements FormModel {
 
 		if (body) {
 			req.body = body
+			this.body = body
 			this.bodyLength = body.length
 			this.inputState.line = body
 			this.reformatInput(body)

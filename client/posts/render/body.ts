@@ -128,9 +128,6 @@ export function parseOpenLine(state: TextState): string {
 function parseFragment(frag: string, data: PostData): string {
 	let html = ""
 	for (let word of frag.split(" ")) {
-		if (!frag) {
-			continue
-		}
 		if (html) {
 			html += " "
 		}
@@ -138,11 +135,12 @@ function parseFragment(frag: string, data: PostData): string {
 			if (/^>{2,}\d+$/.test(word)) {
 				// Post links
 				html += parsePostLink(word, data.links)
+				continue
 			} else if (/^>{3,}\/\w+\//.test(word)) {
 				// Internal and custom reference URLs
 				html += parseReference(word)
+				continue
 			}
-			continue
 		} else if (word.startsWith("http") || word.startsWith("magnet:?")) {
 			// Generic URLs
 			html += parseURL(word)
