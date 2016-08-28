@@ -59,7 +59,7 @@ export function parseTerminatedLine(line: string, data: PostData): string {
 	} else if (line[0] === "#") {
 		const m = line.match(/^#(flip|\d*d\d+|8ball)$/)
 		if (m) {
-			return parseCommand(m[1], data)
+			return html + parseCommand(m[1], data) + terminateTags(state, true)
 		}
 	}
 
@@ -215,7 +215,7 @@ function parseURL(bit: string): string {
 function parseCommand(bit: string, {commands, state}: PostData): string {
 	// Guard against the first command being an invalid dice roll
 	if (!commands) {
-		return ""
+		return "#" + bit
 	}
 
 	let inner: string
@@ -249,5 +249,5 @@ function parseCommand(bit: string, {commands, state}: PostData): string {
 	if (inner !== undefined) {
 		return `<strong>#${bit} (${inner})</strong>`
 	}
-	return ""
+	return "#" + bit
 }
