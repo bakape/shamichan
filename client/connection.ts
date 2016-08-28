@@ -189,7 +189,7 @@ export function synchronise() {
 	const msg: SyncRequest = {
 		board: page.board,
 		thread: page.thread,
-		ctr: syncCounter || 0,
+		ctr: syncCounter,
 	}
 	let type = message.synchronise
 

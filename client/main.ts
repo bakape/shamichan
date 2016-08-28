@@ -40,11 +40,11 @@ async function start() {
 	await loadFromDB()
 	renderPage()
 	new BoardNavigation()
-	connect()
 	bindThreadCreation()
 	bindEtc()
 	exec()
 	await pageLoader
+	connect()
 	displayLoading(false)
 }
 
