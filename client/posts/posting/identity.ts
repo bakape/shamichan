@@ -14,6 +14,15 @@ interface Identity extends ChangeEmitter {
 	[index: string]: any
 }
 
+// Base of any post allocation request
+export interface PostCredentials {
+	name?: string
+	email?: string
+	auth?: string // TODO
+	password?: string
+	[index: string]: any
+}
+
 // Maximum lengths of input fields
 const maxLengths: {[key: string]: number} = {
 	name: 50,
@@ -73,3 +82,19 @@ class IdentityPanel extends BannerModal {
 
 defer(() =>
 	new IdentityPanel())
+
+// Generate a new base post allocation request
+export function newAllocRequest(): PostCredentials {
+	const req: PostCredentials = {
+		password: identity.postPassword,
+	} as any
+
+	for (let key of ["name", "email"]) {
+		const val = identity[key]
+		if (val) {
+			req[key] = val
+		}
+	}
+
+	return req
+}

@@ -6,67 +6,6 @@ const main = require('./main'),
 	{_, common, dispatcher, util, posts, state} = main;
 
 _.extend(dispatcher, {
-	[common.INSERT_POST](message) {
-		let [msg, bump] = message;
-		bump = bump && state.page.get('live');
-		const isThread = !msg.op,
-			{num} = msg;
-		if (isThread)
-			state.syncs[num] = 1;
-		msg.editing = true;
-
-		// Did I create this post?
-		let el;
-		const {nonce} = msg;
-		delete msg.nonce;
-		const myNonce = main.request('nonce:get')[nonce];
-		if (myNonce && myNonce.tab === state.page.get('tabID')) {
-			// posted in this tab; transform placeholder
-			state.ownPosts[num] = true;
-			main.oneeSama.trigger('insertOwnPost', msg);
-			main.postSM.feed('alloc', msg);
-			bump = false;
-			main.request('nonce:destroy', nonce);
-
-			// if we've already made a placeholder for this post, use it
-			const postForm = main.request('postForm');
-			if (postForm && postForm.el)
-				el = postForm.el;
-		}
-
-		// Add to my post set. Separate `if`, so posts form other tabs also
-		// register.
-		if (myNonce) {
-			msg.mine = true;
-			state.mine.write(num);
-		}
-		state.addLinks(msg.links);
-
-		// Create model
-		const model = new posts.models[isThread ? 'Thread' : 'Post'](msg);
-		const view = new posts[isThread ? 'Section' : 'Article']({model, el,
-			id: num});
-		if (!el)
-			view.render().insertIntoDOM();
-		view.clientInit();
-
-		checkRepliedToMe(msg.links, num);
-		main.request('post:inserted', model);
-
-		if (isThread)
-			return;
-		const parent = state.posts.get(msg.op);
-		if (!parent)
-			return;
-		parent.get('replies').push(num);
-		if (state.page.get('thread'))
-			return;
-		parent.dispatch('shiftReplies');
-
-		// Bump thread to page top
-		if (bump)
-			parent.dispatch('bumpThread');
-	},
 	[common.INSERT_IMAGE](msg) {
 		const [num, img] = msg;
 
@@ -79,15 +18,6 @@ _.extend(dispatcher, {
 		// If the image gets inseted into the postForm, we don't need the
 		// generic model to fire a separate image render
 		modelHandler(num, model => model.setImage(img, toPostForm));
-	},
-	[common.FINISH_POST](msg) {
-		const [num] = msg;
-		delete state.ownPosts[num];
-		modelHandler(num, function (model) {
-			// No change event listener to avoid extra overhead
-			model.set('editing', false);
-			model.dispatch('renderEditing', false);
-		});
 	},
 	[common.DELETE_POSTS](msg) {
 		modelHandler(msg[0], model => model.deletePost(msg[1]));

@@ -1,7 +1,7 @@
 // Logic for manipulating the views and FSM of post authoring and communicated
 // the results to the server
 
-import {message, send} from "../../connection"
+import {message, send, handlers} from "../../connection"
 import {OP, Post, TextState, ThreadData} from "../models"
 import {FormView, OPFormView} from "./view"
 import {posts} from "../../state"
@@ -10,8 +10,15 @@ import {applyMixins} from "../../util"
 import PostView from "../view"
 import {SpliceResponse} from "../../client"
 import {FileData} from "./upload"
+import {newAllocRequest, PostCredentials} from "./identity"
 
+// A message created while disconnected for later sending
 type BufferedMessage = [message, any]
+
+interface PostCreationRequest extends PostCredentials {
+	image?: FileData
+	body?: string
+}
 
 // Form Model of an OP post
 export class OPFormModel extends OP implements FormModel {
@@ -30,6 +37,7 @@ export class OPFormModel extends OP implements FormModel {
 	init: () => void
 	lastBodyLine: () => string
 	parseInput: (val: string) => void
+	reformatInput: (val: string) => void
 	requestAlloc: (body: string|null, image: FileData|null) => void
 	send: (type: message, msg: any) => void
 
@@ -73,7 +81,7 @@ export class ReplyFormModel extends Post implements FormModel {
 	init: () => void
 	lastBodyLine: () => string
 	parseInput: (val: string) => void
-	requestAlloc: (body: string|null, image: FileData|null) => void
+	reformatInput: (val: string) => void
 	send: (type: message, msg: any) => void
 
 	constructor() {
@@ -90,6 +98,43 @@ export class ReplyFormModel extends Post implements FormModel {
 		})
 
 		this.init()
+	}
+
+	// Request alocation of a draft post to the server
+	requestAlloc(body: string|null, image: FileData|null) {
+		this.sentAllocRequest = true
+		const req = newAllocRequest() as PostCreationRequest
+
+		if (body) {
+			req.body = body
+			this.bodyLength = body.length
+			this.inputState.line = body
+			this.reformatInput(body)
+		}
+
+		// TODO: Image allocation
+
+		send(message.insertPost, req)
+		handlers[message.insertPost] = (id: number) =>
+			(this.onAllocation(id),
+			delete handlers[message.insertPost])
+	}
+
+	// Handle draft post allocation
+	onAllocation(id: number) {
+		postSM.feed(postEvent.alloc)
+		this.id = id
+		posts.add(this)
+
+		// Not the actual time of allocation, but who cares? Decreases the
+		// payload of the response.
+		this.time = Math.floor(Date.now() / 1000)
+
+		this.view.renderAlloc()
+
+		// TODO: Image insertion
+		// TODO: Add to state.mine and persist
+
 	}
 }
 
@@ -111,6 +156,7 @@ export class FormModel {
 
 	spliceLine: (line: string, msg: SpliceResponse) => string
 	resetState: () => void
+	requestAlloc: (body: string|null, image: FileData|null) => void
 
 	// Initialize state
 	init() {
@@ -240,20 +286,19 @@ export class FormModel {
 		this.send(message.splice, {start, len, text})
 		this.bodyLength += lenDiff
 		this.inputState.line = val
-
-		// If splice contained newlines, reformat text accordingly
-		const lines = val.split("\n")
-		if (lines.length > 1) {
-			const lastLine = lines[lines.length - 1]
-			this.view.injectLines(lines.slice(0, -1), lastLine)
-			this.resetState()
-			this.inputState.line = lastLine
-		}
+		this.reformatInput(val)
 	}
 
-	// Request alocation of a draft post to the server
-	requestAlloc(body: string|null, image: FileData|null) {
-
+	// Reformat the text, if the input contains newlines
+	reformatInput(val: string) {
+		if (val.indexOf("\n") === -1) {
+			return
+		}
+		const lines = val.split("\n"),
+			lastLine = lines[lines.length - 1]
+		this.view.injectLines(lines.slice(0, -1), lastLine)
+		this.resetState()
+		this.inputState.line = lastLine
 	}
 
 	// Close the form and revert to regular post

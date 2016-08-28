@@ -90,7 +90,6 @@ export class Post extends Model implements PostData {
 
 	// PostData properties
 	editing: boolean
-	op: number
 	image: ImageData
 	time: number
 	body: string

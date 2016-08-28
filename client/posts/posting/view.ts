@@ -6,6 +6,7 @@ import {Post, OP} from "../models"
 import {isMobile} from "../../state"
 import {setAttrs, makeFrag, applyMixins} from "../../util"
 import {parseTerminatedLine} from "../render/body"
+import {renderHeader} from "../render/posts"
 import {write} from "../../render"
 import {ui} from "../../lang"
 import {$threadContainer} from "../../page/thread"
@@ -106,7 +107,8 @@ export class FormView extends PostView implements UploadForm {
 	initDraft() {
 		this.el.querySelector("header").classList.add("temporary")
 		write(() =>
-			$threadContainer.append(this.el))
+			($threadContainer.append(this.el),
+			this.$input.focus()))
 	}
 
 	// Handle input events on $input
@@ -184,6 +186,17 @@ export class FormView extends PostView implements UploadForm {
 		write(() =>
 			(this.$blockquote.classList.add("errored"),
 			this.$input.setAttribute("contenteditable", "false")))
+	}
+
+	// Transition into allocated post
+	renderAlloc() {
+		this.id = "p" + this.model.id
+		write(() =>
+			(this.el.id = this.id as string,
+			this.el.querySelector("header").classList.remove("temporary"),
+			renderHeader(this.el, this.model),
+			this.$cancel.remove(),
+			this.$postControls.append(this.renderDone())))
 	}
 }
 

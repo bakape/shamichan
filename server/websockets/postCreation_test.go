@@ -302,7 +302,7 @@ func (*DB) TestPostCreation(c *C) {
 
 	sv := newWSServer(c)
 	defer sv.Close()
-	cl, _ := sv.NewClient()
+	cl, wcl := sv.NewClient()
 	Clients.Add(cl, SyncID{1, "a"})
 	cl.IP = "::1"
 
@@ -321,6 +321,8 @@ func (*DB) TestPostCreation(c *C) {
 	data := marshalJSON(req, c)
 
 	c.Assert(insertPost(data, cl), IsNil)
+
+	assertMessage(wcl, []byte("026"), c)
 
 	// Get the time value from the DB and normalize against it
 	var then int64

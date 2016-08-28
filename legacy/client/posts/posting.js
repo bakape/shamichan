@@ -96,26 +96,6 @@ const ComposerView = Backbone.View.extend({
 		'click #toggle': 'onToggle'
 	},
 
-	initialize(args) {
-		this.listenTo(this.model, {
-			'change': this.renderButtons,
-			'change:spoiler': this.renderSpoilerPane
-		});
-
-		imouto.hook('spoilerTag', util.touchable_spoiler_tag);
-	},
-
-	// Initial render
-	render({destination, section}) {
-		this.$meta = $('<header><a class="nope"><b/></a> <time/></header>');
-
-		// Add a menu to the postform
-		main.oneeSama.trigger('draft', this.$el);
-		this.renderIdentity();
-
-		main.$threads.find('aside.posting').hide();
-	},
-
 	// Render the name, email, and admin title, if any
 	renderIdentity() {
 		// Model has already been alocated and has a proper identity rendered
@@ -146,25 +126,6 @@ const ComposerView = Backbone.View.extend({
 			$tag.removeAttr('href').removeAttr('target').attr('class', 'nope');
 	},
 
-	// Construct the message for post allocation in the database
-	allocationMessage(text, image) {
-		var msg = {nonce: main.request('nonce:create')};
-
-		function opt(key, val) {
-			if (val)
-				msg[key] = val;
-		}
-
-		opt('name', main.$name.val().trim());
-		opt('email', main.$email.val().trim());
-		opt('subject', this.$subject.val().trim());
-		opt('frag', text);
-		opt('image', image);
-		opt('op', this.model.get('op'));
-
-		return msg;
-	},
-
 	onKeyDown(event) {
 		handle_shortcut.bind(this)(event);
 	},
@@ -184,31 +145,6 @@ const ComposerView = Backbone.View.extend({
 			spoiler: pick.index,
 			nextSpoiler: pick.next
 		});
-	},
-
-	onAllocation(msg) {
-		const num = msg.num;
-		state.ownPosts[num] = num;
-		this.model.set({num: num});
-		this.flushPending();
-		var header = $(main.oneeSama.header(msg));
-		this.$meta.replaceWith(header);
-		this.$meta = header;
-
-		/*
-		 TODO: Hide threads that are over THREADS_PER_PAGE. Also would need to be
-		 removed from syncs client and server-side. Hmm.
-		 */
-
-		this.$el.attr('id', 'p' + num);
-
-		if (msg.image)
-			this.insertUploaded(msg.image);
-
-		if (this.$uploadForm)
-			this.$uploadForm.append(this.$submit);
-		else
-			this.$blockquote.after(this.$submit);
 	},
 
 	// Insert an image that has been uploaded and processed by the server

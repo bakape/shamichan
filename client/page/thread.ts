@@ -33,7 +33,7 @@ export default function renderThread(thread: ThreadData) {
 	postCollection.addOP(opModel)
 
 	for (let id in posts) {
-		els.push(createPost(thread.posts[id]))
+		els.push(createPost(posts[id]))
 	}
 	$threadContainer.append(...els)
 

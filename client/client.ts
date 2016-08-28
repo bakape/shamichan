@@ -2,7 +2,10 @@
 
 import {handlers, message, connSM, connEvent} from './connection'
 import {posts} from './state'
-import {Post, PostLinks, Command} from './posts/models'
+import {Post, PostLinks, Command, PostData} from './posts/models'
+import PostView from "./posts/view"
+import {$threadContainer} from "./page/thread"
+import {write} from "./render"
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -24,6 +27,14 @@ interface CommandMessage extends Command {
 	id: number
 }
 
+// Run a function on a model, if it exists
+function handle(id: number, fn: (m: Post) => void) {
+	const model = posts.get(id)
+	if (model) {
+		fn(model)
+	}
+}
+
 handlers[message.invalid] = (msg: string) => {
 
 	// TODO: More user-frienly critical error reporting
@@ -32,32 +43,48 @@ handlers[message.invalid] = (msg: string) => {
 	connSM.feed(connEvent.error)
 }
 
+handlers[message.insertPost] = (data: PostData) => {
+	// If the post is already in the global collection, it was just creaed by
+	// this client
+	const mine = !!posts.get(data.id)
+	if (mine) {
+		return
+	}
+
+	const model = new Post(data)
+	posts.add(model)
+	const view = new PostView(model)
+	write(() =>
+		$threadContainer.append(view.el))
+
+	// TODO: Hooks for triggering desktop notifications
+
+}
+
 handlers[message.append] = ([id, char]: number[]) =>
 	handle(id, m =>
 		m.append(char))
+
 handlers[message.backspace] = (id: number) =>
 	handle(id, m =>
 		m.backspace())
+
 handlers[message.splice] = (msg: SpliceResponse) =>
 	handle(msg.id, m =>
 		m.splice(msg))
+
 handlers[message.link] = ({id, links}: LinkMessage) =>
 	handle(id, m =>
 		m.insertLink(links))
+
 handlers[message.backlink] = ({id, links}: LinkMessage) =>
 	handle(id, m =>
 		m.insertBacklink(links))
+
 handlers[message.command] = ({id, type, val}: CommandMessage) =>
 	handle(id, m =>
 		m.insertCommand(type, val))
+
 handlers[message.closePost] = (id: number) =>
 	handle(id, m =>
 		m.closePost())
-
-// Run a function on model, if it exists
-function handle(id: number, fn: (m: Post) => void) {
-	const model = posts.get(id)
-	if (model) {
-		fn(model)
-	}
-}

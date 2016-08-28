@@ -4,7 +4,7 @@ import {
 import {write, $threads} from '../../render'
 import {FormView, inputType, renderInput, InputSpec} from '../../forms'
 import {Captcha} from '../../captcha'
-import identity from './identity'
+import {PostCredentials, newAllocRequest} from './identity'
 import {page, boardConfig} from '../../state'
 import {posts as lang, ui} from '../../lang'
 import {send, message, handlers} from '../../connection'
@@ -12,19 +12,10 @@ import UploadForm, {FileData} from './upload'
 import navigate from '../../history'
 import {OPFormModel} from './model'
 
-export interface PostCredentials extends Captcha {
-	name?: string
-	email?: string
-	auth?: string // TODO
-	password: string
-	image?: FileData
-
-	[index: string]: any
-}
-
-interface ThreadCreationRequest extends PostCredentials {
+interface ThreadCreationRequest extends PostCredentials, Captcha {
 	subject: string
 	board: string
+	image?: FileData
 }
 
 // Response codes for thread and post insertion requests
@@ -166,9 +157,7 @@ class ThreadForm extends FormView implements UploadForm {
 	}
 
 	async sendRequest() {
-		const req: ThreadCreationRequest = {
-			password: identity.postPassword,
-		} as any
+		const req = newAllocRequest() as ThreadCreationRequest
 
 		if (this.needImage) {
 			req.image = await this.uploadFile()
@@ -178,12 +167,6 @@ class ThreadForm extends FormView implements UploadForm {
 			}
 		}
 
-		for (let key of ["name", "email"]) {
-			const val = identity[key]
-			if (val) {
-				req[key] = val
-			}
-		}
 		req.subject = inputValue(this.el, "subject")
 		this.selectedBoard = req.board =
 			page.board === "all"

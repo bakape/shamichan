@@ -227,6 +227,12 @@ func insertPost(data []byte, c *Client) error {
 	}
 	updates["log"] = r.Row.Field("log").Append(msg)
 
+	// Ensure the client knows the post ID before the update public post
+	// inserttion message is sent
+	if err := c.sendMessage(messageInsertPost, post.ID); err != nil {
+		return err
+	}
+
 	q = r.Table("threads").Get(sync.OP).Update(updates)
 	if err := db.Write(q); err != nil {
 		return err

@@ -1,10 +1,11 @@
-import {escape, pluralize, pad} from '../../util'
+import {escape, pluralize, pad, makeAttrs} from '../../util'
 import {renderImage, renderFigcaption} from './image'
 import {renderBacklinks} from './etc'
 import {renderBody} from './body'
 import {PostData, ThreadData} from '../models'
 import {posts as lang, time as timeLang} from '../../lang'
 import options from '../../options'
+import {PostCredentials} from "../posting/identity"
 
 // Populate post template
 export default function (frag: DocumentFragment, data: PostData|ThreadData) {
@@ -14,16 +15,10 @@ export default function (frag: DocumentFragment, data: PostData|ThreadData) {
 		el.hidden = false
 	}
 
-	renderTime(frag.querySelector("time"), data.time)
-	renderName(frag.querySelector(".name"), data)
 	frag.querySelector("blockquote").innerHTML = renderBody(data)
 	frag.querySelector("small").innerHTML = renderBacklinks(data.backlinks)
 
-	const nav = frag.querySelector("nav"),
-		link = nav.firstChild as HTMLAnchorElement,
-		qoute = nav.lastChild as HTMLAnchorElement
-	link.href = qoute.href = `#p${data.id}`
-	qoute.textContent = data.id.toString()
+	renderHeader(frag, data)
 
 	if (data.image) {
 		renderFigcaption(frag.querySelector("figcaption"), data.image)
@@ -31,32 +26,56 @@ export default function (frag: DocumentFragment, data: PostData|ThreadData) {
 	}
 }
 
+// Render the header on top of the post
+export function renderHeader(frag: NodeSelector, data: PostData) {
+	renderTime(frag.querySelector("time"), data.time)
+	renderName(frag.querySelector(".name"), data)
+
+	const nav = frag.querySelector("nav"),
+		link = nav.firstChild as HTMLAnchorElement,
+		qoute = nav.lastChild as HTMLAnchorElement
+	link.href = qoute.href = `#p${data.id}`
+	qoute.textContent = data.id.toString()
+}
+
 // Render the name of a post's poster
-export function renderName(el: Element, data: PostData) {
-	let text = ""
-	const {trip, name, auth} = data
+export function renderName(
+	el: Element,
+	{trip, name, auth, email}: PostCredentials,
+) {
+	let html = ""
+
+	if (email) {
+		const attrs = {
+			class: "email",
+			href: "mailto:" + encodeURI(email),
+			target: "_blank",
+		}
+		html += `<a ${makeAttrs(attrs)}>`
+	}
 
 	if (name || !trip) {
 		if (name) {
-			text += escape(name)
+			html += escape(name)
 		} else {
-			text += lang.anon
+			html += lang.anon
 		}
 		if (trip) {
-			text += ' '
+			html += ' '
 		}
 	}
 
 	if (trip) {
-		const code = el.lastElementChild as HTMLElement
-		code.hidden = false
-		code.textContent = escape(trip)
+		html += `<code>!${escape(trip)}</code>`
+	}
+	if (email) {
+		html += "</a>"
 	}
 	if (auth) { // Render staff title
 		el.classList.add("admin")
-		text += ` ## ${auth}`
+		html += ` ## ${escape(auth)}`
 	}
-	el.prepend(text)
+	el.innerHTML = html
 }
 
 // TODO: Resolve, once moderation implemented
