@@ -15,7 +15,7 @@ export default function renderThread(thread: ThreadData) {
 	const frag = importTemplate("thread"),
 		title = `/${page.board}/ - ${escape(thread.subject)} (#${thread.id})`
 
-	frag.querySelector("h1").textContent = title
+	frag.querySelector("h1").innerHTML = title
 
 	$threadContainer = frag.querySelector("#thread-container")
 	const els: Element[] = [],
