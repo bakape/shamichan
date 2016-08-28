@@ -63,8 +63,12 @@ function renderThread(thread: ThreadData): DocumentFragment {
 	}
 
 	const $links = frag.querySelector(".thread-links")
-	$links.firstElementChild.textContent =
-		`${thread.postCtr}/${thread.imageCtr}`
+	const $board = $links.querySelector(".board") as HTMLElement
+	$board.hidden = false
+	$board.textContent = `/${thread.board}/`
+	$links
+		.querySelector(".counters")
+		.textContent = `${thread.postCtr}/${thread.imageCtr}`
 	const [$expand, $lastN] = $links.querySelectorAll("a.history")
 	$expand.setAttribute("href", href)
 	$lastN.setAttribute("href", `${href}?last=${lastN}`)

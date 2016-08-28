@@ -44,8 +44,12 @@ for (let el of document.head.querySelectorAll("template")) {
 {
 	const frag = templates["catalog-thread"],
 		links = frag.querySelector(".thread-links")
-	links.firstElementChild.setAttribute("title", lang.navigation.catalogOmit)
-	links.querySelector("a.history").textContent = lang.navigation.expand
+	links
+		.querySelector(".counters")
+		.setAttribute("title", lang.navigation.catalogOmit)
+	links
+		.querySelector("a.history")
+		.textContent = lang.navigation.expand
 }
 {
 	const frag = templates["form"]
