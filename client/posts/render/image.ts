@@ -173,7 +173,7 @@ function imageLink(el: Element, data: ImageData) {
 	}
 
 	setAttrs(el, attrs)
-	el.textContent = name
+	el.innerHTML = name
 }
 
 // Render the actual thumbnail image
