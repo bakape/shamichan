@@ -23,13 +23,13 @@
 		}
 	</script>
 	<noscript>
-		<h1 id="noscriptHeader">
+		<h1 id="noscript-header">
 			>disabling JavaScript
 		</h1>
 	</noscript>
 	<!-- Templates for our various views !-->
 	<template name="article">
-		<header>
+		<header class="spaced">
 			<h3 hidden></h3>
 			<b class="name">
 				<code hidden></code>
@@ -47,7 +47,7 @@
 				</a>
 			</span>
 		</header>
-		<figcaption hidden>
+		<figcaption class="spaced" hidden>
 			<a class="image-toggle act" hidden></a>
 			<span></span>
 			<a></a>
@@ -108,11 +108,12 @@
 					<img>
 				</a>
 			</figure>
-			<small class="thread-links">
+			<small class="spaced thread-links">
 				<span></span>
 				<span class="act">
 					<a class="history"></a>
-					] [
+				</span>
+				<span class="act">
 					<a class="history"></a>
 				</span>
 			</small>
