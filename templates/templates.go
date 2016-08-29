@@ -107,6 +107,9 @@ func buildIndexTemplate(tmpl *template.Template, vars vars, isMobile bool) (
 		return
 	}
 
+	// Also strip all newlines
+	minified = bytes.Replace(minified, []byte{'\n'}, []byte{}, -1)
+
 	return Store{minified, util.HashBuffer(minified)}, nil
 }
 
