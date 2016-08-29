@@ -9,8 +9,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	"github.com/tdewolff/minify"
-	htmlMin "github.com/tdewolff/minify/html"
+	"github.com/dchest/htmlmin"
 )
 
 var (
@@ -101,9 +100,9 @@ func buildIndexTemplate(tmpl *template.Template, vars vars, isMobile bool) (
 		return
 	}
 
-	min := minify.New()
-	min.AddFunc("text/html", htmlMin.Minify)
-	minified, err := min.Bytes("text/html", buffer.Bytes())
+	minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
+		MinifyScripts: true,
+	})
 	if err != nil {
 		return
 	}
