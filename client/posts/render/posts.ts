@@ -32,9 +32,9 @@ export function renderHeader(frag: NodeSelector, data: PostData) {
 	renderName(frag.querySelector(".name"), data)
 
 	const nav = frag.querySelector("nav"),
-		link = nav.firstChild as HTMLAnchorElement,
-		qoute = nav.lastChild as HTMLAnchorElement
-	link.href = qoute.href = `#p${data.id}`
+		link = nav.firstElementChild as HTMLAnchorElement,
+		qoute = nav.lastElementChild as HTMLAnchorElement
+	link.href = `#p${data.id}`
 	qoute.textContent = data.id.toString()
 }
 
