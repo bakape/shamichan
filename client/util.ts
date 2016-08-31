@@ -166,10 +166,10 @@ export function pad(n: number): string {
 }
 
 // Template string tag function for HTML. Strips indentation and newlines.
-export function HTML(callSite: string[], ...args: string[]): string {
-	let output = callSite[0]
+export function HTML(base: TemplateStringsArray, ...args: string[]): string {
+	let output = base[0]
 	for (let i = 1; i <= args.length; i++) {
-		output += args[i - 1] + callSite[i]
+		output += args[i - 1] + base[i]
 	}
 	return output.replace(/[\t\n]+/g, '')
 }

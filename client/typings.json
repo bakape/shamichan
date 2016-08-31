@@ -3,7 +3,6 @@
     "es6-promise": "registry:npm/es6-promise#3.0.0+20160723033700"
   },
   "globalDependencies": {
-    "dom4": "registry:dt/dom4#1.5.0+20160412153730",
     "es6-promise": "registry:dt/es6-promise#0.0.0+20160614011821",
     "promise": "registry:dt/promise#7.1.1+20160602154553",
     "systemjs": "registry:dt/systemjs#0.19.29+20160702105636",
