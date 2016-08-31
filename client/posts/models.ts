@@ -207,7 +207,7 @@ export class Post extends Model implements PostData {
 
 	// Insert data about another post linking this post into the model
 	insertBacklink(links: PostLinks) {
-		this.extendField("links", links)
+		this.extendField("backlinks", links)
 		this.view.renderBacklinks()
 	}
 
