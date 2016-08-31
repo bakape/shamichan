@@ -56,6 +56,7 @@ func (*Tests) TestMarshalPublicBoardJSON(c *C) {
 	"hashCommands":false,
 	"notice":"",
 	"readOnly":true,
+	"rules":"",
 	"spoiler":"foo.png",
 	"textOnly":false,
 	"title":"Animu"
