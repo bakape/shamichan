@@ -136,7 +136,7 @@ function parseFragment(frag: string, data: PostData): string {
 				// Post links
 				html += parsePostLink(word, data.links)
 				continue
-			} else if (/^>{3,}\/\w+\//.test(word)) {
+			} else if (/^>{3,}\/\w+\/$/.test(word)) {
 				// Internal and custom reference URLs
 				html += parseReference(word)
 				continue
@@ -157,7 +157,7 @@ function parsePostLink(bit: string, links: PostLinks): string {
 	if (!links) {
 		return escape(bit)
 	}
-	const [ , extraQoutes, id] = bit.match(/>>(>*)(\d+)$/),
+	const [ , extraQoutes, id] = bit.match(/^>>(>*)(\d+)$/),
 		num = parseInt(id),
 		verified = links[num]
 	if (!verified) {
