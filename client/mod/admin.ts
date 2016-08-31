@@ -143,7 +143,7 @@ const specs: InputSpec[] = [
 export default class ConfigPanel extends AccountFormView {
 	constructor() {
 		const attrs = {
-			cls: 'wide-fields', // The panel needs much larger text inputs
+			class: 'wide-fields', // The panel needs much larger text inputs
 			noCaptcha: true,
 		}
 		super(attrs, () =>
@@ -151,17 +151,16 @@ export default class ConfigPanel extends AccountFormView {
 
 		// Request curent configuration and render the panel
 		send(message.configServer, null)
-		handlers[message.configServer] = async (conf: ServerConfigs) =>
+		handlers[message.configServer] = (conf: ServerConfigs) =>
 			this.handleResponse(conf)
 	}
 
 	// Render the panel element contents
 	render(conf: ServerConfigs) {
-		let html = table(specs, spec => {
-			[spec.label, spec.tooltip] = lang[spec.name]
-			spec.value = conf[spec.name]
-			return renderInput(spec)
-		})
+		const html = table(specs, spec =>
+			([spec.label, spec.tooltip] = lang[spec.name],
+			spec.value = conf[spec.name],
+			renderInput(spec)))
 		this.renderForm(makeFrag(html))
 	}
 

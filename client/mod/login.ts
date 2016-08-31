@@ -27,7 +27,8 @@ export const enum responseCode {
 	invalidCaptcha,
 }
 
-let loginID = localStorage.getItem("loginID"),
+// User ID and session ID currently in use
+export let loginID = localStorage.getItem("loginID"),
 	sessionToken = localStorage.getItem("sessionToken")
 
 // Only active AccountPanel instance
@@ -53,10 +54,7 @@ export default class AccountPanel extends TabbedModal {
 			"#changePassword":  this.loadConditionalView("mod/changePassword"),
 			"#configureServer": this.loadConditionalView("mod/admin"),
 			"#createBoard": this.loadConditionalView("mod/createBoard"),
-
-			// TODO: Board configuration UI
-			"#configureBoard": () =>
-				alert("TODO"),
+			"#configureBoard": this.loadConditionalView("mod/configureBoard"),
 		})
 
 		this.render = this.renderInitial

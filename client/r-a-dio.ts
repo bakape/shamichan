@@ -27,7 +27,7 @@ async function fetchData() {
 			},
 		},
 	} =
-		await fetchJSON('https://r-a-d.io/api')
+		await fetchJSON<any>('https://r-a-d.io/api')
 
 	const newData: RadioData = {np, listeners, dj}
 	if (!isMatch(newData, data)) {

@@ -24,18 +24,18 @@ const lang = (window as any).lang as LanguagePack
 
 // Export each container indivudually for namespacing purposes
 // Can't use destructuring, because it breaks with the SystemJS module compiler.
-export const posts = lang.posts
-export const ui = lang.ui
-export const banner = lang.banner
-export const images = lang.images
-export const navigation = lang.navigation
-export const reports = lang.reports
-export const time = lang.time
-export const sync = lang.sync
-export const syncwatch = lang.syncwatch
-export const mod = lang.mod
-export const opts = lang.opts
-export const identity = lang.identity
+export const posts = lang.posts,
+	ui = lang.ui,
+	banner = lang.banner,
+	images = lang.images,
+	navigation = lang.navigation,
+	reports = lang.reports,
+	time = lang.time,
+	sync = lang.sync,
+	syncwatch = lang.syncwatch,
+	mod = lang.mod,
+	opts = lang.opts,
+	identity = lang.identity
 export let admin: LnAdmin
 
 type StringTuple = [string, string]
@@ -199,5 +199,10 @@ function languageCSS() {
 defer(languageCSS)
 
 // Fetch the administrator language pack
-export const fetchAdminPack = async (): Promise<LnAdmin> =>
-	admin = admin || await fetchJSON(`/assets/lang/${options.lang}/admin.json`)
+export async function fetchAdminPack(): Promise<LnAdmin> {
+	if (admin) {
+		return admin
+	}
+	const path = `/assets/lang/${options.lang}/admin.json`
+	return admin = await fetchJSON<LnAdmin>(path)
+}

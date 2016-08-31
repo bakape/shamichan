@@ -39,7 +39,7 @@ func boardHTML(
 	if auth.IsBoard(params["board"]) {
 		serveIndexTemplate(res, req)
 	} else {
-		text404(res, req)
+		text404(res)
 	}
 }
 
@@ -52,17 +52,17 @@ func threadHTML(
 	board := params["board"]
 	id, err := strconv.ParseInt(params["thread"], 10, 64)
 	if err != nil {
-		text404(res, req)
+		text404(res)
 		return
 	}
 
 	valid, err := db.ValidateOP(id, board)
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
 	if !valid {
-		text404(res, req)
+		text404(res)
 		return
 	}
 

@@ -1,4 +1,4 @@
-import {accountPannel} from './login'
+import {accountPannel, loginID, sessionToken} from './login'
 import {write} from '../render'
 import {FormView, FormViewAttrs} from '../forms'
 import {mod as lang} from '../lang'
@@ -9,6 +9,12 @@ type FieldSpec = {
 	type: string
 	name: string
 	maxLength: number
+}
+
+// Common fields for authenticating `/admin` API request
+export interface LoginCredentials {
+	userID: string
+	session: string
 }
 
 // Specs for all available account management fields
@@ -27,6 +33,14 @@ for (let name of ["password", "repeat", "oldPassword", "newPassword"]) {
 		type: "password",
 		maxLength: 30,
 	}
+}
+
+// Create a new base request for private logged in AJAX queries
+export function newRequest<T extends LoginCredentials>(): T {
+	return {
+		userID: loginID,
+		session: sessionToken,
+	} as T
 }
 
 // Render account management input fields from specs
@@ -71,7 +85,7 @@ export default class AccountFormView extends FormView {
 
 	// Render a form field and embed the input fields inside it. Then append it
 	// to the parrent view.
-	renderForm(fields: DocumentFragment) {
+	renderForm(fields: Node) {
 		super.renderForm(fields)
 		accountPannel.toggleMenu(false)
 		write(() =>

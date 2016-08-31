@@ -113,8 +113,9 @@ func (c *Configs) marshalPublicJSON() ([]byte, error) {
 	v := reflect.ValueOf(*c)
 
 	// Copy the fields we need to a map
-	temp := make(map[string]interface{}, 10)
-	for i := 0; i < t.NumField(); i++ {
+	total := t.NumField()
+	temp := make(map[string]interface{}, total)
+	for i := 0; i < total; i++ {
 		field := t.Field(i)
 		if field.Tag.Get("public") != "true" {
 			continue
@@ -139,6 +140,7 @@ type BoardConfigs struct {
 	Spoiler   string              `json:"spoiler" gorethink:"spoiler" public:"true"`
 	Title     string              `json:"title" gorethink:"title" public:"true"`
 	Notice    string              `json:"notice" gorethink:"notice" public:"true"`
+	Rules     string              `json:"rules" gorethink:"rules" public:"true"`
 	Eightball []string            `json:"eightball" gorethink:"eightball"`
 	Banners   []string            `json:"banners" gorethink:"banners" public:"true"`
 	Staff     map[string][]string `json:"staff" gorethink:"staff"`
@@ -151,9 +153,9 @@ func (b *BoardConfigs) MarshalPublicJSON() ([]byte, error) {
 	v := reflect.ValueOf(*b)
 
 	// Convert all the fields of PostParseConfigs
-	temp := b.PostParseConfigs.toMap(9)
-
-	for i := 0; i < t.NumField(); i++ {
+	total := t.NumField()
+	temp := b.PostParseConfigs.toMap(t.NumField())
+	for i := 0; i < total; i++ {
 		field := t.Field(i)
 		if field.Tag.Get("public") != "true" {
 			continue

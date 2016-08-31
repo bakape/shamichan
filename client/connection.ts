@@ -47,7 +47,6 @@ export const enum message {
 	// Board and server administration
 	configServer,
 	createBoard,
-	configBoard,
 }
 
 export type MessageHandler = (msg: {}) => void

@@ -53,8 +53,10 @@ func startWebServer() (err error) {
 // function for easier testability.
 func createRouter() http.Handler {
 	r := httptreemux.New()
-	r.NotFoundHandler = text404
-	r.PanicHandler = textErrorPage
+	r.NotFoundHandler = func(w http.ResponseWriter, _ *http.Request) {
+		text404(w)
+	}
+	r.PanicHandler = text500
 
 	// HTML
 	r.GET("/", wrapHandler(redirectToDefault))
@@ -63,13 +65,20 @@ func createRouter() http.Handler {
 	r.GET("/:board/:thread", threadHTML)
 
 	// JSON API
-	r.GET("/json/all/", wrapHandler(allBoardJSON))
-	r.GET("/json/:board/", boardJSON)
-	r.GET("/json/:board/:thread", threadJSON)
-	r.GET("/json/post/:post", servePost)
-	r.GET("/json/config", wrapHandler(serveConfigs))
-	r.GET("/json/boardConfig/:board", serveBoardConfigs)
-	r.GET("/json/boardList", wrapHandler(serveBoardList))
+	json := r.NewGroup("/json")
+	json.GET("/all/", wrapHandler(allBoardJSON))
+	json.GET("/:board/", boardJSON)
+	json.GET("/:board/:thread", threadJSON)
+	json.GET("/post/:post", servePost)
+	json.GET("/config", wrapHandler(serveConfigs))
+	json.GET("/boardConfig/:board", serveBoardConfigs)
+	json.GET("/boardList", wrapHandler(serveBoardList))
+	json.GET("/positions/:position/:user", serveStaffPositions)
+
+	// Adminitration JSON API for logged in users
+	admin := r.NewGroup("/admin")
+	admin.POST("/configureBoard", wrapHandler(configureBoard))
+	admin.POST("/boardConfig", wrapHandler(servePrivateBoardConfigs))
 
 	// Assets
 	assetServer = http.FileServer(http.Dir(webRoot))

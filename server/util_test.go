@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,7 +10,7 @@ import (
 )
 
 const (
-	notFound = "404 Not found"
+	notFound = "404 Not found\n"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -93,7 +94,8 @@ func (w *WebServer) TestText404(c *C) {
 
 func (w *WebServer) TestText500(c *C) {
 	rec, req := newPair(c, "/")
-	text404(rec, req)
-	assertCode(rec, 404, c)
-	assertBody(rec, "404 Not found", c)
+	req.RemoteAddr = "::1"
+	text500(rec, req, errors.New("foo"))
+	assertCode(rec, 500, c)
+	assertBody(rec, "500 foo\n", c)
 }

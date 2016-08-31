@@ -46,7 +46,7 @@ func (w *WebServer) TestPanicHandler(c *C) {
 		panic(errors.New("foo"))
 	})
 	r.GET("/panic", h)
-	r.PanicHandler = textErrorPage
+	r.PanicHandler = text500
 	rec := httptest.NewRecorder()
 	req := newRequest(c, "/panic")
 
@@ -56,7 +56,7 @@ func (w *WebServer) TestPanicHandler(c *C) {
 	log.SetOutput(os.Stdout)
 
 	assertCode(rec, 500, c)
-	assertBody(rec, "500 foo", c)
+	assertBody(rec, "500 foo\n", c)
 }
 
 func (w *WebServer) TestGzip(c *C) {

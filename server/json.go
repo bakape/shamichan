@@ -12,8 +12,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-// Serve JSON retrieved from the database and handle i ETag-related
-// functionality
+// Serve JSON retrieved from the database and handle ETag-related functionality
 func serveJSON(
 	res http.ResponseWriter,
 	req *http.Request,
@@ -21,7 +20,7 @@ func serveJSON(
 	err error,
 ) {
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
 
@@ -35,18 +34,26 @@ func serveJSON(
 }
 
 // Convert input data to JSON an write to client
-func writeJSON(res http.ResponseWriter, req *http.Request, data interface{}) {
-	JSON, err := json.Marshal(data)
+func writeJSON(
+	w http.ResponseWriter,
+	r *http.Request,
+	setEtag bool,
+	data interface{},
+) {
+	buf, err := json.Marshal(data)
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(w, r, err)
 		return
 	}
-	setJSONCType(res)
-	writeData(res, req, JSON)
+	setJSONCType(w)
+	if setEtag {
+		w.Header().Set("ETag", util.HashBuffer(buf))
+	}
+	writeData(w, r, buf)
 }
 
-func setJSONCType(res http.ResponseWriter) {
-	res.Header().Set("Content-Type", "application/json")
+func setJSONCType(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
 }
 
 // Validate the client's last N posts to display setting
@@ -80,7 +87,7 @@ func servePost(
 ) {
 	id, err := strconv.ParseInt(params["post"], 10, 64)
 	if err != nil {
-		text404(res, req)
+		text404(res)
 		return
 	}
 
@@ -96,9 +103,9 @@ func servePost(
 
 func respondToJSONError(res http.ResponseWriter, req *http.Request, err error) {
 	if err == r.ErrEmptyResult {
-		text404(res, req)
+		text404(res)
 	} else {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 	}
 }
 
@@ -114,13 +121,13 @@ func serveBoardConfigs(
 		return
 	}
 	if !auth.IsNonMetaBoard(board) {
-		text404(res, req)
+		text404(res)
 		return
 	}
 
 	var conf config.BoardConfigs
 	if err := db.One(db.GetBoardConfig(board), &conf); err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
 
@@ -137,23 +144,23 @@ func threadJSON(
 	board := params["board"]
 	id, err := strconv.ParseInt(params["thread"], 10, 64)
 	if err != nil {
-		text404(res, req)
+		text404(res)
 		return
 	}
 
 	valid, err := db.ValidateOP(id, board)
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
 	if !valid {
-		text404(res, req)
+		text404(res)
 		return
 	}
 
 	counter, err := db.ThreadCounter(id)
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
 	if !pageEtag(res, req, etagStart(counter)) {
@@ -162,18 +169,18 @@ func threadJSON(
 
 	data, err := db.GetThread(id, detectLastN(req))
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
 
-	writeJSON(res, req, data)
+	writeJSON(res, req, false, data)
 }
 
 // Serves JSON for the "/all/" meta-board, that contains threads from all boards
 func allBoardJSON(res http.ResponseWriter, req *http.Request) {
 	counter, err := db.PostCounter()
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
 	if !pageEtag(res, req, etagStart(counter)) {
@@ -182,10 +189,10 @@ func allBoardJSON(res http.ResponseWriter, req *http.Request) {
 
 	data, err := db.GetAllBoard()
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
-	writeJSON(res, req, data)
+	writeJSON(res, req, false, data)
 }
 
 // Serves board page JSON
@@ -196,12 +203,12 @@ func boardJSON(
 ) {
 	board := params["board"]
 	if !auth.IsBoard(board) {
-		text404(res, req)
+		text404(res)
 		return
 	}
 	counter, err := db.BoardCounter(board)
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
 	if !pageEtag(res, req, etagStart(counter)) {
@@ -209,10 +216,10 @@ func boardJSON(
 	}
 	data, err := db.GetBoard(board)
 	if err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
-	writeJSON(res, req, data)
+	writeJSON(res, req, false, data)
 }
 
 // Serve a JSON array of all available boards and their titles
@@ -225,7 +232,7 @@ func serveBoardList(res http.ResponseWriter, req *http.Request) {
 	var list boardEntries
 	q := r.Table("boards").Pluck("id", "title")
 	if err := db.All(q, &list); err != nil {
-		textErrorPage(res, req, err)
+		text500(res, req, err)
 		return
 	}
 	if list == nil { // Ensure always serving an array
@@ -233,4 +240,33 @@ func serveBoardList(res http.ResponseWriter, req *http.Request) {
 	}
 	data, err := json.Marshal(list)
 	serveJSON(res, req, data, err)
+}
+
+// Fetch an array of boards a certain user holds a certion position on
+func serveStaffPositions(
+	res http.ResponseWriter,
+	req *http.Request,
+	params map[string]string,
+) {
+	q := r.
+		Table("boards").
+		Filter(r.Row.
+			Field("staff").
+			Field(params["position"]).
+			Contains(params["user"]),
+		).
+		Field("id").
+		CoerceTo("array")
+	var boards []string
+	if err := db.All(q, &boards); err != nil {
+		text500(res, req, err)
+		return
+	}
+
+	// Ensure response is always a JSON array
+	if boards == nil {
+		boards = []string{}
+	}
+
+	writeJSON(res, req, true, boards)
 }

@@ -27,7 +27,7 @@ var (
 func serveImages(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	file, err := os.Open(filepath.FromSlash(imageWebRoot + p["path"]))
 	if err != nil {
-		text404(w, r)
+		text404(w)
 		return
 	}
 	defer file.Close()

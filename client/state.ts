@@ -28,9 +28,9 @@ export interface BoardConfigs extends ChangeEmitter {
 	textOnly: boolean
 	forcedAnon: boolean
 	hashCommands: boolean
-	spoilers: boolean
+	spoilers: boolean     // Text spoilers
 	codeTags: boolean
-	spoiler: string
+	spoiler: string       //Image spoiler
 	title: string
 	notice: string
 	banners: string[]

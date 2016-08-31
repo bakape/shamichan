@@ -4,8 +4,10 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/util"
 )
 
@@ -48,11 +50,16 @@ func checkClientEtag(
 }
 
 // Write a []byte to the client
-func writeData(res http.ResponseWriter, req *http.Request, data []byte) {
-	_, err := res.Write(data)
+func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
+	_, err := w.Write(data)
 	if err != nil {
-		util.LogError(req.RemoteAddr, err)
+		logError(r, err)
 	}
+}
+
+// Log an error together with the client's IP
+func logError(r *http.Request, err interface{}) {
+	log.Printf("server: %s: %s", auth.GetIP(r), err)
 }
 
 // Set HTTP headers to the response object
@@ -65,14 +72,12 @@ func setHeaders(res http.ResponseWriter, etag string) {
 }
 
 // Text-only 404 response
-func text404(res http.ResponseWriter, req *http.Request) {
-	res.WriteHeader(404)
-	writeData(res, req, []byte("404 Not found"))
+func text404(w http.ResponseWriter) {
+	http.Error(w, "404 Not found", 404)
 }
 
 // Text-only 500 response
-func textErrorPage(res http.ResponseWriter, req *http.Request, err interface{}) {
-	res.WriteHeader(500)
-	writeData(res, req, []byte(fmt.Sprintf("500 %s", err)))
-	util.LogError(req.RemoteAddr, err)
+func text500(w http.ResponseWriter, r *http.Request, err interface{}) {
+	http.Error(w, fmt.Sprintf("500 %s", err), 500)
+	logError(r, err)
 }

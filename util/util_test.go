@@ -1,11 +1,7 @@
 package util
 
 import (
-	"bytes"
 	"errors"
-	"log"
-	"os"
-	"strings"
 	"testing"
 
 	. "gopkg.in/check.v1"
@@ -34,26 +30,6 @@ type jsonSample struct {
 
 func (*Util) TestIDToString(c *C) {
 	c.Assert(IDToString(1), Equals, "1")
-}
-
-func (*Util) TestLogError(c *C) {
-	err := errors.New("foo")
-	log := captureLog(func() {
-		LogError("::1", err)
-	})
-	assertLog(c, strings.Split(log, "\n")[0], "panic serving ::1: foo")
-}
-
-func assertLog(c *C, input, standard string) {
-	c.Assert(input, Matches, `\d+/\d+/\d+ \d+:\d+:\d+ `+standard)
-}
-
-func captureLog(fn func()) string {
-	buf := new(bytes.Buffer)
-	log.SetOutput(buf)
-	fn()
-	log.SetOutput(os.Stdout)
-	return buf.String()
 }
 
 func (*Util) TestWaterfall(c *C) {

@@ -158,6 +158,7 @@ export class FormView extends View<Model> {
 	captcha: CaptchaView
 	noCaptcha: boolean
 	noCancel: boolean
+	noSubmit: boolean
 
 	constructor(attrs: FormViewAttrs, handler: () => void) {
 		attrs.tag = "form"
@@ -178,10 +179,14 @@ export class FormView extends View<Model> {
 	}
 
 	// Render a form field and embed the input fields inside it
-	renderForm(fields: DocumentFragment) {
+	renderForm(fields: Node) {
 		const frag = importTemplate("form")
 		if (this.noCancel) {
 			(frag.querySelector("input[name=cancel]") as HTMLInputElement)
+				.hidden = true
+		}
+		if (this.noSubmit) {
+			(frag.querySelector("input[type=submit]") as HTMLInputElement)
 				.hidden = true
 		}
 		if (config.captcha && !this.noCaptcha) {

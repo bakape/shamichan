@@ -50,7 +50,6 @@ const (
 	// Board administration
 	messageConfigServer
 	messageCreateBoard
-	messageConfigBoard
 )
 
 var (
@@ -61,24 +60,23 @@ var (
 
 	// Lookup table for message handlers
 	handlers = map[messageType]handler{
-		messageSynchronise:    synchronise,
-		messageResynchronise:  resynchronise,
-		messageRegister:       register,
-		messageLogin:          login,
-		messageAuthenticate:   authenticateSession,
-		messageLogout:         logOut,
-		messageLogOutAll:      logOutAll,
-		messageChangePassword: changePassword,
-		messageConfigServer:   configServer,
-		messageCreateBoard:    createBoard,
-		messageConfigBoard:    configBoard,
-		messageInsertThread:   insertThread,
-		messageAppend:         appendRune,
-		messageBackspace:      backspace,
-		messageClosePost:      closePost,
-		messageSplice:         spliceText,
-		messageInsertPost:     insertPost,
-		messageInsertImage:    insertImage,
+		messageSynchronise:      synchronise,
+		messageResynchronise:    resynchronise,
+		messageRegister:         register,
+		messageLogin:            login,
+		messageAuthenticate:     authenticateSession,
+		messageLogout:           logOut,
+		messageLogOutAll:        logOutAll,
+		messageChangePassword:   changePassword,
+		messageConfigServer:     configServer,
+		messageCreateBoard:      createBoard,
+		messageInsertThread:     insertThread,
+		messageAppend:           appendRune,
+		messageBackspace:        backspace,
+		messageClosePost:        closePost,
+		messageSplice:           spliceText,
+		messageInsertPost:       insertPost,
+		messageInsertImage:      insertImage,
 	}
 )
 

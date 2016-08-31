@@ -114,35 +114,3 @@ func createBoard(data []byte, c *Client) error {
 
 	return c.sendMessage(messageCreateBoard, boardCreated)
 }
-
-// Set board-specific configurations
-func configBoard(data []byte, c *Client) error {
-	if !c.isLoggedIn() {
-		return errNotLoggedIn
-	}
-
-	var req config.BoardConfigs
-	if err := decodeMessage(data, &req); err != nil {
-		return err
-	}
-
-	// Assert ownership rights
-	var isOwner bool
-	q := db.GetBoardConfig(req.ID).
-		Field("staff").
-		Field("owners").
-		Contains(c.UserID).
-		Default(false)
-	if err := db.One(q, &isOwner); err != nil {
-		return err
-	}
-	if !isOwner {
-		return errAccessDenied
-	}
-
-	if err := db.Write(db.GetBoardConfig(req.ID).Replace(req)); err != nil {
-		return err
-	}
-
-	return c.sendMessage(messageConfigBoard, true)
-}

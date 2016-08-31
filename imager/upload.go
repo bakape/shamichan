@@ -13,6 +13,7 @@ import (
 	"strconv"
 
 	"github.com/Soreil/apngdetector"
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
@@ -58,7 +59,7 @@ func NewImageUpload(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		text := err.Error()
 		http.Error(res, text, code)
-		log.Printf("upload error: %s: %s\n", req.RemoteAddr, text)
+		log.Printf("upload error: %s: %s\n", auth.GetIP(req), text)
 	}
 	res.Write([]byte(id))
 }

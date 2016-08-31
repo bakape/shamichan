@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -447,4 +448,41 @@ func (d *DB) TestServeBoardListNoBoards(c *C) {
 	rec, req := newPair(c, "/json/boardList")
 	d.r.ServeHTTP(rec, req)
 	assertBody(rec, "[]", c)
+}
+
+func (d *DB) TestServeStaffPosition(c *C) {
+	staff := map[string][]string{
+		"owners": {"admin"},
+	}
+	boards := []config.BoardConfigs{
+		{
+			ID:    "a",
+			Staff: staff,
+		},
+		{
+			ID: "b",
+		},
+		{
+			ID:    "c",
+			Staff: staff,
+		},
+	}
+	c.Assert(db.Write(r.Table("boards").Insert(boards)), IsNil)
+
+	samples := [...]struct {
+		position, user, res string
+	}{
+		{"owners", "admin", `["a","c"]`},
+		{"mod", "admin", "[]"},
+		{"owners", "bullshit", "[]"},
+		{"bullocks", "bullshit", "[]"},
+	}
+
+	for _, s := range samples {
+		path := fmt.Sprintf("/json/positions/%s/%s", s.position, s.user)
+		rec, req := newPair(c, path)
+		d.r.ServeHTTP(rec, req)
+		assertCode(rec, 200, c)
+		assertBody(rec, s.res, c)
+	}
 }

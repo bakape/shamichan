@@ -22,18 +22,28 @@ interface Loader {
 }
 
 // Fetches and decodes a JSON response from the API
-export const fetchJSON = async (url: string): Promise<any> =>
-	await (await fetch(url)).json()
+export async function fetchJSON<T>(url: string): Promise<T> {
+	let res = await fetch(url)
+	await handleError(res)
+	return await res.json()
+}
+
+// Throw the status text of a Response as an error on HTTP errrors
+export async function handleError(res: Response) {
+	if (!res.ok) {
+		throw new Error(await res.text())
+	}
+}
 
 // Returns a list of all boards created in alphabetical order
 export const fetchBoardList = async (): Promise<BoardEntry[]> =>
-	((await fetchJSON("/json/boardList") as BoardEntry[]))
+	(await fetchJSON<BoardEntry[]>("/json/boardList"))
 	.sort((a, b) =>
 		a.id.localeCompare(b.id))
 
 // Fetch configurations of a specific board
 export const fetchBoarConfigs = async (board: string): Promise<BoardConfigs> =>
-	await fetchJSON(`/json/boardConfig/${board}`)
+	await fetchJSON<BoardConfigs>(`/json/boardConfig/${board}`)
 
 const base64 =
 	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'

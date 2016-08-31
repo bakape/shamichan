@@ -5,8 +5,6 @@ package util
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"log"
-	"runtime"
 	"strconv"
 )
 
@@ -52,12 +50,4 @@ func HashBuffer(buf []byte) string {
 // IDToString is a  helper for converting a post ID to a string for JSON keys
 func IDToString(id int64) string {
 	return strconv.FormatInt(id, 10)
-}
-
-// LogError logs an error with its stack trace
-func LogError(ip string, err interface{}) {
-	const size = 64 << 10
-	buf := make([]byte, size)
-	buf = buf[:runtime.Stack(buf, false)]
-	log.Printf("panic serving %v: %v\n%s", ip, err, buf)
 }

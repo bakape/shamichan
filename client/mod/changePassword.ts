@@ -10,7 +10,7 @@ interface PasswordChangeRequest extends Captcha {
 	new: string
 }
 
-// View for changing a password, that gets embedded below the parent view
+// View for changing a password, that gets embedded bellow the parent view
 export default class PasswordChangeView extends AccountFormView {
 	constructor() {
 		super({}, () =>
