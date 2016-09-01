@@ -120,7 +120,7 @@ function bindNagging() {
 postSM.act(postState.ready, postEvent.open, () =>
 	(postModel = new ReplyFormModel(),
 	postForm = new FormView(postModel, false),
-	postState.alloc))
+	postState.draft))
 
 // Hide post controls, when a postForm is open
 const hidePostControls = () =>

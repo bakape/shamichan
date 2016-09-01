@@ -2,11 +2,11 @@
 // the results to the server
 
 import {message, send, handlers} from "../../connection"
-import {OP, Post, TextState, ThreadData, ImageData} from "../models"
+import {OP, Post, TextState, ThreadData, ImageData, PostData} from "../models"
 import {FormView, OPFormView} from "./view"
 import {posts} from "../../state"
 import {postSM, postEvent, postState} from "./main"
-import {applyMixins} from "../../util"
+import {applyMixins, extend} from "../../util"
 import PostView from "../view"
 import {SpliceResponse} from "../../client"
 import {FileData} from "./upload"
@@ -119,20 +119,20 @@ export class ReplyFormModel extends Post implements FormModel {
 
 		send(message.insertPost, req)
 		handlers[message.postID] = (id: number) =>
-			(this.onAllocation(id),
+			(this.setID(id),
 			delete handlers[message.postID])
 	}
 
-	// Handle draft post allocation
-	onAllocation(id: number) {
+	// Set post ID and add to the post collection
+	setID(id: number) {
 		postSM.feed(postEvent.alloc)
 		this.id = id
 		posts.add(this)
+	}
 
-		// Not the actual time of allocation, but who cares? Decreases the
-		// payload of the response.
-		this.time = Math.floor(Date.now() / 1000)
-
+	// Handle draft post allocation
+	onAllocation(data: PostData) {
+		extend(this, data)
 		this.view.renderAlloc()
 
 		// TODO: Add to state.mine and persist

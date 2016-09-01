@@ -3,6 +3,7 @@
 import {handlers, message, connSM, connEvent} from './connection'
 import {posts} from './state'
 import {Post, PostLinks, Command, PostData, ImageData} from './posts/models'
+import {ReplyFormModel} from "./posts/posting/model"
 import PostView from "./posts/view"
 import {$threadContainer} from "./page/thread"
 import {write} from "./render"
@@ -51,8 +52,9 @@ handlers[message.invalid] = (msg: string) => {
 handlers[message.insertPost] = (data: PostData) => {
 	// If the post is already in the global collection, it was just created by
 	// this client
-	const mine = posts.get(data.id)
+	const mine = posts.get(data.id) as ReplyFormModel
 	if (mine) {
+		mine.onAllocation(data)
 		if (data.image) {
 			mine.insertImage(data.image)
 		}

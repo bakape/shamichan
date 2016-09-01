@@ -199,6 +199,7 @@ export class FormView extends PostView implements UploadForm {
 	cleanUp() {
 		write(() =>
 			(this.$postControls.remove(),
+			this.el.classList.add("highlight"),
 			this.$postControls
 				= this.$done
 				= this.$cancel
@@ -219,10 +220,11 @@ export class FormView extends PostView implements UploadForm {
 	// Transition into allocated post
 	renderAlloc() {
 		this.id = "p" + this.model.id
+		const $header = this.el.querySelector("header")
 		write(() =>
 			(this.el.id = this.id as string,
-			this.el.querySelector("header").classList.remove("temporary"),
-			renderHeader(this.el, this.model),
+			$header.classList.remove("temporary"),
+			renderHeader($header, this.model),
 			this.$cancel.remove(),
 			this.$postControls.prepend(this.renderDone())))
 	}
