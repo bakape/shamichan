@@ -213,10 +213,11 @@ export class Post extends Model implements PostData {
 
 	// Insert a new command result into the model
 	insertCommand(type: commandType, val: any) {
+		const comm = {type, val}
 		if (!this.commands) {
-			this.commands = []
+			this.commands = [comm]
 		}
-		this.commands.push({type, val})
+		this.commands.push(comm)
 	}
 
 	// Close an open post and reparse its last line

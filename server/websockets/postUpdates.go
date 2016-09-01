@@ -437,7 +437,7 @@ func insertImage(data []byte, c *Client) error {
 		return err
 	}
 	msg, err := encodeMessage(messageInsertImage, imageMessage{
-		ID: c.openPost.id,
+		ID:    c.openPost.id,
 		Image: *img,
 	})
 	if err != nil {

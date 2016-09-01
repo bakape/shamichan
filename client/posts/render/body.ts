@@ -213,8 +213,9 @@ function parseURL(bit: string): string {
 
 // Parse a hash command
 function parseCommand(bit: string, {commands, state}: PostData): string {
-	// Guard against the first command being an invalid dice roll
-	if (!commands) {
+	// Guard against the first command being an invalid dice roll and parsing
+	// lines in the post form.
+	if (!commands || !commands[state.iDice]) {
 		return "#" + bit
 	}
 
@@ -236,17 +237,19 @@ function parseCommand(bit: string, {commands, state}: PostData): string {
 		const rolls = commands[state.iDice++].val as number[]
 		inner = ""
 		let sum = 0
-		for (let roll of rolls) {
-			if (inner) {
-				inner += ", "
+		for (let i = 0; i < rolls.length; i++) {
+			if (i) {
+				inner += " + "
 			}
-			sum += roll
-			inner += roll
+			sum += rolls[i]
+			inner += rolls[i]
 		}
-		inner += " = " + sum
+		if (rolls.length > 1) {
+			inner += " = " + sum
+		}
 	}
 
-	if (inner !== undefined) {
+	if (inner) {
 		return `<strong>#${bit} (${inner})</strong>`
 	}
 	return "#" + bit
