@@ -60,7 +60,6 @@ func (*DBSuite) TestOpenPostClosing(c *C) {
 					Editing: true,
 					Time:    time.Now().Add(-time.Minute * 31).Unix(),
 				},
-				Password: []byte{},
 			},
 			2: {
 				Post: types.Post{
@@ -68,7 +67,13 @@ func (*DBSuite) TestOpenPostClosing(c *C) {
 					Editing: true,
 					Time:    time.Now().Unix(),
 				},
-				Password: []byte{},
+			},
+			3: {
+				Post: types.Post{
+					ID:      3,
+					Editing: true,
+					Time:    time.Now().Add(-time.Minute * 31).Unix(),
+				},
 			},
 		},
 		Log: [][]byte{[]byte{1, 22, 3}},
@@ -79,20 +84,19 @@ func (*DBSuite) TestOpenPostClosing(c *C) {
 
 	var log [][]byte
 	c.Assert(All(r.Table("threads").Get(1).Field("log"), &log), IsNil)
-	c.Assert(log, DeepEquals, append(thread.Log, []byte("061")))
+	c.Assert(log, DeepEquals, append(thread.Log, []byte("061"), []byte("063")))
 
-	std := thread.Posts[1]
-	std.Editing = false
 	samples := [...]struct {
-		id  int64
-		std types.DatabasePost
+		id      int64
+		editing bool
 	}{
-		{1, std},
-		{2, thread.Posts[2]},
+		{1, false},
+		{2, true},
+		{3, false},
 	}
 	for _, s := range samples {
-		var res types.DatabasePost
-		c.Assert(One(FindPost(s.id), &res), IsNil)
-		c.Assert(res, DeepEquals, s.std)
+		var res bool
+		c.Assert(One(FindPost(s.id).Field("editing"), &res), IsNil)
+		c.Assert(res, DeepEquals, s.editing)
 	}
 }

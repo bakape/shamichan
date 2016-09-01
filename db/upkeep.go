@@ -27,8 +27,12 @@ var postClosingQuery = r.
 			Values().
 			Filter(func(post r.Term) r.Term {
 				return post.
-					Field("editing"). // Older than 30 minutes
-					And(post.Field("time").Lt(r.Now().ToEpochTime().Sub(1800)))
+					Field("editing").
+					Eq(true).
+					And(
+						post.Field("time"). // Older than 30 minutes
+									Lt(r.Now().ToEpochTime().Sub(1800)),
+					)
 			}).
 			Map(func(post r.Term) r.Term {
 				return post.Field("id").CoerceTo("string")
@@ -38,18 +42,13 @@ var postClosingQuery = r.
 					Count().
 					Eq(0).
 					Branch(map[string]string{}, map[string]r.Term{
-						"log": thread.
-							Field("log").
-							Append(ids.
-								Map(func(id r.Term) r.Term {
-									return r.Expr("06").
-										Add(id).
-										CoerceTo("binary")
-								}).
-								Reduce(func(a, b r.Term) r.Term {
-									return a.Append(b)
-								}),
-							),
+						"log": ids.
+							Map(func(id r.Term) r.Term {
+								return r.Expr("06").Add(id).CoerceTo("binary")
+							}).
+							Fold(thread.Field("log"), func(a, b r.Term) r.Term {
+								return a.Append(b)
+							}),
 						"posts": ids.
 							Map(func(id r.Term) interface{} {
 								return []interface{}{
