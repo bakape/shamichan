@@ -42,7 +42,7 @@ export default class UploadForm {
 		this.$spoiler.append(makeFrag(html))
 
 		this.$uploadStatus = document.createElement("strong")
-		this.$uploadInput.setAttribute("class", "upload-status")
+		this.$uploadStatus.setAttribute("class", "upload-status")
 	}
 
 	// Read the file from $uploadInput and send as a POST request to the server.

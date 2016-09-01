@@ -1,10 +1,3 @@
-/*
- * Handles the brunt of the post-related websocket calls
- */
-
-const main = require('./main'),
-	{_, common, dispatcher, util, posts, state} = main;
-
 _.extend(dispatcher, {
 	[common.INSERT_IMAGE](msg) {
 		const [num, img] = msg;
@@ -19,6 +12,7 @@ _.extend(dispatcher, {
 		// generic model to fire a separate image render
 		modelHandler(num, model => model.setImage(img, toPostForm));
 	},
+
 	[common.DELETE_POSTS](msg) {
 		modelHandler(msg[0], model => model.deletePost(msg[1]));
 	},
@@ -48,6 +42,7 @@ _.extend(dispatcher, {
 		}
 		modelHandler(num, model => model.setBan(num, info));
 	},
+
 	// Sync settings with server
 	[common.HOT_INJECTION](msg) {
 		const [force, hash, hotConfig] = msg;

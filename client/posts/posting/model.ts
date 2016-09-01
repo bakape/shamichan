@@ -2,7 +2,7 @@
 // the results to the server
 
 import {message, send, handlers} from "../../connection"
-import {OP, Post, TextState, ThreadData} from "../models"
+import {OP, Post, TextState, ThreadData, ImageData} from "../models"
 import {FormView, OPFormView} from "./view"
 import {posts} from "../../state"
 import {postSM, postEvent, postState} from "./main"
@@ -113,12 +113,14 @@ export class ReplyFormModel extends Post implements FormModel {
 			this.reformatInput(body)
 		}
 
-		// TODO: Image allocation
+		if (image) {
+			req.image = image
+		}
 
 		send(message.insertPost, req)
-		handlers[message.insertPost] = (id: number) =>
+		handlers[message.postID] = (id: number) =>
 			(this.onAllocation(id),
-			delete handlers[message.insertPost])
+			delete handlers[message.postID])
 	}
 
 	// Handle draft post allocation
@@ -133,9 +135,27 @@ export class ReplyFormModel extends Post implements FormModel {
 
 		this.view.renderAlloc()
 
-		// TODO: Image insertion
 		// TODO: Add to state.mine and persist
 
+	}
+
+	// Upload the file and request its allocation
+	async uploadFile() {
+		const file = await this.view.uploadFile()
+		if (!file) { // Upload failed
+			return
+		}
+		if (!this.sentAllocRequest) {
+			this.requestAlloc(null, file)
+		} else {
+			send(message.insertImage, file)
+		}
+	}
+
+	// Insert the uploaded image into the model
+	insertImage(img: ImageData) {
+		super.insertImage(img)
+		this.view.removeUploadForm()
 	}
 }
 
@@ -192,8 +212,14 @@ export class FormModel {
 
 	// Compare new value to old and generate apropriate commands
 	parseInput(val: string): void {
-		const old = this.inputState.line,
-			lenDiff = val.length - old.length,
+		const old = this.inputState.line
+
+		// Rendering hack shenanigans - ignore
+		if (old === val) {
+			return
+		}
+
+		const lenDiff = val.length - old.length,
 			exceeding = this.bodyLength + lenDiff - 2000
 
 		// If exceeding max body lenght, shorten the value, trim $input and try

@@ -50,6 +50,9 @@ const (
 	// Board administration
 	messageConfigServer
 	messageCreateBoard
+
+	// Send new post ID to client
+	messagePostID
 )
 
 var (

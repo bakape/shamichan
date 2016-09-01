@@ -65,11 +65,12 @@ export interface ThreadData extends PostData {
 }
 
 // Image data embedable in posts and thread hashes
-export type ImageData = {
+export interface ImageData {
 	apng?: boolean
 	audio?: boolean
 	spoiler?: boolean
 	large?: boolean // Added at runtime to render larger thumbnails
+	expanded?: boolean
 	fileType: fileTypes
 	length?: number
 	size: number
@@ -212,12 +213,20 @@ export class Post extends Model implements PostData {
 	}
 
 	// Insert a new command result into the model
-	insertCommand(type: commandType, val: any) {
-		const comm = {type, val}
+	insertCommand(comm: Command) {
 		if (!this.commands) {
 			this.commands = [comm]
 		}
 		this.commands.push(comm)
+	}
+
+	// Insert an image into an existing post
+	insertImage(img: ImageData) {
+		this.image = img
+
+		// TODO: Automatic expansion, if set
+
+		this.view.renderImage()
 	}
 
 	// Close an open post and reparse its last line

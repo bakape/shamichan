@@ -10,8 +10,8 @@ export function renderImage(
 	data: ImageData,
 	reveal?: boolean,
 ) {
-	el.hidden = false
 	const showThumb = !options.hideThumbs || reveal
+	el.hidden = !showThumb
 	if (config.hats && showThumb) {
 		(el.firstElementChild as HTMLElement).hidden = false
 	}

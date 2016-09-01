@@ -1,7 +1,7 @@
 // View classes for post authoring
 
 import PostView, {OPView} from "../view"
-import {FormModel} from "./model"
+import {ReplyFormModel} from "./model"
 import {Post, OP} from "../models"
 import {isMobile} from "../../state"
 import {setAttrs, makeFrag, applyMixins} from "../../util"
@@ -15,7 +15,7 @@ import UploadForm, {FileData} from "./upload"
 
 // Post creation and update view
 export class FormView extends PostView implements UploadForm {
-	model: Post & FormModel
+	model: ReplyFormModel
 	inputLock: boolean
 	$input: HTMLSpanElement
 	$done: HTMLInputElement
@@ -26,23 +26,23 @@ export class FormView extends PostView implements UploadForm {
 	$spoiler: HTMLSpanElement
 	$uploadStatus: HTMLSpanElement
 	$uploadInput: HTMLInputElement
-	renderUploadForm: () => string
+	renderUploadForm: () => void
 	uploadFile: () => Promise<FileData>
 	renderProgress: (event: ProgressEvent) => void
 
 	[index: string]: any
 
-	constructor(model: Post, allocated: boolean) {
+	constructor(model: Post, isOP: boolean) {
 		super(model)
-		this.renderInputs(allocated)
-		if (!allocated) {
+		this.renderInputs(isOP)
+		if (!isOP) {
 			this.initDraft()
 		}
 	}
 
 	// Render extra input fields for inputting text and optionally uploading
 	// images
-	renderInputs(allocated: boolean) {
+	renderInputs(isOP: boolean) {
 		this.$input = document.createElement("span")
 		const attrs: {[key: string]: string} = {
 			id: "text-input",
@@ -53,7 +53,10 @@ export class FormView extends PostView implements UploadForm {
 			attrs["autocomplete"] = ""
 		}
 		setAttrs(this.$input, attrs)
-		this.$input.textContent = ""
+
+		// Always make sure the input span alwas has at least 1 character, so
+		// it does not float onto the image, if any.
+		this.$input.textContent = "\u200b"
 		this.$input.addEventListener("input", (event: Event) =>
 			this.onInput((event.target as Element).textContent))
 		this.$input.addEventListener("keydown", (event: KeyboardEvent) =>
@@ -62,12 +65,12 @@ export class FormView extends PostView implements UploadForm {
 		this.$postControls = document.createElement("div")
 		this.$postControls.id = "post-controls"
 		this.$postControls
-			.append(allocated ? this.renderDone() : this.renderDraftInputs())
+			.append(isOP ? this.renderDone() : this.renderDraftInputs())
 
 		write(() => {
 			this.$blockquote.innerHTML = ""
 			this.$blockquote.append(this.$input)
-			this.el.append(this.$postControls)
+			this.el.querySelector(".post-container").append(this.$postControls)
 			this.$input.focus()
 		})
 	}
@@ -78,9 +81,13 @@ export class FormView extends PostView implements UploadForm {
 		const $cancel = this.createButton("cancel", () =>
 			(postSM.feed(postEvent.done),
 			this.remove()))
-		frag.append($cancel)
+		this.renderUploadForm()
+		frag.append(
+			$cancel, this.$uploadInput, this.$spoiler, this.$uploadStatus,
+		)
 
-		// TODO: UploadForm integrations
+		this.$uploadInput.addEventListener("change", () =>
+			this.model.uploadFile())
 
 		return frag
 	}
@@ -111,11 +118,22 @@ export class FormView extends PostView implements UploadForm {
 			this.$input.focus()))
 	}
 
+	removeUploadForm() {
+		write(() =>
+			(this.$uploadInput.remove(),
+			this.$uploadStatus.remove()))
+	}
+
 	// Handle input events on $input
 	onInput(val: string) {
-		if (!this.inputLock) {
-			this.model.parseInput(val)
+		if (this.inputLock) {
+			return
 		}
+		if (val === "") {
+			this.lockInput(() =>
+				this.$input.textContent = "\u200b")
+		}
+		this.model.parseInput(val.replace("\u200b", ""))
 	}
 
 	// Ignore any oninput events on $input during suplied function call
@@ -135,7 +153,10 @@ export class FormView extends PostView implements UploadForm {
 
 	// Trim $input from the end by the suplied length
 	trimInput(length: number) {
-		const val = this.$input.textContent.slice(0, -length)
+		let val = this.$input.textContent.slice(0, -length)
+		if (val === "") {
+			val = "\u200b"
+		}
 		write(() =>
 			this.lockInput(() =>
 				this.$input.textContent = val))
@@ -148,7 +169,7 @@ export class FormView extends PostView implements UploadForm {
 		write(() => {
 			this.$input.before(frag)
 			this.lockInput(() =>
-				this.$input.textContent = "")
+				this.$input.textContent = "\u200b")
 		})
 	}
 
@@ -174,11 +195,18 @@ export class FormView extends PostView implements UploadForm {
 			this.$blockquote.children[num].replaceWith(frag))
 	}
 
-	// Remove any dangling form controls deallocate references
+	// Remove any dangling form controls to deallocate referenced elements
 	cleanUp() {
 		write(() =>
 			(this.$postControls.remove(),
-			this.$postControls = this.$done = null))
+			this.$postControls
+				= this.$done
+				= this.$cancel
+				= this.$input
+				= this.$uploadInput
+				= this.$uploadStatus
+				= this.$spoiler
+				= null))
 	}
 
 	// Lock the post form after a crytical error accours
@@ -196,14 +224,16 @@ export class FormView extends PostView implements UploadForm {
 			this.el.querySelector("header").classList.remove("temporary"),
 			renderHeader(this.el, this.model),
 			this.$cancel.remove(),
-			this.$postControls.append(this.renderDone())))
+			this.$postControls.prepend(this.renderDone())))
 	}
 }
+
+applyMixins(FormView, UploadForm)
 
 // FormView of an OP post
 export class OPFormView extends FormView implements OPView {
 	$omit: Element
-	model: OP & FormModel
+	model: any
 	renderOmit: () => void
 
 	constructor(model: OP) {

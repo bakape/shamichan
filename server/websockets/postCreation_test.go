@@ -322,7 +322,7 @@ func (*DB) TestPostCreation(c *C) {
 
 	c.Assert(insertPost(data, cl), IsNil)
 
-	assertMessage(wcl, []byte("026"), c)
+	assertMessage(wcl, []byte("416"), c)
 
 	// Get the time value from the DB and normalize against it
 	var then int64

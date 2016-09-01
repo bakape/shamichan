@@ -1,28 +1,3 @@
-/*
- * Evertything related to writing and commiting posts
- */
-
-const Article = require('./article'),
-	main = require('../main'),
-	embed = require('./embed'),
-	ident = require('./identity'),
-	imager = require('./imager'),
-	{$, _, Backbone, Cookie, common, config, connSM, util, lang, oneeSama,
-		options, postSM, state} = main;
-
-let postForm, postModel;
-/*
- The variable gets overwritten, so a simple refference will not do. Calling a
- fucntion to retrieve the var each time solves the problem.
- */
-main.reply('postForm', () => postForm)
-	.reply('postModel', () => postModel)
-	.reply('postForm:indentity', () => postForm && postForm.renderIdentity());
-
-const ComposerModel = Backbone.Model.extend({idAttribute: 'num'});
-
-postSM.act('draft + alloc -> alloc', msg => postForm.onAllocation(msg));
-
 main.$doc.on('keydown', handle_shortcut);
 
 function handle_shortcut(event) {
@@ -128,77 +103,6 @@ const ComposerView = Backbone.View.extend({
 
 	onKeyDown(event) {
 		handle_shortcut.bind(this)(event);
-	},
-
-	onToggle(event) {
-		const attrs = this.model.attributes;
-		if (attrs.uploading || attrs.uploaded)
-			return;
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		if (attrs.spoiler) {
-			this.model.set({spoiler: 0});
-			return;
-		}
-		const pick = common.pick_spoiler(attrs.nextSpoiler);
-		this.model.set({
-			spoiler: pick.index,
-			nextSpoiler: pick.next
-		});
-	},
-
-	// Insert an image that has been uploaded and processed by the server
-	insertUploaded(info) {
-		this.renderImage(null, info);
-		this.$imageInput
-			.siblings('strong')
-			.andSelf()
-			.remove();
-		this.$cancel.remove();
-		this.$uploadForm.find('#toggle').remove();
-		this.flushPending();
-		this.model.set({
-			uploading: false,
-			uploaded: true,
-			sentAllocRequest: true
-		});
-
-		// Stop obnoxious wrap-around-image behaviour
-		var $img = this.$el.find('img');
-		this.$blockquote.css({
-			'margin-left': $img.css('margin-right'),
-			'padding-left': $img.width()
-		});
-
-		this.resizeInput();
-	},
-
-	// Handle image upload status
-	dispatch(msg) {
-		const a = msg.arg;
-		switch(msg.t) {
-			case 'alloc':
-				this.onImageAllocation(a);
-				break;
-			case 'error':
-				this.uploadError(a);
-				break;
-			case 'status':
-				this.uploadStatus(a);
-				break;
-		}
-	},
-
-	onImageAllocation(msg) {
-		const attrs = this.model.attributes;
-		if (attrs.cancelled)
-			return;
-		if (!attrs.num && !attrs.sentAllocRequest) {
-			main.send([common.INSERT_POST, this.allocationMessage(null, msg)]);
-			this.model.set({sentAllocRequest: true});
-		}
-		else
-			main.send([common.INSERT_IMAGE, msg]);
 	},
 
 	addReference(num, sel) {

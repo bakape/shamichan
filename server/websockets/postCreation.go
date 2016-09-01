@@ -229,7 +229,7 @@ func insertPost(data []byte, c *Client) error {
 
 	// Ensure the client knows the post ID before the update public post
 	// inserttion message is sent
-	if err := c.sendMessage(messageInsertPost, post.ID); err != nil {
+	if err := c.sendMessage(messagePostID, post.ID); err != nil {
 		return err
 	}
 

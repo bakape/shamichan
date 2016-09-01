@@ -1,16 +1,3 @@
-/*
- Client-side helper functions
- */
-
-import {config} from './main'
-import {escape} from 'underscore'
-
-// Make spoiler tags toggleable on mobile
-export function touchable_spoiler_tag(del) {
-	del.innerHTML = '<del onclick="void(0)">'
-}
-
-// TODO: Refactor server time syncronisation
 let cachedOffset;
 export function serverTime() :number {
 	const d = Date.now();

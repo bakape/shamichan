@@ -2,7 +2,7 @@
 
 import {handlers, message, connSM, connEvent} from './connection'
 import {posts} from './state'
-import {Post, PostLinks, Command, PostData} from './posts/models'
+import {Post, PostLinks, Command, PostData, ImageData} from './posts/models'
 import PostView from "./posts/view"
 import {$threadContainer} from "./page/thread"
 import {write} from "./render"
@@ -27,6 +27,11 @@ interface CommandMessage extends Command {
 	id: number
 }
 
+// Message for inserting images into an open post
+interface ImageMessage extends ImageData {
+	id: number
+}
+
 // Run a function on a model, if it exists
 function handle(id: number, fn: (m: Post) => void) {
 	const model = posts.get(id)
@@ -44,10 +49,13 @@ handlers[message.invalid] = (msg: string) => {
 }
 
 handlers[message.insertPost] = (data: PostData) => {
-	// If the post is already in the global collection, it was just creaed by
+	// If the post is already in the global collection, it was just created by
 	// this client
-	const mine = !!posts.get(data.id)
+	const mine = posts.get(data.id)
 	if (mine) {
+		if (data.image) {
+			mine.insertImage(data.image)
+		}
 		return
 	}
 
@@ -60,6 +68,11 @@ handlers[message.insertPost] = (data: PostData) => {
 	// TODO: Hooks for triggering desktop notifications
 
 }
+
+handlers[message.insertImage] = (msg: ImageMessage) =>
+	handle(msg.id, m =>
+		(delete msg.id,
+		m.insertImage(msg)))
 
 handlers[message.append] = ([id, char]: number[]) =>
 	handle(id, m =>
@@ -81,9 +94,10 @@ handlers[message.backlink] = ({id, links}: LinkMessage) =>
 	handle(id, m =>
 		m.insertBacklink(links))
 
-handlers[message.command] = ({id, type, val}: CommandMessage) =>
-	handle(id, m =>
-		m.insertCommand(type, val))
+handlers[message.command] = (msg: CommandMessage) =>
+	handle(msg.id, m =>
+		(delete msg.id,
+		m.insertCommand(msg)))
 
 handlers[message.closePost] = (id: number) =>
 	handle(id, m =>
