@@ -158,7 +158,7 @@ class FAQPanel extends BannerModal {
 
 	render() {
 		const html = HTML
-			`meguca is licensed under the
+			`meguca is licensed under the&nbsp;
 			<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">
 				GNU Affero General Public License
 			</a>
