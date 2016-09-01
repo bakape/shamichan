@@ -20,9 +20,11 @@ import (
 
 // Overridable for faster testing
 var (
-	writeTimeout = time.Second * 30
+	// Connectivity may become temporarily impared during file upload or when
+	// trvaling on mobile. To accomodate use less restricting timeout settings.
+	writeTimeout = time.Minute * 5
 	pingTimer    = time.Second * 30
-	readTimeout  = time.Second * 40
+	readTimeout  = time.Minute * 6
 	pingMessage  = []byte{1}
 )
 
@@ -263,7 +265,7 @@ func encodeMessage(typ messageType, msg interface{}) ([]byte, error) {
 // receiverLoop proxies the blocking conn.ReadMessage() into the main client
 // select loop.
 func (c *Client) receiverLoop() {
-	// Timeout connection, if no pongs received for 40 seconds
+	// Timeout connection, if no pongs received for 5 minutes
 	c.conn.SetReadDeadline(time.Now().Add(readTimeout))
 	c.conn.SetPongHandler(func(string) error {
 		c.conn.SetReadDeadline(time.Now().Add(readTimeout))
