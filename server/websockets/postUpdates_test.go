@@ -453,7 +453,6 @@ func (*DB) TestSpliceValidityChecks(c *C) {
 		err        error
 	}{
 		{-1, 1, "", "", errInvalidSpliceCoords},
-		{0, -1, "", "", errInvalidSpliceCoords},
 		{2, 1, "", "abc", errInvalidSpliceCoords},
 		{0, 0, "", "", errSpliceNOOP},
 		{0, 0, tooLong, "", errSpliceTooLong},
@@ -500,6 +499,22 @@ func (*DB) TestSplice(c *C) {
 			init:  "abc",
 			final: "bc",
 			log:   []string{`05{"id":2,"start":0,"len":1,"text":""}`},
+		},
+		{
+			start: 2,
+			len:   -1,
+			text:  "abc",
+			init:  "abcd",
+			final: "ababc",
+			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
+		},
+		{
+			start: 2,
+			len:   -1,
+			text:  "abc",
+			init:  "ab",
+			final: "ababc",
+			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
 		},
 		{
 			start: 2,

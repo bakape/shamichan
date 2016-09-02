@@ -7,7 +7,7 @@ import FSM from "../../fsm"
 import {connState, connSM} from "../../connection"
 import {write, $threads} from "../../render"
 import {posts as lang} from "../../lang"
-import {on} from "../../util"
+import {on, getClosestID} from "../../util"
 
 // Sent to the FSM via the "open" and "hijack" events
 export type FormMessage = {
@@ -150,3 +150,17 @@ postSM.on(postState.ready, () =>
 on($threads, "click", postSM.feeder(postEvent.open), {
 	selector: "aside.posting a",
 })
+
+// Handle clicks on post qouting links
+on($threads, "click", quotePost, {
+	selector: "a.quote",
+	passive: true,
+})
+
+function quotePost(event: Event) {
+
+	// TODO: Quote selected text
+
+	postSM.feed(postEvent.open)
+	postModel.addReference(getClosestID(event.target as Element))
+}

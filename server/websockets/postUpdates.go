@@ -322,7 +322,7 @@ func spliceText(data []byte, c *Client) error {
 	switch {
 	case err != nil:
 		return err
-	case req.Start < 0, req.Len < 0, req.Start+req.Len > oldLength:
+	case req.Start < 0, req.Start+req.Len > oldLength:
 		return errInvalidSpliceCoords
 	case req.Len == 0 && req.Text == "":
 		return errSpliceNOOP // This does nothing. Client-side error.
@@ -338,8 +338,16 @@ func spliceText(data []byte, c *Client) error {
 func spliceLine(req spliceRequest, c *Client) error {
 	old := c.openPost.String()
 	start := old[:req.Start]
-	end := req.Text + old[req.Start+req.Len:]
-	c.openPost.bodyLength += -req.Len + len(req.Text)
+	var end string
+
+	// -1 has special meaning - slice off till line end.
+	if req.Len < 0 {
+		end = req.Text
+		c.openPost.bodyLength += len(req.Text) - len(old[req.Start:])
+	} else {
+		end = req.Text + old[req.Start+req.Len:]
+		c.openPost.bodyLength += -req.Len + len(req.Text)
+	}
 	res := spliceResponse{
 		ID:            c.openPost.id,
 		spliceRequest: req,

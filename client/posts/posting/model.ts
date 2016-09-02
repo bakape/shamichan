@@ -11,6 +11,7 @@ import PostView from "../view"
 import {SpliceResponse} from "../../client"
 import {FileData} from "./upload"
 import {newAllocRequest, PostCredentials} from "./identity"
+import {write} from "../../render"
 
 // A message created while disconnected for later sending
 type BufferedMessage = [message, any]
@@ -29,6 +30,7 @@ export class OPFormModel extends OP implements FormModel {
 	inputState: TextState
 	messageBuffer: BufferedMessage[]
 
+	addReference: (id: number) => void
 	commitChar: (char: string) => void
 	commitBackspace: () => void
 	commitClose: () => void
@@ -73,6 +75,7 @@ export class ReplyFormModel extends Post implements FormModel {
 	inputState: TextState
 	messageBuffer: BufferedMessage[]
 
+	addReference: (id: number) => void
 	commitChar: (char: string) => void
 	commitBackspace: () => void
 	commitClose: () => void
@@ -284,9 +287,7 @@ export class FormModel {
 	// Commit any other $input change that is not an append or backspace
 	commitSplice(val: string, lenDiff: number) {
 		const old = this.inputState.line
-		let start: number,
-			len: number,
-			text: string
+		let start: number
 
 		// Find first differing character
 		for (let i = 0; i < old.length; i++) {
@@ -296,24 +297,23 @@ export class FormModel {
 			}
 		}
 
-		// Find the length of the deleted text from old
-		const max = Math.max(old.length, val.length),
-			vOffset = val.length - max - 1,
-			oOffset = old.length - max - 1
-		for (let i = max - 1; i >= start; i--) {
-			if (old[i + oOffset] !== val[i + vOffset]) {
-				len = i + oOffset - start + 1
-				break
-			}
+		// New string is appended to the end
+		if (start === undefined) {
+			start = old.length
 		}
 
-		// Find text to be inserted at the start position
-		text = val.substring(start, val.lastIndexOf(old.slice(start + len)))
-
-		this.send(message.splice, {start, len, text})
+		// Right now we simply resend the entire corrected string, including the
+		// common part, because I can't figure out a diff algorithm that covers
+		// all cases. The backend techincally supports the latter.
+		const end = val.slice(start)
+		this.send(message.splice, {
+			start,
+			len: -1,
+			text: end,
+		})
 		this.bodyLength += lenDiff
-		this.inputState.line = val
-		this.reformatInput(val)
+		this.inputState.line = old.slice(0, start + 1) + end
+		this.reformatInput(this.inputState.line)
 	}
 
 	// Reformat the text, if the input contains newlines
@@ -346,6 +346,24 @@ export class FormModel {
 	lastBodyLine(): string {
 		const i = this.body.lastIndexOf("\n")
 		return this.body.slice(i + 1)
+	}
+
+	// Add a link to the target post in the input
+	addReference(id: number) {
+		let s = ""
+		const {line} = this.inputState
+
+		// If already linking a post, put the new one on the next line
+		if (/^>>\d+ ?$/.test(line)) {
+			s += "\n"
+		} else if (line && line[line.length - 1] !== " ") {
+			s += " "
+		}
+
+		s += ">>" + id
+		this.view.injectString(s)
+		write(() =>
+			this.view.onInput())
 	}
 }
 

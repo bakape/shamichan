@@ -125,7 +125,7 @@ export class FormView extends PostView implements UploadForm {
 	}
 
 	// Handle input events on $input
-	onInput(val: string) {
+	onInput(val: string = this.$input.textContent) {
 		if (this.inputLock) {
 			return
 		}
@@ -160,6 +160,21 @@ export class FormView extends PostView implements UploadForm {
 		write(() =>
 			this.lockInput(() =>
 				this.$input.textContent = val))
+	}
+
+	// Inject a string into the $input field and set the cursor to the input's
+	// end
+	injectString(s: string) {
+		write(() => {
+			const $i = this.$input
+			$i.textContent += s
+			const range = document.createRange(),
+				sel = window.getSelection()
+			range.setEndAfter($i.lastChild)
+			range.collapse(false)
+			sel.removeAllRanges()
+			sel.addRange(range)
+		})
 	}
 
 	// Start a new line in the input field and close the previous one
@@ -213,7 +228,7 @@ export class FormView extends PostView implements UploadForm {
 	// Lock the post form after a crytical error accours
 	renderError() {
 		write(() =>
-			(this.$blockquote.classList.add("errored"),
+			(this.el.classList.add("errored"),
 			this.$input.setAttribute("contenteditable", "false")))
 	}
 
