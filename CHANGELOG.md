@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##vNext
+##v2.2.0-beta - 2016-09-02
 * Add:
 	- Configurable board navigation panel
 	- Board configutation WebUI
