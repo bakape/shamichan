@@ -15,7 +15,7 @@ else
 	export GOPATH=$(shell pwd)/.build
 	BINARY=meguca
 	ISWINDOWS=false
-	PACKAGE="meguca-$(VERSION)_$(shell uname -s)_$(shell uname -p).zip"
+	PACKAGE="meguca-$(VERSION)_$(shell uname -s)_$(shell uname -p).tar.xz"
 endif
 
 .PHONY: server client init
@@ -87,12 +87,10 @@ package: all
 	rm -rf .package
 	mkdir -p .package/templates .package/images/src .package/images/thumb
 	cp -r docs scripts www CHANGELOG.md README.md LICENSE $(BINARY) .package/
-ifeq ($(ISWINDOWS), true)
-	cp *.dll .package/
-endif
 	cp -r templates/*.html .package/templates/
 ifeq ($(ISWINDOWS), true)
 	cp *.dll .package/
+	cd .package; zip -r ../$(PACKAGE) .
+else
+	cd .package; tar cfpJ ../$(PACKAGE) *
 endif
-	cd .package; zip -r $(PACKAGE) .
-	mv .package/$(PACKAGE) .

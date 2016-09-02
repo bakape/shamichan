@@ -11,6 +11,7 @@ node_modules
 meguca
 meguca.exe
 meguca-*.zip
+meguca-*.tar.xz
 www/illya.mp4
 www/illya.webm
 www/css/*.css
