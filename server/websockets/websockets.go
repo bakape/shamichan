@@ -189,7 +189,6 @@ func (c *Client) closeConnections(err error) error {
 	if err != nil {
 		close(c.close)
 	}
-	close(c.write)
 
 	// Send the client the reason for closing
 	var closeType int

@@ -156,7 +156,11 @@ func StreamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
 				// Several update messages may come from the feed at a time.
 				// Separate and send each individually.
 				for _, msg := range updates {
-					write <- msg
+					select {
+					case write <- msg:
+					case <-close:
+						return
+					}
 				}
 			}
 		}
