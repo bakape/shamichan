@@ -1,6 +1,15 @@
+# Path to gulp executable for building the client
 GULP=./node_modules/.bin/gulp
+
+# Version for tagging the releases
 VERSION=$(shell git describe --abbrev=0 --tags)
 
+# Path to and target for the MXE cross environment for cross-compiling to
+# win_amd64. Default value is the debian x86-static install path.
+MXE_ROOT=/usr/lib/mxe/usr
+MXE_TARGET=x86_64-w64-mingw32.static
+
+# Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
 	BUILD_PATH="/.meguca_build/src/github.com/bakape"
 	export GOPATH="/.meguca_build"
@@ -20,22 +29,28 @@ endif
 
 .PHONY: server client init
 
+# Build everything and initialize the dirs
 all: server client init
 
+# Update NPM deps and build client
 client:
 	npm update
 	$(GULP)
 	$(GULP) es5
 
+# Incrementaly rebuild the client for faster develepment builds. Only builds
+# the ES6 version for modern browsers.
 watch:
 	$(GULP) -w
 
+# Build server
 server: server_deps
 	go build -v -o $(BINARY)
 ifeq ($(ISWINDOWS), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
+# Fecth all server dependancies. Dependacies are not updated automatically.
 server_deps: build_dirs
 	go list -f '{{.Deps}}' . \
 		| tr "[" " " \
@@ -44,6 +59,7 @@ server_deps: build_dirs
 		| grep -v 'github.com/bakape/meguca' \
 		| xargs go get -v
 
+# Creates the temporary directories for compiling
 build_dirs:
 ifeq ($(ISWINDOWS), true)
 	rm -rf $(BUILD_PATH)
@@ -51,25 +67,32 @@ endif
 	mkdir -p $(BUILD_PATH)
 	ln -sfn "$(shell pwd)" $(BUILD_PATH)/meguca
 
+# Removes compiled client files
+client_clean:
+	rm -rf www/js www/css/*.css www/css/maps www/lang
+
+# Removes any build and dependancy directories
 clean: client_clean
-	rm -rf .build .ffmpeg node_modules $(BINARY)
+	rm -rf .build .ffmpeg node_modules $(BINARY) .package
 ifeq ($(ISWINDOWS), true)
 	rm -rf /.meguca_build *.dll
 endif
 
-client_clean:
-	rm -rf www/js www/css/*.css www/css/maps www/lang
-
+# Also removes runtime use dirs
 dist_clean: clean
-	rm -rf images assets error.log .package
+	rm -rf images assets error.log
 
+# Create dirs required for use during runtime
 init:
 	mkdir -p assets images/src images/thumb
 
+# Run all server tests
 test: server_deps
 	go get gopkg.in/check.v1
 	go test ./...
 
+# Build ffmpeg for integration testing with Travis.cl. We need these, because
+# their servers are still running trusty.
 travis_build_ffmpeg:
 	apt-get install -y libvpx-dev libmp3lame-dev libopus-dev libvorbis-dev \
 		libx264-dev libtheora-dev git build-essential yasm
@@ -83,14 +106,40 @@ ifeq ("$(wildcard .ffmpeg/ffmpeg)", "")
 endif
 	$(MAKE) -C .ffmpeg install
 
-package: all
-	rm -rf .package
-	mkdir -p .package/templates .package/images/src .package/images/thumb
-	cp -r docs scripts www CHANGELOG.md README.md LICENSE $(BINARY) .package/
-	cp -r templates/*.html .package/templates/
+# Generate binary packages for distribution
+package: all package_copy
+	cp $(BINARY) ./package
 ifeq ($(ISWINDOWS), true)
 	cp *.dll .package/
-	cd .package; zip -r ../$(PACKAGE) .
+	cd .package; zip -rq ../$(PACKAGE) .
 else
 	cd .package; tar cfpJ ../$(PACKAGE) *
 endif
+
+# Copy generated package contents for archiving
+package_copy:
+	rm -rf .package
+	mkdir -p .package/templates .package/images/src .package/images/thumb
+	cp -r docs scripts www CHANGELOG.md README.md LICENSE .package/
+	cp -r templates/*.html .package/templates/
+
+# Cross-compile from Unix into a Windows_amd64 static binary
+# Needs Go checkout dfbbe06a205e7048a8541c4c97b250c24c40db96 or later. At the
+# moment of writing this change is not released yet. Should probably make it
+# into Go 1.7.1.
+# Depends on:
+# 	mxe-x86-64-w64-mingw32.static-gcc
+# 	mxe-x86-64-w64-mingw32.static-libidn
+# 	mxe-x86-64-w64-mingw32.static-ffmpeg
+cross_compile_win_amd64: server_deps
+	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
+	CC=$(MXE_ROOT)/bin/$(MXE_TARGET)-gcc \
+	PKG_CONFIG=$(MXE_ROOT)/bin/$(MXE_TARGET)-pkg-config \
+	PKG_CONFIG_LIBDIR=$(MXE_ROOT)/$(MXE_TARGET)/lib/pkgconfig/ \
+	PKG_CONFIG_PATH=$(MXE_ROOT)/$(MXE_TARGET)/lib/pkgconfig/ \
+	go build -v -o meguca.exe
+
+# Zip the cross-compiled contents into an archive
+cross_package_win_amd64: cross_compile_win_amd64 init client package_copy
+	cp meguca.exe .package/
+	cd .package; zip -rq ../meguca-$(VERSION)_windows_AMD64.zip .

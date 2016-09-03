@@ -27,7 +27,8 @@ compiled with:
 
 ##Compiled Binaries
 Compiled binary release archives for linux/x86_64 and windows/x86_64 are downloadable
-from the [release](https://github.com/bakape/meguca/releases) page.
+from the [release](https://github.com/bakape/meguca/releases) page. The Windows
+binary statically links ffmpeg and does not require it installed.
 
 ##Production
 * See `./meguca help` for server operation
