@@ -183,7 +183,8 @@ export class Post extends Model implements PostData {
 		line = keep + end
 
 		// Replace last line in text body
-		this.body = this.body.split("\n").slice(0, -1).join("\n") + line
+		let iLast = this.body.lastIndexOf("\n")
+		this.body = this.body.substring(0, iLast + 1) + line
 
 		return line
 	}

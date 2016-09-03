@@ -11,7 +11,6 @@ import PostView from "../view"
 import {SpliceResponse} from "../../client"
 import {FileData} from "./upload"
 import {newAllocRequest, PostCredentials} from "./identity"
-import {write} from "../../render"
 
 // A message created while disconnected for later sending
 type BufferedMessage = [message, any]
@@ -323,9 +322,8 @@ export class FormModel {
 		}
 		const lines = val.split("\n"),
 			lastLine = lines[lines.length - 1]
-		this.view.injectLines(lines.slice(0, -1), lastLine)
-		this.resetState()
 		this.inputState.line = lastLine
+		this.view.injectLines(lines.slice(0, -1), lastLine)
 	}
 
 	// Close the form and revert to regular post
@@ -361,9 +359,7 @@ export class FormModel {
 		}
 
 		s += ">>" + id
-		this.view.injectString(s)
-		write(() =>
-			this.view.onInput())
+		this.view.replaceLine(this.inputState.line + s)
 	}
 }
 

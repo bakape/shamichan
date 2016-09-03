@@ -153,27 +153,24 @@ export class FormView extends PostView implements UploadForm {
 
 	// Trim $input from the end by the suplied length
 	trimInput(length: number) {
-		let val = this.$input.textContent.slice(0, -length)
-		if (val === "") {
-			val = "\u200b"
-		}
+		let val = this.$input.textContent.slice(0, -length) || "\u200b"
 		write(() =>
 			this.lockInput(() =>
 				this.$input.textContent = val))
 	}
 
-	// Inject a string into the $input field and set the cursor to the input's
-	// end
-	injectString(s: string) {
+
+	// Replace the current line and set the cursor to the input's end
+	replaceLine(line: string) {
 		write(() => {
-			const $i = this.$input
-			$i.textContent += s
+			this.$input.textContent = line || "\u200b"
 			const range = document.createRange(),
 				sel = window.getSelection()
-			range.setEndAfter($i.lastChild)
+			range.setEndAfter(this.$input.lastChild)
 			range.collapse(false)
 			sel.removeAllRanges()
 			sel.addRange(range)
+			this.onInput()
 		})
 	}
 
@@ -188,7 +185,7 @@ export class FormView extends PostView implements UploadForm {
 		})
 	}
 
-	// Inject lines before $input and set $input contents to lastLine
+	// Inject lines before $input and set $input contents to the lastLine
 	injectLines(lines: string[], lastLine: string) {
 		const frag = document.createDocumentFragment()
 		for (let line of lines) {
@@ -196,9 +193,8 @@ export class FormView extends PostView implements UploadForm {
 			frag.append(el)
 		}
 		write(() =>
-			(this.$input.before(frag),
-			this.lockInput(() =>
-				this.$input.textContent = lastLine)))
+			this.$input.before(frag))
+		this.replaceLine(lastLine)
 	}
 
 	// Parse and replace the temporary like closed by $input with a proper
