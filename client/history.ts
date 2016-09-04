@@ -20,7 +20,7 @@ function handleClick(event: KeyboardEvent) {
 	const href =
 		((event.target as Element)
 			.closest("a.history") as HTMLAnchorElement)
-		.href
+		.getAttribute("href")
 	navigate(href, event, true).catch(alertError)
 }
 
