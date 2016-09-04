@@ -93,23 +93,26 @@ async function renderBackground(bg?: BackgroundStore) {
 type BackgroundGradients = {
 	normal: string
 	editing: string
+	highlight: string
 }
 
 // Map for transparency gradients to apply on top of the blurred background
 const colourMap: {[key: string]: BackgroundGradients} = {
 	glass: {
 		normal: 'rgba(40, 42, 46, 0.5)',
-		editing: 'rgba(145, 145, 145, 0.5)'
+		editing: 'rgba(145, 145, 145, 0.5)',
+		highlight: 'rgba(57, 59, 65, .7)',
 	},
 	ocean: {
 		normal: 'rgba(28, 29, 34, 0.781)',
-		editing: 'rgba(44, 57, 71, 0.88)'
+		editing: 'rgba(44, 57, 71, 0.88)',
+		highlight: 'rgba(44, 44, 51, .95)',
 	}
 }
 
 // Apply transparent blurred glass background to elemnts with the 'glass' class
 function renderGlass(theme: string, blob: Blob): string {
-	const {normal, editing} = colourMap[theme],
+	const {normal, editing, highlight} = colourMap[theme],
 		blurred = URL.createObjectURL(blob)
 	return HTML
 		`.glass {
@@ -121,6 +124,12 @@ function renderGlass(theme: string, blob: Blob): string {
 		.glass.editing {
 			background:
 				linear-gradient(${editing}, ${editing}),
+				url(${blurred}) center fixed no-repeat;
+			background-size: cover;
+		}
+		.glass.highlight {
+			background:
+				linear-gradient(${highlight}, ${highlight}),
 				url(${blurred}) center fixed no-repeat;
 			background-size: cover;
 		}`
