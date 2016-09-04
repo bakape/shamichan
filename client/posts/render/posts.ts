@@ -43,6 +43,10 @@ export function renderName(
 	el: Element,
 	{trip, name, auth, email}: PostCredentials,
 ) {
+	if (options.anonymise) {
+		el.innerHTML = lang.anon
+		return
+	}
 	let html = ""
 
 	if (email) {

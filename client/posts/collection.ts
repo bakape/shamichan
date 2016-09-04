@@ -46,10 +46,10 @@ export default class PostCollection{
 		this.op = null
 	}
 
-	// Runs the suplied function for each model in the collection
-	forEach(fn: (model: Post) => void) {
-		for (let id in this.models) {
-			fn(this.models[id])
-		}
+	*[Symbol.iterator](): IterableIterator<Post> {
+		yield* Object
+			.keys(this.models)
+			.map(key =>
+				this.models[key])
 	}
 }

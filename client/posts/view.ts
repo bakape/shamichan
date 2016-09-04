@@ -1,7 +1,7 @@
 import {Post, OP} from './models'
 import {mine, posts, page} from '../state'
 import {makeFrag, pluralize, HTML} from '../util'
-import renderPost from './render/posts'
+import renderPost, {renderName, renderTime} from './render/posts'
 import {parseOpenLine, parseTerminatedLine} from './render/body'
 import {write, importTemplate} from '../render'
 import {renderBacklinks} from './render/etc'
@@ -142,6 +142,18 @@ export default class PostView extends ImageHandler {
 			this.lastLine().replaceWith(frag)
 			this.$buffer = this.$blockquote = null
 		})
+	}
+
+	// Render the name, tripcode and email in the header
+	renderName() {
+		write(() =>
+			renderName(this.el.querySelector(".name"), this.model))
+	}
+
+	// Render the <time> element in the header
+	renderTime() {
+		write(() =>
+			renderTime(this.el.querySelector("time"), this.model.time))
 	}
 }
 

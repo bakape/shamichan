@@ -1,10 +1,3 @@
-/*
-Timezone corrections, batch timestamp updates, syncwatch, util.
- */
-
-let main = require('./main'),
-	{$, Backbone, common, oneeSama, options, state} = main;
-
 // Get a more accurate server-client time offset, for interclient syncing
 // Does not account for latency, but good enough for our purposes
 var serverTimeOffset = 0;
@@ -14,17 +7,6 @@ main.dispatcher[common.GET_TIME] = function(msg){
 	serverTimeOffset = msg[0] - Date.now();
 };
 main.reply('time:offset', () => serverTimeOffset);
-
-let renderTimer;
-function batcTimeRender(source, rtime = options.get('relativeTime')) {
-	state.posts.each(model => model.dispatch('renderTime'));
-	if (renderTimer)
-		clearTimeout(renderTimer);
-	if (rtime)
-		renderTimer = setTimeout(batcTimeRender, 60000)
-}
-main.reply('time:render', batcTimeRender);
-options.on('change:relativeTime', batcTimeRender);
 
 /* syncwatch */
 function timer_from_el(el) {
@@ -77,5 +59,4 @@ function mouikkai() {
 	}, 1000);
 }
 
-main.defer(batcTimeRender)
-	.defer(mouikkai)
+main.defer(mouikkai)

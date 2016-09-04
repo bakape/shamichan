@@ -15,6 +15,7 @@ import {exec} from './defer'
 import bindThreadCreation from './posts/posting/threadCreation'
 import {initOptions} from './options'
 import bindEtc from './etc'
+import bindOptionsListeners from "./options/loop"
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -42,6 +43,7 @@ async function start() {
 	new BoardNavigation()
 	bindThreadCreation()
 	bindEtc()
+	bindOptionsListeners()
 	exec()
 	await pageLoader
 	connect()
