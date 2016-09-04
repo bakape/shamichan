@@ -72,6 +72,7 @@ export interface ImageData {
 	large: boolean              // Added at runtime to render larger thumbnails
 	expanded: boolean           // Thumbnail is expanded
 	tallerThanViewport: boolean // Image is taller than the current viewport
+	revealed: boolean          // Reaveling a hidden image with [Show]
 	fileType: fileTypes
 	length?: number
 	size: number

@@ -1,34 +1,4 @@
 exports.Hidamari = Backbone.View.extend({
-	/*
-	 Render entire <figure>. Rerenderring completely each time is considerable
-	 overhed, but the alternative is very convoluted logic. I don't really want
-	 to attach a FSM to each view, just for image renderring.
-	 */
-	renderImage(arg, image, manual) {
-		/*
-		 All kinds of listeners call this method, so we need to ensure we
-		 always get the appropriate image object.
-		 */
-		const reveal = arg === true,
-			{model, el} = this;
-		if (!image || !image.src)
-			image = model.get('image');
-		const figure = el.query('figure');
-		if (figure)
-			figure.remove();
-
-		// Remove image on mod deletion
-		if (!image)
-			return;
-		el.query('blockquote')
-			.before(util.parseDOM(oneeSama.image(image, reveal)));
-
-		model.set({
-			// Only used in hidden thumbnail mode
-			thumbnailRevealed: reveal,
-		});
-	},
-
 	autoExpandImage() {
 		const img = this.model.get('image');
 		if (!img
@@ -99,13 +69,3 @@ const ExpanderModel = Backbone.Model.extend({
 
 const massExpander = exports.massExpander = new ExpanderModel();
 main.reply('massExpander:unset', () => massExpander.unset());
-
-// Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
-$threads.on('click', '.imageToggle', function(e) {
-	e.preventDefault();
-	let model = util.getModel(e.target);
-	if (!model)
-		return;
-	main.follow(() =>
-		model.dispatch('renderImage', !model.get('thumbnailRevealed')));
-});

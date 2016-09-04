@@ -9,12 +9,13 @@ import {scrollToElement} from "../scroll"
 
 // Mixin for image expansion and related functionality
 export default class ImageHandler extends View<Post> {
-	// Render the figure and figcaption of a post
-	renderImage() {
+	// Render the figure and figcaption of a post. Optionally set reveal to
+	// true, if in hidden thumbnail mode, to reveal the thumbnail.
+	renderImage(reveal?: boolean) {
 		const img = this.model.image
 		write(() =>
-			(renderFigcaption(this.el.querySelector("figcaption"), img),
-			renderImage(this.el.querySelector("figure"), img)))
+			(renderFigcaption(this.el.querySelector("figcaption"), img, reveal),
+			renderImage(this.el.querySelector("figure"), img, reveal)))
 	}
 
 	toggleImageExpansion(event: Event) {
@@ -51,7 +52,7 @@ export default class ImageHandler extends View<Post> {
 			scrollToElement(this.el as HTMLElement)
 		}
 
-		img.expanded = img.tallerThanViewport = false
+		img.expanded = img.tallerThanViewport = img.revealed = false
 	}
 
 	expandImage(event: Event) {
@@ -124,4 +125,20 @@ function handleImageClick(event: MouseEvent) {
 	model.view.toggleImageExpansion(event)
 
 	// TODO: Remove any image hover previews
+}
+
+// Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
+on($threads, "click", toggleHiddenThumbnail, {
+	passive: true,
+	selector: ".image-toggle",
+})
+
+function toggleHiddenThumbnail(event: Event) {
+	const model = getModel(event.target as Element)
+	if (!model) {
+		return
+	}
+	const {revealed} = model.image
+	model.view.renderImage(!revealed)
+	model.image.revealed = !revealed
 }
