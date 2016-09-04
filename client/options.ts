@@ -5,6 +5,8 @@ import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
 import OptionsPanel from './options/view'
 import {defer} from './defer'
 
+let view: OptionsPanel
+
 // Delete legacy options localStorage entry, if any
 localStorage.removeItem("options")
 
@@ -116,6 +118,7 @@ class OptionModel {
 		if (val !== this.spec.default || this.read()) {
 			localStorage.setItem(this.id, val.toString())
 		}
+		view.assignValue(this.id, this.spec.type, val)
 	}
 
 	// Perform value validation, if any. Othervise return true.
@@ -143,5 +146,5 @@ export function initOptions() {
 	}
 
 	defer(() =>
-		new OptionsPanel())
+		view = new OptionsPanel())
 }

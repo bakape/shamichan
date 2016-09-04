@@ -45,22 +45,29 @@ export default class OptionsPanel extends TabbedModal {
 	assignValues() {
 		for (let id in models) {
 			const model = models[id],
-				el = this.el.querySelector('#' + id) as HTMLInputElement,
 				val = model.get()
-			switch (model.spec.type) {
-			case optionType.checkbox:
-				el.checked = val as boolean
-				break
-			case optionType.number:
-			case optionType.menu:
-				el.value = val as string
-				break
-			case optionType.shortcut:
-				el.value = String.fromCharCode(val as number).toUpperCase()
-				break
-			}
-			// 'image' type simply falls through, as those don't need to be set
+			this.assignValue(id, model.spec.type, val)
 		}
+	}
+
+	// Assign a single option value. Called on changes to the options externally
+	// not from the options panel
+	assignValue(id: string, type: optionType, val: any) {
+		const el = this.el.querySelector('#' + id) as HTMLInputElement
+
+		switch (type) {
+		case optionType.checkbox:
+			el.checked = val as boolean
+			break
+		case optionType.number:
+		case optionType.menu:
+			el.value = val as string
+			break
+		case optionType.shortcut:
+			el.value = String.fromCharCode(val as number).toUpperCase()
+			break
+		}
+		// 'image' type simply falls through, as those don't need to be set
 	}
 
 	// Propagate options panel changes through
