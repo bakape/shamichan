@@ -3,6 +3,8 @@ import {PageState, boardConfig, posts, setSyncCounter} from '../state'
 import renderThread from './thread'
 import renderBoard from './board'
 import {ThreadData} from '../posts/models'
+import {scrollToAnchor} from "../scroll"
+import {read} from "../render"
 
 // Data of a single board retrieved from the server through `/json/:board`
 type BoardData = {
@@ -35,4 +37,8 @@ export default async function (
 	} else {
 		renderBoard((data as BoardData).threads)
 	}
+
+	// Scroll to any selected anchor, after page renders
+	read(() =>
+		scrollToAnchor())
 }

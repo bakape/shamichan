@@ -5,6 +5,7 @@ import {write, $threads} from "../render"
 import options from "../options"
 import {setAttrs, on} from "../util"
 import {getModel} from "../state"
+import {scrollToElement} from "../scroll"
 
 // Mixin for image expansion and related functionality
 export default class ImageHandler extends View<Post> {
@@ -47,10 +48,7 @@ export default class ImageHandler extends View<Post> {
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
 		if (img.tallerThanViewport) {
-			const pos =
-				this.el.getBoundingClientRect().top
-				+ document.body.scrollTop
-			window.scrollTo(0, pos)
+			scrollToElement(this.el as HTMLElement)
 		}
 
 		img.expanded = img.tallerThanViewport = false

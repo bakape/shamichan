@@ -5,6 +5,8 @@ import {read, page, displayLoading} from './state'
 import loadPage from './page/load'
 import {synchronise} from './connection'
 import {postSM, postEvent} from "./posts/posting/main"
+import {scrollToAnchor} from "./scroll"
+import {read as renderRead} from "./render"
 
 // Bind event listener
 on(document, "click", handleClick, {
@@ -65,4 +67,7 @@ function alertError(err: Error) {
 
 // For back and forward history events
 window.onpopstate = (event: any) =>
-	navigate(event.target.location.href, null, false).catch(alertError)
+	(navigate(event.target.location.href, null, false)
+		.catch(alertError),
+	renderRead(() =>
+		scrollToAnchor()))
