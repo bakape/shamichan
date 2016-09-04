@@ -43,6 +43,7 @@ func serveImages(w http.ResponseWriter, r *http.Request, p map[string]string) {
 // Server static assets
 func serveAssets(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	r.URL.Path = p["path"]
+	w.Header().Set("Cache-Control", "max-age=0,must-revalidate")
 	assetServer.ServeHTTP(w, r)
 }
 
