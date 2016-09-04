@@ -68,13 +68,10 @@ var (
 )
 
 // Default string for the FAQ panel
-const defaultFAQ = `Upload size limit is 5 MB
-Accepted upload file types: JPG, JPEG, PNG, GIF, WEBM, SVG, PDF, MP3, MP4, OGG
-<hr>Hash commands:
+const defaultFAQ = `<hr>Hash commands:
 #d100 #2d100 - Roll dice
 #flip - Coin flip
 #8ball - An 8ball
-#queue - Print r/a/dio song queue
 #sw24:15 #sw2:24:15 #sw24:15+30 #sw24:15-30 - Syncronised duration timer
 
 All hash commands need to be input on their own line`
