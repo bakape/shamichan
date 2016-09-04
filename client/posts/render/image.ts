@@ -143,7 +143,7 @@ function readableFilesize(size: number): string {
 
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
-function thumbPath({SHA1, fileType}: ImageData): string {
+function thumbPath(SHA1: string, fileType: fileTypes): string {
 	const ext = fileType === fileTypes.jpg ? "jpg" : "png"
 	return `/images/thumb/${SHA1}.${ext}`
 }
@@ -190,7 +190,7 @@ export function renderThumbnail(el: Element, data: ImageData, href?: string) {
 		// Animated GIF thumbnails
 		thumb = src
 	} else {
-		thumb = thumbPath(data)
+		thumb = thumbPath(data.SHA1, data.fileType)
 	}
 
 	// Downscale thumbnail for higher DPI, unless specified not to
@@ -219,6 +219,7 @@ export function renderThumbnail(el: Element, data: ImageData, href?: string) {
 		linkAttrs["target"] = "_blank"
 		linkAttrs["download"] =
 			`${escape(data.name)}.${fileTypes[data.fileType]}`
+		imgAttrs["class"] = "" // Remove any existing classes
 	}
 
 	setAttrs(el, linkAttrs)

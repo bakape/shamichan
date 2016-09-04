@@ -53,6 +53,8 @@ function renderThread(thread: ThreadData): DocumentFragment {
 		href = `../${thread.board}/${thread.id}`,
 		lastN = options.lastN.toString()
 
+	frag.firstElementChild.id = "p" + thread.id
+
 	if (thread.image) {
 		thread.image.large = true // Display larger thumbnails
 		if (!options.hideThumbs) {
