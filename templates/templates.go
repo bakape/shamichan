@@ -20,6 +20,17 @@ var (
 	// resources conatains all available templates
 	resources = map[string]Store{}
 
+	// clientFileHash is the combined, shortened MD5 hash of all client files
+	clientFileHash string
+
+	imageSearchEngines = []imageSearch{
+		{"google", "G"},
+		{"iqdb", "Iq"},
+		{"saucenao", "Sn"},
+		{"desustorage", "Ds"},
+		{"exhentai", "Ex"},
+	}
+
 	mu sync.RWMutex
 )
 
@@ -28,6 +39,23 @@ var (
 type Store struct {
 	HTML []byte
 	Hash string
+}
+
+// Template variables
+type vars struct {
+	IsMobile    bool
+	Captcha     bool
+	Config      template.JS
+	Navigation  template.HTML
+	Email       string
+	ConfigHash  string
+	DefaultCSS  string
+	ImageSearch []imageSearch
+}
+
+// Definition for an image search link
+type imageSearch struct {
+	ID, Abbrev string
 }
 
 // Compile reads template HTML from disk, injects dynamic variables,
@@ -46,19 +74,6 @@ func Compile() error {
 	return nil
 }
 
-// clientFileHash is the combined, shortened MD5 hash of all client files
-var clientFileHash string
-
-type vars struct {
-	IsMobile   bool
-	Captcha    bool
-	Config     template.JS
-	Navigation template.HTML
-	Email      string
-	ConfigHash string
-	DefaultCSS string
-}
-
 // indexTemplate compiles the HTML template for thread and board pages of the
 // imageboard
 func indexTemplate() (desktop Store, mobile Store, err error) {
@@ -66,11 +81,12 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 	conf := config.Get()
 
 	v := vars{
-		Config:     template.JS(clientJSON),
-		ConfigHash: hash,
-		Captcha:    conf.Captcha,
-		Email:      conf.FeedbackEmail,
-		DefaultCSS: conf.DefaultCSS,
+		Config:      template.JS(clientJSON),
+		ConfigHash:  hash,
+		Captcha:     conf.Captcha,
+		Email:       conf.FeedbackEmail,
+		DefaultCSS:  conf.DefaultCSS,
+		ImageSearch: imageSearchEngines,
 	}
 	path := filepath.FromSlash(TemplateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)

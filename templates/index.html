@@ -46,6 +46,13 @@
 			</span>
 		</header>
 		<figcaption class="spaced" hidden>
+			<span class="spaced">
+				{{range .ImageSearch -}}
+				<a class="image-search {{.ID}}" data-id="{{.ID}}">
+					{{.Abbrev}}
+				</a>
+				{{- end}}
+			</span>
 			<a class="image-toggle act" hidden></a>
 			<span></span>
 			<a></a>

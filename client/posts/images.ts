@@ -1,11 +1,21 @@
 import {Post, fileTypes} from "./models"
 import View from "../view"
-import {renderFigcaption, renderImage, sourcePath} from "./render/image"
+import {
+	renderFigcaption, renderImage, sourcePath, thumbPath,
+} from "./render/image"
 import {write, $threads} from "../render"
 import options from "../options"
 import {setAttrs, on} from "../util"
 import {getModel} from "../state"
 import {scrollToElement} from "../scroll"
+
+// Specs for hadnling image search link clicks
+type ImageSearchSpec = {
+	type: ISType
+	url: string
+}
+
+const enum ISType {thumb, MD5, SHA1}
 
 // Mixin for image expansion and related functionality
 export default class ImageHandler extends View<Post> {
@@ -141,4 +151,57 @@ function toggleHiddenThumbnail(event: Event) {
 	const {revealed} = model.image
 	model.view.renderImage(!revealed)
 	model.image.revealed = !revealed
+}
+
+// Handle image search links
+on($threads, "click", handleImageSearch, {
+	passive: true,
+	selector: ".image-search",
+})
+
+const ISSpecs: {[engine: string]: ImageSearchSpec} = {
+	google: {
+		type: ISType.thumb,
+		url: "https://www.google.com/searchbyimage?image_url=",
+	},
+	iqdb: {
+		type: ISType.thumb,
+		url: "http://iqdb.org/?url=",
+	},
+	saucenao: {
+		type: ISType.thumb,
+		url: "http://saucenao.com/search.php?db=999&url=",
+	},
+	desustorage: {
+		type: ISType.MD5,
+		url: "https://desuarchive.org/_/search/image/",
+	},
+	exhentai: {
+		type: ISType.SHA1,
+		url: "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
+	},
+}
+
+function handleImageSearch(event: Event) {
+	const el = event.target as Element,
+		model = getModel(el)
+	if (!model) {
+		return
+	}
+	const id = el.getAttribute("data-id"),
+		{image: img} = model,
+		{type, url} = ISSpecs[id]
+	let arg: string
+	switch (type) {
+	case ISType.thumb:
+		arg = location.origin + thumbPath(img.SHA1, img.fileType)
+		break
+	case ISType.MD5:
+		arg = img.MD5
+		break
+	case ISType.SHA1:
+		arg = img.SHA1
+		break
+	}
+	window.open(url + encodeURIComponent(arg), "_blank")
 }

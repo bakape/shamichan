@@ -38,14 +38,14 @@ export function renderFigcaption(
 		list.push('APNG')
 	}
 
-	const [hToggle, info, link] = Array.from(el.children) as HTMLElement[]
+	const [, hToggle, info, link] = Array.from(el.children) as HTMLElement[]
 	if (!options.hideThumbs) {
 		hToggle.hidden = true
 	} else {
 		hToggle.hidden = false
 		hToggle.textContent = lang[reveal ? 'hide' : 'show']
 	}
-	info.textContent = `(${commaList(list)})`
+	info.innerHTML = `(${commaList(list)})`
 	imageLink(link, data)
 	el.hidden = false
 }
@@ -62,88 +62,9 @@ function readableFilesize(size: number): string {
 	return `${text.slice(0, -1)}.${text.slice(-1)} MB`
 }
 
-// TODO: Refactor image search rendering
-//
-// type ISTemplate = (data: ImageData) => string
-//
-// // Generate template functions for each image search engine
-// const searchTemplates = (function() {
-// 	const models = [
-// 		{
-// 			engine: 'google',
-// 			url: 'https://www.google.com/searchbyimage?image_url=',
-// 			type: 'thumb',
-// 			symbol: 'G'
-// 		},
-// 		{
-// 			engine: 'iqdb',
-// 			url: 'http://iqdb.org/?url=',
-// 			type: 'thumb',
-// 			symbol: 'Iq'
-// 		},
-// 		{
-// 			engine: 'saucenao',
-// 			url: 'http://saucenao.com/search.php?db=999&url=',
-// 			type: 'thumb',
-// 			symbol: 'Sn'
-// 		},
-// 		{
-// 			engine: 'desustorage',
-// 			type: 'MD5',
-// 			url: 'https://desuarchive.org/_/search/image/',
-// 			symbol: 'Ds'
-// 		},
-// 		{
-// 			engine: 'exhentai',
-// 			type: 'SHA1',
-// 			url: 'http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=',
-// 			symbol: 'Ex'
-// 		}
-// 	]
-//
-// 	const templates: {[engine: string]: ISTemplate} = {}
-// 	for (let {engine, url, type, symbol} of models) {
-// 		const attrs: StringMap = {
-// 			target: '_blank',
-// 			rel: 'nofollow',
-// 			class: 'imageSearch ' + engine
-// 		}
-// 		templates[engine] = data => {
-// 			if (!options[engine]) {
-// 				return ''
-// 			}
-// 			attrs['href'] = url
-// 				+ (type === 'thumb' ? thumbPath(data, false) : data[type])
-// 			return HTML
-// 				`<a ${makeAttrs(attrs)}>
-// 					${symbol}
-// 				</a>`
-// 		}
-// 	}
-//
-// 	return templates
-// })()
-//
-// // Render image search links in accordance to client settings
-// function imageSearch(data: ImageData): string {
-// 	let html = ''
-//
-// 	// Only render google for PDFs
-// 	if (data.fileType === fileTypes.pdf) {
-// 		if (options.google) {
-// 			return searchTemplates['google'](data)
-// 		}
-// 		return ''
-// 	}
-// 	for (let engine in searchTemplates) {
-// 		html += searchTemplates[engine](data)
-// 	}
-// 	return html
-// }
-
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
-function thumbPath(SHA1: string, fileType: fileTypes): string {
+export function thumbPath(SHA1: string, fileType: fileTypes): string {
 	const ext = fileType === fileTypes.jpg ? "jpg" : "png"
 	return `/images/thumb/${SHA1}.${ext}`
 }
