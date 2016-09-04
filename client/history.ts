@@ -1,6 +1,6 @@
 // Inter-page navigation with HTML5 history
 
-import {on, isMatch} from './util'
+import {on} from './util'
 import {read, page, displayLoading} from './state'
 import loadPage from './page/load'
 import {synchronise} from './connection'
@@ -17,10 +17,11 @@ function handleClick(event: KeyboardEvent) {
 	if (event.ctrlKey) {
 		return
 	}
-	const href =
-		((event.target as Element)
-			.closest("a.history") as HTMLAnchorElement)
-		.getAttribute("href")
+
+	// Need to both resolve relative paths and preserve the hash, if any
+	const el = (event.target as Element)
+		.closest("a.history") as HTMLAnchorElement
+	const href = el.href + (el.getAttribute("href").split("#")[1] || "")
 	navigate(href, event, true).catch(alertError)
 }
 
@@ -30,9 +31,17 @@ async function navigate(url: string, event: Event, needPush: boolean) {
 	let nextState = read(url)
 
 	// Does the link point to the same page as this one?
-	if (isMatch(nextState, page)) {
+	let isSame = true
+	for (let key of ["thread", "lastN", "board"]) {
+		if (nextState[key] !== page[key]) {
+			isSame = false
+			break
+		}
+	}
+	if (isSame) {
 		return
 	}
+
 	if (event) {
 		event.preventDefault()
 	}
