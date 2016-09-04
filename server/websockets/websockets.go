@@ -18,16 +18,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Overridable for faster testing
-var (
-	// Connectivity may become temporarily impared during file upload or when
-	// trvaling on mobile. To accomodate use less restricting timeout settings.
-	writeTimeout = time.Minute * 5
-	pingTimer    = time.Second * 30
-	readTimeout  = time.Minute * 6
-	pingMessage  = []byte{1}
-)
-
 var upgrader = websocket.Upgrader{
 	HandshakeTimeout: 5 * time.Second,
 	CheckOrigin:      CheckOrigin,
@@ -150,8 +140,6 @@ func (c *Client) Listen() error {
 
 // Separate function to ease error handling of the intenal client loop
 func (c *Client) listenerLoop() error {
-	ping := time.Tick(pingTimer)
-
 	for {
 		select {
 		case <-c.close:
@@ -165,15 +153,6 @@ func (c *Client) listenerLoop() error {
 			}
 		case msg := <-c.write:
 			if err := c.send(msg); err != nil {
-				return err
-			}
-		case <-ping:
-			err := c.conn.WriteControl(
-				websocket.PingMessage,
-				pingMessage,
-				time.Now().Add(writeTimeout),
-			)
-			if err != nil {
 				return err
 			}
 		}
@@ -264,13 +243,6 @@ func encodeMessage(typ messageType, msg interface{}) ([]byte, error) {
 // receiverLoop proxies the blocking conn.ReadMessage() into the main client
 // select loop.
 func (c *Client) receiverLoop() {
-	// Timeout connection, if no pongs received for 5 minutes
-	c.conn.SetReadDeadline(time.Now().Add(readTimeout))
-	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(readTimeout))
-		return nil
-	})
-
 	for {
 		msg := receivedMessage{}
 		msg.typ, msg.msg, msg.err = c.conn.ReadMessage() // Blocking

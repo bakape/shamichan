@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	invalidMessage  = "invalid message: .*"
-	onlyText        = "only text frames allowed.*"
-	abnormalClosure = "websocket: close 1006 .*"
-	closeNormal     = "websocket: close 1000 .*"
+	invalidMessage   = "invalid message: .*"
+	onlyText         = "only text frames allowed.*"
+	abnormalClosure  = "websocket: close 1006 .*"
+	closeNormal      = "websocket: close 1000 .*"
 	invalidCharacter = "invalid character .*"
 )
 
@@ -267,55 +267,6 @@ func assertListenError(cl *Client, pattern string, sv *mockWSServer, c *C) {
 	c.Assert(cl.Listen(), ErrorMatches, pattern)
 }
 
-// Client closes socket without message or timed out
-func (*ClientSuite) TestClientTimeout(c *C) {
-	sv := newWSServer(c)
-	defer sv.Close()
-
-	cl, wcl := sv.NewClient()
-	oldPing := pingTimer
-	oldRead := readTimeout
-	pingTimer = time.Second
-	readTimeout = time.Second * 2
-	defer func() {
-		pingTimer = oldPing
-		readTimeout = oldRead
-	}()
-
-	// Ignore incomming pings
-	wcl.SetPingHandler(func(string) error {
-		return nil
-	})
-
-	// Timeout may occur either server or client-side, so we just make sure it
-	// exits with an error
-	c.Assert(cl.Listen(), NotNil)
-}
-
-func (*ClientSuite) TestPingPong(c *C) {
-	sv := newWSServer(c)
-	defer sv.Close()
-
-	cl, wcl := sv.NewClient()
-	oldPing := pingTimer
-	oldRead := readTimeout
-	pingTimer = time.Second
-	readTimeout = time.Second * 2
-	defer func() {
-		pingTimer = oldPing
-		readTimeout = oldRead
-	}()
-
-	sv.Add(1)
-	go readListenErrors(c, cl, sv)
-	go wcl.ReadMessage()
-
-	// If Client outlives this with no errors, ping/pong is working
-	time.Sleep(time.Second * 3)
-	cl.Close()
-	sv.Wait()
-}
-
 // Client properly closed connection with a control message
 func (*ClientSuite) TestClientCleanClosure(c *C) {
 	sv := newWSServer(c)
@@ -335,7 +286,7 @@ func readListenErrors(c *C, cl *Client, sv *mockWSServer) {
 
 func normalCloseWebClient(c *C, wcl *websocket.Conn) {
 	msg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")
-	deadline := time.Now().Add(writeTimeout)
+	deadline := time.Now().Add(time.Second)
 	c.Assert(wcl.WriteControl(websocket.CloseMessage, msg, deadline), IsNil)
 }
 
