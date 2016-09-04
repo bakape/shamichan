@@ -3,7 +3,7 @@
 import {emitChanges, ChangeEmitter} from './model'
 import {Post} from './posts/models'
 import PostCollection from './posts/collection'
-import {getID} from './util'
+import {getClosestID} from './util'
 import {db} from './db'
 import {write} from './render'
 import {send} from './connection'
@@ -101,7 +101,7 @@ export async function loadFromDB() {
 
 // Retrieve model of closest parent post
 export function getModel(el: Element): Post {
-	const id = getID(el)
+	const id = getClosestID(el)
 	if (!id) {
 		return null
 	}

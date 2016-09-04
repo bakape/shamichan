@@ -149,7 +149,7 @@ function thumbPath({SHA1, fileType}: ImageData): string {
 }
 
 // Resolve the path to the source file of an upload
-function sourcePath({SHA1, fileType}: ImageData): string {
+export function sourcePath(SHA1: string, fileType: fileTypes): string {
 	return `/images/src/${SHA1}.${fileTypes[fileType]}`
 }
 
@@ -161,7 +161,7 @@ function imageLink(el: Element, data: ImageData) {
 		fullName = `${escape(name)}.${ext}`,
 		tooLong = name.length >= 38
 	const attrs: {[key: string]: string} = {
-		href: sourcePath(data),
+		href: sourcePath(data.SHA1, data.fileType),
 		download: fullName,
 	}
 
@@ -178,7 +178,7 @@ function imageLink(el: Element, data: ImageData) {
 
 // Render the actual thumbnail image
 export function renderThumbnail(el: Element, data: ImageData, href?: string) {
-	const src = sourcePath(data)
+	const src = sourcePath(data.SHA1, data.fileType)
 	let thumb: string,
 		[ , , thumbWidth, thumbHeight] = data.dims
 

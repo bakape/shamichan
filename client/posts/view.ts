@@ -1,16 +1,15 @@
-import View from '../view'
 import {Post, OP} from './models'
 import {mine, posts, page} from '../state'
 import {makeFrag, pluralize, HTML} from '../util'
 import renderPost from './render/posts'
 import {parseOpenLine, parseTerminatedLine} from './render/body'
-import {renderImage,renderFigcaption} from "./render/image"
 import {write, importTemplate} from '../render'
 import {renderBacklinks} from './render/etc'
 import {posts as lang, navigation} from '../lang'
+import ImageHandler from "./images"
 
 // Base post view class
-export default class PostView extends View<Post> {
+export default class PostView extends ImageHandler {
 	// Only exist on open posts
 	$buffer: Node        // Text node being written to
 	$blockquote: Element // Entire text body of post
@@ -143,14 +142,6 @@ export default class PostView extends View<Post> {
 			this.lastLine().replaceWith(frag)
 			this.$buffer = this.$blockquote = null
 		})
-	}
-
-	// Render the figure and figcaption of a post
-	renderImage() {
-		const img = this.model.image
-		write(() =>
-			(renderFigcaption(this.el.querySelector("figcaption"), img),
-			renderImage(this.el.querySelector("figure"), img)))
 	}
 }
 

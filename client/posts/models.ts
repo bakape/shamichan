@@ -66,15 +66,18 @@ export interface ThreadData extends PostData {
 
 // Image data embedable in posts and thread hashes
 export interface ImageData {
-	apng?: boolean
-	audio?: boolean
-	spoiler?: boolean
-	large?: boolean // Added at runtime to render larger thumbnails
-	expanded?: boolean
+	apng: boolean
+	audio: boolean
+	spoiler: boolean
+	large: boolean              // Added at runtime to render larger thumbnails
+	expanded: boolean           // Thumbnail is expanded
+	tallerThanViewport: boolean // Image is taller than the current viewport
 	fileType: fileTypes
 	length?: number
 	size: number
-	dims: number[]
+
+	// [width, height, thumbnail_width, thumbnail_height]
+	dims: [number, number, number, number]
 	MD5: string
 	SHA1: string
 	name: string
