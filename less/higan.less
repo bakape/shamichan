@@ -14,14 +14,14 @@ a:hover {
 	color: #af005f;
 }
 
-article, aside, .pagination {
+article, aside {
 	background-color: @postBG;
 	border-right: @border;
 	border-bottom: @border;
 }
 
 article {
-	&.highlight {
+	&.highlight:not(.editing) {
 		background-color: rgba(44,44,51,.95);
 		border-color: #21212c;
 	}

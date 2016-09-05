@@ -101,12 +101,12 @@ const colourMap: {[key: string]: BackgroundGradients} = {
 	glass: {
 		normal: 'rgba(40, 42, 46, 0.5)',
 		editing: 'rgba(145, 145, 145, 0.5)',
-		highlight: 'rgba(57, 59, 65, .7)',
+		highlight: 'rgba(57, 59, 65, .5)',
 	},
 	ocean: {
-		normal: 'rgba(28, 29, 34, 0.781)',
+		normal: 'rgba(28, 29, 34, 0.78)',
 		editing: 'rgba(44, 57, 71, 0.88)',
-		highlight: 'rgba(44, 44, 51, .95)',
+		highlight: 'rgba(44, 44, 51, 0.88)',
 	}
 }
 
@@ -121,13 +121,13 @@ function renderGlass(theme: string, blob: Blob): string {
 				url(${blurred}) center fixed no-repeat;
 			background-size: cover;
 		}
-		.glass.editing {
+		article.editing {
 			background:
 				linear-gradient(${editing}, ${editing}),
 				url(${blurred}) center fixed no-repeat;
 			background-size: cover;
 		}
-		.glass.highlight {
+		article.highlight:not(.editing) {
 			background:
 				linear-gradient(${highlight}, ${highlight}),
 				url(${blurred}) center fixed no-repeat;

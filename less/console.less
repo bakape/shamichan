@@ -23,7 +23,7 @@ article {
 	form {
 		margin-top: 10pt;
 	}
-	&.highlight {
+	&.highlight:not(.editing) {
 		background-color: #222;
 	}
 	&.editing {
@@ -144,11 +144,6 @@ hr {
 	background-color: white;
 }
 
-section {
-	margin: 30pt 10pt 10pt 10pt;
-	padding: 0;
-}
-
 small {
 	font-size: 10pt;
 	color: #444;
@@ -176,15 +171,6 @@ small {
 .modal, .preview, .popup-menu {
 	border: @border;
 	background: black;
-}
-
-#feedback {
-	right: 0;
-	top: 5pt;
-}
-
-#input {
-	margin-bottom: -4px;
 }
 
 #lock {

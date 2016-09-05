@@ -11,16 +11,11 @@ a:hover, blockquote a, nav {
 	text-decoration:none!important;
 }
 
-article, aside, .pagination {
+article, aside {
 	background-color: @postBG;
 	border: none;
 	border-radius: 2px;
 	box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12);
-}
-
-article.highlight {
-	background-color: #d6bad0;
-	border-color: #ba9dbf;
 }
 
 article {
@@ -29,11 +24,14 @@ article {
 	width: auto;
 	margin-left:5%;
 	margin-right:5%;
-}
-
-.editing {
-	background-color: #EEE;
-	border-color: #E5E5E5;
+	&.highlight:not(.editing) {
+		background-color: #d6bad0;
+		border-color: #ba9dbf;
+	}
+	&.editing {
+		background-color: #EEE;
+		border-color: #E5E5E5;
+	}
 }
 
 body {
@@ -102,53 +100,11 @@ a.tab-sel {
 	color: gray;
 }
 
-section {
-	background-color: #e5e5e5;
-	border-top: 1px solid #ccc;
-	margin-bottom: 50px;
-	paddiing-bottom:25px;
-	clear: both;
-}
-
 .act:before {
 	content: initial;
 }
 .act:after {
 	content: initial;
-}
-
-section > aside {
-    margin: 2px 5%;
-}
-
-section#1 aside.posting a:after {
-	visibility: visible;
-	content: "+";
-	background:@link;
-	background:#F44336;
-}
-
-section#1 aside.posting {
-	visibility:hidden;
-}
-
-section#1 aside.posting a:after{
-	border-radius: 50%;
-	box-shadow: 0 1px 1.5px 0 rgba(0,0,0,.12),0 1px 1px 0 rgba(0,0,0,.24);
-	font-size: 24px;
-	min-width: 56px;
-	width: 56px;
-	height: 56px;
-	min-height: 56px;
-	line-height: normal;
-	margin: auto;
-	overflow: hidden;
-	position: fixed;
-	right: 25px;
-	bottom: 25px;
-	z-index:0;
-	color: white;
-	display: inline-block
 }
 
 #banner {

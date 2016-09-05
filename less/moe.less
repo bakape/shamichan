@@ -10,14 +10,14 @@ a:hover, blockquote a {
 	color: #d00;
 }
 
-article, aside, .pagination {
+article, aside {
 	background-color: @postBG;
 	border-right: @border;
 	border-bottom: @border;
 }
 
 article {
-	&.highlight {
+	&.highlight:not(.editing) {
 		background-color: #d6bad0;
 		border-color: #ba9dbf;
 	}

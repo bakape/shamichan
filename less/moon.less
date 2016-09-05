@@ -11,7 +11,7 @@ a:hover {
 }
 
 article {
-	&.highlight {
+	&.highlight:not(.editing) {
 		background-color: #f5f5f5;
 	}
 	&.editing {
@@ -54,10 +54,6 @@ a.tab-sel {
 
 .omit {
 	color: gray;
-}
-
-#input {
-	margin-bottom: -7px;
 }
 
 // Override defaults

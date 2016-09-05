@@ -14,15 +14,21 @@ a:hover {
 	color: #d17c43;
 }
 
-article, aside, .pagination {
+article, aside {
 	background-color: @postBG;
 	border-right: @border;
 	border-bottom: @border;
 }
 
-article.highlight {
-	background-color: #b9ccb4;
-	border-color: #9fbf9d;
+article {
+	&.highlight:not(.editing) {
+		background-color: #b9ccb4;
+		border-color: #9fbf9d;
+	}
+	&.editing {
+		background-color: #f0e5ba;
+		border-color: #dbd1aa;
+	}
 }
 
 body {
@@ -78,11 +84,6 @@ hr {
 
 a.tab-sel {
 	color: #BA8D7A;
-}
-
-article.editing {
-	background-color: #f0e5ba;
-	border-color: #dbd1aa;
 }
 
 .omit {

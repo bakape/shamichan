@@ -32,15 +32,15 @@ a:hover {
     color: #af005f;
 }
 
-.pagination, article, aside {
+article, aside {
     background-color: @postBG;
     border-right: @border;
     border-bottom: @border;
 }
 
 article {
-    &.highlight {
-        background-color: rgba(44, 44, 51, .95);
+    &.highlight:not(.editing) {
+        background-color: rgba(44, 44, 51, 0.88);
         border-color: #21212c;
     }
     &.editing {
