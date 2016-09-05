@@ -24,9 +24,9 @@ export function initTemplates() {
 	}
 	{
 		const frag = templates["board"]
-		for (let el of frag.querySelectorAll(".new-thread-button")) {
-			el.textContent = lang.posts.newThread
-		}
+		frag
+			.querySelector(".new-thread-button")
+			.textContent = lang.posts.newThread
 	}
 	{
 		const frag = templates["thread"]
