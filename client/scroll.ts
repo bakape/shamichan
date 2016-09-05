@@ -6,7 +6,7 @@ const $banner = document.querySelector("#banner") as HTMLElement
 export function scrollToElement(el: HTMLElement) {
 	const pos =
 		el.getBoundingClientRect().top
-		+ document.body.scrollTop
+		+ window.scrollY
 		- $banner.offsetHeight
 	window.scrollTo(0, pos)
 }
