@@ -38,7 +38,7 @@ export function renderFigcaption(
 		list.push('APNG')
 	}
 
-	const [, hToggle, info, link] = Array.from(el.children) as HTMLElement[]
+	const [hToggle, , info, link] = Array.from(el.children) as HTMLElement[]
 	if (!options.hideThumbs) {
 		hToggle.hidden = true
 	} else {
