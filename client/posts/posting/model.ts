@@ -308,7 +308,7 @@ export class FormModel {
 			text: end,
 		})
 		this.bodyLength += lenDiff
-		this.inputState.line = old.slice(0, start + 1) + end
+		this.inputState.line = old.slice(0, start) + end
 		this.reformatInput(this.inputState.line)
 	}
 
