@@ -334,10 +334,8 @@ export class FormModel {
 
 		// Normalize state
 		this.state.line = this.inputState.line
-		postSM.feed(postEvent.done)
 		this.view.cleanUp()
 		this.send(message.closePost, null)
-		postSM.feed(postEvent.done)
 	}
 
 	// Return the last line of the body
