@@ -16,48 +16,51 @@ let readStack: Operation[] = [],
 	writeStack: Operation[] = [],
 	scheduled: boolean
 
-// Initialize and populate templates with language pack values
-for (let el of document.head.querySelectorAll("template")) {
-	templates[el.getAttribute("name")] = (el as HTMLTemplateElement).content
-}
-{
-	const frag = templates["board"]
-	for (let el of frag.querySelectorAll(".new-thread-button")) {
-		el.textContent = lang.posts.newThread
+// Assign language-specific strings to templates
+export function initTemplates() {
+	// Initialize and populate templates with language pack values
+	for (let el of document.head.querySelectorAll("template")) {
+		templates[el.getAttribute("name")] = (el as HTMLTemplateElement).content
 	}
-}
-{
-	const frag = templates["thread"]
-	const actText = [
-		lang.navigation.bottom,
-		lang.images.expand,
-		lang.navigation.return,
-		lang.navigation.top,
-	]
-	const actEls = frag.querySelectorAll("span a")
-	for (let i = 0; i < actEls.length; i++) {
-		actEls[i].textContent = actText[i]
+	{
+		const frag = templates["board"]
+		for (let el of frag.querySelectorAll(".new-thread-button")) {
+			el.textContent = lang.posts.newThread
+		}
 	}
-	frag.querySelector("aside.posting a").textContent = lang.posts.reply
-	frag.querySelector("#lock").textContent = lang.navigation.lockedToBottom
-}
-{
-	const frag = templates["catalog-thread"],
-		links = frag.querySelector(".thread-links")
-	links
-		.querySelector(".counters")
-		.setAttribute("title", lang.navigation.catalogOmit)
-}
-{
-	const frag = templates["form"]
-	; (frag.querySelector("input[type=submit]") as HTMLInputElement)
-		.value = lang.ui.submit
-	; (frag.querySelector("input[name=cancel]") as HTMLInputElement)
-		.value = lang.ui.cancel
-	frag.querySelector(".captcha-image")
-		.setAttribute("title", lang.ui.reloadCaptcha)
-	frag.querySelector("input[name=adcopy_response]")
-		.setAttribute("placeholder", lang.ui.focusForCaptcha)
+	{
+		const frag = templates["thread"]
+		const actText = [
+			lang.navigation.bottom,
+			lang.images.expand,
+			lang.navigation.return,
+			lang.navigation.top,
+		]
+		const actEls = frag.querySelectorAll("span a")
+		for (let i = 0; i < actEls.length; i++) {
+			actEls[i].textContent = actText[i]
+		}
+		frag.querySelector("aside.posting a").textContent = lang.posts.reply
+		frag.querySelector("#lock").textContent = lang.navigation.lockedToBottom
+	}
+	{
+		const frag = templates["catalog-thread"],
+			links = frag.querySelector(".thread-links")
+		links
+			.querySelector(".counters")
+			.setAttribute("title", lang.navigation.catalogOmit)
+	}
+	{
+		const frag = templates["form"]
+		; (frag.querySelector("input[type=submit]") as HTMLInputElement)
+			.value = lang.ui.submit
+		; (frag.querySelector("input[name=cancel]") as HTMLInputElement)
+			.value = lang.ui.cancel
+		frag.querySelector(".captcha-image")
+			.setAttribute("title", lang.ui.reloadCaptcha)
+		frag.querySelector("input[name=adcopy_response]")
+			.setAttribute("placeholder", lang.ui.focusForCaptcha)
+	}
 }
 
 // Import a prepared template and return it's HTML contents

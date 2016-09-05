@@ -3,6 +3,7 @@ import {extend} from '../util'
 import Collection from './collection'
 import PostView from './view'
 import {SpliceResponse} from '../client'
+import {mine} from "../state"
 
 // Generic link object containing target post board and thread
 export type PostLink = {
@@ -204,9 +205,14 @@ export class Post extends Model implements PostData {
 
 	// Insert data about a link to another post into the model
 	insertLink(links: PostLinks) {
+		for (let key in links) {
+			if (mine.has(parseInt(key))) {
+				this.view.addHighlight()
 
-		// TODO: Trigger Desktop Notification and highlight post, if linking to
-		// my post
+				// TODO: Trigger Desktop Notification
+
+			}
+		}
 
 		this.extendField("links", links)
 	}

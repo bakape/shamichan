@@ -4,7 +4,7 @@
 import {message, send, handlers} from "../../connection"
 import {OP, Post, TextState, ThreadData, ImageData, PostData} from "../models"
 import {FormView, OPFormView} from "./view"
-import {posts} from "../../state"
+import {posts, storeMine} from "../../state"
 import {postSM, postEvent, postState} from "./main"
 import {applyMixins, extend} from "../../util"
 import PostView from "../view"
@@ -43,8 +43,7 @@ export class OPFormModel extends OP implements FormModel {
 	send: (type: message, msg: any) => void
 
 	constructor(id: number) {
-
-		// TODO: Persist id to state.mine
+		storeMine(id)
 
 		const oldModel = posts.get(id) as OP,
 			oldView = oldModel.view
@@ -136,9 +135,7 @@ export class ReplyFormModel extends Post implements FormModel {
 	onAllocation(data: PostData) {
 		extend(this, data)
 		this.view.renderAlloc()
-
-		// TODO: Add to state.mine and persist
-
+		storeMine(data.id)
 	}
 
 	// Upload the file and request its allocation

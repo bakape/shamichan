@@ -5,9 +5,9 @@ import * as client from './client'
 let c = client  // Prevents the compiler from removing as an unused import
 c = null
 
-import {displayLoading} from './state'
+import {displayLoading, loadFromDB, page} from './state'
+import {initTemplates} from "./render"
 import {start as connect} from './connection'
-import {loadFromDB, page} from './state'
 import {open} from './db'
 import loadPage from './page/load'
 import BoardNavigation from './page/boardNavigation'
@@ -37,6 +37,7 @@ async function start() {
 		renderPage = resolve)
 	const pageLoader = loadPage(page, ready)
 
+	initTemplates()
 	initOptions()
 	await open()
 	await loadFromDB()

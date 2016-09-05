@@ -155,6 +155,13 @@ export default class PostView extends ImageHandler {
 		write(() =>
 			renderTime(this.el.querySelector("time"), this.model.time))
 	}
+
+	// Add highlight to post because it lnked a post the client made, the
+	// client made it or similar.
+	addHighlight() {
+		write(() =>
+			this.el.classList.add("highlight"))
+	}
 }
 
 // View of a threads opening post. Contains some extra functionality.

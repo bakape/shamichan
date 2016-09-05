@@ -89,14 +89,53 @@ export function read(href: string): PageState {
 }
 
 // Load post number sets from the database
-export async function loadFromDB() {
-	const resMine = await db
-		.transaction('posts', 'readonly')
-		.objectStore('posts')
-		.get('mine')
-		.exec()
-	delete resMine.id
-	mine = new Set<number>([resMine])
+export function loadFromDB(): Promise<void> {
+	return  Promise.all([loadMine()])
+}
+
+// Load post's this client has created
+function loadMine(): Promise<void> {
+	return new Promise<void>((resolve, reject) => {
+		const ids: number[] = []
+		const req =
+			db
+			.transaction("mine", "readonly")
+			.objectStore("mine")
+			.openCursor()
+
+		req.onerror = err =>
+			reject(err)
+
+		req.onsuccess = event => {
+			const cursor = (event as any).target.result as IDBCursorWithValue
+			if (cursor) {
+				ids.push(cursor.value.id)
+				cursor.continue()
+			} else {
+				mine = new Set<number>(ids)
+				resolve()
+			}
+		}
+	})
+}
+
+// Store the ID of a post this client created
+export function storeMine(id: number) {
+	mine.add(id)
+	const trans = db.transaction("mine", "readwrite")
+
+	trans.onerror = err => {
+		throw err
+	}
+
+	const req = trans.objectStore("mine").add({
+		id,
+		expires: Date.now() + 10 * 24 * 60 * 60, // Expire in 10 days
+	})
+
+	req.onerror = err => {
+		throw err
+	}
 }
 
 // Retrieve model of closest parent post
