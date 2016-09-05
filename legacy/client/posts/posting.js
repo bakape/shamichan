@@ -1,41 +1,8 @@
 main.$doc.on('keydown', handle_shortcut);
 
 function handle_shortcut(event) {
-	if (!event.altKey)
-		return;
-
 	const opts = options.attributes;
 	switch(event.which) {
-		case opts.new:
-			const aside = document.query('aside.posting');
-			if (aside) {
-				postSM.feed('new', aside);
-				prevent();
-			}
-			break;
-		case opts.togglespoiler:
-			if (postForm) {
-				postForm.onToggle(event);
-				prevent();
-			}
-			break;
-		case opts.done:
-			if (postForm && !postForm.$submit.attr('disabled')) {
-				postForm.finish();
-				prevent();
-			}
-			break;
-		// Insert text spoiler
-		case opts.textSpoiler:
-			if (postForm) {
-				var postState = this.imouto.state2.spoiler;
-				// Was spoiler already started?
-				var sp = (postState ? '[/' : ' [') + 'spoiler]';
-				this.imouto.state2.spoiler = !postState;
-				this.$input.val(this.$input.val() + sp);
-				prevent();
-			}
-			break;
 		case opts.expandAll:
 			imager.massExpander.toggle();
 			prevent();
@@ -55,11 +22,6 @@ function handle_shortcut(event) {
 			});
 			prevent()
 			break;
-	}
-
-	function prevent() {
-		event.stopImmediatePropagation();
-		event.preventDefault();
 	}
 }
 

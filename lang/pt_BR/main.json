@@ -252,10 +252,6 @@
 				"Spoiler na imagem",
 				"Ativa spoiler no post aberto"
 			],
-			"textSpoiler": [
-				"Spoiler de texto",
-				"Insere uma tag de spoiler no texto"
-			],
 			"done": [
 				"Terminar post",
 				"Fecha o post aberto"

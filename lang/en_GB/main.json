@@ -252,10 +252,6 @@
 				"Image Spoiler",
 				"Toggle spoiler in the open post"
 			],
-			"textSpoiler": [
-				"Text Spoiler",
-				"Insert text spoiler tag"
-			],
 			"done": [
 				"Finish Post",
 				"Close open post"

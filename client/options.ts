@@ -30,12 +30,11 @@ interface Options extends ChangeEmitter {
 	userBG: boolean
 	lastN: number
 	alwaysLock: boolean
-	newPost: string
-	toggleSpoiler: string
-	textSpoiler: string
-	done: string
-	expandAll: string
-	workMode: string
+	newPost: number
+	toggleSpoiler: number
+	done: number
+	expandAll: number
+	workMode: number
 	workModeToggle: boolean
 }
 

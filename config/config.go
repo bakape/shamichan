@@ -68,7 +68,7 @@ var (
 )
 
 // Default string for the FAQ panel
-const defaultFAQ = `<hr>Hash commands:
+const defaultFAQ = `Hash commands:
 #d100 #2d100 - Roll dice
 #flip - Coin flip
 #8ball - An 8ball

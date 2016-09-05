@@ -16,8 +16,8 @@ export type FormMessage = {
 }
 
 // Current post form view and model instances
-export let postForm: FormView
-export let postModel: FormModel & Post
+export let postForm: FormView,
+	postModel: FormModel & Post
 
 // Post authoring finite state machine
 export const enum postState {
@@ -50,6 +50,18 @@ connSM.on(connState.desynced, postSM.feeder(postEvent.error))
 const stylePostControls = (fn: (el: HTMLElement) => void) =>
 	write(() =>
 		fn($threads.querySelector("aside.posting") as HTMLElement))
+
+// Initial synchronisation
+postSM.act(postState.none, postEvent.sync, () =>
+	postState.ready)
+
+// Set up client to create new posts
+postSM.on(postState.ready, () =>
+	(window.onbeforeunload = postForm = postModel = null,
+	stylePostControls(el =>
+		(el.style.display = "",
+		el.classList.remove("disabled")))))
+
 
 // Handle connection loss
 postSM.wildAct(postEvent.disconnect, () => {
@@ -88,13 +100,7 @@ postSM.wildAct(postEvent.error, () =>
 
 // Reset state during page navigation
 postSM.wildAct(postEvent.reset, () =>
-	(resetState(),
-	postState.ready))
-
-// Reset module state to initial
-function resetState() {
-	window.onbeforeunload = postForm = postModel = null
-}
+	postState.ready)
 
 // Transition a draft post into allocated state. All the logic for this is
 // model- and view-side.
@@ -129,22 +135,15 @@ const hidePostControls = () =>
 postSM.on(postState.draft, hidePostControls)
 postSM.on(postState.alloc, hidePostControls)
 
-// Register all transitions that lead to postState.ready
-const toReady = () =>
-	(resetState(),
-	postState.ready)
-const readyTransitions: [postState, postEvent][] = [
-	[postState.none, postEvent.sync],
-	[postState.draft, postEvent.done],
-	[postState.alloc, postEvent.done],
-]
-for (let [state, event] of readyTransitions) {
-	postSM.act(state, event, toReady)
-}
-postSM.on(postState.ready, () =>
-	stylePostControls(el =>
-		(el.style.display = "",
-		el.classList.remove("disabled"))))
+// Close unallocated draft
+postSM.act(postState.draft, postEvent.done, () =>
+	(postForm.remove(),
+	postState.ready))
+
+// Close allocated post
+postSM.act(postState.alloc, postEvent.done, () =>
+	(postModel.commitClose(),
+	postState.ready))
 
 // Handle clicks on the [Reply] button
 on($threads, "click", postSM.feeder(postEvent.open), {

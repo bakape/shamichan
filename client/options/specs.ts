@@ -254,7 +254,7 @@ export const specs = (): OptionSpec[] => {
 		// }
 	]
 
-	// Image search link toggle
+	// Image search link toggles
 	const engines = ['google', 'iqdb', 'saucenao', 'desustorage', 'exhentai']
 	for (let engine of engines) {
 		opts.push({
@@ -263,6 +263,22 @@ export const specs = (): OptionSpec[] => {
 			default: engine === 'google',
 			exec: toggleImageSearch(engine)
 		})
+	}
+
+	// Shortcut keys
+	const keySpecs: any[] = [
+		{id: 'newPost', default:78},
+		{id: 'done', default: 83},
+		{id: 'toggleSpoiler', default: 73},
+		// 	{id: 'expandAll', default: 69},
+		// 	{id: 'workMode', default: 66}
+	]
+
+	for (let spec of keySpecs as OptionSpec[]) {
+		spec.type = optionType.shortcut
+		spec.tab = tabs.shortcuts
+		spec.noLoad = isMobile
+		opts.push(spec)
 	}
 
 	return opts
@@ -286,20 +302,3 @@ function toggleImageSearch(engine: string): (toggle: boolean) => void {
 			.disabled = !toggle)
 	}
 }
-
-// TODO: Reimplement shortcut keys
-// // SHORTCUT KEYS
-// const shorts: any = [
-// 	{id: 'newPost', default: 78},
-// 	{id: 'toggleSpoiler', default: 73},
-// 	{id: 'textSpoiler', default: 68},
-// 	{id: 'done', default: 83},
-// 	{id: 'expandAll', default: 69},
-// 	{id: 'workMode', default: 66}
-// ]
-// for (let short of shorts) {
-// 	short.type = optionType.shortcut
-// 	short.tab = tabs.shortcuts
-// 	short.noLoad = isMobile
-// 	specs.push(short)
-// }

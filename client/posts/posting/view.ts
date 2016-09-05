@@ -78,9 +78,10 @@ export class FormView extends PostView implements UploadForm {
 	// Aditional controls for draft forms
 	renderDraftInputs(): DocumentFragment {
 		const frag = document.createDocumentFragment()
-		const $cancel = this.createButton("cancel", () =>
-			(postSM.feed(postEvent.done),
-			this.remove()))
+		const $cancel = this.createButton(
+			"cancel",
+			postSM.feeder(postEvent.done),
+		)
 		this.renderUploadForm()
 		frag.append(
 			$cancel, this.$uploadInput, this.$spoiler, this.$uploadStatus,
@@ -94,8 +95,7 @@ export class FormView extends PostView implements UploadForm {
 
 	// Button for closing allocated posts
 	renderDone(): HTMLInputElement {
-		return this.createButton("done", () =>
-			this.model.commitClose())
+		return this.createButton("done", postSM.feeder(postEvent.done))
 	}
 
 	// Create a clickable button element
@@ -238,6 +238,20 @@ export class FormView extends PostView implements UploadForm {
 			renderHeader($header, this.model),
 			this.$cancel.remove(),
 			this.$postControls.prepend(this.renderDone())))
+	}
+
+	// Toggle the spoiler input checkbox
+	toggleSpoiler() {
+		// Can only turn a spoiler on, if image already allocated
+		if (this.model.image && this.model.image.spoiler) {
+			return
+		}
+
+		write(() => {
+			const el = this.el
+				.querySelector("input[name=spoiler]") as HTMLInputElement
+			el.checked = !el.checked
+		})
 	}
 }
 

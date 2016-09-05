@@ -16,6 +16,7 @@ import bindThreadCreation from './posts/posting/threadCreation'
 import {initOptions} from './options'
 import bindEtc from './etc'
 import bindOptionsListeners from "./options/loop"
+import bindShortcuts from "./keyboard"
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -44,6 +45,7 @@ async function start() {
 	bindThreadCreation()
 	bindEtc()
 	bindOptionsListeners()
+	bindShortcuts()
 	exec()
 	await pageLoader
 	connect()
