@@ -46,10 +46,15 @@ connSM.on(connState.synced, postSM.feeder(postEvent.sync))
 connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
 connSM.on(connState.desynced, postSM.feeder(postEvent.error))
 
-// Find the post creation button and style it
-const stylePostControls = (fn: (el: HTMLElement) => void) =>
-	write(() =>
-		fn($threads.querySelector("aside.posting") as HTMLElement))
+// Find the post creation button and style it, if any
+function stylePostControls(fn: (el: HTMLElement) => void) {
+	write(() => {
+		const el = $threads.querySelector("aside.posting") as HTMLElement
+		if (el) {
+			fn(el)
+		}
+	})
+}
 
 // Initial synchronisation
 postSM.act(postState.none, postEvent.sync, () =>
