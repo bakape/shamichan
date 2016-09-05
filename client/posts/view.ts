@@ -19,20 +19,13 @@ export default class PostView extends ImageHandler {
 		if (model.editing) {
 			cls += ' editing'
 		}
-
-		let highlight: boolean
-		if (mine.has(model.id)) {
-			highlight = true
-		} else if (model.links) {
+		if (model.links) {
 			for (let id in model.links) {
 				if (mine.has(parseInt(id))) {
-					highlight = true
+					cls += ' highlight'
 					break
 				}
 			}
-		}
-		if (highlight) {
-			cls += ' highlight'
 		}
 
 		// TODO: If post has links to my posts, send desktop notifications. Best

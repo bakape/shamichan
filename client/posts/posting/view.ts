@@ -210,7 +210,6 @@ export class FormView extends PostView implements UploadForm {
 	cleanUp() {
 		write(() =>
 			(this.$postControls.remove(),
-			this.el.classList.add("highlight"),
 			this.$postControls
 				= this.$done
 				= this.$cancel

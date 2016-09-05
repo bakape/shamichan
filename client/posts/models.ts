@@ -211,6 +211,7 @@ export class Post extends Model implements PostData {
 
 				// TODO: Trigger Desktop Notification
 
+				break
 			}
 		}
 
