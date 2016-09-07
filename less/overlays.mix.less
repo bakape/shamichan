@@ -28,6 +28,7 @@
 }
 
 #hover-overlay {
+	z-index: 320;
 	& > video, & > img {
 		max-height: 100%;
 		max-width: 100%;
@@ -170,9 +171,9 @@
 
 .preview {
 	padding: 4px 10px;
-	position: absolute;
-	z-index: 30;
+	position: fixed;
 	display: inline;
+	z-index: 320;
 	.control {
 		display: none;
 	}

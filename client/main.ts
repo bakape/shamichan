@@ -5,7 +5,7 @@ import * as client from './client'
 let c = client  // Prevents the compiler from removing as an unused import
 c = null
 
-import {displayLoading, loadFromDB, page} from './state'
+import {displayLoading, loadFromDB, page, isMobile} from './state'
 import {initTemplates} from "./render"
 import {start as connect} from './connection'
 import {open} from './db'
@@ -17,6 +17,7 @@ import {initOptions} from './options'
 import bindEtc from './etc'
 import bindOptionsListeners from "./options/loop"
 import bindShortcuts from "./keyboard"
+import {loadModule} from "./util"
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -51,6 +52,12 @@ async function start() {
 	await pageLoader
 	connect()
 	displayLoading(false)
+
+	// Conditionally load desktop-only modules
+	if (!isMobile) {
+		const hover = await loadModule("hover")
+		hover.default()
+	}
 }
 
 start()

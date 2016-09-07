@@ -1,18 +1,3 @@
-/*
- * Hover previews
- */
-
-let main = require('./main'),
-	{Article} = main.posts,
-	{$, Backbone, etc, options, state} = main;
-
-// Centralised mousemove target tracking
-/*Logging only the target isn't a option because change:target doesn't seem
- to fire in some cases where the target is too similar for example changing
- between two post links (>>XXX) directly
- */
-const mousemove = new Backbone.Model();
-
 let ImageHoverView = Backbone.View.extend({
 	initialize() {
 		this.listenTo(this.model,'change:event', this.check);
@@ -57,35 +42,6 @@ let PostPreview = Article.extend({
 });
 
 let HoverPostView = Backbone.View.extend({
-	initialize() {
-		this.listenTo(this.model,'change:event', this.check);
-	},
-	check(model, event) {
-		let $target = $(event.target);
-		if (!$target.is('a.history'))
-			return;
-		const m = $target.text().match(/^>>(\d+)/);
-		if (!m)
-			return;
-		let post = state.posts.get(m[1]);
-		if (!post)
-			return;
-		this.targetPos = $target.offset();
-		this.previewView = new PostPreview({
-			model: post,
-			parentNum: etc.getID(event.target)
-		});
-		$target.one('mouseleave click', () => this.remove());
-	},
-	remove() {
-		if (!this.previewView)
-			return;
-		this.targetPos = null;
-		this.previewView.remove();
-		this.stopListening(this.previewView);
-		this.$el.children().remove('.preview');
-		this.previewView = null;
-	},
 	render($el, num) {
 		// Striped underline links from the parent post
 		$el.find('a.history')
@@ -97,39 +53,11 @@ let HoverPostView = Backbone.View.extend({
 			});
 		$el.css(this.position($el)).appendTo(this.$el.empty());
 	},
-	position($el) {
-		$el.hide();
-		$(document.body).append($el);
-		var w = $el.width();
-		var h = $el.height();
-		$el.detach().show();
-
-		var $w = $(window);
-		var l = this.targetPos.left -$w.scrollLeft();
-		var t = this.targetPos.top -$w.scrollTop()-h-17;
-
-		//If it get cut at the top, put it below the link
-		if(t<0)
-			t+=h+34;
-
-		//if it gets cut to the right push it to the left.
-		var overflowR = l+w-$w.innerWidth();
-		if(overflowR>-30)
-			l = Math.max(0,l-overflowR-30);
-
-		return {left: l,top: t};
-	}
 });
 
 let ltarget, postHover;
 if (!main.isMobile) {
 	main.defer(function() {
-		main.$doc.on('mousemove', function(e) {
-			if(e.target!=ltarget) {
-				mousemove.set('event', e);
-				ltarget= e.target;
-			}
-		});
 		let hover = document.getElementById('hover_overlay');
 		new ImageHoverView({
 			model: mousemove,
