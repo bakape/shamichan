@@ -3,6 +3,7 @@ package db
 
 import (
 	"errors"
+	"log"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/util"
@@ -146,7 +147,15 @@ func StreamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
 	initial := <-read
 
 	go func() {
-		defer cursor.Close()
+		defer func() {
+			err := cursor.Err()
+			if err == nil {
+				err = cursor.Close()
+			}
+			if err != nil {
+				log.Printf("update feed: %s\n", err)
+			}
+		}()
 
 		for {
 			select {
