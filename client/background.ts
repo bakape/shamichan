@@ -43,12 +43,9 @@ write(() =>
 	document.head.append(style)))
 
 // Listen to  changes in related options, that do not call render() directly
-const changeProps = [
-	'illyaDance', 'illyaDanceMute', 'theme', 'workModeToggle'
-]
 const handler = () =>
-	render
-for (let param of changeProps) {
+	render()
+for (let param of ['theme', 'workModeToggle']) {
 	options.onChange(param, handler)
 }
 

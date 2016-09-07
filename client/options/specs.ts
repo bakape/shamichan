@@ -61,6 +61,11 @@ export type OptionSpec = {
 	hidden?: boolean
 }
 
+// Same handler fot toggling Illya dance, adn user backgrounds
+const renderBackground = () =>
+	loadModule('background').then(m =>
+		m.render())
+
 // Option position in the options panel is defined by order in the
 // array. A function, so we can ensure it is not created before state.ts is
 // loaded.
@@ -164,12 +169,16 @@ export const specs = (): OptionSpec[] => {
 			id: 'illyaDance',
 			noLoad: isMobile || !config.illyaDance,
 			tab: tabs.fun,
+			noExecOnStart: true,
+			exec: renderBackground,
 		},
 		// Mute Illya dance
 		{
 			id: 'illyaDanceMute',
 			noLoad: isMobile || !config.illyaDance,
 			tab: tabs.fun,
+			noExecOnStart: true,
+			exec: renderBackground,
 		},
 
 		// Tile posts horizontally too
@@ -216,10 +225,7 @@ export const specs = (): OptionSpec[] => {
 			noLoad: isMobile,
 			tab: tabs.style,
 			noExecOnStart: true,
-			exec() {
-				loadModule('background').then(m =>
-					m.render())
-			}
+			exec: renderBackground,
 		},
 		// Upload field for the custom background image
 		{

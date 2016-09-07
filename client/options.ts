@@ -137,7 +137,7 @@ export function initOptions() {
 	}
 
 	// Conditionally load and execute optional modules
-	for (let opt of ["userBG", "nowPlaying"]) {
+	for (let opt of ["userBG", "nowPlaying", "illyaDance"]) {
 		if (options[opt]) {
 			defer(() =>
 				models[opt].execute(true))
