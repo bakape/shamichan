@@ -172,24 +172,25 @@ export const specs = (): OptionSpec[] => {
 			tab: tabs.fun,
 		},
 
-		// // Tile posts horizontally too
-		// {
-		// 	id: 'horizontalPosting',
-		// 	tab: tabs.fun,
-		// 	exec: toggleHeadStyle(
-		// 		'horizontal',
-		// 		'article,aside{display:inline-block;}'
-		// 	)
-		// },
-		// // Move [Reply] to the right side of the screen
-		// {
-		// 	id: 'replyRight',
-		// 	tab: tabs.style,
-		// 	exec: toggleHeadStyle(
-		// 		'reply-at-right',
-		// 		'section>aside{margin: -26px 0 2px auto;}'
-		// 	)
-		// },
+		// Tile posts horizontally too
+		{
+			id: 'horizontalPosting',
+			tab: tabs.fun,
+			exec: toggleHeadStyle(
+				'horizontal',
+				'article,aside{display:inline-block;}'
+					+ '#thread-container{display:block;}'
+			)
+		},
+		// Move [Reply] to the right side of the screen
+		{
+			id: 'replyRight',
+			tab: tabs.style,
+			exec: toggleHeadStyle(
+				'reply-at-right',
+				'aside.posting{margin: -26px 0 2px auto;}'
+			)
+		},
 
 		// Change theme
 		{
@@ -203,10 +204,9 @@ export const specs = (): OptionSpec[] => {
 				if (!theme) {
 					return
 				}
-				document.getElementById('theme').setAttribute(
-					'href',
-					`/assets/css/${theme}.css`
-				)
+				document
+					.getElementById('theme')
+					.setAttribute('href', `/assets/css/${theme}.css`)
 			},
 		},
 
@@ -286,11 +286,15 @@ export const specs = (): OptionSpec[] => {
 
 // Create a function that toggles the visibility of an image search link
 function toggleImageSearch(engine: string): (toggle: boolean) => void {
+	return toggleHeadStyle(engine, `.${engine}{display:initial;}`)
+}
+
+// Toogle an optional style element in the head
+function toggleHeadStyle(name: string, css: string): (toggle: boolean) => void {
 	return toggle => {
-		const id = engine + "-toggle"
+		const id = name + "-toggle"
 		if (!document.getElementById(id)) {
-			const css = `.${engine}{display:initial;}`,
-				html = `<style id="${id}">${css}</style>`
+			const html = `<style id="${id}">${css}</style>`
 			write(() =>
 				document.head.append(makeEl(html)))
 		}
