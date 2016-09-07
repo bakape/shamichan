@@ -99,7 +99,9 @@ class BoardSelectionPanel extends Modal<Model> {
 				`<span class="input-span" data-id="${id}">
 					<input ${makeAttrs(attrs)}>
 					<label for="${id}">
-						${formatHeader(id, title)}
+						<a class="history" href="/${id}/">
+							${formatHeader(id, title)}
+						</a>
 					</label>
 					<br>
 				</span>`
