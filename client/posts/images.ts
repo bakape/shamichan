@@ -76,6 +76,9 @@ export default class ImageHandler extends View<Post> {
 		case "width":
 			cls = "fit-to-width"
 			img.tallerThanViewport = img.dims[1] > window.innerHeight
+			if (img.tallerThanViewport) {
+				scrollToElement(this.el as HTMLElement)
+			}
 			break
 		case "screen":
 			cls = "fit-to-screen"
