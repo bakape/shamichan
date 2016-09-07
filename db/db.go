@@ -139,12 +139,15 @@ func StreamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
 		Map(formatUpdateFeed).
 		Run(RSession)
 	if err != nil {
-		return nil, util.WrapError("update feed", err)
+		return nil, err
 	}
 
-	read := make(chan [][]byte)
-	cursor.Listen(read)
-	initial := <-read
+	var initial [][]byte
+	if !cursor.Next(&initial) {
+		if err := cursor.Err(); err != nil {
+			return nil, err
+		}
+	}
 
 	go func() {
 		defer func() {
@@ -158,22 +161,18 @@ func StreamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
 		}()
 
 		for {
-			select {
-			case <-close:
-				return
-			case updates, ok := <-read:
-				if !ok {
-					return
-				}
+			var updates [][]byte
+			if !cursor.Next(&updates) {
+				break
+			}
 
-				// Several update messages may come from the feed at a time.
-				// Separate and send each individually.
-				for _, msg := range updates {
-					select {
-					case write <- msg:
-					case <-close:
-						return
-					}
+			// Several update messages may come from the feed at a time.
+			// Separate and send each individually.
+			for _, msg := range updates {
+				select {
+				case write <- msg:
+				case <-close:
+					return
 				}
 			}
 		}
