@@ -23,32 +23,14 @@ function highlightBanner(name: string) {
 		return
 	}
 
-	let out = true,
-		clicked: boolean
-	const el = document.querySelector('#banner-' + name) as HTMLElement
+	const el = document.querySelector('#banner-' + name)
+	write(() =>
+		el.classList.add("blinking"))
 
 	el.addEventListener("click", () => {
-		clicked = true
+		el.classList.remove("blinking")
 		localStorage.setItem(key, '1')
 	})
-	tick()
-
-	function tick() {
-		// Stop
-		if (clicked) {
-			el.style.opacity = '1'
-			return
-		}
-
-		el.style.opacity = (+el.style.opacity + (out ? -0.02 : 0.02)).toString()
-		const now = +el.style.opacity
-
-		// Reverse direction
-		if ((out && now <= 0) || (!out && now >= 1)) {
-			out = !out
-		}
-		requestAnimationFrame(tick)
-	}
 }
 
 defer(() =>
