@@ -6,15 +6,7 @@ import {config, displayLoading} from './state'
 import {HTML, load} from './util'
 import {db} from './db'
 import {write} from './render'
-
-const container = document.createElement('div')
-const style = document.createElement('style')
-
-container.id = 'user-background'
-write(() => {
-	document.body.append(container)
-	document.head.append(style)
-})
+import {$threadContainer} from "./page/thread"
 
 type BackgroundStore = {
 	id: string
@@ -22,44 +14,87 @@ type BackgroundStore = {
 	blurred: Blob
 }
 
-// Central render function. Resets state and renders the apropriate background.
-export function render(bg?: BackgroundStore) {
-	// Assert we were passaded a BackgroundStore
-	if (bg && !bg.normal) {
-		bg = undefined
-	}
-	write(() => {
-		container.innerHTML = ''
-		style.innerHTML = ''
-	})
-	if (options.illyaDance && config.illyaDance) {
-		renderIllya()
-	} else if (options.userBG && !options.workModeToggle) {
-		renderBackground(bg)
+type BackgroundGradients = {
+	normal: string
+	editing: string
+	highlight: string
+}
+
+const container = document.createElement('div'),
+	style = document.createElement('style')
+
+// Map for transparency gradients to apply on top of the blurred background
+const colourMap: {[key: string]: BackgroundGradients} = {
+	glass: {
+		normal: 'rgba(40, 42, 46, 0.5)',
+		editing: 'rgba(145, 145, 145, 0.5)',
+		highlight: 'rgba(57, 59, 65, .5)',
+	},
+	ocean: {
+		normal: 'rgba(28, 29, 34, 0.78)',
+		editing: 'rgba(44, 57, 71, 0.88)',
+		highlight: 'rgba(44, 44, 51, 0.88)',
 	}
 }
+
+container.id = 'user-background'
+write(() =>
+	(document.body.append(container),
+	document.head.append(style)))
 
 // Listen to  changes in related options, that do not call render() directly
 const changeProps = [
 	'illyaDance', 'illyaDanceMute', 'theme', 'workModeToggle'
 ]
+const handler = () =>
+	render
 for (let param of changeProps) {
-	options.onChange(param, render)
+	options.onChange(param, handler)
+}
+
+// Central render function. Resets state and renders the apropriate background.
+export function render(bg?: BackgroundStore) {
+	write(() =>
+		(container.innerHTML = '',
+		style.innerHTML = ''))
+
+	let showOPBG = false
+	if (options.illyaDance && config.illyaDance) {
+		renderIllya()
+		showOPBG = true
+	} else if (options.userBG && !options.workModeToggle) {
+		renderBackground(bg)
+		showOPBG = true
+	}
+	toggleOPBackground(showOPBG)
 }
 
 // Attach Illya Dance to the background
 function renderIllya() {
-	const urlBase = '/assets/illya.'
 	let args = 'autoplay loop'
 	if (options.illyaDanceMute) {
 		args += ' muted'
 	}
 	const html = HTML
 		`<video ${args}>
-			<source src="${urlBase + 'webm'}" type="video/webm">
-			<source src="${urlBase + 'mp4'}" type="video/mp4">
+			<source src="/assets/illya.webm" type="video/webm">
+			<source src="/assets/illya.mp4" type="video/mp4">
 		</video>`
-	write(() => container.innerHTML = html)
+	write(() =>
+		container.innerHTML = html)
+}
+
+// Wrap the OP in a background for better visability
+function toggleOPBackground(on: boolean) {
+	if ($threadContainer) {
+		write(() => {
+			if (on) {
+				$threadContainer.classList.add("custom-BG")
+			} else {
+				$threadContainer.classList.remove("custom-BG")
+			}
+		})
+	}
 }
 
 // Render a custom user-set background apply blurred glass to elements, if
@@ -87,27 +122,8 @@ async function renderBackground(bg?: BackgroundStore) {
 	if (theme === 'glass' || theme === 'ocean') {
 		html += ' ' + renderGlass(theme, bg.blurred)
 	}
-	write(() => style.innerHTML = html)
-}
-
-type BackgroundGradients = {
-	normal: string
-	editing: string
-	highlight: string
-}
-
-// Map for transparency gradients to apply on top of the blurred background
-const colourMap: {[key: string]: BackgroundGradients} = {
-	glass: {
-		normal: 'rgba(40, 42, 46, 0.5)',
-		editing: 'rgba(145, 145, 145, 0.5)',
-		highlight: 'rgba(57, 59, 65, .5)',
-	},
-	ocean: {
-		normal: 'rgba(28, 29, 34, 0.78)',
-		editing: 'rgba(44, 57, 71, 0.88)',
-		highlight: 'rgba(44, 44, 51, 0.88)',
-	}
+	write(() =>
+		style.innerHTML = html)
 }
 
 // Apply transparent blurred glass background to elemnts with the 'glass' class
@@ -174,5 +190,6 @@ export async function store(file: File) {
 }
 
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-	return new Promise<Blob>(resolve => (canvas as any).toBlob(resolve))
+	return new Promise<Blob>(resolve =>
+		(canvas as any).toBlob(resolve))
 }

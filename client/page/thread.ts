@@ -3,6 +3,7 @@ import {ThreadData, PostData, Post, OP} from '../posts/models'
 import PostView, {OPView} from '../posts/view'
 import {page, posts as postCollection} from '../state'
 import {write, $threads, importTemplate} from '../render'
+import options from "../options"
 
 // Container for all rendered posts
 export let $threadContainer: Element
@@ -18,6 +19,9 @@ export default function renderThread(thread: ThreadData) {
 	frag.querySelector("h1").innerHTML = title
 
 	$threadContainer = frag.querySelector("#thread-container")
+	if (options.userBG || options.illyaDance) {
+		$threadContainer.classList.add("custom-BG")
+	}
 	const els: Element[] = [],
 		{posts} = thread
 	delete thread.posts // Reduce strain on the GC. We won't be usng these.
