@@ -6,26 +6,24 @@ import {PostLinks} from '../models'
 
 // Render a link to other posts
 export function renderPostLink(num: number, board: string, op: number): string {
-	let text = '>>'
-	if (board !== page.board) { // Cross-board
-		text += `>/${board}/`
+	let text = num.toString(),
+		url = "#p" + text
+
+	if (op !== page.thread) {         // Cross-thread
+		text += " \u27a1"
+		url = op + url
+	} else if (num === page.thread) { // OP of this thread
+		text += " " + lang.OP
 	}
-	text += num
-	if (mine.has(num)) { // Post, I made
+	if (board !== page.board) {       // Cross-board
+		text = `>/${board}/` + text
+		url = `/${board}/` + url
+	}
+	if (mine.has(num)) {              // Post, I made
 		text += ' ' + lang.you
 	}
-	const {thread} = page
-	if (op !== thread) { // Cross-thread
-		text += ' \u27a1'
-	} else if (num == thread) { // OP post of this thread
-		text += ' ' + lang.OP
-	}
-	return postAnchor(`/${board}/${op}#p${num}`, text)
-}
 
-// Render the anchor element of a post link
-function postAnchor(href: string, text: string): string {
-	return `<a class="history" href="${href}">${text}</a>`
+	return `<a class="history" href="${url}">>>${text}</a>`
 }
 
 // TODO: Reimplement, when moderation done

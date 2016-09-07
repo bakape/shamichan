@@ -18,10 +18,10 @@ function handleClick(event: KeyboardEvent) {
 		return
 	}
 
-	// Need to both resolve relative paths and preserve the hash, if any
-	const el = (event.target as Element)
-		.closest("a.history") as HTMLAnchorElement
-	const href = el.href + (el.getAttribute("href").split("#")[1] || "")
+	const href =
+		((event.target as Element)
+			.closest("a.history") as HTMLAnchorElement)
+		.href
 	navigate(href, event, true).catch(alertError)
 }
 
