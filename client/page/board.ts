@@ -72,7 +72,7 @@ function renderThread(thread: ThreadData): DocumentFragment {
 		.querySelector(".counters")
 		.textContent = `${thread.postCtr}/${thread.imageCtr}`
 	const $lastN = $links.querySelector("a.history")
-	$lastN.setAttribute("href", `${href}?last=${lastN}`)
+	$lastN.setAttribute("href", `${href}?lastN=${lastN}`)
 	$lastN.textContent = `${navigation.last} ${lastN}`
 
 	frag.querySelector("h3").innerHTML = `「${escape(thread.subject)}」`

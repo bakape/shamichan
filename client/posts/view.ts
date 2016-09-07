@@ -170,7 +170,7 @@ export class OPView extends PostView {
 		super.render()
 		const $omit = document.createElement("span")
 		$omit.setAttribute("class", "omit")
-		this.el.append($omit)
+		this.el.querySelector(".post-container").append($omit)
 	}
 
 	// Render posts and images omited indicator
@@ -192,11 +192,12 @@ export class OPView extends PostView {
 		}
 		let html = pluralize(replyOmit, lang.post)
 		if (imageOmit !== 0) {
-			html += ` ${lang.and} ${pluralize(imageOmit, lang.image)} `
+			html += ` ${lang.and} ${pluralize(imageOmit, lang.image)}`
 		}
 		html += HTML
-			`<span class="act">
-				<a href="${page.href.split("?")[0]}" class="history">
+			` ${lang.omitted}&nbsp;
+			<span class="act">
+				<a href="${page.thread.toString()}" class="history">
 					${navigation.seeAll}
 				</a>
 			<span>`

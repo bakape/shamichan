@@ -15,14 +15,18 @@ type BoardData = {
 // Load a page (either board or thread) and render it once the ready promise
 // has been resolved
 export default async function (
-	{board, thread}: PageState,
+	{board, thread, lastN}: PageState,
 	ready: Promise<void>
 ) {
 	const conf = fetchBoarConfigs(board)
 	let data: BoardData|ThreadData
 
 	if (thread) {
-		data = await fetchJSON(`/json/${board}/${thread}`) as ThreadData
+		let url = `/json/${board}/${thread}`
+		if (lastN) {
+			url += `?lastN=${lastN}`
+		}
+		data = await fetchJSON(url) as ThreadData
 	} else {
 		data = await fetchJSON(`/json/${board}/`) as BoardData
 	}
