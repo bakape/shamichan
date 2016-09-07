@@ -53,6 +53,7 @@ function parseOpenBody(data: PostData): string {
 export function parseTerminatedLine(line: string, data: PostData): string {
 	let html = "<span>"
 	const {state} = data
+	state.spoiler = state.quote = false
 	if (line[0] === ">") {
 		state.quote = true
 		html += "<em>"
