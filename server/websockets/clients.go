@@ -4,7 +4,8 @@ import "sync"
 
 // Clients stores all synchronised websocket clients in a theread-safe map
 var Clients = ClientMap{
-	clients: make(map[*Client]SyncID),
+	// Start with 100 to avoid reallocations on server start
+	clients: make(map[*Client]SyncID, 100),
 }
 
 // ClientMap is a thread-safe store for all clients connected to this server

@@ -131,7 +131,7 @@ func ThreadCounter(id int64) (counter int64, err error) {
 // StreamUpdates produces a stream of the replication log updates for the
 // specified thread and sends it on read. Close the close channel to stop
 // receiving updates. The intial contents of the log are returned immediately.
-func StreamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
+func StreamUpdates(id int64, write chan<- [][]byte, close <-chan struct{}) (
 	[][]byte, error,
 ) {
 	cursor, err := getThread(id).
@@ -166,14 +166,10 @@ func StreamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
 				break
 			}
 
-			// Several update messages may come from the feed at a time.
-			// Separate and send each individually.
-			for _, msg := range updates {
-				select {
-				case write <- msg:
-				case <-close:
-					return
-				}
+			select {
+			case write <- updates:
+			case <-close:
+				return
 			}
 		}
 	}()

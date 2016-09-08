@@ -77,21 +77,20 @@ func (*DBSuite) TestStreamUpdates(c *C) {
 	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
 
 	// Empty log
-	read := make(chan []byte, 1)
+	read := make(chan [][]byte)
 	closer := make(chan struct{})
 	initial, err := StreamUpdates(1, read, closer)
 	c.Assert(err, IsNil)
 	c.Assert(initial, DeepEquals, [][]byte{})
 
-	addition := []byte{1, 0, 0, 3, 2}
-	log := [][]byte{addition}
+	log := [][]byte{[]byte{1, 0, 0, 3, 2}}
 	update := map[string][][]byte{"log": log}
 	c.Assert(Write(getThread(1).Update(update)), IsNil)
-	c.Assert(<-read, DeepEquals, addition)
+	c.Assert(<-read, DeepEquals, log)
 	close(closer)
 
 	// Existing data
-	read = make(chan []byte, 1)
+	read = make(chan [][]byte)
 	closer = make(chan struct{})
 	initial, err = StreamUpdates(1, read, closer)
 	c.Assert(err, IsNil)

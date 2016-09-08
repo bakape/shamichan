@@ -50,6 +50,15 @@ type Client struct {
 	// Client identity information
 	auth.Ident
 
+	// Notifications from the feed, that updates are available
+	update chan struct{}
+
+	// Current progress counter on the current update feed
+	feedProgress int
+
+	// Currently subscribed to update feed, if any
+	feed *updateFeed
+
 	// Underlyting websocket connection
 	conn *websocket.Conn
 
@@ -63,13 +72,9 @@ type Client struct {
 	receive chan receivedMessage
 
 	// Thread-safely send a message to the websocket client
-	write chan []byte
-
+	write chan [][]byte
 	// Close the client and free all used resources
 	close chan struct{}
-
-	// Close the update feed of a thread or board
-	closeUpdateFeed chan struct{}
 }
 
 type receivedMessage struct {
@@ -121,7 +126,8 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 func newClient(conn *websocket.Conn, req *http.Request) *Client {
 	return &Client{
 		Ident:   auth.LookUpIdent(req),
-		write:   make(chan []byte),
+		write:   make(chan [][]byte),
+		update:  make(chan struct{}),
 		close:   make(chan struct{}),
 		receive: make(chan receivedMessage),
 		conn:    conn,
@@ -151,19 +157,49 @@ func (c *Client) listenerLoop() error {
 			if err := c.handleMessage(msg.typ, msg.msg); err != nil {
 				return err
 			}
-		case msg := <-c.write:
-			if err := c.send(msg); err != nil {
+
+		// After receiving a notification about new updates being available,
+		// emidietly receive those updates. Done in this roundabout way to
+		// prevent the feed goroutine's blocking on clients performing over
+		// tasks.
+		case <-c.update:
+			if err := c.fetchBacklog(); err != nil {
 				return err
 			}
 		}
 	}
 }
 
+// Request and receive any messages the client is behind on. This should be
+// called after any blocking operation to facilitate quick, but lazy and little
+// blocking updates. Should be called after any log generating messages.
+func (c *Client) fetchBacklog() error {
+	if c.feed == nil {
+		return nil
+	}
+	c.feed.Write <- writeRequest{
+		start: c.feedProgress,
+		write: c.write,
+	}
+
+	// Receive said messages and send to the client
+	updates := <-c.write
+	c.feedProgress += len(updates)
+	for _, msg := range updates {
+		if err := c.send(msg); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Close all conections an goroutines asociated with the Client
 func (c *Client) closeConnections(err error) error {
-	// Close client and update feed
-	if c.closeUpdateFeed != nil {
-		close(c.closeUpdateFeed)
+	// Close update feed, if any
+	if c.feed != nil {
+		c.feed.Remove <- c.update
+		c.feed = nil
 	}
 	if err != nil {
 		close(c.close)
@@ -201,8 +237,7 @@ func (c *Client) closeConnections(err error) error {
 	return err
 }
 
-// Sends a message to the client. Not safe for concurent use. Generally, you
-// should be passing []byte to Client.Send instead.
+// Sends a message to the client. Not safe for concurent use.
 func (c *Client) send(msg []byte) error {
 	return c.conn.WriteMessage(websocket.TextMessage, msg)
 }
@@ -277,6 +312,13 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 	if err := c.runHandler(typ, msg); err != nil {
 		return err
 	}
+
+	// If the message created replication log updates, fetch them from the
+	// feed to increase percieved response speed.
+	if msgType < 30 {
+		return c.fetchBacklog()
+	}
+
 	return nil
 }
 

@@ -16,7 +16,7 @@ var (
 )
 
 type syncRequest struct {
-	Ctr    int64  `json:"ctr"`
+	Ctr    uint64 `json:"ctr"`
 	Thread int64  `json:"thread"`
 	Board  string `json:"board"`
 }
@@ -24,10 +24,11 @@ type syncRequest struct {
 // Syncronise the client to a certain thread, assign it's ID and prepare to
 // receive update messages.
 func synchronise(data []byte, c *Client) error {
-	// Close previous update feed, if any
-	if c.closeUpdateFeed != nil {
-		close(c.closeUpdateFeed)
-		c.closeUpdateFeed = nil
+	// Unsub from previous update feed, if any
+	if c.feed != nil {
+		c.feed.Remove <- c.update
+		c.feed = nil
+		c.feedProgress = 0
 	}
 
 	var msg syncRequest
@@ -67,7 +68,7 @@ func registerSync(board string, op int64, c *Client) {
 
 // Sends a response to the client's synchronisation request with any missed
 // messages and starts streaming in updates.
-func syncToThread(board string, thread, ctr int64, c *Client) error {
+func syncToThread(board string, thread int64, ctr uint64, c *Client) error {
 	valid, err := db.ValidateOP(thread, board)
 	if err != nil {
 		return err
@@ -76,34 +77,27 @@ func syncToThread(board string, thread, ctr int64, c *Client) error {
 		return errInvalidThread
 	}
 
-	closeFeed := make(chan struct{})
-	initial, err := db.StreamUpdates(thread, c.write, closeFeed)
+	// Guard against malicious counters
+	curCtr, err := db.ThreadCounter(thread)
 	if err != nil {
 		return err
 	}
-
-	// Guard against malicious counters, that result in out of bounds slicing
-	// panic
-	if int(ctr) < 0 || int(ctr) > len(initial) {
-		close(closeFeed)
+	if ctr > uint64(curCtr) {
 		return errInvalidCounter
 	}
 
-	c.closeUpdateFeed = closeFeed
 	registerSync(board, thread, c)
+	c.feed, err = feeds.Add(thread, c.update)
+	if err != nil {
+		return err
+	}
+	c.feedProgress = int(ctr)
 
 	if err := c.sendMessage(messageSynchronise, 0); err != nil {
 		return err
 	}
 
-	// Send any messages the client is behind on
-	for _, loggedMessage := range initial[ctr:] {
-		if err := c.send(loggedMessage); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return c.fetchBacklog()
 }
 
 // Syncronise the client after a disconnect and restore any post in progress,

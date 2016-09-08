@@ -179,16 +179,6 @@ func (*ClientSuite) TestInvalidPayloadError(c *C) {
 	c.Assert(err, ErrorMatches, "invalid message: "+msg)
 }
 
-func (*ClientSuite) TestSend(c *C) {
-	std := []byte("foo")
-	sv := newWSServer(c)
-	defer sv.Close()
-	cl, wcl := sv.NewClient()
-	go cl.Listen()
-	cl.write <- std
-	assertMessage(wcl, std, c)
-}
-
 func (*ClientSuite) TestHandleMessage(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
@@ -288,18 +278,6 @@ func normalCloseWebClient(c *C, wcl *websocket.Conn) {
 	msg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")
 	deadline := time.Now().Add(time.Second)
 	c.Assert(wcl.WriteControl(websocket.CloseMessage, msg, deadline), IsNil)
-}
-
-func (*ClientSuite) TestMessageSending(c *C) {
-	sv := newWSServer(c)
-	defer sv.Close()
-
-	// Send a message
-	std := []byte{127, 0, 0, 1}
-	cl, wcl := sv.NewClient()
-	go cl.Listen()
-	cl.write <- std
-	assertMessage(wcl, std, c)
 }
 
 func (*ClientSuite) TestCleanUp(c *C) {

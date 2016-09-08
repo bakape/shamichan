@@ -8,21 +8,26 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func (*ClientSuite) TestOldFeedClosing(c *C) {
+func (*DB) TestOldFeedClosing(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 
-	closer := make(chan struct{})
-	cl.closeUpdateFeed = closer
-	sv.Add(1)
-	go func() {
-		defer sv.Done()
-		<-closer
-	}()
+	writeSampleThread(c)
+	feed, err := feeds.Add(1, cl.update)
+	c.Assert(err, IsNil)
+
+	cl.feed = feed
+	cl.feedProgress = 1
+
 	synchronise(nil, cl)
-	sv.Wait()
-	c.Assert(cl.closeUpdateFeed, IsNil)
+
+	c.Assert(cl.feed, IsNil)
+	c.Assert(cl.feedProgress, Equals, 0)
+}
+
+func writeSampleThread(c *C) {
+	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
 }
 
 func (*DB) TestSyncToBoard(c *C) {
@@ -155,6 +160,8 @@ func (*DB) TestOnlyMissedMessageSyncing(c *C) {
 	assertSyncResponse(wcl, c)             // Receive client ID
 	syncAssertMessage(wcl, backlogs[1], c) // Receive first missed message
 	syncAssertMessage(wcl, backlogs[2], c) // Second missed message
+	c.Assert(cl.feedProgress, Equals, 3)
+
 	cl.Close()
 	sv.Wait()
 }
@@ -170,17 +177,12 @@ func (*DB) TestMaliciousCounterGuard(c *C) {
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 
-	// Negative counter
+	// Counter larger than in the database
 	msg := syncRequest{
 		Board:  "a",
 		Thread: 1,
-		Ctr:    -10,
+		Ctr:    7,
 	}
 	data := marshalJSON(msg, c)
-	c.Assert(synchronise(data, cl), Equals, errInvalidCounter)
-
-	// Counter larger than in the database
-	msg.Ctr = 7
-	data = marshalJSON(msg, c)
 	c.Assert(synchronise(data, cl), Equals, errInvalidCounter)
 }
