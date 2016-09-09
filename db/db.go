@@ -3,7 +3,6 @@ package db
 
 import (
 	"errors"
-	"log"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/util"
@@ -11,17 +10,6 @@ import (
 )
 
 var (
-	// Precompiled query for extracting only the changed fields from the replication
-	// log feed
-	formatUpdateFeed = r.Row.
-				Field("new_val").
-				Field("log").
-				Slice(r.Row.
-					Field("old_val").
-					Field("log").
-					Count().
-					Default(0))
-
 	// ErrUserNameTaken denotes a user name the client is trying  to register
 	// with is already taken
 	ErrUserNameTaken = errors.New("user name already taken")
@@ -126,55 +114,6 @@ func BoardCounter(board string) (counter int64, err error) {
 func ThreadCounter(id int64) (counter int64, err error) {
 	err = One(getThread(id).Field("log").Count(), &counter)
 	return
-}
-
-// StreamUpdates produces a stream of the replication log updates for the
-// specified thread and sends it on read. Close the close channel to stop
-// receiving updates. The intial contents of the log are returned immediately.
-func StreamUpdates(id int64, write chan<- [][]byte, close <-chan struct{}) (
-	[][]byte, error,
-) {
-	cursor, err := getThread(id).
-		Changes(r.ChangesOpts{IncludeInitial: true}).
-		Map(formatUpdateFeed).
-		Run(RSession)
-	if err != nil {
-		return nil, err
-	}
-
-	var initial [][]byte
-	if !cursor.Next(&initial) {
-		if err := cursor.Err(); err != nil {
-			return nil, err
-		}
-	}
-
-	go func() {
-		defer func() {
-			err := cursor.Err()
-			if err == nil {
-				err = cursor.Close()
-			}
-			if err != nil {
-				log.Printf("update feed: %s\n", err)
-			}
-		}()
-
-		for {
-			var updates [][]byte
-			if !cursor.Next(&updates) {
-				break
-			}
-
-			select {
-			case write <- updates:
-			case <-close:
-				return
-			}
-		}
-	}()
-
-	return initial, nil
 }
 
 // RegisterAccount writes the ID and password hash of a new user account to the

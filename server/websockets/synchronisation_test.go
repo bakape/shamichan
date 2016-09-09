@@ -94,8 +94,8 @@ func (*DB) TestSyncToThread(c *C) {
 		Thread: 1,
 	}
 	data := marshalJSON(msg, c)
-	backlog1 := []byte{1, 2, 3}
-	backlog2 := []byte{4, 5, 6}
+	backlog1 := []byte("foog")
+	backlog2 := []byte("bar")
 	thread := types.DatabaseThread{
 		ID:    1,
 		Board: "a",
@@ -114,7 +114,7 @@ func (*DB) TestSyncToThread(c *C) {
 	syncAssertMessage(wcl, backlog2, c) // Second message
 
 	// Receive new message
-	newMessage := []byte{7, 8, 9}
+	newMessage := []byte("foo")
 	update := map[string]r.Term{
 		"log": r.Row.Field("log").Append(newMessage),
 	}

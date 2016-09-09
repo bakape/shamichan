@@ -72,32 +72,6 @@ func (*DBSuite) TestThreadCounter(c *C) {
 	c.Assert(count, Equals, int64(3))
 }
 
-func (*DBSuite) TestStreamUpdates(c *C) {
-	thread := types.DatabaseThread{ID: 1}
-	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
-
-	// Empty log
-	read := make(chan [][]byte)
-	closer := make(chan struct{})
-	initial, err := StreamUpdates(1, read, closer)
-	c.Assert(err, IsNil)
-	c.Assert(initial, DeepEquals, [][]byte{})
-
-	log := [][]byte{[]byte{1, 0, 0, 3, 2}}
-	update := map[string][][]byte{"log": log}
-	c.Assert(Write(getThread(1).Update(update)), IsNil)
-	c.Assert(<-read, DeepEquals, log)
-	close(closer)
-
-	// Existing data
-	read = make(chan [][]byte)
-	closer = make(chan struct{})
-	initial, err = StreamUpdates(1, read, closer)
-	c.Assert(err, IsNil)
-	c.Assert(initial, DeepEquals, log)
-	close(closer)
-}
-
 func (*DBSuite) TestRegisterAccount(c *C) {
 	const id = "123"
 	hash := []byte{1, 2, 3}

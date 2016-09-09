@@ -3,27 +3,32 @@
 package websockets
 
 import (
+	"log"
 	"sync"
 
 	"github.com/bakape/meguca/db"
 	r "github.com/dancannon/gorethink"
 )
 
-// Precompiled query for extracting only the changed fields from the replication
-// log feed
-var formatUpdateFeed = r.Row.
-	Field("new_val").
-	Field("log").
-	Slice(r.Row.
-		Field("old_val").
-		Field("log").
-		Count().
-		Default(0))
+var (
+	// Precompiled query for extracting only the changed fields from the
+	// replication log feed
+	formatUpdateFeed = r.Branch(
+		r.Row.HasFields("old_val"),
+		r.Row.
+			Field("new_val").
+			Field("log").
+			AtIndex(r.Row.Field("old_val").Field("log").Count()).
+			Default(nil),
+		r.Row.Field("new_val").Field("log"),
+	)
 
-var feeds = feedContainer{
-	// 100 len map to avoid some realocation as the server starts
-	feeds: make(map[int64]*updateFeed, 100),
-}
+	// Contains and manages all active update feeds
+	feeds = feedContainer{
+		// 100 len map to avoid some realocation as the server starts
+		feeds: make(map[int64]*updateFeed, 100),
+	}
+)
 
 // Container for holding and managing client<->update-feed interaction
 type feedContainer struct {
@@ -40,7 +45,7 @@ type updateFeed struct {
 	Remove  chan chan<- struct{} // Remove a client from u
 	Write   chan writeRequest    // Request to slice from the replication log
 	close   chan struct{}        // Close database change feed
-	read    chan [][]byte        // Read from database change feed
+	read    chan []byte          // Read from database change feed
 }
 
 // A Client's request to receive new data from the updateFeed's replication log.
@@ -100,8 +105,8 @@ func (f *feedContainer) Clear() {
 // Create a new updateFeed and sync it to the database
 func newUpdateFeed(id int64) (*updateFeed, error) {
 	cl := make(chan struct{})
-	read := make(chan [][]byte)
-	initial, err := db.StreamUpdates(id, read, cl)
+	read := make(chan []byte)
+	initial, err := streamUpdates(id, read, cl)
 	if err != nil {
 		close(cl)
 		return nil, err
@@ -160,8 +165,8 @@ func (u *updateFeed) Listen() {
 			}
 
 		// Update the log
-		case updates := <-u.read:
-			u.appendUpdates(updates)
+		case msg := <-u.read:
+			u.appendUpdates(msg)
 
 		// Send the requested slice of the log to the client
 		case req := <-u.Write:
@@ -175,17 +180,17 @@ func (u *updateFeed) Listen() {
 }
 
 // Append messages to the replication log and notify any ready clients
-func (u *updateFeed) appendUpdates(updates [][]byte) {
+func (u *updateFeed) appendUpdates(msg []byte) {
 	// Create a new slice double the capacity, if capacity would be exceeded
 	curLen := len(u.log)
-	newLen := curLen + len(updates)
+	newLen := curLen + 1
 	if newLen > cap(u.log) {
 		newLog := make([][]byte, curLen, newLen*2)
 		copy(newLog, u.log)
 		u.log = newLog
 	}
 
-	u.log = append(u.log, updates...)
+	u.log = append(u.log, msg)
 
 	// Send to all clients that are not currently blocked doing some other
 	// operation
@@ -195,4 +200,57 @@ func (u *updateFeed) appendUpdates(updates [][]byte) {
 		default:
 		}
 	}
+}
+
+// StreamUpdates produces a stream of the replication log updates for the
+// specified thread and sends it on read. Close the close channel to stop
+// receiving updates. The intial contents of the log are returned immediately.
+func streamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
+	[][]byte, error,
+) {
+	cursor, err := r.
+		Table("threads").
+		Get(id).
+		Changes(r.ChangesOpts{IncludeInitial: true}).
+		Map(formatUpdateFeed).
+		Run(db.RSession)
+	if err != nil {
+		return nil, err
+	}
+
+	var initial [][]byte
+	if !cursor.Next(&initial) {
+		if err := cursor.Err(); err != nil {
+			return nil, err
+		}
+	}
+
+	go func() {
+		defer func() {
+			err := cursor.Err()
+			if err == nil {
+				err = cursor.Close()
+			}
+			if err != nil {
+				log.Printf("update feed: %s\n", err)
+			}
+		}()
+
+		for {
+			var msg []byte
+
+			// Error or document deleted. Close cursor.
+			if !cursor.Next(&msg) || msg == nil {
+				break
+			}
+
+			select {
+			case write <- msg:
+			case <-close:
+				return
+			}
+		}
+	}()
+
+	return initial, nil
 }
