@@ -3,9 +3,9 @@
 import {page} from "./state"
 import options from "./options"
 
-const $banner = document.querySelector("#banner") as HTMLElement
+const $banner = document.querySelector("#banner") as HTMLElement,
+	$reference = document.querySelector("#threads") as HTMLElement
 let $lock: HTMLElement,
-	$reference: HTMLElement,
 	atBottom: boolean
 
 // Scroll to an element in the DOM with compensation for banner height
