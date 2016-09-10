@@ -3,6 +3,7 @@
 // Also contains utilities for HTML template tags.
 
 import * as lang from './lang'
+import {followDOM} from "./scroll"
 
 type Operation = () => void
 
@@ -84,7 +85,8 @@ export function read(operation: Operation) {
 function scheduleFlush() {
 	if (!scheduled) {
 		scheduled = true
-		requestAnimationFrame(flush)
+		requestAnimationFrame(() =>
+			followDOM(flush))
 	}
 }
 

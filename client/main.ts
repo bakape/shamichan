@@ -6,7 +6,7 @@ let c = client  // Prevents the compiler from removing as an unused import
 c = null
 
 import {displayLoading, loadFromDB, page, isMobile} from './state'
-import {initTemplates} from "./render"
+import {initTemplates, read} from "./render"
 import {start as connect} from './connection'
 import {open} from './db'
 import loadPage from './page/load'
@@ -18,6 +18,7 @@ import bindEtc from './etc'
 import bindOptionsListeners from "./options/loop"
 import bindShortcuts from "./keyboard"
 import {loadModule} from "./util"
+import {checkBottom} from "./scroll"
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -50,6 +51,8 @@ async function start() {
 	bindShortcuts()
 	exec()
 	await pageLoader
+	read(() =>
+		checkBottom())
 	connect()
 	displayLoading(false)
 
