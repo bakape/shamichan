@@ -69,20 +69,20 @@ export default class ImageHandler extends View<Post> {
 	expandImage(event: Event) {
 		const mode = options.inlineFit,
 			img = this.model.image
-		let cls: string
+		let cls = "expanded "
 
 		switch (mode) {
 		case "none":
 			return
 		case "width":
-			cls = "fit-to-width"
+			cls += "fit-to-width"
 			img.tallerThanViewport = img.dims[1] > window.innerHeight
 			if (img.tallerThanViewport) {
 				scrollToElement(this.el as HTMLElement)
 			}
 			break
 		case "screen":
-			cls = "fit-to-screen"
+			cls += "fit-to-screen"
 			break
 		}
 		this.model.image.expanded = true
