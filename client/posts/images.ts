@@ -8,6 +8,7 @@ import options from "../options"
 import {setAttrs, on} from "../util"
 import {getModel} from "../state"
 import {scrollToElement} from "../scroll"
+import {trigger} from "../hooks"
 
 // Specs for hadnling image search link clicks
 type ImageSearchSpec = {
@@ -88,6 +89,9 @@ export default class ImageHandler extends View<Post> {
 		event.preventDefault()
 
 		write(() => {
+			// Hide any hover previews
+			trigger("imageExpanded")
+
 			const el = this.el.querySelector("figure img") as HTMLImageElement,
 				src = sourcePath(img.SHA1, img.fileType)
 

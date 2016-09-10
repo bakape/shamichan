@@ -100,19 +100,19 @@ export const specs = (): OptionSpec[] => {
 			tab: tabs.style,
 		},
 
-		// // Image hover expansion
-		// {
-		// 	id: 'imageHover',
-		// 	default: true,
-		// 	noLoad: isMobile,
-		// 	tab: tabs.general
-		// },
-		// // WebM hover expansion
-		// {
-		// 	id: 'webmHover',
-		// 	noLoad: isMobile,
-		// 	tab: tabs.general
-		// },
+		// Image hover expansion
+		{
+			id: 'imageHover',
+			default: true,
+			noLoad: isMobile,
+			tab: tabs.general
+		},
+		// WebM hover expansion
+		{
+			id: 'webmHover',
+			noLoad: isMobile,
+			tab: tabs.general
+		},
 
 		// Animated GIF thumbnails
 		{

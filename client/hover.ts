@@ -3,6 +3,9 @@
 import {emitChanges, ChangeEmitter} from "./model"
 import View from "./view"
 import {posts} from "./state"
+import {hook} from "./hooks"
+import options from "./options"
+import {setAttrs} from "./util"
 
 interface MouseMove extends ChangeEmitter {
 	event: MouseEvent
@@ -11,7 +14,8 @@ interface MouseMove extends ChangeEmitter {
 const $overlay = document.querySelector("#hover-overlay")
 
 // Currently displayed preview, if any
-let postPreview: PostPreview
+let postPreview: PostPreview,
+	imagePreview: HTMLElement
 
 // Centralised mousemove target tracking
 // Logging only the target isn't a option because change:target doesn't seem
@@ -29,34 +33,13 @@ export default function bindMouseListener() {
 		"mousemove",
 		(event: MouseEvent) => {
 			if (event.target !== mouseMove.event.target) {
+				clear()
 				mouseMove.event = event
 			}
 		},
 		{passive: true},
 	)
 }
-
-mouseMove.onChange("event", (event: MouseEvent) => {
-	if (postPreview) {
-		postPreview.remove()
-	}
-	const target = event.target as HTMLAnchorElement
-	if (!target.matches || !target.matches("a.history")) {
-		return
-	}
-	const m = target.textContent.match(/^>>(\d+)/)
-	if (!m) {
-		return
-	}
-	const post = posts.get(parseInt(m[1]))
-	if (!post) {
-
-		// TODO: Try to fetch from API. This includes cross-thread posts
-
-		return
-	}
-	postPreview = new PostPreview(post.view.el, target)
-})
 
 // Post hover preview view
 class PostPreview extends View<any> {
@@ -115,3 +98,76 @@ class PostPreview extends View<any> {
 		super.remove()
 	}
 }
+
+// Clear any previews
+function clear() {
+	if (postPreview) {
+		postPreview.remove()
+		postPreview = null
+	}
+	if (imagePreview) {
+		imagePreview.remove()
+		imagePreview = null
+	}
+}
+
+function renderImagePreview(event: MouseEvent) {
+	if (!options.imageHover) {
+		return
+	}
+	const target = event.target as HTMLElement
+	if (target.tagName !== "IMG" || target.classList.contains("expanded")) {
+		if (imagePreview) {
+			imagePreview.remove()
+			imagePreview = null
+		}
+		return
+	}
+
+	const src = target.closest("a").getAttribute("href"),
+		isWebm = /\.webm$/.test(src)
+
+	// Nothing to preview for PDF or MP3
+	const dontNeed =
+		/\.pdf$/.test(src)
+		|| /\.mp3$/.test(src)
+		|| (isWebm && !options.webmHover)
+	if (dontNeed) {
+		return clear()
+	}
+
+	const el = document.createElement(isWebm ? "video" : "img")
+	setAttrs(el, {
+		src: src,
+		autoplay: "",
+		loop: "",
+	})
+	imagePreview = el
+	$overlay.append(el)
+}
+
+function renderPostPreview(event: MouseEvent) {
+	const target = event.target as HTMLAnchorElement
+	if (!target.matches || !target.matches("a.history")) {
+		return
+	}
+	const m = target.textContent.match(/^>>(\d+)/)
+	if (!m) {
+		return
+	}
+	const post = posts.get(parseInt(m[1]))
+	if (!post) {
+
+		// TODO: Try to fetch from API. This includes cross-thread posts
+
+		return
+	}
+	postPreview = new PostPreview(post.view.el, target)
+}
+
+mouseMove.onChange("event", renderPostPreview)
+mouseMove.onChange("event", renderImagePreview)
+
+// Clear previews, when an image is expanded
+hook("imageExpanded", clear)
+
