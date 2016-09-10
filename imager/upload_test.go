@@ -47,7 +47,7 @@ func (*Imager) TestDetectFileType(c *C) {
 }
 
 func openFile(name string, c *C) *os.File {
-	f, err := os.Open(filepath.FromSlash("test/" + name))
+	f, err := os.Open(filepath.FromSlash("testdata/" + name))
 	c.Assert(err, IsNil)
 	return f
 }
@@ -141,7 +141,7 @@ func assertFiles(src, id string, fileType uint8, c *C) {
 		paths [3]string
 		data  [3][]byte
 	)
-	paths[0] = filepath.FromSlash("test/" + src)
+	paths[0] = filepath.FromSlash("testdata/" + src)
 	destPaths := getFilePaths(id, fileType)
 	paths[1], paths[2] = destPaths[0], destPaths[1]
 

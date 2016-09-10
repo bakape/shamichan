@@ -57,7 +57,7 @@ func (d *DB) TestThreadHTML(c *C) {
 		HTML: body,
 		Hash: "hash",
 	})
-	webRoot = "test"
+	webRoot = "testdata"
 
 	// Unparsable thread number
 	rec, req := newPair(c, "/a/www")

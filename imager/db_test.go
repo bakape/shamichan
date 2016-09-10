@@ -26,7 +26,7 @@ func newAllocatioTester(
 	c *C,
 ) *allocationTester {
 	return &allocationTester{
-		source: filepath.FromSlash("./test/" + source),
+		source: filepath.FromSlash("testdata/" + source),
 		paths:  getFilePaths(name, fileType),
 		c:      c,
 	}
@@ -162,7 +162,7 @@ func (*Imager) TestImageAllocation(c *C) {
 }
 
 func readSample(name string, c *C) []byte {
-	path := filepath.FromSlash("test/" + name)
+	path := filepath.FromSlash("testdata/" + name)
 	data, err := ioutil.ReadFile(path)
 	c.Assert(err, IsNil)
 	return data

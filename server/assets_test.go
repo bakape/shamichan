@@ -23,7 +23,7 @@ func (*WebServer) TestImageServer(c *C) {
 		truncated         = "/src/tis life.gif"
 		notFoundTruncated = "src/nobody here.gif"
 	)
-	imageWebRoot = "test"
+	imageWebRoot = "testdata"
 	path := imageWebRoot + truncated
 	notFound := imageWebRoot + notFoundTruncated
 

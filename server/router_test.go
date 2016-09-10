@@ -20,7 +20,7 @@ type WebServer struct {
 var _ = Suite(&WebServer{})
 
 func (w *WebServer) SetUpSuite(c *C) {
-	webRoot = "test"
+	webRoot = "testdata"
 	w.r = createRouter()
 }
 
@@ -40,7 +40,7 @@ func (w *WebServer) TestAllBoardRedirect(c *C) {
 }
 
 func (w *WebServer) TestPanicHandler(c *C) {
-	webRoot = "test"
+	webRoot = "testdata"
 	r := httptreemux.New()
 	h := wrapHandler(func(_ http.ResponseWriter, _ *http.Request) {
 		panic(errors.New("foo"))
