@@ -53,7 +53,9 @@ export default class ImageHandler extends View<Post> {
 		const img = this.model.image
 		if (img.length) {
 			write(() =>
-				this.el.querySelector("video").remove())
+				(this.el.querySelector("video").remove(),
+				(this.el.querySelector("figure img") as HTMLElement)
+					.hidden = false))
 		}
 		this.renderImage()
 

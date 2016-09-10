@@ -43,9 +43,11 @@ var mimeTypes = map[string]uint8{
 
 // Response from a thumbnail generation performed concurently
 type thumbResponse struct {
-	thumb []byte
-	dims  [4]uint16
-	err   error
+	audio  bool
+	dims   [4]uint16
+	length int32
+	thumb  []byte
+	err    error
 }
 
 // NewImageUpload  handles the clients' image (or other file) upload request
@@ -145,6 +147,8 @@ func newThumbnail(data []byte, img types.ImageCommon) (int, string, error) {
 		return 400, "", res.err // Some errors aren't actually 400, but most are
 	}
 	img.Dims = res.dims
+	img.Length = res.length
+	img.Audio = res.audio
 
 	if err := allocateImage(data, res.thumb, img); err != nil {
 		return 500, "", err
@@ -206,11 +210,8 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 	go func() {
 		var res thumbResponse
 		switch fileType {
-
-		// TODO: WebM thumbnailing
-		// case webm:
-		// 	return processWebm(file)
-
+		case webm:
+			res = processWebm(data)
 		case jpeg, png, gif:
 			res.thumb, res.dims, res.err = processImage(data)
 		}

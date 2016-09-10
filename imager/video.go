@@ -2,22 +2,26 @@
 
 package imager
 
-import (
-	"io"
+import "github.com/Soreil/video"
 
-	webmTool "github.com/Soreil/video/webm"
-)
-
-func processWebm(file io.ReadSeeker) (
-	io.Reader, io.Reader, error,
-) {
-	return nil, nil, nil
-}
-
-func verifyWebm(file io.ReadSeeker) error {
-	_, err := webmTool.DecodeConfig(file)
+// Extract data and thumbnail from a WebM video
+func processWebm(data []byte) (res thumbResponse) {
+	audio, _, err := video.DecodeAVFormat(data)
 	if err != nil {
-		return err
+		if err.Error() == "Failed to decode audio stream" {
+			err = nil
+		} else {
+			res.err = err
+			return
+		}
 	}
-	return nil
+	if audio != "" {
+		res.audio = true
+	}
+
+	// TODO: Waiting on Soreil for implementation
+	res.length = 60
+
+	res.thumb, res.dims, res.err = processImage(data)
+	return
 }

@@ -1,6 +1,6 @@
 import {config, boardConfig} from '../../state'
 import options from '../../options'
-import {commaList, escape, setAttrs} from '../../util'
+import {commaList, escape, setAttrs, pad} from '../../util'
 import {ImageData, fileTypes} from '../models'
 import {images as lang} from '../../lang'
 
@@ -31,7 +31,7 @@ export function renderFigcaption(
 		list.push('\u266B')
 	}
 	if (data.length) {
-		list.push(data.length.toString())
+		list.push(readableLength(data.length))
 	}
 	list.push(readableFilesize(data.size), `${data.dims[0]}x${data.dims[1]}`)
 	if (data.apng) {
@@ -48,6 +48,16 @@ export function renderFigcaption(
 	info.innerHTML = `(${commaList(list)})`
 	imageLink(link, data)
 	el.hidden = false
+}
+
+// Render video/audio length in human readable form
+function readableLength(len: number): string {
+	if (len < 60) {
+		return `0:${pad(len)}`
+	}
+	const min = Math.round(len / 60),
+		sec = len - min * 60
+	return `${pad(min)}:${pad(sec)}`
 }
 
 // Renders a human readable file size string
