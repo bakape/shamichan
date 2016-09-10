@@ -2,7 +2,11 @@
 
 package imager
 
-import "github.com/Soreil/video"
+import (
+	"bytes"
+
+	"github.com/Soreil/video"
+)
 
 // Extract data and thumbnail from a WebM video
 func processWebm(data []byte) (res thumbResponse) {
@@ -19,8 +23,12 @@ func processWebm(data []byte) (res thumbResponse) {
 		res.audio = true
 	}
 
-	// TODO: Waiting on Soreil for implementation
-	res.length = 60
+	dur, err := video.DecodeLength(bytes.NewReader(data))
+	if err != nil {
+		res.err = err
+		return
+	}
+	res.length = int32(dur / 1000000000)
 
 	res.thumb, res.dims, res.err = processImage(data)
 	return
