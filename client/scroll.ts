@@ -33,7 +33,7 @@ export function followDOM(func: () => void) {
 	func()
 
 	// Prevent scrolling with new posts, if page isn't visible
-	if (atBottom && (!document.hidden || options.alwaysLock)) {
+	if (atBottom) {
 		window.scrollTo(0, document.body.scrollHeight)
 	} else {
 		// Only compensate, if the height increased above the viewport
@@ -61,6 +61,14 @@ function referenceDistance(): number {
 	return $reference.getBoundingClientRect().top
 }
 
+// Check, if we are at page bottom on each scroll
 document.addEventListener("scroll", checkBottom, {
 	passive: true,
+})
+
+// Unlock from bottom, when the tab is hidden, unless set not to
+document.addEventListener("visibilitychange", () => {
+	if (document.hidden && !options.alwaysLock) {
+		atBottom = false
+	}
 })

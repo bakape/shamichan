@@ -252,12 +252,13 @@ export const specs = (): OptionSpec[] => {
 		// 	id: 'postUnloading',
 		// 	tab: 0
 		// },
-		// Lock thread scrolling to bottom, when bottom in view, even when the tab
-		// is hidden
-		// {
-		// 	id: 'alwaysLock',
-		// 	tab: tabs.general
-		// }
+
+		// Lock thread scrolling to bottom, when bottom in view, even when the
+		// tab is hidden
+		{
+			id: 'alwaysLock',
+			tab: tabs.general
+		},
 	]
 
 	// Image search link toggles
