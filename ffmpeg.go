@@ -108,7 +108,9 @@ static inline AVCodecContext * extract_audio(AVFormatContext *ctx)
 	int err;
 	AVCodec * codec = NULL;
 	int strm = av_find_best_stream(ctx, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
-
+	if (strm < 0) {
+		return NULL;
+	}
 	AVCodecContext * codecCtx = ctx->streams[strm]->codec;
 	err = avcodec_open2(codecCtx, codec, NULL);
 	if (err < 0) {
