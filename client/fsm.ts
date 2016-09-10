@@ -49,9 +49,9 @@ export default class FSM<S, E> {
 			}
 			result = handler(arg)
 		}
+		this.state = result
 		this.stateHandlers.forEach(result as any, fn =>
 			fn(arg))
-		this.state = result
 	}
 
 	// Returns a function that executes FSM.prototype.feed with the passed

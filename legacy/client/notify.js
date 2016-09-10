@@ -1,21 +1,3 @@
-/*
- Unread post etc. notifications
- */
-
-const main = require('./main'),
-	{$, _, Backbone, config, connSM, etc, state, options} = main;
-
-// Needs to be available with no connectivity, so we download and cache it
-let discoFavicon = '',
-	xhr = new XMLHttpRequest();
-xhr.open('GET', '/ass/css/ui/disconnected.ico');
-xhr.responseType = 'blob';
-xhr.onload = function() {
-	if (this.status === 200)
-		discoFavicon = window.URL.createObjectURL(this.response);
-};
-xhr.send();
-
 let NotifyModel = Backbone.Model.extend({
 	initialize() {
 		this.$favicon = $('#favicon');
@@ -29,7 +11,6 @@ let NotifyModel = Backbone.Model.extend({
 			if (document.hidden)
 				this.set('unreadCount', this.get('unreadCount') + 1);
 		});
-		main.reply('notify:title', title => this.set('title', title));
 
 		// Pass visibility changes to notify model
 		document.addEventListener('visibilitychange', e => {
@@ -41,19 +22,10 @@ let NotifyModel = Backbone.Model.extend({
 				reply: !hidden
 			});
 		}, false);
-
-		let dropped = () => this.set('alert', true);
-		connSM.on('dropped', dropped);
-		connSM.on('desynced', dropped);
-		connSM.on('synced', () => notify.set('alert', false));
 	},
+
 	check(model) {
 		const {hidden, unreadCount, reply, alert} = model.attributes;
-		let icon = '/ass/favicon.ico';
-		if (alert)
-			return this.render(discoFavicon, '--- ');
-		else if (!hidden)
-			return this.render(icon, '');
 		let prefix = '';
 		if (unreadCount) {
 			prefix += `(${unreadCount}) `;
@@ -65,10 +37,6 @@ let NotifyModel = Backbone.Model.extend({
 		}
 		this.render(icon, prefix);
 	},
-	render(icon, prefix) {
-		document.title = prefix + this.get('title');
-		this.$favicon.attr('href', icon);
-	}
 });
 
 let notify = new NotifyModel({

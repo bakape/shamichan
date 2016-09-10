@@ -4,18 +4,18 @@ import PostView, {OPView} from '../posts/view'
 import {page, posts as postCollection} from '../state'
 import {write, $threads, importTemplate} from '../render'
 import options from "../options"
+import {setTitle} from "../tab"
 
 // Container for all rendered posts
 export let $threadContainer: Element
 
 // Render the HTML of a thread page
 export default function renderThread(thread: ThreadData) {
+	const frag = importTemplate("thread")
 
-	// TODO: Apply thread title as tab title
-
-	const frag = importTemplate("thread"),
-		title = `/${page.board}/ - ${escape(thread.subject)} (#${thread.id})`
-
+	// Apply title to header and tab
+	const title = `/${page.board}/ - ${escape(thread.subject)} (#${thread.id})`
+	setTitle(title)
 	frag.querySelector("h1").innerHTML = title
 
 	$threadContainer = frag.querySelector("#thread-container")

@@ -5,6 +5,7 @@ import {ThreadData} from '../posts/models'
 import {renderThumbnail} from '../posts/render/image'
 import options from '../options'
 import {write, $threads, importTemplate} from '../render'
+import {setTitle} from "../tab"
 
 // Format a board name and title into cannonical board header format
 export function formatHeader(name: string, title: string): string {
@@ -14,15 +15,21 @@ export function formatHeader(name: string, title: string): string {
 // Render a board page's HTML
 export default function (threads: ThreadData[]) {
 
-	// TODO: Apply board title as tab title
-
 	// TODO: Cutomisable sorting order
 
 	threads = threads.sort((a, b) =>
 		b.bumpTime - a.bumpTime)
 
-	const frag = importTemplate("board"),
-		{banners, title} = boardConfig
+	const frag = importTemplate("board")
+
+	// Apply board title to tab and header
+	const title = formatHeader(page.board, boardConfig.title)
+	setTitle(title)
+	frag
+		.querySelector(".page-title")
+		.innerHTML = formatHeader(page.board, title)
+
+	const {banners} = boardConfig
 	if (banners.length) {
 		const banner = frag.querySelector(".image-banner") as HTMLElement
 		banner.hidden = false
@@ -30,10 +37,6 @@ export default function (threads: ThreadData[]) {
 			.firstElementChild
 			.setAttribute("src", `/assets/banners/${random(banners)}`)
 	}
-
-	frag
-		.querySelector(".page-title")
-		.innerHTML = formatHeader(page.board, title)
 
 	const threadEls: DocumentFragment[] = []
 	for (let i = 0; i < threads.length; i++) {
