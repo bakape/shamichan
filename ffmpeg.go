@@ -128,7 +128,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -386,4 +388,18 @@ func DecodeAVFormat(data []byte) (audio, video string, err error) {
 	}
 	audio = C.GoString(f.codec.name)
 	return
+}
+
+func DecodeLength(r io.ReadSeeker) (time.Duration, error) {
+	ctx := C.avformat_alloc_context()
+	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{ReadPacket: r.Read, Seek: r.Seek})
+	if err != nil {
+		panic(err)
+	}
+	ctx.pb = avioCtx.avAVIOContext
+	if ctx = C.create_context(ctx); ctx == nil {
+		avioCtx.Free()
+		return 0, errors.New("Failed to initialize AVFormatContext")
+	}
+	return time.Duration(ctx.duration * 1000), nil
 }

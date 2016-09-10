@@ -1,11 +1,14 @@
 package webm
 
 import (
+	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
 	"os"
 	"testing"
+
+	"github.com/Soreil/video"
 )
 
 const dataDirectory = "testdata/"
@@ -88,4 +91,17 @@ func BenchmarkDecode(b *testing.B) {
 			b.Fatal(err)
 		}
 	}
+}
+
+func TestWebmLength(t *testing.T) {
+	const filename = dataDirectory + "wafel.webm"
+	if _, err := os.Stat(filename); err != nil {
+		t.Fatal(err)
+	}
+	file, err := os.Open(filename)
+	defer file.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(video.DecodeLength(file))
 }
