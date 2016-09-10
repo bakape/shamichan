@@ -80,12 +80,13 @@ export default class UploadForm {
 	}
 
 	renderProgress({total, loaded}: ProgressEvent) {
+		let s: string
+		if (loaded === total) {
+			s = lang.thumbnailing
+		} else {
+			s = `${Math.floor(loaded / total * 100)}% ${lang.uploadProgress}`
+		}
 		write(() =>
-			this.$uploadStatus.textContent =
-			`${formatProgress(loaded, total)} ${lang.uploadProgress}`)
+			this.$uploadStatus.textContent = s)
 	}
-}
-
-function formatProgress(done: number, total: number): string {
-	return Math.floor(done / total * 100) + "%"
 }

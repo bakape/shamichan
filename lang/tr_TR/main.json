@@ -16,7 +16,8 @@
 		"omitted": "omitted",
 		"post": ["cevap", "cevaplar"],
 		"image": ["resim", "resimler"],
-		"unfinishedPost": "You have an unfinished post"
+		"unfinishedPost": "You have an unfinished post",
+		"thumbnailing": "Thumbnailing..."
 	},
 
 	"ui": {

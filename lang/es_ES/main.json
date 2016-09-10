@@ -16,7 +16,8 @@
 		"omitted": "omitted",
 		"post": ["post", "posts"],
 		"image": ["image", "images"],
-		"unfinishedPost": "You have an unfinished post"
+		"unfinishedPost": "You have an unfinished post",
+		"thumbnailing": "Thumbnailing..."
 	},
 
 	"ui": {

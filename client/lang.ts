@@ -59,6 +59,7 @@ type LnPosts = {
 	unfinishedPost: string
 	post: StringTuple
 	image: StringTuple
+	thumbnailing: string
 	[index: string]: any
 }
 
