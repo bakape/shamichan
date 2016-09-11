@@ -48,11 +48,6 @@ const specs: InputSpec[] = [
 		min: 1,
 	},
 	{
-		name: "threadCooldown",
-		type: inputType.number,
-		min: 0,
-	},
-	{
 		name: "salt",
 		type: inputType.string,
 	},

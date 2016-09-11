@@ -49,10 +49,6 @@
 		"Thread bump limit",
 		"Maximum number of replies a thread may have, before it no longer is bumped to the top of the board"
 	],
-	"threadCooldown": [
-		"Thread creation cooldown",
-		"Cooldown in seconds for new thread creation by the same IP"
-	],
 	"sessionExpiry": [
 		"Account session expiry",
 		"Time in days until user accoubts are automatically logged out"
