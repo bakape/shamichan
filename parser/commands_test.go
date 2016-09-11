@@ -58,3 +58,36 @@ func (*Tests) Test8ball(c *C) {
 		c.Fatalf("eightball answer not mached: %s", val)
 	}
 }
+
+func (*Tests) TestPyuDisabled(c *C) {
+	for _, in := range [...][]byte{pyuCommand, pcountCommand} {
+		com, err := parseCommand(in, "a")
+		c.Assert(err, IsNil)
+		c.Assert(com, DeepEquals, types.Command{})
+	}
+}
+
+func (*Tests) TestPyuAndPcount(c *C) {
+	(*config.Get()).Pyu = true
+	info := db.Document{ID: "info"}
+	c.Assert(db.Write(r.Table("main").Insert(info)), IsNil)
+
+	samples := [...]struct {
+		in   []byte
+		Type types.CommandType
+		Val  int
+	}{
+		{pcountCommand, types.Pcount, 0},
+		{pyuCommand, types.Pyu, 1},
+		{pcountCommand, types.Pcount, 1},
+	}
+
+	for _, s := range samples {
+		com, err := parseCommand(s.in, "a")
+		c.Assert(err, IsNil)
+		c.Assert(com, DeepEquals, types.Command{
+			Type: s.Type,
+			Val:  s.Val,
+		})
+	}
+}

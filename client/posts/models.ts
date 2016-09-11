@@ -47,7 +47,7 @@ export const enum commandType {dice, flip, eightBall, syncWatch, pyu}
 // Single hash command result delivered from the server
 export interface Command {
 	type: commandType
-	val: number[]|boolean|string
+	val: any
 }
 
 // Data of an OP post

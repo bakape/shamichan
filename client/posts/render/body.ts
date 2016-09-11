@@ -58,7 +58,7 @@ export function parseTerminatedLine(line: string, data: PostData): string {
 		state.quote = true
 		html += "<em>"
 	} else if (line[0] === "#") {
-		const m = line.match(/^#(flip|\d*d\d+|8ball)$/)
+		const m = line.match(/^#(flip|\d*d\d+|8ball|pyu|pcount)$/)
 		if (m) {
 			return html + parseCommand(m[1], data) + terminateTags(state, true)
 		}
@@ -220,13 +220,19 @@ function parseCommand(bit: string, {commands, state}: PostData): string {
 		return "#" + bit
 	}
 
+	// TODO: Sycnwatch
+
 	let inner: string
 	switch (bit) {
 	case "flip":
 		inner = commands[state.iDice++].val.toString()
 		break
 	case "8ball":
-		inner = commands[state.iDice++].val as string
+		inner = commands[state.iDice++].val
+		break
+	case "pyu":
+	case "pcount":
+		inner = commands[state.iDice++].val.toString()
 		break
 	default:
 		// Validate dice

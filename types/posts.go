@@ -14,15 +14,22 @@ type CommandType uint8
 const (
 	// Dice is the dice roll command type
 	Dice CommandType = iota
+
 	// Flip is the coinflip command type
 	Flip
+
 	// EightBall is the the #8ball random answer dispenser command type
 	EightBall
+
 	// SyncWatch is the syncronised timer command type for syncronising episode
 	// time during group anime watching and such
 	SyncWatch
+
 	// Pyu - don't ask
 	Pyu
+
+	// Pcount - don't ask
+	Pcount
 )
 
 // Board stores board metadata and the OPs of all threads
@@ -155,6 +162,7 @@ type Link struct {
 // EightBall: string
 // SyncWatch: TODO: SyncWatch storage type
 // Pyu: int64
+// Pcount: int64
 type Command struct {
 	Type CommandType `json:"type" gorethink:"type"`
 	Val  interface{} `json:"val" gorethink:"val"`

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	commandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball)$`)
+	commandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount)$`)
 
 	// ErrBodyTooLong is returned, when a post text body has exceeded
 	// MaxLengthBody
