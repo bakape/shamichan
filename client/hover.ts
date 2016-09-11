@@ -124,7 +124,11 @@ function renderImagePreview(event: MouseEvent) {
 		return
 	}
 
-	const src = target.closest("a").getAttribute("href"),
+	const link = target.closest("a")
+	if (!link) {
+		return
+	}
+	const src = link.getAttribute("href"),
 		isWebm = /\.webm$/.test(src)
 
 	// Nothing to preview for PDF or MP3
