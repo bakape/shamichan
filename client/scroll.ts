@@ -29,8 +29,12 @@ export function scrollToAnchor() {
 // Lock position to the bottom of a thread or keep the viewport from bumping
 // on out of sight DOM mutation.
 export function followDOM(func: () => void) {
-	const previous = referenceDistance()
+	// Don't compensate on board pages
+	if (!page.thread) {
+		return func()
+	}
 
+	const previous = referenceDistance()
 	func()
 
 	// Prevent scrolling with new posts, if page isn't visible
