@@ -139,15 +139,15 @@ export class ReplyFormModel extends Post implements FormModel {
 	}
 
 	// Upload the file and request its allocation
-	async uploadFile() {
-		const file = await this.view.uploadFile()
-		if (!file) { // Upload failed
+	async uploadFile(file?: File) {
+		const data = await this.view.uploadFile(file)
+		if (!data) { // Upload failed
 			return
 		}
 		if (!this.sentAllocRequest) {
-			this.requestAlloc(null, file)
+			this.requestAlloc(null, data)
 		} else {
-			send(message.insertImage, file)
+			send(message.insertImage, data)
 		}
 	}
 

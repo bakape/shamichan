@@ -27,7 +27,7 @@ export class FormView extends PostView implements UploadForm {
 	$uploadStatus: HTMLSpanElement
 	$uploadInput: HTMLInputElement
 	renderUploadForm: () => void
-	uploadFile: () => Promise<FileData>
+	uploadFile: (file?: File) => Promise<FileData>
 	renderProgress: (event: ProgressEvent) => void
 
 	[index: string]: any

@@ -47,9 +47,10 @@ export default class UploadForm {
 
 	// Read the file from $uploadInput and send as a POST request to the server.
 	// Returns image request data, if upload succeeded.
-	async uploadFile(): Promise<FileData> {
-		const formData = new FormData(),
-			file = this.$uploadInput.files[0]
+	async uploadFile(
+		file: File = this.$uploadInput.files[0]
+	): Promise<FileData> {
+		const formData = new FormData()
 		formData.append("image", file)
 
 		// Not using fetch, because no ProgressEvent support

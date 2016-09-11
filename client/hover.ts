@@ -21,25 +21,11 @@ let postPreview: PostPreview,
 // Logging only the target isn't a option because change:target doesn't seem
 // to fire in some cases where the target is too similar for example changing
 // between two post links (>>XXX) directly.
-export const mouseMove = emitChanges<MouseMove>({
+const mouseMove = emitChanges<MouseMove>({
 	event: {
 		target: null,
 	},
 } as MouseMove)
-
-// Bind mouse movement event listener
-export default function bindMouseListener() {
-	document.addEventListener(
-		"mousemove",
-		(event: MouseEvent) => {
-			if (event.target !== mouseMove.event.target) {
-				clear()
-				mouseMove.event = event
-			}
-		},
-		{passive: true},
-	)
-}
 
 // Post hover preview view
 class PostPreview extends View<any> {
@@ -169,6 +155,17 @@ function renderPostPreview(event: MouseEvent) {
 	postPreview = new PostPreview(post.view.el, target)
 }
 
+// Bind mouse movement event listener
+function onMouseMove(event: MouseEvent) {
+	if (event.target !== mouseMove.event.target) {
+		clear()
+		mouseMove.event = event
+	}
+}
+
+document.addEventListener("mousemove", onMouseMove, {
+	passive: true
+})
 mouseMove.onChange("event", renderPostPreview)
 mouseMove.onChange("event", renderImagePreview)
 

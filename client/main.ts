@@ -58,8 +58,10 @@ async function start() {
 
 	// Conditionally load desktop-only modules
 	if (!isMobile) {
-		const hover = await loadModule("hover")
-		hover.default()
+		await Promise.all([
+			loadModule("hover"),
+			loadModule("posts/posting/drop"),
+		])
 	}
 }
 

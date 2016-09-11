@@ -41,11 +41,6 @@ export const enum postEvent {
 }
 export const postSM = new FSM<postState, postEvent>(postState.none)
 
-// Synchronise with connection state machine
-connSM.on(connState.synced, postSM.feeder(postEvent.sync))
-connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
-connSM.on(connState.desynced, postSM.feeder(postEvent.error))
-
 // Find the post creation button and style it, if any
 function stylePostControls(fn: (el: HTMLElement) => void) {
 	write(() => {
@@ -55,6 +50,27 @@ function stylePostControls(fn: (el: HTMLElement) => void) {
 		}
 	})
 }
+
+// Ensures you are nagged at by the browser, when navigating away from an
+// unfinished allocated post.
+function bindNagging() {
+	window.onbeforeunload = (event: BeforeUnloadEvent) =>
+		event.returnValue = lang.unfinishedPost
+}
+
+// Insert target post's number as a link into the text body
+function quotePost(event: Event) {
+
+	// TODO: Quote selected text
+
+	postSM.feed(postEvent.open)
+	postModel.addReference(getClosestID(event.target as Element))
+}
+
+// Synchronise with connection state machine
+connSM.on(connState.synced, postSM.feeder(postEvent.sync))
+connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
+connSM.on(connState.desynced, postSM.feeder(postEvent.error))
 
 // Initial synchronisation
 postSM.act(postState.none, postEvent.sync, () =>
@@ -66,7 +82,6 @@ postSM.on(postState.ready, () =>
 	stylePostControls(el =>
 		(el.style.display = "",
 		el.classList.remove("disabled")))))
-
 
 // Handle connection loss
 postSM.wildAct(postEvent.disconnect, () => {
@@ -120,13 +135,6 @@ postSM.act(postState.ready, postEvent.hijack, ({view, model}: FormMessage) =>
 
 postSM.on(postState.alloc, bindNagging)
 
-// Ensures you are nagged at by the browser, when navigating away from an
-// unfinished allocated post.
-function bindNagging() {
-	window.onbeforeunload = (event: BeforeUnloadEvent) =>
-		event.returnValue = lang.unfinishedPost
-}
-
 // Open a new post creation form, if none open
 postSM.act(postState.ready, postEvent.open, () =>
 	(postModel = new ReplyFormModel(),
@@ -160,11 +168,3 @@ on($threads, "click", quotePost, {
 	selector: "a.quote",
 	passive: true,
 })
-
-function quotePost(event: Event) {
-
-	// TODO: Quote selected text
-
-	postSM.feed(postEvent.open)
-	postModel.addReference(getClosestID(event.target as Element))
-}
