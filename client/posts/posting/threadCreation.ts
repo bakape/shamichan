@@ -37,8 +37,10 @@ class ThreadForm extends FormView implements UploadForm {
 	$aside: Element
 	$board: HTMLSelectElement
 	$uploadContainer: HTMLSpanElement
-	needImage: boolean = true // Does the board require an OP image?
 	selectedBoard: string
+
+	// Does the board require an OP image?
+	needImage: boolean = !boardConfig.textOnly
 
 	// UploadForm properties
 	$spoiler: HTMLSpanElement
