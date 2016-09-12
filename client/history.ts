@@ -8,13 +8,10 @@ import {postSM, postEvent} from "./posts/posting/main"
 import {scrollToAnchor} from "./scroll"
 import {read as renderRead} from "./render"
 
-// Bind event listener
-on(document, "click", handleClick, {
-	selector: "a.history, a.history img",
-})
-
+// Handle a click on any .history anchor
 function handleClick(event: KeyboardEvent) {
-	if (event.ctrlKey) {
+	// Don't trigger, when user is trying to open in a new tab
+	if (event.ctrlKey || event.which === 2) {
 		return
 	}
 
@@ -73,6 +70,11 @@ function alertError(err: Error) {
 	alert(err)
 	throw err
 }
+
+// Bind event listener
+on(document, "click", handleClick, {
+	selector: "a.history, a.history img",
+})
 
 // For back and forward history events
 window.onpopstate = (event: any) =>
