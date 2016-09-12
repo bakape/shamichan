@@ -20,7 +20,7 @@ type ImageCommon struct {
 	APNG     bool      `json:"apng,omitempty" gorethink:"apng,omitempty"`
 	Audio    bool      `json:"audio,omitempty" gorethink:"audio,omitempty"`
 	FileType uint8     `json:"fileType" gorethink:"fileType"`
-	Length   int32     `json:"length,omitempty" gorethink:"length,omitempty"`
+	Length   uint32    `json:"length,omitempty" gorethink:"length,omitempty"`
 	Dims     [4]uint16 `json:"dims" gorethink:"dims"`
 	Size     int       `json:"size" gorethink:"size"`
 	MD5      string

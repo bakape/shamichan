@@ -32,20 +32,33 @@ const (
 	ogg
 )
 
-// Map of stdlib MIME types to the constants used internally
-var mimeTypes = map[string]uint8{
-	"image/jpeg":      jpeg,
-	"image/png":       png,
-	"image/gif":       gif,
-	"video/webm":      webm,
-	"application/pdf": pdf,
-}
+var (
+	// Map of stdlib MIME types to the constants used internally
+	mimeTypes = map[string]uint8{
+		"image/jpeg":      jpeg,
+		"image/png":       png,
+		"image/gif":       gif,
+		"video/webm":      webm,
+		"application/pdf": pdf,
+	}
+
+	// File type tests for types not supported by http.DetectContentType
+	typeTests = [...]struct {
+		test  func([]byte) (bool, error)
+		fType uint8
+	}{
+		{detectSVG, svg},
+		{detectMP3, mp3},
+		{detectMP4, mp4},
+		{detectOGG, ogg},
+	}
+)
 
 // Response from a thumbnail generation performed concurently
 type thumbResponse struct {
 	audio  bool
 	dims   [4]uint16
-	length int32
+	length uint32
 	thumb  []byte
 	err    error
 }
@@ -82,6 +95,9 @@ func newImageUpload(req *http.Request) (int, string, error) {
 	if err != nil {
 		return 400, "", err
 	}
+
+	// TODO: A  scheduler based on availablr RAM, so we don't run out of memory,
+	// with concurent burst loads.
 
 	file, _, err := req.FormFile("image")
 	if err != nil {
@@ -164,41 +180,32 @@ func detectFileType(buf []byte) (uint8, error) {
 	mimeType := http.DetectContentType(buf)
 	mime, ok := mimeTypes[mimeType]
 	if !ok {
-		switch {
-		case detectSVG(buf):
-			return svg, nil
-		case detectMP3(buf):
-			return mp3, nil
-		default:
-			is, err := detectCompatibleMP4(buf)
-			if is {
-				return mp4, err
+		for _, t := range typeTests {
+			match, err := t.test(buf)
+			if err != nil {
+				return 0, err
 			}
-			is, err = detectCompatibleOGG(buf)
-			if is {
-				return ogg, err
+			if match {
+				return t.fType, nil
 			}
-			return 0, fmt.Errorf("unsupported file type: %s", mimeType)
 		}
+
+		return 0, fmt.Errorf("unsupported file type: %s", mimeType)
 	}
 	return mime, nil
 }
 
 // TODO: Waiting on Soreil
 
-func detectSVG(buf []byte) bool {
-	return false
-}
-
-func detectMP3(buf []byte) bool {
-	return false
-}
-
-func detectCompatibleOGG(buf []byte) (bool, error) {
+func detectSVG(buf []byte) (bool, error) {
 	return false, nil
 }
 
-func detectCompatibleMP4(buf []byte) (bool, error) {
+func detectOGG(buf []byte) (bool, error) {
+	return false, nil
+}
+
+func detectMP4(buf []byte) (bool, error) {
 	return false, nil
 }
 
@@ -212,6 +219,8 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 		switch fileType {
 		case webm:
 			res = processWebm(data)
+		case mp3:
+			res = processMP3(data)
 		case jpeg, png, gif:
 			res.thumb, res.dims, res.err = processImage(data)
 		}

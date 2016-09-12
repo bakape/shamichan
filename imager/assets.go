@@ -14,6 +14,7 @@ var extensions = map[uint8]string{
 	gif:  "gif",
 	webm: "webm",
 	pdf:  "pdf",
+	mp3:  "mp3",
 }
 
 // Generate file paths of the source file and its thumbnail

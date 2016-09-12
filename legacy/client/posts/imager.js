@@ -10,17 +10,6 @@ exports.Hidamari = Backbone.View.extend({
 		this.toggleImageExpansion(true, img);
 		return this;
 	},
-
-	renderAudio(img) {
-		this.el.query('figure').append(util.parseDOM(common.parseHTML
-			`<audio src="${oneeSama.imagePaths().src + img.src}"
-				width="300"
-				height="3em"
-				autoplay loop controls
-			>
-			</audio>`));
-		this.model.set('imageExpanded', true);
-	}
 });
 
 // Expand all images

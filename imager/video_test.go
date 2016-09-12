@@ -8,7 +8,7 @@ func (*Imager) TestProcessWebm(c *C) {
 	samples := [...]struct {
 		name   string
 		audio  bool
-		length int32
+		length uint32
 		dims   [4]uint16
 	}{
 		{"wafel.webm", false, 5, [4]uint16{0x500, 0x2d0, 0x96, 0x54}},

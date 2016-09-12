@@ -30,6 +30,7 @@ var (
 
 func (d *Imager) SetUpSuite(c *C) {
 	isTest = true
+	assetRoot = "testdata"
 	db.DBName = db.UniqueDBName()
 	c.Assert(db.Connect(), IsNil)
 	c.Assert(db.InitDB(), IsNil)

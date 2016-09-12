@@ -51,12 +51,20 @@ export default class ImageHandler extends View<Post> {
 
 	contractImage() {
 		const img = this.model.image
-		if (img.length) {
+
+		switch (img.fileType) {
+		case fileTypes.webm:
 			write(() =>
 				(this.el.querySelector("video").remove(),
 				(this.el.querySelector("figure img") as HTMLElement)
 					.hidden = false))
+			break
+		case fileTypes.mp3:
+			write(() =>
+				this.el.querySelector("audio").remove())
+			break
 		}
+
 		this.renderImage()
 
 		// Scroll the post back into view, if contracting images taller than
@@ -97,7 +105,7 @@ export default class ImageHandler extends View<Post> {
 			const el = this.el.querySelector("figure img") as HTMLImageElement,
 				src = sourcePath(img.SHA1, img.fileType)
 
-			if (img.length) { // Only videos have a length property
+			if (img.fileType == fileTypes.webm) {
 				const video = document.createElement("video")
 				setAttrs(video, {
 					src,
@@ -121,9 +129,17 @@ export default class ImageHandler extends View<Post> {
 
 	// Render audio controls for uploaded MP3 files
 	renderAudio() {
-		// Audio controls are always the same height and do not need to be
-		// fitted
-		// TODO
+		const el = document.createElement("audio"),
+			img = this.model.image
+		setAttrs(el, {
+			autoplay: "",
+			loop: "",
+			controls: "",
+			src: sourcePath(img.SHA1, img.fileType),
+		})
+		this.model.image.expanded = true
+		write(() =>
+			this.el.querySelector("figure").after(el))
 	}
 }
 

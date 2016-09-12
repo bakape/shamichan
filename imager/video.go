@@ -28,7 +28,7 @@ func processWebm(data []byte) (res thumbResponse) {
 		res.err = err
 		return
 	}
-	res.length = int32(dur / 1000000000)
+	res.length = uint32(dur / 1000000000)
 
 	res.thumb, res.dims, res.err = processImage(data)
 	return

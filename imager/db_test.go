@@ -162,7 +162,7 @@ func (*Imager) TestImageAllocation(c *C) {
 }
 
 func readSample(name string, c *C) []byte {
-	path := filepath.FromSlash("testdata/" + name)
+	path := filepath.Join("testdata", name)
 	data, err := ioutil.ReadFile(path)
 	c.Assert(err, IsNil)
 	return data
