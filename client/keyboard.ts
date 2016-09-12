@@ -30,13 +30,12 @@ function handleShortcut(event: KeyboardEvent) {
 	case options.expandAll:
 		toggleExpandAll()
 		break
-
-	// TODO: Work mode
-
+	case options.workMode:
+		options.workModeToggle = !options.workModeToggle
+		break
 	default:
 		caught = false
 	}
-
 
 	if (caught) {
 		event.stopImmediatePropagation()

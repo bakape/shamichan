@@ -55,6 +55,11 @@ export default class OptionsPanel extends TabbedModal {
 	assignValue(id: string, type: optionType, val: any) {
 		const el = this.el.querySelector('#' + id) as HTMLInputElement
 
+		// Pannel not rendered yet
+		if (!el) {
+			return
+		}
+
 		switch (type) {
 		case optionType.checkbox:
 			el.checked = val as boolean

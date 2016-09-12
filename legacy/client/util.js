@@ -1,5 +1,5 @@
 let cachedOffset;
-export function serverTime() :number {
+export function serverTime() {
 	const d = Date.now();
 	if (imports.isNode)
 		return d;

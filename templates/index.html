@@ -14,7 +14,7 @@
 	<script>
 		var config = {{.Config}},
 			configHash = '{{.ConfigHash}}',
-			isMobile = {{.IsMobile}}
+			isMobile = {{.IsMobile}};
 		if (localStorage.theme !== config.DefaultCSS) {
 			document.getElementById('theme').href =
 				'/assets/css/' + localStorage.theme + '.css'

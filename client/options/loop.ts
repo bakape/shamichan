@@ -39,7 +39,10 @@ function loopPosts(test: (post: Post) => boolean, fn: (post: Post) => void) {
 function renderImages() {
 	if (!page.thread) {
 		// Quick render, because we don't have models in the catalog
-		const display = options.hideThumbs || options.workMode ? "none" : ""
+		let display = ""
+		if (options.hideThumbs || options.workModeToggle) {
+			display = "none"
+		}
 		write(() => {
 			for (let el of $threads.querySelectorAll(".expanded")) {
 				(el as HTMLElement).style.display = display

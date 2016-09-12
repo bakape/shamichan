@@ -57,14 +57,3 @@ _.extend(dispatcher, {
 		}
 	}
 });
-
-// Check if new posts links to one of my posts
-function checkRepliedToMe(links, sourceNum) {
-	if (!links)
-		return;
-	const mine = state.mine.readAll();
-	for (let num in links) {
-		if (num in mine)
-			main.request('repliedToMe', sourceNum);
-	}
-}

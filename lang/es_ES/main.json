@@ -263,11 +263,11 @@
 			],
 			"workMode": [
 				"Modo de trabajo",
-				"Esconde las imágenes, activa el tema por defecto y deshabilita el fondo personalizado."
+				"Esconde las imágenes y deshabilita el fondo personalizado."
 			],
 			"workModeToggle": [
 				"Modo de trabajo",
-				"Esconde las imágenes, activa el tema por defecto y deshabilita el fondo personalizado."
+				"Esconde las imágenes y deshabilita el fondo personalizado."
 			],
 			"google": ["Google", "Google búsqueda de imágenes"],
 			"iqdb": ["IQDB", "iqdb.org búsqueda de imágenes"],

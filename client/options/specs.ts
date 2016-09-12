@@ -100,6 +100,12 @@ export const specs = (): OptionSpec[] => {
 			tab: tabs.style,
 		},
 
+		{
+			id: "workModeToggle",
+			tab: tabs.style,
+			exec: toggleHeadStyle("work-mode", ".image-banner{display: none;}"),
+		},
+
 		// Image hover expansion
 		{
 			id: 'imageHover',
@@ -278,7 +284,7 @@ export const specs = (): OptionSpec[] => {
 		{id: 'done', default: 83},
 		{id: 'toggleSpoiler', default: 73},
 		{id: 'expandAll', default: 69},
-		// 	{id: 'workMode', default: 66}
+		{id: 'workMode', default: 66},
 	]
 
 	for (let spec of keySpecs as OptionSpec[]) {

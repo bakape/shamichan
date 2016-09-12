@@ -8,15 +8,15 @@ import {images as lang} from '../../lang'
 export function renderImage(
 	el: HTMLElement,
 	data: ImageData,
-	reveal?: boolean,
+	reveal: boolean,
 ) {
-	const showThumb = !options.hideThumbs || reveal
+	const showThumb = (!options.hideThumbs && !options.workModeToggle) || reveal
 	el.hidden = !showThumb
 	if (config.hats && showThumb) {
 		(el.firstElementChild as HTMLElement).hidden = false
 	}
 	if (showThumb) {
-		renderThumbnail(el.lastElementChild, data)
+		renderThumbnail(el.lastElementChild, data, "")
 	}
 }
 
@@ -24,7 +24,7 @@ export function renderImage(
 export function renderFigcaption(
 	el: HTMLElement,
 	data: ImageData,
-	reveal?: boolean,
+	reveal: boolean,
 ) {
 	const list: string[] = []
 	if (data.audio) {
@@ -39,7 +39,7 @@ export function renderFigcaption(
 	}
 
 	const [hToggle, , info, link] = Array.from(el.children) as HTMLElement[]
-	if (!options.hideThumbs) {
+	if (!options.hideThumbs && !options.workModeToggle) {
 		hToggle.hidden = true
 	} else {
 		hToggle.hidden = false
@@ -108,7 +108,7 @@ function imageLink(el: Element, data: ImageData) {
 }
 
 // Render the actual thumbnail image
-export function renderThumbnail(el: Element, data: ImageData, href?: string) {
+export function renderThumbnail(el: Element, data: ImageData, href: string) {
 	const src = sourcePath(data.SHA1, data.fileType)
 	let thumb: string,
 		[ , , thumbWidth, thumbHeight] = data.dims

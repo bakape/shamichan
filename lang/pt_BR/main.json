@@ -263,11 +263,11 @@
 			],
 			"workMode": [
 				"Work mode",
-				"Hides images, defaults theme and disables user background"
+				"Hides images and disables user background"
 			],
 			"workModeToggle": [
 				"Work mode",
-				"Hides images, defaults theme and disables user background"
+				"Hides images and disables user background"
 			],
 			"google": ["Google", "Google pesquisa de Imagens"],
 			"iqdb": ["IQDB", "iqdb.org pesquisa de Imagens"],

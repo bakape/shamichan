@@ -21,7 +21,7 @@ export default function renderThread(thread: ThreadData) {
 	frag.querySelector("h1").innerHTML = title
 
 	$threadContainer = frag.querySelector("#thread-container")
-	if (options.userBG || options.illyaDance) {
+	if (!options.workModeToggle && (options.userBG || options.illyaDance)) {
 		$threadContainer.classList.add("custom-BG")
 	}
 	const els: Element[] = [],

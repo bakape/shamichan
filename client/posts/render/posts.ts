@@ -21,8 +21,8 @@ export default function (frag: DocumentFragment, data: PostData|ThreadData) {
 	renderHeader(frag, data)
 
 	if (data.image) {
-		renderFigcaption(frag.querySelector("figcaption"), data.image)
-		renderImage(frag.querySelector("figure"), data.image)
+		renderFigcaption(frag.querySelector("figcaption"), data.image, false)
+		renderImage(frag.querySelector("figure"), data.image, false)
 	}
 }
 

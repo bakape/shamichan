@@ -1,30 +1,3 @@
-main.$doc.on('keydown', handle_shortcut);
-
-function handle_shortcut(event) {
-	const opts = options.attributes;
-	switch(event.which) {
-		case opts.expandAll:
-			imager.massExpander.toggle();
-			prevent();
-			break;
-		case opts.workMode:
-			const val = main.oneeSama.workMode = !main.oneeSama.workMode;
-			Cookie.set('workModeTOG', val);
-			const banner = document.querySelector("h1 > img");
-			if(banner!=null)
-				banner.style.display =  val? 'none':'';
-			document.getElementById('theme').setAttribute('href',
-					`${config.MEDIA_URL}css/${val? state.hotConfig.get('DEFAULT_CSS'): main.options.get("theme")}.css?v=${main.cssHash}`);
-			oneeSama.thumbStyle = val? 'hide': main.options.get('thumbs');
-			main.options.trigger("workModeTOG");
-			window.addEventListener('beforeunload', function () {
-				Cookie.set("workModeTOG",false);
-			});
-			prevent()
-			break;
-	}
-}
-
 const ComposerView = Backbone.View.extend({
 	events: {
 		'input #trans': 'onInput',
