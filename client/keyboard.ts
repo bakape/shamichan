@@ -2,6 +2,7 @@
 
 import options from "./options"
 import {postForm, postSM, postEvent} from "./posts/posting/main"
+import {toggleExpandAll} from "./posts/images"
 
 // Bind keyboard event listener to the document
 export default function bindListener() {
@@ -25,6 +26,9 @@ function handleShortcut(event: KeyboardEvent) {
 		if (postForm) {
 			postForm.toggleSpoiler()
 		}
+		break
+	case options.expandAll:
+		toggleExpandAll()
 		break
 
 	// TODO: Work mode

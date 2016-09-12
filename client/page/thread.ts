@@ -5,6 +5,8 @@ import {page, posts as postCollection} from '../state'
 import {write, $threads, importTemplate} from '../render'
 import options from "../options"
 import {setTitle} from "../tab"
+import {expandAll} from "../posts/images"
+import {images as lang} from "../lang"
 
 // Container for all rendered posts
 export let $threadContainer: Element
@@ -30,6 +32,9 @@ export default function renderThread(thread: ThreadData) {
 	if (thread.image) {
 		thread.image.large = true
 	}
+
+	frag.querySelector("#expand-images")
+		.textContent = expandAll ? lang.contract : lang.expand
 
 	const opModel = new OP(thread),
 		opView = new OPView(opModel)

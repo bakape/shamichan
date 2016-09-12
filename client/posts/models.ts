@@ -235,10 +235,8 @@ export class Post extends Model implements PostData {
 	// Insert an image into an existing post
 	insertImage(img: ImageData) {
 		this.image = img
-
-		// TODO: Automatic expansion, if set
-
 		this.view.renderImage()
+		this.view.autoExpandImage()
 	}
 
 	// Close an open post and reparse its last line

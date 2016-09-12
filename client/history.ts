@@ -24,7 +24,11 @@ function handleClick(event: KeyboardEvent) {
 
 // Navigate to the target og the URL and load its data. NewPoint indicates, if
 // a new history state should be pushed.
-async function navigate(url: string, event: Event, needPush: boolean) {
+export default async function navigate(
+	url: string,
+	event: Event,
+	needPush: boolean,
+) {
 	let nextState = read(url)
 
 	// Does the link point to the same page as this one?
@@ -62,8 +66,6 @@ async function navigate(url: string, event: Event, needPush: boolean) {
 	}
 	displayLoading(false)
 }
-
-export default navigate
 
 function alertError(err: Error) {
 	displayLoading(false)

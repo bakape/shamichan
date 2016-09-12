@@ -6,9 +6,10 @@ import {
 import {write, $threads} from "../render"
 import options from "../options"
 import {setAttrs, on} from "../util"
-import {getModel} from "../state"
+import {getModel, posts} from "../state"
 import {scrollToElement} from "../scroll"
 import {trigger} from "../hooks"
+import {images as lang} from "../lang"
 
 // Specs for hadnling image search link clicks
 type ImageSearchSpec = {
@@ -16,7 +17,34 @@ type ImageSearchSpec = {
 	url: string
 }
 
+// Types of data requested by the search provider
 const enum ISType {thumb, MD5, SHA1}
+
+// Expand all image thumbnails automatically
+export let expandAll = false
+
+const ISSpecs: {[engine: string]: ImageSearchSpec} = {
+	google: {
+		type: ISType.thumb,
+		url: "https://www.google.com/searchbyimage?image_url=",
+	},
+	iqdb: {
+		type: ISType.thumb,
+		url: "http://iqdb.org/?url=",
+	},
+	saucenao: {
+		type: ISType.thumb,
+		url: "http://saucenao.com/search.php?db=999&url=",
+	},
+	desustorage: {
+		type: ISType.MD5,
+		url: "https://desuarchive.org/_/search/image/",
+	},
+	exhentai: {
+		type: ISType.SHA1,
+		url: "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
+	},
+}
 
 // Mixin for image expansion and related functionality
 export default class ImageHandler extends View<Post> {
@@ -33,7 +61,7 @@ export default class ImageHandler extends View<Post> {
 		const img = this.model.image
 		if (img.expanded) {
 			event.preventDefault()
-			return this.contractImage()
+			return this.contractImage(false)
 		}
 
 		switch (img.fileType) {
@@ -45,23 +73,38 @@ export default class ImageHandler extends View<Post> {
 			event.preventDefault()
 			return this.renderAudio()
 		default:
-			return this.expandImage(event)
+			return this.expandImage(event, false)
 		}
 	}
 
-	contractImage() {
+	// Automatically expand an image, if expandAll is set
+	autoExpandImage() {
+		if (expandAll && shouldAutoExpand(this.model)) {
+			this.expandImage(null, true)
+		}
+	}
+
+	contractImage(noScroll: boolean) {
 		const img = this.model.image
 
 		switch (img.fileType) {
 		case fileTypes.webm:
-			write(() =>
-				(this.el.querySelector("video").remove(),
+			write(() => {
+				const $v = this.el.querySelector("video")
+				if ($v) {
+					$v.remove()
+				}
 				(this.el.querySelector("figure img") as HTMLElement)
-					.hidden = false))
+					.hidden = false
+			})
 			break
 		case fileTypes.mp3:
-			write(() =>
-				this.el.querySelector("audio").remove())
+			write(() => {
+				const $a = this.el.querySelector("audio")
+				if ($a) {
+					$a.remove()
+				}
+			})
 			break
 		}
 
@@ -69,14 +112,14 @@ export default class ImageHandler extends View<Post> {
 
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
-		if (img.tallerThanViewport) {
+		if (img.tallerThanViewport && !noScroll) {
 			scrollToElement(this.el as HTMLElement)
 		}
 
 		img.expanded = img.tallerThanViewport = img.revealed = false
 	}
 
-	expandImage(event: Event) {
+	expandImage(event: Event|null, noScroll: boolean) {
 		const mode = options.inlineFit,
 			img = this.model.image
 		let cls = "expanded "
@@ -87,7 +130,7 @@ export default class ImageHandler extends View<Post> {
 		case "width":
 			cls += "fit-to-width"
 			img.tallerThanViewport = img.dims[1] > window.innerHeight
-			if (img.tallerThanViewport) {
+			if (img.tallerThanViewport && !noScroll) {
 				scrollToElement(this.el as HTMLElement)
 			}
 			break
@@ -96,7 +139,9 @@ export default class ImageHandler extends View<Post> {
 			break
 		}
 		this.model.image.expanded = true
-		event.preventDefault()
+		if (event) {
+			event.preventDefault()
+		}
 
 		write(() => {
 			// Hide any hover previews
@@ -145,10 +190,6 @@ export default class ImageHandler extends View<Post> {
 
 // Deleagte image clicks to views. More performant than dedicated listeners for
 // each view.
-on($threads, "click", handleImageClick, {
-	selector: "img, video",
-})
-
 function handleImageClick(event: MouseEvent) {
 	if (options.inlineFit == "none" || event.which !== 1) {
 		return
@@ -163,11 +204,6 @@ function handleImageClick(event: MouseEvent) {
 }
 
 // Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
-on($threads, "click", toggleHiddenThumbnail, {
-	passive: true,
-	selector: ".image-toggle",
-})
-
 function toggleHiddenThumbnail(event: Event) {
 	const model = getModel(event.target as Element)
 	if (!model) {
@@ -178,35 +214,8 @@ function toggleHiddenThumbnail(event: Event) {
 	model.image.revealed = !revealed
 }
 
-// Handle image search links
-on($threads, "click", handleImageSearch, {
-	passive: true,
-	selector: ".image-search",
-})
 
-const ISSpecs: {[engine: string]: ImageSearchSpec} = {
-	google: {
-		type: ISType.thumb,
-		url: "https://www.google.com/searchbyimage?image_url=",
-	},
-	iqdb: {
-		type: ISType.thumb,
-		url: "http://iqdb.org/?url=",
-	},
-	saucenao: {
-		type: ISType.thumb,
-		url: "http://saucenao.com/search.php?db=999&url=",
-	},
-	desustorage: {
-		type: ISType.MD5,
-		url: "https://desuarchive.org/_/search/image/",
-	},
-	exhentai: {
-		type: ISType.SHA1,
-		url: "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
-	},
-}
-
+// Handle clicks on the image search links in the figcaption
 function handleImageSearch(event: Event) {
 	const el = event.target as Element,
 		model = getModel(el)
@@ -230,3 +239,62 @@ function handleImageSearch(event: Event) {
 	}
 	window.open(url + encodeURIComponent(arg), "_blank")
 }
+
+// Toggle image expansion on [Expand Images] click
+export function toggleExpandAll() {
+	expandAll = !expandAll
+
+	write(() => {
+		const $e = $threads.querySelector("#expand-images")
+		if ($e) {
+			$e.textContent = expandAll ? lang.contract : lang.expand
+		}
+	})
+
+	// Loop over all models and apply changes
+	for (let post of posts) {
+		if (!shouldAutoExpand(post)) {
+			continue
+		}
+		if (expandAll) {
+			post.view.expandImage(null, true)
+		} else {
+			post.view.contractImage(true)
+		}
+	}
+}
+
+// Resolve, if post should be automatically expanded or contracted
+function shouldAutoExpand(model: Post): boolean {
+	if (!model.image) {
+		return false
+	}
+	switch (model.image.fileType) {
+	case fileTypes.mp3:
+	case fileTypes.mp4:
+	case fileTypes.ogg:
+	case fileTypes.pdf:
+	case fileTypes.webm:
+		return false
+	}
+	return true
+}
+
+on($threads, "click", handleImageClick, {
+	selector: "img, video",
+})
+
+on($threads, "click", toggleHiddenThumbnail, {
+	passive: true,
+	selector: ".image-toggle",
+})
+
+on($threads, "click", handleImageSearch, {
+	passive: true,
+	selector: ".image-search",
+})
+
+on($threads, "click", toggleExpandAll, {
+	passive: true,
+	selector: "#expand-images",
+})

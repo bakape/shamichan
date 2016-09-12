@@ -277,7 +277,7 @@ export const specs = (): OptionSpec[] => {
 		{id: 'newPost', default:78},
 		{id: 'done', default: 83},
 		{id: 'toggleSpoiler', default: 73},
-		// 	{id: 'expandAll', default: 69},
+		{id: 'expandAll', default: 69},
 		// 	{id: 'workMode', default: 66}
 	]
 

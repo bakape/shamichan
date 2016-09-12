@@ -161,7 +161,8 @@ export class ReplyFormModel extends Post implements FormModel {
 
 	// Insert the uploaded image into the model
 	insertImage(img: ImageData) {
-		super.insertImage(img)
+		this.image = img
+		this.view.renderImage()
 		this.view.removeUploadForm()
 	}
 }
