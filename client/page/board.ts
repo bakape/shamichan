@@ -25,9 +25,7 @@ export default function (threads: ThreadData[]) {
 	// Apply board title to tab and header
 	const title = formatHeader(page.board, boardConfig.title)
 	setTitle(title)
-	frag
-		.querySelector(".page-title")
-		.innerHTML = formatHeader(page.board, title)
+	frag.querySelector(".page-title").innerHTML = title
 
 	const {banners} = boardConfig
 	if (banners.length) {
