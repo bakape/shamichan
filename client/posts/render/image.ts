@@ -55,7 +55,7 @@ function readableLength(len: number): string {
 	if (len < 60) {
 		return `0:${pad(len)}`
 	}
-	const min = Math.round(len / 60),
+	const min = Math.floor(len / 60),
 		sec = len - min * 60
 	return `${pad(min)}:${pad(sec)}`
 }
