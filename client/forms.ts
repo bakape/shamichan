@@ -36,7 +36,7 @@ export interface FormViewAttrs extends ViewAttrs {
 }
 
 // Render a form input element for consumption by ../util.table
-export function renderInput(spec: InputSpec): string[] {
+export function renderInput(spec: InputSpec): [string, string] {
 	const attrs: StringMap = {
 		name: spec.name,
 		title: spec.tooltip || "",
@@ -87,17 +87,22 @@ export function renderInput(spec: InputSpec): string[] {
 	return [renderLabel(spec), `<input ${makeAttrs(attrs)}>`]
 }
 
-function renderSelect(spec: InputSpec): string[] {
+// Render a dropdown selecttion menu
+function renderSelect(spec: InputSpec): [string, string] {
 	let html = `<select title="${spec.tooltip || ""}" name="${spec.name}">`
 	for (let item of spec.choices) {
-		html += `<option value="${item}">${item}</option>`
+		html += `<option value="${item}"`
+		if (item === spec.value) {
+			html += `selected="selected"`
+		}
+		html += `>${item}</option>`
 	}
 	html += "</select>"
 	return [renderLabel(spec), html]
 }
 
 // Render a multiline input textarea
-function renderTextArea(spec: InputSpec, attrs: StringMap): string[] {
+function renderTextArea(spec: InputSpec, attrs: StringMap): [string, string] {
 	attrs["rows"] = (spec.rows || 3).toString()
 	if ("maxLength" in spec) {
 		attrs["maxlength"] = spec.maxLength.toString()
@@ -119,7 +124,7 @@ function renderTextArea(spec: InputSpec, attrs: StringMap): string[] {
 }
 
 // Render a subform for assining map-like data
-function renderMap(spec: InputSpec): string[] {
+function renderMap(spec: InputSpec): [string, string] {
 	let html = `<div name="${spec.name}" title="${spec.tooltip || ""}">`
 	if (spec.value) {
 		for (let key in spec.value as StringMap) {
