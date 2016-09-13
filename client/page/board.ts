@@ -71,7 +71,7 @@ function renderThread(thread: ThreadData): DocumentFragment {
 
 	if (thread.image) {
 		thread.image.large = true // Display larger thumbnails
-		if (!options.hideThumbs) {
+		if (!options.hideThumbs && !options.workModeToggle) {
 			const fig = frag.querySelector("figure")
 			fig.hidden = false
 			renderThumbnail(fig.querySelector("a"), thread.image, href)
