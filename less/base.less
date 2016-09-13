@@ -18,6 +18,23 @@ a, .banner-float, .soundcloud, .watch, .control {
 	cursor: pointer;
 }
 
+article, aside {
+	padding: 4px 10px;
+	margin: 1px;
+}
+
+aside {
+	display: table;
+	a {
+		position: relative;
+		z-index: 15;
+	}
+	&.disabled a {
+		color: grey !important;
+		cursor: default;
+	}
+}
+
 .bold {
 	font-weight: bold;
 }
@@ -67,6 +84,12 @@ hr {
 
 #threads {
 	margin: 0 1em 1em 1em;
+}
+
+#rules {
+	&:not(.expanded) span:last-child {
+		display: none;
+	}
 }
 
 .act {
@@ -123,6 +146,11 @@ table {
 	color: #b5bd68;
 	margin-top: 1em;
 	font-size: 10vw;
+}
+
+.aside-container {
+	display: flex;
+	flex-wrap: wrap;
 }
 
 @media screen and (max-device-width: 700px) {

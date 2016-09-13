@@ -30,7 +30,9 @@
 		"invalidCaptcha": "Invalid captcha",
 		"focusForCaptcha": "Focus to load captcha",
 		"reloadCaptcha": "Click to reload",
-		"submit": "Submit"
+		"submit": "Submit",
+		"rules": "Rules",
+		"close": "Close"
 	},
 
 	"banner": {

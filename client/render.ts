@@ -28,6 +28,7 @@ export function initTemplates() {
 		frag
 			.querySelector(".new-thread-button")
 			.textContent = lang.posts.newThread
+		frag.querySelector("#rules a").textContent = lang.ui.rules
 	}
 	{
 		const frag = templates["thread"]

@@ -74,6 +74,8 @@ type LnUI = {
 	focusForCaptcha: string
 	reloadCaptcha: string
 	submit: string
+	rules: string
+	close: string
 	[index: string]: string
 }
 

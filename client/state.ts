@@ -33,6 +33,7 @@ export interface BoardConfigs extends ChangeEmitter {
 	spoiler: string       //Image spoiler
 	title: string
 	notice: string
+	rules: string
 	banners: string[]
 	[index: string]: any
 }

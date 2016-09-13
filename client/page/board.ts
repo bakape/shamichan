@@ -1,5 +1,5 @@
-import {random, escape} from '../util'
-import {navigation} from '../lang'
+import {random, escape, on, makeFrag} from '../util'
+import {navigation, ui} from '../lang'
 import {boardConfig, page} from '../state'
 import {ThreadData} from '../posts/models'
 import {renderThumbnail} from '../posts/render/image'
@@ -34,6 +34,19 @@ export default function (threads: ThreadData[]) {
 		banner
 			.firstElementChild
 			.setAttribute("src", `/assets/banners/${random(banners)}`)
+	}
+
+	// Render rules container aside
+	if (page.board === "all") {
+		(frag.querySelector("#rules") as HTMLElement).style.display = "none"
+	} else {
+		let {rules} = boardConfig
+		if (!rules) {
+			rules = "God's in his heaven. All is right with the world."
+		} else {
+			rules = rules.replace(/\n/g, "<br>")
+		}
+		frag.querySelector("#rules-container").append(makeFrag(rules))
 	}
 
 	const threadEls: DocumentFragment[] = []
@@ -80,3 +93,25 @@ function renderThread(thread: ThreadData): DocumentFragment {
 
 	return frag
 }
+
+// Toggle the [Rules] cotainer expansion or contraction
+function toggleRules(e: MouseEvent) {
+	const $el = e.target as HTMLElement,
+		$aside = $el.closest("aside")
+	if ($aside.classList.contains("expanded")) {
+		write(() => {
+			$aside.classList.remove("expanded")
+			$el.textContent = ui.rules
+		})
+	} else {
+		write(() => {
+			$aside.classList.add("expanded")
+			$el.textContent = ui.close
+		})
+	}
+}
+
+on($threads, "click", toggleRules, {
+	passive: true,
+	selector: "#rules a",
+})

@@ -3,32 +3,6 @@ a.referenced {
 	border-bottom: 1px dashed currentColor;
 }
 
-article, aside {
-	padding: 4px 10px;
-	margin: 1px;
-}
-
-aside {
-	display: table;
-	&.compact {
-		margin: 0 1em;
-	}
-	a {
-		position: relative;
-		z-index: 15;
-	}
-	&.expanded {
-		padding: 0.7em;
-		& > a {
-			display: none;
-		}
-	}
-	&.disabled a {
-		color: grey !important;
-		cursor: default;
-	}
-}
-
 .errored * {
 	color: red !important;
 	cursor: default !important;
@@ -191,6 +165,13 @@ header {
 
 .upload-status {
 	margin-left: 0.5em;
+}
+
+#thread-form-container.expanded {
+	padding: 0.7em;
+	& > a {
+		display: none;
+	}
 }
 
 .new-thread-form {
