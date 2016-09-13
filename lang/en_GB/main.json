@@ -32,7 +32,8 @@
 		"reloadCaptcha": "Click to reload",
 		"submit": "Submit",
 		"rules": "Rules",
-		"close": "Close"
+		"close": "Close",
+		"showNotice": "Show Notice"
 	},
 
 	"banner": {

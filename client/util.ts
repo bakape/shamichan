@@ -1,8 +1,8 @@
 // Various utility functions
 
-import {BoardConfigs} from './state'
+import { BoardConfigs } from './state'
 
-type AnyHash = {[key: string]: any}
+type AnyHash = { [key: string]: any }
 
 // Single entry of the array, fetched through `/json/boardList`
 export type BoardEntry = {
@@ -38,8 +38,8 @@ export async function handleError(res: Response) {
 // Returns a list of all boards created in alphabetical order
 export const fetchBoardList = async (): Promise<BoardEntry[]> =>
 	(await fetchJSON<BoardEntry[]>("/json/boardList"))
-	.sort((a, b) =>
-		a.id.localeCompare(b.id))
+		.sort((a, b) =>
+			a.id.localeCompare(b.id))
 
 // Fetch configurations of a specific board
 export const fetchBoarConfigs = async (board: string): Promise<BoardConfigs> =>
@@ -47,7 +47,7 @@ export const fetchBoarConfigs = async (board: string): Promise<BoardConfigs> =>
 
 const base64 =
 	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
-	.split("")
+		.split("")
 
 // Generate a random base64 string of desird length
 export function randomID(len: number): string {
@@ -65,7 +65,7 @@ export function random<T>(array: T[]): T {
 
 // Simple map of sets with automatic array creation and removal
 export class SetMap<V> {
-	map: {[key: string]: Set<V>} = {}
+	map: { [key: string]: Set<V> } = {}
 
 	// Add item to key
 	add(key: string, item: V) {
@@ -148,7 +148,7 @@ export function on(
 
 // Return width of element with padding and margin
 export function outerWidth(el: Element): number {
-	const style =  getComputedStyle(el)
+	const style = getComputedStyle(el)
 	const widths = [
 		style.marginLeft, style.marginRight, style.paddingLeft,
 		style.paddingRight
@@ -176,7 +176,7 @@ export function HTML(base: TemplateStringsArray, ...args: string[]): string {
 
 // Generate an HTML element attribute list. If a key has an empty string, it's
 // value will be considered "true"
-export function makeAttrs(attrs: {[key: string]: string}): string {
+export function makeAttrs(attrs: { [key: string]: string }): string {
 	let html = ''
 	for (let key in attrs) {
 		html += ' ' + key
@@ -189,7 +189,7 @@ export function makeAttrs(attrs: {[key: string]: string}): string {
 }
 
 // Set attributes from a key-value map to the element
-export function setAttrs(el: Element, attrs: {[key: string]: string}) {
+export function setAttrs(el: Element, attrs: { [key: string]: string }) {
 	for (let key in attrs) {
 		el.setAttribute(key, attrs[key])
 	}
@@ -227,9 +227,8 @@ export function filter<T>(array: T[], fn: (item: T) => boolean): T[] {
 
 // Group all objects in array by a property of the object
 export function groupBy<T extends Object>(array: T[], prop: string)
-	: {[key: string]: T[]}
-{
-	const groups: {[key: string]: T[]} = {}
+	: { [key: string]: T[] } {
+	const groups: { [key: string]: T[] } = {}
 	for (let item of array) {
 		const dest = (item as AnyHash)[prop]
 		if (dest in groups) {
@@ -273,7 +272,7 @@ export function loadModule(path: string): Promise<any> {
 	return System.import(path)
 }
 
-const escapeMap: {[key: string]: string} = {
+const escapeMap: { [key: string]: string } = {
 	'&': '&amp;',
 	'<': '&lt;',
 	'>': '&gt;',
@@ -284,7 +283,7 @@ const escapeMap: {[key: string]: string} = {
 
 // Escape a user-submitted unsafe string to protect against XSS.
 export function escape(str: string): string {
-	return str.replace(/[&<>'"`]/g , char =>
+	return str.replace(/[&<>'"`]/g, char =>
 		escapeMap[char])
 }
 
@@ -331,4 +330,16 @@ export function isMatch(a: AnyHash, b: AnyHash): boolean {
 // number
 export function pluralize(num: number, word: string[]): string {
 	return `${num} ${word[num === 1 || num === -1 ? 0 : 1]}`
+}
+
+// Produce simple numeric hash of a string for quick comparison purposes
+export function hashString(s: string): number {
+	if (s.length === 0) {
+		return 0
+	}
+	let hash = 0
+	for (let i = 0; i < s.length; i++) {
+		hash = ((hash << 5) - hash) + s.charCodeAt(i)
+	}
+	return hash
 }

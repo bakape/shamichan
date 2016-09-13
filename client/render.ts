@@ -33,6 +33,7 @@ export function initTemplates() {
 	{
 		const frag = templates["thread"]
 		const actText = [
+			"",
 			lang.navigation.bottom,
 			"",
 			lang.navigation.return,

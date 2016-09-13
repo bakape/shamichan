@@ -9,7 +9,7 @@ import {displayLoading, loadFromDB, page, isMobile} from './state'
 import {initTemplates, read} from "./render"
 import {start as connect} from './connection'
 import {open} from './db'
-import loadPage from './page/load'
+import loadPage from './page/common'
 import BoardNavigation from './page/boardNavigation'
 import {exec} from './defer'
 import bindThreadCreation from './posts/posting/threadCreation'

@@ -1,4 +1,4 @@
-import {random, escape, on, makeFrag} from '../util'
+import {random, escape, on} from '../util'
 import {navigation, ui} from '../lang'
 import {boardConfig, page} from '../state'
 import {ThreadData} from '../posts/models'
@@ -6,6 +6,7 @@ import {renderThumbnail} from '../posts/render/image'
 import options from '../options'
 import {write, $threads, importTemplate} from '../render'
 import {setTitle} from "../tab"
+import {formatText, renderNotice} from "./common"
 
 // Format a board name and title into cannonical board header format
 export function formatHeader(name: string, title: string): string {
@@ -40,14 +41,16 @@ export default function (threads: ThreadData[]) {
 	if (page.board === "all") {
 		(frag.querySelector("#rules") as HTMLElement).style.display = "none"
 	} else {
-		let {rules} = boardConfig
+		const {rules} = boardConfig,
+			$rc = frag.querySelector("#rules-container")
 		if (!rules) {
-			rules = "God's in his heaven. All is right with the world."
+			$rc.append("God's in his heaven. All is right with the world.")
 		} else {
-			rules = rules.replace(/\n/g, "<br>")
+			$rc.append(formatText(rules))
 		}
-		frag.querySelector("#rules-container").append(makeFrag(rules))
 	}
+
+	renderNotice(frag)
 
 	const threadEls: DocumentFragment[] = []
 	for (let i = 0; i < threads.length; i++) {

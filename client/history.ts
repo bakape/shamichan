@@ -2,7 +2,7 @@
 
 import {on} from './util'
 import {read, page, displayLoading} from './state'
-import loadPage from './page/load'
+import loadPage from './page/common'
 import {synchronise} from './connection'
 import {postSM, postEvent} from "./posts/posting/main"
 import {scrollToAnchor} from "./scroll"

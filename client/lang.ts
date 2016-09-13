@@ -76,6 +76,7 @@ type LnUI = {
 	submit: string
 	rules: string
 	close: string
+	showNotice: string
 	[index: string]: string
 }
 

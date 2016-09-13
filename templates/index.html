@@ -1,3 +1,23 @@
+{{define "figure" -}}
+	<figure hidden>
+		<span class="hat" hidden></span>
+		<a>
+			<img>
+		</a>
+	</figure>
+{{- end}}
+
+{{define "notice" -}}
+	<div id="notice" class="expandable">
+		<span class="act">
+			<a></a>
+		</span>
+		<span>
+			<br>
+		</span>
+	</div>
+{{- end}}
+
 <!doctype html>
 <head>
 	<meta charset="utf-8">
@@ -56,12 +76,7 @@
 			<a></a>
 		</figcaption>
 		<div class="post-container">
-			<figure hidden>
-				<span class="hat" hidden></span>
-				<a>
-					<img>
-				</a>
-			</figure>
+			{{template "figure"}}
 			<blockquote></blockquote>
 		</div>
 		<small></small>
@@ -71,11 +86,12 @@
 			<img>
 		</h1>
 		<h1 class="page-title"></h1>
+		{{template "notice"}}
 		<span class="aside-container">
 			<aside id="thread-form-container" class="act glass">
 				<a class="new-thread-button"></a>
 			</aside>
-			<aside id="rules" class="glass">
+			<aside id="rules" class="glass expandable">
 				<span class="act">
 					<a></a>
 				</span>
@@ -90,6 +106,7 @@
 	</template>
 	<template name="thread">
 		<h1 class="page-title"></h1>
+		{{template "notice"}}
 		<span class="act">
 			<a href="#bottom"></a>
 		</span>
@@ -112,12 +129,7 @@
 	</template>
 	<template name="catalog-thread">
 		<article class="glass">
-			<figure hidden>
-				<span class="hat" hidden></span>
-				<a>
-					<img>
-				</a>
-			</figure>
+			{{template "figure"}}
 			<small class="spaced thread-links">
 				<b class="board" hidden></b>
 				<span class="counters"></span>

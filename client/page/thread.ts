@@ -7,6 +7,7 @@ import options from "../options"
 import {setTitle} from "../tab"
 import {expandAll} from "../posts/images"
 import {images as lang} from "../lang"
+import {renderNotice} from "./common"
 
 // Container for all rendered posts
 export let $threadContainer: Element
@@ -45,6 +46,8 @@ export default function renderThread(thread: ThreadData) {
 		els.push(createPost(posts[id]))
 	}
 	$threadContainer.append(...els)
+
+	renderNotice(frag)
 
 	if (page.lastN) {
 		opView.renderOmit()
