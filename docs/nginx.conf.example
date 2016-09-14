@@ -1,46 +1,40 @@
 # Requires nginx >=1.4.
 
-upstream node {
-	# Endpoint of the doushio node.js server
+upstream meguca {
 	server 127.0.0.1:8000;
 }
 
-access_log /var/log/nginx/doushio.log;
-
-# Additional WebSocket proxying support.
+# Additional WebSocket proxying support
 map $http_upgrade $connection_upgrade {
 	default upgrade;
-	''      close;
+	'' close;
 }
 
 server {
 	listen 80;
+
 	# Domain the website will be hosted on.
 	server_name mydomain.com;
 
-	# SSL
-	#listen 443 ssl;
-	#ssl_certificate /etc/nginx/ssl/nginx.crt;
-	#ssl_certificate_key /etc/nginx/ssl/nginx.key;
-
-
-	# You can forward various root-directory static files here.
-	root /path/to/doushio/www/;
-	location = /favicon.ico {}
-	location = /bg.jpg {}
-	location = /MadokaRunes.ttf {}
-	location = /503.ico {}
-	location = /503.html {}
-	location /mobile {}
-	location /worker.js {}
-
-	# Handles static assets (images, JS, CSS, etc.)
-	# Set "SERVE_STATIC_FILES: false" and  `MEDIA_URL` to the full path of
-	# `/ass/` in `./config`. The trailing "/" is important.
-	location /ass/ {
-		add_header Cache-Control "public, max-age=30240000";
-		alias /path/to/doushio/www/;
+	# For validating letsencrypt SSL certificats
+	location /.well-known/ {
+		alias /home/meguca/server/www/.well-known/;
 	}
+
+	# Redirect to HTTPS
+	location / {
+		return 301 https://$server_name$request_uri;
+	}
+}
+
+server {
+	# SSL
+	listen 443 ssl;
+	server_name mydomain.com;
+
+	# Default letsencrypt paths
+	ssl_certificate /etc/letsencrypt/live/meguca.org/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/meguca.org/privkey.pem;
 
 	# Gzip compression
 	gzip on;
@@ -48,49 +42,30 @@ server {
 	gzip_comp_level 6;
 	gzip_types text/plain text/css application/json application/javascript application/x-javascript text/javascript;
 
-	# Handles image uploads.
-	location /upload/ {
-		proxy_pass http://node/upload/;
-
-		# For forwarding IPs:
-		# Set "TRUST_X_FORWARDED_FOR: true" in ./config.js
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		# CloudFlare
-		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
-
-		# Adjust this to your imager/config IMAGE_FILESIZE_MAX.
-		client_max_body_size 5m;
-		# Allow for prolonged uploads.
-		client_body_timeout  300s;
-		# This may give you more accurate upload progress.
-		#proxy_buffering off;
-	}
-
-	# For HTML
 	location / {
-		proxy_pass http://node;
+		proxy_pass http://meguca/;
+
+		# Stream trafix directly to backend
 		proxy_buffering off;
 
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		# CloudFlare
-		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
+		# Maximum file upload size
+		client_max_body_size 100m;
 
-		# Custom error page. Changing to 503 to not trip Cloudflare
-		error_page 500 502 503 504 =503 /503.html;
-	}
+		# Time out very long file uploads
+		client_body_timeout 600s;
 
-	# For websocket connections. Change to match config.SOCKET_PATH
-	location /hana/ {
-		proxy_pass http://node/hana/;
-		proxy_buffering off;
+		# Prevent websocket from closing every 60 seconds
+		proxy_read_timeout 36000s;
 
-		# WebSockets support.
+		# WebSockets support
 		proxy_http_version 1.1;
-		proxy_set_header   Upgrade $http_upgrade;
-		proxy_set_header   Connection $connection_upgrade;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection $connection_upgrade;
 
+		# Pass source IP to backend
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		# CloudFlare
-		#proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
+
+		# CloudFlare support
+		# proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
 	}
 }

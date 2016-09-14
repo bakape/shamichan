@@ -79,19 +79,5 @@ proper Go worksapce set up, you can simply `export GOPATH=$(pwd)/.build` to
 temporarily assign `.build` as your Go workspace in the current shell. This will
 allow you to use native go commands such as `go test` and `go build`.
 
-// TODO: Rewrite everything below for v2
-
 ## Documentation
-* docs/api.md - JSON API spec
-* docs/dev_guide.md - Brief description on project operation for developers
-* docs/migration_*.js - Major semvser migration instructions
-* docs/doushio.initscript.example - Init script example
 * docs/nginx.config.example - ngingx configuration example
-
-##Standalone upkeep scripts
-* scripts/backup.js - uploads rdb to S3
-* scripts/backup.sh - MEGA backup script
-* scripts/purge_bans.sh - Removes all bans
-* scripts/purge_mod_sessions.sh - Closes all active moderator sessions
-* scripts/radio.js - icecast2 server integration
-* scripts/send.js - global websocket push messages
