@@ -1,9 +1,8 @@
-// Builds client JS and CSS
+// Builds client JS, CSS and JSON
 
 'use strict'
 
-const babel = require('gulp-babel'),
-	cache = require('gulp-cached'),
+const cache = require('gulp-cached'),
 	fs = require('fs-extra'),
 	gulp = require('gulp'),
 	gutil = require('gulp-util'),

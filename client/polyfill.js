@@ -1,6 +1,9 @@
 // A watered down version of https://github.com/WebReflection/dom4, so we don't
 // have to load the entire thing for up to date Chrome and Firefox.
 
+(function () {
+"use strict"
+
 const nodeExtends = {
 	before(...nodes) {
 		if (this.parentNode) {
@@ -73,3 +76,5 @@ function textNodeIfString(node) {
 	}
 	return node
 }
+
+})()
