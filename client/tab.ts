@@ -19,14 +19,18 @@ export function setTitle(t: string) {
 
 // Incerement unseen post number, if tab is hidden
 export function postAdded() {
-	unseenPosts++
-	resolve()
+	if (document.hidden) {
+		unseenPosts++
+		resolve()
+	}
 }
 
 // Add enseen reply indicator to tab header
 export function repliedToMe() {
-	unseenReplies = true
-	resolve()
+	if (document.hidden) {
+		unseenReplies = true
+		resolve()
+	}
 }
 
 // Resolve tab title and favicon
@@ -40,13 +44,15 @@ function resolve() {
 
 	let prefix = "",
 		icon = "default"
-	if (unseenPosts) {
-		prefix = `(${unseenPosts}) `
-		icon = "unread"
-	}
-	if (unseenReplies) {
-		prefix = ">> " + prefix
-		icon = "reply"
+	if (document.hidden) {
+		if (unseenPosts) {
+			prefix = `(${unseenPosts}) `
+			icon = "unread"
+		}
+		if (unseenReplies) {
+			prefix = ">> " + prefix
+			icon = "reply"
+		}
 	}
 	apply(prefix, `${urlBase}${icon}.ico`)
 }
