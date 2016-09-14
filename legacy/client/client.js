@@ -1,18 +1,4 @@
 _.extend(dispatcher, {
-	[common.INSERT_IMAGE](msg) {
-		const [num, img] = msg;
-
-		// Did I just upload this?
-		const postModel = main.request('postModel'),
-			toPostForm = postModel && postModel.get('num') == num;
-		if (toPostForm)
-			main.request('postForm').insertUploaded(img);
-
-		// If the image gets inseted into the postForm, we don't need the
-		// generic model to fire a separate image render
-		modelHandler(num, model => model.setImage(img, toPostForm));
-	},
-
 	[common.DELETE_POSTS](msg) {
 		modelHandler(msg[0], model => model.deletePost(msg[1]));
 	},

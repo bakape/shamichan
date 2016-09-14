@@ -7,6 +7,7 @@ import {ReplyFormModel} from "./posts/posting/model"
 import PostView from "./posts/view"
 import {$threadContainer} from "./page/thread"
 import {write} from "./render"
+import {postAdded} from "./tab"
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -67,8 +68,10 @@ handlers[message.insertPost] = (data: PostData) => {
 	write(() =>
 		$threadContainer.append(view.el))
 
-	// TODO: Hooks for triggering desktop notifications
-
+	postAdded()
+	if (model.links) {
+		model.checkRepliedToMe(model.links)
+	}
 }
 
 handlers[message.insertImage] = (msg: ImageMessage) =>

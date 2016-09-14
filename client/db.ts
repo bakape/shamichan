@@ -8,7 +8,7 @@ export let db: IDBDatabase
 const postStores = [
 	"mine",   // Posts created by this client
 	"hidden", // Posts hidden by client
-	"seen",   // Contains last post seen in a thread
+	"seen",   // Replies to the user's posts that have already been seen
 ]
 
 // Execute a database request as a promise
@@ -90,13 +90,40 @@ function deleteExpired(name: string) {
 	}
 }
 
-// Asynchronously insert a new expiring object into a postStore
-export function storeID(objStore: string, expiry: number, obj: {}) {
+// Read the contents of a postStore into an array
+export function readIDs(store: string): Promise<number[]> {
+	return new Promise<number[]>((resolve, reject) => {
+		const ids: number[] = []
+		const req =
+			db
+			.transaction(store, "readonly")
+			.objectStore(store)
+			.openCursor()
+
+		req.onerror = err =>
+			reject(err)
+
+		req.onsuccess = event => {
+			const cursor = (event as any).target.result as IDBCursorWithValue
+			if (cursor) {
+				ids.push(cursor.value.id)
+				cursor.continue()
+			} else {
+				resolve(ids)
+			}
+		}
+	})
+}
+
+// Asynchronously insert a new expiring post id object into a postStore
+export function storeID(objStore: string, id: number, expiry: number) {
 	const trans = db.transaction(objStore, "readwrite")
 	trans.onerror = throwErr
 
-	; (obj as any).expires = Date.now() + expiry
-	const req = trans.objectStore(objStore).add(obj)
+	const req = trans.objectStore(objStore).add({
+		id,
+		expires: Date.now() + expiry
+	})
 	req.onerror = throwErr
 }
 

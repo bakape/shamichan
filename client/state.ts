@@ -4,7 +4,7 @@ import {emitChanges, ChangeEmitter} from './model'
 import {Post} from './posts/models'
 import PostCollection from './posts/collection'
 import {getClosestID} from './util'
-import {db} from './db'
+import {readIDs, storeID} from './db'
 import {write} from './render'
 import {send} from './connection'
 
@@ -46,6 +46,9 @@ export interface PageState extends ChangeEmitter {
 	href: string
 }
 
+const thirtyDays = 30 * 24 * 60 * 60 * 1000,
+	$loading = document.querySelector('#loading-image') as HTMLElement
+
 // Configuration passed from the server. Some values can be changed during
 // runtime.
 export const config: Configs = (window as any).config
@@ -63,6 +66,9 @@ export const posts = new PostCollection()
 
 // Posts I made in any tab
 export let mine: Set<number>
+
+// Replies to this user's posts the user has already seen
+export let seenReplies: Set<number>
 
 // Tracks the synchronisation progress of the current thread/board
 export let syncCounter: number
@@ -91,52 +97,24 @@ export function read(href: string): PageState {
 
 // Load post number sets from the database
 export function loadFromDB(): Promise<void> {
-	return  Promise.all([loadMine()])
-}
-
-// Load post's this client has created
-function loadMine(): Promise<void> {
-	return new Promise<void>((resolve, reject) => {
-		const ids: number[] = []
-		const req =
-			db
-			.transaction("mine", "readonly")
-			.objectStore("mine")
-			.openCursor()
-
-		req.onerror = err =>
-			reject(err)
-
-		req.onsuccess = event => {
-			const cursor = (event as any).target.result as IDBCursorWithValue
-			if (cursor) {
-				ids.push(cursor.value.id)
-				cursor.continue()
-			} else {
-				mine = new Set<number>(ids)
-				resolve()
-			}
-		}
-	})
+	return Promise.all([
+		readIDs("mine").then(ids =>
+			mine = new Set(ids)),
+		readIDs("seen").then(ids =>
+			seenReplies = new Set(ids)),
+	])
 }
 
 // Store the ID of a post this client created
 export function storeMine(id: number) {
 	mine.add(id)
-	const trans = db.transaction("mine", "readwrite")
+	storeID("mine", id, thirtyDays)
+}
 
-	trans.onerror = err => {
-		throw err
-	}
-
-	const req = trans.objectStore("mine").add({
-		id,
-		expires: Date.now() + 10 * 24 * 60 * 60, // Expire in 10 days
-	})
-
-	req.onerror = err => {
-		throw err
-	}
+// Store the ID of a post that replied to one of the user's posts
+export function storeSeenReply(id: number) {
+	seenReplies.add(id)
+	storeID("seen", id, thirtyDays)
 }
 
 // Retrieve model of closest parent post
@@ -147,8 +125,6 @@ export function getModel(el: Element): Post {
 	}
 	return posts.get(id)
 }
-
-const $loading = document.querySelector('#loading-image') as HTMLElement
 
 // Display or hide the loading animation
 export function displayLoading(loading: boolean) {

@@ -3,7 +3,8 @@ import {extend} from '../util'
 import Collection from './collection'
 import PostView from './view'
 import {SpliceResponse} from '../client'
-import {mine} from "../state"
+import {mine, storeSeenReply, seenReplies} from "../state"
+import {repliedToMe} from "../tab"
 
 // Generic link object containing target post board and thread
 export type PostLink = {
@@ -205,8 +206,21 @@ export class Post extends Model implements PostData {
 
 	// Insert data about a link to another post into the model
 	insertLink(links: PostLinks) {
+		this.checkRepliedToMe(links)
+		this.extendField("links", links)
+	}
+
+	// Check if this post replied to one of the user's posts and trigger
+	// handlers
+	checkRepliedToMe(links: PostLinks) {
 		for (let key in links) {
 			if (mine.has(parseInt(key))) {
+				// In case there are multiple links to the same post
+				if (!seenReplies.has(this.id)) {
+					repliedToMe()
+					storeSeenReply(this.id)
+				}
+
 				this.view.addHighlight()
 
 				// TODO: Trigger Desktop Notification
@@ -214,8 +228,6 @@ export class Post extends Model implements PostData {
 				break
 			}
 		}
-
-		this.extendField("links", links)
 	}
 
 	// Insert data about another post linking this post into the model
