@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##vNext
+* Add:
+	- Highlighting of posts qouting you
+	- MP3 uploads even without cover art
+	- Board rule display widget
+	- Board notice display widget
+* Change:
+	- Navigatable board selection modal
+
 ##v2.2.0-beta - 2016-09-02
 * Add:
 	- Configurable board navigation panel

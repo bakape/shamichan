@@ -4,27 +4,7 @@
 */
 
 (function () {
-	// Check for browser compatibility by trying to detect some ES6 features
-	function check(func) {
-		try {
-			return eval('(function(){' + func + '})()')
-		}
-		catch(e) {
-			return false
-		}
-	}
-
-	// Check if a browser API function is defined
-	function checkFunction(func) {
-		try {
-			return typeof eval(func) === 'function'
-		}
-		catch(e) {
-			return false
-		}
-	}
-
-	var tests = [
+	var strictTests = [
 		// Arrow functions
 		'return (()=>5)()===5;',
 
@@ -80,14 +60,27 @@
 			+ 'return passed;'
 	]
 
-	var functionTests = [
-		'Promise',
-		'Proxy',
-		'Array.prototype.includes',
+	var legacy,
+		scriptCount = 0,
+		polyfills = []
+	var kys = "Your browser is too outdated. Please consider installing "
+		+ "the latest stable version of one these alternatives: "
+		+ "Google Chrome, Chromium, Mozilla Firefox, Opera, "
+		+ "Microsoft Edge."
 
-		// Fetch API
-		'window.fetch',
+	for (var i = 0; i < strictTests.length; i++) {
+		if (!check(strictTests[i])) {
+			alert(kys)
+			return
+		}
+	}
 
+	// Fetch API
+	if (!checkFunction("window.fetch")) {
+		polyfills.push('vendor/fetch')
+	}
+
+	var DOMMetods = [
 		// DOM level 4 methods
 		'Element.prototype.remove',
 
@@ -95,34 +88,31 @@
 		'Element.prototype.querySelector',
 		'Element.prototype.querySelectorAll'
 	]
-
-	var legacy
-
-	for (var i = 0; i < functionTests.length; i++) {
-		if (!checkFunction(functionTests[i])) {
-			legacy = true
+	var DOMUpToDate = true
+	for (var i = 0; i < DOMMetods.length; i++) {
+		if (!checkFunction(DOMMetods[i])) {
+			polyfills.push('vendor/dom4')
+			DOMUpToDate = false
 			break
 		}
 	}
 
-	for (var i = 0; i < tests.length; i++) {
-		if (!check(tests[i])) {
-			legacy = true
-			break
-		}
-	}
-
-	var scriptCount = 0,
-		polyfills = []
-	window.legacy = !!legacy
-
-	if (legacy) {
-		// Stuff them full of hot, fat and juicy polyfills, if even one test
-		// failed
-		polyfills.push('vendor/dom4', 'vendor/fetch', 'vendor/polyfill.min')
-	} else {
-		// Minimalistic polyfill for modern browsers
+	// Minimalistic  DOM polyfill for modern browsers
+	if (DOMUpToDate) {
 		polyfills.push('scripts/polyfill')
+	}
+
+	// Stdlib functions and methods
+	var stdlibTests = [
+		'Promise',
+		'Proxy',
+		'Array.prototype.includes',
+		"String.prototype.includes"
+	]
+	for (var i = 0; i < stdlibTests.length; i++) {
+		if (!checkFunction(stdlibTests[i])) {
+			polyfills.push("vendor/core.min")
+		}
 	}
 
 	var head = document.getElementsByTagName('head')[0]
@@ -153,6 +143,26 @@
 		head.appendChild(script)
 	}
 
+	// Check for browser compatibility by trying to detect some ES6 features
+	function check(func) {
+		try {
+			return eval('(function(){' + func + '})()')
+		}
+		catch(e) {
+			return false
+		}
+	}
+
+	// Check if a browser API function is defined
+	function checkFunction(func) {
+		try {
+			return typeof eval(func) === 'function'
+		}
+		catch(e) {
+			return false
+		}
+	}
+
 	function checkAllLoaded() {
 		// This function might be called multiple times. Only load the client,
 		// when all polyfills are loaded.
@@ -166,9 +176,6 @@
 			baseURL: '/assets/js',
 			defaultJSExtensions: true,
 			meta: {
-				"es5/*": {
-					format: "register"
-				},
 				"es6/*": {
 					format: "register"
 				}

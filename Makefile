@@ -36,7 +36,6 @@ all: server client init
 client:
 	npm update
 	$(GULP)
-	$(GULP) es5
 
 # Incrementaly rebuild the client for faster develepment builds. Only builds
 # the ES6 version for modern browsers.

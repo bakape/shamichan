@@ -24,6 +24,10 @@ const watch = gutil.env.w
 // Dependancy tasks for the default tasks
 const tasks = []
 
+const tsProject = ts.createProject('client/tsconfig.json', {
+	typescript: require("typescript"),
+})
+
 // Client JS files
 buildClient()
 
@@ -72,7 +76,8 @@ gulp.task('vendor', () => {
 		'systemjs/dist/system-polyfills.js',
 		'systemjs/dist/system-polyfills.js.map',
 		'dom4/build/dom4.js',
-		"babel-polyfill/dist/polyfill.min.js"
+		'core-js/client/core.min.js',
+		'core-js/client/core.min.js.map'
 	]
 	for (let path of paths) {
 		const split = path.split('/'),
@@ -90,26 +95,7 @@ gulp.task('polyfill', () => {
 
 compileVendor('fetch', 'node_modules/whatwg-fetch/fetch.js')
 
-// Client for legacy browsers. Must be run in a separate gulp invocation,
-// because of typescript and babel constraints.
-gulp.task("es5", () =>
-	gulp.src('client/**/*.ts')
-	.pipe(sourcemaps.init())
-	.pipe(ts(tsProject))
-	.on('error', handleError)
-	.pipe(babel({
-		presets: ["babel-preset-es2015"],
-		compact: true,
-	}))
-	.pipe(uglify())
-	.pipe(sourcemaps.write('maps'))
-	.pipe(gulp.dest('www/js/es5')))
-
 gulp.task('default', tasks)
-
-const tsProject = ts.createProject('client/tsconfig.json', {
-	typescript: require("typescript"),
-})
 
 // Builds the client files of the apropriate ECMAScript version
 function buildClient() {
