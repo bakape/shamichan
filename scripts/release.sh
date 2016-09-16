@@ -10,4 +10,4 @@ git commit CHANGELOG.md -m $version || exit 1
 git tag $version || exit 1
 git push || exit 1
 git push origin $version || exit 1
-make package
+make package cross_package_win_amd64
