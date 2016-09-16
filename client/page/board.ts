@@ -8,19 +8,38 @@ import {write, $threads, importTemplate} from '../render'
 import {setTitle} from "../tab"
 import {formatText, renderNotice} from "./common"
 
+type SortFunction = (a: ThreadData, b: ThreadData) => number
+
+// Thread sort functions
+const sorts: {[name: string]: SortFunction} = {
+	bump: (a, b) =>
+		b.bumpTime - a.bumpTime,
+	lastReply: (a, b) =>
+		b.replyTime - a.replyTime,
+	creation: (a, b) =>
+		b.time - a.time,
+	replyCount: (a, b) =>
+		b.postCtr - a.postCtr,
+	fileCount: (a, b) =>
+		b.imageCtr - a.imageCtr,
+}
+
+// Cached data of the current board's threads
+let data: ThreadData[]
+
 // Format a board name and title into cannonical board header format
 export function formatHeader(name: string, title: string): string {
 	return escape(`/${name}/ - ${title}`)
 }
 
+// Cache the curent board contents and render the thread
+export default function cachetAndRender(threads: ThreadData[]) {
+	data = threads
+	render(threads)
+}
+
 // Render a board page's HTML
-export default function (threads: ThreadData[]) {
-
-	// TODO: Cutomisable sorting order
-
-	threads = threads.sort((a, b) =>
-		b.bumpTime - a.bumpTime)
-
+function render(threads: ThreadData[]) {
 	const frag = importTemplate("board")
 
 	// Apply board title to tab and header
@@ -49,19 +68,37 @@ export default function (threads: ThreadData[]) {
 			$rc.append(formatText(rules))
 		}
 	}
+	(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
+		.value = localStorage.getItem("catalogSort") || "bump"
 
 	renderNotice(frag)
-
-	const threadEls: DocumentFragment[] = []
-	for (let i = 0; i < threads.length; i++) {
-		threadEls[i] = renderThread(threads[i])
-	}
-	frag.querySelector("#catalog").append(...threadEls)
+	frag.querySelector("#catalog").append(renderThreads("", threads))
 
 	write(() => {
 		$threads.innerHTML = ""
 		$threads.append(frag)
 	})
+}
+
+// Sort, filter and render all threads on a board
+function renderThreads(
+	filter: string, threads: ThreadData[],
+): DocumentFragment {
+	if (filter) {
+		const r = new RegExp(filter, "i")
+		threads = threads.filter(({board, subject}) =>
+			r.test(`/${board}/`) || r.test(subject))
+	}
+
+	threads = threads.sort(sorts[localStorage.getItem("catalogSort") || "bump"])
+
+	const frag = document.createDocumentFragment(),
+		threadEls: DocumentFragment[] = new Array(threads.length)
+	for (let i = 0; i < threads.length; i++) {
+		threadEls[i] = renderThread(threads[i])
+	}
+	frag.append(...threadEls)
+	return frag
 }
 
 // Render a single thread for the thread catalog
@@ -114,7 +151,40 @@ function toggleRules(e: MouseEvent) {
 	}
 }
 
+// Persist thread sort order mode to localStorage and rerender threads
+function onSortChange(e: Event) {
+	localStorage.setItem("catalogSort", (e.target as HTMLInputElement).value)
+	const filter =
+		($threads.querySelector("input[name=search]") as HTMLInputElement)
+		.value
+	writeThreads(renderThreads(filter, data))
+}
+
+function writeThreads(threads: DocumentFragment) {
+	const cat = $threads.querySelector("#catalog")
+	write(() => {
+		cat.innerHTML = ""
+		cat.append(threads)
+	})
+}
+
+// Refilter and rerender threads on seach input change
+function onSearchChange(e: Event) {
+	const threads = renderThreads((e.target as HTMLInputElement).value, data)
+	writeThreads(threads)
+}
+
 on($threads, "click", toggleRules, {
 	passive: true,
 	selector: "#rules a",
+})
+
+on($threads, "change", onSortChange, {
+	passive: true,
+	selector: "select[name=sortMode]",
+})
+
+on($threads, "input", onSearchChange, {
+	passive: true,
+	selector: "input[name=search]",
 })

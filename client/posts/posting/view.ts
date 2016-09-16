@@ -57,8 +57,10 @@ export class FormView extends PostView implements UploadForm {
 		// Always make sure the input span alwas has at least 1 character, so
 		// it does not float onto the image, if any.
 		this.$input.textContent = "\u200b"
-		this.$input.addEventListener("input", (event: Event) =>
-			this.onInput((event.target as Element).textContent))
+		this.$input.addEventListener("input", (event: Event) => {
+			event.stopImmediatePropagation()
+			this.onInput((event.target as Element).textContent)
+		})
 		this.$input.addEventListener("keydown", (event: KeyboardEvent) =>
 			this.onKeyDown(event))
 

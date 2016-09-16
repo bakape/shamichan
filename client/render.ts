@@ -29,6 +29,17 @@ export function initTemplates() {
 			.querySelector(".new-thread-button")
 			.textContent = lang.posts.newThread
 		frag.querySelector("#rules a").textContent = lang.ui.rules
+
+		const cont = frag.querySelector("#catalog-controls"),
+			sortMode = cont.querySelector("select[name=sortMode]")
+		sortMode.setAttribute("title", lang.ui.sortMode)
+		const modes = sortMode.children
+		for (let i = 0; i < modes.length; i++) {
+			modes[i].textContent = lang.ui.sortModes[i]
+		}
+		const search = cont.querySelector("input[name=search]")
+		search.setAttribute("placeholder", lang.ui.search)
+		search.setAttribute("title", lang.ui.searchTooltip)
 	}
 	{
 		const frag = templates["thread"]

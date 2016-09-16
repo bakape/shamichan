@@ -33,7 +33,16 @@
 		"submit": "Submit",
 		"rules": "Rules",
 		"close": "Close",
-		"showNotice": "Show Notice"
+		"showNotice": "Show Notice",
+		"sortMode": "Sort threads by",
+		"searchTooltip": "Filter threads by subject. Accepts Regular expressions.",
+		"sortModes": [
+			"Bump time",
+			"Last reply time",
+			"Creation time",
+			"Reply count",
+			"File count"
+		]
 	},
 
 	"banner": {

@@ -18,7 +18,7 @@ var (
 	TemplateRoot = "templates"
 
 	// resources conatains all available templates
-	resources = map[string]Store{}
+	resources = make(map[string]Store, 2)
 
 	// clientFileHash is the combined, shortened MD5 hash of all client files
 	clientFileHash string
@@ -29,6 +29,10 @@ var (
 		{"saucenao", "Sn"},
 		{"desustorage", "Ds"},
 		{"exhentai", "Ex"},
+	}
+
+	sortModes = []string{
+		"bump", "lastReply", "creation", "replyCount", "fileCount",
 	}
 
 	mu sync.RWMutex
@@ -51,6 +55,7 @@ type vars struct {
 	ConfigHash  string
 	DefaultCSS  string
 	ImageSearch []imageSearch
+	SortModes   []string
 }
 
 // Definition for an image search link
@@ -87,6 +92,7 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 		Email:       conf.FeedbackEmail,
 		DefaultCSS:  conf.DefaultCSS,
 		ImageSearch: imageSearchEngines,
+		SortModes:   sortModes,
 	}
 	path := filepath.FromSlash(TemplateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)

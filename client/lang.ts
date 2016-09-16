@@ -77,7 +77,10 @@ type LnUI = {
 	rules: string
 	close: string
 	showNotice: string
-	[index: string]: string
+	sortMode: string
+	sortModes: string[]
+	searchTooltip: string
+	[index: string]: any
 }
 
 type LnBanner = {

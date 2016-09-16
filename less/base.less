@@ -77,6 +77,19 @@ h3 {
 	display: none;
 }
 
+.spaced {
+	& > *:before {
+		content: ' ';
+	}
+	& > .act:not(.expanded):before {
+		content: " [";
+	}
+}
+
+.margin-spaced > * + * {
+	margin-left: 0.1em;
+}
+
 hr {
 	border: none;
 	clear: both;
@@ -155,6 +168,11 @@ table {
 .aside-container {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: flex-end;
+}
+
+#catalog-controls {
+	margin-left: auto;
 }
 
 @media screen and (max-device-width: 700px) {

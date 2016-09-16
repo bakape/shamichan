@@ -99,6 +99,14 @@
 					<br>
 				</span>
 			</aside>
+			<span id="catalog-controls" class="margin-spaced">
+				<input type="text" name="search">
+				<select name="sortMode">
+					{{range .SortModes -}}
+					<option value="{{.}}"></option>
+					{{- end}}
+				</select>
+			</span>
 		</span>
 		<hr>
 		<div id="catalog"></div>
