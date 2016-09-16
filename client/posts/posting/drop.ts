@@ -7,12 +7,13 @@ import {ReplyFormModel} from "./model"
 
 // Handle file drop
 function onDrop(e: DragEvent) {
-	e.stopPropagation()
-	e.preventDefault()
 	const {files} = e.dataTransfer
 	if (!files.length || !page.thread) { // TODO: Drag&drop for thread creation
 		return
 	}
+
+	e.stopPropagation()
+	e.preventDefault()
 	postSM.feed(postEvent.open)          // Create form, if none
 
 	// Neither disconnected, errored or already has image
@@ -22,8 +23,11 @@ function onDrop(e: DragEvent) {
 }
 
 function stopDefault(e: Event) {
-	e.stopPropagation()
-	e.preventDefault()
+	// No drag and drop for thread creation right now. Keep default behaviour.
+	if (page.thread) {
+		e.stopPropagation()
+		e.preventDefault()
+	}
 }
 
 // Bind listeners
