@@ -11,7 +11,7 @@ import {read as renderRead} from "./render"
 // Handle a click on any .history anchor
 function handleClick(event: KeyboardEvent) {
 	// Don't trigger, when user is trying to open in a new tab
-	if (event.ctrlKey || event.which === 2) {
+	if (event.which !== 1 || event.ctrlKey) {
 		return
 	}
 
