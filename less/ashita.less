@@ -24,7 +24,7 @@ article.highlight, .preview, .popup-menu {
 	border-color: #111;
 }
 
-article.editing {
+.editing-mixin() {
 	background-color: #cec952;
 	border-color: #aa3;
 	color: black;
@@ -36,6 +36,15 @@ article.editing {
 	}
 	li {
 		color: #ddd;
+	}
+}
+
+#thread-container {
+	&:not(.custom-BG) article.editing:not(:first-child) {
+		.editing-mixin;
+	}
+	&.custom-BG article.editing {
+		.editing-mixin;
 	}
 }
 
