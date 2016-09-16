@@ -51,6 +51,11 @@ function parseOpenBody(data: PostData): string {
 
 // Parse a single terminated line
 export function parseTerminatedLine(line: string, data: PostData): string {
+	// For hiding redudndant newlines using CSS
+	if (line === "") {
+		return "<br>"
+	}
+
 	let html = "<span>"
 	const {state} = data
 	state.spoiler = state.quote = false
