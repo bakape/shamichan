@@ -150,16 +150,18 @@ func (*ClientSuite) TestClose(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
+	err := errors.New("foo")
+
 	sv.Add(1)
 	go func() {
 		defer sv.Done()
-		c.Assert(cl.Listen(), IsNil)
+		c.Assert(cl.Listen(), Equals, err)
 	}()
-	cl.Close()
+	cl.Close(err)
 	sv.Wait()
 
 	// Already closed
-	cl.Close()
+	cl.Close(nil)
 }
 
 func (*ClientSuite) TestCloseMessageSending(c *C) {
@@ -169,7 +171,7 @@ func (*ClientSuite) TestCloseMessageSending(c *C) {
 	sv.Add(2)
 	go readListenErrors(c, cl, sv)
 	go assertWebsocketError(c, wcl, closeNormal, sv)
-	cl.Close()
+	cl.Close(nil)
 	sv.Wait()
 }
 

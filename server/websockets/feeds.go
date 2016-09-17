@@ -38,25 +38,25 @@ type feedContainer struct {
 
 // A feed with syncronisation logic of a certain thread
 type updateFeed struct {
-	id      int64                // Thread ID
-	clients []chan<- struct{}    // Subscribed client update notification
-	log     [][]byte             // Cached replication log
-	Add     chan chan<- struct{} // Add a client to u
-	Remove  chan chan<- struct{} // Remove a client from u
-	Write   chan writeRequest    // Request to slice from the replication log
-	close   chan struct{}        // Close database change feed
-	read    chan []byte          // Read from database change feed
+	id         int64               // Thread ID
+	clients    []*Client           // Subscribed clients
+	log        [][]byte            // Cached replication log
+	Add        chan *Client        // Add a client to u
+	Remove     chan *Client        // Remove a client from u
+	GetBacklog chan backlogRequest // Request any missed messages
+	close      chan struct{}       // Close database change feed
+	read       chan []byte         // Read from database change feed
 }
 
-// A Client's request to receive new data from the updateFeed's replication log.
-type writeRequest struct {
-	start int // Index to slice at
-	write chan<- [][]byte
+// A Client's request to receive missed data from the feed's replication log.
+type backlogRequest struct {
+	start  int // Index to slice at
+	client *Client
 }
 
 // Add a client to an existing update feed or create a new one, if it does not
 // exist yet
-func (f *feedContainer) Add(id int64, update chan<- struct{}) (
+func (f *feedContainer) Add(id int64, cl *Client) (
 	*updateFeed, error,
 ) {
 	f.Lock()
@@ -64,19 +64,19 @@ func (f *feedContainer) Add(id int64, update chan<- struct{}) (
 
 	feed := f.feeds[id]
 	if feed != nil {
-		feed.Add <- update
+		feed.Add <- cl
 		return feed, nil
 	}
 
 	var err error
 	feed, err = newUpdateFeed(id)
 	if err != nil {
+		close(feed.close)
 		return nil, err
 	}
 
 	f.feeds[id] = feed
-	go feed.Listen()
-	feed.Add <- update
+	feed.Add <- cl
 
 	return feed, nil
 }
@@ -104,41 +104,38 @@ func (f *feedContainer) Clear() {
 
 // Create a new updateFeed and sync it to the database
 func newUpdateFeed(id int64) (*updateFeed, error) {
-	cl := make(chan struct{})
-	read := make(chan []byte)
-	initial, err := streamUpdates(id, read, cl)
+	feed := updateFeed{
+		id:         id,
+		clients:    make([]*Client, 0, 1),
+		close:      make(chan struct{}),
+		read:       make(chan []byte),
+		Add:        make(chan *Client),
+		Remove:     make(chan *Client),
+		GetBacklog: make(chan backlogRequest),
+	}
+
+	cursor, err := feed.streamUpdates()
 	if err != nil {
-		close(cl)
 		return nil, err
 	}
 
-	// Allocate twice as much as initial log length
-	l := len(initial)
-	log := make([][]byte, l, l*2)
-	copy(log, initial)
-
-	feed := updateFeed{
-		id:      id,
-		clients: make([]chan<- struct{}, 0, 1),
-		log:     log,
-		close:   cl,
-		read:    read,
-		Add:     make(chan chan<- struct{}),
-		Remove:  make(chan chan<- struct{}),
-		Write:   make(chan writeRequest),
-	}
+	go feed.Listen(cursor)
 
 	return &feed, nil
 }
 
 // Start listening for updates from database and client requests
-func (u *updateFeed) Listen() {
+func (u *updateFeed) Listen(cursor *r.Cursor) {
+
 	defer func() {
-		select {
-		case <-u.close:
-		default:
-			close(u.close)
+		err := cursor.Err()
+		if err == nil {
+			err = cursor.Close()
 		}
+		if err != nil {
+			log.Printf("update feed: %s\n", err)
+		}
+
 		feeds.Remove(u.id)
 	}()
 
@@ -166,11 +163,16 @@ func (u *updateFeed) Listen() {
 
 		// Update the log
 		case msg := <-u.read:
-			u.appendUpdates(msg)
+			if msg == nil { // Document deleted
+				return
+			}
+			u.appendUpdate(msg)
 
 		// Send the requested slice of the log to the client
-		case req := <-u.Write:
-			req.write <- u.log[req.start:]
+		case req := <-u.GetBacklog:
+			if err := req.client.sendBatch(u.log[req.start:]); err != nil {
+				req.client.Close(err)
+			}
 
 		// Feed terminated externally
 		case <-u.close:
@@ -179,8 +181,8 @@ func (u *updateFeed) Listen() {
 	}
 }
 
-// Append messages to the replication log and notify any ready clients
-func (u *updateFeed) appendUpdates(msg []byte) {
+// Append messagesto the replication log and send message to clients
+func (u *updateFeed) appendUpdate(msg []byte) {
 	// Create a new slice double the capacity, if capacity would be exceeded
 	curLen := len(u.log)
 	newLen := curLen + 1
@@ -192,25 +194,21 @@ func (u *updateFeed) appendUpdates(msg []byte) {
 
 	u.log = append(u.log, msg)
 
-	// Send to all clients that are not currently blocked doing some other
-	// operation
+	// Send update to all clients
 	for _, client := range u.clients {
-		select {
-		case client <- struct{}{}:
-		default:
+		if err := client.send(msg); err != nil {
+			client.Close(err)
 		}
 	}
 }
 
 // StreamUpdates produces a stream of the replication log updates for the
-// specified thread and sends it on read. Close the close channel to stop
-// receiving updates. The intial contents of the log are returned immediately.
-func streamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
-	[][]byte, error,
-) {
+// specified thread and sends it on read. Close the cursor to stop receiving
+// updates. The intial contents of the log are assigned emediately.
+func (u *updateFeed) streamUpdates() (*r.Cursor, error) {
 	cursor, err := r.
 		Table("threads").
-		Get(id).
+		Get(u.id).
 		Changes(r.ChangesOpts{IncludeInitial: true}).
 		Map(formatUpdateFeed).
 		Run(db.RSession)
@@ -225,32 +223,12 @@ func streamUpdates(id int64, write chan<- []byte, close <-chan struct{}) (
 		}
 	}
 
-	go func() {
-		defer func() {
-			err := cursor.Err()
-			if err == nil {
-				err = cursor.Close()
-			}
-			if err != nil {
-				log.Printf("update feed: %s\n", err)
-			}
-		}()
+	// Allocate twice as much as initial log length
+	l := len(initial)
+	u.log = make([][]byte, l, l*2)
+	copy(u.log, initial)
 
-		for {
-			var msg []byte
+	cursor.Listen(u.read)
 
-			// Error or document deleted. Close cursor.
-			if !cursor.Next(&msg) || msg == nil {
-				break
-			}
-
-			select {
-			case write <- msg:
-			case <-close:
-				return
-			}
-		}
-	}()
-
-	return initial, nil
+	return cursor, nil
 }

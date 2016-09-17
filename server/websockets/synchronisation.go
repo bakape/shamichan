@@ -26,9 +26,8 @@ type syncRequest struct {
 func synchronise(data []byte, c *Client) error {
 	// Unsub from previous update feed, if any
 	if c.feed != nil {
-		c.feed.Remove <- c.update
+		c.feed.Remove <- c
 		c.feed = nil
-		c.feedProgress = 0
 	}
 
 	var msg syncRequest
@@ -87,17 +86,13 @@ func syncToThread(board string, thread int64, ctr uint64, c *Client) error {
 	}
 
 	registerSync(board, thread, c)
-	c.feed, err = feeds.Add(thread, c.update)
+	c.feed, err = feeds.Add(thread, c)
 	if err != nil {
 		return err
 	}
-	c.feedProgress = int(ctr)
+	c.fetchBacklog(int(ctr))
 
-	if err := c.sendMessage(messageSynchronise, 0); err != nil {
-		return err
-	}
-
-	return c.fetchBacklog()
+	return c.sendMessage(messageSynchronise, 0)
 }
 
 // Syncronise the client after a disconnect and restore any post in progress,

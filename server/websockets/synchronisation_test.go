@@ -14,16 +14,12 @@ func (*DB) TestOldFeedClosing(c *C) {
 	cl, _ := sv.NewClient()
 
 	writeSampleThread(c)
-	feed, err := feeds.Add(1, cl.update)
+	feed, err := feeds.Add(1, cl)
 	c.Assert(err, IsNil)
 
 	cl.feed = feed
-	cl.feedProgress = 1
-
 	synchronise(nil, cl)
-
 	c.Assert(cl.feed, IsNil)
-	c.Assert(cl.feedProgress, Equals, 0)
 }
 
 func writeSampleThread(c *C) {
@@ -120,7 +116,7 @@ func (*DB) TestSyncToThread(c *C) {
 	}
 	c.Assert(db.Write(r.Table("threads").Get(1).Update(update)), IsNil)
 	syncAssertMessage(wcl, newMessage, c)
-	cl.Close()
+	cl.Close(nil)
 	sv.Wait()
 }
 
@@ -135,6 +131,7 @@ func (*DB) TestOnlyMissedMessageSyncing(c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
+	defer cl.Close(nil)
 	sv.Add(1)
 	go readListenErrors(c, cl, sv)
 
@@ -160,9 +157,8 @@ func (*DB) TestOnlyMissedMessageSyncing(c *C) {
 	assertSyncResponse(wcl, c)             // Receive client ID
 	syncAssertMessage(wcl, backlogs[1], c) // Receive first missed message
 	syncAssertMessage(wcl, backlogs[2], c) // Second missed message
-	c.Assert(cl.feedProgress, Equals, 3)
 
-	cl.Close()
+	cl.Close(nil)
 	sv.Wait()
 }
 

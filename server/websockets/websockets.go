@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/bakape/meguca/auth"
@@ -50,11 +51,11 @@ type Client struct {
 	// Client identity information
 	auth.Ident
 
-	// Notifications from the feed, that updates are available
-	update chan struct{}
+	// Post currently open by the client
+	openPost openPost
 
-	// Current progress counter on the current update feed
-	feedProgress int
+	// Protects c.send
+	sendMu sync.Mutex
 
 	// Currently subscribed to update feed, if any
 	feed *updateFeed
@@ -65,22 +66,16 @@ type Client struct {
 	// Token of an authenticated user session, if any
 	sessionToken string
 
-	// Post currently open by the client
-	openPost openPost
-
 	// Internal message receiver channel
 	receive chan receivedMessage
 
-	// Thread-safely send a message to the websocket client
-	write chan [][]byte
 	// Close the client and free all used resources
-	close chan struct{}
+	close chan error
 }
 
 type receivedMessage struct {
 	typ int
 	msg []byte
-	err error
 }
 
 // Data of a post currently being written to by a Client
@@ -126,9 +121,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 func newClient(conn *websocket.Conn, req *http.Request) *Client {
 	return &Client{
 		Ident:   auth.LookUpIdent(req),
-		write:   make(chan [][]byte),
-		update:  make(chan struct{}),
-		close:   make(chan struct{}),
+		close:   make(chan error, 2),
 		receive: make(chan receivedMessage),
 		conn:    conn,
 	}
@@ -148,62 +141,37 @@ func (c *Client) Listen() error {
 func (c *Client) listenerLoop() error {
 	for {
 		select {
-		case <-c.close:
-			return nil
+		case err := <-c.close:
+			return err
 		case msg := <-c.receive:
-			if msg.err != nil {
-				return msg.err
-			}
 			if err := c.handleMessage(msg.typ, msg.msg); err != nil {
-				return err
-			}
-
-		// After receiving a notification about new updates being available,
-		// emidietly receive those updates. Done in this roundabout way to
-		// prevent the feed goroutine's blocking on clients performing over
-		// tasks.
-		case <-c.update:
-			if err := c.fetchBacklog(); err != nil {
 				return err
 			}
 		}
 	}
 }
 
-// Request and receive any messages the client is behind on. This should be
-// called after any blocking operation to facilitate quick, but lazy and little
-// blocking updates. Should be called after any log generating messages.
-func (c *Client) fetchBacklog() error {
-	if c.feed == nil {
-		return nil
+// Request and receive any messages the client is behind on
+func (c *Client) fetchBacklog(ctr int) {
+	if c.feed == nil { // On board page. No feed.
+		return
 	}
-	c.feed.Write <- writeRequest{
-		start: c.feedProgress,
-		write: c.write,
+	c.feed.GetBacklog <- backlogRequest{
+		start:  ctr,
+		client: c,
 	}
-
-	// Receive said messages and send to the client
-	updates := <-c.write
-	c.feedProgress += len(updates)
-	for _, msg := range updates {
-		if err := c.send(msg); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // Close all conections an goroutines asociated with the Client
 func (c *Client) closeConnections(err error) error {
 	// Close update feed, if any
 	if c.feed != nil {
-		c.feed.Remove <- c.update
+		c.feed.Remove <- c
 		c.feed = nil
 	}
-	if err != nil {
-		close(c.close)
-	}
+
+	// Close receiver loop
+	c.Close(nil)
 
 	// Send the client the reason for closing
 	var closeType int
@@ -239,7 +207,21 @@ func (c *Client) closeConnections(err error) error {
 
 // Sends a message to the client. Not safe for concurent use.
 func (c *Client) send(msg []byte) error {
+	c.sendMu.Lock()
+	defer c.sendMu.Unlock()
 	return c.conn.WriteMessage(websocket.TextMessage, msg)
+}
+
+// Sends a batch of messages to the client. Reduces mutex overhead.
+func (c *Client) sendBatch(msgs [][]byte) error {
+	c.sendMu.Lock()
+	defer c.sendMu.Unlock()
+	for _, msg := range msgs {
+		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Format a mesage type as JSON and send it to the client. Not safe for
@@ -279,8 +261,15 @@ func encodeMessage(typ messageType, msg interface{}) ([]byte, error) {
 // select loop.
 func (c *Client) receiverLoop() {
 	for {
-		msg := receivedMessage{}
-		msg.typ, msg.msg, msg.err = c.conn.ReadMessage() // Blocking
+		var (
+			err error
+			msg receivedMessage
+		)
+		msg.typ, msg.msg, err = c.conn.ReadMessage() // Blocking
+		if err != nil {
+			c.Close(err)
+			return
+		}
 
 		select {
 		case <-c.close:
@@ -309,17 +298,7 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 		return errInvalidPayload(msg)
 	}
 
-	if err := c.runHandler(typ, msg); err != nil {
-		return err
-	}
-
-	// If the message created replication log updates, fetch them from the
-	// feed to increase percieved response speed.
-	if msgType < 30 {
-		return c.fetchBacklog()
-	}
-
-	return nil
+	return c.runHandler(typ, msg)
 }
 
 // Run the apropriate handler for the websocket message
@@ -339,11 +318,17 @@ func (c *Client) logError(err error) {
 
 // Close closes a websocket connection with the provided status code and
 // optional reason
-func (c *Client) Close() {
+func (c *Client) Close(err error) {
 	select {
 	case <-c.close:
 	default:
-		close(c.close)
+		// Exit both for-select loops, if possible
+		for i := 0; i < 2; i++ {
+			select {
+			case c.close <- err:
+			default:
+			}
+		}
 	}
 }
 
