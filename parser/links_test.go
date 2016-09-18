@@ -23,7 +23,7 @@ func (*Tests) TestLinks(c *C) {
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 
-	links, err := parseLinks([]byte(">>1 >>4"))
+	links, err := parseLinks([]byte(">>>1 >>4 "))
 	c.Assert(err, IsNil)
 	c.Assert(links, DeepEquals, types.LinkMap{
 		4: types.Link{
@@ -34,7 +34,7 @@ func (*Tests) TestLinks(c *C) {
 }
 
 func (*Tests) TestAllLinksInvalid(c *C) {
-	links, err := parseLinks([]byte(">>1 >>2 >>33"))
+	links, err := parseLinks([]byte(" >>1 >>2 >>33"))
 	c.Assert(err, IsNil)
 	c.Assert(links, IsNil)
 }

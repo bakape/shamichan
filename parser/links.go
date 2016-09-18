@@ -9,7 +9,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-var linkRegexp = regexp.MustCompile(`>>(\d+)`)
+var linkRegexp = regexp.MustCompile(`(?:^| )>{2,}(\d+)\b`)
 
 // Extract post links from a text fragment, verify and retrieve their
 // parenthood

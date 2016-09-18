@@ -367,7 +367,7 @@ export class FormModel {
 			s += " "
 		}
 
-		s += ">>" + id
+		s += `>>${id} `
 		this.view.replaceLine(this.inputState.line + s)
 	}
 }
