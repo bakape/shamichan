@@ -343,10 +343,6 @@ export class FormModel {
 		this.state.line = this.inputState.line
 		this.view.cleanUp()
 		this.send(message.closePost, null)
-
-		// Close posts on the client before confirmation from the server to
-		// increase perceived responsiveness.
-		this.closePost()
 	}
 
 	// Return the last line of the body
