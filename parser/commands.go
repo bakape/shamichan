@@ -65,7 +65,7 @@ func parseCommand(match []byte, board string) (types.Command, error) {
 	// Coin flip
 	case bytes.Equal(match, flipCommand):
 		com.Type = types.Flip
-		com.Val = rand.Intn(2) > 1
+		com.Val = rand.Intn(2) == 0
 		return com, nil
 
 	// 8ball
