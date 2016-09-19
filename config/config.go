@@ -68,7 +68,9 @@ var (
 )
 
 // Default string for the FAQ panel
-const defaultFAQ = `Hash commands:
+const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG and WEBM.
+Encase words in ** to spoiler them. Spoilers reset on new line.
+<hr>Hash commands:
 #d100 #2d100 - Roll dice
 #flip - Coin flip
 #8ball - An 8ball
