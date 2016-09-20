@@ -147,7 +147,7 @@ func parseDice(match []byte) ([]uint16, error) {
 
 	val := make([]uint16, rolls)
 	for i := 0; i < rolls; i++ {
-		val[i] = uint16(rand.Intn(max))
+		val[i] = uint16(rand.Intn(max)) + 1
 	}
 
 	return val, nil
