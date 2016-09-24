@@ -78,8 +78,9 @@ type LnUI = {
 	close: string
 	showNotice: string
 	sortMode: string
-	sortModes: string[]
 	searchTooltip: string
+	refresh: string
+	sortModes: string[]
 	[index: string]: any
 }
 

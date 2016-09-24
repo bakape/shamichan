@@ -1,12 +1,13 @@
 import {random, escape, on} from '../util'
-import {navigation, ui} from '../lang'
-import {boardConfig, page} from '../state'
+import {navigation, ui, time} from '../lang'
+import {boardConfig, page, setSyncCounter} from '../state'
 import {ThreadData} from '../posts/models'
 import {renderThumbnail} from '../posts/render/image'
 import options from '../options'
 import {write, $threads, importTemplate} from '../render'
 import {setTitle} from "../tab"
-import {formatText, renderNotice} from "./common"
+import {formatText, renderNotice, fetchBoard} from "./common"
+import {renderTime} from "../posts/render/posts"
 
 type SortFunction = (a: ThreadData, b: ThreadData) => number
 
@@ -25,16 +26,19 @@ const sorts: {[name: string]: SortFunction} = {
 }
 
 // Cached data of the current board's threads
-let data: ThreadData[]
+let data: ThreadData[],
+	// Unix time of last board page render. Used for automatic refreshes.
+	lastRender: number
 
 // Format a board name and title into cannonical board header format
 export function formatHeader(name: string, title: string): string {
-	return escape(`/${name}/ - ${title}`)
+	return `/${name}/ - ${escape(title)}`
 }
 
 // Cache the curent board contents and render the thread
 export default function cachetAndRender(threads: ThreadData[]) {
 	data = threads
+	lastRender = Math.floor(Date.now() / 1000)
 	render(threads)
 }
 
@@ -70,6 +74,8 @@ function render(threads: ThreadData[]) {
 	}
 	(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
 		.value = localStorage.getItem("catalogSort") || "bump"
+
+	renderRefreshButton(frag.querySelector("#refresh"))
 
 	renderNotice(frag)
 	frag.querySelector("#catalog").append(renderThreads("", threads))
@@ -134,6 +140,14 @@ function renderThread(thread: ThreadData): DocumentFragment {
 	return frag
 }
 
+// Render the board refresh button text
+function renderRefreshButton(el: Element) {
+	renderTime(el, lastRender)
+	if (el.textContent === time.justNow) {
+		el.textContent = ui.refresh
+	}
+}
+
 // Toggle the [Rules] cotainer expansion or contraction
 function toggleRules(e: MouseEvent) {
 	const $el = e.target as HTMLElement,
@@ -174,6 +188,26 @@ function onSearchChange(e: Event) {
 	writeThreads(threads)
 }
 
+// Fetch and rerender board contents
+async function refreshBoard() {
+	const {ctr, threads} = await fetchBoard(page.board)
+	setSyncCounter(ctr)
+	cachetAndRender(threads)
+}
+
+// Update refresh timer or refresh board, if document hidden, each minute
+setInterval(() => {
+	if (page.thread) {
+		return
+	}
+	if (document.hidden) {
+		refreshBoard()
+	} else {
+		write(() =>
+			renderRefreshButton($threads.querySelector("#refresh")))
+	}
+}, 60000)
+
 on($threads, "click", toggleRules, {
 	passive: true,
 	selector: "#rules a",
@@ -187,4 +221,9 @@ on($threads, "change", onSortChange, {
 on($threads, "input", onSearchChange, {
 	passive: true,
 	selector: "input[name=search]",
+})
+
+on($threads, "click", refreshBoard, {
+	passive: true,
+	selector: "#refresh",
 })

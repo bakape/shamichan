@@ -30,9 +30,9 @@ export default async function (
 		if (lastN) {
 			url += `?lastN=${lastN}`
 		}
-		data = await fetchJSON(url) as ThreadData
+		data = await fetchJSON<ThreadData>(url)
 	} else {
-		data = await fetchJSON(`/json/${board}/`) as BoardData
+		data = await fetchBoard(board)
 	}
 
 	await ready
@@ -49,6 +49,11 @@ export default async function (
 	// Scroll to any selected anchor, after page renders
 	read(() =>
 		scrollToAnchor())
+}
+
+// Fetch JSON data of a board page
+export async function fetchBoard(board: string): Promise<BoardData> {
+	return await fetchJSON<BoardData>(`/json/${board}/`)
 }
 
 // Format a block of text received from an untrusted user
