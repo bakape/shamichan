@@ -132,15 +132,11 @@ export class Post extends Model implements PostData {
 		this.body += char
 		state.line += char
 
-		if (char === "\n") { // Start new line
+		if (char === "\n") {                    // Start new line
 			view.startNewLine()
-			this.state = {
-				quote: false,
-				spoiler: false,
-				iDice: 0,
-				line: "",
-			}
-		} else if (state.line === ">") { // Start qoute
+			this.resetState()
+			this.state.line = ""
+		} else if (state.line === ">") {        // Start qoute
 			view.reparseLine()
 		} else if (state.line.endsWith("**")) { // Start or close spoiler
 			this.resetState()
@@ -240,8 +236,9 @@ export class Post extends Model implements PostData {
 	insertCommand(comm: Command) {
 		if (!this.commands) {
 			this.commands = [comm]
+		} else {
+			this.commands.push(comm)
 		}
-		this.commands.push(comm)
 	}
 
 	// Insert an image into an existing post
