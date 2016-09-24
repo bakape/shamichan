@@ -28,7 +28,7 @@ export default async function (
 	if (thread) {
 		let url = `/json/${board}/${thread}`
 		if (lastN) {
-			url += `?lastN=${lastN}`
+			url += `?last=${lastN}`
 		}
 		data = await fetchJSON<ThreadData>(url)
 	} else {

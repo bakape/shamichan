@@ -58,7 +58,7 @@ func setJSONCType(w http.ResponseWriter) {
 
 // Validate the client's last N posts to display setting
 func detectLastN(req *http.Request) int {
-	query := req.URL.Query().Get("lastN")
+	query := req.URL.Query().Get("last")
 	if query != "" {
 		lastN, err := strconv.Atoi(query)
 		if err == nil && lastN <= 500 {

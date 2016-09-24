@@ -136,16 +136,16 @@ func (w *WebServer) TestConfigServing(c *C) {
 }
 
 func (*WebServer) TestDetectLastN(c *C) {
-	// No lastN query string
+	// No ?last query string
 	req := newRequest(c, "/a/1")
 	c.Assert(detectLastN(req), Equals, 0)
 
-	// ?lastN value within bounds
-	req = newRequest(c, "/a/1?lastN=100")
+	// ?last value within bounds
+	req = newRequest(c, "/a/1?last=100")
 	c.Assert(detectLastN(req), Equals, 100)
 
-	// ?lastN value beyond max
-	req = newRequest(c, "/a/1?lastN=1000")
+	// ?lastNvalue beyond max
+	req = newRequest(c, "/a/1?last=1000")
 	c.Assert(detectLastN(req), Equals, 0)
 }
 

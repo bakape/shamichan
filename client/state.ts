@@ -86,7 +86,7 @@ export function read(href: string): PageState {
 	const noHash = href.split("#")[0],
 		board = noHash.match(/\/(\w+)\//)[1],
 		thread = noHash.match(/\/(\d+)(?:[\?&]\w+=\w+)*$/),
-		lastN = noHash.match(/[\?&]lastN=(\d+)/)
+		lastN = noHash.match(/[\?&]last=(\d+)/)
 	return {
 		href,
 		board: decodeURIComponent(board),
