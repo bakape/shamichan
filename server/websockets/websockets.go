@@ -10,12 +10,12 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	r "github.com/dancannon/gorethink"
 	"github.com/gorilla/websocket"
 )
 
@@ -54,14 +54,14 @@ type Client struct {
 	// Post currently open by the client
 	openPost openPost
 
+	// Protects c.send
+	sendMu sync.Mutex
+
+	// Currently subscribed to update feed, if any
+	feed *updateFeed
+
 	// Underlyting websocket connection
 	conn *websocket.Conn
-
-	// Currently subscribed to update feed cursor, if any
-	cursor *r.Cursor
-
-	// Channel for receiving update feed messages
-	readFeed <-chan []byte
 
 	// Token of an authenticated user session, if any
 	sessionToken string
@@ -147,19 +147,27 @@ func (c *Client) listenerLoop() error {
 			if err := c.handleMessage(msg.typ, msg.msg); err != nil {
 				return err
 			}
-		case msg := <-c.readFeed:
-			if err := c.send(msg); err != nil {
-				return err
-			}
 		}
+	}
+}
+
+// Request and receive any messages the client is behind on
+func (c *Client) fetchBacklog(ctr int) {
+	if c.feed == nil { // On board page. No feed.
+		return
+	}
+	c.feed.GetBacklog <- backlogRequest{
+		start:  ctr,
+		client: c,
 	}
 }
 
 // Close all conections an goroutines asociated with the Client
 func (c *Client) closeConnections(err error) error {
-	// Close update feed, if any. Don't return from function, if this fails.
-	if err := c.closeFeed(); err != nil {
-		log.Println(err)
+	// Close update feed, if any
+	if c.feed != nil {
+		c.feed.Remove <- c
+		c.feed = nil
 	}
 
 	// Close receiver loop
@@ -197,28 +205,23 @@ func (c *Client) closeConnections(err error) error {
 	return err
 }
 
-// Close current update feed, if any
-func (c *Client) closeFeed() error {
-	if c.cursor == nil {
-		return nil
-	}
-	cur := c.cursor
-	c.cursor = nil
-	c.readFeed = nil
-
-	err := cur.Err()
-	if err == nil {
-		err = cur.Close()
-	}
-	if err != nil {
-		err = util.WrapError("update feed", err)
-	}
-	return err
-}
-
 // Sends a message to the client. Not safe for concurent use.
 func (c *Client) send(msg []byte) error {
+	c.sendMu.Lock()
+	defer c.sendMu.Unlock()
 	return c.conn.WriteMessage(websocket.TextMessage, msg)
+}
+
+// Sends a batch of messages to the client. Reduces mutex overhead.
+func (c *Client) sendBatch(msgs [][]byte) error {
+	c.sendMu.Lock()
+	defer c.sendMu.Unlock()
+	for _, msg := range msgs {
+		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Format a mesage type as JSON and send it to the client. Not safe for
