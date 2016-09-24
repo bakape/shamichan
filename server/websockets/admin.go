@@ -89,15 +89,17 @@ func createBoard(data []byte, c *Client) error {
 		return c.sendMessage(messageCreateBoard, code)
 	}
 
-	q := r.Table("boards").Insert(config.BoardConfigs{
-		ID:        req.Name,
-		Title:     req.Title,
-		Spoiler:   "default.jpg",
-		Eightball: config.EightballDefaults,
-		Banners:   []string{},
-		Created:   time.Now(),
-		Staff: map[string][]string{
-			"owners": []string{c.UserID},
+	q := r.Table("boards").Insert(config.DatabaseBoardConfigs{
+		Created: time.Now(),
+		BoardConfigs: config.BoardConfigs{
+			ID:        req.Name,
+			Title:     req.Title,
+			Spoiler:   "default.jpg",
+			Eightball: config.EightballDefaults,
+			Banners:   []string{},
+			Staff: map[string][]string{
+				"owners": []string{c.UserID},
+			},
 		},
 	})
 	if err := db.Write(q); r.IsConflictErr(err) {

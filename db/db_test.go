@@ -115,7 +115,8 @@ func (*DBSuite) TestGetImage(c *C) {
 }
 
 func (*DBSuite) TestGetBoardConfig(c *C) {
-	c.Assert(GetBoardConfig("a").String(), Equals, `r.Table("boards").Get("a")`)
+	const q = `r.Table("boards").Get("a").Without("created")`
+	c.Assert(GetBoardConfig("a").String(), Equals, q)
 }
 
 func (*DBSuite) TestReservePostID(c *C) {

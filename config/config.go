@@ -135,7 +135,6 @@ type BoardConfigs struct {
 	PostParseConfigs
 	Spoilers  bool                `json:"spoilers" gorethink:"spoilers"`
 	CodeTags  bool                `json:"codeTags" gorethink:"codeTags" public:"true"`
-	Created   time.Time           `json:"created" gorethink:"created"`
 	ID        string              `json:"id" gorethink:"id"`
 	Spoiler   string              `json:"spoiler" gorethink:"spoiler" public:"true"`
 	Title     string              `json:"title" gorethink:"title" public:"true"`
@@ -144,6 +143,12 @@ type BoardConfigs struct {
 	Eightball []string            `json:"eightball" gorethink:"eightball"`
 	Banners   []string            `json:"banners" gorethink:"banners" public:"true"`
 	Staff     map[string][]string `json:"staff" gorethink:"staff"`
+}
+
+// DatabaseBoardConfigs contains extra fields not exposed on database reads
+type DatabaseBoardConfigs struct {
+	BoardConfigs
+	Created time.Time `gorethink:"created"`
 }
 
 // MarshalPublicJSON marshals the publically exposed fields of a board-specific
