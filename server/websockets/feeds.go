@@ -243,7 +243,7 @@ func (u *updateFeed) streamUpdates() (*r.Cursor, error) {
 		Get(u.id).
 		Changes(r.ChangesOpts{
 			IncludeInitial: true,
-			Squash:         1, // Perform at most every second
+			Squash:         0.2, // Perform at most every 0.2 seconds
 		}).
 		Map(formatUpdateFeed).
 		Run(db.RSession)
