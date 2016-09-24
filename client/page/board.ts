@@ -61,11 +61,11 @@ function render(threads: ThreadData[]) {
 	}
 
 	// Render rules container aside
-	if (page.board === "all") {
+	const {rules} = boardConfig
+	if (!rules || page.board === "all") {
 		(frag.querySelector("#rules") as HTMLElement).style.display = "none"
 	} else {
-		const {rules} = boardConfig,
-			$rc = frag.querySelector("#rules-container")
+		const $rc = frag.querySelector("#rules-container")
 		if (!rules) {
 			$rc.append("God's in his heaven. All is right with the world.")
 		} else {
