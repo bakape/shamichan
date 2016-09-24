@@ -29,7 +29,6 @@ func (d *DB) TearDownSuite(c *C) {
 
 func (d *DB) SetUpTest(c *C) {
 	Clients.Clear()
-	feeds.Clear()
 	config.Set(config.Configs{
 		SessionExpiry: 30,
 		Boards:        []string{"a"},

@@ -10,9 +10,8 @@ import (
 )
 
 var (
-	errInvalidBoard   = errors.New("invalid board")
-	errInvalidThread  = errors.New("invalid thread")
-	errInvalidCounter = errors.New("invalid progress counter")
+	errInvalidBoard  = errors.New("invalid board")
+	errInvalidThread = errors.New("invalid thread")
 )
 
 type syncRequest struct {
@@ -25,9 +24,8 @@ type syncRequest struct {
 // receive update messages.
 func synchronise(data []byte, c *Client) error {
 	// Unsub from previous update feed, if any
-	if c.feed != nil {
-		c.feed.Remove <- c
-		c.feed = nil
+	if err := c.closeFeed(); err != nil {
+		return err
 	}
 
 	var msg syncRequest
@@ -76,23 +74,26 @@ func syncToThread(board string, thread int64, ctr uint64, c *Client) error {
 		return errInvalidThread
 	}
 
-	// Guard against malicious counters
-	curCtr, err := db.ThreadCounter(thread)
-	if err != nil {
-		return err
-	}
-	if ctr > uint64(curCtr) {
-		return errInvalidCounter
-	}
-
 	registerSync(board, thread, c)
-	c.feed, err = feeds.Add(thread, c)
+
+	var log [][]byte
+	log, c.readFeed, c.cursor, err = streamUpdates(thread, ctr)
 	if err != nil {
 		return err
 	}
-	c.fetchBacklog(int(ctr))
 
-	return c.sendMessage(messageSynchronise, 0)
+	if err := c.sendMessage(messageSynchronise, 0); err != nil {
+		return err
+	}
+
+	// Send all messages the client is behind on
+	for _, msg := range log {
+		if err := c.send(msg); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Syncronise the client after a disconnect and restore any post in progress,
