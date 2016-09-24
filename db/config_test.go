@@ -19,7 +19,7 @@ func (*DBSuite) TestLoadConfigs(c *C) {
 	defer func() {
 		isTest = false
 	}()
-	templates.TemplateRoot = "test"
+	templates.TemplateRoot = "testdata"
 	sample := ConfigDocument{
 		Document{"config"},
 		config.Defaults,

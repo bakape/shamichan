@@ -45,10 +45,10 @@ func loadConfigs() error {
 
 func updateConfigs(conf config.Configs) error {
 	if err := config.Set(conf); err != nil {
-		return util.WrapError("error reloading configuration", err)
+		return util.WrapError("reloading configuration", err)
 	}
 	if err := templates.Compile(); err != nil {
-		return util.WrapError("error recompiling teplates", err)
+		return util.WrapError("recompiling teplates", err)
 	}
 	return nil
 }

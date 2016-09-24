@@ -58,7 +58,7 @@ func (*DBSuite) TestVerifyVersion(c *C) {
 	c.Assert(
 		verifyDBVersion(),
 		ErrorMatches,
-		"Incompatible RethinkDB database version: 0.*",
+		"incompatible RethinkDB database version: 0.*",
 	)
 }
 

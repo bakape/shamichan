@@ -5,6 +5,7 @@ package websockets
 import (
 	"errors"
 	"regexp"
+	"time"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -94,6 +95,7 @@ func createBoard(data []byte, c *Client) error {
 		Spoiler:   "default.jpg",
 		Eightball: config.EightballDefaults,
 		Banners:   []string{},
+		Created:   time.Now(),
 		Staff: map[string][]string{
 			"owners": []string{c.UserID},
 		},

@@ -135,6 +135,7 @@ type BoardConfigs struct {
 	PostParseConfigs
 	Spoilers  bool                `json:"spoilers" gorethink:"spoilers"`
 	CodeTags  bool                `json:"codeTags" gorethink:"codeTags" public:"true"`
+	Created   time.Time           `json:"created" gorethink:"created"`
 	ID        string              `json:"id" gorethink:"id"`
 	Spoiler   string              `json:"spoiler" gorethink:"spoiler" public:"true"`
 	Title     string              `json:"title" gorethink:"title" public:"true"`

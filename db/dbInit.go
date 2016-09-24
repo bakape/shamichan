@@ -14,7 +14,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 14
+const dbVersion = 15
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -105,11 +105,36 @@ func verifyDBVersion() error {
 		return util.WrapError("error reading database version", err)
 	}
 	if version != dbVersion {
-		return fmt.Errorf(
-			"Incompatible RethinkDB database version: %d. "+
-				"See docs/migration.md",
-			version,
-		)
+		if version == 14 {
+			if err := upgrade14to15(); err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf(
+				"incompatible RethinkDB database version: %d",
+				version,
+			)
+		}
+	}
+	return nil
+}
+
+// Perform database upgrade from version 14 to 15. Inserts faux creation dates
+//  into all board documents.
+func upgrade14to15() error {
+	qs := [...]r.Term{
+		r.Table("boards").Update(map[string]r.Term{
+			"created": r.Now(),
+		}),
+		r.Table("main").Get("info").Update(map[string]int{
+			"version": 15,
+		}),
+	}
+
+	for _, q := range qs {
+		if err := Write(q); err != nil {
+			return err
+		}
 	}
 	return nil
 }
