@@ -35,9 +35,9 @@ func (*DB) TestFeedLogAllocation(c *C) {
 	feed := updateFeed{
 		log: dummyLog,
 	}
-	added := []byte{1, 2, 3}
+	added := [][]byte{[]byte{1, 2, 3}}
 	feed.appendUpdate(added)
-	c.Assert(feed.log, DeepEquals, append(dummyLog, added))
+	c.Assert(feed.log, DeepEquals, append(dummyLog, added[0]))
 	c.Assert(cap(feed.log), Equals, 2*(len(dummyLog)+1))
 }
 

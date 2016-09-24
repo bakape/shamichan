@@ -18,8 +18,8 @@ var (
 		r.Row.
 			Field("new_val").
 			Field("log").
-			AtIndex(r.Row.Field("old_val").Field("log").Count()).
-			Default(nil),
+			Slice(r.Row.Field("old_val").Field("log").Count()).
+			Default(nil), // Thread deleted
 		r.Row.Field("new_val").Field("log"),
 	)
 
@@ -45,7 +45,7 @@ type updateFeed struct {
 	Remove     chan *Client        // Remove a client from u
 	GetBacklog chan backlogRequest // Request any missed messages
 	close      chan struct{}       // Close database change feed
-	read       chan []byte         // Read from database change feed
+	read       chan [][]byte       // Read from database change feed
 }
 
 // A Client's request to receive missed data from the feed's replication log.
@@ -108,7 +108,7 @@ func newUpdateFeed(id int64) (*updateFeed, error) {
 		id:         id,
 		clients:    make([]*Client, 0, 1),
 		close:      make(chan struct{}),
-		read:       make(chan []byte),
+		read:       make(chan [][]byte),
 		Add:        make(chan *Client),
 		Remove:     make(chan *Client),
 		GetBacklog: make(chan backlogRequest),
@@ -163,15 +163,20 @@ func (u *updateFeed) Listen(cursor *r.Cursor) {
 
 		// Update the log
 		case msg := <-u.read:
-			if msg == nil { // Document deleted
+			if msg == nil { // Thread deleted
 				return
 			}
 			u.appendUpdate(msg)
 
 		// Send the requested slice of the log to the client
 		case req := <-u.GetBacklog:
-			if err := req.client.sendBatch(u.log[req.start:]); err != nil {
-				req.client.Close(err)
+			// Do nothing, if start == len(u.log) .
+			// In rare racy cases start can also exceed u.log.
+			if req.start < len(u.log) {
+				msg := concatMessages(u.log[req.start:])
+				if err := req.client.send(msg); err != nil {
+					req.client.Close(err)
+				}
 			}
 
 		// Feed terminated externally
@@ -182,24 +187,51 @@ func (u *updateFeed) Listen(cursor *r.Cursor) {
 }
 
 // Append messagesto the replication log and send message to clients
-func (u *updateFeed) appendUpdate(msg []byte) {
+func (u *updateFeed) appendUpdate(updates [][]byte) {
 	// Create a new slice double the capacity, if capacity would be exceeded
 	curLen := len(u.log)
-	newLen := curLen + 1
+	newLen := curLen + len(updates)
 	if newLen > cap(u.log) {
 		newLog := make([][]byte, curLen, newLen*2)
 		copy(newLog, u.log)
 		u.log = newLog
 	}
 
-	u.log = append(u.log, msg)
+	u.log = append(u.log, updates...)
 
-	// Send update to all clients
+	// Send update to all clients as a concatenated message
+	concat := concatMessages(updates)
 	for _, client := range u.clients {
-		if err := client.send(msg); err != nil {
+		if err := client.send(concat); err != nil {
 			client.Close(err)
 		}
 	}
+}
+
+// Concatenate multiple feed messages into a single one to reduce transport
+// overhead
+func concatMessages(msgs [][]byte) []byte {
+	if len(msgs) == 1 {
+		return msgs[0]
+	}
+
+	// Calculate capacity
+	cap := 1
+	for _, msg := range msgs {
+		cap += len(msg) + 1
+	}
+
+	buf := make([]byte, 2, cap)
+	buf[0] = 52
+	buf[1] = 50
+	for i, msg := range msgs {
+		if i != 0 {
+			buf = append(buf, '\u0000') // Delimit with null bytes
+		}
+		buf = append(buf, msg...)
+	}
+
+	return buf
 }
 
 // StreamUpdates produces a stream of the replication log updates for the
@@ -209,7 +241,10 @@ func (u *updateFeed) streamUpdates() (*r.Cursor, error) {
 	cursor, err := r.
 		Table("threads").
 		Get(u.id).
-		Changes(r.ChangesOpts{IncludeInitial: true}).
+		Changes(r.ChangesOpts{
+			IncludeInitial: true,
+			Squash:         1, // Perform at most every second
+		}).
 		Map(formatUpdateFeed).
 		Run(db.RSession)
 	if err != nil {

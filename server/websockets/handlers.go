@@ -53,6 +53,9 @@ const (
 
 	// Send new post ID to client
 	messagePostID
+
+	// Concatenation of multiple websocket messages to reduce transport overhead
+	messageConcat
 )
 
 var (

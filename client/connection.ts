@@ -50,6 +50,9 @@ export const enum message {
 
 	// Send new post ID to client
 	postID,
+
+	// Concatenation of multiple websocket messages to reduce transport overhead
+	concat,
 }
 
 export type MessageHandler = (msg: {}) => void
@@ -107,14 +110,23 @@ function leftPad(type: message): string {
 }
 
 // Routes messages from the server to the respective handler
-function onMessage({data}: MessageEvent) {
+function onMessage(data: string, extracted: boolean) {
 	if (debug) {
-		console.log('>', data)
+		console.log(extracted ? ">>" : ">" , data)
 	}
 
 	// First two charecters of a message define its type
-	const type = parseInt(data.slice(0, 2)),
-		handler = handlers[type]
+	const type = parseInt(data.slice(0, 2))
+
+	// Split several concatenated messages
+	if (type === message.concat) {
+		for (let msg of data.slice(2).split('\u0000')) {
+			onMessage(msg, true)
+		}
+		return
+	}
+
+	const handler = handlers[type]
 	if (handler) {
 		// Message was written to replication log. Increment syncronisation
 		// counter.
@@ -154,7 +166,8 @@ function connect() {
 	socket.onopen = connSM.feeder(connEvent.open)
 	socket.onclose = connSM.feeder(connEvent.close)
 	socket.onerror = connSM.feeder(connEvent.close)
-	socket.onmessage = onMessage
+	socket.onmessage = ({data}) =>
+		onMessage(data, false)
 	if (debug) {
 		(window as any).socket = socket
 	}

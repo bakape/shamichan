@@ -1,6 +1,8 @@
 package websockets
 
 import (
+	"fmt"
+
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
@@ -105,9 +107,12 @@ func (*DB) TestSyncToThread(c *C) {
 		Board: "a",
 	})
 
-	assertSyncResponse(wcl, c)          // Receive client ID
-	syncAssertMessage(wcl, backlog1, c) // Receive first missed message
-	syncAssertMessage(wcl, backlog2, c) // Second message
+	// Receive client ID
+	assertSyncResponse(wcl, c)
+
+	// Receive missed messages
+	stdMsg := fmt.Sprintf("42%s\u0000%s", string(backlog1), string(backlog2))
+	syncAssertMessage(wcl, []byte(stdMsg), c)
 
 	// Receive new message
 	newMessage := []byte("foo")
@@ -142,9 +147,9 @@ func (*DB) TestOnlyMissedMessageSyncing(c *C) {
 	}
 	data := marshalJSON(msg, c)
 	backlogs := [][]byte{
-		{1, 2, 3},
-		{4, 5, 6},
-		{7, 8, 9},
+		[]byte("foo"),
+		[]byte("bar"),
+		[]byte("baz"),
 	}
 	thread := types.DatabaseThread{
 		ID:    1,
@@ -154,9 +159,12 @@ func (*DB) TestOnlyMissedMessageSyncing(c *C) {
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 
 	c.Assert(synchronise(data, cl), IsNil)
-	assertSyncResponse(wcl, c)             // Receive client ID
-	syncAssertMessage(wcl, backlogs[1], c) // Receive first missed message
-	syncAssertMessage(wcl, backlogs[2], c) // Second missed message
+
+	// Receive client ID
+	assertSyncResponse(wcl, c)
+
+	// Receive missed messages
+	syncAssertMessage(wcl, []byte("42bar\u0000baz"), c)
 
 	cl.Close(nil)
 	sv.Wait()

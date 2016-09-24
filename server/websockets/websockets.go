@@ -212,18 +212,6 @@ func (c *Client) send(msg []byte) error {
 	return c.conn.WriteMessage(websocket.TextMessage, msg)
 }
 
-// Sends a batch of messages to the client. Reduces mutex overhead.
-func (c *Client) sendBatch(msgs [][]byte) error {
-	c.sendMu.Lock()
-	defer c.sendMu.Unlock()
-	for _, msg := range msgs {
-		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // Format a mesage type as JSON and send it to the client. Not safe for
 // concurent use.
 func (c *Client) sendMessage(typ messageType, msg interface{}) error {
