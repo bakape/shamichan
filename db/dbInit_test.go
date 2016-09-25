@@ -2,6 +2,7 @@ package db
 
 import (
 	"testing"
+	"time"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
@@ -121,4 +122,28 @@ func (*DBInit) TestLoadDB(c *C) {
 
 	c.Assert(RSession.Close(), IsNil)
 	c.Assert(LoadDB(), IsNil)
+}
+
+func (*Tests) TestUpgrade14to15(c *C) {
+	info := map[string]interface{}{
+		"id":      "info",
+		"version": 14,
+	}
+	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
+	board := config.BoardConfigs{
+		ID: "a",
+	}
+	c.Assert(Write(r.Table("boards").Insert(board)), IsNil)
+
+	c.Assert(upgrade14to15(), IsNil)
+
+	var v int
+	q := GetMain("info").Field("version")
+	c.Assert(One(q, &v), IsNil)
+	c.Assert(v, Equals, 15)
+
+	var created time.Time
+	q = r.Table("boards").Get("a").Field("created")
+	c.Assert(One(q, &created), IsNil)
+	c.Assert(created.Before(time.Now()), Equals, true)
 }
