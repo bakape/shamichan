@@ -137,3 +137,87 @@ func (*Tests) TestTokenExpiry(c *C) {
 func (*Tests) TestTokenExpiryNoTokens(c *C) {
 	c.Assert(expireImageTokens(), IsNil)
 }
+
+func (*Tests) TestDeleteThreadWithoutImages(c *C) {
+	thread := types.DatabaseThread{
+		ID: 1,
+		Posts: map[int64]types.DatabasePost{
+			1: {
+				Post: types.Post{
+					ID: 1,
+				},
+			},
+			2: {
+				Post: types.Post{
+					ID: 2,
+				},
+			},
+		},
+	}
+	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
+
+	c.Assert(DeleteThread(1), IsNil)
+	assertThreadDeleted(1, c)
+}
+
+func assertThreadDeleted(id int64, c *C) {
+	var noThread bool
+	q := r.Table("threads").Get(id).Eq(nil)
+	c.Assert(One(q, &noThread), IsNil)
+	c.Assert(noThread, Equals, true)
+}
+
+func (*Tests) TestDeleteNonExistantThread(c *C) {
+	c.Assert(DeleteThread(1), IsNil)
+}
+
+func (*Tests) TestDeleteThread(c *C) {
+	images := [...]types.ProtoImage{
+		{
+			ImageCommon: types.ImageCommon{
+				SHA1: "2",
+			},
+			Posts: 2,
+		},
+		{
+			ImageCommon: types.ImageCommon{
+				SHA1: "3",
+			},
+			Posts: 3,
+		},
+	}
+	c.Assert(Write(r.Table("images").Insert(images)), IsNil)
+
+	thread := types.DatabaseThread{
+		ID: 1,
+		Posts: map[int64]types.DatabasePost{
+			1: {
+				Post: types.Post{
+					ID: 1,
+					Image: &types.Image{
+						ImageCommon: types.ImageCommon{
+							SHA1: "2",
+						},
+					},
+				},
+			},
+			2: {
+				Post: types.Post{
+					ID: 2,
+					Image: &types.Image{
+						ImageCommon: types.ImageCommon{
+							SHA1: "3",
+						},
+					},
+				},
+			},
+		},
+	}
+	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
+
+	c.Assert(DeleteThread(1), IsNil)
+
+	assertThreadDeleted(1, c)
+	assertImageRefCount("2", 1, c)
+	assertImageRefCount("3", 2, c)
+}

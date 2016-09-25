@@ -107,22 +107,34 @@ var expireImageTokensQuery = r.
 			)
 	})
 
-// Run database clean up tasks at server start and every 10 minutes
+// Run database clean up tasks at server start and regular intervals. Must be
+// launched in separate goroutine.
 func runCleanupTasks() {
-	timer10 := time.Tick(time.Minute * 10)
-	timer1 := time.Tick(time.Minute)
+	// To ensure even the once an hour tasks are run shortly after server start
+	time.Sleep(time.Minute)
+	runMinuteTasks()
+	runHourTasks()
+
+	timerMin := time.Tick(time.Minute)
 	timerHour := time.Tick(time.Hour)
 	for {
 		select {
-		case <-timer1:
-			logError("open post cleanup", closeDanglingPosts())
-			logError("expire image tokens", expireImageTokens())
-		case <-timer10:
-			logError("session cleanup", expireUserSessions())
+		case <-timerMin:
+			runMinuteTasks()
 		case <-timerHour:
-			logError("board cleanup", deleteUnusedBoards())
+			runHourTasks()
 		}
 	}
+}
+
+func runMinuteTasks() {
+	logError("open post cleanup", closeDanglingPosts())
+	logError("expire image tokens", expireImageTokens())
+}
+
+func runHourTasks() {
+	logError("session cleanup", expireUserSessions())
+	logError("board cleanup", deleteUnusedBoards())
 }
 
 func logError(prefix string, err error) {
@@ -168,6 +180,37 @@ func deleteUnusedBoards() error {
 	}
 	if expired == nil {
 		return nil
+	}
+
+	return nil
+}
+
+// DeleteThread dletes a thread from the database and dealocated any freed up
+// images
+func DeleteThread(id int64) error {
+	q := r.
+		Table("threads").
+		Get(id).
+		Delete(r.DeleteOpts{
+			ReturnChanges: true,
+		}).
+		Field("changes").
+		AtIndex(0).
+		Field("old_val").
+		Field("posts").
+		Values().
+		Filter(r.Row.HasFields("image")).
+		Map(r.Row.Field("image").Field("SHA1")).
+		Default([]string{}) // If aready deleted by another backend instance
+	var images []string
+	if err := All(q, &images); err != nil {
+		return err
+	}
+
+	for _, sha1 := range images {
+		if err := DeallocateImage(sha1); err != nil {
+			return err
+		}
 	}
 
 	return nil
