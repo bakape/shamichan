@@ -34,7 +34,7 @@ all: server client
 
 # Update NPM deps and build client
 client:
-	npm update
+	npm install
 	$(GULP)
 
 # Incrementaly rebuild the client for faster develepment builds. Only builds
@@ -57,6 +57,11 @@ server_deps: build_dirs
 		| xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' \
 		| grep -v 'github.com/bakape/meguca' \
 		| xargs go get -v
+
+# Fetch updates of both meguca and dependancies
+update:
+	go get -u -v github.com/bakape/meguca
+	npm update
 
 # Creates the temporary directories for compiling
 build_dirs:

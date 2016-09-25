@@ -70,6 +70,8 @@ binary statically links ffmpeg and does not require it installed.
 * `make server` and `make client` build the server and client separately
 * `make watch` watches the file system for changes and incrementally rebuilds
 the client
+* `make update` updates all dependencies and fetches new project sources from
+the master branch
 * `make clean` removes files from the previous compilation
 * `make dist_clean` in addition to the above removes images and stored assets
 
