@@ -1,6 +1,9 @@
 package imager
 
-import . "gopkg.in/check.v1"
+import (
+	"github.com/bakape/meguca/imager/assets"
+	. "gopkg.in/check.v1"
+)
 
 const mp3Length uint32 = 1
 
@@ -33,6 +36,6 @@ func (*Imager) TestProcessMP3(c *C) {
 	res := processMP3(readSample("with-cover.mp3", c))
 	c.Assert(res.err, IsNil)
 	assertThumbnail(res.thumb, c)
-	c.Assert(res.dims, Equals, pngDims)
+	c.Assert(res.dims, Equals, assets.StdDims["png"])
 	c.Assert(res.length, Equals, mp3Length)
 }

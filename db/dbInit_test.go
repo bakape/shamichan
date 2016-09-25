@@ -2,8 +2,10 @@ package db
 
 import (
 	"testing"
+	"time"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager/assets"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -16,34 +18,38 @@ type DBInit struct{}
 var _ = Suite(&DBInit{})
 
 // All other functions that depend on the database
-type DBSuite struct{}
+type Tests struct{}
 
-var _ = Suite(&DBSuite{})
+var _ = Suite(&Tests{})
 
 var testDBName string
 
-func (d *DBSuite) SetUpSuite(c *C) {
+func (d *Tests) SetUpSuite(c *C) {
 	DBName = UniqueDBName()
 	c.Assert(Connect(), IsNil)
 	c.Assert(InitDB(), IsNil)
+	c.Assert(assets.CreateDirs(), IsNil)
 }
 
-func (*DBSuite) SetUpTest(c *C) {
-	// Clear all documents from all tables after each test.
-	for _, table := range AllTables {
-		c.Assert(Write(r.Table(table).Delete()), IsNil)
-	}
+func (*Tests) SetUpTest(c *C) {
+	// Clear all documents from all tables before each test.
+	c.Assert(ClearTables(), IsNil)
 	config.Set(config.Configs{
 		Boards: []string{"a"},
 	})
 }
 
-func (d *DBSuite) TearDownSuite(c *C) {
-	c.Assert(r.DBDrop(DBName).Exec(RSession), IsNil)
-	c.Assert(RSession.Close(), IsNil)
+func (*Tests) TearDownTest(c *C) {
+	c.Assert(assets.ResetDirs(), IsNil)
 }
 
-func (*DBSuite) TestVerifyVersion(c *C) {
+func (d *Tests) TearDownSuite(c *C) {
+	c.Assert(r.DBDrop(DBName).Exec(RSession), IsNil)
+	c.Assert(RSession.Close(), IsNil)
+	c.Assert(assets.DeleteDirs(), IsNil)
+}
+
+func (*Tests) TestVerifyVersion(c *C) {
 	// Correct DB version
 	info := map[string]interface{}{
 		"id":        "info",
@@ -58,7 +64,7 @@ func (*DBSuite) TestVerifyVersion(c *C) {
 	c.Assert(
 		verifyDBVersion(),
 		ErrorMatches,
-		"Incompatible RethinkDB database version: 0.*",
+		"incompatible RethinkDB database version: 0.*",
 	)
 }
 
@@ -116,4 +122,28 @@ func (*DBInit) TestLoadDB(c *C) {
 
 	c.Assert(RSession.Close(), IsNil)
 	c.Assert(LoadDB(), IsNil)
+}
+
+func (*Tests) TestUpgrade14to15(c *C) {
+	info := map[string]interface{}{
+		"id":      "info",
+		"version": 14,
+	}
+	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
+	board := config.BoardConfigs{
+		ID: "a",
+	}
+	c.Assert(Write(r.Table("boards").Insert(board)), IsNil)
+
+	c.Assert(upgrade14to15(), IsNil)
+
+	var v int
+	q := GetMain("info").Field("version")
+	c.Assert(One(q, &v), IsNil)
+	c.Assert(v, Equals, 15)
+
+	var created time.Time
+	q = r.Table("boards").Get("a").Field("created")
+	c.Assert(One(q, &created), IsNil)
+	c.Assert(created.Before(time.Now()), Equals, true)
 }

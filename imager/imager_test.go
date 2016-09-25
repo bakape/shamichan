@@ -1,16 +1,16 @@
 package imager
 
 import (
-	"fmt"
 	"image"
 	jpegLib "image/jpeg"
-	"os"
+	"io/ioutil"
 	"path/filepath"
 	"testing"
 
 	"github.com/Soreil/imager"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager/assets"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -19,26 +19,14 @@ func Test(t *testing.T) { TestingT(t) }
 
 type Imager struct{}
 
-var (
-	_ = Suite(&Imager{})
-
-	// Resulting dimentions after thumbnailing samples
-	jpegDims = [4]uint16{0x43c, 0x371, 0x96, 0x79}
-	pngDims  = [4]uint16{0x500, 0x2d0, 0x96, 0x54}
-	gifDims  = [4]uint16{0x248, 0x2d0, 0x7a, 0x96}
-)
+var _ = Suite(&Imager{})
 
 func (d *Imager) SetUpSuite(c *C) {
-	isTest = true
 	assetRoot = "testdata"
 	db.DBName = db.UniqueDBName()
 	c.Assert(db.Connect(), IsNil)
 	c.Assert(db.InitDB(), IsNil)
-
-	for _, dir := range [...]string{"src", "thumb"} {
-		path := filepath.FromSlash("images/" + dir)
-		c.Assert(os.MkdirAll(path, 0770), IsNil)
-	}
+	c.Assert(assets.CreateDirs(), IsNil)
 }
 
 func (d *Imager) SetUpTest(c *C) {
@@ -51,30 +39,23 @@ func (d *Imager) SetUpTest(c *C) {
 
 func (d *Imager) TearDownTest(c *C) {
 	// Clear DB tables
-	for _, table := range db.AllTables {
-		c.Assert(db.Write(r.Table(table).Delete()), IsNil)
-	}
+	c.Assert(db.ClearTables(), IsNil)
 
 	// Clear image asset folders
-	for _, dir := range [...]string{"src", "thumb"} {
-		path := filepath.FromSlash("images/" + dir)
-		dirh, err := os.Open(path)
-		c.Assert(err, IsNil)
-		defer dirh.Close()
-		files, err := dirh.Readdirnames(-1)
-		c.Assert(err, IsNil)
-		for _, file := range files {
-			path := fmt.Sprintf("images/%s/%s", dir, file)
-			path = filepath.FromSlash(path)
-			c.Assert(os.Remove(path), IsNil)
-		}
-	}
+	c.Assert(assets.ResetDirs(), IsNil)
 }
 
 func (d *Imager) TearDownSuite(c *C) {
 	c.Assert(db.Write(r.DBDrop(db.DBName)), IsNil)
 	c.Assert(db.RSession.Close(), IsNil)
-	c.Assert(os.RemoveAll("img"), IsNil)
+	c.Assert(assets.DeleteDirs(), IsNil)
+}
+
+func readSample(name string, c *C) []byte {
+	path := filepath.Join("testdata", name)
+	data, err := ioutil.ReadFile(path)
+	c.Assert(err, IsNil)
+	return data
 }
 
 func (*Imager) TestInitImager(c *C) {
@@ -119,9 +100,9 @@ func (*Imager) TestImageProcessing(c *C) {
 		ext  string
 		dims [4]uint16
 	}{
-		{"jpg", jpegDims},
-		{"png", pngDims},
-		{"gif", gifDims},
+		{"jpg", assets.StdDims["jpeg"]},
+		{"png", assets.StdDims["png"]},
+		{"gif", assets.StdDims["gif"]},
 	}
 
 	for _, s := range samples {

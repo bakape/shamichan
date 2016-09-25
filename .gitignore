@@ -5,7 +5,6 @@
 .pid
 .vscode
 *.dll
-assets
 error.log
 node_modules
 meguca

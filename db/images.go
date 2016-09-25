@@ -1,11 +1,11 @@
-package imager
+package db
 
 import (
 	"errors"
 	"os"
 	"time"
 
-	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -28,24 +28,6 @@ var (
 	ErrInvalidToken = errors.New("invalid image token")
 )
 
-// Cached query
-var expireImageTokensQuery = r.
-	Table("imageTokens").
-	Filter(r.Row.Field("expires").Lt(r.Now())).
-	Delete(r.DeleteOpts{ReturnChanges: true}).
-	Do(func(d r.Term) r.Term {
-		return d.
-			Field("deleted").
-			Eq(0).
-			Branch(
-				r.Expr([]string{}),
-				d.
-					Field("changes").
-					Field("old_val").
-					Field("SHA1"),
-			)
-	})
-
 // Document for registering a token coresponding to a client's right to allocate
 // an image in its post
 type allocationToken struct {
@@ -58,13 +40,13 @@ type allocationToken struct {
 // image is not deallocated by another theread/process, the refference counter
 // of the image will be incremented.
 func FindImageThumb(hash string) (img types.ImageCommon, err error) {
-	query := db.GetImage(hash).
+	query := GetImage(hash).
 		Update(incrementImageRefCount, r.UpdateOpts{ReturnChanges: true}).
 		Field("changes").
 		Field("new_val").
 		Without("posts").
 		Default(nil)
-	err = db.One(query, &img)
+	err = One(query, &img)
 	return
 }
 
@@ -79,7 +61,7 @@ func NewImageToken(SHA1 string) (code int, token string, err error) {
 		}).
 		Field("generated_keys").
 		AtIndex(0)
-	err = db.One(q, &token)
+	err = One(q, &token)
 	if err != nil {
 		code = 500
 	} else {
@@ -106,7 +88,7 @@ func UseImageToken(id string) (img types.ImageCommon, err error) {
 			Without("posts"),
 		).
 		Default(nil)
-	err = db.One(q, &img)
+	err = One(q, &img)
 	if err == r.ErrEmptyResult {
 		err = ErrInvalidToken
 	}
@@ -117,7 +99,7 @@ func UseImageToken(id string) (img types.ImageCommon, err error) {
 // would become zero, the image entry is immediately deleted allong with its
 // file assets.
 func DeallocateImage(id string) error {
-	query := db.GetImage(id).
+	query := GetImage(id).
 		Replace(
 			func(doc r.Term) r.Term {
 				return r.Branch(
@@ -138,12 +120,12 @@ func DeallocateImage(id string) error {
 		Posts    int   `gorethink:"posts"`
 		FileType uint8 `gorethink:"fileType"`
 	}
-	if err := db.One(query, &res); err != nil {
+	if err := One(query, &res); err != nil {
 		return err
 	}
 
 	if res.Posts == 1 {
-		if err := deleteAssets(id, res.FileType); err != nil {
+		if err := assets.Delete(id, res.FileType); err != nil {
 			return err
 		}
 	}
@@ -151,10 +133,10 @@ func DeallocateImage(id string) error {
 	return nil
 }
 
-// Allocate an image's file resources to their respective served directories and
-// write its data to the database
-func allocateImage(src, thumb []byte, img types.ImageCommon) error {
-	err := writeAssets(img.SHA1, img.FileType, src, thumb)
+// AllocateImage allocates an image's file resources to their respective served
+// directories and write its data to the database
+func AllocateImage(src, thumb []byte, img types.ImageCommon) error {
+	err := assets.Write(img.SHA1, img.FileType, src, thumb)
 	if err != nil {
 		return cleanUpFailedAllocation(img, err)
 	}
@@ -167,7 +149,7 @@ func allocateImage(src, thumb []byte, img types.ImageCommon) error {
 			ImageCommon: img,
 			Posts:       1,
 		})
-	err = db.Write(query)
+	err = Write(query)
 	if err != nil {
 		return cleanUpFailedAllocation(img, err)
 	}
@@ -176,26 +158,9 @@ func allocateImage(src, thumb []byte, img types.ImageCommon) error {
 
 // Delete any dangling image files in case of a failed image allocattion
 func cleanUpFailedAllocation(img types.ImageCommon, err error) error {
-	delErr := deleteAssets(img.SHA1, img.FileType)
+	delErr := assets.Delete(img.SHA1, img.FileType)
 	if err != nil && !os.IsNotExist(delErr) {
 		err = util.WrapError(err.Error(), delErr)
 	}
 	return err
-}
-
-// Remove any expired image tokens and decrement or dealocate their target
-// image's assets
-func expireImageTokens() error {
-	var toDealloc []string
-	if err := db.All(expireImageTokensQuery, &toDealloc); err != nil {
-		return err
-	}
-
-	for _, sha1 := range toDealloc {
-		if err := DeallocateImage(sha1); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

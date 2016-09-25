@@ -34,9 +34,7 @@ func (d *DB) SetUpTest(c *C) {
 		SessionExpiry: 30,
 		Boards:        []string{"a"},
 	})
-	for _, table := range db.AllTables {
-		c.Assert(db.Write(r.Table(table).Delete()), IsNil)
-	}
+	c.Assert(db.ClearTables(), IsNil)
 }
 
 func syncAssertMessage(conn *websocket.Conn, msg []byte, c *C) {

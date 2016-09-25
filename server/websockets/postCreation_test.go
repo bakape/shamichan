@@ -7,7 +7,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
@@ -61,7 +60,7 @@ func (*DB) TestThreadCreation(c *C) {
 	populateMainTable(c)
 	writeBoardConfigs(false, c)
 	c.Assert(db.Write(r.Table("images").Insert(stdJPEG)), IsNil)
-	_, token, err := imager.NewImageToken(stdJPEG.SHA1)
+	_, token, err := db.NewImageToken(stdJPEG.SHA1)
 	c.Assert(err, IsNil)
 
 	sv := newWSServer(c)
@@ -297,7 +296,7 @@ func (*DB) TestPostCreation(c *C) {
 	now := prepareForPostCreation(c)
 	writeBoardConfigs(false, c)
 	c.Assert(db.Write(r.Table("images").Insert(stdJPEG)), IsNil)
-	_, token, err := imager.NewImageToken(stdJPEG.SHA1)
+	_, token, err := db.NewImageToken(stdJPEG.SHA1)
 	c.Assert(err, IsNil)
 
 	sv := newWSServer(c)

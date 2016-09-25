@@ -1,6 +1,8 @@
 package websockets
 
 import (
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -106,19 +108,22 @@ func (*DB) TestBoardCreation(c *C) {
 	}
 	assertLoggedInResponse(req, createBoard, userID, []byte("400"), c)
 
-	var board config.BoardConfigs
+	var board config.DatabaseBoardConfigs
 	c.Assert(db.One(db.GetBoardConfig(id), &board), IsNil)
-	std := config.BoardConfigs{
-		ID:        id,
-		Spoiler:   "default.jpg",
-		Title:     title,
-		Eightball: config.EightballDefaults,
-		Banners:   []string{},
-		Staff: map[string][]string{
-			"owners": []string{userID},
+	std := config.DatabaseBoardConfigs{
+		BoardConfigs: config.BoardConfigs{
+			ID:        id,
+			Spoiler:   "default.jpg",
+			Title:     title,
+			Eightball: config.EightballDefaults,
+			Banners:   []string{},
+			Staff: map[string][]string{
+				"owners": []string{userID},
+			},
 		},
 	}
-	c.Assert(board, DeepEquals, std)
+	c.Assert(board.Created.Before(time.Now()), Equals, true)
+	c.Assert(board.BoardConfigs, DeepEquals, std.BoardConfigs)
 
 	var boards []string
 	c.Assert(db.All(db.GetMain("config").Field("boards"), &boards), IsNil)

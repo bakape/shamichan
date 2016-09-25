@@ -42,9 +42,7 @@ func (d *DB) SetUpSuite(c *C) {
 
 func (*DB) SetUpTest(c *C) {
 	enableGzip = false
-	for _, table := range db.AllTables {
-		c.Assert(db.Exec(r.Table(table).Delete()), IsNil)
-	}
+	c.Assert(db.ClearTables(), IsNil)
 	config.Set(config.Configs{
 		Boards: []string{"a"},
 	})

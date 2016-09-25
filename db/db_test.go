@@ -7,7 +7,7 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func (*DBSuite) TestValidateOP(c *C) {
+func (*Tests) TestValidateOP(c *C) {
 	std := types.DatabaseThread{
 		ID:    1,
 		Board: "a",
@@ -24,11 +24,11 @@ func (*DBSuite) TestValidateOP(c *C) {
 	c.Assert(v, Equals, false)
 }
 
-func (*DBSuite) TestGetThread(c *C) {
+func (*Tests) TestGetThread(c *C) {
 	c.Assert(getThread(1).String(), Equals, `r.Table("threads").Get(1)`)
 }
 
-func (*DBSuite) TestPostCounter(c *C) {
+func (*Tests) TestPostCounter(c *C) {
 	std := infoDocument{
 		Document: Document{"info"},
 		PostCtr:  1,
@@ -40,7 +40,7 @@ func (*DBSuite) TestPostCounter(c *C) {
 	c.Assert(count, Equals, int64(1))
 }
 
-func (*DBSuite) TestBoardCounter(c *C) {
+func (*Tests) TestBoardCounter(c *C) {
 	std := Document{"boardCtrs"}
 	c.Assert(Write(r.Table("main").Insert(std)), IsNil)
 
@@ -56,7 +56,7 @@ func (*DBSuite) TestBoardCounter(c *C) {
 	c.Assert(count, Equals, int64(1))
 }
 
-func (*DBSuite) TestThreadCounter(c *C) {
+func (*Tests) TestThreadCounter(c *C) {
 	std := types.DatabaseThread{
 		ID: 1,
 		Log: [][]byte{
@@ -72,7 +72,7 @@ func (*DBSuite) TestThreadCounter(c *C) {
 	c.Assert(count, Equals, int64(3))
 }
 
-func (*DBSuite) TestRegisterAccount(c *C) {
+func (*Tests) TestRegisterAccount(c *C) {
 	const id = "123"
 	hash := []byte{1, 2, 3}
 	user := auth.User{
@@ -91,12 +91,12 @@ func (*DBSuite) TestRegisterAccount(c *C) {
 	c.Assert(RegisterAccount(id, hash), ErrorMatches, "user name already taken")
 }
 
-func (*DBSuite) TestNonExistantUserGetHash(c *C) {
+func (*Tests) TestNonExistantUserGetHash(c *C) {
 	_, err := GetLoginHash("123")
 	c.Assert(err, Equals, r.ErrEmptyResult)
 }
 
-func (*DBSuite) TestGetLoginHash(c *C) {
+func (*Tests) TestGetLoginHash(c *C) {
 	const id = "123"
 	hash := []byte{1, 2, 3}
 	user := auth.User{
@@ -110,15 +110,16 @@ func (*DBSuite) TestGetLoginHash(c *C) {
 	c.Assert(res, DeepEquals, hash)
 }
 
-func (*DBSuite) TestGetImage(c *C) {
+func (*Tests) TestGetImage(c *C) {
 	c.Assert(GetImage("123").String(), Equals, `r.Table("images").Get("123")`)
 }
 
-func (*DBSuite) TestGetBoardConfig(c *C) {
-	c.Assert(GetBoardConfig("a").String(), Equals, `r.Table("boards").Get("a")`)
+func (*Tests) TestGetBoardConfig(c *C) {
+	const q = `r.Table("boards").Get("a").Without("created")`
+	c.Assert(GetBoardConfig("a").String(), Equals, q)
 }
 
-func (*DBSuite) TestReservePostID(c *C) {
+func (*Tests) TestReservePostID(c *C) {
 	info := map[string]interface{}{
 		"id":      "info",
 		"postCtr": 0,
@@ -132,7 +133,7 @@ func (*DBSuite) TestReservePostID(c *C) {
 	}
 }
 
-func (*DBSuite) TestIncrementBoardCounter(c *C) {
+func (*Tests) TestIncrementBoardCounter(c *C) {
 	c.Assert(Write(r.Table("main").Insert(Document{"boardCtrs"})), IsNil)
 
 	// Check both a fresh board counter and incrementing an existing one

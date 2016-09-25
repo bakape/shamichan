@@ -13,29 +13,15 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
 
-var (
-	// JPEG sample image standard struct
-	stdJPEG = types.Image{
-		ImageCommon: types.ImageCommon{
-			SHA1:     "012a2f912c9ee93ceb0ccb8684a29ec571990a94",
-			FileType: jpeg,
-			Dims:     jpegDims,
-			MD5:      "60e41092581f7b329b057b8402caa8a7",
-			Size:     300792,
-		},
-		Name:    "sample.jpg",
-		Spoiler: true,
-	}
-)
-
 func (*Imager) TestDetectFileType(c *C) {
 	// Supported file types
-	for code, ext := range extensions {
+	for code, ext := range types.Extensions {
 		f := openFile("sample."+ext, c)
 		defer f.Close()
 		buf, err := ioutil.ReadAll(f)
@@ -124,15 +110,15 @@ func (*Imager) TestNewThumbnail(c *C) {
 	c.Assert(rec.Code, Equals, 200)
 
 	std := types.ProtoImage{
-		ImageCommon: stdJPEG.ImageCommon,
+		ImageCommon: assets.StdJPEG.ImageCommon,
 		Posts:       1,
 	}
 	var img types.ProtoImage
 	c.Assert(db.One(r.Table("images").Get(std.SHA1), &img), IsNil)
 	c.Assert(img, DeepEquals, std)
 
-	assertImageToken(rec.Body.String(), std.SHA1, stdJPEG.Name, c)
-	assertFiles("sample.jpg", std.SHA1, jpeg, c)
+	assertImageToken(rec.Body.String(), std.SHA1, assets.StdJPEG.Name, c)
+	assertFiles("sample.jpg", std.SHA1, types.JPEG, c)
 }
 
 // Assert image file assets were created with the correct paths
@@ -142,7 +128,7 @@ func assertFiles(src, id string, fileType uint8, c *C) {
 		data  [3][]byte
 	)
 	paths[0] = filepath.FromSlash("testdata/" + src)
-	destPaths := getFilePaths(id, fileType)
+	destPaths := assets.GetFilePaths(id, fileType)
 	paths[1], paths[2] = destPaths[0], destPaths[1]
 
 	for i := range paths {
@@ -198,8 +184,14 @@ func (*Imager) TestThumbNailReuse(c *C) {
 		c.Assert(err, IsNil)
 		c.Assert(code, Equals, 200)
 
-		assertImageRefCount(stdJPEG.SHA1, i+1, c)
+		assertImageRefCount(assets.StdJPEG.SHA1, i+1, c)
 	}
+}
+
+func assertImageRefCount(id string, count int, c *C) {
+	var posts int
+	c.Assert(db.One(db.GetImage(id).Field("posts"), &posts), IsNil)
+	c.Assert(posts, Equals, count)
 }
 
 func newJPEGRequest(c *C) *http.Request {
@@ -207,9 +199,9 @@ func newJPEGRequest(c *C) *http.Request {
 	wg.Add(1)
 	b, w := newMultiWriter()
 
-	file, err := w.CreateFormFile("image", stdJPEG.Name)
+	file, err := w.CreateFormFile("image", assets.StdJPEG.Name)
 	c.Assert(err, IsNil)
-	_, err = file.Write(readSample(stdJPEG.Name, c))
+	_, err = file.Write(readSample(assets.StdJPEG.Name, c))
 	c.Assert(err, IsNil)
 
 	req := newRequest(c, b, w)
