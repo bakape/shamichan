@@ -64,6 +64,18 @@ function apply(prefix: string, favicon: string) {
 	$favicon.setAttribute("href", favicon)
 }
 
+// Account for immeadiate recconection and only render favicon, if not
+// reconnected in 5 seconds
+function delayedDiscoRender() {
+	setTimeout(() => {
+		switch (connSM.state) {
+		case connState.dropped:
+		case connState.desynced:
+			resolve()
+		}
+	}, 5000)
+}
+
 // Needs to be available with no connectivity, so we download and cache it
 fetch(urlBase + "disconnected.ico")
 	.then(res =>
@@ -72,8 +84,9 @@ fetch(urlBase + "disconnected.ico")
 		discoFavicon = URL.createObjectURL(blob))
 
 // Connection change listeners
-for (let state of [connState.dropped, connState.desynced, connState.synced]) {
-	connSM.on(state, resolve)
+connSM.on(connState.synced, resolve)
+for (let state of [connState.dropped, connState.desynced]) {
+	connSM.on(state, delayedDiscoRender)
 }
 
 // Reset title on tab focus
