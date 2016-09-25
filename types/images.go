@@ -1,5 +1,28 @@
 package types
 
+// Supported file formats
+const (
+	JPEG = iota
+	PNG
+	GIF
+	WEBM
+	PDF
+	SVG
+	MP4
+	MP3
+	OGG
+)
+
+// Extensions maps internal file types to their canonical file extensions
+var Extensions = map[uint8]string{
+	JPEG: "jpg",
+	PNG:  "png",
+	GIF:  "gif",
+	WEBM: "webm",
+	PDF:  "pdf",
+	MP3:  "mp3",
+}
+
 // Image contains a post's image and thumbnail data
 type Image struct {
 	Spoiler bool `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`

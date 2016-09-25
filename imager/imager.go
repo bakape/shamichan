@@ -12,6 +12,7 @@ import (
 
 	"github.com/Soreil/imager"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/util"
 )
 
@@ -26,6 +27,10 @@ var (
 // InitImager applies the thumbnail quality configuration and starts the image
 // token expiry scheduler
 func InitImager() error {
+	if err := assets.CreateDirs(); err != nil {
+		return err
+	}
+
 	conf := config.Get()
 	imager.JPEGOptions = jpegLib.Options{Quality: conf.JPEGQuality}
 	imager.PNGQuantization = conf.PNGQuality

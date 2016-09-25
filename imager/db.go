@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -143,7 +144,7 @@ func DeallocateImage(id string) error {
 	}
 
 	if res.Posts == 1 {
-		if err := deleteAssets(id, res.FileType); err != nil {
+		if err := assets.Delete(id, res.FileType); err != nil {
 			return err
 		}
 	}
@@ -154,7 +155,7 @@ func DeallocateImage(id string) error {
 // Allocate an image's file resources to their respective served directories and
 // write its data to the database
 func allocateImage(src, thumb []byte, img types.ImageCommon) error {
-	err := writeAssets(img.SHA1, img.FileType, src, thumb)
+	err := assets.Write(img.SHA1, img.FileType, src, thumb)
 	if err != nil {
 		return cleanUpFailedAllocation(img, err)
 	}
@@ -176,7 +177,7 @@ func allocateImage(src, thumb []byte, img types.ImageCommon) error {
 
 // Delete any dangling image files in case of a failed image allocattion
 func cleanUpFailedAllocation(img types.ImageCommon, err error) error {
-	delErr := deleteAssets(img.SHA1, img.FileType)
+	delErr := assets.Delete(img.SHA1, img.FileType)
 	if err != nil && !os.IsNotExist(delErr) {
 		err = util.WrapError(err.Error(), delErr)
 	}

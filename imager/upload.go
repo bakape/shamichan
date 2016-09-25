@@ -19,27 +19,14 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-// Supported file formats
-const (
-	jpeg = iota
-	png
-	gif
-	webm
-	pdf
-	svg
-	mp4
-	mp3
-	ogg
-)
-
 var (
 	// Map of stdlib MIME types to the constants used internally
 	mimeTypes = map[string]uint8{
-		"image/jpeg":      jpeg,
-		"image/png":       png,
-		"image/gif":       gif,
-		"video/webm":      webm,
-		"application/pdf": pdf,
+		"image/jpeg":      types.JPEG,
+		"image/png":       types.PNG,
+		"image/gif":       types.GIF,
+		"video/webm":      types.WEBM,
+		"application/pdf": types.PDF,
 	}
 
 	// File type tests for types not supported by http.DetectContentType
@@ -47,10 +34,10 @@ var (
 		test  func([]byte) (bool, error)
 		fType uint8
 	}{
-		{detectSVG, svg},
-		{detectMP3, mp3},
-		{detectMP4, mp4},
-		{detectOGG, ogg},
+		{detectSVG, types.SVG},
+		{detectMP3, types.MP3},
+		{detectMP4, types.MP4},
+		{detectOGG, types.OGG},
 	}
 )
 
@@ -151,7 +138,7 @@ func newThumbnail(data []byte, img types.ImageCommon) (int, string, error) {
 	md5 := genMD5(data)
 	thumb := processFile(data, fileType)
 
-	if fileType == png {
+	if fileType == types.PNG {
 		img.APNG = apngdetector.Detect(data)
 	}
 
@@ -217,11 +204,11 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 	go func() {
 		var res thumbResponse
 		switch fileType {
-		case webm:
+		case types.WEBM:
 			res = processWebm(data)
-		case mp3:
+		case types.MP3:
 			res = processMP3(data)
-		case jpeg, png, gif:
+		case types.JPEG, types.PNG, types.GIF:
 			res.thumb, res.dims, res.err = processImage(data)
 		}
 

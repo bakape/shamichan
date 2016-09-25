@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
@@ -27,7 +28,7 @@ func newAllocatioTester(
 ) *allocationTester {
 	return &allocationTester{
 		source: filepath.FromSlash("testdata/" + source),
-		paths:  getFilePaths(name, fileType),
+		paths:  assets.GetFilePaths(name, fileType),
 		c:      c,
 	}
 }
@@ -96,13 +97,13 @@ func (*Imager) TestRemoveUnreffedImage(c *C) {
 	const id = "123"
 	img := types.ProtoImage{
 		ImageCommon: types.ImageCommon{
-			FileType: jpeg,
+			FileType: types.JPEG,
 			SHA1:     id,
 		},
 		Posts: 1,
 	}
 	insertProtoImage(img, c)
-	at := newAllocatioTester("sample.jpg", id, jpeg, c)
+	at := newAllocatioTester("sample.jpg", id, types.JPEG, c)
 	at.Allocate()
 
 	c.Assert(DeallocateImage(id), IsNil)
@@ -118,14 +119,14 @@ func (*Imager) TestRemoveUnreffedImage(c *C) {
 
 func (*Imager) TestFailedAllocationCleanUp(c *C) {
 	const id = "123"
-	at := newAllocatioTester("sample.jpg", id, jpeg, c)
+	at := newAllocatioTester("sample.jpg", id, types.JPEG, c)
 	at.Allocate()
 	c.Assert(os.Remove(filepath.FromSlash("images/thumb/"+id+".jpg")), IsNil)
 
 	err := errors.New("foo")
 	img := types.ImageCommon{
 		SHA1:     id,
-		FileType: jpeg,
+		FileType: types.JPEG,
 	}
 
 	c.Assert(cleanUpFailedAllocation(img, err), Equals, err)
@@ -140,13 +141,13 @@ func (*Imager) TestImageAllocation(c *C) {
 	}
 	img := types.ImageCommon{
 		SHA1:     id,
-		FileType: jpeg,
+		FileType: types.JPEG,
 	}
 
 	c.Assert(allocateImage(samples[0], samples[1], img), IsNil)
 
 	// Assert files and remove them
-	for i, path := range getFilePaths(id, jpeg) {
+	for i, path := range assets.GetFilePaths(id, types.JPEG) {
 		buf, err := ioutil.ReadFile(path)
 		c.Assert(err, IsNil)
 		c.Assert(buf, DeepEquals, samples[i])
@@ -173,7 +174,7 @@ func (*Imager) TestTokenExpiry(c *C) {
 	img := types.ProtoImage{
 		ImageCommon: types.ImageCommon{
 			SHA1:     "123",
-			FileType: jpeg,
+			FileType: types.JPEG,
 		},
 		Posts: 7,
 	}

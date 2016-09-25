@@ -13,6 +13,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
@@ -23,7 +24,7 @@ var (
 	stdJPEG = types.Image{
 		ImageCommon: types.ImageCommon{
 			SHA1:     "012a2f912c9ee93ceb0ccb8684a29ec571990a94",
-			FileType: jpeg,
+			FileType: types.JPEG,
 			Dims:     jpegDims,
 			MD5:      "60e41092581f7b329b057b8402caa8a7",
 			Size:     300792,
@@ -35,7 +36,7 @@ var (
 
 func (*Imager) TestDetectFileType(c *C) {
 	// Supported file types
-	for code, ext := range extensions {
+	for code, ext := range types.Extensions {
 		f := openFile("sample."+ext, c)
 		defer f.Close()
 		buf, err := ioutil.ReadAll(f)
@@ -132,7 +133,7 @@ func (*Imager) TestNewThumbnail(c *C) {
 	c.Assert(img, DeepEquals, std)
 
 	assertImageToken(rec.Body.String(), std.SHA1, stdJPEG.Name, c)
-	assertFiles("sample.jpg", std.SHA1, jpeg, c)
+	assertFiles("sample.jpg", std.SHA1, types.JPEG, c)
 }
 
 // Assert image file assets were created with the correct paths
@@ -142,7 +143,7 @@ func assertFiles(src, id string, fileType uint8, c *C) {
 		data  [3][]byte
 	)
 	paths[0] = filepath.FromSlash("testdata/" + src)
-	destPaths := getFilePaths(id, fileType)
+	destPaths := assets.GetFilePaths(id, fileType)
 	paths[1], paths[2] = destPaths[0], destPaths[1]
 
 	for i := range paths {

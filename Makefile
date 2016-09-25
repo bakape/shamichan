@@ -27,10 +27,10 @@ else
 	PACKAGE="meguca-$(VERSION)_$(shell uname -s)_$(shell uname -p).tar.xz"
 endif
 
-.PHONY: server client init
+.PHONY: server client
 
-# Build everything and initialize the dirs
-all: server client init
+# Build everything
+all: server client
 
 # Update NPM deps and build client
 client:
@@ -79,11 +79,7 @@ endif
 
 # Also removes runtime use dirs
 dist_clean: clean
-	rm -rf images assets error.log
-
-# Create dirs required for use during runtime
-init:
-	mkdir -p assets images/src images/thumb
+	rm -rf images error.log
 
 # Run all server tests
 test: server_deps
@@ -139,6 +135,6 @@ cross_compile_win_amd64: server_deps
 	go build -v -o meguca.exe
 
 # Zip the cross-compiled contents into an archive
-cross_package_win_amd64: cross_compile_win_amd64 init client package_copy
+cross_package_win_amd64: cross_compile_win_amd64 client package_copy
 	cp meguca.exe .package/
 	cd .package; zip -rq ../meguca-$(VERSION)_windows_AMD64.zip .
