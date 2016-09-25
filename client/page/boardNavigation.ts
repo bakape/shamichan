@@ -6,8 +6,9 @@ import Modal from '../modal'
 import {ui} from '../lang'
 import {formatHeader} from './board'
 
+const selected = new Set<string>()
+
 let boards: BoardEntry[],
-	selected: string[],
 	navigation: BoardNavigation,
 	selectionPanel: BoardSelectionPanel
 
@@ -19,8 +20,7 @@ export default class BoardNavigation extends View<Model> {
 			tag: "nav",
 		})
 		navigation = this
-		const sel = localStorage.getItem("selectedBoards")
-		selected = sel ? JSON.parse(sel) : []
+
 		this.render()
 		this.onClick({
 			".board-selection": e =>
@@ -48,9 +48,9 @@ export default class BoardNavigation extends View<Model> {
 			]
 			</nav>`
 
-		this.el.innerHTML = html
 		write(() =>
-			document.querySelector("#banner").prepend(this.el))
+			(this.el.innerHTML = html,
+			document.querySelector("#banner").prepend(this.el)))
 	}
 
 	toggleBoardSelectionPanel(el: Element) {
@@ -86,13 +86,24 @@ class BoardSelectionPanel extends Modal<Model> {
 	async render() {
 		boards = await fetchBoardList()
 
+		// Assert all selected boards still exist. If not, deselect them.
+		const boardIDs = boards.map(board =>
+			board.id)
+		for (let sel of selected) {
+			if (boardIDs.indexOf(sel) === -1) {
+				selected.delete(sel)
+				persistSelected()
+				navigation.render()
+			}
+		}
+
 		let boardList = ""
 		for (let {id, title} of boards) {
 			const attrs: {[key: string]: string} = {
 				type: "checkbox",
 				name: id
 			}
-			if (selected.indexOf(id) > -1) {
+			if (selected.has(id)) {
 				attrs["checked"] = ""
 			}
 			boardList += HTML
@@ -140,13 +151,13 @@ class BoardSelectionPanel extends Modal<Model> {
 	// Handle form submition
 	submit(event: Event) {
 		event.preventDefault()
-		selected = []
+		selected.clear()
 		for (let el of this.el.querySelectorAll("input[type=checkbox]")) {
 			if ((el as HTMLInputElement).checked) {
-				selected.push(el.getAttribute("name"))
+				selected.add(el.getAttribute("name"))
 			}
 		}
-		localStorage.setItem("selectedBoards", JSON.stringify(selected))
+		persistSelected()
 		navigation.render()
 		this.remove()
 	}
@@ -174,5 +185,19 @@ class BoardSelectionPanel extends Modal<Model> {
 				el.style.display = display
 			}
 		})
+	}
+}
+
+// Write selected boards to localStorage
+function persistSelected() {
+	const data = JSON.stringify(Array.from(selected))
+	localStorage.setItem("selectedBoards", data)
+}
+
+// Read selected boards from localStorage
+const sel = localStorage.getItem("selectedBoards")
+if (sel) {
+	for (let b of JSON.parse(sel)) {
+		selected.add(b)
 	}
 }

@@ -104,14 +104,18 @@
 
 	// Stdlib functions and methods
 	var stdlibTests = [
+		"Set",
+		"Map",
 		'Promise',
 		'Proxy',
+		"Array.from",
 		'Array.prototype.includes',
 		"String.prototype.includes"
 	]
 	for (var i = 0; i < stdlibTests.length; i++) {
 		if (!checkFunction(stdlibTests[i])) {
 			polyfills.push("vendor/core.min")
+			break
 		}
 	}
 
