@@ -90,7 +90,10 @@
 
 		// DOM 3 query methods
 		'Element.prototype.querySelector',
-		'Element.prototype.querySelectorAll'
+		'Element.prototype.querySelectorAll',
+
+		// Itterable NodeLists
+		'NodeList.prototype[Symbol.iterator]'
 	]
 	var DOMUpToDate = true
 	for (var i = 0; i < DOMMetods.length; i++) {
