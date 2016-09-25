@@ -63,14 +63,18 @@
 	var legacy,
 		scriptCount = 0,
 		polyfills = []
-	var kys = "Your browser is too outdated. Please consider installing "
-		+ "the latest stable version of one these alternatives: "
+	var kys = "Please consider installing the latest stable version of "
+		+ "one these alternatives: "
 		+ "Google Chrome, Chromium, Mozilla Firefox, Opera, "
-		+ "Microsoft Edge."
+		+ "Microsoft Edge or Safari."
+	var kysMobile = "Please install the latest version of Chrome for Android or"
+		+ "upgrade your iOS or Windows Mobile operating system."
 
 	for (var i = 0; i < strictTests.length; i++) {
 		if (!check(strictTests[i])) {
-			alert(kys)
+			var text = "Your browser is too outdated. "
+				+ (isMobile ? kysMobile : kys)
+			alert(text)
 			return
 		}
 	}
@@ -182,11 +186,10 @@
 			}
 		})
 
-		System.import('es' + (legacy ? 5 : 6) + '/main')
-			.catch(function (err) {
-				alert(err)
-				throw err
-			})
+		System.import('es6/main').catch(function (err) {
+			alert(err)
+			throw err
+		})
 
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker
