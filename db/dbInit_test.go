@@ -32,9 +32,7 @@ func (d *Tests) SetUpSuite(c *C) {
 
 func (*Tests) SetUpTest(c *C) {
 	// Clear all documents from all tables before each test.
-	for _, table := range AllTables {
-		c.Assert(Write(r.Table(table).Delete()), IsNil)
-	}
+	c.Assert(ClearTables(), IsNil)
 	config.Set(config.Configs{
 		Boards: []string{"a"},
 	})

@@ -256,3 +256,11 @@ func createAdminAccount() error {
 	}
 	return RegisterAccount("admin", hash)
 }
+
+// ClearTables deletes the contents of all DB tables. Only used for tests.
+func ClearTables() error {
+	q := r.TableList().ForEach(func(table r.Term) r.Term {
+		return r.Table(table).Delete()
+	})
+	return Write(q)
+}

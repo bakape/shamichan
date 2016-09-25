@@ -39,9 +39,7 @@ func (d *Imager) SetUpTest(c *C) {
 
 func (d *Imager) TearDownTest(c *C) {
 	// Clear DB tables
-	for _, table := range db.AllTables {
-		c.Assert(db.Write(r.Table(table).Delete()), IsNil)
-	}
+	c.Assert(db.ClearTables(), IsNil)
 
 	// Clear image asset folders
 	c.Assert(assets.ResetDirs(), IsNil)
