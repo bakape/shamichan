@@ -177,11 +177,16 @@ func (c *Client) closeConnections(err error) error {
 	var closeType int
 	switch err.(type) {
 	case *websocket.CloseError:
-		// Normal client-side websocket closure
 		switch err.(*websocket.CloseError).Code {
+
+		// Normal client-side websocket closure
 		case websocket.CloseNormalClosure, websocket.CloseGoingAway:
 			err = nil
 			closeType = websocket.CloseNormalClosure
+
+		// Ignore abnormal websocket closure as a network fault
+		case websocket.CloseAbnormalClosure:
+			err = nil
 		}
 	case nil:
 		closeType = websocket.CloseNormalClosure
@@ -192,9 +197,11 @@ func (c *Client) closeConnections(err error) error {
 
 	// Try to send the client a close frame. This might fail, so ignore any
 	// errors.
-	msg := websocket.FormatCloseMessage(closeType, "")
-	deadline := time.Now().Add(time.Second)
-	c.conn.WriteControl(websocket.CloseMessage, msg, deadline)
+	if closeType != 0 {
+		msg := websocket.FormatCloseMessage(closeType, "")
+		deadline := time.Now().Add(time.Second)
+		c.conn.WriteControl(websocket.CloseMessage, msg, deadline)
+	}
 
 	// Close socket
 	closeError := c.conn.Close()
