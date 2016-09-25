@@ -68,13 +68,13 @@ var (
 )
 
 // Default string for the FAQ panel
-const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG and WEBM.
+const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM and MP3.
 Encase words in ** to spoiler them. Spoilers reset on new line.
+Boards that have not had any new posts in 7 days are automatically deleted.
 <hr>Hash commands:
 #d100 #2d100 - Roll dice
 #flip - Coin flip
 #8ball - An 8ball
-#sw24:15 #sw2:24:15 #sw24:15+30 #sw24:15-30 - Syncronised duration timer
 
 All hash commands need to be input on their own line`
 

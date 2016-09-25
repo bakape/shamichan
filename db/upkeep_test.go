@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
@@ -220,4 +221,76 @@ func (*Tests) TestDeleteThread(c *C) {
 	assertThreadDeleted(1, c)
 	assertImageRefCount("2", 1, c)
 	assertImageRefCount("3", 2, c)
+}
+
+func (*Tests) TestNoExpiredBoards(c *C) {
+	c.Assert(deleteUnusedBoards(), IsNil)
+}
+
+func (*Tests) TestExpireBoards(c *C) {
+	expired := time.Now().Add((-week - 1) * time.Second)
+	fresh := time.Now()
+
+	boards := [...]config.DatabaseBoardConfigs{
+		{
+			Created: expired,
+			BoardConfigs: config.BoardConfigs{
+				ID: "a",
+			},
+		},
+		{
+			Created: fresh,
+			BoardConfigs: config.BoardConfigs{
+				ID: "c",
+			},
+		},
+	}
+	c.Assert(Write(r.Table("boards").Insert(boards)), IsNil)
+
+	threads := [...]types.DatabaseThread{
+		{
+			ID:    1,
+			Board: "a",
+			Posts: map[int64]types.DatabasePost{
+				1: {
+					Post: types.Post{
+						ID: 1,
+					},
+				},
+			},
+		},
+		{
+			ID:    2,
+			Board: "a",
+			Posts: map[int64]types.DatabasePost{
+				2: {
+					Post: types.Post{
+						ID: 1,
+					},
+				},
+			},
+		},
+		{
+			ID:    3,
+			Board: "c",
+			Posts: map[int64]types.DatabasePost{
+				3: {
+					Post: types.Post{
+						ID: 1,
+					},
+				},
+			},
+		},
+	}
+	c.Assert(Write(r.Table("threads").Insert(threads)), IsNil)
+
+	c.Assert(deleteUnusedBoards(), IsNil)
+
+	assertThreadDeleted(1, c)
+	assertThreadDeleted(2, c)
+
+	var notDeleted bool
+	q := r.Table("threads").Get(3).Eq(nil).Not()
+	c.Assert(One(q, &notDeleted), IsNil)
+	c.Assert(notDeleted, Equals, true)
 }

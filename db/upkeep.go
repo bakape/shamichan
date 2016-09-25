@@ -75,13 +75,13 @@ var getExpiredBoards = r.
 				Table("threads").
 				GetAllByIndex("board", board.Field("id")).
 				Field("posts").
-				Map(r.
-					Row.
-					CoerceTo("array").
-					Nth(-1).
-					AtIndex(1).
-					Pluck("time"),
-				).
+				Map(func(posts r.Term) r.Term {
+					return posts.
+						CoerceTo("array").
+						Nth(-1).
+						AtIndex(1).
+						Pluck("time")
+				}).
 				OrderBy("time").
 				Nth(-1).
 				Field("time").
@@ -178,8 +178,23 @@ func deleteUnusedBoards() error {
 	if err := All(getExpiredBoards, &expired); err != nil {
 		return err
 	}
-	if expired == nil {
-		return nil
+
+	for _, board := range expired {
+		q := r.Table("boards").Get(board).Delete()
+		if err := Write(q); err != nil {
+			return err
+		}
+
+		var threads []int64
+		q = r.Table("threads").GetAllByIndex("board", board).Field("id")
+		if err := All(q, &threads); err != nil {
+			return err
+		}
+		for _, thread := range threads {
+			if err := DeleteThread(thread); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
