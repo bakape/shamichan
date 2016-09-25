@@ -7,7 +7,6 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
@@ -716,7 +715,7 @@ func (*DB) TestInsertImage(c *C) {
 	}
 
 	c.Assert(db.Write(r.Table("images").Insert(stdJPEG)), IsNil)
-	_, token, err := imager.NewImageToken(stdJPEG.SHA1)
+	_, token, err := db.NewImageToken(stdJPEG.SHA1)
 	c.Assert(err, IsNil)
 
 	req := imageRequest{

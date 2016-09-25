@@ -10,7 +10,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
@@ -325,9 +324,9 @@ func getImage(token, name string, spoiler bool) (img *types.Image, err error) {
 		return
 	}
 
-	imgCommon, err := imager.UseImageToken(token)
+	imgCommon, err := db.UseImageToken(token)
 	if err != nil {
-		if err == imager.ErrInvalidToken {
+		if err == db.ErrInvalidToken {
 			err = errInvalidImageToken
 		}
 		return

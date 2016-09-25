@@ -3,6 +3,8 @@ package imager
 import (
 	"image"
 	jpegLib "image/jpeg"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 
 	"github.com/Soreil/imager"
@@ -17,17 +19,9 @@ func Test(t *testing.T) { TestingT(t) }
 
 type Imager struct{}
 
-var (
-	_ = Suite(&Imager{})
-
-	// Resulting dimentions after thumbnailing samples
-	jpegDims = [4]uint16{0x43c, 0x371, 0x96, 0x79}
-	pngDims  = [4]uint16{0x500, 0x2d0, 0x96, 0x54}
-	gifDims  = [4]uint16{0x248, 0x2d0, 0x7a, 0x96}
-)
+var _ = Suite(&Imager{})
 
 func (d *Imager) SetUpSuite(c *C) {
-	isTest = true
 	assetRoot = "testdata"
 	db.DBName = db.UniqueDBName()
 	c.Assert(db.Connect(), IsNil)
@@ -57,6 +51,13 @@ func (d *Imager) TearDownSuite(c *C) {
 	c.Assert(db.Write(r.DBDrop(db.DBName)), IsNil)
 	c.Assert(db.RSession.Close(), IsNil)
 	c.Assert(assets.DeleteDirs(), IsNil)
+}
+
+func readSample(name string, c *C) []byte {
+	path := filepath.Join("testdata", name)
+	data, err := ioutil.ReadFile(path)
+	c.Assert(err, IsNil)
+	return data
 }
 
 func (*Imager) TestInitImager(c *C) {
@@ -101,9 +102,9 @@ func (*Imager) TestImageProcessing(c *C) {
 		ext  string
 		dims [4]uint16
 	}{
-		{"jpg", jpegDims},
-		{"png", pngDims},
-		{"gif", gifDims},
+		{"jpg", assets.StdDims["jpeg"]},
+		{"png", assets.StdDims["png"]},
+		{"gif", assets.StdDims["gif"]},
 	}
 
 	for _, s := range samples {

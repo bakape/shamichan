@@ -15,6 +15,7 @@ import (
 	"github.com/Soreil/apngdetector"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -99,7 +100,7 @@ func newImageUpload(req *http.Request) (int, string, error) {
 
 	sum := sha1.Sum(data)
 	SHA1 := hex.EncodeToString(sum[:])
-	img, err := FindImageThumb(SHA1)
+	img, err := db.FindImageThumb(SHA1)
 	noThumbnail := err == r.ErrEmptyResult
 	if err != nil && !noThumbnail {
 		return 500, "", err
@@ -107,7 +108,7 @@ func newImageUpload(req *http.Request) (int, string, error) {
 
 	// Already have a thumbnail
 	if !noThumbnail {
-		return NewImageToken(SHA1)
+		return db.NewImageToken(SHA1)
 	}
 
 	img.SHA1 = SHA1
@@ -153,11 +154,11 @@ func newThumbnail(data []byte, img types.ImageCommon) (int, string, error) {
 	img.Length = res.length
 	img.Audio = res.audio
 
-	if err := allocateImage(data, res.thumb, img); err != nil {
+	if err := db.AllocateImage(data, res.thumb, img); err != nil {
 		return 500, "", err
 	}
 
-	return NewImageToken(img.SHA1)
+	return db.NewImageToken(img.SHA1)
 }
 
 // detectFileType detects if the upload is of a supported file type, by reading

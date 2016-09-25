@@ -14,7 +14,7 @@ func init() {
 	isTest = true
 }
 
-func (*DBSuite) TestLoadConfigs(c *C) {
+func (*Tests) TestLoadConfigs(c *C) {
 	isTest = false
 	defer func() {
 		isTest = false

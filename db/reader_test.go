@@ -79,7 +79,7 @@ var (
 	}
 )
 
-func (*DBSuite) TestGetPost(c *C) {
+func (*Tests) TestGetPost(c *C) {
 	config.Set(config.Configs{
 		Boards: []string{"a"},
 	})
@@ -112,7 +112,7 @@ func (*DBSuite) TestGetPost(c *C) {
 	c.Assert(post, DeepEquals, std)
 }
 
-func (*DBSuite) TestGetBoard(c *C) {
+func (*Tests) TestGetBoard(c *C) {
 	setEnabledBoards("a")
 	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
 
@@ -133,7 +133,7 @@ func setEnabledBoards(boards ...string) {
 	})
 }
 
-func (*DBSuite) TestGetEmptyBoard(c *C) {
+func (*Tests) TestGetEmptyBoard(c *C) {
 	setEnabledBoards("a")
 	boardCounters := Document{"boardCtrs"}
 	c.Assert(Write(r.Table("main").Insert(boardCounters)), IsNil)
@@ -143,7 +143,7 @@ func (*DBSuite) TestGetEmptyBoard(c *C) {
 	c.Assert(board, DeepEquals, new(types.Board))
 }
 
-func (*DBSuite) TestGetAllBoard(c *C) {
+func (*Tests) TestGetAllBoard(c *C) {
 	setEnabledBoards("a")
 	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
 	info := infoDocument{
@@ -167,7 +167,7 @@ func (*DBSuite) TestGetAllBoard(c *C) {
 	c.Assert(board, DeepEquals, &std)
 }
 
-func (*DBSuite) TestGetEmptyAllBoard(c *C) {
+func (*Tests) TestGetEmptyAllBoard(c *C) {
 	setEnabledBoards("a")
 	info := infoDocument{
 		Document: Document{"info"},
@@ -178,7 +178,7 @@ func (*DBSuite) TestGetEmptyAllBoard(c *C) {
 	c.Assert(board, DeepEquals, new(types.Board))
 }
 
-func (*DBSuite) TestReaderGetThread(c *C) {
+func (*Tests) TestReaderGetThread(c *C) {
 	setEnabledBoards("a")
 	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
 

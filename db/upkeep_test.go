@@ -6,11 +6,10 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-
 	. "gopkg.in/check.v1"
 )
 
-func (*DBSuite) TestSessionCleanup(c *C) {
+func (*Tests) TestSessionCleanup(c *C) {
 	expired := time.Now().Add(-time.Hour)
 	samples := []auth.User{
 		{
@@ -38,7 +37,7 @@ func (*DBSuite) TestSessionCleanup(c *C) {
 	}
 	c.Assert(Write(r.Table("accounts").Insert(samples)), IsNil)
 
-	expireUserSessions()
+	c.Assert(expireUserSessions(), IsNil)
 
 	var res1 []auth.Session
 	c.Assert(All(GetAccount("1").Field("sessions"), &res1), IsNil)
@@ -50,7 +49,7 @@ func (*DBSuite) TestSessionCleanup(c *C) {
 	c.Assert(res2, DeepEquals, []auth.Session(nil))
 }
 
-func (*DBSuite) TestOpenPostClosing(c *C) {
+func (*Tests) TestOpenPostClosing(c *C) {
 	thread := types.DatabaseThread{
 		ID: 1,
 		Posts: map[int64]types.DatabasePost{
@@ -80,7 +79,7 @@ func (*DBSuite) TestOpenPostClosing(c *C) {
 	}
 	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
 
-	closeDanglingPosts()
+	c.Assert(closeDanglingPosts(), IsNil)
 
 	var log [][]byte
 	c.Assert(All(r.Table("threads").Get(1).Field("log"), &log), IsNil)
@@ -99,4 +98,42 @@ func (*DBSuite) TestOpenPostClosing(c *C) {
 		c.Assert(One(FindPost(s.id).Field("editing"), &res), IsNil)
 		c.Assert(res, DeepEquals, s.editing)
 	}
+}
+
+func (*Tests) TestTokenExpiry(c *C) {
+	const SHA1 = "123"
+	img := types.ProtoImage{
+		ImageCommon: types.ImageCommon{
+			SHA1:     "123",
+			FileType: types.JPEG,
+		},
+		Posts: 7,
+	}
+	c.Assert(Write(r.Table("images").Insert(img)), IsNil)
+
+	expired := time.Now().Add(-time.Minute)
+	tokens := [...]allocationToken{
+		{
+			SHA1:    SHA1,
+			Expires: expired,
+		},
+		{
+			SHA1:    SHA1,
+			Expires: expired,
+		},
+		{
+			SHA1:    SHA1,
+			Expires: time.Now().Add(time.Minute),
+		},
+	}
+	c.Assert(Write(r.Table("imageTokens").Insert(tokens)), IsNil)
+
+	c.Assert(expireImageTokens(), IsNil)
+	var posts int
+	c.Assert(One(GetImage(SHA1).Field("posts"), &posts), IsNil)
+	c.Assert(posts, Equals, 5)
+}
+
+func (*Tests) TestTokenExpiryNoTokens(c *C) {
+	c.Assert(expireImageTokens(), IsNil)
 }

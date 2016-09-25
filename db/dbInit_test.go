@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager/assets"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -16,20 +17,21 @@ type DBInit struct{}
 var _ = Suite(&DBInit{})
 
 // All other functions that depend on the database
-type DBSuite struct{}
+type Tests struct{}
 
-var _ = Suite(&DBSuite{})
+var _ = Suite(&Tests{})
 
 var testDBName string
 
-func (d *DBSuite) SetUpSuite(c *C) {
+func (d *Tests) SetUpSuite(c *C) {
 	DBName = UniqueDBName()
 	c.Assert(Connect(), IsNil)
 	c.Assert(InitDB(), IsNil)
+	c.Assert(assets.CreateDirs(), IsNil)
 }
 
-func (*DBSuite) SetUpTest(c *C) {
-	// Clear all documents from all tables after each test.
+func (*Tests) SetUpTest(c *C) {
+	// Clear all documents from all tables before each test.
 	for _, table := range AllTables {
 		c.Assert(Write(r.Table(table).Delete()), IsNil)
 	}
@@ -38,12 +40,17 @@ func (*DBSuite) SetUpTest(c *C) {
 	})
 }
 
-func (d *DBSuite) TearDownSuite(c *C) {
-	c.Assert(r.DBDrop(DBName).Exec(RSession), IsNil)
-	c.Assert(RSession.Close(), IsNil)
+func (*Tests) TearDownTest(c *C) {
+	c.Assert(assets.ResetDirs(), IsNil)
 }
 
-func (*DBSuite) TestVerifyVersion(c *C) {
+func (d *Tests) TearDownSuite(c *C) {
+	c.Assert(r.DBDrop(DBName).Exec(RSession), IsNil)
+	c.Assert(RSession.Close(), IsNil)
+	c.Assert(assets.DeleteDirs(), IsNil)
+}
+
+func (*Tests) TestVerifyVersion(c *C) {
 	// Correct DB version
 	info := map[string]interface{}{
 		"id":        "info",
