@@ -108,6 +108,9 @@ export default function init() {
 		passive: true,
 	})
 
+	// And on thread change
+	page.onChange("thread", checkBottom)
+
 	// Unlock from bottom, when the tab is hidden, unless set not to
 	document.addEventListener("visibilitychange", () => {
 		if (document.hidden && !options.alwaysLock) {
