@@ -138,7 +138,7 @@ func (*Tests) TestUpgrade14to15(c *C) {
 	c.Assert(upgrade14to15(), IsNil)
 
 	var v int
-	q := GetMain("info").Field("version")
+	q := GetMain("info").Field("dbVersion")
 	c.Assert(One(q, &v), IsNil)
 	c.Assert(v, Equals, 15)
 

@@ -127,7 +127,7 @@ func upgrade14to15() error {
 			"created": r.Now(),
 		}),
 		r.Table("main").Get("info").Update(map[string]int{
-			"version": 15,
+			"dbVersion": 15,
 		}),
 	}
 
