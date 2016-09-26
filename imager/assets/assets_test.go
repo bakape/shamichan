@@ -74,6 +74,10 @@ func (*Tests) TestDeleteAssets(c *C) {
 	}
 }
 
+func (*Tests) TestDeleteMissingAssets(c *C) {
+	c.Assert(Delete("akari", types.PNG), IsNil)
+}
+
 func (*Tests) TestWriteFile(c *C) {
 	std := []byte{1, 0, 0, 3, 2}
 	path := filepath.FromSlash("images/src/write_test")

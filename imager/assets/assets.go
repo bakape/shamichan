@@ -78,7 +78,8 @@ func writeFile(path string, data []byte) error {
 // Delete deletes file assets belonging to a single upload
 func Delete(name string, fileType uint8) error {
 	for _, path := range GetFilePaths(name, fileType) {
-		if err := os.Remove(path); err != nil {
+		// Ignore somehow absent images
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 			return err
 		}
 	}
