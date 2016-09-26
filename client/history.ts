@@ -86,5 +86,4 @@ on(document, "click", handleClick, {
 window.onpopstate = (event: any) =>
 	(navigate(event.target.location.href, null, false)
 		.catch(alertError),
-	renderRead(() =>
-		scrollToAnchor()))
+	scrollToAnchor())
