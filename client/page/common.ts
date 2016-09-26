@@ -46,9 +46,15 @@ export default async function (
 		renderBoard((data as BoardData).threads)
 	}
 
-	// Scroll to any selected anchor, after page renders
-	read(() =>
-		scrollToAnchor())
+	read(() => {
+		// Scroll to any selected anchor, after page renders
+		scrollToAnchor()
+
+		// Focus the thread container, so novigation keys (End, arrow keys,
+		// etc.) actually target this element, not the window.
+		$threads.focus()
+	})
+
 }
 
 // Fetch JSON data of a board page
