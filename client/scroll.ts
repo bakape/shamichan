@@ -4,6 +4,8 @@ import {page} from "./state"
 import options from "./options"
 import {$threads} from "./render"
 
+const $banner = document.getElementById("banner")
+
 let $lock: HTMLElement,
 	$reference: Element,
 	atBottom: boolean
@@ -29,7 +31,7 @@ export function followDOM(func: () => void) {
 
 	// Prevent scrolling with new posts, if page isn't visible
 	if (atBottom) {
-		window.scrollTo(0, document.body.scrollHeight)
+		$threads.scrollTop = $threads.scrollHeight
 	} else {
 		// Element was removed or something
 		if (!elExists($reference)) {
@@ -39,7 +41,7 @@ export function followDOM(func: () => void) {
 		// Only compensate, if the height increased above the viewport
 		const delta = topDistance($reference, true) - previous
 		if (delta) {
-			window.scrollBy(0, delta)
+			$threads.scrollTop += delta
 		}
 	}
 }
@@ -50,7 +52,11 @@ export function checkBottom() {
 		atBottom = false
 		return
 	}
-	atBottom = window.scrollY + window.innerHeight >= document.body.scrollHeight
+	const threadsBottom =
+		$threads.scrollTop
+		+ window.innerHeight
+		- $banner.offsetHeight
+	atBottom = threadsBottom >= $threads.scrollHeight
 	if (!$lock) {
 		$lock = document.querySelector("#lock") as HTMLElement
 	}
@@ -96,14 +102,16 @@ function referenceDistance(): number {
 	}
 }
 
-// Check, if we are at page bottom on each scroll
-document.addEventListener("scroll", checkBottom, {
-	passive: true,
-})
+export default function init() {
+	// Check, if we are at page bottom on each scroll
+	$threads.addEventListener("scroll", checkBottom, {
+		passive: true,
+	})
 
-// Unlock from bottom, when the tab is hidden, unless set not to
-document.addEventListener("visibilitychange", () => {
-	if (document.hidden && !options.alwaysLock) {
-		atBottom = false
-	}
-})
+	// Unlock from bottom, when the tab is hidden, unless set not to
+	document.addEventListener("visibilitychange", () => {
+		if (document.hidden && !options.alwaysLock) {
+			atBottom = false
+		}
+	})
+}
