@@ -286,6 +286,7 @@ func (*Tests) TestExpireBoards(c *C) {
 
 	c.Assert(deleteUnusedBoards(), IsNil)
 
+	assertBoardDeleted("a", c)
 	assertThreadDeleted(1, c)
 	assertThreadDeleted(2, c)
 
@@ -293,4 +294,25 @@ func (*Tests) TestExpireBoards(c *C) {
 	q := r.Table("threads").Get(3).Eq(nil).Not()
 	c.Assert(One(q, &notDeleted), IsNil)
 	c.Assert(notDeleted, Equals, true)
+}
+
+func assertBoardDeleted(board string, c *C) {
+	var deleted bool
+	q := r.Table("boards").Get(board).Eq(nil)
+	c.Assert(One(q, &deleted), IsNil)
+	c.Assert(deleted, Equals, true)
+}
+
+func (*Tests) TestExpireBoardWithoutThreads(c *C) {
+	board := config.DatabaseBoardConfigs{
+		Created: time.Now().Add((-week - 1) * time.Second),
+		BoardConfigs: config.BoardConfigs{
+			ID: "a",
+		},
+	}
+	c.Assert(Write(r.Table("boards").Insert(board)), IsNil)
+
+	c.Assert(deleteUnusedBoards(), IsNil)
+
+	assertBoardDeleted("a", c)
 }

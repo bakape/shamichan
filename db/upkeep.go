@@ -85,7 +85,8 @@ var getExpiredBoards = r.
 				OrderBy("time").
 				Nth(-1).
 				Field("time").
-				Lt(r.Now().ToEpochTime().Sub(week)),
+				Lt(r.Now().ToEpochTime().Sub(week)).
+				Default(true),
 			)
 	}).
 	Field("id")

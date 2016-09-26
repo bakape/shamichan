@@ -2,7 +2,6 @@ package db
 
 import (
 	"errors"
-	"os"
 	"time"
 
 	"github.com/bakape/meguca/imager/assets"
@@ -159,7 +158,7 @@ func AllocateImage(src, thumb []byte, img types.ImageCommon) error {
 // Delete any dangling image files in case of a failed image allocattion
 func cleanUpFailedAllocation(img types.ImageCommon, err error) error {
 	delErr := assets.Delete(img.SHA1, img.FileType)
-	if err != nil && !os.IsNotExist(delErr) {
+	if delErr != nil {
 		err = util.WrapError(err.Error(), delErr)
 	}
 	return err
