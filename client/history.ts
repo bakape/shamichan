@@ -6,7 +6,6 @@ import loadPage from './page/common'
 import {synchronise} from './connection'
 import {postSM, postEvent} from "./posts/posting/main"
 import {scrollToAnchor} from "./scroll"
-import {read as renderRead} from "./render"
 import {connSM, connState} from "./connection"
 
 // Handle a click on any .history anchor
