@@ -2,11 +2,11 @@ import View from '../view'
 import Model from '../model'
 import {write} from '../render'
 import {HTML, makeAttrs, fetchBoardList, BoardEntry} from '../util'
-import Modal from '../modal'
 import {ui} from '../lang'
 import {formatHeader} from './board'
 
-const selected = new Set<string>()
+const selected = new Set<string>(),
+	$panel = document.getElementById("left-panel")
 
 let boards: BoardEntry[],
 	navigation: BoardNavigation,
@@ -64,11 +64,11 @@ export default class BoardNavigation extends View<Model> {
 }
 
 // Panel for selecting which boards to display in the top banner
-class BoardSelectionPanel extends Modal<Model> {
+class BoardSelectionPanel extends View<Model> {
 	parentEl: Element
 
 	constructor(parentEl: Element) {
-		super({class: "float-left"})
+		super({})
 		this.parentEl = parentEl
 		this.render()
 		this.onClick({
@@ -137,7 +137,7 @@ class BoardSelectionPanel extends Modal<Model> {
 		write(() => {
 			this.parentEl.textContent = "-"
 			this.el.innerHTML = html
-			document.querySelector("#modal-overlay").append(this.el)
+			$panel.append(this.el)
 		})
 	}
 

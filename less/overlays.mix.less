@@ -13,10 +13,6 @@
 	pointer-events: none;
 	flex-direction: row-reverse;;
 	align-items: flex-start;
-	.float-left {
-		left: 0;
-		margin-right: auto;
-	}
 }
 
 #loading-image {
@@ -58,8 +54,19 @@
 	display: inline-block;
 	text-align: center;
 	width: 100%;
+	height: 1.3em;
 	top: 0;
 	left: 0;
+}
+
+.side-panel {
+	&:not(:empty) {
+		padding: 1em;
+	}
+	&:empty {
+		border: none;
+	}
+	z-index: 300;
 }
 
 .banner-float {
@@ -139,7 +146,6 @@
 	margin: 0.5em;
 	padding: 1em;
 	white-space: nowrap;
-	box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
 	input[type=number] {
 		width: 5em;
 	}
@@ -163,9 +169,7 @@
 	}
 }
 
-.modal, #banner {
-	-webkit-box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
-	-moz-box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
+.modal, #banner, .side-panel:not(:empty) {
 	box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
 	pointer-events: all;
 }

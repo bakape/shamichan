@@ -23,6 +23,39 @@ article, aside {
 	margin: 1px;
 }
 
+body {
+	overflow: hidden;
+}
+
+html, body {
+	padding: 0;
+	margin: 0;
+}
+
+#page-container {
+	display: flex;
+	overflow: hidden;
+	height: ~"calc(100vh - 1.5em)";
+	margin-top: 1.5em;
+	width: 100%;
+	position: relative;
+	& > section {
+		overflow: auto;
+		height: auto;
+		-webkit-overflow-scrolling: touch;
+		-ms-overflow-style: none;
+	}
+}
+
+#middle-column {
+	flex: 1;
+	will-change: contents;
+}
+
+#threads {
+	margin: 1em 1.4em;
+}
+
 aside {
 	display: table;
 	a {
@@ -60,10 +93,6 @@ label {
 	padding: 0.2em;
 }
 
-#threads {
-	margin-top: 1.1em;
-}
-
 h1, h2 {
 	text-align: center;
 }
@@ -93,10 +122,6 @@ h3 {
 hr {
 	border: none;
 	clear: both;
-}
-
-#threads {
-	margin: 0 1em 1em 1em;
 }
 
 .expandable {

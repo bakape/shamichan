@@ -7,7 +7,6 @@ import {write, $threads} from "../render"
 import options from "../options"
 import {setAttrs, on} from "../util"
 import {getModel, posts} from "../state"
-import {scrollToElement} from "../scroll"
 import {trigger} from "../hooks"
 import {images as lang} from "../lang"
 
@@ -113,7 +112,7 @@ export default class ImageHandler extends View<Post> {
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
 		if (img.tallerThanViewport && !noScroll) {
-			scrollToElement(this.el as HTMLElement)
+			this.el.scrollIntoView()
 		}
 
 		img.expanded = img.tallerThanViewport = img.revealed = false
@@ -131,7 +130,7 @@ export default class ImageHandler extends View<Post> {
 			cls += "fit-to-width"
 			img.tallerThanViewport = img.dims[1] > window.innerHeight
 			if (img.tallerThanViewport && !noScroll) {
-				scrollToElement(this.el as HTMLElement)
+				this.el.scrollIntoView()
 			}
 			break
 		case "screen":
