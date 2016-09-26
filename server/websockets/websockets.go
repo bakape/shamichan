@@ -19,10 +19,17 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	HandshakeTimeout: 5 * time.Second,
-	CheckOrigin:      CheckOrigin,
-}
+const pingWriteTimeout = time.Second * 30
+
+var (
+	// Overridable for faster tests
+	pingTimer = time.Minute
+
+	upgrader = websocket.Upgrader{
+		HandshakeTimeout: 5 * time.Second,
+		CheckOrigin:      CheckOrigin,
+	}
+)
 
 // errInvalidPayload denotes a malformed messages received from the client
 type errInvalidPayload []byte
@@ -139,10 +146,22 @@ func (c *Client) Listen() error {
 
 // Separate function to ease error handling of the intenal client loop
 func (c *Client) listenerLoop() error {
+	// Periodically ping the client to ensure external proxies and CDNs do not
+	// close the connection. Those have a tendency of sending 1001 to both ends
+	// after rather short timeout, if no messages have been sent.
+	ping := time.NewTicker(pingTimer)
+	defer ping.Stop()
+
 	for {
 		select {
 		case err := <-c.close:
 			return err
+		case <-ping.C:
+			deadline := time.Now().Add(pingWriteTimeout)
+			err := c.conn.WriteControl(websocket.PingMessage, nil, deadline)
+			if err != nil {
+				return err
+			}
 		case msg := <-c.receive:
 			if err := c.handleMessage(msg.typ, msg.msg); err != nil {
 				return err

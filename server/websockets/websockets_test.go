@@ -323,3 +323,26 @@ func (*ClientSuite) TestSendMessage(c *C) {
 	c.Assert(cl.sendMessage(messageSynchronise, nil), IsNil)
 	assertMessage(wcl, []byte("30null"), c)
 }
+
+func (*ClientSuite) TestPinging(c *C) {
+	old := pingTimer
+	pingTimer = time.Second
+	defer func() {
+		pingTimer = old
+	}()
+
+	sv := newWSServer(c)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+
+	sv.Add(1)
+	wcl.SetPingHandler(func(_ string) error {
+		defer sv.Done()
+		return nil
+	})
+
+	go wcl.ReadMessage()
+	go cl.Listen()
+	sv.Wait()
+	cl.Close(nil)
+}
