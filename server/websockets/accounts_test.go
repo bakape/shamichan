@@ -55,13 +55,13 @@ func (*DB) TestRegistration(c *C) {
 	}
 
 	// Valid registration
-	assertValidLogin(req, register, messageRegister, c)
+	assertValidLogin(req, register, MessageRegister, c)
 
 	// User name taken
 	assertHandlerResponse(req, register, []byte(`33{"code":1,"session":""}`), c)
 }
 
-func assertValidLogin(req interface{}, fn handler, typ messageType, c *C) {
+func assertValidLogin(req interface{}, fn handler, typ MessageType, c *C) {
 	sv := newWSServer(c)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
@@ -123,7 +123,7 @@ func (*DB) TestLogin(c *C) {
 	}
 
 	// Valid login
-	assertValidLogin(req, login, messageLogin, c)
+	assertValidLogin(req, login, MessageLogin, c)
 
 	// Wrong password
 	req.Password += "1"

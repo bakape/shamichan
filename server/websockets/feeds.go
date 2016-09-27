@@ -135,7 +135,7 @@ func (u *updateFeed) Listen(cursor *r.Cursor) {
 		// Add client
 		case client := <-u.Add:
 			u.clients = append(u.clients, client)
-			err := client.sendMessage(messageSynchronise, u.ctr)
+			err := client.sendMessage(MessageSynchronise, u.ctr)
 			if err != nil {
 				client.Close(err)
 			}

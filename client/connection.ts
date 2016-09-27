@@ -12,7 +12,6 @@ import {handleError} from "./util"
 type SyncRequest = {
 	board: string
 	thread: number
-	ctr: number
 	id?: string
 }
 
@@ -31,6 +30,7 @@ export const enum message {
 	backlink,
 	command,
 	insertImage,
+	spoiler,
 
 	// >= 30 are miscelenious and do not write to post models
 	synchronise = 30,
@@ -202,10 +202,8 @@ export function synchronise() {
 	const msg: SyncRequest = {
 		board: page.board,
 		thread: page.thread,
-		ctr: syncCounter,
 	}
 	let type = message.synchronise
-
 
 	// TODO: Resynchronisation logic, with open post right retrieval
 	// // If clientID is set, then this attempt to synchronise comes after a

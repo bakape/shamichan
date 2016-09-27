@@ -9,53 +9,55 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 )
 
-// identifier codes for websocket message types
-type messageType uint8
+// MessageType is the identifier code for websocket message types
+type MessageType uint8
 
 // 1 - 29 modify post model state
 const (
-	messageInvalid messageType = iota
-	messageInsertThread
-	messageInsertPost
-	messageAppend
-	messageBackspace
-	messageSplice
-	messageClosePost
-	messageLink
-	messageBacklink
-	messageCommand
-	messageInsertImage
+	MessageInvalid MessageType = iota
+	MessageInsertThread
+	MessageInsertPost
+	MessageAppend
+	MessageBackspace
+	MessageSplice
+	MessageClosePost
+	MessageLink
+	MessageBacklink
+	MessageCommand
+	MessageInsertImage
+	MessageSpoiler
 )
 
 // >= 30 are miscelenious and do not write to post models
 const (
 	// Update feeds
-	messageSynchronise messageType = 30 + iota
-	messageResynchronise
-	messageSwitchSync
+	MessageSynchronise MessageType = 30 + iota
+	MessageResynchronise
+	MessageSwitchSync
 
 	// Account management
-	messageRegister
-	messageLogin
-	messageAuthenticate
-	messageLogout
-	messageLogOutAll
-	messageChangePassword
+	MessageRegister
+	MessageLogin
+	MessageAuthenticate
+	MessageLogout
+	MessageLogOutAll
+	MessageChangePassword
 
 	// Board administration
-	messageConfigServer
-	messageCreateBoard
+	MessageConfigServer
+	MessageCreateBoard
 
 	// Send new post ID to client
-	messagePostID
+	MessagePostID
 
 	// Concatenation of multiple websocket messages to reduce transport overhead
-	messageConcat
+	MessageConcat
 )
 
 var (
@@ -65,24 +67,24 @@ var (
 	errInValidCaptcha   = errors.New("no captcha provided")
 
 	// Lookup table for message handlers
-	handlers = map[messageType]handler{
-		messageSynchronise:      synchronise,
-		messageResynchronise:    resynchronise,
-		messageRegister:         register,
-		messageLogin:            login,
-		messageAuthenticate:     authenticateSession,
-		messageLogout:           logOut,
-		messageLogOutAll:        logOutAll,
-		messageChangePassword:   changePassword,
-		messageConfigServer:     configServer,
-		messageCreateBoard:      createBoard,
-		messageInsertThread:     insertThread,
-		messageAppend:           appendRune,
-		messageBackspace:        backspace,
-		messageClosePost:        closePost,
-		messageSplice:           spliceText,
-		messageInsertPost:       insertPost,
-		messageInsertImage:      insertImage,
+	handlers = map[MessageType]handler{
+		MessageSynchronise:    synchronise,
+		MessageResynchronise:  resynchronise,
+		MessageRegister:       register,
+		MessageLogin:          login,
+		MessageAuthenticate:   authenticateSession,
+		MessageLogout:         logOut,
+		MessageLogOutAll:      logOutAll,
+		MessageChangePassword: changePassword,
+		MessageConfigServer:   configServer,
+		MessageCreateBoard:    createBoard,
+		MessageInsertThread:   insertThread,
+		MessageAppend:         appendRune,
+		MessageBackspace:      backspace,
+		MessageClosePost:      closePost,
+		MessageSplice:         spliceText,
+		MessageInsertPost:     insertPost,
+		MessageInsertImage:    insertImage,
 	}
 )
 
@@ -102,6 +104,29 @@ type handler func([]byte, *Client) error
 // a binary message protocol.
 func decodeMessage(data []byte, dest interface{}) error {
 	return json.Unmarshal(data, dest)
+}
+
+// EncodeMessage encodes a message for sending through websockets or writing to
+// the replication log.
+func EncodeMessage(typ MessageType, msg interface{}) ([]byte, error) {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+	encoded := make([]byte, len(data)+2)
+	typeString := strconv.FormatUint(uint64(typ), 10)
+
+	// Ensure type string is always 2 chars long
+	if len(typeString) == 1 {
+		encoded[0] = '0'
+		encoded[1] = typeString[0]
+	} else {
+		copy(encoded, typeString)
+	}
+
+	copy(encoded[2:], data)
+
+	return encoded, nil
 }
 
 // Post a request to the SolveMedia API to authenticate a captcha

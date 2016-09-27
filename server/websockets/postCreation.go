@@ -33,28 +33,23 @@ const (
 
 type threadCreationRequest struct {
 	postCreationCommon
-	Subject string `json:"subject"`
-	Board   string `json:"board"`
+	Subject, Board string
 	types.Captcha
 }
 
 type postCreationCommon struct {
-	Image    imageRequest `json:"image"`
-	Name     string       `json:"name"`
-	Email    string       `json:"email"`
-	Auth     string       `json:"auth"`
-	Password string       `json:"password"`
+	Image                       imageRequest
+	Name, Email, Auth, Password string
 }
 
 type imageRequest struct {
-	Spoiler bool   `json:"spoiler"`
-	Token   string `json:"token"`
-	Name    string `json:"name"`
+	Spoiler     bool
+	Token, Name string
 }
 
 type replyCreationRequest struct {
 	postCreationCommon
-	Body string `json:"body"`
+	Body string
 }
 
 // Response to a thread creation request
@@ -76,7 +71,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		return errInvalidBoard
 	}
 	if !authenticateCaptcha(req.Captcha, c.IP) {
-		return c.sendMessage(messageInsertThread, threadCreationResponse{
+		return c.sendMessage(MessageInsertThread, threadCreationResponse{
 			Code: invalidInsertionCaptcha,
 		})
 	}
@@ -139,7 +134,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		Code: postCreated,
 		ID:   id,
 	}
-	return c.sendMessage(messageInsertThread, msg)
+	return c.sendMessage(MessageInsertThread, msg)
 }
 
 // Insert a new post into the database
@@ -198,7 +193,7 @@ func insertPost(data []byte, c *Client) error {
 		return err
 	}
 
-	updates := make(msi, 6)
+	updates := make(map[string]interface{}, 6)
 	updates["postCtr"] = r.Row.Field("postCtr").Add(1)
 	updates["replyTime"] = now
 
@@ -220,7 +215,7 @@ func insertPost(data []byte, c *Client) error {
 		util.IDToString(post.ID): post,
 	}
 
-	msg, err := encodeMessage(messageInsertPost, post.Post)
+	msg, err := EncodeMessage(MessageInsertPost, post.Post)
 	if err != nil {
 		return err
 	}
@@ -228,7 +223,7 @@ func insertPost(data []byte, c *Client) error {
 
 	// Ensure the client knows the post ID before the update public post
 	// inserttion message is sent
-	if err := c.sendMessage(messagePostID, post.ID); err != nil {
+	if err := c.sendMessage(MessagePostID, post.ID); err != nil {
 		return err
 	}
 

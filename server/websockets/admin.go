@@ -20,8 +20,7 @@ var (
 )
 
 type boardCreationRequest struct {
-	Name  string `json:"name"`
-	Title string `json:"title"`
+	Name, Title string
 	types.Captcha
 }
 
@@ -41,7 +40,7 @@ func configServer(data []byte, c *Client) error {
 		return errAccessDenied
 	}
 	if len(data) == 0 { // Request to send current configs
-		return c.sendMessage(messageConfigServer, config.Get())
+		return c.sendMessage(MessageConfigServer, config.Get())
 	}
 
 	var conf config.Configs
@@ -62,7 +61,7 @@ func configServer(data []byte, c *Client) error {
 		return err
 	}
 
-	return c.sendMessage(messageConfigServer, true)
+	return c.sendMessage(MessageConfigServer, true)
 }
 
 // Handle requests to create a board
@@ -86,7 +85,7 @@ func createBoard(data []byte, c *Client) error {
 		code = invalidBoardCreationCaptcha
 	}
 	if code > 0 {
-		return c.sendMessage(messageCreateBoard, code)
+		return c.sendMessage(MessageCreateBoard, code)
 	}
 
 	q := r.Table("boards").Insert(config.DatabaseBoardConfigs{
@@ -103,7 +102,7 @@ func createBoard(data []byte, c *Client) error {
 		},
 	})
 	if err := db.Write(q); r.IsConflictErr(err) {
-		return c.sendMessage(messageCreateBoard, boardNameTaken)
+		return c.sendMessage(MessageCreateBoard, boardNameTaken)
 	} else if err != nil {
 		return err
 	}
@@ -116,5 +115,5 @@ func createBoard(data []byte, c *Client) error {
 		return err
 	}
 
-	return c.sendMessage(messageCreateBoard, boardCreated)
+	return c.sendMessage(MessageCreateBoard, boardCreated)
 }

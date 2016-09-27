@@ -104,7 +104,7 @@ func (*DB) TestSyncToThread(c *C) {
 		Board: "a",
 	})
 
-	res, err := encodeMessage(messageSynchronise, 2)
+	res, err := EncodeMessage(MessageSynchronise, 2)
 	c.Assert(err, IsNil)
 	syncAssertMessage(wcl, res, c)
 

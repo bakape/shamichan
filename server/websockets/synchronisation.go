@@ -16,8 +16,8 @@ var (
 )
 
 type syncRequest struct {
-	Thread int64  `json:"thread"`
-	Board  string `json:"board"`
+	Thread int64
+	Board  string
 }
 
 // Syncronise the client to a certain thread, assign it's ID and prepare to
@@ -48,7 +48,7 @@ func synchronise(data []byte, c *Client) error {
 // client its ID.
 func syncToBoard(board string, c *Client) error {
 	registerSync(board, 0, c)
-	return c.sendMessage(messageSynchronise, 0)
+	return c.sendMessage(MessageSynchronise, 0)
 }
 
 // Register the client with the central client storage datastructure

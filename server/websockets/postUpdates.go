@@ -55,9 +55,6 @@ type imageMessage struct {
 	ID int64 `json:"id"`
 }
 
-// Shorthand. We use it a lot for update query construction.
-type msi map[string]interface{}
-
 // Append a rune to the body of the open post
 func appendRune(data []byte, c *Client) error {
 	if has, err := c.hasPost(); err != nil {
@@ -78,12 +75,12 @@ func appendRune(data []byte, c *Client) error {
 	}
 
 	id := c.openPost.id
-	msg, err := encodeMessage(messageAppend, [2]int64{id, int64(char)})
+	msg, err := EncodeMessage(MessageAppend, [2]int64{id, int64(char)})
 	if err != nil {
 		return err
 	}
 
-	update := msi{
+	update := map[string]r.Term{
 		"body": postBody(id).Add(string(char)),
 	}
 	if err := c.updatePost(update, msg); err != nil {
@@ -104,19 +101,23 @@ func postBody(id int64) r.Term {
 }
 
 // Helper for running post update queries on the current open post
-func (c *Client) updatePost(update msi, msg []byte) error {
+func (c *Client) updatePost(update interface{}, msg []byte) error {
 	q := r.
 		Table("threads").
 		Get(c.openPost.op).
-		Update(createUpdate(c.openPost.id, update, msg))
+		Update(CreateUpdate(c.openPost.id, update, msg))
 	return db.Write(q)
 }
 
-// Helper for creating post update maps
-func createUpdate(id int64, update msi, msg []byte) msi {
-	return msi{
+// CreateUpdate is a helper for creating post update maps
+func CreateUpdate(
+	id int64,
+	update interface{},
+	msg []byte,
+) map[string]interface{} {
+	return map[string]interface{}{
 		"log": appendLog(msg),
-		"posts": msi{
+		"posts": map[string]interface{}{
 			util.IDToString(id): update,
 		},
 	}
@@ -151,14 +152,14 @@ func parseLine(c *Client, insertNewline bool) error {
 	}
 
 	if insertNewline {
-		msg, err := encodeMessage(messageAppend, [2]int64{
+		msg, err := EncodeMessage(MessageAppend, [2]int64{
 			c.openPost.id,
 			int64('\n'),
 		})
 		if err != nil {
 			return err
 		}
-		update := msi{
+		update := map[string]r.Term{
 			"body": r.Row.
 				Field("posts").
 				Field(idStr).
@@ -175,14 +176,14 @@ func parseLine(c *Client, insertNewline bool) error {
 
 // Write a hash command to the database
 func writeCommand(comm types.Command, idStr string, c *Client) error {
-	msg, err := encodeMessage(messageCommand, commandMessage{
+	msg, err := EncodeMessage(MessageCommand, commandMessage{
 		ID:      c.openPost.id,
 		Command: comm,
 	})
 	if err != nil {
 		return err
 	}
-	update := msi{
+	update := map[string]r.Term{
 		"commands": r.Row.
 			Field("posts").
 			Field(idStr).
@@ -195,14 +196,14 @@ func writeCommand(comm types.Command, idStr string, c *Client) error {
 
 // Write new links to other posts to the database
 func writeLinks(links types.LinkMap, c *Client) error {
-	msg, err := encodeMessage(messageLink, linkMessage{
+	msg, err := EncodeMessage(MessageLink, linkMessage{
 		ID:    c.openPost.id,
 		Links: links,
 	})
 	if err != nil {
 		return err
 	}
-	update := msi{
+	update := map[string]types.LinkMap{
 		"links": links,
 	}
 	if err := c.updatePost(update, msg); err != nil {
@@ -226,7 +227,7 @@ func writeLinks(links types.LinkMap, c *Client) error {
 // Writes the location data of the post linking a post to the the post being
 // linked
 func writeBacklink(id, op int64, board string, destID int64) error {
-	msg, err := encodeMessage(messageBacklink, linkMessage{
+	msg, err := EncodeMessage(MessageBacklink, linkMessage{
 		ID: destID,
 		Links: types.LinkMap{
 			id: {
@@ -239,8 +240,8 @@ func writeBacklink(id, op int64, board string, destID int64) error {
 		return err
 	}
 
-	update := msi{
-		"backlinks": msi{
+	update := map[string]map[string]types.Link{
+		"backlinks": {
 			util.IDToString(id): types.Link{
 				OP:    op,
 				Board: board,
@@ -250,7 +251,7 @@ func writeBacklink(id, op int64, board string, destID int64) error {
 	q := r.
 		Table("threads").
 		GetAllByIndex("post", destID).
-		Update(createUpdate(destID, update, msg))
+		Update(CreateUpdate(destID, update, msg))
 
 	return db.Write(q)
 }
@@ -271,10 +272,10 @@ func backspace(_ []byte, c *Client) error {
 	c.openPost.bodyLength--
 
 	id := c.openPost.id
-	update := msi{
+	update := map[string]r.Term{
 		"body": postBody(id).Slice(0, -1),
 	}
-	msg, err := encodeMessage(messageBackspace, id)
+	msg, err := EncodeMessage(MessageBackspace, id)
 	if err != nil {
 		return err
 	}
@@ -292,10 +293,10 @@ func closePost(_ []byte, c *Client) error {
 		}
 	}
 
-	update := msi{
+	update := map[string]bool{
 		"editing": false,
 	}
-	msg, err := encodeMessage(messageClosePost, c.openPost.id)
+	msg, err := EncodeMessage(MessageClosePost, c.openPost.id)
 	if err != nil {
 		return err
 	}
@@ -377,13 +378,13 @@ func spliceLine(req spliceRequest, c *Client) error {
 	new := start + end
 	c.openPost.WriteString(new)
 
-	msg, err := encodeMessage(messageSplice, res)
+	msg, err := EncodeMessage(MessageSplice, res)
 	if err != nil {
 		return err
 	}
 
 	// Split body into lines, remove last line and replace with new text
-	update := msi{
+	update := map[string]r.Term{
 		"body": postBody(c.openPost.id).
 			Split("\n").
 			Do(func(b r.Term) r.Term {
@@ -444,14 +445,14 @@ func insertImage(data []byte, c *Client) error {
 	if err != nil {
 		return err
 	}
-	msg, err := encodeMessage(messageInsertImage, imageMessage{
+	msg, err := EncodeMessage(MessageInsertImage, imageMessage{
 		ID:    c.openPost.id,
 		Image: *img,
 	})
 	if err != nil {
 		return err
 	}
-	update := msi{
+	update := map[string]interface{}{
 		"log":      appendLog(msg),
 		"imageCtr": r.Row.Field("imageCtr").Add(1),
 		"posts": map[string]map[string]types.Image{

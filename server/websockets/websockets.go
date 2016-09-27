@@ -4,7 +4,6 @@ package websockets
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -199,7 +198,7 @@ func (c *Client) closeConnections(err error) error {
 	case nil:
 		closeType = websocket.CloseNormalClosure
 	default:
-		c.sendMessage(messageInvalid, err.Error())
+		c.sendMessage(MessageInvalid, err.Error())
 		closeType = websocket.CloseInvalidFramePayloadData
 	}
 
@@ -229,35 +228,12 @@ func (c *Client) send(msg []byte) error {
 
 // Format a mesage type as JSON and send it to the client. Not safe for
 // concurent use.
-func (c *Client) sendMessage(typ messageType, msg interface{}) error {
-	encoded, err := encodeMessage(typ, msg)
+func (c *Client) sendMessage(typ MessageType, msg interface{}) error {
+	encoded, err := EncodeMessage(typ, msg)
 	if err != nil {
 		return err
 	}
 	return c.send(encoded)
-}
-
-// Encodes a message for sending through websockets. Separate function, so it
-// can be used in tests.1
-func encodeMessage(typ messageType, msg interface{}) ([]byte, error) {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
-	encoded := make([]byte, len(data)+2)
-	typeString := strconv.FormatUint(uint64(typ), 10)
-
-	// Ensure type string is always 2 chars long
-	if len(typeString) == 1 {
-		encoded[0] = '0'
-		encoded[1] = typeString[0]
-	} else {
-		copy(encoded, typeString)
-	}
-
-	copy(encoded[2:], data)
-
-	return encoded, nil
 }
 
 // receiverLoop proxies the blocking conn.ReadMessage() into the main client
@@ -296,8 +272,8 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 	if err != nil {
 		return errInvalidPayload(msg)
 	}
-	typ := messageType(uncast)
-	if !c.synced && typ != messageSynchronise && typ != messageResynchronise {
+	typ := MessageType(uncast)
+	if !c.synced && typ != MessageSynchronise && typ != MessageResynchronise {
 		return errInvalidPayload(msg)
 	}
 
@@ -305,7 +281,7 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 }
 
 // Run the apropriate handler for the websocket message
-func (c *Client) runHandler(typ messageType, msg []byte) error {
+func (c *Client) runHandler(typ MessageType, msg []byte) error {
 	data := msg[2:]
 	handler, ok := handlers[typ]
 	if !ok {

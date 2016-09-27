@@ -81,6 +81,10 @@ func text400(w http.ResponseWriter, err error) {
 	http.Error(w, fmt.Sprintf("400 Bad request: %s", err), 400)
 }
 
+func text403(w http.ResponseWriter, err error) {
+	http.Error(w, fmt.Sprintf("403 Forbidden: %s", err), 403)
+}
+
 // Text-only 500 response
 func text500(w http.ResponseWriter, r *http.Request, err interface{}) {
 	http.Error(w, fmt.Sprintf("500 %s", err), 500)

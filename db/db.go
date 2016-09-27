@@ -53,17 +53,12 @@ func All(query r.Term, res interface{}) error {
 
 // FindParentThread finds the parent thread of an arbitrary post number
 func FindParentThread(id int64) r.Term {
-	return r.
-		Table("threads").
-		GetAllByIndex("post", id).
-		AtIndex(0)
+	return r.Table("threads").GetAllByIndex("post", id).AtIndex(0)
 }
 
 // FindPost finds a post only by ID number
 func FindPost(id int64) r.Term {
-	return FindParentThread(id).
-		Field("posts").
-		Field(util.IDToString(id))
+	return FindParentThread(id).Field("posts").Field(util.IDToString(id))
 }
 
 // ValidateOP confirms the specified thread exists on specific board

@@ -272,7 +272,7 @@ func (*DB) TestPostCreationValidations(c *C) {
 }
 
 func (*DB) TestPoctCreationOnLockedThread(c *C) {
-	thread := msi{
+	thread := map[string]interface{}{
 		"id":      1,
 		"postCtr": 0,
 		"locked":  true,
@@ -340,7 +340,7 @@ func (*DB) TestPostCreation(c *C) {
 			ImageCommon: stdJPEG,
 		},
 	}
-	stdMsg, err := encodeMessage(messageInsertPost, post)
+	stdMsg, err := EncodeMessage(MessageInsertPost, post)
 	c.Assert(err, IsNil)
 
 	assertRepLog(6, append(strDummyLog, string(stdMsg)), c)
@@ -546,7 +546,7 @@ func (*DB) TestPostCreationWithNewlines(c *C) {
 		Time:    then,
 		Body:    "abc",
 	}
-	postMsg, err := encodeMessage(messageInsertPost, post)
+	postMsg, err := EncodeMessage(MessageInsertPost, post)
 	c.Assert(err, IsNil)
 	log := []string{
 		string(postMsg),

@@ -115,7 +115,7 @@ func (*DB) TestWriteBacklinks(c *C) {
 		c.Assert(db.One(q, &link), IsNil)
 		c.Assert(link, Equals, std)
 
-		stdMsg, err := encodeMessage(messageBacklink, linkMessage{
+		stdMsg, err := EncodeMessage(MessageBacklink, linkMessage{
 			ID: id,
 			Links: types.LinkMap{
 				10: {
@@ -729,7 +729,7 @@ func (*DB) TestInsertImage(c *C) {
 		Name:        "foo",
 		ImageCommon: stdJPEG,
 	}
-	msg, err := encodeMessage(messageInsertImage, imageMessage{
+	msg, err := EncodeMessage(MessageInsertImage, imageMessage{
 		ID:    2,
 		Image: std,
 	})

@@ -37,8 +37,7 @@ var (
 
 // Embed in every request that needs authentication
 type loginCredentials struct {
-	UserID  string `json:"userID"`
-	Session string `json:"session"`
+	UserID, Session string
 }
 
 // Request to set the board-specific configuration for a board

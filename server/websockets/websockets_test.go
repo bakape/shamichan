@@ -316,11 +316,11 @@ func (*ClientSuite) TestSendMessage(c *C) {
 	cl, wcl := sv.NewClient()
 
 	// 1 char type string
-	c.Assert(cl.sendMessage(messageInsertPost, nil), IsNil)
+	c.Assert(cl.sendMessage(MessageInsertPost, nil), IsNil)
 	assertMessage(wcl, []byte("02null"), c)
 
 	// 2 char type string
-	c.Assert(cl.sendMessage(messageSynchronise, nil), IsNil)
+	c.Assert(cl.sendMessage(MessageSynchronise, nil), IsNil)
 	assertMessage(wcl, []byte("30null"), c)
 }
 

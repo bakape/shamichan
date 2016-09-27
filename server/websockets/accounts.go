@@ -42,8 +42,7 @@ var (
 
 // Request struct for logging in to an existing or registering a new account
 type loginRequest struct {
-	ID       string `json:"id"`
-	Password string `json:"password"`
+	ID, Password string
 	types.Captcha
 }
 
@@ -53,13 +52,11 @@ type loginResponse struct {
 }
 
 type authenticationRequest struct {
-	ID      string `json:"id"`
-	Session string `json:"session"`
+	ID, Session string
 }
 
 type passwordChangeRequest struct {
-	Old string `json:"old"`
-	New string `json:"new"`
+	Old, New string
 	types.Captcha
 }
 
@@ -79,7 +76,7 @@ func register(data []byte, c *Client) error {
 		return err
 	}
 
-	return commitLogin(code, messageRegister, req.ID, c)
+	return commitLogin(code, MessageRegister, req.ID, c)
 }
 
 // Seperated into its own function for cleanliness and testability
@@ -136,7 +133,7 @@ func checkPasswordAndCaptcha(password, ip string, captcha types.Captcha) (
 
 // If login succesful, generate a session token and comit to DB. Otherwise
 // simply send the response code the client.
-func commitLogin(code loginResponseCode, typ messageType, id string, c *Client) (
+func commitLogin(code loginResponseCode, typ MessageType, id string, c *Client) (
 	err error,
 ) {
 	msg := loginResponse{Code: code}
@@ -178,7 +175,7 @@ func login(data []byte, c *Client) error {
 	}
 
 	if !authenticateCaptcha(req.Captcha, c.IP) {
-		return c.sendMessage(messageLogin, loginResponse{
+		return c.sendMessage(MessageLogin, loginResponse{
 			Code: invalidCaptcha,
 		})
 	}
@@ -186,7 +183,7 @@ func login(data []byte, c *Client) error {
 	hash, err := db.GetLoginHash(req.ID)
 	if err != nil {
 		if err == r.ErrEmptyResult {
-			return commitLogin(wrongCredentials, messageLogin, req.ID, c)
+			return commitLogin(wrongCredentials, MessageLogin, req.ID, c)
 		}
 		return err
 	}
@@ -202,7 +199,7 @@ func login(data []byte, c *Client) error {
 		return err
 	}
 
-	return commitLogin(code, messageLogin, req.ID, c)
+	return commitLogin(code, MessageLogin, req.ID, c)
 }
 
 // Authenticate the session token of an existing logged in user account
@@ -233,7 +230,7 @@ func authenticateSession(data []byte, c *Client) error {
 		c.UserID = req.ID
 	}
 
-	return c.sendMessage(messageAuthenticate, isSession)
+	return c.sendMessage(MessageAuthenticate, isSession)
 }
 
 // Log out user from session and remove the session key from the database
@@ -262,7 +259,7 @@ func commitLogout(query r.Term, c *Client) error {
 		return err
 	}
 
-	return c.sendMessage(messageLogout, true)
+	return c.sendMessage(MessageLogout, true)
 }
 
 // Log out all sessions of the specific user
@@ -291,7 +288,7 @@ func changePassword(data []byte, c *Client) error {
 
 	code := checkPasswordAndCaptcha(req.New, c.IP, req.Captcha)
 	if code > 0 {
-		return c.sendMessage(messageChangePassword, code)
+		return c.sendMessage(MessageChangePassword, code)
 	}
 
 	// Get old hash
@@ -326,5 +323,5 @@ func changePassword(data []byte, c *Client) error {
 		}
 	}
 
-	return c.sendMessage(messageChangePassword, code)
+	return c.sendMessage(MessageChangePassword, code)
 }

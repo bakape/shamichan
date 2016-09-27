@@ -3,8 +3,10 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
@@ -516,5 +518,67 @@ func (d *DB) TestServeBacklog(c *C) {
 		if s.code == 200 {
 			assertBody(rec, s.body, c)
 		}
+	}
+}
+
+func (d *DB) TestSpoilerImageWrongPassword(c *C) {
+	const password = "123"
+	hash, err := auth.BcryptHash(password, 6)
+	c.Assert(err, IsNil)
+
+	thread := types.DatabaseThread{
+		ID: 1,
+		Posts: map[int64]types.DatabasePost{
+			1: {
+				Password: hash,
+				Post: types.Post{
+					ID: 1,
+					Image: &types.Image{
+						ImageCommon: types.ImageCommon{
+							SHA1: "123",
+						},
+					},
+				},
+			},
+			2: {
+				Password: hash,
+				Post: types.Post{
+					ID: 1,
+				},
+			},
+		},
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+	samples := [...]struct {
+		id        int64
+		password  string
+		code      int
+		spoilered bool
+	}{
+		{2, password, 400, false}, // No image
+		{1, "122", 403, false},    // Wrong password
+		{1, password, 200, true},  // Success
+		{1, password, 200, true},  // Already spoilered
+	}
+
+	for _, s := range samples {
+		data := spoilerRequest{
+			ID:       s.id,
+			Password: s.password,
+		}
+		rec, req := newJSONPair(c, "/json/spoiler", data)
+		d.r.ServeHTTP(rec, req)
+
+		assertCode(rec, s.code, c)
+
+		var spoilered bool
+		msg := []byte("11" + strconv.Itoa(int(s.id)))
+		q := r.And(
+			db.FindParentThread(s.id).Field("log").Contains(msg),
+			db.FindPost(s.id).Field("image").Field("spoiler"),
+		)
+		c.Assert(db.One(q, &spoilered), IsNil)
+		c.Assert(spoilered, Equals, s.spoilered)
 	}
 }
