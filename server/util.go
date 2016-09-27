@@ -21,12 +21,12 @@ var vanillaHeaders = map[string]string{
 // Build an etag for HTML or JSON pages and check if it matches the one provided
 // by the client. If yes, send 304 and return false, otherwise set headers and
 // return true.
-func pageEtag(res http.ResponseWriter, req *http.Request, etag string) bool {
+func pageEtag(w http.ResponseWriter, r *http.Request, etag string) bool {
 	// If etags match, no need to rerender
-	if checkClientEtag(res, req, etag) {
+	if checkClientEtag(w, r, etag) {
 		return false
 	}
-	setHeaders(res, etag)
+	setHeaders(w, etag)
 	return true
 }
 
@@ -38,12 +38,12 @@ func etagStart(counter int64) string {
 // Check is any of the etags the client provides in the "If-None-Match" header
 // match the generated etag. If yes, write 304 and return true.
 func checkClientEtag(
-	res http.ResponseWriter,
-	req *http.Request,
+	w http.ResponseWriter,
+	r *http.Request,
 	etag string,
 ) bool {
-	if etag == req.Header.Get("If-None-Match") {
-		res.WriteHeader(304)
+	if etag == r.Header.Get("If-None-Match") {
+		w.WriteHeader(304)
 		return true
 	}
 	return false
@@ -63,8 +63,8 @@ func logError(r *http.Request, err interface{}) {
 }
 
 // Set HTTP headers to the response object
-func setHeaders(res http.ResponseWriter, etag string) {
-	head := res.Header()
+func setHeaders(w http.ResponseWriter, etag string) {
+	head := w.Header()
 	for key, val := range vanillaHeaders {
 		head.Set(key, val)
 	}
@@ -74,6 +74,11 @@ func setHeaders(res http.ResponseWriter, etag string) {
 // Text-only 404 response
 func text404(w http.ResponseWriter) {
 	http.Error(w, "404 Not found", 404)
+}
+
+// Text-only 400 response
+func text400(w http.ResponseWriter, err error) {
+	http.Error(w, fmt.Sprintf("400 Bad request: %s", err), 400)
 }
 
 // Text-only 500 response

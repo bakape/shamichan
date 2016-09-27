@@ -74,6 +74,7 @@ func createRouter() http.Handler {
 	json.GET("/boardConfig/:board", serveBoardConfigs)
 	json.GET("/boardList", wrapHandler(serveBoardList))
 	json.GET("/positions/:position/:user", serveStaffPositions)
+	json.GET("/backlog/:thread/:start/:end", serveBacklog)
 
 	// Adminitration JSON API for logged in users
 	admin := r.NewGroup("/admin")
@@ -102,12 +103,8 @@ func createRouter() http.Handler {
 
 // Adapter for http.HandlerFunc -> httptreemux.HandlerFunc
 func wrapHandler(fn http.HandlerFunc) httptreemux.HandlerFunc {
-	return func(
-		res http.ResponseWriter,
-		req *http.Request,
-		_ map[string]string,
-	) {
-		fn(res, req)
+	return func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+		fn(w, r)
 	}
 }
 
