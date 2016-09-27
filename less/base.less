@@ -40,7 +40,6 @@ html, body {
 	width: 100%;
 	position: relative;
 	& > section {
-		overflow: auto;
 		height: auto;
 		-webkit-overflow-scrolling: touch;
 		-ms-overflow-style: none;
@@ -52,6 +51,12 @@ html, body {
 	will-change: contents, scroll-position;
 	padding: 1em 1.4em;
 	outline: none;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.side-panel {
+	overflow: auto;
 }
 
 aside {
@@ -207,6 +212,19 @@ table {
 		margin: 0.5em 0 0.5em 0.5em;
 	}
 	#threads {
+		padding: 0.3em;
+	}
+	figure img.expanded {
 		margin: 0;
+	}
+}
+
+@media (pointer: coarse) {
+	#banner {
+		font-size: 150%;
+	}
+	#page-container {
+		height: ~"calc(100vh - 2.25em)";
+		margin-top: 2.25em;
 	}
 }
