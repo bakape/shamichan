@@ -23,7 +23,7 @@ interface Loader {
 
 // Fetches and decodes a JSON response from the API
 export async function fetchJSON<T>(url: string): Promise<T> {
-	let res = await fetch(url)
+	const res = await fetch(url)
 	await handleError(res)
 	return await res.json()
 }

@@ -5,6 +5,7 @@ import {debug, syncCounter, setSyncCounter, page} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
 import {authenticate} from './mod/login'
+import {handleError} from "./util"
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server
@@ -79,79 +80,10 @@ export const connSM = new FSM<connState, connEvent>(connState.loading)
 
 let socket: WebSocket,
 	attempts: number,
-	attemptTimer: number
-
-// Send a message to the server. If msg is null, it is omitted from sent
-// websocket message.
-export function send(type: message, msg: any) {
-	if (socket.readyState !== 1) {
-		console.warn("Attempting to send while socket closed")
-		return
-	}
-
-	let str = leftPad(type)
-	if (msg !== null) {
-		str += JSON.stringify(msg)
-	}
-
-	if (debug) {
-		console.log('<', str)
-	}
-	socket.send(str)
-}
-
-// Ensure message type is always a 2 characters long string
-function leftPad(type: message): string {
-	let str = type.toString()
-	if (str.length === 1) {
-		str = '0' + str
-	}
-	return str
-}
-
-// Routes messages from the server to the respective handler
-function onMessage(data: string, extracted: boolean) {
-	if (debug) {
-		console.log(extracted ? ">>" : ">" , data)
-	}
-
-	// First two charecters of a message define its type
-	const type = parseInt(data.slice(0, 2))
-
-	// Split several concatenated messages
-	if (type === message.concat) {
-		for (let msg of data.slice(2).split('\u0000')) {
-			onMessage(msg, true)
-		}
-		return
-	}
-
-	const handler = handlers[type]
-	if (handler) {
-		// Message was written to replication log. Increment syncronisation
-		// counter.
-		if (type > 1 && type < 30) {
-			setSyncCounter(syncCounter + 1)
-		}
-
-		handler(JSON.parse(data.slice(2)))
-	}
-}
+	attemptTimer: number,
+	buffer: string[] = []
 
 const syncEl = document.getElementById('sync')
-
-// Render connction status indicator
-function renderStatus(status: syncStatus) {
-	write(() =>
-		syncEl.textContent = lang[status])
-}
-
-connSM.act(connState.loading, connEvent.start, () =>
-	(renderStatus(syncStatus.connecting),
-	attempts = 0,
-	connect(),
-	connState.connecting))
-
 const path =
 	(location.protocol === 'https:' ? 'wss' : 'ws')
 	+ `://${location.host}/socket`
@@ -186,8 +118,74 @@ function nullSocket() {
 	}
 }
 
-for (let state of [connState.connecting, connState.reconnecting]) {
-	connSM.act(state, connEvent.open, prepareToSync)
+// Render connction status indicator
+function renderStatus(status: syncStatus) {
+	write(() =>
+		syncEl.textContent = lang[status])
+}
+
+// Send a message to the server. If msg is null, it is omitted from sent
+// websocket message.
+export function send(type: message, msg: any) {
+	if (socket.readyState !== 1) {
+		console.warn("Attempting to send while socket closed")
+		return
+	}
+
+	let str = leftPad(type)
+	if (msg !== null) {
+		str += JSON.stringify(msg)
+	}
+
+	if (debug) {
+		console.log('<', str)
+	}
+	socket.send(str)
+}
+
+// Ensure message type is always a 2 characters long string
+function leftPad(type: message): string {
+	let str = type.toString()
+	if (str.length === 1) {
+		str = '0' + str
+	}
+	return str
+}
+
+// Routes messages from the server to the respective handler
+function onMessage(data: string, extracted: boolean) {
+	// First two charecters of a message define its type
+	const type = parseInt(data.slice(0, 2))
+
+	// Buffer any messages before a potential backlog fetch is done to maintain
+	// original order.
+	if (connSM.state === connState.syncing && type !== message.synchronise) {
+		buffer.push(data)
+		return
+	}
+
+	if (debug) {
+		console.log(extracted ? ">>" : ">" , data)
+	}
+
+	// Split several concatenated messages
+	if (type === message.concat) {
+		for (let msg of data.slice(2).split('\u0000')) {
+			onMessage(msg, true)
+		}
+		return
+	}
+
+	const handler = handlers[type]
+	if (handler) {
+		// Message was written to replication log. Increment syncronisation
+		// counter.
+		if (type > 1 && type < 30) {
+			setSyncCounter(syncCounter + 1)
+		}
+
+		handler(JSON.parse(data.slice(2)))
+	}
 }
 
 function prepareToSync() {
@@ -229,13 +227,65 @@ function resetAttempts() {
 	attempts = 0
 }
 
-// Syncronise to the server and start receiving updates on the apropriate
-// channel
-handlers[message.synchronise] = connSM.feeder(connEvent.sync)
+function clearModuleState() {
+	nullSocket()
+	if (attemptTimer) {
+		clearTimeout(attemptTimer)
+		attemptTimer = 0
+	}
+}
 
-connSM.act(connState.syncing, connEvent.sync, () =>
-	(renderStatus(syncStatus.synced),
-	connState.synced))
+export function start() {
+	connSM.feed(connEvent.start)
+}
+
+// Work arround browser slowing down/suspending tabs and keep the FSM up to date
+// with the actual status.
+function onWindowFocus() {
+	if (connSM.state !== connState.desynced && navigator.onLine) {
+		connSM.feed(connEvent.retry)
+	}
+}
+
+connSM.act(connState.loading, connEvent.start, () => {
+	renderStatus(syncStatus.connecting)
+	attempts = 0
+	connect()
+	return connState.connecting
+})
+
+for (let state of [connState.connecting, connState.reconnecting]) {
+	connSM.act(state, connEvent.open, prepareToSync)
+}
+
+// Syncronise to the server and start receiving updates on the apropriate
+// channel. If there are any missed meessages, fetch them.
+handlers[message.synchronise] = async (ctr: number) => {
+	// In case of user-induced page navigation races
+	buffer = []
+
+	if (page.thread && syncCounter !== ctr) {
+		const url = `/json/backlog/${page.thread}/${syncCounter}/${ctr}`,
+			res = await fetch(url)
+		await handleError(res)
+		const backlog = await res.text()
+		connSM.feed(connEvent.sync)
+		onMessage(backlog, false)
+
+		// Process all buffered messages
+		for (let msg of buffer) {
+			onMessage(msg, false)
+		}
+		buffer = []
+	} else {
+		connSM.feed(connEvent.sync)
+	}
+}
+
+connSM.act(connState.syncing, connEvent.sync, () => {
+	renderStatus(syncStatus.synced)
+	return connState.synced
+})
 
 connSM.wildAct(connEvent.close, event => {
 	clearModuleState()
@@ -251,42 +301,23 @@ connSM.wildAct(connEvent.close, event => {
 	return connState.dropped
 })
 
-function clearModuleState() {
-	nullSocket()
-	if (attemptTimer) {
-		clearTimeout(attemptTimer)
-		attemptTimer = 0
-	}
-}
-
-connSM.act(connState.dropped, connEvent.retry, () =>
-	(connect(),
+connSM.act(connState.dropped, connEvent.retry, () => {
+	connect()
 
 	// Don't show this immediately so we don't thrash on network loss
-	setTimeout(
-		() =>
-			connSM.state === connState.reconnecting
-			&& renderStatus(syncStatus.connecting),
-		100),
-	connState.reconnecting))
+	setTimeout(() =>
+		connSM.state === connState.reconnecting
+		&& renderStatus(syncStatus.connecting)
+	, 100)
+	return connState.reconnecting
+})
 
 // Invalid message or some other critical error
-connSM.wildAct(connEvent.error, () =>
-	(renderStatus(syncStatus.desynced),
-	clearModuleState(),
-	connState.desynced))
-
-export function start() {
-	connSM.feed(connEvent.start)
-}
-
-// Work arround browser slowing down/suspending tabs and keep the FSM up to date
-// with the actual status.
-function onWindowFocus() {
-	if (connSM.state !== connState.desynced && navigator.onLine) {
-		connSM.feed(connEvent.retry)
-	}
-}
+connSM.wildAct(connEvent.error, () => {
+	renderStatus(syncStatus.desynced)
+	clearModuleState()
+	return connState.desynced
+})
 
 document.addEventListener('visibilitychange', event => {
 	if (!(event.target as Document).hidden) {
@@ -294,7 +325,8 @@ document.addEventListener('visibilitychange', event => {
 	}
 })
 
-window.addEventListener('online', () =>
-	(resetAttempts(),
-	connSM.feed(connEvent.retry)))
+window.addEventListener('online', () => {
+	resetAttempts()
+	connSM.feed(connEvent.retry)
+})
 window.addEventListener('offline', connSM.feeder(connEvent.close))

@@ -54,6 +54,7 @@ func (*DB) TestStreamUpdates(c *C) {
 	c.Assert(db.Write(q), IsNil)
 	assertMessage(wcl, []byte("301"), c)
 	assertMessage(wcl, msg, c)
+	c.Assert(feed.ctr, Equals, uint64(2))
 	close(feed.close)
 	cl.Close(nil)
 

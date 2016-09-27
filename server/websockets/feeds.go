@@ -160,6 +160,7 @@ func (u *updateFeed) Listen(cursor *r.Cursor) {
 			if updates == nil { // Thread deleted
 				return
 			}
+			u.ctr += uint64(len(updates))
 			concat := ConcatMessages(updates)
 			for _, client := range u.clients {
 				if err := client.send(concat); err != nil {
