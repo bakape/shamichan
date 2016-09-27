@@ -248,6 +248,12 @@ export class Post extends Model implements PostData {
 		this.view.autoExpandImage()
 	}
 
+	// Spoiler an already allocated image
+	spoilerImage() {
+		this.image.spoiler = true
+		this.view.renderImage()
+	}
+
 	// Close an open post and reparse its last line
 	closePost() {
 		// Posts may be closed from multiple sources. It may be the user

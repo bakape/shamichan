@@ -29,6 +29,7 @@ export class FormView extends PostView implements UploadForm {
 	renderUploadForm: () => void
 	uploadFile: (file?: File) => Promise<FileData>
 	renderProgress: (event: ProgressEvent) => void
+	spoilerImage: () => Promise<void>
 
 	[index: string]: any
 
@@ -254,6 +255,22 @@ export class FormView extends PostView implements UploadForm {
 				.querySelector("input[name=spoiler]") as HTMLInputElement
 			el.checked = !el.checked
 		})
+	}
+
+	// Insert image into the open post
+	insertImage() {
+		this.renderImage()
+		this.removeUploadForm()
+
+		const {$spoiler} = this
+		if (this.model.image.spoiler) {
+			write(() =>
+				$spoiler.remove())
+		} else {
+			$spoiler.addEventListener("change", () => this.spoilerImage(), {
+				passive: true,
+			})
+		}
 	}
 }
 

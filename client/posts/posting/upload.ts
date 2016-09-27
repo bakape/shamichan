@@ -1,6 +1,9 @@
 import {posts as lang} from '../../lang'
 import {HTML, commaList, load, setAttrs, makeFrag} from '../../util'
 import {write} from '../../render'
+import {postJSON} from "../../json"
+import Model from "../../model"
+import identity from "./identity"
 
 // Uploaded file data to be embeded in thread and reply creation or appendage
 // requests
@@ -18,6 +21,7 @@ const acceptedFormats = commaList([
 // Mixin for handling file uploads
 export default class UploadForm {
 	el: Element
+	model: Model
 	$spoiler: HTMLSpanElement
 	$uploadStatus: Element
 	$uploadInput: HTMLInputElement
@@ -80,6 +84,7 @@ export default class UploadForm {
 		return img
 	}
 
+	// Render client-side upload progress
 	renderProgress({total, loaded}: ProgressEvent) {
 		let s: string
 		if (loaded === total) {
@@ -89,5 +94,15 @@ export default class UploadForm {
 		}
 		write(() =>
 			this.$uploadStatus.textContent = s)
+	}
+
+	// Spoiler an image file after it has already been allocated
+	async spoilerImage() {
+		await postJSON("/json/spoiler", {
+			id: this.model.id,
+			password: identity.postPassword,
+		})
+		write(() =>
+			this.$spoiler.remove())
 	}
 }

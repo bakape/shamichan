@@ -5,7 +5,7 @@ import {debug, syncCounter, setSyncCounter, page} from './state'
 import {sync as lang} from './lang'
 import {write} from './render'
 import {authenticate} from './mod/login'
-import {handleError} from "./util"
+import {handleError} from "./json"
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server

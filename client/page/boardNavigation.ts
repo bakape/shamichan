@@ -1,7 +1,8 @@
 import View from '../view'
 import Model from '../model'
 import {write} from '../render'
-import {HTML, makeAttrs, fetchBoardList, BoardEntry} from '../util'
+import {HTML, makeAttrs} from '../util'
+import {fetchBoardList, BoardEntry} from "../json"
 import {ui} from '../lang'
 import {formatHeader} from './board'
 

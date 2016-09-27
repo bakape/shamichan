@@ -2,9 +2,8 @@ import AccountFormView, {newRequest, LoginCredentials} from "./common"
 import {BoardConfigs} from "../state"
 import {InputSpec, renderInput, inputType} from '../forms'
 import {admin as lang, fetchAdminPack} from '../lang'
-import {
-	table, makeFrag, fetchJSON, makeEl, on, fetchBoardList, handleError
-	} from "../util"
+import {table, makeFrag, makeEl, on} from "../util"
+import {fetchJSON, fetchBoardList, postJSON} from "../json"
 import {loginID, sessionToken} from "./login"
 import {write} from "../render"
 import {formatHeader} from "../page/board"
@@ -145,23 +144,19 @@ export default class BoardConfigPabel extends AccountFormView {
 	// Render the configuration input elemets
 	async renderConfigs(board: string) {
 		this.board = board
-		const res = await fetch(`/admin/boardConfig`, {
-			method: "POST",
-			body: JSON.stringify({
-				userID: loginID,
-				session: sessionToken,
-				id: board,
-			}),
+		const res = await postJSON("/admin/boardConfig", {
+			userID: loginID,
+			session: sessionToken,
+			id: board,
 		})
-		await handleError(res)
-
 		const conf: PrivateBoardConfigs = await res.json()
 		conf.eightball = conf.eightball.join("\n") as any
 
-		const html = table(specs, spec =>
-			([spec.label, spec.tooltip] = lang[spec.name],
-			spec.value = conf[spec.name],
-			renderInput(spec)))
+		const html = table(specs, spec => {
+			[spec.label, spec.tooltip] = lang[spec.name]
+			spec.value = conf[spec.name]
+			return renderInput(spec)
+		})
 		write(() =>
 			this.el.prepend(makeFrag(html)))
 	}
@@ -183,11 +178,7 @@ export default class BoardConfigPabel extends AccountFormView {
 		}
 		req.eightball = (req.eightball as any).split("\n").slice(0, 100)
 
-		const res = await fetch(`/admin/configureBoard`, {
-			method: "POST",
-			body: JSON.stringify(req),
-		})
-		await handleError(res)
+		await postJSON("/admin/configureBoard", req)
 		this.remove()
 	}
 }

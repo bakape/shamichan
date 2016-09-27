@@ -75,9 +75,14 @@ handlers[message.insertPost] = (data: PostData) => {
 }
 
 handlers[message.insertImage] = (msg: ImageMessage) =>
-	handle(msg.id, m =>
-		(delete msg.id,
-		m.insertImage(msg)))
+	handle(msg.id, m => {
+		delete msg.id
+		m.insertImage(msg)
+	})
+
+handlers[message.spoiler] = (id: number) =>
+	handle(id, m =>
+		m.spoilerImage())
 
 handlers[message.append] = ([id, char]: number[]) =>
 	handle(id, m =>
@@ -100,9 +105,10 @@ handlers[message.backlink] = ({id, links}: LinkMessage) =>
 		m.insertBacklink(links))
 
 handlers[message.command] = (msg: CommandMessage) =>
-	handle(msg.id, m =>
-		(delete msg.id,
-		m.insertCommand(msg)))
+	handle(msg.id, m => {
+		delete msg.id
+		m.insertCommand(msg)
+	})
 
 handlers[message.closePost] = (id: number) =>
 	handle(id, m =>

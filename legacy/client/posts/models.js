@@ -1,11 +1,4 @@
 exports.Post = Backbone.Model.extend({
-	setSpoiler(spoiler, info) {
-		let image = this.get('image');
-		image.spoiler = spoiler;
-		this.dispatch('renderImage', image);
-		this.moderationInfo(info);
-	},
-
 	removeImage(info) {
 		// Staff won't have the image removed, but rerendered with
 		// indication, that it has been deleted and extra information

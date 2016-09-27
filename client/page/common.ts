@@ -1,6 +1,5 @@
-import {
-	fetchJSON, fetchBoarConfigs, makeFrag, escape, hashString, on,
-} from '../util'
+import {makeFrag, escape, hashString, on} from '../util'
+import {fetchJSON, fetchBoarConfigs} from "../json"
 import {PageState, boardConfig, posts, setSyncCounter, page} from '../state'
 import renderThread from './thread'
 import renderBoard from './board'

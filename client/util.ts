@@ -1,14 +1,6 @@
 // Various utility functions
 
-import { BoardConfigs } from './state'
-
 type AnyHash = { [key: string]: any }
-
-// Single entry of the array, fetched through `/json/boardList`
-export type BoardEntry = {
-	id: string
-	title: string
-}
 
 // Options for the on() addEventListener() wrapper
 export interface OnOptions extends EventListenerOptions {
@@ -20,30 +12,6 @@ interface Loader {
 	onload: EventListener
 	onerror: EventListener
 }
-
-// Fetches and decodes a JSON response from the API
-export async function fetchJSON<T>(url: string): Promise<T> {
-	const res = await fetch(url)
-	await handleError(res)
-	return await res.json()
-}
-
-// Throw the status text of a Response as an error on HTTP errrors
-export async function handleError(res: Response) {
-	if (!res.ok) {
-		throw new Error(await res.text())
-	}
-}
-
-// Returns a list of all boards created in alphabetical order
-export const fetchBoardList = async (): Promise<BoardEntry[]> =>
-	(await fetchJSON<BoardEntry[]>("/json/boardList"))
-		.sort((a, b) =>
-			a.id.localeCompare(b.id))
-
-// Fetch configurations of a specific board
-export const fetchBoarConfigs = async (board: string): Promise<BoardConfigs> =>
-	await fetchJSON<BoardConfigs>(`/json/boardConfig/${board}`)
 
 const base64 =
 	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'

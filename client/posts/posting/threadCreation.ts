@@ -1,6 +1,5 @@
-import {
-	on, inputValue, applyMixins, fetchBoardList, fetchBoarConfigs, makeFrag,
-} from '../../util'
+import {on, inputValue, applyMixins, makeFrag} from '../../util'
+import {fetchBoardList, fetchBoarConfigs} from "../../json"
 import {write, $threads} from '../../render'
 import {FormView, inputType, renderInput, InputSpec} from '../../forms'
 import {Captcha} from '../../captcha'
@@ -49,6 +48,7 @@ class ThreadForm extends FormView implements UploadForm {
 	renderUploadForm: () => void
 	uploadFile: () => Promise<FileData>
 	renderProgress: (event: ProgressEvent) => void
+	spoilerImage: () => Promise<void>
 
 	constructor(event: Event) {
 		super({class: "new-thread-form"}, () =>

@@ -1,6 +1,7 @@
 // R/a/dio integration
 
-import {HTML, makeAttrs, isMatch, fetchJSON} from './util'
+import {HTML, makeAttrs, isMatch} from './util'
+import {fetchJSON} from "./json"
 import options from './options'
 import {write} from './render'
 import {banner as lang} from './lang'
