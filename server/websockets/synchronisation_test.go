@@ -1,12 +1,9 @@
 package websockets
 
 import (
-	"fmt"
-
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-	"github.com/gorilla/websocket"
 	. "gopkg.in/check.v1"
 )
 
@@ -107,12 +104,9 @@ func (*DB) TestSyncToThread(c *C) {
 		Board: "a",
 	})
 
-	// Receive client ID
-	assertSyncResponse(wcl, c)
-
-	// Receive missed messages
-	stdMsg := fmt.Sprintf("42%s\u0000%s", string(backlog1), string(backlog2))
-	syncAssertMessage(wcl, []byte(stdMsg), c)
+	res, err := encodeMessage(messageSynchronise, 2)
+	c.Assert(err, IsNil)
+	syncAssertMessage(wcl, res, c)
 
 	// Receive new message
 	newMessage := []byte("foo")
@@ -123,70 +117,4 @@ func (*DB) TestSyncToThread(c *C) {
 	syncAssertMessage(wcl, newMessage, c)
 	cl.Close(nil)
 	sv.Wait()
-}
-
-func assertSyncResponse(wcl *websocket.Conn, c *C) {
-	res, err := encodeMessage(messageSynchronise, 0)
-	c.Assert(err, IsNil)
-	syncAssertMessage(wcl, res, c)
-}
-
-// Test that only missed messages get sent as backlog.
-func (*DB) TestOnlyMissedMessageSyncing(c *C) {
-	sv := newWSServer(c)
-	defer sv.Close()
-	cl, wcl := sv.NewClient()
-	defer cl.Close(nil)
-	sv.Add(1)
-	go readListenErrors(c, cl, sv)
-
-	msg := syncRequest{
-		Board:  "a",
-		Thread: 1,
-		Ctr:    1,
-	}
-	data := marshalJSON(msg, c)
-	backlogs := [][]byte{
-		[]byte("foo"),
-		[]byte("bar"),
-		[]byte("baz"),
-	}
-	thread := types.DatabaseThread{
-		ID:    1,
-		Board: "a",
-		Log:   backlogs,
-	}
-	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
-
-	c.Assert(synchronise(data, cl), IsNil)
-
-	// Receive client ID
-	assertSyncResponse(wcl, c)
-
-	// Receive missed messages
-	syncAssertMessage(wcl, []byte("42bar\u0000baz"), c)
-
-	cl.Close(nil)
-	sv.Wait()
-}
-
-func (*DB) TestMaliciousCounterGuard(c *C) {
-	sv := newWSServer(c)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	thread := types.DatabaseThread{
-		ID:    1,
-		Board: "a",
-		Log:   [][]byte{{1}},
-	}
-	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
-
-	// Counter larger than in the database
-	msg := syncRequest{
-		Board:  "a",
-		Thread: 1,
-		Ctr:    7,
-	}
-	data := marshalJSON(msg, c)
-	c.Assert(synchronise(data, cl), Equals, errInvalidCounter)
 }

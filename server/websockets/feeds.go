@@ -20,7 +20,7 @@ var (
 			Field("log").
 			Slice(r.Row.Field("old_val").Field("log").Count()).
 			Default(nil), // Thread deleted
-		r.Row.Field("new_val").Field("log"),
+		r.Row.Field("new_val").Field("log").Count(), // Initial counter
 	)
 
 	// Contains and manages all active update feeds
@@ -38,27 +38,18 @@ type feedContainer struct {
 
 // A feed with syncronisation logic of a certain thread
 type updateFeed struct {
-	id         int64               // Thread ID
-	clients    []*Client           // Subscribed clients
-	log        [][]byte            // Cached replication log
-	Add        chan *Client        // Add a client to u
-	Remove     chan *Client        // Remove a client from u
-	GetBacklog chan backlogRequest // Request any missed messages
-	close      chan struct{}       // Close database change feed
-	read       chan [][]byte       // Read from database change feed
-}
-
-// A Client's request to receive missed data from the feed's replication log.
-type backlogRequest struct {
-	start  int // Index to slice at
-	client *Client
+	id      int64         // Thread ID
+	ctr     uint64        // Feed progress counter
+	clients []*Client     // Subscribed clients
+	Add     chan *Client  // Add a client to u
+	Remove  chan *Client  // Remove a client from u
+	close   chan struct{} // Close database change feed
+	read    chan [][]byte // Read from database change feed
 }
 
 // Add a client to an existing update feed or create a new one, if it does not
 // exist yet
-func (f *feedContainer) Add(id int64, cl *Client) (
-	*updateFeed, error,
-) {
+func (f *feedContainer) Add(id int64, cl *Client) (*updateFeed, error) {
 	f.Lock()
 	defer f.Unlock()
 
@@ -105,13 +96,12 @@ func (f *feedContainer) Clear() {
 // Create a new updateFeed and sync it to the database
 func newUpdateFeed(id int64) (*updateFeed, error) {
 	feed := updateFeed{
-		id:         id,
-		clients:    make([]*Client, 0, 1),
-		close:      make(chan struct{}),
-		read:       make(chan [][]byte),
-		Add:        make(chan *Client),
-		Remove:     make(chan *Client),
-		GetBacklog: make(chan backlogRequest),
+		id:      id,
+		clients: make([]*Client, 0, 1),
+		close:   make(chan struct{}),
+		read:    make(chan [][]byte),
+		Add:     make(chan *Client),
+		Remove:  make(chan *Client),
 	}
 
 	cursor, err := feed.streamUpdates()
@@ -145,6 +135,10 @@ func (u *updateFeed) Listen(cursor *r.Cursor) {
 		// Add client
 		case client := <-u.Add:
 			u.clients = append(u.clients, client)
+			err := client.sendMessage(messageSynchronise, u.ctr)
+			if err != nil {
+				client.Close(err)
+			}
 
 		// Remove client or close feed, if no clients would remain
 		case client := <-u.Remove:
@@ -161,21 +155,16 @@ func (u *updateFeed) Listen(cursor *r.Cursor) {
 				}
 			}
 
-		// Update the log
-		case msg := <-u.read:
-			if msg == nil { // Thread deleted
+		// Forward updates to clients
+		case updates := <-u.read:
+			if updates == nil { // Thread deleted
 				return
 			}
-			u.appendUpdate(msg)
-
-		// Send the requested slice of the log to the client
-		case req := <-u.GetBacklog:
-			// Do nothing, if start == len(u.log) .
-			// In rare racy cases start can also exceed u.log.
-			if req.start < len(u.log) {
-				msg := concatMessages(u.log[req.start:])
-				if err := req.client.send(msg); err != nil {
-					req.client.Close(err)
+			u.ctr += uint64(len(updates))
+			concat := ConcatMessages(updates)
+			for _, client := range u.clients {
+				if err := client.send(concat); err != nil {
+					client.Close(err)
 				}
 			}
 
@@ -186,39 +175,17 @@ func (u *updateFeed) Listen(cursor *r.Cursor) {
 	}
 }
 
-// Append messagesto the replication log and send message to clients
-func (u *updateFeed) appendUpdate(updates [][]byte) {
-	// Create a new slice double the capacity, if capacity would be exceeded
-	curLen := len(u.log)
-	newLen := curLen + len(updates)
-	if newLen > cap(u.log) {
-		newLog := make([][]byte, curLen, newLen*2)
-		copy(newLog, u.log)
-		u.log = newLog
-	}
-
-	u.log = append(u.log, updates...)
-
-	// Send update to all clients as a concatenated message
-	concat := concatMessages(updates)
-	for _, client := range u.clients {
-		if err := client.send(concat); err != nil {
-			client.Close(err)
-		}
-	}
-}
-
-// Concatenate multiple feed messages into a single one to reduce transport
-// overhead
-func concatMessages(msgs [][]byte) []byte {
+// ConcatMessages concatenate multiple feed messages into a single one to reduce
+// transport overhead
+func ConcatMessages(msgs [][]byte) []byte {
 	if len(msgs) == 1 {
 		return msgs[0]
 	}
 
 	// Calculate capacity
-	cap := 1
+	cap := 2 + len(msgs)
 	for _, msg := range msgs {
-		cap += len(msg) + 1
+		cap += len(msg)
 	}
 
 	buf := make([]byte, 2, cap)
@@ -251,17 +218,11 @@ func (u *updateFeed) streamUpdates() (*r.Cursor, error) {
 		return nil, err
 	}
 
-	var initial [][]byte
-	if !cursor.Next(&initial) {
+	if !cursor.Next(&u.ctr) {
 		if err := cursor.Err(); err != nil {
 			return nil, err
 		}
 	}
-
-	// Allocate twice as much as initial log length
-	l := len(initial)
-	u.log = make([][]byte, l, l*2)
-	copy(u.log, initial)
 
 	cursor.Listen(u.read)
 

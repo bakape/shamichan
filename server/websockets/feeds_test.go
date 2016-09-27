@@ -18,8 +18,6 @@ func (*DB) TestAddingFeeds(c *C) {
 	feed, err := feeds.Add(1, cl1)
 	c.Assert(err, IsNil)
 	c.Assert(feed, Equals, feeds.feeds[1])
-	c.Assert(feed.log, DeepEquals, dummyLog)
-	c.Assert(cap(feed.log), Equals, len(dummyLog)*2)
 
 	// Add to exiting feed
 	oldFeed := feed
@@ -31,27 +29,17 @@ func (*DB) TestAddingFeeds(c *C) {
 	feed.Remove <- cl2
 }
 
-func (*DB) TestFeedLogAllocation(c *C) {
-	feed := updateFeed{
-		log: dummyLog,
-	}
-	added := [][]byte{[]byte{1, 2, 3}}
-	feed.appendUpdate(added)
-	c.Assert(feed.log, DeepEquals, append(dummyLog, added[0]))
-	c.Assert(cap(feed.log), Equals, 2*(len(dummyLog)+1))
-}
-
 func (*DB) TestStreamUpdates(c *C) {
 	thread := types.DatabaseThread{
 		ID:  1,
-		Log: [][]byte{},
+		Log: [][]byte{[]byte("foo")},
 	}
 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 
 	// Empty log
 	feed, err := newUpdateFeed(1)
 	c.Assert(err, IsNil)
-	c.Assert(feed.log, DeepEquals, [][]byte{})
+	c.Assert(feed.ctr, Equals, uint64(1))
 
 	sv := newWSServer(c)
 	defer sv.Close()
@@ -59,17 +47,20 @@ func (*DB) TestStreamUpdates(c *C) {
 	go cl.Listen()
 	feed.Add <- cl
 
-	log := [][]byte{[]byte("foo")}
-	update := map[string][][]byte{"log": log}
-	q := r.Table("threads").Get(1).Update(update)
+	msg := []byte("bar")
+	q := r.Table("threads").Get(1).Update(map[string]r.Term{
+		"log": appendLog(msg),
+	})
 	c.Assert(db.Write(q), IsNil)
-	assertMessage(wcl, log[0], c)
+	assertMessage(wcl, []byte("301"), c)
+	assertMessage(wcl, msg, c)
+	c.Assert(feed.ctr, Equals, uint64(2))
 	close(feed.close)
 	cl.Close(nil)
 
 	// Existing data
 	feed, err = newUpdateFeed(1)
 	c.Assert(err, IsNil)
-	c.Assert(feed.log, DeepEquals, log)
+	c.Assert(feed.ctr, Equals, uint64(2))
 	close(feed.close)
 }

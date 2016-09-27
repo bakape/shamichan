@@ -170,17 +170,6 @@ func (c *Client) listenerLoop() error {
 	}
 }
 
-// Request and receive any messages the client is behind on
-func (c *Client) fetchBacklog(ctr int) {
-	if c.feed == nil { // On board page. No feed.
-		return
-	}
-	c.feed.GetBacklog <- backlogRequest{
-		start:  ctr,
-		client: c,
-	}
-}
-
 // Close all conections an goroutines asociated with the Client
 func (c *Client) closeConnections(err error) error {
 	// Close update feed, if any

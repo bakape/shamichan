@@ -153,7 +153,7 @@ func (d *DB) TestServePost(c *C) {
 	// Invalid post number
 	rec, req := newPair(c, "/json/post/www")
 	d.r.ServeHTTP(rec, req)
-	assertCode(rec, 404, c)
+	assertCode(rec, 400, c)
 
 	// Non-existing post or otherwise invalid post
 	rec, req = newPair(c, "/json/post/66")
@@ -328,7 +328,7 @@ func (d *DB) TestThreadJSON(c *C) {
 	// Invalid post number
 	rec, req = newPair(c, "/json/a/www")
 	d.r.ServeHTTP(rec, req)
-	assertCode(rec, 404, c)
+	assertCode(rec, 400, c)
 
 	// Non-existing thread
 	rec, req = newPair(c, "/json/a/22")
@@ -482,5 +482,39 @@ func (d *DB) TestServeStaffPosition(c *C) {
 		d.r.ServeHTTP(rec, req)
 		assertCode(rec, 200, c)
 		assertBody(rec, s.res, c)
+	}
+}
+
+func (d *DB) TestServeBacklog(c *C) {
+	log := [][]byte{
+		[]byte("foo"),
+		[]byte("bar"),
+		[]byte("baz"),
+	}
+	thread := types.DatabaseThread{
+		ID:  1,
+		Log: log,
+	}
+	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+
+	samples := [...]struct {
+		url  string
+		code int
+		body string
+	}{
+		{"/1/0/1", 200, "foo"},
+		{"/1/0/2", 200, "42foo\u0000bar"},
+		{"/2/0/1", 200, ""},
+		{"/a/0/1", 400, ""},
+		{"/-1/0/1", 400, ""},
+	}
+
+	for _, s := range samples {
+		rec, req := newPair(c, "/json/backlog"+s.url)
+		d.r.ServeHTTP(rec, req)
+		assertCode(rec, s.code, c)
+		if s.code == 200 {
+			assertBody(rec, s.body, c)
+		}
 	}
 }
