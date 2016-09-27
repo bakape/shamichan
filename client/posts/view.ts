@@ -147,7 +147,7 @@ export default class PostView extends ImageHandler {
 	// Render the <time> element in the header
 	renderTime() {
 		write(() =>
-			renderTime(this.el.querySelector("time"), this.model.time))
+			renderTime(this.el.querySelector("time"), this.model.time, false))
 	}
 
 	// Add highlight to post because it lnked a post the client made, the

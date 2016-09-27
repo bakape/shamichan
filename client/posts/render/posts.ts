@@ -28,7 +28,7 @@ export default function (frag: DocumentFragment, data: PostData|ThreadData) {
 
 // Render the header on top of the post
 export function renderHeader(frag: NodeSelector, data: PostData) {
-	renderTime(frag.querySelector("time"), data.time)
+	renderTime(frag.querySelector("time"), data.time, false)
 	renderName(frag.querySelector(".name"), data)
 
 	const nav = frag.querySelector("nav"),
@@ -89,10 +89,10 @@ export function renderName(
 // }
 
 // Renders a time element. Can be either absolute or relative.
-export function renderTime(el: Element, time: number) {
+export function renderTime(el: Element, time: number, forceRelative: boolean) {
 	// Format according to client's relative post timestamp setting
 	let text = readableTime(time)
-	if (options.relativeTime) {
+	if (forceRelative || options.relativeTime) {
 		el.setAttribute("title", text)
 		text = relativeTime(time, Math.floor(Date.now() / 1000))
 	}

@@ -142,7 +142,7 @@ function renderThread(thread: ThreadData): DocumentFragment {
 
 // Render the board refresh button text
 function renderRefreshButton(el: Element) {
-	renderTime(el, lastRender)
+	renderTime(el, lastRender, true)
 	if (el.textContent === time.justNow) {
 		el.textContent = ui.refresh
 	}
