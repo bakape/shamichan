@@ -1,5 +1,5 @@
 // Package websockets manages active websocket connections and messages received
-// from and sent to them.
+// from and sent to them
 package websockets
 
 import (

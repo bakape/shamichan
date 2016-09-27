@@ -1,4 +1,4 @@
-// Package types contains common shared types used throughout the project.
+// Package types contains common shared types used throughout the project
 package types
 
 import (

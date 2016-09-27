@@ -1,5 +1,5 @@
 // Package auth determines and asserts client permissions to access and modify
-// resources.
+// server resources.
 package auth
 
 import (

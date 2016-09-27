@@ -1,3 +1,4 @@
+// Package assets manages imager file asset allocation and deallocation
 package assets
 
 import (

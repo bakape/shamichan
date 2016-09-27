@@ -1,4 +1,4 @@
-// Package imager handles image, video, etc. upload requests and processing.
+// Package imager handles image, video, etc. upload requests and processing
 package imager
 
 import (

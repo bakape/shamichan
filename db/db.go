@@ -1,4 +1,4 @@
-// Package db handles all database intercations of the server
+// Package db handles all core database intercations of the server
 package db
 
 import (

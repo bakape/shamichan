@@ -1,5 +1,5 @@
-// Package server handles client requests, both for HTML page rendering and
-// websocket connections.
+// Package server handles client requests for HTML page rendering, JSON and
+// websocket connections
 package server
 
 import (
