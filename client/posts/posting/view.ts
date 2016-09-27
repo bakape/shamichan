@@ -3,7 +3,7 @@
 import PostView, {OPView} from "../view"
 import {ReplyFormModel} from "./model"
 import {Post, OP} from "../models"
-import {isMobile} from "../../state"
+import {isMobile, boardConfig} from "../../state"
 import {setAttrs, makeFrag, applyMixins} from "../../util"
 import {parseTerminatedLine} from "../render/body"
 import {renderHeader} from "../render/posts"
@@ -84,13 +84,14 @@ export class FormView extends PostView implements UploadForm {
 			"cancel",
 			postSM.feeder(postEvent.done),
 		)
-		this.renderUploadForm()
-		frag.append(
-			$cancel, this.$uploadInput, this.$spoiler, this.$uploadStatus,
-		)
+		frag.append($cancel)
 
-		this.$uploadInput.addEventListener("change", () =>
-			this.model.uploadFile())
+		if (!boardConfig.textOnly) {
+			this.renderUploadForm()
+			frag.append(this.$uploadInput, this.$spoiler, this.$uploadStatus)
+			this.$uploadInput.addEventListener("change", () =>
+				this.model.uploadFile())
+		}
 
 		return frag
 	}

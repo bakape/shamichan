@@ -2,19 +2,27 @@
 
 import {$threads} from "../../render"
 import {postSM, postEvent, postModel} from "./main"
-import {page} from "../../state"
+import {page, boardConfig} from "../../state"
 import {ReplyFormModel} from "./model"
 
 // Handle file drop
 function onDrop(e: DragEvent) {
 	const {files} = e.dataTransfer
-	if (!files.length || !page.thread) { // TODO: Drag&drop for thread creation
+
+	// TODO: Drag & drop for thread creation
+	if (!files.length || !page.thread) {
 		return
 	}
 
 	e.stopPropagation()
 	e.preventDefault()
-	postSM.feed(postEvent.open)          // Create form, if none
+
+	if (boardConfig.textOnly) {
+		return
+	}
+
+	// Create form, if none
+	postSM.feed(postEvent.open)
 
 	// Neither disconnected, errored or already has image
 	if (postModel && !postModel.image) {
