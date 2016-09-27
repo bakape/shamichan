@@ -16,7 +16,6 @@ var (
 )
 
 type syncRequest struct {
-	Ctr    uint64 `json:"ctr"`
 	Thread int64  `json:"thread"`
 	Board  string `json:"board"`
 }
@@ -42,7 +41,7 @@ func synchronise(data []byte, c *Client) error {
 		return syncToBoard(msg.Board, c)
 	}
 
-	return syncToThread(msg.Board, msg.Thread, msg.Ctr, c)
+	return syncToThread(msg.Board, msg.Thread, c)
 }
 
 // Board pages do not have any live feeds (for now, at least). Just send the
@@ -67,7 +66,7 @@ func registerSync(board string, op int64, c *Client) {
 
 // Sends a response to the client's synchronisation request with any missed
 // messages and starts streaming in updates.
-func syncToThread(board string, thread int64, ctr uint64, c *Client) error {
+func syncToThread(board string, thread int64, c *Client) error {
 	valid, err := db.ValidateOP(thread, board)
 	if err != nil {
 		return err
@@ -76,23 +75,13 @@ func syncToThread(board string, thread int64, ctr uint64, c *Client) error {
 		return errInvalidThread
 	}
 
-	// Guard against malicious counters
-	curCtr, err := db.ThreadCounter(thread)
-	if err != nil {
-		return err
-	}
-	if ctr > uint64(curCtr) {
-		return errInvalidCounter
-	}
-
 	registerSync(board, thread, c)
 	c.feed, err = feeds.Add(thread, c)
 	if err != nil {
 		return err
 	}
-	c.fetchBacklog(int(ctr))
 
-	return c.sendMessage(messageSynchronise, 0)
+	return nil
 }
 
 // Syncronise the client after a disconnect and restore any post in progress,

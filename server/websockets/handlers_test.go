@@ -58,7 +58,6 @@ func (*ClientSuite) TestDecodeMessage(c *C) {
 
 	// Valid message
 	std := syncRequest{
-		Ctr:    5,
 		Thread: 20,
 		Board:  "a",
 	}
