@@ -15,7 +15,10 @@ export function scrollToAnchor() {
 	if (!location.hash) {
 		return
 	}
-	document.querySelector(location.hash).scrollIntoView()
+	const el = document.querySelector(location.hash)
+	if (el) {
+		el.scrollIntoView()
+	}
 }
 
 // Lock position to the bottom of a thread or keep the viewport from bumping
