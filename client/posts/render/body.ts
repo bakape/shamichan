@@ -210,7 +210,12 @@ function parseURL(bit: string): string {
 
 	// TODO: Embeds
 
-	if (/^(?:magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$/.test(bit)) {
+	const m = bit
+		.match(/^(magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$/)
+	if (m) {
+		if (m[1].startsWith("magnet")) {
+			return escape(bit).link(encodeURI(bit))
+		}
 		return newTabLink(bit, bit)
 	}
 
