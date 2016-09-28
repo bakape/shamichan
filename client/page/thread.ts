@@ -1,7 +1,7 @@
 import {escape} from '../util'
 import {ThreadData, PostData, Post, OP} from '../posts/models'
 import PostView, {OPView} from '../posts/view'
-import {page, posts as postCollection} from '../state'
+import {page, posts as postCollection, hidden} from '../state'
 import {write, $threads, importTemplate} from '../render'
 import options from "../options"
 import {setTitle} from "../tab"
@@ -43,7 +43,9 @@ export default function renderThread(thread: ThreadData) {
 	postCollection.addOP(opModel)
 
 	for (let id in posts) {
-		els.push(createPost(posts[id]))
+		if (!hidden.has(parseInt(id))) {
+			els.push(createPost(posts[id]))
+		}
 	}
 	$threadContainer.append(...els)
 

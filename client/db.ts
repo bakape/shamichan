@@ -67,7 +67,8 @@ export function open(): Promise<void> {
 	})
 }
 
-function throwErr(err: ErrorEvent) {
+// Helper for throwing errors with event-based error passing
+export function throwErr(err: ErrorEvent) {
 	throw err
 }
 

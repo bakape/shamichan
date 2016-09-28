@@ -70,6 +70,9 @@ export let mine: Set<number>
 // Replies to this user's posts the user has already seen
 export let seenReplies: Set<number>
 
+// Explicitly hidden posts and threads
+export let hidden: Set<number>
+
 // Tracks the synchronisation progress of the current thread/board
 export let syncCounter: number
 
@@ -102,6 +105,8 @@ export function loadFromDB(): Promise<void> {
 			mine = new Set(ids)),
 		readIDs("seen").then(ids =>
 			seenReplies = new Set(ids)),
+		readIDs("hidden").then((ids) =>
+			hidden = new Set(ids)),
 	])
 }
 
@@ -115,6 +120,12 @@ export function storeMine(id: number) {
 export function storeSeenReply(id: number) {
 	seenReplies.add(id)
 	storeID("seen", id, thirtyDays)
+}
+
+// Store the ID of a post or thread to hide
+export function storeHidden(id: number) {
+	hidden.add(id)
+	storeID("hidden", id, thirtyDays)
 }
 
 // Retrieve model of closest parent post

@@ -1,10 +1,15 @@
-import {TabbedModal} from '../banner'
+import { TabbedModal } from '../banner'
 import renderContents from './render'
-import {models, default as options} from '../options'
-import {optionType} from './specs'
-import {loadModule, load} from '../util'
-import {opts as lang} from '../lang'
-import {write, read} from '../render'
+import { models, default as options } from '../options'
+import { optionType } from './specs'
+import { loadModule, load } from '../util'
+import { opts as lang } from '../lang'
+import { write, read } from '../render'
+import { clearHidden } from "../posts/hide"
+import { hidden } from "../state"
+
+// Only instance of the options panel
+export let panel: OptionsPanel
 
 // View of the options panel
 export default class OptionsPanel extends TabbedModal {
@@ -12,17 +17,18 @@ export default class OptionsPanel extends TabbedModal {
 	$import: HTMLInputElement
 
 	constructor() {
-		super({id: 'options'})
+		super({ id: 'options' })
+		panel = this
 		this.onClick({
 			'#export': () =>
 				this.exportConfigs(),
 			'#import': e =>
 				this.importConfigs(e),
-			'#hidden': () =>
-				this.clearHidden(),
+			'#hidden': clearHidden,
 		})
 		this.on('change', e =>
 			this.applyChange(e))
+
 	}
 
 	// Render the contents of the options panel and insert it into the DOM
@@ -32,12 +38,10 @@ export default class OptionsPanel extends TabbedModal {
 			this.assignValues())
 		read(() => {
 			this.$hidden = this.el.querySelector('#hidden')
+			this.renderHidden(hidden.size)
 			this.$import =
 				this.el.querySelector("#importSettings") as HTMLInputElement
 		})
-
-		// TODO: Hidden posts count rendering
-		// events.reply('hide:render', this.renderHidden, this)
 	}
 
 	// Assign loaded option settings to the respective elements in the options
@@ -61,16 +65,16 @@ export default class OptionsPanel extends TabbedModal {
 		}
 
 		switch (type) {
-		case optionType.checkbox:
-			el.checked = val as boolean
-			break
-		case optionType.number:
-		case optionType.menu:
-			el.value = val as string
-			break
-		case optionType.shortcut:
-			el.value = String.fromCharCode(val as number).toUpperCase()
-			break
+			case optionType.checkbox:
+				el.checked = val as boolean
+				break
+			case optionType.number:
+			case optionType.menu:
+				el.value = val as string
+				break
+			case optionType.shortcut:
+				el.value = String.fromCharCode(val as number).toUpperCase()
+				break
 		}
 		// 'image' type simply falls through, as those don't need to be set
 	}
@@ -87,25 +91,25 @@ export default class OptionsPanel extends TabbedModal {
 			return
 		}
 
-		let val: boolean|string|number
+		let val: boolean | string | number
 		switch (model.spec.type) {
-		case optionType.checkbox:
-			val = el.checked
-			break
-		case optionType.number:
-			val = parseInt(el.value)
-			break
-		case optionType.menu:
-			val = el.value
-			break
-		case optionType.shortcut:
-			val = el.value.toUpperCase().charCodeAt(0)
-			break
-		case optionType.image:
-			// Not recorded. Extracted directly by the background handler
-			loadModule('background').then(m =>
-				m.store((event as any).target.files[0]))
-			return
+			case optionType.checkbox:
+				val = el.checked
+				break
+			case optionType.number:
+				val = parseInt(el.value)
+				break
+			case optionType.menu:
+				val = el.value
+				break
+			case optionType.shortcut:
+				val = el.value.toUpperCase().charCodeAt(0)
+				break
+			case optionType.image:
+				// Not recorded. Extracted directly by the background handler
+				loadModule('background').then(m =>
+					m.store((event as any).target.files[0]))
+				return
 		}
 
 		if (!model.validate(val)) {
@@ -131,7 +135,7 @@ export default class OptionsPanel extends TabbedModal {
 		this.$import.click()
 		const handler = () =>
 			this.importConfigFile()
-		this.$import.addEventListener("change", handler, {once: true})
+		this.$import.addEventListener("change", handler, { once: true })
 	}
 
 	// After the file has been uploaded, parse it and import the configs
@@ -141,11 +145,11 @@ export default class OptionsPanel extends TabbedModal {
 		const event = await load(reader) as any
 
 		// In case of curruption
-		let json: {[key: string]: string}
+		let json: { [key: string]: string }
 		try {
 			json = JSON.parse(event.target.result)
 		}
-		catch(err) {
+		catch (err) {
 			alert(lang.importConfig.corrupt)
 			return
 		}
@@ -160,18 +164,12 @@ export default class OptionsPanel extends TabbedModal {
 
 	// Render Hiden posts counter
 	renderHidden(count: number) {
+		if (!this.isRendered) {
+			return
+		}
 		write(() => {
 			const el = this.$hidden
 			el.textContent = el.textContent.replace(/\d+$/, count.toString())
 		})
-	}
-
-	// Clear displayed hidden post counter
-	clearHidden() {
-
-		// TODO: Fix  after post hiding ported
-		// main.request('hide:clear')
-
-		this.renderHidden(0)
 	}
 }

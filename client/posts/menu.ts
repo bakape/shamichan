@@ -4,15 +4,15 @@ import { getModel } from "../state"
 import { $threads , write } from "../render"
 import { on , outerWidth} from "../util"
 import { images } from "../lang"
+import { hidePost } from "./hide"
 
 interface ControlButton extends Element {
 	_popup_menu: MenuView
 }
 
 // Actions to be performed by the items in the popup menu
-const actions: {[key: string]: [string, () => void]} = {
-	hide: [images.hide, () =>
-		alert("TODO")],
+const actions: {[key: string]: [string, (m: Post) => void]} = {
+	hide: [images.hide, hidePost],
 }
 
 // Post header drop down menu
@@ -56,7 +56,7 @@ class MenuView extends View<Post> {
 
 	// Run appropriate handler on click or simply remove the menu
 	handleClick(e: Event) {
-		actions[(e.target as Element).getAttribute('data-id')][1]()
+		actions[(e.target as Element).getAttribute('data-id')][1](this.model)
 		this.remove()
 	}
 
