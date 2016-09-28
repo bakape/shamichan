@@ -83,7 +83,6 @@ func createRouter() http.Handler {
 	admin.POST("/boardConfig", wrapHandler(servePrivateBoardConfigs))
 
 	// Assets
-	assetServer = http.FileServer(http.Dir(webRoot))
 	r.GET("/assets/*path", serveAssets)
 	r.GET("/images/*path", serveImages)
 	r.GET("/worker.js", wrapHandler(serveWorker))

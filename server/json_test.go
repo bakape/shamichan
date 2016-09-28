@@ -10,6 +10,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 	. "gopkg.in/check.v1"
 )
@@ -164,9 +165,9 @@ func (d *DB) TestServePost(c *C) {
 
 	// Existing post
 	const (
-		etag = "998db21ac97653d1"
 		body = `{"editing":false,"id":2,"time":0,"body":"","op":1,"board":"a"}`
 	)
+	etag := util.HashBuffer([]byte(body))
 	rec, req = newPair(c, "/json/post/2")
 	d.r.ServeHTTP(rec, req)
 	assertBody(rec, body, c)

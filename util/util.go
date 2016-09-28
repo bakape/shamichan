@@ -4,7 +4,7 @@ package util
 
 import (
 	"crypto/md5"
-	"encoding/hex"
+	"encoding/base64"
 	"strconv"
 )
 
@@ -41,10 +41,10 @@ func Waterfall(fns []func() error) (err error) {
 	return
 }
 
-// HashBuffer computes a truncated MD5 hash from a buffer
+// HashBuffer computes a base64 MD5 hash from a buffer
 func HashBuffer(buf []byte) string {
 	hash := md5.Sum(buf)
-	return hex.EncodeToString(hash[:])[:16]
+	return base64.RawStdEncoding.EncodeToString(hash[:])
 }
 
 // IDToString is a  helper for converting a post ID to a string for JSON keys
