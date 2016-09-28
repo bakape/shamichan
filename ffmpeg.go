@@ -301,7 +301,7 @@ func Decode(data []byte) (image.Image, error) {
 		YStride:        int(f.linesize[0]),
 		CStride:        int(f.linesize[0]) / 2,
 		SubsampleRatio: image.YCbCrSubsampleRatio420,
-		Rect:           image.Rectangle{Min: image.Point{X: 0, Y: 0}, Max: image.Point{X: int(f.width), Y: int(f.height)-1}}}, nil
+		Rect:           image.Rectangle{Min: image.Point{X: 0, Y: 0}, Max: image.Point{X: int(f.width), Y: int(f.height)/2*2}}}, nil
 }
 
 //Uses CGo FFmpeg binding to find video config
