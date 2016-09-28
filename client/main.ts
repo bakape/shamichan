@@ -18,7 +18,8 @@ import bindEtc from './etc'
 import bindOptionsListeners from "./options/loop"
 import bindShortcuts from "./keyboard"
 import {loadModule} from "./util"
-import bindScroll, {checkBottom} from "./scroll"
+import bindScroll, { checkBottom } from "./scroll"
+import bindMenu from "./posts/menu"
 
 // Clear cookies, if versions mismatch.
 const cookieVersion = 4
@@ -50,6 +51,7 @@ async function start() {
 	bindOptionsListeners()
 	bindShortcuts()
 	bindScroll()
+	bindMenu()
 	exec()
 	await pageLoader
 	read(() =>

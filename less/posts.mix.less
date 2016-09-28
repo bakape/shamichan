@@ -14,13 +14,6 @@ a.referenced {
 	align-items: flex-start;
 }
 
-.popup-menu, .act {
-	user-select: none;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-}
-
 article {
 	header {
 		padding-left: 14px;
@@ -131,8 +124,16 @@ header {
 		text-decoration: underline !important;
 	}
 	.control {
+		// Widen click area
+		width: 1em;
+		height: 1em;
+
 		margin-left: 0.5em;
 		float: right;
+		svg {
+			width: 0.7em;
+			height: 0.7em;
+		}
 	}
 	&.temporary > *:not(.name) {
 		display: none;
