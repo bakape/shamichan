@@ -83,6 +83,7 @@ function render(threads: ThreadData[]) {
 	write(() => {
 		$threads.innerHTML = ""
 		$threads.append(frag)
+		$threads.scrollTop = 0
 	})
 }
 
