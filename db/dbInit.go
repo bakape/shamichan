@@ -180,7 +180,7 @@ func CreateTables() error {
 	fns := make([]func() error, 0, len(AllTables))
 
 	for _, table := range AllTables {
-		if table == "images" {
+		if table == "images" || table == "threads" {
 			continue
 		}
 		fns = append(fns, createTable(table))
@@ -189,6 +189,12 @@ func CreateTables() error {
 	fns = append(fns, func() error {
 		return Write(r.TableCreate("images", r.TableCreateOpts{
 			PrimaryKey: "SHA1",
+		}))
+	})
+
+	fns = append(fns, func() error {
+		return Write(r.TableCreate("threads", r.TableCreateOpts{
+			Durability: "soft",
 		}))
 	})
 
