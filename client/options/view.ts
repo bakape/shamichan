@@ -73,7 +73,7 @@ export default class OptionsPanel extends TabbedModal {
 				el.value = val as string
 				break
 			case optionType.shortcut:
-				el.value = String.fromCharCode(val as number).toUpperCase()
+				el.value = String.fromCodePoint(val as number).toUpperCase()
 				break
 		}
 		// 'image' type simply falls through, as those don't need to be set
@@ -103,7 +103,7 @@ export default class OptionsPanel extends TabbedModal {
 				val = el.value
 				break
 			case optionType.shortcut:
-				val = el.value.toUpperCase().charCodeAt(0)
+				val = el.value.toUpperCase().codePointAt(0)
 				break
 			case optionType.image:
 				// Not recorded. Extracted directly by the background handler

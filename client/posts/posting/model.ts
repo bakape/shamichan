@@ -201,7 +201,7 @@ export class FormModel {
 	// Append a character to the model's body and reparse the line, if it's a
 	// newline
 	append(code: number) {
-		const char = String.fromCharCode(code)
+		const char = String.fromCodePoint(code)
 		if (char === "\n") {
 			this.view.terminateLine(this.parsedLines++)
 		}
@@ -261,7 +261,7 @@ export class FormModel {
 		} else {
 			this.inputState.line += char
 		}
-		this.send(message.append, char.charCodeAt(0))
+		this.send(message.append, char.codePointAt(0))
 	}
 
 	// Optionally buffer all data, if currently disconnected

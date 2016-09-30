@@ -127,7 +127,7 @@ export class Post extends Model implements PostData {
 
 	// Append a character to the text body
 	append(code: number) {
-		const char = String.fromCharCode(code),
+		const char = String.fromCodePoint(code),
 			{state, view} = this
 		this.body += char
 		state.line += char
