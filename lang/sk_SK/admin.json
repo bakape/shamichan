@@ -1,0 +1,140 @@
+{
+	"boardNameTaken": "Doska s týmto menom už existuje",
+	"ownNoBoards": "Nevlastníš žiadne dosky",
+	"prune": [
+		"Prune vlákna",
+		"Zmaž vlákna s obrázkami, keď priesnahnú limit na vlákno."
+	],
+	"radio": [
+		"R/a/dio integrácia",
+		"Enable 'Now playing' song display in the top banner and the #queue hash command"
+	],
+	"pyu": [
+		"#pyu",
+		"Nepýtaj sa"
+	],
+	"illyaDance": [
+		"Illya dance background",
+		"Local http://loli.dance/ implementation. Videos not included by default. Place illya.webm and illya.mp4 into the www directory, if you want this."
+	],
+	"hats": [
+		"Klobúčiky na obrázkoch",
+		"Attach hats to all image thumbnails"
+	],
+	"maxWidth": [
+		"Limit na výšky obrázka",
+		"Maximum width of uploaded images"
+	],
+	"maxHeight": [
+		"Limit na šírku obrázka",
+		"Maximum height of uploaded images"
+	],
+	"maxSize": [
+		"Limit na veľkosť obrázkov",
+		"Maximálna veľkosť obrázku v MB"
+	],
+	"JPEGQuality": [
+		"JPEG kompresia náhľadu",
+		"Kvalita JPEG náhľadov"
+	],
+	"PNGQuality": [
+		"PNG kompresia náhľadu",
+		"Stratová kompresia PNG náhľadov. Vyššia je horšia"
+	],
+	"maxThreads": [
+		"Threads per board limit",
+		"Maximum number of threads a board will retain, before the last ones are deleted, if thread pruning is enabled"
+	],
+	"maxBump": [
+		"Limit na drganie do vlákna",
+		"Maximum number of replies a thread may have, before it no longer is bumped to the top of the board"
+	],
+	"sessionExpiry": [
+		"Vypršanie sedenia pre účet",
+		"Čas v počte dňoch, kedy sa uživateľské účty automaticky odhlásia"
+	],
+	"salt": [
+		"Bezpečná soľ",
+		"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
+	],
+	"feedbackEmail": [
+		"Email na spätnú väzbu",
+		"User feedback email to display in the top banner"
+	],
+	"FAQ": [
+		"Information panel text",
+		"Entries for the banner's Frequently Asked Questions list and information modal"
+	],
+	"defaultLang": [
+		"Východzí jazyk",
+		"Jazyk ktorý použíť ako východzí"
+	],
+	"defaultCSS": [
+		"Východzia téma",
+		"Téma ktorú načítať, keď klient žiadnú nezvolil"
+	],
+	"links": [
+		"Externé odkazy",
+		"Pridať, zmazať alebo editovať externé >>>/4chan/ odkazy"
+	],
+	"boardName": [
+		"Názov dosky",
+		"Názov novej dosky. Môže obsahovať maximálne 3 malé latinské písmena alebo čísla."
+	],
+	"boardTitle": [
+		"Titúlok dosky",
+		"Titúlok novej dosky ako napríklad 'Politika & Sranie'. Maximálne 100 znakov."
+	],
+	"captcha": [
+		"Kapča",
+		"Ask users to complete a captcha for certain tasks like registration and thread creation"
+	],
+	"captchaPublicKey": [
+		"Kapča verejný kľúč",
+		"Kľúč používaný na komunikáciu s externou kapča službou"
+	],
+	"captchaPrivateKey": [
+		"Kapča súkromný kľúč",
+		"Kľúč používaný na autentizáciu vyriešených kapčí na strane servera"
+	],
+	"readOnly": [
+		"Len na čítanie",
+		"Zakázať prispievanie"
+	],
+	"textOnly": [
+		"Len text",
+		"Zakázať odosielanie súborov"
+	],
+	"forcedAnon": [
+		"Vynútená anonymita",
+		"Zruš uživateľské mená, výletokódy a emaily v plagátoch"
+	],
+	"hashCommands": [
+		"Hash príkazy",
+		"Povoliť #dice, #flip, #8ball, etc."
+	],
+	"spoilers": [
+		"Textové spojlere",
+		"Povoľ používanie ** na spojlerovanie blokov textu"
+	],
+	"codeTags": [
+		"Code tags",
+		"Enable code tags for embedding programming code"
+	],
+	"title": [
+		"Titúlok dosky",
+		"Krátky popis do dosky"
+	],
+	"notice": [
+		"Oznámenie",
+		"Krátka informačná správa zobrazená na vrchu dosky"
+	],
+	"eightball": [
+		"#8ball odpoveďe",
+		"List of answers for the #8ball hash command. One answer per line. Can contain up to 100 answers and 2000 characters total."
+	],
+	"rules": [
+		"Pravítka",
+		"Board rules to display in the rule modal window"
+	]
+}

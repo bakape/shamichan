@@ -23,7 +23,7 @@ export const themes = [
 ]
 
 // Available language packs. Change this, when adding any new ones.
-export const langs = ["en_GB", "es_ES", "pt_BR", "tr_TR", 'uk_UA']
+export const langs = ["en_GB", "es_ES", "pt_BR", "tr_TR", 'uk_UA', "sk_SK"]
 
 export type OptionValue =  boolean|string|number
 
