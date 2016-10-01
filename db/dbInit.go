@@ -14,7 +14,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 15
+const dbVersion = 16
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -28,14 +28,37 @@ var (
 	RSession *r.Session
 
 	// AllTables are all tables needed for meguca operation
-	AllTables = [...]string{
-		"main",        // Various global information
-		"threads",     // Thread and post data
-		"images",      // Thumbnailed upload data
-		"imageTokens", // Tokens for claiming thumbnailed images from the
-		// "images" table
-		"accounts", // Registered user accounts
-		"boards",   // Board configurations
+	AllTables = []string{
+		// Various global information
+		"main",
+
+		// Thread data
+		"threads",
+
+		// Post data
+		"posts",
+
+		// Thumbnailed upload data
+		"images",
+
+		// Tokens for claiming thumbnailed images from the "images" table
+		"imageTokens",
+
+		// Registered user accounts
+		"accounts",
+
+		// Board configurations
+		"boards",
+	}
+
+	// Map of simple secondary indececes for tables
+	secondaryIndeces = [...]struct {
+		table, index string
+	}{
+		{"threads", "board"},
+		{"posts", "op"},
+		{"posts", "board"},
+		{"posts", "editing"},
 	}
 )
 
@@ -73,8 +96,10 @@ func LoadDB() (err error) {
 	}
 	if isCreated {
 		RSession.Use(DBName)
-		if err := verifyDBVersion(); err != nil {
-			return err
+		if !isTest {
+			if err := verifyDBVersion(); err != nil {
+				return err
+			}
 		}
 	} else if err := InitDB(); err != nil {
 		return err
@@ -152,6 +177,11 @@ func InitDB() error {
 		return err
 	}
 
+	return populateDB()
+}
+
+// Populate DB with initial documents
+func populateDB() error {
 	main := [...]interface{}{
 		infoDocument{Document{"info"}, dbVersion, 0},
 
@@ -164,7 +194,7 @@ func InitDB() error {
 			config.Defaults,
 		},
 	}
-	if err := Write(r.Table("main").Insert(main)); err != nil {
+	if err := Insert("main", main); err != nil {
 		return util.WrapError("initializing database", err)
 	}
 
@@ -180,10 +210,11 @@ func CreateTables() error {
 	fns := make([]func() error, 0, len(AllTables))
 
 	for _, table := range AllTables {
-		if table == "images" || table == "threads" {
-			continue
+		switch table {
+		case "images", "threads", "posts":
+		default:
+			fns = append(fns, createTable(table))
 		}
-		fns = append(fns, createTable(table))
 	}
 
 	fns = append(fns, func() error {
@@ -192,11 +223,15 @@ func CreateTables() error {
 		}))
 	})
 
-	fns = append(fns, func() error {
-		return Write(r.TableCreate("threads", r.TableCreateOpts{
-			Durability: "soft",
-		}))
-	})
+	softDurability := [...]string{"threads", "posts"}
+	for i := range softDurability {
+		table := softDurability[i]
+		fns = append(fns, func() error {
+			return Write(r.TableCreate(table, r.TableCreateOpts{
+				Durability: "soft",
+			}))
+		})
+	}
 
 	return util.Waterfall(fns)
 }
@@ -209,28 +244,13 @@ func createTable(name string) func() error {
 
 // CreateIndeces create secondary indeces for faster table queries
 func CreateIndeces() error {
-	fns := []func() error{
-		func() error {
-			return Write(r.Table("threads").IndexCreate("board"))
-		},
+	fns := make([]func() error, 0, len(secondaryIndeces)+len(AllTables))
 
-		// For quick post parent thread lookups
-		func() error {
-			q := r.Table("threads").
-				IndexCreateFunc(
-					"post",
-					func(thread r.Term) r.Term {
-						return thread.
-							Field("posts").
-							Keys().
-							Map(func(id r.Term) r.Term {
-								return id.CoerceTo("number")
-							})
-					},
-					r.IndexCreateOpts{Multi: true},
-				)
-			return Write(q)
-		},
+	for _, i := range secondaryIndeces {
+		index := i // Capture variable
+		fns = append(fns, func() error {
+			return Write(r.Table(index.table).IndexCreate(index.index))
+		})
 	}
 
 	// Make sure all indeces are ready to avoid the race condition of and index
@@ -263,9 +283,9 @@ func createAdminAccount() error {
 	return RegisterAccount("admin", hash)
 }
 
-// ClearTables deletes the contents of all DB tables. Only used for tests.
-func ClearTables() error {
-	q := r.TableList().ForEach(func(table r.Term) r.Term {
+// ClearTables deletes the contents of specified DB tables. Only used for tests.
+func ClearTables(tables ...string) error {
+	q := r.Expr(tables).ForEach(func(table r.Term) r.Term {
 		return r.Table(table).Delete()
 	})
 	return Write(q)
