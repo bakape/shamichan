@@ -13,7 +13,7 @@ import (
 
 func init() {
 	DBName = "meguca_test"
-	isTest = true
+	IsTest = true
 	if err := LoadDB(); err != nil {
 		panic(err)
 	}
@@ -33,6 +33,12 @@ func assertInsert(t *testing.T, table string, doc interface{}) {
 
 func logUnexpected(t *testing.T, expected, got interface{}) {
 	t.Errorf("\nexpected: %#v\ngot:      %#v", expected, got)
+}
+
+func assertDeepEquals(t *testing.T, res, std interface{}) {
+	if !reflect.DeepEqual(res, std) {
+		logUnexpected(t, std, res)
+	}
 }
 
 func TestVerifyVersion(t *testing.T) {
@@ -145,9 +151,7 @@ func TestPopulateDB(t *testing.T) {
 		if err := One(GetMain("config"), &conf); err != nil {
 			t.Fatal(err)
 		}
-		if !reflect.DeepEqual(conf, config.Defaults) {
-			logUnexpected(t, config.Defaults, conf)
-		}
+		assertDeepEquals(t, conf, config.Defaults)
 	})
 }
 

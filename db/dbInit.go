@@ -23,6 +23,10 @@ var (
 	// DBName is the name of the database to use
 	DBName = "meguca"
 
+	// IsTest can be overriden to not launch several infinite loops during tests
+	// or check DB version
+	IsTest bool
+
 	// RSession exports the RethinkDB connection session. Used globally by the
 	// entire server.
 	RSession *r.Session
@@ -96,7 +100,7 @@ func LoadDB() (err error) {
 	}
 	if isCreated {
 		RSession.Use(DBName)
-		if !isTest {
+		if !IsTest {
 			if err := verifyDBVersion(); err != nil {
 				return err
 			}
@@ -105,7 +109,7 @@ func LoadDB() (err error) {
 		return err
 	}
 
-	if !isTest {
+	if !IsTest {
 		go runCleanupTasks()
 	}
 	return loadConfigs()

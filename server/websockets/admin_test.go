@@ -1,46 +1,54 @@
 package websockets
 
 import (
+	"testing"
 	"time"
 
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	r "github.com/dancannon/gorethink"
-	. "gopkg.in/check.v1"
 )
 
-func (*DB) TestNotAdmin(c *C) {
+func TestNotAdmin(t *testing.T) {
+	t.Parallel()
+
 	cl := &Client{}
 	cl.UserID = "foo"
 	for _, fn := range []handler{configServer} {
-		c.Assert(fn(nil, cl), Equals, errAccessDenied)
+		if err := fn(nil, cl); err != errAccessDenied {
+			t.Errorf("unexpected error: %#v", err)
+		}
 	}
 }
 
-func (*DB) TestServerConfigRequest(c *C) {
+func TestServerConfigRequest(t *testing.T) {
 	config.Set(config.Defaults)
-	sv := newWSServer(c)
+
+	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	cl.UserID = "admin"
 
-	c.Assert(configServer([]byte{}, cl), IsNil)
+	if err := configServer([]byte{}, cl); err != nil {
+		t.Fatal(err)
+	}
+
 	msg, err := EncodeMessage(MessageConfigServer, config.Get())
-	c.Assert(err, IsNil)
-	assertMessage(wcl, msg, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertMessage(t, wcl, string(msg))
 }
 
-func (*DB) TestServerConfigSetting(c *C) {
-	init := db.ConfigDocument{
+func TestServerConfigSetting(t *testing.T) {
+	assertTableClear(t, "main")
+	assertInsert(t, "main", db.ConfigDocument{
 		Document: db.Document{
 			ID: "config",
 		},
 		Configs: config.Defaults,
-	}
-	c.Assert(db.Write(r.Table("main").Insert(init)), IsNil)
+	})
 
-	sv := newWSServer(c)
+	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	cl.UserID = "admin"
@@ -48,68 +56,72 @@ func (*DB) TestServerConfigSetting(c *C) {
 	req := config.Defaults
 	req.Boards = []string{"fa"}
 	req.DefaultCSS = "ashita"
-	c.Assert(configServer(marshalJSON(req, c), cl), IsNil)
-	assertMessage(wcl, []byte("39true"), c)
+	if err := configServer(marshalJSON(t, req), cl); err != nil {
+		t.Fatal(err)
+	}
+	assertMessage(t, wcl, "39true")
 
 	var conf config.Configs
-	c.Assert(db.One(db.GetMain("config"), &conf), IsNil)
+	if err := db.One(db.GetMain("config"), &conf); err != nil {
+		t.Fatal(err)
+	}
 	std := config.Defaults
 	std.DefaultCSS = "ashita"
-	c.Assert(conf, DeepEquals, std)
+	assertDeepEquals(t, conf, std)
 }
 
-func (*DB) TestInvalidBoardName(c *C) {
-	for _, name := range [...]string{"abcd", "", ":^)"} {
-		req := boardCreationRequest{
-			Name:  name,
-			Title: "foo",
-		}
-		assertLoggedInResponse(req, createBoard, "123", []byte("401"), c)
+func TestValidateBoardCreation(t *testing.T) {
+	assertTableClear(t, "boards")
+	assertInsert(t, "boards", db.Document{ID: "a"})
+
+	cases := [...]struct {
+		name, boardName, title, response string
+	}{
+		{"board name too long", "abcd", "foo", "401"},
+		{"empty board name", "", "foo", "401"},
+		{"invalid chars in board name", ":^)", "foo", "401"},
+		{"reserved key 'id' as board name", "id", "foo", "401"},
+		{"title too long", "a", genString(101), "403"},
+		{"board name taken", "a", "foo", "402"},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := boardCreationRequest{
+				Name:  c.boardName,
+				Title: c.title,
+			}
+			assertLoggedInResponse(t, req, createBoard, "123", c.response)
+		})
 	}
 }
 
-func (*DB) TestBoardTitleTooLong(c *C) {
-	title, err := auth.RandomID(101)
-	c.Assert(err, IsNil)
-	title = title[:101]
-	req := boardCreationRequest{
-		Name:  "a",
-		Title: title,
-	}
-	assertLoggedInResponse(req, createBoard, "123", []byte("403"), c)
-}
+func TestBoardCreation(t *testing.T) {
+	assertTableClear(t, "main", "boards")
 
-func (*DB) TestBoardNameTaken(c *C) {
-	q := r.Table("boards").Insert(db.Document{ID: "a"})
-	c.Assert(db.Write(q), IsNil)
-	req := boardCreationRequest{
-		Name:  "a",
-		Title: "/a/ - Animu & Mango",
-	}
-	assertLoggedInResponse(req, createBoard, "123", []byte("402"), c)
-}
-
-func (*DB) TestBoardCreation(c *C) {
 	const (
 		id     = "a"
 		userID = "123"
 		title  = "/a/ - Animu & Mango"
 	)
-
-	conf := db.ConfigDocument{
+	assertInsert(t, "main", db.ConfigDocument{
 		Document: db.Document{ID: "config"},
 		Configs:  config.Defaults,
-	}
-	c.Assert(db.Write(r.Table("main").Insert(conf)), IsNil)
+	})
 
 	req := boardCreationRequest{
 		Name:  id,
 		Title: title,
 	}
-	assertLoggedInResponse(req, createBoard, userID, []byte("400"), c)
+	assertLoggedInResponse(t, req, createBoard, userID, "400")
 
 	var board config.DatabaseBoardConfigs
-	c.Assert(db.One(db.GetBoardConfig(id), &board), IsNil)
+	if err := db.One(db.GetBoardConfig(id), &board); err != nil {
+		t.Fatal(err)
+	}
 	std := config.DatabaseBoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        id,
@@ -122,10 +134,15 @@ func (*DB) TestBoardCreation(c *C) {
 			},
 		},
 	}
-	c.Assert(board.Created.Before(time.Now()), Equals, true)
-	c.Assert(board.BoardConfigs, DeepEquals, std.BoardConfigs)
+	if !board.Created.Before(time.Now()) {
+		t.Errorf("invalid board creation time: %#v", board.Created)
+	}
+	assertDeepEquals(t, board.BoardConfigs, std.BoardConfigs)
 
 	var boards []string
-	c.Assert(db.All(db.GetMain("config").Field("boards"), &boards), IsNil)
-	c.Assert(boards, DeepEquals, []string{"a"})
+	err := db.All(db.GetMain("config").Field("boards"), &boards)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertDeepEquals(t, boards, []string{"a"})
 }

@@ -174,7 +174,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 
 	data, err := db.GetThread(id, detectLastN(r))
 	if err != nil {
-		text500(w, r, err)
+		respondToJSONError(w, r, err)
 		return
 	}
 

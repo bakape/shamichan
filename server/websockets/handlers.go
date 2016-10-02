@@ -78,13 +78,13 @@ var (
 		MessageChangePassword: changePassword,
 		MessageConfigServer:   configServer,
 		MessageCreateBoard:    createBoard,
-		MessageInsertThread:   insertThread,
-		MessageAppend:         appendRune,
-		MessageBackspace:      backspace,
-		MessageClosePost:      closePost,
-		MessageSplice:         spliceText,
-		MessageInsertPost:     insertPost,
-		MessageInsertImage:    insertImage,
+		// MessageInsertThread:   insertThread,
+		// MessageAppend:         appendRune,
+		// MessageBackspace:      backspace,
+		// MessageClosePost:      closePost,
+		// MessageSplice:         spliceText,
+		// MessageInsertPost:     insertPost,
+		// MessageInsertImage:    insertImage,
 	}
 )
 
@@ -113,6 +113,12 @@ func EncodeMessage(typ MessageType, msg interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return prepependMessageType(typ, data), nil
+}
+
+// Prepend the encoded websocket message type to an already encoded message
+func prepependMessageType(typ MessageType, data []byte) []byte {
 	encoded := make([]byte, len(data)+2)
 	typeString := strconv.FormatUint(uint64(typ), 10)
 
@@ -126,7 +132,7 @@ func EncodeMessage(typ MessageType, msg interface{}) ([]byte, error) {
 
 	copy(encoded[2:], data)
 
-	return encoded, nil
+	return encoded
 }
 
 // Post a request to the SolveMedia API to authenticate a captcha

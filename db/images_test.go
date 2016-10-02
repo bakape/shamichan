@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"reflect"
-
 	"bytes"
 
 	"github.com/bakape/meguca/imager/assets"
@@ -90,9 +88,7 @@ func testFindImageThumb(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(img, thumbnailed.ImageCommon) {
-		logUnexpected(t, thumbnailed.ImageCommon, img)
-	}
+	assertDeepEquals(t, img, thumbnailed.ImageCommon)
 	assertImageRefCount(t, id, 2)
 }
 

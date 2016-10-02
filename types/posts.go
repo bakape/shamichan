@@ -108,21 +108,21 @@ type DatabaseThread struct {
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
-	Editing   bool      `json:"editing" gorethink:"editing"`
-	LogCtr    int       `json:"logCtr,omitempty" gorethink:"logCtr,omitempty"`
-	ID        int64     `json:"id" gorethink:"id"`
-	OP        int64     `json:"op,omitempty" gorethink:"op"`
-	Time      int64     `json:"time" gorethink:"time"`
-	Board     string    `json:"board" gorethink:"board"`
-	Body      string    `json:"body" gorethink:"body"`
-	Name      string    `json:"name,omitempty" gorethink:"name,omitempty"`
-	Trip      string    `json:"trip,omitempty" gorethink:"trip,omitempty"`
-	Auth      string    `json:"auth,omitempty" gorethink:"auth,omitempty"`
-	Email     string    `json:"email,omitempty" gorethink:"email,omitempty"`
-	Image     *Image    `json:"image,omitempty" gorethink:"image,omitempty"`
-	Backlinks LinkMap   `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
-	Links     LinkMap   `json:"links,omitempty" gorethink:"links,omitempty"`
-	Commands  []Command `json:"commands,omitempty" gorethink:"commands,omitempty"`
+	Editing     bool      `json:"editing" gorethink:"editing"`
+	ID          int64     `json:"id" gorethink:"id"`
+	OP          int64     `json:"op,omitempty" gorethink:"op"`
+	Time        int64     `json:"time" gorethink:"time"`
+	LastUpdated int64     `json:"lastUpdated" gorethink:"lastUpdated"`
+	Board       string    `json:"board" gorethink:"board"`
+	Body        string    `json:"body" gorethink:"body"`
+	Name        string    `json:"name,omitempty" gorethink:"name,omitempty"`
+	Trip        string    `json:"trip,omitempty" gorethink:"trip,omitempty"`
+	Auth        string    `json:"auth,omitempty" gorethink:"auth,omitempty"`
+	Email       string    `json:"email,omitempty" gorethink:"email,omitempty"`
+	Image       *Image    `json:"image,omitempty" gorethink:"image,omitempty"`
+	Backlinks   LinkMap   `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
+	Links       LinkMap   `json:"links,omitempty" gorethink:"links,omitempty"`
+	Commands    []Command `json:"commands,omitempty" gorethink:"commands,omitempty"`
 }
 
 // DatabasePost is for writing new posts to a database. It contains the IP and

@@ -101,9 +101,7 @@ func testGetPost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(post, std) {
-		logUnexpected(t, std, post)
-	}
+	assertDeepEquals(t, post, std)
 }
 
 func testGetAllBoard(t *testing.T) {
@@ -129,9 +127,7 @@ func testGetAllBoard(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(board, &std) {
-		logUnexpected(t, &std, board)
-	}
+	assertDeepEquals(t, board, &std)
 }
 
 func testGetBoard(t *testing.T) {
@@ -174,9 +170,7 @@ func testGetBoard(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !reflect.DeepEqual(board, &c.std) {
-				logUnexpected(t, &c.std, board)
-			}
+			assertDeepEquals(t, board, &c.std)
 		})
 	}
 }
@@ -187,23 +181,20 @@ func testGetThread(t *testing.T) {
 	thread1 := types.Thread{
 		PostCtr: 3,
 		Post: types.Post{
-			ID:     1,
-			LogCtr: 1,
-			Board:  "a",
+			ID:    1,
+			Board: "a",
 		},
 		Posts: []types.Post{
 			{
-				ID:     2,
-				OP:     1,
-				LogCtr: 1,
-				Board:  "a",
-				Body:   "foo",
+				ID:    2,
+				OP:    1,
+				Board: "a",
+				Body:  "foo",
 			},
 			{
-				ID:     4,
-				OP:     1,
-				LogCtr: 1,
-				Board:  "a",
+				ID:    4,
+				OP:    1,
+				Board: "a",
 			},
 		},
 	}
@@ -234,9 +225,8 @@ func testGetThread(t *testing.T) {
 			std: &types.Thread{
 				PostCtr: 1,
 				Post: types.Post{
-					ID:     3,
-					Board:  "c",
-					LogCtr: 2,
+					ID:    3,
+					Board: "c",
 				},
 				Posts: []types.Post{},
 			},
@@ -257,9 +247,7 @@ func testGetThread(t *testing.T) {
 			if err != c.err {
 				t.Fatalf("unexpected error: %#v", err)
 			}
-			if !reflect.DeepEqual(thread, c.std) {
-				logUnexpected(t, c.std, thread)
-			}
+			assertDeepEquals(t, thread, c.std)
 		})
 	}
 }

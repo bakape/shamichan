@@ -44,14 +44,7 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 	}
 
 	q = q.Merge(map[string]r.Term{
-		"logCtr": r.Row.Field("log").Count(),
-		"posts": getPosts.
-			Merge(func(post r.Term) map[string]r.Term {
-				return map[string]r.Term{
-					"logCtr": post.Field("log").Count(),
-				}
-			}).
-			Without(omitForPosts),
+		"posts": getPosts.Without(omitForPosts),
 	}).
 		Without(omitForPosts)
 

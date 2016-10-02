@@ -26,10 +26,10 @@ func parseLinks(frag []byte) (types.LinkMap, error) {
 		}
 
 		var parent struct {
-			ID    int64  `gorethink:"id"`
-			Board string `gorethink:"board"`
+			ID    int64
+			Board string
 		}
-		q := db.FindParentThread(id).Pluck("id", "board").Default(nil)
+		q := db.FindPost(id).Pluck("id", "board").Default(nil)
 		err = db.One(q, &parent)
 		if err != nil {
 			if err == r.ErrEmptyResult { // Points to invalid post. Ignore.

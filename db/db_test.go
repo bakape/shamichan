@@ -1,7 +1,6 @@
 package db
 
 import (
-	"reflect"
 	"testing"
 
 	"bytes"
@@ -93,9 +92,7 @@ func TestRegisterAccount(t *testing.T) {
 	if err := One(GetAccount(id), &res); err != nil {
 		t.Error(err)
 	}
-	if !reflect.DeepEqual(res, user) {
-		logUnexpected(t, user, res)
-	}
+	assertDeepEquals(t, res, user)
 
 	// User name already registered
 	if err := RegisterAccount(id, hash); err != ErrUserNameTaken {

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/bakape/meguca/config"
@@ -19,9 +18,7 @@ func TestLoadConfigs(t *testing.T) {
 	if err := loadConfigs(); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(config.Get(), &config.Defaults) {
-		logUnexpected(t, &config.Defaults, config.Get())
-	}
+	assertDeepEquals(t, config.Get(), &config.Defaults)
 }
 
 func TestUpdateConfigs(t *testing.T) {
@@ -33,7 +30,5 @@ func TestUpdateConfigs(t *testing.T) {
 	if err := updateConfigs(std); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(config.Get(), &std) {
-		logUnexpected(t, &std, config.Get())
-	}
+	assertDeepEquals(t, config.Get(), &std)
 }

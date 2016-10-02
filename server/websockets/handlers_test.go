@@ -2,66 +2,34 @@ package websockets
 
 import (
 	"encoding/json"
-
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	r "github.com/dancannon/gorethink"
-	"github.com/gorilla/websocket"
-	. "gopkg.in/check.v1"
+	"testing"
 )
 
-var _ = Suite(&DB{})
-
-// Tests that require database access
-type DB struct{}
-
-func (d *DB) SetUpSuite(c *C) {
-	db.DBName = db.UniqueDBName()
-	c.Assert(db.Connect(), IsNil)
-	c.Assert(db.InitDB(), IsNil)
-	isTest = true
-}
-
-func (d *DB) TearDownSuite(c *C) {
-	c.Assert(db.Exec(r.DBDrop(db.DBName)), IsNil)
-	isTest = false
-}
-
-func (d *DB) SetUpTest(c *C) {
-	Clients.Clear()
-	feeds.Clear()
-	config.Set(config.Configs{
-		SessionExpiry: 30,
-		Boards:        []string{"a"},
-	})
-	c.Assert(db.ClearTables(), IsNil)
-}
-
-func syncAssertMessage(conn *websocket.Conn, msg []byte, c *C) {
-	typ, buf, err := conn.ReadMessage()
-	c.Assert(err, IsNil)
-	c.Assert(typ, Equals, websocket.TextMessage)
-	c.Assert(buf, DeepEquals, msg)
-}
-
-func marshalJSON(msg interface{}, c *C) []byte {
+func marshalJSON(t *testing.T, msg interface{}) []byte {
 	data, err := json.Marshal(msg)
-	c.Assert(err, IsNil)
+	if err != nil {
+		t.Fatal(err)
+	}
 	return data
 }
 
-func (*ClientSuite) TestDecodeMessage(c *C) {
+func TestDecodeMessage(t *testing.T) {
+	t.Parallel()
+
 	// Unparsable message
 	var msg syncRequest
-	err := decodeMessage([]byte{0}, &msg)
-	c.Assert(err, ErrorMatches, invalidCharacter)
+	assertErrorPrefix(t, decodeMessage([]byte{0}, &msg), invalidCharacter)
 
 	// Valid message
 	std := syncRequest{
 		Thread: 20,
 		Board:  "a",
 	}
-	data := marshalJSON(std, c)
-	c.Assert(decodeMessage(data, &msg), IsNil)
-	c.Assert(msg, DeepEquals, std)
+	data := marshalJSON(t, std)
+	if err := decodeMessage(data, &msg); err != nil {
+		t.Fatal(err)
+	}
+	if msg != std {
+		logUnexpected(t, std, msg)
+	}
 }

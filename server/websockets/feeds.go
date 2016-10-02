@@ -3,25 +3,33 @@
 package websockets
 
 import (
+	"bytes"
 	"log"
 	"sync"
 
+	"time"
+
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
 
 var (
-	// Precompiled query for extracting only the changed fields from the
-	// replication log feed
-	formatUpdateFeed = r.Branch(
-		r.Row.HasFields("old_val"),
-		r.Row.
-			Field("new_val").
-			Field("log").
-			Slice(r.Row.Field("old_val").Field("log").Count()).
-			Default(nil), // Thread deleted
-		r.Row.Field("new_val").Field("log").Count(), // Initial counter
-	)
+	// Precompiled query for formatting the change feed stream
+	formatChangeFeed = map[string]map[string]r.Term{
+		"new_val": {
+			"log": r.Row.
+				Field("new_val").
+				Field("log").
+				Slice(r.Row.
+					Field("old_val").
+					Field("log").
+					Count().
+					Default(0),
+				),
+			"isFresh": r.Row.Field("old_val").Eq(nil),
+		},
+	}
 
 	// Contains and manages all active update feeds
 	feeds = feedContainer{
@@ -38,42 +46,59 @@ type feedContainer struct {
 
 // A feed with syncronisation logic of a certain thread
 type updateFeed struct {
-	id      int64         // Thread ID
-	ctr     uint64        // Feed progress counter
-	clients []*Client     // Subscribed clients
-	Add     chan *Client  // Add a client to u
-	Remove  chan *Client  // Remove a client from u
-	close   chan struct{} // Close database change feed
-	read    chan [][]byte // Read from database change feed
+	id       int64                // Thread ID
+	clients  []*Client            // Subscribed clients
+	clientMu sync.RWMutex         // Protects the clients slice
+	close    chan struct{}        // Close database change feed
+	read     chan feedUpdate      // Read from database change feed
+	buf      bytes.Buffer         // Buffer of unsent messages
+	cache    map[int64]types.Post // Cache of posts updated within ght last 30 s
+}
+
+// Change feed update message
+type feedUpdate struct {
+	IsFresh bool
+	types.DatabasePost
 }
 
 // Add a client to an existing update feed or create a new one, if it does not
 // exist yet
-func (f *feedContainer) Add(id int64, cl *Client) (*updateFeed, error) {
+func (f *feedContainer) Add(id int64, cl *Client) error {
 	f.Lock()
 	defer f.Unlock()
 
 	feed := f.feeds[id]
 	if feed != nil {
-		feed.Add <- cl
-		return feed, nil
+		feed.add(cl)
+		return nil
 	}
 
 	var err error
 	feed, err = newUpdateFeed(id)
 	if err != nil {
 		close(feed.close)
-		return nil, err
+		return err
 	}
 
 	f.feeds[id] = feed
-	feed.Add <- cl
+	feed.add(cl)
 
-	return feed, nil
+	return nil
+}
+
+// Remove a client from the update feed
+func (f *feedContainer) Remove(id int64, cl *Client) {
+	f.RLock()
+	feed, ok := f.feeds[id]
+	f.RUnlock()
+
+	if ok {
+		feed.remove(cl)
+	}
 }
 
 // Remove an updateFeed from f. Should only be called by the feed itself.
-func (f *feedContainer) Remove(id int64) {
+func (f *feedContainer) removeFeed(id int64) {
 	f.Lock()
 	defer f.Unlock()
 	delete(f.feeds, id)
@@ -94,30 +119,35 @@ func (f *feedContainer) Clear() {
 }
 
 // Create a new updateFeed and sync it to the database
-func newUpdateFeed(id int64) (*updateFeed, error) {
-	feed := updateFeed{
+func newUpdateFeed(id int64) (feed *updateFeed, err error) {
+	feed = &updateFeed{
 		id:      id,
 		clients: make([]*Client, 0, 1),
 		close:   make(chan struct{}),
-		read:    make(chan [][]byte),
-		Add:     make(chan *Client),
-		Remove:  make(chan *Client),
+		read:    make(chan feedUpdate),
+		cache:   make(map[int64]types.Post, 1<<4),
 	}
 
 	cursor, err := feed.streamUpdates()
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	go feed.Listen(cursor)
+	go feed.listen(cursor)
 
-	return &feed, nil
+	return
 }
 
 // Start listening for updates from database and client requests
-func (u *updateFeed) Listen(cursor *r.Cursor) {
+func (u *updateFeed) listen(cursor *r.Cursor) {
+	send := time.NewTicker(time.Millisecond * 200)
+	cleanCache := time.NewTicker(time.Second * 10)
 
 	defer func() {
+		send.Stop()
+		cleanCache.Stop()
+		feeds.removeFeed(u.id)
+
 		err := cursor.Err()
 		if err == nil {
 			err = cursor.Close()
@@ -125,51 +155,20 @@ func (u *updateFeed) Listen(cursor *r.Cursor) {
 		if err != nil {
 			log.Printf("update feed: %s\n", err)
 		}
-
-		feeds.Remove(u.id)
 	}()
 
 	for {
 		select {
-
-		// Add client
-		case client := <-u.Add:
-			u.clients = append(u.clients, client)
-			err := client.sendMessage(MessageSynchronise, u.ctr)
-			if err != nil {
-				client.Close(err)
-			}
-
-		// Remove client or close feed, if no clients would remain
-		case client := <-u.Remove:
-			if len(u.clients) == 1 {
-				u.clients = nil
+		case update := <-u.read:
+			if err := u.bufferUpdate(update); err != nil {
+				log.Printf("feed update: %s", err)
 				return
 			}
-			for i, cl := range u.clients {
-				if cl == client {
-					copy(u.clients[i:], u.clients[i+1:])
-					u.clients[len(u.clients)-1] = nil
-					u.clients = u.clients[:len(u.clients)-1]
-					break
-				}
-			}
-
-		// Forward updates to clients
-		case updates := <-u.read:
-			if updates == nil { // Thread deleted
-				return
-			}
-			u.ctr += uint64(len(updates))
-			concat := ConcatMessages(updates)
-			for _, client := range u.clients {
-				if err := client.send(concat); err != nil {
-					client.Close(err)
-				}
-			}
-
-		// Feed terminated externally
-		case <-u.close:
+		case <-send.C:
+			u.flushBuffer()
+		case t := <-cleanCache.C:
+			u.cleanCache(t.Unix())
+		case <-u.close: // Feed terminated externally
 			return
 		}
 	}
@@ -189,7 +188,7 @@ func ConcatMessages(msgs [][]byte) []byte {
 	}
 
 	buf := make([]byte, 2, cap)
-	buf[0] = 52
+	buf[0] = 52 // Corresponds to string encoded MessageConcat
 	buf[1] = 50
 	for i, msg := range msgs {
 		if i != 0 {
@@ -206,25 +205,120 @@ func ConcatMessages(msgs [][]byte) []byte {
 // updates. The intial contents of the log are assigned emediately.
 func (u *updateFeed) streamUpdates() (*r.Cursor, error) {
 	cursor, err := r.
-		Table("threads").
-		Get(u.id).
+		Table("posts").
+		GetAllByIndex("op", u.id).
 		Changes(r.ChangesOpts{
 			IncludeInitial: true,
 			Squash:         0.2, // Perform at most every 0.2 seconds
 		}).
-		Map(formatUpdateFeed).
+		Filter(r. // Exclude the initial swarm of old posts
+				Row.
+				Field("lastUpdated").
+				Gt(r.Now().ToEpochTime().Sub(30)),
+		).
+		Merge(formatChangeFeed).
+		Field("new_val").
+		Without("ip", "password").
 		Run(db.RSession)
 	if err != nil {
 		return nil, err
 	}
 
-	if !cursor.Next(&u.ctr) {
-		if err := cursor.Err(); err != nil {
-			return nil, err
-		}
-	}
-
 	cursor.Listen(u.read)
 
 	return cursor, nil
+}
+
+// Add client and send it posts updated within the last 30 seconds
+func (u *updateFeed) add(c *Client) {
+	u.clientMu.Lock()
+	u.clients = append(u.clients, c)
+	u.clientMu.Unlock()
+
+	err := c.sendMessage(MessageSynchronise, u.cache)
+	if err != nil {
+		c.Close(err)
+	}
+}
+
+// Remove client from listeners and close feed, if none left. Should only be
+// called from "feeds".
+func (u *updateFeed) remove(c *Client) {
+	u.clientMu.Lock()
+	defer u.clientMu.Unlock()
+
+	if len(u.clients) == 1 {
+		u.clients = []*Client{}
+		select {
+		case <-u.close:
+		default:
+			close(u.close)
+		}
+		return
+	}
+
+	for i, cl := range u.clients {
+		if cl == c {
+			copy(u.clients[i:], u.clients[i+1:])
+			u.clients[len(u.clients)-1] = nil
+			u.clients = u.clients[:len(u.clients)-1]
+			break
+		}
+	}
+}
+
+// Buffer the replication log updates received from the DB and cache the new
+// contents of the post.
+func (u *updateFeed) bufferUpdate(update feedUpdate) error {
+	u.cache[update.ID] = update.Post
+
+	// To synchronise the client's state with u we resend any posts updated
+	// withing the last 30 seconds. Client must dedup and render accordingly.
+	if !update.IsFresh {
+		data, err := EncodeMessage(MessageInsertPost, update.Post)
+		if err != nil {
+			return err
+		}
+		u.writeToBuffer(data)
+	} else {
+		for _, msg := range update.Log {
+			u.writeToBuffer(msg)
+		}
+	}
+	return nil
+}
+
+func (u *updateFeed) writeToBuffer(data []byte) {
+	if u.buf.Len() != 0 {
+		u.buf.WriteRune('\u0000')
+	}
+	u.buf.Write(data)
+}
+
+// Send any buffered messages
+func (u *updateFeed) flushBuffer() {
+	if u.buf.Len() == 0 {
+		return
+	}
+	buf := prepependMessageType(MessageConcat, u.buf.Bytes())
+
+	u.clientMu.RLock()
+	for _, client := range u.clients {
+		if err := client.send(buf); err != nil {
+			client.Close(err)
+		}
+	}
+	u.clientMu.RUnlock()
+
+	u.buf.Reset()
+}
+
+// Clean up entries from updated post cache older than 30 seconds
+func (u *updateFeed) cleanCache(time int64) {
+	time -= 30
+	for id, post := range u.cache {
+		if post.LastUpdated < time {
+			delete(u.cache, id)
+		}
+	}
 }
