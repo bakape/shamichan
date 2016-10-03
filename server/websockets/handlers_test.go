@@ -5,14 +5,6 @@ import (
 	"testing"
 )
 
-func marshalJSON(t *testing.T, msg interface{}) []byte {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return data
-}
-
 func TestDecodeMessage(t *testing.T) {
 	t.Parallel()
 

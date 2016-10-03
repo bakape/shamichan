@@ -1,11 +1,14 @@
 package server
 
 import (
+	"testing"
+
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/templates"
-	. "gopkg.in/check.v1"
+	"github.com/bakape/meguca/types"
 )
 
-func (w *WebServer) TestServeIndexTemplate(c *C) {
+func TestServeIndexTemplate(t *testing.T) {
 	const (
 		desktopUA = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 " +
 			"(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
@@ -26,51 +29,72 @@ func (w *WebServer) TestServeIndexTemplate(c *C) {
 	headers := map[string]string{
 		"Content-Type": "text/html",
 	}
+	(*config.Get()).Boards = []string{"a"}
 
-	// Desktop
-	rec, req := newPair(c, "/a/")
-	req.Header.Set("User-Agent", desktopUA)
-	w.r.ServeHTTP(rec, req)
-	assertBody(rec, string(desktop.HTML), c)
-	assertEtag(rec, desktop.Hash, c)
-	assertHeaders(c, rec, headers)
+	t.Run("desktop", func(t *testing.T) {
+		t.Parallel()
 
-	// Mobile
-	rec, req = newPair(c, "/a/")
-	req.Header.Set("User-Agent", mobileUA)
-	w.r.ServeHTTP(rec, req)
-	assertBody(rec, string(mobile.HTML), c)
-	assertEtag(rec, mobile.Hash+"-mobile", c)
-	assertHeaders(c, rec, headers)
+		rec, req := newPair("/a/")
+		req.Header.Set("User-Agent", desktopUA)
+		router.ServeHTTP(rec, req)
+		assertBody(t, rec, string(desktop.HTML))
+		assertEtag(t, rec, desktop.Hash)
+		assertHeaders(t, rec, headers)
+	})
 
-	// Etag matches
-	rec, req = newPair(c, "/a/")
-	req.Header.Set("If-None-Match", desktop.Hash)
-	w.r.ServeHTTP(rec, req)
-	assertCode(rec, 304, c)
+	t.Run("mobile", func(t *testing.T) {
+		t.Parallel()
+
+		rec, req := newPair("/a/")
+		req.Header.Set("User-Agent", mobileUA)
+		router.ServeHTTP(rec, req)
+		assertBody(t, rec, string(mobile.HTML))
+		assertEtag(t, rec, mobile.Hash+"-mobile")
+		assertHeaders(t, rec, headers)
+	})
+
+	t.Run("etag matches", func(t *testing.T) {
+		t.Parallel()
+
+		rec, req := newPair("/a/")
+		req.Header.Set("If-None-Match", desktop.Hash)
+		router.ServeHTTP(rec, req)
+		assertCode(t, rec, 304)
+	})
 }
 
-func (d *DB) TestThreadHTML(c *C) {
-	setupPosts(c)
+func TestThreadHTML(t *testing.T) {
+	assertTableClear(t, "threads")
+	assertInsert(t, "threads", types.DatabaseThread{
+		ID:    1,
+		Board: "a",
+	})
+	(*config.Get()).Boards = []string{"a"}
 	body := []byte("body")
 	templates.Set("index", templates.Store{
 		HTML: body,
 		Hash: "hash",
 	})
-	webRoot = "testdata"
 
-	// Unparsable thread number
-	rec, req := newPair(c, "/a/www")
-	d.r.ServeHTTP(rec, req)
-	assertCode(rec, 404, c)
+	t.Run("unparsable thread number", func(t *testing.T) {
+		t.Parallel()
 
-	// Non-existant thread
-	rec, req = newPair(c, "/a/22")
-	d.r.ServeHTTP(rec, req)
-	assertCode(rec, 404, c)
+		rec, req := newPair("/a/www")
+		router.ServeHTTP(rec, req)
+		assertCode(t, rec, 404)
+	})
+	t.Run("nonexistant thread", func(t *testing.T) {
+		t.Parallel()
 
-	// Thread exists
-	rec, req = newPair(c, "/a/1")
-	d.r.ServeHTTP(rec, req)
-	assertBody(rec, string(body), c)
+		rec, req := newPair("/a/22")
+		router.ServeHTTP(rec, req)
+		assertCode(t, rec, 404)
+	})
+	t.Run("thread esists", func(t *testing.T) {
+		t.Parallel()
+
+		rec, req := newPair("/a/1")
+		router.ServeHTTP(rec, req)
+		assertBody(t, rec, string(body))
+	})
 }

@@ -9,8 +9,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/server/websockets"
-	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
@@ -272,87 +270,50 @@ func serveStaffPositions(
 	writeJSON(res, req, true, boards)
 }
 
-// Serve slices of a thread's replication log for filling in any missing
-// messages between client's JSON retrieval and websocket synchronisation. Also
-// used for catching up after a disconnect.
-func serveBacklog(
-	w http.ResponseWriter,
-	req *http.Request,
-	p map[string]string,
-) {
-	var args [3]uint64
-	for i, key := range [...]string{"thread", "start", "end"} {
-		var err error
-		args[i], err = strconv.ParseUint(p[key], 10, 64)
-		if err != nil {
-			text400(w, err)
-			return
-		}
-	}
+// // Spoiler an already allocated image
+// func spoilerImage(w http.ResponseWriter, req *http.Request) {
+// 	var msg spoilerRequest
+// 	if !decodeJSON(w, req, &msg) {
+// 		return
+// 	}
 
-	q := r.
-		Table("threads").
-		Get(args[0]).
-		Field("log").
-		Slice(args[1], args[2]).
-		Default(nil)
-	var log [][]byte
-	if err := db.All(q, &log); err != nil {
-		text500(w, req, err)
-		return
-	}
+// 	var res struct {
+// 		Image    types.Image
+// 		Password []byte
+// 	}
+// 	q := db.FindPost(msg.ID).Pluck("image", "password").Default(nil)
+// 	if err := db.One(q, &res); err != nil {
+// 		text500(w, req, err)
+// 		return
+// 	}
 
-	data := websockets.ConcatMessages(log)
-	head := w.Header()
-	head.Set("ETag", util.HashBuffer(data))
-	head.Set("Content-Type", "text/plain; charset=UTF-8")
-	writeData(w, req, data)
-}
+// 	if res.Image.SHA1== "" {
+// 		text400(w, errNoImage)
+// 		return
+// 	}
+// 	if res.Image.Spoiler { // Already spoilered. NOOP.
+// 		return
+// 	}
+// 	if err := auth.BcryptCompare(msg.Password, res.Password); err != nil {
+// 		text403(w, err)
+// 		return
+// 	}
 
-// Spoiler an already allocated image
-func spoilerImage(w http.ResponseWriter, req *http.Request) {
-	var msg spoilerRequest
-	if !decodeJSON(w, req, &msg) {
-		return
-	}
+// 	logMsg, err := websockets.EncodeMessage(websockets.MessageSpoiler, msg.ID)
+// 	if err != nil {
+// 		text500(w, req, err)
+// 		return
+// 	}
 
-	var res struct {
-		Image    types.Image
-		Password []byte
-	}
-	q := db.FindPost(msg.ID).Pluck("image", "password").Default(nil)
-	if err := db.One(q, &res); err != nil {
-		text500(w, req, err)
-		return
-	}
-
-	if res.Image.SHA1== "" {
-		text400(w, errNoImage)
-		return
-	}
-	if res.Image.Spoiler { // Already spoilered. NOOP.
-		return
-	}
-	if err := auth.BcryptCompare(msg.Password, res.Password); err != nil {
-		text403(w, err)
-		return
-	}
-
-	logMsg, err := websockets.EncodeMessage(websockets.MessageSpoiler, msg.ID)
-	if err != nil {
-		text500(w, req, err)
-		return
-	}
-
-	update := map[string]map[string]bool{
-		"image": {
-			"spoiler": true,
-		},
-	}
-	diff := websockets.CreateUpdate(msg.ID, update, logMsg)
-	q = db.FindParentThread(msg.ID).Update(diff)
-	if err := db.Write(q); err != nil {
-		text500(w, req, err)
-		return
-	}
-}
+// 	update := map[string]map[string]bool{
+// 		"image": {
+// 			"spoiler": true,
+// 		},
+// 	}
+// 	diff := websockets.CreateUpdate(msg.ID, update, logMsg)
+// 	q = db.FindParentThread(msg.ID).Update(diff)
+// 	if err := db.Write(q); err != nil {
+// 		text500(w, req, err)
+// 		return
+// 	}
+// }

@@ -5,65 +5,72 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/httptest"
 	"os"
+	"testing"
 
-	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/dimfeld/httptreemux"
-	. "gopkg.in/check.v1"
 )
 
-type WebServer struct {
-	r http.Handler
-}
+// Global router used for tests
+var router http.Handler
 
-var _ = Suite(&WebServer{})
-
-func (w *WebServer) SetUpSuite(c *C) {
+func init() {
+	router = createRouter()
 	webRoot = "testdata"
-	w.r = createRouter()
+	imageWebRoot = "testdata"
+	db.IsTest = true
+	if err := db.LoadDB(); err != nil {
+		panic(err)
+	}
 }
 
-func (*WebServer) SetUpTest(_ *C) {
-	config.Set(config.Configs{
-		Boards: []string{"a", "c"},
-	})
-	config.SetClient(nil, "")
+func TestAllBoardRedirect(t *testing.T) {
+	t.Parallel()
+
+	rec, req := newPair("/")
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 302)
+
+	loc := rec.Header().Get("Location")
+	if loc != "/all/" {
+		t.Fatalf("unexpected redirect result: %s", loc)
+	}
 }
 
-func (w *WebServer) TestAllBoardRedirect(c *C) {
-	rec := httptest.NewRecorder()
-	req := newRequest(c, "/")
-	w.r.ServeHTTP(rec, req)
-	assertCode(rec, 302, c)
-	c.Assert(rec.Header().Get("Location"), Equals, "/all/")
-}
+func TestPanicHandler(t *testing.T) {
+	t.Parallel()
 
-func (w *WebServer) TestPanicHandler(c *C) {
-	webRoot = "testdata"
 	r := httptreemux.New()
 	h := wrapHandler(func(_ http.ResponseWriter, _ *http.Request) {
 		panic(errors.New("foo"))
 	})
 	r.GET("/panic", h)
 	r.PanicHandler = text500
-	rec := httptest.NewRecorder()
-	req := newRequest(c, "/panic")
+	rec, req := newPair("/panic")
 
 	// Prevent printing stack trace to terminal
 	log.SetOutput(ioutil.Discard)
 	r.ServeHTTP(rec, req)
 	log.SetOutput(os.Stdout)
 
-	assertCode(rec, 500, c)
-	assertBody(rec, "500 foo\n", c)
+	assertCode(t, rec, 500)
+	assertBody(t, rec, "500 Internal server error: foo\n")
 }
 
-func (w *WebServer) TestGzip(c *C) {
+func TestGzip(t *testing.T) {
 	enableGzip = true
+	defer func() {
+		enableGzip = false
+	}()
+
 	r := createRouter()
-	rec, req := newPair(c, "/json/config")
+	rec, req := newPair("/json/config")
 	req.Header.Set("Accept-Encoding", "gzip")
+
 	r.ServeHTTP(rec, req)
-	c.Assert(rec.Header().Get("Content-Encoding"), Equals, "gzip")
+
+	if rec.Header().Get("Content-Encoding") != "gzip" {
+		t.Fatal("response not gzipped")
+	}
 }
