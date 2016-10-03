@@ -16,12 +16,12 @@ var (
 
 	// Fields to omit in board queries. Decreases payload of DB replies.
 	omitForBoards = []string{
-		"log", "body", "password", "commands", "links", "backlinks", "ip",
-		"editing", "op",
+		"body", "password", "commands", "links", "backlinks", "ip", "editing",
+		"op",
 	}
 
 	// Fields to omit for post queries
-	omitForPosts = []string{"log", "password", "ip"}
+	omitForPosts = []string{"password", "ip"}
 )
 
 // GetThread retrieves public thread data from the database

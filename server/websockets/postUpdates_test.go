@@ -1,59 +1,62 @@
 package websockets
 
+import (
+	"testing"
 
-// // Sample wall of text
-// const longPost = `Shut the fuck up. I'm so tired of being disrespected on this
-// goddamn website. All I wanted to do was post my opinion. MY OPINION. But no,
-// you little bastards think it's "hilarious" to mock those with good opinions.
-// My opinion. while not absolute, is definitely worth the respect to formulate
-// an ACTUAL FUCKING RESPONSE AND NOT JUST A SHORT MEME OF A REPLY. I've been on
-// this site for 6 months: 6 MONTHS and I have never felt this wronged. It boils
-// me up that I could spend so much time thinking and putting effort into things
-// while you shits sit around (probably jerking off to Gardevoir or whatever
-// furbait you like) and make fun of the intellectuals of this world. You're
-// laughing at me? Good for fucking you. Literally no one cares that your little
-// brain is to underdeveloped and rotted to comprehend this game...THIS GREAT
-// GREAT GAME. I could sit here all day whining, but I won't. I'm NOT a whiner.
-// I'm a realist and an intellectual. I know when to call it quits and to leave
-// the babybrains to themselves. I'm done with this goddamn site and you goddamn
-// immature children. I have lived my life up until this point having to deal
-// with memesters and idiots like you. I know how you work. I know that you all
-// think you're "epik trolls" but you're not. You think you baited me? NAH. I've
-// never taken any bait. This is my 100% real opinion divorced from anger. I'm
-// calm, I'm serene. I LAUGH when people imply I'm intellectually low enough to
-// take bait. I always choose to reply just to spite you. I won. I've always won.
-// Losing is not in my skillset. So you're probably gonna reply "lol epik
-// trolled" or "u mad bro" but once you've done that you've shown me I've won.
-// I've tricked the trickster and conquered memery. I live everyday growing
-// stronger to fight you plebs and low level trolls who are probably 11 (baby,
-// you gotta be 18 to use 4chan). But whatever, I digress. It's just fucking
-// annoying that I'm never taken serious on this site, goddamn.`
+	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/types"
+)
 
-// var (
-// 	dummyLog = [][]byte{
-// 		{102, 111, 111},
-// 		{98, 97, 114},
-// 	}
+// Sample wall of text
+const longPost = `Shut the fuck up. I'm so tired of being disrespected on this
+goddamn website. All I wanted to do was post my opinion. MY OPINION. But no,
+you little bastards think it's "hilarious" to mock those with good opinions.
+My opinion. while not absolute, is definitely worth the respect to formulate
+an ACTUAL FUCKING RESPONSE AND NOT JUST A SHORT MEME OF A REPLY. I've been on
+this site for 6 months: 6 MONTHS and I have never felt this wronged. It boils
+me up that I could spend so much time thinking and putting effort into things
+while you shits sit around (probably jerking off to Gardevoir or whatever
+furbait you like) and make fun of the intellectuals of this world. You're
+laughing at me? Good for fucking you. Literally no one cares that your little
+brain is to underdeveloped and rotted to comprehend this game...THIS GREAT
+GREAT GAME. I could sit here all day whining, but I won't. I'm NOT a whiner.
+I'm a realist and an intellectual. I know when to call it quits and to leave
+the babybrains to themselves. I'm done with this goddamn site and you goddamn
+immature children. I have lived my life up until this point having to deal
+with memesters and idiots like you. I know how you work. I know that you all
+think you're "epik trolls" but you're not. You think you baited me? NAH. I've
+never taken any bait. This is my 100% real opinion divorced from anger. I'm
+calm, I'm serene. I LAUGH when people imply I'm intellectually low enough to
+take bait. I always choose to reply just to spite you. I won. I've always won.
+Losing is not in my skillset. So you're probably gonna reply "lol epik
+trolled" or "u mad bro" but once you've done that you've shown me I've won.
+I've tricked the trickster and conquered memery. I live everyday growing
+stronger to fight you plebs and low level trolls who are probably 11 (baby,
+you gotta be 18 to use 4chan). But whatever, I digress. It's just fucking
+annoying that I'm never taken serious on this site, goddamn.`
 
-// 	strDummyLog = []string{
-// 		"foo",
-// 		"bar",
-// 	}
+var (
+	dummyLog = [][]byte{
+		{102, 111, 111},
+		{98, 97, 114},
+	}
 
-// 	sampleThread = types.DatabaseThread{
-// 		ID:  1,
-// 		Log: dummyLog,
-// 		Posts: map[int64]types.DatabasePost{
-// 			2: {
-// 				Post: types.Post{
-// 					Editing: true,
-// 					ID:      2,
-// 					Body:    "abc",
-// 				},
-// 			},
-// 		},
-// 	}
-// )
+	strDummyLog = []string{
+		"foo",
+		"bar",
+	}
+
+	samplePost = types.DatabasePost{
+		Post: types.Post{
+			Editing: true,
+			ID:      2,
+			OP:      1,
+			Board:   "a",
+			Body:    "abc",
+		},
+		Log: dummyLog,
+	}
+)
 
 // func (*DB) TestWriteBacklinks(c *C) {
 // 	threads := []types.DatabaseThread{
@@ -183,24 +186,30 @@ package websockets
 // 	assertRepLog(2, append(strDummyLog, `03[2,100]`), c)
 // }
 
-// func assertBody(id int64, body string, c *C) {
-// 	var res string
-// 	q := db.FindPost(id).Field("body")
-// 	c.Assert(db.One(q, &res), IsNil)
-// 	c.Assert(res, Equals, body)
-// }
+func assertBody(t *testing.T, id int64, body string) {
+	var res string
+	q := db.FindPost(id).Field("body")
+	if err := db.One(q, &res); err != nil {
+		t.Fatal(err)
+	}
+	if res != body {
+		logUnexpected(t, body, res)
+	}
+}
 
-// func assertRepLog(id int64, log []string, c *C) {
-// 	var res [][]byte
-// 	q := db.FindParentThread(id).Field("log")
-// 	c.Assert(db.All(q, &res), IsNil)
+func assertRepLog(t *testing.T, id int64, log []string) {
+	var res [][]byte
+	q := db.FindPost(id).Field("log")
+	if err := db.All(q, &res); err != nil {
+		t.Fatal(err)
+	}
 
-// 	strRes := make([]string, len(res))
-// 	for i := range res {
-// 		strRes[i] = string(res[i])
-// 	}
-// 	c.Assert(strRes, DeepEquals, log)
-// }
+	strRes := make([]string, len(res))
+	for i := range res {
+		strRes[i] = string(res[i])
+	}
+	assertDeepEquals(t, strRes, log)
+}
 
 // func (*DB) TestAppendNewline(c *C) {
 // 	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
@@ -413,12 +422,16 @@ package websockets
 // 	assertPostClosed(2, c)
 // }
 
-// func assertPostClosed(id int64, c *C) {
-// 	var editing bool
-// 	q := db.FindPost(id).Field("editing")
-// 	c.Assert(db.One(q, &editing), IsNil)
-// 	c.Assert(editing, Equals, false)
-// }
+func assertPostClosed(t *testing.T, id int64) {
+	var editing bool
+	q := db.FindPost(id).Field("editing")
+	if err := db.One(q, &editing); err != nil {
+		t.Fatal(err)
+	}
+	if editing {
+		t.Error("post not closed")
+	}
+}
 
 // func (*DB) TestSpliceValidityChecks(c *C) {
 // 	sv := newWSServer(c)

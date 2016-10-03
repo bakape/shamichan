@@ -58,7 +58,8 @@ type updateFeed struct {
 // Change feed update message
 type feedUpdate struct {
 	IsFresh bool
-	types.DatabasePost
+	types.Post
+	Log [][]byte
 }
 
 // Add a client to an existing update feed or create a new one, if it does not

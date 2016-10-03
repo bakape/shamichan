@@ -322,10 +322,8 @@ func (c *Client) hasPost() (bool, error) {
 	switch {
 	case c.openPost.id == 0:
 		return false, errNoPostOpen
-
-	// case c.openPost.time < time.Now().Add(-time.Minute*29).Unix():
-	// 	return false, closePost(nil, c)
-
+	case c.openPost.time < time.Now().Add(-time.Minute*29).Unix():
+		return false, closePost(nil, c)
 	default:
 		return true, nil
 	}
