@@ -19,6 +19,7 @@ func init() {
 	router = createRouter()
 	webRoot = "testdata"
 	imageWebRoot = "testdata"
+	db.DBName = "meguca_test_server"
 	db.IsTest = true
 	if err := db.LoadDB(); err != nil {
 		panic(err)

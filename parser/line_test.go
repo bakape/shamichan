@@ -1,36 +1,48 @@
 package parser
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-	. "gopkg.in/check.v1"
 )
 
-func (*Tests) TestParseHashCommandLine(c *C) {
-	conf := config.BoardConfigs{
+func TestParseLine(t *testing.T) {
+	assertTableClear(t, "boards")
+	assertInsert(t, "boards", config.BoardConfigs{
 		ID: "a",
-		PostParseConfigs: config.PostParseConfigs{
-			HashCommands: true,
-		},
-	}
-	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	})
 
-	links, com, err := ParseLine([]byte("#flip"), "a")
-	c.Assert(err, IsNil)
-	c.Assert(links, IsNil)
-	c.Assert(com.Type, Equals, types.Flip)
-}
+	t.Run("commands disabled", func(t *testing.T) {
+		links, com, err := ParseLine([]byte("#flip"), "a")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if links != nil {
+			t.Fatalf("unexpected links: %#v", links)
+		}
+		assertDeepEquals(t, com, types.Command{})
+	})
 
-func (*Tests) TestHashCommandsDisabled(c *C) {
-	conf := config.BoardConfigs{
-		ID: "a",
-	}
-	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	t.Run("commands enabled", func(t *testing.T) {
+		q := r.Table("boards").Get("a").Update(map[string]bool{
+			"hashCommands": true,
+		})
+		if err := db.Write(q); err != nil {
+			t.Fatal(err)
+		}
 
-	links, com, err := ParseLine([]byte("#flip"), "a")
-	c.Assert(err, IsNil)
-	c.Assert(links, IsNil)
-	c.Assert(com.Val, IsNil)
+		links, com, err := ParseLine([]byte("#flip"), "a")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if links != nil {
+			t.Fatalf("unexpected links: %#v", links)
+		}
+		if com.Type != types.Flip {
+			t.Fatalf("unexpected command type: %d", com.Type)
+		}
+	})
 }

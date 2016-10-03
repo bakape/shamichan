@@ -13,7 +13,7 @@ const (
 	maxLengthPostPassword = 50
 	maxLengthSubject      = 100
 
-	// MaxLengthBody is the maximum length of a post text body
+	// MaxLengthBody is the maximum allowed length of a post text body
 	MaxLengthBody = 2000
 )
 

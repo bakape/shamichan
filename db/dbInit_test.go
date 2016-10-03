@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	DBName = "meguca_test"
+	DBName = "meguca_test_db"
 	IsTest = true
 	if err := LoadDB(); err != nil {
 		panic(err)

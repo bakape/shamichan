@@ -39,7 +39,7 @@ type mockWSServer struct {
 }
 
 func init() {
-	db.DBName = "meguca_test"
+	db.DBName = "meguca_test_websockets"
 	db.IsTest = true
 	if err := db.LoadDB(); err != nil {
 		panic(err)
