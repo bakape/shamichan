@@ -846,7 +846,7 @@ func TestInsertImage(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertRepLog(t, 2, []string{string(msg)})
-	assertImageCounter(t, 2, 1)
+	assertImageCounter(t, 1, 1)
 
 	var res types.Image
 	q := db.FindPost(2).Field("image")
