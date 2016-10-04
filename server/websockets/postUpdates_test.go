@@ -1,9 +1,18 @@
 package websockets
 
 import (
+	"bytes"
+	"fmt"
+	"reflect"
+	"regexp"
+	"runtime"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
 )
 
@@ -58,133 +67,162 @@ var (
 	}
 )
 
-// func (*DB) TestWriteBacklinks(c *C) {
-// 	threads := []types.DatabaseThread{
-// 		{
-// 			ID: 1,
-// 			Posts: map[int64]types.DatabasePost{
-// 				1: {
-// 					Post: types.Post{
-// 						ID: 1,
-// 					},
-// 				},
-// 				2: {
-// 					Post: types.Post{
-// 						ID: 2,
-// 					},
-// 				},
-// 			},
-// 			Log: dummyLog,
-// 		},
-// 		{
-// 			ID: 5,
-// 			Posts: map[int64]types.DatabasePost{
-// 				7: {
-// 					Post: types.Post{
-// 						ID: 7,
-// 					},
-// 				},
-// 			},
-// 			Log: dummyLog,
-// 		},
-// 	}
-// 	c.Assert(db.Write(r.Table("threads").Insert(threads)), IsNil)
+func TestWriteBacklinks(t *testing.T) {
+	assertTableClear(t, "posts")
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			Post: types.Post{
+				ID: 1,
+			},
+			Log: dummyLog,
+		},
+		{
+			Post: types.Post{
+				ID: 2,
+			},
+			Log: dummyLog,
+		},
+	})
 
-// 	for _, dest := range [...]int64{1, 2, 7, 8} {
-// 		c.Assert(writeBacklink(10, 9, "a", dest), IsNil)
-// 	}
+	for _, dest := range [...]int64{1, 2, 8} {
+		if err := writeBacklink(10, 9, "a", dest); err != nil {
+			t.Fatalf("write post %d backlink: %s", dest, err)
+		}
+	}
 
-// 	// Assert each existong post had a backlink inserted
-// 	std := types.Link{
-// 		OP:    9,
-// 		Board: "a",
-// 	}
+	// Assert each existong post had a backlink inserted
+	std := types.Link{
+		OP:    9,
+		Board: "a",
+	}
 
-// 	for _, id := range [...]int64{1, 2, 7} {
-// 		var link types.Link
-// 		q := db.FindPost(id).Field("backlinks").Field("10")
-// 		c.Assert(db.One(q, &link), IsNil)
-// 		c.Assert(link, Equals, std)
+	for _, i := range [...]int64{1, 2} {
+		id := i
+		t.Run(fmt.Sprintf("post %d", id), func(t *testing.T) {
+			t.Parallel()
 
-// 		stdMsg, err := EncodeMessage(MessageBacklink, linkMessage{
-// 			ID: id,
-// 			Links: types.LinkMap{
-// 				10: {
-// 					OP:    9,
-// 					Board: "a",
-// 				},
-// 			},
-// 		})
-// 		c.Assert(err, IsNil)
+			var link types.Link
+			q := db.FindPost(id).Field("backlinks").Field("10")
+			if err := db.One(q, &link); err != nil {
+				t.Fatal(err)
+			}
+			if link != std {
+				logUnexpected(t, std, link)
+			}
 
-// 		var constains bool
-// 		q = db.FindParentThread(id).Field("log").Contains(stdMsg)
-// 		c.Assert(db.One(q, &constains), IsNil)
-// 		c.Assert(constains, Equals, true)
-// 	}
-// }
+			msg, err := EncodeMessage(MessageBacklink, linkMessage{
+				ID: id,
+				Links: types.LinkMap{
+					10: {
+						OP:    9,
+						Board: "a",
+					},
+				},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// func (*DB) TestNoOpenPost(c *C) {
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
+			var written bool
+			q = db.FindPost(id).Field("log").Eq(append(dummyLog, msg))
+			if err := db.One(q, &written); err != nil {
+				t.Fatal(err)
+			}
+			if !written {
+				t.Error("no message in replication log")
+			}
+		})
+	}
+}
 
-// 	fns := [...]func([]byte, *Client) error{
-// 		appendRune, backspace, closePost, spliceText, insertImage,
-// 	}
-// 	for _, fn := range fns {
-// 		cl, _ := sv.NewClient()
-// 		c.Assert(fn(nil, cl), Equals, errNoPostOpen)
-// 	}
-// }
+func TestNoOpenPost(t *testing.T) {
+	t.Parallel()
 
-// func (*DB) TestLineEmpty(c *C) {
-// 	fns := [...]func([]byte, *Client) error{backspace}
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
+	sv := newWSServer(t)
+	defer sv.Close()
 
-// 	for _, fn := range fns {
-// 		cl, _ := sv.NewClient()
-// 		cl.openPost.id = 1
-// 		cl.openPost.time = time.Now().Unix()
-// 		c.Assert(fn(nil, cl), Equals, errLineEmpty)
-// 	}
-// }
+	fns := [...]func([]byte, *Client) error{
+		appendRune, backspace, closePost, spliceText, insertImage,
+	}
+	for _, fn := range fns {
+		cl, _ := sv.NewClient()
+		if err := fn(nil, cl); err != errNoPostOpen {
+			t.Errorf("unexpected error by %s: %s", funcName(fn), err)
+		}
+	}
+}
 
-// func (*DB) TestAppendBodyTooLong(c *C) {
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
+func funcName(fn interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
+}
 
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:         1,
-// 		time:       time.Now().Unix(),
-// 		bodyLength: parser.MaxLengthBody,
-// 	}
-// 	c.Assert(appendRune(nil, cl), Equals, parser.ErrBodyTooLong)
-// }
+func TestLineEmpty(t *testing.T) {
+	t.Parallel()
 
-// func (*DB) TestAppendRune(c *C) {
-// 	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
+	fns := [...]func([]byte, *Client) error{backspace}
 
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:         2,
-// 		op:         1,
-// 		bodyLength: 3,
-// 		time:       time.Now().Unix(),
-// 		Buffer:     *bytes.NewBuffer([]byte("abc")),
-// 	}
+	sv := newWSServer(t)
+	defer sv.Close()
 
-// 	c.Assert(appendRune([]byte("100"), cl), IsNil)
+	for _, fn := range fns {
+		cl, _ := sv.NewClient()
+		cl.openPost.id = 1
+		cl.openPost.time = time.Now().Unix()
+		if err := fn(nil, cl); err != errLineEmpty {
+			t.Errorf("unexpected error by %s: %s", funcName(fn), err)
+		}
+	}
+}
 
-// 	c.Assert(cl.openPost.bodyLength, Equals, 4)
-// 	c.Assert(cl.openPost.String(), Equals, "abcd")
-// 	assertBody(2, "abcd", c)
+func TestAppendBodyTooLong(t *testing.T) {
+	t.Parallel()
 
-// 	assertRepLog(2, append(strDummyLog, `03[2,100]`), c)
-// }
+	sv := newWSServer(t)
+	defer sv.Close()
+
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         1,
+		time:       time.Now().Unix(),
+		bodyLength: parser.MaxLengthBody,
+	}
+	if err := appendRune(nil, cl); err != parser.ErrBodyTooLong {
+		t.Fatalf("unexpected error %#v", err)
+	}
+}
+
+func TestAppendRune(t *testing.T) {
+	assertTableClear(t, "posts")
+	assertInsert(t, "posts", samplePost)
+
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		time:       time.Now().Unix(),
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+
+	if err := appendRune([]byte("100"), cl); err != nil {
+		t.Fatal(err)
+	}
+
+	assertOpenPost(t, cl, 4, "abcd")
+	assertBody(t, 2, "abcd")
+	assertRepLog(t, 2, append(strDummyLog, `03[2,100]`))
+}
+
+func assertOpenPost(t *testing.T, cl *Client, len int, buf string) {
+	if l := cl.openPost.bodyLength; l != len {
+		t.Errorf("unexpected openPost body length: %d", l)
+	}
+	if s := cl.openPost.String(); s != buf {
+		t.Errorf("unexpected openPost buffer contents: `%s`", s)
+	}
+}
 
 func assertBody(t *testing.T, id int64, body string) {
 	var res string
@@ -211,216 +249,246 @@ func assertRepLog(t *testing.T, id int64, log []string) {
 	assertDeepEquals(t, strRes, log)
 }
 
-// func (*DB) TestAppendNewline(c *C) {
-// 	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
+func TestAppendNewline(t *testing.T) {
+	assertTableClear(t, "posts", "boards")
+	assertInsert(t, "posts", samplePost)
 
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:         2,
-// 		op:         1,
-// 		bodyLength: 3,
-// 		board:      "a",
-// 		time:       time.Now().Unix(),
-// 		Buffer:     *bytes.NewBuffer([]byte("abc")),
-// 	}
-// 	writeBoardConfigs(false, c)
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		board:      "a",
+		time:       time.Now().Unix(),
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+	writeBoardConfigs(t, false)
 
-// 	c.Assert(appendRune([]byte("10"), cl), IsNil)
+	if err := appendRune([]byte("10"), cl); err != nil {
+		t.Fatal(err)
+	}
 
-// 	c.Assert(cl.openPost.bodyLength, Equals, 4)
-// 	c.Assert(cl.openPost.String(), Equals, "")
-// 	assertBody(2, "abc\n", c)
-// 	assertRepLog(2, append(strDummyLog, "03[2,10]"), c)
-// }
+	assertOpenPost(t, cl, 4, "")
+	assertBody(t, 2, "abc\n")
+	assertRepLog(t, 2, append(strDummyLog, "03[2,10]"))
+}
 
-// func (*DB) TestAppendNewlineWithHashCommand(c *C) {
-// 	thread := types.DatabaseThread{
-// 		ID:  1,
-// 		Log: dummyLog,
-// 		Posts: map[int64]types.DatabasePost{
-// 			2: {
-// 				Post: types.Post{
-// 					ID:   2,
-// 					Body: "#flip",
-// 				},
-// 			},
-// 		},
-// 	}
-// 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+func TestAppendNewlineWithHashCommand(t *testing.T) {
+	assertTableClear(t, "posts", "boards")
+	assertInsert(t, "posts", types.DatabasePost{
+		Log: dummyLog,
+		Post: types.Post{
+			ID:   2,
+			Body: "#flip",
+		},
+	})
+	assertInsert(t, "boards", config.BoardConfigs{
+		ID: "a",
+		PostParseConfigs: config.PostParseConfigs{
+			HashCommands: true,
+		},
+	})
 
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:         2,
-// 		op:         1,
-// 		bodyLength: 3,
-// 		board:      "a",
-// 		time:       time.Now().Unix(),
-// 		Buffer:     *bytes.NewBuffer([]byte("#flip")),
-// 	}
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		board:      "a",
+		time:       time.Now().Unix(),
+		Buffer:     *bytes.NewBuffer([]byte("#flip")),
+	}
 
-// 	conf := config.BoardConfigs{
-// 		ID: "a",
-// 		PostParseConfigs: config.PostParseConfigs{
-// 			HashCommands: true,
-// 		},
-// 	}
-// 	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	if err := appendRune([]byte("10"), cl); err != nil {
+		t.Fatal(err)
+	}
 
-// 	c.Assert(appendRune([]byte("10"), cl), IsNil)
+	t.Run("command type", func(t *testing.T) {
+		t.Parallel()
 
-// 	var typ int
-// 	q := db.FindPost(2).Field("commands").AtIndex(0).Field("type")
-// 	c.Assert(db.One(q, &typ), IsNil)
-// 	c.Assert(typ, Equals, int(types.Flip))
+		var typ types.CommandType
+		q := db.FindPost(2).Field("commands").AtIndex(0).Field("type")
+		if err := db.One(q, &typ); err != nil {
+			t.Fatal(err)
+		}
+		if typ != types.Flip {
+			t.Errorf("unexpected command type: %d", typ)
+		}
+	})
 
-// 	var log []byte
-// 	q = db.FindParentThread(2).Field("log").Nth(-1)
-// 	c.Assert(db.One(q, &log), IsNil)
-// 	c.Assert(string(log), Equals, "03[2,10]")
+	t.Run("last log message", func(t *testing.T) {
+		t.Parallel()
 
-// 	q = db.FindParentThread(2).Field("log").Nth(-2)
-// 	c.Assert(db.One(q, &log), IsNil)
-// 	c.Assert(string(log), Matches, `09{"id":2,"type":1,"val":(?:true|false)}`)
-// }
+		var log []byte
+		q := db.FindPost(2).Field("log").Nth(-1)
+		if err := db.One(q, &log); err != nil {
+			t.Fatal(err)
+		}
+		const std = "03[2,10]"
+		if s := string(log); s != std {
+			logUnexpected(t, std, s)
+		}
+	})
 
-// func (*DB) TestAppendNewlineWithLinks(c *C) {
-// 	threads := []types.DatabaseThread{
-// 		{
-// 			ID:    1,
-// 			Board: "a",
-// 			Log:   [][]byte{},
-// 			Posts: map[int64]types.DatabasePost{
-// 				2: {
-// 					Post: types.Post{
-// 						ID:   2,
-// 						Body: " >>22 ",
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			ID:    21,
-// 			Board: "c",
-// 			Log:   [][]byte{},
-// 			Posts: map[int64]types.DatabasePost{
-// 				22: {
-// 					Post: types.Post{
-// 						ID: 22,
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-// 	c.Assert(db.Write(r.Table("threads").Insert(threads)), IsNil)
+	t.Run("second to last log message", func(t *testing.T) {
+		t.Parallel()
 
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:         2,
-// 		op:         1,
-// 		bodyLength: 3,
-// 		board:      "a",
-// 		time:       time.Now().Unix(),
-// 		Buffer:     *bytes.NewBuffer([]byte(" >>22 ")),
-// 	}
-// 	writeBoardConfigs(false, c)
+		var log []byte
+		q := db.FindPost(2).Field("log").Nth(-2)
+		if err := db.One(q, &log); err != nil {
+			t.Fatal(err)
+		}
+		const patt = `09{"id":2,"type":1,"val":(?:true|false)}`
+		if !regexp.MustCompile(patt).Match(log) {
+			t.Fatalf("message does not match `%s`: `%s`", patt, string(log))
+		}
+	})
+}
 
-// 	c.Assert(appendRune([]byte("10"), cl), IsNil)
+func TestAppendNewlineWithLinks(t *testing.T) {
+	assertTableClear(t, "posts", "boards")
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			Post: types.Post{
+				Board: "a",
+				ID:    2,
+				OP:    1,
+				Body:  " >>22 ",
+			},
+			Log: [][]byte{},
+		},
+		{
+			Post: types.Post{
+				ID:    22,
+				Board: "c",
+				OP:    21,
+			},
+			Log: [][]byte{},
+		},
+	})
 
-// 	std := [...]struct {
-// 		id    int64
-// 		log   []string
-// 		field string
-// 		val   types.LinkMap
-// 	}{
-// 		{
-// 			id: 2,
-// 			log: []string{
-// 				`07{"id":2,"links":{"22":{"op":21,"board":"c"}}}`,
-// 				`03[2,10]`,
-// 			},
-// 			field: "links",
-// 			val: types.LinkMap{
-// 				22: {
-// 					OP:    21,
-// 					Board: "c",
-// 				},
-// 			},
-// 		},
-// 		{
-// 			id: 22,
-// 			log: []string{
-// 				`08{"id":22,"links":{"2":{"op":1,"board":"a"}}}`,
-// 			},
-// 			field: "backlinks",
-// 			val: types.LinkMap{
-// 				2: {
-// 					OP:    1,
-// 					Board: "a",
-// 				},
-// 			},
-// 		},
-// 	}
-// 	for _, s := range std {
-// 		assertRepLog(s.id, s.log, c)
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		board:      "a",
+		time:       time.Now().Unix(),
+		Buffer:     *bytes.NewBuffer([]byte(" >>22 ")),
+	}
+	writeBoardConfigs(t, false)
 
-// 		var links types.LinkMap
-// 		q := db.FindPost(s.id).Field(s.field)
-// 		c.Assert(db.One(q, &links), IsNil)
-// 		c.Assert(links, DeepEquals, s.val)
-// 	}
-// }
+	if err := appendRune([]byte("10"), cl); err != nil {
+		t.Fatal(err)
+	}
 
-// func (*DB) TestBackspace(c *C) {
-// 	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
+	std := [...]struct {
+		id    int64
+		log   []string
+		field string
+		val   types.LinkMap
+	}{
+		{
+			id: 2,
+			log: []string{
+				`07{"id":2,"links":{"22":{"op":21,"board":"c"}}}`,
+				`03[2,10]`,
+			},
+			field: "links",
+			val: types.LinkMap{
+				22: {
+					OP:    21,
+					Board: "c",
+				},
+			},
+		},
+		{
+			id: 22,
+			log: []string{
+				`08{"id":22,"links":{"2":{"op":1,"board":"a"}}}`,
+			},
+			field: "backlinks",
+			val: types.LinkMap{
+				2: {
+					OP:    1,
+					Board: "a",
+				},
+			},
+		},
+	}
 
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:         2,
-// 		op:         1,
-// 		bodyLength: 3,
-// 		time:       time.Now().Unix(),
-// 		Buffer:     *bytes.NewBuffer([]byte("abc")),
-// 	}
+	for i := range std {
+		s := std[i]
+		t.Run(s.field, func(t *testing.T) {
+			t.Parallel()
 
-// 	c.Assert(backspace([]byte{}, cl), IsNil)
+			assertRepLog(t, s.id, s.log)
 
-// 	c.Assert(cl.openPost.String(), Equals, "ab")
-// 	c.Assert(cl.openPost.bodyLength, Equals, 2)
+			var links types.LinkMap
+			q := db.FindPost(s.id).Field(s.field)
+			if err := db.One(q, &links); err != nil {
+				t.Fatal(err)
+			}
+			assertDeepEquals(t, links, s.val)
+		})
+	}
+}
 
-// 	assertRepLog(2, append(strDummyLog, "042"), c)
-// 	assertBody(2, "ab", c)
-// }
+func TestBackspace(t *testing.T) {
+	assertTableClear(t, "posts")
+	assertInsert(t, "posts", samplePost)
 
-// func (*DB) TestClosePost(c *C) {
-// 	c.Assert(db.Write(r.Table("threads").Insert(sampleThread)), IsNil)
-// 	writeBoardConfigs(false, c)
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		time:       time.Now().Unix(),
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
 
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:         2,
-// 		op:         1,
-// 		bodyLength: 3,
-// 		board:      "a",
-// 		Buffer:     *bytes.NewBuffer([]byte("abc")),
-// 	}
+	if err := backspace([]byte{}, cl); err != nil {
+		t.Fatal(err)
+	}
 
-// 	c.Assert(closePost([]byte{}, cl), IsNil)
+	assertOpenPost(t, cl, 2, "ab")
+	assertRepLog(t, 2, append(strDummyLog, "042"))
+	assertBody(t, 2, "ab")
+}
 
-// 	c.Assert(cl.openPost, DeepEquals, openPost{})
-// 	assertRepLog(2, append(strDummyLog, "062"), c)
-// 	assertBody(2, "abc", c)
-// 	assertPostClosed(2, c)
-// }
+func TestClosePost(t *testing.T) {
+	assertTableClear(t, "posts", "boards")
+	assertInsert(t, "posts", samplePost)
+	writeBoardConfigs(t, false)
+
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		board:      "a",
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+
+	if err := closePost([]byte{}, cl); err != nil {
+		t.Fatal(err)
+	}
+
+	assertDeepEquals(t, cl.openPost, openPost{})
+	assertRepLog(t, 2, append(strDummyLog, "062"))
+	assertBody(t, 2, "abc")
+	assertPostClosed(t, 2)
+}
 
 func assertPostClosed(t *testing.T, id int64) {
 	var editing bool
@@ -433,315 +501,363 @@ func assertPostClosed(t *testing.T, id int64) {
 	}
 }
 
-// func (*DB) TestSpliceValidityChecks(c *C) {
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:   2,
-// 		time: time.Now().Unix(),
-// 	}
+func TestSpliceValidityChecks(t *testing.T) {
+	t.Parallel()
 
-// 	var tooLong string
-// 	for i := 0; i < 2001; i++ {
-// 		tooLong += "a"
-// 	}
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:   2,
+		time: time.Now().Unix(),
+	}
 
-// 	samples := [...]struct {
-// 		start, len int
-// 		text, line string
-// 		err        error
-// 	}{
-// 		{-1, 1, "", "", errInvalidSpliceCoords},
-// 		{2, 1, "", "abc", errInvalidSpliceCoords},
-// 		{0, 0, "", "", errSpliceNOOP},
-// 		{0, 0, tooLong, "", errSpliceTooLong},
-// 	}
-// 	for _, s := range samples {
-// 		req := spliceRequest{
-// 			Start: s.start,
-// 			Len:   s.len,
-// 			Text:  s.text,
-// 		}
-// 		c.Assert(spliceText(marshalJSON(req, c), cl), Equals, s.err)
-// 	}
-// }
+	var tooLong string
+	for i := 0; i < 2001; i++ {
+		tooLong += "a"
+	}
 
-// func (*DB) TestSplice(c *C) {
-// 	const longSplice = `Never gonna give you up ` +
-// 		`Never gonna let you down ` +
-// 		`Never gonna run around and desert you ` +
-// 		`Never gonna make you cry ` +
-// 		`Never gonna say goodbye ` +
-// 		`Never gonna tell a lie and hurt you `
+	cases := [...]struct {
+		name       string
+		start, len int
+		text, line string
+		err        error
+	}{
+		{"negative start", -1, 1, "", "", errInvalidSpliceCoords},
+		{"exceeds buffer bounds", 2, 1, "", "abc", errInvalidSpliceCoords},
+		{"NOOP", 0, 0, "", "", errSpliceNOOP},
+		{"too long", 0, 0, tooLong, "", errSpliceTooLong},
+	}
 
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	writeBoardConfigs(false, c)
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 
-// 	samples := [...]struct {
-// 		start, len        int
-// 		text, init, final string
-// 		log               []string
-// 	}{
-// 		{
-// 			start: 0,
-// 			len:   0,
-// 			text:  "abc",
-// 			init:  "",
-// 			final: "abc",
-// 			log:   []string{`05{"id":2,"start":0,"len":0,"text":"abc"}`},
-// 		},
-// 		{
-// 			start: 0,
-// 			len:   1,
-// 			text:  "",
-// 			init:  "abc",
-// 			final: "bc",
-// 			log:   []string{`05{"id":2,"start":0,"len":1,"text":""}`},
-// 		},
-// 		{
-// 			start: 2,
-// 			len:   -1,
-// 			text:  "abc",
-// 			init:  "abcd",
-// 			final: "ababc",
-// 			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
-// 		},
-// 		{
-// 			start: 2,
-// 			len:   -1,
-// 			text:  "abc",
-// 			init:  "ab",
-// 			final: "ababc",
-// 			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
-// 		},
-// 		{
-// 			start: 2,
-// 			len:   3,
-// 			text:  "abcdefg",
-// 			init:  "00\n012345",
-// 			final: "00\n01abcdefg5",
-// 			log:   []string{`05{"id":2,"start":2,"len":3,"text":"abcdefg"}`},
-// 		},
-// 		{
-// 			start: 52,
-// 			len:   0,
-// 			text:  longSplice,
-// 			init:  longPost,
-// 			final: longPost[:1943] + longSplice[:57],
-// 			log: []string{
-// 				`05{"id":2,"start":52,"len":-1,"text":"Never gonna give you` +
-// 					` up Never gonna let you down Never go"}`,
-// 			},
-// 		},
-// 		{
-// 			start: 60,
-// 			len:   0,
-// 			text:  longSplice + "\n",
-// 			init:  longPost,
-// 			final: longPost + longSplice[:49],
-// 			log: []string{
-// 				`05{"id":2,"start":60,"len":-1,"text":"Never gonna give you` +
-// 					` up Never gonna let you down "}`,
-// 			},
-// 		},
-// 		{
-// 			start: 2,
-// 			len:   1,
-// 			text:  "abc\nefg",
-// 			init:  "00\n012345",
-// 			final: "00\n01abc\nefg345",
-// 			log: []string{
-// 				`05{"id":2,"start":2,"len":-1,"text":"abc"}`,
-// 				"03[2,10]",
-// 				`05{"id":2,"start":0,"len":0,"text":"efg345"}`,
-// 			},
-// 		},
-// 		{
-// 			start: 2,
-// 			len:   0,
-// 			text:  "\n",
-// 			init:  "012345",
-// 			final: "01\n2345",
-// 			log: []string{
-// 				`05{"id":2,"start":2,"len":-1,"text":""}`,
-// 				"03[2,10]",
-// 				`05{"id":2,"start":0,"len":0,"text":"2345"}`,
-// 			},
-// 		},
-// 	}
+			req := spliceRequest{
+				Start: c.start,
+				Len:   c.len,
+				Text:  c.text,
+			}
+			if err := spliceText(marshalJSON(t, req), cl); err != c.err {
+				t.Errorf("unexpected error: %#v", err)
+			}
+		})
+	}
+}
 
-// 	for _, s := range samples {
-// 		thread := types.DatabaseThread{
-// 			ID:  1,
-// 			Log: [][]byte{},
-// 			Posts: map[int64]types.DatabasePost{
-// 				2: {
-// 					Post: types.Post{
-// 						Editing: true,
-// 						ID:      2,
-// 						Body:    s.init,
-// 					},
-// 				},
-// 			},
-// 		}
-// 		c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+func TestSplice(t *testing.T) {
+	assertTableClear(t, "posts", "boards")
+	assertInsert(t, "posts", samplePost)
+	writeBoardConfigs(t, false)
 
-// 		cl, _ := sv.NewClient()
-// 		cl.openPost = openPost{
-// 			id:         2,
-// 			op:         1,
-// 			bodyLength: len(s.init),
-// 			board:      "a",
-// 			time:       time.Now().Unix(),
-// 			Buffer:     *bytes.NewBuffer([]byte(lastLine(s.init))),
-// 		}
+	const longSplice = `Never gonna give you up ` +
+		`Never gonna let you down ` +
+		`Never gonna run around and desert you ` +
+		`Never gonna make you cry ` +
+		`Never gonna say goodbye ` +
+		`Never gonna tell a lie and hurt you `
 
-// 		req := spliceRequest{
-// 			Start: s.start,
-// 			Len:   s.len,
-// 			Text:  s.text,
-// 		}
-// 		data := marshalJSON(req, c)
-// 		c.Assert(spliceText(data, cl), IsNil)
+	sv := newWSServer(t)
+	defer sv.Close()
 
-// 		c.Assert(cl.openPost.String(), Equals, lastLine(s.final))
-// 		c.Assert(cl.openPost.bodyLength, Equals, len(s.final))
-// 		assertBody(2, s.final, c)
-// 		assertRepLog(2, s.log, c)
+	cases := [...]struct {
+		name              string
+		start, len        int
+		text, init, final string
+		log               []string
+	}{
+		{
+			name:  "append to empty line",
+			start: 0,
+			len:   0,
+			text:  "abc",
+			init:  "",
+			final: "abc",
+			log:   []string{`05{"id":2,"start":0,"len":0,"text":"abc"}`},
+		},
+		{
+			name:  "remove one char",
+			start: 0,
+			len:   1,
+			text:  "",
+			init:  "abc",
+			final: "bc",
+			log:   []string{`05{"id":2,"start":0,"len":1,"text":""}`},
+		},
+		{
+			name:  "replace till line end",
+			start: 2,
+			len:   -1,
+			text:  "abc",
+			init:  "abcd",
+			final: "ababc",
+			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
+		},
+		{
+			name:  "inject into the middle of the line",
+			start: 2,
+			len:   -1,
+			text:  "abc",
+			init:  "ab",
+			final: "ababc",
+			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
+		},
+		{
+			name:  "ineject into second line of body",
+			start: 2,
+			len:   3,
+			text:  "abcdefg",
+			init:  "00\n012345",
+			final: "00\n01abcdefg5",
+			log:   []string{`05{"id":2,"start":2,"len":3,"text":"abcdefg"}`},
+		},
+		{
+			name:  "append exceeds max body length",
+			start: 52,
+			len:   0,
+			text:  longSplice,
+			init:  longPost,
+			final: longPost[:1943] + longSplice[:57],
+			log: []string{
+				`05{"id":2,"start":52,"len":-1,"text":"Never gonna give you` +
+					` up Never gonna let you down Never go"}`,
+			},
+		},
+		{
+			name:  "injection exceeds max body length",
+			start: 60,
+			len:   0,
+			text:  longSplice + "\n",
+			init:  longPost,
+			final: longPost + longSplice[:49],
+			log: []string{
+				`05{"id":2,"start":60,"len":-1,"text":"Never gonna give you` +
+					` up Never gonna let you down "}`,
+			},
+		},
+		{
+			name:  "splice contains newlines",
+			start: 2,
+			len:   1,
+			text:  "abc\nefg",
+			init:  "00\n012345",
+			final: "00\n01abc\nefg345",
+			log: []string{
+				`05{"id":2,"start":2,"len":-1,"text":"abc"}`,
+				"03[2,10]",
+				`05{"id":2,"start":0,"len":0,"text":"efg345"}`,
+			},
+		},
+		{
+			name:  "inject single newline char",
+			start: 2,
+			len:   0,
+			text:  "\n",
+			init:  "012345",
+			final: "01\n2345",
+			log: []string{
+				`05{"id":2,"start":2,"len":-1,"text":""}`,
+				"03[2,10]",
+				`05{"id":2,"start":0,"len":0,"text":"2345"}`,
+			},
+		},
+	}
 
-// 		// Clean up
-// 		c.Assert(db.Write(r.Table("threads").Delete()), IsNil)
-// 	}
-// }
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			assertTableClear(t, "posts")
+			assertInsert(t, "posts", types.DatabasePost{
+				Post: types.Post{
+					Editing: true,
+					ID:      2,
+					OP:      1,
+					Body:    c.init,
+					Board:   "a",
+				},
+				Log: [][]byte{},
+			})
 
-// func lastLine(s string) string {
-// 	lines := strings.Split(s, "\n")
-// 	return lines[len(lines)-1]
-// }
+			cl, _ := sv.NewClient()
+			cl.openPost = openPost{
+				id:         2,
+				op:         1,
+				bodyLength: len(c.init),
+				board:      "a",
+				time:       time.Now().Unix(),
+				Buffer:     *bytes.NewBuffer([]byte(lastLine(c.init))),
+			}
 
-// func (*DB) TestCloseOldOpenPost(c *C) {
-// 	then := time.Now().Add(time.Minute * -30).Unix()
-// 	thread := types.DatabaseThread{
-// 		ID:  1,
-// 		Log: [][]byte{},
-// 		Posts: map[int64]types.DatabasePost{
-// 			1: {
-// 				Post: types.Post{
-// 					Editing: true,
-// 					ID:      1,
-// 					Time:    then,
-// 				},
-// 			},
-// 		},
-// 	}
-// 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+			req := spliceRequest{
+				Start: c.start,
+				Len:   c.len,
+				Text:  c.text,
+			}
 
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:   1,
-// 		op:   1,
-// 		time: then,
-// 	}
+			if err := spliceText(marshalJSON(t, req), cl); err != nil {
+				t.Fatal(err)
+			}
 
-// 	has, err := cl.hasPost()
-// 	c.Assert(has, Equals, false)
-// 	c.Assert(err, IsNil)
+			assertOpenPost(t, cl, len(c.final), lastLine(c.final))
+			assertBody(t, 2, c.final)
+			assertRepLog(t, 2, c.log)
+		})
+	}
+}
 
-// 	var editing bool
-// 	c.Assert(db.One(db.FindPost(1).Field("editing"), &editing), IsNil)
-// 	c.Assert(editing, Equals, false)
+func lastLine(s string) string {
+	i := strings.LastIndexByte(s, '\n')
+	if i == -1 {
+		return s
+	}
+	return s[i+1:]
+}
 
-// 	assertRepLog(1, []string{"061"}, c)
-// }
+func TestCloseOldOpenPost(t *testing.T) {
+	assertTableClear(t, "posts")
 
-// func (*DB) TestInsertImageIntoPostWithImage(c *C) {
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:       1,
-// 		time:     time.Now().Unix(),
-// 		hasImage: true,
-// 	}
-// 	c.Assert(insertImage(nil, cl), Equals, errHasImage)
-// }
+	then := time.Now().Add(time.Minute * -30).Unix()
+	assertInsert(t, "posts", types.DatabasePost{
+		Post: types.Post{
+			Editing: true,
+			ID:      1,
+			OP:      1,
+			Time:    then,
+		},
+		Log: [][]byte{},
+	})
 
-// func (*DB) TestInsertImageOnTextOnlyBoard(c *C) {
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:    1,
-// 		board: "a",
-// 		time:  time.Now().Unix(),
-// 	}
-// 	writeBoardConfigs(true, c)
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:   1,
+		op:   1,
+		time: then,
+	}
 
-// 	req := imageRequest{
-// 		Name:  "foo.jpeg",
-// 		Token: "123",
-// 	}
-// 	data := marshalJSON(req, c)
-// 	c.Assert(insertImage(data, cl), Equals, errTextOnly)
-// }
+	has, err := cl.hasPost()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if has {
+		t.Error("client has open post")
+	}
 
-// func (*DB) TestInsertImage(c *C) {
-// 	writeBoardConfigs(false, c)
-// 	thread := types.DatabaseThread{
-// 		ID:      1,
-// 		Board:   "a",
-// 		PostCtr: 1,
-// 		Posts: map[int64]types.DatabasePost{
-// 			2: {
-// 				Post: types.Post{
-// 					ID: 2,
-// 				},
-// 			},
-// 		},
-// 	}
-// 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	var editing bool
+	if err := db.One(db.FindPost(1).Field("editing"), &editing); err != nil {
+		t.Fatal(err)
+	}
+	if editing {
+		t.Fatal("post not closed")
+	}
 
-// 	sv := newWSServer(c)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	cl.openPost = openPost{
-// 		id:    2,
-// 		board: "a",
-// 		op:    1,
-// 		time:  time.Now().Unix(),
-// 	}
+	assertRepLog(t, 1, []string{"061"})
+}
 
-// 	c.Assert(db.Write(r.Table("images").Insert(stdJPEG)), IsNil)
-// 	_, token, err := db.NewImageToken(stdJPEG.SHA1)
-// 	c.Assert(err, IsNil)
+func TestInsertImageIntoPostWithImage(t *testing.T) {
+	t.Parallel()
 
-// 	req := imageRequest{
-// 		Name:  "foo.jpeg",
-// 		Token: token,
-// 	}
-// 	data := marshalJSON(req, c)
-// 	c.Assert(insertImage(data, cl), IsNil)
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:       1,
+		time:     time.Now().Unix(),
+		hasImage: true,
+	}
+	if err := insertImage(nil, cl); err != errHasImage {
+		t.Fatalf("unexpected error: %#v", err)
+	}
+}
 
-// 	std := types.Image{
-// 		Name:        "foo",
-// 		ImageCommon: stdJPEG,
-// 	}
-// 	msg, err := EncodeMessage(MessageInsertImage, imageMessage{
-// 		ID:    2,
-// 		Image: std,
-// 	})
-// 	c.Assert(err, IsNil)
-// 	assertRepLog(2, []string{string(msg)}, c)
-// 	assertImageCounter(2, 1, c)
+func TestInsertImageOnTextOnlyBoard(t *testing.T) {
+	assertTableClear(t, "boards")
+	writeBoardConfigs(t, true)
 
-// 	var res types.Image
-// 	q := db.FindPost(2).Field("image")
-// 	c.Assert(db.One(q, &res), IsNil)
-// 	c.Assert(res, Equals, std)
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:    1,
+		board: "a",
+		time:  time.Now().Unix(),
+	}
 
-// 	c.Assert(cl.openPost.hasImage, Equals, true)
-// }
+	req := imageRequest{
+		Name:  "foo.jpeg",
+		Token: "123",
+	}
+	if err := insertImage(marshalJSON(t, req), cl); err != errTextOnly {
+		t.Fatalf("unexpected error: %#v", err)
+	}
+}
+
+func TestInsertImage(t *testing.T) {
+	assertTableClear(t, "posts", "threads", "boards", "images", "imageTokens")
+	writeBoardConfigs(t, false)
+	assertInsert(t, "threads", types.DatabaseThread{
+		ID:      1,
+		Board:   "a",
+		PostCtr: 1,
+	})
+	assertInsert(t, "posts", types.DatabasePost{
+		Post: types.Post{
+			ID:    2,
+			Board: "a",
+			OP:    1,
+		},
+		Log: [][]byte{},
+	})
+	assertInsert(t, "images", stdJPEG)
+	_, token, err := db.NewImageToken(stdJPEG.SHA1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:    2,
+		board: "a",
+		op:    1,
+		time:  time.Now().Unix(),
+	}
+
+	req := imageRequest{
+		Name:  "foo.jpeg",
+		Token: token,
+	}
+	if err := insertImage(marshalJSON(t, req), cl); err != nil {
+		t.Fatal(err)
+	}
+
+	std := types.Image{
+		Name:        "foo",
+		ImageCommon: stdJPEG,
+	}
+	msg, err := EncodeMessage(MessageInsertImage, imageMessage{
+		ID:    2,
+		Image: std,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertRepLog(t, 2, []string{string(msg)})
+	assertImageCounter(t, 2, 1)
+
+	var res types.Image
+	q := db.FindPost(2).Field("image")
+	if err := db.One(q, &res); err != nil {
+		t.Fatal(err)
+	}
+	if res != std {
+		logUnexpected(t, std, res)
+	}
+
+	if !cl.openPost.hasImage {
+		t.Error("no image flag on openPost")
+	}
+}

@@ -92,12 +92,18 @@ func appendRune(data []byte, c *Client) error {
 
 // Helper for running post update queries on the current open post
 func (c *Client) updatePost(key string, val interface{}, msg []byte) error {
+	return UpdatePost(c.openPost.id, key, val, msg)
+}
+
+// UpdatePost post updates a single field of an existing post with the
+// appropriate replication log update and timestamp modification.
+func UpdatePost(id int64, key string, val interface{}, msg []byte) error {
 	update := map[string]interface{}{
 		key:           val,
 		"log":         appendLog(msg),
 		"lastUpdated": time.Now().Unix(),
 	}
-	return db.Write(r.Table("posts").Get(c.openPost.id).Update(update))
+	return db.Write(r.Table("posts").Get(id).Update(update))
 }
 
 // Shorthand for creating a replication log append query
@@ -210,9 +216,7 @@ func writeBacklink(id, op int64, board string, destID int64) error {
 		"log":         appendLog(msg),
 		"lastUpdated": time.Now().Unix(),
 	}
-	q := r.Table("threads").GetAllByIndex("post", destID).Update(update)
-
-	return db.Write(q)
+	return db.Write(r.Table("posts").Get(destID).Update(update))
 }
 
 // Remove one character from the end of the line in the open post
