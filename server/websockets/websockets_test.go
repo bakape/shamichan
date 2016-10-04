@@ -400,8 +400,11 @@ func TestPinging(t *testing.T) {
 	cl, wcl := sv.NewClient()
 
 	sv.Add(1)
+	var once sync.Once
 	wcl.SetPingHandler(func(_ string) error {
-		defer sv.Done()
+		once.Do(func() {
+			sv.Done()
+		})
 		return nil
 	})
 
