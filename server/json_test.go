@@ -2,11 +2,15 @@ package server
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
+	r "github.com/dancannon/gorethink"
 )
 
 var genericImage = &types.Image{
@@ -309,64 +313,91 @@ func TestServeStaffPosition(t *testing.T) {
 	}
 }
 
-// func (d *DB) TestSpoilerImageWrongPassword(c *C) {
-// 	const password = "123"
-// 	hash, err := auth.BcryptHash(password, 6)
-// 	c.Assert(err, IsNil)
+func TestSpoilerImage(t *testing.T) {
+	assertTableClear(t, "posts")
 
-// 	thread := types.DatabaseThread{
-// 		ID: 1,
-// 		Posts: map[int64]types.DatabasePost{
-// 			1: {
-// 				Password: hash,
-// 				Post: types.Post{
-// 					ID: 1,
-// 					Image: &types.Image{
-// 						ImageCommon: types.ImageCommon{
-// 							SHA1: "123",
-// 						},
-// 					},
-// 				},
-// 			},
-// 			2: {
-// 				Password: hash,
-// 				Post: types.Post{
-// 					ID: 1,
-// 				},
-// 			},
-// 		},
-// 	}
-// 	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
+	const password = "123"
+	hash, err := auth.BcryptHash(password, 6)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	samples := [...]struct {
-// 		id        int64
-// 		password  string
-// 		code      int
-// 		spoilered bool
-// 	}{
-// 		{2, password, 400, false}, // No image
-// 		{1, "122", 403, false},    // Wrong password
-// 		{1, password, 200, true},  // Success
-// 		{1, password, 200, true},  // Already spoilered
-// 	}
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			Password: hash,
+			Post: types.Post{
+				ID: 1,
+				Image: &types.Image{
+					ImageCommon: types.ImageCommon{
+						SHA1: "123",
+					},
+				},
+			},
+		},
+		{
+			Password: hash,
+			Post: types.Post{
+				ID: 2,
+			},
+		},
+		{
+			Password: hash,
+			Post: types.Post{
+				ID: 3,
+				Image: &types.Image{
+					ImageCommon: types.ImageCommon{
+						SHA1: "123",
+					},
+					Spoiler: true,
+				},
+			},
+		},
+	})
 
-// 	for _, s := range samples {
-// 		data := spoilerRequest{
-// 			ID:       s.id,
-// 			Password: s.password,
-// 		}
-// 		rec, req := newJSONPair(c, "/json/spoiler", data)
-// 		d.r.ServeHTTP(rec, req)
+	cases := [...]struct {
+		name      string
+		id        int64
+		password  string
+		code      int
+		spoilered bool
+	}{
+		{"no image", 2, password, 400, false},
+		{"wrong password", 1, "122", 403, false},
+		{"success", 1, password, 200, true},
+		{"already spoilerd", 1, password, 200, true},
+	}
 
-// 		assertCode(rec, s.code, c)
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 
-// 		var spoilered bool
-// 		msg := []byte("11" + strconv.Itoa(int(s.id)))
-// 		q := r.And(
-// 			db.FindParentThread(s.id).Field("log").Contains(msg),
-// 			db.FindPost(s.id).Field("image").Field("spoiler"),
-// 		)
-// 		c.Assert(db.One(q, &spoilered), IsNil)
-// 		c.Assert(spoilered, Equals, s.spoilered)
-// 	}
-// }
+			data := spoilerRequest{
+				ID:       c.id,
+				Password: c.password,
+			}
+			rec, req := newJSONPair(t, "/json/spoiler", data)
+			router.ServeHTTP(rec, req)
+
+			assertCode(t, rec, c.code)
+
+			var spoilered bool
+			msg := []byte("11" + strconv.Itoa(int(c.id)))
+			post := db.FindPost(c.id)
+			q := r.And(
+				post.Field("log").Contains(msg),
+				post.Field("image").Field("spoiler"),
+			)
+			if err := db.One(q, &spoilered); err != nil {
+				t.Fatal(err)
+			}
+			if spoilered != spoilered {
+				t.Errorf(
+					"spoiler mismatch: expected %v; got %v",
+					c.spoilered,
+					spoilered,
+				)
+			}
+		})
+	}
+}
