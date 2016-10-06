@@ -103,7 +103,6 @@ func testCreateThread(t *testing.T) {
 		Subject:  "subject",
 		Board:    "c",
 		ImageCtr: 1,
-		PostCtr:  1,
 	}
 	stdPost := types.DatabasePost{
 		IP:  "::1",

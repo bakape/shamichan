@@ -89,7 +89,6 @@ func insertThread(data []byte, c *Client) (err error) {
 		BumpTime:  now,
 		ReplyTime: now,
 		Board:     req.Board,
-		PostCtr:   1,
 	}
 	thread.Subject, err = parser.ParseSubject(req.Subject)
 	if err != nil {
