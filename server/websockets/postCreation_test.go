@@ -111,6 +111,7 @@ func testCreateThread(t *testing.T) {
 		Post: types.Post{
 			Editing: true,
 			ID:      6,
+			OP:      6,
 			Name:    "name",
 			Board:   "c",
 			Image: &types.Image{

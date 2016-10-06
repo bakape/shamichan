@@ -112,8 +112,7 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 	thread.ID = id
 	post.ID = id
-	_, sync := Clients.GetSync(c)
-	post.OP = sync.OP
+	post.OP = id
 
 	if err := db.Insert("posts", post); err != nil {
 		return err

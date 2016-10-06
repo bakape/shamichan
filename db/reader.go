@@ -53,8 +53,9 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 		return nil, err
 	}
 
-	// Remove OP from posts slice to prevent possible duplication
-	if thread.Posts[0].ID == id {
+	// Remove OP from posts slice to prevent possible duplication. Post might
+	// be deleted before the thread due to a deletion race.
+	if len(thread.Posts) != 0 && thread.Posts[0].ID == id {
 		thread.Posts = thread.Posts[1:]
 	}
 
