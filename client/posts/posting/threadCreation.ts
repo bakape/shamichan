@@ -1,15 +1,15 @@
-import {on, inputValue, applyMixins, makeFrag} from '../../util'
-import {fetchBoardList, fetchBoarConfigs} from "../../json"
-import {write, $threads} from '../../render'
-import {FormView, inputType, renderInput, InputSpec} from '../../forms'
-import {Captcha} from '../../captcha'
-import {PostCredentials, newAllocRequest} from './identity'
-import {page, boardConfig} from '../../state'
-import {posts as lang, ui} from '../../lang'
-import {send, message, handlers} from '../../connection'
-import UploadForm, {FileData} from './upload'
+import { on, inputValue, applyMixins, makeFrag } from '../../util'
+import { fetchBoardList, fetchBoarConfigs } from "../../json"
+import { write, $threads } from '../../render'
+import { FormView, inputType, renderInput, InputSpec } from '../../forms'
+import { Captcha } from '../../captcha'
+import { PostCredentials, newAllocRequest } from './identity'
+import { page, boardConfig } from '../../state'
+import { posts as lang, ui } from '../../lang'
+import { send, message, handlers } from '../../connection'
+import UploadForm, { FileData } from './upload'
 import navigate from '../../history'
-import {OPFormModel} from './model'
+import { OPFormModel } from './model'
 
 interface ThreadCreationRequest extends PostCredentials, Captcha {
 	subject: string
@@ -18,14 +18,14 @@ interface ThreadCreationRequest extends PostCredentials, Captcha {
 }
 
 // Response codes for thread and post insertion requests
-export const enum responseCode {success, invalidCaptcha}
+export const enum responseCode { success, invalidCaptcha }
 
 type ThreadCreationResponse = {
 	code: responseCode
 	id: number
 }
 
-// Bind event listener to the thread container
+// Bind event listener to the thread containerThreadForm
 export default () =>
 	on($threads, "click", e => new ThreadForm(e), {
 		selector: ".new-thread-button",
@@ -51,7 +51,7 @@ class ThreadForm extends FormView implements UploadForm {
 	spoilerImage: () => Promise<void>
 
 	constructor(event: Event) {
-		super({class: "new-thread-form"}, () =>
+		super({ class: "new-thread-form" }, () =>
 			this.sendRequest())
 		this.$aside = (event.target as Element).closest("aside")
 		this.render()
@@ -99,8 +99,8 @@ class ThreadForm extends FormView implements UploadForm {
 		this.renderForm(frag)
 		write(() =>
 			(this.$aside.classList.add("expanded"),
-			this.$aside.append(this.el),
-			(this.el.querySelector("input, select") as HTMLElement).focus()))
+				this.$aside.append(this.el),
+				(this.el.querySelector("input, select") as HTMLElement).focus()))
 	}
 
 	// Initialize the board selection input for the /all/ board and return its
@@ -180,14 +180,14 @@ class ThreadForm extends FormView implements UploadForm {
 
 	async handleResponse({code, id}: ThreadCreationResponse) {
 		switch (code) {
-		case responseCode.success:
-			await navigate(`/${this.selectedBoard}/${id}`, null, true)
-			new OPFormModel(id)
-			break
-		case responseCode.invalidCaptcha:
-			this.renderFormResponse(ui.invalidCaptcha)
-			this.reloadCaptcha(code)
-			break
+			case responseCode.success:
+				await navigate(`/${this.selectedBoard}/${id}`, null, true)
+				new OPFormModel(id)
+				break
+			case responseCode.invalidCaptcha:
+				this.renderFormResponse(ui.invalidCaptcha)
+				this.reloadCaptcha(code)
+				break
 		}
 	}
 }

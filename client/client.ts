@@ -3,7 +3,7 @@
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts } from './state'
 import { Post, PostLinks, Command, PostData, ImageData } from './posts/models'
-import { ReplyFormModel } from "./posts/posting/model"
+import { ReplyFormModel , OPFormModel } from "./posts/posting/model"
 import PostView from "./posts/view"
 import { $threadContainer } from "./page/thread"
 import { write } from "./render"
@@ -50,7 +50,7 @@ export function insertPost(data: PostData) {
 	if (existing) {
 		if (existing instanceof ReplyFormModel) {
 			existing.onAllocation(data)
-		} else {
+		} else if (!(existing instanceof OPFormModel)) {
 			existing.extend(data)
 		}
 		return
