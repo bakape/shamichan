@@ -77,6 +77,7 @@ func syncToThread(board string, thread int64, c *Client) error {
 
 	registerSync(board, thread, c)
 	feeds.Add <- subRequest{thread, c}
+	c.feedID = thread
 
 	return nil
 }

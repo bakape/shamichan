@@ -127,6 +127,9 @@ func TestSyncToThread(t *testing.T) {
 		OP:    1,
 		Board: "a",
 	})
+	if cl.feedID != 1 {
+		t.Errorf("unexpected feed ID: 1 : %d", cl.feedID)
+	}
 
 	// The update stream does not guarantee initial message order on
 	// synchronisation, only that messages from the same document will be in
