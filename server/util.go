@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/util"
@@ -59,7 +60,7 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 
 // Log an error together with the client's IP
 func logError(r *http.Request, err interface{}) {
-	log.Printf("server: %s: %s", auth.GetIP(r), err)
+	log.Printf("server: %s: %s\n%s", auth.GetIP(r), err, debug.Stack())
 }
 
 // Set HTTP headers to the response object
