@@ -11,9 +11,6 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-// Override to not launch several infinite loops during tests
-var isTest bool
-
 // Load configs from the database and on each change
 func loadConfigs() error {
 	cursor, err := GetMain("config").
@@ -30,7 +27,7 @@ func loadConfigs() error {
 
 	// Reaload configuration on any change in the database
 	go func() {
-		if isTest {
+		if IsTest {
 			return
 		}
 		for {

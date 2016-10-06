@@ -73,16 +73,8 @@ export let seenReplies: Set<number>
 // Explicitly hidden posts and threads
 export let hidden: Set<number>
 
-// Tracks the synchronisation progress of the current thread/board
-export let syncCounter: number
-
 // Debug mode with more verbose logging
 export let debug: boolean = /[\?&]debug=true/.test(location.href)
-
-// Set the synchronisation counter
-export function setSyncCounter(ctr: number) {
-	syncCounter = ctr
-}
 
 // Read page state by parsing a URL
 export function read(href: string): PageState {

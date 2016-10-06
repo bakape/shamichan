@@ -1,85 +1,142 @@
 package parser
 
 import (
-	"github.com/bakape/meguca/auth"
+	"testing"
+
 	"github.com/bakape/meguca/config"
-	. "gopkg.in/check.v1"
 )
 
-func (*Tests) TestParseName(c *C) {
+func TestParseName(t *testing.T) {
 	(*config.Get()).Salt = "123"
 
-	samples := [...]struct {
-		in, name, trip string
+	cases := [...]struct {
+		testName, in, name, trip string
 	}{
-		{"", "", ""},
-		{"name", "name", ""},
-		{"#test", "", ".CzKQna1OU"},
-		{"name#test", "name", ".CzKQna1OU"},
-		{"##test", "", "mb8h72.d9g"},
-		{"name##test", "name", "mb8h72.d9g"},
-		{"  name##test ", "name", "mb8h72.d9g"},
+		{"empty", "", "", ""},
+		{"name only", "name", "name", ""},
+		{"trip only", "#test", "", ".CzKQna1OU"},
+		{"name and trip", "name#test", "name", ".CzKQna1OU"},
+		{"secure trip", "##test", "", "mb8h72.d9g"},
+		{"name secure trip", "name##test", "name", "mb8h72.d9g"},
+		{"with padding spaces", "  name##test ", "name", "mb8h72.d9g"},
 	}
 
-	for _, s := range samples {
-		name, trip, err := ParseName(s.in)
-		c.Assert(err, IsNil)
-		c.Assert(name, Equals, s.name)
-		c.Assert(trip, Equals, s.trip)
-	}
-}
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.testName, func(t *testing.T) {
+			t.Parallel()
 
-func (*Tests) TestParseSubject(c *C) {
-	samples := [...]struct {
-		in, out string
-		err     error
-	}{
-		{"", "", errNoSubject},
-		{randomString(maxLengthSubject+1, c), "", ErrTooLong("subject")},
-		{" abc ", "abc", nil},
+			name, trip, err := ParseName(c.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if name != c.name {
+				logUnexpected(t, c.name, name)
+			}
+			if trip != c.trip {
+				logUnexpected(t, c.trip, trip)
+			}
+		})
 	}
 
-	for _, s := range samples {
-		sub, err := ParseSubject(s.in)
-		c.Assert(err, Equals, s.err)
-		if s.err == nil {
-			c.Assert(sub, Equals, s.out)
+	t.Run("name too long", func(t *testing.T) {
+		t.Parallel()
+		_, _, err := ParseName(genString(maxLengthName + 1))
+		if err != errNameTooLong {
+			t.Fatalf("unexpected error: %#v", err)
 		}
-	}
+	})
 }
 
-func randomString(length int, c *C) string {
-	s, err := auth.RandomID(length)
-	c.Assert(err, IsNil)
-	return s[:length]
-}
+func TestParseSubject(t *testing.T) {
+	t.Parallel()
 
-func (*Tests) TestVerifyPostPassword(c *C) {
-	samples := [...]struct {
-		in  string
-		err error
+	cases := [...]struct {
+		name, in, out string
+		err           error
 	}{
-		{"", errNoPostPassword},
-		{randomString(maxLengthPostPassword+1, c), ErrTooLong("post password")},
-		{randomString(maxLengthPostPassword, c), nil},
+		{
+			"no subject",
+			"", "", errNoSubject,
+		},
+		{
+			"subject too long",
+			genString(maxLengthSubject + 1), "", errSubjectTooLong,
+		},
+		{
+			"valid",
+			" abc ", "abc", nil,
+		},
 	}
 
-	for _, s := range samples {
-		c.Assert(VerifyPostPassword(s.in), Equals, s.err)
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			sub, err := ParseSubject(c.in)
+			if err != c.err {
+				t.Fatalf("unexpected error: %#v", err)
+			}
+			if c.err == nil {
+				if sub != c.out {
+					logUnexpected(t, c.out, sub)
+				}
+			}
+		})
 	}
 }
 
-func (*Tests) TestFormatEmail(c *C) {
-	samples := [...]struct {
-		in, out string
+func TestVerifyPostPassword(t *testing.T) {
+	t.Parallel()
+
+	cases := [...]struct {
+		name, in string
+		err      error
 	}{
-		{"", ""},
-		{"sage", ""},
-		{"foo", "foo"},
-		{"h\u2000e\u200fl\u202al\u202fo\u205f\u206f", "hello"},
-		{randomString(maxLengthEmail+1, c), ""},
+		{
+			"no password",
+			"", errNoPostPassword,
+		},
+		{
+			"too long",
+			genString(maxLengthPostPassword + 1), errPostPaswordTooLong,
+		},
+		{
+			"valid",
+			genString(maxLengthPostPassword), nil,
+		},
 	}
-	for _, s := range samples {
-		c.Assert(FormatEmail(s.in), Equals, s.out)
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			if err := VerifyPostPassword(c.in); err != c.err {
+				t.Fatalf("unexpected error: %#v", err)
+			}
+		})
+	}
+}
+
+func TestFormatEmail(t *testing.T) {
+	t.Parallel()
+
+	cases := [...]struct {
+		name, in, out string
+	}{
+		{"empty", "", ""},
+		{"sage", "sage", ""},
+		{"normal", "foo", "foo"},
+		{
+			"with psuedo whitespace",
+			"h\u2000e\u200fl\u202al\u202fo\u205f\u206f", "hello",
+		},
+		{"too long", genString(maxLengthEmail + 1), ""},
+	}
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			if s := FormatEmail(c.in); s != c.out {
+				logUnexpected(t, c.out, s)
+			}
+		})
 	}
 }

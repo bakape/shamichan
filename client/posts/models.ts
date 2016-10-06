@@ -1,10 +1,11 @@
 import Model from '../model'
-import {extend} from '../util'
+import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
-import {SpliceResponse} from '../client'
-import {mine, storeSeenReply, seenReplies} from "../state"
-import {repliedToMe} from "../tab"
+import { SpliceResponse } from '../client'
+import { mine, storeSeenReply, seenReplies } from "../state"
+import { repliedToMe } from "../tab"
+import { write } from "../render"
 
 // Generic link object containing target post board and thread
 export type PostLink = {
@@ -13,7 +14,7 @@ export type PostLink = {
 }
 
 // Map of target to post numbers to their parenthood data
-export type PostLinks = {[id: number]: PostLink}
+export type PostLinks = { [id: number]: PostLink }
 
 // Data of any post. In addition to server-sent JSON includes the state
 // property.
@@ -43,7 +44,7 @@ export type TextState = {
 }
 
 // Types of hash command entries
-export const enum commandType {dice, flip, eightBall, syncWatch, pyu}
+export const enum commandType { dice, flip, eightBall, syncWatch, pyu }
 
 // Single hash command result delivered from the server
 export interface Command {
@@ -63,7 +64,7 @@ export interface ThreadData extends PostData {
 	replyTime: number
 	subject: string
 	board: string
-	posts?: {[id: number]: PostData}
+	posts?: { [id: number]: PostData }
 }
 
 // Image data embedable in posts and thread hashes
@@ -88,7 +89,7 @@ export interface ImageData {
 }
 
 // Possible file types of a post image
-export enum fileTypes {jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg}
+export enum fileTypes { jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg }
 
 // Generic post model
 export class Post extends Model implements PostData {
@@ -198,6 +199,13 @@ export class Post extends Model implements PostData {
 		} else {
 			this[key] = obj
 		}
+	}
+
+	// Extend all fields in the model and rerender
+	extend(data: PostData) {
+		extend(this, data)
+		write(() =>
+			this.view.renderContents(this.view.el))
 	}
 
 	// Insert data about a link to another post into the model

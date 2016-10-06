@@ -2,77 +2,72 @@ package db
 
 import (
 	"github.com/bakape/meguca/types"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
 // Preconstructed REQL queries that don't have to be rebuilt
 var (
-	postRow = r.Row.Field("posts")
-
-	// Retrieves thread OP information for merging into the thread struct
-	getThreadOP = postRow.Field(r.Row.Field("id").CoerceTo("string"))
-
-	// Retrieves thread counters for merging into the thread struct
-	getLogCounter = map[string]r.Term{
-		// Replication log counter
-		"logCtr": r.Row.Field("log").Count(),
-	}
-
 	// Retrieves all threads for the /all/ metaboard
 	getAllBoard = r.
 			Table("threads").
-			Merge(getThreadOP.Without("body"), getLogCounter).
+			EqJoin("id", r.Table("posts")).
+			Zip().
 			Without(omitForBoards)
 
 	// Fields to omit in board queries. Decreases payload of DB replies.
 	omitForBoards = []string{
-		"posts", "log", "body", "password", "commands", "links", "backlinks",
-		"ip",
+		"body", "password", "commands", "links", "backlinks", "ip", "editing",
+		"op",
 	}
+
+	// Fields to omit for post queries
+	omitForPosts = []string{"password", "ip"}
 )
 
 // GetThread retrieves public thread data from the database
 func GetThread(id int64, lastN int) (*types.Thread, error) {
-	toMerge := []interface{}{getThreadOP, getLogCounter}
+	q := r.
+		Table("threads").
+		GetAll(id). // Can not join after Get(). Meh.
+		EqJoin("id", r.Table("posts")).
+		Zip()
+
+	getPosts := r.
+		Table("posts").
+		GetAllByIndex("op", id).
+		OrderBy("id").
+		CoerceTo("array")
 
 	// Only fetch last N number of replies
 	if lastN != 0 {
-		sliced := postRow.
-			CoerceTo("array").
-			Slice(-lastN).
-			CoerceTo("object")
-		toMerge = append(toMerge, map[string]r.Term{
-			"posts": r.Literal(sliced),
-		})
+		getPosts = getPosts.Slice(-lastN)
 	}
 
+	q = q.Merge(map[string]r.Term{
+		"posts": getPosts.Without(omitForPosts),
+	}).
+		Without(omitForPosts)
+
 	var thread types.Thread
-	err := One(getThread(id).Merge(toMerge...).Without("log"), &thread)
-	if err != nil {
+	if err := One(q, &thread); err != nil {
 		return nil, err
 	}
 
-	// Remove OP from posts map to prevent possible duplication
-	delete(thread.Posts, id)
+	// Remove OP from posts slice to prevent possible duplication. Post might
+	// be deleted before the thread due to a deletion race.
+	if len(thread.Posts) != 0 && thread.Posts[0].ID == id {
+		thread.Posts = thread.Posts[1:]
+	}
+
+	// Do not include redundant "op" field in output JSON
+	thread.OP = 0
 
 	return &thread, nil
 }
 
-// GetPost reads a single post from the database complete with parent board and
-// thread
-func GetPost(id int64) (post types.StandalonePost, err error) {
-	q := FindParentThread(id).
-		Do(func(t r.Term) r.Term {
-			return t.
-				Field("posts").
-				Field(util.IDToString(id)).
-				Merge(map[string]r.Term{
-					"op":    t.Field("id"),
-					"board": t.Field("board"),
-				})
-		}).
-		Default(nil)
+// GetPost reads a single post from the database
+func GetPost(id int64) (post types.Post, err error) {
+	q := FindPost(id).Without(omitForPosts).Default(nil)
 	err = One(q, &post)
 	return
 }
@@ -84,13 +79,14 @@ func GetBoard(board string) (*types.Board, error) {
 		return nil, err
 	}
 
-	query := r.
+	q := r.
 		Table("threads").
 		GetAllByIndex("board", board).
-		Merge(getThreadOP, getLogCounter).
+		EqJoin("id", r.Table("posts")).
+		Zip().
 		Without(omitForBoards)
 	out := &types.Board{Ctr: ctr}
-	err = All(query, &out.Threads)
+	err = All(q, &out.Threads)
 
 	return out, err
 }

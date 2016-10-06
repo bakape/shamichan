@@ -13,6 +13,15 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
+// Board creation request responses
+const (
+	boardCreated = iota
+	invalidBoardName
+	boardNameTaken
+	titleTooLong
+	invalidBoardCreationCaptcha
+)
+
 var (
 	errAccessDenied = errors.New("access denied")
 
@@ -23,15 +32,6 @@ type boardCreationRequest struct {
 	Name, Title string
 	types.Captcha
 }
-
-// Board creation request responses
-const (
-	boardCreated = iota
-	invalidBoardName
-	boardNameTaken
-	titleTooLong
-	invalidBoardCreationCaptcha
-)
 
 // Answer the admin account's requests for the current server configuration or
 // set the server configuration to match the one sent from the admin account.
@@ -77,7 +77,7 @@ func createBoard(data []byte, c *Client) error {
 
 	var code int
 	switch {
-	case !boardNameValidation.MatchString(req.Name):
+	case req.Name == "id", !boardNameValidation.MatchString(req.Name):
 		code = invalidBoardName
 	case len(req.Title) > 100:
 		code = titleTooLong

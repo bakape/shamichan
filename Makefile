@@ -32,7 +32,7 @@ endif
 # Build everything
 all: server client
 
-# Update NPM deps and build client
+# Install NPM deps and build client
 client:
 	npm install
 	$(GULP)

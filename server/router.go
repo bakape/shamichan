@@ -29,6 +29,8 @@ var (
 	// Defines, if all trafic should be piped through a gzip compression
 	// -decompression handler
 	enableGzip bool
+
+	isTest bool
 )
 
 // Used for overriding during tests
@@ -74,7 +76,6 @@ func createRouter() http.Handler {
 	json.GET("/boardConfig/:board", serveBoardConfigs)
 	json.GET("/boardList", wrapHandler(serveBoardList))
 	json.GET("/positions/:position/:user", serveStaffPositions)
-	json.GET("/backlog/:thread/:start/:end", serveBacklog)
 	json.POST("/spoiler", wrapHandler(spoilerImage))
 
 	// Adminitration JSON API for logged in users

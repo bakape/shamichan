@@ -10,9 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/bakape/meguca/config"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (

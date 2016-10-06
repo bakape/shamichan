@@ -1,78 +1,81 @@
 package db
 
 import (
+	"testing"
+
+	"bytes"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-	. "gopkg.in/check.v1"
 )
 
-func (*Tests) TestValidateOP(c *C) {
-	std := types.DatabaseThread{
+func TestValidateOp(t *testing.T) {
+	assertTableClear(t, "threads")
+	assertInsert(t, "threads", types.DatabaseThread{
 		ID:    1,
 		Board: "a",
+	})
+
+	samples := [...]struct {
+		id      int64
+		board   string
+		isValid bool
+	}{
+		{1, "a", true},
+		{15, "a", false},
 	}
-	c.Assert(Write(r.Table("threads").Insert(std)), IsNil)
 
-	v, err := ValidateOP(1, "a")
-	c.Assert(err, IsNil)
-	c.Assert(v, Equals, true)
-
-	// Thread does not exist
-	v, err = ValidateOP(15, "a")
-	c.Assert(err, IsNil)
-	c.Assert(v, Equals, false)
+	for i := range samples {
+		s := samples[i]
+		t.Run("", func(t *testing.T) {
+			t.Parallel()
+			valid, err := ValidateOP(s.id, s.board)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if valid != s.isValid {
+				t.Fatal("unexpected result")
+			}
+		})
+	}
 }
 
-func (*Tests) TestGetThread(c *C) {
-	c.Assert(getThread(1).String(), Equals, `r.Table("threads").Get(1)`)
-}
-
-func (*Tests) TestPostCounter(c *C) {
-	std := infoDocument{
+func TestPostCounter(t *testing.T) {
+	assertTableClear(t, "main")
+	assertInsert(t, "main", infoDocument{
 		Document: Document{"info"},
 		PostCtr:  1,
+	})
+
+	ctr, err := PostCounter()
+	if err != nil {
+		t.Fatal(err)
 	}
-	c.Assert(Write(r.Table("main").Insert(std)), IsNil)
-
-	count, err := PostCounter()
-	c.Assert(err, IsNil)
-	c.Assert(count, Equals, int64(1))
-}
-
-func (*Tests) TestBoardCounter(c *C) {
-	std := Document{"boardCtrs"}
-	c.Assert(Write(r.Table("main").Insert(std)), IsNil)
-
-	count, err := BoardCounter("a")
-	c.Assert(err, IsNil)
-	c.Assert(count, Equals, int64(0))
-
-	update := map[string]int{"a": 1}
-	c.Assert(Write(GetMain("boardCtrs").Update(update)), IsNil)
-
-	count, err = BoardCounter("a")
-	c.Assert(err, IsNil)
-	c.Assert(count, Equals, int64(1))
-}
-
-func (*Tests) TestThreadCounter(c *C) {
-	std := types.DatabaseThread{
-		ID: 1,
-		Log: [][]byte{
-			{1},
-			{2},
-			{3},
-		},
+	if ctr != 1 {
+		t.Fatalf("expected: 1, got: %d", ctr)
 	}
-	c.Assert(Write(r.Table("threads").Insert(std)), IsNil)
-
-	count, err := ThreadCounter(1)
-	c.Assert(err, IsNil)
-	c.Assert(count, Equals, int64(3))
 }
 
-func (*Tests) TestRegisterAccount(c *C) {
+func TestThreadCounter(t *testing.T) {
+	assertTableClear(t, "threads")
+	assertInsert(t, "threads", types.DatabaseThread{
+		ID:      1,
+		PostCtr: 55,
+	})
+
+	ctr, err := ThreadCounter(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ctr != 55 {
+		logUnexpected(t, 55, ctr)
+	}
+}
+
+func TestRegisterAccount(t *testing.T) {
+	assertTableClear(t, "accounts")
+
 	const id = "123"
 	hash := []byte{1, 2, 3}
 	user := auth.User{
@@ -82,65 +85,98 @@ func (*Tests) TestRegisterAccount(c *C) {
 	}
 
 	// New user
-	c.Assert(RegisterAccount(id, hash), IsNil)
+	if err := RegisterAccount(id, hash); err != nil {
+		t.Fatal(err)
+	}
 	var res auth.User
-	c.Assert(One(GetAccount(id), &res), IsNil)
-	c.Assert(res, DeepEquals, user)
+	if err := One(GetAccount(id), &res); err != nil {
+		t.Error(err)
+	}
+	assertDeepEquals(t, res, user)
 
 	// User name already registered
-	c.Assert(RegisterAccount(id, hash), ErrorMatches, "user name already taken")
+	if err := RegisterAccount(id, hash); err != ErrUserNameTaken {
+		t.Errorf("unexpected error: %s", err)
+	}
 }
 
-func (*Tests) TestNonExistantUserGetHash(c *C) {
-	_, err := GetLoginHash("123")
-	c.Assert(err, Equals, r.ErrEmptyResult)
-}
+func TestGetLoginHash(t *testing.T) {
+	assertTableClear(t, "accounts")
 
-func (*Tests) TestGetLoginHash(c *C) {
 	const id = "123"
 	hash := []byte{1, 2, 3}
-	user := auth.User{
+	assertInsert(t, "accounts", auth.User{
 		ID:       id,
 		Password: hash,
+	})
+
+	samples := [...]struct {
+		name, id string
+		err      error
+	}{
+		{"exists", id, nil},
+		{"does not exist", "456", r.ErrEmptyResult},
 	}
-	c.Assert(Write(r.Table("accounts").Insert(user)), IsNil)
 
-	res, err := GetLoginHash(id)
-	c.Assert(err, IsNil)
-	c.Assert(res, DeepEquals, hash)
+	for i := range samples {
+		s := samples[i]
+		t.Run(s.name, func(t *testing.T) {
+			t.Parallel()
+			h, err := GetLoginHash(s.id)
+			if err != s.err {
+				logUnexpected(t, s.err, err)
+			}
+			if s.err == nil {
+				if !bytes.Equal(h, hash) {
+					logUnexpected(t, hash, h)
+				}
+			}
+		})
+	}
 }
 
-func (*Tests) TestGetImage(c *C) {
-	c.Assert(GetImage("123").String(), Equals, `r.Table("images").Get("123")`)
+func TestGetBoardConfig(t *testing.T) {
+	t.Parallel()
+	const std = `r.Table("boards").Get("a").Without("created")`
+	if q := GetBoardConfig("a").String(); q != std {
+		logUnexpected(t, std, q)
+	}
 }
 
-func (*Tests) TestGetBoardConfig(c *C) {
-	const q = `r.Table("boards").Get("a").Without("created")`
-	c.Assert(GetBoardConfig("a").String(), Equals, q)
-}
-
-func (*Tests) TestReservePostID(c *C) {
-	info := map[string]interface{}{
+func TestReservePostID(t *testing.T) {
+	assertTableClear(t, "main")
+	assertInsert(t, "main", map[string]interface{}{
 		"id":      "info",
 		"postCtr": 0,
-	}
-	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
+	})
 
 	for i := int64(1); i <= 2; i++ {
 		id, err := ReservePostID()
-		c.Assert(err, IsNil)
-		c.Assert(id, Equals, i)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if id != i {
+			logUnexpected(t, i, id)
+		}
 	}
 }
 
-func (*Tests) TestIncrementBoardCounter(c *C) {
-	c.Assert(Write(r.Table("main").Insert(Document{"boardCtrs"})), IsNil)
+func TestIncrementBoardCounter(t *testing.T) {
+	assertTableClear(t, "main")
+	assertInsert(t, "main", Document{"boardCtrs"})
 
 	// Check both a fresh board counter and incrementing an existing one
 	for i := int64(1); i <= 2; i++ {
-		c.Assert(IncrementBoardCounter("a"), IsNil)
+		if err := IncrementBoardCounter("a"); err != nil {
+			t.Fatal(err)
+		}
+
 		ctr, err := BoardCounter("a")
-		c.Assert(err, IsNil)
-		c.Assert(ctr, Equals, i)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ctr != i {
+			logUnexpected(t, i, ctr)
+		}
 	}
 }

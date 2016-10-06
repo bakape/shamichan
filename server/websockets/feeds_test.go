@@ -1,66 +1,230 @@
 package websockets
 
 import (
+	"bytes"
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-	. "gopkg.in/check.v1"
 )
 
-func (*DB) TestAddingFeeds(c *C) {
-	writeSampleThread(c)
-	sv := newWSServer(c)
+func TestAddingFeeds(t *testing.T) {
+	assertTableClear(t, "posts")
+	feeds.Clear()
+
+	sv := newWSServer(t)
 	defer sv.Close()
-	cl1, _ := sv.NewClient()
-	cl2, _ := sv.NewClient()
+	cl1, wcl1 := sv.NewClient()
+	cl2, wcl2 := sv.NewClient()
 
-	// Create new feed
-	feed, err := feeds.Add(1, cl1)
-	c.Assert(err, IsNil)
-	c.Assert(feed, Equals, feeds.feeds[1])
+	feeds.Add <- subRequest{1, cl1}
+	defer feeds.Clear()
+	assertMessage(t, wcl1, "30{}")
 
-	// Add to exiting feed
-	oldFeed := feed
-	feed, err = feeds.Add(1, cl2)
-	c.Assert(err, IsNil)
-	c.Assert(feed, Equals, oldFeed)
+	feeds.Add <- subRequest{1, cl2}
+	assertMessage(t, wcl2, "30{}")
 
-	// Remove second client
-	feed.Remove <- cl2
+	feeds.Remove <- subRequest{1, cl2}
 }
 
-func (*DB) TestStreamUpdates(c *C) {
-	thread := types.DatabaseThread{
-		ID:  1,
-		Log: [][]byte{[]byte("foo")},
+func TestStreamUpdates(t *testing.T) {
+	assertTableClear(t, "posts", "threads")
+	feeds.Clear()
+	assertInsert(t, "threads", types.DatabaseThread{
+		ID:    1,
+		Board: "a",
+	})
+	post := types.Post{
+		ID:          1,
+		Board:       "a",
+		OP:          1,
+		LastUpdated: time.Now().Unix(),
 	}
-	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
 
-	// Empty log
-	feed, err := newUpdateFeed(1)
-	c.Assert(err, IsNil)
-	c.Assert(feed.ctr, Equals, uint64(1))
-
-	sv := newWSServer(c)
+	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	go cl.Listen()
-	feed.Add <- cl
+	feeds.Add <- subRequest{1, cl}
+	defer feeds.Clear()
 
-	msg := []byte("bar")
-	q := r.Table("threads").Get(1).Update(map[string]r.Term{
-		"log": appendLog(msg),
+	assertMessage(t, wcl, "30{}")
+	assertInsert(t, "posts", types.DatabasePost{
+		Post: post,
+		Log:  [][]byte{},
 	})
-	c.Assert(db.Write(q), IsNil)
-	assertMessage(wcl, []byte("301"), c)
-	assertMessage(wcl, msg, c)
-	c.Assert(feed.ctr, Equals, uint64(2))
-	close(feed.close)
-	cl.Close(nil)
+	assertMessage(t, wcl, encodeMessage(t, MessageInsertPost, post))
 
-	// Existing data
-	feed, err = newUpdateFeed(1)
-	c.Assert(err, IsNil)
-	c.Assert(feed.ctr, Equals, uint64(2))
-	close(feed.close)
+	q := db.FindPost(1).Update(map[string]interface{}{
+		"log": appendLog([]byte("bar")),
+	})
+	if err := db.Write(q); err != nil {
+		t.Fatal(err)
+	}
+	assertMessage(t, wcl, "bar")
+
+	// Sending of cached posts
+	cl2, wcl2 := sv.NewClient()
+	feeds.Add <- subRequest{1, cl2}
+	std := encodeMessage(t, MessageSynchronise, map[int64]types.Post{
+		1: post,
+	})
+	assertMessage(t, wcl2, std)
+}
+
+func TestBufferUpdate(t *testing.T) {
+	t.Parallel()
+
+	stdPost := types.Post{
+		ID:    1,
+		OP:    1,
+		Board: "a",
+	}
+
+	cases := [...]struct {
+		name   string
+		update feedUpdate
+		cached types.Post
+		buf    string
+	}{
+		{
+			name: "post insertion",
+			update: feedUpdate{
+				Change: postInserted,
+				Post:   stdPost,
+				Log:    nil,
+			},
+			cached: stdPost,
+			buf:    encodeMessage(t, MessageInsertPost, stdPost),
+		},
+		{
+			name: "post updated",
+			update: feedUpdate{
+				Change: postUpdated,
+				Post:   stdPost,
+				Log:    [][]byte{[]byte("foo")},
+			},
+			cached: stdPost,
+			buf:    "foo",
+		},
+		{
+			name: "post deleted",
+			update: feedUpdate{
+				Change: postDeleted,
+				Post: types.Post{
+					ID: 1,
+				},
+			},
+			cached: types.Post{},
+			buf:    encodeMessage(t, MessageDelete, 1),
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			feeds := newFeedContainer()
+			if err := feeds.bufferUpdate(c.update); err != nil {
+				t.Fatal(err)
+			}
+			feed := feeds.feeds[c.update.OP]
+
+			assertDeepEquals(t, feed.cache[c.update.ID], c.cached)
+			if s := feed.buf.String(); s != c.buf {
+				logUnexpected(t, c.buf, s)
+			}
+		})
+	}
+}
+
+func encodeMessage(t *testing.T, typ MessageType, data interface{}) string {
+	msg, err := EncodeMessage(typ, data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(msg)
+}
+
+func TestWriteMultipleToBuffer(t *testing.T) {
+	t.Parallel()
+
+	u := updateFeed{}
+	u.writeToBuffer([]byte("a"))
+	u.writeToBuffer([]byte("b"))
+
+	const std = "a\u0000b"
+	if s := u.buf.String(); s != std {
+		logUnexpected(t, std, s)
+	}
+	if !u.multiple {
+		t.Fatal("containing multiple messages not recorded")
+	}
+}
+
+func TestFlushMultipleMessages(t *testing.T) {
+	t.Parallel()
+
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+	feeds := newFeedContainer()
+	const msg = "a\u0000bc"
+	feeds.feeds[1] = &updateFeed{
+		clients:  []*Client{cl},
+		buf:      *bytes.NewBufferString(msg),
+		multiple: true,
+	}
+
+	feeds.flushBuffers()
+	assertMessage(t, wcl, `42`+msg)
+}
+
+func TestFeedCleanUp(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now().Unix()
+	expired := now - 31
+	cls := []*Client{new(Client)}
+	fresh := types.Post{
+		LastUpdated: now,
+	}
+	stale := types.Post{
+		LastUpdated: expired,
+	}
+	feeds := newFeedContainer()
+	feeds.cursor = new(r.Cursor)
+	feeds.feeds = map[int64]*updateFeed{
+		1: {}, // No clients or cache
+		2: { // No cache, has clients
+			clients: cls,
+		},
+		3: { // Cache expired
+			cache: map[int64]types.Post{
+				1: stale,
+			},
+		},
+		4: { // Not fully expired
+			cache: map[int64]types.Post{
+				1: stale,
+				2: fresh,
+			},
+		},
+	}
+
+	feeds.cleanUp(now)
+
+	std := map[int64]*updateFeed{
+		2: {
+			clients: cls,
+		},
+		4: {
+			cache: map[int64]types.Post{
+				2: fresh,
+			},
+		},
+	}
+	assertDeepEquals(t, feeds.feeds, std)
 }

@@ -1,6 +1,6 @@
 import {random, escape, on} from '../util'
 import {navigation, ui, time} from '../lang'
-import {boardConfig, page, setSyncCounter} from '../state'
+import {boardConfig, page} from '../state'
 import {ThreadData} from '../posts/models'
 import {renderThumbnail} from '../posts/render/image'
 import options from '../options'
@@ -28,7 +28,9 @@ const sorts: {[name: string]: SortFunction} = {
 // Cached data of the current board's threads
 let data: ThreadData[],
 	// Unix time of last board page render. Used for automatic refreshes.
-	lastRender: number
+	lastRender: number,
+	// Progress counter of the current board. Used for skipping useless renders.
+	progressCounter: number
 
 // Format a board name and title into cannonical board header format
 export function formatHeader(name: string, title: string): string {
@@ -36,8 +38,9 @@ export function formatHeader(name: string, title: string): string {
 }
 
 // Cache the curent board contents and render the thread
-export default function cachetAndRender(threads: ThreadData[]) {
+export default function cachetAndRender(threads: ThreadData[], ctr: number) {
 	data = threads
+	progressCounter = ctr
 	lastRender = Math.floor(Date.now() / 1000)
 	render(threads)
 }
@@ -192,8 +195,7 @@ function onSearchChange(e: Event) {
 // Fetch and rerender board contents
 async function refreshBoard() {
 	const {ctr, threads} = await fetchBoard(page.board)
-	setSyncCounter(ctr)
-	cachetAndRender(threads)
+	cachetAndRender(threads, ctr)
 }
 
 // Update refresh timer or refresh board, if document hidden, each minute

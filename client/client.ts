@@ -1,13 +1,13 @@
 // Core websocket message handlers
 
-import {handlers, message, connSM, connEvent} from './connection'
-import {posts} from './state'
-import {Post, PostLinks, Command, PostData, ImageData} from './posts/models'
-import {ReplyFormModel} from "./posts/posting/model"
+import { handlers, message, connSM, connEvent } from './connection'
+import { posts } from './state'
+import { Post, PostLinks, Command, PostData, ImageData } from './posts/models'
+import { ReplyFormModel } from "./posts/posting/model"
 import PostView from "./posts/view"
-import {$threadContainer} from "./page/thread"
-import {write} from "./render"
-import {postAdded} from "./tab"
+import { $threadContainer } from "./page/thread"
+import { write } from "./render"
+import { postAdded } from "./tab"
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -42,22 +42,16 @@ function handle(id: number, fn: (m: Post) => void) {
 	}
 }
 
-handlers[message.invalid] = (msg: string) => {
-
-	// TODO: More user-frienly critical error reporting
-
-	alert(msg)
-	connSM.feed(connEvent.error)
-}
-
-handlers[message.insertPost] = (data: PostData) => {
-	// If the post is already in the global collection, it was just created by
-	// this client
-	const mine = posts.get(data.id) as ReplyFormModel
-	if (mine) {
-		mine.onAllocation(data)
-		if (data.image) {
-			mine.insertImage(data.image)
+// Insert a post into the models and DOM. The passed post may already exist and
+// be rendered, in which case it is a possibly updated version, that sync the
+// client's state to the update stream.
+export function insertPost(data: PostData) {
+	const existing = posts.get(data.id)
+	if (existing) {
+		if (existing instanceof ReplyFormModel) {
+			existing.onAllocation(data)
+		} else {
+			existing.extend(data)
 		}
 		return
 	}
@@ -73,6 +67,16 @@ handlers[message.insertPost] = (data: PostData) => {
 		model.checkRepliedToMe(model.links)
 	}
 }
+
+handlers[message.invalid] = (msg: string) => {
+
+	// TODO: More user-frienly critical error reporting
+
+	alert(msg)
+	connSM.feed(connEvent.error)
+}
+
+handlers[message.insertPost] = insertPost
 
 handlers[message.insertImage] = (msg: ImageMessage) =>
 	handle(msg.id, m => {

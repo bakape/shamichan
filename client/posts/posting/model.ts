@@ -1,16 +1,16 @@
 // Logic for manipulating the views and FSM of post authoring and communicated
 // the results to the server
 
-import {message, send, handlers} from "../../connection"
-import {OP, Post, TextState, ThreadData, ImageData, PostData} from "../models"
-import {FormView, OPFormView} from "./view"
-import {posts, storeMine} from "../../state"
-import {postSM, postEvent, postState} from "./main"
-import {applyMixins, extend} from "../../util"
+import { message, send, handlers } from "../../connection"
+import { OP, Post, TextState, ThreadData, ImageData, PostData } from "../models"
+import { FormView, OPFormView } from "./view"
+import { posts, storeMine } from "../../state"
+import { postSM, postEvent, postState } from "./main"
+import { applyMixins, extend } from "../../util"
 import PostView from "../view"
-import {SpliceResponse} from "../../client"
-import {FileData} from "./upload"
-import {newAllocRequest, PostCredentials} from "./identity"
+import { SpliceResponse } from "../../client"
+import { FileData } from "./upload"
+import { newAllocRequest, PostCredentials } from "./identity"
 
 // A message created while disconnected for later sending
 type BufferedMessage = [message, any]
@@ -39,7 +39,7 @@ export class OPFormModel extends OP implements FormModel {
 	lastBodyLine: () => string
 	parseInput: (val: string) => void
 	reformatInput: (val: string) => void
-	requestAlloc: (body: string|null, image: FileData|null) => void
+	requestAlloc: (body: string | null, image: FileData | null) => void
 	send: (type: message, msg: any) => void
 
 	constructor(id: number) {
@@ -57,7 +57,7 @@ export class OPFormModel extends OP implements FormModel {
 		const view = new OPFormView(this)
 		oldView.el.replaceWith(view.el)
 
-		postSM.feed(postEvent.hijack, {view, model: this})
+		postSM.feed(postEvent.hijack, { view, model: this })
 		this.sentAllocRequest = true
 
 		this.init()
@@ -66,6 +66,7 @@ export class OPFormModel extends OP implements FormModel {
 
 // Form model for regular reply posts
 export class ReplyFormModel extends Post implements FormModel {
+	isAllocated: boolean
 	sentAllocRequest: boolean
 	bodyLength: number
 	parsedLines: number
@@ -102,7 +103,7 @@ export class ReplyFormModel extends Post implements FormModel {
 	}
 
 	// Request alocation of a draft post to the server
-	requestAlloc(body: string|null, image: FileData|null) {
+	requestAlloc(body: string | null, image: FileData | null) {
 		this.sentAllocRequest = true
 		const req = newAllocRequest() as PostCreationRequest
 
@@ -121,7 +122,7 @@ export class ReplyFormModel extends Post implements FormModel {
 		send(message.insertPost, req)
 		handlers[message.postID] = (id: number) =>
 			(this.setID(id),
-			delete handlers[message.postID])
+				delete handlers[message.postID])
 	}
 
 	// Set post ID and add to the post collection
@@ -133,9 +134,18 @@ export class ReplyFormModel extends Post implements FormModel {
 
 	// Handle draft post allocation
 	onAllocation(data: PostData) {
+		// May sometimes be called multiple times, because of reconnects
+		if (this.isAllocated) {
+			return
+		}
+
+		this.isAllocated = true
 		extend(this, data)
 		this.view.renderAlloc()
 		storeMine(data.id)
+		if (data.image) {
+			this.insertImage(this.image)
+		}
 	}
 
 	// Upload the file and request its allocation
@@ -185,7 +195,7 @@ export class FormModel {
 	closePost: () => void
 	spliceLine: (line: string, msg: SpliceResponse) => string
 	resetState: () => void
-	requestAlloc: (body: string|null, image: FileData|null) => void
+	requestAlloc: (body: string | null, image: FileData | null) => void
 
 	// Initialize state
 	init() {
@@ -371,8 +381,8 @@ applyMixins(OPFormModel, FormModel)
 applyMixins(ReplyFormModel, FormModel)
 
 // Extract all non-function attributes from a model
-function extractAttrs(src: {[key: string]: any}): {[key: string]: any} {
-	const attrs: {[key: string]: any} = {}
+function extractAttrs(src: { [key: string]: any }): { [key: string]: any } {
+	const attrs: { [key: string]: any } = {}
 	for (let key in src) {
 		if (typeof src[key] !== "function") {
 			attrs[key] = src[key]

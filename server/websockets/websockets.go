@@ -64,7 +64,7 @@ type Client struct {
 	sendMu sync.Mutex
 
 	// Currently subscribed to update feed, if any
-	feed *updateFeed
+	feedID int64
 
 	// Underlyting websocket connection
 	conn *websocket.Conn
@@ -172,9 +172,9 @@ func (c *Client) listenerLoop() error {
 // Close all conections an goroutines asociated with the Client
 func (c *Client) closeConnections(err error) error {
 	// Close update feed, if any
-	if c.feed != nil {
-		c.feed.Remove <- c
-		c.feed = nil
+	if c.feedID != 0 {
+		feeds.Remove <- subRequest{c.feedID, c}
+		c.feedID = 0
 	}
 
 	// Close receiver loop

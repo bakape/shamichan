@@ -46,12 +46,17 @@ export default class PostView extends ImageHandler {
 	// Render the element contents, but don't insert it into the DOM
 	render() {
 		const frag = importTemplate("article")
-		renderPost(frag, this.model)
+		this.renderContents(frag)
+		this.el.append(frag)
+	}
+
+	// Render post into a container and find buffer positions
+	renderContents(container: NodeSelector&ParentNode) {
+		renderPost(container, this.model)
 		if (this.model.editing) {
-			this.$blockquote = frag.querySelector("blockquote")
+			this.$blockquote = container.querySelector("blockquote")
 			this.findBuffer(this.$blockquote.lastChild)
 		}
-		this.el.append(frag)
 	}
 
 	// Find the text buffer in an open line

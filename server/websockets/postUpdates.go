@@ -3,6 +3,7 @@ package websockets
 import (
 	"errors"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/db"
@@ -79,11 +80,8 @@ func appendRune(data []byte, c *Client) error {
 	if err != nil {
 		return err
 	}
-
-	update := map[string]r.Term{
-		"body": postBody(id).Add(string(char)),
-	}
-	if err := c.updatePost(update, msg); err != nil {
+	q := r.Row.Field("body").Add(string(char))
+	if err := c.updatePost("body", q, msg); err != nil {
 		return err
 	}
 	c.openPost.WriteRune(char)
@@ -92,35 +90,20 @@ func appendRune(data []byte, c *Client) error {
 	return nil
 }
 
-// Shorthand for retrievinf the post's body field from a thread document
-func postBody(id int64) r.Term {
-	return r.Row.
-		Field("posts").
-		Field(util.IDToString(id)).
-		Field("body")
-}
-
 // Helper for running post update queries on the current open post
-func (c *Client) updatePost(update interface{}, msg []byte) error {
-	q := r.
-		Table("threads").
-		Get(c.openPost.op).
-		Update(CreateUpdate(c.openPost.id, update, msg))
-	return db.Write(q)
+func (c *Client) updatePost(key string, val interface{}, msg []byte) error {
+	return UpdatePost(c.openPost.id, key, val, msg)
 }
 
-// CreateUpdate is a helper for creating post update maps
-func CreateUpdate(
-	id int64,
-	update interface{},
-	msg []byte,
-) map[string]interface{} {
-	return map[string]interface{}{
-		"log": appendLog(msg),
-		"posts": map[string]interface{}{
-			util.IDToString(id): update,
-		},
+// UpdatePost post updates a single field of an existing post with the
+// appropriate replication log update and timestamp modification.
+func UpdatePost(id int64, key string, val interface{}, msg []byte) error {
+	update := map[string]interface{}{
+		key:           val,
+		"log":         appendLog(msg),
+		"lastUpdated": time.Now().Unix(),
 	}
+	return db.Write(r.Table("posts").Get(id).Update(update))
 }
 
 // Shorthand for creating a replication log append query
@@ -139,11 +122,10 @@ func parseLine(c *Client, insertNewline bool) error {
 		return err
 	}
 	defer c.openPost.Reset()
-	idStr := util.IDToString(c.openPost.id)
 
 	switch {
 	case comm.Val != nil:
-		err = writeCommand(comm, idStr, c)
+		err = writeCommand(comm, c)
 	case links != nil:
 		err = writeLinks(links, c)
 	}
@@ -159,14 +141,8 @@ func parseLine(c *Client, insertNewline bool) error {
 		if err != nil {
 			return err
 		}
-		update := map[string]r.Term{
-			"body": r.Row.
-				Field("posts").
-				Field(idStr).
-				Field("body").
-				Add("\n"),
-		}
-		if err := c.updatePost(update, msg); err != nil {
+		q := r.Row.Field("body").Add("\n")
+		if err := c.updatePost("body", q, msg); err != nil {
 			return err
 		}
 	}
@@ -175,7 +151,7 @@ func parseLine(c *Client, insertNewline bool) error {
 }
 
 // Write a hash command to the database
-func writeCommand(comm types.Command, idStr string, c *Client) error {
+func writeCommand(comm types.Command, c *Client) error {
 	msg, err := EncodeMessage(MessageCommand, commandMessage{
 		ID:      c.openPost.id,
 		Command: comm,
@@ -183,15 +159,8 @@ func writeCommand(comm types.Command, idStr string, c *Client) error {
 	if err != nil {
 		return err
 	}
-	update := map[string]r.Term{
-		"commands": r.Row.
-			Field("posts").
-			Field(idStr).
-			Field("commands").
-			Default([]types.Command{}).
-			Append(comm),
-	}
-	return c.updatePost(update, msg)
+	q := r.Row.Field("commands").Default([]types.Command{}).Append(comm)
+	return c.updatePost("commands", q, msg)
 }
 
 // Write new links to other posts to the database
@@ -203,10 +172,7 @@ func writeLinks(links types.LinkMap, c *Client) error {
 	if err != nil {
 		return err
 	}
-	update := map[string]types.LinkMap{
-		"links": links,
-	}
-	if err := c.updatePost(update, msg); err != nil {
+	if err := c.updatePost("links", links, msg); err != nil {
 		return err
 	}
 
@@ -240,20 +206,17 @@ func writeBacklink(id, op int64, board string, destID int64) error {
 		return err
 	}
 
-	update := map[string]map[string]types.Link{
-		"backlinks": {
+	update := map[string]interface{}{
+		"backlinks": map[string]types.Link{
 			util.IDToString(id): types.Link{
 				OP:    op,
 				Board: board,
 			},
 		},
+		"log":         appendLog(msg),
+		"lastUpdated": time.Now().Unix(),
 	}
-	q := r.
-		Table("threads").
-		GetAllByIndex("post", destID).
-		Update(CreateUpdate(destID, update, msg))
-
-	return db.Write(q)
+	return db.Write(r.Table("posts").Get(destID).Update(update))
 }
 
 // Remove one character from the end of the line in the open post
@@ -272,14 +235,11 @@ func backspace(_ []byte, c *Client) error {
 	c.openPost.bodyLength--
 
 	id := c.openPost.id
-	update := map[string]r.Term{
-		"body": postBody(id).Slice(0, -1),
-	}
 	msg, err := EncodeMessage(MessageBackspace, id)
 	if err != nil {
 		return err
 	}
-	return c.updatePost(update, msg)
+	return c.updatePost("body", r.Row.Field("body").Slice(0, -1), msg)
 }
 
 // Close an open post and parse the last line, if needed.
@@ -293,14 +253,11 @@ func closePost(_ []byte, c *Client) error {
 		}
 	}
 
-	update := map[string]bool{
-		"editing": false,
-	}
 	msg, err := EncodeMessage(MessageClosePost, c.openPost.id)
 	if err != nil {
 		return err
 	}
-	if err := c.updatePost(update, msg); err != nil {
+	if err := c.updatePost("editing", false, msg); err != nil {
 		return err
 	}
 
@@ -384,24 +341,23 @@ func spliceLine(req spliceRequest, c *Client) error {
 	}
 
 	// Split body into lines, remove last line and replace with new text
-	update := map[string]r.Term{
-		"body": postBody(c.openPost.id).
-			Split("\n").
-			Do(func(b r.Term) r.Term {
-				return b.
-					Slice(0, -1).
-					Append(new).
-					Fold("", func(all, line r.Term) r.Term {
-						return all.Add(
-							all.Eq("").Branch(
-								line,
-								r.Expr("\n").Add(line),
-							),
-						)
-					})
-			}),
-	}
-	if err := c.updatePost(update, msg); err != nil {
+	q := r.Row.
+		Field("body").
+		Split("\n").
+		Do(func(b r.Term) r.Term {
+			return b.
+				Slice(0, -1).
+				Append(new).
+				Fold("", func(all, line r.Term) r.Term {
+					return all.Add(
+						all.Eq("").Branch(
+							line,
+							r.Expr("\n").Add(line),
+						),
+					)
+				})
+		})
+	if err := c.updatePost("body", q, msg); err != nil {
 		return err
 	}
 
@@ -452,16 +408,14 @@ func insertImage(data []byte, c *Client) error {
 	if err != nil {
 		return err
 	}
-	update := map[string]interface{}{
-		"log":      appendLog(msg),
-		"imageCtr": r.Row.Field("imageCtr").Add(1),
-		"posts": map[string]map[string]types.Image{
-			util.IDToString(c.openPost.id): {
-				"image": *img,
-			},
-		},
+	if err := c.updatePost("image", *img, msg); err != nil {
+		return err
 	}
-	q = r.Table("threads").Get(c.openPost.op).Update(update)
+
+	// Increment image counter on parent post
+	q = r.Table("threads").Get(c.openPost.op).Update(map[string]r.Term{
+		"imageCtr": r.Row.Field("imageCtr").Add(1),
+	})
 	if err := db.Write(q); err != nil {
 		return err
 	}

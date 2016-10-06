@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -14,6 +13,20 @@ var (
 	// with is already taken
 	ErrUserNameTaken = errors.New("user name already taken")
 )
+
+var postReservationQuery = GetMain("info").
+	Update(
+		map[string]r.Term{
+			"postCtr": r.Row.Field("postCtr").Add(1),
+		},
+		r.UpdateOpts{
+			ReturnChanges: true,
+		},
+	).
+	Field("changes").
+	AtIndex(0).
+	Field("new_val").
+	Field("postCtr")
 
 // DatabaseHelper simplifies managing queries, by providing extra utility
 type DatabaseHelper struct {
@@ -31,6 +44,16 @@ func Exec(query r.Term) error {
 func Write(query r.Term) error {
 	_, err := query.RunWrite(RSession)
 	return err
+}
+
+// WriteAll executes passed write queries in order. Returns on first error.
+func WriteAll(qs []r.Term) error {
+		for _, q := range qs {
+		if err := Write(q); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // One writes the query result into the target pointer or throws an error
@@ -51,24 +74,19 @@ func All(query r.Term, res interface{}) error {
 	return c.All(res)
 }
 
-// FindParentThread finds the parent thread of an arbitrary post number
-func FindParentThread(id int64) r.Term {
-	return r.Table("threads").GetAllByIndex("post", id).AtIndex(0)
-}
-
 // FindPost finds a post only by ID number
 func FindPost(id int64) r.Term {
-	return FindParentThread(id).Field("posts").Field(util.IDToString(id))
+	return r.Table("posts").Get(id)
 }
 
 // ValidateOP confirms the specified thread exists on specific board
 func ValidateOP(id int64, board string) (valid bool, err error) {
-	err = One(getThread(id).Field("board").Eq(board).Default(false), &valid)
+	err = One(FindThread(id).Field("board").Eq(board).Default(false), &valid)
 	return
 }
 
-// shorthand for retrieving a document from the "threads" table
-func getThread(id int64) r.Term {
+// FindThread is a  shorthand for retrieving a document from the "threads" table
+func FindThread(id int64) r.Term {
 	return r.Table("threads").Get(id)
 }
 
@@ -93,6 +111,12 @@ func GetBoardConfig(id string) r.Term {
 	return r.Table("boards").Get(id).Without("created")
 }
 
+// Insert is a shorthand for inserting documents or slices of documents into a
+// table
+func Insert(table string, doc interface{}) error {
+	return Write(r.Table(table).Insert(doc))
+}
+
 // PostCounter retrieves the current global post count
 func PostCounter() (counter int64, err error) {
 	err = One(GetMain("info").Field("postCtr"), &counter)
@@ -105,20 +129,20 @@ func BoardCounter(board string) (counter int64, err error) {
 	return
 }
 
-// ThreadCounter retrieve the history or "progress" counter of a thread
+// ThreadCounter retrieves the post counter of a thread to get a rough estimate
+// of the thread's progress
 func ThreadCounter(id int64) (counter int64, err error) {
-	err = One(getThread(id).Field("log").Count(), &counter)
+	err = One(FindThread(id).Field("postCtr"), &counter)
 	return
 }
 
 // RegisterAccount writes the ID and password hash of a new user account to the
 // database
 func RegisterAccount(ID string, hash []byte) error {
-	user := auth.User{
+	err := Insert("accounts", auth.User{
 		ID:       ID,
 		Password: hash,
-	}
-	err := Write(r.Table("accounts").Insert(user))
+	})
 	if r.IsConflictErr(err) {
 		return ErrUserNameTaken
 	}
@@ -134,21 +158,7 @@ func GetLoginHash(id string) (hash []byte, err error) {
 
 // ReservePostID reserves a post ID number for post and thread creation
 func ReservePostID() (id int64, err error) {
-	q := GetMain("info").
-		Update(
-			map[string]r.Term{
-				"postCtr": r.Row.Field("postCtr").Add(1),
-			},
-			r.UpdateOpts{
-				ReturnChanges: true,
-			},
-		).
-		Field("changes").
-		AtIndex(0).
-		Field("new_val").
-		Field("postCtr")
-
-	err = One(q, &id)
+	err = One(postReservationQuery, &id)
 	return
 }
 

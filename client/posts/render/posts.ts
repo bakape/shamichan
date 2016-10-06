@@ -8,7 +8,10 @@ import options from '../../options'
 import {PostCredentials} from "../posting/identity"
 
 // Populate post template
-export default function (frag: DocumentFragment, data: PostData|ThreadData) {
+export default function (
+	frag: NodeSelector & ParentNode,
+	data: PostData | ThreadData,
+) {
 	if ((data as ThreadData).subject) {
 		const el = frag.querySelector("h3")
 		el.innerHTML = `「${escape((data as ThreadData).subject)}」`

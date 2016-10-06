@@ -1,40 +1,49 @@
 package parser
 
 import (
-	"github.com/bakape/meguca/db"
+	"testing"
+
 	"github.com/bakape/meguca/types"
-	r "github.com/dancannon/gorethink"
-	. "gopkg.in/check.v1"
 )
 
-func (*Tests) TestNoLinks(c *C) {
-	links, err := parseLinks([]byte("foo bar baz"))
-	c.Assert(err, IsNil)
-	c.Assert(links, IsNil)
-}
-
-func (*Tests) TestLinks(c *C) {
-	thread := types.DatabaseThread{
-		ID:    2,
-		Board: "a",
-		Posts: map[int64]types.DatabasePost{
-			4: types.DatabasePost{},
-		},
-	}
-	c.Assert(db.Write(r.Table("threads").Insert(thread)), IsNil)
-
-	links, err := parseLinks([]byte(">>>1 >>4 "))
-	c.Assert(err, IsNil)
-	c.Assert(links, DeepEquals, types.LinkMap{
-		4: types.Link{
+func TestParseLinks(t *testing.T) {
+	assertTableClear(t, "posts")
+	assertInsert(t, "posts", types.DatabasePost{
+		Post: types.Post{
+			ID:    4,
 			OP:    2,
 			Board: "a",
 		},
 	})
-}
 
-func (*Tests) TestAllLinksInvalid(c *C) {
-	links, err := parseLinks([]byte(" >>1 >>2 >>33"))
-	c.Assert(err, IsNil)
-	c.Assert(links, IsNil)
+	cases := [...]struct {
+		name, in string
+		links    types.LinkMap
+	}{
+		{"no links", "foo bar baz", nil},
+		{
+			"valid links",
+			" >>>1  >>4 ",
+			types.LinkMap{
+				4: types.Link{
+					OP:    2,
+					Board: "a",
+				},
+			},
+		},
+		{"all links invalid", " >>1 >>2 >>33", nil},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			links, err := parseLinks([]byte(c.in))
+			if err != nil {
+				t.Fatal(err)
+			}
+			assertDeepEquals(t, links, c.links)
+		})
+	}
 }

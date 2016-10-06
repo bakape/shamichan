@@ -2,19 +2,17 @@ package server
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
-	"strings"
+	"testing"
 	"time"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	r "github.com/dancannon/gorethink"
-	. "gopkg.in/check.v1"
 )
 
 var sampleLoginCredentials = loginCredentials{
@@ -22,8 +20,9 @@ var sampleLoginCredentials = loginCredentials{
 	Session: "token1",
 }
 
-func (d *DB) TestIsLoggedIn(c *C) {
-	users := []auth.User{
+func TestIsLoggedIn(t *testing.T) {
+	assertTableClear(t, "accounts")
+	assertInsert(t, "accounts", []auth.User{
 		{
 			ID: "user1",
 			Sessions: []auth.Session{
@@ -37,73 +36,85 @@ func (d *DB) TestIsLoggedIn(c *C) {
 			ID:       "user2",
 			Sessions: []auth.Session{},
 		},
-	}
-	c.Assert(db.Write(r.Table("accounts").Insert(users)), IsNil)
+	})
 
-	samples := [...]struct {
-		user, session string
-		isValid       bool
+	cases := [...]struct {
+		name, user, session string
+		isValid             bool
 	}{
-		{"user1", "token1", true},
-		{"user2", "token2", false},
-		{"notAUser", "token3", false},
+		{"valid", "user1", "token1", true},
+		{"invalid session", "user2", "token2", false},
+		{"not registered", "nope", "token3", false},
 	}
 
-	for _, s := range samples {
-		rec, req := newPair(c, "/")
-		isValid := isLoggedIn(rec, req, s.user, s.session)
-		c.Assert(isValid, Equals, s.isValid)
-		if !s.isValid {
-			assertCode(rec, 403, c)
-			assertBody(rec, "403 Invalid login credentials\n", c)
-		}
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			rec, req := newPair("/")
+			isValid := isLoggedIn(rec, req, c.user, c.session)
+			if isValid != c.isValid {
+				logUnexpected(t, c.isValid, isValid)
+			}
+			if !c.isValid {
+				assertCode(t, rec, 403)
+				assertBody(t, rec, "403 Invalid login credentials\n")
+			}
+		})
 	}
 }
 
-func (*DB) TestNotLoggedIn(c *C) {
+func TestNotLoggedIn(t *testing.T) {
+	assertTableClear(t, "accounts")
+
 	fns := [...]http.HandlerFunc{configureBoard, servePrivateBoardConfigs}
 
-	for _, fn := range fns {
-		rec, req := newJSONPair(c, "/", sampleLoginCredentials)
-		fn(rec, req)
-		assertCode(rec, 403, c)
-		assertBody(rec, "403 Invalid login credentials\n", c)
+	for i := range fns {
+		fn := fns[i]
+		t.Run("", func(t *testing.T) {
+			t.Parallel()
+
+			rec, req := newJSONPair(t, "/", sampleLoginCredentials)
+			fn(rec, req)
+			assertCode(t, rec, 403)
+			assertBody(t, rec, "403 Invalid login credentials\n")
+		})
 	}
 }
 
-func newJSONPair(c *C, url string, data interface{}) (
+func newJSONPair(t *testing.T, url string, data interface{}) (
 	*httptest.ResponseRecorder, *http.Request,
 ) {
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", url, encodeBody(c, data))
-	return rec, req
+	body := encodeBody(t, data)
+	return httptest.NewRecorder(), httptest.NewRequest("POST", url, body)
 }
 
-func encodeBody(c *C, data interface{}) io.Reader {
-	return bytes.NewReader(marshalJSON(c, data))
+func encodeBody(t *testing.T, data interface{}) io.Reader {
+	return bytes.NewReader(marshalJSON(t, data))
 }
 
-func marshalJSON(c *C, data interface{}) []byte {
-	buf, err := json.Marshal(data)
-	c.Assert(err, IsNil)
-	return buf
-}
-
-func (*DB) TestNotBoardOwner(c *C) {
-	writeSampleUser(c)
+func TestNotBoardOwner(t *testing.T) {
+	assertTableClear(t, "accounts")
+	writeSampleUser(t)
 
 	fns := [...]http.HandlerFunc{configureBoard, servePrivateBoardConfigs}
 
-	for _, fn := range fns {
-		rec, req := newJSONPair(c, "/", sampleLoginCredentials)
-		fn(rec, req)
-		assertCode(rec, 403, c)
-		assertBody(rec, "403 Not board owner\n", c)
+	for i := range fns {
+		fn := fns[i]
+		t.Run("", func(t *testing.T) {
+			t.Parallel()
+
+			rec, req := newJSONPair(t, "/", sampleLoginCredentials)
+			fn(rec, req)
+			assertCode(t, rec, 403)
+			assertBody(t, rec, "403 Not board owner\n")
+		})
 	}
 }
 
-func writeSampleUser(c *C) {
-	user := auth.User{
+func writeSampleUser(t *testing.T) {
+	assertInsert(t, "accounts", auth.User{
 		ID: "user1",
 		Sessions: []auth.Session{
 			{
@@ -111,12 +122,12 @@ func writeSampleUser(c *C) {
 				Expires: time.Now().Add(time.Hour),
 			},
 		},
-	}
-	c.Assert(db.Write(r.Table("accounts").Insert(user)), IsNil)
+	})
 }
 
-func (d *DB) TestServePrivateBoardConfigs(c *C) {
-	writeSampleUser(c)
+func TestServePrivateBoardConfigs(t *testing.T) {
+	assertTableClear(t, "accounts", "boards")
+	writeSampleUser(t)
 
 	conf := config.BoardConfigs{
 		ID:        "a",
@@ -126,17 +137,19 @@ func (d *DB) TestServePrivateBoardConfigs(c *C) {
 			"owners": {"user1"},
 		},
 	}
-	c.Assert(db.Write(r.Table("boards").Insert(conf)), IsNil)
+	assertInsert(t, "boards", conf)
 
-	rec, req := newJSONPair(c, "/admin/boardConfig", boardConfigRequest{
+	rec, req := newJSONPair(t, "/admin/boardConfig", boardConfigRequest{
 		ID:               "a",
 		loginCredentials: sampleLoginCredentials,
 	})
-	d.r.ServeHTTP(rec, req)
-	assertBody(rec, string(marshalJSON(c, conf)), c)
+	router.ServeHTTP(rec, req)
+	assertBody(t, rec, string(marshalJSON(t, conf)))
 }
 
-func (d *DB) TestBoardConfiguration(c *C) {
+func TestBoardConfiguration(t *testing.T) {
+	assertTableClear(t, "accounts", "boards")
+
 	const (
 		id    = "user1"
 		board = "a"
@@ -160,71 +173,95 @@ func (d *DB) TestBoardConfiguration(c *C) {
 		Banners:   []string{},
 		Staff:     staff,
 	}
-	c.Assert(db.Write(r.Table("boards").Insert(init)), IsNil)
+	assertInsert(t, "boards", init)
 
-	writeSampleUser(c)
+	writeSampleUser(t)
 
 	data := boardConfigSettingRequest{
 		loginCredentials: sampleLoginCredentials,
 		BoardConfigs:     conf,
 	}
-	rec, req := newJSONPair(c, "/admin/configureBoard", data)
-	d.r.ServeHTTP(rec, req)
+	rec, req := newJSONPair(t, "/admin/configureBoard", data)
+	router.ServeHTTP(rec, req)
 
 	var res config.BoardConfigs
-	c.Assert(db.One(db.GetBoardConfig(board), &res), IsNil)
-	c.Assert(res, DeepEquals, conf)
+	if err := db.One(db.GetBoardConfig(board), &res); err != nil {
+		t.Fatal(err)
+	}
+	assertDeepEquals(t, res, conf)
 }
 
-func (*WebServer) TestValidateConfigs(c *C) {
-	samples := [...]struct {
+func TestValidateConfigs(t *testing.T) {
+	t.Parallel()
+
+	cases := [...]struct {
+		name string
 		config.BoardConfigs
 		err error
 	}{
-		{}, // All is well
 		{
-			BoardConfigs: config.BoardConfigs{
+			"all is well",
+			config.BoardConfigs{},
+			nil,
+		},
+		{
+			"too many eightball answers",
+			config.BoardConfigs{
 				Eightball: make([]string, maxEigthballLen+1),
 			},
-			err: errTooManyAnswers,
+			errTooManyAnswers,
 		},
 		{
-			BoardConfigs: config.BoardConfigs{
+			"compound eightball length to big",
+			config.BoardConfigs{
 				Eightball: []string{genString(maxEigthballLen + 1)},
 			},
-			err: errEightballTooLong,
+			errEightballTooLong,
 		},
 		{
-			BoardConfigs: config.BoardConfigs{
+			"notice too long",
+			config.BoardConfigs{
 				Notice: genString(maxNoticeLen + 1),
 			},
-			err: errNoticeTooLong,
+			errNoticeTooLong,
 		},
 		{
-			BoardConfigs: config.BoardConfigs{
+			"rules too long",
+			config.BoardConfigs{
 				Rules: genString(maxRulesLen + 1),
 			},
-			err: errRulesTooLong,
+			errRulesTooLong,
 		},
 		{
-			BoardConfigs: config.BoardConfigs{
+			"title too long",
+			config.BoardConfigs{
 				Title: genString(maxTitleLen + 1),
 			},
-			err: errTitleTooLong,
+			errTitleTooLong,
 		},
 	}
 
-	for _, s := range samples {
-		rec := httptest.NewRecorder()
-		c.Assert(validateConfigs(rec, s.BoardConfigs), Equals, s.err == nil)
-		if s.err != nil {
-			assertCode(rec, 400, c)
-			assertBody(rec, fmt.Sprintf("400 %s\n", s.err), c)
-		}
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			rec := httptest.NewRecorder()
+			if b := validateConfigs(rec, c.BoardConfigs); b != (c.err == nil) {
+				t.Fatal("unexpected result")
+			}
+			if c.err != nil {
+				assertCode(t, rec, 400)
+				assertBody(t, rec, fmt.Sprintf("400 %s\n", c.err))
+			}
+		})
 	}
 }
 
-// Generate a test string of suplied length
 func genString(len int) string {
-	return strings.Repeat("a", len)
+	var buf bytes.Buffer
+	for i := 0; i < len; i++ {
+		buf.WriteRune(rune(rand.Intn(128)))
+	}
+	return buf.String()
 }

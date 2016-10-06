@@ -1,21 +1,20 @@
 package websockets
 
 import (
-	"github.com/bakape/meguca/config"
-	. "gopkg.in/check.v1"
+	"testing"
 )
 
-type Map struct{}
-
-var _ = Suite(&Map{})
-
-func (*Map) SetUpTest(_ *C) {
-	config.Set(config.Configs{})
+func newClientMap() *ClientMap {
+	return &ClientMap{
+		clients: make(map[*Client]SyncID),
+	}
 }
 
-func (*Map) TestAddHasRemove(c *C) {
+func TestMapAddHasRemove(t *testing.T) {
+	t.Parallel()
+
 	m := newClientMap()
-	sv := newWSServer(c)
+	sv := newWSServer(t)
 	defer sv.Close()
 	id := SyncID{
 		OP:    1,
@@ -25,23 +24,27 @@ func (*Map) TestAddHasRemove(c *C) {
 	// Add client
 	cl, _ := sv.NewClient()
 	m.Add(cl, id)
-	synced, sync := m.GetSync(cl)
-	c.Assert(synced, Equals, true)
-	c.Assert(sync, Equals, id)
-
+	assertSyncID(t, m, cl, id)
 	// Remove client
 	m.Remove(cl)
-	synced, _ = m.GetSync(cl)
-	c.Assert(synced, Equals, false)
-}
-
-func newClientMap() *ClientMap {
-	return &ClientMap{
-		clients: make(map[*Client]SyncID),
+	if synced, _ := m.GetSync(cl); synced {
+		t.Error("client still synced")
 	}
 }
 
-func (*Map) TestChangeSync(c *C) {
+func assertSyncID(t *testing.T, m *ClientMap, cl *Client, id SyncID) {
+	synced, sync := m.GetSync(cl)
+	if !synced {
+		t.Error("client not synced")
+	}
+	if sync != id {
+		logUnexpected(t, id, sync)
+	}
+}
+
+func TestMapChangeSync(t *testing.T) {
+	t.Parallel()
+
 	oldSync := SyncID{
 		OP:    1,
 		Board: "a",
@@ -51,24 +54,22 @@ func (*Map) TestChangeSync(c *C) {
 		Board: "g",
 	}
 	m := newClientMap()
-	sv := newWSServer(c)
+	sv := newWSServer(t)
 	defer sv.Close()
 
 	cl, _ := sv.NewClient()
 	m.Add(cl, oldSync)
-	synced, sync := m.GetSync(cl)
-	c.Assert(synced, Equals, true)
-	c.Assert(sync, Equals, oldSync)
+	assertSyncID(t, m, cl, oldSync)
 
 	m.ChangeSync(cl, newSync)
-	synced, sync = m.GetSync(cl)
-	c.Assert(synced, Equals, true)
-	c.Assert(sync, Equals, newSync)
+	assertSyncID(t, m, cl, newSync)
 }
 
-func (*Map) TestCountByIP(c *C) {
+func TestCountByIP(t *testing.T) {
+	t.Parallel()
+
 	m := newClientMap()
-	sv := newWSServer(c)
+	sv := newWSServer(t)
 	defer sv.Close()
 
 	cls := [3]*Client{}
@@ -85,5 +86,7 @@ func (*Map) TestCountByIP(c *C) {
 	cls[1].IP = "foo"
 	cls[2].IP = "bar"
 
-	c.Assert(m.CountByIP(), Equals, 2)
+	if count := m.CountByIP(); count != 2 {
+		logUnexpected(t, 2, count)
+	}
 }

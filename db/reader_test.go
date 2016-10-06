@@ -1,224 +1,295 @@
 package db
 
 import (
-	"github.com/bakape/meguca/config"
+	"reflect"
+	"testing"
+
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-	. "gopkg.in/check.v1"
 )
 
-var (
-	sampleThreads = []types.DatabaseThread{
-		{
-			ID:       1,
-			Board:    "a",
-			ImageCtr: 1,
-			PostCtr:  2,
-			Posts: map[int64]types.DatabasePost{
-				1: {
-					Post: types.Post{
-						ID: 1,
-					},
-				},
-				2: {
-					Post: types.Post{
-						ID: 2,
-					},
-				},
-				3: {
-					Post: types.Post{
-						ID: 3,
-					},
-				},
-			},
-			Log: [][]byte{
-				{1, 3, 4},
-				{1, 3, 2},
-				{1},
-			},
-		},
-		{
-			ID:    4,
-			Board: "a",
-			Posts: map[int64]types.DatabasePost{
-				4: {
-					Post: types.Post{
-						ID: 4,
-					},
-				},
-			},
-		},
-		{
-			ID:    5,
-			Board: "c",
-			Posts: map[int64]types.DatabasePost{
-				5: {
-					Post: types.Post{
-						ID: 5,
-					},
-				},
-			},
-		},
-	}
+func TestReader(t *testing.T) {
+	assertTableClear(t, "posts", "threads", "boards", "main")
 
-	boardStandard = types.Board{
-		Ctr: 7,
-		Threads: []types.BoardThread{
-			{
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			Post: types.Post{
+				ID:    1,
+				OP:    1,
 				Board: "a",
+			},
+			Log: [][]byte{{1, 2, 3}},
+		},
+		{
+			Post: types.Post{
+				ID:    2,
+				OP:    1,
+				Board: "a",
+				Body:  "foo",
+			},
+			Log: [][]byte{{3, 4, 5}},
+		},
+		{
+			Post: types.Post{
 				ID:    4,
+				OP:    1,
+				Board: "a",
 			},
-			{
-				Board:    "a",
-				ImageCtr: 1,
-				PostCtr:  2,
-				LogCtr:   3,
-				ID:       1,
-			},
+			Log: [][]byte{{1}},
 		},
-	}
-)
-
-func (*Tests) TestGetPost(c *C) {
-	config.Set(config.Configs{
-		Boards: []string{"a"},
+		{
+			Post: types.Post{
+				ID:    3,
+				OP:    3,
+				Board: "c",
+			},
+			Log: [][]byte{{1}, {2}},
+		},
 	})
-	std := types.StandalonePost{
-		Board: "a",
-		OP:    1,
-		Post: types.Post{
-			ID: 2,
-		},
-	}
-	thread := types.DatabaseThread{
-		ID:    1,
-		Board: "a",
-		Posts: map[int64]types.DatabasePost{
-			2: {
-				Post: std.Post,
-			},
-		},
-	}
-	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
 
-	// Post does not exist
-	post, err := GetPost(8)
-	c.Assert(err, Equals, r.ErrEmptyResult)
-	c.Assert(post, DeepEquals, types.StandalonePost{})
+	assertInsert(t, "threads", []types.DatabaseThread{
+		{
+			ID:      1,
+			Board:   "a",
+			PostCtr: 3,
+		},
+		{
+			ID:      3,
+			Board:   "c",
+			PostCtr: 1,
+		},
+	})
+
+	assertInsert(t, "main", []map[string]interface{}{
+		{
+			"id":      "info",
+			"postCtr": 3,
+		},
+		{
+			"id": "boardCtrs",
+			"a":  2,
+			"c":  1,
+		},
+	})
+
+	t.Run("GetPost", testGetPost)
+	t.Run("GetAllBoard", testGetAllBoard)
+	t.Run("GetBoard", testGetBoard)
+	t.Run("GetThread", testGetThread)
+}
+
+func testGetPost(t *testing.T) {
+	t.Parallel()
+
+	// Does not exist
+	post, err := GetPost(99)
+	if err != r.ErrEmptyResult {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(post, types.Post{}) {
+		t.Errorf("post not empty: %#v", post)
+	}
 
 	// Valid read
-	post, err = GetPost(2)
-	c.Assert(err, IsNil)
-	c.Assert(post, DeepEquals, std)
-}
-
-func (*Tests) TestGetBoard(c *C) {
-	setEnabledBoards("a")
-	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
-
-	boardCounters := map[string]interface{}{
-		"id": "boardCtrs",
-		"a":  7,
-	}
-	c.Assert(Write(r.Table("main").Insert(boardCounters)), IsNil)
-
-	board, err := GetBoard("a")
-	c.Assert(err, IsNil)
-	c.Assert(board, DeepEquals, &boardStandard)
-}
-
-func setEnabledBoards(boards ...string) {
-	config.Set(config.Configs{
-		Boards: boards,
-	})
-}
-
-func (*Tests) TestGetEmptyBoard(c *C) {
-	setEnabledBoards("a")
-	boardCounters := Document{"boardCtrs"}
-	c.Assert(Write(r.Table("main").Insert(boardCounters)), IsNil)
-
-	board, err := GetBoard("a")
-	c.Assert(err, IsNil)
-	c.Assert(board, DeepEquals, new(types.Board))
-}
-
-func (*Tests) TestGetAllBoard(c *C) {
-	setEnabledBoards("a")
-	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
-	info := infoDocument{
-		Document: Document{"info"},
-		PostCtr:  7,
-	}
-	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
-
-	std := boardStandard
-	std.Threads = []types.BoardThread{
-		boardStandard.Threads[0],
-		{
-			Board: "c",
-			ID:    5,
-		},
-		boardStandard.Threads[1],
-	}
-
-	board, err := GetAllBoard()
-	c.Assert(err, IsNil)
-	c.Assert(board, DeepEquals, &std)
-}
-
-func (*Tests) TestGetEmptyAllBoard(c *C) {
-	setEnabledBoards("a")
-	info := infoDocument{
-		Document: Document{"info"},
-	}
-	c.Assert(Write(r.Table("main").Insert(info)), IsNil)
-	board, err := GetAllBoard()
-	c.Assert(err, IsNil)
-	c.Assert(board, DeepEquals, new(types.Board))
-}
-
-func (*Tests) TestReaderGetThread(c *C) {
-	setEnabledBoards("a")
-	c.Assert(Write(r.Table("threads").Insert(sampleThreads)), IsNil)
-
-	// No replies ;_;
-	std := &types.Thread{
+	std := types.Post{
+		ID:    2,
+		OP:    1,
 		Board: "a",
-		Post: types.Post{
-			ID: 4,
-		},
-		Posts: map[int64]types.Post{},
+		Body:  "foo",
 	}
-	thread, err := GetThread(4, 0)
-	c.Assert(err, IsNil)
-	c.Assert(thread, DeepEquals, std)
-
-	// With replies
-	std = &types.Thread{
-		ImageCtr: 1,
-		PostCtr:  2,
-		LogCtr:   3,
-		Board:    "a",
-		Post: types.Post{
-			ID: 1,
-		},
-		Posts: map[int64]types.Post{
-			2: {
-				ID: 2,
-			},
-			3: {
-				ID: 3,
-			},
-		},
+	post, err = GetPost(2)
+	if err != nil {
+		t.Fatal(err)
 	}
-	thread, err = GetThread(1, 0)
-	c.Assert(err, IsNil)
-	c.Assert(thread, DeepEquals, std)
-
-	// Last 1 post
-	delete(std.Posts, 2)
-	thread, err = GetThread(1, 1)
-	c.Assert(err, IsNil)
-	c.Assert(thread, DeepEquals, std)
+	assertDeepEquals(t, post, std)
 }
+
+func testGetAllBoard(t *testing.T) {
+	t.Parallel()
+
+	std := types.Board{
+		Ctr: 3,
+		Threads: []types.BoardThread{
+			{
+				ID:      1,
+				PostCtr: 3,
+				Board:   "a",
+			},
+			{
+				ID:      3,
+				PostCtr: 1,
+				Board:   "c",
+			},
+		},
+	}
+
+	board, err := GetAllBoard()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertDeepEquals(t, board, &std)
+}
+
+func testGetBoard(t *testing.T) {
+	t.Parallel()
+
+	cases := [...]struct {
+		name, id string
+		std      types.Board
+	}{
+		{
+			name: "full",
+			id:   "c",
+			std: types.Board{
+				Ctr: 1,
+				Threads: []types.BoardThread{
+					{
+						ID:      3,
+						PostCtr: 1,
+						Board:   "c",
+					},
+				},
+			},
+		},
+		{
+			name: "empty",
+			id:   "z",
+			std: types.Board{
+				Ctr:     0,
+				Threads: nil,
+			},
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			board, err := GetBoard(c.id)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assertDeepEquals(t, board, &c.std)
+		})
+	}
+}
+
+func testGetThread(t *testing.T) {
+	t.Parallel()
+
+	thread1 := types.Thread{
+		PostCtr: 3,
+		Post: types.Post{
+			ID:    1,
+			Board: "a",
+		},
+		Posts: []types.Post{
+			{
+				ID:    2,
+				OP:    1,
+				Board: "a",
+				Body:  "foo",
+			},
+			{
+				ID:    4,
+				OP:    1,
+				Board: "a",
+			},
+		},
+	}
+	sliced := thread1
+	sliced.Posts = sliced.Posts[1:]
+
+	cases := [...]struct {
+		name  string
+		id    int64
+		lastN int
+		std   *types.Thread
+		err   error
+	}{
+		{
+			name: "full",
+			id:   1,
+			std:  &thread1,
+		},
+		{
+			name:  "last 1 reply",
+			id:    1,
+			lastN: 1,
+			std:   &sliced,
+		},
+		{
+			name: "no replies ;_;",
+			id:   3,
+			std: &types.Thread{
+				PostCtr: 1,
+				Post: types.Post{
+					ID:    3,
+					Board: "c",
+				},
+				Posts: []types.Post{},
+			},
+		},
+		{
+			name: "nonexistant thread",
+			id:   99,
+			err:  r.ErrEmptyResult,
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			thread, err := GetThread(c.id, c.lastN)
+			if err != c.err {
+				t.Fatalf("unexpected error: %#v", err)
+			}
+			assertDeepEquals(t, thread, c.std)
+		})
+	}
+}
+
+// func (*Tests) TestReaderGetThread(c *C) {
+// 	// No replies ;_;
+// 	std := &types.Thread{
+// 		Board: "a",
+// 		Post: types.Post{
+// 			ID: 4,
+// 		},
+// 		Posts: map[int64]types.Post{},
+// 	}
+// 	thread, err := GetThread(4, 0)
+// 	c.Assert(err, IsNil)
+// 	c.Assert(thread, DeepEquals, std)
+
+// 	// With replies
+// 	std = &types.Thread{
+// 		ImageCtr: 1,
+// 		PostCtr:  2,
+// 		LogCtr:   3,
+// 		Board:    "a",
+// 		Post: types.Post{
+// 			ID: 1,
+// 		},
+// 		Posts: map[int64]types.Post{
+// 			2: {
+// 				ID: 2,
+// 			},
+// 			3: {
+// 				ID: 3,
+// 			},
+// 		},
+// 	}
+// 	thread, err = GetThread(1, 0)
+// 	c.Assert(err, IsNil)
+// 	c.Assert(thread, DeepEquals, std)
+
+// 	// Last 1 post
+// 	delete(std.Posts, 2)
+// 	thread, err = GetThread(1, 1)
+// 	c.Assert(err, IsNil)
+// 	c.Assert(thread, DeepEquals, std)
+// }

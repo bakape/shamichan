@@ -2,92 +2,129 @@ package parser
 
 import (
 	"reflect"
+	"testing"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
-	r "github.com/dancannon/gorethink"
-	. "gopkg.in/check.v1"
 )
 
-func (*Tests) TestParseFlip(c *C) {
+func TestFlip(t *testing.T) {
+	t.Parallel()
+
 	com, err := parseCommand([]byte("flip"), "a")
-	c.Assert(err, IsNil)
-	c.Assert(com.Type, Equals, types.Flip)
-	c.Assert(reflect.TypeOf(com.Val).Kind(), Equals, reflect.Bool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if com.Type != types.Flip {
+		t.Fatalf("unexpected command type: %d", com.Type)
+	}
+	if k := reflect.TypeOf(com.Val).Kind(); k != reflect.Bool {
+		t.Fatalf("unexpected value kind: %d", k)
+	}
 }
 
-func (*Tests) TestDice(c *C) {
-	samples := [...]struct {
-		in         string
+func TestDice(t *testing.T) {
+	t.Parallel()
+
+	cases := [...]struct {
+		name, in   string
 		isNil      bool
 		rolls, max int
 	}{
-		{`d101`, true, 0, 0},
-		{`11d100`, true, 0, 0},
-		{`11d101`, true, 0, 0},
-		{`d10`, false, 1, 10},
-		{`10d100`, false, 10, 100},
+		{"too many sides", `d101`, true, 0, 0},
+		{"too many dice", `11d100`, true, 0, 0},
+		{"too many dice and sides", `11d101`, true, 0, 0},
+		{"valid single die", `d10`, false, 1, 10},
+		{"valid multiple dice", `10d100`, false, 10, 100},
 	}
-	for _, s := range samples {
-		com, err := parseCommand([]byte(s.in), "a")
-		c.Assert(err, IsNil)
-		if s.isNil {
-			c.Assert(com.Val, IsNil)
-		} else {
-			c.Assert(com.Type, Equals, types.Dice)
-			val := com.Val.([]uint16)
-			c.Assert(len(val), Equals, s.rolls)
-		}
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			com, err := parseCommand([]byte(c.in), "a")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if c.isNil {
+				if com.Val != nil {
+					t.Fatalf("unexpected value: %#v", com.Val)
+				}
+			} else {
+				if com.Type != types.Dice {
+					t.Fatalf("unexpected command type: %d", com.Type)
+				}
+				val := com.Val.([]uint16)
+				if l := len(val); l != c.rolls {
+					logUnexpected(t, c.rolls, l)
+				}
+			}
+		})
 	}
 }
 
-func (*Tests) Test8ball(c *C) {
+func Test8ball(t *testing.T) {
+	assertTableClear(t, "boards")
+
 	answers := []string{"Yes", "No"}
-	q := r.Table("boards").Insert(config.BoardConfigs{
+	assertInsert(t, "boards", config.BoardConfigs{
 		ID:        "a",
 		Eightball: answers,
 	})
-	c.Assert(db.Write(q), IsNil)
 
 	com, err := parseCommand([]byte("8ball"), "a")
-	c.Assert(err, IsNil)
-	c.Assert(com.Type, Equals, types.EightBall)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if com.Type != types.EightBall {
+		t.Fatalf("unexpected command type: %d", com.Type)
+	}
 	val := com.Val.(string)
 	if val != answers[0] && val != answers[1] {
-		c.Fatalf("eightball answer not mached: %s", val)
+		t.Fatalf("unexpected answer: %s", val)
 	}
 }
 
-func (*Tests) TestPyuDisabled(c *C) {
-	for _, in := range [...][]byte{pyuCommand, pcountCommand} {
-		com, err := parseCommand(in, "a")
-		c.Assert(err, IsNil)
-		c.Assert(com, DeepEquals, types.Command{})
-	}
-}
+func TestPyu(t *testing.T) {
+	assertTableClear(t, "main")
+	assertInsert(t, "main", db.Document{ID: "info"})
 
-func (*Tests) TestPyuAndPcount(c *C) {
-	(*config.Get()).Pyu = true
-	info := db.Document{ID: "info"}
-	c.Assert(db.Write(r.Table("main").Insert(info)), IsNil)
+	t.Run("disabled", func(t *testing.T) {
+		(*config.Get()).Pyu = false
+		for _, in := range [...][]byte{pyuCommand, pcountCommand} {
+			com, err := parseCommand(in, "a")
+			if err != nil {
+				t.Error(err)
+			}
+			assertDeepEquals(t, com, types.Command{})
+		}
+	})
 
-	samples := [...]struct {
-		in   []byte
-		Type types.CommandType
-		Val  int
-	}{
-		{pcountCommand, types.Pcount, 0},
-		{pyuCommand, types.Pyu, 1},
-		{pcountCommand, types.Pcount, 1},
-	}
+	t.Run("enabled", func(t *testing.T) {
+		(*config.Get()).Pyu = true
 
-	for _, s := range samples {
-		com, err := parseCommand(s.in, "a")
-		c.Assert(err, IsNil)
-		c.Assert(com, DeepEquals, types.Command{
-			Type: s.Type,
-			Val:  s.Val,
-		})
-	}
+		cases := [...]struct {
+			name string
+			in   []byte
+			Type types.CommandType
+			Val  int
+		}{
+			{"count on zero", pcountCommand, types.Pcount, 0},
+			{"increment", pyuCommand, types.Pyu, 1},
+			{"count", pcountCommand, types.Pcount, 1},
+		}
+
+		for i := range cases {
+			c := cases[i]
+			t.Run(c.name, func(t *testing.T) {
+				com, err := parseCommand(c.in, "a")
+				if err != nil {
+					t.Fatal(err)
+				}
+				assertDeepEquals(t, com, types.Command{
+					Type: c.Type,
+					Val:  c.Val,
+				})
+			})
+		}
+	})
 }

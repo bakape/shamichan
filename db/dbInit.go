@@ -14,7 +14,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 15
+const dbVersion = 16
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -23,19 +23,46 @@ var (
 	// DBName is the name of the database to use
 	DBName = "meguca"
 
+	// IsTest can be overriden to not launch several infinite loops during tests
+	// or check DB version
+	IsTest bool
+
 	// RSession exports the RethinkDB connection session. Used globally by the
 	// entire server.
 	RSession *r.Session
 
 	// AllTables are all tables needed for meguca operation
-	AllTables = [...]string{
-		"main",        // Various global information
-		"threads",     // Thread and post data
-		"images",      // Thumbnailed upload data
-		"imageTokens", // Tokens for claiming thumbnailed images from the
-		// "images" table
-		"accounts", // Registered user accounts
-		"boards",   // Board configurations
+	AllTables = []string{
+		// Various global information
+		"main",
+
+		// Thread data
+		"threads",
+
+		// Post data
+		"posts",
+
+		// Thumbnailed upload data
+		"images",
+
+		// Tokens for claiming thumbnailed images from the "images" table
+		"imageTokens",
+
+		// Registered user accounts
+		"accounts",
+
+		// Board configurations
+		"boards",
+	}
+
+	// Map of simple secondary indececes for tables
+	secondaryIndeces = [...]struct {
+		table, index string
+	}{
+		{"threads", "board"},
+		{"posts", "op"},
+		{"posts", "board"},
+		{"posts", "editing"},
 	}
 )
 
@@ -73,14 +100,16 @@ func LoadDB() (err error) {
 	}
 	if isCreated {
 		RSession.Use(DBName)
-		if err := verifyDBVersion(); err != nil {
-			return err
+		if !IsTest {
+			if err := verifyDBVersion(); err != nil {
+				return err
+			}
 		}
 	} else if err := InitDB(); err != nil {
 		return err
 	}
 
-	if !isTest {
+	if !IsTest {
 		go runCleanupTasks()
 	}
 	return loadConfigs()
@@ -104,17 +133,21 @@ func verifyDBVersion() error {
 	if err != nil {
 		return util.WrapError("error reading database version", err)
 	}
-	if version != dbVersion {
-		if version == 14 {
-			if err := upgrade14to15(); err != nil {
-				return err
-			}
-		} else {
-			return fmt.Errorf(
-				"incompatible RethinkDB database version: %d",
-				version,
-			)
+
+	switch version {
+	case dbVersion:
+		return nil
+	case 14:
+		if err := upgrade14to15(); err != nil {
+			return err
 		}
+		fallthrough
+	case 15:
+		if err := upgrade15to16(); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("incompatible database version: %d", version)
 	}
 	return nil
 }
@@ -139,6 +172,52 @@ func upgrade14to15() error {
 	return nil
 }
 
+// Upgrade from version 15 to 16. Contains major structural changes to post
+// storage.
+func upgrade15to16() error {
+	q := r.Table("threads").Config().Update(map[string]string{
+		"name": "threads_old",
+	})
+	if err := Write(q); err != nil {
+		return err
+	}
+
+	qs := make([]r.Term, 0, 5)
+	qs = append(qs, createPostTables()...)
+	qs = append(qs,
+		// Copy all threads
+		r.
+			Table("threads").
+			Insert(r.Table("threads_old").Without("log", "posts")),
+		// Copy all posts
+		r.
+			Table("threads_old").
+			ForEach(func(t r.Term) r.Term {
+				return t.
+					Field("posts").
+					Values().
+					Map(func(p r.Term) r.Term {
+						return p.Merge(map[string]interface{}{
+							"op":          t.Field("id"),
+							"board":       t.Field("board"),
+							"lastUpdated": time.Now().Unix() - 60,
+							"log":         [][]byte{},
+						})
+					}).
+					ForEach(func(p r.Term) r.Term {
+						return r.Table("posts").Insert(p)
+					})
+			}),
+		// Delete old table
+		r.TableDrop("threads_old"),
+	)
+	if err := WriteAll(qs); err != nil {
+		return err
+	}
+
+	return CreateIndeces()
+}
+
 // InitDB initialize a rethinkDB database
 func InitDB() error {
 	log.Printf("initialising database '%s'", DBName)
@@ -152,6 +231,11 @@ func InitDB() error {
 		return err
 	}
 
+	return populateDB()
+}
+
+// Populate DB with initial documents
+func populateDB() error {
 	main := [...]interface{}{
 		infoDocument{Document{"info"}, dbVersion, 0},
 
@@ -164,7 +248,7 @@ func InitDB() error {
 			config.Defaults,
 		},
 	}
-	if err := Write(r.Table("main").Insert(main)); err != nil {
+	if err := Insert("main", main); err != nil {
 		return util.WrapError("initializing database", err)
 	}
 
@@ -177,54 +261,47 @@ func InitDB() error {
 
 // CreateTables creates all tables needed for meguca operation
 func CreateTables() error {
-	fns := make([]func() error, 0, len(AllTables))
+	qs := make([]r.Term, 0, len(AllTables))
 
-	for _, table := range AllTables {
-		if table == "images" {
-			continue
+	for _, t := range AllTables {
+		switch t {
+		case "images", "threads", "posts":
+		default:
+			qs = append(qs, createTable(t))
 		}
-		fns = append(fns, createTable(table))
 	}
 
-	fns = append(fns, func() error {
-		return Write(r.TableCreate("images", r.TableCreateOpts{
-			PrimaryKey: "SHA1",
-		}))
-	})
+	qs = append(qs, createPostTables()...)
+	qs = append(qs, r.TableCreate("images", r.TableCreateOpts{
+		PrimaryKey: "SHA1",
+	}))
 
-	return util.Waterfall(fns)
+	return WriteAll(qs)
 }
 
-func createTable(name string) func() error {
-	return func() error {
-		return Write(r.TableCreate(name))
+func createPostTables() []r.Term {
+	fns := make([]r.Term, 2)
+	for i, t := range [...]string{"threads", "posts"} {
+		fns[i] = r.TableCreate(t, r.TableCreateOpts{
+			Durability: "soft",
+		})
 	}
+	return fns
+}
+
+func createTable(t string) r.Term {
+	return r.TableCreate(t)
 }
 
 // CreateIndeces create secondary indeces for faster table queries
 func CreateIndeces() error {
-	fns := []func() error{
-		func() error {
-			return Write(r.Table("threads").IndexCreate("board"))
-		},
+	fns := make([]func() error, 0, len(secondaryIndeces)+len(AllTables))
 
-		// For quick post parent thread lookups
-		func() error {
-			q := r.Table("threads").
-				IndexCreateFunc(
-					"post",
-					func(thread r.Term) r.Term {
-						return thread.
-							Field("posts").
-							Keys().
-							Map(func(id r.Term) r.Term {
-								return id.CoerceTo("number")
-							})
-					},
-					r.IndexCreateOpts{Multi: true},
-				)
-			return Write(q)
-		},
+	for _, i := range secondaryIndeces {
+		index := i // Capture variable
+		fns = append(fns, func() error {
+			return Write(r.Table(index.table).IndexCreate(index.index))
+		})
 	}
 
 	// Make sure all indeces are ready to avoid the race condition of and index
@@ -257,9 +334,9 @@ func createAdminAccount() error {
 	return RegisterAccount("admin", hash)
 }
 
-// ClearTables deletes the contents of all DB tables. Only used for tests.
-func ClearTables() error {
-	q := r.TableList().ForEach(func(table r.Term) r.Term {
+// ClearTables deletes the contents of specified DB tables. Only used for tests.
+func ClearTables(tables ...string) error {
+	q := r.Expr(tables).ForEach(func(table r.Term) r.Term {
 		return r.Table(table).Delete()
 	})
 	return Write(q)

@@ -1,16 +1,19 @@
 package db
 
 import (
+	"fmt"
+	"testing"
 	"time"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
-	. "gopkg.in/check.v1"
 )
 
-func (*Tests) TestSessionCleanup(c *C) {
+func TestExpireUserSessions(t *testing.T) {
+	assertTableClear(t, "accounts")
+
 	expired := time.Now().Add(-time.Hour)
 	samples := []auth.User{
 		{
@@ -36,81 +39,115 @@ func (*Tests) TestSessionCleanup(c *C) {
 			},
 		},
 	}
-	c.Assert(Write(r.Table("accounts").Insert(samples)), IsNil)
+	assertInsert(t, "accounts", samples)
 
-	c.Assert(expireUserSessions(), IsNil)
+	if err := expireUserSessions(); err != nil {
+		t.Fatal(err)
+	}
 
-	var res1 []auth.Session
-	c.Assert(All(GetAccount("1").Field("sessions"), &res1), IsNil)
-	c.Assert(len(res1), Equals, 1)
-	c.Assert(res1[0].Token, Equals, "bar")
+	t.Run("not expired", func(t *testing.T) {
+		t.Parallel()
+		var res []auth.Session
+		if err := All(GetAccount("1").Field("sessions"), &res); err != nil {
+			t.Fatal(err)
+		}
+		if len(res) != 1 {
+			t.Errorf("unexpected session count: %d", len(res))
+		}
+		token := res[0].Token
+		if token != "bar" {
+			t.Errorf("unexpected session token: %s", token)
+		}
+	})
 
-	var res2 []auth.Session
-	c.Assert(All(GetAccount("2").Field("sessions"), &res1), IsNil)
-	c.Assert(res2, DeepEquals, []auth.Session(nil))
+	t.Run("expired", func(t *testing.T) {
+		t.Parallel()
+		var res []auth.Session
+		if err := All(GetAccount("2").Field("sessions"), &res); err != nil {
+			t.Fatal(err)
+		}
+		if res != nil {
+			t.Fatal("session not cleared")
+		}
+	})
 }
 
-func (*Tests) TestOpenPostClosing(c *C) {
-	thread := types.DatabaseThread{
-		ID: 1,
-		Posts: map[int64]types.DatabasePost{
-			1: {
-				Post: types.Post{
-					ID:      1,
-					Editing: true,
-					Time:    time.Now().Add(-time.Minute * 31).Unix(),
-				},
+func TestOpenPostClosing(t *testing.T) {
+	assertTableClear(t, "posts")
+
+	tooOld := time.Now().Add(-time.Minute * 31).Unix()
+	log := [][]byte{[]byte{1, 2, 3}}
+	posts := []types.DatabasePost{
+		{
+			Post: types.Post{
+				ID:      1,
+				Editing: true,
+				Time:    tooOld,
 			},
-			2: {
-				Post: types.Post{
-					ID:      2,
-					Editing: true,
-					Time:    time.Now().Unix(),
-				},
-			},
-			3: {
-				Post: types.Post{
-					ID:      3,
-					Editing: true,
-					Time:    time.Now().Add(-time.Minute * 31).Unix(),
-				},
+			Log: log,
+		},
+		{
+			Post: types.Post{
+				ID:      2,
+				Editing: true,
+				Time:    time.Now().Unix(),
 			},
 		},
-		Log: [][]byte{[]byte{1, 22, 3}},
 	}
-	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
+	assertInsert(t, "posts", posts)
 
-	c.Assert(closeDanglingPosts(), IsNil)
+	if err := closeDanglingPosts(); err != nil {
+		t.Fatal(err)
+	}
 
-	var log [][]byte
-	c.Assert(All(r.Table("threads").Get(1).Field("log"), &log), IsNil)
-	c.Assert(log, DeepEquals, append(thread.Log, []byte("061"), []byte("063")))
-
-	samples := [...]struct {
+	cases := [...]struct {
+		name    string
 		id      int64
 		editing bool
 	}{
-		{1, false},
-		{2, true},
-		{3, false},
+		{"closed", 1, false},
+		{"untouched", 2, true},
 	}
-	for _, s := range samples {
-		var res bool
-		c.Assert(One(FindPost(s.id).Field("editing"), &res), IsNil)
-		c.Assert(res, DeepEquals, s.editing)
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			var editing bool
+			err := One(FindPost(c.id).Field("editing"), &editing)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if editing != c.editing {
+				logUnexpected(t, c.editing, editing)
+			}
+		})
 	}
+
+	t.Run("log update", func(t *testing.T) {
+		t.Parallel()
+		var isAppended bool
+		q := FindPost(1).Field("log").Nth(-1).Eq([]byte("061"))
+		if err := One(q, &isAppended); err != nil {
+			t.Fatal(err)
+		}
+		if !isAppended {
+			t.Error("log not updated")
+		}
+	})
 }
 
-func (*Tests) TestTokenExpiry(c *C) {
+func TestImageTokenExpiry(t *testing.T) {
+	assertTableClear(t, "images")
+
 	const SHA1 = "123"
-	img := types.ProtoImage{
+	assertInsert(t, "images", types.ProtoImage{
 		ImageCommon: types.ImageCommon{
 			SHA1:     "123",
 			FileType: types.JPEG,
 		},
 		Posts: 7,
-	}
-	c.Assert(Write(r.Table("images").Insert(img)), IsNil)
+	})
 
 	expired := time.Now().Add(-time.Minute)
 	tokens := [...]allocationToken{
@@ -127,107 +164,191 @@ func (*Tests) TestTokenExpiry(c *C) {
 			Expires: time.Now().Add(time.Minute),
 		},
 	}
-	c.Assert(Write(r.Table("imageTokens").Insert(tokens)), IsNil)
+	assertInsert(t, "imageTokens", tokens)
 
-	c.Assert(expireImageTokens(), IsNil)
+	if err := expireImageTokens(); err != nil {
+		t.Fatal(err)
+	}
+
 	var posts int
-	c.Assert(One(GetImage(SHA1).Field("posts"), &posts), IsNil)
-	c.Assert(posts, Equals, 5)
+	if err := One(GetImage(SHA1).Field("posts"), &posts); err != nil {
+		t.Fatal(err)
+	}
+	if posts != 5 {
+		t.Errorf("unexpected reference count: %d", posts)
+	}
 }
 
-func (*Tests) TestTokenExpiryNoTokens(c *C) {
-	c.Assert(expireImageTokens(), IsNil)
+func TestDeleteThread(t *testing.T) {
+	assertTableClear(t, "threads", "posts", "images")
+
+	t.Run("without images", deleteThreadWithoutImages)
+	t.Run("with images", deleteThreadWithImages)
+	t.Run("nonexitant thread", deleteMissingThread)
 }
 
-func (*Tests) TestDeleteThreadWithoutImages(c *C) {
-	thread := types.DatabaseThread{
+func deleteThreadWithoutImages(t *testing.T) {
+	t.Parallel()
+
+	assertInsert(t, "threads", types.DatabaseThread{
 		ID: 1,
-		Posts: map[int64]types.DatabasePost{
-			1: {
-				Post: types.Post{
-					ID: 1,
-				},
+	})
+
+	posts := [...]types.DatabasePost{
+		{
+			Post: types.Post{
+				ID: 1,
+				OP: 1,
 			},
-			2: {
-				Post: types.Post{
-					ID: 2,
-				},
+		},
+		{
+			Post: types.Post{
+				ID: 2,
+				OP: 1,
 			},
 		},
 	}
-	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
+	assertInsert(t, "posts", posts)
 
-	c.Assert(DeleteThread(1), IsNil)
-	assertThreadDeleted(1, c)
+	if err := DeleteThread(1); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("thread", func(t *testing.T) {
+		t.Parallel()
+		assertDeleted(t, FindThread(1), true)
+	})
+
+	for i := int64(1); i <= 2; i++ {
+		id := i
+		t.Run(fmt.Sprintf("post %d", id), func(t *testing.T) {
+			t.Parallel()
+			assertDeleted(t, FindPost(id), true)
+		})
+	}
 }
 
-func assertThreadDeleted(id int64, c *C) {
-	var noThread bool
-	q := r.Table("threads").Get(id).Eq(nil)
-	c.Assert(One(q, &noThread), IsNil)
-	c.Assert(noThread, Equals, true)
+func assertDeleted(t *testing.T, q r.Term, del bool) {
+	var deleted bool
+	if err := One(q.Eq(nil), &deleted); err != nil {
+		t.Fatal(err)
+	}
+	if deleted != del {
+		logUnexpected(t, del, deleted)
+	}
 }
 
-func (*Tests) TestDeleteNonExistantThread(c *C) {
-	c.Assert(DeleteThread(1), IsNil)
+func deleteMissingThread(t *testing.T) {
+	t.Parallel()
+	if err := DeleteThread(99); err != nil {
+		t.Fatal(err)
+	}
 }
 
-func (*Tests) TestDeleteThread(c *C) {
+func deleteThreadWithImages(t *testing.T) {
+	t.Parallel()
+
 	images := [...]types.ProtoImage{
 		{
 			ImageCommon: types.ImageCommon{
-				SHA1: "2",
+				SHA1: "111",
 			},
-			Posts: 2,
+			Posts: 7,
 		},
 		{
 			ImageCommon: types.ImageCommon{
-				SHA1: "3",
+				SHA1: "122",
 			},
-			Posts: 3,
+			Posts: 8,
 		},
 	}
-	c.Assert(Write(r.Table("images").Insert(images)), IsNil)
+	assertInsert(t, "images", images)
 
-	thread := types.DatabaseThread{
-		ID: 1,
-		Posts: map[int64]types.DatabasePost{
-			1: {
-				Post: types.Post{
-					ID: 1,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
-							SHA1: "2",
-						},
-					},
-				},
-			},
-			2: {
-				Post: types.Post{
-					ID: 2,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
-							SHA1: "3",
-						},
+	assertInsert(t, "threads", types.DatabaseThread{
+		ID: 11,
+	})
+
+	posts := [...]types.DatabasePost{
+		{
+			Post: types.Post{
+				ID: 11,
+				OP: 11,
+				Image: &types.Image{
+					ImageCommon: types.ImageCommon{
+						SHA1: "111",
 					},
 				},
 			},
 		},
+		{
+			Post: types.Post{
+				ID: 12,
+				OP: 11,
+				Image: &types.Image{
+					ImageCommon: types.ImageCommon{
+						SHA1: "122",
+					},
+				},
+			},
+		},
 	}
-	c.Assert(Write(r.Table("threads").Insert(thread)), IsNil)
+	assertInsert(t, "posts", posts)
 
-	c.Assert(DeleteThread(1), IsNil)
+	if err := DeleteThread(11); err != nil {
+		t.Fatal(err)
+	}
 
-	assertThreadDeleted(1, c)
-	assertImageRefCount("2", 1, c)
-	assertImageRefCount("3", 2, c)
+	t.Run("thread", func(t *testing.T) {
+		t.Parallel()
+		assertDeleted(t, FindThread(11), true)
+	})
+
+	cases := [...]struct {
+		id       int64
+		sha1     string
+		refCount int
+	}{
+		{11, "111", 6},
+		{12, "122", 7},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(fmt.Sprintf("post %d", c.id), func(t *testing.T) {
+			t.Parallel()
+			assertDeleted(t, FindPost(c.id), true)
+		})
+		t.Run("image ref count "+c.sha1, func(t *testing.T) {
+			t.Parallel()
+			assertImageRefCount(t, c.sha1, c.refCount)
+		})
+	}
 }
 
-func (*Tests) TestNoExpiredBoards(c *C) {
-	c.Assert(deleteUnusedBoards(), IsNil)
+func TestDeleteUnusedBoards(t *testing.T) {
+	assertTableClear(t, "boards", "threads", "posts")
+
+	t.Run("no unused boards", func(t *testing.T) {
+		if err := deleteUnusedBoards(); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("board with no threads", func(t *testing.T) {
+		assertInsert(t, "boards", config.DatabaseBoardConfigs{
+			Created: time.Now().Add((-week - 1) * time.Second),
+			BoardConfigs: config.BoardConfigs{
+				ID: "l",
+			},
+		})
+		if err := deleteUnusedBoards(); err != nil {
+			t.Fatal(err)
+		}
+		assertDeleted(t, r.Table("boards").Get("l"), true)
+	})
+	t.Run("board with threads", testDeleteUnsusedBoards)
 }
 
-func (*Tests) TestExpireBoards(c *C) {
+func testDeleteUnsusedBoards(t *testing.T) {
 	expired := time.Now().Add((-week - 1) * time.Second)
 	fresh := time.Now()
 
@@ -239,80 +360,84 @@ func (*Tests) TestExpireBoards(c *C) {
 			},
 		},
 		{
-			Created: fresh,
+			Created: expired,
 			BoardConfigs: config.BoardConfigs{
 				ID: "c",
 			},
 		},
 	}
-	c.Assert(Write(r.Table("boards").Insert(boards)), IsNil)
+	assertInsert(t, "boards", boards)
 
 	threads := [...]types.DatabaseThread{
 		{
 			ID:    1,
 			Board: "a",
-			Posts: map[int64]types.DatabasePost{
-				1: {
-					Post: types.Post{
-						ID: 1,
-					},
-				},
-			},
-		},
-		{
-			ID:    2,
-			Board: "a",
-			Posts: map[int64]types.DatabasePost{
-				2: {
-					Post: types.Post{
-						ID: 1,
-					},
-				},
-			},
 		},
 		{
 			ID:    3,
 			Board: "c",
-			Posts: map[int64]types.DatabasePost{
-				3: {
-					Post: types.Post{
-						ID: 1,
-					},
-				},
+		},
+	}
+	assertInsert(t, "threads", threads)
+
+	posts := [...]types.DatabasePost{
+		{
+			Post: types.Post{
+				ID:    1,
+				OP:    1,
+				Board: "a",
+				Time:  expired.Unix(),
+			},
+		},
+		{
+			Post: types.Post{
+				ID:    3,
+				OP:    3,
+				Board: "c",
+				Time:  expired.Unix(),
+			},
+		},
+		{
+			Post: types.Post{
+				ID:    4,
+				OP:    3,
+				Board: "c",
+				Time:  fresh.Unix(),
 			},
 		},
 	}
-	c.Assert(Write(r.Table("threads").Insert(threads)), IsNil)
+	assertInsert(t, "posts", posts)
 
-	c.Assert(deleteUnusedBoards(), IsNil)
-
-	assertBoardDeleted("a", c)
-	assertThreadDeleted(1, c)
-	assertThreadDeleted(2, c)
-
-	var notDeleted bool
-	q := r.Table("threads").Get(3).Eq(nil).Not()
-	c.Assert(One(q, &notDeleted), IsNil)
-	c.Assert(notDeleted, Equals, true)
-}
-
-func assertBoardDeleted(board string, c *C) {
-	var deleted bool
-	q := r.Table("boards").Get(board).Eq(nil)
-	c.Assert(One(q, &deleted), IsNil)
-	c.Assert(deleted, Equals, true)
-}
-
-func (*Tests) TestExpireBoardWithoutThreads(c *C) {
-	board := config.DatabaseBoardConfigs{
-		Created: time.Now().Add((-week - 1) * time.Second),
-		BoardConfigs: config.BoardConfigs{
-			ID: "a",
-		},
+	if err := deleteUnusedBoards(); err != nil {
+		t.Fatal(err)
 	}
-	c.Assert(Write(r.Table("boards").Insert(board)), IsNil)
 
-	c.Assert(deleteUnusedBoards(), IsNil)
+	cases := [...]struct {
+		name    string
+		deleted bool
+		board   string
+		id      int64
+	}{
+		{"deleted", true, "a", 1},
+		{"untouched", false, "c", 3},
+	}
 
-	assertBoardDeleted("a", c)
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			t.Run("board", func(t *testing.T) {
+				t.Parallel()
+				assertDeleted(t, r.Table("boards").Get(c.board), c.deleted)
+			})
+			t.Run("thread", func(t *testing.T) {
+				t.Parallel()
+				assertDeleted(t, FindThread(c.id), c.deleted)
+			})
+			t.Run("post", func(t *testing.T) {
+				t.Parallel()
+				assertDeleted(t, FindPost(c.id), c.deleted)
+			})
+		})
+	}
 }

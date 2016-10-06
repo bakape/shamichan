@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/util"
@@ -57,9 +58,11 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 	}
 }
 
-// Log an error together with the client's IP
+// Log an error together with the client's IP and stack trace
 func logError(r *http.Request, err interface{}) {
-	log.Printf("server: %s: %s", auth.GetIP(r), err)
+	if !isTest { // Do not polute test output with logs
+		log.Printf("server: %s: %s\n%s", auth.GetIP(r), err, debug.Stack())
+	}
 }
 
 // Set HTTP headers to the response object
@@ -87,6 +90,6 @@ func text403(w http.ResponseWriter, err error) {
 
 // Text-only 500 response
 func text500(w http.ResponseWriter, r *http.Request, err interface{}) {
-	http.Error(w, fmt.Sprintf("500 %s", err), 500)
+	http.Error(w, fmt.Sprintf("500 Internal server error: %s", err), 500)
 	logError(r, err)
 }

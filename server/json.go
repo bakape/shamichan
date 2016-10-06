@@ -174,7 +174,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 
 	data, err := db.GetThread(id, detectLastN(r))
 	if err != nil {
-		text500(w, r, err)
+		respondToJSONError(w, r, err)
 		return
 	}
 
@@ -272,43 +272,6 @@ func serveStaffPositions(
 	writeJSON(res, req, true, boards)
 }
 
-// Serve slices of a thread's replication log for filling in any missing
-// messages between client's JSON retrieval and websocket synchronisation. Also
-// used for catching up after a disconnect.
-func serveBacklog(
-	w http.ResponseWriter,
-	req *http.Request,
-	p map[string]string,
-) {
-	var args [3]uint64
-	for i, key := range [...]string{"thread", "start", "end"} {
-		var err error
-		args[i], err = strconv.ParseUint(p[key], 10, 64)
-		if err != nil {
-			text400(w, err)
-			return
-		}
-	}
-
-	q := r.
-		Table("threads").
-		Get(args[0]).
-		Field("log").
-		Slice(args[1], args[2]).
-		Default(nil)
-	var log [][]byte
-	if err := db.All(q, &log); err != nil {
-		text500(w, req, err)
-		return
-	}
-
-	data := websockets.ConcatMessages(log)
-	head := w.Header()
-	head.Set("ETag", util.HashBuffer(data))
-	head.Set("Content-Type", "text/plain; charset=UTF-8")
-	writeData(w, req, data)
-}
-
 // Spoiler an already allocated image
 func spoilerImage(w http.ResponseWriter, req *http.Request) {
 	var msg spoilerRequest
@@ -326,7 +289,7 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if res.Image.SHA1== "" {
+	if res.Image.SHA1 == "" {
 		text400(w, errNoImage)
 		return
 	}
@@ -344,14 +307,11 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	update := map[string]map[string]bool{
-		"image": {
-			"spoiler": true,
-		},
+	update := map[string]bool{
+		"spoiler": true,
 	}
-	diff := websockets.CreateUpdate(msg.ID, update, logMsg)
-	q = db.FindParentThread(msg.ID).Update(diff)
-	if err := db.Write(q); err != nil {
+	err = websockets.UpdatePost(msg.ID, "image", update, logMsg)
+	if err != nil {
 		text500(w, req, err)
 		return
 	}

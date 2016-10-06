@@ -12,7 +12,6 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -85,10 +84,12 @@ func insertThread(data []byte, c *Client) (err error) {
 	if err != nil {
 		return err
 	}
+	post.Board = req.Board
 	thread := types.DatabaseThread{
 		BumpTime:  now,
 		ReplyTime: now,
 		Board:     req.Board,
+		PostCtr:   1,
 	}
 	thread.Subject, err = parser.ParseSubject(req.Subject)
 	if err != nil {
@@ -111,11 +112,12 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 	thread.ID = id
 	post.ID = id
-	thread.Posts = map[int64]types.DatabasePost{
-		id: post,
-	}
+	post.OP = id
 
-	if err := db.Write(r.Table("threads").Insert(thread)); err != nil {
+	if err := db.Insert("posts", post); err != nil {
+		return err
+	}
+	if err := db.Insert("threads", thread); err != nil {
 		return err
 	}
 	if err := db.IncrementBoardCounter(req.Board); err != nil {
@@ -162,8 +164,8 @@ func insertPost(data []byte, c *Client) error {
 
 	// Check thread is not locked and retrieve the post counter
 	var threadAttrs struct {
-		Locked  bool `gorethink:"locked"`
-		PostCtr int  `gorethink:"postCtr"`
+		Locked  bool
+		PostCtr int
 	}
 	q := r.Table("threads").Get(sync.OP).Pluck("locked", "postCtr")
 	if err := db.One(q, &threadAttrs); err != nil {
@@ -188,12 +190,13 @@ func insertPost(data []byte, c *Client) error {
 	}
 	post.Body = req.Body
 
+	post.OP = sync.OP
 	post.ID, err = db.ReservePostID()
 	if err != nil {
 		return err
 	}
 
-	updates := make(map[string]interface{}, 6)
+	updates := make(map[string]interface{}, 5)
 	updates["postCtr"] = r.Row.Field("postCtr").Add(1)
 	updates["replyTime"] = now
 
@@ -211,22 +214,15 @@ func insertPost(data []byte, c *Client) error {
 		updates["imageCtr"] = r.Row.Field("imageCtr").Add(1)
 	}
 
-	updates["posts"] = map[string]types.DatabasePost{
-		util.IDToString(post.ID): post,
-	}
-
-	msg, err := EncodeMessage(MessageInsertPost, post.Post)
-	if err != nil {
-		return err
-	}
-	updates["log"] = r.Row.Field("log").Append(msg)
-
-	// Ensure the client knows the post ID before the update public post
-	// inserttion message is sent
+	// Ensure the client knows the post ID before the public post insertion
+	// update message is sent
 	if err := c.sendMessage(MessagePostID, post.ID); err != nil {
 		return err
 	}
 
+	if err := db.Insert("posts", post); err != nil {
+		return err
+	}
 	q = r.Table("threads").Get(sync.OP).Update(updates)
 	if err := db.Write(q); err != nil {
 		return err
@@ -265,7 +261,9 @@ func closePreviousPost(c *Client) error {
 
 // Reatrieve post-related board configuraions
 func getBoardConfig(board string) (conf config.PostParseConfigs, err error) {
-	err = db.One(db.GetBoardConfig(board), &conf)
+	q := db.GetBoardConfig(board).
+		Pluck("readOnly", "textOnly", "forcedAnon", "hashCommands")
+	err = db.One(q, &conf)
 	if err != nil {
 		return
 	}
@@ -282,9 +280,10 @@ func constructPost(req postCreationCommon, c *Client) (
 	now = time.Now().Unix()
 	post = types.DatabasePost{
 		Post: types.Post{
-			Editing: true,
-			Time:    now,
-			Email:   parser.FormatEmail(req.Email),
+			Editing:     true,
+			Time:        now,
+			LastUpdated: now,
+			Email:       parser.FormatEmail(req.Email),
 		},
 		IP: c.IP,
 	}

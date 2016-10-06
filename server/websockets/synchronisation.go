@@ -24,9 +24,9 @@ type syncRequest struct {
 // receive update messages.
 func synchronise(data []byte, c *Client) error {
 	// Unsub from previous update feed, if any
-	if c.feed != nil {
-		c.feed.Remove <- c
-		c.feed = nil
+	if c.feedID != 0 {
+		feeds.Remove <- subRequest{c.feedID, c}
+		c.feedID = 0
 	}
 
 	var msg syncRequest
@@ -48,7 +48,7 @@ func synchronise(data []byte, c *Client) error {
 // client its ID.
 func syncToBoard(board string, c *Client) error {
 	registerSync(board, 0, c)
-	return c.sendMessage(MessageSynchronise, 0)
+	return c.sendMessage(MessageSynchronise, map[string]string{})
 }
 
 // Register the client with the central client storage datastructure
@@ -76,10 +76,7 @@ func syncToThread(board string, thread int64, c *Client) error {
 	}
 
 	registerSync(board, thread, c)
-	c.feed, err = feeds.Add(thread, c)
-	if err != nil {
-		return err
-	}
+	feeds.Add <- subRequest{thread, c}
 
 	return nil
 }

@@ -178,7 +178,7 @@ func (*Imager) TestNoImageUploaded(c *C) {
 }
 
 func (*Imager) TestThumbNailReuse(c *C) {
-	for i := 0; i < 2; i++ {
+	for i := 1; i <= 2; i++ {
 		req := newJPEGRequest(c)
 		code, _, err := newImageUpload(req)
 		c.Assert(err, IsNil)

@@ -2,51 +2,56 @@ package server
 
 import (
 	"io/ioutil"
-
-	. "gopkg.in/check.v1"
+	"path/filepath"
+	"testing"
 )
 
-func (w *WebServer) TestAssetServer(c *C) {
-	rec, req := newPair(c, "/assets/frontpage.html")
-	w.r.ServeHTTP(rec, req)
-	assertBody(rec, "<!doctype html><html></html>\n", c)
+func TestAssetServer(t *testing.T) {
+	t.Parallel()
+
+	rec, req := newPair("/assets/frontpage.html")
+	router.ServeHTTP(rec, req)
+	assertBody(t, rec, "<!doctype html><html></html>\n")
 }
 
-func (w *WebServer) TestServeWorker(c *C) {
-	rec, req := newPair(c, "/worker.js")
-	w.r.ServeHTTP(rec, req)
-	assertBody(rec, "console.log(\"Worker dess\")\n", c)
+func TestServeWorker(t *testing.T) {
+	t.Parallel()
+
+	rec, req := newPair("/worker.js")
+	router.ServeHTTP(rec, req)
+	assertBody(t, rec, "console.log(\"Worker dess\")\n")
 }
 
-func (*WebServer) TestImageServer(c *C) {
+func TestImageServer(t *testing.T) {
+	t.Parallel()
+
 	const (
-		truncated         = "/src/tis life.gif"
-		notFoundTruncated = "src/nobody here.gif"
+		found    = "/images/src/tis_life.gif"
+		notFound = "/images/src/nobody_here.gif"
 	)
-	imageWebRoot = "testdata"
-	path := imageWebRoot + truncated
-	notFound := imageWebRoot + notFoundTruncated
 
 	// Succesful first serve
-	rec, req := newPair(c, path)
-	params := map[string]string{
-		"path": truncated,
-	}
-	serveImages(rec, req, params)
+	rec, req := newPair(found)
+	router.ServeHTTP(rec, req)
+	path := filepath.Join("testdata", "src", "tis_life.gif")
 	buf, err := ioutil.ReadFile(path)
-	c.Assert(err, IsNil)
-	assertBody(rec, string(buf), c)
-	assertHeaders(c, rec, imageHeaders)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.Code != 200 {
+		t.Fatal("failed to fetch image")
+	}
+	assertBody(t, rec, string(buf))
+	assertHeaders(t, rec, imageHeaders)
 
 	// Second fetch
-	rec, req = newPair(c, path)
+	rec, req = newPair(found)
 	req.Header.Set("If-None-Match", "0")
-	serveImages(rec, req, params)
-	assertCode(rec, 304, c)
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 304)
 
 	// Non-existing file
-	rec, req = newPair(c, notFound)
-	params["path"] = notFoundTruncated
-	serveImages(rec, req, params)
-	assertCode(rec, 404, c)
+	rec, req = newPair(notFound)
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 404)
 }
