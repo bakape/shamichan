@@ -1,15 +1,15 @@
 // Specs for individual option models
 
-import {config, isMobile} from '../state'
-import {opts as lang} from '../lang'
-import {loadModule, makeEl} from '../util'
-import {write} from "../render"
+import { config, isMobile } from '../state'
+import { opts as lang } from '../lang'
+import { loadModule, makeEl } from '../util'
+import { write } from "../render"
 
 // Types of option models
-export const enum optionType {checkbox, number, image, shortcut, menu}
+export const enum optionType { checkbox, number, image, shortcut, menu }
 
 // Options panel display tabs
-export const enum tabs {general, style, imagesearch, fun, shortcuts}
+export const enum tabs { general, style, imagesearch, fun, shortcuts }
 
 // Can't  use enums for ones below, because they persist to localStorage
 
@@ -23,9 +23,9 @@ export const themes = [
 ]
 
 // Available language packs. Change this, when adding any new ones.
-export const langs = ["en_GB", "es_ES", "pt_BR", "tr_TR", 'uk_UA', "sk_SK"]
+export const langs = ["en_GB", "es_ES", "pt_BR", "sk_SK", "tr_TR", 'uk_UA']
 
-export type OptionValue =  boolean|string|number
+export type OptionValue = boolean | string | number
 
 // Full schema of the option interface
 export type OptionSpec = {
@@ -194,7 +194,7 @@ export const specs = (): OptionSpec[] => {
 			exec: toggleHeadStyle(
 				'horizontal',
 				'article,aside{display:inline-block;}'
-					+ '#thread-container{display:block;}'
+				+ '#thread-container{display:block;}'
 			)
 		},
 		// Move [Reply] to the right side of the screen
@@ -280,11 +280,11 @@ export const specs = (): OptionSpec[] => {
 
 	// Shortcut keys
 	const keySpecs: any[] = [
-		{id: 'newPost', default:78},
-		{id: 'done', default: 83},
-		{id: 'toggleSpoiler', default: 73},
-		{id: 'expandAll', default: 69},
-		{id: 'workMode', default: 66},
+		{ id: 'newPost', default: 78 },
+		{ id: 'done', default: 83 },
+		{ id: 'toggleSpoiler', default: 73 },
+		{ id: 'expandAll', default: 69 },
+		{ id: 'workMode', default: 66 },
 	]
 
 	for (let spec of keySpecs as OptionSpec[]) {
@@ -316,6 +316,6 @@ function toggleHeadStyle(name: string, css: string): (toggle: boolean) => void {
 		// another query
 		write(() =>
 			(document.getElementById(id) as HTMLInputElement)
-			.disabled = !toggle)
+				.disabled = !toggle)
 	}
 }
