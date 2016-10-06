@@ -17,7 +17,7 @@
     "gulp-less": "^3.0.1",
     "gulp-rename": "^1.2.2",
     "gulp-sourcemaps": "^1.5.1",
-    "gulp-typescript": "^2.12.0",
+    "gulp-typescript": "^3.0.2",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.4",
     "systemjs": "^0.19.9",

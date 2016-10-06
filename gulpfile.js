@@ -62,9 +62,9 @@ createTask('scripts', 'clientScripts/*.js', src =>
 // Language packs
 createTask('lang', 'lang/**/*.json', src =>
 	src
-	.pipe(jsonminify())
-	.on('error', handleError)
-	.pipe(gulp.dest('www/lang')))
+		.pipe(jsonminify())
+		.on('error', handleError)
+		.pipe(gulp.dest('www/lang')))
 
 // Copies a dependancy libraries from node_modules to the vendor directory
 tasks.push('vendor')
@@ -80,8 +80,8 @@ gulp.task('vendor', () => {
 	]
 	for (let path of paths) {
 		const split = path.split('/'),
-			dest = 'www/js/vendor/' + split[split.length-1]
-		fs.copySync("node_modules/" + path, dest, {clobber: true})
+			dest = 'www/js/vendor/' + split[split.length - 1]
+		fs.copySync("node_modules/" + path, dest, { clobber: true })
 	}
 })
 
@@ -89,7 +89,7 @@ tasks.push('polyfill')
 gulp.task('polyfill', () => {
 	const path = 'client/polyfill.js',
 		dest = 'www/js/scripts/polyfill.js'
-	fs.copySync(path, dest, {clobber: true})
+	fs.copySync(path, dest, { clobber: true })
 })
 
 compileVendor('fetch', 'node_modules/whatwg-fetch/fetch.js')
@@ -104,7 +104,7 @@ function buildClient() {
 	gulp.task(name, () =>
 		gulp.src(path)
 		.pipe(sourcemaps.init())
-		.pipe(ts(tsProject))
+		.pipe(tsProject())
 		.on('error', handleError)
 		.pipe(sourcemaps.write('maps'))
 		.pipe(gulp.dest('www/js/es6')))
@@ -140,7 +140,7 @@ function createTask(name, path, task) {
 function compileVendor(name, path) {
 	createTask(name, path, src =>
 		src
-		.pipe(rename({basename: name}))
+		.pipe(rename({ basename: name }))
 		.pipe(sourcemaps.init())
 		.pipe(uglify())
 		.pipe(sourcemaps.write('maps'))
