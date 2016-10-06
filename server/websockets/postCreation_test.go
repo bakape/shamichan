@@ -397,6 +397,7 @@ func TestPostCreation(t *testing.T) {
 		Editing:     true,
 		ID:          6,
 		OP:          1,
+		Board:       "a",
 		Time:        then,
 		LastUpdated: then,
 		Body:        "a",

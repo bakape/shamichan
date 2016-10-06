@@ -191,6 +191,7 @@ func insertPost(data []byte, c *Client) error {
 	post.Body = req.Body
 
 	post.OP = sync.OP
+	post.Board = sync.Board
 	post.ID, err = db.ReservePostID()
 	if err != nil {
 		return err
