@@ -48,7 +48,7 @@ func synchronise(data []byte, c *Client) error {
 // client its ID.
 func syncToBoard(board string, c *Client) error {
 	registerSync(board, 0, c)
-	return c.sendMessage(MessageSynchronise, 0)
+	return c.sendMessage(MessageSynchronise, map[string]string{})
 }
 
 // Register the client with the central client storage datastructure

@@ -1,11 +1,12 @@
 // Handles Websocket connectivity and messaging
 
 import FSM from './fsm'
-import {debug, syncCounter, setSyncCounter, page} from './state'
-import {sync as lang} from './lang'
-import {write} from './render'
-import {authenticate} from './mod/login'
-import {handleError} from "./json"
+import { debug, page } from './state'
+import { sync as lang } from './lang'
+import { write } from './render'
+import { authenticate } from './mod/login'
+import { PostData } from "./posts/models"
+import { insertPost } from "./client"
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server
@@ -60,10 +61,10 @@ export type MessageHandler = (msg: {}) => void
 
 // Websocket message handlers. Each handler responds to its distinct message
 // type.
-export const handlers: {[type: number]: MessageHandler} = {}
+export const handlers: { [type: number]: MessageHandler } = {}
 
 // Websocket connection and syncronisation with server states
-const enum syncStatus {disconnected, connecting, syncing, synced, desynced}
+const enum syncStatus { disconnected, connecting, syncing, synced, desynced }
 
 // States of the connection finite state machine
 export const enum connState {
@@ -80,8 +81,7 @@ export const connSM = new FSM<connState, connEvent>(connState.loading)
 
 let socket: WebSocket,
 	attempts: number,
-	attemptTimer: number,
-	buffer: string[] = []
+	attemptTimer: number
 
 const syncEl = document.getElementById('sync')
 const path =
@@ -157,15 +157,8 @@ function onMessage(data: string, extracted: boolean) {
 	// First two charecters of a message define its type
 	const type = parseInt(data.slice(0, 2))
 
-	// Buffer any messages before a potential backlog fetch is done to maintain
-	// original order.
-	if (connSM.state === connState.syncing && type !== message.synchronise) {
-		buffer.push(data)
-		return
-	}
-
 	if (debug) {
-		console.log(extracted ? ">>" : ">" , data)
+		console.log(extracted ? ">>" : ">", data)
 	}
 
 	// Split several concatenated messages
@@ -178,12 +171,6 @@ function onMessage(data: string, extracted: boolean) {
 
 	const handler = handlers[type]
 	if (handler) {
-		// Message was written to replication log. Increment syncronisation
-		// counter.
-		if (type > 1 && type < 30) {
-			setSyncCounter(syncCounter + 1)
-		}
-
 		handler(JSON.parse(data.slice(2)))
 	}
 }
@@ -258,26 +245,13 @@ for (let state of [connState.connecting, connState.reconnecting]) {
 
 // Syncronise to the server and start receiving updates on the apropriate
 // channel. If there are any missed meessages, fetch them.
-handlers[message.synchronise] = async (ctr: number) => {
-	// In case of user-induced page navigation races
-	buffer = []
-
-	if (page.thread && syncCounter !== ctr) {
-		const url = `/json/backlog/${page.thread}/${syncCounter}/${ctr}`,
-			res = await fetch(url)
-		await handleError(res)
-		const backlog = await res.text()
-		connSM.feed(connEvent.sync)
-		onMessage(backlog, false)
-
-		// Process all buffered messages
-		for (let msg of buffer) {
-			onMessage(msg, false)
+handlers[message.synchronise] = (backlog: { [id: number]: PostData }) => {
+	if (page.thread) {
+		for (let id in backlog) {
+			insertPost(backlog[id])
 		}
-		buffer = []
-	} else {
-		connSM.feed(connEvent.sync)
 	}
+	connSM.feed(connEvent.sync)
 }
 
 connSM.act(connState.syncing, connEvent.sync, () => {
@@ -306,7 +280,7 @@ connSM.act(connState.dropped, connEvent.retry, () => {
 	setTimeout(() =>
 		connSM.state === connState.reconnecting
 		&& renderStatus(syncStatus.connecting)
-	, 100)
+		, 100)
 	return connState.reconnecting
 })
 

@@ -42,10 +42,6 @@ func TestStreamUpdates(t *testing.T) {
 		OP:          1,
 		LastUpdated: time.Now().Unix(),
 	}
-	assertInsert(t, "posts", types.DatabasePost{
-		Post: post,
-		Log:  [][]byte{},
-	})
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -54,6 +50,10 @@ func TestStreamUpdates(t *testing.T) {
 	defer feeds.Clear()
 
 	assertMessage(t, wcl, "30{}")
+	assertInsert(t, "posts", types.DatabasePost{
+		Post: post,
+		Log:  [][]byte{},
+	})
 	assertMessage(t, wcl, encodeMessage(t, MessageInsertPost, post))
 
 	q := db.FindPost(1).Update(map[string]interface{}{

@@ -53,7 +53,7 @@ func TestSyncToBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer Clients.Clear()
-	assertMessage(t, wcl, `300`)
+	assertMessage(t, wcl, `30{}`)
 }
 
 func TestRegisterSync(t *testing.T) {

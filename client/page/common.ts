@@ -1,6 +1,6 @@
 import {makeFrag, escape, hashString, on} from '../util'
 import {fetchJSON, fetchBoarConfigs} from "../json"
-import {PageState, boardConfig, posts, setSyncCounter, page} from '../state'
+import {PageState, boardConfig, posts, page} from '../state'
 import renderThread from './thread'
 import renderBoard from './board'
 import {ThreadData} from '../posts/models'
@@ -36,13 +36,13 @@ export default async function (
 
 	await ready
 	boardConfig.replaceWith(await conf)
-	setSyncCounter((data as ThreadData).logCtr || (data as BoardData).ctr || 0)
 	posts.clear()
 
 	if (thread) {
 		renderThread(data as ThreadData)
 	} else {
-		renderBoard((data as BoardData).threads)
+		const {threads, ctr} = data as BoardData
+		renderBoard(threads, ctr)
 	}
 
 	read(() => {
