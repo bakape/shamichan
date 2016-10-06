@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -62,7 +63,7 @@ func TestVerifyVersion(t *testing.T) {
 
 	// Incompatible DB version
 	err := verifyDBVersion()
-	if fmt.Sprint(err) != `incompatible RethinkDB database version: 0` {
+	if fmt.Sprint(err) != `incompatible database version: 0` {
 		t.Errorf("unexpected error: %s", err)
 	}
 }
@@ -202,4 +203,83 @@ func TestUpgrade14to15(t *testing.T) {
 			t.Fatalf("invalid timestamp: %v", created)
 		}
 	})
+}
+
+func TestUpgrade15to16(t *testing.T) {
+	assertTableClear(t, "threads")
+	if err := Write(r.TableDrop("posts")); err != nil {
+		t.Fatal(err)
+	}
+	assertInsert(t, "threads", map[string]interface{}{
+		"id":    11,
+		"board": "a",
+		"log":   []string{"some", "shit"},
+		"posts": map[string]map[string]interface{}{
+			"11": {
+				"id":   11,
+				"body": "foo",
+			},
+			"12": {
+				"id":   12,
+				"body": "bar",
+			},
+		},
+	})
+
+	stdThreads := []types.DatabaseThread{
+		{
+			ID:    11,
+			Board: "a",
+		},
+	}
+	now := time.Now().Unix()
+	stdPosts := []types.DatabasePost{
+		{
+			Post: types.Post{
+				ID:    11,
+				OP:    11,
+				Board: "a",
+				Body:  "foo",
+			},
+			Log: [][]byte{},
+		},
+		{
+			Post: types.Post{
+				ID:    12,
+				OP:    11,
+				Board: "a",
+				Body:  "bar",
+			},
+			Log: [][]byte{},
+		},
+	}
+
+	if err := upgrade15to16(); err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		threads []types.DatabaseThread
+		posts   []types.DatabasePost
+	)
+	if err := All(r.Table("threads"), &threads); err != nil {
+		t.Fatal(err)
+	}
+	if err := All(r.Table("posts"), &posts); err != nil {
+		t.Fatal(err)
+	}
+
+	assertDeepEquals(t, threads, stdThreads)
+
+	// Assert and normalize timestamp
+	for _, p := range posts {
+		if p.LastUpdated > now-30 {
+			t.Errorf("unexpected timestamp: %d", p.LastUpdated)
+		}
+	}
+	then := posts[0].LastUpdated
+	stdPosts[0].LastUpdated = then
+	stdPosts[1].LastUpdated = then
+
+	assertDeepEquals(t, posts, stdPosts)
 }

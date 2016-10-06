@@ -46,6 +46,16 @@ func Write(query r.Term) error {
 	return err
 }
 
+// WriteAll executes passed write queries in order. Returns on first error.
+func WriteAll(qs []r.Term) error {
+		for _, q := range qs {
+		if err := Write(q); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // One writes the query result into the target pointer or throws an error
 func One(query r.Term, res interface{}) error {
 	c, err := query.Run(RSession)
