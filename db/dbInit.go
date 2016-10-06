@@ -210,6 +210,9 @@ func upgrade15to16() error {
 			}),
 		// Delete old table
 		r.TableDrop("threads_old"),
+		r.Table("main").Get("info").Update(map[string]int{
+			"dbVersion": 16,
+		}),
 	)
 	if err := WriteAll(qs); err != nil {
 		return err
