@@ -21,9 +21,7 @@ func TestOldFeedClosing(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	if err := feeds.Add(1, cl); err != nil {
-		t.Fatal(err)
-	}
+	feeds.Add <- subRequest{1, cl}
 	defer feeds.Clear()
 
 	cl.feedID = 1

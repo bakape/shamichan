@@ -173,7 +173,7 @@ func (c *Client) listenerLoop() error {
 func (c *Client) closeConnections(err error) error {
 	// Close update feed, if any
 	if c.feedID != 0 {
-		feeds.Remove(c.feedID, c)
+		feeds.Remove <- subRequest{c.feedID, c}
 		c.feedID = 0
 	}
 

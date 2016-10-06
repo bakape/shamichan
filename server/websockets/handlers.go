@@ -32,6 +32,7 @@ const (
 	MessageCommand
 	MessageInsertImage
 	MessageSpoiler
+	MessageDelete
 )
 
 // >= 30 are miscelenious and do not write to post models
@@ -78,13 +79,13 @@ var (
 		MessageChangePassword: changePassword,
 		MessageConfigServer:   configServer,
 		MessageCreateBoard:    createBoard,
-		// MessageInsertThread:   insertThread,
-		// MessageAppend:         appendRune,
-		// MessageBackspace:      backspace,
-		// MessageClosePost:      closePost,
-		// MessageSplice:         spliceText,
-		// MessageInsertPost:     insertPost,
-		// MessageInsertImage:    insertImage,
+		MessageInsertThread:   insertThread,
+		MessageAppend:         appendRune,
+		MessageBackspace:      backspace,
+		MessageClosePost:      closePost,
+		MessageSplice:         spliceText,
+		MessageInsertPost:     insertPost,
+		MessageInsertImage:    insertImage,
 	}
 )
 

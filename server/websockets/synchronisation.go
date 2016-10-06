@@ -25,7 +25,7 @@ type syncRequest struct {
 func synchronise(data []byte, c *Client) error {
 	// Unsub from previous update feed, if any
 	if c.feedID != 0 {
-		feeds.Remove(c.feedID, c)
+		feeds.Remove <- subRequest{c.feedID, c}
 		c.feedID = 0
 	}
 
@@ -76,9 +76,7 @@ func syncToThread(board string, thread int64, c *Client) error {
 	}
 
 	registerSync(board, thread, c)
-	if err := feeds.Add(thread, c); err != nil {
-		return err
-	}
+	feeds.Add <- subRequest{thread, c}
 
 	return nil
 }
