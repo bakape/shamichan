@@ -58,9 +58,11 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 	}
 }
 
-// Log an error together with the client's IP
+// Log an error together with the client's IP and stack trace
 func logError(r *http.Request, err interface{}) {
-	log.Printf("server: %s: %s\n%s", auth.GetIP(r), err, debug.Stack())
+	if !isTest { // Do not polute test output with logs
+		log.Printf("server: %s: %s\n%s", auth.GetIP(r), err, debug.Stack())
+	}
 }
 
 // Set HTTP headers to the response object

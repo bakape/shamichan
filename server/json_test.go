@@ -352,6 +352,17 @@ func TestSpoilerImage(t *testing.T) {
 				},
 			},
 		},
+		{
+			Password: hash,
+			Post: types.Post{
+				ID: 4,
+				Image: &types.Image{
+					ImageCommon: types.ImageCommon{
+						SHA1: "123",
+					},
+				},
+			},
+		},
 	})
 
 	cases := [...]struct {
@@ -362,9 +373,9 @@ func TestSpoilerImage(t *testing.T) {
 		spoilered bool
 	}{
 		{"no image", 2, password, 400, false},
-		{"wrong password", 1, "122", 403, false},
+		{"wrong password", 4, "122", 403, false},
 		{"success", 1, password, 200, true},
-		{"already spoilerd", 1, password, 200, true},
+		{"already spoilered", 3, password, 200, true},
 	}
 
 	for i := range cases {

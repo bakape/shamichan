@@ -29,6 +29,8 @@ var (
 	// Defines, if all trafic should be piped through a gzip compression
 	// -decompression handler
 	enableGzip bool
+
+	isTest bool
 )
 
 // Used for overriding during tests

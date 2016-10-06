@@ -16,6 +16,7 @@ import (
 var router http.Handler
 
 func init() {
+	isTest = true
 	router = createRouter()
 	webRoot = "testdata"
 	imageWebRoot = "testdata"
