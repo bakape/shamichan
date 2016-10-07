@@ -412,3 +412,16 @@ func TestSpoilerImage(t *testing.T) {
 		})
 	}
 }
+
+func TestServeBoardCounters(t *testing.T) {
+	assertTableClear(t, "main")
+	assertInsert(t, "main", map[string]interface{}{
+		"id": "boardCtrs",
+		"a":  1,
+		"c":  2,
+	})
+
+	rec, req := newPair("/json/boardCounters")
+	router.ServeHTTP(rec, req)
+	assertBody(t, rec, `{"a":1,"c":2}`)
+}

@@ -11,8 +11,8 @@ import (
 )
 
 // Serves the standard HTML for desktop or mobile pages
-func serveIndexTemplate(res http.ResponseWriter, req *http.Request) {
-	isMobile := user_agent.New(req.UserAgent()).Mobile()
+func serveIndexTemplate(w http.ResponseWriter, r *http.Request) {
+	isMobile := user_agent.New(r.UserAgent()).Mobile()
 	var template templates.Store
 	if isMobile {
 		template = templates.Get("mobile")
@@ -23,11 +23,20 @@ func serveIndexTemplate(res http.ResponseWriter, req *http.Request) {
 	if isMobile {
 		etag += "-mobile"
 	}
-	if !pageEtag(res, req, etag) {
+
+	// If etags match, no need to rerender
+	if checkClientEtag(w, r, etag) {
 		return
 	}
-	res.Header().Set("Content-Type", "text/html")
-	writeData(res, req, template.HTML)
+
+	head := w.Header()
+	for key, val := range vanillaHeaders {
+		head.Set(key, val)
+	}
+	head.Set("ETag", etag)
+	head.Set("Content-Type", "text/html")
+
+	writeData(w, r, template.HTML)
 }
 
 // Asserts board exists and renders the index template

@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	errNoImage = errors.New("post has no image")
+	errNoImage       = errors.New("post has no image")
+	getBoardCounters = db.GetMain("boardCtrs").Without("id")
 )
 
 // Request to spoiler an already allocated image that the sender has created
@@ -25,32 +26,11 @@ type spoilerRequest struct {
 	Password string
 }
 
-// Serve JSON retrieved from the database and handle ETag-related functionality
+// Marshal input data to JSON an write to client
 func serveJSON(
-	res http.ResponseWriter,
-	req *http.Request,
-	data []byte,
-	err error,
-) {
-	if err != nil {
-		text500(res, req, err)
-		return
-	}
-
-	etag := util.HashBuffer(data)
-	if checkClientEtag(res, req, etag) {
-		return
-	}
-	setHeaders(res, etag)
-	setJSONCType(res)
-	writeData(res, req, data)
-}
-
-// Convert input data to JSON an write to client
-func writeJSON(
 	w http.ResponseWriter,
 	r *http.Request,
-	setEtag bool,
+	etag string,
 	data interface{},
 ) {
 	buf, err := json.Marshal(data)
@@ -58,15 +38,33 @@ func writeJSON(
 		text500(w, r, err)
 		return
 	}
-	setJSONCType(w)
-	if setEtag {
-		w.Header().Set("ETag", util.HashBuffer(buf))
-	}
-	writeData(w, r, buf)
+	writeJSON(w, r, etag, buf)
 }
 
-func setJSONCType(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
+// Write data as JSON to the client. If etag is "" generate a strong etag by
+// hashing the resulting buffer and perorm a check against the "If-None-Match"
+// header. If etag is set, assume this check has already been done.
+func writeJSON(
+	w http.ResponseWriter,
+	r *http.Request,
+	etag string,
+	buf []byte,
+) {
+	if etag == "" {
+		etag = util.HashBuffer(buf)
+		if checkClientEtag(w, r, etag) {
+			return
+		}
+	}
+
+	head := w.Header()
+	for key, val := range vanillaHeaders {
+		head.Set(key, val)
+	}
+	head.Set("ETag", etag)
+	head.Set("Content-Type", "application/json")
+
+	writeData(w, r, buf)
 }
 
 // Validate the client's last N posts to display setting
@@ -83,13 +81,11 @@ func detectLastN(req *http.Request) int {
 
 // Serve public configuration information as JSON
 func serveConfigs(w http.ResponseWriter, r *http.Request) {
-	json, etag := config.GetClient()
+	buf, etag := config.GetClient()
 	if checkClientEtag(w, r, etag) {
 		return
 	}
-	setHeaders(w, etag)
-	setJSONCType(w)
-	writeData(w, r, json)
+	writeJSON(w, r, etag, buf)
 }
 
 // Serve a single post as JSON
@@ -106,8 +102,7 @@ func servePost(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	data, err := json.Marshal(post)
-	serveJSON(w, r, data, err)
+	serveJSON(w, r, "", post)
 }
 
 func respondToJSONError(w http.ResponseWriter, req *http.Request, err error) {
@@ -126,7 +121,7 @@ func serveBoardConfigs(
 ) {
 	board := p["board"]
 	if board == "all" {
-		serveJSON(w, r, config.AllBoardConfigs, nil)
+		writeJSON(w, r, "", config.AllBoardConfigs)
 		return
 	}
 	if !auth.IsNonMetaBoard(board) {
@@ -141,7 +136,11 @@ func serveBoardConfigs(
 	}
 
 	data, err := conf.MarshalPublicJSON()
-	serveJSON(w, r, data, err)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	writeJSON(w, r, "", data)
 }
 
 // Serves thread page JSON
@@ -168,7 +167,8 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		text500(w, r, err)
 		return
 	}
-	if !pageEtag(w, r, etagStart(counter)) {
+	etag := etagStart(counter)
+	if checkClientEtag(w, r, etag) {
 		return
 	}
 
@@ -177,8 +177,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		respondToJSONError(w, r, err)
 		return
 	}
-
-	writeJSON(w, r, false, data)
+	serveJSON(w, r, etag, data)
 }
 
 // Serves JSON for the "/all/" meta-board, that contains threads from all boards
@@ -188,7 +187,8 @@ func allBoardJSON(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 		return
 	}
-	if !pageEtag(w, r, etagStart(counter)) {
+	etag := etagStart(counter)
+	if checkClientEtag(w, r, etag) {
 		return
 	}
 
@@ -197,7 +197,7 @@ func allBoardJSON(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 		return
 	}
-	writeJSON(w, r, false, data)
+	serveJSON(w, r, etag, data)
 }
 
 // Serves board page JSON
@@ -207,20 +207,23 @@ func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		text404(w)
 		return
 	}
+
 	counter, err := db.BoardCounter(board)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	if !pageEtag(w, r, etagStart(counter)) {
+	etag := etagStart(counter)
+	if checkClientEtag(w, r, etag) {
 		return
 	}
+
 	data, err := db.GetBoard(board)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	writeJSON(w, r, false, data)
+	serveJSON(w, r, etag, data)
 }
 
 // Serve a JSON array of all available boards and their titles
@@ -239,8 +242,7 @@ func serveBoardList(res http.ResponseWriter, req *http.Request) {
 	if list == nil { // Ensure always serving an array
 		list = boardEntries{}
 	}
-	data, err := json.Marshal(list)
-	serveJSON(res, req, data, err)
+	serveJSON(res, req, "", list)
 }
 
 // Fetch an array of boards a certain user holds a certion position on
@@ -269,7 +271,7 @@ func serveStaffPositions(
 		boards = []string{}
 	}
 
-	writeJSON(res, req, true, boards)
+	serveJSON(res, req, "", boards)
 }
 
 // Spoiler an already allocated image
@@ -315,4 +317,15 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 		text500(w, req, err)
 		return
 	}
+}
+
+// Serve board progress counters. If a board's key is not present, the client
+// must assume it to be zero.
+func serveBoardCounters(w http.ResponseWriter, r *http.Request) {
+	var ctrs map[string]uint64
+	if err := db.One(getBoardCounters, &ctrs); err != nil {
+		text500(w, r, err)
+		return
+	}
+	serveJSON(w, r, "", ctrs)
 }

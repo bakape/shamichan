@@ -94,42 +94,6 @@ func dummyLog(n int) [][]byte {
 	return log
 }
 
-func TestSetHeaders(t *testing.T) {
-	t.Parallel()
-
-	rec := httptest.NewRecorder()
-	const etag = "foo"
-	headers := map[string]string{
-		"X-Frame-Options": "sameorigin",
-		"Cache-Control":   "max-age=0, must-revalidate",
-		"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
-		"ETag":            etag,
-	}
-	setHeaders(rec, etag)
-	assertHeaders(t, rec, headers)
-}
-
-func TestCompareEtag(t *testing.T) {
-	t.Parallel()
-
-	rec, req := newPair("/")
-	const etag = "foo"
-	req.Header.Set("If-None-Match", etag)
-	if pageEtag(rec, req, etag) {
-		t.Error("unexpected match")
-	}
-
-	rec, req = newPair("/")
-	headers := map[string]string{
-		"ETag":          etag,
-		"Cache-Control": "max-age=0, must-revalidate",
-	}
-	if !pageEtag(rec, req, etag) {
-		t.Error("match expected")
-	}
-	assertHeaders(t, rec, headers)
-}
-
 func TestText404(t *testing.T) {
 	t.Parallel()
 

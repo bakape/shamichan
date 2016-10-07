@@ -19,17 +19,6 @@ var vanillaHeaders = map[string]string{
 	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
 }
 
-// Build an etag for HTML or JSON pages and check if it matches the one provided
-// by the client. If yes, send 304 and return false, otherwise set headers and
-// return true.
-func pageEtag(w http.ResponseWriter, r *http.Request, etag string) bool {
-	// If etags match, no need to rerender
-	if checkClientEtag(w, r, etag) {
-		return false
-	}
-	setHeaders(w, etag)
-	return true
-}
 
 // Build the main part of the etag
 func etagStart(counter int64) string {
@@ -65,14 +54,6 @@ func logError(r *http.Request, err interface{}) {
 	}
 }
 
-// Set HTTP headers to the response object
-func setHeaders(w http.ResponseWriter, etag string) {
-	head := w.Header()
-	for key, val := range vanillaHeaders {
-		head.Set(key, val)
-	}
-	head.Set("ETag", etag)
-}
 
 // Text-only 404 response
 func text404(w http.ResponseWriter) {

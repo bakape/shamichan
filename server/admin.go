@@ -188,5 +188,6 @@ func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 		return
 	}
-	writeJSON(w, r, true, conf)
+
+	serveJSON(w, r, "", conf)
 }
