@@ -6,14 +6,13 @@ import { start as connect } from './connection'
 import { open } from './db'
 import loadPage from './page/common'
 import BoardNavigation from './page/boardNavigation'
-import { exec } from './defer'
+import { exec, init } from './defer'
 import bindThreadCreation from './posts/posting/threadCreation'
-import { initOptions } from './options'
 import bindEtc from './etc'
 import bindOptionsListeners from "./options/loop"
 import bindShortcuts from "./keyboard"
 import { loadModule } from "./util"
-import bindScroll, { checkBottom } from "./scroll"
+import { checkBottom } from "./scroll"
 import bindMenu from "./posts/menu"
 
 // Clear cookies, if versions mismatch
@@ -36,22 +35,21 @@ async function start() {
 	const pageLoader = loadPage(page, ready)
 
 	initTemplates()
-	initOptions()
 	await open()
 	await loadFromDB()
+	init()
 	renderPage()
 	new BoardNavigation()
 	bindThreadCreation()
 	bindEtc()
 	bindOptionsListeners()
 	bindShortcuts()
-	bindScroll()
 	bindMenu()
-	exec()
 	await pageLoader
 	read(() =>
 		checkBottom())
 	connect()
+	exec()
 	displayLoading(false)
 
 	// Conditionally load desktop-only modules

@@ -1,13 +1,14 @@
 // Contains the FSM and core API for accessing the post authoring system
 
-import {FormModel, ReplyFormModel} from "./model"
-import {Post} from "../models"
-import {FormView} from "./view"
+import { FormModel, ReplyFormModel } from "./model"
+import { Post } from "../models"
+import { FormView } from "./view"
 import FSM from "../../fsm"
-import {connState, connSM} from "../../connection"
-import {write, $threads} from "../../render"
-import {posts as lang} from "../../lang"
-import {on, getClosestID} from "../../util"
+import { connState, connSM } from "../../connection"
+import { write, $threads } from "../../render"
+import { posts as lang } from "../../lang"
+import { on, getClosestID } from "../../util"
+import { deferInit } from "../../defer"
 
 // Sent to the FSM via the "open" and "hijack" events
 export type FormMessage = {
@@ -67,104 +68,106 @@ function quotePost(event: Event) {
 	postModel.addReference(getClosestID(event.target as Element))
 }
 
-// Synchronise with connection state machine
-connSM.on(connState.synced, postSM.feeder(postEvent.sync))
-connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
-connSM.on(connState.desynced, postSM.feeder(postEvent.error))
+deferInit(() => {
+	// Synchronise with connection state machine
+	connSM.on(connState.synced, postSM.feeder(postEvent.sync))
+	connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
+	connSM.on(connState.desynced, postSM.feeder(postEvent.error))
 
-// Initial synchronisation
-postSM.act(postState.none, postEvent.sync, () =>
-	postState.ready)
+	// Initial synchronisation
+	postSM.act(postState.none, postEvent.sync, () =>
+		postState.ready)
 
-// Set up client to create new posts
-postSM.on(postState.ready, () =>
-	(window.onbeforeunload = postForm = postModel = null,
-	stylePostControls(el =>
-		(el.style.display = "",
-		el.classList.remove("disabled")))))
+	// Set up client to create new posts
+	postSM.on(postState.ready, () =>
+		(window.onbeforeunload = postForm = postModel = null,
+			stylePostControls(el =>
+				(el.style.display = "",
+					el.classList.remove("disabled")))))
 
-// Handle connection loss
-postSM.wildAct(postEvent.disconnect, () => {
-	switch (postSM.state) {
-	case postState.alloc:       // Pause current allocated post
-		return postState.halted
-	case postState.draft:       // Clear any unallocated postForm
-		postForm.remove()
-		postModel = postForm = null
+	// Handle connection loss
+	postSM.wildAct(postEvent.disconnect, () => {
+		switch (postSM.state) {
+			case postState.alloc:       // Pause current allocated post
+				return postState.halted
+			case postState.draft:       // Clear any unallocated postForm
+				postForm.remove()
+				postModel = postForm = null
+				stylePostControls(el =>
+					el.style.display = "")
+		}
+
 		stylePostControls(el =>
-			el.style.display = "")
-	}
+			el.classList.add("disabled"))
 
-	stylePostControls(el =>
-		el.classList.add("disabled"))
+		return postState.locked
+	})
 
-	return postState.locked
-})
+	// Regained conectitvity, when post is open
+	postSM.act(postState.halted, postEvent.sync, () =>
+		(postModel.flushBuffer(),
+			postState.alloc))
 
-// Regained conectitvity, when post is open
-postSM.act(postState.halted, postEvent.sync, () =>
-	(postModel.flushBuffer(),
-	postState.alloc))
+	// Regained connectivity, when no post open
+	postSM.act(postState.locked, postEvent.sync, () =>
+		postState.ready)
 
-// Regained connectivity, when no post open
-postSM.act(postState.locked, postEvent.sync, () =>
-	postState.ready)
+	// Handle critical errors
+	postSM.wildAct(postEvent.error, () =>
+		(stylePostControls(el =>
+			el.classList.add("errored")),
+			postForm && postForm.renderError(),
+			window.onbeforeunload = null,
+			postState.errored))
 
-// Handle critical errors
-postSM.wildAct(postEvent.error, () =>
-	(stylePostControls(el =>
-		el.classList.add("errored")),
-	postForm && postForm.renderError(),
-	window.onbeforeunload = null,
-	postState.errored))
+	// Reset state during page navigation
+	postSM.wildAct(postEvent.reset, () =>
+		postState.ready)
 
-// Reset state during page navigation
-postSM.wildAct(postEvent.reset, () =>
-	postState.ready)
+	// Transition a draft post into allocated state. All the logic for this is
+	// model- and view-side.
+	postSM.act(postState.draft, postEvent.alloc, () =>
+		postState.alloc)
 
-// Transition a draft post into allocated state. All the logic for this is
-// model- and view-side.
-postSM.act(postState.draft, postEvent.alloc, () =>
-	postState.alloc)
+	// Hijack and existing post and replace with post form and model
+	postSM.act(postState.ready, postEvent.hijack, ({view, model}: FormMessage) =>
+		(postModel = model,
+			postForm = view,
+			postState.alloc))
 
-// Hijack and existing post and replace with post form and model
-postSM.act(postState.ready, postEvent.hijack, ({view, model}: FormMessage) =>
-	(postModel = model,
-	postForm = view,
-	postState.alloc))
+	postSM.on(postState.alloc, bindNagging)
 
-postSM.on(postState.alloc, bindNagging)
+	// Open a new post creation form, if none open
+	postSM.act(postState.ready, postEvent.open, () =>
+		(postModel = new ReplyFormModel(),
+			postForm = new FormView(postModel, false),
+			postState.draft))
 
-// Open a new post creation form, if none open
-postSM.act(postState.ready, postEvent.open, () =>
-	(postModel = new ReplyFormModel(),
-	postForm = new FormView(postModel, false),
-	postState.draft))
+	// Hide post controls, when a postForm is open
+	const hidePostControls = () =>
+		stylePostControls(el =>
+			el.style.display = "none")
+	postSM.on(postState.draft, hidePostControls)
+	postSM.on(postState.alloc, hidePostControls)
 
-// Hide post controls, when a postForm is open
-const hidePostControls = () =>
-	stylePostControls(el =>
-		el.style.display = "none")
-postSM.on(postState.draft, hidePostControls)
-postSM.on(postState.alloc, hidePostControls)
+	// Close unallocated draft
+	postSM.act(postState.draft, postEvent.done, () =>
+		(postForm.remove(),
+			postState.ready))
 
-// Close unallocated draft
-postSM.act(postState.draft, postEvent.done, () =>
-	(postForm.remove(),
-	postState.ready))
+	// Close allocated post
+	postSM.act(postState.alloc, postEvent.done, () =>
+		(postModel.commitClose(),
+			postState.ready))
 
-// Close allocated post
-postSM.act(postState.alloc, postEvent.done, () =>
-	(postModel.commitClose(),
-	postState.ready))
+	// Handle clicks on the [Reply] button
+	on($threads, "click", postSM.feeder(postEvent.open), {
+		selector: "aside.posting a",
+	})
 
-// Handle clicks on the [Reply] button
-on($threads, "click", postSM.feeder(postEvent.open), {
-	selector: "aside.posting a",
-})
-
-// Handle clicks on post qouting links
-on($threads, "click", quotePost, {
-	selector: "a.quote",
-	passive: true,
+	// Handle clicks on post qouting links
+	on($threads, "click", quotePost, {
+		selector: "a.quote",
+		passive: true,
+	})
 })

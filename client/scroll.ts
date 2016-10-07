@@ -1,8 +1,9 @@
 // Various page scrolling aids
 
-import {page} from "./state"
+import { page } from "./state"
 import options from "./options"
-import {$threads} from "./render"
+import { $threads } from "./render"
+import { deferInit } from "./defer"
 
 const $banner = document.getElementById("banner")
 
@@ -75,7 +76,7 @@ function elExists(el: Element): boolean {
 
 // Return element position dimentions against the viewport, if the element
 // is within the viewport
-function topDistance(el: Element, skipCheck: boolean): number|null {
+function topDistance(el: Element, skipCheck: boolean): number | null {
 	const {top} = el.getBoundingClientRect()
 	if (skipCheck || (top >= 0 && top < window.innerHeight)) {
 		return top
@@ -105,7 +106,7 @@ function referenceDistance(): number {
 	}
 }
 
-export default function init() {
+deferInit(() => {
 	// Check, if we are at page bottom on each scroll
 	$threads.addEventListener("scroll", checkBottom, {
 		passive: true,
@@ -120,4 +121,4 @@ export default function init() {
 			atBottom = false
 		}
 	})
-}
+})

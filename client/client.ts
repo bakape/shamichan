@@ -3,11 +3,12 @@
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts } from './state'
 import { Post, PostLinks, Command, PostData, ImageData } from './posts/models'
-import { ReplyFormModel , OPFormModel } from "./posts/posting/model"
+import { ReplyFormModel, OPFormModel } from "./posts/posting/model"
 import PostView from "./posts/view"
 import { $threadContainer } from "./page/thread"
 import { write } from "./render"
 import { postAdded } from "./tab"
+import { deferInit } from "./defer"
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -68,52 +69,54 @@ export function insertPost(data: PostData) {
 	}
 }
 
-handlers[message.invalid] = (msg: string) => {
+deferInit(() => {
+	handlers[message.invalid] = (msg: string) => {
 
-	// TODO: More user-frienly critical error reporting
+		// TODO: More user-frienly critical error reporting
 
-	alert(msg)
-	connSM.feed(connEvent.error)
-}
+		alert(msg)
+		connSM.feed(connEvent.error)
+	}
 
-handlers[message.insertPost] = insertPost
+	handlers[message.insertPost] = insertPost
 
-handlers[message.insertImage] = (msg: ImageMessage) =>
-	handle(msg.id, m => {
-		delete msg.id
-		m.insertImage(msg)
-	})
+	handlers[message.insertImage] = (msg: ImageMessage) =>
+		handle(msg.id, m => {
+			delete msg.id
+			m.insertImage(msg)
+		})
 
-handlers[message.spoiler] = (id: number) =>
-	handle(id, m =>
-		m.spoilerImage())
+	handlers[message.spoiler] = (id: number) =>
+		handle(id, m =>
+			m.spoilerImage())
 
-handlers[message.append] = ([id, char]: number[]) =>
-	handle(id, m =>
-		m.append(char))
+	handlers[message.append] = ([id, char]: number[]) =>
+		handle(id, m =>
+			m.append(char))
 
-handlers[message.backspace] = (id: number) =>
-	handle(id, m =>
-		m.backspace())
+	handlers[message.backspace] = (id: number) =>
+		handle(id, m =>
+			m.backspace())
 
-handlers[message.splice] = (msg: SpliceResponse) =>
-	handle(msg.id, m =>
-		m.splice(msg))
+	handlers[message.splice] = (msg: SpliceResponse) =>
+		handle(msg.id, m =>
+			m.splice(msg))
 
-handlers[message.link] = ({id, links}: LinkMessage) =>
-	handle(id, m =>
-		m.insertLink(links))
+	handlers[message.link] = ({id, links}: LinkMessage) =>
+		handle(id, m =>
+			m.insertLink(links))
 
-handlers[message.backlink] = ({id, links}: LinkMessage) =>
-	handle(id, m =>
-		m.insertBacklink(links))
+	handlers[message.backlink] = ({id, links}: LinkMessage) =>
+		handle(id, m =>
+			m.insertBacklink(links))
 
-handlers[message.command] = (msg: CommandMessage) =>
-	handle(msg.id, m => {
-		delete msg.id
-		m.insertCommand(msg)
-	})
+	handlers[message.command] = (msg: CommandMessage) =>
+		handle(msg.id, m => {
+			delete msg.id
+			m.insertCommand(msg)
+		})
 
-handlers[message.closePost] = (id: number) =>
-	handle(id, m =>
-		m.closePost())
+	handlers[message.closePost] = (id: number) =>
+		handle(id, m =>
+			m.closePost())
+})

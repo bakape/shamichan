@@ -1,9 +1,9 @@
 // User-set settings storage and change handling
 
-import {emitChanges, ChangeEmitter} from './model'
-import {OptionSpec, specs, optionType, OptionValue} from './options/specs'
+import { emitChanges, ChangeEmitter } from './model'
+import { OptionSpec, specs, optionType, OptionValue } from './options/specs'
 import OptionsPanel from './options/view'
-import {defer} from './defer'
+import { defer, deferInit } from './defer'
 
 let view: OptionsPanel
 
@@ -43,7 +43,7 @@ let options: Options
 export default options = emitChanges({} as Options)
 
 // All loaded option models
-export const models: {[key: string]: OptionModel} = {}
+export const models: { [key: string]: OptionModel } = {}
 
 // Controler for each individual option
 class OptionModel {
@@ -130,7 +130,7 @@ class OptionModel {
 }
 
 // Intialize options system
-export function initOptions() {
+deferInit(() => {
 	// Populate option model collection and central model
 	for (let spec of specs()) {
 		new OptionModel(spec)
@@ -146,4 +146,4 @@ export function initOptions() {
 
 	defer(() =>
 		view = new OptionsPanel())
-}
+})

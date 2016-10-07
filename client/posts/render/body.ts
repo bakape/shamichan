@@ -1,7 +1,8 @@
 import {config} from '../../state'
 import {renderPostLink} from './etc'
 import {PostData, PostLinks, TextState} from '../models'
-import {escape} from '../../util'
+import { escape } from '../../util'
+import { deferInit } from "../../defer"
 
 // Map of {name: url} for generating `>>>/foo/bar` type reference links
 let refTargets: {[key: string]: string}
@@ -188,8 +189,6 @@ export function genRefTargets() {
 	refTargets = targets
 }
 
-genRefTargets()
-
 // Parse internal or customly set reference URL
 function parseReference(bit: string): string {
 	const [ , extraQoutes, name] = bit.match(/^>>>(>*)\/(\w+)\/$/),
@@ -267,3 +266,5 @@ function parseCommand(bit: string, {commands, state}: PostData): string {
 	}
 	return "#" + bit
 }
+
+deferInit(genRefTargets)

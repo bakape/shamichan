@@ -2,15 +2,15 @@
 // module loops through the post models and calls the appropriate methods in
 // batches.
 
-import {posts, page} from "../state"
+import { posts, page } from "../state"
 import options from "../options"
-import {$threads, write} from "../render"
-import {fileTypes, Post} from "../posts/models"
+import { $threads, write } from "../render"
+import { fileTypes, Post } from "../posts/models"
 
 // Listen for changes on the options object and call appropriate handlers on
 // all applicable posts
 export default function assignListeners() {
-	const handlers: {[key:string]: () => void} = {
+	const handlers: { [key: string]: () => void } = {
 		workModeToggle: renderImages,
 		hideThumbs: renderImages,
 		spoilers: toggleSpoilers,

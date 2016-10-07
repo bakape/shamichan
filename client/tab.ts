@@ -1,6 +1,7 @@
 // Tab title and favicon rendering
 
-import {connSM, connState} from "./connection"
+import { connSM, connState } from "./connection"
+import { deferInit } from "./defer"
 
 const $title = document.head.querySelector("title"),
 	$favicon = document.head.querySelector("#favicon"),
@@ -36,10 +37,10 @@ export function repliedToMe() {
 // Resolve tab title and favicon
 function resolve() {
 	switch (connSM.state) {
-	case connState.desynced:
-		return apply("--- ", urlBase + "error.ico")
-	case connState.dropped:
-		return apply("--- ", discoFavicon)
+		case connState.desynced:
+			return apply("--- ", urlBase + "error.ico")
+		case connState.dropped:
+			return apply("--- ", discoFavicon)
 	}
 
 	let prefix = "",
@@ -69,31 +70,33 @@ function apply(prefix: string, favicon: string) {
 function delayedDiscoRender() {
 	setTimeout(() => {
 		switch (connSM.state) {
-		case connState.dropped:
-		case connState.desynced:
-			resolve()
+			case connState.dropped:
+			case connState.desynced:
+				resolve()
 		}
 	}, 5000)
 }
 
-// Needs to be available with no connectivity, so we download and cache it
-fetch(urlBase + "disconnected.ico")
-	.then(res =>
-		res.blob())
-	.then(blob =>
-		discoFavicon = URL.createObjectURL(blob))
+deferInit(() => {
+	// Needs to be available with no connectivity, so we download and cache it
+	fetch(urlBase + "disconnected.ico")
+		.then(res =>
+			res.blob())
+		.then(blob =>
+			discoFavicon = URL.createObjectURL(blob))
 
-// Connection change listeners
-connSM.on(connState.synced, resolve)
-for (let state of [connState.dropped, connState.desynced]) {
-	connSM.on(state, delayedDiscoRender)
-}
-
-// Reset title on tab focus
-document.addEventListener('visibilitychange', () => {
-	if (!document.hidden) {
-		unseenPosts = 0
-		unseenReplies = false
-		resolve()
+	// Connection change listeners
+	connSM.on(connState.synced, resolve)
+	for (let state of [connState.dropped, connState.desynced]) {
+		connSM.on(state, delayedDiscoRender)
 	}
+
+	// Reset title on tab focus
+	document.addEventListener('visibilitychange', () => {
+		if (!document.hidden) {
+			unseenPosts = 0
+			unseenReplies = false
+			resolve()
+		}
+	})
 })
