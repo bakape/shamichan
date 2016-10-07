@@ -1,12 +1,15 @@
 // Inter-page navigation with HTML5 history
 
-import {on} from './util'
-import {read, page, displayLoading} from './state'
+import { on } from './util'
+import { read, page, displayLoading } from './state'
 import loadPage from './page/common'
-import {synchronise} from './connection'
-import {postSM, postEvent} from "./posts/posting/main"
-import {scrollToAnchor} from "./scroll"
-import {connSM, connState} from "./connection"
+import { synchronise } from './connection'
+import { postSM, postEvent } from "./posts/posting/main"
+import { scrollToAnchor } from "./scroll"
+import { connSM, connState } from "./connection"
+import { $threads } from "./render"
+
+history.scrollRestoration = "manual"
 
 // Handle a click on any .history anchor
 function handleClick(event: KeyboardEvent) {
@@ -18,7 +21,8 @@ function handleClick(event: KeyboardEvent) {
 	const href =
 		((event.target as Element)
 			.closest("a.history") as HTMLAnchorElement)
-		.href
+			.href
+	history.replaceState($threads.scrollTop, "")
 	navigate(href, event, true).catch(alertError)
 }
 
@@ -65,7 +69,8 @@ export default async function navigate(
 	synchronise()
 
 	if (needPush) {
-		history.pushState(null, null, nextState.href)
+		scrollToAnchor()
+		history.pushState($threads.scrollTop, "", nextState.href)
 	}
 	displayLoading(false)
 }
@@ -82,7 +87,7 @@ on(document, "click", handleClick, {
 })
 
 // For back and forward history events
-window.onpopstate = (event: any) =>
-	(navigate(event.target.location.href, null, false)
-		.catch(alertError),
-	scrollToAnchor())
+window.onpopstate = e => {
+	navigate((e.target as Window).location.href, null, false).catch(alertError)
+	$threads.scrollTop = e.state || 0 // Scroll to saved position
+}

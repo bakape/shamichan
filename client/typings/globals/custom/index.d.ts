@@ -3,14 +3,14 @@ interface IDBRequest {
 }
 
 interface ChildNode {
-	after(...nodes: (Node|string)[]): void
+	after(...nodes: (Node | string)[]): void
 	before(...nodes: (Node | string)[]): void
-	replaceWith(...nodes: (Node|string)[]): void
+	replaceWith(...nodes: (Node | string)[]): void
 }
 
 interface ParentNode {
-	append(...nodes: (Node|string)[]): void
-	prepend(...nodes: (Node|string)[]): void
+	append(...nodes: (Node | string)[]): void
+	prepend(...nodes: (Node | string)[]): void
 }
 
 interface NodeSelector {
@@ -24,7 +24,7 @@ interface EventTarget {
 	addEventListener(
 		type: string,
 		handler: EventListener,
-		options?: boolean|EventListenerOptions
+		options?: boolean | EventListenerOptions
 	): void
 }
 
@@ -38,7 +38,7 @@ interface Element extends ChildNode, ParentNode {
 	addEventListener(
 		type: string,
 		handler: EventListener,
-		options?: boolean|EventListenerOptions
+		options?: boolean | EventListenerOptions
 	): void
 }
 
@@ -46,7 +46,7 @@ interface HTMLElement {
 	addEventListener(
 		type: string,
 		handler: EventListener,
-		options?: boolean|EventListenerOptions
+		options?: boolean | EventListenerOptions
 	): void
 }
 
@@ -54,7 +54,7 @@ interface Node extends ChildNode, ParentNode {
 	addEventListener(
 		type: string,
 		handler: EventListener,
-		options?: boolean|EventListenerOptions
+		options?: boolean | EventListenerOptions
 	): void
 }
 
@@ -62,6 +62,11 @@ interface Document extends ChildNode, ParentNode {
 	addEventListener(
 		type: string,
 		handler: EventListener,
-		options?: boolean|EventListenerOptions
+		options?: boolean | EventListenerOptions
 	): void
 }
+
+interface History {
+	scrollRestoration: "auto" | "manual"
+}
+
