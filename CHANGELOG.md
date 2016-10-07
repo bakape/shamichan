@@ -3,13 +3,38 @@ All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
 ##vNext
+* Warning:
+	- An automatic database upgrade will be performed. Make sure only one
+	instance of meguca is running at that time. It is also recommended to back
+	up the database before upgrading.
 * Add:
 	- Highlighting of posts qouting you
 	- MP3 uploads even without cover art
 	- Board rule display widget
 	- Board notice display widget
+	- Catalog thread sorting and filtering
+	- Manual catalog refreshing
+	- Automatic catalog refreshing, when tab is hidden
+	- Automatically delete boards that have not had any posts for 7 days
+	- Make rule for updating project and dependancies
+	- Ukranian and Slovak language packs
+	- Ability to spoiler images after allocation
 * Change:
-	- Navigatable board selection modal
+	- Navigatable board selection sidebar
+	- Hide successive empty newlines
+	- Batch concatenated live updates in 0.2 second intervals
+	- Don't log abnormal websocket closure errors
+* Remove:
+	- [New Thread] button from board page bottom
+	- Legacy deployment script. Superseeded by binary releases.
+	- ES5 support. All browsers are now required to support ES6 and are notified
+	to update, if feature detection fails.
+* Fix:
+	- #flip always returning false
+	- Drastically improved live update CPU and memory usage. Updates in will no
+	longer slow down as a thread gets larger.
+	- File upload attempt handling on text-only boards
+	- Etag generation on upload assets and JSON
 
 ##v2.2.0-beta - 2016-09-02
 * Add:
