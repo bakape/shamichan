@@ -1,19 +1,23 @@
-import {escape} from '../util'
-import {ThreadData, PostData, Post, OP} from '../posts/models'
-import PostView, {OPView} from '../posts/view'
-import {page, posts as postCollection, hidden} from '../state'
-import {write, $threads, importTemplate} from '../render'
+import { escape } from '../util'
+import { ThreadData, PostData, Post, OP } from '../posts/models'
+import PostView, { OPView } from '../posts/view'
+import { page, posts as postCollection, hidden } from '../state'
+import { write, $threads, importTemplate } from '../render'
 import options from "../options"
-import {setTitle} from "../tab"
-import {expandAll} from "../posts/images"
-import {images as lang} from "../lang"
-import {renderNotice} from "./common"
+import { setTitle } from "../tab"
+import { expandAll } from "../posts/images"
+import { images as lang } from "../lang"
+import { renderNotice } from "./common"
+import { fetchThread } from "../json"
 
 // Container for all rendered posts
-export let $threadContainer: Element
+export let $threadContainer: Element,
+	// Unix time of the last thread data fetch
+	fetchTime: number
 
 // Render the HTML of a thread page
 export default function renderThread(thread: ThreadData) {
+	fetchTime = Date.now()
 	const frag = importTemplate("thread")
 
 	// Apply title to header and tab
@@ -42,9 +46,9 @@ export default function renderThread(thread: ThreadData) {
 	els.push(opView.el)
 	postCollection.addOP(opModel)
 
-	for (let id in posts) {
-		if (!hidden.has(parseInt(id))) {
-			els.push(createPost(posts[id]))
+	for (let post of posts) {
+		if (!hidden.has(post.id)) {
+			els.push(createPost(post))
 		}
 	}
 	$threadContainer.append(...els)
@@ -66,4 +70,10 @@ function createPost(data: PostData): Element {
 		view = new PostView(model)
 	postCollection.add(model)
 	return view.el
+}
+
+// Refetch the contents of the current thread and rerender
+export async function refetch() {
+	const {board, thread, lastN} = page
+	renderThread(await fetchThread(board, thread, lastN))
 }

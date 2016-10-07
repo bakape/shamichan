@@ -64,7 +64,7 @@ export interface ThreadData extends PostData {
 	replyTime: number
 	subject: string
 	board: string
-	posts?: { [id: number]: PostData }
+	posts?: PostData[]
 }
 
 // Image data embedable in posts and thread hashes

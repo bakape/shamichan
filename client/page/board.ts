@@ -1,18 +1,19 @@
-import {random, escape, on} from '../util'
-import {navigation, ui, time} from '../lang'
-import {boardConfig, page} from '../state'
-import {ThreadData} from '../posts/models'
-import {renderThumbnail} from '../posts/render/image'
+import { random, escape, on } from '../util'
+import { navigation, ui, time } from '../lang'
+import { boardConfig, page } from '../state'
+import { ThreadData } from '../posts/models'
+import { renderThumbnail } from '../posts/render/image'
 import options from '../options'
-import {write, $threads, importTemplate} from '../render'
-import {setTitle} from "../tab"
-import {formatText, renderNotice, fetchBoard} from "./common"
-import {renderTime} from "../posts/render/posts"
+import { write, $threads, importTemplate } from '../render'
+import { setTitle } from "../tab"
+import { formatText, renderNotice } from "./common"
+import { renderTime } from "../posts/render/posts"
+import { fetchBoard } from "../json"
 
 type SortFunction = (a: ThreadData, b: ThreadData) => number
 
 // Thread sort functions
-const sorts: {[name: string]: SortFunction} = {
+const sorts: { [name: string]: SortFunction } = {
 	bump: (a, b) =>
 		b.bumpTime - a.bumpTime,
 	lastReply: (a, b) =>
@@ -173,7 +174,7 @@ function onSortChange(e: Event) {
 	localStorage.setItem("catalogSort", (e.target as HTMLInputElement).value)
 	const filter =
 		($threads.querySelector("input[name=search]") as HTMLInputElement)
-		.value
+			.value
 	writeThreads(renderThreads(filter, data))
 }
 

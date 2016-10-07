@@ -1,27 +1,22 @@
 // Client entry point
 
-// TODO: Remove, when proper structure done
-import * as client from './client'
-let c = client  // Prevents the compiler from removing as an unused import
-c = null
-
-import {displayLoading, loadFromDB, page, isMobile} from './state'
-import {initTemplates, read} from "./render"
-import {start as connect} from './connection'
-import {open} from './db'
+import { displayLoading, loadFromDB, page, isMobile } from './state'
+import { initTemplates, read } from "./render"
+import { start as connect } from './connection'
+import { open } from './db'
 import loadPage from './page/common'
 import BoardNavigation from './page/boardNavigation'
-import {exec} from './defer'
+import { exec } from './defer'
 import bindThreadCreation from './posts/posting/threadCreation'
-import {initOptions} from './options'
+import { initOptions } from './options'
 import bindEtc from './etc'
 import bindOptionsListeners from "./options/loop"
 import bindShortcuts from "./keyboard"
-import {loadModule} from "./util"
+import { loadModule } from "./util"
 import bindScroll, { checkBottom } from "./scroll"
 import bindMenu from "./posts/menu"
 
-// Clear cookies, if versions mismatch.
+// Clear cookies, if versions mismatch
 const cookieVersion = 4
 if (localStorage.getItem("cookieVersion") !== cookieVersion.toString()) {
 	for (let cookie of document.cookie.split(";")) {

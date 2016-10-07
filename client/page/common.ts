@@ -1,19 +1,13 @@
-import {makeFrag, escape, hashString, on} from '../util'
-import {fetchJSON, fetchBoarConfigs} from "../json"
-import {PageState, boardConfig, posts, page} from '../state'
+import { makeFrag, escape, hashString, on } from '../util'
+import { fetchBoarConfigs, BoardData, fetchBoard, fetchThread } from "../json"
+import { PageState, boardConfig, posts, page } from '../state'
 import renderThread from './thread'
 import renderBoard from './board'
-import {ThreadData} from '../posts/models'
-import {scrollToAnchor} from "../scroll"
-import {read} from "../render"
-import {images, ui} from "../lang"
-import {write, $threads} from "../render"
-
-// Data of a single board retrieved from the server through `/json/:board`
-type BoardData = {
-	ctr: number
-	threads: ThreadData[]
-}
+import { ThreadData } from '../posts/models'
+import { scrollToAnchor } from "../scroll"
+import { read } from "../render"
+import { images, ui } from "../lang"
+import { write, $threads } from "../render"
 
 // Load a page (either board or thread) and render it once the ready promise
 // has been resolved
@@ -22,17 +16,9 @@ export default async function (
 	ready: Promise<void>
 ) {
 	const conf = fetchBoarConfigs(board)
-	let data: BoardData|ThreadData
-
-	if (thread) {
-		let url = `/json/${board}/${thread}`
-		if (lastN) {
-			url += `?last=${lastN}`
-		}
-		data = await fetchJSON<ThreadData>(url)
-	} else {
-		data = await fetchBoard(board)
-	}
+	const data = thread
+		? await fetchThread(board, thread, lastN)
+		: await fetchBoard(board)
 
 	await ready
 	boardConfig.replaceWith(await conf)
@@ -54,11 +40,6 @@ export default async function (
 		$threads.focus()
 	})
 
-}
-
-// Fetch JSON data of a board page
-export async function fetchBoard(board: string): Promise<BoardData> {
-	return await fetchJSON<BoardData>(`/json/${board}/`)
 }
 
 // Format a block of text received from an untrusted user

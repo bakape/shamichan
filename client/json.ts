@@ -1,6 +1,13 @@
 // Helper functions for communicating with the server's JSON API
 
-import {BoardConfigs} from './state'
+import { BoardConfigs } from './state'
+import { ThreadData } from "./posts/models"
+
+// Data of a single board retrieved from the server through `/json/:board`
+export type BoardData = {
+	ctr: number
+	threads: ThreadData[]
+}
 
 // Single entry of the array, fetched through `/json/boardList`
 export type BoardEntry = {
@@ -42,4 +49,20 @@ export async function fetchBoardList(): Promise<BoardEntry[]> {
 // Fetch configurations of a specific board
 export async function fetchBoarConfigs(board: string): Promise<BoardConfigs> {
 	return await fetchJSON<BoardConfigs>(`/json/boardConfig/${board}`)
+}
+
+// Fetch JSON data of a board page
+export async function fetchBoard(board: string): Promise<BoardData> {
+	return await fetchJSON<BoardData>(`/json/${board}/`)
+}
+
+// Fetch thread JSON data
+export async function fetchThread(
+	board: string, thread: number, lastN: number,
+): Promise<ThreadData> {
+	let url = `/json/${board}/${thread}`
+	if (lastN) {
+		url += `?last=${lastN}`
+	}
+	return await fetchJSON<ThreadData>(url)
 }

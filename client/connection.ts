@@ -7,6 +7,7 @@ import { write } from './render'
 import { authenticate } from './mod/login'
 import { PostData } from "./posts/models"
 import { insertPost } from "./client"
+import { fetchTime, refetch } from "./page/thread"
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server
@@ -185,12 +186,19 @@ function prepareToSync() {
 
 // Send a requests to the server to syschronise to the current page and
 // subscribe to the apropriate event feeds.
-export function synchronise() {
+export async function synchronise() {
 	const msg: SyncRequest = {
 		board: page.board,
 		thread: page.thread,
 	}
 	let type = message.synchronise
+
+	// If thread data is too old because of disconnect, computer suspention or
+	// resuming old tabs, refetch and rerender the thread. The actual deadline
+	// is 30 seconds, but a ten second buffer is probably sound.
+	if (page.thread && Date.now() - fetchTime > 20000) {
+		await refetch()
+	}
 
 	// TODO: Resynchronisation logic, with open post right retrieval
 	// // If clientID is set, then this attempt to synchronise comes after a
