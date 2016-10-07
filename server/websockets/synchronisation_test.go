@@ -98,14 +98,14 @@ func TestSyncToThread(t *testing.T) {
 		Board: "a",
 	})
 	assertInsert(t, "posts", types.DatabasePost{
-		Log: [][]byte{[]byte("foog"), []byte("bar")},
 		Post: types.Post{
-			ID:          1,
-			OP:          1,
-			Board:       "a",
-			Body:        "foo",
-			LastUpdated: time.Now().Unix(),
+			ID:    1,
+			OP:    1,
+			Board: "a",
+			Body:  "foo",
 		},
+		Log:         [][]byte{[]byte("foog"), []byte("bar")},
+		LastUpdated: time.Now().Unix(),
 	})
 
 	sv := newWSServer(t)

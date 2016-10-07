@@ -94,7 +94,7 @@ func TestPostJSON(t *testing.T) {
 
 	(*config.Get()).Boards = []string{"a"}
 
-	const postEtag = "pF2WuTWab2p8BN88aBNTxw"
+	const postEtag = "PKgeef5Rgp5nZtSY6vAVAg"
 
 	cases := [...]struct {
 		name, url, header string

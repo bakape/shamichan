@@ -49,14 +49,19 @@ type updateFeed struct {
 	// Subscribed clients
 	clients []*Client
 	// Cache of posts updated within the last 30 s
-	cache map[int64]types.Post
+	cache map[int64]timestampedPost
 }
 
 // Change feed update message
 type feedUpdate struct {
 	Change uint8
-	types.Post
+	timestampedPost
 	Log [][]byte
+}
+
+type timestampedPost struct {
+	types.Post
+	LastUpdated int64 `json:"-"`
 }
 
 // Reques to add or remove a client to a subscription
@@ -114,7 +119,7 @@ func (f *feedContainer) addClient(id int64, cl *Client) {
 	feed, ok := f.feeds[id]
 	if !ok {
 		feed = &updateFeed{
-			cache: make(map[int64]types.Post, 4),
+			cache: make(map[int64]timestampedPost, 4),
 		}
 		f.feeds[id] = feed
 	}
@@ -261,7 +266,7 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) error {
 	feed, ok := f.feeds[update.OP]
 	if !ok {
 		feed = &updateFeed{
-			cache: make(map[int64]types.Post, 4),
+			cache: make(map[int64]timestampedPost, 4),
 		}
 		f.feeds[update.OP] = feed
 	}
@@ -276,13 +281,13 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) error {
 			return err
 		}
 		feed.writeToBuffer(data)
-		feed.cache[update.ID] = update.Post
+		feed.cache[update.ID] = update.timestampedPost
 	// New replication log messages
 	case postUpdated:
 		for _, msg := range update.Log {
 			feed.writeToBuffer(msg)
 		}
-		feed.cache[update.ID] = update.Post
+		feed.cache[update.ID] = update.timestampedPost
 	// Post deletion message
 	case postDeleted:
 		data, err := EncodeMessage(MessageDelete, update.ID)

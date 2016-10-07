@@ -36,10 +36,12 @@ func TestStreamUpdates(t *testing.T) {
 		ID:    1,
 		Board: "a",
 	})
-	post := types.Post{
-		ID:          1,
-		Board:       "a",
-		OP:          1,
+	post := timestampedPost{
+		Post: types.Post{
+			ID:    1,
+			Board: "a",
+			OP:    1,
+		},
 		LastUpdated: time.Now().Unix(),
 	}
 
@@ -51,10 +53,11 @@ func TestStreamUpdates(t *testing.T) {
 
 	assertMessage(t, wcl, "30{}")
 	assertInsert(t, "posts", types.DatabasePost{
-		Post: post,
-		Log:  [][]byte{},
+		Post:        post.Post,
+		LastUpdated: post.LastUpdated,
+		Log:         [][]byte{},
 	})
-	assertMessage(t, wcl, encodeMessage(t, MessageInsertPost, post))
+	assertMessage(t, wcl, encodeMessage(t, MessageInsertPost, post.Post))
 
 	q := db.FindPost(1).Update(map[string]interface{}{
 		"log": appendLog([]byte("bar")),
@@ -68,7 +71,7 @@ func TestStreamUpdates(t *testing.T) {
 	cl2, wcl2 := sv.NewClient()
 	feeds.Add <- subRequest{1, cl2}
 	std := encodeMessage(t, MessageSynchronise, map[int64]types.Post{
-		1: post,
+		1: post.Post,
 	})
 	assertMessage(t, wcl2, std)
 }
@@ -76,24 +79,26 @@ func TestStreamUpdates(t *testing.T) {
 func TestBufferUpdate(t *testing.T) {
 	t.Parallel()
 
-	stdPost := types.Post{
-		ID:    1,
-		OP:    1,
-		Board: "a",
+	stdPost := timestampedPost{
+		Post: types.Post{
+			ID:    1,
+			OP:    1,
+			Board: "a",
+		},
 	}
 
 	cases := [...]struct {
 		name   string
 		update feedUpdate
-		cached types.Post
+		cached timestampedPost
 		buf    string
 	}{
 		{
 			name: "post insertion",
 			update: feedUpdate{
-				Change: postInserted,
-				Post:   stdPost,
-				Log:    nil,
+				Change:          postInserted,
+				timestampedPost: stdPost,
+				Log:             nil,
 			},
 			cached: stdPost,
 			buf:    encodeMessage(t, MessageInsertPost, stdPost),
@@ -101,9 +106,9 @@ func TestBufferUpdate(t *testing.T) {
 		{
 			name: "post updated",
 			update: feedUpdate{
-				Change: postUpdated,
-				Post:   stdPost,
-				Log:    [][]byte{[]byte("foo")},
+				Change:          postUpdated,
+				timestampedPost: stdPost,
+				Log:             [][]byte{[]byte("foo")},
 			},
 			cached: stdPost,
 			buf:    "foo",
@@ -112,11 +117,13 @@ func TestBufferUpdate(t *testing.T) {
 			name: "post deleted",
 			update: feedUpdate{
 				Change: postDeleted,
-				Post: types.Post{
-					ID: 1,
+				timestampedPost: timestampedPost{
+					Post: types.Post{
+						ID: 1,
+					},
 				},
 			},
-			cached: types.Post{},
+			cached: timestampedPost{},
 			buf:    encodeMessage(t, MessageDelete, 1),
 		},
 	}
@@ -188,10 +195,10 @@ func TestFeedCleanUp(t *testing.T) {
 	now := time.Now().Unix()
 	expired := now - 31
 	cls := []*Client{new(Client)}
-	fresh := types.Post{
+	fresh := timestampedPost{
 		LastUpdated: now,
 	}
-	stale := types.Post{
+	stale := timestampedPost{
 		LastUpdated: expired,
 	}
 	feeds := newFeedContainer()
@@ -202,12 +209,12 @@ func TestFeedCleanUp(t *testing.T) {
 			clients: cls,
 		},
 		3: { // Cache expired
-			cache: map[int64]types.Post{
+			cache: map[int64]timestampedPost{
 				1: stale,
 			},
 		},
 		4: { // Not fully expired
-			cache: map[int64]types.Post{
+			cache: map[int64]timestampedPost{
 				1: stale,
 				2: fresh,
 			},
@@ -221,7 +228,7 @@ func TestFeedCleanUp(t *testing.T) {
 			clients: cls,
 		},
 		4: {
-			cache: map[int64]types.Post{
+			cache: map[int64]timestampedPost{
 				2: fresh,
 			},
 		},

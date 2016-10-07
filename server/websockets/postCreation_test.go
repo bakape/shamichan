@@ -392,20 +392,22 @@ func TestPostCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stdPost := types.Post{
-		Editing:     true,
-		ID:          6,
-		OP:          1,
-		Board:       "a",
-		Time:        then,
-		LastUpdated: then,
-		Body:        "a",
-		Email:       "wew lad",
-		Image: &types.Image{
-			Name:        "foo",
-			Spoiler:     true,
-			ImageCommon: stdJPEG,
+	stdPost := types.DatabasePost{
+		Post: types.Post{
+			Editing: true,
+			ID:      6,
+			OP:      1,
+			Board:   "a",
+			Time:    then,
+			Body:    "a",
+			Email:   "wew lad",
+			Image: &types.Image{
+				Name:        "foo",
+				Spoiler:     true,
+				ImageCommon: stdJPEG,
+			},
 		},
+		LastUpdated: then,
 	}
 
 	var post types.Post
@@ -414,7 +416,7 @@ func TestPostCreation(t *testing.T) {
 	}
 	assertDeepEquals(t, *post.Image, *stdPost.Image)
 	stdPost.Image = post.Image
-	assertDeepEquals(t, post, stdPost)
+	assertDeepEquals(t, post, stdPost.Post)
 
 	assertIP(t, 6, "::1")
 

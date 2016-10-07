@@ -280,12 +280,12 @@ func constructPost(req postCreationCommon, c *Client) (
 	now = time.Now().Unix()
 	post = types.DatabasePost{
 		Post: types.Post{
-			Editing:     true,
-			Time:        now,
-			LastUpdated: now,
-			Email:       parser.FormatEmail(req.Email),
+			Editing: true,
+			Time:    now,
+			Email:   parser.FormatEmail(req.Email),
 		},
-		IP: c.IP,
+		LastUpdated: now,
+		IP:          c.IP,
 	}
 	post.Name, post.Trip, err = parser.ParseName(req.Name)
 	if err != nil {
