@@ -204,6 +204,10 @@ export class Post extends Model implements PostData {
 	// Extend all fields in the model and rerender
 	extend(data: PostData) {
 		extend(this, data)
+		// "editing":false is omitted to reduce payload. Override explicitly.
+		if (!data.editing) {
+			this.editing = false
+		}
 		write(() =>
 			this.view.renderContents(this.view.el))
 	}

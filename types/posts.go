@@ -108,7 +108,7 @@ type DatabaseThread struct {
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
-	Editing   bool      `json:"editing" gorethink:"editing"`
+	Editing   bool      `json:"editing,omitempty" gorethink:"editing"`
 	ID        int64     `json:"id" gorethink:"id"`
 	OP        int64     `json:"op,omitempty" gorethink:"op"`
 	Time      int64     `json:"time" gorethink:"time"`
