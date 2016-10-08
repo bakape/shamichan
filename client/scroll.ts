@@ -35,7 +35,7 @@ export function followDOM(func: () => void) {
 
 	// Prevent scrolling with new posts, if page isn't visible
 	if (atBottom) {
-		$threads.scrollTop = $threads.scrollHeight
+		scrollToBottom()
 	} else {
 		// Element was removed or something
 		if (!elExists($reference)) {
@@ -48,6 +48,11 @@ export function followDOM(func: () => void) {
 			$threads.scrollTop += delta
 		}
 	}
+}
+
+// Scroll to the bottom of the thread
+export function scrollToBottom() {
+	$threads.scrollTop = $threads.scrollHeight
 }
 
 // Set the scroll lock position to a post or to the bottom of the document

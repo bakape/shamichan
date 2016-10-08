@@ -1,17 +1,18 @@
 // View classes for post authoring
 
-import PostView, {OPView} from "../view"
-import {ReplyFormModel} from "./model"
-import {Post, OP} from "../models"
-import {isMobile, boardConfig} from "../../state"
-import {setAttrs, makeFrag, applyMixins} from "../../util"
-import {parseTerminatedLine} from "../render/body"
-import {renderHeader} from "../render/posts"
-import {write} from "../../render"
-import {ui} from "../../lang"
-import {$threadContainer} from "../../page/thread"
-import {postSM, postEvent} from "./main"
-import UploadForm, {FileData} from "./upload"
+import PostView, { OPView } from "../view"
+import { ReplyFormModel } from "./model"
+import { Post, OP } from "../models"
+import { isMobile, boardConfig } from "../../state"
+import { setAttrs, makeFrag, applyMixins } from "../../util"
+import { parseTerminatedLine } from "../render/body"
+import { renderHeader } from "../render/posts"
+import { write } from "../../render"
+import { ui } from "../../lang"
+import { $threadContainer } from "../../page/thread"
+import { postSM, postEvent } from "./main"
+import UploadForm, { FileData } from "./upload"
+import { scrollToBottom } from "../../scroll"
 
 // Post creation and update view
 export class FormView extends PostView implements UploadForm {
@@ -45,7 +46,7 @@ export class FormView extends PostView implements UploadForm {
 	// images
 	renderInputs(isOP: boolean) {
 		this.$input = document.createElement("span")
-		const attrs: {[key: string]: string} = {
+		const attrs: { [key: string]: string } = {
 			id: "text-input",
 			name: "body",
 			contenteditable: "",
@@ -117,15 +118,17 @@ export class FormView extends PostView implements UploadForm {
 	// Initialize extra elements for a draft unallocated post
 	initDraft() {
 		this.el.querySelector("header").classList.add("temporary")
-		write(() =>
-			($threadContainer.append(this.el),
-			this.$input.focus()))
+		write(() => {
+			$threadContainer.append(this.el)
+			this.$input.focus()
+		})
+		scrollToBottom()
 	}
 
 	removeUploadForm() {
 		write(() =>
 			(this.$uploadInput.remove(),
-			this.$uploadStatus.remove()))
+				this.$uploadStatus.remove()))
 	}
 
 	// Handle input events on $input
@@ -214,7 +217,7 @@ export class FormView extends PostView implements UploadForm {
 	cleanUp() {
 		write(() =>
 			(this.$postControls.remove(),
-			this.$postControls
+				this.$postControls
 				= this.$done
 				= this.$cancel
 				= this.$input
@@ -228,7 +231,7 @@ export class FormView extends PostView implements UploadForm {
 	renderError() {
 		write(() =>
 			(this.el.classList.add("errored"),
-			this.$input.setAttribute("contenteditable", "false")))
+				this.$input.setAttribute("contenteditable", "false")))
 	}
 
 	// Transition into allocated post
@@ -237,10 +240,10 @@ export class FormView extends PostView implements UploadForm {
 		const $header = this.el.querySelector("header")
 		write(() =>
 			(this.el.id = this.id as string,
-			$header.classList.remove("temporary"),
-			renderHeader($header, this.model),
-			this.$cancel.remove(),
-			this.$postControls.prepend(this.renderDone())))
+				$header.classList.remove("temporary"),
+				renderHeader($header, this.model),
+				this.$cancel.remove(),
+				this.$postControls.prepend(this.renderDone())))
 	}
 
 	// Toggle the spoiler input checkbox
