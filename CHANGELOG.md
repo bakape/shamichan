@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##vNext
+##v2.3.0 - 2016-10-08
 * Warning:
 	- An automatic database upgrade will be performed. Make sure only one
 	instance of meguca is running at that time. It is also recommended to back
