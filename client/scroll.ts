@@ -14,12 +14,15 @@ let $lock: HTMLElement,
 // Scroll to target anchor element, if any
 export function scrollToAnchor() {
 	if (!location.hash) {
+		$threads.scrollTop = 0
+		checkBottom()
 		return
 	}
 	const el = document.querySelector(location.hash)
 	if (el) {
 		el.scrollIntoView()
 	}
+	checkBottom()
 }
 
 // Lock position to the bottom of a thread or keep the viewport from bumping
@@ -116,9 +119,6 @@ deferInit(() => {
 	$threads.addEventListener("scroll", checkBottom, {
 		passive: true,
 	})
-
-	// And on thread change
-	page.onChange("thread", checkBottom)
 
 	// Unlock from bottom, when the tab is hidden, unless set not to
 	document.addEventListener("visibilitychange", () => {
