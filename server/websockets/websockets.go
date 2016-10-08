@@ -4,12 +4,12 @@ package websockets
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/bakape/meguca/auth"
@@ -60,9 +60,6 @@ type Client struct {
 	// Post currently open by the client
 	openPost openPost
 
-	// Protects c.send
-	sendMu sync.Mutex
-
 	// Currently subscribed to update feed, if any
 	feedID int64
 
@@ -74,6 +71,9 @@ type Client struct {
 
 	// Internal message receiver channel
 	receive chan receivedMessage
+
+	// Only used to pass messages from the Send method.
+	sendExternal chan []byte
 
 	// Close the client and free all used resources
 	close chan error
@@ -129,7 +129,10 @@ func newClient(conn *websocket.Conn, req *http.Request) *Client {
 		Ident:   auth.LookUpIdent(req),
 		close:   make(chan error, 2),
 		receive: make(chan receivedMessage),
-		conn:    conn,
+		// Allows for ~6 seconds of messages at 0.2 second intervals, until the
+		// buffer overflows.
+		sendExternal: make(chan []byte, 1<<5),
+		conn:         conn,
 	}
 }
 
@@ -155,6 +158,10 @@ func (c *Client) listenerLoop() error {
 		select {
 		case err := <-c.close:
 			return err
+		case msg := <-c.sendExternal:
+			if err := c.send(msg); err != nil {
+				return err
+			}
 		case <-ping.C:
 			deadline := time.Now().Add(pingWriteTimeout)
 			err := c.conn.WriteControl(websocket.PingMessage, nil, deadline)
@@ -219,10 +226,17 @@ func (c *Client) closeConnections(err error) error {
 	return err
 }
 
+// Send a message to the client. Can be used concurrently.
+func (c *Client) Send(msg []byte) {
+	select {
+	case c.sendExternal <- msg:
+	default:
+		c.Close(errors.New("send buffer overflow"))
+	}
+}
+
 // Sends a message to the client. Not safe for concurent use.
 func (c *Client) send(msg []byte) error {
-	c.sendMu.Lock()
-	defer c.sendMu.Unlock()
 	return c.conn.WriteMessage(websocket.TextMessage, msg)
 }
 
@@ -301,7 +315,7 @@ func (c *Client) Close(err error) {
 	select {
 	case <-c.close:
 	default:
-		// Exit both for-select loops, if possible
+		// Exit both for-select loops, if they have not exited yet
 		for i := 0; i < 2; i++ {
 			select {
 			case c.close <- err:

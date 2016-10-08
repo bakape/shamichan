@@ -125,9 +125,12 @@ func (f *feedContainer) addClient(id int64, cl *Client) {
 		f.feeds[id] = feed
 	}
 	feed.clients = append(feed.clients, cl)
-	if err := cl.sendMessage(MessageSynchronise, feed.cache); err != nil {
+
+	msg, err := EncodeMessage(MessageSynchronise, feed.cache)
+	if err != nil {
 		cl.Close(err)
 	}
+	cl.Send(msg)
 }
 
 // Remove client from subscribers
@@ -202,9 +205,7 @@ func (f *feedContainer) flushBuffers() {
 		feed.buf.Reset()
 
 		for _, client := range feed.clients {
-			if err := client.send(buf); err != nil {
-				client.Close(err)
-			}
+			client.Send(buf)
 		}
 	}
 }

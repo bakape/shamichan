@@ -16,8 +16,11 @@ func TestAddingFeeds(t *testing.T) {
 
 	sv := newWSServer(t)
 	defer sv.Close()
+	sv.Add(2)
 	cl1, wcl1 := sv.NewClient()
+	go readListenErrors(t, cl1, sv)
 	cl2, wcl2 := sv.NewClient()
+	go readListenErrors(t, cl2, sv)
 
 	feeds.Add <- subRequest{1, cl1}
 	defer feeds.Clear()
@@ -27,6 +30,10 @@ func TestAddingFeeds(t *testing.T) {
 	assertMessage(t, wcl2, "30{}")
 
 	feeds.Remove <- subRequest{1, cl2}
+
+	cl1.Close(nil)
+	cl2.Close(nil)
+	sv.Wait()
 }
 
 func TestStreamUpdates(t *testing.T) {
@@ -47,6 +54,8 @@ func TestStreamUpdates(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
+	sv.Add(1)
+	go readListenErrors(t, cl, sv)
 	feeds.Add <- subRequest{1, cl}
 	defer feeds.Clear()
 
@@ -71,11 +80,17 @@ func TestStreamUpdates(t *testing.T) {
 
 	// Sending of cached posts
 	cl2, wcl2 := sv.NewClient()
+	sv.Add(1)
+	go readListenErrors(t, cl2, sv)
 	feeds.Add <- subRequest{1, cl2}
 	std := encodeMessage(t, MessageSynchronise, map[int64]types.Post{
 		1: post.Post,
 	})
 	assertMessage(t, wcl2, std)
+
+	cl.Close(nil)
+	cl2.Close(nil)
+	sv.Wait()
 }
 
 func TestBufferUpdate(t *testing.T) {
@@ -178,6 +193,8 @@ func TestFlushMultipleMessages(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
+	sv.Add(1)
+	go readListenErrors(t, cl, sv)
 	feeds := newFeedContainer()
 	const msg = "a\u0000bc"
 	feeds.feeds[1] = &updateFeed{
@@ -188,6 +205,9 @@ func TestFlushMultipleMessages(t *testing.T) {
 
 	feeds.flushBuffers()
 	assertMessage(t, wcl, `42`+msg)
+
+	cl.Close(nil)
+	sv.Wait()
 }
 
 func TestFeedCleanUp(t *testing.T) {
