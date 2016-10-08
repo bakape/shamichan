@@ -89,11 +89,12 @@ type Thread struct {
 	PostCtr  int16 `json:"postCtr" gorethink:"postCtr"`
 	ImageCtr int16 `json:"imageCtr" gorethink:"imageCtr"`
 	Post
-	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
-	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
-	Subject   string `json:"subject" gorethink:"subject"`
-	Board     string `json:"board" gorethink:"board"`
-	Posts     []Post `json:"posts" gorethink:"posts"`
+	BumpTime    int64  `json:"bumpTime" gorethink:"bumpTime"`
+	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
+	LastUpdated int64  `json:"lastUpdated" gorethink:"lastUpdated"`
+	Subject     string `json:"subject" gorethink:"subject"`
+	Board       string `json:"board" gorethink:"board"`
+	Posts       []Post `json:"posts" gorethink:"posts"`
 }
 
 // DatabaseThread is a template for writing new threads to the database

@@ -197,7 +197,8 @@ func testGetThread(t *testing.T) {
 	t.Parallel()
 
 	thread1 := types.Thread{
-		PostCtr: 3,
+		PostCtr:     3,
+		LastUpdated: 3,
 		Post: types.Post{
 			ID: 1,
 		},
@@ -241,8 +242,9 @@ func testGetThread(t *testing.T) {
 				Post: types.Post{
 					ID: 3,
 				},
-				Board: "c",
-				Posts: []types.Post{},
+				Board:       "c",
+				LastUpdated: 4,
+				Posts:       []types.Post{},
 			},
 		},
 		{
