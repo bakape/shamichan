@@ -56,12 +56,14 @@ var (
 	}
 
 	samplePost = types.DatabasePost{
-		Post: types.Post{
-			Editing: true,
-			ID:      2,
-			OP:      1,
-			Board:   "a",
-			Body:    "abc",
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				Editing: true,
+				ID:      2,
+				Body:    "abc",
+			},
+			OP:    1,
+			Board: "a",
 		},
 		Log: dummyLog,
 	}
@@ -71,14 +73,18 @@ func TestWriteBacklinks(t *testing.T) {
 	assertTableClear(t, "posts")
 	assertInsert(t, "posts", []types.DatabasePost{
 		{
-			Post: types.Post{
-				ID: 1,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 1,
+				},
 			},
 			Log: dummyLog,
 		},
 		{
-			Post: types.Post{
-				ID: 2,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 2,
+				},
 			},
 			Log: dummyLog,
 		},
@@ -279,9 +285,11 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 	assertTableClear(t, "posts", "boards")
 	assertInsert(t, "posts", types.DatabasePost{
 		Log: dummyLog,
-		Post: types.Post{
-			ID:   2,
-			Body: "#flip",
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				ID:   2,
+				Body: "#flip",
+			},
 		},
 	})
 	assertInsert(t, "boards", config.BoardConfigs{
@@ -353,19 +361,23 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 	assertTableClear(t, "posts", "boards")
 	assertInsert(t, "posts", []types.DatabasePost{
 		{
-			Post: types.Post{
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:   2,
+					Body: " >>22 ",
+				},
 				Board: "a",
-				ID:    2,
 				OP:    1,
-				Body:  " >>22 ",
 			},
 			Log: [][]byte{},
 		},
 		{
-			Post: types.Post{
-				ID:    22,
-				Board: "c",
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 22,
+				},
 				OP:    21,
+				Board: "c",
 			},
 			Log: [][]byte{},
 		},
@@ -669,12 +681,14 @@ func TestSplice(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			assertTableClear(t, "posts")
 			assertInsert(t, "posts", types.DatabasePost{
-				Post: types.Post{
-					Editing: true,
-					ID:      2,
-					OP:      1,
-					Body:    c.init,
-					Board:   "a",
+				StandalonePost: types.StandalonePost{
+					Post: types.Post{
+						Editing: true,
+						ID:      2,
+						Body:    c.init,
+					},
+					Board: "a",
+					OP:    1,
 				},
 				Log: [][]byte{},
 			})
@@ -719,11 +733,13 @@ func TestCloseOldOpenPost(t *testing.T) {
 
 	then := time.Now().Add(time.Minute * -30).Unix()
 	assertInsert(t, "posts", types.DatabasePost{
-		Post: types.Post{
-			Editing: true,
-			ID:      1,
-			OP:      1,
-			Time:    then,
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				Editing: true,
+				ID:      1,
+				Time:    then,
+			},
+			OP: 1,
 		},
 		Log: [][]byte{},
 	})
@@ -803,8 +819,10 @@ func TestInsertImage(t *testing.T) {
 		PostCtr: 1,
 	})
 	assertInsert(t, "posts", types.DatabasePost{
-		Post: types.Post{
-			ID:    2,
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				ID: 2,
+			},
 			Board: "a",
 			OP:    1,
 		},

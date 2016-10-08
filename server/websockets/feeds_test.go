@@ -38,10 +38,9 @@ func TestStreamUpdates(t *testing.T) {
 	})
 	post := timestampedPost{
 		Post: types.Post{
-			ID:    1,
-			Board: "a",
-			OP:    1,
+			ID: 1,
 		},
+		OP:          1,
 		LastUpdated: time.Now().Unix(),
 	}
 
@@ -53,7 +52,10 @@ func TestStreamUpdates(t *testing.T) {
 
 	assertMessage(t, wcl, "30{}")
 	assertInsert(t, "posts", types.DatabasePost{
-		Post:        post.Post,
+		StandalonePost: types.StandalonePost{
+			Post: post.Post,
+			OP:   post.OP,
+		},
 		LastUpdated: post.LastUpdated,
 		Log:         [][]byte{},
 	})
@@ -81,10 +83,9 @@ func TestBufferUpdate(t *testing.T) {
 
 	stdPost := timestampedPost{
 		Post: types.Post{
-			ID:    1,
-			OP:    1,
-			Board: "a",
+			ID: 1,
 		},
+		OP: 1,
 	}
 
 	cases := [...]struct {

@@ -13,33 +13,42 @@ func TestReader(t *testing.T) {
 
 	assertInsert(t, "posts", []types.DatabasePost{
 		{
-			Post: types.Post{
-				ID:    1,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 1,
+				},
 				OP:    1,
 				Board: "a",
 			},
 			Log: [][]byte{{1, 2, 3}},
 		},
 		{
-			Post: types.Post{
-				ID:    2,
+			StandalonePost: types.StandalonePost{
+
+				Post: types.Post{
+					ID:   2,
+					Body: "foo",
+				},
 				OP:    1,
 				Board: "a",
-				Body:  "foo",
 			},
 			Log: [][]byte{{3, 4, 5}},
 		},
 		{
-			Post: types.Post{
-				ID:    4,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 4,
+				},
 				OP:    1,
 				Board: "a",
 			},
 			Log: [][]byte{{1}},
 		},
 		{
-			Post: types.Post{
-				ID:    3,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 3,
+				},
 				OP:    3,
 				Board: "c",
 			},
@@ -86,16 +95,18 @@ func testGetPost(t *testing.T) {
 	if err != r.ErrEmptyResult {
 		t.Errorf("unexpected error: %v", err)
 	}
-	if !reflect.DeepEqual(post, types.Post{}) {
+	if !reflect.DeepEqual(post, types.StandalonePost{}) {
 		t.Errorf("post not empty: %#v", post)
 	}
 
 	// Valid read
-	std := types.Post{
-		ID:    2,
+	std := types.StandalonePost{
+		Post: types.Post{
+			ID:   2,
+			Body: "foo",
+		},
 		OP:    1,
 		Board: "a",
-		Body:  "foo",
 	}
 	post, err = GetPost(2)
 	if err != nil {
@@ -181,20 +192,16 @@ func testGetThread(t *testing.T) {
 	thread1 := types.Thread{
 		PostCtr: 3,
 		Post: types.Post{
-			ID:    1,
-			Board: "a",
+			ID: 1,
 		},
+		Board: "a",
 		Posts: []types.Post{
 			{
-				ID:    2,
-				OP:    1,
-				Board: "a",
-				Body:  "foo",
+				ID:   2,
+				Body: "foo",
 			},
 			{
-				ID:    4,
-				OP:    1,
-				Board: "a",
+				ID: 4,
 			},
 		},
 	}
@@ -225,9 +232,9 @@ func testGetThread(t *testing.T) {
 			std: &types.Thread{
 				PostCtr: 1,
 				Post: types.Post{
-					ID:    3,
-					Board: "c",
+					ID: 3,
 				},
+				Board: "c",
 				Posts: []types.Post{},
 			},
 		},

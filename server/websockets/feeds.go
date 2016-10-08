@@ -61,6 +61,7 @@ type feedUpdate struct {
 
 type timestampedPost struct {
 	types.Post
+	OP          int64 `json:"-"`
 	LastUpdated int64 `json:"-"`
 }
 

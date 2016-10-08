@@ -12,8 +12,10 @@ import (
 func TestOldFeedClosing(t *testing.T) {
 	assertTableClear(t, "posts")
 	assertInsert(t, "posts", types.DatabasePost{
-		Post: types.Post{
-			ID: 1,
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				ID: 1,
+			},
 			OP: 1,
 		},
 	})
@@ -98,11 +100,13 @@ func TestSyncToThread(t *testing.T) {
 		Board: "a",
 	})
 	assertInsert(t, "posts", types.DatabasePost{
-		Post: types.Post{
-			ID:    1,
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				ID:   1,
+				Body: "foo",
+			},
 			OP:    1,
 			Board: "a",
-			Body:  "foo",
 		},
 		Log:         [][]byte{[]byte("foog"), []byte("bar")},
 		LastUpdated: time.Now().Unix(),

@@ -107,17 +107,19 @@ func testCreateThread(t *testing.T) {
 	stdPost := types.DatabasePost{
 		IP:  "::1",
 		Log: [][]byte{},
-		Post: types.Post{
-			Editing: true,
-			ID:      6,
-			OP:      6,
-			Name:    "name",
-			Board:   "c",
-			Image: &types.Image{
-				Spoiler:     true,
-				ImageCommon: stdJPEG,
-				Name:        "foo",
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				Editing: true,
+				ID:      6,
+				Name:    "name",
+				Image: &types.Image{
+					Spoiler:     true,
+					ImageCommon: stdJPEG,
+					Name:        "foo",
+				},
 			},
+			Board: "c",
+			OP:    6,
 		},
 	}
 
@@ -393,19 +395,21 @@ func TestPostCreation(t *testing.T) {
 	}
 
 	stdPost := types.DatabasePost{
-		Post: types.Post{
-			Editing: true,
-			ID:      6,
-			OP:      1,
-			Board:   "a",
-			Time:    then,
-			Body:    "a",
-			Email:   "wew lad",
-			Image: &types.Image{
-				Name:        "foo",
-				Spoiler:     true,
-				ImageCommon: stdJPEG,
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				Editing: true,
+				ID:      6,
+				Time:    then,
+				Body:    "a",
+				Email:   "wew lad",
+				Image: &types.Image{
+					Name:        "foo",
+					Spoiler:     true,
+					ImageCommon: stdJPEG,
+				},
 			},
+			OP:    1,
+			Board: "a",
 		},
 		LastUpdated: then,
 	}

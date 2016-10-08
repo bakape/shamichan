@@ -21,7 +21,9 @@ var (
 	}
 
 	// Fields to omit for post queries
-	omitForPosts = []string{"password", "ip"}
+	omitForPosts       = []string{"password", "ip", "lastUpdated"}
+	omitForOP          = append(omitForPosts, "op")
+	omitForThreadPosts = append(omitForPosts, []string{"op", "board"}...)
 )
 
 // GetThread retrieves public thread data from the database
@@ -44,9 +46,9 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 	}
 
 	q = q.Merge(map[string]r.Term{
-		"posts": getPosts.Without(omitForPosts),
+		"posts": getPosts.Without(omitForThreadPosts),
 	}).
-		Without(omitForPosts)
+		Without(omitForOP)
 
 	var thread types.Thread
 	if err := One(q, &thread); err != nil {
@@ -59,14 +61,11 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 		thread.Posts = thread.Posts[1:]
 	}
 
-	// Do not include redundant "op" field in output JSON
-	thread.OP = 0
-
 	return &thread, nil
 }
 
 // GetPost reads a single post from the database
-func GetPost(id int64) (post types.Post, err error) {
+func GetPost(id int64) (post types.StandalonePost, err error) {
 	q := FindPost(id).Without(omitForPosts).Default(nil)
 	err = One(q, &post)
 	return

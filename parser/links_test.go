@@ -9,8 +9,10 @@ import (
 func TestParseLinks(t *testing.T) {
 	assertTableClear(t, "posts")
 	assertInsert(t, "posts", types.DatabasePost{
-		Post: types.Post{
-			ID:    4,
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				ID: 4,
+			},
 			OP:    2,
 			Board: "a",
 		},

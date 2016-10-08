@@ -85,8 +85,10 @@ func TestPostJSON(t *testing.T) {
 		PostCtr: 11,
 	})
 	assertInsert(t, "posts", types.DatabasePost{
-		Post: types.Post{
-			ID:    1,
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				ID: 1,
+			},
 			Board: "a",
 			OP:    1,
 		},
@@ -94,7 +96,7 @@ func TestPostJSON(t *testing.T) {
 
 	(*config.Get()).Boards = []string{"a"}
 
-	const postEtag = "TBgy+l3UAYDkcpyRoTvXsg"
+	const postEtag = "qO18VR0TvaL71iNdrFmaIQ"
 
 	cases := [...]struct {
 		name, url, header string
@@ -325,40 +327,48 @@ func TestSpoilerImage(t *testing.T) {
 	assertInsert(t, "posts", []types.DatabasePost{
 		{
 			Password: hash,
-			Post: types.Post{
-				ID: 1,
-				Image: &types.Image{
-					ImageCommon: types.ImageCommon{
-						SHA1: "123",
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 1,
+					Image: &types.Image{
+						ImageCommon: types.ImageCommon{
+							SHA1: "123",
+						},
 					},
 				},
 			},
 		},
 		{
 			Password: hash,
-			Post: types.Post{
-				ID: 2,
-			},
-		},
-		{
-			Password: hash,
-			Post: types.Post{
-				ID: 3,
-				Image: &types.Image{
-					ImageCommon: types.ImageCommon{
-						SHA1: "123",
-					},
-					Spoiler: true,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 2,
 				},
 			},
 		},
 		{
 			Password: hash,
-			Post: types.Post{
-				ID: 4,
-				Image: &types.Image{
-					ImageCommon: types.ImageCommon{
-						SHA1: "123",
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 3,
+					Image: &types.Image{
+						ImageCommon: types.ImageCommon{
+							SHA1: "123",
+						},
+						Spoiler: true,
+					},
+				},
+			},
+		},
+		{
+			Password: hash,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 4,
+					Image: &types.Image{
+						ImageCommon: types.ImageCommon{
+							SHA1: "123",
+						},
 					},
 				},
 			},

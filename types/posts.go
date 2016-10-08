@@ -91,6 +91,7 @@ type Thread struct {
 	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
 	Subject   string `json:"subject" gorethink:"subject"`
+	Board     string `json:"board" gorethink:"board"`
 	Posts     []Post `json:"posts" gorethink:"posts"`
 }
 
@@ -110,9 +111,7 @@ type DatabaseThread struct {
 type Post struct {
 	Editing   bool      `json:"editing,omitempty" gorethink:"editing"`
 	ID        int64     `json:"id" gorethink:"id"`
-	OP        int64     `json:"op,omitempty" gorethink:"op"`
 	Time      int64     `json:"time" gorethink:"time"`
-	Board     string    `json:"board" gorethink:"board"`
 	Body      string    `json:"body" gorethink:"body"`
 	Name      string    `json:"name,omitempty" gorethink:"name,omitempty"`
 	Trip      string    `json:"trip,omitempty" gorethink:"trip,omitempty"`
@@ -124,10 +123,19 @@ type Post struct {
 	Commands  []Command `json:"commands,omitempty" gorethink:"commands,omitempty"`
 }
 
+// StandalonePost is a post view that includes the "op" and "board" fields,
+// which are not exposed though Post, but are required for retrieving a post
+// with unknown parenthood.
+type StandalonePost struct {
+	Post
+	OP    int64  `json:"op" gorethink:"op"`
+	Board string `json:"board" gorethink:"board"`
+}
+
 // DatabasePost is for writing new posts to a database. It contains the IP and
 // Password fields, which are never exposed publically through Post.
 type DatabasePost struct {
-	Post
+	StandalonePost
 	IP          string   `gorethink:"ip"`
 	Password    []byte   `gorethink:"password"`
 	Log         [][]byte `gorethink:"log"`

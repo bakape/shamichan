@@ -79,18 +79,22 @@ func TestOpenPostClosing(t *testing.T) {
 	log := [][]byte{[]byte{1, 2, 3}}
 	posts := []types.DatabasePost{
 		{
-			Post: types.Post{
-				ID:      1,
-				Editing: true,
-				Time:    tooOld,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:      1,
+					Editing: true,
+					Time:    tooOld,
+				},
 			},
 			Log: log,
 		},
 		{
-			Post: types.Post{
-				ID:      2,
-				Editing: true,
-				Time:    time.Now().Unix(),
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:      2,
+					Editing: true,
+					Time:    time.Now().Unix(),
+				},
 			},
 		},
 	}
@@ -196,14 +200,18 @@ func deleteThreadWithoutImages(t *testing.T) {
 
 	posts := [...]types.DatabasePost{
 		{
-			Post: types.Post{
-				ID: 1,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 1,
+				},
 				OP: 1,
 			},
 		},
 		{
-			Post: types.Post{
-				ID: 2,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 2,
+				},
 				OP: 1,
 			},
 		},
@@ -270,23 +278,27 @@ func deleteThreadWithImages(t *testing.T) {
 
 	posts := [...]types.DatabasePost{
 		{
-			Post: types.Post{
-				ID: 11,
+			StandalonePost: types.StandalonePost{
 				OP: 11,
-				Image: &types.Image{
-					ImageCommon: types.ImageCommon{
-						SHA1: "111",
+				Post: types.Post{
+					ID: 11,
+					Image: &types.Image{
+						ImageCommon: types.ImageCommon{
+							SHA1: "111",
+						},
 					},
 				},
 			},
 		},
 		{
-			Post: types.Post{
-				ID: 12,
+			StandalonePost: types.StandalonePost{
 				OP: 11,
-				Image: &types.Image{
-					ImageCommon: types.ImageCommon{
-						SHA1: "122",
+				Post: types.Post{
+					ID: 12,
+					Image: &types.Image{
+						ImageCommon: types.ImageCommon{
+							SHA1: "122",
+						},
 					},
 				},
 			},
@@ -382,27 +394,33 @@ func testDeleteUnsusedBoards(t *testing.T) {
 
 	posts := [...]types.DatabasePost{
 		{
-			Post: types.Post{
-				ID:    1,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:   1,
+					Time: expired.Unix(),
+				},
 				OP:    1,
 				Board: "a",
-				Time:  expired.Unix(),
 			},
 		},
 		{
-			Post: types.Post{
-				ID:    3,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:   3,
+					Time: expired.Unix(),
+				},
 				OP:    3,
 				Board: "c",
-				Time:  expired.Unix(),
 			},
 		},
 		{
-			Post: types.Post{
-				ID:    4,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:   4,
+					Time: fresh.Unix(),
+				},
 				OP:    3,
 				Board: "c",
-				Time:  fresh.Unix(),
 			},
 		},
 	}

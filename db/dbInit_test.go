@@ -235,20 +235,24 @@ func TestUpgrade15to16(t *testing.T) {
 	now := time.Now().Unix()
 	stdPosts := []types.DatabasePost{
 		{
-			Post: types.Post{
-				ID:    11,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:   11,
+					Body: "foo",
+				},
 				OP:    11,
 				Board: "a",
-				Body:  "foo",
 			},
 			Log: [][]byte{},
 		},
 		{
-			Post: types.Post{
-				ID:    12,
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:   12,
+					Body: "bar",
+				},
 				OP:    11,
 				Board: "a",
-				Body:  "bar",
 			},
 			Log: [][]byte{},
 		},
