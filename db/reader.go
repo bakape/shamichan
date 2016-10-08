@@ -12,7 +12,18 @@ var (
 			Table("threads").
 			EqJoin("id", r.Table("posts")).
 			Zip().
-			Without(omitForBoards)
+			Without(omitForBoards).
+			Merge(getLastUpdated)
+
+	// Gets the most recently updated post timestamp from thread
+	getLastUpdated = map[string]r.Term{
+		"lastUpdated": r.
+			Table("posts").
+			GetAllByIndex("op", r.Row.Field("id")).
+			Field("lastUpdated").
+			Max().
+			Default(0),
+	}
 
 	// Fields to omit in board queries. Decreases payload of DB replies.
 	omitForBoards = []string{
@@ -83,7 +94,8 @@ func GetBoard(board string) (*types.Board, error) {
 		GetAllByIndex("board", board).
 		EqJoin("id", r.Table("posts")).
 		Zip().
-		Without(omitForBoards)
+		Without(omitForBoards).
+		Merge(getLastUpdated)
 	out := &types.Board{Ctr: ctr}
 	err = All(q, &out.Threads)
 

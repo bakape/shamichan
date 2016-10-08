@@ -20,7 +20,8 @@ func TestReader(t *testing.T) {
 				OP:    1,
 				Board: "a",
 			},
-			Log: [][]byte{{1, 2, 3}},
+			LastUpdated: 1,
+			Log:         [][]byte{{1, 2, 3}},
 		},
 		{
 			StandalonePost: types.StandalonePost{
@@ -32,7 +33,8 @@ func TestReader(t *testing.T) {
 				OP:    1,
 				Board: "a",
 			},
-			Log: [][]byte{{3, 4, 5}},
+			LastUpdated: 2,
+			Log:         [][]byte{{3, 4, 5}},
 		},
 		{
 			StandalonePost: types.StandalonePost{
@@ -42,7 +44,8 @@ func TestReader(t *testing.T) {
 				OP:    1,
 				Board: "a",
 			},
-			Log: [][]byte{{1}},
+			LastUpdated: 3,
+			Log:         [][]byte{{1}},
 		},
 		{
 			StandalonePost: types.StandalonePost{
@@ -52,7 +55,8 @@ func TestReader(t *testing.T) {
 				OP:    3,
 				Board: "c",
 			},
-			Log: [][]byte{{1}, {2}},
+			LastUpdated: 4,
+			Log:         [][]byte{{1}, {2}},
 		},
 	})
 
@@ -122,14 +126,16 @@ func testGetAllBoard(t *testing.T) {
 		Ctr: 3,
 		Threads: []types.BoardThread{
 			{
-				ID:      1,
-				PostCtr: 3,
-				Board:   "a",
+				ID:          1,
+				PostCtr:     3,
+				Board:       "a",
+				LastUpdated: 3,
 			},
 			{
-				ID:      3,
-				PostCtr: 1,
-				Board:   "c",
+				ID:          3,
+				PostCtr:     1,
+				Board:       "c",
+				LastUpdated: 4,
 			},
 		},
 	}
@@ -155,9 +161,10 @@ func testGetBoard(t *testing.T) {
 				Ctr: 1,
 				Threads: []types.BoardThread{
 					{
-						ID:      3,
-						PostCtr: 1,
-						Board:   "c",
+						ID:          3,
+						PostCtr:     1,
+						Board:       "c",
+						LastUpdated: 4,
 					},
 				},
 			},
@@ -258,45 +265,3 @@ func testGetThread(t *testing.T) {
 		})
 	}
 }
-
-// func (*Tests) TestReaderGetThread(c *C) {
-// 	// No replies ;_;
-// 	std := &types.Thread{
-// 		Board: "a",
-// 		Post: types.Post{
-// 			ID: 4,
-// 		},
-// 		Posts: map[int64]types.Post{},
-// 	}
-// 	thread, err := GetThread(4, 0)
-// 	c.Assert(err, IsNil)
-// 	c.Assert(thread, DeepEquals, std)
-
-// 	// With replies
-// 	std = &types.Thread{
-// 		ImageCtr: 1,
-// 		PostCtr:  2,
-// 		LogCtr:   3,
-// 		Board:    "a",
-// 		Post: types.Post{
-// 			ID: 1,
-// 		},
-// 		Posts: map[int64]types.Post{
-// 			2: {
-// 				ID: 2,
-// 			},
-// 			3: {
-// 				ID: 3,
-// 			},
-// 		},
-// 	}
-// 	thread, err = GetThread(1, 0)
-// 	c.Assert(err, IsNil)
-// 	c.Assert(thread, DeepEquals, std)
-
-// 	// Last 1 post
-// 	delete(std.Posts, 2)
-// 	thread, err = GetThread(1, 1)
-// 	c.Assert(err, IsNil)
-// 	c.Assert(thread, DeepEquals, std)
-// }

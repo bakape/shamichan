@@ -60,22 +60,23 @@ func (b *Board) MarshalJSON() ([]byte, error) {
 // BoardThread is a stripped down version of Thread for whole-board retrieval
 // queries. Reduces server memory usage and served JSON payload.
 type BoardThread struct {
-	Locked    bool   `json:"locked,omitempty" gorethink:"locked"`
-	Archived  bool   `json:"archived,omitempty" gorethink:"archived"`
-	Sticky    bool   `json:"sticky,omitempty" gorethink:"sticky"`
-	PostCtr   int16  `json:"postCtr" gorethink:"postCtr"`
-	ImageCtr  int16  `json:"imageCtr" gorethink:"imageCtr"`
-	ID        int64  `json:"id" gorethink:"id"`
-	Time      int64  `json:"time" gorethink:"time"`
-	Name      string `json:"name,omitempty" gorethink:"name,omitempty"`
-	Trip      string `json:"trip,omitempty" gorethink:"trip,omitempty"`
-	Auth      string `json:"auth,omitempty" gorethink:"auth,omitempty"`
-	Email     string `json:"email,omitempty" gorethink:"email,omitempty"`
-	Image     *Image `json:"image,omitempty" gorethink:"image,omitempty"`
-	BumpTime  int64  `json:"bumpTime" gorethink:"bumpTime"`
-	ReplyTime int64  `json:"replyTime" gorethink:"replyTime"`
-	Board     string `json:"board" gorethink:"board"`
-	Subject   string `json:"subject" gorethink:"subject"`
+	Locked      bool   `json:"locked,omitempty" gorethink:"locked"`
+	Archived    bool   `json:"archived,omitempty" gorethink:"archived"`
+	Sticky      bool   `json:"sticky,omitempty" gorethink:"sticky"`
+	PostCtr     int16  `json:"postCtr" gorethink:"postCtr"`
+	ImageCtr    int16  `json:"imageCtr" gorethink:"imageCtr"`
+	ID          int64  `json:"id" gorethink:"id"`
+	Time        int64  `json:"time" gorethink:"time"`
+	LastUpdated int64  `json:"lastUpdated" gorethink:"lastUpdated"`
+	Name        string `json:"name,omitempty" gorethink:"name,omitempty"`
+	Trip        string `json:"trip,omitempty" gorethink:"trip,omitempty"`
+	Auth        string `json:"auth,omitempty" gorethink:"auth,omitempty"`
+	Email       string `json:"email,omitempty" gorethink:"email,omitempty"`
+	Image       *Image `json:"image,omitempty" gorethink:"image,omitempty"`
+	BumpTime    int64  `json:"bumpTime" gorethink:"bumpTime"`
+	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
+	Board       string `json:"board" gorethink:"board"`
+	Subject     string `json:"subject" gorethink:"subject"`
 }
 
 // Thread is a transport/export wrapper that stores both the thread metada, its
