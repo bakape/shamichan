@@ -2,11 +2,6 @@
 [![Build Status](https://travis-ci.org/bakape/meguca.svg)](https://travis-ci.org/bakape/meguca)
 [![Dependency Status](https://david-dm.org/bakape/meguca.svg)](https://david-dm.org/bakape/meguca)
 
-__Note: The version in the master branch is currently in early development.
-For deploying a production-ready legacy meguca instance, download the [latests
-release](https://github.com/bakape/meguca/releases/latest) and consult the
-bundled README.__
-
 Platforms: Linux, OSX, Win64
 
 License: GNU AGPL
@@ -33,7 +28,6 @@ binary statically links ffmpeg and does not require it installed.
 ##Production
 * See `./meguca help` for server operation
 * Login into the "admin" with the password "password" and change the password
-* For upgrading between semver major releases see `docs/migration.md`
 
 ##Building from source
 
@@ -66,14 +60,15 @@ binary statically links ffmpeg and does not require it installed.
 * Run `make`
 
 ##Development
-* `./meguca` or `./meguca debug` to run the server in development mode
+* `./meguca` or `./meguca debug` run the server in development mode
 * `make server` and `make client` build the server and client separately
 * `make watch` watches the file system for changes and incrementally rebuilds
 the client
 * `make update` updates all dependencies and fetches new project sources from
 the master branch
 * `make clean` removes files from the previous compilation
-* `make dist_clean` in addition to the above removes images and stored assets
+* `make dist_clean` in addition to the above removes uploaded files and their
+thumbnails
 
 ###Linux only
 * make creates a Go workspace in the `.build` subdirectory. If you don't have a
