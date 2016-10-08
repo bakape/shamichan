@@ -178,14 +178,15 @@ function onMessage(data: string, extracted: boolean) {
 
 function prepareToSync() {
 	renderStatus(syncStatus.connecting)
-	synchronise()
+	synchronise(true)
 	attemptTimer = setTimeout(() => resetAttempts(), 10000)
 	return connState.syncing
 }
 
 // Send a requests to the server to syschronise to the current page and
-// subscribe to the apropriate event feeds.
-export async function synchronise() {
+// subscribe to the apropriate event feeds and optionally try to send a logged
+// in user session authentication request.
+export async function synchronise(auth: boolean) {
 	const msg: SyncRequest = {
 		board: page.board,
 		thread: page.thread,
@@ -208,7 +209,9 @@ export async function synchronise() {
 	// }
 
 	send(type, msg)
-	authenticate()
+	if (auth) {
+		authenticate()
+	}
 }
 
 // Reset the reconnection attempt counter and timers
