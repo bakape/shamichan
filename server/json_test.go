@@ -423,15 +423,40 @@ func TestSpoilerImage(t *testing.T) {
 	}
 }
 
-func TestServeBoardCounters(t *testing.T) {
-	assertTableClear(t, "main")
-	assertInsert(t, "main", map[string]interface{}{
-		"id": "boardCtrs",
-		"a":  1,
-		"c":  2,
+func TestServeBoardTimeStamps(t *testing.T) {
+	(*config.Get()).Boards = []string{"a", "c"}
+	assertTableClear(t, "posts")
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			LastUpdated: 1,
+			StandalonePost: types.StandalonePost{
+				Board: "a",
+				Post: types.Post{
+					ID: 11,
+				},
+			},
+		},
+		{
+			LastUpdated: 2,
+			StandalonePost: types.StandalonePost{
+				Board: "a",
+				Post: types.Post{
+					ID: 22,
+				},
+			},
+		},
+		{
+			LastUpdated: 3,
+			StandalonePost: types.StandalonePost{
+				Board: "c",
+				Post: types.Post{
+					ID: 33,
+				},
+			},
+		},
 	})
 
-	rec, req := newPair("/json/boardCounters")
+	rec, req := newPair("/json/boardTimestamps")
 	router.ServeHTTP(rec, req)
-	assertBody(t, rec, `{"a":1,"c":2}`)
+	assertBody(t, rec, `{"a":2,"c":3}`)
 }

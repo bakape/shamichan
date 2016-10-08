@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	errNoImage       = errors.New("post has no image")
-	getBoardCounters = db.GetMain("boardCtrs").Without("id")
+	errNoImage = errors.New("post has no image")
 )
 
 // Request to spoiler an already allocated image that the sender has created
@@ -319,13 +318,29 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// Serve board progress counters. If a board's key is not present, the client
-// must assume it to be zero.
-func serveBoardCounters(w http.ResponseWriter, r *http.Request) {
+// Serve boards' last update timestamps. A board with no  posts will produce
+// zero.
+func serveBoardTimestamps(w http.ResponseWriter, req *http.Request) {
+	q := r.
+		Expr(config.Get().Boards).
+		Map(func(b r.Term) r.Term {
+			return r.Object(
+				b,
+				r.
+					Table("posts").
+					GetAllByIndex("board", b).
+					Field("lastUpdated").
+					Max().
+					Default(0),
+			)
+		}).
+		Reduce(func(a, b r.Term) r.Term {
+			return a.Merge(b)
+		})
 	var ctrs map[string]uint64
-	if err := db.One(getBoardCounters, &ctrs); err != nil {
-		text500(w, r, err)
+	if err := db.One(q, &ctrs); err != nil {
+		text500(w, req, err)
 		return
 	}
-	serveJSON(w, r, "", ctrs)
+	serveJSON(w, req, "", ctrs)
 }
