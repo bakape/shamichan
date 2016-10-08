@@ -108,7 +108,7 @@ endif
 
 # Generate binary packages for distribution
 package: all package_copy
-	cp $(BINARY) ./package
+	cp $(BINARY) .package/
 ifeq ($(ISWINDOWS), true)
 	cp *.dll .package/
 	cd .package; zip -rq ../$(PACKAGE) .
