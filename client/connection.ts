@@ -179,7 +179,6 @@ function onMessage(data: string, extracted: boolean) {
 function prepareToSync() {
 	renderStatus(syncStatus.connecting)
 	synchronise()
-	authenticate()
 	attemptTimer = setTimeout(() => resetAttempts(), 10000)
 	return connState.syncing
 }
@@ -209,6 +208,7 @@ export async function synchronise() {
 	// }
 
 	send(type, msg)
+	authenticate()
 }
 
 // Reset the reconnection attempt counter and timers

@@ -64,6 +64,9 @@ export default class AccountPanel extends TabbedModal {
 				if (this.isRendered) {
 					this.render()
 				}
+			} else {
+				localStorage.removeItem("sessionToken")
+				sessionToken = ""
 			}
 		}
 	}
