@@ -2,7 +2,7 @@ import { escape } from '../util'
 import { ThreadData, PostData, Post, OP } from '../posts/models'
 import PostView, { OPView } from '../posts/view'
 import { page, posts as postCollection, hidden } from '../state'
-import { write, $threads, importTemplate } from '../render'
+import { $threads, importTemplate } from '../render'
 import options from "../options"
 import { setTitle } from "../tab"
 import { expandAll } from "../posts/images"
@@ -58,10 +58,8 @@ export default function renderThread(thread: ThreadData) {
 		opView.renderOmit()
 	}
 
-	write(() => {
-		$threads.innerHTML = ""
-		$threads.append(frag)
-	})
+	$threads.innerHTML = ""
+	$threads.append(frag)
 }
 
 function createPost(data: PostData): Element {

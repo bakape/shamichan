@@ -84,10 +84,8 @@ function render(threads: ThreadData[]) {
 	renderNotice(frag)
 	frag.querySelector("#catalog").append(renderThreads("", threads))
 
-	write(() => {
-		$threads.innerHTML = ""
-		$threads.append(frag)
-	})
+	$threads.innerHTML = ""
+	$threads.append(frag)
 }
 
 // Sort, filter and render all threads on a board
@@ -180,10 +178,8 @@ function onSortChange(e: Event) {
 
 function writeThreads(threads: DocumentFragment) {
 	const cat = $threads.querySelector("#catalog")
-	write(() => {
-		cat.innerHTML = ""
-		cat.append(threads)
-	})
+	cat.innerHTML = ""
+	cat.append(threads)
 }
 
 // Refilter and rerender threads on seach input change
