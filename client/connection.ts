@@ -7,7 +7,7 @@ import { write } from './render'
 import { authenticate } from './mod/login'
 import { PostData } from "./posts/models"
 import { insertPost } from "./client"
-import { fetchTime, refetch } from "./page/thread"
+import { refetch } from "./page/thread"
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server
@@ -82,7 +82,10 @@ export const connSM = new FSM<connState, connEvent>(connState.loading)
 
 let socket: WebSocket,
 	attempts: number,
-	attemptTimer: number
+	attemptTimer: number,
+	// Timestamp of the last post altering message received or the the initial
+	// fetch of thread contents
+	syncTimestamp: number
 
 const syncEl = document.getElementById('sync')
 const path =
@@ -170,10 +173,20 @@ function onMessage(data: string, extracted: boolean) {
 		return
 	}
 
+	// Message types bellow thirty alter the thread state
+	if (type < 30) {
+		updateSyncTimestamp()
+	}
+
 	const handler = handlers[type]
 	if (handler) {
 		handler(JSON.parse(data.slice(2)))
 	}
+}
+
+// Update the thread synchronisation timestamp
+export function updateSyncTimestamp() {
+	syncTimestamp = Date.now()
 }
 
 function prepareToSync() {
@@ -196,7 +209,7 @@ export async function synchronise(auth: boolean) {
 	// If thread data is too old because of disconnect, computer suspention or
 	// resuming old tabs, refetch and rerender the thread. The actual deadline
 	// is 30 seconds, but a ten second buffer is probably sound.
-	if (page.thread && Date.now() - fetchTime > 20000) {
+	if (page.thread && Date.now() - syncTimestamp > 20000) {
 		await refetch()
 	}
 

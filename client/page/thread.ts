@@ -9,15 +9,14 @@ import { expandAll } from "../posts/images"
 import { images as lang } from "../lang"
 import { renderNotice } from "./common"
 import { fetchThread } from "../json"
+import { updateSyncTimestamp } from "../connection"
 
 // Container for all rendered posts
-export let $threadContainer: Element,
-	// Unix time of the last thread data fetch
-	fetchTime: number
+export let $threadContainer: Element
 
 // Render the HTML of a thread page
 export default function renderThread(thread: ThreadData) {
-	fetchTime = Date.now()
+	updateSyncTimestamp()
 	const frag = importTemplate("thread")
 
 	// Apply title to header and tab
