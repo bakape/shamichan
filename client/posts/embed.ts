@@ -40,10 +40,10 @@ const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 for (let p of ["Youtube", "SoundCloud", "Vimeo"]) {
 	const id = (provider as any)[p] as number
 	formatters[id] = formatNoEmbed(id)
-	fetchers[id] = fetchNoEmbed
+	fetchers[id] = fetchNoEmbed(id)
 }
 
-// Formatter for the noembed.com meta-provider
+// formatter for the noembed.com meta-provider
 function formatNoEmbed(type: provider): (s: string) => string {
 	return (href: string) => {
 		const attrs = {
@@ -52,18 +52,20 @@ function formatNoEmbed(type: provider): (s: string) => string {
 			target: "_blank",
 			"data-type": type.toString(),
 		}
-		return `<em><a ${makeAttrs(attrs)}>${provider[type]} ???</a></em>`
+		return `<em><a ${makeAttrs(attrs)}>[${provider[type]}] ???</a></em>`
 	}
 }
 
 // fetcher for the noembed.com meta-provider
-async function fetchNoEmbed(el: Element) {
-	const url = "https://noembed.com/embed?url="
-		+ encodeURI(el.getAttribute("href"))
-	const {title, html} = await fetchJSON<OEmbedDoc>(url)
+function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
+	return async (el: Element) => {
+		const url = "https://noembed.com/embed?url="
+			+ encodeURI(el.getAttribute("href"))
+		const {title, html} = await fetchJSON<OEmbedDoc>(url)
 
-	el.textContent = title
-	el.setAttribute("data-html", encodeURIComponent(html.trim()))
+		el.textContent = `[${provider[type]}] ${title}}`
+		el.setAttribute("data-html", encodeURIComponent(html.trim()))
+	}
 }
 
 // Match and parse URL against embedable formats. If matched, returns the
