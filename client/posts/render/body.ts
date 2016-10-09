@@ -1,11 +1,12 @@
-import {config} from '../../state'
-import {renderPostLink} from './etc'
-import {PostData, PostLinks, TextState} from '../models'
+import { config } from '../../state'
+import { renderPostLink } from './etc'
+import { PostData, PostLinks, TextState } from '../models'
 import { escape } from '../../util'
 import { deferInit } from "../../defer"
+import { parseEmbeds } from "../embed"
 
 // Map of {name: url} for generating `>>>/foo/bar` type reference links
-let refTargets: {[key: string]: string}
+let refTargets: { [key: string]: string }
 
 // Render the text body of a post
 export function renderBody(data: PostData): string {
@@ -75,7 +76,7 @@ export function parseTerminatedLine(line: string, data: PostData): string {
 		const i = line.indexOf("**")
 		if (i !== -1) {
 			html += parseFragment(line.slice(0, i), data)
-			 	+ `<${state.spoiler ? '/' : ''}del>`
+				+ `<${state.spoiler ? '/' : ''}del>`
 			state.spoiler = !state.spoiler
 			line = line.substring(i + 2)
 		} else {
@@ -164,7 +165,7 @@ function parsePostLink(bit: string, links: PostLinks): string {
 	if (!links) {
 		return escape(bit)
 	}
-	const [ , extraQoutes, id] = bit.match(/^>>(>*)(\d+)$/),
+	const [, extraQoutes, id] = bit.match(/^>>(>*)(\d+)$/),
 		num = parseInt(id),
 		verified = links[num]
 	if (!verified) {
@@ -177,7 +178,7 @@ function parsePostLink(bit: string, links: PostLinks): string {
 // Generate all possible refference name and link pairs for externa
 // `>>>/foo/bar` links
 export function genRefTargets() {
-	const targets: {[key: string]: string} = {}
+	const targets: { [key: string]: string } = {}
 
 	for (let name in config.links) {
 		targets[name] = config.links[name]
@@ -191,7 +192,7 @@ export function genRefTargets() {
 
 // Parse internal or customly set reference URL
 function parseReference(bit: string): string {
-	const [ , extraQoutes, name] = bit.match(/^>>>(>*)\/(\w+)\/$/),
+	const [, extraQoutes, name] = bit.match(/^>>>(>*)\/(\w+)\/$/),
 		href = refTargets[name]
 	if (!href) {
 		return escape(bit)
@@ -206,8 +207,10 @@ function newTabLink(href: string, text: string): string {
 
 // Render generic URLs and embed, if aplicable
 function parseURL(bit: string): string {
-
-	// TODO: Embeds
+	const embed = parseEmbeds(bit)
+	if (embed) {
+		return embed
+	}
 
 	const m = bit
 		.match(/^(magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$/)
@@ -233,32 +236,32 @@ function parseCommand(bit: string, {commands, state}: PostData): string {
 
 	let inner: string
 	switch (bit) {
-	case "flip":
-	case "8ball":
-	case "pyu":
-	case "pcount":
-		inner = commands[state.iDice++].val.toString()
-		break
-	default:
-		// Validate dice
-		const m = bit.match(/(\d*)d(\d+)/)
-		if (parseInt(m[1]) > 10 || parseInt(m[2]) > 100) {
+		case "flip":
+		case "8ball":
+		case "pyu":
+		case "pcount":
+			inner = commands[state.iDice++].val.toString()
 			break
-		}
-
-		const rolls = commands[state.iDice++].val as number[]
-		inner = ""
-		let sum = 0
-		for (let i = 0; i < rolls.length; i++) {
-			if (i) {
-				inner += " + "
+		default:
+			// Validate dice
+			const m = bit.match(/(\d*)d(\d+)/)
+			if (parseInt(m[1]) > 10 || parseInt(m[2]) > 100) {
+				break
 			}
-			sum += rolls[i]
-			inner += rolls[i]
-		}
-		if (rolls.length > 1) {
-			inner += " = " + sum
-		}
+
+			const rolls = commands[state.iDice++].val as number[]
+			inner = ""
+			let sum = 0
+			for (let i = 0; i < rolls.length; i++) {
+				if (i) {
+					inner += " + "
+				}
+				sum += rolls[i]
+				inner += rolls[i]
+			}
+			if (rolls.length > 1) {
+				inner += " = " + sum
+			}
 	}
 
 	if (inner) {

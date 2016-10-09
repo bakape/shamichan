@@ -1,8 +1,8 @@
 import View from "../view"
 import { Post } from "./models"
 import { getModel } from "../state"
-import { $threads , write } from "../render"
-import { on , outerWidth} from "../util"
+import { $threads, write } from "../render"
+import { on, outerWidth } from "../util"
 import { images } from "../lang"
 import { hidePost } from "./hide"
 
@@ -11,7 +11,7 @@ interface ControlButton extends Element {
 }
 
 // Actions to be performed by the items in the popup menu
-const actions: {[key: string]: [string, (m: Post) => void]} = {
+const actions: { [key: string]: [string, (m: Post) => void] } = {
 	hide: [images.hide, hidePost],
 }
 
