@@ -12,10 +12,17 @@ func TestAssetServer(t *testing.T) {
 	rec, req := newPair("/assets/frontpage.html")
 	router.ServeHTTP(rec, req)
 	assertBody(t, rec, "<!doctype html><html></html>\n")
+
+	// Requesting a directory
+	rec, req = newPair("/assets/js")
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 400)
 }
 
 func TestServeWorker(t *testing.T) {
 	t.Parallel()
+
+	workerPath = getWorkerPath()
 
 	rec, req := newPair("/worker.js")
 	router.ServeHTTP(rec, req)

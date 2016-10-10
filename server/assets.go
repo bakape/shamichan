@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"syscall"
+
 	"github.com/bakape/meguca/util"
 )
 
@@ -27,7 +29,14 @@ var (
 
 	// For overriding during tests
 	imageWebRoot = "images"
+
+	// Path to the service worker script. Overidable in tests.
+	workerPath = getWorkerPath()
 )
+
+func getWorkerPath() string {
+	return filepath.FromSlash(webRoot+"/js/scripts/worker.js")
+}
 
 // More performant handler for serving image assets. These are immutable
 // (except deletion), so we can also set seperate caching policies for them.
@@ -71,7 +80,14 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 
 	buf, err := ioutil.ReadAll(file)
 	if err != nil {
-		text500(w, r, err)
+		// I don't know how but some clients keep requesting a directory. Maybe
+		// a crawler.
+		pathErr, ok := err.(*os.PathError)
+		if ok && pathErr.Err == syscall.EISDIR {
+			text400(w, err)
+		} else {
+			text500(w, r, err)
+		}
 		return
 	}
 
@@ -85,5 +101,5 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 // Serve the service worker script file. It needs to be on the root scope for
 // security reasons.
 func serveWorker(w http.ResponseWriter, r *http.Request) {
-	serveFile(w, r, filepath.FromSlash(webRoot+"/js/scripts/worker.js"))
+	serveFile(w, r, workerPath)
 }
