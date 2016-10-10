@@ -24,7 +24,7 @@ func ParseName(name string) (string, string, error) {
 	if len(name) > maxLengthName {
 		return "", "", errNameTooLong
 	}
-	name = stripAndTrim(name)
+	name = strings.TrimSpace(name)
 
 	// #password for tripcodes and ##password for secure tripcodes
 	firstHash := strings.IndexByte(name, '#')
@@ -49,7 +49,7 @@ func ParseSubject(s string) (string, error) {
 	if len(s) > maxLengthSubject {
 		return s, errSubjectTooLong
 	}
-	return stripAndTrim(s), nil
+	return strings.TrimSpace(s), nil
 }
 
 // FormatEmail validates and checks
@@ -57,7 +57,7 @@ func FormatEmail(email string) string {
 	if email == "" || email == "sage" || len(email) > maxLengthEmail {
 		return ""
 	}
-	return stripAndTrim(email)
+	return strings.TrimSpace(email)
 }
 
 // VerifyPostPassword verifies a post password exists does not surpass the

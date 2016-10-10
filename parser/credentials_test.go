@@ -125,10 +125,6 @@ func TestFormatEmail(t *testing.T) {
 		{"empty", "", ""},
 		{"sage", "sage", ""},
 		{"normal", "foo", "foo"},
-		{
-			"with psuedo whitespace",
-			"h\u2000e\u200fl\u202al\u202fo\u205f\u206f", "hello",
-		},
 		{"too long", genString(maxLengthEmail + 1), ""},
 	}
 	for i := range cases {

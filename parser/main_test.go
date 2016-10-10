@@ -48,24 +48,3 @@ func genString(len int) string {
 	}
 	return buf.String()
 }
-
-func TestStripPsuedoWhitespace(t *testing.T) {
-	t.Parallel()
-
-	cases := [...]struct {
-		name, in, out string
-	}{
-		{"without", "normal", "normal"},
-		{"with", "h\u2000e\u200fl\u202al\u202fo\u205f\u206f", "hello"},
-		{"unicode with", "日本\u2062語", "日本語"},
-	}
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-			if s := stripPsuedoWhitespace(c.in); s != c.out {
-				logUnexpected(t, c.out, s)
-			}
-		})
-	}
-}
