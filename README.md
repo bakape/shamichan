@@ -31,8 +31,14 @@ downloadable from the [release](https://github.com/bakape/meguca/releases) page.
 * Install:
     * GCC or Clang
     * make
-    * ffmpeg >= 3.0 development libraries (libavcodec, libavutil,
-    libavformat, libswscale)
+    * ffmpeg >= 3.0 development libraries (libavcodec, libavutil, libavformat,
+    libswscale) compiled with:
+        * libvpx
+        * libvorbis
+        * libopus
+        * libtheora
+        * libx264
+        * libmp3lame
     * git
     * zip
 * Run `make`
