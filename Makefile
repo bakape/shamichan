@@ -9,6 +9,9 @@ VERSION=$(shell git describe --abbrev=0 --tags)
 MXE_ROOT=/usr/lib/mxe/usr
 MXE_TARGET=x86_64-w64-mingw32.static
 
+# Root of statically compiled libraries for native static compilation
+STATIC_ROOT=/usr/local
+
 # Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
 	BUILD_PATH="/.meguca_build/src/github.com/bakape"
@@ -48,6 +51,12 @@ server: server_deps
 ifeq ($(ISWINDOWS), true)
 	cp /mingw64/bin/*.dll ./
 endif
+
+# Build server, but link all cgo deps statically
+server_static:
+	PKG_CONFIG_LIBDIR=$(STATIC_ROOT)/lib/pkgconfig \
+	PKG_CONFIG_PATH=$(STATIC_ROOT)/lib/pkgconfig \
+	go build -v -a -o $(BINARY) --ldflags '-extldflags "-static"'
 
 # Fecth all server dependancies. Dependacies are not updated automatically.
 server_deps: build_dirs
@@ -107,7 +116,7 @@ endif
 	$(MAKE) -C .ffmpeg install
 
 # Generate binary packages for distribution
-package: all package_copy
+package: server_static client package_copy
 	cp $(BINARY) .package/
 ifeq ($(ISWINDOWS), true)
 	cp *.dll .package/
@@ -131,13 +140,13 @@ package_copy:
 # 	mxe-x86-64-w64-mingw32.static-gcc
 # 	mxe-x86-64-w64-mingw32.static-libidn
 # 	mxe-x86-64-w64-mingw32.static-ffmpeg
-cross_compile_win_amd64: server_deps
+cross_compile_win_amd64:
 	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
 	CC=$(MXE_ROOT)/bin/$(MXE_TARGET)-gcc \
 	PKG_CONFIG=$(MXE_ROOT)/bin/$(MXE_TARGET)-pkg-config \
-	PKG_CONFIG_LIBDIR=$(MXE_ROOT)/$(MXE_TARGET)/lib/pkgconfig/ \
-	PKG_CONFIG_PATH=$(MXE_ROOT)/$(MXE_TARGET)/lib/pkgconfig/ \
-	go build -v -o meguca.exe
+	PKG_CONFIG_LIBDIR=$(MXE_ROOT)/$(MXE_TARGET)/lib/pkgconfig \
+	PKG_CONFIG_PATH=$(MXE_ROOT)/$(MXE_TARGET)/lib/pkgconfig \
+	go build -v -a -o meguca.exe --ldflags '-extldflags "-static"'
 
 # Zip the cross-compiled contents into an archive
 cross_package_win_amd64: cross_compile_win_amd64 client package_copy
