@@ -117,6 +117,7 @@ endif
 
 # Generate binary packages for distribution
 package: server_static client package_copy
+	rm -rf .package/meguca.exe
 	cp $(BINARY) .package/
 ifeq ($(ISWINDOWS), true)
 	cp *.dll .package/
@@ -150,5 +151,6 @@ cross_compile_win_amd64:
 
 # Zip the cross-compiled contents into an archive
 cross_package_win_amd64: cross_compile_win_amd64 client package_copy
+	rm -rf .package/meguca
 	cp meguca.exe .package/
 	cd .package; zip -rq ../meguca-$(VERSION)_windows_AMD64.zip .
