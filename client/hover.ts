@@ -1,11 +1,11 @@
 // Post and image hover previews
 
-import {emitChanges, ChangeEmitter} from "./model"
+import { emitChanges, ChangeEmitter } from "./model"
 import View from "./view"
-import {posts} from "./state"
-import {hook} from "./hooks"
+import { posts } from "./state"
+import { hook } from "./hooks"
 import options from "./options"
-import {setAttrs} from "./util"
+import { setAttrs } from "./util"
 
 interface MouseMove extends ChangeEmitter {
 	event: MouseEvent
@@ -18,9 +18,6 @@ let postPreview: PostPreview,
 	imagePreview: HTMLElement
 
 // Centralised mousemove target tracking
-// Logging only the target isn't a option because change:target doesn't seem
-// to fire in some cases where the target is too similar for example changing
-// between two post links (>>XXX) directly.
 const mouseMove = emitChanges<MouseMove>({
 	event: {
 		target: null,
@@ -39,7 +36,7 @@ class PostPreview extends View<any> {
 		preview.removeAttribute("id")
 		preview.classList.add("preview")
 
-		super({el: preview})
+		super({ el: preview })
 		this.$parent = parent
 
 		// Remove on parent click
@@ -61,19 +58,21 @@ class PostPreview extends View<any> {
 
 	// Position the preview element relative to it's parent link
 	position() {
-		const rect = this.$parent.getBoundingClientRect(),
-			height = this.el.offsetHeight
-		let left = rect.left,
-			top = rect.top - height - 5
+		const rect = this.$parent.getBoundingClientRect()
 
-		// If post gets cut off at the top, put it bellow the link. The preview
-		// will never take up more than 100% screen width, so no need for
-		// checking horizontal overlflow.
+		// The preview will never take up more than 100% screen width, so no
+		// need for checking horizontal overlflow. Must be applied before
+		// reading the height, so it takes into account post resizing to
+		// viewport edge.
+		this.el.style.left = rect.left + "px"
+
+		const height = this.el.offsetHeight
+		let top = rect.top - height - 5
+
+		// If post gets cut off at the top, put it bellow the link
 		if (top < 0) {
 			top += height + 23
 		}
-
-		this.el.style.left = left + "px"
 		this.el.style.top = top + "px"
 	}
 
@@ -115,18 +114,24 @@ function renderImagePreview(event: MouseEvent) {
 		return
 	}
 	const src = link.getAttribute("href"),
-		isWebm = /\.webm$/.test(src)
+		ext = src.slice(src.lastIndexOf(".") + 1)
+	let tag: string
 
-	// Nothing to preview for PDF or MP3
-	const dontNeed =
-		/\.pdf$/.test(src)
-		|| /\.mp3$/.test(src)
-		|| (isWebm && !options.webmHover)
-	if (dontNeed) {
-		return clear()
+	switch (ext) {
+		case "pdf": // Nothing to preview for PDF or MP3
+		case "mp3":
+			return clear()
+		case "webm":
+			if (!options.webmHover) {
+				return clear()
+			}
+			tag = "video"
+			break
+		default:
+			tag = "img"
 	}
 
-	const el = document.createElement(isWebm ? "video" : "img")
+	const el = document.createElement(tag)
 	setAttrs(el, {
 		src: src,
 		autoplay: "",
@@ -141,7 +146,7 @@ function renderPostPreview(event: MouseEvent) {
 	if (!target.matches || !target.matches("a.history")) {
 		return
 	}
-	const m = target.textContent.match(/^>>(\d+)/)
+	const m = target.textContent.match(/^>{2,}(\d+)/)
 	if (!m) {
 		return
 	}
@@ -164,7 +169,7 @@ function onMouseMove(event: MouseEvent) {
 }
 
 document.addEventListener("mousemove", onMouseMove, {
-	passive: true
+	passive: true,
 })
 mouseMove.onChange("event", renderPostPreview)
 mouseMove.onChange("event", renderImagePreview)
