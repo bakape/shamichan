@@ -130,6 +130,7 @@ import (
 	"image/color"
 	"io"
 	"strings"
+	"sync"
 	"time"
 	"unsafe"
 )
@@ -141,6 +142,13 @@ func init() {
 
 var (
 	IO_BUFFER_SIZE int = 4096
+
+	// Global map of AVIOHandlers
+	// One handlers struct per format context. Using ctx pointer address as a
+	// key.
+	handlersMap = handlerMap{
+		m: make(map[uintptr]*avIOHandlers),
+	}
 )
 
 /////////////////////////////////////
@@ -159,14 +167,40 @@ type avIOHandlers struct {
 	Seek        func(int64, int) (int64, error)
 }
 
-// Global map of AVIOHandlers
-// one handlers struct per format context. Using ctx pointer address as a key.
-var handlersMap map[uintptr]*avIOHandlers
-
 type avIOContext struct {
 	// avAVIOContext *_Ctype_AVIOContext
 	avAVIOContext *C.struct_AVIOContext
 	handlerKey    uintptr
+}
+
+type handlerMap struct {
+	sync.RWMutex
+	m map[uintptr]*avIOHandlers
+}
+
+func (h *handlerMap) Set(k uintptr, handlers *avIOHandlers) {
+	h.Lock()
+	h.m[k] = handlers
+	h.Unlock()
+}
+
+func (h *handlerMap) Delete(k uintptr) {
+	h.Lock()
+	delete(h.m, k)
+	h.Unlock()
+}
+
+func (h *handlerMap) Get(k unsafe.Pointer) *avIOHandlers {
+	h.RLock()
+	handlers, ok := h.m[uintptr(k)]
+	h.RUnlock()
+	if !ok {
+		panic(fmt.Sprintf(
+			"No handlers instance found, according pointer: %v",
+			k,
+		))
+	}
+	return handlers
 }
 
 // AVIOContext constructor. Use it only if You need custom IO behaviour!
@@ -183,12 +217,8 @@ func newAVIOContext(ctx *C.AVFormatContext, handlers *avIOHandlers) (*avIOContex
 	var ptrRead, ptrWrite, ptrSeek *[0]byte = nil, nil, nil
 
 	if handlers != nil {
-		if handlersMap == nil {
-			handlersMap = make(map[uintptr]*avIOHandlers)
-		}
-
-		handlersMap[uintptr(unsafe.Pointer(ctx))] = handlers
 		this.handlerKey = uintptr(unsafe.Pointer(ctx))
+		handlersMap.Set(this.handlerKey, handlers)
 	}
 
 	if handlers.ReadPacket != nil {
@@ -211,16 +241,12 @@ func newAVIOContext(ctx *C.AVFormatContext, handlers *avIOHandlers) (*avIOContex
 }
 
 func (this *avIOContext) Free() {
-	delete(handlersMap, this.handlerKey)
+	handlersMap.Delete(this.handlerKey)
 }
 
 //export readCallBack
 func readCallBack(opaque unsafe.Pointer, buf *C.uint8_t, buf_size C.int) C.int {
-	handlers, found := handlersMap[uintptr(opaque)]
-	if !found {
-		panic(fmt.Sprintf("No handlers instance found, according pointer: %v", opaque))
-	}
-
+	handlers := handlersMap.Get(opaque)
 	if handlers.ReadPacket == nil {
 		panic("No reader handler initialized")
 	}
@@ -234,11 +260,7 @@ func readCallBack(opaque unsafe.Pointer, buf *C.uint8_t, buf_size C.int) C.int {
 
 //export writeCallBack
 func writeCallBack(opaque unsafe.Pointer, buf *C.uint8_t, buf_size C.int) C.int {
-	handlers, found := handlersMap[uintptr(opaque)]
-	if !found {
-		panic(fmt.Sprintf("No handlers instance found, according pointer: %v", opaque))
-	}
-
+	handlers := handlersMap.Get(opaque)
 	if handlers.WritePacket == nil {
 		panic("No writer handler initialized.")
 	}
@@ -252,11 +274,7 @@ func writeCallBack(opaque unsafe.Pointer, buf *C.uint8_t, buf_size C.int) C.int 
 
 //export seekCallBack
 func seekCallBack(opaque unsafe.Pointer, offset C.int64_t, whence C.int) C.int64_t {
-	handlers, found := handlersMap[uintptr(opaque)]
-	if !found {
-		panic(fmt.Sprintf("No handlers instance found, according pointer: %v", opaque))
-	}
-
+	handlers := handlersMap.Get(opaque)
 	if handlers.Seek == nil {
 		panic("No seek handler initialized.")
 	}
@@ -301,7 +319,7 @@ func Decode(data []byte) (image.Image, error) {
 		YStride:        int(f.linesize[0]),
 		CStride:        int(f.linesize[0]) / 2,
 		SubsampleRatio: image.YCbCrSubsampleRatio420,
-		Rect:           image.Rectangle{Min: image.Point{X: 0, Y: 0}, Max: image.Point{X: int(f.width), Y: int(f.height)/2*2}}}, nil
+		Rect:           image.Rectangle{Min: image.Point{X: 0, Y: 0}, Max: image.Point{X: int(f.width), Y: int(f.height) / 2 * 2}}}, nil
 }
 
 //Uses CGo FFmpeg binding to find video config
