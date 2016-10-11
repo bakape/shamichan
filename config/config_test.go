@@ -1,44 +1,46 @@
 package config
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 
-	. "gopkg.in/check.v1"
+	. "github.com/bakape/meguca/test"
 )
 
-func Test(t *testing.T) { TestingT(t) }
-
-type Tests struct{}
-
-var _ = Suite(&Tests{})
-
-func (*Tests) SetUpTest(c *C) {
-	global = nil
-	clientJSON = nil
-	boardConfigs = nil
-	hash = ""
-}
-
-func (*Tests) TestSetGet(c *C) {
+func TestSetGet(t *testing.T) {
 	conf := Configs{}
 	conf.Hats = true
-	c.Assert(Set(conf), IsNil)
-	c.Assert(Get(), DeepEquals, &conf)
+
+	if err := Set(conf); err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, Get(), &conf)
+
 	json, hash := GetClient()
-	c.Assert(json, NotNil)
-	c.Assert(hash, Not(Equals), "")
+	if json == nil {
+		t.Fatal("client json not set")
+	}
+	if hash == "" {
+		t.Fatal("hash not set")
+	}
 }
 
-func (*Tests) TestSetGetClient(c *C) {
+func TestSetGetClient(t *testing.T) {
 	std := []byte{1, 2, 3}
 	hash := "foo"
 	SetClient(std, hash)
+
 	json, jsonHash := GetClient()
-	c.Assert(json, DeepEquals, std)
-	c.Assert(jsonHash, Equals, hash)
+	if !bytes.Equal(json, std) {
+		LogUnexpected(t, std, json)
+	}
+	if jsonHash != hash {
+		LogUnexpected(t, hash, jsonHash)
+	}
 }
-func (*Tests) TestMarshalPublicBoardJSON(c *C) {
+
+func TestMarshalPublicBoardJSON(t *testing.T) {
 	b := BoardConfigs{
 		CodeTags: true,
 		PostParseConfigs: PostParseConfigs{
@@ -65,6 +67,10 @@ func (*Tests) TestMarshalPublicBoardJSON(c *C) {
 	std = strings.Replace(std, "\n", "", -1)
 
 	data, err := b.MarshalPublicJSON()
-	c.Assert(err, IsNil)
-	c.Assert(string(data), Equals, std)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s := string(data); s != std {
+		LogUnexpected(t, std, s)
+	}
 }

@@ -15,7 +15,6 @@ func init() {
 }
 
 func TestIsBoard(t *testing.T) {
-	t.Parallel()
 	(*config.Get()).Boards = []string{"a"}
 
 	cases := [...]struct {
@@ -38,6 +37,8 @@ func TestIsBoard(t *testing.T) {
 }
 
 func TestLookupIdentNoReverseProxy(t *testing.T) {
+	t.Parallel()
+
 	const ip = "::1"
 	req := httptest.NewRequest("GET", "/", nil)
 	req.RemoteAddr = ip
@@ -92,6 +93,8 @@ func TestGetIP(t *testing.T) {
 }
 
 func TestBcryptHash(t *testing.T) {
+	t.Parallel()
+
 	const (
 		password = "123456"
 	)
