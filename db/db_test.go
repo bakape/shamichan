@@ -6,6 +6,7 @@ import (
 	"bytes"
 
 	"github.com/bakape/meguca/auth"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -69,7 +70,7 @@ func TestThreadCounter(t *testing.T) {
 		t.Fatal(err)
 	}
 	if ctr != 55 {
-		logUnexpected(t, 55, ctr)
+		LogUnexpected(t, 55, ctr)
 	}
 }
 
@@ -92,11 +93,11 @@ func TestRegisterAccount(t *testing.T) {
 	if err := One(GetAccount(id), &res); err != nil {
 		t.Error(err)
 	}
-	assertDeepEquals(t, res, user)
+	AssertDeepEquals(t, res, user)
 
 	// User name already registered
 	if err := RegisterAccount(id, hash); err != ErrUserNameTaken {
-		t.Errorf("unexpected error: %s", err)
+		UnexpectedError(t, err)
 	}
 }
 
@@ -124,11 +125,11 @@ func TestGetLoginHash(t *testing.T) {
 			t.Parallel()
 			h, err := GetLoginHash(s.id)
 			if err != s.err {
-				logUnexpected(t, s.err, err)
+				LogUnexpected(t, s.err, err)
 			}
 			if s.err == nil {
 				if !bytes.Equal(h, hash) {
-					logUnexpected(t, hash, h)
+					LogUnexpected(t, hash, h)
 				}
 			}
 		})
@@ -139,7 +140,7 @@ func TestGetBoardConfig(t *testing.T) {
 	t.Parallel()
 	const std = `r.Table("boards").Get("a").Without("created")`
 	if q := GetBoardConfig("a").String(); q != std {
-		logUnexpected(t, std, q)
+		LogUnexpected(t, std, q)
 	}
 }
 
@@ -156,7 +157,7 @@ func TestReservePostID(t *testing.T) {
 			t.Fatal(err)
 		}
 		if id != i {
-			logUnexpected(t, i, id)
+			LogUnexpected(t, i, id)
 		}
 	}
 }
@@ -176,7 +177,7 @@ func TestIncrementBoardCounter(t *testing.T) {
 			t.Fatal(err)
 		}
 		if ctr != i {
-			logUnexpected(t, i, ctr)
+			LogUnexpected(t, i, ctr)
 		}
 	}
 }

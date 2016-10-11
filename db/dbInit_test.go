@@ -5,9 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"reflect"
-
 	"github.com/bakape/meguca/config"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -29,16 +28,6 @@ func assertTableClear(t *testing.T, tables ...string) {
 func assertInsert(t *testing.T, table string, doc interface{}) {
 	if err := Insert(table, doc); err != nil {
 		t.Fatal(err)
-	}
-}
-
-func logUnexpected(t *testing.T, expected, got interface{}) {
-	t.Errorf("\nexpected: %#v\ngot:      %#v", expected, got)
-}
-
-func assertDeepEquals(t *testing.T, res, std interface{}) {
-	if !reflect.DeepEqual(res, std) {
-		logUnexpected(t, std, res)
 	}
 }
 
@@ -64,7 +53,7 @@ func TestVerifyVersion(t *testing.T) {
 	// Incompatible DB version
 	err := verifyDBVersion()
 	if fmt.Sprint(err) != `incompatible database version: 0` {
-		t.Errorf("unexpected error: %s", err)
+		UnexpectedError(t, err)
 	}
 }
 
@@ -132,7 +121,7 @@ func TestPopulateDB(t *testing.T) {
 			t.Fatal(err)
 		}
 		if res != std {
-			logUnexpected(t, std, res)
+			LogUnexpected(t, std, res)
 		}
 	})
 
@@ -152,7 +141,7 @@ func TestPopulateDB(t *testing.T) {
 		if err := One(GetMain("config"), &conf); err != nil {
 			t.Fatal(err)
 		}
-		assertDeepEquals(t, conf, config.Defaults)
+		AssertDeepEquals(t, conf, config.Defaults)
 	})
 }
 
@@ -273,7 +262,7 @@ func TestUpgrade15to16(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertDeepEquals(t, threads, stdThreads)
+	AssertDeepEquals(t, threads, stdThreads)
 
 	// Assert and normalize timestamp
 	for _, p := range posts {
@@ -285,5 +274,5 @@ func TestUpgrade15to16(t *testing.T) {
 	stdPosts[0].LastUpdated = then
 	stdPosts[1].LastUpdated = then
 
-	assertDeepEquals(t, posts, stdPosts)
+	AssertDeepEquals(t, posts, stdPosts)
 }

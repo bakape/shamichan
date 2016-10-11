@@ -6,6 +6,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestNotAdmin(t *testing.T) {
@@ -15,7 +16,7 @@ func TestNotAdmin(t *testing.T) {
 	cl.UserID = "foo"
 	for _, fn := range []handler{configServer} {
 		if err := fn(nil, cl); err != errAccessDenied {
-			t.Errorf("unexpected error: %#v", err)
+			UnexpectedError(t, err)
 		}
 	}
 }
@@ -67,7 +68,7 @@ func TestServerConfigSetting(t *testing.T) {
 	}
 	std := config.Defaults
 	std.DefaultCSS = "ashita"
-	assertDeepEquals(t, conf, std)
+	AssertDeepEquals(t, conf, std)
 }
 
 func TestValidateBoardCreation(t *testing.T) {
@@ -137,12 +138,12 @@ func TestBoardCreation(t *testing.T) {
 	if !board.Created.Before(time.Now()) {
 		t.Errorf("invalid board creation time: %#v", board.Created)
 	}
-	assertDeepEquals(t, board.BoardConfigs, std.BoardConfigs)
+	AssertDeepEquals(t, board.BoardConfigs, std.BoardConfigs)
 
 	var boards []string
 	err := db.All(db.GetMain("config").Field("boards"), &boards)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertDeepEquals(t, boards, []string{"a"})
+	AssertDeepEquals(t, boards, []string{"a"})
 }

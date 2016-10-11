@@ -5,6 +5,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -23,7 +24,7 @@ func TestParseLine(t *testing.T) {
 		if links != nil {
 			t.Fatalf("unexpected links: %#v", links)
 		}
-		assertDeepEquals(t, com, types.Command{})
+		AssertDeepEquals(t, com, types.Command{})
 	})
 
 	t.Run("commands enabled", func(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/config"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestParseName(t *testing.T) {
@@ -31,10 +32,10 @@ func TestParseName(t *testing.T) {
 				t.Fatal(err)
 			}
 			if name != c.name {
-				logUnexpected(t, c.name, name)
+				LogUnexpected(t, c.name, name)
 			}
 			if trip != c.trip {
-				logUnexpected(t, c.trip, trip)
+				LogUnexpected(t, c.trip, trip)
 			}
 		})
 	}
@@ -43,7 +44,7 @@ func TestParseName(t *testing.T) {
 		t.Parallel()
 		_, _, err := ParseName(genString(maxLengthName + 1))
 		if err != errNameTooLong {
-			t.Fatalf("unexpected error: %#v", err)
+			UnexpectedError(t, err)
 		}
 	})
 }
@@ -74,11 +75,11 @@ func TestParseSubject(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			sub, err := ParseSubject(c.in)
 			if err != c.err {
-				t.Fatalf("unexpected error: %#v", err)
+				UnexpectedError(t, err)
 			}
 			if c.err == nil {
 				if sub != c.out {
-					logUnexpected(t, c.out, sub)
+					LogUnexpected(t, c.out, sub)
 				}
 			}
 		})
@@ -110,7 +111,7 @@ func TestVerifyPostPassword(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			if err := VerifyPostPassword(c.in); err != c.err {
-				t.Fatalf("unexpected error: %#v", err)
+				UnexpectedError(t, err)
 			}
 		})
 	}
@@ -131,7 +132,7 @@ func TestFormatEmail(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			if s := FormatEmail(c.in); s != c.out {
-				logUnexpected(t, c.out, s)
+				LogUnexpected(t, c.out, s)
 			}
 		})
 	}

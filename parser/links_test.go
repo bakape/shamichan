@@ -3,6 +3,7 @@ package parser
 import (
 	"testing"
 
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 )
 
@@ -45,7 +46,7 @@ func TestParseLinks(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			assertDeepEquals(t, links, c.links)
+			AssertDeepEquals(t, links, c.links)
 		})
 	}
 }

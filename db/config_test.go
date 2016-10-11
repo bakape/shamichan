@@ -5,6 +5,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/templates"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestLoadConfigs(t *testing.T) {
@@ -18,7 +19,7 @@ func TestLoadConfigs(t *testing.T) {
 	if err := loadConfigs(); err != nil {
 		t.Fatal(err)
 	}
-	assertDeepEquals(t, config.Get(), &config.Defaults)
+	AssertDeepEquals(t, config.Get(), &config.Defaults)
 }
 
 func TestUpdateConfigs(t *testing.T) {
@@ -30,5 +31,5 @@ func TestUpdateConfigs(t *testing.T) {
 	if err := updateConfigs(std); err != nil {
 		t.Fatal(err)
 	}
-	assertDeepEquals(t, config.Get(), &std)
+	AssertDeepEquals(t, config.Get(), &std)
 }

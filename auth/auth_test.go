@@ -7,49 +7,48 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/bakape/meguca/config"
-	. "gopkg.in/check.v1"
+	. "github.com/bakape/meguca/test"
 )
 
-func Test(t *testing.T) { TestingT(t) }
-
-type Tests struct{}
-
-var _ = Suite(&Tests{})
-
-func (*Tests) SetUpTest(_ *C) {
+func init() {
 	config.Set(config.Configs{})
-	IsReverseProxied = false
-	ReverseProxyIP = ""
 }
 
-func (*Tests) TestIsBoard(c *C) {
-	config.Set(config.Configs{
-		Boards: []string{"a", ":^)"},
-	})
+func TestIsBoard(t *testing.T) {
+	t.Parallel()
+	(*config.Get()).Boards = []string{"a"}
 
-	samples := [...]struct {
-		in      string
-		isBoard bool
+	cases := [...]struct {
+		name, in string
+		isBoard  bool
 	}{
-		{"a", true},   // Board exists
-		{"b", false},  // Board doesn't exist
-		{"all", true}, // /all/ board
+		{"exits", "a", true},
+		{"doesn't exist", "b", false},
+		{"/all/ board", "all", true},
 	}
 
-	for _, s := range samples {
-		c.Assert(IsBoard(s.in), Equals, s.isBoard)
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			if IsBoard(c.in) != c.isBoard {
+				t.Fatal("unexpected result")
+			}
+		})
 	}
 }
 
-func (*Tests) TestLookupIdentNoReverseProxy(c *C) {
+func TestLookupIdentNoReverseProxy(t *testing.T) {
 	const ip = "::1"
 	req := httptest.NewRequest("GET", "/", nil)
 	req.RemoteAddr = ip
 	std := Ident{IP: ip}
-	c.Assert(LookUpIdent(req), DeepEquals, std)
+
+	if i := LookUpIdent(req); i != std {
+		LogUnexpected(t, std, i)
+	}
 }
 
-func (*Tests) TestGetIP(c *C) {
+func TestGetIP(t *testing.T) {
 	const (
 		ip             = "207.178.71.93"
 		reverseProxyIP = "162.30.251.246"
@@ -57,44 +56,70 @@ func (*Tests) TestGetIP(c *C) {
 	IsReverseProxied = true
 	ReverseProxyIP = reverseProxyIP
 
-	samples := [...]struct {
-		xff, out string
+	cases := [...]struct {
+		name, xff, out string
 	}{
-		{"10.121.169.19", "10.121.169.19"},
-		{"", ip},
-		{"notip, nope", ip},
-		{"105.124.243.122, 10.168.239.157, 127.0.0.1, ::1", "10.168.239.157"},
-		{"105.124.243.122," + reverseProxyIP, "105.124.243.122"},
+		{"valid XFF", "10.121.169.19", "10.121.169.19"},
+		{"no XFF", "", ip},
+		{"invalid XFF", "notip, nope", ip},
+		{
+			"hosted on localhost",
+			"105.124.243.122, 10.168.239.157, 127.0.0.1, ::1",
+			"10.168.239.157",
+		},
+		{
+			"behind reverse proxy",
+			"105.124.243.122," + reverseProxyIP,
+			"105.124.243.122",
+		},
 	}
 
-	for _, s := range samples {
-		req := httptest.NewRequest("GET", "/", nil)
-		req.RemoteAddr = ip
-		if s.xff != "" {
-			req.Header.Set("X-Forwarded-For", s.xff)
-		}
-		c.Assert(GetIP(req), Equals, s.out)
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequest("GET", "/", nil)
+			req.RemoteAddr = ip
+			if c.xff != "" {
+				req.Header.Set("X-Forwarded-For", c.xff)
+			}
+			if i := GetIP(req); i != c.out {
+				LogUnexpected(t, c.out, ip)
+			}
+		})
 	}
 }
 
-func (*Tests) TestBcryptHash(c *C) {
+func TestBcryptHash(t *testing.T) {
 	const (
 		password = "123456"
 	)
 	hash, err := BcryptHash(password, 8)
-	c.Assert(err, IsNil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Mismatch
 	err = BcryptCompare(password+"1", hash)
-	c.Assert(err, Equals, bcrypt.ErrMismatchedHashAndPassword)
+	if err != bcrypt.ErrMismatchedHashAndPassword {
+		UnexpectedError(t, err)
+	}
 
 	// Correct
-	err = BcryptCompare(password, hash)
-	c.Assert(err, IsNil)
+	if err := BcryptCompare(password, hash); err != nil {
+		t.Fatal(err)
+	}
 }
 
-func (*Tests) TestRandomID(c *C) {
+func TestRandomID(t *testing.T) {
+	t.Parallel()
+
 	hash, err := RandomID(32)
-	c.Assert(err, IsNil)
-	c.Assert(hash, Matches, "^.{43}$")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l := len(hash); l != 43 {
+		t.Fatalf("unexpected hash string length: %d", l)
+	}
 }

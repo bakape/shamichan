@@ -6,6 +6,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 )
 
@@ -55,7 +56,7 @@ func TestDice(t *testing.T) {
 				}
 				val := com.Val.([]uint16)
 				if l := len(val); l != c.rolls {
-					logUnexpected(t, c.rolls, l)
+					LogUnexpected(t, c.rolls, l)
 				}
 			}
 		})
@@ -95,7 +96,7 @@ func TestPyu(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			assertDeepEquals(t, com, types.Command{})
+			AssertDeepEquals(t, com, types.Command{})
 		}
 	})
 
@@ -120,7 +121,7 @@ func TestPyu(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				assertDeepEquals(t, com, types.Command{
+				AssertDeepEquals(t, com, types.Command{
 					Type: c.Type,
 					Val:  c.Val,
 				})

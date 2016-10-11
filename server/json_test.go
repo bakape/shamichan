@@ -9,6 +9,7 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -61,7 +62,7 @@ func TestDetectLastN(t *testing.T) {
 
 			req := newRequest(c.in)
 			if n := detectLastN(req); n != c.out {
-				logUnexpected(t, c.out, n)
+				LogUnexpected(t, c.out, n)
 			}
 		})
 	}

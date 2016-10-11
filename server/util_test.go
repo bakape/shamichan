@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"strconv"
@@ -41,16 +40,6 @@ func assertTableClear(t *testing.T, tables ...string) {
 func assertInsert(t *testing.T, table string, doc interface{}) {
 	if err := db.Insert(table, doc); err != nil {
 		t.Fatal(err)
-	}
-}
-
-func logUnexpected(t *testing.T, expected, got interface{}) {
-	t.Errorf("\nexpected: %#v\ngot:      %#v", expected, got)
-}
-
-func assertDeepEquals(t *testing.T, res, std interface{}) {
-	if !reflect.DeepEqual(res, std) {
-		logUnexpected(t, std, res)
 	}
 }
 

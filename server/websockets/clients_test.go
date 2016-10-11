@@ -2,6 +2,8 @@ package websockets
 
 import (
 	"testing"
+
+	. "github.com/bakape/meguca/test"
 )
 
 func newClientMap() *ClientMap {
@@ -38,7 +40,7 @@ func assertSyncID(t *testing.T, m *ClientMap, cl *Client, id SyncID) {
 		t.Error("client not synced")
 	}
 	if sync != id {
-		logUnexpected(t, id, sync)
+		LogUnexpected(t, id, sync)
 	}
 }
 
@@ -87,6 +89,6 @@ func TestCountByIP(t *testing.T) {
 	cls[2].IP = "bar"
 
 	if count := m.CountByIP(); count != 2 {
-		logUnexpected(t, 2, count)
+		LogUnexpected(t, 2, count)
 	}
 }

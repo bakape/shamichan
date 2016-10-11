@@ -3,6 +3,8 @@ package websockets
 import (
 	"encoding/json"
 	"testing"
+
+	. "github.com/bakape/meguca/test"
 )
 
 func marshalJSON(t *testing.T, msg interface{}) []byte {
@@ -30,6 +32,6 @@ func TestDecodeMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 	if msg != std {
-		logUnexpected(t, std, msg)
+		LogUnexpected(t, std, msg)
 	}
 }

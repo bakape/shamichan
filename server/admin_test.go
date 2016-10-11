@@ -13,6 +13,7 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 )
 
 var sampleLoginCredentials = loginCredentials{
@@ -55,7 +56,7 @@ func TestIsLoggedIn(t *testing.T) {
 			rec, req := newPair("/")
 			isValid := isLoggedIn(rec, req, c.user, c.session)
 			if isValid != c.isValid {
-				logUnexpected(t, c.isValid, isValid)
+				LogUnexpected(t, c.isValid, isValid)
 			}
 			if !c.isValid {
 				assertCode(t, rec, 403)
@@ -188,7 +189,7 @@ func TestBoardConfiguration(t *testing.T) {
 	if err := db.One(db.GetBoardConfig(board), &res); err != nil {
 		t.Fatal(err)
 	}
-	assertDeepEquals(t, res, conf)
+	AssertDeepEquals(t, res, conf)
 }
 
 func TestValidateConfigs(t *testing.T) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 )
 
@@ -72,7 +73,7 @@ func TestInsertThread(t *testing.T) {
 			}
 			err := insertThread(marshalJSON(t, req), new(Client))
 			if err != c.err {
-				t.Fatalf("unexpected error %#v", err)
+				UnexpectedError(t, err)
 			}
 		})
 	}
@@ -155,7 +156,7 @@ func testCreateThread(t *testing.T) {
 	}
 
 	// Pointers have to be dereferenced to be asserted
-	assertDeepEquals(t, *post.Image, *stdPost.Image)
+	AssertDeepEquals(t, *post.Image, *stdPost.Image)
 
 	// Normalize timestamps and pointer fields
 	then := thread.BumpTime
@@ -166,9 +167,9 @@ func testCreateThread(t *testing.T) {
 	stdPost.Password = post.Password
 	stdPost.Image = post.Image
 
-	assertDeepEquals(t, thread, stdThread)
-	assertDeepEquals(t, post, stdPost)
-	assertDeepEquals(t, cl.openPost, openPost{
+	AssertDeepEquals(t, thread, stdThread)
+	AssertDeepEquals(t, post, stdPost)
+	AssertDeepEquals(t, cl.openPost, openPost{
 		id:       6,
 		op:       6,
 		board:    "c",
@@ -256,7 +257,7 @@ func TestGetInvalidImage(t *testing.T) {
 		t.Run(c.testName, func(t *testing.T) {
 			t.Parallel()
 			if _, err := getImage(c.token, c.name, false); err != c.err {
-				t.Fatalf("unexpected error %#v", err)
+				UnexpectedError(t, err)
 			}
 		})
 	}
@@ -323,7 +324,7 @@ func TestPostCreationValidations(t *testing.T) {
 			}
 			err := insertPost(marshalJSON(t, req), cl)
 			if err != errNoTextOrImage {
-				t.Fatalf("unexpected error: %#v", err)
+				UnexpectedError(t, err)
 			}
 		})
 	}
@@ -349,7 +350,7 @@ func TestPoctCreationOnLockedThread(t *testing.T) {
 		Body: "a",
 	}
 	if err := insertPost(marshalJSON(t, req), cl); err != errThreadIsLocked {
-		t.Fatalf("unexpected error: %#v", err)
+		UnexpectedError(t, err)
 	}
 }
 
@@ -418,9 +419,9 @@ func TestPostCreation(t *testing.T) {
 	if err := db.One(db.FindPost(6), &post); err != nil {
 		t.Fatal(err)
 	}
-	assertDeepEquals(t, *post.Image, *stdPost.Image)
+	AssertDeepEquals(t, *post.Image, *stdPost.Image)
 	stdPost.Image = post.Image
-	assertDeepEquals(t, post, stdPost.Post)
+	AssertDeepEquals(t, post, stdPost.Post)
 
 	assertIP(t, 6, "::1")
 
@@ -444,7 +445,7 @@ func TestPostCreation(t *testing.T) {
 		ReplyTime: then,
 	}
 	if attrs != stdAttrs {
-		logUnexpected(t, stdAttrs, attrs)
+		LogUnexpected(t, stdAttrs, attrs)
 	}
 
 	var boardCtr int
@@ -456,7 +457,7 @@ func TestPostCreation(t *testing.T) {
 		t.Errorf("unexpected board counter: %d", boardCtr)
 	}
 
-	assertDeepEquals(t, cl.openPost, openPost{
+	AssertDeepEquals(t, cl.openPost, openPost{
 		id:         6,
 		op:         1,
 		time:       then,

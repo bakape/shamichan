@@ -7,6 +7,7 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -123,7 +124,7 @@ func TestOpenPostClosing(t *testing.T) {
 				t.Fatal(err)
 			}
 			if editing != c.editing {
-				logUnexpected(t, c.editing, editing)
+				LogUnexpected(t, c.editing, editing)
 			}
 		})
 	}
@@ -242,7 +243,7 @@ func assertDeleted(t *testing.T, q r.Term, del bool) {
 		t.Fatal(err)
 	}
 	if deleted != del {
-		logUnexpected(t, del, deleted)
+		LogUnexpected(t, del, deleted)
 	}
 }
 

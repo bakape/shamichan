@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 	"github.com/gorilla/websocket"
 )
 
@@ -96,16 +96,6 @@ func assertInsert(t *testing.T, table string, doc interface{}) {
 	}
 }
 
-func logUnexpected(t *testing.T, expected, got interface{}) {
-	t.Errorf("\nexpected: %#v\ngot:      %#v", expected, got)
-}
-
-func assertDeepEquals(t *testing.T, res, std interface{}) {
-	if !reflect.DeepEqual(res, std) {
-		logUnexpected(t, std, res)
-	}
-}
-
 func readListenErrors(t *testing.T, cl *Client, sv *mockWSServer) {
 	defer sv.Done()
 	if err := cl.Listen(); err != nil {
@@ -126,7 +116,7 @@ func assertMessage(t *testing.T, con *websocket.Conn, std string) {
 		t.Errorf("invalid received message format: %d", typ)
 	}
 	if s := string(msg); s != std {
-		logUnexpected(t, std, s)
+		LogUnexpected(t, std, s)
 	}
 }
 
@@ -174,7 +164,7 @@ func captureLog(fn func()) string {
 func assertLog(t *testing.T, input, std string) {
 	std = `\d+/\d+/\d+ \d+:\d+:\d+ ` + std
 	if strings.HasPrefix(std, input) {
-		logUnexpected(t, std, input)
+		LogUnexpected(t, std, input)
 	}
 }
 
@@ -190,7 +180,7 @@ func TestTestClose(t *testing.T) {
 	go func() {
 		defer sv.Done()
 		if err := cl.Listen(); err != std {
-			t.Fatalf("unexpected error: %#v", err)
+			UnexpectedError(t, err)
 		}
 	}()
 	cl.Close(std)
@@ -345,7 +335,7 @@ func TestClientCleanUp(t *testing.T) {
 	cl, wcl := sv.NewClient()
 	Clients.Add(cl, id)
 	if _, sync := Clients.GetSync(cl); sync != id {
-		logUnexpected(t, id, sync)
+		LogUnexpected(t, id, sync)
 	}
 
 	sv.Add(1)

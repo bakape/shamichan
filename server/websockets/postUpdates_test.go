@@ -13,6 +13,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 )
 
@@ -113,7 +114,7 @@ func TestWriteBacklinks(t *testing.T) {
 				t.Fatal(err)
 			}
 			if link != std {
-				logUnexpected(t, std, link)
+				LogUnexpected(t, std, link)
 			}
 
 			msg, err := EncodeMessage(MessageBacklink, linkMessage{
@@ -193,7 +194,7 @@ func TestAppendBodyTooLong(t *testing.T) {
 		bodyLength: parser.MaxLengthBody,
 	}
 	if err := appendRune(nil, cl); err != parser.ErrBodyTooLong {
-		t.Fatalf("unexpected error %#v", err)
+		UnexpectedError(t, err)
 	}
 }
 
@@ -237,7 +238,7 @@ func assertBody(t *testing.T, id int64, body string) {
 		t.Fatal(err)
 	}
 	if res != body {
-		logUnexpected(t, body, res)
+		LogUnexpected(t, body, res)
 	}
 }
 
@@ -252,7 +253,7 @@ func assertRepLog(t *testing.T, id int64, log []string) {
 	for i := range res {
 		strRes[i] = string(res[i])
 	}
-	assertDeepEquals(t, strRes, log)
+	AssertDeepEquals(t, strRes, log)
 }
 
 func TestAppendNewline(t *testing.T) {
@@ -338,7 +339,7 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 		}
 		const std = "03[2,10]"
 		if s := string(log); s != std {
-			logUnexpected(t, std, s)
+			LogUnexpected(t, std, s)
 		}
 	})
 
@@ -447,7 +448,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 			if err := db.One(q, &links); err != nil {
 				t.Fatal(err)
 			}
-			assertDeepEquals(t, links, s.val)
+			AssertDeepEquals(t, links, s.val)
 		})
 	}
 }
@@ -496,7 +497,7 @@ func TestClosePost(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertDeepEquals(t, cl.openPost, openPost{})
+	AssertDeepEquals(t, cl.openPost, openPost{})
 	assertRepLog(t, 2, append(strDummyLog, "062"))
 	assertBody(t, 2, "abc")
 	assertPostClosed(t, 2)
@@ -552,7 +553,7 @@ func TestSpliceValidityChecks(t *testing.T) {
 				Text:  c.text,
 			}
 			if err := spliceText(marshalJSON(t, req), cl); err != c.err {
-				t.Errorf("unexpected error: %#v", err)
+				UnexpectedError(t, err)
 			}
 		})
 	}
@@ -784,7 +785,7 @@ func TestInsertImageIntoPostWithImage(t *testing.T) {
 		hasImage: true,
 	}
 	if err := insertImage(nil, cl); err != errHasImage {
-		t.Fatalf("unexpected error: %#v", err)
+	UnexpectedError(t, err)
 	}
 }
 
@@ -806,7 +807,7 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 		Token: "123",
 	}
 	if err := insertImage(marshalJSON(t, req), cl); err != errTextOnly {
-		t.Fatalf("unexpected error: %#v", err)
+		UnexpectedError(t, err)
 	}
 }
 
@@ -872,7 +873,7 @@ func TestInsertImage(t *testing.T) {
 		t.Fatal(err)
 	}
 	if res != std {
-		logUnexpected(t, std, res)
+		LogUnexpected(t, std, res)
 	}
 
 	if !cl.openPost.hasImage {

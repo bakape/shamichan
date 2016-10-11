@@ -10,6 +10,7 @@ import (
 	"bytes"
 
 	"github.com/bakape/meguca/imager/assets"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -44,7 +45,7 @@ func (a *allocationTester) Allocate() {
 func (a *allocationTester) AssertDeleted() {
 	for _, path := range a.paths {
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			a.t.Errorf("unexpected error: %v", err)
+			UnexpectedError(a.t, err)
 		}
 	}
 }
@@ -66,7 +67,7 @@ func TestFindImageThumb(t *testing.T) {
 		t.Parallel()
 		_, err := FindImageThumb("sha")
 		if err != r.ErrEmptyResult {
-			t.Errorf("unexpected error: %v", err)
+			UnexpectedError(t, err)
 		}
 	})
 	t.Run("existant image", testFindImageThumb)
@@ -88,7 +89,7 @@ func testFindImageThumb(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertDeepEquals(t, img, thumbnailed.ImageCommon)
+	AssertDeepEquals(t, img, thumbnailed.ImageCommon)
 	assertImageRefCount(t, id, 2)
 }
 
@@ -169,7 +170,7 @@ func TestCleanUpFailedAllocation(t *testing.T) {
 	}
 
 	if reErr := cleanUpFailedAllocation(img, err); reErr != err {
-		logUnexpected(t, err, reErr)
+		LogUnexpected(t, err, reErr)
 	}
 	at.AssertDeleted()
 }
@@ -216,7 +217,7 @@ func TestAllocateImage(t *testing.T) {
 			Posts:       1,
 		}
 		if doc != std {
-			logUnexpected(t, std, doc)
+			LogUnexpected(t, std, doc)
 		}
 	})
 }
@@ -250,6 +251,6 @@ func TestUseImageToken(t *testing.T) {
 	}
 	std := assets.StdJPEG.ImageCommon
 	if img != std {
-		logUnexpected(t, img, std)
+		LogUnexpected(t, img, std)
 	}
 }

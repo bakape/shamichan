@@ -9,6 +9,7 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 )
 
 const (
@@ -47,7 +48,7 @@ func TestRegistrationValidations(t *testing.T) {
 				t.Fatal(err)
 			}
 			if code != c.code {
-				logUnexpected(t, c.code, code)
+				LogUnexpected(t, c.code, code)
 			}
 		})
 	}
@@ -102,7 +103,7 @@ func assertValidLogin(
 	}
 	std := strconv.Itoa(int(typ)) + `{"code":0,"session":"`
 	if s := string(msg[:23]); s != std {
-		logUnexpected(t, std, s)
+		LogUnexpected(t, std, s)
 	}
 }
 
@@ -130,7 +131,7 @@ func TestAlreadyLoggedIn(t *testing.T) {
 	}
 	for _, fn := range [...]handler{register, login, authenticateSession} {
 		if err := fn(nil, cl); err != errAlreadyLoggedIn {
-			t.Fatalf("unexpected error: %#v", err)
+			UnexpectedError(t, err)
 		}
 	}
 }
@@ -142,7 +143,7 @@ func TestNotLoggedIn(t *testing.T) {
 	fns := [...]handler{logOut, logOutAll, changePassword, createBoard}
 	for _, fn := range fns {
 		if err := fn(nil, cl); err != errNotLoggedIn {
-			t.Fatalf("unexpected error: %#v", err)
+			UnexpectedError(t, err)
 		}
 	}
 }
@@ -217,10 +218,10 @@ func TestAuthentication(t *testing.T) {
 		t.Fatal(err)
 	}
 	if cl.sessionToken != session {
-		logUnexpected(t, session, cl.sessionToken)
+		LogUnexpected(t, session, cl.sessionToken)
 	}
 	if cl.UserID != id {
-		logUnexpected(t, id, cl.UserID)
+		LogUnexpected(t, id, cl.UserID)
 	}
 	assertMessage(t, wcl, "35true")
 
@@ -270,7 +271,7 @@ func TestLogOut(t *testing.T) {
 	}
 	res[0].Expires = time.Time{}
 	std := []auth.Session{sessions[1]}
-	assertDeepEquals(t, res, std)
+	AssertDeepEquals(t, res, std)
 }
 
 func assertLogout(t *testing.T, id string, fn handler) {
@@ -317,7 +318,7 @@ func TestLogOutAll(t *testing.T) {
 		t.Fatal(err)
 	}
 	user.Sessions = []auth.Session{}
-	assertDeepEquals(t, res, user)
+	AssertDeepEquals(t, res, user)
 }
 
 func TestChangePassword(t *testing.T) {

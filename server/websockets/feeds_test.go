@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -155,9 +156,9 @@ func TestBufferUpdate(t *testing.T) {
 			}
 			feed := feeds.feeds[c.update.OP]
 
-			assertDeepEquals(t, feed.cache[c.update.ID], c.cached)
+			AssertDeepEquals(t, feed.cache[c.update.ID], c.cached)
 			if s := feed.buf.String(); s != c.buf {
-				logUnexpected(t, c.buf, s)
+				LogUnexpected(t, c.buf, s)
 			}
 		})
 	}
@@ -180,7 +181,7 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 
 	const std = "a\u0000b"
 	if s := u.buf.String(); s != std {
-		logUnexpected(t, std, s)
+		LogUnexpected(t, std, s)
 	}
 	if !u.multiple {
 		t.Fatal("containing multiple messages not recorded")
@@ -254,5 +255,5 @@ func TestFeedCleanUp(t *testing.T) {
 			},
 		},
 	}
-	assertDeepEquals(t, feeds.feeds, std)
+	AssertDeepEquals(t, feeds.feeds, std)
 }

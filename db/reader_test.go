@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
@@ -97,7 +98,7 @@ func testGetPost(t *testing.T) {
 	// Does not exist
 	post, err := GetPost(99)
 	if err != r.ErrEmptyResult {
-		t.Errorf("unexpected error: %v", err)
+		UnexpectedError(t, err)
 	}
 	if !reflect.DeepEqual(post, types.StandalonePost{}) {
 		t.Errorf("post not empty: %#v", post)
@@ -116,7 +117,7 @@ func testGetPost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertDeepEquals(t, post, std)
+	AssertDeepEquals(t, post, std)
 }
 
 func testGetAllBoard(t *testing.T) {
@@ -144,7 +145,7 @@ func testGetAllBoard(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertDeepEquals(t, board, &std)
+	AssertDeepEquals(t, board, &std)
 }
 
 func testGetBoard(t *testing.T) {
@@ -188,7 +189,7 @@ func testGetBoard(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			assertDeepEquals(t, board, &c.std)
+			AssertDeepEquals(t, board, &c.std)
 		})
 	}
 }
@@ -261,9 +262,9 @@ func testGetThread(t *testing.T) {
 
 			thread, err := GetThread(c.id, c.lastN)
 			if err != c.err {
-				t.Fatalf("unexpected error: %#v", err)
+				UnexpectedError(t, err)
 			}
-			assertDeepEquals(t, thread, c.std)
+			AssertDeepEquals(t, thread, c.std)
 		})
 	}
 }

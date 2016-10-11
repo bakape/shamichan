@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/config"
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 )
 
@@ -46,7 +47,7 @@ func TestSyncToBoard(t *testing.T) {
 		Board:  "c",
 	}
 	if err := synchronise(marshalJSON(t, msg), cl); err != errInvalidBoard {
-		t.Errorf("unexpected error: %#v", err)
+		UnexpectedError(t, err)
 	}
 
 	// Valid synchronisation
@@ -89,7 +90,7 @@ func TestInvalidThreadSync(t *testing.T) {
 		Thread: 1,
 	})
 	if err := synchronise(data, cl); err != errInvalidThread {
-		t.Fatalf("unexpected error: %#v", err)
+		UnexpectedError(t, err)
 	}
 }
 
