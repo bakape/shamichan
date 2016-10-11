@@ -1,94 +1,124 @@
 package assets
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
+	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
-	. "gopkg.in/check.v1"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+func TestMain(m *testing.M) {
+	if err := CreateDirs(); err != nil {
+		panic(err)
+	}
 
-var _ = Suite(&Tests{})
+	code := m.Run()
 
-type Tests struct{}
-
-func (*Tests) SetUpSuite(c *C) {
-	c.Assert(CreateDirs(), IsNil)
+	if err := DeleteDirs(); err != nil {
+		panic(err)
+	}
+	os.Exit(code)
 }
 
-func (*Tests) TearDownTest(c *C) {
-	c.Assert(ResetDirs(), IsNil)
+func reset(t *testing.T) {
+	if err := ResetDirs(); err != nil {
+		t.Fatal(err)
+	}
 }
 
-func (*Tests) TearDownSuite(c *C) {
-	c.Assert(DeleteDirs(), IsNil)
-}
+func TestGetFilePaths(t *testing.T) {
+	t.Parallel()
 
-func (*Tests) TestGetFilePaths(c *C) {
 	webm := GetFilePaths("jingai", types.WEBM)
 	jpeg := GetFilePaths("modoki", types.JPEG)
-	checks := [...]struct {
-		got, expected string
+
+	cases := [...]struct {
+		name, got, expected string
 	}{
-		{webm[0], "images/src/jingai.webm"},
-		{webm[1], "images/thumb/jingai.png"},
-		{jpeg[0], "images/src/modoki.jpg"},
-		{jpeg[1], "images/thumb/modoki.jpg"},
+		{"not JPEG src", webm[0], "images/src/jingai.webm"},
+		{"not JPEG thumb", webm[1], "images/thumb/jingai.png"},
+		{"JPEG src", jpeg[0], "images/src/modoki.jpg"},
+		{"JPEG thumb", jpeg[1], "images/thumb/modoki.jpg"},
 	}
-	for _, check := range checks {
-		c.Assert(check.got, Equals, filepath.FromSlash(check.expected))
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			if c.got != c.expected {
+				LogUnexpected(t, c.expected, c.got)
+			}
+		})
 	}
 }
 
-func (*Tests) TestDeleteAssets(c *C) {
-	samples := [...]struct {
-		name     string
-		fileType uint8
+func TestDeleteAssets(t *testing.T) {
+	reset(t)
+
+	cases := [...]struct {
+		testName, name string
+		fileType       uint8
 	}{
-		{"foo", types.JPEG},
-		{"bar", types.PNG},
+		{"JPEG", "foo", types.JPEG},
+		{"PNG", "bar", types.PNG},
 	}
 
-	// Create all sample files
-	for _, sample := range samples {
-		for _, path := range GetFilePaths(sample.name, sample.fileType) {
-			file, err := os.Create(path)
-			c.Assert(err, IsNil)
-			file.Close()
-		}
-	}
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.testName, func(t *testing.T) {
+			t.Parallel()
 
-	// Delete them and check, if deleted
-	for _, sample := range samples {
-		c.Assert(Delete(sample.name, sample.fileType), IsNil)
+			// Create files
+			for _, path := range GetFilePaths(c.name, c.fileType) {
+				file, err := os.Create(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := file.Close(); err != nil {
+					t.Fatal(err)
+				}
+			}
 
-		for _, path := range GetFilePaths(sample.name, sample.fileType) {
-			_, err := os.Stat(path)
-			c.Assert(err, NotNil)
-			c.Assert(os.IsNotExist(err), Equals, true)
-		}
+			// Delete them and check, if deleted
+			if err := Delete(c.name, c.fileType); err != nil {
+				t.Fatal(err)
+			}
+			for _, path := range GetFilePaths(c.name, c.fileType) {
+				_, err := os.Stat(path)
+				if !os.IsNotExist(err) {
+					UnexpectedError(t, err)
+				}
+			}
+		})
 	}
 }
 
-func (*Tests) TestDeleteMissingAssets(c *C) {
-	c.Assert(Delete("akari", types.PNG), IsNil)
+func TestDeleteMissingAssets(t *testing.T) {
+	reset(t)
+
+	if err := Delete("akarin", types.PNG); err != nil {
+		t.Fatal(err)
+	}
 }
 
-func (*Tests) TestWriteFile(c *C) {
-	std := []byte{1, 0, 0, 3, 2}
+func TestWriteFile(t *testing.T) {
+	reset(t)
+
+	std := []byte("abc")
 	path := filepath.FromSlash("images/src/write_test")
-	c.Assert(writeFile(path, std), IsNil)
+	if err := writeFile(path, std); err != nil {
+		t.Fatal(err)
+	}
 
-	buf, err := ioutil.ReadFile(path)
-	c.Assert(err, IsNil)
-	c.Assert(buf, DeepEquals, std)
+	AssertFileEquals(t, path, std)
 }
 
-func (*Tests) TestWriteAssets(c *C) {
+func TestWriteAssets(t *testing.T) {
+	reset(t)
+
 	const (
 		name     = "foo"
 		fileType = types.JPEG
@@ -98,10 +128,11 @@ func (*Tests) TestWriteAssets(c *C) {
 		{4, 5, 6},
 	}
 
-	c.Assert(Write(name, fileType, std[0], std[1]), IsNil)
+	if err := Write(name, fileType, std[0], std[1]); err != nil {
+		t.Fatal(err)
+	}
+
 	for i, path := range GetFilePaths(name, fileType) {
-		buf, err := ioutil.ReadFile(path)
-		c.Assert(err, IsNil)
-		c.Assert(buf, DeepEquals, std[i])
+		AssertFileEquals(t, path, std[i])
 	}
 }

@@ -99,13 +99,13 @@ func CreateDirs() error {
 }
 
 // DeleteDirs recursively deletes the image storage folder. Only used for
-// cleaning up  after tests.
+// cleaning up after tests.
 func DeleteDirs() error {
 	return os.RemoveAll("images")
 }
 
 // ResetDirs removes all contents from the image storage directories. Only
-// used for cleaning up  after tests.
+// used for cleaning up after tests.
 func ResetDirs() error {
 	if err := DeleteDirs(); err != nil {
 		return err
