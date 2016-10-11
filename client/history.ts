@@ -89,5 +89,8 @@ on(document, "click", handleClick, {
 // For back and forward history events
 window.onpopstate = e => {
 	navigate((e.target as Window).location.href, null, false).catch(alertError)
-	$threads.scrollTop = e.state || 0 // Scroll to saved position
+	// Scroll to saved position
+	if (e.state !== null) {
+		$threads.scrollTop = e.state
+	}
 }

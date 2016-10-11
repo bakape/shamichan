@@ -1,14 +1,16 @@
-import {Post, fileTypes} from "./models"
+import { Post, fileTypes } from "./models"
 import View from "../view"
 import {
 	renderFigcaption, renderImage, sourcePath, thumbPath,
 } from "./render/image"
-import {write, $threads} from "../render"
+import { write, $threads } from "../render"
 import options from "../options"
-import {setAttrs, on} from "../util"
-import {getModel, posts} from "../state"
-import {trigger} from "../hooks"
-import {images as lang} from "../lang"
+import { setAttrs, on } from "../util"
+import { getModel, posts } from "../state"
+import { trigger } from "../hooks"
+import { images as lang } from "../lang"
+import { deferInit } from "../defer"
+
 
 // Specs for hadnling image search link clicks
 type ImageSearchSpec = {
@@ -17,12 +19,12 @@ type ImageSearchSpec = {
 }
 
 // Types of data requested by the search provider
-const enum ISType {thumb, MD5, SHA1}
+const enum ISType { thumb, MD5, SHA1 }
 
 // Expand all image thumbnails automatically
 export let expandAll = false
 
-const ISSpecs: {[engine: string]: ImageSearchSpec} = {
+const ISSpecs: { [engine: string]: ImageSearchSpec } = {
 	google: {
 		type: ISType.thumb,
 		url: "https://www.google.com/searchbyimage?image_url=",
@@ -53,7 +55,7 @@ export default class ImageHandler extends View<Post> {
 		const img = this.model.image
 		write(() =>
 			(renderFigcaption(this.el.querySelector("figcaption"), img, reveal),
-			renderImage(this.el.querySelector("figure"), img, reveal)))
+				renderImage(this.el.querySelector("figure"), img, reveal)))
 	}
 
 	toggleImageExpansion(event: Event) {
@@ -64,15 +66,15 @@ export default class ImageHandler extends View<Post> {
 		}
 
 		switch (img.fileType) {
-		case fileTypes.pdf:
-			event.preventDefault()
-			window.open(sourcePath(img.SHA1, img.fileType), "_blank")
-			return
-		case fileTypes.mp3:
-			event.preventDefault()
-			return this.renderAudio()
-		default:
-			return this.expandImage(event, false)
+			case fileTypes.pdf:
+				event.preventDefault()
+				window.open(sourcePath(img.SHA1, img.fileType), "_blank")
+				return
+			case fileTypes.mp3:
+				event.preventDefault()
+				return this.renderAudio()
+			default:
+				return this.expandImage(event, false)
 		}
 	}
 
@@ -87,24 +89,24 @@ export default class ImageHandler extends View<Post> {
 		const img = this.model.image
 
 		switch (img.fileType) {
-		case fileTypes.webm:
-			write(() => {
-				const $v = this.el.querySelector("video")
-				if ($v) {
-					$v.remove()
-				}
-				(this.el.querySelector("figure img") as HTMLElement)
-					.hidden = false
-			})
-			break
-		case fileTypes.mp3:
-			write(() => {
-				const $a = this.el.querySelector("audio")
-				if ($a) {
-					$a.remove()
-				}
-			})
-			break
+			case fileTypes.webm:
+				write(() => {
+					const $v = this.el.querySelector("video")
+					if ($v) {
+						$v.remove()
+					}
+					(this.el.querySelector("figure img") as HTMLElement)
+						.hidden = false
+				})
+				break
+			case fileTypes.mp3:
+				write(() => {
+					const $a = this.el.querySelector("audio")
+					if ($a) {
+						$a.remove()
+					}
+				})
+				break
 		}
 
 		this.renderImage()
@@ -118,24 +120,24 @@ export default class ImageHandler extends View<Post> {
 		img.expanded = img.tallerThanViewport = img.revealed = false
 	}
 
-	expandImage(event: Event|null, noScroll: boolean) {
+	expandImage(event: Event | null, noScroll: boolean) {
 		const mode = options.inlineFit,
 			img = this.model.image
 		let cls = "expanded "
 
 		switch (mode) {
-		case "none":
-			return
-		case "width":
-			cls += "fit-to-width"
-			img.tallerThanViewport = img.dims[1] > window.innerHeight
-			if (img.tallerThanViewport && !noScroll) {
-				this.el.scrollIntoView()
-			}
-			break
-		case "screen":
-			cls += "fit-to-screen"
-			break
+			case "none":
+				return
+			case "width":
+				cls += "fit-to-width"
+				img.tallerThanViewport = img.dims[1] > window.innerHeight
+				if (img.tallerThanViewport && !noScroll) {
+					this.el.scrollIntoView()
+				}
+				break
+			case "screen":
+				cls += "fit-to-screen"
+				break
 		}
 		this.model.image.expanded = true
 		if (event) {
@@ -226,15 +228,15 @@ function handleImageSearch(event: Event) {
 		{type, url} = ISSpecs[id]
 	let arg: string
 	switch (type) {
-	case ISType.thumb:
-		arg = location.origin + thumbPath(img.SHA1, img.fileType)
-		break
-	case ISType.MD5:
-		arg = img.MD5
-		break
-	case ISType.SHA1:
-		arg = img.SHA1
-		break
+		case ISType.thumb:
+			arg = location.origin + thumbPath(img.SHA1, img.fileType)
+			break
+		case ISType.MD5:
+			arg = img.MD5
+			break
+		case ISType.SHA1:
+			arg = img.SHA1
+			break
 	}
 	window.open(url + encodeURIComponent(arg), "_blank")
 }
@@ -269,31 +271,33 @@ function shouldAutoExpand(model: Post): boolean {
 		return false
 	}
 	switch (model.image.fileType) {
-	case fileTypes.mp3:
-	case fileTypes.mp4:
-	case fileTypes.ogg:
-	case fileTypes.pdf:
-	case fileTypes.webm:
-		return false
+		case fileTypes.mp3:
+		case fileTypes.mp4:
+		case fileTypes.ogg:
+		case fileTypes.pdf:
+		case fileTypes.webm:
+			return false
 	}
 	return true
 }
 
-on($threads, "click", handleImageClick, {
-	selector: "img, video",
-})
+deferInit(() => {
+	on($threads, "click", handleImageClick, {
+		selector: "img, video",
+	})
 
-on($threads, "click", toggleHiddenThumbnail, {
-	passive: true,
-	selector: ".image-toggle",
-})
+	on($threads, "click", toggleHiddenThumbnail, {
+		passive: true,
+		selector: ".image-toggle",
+	})
 
-on($threads, "click", handleImageSearch, {
-	passive: true,
-	selector: ".image-search",
-})
+	on($threads, "click", handleImageSearch, {
+		passive: true,
+		selector: ".image-search",
+	})
 
-on($threads, "click", toggleExpandAll, {
-	passive: true,
-	selector: "#expand-images",
+	on($threads, "click", toggleExpandAll, {
+		passive: true,
+		selector: "#expand-images",
+	})
 })

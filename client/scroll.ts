@@ -9,13 +9,16 @@ const $banner = document.getElementById("banner")
 
 let $lock: HTMLElement,
 	$reference: Element,
-	atBottom: boolean
+	atBottom: boolean,
+	ticking: boolean
 
 // Scroll to target anchor element, if any
 export function scrollToAnchor() {
 	if (!location.hash) {
-		$threads.scrollTop = 0
-		checkBottom()
+		if (!history.state) {
+			$threads.scrollTop = 0
+			checkBottom(0)
+		}
 		return
 	}
 	const el = document.querySelector(location.hash)
@@ -59,13 +62,13 @@ export function scrollToBottom() {
 }
 
 // Set the scroll lock position to a post or to the bottom of the document
-export function checkBottom() {
+export function checkBottom(scrollTop: number = $threads.scrollTop) {
 	if (!page.thread) {
 		atBottom = false
 		return
 	}
 	const threadsBottom =
-		$threads.scrollTop
+		scrollTop
 		+ window.innerHeight
 		- $banner.offsetHeight
 	atBottom = threadsBottom >= $threads.scrollHeight
@@ -114,9 +117,21 @@ function referenceDistance(): number {
 	}
 }
 
+// Check, if we are at page bottom and persists to position on scroll. Defered
+// to animation frames to reduce lag.
+function onScroll() {
+	if (ticking) {
+		return
+	}
+	ticking = true
+	requestAnimationFrame(() => {
+		checkBottom()
+		ticking = false
+	})
+}
+
 deferInit(() => {
-	// Check, if we are at page bottom on each scroll
-	$threads.addEventListener("scroll", checkBottom, {
+	$threads.addEventListener("scroll", onScroll, {
 		passive: true,
 	})
 

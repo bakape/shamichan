@@ -2,6 +2,7 @@ import { makeAttrs, makeFrag } from "../util"
 import { $threads, write } from "../render"
 import { on } from "../util"
 import { fetchJSON } from "../json"
+import { deferInit } from "../defer"
 
 type OEmbedDoc = {
 	title: string
@@ -128,12 +129,14 @@ async function toggleExpansion(e: MouseEvent) {
 	})
 }
 
-on($threads, "mouseover", fetchMeta, {
-	passive: true,
-	selector: ".embed",
-})
+deferInit(() => {
+	on($threads, "mouseover", fetchMeta, {
+		passive: true,
+		selector: ".embed",
+	})
 
-on($threads, "click", toggleExpansion, {
-	selector: ".embed",
+	on($threads, "click", toggleExpansion, {
+		selector: ".embed",
+	})
 })
 
