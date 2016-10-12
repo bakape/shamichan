@@ -60,8 +60,16 @@ export function insertPost(data: PostData) {
 	const model = new Post(data)
 	posts.add(model)
 	const view = new PostView(model)
-	write(() =>
-		$threadContainer.append(view.el))
+
+	// Find last allocated post and insert after it
+	write(() => {
+		const last = $threadContainer.lastElementChild
+		if (last.id === "p0") {
+			last.before(view.el)
+		} else {
+			last.after(view.el)
+		}
+	})
 
 	postAdded()
 	if (model.links) {
