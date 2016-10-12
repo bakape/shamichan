@@ -1,14 +1,18 @@
 package imager
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/imager/assets"
-	. "gopkg.in/check.v1"
+	. "github.com/bakape/meguca/test"
 )
 
 const mp3Length uint32 = 1
 
-func (*Imager) TestMP3Detection(c *C) {
-	samples := [...]struct {
+func TestMP3Detection(t *testing.T) {
+	t.Parallel()
+
+	cases := [...]struct {
 		ext   string
 		isMP3 bool
 	}{
@@ -17,25 +21,44 @@ func (*Imager) TestMP3Detection(c *C) {
 		{"txt", false},
 	}
 
-	for _, s := range samples {
-		isMp3, err := detectMP3(readSample("sample."+s.ext, c))
-		c.Assert(err, IsNil)
-		c.Assert(isMp3, Equals, s.isMP3)
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.ext, func(t *testing.T) {
+			t.Parallel()
+
+			isMp3, err := detectMP3(readSample(t, "sample."+c.ext))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if isMp3 != c.isMP3 {
+				t.Fatal("unexpected result")
+			}
+		})
 	}
 }
 
-func (*Imager) TestProcessMP3NoCover(c *C) {
-	res := processMP3(readSample("sample.mp3", c))
-	c.Assert(res.err, IsNil)
-	c.Assert(res.thumb, DeepEquals, readSample("audio-fallback.png", c))
-	c.Assert(res.dims, Equals, [4]uint16{150, 150, 150, 150})
-	c.Assert(res.length, Equals, mp3Length)
+func TestProcessMP3NoCover(t *testing.T) {
+	res := processMP3(readSample(t, "sample.mp3"))
+	if res.err != nil {
+		t.Fatal(res.err)
+	}
+
+	AssertBufferEquals(t, res.thumb, readSample(t, "audio-fallback.png"))
+	assertDims(t, res.dims, [4]uint16{150, 150, 150, 150})
+	if res.length != mp3Length {
+		t.Fatalf("unexpected length: %d : %d", mp3Length, res.length)
+	}
 }
 
-func (*Imager) TestProcessMP3(c *C) {
-	res := processMP3(readSample("with-cover.mp3", c))
-	c.Assert(res.err, IsNil)
-	assertThumbnail(res.thumb, c)
-	c.Assert(res.dims, Equals, assets.StdDims["png"])
-	c.Assert(res.length, Equals, mp3Length)
+func TestProcessMP3(t *testing.T) {
+	res := processMP3(readSample(t, "with-cover.mp3"))
+	if res.err != nil {
+		t.Fatal(res.err)
+	}
+
+	assertThumbnail(t, res.thumb)
+	assertDims(t, res.dims, assets.StdDims["png"])
+	if res.length != mp3Length {
+		t.Fatalf("unexpected length: %d : %d", mp3Length, res.length)
+	}
 }

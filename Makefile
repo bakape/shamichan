@@ -97,7 +97,6 @@ dist_clean: clean
 
 # Run all server tests
 test: server_deps
-	go get gopkg.in/check.v1
 	go test ./...
 
 # Build ffmpeg for integration testing with Travis.cl. We need these, because

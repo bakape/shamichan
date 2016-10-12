@@ -19,8 +19,7 @@ var (
 	errTooTall = errors.New("image too tall")
 )
 
-// InitImager applies the thumbnail quality configuration and starts the image
-// token expiry scheduler
+// InitImager applies the thumbnail quality configuration
 func InitImager() error {
 	if err := assets.CreateDirs(); err != nil {
 		return err

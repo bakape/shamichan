@@ -8,7 +8,7 @@ import (
 	"github.com/Soreil/audio"
 )
 
-// Diricetory for static image asset storage. Overridable for tests.
+// Directory for static image asset storage. Overridable for tests.
 var assetRoot = "www"
 
 // Fallback image for MP3 files with no cover

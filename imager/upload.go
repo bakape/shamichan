@@ -40,6 +40,8 @@ var (
 		{detectMP4, types.MP4},
 		{detectOGG, types.OGG},
 	}
+
+	errTooLarge = errors.New("file too large")
 )
 
 // Response from a thumbnail generation performed concurently
@@ -122,7 +124,7 @@ func parseUploadForm(req *http.Request) error {
 		return err
 	}
 	if length > config.Get().MaxSize*1024*1024 {
-		return errors.New("file too large")
+		return errTooLarge
 	}
 	return req.ParseMultipartForm(0)
 }
@@ -197,8 +199,8 @@ func detectMP4(buf []byte) (bool, error) {
 	return false, nil
 }
 
-// Concurently delegate the processing of the file to an apropriate function by file
-// type
+// Concurently delegate the processing of the file to an apropriate function by
+// file type
 func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 	ch := make(chan thumbResponse)
 

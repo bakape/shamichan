@@ -13,16 +13,14 @@ func TestMain(m *testing.M) {
 	if err := CreateDirs(); err != nil {
 		panic(err)
 	}
+	defer  DeleteDirs()
 
 	code := m.Run()
 
-	if err := DeleteDirs(); err != nil {
-		panic(err)
-	}
 	os.Exit(code)
 }
 
-func reset(t *testing.T) {
+func resetDirs(t *testing.T) {
 	if err := ResetDirs(); err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +54,7 @@ func TestGetFilePaths(t *testing.T) {
 }
 
 func TestDeleteAssets(t *testing.T) {
-	reset(t)
+	resetDirs(t)
 
 	cases := [...]struct {
 		testName, name string
@@ -97,7 +95,7 @@ func TestDeleteAssets(t *testing.T) {
 }
 
 func TestDeleteMissingAssets(t *testing.T) {
-	reset(t)
+	resetDirs(t)
 
 	if err := Delete("akarin", types.PNG); err != nil {
 		t.Fatal(err)
@@ -105,7 +103,7 @@ func TestDeleteMissingAssets(t *testing.T) {
 }
 
 func TestWriteFile(t *testing.T) {
-	reset(t)
+	resetDirs(t)
 
 	std := []byte("abc")
 	path := filepath.FromSlash("images/src/write_test")
@@ -117,7 +115,7 @@ func TestWriteFile(t *testing.T) {
 }
 
 func TestWriteAssets(t *testing.T) {
-	reset(t)
+	resetDirs(t)
 
 	const (
 		name     = "foo"

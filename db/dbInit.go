@@ -5,7 +5,6 @@ package db
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/bakape/meguca/auth"
@@ -320,12 +319,6 @@ func waitForIndex(table string) func() error {
 	return func() error {
 		return Exec(r.Table(table).IndexWait())
 	}
-}
-
-// UniqueDBName returns a unique datatabase name. Needed so multiple concurent
-// `go test` don't clash in the same database.
-func UniqueDBName() string {
-	return "meguca_tests_" + strconv.FormatInt(time.Now().UnixNano(), 10)
 }
 
 // Create the admin account and write it to the database

@@ -34,6 +34,11 @@ func AssertFileEquals(t *testing.T, path string, std []byte) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	AssertBufferEquals(t, buf, std)
+}
+
+// AssertBufferEquals asserts two buffers are equal
+func AssertBufferEquals(t *testing.T, buf, std []byte) {
 	if !bytes.Equal(buf, std) {
 		t.Fatalf("files not equal: `%s` : `%s`", string(std), string(buf))
 	}
