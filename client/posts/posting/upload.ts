@@ -57,6 +57,8 @@ export default class UploadForm {
 	): Promise<FileData> {
 		const formData = new FormData()
 		formData.append("image", file)
+		write(() =>
+			this.$uploadInput.style.display = "none")
 
 		// Not using fetch, because no ProgressEvent support
 		const xhr = new XMLHttpRequest()
@@ -67,8 +69,10 @@ export default class UploadForm {
 		await load(xhr)
 
 		if (xhr.status !== 200) {
-			write(() =>
-				this.$uploadStatus.textContent = xhr.response)
+			write(() => {
+				this.$uploadStatus.textContent = xhr.response
+				this.$uploadInput.style.display = ""
+		})
 			return null
 		}
 
