@@ -4,35 +4,36 @@ import (
 	"errors"
 	"testing"
 
-	. "gopkg.in/check.v1"
+	. "github.com/bakape/meguca/test"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+func TestWrapError(t *testing.T) {
+	t.Parallel()
 
-type Util struct{}
-
-var _ = Suite(&Util{})
-
-func (*Util) TestWrapError(c *C) {
 	err := errors.New("foo")
 	wrapped := WrapError("bar", err)
-	c.Assert(wrapped.Error(), Equals, "bar: foo")
+	if s := wrapped.Error(); s != "bar: foo" {
+		t.Fatalf("unexpected error: `%s`", s)
+	}
 }
 
-func (*Util) TestHashBuffer(c *C) {
-	c.Assert(HashBuffer([]byte{1, 2, 3}), Equals, "Uonfc331cyb83SJZevsfrA")
+func TestHashBuffer(t *testing.T) {
+	t.Parallel()
+
+	if h := HashBuffer([]byte{1, 2, 3}); h != "Uonfc331cyb83SJZevsfrA" {
+		t.Fatalf("unexpected hash: %s", h)
+	}
 }
 
-type jsonSample struct {
-	A int    `json:"a"`
-	B string `json:"b"`
+func TestIDToString(t *testing.T) {
+	t.Parallel()
+
+	if s := IDToString(1); s != "1" {
+		t.Fatalf("unexpected: %s", s)
+	}
 }
 
-func (*Util) TestIDToString(c *C) {
-	c.Assert(IDToString(1), Equals, "1")
-}
-
-func (*Util) TestWaterfall(c *C) {
+func TestWaterfall(t *testing.T) {
 	// All pass
 	var wasRun int
 	fn := func() error {
@@ -40,19 +41,28 @@ func (*Util) TestWaterfall(c *C) {
 		return nil
 	}
 	fns := []func() error{fn, fn}
-	c.Assert(Waterfall(fns), IsNil)
-	c.Assert(wasRun, Equals, 2)
+	if err := Waterfall(fns); err != nil {
+		t.Fatal(err)
+	}
+	if wasRun != 2 {
+		t.Fatalf("wrong  run numer: %d", wasRun)
+	}
 
 	// 2nd function returns error
 	wasRun = 0
+	stdErr := errors.New("foo")
 	fns = []func() error{
 		fn,
 		func() error {
 			wasRun++
-			return errors.New("foo")
+			return stdErr
 		},
 		fn,
 	}
-	c.Assert(Waterfall(fns), ErrorMatches, "foo")
-	c.Assert(wasRun, Equals, 2)
+	if err := Waterfall(fns); err != stdErr {
+		UnexpectedError(t, err)
+	}
+	if wasRun != 2 {
+		t.Fatalf("wrong  run numer: %d", wasRun)
+	}
 }
