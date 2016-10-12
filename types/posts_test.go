@@ -4,44 +4,63 @@ import (
 	"encoding/json"
 	"testing"
 
-	. "gopkg.in/check.v1"
+	. "github.com/bakape/meguca/test"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+func TestMarshalUnmarshalCommands(t *testing.T) {
+	t.Parallel()
 
-type Tests struct{}
-
-var _ = Suite(&Tests{})
-
-func (*Tests) TestMarshalUnmarshalCommands(c *C) {
-	samples := [...]struct {
-		typ CommandType
-		val interface{}
-		res string
+	cases := [...]struct {
+		name string
+		typ  CommandType
+		val  interface{}
+		res  string
 	}{
-		{Dice, []uint16{100, 50, 50}, `{"type":0,"val":[100,50,50]}`},
-		{Flip, true, `{"type":1,"val":true}`},
-		{EightBall, "Yes", `{"type":2,"val":"Yes"}`},
-		{Pyu, 999, `{"type":4,"val":999}`},
+		{"dice", Dice, []uint16{100, 50, 50}, `{"type":0,"val":[100,50,50]}`},
+		{"flip", Flip, true, `{"type":1,"val":true}`},
+		{"8ball", EightBall, "Yes", `{"type":2,"val":"Yes"}`},
+		{"pyu", Pyu, 999, `{"type":4,"val":999}`},
 	}
-	for _, s := range samples {
-		command := Command{
-			Type: s.typ,
-			Val:  s.val,
-		}
-		data, err := json.Marshal(command)
-		c.Assert(err, IsNil)
-		c.Assert(string(data), Equals, s.res)
 
-		var val Command
-		c.Assert(json.Unmarshal(data, &val), IsNil)
-		c.Assert(val.Type, Equals, s.typ)
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			command := Command{
+				Type: c.typ,
+				Val:  c.val,
+			}
+			data, err := json.Marshal(command)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if s := string(data); s != c.res {
+				LogUnexpected(t, c.res, s)
+			}
+
+			var val Command
+			if err := json.Unmarshal(data, &val); err != nil {
+				t.Fatal(err)
+			}
+			if val.Type != c.typ {
+				LogUnexpected(t, c.typ, val.Type)
+			}
+		})
 	}
+
 }
 
-func (*Tests) TestMarshalEmptyBoard(c *C) {
+func TestMarshalEmptyBoard(t *testing.T) {
+	t.Parallel()
+
 	b := Board{}
 	data, err := json.Marshal(&b)
-	c.Assert(err, IsNil)
-	c.Assert(string(data), Equals, `{"ctr":0,"threads":[]}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const std = `{"ctr":0,"threads":[]}`
+	if s := string(data); s != std {
+		LogUnexpected(t, std, s)
+	}
 }
