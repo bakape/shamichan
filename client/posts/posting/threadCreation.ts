@@ -159,6 +159,14 @@ class ThreadForm extends FormView implements UploadForm {
 	}
 
 	async sendRequest() {
+		write(() => {
+			this.el.querySelector("input[type=submit]").remove()
+			this.el.querySelector("input[name=cancel]").remove()
+			if (this.$uploadContainer) {
+				this.$uploadContainer.querySelector("br:last-child").remove()
+			}
+		})
+
 		const req = newAllocRequest() as ThreadCreationRequest
 
 		if (this.needImage) {

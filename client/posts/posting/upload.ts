@@ -72,7 +72,7 @@ export default class UploadForm {
 			write(() => {
 				this.$uploadStatus.textContent = xhr.response
 				this.$uploadInput.style.display = ""
-		})
+			})
 			return null
 		}
 

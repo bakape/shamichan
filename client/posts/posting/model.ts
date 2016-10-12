@@ -11,6 +11,7 @@ import PostView from "../view"
 import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
 import { newAllocRequest, PostCredentials } from "./identity"
+import { write } from "../../render"
 
 // A message created while disconnected for later sending
 type BufferedMessage = [message, any]
@@ -154,6 +155,9 @@ export class ReplyFormModel extends Post implements FormModel {
 		if (this.image) {
 			return
 		}
+
+		write(() =>
+			this.view.$cancel.remove())
 
 		const data = await this.view.uploadFile(file)
 
