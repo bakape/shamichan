@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Soreil/video"
+	"github.com/bakape/video"
 )
 
 const dataDirectory = "testdata/"

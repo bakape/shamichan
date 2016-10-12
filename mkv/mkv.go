@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/Soreil/video"
+	"github.com/bakape/video"
 )
 
 //The integer field sizes can differ in a EBML (MKV) header.

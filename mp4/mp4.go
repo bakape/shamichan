@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/Soreil/video"
+	"github.com/bakape/video"
 )
 
 const mp4Header = "????ftyp"
