@@ -32,6 +32,7 @@ var postClosingQuery = r.
 			CoerceTo("binary"),
 		),
 		"editing": false,
+		"lastUpdated": r.Now().ToEpochTime().Floor(),
 	})
 
 var getExpiredBoards = r.

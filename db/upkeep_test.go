@@ -140,6 +140,18 @@ func TestOpenPostClosing(t *testing.T) {
 			t.Error("log not updated")
 		}
 	})
+
+	t.Run("lastUpdated field", func(t *testing.T) {
+		t.Parallel()
+		var lu int64
+		q := FindPost(1).Field("lastUpdated")
+		if err := One(q, &lu); err != nil {
+			t.Fatal(err)
+		}
+		if lu <= tooOld || lu > time.Now().Unix() {
+			t.Fatalf("unexpected lastUpdated time: %d", lu)
+		}
+	})
 }
 
 func TestImageTokenExpiry(t *testing.T) {
