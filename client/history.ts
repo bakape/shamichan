@@ -44,7 +44,7 @@ export default async function navigate(
 		}
 	}
 	if (isSame) {
-		return
+		return scrollToAnchor()
 	}
 
 	if (event) {
