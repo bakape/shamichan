@@ -1,126 +1,11 @@
+// Package video provides thumbnailing and meta information retrieval for video
+// files
 package video
 
 // #cgo pkg-config: libavcodec libavutil libavformat libswscale
 // #cgo CFLAGS: -std=c11
-/*
-
-#include <libavcodec/avcodec.h>
-#include <libavutil/frame.h>
-#include <libavutil/pixdesc.h>
-#include <libavutil/avutil.h>
-#include <libavformat/avformat.h>
-#include <libavformat/avio.h>
-#include <libswscale/swscale.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-
-extern int readCallBack(void*, uint8_t*, int);
-extern int writeCallBack(void*, uint8_t*, int);
-extern int64_t seekCallBack(void*, int64_t, int);
-
-static inline AVFormatContext * create_context(AVFormatContext *ctx)
-{
-	char errstringbuf[1024];
-	int err = avformat_open_input(&ctx, NULL, NULL, NULL);
-	if (err < 0) {
-		av_strerror(err,errstringbuf,1024);
-		fprintf(stderr,"%s\n",errstringbuf);
-		return NULL;
-	}
-	err = avformat_find_stream_info(ctx,NULL);
-	if (err < 0) {
-		av_strerror(err,errstringbuf,1024);
-		fprintf(stderr,"%s\n",errstringbuf);
-		return NULL;
-	}
-
-	return ctx;
-}
-
-static inline AVFrame * extract_video_image(AVFormatContext *ctx)
-{
-	char errstringbuf[1024];
-	int err;
-	AVCodec * codec = NULL;
-	//Get video stream ID
-	int strm = av_find_best_stream(ctx, AVMEDIA_TYPE_VIDEO, -1, -1, &codec, 0);
-
-	AVCodecContext * codecCtx = ctx->streams[strm]->codec;
-	//Open video decoder
-	err = avcodec_open2(codecCtx, codec, NULL);
-	if (err < 0) {
-		av_strerror(err,errstringbuf,1024);
-		fprintf(stderr,"%s\n",errstringbuf);
-		return NULL;
-	}
-
-
-	for (;;)
-	{
-		AVPacket pkt;
-		err = av_read_frame(ctx, &pkt);
-		if (err < 0) {
-			av_strerror(err,errstringbuf,1024);
-			fprintf(stderr,"%s\n",errstringbuf);
-			return NULL;
-		}
-
-		if (pkt.stream_index == strm)
-		{
-			int got = 0;
-			AVFrame * frame = av_frame_alloc();
-			err = avcodec_decode_video2(codecCtx, frame, &got, &pkt);
-			if (err < 0) {
-				av_strerror(err,errstringbuf,1024);
-				fprintf(stderr,"%s\n",errstringbuf);
-				return NULL;
-			}
-
-			if (got) {
-				return frame;
-			}
-			av_frame_free(&frame);
-		}
-	}
-}
-
-static inline AVCodecContext * extract_video(AVFormatContext *ctx)
-{
-	char errstringbuf[1024];
-	int err;
-	AVCodec * codec = NULL;
-	int strm = av_find_best_stream(ctx, AVMEDIA_TYPE_VIDEO, -1, -1, &codec, 0);
-
-	AVCodecContext * codecCtx = ctx->streams[strm]->codec;
-	err = avcodec_open2(codecCtx, codec, NULL);
-	if (err < 0) {
-		av_strerror(err,errstringbuf,1024);
-		fprintf(stderr,"%s\n",errstringbuf);
-		return NULL;
-	}
-	return codecCtx;
-}
-
-static inline AVCodecContext * extract_audio(AVFormatContext *ctx)
-{
-	char errstringbuf[1024];
-	int err;
-	AVCodec * codec = NULL;
-	int strm = av_find_best_stream(ctx, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
-	if (strm < 0) {
-		return NULL;
-	}
-	AVCodecContext * codecCtx = ctx->streams[strm]->codec;
-	err = avcodec_open2(codecCtx, codec, NULL);
-	if (err < 0) {
-		av_strerror(err,errstringbuf,1024);
-		fprintf(stderr,"%s\n",errstringbuf);
-		return NULL;
-	}
-	return codecCtx;
-}
-*/
+// #include <libavutil/pixdesc.h>
+// #include "ffmpeg.h"
 import "C"
 import (
 	"bytes"
@@ -141,18 +26,20 @@ func init() {
 }
 
 var (
-	IO_BUFFER_SIZE int = 4096
+	// IOBufferSize defines the size of the allocated buffer used for allacating
+	// the C response from ffmpeg
+	IOBufferSize = 4096
 
-	// Global map of AVIOHandlers
-	// One handlers struct per format context. Using ctx pointer address as a
-	// key.
+	// Global map of AVIOHandlers. One handlers struct per format context.
+	// Using ctx pointer address as a key.
 	handlersMap = handlerMap{
 		m: make(map[uintptr]*avIOHandlers),
 	}
 )
 
 /////////////////////////////////////
-// Functions prototypes for custom IO. Implement necessary prototypes and pass instance pointer to NewAVIOContext.
+// Functions prototypes for custom IO. Implement necessary prototypes and pass
+// instance pointer to NewAVIOContext.
 //
 // E.g.:
 // 	func gridFsReader() ([]byte, int) {
@@ -204,16 +91,19 @@ func (h *handlerMap) Get(k unsafe.Pointer) *avIOHandlers {
 }
 
 // AVIOContext constructor. Use it only if You need custom IO behaviour!
-func newAVIOContext(ctx *C.AVFormatContext, handlers *avIOHandlers) (*avIOContext, error) {
+func newAVIOContext(ctx *C.AVFormatContext, handlers *avIOHandlers) (
+	*avIOContext, error,
+) {
 	this := &avIOContext{}
 
-	buffer := (*C.uchar)(C.av_malloc(C.size_t(IO_BUFFER_SIZE)))
+	buffer := (*C.uchar)(C.av_malloc(C.size_t(IOBufferSize)))
 
 	if buffer == nil {
 		return nil, errors.New("unable to allocate buffer")
 	}
 
-	// we have to explicitly set it to nil, to force library using default handlers
+	// we have to explicitly set it to nil, to force library using default
+	// handlers
 	var ptrRead, ptrWrite, ptrSeek *[0]byte = nil, nil, nil
 
 	if handlers != nil {
@@ -233,24 +123,34 @@ func newAVIOContext(ctx *C.AVFormatContext, handlers *avIOHandlers) (*avIOContex
 		ptrSeek = (*[0]byte)(C.seekCallBack)
 	}
 
-	if this.avAVIOContext = C.avio_alloc_context(buffer, C.int(IO_BUFFER_SIZE), 0, unsafe.Pointer(ctx), ptrRead, ptrWrite, ptrSeek); this.avAVIOContext == nil {
+	this.avAVIOContext = C.avio_alloc_context(
+		buffer,
+		C.int(IOBufferSize),
+		0,
+		unsafe.Pointer(ctx),
+		ptrRead,
+		ptrWrite,
+		ptrSeek,
+	)
+	if this.avAVIOContext == nil {
 		return nil, errors.New("unable to initialize avio context")
 	}
 
 	return this, nil
 }
 
-func (this *avIOContext) Free() {
-	handlersMap.Delete(this.handlerKey)
+// Free frees up resources allocated to a
+func (a *avIOContext) Free() {
+	handlersMap.Delete(a.handlerKey)
 }
 
 //export readCallBack
-func readCallBack(opaque unsafe.Pointer, buf *C.uint8_t, buf_size C.int) C.int {
+func readCallBack(opaque unsafe.Pointer, buf *C.uint8_t, bufSize C.int) C.int {
 	handlers := handlersMap.Get(opaque)
 	if handlers.ReadPacket == nil {
 		panic("No reader handler initialized")
 	}
-	s := (*[1 << 30]byte)(unsafe.Pointer(buf))[:buf_size:buf_size]
+	s := (*[1 << 30]byte)(unsafe.Pointer(buf))[:bufSize:bufSize]
 	n, err := handlers.ReadPacket(s)
 	if err != nil {
 		return -1
@@ -259,13 +159,13 @@ func readCallBack(opaque unsafe.Pointer, buf *C.uint8_t, buf_size C.int) C.int {
 }
 
 //export writeCallBack
-func writeCallBack(opaque unsafe.Pointer, buf *C.uint8_t, buf_size C.int) C.int {
+func writeCallBack(opaque unsafe.Pointer, buf *C.uint8_t, bufSize C.int) C.int {
 	handlers := handlersMap.Get(opaque)
 	if handlers.WritePacket == nil {
 		panic("No writer handler initialized.")
 	}
 
-	n, err := handlers.WritePacket(C.GoBytes(unsafe.Pointer(buf), buf_size))
+	n, err := handlers.WritePacket(C.GoBytes(unsafe.Pointer(buf), bufSize))
 	if err != nil {
 		return -1
 	}
@@ -288,11 +188,14 @@ func seekCallBack(opaque unsafe.Pointer, offset C.int64_t, whence C.int) C.int64
 
 /////////////////////////////////////
 
-//Uses CGo FFmpeg binding to extract video frame
+// Decode uses CGo FFmpeg binding to extract the first video frame
 func Decode(data []byte) (image.Image, error) {
 	ctx := C.avformat_alloc_context()
 	r := bytes.NewReader(data)
-	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{ReadPacket: r.Read, Seek: r.Seek})
+	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{
+		ReadPacket: r.Read,
+		Seek:       r.Seek,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -307,26 +210,44 @@ func Decode(data []byte) (image.Image, error) {
 	}
 
 	if C.GoString(C.av_get_pix_fmt_name(int32(f.format))) != "yuv420p" {
-		return nil, errors.New("Didn't get format: " + image.YCbCrSubsampleRatio420.String() + "instead got: " + C.GoString(C.av_get_pix_fmt_name(int32(f.format))))
+		return nil, fmt.Errorf(
+			"expected format: %s; got: %s",
+			image.YCbCrSubsampleRatio420,
+			C.GoString(C.av_get_pix_fmt_name(int32(f.format))),
+		)
 	}
 	y := C.GoBytes(unsafe.Pointer(f.data[0]), f.linesize[0]*f.height)
 	u := C.GoBytes(unsafe.Pointer(f.data[1]), f.linesize[0]*f.height/4)
 	v := C.GoBytes(unsafe.Pointer(f.data[2]), f.linesize[0]*f.height/4)
 
-	return &image.YCbCr{Y: y,
+	return &image.YCbCr{
+		Y:              y,
 		Cb:             u,
 		Cr:             v,
 		YStride:        int(f.linesize[0]),
 		CStride:        int(f.linesize[0]) / 2,
 		SubsampleRatio: image.YCbCrSubsampleRatio420,
-		Rect:           image.Rectangle{Min: image.Point{X: 0, Y: 0}, Max: image.Point{X: int(f.width), Y: int(f.height) / 2 * 2}}}, nil
+		Rect: image.Rectangle{
+			Min: image.Point{
+				X: 0,
+				Y: 0,
+			},
+			Max: image.Point{
+				X: int(f.width),
+				Y: int(f.height) / 2 * 2,
+			},
+		},
+	}, nil
 }
 
-//Uses CGo FFmpeg binding to find video config
+// DecodeConfig uses CGo FFmpeg binding to find video config
 func DecodeConfig(data []byte) (image.Config, error) {
 	ctx := C.avformat_alloc_context()
 	r := bytes.NewReader(data)
-	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{ReadPacket: r.Read, Seek: r.Seek})
+	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{
+		ReadPacket: r.Read,
+		Seek:       r.Seek,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -339,21 +260,32 @@ func DecodeConfig(data []byte) (image.Config, error) {
 	if f == nil {
 		return image.Config{}, errors.New("Failed to decode")
 	}
-	if strings.Contains(C.GoString(C.av_get_pix_fmt_name(int32(f.pix_fmt))), "yuv") {
-		return image.Config{ColorModel: color.YCbCrModel,
-			Width:  int(f.width),
-			Height: int(f.height)}, nil
-	} else {
-		return image.Config{ColorModel: color.RGBAModel,
-			Width:  int(f.width),
-			Height: int(f.height)}, nil
+
+	s := C.GoString(C.av_get_pix_fmt_name(int32(f.pix_fmt)))
+	if strings.Contains(s, "yuv") {
+		return image.Config{
+			ColorModel: color.YCbCrModel,
+			Width:      int(f.width),
+			Height:     int(f.height),
+		}, nil
 	}
+
+	return image.Config{
+		ColorModel: color.RGBAModel,
+		Width:      int(f.width),
+		Height:     int(f.height),
+	}, nil
 }
 
+// DecodeAVFormatDetail retrieves contained stream codecs in more verbose
+// representation
 func DecodeAVFormatDetail(data []byte) (audio, video string, err error) {
 	ctx := C.avformat_alloc_context()
 	r := bytes.NewReader(data)
-	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{ReadPacket: r.Read, Seek: r.Seek})
+	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{
+		ReadPacket: r.Read,
+		Seek:       r.Seek,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -379,10 +311,14 @@ func DecodeAVFormatDetail(data []byte) (audio, video string, err error) {
 	return
 }
 
+// DecodeAVFormat retrieves contained stream codecs
 func DecodeAVFormat(data []byte) (audio, video string, err error) {
 	ctx := C.avformat_alloc_context()
 	r := bytes.NewReader(data)
-	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{ReadPacket: r.Read, Seek: r.Seek})
+	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{
+		ReadPacket: r.Read,
+		Seek:       r.Seek,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -408,9 +344,13 @@ func DecodeAVFormat(data []byte) (audio, video string, err error) {
 	return
 }
 
+// DecodeLength returns the length of the video
 func DecodeLength(r io.ReadSeeker) (time.Duration, error) {
 	ctx := C.avformat_alloc_context()
-	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{ReadPacket: r.Read, Seek: r.Seek})
+	avioCtx, err := newAVIOContext(ctx, &avIOHandlers{
+		ReadPacket: r.Read,
+		Seek:       r.Seek,
+	})
 	if err != nil {
 		panic(err)
 	}

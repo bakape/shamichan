@@ -16,7 +16,7 @@ func init() {
 	image.RegisterFormat("mkv", "\x1A\x45\xDF\xA3????matroska", Decode, DecodeConfig)
 }
 
-//Decodes the first frame of an mkv video in to an image
+// Decode decodes the first frame of an mkv video in to an image
 func Decode(r io.Reader) (image.Image, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -25,7 +25,7 @@ func Decode(r io.Reader) (image.Image, error) {
 	return video.Decode(b)
 }
 
-//Returns mkv metadata
+// DecodeConfig returns mkv metadata
 func DecodeConfig(r io.Reader) (image.Config, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {

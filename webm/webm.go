@@ -16,7 +16,7 @@ func init() {
 	image.RegisterFormat("webm", "\x1A\x45\xDF\xA3????webm", Decode, DecodeConfig)
 }
 
-//Decodes the first frame of a Webm video in to an image
+// Decode decodes the first frame of a Webm video in to an image
 func Decode(r io.Reader) (image.Image, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -25,7 +25,7 @@ func Decode(r io.Reader) (image.Image, error) {
 	return video.Decode(b)
 }
 
-//Returns Webm metadata
+// DecodeConfig returns Webm metadata
 func DecodeConfig(r io.Reader) (image.Config, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
