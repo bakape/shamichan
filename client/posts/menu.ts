@@ -1,18 +1,39 @@
 import View from "../view"
 import { Post } from "./models"
-import { getModel } from "../state"
+import { getModel, mine } from "../state"
 import { $threads, write } from "../render"
 import { on, outerWidth } from "../util"
-import { images } from "../lang"
+import * as lang from "../lang"
 import { hidePost } from "./hide"
+import { spoilerImage } from "./posting/upload"
 
 interface ControlButton extends Element {
 	_popup_menu: MenuView
 }
 
+// Spec for a single item of the dropdown menu
+type ItemSpec = {
+	text: string
+	shouldRender: (m: Post) => boolean
+	handler: (m: Post) => void|Promise<void>
+}
+
 // Actions to be performed by the items in the popup menu
-const actions: { [key: string]: [string, (m: Post) => void] } = {
-	hide: [images.hide, hidePost],
+const actions: { [key: string]: ItemSpec } = {
+	hide: {
+		text: lang.images.hide,
+		shouldRender(m) {
+			return true
+		},
+		handler: hidePost,
+	},
+	spoiler: {
+		text: lang.posts.spoiler,
+		shouldRender({id, image}) {
+			return !!image && !image.spoiler && mine.has(id)
+		},
+		handler: spoilerImage,
+	},
 }
 
 // Post header drop down menu
@@ -36,9 +57,13 @@ class MenuView extends View<Post> {
 
 	render() {
 		for (let key in actions) {
+			const {shouldRender, text} = actions[key]
+			if (!shouldRender(this.model)) {
+				continue
+			}
 			const $li = document.createElement("li")
 			$li.setAttribute("data-id", key)
-			$li.textContent = actions[key][0]
+			$li.textContent = text
 			this.el.append($li)
 		}
 
@@ -56,7 +81,8 @@ class MenuView extends View<Post> {
 
 	// Run appropriate handler on click or simply remove the menu
 	handleClick(e: Event) {
-		actions[(e.target as Element).getAttribute('data-id')][1](this.model)
+		actions[(e.target as Element).getAttribute('data-id')]
+			.handler(this.model)
 		this.remove()
 	}
 

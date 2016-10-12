@@ -1,9 +1,10 @@
-import {posts as lang} from '../../lang'
-import {HTML, commaList, load, setAttrs, makeFrag} from '../../util'
-import {write} from '../../render'
-import {postJSON} from "../../json"
+import { posts as lang } from '../../lang'
+import { HTML, commaList, load, setAttrs, makeFrag } from '../../util'
+import { write } from '../../render'
+import { postJSON } from "../../json"
 import Model from "../../model"
 import identity from "./identity"
+import { Post } from "../models"
 
 // Uploaded file data to be embeded in thread and reply creation or appendage
 // requests
@@ -77,7 +78,7 @@ export default class UploadForm {
 		}
 		const spoiler =
 			(this.el.querySelector("input[name=spoiler]") as HTMLInputElement)
-			.checked
+				.checked
 		if (spoiler) {
 			img.spoiler = true
 		}
@@ -98,11 +99,16 @@ export default class UploadForm {
 
 	// Spoiler an image file after it has already been allocated
 	async spoilerImage() {
-		await postJSON("/json/spoiler", {
-			id: this.model.id,
-			password: identity.postPassword,
-		})
+		await spoilerImage(this.model as Post)
 		write(() =>
 			this.$spoiler.remove())
 	}
+}
+
+// Spoiler a post's image.
+export async function spoilerImage({id}: Post) {
+	await postJSON("/json/spoiler", {
+		id,
+		password: identity.postPassword,
+	})
 }
