@@ -1,8 +1,8 @@
-import {Post, OP} from './models'
+import { Post, OP } from './models'
 
 // Holds a collection of models
-export default class PostCollection{
-	models: {[key: string]: Post} = {}
+export default class PostCollection {
+	models: { [key: string]: Post } = {}
 	op: OP
 
 	// Creates a new Collection instance, with optional starting set of models
@@ -44,6 +44,11 @@ export default class PostCollection{
 		}
 		this.models = {}
 		this.op = null
+	}
+
+	// Return weather a post exists in the collection
+	has(id: number): boolean {
+		return id in this.models
 	}
 
 	*[Symbol.iterator](): IterableIterator<Post> {

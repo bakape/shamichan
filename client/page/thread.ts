@@ -8,7 +8,6 @@ import { setTitle } from "../tab"
 import { expandAll } from "../posts/images"
 import { images as lang } from "../lang"
 import { renderNotice } from "./common"
-import { fetchThread } from "../json"
 import { updateSyncTimestamp } from "../connection"
 
 // Container for all rendered posts
@@ -67,10 +66,4 @@ function createPost(data: PostData): Element {
 		view = new PostView(model)
 	postCollection.add(model)
 	return view.el
-}
-
-// Refetch the contents of the current thread and rerender
-export async function refetch() {
-	const {board, thread, lastN} = page
-	renderThread(await fetchThread(board, thread, lastN))
 }

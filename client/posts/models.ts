@@ -3,7 +3,7 @@ import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
 import { SpliceResponse } from '../client'
-import { mine, storeSeenReply, seenReplies } from "../state"
+import { mine, storeSeenReply, seenReplies, page } from "../state"
 import { repliedToMe } from "../tab"
 import { write } from "../render"
 
@@ -207,6 +207,10 @@ export class Post extends Model implements PostData {
 		// "editing":false is omitted to reduce payload. Override explicitly.
 		if (!data.editing) {
 			this.editing = false
+		}
+		// Keep a bigger thumbnail for OPs
+		if (data.image && data.id === page.thread) {
+			data.image.large = true
 		}
 		write(() =>
 			this.view.renderContents(this.view.el))

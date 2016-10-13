@@ -1,13 +1,13 @@
 // Handles Websocket connectivity and messaging
 
 import FSM from './fsm'
-import { debug, page } from './state'
+import { debug, page, posts } from './state'
 import { sync as lang } from './lang'
 import { write } from './render'
 import { authenticate } from './mod/login'
 import { PostData } from "./posts/models"
 import { insertPost } from "./client"
-import { refetch } from "./page/thread"
+import { fetchThread } from "./json"
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server
@@ -207,10 +207,23 @@ export async function synchronise(auth: boolean) {
 	let type = message.synchronise
 
 	// If thread data is too old because of disconnect, computer suspention or
-	// resuming old tabs, refetch and rerender the thread. The actual deadline
+	// resuming old tabs, refetch and sync differences. The actual deadline
 	// is 30 seconds, but a ten second buffer is probably sound.
 	if (page.thread && Date.now() - syncTimestamp > 20000) {
-		await refetch()
+		const {board, thread} = page,
+			// Always fetch the full thread
+			data = await fetchThread(board, thread, 0)
+		insertPost(data)
+		// ID of the first non-OP post that we have rendered, or OP, if none
+		const firstID = Object.keys(posts.models).sort()[1] || page.thread
+		for (let post of data.posts) {
+			// Filter posts that we never retrived in lastN mode
+			if (!posts.has(post.id) && post.id < firstID) {
+				continue
+			}
+			insertPost(post)
+		}
+		delete data.posts
 	}
 
 	// TODO: Resynchronisation logic, with open post right retrieval
