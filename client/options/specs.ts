@@ -19,7 +19,7 @@ export const thumbExpansions = ['none', 'width', 'screen']
 // Available themes. Change this, when adding any new ones.
 export const themes = [
 	'moe', 'gar', 'mawaru', 'moon', 'ashita', 'console', 'tea', 'higan',
-	'ocean', 'rave', 'glass', 'material',
+	'ocean', 'rave', 'glass',
 ]
 
 // Available language packs. Change this, when adding any new ones.
