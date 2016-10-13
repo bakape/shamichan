@@ -64,7 +64,7 @@ function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
 			+ encodeURI(el.getAttribute("href"))
 		const {title, html} = await fetchJSON<OEmbedDoc>(url)
 
-		el.textContent = `[${provider[type]}] ${title}}`
+		el.textContent = `[${provider[type]}] ${title}`
 		el.setAttribute("data-html", encodeURIComponent(html.trim()))
 	}
 }
@@ -116,7 +116,7 @@ async function toggleExpansion(e: MouseEvent) {
 		return
 	}
 
-	// Somehow the embed was clicked before a mouseover
+	// The embed was clicked before a mouseover (ex: touch screen)
 	if (!el.hasAttribute("data-html")) {
 		await execFetcher(el)
 	}
