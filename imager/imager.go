@@ -6,9 +6,9 @@ import (
 	"bytes"
 	"errors"
 	"image"
-	jpegLib "image/jpeg"
+	"image/jpeg"
 
-	"github.com/Soreil/imager"
+	"github.com/bakape/imager"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/util"
@@ -26,7 +26,7 @@ func InitImager() error {
 	}
 
 	conf := config.Get()
-	imager.JPEGOptions = jpegLib.Options{Quality: conf.JPEGQuality}
+	imager.JPEGOptions = jpeg.Options{Quality: conf.JPEGQuality}
 	imager.PNGQuantization = conf.PNGQuality
 
 	return nil // To comply to the rest of the initialization functions

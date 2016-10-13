@@ -5,7 +5,10 @@ package imager
 import (
 	"bytes"
 
-	"github.com/Soreil/video"
+	"github.com/bakape/video"
+
+	// webm thumbnailing driver
+	_ "github.com/bakape/video/webm"
 )
 
 // Extract data and thumbnail from a WebM video
