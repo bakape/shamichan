@@ -136,5 +136,9 @@
 	"rules": [
 		"Rules",
 		"Board rules to display in the rule modal window"
+	],
+	"mature": [
+		"Mature content",
+		"Inform the user the website contains mature content on first visit"
 	]
 }

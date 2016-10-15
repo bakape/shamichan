@@ -86,6 +86,7 @@ type Configs struct {
 	IllyaDance        bool   `json:"illyaDance" gorethink:"illyaDance" public:"true"`
 	Pyu               bool   `json:"pyu" gorethink:"pyu"`
 	Captcha           bool   `json:"captcha" gorethink:"captcha" public:"true"`
+	Mature            bool   `json:"mature" gorethink:"mature" public:"true"`
 	MaxWidth          uint16 `json:"maxWidth" gorethink:"maxWidth"`
 	MaxHeight         uint16 `json:"maxHeight" gorethink:"maxHeight"`
 	MaxThreads        int    `json:"maxThreads" gorethink:"maxThreads"`

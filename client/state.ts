@@ -14,6 +14,7 @@ interface Configs extends ChangeEmitter {
 	hats: boolean
 	illyaDance: boolean
 	captcha: boolean
+	mature: boolean // Website intended for mature audiences
 	defaultLang: string
 	defaultCSS: string
 	FAQ: string

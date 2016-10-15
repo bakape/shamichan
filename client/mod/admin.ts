@@ -1,9 +1,9 @@
 import { handlers, send, message } from '../connection'
-import {InputSpec, renderInput, inputType} from '../forms'
+import { InputSpec, renderInput, inputType } from '../forms'
 import AccountFormView from './common'
-import {admin as lang, fetchAdminPack} from '../lang'
-import {table, makeFrag} from '../util'
-import {langs, themes} from '../options/specs'
+import { admin as lang, fetchAdminPack } from '../lang'
+import { table, makeFrag } from '../util'
+import { langs, themes } from '../options/specs'
 
 type ServerConfigs = {
 	prune: boolean
@@ -27,12 +27,16 @@ type ServerConfigs = {
 	FAQ: string
 	defaultCSS: string
 	defaultLang: string
-	links: {[key: string]: string}
+	links: { [key: string]: string }
 
 	[index: string]: any
 }
 
 const specs: InputSpec[] = [
+	{
+		name: "mature",
+		type: inputType.boolean,
+	},
 	{
 		name: "prune",
 		type: inputType.boolean,
@@ -154,8 +158,8 @@ export default class ConfigPanel extends AccountFormView {
 	render(conf: ServerConfigs) {
 		const html = table(specs, spec =>
 			([spec.label, spec.tooltip] = lang[spec.name],
-			spec.value = conf[spec.name],
-			renderInput(spec)))
+				spec.value = conf[spec.name],
+				renderInput(spec)))
 		this.renderForm(makeFrag(html))
 	}
 
@@ -174,17 +178,17 @@ export default class ConfigPanel extends AccountFormView {
 		for (let el of els as HTMLInputElement[]) {
 			let val: any
 			switch (el.type) {
-			case "submit":
-			case "button":
-				continue
-			case "checkbox":
-				val = el.checked
-				break
-			case "number":
-				val = parseInt(el.value)
-				break
-			default:
-				val = el.value
+				case "submit":
+				case "button":
+					continue
+				case "checkbox":
+					val = el.checked
+					break
+				case "number":
+					val = parseInt(el.value)
+					break
+				default:
+					val = el.value
 			}
 			req[el.name] = val
 		}
@@ -195,7 +199,7 @@ export default class ConfigPanel extends AccountFormView {
 		) as HTMLInputElement[]
 		req.links = {}
 		for (let i = 0; i < keyVals.length; i += 2) {
-			req.links[keyVals[i].value] = keyVals[i+1].value
+			req.links[keyVals[i].value] = keyVals[i + 1].value
 		}
 
 		send(message.configServer, req)
