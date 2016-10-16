@@ -3,10 +3,15 @@
 package websockets
 
 import (
+	"bytes"
 	"errors"
+	"strings"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/types"
+	r "github.com/dancannon/gorethink"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -18,6 +23,11 @@ var (
 type syncRequest struct {
 	Thread int64
 	Board  string
+}
+
+type reclaimRequest struct {
+	ID       int64
+	Password string
 }
 
 // Syncronise the client to a certain thread, assign it's ID and prepare to
@@ -82,11 +92,49 @@ func syncToThread(board string, thread int64, c *Client) error {
 	return nil
 }
 
-// Syncronise the client after a disconnect and restore any post in progress,
-// if it is still not collected in the database
-func resynchronise(data []byte, c *Client) error {
+// Reclaim an open post after connection loss or navigating away.
+//
+// TODO: Technically there is no locking performed so a single post may be open
+// by multiple clients. This opens us up to some exploits, but nothing severe.
+// Still need to think of a solution.
+func reclaimPost(data []byte, c *Client) error {
+	if err := closePreviousPost(c); err != nil {
+		return err
+	}
 
-	// TODO: Open post restoration logic
+	var req reclaimRequest
+	if err := decodeMessage(data, &req); err != nil {
+		return err
+	}
 
-	return synchronise(data, c)
+	var post types.DatabasePost
+	err := db.One(db.FindPost(req.ID).Default(nil), &post)
+	if err != nil && err != r.ErrEmptyResult {
+		return err
+	}
+	if !post.Editing {
+		return c.sendMessage(MessageReclaim, 1)
+	}
+	if err := auth.BcryptCompare(req.Password, post.Password); err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return c.sendMessage(MessageReclaim, 1)
+		}
+		return err
+	}
+
+	iLast := strings.LastIndexByte(post.Body, '\n')
+	if iLast == -1 {
+		iLast = 0
+	}
+	c.openPost = openPost{
+		hasImage:   post.Image != nil,
+		Buffer:     *bytes.NewBufferString(post.Body[iLast:]),
+		bodyLength: len(post.Body),
+		id:         post.ID,
+		op:         post.OP,
+		time:       post.Time,
+		board:      post.Board,
+	}
+
+	return c.sendMessage(MessageReclaim, 0)
 }

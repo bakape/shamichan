@@ -1,11 +1,14 @@
 package websockets
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 )
@@ -149,4 +152,68 @@ func TestSyncToThread(t *testing.T) {
 
 	cl.Close(nil)
 	sv.Wait()
+}
+
+func TestReclaimPost(t *testing.T) {
+	assertTableClear(t, "posts")
+
+	const pw = "123"
+	hash, err := auth.BcryptHash(pw, 6)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					Editing: true,
+					Image:   &assets.StdJPEG,
+					ID:      1,
+					Body:    "abc\ndef",
+					Time:    3,
+				},
+				OP:    1,
+				Board: "a",
+			},
+			Password: hash,
+		},
+		{
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					Editing: false,
+					ID:      2,
+				},
+			},
+		},
+	})
+
+	cases := [...]struct {
+		name     string
+		id       int64
+		password string
+		code     int
+	}{
+		{"no post", 99, "", 1},
+		{"already closed", 2, "", 1},
+		{"wrong password", 1, "aaaaaaaa", 1},
+		{"valid", 1, pw, 0},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			sv := newWSServer(t)
+			defer sv.Close()
+			cl, wcl := sv.NewClient()
+			req := reclaimRequest{
+				ID:       c.id,
+				Password: c.password,
+			}
+			reclaimPost(marshalJSON(t, req), cl)
+
+			assertMessage(t, wcl, `31`+strconv.Itoa(c.code))
+		})
+	}
 }

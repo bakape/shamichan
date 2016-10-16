@@ -287,7 +287,7 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 		return errInvalidPayload(msg)
 	}
 	typ := MessageType(uncast)
-	if !c.synced && typ != MessageSynchronise && typ != MessageResynchronise {
+	if !c.synced && typ != MessageSynchronise {
 		return errInvalidPayload(msg)
 	}
 

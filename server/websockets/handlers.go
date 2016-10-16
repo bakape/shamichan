@@ -39,7 +39,7 @@ const (
 const (
 	// Update feeds
 	MessageSynchronise MessageType = 30 + iota
-	MessageResynchronise
+	MessageReclaim
 	MessageSwitchSync
 
 	// Account management
@@ -70,7 +70,7 @@ var (
 	// Lookup table for message handlers
 	handlers = map[MessageType]handler{
 		MessageSynchronise:    synchronise,
-		MessageResynchronise:  resynchronise,
+		MessageReclaim:        reclaimPost,
 		MessageRegister:       register,
 		MessageLogin:          login,
 		MessageAuthenticate:   authenticateSession,
