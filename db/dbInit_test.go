@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/templates"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
@@ -14,6 +15,7 @@ import (
 func init() {
 	DBName = "meguca_test_db"
 	IsTest = true
+	templates.TemplateRoot = "testdata"
 	if err := LoadDB(); err != nil {
 		panic(err)
 	}

@@ -15,7 +15,7 @@ func init() {
 }
 
 func TestIsBoard(t *testing.T) {
-	(*config.Get()).Boards = []string{"a"}
+	config.SetBoards([]string{"a"})
 
 	cases := [...]struct {
 		name, in string

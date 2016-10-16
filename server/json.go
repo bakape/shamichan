@@ -120,7 +120,9 @@ func serveBoardConfigs(
 ) {
 	board := p["board"]
 	if board == "all" {
-		writeJSON(w, r, "", config.AllBoardConfigs)
+		if !checkClientEtag(w, r, "0") {
+			writeJSON(w, r, "0", config.AllBoardConfigs)
+		}
 		return
 	}
 	if !auth.IsNonMetaBoard(board) {
@@ -128,18 +130,8 @@ func serveBoardConfigs(
 		return
 	}
 
-	var conf config.BoardConfigs
-	if err := db.One(db.GetBoardConfig(board), &conf); err != nil {
-		text500(w, r, err)
-		return
-	}
-
-	data, err := conf.MarshalPublicJSON()
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	writeJSON(w, r, "", data)
+	conf := config.GetBoardConfigs(board)
+	writeJSON(w, r, conf.Hash, conf.JSON)
 }
 
 // Serves thread page JSON
@@ -322,7 +314,7 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 // zero.
 func serveBoardTimestamps(w http.ResponseWriter, req *http.Request) {
 	q := r.
-		Expr(config.Get().Boards).
+		Expr(config.GetBoards()).
 		Map(func(b r.Term) r.Term {
 			return r.Object(
 				b,

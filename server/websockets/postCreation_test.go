@@ -32,27 +32,35 @@ var (
 )
 
 func TestInsertThread(t *testing.T) {
-	assertTableClear(t, "main", "posts", "threads", "boards", "images")
+	assertTableClear(t, "main", "posts", "threads", "images")
 	populateMainTable(t)
-	assertInsert(t, "boards", []config.BoardConfigs{
+
+	conf := [...]config.BoardConfigs{
 		{
-			ID:               "c",
-			PostParseConfigs: config.PostParseConfigs{},
+			ID: "c",
 		},
 		{
 			ID: "r",
-			PostParseConfigs: config.PostParseConfigs{
-				ReadOnly: true,
+			BoardPublic: config.BoardPublic{
+				PostParseConfigs: config.PostParseConfigs{
+					ReadOnly: true,
+				},
 			},
 		},
 		{
 			ID: "a",
-			PostParseConfigs: config.PostParseConfigs{
-				TextOnly: true,
+			BoardPublic: config.BoardPublic{
+				PostParseConfigs: config.PostParseConfigs{
+					TextOnly: true,
+				},
 			},
 		},
-	})
-	(*config.Get()).Boards = []string{"a", "c", "r"}
+	}
+	for _, c := range conf {
+		config.SetBoardConfigs(c)
+	}
+
+	config.SetBoards([]string{"a", "c", "r"})
 
 	cases := [...]struct {
 		name, board string
@@ -213,11 +221,13 @@ func populateMainTable(t *testing.T) {
 	})
 }
 
-func writeBoardConfigs(t *testing.T, textOnly bool) {
-	assertInsert(t, "boards", config.BoardConfigs{
+func setBoardConfigs(textOnly bool) {
+	config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
-		PostParseConfigs: config.PostParseConfigs{
-			TextOnly: textOnly,
+		BoardPublic: config.BoardPublic{
+			PostParseConfigs: config.PostParseConfigs{
+				TextOnly: textOnly,
+			},
 		},
 	})
 }
@@ -264,11 +274,11 @@ func TestGetInvalidImage(t *testing.T) {
 }
 
 func TestClosePreviousPostOnCreation(t *testing.T) {
-	assertTableClear(t, "main", "threads", "posts", "boards")
+	assertTableClear(t, "main", "threads", "posts")
 	assertInsert(t, "posts", samplePost)
-	(*config.Get()).Boards = []string{"a"}
+	config.SetBoards([]string{"a"})
 	populateMainTable(t)
-	writeBoardConfigs(t, true)
+	setBoardConfigs(true)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -293,8 +303,7 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 }
 
 func TestPostCreationValidations(t *testing.T) {
-	assertTableClear(t, "boards")
-	writeBoardConfigs(t, false)
+	setBoardConfigs(false)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -331,14 +340,14 @@ func TestPostCreationValidations(t *testing.T) {
 }
 
 func TestPoctCreationOnLockedThread(t *testing.T) {
-	assertTableClear(t, "boards", "threads")
+	assertTableClear(t, "threads")
 	assertInsert(t, "threads", map[string]interface{}{
 		"id":      1,
 		"board":   "a",
 		"postCtr": 0,
 		"locked":  true,
 	})
-	writeBoardConfigs(t, true)
+	setBoardConfigs(true)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -356,7 +365,7 @@ func TestPoctCreationOnLockedThread(t *testing.T) {
 
 func TestPostCreation(t *testing.T) {
 	prepareForPostCreation(t)
-	writeBoardConfigs(t, false)
+	setBoardConfigs(false)
 	assertInsert(t, "images", stdJPEG)
 	_, token, err := db.NewImageToken(stdJPEG.SHA1)
 	if err != nil {
@@ -471,7 +480,7 @@ func TestPostCreation(t *testing.T) {
 func prepareForPostCreation(t *testing.T) {
 	now := time.Now().Unix()
 	(*config.Get()).MaxBump = 500
-	assertTableClear(t, "main", "boards", "threads", "posts")
+	assertTableClear(t, "main", "threads", "posts")
 	assertInsert(t, "threads", types.DatabaseThread{
 		ID:        1,
 		Board:     "a",
@@ -485,7 +494,7 @@ func prepareForPostCreation(t *testing.T) {
 
 func TestTextOnlyPostCreation(t *testing.T) {
 	prepareForPostCreation(t)
-	writeBoardConfigs(t, true)
+	setBoardConfigs(true)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -534,7 +543,7 @@ func assertImageCounter(t *testing.T, id int64, ctr int) {
 }
 
 func TestBumpLimit(t *testing.T) {
-	assertTableClear(t, "main", "boards", "threads", "posts")
+	assertTableClear(t, "main", "threads", "posts")
 
 	(*config.Get()).MaxBump = 10
 	then := time.Now().Add(-time.Minute).Unix()
@@ -547,7 +556,7 @@ func TestBumpLimit(t *testing.T) {
 		ReplyTime: then,
 	})
 	populateMainTable(t)
-	writeBoardConfigs(t, true)
+	setBoardConfigs(true)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -578,7 +587,7 @@ func TestBumpLimit(t *testing.T) {
 }
 
 func TestSaging(t *testing.T) {
-	assertTableClear(t, "main", "boards", "threads", "posts")
+	assertTableClear(t, "main", "threads", "posts")
 
 	(*config.Get()).MaxBump = 10
 	then := time.Now().Add(-time.Minute).Unix()
@@ -589,7 +598,7 @@ func TestSaging(t *testing.T) {
 		ReplyTime: then,
 	})
 	populateMainTable(t)
-	writeBoardConfigs(t, true)
+	setBoardConfigs(true)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -622,7 +631,7 @@ func TestSaging(t *testing.T) {
 }
 
 func TestPostCreationWithNewlines(t *testing.T) {
-	assertTableClear(t, "main", "boards", "threads", "posts")
+	assertTableClear(t, "main", "threads", "posts")
 
 	(*config.Get()).MaxBump = 500
 	assertInsert(t, "threads", types.DatabaseThread{
@@ -630,7 +639,7 @@ func TestPostCreationWithNewlines(t *testing.T) {
 		Board: "a",
 	})
 	populateMainTable(t)
-	writeBoardConfigs(t, true)
+	setBoardConfigs(true)
 
 	sv := newWSServer(t)
 	defer sv.Close()

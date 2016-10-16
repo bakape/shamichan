@@ -48,7 +48,7 @@ func Write(query r.Term) error {
 
 // WriteAll executes passed write queries in order. Returns on first error.
 func WriteAll(qs []r.Term) error {
-		for _, q := range qs {
+	for _, q := range qs {
 		if err := Write(q); err != nil {
 			return err
 		}
@@ -103,12 +103,6 @@ func GetAccount(id string) r.Term {
 // GetImage is a shorthand for retrieving a document from the "images" table
 func GetImage(id string) r.Term {
 	return r.Table("images").Get(id)
-}
-
-// GetBoardConfig is a shorthand for retrieving a document from the "boards"
-// table
-func GetBoardConfig(id string) r.Term {
-	return r.Table("boards").Get(id).Without("created")
 }
 
 // Insert is a shorthand for inserting documents or slices of documents into a

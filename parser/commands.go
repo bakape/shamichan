@@ -73,13 +73,16 @@ func parseCommand(match []byte, board string) (types.Command, error) {
 		com.Type = types.EightBall
 
 		// Select random string from the the 8ball answer array
-		q := db.
-			GetBoardConfig(board).
-			Field("eightball").
-			Sample(1).
-			AtIndex(0)
-		err := db.One(q, &com.Val)
-		return com, err
+		answers := config.GetBoardConfigs(board).Eightball
+		// Just in case something unexpected happens due to race condition or
+		// something
+		if answers == nil {
+			com.Val = "null"
+		} else {
+			com.Val = answers[rand.Intn(len(answers))]
+		}
+
+		return com, nil
 
 	// Incerement pyu counter
 	case bytes.Equal(match, pyuCommand):

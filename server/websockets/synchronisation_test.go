@@ -35,7 +35,7 @@ func TestOldFeedClosing(t *testing.T) {
 }
 
 func TestSyncToBoard(t *testing.T) {
-	(*config.Get()).Boards = []string{"a"}
+	config.SetBoards([]string{"a"})
 
 	sv := newWSServer(t)
 	defer sv.Close()

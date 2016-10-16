@@ -10,7 +10,7 @@ import (
 )
 
 func TestReader(t *testing.T) {
-	assertTableClear(t, "posts", "threads", "boards", "main")
+	assertTableClear(t, "posts", "threads", "main")
 
 	assertInsert(t, "posts", []types.DatabasePost{
 		{

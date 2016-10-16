@@ -6,6 +6,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
@@ -388,12 +389,7 @@ func insertImage(data []byte, c *Client) error {
 		return err
 	}
 
-	var textOnly bool
-	q := db.GetBoardConfig(c.openPost.board).Field("textOnly")
-	if err := db.One(q, &textOnly); err != nil {
-		return err
-	}
-	if textOnly {
+	if config.GetBoardConfigs(c.openPost.board).TextOnly {
 		return errTextOnly
 	}
 
@@ -413,7 +409,7 @@ func insertImage(data []byte, c *Client) error {
 	}
 
 	// Increment image counter on parent post
-	q = r.Table("threads").Get(c.openPost.op).Update(map[string]r.Term{
+	q := r.Table("threads").Get(c.openPost.op).Update(map[string]r.Term{
 		"imageCtr": r.Row.Field("imageCtr").Add(1),
 	})
 	if err := db.Write(q); err != nil {

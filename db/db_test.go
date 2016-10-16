@@ -136,14 +136,6 @@ func TestGetLoginHash(t *testing.T) {
 	}
 }
 
-func TestGetBoardConfig(t *testing.T) {
-	t.Parallel()
-	const std = `r.Table("boards").Get("a").Without("created")`
-	if q := GetBoardConfig("a").String(); q != std {
-		LogUnexpected(t, std, q)
-	}
-}
-
 func TestReservePostID(t *testing.T) {
 	assertTableClear(t, "main")
 	assertInsert(t, "main", map[string]interface{}{

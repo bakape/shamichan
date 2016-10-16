@@ -95,7 +95,7 @@ func TestPostJSON(t *testing.T) {
 		},
 	})
 
-	(*config.Get()).Boards = []string{"a"}
+	config.SetBoards([]string{"a"})
 
 	const postEtag = "qO18VR0TvaL71iNdrFmaIQ"
 
@@ -195,23 +195,18 @@ func TestPostJSON(t *testing.T) {
 }
 
 func TestServeBoardConfigs(t *testing.T) {
-	assertTableClear(t, "boards")
-
-	(*config.Get()).Boards = []string{"a"}
+	config.SetBoards([]string{"a"})
 	config.AllBoardConfigs = []byte("foo")
 	conf := config.BoardConfigs{
-		ID:       "a",
-		CodeTags: true,
-		Title:    "Animu",
-		Notice:   "Notice",
-		Banners:  []string{},
+		ID: "a",
+		BoardPublic: config.BoardPublic{
+			CodeTags: true,
+			Title:    "Animu",
+			Notice:   "Notice",
+			Banners:  []string{},
+		},
 	}
-	assertInsert(t, "boards", conf)
-
-	clientConf, err := conf.MarshalPublicJSON()
-	if err != nil {
-		t.Fatal(err)
-	}
+	config.SetBoardConfigs(conf)
 
 	cases := [...]struct {
 		name, url string
@@ -219,7 +214,7 @@ func TestServeBoardConfigs(t *testing.T) {
 		body      string
 	}{
 		{"invalid board", "aaa", 404, ""},
-		{"valid board", "a", 200, string(clientConf)},
+		{"valid board", "a", 200, string(marshalJSON(t, conf.BoardPublic))},
 		{"/all/ board", "all", 200, "foo"},
 	}
 
@@ -248,12 +243,16 @@ func TestServeBoardList(t *testing.T) {
 
 	assertInsert(t, "boards", []config.BoardConfigs{
 		{
-			ID:    "a",
-			Title: "Animu",
+			ID: "a",
+			BoardPublic: config.BoardPublic{
+				Title: "Animu",
+			},
 		},
 		{
-			ID:    "g",
-			Title: "Technology",
+			ID: "g",
+			BoardPublic: config.BoardPublic{
+				Title: "Technology",
+			},
 		},
 	})
 
@@ -425,7 +424,7 @@ func TestSpoilerImage(t *testing.T) {
 }
 
 func TestServeBoardTimeStamps(t *testing.T) {
-	(*config.Get()).Boards = []string{"a", "c"}
+	config.SetBoards([]string{"a", "c"})
 	assertTableClear(t, "posts")
 	assertInsert(t, "posts", []types.DatabasePost{
 		{
