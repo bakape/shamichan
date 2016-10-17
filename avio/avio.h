@@ -8,5 +8,6 @@ extern int writeCallBack(void *, uint8_t *, int);
 extern int64_t seekCallBack(void *, int64_t, int);
 
 AVFormatContext *create_context(AVFormatContext *ctx);
+void destroy(AVFormatContext *ctx);
 
 #endif

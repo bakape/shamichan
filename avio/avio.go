@@ -138,15 +138,18 @@ func NewContext(handlers *Handlers) (*Context, error) {
 
 	ctx.pb = this.avIOCtx
 	if this.avFormatCtx = C.create_context(ctx); this.avFormatCtx == nil {
-		this.Free()
+		this.Close()
 		return nil, ErrFailedAVIOCtx
 	}
 
 	return this, nil
 }
 
-// Free frees up resources allocated for handling I/O in C
-func (c *Context) Free() {
+// Close closes and frees c. It should not be used after this point.
+func (c *Context) Close() {
+	if c.avFormatCtx != nil {
+		C.destroy(c.avFormatCtx)
+	}
 	handlersMap.Delete(c.handlerKey)
 }
 

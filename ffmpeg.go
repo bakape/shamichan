@@ -8,11 +8,13 @@ package video
 // #include "ffmpeg.h"
 import "C"
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"image"
 	"image/color"
 	"io"
+	"io/ioutil"
 	"strings"
 	"time"
 	"unsafe"
@@ -20,13 +22,39 @@ import (
 	"github.com/bakape/video/avio"
 )
 
+// Decoder wraps around internal state, all methods are called on this.
+type Decoder struct {
+	avio.Context
+	avIOCtx     *C.struct_AVIOContext
+	avFormatCtx *C.struct_AVFormatContext
+}
+
 func init() {
 	C.av_register_all()
 	C.avcodec_register_all()
+
+	// Register all supported formats with the image package
+	magic := [...]struct {
+		format, seq string
+	}{
+		{"mkv", "\x1A\x45\xDF\xA3???????????????????????????matroska"},
+		{"mkv", "\x1A\x45\xDF\xA3????????????????????matroska"},
+		{"mkv", "\x1A\x45\xDF\xA3????????????matroska"},
+		{"mkv", "\x1A\x45\xDF\xA3????matroska"},
+		{"mp4", "????ftyp"},
+		{"webm", "\x1A\x45\xDF\xA3???????????????????????????webm"},
+		{"webm", "\x1A\x45\xDF\xA3????????????????????webm"},
+		{"webm", "\x1A\x45\xDF\xA3????????????webm"},
+		{"webm", "\x1A\x45\xDF\xA3????webm"},
+	}
+	for _, m := range magic {
+		image.RegisterFormat(m.format, m.seq, Decode, DecodeConfig)
+	}
 }
 
-// Decode uses CGo FFmpeg binding to extract the first video frame
-func Decode(r io.ReadSeeker) (image.Image, error) {
+// NewDecoder sets up a context for the file. Call methods on it to perform
+// operations on the file.
+func NewDecoder(r io.ReadSeeker) (*Decoder, error) {
 	ctx, err := avio.NewContext(&avio.Handlers{
 		ReadPacket: r.Read,
 		Seek:       r.Seek,
@@ -34,11 +62,30 @@ func Decode(r io.ReadSeeker) (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer ctx.Free()
 
-	f := C.extract_video_image(ctx.AVFormatContext())
+	return &Decoder{
+		Context: *ctx,
+		// C types from different packages are not equal. Cast them.
+		avIOCtx:     (*C.struct_AVIOContext)(ctx.AVIOContext()),
+		avFormatCtx: (*C.struct_AVFormatContext)(ctx.AVFormatContext()),
+	}, nil
+}
+
+// NewDecoderReader reads the entirety of r and returns a Decoder to operate on
+// the contents
+func NewDecoderReader(r io.Reader) (*Decoder, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	return NewDecoder(bytes.NewReader(b))
+}
+
+// Thumbnail extracts the first frame of the video
+func (d *Decoder) Thumbnail() (image.Image, error) {
+	f := C.extract_video_image(d.avFormatCtx)
 	if f == nil {
-		return nil, errors.New("Failed to Get AVCodecContext")
+		return nil, errors.New("failed to get AVCodecContext")
 	}
 
 	if C.GoString(C.av_get_pix_fmt_name(int32(f.format))) != "yuv420p" {
@@ -72,20 +119,21 @@ func Decode(r io.ReadSeeker) (image.Image, error) {
 	}, nil
 }
 
-// DecodeConfig uses CGo FFmpeg binding to find video config
-func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
-	ctx, err := avio.NewContext(&avio.Handlers{
-		ReadPacket: r.Read,
-		Seek:       r.Seek,
-	})
+// Decode extracts the first frame of the video
+func Decode(r io.Reader) (image.Image, error) {
+	d, err := NewDecoderReader(r)
 	if err != nil {
-		return image.Config{}, err
+		return nil, err
 	}
-	defer ctx.Free()
+	defer d.Close()
+	return d.Thumbnail()
+}
 
-	f := C.extract_video(ctx.AVFormatContext())
+// Config uses CGo FFmpeg binding to find video's image.Config metadata
+func (d *Decoder) Config() (image.Config, error) {
+	f := C.extract_video(d.avFormatCtx)
 	if f == nil {
-		return image.Config{}, errors.New("Failed to decode")
+		return image.Config{}, errors.New("failed to decode")
 	}
 
 	s := C.GoString(C.av_get_pix_fmt_name(int32(f.pix_fmt)))
@@ -104,55 +152,45 @@ func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 	}, nil
 }
 
-// DecodeAVFormatDetail retrieves contained stream codecs in more verbose
-// representation
-func DecodeAVFormatDetail(r io.ReadSeeker) (audio, video string, err error) {
-	ctx, err := avio.NewContext(&avio.Handlers{
-		ReadPacket: r.Read,
-		Seek:       r.Seek,
-	})
+// DecodeConfig uses CGo FFmpeg binding to find video's image.Config metadata
+func DecodeConfig(r io.Reader) (image.Config, error) {
+	d, err := NewDecoderReader(r)
 	if err != nil {
-		return
+		return image.Config{}, err
 	}
-	defer ctx.Free()
+	defer d.Close()
+	return d.Config()
+}
 
-	avfc := ctx.AVFormatContext()
-	f := C.extract_video(avfc)
+// AVFormatDetail returns contained stream codecs in a more verbose
+// representation
+func (d *Decoder) AVFormatDetail() (audio, video string, err error) {
+	f := C.extract_video(d.avFormatCtx)
 	if f == nil {
-		err = errors.New("Failed to decode video stream")
+		err = errors.New("failed to decode video stream")
 		return
 	}
 	video = C.GoString(f.codec.long_name)
 
-	f = C.extract_audio(avfc)
+	f = C.extract_audio(d.avFormatCtx)
 	if f == nil {
-		err = errors.New("Failed to decode audio stream")
+		err = errors.New("failed to decode audio stream")
 		return
 	}
 	audio = C.GoString(f.codec.long_name)
 	return
 }
 
-// DecodeAVFormat retrieves contained stream codecs
-func DecodeAVFormat(r io.ReadSeeker) (audio, video string, err error) {
-	ctx, err := avio.NewContext(&avio.Handlers{
-		ReadPacket: r.Read,
-		Seek:       r.Seek,
-	})
-	if err != nil {
-		return
-	}
-	defer ctx.Free()
-
-	avfc := ctx.AVFormatContext()
-	f := C.extract_video(avfc)
+// AVFormat returns contained stream codecs
+func (d *Decoder) AVFormat() (audio, video string, err error) {
+	f := C.extract_video(d.avFormatCtx)
 	if f == nil {
 		err = errors.New("Failed to decode video stream")
 		return
 	}
 	video = C.GoString(f.codec.name)
 
-	f = C.extract_audio(avfc)
+	f = C.extract_audio(d.avFormatCtx)
 	if f == nil {
 		err = errors.New("Failed to decode audio stream")
 		return
@@ -161,17 +199,7 @@ func DecodeAVFormat(r io.ReadSeeker) (audio, video string, err error) {
 	return
 }
 
-// DecodeLength returns the length of the video
-func DecodeLength(r io.ReadSeeker) (time.Duration, error) {
-	ctx, err := avio.NewContext(&avio.Handlers{
-		ReadPacket: r.Read,
-		Seek:       r.Seek,
-	})
-	if err != nil {
-		return 0, err
-	}
-	defer ctx.Free()
-
-	dur := (*C.struct_AVFormatContext)(ctx.AVFormatContext()).duration
-	return time.Duration(dur * 1000), nil
+// Length returns the length of the video
+func (d *Decoder) Length() (time.Duration, error) {
+	return time.Duration(d.avFormatCtx.duration * 1000), nil
 }
