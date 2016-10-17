@@ -23,6 +23,12 @@ var (
 	handlersMap = handlerMap{
 		m: make(map[uintptr]*Handlers),
 	}
+
+	// ErrFailedAVIOCtx indicates failure to create an AVIOContext
+	ErrFailedAVIOCtx = errors.New("failed to initialize AVIOContext")
+
+	// ErrFailedAVFCtx indicates faulure to create an AVFormatContext
+	ErrFailedAVFCtx = errors.New("failed to initialize AVFormatContext")
 )
 
 // Handlers contains function prototypes for custom IO. Implement necessary
@@ -127,13 +133,13 @@ func NewContext(handlers *Handlers) (*Context, error) {
 		ptrSeek,
 	)
 	if this.avIOCtx == nil {
-		return nil, errors.New("unable to initialize avio context")
+		return nil, ErrFailedAVIOCtx
 	}
 
 	ctx.pb = this.avIOCtx
-	if this.avFormatCtx = C.create_context(ctx); ctx == nil {
+	if this.avFormatCtx = C.create_context(ctx); this.avFormatCtx == nil {
 		this.Free()
-		return nil, errors.New("failed to initialize AVFormatContext")
+		return nil, ErrFailedAVIOCtx
 	}
 
 	return this, nil
