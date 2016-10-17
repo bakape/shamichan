@@ -4,16 +4,17 @@ package imager
 
 import (
 	"bytes"
+	"io"
 
 	"github.com/bakape/video"
-
 	// webm thumbnailing driver
 	_ "github.com/bakape/video/webm"
 )
 
 // Extract data and thumbnail from a WebM video
 func processWebm(data []byte) (res thumbResponse) {
-	audio, _, err := video.DecodeAVFormat(data)
+	r := bytes.NewReader(data)
+	audio, _, err := video.DecodeAVFormat(r)
 	if err != nil {
 		if err.Error() == "Failed to decode audio stream" {
 			err = nil
@@ -26,7 +27,8 @@ func processWebm(data []byte) (res thumbResponse) {
 		res.audio = true
 	}
 
-	dur, err := video.DecodeLength(bytes.NewReader(data))
+	r.Seek(0, io.SeekStart)
+	dur, err := video.DecodeLength(r)
 	if err != nil {
 		res.err = err
 		return
