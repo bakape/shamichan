@@ -40,7 +40,11 @@ func processImage(data []byte) ([]byte, [4]uint16, error) {
 		err = util.WrapError("error decoding source image", err)
 		return nil, [4]uint16{}, err
 	}
+	return verifyAndScale(src, format)
+}
 
+// Separate dunction, so it can be used in a more optimised video thumbnailer
+func verifyAndScale(src image.Image, format string) ([]byte, [4]uint16, error) {
 	dims, err := verifyDimentions(src)
 	if err != nil {
 		return nil, dims, err
