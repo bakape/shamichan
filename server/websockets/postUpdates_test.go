@@ -257,7 +257,7 @@ func assertRepLog(t *testing.T, id int64, log []string) {
 }
 
 func TestAppendNewline(t *testing.T) {
-	assertTableClear(t, "posts", "boards")
+	assertTableClear(t, "posts")
 	assertInsert(t, "posts", samplePost)
 
 	sv := newWSServer(t)
@@ -271,7 +271,7 @@ func TestAppendNewline(t *testing.T) {
 		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
-	writeBoardConfigs(t, false)
+	setBoardConfigs(false)
 
 	if err := appendRune([]byte("10"), cl); err != nil {
 		t.Fatal(err)
@@ -283,7 +283,7 @@ func TestAppendNewline(t *testing.T) {
 }
 
 func TestAppendNewlineWithHashCommand(t *testing.T) {
-	assertTableClear(t, "posts", "boards")
+	assertTableClear(t, "posts")
 	assertInsert(t, "posts", types.DatabasePost{
 		Log: dummyLog,
 		StandalonePost: types.StandalonePost{
@@ -293,10 +293,12 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 			},
 		},
 	})
-	assertInsert(t, "boards", config.BoardConfigs{
+	config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
-		PostParseConfigs: config.PostParseConfigs{
-			HashCommands: true,
+		BoardPublic: config.BoardPublic{
+			PostParseConfigs: config.PostParseConfigs{
+				HashCommands: true,
+			},
 		},
 	})
 
@@ -359,7 +361,7 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 }
 
 func TestAppendNewlineWithLinks(t *testing.T) {
-	assertTableClear(t, "posts", "boards")
+	assertTableClear(t, "posts")
 	assertInsert(t, "posts", []types.DatabasePost{
 		{
 			StandalonePost: types.StandalonePost{
@@ -395,7 +397,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte(" >>22 ")),
 	}
-	writeBoardConfigs(t, false)
+	setBoardConfigs(false)
 
 	if err := appendRune([]byte("10"), cl); err != nil {
 		t.Fatal(err)
@@ -478,9 +480,9 @@ func TestBackspace(t *testing.T) {
 }
 
 func TestClosePost(t *testing.T) {
-	assertTableClear(t, "posts", "boards")
+	assertTableClear(t, "posts")
 	assertInsert(t, "posts", samplePost)
-	writeBoardConfigs(t, false)
+	setBoardConfigs(false)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -560,9 +562,9 @@ func TestSpliceValidityChecks(t *testing.T) {
 }
 
 func TestSplice(t *testing.T) {
-	assertTableClear(t, "posts", "boards")
+	assertTableClear(t, "posts")
 	assertInsert(t, "posts", samplePost)
-	writeBoardConfigs(t, false)
+	setBoardConfigs(false)
 
 	const longSplice = `Never gonna give you up ` +
 		`Never gonna let you down ` +
@@ -785,13 +787,12 @@ func TestInsertImageIntoPostWithImage(t *testing.T) {
 		hasImage: true,
 	}
 	if err := insertImage(nil, cl); err != errHasImage {
-	UnexpectedError(t, err)
+		UnexpectedError(t, err)
 	}
 }
 
 func TestInsertImageOnTextOnlyBoard(t *testing.T) {
-	assertTableClear(t, "boards")
-	writeBoardConfigs(t, true)
+	setBoardConfigs(true)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -812,8 +813,8 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 }
 
 func TestInsertImage(t *testing.T) {
-	assertTableClear(t, "posts", "threads", "boards", "images", "imageTokens")
-	writeBoardConfigs(t, false)
+	assertTableClear(t, "posts", "threads", "images", "imageTokens")
+	setBoardConfigs(false)
 	assertInsert(t, "threads", types.DatabaseThread{
 		ID:      1,
 		Board:   "a",

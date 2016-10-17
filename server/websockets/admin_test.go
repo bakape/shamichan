@@ -7,6 +7,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
+	r "github.com/dancannon/gorethink"
 )
 
 func TestNotAdmin(t *testing.T) {
@@ -55,7 +56,6 @@ func TestServerConfigSetting(t *testing.T) {
 	cl.UserID = "admin"
 
 	req := config.Defaults
-	req.Boards = []string{"fa"}
 	req.DefaultCSS = "ashita"
 	if err := configServer(marshalJSON(t, req), cl); err != nil {
 		t.Fatal(err)
@@ -120,16 +120,18 @@ func TestBoardCreation(t *testing.T) {
 	assertLoggedInResponse(t, req, createBoard, userID, "400")
 
 	var board config.DatabaseBoardConfigs
-	if err := db.One(db.GetBoardConfig(id), &board); err != nil {
+	if err := db.One(r.Table("boards").Get(id), &board); err != nil {
 		t.Fatal(err)
 	}
 	std := config.DatabaseBoardConfigs{
 		BoardConfigs: config.BoardConfigs{
-			ID:        id,
-			Spoiler:   "default.jpg",
-			Title:     title,
+			ID: id,
+			BoardPublic: config.BoardPublic{
+				Spoiler: "default.jpg",
+				Title:   title,
+				Banners: []string{},
+			},
 			Eightball: config.EightballDefaults,
-			Banners:   []string{},
 			Staff: map[string][]string{
 				"owners": []string{userID},
 			},
@@ -139,11 +141,4 @@ func TestBoardCreation(t *testing.T) {
 		t.Errorf("invalid board creation time: %#v", board.Created)
 	}
 	AssertDeepEquals(t, board.BoardConfigs, std.BoardConfigs)
-
-	var boards []string
-	err := db.All(db.GetMain("config").Field("boards"), &boards)
-	if err != nil {
-		t.Fatal(err)
-	}
-	AssertDeepEquals(t, boards, []string{"a"})
 }

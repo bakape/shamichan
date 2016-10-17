@@ -3,7 +3,7 @@ package parser
 import (
 	"regexp"
 
-	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 )
 
@@ -20,12 +20,7 @@ func ParseLine(line []byte, board string) (
 	links types.LinkMap, command types.Command, err error,
 ) {
 	// Find and parse hash commands
-	var enabled bool
-	err = db.One(db.GetBoardConfig(board).Field("hashCommands"), &enabled)
-	if err != nil {
-		return
-	}
-	if enabled {
+	if config.GetBoardConfigs(board).HashCommands {
 		match := commandRegexp.FindSubmatch(line)
 		if match != nil {
 			command, err = parseCommand(match[1], board)

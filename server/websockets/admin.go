@@ -51,10 +51,10 @@ func configServer(data []byte, c *Client) error {
 	query := db.GetMain("config").
 		Replace(func(doc r.Term) r.Term {
 			return r.Expr(conf).
-				// Client can not set boards, so don't update this field
-				Merge(map[string]interface{}{
-					"id":     "config",
-					"boards": doc.Field("boards"),
+				// The "boards" field is computed dynamically. Don't insert it.
+				Without("boards").
+				Merge(map[string]string{
+					"id": "config",
 				})
 		})
 	if err := db.Write(query); err != nil {
@@ -91,11 +91,13 @@ func createBoard(data []byte, c *Client) error {
 	q := r.Table("boards").Insert(config.DatabaseBoardConfigs{
 		Created: time.Now(),
 		BoardConfigs: config.BoardConfigs{
+			BoardPublic: config.BoardPublic{
+				Title:   req.Title,
+				Spoiler: "default.jpg",
+				Banners: []string{},
+			},
 			ID:        req.Name,
-			Title:     req.Title,
-			Spoiler:   "default.jpg",
 			Eightball: config.EightballDefaults,
-			Banners:   []string{},
 			Staff: map[string][]string{
 				"owners": []string{c.UserID},
 			},
@@ -104,14 +106,6 @@ func createBoard(data []byte, c *Client) error {
 	if err := db.Write(q); r.IsConflictErr(err) {
 		return c.sendMessage(MessageCreateBoard, boardNameTaken)
 	} else if err != nil {
-		return err
-	}
-
-	// Need to update the config struct separatly
-	q = db.GetMain("config").Update(map[string]r.Term{
-		"boards": r.Row.Field("boards").Append(req.Name),
-	})
-	if err := db.Write(q); err != nil {
 		return err
 	}
 

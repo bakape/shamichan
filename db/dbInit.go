@@ -111,7 +111,10 @@ func LoadDB() (err error) {
 	if !IsTest {
 		go runCleanupTasks()
 	}
-	return loadConfigs()
+	if err := loadConfigs(); err != nil {
+		return err
+	}
+	return loadBoardConfigs()
 }
 
 // Connect establishes a connection to RethinkDB. Address passed separately for

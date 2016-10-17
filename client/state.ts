@@ -19,7 +19,6 @@ interface Configs extends ChangeEmitter {
 	defaultCSS: string
 	FAQ: string
 	captchaPublicKey: string
-	boards: string[]
 	links: {[key: string]: string}
 }
 
@@ -53,6 +52,9 @@ const thirtyDays = 30 * 24 * 60 * 60 * 1000,
 // Configuration passed from the server. Some values can be changed during
 // runtime.
 export const config: Configs = (window as any).config
+
+// Currently existing boards
+export let boards: string[] = (window as any).boards
 
 // Indicates, if in mobile mode. Determined server-side.
 export const isMobile: boolean = (window as any).isMobile

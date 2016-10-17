@@ -1,4 +1,4 @@
-import { config } from '../../state'
+import { config, boards } from '../../state'
 import { renderPostLink } from './etc'
 import { PostData, PostLinks, TextState } from '../models'
 import { escape } from '../../util'
@@ -183,7 +183,7 @@ export function genRefTargets() {
 	for (let name in config.links) {
 		targets[name] = config.links[name]
 	}
-	for (let board of config.boards) { // Boards override links
+	for (let board of boards) { // Boards override links
 		targets[board] = `../${board}/`
 	}
 

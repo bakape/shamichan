@@ -126,21 +126,20 @@ func isBoardOwner(
 	w http.ResponseWriter,
 	req *http.Request,
 	board, userID string,
-) bool {
-	var isOwner bool
-	q := db.GetBoardConfig(board).
-		Field("staff").
-		Field("owners").
-		Contains(userID).
-		Default(false)
-	if err := db.One(q, &isOwner); err != nil {
-		text500(w, req, err)
-		return false
+) (isOwner bool) {
+	if staff := config.GetBoardConfigs(board).Staff; staff != nil {
+		for _, o := range staff["owners"] {
+			if o == userID {
+				isOwner = true
+				break
+			}
+		}
 	}
+
 	if !isOwner {
 		http.Error(w, "403 Not board owner", 403)
 	}
-	return isOwner
+	return
 }
 
 // Validate length limit compliance of various fields
@@ -183,11 +182,10 @@ func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var conf config.BoardConfigs
-	if err := db.One(db.GetBoardConfig(msg.ID), &conf); err != nil {
-		text500(w, r, err)
+	conf := config.GetBoardConfigs(msg.ID)
+	if conf.ID == "" {
+		text404(w)
 		return
 	}
-
-	serveJSON(w, r, "", conf)
+	serveJSON(w, r, "", conf.BoardConfigs)
 }

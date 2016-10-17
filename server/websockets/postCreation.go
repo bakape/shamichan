@@ -261,12 +261,7 @@ func closePreviousPost(c *Client) error {
 
 // Reatrieve post-related board configuraions
 func getBoardConfig(board string) (conf config.PostParseConfigs, err error) {
-	q := db.GetBoardConfig(board).
-		Pluck("readOnly", "textOnly", "forcedAnon", "hashCommands")
-	err = db.One(q, &conf)
-	if err != nil {
-		return
-	}
+	conf = config.GetBoardConfigs(board).PostParseConfigs
 	if conf.ReadOnly {
 		err = errReadOnly
 	}

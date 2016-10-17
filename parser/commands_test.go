@@ -64,10 +64,8 @@ func TestDice(t *testing.T) {
 }
 
 func Test8ball(t *testing.T) {
-	assertTableClear(t, "boards")
-
 	answers := []string{"Yes", "No"}
-	assertInsert(t, "boards", config.BoardConfigs{
+	config.SetBoardConfigs(config.BoardConfigs{
 		ID:        "a",
 		Eightball: answers,
 	})

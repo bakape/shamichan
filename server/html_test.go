@@ -29,7 +29,7 @@ func TestServeIndexTemplate(t *testing.T) {
 	headers := map[string]string{
 		"Content-Type": "text/html",
 	}
-	(*config.Get()).Boards = []string{"a"}
+	config.SetBoards([]string{"a"})
 
 	t.Run("desktop", func(t *testing.T) {
 		t.Parallel()
@@ -69,7 +69,7 @@ func TestThreadHTML(t *testing.T) {
 		ID:    1,
 		Board: "a",
 	})
-	(*config.Get()).Boards = []string{"a"}
+	config.SetBoards([]string{"a"})
 	body := []byte("body")
 	templates.Set("index", templates.Store{
 		HTML: body,

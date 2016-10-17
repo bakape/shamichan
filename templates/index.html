@@ -34,6 +34,7 @@
 	<script>
 		var config = {{.Config}},
 			configHash = '{{.ConfigHash}}',
+			boards = {{.Boards}},
 			isMobile = {{.IsMobile}};
 		if (localStorage.theme !== config.DefaultCSS) {
 			document.getElementById('theme').href =

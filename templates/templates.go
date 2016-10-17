@@ -47,15 +47,12 @@ type Store struct {
 
 // Template variables
 type vars struct {
-	IsMobile    bool
-	Captcha     bool
-	Config      template.JS
-	Navigation  template.HTML
-	Email       string
-	ConfigHash  string
-	DefaultCSS  string
-	ImageSearch []imageSearch
-	SortModes   []string
+	IsMobile, Captcha             bool
+	Config                        template.JS
+	Navigation                    template.HTML
+	Email, ConfigHash, DefaultCSS string
+	ImageSearch                   []imageSearch
+	SortModes, Boards             []string
 }
 
 // Definition for an image search link
@@ -93,6 +90,7 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 		DefaultCSS:  conf.DefaultCSS,
 		ImageSearch: imageSearchEngines,
 		SortModes:   sortModes,
+		Boards:      config.GetBoards(),
 	}
 	path := filepath.FromSlash(TemplateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)

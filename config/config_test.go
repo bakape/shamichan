@@ -2,15 +2,17 @@ package config
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 
 	. "github.com/bakape/meguca/test"
 )
 
 func TestSetGet(t *testing.T) {
-	conf := Configs{}
-	conf.Hats = true
+	conf := Configs{
+		Public: Public{
+			Hats: true,
+		},
+	}
 
 	if err := Set(conf); err != nil {
 		t.Fatal(err)
@@ -40,37 +42,34 @@ func TestSetGetClient(t *testing.T) {
 	}
 }
 
-func TestMarshalPublicBoardJSON(t *testing.T) {
-	b := BoardConfigs{
-		CodeTags: true,
-		PostParseConfigs: PostParseConfigs{
-			ReadOnly: true,
-		},
-		Spoiler: "foo.png",
-		Title:   "Animu",
-		Banners: []string{},
-	}
-	std := `
-{
-	"banners":[],
-	"codeTags":true,
-	"forcedAnon":false,
-	"hashCommands":false,
-	"notice":"",
-	"readOnly":true,
-	"rules":"",
-	"spoiler":"foo.png",
-	"textOnly":false,
-	"title":"Animu"
-}`
-	std = strings.Replace(std, "\t", "", -1)
-	std = strings.Replace(std, "\n", "", -1)
+func TestSetGetBoards(t *testing.T) {
+	std := []string{"a", "b", "c"}
+	SetBoards(std)
+	AssertDeepEquals(t, GetBoards(), std)
+}
 
-	data, err := b.MarshalPublicJSON()
-	if err != nil {
+func TestSetGetRemoveBoardConfigs(t *testing.T) {
+	std := BoardConfigs{
+		ID: "a",
+		BoardPublic: BoardPublic{
+			Spoilers: true,
+		},
+	}
+	SetBoards([]string{"a", "x"})
+
+	if err := SetBoardConfigs(std); err != nil {
 		t.Fatal(err)
 	}
-	if s := string(data); s != std {
-		LogUnexpected(t, std, s)
+	conf := GetBoardConfigs("a")
+	if conf.Hash == "" {
+		t.Fatal("no hash generated")
 	}
+	if conf.JSON == nil {
+		t.Fatal("no JSON generated")
+	}
+	AssertDeepEquals(t, conf.BoardConfigs, std)
+
+	RemoveBoard("a")
+	AssertDeepEquals(t, GetBoardConfigs("a"), BoardConfContainer{})
+	AssertDeepEquals(t, GetBoards(), []string{"x"})
 }

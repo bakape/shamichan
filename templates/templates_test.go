@@ -10,9 +10,8 @@ import (
 
 func init() {
 	TemplateRoot = "testdata"
-	config.Set(config.Configs{
-		Boards: []string{"a"},
-	})
+	config.SetBoards([]string{"a"})
+	config.Set(config.Configs{})
 }
 
 func TestBuildIndexTemplate(t *testing.T) {

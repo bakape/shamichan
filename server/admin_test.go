@@ -14,6 +14,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
+	r "github.com/dancannon/gorethink"
 )
 
 var sampleLoginCredentials = loginCredentials{
@@ -127,18 +128,20 @@ func writeSampleUser(t *testing.T) {
 }
 
 func TestServePrivateBoardConfigs(t *testing.T) {
-	assertTableClear(t, "accounts", "boards")
+	assertTableClear(t, "accounts")
 	writeSampleUser(t)
 
 	conf := config.BoardConfigs{
 		ID:        "a",
 		Eightball: []string{"a", "b", "c"},
-		Banners:   []string{},
+		BoardPublic: config.BoardPublic{
+			Banners: []string{},
+		},
 		Staff: map[string][]string{
 			"owners": {"user1"},
 		},
 	}
-	assertInsert(t, "boards", conf)
+	config.SetBoardConfigs(conf)
 
 	rec, req := newJSONPair(t, "/admin/boardConfig", boardConfigRequest{
 		ID:               "a",
@@ -160,18 +163,22 @@ func TestBoardConfiguration(t *testing.T) {
 	}
 	conf := config.BoardConfigs{
 		ID: board,
-		PostParseConfigs: config.PostParseConfigs{
-			ForcedAnon: true,
+		BoardPublic: config.BoardPublic{
+			PostParseConfigs: config.PostParseConfigs{
+				ForcedAnon: true,
+			},
+			Banners: []string{},
+			Spoiler: "default.jpg",
 		},
-		Spoiler:   "default.jpg",
 		Eightball: []string{},
-		Banners:   []string{},
 		Staff:     staff,
 	}
 	init := config.BoardConfigs{
-		ID:        board,
+		ID: board,
+		BoardPublic: config.BoardPublic{
+			Banners: []string{},
+		},
 		Eightball: []string{},
-		Banners:   []string{},
 		Staff:     staff,
 	}
 	assertInsert(t, "boards", init)
@@ -186,7 +193,7 @@ func TestBoardConfiguration(t *testing.T) {
 	router.ServeHTTP(rec, req)
 
 	var res config.BoardConfigs
-	if err := db.One(db.GetBoardConfig(board), &res); err != nil {
+	if err := db.One(r.Table("boards").Get(board), &res); err != nil {
 		t.Fatal(err)
 	}
 	AssertDeepEquals(t, res, conf)
@@ -222,21 +229,27 @@ func TestValidateConfigs(t *testing.T) {
 		{
 			"notice too long",
 			config.BoardConfigs{
-				Notice: genString(maxNoticeLen + 1),
+				BoardPublic: config.BoardPublic{
+					Notice: genString(maxNoticeLen + 1),
+				},
 			},
 			errNoticeTooLong,
 		},
 		{
 			"rules too long",
 			config.BoardConfigs{
-				Rules: genString(maxRulesLen + 1),
+				BoardPublic: config.BoardPublic{
+					Rules: genString(maxRulesLen + 1),
+				},
 			},
 			errRulesTooLong,
 		},
 		{
 			"title too long",
 			config.BoardConfigs{
-				Title: genString(maxTitleLen + 1),
+				BoardPublic: config.BoardPublic{
+					Title: genString(maxTitleLen + 1),
+				},
 			},
 			errTitleTooLong,
 		},

@@ -4,15 +4,12 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
-	r "github.com/dancannon/gorethink"
 )
 
 func TestParseLine(t *testing.T) {
-	assertTableClear(t, "boards")
-	assertInsert(t, "boards", config.BoardConfigs{
+	config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
 	})
 
@@ -28,12 +25,14 @@ func TestParseLine(t *testing.T) {
 	})
 
 	t.Run("commands enabled", func(t *testing.T) {
-		q := r.Table("boards").Get("a").Update(map[string]bool{
-			"hashCommands": true,
+		config.SetBoardConfigs(config.BoardConfigs{
+			ID: "a",
+			BoardPublic: config.BoardPublic{
+				PostParseConfigs: config.PostParseConfigs{
+					HashCommands: true,
+				},
+			},
 		})
-		if err := db.Write(q); err != nil {
-			t.Fatal(err)
-		}
 
 		links, com, err := ParseLine([]byte("#flip"), "a")
 		if err != nil {
