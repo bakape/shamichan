@@ -1,6 +1,7 @@
 package mp4
 
 import (
+	"bytes"
 	"image"
 	"io"
 	"io/ioutil"
@@ -20,7 +21,7 @@ func Decode(r io.Reader) (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	return video.Decode(b)
+	return video.Decode(bytes.NewReader(b))
 }
 
 // DecodeConfig returns mp4 metadata
@@ -29,5 +30,5 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 	if err != nil {
 		return image.Config{}, err
 	}
-	return video.DecodeConfig(b)
+	return video.DecodeConfig(bytes.NewReader(b))
 }
