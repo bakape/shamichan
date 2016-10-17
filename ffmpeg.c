@@ -1,6 +1,5 @@
 #include "ffmpeg.h"
 #include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 #include <libavutil/avutil.h>
 #include <libavutil/frame.h>
@@ -8,25 +7,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-AVFormatContext *create_context(AVFormatContext *ctx)
-{
-	char errstringbuf[1024];
-	int err = avformat_open_input(&ctx, NULL, NULL, NULL);
-	if (err < 0) {
-		av_strerror(err, errstringbuf, 1024);
-		fprintf(stderr, "%s\n", errstringbuf);
-		return NULL;
-	}
-	err = avformat_find_stream_info(ctx, NULL);
-	if (err < 0) {
-		av_strerror(err, errstringbuf, 1024);
-		fprintf(stderr, "%s\n", errstringbuf);
-		return NULL;
-	}
-
-	return ctx;
-}
 
 AVFrame *extract_video_image(AVFormatContext *ctx)
 {

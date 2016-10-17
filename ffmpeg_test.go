@@ -42,11 +42,10 @@ func TestDecode(t *testing.T) {
 	t.Parallel()
 	f := openFile(t)
 	defer f.Close()
-	img, err := Decode(f)
+	_, err := Decode(f)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(img)
 }
 
 func TestDecodeConfig(t *testing.T) {
@@ -57,7 +56,7 @@ func TestDecodeConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(img)
+	t.Logf("%#v\n", img)
 }
 
 func TestDecodeLength(t *testing.T) {
