@@ -8,6 +8,8 @@ import { authenticate } from './mod/login'
 import { PostData } from "./posts/models"
 import { insertPost } from "./client"
 import { fetchThread } from "./json"
+import identity from "./posts/posting/identity"
+import { postSM, postEvent, postState, postModel } from "./posts/posting/main"
 
 // A reqeust message to synchronise or resynchronise (after a connection loss)
 // to the server
@@ -36,7 +38,7 @@ export const enum message {
 
 	// >= 30 are miscelenious and do not write to post models
 	synchronise = 30,
-	resynchronise,
+	reclaim,
 	switchSync,
 
 	// Account management
@@ -189,7 +191,7 @@ export function updateSyncTimestamp() {
 	syncTimestamp = Date.now()
 }
 
-function prepareToSync() {
+function prepareToSync(): connState {
 	renderStatus(syncStatus.connecting)
 	synchronise(true)
 	attemptTimer = setTimeout(() => resetAttempts(), 10000)
@@ -204,7 +206,6 @@ export async function synchronise(auth: boolean) {
 		board: page.board,
 		thread: page.thread,
 	}
-	let type = message.synchronise
 
 	// If thread data is too old because of disconnect, computer suspention or
 	// resuming old tabs, refetch and sync differences. The actual deadline
@@ -226,17 +227,23 @@ export async function synchronise(auth: boolean) {
 		delete data.posts
 	}
 
-	// TODO: Resynchronisation logic, with open post right retrieval
-	// // If clientID is set, then this attempt to synchronise comes after a
-	// // connection loss. Attempt to recover lost server-side state.
-	// if (clientID) {
-	// 	msg.id = clientID
-	// 	type = message.resynchronise
-	// }
-
-	send(type, msg)
+	send(message.synchronise, msg)
 	if (auth) {
 		authenticate()
+	}
+
+	// Reclaim a post lost during after disconnecting, going on standby,
+	// resuming browser tab, etc.
+	if (
+		page.thread
+		&& postSM.state === postState.halted
+		// No older than 28 minutes
+		&& postModel.time < Date.now() / 1000 + 28 * 60
+	) {
+		send(message.reclaim, {
+			id: postModel.id,
+			password: identity.postPassword,
+		})
 	}
 }
 
@@ -291,6 +298,18 @@ handlers[message.synchronise] = (backlog: { [id: number]: PostData }) => {
 	connSM.feed(connEvent.sync)
 }
 
+// Handle response to a open post reclaim request
+handlers[message.reclaim] = (code: number) => {
+	switch (code) {
+		case 0:
+			postSM.feed(postEvent.reclaim)
+			break
+		case 1:
+			postSM.feed(postEvent.abandon)
+			break
+	}
+}
+
 connSM.act(connState.syncing, connEvent.sync, () => {
 	renderStatus(syncStatus.synced)
 	return connState.synced
@@ -311,6 +330,10 @@ connSM.wildAct(connEvent.close, event => {
 })
 
 connSM.act(connState.dropped, connEvent.retry, () => {
+	if (!navigator.onLine) {
+		return connState.dropped
+	}
+
 	connect()
 
 	// Don't show this immediately so we don't thrash on network loss

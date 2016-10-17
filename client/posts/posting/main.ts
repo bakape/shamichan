@@ -24,7 +24,7 @@ export let postForm: FormView,
 export const enum postState {
 	none,    // No state. Awating first connection.
 	ready,   // Ready to create posts
-	halted,  // Post allocated to thhe server but no connection
+	halted,  // Post allocated to the server but no connectivity
 	locked,  // No post open. Post creation controls locked.
 	alloc,   // Post open and allocated to the server
 	draft,   // Post open, but not yet allocated.
@@ -39,6 +39,8 @@ export const enum postEvent {
 	hijack,     // Hijacked an existing post as a postForm
 	reset,      // Set to none. Used during page navigation.
 	alloc,      // Allocated the draft post to the server
+	reclaim,    // Ownership of post reclaimed after connectivity loss
+	abandon,    // Abandon ownership of any open post
 }
 export const postSM = new FSM<postState, postEvent>(postState.none)
 
@@ -79,22 +81,28 @@ deferInit(() => {
 		postState.ready)
 
 	// Set up client to create new posts
-	postSM.on(postState.ready, () =>
-		(window.onbeforeunload = postForm = postModel = null,
-			stylePostControls(el =>
-				(el.style.display = "",
-					el.classList.remove("disabled")))))
+	postSM.on(postState.ready, () => {
+		window.onbeforeunload = postForm = postModel = null
+		stylePostControls(el => {
+			el.style.display = ""
+			el.classList.remove("disabled")
+		})
+	})
 
 	// Handle connection loss
 	postSM.wildAct(postEvent.disconnect, () => {
 		switch (postSM.state) {
 			case postState.alloc:       // Pause current allocated post
+			case postState.halted:
 				return postState.halted
 			case postState.draft:       // Clear any unallocated postForm
 				postForm.remove()
 				postModel = postForm = null
 				stylePostControls(el =>
 					el.style.display = "")
+				break
+			case postState.locked:
+				return postState.locked
 		}
 
 		stylePostControls(el =>
@@ -103,22 +111,30 @@ deferInit(() => {
 		return postState.locked
 	})
 
-	// Regained conectitvity, when post is open
-	postSM.act(postState.halted, postEvent.sync, () =>
-		(postModel.flushBuffer(),
-			postState.alloc))
+	// Regained conectitvity, when post is allocated
+	postSM.act(postState.halted, postEvent.reclaim, () => {
+		postModel.flushBuffer()
+		return postState.alloc
+	})
+
+	// Regained connectivity too late and post can no longer be reclaimed
+	postSM.act(postState.halted, postEvent.abandon, () => {
+		postModel.abandon()
+		return postState.ready
+	})
 
 	// Regained connectivity, when no post open
 	postSM.act(postState.locked, postEvent.sync, () =>
 		postState.ready)
 
 	// Handle critical errors
-	postSM.wildAct(postEvent.error, () =>
-		(stylePostControls(el =>
-			el.classList.add("errored")),
-			postForm && postForm.renderError(),
-			window.onbeforeunload = null,
-			postState.errored))
+	postSM.wildAct(postEvent.error, () => {
+		stylePostControls(el =>
+			el.classList.add("errored"))
+		postForm && postForm.renderError()
+		window.onbeforeunload = null
+		return postState.errored
+	})
 
 	// Reset state during page navigation
 	postSM.wildAct(postEvent.reset, () =>
@@ -130,18 +146,24 @@ deferInit(() => {
 		postState.alloc)
 
 	// Hijack and existing post and replace with post form and model
-	postSM.act(postState.ready, postEvent.hijack, ({view, model}: FormMessage) =>
-		(postModel = model,
-			postForm = view,
-			postState.alloc))
+	postSM.act(
+		postState.ready,
+		postEvent.hijack,
+		({view, model}: FormMessage) => {
+			postModel = model
+			postForm = view
+			return postState.alloc
+		},
+	)
 
 	postSM.on(postState.alloc, bindNagging)
 
 	// Open a new post creation form, if none open
-	postSM.act(postState.ready, postEvent.open, () =>
-		(postModel = new ReplyFormModel(),
-			postForm = new FormView(postModel, false),
-			postState.draft))
+	postSM.act(postState.ready, postEvent.open, () => {
+		postModel = new ReplyFormModel()
+		postForm = new FormView(postModel, false)
+		return postState.draft
+	})
 
 	// Hide post controls, when a postForm is open
 	const hidePostControls = () =>
@@ -151,14 +173,16 @@ deferInit(() => {
 	postSM.on(postState.alloc, hidePostControls)
 
 	// Close unallocated draft
-	postSM.act(postState.draft, postEvent.done, () =>
-		(postForm.remove(),
-			postState.ready))
+	postSM.act(postState.draft, postEvent.done, () => {
+		postForm.remove()
+		return postState.ready
+	})
 
 	// Close allocated post
-	postSM.act(postState.alloc, postEvent.done, () =>
-		(postModel.commitClose(),
-			postState.ready))
+	postSM.act(postState.alloc, postEvent.done, () => {
+		postModel.commitClose()
+		return postState.ready
+	})
 
 	// Handle clicks on the [Reply] button
 	on($threads, "click", postSM.feeder(postEvent.open), {

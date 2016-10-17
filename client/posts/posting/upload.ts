@@ -55,6 +55,9 @@ export default class UploadForm {
 	async uploadFile(
 		file: File = this.$uploadInput.files[0]
 	): Promise<FileData> {
+		if (!navigator.onLine) {
+			return null
+		}
 		const formData = new FormData()
 		formData.append("image", file)
 		write(() =>

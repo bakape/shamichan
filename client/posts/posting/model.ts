@@ -30,6 +30,7 @@ export class OPFormModel extends OP implements FormModel {
 	inputState: TextState
 	messageBuffer: BufferedMessage[]
 
+	abandon: () => void
 	addReference: (id: number) => void
 	commitChar: (char: string) => void
 	commitBackspace: () => void
@@ -75,6 +76,7 @@ export class ReplyFormModel extends Post implements FormModel {
 	inputState: TextState
 	messageBuffer: BufferedMessage[]
 
+	abandon: () => void
 	addReference: (id: number) => void
 	commitChar: (char: string) => void
 	commitBackspace: () => void
@@ -121,15 +123,16 @@ export class ReplyFormModel extends Post implements FormModel {
 		}
 
 		send(message.insertPost, req)
-		handlers[message.postID] = (id: number) =>
-			(this.setID(id),
-				delete handlers[message.postID])
+		handlers[message.postID] = (id: number) => {
+			this.setID(id)
+			delete handlers[message.postID]
+		}
 	}
 
 	// Set post ID and add to the post collection
 	setID(id: number) {
-		postSM.feed(postEvent.alloc)
 		this.id = id
+		postSM.feed(postEvent.alloc)
 		posts.add(this)
 	}
 
@@ -183,8 +186,8 @@ export class ReplyFormModel extends Post implements FormModel {
 // Override mixin for post authoring models
 export class FormModel {
 	sentAllocRequest: boolean
-	bodyLength: number = 0    // Compound length of the input text body
-	parsedLines: number = 0   // Number of closed, commited and parsed lines
+	bodyLength: number        // Compound length of the input text body
+	parsedLines: number       // Number of closed, commited and parsed lines
 	body: string
 	view: PostView & FormView
 	state: TextState          // State of the underlying normal post model
@@ -210,6 +213,7 @@ export class FormModel {
 			iDice: 0, // Not used in FormModel. TypeScipt demands it.
 			line: "",
 		}
+		this.messageBuffer = []
 	}
 
 	// Append a character to the model's body and reparse the line, if it's a
@@ -356,6 +360,14 @@ export class FormModel {
 		this.state.line = this.inputState.line
 		this.view.cleanUp()
 		this.send(message.closePost, null)
+	}
+
+	// Turn post form into a regular post, because it has expired after a
+	// preiod of posting ability loss
+	abandon() {
+		this.state.line = this.inputState.line
+		this.view.cleanUp()
+		this.closePost()
 	}
 
 	// Return the last line of the body
