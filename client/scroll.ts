@@ -59,6 +59,7 @@ export function followDOM(func: () => void) {
 // Scroll to the bottom of the thread
 export function scrollToBottom() {
 	$threads.scrollTop = $threads.scrollHeight
+	atBottom = true
 }
 
 // Set the scroll lock position to a post or to the bottom of the document

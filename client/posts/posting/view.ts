@@ -36,6 +36,7 @@ export class FormView extends PostView implements UploadForm {
 
 	constructor(model: Post, isOP: boolean) {
 		super(model)
+		scrollToBottom()
 		this.renderInputs(isOP)
 		if (!isOP) {
 			this.initDraft()
@@ -122,7 +123,6 @@ export class FormView extends PostView implements UploadForm {
 			$threadContainer.append(this.el)
 			this.$input.focus()
 		})
-		scrollToBottom()
 	}
 
 	removeUploadForm() {
