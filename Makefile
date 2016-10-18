@@ -27,7 +27,9 @@ else
 	export GOPATH=$(shell pwd)/.build
 	BINARY=meguca
 	ISWINDOWS=false
-	PACKAGE="meguca-$(VERSION)_$(shell uname -s)_$(shell uname -p).tar.xz"
+	OS_LOWER=$(shell echo `uname -s` | tr A-Z a-z)
+	ARCH=$(shell uname -p)
+	PACKAGE="meguca-$(VERSION)_$(OS_LOWER)_$(ARCH).tar.xz"
 endif
 
 .PHONY: server client
@@ -152,4 +154,4 @@ cross_compile_win_amd64:
 cross_package_win_amd64: cross_compile_win_amd64 client package_copy
 	rm -rf .package/meguca
 	cp meguca.exe .package/
-	cd .package; zip -rq ../meguca-$(VERSION)_windows_AMD64.zip .
+	cd .package; zip -rq ../meguca-$(VERSION)_windows_x86_64.zip .
