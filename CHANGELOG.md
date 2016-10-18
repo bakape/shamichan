@@ -2,6 +2,20 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v2.4.0 - 2016-10-18
+* Add:
+	- Youtube, SoundCloud and Vimeo embeds
+	- Optional notice for mature content
+	- Ability to continue posts during connection loss
+* Fix:
+	- Large post preview positioning in FireFox
+	- Firefox jumping to thread top on post link click
+	- Incosistecies in scrolling to posts on link clicks
+	- Possible crashes on WebM and MP3 processing
+* Change
+	- Hide file upload controls while uploading
+	- Scroll to bottom on post creation
+
 ##v2.3.0 - 2016-10-08
 * Warning:
 	- An automatic database upgrade will be performed. Make sure only one
