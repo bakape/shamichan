@@ -1,24 +1,22 @@
 #include "avio.h"
+#include <errno.h>
 
-AVFormatContext *create_context(AVFormatContext *ctx)
+AVFormatContext *format_context(AVFormatContext *ctx)
 {
-	char errstringbuf[1024];
+	errno = 0;
 	int err = avformat_open_input(&ctx, NULL, NULL, NULL);
 	if (err < 0) {
-		av_strerror(err, errstringbuf, 1024);
-		fprintf(stderr, "%s\n", errstringbuf);
+		errno = err;
 		return NULL;
 	}
 	err = avformat_find_stream_info(ctx, NULL);
 	if (err < 0) {
-		av_strerror(err, errstringbuf, 1024);
-		fprintf(stderr, "%s\n", errstringbuf);
+		errno = err;
 		return NULL;
 	}
 
 	return ctx;
 }
-
 
 void destroy(AVFormatContext *ctx)
 {
@@ -26,4 +24,40 @@ void destroy(AVFormatContext *ctx)
 	ctx->pb->buffer = NULL;
 	av_free(ctx->pb);
 	avformat_close_input(&ctx);
+}
+
+AVCodecContext *codec_context(AVFormatContext *ctx, const enum AVMediaType type)
+{
+	errno = 0;
+	AVCodec *codec;
+	if (av_find_best_stream(ctx, type, -1, -1, &codec, 0) < 0) {
+		return NULL;
+	}
+
+	AVCodecContext *codecCtx = avcodec_alloc_context3(codec);
+	int err = avcodec_open2(codecCtx, codec, NULL);
+	if (err < 0) {
+		errno = err;
+		avcodec_free_context(&codecCtx);
+		return NULL;
+	}
+
+	return codecCtx;
+}
+
+char *codec_name(AVFormatContext *ctx, const enum AVMediaType type,
+		 const bool detailed)
+{
+	AVCodecContext *codecCtx = codec_context(ctx, type);
+	if (codecCtx == NULL) {
+		return NULL;
+	}
+
+	const AVCodec *codec = codecCtx->codec;
+	const char *src = detailed ? codec->long_name : codec->name;
+	char *ret = malloc(strlen(src));
+	strcpy(ret, src);
+	avcodec_free_context(&codecCtx);
+
+	return ret;
 }

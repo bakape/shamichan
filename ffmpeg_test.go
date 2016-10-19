@@ -22,14 +22,14 @@ func TestDecoder(t *testing.T) {
 	}
 	defer d.Close()
 
-	a, v, err := d.AVFormat()
+	a, v, err := d.AVFormat(false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log("audio:", a)
 	t.Log("video:", v)
 
-	a, v, err = d.AVFormatDetail()
+	a, v, err = d.AVFormat(true)
 	if err != nil {
 		t.Fatal(err)
 	}

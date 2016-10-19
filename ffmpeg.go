@@ -2,7 +2,7 @@
 // files
 package video
 
-// #cgo pkg-config: libavcodec libavutil libavformat libswscale
+// #cgo pkg-config: libavcodec libavutil libavformat
 // #cgo CFLAGS: -std=c11
 // #include <libavutil/pixdesc.h>
 // #include "ffmpeg.h"
@@ -83,7 +83,10 @@ func NewDecoderReader(r io.Reader) (*Decoder, error) {
 
 // Thumbnail extracts the first frame of the video
 func (d *Decoder) Thumbnail() (image.Image, error) {
-	f := C.extract_video_image(d.avFormatCtx)
+	f, err := C.extract_video_image(d.avFormatCtx)
+	if err != nil {
+		return nil, err
+	}
 	if f == nil {
 		return nil, errors.New("failed to get AVCodecContext")
 	}
@@ -131,24 +134,29 @@ func Decode(r io.Reader) (image.Image, error) {
 
 // Config uses CGo FFmpeg binding to find video's image.Config metadata
 func (d *Decoder) Config() (image.Config, error) {
-	f := C.extract_video(d.avFormatCtx)
-	if f == nil {
+	cc, err := d.CodecContext(avio.Video)
+	if err != nil {
+		return image.Config{}, err
+	}
+	if cc == nil {
 		return image.Config{}, errors.New("failed to decode")
 	}
+	codecCtx := (*C.AVCodecContext)(cc)
+	defer C.avcodec_free_context(&codecCtx)
 
-	s := C.GoString(C.av_get_pix_fmt_name(int32(f.pix_fmt)))
+	s := C.GoString(C.av_get_pix_fmt_name(int32(codecCtx.pix_fmt)))
 	if strings.Contains(s, "yuv") {
 		return image.Config{
 			ColorModel: color.YCbCrModel,
-			Width:      int(f.width),
-			Height:     int(f.height),
+			Width:      int(codecCtx.width),
+			Height:     int(codecCtx.height),
 		}, nil
 	}
 
 	return image.Config{
 		ColorModel: color.RGBAModel,
-		Width:      int(f.width),
-		Height:     int(f.height),
+		Width:      int(codecCtx.width),
+		Height:     int(codecCtx.height),
 	}, nil
 }
 
@@ -162,40 +170,13 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 	return d.Config()
 }
 
-// AVFormatDetail returns contained stream codecs in a more verbose
-// representation
-func (d *Decoder) AVFormatDetail() (audio, video string, err error) {
-	f := C.extract_video(d.avFormatCtx)
-	if f == nil {
-		err = errors.New("failed to decode video stream")
+// AVFormat returns contained stream codecs with desired codec name verbosity
+func (d *Decoder) AVFormat(detailed bool) (audio, video string, err error) {
+	video, err = d.CodecName(C.AVMEDIA_TYPE_VIDEO, detailed)
+	if err != nil {
 		return
 	}
-	video = C.GoString(f.codec.long_name)
-
-	f = C.extract_audio(d.avFormatCtx)
-	if f == nil {
-		err = errors.New("failed to decode audio stream")
-		return
-	}
-	audio = C.GoString(f.codec.long_name)
-	return
-}
-
-// AVFormat returns contained stream codecs
-func (d *Decoder) AVFormat() (audio, video string, err error) {
-	f := C.extract_video(d.avFormatCtx)
-	if f == nil {
-		err = errors.New("Failed to decode video stream")
-		return
-	}
-	video = C.GoString(f.codec.name)
-
-	f = C.extract_audio(d.avFormatCtx)
-	if f == nil {
-		err = errors.New("Failed to decode audio stream")
-		return
-	}
-	audio = C.GoString(f.codec.name)
+	audio, err = d.CodecName(C.AVMEDIA_TYPE_AUDIO, detailed)
 	return
 }
 

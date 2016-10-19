@@ -2,7 +2,7 @@
 // io.ReadSeeker directly to ffmpeg.
 package avio
 
-// #cgo pkg-config: libavcodec libavutil libavformat libswscale
+// #cgo pkg-config: libavcodec libavutil libavformat
 // #cgo CFLAGS: -std=c11
 // #include "avio.h"
 import "C"
@@ -11,6 +11,16 @@ import (
 	"fmt"
 	"sync"
 	"unsafe"
+)
+
+// MediaType cooresponds to the AVMediaType enum in ffmpeg. Exported separatly
+// to bypass cross-package boundries.
+type MediaType int
+
+// Correspond to AVMediaType
+const (
+	Video MediaType = iota
+	Audio
 )
 
 var (
@@ -137,7 +147,13 @@ func NewContext(handlers *Handlers) (*Context, error) {
 	}
 
 	ctx.pb = this.avIOCtx
-	if this.avFormatCtx = C.create_context(ctx); this.avFormatCtx == nil {
+	var err error
+	this.avFormatCtx, err = C.format_context(ctx)
+	if err != nil {
+		this.Close()
+		return nil, err
+	}
+	if this.avFormatCtx == nil {
 		this.Close()
 		return nil, ErrFailedAVIOCtx
 	}
@@ -163,6 +179,30 @@ func (c *Context) AVIOContext() unsafe.Pointer {
 // for use in other packages.
 func (c *Context) AVFormatContext() unsafe.Pointer {
 	return unsafe.Pointer(c.avFormatCtx)
+}
+
+// CodecName returns codec name of the best stream type in the input with
+// desired verbosity of the codec name
+func (c *Context) CodecName(typ MediaType, detailed bool) (
+	string, error,
+) {
+	name, err := C.codec_name(c.avFormatCtx, int32(typ), C._Bool(detailed))
+	if err != nil {
+		return "", err
+	}
+	defer C.free(unsafe.Pointer(name))
+	return C.GoString(name), nil
+}
+
+// CodecContext returns the AVCodecContext of the best stream of the passed
+// MediaType. It is the responsibility of the caller to cast to his local
+// C type. check the codec context for nil pointers and free memory, when done.
+func (c *Context) CodecContext(typ MediaType) (unsafe.Pointer, error) {
+	codecCtx, err := C.codec_context(c.avFormatCtx, int32(typ))
+	if err != nil {
+		return nil, err
+	}
+	return unsafe.Pointer(codecCtx), nil
 }
 
 //export readCallBack
