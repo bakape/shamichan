@@ -23,6 +23,16 @@ const (
 	Audio
 )
 
+// Flags for enabling diffrent callbacks in AVIOContext
+const (
+	//export canRead
+	canRead = 1 << (iota + 1)
+	//export canWrite
+	canWrite
+	//export canSeek
+	canSeek
+)
+
 var (
 	// IOBufferSize defines the size of the buffer used for allocating the C
 	// response from ffmpeg. Not safe to be changed concurently.
@@ -51,7 +61,6 @@ type Handlers struct {
 
 // Context is a wrapper for passing Go I/O interfaces to C
 type Context struct {
-	avIOCtx     *C.struct_AVIOContext
 	avFormatCtx *C.struct_AVFormatContext
 	handlerKey  uintptr
 }
@@ -92,63 +101,37 @@ I/O psuedo-interface.
 
 Example:
 
-	f, _ := os.Open(filepath.Join("testdata", "sample.mp4"))
+	f, _ := os.Open("my file.mp4")
 	ctx, _ := NewContext(&Handlers{
 		ReadPacket: f.Read,
 		Seek:       f.Seek,
 	})
 	defer ctx.Free()
 
-	avfc := ctx.AVFormatContext()
 	... Do Something ...
 */
 func NewContext(handlers *Handlers) (*Context, error) {
 	ctx := C.avformat_alloc_context()
 	this := &Context{}
 
-	buffer := (*C.uchar)(C.av_malloc(C.size_t(IOBufferSize)))
-
-	if buffer == nil {
-		return nil, errors.New("unable to allocate buffer")
-	}
-
-	// we have to explicitly set it to nil, to force library using default
-	// handlers
-	var ptrRead, ptrWrite, ptrSeek *[0]byte = nil, nil, nil
-
 	if handlers != nil {
 		this.handlerKey = uintptr(unsafe.Pointer(ctx))
 		handlersMap.Set(this.handlerKey, handlers)
 	}
 
+	var flags C.int
 	if handlers.ReadPacket != nil {
-		ptrRead = (*[0]byte)(C.readCallBack)
+		flags |= canRead
 	}
-
 	if handlers.WritePacket != nil {
-		ptrWrite = (*[0]byte)(C.writeCallBack)
+		flags |= canWrite
 	}
-
 	if handlers.Seek != nil {
-		ptrSeek = (*[0]byte)(C.seekCallBack)
+		flags |= canSeek
 	}
 
-	this.avIOCtx = C.avio_alloc_context(
-		buffer,
-		C.int(IOBufferSize),
-		0,
-		unsafe.Pointer(ctx),
-		ptrRead,
-		ptrWrite,
-		ptrSeek,
-	)
-	if this.avIOCtx == nil {
-		return nil, ErrFailedAVIOCtx
-	}
-
-	ctx.pb = this.avIOCtx
 	var err error
-	this.avFormatCtx, err = C.format_context(ctx)
+	this.avFormatCtx, err = C.format_context(ctx, C.int(IOBufferSize), flags)
 	if err != nil {
 		this.Close()
 		return nil, err
@@ -169,12 +152,6 @@ func (c *Context) Close() {
 	handlersMap.Delete(c.handlerKey)
 }
 
-// AVIOContext returns the underlying AVIOContext as an unsafe.Pointer for use
-// in other packages.
-func (c *Context) AVIOContext() unsafe.Pointer {
-	return unsafe.Pointer(c.avIOCtx)
-}
-
 // AVFormatContext returns the underlying AVFormatContext as an unsafe.Pointer
 // for use in other packages.
 func (c *Context) AVFormatContext() unsafe.Pointer {
@@ -189,6 +166,9 @@ func (c *Context) CodecName(typ MediaType, detailed bool) (
 	name, err := C.codec_name(c.avFormatCtx, int32(typ), C._Bool(detailed))
 	if err != nil {
 		return "", err
+	}
+	if name == nil {
+		return "", nil
 	}
 	defer C.free(unsafe.Pointer(name))
 	return C.GoString(name), nil

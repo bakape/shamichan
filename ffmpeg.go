@@ -25,7 +25,6 @@ import (
 // Decoder wraps around internal state, all methods are called on this.
 type Decoder struct {
 	avio.Context
-	avIOCtx     *C.struct_AVIOContext
 	avFormatCtx *C.struct_AVFormatContext
 }
 
@@ -66,7 +65,6 @@ func NewDecoder(r io.ReadSeeker) (*Decoder, error) {
 	return &Decoder{
 		Context: *ctx,
 		// C types from different packages are not equal. Cast them.
-		avIOCtx:     (*C.struct_AVIOContext)(ctx.AVIOContext()),
 		avFormatCtx: (*C.struct_AVFormatContext)(ctx.AVFormatContext()),
 	}, nil
 }
@@ -172,11 +170,11 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 
 // AVFormat returns contained stream codecs with desired codec name verbosity
 func (d *Decoder) AVFormat(detailed bool) (audio, video string, err error) {
-	video, err = d.CodecName(C.AVMEDIA_TYPE_VIDEO, detailed)
+	video, err = d.CodecName(avio.Video, detailed)
 	if err != nil {
 		return
 	}
-	audio, err = d.CodecName(C.AVMEDIA_TYPE_AUDIO, detailed)
+	audio, err = d.CodecName(avio.Audio, detailed)
 	return
 }
 
