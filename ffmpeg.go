@@ -1,186 +1,261 @@
-// Package video provides thumbnailing and meta information retrieval for video
-// files
-package video
+// Package goffmpeg provides an interface to pass I/O between Go and ffmpeg as
+// well as methods for detecting codec format and generating thumbnail images
+// from audio and video input.
+package goffmpeg
 
 // #cgo pkg-config: libavcodec libavutil libavformat
 // #cgo CFLAGS: -std=c11
-// #include <libavutil/pixdesc.h>
 // #include "ffmpeg.h"
 import "C"
 import (
 	"bytes"
 	"errors"
 	"fmt"
-	"image"
-	"image/color"
 	"io"
 	"io/ioutil"
-	"strings"
+	"sync"
 	"time"
 	"unsafe"
-
-	"github.com/bakape/video/avio"
 )
 
-// Decoder wraps around internal state, all methods are called on this.
-type Decoder struct {
-	avio.Context
-	avFormatCtx *C.struct_AVFormatContext
-}
+// MediaType cooresponds to the AVMediaType enum in ffmpeg. Exported separately
+// to bypass cross-package boundries.
+type MediaType int
+
+// Correspond to AVMediaType
+const (
+	Video MediaType = iota
+	Audio
+)
+
+// Flags for enabling diffrent callbacks in AVIOContext
+const (
+	//export canRead
+	canRead = 1 << iota
+	//export canWrite
+	canWrite
+	//export canSeek
+	canSeek
+)
+
+var (
+	// IOBufferSize defines the size of the buffer used for allocating the C
+	// response from ffmpeg. Not safe to be changed concurently.
+	IOBufferSize = 4096
+
+	// Global map of AVIOHandlers. One handlers struct per format context.
+	// Using ctx pointer address as a key.
+	handlersMap = handlerMap{
+		m: make(map[uintptr]Handlers),
+	}
+
+	// ErrFailedAVIOCtx indicates failure to create an AVIOContext
+	ErrFailedAVIOCtx = errors.New("failed to initialize AVIOContext")
+
+	// ErrFailedAVFCtx indicates faulure to create an AVFormatContext
+	ErrFailedAVFCtx = errors.New("failed to initialize AVFormatContext")
+)
 
 func init() {
 	C.av_register_all()
 	C.avcodec_register_all()
-
-	// Register all supported formats with the image package
-	magic := [...]struct {
-		format, seq string
-	}{
-		{"mkv", "\x1A\x45\xDF\xA3???????????????????????????matroska"},
-		{"mkv", "\x1A\x45\xDF\xA3????????????????????matroska"},
-		{"mkv", "\x1A\x45\xDF\xA3????????????matroska"},
-		{"mkv", "\x1A\x45\xDF\xA3????matroska"},
-		{"mp4", "????ftyp"},
-		{"webm", "\x1A\x45\xDF\xA3???????????????????????????webm"},
-		{"webm", "\x1A\x45\xDF\xA3????????????????????webm"},
-		{"webm", "\x1A\x45\xDF\xA3????????????webm"},
-		{"webm", "\x1A\x45\xDF\xA3????webm"},
-	}
-	for _, m := range magic {
-		image.RegisterFormat(m.format, m.seq, Decode, DecodeConfig)
-	}
 }
 
-// NewDecoder sets up a context for the file. Call methods on it to perform
-// operations on the file.
-// TODO: You can not currently reuse the decoder for processign the same stream
-// twice. Need to store codec contexts in Decoder struct.
-func NewDecoder(r io.ReadSeeker) (*Decoder, error) {
-	ctx, err := avio.NewContext(&avio.Handlers{
-		ReadPacket: r.Read,
-		Seek:       r.Seek,
+// Handlers contains function prototypes for custom IO. Implement necessary
+// prototypes and pass instance pointer to NewContext.
+type Handlers struct {
+	Read  func([]byte) (int, error)
+	Write func([]byte) (int, error)
+	Seek  func(int64, int) (int64, error)
+}
+
+// Context is a wrapper for passing Go I/O interfaces to C
+type Context struct {
+	avFormatCtx *C.struct_AVFormatContext
+	handlerKey  uintptr
+}
+
+// C can not retain any pointers to Go memory after the cgo call returns. We
+// still need a way to bind AVFormatContext insatnces to Go I/O functions. To do
+// that we convert the AVFormatContext pointer to a uintptr and use it as a key
+// to look up the respective handlers on each call to one of the 3 I/O
+// callbacks.
+type handlerMap struct {
+	sync.RWMutex
+	m map[uintptr]Handlers
+}
+
+func (h *handlerMap) Set(k uintptr, handlers Handlers) {
+	h.Lock()
+	h.m[k] = handlers
+	h.Unlock()
+}
+
+func (h *handlerMap) Delete(k uintptr) {
+	h.Lock()
+	delete(h.m, k)
+	h.Unlock()
+}
+
+func (h *handlerMap) Get(k unsafe.Pointer) Handlers {
+	h.RLock()
+	handlers, ok := h.m[uintptr(k)]
+	h.RUnlock()
+	if !ok {
+		panic(fmt.Sprintf(
+			"No handlers instance found, according to pointer: %v",
+			k,
+		))
+	}
+	return handlers
+}
+
+/*
+NewContext constructs a new AVIOContext and AVFormatContext to use on the passed
+I/O psuedo-interface
+
+Example:
+
+	f, _ := os.Open("my file.mp4")
+	ctx, _ := NewContext(&Handlers{
+		ReadPacket: f.Read,
+		Seek:       f.Seek,
 	})
-	if err != nil {
-		return nil, err
+	defer ctx.Free()
+
+	... Do Something ...
+*/
+func NewContext(handlers *Handlers) (*Context, error) {
+	ctx := C.avformat_alloc_context()
+	this := &Context{
+		avFormatCtx: ctx,
 	}
 
-	return &Decoder{
-		Context: *ctx,
-		// C types from different packages are not equal. Cast them.
-		avFormatCtx: (*C.struct_AVFormatContext)(ctx.AVFormatContext()),
-	}, nil
+	if handlers != nil {
+		this.handlerKey = uintptr(unsafe.Pointer(ctx))
+		handlersMap.Set(this.handlerKey, *handlers)
+	}
+
+	var flags C.int
+	if handlers.Read != nil {
+		flags |= canRead
+	}
+	if handlers.Write != nil {
+		flags |= canWrite
+	}
+	if handlers.Seek != nil {
+		flags |= canSeek
+	}
+
+	err := C.create_context(&this.avFormatCtx, C.int(IOBufferSize), flags)
+	if err < 0 {
+		this.Close()
+		return nil, FormatError(int(err))
+	}
+	if this.avFormatCtx == nil {
+		this.Close()
+		return nil, ErrFailedAVIOCtx
+	}
+
+	return this, nil
 }
 
-// NewDecoderReader reads the entirety of r and returns a Decoder to operate on
-// the contents
-func NewDecoderReader(r io.Reader) (*Decoder, error) {
+// NewContextReader reads the entirety of r and returns a Context to operate on
+// the read buffer
+func NewContextReader(r io.Reader) (*Context, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
-	return NewDecoder(bytes.NewReader(b))
+	return NewContextReadSeeker(bytes.NewReader(b))
 }
 
-// Thumbnail extracts the first frame of the video
-func (d *Decoder) Thumbnail() (image.Image, error) {
-	var f *C.AVFrame
-	if err := C.extract_video_image(&f, d.avFormatCtx); err != 0 {
-		return nil, avio.FormatError(int(err))
-	}
-	if f == nil {
-		return nil, errors.New("failed to get AVCodecContext")
-	}
-
-	if C.GoString(C.av_get_pix_fmt_name(int32(f.format))) != "yuv420p" {
-		return nil, fmt.Errorf(
-			"expected format: %s; got: %s",
-			image.YCbCrSubsampleRatio420,
-			C.GoString(C.av_get_pix_fmt_name(int32(f.format))),
-		)
-	}
-	y := C.GoBytes(unsafe.Pointer(f.data[0]), f.linesize[0]*f.height)
-	u := C.GoBytes(unsafe.Pointer(f.data[1]), f.linesize[0]*f.height/4)
-	v := C.GoBytes(unsafe.Pointer(f.data[2]), f.linesize[0]*f.height/4)
-
-	return &image.YCbCr{
-		Y:              y,
-		Cb:             u,
-		Cr:             v,
-		YStride:        int(f.linesize[0]),
-		CStride:        int(f.linesize[0]) / 2,
-		SubsampleRatio: image.YCbCrSubsampleRatio420,
-		Rect: image.Rectangle{
-			Min: image.Point{
-				X: 0,
-				Y: 0,
-			},
-			Max: image.Point{
-				X: int(f.width),
-				Y: int(f.height) / 2 * 2,
-			},
-		},
-	}, nil
+// NewContextReadSeeker is a helper for creating a Context from an io.ReadSeeker
+func NewContextReadSeeker(r io.ReadSeeker) (*Context, error) {
+	return NewContext(&Handlers{
+		Read: r.Read,
+		Seek: r.Seek,
+	})
 }
 
-// Decode extracts the first frame of the video
-func Decode(r io.Reader) (image.Image, error) {
-	d, err := NewDecoderReader(r)
+// Close closes and frees c. It should not be used after this point.
+func (c *Context) Close() {
+	if c.avFormatCtx != nil {
+		C.destroy(c.avFormatCtx)
+	}
+	handlersMap.Delete(c.handlerKey)
+}
+
+// CodecName returns codec name of the best stream type in the input with
+// desired verbosity of the codec name
+func (c *Context) CodecName(typ MediaType, detailed bool) (
+	string, error,
+) {
+	name, err := C.codec_name(c.avFormatCtx, int32(typ), C._Bool(detailed))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	defer d.Close()
-	return d.Thumbnail()
+	if name == nil {
+		return "", nil
+	}
+	defer C.free(unsafe.Pointer(name))
+	return C.GoString(name), nil
 }
 
-// Config uses CGo FFmpeg binding to find video's image.Config metadata
-func (d *Decoder) Config() (image.Config, error) {
-	cc, err := d.CodecContext(avio.Video)
-	if err != nil {
-		return image.Config{}, err
+// CodecContext returns the AVCodecContext of the best stream of the passed
+// MediaType. It is the responsibility of the caller to cast to his local
+// C type. check the codec context for nil pointers and free memory, when done.
+func (c *Context) CodecContext(typ MediaType) (unsafe.Pointer, error) {
+	var codecCtx *C.struct_AVCodecContext
+	err := C.codec_context(&codecCtx, c.avFormatCtx, int32(typ))
+	if err < 0 {
+		return nil, FormatError(int(err))
 	}
-	if cc == nil {
-		return image.Config{}, errors.New("failed to decode")
-	}
-	codecCtx := (*C.AVCodecContext)(cc)
-	defer C.avcodec_free_context(&codecCtx)
-
-	s := C.GoString(C.av_get_pix_fmt_name(int32(codecCtx.pix_fmt)))
-	if strings.Contains(s, "yuv") {
-		return image.Config{
-			ColorModel: color.YCbCrModel,
-			Width:      int(codecCtx.width),
-			Height:     int(codecCtx.height),
-		}, nil
-	}
-
-	return image.Config{
-		ColorModel: color.RGBAModel,
-		Width:      int(codecCtx.width),
-		Height:     int(codecCtx.height),
-	}, nil
+	return unsafe.Pointer(codecCtx), nil
 }
 
-// DecodeConfig uses CGo FFmpeg binding to find video's image.Config metadata
-func DecodeConfig(r io.Reader) (image.Config, error) {
-	d, err := NewDecoderReader(r)
-	if err != nil {
-		return image.Config{}, err
-	}
-	defer d.Close()
-	return d.Config()
+// FormatError converst an ffmpeg error message to a string
+func FormatError(code int) error {
+	str := C.format_error(C.int(code))
+	defer C.free(unsafe.Pointer(str))
+	return fmt.Errorf("ffmpeg: %s", C.GoString(str))
 }
 
-// AVFormat returns contained stream codecs with desired codec name verbosity
-func (d *Decoder) AVFormat(detailed bool) (audio, video string, err error) {
-	video, err = d.CodecName(avio.Video, detailed)
+//export readCallBack
+func readCallBack(opaque unsafe.Pointer, buf *C.uint8_t, bufSize C.int) C.int {
+	s := (*[1 << 30]byte)(unsafe.Pointer(buf))[:bufSize:bufSize]
+	n, err := handlersMap.Get(opaque).Read(s)
 	if err != nil {
-		return
+		return -1
 	}
-	audio, err = d.CodecName(avio.Audio, detailed)
-	return
+	return C.int(n)
+}
+
+//export writeCallBack
+func writeCallBack(opaque unsafe.Pointer, buf *C.uint8_t, bufSize C.int) C.int {
+	n, err := handlersMap.
+		Get(opaque).
+		Write(C.GoBytes(unsafe.Pointer(buf), bufSize))
+	if err != nil {
+		return -1
+	}
+	return C.int(n)
+}
+
+//export seekCallBack
+func seekCallBack(
+	opaque unsafe.Pointer,
+	offset C.int64_t,
+	whence C.int,
+) C.int64_t {
+	n, err := handlersMap.Get(opaque).Seek(int64(offset), int(whence))
+	if err != nil {
+		return -1
+	}
+	return C.int64_t(n)
 }
 
 // Length returns the length of the video
-func (d *Decoder) Length() (time.Duration, error) {
-	return time.Duration(d.avFormatCtx.duration * 1000), nil
+func (c *Context) Length() (time.Duration, error) {
+	return time.Duration(c.avFormatCtx.duration * 1000), nil
 }
