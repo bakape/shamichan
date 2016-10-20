@@ -41,7 +41,7 @@ var (
 	// Global map of AVIOHandlers. One handlers struct per format context.
 	// Using ctx pointer address as a key.
 	handlersMap = handlerMap{
-		m: make(map[uintptr]*Handlers),
+		m: make(map[uintptr]Handlers),
 	}
 
 	// ErrFailedAVIOCtx indicates failure to create an AVIOContext
@@ -67,10 +67,10 @@ type Context struct {
 
 type handlerMap struct {
 	sync.RWMutex
-	m map[uintptr]*Handlers
+	m map[uintptr]Handlers
 }
 
-func (h *handlerMap) Set(k uintptr, handlers *Handlers) {
+func (h *handlerMap) Set(k uintptr, handlers Handlers) {
 	h.Lock()
 	h.m[k] = handlers
 	h.Unlock()
@@ -82,7 +82,7 @@ func (h *handlerMap) Delete(k uintptr) {
 	h.Unlock()
 }
 
-func (h *handlerMap) Get(k unsafe.Pointer) *Handlers {
+func (h *handlerMap) Get(k unsafe.Pointer) Handlers {
 	h.RLock()
 	handlers, ok := h.m[uintptr(k)]
 	h.RUnlock()
@@ -112,11 +112,13 @@ Example:
 */
 func NewContext(handlers *Handlers) (*Context, error) {
 	ctx := C.avformat_alloc_context()
-	this := &Context{}
+	this := &Context{
+		avFormatCtx: ctx,
+	}
 
 	if handlers != nil {
 		this.handlerKey = uintptr(unsafe.Pointer(ctx))
-		handlersMap.Set(this.handlerKey, handlers)
+		handlersMap.Set(this.handlerKey, *handlers)
 	}
 
 	var flags C.int
@@ -130,11 +132,10 @@ func NewContext(handlers *Handlers) (*Context, error) {
 		flags |= canSeek
 	}
 
-	var err error
-	this.avFormatCtx, err = C.format_context(ctx, C.int(IOBufferSize), flags)
-	if err != nil {
+	err := C.create_context(&this.avFormatCtx, C.int(IOBufferSize), flags)
+	if err < 0 {
 		this.Close()
-		return nil, err
+		return nil, FormatError(int(err))
 	}
 	if this.avFormatCtx == nil {
 		this.Close()
@@ -178,11 +179,19 @@ func (c *Context) CodecName(typ MediaType, detailed bool) (
 // MediaType. It is the responsibility of the caller to cast to his local
 // C type. check the codec context for nil pointers and free memory, when done.
 func (c *Context) CodecContext(typ MediaType) (unsafe.Pointer, error) {
-	codecCtx, err := C.codec_context(c.avFormatCtx, int32(typ))
-	if err != nil {
-		return nil, err
+	var codecCtx *C.struct_AVCodecContext
+	err := C.codec_context(&codecCtx, c.avFormatCtx, int32(typ))
+	if err < 0 {
+		return nil, FormatError(int(err))
 	}
 	return unsafe.Pointer(codecCtx), nil
+}
+
+// FormatError converst an ffmpeg error message to a string
+func FormatError(code int) error {
+	str := C.format_error(C.int(code))
+	defer C.free(unsafe.Pointer(str))
+	return fmt.Errorf("ffmpeg: %s", C.GoString(str))
 }
 
 //export readCallBack

@@ -53,6 +53,8 @@ func init() {
 
 // NewDecoder sets up a context for the file. Call methods on it to perform
 // operations on the file.
+// TODO: You can not currently reuse the decoder for processign the same stream
+// twice. Need to store codec contexts in Decoder struct.
 func NewDecoder(r io.ReadSeeker) (*Decoder, error) {
 	ctx, err := avio.NewContext(&avio.Handlers{
 		ReadPacket: r.Read,
@@ -81,9 +83,9 @@ func NewDecoderReader(r io.Reader) (*Decoder, error) {
 
 // Thumbnail extracts the first frame of the video
 func (d *Decoder) Thumbnail() (image.Image, error) {
-	f, err := C.extract_video_image(d.avFormatCtx)
-	if err != nil {
-		return nil, err
+	var f *C.AVFrame
+	if err := C.extract_video_image(&f, d.avFormatCtx); err != 0 {
+		return nil, avio.FormatError(int(err))
 	}
 	if f == nil {
 		return nil, errors.New("failed to get AVCodecContext")

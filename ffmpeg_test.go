@@ -10,49 +10,57 @@ import (
 
 var extensions = []string{"mp4", "webm", "mkv"}
 
-func TestDecoder(t *testing.T) {
-	t.Parallel()
 
-	f := openSample(t, "mp4")
-	defer f.Close()
+// func TestDecoder(t *testing.T) {
+// 	t.Parallel()
 
-	d, err := NewDecoder(f)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer d.Close()
+// 	for i := range extensions {
+// 		ext := extensions[i]
+// 		t.Run(ext, func(t *testing.T) {
+// 			t.Parallel()
 
-	a, v, err := d.AVFormat(false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("audio:", a)
-	t.Log("video:", v)
+// 			f := openSample(t, ext)
+// 			defer f.Close()
 
-	a, v, err = d.AVFormat(true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("audio:", a)
-	t.Log("video:", v)
+// 			d, err := NewDecoder(f)
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+// 			defer d.Close()
 
-	_, err = d.Thumbnail()
-	if err != nil {
-		t.Fatal(err)
-	}
+// 			a, v, err := d.AVFormat(false)
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+// 			t.Log("audio:", a)
+// 			t.Log("video:", v)
 
-	img, err := d.Config()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("%#v\n", img)
+// 			a, v, err = d.AVFormat(true)
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+// 			t.Log("audio:", a)
+// 			t.Log("video:", v)
 
-	l, err := d.Length()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(l)
-}
+// 			_, err = d.Thumbnail()
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+
+// 			img, err := d.Config()
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+// 			t.Logf("%#v\n", img)
+
+// 			l, err := d.Length()
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+// 			t.Log(l)
+// 		})
+// 	}
+// }
 
 func openSample(t *testing.T, ext string) *os.File {
 	f, err := os.Open(samplePath(ext))
@@ -108,7 +116,7 @@ func TestDecode(t *testing.T) {
 	}
 }
 
-func TestMP4DecodeConfig(t *testing.T) {
+func TestDecodeConfig(t *testing.T) {
 	t.Parallel()
 
 	for i := range extensions {
@@ -130,7 +138,7 @@ func TestMP4DecodeConfig(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			t.Log(img, name, err)
+			t.Log(img, name)
 		})
 	}
 }

@@ -12,10 +12,11 @@ extern const int canRead;
 extern const int canWrite;
 extern const int canSeek;
 
-AVFormatContext *format_context(AVFormatContext *ctx, const int bufSize,
-				const int flags);
+int create_context(AVFormatContext **ctx, const int bufSize, const int flags);
 void destroy(AVFormatContext *ctx);
-AVCodecContext *codec_context(AVFormatContext *ctx, enum AVMediaType type);
+int codec_context(AVCodecContext **codecCtx, AVFormatContext *ctx,
+		  const enum AVMediaType type);
 char *codec_name(AVFormatContext *ctx, enum AVMediaType type, bool detailed);
+char *format_error(const int code);
 
 #endif

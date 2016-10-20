@@ -1,11 +1,7 @@
 #include "avio.h"
-#include <errno.h>
 
-AVFormatContext *format_context(AVFormatContext *ctx, const int bufSize,
-				const int flags)
+int create_context(AVFormatContext **ctx, const int bufSize, const int flags)
 {
-	errno = 0;
-
 	int (*read)(void *, uint8_t *, int);
 	int (*write)(void *, uint8_t *, int);
 	int64_t (*seek)(void *, int64_t, int);
@@ -20,20 +16,20 @@ AVFormatContext *format_context(AVFormatContext *ctx, const int bufSize,
 	}
 
 	unsigned char *buf = malloc((size_t)(bufSize));
-	ctx->pb = avio_alloc_context(buf, bufSize, 0, ctx, read, write, seek);
+	AVFormatContext *c = *ctx;
+	c->pb = avio_alloc_context(buf, bufSize, 0, c, read, write, seek);
+	c->flags |= AVFMT_FLAG_CUSTOM_IO;
 
-	int err = avformat_open_input(&ctx, NULL, NULL, NULL);
+	int err = avformat_open_input(ctx, NULL, NULL, NULL);
 	if (err < 0) {
-		errno = err;
-		return NULL;
+		return err;
 	}
-	err = avformat_find_stream_info(ctx, NULL);
+	err = avformat_find_stream_info(*ctx, NULL);
 	if (err < 0) {
-		errno = err;
-		return NULL;
+		return err;
 	}
 
-	return ctx;
+	return 0;
 }
 
 void destroy(AVFormatContext *ctx)
@@ -41,33 +37,34 @@ void destroy(AVFormatContext *ctx)
 	av_free(ctx->pb->buffer);
 	ctx->pb->buffer = NULL;
 	av_free(ctx->pb);
-	avformat_close_input(&ctx);
+	av_free(ctx);
 }
 
-AVCodecContext *codec_context(AVFormatContext *ctx, const enum AVMediaType type)
+int codec_context(AVCodecContext **codecCtx, AVFormatContext *ctx,
+		  const enum AVMediaType type)
 {
-	errno = 0;
-	AVCodec *codec;
-	if (av_find_best_stream(ctx, type, -1, -1, &codec, 0) < 0) {
-		return NULL;
+	AVCodec *codec = NULL;
+	int strm = av_find_best_stream(ctx, type, -1, -1, &codec, 0);
+	if (strm < 0) {
+		return strm;
 	}
 
-	AVCodecContext *codecCtx = avcodec_alloc_context3(codec);
-	int err = avcodec_open2(codecCtx, codec, NULL);
+	*codecCtx = ctx->streams[strm]->codec;
+	int err = avcodec_open2(*codecCtx, codec, NULL);
 	if (err < 0) {
-		errno = err;
-		avcodec_free_context(&codecCtx);
-		return NULL;
+		avcodec_free_context(codecCtx);
+		return err;
 	}
 
-	return codecCtx;
+	return 0;
 }
 
 char *codec_name(AVFormatContext *ctx, const enum AVMediaType type,
 		 const bool detailed)
 {
-	AVCodecContext *codecCtx = codec_context(ctx, type);
-	if (codecCtx == NULL) {
+	AVCodecContext *codecCtx = NULL;
+	int err = codec_context(&codecCtx, ctx, type);
+	if (err < 0) {
 		return NULL;
 	}
 
@@ -78,4 +75,11 @@ char *codec_name(AVFormatContext *ctx, const enum AVMediaType type,
 	avcodec_free_context(&codecCtx);
 
 	return ret;
+}
+
+char *format_error(const int code)
+{
+	char *buf = malloc(1024);
+	av_strerror(code, buf, 1024);
+	return buf;
 }

@@ -3,6 +3,6 @@
 
 #include <libavformat/avformat.h>
 
-AVFrame *extract_video_image(AVFormatContext *ctx);
+int extract_video_image(AVFrame **frame, AVFormatContext *ctx);
 
 #endif
