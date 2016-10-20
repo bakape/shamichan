@@ -60,6 +60,7 @@ var (
 func init() {
 	C.av_register_all()
 	C.avcodec_register_all()
+		C.av_log_set_level(16)
 }
 
 // Handlers contains function prototypes for custom IO. Implement necessary
@@ -256,7 +257,7 @@ func seekCallBack(
 	return C.int64_t(n)
 }
 
-// Length returns the length of the video
-func (c *Context) Length() (time.Duration, error) {
+// Duration returns the duration of the input
+func (c *Context) Duration() (time.Duration, error) {
 	return time.Duration(c.avFormatCtx.duration * 1000), nil
 }
