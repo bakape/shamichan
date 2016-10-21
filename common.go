@@ -20,8 +20,8 @@ func (c *Context) CodecName(typ MediaType) (string, error) {
 }
 
 // Duration returns the duration of the input
-func (c *Context) Duration() (time.Duration, error) {
-	return time.Duration(c.avFormatCtx.duration * 1000), nil
+func (c *Context) Duration() time.Duration {
+	return time.Duration(c.avFormatCtx.duration * 1000)
 }
 
 // Bitrate returns the estimated bitrate in bits per second

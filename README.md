@@ -1,3 +1,4 @@
+
 # goffmpeg
 Package goffmpeg provides an interface to pass I/O between Go and ffmpeg as
 well as methods for detecting codec format and generating thumbnail images

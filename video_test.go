@@ -102,12 +102,7 @@ func TestVideoDecoding(t *testing.T) {
 				t.Fatal(err)
 			}
 			t.Logf("%#v\n", img)
-
-			l, err := d.Duration()
-			if err != nil {
-				t.Fatal(err)
-			}
-			t.Log(l)
+			t.Log(d.Duration())
 		})
 	}
 }
