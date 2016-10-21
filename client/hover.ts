@@ -5,7 +5,7 @@ import View from "./view"
 import { posts } from "./state"
 import { hook } from "./hooks"
 import options from "./options"
-import { setAttrs } from "./util"
+import { setAttrs, getClosestID } from "./util"
 
 interface MouseMove extends ChangeEmitter {
 	event: MouseEvent
@@ -45,15 +45,24 @@ class PostPreview extends View<any> {
 		parent.addEventListener("click", this.clickHandler, {
 			passive: true,
 		})
+		this.render()
+	}
+
+	render() {
+		// Underline reverse post links in preview
+		const linksPost = ">>" + getClosestID(this.$parent)
+		for (let el of this.el.querySelectorAll("a.history")) {
+			if (!el.textContent.includes(linksPost)) {
+				continue
+			}
+			el.classList.add("referenced")
+		}
 
 		if ($overlay.firstChild) {
 			$overlay.firstChild.remove()
 		}
 		$overlay.append(this.el)
 		this.position()
-
-		// TODO: Underline reference link in preview
-
 	}
 
 	// Position the preview element relative to it's parent link

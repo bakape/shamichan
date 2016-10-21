@@ -12,17 +12,3 @@ let PostPreview = Article.extend({
 		postHover.render(this.$el, this.parentNum);
 	}
 });
-
-let HoverPostView = Backbone.View.extend({
-	render($el, num) {
-		// Striped underline links from the parent post
-		$el.find('a.history')
-			.filter(function () {
-				return this.text.includes('>>' + num);
-			})
-			.each(function () {
-				$(this).addClass('referenced');
-			});
-		$el.css(this.position($el)).appendTo(this.$el.empty());
-	},
-});
