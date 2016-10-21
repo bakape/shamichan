@@ -36,6 +36,10 @@ func loadConfigs() error {
 	if err := All(q, &boards); err != nil {
 		return err
 	}
+	// Ensure boards is always a slice
+	if boards == nil {
+		boards = []string{}
+	}
 	config.SetBoards(boards)
 
 	read := make(chan config.Configs)

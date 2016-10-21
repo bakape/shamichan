@@ -17,14 +17,31 @@ func TestLoadConfigs(t *testing.T) {
 		{ID: "a"},
 		{ID: "c"},
 	})
+	config.Set(config.Configs{})
+	config.SetBoards(nil)
 
-	// Intiial configs
 	if err := loadConfigs(); err != nil {
 		t.Fatal(err)
 	}
 
 	AssertDeepEquals(t, config.Get(), &config.Defaults)
 	AssertDeepEquals(t, config.GetBoards(), []string{"a", "c"})
+}
+
+func TestLoadConfigsNoBoards(t *testing.T) {
+	assertTableClear(t, "main", "boards")
+	assertInsert(t, "main", ConfigDocument{
+		Document{"config"},
+		config.Defaults,
+	})
+	config.Set(config.Configs{})
+	config.SetBoards(nil)
+
+	if err := loadConfigs(); err != nil {
+		t.Fatal(err)
+	}
+
+	AssertDeepEquals(t, config.GetBoards(), []string{})
 }
 
 func TestUpdateConfigs(t *testing.T) {
