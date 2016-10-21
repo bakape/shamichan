@@ -98,7 +98,7 @@ func assertInsert(t *testing.T, table string, doc interface{}) {
 
 func readListenErrors(t *testing.T, cl *Client, sv *mockWSServer) {
 	defer sv.Done()
-	if err := cl.Listen(); err != nil {
+	if err := cl.listen(); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -179,7 +179,7 @@ func TestTestClose(t *testing.T) {
 	sv.Add(1)
 	go func() {
 		defer sv.Done()
-		if err := cl.Listen(); err != std {
+		if err := cl.listen(); err != std {
 			UnexpectedError(t, err)
 		}
 	}()
@@ -296,7 +296,7 @@ func assertListenError(
 	sv *mockWSServer,
 ) {
 	defer sv.Done()
-	assertErrorPrefix(t, cl.Listen(), prefix)
+	assertErrorPrefix(t, cl.listen(), prefix)
 }
 
 // Client properly closed connection with a control message
@@ -333,7 +333,7 @@ func TestClientCleanUp(t *testing.T) {
 	}
 
 	cl, wcl := sv.NewClient()
-	Clients.Add(cl, id)
+	Clients.add(cl, id)
 	if _, sync := Clients.GetSync(cl); sync != id {
 		LogUnexpected(t, id, sync)
 	}
@@ -402,7 +402,7 @@ func TestPinging(t *testing.T) {
 	})
 
 	go wcl.ReadMessage()
-	go cl.Listen()
+	go cl.listen()
 	sv.Wait()
 	cl.Close(nil)
 }

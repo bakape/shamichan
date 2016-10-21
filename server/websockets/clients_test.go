@@ -25,10 +25,10 @@ func TestMapAddHasRemove(t *testing.T) {
 
 	// Add client
 	cl, _ := sv.NewClient()
-	m.Add(cl, id)
+	m.add(cl, id)
 	assertSyncID(t, m, cl, id)
 	// Remove client
-	m.Remove(cl)
+	m.remove(cl)
 	if synced, _ := m.GetSync(cl); synced {
 		t.Error("client still synced")
 	}
@@ -60,10 +60,10 @@ func TestMapChangeSync(t *testing.T) {
 	defer sv.Close()
 
 	cl, _ := sv.NewClient()
-	m.Add(cl, oldSync)
+	m.add(cl, oldSync)
 	assertSyncID(t, m, cl, oldSync)
 
-	m.ChangeSync(cl, newSync)
+	m.changeSync(cl, newSync)
 	assertSyncID(t, m, cl, newSync)
 }
 
@@ -82,7 +82,7 @@ func TestCountByIP(t *testing.T) {
 	for i := range cls {
 		cl, _ := sv.NewClient()
 		cls[i] = cl
-		m.Add(cl, id)
+		m.add(cl, id)
 	}
 	cls[0].IP = "foo"
 	cls[1].IP = "foo"

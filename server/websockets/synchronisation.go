@@ -68,9 +68,9 @@ func registerSync(board string, op int64, c *Client) {
 		Board: board,
 	}
 	if !c.synced {
-		Clients.Add(c, id)
+		Clients.add(c, id)
 	} else {
-		Clients.ChangeSync(c, id)
+		Clients.changeSync(c, id)
 	}
 }
 

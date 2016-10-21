@@ -118,7 +118,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	c := newClient(conn, req)
-	if err := c.Listen(); err != nil {
+	if err := c.listen(); err != nil {
 		c.logError(err)
 	}
 }
@@ -137,12 +137,12 @@ func newClient(conn *websocket.Conn, req *http.Request) *Client {
 }
 
 // Listen listens for incoming messages on the channels and processes them
-func (c *Client) Listen() error {
+func (c *Client) listen() error {
 	go c.receiverLoop()
 
 	// Clean up, when loop exits
 	err := c.listenerLoop()
-	Clients.Remove(c)
+	Clients.remove(c)
 	return c.closeConnections(err)
 }
 

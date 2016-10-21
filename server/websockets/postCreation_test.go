@@ -100,7 +100,7 @@ func testCreateThread(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	Clients.Add(cl, SyncID{
+	Clients.add(cl, SyncID{
 		OP:    0,
 		Board: "all",
 	})
@@ -308,7 +308,7 @@ func TestPostCreationValidations(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.Add(cl, SyncID{1, "a"})
+	Clients.add(cl, SyncID{1, "a"})
 
 	cases := [...]struct {
 		testName, text, token, name string
@@ -352,7 +352,7 @@ func TestPoctCreationOnLockedThread(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.Add(cl, SyncID{1, "a"})
+	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 
 	req := replyCreationRequest{
@@ -375,7 +375,7 @@ func TestPostCreation(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	Clients.Add(cl, SyncID{1, "a"})
+	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 	cl.IP = "::1"
 
@@ -499,7 +499,7 @@ func TestTextOnlyPostCreation(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.Add(cl, SyncID{1, "a"})
+	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 
 	req := replyCreationRequest{
@@ -561,7 +561,7 @@ func TestBumpLimit(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.Add(cl, SyncID{1, "a"})
+	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 
 	req := replyCreationRequest{
@@ -603,7 +603,7 @@ func TestSaging(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.Add(cl, SyncID{1, "a"})
+	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 
 	req := replyCreationRequest{
@@ -644,7 +644,7 @@ func TestPostCreationWithNewlines(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.Add(cl, SyncID{1, "a"})
+	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 
 	req := replyCreationRequest{

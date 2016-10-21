@@ -24,7 +24,7 @@ type SyncID struct {
 }
 
 // Add adds a client to the map
-func (c *ClientMap) Add(cl *Client, syncID SyncID) {
+func (c *ClientMap) add(cl *Client, syncID SyncID) {
 	c.Lock()
 	defer c.Unlock()
 	c.clients[cl] = syncID
@@ -32,14 +32,14 @@ func (c *ClientMap) Add(cl *Client, syncID SyncID) {
 }
 
 // ChangeSync changes the thread or board ID the client is synchronised to
-func (c *ClientMap) ChangeSync(cl *Client, syncID SyncID) {
+func (c *ClientMap) changeSync(cl *Client, syncID SyncID) {
 	c.Lock()
 	defer c.Unlock()
 	c.clients[cl] = syncID
 }
 
 // Remove removes a client from the map
-func (c *ClientMap) Remove(cl *Client) {
+func (c *ClientMap) remove(cl *Client) {
 	c.Lock()
 	defer c.Unlock()
 	delete(c.clients, cl)

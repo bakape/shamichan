@@ -28,11 +28,6 @@ var postReservationQuery = GetMain("info").
 	Field("new_val").
 	Field("postCtr")
 
-// DatabaseHelper simplifies managing queries, by providing extra utility
-type DatabaseHelper struct {
-	query r.Term
-}
-
 // Exec excutes the query and only returns an error, if any. Do not use for
 // write queries.
 func Exec(query r.Term) error {
