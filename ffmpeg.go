@@ -15,7 +15,6 @@ import (
 	"io"
 	"io/ioutil"
 	"sync"
-	"time"
 	"unsafe"
 )
 
@@ -25,8 +24,13 @@ type MediaType int
 
 // Correspond to AVMediaType
 const (
-	Video MediaType = iota
+	Unknown MediaType = iota - 1
+	Video
 	Audio
+	Data
+	Subtitle
+	Attachment
+	NB
 )
 
 // Flags for enabling diffrent callbacks in AVIOContext
@@ -60,7 +64,7 @@ var (
 func init() {
 	C.av_register_all()
 	C.avcodec_register_all()
-		C.av_log_set_level(16)
+	C.av_log_set_level(16)
 }
 
 // Handlers contains function prototypes for custom IO. Implement necessary
@@ -75,7 +79,18 @@ type Handlers struct {
 type Context struct {
 	avFormatCtx *C.struct_AVFormatContext
 	handlerKey  uintptr
+	codecs      map[MediaType]codecInfo
 }
+
+// Contaoiner for allocated coddecs, so we can reuse them
+type codecInfo struct {
+	stream C.int
+	ctx    *C.AVCodecContext
+}
+
+// FFmpegError converst an FFmpeg error code to a Go error with a
+// human-readable error message
+type FFmpegError C.int
 
 // C can not retain any pointers to Go memory after the cgo call returns. We
 // still need a way to bind AVFormatContext insatnces to Go I/O functions. To do
@@ -85,6 +100,17 @@ type Context struct {
 type handlerMap struct {
 	sync.RWMutex
 	m map[uintptr]Handlers
+}
+
+func (f FFmpegError) Error() string {
+	str := C.format_error(C.int(f))
+	defer C.free(unsafe.Pointer(str))
+	return fmt.Sprintf("ffmpeg: %s", C.GoString(str))
+}
+
+// Code rreturns the underlying FFmpeg error code
+func (f FFmpegError) Code() int {
+	return int(f)
 }
 
 func (h *handlerMap) Set(k uintptr, handlers Handlers) {
@@ -131,6 +157,7 @@ func NewContext(handlers *Handlers) (*Context, error) {
 	ctx := C.avformat_alloc_context()
 	this := &Context{
 		avFormatCtx: ctx,
+		codecs:      make(map[MediaType]codecInfo),
 	}
 
 	if handlers != nil {
@@ -152,7 +179,7 @@ func NewContext(handlers *Handlers) (*Context, error) {
 	err := C.create_context(&this.avFormatCtx, C.int(IOBufferSize), flags)
 	if err < 0 {
 		this.Close()
-		return nil, FormatError(int(err))
+		return nil, FFmpegError(err)
 	}
 	if this.avFormatCtx == nil {
 		this.Close()
@@ -180,47 +207,40 @@ func NewContextReadSeeker(r io.ReadSeeker) (*Context, error) {
 	})
 }
 
-// Close closes and frees c. It should not be used after this point.
+// Close closes and frees memory allocated for c. c should not be used after
+// this point.
 func (c *Context) Close() {
+	for _, ci := range c.codecs {
+		C.avcodec_free_context(&ci.ctx)
+	}
 	if c.avFormatCtx != nil {
 		C.destroy(c.avFormatCtx)
 	}
 	handlersMap.Delete(c.handlerKey)
 }
 
-// CodecName returns codec name of the best stream type in the input with
-// desired verbosity of the codec name
-func (c *Context) CodecName(typ MediaType, detailed bool) (
-	string, error,
-) {
-	name, err := C.codec_name(c.avFormatCtx, int32(typ), C._Bool(detailed))
-	if err != nil {
-		return "", err
+// Allocate a codec context for the best stream of the passed MediaType, if not
+// allocated allready
+func (c *Context) codecContext(typ MediaType) (codecInfo, error) {
+	if ci, ok := c.codecs[typ]; ok {
+		return ci, nil
 	}
-	if name == nil {
-		return "", nil
-	}
-	defer C.free(unsafe.Pointer(name))
-	return C.GoString(name), nil
-}
 
-// CodecContext returns the AVCodecContext of the best stream of the passed
-// MediaType. It is the responsibility of the caller to cast to his local
-// C type. check the codec context for nil pointers and free memory, when done.
-func (c *Context) CodecContext(typ MediaType) (unsafe.Pointer, error) {
-	var codecCtx *C.struct_AVCodecContext
-	err := C.codec_context(&codecCtx, c.avFormatCtx, int32(typ))
+	var (
+		ctx    *C.struct_AVCodecContext
+		stream C.int
+	)
+	err := C.codec_context(&ctx, &stream, c.avFormatCtx, int32(typ))
 	if err < 0 {
-		return nil, FormatError(int(err))
+		return codecInfo{}, FFmpegError(err)
 	}
-	return unsafe.Pointer(codecCtx), nil
-}
 
-// FormatError converst an ffmpeg error message to a string
-func FormatError(code int) error {
-	str := C.format_error(C.int(code))
-	defer C.free(unsafe.Pointer(str))
-	return fmt.Errorf("ffmpeg: %s", C.GoString(str))
+	ci := codecInfo{
+		stream: stream,
+		ctx:    ctx,
+	}
+	c.codecs[typ] = ci
+	return ci, nil
 }
 
 //export readCallBack
@@ -255,9 +275,4 @@ func seekCallBack(
 		return -1
 	}
 	return C.int64_t(n)
-}
-
-// Duration returns the duration of the input
-func (c *Context) Duration() (time.Duration, error) {
-	return time.Duration(c.avFormatCtx.duration * 1000), nil
 }

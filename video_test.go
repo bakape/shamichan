@@ -64,6 +64,54 @@ func TestDecode(t *testing.T) {
 	}
 }
 
+func TestVideoDecoding(t *testing.T) {
+	t.Parallel()
+
+	for i := range extensions {
+		ext := extensions[i]
+		t.Run(ext, func(t *testing.T) {
+			t.Parallel()
+
+			f := openSample(t, ext)
+			defer f.Close()
+
+			d, err := NewContextReadSeeker(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer d.Close()
+
+			a, err := d.CodecName(Audio)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log("audio:", a)
+			v, err := d.CodecName(Video)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log("video:", v)
+
+			_, err = d.Thumbnail()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			img, err := d.Config()
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Logf("%#v\n", img)
+
+			l, err := d.Duration()
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log(l)
+		})
+	}
+}
+
 func TestDecodeConfig(t *testing.T) {
 	t.Parallel()
 

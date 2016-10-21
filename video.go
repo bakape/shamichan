@@ -37,13 +37,20 @@ func init() {
 
 // Thumbnail extracts the first frame of the video
 func (c *Context) Thumbnail() (image.Image, error) {
+	ci, err := c.codecContext(Video)
+	if err != nil {
+		return nil, err
+	}
+
 	var f *C.AVFrame
-	if err := C.extract_video_image(&f, c.avFormatCtx); err != 0 {
-		return nil, FormatError(int(err))
+	eErr := C.extract_video_image(&f, c.avFormatCtx, ci.ctx, ci.stream)
+	if eErr != 0 {
+		return nil, FFmpegError(eErr)
 	}
 	if f == nil {
-		return nil, errors.New("failed to get AVCodecContext")
+		return nil, errors.New("failed to get frame")
 	}
+	defer C.av_frame_free(&f)
 
 	if C.GoString(C.av_get_pix_fmt_name(int32(f.format))) != "yuv420p" {
 		return nil, fmt.Errorf(
@@ -88,29 +95,26 @@ func Decode(r io.Reader) (image.Image, error) {
 
 // Config uses CGo FFmpeg binding to find video's image.Config metadata
 func (c *Context) Config() (image.Config, error) {
-	cc, err := c.CodecContext(Video)
+	ci, err := c.codecContext(Video)
 	if err != nil {
 		return image.Config{}, err
 	}
-	if cc == nil {
-		return image.Config{}, errors.New("failed to decode")
-	}
-	codecCtx := (*C.AVCodecContext)(cc)
-	defer C.avcodec_free_context(&codecCtx)
 
-	s := C.GoString(C.av_get_pix_fmt_name(int32(codecCtx.pix_fmt)))
+	ctx := ci.ctx
+
+	s := C.GoString(C.av_get_pix_fmt_name(int32(ctx.pix_fmt)))
 	if strings.Contains(s, "yuv") {
 		return image.Config{
 			ColorModel: color.YCbCrModel,
-			Width:      int(codecCtx.width),
-			Height:     int(codecCtx.height),
+			Width:      int(ctx.width),
+			Height:     int(ctx.height),
 		}, nil
 	}
 
 	return image.Config{
 		ColorModel: color.RGBAModel,
-		Width:      int(codecCtx.width),
-		Height:     int(codecCtx.height),
+		Width:      int(ctx.width),
+		Height:     int(ctx.height),
 	}, nil
 }
 
@@ -123,14 +127,4 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 	}
 	defer d.Close()
 	return d.Config()
-}
-
-// AVFormat returns contained stream codecs with desired codec name verbosity
-func (c *Context) AVFormat(detailed bool) (audio, video string, err error) {
-	video, err = c.CodecName(Video, detailed)
-	if err != nil {
-		return
-	}
-	audio, err = c.CodecName(Audio, detailed)
-	return
 }

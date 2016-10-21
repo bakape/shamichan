@@ -59,13 +59,17 @@ func TestAudio(t *testing.T) {
 			}
 			defer dec.Close()
 
-			if fmt := dec.AudioFormat(); fmt != "" {
+			fmt, err := dec.CodecName(Audio)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if fmt != "" {
 				dur, err := dec.Duration()
 				if err != nil {
 					t.Fatal(err)
 				}
+				t.Log("Audio format: ", fmt)
 				t.Log("Audio duration: ", dur)
-				t.Log("Audio format: ", dec.AudioFormat())
 				t.Log("Bitrate: ", dec.Bitrate()/1000, "kbps")
 			}
 			if dec.HasImage() {

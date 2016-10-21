@@ -2,6 +2,7 @@
 
 int create_context(AVFormatContext **ctx, const int bufSize, const int flags)
 {
+	// Pick which custom I/O callbacks to assign to AVIOContext
 	int (*read)(void *, uint8_t *, int);
 	int (*write)(void *, uint8_t *, int);
 	int64_t (*seek)(void *, int64_t, int);
@@ -40,41 +41,23 @@ void destroy(AVFormatContext *ctx)
 	av_free(ctx);
 }
 
-int codec_context(AVCodecContext **codecCtx, AVFormatContext *ctx,
+int codec_context(AVCodecContext **avcc, int *stream, AVFormatContext *avfc,
 		  const enum AVMediaType type)
 {
 	AVCodec *codec = NULL;
-	int strm = av_find_best_stream(ctx, type, -1, -1, &codec, 0);
-	if (strm < 0) {
-		return strm;
+	*stream = av_find_best_stream(avfc, type, -1, -1, &codec, 0);
+	if (*stream < 0) {
+		return *stream;
 	}
 
-	*codecCtx = ctx->streams[strm]->codec;
-	int err = avcodec_open2(*codecCtx, codec, NULL);
+	*avcc = avfc->streams[*stream]->codec;
+	int err = avcodec_open2(*avcc, codec, NULL);
 	if (err < 0) {
-		avcodec_free_context(codecCtx);
+		avcodec_free_context(avcc);
 		return err;
 	}
 
 	return 0;
-}
-
-char *codec_name(AVFormatContext *ctx, const enum AVMediaType type,
-		 const bool detailed)
-{
-	AVCodecContext *codecCtx = NULL;
-	int err = codec_context(&codecCtx, ctx, type);
-	if (err < 0) {
-		return NULL;
-	}
-
-	const AVCodec *codec = codecCtx->codec;
-	const char *src = detailed ? codec->long_name : codec->name;
-	char *ret = malloc(strlen(src));
-	strcpy(ret, src);
-	avcodec_free_context(&codecCtx);
-
-	return ret;
 }
 
 char *format_error(const int code)

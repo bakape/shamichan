@@ -3,6 +3,7 @@
 
 #include "ffmpeg.h"
 
-int extract_video_image(AVFrame **frame, AVFormatContext *ctx);
+int extract_video_image(AVFrame **frame, AVFormatContext *avfc,
+			AVCodecContext *avcc, const int stream);
 
 #endif
