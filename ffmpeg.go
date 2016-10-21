@@ -102,13 +102,14 @@ type handlerMap struct {
 	m map[uintptr]Handlers
 }
 
+// Error formats the FFmpeg error in human-readable format
 func (f FFmpegError) Error() string {
 	str := C.format_error(C.int(f))
 	defer C.free(unsafe.Pointer(str))
 	return fmt.Sprintf("ffmpeg: %s", C.GoString(str))
 }
 
-// Code rreturns the underlying FFmpeg error code
+// Code returns the underlying FFmpeg error code
 func (f FFmpegError) Code() int {
 	return int(f)
 }
