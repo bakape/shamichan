@@ -18,7 +18,7 @@ import (
 	"unsafe"
 )
 
-// MediaType cooresponds to the AVMediaType enum in ffmpeg. Exported separately
+// MediaType coresponds to the AVMediaType enum in ffmpeg. Exported separately
 // to bypass cross-package boundries.
 type MediaType int
 
