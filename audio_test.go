@@ -36,6 +36,8 @@ func TestAudio(t *testing.T) {
 		"aacTest.aac",
 
 		"itunes.m4a",
+
+		"False.txt",
 	}
 	for i := range files {
 		input := files[i]

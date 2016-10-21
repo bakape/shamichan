@@ -2,7 +2,9 @@
 
 package goffmpeg
 
+// #cgo pkg-config: libavcodec libavutil libavformat
 // #cgo CFLAGS: -std=c11
+// #include <libavformat/avformat.h>
 import "C"
 import "time"
 
@@ -13,7 +15,8 @@ func (c *Context) CodecName(typ MediaType) (string, error) {
 	if err == nil {
 		return C.GoString(ci.ctx.codec.name), nil
 	}
-	if fferr, ok := err.(FFmpegError); ok && fferr.Code() == -1381258232 {
+	fferr, ok := err.(FFmpegError)
+	if ok && C.int(fferr) == C.AVERROR_STREAM_NOT_FOUND {
 		return "", nil
 	}
 	return "", err

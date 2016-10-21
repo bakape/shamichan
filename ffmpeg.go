@@ -54,9 +54,6 @@ var (
 		m: make(map[uintptr]Handlers),
 	}
 
-	// ErrFailedAVIOCtx indicates failure to create an AVIOContext
-	ErrFailedAVIOCtx = errors.New("failed to initialize AVIOContext")
-
 	// ErrFailedAVFCtx indicates faulure to create an AVFormatContext
 	ErrFailedAVFCtx = errors.New("failed to initialize AVFormatContext")
 )
@@ -184,7 +181,7 @@ func NewContext(handlers *Handlers) (*Context, error) {
 	}
 	if this.avFormatCtx == nil {
 		this.Close()
-		return nil, ErrFailedAVIOCtx
+		return nil, ErrFailedAVFCtx
 	}
 
 	return this, nil
