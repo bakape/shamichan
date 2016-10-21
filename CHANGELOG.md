@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v2.4.1 - 2016-10-21
+* Fix:
+	- Page not loading, when there are no boards created
+
 ##v2.4.0 - 2016-10-18
 * Add:
 	- Youtube, SoundCloud and Vimeo embeds
