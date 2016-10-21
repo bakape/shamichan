@@ -5,8 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/bakape/audio"
-	"github.com/bakape/video/avio"
+	"github.com/bakape/goffmpeg"
 )
 
 // Directory for static image asset storage. Overridable for tests.
@@ -17,37 +16,41 @@ const fallbackCover = "audio-fallback.png"
 
 // Test if file is an MP3
 func detectMP3(buf []byte) (bool, error) {
-	d, err := audio.NewDecoder(bytes.NewReader(buf))
-	switch err {
-	case avio.ErrFailedAVFCtx, avio.ErrFailedAVIOCtx:
-		return false, nil
-	case nil:
-		defer d.Close()
-		return d.AudioFormat() == "mp3", nil
-	default:
+	c, err := goffmpeg.NewContextReadSeeker(bytes.NewReader(buf))
+	if err != nil {
+		// Invalid file that can't even have a context created
+		if fferr, ok := err.(goffmpeg.FFmpegError); ok && fferr.Code() == -1 {
+			return false, nil
+		}
 		return false, err
 	}
+	defer c.Close()
+	codec, err := c.CodecName(goffmpeg.Audio)
+	if err != nil {
+		return false, err
+	}
+	return codec == "mp3", nil
 }
 
 // Extract image and meta info from MP3 files and send them down the
 // thumbnailing pipeline.
 func processMP3(data []byte) (res thumbResponse) {
-	d, err := audio.NewDecoder(bytes.NewReader(data))
+	c, err := goffmpeg.NewContextReadSeeker(bytes.NewReader(data))
 	if err != nil {
 		res.err = err
 		return
 	}
-	defer d.Close()
-	res.length = uint32(d.Duration() / 1000000000)
+	defer c.Close()
+	res.length = uint32(c.Duration() / 1000000000)
 
 	// No cover art in file. Assign fallback cover and return.
-	if !d.HasImage() {
+	if !c.HasImage() {
 		path := filepath.Join(assetRoot, fallbackCover)
 		res.thumb, res.err = ioutil.ReadFile(path)
 		res.dims = [4]uint16{150, 150, 150, 150}
 		return
 	}
 
-	res.thumb, res.dims, res.err = processImage(d.Picture())
+	res.thumb, res.dims, res.err = processImage(c.Picture())
 	return
 }

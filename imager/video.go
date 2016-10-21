@@ -5,39 +5,30 @@ package imager
 import (
 	"bytes"
 
-	"github.com/bakape/video"
+	"github.com/bakape/goffmpeg"
 )
 
 // Extract data and thumbnail from a WebM video
 func processWebm(data []byte) (res thumbResponse) {
-	d, err := video.NewDecoder(bytes.NewReader(data))
+	c, err := goffmpeg.NewContextReadSeeker(bytes.NewReader(data))
 	if err != nil {
 		res.err = err
 		return
 	}
-	defer d.Close()
+	defer c.Close()
 
-	audio, _, err := d.AVFormat()
+	audio, err := c.CodecName(goffmpeg.Audio)
 	if err != nil {
-		if err.Error() == "Failed to decode audio stream" {
-			err = nil
-		} else {
-			res.err = err
-			return
-		}
+		res.err = err
+		return
 	}
 	if audio != "" {
 		res.audio = true
 	}
 
-	dur, err := d.Length()
-	if err != nil {
-		res.err = err
-		return
-	}
-	res.length = uint32(dur / 1000000000)
+	res.length = uint32(c.Duration() / 1000000000)
 
-	src, err := d.Thumbnail()
+	src, err := c.Thumbnail()
 	if err != nil {
 		res.err = err
 		return
