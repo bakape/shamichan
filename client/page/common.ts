@@ -4,7 +4,6 @@ import { PageState, boardConfig, posts, page } from '../state'
 import renderThread from './thread'
 import renderBoard from './board'
 import { ThreadData } from '../posts/models'
-import { scrollToAnchor } from "../scroll"
 import { read } from "../render"
 import { images, ui } from "../lang"
 import { write, $threads } from "../render"
@@ -31,15 +30,10 @@ export default async function (
 		renderBoard(threads, ctr)
 	}
 
-	read(() => {
-		// Scroll to any selected anchor, after page renders
-		scrollToAnchor()
-
-		// Focus the thread container, so novigation keys (End, arrow keys,
-		// etc.) actually target this element, not the window.
-		$threads.focus()
-	})
-
+	// Focus the thread container, so navigation keys (End, arrow keys, etc.)
+	// actually target this element, not the window.
+	read(() =>
+		$threads.focus())
 }
 
 // Format a block of text received from an untrusted user

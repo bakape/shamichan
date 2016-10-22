@@ -1,7 +1,7 @@
 // Client entry point
 
 import { displayLoading, loadFromDB, page, isMobile } from './state'
-import { initTemplates, read } from "./render"
+import { initTemplates } from "./render"
 import { start as connect } from './connection'
 import { open } from './db'
 import loadPage from './page/common'
@@ -12,7 +12,7 @@ import bindEtc from './etc'
 import bindOptionsListeners from "./options/loop"
 import bindShortcuts from "./keyboard"
 import { loadModule } from "./util"
-import { checkBottom } from "./scroll"
+import { checkBottom, scrollToAnchor } from "./scroll"
 import bindMenu from "./posts/menu"
 
 // Clear cookies, if versions mismatch
@@ -46,8 +46,8 @@ async function start() {
 	bindShortcuts()
 	bindMenu()
 	await pageLoader
-	read(() =>
-		checkBottom())
+	scrollToAnchor()
+	checkBottom()
 	connect()
 	exec()
 	displayLoading(false)

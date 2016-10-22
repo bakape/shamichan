@@ -15,17 +15,19 @@ let $lock: HTMLElement,
 // Scroll to target anchor element, if any
 export function scrollToAnchor() {
 	if (!location.hash) {
-		if (!history.state) {
-			$threads.scrollTop = 0
-			checkBottom(0)
-		}
-		return
+		return scrollToTop()
 	}
 	const el = document.querySelector(location.hash)
-	if (el) {
-		el.scrollIntoView()
+	if (!el) {
+		return scrollToTop()
 	}
+	el.scrollIntoView()
 	checkBottom()
+}
+
+function scrollToTop() {
+	$threads.scrollTop = 0
+	checkBottom(0)
 }
 
 // Lock position to the bottom of a thread or keep the viewport from bumping
