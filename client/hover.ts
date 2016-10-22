@@ -6,6 +6,9 @@ import { posts } from "./state"
 import { hook } from "./hooks"
 import options from "./options"
 import { setAttrs, getClosestID } from "./util"
+import { fetchJSON } from "./json"
+import { PostData, Post } from "./posts/models"
+import PostView from "./posts/view"
 
 interface MouseMove extends ChangeEmitter {
 	event: MouseEvent
@@ -150,7 +153,7 @@ function renderImagePreview(event: MouseEvent) {
 	$overlay.append(el)
 }
 
-function renderPostPreview(event: MouseEvent) {
+async function renderPostPreview(event: MouseEvent) {
 	const target = event.target as HTMLAnchorElement
 	if (!target.matches || !target.matches("a.history")) {
 		return
@@ -159,12 +162,20 @@ function renderPostPreview(event: MouseEvent) {
 	if (!m) {
 		return
 	}
-	const post = posts.get(parseInt(m[1]))
+
+	let post = posts.get(parseInt(m[1]))
 	if (!post) {
+		// Try to fetch from server, if this post is not currently displayed
+		// due to lastN or in a different thread
+		let data: PostData
+		try {
+			data = await fetchJSON<PostData>(`/json/post/${m[1]}`)
+		} catch (e) {
+			return
+		}
 
-		// TODO: Try to fetch from API. This includes cross-thread posts
-
-		return
+		post = new Post(data)
+		new PostView(post)
 	}
 	postPreview = new PostPreview(post.view.el, target)
 }
