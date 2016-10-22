@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v2.5.0 - 2016-10-22
+* Fix:
+	- Existing board updates on board creation
+	- Don't lock to bottom, when navigating between threads
+* Add:
+	- Cross-thread post previews
+	- Underline reverse links in post hover previews
+
 ##v2.4.1 - 2016-10-21
 * Fix:
 	- Page not loading, when there are no boards created
