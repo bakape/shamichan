@@ -13,6 +13,7 @@ import (
 
 type boardConfUpdate struct {
 	Deleted bool
+	Created bool
 	config.BoardConfigs
 }
 
@@ -71,7 +72,12 @@ func loadBoardConfigs() error {
 				b.Field("new_val").Eq(nil),
 				map[string]interface{}{
 					"deleted": true,
-					"id":      b.Field("id"),
+					"id":      b.Field("old_val").Field("id"),
+				},
+				b.HasFields("old_val").Not(),
+				map[string]interface{}{
+					"created": true,
+					"id":      b.Field("new_val").Field("id"),
 				},
 				b.Field("new_val"),
 			)
@@ -112,6 +118,10 @@ func updateBoardConfigs(u boardConfUpdate) error {
 	}
 	if err := config.SetBoardConfigs(u.BoardConfigs); err != nil {
 		return util.WrapError("reloading board configuration", err)
+	}
+	if u.Created {
+		config.AddBoard(u.ID)
+		return recompileTemplates()
 	}
 	return nil
 }

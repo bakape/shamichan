@@ -48,7 +48,7 @@ func TestSetGetBoards(t *testing.T) {
 	AssertDeepEquals(t, GetBoards(), std)
 }
 
-func TestSetGetRemoveBoardConfigs(t *testing.T) {
+func TestSetGetAddRemoveBoardConfigs(t *testing.T) {
 	std := BoardConfigs{
 		ID: "a",
 		BoardPublic: BoardPublic{
@@ -70,6 +70,7 @@ func TestSetGetRemoveBoardConfigs(t *testing.T) {
 	AssertDeepEquals(t, conf.BoardConfigs, std)
 
 	RemoveBoard("a")
+	AddBoard("c")
 	AssertDeepEquals(t, GetBoardConfigs("a"), BoardConfContainer{})
-	AssertDeepEquals(t, GetBoards(), []string{"x"})
+	AssertDeepEquals(t, GetBoards(), []string{"x", "c"})
 }

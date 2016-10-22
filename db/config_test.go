@@ -79,6 +79,31 @@ func TestUpdateOnRemovedBoard(t *testing.T) {
 	AssertDeepEquals(t, config.GetBoards(), []string{"x"})
 }
 
+func TestUpdateOnAddBoard(t *testing.T) {
+	config.SetBoards([]string{"x"})
+	config.SetBoardConfigs(config.BoardConfigs{
+		ID: "a",
+	})
+
+	std := config.BoardConfigs{
+		ID: "a",
+		BoardPublic: config.BoardPublic{
+			CodeTags: true,
+		},
+	}
+	u := boardConfUpdate{
+		BoardConfigs: std,
+		Created:      true,
+	}
+
+	if err := updateBoardConfigs(u); err != nil {
+		t.Fatal(err)
+	}
+
+	AssertDeepEquals(t, config.GetBoardConfigs("a").BoardConfigs, std)
+	AssertDeepEquals(t, config.GetBoards(), []string{"x", "a"})
+}
+
 func TestUpdateBoatrdConfigs(t *testing.T) {
 	config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",

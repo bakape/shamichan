@@ -273,3 +273,11 @@ func RemoveBoard(b string) {
 		}
 	}
 }
+
+// AddBoard adds a board to the existing board array. Should only be called on
+// board creation
+func AddBoard(b string) {
+	boardsMu.Lock()
+	defer boardsMu.Unlock()
+	boards = append(boards, b)
+}
