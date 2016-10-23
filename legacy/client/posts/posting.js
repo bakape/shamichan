@@ -39,52 +39,5 @@ const ComposerView = Backbone.View.extend({
 	onKeyDown(event) {
 		handle_shortcut.bind(this)(event);
 	},
-
-	addReference(num, sel) {
-		// If a >>link exists, put this one on the next line
-		var val = this.$input.val();
-		if (/^>>\d+$/.test(val)) {
-			this.$input.val(val + '\n');
-			this.onInput();
-			val = this.$input.val();
-		}
-		// Quote selected text automatically
-		if (sel) {
-			sel = sel.split('\n');
-			// Prepend > to each line
-			for (let i = 0, len = sel.length; i < len; i++)
-				sel[i] = '>' + sel[i];
-			num += '\n' + sel.join('\n') + '\n';
-		}
-		this.$input.val(val + '>>' + num);
-		this.$input[0].selectionStart = this.$input.val().length;
-		this.onInput();
-		this.$input.focus();
-	},
 });
 exports.ComposerView = ComposerView;
-
-main.$threads.on('click', 'a.quote', function(e) {
-	e.preventDefault();
-
-	/*
-	 Make sure the selection both starts and ends in the quoted post's
-	 blockquote
-	 */
-	const post = e.target.closest('article, section'),
-		gsel = getSelection(),
-		num = util.getNum(post);
-
-	function isInside(prop) {
-		const el = gsel[prop] && gsel[prop].parentElement;
-		return  el
-			&& el.closest('blockquote')
-			&& el.closest('article, section') === post;
-	}
-
-	let sel;
-	if (isInside('baseNode') && isInside('focusNode'))
-		sel = gsel.toString();
-	openPostBox(util.getNum(post.closest('section')));
-	postForm.addReference(num, sel);
-});
