@@ -88,7 +88,8 @@ client_clean:
 
 # Removes any build and dependancy directories
 clean: client_clean
-	rm -rf .build .ffmpeg node_modules $(BINARY) .package
+	rm -rf .build .ffmpeg node_modules .package \
+		meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 ifeq ($(ISWINDOWS), true)
 	rm -rf /.meguca_build *.dll
 endif
