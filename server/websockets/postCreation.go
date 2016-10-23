@@ -80,7 +80,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		return err
 	}
 
-	post, now, err := constructPost(req.postCreationCommon, c)
+	post, now, err := constructPost(req.postCreationCommon, conf.ForcedAnon, c)
 	if err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func insertPost(data []byte, c *Client) error {
 		return errThreadIsLocked
 	}
 
-	post, now, err := constructPost(req.postCreationCommon, c)
+	post, now, err := constructPost(req.postCreationCommon, conf.ForcedAnon, c)
 	if err != nil {
 		return err
 	}
@@ -269,7 +269,7 @@ func getBoardConfig(board string) (conf config.PostParseConfigs, err error) {
 }
 
 // Contruct the common parts of the new post for both threads and replies
-func constructPost(req postCreationCommon, c *Client) (
+func constructPost(req postCreationCommon, forcedAnon bool, c *Client) (
 	post types.DatabasePost, now int64, err error,
 ) {
 	now = time.Now().Unix()
@@ -284,9 +284,11 @@ func constructPost(req postCreationCommon, c *Client) (
 		LastUpdated: now,
 		IP:          c.IP,
 	}
-	post.Name, post.Trip, err = parser.ParseName(req.Name)
-	if err != nil {
-		return
+	if !forcedAnon {
+		post.Name, post.Trip, err = parser.ParseName(req.Name)
+		if err != nil {
+			return
+		}
 	}
 	err = parser.VerifyPostPassword(req.Password)
 	if err != nil {

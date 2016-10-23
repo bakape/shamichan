@@ -9,6 +9,7 @@ import (
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
+	r "github.com/dancannon/gorethink"
 )
 
 var (
@@ -532,6 +533,53 @@ func TestTextOnlyPostCreation(t *testing.T) {
 
 	if cl.openPost.hasImage {
 		t.Error("openPost has image")
+	}
+}
+
+func TestPostCreationForcedAnon(t *testing.T) {
+	prepareForPostCreation(t)
+	config.ClearBoards()
+	_, err := config.SetBoardConfigs(config.BoardConfigs{
+		ID: "a",
+		BoardPublic: config.BoardPublic{
+			PostParseConfigs: config.PostParseConfigs{
+				ForcedAnon: true,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	Clients.add(cl, SyncID{1, "a"})
+	defer Clients.Clear()
+
+	req := replyCreationRequest{
+		Body: "a",
+		postCreationCommon: postCreationCommon{
+			Password: "123",
+		},
+	}
+
+	if err := insertPost(marshalJSON(t, req), cl); err != nil {
+		t.Fatal(err)
+	}
+
+	// Assert no name or trip in post
+	var isAnon bool
+	post := db.FindPost(6)
+	q := r.And(
+		post.HasFields("name").Not(),
+		post.HasFields("trip").Not(),
+	)
+	if err := db.One(q, &isAnon); err != nil {
+		t.Fatal(err)
+	}
+	if !isAnon {
+		t.Fatal("not anonymous")
 	}
 }
 
