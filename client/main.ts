@@ -61,4 +61,5 @@ async function start() {
 	}
 }
 
-start()
+start().catch(err =>
+	alert(err.message))
