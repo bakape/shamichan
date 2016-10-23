@@ -8,40 +8,18 @@ import (
 )
 
 func TestLoadConfigs(t *testing.T) {
+	config.Clear()
 	assertTableClear(t, "main", "boards")
 	assertInsert(t, "main", ConfigDocument{
 		Document{"config"},
 		config.Defaults,
 	})
-	assertInsert(t, "boards", []config.BoardConfigs{
-		{ID: "a"},
-		{ID: "c"},
-	})
-	config.Set(config.Configs{})
-	config.SetBoards(nil)
 
 	if err := loadConfigs(); err != nil {
 		t.Fatal(err)
 	}
 
 	AssertDeepEquals(t, config.Get(), &config.Defaults)
-	AssertDeepEquals(t, config.GetBoards(), []string{"a", "c"})
-}
-
-func TestLoadConfigsNoBoards(t *testing.T) {
-	assertTableClear(t, "main", "boards")
-	assertInsert(t, "main", ConfigDocument{
-		Document{"config"},
-		config.Defaults,
-	})
-	config.Set(config.Configs{})
-	config.SetBoards(nil)
-
-	if err := loadConfigs(); err != nil {
-		t.Fatal(err)
-	}
-
-	AssertDeepEquals(t, config.GetBoards(), []string{})
 }
 
 func TestUpdateConfigs(t *testing.T) {
@@ -56,7 +34,7 @@ func TestUpdateConfigs(t *testing.T) {
 }
 
 func TestUpdateOnRemovedBoard(t *testing.T) {
-	config.SetBoards([]string{"a", "x"})
+	config.Clear()
 	config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
 	})
@@ -76,14 +54,11 @@ func TestUpdateOnRemovedBoard(t *testing.T) {
 		config.GetBoardConfigs("a"),
 		config.BoardConfContainer{},
 	)
-	AssertDeepEquals(t, config.GetBoards(), []string{"x"})
+	AssertDeepEquals(t, config.GetBoards(), []string{})
 }
 
 func TestUpdateOnAddBoard(t *testing.T) {
-	config.SetBoards([]string{"x"})
-	config.SetBoardConfigs(config.BoardConfigs{
-		ID: "a",
-	})
+	config.Clear()
 
 	std := config.BoardConfigs{
 		ID: "a",
@@ -93,7 +68,6 @@ func TestUpdateOnAddBoard(t *testing.T) {
 	}
 	u := boardConfUpdate{
 		BoardConfigs: std,
-		Created:      true,
 	}
 
 	if err := updateBoardConfigs(u); err != nil {
@@ -101,7 +75,7 @@ func TestUpdateOnAddBoard(t *testing.T) {
 	}
 
 	AssertDeepEquals(t, config.GetBoardConfigs("a").BoardConfigs, std)
-	AssertDeepEquals(t, config.GetBoards(), []string{"x", "a"})
+	AssertDeepEquals(t, config.GetBoards(), []string{"a"})
 }
 
 func TestUpdateBoatrdConfigs(t *testing.T) {

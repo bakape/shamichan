@@ -271,7 +271,7 @@ func TestAppendNewline(t *testing.T) {
 		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
-	setBoardConfigs(false)
+	setBoardConfigs(t, false)
 
 	if err := appendRune([]byte("10"), cl); err != nil {
 		t.Fatal(err)
@@ -397,7 +397,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 		time:       time.Now().Unix(),
 		Buffer:     *bytes.NewBuffer([]byte(" >>22 ")),
 	}
-	setBoardConfigs(false)
+	setBoardConfigs(t, false)
 
 	if err := appendRune([]byte("10"), cl); err != nil {
 		t.Fatal(err)
@@ -482,7 +482,7 @@ func TestBackspace(t *testing.T) {
 func TestClosePost(t *testing.T) {
 	assertTableClear(t, "posts")
 	assertInsert(t, "posts", samplePost)
-	setBoardConfigs(false)
+	setBoardConfigs(t, false)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -564,7 +564,7 @@ func TestSpliceValidityChecks(t *testing.T) {
 func TestSplice(t *testing.T) {
 	assertTableClear(t, "posts")
 	assertInsert(t, "posts", samplePost)
-	setBoardConfigs(false)
+	setBoardConfigs(t, false)
 
 	const longSplice = `Never gonna give you up ` +
 		`Never gonna let you down ` +
@@ -792,7 +792,7 @@ func TestInsertImageIntoPostWithImage(t *testing.T) {
 }
 
 func TestInsertImageOnTextOnlyBoard(t *testing.T) {
-	setBoardConfigs(true)
+	setBoardConfigs(t, true)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -814,7 +814,7 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 
 func TestInsertImage(t *testing.T) {
 	assertTableClear(t, "posts", "threads", "images", "imageTokens")
-	setBoardConfigs(false)
+	setBoardConfigs(t, false)
 	assertInsert(t, "threads", types.DatabaseThread{
 		ID:      1,
 		Board:   "a",

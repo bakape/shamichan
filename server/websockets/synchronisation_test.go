@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
@@ -38,7 +37,7 @@ func TestOldFeedClosing(t *testing.T) {
 }
 
 func TestSyncToBoard(t *testing.T) {
-	config.SetBoards([]string{"a"})
+	setBoardConfigs(t, false)
 
 	sv := newWSServer(t)
 	defer sv.Close()

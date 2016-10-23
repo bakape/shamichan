@@ -131,6 +131,10 @@ func serveBoardConfigs(
 	}
 
 	conf := config.GetBoardConfigs(board)
+	if conf.ID == "" { // Data race with DB. Board deleted.
+		text404(w)
+		return
+	}
 	writeJSON(w, r, conf.Hash, conf.JSON)
 }
 

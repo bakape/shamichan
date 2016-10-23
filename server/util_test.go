@@ -10,6 +10,7 @@ import (
 
 	"strconv"
 
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 )
 
@@ -51,7 +52,11 @@ func assertEtag(t *testing.T, rec *httptest.ResponseRecorder, etag string) {
 
 func assertBody(t *testing.T, rec *httptest.ResponseRecorder, body string) {
 	if s := rec.Body.String(); s != body {
-		t.Errorf("unexpected response body: %s : %s", body, s)
+		t.Errorf(
+			"unexpected response body:\nexpected: %s\ngot:      %s",
+			body,
+			s,
+		)
 	}
 }
 
@@ -81,6 +86,18 @@ func dummyLog(n int) [][]byte {
 		log[i] = []byte{1}
 	}
 	return log
+}
+
+func setBoards(t *testing.T, boards ...string) {
+	config.ClearBoards()
+	for _, b := range boards {
+		_, err := config.SetBoardConfigs(config.BoardConfigs{
+			ID: b,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 func TestText404(t *testing.T) {

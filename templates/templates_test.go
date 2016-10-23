@@ -10,7 +10,12 @@ import (
 
 func init() {
 	TemplateRoot = "testdata"
-	config.SetBoards([]string{"a"})
+	_, err := config.SetBoardConfigs(config.BoardConfigs{
+		ID: "a",
+	})
+	if err != nil {
+		panic(err)
+	}
 	config.Set(config.Configs{})
 }
 

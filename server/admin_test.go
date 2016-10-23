@@ -130,6 +130,7 @@ func writeSampleUser(t *testing.T) {
 func TestServePrivateBoardConfigs(t *testing.T) {
 	assertTableClear(t, "accounts")
 	writeSampleUser(t)
+	config.ClearBoards()
 
 	conf := config.BoardConfigs{
 		ID:        "a",
@@ -141,7 +142,10 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 			"owners": {"user1"},
 		},
 	}
-	config.SetBoardConfigs(conf)
+	_, err := config.SetBoardConfigs(conf)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	rec, req := newJSONPair(t, "/admin/boardConfig", boardConfigRequest{
 		ID:               "a",

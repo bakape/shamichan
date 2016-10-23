@@ -95,7 +95,7 @@ func TestPostJSON(t *testing.T) {
 		},
 	})
 
-	config.SetBoards([]string{"a"})
+	setBoards(t, "a")
 
 	const postEtag = "qO18VR0TvaL71iNdrFmaIQ"
 
@@ -195,7 +195,7 @@ func TestPostJSON(t *testing.T) {
 }
 
 func TestServeBoardConfigs(t *testing.T) {
-	config.SetBoards([]string{"a"})
+	setBoards(t, "a")
 	config.AllBoardConfigs = []byte("foo")
 	conf := config.BoardConfigs{
 		ID: "a",
@@ -424,7 +424,7 @@ func TestSpoilerImage(t *testing.T) {
 }
 
 func TestServeBoardTimeStamps(t *testing.T) {
-	config.SetBoards([]string{"a", "c"})
+	setBoards(t, "a", "c")
 	assertTableClear(t, "posts")
 	assertInsert(t, "posts", []types.DatabasePost{
 		{

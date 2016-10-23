@@ -15,7 +15,13 @@ func init() {
 }
 
 func TestIsBoard(t *testing.T) {
-	config.SetBoards([]string{"a"})
+	config.Clear()
+	_, err := config.SetBoardConfigs(config.BoardConfigs{
+		ID: "a",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cases := [...]struct {
 		name, in string

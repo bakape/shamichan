@@ -8,6 +8,7 @@ import (
 )
 
 func TestSetGet(t *testing.T) {
+	Clear()
 	conf := Configs{
 		Public: Public{
 			Hats: true,
@@ -29,6 +30,7 @@ func TestSetGet(t *testing.T) {
 }
 
 func TestSetGetClient(t *testing.T) {
+	Clear()
 	std := []byte{1, 2, 3}
 	hash := "foo"
 	SetClient(std, hash)
@@ -42,24 +44,36 @@ func TestSetGetClient(t *testing.T) {
 	}
 }
 
-func TestSetGetBoards(t *testing.T) {
-	std := []string{"a", "b", "c"}
-	SetBoards(std)
-	AssertDeepEquals(t, GetBoards(), std)
+func TestGetBoards(t *testing.T) {
+	ClearBoards()
+
+	_, err := SetBoardConfigs(BoardConfigs{
+		ID: "a",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	AssertDeepEquals(t, GetBoards(), []string{"a"})
 }
 
 func TestSetGetAddRemoveBoardConfigs(t *testing.T) {
+	ClearBoards()
 	std := BoardConfigs{
 		ID: "a",
 		BoardPublic: BoardPublic{
 			Spoilers: true,
 		},
 	}
-	SetBoards([]string{"a", "x"})
 
-	if err := SetBoardConfigs(std); err != nil {
+	changed, err := SetBoardConfigs(std)
+	if err != nil {
 		t.Fatal(err)
 	}
+	if !changed {
+		t.Fatal("configs not changed")
+	}
+
 	conf := GetBoardConfigs("a")
 	if conf.Hash == "" {
 		t.Fatal("no hash generated")
@@ -68,9 +82,60 @@ func TestSetGetAddRemoveBoardConfigs(t *testing.T) {
 		t.Fatal("no JSON generated")
 	}
 	AssertDeepEquals(t, conf.BoardConfigs, std)
+	if !IsBoard("a") {
+		t.Fatal("board does not exist")
+	}
 
 	RemoveBoard("a")
-	AddBoard("c")
 	AssertDeepEquals(t, GetBoardConfigs("a"), BoardConfContainer{})
-	AssertDeepEquals(t, GetBoards(), []string{"x", "c"})
+	if IsBoard("a") {
+		t.Fatal("board not deleted")
+	}
+}
+
+func TestSetMatchingBoardConfigs(t *testing.T) {
+	ClearBoards()
+
+	conf := BoardConfigs{
+		ID: "a",
+		BoardPublic: BoardPublic{
+			Spoilers: true,
+		},
+	}
+
+	for i := 0; i < 2; i++ {
+		changed, err := SetBoardConfigs(conf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected := i == 0
+		if changed != expected {
+			LogUnexpected(t, expected, changed)
+		}
+	}
+}
+
+func TestSetDifferentBoardConfigs(t *testing.T) {
+	ClearBoards()
+
+	conf := BoardConfigs{
+		ID: "a",
+		BoardPublic: BoardPublic{
+			Spoilers: true,
+		},
+	}
+
+	testBoardConfChange(t, conf)
+	conf.Notice = "foo"
+	testBoardConfChange(t, conf)
+}
+
+func testBoardConfChange(t *testing.T, conf BoardConfigs) {
+	changed, err := SetBoardConfigs(conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !changed {
+		t.Fatal("expected change")
+	}
 }

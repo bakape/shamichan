@@ -13,7 +13,6 @@ import (
 
 type boardConfUpdate struct {
 	Deleted bool
-	Created bool
 	config.BoardConfigs
 }
 
@@ -26,22 +25,6 @@ func loadConfigs() error {
 	if err != nil {
 		return err
 	}
-
-	// Load and set initial board slice. Technically there is a data race here.
-	// If a board is delted by another backend instance in the time between this
-	// query and loadBoardConfigs() sees the update, this backend instance will
-	// not see the update. But considering how much compilcation working around
-	// this would bring, let's ingonre this for now.
-	q := r.Table("boards").Field("id").CoerceTo("array")
-	var boards []string
-	if err := All(q, &boards); err != nil {
-		return err
-	}
-	// Ensure boards is always a slice
-	if boards == nil {
-		boards = []string{}
-	}
-	config.SetBoards(boards)
 
 	read := make(chan config.Configs)
 	cursor.Listen(read)
@@ -62,6 +45,20 @@ func loadConfigs() error {
 }
 
 func loadBoardConfigs() error {
+	// First load all boards
+	var all []config.BoardConfigs
+	if err := All(r.Table("boards"), &all); err != nil {
+		return err
+	}
+	for _, conf := range all {
+		_, err := config.SetBoardConfigs(conf)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Then start listening to updates. This will also contain the initial
+	// values, so we dedup server-side.
 	cursor, err := r.
 		Table("boards").
 		Changes(r.ChangesOpts{
@@ -73,11 +70,6 @@ func loadBoardConfigs() error {
 				map[string]interface{}{
 					"deleted": true,
 					"id":      b.Field("old_val").Field("id"),
-				},
-				b.HasFields("old_val").Not(),
-				map[string]interface{}{
-					"created": true,
-					"id":      b.Field("new_val").Field("id"),
 				},
 				b.Field("new_val"),
 			)
@@ -116,11 +108,12 @@ func updateBoardConfigs(u boardConfUpdate) error {
 		config.RemoveBoard(u.ID)
 		return recompileTemplates()
 	}
-	if err := config.SetBoardConfigs(u.BoardConfigs); err != nil {
+
+	changed, err := config.SetBoardConfigs(u.BoardConfigs)
+	if err != nil {
 		return util.WrapError("reloading board configuration", err)
 	}
-	if u.Created {
-		config.AddBoard(u.ID)
+	if changed {
 		return recompileTemplates()
 	}
 	return nil
@@ -128,7 +121,7 @@ func updateBoardConfigs(u boardConfUpdate) error {
 
 func recompileTemplates() error {
 	if err := templates.Compile(); err != nil {
-		return util.WrapError("recompiling teplates", err)
+		return util.WrapError("recompiling templates", err)
 	}
 	return nil
 }

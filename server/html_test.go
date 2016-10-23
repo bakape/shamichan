@@ -3,18 +3,14 @@ package server
 import (
 	"testing"
 
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/types"
 )
 
 func TestServeIndexTemplate(t *testing.T) {
 	const (
-		desktopUA = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 " +
-			"(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
-		mobileUA = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus" +
-			" Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko)" +
-			" Chrome/18.0.1025.166 Mobile Safari/535.19"
+		desktopUA = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+		mobileUA  = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19"
 	)
 	desktop := templates.Store{
 		HTML: []byte("desktop"),
@@ -29,7 +25,7 @@ func TestServeIndexTemplate(t *testing.T) {
 	headers := map[string]string{
 		"Content-Type": "text/html",
 	}
-	config.SetBoards([]string{"a"})
+	setBoards(t, "a")
 
 	t.Run("desktop", func(t *testing.T) {
 		t.Parallel()
@@ -69,7 +65,7 @@ func TestThreadHTML(t *testing.T) {
 		ID:    1,
 		Board: "a",
 	})
-	config.SetBoards([]string{"a"})
+	setBoards(t, "a")
 	body := []byte("body")
 	templates.Set("index", templates.Store{
 		HTML: body,

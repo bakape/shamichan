@@ -13,13 +13,10 @@ import (
 
 var (
 	// Ensures no reads happen, while the configuration is reloading
-	globalMu, boardsMu, boardConfMu sync.RWMutex
+	globalMu, boardMu sync.RWMutex
 
 	// Contains currently loaded global server configuration
 	global *Configs
-
-	// Array of currently existing boards
-	boards []string
 
 	// Map of board IDs to their cofiguration structs
 	boardConfigs = map[string]BoardConfContainer{}
@@ -183,7 +180,7 @@ func Get() *Configs {
 	return global
 }
 
-// Set sets the internal configuration struct. To be used only in tests.
+// Set sets the internal configuration struct
 func Set(c Configs) error {
 	client, err := json.Marshal(c.Public)
 	if err != nil {
@@ -217,67 +214,88 @@ func SetClient(json []byte, cHash string) {
 	globalMu.Unlock()
 }
 
-// SetBoards sets the slice of currently existing boards
-func SetBoards(b []string) {
-	boardsMu.Lock()
-	boards = b
-	boardsMu.Unlock()
-}
-
-// GetBoards returns the slice of currently existing boards
-func GetBoards() []string {
-	boardsMu.RLock()
-	defer boardsMu.RUnlock()
-	return boards
-}
-
 // GetBoardConfigs returns board-specific configurations for a board combined
 // with pregenerated public JSON of these configurations and their hash
 func GetBoardConfigs(b string) BoardConfContainer {
-	boardConfMu.RLock()
-	defer boardConfMu.RUnlock()
+	boardMu.RLock()
+	defer boardMu.RUnlock()
 	return boardConfigs[b]
 }
 
+// GetBoards returns an array of currently existing boards
+func GetBoards() []string {
+	boardMu.RLock()
+	defer boardMu.RUnlock()
+	boards := make([]string, 0, len(boardConfigs))
+	for b := range boardConfigs {
+		boards = append(boards, b)
+	}
+	return boards
+}
+
+// IsBoard returns wheather the passed string is a currently existing board
+func IsBoard(b string) bool {
+	boardMu.RLock()
+	defer boardMu.RUnlock()
+	_, ok := boardConfigs[b]
+	return ok
+}
+
 // SetBoardConfigs sets configurations for a specific board as well as
-// pregenerates their public JSON and hash
-func SetBoardConfigs(conf BoardConfigs) (err error) {
+// pregenerates their public JSON and hash. Returns if any changes were made to
+// the configs in result.
+func SetBoardConfigs(conf BoardConfigs) (bool, error) {
 	cont := BoardConfContainer{
 		BoardConfigs: conf,
 	}
+	var err error
 	cont.JSON, err = json.Marshal(conf.BoardPublic)
 	if err != nil {
-		return
+		return false, err
 	}
 	cont.Hash = util.HashBuffer(cont.JSON)
 
-	boardConfMu.Lock()
-	boardConfigs[conf.ID] = cont
-	boardConfMu.Unlock()
+	boardMu.Lock()
+	defer boardMu.Unlock()
 
-	return
+	// Nothing changed
+	if boardConfigs[conf.ID].Hash == cont.Hash {
+		return false, nil
+	}
+
+	// Swap config
+	boardConfigs[conf.ID] = cont
+	return true, nil
 }
 
 // RemoveBoard removes a board from the exiting board list and deletes its
 // configurations. To be called, when a board is deleted.
 func RemoveBoard(b string) {
-	boardConfMu.Lock()
-	defer boardConfMu.Unlock()
-	boardsMu.Lock()
-	defer boardsMu.Unlock()
+	boardMu.Lock()
+	defer boardMu.Unlock()
 
 	delete(boardConfigs, b)
-	for i, board := range boards {
-		if board == b {
-			boards = append(boards[:i], boards[i+1:]...)
-		}
-	}
 }
 
-// AddBoard adds a board to the existing board array. Should only be called on
-// board creation
-func AddBoard(b string) {
-	boardsMu.Lock()
-	defer boardsMu.Unlock()
-	boards = append(boards, b)
+// Clear resets package state. Only use in tests.
+func Clear() {
+	boardMu.Lock()
+	defer boardMu.Unlock()
+	globalMu.RLock()
+	defer globalMu.RUnlock()
+
+	global = &Configs{}
+	boardConfigs = map[string]BoardConfContainer{}
+	clientJSON = nil
+	AllBoardConfigs = nil
+	hash = ""
+}
+
+// ClearBoards clears any existing board configuration entries. Only use in
+// tests.
+func ClearBoards() {
+	boardMu.Lock()
+	defer boardMu.Unlock()
+
+	boardConfigs = map[string]BoardConfContainer{}
 }
