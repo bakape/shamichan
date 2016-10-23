@@ -51,6 +51,7 @@ export default class PostCollection {
 		return id in this.models
 	}
 
+	// Make collections itterable
 	*[Symbol.iterator](): IterableIterator<Post> {
 		yield* Object
 			.keys(this.models)
