@@ -28,6 +28,7 @@ var (
 		"image/gif":       types.GIF,
 		"video/webm":      types.WEBM,
 		"application/ogg": types.OGG,
+		"video/mp4":       types.MP4,
 	}
 
 	// File type tests for types not supported by http.DetectContentType
@@ -209,6 +210,8 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 			res = processMP3(data)
 		case types.OGG:
 			res = processOGG(data)
+		case types.MP4:
+			res = processMP4(data)
 		case types.JPEG, types.PNG, types.GIF:
 			res.thumb, res.dims, res.err = processImage(data)
 		}

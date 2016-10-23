@@ -139,6 +139,7 @@ function renderImagePreview(event: MouseEvent) {
 			}
 			tag = "video"
 			break
+		case "mp4":
 		case "ogg":
 			const model = getModel(link)
 			// No video OGG are treated just like MP3

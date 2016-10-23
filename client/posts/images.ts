@@ -73,6 +73,7 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes.mp3:
 				event.preventDefault()
 				return this.renderAudio()
+			case fileTypes.mp4:
 			case fileTypes.ogg:
 				if (!this.model.image.video) {
 					event.preventDefault()
@@ -96,6 +97,7 @@ export default class ImageHandler extends View<Post> {
 		switch (img.fileType) {
 			case fileTypes.ogg:
 			case fileTypes.mp3:
+			case fileTypes.mp4:
 			case fileTypes.webm:
 				write(() => {
 					const $v = this.el.querySelector("video")
@@ -156,6 +158,7 @@ export default class ImageHandler extends View<Post> {
 
 			switch (img.fileType) {
 				case fileTypes.ogg:
+				case fileTypes.mp4:
 				case fileTypes.webm:
 					const video = document.createElement("video")
 					setAttrs(video, {

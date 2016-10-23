@@ -48,8 +48,20 @@ func thumbnailVideo(c *goffmpeg.Context, res thumbResponse) thumbResponse {
 	return res
 }
 
-// Verify and extract the contents of and OGG container and produce a thumbnail
-func processOGG(data []byte) (res thumbResponse) {
+func processOGG(data []byte) thumbResponse {
+	return processMediaContainer(data, "theora", "vorbis", "opus")
+}
+
+func processMP4(data []byte) thumbResponse {
+	return processMediaContainer(data, "h264", "mp3", "aac")
+}
+
+// Verify the media container file (OGG, MP4, etc.) contains the supported
+// stream codecs and produce an appropriate thumbnail
+func processMediaContainer(
+	data []byte,
+	videoC, audioC1, audioC2 string,
+) (res thumbResponse) {
 	c, err := goffmpeg.NewContextReadSeeker(bytes.NewReader(data))
 	if err != nil {
 		res.err = err
@@ -63,7 +75,7 @@ func processOGG(data []byte) (res thumbResponse) {
 		return
 	}
 	switch audio {
-	case "vorbis", "opus":
+	case audioC1, audioC2:
 		res.audio = true
 	}
 
@@ -72,7 +84,7 @@ func processOGG(data []byte) (res thumbResponse) {
 		res.err = err
 		return
 	}
-	res.video = video == "theora"
+	res.video = video == videoC
 
 	// Contains no streams compatible with the OGG container in common browsers
 	if !res.audio && !res.video {
@@ -83,7 +95,7 @@ func processOGG(data []byte) (res thumbResponse) {
 	res.length = uint32(c.Duration() / 1000000000)
 
 	if !res.video {
-		// OGG can contain cover art
+		// Can contain cover art
 		if !c.HasImage() {
 			return assignFallbackCover(res)
 		}

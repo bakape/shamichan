@@ -19,6 +19,7 @@ var Extensions = map[uint8]string{
 	PNG:  "png",
 	GIF:  "gif",
 	MP3:  "mp3",
+	MP4: "mp4",
 	WEBM: "webm",
 	OGG:  "ogg",
 }
