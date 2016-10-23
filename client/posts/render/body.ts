@@ -1,4 +1,4 @@
-import { config, boards } from '../../state'
+import { config, boards, boardConfig } from '../../state'
 import { renderPostLink } from './etc'
 import { PostData, PostLinks, TextState } from '../models'
 import { escape } from '../../util'
@@ -72,17 +72,21 @@ export function parseTerminatedLine(line: string, data: PostData): string {
 	}
 
 	// Check for spoilers
-	while (true) {
-		const i = line.indexOf("**")
-		if (i !== -1) {
-			html += parseFragment(line.slice(0, i), data)
-				+ `<${state.spoiler ? '/' : ''}del>`
-			state.spoiler = !state.spoiler
-			line = line.substring(i + 2)
-		} else {
-			html += parseFragment(line, data)
-			break
+	if (boardConfig.spoilers) {
+		while (true) {
+			const i = line.indexOf("**")
+			if (i !== -1) {
+				html += parseFragment(line.slice(0, i), data)
+					+ `<${state.spoiler ? '/' : ''}del>`
+				state.spoiler = !state.spoiler
+				line = line.substring(i + 2)
+			} else {
+				html += parseFragment(line, data)
+				break
+			}
 		}
+	} else {
+		html += parseFragment(line, data)
 	}
 
 	html += terminateTags(state, true)
@@ -113,18 +117,22 @@ export function parseOpenLine(state: TextState): string {
 	}
 
 	// Check for spoilers
-	let {line} = state
-	while (true) {
-		const i = line.indexOf("**")
-		if (i !== -1) {
-			html += escape(line.slice(0, i))
-				+ `<${state.spoiler ? '/' : ''}del>`
-			state.spoiler = !state.spoiler
-			line = line.slice(i + 2)
-		} else {
-			html += escape(line.substring(i))
-			break
+	if (boardConfig.spoilers) {
+		let {line} = state
+		while (true) {
+			const i = line.indexOf("**")
+			if (i !== -1) {
+				html += escape(line.slice(0, i))
+					+ `<${state.spoiler ? '/' : ''}del>`
+				state.spoiler = !state.spoiler
+				line = line.slice(i + 2)
+			} else {
+				html += escape(line.substring(i))
+				break
+			}
 		}
+	} else {
+		html += escape(state.line)
 	}
 
 	html += terminateTags(state, false)
