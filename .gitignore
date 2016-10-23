@@ -11,6 +11,7 @@ meguca
 meguca.exe
 meguca-*.zip
 meguca-*.tar.xz
+scripts/*.local.sh
 www/illya.mp4
 www/illya.webm
 www/css/*.css
