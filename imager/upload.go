@@ -21,13 +21,13 @@ import (
 )
 
 var (
-	// Map of stdlib MIME types to the constants used internally
+	// Map of net/http MIME types to the constants used internally
 	mimeTypes = map[string]uint8{
 		"image/jpeg":      types.JPEG,
 		"image/png":       types.PNG,
 		"image/gif":       types.GIF,
 		"video/webm":      types.WEBM,
-		"application/pdf": types.PDF,
+		"application/ogg": types.OGG,
 	}
 
 	// File type tests for types not supported by http.DetectContentType
@@ -38,7 +38,6 @@ var (
 		{detectSVG, types.SVG},
 		{detectMP3, types.MP3},
 		{detectMP4, types.MP4},
-		{detectOGG, types.OGG},
 	}
 
 	errTooLarge = errors.New("file too large")
@@ -46,11 +45,11 @@ var (
 
 // Response from a thumbnail generation performed concurently
 type thumbResponse struct {
-	audio  bool
-	dims   [4]uint16
-	length uint32
-	thumb  []byte
-	err    error
+	audio, video bool
+	dims         [4]uint16
+	length       uint32
+	thumb        []byte
+	err          error
 }
 
 // NewImageUpload  handles the clients' image (or other file) upload request
@@ -155,6 +154,7 @@ func newThumbnail(data []byte, img types.ImageCommon) (int, string, error) {
 	img.Dims = res.dims
 	img.Length = res.length
 	img.Audio = res.audio
+	img.Video = res.video
 
 	if err := db.AllocateImage(data, res.thumb, img); err != nil {
 		return 500, "", err
@@ -191,10 +191,6 @@ func detectSVG(buf []byte) (bool, error) {
 	return false, nil
 }
 
-func detectOGG(buf []byte) (bool, error) {
-	return false, nil
-}
-
 func detectMP4(buf []byte) (bool, error) {
 	return false, nil
 }
@@ -211,6 +207,8 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 			res = processWebm(data)
 		case types.MP3:
 			res = processMP3(data)
+		case types.OGG:
+			res = processOGG(data)
 		case types.JPEG, types.PNG, types.GIF:
 			res.thumb, res.dims, res.err = processImage(data)
 		}

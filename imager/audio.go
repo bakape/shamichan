@@ -45,12 +45,17 @@ func processMP3(data []byte) (res thumbResponse) {
 
 	// No cover art in file. Assign fallback cover and return.
 	if !c.HasImage() {
-		path := filepath.Join(assetRoot, fallbackCover)
-		res.thumb, res.err = ioutil.ReadFile(path)
-		res.dims = [4]uint16{150, 150, 150, 150}
-		return
+		return assignFallbackCover(res)
 	}
 
 	res.thumb, res.dims, res.err = processImage(c.Picture())
 	return
+}
+
+// Assign fallback cover art to audio file without any
+func assignFallbackCover(res thumbResponse) thumbResponse {
+	path := filepath.Join(assetRoot, fallbackCover)
+	res.thumb, res.err = ioutil.ReadFile(path)
+	res.dims = [4]uint16{150, 150, 150, 150}
+	return res
 }

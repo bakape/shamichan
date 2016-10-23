@@ -73,6 +73,11 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes.mp3:
 				event.preventDefault()
 				return this.renderAudio()
+			case fileTypes.ogg:
+				if (!this.model.image.video) {
+					event.preventDefault()
+					return this.renderAudio()
+				}
 			default:
 				return this.expandImage(event, false)
 		}
@@ -89,22 +94,20 @@ export default class ImageHandler extends View<Post> {
 		const img = this.model.image
 
 		switch (img.fileType) {
+			case fileTypes.ogg:
+			case fileTypes.mp3:
 			case fileTypes.webm:
 				write(() => {
 					const $v = this.el.querySelector("video")
 					if ($v) {
 						$v.remove()
 					}
-					(this.el.querySelector("figure img") as HTMLElement)
-						.hidden = false
-				})
-				break
-			case fileTypes.mp3:
-				write(() => {
 					const $a = this.el.querySelector("audio")
 					if ($a) {
 						$a.remove()
 					}
+					(this.el.querySelector("figure img") as HTMLElement)
+						.hidden = false
 				})
 				break
 		}
@@ -151,24 +154,27 @@ export default class ImageHandler extends View<Post> {
 			const el = this.el.querySelector("figure img") as HTMLImageElement,
 				src = sourcePath(img.SHA1, img.fileType)
 
-			if (img.fileType == fileTypes.webm) {
-				const video = document.createElement("video")
-				setAttrs(video, {
-					src,
-					class: cls,
-					autoplay: "",
-					controls: "",
-					loop: "",
-				})
-				el.hidden = true
-				el.after(video)
-			} else {
-				setAttrs(el, {
-					src,
-					class: cls,
-					width: "",
-					height: "",
-				})
+			switch (img.fileType) {
+				case fileTypes.ogg:
+				case fileTypes.webm:
+					const video = document.createElement("video")
+					setAttrs(video, {
+						src,
+						class: cls,
+						autoplay: "",
+						controls: "",
+						loop: "",
+					})
+					el.hidden = true
+					el.after(video)
+					break
+				default:
+					setAttrs(el, {
+						src,
+						class: cls,
+						width: "",
+						height: "",
+					})
 			}
 		})
 	}
@@ -200,8 +206,6 @@ function handleImageClick(event: MouseEvent) {
 		return
 	}
 	model.view.toggleImageExpansion(event)
-
-	// TODO: Remove any image hover previews
 }
 
 // Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode

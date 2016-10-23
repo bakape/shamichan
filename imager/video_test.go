@@ -1,8 +1,11 @@
 package imager
 
 import "testing"
+import "github.com/bakape/meguca/imager/assets"
 
 func TestProcessWebm(t *testing.T) {
+	t.Parallel()
+
 	cases := [...]struct {
 		testName, name string
 		audio          bool
@@ -27,6 +30,90 @@ func TestProcessWebm(t *testing.T) {
 			res := processWebm(readSample(t, c.name))
 			if res.err != nil {
 				t.Fatal(res.err)
+			}
+			assertThumbnail(t, res.thumb)
+			assertDims(t, res.dims, c.dims)
+			if res.audio != c.audio {
+				t.Error("unexpected audio flag value")
+			}
+			if res.length != c.length {
+				t.Errorf("unexpected length: %d : %d", c.length, res.length)
+			}
+		})
+	}
+}
+
+func TestProcessOGG(t *testing.T) {
+	t.Parallel()
+
+	cases := [...]struct {
+		name, file   string
+		err          error
+		audio, video bool
+		length       uint32
+		dims         [4]uint16
+	}{
+		{
+			name:   "vorbis+theora",
+			file:   "sample",
+			audio:  true,
+			video:  true,
+			length: 5,
+			dims:   [4]uint16{0x230, 0x140, 0x96, 0x55},
+		},
+		{
+			name:   "opus+theora",
+			file:   "opus_theora",
+			audio:  true,
+			video:  true,
+			length: 5,
+			dims:   [4]uint16{0x230, 0x140, 0x96, 0x55},
+		},
+		{
+			name:   "theora",
+			file:   "no_audio",
+			length: 5,
+			dims:   [4]uint16{0x230, 0x140, 0x96, 0x55},
+		},
+		{
+			name:   "vorbis",
+			file:   "no_video",
+			audio:  true,
+			length: 5,
+			dims:   [4]uint16{150, 150, 150, 150},
+		},
+		{
+			name:   "opus",
+			file:   "opus",
+			audio:  true,
+			length: 5,
+			dims:   [4]uint16{150, 150, 150, 150},
+		},
+		{
+			name:   "with cover art",
+			file:   "with_cover",
+			audio:  true,
+			length: 5,
+			dims:   assets.StdJPEG.Dims,
+		},
+		{
+			name: "no compatible streams",
+			file: "no_streams",
+			err:  errNoCompatibleStreams,
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			res := processOGG(readSample(t, c.file+".ogg"))
+			if res.err != c.err {
+				t.Fatal(res.err)
+			}
+			if c.err != nil {
+				return
 			}
 			assertThumbnail(t, res.thumb)
 			assertDims(t, res.dims, c.dims)

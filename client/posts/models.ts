@@ -71,6 +71,7 @@ export interface ThreadData extends PostData {
 export interface ImageData {
 	apng: boolean
 	audio: boolean
+	video: boolean
 	spoiler: boolean
 	large: boolean              // Added at runtime to render larger thumbnails
 	expanded: boolean           // Thumbnail is expanded

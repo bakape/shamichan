@@ -68,7 +68,7 @@ var (
 )
 
 // Default string for the FAQ panel
-const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM and MP3.
+const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3 and OGG.
 Encase words in ** to spoiler them. Spoilers reset on new line.
 Boards that have not had any new posts in 7 days are automatically deleted.
 <hr>Hash commands:

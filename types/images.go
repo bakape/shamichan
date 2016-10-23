@@ -18,9 +18,9 @@ var Extensions = map[uint8]string{
 	JPEG: "jpg",
 	PNG:  "png",
 	GIF:  "gif",
-	WEBM: "webm",
-	PDF:  "pdf",
 	MP3:  "mp3",
+	WEBM: "webm",
+	OGG:  "ogg",
 }
 
 // Image contains a post's image and thumbnail data
@@ -40,8 +40,13 @@ type ProtoImage struct {
 
 // ImageCommon contains the common fields of both Image and ProtoImage structs
 type ImageCommon struct {
-	APNG     bool      `json:"apng,omitempty" gorethink:"apng,omitempty"`
-	Audio    bool      `json:"audio,omitempty" gorethink:"audio,omitempty"`
+	APNG  bool `json:"apng,omitempty" gorethink:"apng,omitempty"`
+	Audio bool `json:"audio,omitempty" gorethink:"audio,omitempty"`
+
+	// Only used for file formats like OGG and MP4 that may or may not contain
+	// video
+	Video bool `json:"video,omitempty" gorethink:"video,omitempty"`
+
 	FileType uint8     `json:"fileType" gorethink:"fileType"`
 	Length   uint32    `json:"length,omitempty" gorethink:"length,omitempty"`
 	Dims     [4]uint16 `json:"dims" gorethink:"dims"`

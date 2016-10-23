@@ -15,8 +15,10 @@ export type FileData = {
 }
 
 const acceptedFormats = commaList([
-	"image/png", "image/gif", "image/jpeg", "video/webm", "video/mp4",
-	"video/ogg", "application/pdf", "audio/mp3", "image/svg"
+	"image/png", "image/gif", "image/jpeg",
+	"video/webm",
+	"video/ogg", "audio/ogg", "application/ogg",
+	"audio/mp3"
 ])
 
 // Mixin for handling file uploads

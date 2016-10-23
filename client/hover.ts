@@ -2,7 +2,7 @@
 
 import { emitChanges, ChangeEmitter } from "./model"
 import View from "./view"
-import { posts } from "./state"
+import { posts, getModel } from "./state"
 import { hook } from "./hooks"
 import options from "./options"
 import { setAttrs, getClosestID } from "./util"
@@ -135,6 +135,14 @@ function renderImagePreview(event: MouseEvent) {
 			return clear()
 		case "webm":
 			if (!options.webmHover) {
+				return clear()
+			}
+			tag = "video"
+			break
+		case "ogg":
+			const model = getModel(link)
+			// No video OGG are treated just like MP3
+			if (!model || !model.image.video) {
 				return clear()
 			}
 			tag = "video"
