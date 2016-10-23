@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v2.5.1 - 2016-10-23
+* Fix:
+	- Board configuration live reloading
+
 ##v2.5.0 - 2016-10-22
 * Fix:
 	- Existing board updates on board creation
