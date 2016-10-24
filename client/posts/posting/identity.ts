@@ -1,11 +1,11 @@
 // Name, email, tripcode and staff title persistence and postform propagation
 
-import {emitChanges, ChangeEmitter} from '../../model'
-import {defer} from '../../defer'
-import {BannerModal} from '../../banner'
-import {identity as lang} from '../../lang'
-import {table, randomID} from '../../util'
-import {inputType, renderInput} from '../../forms'
+import { emitChanges, ChangeEmitter } from '../../model'
+import { defer } from '../../defer'
+import { BannerModal } from '../../banner'
+import { identity as lang } from '../../lang'
+import { table, randomID } from '../../util'
+import { inputType, renderInput } from '../../forms'
 
 interface Identity extends ChangeEmitter {
 	name: string
@@ -24,7 +24,7 @@ export interface PostCredentials {
 }
 
 // Maximum lengths of input fields
-const maxLengths: {[key: string]: number} = {
+const maxLengths: { [key: string]: number } = {
 	name: 50,
 	email: 100,
 	auth: 50,
@@ -32,7 +32,8 @@ const maxLengths: {[key: string]: number} = {
 }
 
 // Values of the name and tripcode fields
-const identity = {} as Identity
+const identity = emitChanges({} as Identity)
+export default identity
 
 // Load from localStorage or initialize
 for (let name of ["name", "email"]) {
@@ -45,12 +46,10 @@ if (!stored) {
 }
 identity.postPassword = stored
 
-export default emitChanges(identity)
-
 // Name and email input pannel
 class IdentityPanel extends BannerModal {
 	constructor() {
-		super({id: "identity"})
+		super({ id: "identity" })
 		this.on("input", e =>
 			this.onInput(e))
 	}

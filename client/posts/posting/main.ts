@@ -9,6 +9,8 @@ import { write, $threads } from "../../render"
 import { posts as lang } from "../../lang"
 import { on, getClosestID } from "../../util"
 import { deferInit } from "../../defer"
+import identity from "./identity"
+import { boardConfig } from "../../state"
 
 // Sent to the FSM via the "open" and "hijack" events
 export type FormMessage = {
@@ -63,11 +65,15 @@ function bindNagging() {
 
 // Insert target post's number as a link into the text body
 function quotePost(event: Event) {
-
-	// TODO: Quote selected text
-
 	postSM.feed(postEvent.open)
 	postModel.addReference(getClosestID(event.target as Element))
+}
+
+// Update the draft post's fields on identity change, if any
+function updateIdentity() {
+	if (postSM.state === postState.draft && !boardConfig.forcedAnon) {
+		postForm.renderIndentity()
+	}
 }
 
 deferInit(() => {
@@ -194,4 +200,9 @@ deferInit(() => {
 		selector: "a.quote",
 		passive: true,
 	})
+
+	// Triiger update on name and email change
+	for (let key of ["name", "email"]) {
+		identity.onChange(key, updateIdentity)
+	}
 })

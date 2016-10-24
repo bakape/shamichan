@@ -6,13 +6,14 @@ import { Post, OP } from "../models"
 import { isMobile, boardConfig } from "../../state"
 import { setAttrs, makeFrag, applyMixins } from "../../util"
 import { parseTerminatedLine } from "../render/body"
-import { renderHeader } from "../render/posts"
+import { renderHeader, renderName } from "../render/posts"
 import { write } from "../../render"
 import { ui } from "../../lang"
 import { $threadContainer } from "../../page/thread"
 import { postSM, postEvent } from "./main"
 import UploadForm, { FileData } from "./upload"
 import { scrollToBottom } from "../../scroll"
+import identity from "./identity"
 
 // Post creation and update view
 export class FormView extends PostView implements UploadForm {
@@ -70,7 +71,7 @@ export class FormView extends PostView implements UploadForm {
 		this.$postControls = document.createElement("div")
 		this.$postControls.id = "post-controls"
 		this.$postControls
-			.append(isOP ? this.renderDone() : this.renderDraftInputs())
+			.append(isOP ? this.renderDone() : this.renderDraft())
 
 		write(() => {
 			this.$blockquote.innerHTML = ""
@@ -80,8 +81,8 @@ export class FormView extends PostView implements UploadForm {
 		})
 	}
 
-	// Aditional controls for draft forms
-	renderDraftInputs(): DocumentFragment {
+	// Aditional controls and header contents for unallocated draft forms
+	renderDraft(): DocumentFragment {
 		const frag = document.createDocumentFragment()
 		const $cancel = this.createButton(
 			"cancel",
@@ -96,7 +97,27 @@ export class FormView extends PostView implements UploadForm {
 				this.model.uploadFile())
 		}
 
+		this.renderIndentity()
+
 		return frag
+	}
+
+	// Render a temporary view of the identity fields, so the user can see what
+	// credentials he is about to post with
+	renderIndentity() {
+		let {name, email} = identity,
+			trip = ""
+		const iHash = name.indexOf("#")
+		if (iHash !== -1) {
+			trip = "?"
+			name = name.slice(0, iHash)
+		}
+		renderName(this.el.querySelector(".name"), {
+			trip,
+			name: name.trim(),
+			email: email.trim(),
+			auth: undefined,
+		})
 	}
 
 	// Button for closing allocated posts
@@ -238,12 +259,13 @@ export class FormView extends PostView implements UploadForm {
 	renderAlloc() {
 		this.id = "p" + this.model.id
 		const $header = this.el.querySelector("header")
-		write(() =>
-			(this.el.id = this.id as string,
-				$header.classList.remove("temporary"),
-				renderHeader($header, this.model),
-				this.$cancel.remove(),
-				this.$postControls.prepend(this.renderDone())))
+		write(() => {
+			this.el.id = this.id as string
+			$header.classList.remove("temporary")
+			renderHeader($header, this.model)
+			this.$cancel.remove()
+			this.$postControls.prepend(this.renderDone())
+		})
 	}
 
 	// Toggle the spoiler input checkbox
