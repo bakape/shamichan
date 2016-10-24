@@ -117,10 +117,7 @@
 
 		// DOM 3 query methods
 		'Element.prototype.querySelector',
-		'Element.prototype.querySelectorAll',
-
-		// Itterable NodeLists
-		'NodeList.prototype[Symbol.iterator]'
+		'Element.prototype.querySelectorAll'
 	]
 	var DOMUpToDate = true
 	for (var i = 0; i < DOMMetods.length; i++) {
@@ -129,6 +126,11 @@
 			DOMUpToDate = false
 			break
 		}
+	}
+
+	// Itterable NodeList
+	if (!checkFunction('NodeList.prototype[Symbol.iterator]')) {
+		NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator]
 	}
 
 	// Minimalistic  DOM polyfill for modern browsers
