@@ -31,16 +31,14 @@ const mouseMove = emitChanges<MouseMove>({
 class PostPreview extends View<any> {
 	el: HTMLElement
 	clickHandler: EventListener
+	observer: MutationObserver
 	$parent: HTMLAnchorElement
+	$source: Element
 
 	constructor(el: Element, parent: HTMLAnchorElement) {
-		// Clone original element and modify
-		const preview = el.cloneNode(true) as Element
-		preview.removeAttribute("id")
-		preview.classList.add("preview")
-
-		super({ el: preview })
+		super({ el: clonePost(el) })
 		this.$parent = parent
+		this.$source = el
 
 		// Remove on parent click
 		this.clickHandler = () =>
@@ -48,6 +46,17 @@ class PostPreview extends View<any> {
 		parent.addEventListener("click", this.clickHandler, {
 			passive: true,
 		})
+
+		// Propagate post updates to clone
+		this.observer = new MutationObserver(() =>
+			this.renderUpdates())
+		this.observer.observe(el, {
+			childList: true,
+			attributes: true,
+			characterData: true,
+			subtree: true,
+		})
+
 		this.render()
 	}
 
@@ -88,8 +97,18 @@ class PostPreview extends View<any> {
 		this.el.style.top = top + "px"
 	}
 
+	// Reclone and reposition on update. This is pretty expensive, but good
+	// enough, because only one post will ever be previewied at a time
+	renderUpdates() {
+		const el = clonePost(this.$source)
+		this.el.replaceWith(el)
+		this.el = el as HTMLElement
+		this.render()
+	}
+
 	// Remove reference to this view from the parent element and module
 	remove() {
+		this.observer.disconnect()
 		this.$parent.removeEventListener("click", this.clickHandler)
 		postPreview = null
 		super.remove()
@@ -106,6 +125,14 @@ function clear() {
 		imagePreview.remove()
 		imagePreview = null
 	}
+}
+
+// Clone a post element as a preview
+function clonePost(el: Element): Element {
+	const preview = el.cloneNode(true) as Element
+	preview.removeAttribute("id")
+	preview.classList.add("preview")
+	return preview
 }
 
 function renderImagePreview(event: MouseEvent) {

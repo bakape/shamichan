@@ -86,8 +86,16 @@ hr{
 	color: @bold;
 }
 
-.modal, .preview, .popup-menu, .side-panel {
+.modal, .popup-menu, .side-panel {
 	background-color: white;
+	border-right: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+}
+
+.preview {
+	&:not(.editing) {
+		background-color: white;
+	}
 	border-right: 1px solid #eee;
 	border-bottom: 1px solid #eee;
 }

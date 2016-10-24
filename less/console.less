@@ -168,9 +168,16 @@ small {
 	color: #2020ff;
 }
 
-.modal, .preview, .popup-menu, .side-panel {
+.modal, .preview:not(.editing), .popup-menu, .side-panel {
 	border: @border;
 	background: black;
+}
+
+.preview {
+	&:not(.editing) {
+		background: black;
+	}
+	border: @border;
 }
 
 // Override default with a fully opaque banner

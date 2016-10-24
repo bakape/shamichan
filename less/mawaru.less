@@ -70,8 +70,16 @@ hr {
 	color: #88c;
 }
 
-.preview, .popup-menu {
+.popup-menu {
 	background-color: #111;
+	border-right: 1px solid #000;
+	border-bottom: 1px solid #000;
+}
+
+.preview {
+	&:not(.editing) {
+		background-color: #111;
+	}
 	border-right: 1px solid #000;
 	border-bottom: 1px solid #000;
 }

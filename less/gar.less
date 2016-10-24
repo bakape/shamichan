@@ -81,7 +81,9 @@ a.tab-sel {
 }
 
 .preview {
-	background-color: #f9f0d9;
+	&:not(.editing) {
+		background-color: #f9f0d9;
+	}
 	border-right: 1px solid #e9e0c9;
 	border-bottom: 1px solid #e9e0c9;
 }

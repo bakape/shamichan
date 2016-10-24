@@ -19,8 +19,15 @@ article, aside, .modal, .side-panel {
 	border: @border;
 }
 
-article.highlight, .preview, .popup-menu {
+article.highlight, .popup-menu {
 	background-color: #1d1d21;
+	border-color: #111;
+}
+
+.preview {
+	&:not(.editing) {
+		background-color: #1d1d21;
+	}
 	border-color: #111;
 }
 
