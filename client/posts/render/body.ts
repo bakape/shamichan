@@ -90,6 +90,7 @@ export function parseTerminatedLine(line: string, data: PostData): string {
 	}
 
 	html += terminateTags(state, true)
+
 	return html
 }
 
@@ -146,6 +147,10 @@ function parseFragment(frag: string, data: PostData): string {
 	for (let word of frag.split(" ")) {
 		if (html) {
 			html += " "
+		}
+		if (!word) {
+			html += " "
+			continue
 		}
 		if (word[0] === ">") {
 			if (/^>{2,}\d+$/.test(word)) {
