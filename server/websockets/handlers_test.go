@@ -7,7 +7,7 @@ import (
 	. "github.com/bakape/meguca/test"
 )
 
-func marshalJSON(t *testing.T, msg interface{}) []byte {
+func marshalJSON(t testing.TB, msg interface{}) []byte {
 	data, err := json.Marshal(msg)
 	if err != nil {
 		t.Fatal(err)

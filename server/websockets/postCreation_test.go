@@ -211,7 +211,7 @@ func testCreateThreadTextOnly(t *testing.T) {
 	}
 }
 
-func populateMainTable(t *testing.T) {
+func populateMainTable(t testing.TB) {
 	assertInsert(t, "main", []map[string]interface{}{
 		{
 			"id":      "info",
@@ -223,7 +223,7 @@ func populateMainTable(t *testing.T) {
 	})
 }
 
-func setBoardConfigs(t *testing.T, textOnly bool) {
+func setBoardConfigs(t testing.TB, textOnly bool) {
 	config.ClearBoards()
 	_, err := config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
@@ -482,7 +482,7 @@ func TestPostCreation(t *testing.T) {
 	})
 }
 
-func prepareForPostCreation(t *testing.T) {
+func prepareForPostCreation(t testing.TB) {
 	now := time.Now().Unix()
 	(*config.Get()).MaxBump = 500
 	assertTableClear(t, "main", "threads", "posts")
@@ -533,6 +533,35 @@ func TestTextOnlyPostCreation(t *testing.T) {
 
 	if cl.openPost.hasImage {
 		t.Error("openPost has image")
+	}
+}
+
+func BenchmarkPostCreation(b *testing.B) {
+	prepareForPostCreation(b)
+	setBoardConfigs(b, true)
+
+	sv := newWSServer(b)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	Clients.add(cl, SyncID{1, "a"})
+	defer Clients.Clear()
+
+	req := replyCreationRequest{
+		Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit," +
+			"sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+		postCreationCommon: postCreationCommon{
+			Password: "123",
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if err := insertPost(marshalJSON(b, req), cl); err != nil {
+			b.Fatal(err)
+		}
+		if err := closePost(nil, cl); err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 

@@ -32,7 +32,7 @@ var (
 )
 
 type mockWSServer struct {
-	t          *testing.T
+	t          testing.TB
 	server     *httptest.Server
 	connSender chan *websocket.Conn
 	sync.WaitGroup
@@ -49,7 +49,7 @@ func init() {
 	}
 }
 
-func newWSServer(t *testing.T) *mockWSServer {
+func newWSServer(t testing.TB) *mockWSServer {
 	connSender := make(chan *websocket.Conn)
 	handler := func(res http.ResponseWriter, req *http.Request) {
 		conn, err := upgrader.Upgrade(res, req, nil)
@@ -76,7 +76,7 @@ func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 	return newClient(<-m.connSender, httptest.NewRequest("GET", "/", nil)), wcl
 }
 
-func dialServer(t *testing.T, sv *httptest.Server) *websocket.Conn {
+func dialServer(t testing.TB, sv *httptest.Server) *websocket.Conn {
 	wcl, _, err := dialer.Dial(strings.Replace(sv.URL, "http", "ws", 1), nil)
 	if err != nil {
 		t.Fatal(err)
@@ -84,13 +84,13 @@ func dialServer(t *testing.T, sv *httptest.Server) *websocket.Conn {
 	return wcl
 }
 
-func assertTableClear(t *testing.T, tables ...string) {
+func assertTableClear(t testing.TB, tables ...string) {
 	if err := db.ClearTables(tables...); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func assertInsert(t *testing.T, table string, doc interface{}) {
+func assertInsert(t testing.TB, table string, doc interface{}) {
 	if err := db.Insert(table, doc); err != nil {
 		t.Fatal(err)
 	}

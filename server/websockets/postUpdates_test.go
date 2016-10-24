@@ -256,6 +256,29 @@ func assertRepLog(t *testing.T, id int64, log []string) {
 	AssertDeepEquals(t, strRes, log)
 }
 
+func BenchmarkAppend(b *testing.B) {
+	assertTableClear(b, "posts")
+	assertInsert(b, "posts", samplePost)
+
+	sv := newWSServer(b)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	cl.openPost = openPost{
+		id:         2,
+		op:         1,
+		bodyLength: 3,
+		time:       time.Now().Unix(),
+		Buffer:     *bytes.NewBuffer([]byte("abc")),
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if err := appendRune([]byte("100"), cl); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
 func TestAppendNewline(t *testing.T) {
 	assertTableClear(t, "posts")
 	assertInsert(t, "posts", samplePost)
