@@ -5,6 +5,10 @@
 		"Prune vlákna",
 		"Zmaž vlákna s obrázkami, keď priesnahnú limit na vlákno."
 	],
+	"pruneBoards": [
+		"Prune boards",
+		"Delete boards that have not had any new posts for 7 days"
+	],
 	"radio": [
 		"R/a/dio integrácia",
 		"Enable 'Now playing' song display in the top banner and the #queue hash command"

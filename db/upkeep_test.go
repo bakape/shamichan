@@ -354,26 +354,47 @@ func TestDeleteUnusedBoards(t *testing.T) {
 	assertTableClear(t, "boards", "threads", "posts")
 
 	t.Run("no unused boards", func(t *testing.T) {
+		(*config.Get()).PruneBoards = true
 		if err := deleteUnusedBoards(); err != nil {
 			t.Fatal(err)
 		}
 	})
+
 	t.Run("board with no threads", func(t *testing.T) {
+		(*config.Get()).PruneBoards = true
 		assertInsert(t, "boards", config.DatabaseBoardConfigs{
 			Created: time.Now().Add((-week - 1) * time.Second),
 			BoardConfigs: config.BoardConfigs{
 				ID: "l",
 			},
 		})
+
 		if err := deleteUnusedBoards(); err != nil {
 			t.Fatal(err)
 		}
 		assertDeleted(t, r.Table("boards").Get("l"), true)
 	})
+
+	t.Run("pruning disabled", func(t *testing.T) {
+		(*config.Get()).PruneBoards = false
+		assertInsert(t, "boards", config.DatabaseBoardConfigs{
+			Created: time.Now().Add((-week - 1) * time.Second),
+			BoardConfigs: config.BoardConfigs{
+				ID: "x",
+			},
+		})
+
+		if err := deleteUnusedBoards(); err != nil {
+			t.Fatal(err)
+		}
+		assertDeleted(t, r.Table("boards").Get("x"), false)
+	})
+
 	t.Run("board with threads", testDeleteUnsusedBoards)
 }
 
 func testDeleteUnsusedBoards(t *testing.T) {
+	(*config.Get()).PruneBoards = true
 	expired := time.Now().Add((-week - 1) * time.Second)
 	fresh := time.Now()
 

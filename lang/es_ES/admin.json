@@ -5,6 +5,10 @@
 		"Prune threads",
 		"Delete threads and their images, when they exceed the board's thread limit"
 	],
+	"pruneBoards": [
+		"Prune boards",
+		"Delete boards that have not had any new posts for 7 days"
+	],
 	"radio": [
 		"R/a/dio integration",
 		"Enable 'Now playing' song display in the top banner and the #queue hash command"

@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/bakape/meguca/config"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -31,7 +32,7 @@ var postClosingQuery = r.
 			Add(r.Row.Field("id").CoerceTo("string")).
 			CoerceTo("binary"),
 		),
-		"editing": false,
+		"editing":     false,
 		"lastUpdated": r.Now().ToEpochTime().Floor(),
 	})
 
@@ -137,6 +138,10 @@ func expireImageTokens() error {
 // Delete boards that are older than 1 week and have not had any new posts for
 // a week.
 func deleteUnusedBoards() error {
+	if !config.Get().PruneBoards {
+		return nil
+	}
+
 	var expired []string
 	if err := All(getExpiredBoards, &expired); err != nil {
 		return err

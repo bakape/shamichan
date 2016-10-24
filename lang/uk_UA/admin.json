@@ -5,6 +5,10 @@
 		"Обрізати тхреди",
         "Видаляти тхреди та їхні зображення коли вони перевищили ліміт"
 	],
+	"pruneBoards": [
+		"Prune boards",
+		"Delete boards that have not had any new posts for 7 days"
+	],
 	"radio": [
 		"R/a/dio інтеграція",
 		"Enable 'Now playing' song display in the top banner and the #queue hash command"

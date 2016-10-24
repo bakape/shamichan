@@ -7,6 +7,7 @@ import { langs, themes } from '../options/specs'
 
 type ServerConfigs = {
 	prune: boolean
+	pruneBoards: boolean
 	radio: boolean
 	hats: boolean
 	illyaDance: boolean
@@ -39,6 +40,10 @@ const specs: InputSpec[] = [
 	},
 	{
 		name: "prune",
+		type: inputType.boolean,
+	},
+	{
+		name: "pruneBoards",
 		type: inputType.boolean,
 	},
 	{

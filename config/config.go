@@ -69,8 +69,7 @@ var (
 
 // Default string for the FAQ panel
 const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, MP4 and OGG.
-Encase words in ** to spoiler them. Spoilers reset on new line.
-Boards that have not had any new posts in 7 days are automatically deleted.
+Encase words in ** to spoiler them. Spoilers reset on newline.
 <hr>Hash commands:
 #d100 #2d100 - Roll dice
 #flip - Coin flip
@@ -82,6 +81,7 @@ All hash commands need to be input on their own line`
 type Configs struct {
 	Public
 	Prune             bool   `json:"prune" gorethink:"prune"`
+	PruneBoards       bool   `json:"pruneBoards" gorethink:"pruneBoards"`
 	Pyu               bool   `json:"pyu" gorethink:"pyu"`
 	MaxWidth          uint16 `json:"maxWidth" gorethink:"maxWidth"`
 	MaxHeight         uint16 `json:"maxHeight" gorethink:"maxHeight"`
