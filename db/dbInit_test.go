@@ -160,8 +160,8 @@ func assertExists(t *testing.T, q r.Term) {
 func TestUpgrade14to15(t *testing.T) {
 	assertTableClear(t, "main", "boards")
 	assertInsert(t, "main", map[string]interface{}{
-		"id":      "info",
-		"version": 14,
+		"id":        "info",
+		"dbVersion": 14,
 	})
 	assertInsert(t, "boards", config.BoardConfigs{
 		ID: "a",

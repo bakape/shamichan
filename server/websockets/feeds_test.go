@@ -111,7 +111,7 @@ func TestBufferUpdate(t *testing.T) {
 		buf    string
 	}{
 		{
-			name: "post insertion",
+			name: "post inserted",
 			update: feedUpdate{
 				Change:          postInserted,
 				timestampedPost: stdPost,
@@ -130,19 +130,6 @@ func TestBufferUpdate(t *testing.T) {
 			cached: stdPost,
 			buf:    "foo",
 		},
-		{
-			name: "post deleted",
-			update: feedUpdate{
-				Change: postDeleted,
-				timestampedPost: timestampedPost{
-					Post: types.Post{
-						ID: 1,
-					},
-				},
-			},
-			cached: timestampedPost{},
-			buf:    encodeMessage(t, MessageDelete, 1),
-		},
 	}
 
 	for i := range cases {
@@ -151,9 +138,7 @@ func TestBufferUpdate(t *testing.T) {
 			t.Parallel()
 
 			feeds := newFeedContainer()
-			if err := feeds.bufferUpdate(c.update); err != nil {
-				t.Fatal(err)
-			}
+			feeds.bufferUpdate(c.update)
 			feed := feeds.feeds[c.update.OP]
 
 			AssertDeepEquals(t, feed.cache[c.update.ID], c.cached)

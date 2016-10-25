@@ -16,7 +16,6 @@ import (
 const (
 	postInserted = iota
 	postUpdated
-	postDeleted
 )
 
 var (
@@ -215,42 +214,31 @@ func (f *feedContainer) flushBuffers() {
 func (f *feedContainer) streamUpdates() error {
 	cursor, err := r.
 		Table("posts").
+		Between(r.Now().ToEpochTime().Sub(30), r.MaxVal, r.BetweenOpts{
+			Index: "lastUpdated",
+		}).
 		Changes(r.ChangesOpts{
 			IncludeInitial: true,
+			IncludeTypes:   true,
 			Squash:         0.2, // Perform at most every 0.2 seconds
 		}).
-		Filter(
-			r. // Exclude the initial swarm of old posts
-				Row.
-				HasFields("old_val").
-				Not().
-				And(r.
-					Row.
-					Field("new_val").
-					Field("lastUpdated").
-					Lt(r.Now().ToEpochTime().Sub(30)),
-				).
-				Not(),
-		).
 		Map(func(ch r.Term) r.Term {
-			return r.Branch(
-				ch.Field("new_val").Eq(nil),
-				map[string]interface{}{
-					"change": postDeleted,
-					"id":     ch.Field("old_val").Field("id"),
-				},
-				ch.HasFields("old_val").Not(),
-				ch.Field("new_val").Without("log"),
-				ch.Field("new_val").Merge(map[string]interface{}{
-					"log": ch.
-						Field("new_val").
-						Field("log").
-						Slice(ch.Field("old_val").Field("log").Count()),
-					"change": postUpdated,
-				}),
-			)
+			return ch.Field("type").Do(func(typ r.Term) r.Term {
+				return r.Branch(
+					typ.Eq("add").Or(typ.Eq("initial")),
+					ch.Field("new_val").Without("log", "ip", "password"),
+					typ.Eq("remove"),
+					nil,
+					ch.Field("new_val").Merge(map[string]interface{}{
+						"log": ch.
+							Field("new_val").
+							Field("log").
+							Slice(ch.Field("old_val").Field("log").Count()),
+						"change": postUpdated,
+					}),
+				)
+			})
 		}).
-		Without("ip", "password").
 		Run(db.RSession)
 	if err != nil {
 		return err
@@ -264,7 +252,12 @@ func (f *feedContainer) streamUpdates() error {
 
 // Buffer the replication log updates received from the DB and cache the new
 // contents of the post.
-func (f *feedContainer) bufferUpdate(update feedUpdate) error {
+func (f *feedContainer) bufferUpdate(update feedUpdate) {
+	// Empty updates are returned on post deletion
+	if update.timestampedPost.ID == 0 {
+		return
+	}
+
 	feed, ok := f.feeds[update.OP]
 	if !ok {
 		feed = &updateFeed{
@@ -280,7 +273,8 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) error {
 	case postInserted:
 		data, err := EncodeMessage(MessageInsertPost, update.Post)
 		if err != nil {
-			return err
+			log.Printf("could not encode: %#v\n", update.Post)
+			break
 		}
 		feed.writeToBuffer(data)
 		feed.cache[update.ID] = update.timestampedPost
@@ -290,17 +284,7 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) error {
 			feed.writeToBuffer(msg)
 		}
 		feed.cache[update.ID] = update.timestampedPost
-	// Post deletion message
-	case postDeleted:
-		data, err := EncodeMessage(MessageDelete, update.ID)
-		if err != nil {
-			return err
-		}
-		feed.writeToBuffer(data)
-		delete(feed.cache, update.ID)
 	}
-
-	return nil
 }
 
 func (u *updateFeed) writeToBuffer(data []byte) {

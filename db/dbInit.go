@@ -13,7 +13,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 16
+const dbVersion = 17
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -62,7 +62,13 @@ var (
 		{"posts", "op"},
 		{"posts", "board"},
 		{"posts", "editing"},
+		{"posts", "lastUpdated"},
 	}
+
+	// Query that increments the database version
+	incrementVersion = GetMain("info").Update(map[string]r.Term{
+		"dbVersion": r.Row.Field("dbVersion").Add(1),
+	})
 )
 
 // Document is a eneric RethinkDB Document. For DRY-ness.
@@ -148,6 +154,18 @@ func verifyDBVersion() error {
 		if err := upgrade15to16(); err != nil {
 			return err
 		}
+		fallthrough
+	case 16:
+		err := WriteAll([]r.Term{
+			r.Table("posts").IndexCreate("lastUpdated"),
+			incrementVersion,
+		})
+		if err != nil {
+			return err
+		}
+		if err := waitForIndex("posts")(); err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("incompatible database version: %d", version)
 	}
@@ -161,9 +179,7 @@ func upgrade14to15() error {
 		r.Table("boards").Update(map[string]r.Term{
 			"created": r.Now(),
 		}),
-		r.Table("main").Get("info").Update(map[string]int{
-			"dbVersion": 15,
-		}),
+		incrementVersion,
 	}
 
 	for _, q := range qs {
@@ -212,9 +228,7 @@ func upgrade15to16() error {
 			}),
 		// Delete old table
 		r.TableDrop("threads_old"),
-		r.Table("main").Get("info").Update(map[string]int{
-			"dbVersion": 16,
-		}),
+		incrementVersion,
 	)
 	if err := WriteAll(qs); err != nil {
 		return err
