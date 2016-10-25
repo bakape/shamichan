@@ -47,6 +47,7 @@ class ThreadForm extends FormView implements UploadForm {
 	$uploadInput: HTMLInputElement
 	renderUploadForm: () => void
 	uploadFile: () => Promise<FileData>
+	upload: (file: File) => Promise<string>
 	renderProgress: (event: ProgressEvent) => void
 	spoilerImage: () => Promise<void>
 

@@ -70,3 +70,10 @@ interface History {
 	scrollRestoration: "auto" | "manual"
 }
 
+interface ArrayBufferTarget extends EventTarget {
+	result: ArrayBuffer
+}
+
+interface ArrayBufferLoadEvent extends Event {
+	target: ArrayBufferTarget
+}

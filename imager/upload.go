@@ -38,10 +38,10 @@ var (
 	}{
 		{detectSVG, types.SVG},
 		{detectMP3, types.MP3},
-		{detectMP4, types.MP4},
 	}
 
-	errTooLarge = errors.New("file too large")
+	errTooLarge        = errors.New("file too large")
+	errInvalidFileHash = errors.New("invalid file hash")
 )
 
 // Response from a thumbnail generation performed concurently
@@ -54,19 +54,53 @@ type thumbResponse struct {
 }
 
 // NewImageUpload  handles the clients' image (or other file) upload request
-func NewImageUpload(res http.ResponseWriter, req *http.Request) {
+func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
 	maxSize := config.Get().MaxSize * 1024 * 1024
-	req.Body = http.MaxBytesReader(res, req.Body, maxSize)
-	res.Header().Set("Access-Control-Allow-Origin", config.AllowedOrigin)
+	r.Body = http.MaxBytesReader(w, r.Body, maxSize)
+	w.Header().Set("Access-Control-Allow-Origin", config.AllowedOrigin)
 
-	code, id, err := newImageUpload(req)
+	code, id, err := newImageUpload(r)
 	if err != nil {
-		text := err.Error()
-		http.Error(res, text, code)
-		log.Printf("upload error: %s: %s\n", auth.GetIP(req), text)
+		logError(w, r, code, err)
 	}
-	res.Write([]byte(id))
+	w.Write([]byte(id))
+}
+
+// UploadImageHash attempts to skip image upload, if the file has already
+// been thumbnailed and is stored on the server. The client sends and SHA1 hash
+// of the file it wants to upload. The server looks up, if such a file is
+// thumbnailed. If yes, generates and sends a new image allocation token to
+// the client.
+func UploadImageHash(w http.ResponseWriter, req *http.Request) {
+	buf, err := ioutil.ReadAll(http.MaxBytesReader(w, req.Body, 40))
+	if err != nil {
+		logError(w, req, 500, err)
+		return
+	}
+	hash := string(buf)
+
+	_, err = db.FindImageThumb(hash)
+	if err == r.ErrEmptyResult {
+		w.Write([]byte("-1"))
+		return
+	} else if err != nil {
+		logError(w, req, 500, err)
+		return
+	}
+
+	code, token, err := db.NewImageToken(hash)
+	if err != nil {
+		logError(w, req, code, err)
+	}
+	w.Write([]byte(token))
+}
+
+// Send the client its error and log it
+func logError(w http.ResponseWriter, r *http.Request, code int, err error) {
+	text := err.Error()
+	http.Error(w, text, code)
+	log.Printf("upload error: %s: %s\n", auth.GetIP(r), text)
 }
 
 // Separate function for cleaner error handling. Returns the HTTP status code of
@@ -86,7 +120,7 @@ func newImageUpload(req *http.Request) (int, string, error) {
 		return 400, "", err
 	}
 
-	// TODO: A  scheduler based on availablr RAM, so we don't run out of memory,
+	// TODO: A scheduler based on availablr RAM, so we don't run out of memory,
 	// with concurent burst loads.
 
 	file, _, err := req.FormFile("image")
@@ -187,12 +221,7 @@ func detectFileType(buf []byte) (uint8, error) {
 }
 
 // TODO: Waiting on Soreil
-
 func detectSVG(buf []byte) (bool, error) {
-	return false, nil
-}
-
-func detectMP4(buf []byte) (bool, error) {
 	return false, nil
 }
 

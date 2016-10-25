@@ -1,10 +1,11 @@
 import { posts as lang } from '../../lang'
 import { HTML, commaList, load, setAttrs, makeFrag } from '../../util'
 import { write } from '../../render'
-import { postJSON } from "../../json"
+import { postJSON, postText } from "../../json"
 import Model from "../../model"
 import identity from "./identity"
 import { Post } from "../models"
+import Rusha from "./sha1"
 
 // Uploaded file data to be embeded in thread and reply creation or appendage
 // requests
@@ -61,6 +62,40 @@ export default class UploadForm {
 		if (!navigator.onLine) {
 			return null
 		}
+
+		let token: string
+
+		// First send a an SHA1 hash to the server, in case it already has the
+		// file thumbnailed and we don't need to upload.
+		const r = new FileReader()
+		r.readAsArrayBuffer(file)
+		const {target: {result}} = await load(r) as ArrayBufferLoadEvent,
+			res = await postText("/uploadHash", new Rusha().digest(result))
+		if (res !== "-1") {
+			token = res
+		} else {
+			// If there is none, upload file like normal
+			token = await this.upload(file)
+			if (!token) {
+				return null
+			}
+		}
+
+		const img: FileData = {
+			token,
+			name: file.name,
+		}
+		const spoiler =
+			(this.el.querySelector("input[name=spoiler]") as HTMLInputElement)
+				.checked
+		if (spoiler) {
+			img.spoiler = true
+		}
+		return img
+	}
+
+	// Upload file to server and return the file allocation token
+	async upload(file: File): Promise<string> {
 		const formData = new FormData()
 		formData.append("image", file)
 		write(() =>
@@ -79,20 +114,10 @@ export default class UploadForm {
 				this.$uploadStatus.textContent = xhr.response
 				this.$uploadInput.style.display = ""
 			})
-			return null
+			return ""
 		}
 
-		const img: FileData = {
-			name: file.name,
-			token: xhr.response,
-		}
-		const spoiler =
-			(this.el.querySelector("input[name=spoiler]") as HTMLInputElement)
-				.checked
-		if (spoiler) {
-			img.spoiler = true
-		}
-		return img
+		return xhr.responseText
 	}
 
 	// Render client-side upload progress

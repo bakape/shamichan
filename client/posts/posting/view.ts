@@ -30,6 +30,7 @@ export class FormView extends PostView implements UploadForm {
 	$uploadInput: HTMLInputElement
 	renderUploadForm: () => void
 	uploadFile: (file?: File) => Promise<FileData>
+	upload: (file: File) => Promise<string>
 	renderProgress: (event: ProgressEvent) => void
 	spoilerImage: () => Promise<void>
 

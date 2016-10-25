@@ -32,6 +32,16 @@ export async function postJSON(url: string, body: any): Promise<Response> {
 	return res
 }
 
+// Send a POST request with a text body to the server
+export async function postText(url: string, text: string): Promise<string> {
+	const res = await fetch(url, {
+		method: "POST",
+		body: text,
+	})
+	await handleError(res)
+	return await res.text()
+}
+
 // Throw the status text of a Response as an error on HTTP errrors
 export async function handleError(res: Response) {
 	if (!res.ok) {

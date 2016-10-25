@@ -94,6 +94,7 @@ func createRouter() http.Handler {
 
 	// File upload
 	r.POST("/upload", wrapHandler(imager.NewImageUpload))
+	r.POST("/uploadHash", wrapHandler(imager.UploadImageHash))
 
 	h := http.Handler(r)
 	if enableGzip {

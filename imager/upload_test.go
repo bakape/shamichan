@@ -292,6 +292,45 @@ func TestThumbNailReuse(t *testing.T) {
 	}
 }
 
+func TestUploadImageHash(t *testing.T) {
+	assertTableClear(t, "images", "imageTokens")
+	resetDirs(t)
+
+	std := assets.StdJPEG
+
+	req := newJPEGRequest(t)
+	code, _, err := newImageUpload(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertCode(t, code, 200)
+	assertImageRefCount(t, std.SHA1, 1)
+
+	rec := httptest.NewRecorder()
+	b := bytes.NewReader([]byte(std.SHA1))
+	req = httptest.NewRequest("POST", "/", b)
+	UploadImageHash(rec, req)
+	if rec.Code != 200 {
+		t.Errorf("unexpected status code: %d", rec.Code)
+	}
+	assertImageToken(t, rec.Body.String(), std.SHA1, std.Name)
+}
+
+func TestUploadImageHashNoHash(t *testing.T) {
+	assertTableClear(t, "images", "imageTokens")
+
+	rec := httptest.NewRecorder()
+	b := bytes.NewReader([]byte(assets.StdJPEG.SHA1))
+	req := httptest.NewRequest("POST", "/", b)
+	UploadImageHash(rec, req)
+	if rec.Code != 200 {
+		t.Errorf("unexpected status code: %d", rec.Code)
+	}
+	if s := rec.Body.String(); s != "-1" {
+		t.Errorf("unexpected response body: `%s`", s)
+	}
+}
+
 func TestErrorPassing(t *testing.T) {
 	t.Parallel()
 
