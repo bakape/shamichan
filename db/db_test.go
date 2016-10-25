@@ -59,10 +59,26 @@ func TestPostCounter(t *testing.T) {
 }
 
 func TestThreadCounter(t *testing.T) {
-	assertTableClear(t, "threads")
-	assertInsert(t, "threads", types.DatabaseThread{
-		ID:      1,
-		PostCtr: 55,
+	assertTableClear(t, "posts")
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			StandalonePost: types.StandalonePost{
+				OP: 1,
+				Post: types.Post{
+					ID: 1,
+				},
+			},
+			LastUpdated: 54,
+		},
+		{
+			StandalonePost: types.StandalonePost{
+				OP: 1,
+				Post: types.Post{
+					ID: 2,
+				},
+			},
+			LastUpdated: 55,
+		},
 	})
 
 	ctr, err := ThreadCounter(1)

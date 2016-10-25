@@ -81,9 +81,8 @@ func TestPostJSON(t *testing.T) {
 		},
 	})
 	assertInsert(t, "threads", types.DatabaseThread{
-		ID:      1,
-		Board:   "a",
-		PostCtr: 11,
+		ID:    1,
+		Board: "a",
 	})
 	assertInsert(t, "posts", types.DatabasePost{
 		StandalonePost: types.StandalonePost{
@@ -93,6 +92,7 @@ func TestPostJSON(t *testing.T) {
 			Board: "a",
 			OP:    1,
 		},
+		LastUpdated: 11,
 	})
 
 	setBoards(t, "a")

@@ -121,7 +121,13 @@ func BoardCounter(board string) (counter int64, err error) {
 // ThreadCounter retrieves the post counter of a thread to get a rough estimate
 // of the thread's progress
 func ThreadCounter(id int64) (counter int64, err error) {
-	err = One(FindThread(id).Field("postCtr"), &counter)
+	q := r.
+		Table("posts").
+		GetAllByIndex("op", id).
+		Field("lastUpdated").
+		Max().
+		Default(0)
+	err = One(q, &counter)
 	return
 }
 
