@@ -7,22 +7,28 @@ import { isMobile, boardConfig } from "../../state"
 import { setAttrs, makeFrag, applyMixins } from "../../util"
 import { parseTerminatedLine } from "../render/body"
 import { renderHeader, renderName } from "../render/posts"
-import { write } from "../../render"
+import { write, $threads } from "../../render"
 import { ui } from "../../lang"
 import { $threadContainer } from "../../page/thread"
 import { postSM, postEvent } from "./main"
 import UploadForm, { FileData } from "./upload"
-import { scrollToBottom } from "../../scroll"
 import identity from "./identity"
+
+// Element at the bottom of the thread to keep the fixed reply form from
+// overlaping any other posts, when scrolled till bottom
+let $bottomSpacer: HTMLElement
 
 // Post creation and update view
 export class FormView extends PostView implements UploadForm {
+	el: HTMLElement
 	model: ReplyFormModel
 	inputLock: boolean
 	$input: HTMLSpanElement
 	$done: HTMLInputElement
 	$cancel: HTMLInputElement
+	observer: MutationObserver
 	$postControls: Element
+	previousHeight: number
 
 	// UploadForm properties
 	$spoiler: HTMLSpanElement
@@ -38,9 +44,9 @@ export class FormView extends PostView implements UploadForm {
 
 	constructor(model: Post, isOP: boolean) {
 		super(model)
-		scrollToBottom()
 		this.renderInputs(isOP)
 		if (!isOP) {
+			this.el.classList.add("reply-form")
 			this.initDraft()
 		}
 	}
@@ -141,16 +147,53 @@ export class FormView extends PostView implements UploadForm {
 	// Initialize extra elements for a draft unallocated post
 	initDraft() {
 		this.el.querySelector("header").classList.add("temporary")
+		$bottomSpacer = document.getElementById("bottom-spacer")
+
+		// Keep this post and $bottomSpacer the same height
+		this.observer = new MutationObserver(() =>
+			write(() =>
+				this.resizeSpacer()))
+		this.observer.observe(this.el, {
+			childList: true,
+			attributes: true,
+			characterData: true,
+			subtree: true,
+		})
+
 		write(() => {
 			$threadContainer.append(this.el)
 			this.$input.focus()
+			this.resizeSpacer()
 		})
 	}
 
+	// Resize $bottomSpacer to the same top position as this post
+	resizeSpacer() {
+		// Not a reply
+		if (!$bottomSpacer) {
+			return
+		}
+
+		// Avoid spacer being seen, if thread is too short to fill the
+		// viewport.
+		if ($threadContainer.offsetHeight < $threads.offsetHeight) {
+			return
+		}
+
+		const {height} = this.el.getBoundingClientRect()
+		// Avoid needless writes
+		if (this.previousHeight === height) {
+			return
+		}
+		this.previousHeight = height
+		$bottomSpacer.style.height = `calc(${height}px - 2.1em)`
+	}
+
 	removeUploadForm() {
-		write(() =>
-			(this.$uploadInput.remove(),
-				this.$uploadStatus.remove()))
+		write(() => {
+			this.$uploadInput.remove()
+			this.$uploadStatus.remove()
+		})
 	}
 
 	// Handle input events on $input
@@ -235,18 +278,37 @@ export class FormView extends PostView implements UploadForm {
 			this.$blockquote.children[num].replaceWith(frag))
 	}
 
-	// Remove any dangling form controls to deallocate referenced elements
+	// Transform form into a generic post. Removes any dangling form controls
+	// and frees up references.
 	cleanUp() {
-		write(() =>
-			(this.$postControls.remove(),
-				this.$postControls
+		write(() => {
+			this.el.classList.remove("reply-form")
+			if (this.$postControls) {
+				this.$postControls.remove()
+			}
+			if ($bottomSpacer) {
+				$bottomSpacer.style.height = ""
+			}
+			if (this.observer) {
+				this.observer.disconnect()
+			}
+			this.$postControls
+				= $bottomSpacer
+				= this.observer
 				= this.$done
 				= this.$cancel
 				= this.$input
 				= this.$uploadInput
 				= this.$uploadStatus
 				= this.$spoiler
-				= null))
+				= null
+		})
+	}
+
+	// Clean up on form removal
+	remove() {
+		super.remove()
+		this.cleanUp()
 	}
 
 	// Lock the post form after a crytical error accours

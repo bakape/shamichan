@@ -11,7 +11,7 @@ import { renderNotice } from "./common"
 import { updateSyncTimestamp } from "../connection"
 
 // Container for all rendered posts
-export let $threadContainer: Element
+export let $threadContainer: HTMLElement
 
 // Render the HTML of a thread page
 export default function renderThread(thread: ThreadData) {
@@ -23,7 +23,7 @@ export default function renderThread(thread: ThreadData) {
 	setTitle(title)
 	frag.querySelector("h1").innerHTML = title
 
-	$threadContainer = frag.querySelector("#thread-container")
+	$threadContainer = frag.querySelector("#thread-container") as HTMLElement
 	if (!options.workModeToggle && (options.userBG || options.illyaDance)) {
 		$threadContainer.classList.add("custom-BG")
 	}
