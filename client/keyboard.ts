@@ -1,8 +1,9 @@
 // Keyboard shortcuts and such
 
 import options from "./options"
-import {postForm, postSM, postEvent} from "./posts/posting/main"
-import {toggleExpandAll} from "./posts/images"
+import { postForm, postSM, postEvent } from "./posts/posting/main"
+import { toggleExpandAll } from "./posts/images"
+import { page } from "./state"
 
 // Bind keyboard event listener to the document
 export default function bindListener() {
@@ -16,25 +17,34 @@ function handleShortcut(event: KeyboardEvent) {
 
 	let caught = true
 	switch (event.which) {
-	case options.newPost:
-		postSM.feed(postEvent.open)
-		break
-	case options.done:
-		postSM.feed(postEvent.done)
-		break
-	case options.toggleSpoiler:
-		if (postForm) {
-			postForm.toggleSpoiler()
-		}
-		break
-	case options.expandAll:
-		toggleExpandAll()
-		break
-	case options.workMode:
-		options.workModeToggle = !options.workModeToggle
-		break
-	default:
-		caught = false
+		case options.newPost:
+			if (page.thread) {
+				postSM.feed(postEvent.open)
+				break
+			}
+			const tf = document
+				.querySelector("aside:not(.expanded) .new-thread-button")
+			if (tf) {
+				(tf as HTMLElement).click()
+				tf.scrollIntoView()
+			}
+			break
+		case options.done:
+			postSM.feed(postEvent.done)
+			break
+		case options.toggleSpoiler:
+			if (postForm) {
+				postForm.toggleSpoiler()
+			}
+			break
+		case options.expandAll:
+			toggleExpandAll()
+			break
+		case options.workMode:
+			options.workModeToggle = !options.workModeToggle
+			break
+		default:
+			caught = false
 	}
 
 	if (caught) {
