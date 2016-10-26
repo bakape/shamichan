@@ -246,10 +246,6 @@
 				"",
 				"Image to use as the background"
 			],
-			"lastN": [
-				"Last # post number",
-				"Number of posts to display with the 'Last N' thread expansion link"
-			],
 			"postUnloading": [
 				"Dynamic Post Unloading",
 				"Improves thread responsiveness by unloading posts from the top of the thread, so that post count stays within the Last # value. Only applies to Last # enabled threads"

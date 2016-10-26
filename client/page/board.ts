@@ -112,8 +112,7 @@ function renderThreads(
 // Render a single thread for the thread catalog
 function renderThread(thread: ThreadData): DocumentFragment {
 	const frag = importTemplate("catalog-thread"),
-		href = `../${thread.board}/${thread.id}`,
-		lastN = options.lastN.toString()
+		href = `../${thread.board}/${thread.id}`
 
 	frag.firstElementChild.id = "p" + thread.id
 
@@ -134,8 +133,8 @@ function renderThread(thread: ThreadData): DocumentFragment {
 		.querySelector(".counters")
 		.textContent = `${thread.postCtr}/${thread.imageCtr}`
 	const $lastN = $links.querySelector("a.history")
-	$lastN.setAttribute("href", `${href}?last=${lastN}`)
-	$lastN.textContent = `${navigation.last} ${lastN}`
+	$lastN.setAttribute("href", `${href}?last=50`)
+	$lastN.textContent = `${navigation.last} 50`
 
 	frag.querySelector("h3").innerHTML = `「${escape(thread.subject)}」`
 

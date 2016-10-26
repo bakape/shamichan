@@ -28,7 +28,6 @@ interface Options extends ChangeEmitter {
 	replyRight: boolean
 	theme: string
 	userBG: boolean
-	lastN: number
 	alwaysLock: boolean
 	newPost: number
 	toggleSpoiler: number

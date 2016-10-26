@@ -241,17 +241,6 @@ export const specs = (): OptionSpec[] => {
 			tab: tabs.style
 		},
 
-		// Last N posts to display in a thread, if viewing in Last N mode
-		{
-			id: 'lastN',
-			type: optionType.number,
-			tab: tabs.general,
-			validation(n: number) {
-				return Number.isInteger(n) && n <= 500
-			},
-			default: 100,
-		},
-
 		// KEEP THREAD LENGTH WITHIN LASTN
 		// Disabled, until dependancy features are implemnted (see issue #280)
 		// {

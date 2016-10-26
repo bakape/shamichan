@@ -246,10 +246,6 @@
 				"",
 				"Arkaplan için resim seç"
 			],
-			"lastN": [
-				"[Son #]",
-				"'Son n' ile gösterilecek girdi sayısı"
-			],
 			"postUnloading": [
 				"Girdileri bellekten çıkar",
 				"Yukardan girdileri bellekten çıkararak performansı artırır"

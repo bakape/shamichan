@@ -51,8 +51,10 @@ func TestDetectLastN(t *testing.T) {
 		out      int
 	}{
 		{"no query string", "/a/1", 0},
-		{"within bounds", "/a/1?last=100", 100},
-		{"too large", "/a/1?last=1000", 0},
+		{"unparsable", "/a/1?last=addsa", 0},
+		{"5", "/a/1?last=5", 5},
+		{"50", "/a/1?last=50", 50},
+		{"invalid number", "/a/1?last=1000", 0},
 	}
 
 	for i := range cases {

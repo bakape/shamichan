@@ -49,6 +49,7 @@ export function initTemplates() {
 			"",
 			lang.navigation.return,
 			lang.navigation.top,
+			`${lang.navigation.last} 50`,
 		]
 		const actEls = frag.querySelectorAll("span a")
 		for (let i = 0; i < actEls.length; i++) {

@@ -44,7 +44,12 @@ export default async function navigate(
 		}
 	}
 	if (isSame) {
-		return scrollToAnchor()
+		// Soft reload the page
+		if (event && (event.target as Element).classList.contains("reload")) {
+			needPush = false
+		} else {
+			return scrollToAnchor()
+		}
 	}
 
 	if (event) {

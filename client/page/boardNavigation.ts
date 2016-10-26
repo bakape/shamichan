@@ -37,7 +37,7 @@ export default class BoardNavigation extends View<Model> {
 				html += " / "
 			}
 			html += HTML
-				`<a href="../${boards[i]}/" class="history">
+				`<a href="../${boards[i]}/" class="history reload">
 					${boards[i]}
 				</a>`
 		}
