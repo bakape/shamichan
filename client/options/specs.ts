@@ -241,13 +241,6 @@ export const specs = (): OptionSpec[] => {
 			tab: tabs.style
 		},
 
-		// KEEP THREAD LENGTH WITHIN LASTN
-		// Disabled, until dependancy features are implemnted (see issue #280)
-		// {
-		// 	id: 'postUnloading',
-		// 	tab: 0
-		// },
-
 		// Lock thread scrolling to bottom, when bottom in view, even when the
 		// tab is hidden
 		{

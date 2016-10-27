@@ -246,10 +246,6 @@
 				"",
 				"Arkaplan için resim seç"
 			],
-			"postUnloading": [
-				"Girdileri bellekten çıkar",
-				"Yukardan girdileri bellekten çıkararak performansı artırır"
-			],
 			"alwaysLock": [
 				"Her zaman aşağıda kal",
 				"Her zaman aşağıda kal"

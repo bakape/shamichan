@@ -246,10 +246,6 @@
 				"",
 				"Imagen para usar como fondo personalizado"
 			],
-			"postUnloading": [
-				"Descarga de posts dinámica",
-				"Mejora la capacidad de respuesta del thread mediante descargando posts desde la parte superior del thread, para que el numero de posts se mantenga dentro de el valor de Últimos #. Solamente se aplica a threads que tengan Last # activado"
-			],
 			"alwaysLock": [
 				"Siempre bloquear a la parte inferior",
 				"Bloquea scrolling a la parte inferior de la pagina incluso cuando la pestaña esta escondida"

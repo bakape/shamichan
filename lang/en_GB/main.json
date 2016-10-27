@@ -246,10 +246,6 @@
 				"",
 				"Image to use as the background"
 			],
-			"postUnloading": [
-				"Dynamic Post Unloading",
-				"Improves thread responsiveness by unloading posts from the top of the thread, so that post count stays within the Last # value. Only applies to Last # enabled threads"
-			],
 			"alwaysLock": [
 				"Always Lock to Bottom",
 				"Lock scrolling to page bottom even when tab is hidden"

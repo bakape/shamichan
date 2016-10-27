@@ -246,10 +246,6 @@
 				"",
 				"Imagem para usar como fundo"
 			],
-			"postUnloading": [
-				"Descarregamento dinâmico de posts",
-				"Torna a thread mais resposiva ao descarregar posts do topo da thread, para que a contagem de posts se mantenha no valor do Últimos #. Somente se aplica a threads com o Últimos # ativado."
-			],
 			"alwaysLock": [
 				"Sempre travar no rodapé",
 				"Trava o scroll da página no rodapé mesmo com a aba no fundo."
