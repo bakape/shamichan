@@ -115,13 +115,13 @@ export function on(
 }
 
 // Return width of element with padding and margin
-export function outerWidth(el: Element): number {
+export function outerWidth(el: HTMLElement): number {
 	const style = getComputedStyle(el)
 	const widths = [
 		style.marginLeft, style.marginRight, style.paddingLeft,
 		style.paddingRight
 	]
-	let total = 0
+	let total = el.offsetWidth
 	for (let width of widths) {
 		total += parseInt(width)
 	}

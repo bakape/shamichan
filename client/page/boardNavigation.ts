@@ -1,17 +1,19 @@
 import View from '../view'
 import Model from '../model'
-import {write} from '../render'
-import {HTML, makeAttrs} from '../util'
-import {fetchBoardList, BoardEntry} from "../json"
-import {ui} from '../lang'
-import {formatHeader} from './board'
+import { write } from '../render'
+import { HTML, makeAttrs } from '../util'
+import { fetchBoardList, BoardEntry } from "../json"
+import { ui } from '../lang'
+import { formatHeader } from './board'
 
 const selected = new Set<string>(),
-	$panel = document.getElementById("left-panel")
+	$panel = document.getElementById("left-panel"),
+	$spacer = document.getElementById("left-spacer")
 
 let boards: BoardEntry[],
 	navigation: BoardNavigation,
-	selectionPanel: BoardSelectionPanel
+	selectionPanel: BoardSelectionPanel,
+	lastPanelWidth: number
 
 // View for navigating between boards and selecting w
 export default class BoardNavigation extends View<Model> {
@@ -51,7 +53,7 @@ export default class BoardNavigation extends View<Model> {
 
 		write(() =>
 			(this.el.innerHTML = html,
-			document.querySelector("#banner").prepend(this.el)))
+				document.querySelector("#banner").prepend(this.el)))
 	}
 
 	toggleBoardSelectionPanel(el: Element) {
@@ -100,7 +102,7 @@ class BoardSelectionPanel extends View<Model> {
 
 		let boardList = ""
 		for (let {id, title} of boards) {
-			const attrs: {[key: string]: string} = {
+			const attrs: { [key: string]: string } = {
 				type: "checkbox",
 				name: id
 			}
@@ -194,6 +196,23 @@ function persistSelected() {
 	const data = JSON.stringify(Array.from(selected))
 	localStorage.setItem("selectedBoards", data)
 }
+
+// Shift thread to the right, when the side panel is rendered or mutated
+function shiftThread() {
+	const w = $panel.offsetWidth
+	if (w === lastPanelWidth) {
+		return
+	}
+	lastPanelWidth = w
+	$spacer.style.width = w + "px"
+}
+
+new MutationObserver(shiftThread).observe($panel, {
+	childList: true,
+	attributes: true,
+	characterData: true,
+	subtree: true,
+})
 
 // Read selected boards from localStorage
 const sel = localStorage.getItem("selectedBoards")

@@ -14,10 +14,10 @@ interface ParentNode {
 }
 
 interface NodeSelector {
-	querySelector(sel: string): Element
+	querySelector(sel: string): HTMLElement
 
 	// Hack. Modern browsers have Symbol.iterator on NodeList
-	querySelectorAll(sel: string): Element[]
+	querySelectorAll(sel: string): HTMLElement[]
 }
 
 interface EventTarget {

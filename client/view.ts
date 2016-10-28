@@ -3,7 +3,7 @@ import Model from './model'
 import {write} from './render'
 
 export interface ViewAttrs {
-	el?: Element
+	el?: HTMLElement
 	model?: Model
 	tag?: string
 	class?: string
@@ -13,7 +13,7 @@ export interface ViewAttrs {
 // Generic view class, that all over view classes extend
 export default class View<M> {
 	model: M
-	el: Element
+	el: HTMLElement
 	id: string|number
 
 	// Creates a new View and binds it to the target model, id any. If no

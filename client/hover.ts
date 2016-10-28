@@ -33,9 +33,9 @@ class PostPreview extends View<any> {
 	clickHandler: EventListener
 	observer: MutationObserver
 	$parent: HTMLAnchorElement
-	$source: Element
+	$source: HTMLElement
 
-	constructor(el: Element, parent: HTMLAnchorElement) {
+	constructor(el: HTMLElement, parent: HTMLAnchorElement) {
 		super({ el: clonePost(el) })
 		this.$parent = parent
 		this.$source = el
@@ -128,8 +128,8 @@ function clear() {
 }
 
 // Clone a post element as a preview
-function clonePost(el: Element): Element {
-	const preview = el.cloneNode(true) as Element
+function clonePost(el: HTMLElement): HTMLElement {
+	const preview = el.cloneNode(true) as HTMLElement
 	preview.removeAttribute("id")
 	preview.classList.add("preview")
 	return preview

@@ -4,7 +4,6 @@ import { PageState, boardConfig, posts, page } from '../state'
 import renderThread from './thread'
 import renderBoard from './board'
 import { ThreadData } from '../posts/models'
-import { read } from "../render"
 import { images, ui } from "../lang"
 import { write, $threads } from "../render"
 
@@ -29,11 +28,6 @@ export default async function (
 		const {threads, ctr} = data as BoardData
 		renderBoard(threads, ctr)
 	}
-
-	// Focus the thread container, so navigation keys (End, arrow keys, etc.)
-	// actually target this element, not the window.
-	read(() =>
-		$threads.focus())
 }
 
 // Format a block of text received from an untrusted user

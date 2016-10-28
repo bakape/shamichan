@@ -2,8 +2,8 @@
 
 import { page } from "./state"
 import options from "./options"
-import { $threads } from "./render"
 import { deferInit } from "./defer"
+import { $threads } from "./render"
 
 const $banner = document.getElementById("banner")
 
@@ -21,13 +21,19 @@ export function scrollToAnchor() {
 	if (!el) {
 		return scrollToTop()
 	}
-	el.scrollIntoView()
+	scrollToElement(el)
 	checkBottom()
 }
 
+// Scroll to particular element and compensate for the banner height
+export function scrollToElement(el: Element) {
+	el.scrollIntoView()
+	window.scrollBy(0, -$banner.offsetHeight - 5)
+}
+
 function scrollToTop() {
-	$threads.scrollTop = 0
-	checkBottom(0)
+	window.scrollTo(0, 0)
+	checkBottom()
 }
 
 // Lock position to the bottom of a thread or keep the viewport from bumping
@@ -53,28 +59,25 @@ export function followDOM(func: () => void) {
 		// Only compensate, if the height increased above the viewport
 		const delta = topDistance($reference, true) - previous
 		if (delta) {
-			$threads.scrollTop += delta
+			window.scrollBy(0, delta)
 		}
 	}
 }
 
 // Scroll to the bottom of the thread
 export function scrollToBottom() {
-	$threads.scrollTop = $threads.scrollHeight
+	window.scrollTo(0, document.documentElement.scrollHeight)
 	atBottom = true
 }
 
 // Set the scroll lock position to a post or to the bottom of the document
-export function checkBottom(scrollTop: number = $threads.scrollTop) {
+export function checkBottom() {
 	if (!page.thread) {
 		atBottom = false
 		return
 	}
-	const threadsBottom =
-		scrollTop
-		+ window.innerHeight
-		- $banner.offsetHeight
-	atBottom = threadsBottom >= $threads.scrollHeight
+	atBottom = window.innerHeight + window.scrollY
+		>= document.documentElement.offsetHeight
 	if (!$lock) {
 		$lock = document.querySelector("#lock") as HTMLElement
 	}
@@ -134,7 +137,7 @@ function onScroll() {
 }
 
 deferInit(() => {
-	$threads.addEventListener("scroll", onScroll, {
+	document.addEventListener("scroll", onScroll, {
 		passive: true,
 	})
 

@@ -39,7 +39,7 @@ export default class CaptchaView extends View<Model> {
 	widget: ACPuzzleController
 	id: string
 
-	constructor(el: Element) {
+	constructor(el: HTMLElement) {
 		super({el})
 		this.el.id = this.id = `captcha-${captchaCounter++}`
 		; (this.el as HTMLElement).hidden = false

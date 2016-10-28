@@ -7,7 +7,6 @@ import { synchronise } from './connection'
 import { postSM, postEvent } from "./posts/posting/main"
 import { scrollToAnchor } from "./scroll"
 import { connSM, connState } from "./connection"
-import { $threads } from "./render"
 
 history.scrollRestoration = "manual"
 
@@ -22,7 +21,7 @@ function handleClick(event: KeyboardEvent) {
 		((event.target as Element)
 			.closest("a.history") as HTMLAnchorElement)
 			.href
-	history.replaceState($threads.scrollTop, "")
+	history.replaceState(window.scrollY, "")
 	navigate(href, event, true).catch(alertError)
 }
 
@@ -75,7 +74,7 @@ export default async function navigate(
 
 	if (needPush) {
 		scrollToAnchor()
-		history.pushState($threads.scrollTop, "", nextState.href)
+		history.pushState(window.scrollY, "", nextState.href)
 	}
 	displayLoading(false)
 }
@@ -97,6 +96,7 @@ window.onpopstate = async e => {
 		.catch(alertError)
 	// Scroll to saved position
 	if (e.state !== null) {
-		$threads.scrollTop = e.state
+		window.scrollTo(0, e.state)
 	}
 }
+

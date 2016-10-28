@@ -4,6 +4,7 @@ import options from "./options"
 import { postForm, postSM, postEvent } from "./posts/posting/main"
 import { toggleExpandAll } from "./posts/images"
 import { page } from "./state"
+import { scrollToElement } from "./scroll"
 
 // Bind keyboard event listener to the document
 export default function bindListener() {
@@ -26,7 +27,7 @@ function handleShortcut(event: KeyboardEvent) {
 				.querySelector("aside:not(.expanded) .new-thread-button")
 			if (tf) {
 				(tf as HTMLElement).click()
-				tf.scrollIntoView()
+				scrollToElement(tf)
 			}
 			break
 		case options.done:

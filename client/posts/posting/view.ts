@@ -7,7 +7,7 @@ import { isMobile, boardConfig } from "../../state"
 import { setAttrs, makeFrag, applyMixins } from "../../util"
 import { parseTerminatedLine } from "../render/body"
 import { renderHeader, renderName } from "../render/posts"
-import { write, $threads } from "../../render"
+import { write } from "../../render"
 import { ui } from "../../lang"
 import { $threadContainer } from "../../page/thread"
 import { postSM, postEvent } from "./main"
@@ -176,7 +176,10 @@ export class FormView extends PostView implements UploadForm {
 
 		// Avoid spacer being seen, if thread is too short to fill the
 		// viewport.
-		if ($threadContainer.offsetHeight < $threads.offsetHeight) {
+		if (
+			$threadContainer.offsetHeight
+			< document.documentElement.offsetHeight
+		) {
 			return
 		}
 

@@ -10,6 +10,7 @@ import { getModel, posts } from "../state"
 import { trigger } from "../hooks"
 import { images as lang } from "../lang"
 import { deferInit } from "../defer"
+import { scrollToElement } from "../scroll"
 
 
 // Specs for hadnling image search link clicks
@@ -119,7 +120,7 @@ export default class ImageHandler extends View<Post> {
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
 		if (img.tallerThanViewport && !noScroll) {
-			this.el.scrollIntoView()
+			scrollToElement(this.el)
 		}
 
 		img.expanded = img.tallerThanViewport = img.revealed = false
@@ -137,7 +138,7 @@ export default class ImageHandler extends View<Post> {
 				cls += "fit-to-width"
 				img.tallerThanViewport = img.dims[1] > window.innerHeight
 				if (img.tallerThanViewport && !noScroll) {
-					this.el.scrollIntoView()
+					scrollToElement(this.el)
 				}
 				break
 			case "screen":

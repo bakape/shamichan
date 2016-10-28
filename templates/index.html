@@ -223,11 +223,14 @@
 	<div class="overlay" id="hover-overlay"></div>
 	<div id="page-container">
 		<section id="left-panel" class="side-panel glass"></section>
-		<section id="threads" tabindex="0">
+		<!-- Used to move #threads to the side, when a #left-panel is shown -->
+		<div id="left-spacer" class="side-spacer"></div>
+		<section id="threads">
 			<!-- Contains posts, page naviagation, title, image banner and the catalog !-->
 			<div id="threads"></div>
 		</section>
 		<section id="right-panel" class="side-panel glass"></section>
+		<div id="right-spacer" class="side-spacer"></div>
 	</div>
 	<!-- Dynamic module loader!-->
 	<script src="/assets/js/vendor/system.js"></script>
