@@ -174,12 +174,8 @@ export class FormView extends PostView implements UploadForm {
 			return
 		}
 
-		// Avoid spacer being seen, if thread is too short to fill the
-		// viewport.
-		if (
-			$threadContainer.offsetHeight
-			< document.documentElement.offsetHeight
-		) {
+		// Avoid spacer being seen, if thread is too short to fill the viewport
+		if ($threadContainer.offsetHeight < window.innerHeight) {
 			return
 		}
 
