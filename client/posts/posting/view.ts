@@ -13,6 +13,7 @@ import { $threadContainer } from "../../page/thread"
 import { postSM, postEvent } from "./main"
 import UploadForm, { FileData } from "./upload"
 import identity from "./identity"
+import { atBottom, scrollToBottom } from "../../scroll"
 
 // Element at the bottom of the thread to keep the fixed reply form from
 // overlaping any other posts, when scrolled till bottom
@@ -280,28 +281,29 @@ export class FormView extends PostView implements UploadForm {
 	// Transform form into a generic post. Removes any dangling form controls
 	// and frees up references.
 	cleanUp() {
-		write(() => {
-			this.el.classList.remove("reply-form")
-			if (this.$postControls) {
-				this.$postControls.remove()
+		this.el.classList.remove("reply-form")
+		if (this.$postControls) {
+			this.$postControls.remove()
+		}
+		if ($bottomSpacer) {
+			$bottomSpacer.style.height = ""
+			if (atBottom) {
+				scrollToBottom()
 			}
-			if ($bottomSpacer) {
-				$bottomSpacer.style.height = ""
-			}
-			if (this.observer) {
-				this.observer.disconnect()
-			}
-			this.$postControls
-				= $bottomSpacer
-				= this.observer
-				= this.$done
-				= this.$cancel
-				= this.$input
-				= this.$uploadInput
-				= this.$uploadStatus
-				= this.$spoiler
-				= null
-		})
+		}
+		if (this.observer) {
+			this.observer.disconnect()
+		}
+		this.$postControls
+			= $bottomSpacer
+			= this.observer
+			= this.$done
+			= this.$cancel
+			= this.$input
+			= this.$uploadInput
+			= this.$uploadStatus
+			= this.$spoiler
+			= null
 	}
 
 	// Clean up on form removal

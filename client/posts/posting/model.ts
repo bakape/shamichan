@@ -352,10 +352,6 @@ export class FormModel {
 
 	// Close the form and revert to regular post
 	commitClose() {
-
-		// TODO: Need some warning, if closing a post, when there is no
-		// connectivity. This might become very confusing otherwisse.
-
 		// Normalize state
 		this.state.line = this.inputState.line
 		this.view.cleanUp()

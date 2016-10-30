@@ -9,8 +9,10 @@ const $banner = document.getElementById("banner")
 
 let $lock: HTMLElement,
 	$reference: Element,
-	atBottom: boolean,
 	ticking: boolean
+
+// Indicates if the page is scrolled to its bottom
+export let atBottom: boolean
 
 // Scroll to target anchor element, if any
 export function scrollToAnchor() {
@@ -49,18 +51,17 @@ export function followDOM(func: () => void) {
 
 	// Prevent scrolling with new posts, if page isn't visible
 	if (atBottom) {
-		scrollToBottom()
-	} else {
-		// Element was removed or something
-		if (!elExists($reference)) {
-			return
-		}
+		return scrollToBottom()
+	}
+	// Element was removed or something
+	if (!elExists($reference)) {
+		return
+	}
 
-		// Only compensate, if the height increased above the viewport
-		const delta = topDistance($reference, true) - previous
-		if (delta) {
-			window.scrollBy(0, delta)
-		}
+	// Only compensate, if the height increased above the viewport
+	const delta = topDistance($reference, true) - previous
+	if (delta) {
+		window.scrollBy(0, delta)
 	}
 }
 
