@@ -17,6 +17,12 @@ const base64 =
 	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
 		.split("")
 
+// Precompute 00 - ff strings for conversion to hexadecimal strings
+const precomputedHex = new Array(256)
+for (let i = 0; i < 256; i++) {
+	precomputedHex[i] = (i < 16 ? '0' : '') + i.toString(16)
+}
+
 // Generate a random base64 string of desird length
 export function randomID(len: number): string {
 	let id = ''
@@ -309,4 +315,14 @@ export function hashString(s: string): number {
 		hash = ((hash << 5) - hash) + s.codePointAt(i)
 	}
 	return hash
+}
+
+// Encodes an ArrayBuffer to a hex string
+export function bufferToHex(buf: ArrayBuffer): string {
+	const binarray = new Uint8Array(buf),
+		res = new Array(buf.byteLength)
+	for (let i = 0; i < res.length; i++) {
+		res[i] = precomputedHex[binarray[i]]
+	}
+	return res.join('')
 }

@@ -1,11 +1,12 @@
 import { posts as lang } from '../../lang'
-import { HTML, commaList, load, setAttrs, makeFrag } from '../../util'
+import {
+	HTML, commaList, load, setAttrs, makeFrag, bufferToHex
+} from '../../util'
 import { write } from '../../render'
 import { postJSON, postText } from "../../json"
 import Model from "../../model"
 import identity from "./identity"
 import { Post } from "../models"
-import Rusha from "./sha1"
 
 // Uploaded file data to be embeded in thread and reply creation or appendage
 // requests
@@ -70,7 +71,8 @@ export default class UploadForm {
 		const r = new FileReader()
 		r.readAsArrayBuffer(file)
 		const {target: {result}} = await load(r) as ArrayBufferLoadEvent,
-			res = await postText("/uploadHash", new Rusha().digest(result))
+			hash = await crypto.subtle.digest("SHA-1", result),
+			res = await postText("/uploadHash", bufferToHex(hash))
 		if (res !== "-1") {
 			token = res
 		} else {

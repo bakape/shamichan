@@ -1,7 +1,4 @@
-/*
- Selects and loads the client files
- Use only pure ES5.
-*/
+// Selects and loads the client files and polyfills, if any
 
 (function () {
 	// Check if the client is an automated crawler
@@ -226,6 +223,11 @@
 			alert(err)
 			throw err
 		})
+
+		// Web Crypto API polyfill
+		if (!checkFunction("window.crypto.subtle.digest")) {
+			System.import("es6/sha1")
+		}
 
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker
