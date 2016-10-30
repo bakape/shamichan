@@ -1,8 +1,40 @@
-import {config, boardConfig} from '../../state'
+import { config, boardConfig } from '../../state'
 import options from '../../options'
-import {commaList, escape, setAttrs, pad} from '../../util'
-import {ImageData, fileTypes} from '../models'
-import {images as lang} from '../../lang'
+import { commaList, escape, setAttrs, pad } from '../../util'
+import { ImageData, fileTypes } from '../models'
+import { images as lang } from '../../lang'
+
+// Specs for hadnling image search link clicks
+type ImageSearchSpec = {
+	type: ISType
+	url: string
+}
+
+// Types of data requested by the search provider
+const enum ISType { thumb, MD5, SHA1 }
+
+const ISSpecs: ImageSearchSpec[] = [
+	{
+		type: ISType.thumb,
+		url: "https://www.google.com/searchbyimage?image_url=",
+	},
+	{
+		type: ISType.thumb,
+		url: "http://iqdb.org/?url=",
+	},
+	{
+		type: ISType.thumb,
+		url: "http://saucenao.com/search.php?db=999&url=",
+	},
+	{
+		type: ISType.MD5,
+		url: "https://desuarchive.org/_/search/image/",
+	},
+	{
+		type: ISType.SHA1,
+		url: "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
+	},
+]
 
 // Render a thumbnail of an image, according to configuration settings
 export function renderImage(
@@ -47,7 +79,29 @@ export function renderFigcaption(
 	}
 	info.innerHTML = `(${commaList(list)})`
 	imageLink(link, data)
+	renderImageSearch(el.querySelector(".image-search-container"), data)
 	el.hidden = false
+}
+
+// Assign URLs to image search links
+function renderImageSearch(cont: HTMLElement, img: ImageData) {
+	const ch = cont.children
+	for (let i = 0; i < ch.length; i++) {
+		const {type, url} = ISSpecs[i]
+		let arg: string
+		switch (type) {
+			case ISType.thumb:
+				arg = location.origin + thumbPath(img.SHA1, img.fileType)
+				break
+			case ISType.MD5:
+				arg = img.MD5
+				break
+			case ISType.SHA1:
+				arg = img.SHA1
+				break
+		}
+		ch[i].setAttribute("href", url + encodeURIComponent(arg))
+	}
 }
 
 // Render video/audio length in human readable form
@@ -91,7 +145,7 @@ function imageLink(el: Element, data: ImageData) {
 		ext = fileTypes[fileType],
 		fullName = `${escape(name)}.${ext}`,
 		tooLong = name.length >= 38
-	const attrs: {[key: string]: string} = {
+	const attrs: { [key: string]: string } = {
 		href: sourcePath(data.SHA1, data.fileType),
 		download: fullName,
 	}
@@ -111,7 +165,7 @@ function imageLink(el: Element, data: ImageData) {
 export function renderThumbnail(el: Element, data: ImageData, href: string) {
 	const src = sourcePath(data.SHA1, data.fileType)
 	let thumb: string,
-		[ , , thumbWidth, thumbHeight] = data.dims
+		[, , thumbWidth, thumbHeight] = data.dims
 
 	if (data.spoiler && options.spoilers) {
 		// Spoilered and spoilers enabled
@@ -130,10 +184,10 @@ export function renderThumbnail(el: Element, data: ImageData, href: string) {
 		thumbHeight *= 0.8333
 	}
 
-	const linkAttrs: {[key: string]: string} = {
+	const linkAttrs: { [key: string]: string } = {
 		href: href || src
 	}
-	const imgAttrs: {[key: string]: string} = {
+	const imgAttrs: { [key: string]: string } = {
 		src: thumb,
 		width: thumbWidth.toString(),
 		height: thumbHeight.toString()

@@ -1,8 +1,6 @@
 import { Post, fileTypes } from "./models"
 import View from "../view"
-import {
-	renderFigcaption, renderImage, sourcePath, thumbPath,
-} from "./render/image"
+import { renderFigcaption, renderImage, sourcePath, } from "./render/image"
 import { write, $threads } from "../render"
 import options from "../options"
 import { setAttrs, on } from "../util"
@@ -12,41 +10,8 @@ import { images as lang } from "../lang"
 import { deferInit } from "../defer"
 import { scrollToElement } from "../scroll"
 
-
-// Specs for hadnling image search link clicks
-type ImageSearchSpec = {
-	type: ISType
-	url: string
-}
-
-// Types of data requested by the search provider
-const enum ISType { thumb, MD5, SHA1 }
-
 // Expand all image thumbnails automatically
 export let expandAll = false
-
-const ISSpecs: { [engine: string]: ImageSearchSpec } = {
-	google: {
-		type: ISType.thumb,
-		url: "https://www.google.com/searchbyimage?image_url=",
-	},
-	iqdb: {
-		type: ISType.thumb,
-		url: "http://iqdb.org/?url=",
-	},
-	saucenao: {
-		type: ISType.thumb,
-		url: "http://saucenao.com/search.php?db=999&url=",
-	},
-	desustorage: {
-		type: ISType.MD5,
-		url: "https://desuarchive.org/_/search/image/",
-	},
-	exhentai: {
-		type: ISType.SHA1,
-		url: "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
-	},
-}
 
 // Mixin for image expansion and related functionality
 export default class ImageHandler extends View<Post> {
@@ -223,32 +188,6 @@ function toggleHiddenThumbnail(event: Event) {
 	model.image.revealed = !revealed
 }
 
-
-// Handle clicks on the image search links in the figcaption
-function handleImageSearch(event: Event) {
-	const el = event.target as Element,
-		model = getModel(el)
-	if (!model) {
-		return
-	}
-	const id = el.getAttribute("data-id"),
-		{image: img} = model,
-		{type, url} = ISSpecs[id]
-	let arg: string
-	switch (type) {
-		case ISType.thumb:
-			arg = location.origin + thumbPath(img.SHA1, img.fileType)
-			break
-		case ISType.MD5:
-			arg = img.MD5
-			break
-		case ISType.SHA1:
-			arg = img.SHA1
-			break
-	}
-	window.open(url + encodeURIComponent(arg), "_blank")
-}
-
 // Toggle image expansion on [Expand Images] click
 export function toggleExpandAll() {
 	expandAll = !expandAll
@@ -297,11 +236,6 @@ deferInit(() => {
 	on($threads, "click", toggleHiddenThumbnail, {
 		passive: true,
 		selector: ".image-toggle",
-	})
-
-	on($threads, "click", handleImageSearch, {
-		passive: true,
-		selector: ".image-search",
 	})
 
 	on($threads, "click", toggleExpandAll, {

@@ -66,9 +66,9 @@
 		</header>
 		<figcaption class="spaced" hidden>
 			<a class="image-toggle act" hidden></a>
-			<span class="spaced">
+			<span class="spaced image-search-container">
 				{{range .ImageSearch -}}
-				<a class="image-search {{.ID}}" data-id="{{.ID}}">
+				<a class="image-search {{.ID}}" target="_blank" rel="nofollow">
 					{{.Abbrev}}
 				</a>
 				{{- end}}
