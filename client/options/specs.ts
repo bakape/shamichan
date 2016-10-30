@@ -134,16 +134,18 @@ export const specs = (): OptionSpec[] => {
 			default: true,
 		},
 
-		// // Desktop Notifications
-		// {
-		// 	id: 'notification',
-		// 	tab: tabs.general,
-		// 	exec(toggle) {
-		// 		if (toggle && Notification.permission !== "granted") {
-		// 			Notification.requestPermission()
-		// 		}
-		// 	}
-		// },
+		// Desktop Notifications
+		{
+			id: "notification",
+			tab: tabs.general,
+			noLoad: isMobile,
+			default: true,
+			exec(enabled: boolean) {
+				if (enabled && Notification.permission !== "granted") {
+					Notification.requestPermission()
+				}
+			},
+		},
 
 		// Anonymise all poster names
 		{

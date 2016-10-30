@@ -73,3 +73,18 @@ interface ArrayBufferTarget extends EventTarget {
 interface ArrayBufferLoadEvent extends Event {
 	target: ArrayBufferTarget
 }
+
+declare class Notification {
+	static permission: string
+	onclick: () => void
+
+	constructor(title: string, options?: NotificationOptions)
+
+	close(): void
+	static requestPermission(): void
+}
+
+interface NotificationOptions {
+	body?: string
+	icon?: string
+}

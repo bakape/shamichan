@@ -3,8 +3,8 @@ import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
 import { SpliceResponse } from '../client'
-import { mine, storeSeenReply, seenReplies, page } from "../state"
-import { repliedToMe } from "../tab"
+import { mine, seenReplies, page } from "../state"
+import notifyAboutReply from "../notification"
 import { write } from "../render"
 
 // Generic link object containing target post board and thread
@@ -227,19 +227,14 @@ export class Post extends Model implements PostData {
 	// handlers
 	checkRepliedToMe(links: PostLinks) {
 		for (let key in links) {
-			if (mine.has(parseInt(key))) {
-				// In case there are multiple links to the same post
-				if (!seenReplies.has(this.id)) {
-					repliedToMe()
-					storeSeenReply(this.id)
-				}
-
-				this.view.addHighlight()
-
-				// TODO: Trigger Desktop Notification
-
-				break
+			if (!mine.has(parseInt(key))) {
+				continue
 			}
+			// In case there are multiple links to the same post
+			if (!seenReplies.has(this.id)) {
+				notifyAboutReply(this)
+			}
+			this.view.addHighlight()
 		}
 	}
 

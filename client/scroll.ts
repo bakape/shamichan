@@ -28,9 +28,8 @@ export function scrollToAnchor() {
 }
 
 // Scroll to particular element and compensate for the banner height
-export function scrollToElement(el: Element) {
-	el.scrollIntoView()
-	window.scrollBy(0, -$banner.offsetHeight - 5)
+export function scrollToElement(el: HTMLElement) {
+	window.scrollTo(0, el.offsetTop - $banner.offsetHeight - 5)
 }
 
 function scrollToTop() {

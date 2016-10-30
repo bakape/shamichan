@@ -79,11 +79,10 @@ function throwErr(err: ErrorEvent) {
 
 // Delete expired keys from post ID object stores
 function deleteExpired(name: string) {
-	const trans = db.transaction(name, "readwrite")
-	trans.onerror = throwErr
+	const trans = newTransaction(name, true),
+		range = IDBKeyRange.upperBound(Date.now()),
+		req = trans.index("expires").openCursor(range)
 
-	const range = IDBKeyRange.upperBound(Date.now()),
-		req = trans.objectStore(name).index("expires").openCursor(range)
 	req.onerror = throwErr
 
 	req.onsuccess = event => {

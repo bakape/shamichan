@@ -28,10 +28,8 @@ export function postAdded() {
 
 // Add enseen reply indicator to tab header
 export function repliedToMe() {
-	if (document.hidden) {
-		unseenReplies = true
-		resolve()
-	}
+	unseenReplies = true
+	resolve()
 }
 
 // Resolve tab title and favicon
