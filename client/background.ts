@@ -2,11 +2,11 @@
 
 import stackBlur from './stackBlur'
 import options from './options'
-import {config, displayLoading} from './state'
-import {HTML, load} from './util'
-import {db} from './db'
-import {write} from './render'
-import {$threadContainer} from "./page/thread"
+import { config, displayLoading } from './state'
+import { HTML, load } from './util'
+import { getObj, putObj } from './db'
+import { write } from './render'
+import { $threadContainer } from "./page/thread"
 
 type BackgroundStore = {
 	id: string
@@ -24,7 +24,7 @@ const container = document.createElement('div'),
 	style = document.createElement('style')
 
 // Map for transparency gradients to apply on top of the blurred background
-const colourMap: {[key: string]: BackgroundGradients} = {
+const colourMap: { [key: string]: BackgroundGradients } = {
 	glass: {
 		normal: 'rgba(40, 42, 46, 0.5)',
 		editing: 'rgba(145, 145, 145, 0.5)',
@@ -40,7 +40,7 @@ const colourMap: {[key: string]: BackgroundGradients} = {
 container.id = 'user-background'
 write(() =>
 	(document.body.append(container),
-	document.head.append(style)))
+		document.head.append(style)))
 
 // Listen to  changes in related options, that do not call render() directly
 const handler = () =>
@@ -53,7 +53,7 @@ for (let param of ['theme', 'workModeToggle']) {
 export function render(bg?: BackgroundStore) {
 	write(() =>
 		(container.innerHTML = '',
-		style.innerHTML = ''))
+			style.innerHTML = ''))
 
 	let showOPBG = false
 	if (options.illyaDance && config.illyaDance) {
@@ -98,11 +98,7 @@ function toggleOPBackground(on: boolean) {
 // needed.
 async function renderBackground(bg?: BackgroundStore) {
 	if (!bg) {
-		bg = await db
-			.transaction(['main'], 'readonly')
-			.objectStore('main')
-			.get('background')
-			.exec()
+		bg = await getObj<BackgroundStore>("main", "background")
 		if (!bg.normal || !bg.blurred) {
 			return
 		}
@@ -173,12 +169,7 @@ export async function store(file: File) {
 		normal,
 		blurred
 	}
-
-	await db
-		.transaction(['main'], 'readwrite')
-		.objectStore('main')
-		.put(bg)
-		.exec()
+	await putObj("main", bg)
 
 	if (options.userBG) {
 		render(bg)

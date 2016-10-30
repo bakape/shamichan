@@ -3,7 +3,7 @@
 import { storeHidden, hidden } from "../state"
 import { Post } from "./models"
 import { panel } from "../options/view"
-import { db, throwErr } from "../db"
+import { clearStore } from "../db"
 
 // TODO: Thread hiding
 
@@ -18,10 +18,5 @@ export function hidePost(model: Post) {
 export function clearHidden() {
 	hidden.clear()
 	panel.renderHidden(0)
-
-	const trans = db.transaction("hidden", "readwrite")
-	trans.onerror = throwErr
-
-	const req = trans.objectStore("hidden").clear()
-	req.onerror = throwErr
+	clearStore("hidden")
 }

@@ -1,7 +1,3 @@
-interface IDBRequest {
-	exec(): Promise<any>
-}
-
 interface ChildNode {
 	after(...nodes: (Node | string)[]): void
 	before(...nodes: (Node | string)[]): void
