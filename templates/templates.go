@@ -17,7 +17,7 @@ var (
 	// in tests.
 	TemplateRoot = "templates"
 
-	// resources conatains all available templates
+	// resources contains all available templates
 	resources = make(map[string]Store, 2)
 
 	// clientFileHash is the combined, shortened MD5 hash of all client files
@@ -31,9 +31,7 @@ var (
 		{"exhentai", "Ex"},
 	}
 
-	sortModes = []string{
-		"bump", "lastReply", "creation", "replyCount", "fileCount",
-	}
+	sortModes = []string{"lastReply", "creation", "replyCount", "fileCount"}
 
 	mu sync.RWMutex
 )

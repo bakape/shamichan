@@ -73,7 +73,6 @@ type BoardThread struct {
 	Auth        string `json:"auth,omitempty" gorethink:"auth,omitempty"`
 	Email       string `json:"email,omitempty" gorethink:"email,omitempty"`
 	Image       *Image `json:"image,omitempty" gorethink:"image,omitempty"`
-	BumpTime    int64  `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
 	Board       string `json:"board" gorethink:"board"`
 	Subject     string `json:"subject" gorethink:"subject"`
@@ -89,7 +88,6 @@ type Thread struct {
 	PostCtr  int16 `json:"postCtr" gorethink:"postCtr"`
 	ImageCtr int16 `json:"imageCtr" gorethink:"imageCtr"`
 	Post
-	BumpTime    int64  `json:"bumpTime" gorethink:"bumpTime"`
 	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
 	LastUpdated int64  `json:"lastUpdated" gorethink:"lastUpdated"`
 	Subject     string `json:"subject" gorethink:"subject"`
@@ -102,7 +100,6 @@ type DatabaseThread struct {
 	PostCtr   int16  `gorethink:"postCtr"`
 	ImageCtr  int16  `gorethink:"imageCtr"`
 	ID        int64  `gorethink:"id"`
-	BumpTime  int64  `gorethink:"bumpTime"`
 	ReplyTime int64  `gorethink:"replyTime"`
 	Subject   string `gorethink:"subject"`
 	Board     string `gorethink:"board"`

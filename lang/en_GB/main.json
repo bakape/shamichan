@@ -38,7 +38,6 @@
 		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
 		"refresh": "Refresh",
 		"sortModes": [
-			"Bump time",
 			"Last reply time",
 			"Creation time",
 			"Reply count",
@@ -137,7 +136,7 @@
 		],
 		"email": [
 			"Email",
-			"Email to include in new posts. If 'sage' is input, the parent thread will not be bumped on reply."
+			"Email to include in new posts"
 		],
 		"postPassword": [
 			"Password",

@@ -86,7 +86,6 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 	post.Board = req.Board
 	thread := types.DatabaseThread{
-		BumpTime:  now,
 		ReplyTime: now,
 		Board:     req.Board,
 	}
@@ -196,14 +195,9 @@ func insertPost(data []byte, c *Client) error {
 		return err
 	}
 
-	updates := make(map[string]interface{}, 5)
+	updates := make(map[string]interface{}, 3)
 	updates["postCtr"] = r.Row.Field("postCtr").Add(1)
 	updates["replyTime"] = now
-
-	// TODO: More dynamic maximum bump limit generation
-	if req.Email != "sage" && threadAttrs.PostCtr < config.Get().MaxBump {
-		updates["bumpTime"] = now
-	}
 
 	if !noImage {
 		img := req.Image

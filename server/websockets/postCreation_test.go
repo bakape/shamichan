@@ -169,8 +169,7 @@ func testCreateThread(t *testing.T) {
 	AssertDeepEquals(t, *post.Image, *stdPost.Image)
 
 	// Normalize timestamps and pointer fields
-	then := thread.BumpTime
-	stdThread.BumpTime = then
+	then := thread.ReplyTime
 	stdThread.ReplyTime = then
 	stdPost.Time = then
 	stdPost.LastUpdated = then
@@ -443,19 +442,17 @@ func TestPostCreation(t *testing.T) {
 	type threadAttrs struct {
 		PostCtr   int
 		ImageCtr  int
-		BumpTime  int64
 		ReplyTime int64
 	}
 
 	var attrs threadAttrs
-	q := db.FindThread(1).Pluck("postCtr", "imageCtr", "bumpTime", "replyTime")
+	q := db.FindThread(1).Pluck("postCtr", "imageCtr", "replyTime")
 	if err := db.One(q, &attrs); err != nil {
 		t.Fatal(err)
 	}
 	stdAttrs := threadAttrs{
 		PostCtr:   1,
 		ImageCtr:  2,
-		BumpTime:  then,
 		ReplyTime: then,
 	}
 	if attrs != stdAttrs {
@@ -484,14 +481,12 @@ func TestPostCreation(t *testing.T) {
 
 func prepareForPostCreation(t testing.TB) {
 	now := time.Now().Unix()
-	(*config.Get()).MaxBump = 500
 	assertTableClear(t, "main", "threads", "posts")
 	assertInsert(t, "threads", types.DatabaseThread{
 		ID:        1,
 		Board:     "a",
 		PostCtr:   0,
 		ImageCtr:  1,
-		BumpTime:  now,
 		ReplyTime: now,
 	})
 	populateMainTable(t)
@@ -623,98 +618,8 @@ func assertImageCounter(t *testing.T, id int64, ctr int) {
 	}
 }
 
-func TestBumpLimit(t *testing.T) {
-	assertTableClear(t, "main", "threads", "posts")
-
-	(*config.Get()).MaxBump = 10
-	then := time.Now().Add(-time.Minute).Unix()
-
-	assertInsert(t, "threads", types.DatabaseThread{
-		ID:        1,
-		PostCtr:   10,
-		Board:     "a",
-		BumpTime:  then,
-		ReplyTime: then,
-	})
-	populateMainTable(t)
-	setBoardConfigs(t, true)
-
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	Clients.add(cl, SyncID{1, "a"})
-	defer Clients.Clear()
-
-	req := replyCreationRequest{
-		Body: "a",
-		postCreationCommon: postCreationCommon{
-			Password: "123",
-		},
-	}
-	if err := insertPost(marshalJSON(t, req), cl); err != nil {
-		t.Fatal(err)
-	}
-
-	var res types.DatabaseThread
-	if err := db.One(db.FindThread(1), &res); err != nil {
-		t.Fatal(err)
-	}
-	if res.BumpTime != then {
-		t.Errorf("unexpected bump time: %d : %d", then, res.BumpTime)
-	}
-	if res.ReplyTime <= then {
-		t.Error("invalid reply time")
-	}
-}
-
-func TestSaging(t *testing.T) {
-	assertTableClear(t, "main", "threads", "posts")
-
-	(*config.Get()).MaxBump = 10
-	then := time.Now().Add(-time.Minute).Unix()
-	assertInsert(t, "threads", types.DatabaseThread{
-		ID:        1,
-		Board:     "a",
-		BumpTime:  then,
-		ReplyTime: then,
-	})
-	populateMainTable(t)
-	setBoardConfigs(t, true)
-
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	Clients.add(cl, SyncID{1, "a"})
-	defer Clients.Clear()
-
-	req := replyCreationRequest{
-		Body: "a",
-		postCreationCommon: postCreationCommon{
-			Password: "123",
-			Email:    "sage",
-		},
-	}
-	if err := insertPost(marshalJSON(t, req), cl); err != nil {
-		t.Fatal(err)
-	}
-
-	var res types.DatabaseThread
-	q := db.FindThread(1).Pluck("replyTime", "bumpTime")
-	if err := db.One(q, &res); err != nil {
-		t.Fatal(err)
-	}
-	if res.BumpTime != then {
-		t.Errorf("unexpected bump time: %d : %d", then, res.BumpTime)
-	}
-	if res.ReplyTime <= then {
-		t.Error("invalid reply time")
-	}
-}
-
 func TestPostCreationWithNewlines(t *testing.T) {
 	assertTableClear(t, "main", "threads", "posts")
-
-	(*config.Get()).MaxBump = 500
 	assertInsert(t, "threads", types.DatabaseThread{
 		ID:    1,
 		Board: "a",

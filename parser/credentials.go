@@ -54,7 +54,7 @@ func ParseSubject(s string) (string, error) {
 
 // FormatEmail validates and checks
 func FormatEmail(email string) string {
-	if email == "" || email == "sage" || len(email) > maxLengthEmail {
+	if email == "" || len(email) > maxLengthEmail {
 		return ""
 	}
 	return strings.TrimSpace(email)

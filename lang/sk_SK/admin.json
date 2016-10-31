@@ -49,10 +49,6 @@
 		"Threads per board limit",
 		"Maximum number of threads a board will retain, before the last ones are deleted, if thread pruning is enabled"
 	],
-	"maxBump": [
-		"Limit na drganie do vlákna",
-		"Maximum number of replies a thread may have, before it no longer is bumped to the top of the board"
-	],
 	"sessionExpiry": [
 		"Vypršanie sedenia pre účet",
 		"Čas v počte dňoch, kedy sa uživateľské účty automaticky odhlásia"

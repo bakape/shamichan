@@ -124,7 +124,6 @@ func TestFormatEmail(t *testing.T) {
 		name, in, out string
 	}{
 		{"empty", "", ""},
-		{"sage", "sage", ""},
 		{"normal", "foo", "foo"},
 		{"too long", genString(maxLengthEmail + 1), ""},
 	}

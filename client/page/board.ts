@@ -14,8 +14,6 @@ type SortFunction = (a: ThreadData, b: ThreadData) => number
 
 // Thread sort functions
 const sorts: { [name: string]: SortFunction } = {
-	bump: (a, b) =>
-		b.bumpTime - a.bumpTime,
 	lastReply: (a, b) =>
 		b.replyTime - a.replyTime,
 	creation: (a, b) =>
@@ -76,8 +74,15 @@ function render(threads: ThreadData[]) {
 			$rc.append(formatText(rules))
 		}
 	}
+
+
+	let sortMode = localStorage.getItem("catalogSort")
+	// "bump" is a legacy sort mode. Account for clients explicitly set to it.
+	if (!sortMode || sortMode === "bump") {
+		sortMode = "lastReply"
+	}
 	(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
-		.value = localStorage.getItem("catalogSort") || "bump"
+		.value = sortMode
 
 	renderRefreshButton(frag.querySelector("#refresh"))
 
@@ -90,7 +95,8 @@ function render(threads: ThreadData[]) {
 
 // Sort, filter and render all threads on a board
 function renderThreads(
-	filter: string, threads: ThreadData[],
+	filter: string,
+	threads: ThreadData[],
 ): DocumentFragment {
 	if (filter) {
 		const r = new RegExp(filter, "i")
@@ -98,7 +104,9 @@ function renderThreads(
 			r.test(`/${board}/`) || r.test(subject))
 	}
 
-	threads = threads.sort(sorts[localStorage.getItem("catalogSort") || "bump"])
+	const sortFunc = sorts[localStorage.getItem("catalogSort")]
+		|| sorts["lastReply"]
+	threads = threads.sort(sortFunc)
 
 	const frag = document.createDocumentFragment(),
 		threadEls: DocumentFragment[] = new Array(threads.length)

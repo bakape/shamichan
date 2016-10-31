@@ -39,7 +39,6 @@ var (
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
 		MaxThreads:    100,
-		MaxBump:       1000,
 		JPEGQuality:   80,
 		PNGQuality:    20,
 		MaxSize:       5,
@@ -86,7 +85,6 @@ type Configs struct {
 	MaxWidth          uint16 `json:"maxWidth" gorethink:"maxWidth"`
 	MaxHeight         uint16 `json:"maxHeight" gorethink:"maxHeight"`
 	MaxThreads        int    `json:"maxThreads" gorethink:"maxThreads"`
-	MaxBump           int    `json:"maxBump" gorethink:"maxBump"`
 	JPEGQuality       int
 	PNGQuality        int
 	MaxSize           int64         `json:"maxSize" gorethink:"maxSize"`

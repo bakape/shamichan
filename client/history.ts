@@ -70,7 +70,7 @@ export default async function navigate(
 	renderPage()
 	await pageLoader
 	postSM.feed(postEvent.reset)
-	synchronise(false)
+	await synchronise(false)
 
 	if (needPush) {
 		scrollToAnchor()

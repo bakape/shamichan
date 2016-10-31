@@ -15,7 +15,6 @@ type ServerConfigs = {
 	maxWidth: number
 	maxHeight: number
 	maxThreads: number
-	maxBump: number
 	JPEGQuality: number
 	PNGQuality: number
 	threadCooldown: number
@@ -48,11 +47,6 @@ const specs: InputSpec[] = [
 	},
 	{
 		name: "maxThreads",
-		type: inputType.number,
-		min: 1,
-	},
-	{
-		name: "maxBump",
 		type: inputType.number,
 		min: 1,
 	},

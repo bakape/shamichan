@@ -60,7 +60,6 @@ export interface ThreadData extends PostData {
 	postCtr: number
 	imageCtr: number
 	logCtr: number
-	bumpTime: number
 	replyTime: number
 	subject: string
 	board: string
@@ -290,7 +289,6 @@ export class OP extends Post implements ThreadData {
 	postCtr: number
 	imageCtr: number
 	logCtr: number
-	bumpTime: number
 	replyTime: number
 	subject: string
 	board: string

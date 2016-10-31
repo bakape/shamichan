@@ -49,10 +49,6 @@
 		"Ліміт тхредів на дошку",
 		"Максимальна кількість тхредів на  Maximum number of threads a board will retain, before the last ones are deleted, if thread pruning is enabled"
 	],
-	"maxBump": [
-		"Ліміт постів",
-		"Максимальна кількість постів після тхрід не буде більше підніматися"
-	],
 	"sessionExpiry": [
 		"Час дії сесії",
 		"Час в днях поки аккаунт буде автоматично розлогінено"
