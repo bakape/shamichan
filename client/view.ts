@@ -17,7 +17,7 @@ export default class View<M> {
 	id: string|number
 
 	// Creates a new View and binds it to the target model, id any. If no
-	// element suplied, creates a new one from the attributes.
+	// element supplied, creates a new one from the attributes.
 	constructor({el, model, tag, class: cls, id}: ViewAttrs) {
 		if (model) {
 			this.model = model as any

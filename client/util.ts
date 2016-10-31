@@ -23,7 +23,7 @@ for (let i = 0; i < 256; i++) {
 	precomputedHex[i] = (i < 16 ? '0' : '') + i.toString(16)
 }
 
-// Generate a random base64 string of desird length
+// Generate a random base64 string of passed length
 export function randomID(len: number): string {
 	let id = ''
 	for (let i = 0; i < len; i++) {
@@ -169,7 +169,7 @@ export function setAttrs(el: Element, attrs: { [key: string]: string }) {
 	}
 }
 
-// Makes a ', ' seperated list
+// Makes a ', ' separated list
 export function commaList(items: string[]): string {
 	let html = ''
 	for (let item of items) {
@@ -260,7 +260,7 @@ export function escape(str: string): string {
 		escapeMap[char])
 }
 
-// Construct a table from an array of objects and a consumer funtion,
+// Construct a table from an array of objects and a consumer function,
 // that returns an array of cells.
 export function table<T>(rows: T[], func: (arg: T) => string[]): string {
 	let html = '<table>'
@@ -319,10 +319,10 @@ export function hashString(s: string): number {
 
 // Encodes an ArrayBuffer to a hex string
 export function bufferToHex(buf: ArrayBuffer): string {
-	const binarray = new Uint8Array(buf),
+	const b = new Uint8Array(buf),
 		res = new Array(buf.byteLength)
 	for (let i = 0; i < res.length; i++) {
-		res[i] = precomputedHex[binarray[i]]
+		res[i] = precomputedHex[b[i]]
 	}
 	return res.join('')
 }

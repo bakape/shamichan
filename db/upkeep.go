@@ -118,7 +118,7 @@ func closeDanglingPosts() error {
 	return Write(postClosingQuery)
 }
 
-// Remove any expired image tokens and decrement or dealocate their target
+// Remove any expired image tokens and decrement or deallocate their target
 // image's assets
 func expireImageTokens() error {
 	var toDealloc []string
@@ -161,7 +161,7 @@ func deleteUnusedBoards() error {
 		}
 
 		// Perform board deletion after all threads are deleted, so there are
-		// less consequences to an interupted cleanup task.
+		// less consequences to an interrupted cleanup task.
 		q = r.Table("boards").Get(board).Delete()
 		if err := Write(q); err != nil {
 			return err
@@ -171,7 +171,7 @@ func deleteUnusedBoards() error {
 	return nil
 }
 
-// DeleteThread deletes a thread from the database and dealocated any freed up
+// DeleteThread deletes a thread from the database and deallocated any freed up
 // images
 func DeleteThread(id int64) error {
 	if err := Write(FindThread(id).Delete()); err != nil {
@@ -188,7 +188,7 @@ func DeleteThread(id int64) error {
 		Field("old_val").
 		Field("image").
 		Field("SHA1").
-		Default("") // Aready deleted by another backend instance or no image
+		Default("") // Already deleted by another backend instance or no image
 	var images []string
 	if err := All(q, &images); err != nil {
 		return err

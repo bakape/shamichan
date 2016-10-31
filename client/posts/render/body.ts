@@ -32,7 +32,7 @@ function parseClosedBody(data: PostData): string {
 	return html
 }
 
-// Parse a text body, that is still being editted
+// Parse a text body, that is still being edited
 function parseOpenBody(data: PostData): string {
 	const state: TextState = data.state = {
 		spoiler: false,
@@ -53,7 +53,7 @@ function parseOpenBody(data: PostData): string {
 
 // Parse a single terminated line
 export function parseTerminatedLine(line: string, data: PostData): string {
-	// For hiding redudndant newlines using CSS
+	// For hiding redundant newlines using CSS
 	if (line === "") {
 		return "<br>"
 	}
@@ -109,7 +109,7 @@ function terminateTags(state: TextState, newLine: boolean): string {
 	return html + "</span>"
 }
 
-// Parse a line that is still being editted
+// Parse a line that is still being edited
 export function parseOpenLine(state: TextState): string {
 	let html = "<span>"
 	if (state.line[0] === ">") {
@@ -178,17 +178,17 @@ function parsePostLink(bit: string, links: PostLinks): string {
 	if (!links) {
 		return escape(bit)
 	}
-	const [, extraQoutes, id] = bit.match(/^>>(>*)(\d+)$/),
+	const [, extraQuotes, id] = bit.match(/^>>(>*)(\d+)$/),
 		num = parseInt(id),
 		verified = links[num]
 	if (!verified) {
 		return escape(bit)
 	}
-	return escape(extraQoutes)
+	return escape(extraQuotes)
 		+ renderPostLink(num, verified.board, verified.op)
 }
 
-// Generate all possible refference name and link pairs for externa
+// Generate all possible reference name and link pairs for external
 // `>>>/foo/bar` links
 export function genRefTargets() {
 	const targets: { [key: string]: string } = {}
@@ -205,12 +205,12 @@ export function genRefTargets() {
 
 // Parse internal or customly set reference URL
 function parseReference(bit: string): string {
-	const [, extraQoutes, name] = bit.match(/^>>>(>*)\/(\w+)\/$/),
+	const [, extraQuotes, name] = bit.match(/^>>>(>*)\/(\w+)\/$/),
 		href = refTargets[name]
 	if (!href) {
 		return escape(bit)
 	}
-	return escape(extraQoutes) + newTabLink(href, bit)
+	return escape(extraQuotes) + newTabLink(href, bit)
 }
 
 // Render and anchor link that opens in a new tab
@@ -218,7 +218,7 @@ function newTabLink(href: string, text: string): string {
 	return `<a href="${encodeURI(href)}" target="_blank">${escape(text)}</a>`
 }
 
-// Render generic URLs and embed, if aplicable
+// Render generic URLs and embed, if applicable
 function parseURL(bit: string): string {
 	const embed = parseEmbeds(bit)
 	if (embed) {

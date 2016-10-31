@@ -16,7 +16,7 @@ var (
 	// Address is the listening address of the HTTP web server
 	address = ":8000"
 
-	// Defines if HTTPS should be used for listening for incomming connections.
+	// Defines if HTTPS should be used for listening for incoming connections.
 	// Requires sslCert and sslKey to be set.
 	ssl bool
 
@@ -26,7 +26,7 @@ var (
 	// Path to SSL key
 	sslKey string
 
-	// Defines, if all trafic should be piped through a gzip compression
+	// Defines, if all traffic should be piped through a gzip compression
 	// -decompression handler
 	enableGzip bool
 
@@ -79,7 +79,7 @@ func createRouter() http.Handler {
 	json.POST("/spoiler", wrapHandler(spoilerImage))
 	json.GET("/boardTimestamps", wrapHandler(serveBoardTimestamps))
 
-	// Adminitration JSON API for logged in users
+	// Administration JSON API for logged in users
 	admin := r.NewGroup("/admin")
 	admin.POST("/configureBoard", wrapHandler(configureBoard))
 	admin.POST("/boardConfig", wrapHandler(servePrivateBoardConfigs))

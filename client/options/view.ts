@@ -59,7 +59,7 @@ export default class OptionsPanel extends TabbedModal {
 	assignValue(id: string, type: optionType, val: any) {
 		const el = this.el.querySelector('#' + id) as HTMLInputElement
 
-		// Pannel not rendered yet
+		// Panel not rendered yet
 		if (!el) {
 			return
 		}
@@ -144,7 +144,7 @@ export default class OptionsPanel extends TabbedModal {
 		reader.readAsText(this.$import.files[0])
 		const event = await load(reader) as any
 
-		// In case of curruption
+		// In case of corruption
 		let json: { [key: string]: string }
 		try {
 			json = JSON.parse(event.target.result)
@@ -162,7 +162,7 @@ export default class OptionsPanel extends TabbedModal {
 		location.reload()
 	}
 
-	// Render Hiden posts counter
+	// Render Hidden posts counter
 	renderHidden(count: number) {
 		if (!this.isRendered) {
 			return

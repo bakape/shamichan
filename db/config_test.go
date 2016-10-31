@@ -78,7 +78,7 @@ func TestUpdateOnAddBoard(t *testing.T) {
 	AssertDeepEquals(t, config.GetBoards(), []string{"a"})
 }
 
-func TestUpdateBoatrdConfigs(t *testing.T) {
+func TestUpdateBoardConfigs(t *testing.T) {
 	config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
 	})

@@ -54,14 +54,14 @@ class Rusha {
         // The size of the heap is the sum of:
         // 1. The padded input message size
         // 2. The extended space the algorithm needs (320 byte)
-        // 3. The 160 bit state the algoritm uses
+        // 3. The 160 bit state the algorithm uses
         this.heap = new ArrayBuffer(ceilHeapSize)
         this.h32 = new Int32Array(this.heap)
         this.h8 = new Int8Array(this.heap)
     }
 
     private padChunk(chunkLen: number, msgLen: number) {
-        const padChunkLen = padlen(chunkLen),
+        const padChunkLen = padLen(chunkLen),
             view = new Int32Array(this.heap, 0, padChunkLen >> 2)
         padZeroes(view, chunkLen)
         padData(view, chunkLen, msgLen)
@@ -79,7 +79,7 @@ class Rusha {
         const msgLen = str.byteLength
         initState(this.heap)
 
-        // Initialze asm.js function
+        // Initialize asm.js function
         this.core = RushaCore({ Int32Array, DataView }, {}, this.heap).hash
 
         let chunkOffset = 0,
@@ -114,7 +114,7 @@ class Rusha {
 
     // Write data to the heap
     private write(data: ArrayBuffer, chunkOffset: number, chunkLen: number) {
-        convBuf(data, this.h8, this.h32, chunkOffset, chunkLen, 0)
+        convertBuffer(data, this.h8, this.h32, chunkOffset, chunkLen, 0)
     }
 }
 
@@ -210,7 +210,7 @@ function RushaCore(stdlib: any, foreign: any, heap: ArrayBuffer) {
 
 // Calculate the length of buffer that the sha1 routine uses
 // including the padding.
-function padlen(len: number) {
+function padLen(len: number) {
     for (len += 9; len % 64 > 0; len += 1);
     return len
 }
@@ -231,7 +231,7 @@ function padData(bin: Int32Array, chunkLen: number, msgLen: number) {
 
 // Convert a buffer or array and write it to the heap.
 // The buffer or array is expected to only contain elements < 256.
-function convBuf(
+function convertBuffer(
     data: ArrayBuffer,
     H8: Int8Array,
     H32: Int32Array,

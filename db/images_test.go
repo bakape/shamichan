@@ -21,7 +21,7 @@ type allocationTester struct {
 	paths        [2]string
 }
 
-func newAllocatioTester(
+func newAllocationTester(
 	t *testing.T,
 	source,
 	name string,
@@ -63,14 +63,14 @@ func assertImageRefCount(t *testing.T, id string, count int) {
 func TestFindImageThumb(t *testing.T) {
 	assertTableClear(t, "images")
 
-	t.Run("nonexistant image", func(t *testing.T) {
+	t.Run("nonexistent image", func(t *testing.T) {
 		t.Parallel()
 		_, err := FindImageThumb("sha")
 		if err != r.ErrEmptyResult {
 			UnexpectedError(t, err)
 		}
 	})
-	t.Run("existant image", testFindImageThumb)
+	t.Run("existent image", testFindImageThumb)
 }
 
 func testFindImageThumb(t *testing.T) {
@@ -130,7 +130,7 @@ func testRemoveImage(t *testing.T) {
 		},
 		Posts: 1,
 	})
-	at := newAllocatioTester(t, "sample.jpg", id, types.JPEG)
+	at := newAllocationTester(t, "sample.jpg", id, types.JPEG)
 	at.Allocate()
 
 	if err := DeallocateImage(id); err != nil {
@@ -156,7 +156,7 @@ func TestCleanUpFailedAllocation(t *testing.T) {
 	defer setupImageDirs(t)()
 
 	const id = "123"
-	at := newAllocatioTester(t, "sample.jpg", id, types.JPEG)
+	at := newAllocationTester(t, "sample.jpg", id, types.JPEG)
 	at.Allocate()
 	path := filepath.Join("images", "thumb", id+".jpg")
 	if err := os.Remove(path); err != nil {

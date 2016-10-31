@@ -201,7 +201,7 @@ func TestDeleteThread(t *testing.T) {
 
 	t.Run("without images", deleteThreadWithoutImages)
 	t.Run("with images", deleteThreadWithImages)
-	t.Run("nonexitant thread", deleteMissingThread)
+	t.Run("nonexistent thread", deleteMissingThread)
 }
 
 func deleteThreadWithoutImages(t *testing.T) {
@@ -390,10 +390,10 @@ func TestDeleteUnusedBoards(t *testing.T) {
 		assertDeleted(t, r.Table("boards").Get("x"), false)
 	})
 
-	t.Run("board with threads", testDeleteUnsusedBoards)
+	t.Run("board with threads", testDeleteUnusedBoards)
 }
 
-func testDeleteUnsusedBoards(t *testing.T) {
+func testDeleteUnusedBoards(t *testing.T) {
 	(*config.Get()).PruneBoards = true
 	expired := time.Now().Add((-week - 1) * time.Second)
 	fresh := time.Now()

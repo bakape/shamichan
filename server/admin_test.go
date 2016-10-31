@@ -219,14 +219,14 @@ func TestValidateConfigs(t *testing.T) {
 		{
 			"too many eightball answers",
 			config.BoardConfigs{
-				Eightball: make([]string, maxEigthballLen+1),
+				Eightball: make([]string, maxEightballLen+1),
 			},
 			errTooManyAnswers,
 		},
 		{
 			"compound eightball length to big",
 			config.BoardConfigs{
-				Eightball: []string{genString(maxEigthballLen + 1)},
+				Eightball: []string{genString(maxEightballLen + 1)},
 			},
 			errEightballTooLong,
 		},

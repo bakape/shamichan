@@ -19,7 +19,7 @@ export default class FSM<S, E> {
 		this.stateHandlers.add(state as any, handler)
 	}
 
-	// Specify state transition and a handler to execute on it. The hendler must
+	// Specify state transition and a handler to execute on it. The handler must
 	// return the next state of FSM.
 	act(start: S, event: E, handler: (arg?: any) => S) {
 		this.transitions[this.transitionString(start, event)] = handler

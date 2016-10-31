@@ -18,7 +18,7 @@ export function setTitle(t: string) {
 	resolve()
 }
 
-// Incerement unseen post number, if tab is hidden
+// Increment unseen post number, if tab is hidden
 export function postAdded() {
 	if (document.hidden) {
 		unseenPosts++
@@ -26,7 +26,7 @@ export function postAdded() {
 	}
 }
 
-// Add enseen reply indicator to tab header
+// Add unseen reply indicator to tab header
 export function repliedToMe() {
 	unseenReplies = true
 	resolve()
@@ -63,7 +63,7 @@ function apply(prefix: string, favicon: string) {
 	$favicon.setAttribute("href", favicon)
 }
 
-// Account for immeadiate recconection and only render favicon, if not
+// Account for immediate reconnection and only render favicon, if not
 // reconnected in 5 seconds
 function delayedDiscoRender() {
 	setTimeout(() => {

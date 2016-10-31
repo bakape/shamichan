@@ -120,8 +120,8 @@ func newImageUpload(req *http.Request) (int, string, error) {
 		return 400, "", err
 	}
 
-	// TODO: A scheduler based on availablr RAM, so we don't run out of memory,
-	// with concurent burst loads.
+	// TODO: A scheduler based on available RAM, so we don't run out of memory,
+	// with concurrent burst loads.
 
 	file, _, err := req.FormFile("image")
 	if err != nil {
@@ -199,7 +199,7 @@ func newThumbnail(data []byte, img types.ImageCommon) (int, string, error) {
 }
 
 // detectFileType detects if the upload is of a supported file type, by reading
-// its first 512 bytes. OGG and MP4 are also cheked to contain HTML5 supported
+// its first 512 bytes. OGG and MP4 are also checked to contain HTML5 supported
 // video and audio streams.
 func detectFileType(buf []byte) (uint8, error) {
 	mimeType := http.DetectContentType(buf)
@@ -225,7 +225,7 @@ func detectSVG(buf []byte) (bool, error) {
 	return false, nil
 }
 
-// Concurently delegate the processing of the file to an apropriate function by
+// Concurently delegate the processing of the file to an appropriate function by
 // file type
 func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 	ch := make(chan thumbResponse)

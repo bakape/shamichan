@@ -31,7 +31,7 @@ export default function (): string {
 		opts[i] = filter(byTab[i], spec =>
 			!spec.noLoad && !spec.hidden)
 
-		// All options disaled
+		// All options disabled
 		if (!opts[i].length) {
 			continue
 		}

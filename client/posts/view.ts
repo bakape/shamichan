@@ -155,7 +155,7 @@ export default class PostView extends ImageHandler {
 			renderTime(this.el.querySelector("time"), this.model.time, false))
 	}
 
-	// Add highlight to post because it lnked a post the client made, the
+	// Add highlight to post because it linked a post the client made, the
 	// client made it or similar.
 	addHighlight() {
 		write(() =>
@@ -179,7 +179,7 @@ export class OPView extends PostView {
 		this.el.querySelector(".post-container").append($omit)
 	}
 
-	// Render posts and images omited indicator
+	// Render posts and images omitted indicator
 	renderOmit() {
 		let images = 0,
 			replies = -1

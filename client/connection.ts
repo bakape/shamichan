@@ -28,7 +28,7 @@ export const enum message {
 	insertImage,
 	spoiler,
 
-	// >= 30 are miscelenious and do not write to post models
+	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,
 	reclaim,
 	switchSync,
@@ -58,7 +58,7 @@ export type MessageHandler = (msg: {}) => void
 // type.
 export const handlers: { [type: number]: MessageHandler } = {}
 
-// Websocket connection and syncronisation with server states
+// Websocket connection and synchronization with server states
 const enum syncStatus { disconnected, connecting, syncing, synced, desynced }
 
 // States of the connection finite state machine
@@ -116,7 +116,7 @@ function nullSocket() {
 	}
 }
 
-// Render connction status indicator
+// Render connection status indicator
 function renderStatus(status: syncStatus) {
 	write(() =>
 		syncEl.textContent = lang[status])
@@ -152,7 +152,7 @@ function leftPad(type: message): string {
 
 // Routes messages from the server to the respective handler
 function onMessage(data: string, extracted: boolean) {
-	// First two charecters of a message define its type
+	// First two characters of a message define its type
 	const type = parseInt(data.slice(0, 2))
 
 	if (debug) {
@@ -178,7 +178,7 @@ function onMessage(data: string, extracted: boolean) {
 	}
 }
 
-// Update the thread synchronisation timestamp
+// Update the thread synchronization timestamp
 export function updateSyncTimestamp() {
 	syncTimestamp = Date.now()
 }
@@ -190,11 +190,11 @@ function prepareToSync(): connState {
 	return connState.syncing
 }
 
-// Send a requests to the server to syschronise to the current page and
-// subscribe to the apropriate event feeds and optionally try to send a logged
+// Send a requests to the server to synchronise to the current page and
+// subscribe to the appropriate event feeds and optionally try to send a logged
 // in user session authentication request.
 export async function synchronise(auth: boolean) {
-	// If thread data is too old because of disconnect, computer suspention or
+	// If thread data is too old because of disconnect, computer suspension or
 	// resuming old tabs, refetch and sync differences. The actual deadline
 	// is 30 seconds, but a ten second buffer is probably sound.
 	if (page.thread && Date.now() - syncTimestamp > 20000) {
@@ -205,7 +205,7 @@ export async function synchronise(auth: boolean) {
 		// ID of the first non-OP post that we have rendered, or OP, if none
 		const firstID = Object.keys(posts.models).sort()[1] || page.thread
 		for (let post of data.posts) {
-			// Filter posts that we never retrived in lastN mode
+			// Filter posts that we never retrieved in lastN mode
 			if (!posts.has(post.id) && post.id < firstID) {
 				continue
 			}
@@ -258,7 +258,7 @@ export function start() {
 	connSM.feed(connEvent.start)
 }
 
-// Work arround browser slowing down/suspending tabs and keep the FSM up to date
+// Work around browser slowing down/suspending tabs and keep the FSM up to date
 // with the actual status.
 function onWindowFocus() {
 	if (connSM.state !== connState.desynced && navigator.onLine) {
@@ -277,8 +277,8 @@ for (let state of [connState.connecting, connState.reconnecting]) {
 	connSM.act(state, connEvent.open, prepareToSync)
 }
 
-// Syncronise to the server and start receiving updates on the apropriate
-// channel. If there are any missed meessages, fetch them.
+// Synchronise to the server and start receiving updates on the appropriate
+// channel. If there are any missed messages, fetch them.
 handlers[message.synchronise] = (backlog: { [id: number]: PostData }) => {
 	if (page.thread) {
 		for (let id in backlog) {

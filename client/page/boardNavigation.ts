@@ -151,7 +151,7 @@ class BoardSelectionPanel extends View<Model> {
 		super.remove()
 	}
 
-	// Handle form submition
+	// Handle form submission
 	submit(event: Event) {
 		event.preventDefault()
 		selected.clear()

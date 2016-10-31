@@ -52,7 +52,7 @@ func TestSyncToBoard(t *testing.T) {
 		UnexpectedError(t, err)
 	}
 
-	// Valid synchronisation
+	// Valid synchronization
 	msg.Board = "a"
 	if err := synchronise(marshalJSON(t, msg), cl); err != nil {
 		t.Fatal(err)
@@ -73,7 +73,7 @@ func TestRegisterSync(t *testing.T) {
 
 	defer Clients.Clear()
 
-	// Both for new syncs and swicthing syncs
+	// Both for new syncs and switching syncs
 	for _, s := range syncs {
 		registerSync(s.Board, s.OP, cl)
 		assertSyncID(t, &Clients, cl, s)
@@ -139,7 +139,7 @@ func TestSyncToThread(t *testing.T) {
 	}
 
 	// The update stream does not guarantee initial message order on
-	// synchronisation, only that messages from the same document will be in
+	// synchronization, only that messages from the same document will be in
 	// order. Can't really test that here.
 	_, msg, err := wcl.ReadMessage()
 	if err != nil {

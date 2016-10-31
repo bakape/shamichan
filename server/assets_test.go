@@ -37,7 +37,7 @@ func TestImageServer(t *testing.T) {
 		notFound = "/images/src/nobody_here.gif"
 	)
 
-	// Succesful first serve
+	// Successful first serve
 	rec, req := newPair(found)
 	router.ServeHTTP(rec, req)
 	path := filepath.Join("testdata", "src", "tis_life.gif")

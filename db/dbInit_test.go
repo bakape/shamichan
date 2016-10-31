@@ -62,7 +62,7 @@ func TestVerifyVersion(t *testing.T) {
 func TestPopulateDB(t *testing.T) {
 	assertTableClear(t, AllTables...)
 
-	// Remove all indeces
+	// Remove all indices
 	q := r.
 		TableList().
 		ForEach(func(table r.Term) r.Term {
@@ -94,8 +94,8 @@ func TestPopulateDB(t *testing.T) {
 		}
 	})
 
-	// Assert all secondary indeces exist
-	for _, index := range secondaryIndeces {
+	// Assert all secondary indices exist
+	for _, index := range secondaryIndices {
 		i := index // Capture variable
 		name := fmt.Sprintf("index %s:%s", i.table, i.index)
 		t.Run(name, func(t *testing.T) {

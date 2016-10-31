@@ -8,7 +8,7 @@ import Model from "../../model"
 import identity from "./identity"
 import { Post } from "../models"
 
-// Uploaded file data to be embeded in thread and reply creation or appendage
+// Uploaded file data to be embedded in thread and reply creation or appendage
 // requests
 export type FileData = {
 	token: string

@@ -25,7 +25,7 @@ type LinkMessage = {
 	links: PostLinks
 }
 
-// Meesage to inject a new command result into a model
+// Message to inject a new command result into a model
 interface CommandMessage extends Command {
 	id: number
 }
@@ -80,7 +80,7 @@ export function insertPost(data: PostData) {
 deferInit(() => {
 	handlers[message.invalid] = (msg: string) => {
 
-		// TODO: More user-frienly critical error reporting
+		// TODO: More user-friendly critical error reporting
 
 		alert(msg)
 		connSM.feed(connEvent.error)

@@ -69,7 +69,7 @@ function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
 	}
 }
 
-// Match and parse URL against embedable formats. If matched, returns the
+// Match and parse URL against embeddable formats. If matched, returns the
 // generated HTML embed string, otherwise returns empty string.
 export function parseEmbeds(s: string): string {
 	for (let [type, patt] of patterns) {

@@ -1,4 +1,4 @@
-import {accountPannel, loginID, sessionToken} from './login'
+import {accountPanel, loginID, sessionToken} from './login'
 import {write} from '../render'
 import {FormView, FormViewAttrs} from '../forms'
 import {mod as lang} from '../lang'
@@ -84,17 +84,17 @@ export default class AccountFormView extends FormView {
 	}
 
 	// Render a form field and embed the input fields inside it. Then append it
-	// to the parrent view.
+	// to the parent view.
 	renderForm(fields: Node) {
 		super.renderForm(fields)
-		accountPannel.toggleMenu(false)
+		accountPanel.toggleMenu(false)
 		write(() =>
-			accountPannel.el.append(this.el))
+			accountPanel.el.append(this.el))
 	}
 
 	// Unhide the parent AccountPanel, when this view is removed
 	remove() {
 		super.remove()
-		accountPannel.toggleMenu(true)
+		accountPanel.toggleMenu(true)
 	}
 }

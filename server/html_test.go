@@ -79,14 +79,14 @@ func TestThreadHTML(t *testing.T) {
 		router.ServeHTTP(rec, req)
 		assertCode(t, rec, 404)
 	})
-	t.Run("nonexistant thread", func(t *testing.T) {
+	t.Run("nonexistent thread", func(t *testing.T) {
 		t.Parallel()
 
 		rec, req := newPair("/a/22")
 		router.ServeHTTP(rec, req)
 		assertCode(t, rec, 404)
 	})
-	t.Run("thread esists", func(t *testing.T) {
+	t.Run("thread exists", func(t *testing.T) {
 		t.Parallel()
 
 		rec, req := newPair("/a/1")

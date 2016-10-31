@@ -35,7 +35,7 @@ var (
 		"start":   "start the meguca server",
 		"stop":    "stop a running daemonised meguca server",
 		"restart": "combination of stop + start",
-		"debug":   "start server in debug mode without deamonising (default)",
+		"debug":   "start server in debug mode without daemonizing (default)",
 		"help":    "print this help text",
 	}
 )
@@ -47,7 +47,7 @@ func Start() {
 		&address,
 		"http-addr",
 		":8000",
-		"address to listen on for incomming HTTP connections",
+		"address to listen on for incoming HTTP connections",
 	)
 	flag.StringVar(
 		&db.Address,

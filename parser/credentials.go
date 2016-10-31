@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	errNoPostPassword     = errors.New("no post password")
-	errNoSubject          = errors.New("no subject")
-	errNameTooLong        = ErrTooLong("name")
-	errSubjectTooLong     = ErrTooLong("subject")
-	errPostPaswordTooLong = ErrTooLong("post password")
+	errNoPostPassword      = errors.New("no post password")
+	errNoSubject           = errors.New("no subject")
+	errNameTooLong         = ErrTooLong("name")
+	errSubjectTooLong      = ErrTooLong("subject")
+	errPostPasswordTooLong = ErrTooLong("post password")
 )
 
 // ParseName parses the name field into a name and tripcode, if any
@@ -67,7 +67,7 @@ func VerifyPostPassword(s string) error {
 		return errNoPostPassword
 	}
 	if len(s) > maxLengthPostPassword {
-		return errPostPaswordTooLong
+		return errPostPasswordTooLong
 	}
 	return nil
 }

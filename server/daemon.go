@@ -1,6 +1,6 @@
 // +build linux darwin
 
-// Daemonisation logic for the server
+// Daemonization logic for the server
 
 package server
 
@@ -84,7 +84,7 @@ func killDaemon() {
 			log.Fatalf("error killing running daemon: %s\n", err)
 		}
 
-		// Assertain process has exited
+		// Ascertain process has exited
 		for {
 			if err := proc.Signal(syscall.Signal(0)); err != nil {
 				if err.Error() == "os: process already finished" {
@@ -97,7 +97,7 @@ func killDaemon() {
 	}
 }
 
-// Find the running deamonised meguca server process
+// Find the running daemonised meguca server process
 func findDaemon() *os.Process {
 	proc, err := daemonContext.Search()
 	if err != nil && (!os.IsNotExist(err) && err.Error() != "EOF") {

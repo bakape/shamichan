@@ -105,7 +105,7 @@ export class ReplyFormModel extends Post implements FormModel {
 		this.init()
 	}
 
-	// Request alocation of a draft post to the server
+	// Request allocation of a draft post to the server
 	requestAlloc(body: string | null, image: FileData | null) {
 		this.sentAllocRequest = true
 		const req = newAllocRequest() as PostCreationRequest
@@ -187,16 +187,16 @@ export class ReplyFormModel extends Post implements FormModel {
 export class FormModel {
 	sentAllocRequest: boolean
 	bodyLength: number        // Compound length of the input text body
-	parsedLines: number       // Number of closed, commited and parsed lines
+	parsedLines: number       // Number of closed, committed and parsed lines
 	body: string
 	view: PostView & FormView
 	state: TextState          // State of the underlying normal post model
 
-	// State of line being edditted. Must be seperated to not affect the
-	// asynchronous updates of commited lines
+	// State of line being edited. Must be separated to not affect the
+	// asynchronous updates of committed lines
 	inputState: TextState
 
-	// Buffer for messages commited during connection outage
+	// Buffer for messages committed during connection outage
 	messageBuffer: BufferedMessage[]
 
 	closePost: () => void
@@ -210,7 +210,7 @@ export class FormModel {
 		this.inputState = {
 			quote: false,
 			spoiler: false,
-			iDice: 0, // Not used in FormModel. TypeScipt demands it.
+			iDice: 0, // Not used in FormModel. TypeScript demands it.
 			line: "",
 		}
 		this.messageBuffer = []
@@ -236,7 +236,7 @@ export class FormModel {
 		this.spliceLine(this.lastBodyLine(), msg)
 	}
 
-	// Compare new value to old and generate apropriate commands
+	// Compare new value to old and generate appropriate commands
 	parseInput(val: string): void {
 		const old = this.inputState.line
 
@@ -248,7 +248,7 @@ export class FormModel {
 		const lenDiff = val.length - old.length,
 			exceeding = this.bodyLength + lenDiff - 2000
 
-		// If exceeding max body lenght, shorten the value, trim $input and try
+		// If exceeding max body length, shorten the value, trim $input and try
 		// again
 		if (exceeding > 0) {
 			this.view.trimInput(exceeding)
@@ -327,7 +327,7 @@ export class FormModel {
 
 		// Right now we simply resend the entire corrected string, including the
 		// common part, because I can't figure out a diff algorithm that covers
-		// all cases. The backend techincally supports the latter.
+		// all cases. The backend technically supports the latter.
 		const end = val.slice(start)
 		this.send(message.splice, {
 			start,
@@ -359,7 +359,7 @@ export class FormModel {
 	}
 
 	// Turn post form into a regular post, because it has expired after a
-	// preiod of posting ability loss
+	// period of posting ability loss
 	abandon() {
 		this.state.line = this.inputState.line
 		this.view.cleanUp()

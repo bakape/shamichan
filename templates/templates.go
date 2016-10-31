@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	// TemplateRoot stores the root directory of all HTML templates. Overriden
+	// TemplateRoot stores the root directory of all HTML templates. Overridden
 	// in tests.
 	TemplateRoot = "templates"
 
@@ -93,12 +93,12 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 	path := filepath.FromSlash(TemplateRoot + "/index.html")
 	tmpl, err := template.ParseFiles(path)
 	if err != nil {
-		err = util.WrapError("error parsing index temlate", err)
+		err = util.WrapError("error parsing index template", err)
 		return
 	}
 
-	// Rigt now the desktop and mobile templates are almost identical. This will
-	// change, when we get a dedicated mobile GUI.
+	// Right now the desktop and mobile templates are almost identical. This
+	// will change, when we get a dedicated mobile GUI.
 	desktop, err = buildIndexTemplate(tmpl, v, false)
 	if err != nil {
 		return

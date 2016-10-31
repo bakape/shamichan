@@ -66,7 +66,7 @@ export interface ThreadData extends PostData {
 	posts?: PostData[]
 }
 
-// Image data embedable in posts and thread hashes
+// Image data embeddable in posts and thread hashes
 export interface ImageData {
 	apng: boolean
 	audio: boolean
@@ -75,7 +75,7 @@ export interface ImageData {
 	large: boolean              // Added at runtime to render larger thumbnails
 	expanded: boolean           // Thumbnail is expanded
 	tallerThanViewport: boolean // Image is taller than the current viewport
-	revealed: boolean          // Reaveling a hidden image with [Show]
+	revealed: boolean           // Revealing a hidden image with [Show]
 	fileType: fileTypes
 	length?: number
 	size: number
@@ -137,7 +137,7 @@ export class Post extends Model implements PostData {
 			view.startNewLine()
 			this.resetState()
 			this.state.line = ""
-		} else if (state.line === ">") {        // Start qoute
+		} else if (state.line === ">") {        // Start quote
 			view.reparseLine()
 		} else if (state.line.endsWith("**")) { // Start or close spoiler
 			this.resetState()
@@ -147,7 +147,7 @@ export class Post extends Model implements PostData {
 		}
 	}
 
-	// Reset spoiler and qoute state of the line
+	// Reset spoiler and quote state of the line
 	resetState() {
 		this.state.spoiler = this.state.quote = false
 	}
@@ -268,7 +268,7 @@ export class Post extends Model implements PostData {
 	// Close an open post and reparse its last line
 	closePost() {
 		// Posts may be closed from multiple sources. It may be the user
-		// closing the post manually, the sheduled cleanup task closing or
+		// closing the post manually, the scheduled cleanup task closing or
 		// the check done when writing to open posts. Therefore some
 		// duplication is possible. Ignore closing of already closed posts.
 		if (!this.editing) {

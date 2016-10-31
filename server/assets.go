@@ -18,11 +18,10 @@ const assetCacheHeader = "max-age=0, must-revalidate"
 var (
 	// Set of headers for serving images (and other uploaded files)
 	imageHeaders = map[string]string{
-		// max-age set to 350 days. Some caches and browsers ignore max-age, if it
-		// is a year or greater, so keep it a little below.
+		// max-age set to 350 days. Some caches and browsers ignore max-age, if
+		// it is a year or greater, so keep it a little below.
 		"Cache-Control":   "max-age=30240000, public",
 		"X-Frame-Options": "sameorigin",
-
 		// Fake E-tag, because all images are immutable
 		"ETag": "0",
 	}
@@ -30,16 +29,16 @@ var (
 	// For overriding during tests
 	imageWebRoot = "images"
 
-	// Path to the service worker script. Overidable in tests.
+	// Path to the service worker script. Overrideable in tests.
 	workerPath = getWorkerPath()
 )
 
 func getWorkerPath() string {
-	return filepath.FromSlash(webRoot+"/js/scripts/worker.js")
+	return filepath.FromSlash(webRoot + "/js/scripts/worker.js")
 }
 
 // More performant handler for serving image assets. These are immutable
-// (except deletion), so we can also set seperate caching policies for them.
+// (except deletion), so we can also set separate caching policies for them.
 func serveImages(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	if r.Header.Get("If-None-Match") == "0" {
 		w.WriteHeader(304)

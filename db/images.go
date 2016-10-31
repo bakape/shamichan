@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	// Time it takes for an image allocattion token to expire
+	// Time it takes for an image allocation token to expire
 	tokenTimeout = time.Minute
 )
 
@@ -22,13 +22,13 @@ var (
 	}
 
 	// ErrInvalidToken occurs, when trying to retrieve an image with an
-	// non-existant token. The token might have expired (60 to 119 seconds) or
+	// non-existent token. The token might have expired (60 to 119 seconds) or
 	// the client could have provided an invalid token to begin with.
 	ErrInvalidToken = errors.New("invalid image token")
 )
 
-// Document for registering a token coresponding to a client's right to allocate
-// an image in its post
+// Document for registering a token corresponding to a client's right to
+// allocate an image in its post
 type allocationToken struct {
 	SHA1    string
 	Expires time.Time `gorethink:"expires"`
@@ -36,7 +36,7 @@ type allocationToken struct {
 
 // FindImageThumb searches for an existing image with the specified hash and
 // returns it, if it exists. Otherwise, returns an empty struct. To ensure the
-// image is not deallocated by another theread/process, the refference counter
+// image is not deallocated by another thread/process, the reference counter
 // of the image will be incremented.
 func FindImageThumb(hash string) (img types.ImageCommon, err error) {
 	query := GetImage(hash).
@@ -94,8 +94,8 @@ func UseImageToken(id string) (img types.ImageCommon, err error) {
 	return
 }
 
-// DeallocateImage decrements the image's refference counter. If the counter
-// would become zero, the image entry is immediately deleted allong with its
+// DeallocateImage decrements the image's reference counter. If the counter
+// would become zero, the image entry is immediately deleted along with its
 // file assets.
 func DeallocateImage(id string) error {
 	query := GetImage(id).
@@ -155,7 +155,7 @@ func AllocateImage(src, thumb []byte, img types.ImageCommon) error {
 	return nil
 }
 
-// Delete any dangling image files in case of a failed image allocattion
+// Delete any dangling image files in case of a failed image allocation
 func cleanUpFailedAllocation(img types.ImageCommon, err error) error {
 	delErr := assets.Delete(img.SHA1, img.FileType)
 	if delErr != nil {

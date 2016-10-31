@@ -1,4 +1,4 @@
-// Thread update feed managment
+// Thread update feed management
 
 package websockets
 
@@ -39,7 +39,7 @@ type feedContainer struct {
 	feeds map[int64]*updateFeed
 }
 
-// A feed with syncronisation logic of a certain thread
+// A feed with synchronization logic of a certain thread
 type updateFeed struct {
 	// Indicates the buf contains multiple concatenated messages
 	multiple bool
@@ -64,7 +64,7 @@ type timestampedPost struct {
 	LastUpdated int64 `json:"-"`
 }
 
-// Reques to add or remove a client to a subscription
+// Request to add or remove a client to a subscription
 type subRequest struct {
 	id     int64
 	client *Client
@@ -87,7 +87,7 @@ func newFeedContainer() feedContainer {
 		clear:  make(chan struct{}),
 		read:   make(chan feedUpdate),
 
-		// 100 len map to avoid some possible realocation as the server starts
+		// 100 len map to avoid some possible reallocation as the server starts
 		feeds: make(map[int64]*updateFeed, 100),
 	}
 }
@@ -193,7 +193,7 @@ func (f *feedContainer) flushBuffers() {
 		buf := feed.buf.Bytes()
 		if feed.multiple {
 			feed.multiple = false
-			buf = prepependMessageType(MessageConcat, buf)
+			buf = prependMessageType(MessageConcat, buf)
 		} else {
 			// Need to copy, because the underlying array can be modified during
 			// sending to clients.
@@ -268,7 +268,7 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) {
 
 	switch update.Change {
 	// To synchronise the client's state with the feed we resend any posts
-	// updated within the last 30 seconds. Client must dedup and render
+	// updated within the last 30 seconds. Client must deduplicate and render
 	// accordingly.
 	case postInserted:
 		data, err := EncodeMessage(MessageInsertPost, update.Post)

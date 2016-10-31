@@ -1,4 +1,4 @@
-// Miscalleneous post component rendering functions
+// Miscellaneous post component rendering functions
 
 import {page, mine} from '../../state'
 import {posts as lang} from '../../lang'
@@ -29,7 +29,7 @@ export function renderPostLink(num: number, board: string, op: number): string {
 // TODO: Reimplement, when moderation done
 
 // Render USER WAS BANNED FOR THIS POST message, or similar
-// export function renerBanned(): string {
+// export function renderBanned(): string {
 // 	return `<b class="admin banMessage">${lang.mod.banMessage}</b>`
 // }
 //

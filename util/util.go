@@ -10,18 +10,18 @@ import (
 
 // WrapError wraps error types to create compound error chains
 func WrapError(text string, err error) error {
-	return wrapedError{
+	return wrappedError{
 		text:  text,
 		inner: err,
 	}
 }
 
-type wrapedError struct {
+type wrappedError struct {
 	text  string
 	inner error
 }
 
-func (e wrapedError) Error() string {
+func (e wrappedError) Error() string {
 	text := e.text
 	if e.inner != nil {
 		text += ": " + e.inner.Error()

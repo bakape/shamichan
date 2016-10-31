@@ -32,8 +32,8 @@ type Image struct {
 }
 
 // ProtoImage stores image data related to the source and thumbnail resources
-// themselves. This struct is partially coppied into the image struct on image
-// allocattion.
+// themselves. This struct is partially copied into the image struct on image
+// allocation.
 type ProtoImage struct {
 	ImageCommon
 	Posts int64 `gorethink:"posts"`

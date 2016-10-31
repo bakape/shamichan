@@ -24,7 +24,7 @@ export let postForm: FormView,
 
 // Post authoring finite state machine
 export const enum postState {
-	none,    // No state. Awating first connection.
+	none,    // No state. Awaiting first connection.
 	ready,   // Ready to create posts
 	halted,  // Post allocated to the server but no connectivity
 	locked,  // No post open. Post creation controls locked.
@@ -33,7 +33,7 @@ export const enum postState {
 	errored, // Suffered unrecoverable error
 }
 export const enum postEvent {
-	sync,       // Synchronised to the server
+	sync,       // Synchronized to the server
 	disconnect, // Disconnected from server
 	error,      // Unrecoverable error
 	done,       // Post closed
@@ -72,7 +72,7 @@ function quotePost(event: Event) {
 // Update the draft post's fields on identity change, if any
 function updateIdentity() {
 	if (postSM.state === postState.draft && !boardConfig.forcedAnon) {
-		postForm.renderIndentity()
+		postForm.renderIdentity()
 	}
 }
 
@@ -82,7 +82,7 @@ deferInit(() => {
 	connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
 	connSM.on(connState.desynced, postSM.feeder(postEvent.error))
 
-	// Initial synchronisation
+	// Initial synchronization
 	postSM.act(postState.none, postEvent.sync, () =>
 		postState.ready)
 
@@ -117,7 +117,7 @@ deferInit(() => {
 		return postState.locked
 	})
 
-	// Regained conectitvity, when post is allocated
+	// Regained connectivity, when post is allocated
 	postSM.act(postState.halted, postEvent.reclaim, () => {
 		postModel.flushBuffer()
 		return postState.alloc
@@ -195,13 +195,13 @@ deferInit(() => {
 		selector: "aside.posting a",
 	})
 
-	// Handle clicks on post qouting links
+	// Handle clicks on post quoting links
 	on($threads, "click", quotePost, {
 		selector: "a.quote",
 		passive: true,
 	})
 
-	// Triiger update on name and email change
+	// Trigger update on name and email change
 	for (let key of ["name", "email"]) {
 		identity.onChange(key, updateIdentity)
 	}

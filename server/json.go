@@ -41,7 +41,7 @@ func serveJSON(
 }
 
 // Write data as JSON to the client. If etag is "" generate a strong etag by
-// hashing the resulting buffer and perorm a check against the "If-None-Match"
+// hashing the resulting buffer and perform a check against the "If-None-Match"
 // header. If etag is set, assume this check has already been done.
 func writeJSON(
 	w http.ResponseWriter,
@@ -68,7 +68,7 @@ func writeJSON(
 
 // Validate the client's last N posts to display setting. To allow for better
 // caching the only valid values are 5 and 50. 5 is for index-like thread
-// previews and 50 is for short theads.
+// previews and 50 is for short threads.
 func detectLastN(req *http.Request) int {
 	if q := req.URL.Query().Get("last"); q != "" {
 		n, err := strconv.Atoi(q)
@@ -241,7 +241,7 @@ func serveBoardList(res http.ResponseWriter, req *http.Request) {
 	serveJSON(res, req, "", list)
 }
 
-// Fetch an array of boards a certain user holds a certion position on
+// Fetch an array of boards a certain user holds a certain position on
 func serveStaffPositions(
 	res http.ResponseWriter,
 	req *http.Request,

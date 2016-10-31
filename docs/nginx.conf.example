@@ -16,7 +16,7 @@ server {
 	# Domain the website will be hosted on.
 	server_name mydomain.com;
 
-	# For validating letsencrypt SSL certificats
+	# For validating letsencrypt SSL certificates
 	location /.well-known/ {
 		alias /home/meguca/server/www/.well-known/;
 	}
@@ -45,7 +45,7 @@ server {
 	location / {
 		proxy_pass http://meguca/;
 
-		# Stream trafix directly to backend
+		# Stream traffic directly to backend
 		proxy_buffering off;
 
 		# Maximum file upload size

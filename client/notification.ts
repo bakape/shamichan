@@ -12,7 +12,7 @@ import { read, write } from "./render"
 // Displayed, when there is no image in post
 const defaultIcon = "/assets/notification-icon.png"
 
-// Notify the user that one of thier posts has been replied to
+// Notify the user that one of their posts has been replied to
 export default function notifyAboutReply(post: Post) {
 	storeSeenReply(post.id)
 	if (!document.hidden) {

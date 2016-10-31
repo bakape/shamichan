@@ -32,7 +32,7 @@
 		// Arrow functions
 		'return (()=>5)()===5;',
 
-		// Block scopped const
+		// Block scoped const
 		'"use strict";  const bar = 123; {const bar = 456;} return bar===123;',
 
 		// Block-scoped let
@@ -108,7 +108,7 @@
 		polyfills.push('vendor/fetch')
 	}
 
-	var DOMMetods = [
+	var DOMMethods = [
 		// DOM level 4 methods
 		'Element.prototype.remove',
 
@@ -117,20 +117,20 @@
 		'Element.prototype.querySelectorAll'
 	]
 	var DOMUpToDate = true
-	for (var i = 0; i < DOMMetods.length; i++) {
-		if (!checkFunction(DOMMetods[i])) {
+	for (var i = 0; i < DOMMethods.length; i++) {
+		if (!checkFunction(DOMMethods[i])) {
 			polyfills.push('vendor/dom4')
 			DOMUpToDate = false
 			break
 		}
 	}
 
-	// Itterable NodeList
+	// Iterable NodeList
 	if (!checkFunction('NodeList.prototype[Symbol.iterator]')) {
 		NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator]
 	}
 
-	// Minimalistic  DOM polyfill for modern browsers
+	// Minimalistic DOM polyfill for modern browsers
 	if (DOMUpToDate) {
 		polyfills.push('scripts/polyfill')
 	}
@@ -154,7 +154,7 @@
 
 	var head = document.getElementsByTagName('head')[0]
 
-	// Load apropriate language pack
+	// Load appropriate language pack
 	scriptCount++
 	var xhr = new XMLHttpRequest()
 	var langPath = '/assets/lang/'

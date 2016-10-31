@@ -21,7 +21,7 @@ const (
 	jsonLimit = 1 << 15
 
 	maxAnswers      = 100  // Maximum number of eightball answers
-	maxEigthballLen = 2000 // Total chars in eightball
+	maxEightballLen = 2000 // Total chars in eightball
 	maxNoticeLen    = 500
 	maxRulesLen     = 5000
 	maxTitleLen     = 100
@@ -53,7 +53,7 @@ type boardConfigRequest struct {
 }
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
-// decoding suceeded.
+// decoding succeeded.
 func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
 	decoder := json.NewDecoder(io.LimitReader(r.Body, jsonLimit))
 	if err := decoder.Decode(dest); err != nil {
@@ -153,7 +153,7 @@ func validateConfigs(w http.ResponseWriter, conf config.BoardConfigs) bool {
 	switch {
 	case len(conf.Eightball) > maxAnswers:
 		err = errTooManyAnswers
-	case totalLen > maxEigthballLen:
+	case totalLen > maxEightballLen:
 		err = errEightballTooLong
 	case len(conf.Notice) > maxNoticeLen:
 		err = errNoticeTooLong
@@ -171,7 +171,7 @@ func validateConfigs(w http.ResponseWriter, conf config.BoardConfigs) bool {
 }
 
 // Serve the current board configurations to the client, including publically
-// unexsposed ones. Intended to be used before setting the the configs with
+// unexposed ones. Intended to be used before setting the the configs with
 // configureBoard().
 func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
 	var msg boardConfigRequest

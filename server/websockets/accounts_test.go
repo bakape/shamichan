@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	wrongCredentialsResopnse = `34{"code":2,"session":""}`
+	wrongCredentialsResponse = `34{"code":2,"session":""}`
 )
 
 func TestRegistrationValidations(t *testing.T) {
@@ -155,7 +155,7 @@ func TestNoUserRegistered(t *testing.T) {
 		ID:       "123",
 		Password: "1233456",
 	}
-	assertHandlerResponse(t, req, login, wrongCredentialsResopnse)
+	assertHandlerResponse(t, req, login, wrongCredentialsResponse)
 }
 
 func TestLogin(t *testing.T) {
@@ -185,7 +185,7 @@ func TestLogin(t *testing.T) {
 		t.Parallel()
 		r := req
 		r.Password += "1"
-		assertHandlerResponse(t, r, login, wrongCredentialsResopnse)
+		assertHandlerResponse(t, r, login, wrongCredentialsResponse)
 	})
 }
 
@@ -239,7 +239,7 @@ func TestAuthentication(t *testing.T) {
 		assertHandlerResponse(t, req, authenticateSession, "35false")
 	})
 
-	t.Run("nonexistant user", func(t *testing.T) {
+	t.Run("nonexistent user", func(t *testing.T) {
 		t.Parallel()
 
 		req := authenticationRequest{

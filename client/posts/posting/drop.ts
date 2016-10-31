@@ -31,7 +31,7 @@ function onDrop(e: DragEvent) {
 }
 
 function stopDefault(e: Event) {
-	// No drag and drop for thread creation right now. Keep default behaviour.
+	// No drag and drop for thread creation right now. Keep default behavior.
 	if (page.thread) {
 		e.stopPropagation()
 		e.preventDefault()

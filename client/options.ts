@@ -44,7 +44,7 @@ export default options = emitChanges({} as Options)
 // All loaded option models
 export const models: { [key: string]: OptionModel } = {}
 
-// Controler for each individual option
+// Controller for each individual option
 class OptionModel {
 	id: string
 	spec: OptionSpec
@@ -63,7 +63,7 @@ class OptionModel {
 			spec.type = optionType.checkbox
 		}
 
-		// Store option value in central stotage options Model
+		// Store option value in central storage options Model
 		const val = options[this.id] = this.get()
 		options.onChange(this.id, val =>
 			this.onChange(val))
@@ -119,7 +119,7 @@ class OptionModel {
 		view.assignValue(this.id, this.spec.type, val)
 	}
 
-	// Perform value validation, if any. Othervise return true.
+	// Perform value validation, if any. Otherwise return true.
 	validate(val: OptionValue): boolean {
 		if (this.spec.validation) {
 			return this.spec.validation(val)
@@ -128,7 +128,7 @@ class OptionModel {
 	}
 }
 
-// Intialize options system
+// Initialize options system
 deferInit(() => {
 	// Populate option model collection and central model
 	for (let spec of specs()) {

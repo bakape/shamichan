@@ -23,7 +23,7 @@ type LanguagePack = {
 
 const lang = (window as any).lang as LanguagePack
 
-// Export each container indivudually for namespacing purposes
+// Export each container individually for namespacing purposes
 // Can't use destructuring, because it breaks with the SystemJS module compiler.
 export const posts = lang.posts,
 	ui = lang.ui,
@@ -89,7 +89,7 @@ type LnBanner = {
 	worksBestWith: string
 	options: string
 	identity: string
-	acccount: string
+	account: string
 	FAQ: string
 	feedback: string
 	googleSong: string

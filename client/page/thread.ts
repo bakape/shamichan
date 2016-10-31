@@ -29,7 +29,7 @@ export default function renderThread(thread: ThreadData) {
 	}
 	const els: Element[] = [],
 		{posts} = thread
-	delete thread.posts // Reduce strain on the GC. We won't be usng these.
+	delete thread.posts // Reduce strain on the GC. We won't be using these.
 
 	// Render larger thumbnail for the OP
 	if (thread.image) {

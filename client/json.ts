@@ -42,7 +42,7 @@ export async function postText(url: string, text: string): Promise<string> {
 	return await res.text()
 }
 
-// Throw the status text of a Response as an error on HTTP errrors
+// Throw the status text of a Response as an error on HTTP errors
 export async function handleError(res: Response) {
 	if (!res.ok) {
 		throw new Error(await res.text())

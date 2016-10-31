@@ -1,6 +1,6 @@
 /*
- Seperate module for defering operations to execute. Helps avoid race
- conditions, circular dependancies and offload less critical expensive
+ Separate module for deferring operations to execute. Helps avoid race
+ conditions, circular dependencies and offload less critical expensive
  computations to later.
 */
 
@@ -22,13 +22,13 @@ export function exec() {
 	deferred = []
 }
 
-// Defer initialisation functions to be loaded after the main infrastructer like
-// "state" and "connection" modules are loaded
+// Defer initialization functions to be loaded after the main infrastructure
+// like "state" and "connection" modules are loaded
 export function deferInit(fn: Func) {
 	inits.push(fn)
 }
 
-// Execute all defered initialisation functions
+// Execute all deferred initialization functions
 export function init() {
 	for (let fn of inits) {
 		fn()

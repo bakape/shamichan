@@ -43,9 +43,9 @@ func processImage(data []byte) ([]byte, [4]uint16, error) {
 	return verifyAndScale(src, format)
 }
 
-// Separate dunction, so it can be used in a more optimised video thumbnailer
+// Separate function, so it can be used in a more optimized video thumbnailer
 func verifyAndScale(src image.Image, format string) ([]byte, [4]uint16, error) {
-	dims, err := verifyDimentions(src)
+	dims, err := verifyDimensions(src)
 	if err != nil {
 		return nil, dims, err
 	}
@@ -64,8 +64,8 @@ func verifyAndScale(src image.Image, format string) ([]byte, [4]uint16, error) {
 	return thumb.Bytes(), dims, err
 }
 
-// Verify an image does not exceed the preset maximum dimentions and return them
-func verifyDimentions(img image.Image) (dims [4]uint16, err error) {
+// Verify an image does not exceed the preset maximum dimensions and return them
+func verifyDimensions(img image.Image) (dims [4]uint16, err error) {
 	dims[0], dims[1] = getDims(img)
 	conf := config.Get()
 	if dims[0] > conf.MaxWidth {

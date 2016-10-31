@@ -49,7 +49,7 @@ for (let param of ['theme', 'workModeToggle']) {
 	options.onChange(param, handler)
 }
 
-// Central render function. Resets state and renders the apropriate background.
+// Central render function. Resets state and renders the appropriate background.
 export function render(bg?: BackgroundStore) {
 	write(() =>
 		(container.innerHTML = '',
@@ -81,7 +81,7 @@ function renderIllya() {
 		container.innerHTML = html)
 }
 
-// Wrap the OP in a background for better visability
+// Wrap the OP in a background for better visibility
 function toggleOPBackground(on: boolean) {
 	if ($threadContainer) {
 		write(() => {
@@ -119,7 +119,7 @@ async function renderBackground(bg?: BackgroundStore) {
 		style.innerHTML = html)
 }
 
-// Apply transparent blurred glass background to elemnts with the 'glass' class
+// Apply transparent blurred glass background to elements with the 'glass' class
 function renderGlass(theme: string, blob: Blob): string {
 	const {normal, editing, highlight} = colourMap[theme],
 		blurred = URL.createObjectURL(blob)

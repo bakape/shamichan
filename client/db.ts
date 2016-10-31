@@ -67,7 +67,7 @@ function upgradeDB(event: IDBVersionChangeEvent) {
 			.createIndex("expires", "expires")
 	}
 
-	// Various miisceleneous objects
+	// Various miscellaneous objects
 	const main = db.createObjectStore('main', { keyPath: 'id' })
 	main.add({ id: 'background' })
 }
@@ -95,7 +95,7 @@ function deleteExpired(name: string) {
 	}
 }
 
-// Helper for intiating transactions on a single object store
+// Helper for initiating transactions on a single object store
 function newTransaction(store: string, write: boolean): IDBObjectStore {
 	const t = db.transaction(store, write ? "readwrite" : "readonly")
 	t.onerror = throwErr

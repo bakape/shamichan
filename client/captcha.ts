@@ -3,7 +3,7 @@ import Model from './model'
 import {write} from './render'
 import {config} from './state'
 
-// Solve Media AJAX API controler
+// Solve Media AJAX API controller
 // https://portal.solvemedia.com/portal/help/pub/ajax
 interface ACPuzzleController  {
 	create(

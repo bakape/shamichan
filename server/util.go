@@ -1,5 +1,3 @@
-// Webserver
-
 package server
 
 import (
@@ -18,7 +16,6 @@ var vanillaHeaders = map[string]string{
 	"Cache-Control":   "max-age=0, must-revalidate",
 	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
 }
-
 
 // Build the main part of the etag
 func etagStart(counter int64) string {
@@ -49,11 +46,10 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 
 // Log an error together with the client's IP and stack trace
 func logError(r *http.Request, err interface{}) {
-	if !isTest { // Do not polute test output with logs
+	if !isTest { // Do not pollute test output with logs
 		log.Printf("server: %s: %#v\n%s", auth.GetIP(r), err, debug.Stack())
 	}
 }
-
 
 // Text-only 404 response
 func text404(w http.ResponseWriter) {

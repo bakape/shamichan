@@ -58,7 +58,7 @@ func loadBoardConfigs() error {
 	}
 
 	// Then start listening to updates. This will also contain the initial
-	// values, so we dedup server-side.
+	// values, so we deduplicate server-side.
 	cursor, err := r.
 		Table("boards").
 		Changes(r.ChangesOpts{

@@ -36,9 +36,9 @@ export function renderHeader(frag: NodeSelector, data: PostData) {
 
 	const nav = frag.querySelector("nav"),
 		link = nav.firstElementChild as HTMLAnchorElement,
-		qoute = nav.lastElementChild as HTMLAnchorElement
+		quote = nav.lastElementChild as HTMLAnchorElement
 	link.href = `#p${data.id}`
-	qoute.textContent = data.id.toString()
+	quote.textContent = data.id.toString()
 }
 
 // Render the name of a post's poster
@@ -88,7 +88,7 @@ export function renderName(
 // TODO: Resolve, once moderation implemented
 // // Renders a poster identification mnemonic
 // export function renderMnemonic(mnemonic) {
-// 	return `<b class="mod addr">${mnem}</b>`
+// 	return `<b class="mod addr">${mnemonic}</b>`
 // }
 
 // Renders a time element. Can be either absolute or relative.
@@ -115,7 +115,7 @@ function relativeTime(then: number, now: number): string {
 	let time = Math.floor((now - then) / 60),
 		isFuture = false
 	if (time < 1) {
-		if (time > -5) { // Assume to be client clock imprecission
+		if (time > -5) { // Assume to be client clock imprecision
 			return timeLang.justNow
 		}
 		else {

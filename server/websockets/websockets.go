@@ -21,7 +21,7 @@ import (
 const pingWriteTimeout = time.Second * 30
 
 var (
-	// Overridable for faster tests
+	// Overrideable for faster tests
 	pingTimer = time.Minute
 
 	upgrader = websocket.Upgrader{
@@ -48,7 +48,7 @@ func (e errInvalidFrame) Error() string {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	// Synchronised to any change feed and regstered in the global Clients map.
+	// Synchronized to any change feed and registered in the global Clients map.
 	// Should only be mutated from Clients, which also contains weather this
 	// Client is synced. The local property exists mainly to reduce lock
 	// contention on Clients.
@@ -63,7 +63,7 @@ type Client struct {
 	// Currently subscribed to update feed, if any
 	feedID int64
 
-	// Underlyting websocket connection
+	// Underlying websocket connection
 	conn *websocket.Conn
 
 	// Token of an authenticated user session, if any
@@ -146,7 +146,7 @@ func (c *Client) listen() error {
 	return c.closeConnections(err)
 }
 
-// Separate function to ease error handling of the intenal client loop
+// Separate function to ease error handling of the internal client loop
 func (c *Client) listenerLoop() error {
 	// Periodically ping the client to ensure external proxies and CDNs do not
 	// close the connection. Those have a tendency of sending 1001 to both ends
@@ -176,7 +176,7 @@ func (c *Client) listenerLoop() error {
 	}
 }
 
-// Close all conections an goroutines asociated with the Client
+// Close all connections an goroutines associated with the Client
 func (c *Client) closeConnections(err error) error {
 	// Close update feed, if any
 	if c.feedID != 0 {
@@ -235,13 +235,13 @@ func (c *Client) Send(msg []byte) {
 	}
 }
 
-// Sends a message to the client. Not safe for concurent use.
+// Sends a message to the client. Not safe for concurrent use.
 func (c *Client) send(msg []byte) error {
 	return c.conn.WriteMessage(websocket.TextMessage, msg)
 }
 
-// Format a mesage type as JSON and send it to the client. Not safe for
-// concurent use.
+// Format a message type as JSON and send it to the client. Not safe for
+// concurrent use.
 func (c *Client) sendMessage(typ MessageType, msg interface{}) error {
 	encoded, err := EncodeMessage(typ, msg)
 	if err != nil {
@@ -294,7 +294,7 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 	return c.runHandler(typ, msg)
 }
 
-// Run the apropriate handler for the websocket message
+// Run the appropriate handler for the websocket message
 func (c *Client) runHandler(typ MessageType, msg []byte) error {
 	data := msg[2:]
 	handler, ok := handlers[typ]

@@ -178,7 +178,7 @@ func writeLinks(links types.LinkMap, c *Client) error {
 	}
 
 	// Most often this loop will iterate only once, so no need to think heavily
-	// about optimisations
+	// about optimizations
 	for destID := range links {
 		id := c.openPost.id
 		op := c.openPost.op

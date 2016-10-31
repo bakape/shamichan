@@ -1,4 +1,4 @@
-// Syncronisation management message handlers
+// Synchronization management message handlers
 
 package websockets
 
@@ -30,10 +30,10 @@ type reclaimRequest struct {
 	Password string
 }
 
-// Syncronise the client to a certain thread, assign it's ID and prepare to
+// Synchronise the client to a certain thread, assign it's ID and prepare to
 // receive update messages.
 func synchronise(data []byte, c *Client) error {
-	// Unsub from previous update feed, if any
+	// Unsubscribe from previous update feed, if any
 	if c.feedID != 0 {
 		feeds.Remove <- subRequest{c.feedID, c}
 		c.feedID = 0
@@ -61,7 +61,7 @@ func syncToBoard(board string, c *Client) error {
 	return c.sendMessage(MessageSynchronise, map[string]string{})
 }
 
-// Register the client with the central client storage datastructure
+// Register the client with the central client storage data structure
 func registerSync(board string, op int64, c *Client) {
 	id := SyncID{
 		OP:    op,
@@ -74,7 +74,7 @@ func registerSync(board string, op int64, c *Client) {
 	}
 }
 
-// Sends a response to the client's synchronisation request with any missed
+// Sends a response to the client's synchronization request with any missed
 // messages and starts streaming in updates.
 func syncToThread(board string, thread int64, c *Client) error {
 	valid, err := db.ValidateOP(thread, board)

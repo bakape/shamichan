@@ -45,7 +45,7 @@ func TestWaterfall(t *testing.T) {
 		t.Fatal(err)
 	}
 	if wasRun != 2 {
-		t.Fatalf("wrong  run numer: %d", wasRun)
+		t.Fatalf("wrong run number: %d", wasRun)
 	}
 
 	// 2nd function returns error
@@ -63,6 +63,6 @@ func TestWaterfall(t *testing.T) {
 		UnexpectedError(t, err)
 	}
 	if wasRun != 2 {
-		t.Fatalf("wrong  run numer: %d", wasRun)
+		t.Fatalf("wrong run number: %d", wasRun)
 	}
 }

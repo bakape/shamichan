@@ -78,7 +78,7 @@ const specs: InputSpec[] = [
 ]
 
 // Board configuration panel
-export default class BoardConfigPabel extends AccountFormView {
+export default class BoardConfigPanel extends AccountFormView {
 	board: string
 
 	constructor() {
@@ -141,7 +141,7 @@ export default class BoardConfigPabel extends AccountFormView {
 			.style.display = "none"
 	}
 
-	// Render the configuration input elemets
+	// Render the configuration input elements
 	async renderConfigs(board: string) {
 		this.board = board
 		const res = await postJSON("/admin/boardConfig", {

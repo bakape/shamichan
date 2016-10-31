@@ -99,7 +99,7 @@ func TestVerifyPostPassword(t *testing.T) {
 		},
 		{
 			"too long",
-			genString(maxLengthPostPassword + 1), errPostPaswordTooLong,
+			genString(maxLengthPostPassword + 1), errPostPasswordTooLong,
 		},
 		{
 			"valid",

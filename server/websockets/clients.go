@@ -2,7 +2,7 @@ package websockets
 
 import "sync"
 
-// Clients stores all synchronised websocket clients in a theread-safe map
+// Clients stores all synchronized websocket clients in a thread-safe map
 var Clients = ClientMap{
 	// Start with 100 to avoid reallocations on server start
 	clients: make(map[*Client]SyncID, 100),
@@ -31,7 +31,7 @@ func (c *ClientMap) add(cl *Client, syncID SyncID) {
 	cl.synced = true
 }
 
-// ChangeSync changes the thread or board ID the client is synchronised to
+// ChangeSync changes the thread or board ID the client is synchronized to
 func (c *ClientMap) changeSync(cl *Client, syncID SyncID) {
 	c.Lock()
 	defer c.Unlock()
@@ -45,7 +45,7 @@ func (c *ClientMap) remove(cl *Client) {
 	delete(c.clients, cl)
 }
 
-// CountByIP returns the number of unique IPs synchronised with the server
+// CountByIP returns the number of unique IPs synchronized with the server
 func (c *ClientMap) CountByIP() int {
 	c.RLock()
 	ips := make(map[string]bool, len(c.clients))

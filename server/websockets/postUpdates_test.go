@@ -97,7 +97,7 @@ func TestWriteBacklinks(t *testing.T) {
 		}
 	}
 
-	// Assert each existong post had a backlink inserted
+	// Assert each existing post had a backlink inserted
 	std := types.Link{
 		OP:    9,
 		Board: "a",
@@ -642,7 +642,7 @@ func TestSplice(t *testing.T) {
 			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
 		},
 		{
-			name:  "ineject into second line of body",
+			name:  "inject into second line of body",
 			start: 2,
 			len:   3,
 			text:  "abcdefg",

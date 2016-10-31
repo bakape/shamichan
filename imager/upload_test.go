@@ -111,7 +111,7 @@ func assertFiles(t *testing.T, src, id string, fileType uint8) {
 
 	AssertBufferEquals(t, data[0], data[1])
 	if len(data[1]) < len(data[2]) {
-		t.Error("unexpected file size diffrence")
+		t.Error("unexpected file size difference")
 	}
 }
 

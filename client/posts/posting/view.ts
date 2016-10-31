@@ -16,7 +16,7 @@ import identity from "./identity"
 import { atBottom, scrollToBottom } from "../../scroll"
 
 // Element at the bottom of the thread to keep the fixed reply form from
-// overlaping any other posts, when scrolled till bottom
+// overlapping any other posts, when scrolled till bottom
 let $bottomSpacer: HTMLElement
 
 // Post creation and update view
@@ -66,7 +66,7 @@ export class FormView extends PostView implements UploadForm {
 		}
 		setAttrs(this.$input, attrs)
 
-		// Always make sure the input span alwas has at least 1 character, so
+		// Always make sure the input span always has at least 1 character, so
 		// it does not float onto the image, if any.
 		this.$input.textContent = "\u200b"
 		this.$input.addEventListener("input", (event: Event) => {
@@ -89,7 +89,7 @@ export class FormView extends PostView implements UploadForm {
 		})
 	}
 
-	// Aditional controls and header contents for unallocated draft forms
+	// Additional controls and header contents for unallocated draft forms
 	renderDraft(): DocumentFragment {
 		const frag = document.createDocumentFragment()
 		const $cancel = this.createButton(
@@ -105,14 +105,14 @@ export class FormView extends PostView implements UploadForm {
 				this.model.uploadFile())
 		}
 
-		this.renderIndentity()
+		this.renderIdentity()
 
 		return frag
 	}
 
 	// Render a temporary view of the identity fields, so the user can see what
 	// credentials he is about to post with
-	renderIndentity() {
+	renderIdentity() {
 		let {name, email} = identity,
 			trip = ""
 		const iHash = name.indexOf("#")
@@ -208,7 +208,7 @@ export class FormView extends PostView implements UploadForm {
 		this.model.parseInput(val.replace("\u200b", ""))
 	}
 
-	// Ignore any oninput events on $input during suplied function call
+	// Ignore any oninput events on $input during supplied function call
 	lockInput(fn: () => void) {
 		this.inputLock = true
 		fn()
@@ -223,7 +223,7 @@ export class FormView extends PostView implements UploadForm {
 		}
 	}
 
-	// Trim $input from the end by the suplied length
+	// Trim $input from the end by the supplied length
 	trimInput(length: number) {
 		let val = this.$input.textContent.slice(0, -length) || "\u200b"
 		write(() =>
@@ -312,7 +312,7 @@ export class FormView extends PostView implements UploadForm {
 		this.cleanUp()
 	}
 
-	// Lock the post form after a crytical error accours
+	// Lock the post form after a critical error occurs
 	renderError() {
 		write(() =>
 			(this.el.classList.add("errored"),

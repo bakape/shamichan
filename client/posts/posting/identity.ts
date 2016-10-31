@@ -46,7 +46,7 @@ if (!stored) {
 }
 identity.postPassword = stored
 
-// Name and email input pannel
+// Name and email input panel
 class IdentityPanel extends BannerModal {
 	constructor() {
 		super({ id: "identity" })

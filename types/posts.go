@@ -15,14 +15,14 @@ const (
 	// Dice is the dice roll command type
 	Dice CommandType = iota
 
-	// Flip is the coinflip command type
+	// Flip is the coin flip command type
 	Flip
 
 	// EightBall is the the #8ball random answer dispenser command type
 	EightBall
 
-	// SyncWatch is the syncronised timer command type for syncronising episode
-	// time during group anime watching and such
+	// SyncWatch is the synchronized timer command type for synchronizing
+	// episode time during group anime watching and such
 	SyncWatch
 
 	// Pyu - don't ask
@@ -78,9 +78,9 @@ type BoardThread struct {
 	Subject     string `json:"subject" gorethink:"subject"`
 }
 
-// Thread is a transport/export wrapper that stores both the thread metada, its
-// opening post data and its contained posts. The composite type itself is not
-// stored in the database.
+// Thread is a transport/export wrapper that stores both the thread metadata,
+// its opening post data and its contained posts. The composite type itself is
+// not stored in the database.
 type Thread struct {
 	Locked   bool  `json:"locked,omitempty" gorethink:"locked"`
 	Archived bool  `json:"archived,omitempty" gorethink:"archived"`

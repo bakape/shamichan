@@ -87,7 +87,7 @@ export function renderInput(spec: InputSpec): [string, string] {
 	return [renderLabel(spec), `<input ${makeAttrs(attrs)}>`]
 }
 
-// Render a dropdown selecttion menu
+// Render a dropdown selection menu
 function renderSelect(spec: InputSpec): [string, string] {
 	let html = `<select title="${spec.tooltip || ""}" name="${spec.name}">`
 	for (let item of spec.choices) {
@@ -123,7 +123,7 @@ function renderTextArea(spec: InputSpec, attrs: StringMap): [string, string] {
 	]
 }
 
-// Render a subform for assining map-like data
+// Render a subform for assigning map-like data
 function renderMap(spec: InputSpec): [string, string] {
 	let html = `<div name="${spec.name}" title="${spec.tooltip || ""}">`
 	if (spec.value) {

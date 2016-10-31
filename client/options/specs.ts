@@ -127,7 +127,7 @@ export const specs = (): OptionSpec[] => {
 			tab: tabs.style,
 		},
 
-		// Enable thumnail spoilers
+		// Enable thumbnail spoilers
 		{
 			id: 'spoilers',
 			tab: tabs.style,
@@ -286,7 +286,7 @@ function toggleImageSearch(engine: string): (toggle: boolean) => void {
 	return toggleHeadStyle(engine, `.${engine}{display:initial;}`)
 }
 
-// Toogle an optional style element in the head
+// Toggle an optional style element in the head
 function toggleHeadStyle(name: string, css: string): (toggle: boolean) => void {
 	return toggle => {
 		const id = name + "-toggle"

@@ -132,7 +132,7 @@ export class TabbedModal extends BannerModal {
 	}
 }
 
-// FAQ and information pannel
+// FAQ and information panel
 class FAQPanel extends BannerModal {
 	constructor() {
 		super({id: "FAQ"})
@@ -160,17 +160,17 @@ class FAQPanel extends BannerModal {
 defer(() =>
 	new FAQPanel())
 
-// Apply localised hover tooltips to banner links
-function localiseTitles() {
+// Apply localized hover tooltips to banner links
+function localizeTitles() {
 	for (let id of ['feedback', 'FAQ', 'identity', 'options', 'account']) {
 		setTitle('banner-' + id, id)
 	}
 	setTitle('sync', 'sync')
 }
 
-defer(localiseTitles)
+defer(localizeTitles)
 
-// Set the title of an element to a localised string
+// Set the title of an element to a localized string
 export function setTitle(id: string, langID: string) {
 	write(() =>
 		document.querySelector('#' + id)

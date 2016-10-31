@@ -4,7 +4,7 @@ import { commaList, escape, setAttrs, pad } from '../../util'
 import { ImageData, fileTypes } from '../models'
 import { images as lang } from '../../lang'
 
-// Specs for hadnling image search link clicks
+// Specs for handling image search link clicks
 type ImageSearchSpec = {
 	type: ISType
 	url: string

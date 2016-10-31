@@ -87,7 +87,7 @@ func TestInitImager(t *testing.T) {
 	}
 }
 
-func TestVerifyDimentions(t *testing.T) {
+func TestVerifyDimensions(t *testing.T) {
 	config.Set(config.Configs{
 		MaxWidth:  2000,
 		MaxHeight: 2000,
@@ -114,7 +114,7 @@ func TestVerifyDimentions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			dims, err := verifyDimentions(img)
+			dims, err := verifyDimensions(img)
 			if err != c.err {
 				UnexpectedError(t, err)
 			}

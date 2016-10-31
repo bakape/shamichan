@@ -147,7 +147,7 @@ class ThreadForm extends FormView implements UploadForm {
 		})
 	}
 
-	// Retrieve the curently selected board, if on the /all/ board
+	// Retrieve the currently selected board, if on the /all/ board
 	getSelectedBoard(): string {
 		return this.$board.value.match(/^(\w+) -/)[1]
 	}

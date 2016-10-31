@@ -19,8 +19,8 @@ var (
 	// proxy.
 	IsReverseProxied bool
 
-	// ReverseProxyIP specifies the IP of a non-localost reverse proxy. Used for
-	// filtering in XFF IP determination.
+	// ReverseProxyIP specifies the IP of a non-localhost reverse proxy. Used
+	// for filtering in XFF IP determination.
 	ReverseProxyIP string
 )
 
@@ -62,7 +62,7 @@ func IsBoard(board string) bool {
 	return IsNonMetaBoard(board)
 }
 
-// IsNonMetaBoard returns wheather a valid board is a classic board and not
+// IsNonMetaBoard returns whether a valid board is a classic board and not
 // some other path that emulates a board
 func IsNonMetaBoard(b string) bool {
 	return config.IsBoard(b)
@@ -105,7 +105,7 @@ func BcryptHash(password string, rounds int) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(password), rounds)
 }
 
-// BcryptCompare compares a bcrypt hash with a user-suplied string
+// BcryptCompare compares a bcrypt hash with a user-supplied string
 func BcryptCompare(password string, hash []byte) error {
 	return bcrypt.CompareHashAndPassword(hash, []byte(password))
 }

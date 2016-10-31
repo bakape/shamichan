@@ -12,7 +12,7 @@ const (
 	MaxLengthBody = 2000
 )
 
-// ErrTooLong is passed, when a field exceeds the maximum string lenghth for
+// ErrTooLong is passed, when a field exceeds the maximum string length for
 // that specific field
 type ErrTooLong string
 

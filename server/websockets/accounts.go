@@ -79,7 +79,7 @@ func register(data []byte, c *Client) error {
 	return commitLogin(code, MessageRegister, req.ID, c)
 }
 
-// Seperated into its own function for cleanliness and testability
+// Separated into its own function for cleanliness and testability
 func handleRegistration(req loginRequest, c *Client) (
 	code loginResponseCode, err error,
 ) {
@@ -131,7 +131,7 @@ func checkPasswordAndCaptcha(password, ip string, captcha types.Captcha) (
 	return
 }
 
-// If login succesful, generate a session token and comit to DB. Otherwise
+// If login successful, generate a session token and commit to DB. Otherwise
 // simply send the response code the client.
 func commitLogin(code loginResponseCode, typ MessageType, id string, c *Client) (
 	err error,

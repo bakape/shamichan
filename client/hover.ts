@@ -20,7 +20,7 @@ const $overlay = document.querySelector("#hover-overlay")
 let postPreview: PostPreview,
 	imagePreview: HTMLElement
 
-// Centralised mousemove target tracking
+// Centralized mousemove target tracking
 const mouseMove = emitChanges<MouseMove>({
 	event: {
 		target: null,
@@ -82,7 +82,7 @@ class PostPreview extends View<any> {
 		const rect = this.$parent.getBoundingClientRect()
 
 		// The preview will never take up more than 100% screen width, so no
-		// need for checking horizontal overlflow. Must be applied before
+		// need for checking horizontal overflow. Must be applied before
 		// reading the height, so it takes into account post resizing to
 		// viewport edge.
 		this.el.style.left = rect.left + "px"
@@ -98,7 +98,7 @@ class PostPreview extends View<any> {
 	}
 
 	// Reclone and reposition on update. This is pretty expensive, but good
-	// enough, because only one post will ever be previewied at a time
+	// enough, because only one post will ever be previewed at a time
 	renderUpdates() {
 		const el = clonePost(this.$source)
 		this.el.replaceWith(el)

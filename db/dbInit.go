@@ -1,4 +1,4 @@
-// Initialises and loads RethinkDB
+// Initializes and loads RethinkDB
 
 package db
 
@@ -22,7 +22,7 @@ var (
 	// DBName is the name of the database to use
 	DBName = "meguca"
 
-	// IsTest can be overriden to not launch several infinite loops during tests
+	// IsTest can be overridden to not launch several infinite loops during tests
 	// or check DB version
 	IsTest bool
 
@@ -54,8 +54,8 @@ var (
 		"boards",
 	}
 
-	// Map of simple secondary indececes for tables
-	secondaryIndeces = [...]struct {
+	// Map of simple secondary indices for tables
+	secondaryIndices = [...]struct {
 		table, index string
 	}{
 		{"threads", "board"},
@@ -71,7 +71,7 @@ var (
 	})
 )
 
-// Document is a eneric RethinkDB Document. For DRY-ness.
+// Document is a generic RethinkDB Document. For DRY-ness.
 type Document struct {
 	ID string `gorethink:"id"`
 }
@@ -133,8 +133,8 @@ func Connect() (err error) {
 	return
 }
 
-// Confirm database verion is compatible, if not refuse to start, so we don't
-// mess up the DB irreversably.
+// Confirm database version is compatible, if not refuse to start, so we don't
+// mess up the DB irreversibly.
 func verifyDBVersion() error {
 	var version int
 	err := One(GetMain("info").Field("dbVersion"), &version)
@@ -234,12 +234,12 @@ func upgrade15to16() error {
 		return err
 	}
 
-	return CreateIndeces()
+	return CreateIndices()
 }
 
 // InitDB initialize a rethinkDB database
 func InitDB() error {
-	log.Printf("initialising database '%s'", DBName)
+	log.Printf("initializing database '%s'", DBName)
 	if err := Write(r.DBCreate(DBName)); err != nil {
 		return util.WrapError("creating database", err)
 	}
@@ -275,7 +275,7 @@ func populateDB() error {
 		return err
 	}
 
-	return CreateIndeces()
+	return CreateIndices()
 }
 
 // CreateTables creates all tables needed for meguca operation
@@ -312,18 +312,18 @@ func createTable(t string) r.Term {
 	return r.TableCreate(t)
 }
 
-// CreateIndeces create secondary indeces for faster table queries
-func CreateIndeces() error {
-	fns := make([]func() error, 0, len(secondaryIndeces)+len(AllTables))
+// CreateIndices creates secondary indices for faster table queries
+func CreateIndices() error {
+	fns := make([]func() error, 0, len(secondaryIndices)+len(AllTables))
 
-	for _, i := range secondaryIndeces {
+	for _, i := range secondaryIndices {
 		index := i // Capture variable
 		fns = append(fns, func() error {
 			return Write(r.Table(index.table).IndexCreate(index.index))
 		})
 	}
 
-	// Make sure all indeces are ready to avoid the race condition of and index
+	// Make sure all indices are ready to avoid the race condition of and index
 	// being accessed before its full creation.
 	for _, table := range AllTables {
 		fns = append(fns, waitForIndex(table))

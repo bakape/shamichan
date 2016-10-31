@@ -17,7 +17,6 @@ type ServerConfigs = {
 	maxThreads: number
 	JPEGQuality: number
 	PNGQuality: number
-	threadCooldown: number
 	maxSize: number
 	sessionExpiry: number
 	origin: string
@@ -147,7 +146,7 @@ export default class ConfigPanel extends AccountFormView {
 		super(attrs, () =>
 			this.extractConfigs())
 
-		// Request curent configuration and render the panel
+		// Request current configuration and render the panel
 		send(message.configServer, null)
 		handlers[message.configServer] = (conf: ServerConfigs) =>
 			this.handleResponse(conf)

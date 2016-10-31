@@ -244,7 +244,7 @@ func assertIP(t *testing.T, id int64, ip string) {
 		t.Fatal(err)
 	}
 	if res != ip {
-		t.Errorf("unexpcted ip: %s : %s", ip, res)
+		t.Errorf("unexpected ip: %s : %s", ip, res)
 	}
 }
 
@@ -343,7 +343,7 @@ func TestPostCreationValidations(t *testing.T) {
 	}
 }
 
-func TestPoctCreationOnLockedThread(t *testing.T) {
+func TestPostCreationOnLockedThread(t *testing.T) {
 	assertTableClear(t, "threads")
 	assertInsert(t, "threads", map[string]interface{}{
 		"id":      1,
@@ -542,8 +542,7 @@ func BenchmarkPostCreation(b *testing.B) {
 	defer Clients.Clear()
 
 	req := replyCreationRequest{
-		Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit," +
-			"sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+		Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 		postCreationCommon: postCreationCommon{
 			Password: "123",
 		},
@@ -614,7 +613,7 @@ func assertImageCounter(t *testing.T, id int64, ctr int) {
 		t.Fatal(err)
 	}
 	if res != ctr {
-		t.Errorf("unexpected thrad image counter: %d : %d", ctr, res)
+		t.Errorf("unexpected thread image counter: %d : %d", ctr, res)
 	}
 }
 

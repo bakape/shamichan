@@ -91,7 +91,7 @@ function elExists(el: Element): boolean {
 	return !!el && document.contains(el)
 }
 
-// Return element position dimentions against the viewport, if the element
+// Return element position dimensions against the viewport, if the element
 // is within the viewport
 function topDistance(el: Element, skipCheck: boolean): number | null {
 	const {top} = el.getBoundingClientRect()
@@ -123,7 +123,7 @@ function referenceDistance(): number {
 	}
 }
 
-// Check, if we are at page bottom and persists to position on scroll. Defered
+// Check, if we are at page bottom and persists to position on scroll. Deferred
 // to animation frames to reduce lag.
 function onScroll() {
 	if (ticking) {

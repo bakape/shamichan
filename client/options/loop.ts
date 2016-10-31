@@ -1,4 +1,4 @@
-// It is not very efficient to spam liteners to the options object. This
+// It is not very efficient to spam listeners to the options object. This
 // module loops through the post models and calls the appropriate methods in
 // batches.
 

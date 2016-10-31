@@ -249,7 +249,7 @@ func testGetThread(t *testing.T) {
 			},
 		},
 		{
-			name: "nonexistant thread",
+			name: "nonexistent thread",
 			id:   99,
 			err:  r.ErrEmptyResult,
 		},

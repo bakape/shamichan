@@ -35,7 +35,7 @@ const (
 	MessageDelete
 )
 
-// >= 30 are miscelenious and do not write to post models
+// >= 30 are miscellaneous and do not write to post models
 const (
 	// Update feeds
 	MessageSynchronise MessageType = 30 + iota
@@ -101,7 +101,7 @@ func (e errCaptcha) Error() string {
 
 type handler func([]byte, *Client) error
 
-// Decode message JSON into the suplied type. Will augment, once we switch to
+// Decode message JSON into the supplied type. Will augment, once we switch to
 // a binary message protocol.
 func decodeMessage(data []byte, dest interface{}) error {
 	return json.Unmarshal(data, dest)
@@ -115,11 +115,11 @@ func EncodeMessage(typ MessageType, msg interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	return prepependMessageType(typ, data), nil
+	return prependMessageType(typ, data), nil
 }
 
 // Prepend the encoded websocket message type to an already encoded message
-func prepependMessageType(typ MessageType, data []byte) []byte {
+func prependMessageType(typ MessageType, data []byte) []byte {
 	encoded := make([]byte, len(data)+2)
 	typeString := strconv.FormatUint(uint64(typ), 10)
 
@@ -140,7 +140,7 @@ func prepependMessageType(typ MessageType, data []byte) []byte {
 func authenticateCaptcha(captcha types.Captcha, ip string) bool {
 	conf := config.Get()
 
-	// Captchas disablled or running tests. Can not use API, when testing
+	// Captchas disabled or running tests. Can not use API, when testing
 	if isTest || !conf.Captcha {
 		return true
 	}
@@ -157,7 +157,7 @@ func authenticateCaptcha(captcha types.Captcha, ip string) bool {
 	}
 	res, err := http.PostForm("http://verify.solvemedia.com/papi/verify", data)
 	if err != nil {
-		printCapthcaError(err)
+		printCaptchaError(err)
 		return false
 	}
 	defer res.Body.Close()
@@ -165,18 +165,18 @@ func authenticateCaptcha(captcha types.Captcha, ip string) bool {
 	reader := bufio.NewReader(res.Body)
 	status, err := reader.ReadString('\n')
 	if err != nil {
-		printCapthcaError(err)
+		printCaptchaError(err)
 		return false
 	}
 	if status[:len(status)-1] != "true" {
 		reason, _ := reader.ReadString('\n')
-		printCapthcaError(errors.New(reason[:len(reason)-1]))
+		printCaptchaError(errors.New(reason[:len(reason)-1]))
 		return false
 	}
 
 	return true
 }
 
-func printCapthcaError(err error) {
+func printCaptchaError(err error) {
 	log.Println(errCaptcha{err})
 }

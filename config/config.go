@@ -18,17 +18,17 @@ var (
 	// Contains currently loaded global server configuration
 	global *Configs
 
-	// Map of board IDs to their cofiguration structs
+	// Map of board IDs to their configuration structs
 	boardConfigs = map[string]BoardConfContainer{}
 
 	// AllBoardConfigs stores board-specific configurations for the /all/
 	// metaboard. Constant.
 	AllBoardConfigs []byte
 
-	// JSON of client-accessable configuration
+	// JSON of client-accessible configuration
 	clientJSON []byte
 
-	// Hash of the gloabal configs. Used for live reloading configuration on the
+	// Hash of the global configs. Used for live reloading configuration on the
 	// client.
 	hash string
 
@@ -94,7 +94,7 @@ type Configs struct {
 	SessionExpiry     time.Duration `json:"sessionExpiry" gorethink:"sessionExpiry"`
 }
 
-// Public contains configurations exposable through public availability APIs
+// Public contains configurations exposeable through public availability APIs
 type Public struct {
 	Radio            bool   `json:"radio" gorethink:"radio"`
 	Hats             bool   `json:"hats" gorethink:"hats"`
@@ -116,7 +116,7 @@ type BoardConfigs struct {
 	Staff     map[string][]string `json:"staff" gorethink:"staff"`
 }
 
-// BoardPublic contains publically accessable board-specific configurations
+// BoardPublic contains publically accessible board-specific configurations
 type BoardPublic struct {
 	PostParseConfigs
 	Spoilers bool     `json:"spoilers" gorethink:"spoilers"`
@@ -195,7 +195,7 @@ func Set(c Configs) error {
 	return nil
 }
 
-// GetClient returns punlic availability configuration JSON and a truncated
+// GetClient returns public availability configuration JSON and a truncated
 // configuration MD5 hash
 func GetClient() ([]byte, string) {
 	globalMu.RLock()
@@ -231,7 +231,7 @@ func GetBoards() []string {
 	return boards
 }
 
-// IsBoard returns wheather the passed string is a currently existing board
+// IsBoard returns whether the passed string is a currently existing board
 func IsBoard(b string) bool {
 	boardMu.RLock()
 	defer boardMu.RUnlock()

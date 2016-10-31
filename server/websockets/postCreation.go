@@ -179,7 +179,7 @@ func insertPost(data []byte, c *Client) error {
 	}
 
 	// If the post contains a newline, slice till it and commit the remainder
-	// separatly as a splice
+	// separately as a splice
 	var forSplicing string
 	iNewline := strings.IndexRune(req.Body, '\n')
 	if iNewline > -1 {
@@ -253,7 +253,7 @@ func closePreviousPost(c *Client) error {
 	return nil
 }
 
-// Reatrieve post-related board configuraions
+// Retrieve post-related board configurations
 func getBoardConfig(board string) (conf config.PostParseConfigs, err error) {
 	conf = config.GetBoardConfigs(board).PostParseConfigs
 	if conf.ReadOnly {
@@ -262,7 +262,7 @@ func getBoardConfig(board string) (conf config.PostParseConfigs, err error) {
 	return
 }
 
-// Contruct the common parts of the new post for both threads and replies
+// Construct the common parts of the new post for both threads and replies
 func constructPost(req postCreationCommon, forcedAnon bool, c *Client) (
 	post types.DatabasePost, now int64, err error,
 ) {

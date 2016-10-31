@@ -15,7 +15,7 @@ type LoginResponse = {
 	session: string // Session ID token
 }
 
-// Response codes for loging in, registration and password changing
+// Response codes for logging in, registration and password changing
 export const enum responseCode {
 	success,
 	nameTaken,
@@ -32,7 +32,7 @@ export let loginID = localStorage.getItem("loginID"),
 	sessionToken = localStorage.getItem("sessionToken")
 
 // Only active AccountPanel instance
-export let accountPannel: AccountPanel
+export let accountPanel: AccountPanel
 
 // Account login and registration
 export default class AccountPanel extends TabbedModal {
@@ -41,7 +41,7 @@ export default class AccountPanel extends TabbedModal {
 
 	constructor() {
 		super({id: "account-panel"})
-		accountPannel = this
+		accountPanel = this
 
 		this.onClick({
 			'#logout': () =>
@@ -71,7 +71,7 @@ export default class AccountPanel extends TabbedModal {
 		}
 	}
 
-	// Render the login an redistration forms in a tabbed panel
+	// Render the login an registration forms in a tabbed panel
 	renderInitial() {
 		const html = HTML
 			`<div class="tab-butts">
@@ -126,7 +126,7 @@ export default class AccountPanel extends TabbedModal {
 		location.reload()
 	}
 
-	// Create handler for ynamically loading and rendering conditional view
+	// Create handler for dynamically loading and rendering conditional view
 	// modules
 	loadConditionalView(path: string): EventListener {
 		return () =>
@@ -165,7 +165,7 @@ class BaseLoginForm extends FormView {
 	}
 
 	// Handle the login request response from the server.
-	// Both registration and login requests reply with the same messsage type
+	// Both registration and login requests reply with the same message type
 	loginResponse({code, session}: LoginResponse) {
 		let text: string
 		switch (code) {
@@ -173,7 +173,7 @@ class BaseLoginForm extends FormView {
 			sessionToken = session
 			localStorage.setItem("sessionToken", session)
 			localStorage.setItem("loginID", loginID)
-			accountPannel.renderControls()
+			accountPanel.renderControls()
 			return
 		case responseCode.nameTaken:
 			text = lang.nameTaken
@@ -195,7 +195,7 @@ class BaseLoginForm extends FormView {
 	}
 }
 
-// Form for loggin into to an existing account
+// Form for logging into to an existing account
 class LoginForm extends BaseLoginForm {
 	constructor() {
 		super(() =>

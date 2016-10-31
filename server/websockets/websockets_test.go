@@ -219,27 +219,27 @@ func TestHandleMessage(t *testing.T) {
 	// Message too short
 	msg = []byte("0")
 	cl, _ = sv.NewClient()
-	asserHandlerError(t, cl, msg, invalidMessage)
+	assertHandlerError(t, cl, msg, invalidMessage)
 
 	// Unparsable message type
 	msg = []byte("nope")
-	asserHandlerError(t, cl, msg, invalidMessage)
+	assertHandlerError(t, cl, msg, invalidMessage)
 
 	// Not a sync message, when not synced
 	msg = []byte("99no")
-	asserHandlerError(t, cl, msg, invalidMessage)
+	assertHandlerError(t, cl, msg, invalidMessage)
 
 	// No handler
 	cl.synced = true
-	asserHandlerError(t, cl, msg, invalidMessage)
+	assertHandlerError(t, cl, msg, invalidMessage)
 
 	// Invalid inner message payload. Test proper type reflection of the
 	// errInvalidMessage error type
 	msg = []byte("30nope")
-	asserHandlerError(t, cl, msg, invalidCharacter)
+	assertHandlerError(t, cl, msg, invalidCharacter)
 }
 
-func asserHandlerError(t *testing.T, cl *Client, msg []byte, prefix string) {
+func assertHandlerError(t *testing.T, cl *Client, msg []byte, prefix string) {
 	err := cl.handleMessage(websocket.TextMessage, msg)
 	assertErrorPrefix(t, err, prefix)
 }

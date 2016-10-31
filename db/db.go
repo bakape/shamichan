@@ -1,4 +1,4 @@
-// Package db handles all core database intercations of the server
+// Package db handles all core database interactions of the server
 package db
 
 import (
@@ -28,7 +28,7 @@ var postReservationQuery = GetMain("info").
 	Field("new_val").
 	Field("postCtr")
 
-// Exec excutes the query and only returns an error, if any. Do not use for
+// Exec executes the query and only returns an error, if any. Do not use for
 // write queries.
 func Exec(query r.Term) error {
 	return query.Exec(RSession)

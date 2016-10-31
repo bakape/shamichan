@@ -31,12 +31,12 @@ let data: ThreadData[],
 	// Progress counter of the current board. Used for skipping useless renders.
 	progressCounter: number
 
-// Format a board name and title into cannonical board header format
+// Format a board name and title into canonical board header format
 export function formatHeader(name: string, title: string): string {
 	return `/${name}/ - ${escape(title)}`
 }
 
-// Cache the curent board contents and render the thread
+// Cache the current board contents and render the thread
 export default function cachetAndRender(threads: ThreadData[], ctr: number) {
 	data = threads
 	progressCounter = ctr
@@ -157,7 +157,7 @@ function renderRefreshButton(el: Element) {
 	}
 }
 
-// Toggle the [Rules] cotainer expansion or contraction
+// Toggle the [Rules] container expansion or contraction
 function toggleRules(e: MouseEvent) {
 	const $el = e.target as HTMLElement,
 		$aside = $el.closest("aside")
@@ -189,7 +189,7 @@ function writeThreads(threads: DocumentFragment) {
 	cat.append(threads)
 }
 
-// Refilter and rerender threads on seach input change
+// Refilter and rerender threads on search input change
 function onSearchChange(e: Event) {
 	const threads = renderThreads((e.target as HTMLInputElement).value, data)
 	writeThreads(threads)

@@ -112,7 +112,7 @@ func TestPostJSON(t *testing.T) {
 			"", 400, "",
 		},
 		{
-			"nonexitant post",
+			"nonexistent post",
 			"/post/66",
 			"", 404, "",
 		},
@@ -137,7 +137,7 @@ func TestPostJSON(t *testing.T) {
 			"", 400, "",
 		},
 		{
-			"nonexitant thread",
+			"nonexistent thread",
 			"/a/22",
 			"", 404, "",
 		},

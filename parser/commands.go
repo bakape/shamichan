@@ -84,7 +84,7 @@ func parseCommand(match []byte, board string) (types.Command, error) {
 
 		return com, nil
 
-	// Incerement pyu counter
+	// Increment pyu counter
 	case bytes.Equal(match, pyuCommand):
 		if !config.Get().Pyu {
 			return com, nil
@@ -122,7 +122,7 @@ func parseCommand(match []byte, board string) (types.Command, error) {
 	}
 }
 
-// Parse dice thow commands
+// Parse dice throw commands
 func parseDice(match []byte) ([]uint16, error) {
 	dice := diceRegexp.FindSubmatch(match)
 

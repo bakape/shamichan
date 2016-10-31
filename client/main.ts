@@ -26,7 +26,7 @@ if (localStorage.getItem("cookieVersion") !== cookieVersion.toString()) {
 	localStorage.setItem("cookieVersion", cookieVersion.toString())
 }
 
-// Load all stateful modules in dependancy order
+// Load all stateful modules in dependency order
 async function start() {
 	// Load asynchronously and concurently as fast as possible
 	let renderPage: () => void
