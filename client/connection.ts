@@ -11,14 +11,6 @@ import { fetchThread } from "./json"
 import identity from "./posts/posting/identity"
 import { postSM, postEvent, postState, postModel } from "./posts/posting/main"
 
-// A reqeust message to synchronise or resynchronise (after a connection loss)
-// to the server
-type SyncRequest = {
-	board: string
-	thread: number
-	id?: string
-}
-
 // Message types of the WebSocket communication protocol
 export const enum message {
 	invalid,
@@ -194,7 +186,7 @@ export function updateSyncTimestamp() {
 function prepareToSync(): connState {
 	renderStatus(syncStatus.connecting)
 	synchronise(true)
-	attemptTimer = setTimeout(() => resetAttempts(), 10000) as any
+	attemptTimer = setTimeout(resetAttempts, 10000) as any
 	return connState.syncing
 }
 
@@ -202,11 +194,6 @@ function prepareToSync(): connState {
 // subscribe to the apropriate event feeds and optionally try to send a logged
 // in user session authentication request.
 export async function synchronise(auth: boolean) {
-	const msg: SyncRequest = {
-		board: page.board,
-		thread: page.thread,
-	}
-
 	// If thread data is too old because of disconnect, computer suspention or
 	// resuming old tabs, refetch and sync differences. The actual deadline
 	// is 30 seconds, but a ten second buffer is probably sound.
@@ -227,23 +214,26 @@ export async function synchronise(auth: boolean) {
 		delete data.posts
 	}
 
-	send(message.synchronise, msg)
+	send(message.synchronise, {
+		board: page.board,
+		thread: page.thread,
+	})
 	if (auth) {
 		authenticate()
 	}
 
-	// Reclaim a post lost during after disconnecting, going on standby,
-	// resuming browser tab, etc.
-	if (
-		page.thread
-		&& postSM.state === postState.halted
+	// Reclaim a post lost after disconnecting, going on standby, resuming
+	// browser tab, etc.
+	if (page.thread && postSM.state === postState.halted) {
 		// No older than 28 minutes
-		&& postModel.time < Date.now() / 1000 + 28 * 60
-	) {
-		send(message.reclaim, {
-			id: postModel.id,
-			password: identity.postPassword,
-		})
+		if (postModel.time > (Date.now() / 1000 - 28 * 60)) {
+			send(message.reclaim, {
+				id: postModel.id,
+				password: identity.postPassword,
+			})
+		} else {
+			postSM.feed(postEvent.abandon)
+		}
 	}
 }
 
