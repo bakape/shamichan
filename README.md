@@ -53,6 +53,7 @@ License: GNU AGPL
     - More languages can be added by editing simple JSON files
 * Miscellaneous
     - Optional R/a/dio Now Playing banner
+    - Public JSON API
 
 ##Runtime dependencies
 * [RethinkDB](https://rethinkdb.com/docs/install/).
@@ -64,9 +65,13 @@ want to configure anything, just copy `/etc/rethinkdb/default.conf.sample` into
 Compiled binary release archives for linux/x86_64 and windows/x86_64 are
 downloadable from the [release](https://github.com/bakape/meguca/releases) page.
 
-##Production
+##Setup
 * See `./meguca help` for server operation
-* Login into the "admin" with the password "password" and change the password
+* Login into the "admin" account via the infinity symbol in the top banner with
+the password "password"
+* Change the default password
+* Create a board from the administration panel
+* Configure server from the administration panel
 
 ##Building from source
 
