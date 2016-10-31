@@ -6,6 +6,54 @@ Platforms: Linux, OSX, Win64
 
 License: GNU AGPL
 
+##Features
+* Posts and posting
+    - Character by character post updates
+    - Can edit entire line while writing
+    - Hovering quick reply for post authoring
+    - Dice roll, coin flip and eightball commands
+    - Desktop notifications, post highlighting and "(You)" on quote
+    - Post link hover previews, including cross-thread
+    - Optional relative post timestamps
+    - Image spoilering after closing a post
+    - Non-temporal and recursive post linking
+    - No posts per thread or threads per board limit
+    - Forced anonymity display mode
+    - Post hiding
+    - Option to display only the last 50 posts in a thread
+* Files and images
+    - JPEG, PNG, APNG, WEBM, MP3, MP4 and OGG supported
+    - Transparent PNG and GIF thumbnails
+    - Configurable size limits
+    - Inbuilt reverse image search
+    - No file is ever thumbnailed or stored twice, reducing server load and
+    disk space usage
+    - Any file already present on the server is "uploaded and thumbnailed"
+    instantly
+* Performance
+    - Low memory and CPU usage
+    - High vertical and easy horizontal scaling
+    - No frameworks and optimized code on both client and server
+    - Fast video and audio processing through C bindings to ffmpeg
+    - On-demand lazy client module loading and rendering
+* Client UI
+    - Scrolling compensation prevents post updates from moving the viewport
+    - Inbuilt DOM update batching to reduce redraws
+    - Multiple themes
+    - Custom user-uploaded backgrounds
+    - Configurable keyboard shortcuts
+    - Work mode aka Boss key
+    - Customisable top banner board link list
+    - Optional animated GIF thumbnails
+    - Settings export/import to/from JSON file
+* Board administration
+    - User board creation and configuration panels
+* Internationalization
+    - Client almost entirely localized in multiple languages
+    - More languages can be added by editing simple JSON files
+* Miscellaneous
+    - Optional R/a/dio Now Playing banner
+
 ##Runtime dependencies
 * [RethinkDB](https://rethinkdb.com/docs/install/).
 On Linux RethinkDB does not enable a configuration file by default. If you don't
@@ -69,9 +117,9 @@ thumbnails
 
 ###Linux only
 * make creates a Go workspace in the `.build` subdirectory. If you don't have a
-proper Go worksapce set up, you can simply `export GOPATH=$(pwd)/.build` to
+proper Go workspace set up, you can simply `export GOPATH=$(pwd)/.build` to
 temporarily assign `.build` as your Go workspace in the current shell. This will
 allow you to use native go commands such as `go test` and `go build`.
 
 ## Documentation
-* docs/nginx.config.example - ngingx configuration example
+* docs/nginx.config.example - nginx configuration example
