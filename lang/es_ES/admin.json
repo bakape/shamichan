@@ -1,13 +1,21 @@
 {
 	"boardNameTaken": "Board name already taken",
 	"ownNoBoards": "You don't own any boards",
-	"prune": [
+	"pruneThreads": [
 		"Prune threads",
-		"Delete threads and their images, when they exceed the board's thread limit"
+		"Delete threads that have not had any posts in N days"
+	],
+	"threadExpiry": [
+		"Thread expiry time",
+		"Number of days without new posts before a thread is deleted"
 	],
 	"pruneBoards": [
 		"Prune boards",
-		"Delete boards that have not had any new posts for 7 days"
+		"Delete boards that have not had any new posts for N days"
+	],
+	"boardExpiry": [
+		"Board expiry time",
+		"Number of days without new posts before a board is deleted"
 	],
 	"radio": [
 		"R/a/dio integration",
@@ -44,10 +52,6 @@
 	"PNGQuality": [
 		"PNG thumbnail compression",
 		"Lossy compression level of PNG thumbnails. Higher is lossier."
-	],
-	"maxThreads": [
-		"Threads per board limit",
-		"Maximum number of threads a board will retain, before the last ones are deleted, if thread pruning is enabled"
 	],
 	"sessionExpiry": [
 		"Account session expiry",

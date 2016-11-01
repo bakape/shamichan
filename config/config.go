@@ -38,7 +38,8 @@ var (
 
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
-		MaxThreads:    100,
+		ThreadExpiry:  14,
+		BoardExpiry:   7,
 		JPEGQuality:   80,
 		PNGQuality:    20,
 		MaxSize:       5,
@@ -79,14 +80,15 @@ All hash commands need to be input on their own line`
 // Configs stores the global server configuration
 type Configs struct {
 	Public
-	Prune             bool   `json:"prune" gorethink:"prune"`
+	PruneThreads      bool   `json:"pruneThreads" gorethink:"pruneThreads"`
 	PruneBoards       bool   `json:"pruneBoards" gorethink:"pruneBoards"`
 	Pyu               bool   `json:"pyu" gorethink:"pyu"`
 	MaxWidth          uint16 `json:"maxWidth" gorethink:"maxWidth"`
 	MaxHeight         uint16 `json:"maxHeight" gorethink:"maxHeight"`
-	MaxThreads        int    `json:"maxThreads" gorethink:"maxThreads"`
 	JPEGQuality       int
 	PNGQuality        int
+	ThreadExpiry      uint          `json:"threadExpiry" gorethink:"threadExpiry"`
+	BoardExpiry       uint          `json:"boardExpiry" gorethink:"boardExpiry"`
 	MaxSize           int64         `json:"maxSize" gorethink:"maxSize"`
 	Salt              string        `json:"salt" gorethink:"salt"`
 	FeedbackEmail     string        `json:"feedbackEmail" gorethink:"feedbackEmail"`

@@ -1,13 +1,21 @@
 {
 	"boardNameTaken": "Doska s týmto menom už existuje",
 	"ownNoBoards": "Nevlastníš žiadne dosky",
-	"prune": [
-		"Prune vlákna",
-		"Zmaž vlákna s obrázkami, keď priesnahnú limit na vlákno."
+	"pruneThreads": [
+		"Prune threads",
+		"Delete threads that have not had any posts in N days"
+	],
+	"threadExpiry": [
+		"Thread expiry time",
+		"Number of days without new posts before a thread is deleted"
 	],
 	"pruneBoards": [
 		"Prune boards",
-		"Delete boards that have not had any new posts for 7 days"
+		"Delete boards that have not had any new posts for N days"
+	],
+	"boardExpiry": [
+		"Board expiry time",
+		"Number of days without new posts before a board is deleted"
 	],
 	"radio": [
 		"R/a/dio integrácia",
@@ -44,10 +52,6 @@
 	"PNGQuality": [
 		"PNG kompresia náhľadu",
 		"Stratová kompresia PNG náhľadov. Vyššia je horšia"
-	],
-	"maxThreads": [
-		"Threads per board limit",
-		"Maximum number of threads a board will retain, before the last ones are deleted, if thread pruning is enabled"
 	],
 	"sessionExpiry": [
 		"Vypršanie sedenia pre účet",

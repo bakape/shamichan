@@ -97,8 +97,8 @@ type Thread struct {
 
 // DatabaseThread is a template for writing new threads to the database
 type DatabaseThread struct {
-	PostCtr   int16  `gorethink:"postCtr"`
-	ImageCtr  int16  `gorethink:"imageCtr"`
+	PostCtr   int    `gorethink:"postCtr"`
+	ImageCtr  int    `gorethink:"imageCtr"`
 	ID        int64  `gorethink:"id"`
 	ReplyTime int64  `gorethink:"replyTime"`
 	Subject   string `gorethink:"subject"`

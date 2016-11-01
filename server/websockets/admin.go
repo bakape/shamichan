@@ -50,12 +50,9 @@ func configServer(data []byte, c *Client) error {
 
 	query := db.GetMain("config").
 		Replace(func(doc r.Term) r.Term {
-			return r.Expr(conf).
-				// The "boards" field is computed dynamically. Don't insert it.
-				Without("boards").
-				Merge(map[string]string{
-					"id": "config",
-				})
+			return r.Expr(conf).Merge(map[string]string{
+				"id": "config",
+			})
 		})
 	if err := db.Write(query); err != nil {
 		return err

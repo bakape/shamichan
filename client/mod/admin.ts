@@ -6,7 +6,7 @@ import { table, makeFrag } from '../util'
 import { langs, themes } from '../options/specs'
 
 type ServerConfigs = {
-	prune: boolean
+	pruneThreads: boolean
 	pruneBoards: boolean
 	radio: boolean
 	hats: boolean
@@ -14,11 +14,12 @@ type ServerConfigs = {
 	pyu: boolean
 	maxWidth: number
 	maxHeight: number
-	maxThreads: number
 	JPEGQuality: number
 	PNGQuality: number
 	maxSize: number
-	sessionExpiry: number
+    sessionExpiry: number
+    threadExpiry: number
+	boardExpiry: number
 	origin: string
 	salt: string
 	excludeRegex: string
@@ -37,15 +38,20 @@ const specs: InputSpec[] = [
 		type: inputType.boolean,
 	},
 	{
-		name: "prune",
+		name: "pruneThreads",
 		type: inputType.boolean,
+	},
+	{
+		name: "threadExpiry",
+		type: inputType.number,
+		min: 1,
 	},
 	{
 		name: "pruneBoards",
 		type: inputType.boolean,
 	},
 	{
-		name: "maxThreads",
+		name: "boardExpiry",
 		type: inputType.number,
 		min: 1,
 	},
@@ -154,10 +160,11 @@ export default class ConfigPanel extends AccountFormView {
 
 	// Render the panel element contents
 	render(conf: ServerConfigs) {
-		const html = table(specs, spec =>
-			([spec.label, spec.tooltip] = lang[spec.name],
-				spec.value = conf[spec.name],
-				renderInput(spec)))
+		const html = table(specs, spec => {
+			[spec.label, spec.tooltip] = lang[spec.name]
+			spec.value = conf[spec.name]
+			return renderInput(spec)
+		})
 		this.renderForm(makeFrag(html))
 	}
 

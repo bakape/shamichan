@@ -12,6 +12,8 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
+const eightDays = time.Hour * 24 * 8
+
 func TestExpireUserSessions(t *testing.T) {
 	assertTableClear(t, "accounts")
 
@@ -352,18 +354,24 @@ func deleteThreadWithImages(t *testing.T) {
 
 func TestDeleteUnusedBoards(t *testing.T) {
 	assertTableClear(t, "boards", "threads", "posts")
+	config.Set(config.Configs{
+		BoardExpiry: 7,
+		PruneBoards: true,
+	})
 
 	t.Run("no unused boards", func(t *testing.T) {
-		(*config.Get()).PruneBoards = true
+		t.Parallel()
+
 		if err := deleteUnusedBoards(); err != nil {
 			t.Fatal(err)
 		}
 	})
 
 	t.Run("board with no threads", func(t *testing.T) {
-		(*config.Get()).PruneBoards = true
+		t.Parallel()
+
 		assertInsert(t, "boards", config.DatabaseBoardConfigs{
-			Created: time.Now().Add((-week - 1) * time.Second),
+			Created: time.Now().Add(-eightDays),
 			BoardConfigs: config.BoardConfigs{
 				ID: "l",
 			},
@@ -378,7 +386,7 @@ func TestDeleteUnusedBoards(t *testing.T) {
 	t.Run("pruning disabled", func(t *testing.T) {
 		(*config.Get()).PruneBoards = false
 		assertInsert(t, "boards", config.DatabaseBoardConfigs{
-			Created: time.Now().Add((-week - 1) * time.Second),
+			Created: time.Now().Add(-eightDays),
 			BoardConfigs: config.BoardConfigs{
 				ID: "x",
 			},
@@ -394,8 +402,11 @@ func TestDeleteUnusedBoards(t *testing.T) {
 }
 
 func testDeleteUnusedBoards(t *testing.T) {
-	(*config.Get()).PruneBoards = true
-	expired := time.Now().Add((-week - 1) * time.Second)
+	config.Set(config.Configs{
+		PruneBoards: true,
+		BoardExpiry: 7,
+	})
+	expired := time.Now().Add(-eightDays)
 	fresh := time.Now()
 
 	boards := [...]config.DatabaseBoardConfigs{
@@ -492,4 +503,63 @@ func testDeleteUnusedBoards(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestDeleteOldThreads(t *testing.T) {
+	assertTableClear(t, "posts", "threads")
+	config.Set(config.Configs{
+		ThreadExpiry: 7,
+	})
+
+	t.Run("no expired threads", func(t *testing.T) {
+		(*config.Get()).PruneThreads = true
+		if err := deleteOldThreads(); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	assertInsert(t, "threads", []types.DatabaseThread{
+		{ID: 1},
+		{ID: 2},
+	})
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:   1,
+					Time: time.Now().Add(-eightDays).Unix(),
+				},
+				OP: 1,
+			},
+		},
+		{
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID:   2,
+					Time: time.Now().Unix(),
+				},
+				OP: 2,
+			},
+		},
+	})
+
+	t.Run("pruning disabled", func(t *testing.T) {
+		(*config.Get()).PruneThreads = false
+		if err := deleteOldThreads(); err != nil {
+			t.Fatal(err)
+		}
+		assertDeleted(t, FindPost(1), false)
+		assertDeleted(t, FindThread(1), false)
+	})
+
+	t.Run("deleted", func(t *testing.T) {
+		(*config.Get()).PruneThreads = true
+		if err := deleteOldThreads(); err != nil {
+			t.Fatal(err)
+		}
+		for i := int64(1); i <= 2; i++ {
+			assertDeleted(t, FindPost(i), i == 1)
+			assertDeleted(t, FindThread(i), i == 1)
+		}
+	})
 }

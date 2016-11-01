@@ -10,7 +10,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const week = 7 * 24 * 60 * 60
+const day = 24 * 60 * 60
 
 var sessionExpiryQuery = r.
 	Table("accounts").
@@ -35,25 +35,6 @@ var postClosingQuery = r.
 		"editing":     false,
 		"lastUpdated": r.Now().ToEpochTime().Floor(),
 	})
-
-var getExpiredBoards = r.
-	Table("boards").
-	Filter(r.
-		Row.
-		Field("created").
-		Lt(r.Now().Sub(week)).
-		And(r.
-			Table("posts").
-			GetAllByIndex("board", r.Row.Field("id")).
-			Pluck("time").
-			OrderBy("time").
-			Nth(-1).
-			Field("time").
-			Lt(r.Now().ToEpochTime().Sub(week)).
-			Default(true),
-		),
-	).
-	Field("id")
 
 var expireImageTokensQuery = r.
 	Table("imageTokens").
@@ -100,6 +81,7 @@ func runMinuteTasks() {
 func runHourTasks() {
 	logError("session cleanup", expireUserSessions())
 	logError("board cleanup", deleteUnusedBoards())
+	logError("thread cleanup", deleteOldThreads())
 }
 
 func logError(prefix string, err error) {
@@ -136,14 +118,34 @@ func expireImageTokens() error {
 }
 
 // Delete boards that are older than 1 week and have not had any new posts for
-// a week.
+// N days.
 func deleteUnusedBoards() error {
-	if !config.Get().PruneBoards {
+	conf := config.Get()
+	if !conf.PruneBoards {
 		return nil
 	}
 
+	q := r.
+		Table("boards").
+		Filter(r.
+			Row.
+			Field("created").
+			Lt(r.Now().Sub(day * conf.BoardExpiry)).
+			And(r.
+				Table("posts").
+				GetAllByIndex("board", r.Row.Field("id")).
+				Pluck("time").
+				OrderBy("time").
+				Nth(-1).
+				Field("time").
+				Lt(r.Now().ToEpochTime().Sub(day * conf.BoardExpiry)).
+				Default(true),
+			),
+		).
+		Field("id")
+
 	var expired []string
-	if err := All(getExpiredBoards, &expired); err != nil {
+	if err := All(q, &expired); err != nil {
 		return err
 	}
 
@@ -164,6 +166,40 @@ func deleteUnusedBoards() error {
 		// less consequences to an interrupted cleanup task.
 		q = r.Table("boards").Get(board).Delete()
 		if err := Write(q); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Delete threads that have not had any new posts in N days.
+func deleteOldThreads() error {
+	conf := config.Get()
+	if !conf.PruneThreads {
+		return nil
+	}
+
+	q := r.
+		Table("posts").
+		GroupByIndex("op").
+		Field("time").
+		Max().
+		Ungroup().
+		Filter(r.Row.
+			Field("reduction").
+			Lt(r.Now().ToEpochTime().Sub(day * conf.ThreadExpiry)),
+		).
+		Field("group").
+		Default(nil)
+
+	var expired []int64
+	if err := All(q, &expired); err != nil {
+		return err
+	}
+
+	for _, t := range expired {
+		if err := DeleteThread(t); err != nil {
 			return err
 		}
 	}
