@@ -50,6 +50,10 @@ export const enum message {
 
 	// Concatenation of multiple websocket messages to reduce transport overhead
 	concat,
+
+	// Invokes no operation on the server. Used to test the client's connection
+	// in situations, when you can't be certain the client is still connected.
+	NOOP,
 }
 
 export type MessageHandler = (msg: {}) => void
@@ -261,8 +265,19 @@ export function start() {
 // Work around browser slowing down/suspending tabs and keep the FSM up to date
 // with the actual status.
 function onWindowFocus() {
-	if (connSM.state !== connState.desynced && navigator.onLine) {
-		connSM.feed(connEvent.retry)
+	if (!navigator.onLine) {
+		return
+	}
+	switch (connSM.state) {
+		// Ensure still connected, in case the computer went to sleep or
+		// hibernate or the mobile browser tab was suspended.
+		case connState.synced:
+			send(message.NOOP, null)
+			break
+		case connState.desynced:
+			break
+		default:
+			connSM.feed(connEvent.retry)
 	}
 }
 

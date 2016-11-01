@@ -59,6 +59,11 @@ const (
 
 	// Concatenation of multiple websocket messages to reduce transport overhead
 	MessageConcat
+
+	// Message from the client meant to invoke no operation. Mostly used as a
+	// one way ping, because the JS Websocket API does not provide access to
+	// pinging.
+	MessageNOOP
 )
 
 var (
@@ -86,6 +91,7 @@ var (
 		MessageSplice:         spliceText,
 		MessageInsertPost:     insertPost,
 		MessageInsertImage:    insertImage,
+		MessageNOOP:           noop,
 	}
 )
 
@@ -179,4 +185,9 @@ func authenticateCaptcha(captcha types.Captcha, ip string) bool {
 
 func printCaptchaError(err error) {
 	log.Println(errCaptcha{err})
+}
+
+// No operation message handler. Used as a one way pseudo-ping.
+func noop(_ []byte, _ *Client) error {
+	return nil
 }
