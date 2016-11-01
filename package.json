@@ -8,7 +8,7 @@
   "dependencies": {
     "core-js": "^2.4.1",
     "dom4": "^1.8.3",
-    "fs-extra": "^0.30.0",
+    "fs-extra": "^1.0.0",
     "gulp": "^3.8.11",
     "gulp-babel": "^6.1.2",
     "gulp-cached": "^1.1.0",
