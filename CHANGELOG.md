@@ -2,43 +2,65 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v2.6.0 - 2016-11-02
+* Add
+	- OGG and MP4 upload support
+	- Preview new post credentials before allocation
+	- Configurable old board and thread pruning
+	- Link to unload to the last 50 posts at thread bottom
+	- Floating quick reply
+	- Box shadows to all floating UI elements, except image previews
+	- Desktop notifications on quoting the user's posts
+* Change
+	- Speed up upload and thumbnailing of files already present on the server
+	- Fix configurable Last N post display number to 50 posts
+	- Optimised large thread overall performance and responsiveness
+* Fix
+	- Omitted post and image span wrapping
+	- Text spoiler display honoring board spoiler configuration
+	- Forced anonymity setting
+	- Spaces not displaying after text spoilers
+	- SVG link icon colours
+	- Middle clicking on image search links
+	- Missing content after resuming from standby or a background tab on mobile
+
 ##v2.5.1 - 2016-10-23
-* Fix:
+* Fix
 	- Board configuration live reloading
 
 ##v2.5.0 - 2016-10-22
-* Fix:
+* Fix
 	- Existing board updates on board creation
 	- Don't lock to bottom, when navigating between threads
-* Add:
+* Add
 	- Cross-thread post previews
 	- Underline reverse links in post hover previews
 
 ##v2.4.1 - 2016-10-21
-* Fix:
+* Fix
 	- Page not loading, when there are no boards created
 
 ##v2.4.0 - 2016-10-18
-* Add:
+* Add
 	- Youtube, SoundCloud and Vimeo embeds
 	- Optional notice for mature content
 	- Ability to continue posts during connection loss
-* Fix:
+* Fix
 	- Large post preview positioning in FireFox
 	- Firefox jumping to thread top on post link click
-	- Incosistecies in scrolling to posts on link clicks
+	- Inconsistencies in scrolling to posts on link clicks
 	- Possible crashes on WebM and MP3 processing
 * Change
 	- Hide file upload controls while uploading
 	- Scroll to bottom on post creation
 
 ##v2.3.0 - 2016-10-08
-* Warning:
+* Warning
 	- An automatic database upgrade will be performed. Make sure only one
 	instance of meguca is running at that time. It is also recommended to back
 	up the database before upgrading.
-* Add:
-	- Highlighting of posts qouting you
+* Add
+	- Highlighting of posts quoting you
 	- MP3 uploads even without cover art
 	- Board rule display widget
 	- Board notice display widget
@@ -46,20 +68,20 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Manual catalog refreshing
 	- Automatic catalog refreshing, when tab is hidden
 	- Automatically delete boards that have not had any posts for 7 days
-	- Make rule for updating project and dependancies
-	- Ukranian and Slovak language packs
+	- Make rule for updating project and dependencies
+	- Ukrainian and Slovak language packs
 	- Ability to spoiler images after allocation
-* Change:
+* Change
 	- Navigatable board selection sidebar
 	- Hide successive empty newlines
 	- Batch concatenated live updates in 0.2 second intervals
 	- Don't log abnormal websocket closure errors
-* Remove:
+* Remove
 	- [New Thread] button from board page bottom
-	- Legacy deployment script. Superseeded by binary releases.
+	- Legacy deployment script. Superseded by binary releases.
 	- ES5 support. All browsers are now required to support ES6 and are notified
 	to update, if feature detection fails.
-* Fix:
+* Fix
 	- #flip always returning false
 	- Drastically improved live update CPU and memory usage. Updates in will no
 	longer slow down as a thread gets larger.
@@ -67,38 +89,38 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Etag generation on upload assets and JSON
 
 ##v2.2.0-beta - 2016-09-02
-* Add:
+* Add
 	- Configurable board navigation panel
-	- Board configutation WebUI
-	- Optional Solve Media captcha integartion
+	- Board configuration WebUI
+	- Optional Solve Media captcha integration
 	- Thread and post creation and basic updating
-* Change:
+* Change
 	- Required Go version to 1.7
 	- Move origin configuration to server flag
 	- Restrict board names to [a-z0-9]{1,3}
 	- Remove minimum length requirement for passwords
-* Fix:
+* Fix
 	- Client HTTPS detection
 	- SystemJS not loading in Palemoon
 	- Board list retrieval with no boards created
 	- Captcha reloading in login/registration forms
 
 ##v2.1.0-alpha - 2016-07-04
-* License:
+* License
 	- Relicense under GNU AGPL
-* Add:
+* Add
 	- HTTP and database connection flags. See `./meguca help`.
 	- Server configuration WebUI
 	- Basic account management for staff
 	- User-creatable boards
 	- Global "admin" account
-* Change:
+* Change
 	- Highlight all banner panel toggles, until clicked
 	- Descriptive text error pages instead of graphical ones
-	- Hardcode /all/ as default board
+	- Hard code /all/ as default board
 	- Make spoilers board-specific
-* Fix:
-	- Duplicative header writing, when using Chrome dev tools
+* Fix
+	- Duplicate header writing, when using Chrome dev tools
 * Remove
 	- Staff board
 	- Pseudo boards
@@ -111,57 +133,57 @@ Start tracking v2 progress in versions for easier debugging
 	- Switched DBMS to RethinkDB
 
 ##v1.9.6 - 2016-08-11
-* Add:
+* Add
 	- Turkish language pack
 
 ##v1.9.5 - 2016-07-12
-* Fix:
+* Fix
 	- Outdated desustorage URL
 
 ##v1.9.4 - 2016-06-21
-* Fix:
+* Fix
 	- Server crashing, when launched from init script on Debian
 
 ##v1.9.3 - 2016-06-11
-* Fix:
-	- Don't autoexpand files with audio and PDF
+* Fix
+	- Don't auto expand files with audio and PDF
 
 ##v1.9.2 - 2016-05-27
-* Fix:
+* Fix
 	- Server crashes on catalog pages
 
 ##v1.9.1 - 2016-04-29
-* Fix:
-	- Spontanious server crashes
+* Fix
+	- Spontaneous server crashes
 
 ##v1.9.0 - 2016-04-29
-* Change:
-	- Replace homebrew webapp install prompt with Android Chrome install banner
+* Change
+	- Replace homebrew web app install prompt with Android Chrome install banner
 
 ##v1.8.3 - 2016-04-17
-* Change:
-	- Restore web manifest install promt on Android Chrome/FF
+* Change
+	- Restore web manifest install prompt on Android Chrome/FF
 
 ##v1.8.2 - 2016-04-11
-* Fix:
+* Fix
 	- Revert bugged SockJS version change
 
 ##v1.8.1 - 2016-04-05
-* Fix:
+* Fix
 	- Websocket heartbeat timeout crashes
 
 ##v1.8.0 - 2016-04-03
-* Add:
+* Add
 	- Material Design theme
-* Fix:
+* Fix
 	- Syncing of mobile devices
 
 ##v1.7.5 - 2016-04-01
-* Fix:
+* Fix
 	- Not being able to connect to websocket in some cases
 
 ##v1.7.4 - 2016-03-28
-* Fix:
+* Fix
 	- Post hover anonymisation
 
 ##v1.7.3 - 2016-02-12
@@ -245,7 +267,7 @@ Start tracking v2 progress in versions for easier debugging
 
 ##v1.2.7 - 2015-10-11
 * Fixed
-	- "Workst best with" appearing on Chromium browsers
+	- "Works best with" appearing on Chromium browsers
 	- Skewed clocks resulting in post showing in the future
 
 ##v1.2.6 - 2015-10-10
@@ -266,12 +288,12 @@ Start tracking v2 progress in versions for easier debugging
 
 ##v1.2.3 2015-10-03
 * Fixed
-	- New post keboard shortcut
+	- New post keyboard shortcut
 
 ##v1.2.2 - 2015-10-02
 * Changed
-	- Refactored page scrollinh on change compensation
-	- Default image hower preview and relative timestamp settings
+	- Refactored page scrolling on change compensation
+	- Default image hover preview and relative timestamp settings
 
 ##v1.2.1 - 2015-09-30
 * Fixed
@@ -288,7 +310,7 @@ Start tracking v2 progress in versions for easier debugging
 * Fixed
 	- Post menu background artefact
 	- Missing post menu button on console theme
-	- Reaload looping, when behind CDN
+	- Reload looping, when behind CDN
 
 ##v1.1.0 - 2015-09-22
 * Added
@@ -312,7 +334,7 @@ Start tracking v2 progress in versions for easier debugging
 	- Ocean theme
 	- Full ETag support
 	- Debug mode forcing client-side with `debug=true` query string
-	- Compatability bundle for older, hipster and outright retarded browsers
+	- Compatibility bundle for older, hipster and outright retarded browsers
 	- Scroll to post after contracting images taller than the viewport
 	- `scripts/send` for pushing arbitrary messages to all client from the
     server's shell
@@ -332,10 +354,10 @@ Start tracking v2 progress in versions for easier debugging
 	- Reason field for bans
 	- <noscript> header
 	- Panel listing active
-	- Full client-facing localisation
+	- Full client-facing localization
 	- Operational dev guide
 	- Separate mobile HTML templates
-	- Uncommited text colour to glass theme
+	- Uncommitted text colour to glass theme
 	- Supported browser indicator
 	- Configurable custom `>>>/${link}/` targets
 	- Optional global server-side anonymisation
@@ -345,16 +367,16 @@ Start tracking v2 progress in versions for easier debugging
 	- Pastebin embed height to 0.65 of viewport
 	- Client to single page application
 	- Faster builder.js client recompilation on change
-	- Upgraded dependancies, including minimal node.js version
+	- Upgraded dependencies, including minimal node.js version
 	- Google image search enabled by default
 	- Post menu only disappears on click either inside or outside the menu
 	- Render catalog server-side
 	- JSON API spec
-	- Metric ton of performance improvments
+	- Metric ton of performance improvements
 	- Switched to 4chan-like thread expiry model with page limits and autosaging
 	- Persist `sage` in the email field
 	- Clicking on catalog images no longer opens new tab
-	- Criptographically secure mnemonics
+	- Cryptographically secure mnemonics
 	- Always render inter-board navigation
 	- Updated JSON API post spec
 	- Restyle moderation selection checkbox
@@ -370,13 +392,13 @@ Start tracking v2 progress in versions for easier debugging
 	- Disconnect favicon 404, if served from subdomain
 	- Navigating with inter-board post links
 	- Thread hiding
-	- Memory leak, if repetedly clicking on UTC clock
+	- Memory leak, if repeatedly clicking on UTC clock
 	- Following a locked page bottom on post text input
 	- Ctrl clicking post links
 	- DOM bumping on reply shift on board pages
-	- (You) disapearing on page refresh
+	- (You) disappearing on page refresh
 	- Option exporting on Firefox
-	- Image hower previews not respecting aspect ration on Firefox
+	- Image hover previews not respecting aspect ration on Firefox
 	- Opening new tab when clicking audio controls in Firefox
 	- Dangling apostrophe in tripcode
 	- WebM expansion on Chrome for Android
@@ -396,7 +418,7 @@ Start tracking v2 progress in versions for easier debugging
 	- Changelog banner icon
 	- Post focusing menu option
 	- Board curfews
-	- Imager deamon stub
+	- Imager daemon stub
 	- Dynamic post unloading (temporarily, until reimplementation)
 * Breaking
 	- Dice storage in old threads
@@ -428,25 +450,25 @@ Start tracking v2 progress in versions for easier debugging
 	- Changelog icon to the banner
 * Fixed
 	- Administrator panel rendering on some configurations
-	- Silent desynchronisation on mobile
+	- Silent desynchronization on mobile
 	- Syncwatch imprecision
 	- Memory leak in syncwatch
 	- `Could not get response` error, when uploading with drag&drop
-	- Disapering replies on mobile
+	- Disappearing replies on mobile
 * Changed
 	- `npm install` now copies configuration files from examples on first run
-	- Image hover previes now use the more responsive velocity.js library
+	- Image hover previews now use the more responsive velocity.js library
 	- Moved r/a/dio API polling server-side. Now passed to the clients through
     push notifications
 	- Patched upkeep/radio.js to use push notifications
 	- Made `#pyu` toggleable in the config.js
 	- Reduced the banner''s screen footprint
-	- Moved the separate archive deamon into a toggleable server module
+	- Moved the separate archive daemon into a toggleable server module
 	- Log errors to meguca's root directory
 	- Updated init script sample
-	- Notification text colour to red for easier noticability
+	- Notification text colour to red for easier noticeability
 	- `make clean` to also delete compiled JS and CSS files
-	- Vagrant now supplies all of the dependancies, including optional. Be sure
+	- Vagrant now supplies all of the dependencies, including optional. Be sure
     to run `vagrant provision` for existing VMs
 * Removed
 	- Deployment script
@@ -471,7 +493,7 @@ Start tracking v2 progress in versions for easier debugging
 	- websocket hangups on node server disconnect
 	- Caching issues on Android
 * Changed
-	- Expanded and reorganised documentation
+	- Expanded and reorganized documentation
 
 ##v0.9.0 - 2015-02-17
 * Added
@@ -495,7 +517,7 @@ Start tracking v2 progress in versions for easier debugging
 
 ##v0.8.0 - 2015-01-30
 *  Changed
-	- Acquire most dependancies through npm
+	- Acquire most dependencies through npm
 	- Moved various settings from config.js to hot.js
 	- Duplicate image detection similar to findimagedupes.pl
 	- Replaced homebrew client builder with gulp.js
@@ -505,7 +527,7 @@ Start tracking v2 progress in versions for easier debugging
 	- Report Recaptcha from HTTPS pages
 	- Illya dance + glass theme distortion on webkit browsers
 *  Removed
-	- Posted From siginitures
+	- Posted From signatures
 *  Added
 	- Button for Fun Thread dispatching
 	- Client configuration push updates
@@ -525,7 +547,7 @@ Start tracking v2 progress in versions for easier debugging
 	- Expand all images button
 *  Removed
 	- Large thumbnail mode
-	- Japanese text-to-speach
+	- Japanese text-to-speech
 	- Composite spoilers
 	- WebM audio spoilers
 *  Changed
@@ -556,5 +578,5 @@ Start tracking v2 progress in versions for easier debugging
 
 ##v0.4.0 - 2014-12-3
 *  Info
-	- Started versioning seperately from
+	- Started versioning separately from
     [doushio](https://github.com/lalcmellkmal/doushio)

@@ -21,6 +21,7 @@ License: GNU AGPL
     - Forced anonymity display mode
     - Post hiding
     - Option to display only the last 50 posts in a thread
+    - Optional automatic deletion of unused threads and boards
 * Files and images
     - JPEG, PNG, APNG, WEBM, MP3, MP4 and OGG supported
     - Transparent PNG and GIF thumbnails
@@ -76,16 +77,16 @@ the password "password"
 ##Building from source
 
 ###All Platforms
-* Install:
+* Install
 	* [Go](https://golang.org/doc/install) >=1.7
 	* [Node.js](https://nodejs.org) >=5.0 (for building the client)
 
 ###Linux and OSX
-* Install:
+* Install
     * GCC or Clang
     * make
     * ffmpeg >= 3.0 development libraries (libavcodec, libavutil, libavformat,
-    libswscale) compiled with:
+    libswscale) compiled with
         * libvpx
         * libvorbis
         * libopus
@@ -99,7 +100,7 @@ the password "password"
 ###Windows
 * Install [MSYS2](https://sourceforge.net/projects/msys2/)
 * Open MSYS2 shell
-* Install with pacman:
+* Install with pacman
     * mingw-w64-x86_64-ffmpeg
     * mingw-w64-x86_64-gcc
     * mingw-w64-x86_64-pkg-config
