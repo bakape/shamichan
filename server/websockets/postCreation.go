@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"unicode/utf8"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -230,8 +232,8 @@ func insertPost(data []byte, c *Client) error {
 		op:         sync.OP,
 		time:       now,
 		board:      sync.Board,
-		Buffer:     *bytes.NewBuffer([]byte(req.Body)),
-		bodyLength: len(req.Body),
+		Buffer:     *bytes.NewBuffer([]byte(post.Body)),
+		bodyLength: utf8.RuneCountInString(post.Body),
 		hasImage:   !noImage,
 	}
 
@@ -239,7 +241,7 @@ func insertPost(data []byte, c *Client) error {
 		if err := parseLine(c, true); err != nil {
 			return err
 		}
-		return spliceLine(spliceRequest{Text: forSplicing}, c)
+		return spliceLine(spliceRequest{Text: []rune(forSplicing)}, c)
 	}
 
 	return nil

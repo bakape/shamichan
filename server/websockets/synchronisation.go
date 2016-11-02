@@ -7,6 +7,8 @@ import (
 	"errors"
 	"strings"
 
+	"unicode/utf8"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/types"
@@ -129,7 +131,7 @@ func reclaimPost(data []byte, c *Client) error {
 	c.openPost = openPost{
 		hasImage:   post.Image != nil,
 		Buffer:     *bytes.NewBufferString(post.Body[iLast:]),
-		bodyLength: len(post.Body),
+		bodyLength: utf8.RuneCountInString(post.Body),
 		id:         post.ID,
 		op:         post.OP,
 		time:       post.Time,

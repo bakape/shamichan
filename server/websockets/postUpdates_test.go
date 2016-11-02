@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"unicode/utf8"
+
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
@@ -573,9 +575,11 @@ func TestSpliceValidityChecks(t *testing.T) {
 			t.Parallel()
 
 			req := spliceRequest{
-				Start: c.start,
-				Len:   c.len,
-				Text:  c.text,
+				spliceCoords: spliceCoords{
+					Start: c.start,
+					Len:   c.len,
+				},
+				Text: []rune(c.text),
 			}
 			if err := spliceText(marshalJSON(t, req), cl); err != c.err {
 				UnexpectedError(t, err)
@@ -624,6 +628,15 @@ func TestSplice(t *testing.T) {
 			log:   []string{`05{"id":2,"start":0,"len":1,"text":""}`},
 		},
 		{
+			name:  "remove one multibyte char",
+			start: 2,
+			len:   1,
+			text:  "",
+			init:  "αΒΓΔ",
+			final: "αΒΔ",
+			log:   []string{`05{"id":2,"start":2,"len":1,"text":""}`},
+		},
+		{
 			name:  "replace till line end",
 			start: 2,
 			len:   -1,
@@ -633,6 +646,15 @@ func TestSplice(t *testing.T) {
 			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
 		},
 		{
+			name:  "replace multibyte char till line end",
+			start: 1,
+			len:   -1,
+			text:  "ΓΔ",
+			init:  "αΒΓΔ",
+			final: "αΓΔ",
+			log:   []string{`05{"id":2,"start":1,"len":-1,"text":"ΓΔ"}`},
+		},
+		{
 			name:  "inject into the middle of the line",
 			start: 2,
 			len:   -1,
@@ -640,6 +662,15 @@ func TestSplice(t *testing.T) {
 			init:  "ab",
 			final: "ababc",
 			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
+		},
+		{
+			name:  "inject multibyte char into the middle of the line",
+			start: 2,
+			len:   0,
+			text:  "Δ",
+			init:  "αΒΓ",
+			final: "αΒΔΓ",
+			log:   []string{`05{"id":2,"start":2,"len":0,"text":"Δ"}`},
 		},
 		{
 			name:  "inject into second line of body",
@@ -723,23 +754,30 @@ func TestSplice(t *testing.T) {
 			cl.openPost = openPost{
 				id:         2,
 				op:         1,
-				bodyLength: len(c.init),
+				bodyLength: utf8.RuneCountInString(c.init),
 				board:      "a",
 				time:       time.Now().Unix(),
 				Buffer:     *bytes.NewBuffer([]byte(lastLine(c.init))),
 			}
 
 			req := spliceRequest{
-				Start: c.start,
-				Len:   c.len,
-				Text:  c.text,
+				spliceCoords: spliceCoords{
+					Start: c.start,
+					Len:   c.len,
+				},
+				Text: []rune(c.text),
 			}
 
 			if err := spliceText(marshalJSON(t, req), cl); err != nil {
 				t.Fatal(err)
 			}
 
-			assertOpenPost(t, cl, len(c.final), lastLine(c.final))
+			assertOpenPost(
+				t,
+				cl,
+				utf8.RuneCountInString(c.final),
+				lastLine(c.final),
+			)
 			assertBody(t, 2, c.final)
 			assertRepLog(t, 2, c.log)
 		})

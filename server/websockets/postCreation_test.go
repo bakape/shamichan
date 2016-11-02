@@ -384,7 +384,7 @@ func TestPostCreation(t *testing.T) {
 	cl.IP = "::1"
 
 	req := replyCreationRequest{
-		Body: "a",
+		Body: "Δ",
 		postCreationCommon: postCreationCommon{
 			Password: "123",
 			Email:    "wew lad",
@@ -414,7 +414,7 @@ func TestPostCreation(t *testing.T) {
 				Editing: true,
 				ID:      6,
 				Time:    then,
-				Body:    "a",
+				Body:    "Δ",
 				Email:   "wew lad",
 				Image: &types.Image{
 					Name:        "foo",
@@ -474,7 +474,7 @@ func TestPostCreation(t *testing.T) {
 		time:       then,
 		board:      "a",
 		bodyLength: 1,
-		Buffer:     *bytes.NewBuffer([]byte("a")),
+		Buffer:     *bytes.NewBuffer([]byte("Δ")),
 		hasImage:   true,
 	})
 }

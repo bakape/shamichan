@@ -308,8 +308,10 @@ export class FormModel {
 	}
 
 	// Commit any other $input change that is not an append or backspace
-	commitSplice(val: string, lenDiff: number) {
-		const old = this.inputState.line
+	commitSplice(v: string, lenDiff: number) {
+		// Convert to arrays of chars to deal with multibyte unicode chars
+		const old = Array.from(this.inputState.line),
+			val = Array.from(v)
 		let start: number
 
 		// Find first differing character
@@ -328,14 +330,14 @@ export class FormModel {
 		// Right now we simply resend the entire corrected string, including the
 		// common part, because I can't figure out a diff algorithm that covers
 		// all cases. The backend technically supports the latter.
-		const end = val.slice(start)
+		const end = val.slice(start).join("")
 		this.send(message.splice, {
 			start,
 			len: -1,
 			text: end,
 		})
 		this.bodyLength += lenDiff
-		this.inputState.line = old.slice(0, start) + end
+		this.inputState.line = old.slice(0, start).join("") + end
 		this.reformatInput(this.inputState.line)
 	}
 

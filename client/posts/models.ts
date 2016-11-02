@@ -174,19 +174,21 @@ export class Post extends Model implements PostData {
 		this.view.reparseLine()
 	}
 
-	// Extra method for code reuse in PostForms
+	// Extra method for code reuse in post forms
 	spliceLine(line: string, {start, len, text}: SpliceResponse): string {
-		const keep = line.slice(0, start)
-		let end: string
+		// Must use arrays of chars to properly splice multibyte unicode
+		const keep = Array.from(line).slice(0, start),
+			t = Array.from(text)
+		let end: string[]
 		if (len === -1) { // Special meaning - replace till line end
-			end = text
+			end = t
 		} else {
-			end = text + line.slice(start + 1 + len)
+			end = t.concat(Array.from(line).slice(start + 1 + len))
 		}
-		line = keep + end
+		line = keep.concat(end).join("")
 
 		// Replace last line in text body
-		let iLast = this.body.lastIndexOf("\n")
+		const iLast = this.body.lastIndexOf("\n")
 		this.body = this.body.substring(0, iLast + 1) + line
 
 		return line

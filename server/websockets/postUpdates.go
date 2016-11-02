@@ -1,8 +1,8 @@
 package websockets
 
 import (
+	"encoding/json"
 	"errors"
-	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -27,15 +27,27 @@ var (
 // Request or to replace the current line's text starting at an exact position
 // in the current line
 type spliceRequest struct {
-	Start int    `json:"start"`
-	Len   int    `json:"len"`
-	Text  string `json:"text"`
+	spliceCoords
+	Text []rune
+}
+
+// Like spliceRequest, but with a string Text field. Used for internal
+// conversions between []rune and string.
+type spliceRequestString struct {
+	spliceCoords
+	Text string `json:"text"`
+}
+
+// Common part of a splice request and a splice response
+type spliceCoords struct {
+	Start int `json:"start"`
+	Len   int `json:"len"`
 }
 
 // Response to a spliceRequest. Sent to all listening clients.
 type spliceResponse struct {
 	ID int64 `json:"id"`
-	spliceRequest
+	spliceRequestString
 }
 
 // Message sent to listening clients about a link or backlink insertion into
@@ -55,6 +67,27 @@ type commandMessage struct {
 type imageMessage struct {
 	types.Image
 	ID int64 `json:"id"`
+}
+
+// Custom unmarshaling of string -> []rune
+func (s *spliceRequest) UnmarshalJSON(buf []byte) error {
+	var tmp spliceRequestString
+	if err := json.Unmarshal(buf, &tmp); err != nil {
+		return err
+	}
+	*s = spliceRequest{
+		spliceCoords: tmp.spliceCoords,
+		Text:         []rune(tmp.Text),
+	}
+	return nil
+}
+
+// Custom marshaling of []rune -> string
+func (s spliceRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(spliceRequestString{
+		spliceCoords: s.spliceCoords,
+		Text:         string(s.Text),
+	})
 }
 
 // Append a rune to the body of the open post
@@ -283,7 +316,7 @@ func spliceText(data []byte, c *Client) error {
 		return err
 	case req.Start < 0, req.Start+req.Len > oldLength:
 		return errInvalidSpliceCoords
-	case req.Len == 0 && req.Text == "":
+	case req.Len == 0 && len(req.Text) == 0:
 		return errSpliceNOOP // This does nothing. Client-side error.
 	case len(req.Text) > parser.MaxLengthBody:
 		return errSpliceTooLong // Nice try, kid
@@ -295,31 +328,45 @@ func spliceText(data []byte, c *Client) error {
 // Splice the first line of the text. If there are more lines, parse the
 // previous one and recurse until all lines are parsed.
 func spliceLine(req spliceRequest, c *Client) error {
-	old := c.openPost.String()
-	start := old[:req.Start]
-	var end string
+	var (
+		old   = []rune(c.openPost.String())
+		start = old[:req.Start]
+		end   []rune
+	)
 
 	// -1 has special meaning - slice off till line end.
 	if req.Len < 0 {
 		end = req.Text
 		c.openPost.bodyLength += len(req.Text) - len(old[req.Start:])
 	} else {
-		end = req.Text + old[req.Start+req.Len:]
+		end = append(req.Text, old[req.Start+req.Len:]...)
 		c.openPost.bodyLength += -req.Len + len(req.Text)
 	}
 	res := spliceResponse{
-		ID:            c.openPost.id,
-		spliceRequest: req,
+		ID: c.openPost.id,
+		spliceRequestString: spliceRequestString{
+			spliceCoords: req.spliceCoords,
+			Text:         string(req.Text),
+		},
 	}
 
 	// Slice until newline, if any, and delay the next line's splicing until the
 	// next recursive spliceLine call
-	var delayed string
-	if firstNewline := strings.IndexRune(end, '\n'); firstNewline > -1 {
+	var (
+		delayed      []rune
+		firstNewline = -1
+	)
+	for i, r := range end { // Find first newline
+		if r == '\n' {
+			firstNewline = i
+			break
+		}
+	}
+	if firstNewline != -1 {
 		delayed = end[firstNewline+1:]
 		end = end[:firstNewline]
 		res.Len = -1 // Special meaning. Client should replace till line end.
-		res.Text = end
+		res.Text = string(end)
 		c.openPost.bodyLength -= len(delayed) + 1
 	}
 
@@ -328,12 +375,12 @@ func spliceLine(req spliceRequest, c *Client) error {
 	if exceeding > 0 {
 		end = end[:len(end)-exceeding]
 		res.Len = -1
-		res.Text = end
+		res.Text = string(end)
 		c.openPost.bodyLength = parser.MaxLengthBody
 	}
 
 	c.openPost.Reset()
-	new := start + end
+	new := string(append(start, end...))
 	c.openPost.WriteString(new)
 
 	msg, err := EncodeMessage(MessageSplice, res)
@@ -364,7 +411,7 @@ func spliceLine(req spliceRequest, c *Client) error {
 
 	// Recurse on the text sliced after the newline, until all lines are
 	// processed. Unless the text body is already over max length
-	if delayed != "" && exceeding < 0 {
+	if delayed != nil && exceeding < 0 {
 		if err := parseLine(c, true); err != nil {
 			return err
 		}
