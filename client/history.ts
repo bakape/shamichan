@@ -47,7 +47,8 @@ export default async function navigate(
 		if (event && (event.target as Element).classList.contains("reload")) {
 			needPush = false
 		} else {
-			return scrollToAnchor()
+			// Natively scroll to anchor
+			return
 		}
 	}
 
