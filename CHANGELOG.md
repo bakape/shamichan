@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v2.6.1 - 2016-11-02
+* Fix
+	- Splicing of multibyte character unicode strings
+
 ##v2.6.0 - 2016-11-02
 * Add
 	- OGG and MP4 upload support
