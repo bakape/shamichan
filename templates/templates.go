@@ -34,6 +34,9 @@ var (
 	sortModes = []string{"lastReply", "creation", "replyCount", "fileCount"}
 
 	mu sync.RWMutex
+
+	// Contains all compiled HTML templates
+	tmpl = make(map[string]*template.Template, 4)
 )
 
 // Store stores the compiled HTML template and the corresponding truncated MD5
@@ -47,7 +50,6 @@ type Store struct {
 type vars struct {
 	IsMobile, Captcha             bool
 	Config                        template.JS
-	Navigation                    template.HTML
 	Email, ConfigHash, DefaultCSS string
 	ImageSearch                   []imageSearch
 	SortModes, Boards             []string
@@ -56,6 +58,50 @@ type vars struct {
 // Definition for an image search link
 type imageSearch struct {
 	ID, Abbrev string
+}
+
+// ParseTemplates reads all HTML templates from disk and parses them into the
+// global template map
+func ParseTemplates() error {
+	specs := [...]struct {
+		name  string
+		files []string
+		funcs template.FuncMap
+	}{
+		{
+			"index",
+			[]string{"index"},
+			nil,
+		},
+		{
+			"noscript",
+			[]string{"noscript"},
+			nil,
+		},
+		{
+			"board",
+			[]string{"board"},
+			template.FuncMap{
+				"thumbPath": thumbPath,
+			},
+		},
+	}
+	for _, s := range specs {
+		for i := range s.files {
+			s.files[i] = filepath.Join(TemplateRoot, s.files[i]+".html")
+		}
+
+		t := template.New(s.name).Funcs(s.funcs)
+		var err error
+		t, err = t.ParseFiles(s.files...)
+		if err != nil {
+			return err
+		}
+
+		tmpl[s.name] = t
+	}
+
+	return nil
 }
 
 // Compile reads template HTML from disk, injects dynamic variables,
@@ -90,30 +136,22 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 		SortModes:   sortModes,
 		Boards:      config.GetBoards(),
 	}
-	path := filepath.FromSlash(TemplateRoot + "/index.html")
-	tmpl, err := template.ParseFiles(path)
-	if err != nil {
-		err = util.WrapError("error parsing index template", err)
-		return
-	}
 
 	// Right now the desktop and mobile templates are almost identical. This
 	// will change, when we get a dedicated mobile GUI.
-	desktop, err = buildIndexTemplate(tmpl, v, false)
+	desktop, err = buildIndexTemplate(v, false)
 	if err != nil {
 		return
 	}
-	mobile, err = buildIndexTemplate(tmpl, v, true)
+	mobile, err = buildIndexTemplate(v, true)
 	return
 }
 
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it
-func buildIndexTemplate(tmpl *template.Template, vars vars, isMobile bool) (
-	store Store, err error,
-) {
+func buildIndexTemplate(vars vars, isMobile bool) (store Store, err error) {
 	vars.IsMobile = isMobile
 	buffer := new(bytes.Buffer)
-	err = tmpl.Execute(buffer, vars)
+	err = tmpl["index"].ExecuteTemplate(buffer, "index.html", vars)
 	if err != nil {
 		return
 	}

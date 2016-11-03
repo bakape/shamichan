@@ -1,0 +1,45 @@
+{{- if .Banner -}}
+	<h1 class="image-banner">
+		<img src="/assets/banners/{{.Banner}}">
+	</h1>
+{{- end -}}
+<h1 class="page-title">{{.Title}}</h1>
+{{- if .Notice -}}
+	<span id="notice">
+		<span>{{.Notice}}</span>
+	</span>
+{{- end -}}
+<span class="aside-container">
+	TODO: New Thread Form
+</span>
+<hr>
+<div id="catalog">
+	{{range .Threads -}}
+		<article class="glass">
+			{{- if .Image -}}
+				<figure>
+					{{- if $.Hats -}}<span class="hat"></span>{{- end -}}
+					<a target="_blank" href="{{.Board}}/{{.ID}}?noscript=true">
+						<img src="{{thumbPath .Image}}">
+					</a>
+				</figure>
+			{{- end -}}
+			<small class="spaced thread-links">
+				{{- if $.IsAll -}}
+					<b class="board">/{{.Board}}/</b>
+				{{- end -}}
+				<span class="counters" title="Replies/Images">
+					{{- .PostCtr}}/{{.ImageCtr -}}
+				</span>
+				<span class="act">
+					<a class="history" href="{{.Board}}/{{.ID}}?noscript=true&last=50">
+						Last 50
+					</a>
+				</span>
+			</small>
+			<br>
+			<h3>「{{.Subject}}」</h3>
+		</article>
+	{{end}}
+</div>
+<hr>

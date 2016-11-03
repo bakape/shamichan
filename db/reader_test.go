@@ -125,7 +125,7 @@ func testGetAllBoard(t *testing.T) {
 
 	std := types.Board{
 		Ctr: 3,
-		Threads: []types.BoardThread{
+		Threads: types.BoardThreads{
 			{
 				ID:          1,
 				PostCtr:     3,
@@ -160,7 +160,7 @@ func testGetBoard(t *testing.T) {
 			id:   "c",
 			std: types.Board{
 				Ctr: 1,
-				Threads: []types.BoardThread{
+				Threads: types.BoardThreads{
 					{
 						ID:          3,
 						PostCtr:     1,

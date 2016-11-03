@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	TemplateRoot = "testdata"
+	TemplateRoot = "."
 	_, err := config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
 	})
@@ -17,6 +17,9 @@ func init() {
 		panic(err)
 	}
 	config.Set(config.Configs{})
+	if err := ParseTemplates(); err != nil {
+		panic(err)
+	}
 }
 
 func TestBuildIndexTemplate(t *testing.T) {
@@ -24,15 +27,7 @@ func TestBuildIndexTemplate(t *testing.T) {
 		Config:     template.JS("c()"),
 		ConfigHash: "a",
 	}
-	const source = `<script>{{.Config}}</script><b>{{.ConfigHash}}</b>` +
-		`{{.Navigation}}<script>{{.IsMobile}}</script>`
-	tmpl, err := template.New("index").Parse(source)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = buildIndexTemplate(tmpl, v, false)
-	if err != nil {
+	if _, err := buildIndexTemplate(v, false); err != nil {
 		t.Fatal(err)
 	}
 }

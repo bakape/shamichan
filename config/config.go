@@ -23,7 +23,22 @@ var (
 
 	// AllBoardConfigs stores board-specific configurations for the /all/
 	// metaboard. Constant.
-	AllBoardConfigs []byte
+	AllBoardConfigs = BoardConfContainer{
+		BoardConfigs: BoardConfigs{
+			ID: "all",
+			BoardPublic: BoardPublic{
+				PostParseConfigs: PostParseConfigs{
+					HashCommands: true,
+				},
+				Spoilers: true,
+				CodeTags: true,
+				Spoiler:  "default.jpg",
+				Title:    "Aggregator metaboard",
+				Banners:  []string{},
+			},
+		},
+		Hash: "0",
+	}
 
 	// JSON of client-accessible configuration
 	clientJSON []byte
@@ -154,19 +169,8 @@ type PostParseConfigs struct {
 
 // Generate /all/ board configs
 func init() {
-	conf := BoardPublic{
-		PostParseConfigs: PostParseConfigs{
-			HashCommands: true,
-		},
-		Spoilers: true,
-		CodeTags: true,
-		Spoiler:  "default.jpg",
-		Title:    "Aggregator metaboard",
-		Banners:  []string{},
-	}
-
 	var err error
-	AllBoardConfigs, err = json.Marshal(conf)
+	AllBoardConfigs.JSON, err = json.Marshal(AllBoardConfigs.BoardPublic)
 	if err != nil {
 		panic(err)
 	}
@@ -217,6 +221,9 @@ func SetClient(json []byte, cHash string) {
 // GetBoardConfigs returns board-specific configurations for a board combined
 // with pregenerated public JSON of these configurations and their hash
 func GetBoardConfigs(b string) BoardConfContainer {
+	if b == "all" {
+		return AllBoardConfigs
+	}
 	boardMu.RLock()
 	defer boardMu.RUnlock()
 	return boardConfigs[b]
@@ -287,7 +294,6 @@ func Clear() {
 	global = &Configs{}
 	boardConfigs = map[string]BoardConfContainer{}
 	clientJSON = nil
-	AllBoardConfigs = nil
 	hash = ""
 }
 

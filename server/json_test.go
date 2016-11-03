@@ -198,7 +198,7 @@ func TestPostJSON(t *testing.T) {
 
 func TestServeBoardConfigs(t *testing.T) {
 	setBoards(t, "a")
-	config.AllBoardConfigs = []byte("foo")
+	config.AllBoardConfigs.JSON = []byte("foo")
 	conf := config.BoardConfigs{
 		ID: "a",
 		BoardPublic: config.BoardPublic{

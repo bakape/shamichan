@@ -120,13 +120,7 @@ func serveBoardConfigs(
 	p map[string]string,
 ) {
 	board := p["board"]
-	if board == "all" {
-		if !checkClientEtag(w, r, "0") {
-			writeJSON(w, r, "0", config.AllBoardConfigs)
-		}
-		return
-	}
-	if !auth.IsNonMetaBoard(board) {
+	if !auth.IsBoard(board) {
 		text404(w)
 		return
 	}
@@ -176,50 +170,70 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	serveJSON(w, r, etag, data)
 }
 
-// Serves JSON for the "/all/" meta-board, that contains threads from all boards
-func allBoardJSON(w http.ResponseWriter, r *http.Request) {
-	counter, err := db.PostCounter()
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	etag := etagStart(counter)
-	if checkClientEtag(w, r, etag) {
+// Serves board page JSON
+func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	b := p["board"]
+	if !auth.IsBoard(b) {
+		text404(w)
 		return
 	}
 
-	data, err := db.GetAllBoard()
-	if err != nil {
-		text500(w, r, err)
+	data, etag, ok := boardData(w, r, b)
+	if !ok {
 		return
 	}
 	serveJSON(w, r, etag, data)
 }
 
-// Serves board page JSON
-func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	board := p["board"]
-	if !auth.IsBoard(board) {
-		text404(w)
-		return
+// Retrieves board data from the database and the associated etag header. If an
+// error occurred and the calling function should return, ok = false
+func boardData(w http.ResponseWriter, r *http.Request, b string) (
+	data *types.Board, etag string, ok bool,
+) {
+	if b == "all" {
+		return allBoardData(w, r)
 	}
 
-	counter, err := db.BoardCounter(board)
+	counter, err := db.BoardCounter(b)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	etag := etagStart(counter)
+	etag = etagStart(counter)
 	if checkClientEtag(w, r, etag) {
 		return
 	}
 
-	data, err := db.GetBoard(board)
+	data, err = db.GetBoard(b)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	serveJSON(w, r, etag, data)
+
+	return data, etag, true
+}
+
+// Same as boardData(), but for the /all/ metaboard
+func allBoardData(w http.ResponseWriter, r *http.Request) (
+	data *types.Board, etag string, ok bool,
+) {
+	counter, err := db.PostCounter()
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	etag = etagStart(counter)
+	if checkClientEtag(w, r, etag) {
+		return
+	}
+
+	data, err = db.GetAllBoard()
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	return data, etag, true
 }
 
 // Serve a JSON array of all available boards and their titles

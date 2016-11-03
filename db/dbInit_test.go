@@ -15,7 +15,11 @@ import (
 func init() {
 	DBName = "meguca_test_db"
 	IsTest = true
+	config.Set(config.Configs{})
 	templates.TemplateRoot = "testdata"
+	if err := templates.ParseTemplates(); err != nil {
+		panic(err)
+	}
 	if err := LoadDB(); err != nil {
 		panic(err)
 	}

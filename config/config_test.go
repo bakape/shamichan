@@ -7,6 +7,11 @@ import (
 	. "github.com/bakape/meguca/test"
 )
 
+func TestGetAllBoard(t *testing.T) {
+	t.Parallel()
+	AssertDeepEquals(t, GetBoardConfigs("all"), AllBoardConfigs)
+}
+
 func TestSetGet(t *testing.T) {
 	Clear()
 	conf := Configs{

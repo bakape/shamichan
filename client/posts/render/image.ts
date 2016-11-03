@@ -197,13 +197,10 @@ export function renderThumbnail(el: Element, data: ImageData, href: string) {
 	if (href) {
 		// Handle the thumbnails with the HTML5 History controller
 		linkAttrs['class'] = 'history'
-
 		// No image hover previews
 		imgAttrs['class'] = 'expanded'
 	} else {
 		linkAttrs["target"] = "_blank"
-		linkAttrs["download"] =
-			`${escape(data.name)}.${fileTypes[data.fileType]}`
 		imgAttrs["class"] = "" // Remove any existing classes
 	}
 

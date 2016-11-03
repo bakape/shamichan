@@ -29,6 +29,16 @@ func serveIndexTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	serveHTML(w, r, template.HTML, etag)
+}
+
+// Apply headers and write HTML to client
+func serveHTML(
+	w http.ResponseWriter,
+	r *http.Request,
+	data []byte,
+	etag string,
+) {
 	head := w.Header()
 	for key, val := range vanillaHeaders {
 		head.Set(key, val)
@@ -36,20 +46,30 @@ func serveIndexTemplate(w http.ResponseWriter, r *http.Request) {
 	head.Set("ETag", etag)
 	head.Set("Content-Type", "text/html")
 
-	writeData(w, r, template.HTML)
+	writeData(w, r, data)
 }
 
-// Asserts board exists and renders the index template
-func boardHTML(
-	res http.ResponseWriter,
-	req *http.Request,
-	params map[string]string,
-) {
-	if auth.IsBoard(params["board"]) {
-		serveIndexTemplate(res, req)
-	} else {
-		text404(res)
+// Serves board HTML to regular or noscript clients
+func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	b := p["board"]
+	if !auth.IsBoard(b) {
+		text404(w)
+		return
 	}
+	if r.URL.Query().Get("noscript") != "true" {
+		serveIndexTemplate(w, r)
+		return
+	}
+	board, etag, ok := boardData(w, r, b)
+	if !ok {
+		return
+	}
+	data, err := templates.Board(b, board)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	serveHTML(w, r, data, etag)
 }
 
 // Asserts a thread exists on the specific board and renders the index template

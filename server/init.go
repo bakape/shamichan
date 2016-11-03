@@ -143,6 +143,7 @@ func startServer() {
 	fns := [...]func() error{
 		db.LoadDB,
 		websockets.Listen,
+		templates.ParseTemplates,
 		templates.Compile,
 		imager.InitImager,
 		startWebServer,

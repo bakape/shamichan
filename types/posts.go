@@ -34,8 +34,8 @@ const (
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {
-	Ctr     int64         `json:"ctr"`
-	Threads []BoardThread `json:"threads"`
+	Ctr     int64        `json:"ctr"`
+	Threads BoardThreads `json:"threads"`
 }
 
 // MarshalJSON ensures b.Threads is marshalled to a JSON array even when nil
@@ -57,9 +57,9 @@ func (b *Board) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// BoardThread is a stripped down version of Thread for whole-board retrieval
-// queries. Reduces server memory usage and served JSON payload.
-type BoardThread struct {
+// BoardThreads is an array stripped down version of Thread for whole-board
+// retrieval queries. Reduces server memory usage and served JSON payload.
+type BoardThreads []struct {
 	Locked      bool   `json:"locked,omitempty" gorethink:"locked"`
 	Archived    bool   `json:"archived,omitempty" gorethink:"archived"`
 	Sticky      bool   `json:"sticky,omitempty" gorethink:"sticky"`
@@ -162,4 +162,16 @@ type Link struct {
 type Command struct {
 	Type CommandType `json:"type" gorethink:"type"`
 	Val  interface{} `json:"val" gorethink:"val"`
+}
+
+func (b BoardThreads) Len() int {
+	return len(b)
+}
+
+func (b BoardThreads) Less(i, j int) bool {
+	return b[i].ReplyTime > b[j].ReplyTime
+}
+
+func (b BoardThreads) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
 }

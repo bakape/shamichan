@@ -62,13 +62,11 @@ func createRouter() http.Handler {
 
 	// HTML
 	r.GET("/", wrapHandler(redirectToDefault))
-	r.GET("/all/", wrapHandler(serveIndexTemplate))
 	r.GET("/:board/", boardHTML)
 	r.GET("/:board/:thread", threadHTML)
 
 	// JSON API
 	json := r.NewGroup("/json")
-	json.GET("/all/", wrapHandler(allBoardJSON))
 	json.GET("/:board/", boardJSON)
 	json.GET("/:board/:thread", threadJSON)
 	json.GET("/post/:post", servePost)
