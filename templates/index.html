@@ -22,11 +22,14 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+	<meta name="application-name" content="meguca">
+	<meta name="description" content="Realtime imageboard">
+	<noscript>
+		<meta http-equiv="refresh" content="0.05; url=?noscript=true">
+	</noscript>
 	<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">
 	<title></title>
 	<link rel="manifest" href="/assets/mobile/manifest.json">
-	<meta name="application-name" content="meguca">
-	<meta name="description" content="Realtime imageboard">
 	<!-- Main and theme-specific stylesheets !-->
 	<link rel="stylesheet" href="/assets/css/base.css">
 	<link rel="stylesheet" id="theme" href="/assets/css/{{.DefaultCSS}}.css">
@@ -41,9 +44,6 @@
 				'/assets/css/' + localStorage.theme + '.css'
 		}
 	</script>
-	<noscript>
-		<meta http-equiv="refresh" content="0.1; url=?noscript=true">
-	</noscript>
 	<!-- Templates for our various views !-->
 	<template name="article">
 		<header class="spaced">

@@ -2,17 +2,17 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
-	<link type="image/x-icon" rel="shortcut icon" href="/assets/favicons/default.ico">
-	<title>{{.Title}}</title>
-	<link rel="manifest" href="/assets/mobile/manifest.json">
 	<meta name="application-name" content="meguca">
 	<meta name="description" content="Realtime imageboard">
-	<!-- Main and theme-specific stylesheets !-->
-	<link rel="stylesheet" href="/assets/css/base.css">
-	<link rel="stylesheet" href="/assets/css/{{.DefaultCSS}}.css">
+	<link type="image/x-icon" rel="shortcut icon" href="/assets/favicons/default.ico">
 	<script>
 		location.replace(location.href.split(/[\?&]/)[0])
 	</script>
+	<title>{{.Title}}</title>
+	<link rel="manifest" href="/assets/mobile/manifest.json">
+	<!-- Main and theme-specific stylesheets !-->
+	<link rel="stylesheet" href="/assets/css/base.css">
+	<link rel="stylesheet" href="/assets/css/{{.DefaultCSS}}.css">
 </head>
 <body>
 	<div id="overlay-container">
