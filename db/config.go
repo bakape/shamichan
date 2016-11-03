@@ -120,6 +120,9 @@ func updateBoardConfigs(u boardConfUpdate) error {
 }
 
 func recompileTemplates() error {
+	if IsTest {
+		return nil
+	}
 	if err := templates.Compile(); err != nil {
 		return util.WrapError("recompiling templates", err)
 	}

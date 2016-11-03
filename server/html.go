@@ -2,10 +2,8 @@ package server
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
 	"github.com/mssola/user_agent"
 )
@@ -56,10 +54,12 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		text404(w)
 		return
 	}
+
 	if r.URL.Query().Get("noscript") != "true" {
 		serveIndexTemplate(w, r)
 		return
 	}
+
 	board, etag, ok := boardData(w, r, b)
 	if !ok {
 		return
@@ -73,27 +73,25 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 }
 
 // Asserts a thread exists on the specific board and renders the index template
-func threadHTML(
-	res http.ResponseWriter,
-	req *http.Request,
-	params map[string]string,
-) {
-	board := params["board"]
-	id, err := strconv.ParseInt(params["thread"], 10, 64)
-	if err != nil {
-		text404(res)
+func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	id, ok := validateThread(w, r, p)
+	if !ok {
 		return
 	}
 
-	valid, err := db.ValidateOP(id, board)
-	if err != nil {
-		text500(res, req, err)
-		return
-	}
-	if !valid {
-		text404(res)
+	if r.URL.Query().Get("noscript") != "true" {
+		serveIndexTemplate(w, r)
 		return
 	}
 
-	serveIndexTemplate(res, req)
+	thread, etag, ok := threadData(w, r, id)
+	if !ok {
+		return
+	}
+	data, err := templates.Thread(thread)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	serveHTML(w, r, data, etag)
 }

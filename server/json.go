@@ -135,8 +135,28 @@ func serveBoardConfigs(
 
 // Serves thread page JSON
 func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	id, ok := validateThread(w, r, p)
+	if !ok {
+		return
+	}
+	data, etag, ok := threadData(w, r, id)
+	if !ok {
+		return
+	}
+
+	serveJSON(w, r, etag, data)
+}
+
+// Confirms a the thread exists on the board and returns its ID. If an error
+// occurred and the calling function should return, ok = false.
+func validateThread(
+	w http.ResponseWriter,
+	r *http.Request,
+	p map[string]string,
+) (id int64, ok bool) {
 	board := p["board"]
-	id, err := strconv.ParseInt(p["thread"], 10, 64)
+	var err error
+	id, err = strconv.ParseInt(p["thread"], 10, 64)
 	if err != nil {
 		text400(w, err)
 		return
@@ -152,22 +172,31 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
+	return id, true
+}
+
+// Retrieves thread data from the database and the associated etag header. If an
+// error occurred and the calling function should return, ok = false.
+func threadData(w http.ResponseWriter, r *http.Request, id int64) (
+	data *types.Thread, etag string, ok bool,
+) {
 	counter, err := db.ThreadCounter(id)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	etag := etagStart(counter)
+	etag = etagStart(counter)
 	if checkClientEtag(w, r, etag) {
 		return
 	}
 
-	data, err := db.GetThread(id, detectLastN(r))
+	data, err = db.GetThread(id, detectLastN(r))
 	if err != nil {
 		respondToJSONError(w, r, err)
 		return
 	}
-	serveJSON(w, r, etag, data)
+
+	return data, etag, true
 }
 
 // Serves board page JSON
@@ -186,7 +215,7 @@ func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 }
 
 // Retrieves board data from the database and the associated etag header. If an
-// error occurred and the calling function should return, ok = false
+// error occurred and the calling function should return, ok = false.
 func boardData(w http.ResponseWriter, r *http.Request, b string) (
 	data *types.Board, etag string, ok bool,
 ) {

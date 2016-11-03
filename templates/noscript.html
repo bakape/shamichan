@@ -8,7 +8,9 @@
 	<script>
 		location.replace(location.href.split(/[\?&]/)[0])
 	</script>
-	<title>{{.Title}}</title>
+	<title>
+		{{.Title}}
+	</title>
 	<link rel="manifest" href="/assets/mobile/manifest.json">
 	<!-- Main and theme-specific stylesheets !-->
 	<link rel="stylesheet" href="/assets/css/base.css">
@@ -20,12 +22,14 @@
 		<span id="banner">
 			<nav id="board-navigation">
 				[
-				{{- range $i, $board := .Boards -}}
-					{{- if ne $i 0}}&nbsp;/&nbsp;{{end -}}
+				{{range $i, $board := .Boards}}
+					{{if ne $i 0}}
+						&nbsp;/&nbsp;
+					{{end}}
 					<a href="../{{$board}}/?noscript=true" class="history">
-						{{- $board -}}
+						{{$board}}
 					</a>
-				{{- end -}}
+				{{end}}
 				]
 			</nav>
 			<b>Enable JavaScript for more functionality</b>
@@ -34,7 +38,9 @@
 	<div id="page-container">
 		<section id="threads">
 			<!-- Contains posts, page naviagation, title, image banner and the catalog !-->
-			<div id="threads">{{.Threads}}</div>
+			<div id="threads">
+				{{.Threads}}
+			</div>
 		</section>
 	</div>
 </body>

@@ -4,6 +4,7 @@ package templates
 import (
 	"bytes"
 	"html/template"
+	"io/ioutil"
 	"path/filepath"
 	"sync"
 
@@ -36,7 +37,7 @@ var (
 	mu sync.RWMutex
 
 	// Contains all compiled HTML templates
-	tmpl = make(map[string]*template.Template, 4)
+	tmpl = make(map[string]*template.Template)
 )
 
 // Store stores the compiled HTML template and the corresponding truncated MD5
@@ -60,44 +61,51 @@ type imageSearch struct {
 	ID, Abbrev string
 }
 
-// ParseTemplates reads all HTML templates from disk and parses them into the
-// global template map
+// ParseTemplates reads all HTML templates from disk, strips whitespace and
+// parses them into the global template map
 func ParseTemplates() error {
 	specs := [...]struct {
-		name  string
-		files []string
-		funcs template.FuncMap
+		name string
+		deps []string
+		fns  template.FuncMap
 	}{
-		{
-			"index",
-			[]string{"index"},
-			nil,
-		},
-		{
-			"noscript",
-			[]string{"noscript"},
-			nil,
-		},
-		{
-			"board",
-			[]string{"board"},
-			template.FuncMap{
-				"thumbPath": thumbPath,
-			},
-		},
+		// Order matters. Dependencies must come before dependents.
+		{"index", nil, nil},
+		{"noscript", nil, nil},
+		{"board", nil, template.FuncMap{
+			"thumbPath": thumbPath,
+		}},
+		{"thread", nil, template.FuncMap{
+			"thumbPath": thumbPath,
+		}},
 	}
-	for _, s := range specs {
-		for i := range s.files {
-			s.files[i] = filepath.Join(TemplateRoot, s.files[i]+".html")
-		}
 
-		t := template.New(s.name).Funcs(s.funcs)
-		var err error
-		t, err = t.ParseFiles(s.files...)
+	for _, s := range specs {
+		path := filepath.Join(TemplateRoot, s.name+".html")
+		b, err := ioutil.ReadFile(path)
 		if err != nil {
 			return err
 		}
 
+		// Strip tabs and newlines
+		min := make([]byte, 0, len(b))
+		for _, r := range b {
+			if r != '\n' && r != '\t' {
+				min = append(min, r)
+			}
+		}
+
+		t := template.New(s.name).Funcs(s.fns)
+		for _, d := range s.deps {
+			_, err := t.AddParseTree(d, tmpl[d].Tree)
+			if err != nil {
+				return err
+			}
+		}
+		t, err = t.Parse(string(min))
+		if err != nil {
+			return err
+		}
 		tmpl[s.name] = t
 	}
 
@@ -151,7 +159,7 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 func buildIndexTemplate(vars vars, isMobile bool) (store Store, err error) {
 	vars.IsMobile = isMobile
 	buffer := new(bytes.Buffer)
-	err = tmpl["index"].ExecuteTemplate(buffer, "index.html", vars)
+	err = tmpl["index"].Execute(buffer, vars)
 	if err != nil {
 		return
 	}

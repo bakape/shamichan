@@ -77,7 +77,7 @@ func TestThreadHTML(t *testing.T) {
 
 		rec, req := newPair("/a/www")
 		router.ServeHTTP(rec, req)
-		assertCode(t, rec, 404)
+		assertCode(t, rec, 400)
 	})
 	t.Run("nonexistent thread", func(t *testing.T) {
 		t.Parallel()

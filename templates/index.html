@@ -1,13 +1,13 @@
-{{define "figure" -}}
+{{define "figure"}}
 	<figure hidden>
 		<span class="hat" hidden></span>
 		<a>
 			<img>
 		</a>
 	</figure>
-{{- end}}
+{{end}}
 
-{{define "notice" -}}
+{{define "notice"}}
 	<div id="notice" class="expandable">
 		<span class="act">
 			<a></a>
@@ -16,7 +16,7 @@
 			<br>
 		</span>
 	</div>
-{{- end}}
+{{end}}
 
 <!doctype html>
 <head>
@@ -65,11 +65,11 @@
 		<figcaption class="spaced" hidden>
 			<a class="image-toggle act" hidden></a>
 			<span class="spaced image-search-container">
-				{{range .ImageSearch -}}
-				<a class="image-search {{.ID}}" target="_blank" rel="nofollow">
-					{{- .Abbrev -}}
-				</a>
-				{{- end}}
+				{{range .ImageSearch}}
+					<a class="image-search {{.ID}}" target="_blank" rel="nofollow">
+						{{.Abbrev}}
+					</a>
+				{{end}}
 			</span>
 			<span></span>
 			<a></a>
@@ -104,9 +104,9 @@
 			<span id="catalog-controls" class="margin-spaced">
 				<input type="text" name="search">
 				<select name="sortMode">
-					{{range .SortModes -}}
-					<option value="{{.}}"></option>
-					{{- end}}
+					{{range .SortModes}}
+						<option value="{{.}}"></option>
+					{{end}}
 				</select>
 			</span>
 		</span>
@@ -233,8 +233,8 @@
 	<!-- Dynamic module loader!-->
 	<script src="/assets/js/vendor/system.js"></script>
 	<script src="/assets/js/scripts/loader.js"></script>
-	{{- if .Captcha -}}
-	<!-- Captcha script !-->
-	<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>
-	{{- end -}}
+	{{if .Captcha}}
+		<!-- Captcha script !-->
+		<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>
+	{{end}}
 </body>
