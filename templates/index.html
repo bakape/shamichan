@@ -67,7 +67,7 @@
 			<span class="spaced image-search-container">
 				{{range .ImageSearch -}}
 				<a class="image-search {{.ID}}" target="_blank" rel="nofollow">
-					{{.Abbrev}}
+					{{- .Abbrev -}}
 				</a>
 				{{- end}}
 			</span>
@@ -233,8 +233,8 @@
 	<!-- Dynamic module loader!-->
 	<script src="/assets/js/vendor/system.js"></script>
 	<script src="/assets/js/scripts/loader.js"></script>
-	{{if .Captcha -}}
+	{{- if .Captcha -}}
 	<!-- Captcha script !-->
 	<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>
-	{{- end}}
+	{{- end -}}
 </body>
