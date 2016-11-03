@@ -34,9 +34,11 @@ func Board(b string, data *types.Board) ([]byte, error) {
 		return nil, err
 	}
 
+	boards := config.GetBoards()
+	sort.Strings(boards)
 	err = tmpl["noscript"].ExecuteTemplate(w, "noscript.html", noscriptVars{
 		Threads:    template.HTML(board),
-		Boards:     append([]string{"all"}, config.GetBoards()...),
+		Boards:     append([]string{"all"}, boards...),
 		DefaultCSS: config.Get().DefaultCSS,
 		Title:      title,
 	})
