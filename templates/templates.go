@@ -38,6 +38,16 @@ var (
 
 	// Contains all compiled HTML templates
 	tmpl = make(map[string]*template.Template)
+
+	// Template functions for rendering posts
+	postFunctions = template.FuncMap{
+		"thumbPath":        thumbPath,
+		"renderTime":       renderTime,
+		"readableLength":   readableLength,
+		"readableFileSize": readableFileSize,
+		"sourcePath":       sourcePath,
+		"extension":        extension,
+	}
 )
 
 // Store stores the compiled HTML template and the corresponding truncated MD5
@@ -70,14 +80,13 @@ func ParseTemplates() error {
 		fns  template.FuncMap
 	}{
 		// Order matters. Dependencies must come before dependents.
+		{"article", nil, postFunctions},
 		{"index", nil, nil},
 		{"noscript", nil, nil},
 		{"board", nil, template.FuncMap{
 			"thumbPath": thumbPath,
 		}},
-		{"thread", nil, template.FuncMap{
-			"thumbPath": thumbPath,
-		}},
+		{"thread", []string{"article"}, postFunctions},
 	}
 
 	for _, s := range specs {

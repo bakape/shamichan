@@ -26,12 +26,14 @@ func TestBoard(t *testing.T) {
 }
 
 func TestThread(t *testing.T) {
-	html, err := Thread(&types.Thread{
+	img := assets.StdJPEG
+	img.Length = 20
+	_, err := Thread(&types.Thread{
 		Board:   "a",
 		Subject: "foo",
 		Post: types.Post{
 			ID:    1,
-			Image: &assets.StdJPEG,
+			Image: &img,
 		},
 		Posts: []types.Post{
 			{
@@ -47,5 +49,4 @@ func TestThread(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(string(html))
 }

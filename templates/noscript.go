@@ -18,13 +18,12 @@ type noscriptVars struct {
 }
 
 type boardVars struct {
-	Hats, IsAll           bool
+	IsAll                 bool
 	Banner, Notice, Title string
 	Threads               types.BoardThreads
 }
 
 type threadVars struct {
-	Hats          bool
 	Notice, Title string
 	Thread        *types.Thread
 }
@@ -38,7 +37,6 @@ func Board(b string, data *types.Board) ([]byte, error) {
 
 	v := boardVars{
 		IsAll:   b == "all",
-		Hats:    config.Get().Hats,
 		Notice:  conf.Notice,
 		Title:   title,
 		Threads: data.Threads,
@@ -77,7 +75,6 @@ func Thread(t *types.Thread) ([]byte, error) {
 	title := fmt.Sprintf("/%s/ - %s (#%d)", t.Board, t.Subject, t.ID)
 
 	v := threadVars{
-		Hats:   config.Get().Hats,
 		Notice: conf.Notice,
 		Title:  title,
 		Thread: t,
@@ -89,15 +86,4 @@ func Thread(t *types.Thread) ([]byte, error) {
 	}
 
 	return renderNoscriptIndex(w.Bytes(), title)
-}
-
-// Returns the HTTP path to the thumbnail of an image
-func thumbPath(img *types.Image) string {
-	var ext string
-	if img.FileType == types.JPEG {
-		ext = "jpg"
-	} else {
-		ext = "png"
-	}
-	return fmt.Sprintf("/images/thumb/%s.%s", img.SHA1, ext)
 }

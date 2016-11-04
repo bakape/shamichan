@@ -1,3 +1,12 @@
+<style>
+	.image-search{
+		display: initial;
+	}
+	figure img {
+		max-width: 125px;
+		max-height: 125px;
+	}
+</style>
 <h1 class="page-title">
 	{{.Title}}
 </h1>
@@ -16,7 +25,10 @@ TODO: Post form<br>
 </span>
 <hr>
 <div id="thread-container">
-	TODO: Posts
+	{{template "article" .Thread.Post}}
+	{{range .Thread.Posts}}
+		{{template "article" .}}
+	{{end}}
 </div>
 <hr>
 <span class="act" id="bottom">

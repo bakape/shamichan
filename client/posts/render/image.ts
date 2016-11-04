@@ -77,7 +77,7 @@ export function renderFigcaption(
 		hToggle.hidden = false
 		hToggle.textContent = lang[reveal ? 'hide' : 'show']
 	}
-	info.innerHTML = `(${commaList(list)})`
+	info.textContent = `(${commaList(list)})`
 	imageLink(link, data)
 	renderImageSearch(el.querySelector(".image-search-container"), data)
 	el.hidden = false
@@ -116,13 +116,13 @@ function readableLength(len: number): string {
 
 // Renders a human readable file size string
 function readableFilesize(size: number): string {
-	if (size < 1024) {
+	if (size < (1 << 10)) {
 		return size + ' B'
 	}
-	if (size < 1048576) {
-		return Math.round(size / 1024) + ' KB'
+	if (size < (1 << 20)) {
+		return Math.round(size / (1 << 10)) + ' KB'
 	}
-	const text = Math.round(size / 104857.6).toString()
+	const text = Math.round(size / (1 << 20) * 0.1).toString()
 	return `${text.slice(0, -1)}.${text.slice(-1)} MB`
 }
 

@@ -1,0 +1,79 @@
+<article id="p{{.ID}}" class="glass">
+	<header class="spaced">
+		<b class="name"{{if .Auth}} class="admin"{{end}}>
+			{{if .Email}}
+				<a href="mailto:{{urlquery .Email}}" target="_blank" class="email">
+			{{end}}
+			{{if (or .Name (eq .Trip ""))}}
+				{{if .Name}}
+					{{.Name}}
+				{{else}}
+					Anonymous
+				{{end}}
+				{{if .Trip}}
+					&nbsp;
+				{{end}}
+			{{end}}
+			{{if .Trip}}
+				<code>!{{.Trip}}</code>
+			{{end}}
+			{{if .Auth}}
+				## {{.Auth}}
+			{{end}}
+			{{if .Email}}
+				</a>
+			{{end}}
+		</b>
+		<time>{{renderTime .Time}}</time>
+		<nav>
+			<a href="#p{{.ID}}">
+				No.{{.ID}}
+			</a>
+		</nav>
+	</header>
+	{{if .Image}}{{with .Image}}
+		<figcaption class="spaced">
+			<span class="spaced image-search-container">
+				<a class="image-search" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{{.MD5}}">
+					Ds
+				</a>
+				<a class="image-search" target="_blank" rel="nofollow" href="http://exhentai.org/?fs_similar=1&amp;fs_exp=1&amp;f_shash={{.SHA1}}">
+					Ex
+				</a>
+			</span>
+			<span>
+				(
+				{{if .Audio}}
+					♫,&nbsp;
+				{{end}}
+				{{if .Length}}
+					{{readableLength .Length}},&nbsp;
+				{{end}}
+				{{if .APNG}}
+					APNG,&nbsp;
+				{{end}}
+				{{readableFileSize .Size}},&nbsp;
+				{{index .Dims 0}}x{{index .Dims 1}}
+				)
+			</span>
+			<a href="{{sourcePath .}}" download="{{.Name}}.{{extension .FileType}}">
+				{{.Name}}.{{extension .FileType}}
+			</a>
+		</figcaption>
+	{{end}}{{end}}
+	<div class="post-container">
+		{{if .Image}}{{with .Image}}
+			<figure>
+				<a target="_blank" href="{{sourcePath .}}">
+					{{if .Spoiler}}
+						<img src="/assets/spoil/default.jpg" width="125" height="125">
+					{{else}}
+						<img src="{{thumbPath .}}" width="">
+					{{end}}
+				</a>
+			</figure>
+		{{end}}{{end}}
+		<blockquote>{{.Body}}</blockquote>
+	</div>
+	<small></small>
+</article>
