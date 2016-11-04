@@ -8,8 +8,6 @@ import { postSM, postEvent } from "./posts/posting/main"
 import { scrollToAnchor } from "./scroll"
 import { connSM, connState } from "./connection"
 
-history.scrollRestoration = "manual"
-
 // Handle a click on any .history anchor
 function handleClick(event: KeyboardEvent) {
 	// Don't trigger, when user is trying to open in a new tab
@@ -17,11 +15,9 @@ function handleClick(event: KeyboardEvent) {
 		return
 	}
 
-	const href =
-		((event.target as Element)
-			.closest("a.history") as HTMLAnchorElement)
-			.href
-	history.replaceState(window.scrollY, "")
+	const href = ((event.target as Element)
+		.closest("a.history") as HTMLAnchorElement)
+		.href
 	navigate(href, event, true).catch(alertError)
 }
 
@@ -47,8 +43,7 @@ export default async function navigate(
 		if (event && (event.target as Element).classList.contains("reload")) {
 			needPush = false
 		} else {
-			// Natively scroll to anchor
-			return
+			return scrollToAnchor()
 		}
 	}
 
@@ -75,7 +70,7 @@ export default async function navigate(
 
 	if (needPush) {
 		scrollToAnchor()
-		history.pushState(window.scrollY, "", nextState.href)
+		history.pushState(null, null, nextState.href)
 	}
 	displayLoading(false)
 }
@@ -92,12 +87,6 @@ on(document, "click", handleClick, {
 })
 
 // For back and forward history events
-window.onpopstate = async e => {
-	await navigate((e.target as Window).location.href, null, false)
-		.catch(alertError)
-	// Scroll to saved position
-	if (e.state !== null) {
-		window.scrollTo(0, e.state)
-	}
-}
+window.onpopstate = e =>
+	navigate((e.target as Window).location.href, null, false).catch(alertError)
 
