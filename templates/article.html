@@ -14,11 +14,11 @@
 					&nbsp;
 				{{end}}
 			{{end}}
-			{{if .Trip}}
-				<code>!{{.Trip}}</code>
+			{{with .Trip}}
+				<code>!{{.}}</code>
 			{{end}}
-			{{if .Auth}}
-				## {{.Auth}}
+			{{with .Auth}}
+				## {{.}}
 			{{end}}
 			{{if .Email}}
 				</a>
@@ -31,7 +31,7 @@
 			</a>
 		</nav>
 	</header>
-	{{if .Image}}{{with .Image}}
+	{{with .Image}}
 		<figcaption class="spaced">
 			<span class="spaced image-search-container">
 				<a class="image-search" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{{.MD5}}">
@@ -60,20 +60,26 @@
 				{{.Name}}.{{extension .FileType}}
 			</a>
 		</figcaption>
-	{{end}}{{end}}
+	{{end}}
 	<div class="post-container">
-		{{if .Image}}{{with .Image}}
+		{{with .Image}}
 			<figure>
 				<a target="_blank" href="{{sourcePath .}}">
 					{{if .Spoiler}}
-						<img src="/assets/spoil/default.jpg" width="125" height="125">
+						<img src="/assets/spoil/default.jpg">
 					{{else}}
-						<img src="{{thumbPath .}}" width="">
+						<img src="{{thumbPath .}}">
 					{{end}}
 				</a>
 			</figure>
-		{{end}}{{end}}
+		{{end}}
 		<blockquote>{{.Body}}</blockquote>
 	</div>
-	<small></small>
+	{{with .Backlinks}}
+		<small>
+			{{range $id, $link := .}}
+				{{renderPostLink $id $link.OP $link.Board (ne $link.OP $.OP)}}
+			{{end}}
+		</small>
+	{{end}}
 </article>

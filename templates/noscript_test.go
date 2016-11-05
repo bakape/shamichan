@@ -39,6 +39,16 @@ func TestThread(t *testing.T) {
 			{
 				ID:   2,
 				Body: "foo",
+				Backlinks: types.LinkMap{
+					3: {
+						OP:    1,
+						Board: "a",
+					},
+					4: {
+						OP:    7,
+						Board: "l",
+					},
+				},
 			},
 			{
 				ID:   3,

@@ -47,7 +47,11 @@ var (
 		"readableFileSize": readableFileSize,
 		"sourcePath":       sourcePath,
 		"extension":        extension,
+		"wrapPost":         wrapPost,
+		"renderPostLink":   renderPostLink,
 	}
+
+	isTest bool
 )
 
 // Store stores the compiled HTML template and the corresponding truncated MD5
@@ -96,12 +100,18 @@ func ParseTemplates() error {
 			return err
 		}
 
-		// Strip tabs and newlines
-		min := make([]byte, 0, len(b))
-		for _, r := range b {
-			if r != '\n' && r != '\t' {
-				min = append(min, r)
+		// Strip tabs and newlines. Not done in tests to preserve HTML line
+		// numbers in template errors.
+		var min []byte
+		if !isTest {
+			min = make([]byte, 0, len(b))
+			for _, r := range b {
+				if r != '\n' && r != '\t' {
+					min = append(min, r)
+				}
 			}
+		} else {
+			min = b
 		}
 
 		t := template.New(s.name).Funcs(s.fns)

@@ -10,10 +10,10 @@
 <h1 class="page-title">
 	{{.Title}}
 </h1>
-{{if .Notice}}
+{{with .Notice}}
 	<span id="notice">
 		<span>
-			{{.Notice}}
+			{{.}}
 		</span>
 	</span>
 {{end}}
@@ -25,9 +25,9 @@ TODO: Post form<br>
 </span>
 <hr>
 <div id="thread-container">
-	{{template "article" .Thread.Post}}
+	{{template "article" (wrapPost .Thread.Post .Thread.ID .Thread.Board)}}
 	{{range .Thread.Posts}}
-		{{template "article" .}}
+		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board)}}
 	{{end}}
 </div>
 <hr>

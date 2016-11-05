@@ -10,6 +10,7 @@ import (
 
 func init() {
 	TemplateRoot = "."
+	isTest = true
 	_, err := config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
 	})

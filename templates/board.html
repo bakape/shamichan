@@ -1,12 +1,12 @@
-{{if .Banner}}
+{{with .Banner}}
 	<h1 class="image-banner">
-		<img src="/assets/banners/{{.Banner}}">
+		<img src="/assets/banners/{{.}}">
 	</h1>
 {{end}}
 <h1 class="page-title">{{.Title}}</h1>
-{{if .Notice}}
+{{with .Notice}}
 	<span id="notice">
-		<span>{{.Notice}}</span>
+		<span>{{.}}</span>
 	</span>
 {{end}}
 <span class="aside-container">
@@ -37,7 +37,9 @@
 				</span>
 			</small>
 			<br>
-			<h3>「{{.Subject}}」</h3>
+			<h3>
+				「{{.Subject}}」
+			</h3>
 		</article>
 	{{end}}
 </div>

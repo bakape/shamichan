@@ -2,10 +2,25 @@ package templates
 
 import (
 	"fmt"
+	"html/template"
+	"strconv"
 	"time"
 
 	"github.com/bakape/meguca/types"
 )
+
+// Allows passing additional information to thread-related templates
+type threadContext struct {
+	OP int64
+	types.Post
+}
+
+func wrapPost(p types.Post, op int64, board string) threadContext {
+	return threadContext{
+		OP:   op,
+		Post: p,
+	}
+}
 
 // Returns the HTTP path to the thumbnail of an image
 func thumbPath(img types.Image) string {
@@ -54,4 +69,17 @@ func readableFileSize(s int) string {
 		return fmt.Sprintf("%d KB", s/(1<<10))
 	}
 	return fmt.Sprintf("%.1f MB", float32(s)/(1<<20))
+}
+
+// Render a link to another post. Can optionally be cross-thread.
+func renderPostLink(id, op int64, board string, cross bool) template.HTML {
+	var text, url string
+	if !cross {
+		text = strconv.FormatInt(id, 10)
+		url = fmt.Sprintf("#p%d", id)
+	} else {
+		text = fmt.Sprintf(">/%s/%d", board, id)
+		url = fmt.Sprintf("/%s/%d?noscript=true#p%d", board, op, id)
+	}
+	return template.HTML(fmt.Sprintf("<a href=\"%s\">>>%s</a>", url, text))
 }
