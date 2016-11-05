@@ -122,7 +122,7 @@ function readableFilesize(size: number): string {
 	if (size < (1 << 20)) {
 		return Math.round(size / (1 << 10)) + ' KB'
 	}
-	const text = Math.round(size / (1 << 20) * 0.1).toString()
+	const text = Math.round(size / (1 << 20) * 10).toString()
 	return `${text.slice(0, -1)}.${text.slice(-1)} MB`
 }
 
