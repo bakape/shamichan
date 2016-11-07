@@ -1,22 +1,27 @@
 package templates
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/bakape/meguca/types"
 	"html/template"
 	"strconv"
 	"time"
-
-	"github.com/bakape/meguca/types"
 )
 
 // Allows passing additional information to thread-related templates
-type threadContext struct {
+type postContext struct {
+	state struct { // Body parser state
+		spoiler, quote bool
+		iDice          int
+	}
+	bytes.Buffer
 	OP int64
 	types.Post
 }
 
-func wrapPost(p types.Post, op int64, board string) threadContext {
-	return threadContext{
+func wrapPost(p types.Post, op int64, board string) *postContext {
+	return &postContext{
 		OP:   op,
 		Post: p,
 	}

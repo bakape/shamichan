@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	commandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount)$`)
+	// CommandRegexp matches any hash command in a line
+	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount)$`)
 
 	// ErrBodyTooLong is returned, when a post text body has exceeded
 	// MaxLengthBody
@@ -21,7 +22,7 @@ func ParseLine(line []byte, board string) (
 ) {
 	// Find and parse hash commands
 	if config.GetBoardConfigs(board).HashCommands {
-		match := commandRegexp.FindSubmatch(line)
+		match := CommandRegexp.FindSubmatch(line)
 		if match != nil {
 			command, err = parseCommand(match[1], board)
 			return

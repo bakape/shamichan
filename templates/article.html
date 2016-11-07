@@ -1,4 +1,4 @@
-<article id="p{{.ID}}" class="glass">
+<article id="p{{.ID}}" class="glass{{if .Editing}} editing{{end}}">
 	<header class="spaced">
 		<b class="name"{{if .Auth}} class="admin"{{end}}>
 			{{if .Email}}
@@ -73,7 +73,7 @@
 				</a>
 			</figure>
 		{{end}}
-		<blockquote>{{.Body}}</blockquote>
+		<blockquote>{{renderBody .}}</blockquote>
 	</div>
 	{{with .Backlinks}}
 		<small>

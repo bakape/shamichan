@@ -88,3 +88,7 @@ interface NotificationOptions {
 	body?: string
 	icon?: string
 }
+
+interface Array<T> {
+	includes(item: T): boolean
+}

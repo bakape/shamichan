@@ -49,6 +49,7 @@ var (
 		"extension":        extension,
 		"wrapPost":         wrapPost,
 		"renderPostLink":   renderPostLink,
+		"renderBody": renderBody,
 	}
 
 	isTest bool

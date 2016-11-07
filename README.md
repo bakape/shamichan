@@ -22,6 +22,7 @@ License: GNU AGPL
     - Post hiding
     - Option to display only the last 50 posts in a thread
     - Optional automatic deletion of unused threads and boards
+    - Automatic HTTP(S) and magnet URL linkification
 * Files and images
     - JPEG, PNG, APNG, WEBM, MP3, MP4 and OGG supported
     - Transparent PNG and GIF thumbnails
