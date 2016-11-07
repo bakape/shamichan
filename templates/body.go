@@ -236,7 +236,13 @@ func (c *postContext) parseCommands(bit string) {
 			return
 		}
 
-		rolls := c.Commands[c.state.iDice].Val.([]uint16)
+		// Cast []interface to []uint16
+		uncast := c.Commands[c.state.iDice].Val.([]interface{})
+		rolls := make([]uint16, len(uncast))
+		for i := range rolls {
+			rolls[i] = uint16(uncast[i].(float64))
+		}
+
 		c.state.iDice++
 		var sum uint
 		for i, roll := range rolls {

@@ -131,7 +131,8 @@ func TestRenderBody(t *testing.T) {
 			commands: []types.Command{
 				{
 					Type: types.Dice,
-					Val:  []uint16{22},
+					// This is how values are decoded from the database
+					Val: []interface{}{float64(22)},
 				},
 			},
 		},
@@ -142,7 +143,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []types.Command{
 				{
 					Type: types.Dice,
-					Val:  []uint16{22, 33},
+					Val:  []interface{}{float64(22), float64(33)},
 				},
 			},
 		},
@@ -153,7 +154,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []types.Command{
 				{
 					Type: types.Dice,
-					Val:  []uint16{22, 33},
+					Val:  []interface{}{float64(22), float64(33)},
 				},
 			},
 		},
@@ -164,7 +165,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []types.Command{
 				{
 					Type: types.Dice,
-					Val:  []uint16{22, 33},
+					Val:  []interface{}{float64(22), float64(33)},
 				},
 			},
 		},
