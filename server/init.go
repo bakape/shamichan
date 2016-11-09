@@ -9,11 +9,13 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"sync"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
+	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/templates"
 )
@@ -140,18 +142,36 @@ func printUsage() {
 }
 
 func startServer() {
-	fns := [...]func() error{
-		db.LoadDB,
-		websockets.Listen,
-		templates.ParseTemplates,
-		templates.Compile,
-		imager.InitImager,
-		startWebServer,
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+	load(wg, lang.Load)
+
+	logFatal(db.LoadDB)
+
+	wg.Wait()
+	wg.Add(3)
+	go func() {
+		logFatal(templates.ParseTemplates)
+		logFatal(templates.Compile)
+		wg.Done()
+	}()
+	load(wg, imager.InitImager)
+	load(wg, websockets.Listen)
+
+	wg.Wait()
+
+	logFatal(startWebServer)
+}
+
+func logFatal(fn func() error) {
+	if err := fn(); err != nil {
+		log.Fatal(err)
 	}
-	for _, fn := range fns {
-		err := fn()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+}
+
+func load(wg *sync.WaitGroup, fn func() error) {
+	go func() {
+		logFatal(fn)
+		wg.Done()
+	}()
 }

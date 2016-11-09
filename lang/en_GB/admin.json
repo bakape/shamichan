@@ -55,11 +55,11 @@
 	],
 	"sessionExpiry": [
 		"Account session expiry",
-		"Time in days until user accoubts are automatically logged out"
+		"Time in days until user accounts are automatically logged out"
 	],
 	"salt": [
 		"Secure salt",
-		"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
+		"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 characters long."
 	],
 	"feedbackEmail": [
 		"Feedback email",
@@ -78,7 +78,7 @@
 		"Theme to load by default, when none is set by the client"
 	],
 	"links": [
-		"Extrenal links",
+		"External links",
 		"Add, remove or edit external >>>/4chan/-type references"
 	],
 	"boardName": [

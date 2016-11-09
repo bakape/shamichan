@@ -83,7 +83,7 @@
 		"reporting": "Reporting...",
 		"submitted": "Report submitted!",
 		"setup": "Obtaining reCAPTCHA...",
-		"loadError": "Couldn't load reCATPCHA"
+		"loadError": "Couldn't load captcha"
 	},
 
 	"time": {
@@ -152,7 +152,7 @@
 			"screen": "fit to screen"
 		},
 		"importConfig": {
-			"done":"Import successfull. The page will now reload.",
+			"done":"Import successful. The page will now reload.",
 			"corrupt": "Import failed. File corrupt"
 		},
 		"langApplied": "Language settings applied. The page will now reload.",

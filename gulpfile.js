@@ -20,7 +20,7 @@ fs.mkdirsSync('www/js/vendor')
 // Triggered with the `-w` flag
 const watch = gutil.env.w
 
-// Dependancy tasks for the default tasks
+// Dependency tasks for the default tasks
 const tasks = []
 
 const tsProject = ts.createProject('client/tsconfig.json', {
@@ -33,11 +33,11 @@ buildClient()
 // Various little scripts
 createTask('scripts', 'clientScripts/*.js', src =>
 	src
-	.pipe(sourcemaps.init())
-	.pipe(uglify())
-	.on('error', handleError)
-	.pipe(sourcemaps.write('maps'))
-	.pipe(gulp.dest('www/js/scripts')))
+		.pipe(sourcemaps.init())
+		.pipe(uglify())
+		.on('error', handleError)
+		.pipe(sourcemaps.write('maps'))
+		.pipe(gulp.dest('www/js/scripts')))
 
 // Compile Less to CSS
 {
@@ -45,12 +45,12 @@ createTask('scripts', 'clientScripts/*.js', src =>
 	tasks.push(name)
 	gulp.task(name, () =>
 		gulp.src(['less/*.less', '!less/*.mix.less'])
-		.pipe(sourcemaps.init())
-		.pipe(less())
-		.on('error', handleError)
-		.pipe(nano())
-		.pipe(sourcemaps.write('maps'))
-		.pipe(gulp.dest('www/css')))
+			.pipe(sourcemaps.init())
+			.pipe(less())
+			.on('error', handleError)
+			.pipe(nano())
+			.pipe(sourcemaps.write('maps'))
+			.pipe(gulp.dest('www/css')))
 
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {
@@ -66,7 +66,7 @@ createTask('lang', 'lang/**/*.json', src =>
 		.on('error', handleError)
 		.pipe(gulp.dest('www/lang')))
 
-// Copies a dependancy libraries from node_modules to the vendor directory
+// Copies a dependency libraries from node_modules to the vendor directory
 tasks.push('vendor')
 gulp.task('vendor', () => {
 	const paths = [
@@ -96,18 +96,18 @@ compileVendor('fetch', 'node_modules/whatwg-fetch/fetch.js')
 
 gulp.task('default', tasks)
 
-// Builds the client files of the apropriate ECMAScript version
+// Builds the client files of the appropriate ECMAScript version
 function buildClient() {
 	const name = 'client',
 		path = 'client/**/*.ts'
 	tasks.push(name)
 	gulp.task(name, () =>
 		gulp.src(path)
-		.pipe(sourcemaps.init())
-		.pipe(tsProject())
-		.on('error', handleError)
-		.pipe(sourcemaps.write('maps'))
-		.pipe(gulp.dest('www/js/es6')))
+			.pipe(sourcemaps.init())
+			.pipe(tsProject())
+			.on('error', handleError)
+			.pipe(sourcemaps.write('maps'))
+			.pipe(gulp.dest('www/js/es6')))
 
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {
@@ -115,7 +115,7 @@ function buildClient() {
 	}
 }
 
-// Simply log the error on continous builds, but fail the build and exit with
+// Simply log the error on continuos builds, but fail the build and exit with
 // an error status, if failing a one-time build. This way we can use failure to
 // build the client to not pass Travis CL tests.
 function handleError(err) {
@@ -124,7 +124,7 @@ function handleError(err) {
 	}
 }
 
-// Create a new gulp taks and set it to execute on default and incrementally
+// Create a new gulp task and set it to execute on default and incrementally
 function createTask(name, path, task) {
 	tasks.push(name)
 	gulp.task(name, () =>
@@ -136,13 +136,13 @@ function createTask(name, path, task) {
 	}
 }
 
-// Copy a dependancy library, minify and generate sourcemaps
+// Copy a dependency library, minify and generate sourcemaps
 function compileVendor(name, path) {
 	createTask(name, path, src =>
 		src
-		.pipe(rename({ basename: name }))
-		.pipe(sourcemaps.init())
-		.pipe(uglify())
-		.pipe(sourcemaps.write('maps'))
-		.pipe(gulp.dest('www/js/vendor')))
+			.pipe(rename({ basename: name }))
+			.pipe(sourcemaps.init())
+			.pipe(uglify())
+			.pipe(sourcemaps.write('maps'))
+			.pipe(gulp.dest('www/js/vendor')))
 }
