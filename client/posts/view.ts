@@ -1,11 +1,11 @@
-import {Post, OP} from './models'
-import {mine, posts, page} from '../state'
-import {makeFrag, pluralize, HTML} from '../util'
-import renderPost, {renderName, renderTime} from './render/posts'
-import {parseOpenLine, parseTerminatedLine} from './render/body'
-import {write, importTemplate} from '../render'
-import {renderBacklinks} from './render/etc'
-import {posts as lang, navigation} from '../lang'
+import { Post, OP } from './models'
+import { mine, posts, page } from '../state'
+import { makeFrag, pluralize, HTML } from '../util'
+import renderPost, { renderName, renderTime } from './render/posts'
+import { parseOpenLine, parseTerminatedLine } from './render/body'
+import { write, importTemplate } from '../render'
+import { renderBacklinks } from './render/etc'
+import { posts as lang, navigation } from '../lang'
 import ImageHandler from "./images"
 
 // Base post view class
@@ -51,11 +51,17 @@ export default class PostView extends ImageHandler {
 	}
 
 	// Render post into a container and find buffer positions
-	renderContents(container: NodeSelector&ParentNode) {
+	renderContents(container: NodeSelector & ParentNode) {
 		renderPost(container, this.model)
 		if (this.model.editing) {
 			this.blockquote = container.querySelector("blockquote")
-			this.findBuffer(this.blockquote.lastChild)
+			let buf = this.blockquote.lastChild
+			if (!buf) {
+				this.buffer = document.createElement("span")
+				this.blockquote.append(this.buffer)
+			} else {
+				this.findBuffer(buf)
+			}
 		}
 	}
 
@@ -67,6 +73,9 @@ export default class PostView extends ImageHandler {
 		}
 		if (state.spoiler) {
 			b = b.lastChild
+		}
+		if (!b) {
+
 		}
 		this.buffer = b
 	}
