@@ -98,13 +98,24 @@ export default class PostView extends ImageHandler {
 		const frag = makeFrag(parseOpenLine(this.model.state))
 		this.findBuffer(frag.firstChild)
 		write(() =>
-			this.lastLine().replaceWith(frag))
+			this.replaceLastLine(frag))
 	}
 
 	// Return the last line of the text body
 	lastLine(): Element {
 		const ch = this.blockquote.children
 		return ch[ch.length - 1]
+    }
+
+	// Replace the contents of the last line, accounting for the possibility of
+    // there being no lines
+	replaceLastLine(node: Node) {
+		const ll = this.lastLine()
+		if (ll) {
+			ll.replaceWith(node)
+        } else {
+			this.blockquote.append(node)
+		}
 	}
 
 	// Append a string to the current text buffer
@@ -128,7 +139,7 @@ export default class PostView extends ImageHandler {
 		const line = this.model.state.line.slice(0, -1),
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
-			this.lastLine().replaceWith(frag)
+			this.replaceLastLine(frag)
 			this.buffer = document.createElement("span")
 			this.blockquote.append(this.buffer)
 		})
@@ -147,7 +158,7 @@ export default class PostView extends ImageHandler {
 			frag = makeFrag(html)
 		write(() => {
 			this.el.classList.remove("editing")
-			this.lastLine().replaceWith(frag)
+			this.replaceLastLine(frag)
 			this.buffer = this.blockquote = null
 		})
 	}
